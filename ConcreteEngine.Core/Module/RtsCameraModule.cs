@@ -1,0 +1,36 @@
+using Silk.NET.Input;
+using Silk.NET.Maths;
+
+namespace ConcreteEngine.Core.Module;
+
+public sealed class RtsCameraModule: GameModule
+{
+    public override bool IsUpdateable => true;
+    public override bool IsRenderable => false;
+
+    public RtsCameraModule(GameEngineContext context, int order) : base(context, order)
+    {
+    }
+
+    public override void Update(float dt)
+    {
+        const float speed = 100;
+
+        var input = Context.Input;
+        var camera = Context.Graphics.Ctx.ViewTransform;
+        if (input.IsKeyDown(Key.A))
+        {
+            camera.Position -= new Vector2D<float>(dt * speed, 0);
+        }
+        else if (input.IsKeyDown(Key.D))
+        {
+            camera.Position += new Vector2D<float>(dt * speed, 0);
+        }
+        
+
+        if (input.IsKeyDown(Key.W)) camera.Position -= new Vector2D<float>(0, dt * speed);
+        else if (input.IsKeyDown(Key.S)) camera.Position += new Vector2D<float>(0, dt * speed);
+
+    }
+
+}

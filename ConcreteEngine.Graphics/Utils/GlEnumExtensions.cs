@@ -1,0 +1,55 @@
+#region
+
+using ConcreteEngine.Graphics.Definitions;
+using ConcreteEngine.Graphics.Error;
+using Silk.NET.OpenGL;
+
+#endregion
+
+namespace ConcreteEngine.Graphics.Utils;
+
+public static class GlEnumExtensions
+{
+    public static (PixelFormat glFormat, InternalFormat glInternalFormat) ToGlEnums(this EnginePixelFormat format)
+    {
+        return format switch
+        {
+            EnginePixelFormat.Red => (PixelFormat.Red, InternalFormat.R8),
+            EnginePixelFormat.Rgb => (PixelFormat.Rgb, InternalFormat.Rgb8),
+            EnginePixelFormat.Rgba => (PixelFormat.Rgba, InternalFormat.Rgba8),
+            _ => throw GraphicsException.UnsupportedFeature(nameof(format))
+        };
+    }
+
+    public static BufferUsageARB ToGlEnum(this BufferUsage usage)
+    {
+        return usage switch
+        {
+            BufferUsage.StaticDraw => BufferUsageARB.StaticDraw,
+            BufferUsage.DynamicDraw => BufferUsageARB.DynamicDraw,
+            BufferUsage.StreamDraw => BufferUsageARB.StreamDraw,
+            _ => throw GraphicsException.UnsupportedFeature(nameof(usage))
+        };
+    }
+
+    public static BufferTargetARB ToGlEnum(this BufferTarget target)
+    {
+        return target switch
+        {
+            BufferTarget.VertexBuffer => BufferTargetARB.ArrayBuffer,
+            BufferTarget.IndexBuffer => BufferTargetARB.ElementArrayBuffer,
+            _ => throw GraphicsException.UnsupportedFeature(nameof(target))
+        };
+    }
+
+    public static VertexAttribPointerType PrimitiveToVertexAttribPointerType<R>() where R : unmanaged
+    {
+        if (typeof(R) == typeof(int)) return VertexAttribPointerType.Int;
+        if (typeof(R) == typeof(uint)) return VertexAttribPointerType.UnsignedInt;
+        if (typeof(R) == typeof(float)) return VertexAttribPointerType.Float;
+        if (typeof(R) == typeof(double)) return VertexAttribPointerType.Double;
+        if (typeof(R) == typeof(byte)) return VertexAttribPointerType.Byte;
+
+        throw GraphicsException.UnsupportedFeature($"VertexAttribPointerType of type {typeof(R).Name}.");
+    }
+}

@@ -1,0 +1,18 @@
+{
+  "shaders": [
+    {
+      "name": "SpriteShader",
+      "path": "sprite-shader.glsl"
+    },
+    {
+      "name": "SpriteShaderOld",
+      "path": "sprite-shader-old.glsl"
+    }
+  ],
+  "textures": [
+    {
+      "name": "SpriteTexture",
+      "path": "sprite.png"
+    }
+  ]
+}

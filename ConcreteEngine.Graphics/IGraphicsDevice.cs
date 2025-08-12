@@ -18,11 +18,13 @@ public interface IGraphicsDevice : IDisposable
     SpriteBatchController SpriteBatchController { get; }
     void StartFrame(in RenderFrameContext frameCtx);
     void EndFrame();
-    IShader CreateShader(string vertexSource, string fragmentSource);
-    ITexture2D CreateTexture2D(in TextureDescriptor textureDescriptor);
-    IGraphicsBuffer CreateBuffer(BufferTarget target, BufferUsage usage);
-    IMesh CreateMesh<TBuffer>(MeshDescriptor<TBuffer> meshData) where TBuffer : unmanaged;
-    void RemoveResource<TResource>(TResource resource) where TResource : IGraphicsResource;
+    int CreateShader(string vertexSource, string fragmentSource);
+    int CreateTexture2D(in TextureDescriptor textureDescriptor);
+    int CreateBuffer(BufferTarget target, BufferUsage usage);
+    int CreateVertexBuffer(BufferUsage bufferUsage);
+    int CreateIndexBuffer(BufferUsage bufferUsage);
+    CreateMeshResult CreateMesh<TBuffer>(MeshDescriptor<TBuffer> meshData) where TBuffer : unmanaged;
+    void RemoveResource(int resourceId);
 }
 
 public interface IGraphicsDevice<out TContext> : IGraphicsDevice where TContext : class, IGraphicsContext

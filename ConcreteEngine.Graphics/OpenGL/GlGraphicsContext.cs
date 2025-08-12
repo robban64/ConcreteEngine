@@ -1,5 +1,6 @@
 #region
 
+using System.Diagnostics.CodeAnalysis;
 using System.Drawing;
 using System.Runtime.CompilerServices;
 using ConcreteEngine.Graphics.Data;
@@ -17,13 +18,16 @@ public sealed class GlGraphicsContext : IGraphicsContext
     private readonly GL _gl;
     private readonly int glMinor = 0;
     private readonly int glMajor = 0;
-
-    private GlShader? _currentProgram;
-    private GlVertexBuffer? _boundVertexBuffer;
-    private GlIndexBuffer? _boundIndexBuffer;
-    private GlMesh? _boundVao;
-    private uint[] _boundTextures;
     
+    private readonly GraphicsResourceStore _store;
+
+    private int _boundShader = 0;
+    private int _boundVertexBuffer  = 0;
+    private int _boundIndexBuffer  = 0;
+    private int _boundVao = 0;
+    private readonly int[] _boundTextures;
+    
+    private UniformTable? _boundUniforms;
 
     private float _deltaTime = 0f;
     private Vector2D<int> _viewPortSize = Vector2D<int>.Zero;
@@ -40,12 +44,13 @@ public sealed class GlGraphicsContext : IGraphicsContext
     public GL Gl => _gl;
 
 
-    internal GlGraphicsContext(GL gl, GraphicsConfiguration configuration, in RenderFrameContext initialFrameCtx)
+    internal GlGraphicsContext(GL gl, GraphicsConfiguration configuration, GraphicsResourceStore store, in RenderFrameContext initialFrameCtx)
     {
         _gl = gl;
         Configuration = configuration;
+        _store = store;
 
-        _boundTextures = new uint[configuration.MaxTextureImageUnits];
+        _boundTextures = new int[configuration.MaxTextureImageUnits];
 
         _framebufferSize = initialFrameCtx.FramebufferSize;
         //_renderPipeline = new RenderPipeline(this);
@@ -85,13 +90,13 @@ public sealed class GlGraphicsContext : IGraphicsContext
     public void End()
     {
         // unbind context
-        UseShader(null);
-        BindMesh(null);
-        BindVertexBuffer(null);
-        BindIndexBuffer(null);
+        UseShader(0);
+        BindMesh(0);
+        BindVertexBuffer(0);
+        BindIndexBuffer(0);
         for (uint i = 0; i < _boundTextures.Length; i++)
         {
-            BindTexture(i, null);
+            BindTexture(0, i);
         }
     }
 
@@ -101,113 +106,117 @@ public sealed class GlGraphicsContext : IGraphicsContext
         _gl.Clear(ClearBufferMask.ColorBufferBit | ClearBufferMask.DepthBufferBit);
     }
 
-    public void UseShader(IShader? shader)
+    public void UseShader(int resourceId)
     {
-        if (shader is null)
+        if (_boundShader == resourceId) return;
+
+        if (resourceId == 0)
         {
-            _currentProgram = null;
+            _boundShader = 0;
+            _boundUniforms = null;
             _gl.UseProgram(0);
             return;
         }
+        
+        var resource = _store.Get<GlShader>(resourceId);
 
-        if (shader is not GlShader glShader)
-            throw GraphicsException.InvalidType<GlShader>(nameof(shader), shader);
-
-        if (_currentProgram == glShader) return;
-        _currentProgram = glShader;
-        _gl.UseProgram(glShader.Handle);
+        _gl.UseProgram(resource!.Handle);
+        _boundShader = resourceId;
+        _boundUniforms = resource.Uniforms;
     }
 
-    public void BindTexture(uint slot, ITexture2D? texture)
+    public void BindTexture(int resourceId, uint slot)
     {
         if ((int)slot >= Configuration.MaxTextureImageUnits)
-            throw GraphicsException.CapabilityExceeded<GlTexture2D>("Texture slot", (int)slot,
+             GraphicsException.ThrowCapabilityExceeded<GlTexture2D>("Texture slot", (int)slot,
                 Configuration.MaxTextureImageUnits);
 
-        if (texture is null)
+        if (_boundShader == resourceId) return;
+
+        if (resourceId == 0)
         {
             _gl.BindTextureUnit(slot, 0);
-
             _boundTextures[slot] = 0;
             return;
         }
 
-        if (texture is not GlTexture2D glTex)
-            throw GraphicsException.InvalidType<GlTexture2D>(nameof(texture), texture);
+        if (_boundTextures[slot] == resourceId) return;
 
+        var resource = _store.Get<GlTexture2D>(resourceId);
 
-        if (_boundTextures[slot] == glTex.Handle) return;
-
-        _gl.BindTextureUnit(slot, glTex.Handle);
-        _boundTextures[slot] = glTex.Handle;
+        _gl.BindTextureUnit(slot, resource!.Handle);
+        _boundTextures[slot] = resourceId;
     }
 
-    public void BindMesh(IMesh? mesh)
+    public void BindMesh(int resourceId)
     {
-        if (mesh is null)
+        if (_boundShader == resourceId) return;
+
+        if (resourceId == 0)
         {
             _gl.BindVertexArray(0);
-            _boundVao = null;
+            _boundVao = 0;
             return;
         }
-
-        if (mesh is not GlMesh glMesh)
-            throw GraphicsException.InvalidType<GlMesh>(nameof(mesh), mesh);
-
-        _gl.BindVertexArray(glMesh.Handle);
-        _boundVao = glMesh;
+        
+        var resource = _store.Get<GlMesh>(resourceId);
+        _gl.BindVertexArray(resource!.Handle);
+        _boundVao = resourceId;
     }
 
-    public void BindVertexBuffer(IGraphicsBuffer? buffer)
+    public void BindVertexBuffer(int resourceId)
     {
-        if (buffer is null)
+        if (_boundShader == resourceId) return;
+
+        if (resourceId == 0)
         {
             _gl.BindBuffer(BufferTargetARB.ArrayBuffer, 0);
-            _boundVertexBuffer = null;
+            _boundVertexBuffer = 0;
             return;
         }
 
-        if (buffer is not GlVertexBuffer glBuffer)
-            throw GraphicsException.InvalidType<GlVertexBuffer>(nameof(buffer), buffer);
-
-        _gl.BindBuffer(glBuffer.GlBufferTarget, glBuffer.Handle);
-        _boundVertexBuffer = glBuffer;
+        var resource = _store.Get<GlVertexBuffer>(resourceId)!;
+        _gl.BindBuffer(resource.GlBufferTarget, resource.Handle);
+        _boundVertexBuffer = resourceId;
     }
 
-    public void BindIndexBuffer(IGraphicsBuffer? buffer)
+    public void BindIndexBuffer(int resourceId)
     {
-        if (buffer is null)
+        if (_boundShader == resourceId) return;
+
+        if (resourceId == 0)
         {
             _gl.BindBuffer(BufferTargetARB.ElementArrayBuffer, 0);
-            _boundIndexBuffer = null;
+            _boundIndexBuffer = 0;
             return;
         }
 
-        if (buffer is not GlIndexBuffer glBuffer)
-            throw GraphicsException.InvalidType<GlIndexBuffer>(nameof(buffer), buffer);
-
-        _gl.BindBuffer(glBuffer.GlBufferTarget, glBuffer.Handle);
-        _boundIndexBuffer = glBuffer;
+        var resource = _store.Get<GlIndexBuffer>(resourceId)!;
+        _gl.BindBuffer(resource.GlBufferTarget, resource.Handle);
+        _boundIndexBuffer = resourceId;
     }
 
     public void SetVertexBuffer<T>(ReadOnlySpan<T> data) where T : unmanaged
     {
-        SetBufferData(_boundVertexBuffer, data);
+        SetBufferData<GlVertexBuffer, T>(_boundVertexBuffer, data);
     }
 
     public void SetIndexBuffer(ReadOnlySpan<uint> data)
     {
-        SetBufferData(_boundIndexBuffer, data);
+        SetBufferData<GlIndexBuffer, uint>(_boundIndexBuffer, data);
     }
 
-    private void SetBufferData<T>(GlBuffer? buffer, ReadOnlySpan<T> data) where T : unmanaged
+    private void SetBufferData<TBuffer, TData>(int resourceId, ReadOnlySpan<TData> data) 
+        where TBuffer : GlBuffer where TData : unmanaged
     {
+        var buffer = _store.Get<TBuffer>(resourceId);
         ValidateBoundResource(buffer);
+        
         if (buffer!.IsStatic && buffer.BufferSizeInBytes > 0)
-            throw GraphicsException.InvalidBufferData<GlBuffer>(nameof(buffer), "Buffer is static");
+             GraphicsException.ThrowInvalidBufferData<GlBuffer>(nameof(buffer), "Buffer is static");
 
         buffer.ElementCount = data.Length;
-        buffer.ElementSize = Unsafe.SizeOf<T>();
+        buffer.ElementSize = Unsafe.SizeOf<TData>();
         Gl.BufferData(buffer.GlBufferTarget, (nuint)buffer.BufferSizeInBytes, data, buffer.GlBufferUsage);
 
         CheckGlError();
@@ -215,30 +224,32 @@ public sealed class GlGraphicsContext : IGraphicsContext
 
     public void UploadVertexBuffer<T>(ReadOnlySpan<T> data, int offsetElements) where T : unmanaged
     {
-        UploadBufferData(_boundVertexBuffer, data, offsetElements);
+        UploadBufferData<GlVertexBuffer,T>(_boundVertexBuffer, data, offsetElements);
     }
 
     public void UploadIndexBuffer(ReadOnlySpan<uint> data, int offsetElements)
     {
-        UploadBufferData(_boundIndexBuffer, data, offsetElements);
+        UploadBufferData<GlIndexBuffer, uint>(_boundIndexBuffer, data, offsetElements);
     }
 
-    private void UploadBufferData<T>(GlBuffer? buffer, ReadOnlySpan<T> data, int offsetElements) where T : unmanaged
+    private void UploadBufferData<TBuffer, TData>(int resourceId, ReadOnlySpan<TData> data, int offsetElements) 
+        where TBuffer : GlBuffer where TData : unmanaged
     {
         ArgumentOutOfRangeException.ThrowIfNegative(offsetElements, nameof(offsetElements));
+        var buffer = _store.Get<TBuffer>(resourceId);
         ValidateBoundResource(buffer);
 
         if (buffer.IsStatic)
-            throw GraphicsException.InvalidBufferData<GlBuffer>(nameof(buffer), "Buffer is static");
+             GraphicsException.ThrowInvalidBufferData<GlBuffer>(nameof(buffer), "Buffer is static");
 
-        var elementSize = Unsafe.SizeOf<T>();
+        var elementSize = Unsafe.SizeOf<TData>();
 
         if (elementSize != buffer.ElementSize)
-            throw GraphicsException.InvalidBufferData<GlBuffer>(nameof(elementSize), "Invalid element size");
+             GraphicsException.ThrowInvalidBufferData<GlBuffer>(nameof(elementSize), "Invalid element size");
 
         if (data.Length + offsetElements > buffer.ElementCount)
         {
-            throw GraphicsException.InvalidBufferData<GlBuffer>(null,
+             GraphicsException.ThrowInvalidBufferData<GlBuffer>(null,
                 $"Upload data {data.Length + offsetElements} cannot be bigger than {buffer.ElementCount} elements.");
         }
 
@@ -249,17 +260,31 @@ public sealed class GlGraphicsContext : IGraphicsContext
         CheckGlError(); // throws here
     }
 
-    public void Draw(uint vertexCount)
+    public void Draw(uint drawCount = 0)
     {
-        _gl.DrawArrays(PrimitiveType.Triangles, 0, vertexCount);
-        _drawTriangleCount += (int)vertexCount;
+        var mesh = _store.Get<GlMesh>(_boundVao);
+        ValidateBoundResource(mesh);
+
+        if(mesh.VertexBufferId == 0) 
+            GraphicsException.ThrowInvalidState($"Mesh is missing VertexBuffer");
+
+        var count = drawCount > 0 ? drawCount : mesh.DrawCount;
+        _gl.DrawArrays(PrimitiveType.Triangles, 0, count);
+        _drawTriangleCount += (int)count;
         _drawCallCount++;
     }
 
-    public unsafe void DrawIndexed(uint indexCount)
+    public unsafe void DrawIndexed(uint drawCount = 0)
     {
-        _gl.DrawElements(PrimitiveType.Triangles, indexCount, DrawElementsType.UnsignedInt, (void*)0);
-        _drawTriangleCount += (int)indexCount;
+        var mesh = _store.Get<GlMesh>(_boundVao);
+        ValidateBoundResource(mesh);
+        if(mesh.IndexBufferId == 0) 
+            GraphicsException.ThrowInvalidState($"Mesh is missing IndexBuffer"); 
+
+        var count = drawCount > 0 ? drawCount : mesh.DrawCount;
+
+        _gl.DrawElements(PrimitiveType.Triangles, count, DrawElementsType.UnsignedInt, (void*)0);
+        _drawTriangleCount += (int)count;
         _drawCallCount++;
     }
 
@@ -293,35 +318,38 @@ public sealed class GlGraphicsContext : IGraphicsContext
 
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public void SetUniform(ShaderUniform uniform, int value) => _gl.Uniform1(_currentProgram![uniform], value);
+    public void SetUniforma(ShaderUniform uniform, int value) => _gl.Uniform1(_boundUniforms![uniform], value);
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public void SetUniform(ShaderUniform uniform, uint value) => _gl.Uniform1(_currentProgram![uniform], value);
+    public void SetUniform(ShaderUniform uniform, int value) => _gl.Uniform1(_boundUniforms![uniform], value);
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public void SetUniform(ShaderUniform uniform, float value) => _gl.Uniform1(_currentProgram![uniform], value);
+    public void SetUniform(ShaderUniform uniform, uint value) => _gl.Uniform1(_boundUniforms![uniform], value);
+
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public void SetUniform(ShaderUniform uniform, float value) => _gl.Uniform1(_boundUniforms![uniform], value);
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public void SetUniform(ShaderUniform uniform, Vector2D<float> value) =>
-        _gl.Uniform2(_currentProgram![uniform], value.X, value.Y);
+        _gl.Uniform2(_boundUniforms![uniform], value.X, value.Y);
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public void SetUniform(ShaderUniform uniform, Vector3D<float> value)
     {
-        _gl.Uniform3(_currentProgram![uniform], value.X, value.Y, value.Z);
+        _gl.Uniform3(_boundUniforms![uniform], value.X, value.Y, value.Z);
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public void SetUniform(ShaderUniform uniform, Vector4D<float> value)
     {
-        _gl.Uniform4(_currentProgram![uniform], value.X, value.Y, value.Z, value.W);
+        _gl.Uniform4(_boundUniforms![uniform], value.X, value.Y, value.Z, value.W);
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public unsafe void SetUniform(ShaderUniform uniform, in Matrix4X4<float> value)
     {
         var p = (float*)Unsafe.AsPointer(ref Unsafe.AsRef(in value));
-        _gl.UniformMatrix4(_currentProgram![uniform], 1, false, p);
+        _gl.UniformMatrix4(_boundUniforms![uniform], 1, false, p);
     }
 
 
@@ -332,10 +360,10 @@ public sealed class GlGraphicsContext : IGraphicsContext
             throw new OpenGlException(error);
     }
 
-    private static void ValidateBoundResource<T>(T? resource) where T : OpenGLResource
+    private static void ValidateBoundResource<T>([NotNull]T? resource) where T : OpenGLResource
     {
         if (resource is null)
-            throw GraphicsException.ResourceNotBound<T>(nameof(resource));
+            throw GraphicsException.ResourceIsNull<T>(nameof(resource));
 
         if (resource.Handle == 0)
             throw GraphicsException.MissingHandle<T>(nameof(resource));

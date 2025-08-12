@@ -11,6 +11,8 @@ namespace ConcreteEngine.Graphics.OpenGL;
 public sealed class GlShader : OpenGLResource, IShader
 {
     private readonly UniformTable _uniforms;
+    
+    public UniformTable Uniforms => _uniforms;
 
     internal GlShader(uint handle, Dictionary<string, int> uniforms) : base(handle)
     {

@@ -19,7 +19,9 @@ internal sealed class SpriteBatch : IDisposable
     private readonly int _capacity;
     private readonly SpriteBatchDrawCommand _command;
 
-    private readonly IMesh _mesh;
+    private readonly int _meshId;
+    private readonly int _vertexBufferId;
+    private readonly int _indexBufferId;
 
     private bool _disposed = false;
 
@@ -46,15 +48,19 @@ internal sealed class SpriteBatch : IDisposable
             ]
         };
 
-        _mesh = _graphics.CreateMesh(meshData);
-        _ctx.BindVertexBuffer(_mesh!.VertexBuffer);
+        var meshResult = _graphics.CreateMesh(meshData);
+        _meshId = meshResult.MeshId;
+        _vertexBufferId = meshResult.VertexBufferId;
+        _indexBufferId = meshResult.IndexBufferId;
+        
+        _ctx.BindVertexBuffer(meshResult.VertexBufferId);
         InitVertexBufferData();
-        _ctx.BindVertexBuffer(null);
+        _ctx.BindVertexBuffer(0);
 
-        _ctx.BindIndexBuffer(_mesh!.IndexBuffer);
+        _ctx.BindIndexBuffer(meshResult.IndexBufferId);
         InitIndexBufferData();
-        _ctx.BindIndexBuffer(null);
-        _command = new SpriteBatchDrawCommand { Mesh = _mesh };
+        _ctx.BindIndexBuffer(0);
+        _command = new SpriteBatchDrawCommand { MeshId = _meshId };
     }
 
     private void InitVertexBufferData()
@@ -138,20 +144,20 @@ internal sealed class SpriteBatch : IDisposable
              */
         }
 
-        _ctx.BindVertexBuffer(_mesh!.VertexBuffer);
+        _ctx.BindVertexBuffer(_vertexBufferId);
         _ctx.UploadVertexBuffer<Vertex2D>(vertices, 0);
-        _ctx.BindVertexBuffer(null);
+        _ctx.BindVertexBuffer(0);
 
-        _mesh.DrawCount = (uint)(spriteCount * IndicesPerSprite);
+        _command.DrawCount = (uint)(spriteCount * IndicesPerSprite);
 
-        _command.Mesh = _mesh;
+        _command.MeshId = _meshId;
         return _command;
     }
 
     public void Dispose()
     {
         if (_disposed) return;
-        _graphics.RemoveResource(_mesh);
+        _graphics.RemoveResource(_meshId);
         _disposed = true;
     }
 }

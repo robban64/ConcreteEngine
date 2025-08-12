@@ -2,6 +2,7 @@
 
 using ConcreteEngine.Graphics.Data;
 using ConcreteEngine.Graphics.Definitions;
+using ConcreteEngine.Graphics.Error;
 using ConcreteEngine.Graphics.Rendering;
 using ConcreteEngine.Graphics.Rendering.Sprite;
 using Silk.NET.OpenGL;
@@ -12,10 +13,15 @@ namespace ConcreteEngine.Graphics.OpenGL;
 
 public sealed class GlGraphicsDevice : IGraphicsDevice<GlGraphicsContext>
 {
+    private static int resourceCounter = 0;
+
     private readonly GlResourceFactory _resourceFactory;
 
-    private readonly List<IGraphicsResource> _resources = [];
-    private readonly HashSet<IGraphicsResource> _resourceDisposeQueue = [];
+    private readonly IGraphicsResource[] _resources = new IGraphicsResource[128];
+
+    private readonly GraphicsResourceStore _store;
+
+    private readonly List<int> _resourceDisposeQueue = [];
 
     public GL Gl { get; }
     public GlGraphicsContext Ctx { get; }
@@ -30,7 +36,8 @@ public sealed class GlGraphicsDevice : IGraphicsDevice<GlGraphicsContext>
     {
         Gl = gl;
         Configuration = new GraphicsConfiguration(CreateDeviceCapabilities(gl));
-        Ctx = new GlGraphicsContext(gl, Configuration, in initialFrameCtx);
+        _store = new GraphicsResourceStore(FreeResource);
+        Ctx = new GlGraphicsContext(gl, Configuration, _store, in initialFrameCtx);
         Console.WriteLine("Device Capability");
         Console.WriteLine(Configuration.Capabilities.ToString());
 
@@ -51,66 +58,60 @@ public sealed class GlGraphicsDevice : IGraphicsDevice<GlGraphicsContext>
         RenderPipeline.Execute();
         Ctx.End();
 
-        if (_resourceDisposeQueue.Count > 0)
-        {
-            foreach (var resource in _resourceDisposeQueue)
-            {
-                FreeResource(resource);
-            }
-
-            _resourceDisposeQueue.Clear();
-        }
+        _store.FlushRemoveQueue();
     }
 
-    public IShader CreateShader(string vertexSource, string fragmentSource)
+    public int CreateShader(string vertexSource, string fragmentSource)
     {
         var resource = _resourceFactory.CreateShader(vertexSource, fragmentSource);
-        _resources.Add(resource);
-        return resource;
+        return _store.AddResource(resource);
     }
 
-    public ITexture2D CreateTexture2D(in TextureDescriptor textureDescriptor)
+    public int CreateTexture2D(in TextureDescriptor textureDescriptor)
     {
         var resource = _resourceFactory.CreateTexture2D(in textureDescriptor);
-        _resources.Add(resource);
-        return resource;
+        return _store.AddResource(resource);
     }
-
-    public GlVertexBuffer CreateVertexBuffer(BufferUsage bufferUsage) =>
-        (GlVertexBuffer)CreateBuffer(BufferTarget.VertexBuffer, bufferUsage);
-
-    public GlIndexBuffer CreateIndexBuffer(BufferUsage bufferUsage) =>
-        (GlIndexBuffer)CreateBuffer(BufferTarget.IndexBuffer, bufferUsage);
-
-    public IGraphicsBuffer CreateBuffer(BufferTarget target, BufferUsage usage)
+    public CreateMeshResult CreateMesh<T>(MeshDescriptor<T> meshData) where T : unmanaged
     {
-        var buffer = _resourceFactory.CreateBuffer(target, usage);
-        _resources.Add(buffer);
-        return buffer;
+        var resource = _resourceFactory.CreateMesh(this, meshData);
+        var meshId = _store.AddResource(resource);
+        return new CreateMeshResult(meshId, resource.VertexBufferId, resource.IndexBufferId, resource.DrawCount);
     }
 
-    public IMesh CreateMesh<T>(MeshDescriptor<T> meshData) where T : unmanaged
+    public void RemoveResource(int resourceId)
     {
-        var mesh = _resourceFactory.CreateMesh(this, meshData);
-        _resources.Add(mesh);
-        return mesh;
+        _store.EnqueueRemoveResource(resourceId);
     }
 
-    public void RemoveResource<TResource>(TResource resource) where TResource : IGraphicsResource
+    public int CreateBuffer(BufferTarget target, BufferUsage usage)
     {
-        if (resource.IsDisposed) throw new ObjectDisposedException(nameof(GlGraphicsDevice));
-        _resourceDisposeQueue.Add(resource);
+        var resource = _resourceFactory.CreateBuffer(target, usage);
+        return _store.AddResource(resource);
     }
+    public int CreateVertexBuffer(BufferUsage bufferUsage) => CreateBuffer(BufferTarget.VertexBuffer, bufferUsage);
+    public int CreateIndexBuffer(BufferUsage bufferUsage) => CreateBuffer(BufferTarget.IndexBuffer, bufferUsage);
+
 
     public void Dispose()
     {
-        Console.WriteLine($"Disposing {nameof(GlGraphicsDevice)} with {_resources.Count} resources");
-        _resources.ForEach(FreeResource);
+        Console.WriteLine($"Disposing {nameof(GlGraphicsDevice)} with {resourceCounter} resources");
+        for (int i = 0; i < resourceCounter; i++)
+        {
+            var resource = _resources[i];
+            if(resource == null || resource.IsDisposed) continue;
+            FreeResource(resource);
+        }
+
         Gl.Dispose();
     }
 
-    private void FreeResource<TResource>(TResource resource) where TResource : IGraphicsResource
+
+
+    private void FreeResource(IGraphicsResource resource)
     {
+        if(resource.IsDisposed) return;
+        resource.IsDisposed = true;
         switch (resource)
         {
             case GlShader shader:
@@ -127,8 +128,8 @@ public sealed class GlGraphicsDevice : IGraphicsDevice<GlGraphicsContext>
                 break;
             case GlMesh mesh:
                 Gl.DeleteVertexArray(mesh.Handle);
-                if (mesh.VertexBuffer != null) FreeResource(mesh.VertexBuffer);
-                if (mesh.IndexBuffer != null) FreeResource(mesh.IndexBuffer);
+                //if (mesh.VertexBuffer != null) FreeResource(mesh.VertexBuffer);
+                //if (mesh.IndexBuffer != null) FreeResource(mesh.IndexBuffer);
                 break;
         }
     }

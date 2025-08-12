@@ -40,10 +40,14 @@ internal class GlResourceFactory(GlGraphicsContext ctx)
         }
 
         Gl.BindVertexArray(0);
-        ctx.BindVertexBuffer(null);
-        ctx.BindIndexBuffer(null);
+        ctx.BindVertexBuffer(0);
+        ctx.BindIndexBuffer(0);
 
-        var mesh = new GlMesh(handle, vertexBuffer, indexBuffer, descriptor.VertexPointers);
+        var vertexBufferSize = vertexBufferDesc.Data?.Length ?? 0;
+        var indexBufferSize = indexBufferDesc.Data?.Length ?? 0;
+        
+        uint drawCount = (uint)(indexBuffer > 0 ? indexBufferSize : vertexBufferSize);
+        var mesh = new GlMesh(handle, vertexBuffer, indexBuffer, descriptor.VertexPointers, drawCount);
         return mesh;
     }
 

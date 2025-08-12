@@ -80,7 +80,7 @@ public sealed class SpriteModule : GameModule
         
         Context.Graphics.RenderPipeline.BindRenderPass(RenderTargetId.None);
         var spriteBatch = Context.Graphics.SpriteBatchController;
-        spriteBatch.BeginBatch("default", SpriteTexture.Texture, SpriteShader.ShaderProgram);
+        spriteBatch.BeginBatch("default", SpriteTexture.ResourceId, SpriteShader.ResourceId);
         var cmd = SpriteBatchDrawItem.From(Transform, SpriteAtlas.GetOffset(column, row), SpriteAtlas.Scale);
         spriteBatch.SubmitSprite(cmd);
         spriteBatch.FlushBatch();

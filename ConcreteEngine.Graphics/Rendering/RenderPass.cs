@@ -14,7 +14,7 @@ public sealed class RenderPass
 
     private readonly List<IDrawCommand> _commands = new (64);
 
-    private readonly HashSet<IShader> _usedShaders = new(8);
+    private readonly HashSet<int> _usedShaders = new(8);
 
     private Matrix4X4<float> _projectionViewMatrix;
 
@@ -37,7 +37,7 @@ public sealed class RenderPass
     public void AddCommand<T>(T cmd) where T : IDrawCommand
     {
         _commands.Add(cmd);
-        _usedShaders.Add(cmd.Shader);
+        _usedShaders.Add(cmd.ShaderId);
     }
 
     public void Execute(IGraphicsContext ctx)
@@ -49,7 +49,7 @@ public sealed class RenderPass
             ctx.SetUniform(ShaderUniform.ProjectionViewMatrix, in _projectionViewMatrix);
         }
 
-        ctx.UseShader(null);
+        ctx.UseShader(0);
 
         foreach (var cmd in _commands)
         {

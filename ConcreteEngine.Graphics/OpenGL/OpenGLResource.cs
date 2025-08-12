@@ -9,7 +9,7 @@ namespace ConcreteEngine.Graphics.OpenGL;
 public abstract class OpenGLResource : IGraphicsResource
 {
     public uint Handle { get; }
-    public bool IsDisposed { get; internal set; } = false;
+    public bool IsDisposed { get; set; } = false;
 
     internal OpenGLResource(uint handle)
     {

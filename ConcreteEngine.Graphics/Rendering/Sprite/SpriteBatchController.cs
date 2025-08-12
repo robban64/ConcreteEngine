@@ -20,8 +20,8 @@ public sealed class SpriteBatchController
     private readonly Dictionary<string, SpriteBatch> _spriteBatches;
 
     private Matrix4X4<float> _transformMatrix = Matrix4X4<float>.Identity;
-    private ITexture2D? _texture;
-    private IShader? _shader;
+    private int _textureId = 0;
+    private int _shaderId = 0;
 
     private static readonly Matrix4X4<float> DefaultTransform =
         Transform2D.CreateTransformMatrix(Vector2D<float>.Zero, Vector2D<float>.One, 0);
@@ -40,8 +40,8 @@ public sealed class SpriteBatchController
     {
         _commandSize = 0;
         _boundSpriteBatch = null;
-        _texture = null;
-        _shader = null;
+        _textureId = 0;
+        _shaderId = 0;
     }
 
     public void CreateSpriteBatch(string name, int capacity)
@@ -80,19 +80,19 @@ public sealed class SpriteBatchController
         _commandSize++;
     }
 
-    public void BeginBatch(string name, ITexture2D texture, IShader shader)
+    public void BeginBatch(string name, int textureId, int shaderId)
     {
         BeginBatch(name);
-        _texture = texture;
-        _shader = shader;
+        _textureId = textureId;
+        _shaderId = shaderId;
         _transformMatrix = DefaultTransform;
     }
 
-    public void BeginBatch(string name, ITexture2D texture, IShader shader, in Matrix4X4<float> transform)
+    public void BeginBatch(string name, int textureId, int shaderId, in Matrix4X4<float> transform)
     {
         BeginBatch(name);
-        _texture = texture;
-        _shader = shader;
+        _textureId = textureId;
+        _shaderId = shaderId;
         _transformMatrix = transform;
     }
 
@@ -109,19 +109,19 @@ public sealed class SpriteBatchController
     {
         if (_boundSpriteBatch == null) throw GraphicsException.InvalidState("No sprite batch is bound.");
         if (_commandSize <= 0) throw GraphicsException.InvalidState("No commands are available.");
-        if (_texture == null) throw GraphicsException.InvalidState("No texture is bound to the sprite batch.");
-        if (_shader == null) throw GraphicsException.InvalidState("No shader is bound to the sprite batch.");
+        if (_textureId == 0) throw GraphicsException.InvalidState("No texture is bound to the sprite batch.");
+        if (_shaderId == 0) throw GraphicsException.InvalidState("No shader is bound to the sprite batch.");
 
         var commandSpan = _commandBuffer.AsSpan().Slice(0, _commandSize);
         var cmd = _boundSpriteBatch.BuildMesh(commandSpan);
-        cmd.Shader = _shader;
+        cmd.ShaderId = _shaderId;
         cmd.Transform = _transformMatrix;
-        cmd.Texture = _texture;
+        cmd.TextureId = _textureId;
         _renderPipeline.SubmitDraw(cmd);
 
         _boundSpriteBatch = null;
-        _texture = null;
-        _shader = null;
+        _textureId = 0;
+        _shaderId = 0;
         _commandSize = 0;
     }
 }

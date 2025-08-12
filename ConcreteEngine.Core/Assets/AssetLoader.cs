@@ -26,17 +26,6 @@ internal sealed class AssetLoader
     public Shader LoadShader(AssetShaderEntry entry)
     {
         var shaderText = File.ReadAllText(GetEntryPath("shaders", entry));
-        /*
-        var parts = shaderText.Split("@fragment")
-            .Select(s => s.Trim())
-            .Where(s => !string.IsNullOrWhiteSpace(s))
-            .ToArray();
-
-        if (parts.Length != 2)
-            throw new InvalidDataException("Invalid shader content, must contain new line with @fragment");
-
-        var (vertexSource, fragmentSource) = (parts[0], parts[1]);
-*/
 
         var vertexIndex = shaderText.IndexOf("@vertex", StringComparison.Ordinal);
         var fragmentIndex = shaderText.IndexOf("@fragment", StringComparison.Ordinal);
@@ -52,13 +41,13 @@ internal sealed class AssetLoader
             .Trim();
         var fragmentSource = shaderText.Substring(fragmentIndex + "@fragment".Length).Trim();
 
-        var graphicsResource = _graphics.CreateShader(vertexSource, fragmentSource);
+        var resourceId = _graphics.CreateShader(vertexSource, fragmentSource);
 
         return new Shader
         {
             Name = entry.Name,
             Path = entry.Path,
-            GraphicsResource = graphicsResource
+            ResourceId = resourceId
         };
     }
 
@@ -75,13 +64,16 @@ internal sealed class AssetLoader
             format: entry.PixelFormat
         );
 
-        var graphicsResource = _graphics.CreateTexture2D(in textureData);
+        var resourceId = _graphics.CreateTexture2D(in textureData);
 
         return new Texture2D
         {
             Name = entry.Name,
             Path = entry.Path,
-            GraphicsResource = graphicsResource
+            Width = textureData.Width,
+            Height = textureData.Height,
+            PixelFormat = textureData.Format,
+            ResourceId = resourceId
         };
     }
 }

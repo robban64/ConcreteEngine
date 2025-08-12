@@ -32,12 +32,11 @@ public interface IGraphicsContext
     void BindDefaultFramebuffer();
     void Clear(Color color);
 
-    void UseShader(IShader? shader);
-
-    void BindTexture(uint slot, ITexture2D? texture);
-    void BindMesh(IMesh? mesh);
-    void BindVertexBuffer(IGraphicsBuffer? buffer);
-    void BindIndexBuffer(IGraphicsBuffer? buffer);
+    void UseShader(int resourceId);
+    void BindTexture(int resourceId, uint slot);
+    void BindMesh(int resourceId);
+    void BindVertexBuffer(int resourceId);
+    void BindIndexBuffer(int resourceId);
 
     void SetVertexBuffer<T>(ReadOnlySpan<T> data) where T : unmanaged;
     void SetIndexBuffer(ReadOnlySpan<uint> data);
@@ -45,8 +44,8 @@ public interface IGraphicsContext
     void UploadVertexBuffer<T>(ReadOnlySpan<T> data, int offsetElements) where T : unmanaged;
     void UploadIndexBuffer(ReadOnlySpan<uint> data, int offsetElements);
 
-    void Draw(uint vertexCount);
-    void DrawIndexed(uint indexCount);
+    void Draw(uint drawCount = 0);
+    void DrawIndexed(uint drawCount = 0);
 
     void SetUniform(ShaderUniform uniform, int value);
 

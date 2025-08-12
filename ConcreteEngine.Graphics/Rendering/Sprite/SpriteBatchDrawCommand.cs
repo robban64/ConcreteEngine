@@ -9,9 +9,10 @@ namespace ConcreteEngine.Graphics.Rendering.Sprite;
 
 public sealed class SpriteBatchDrawCommand : IDrawCommand
 {
-    public IMesh Mesh { get; set; }
-    public IShader Shader { get; set; }
-    public ITexture2D Texture { get; set; }
+    public int MeshId { get; set; }
+    public int ShaderId { get; set;}
+    public int TextureId { get; set;}
+    public uint DrawCount { get; set;}
 
     private Matrix4X4<float> _transform;
 
@@ -24,14 +25,14 @@ public sealed class SpriteBatchDrawCommand : IDrawCommand
 
     public void Execute(IGraphicsContext ctx)
     {
-        ctx.UseShader(Shader);
+        ctx.UseShader(ShaderId);
 
         ctx.SetUniform(ShaderUniform.ModelMatrix, in _transform);
         ctx.SetUniform(ShaderUniform.SampleTexture, 0);
 
-        ctx.BindTexture(0, Texture);
+        ctx.BindTexture(TextureId, 0);
 
-        ctx.BindMesh(Mesh);
-        ctx.DrawIndexed(Mesh.DrawCount);
+        ctx.BindMesh(MeshId);
+        ctx.DrawIndexed(DrawCount);
     }
 }

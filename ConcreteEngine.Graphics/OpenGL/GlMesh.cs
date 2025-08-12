@@ -9,12 +9,13 @@ namespace ConcreteEngine.Graphics.OpenGL;
 
 public record GlMeshFactoryResult(GlVertexBuffer VertexBuffer, GlIndexBuffer IndexBuffer);
 
-public sealed class GlMesh : OpenGLResource, IMesh
+public sealed class GlMesh :  IMesh
 {
-    // public bool IsStaticMesh { get; private set; }
-    public int VertexBufferId { get; private set; }
+    public uint Handle { get; }
+    public bool IsDisposed { get; set; } = false;
+    public ushort VertexBufferId { get; private set; }
 
-    public int IndexBufferId { get; private set; }
+    public ushort IndexBufferId { get; private set; }
     public ICollection<VertexAttributeDescriptor> VertexAttributes { get; }
     public uint DrawCount { get; set; }
 
@@ -22,12 +23,13 @@ public sealed class GlMesh : OpenGLResource, IMesh
 
     internal GlMesh(
         uint handle,
-        int vertexBufferId,
-        int indexBufferId,
+        ushort vertexBufferId,
+        ushort indexBufferId,
         VertexAttributeDescriptor[] vertexAttributes,
         uint drawCount
-    ) : base(handle)
+    )
     {
+        Handle = handle;
         VertexBufferId = vertexBufferId;
         IndexBufferId = indexBufferId;
         VertexAttributes = vertexAttributes;

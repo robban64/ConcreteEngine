@@ -2,10 +2,10 @@ using System.Numerics;
 
 namespace ConcreteEngine.Graphics.Data;
 
-public readonly struct CreateMeshResult(int meshId, int vertexBufferId, int indexBufferId, uint drawCount)
+public readonly struct CreateMeshResult(ushort meshId, ushort vertexBufferId, ushort indexBufferId, uint drawCount)
 {
-    public readonly int MeshId = meshId;
-    public readonly int VertexBufferId = vertexBufferId;
-    public readonly int IndexBufferId = indexBufferId;
+    public readonly ushort MeshId = meshId;
+    public readonly ushort VertexBufferId = vertexBufferId;
+    public readonly ushort IndexBufferId = indexBufferId;
     public readonly uint DrawCount = drawCount;
 }

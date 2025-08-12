@@ -8,9 +8,9 @@ namespace ConcreteEngine.Graphics.Rendering;
 
 public interface IDrawCommand
 {
-    public int MeshId { get; }
-    public int ShaderId { get; }
-    public int TextureId { get; }
+    public ushort MeshId { get; }
+    public ushort ShaderId { get; }
+    public ushort TextureId { get; }
     public Matrix4X4<float> Transform { get; }
     void Execute(IGraphicsContext ctx);
 }

@@ -19,9 +19,9 @@ internal sealed class SpriteBatch : IDisposable
     private readonly int _capacity;
     private readonly SpriteBatchDrawCommand _command;
 
-    private readonly int _meshId;
-    private readonly int _vertexBufferId;
-    private readonly int _indexBufferId;
+    private readonly ushort _meshId;
+    private readonly ushort _vertexBufferId;
+    private readonly ushort _indexBufferId;
 
     private bool _disposed = false;
 

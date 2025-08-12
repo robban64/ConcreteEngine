@@ -14,8 +14,11 @@ public sealed class GlIndexBuffer(uint handle, BufferUsage usage)
 public sealed class GlVertexBuffer(uint handle, BufferUsage usage)
     : GlBuffer(handle, BufferTarget.VertexBuffer, usage);
 
-public abstract class GlBuffer : OpenGLResource, IGraphicsBuffer
+public abstract class GlBuffer : IGraphicsBuffer
 {
+    public uint Handle { get; }
+    public bool IsDisposed { get; set; } = false;
+
     public BufferUsage Usage { get; }
     public BufferUsageARB GlBufferUsage { get; }
 
@@ -27,8 +30,9 @@ public abstract class GlBuffer : OpenGLResource, IGraphicsBuffer
     public int BufferSizeInBytes => ElementCount * ElementSize;
     public bool IsStatic => Usage == BufferUsage.StaticDraw;
 
-    internal GlBuffer(uint handle, BufferTarget target, BufferUsage usage) : base(handle)
+    internal GlBuffer(uint handle, BufferTarget target, BufferUsage usage) 
     {
+        Handle = handle;
         Usage = usage;
         GlBufferUsage = usage.ToGlEnum();
 

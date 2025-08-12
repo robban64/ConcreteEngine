@@ -18,8 +18,4 @@
         <ProjectReference Include="..\ConcreteEngine.Common\ConcreteEngine.Common.csproj" />
     </ItemGroup>
 
-    <ItemGroup>
-      <Folder Include="Temp\" />
-    </ItemGroup>
-
 </Project>

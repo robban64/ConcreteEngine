@@ -14,7 +14,7 @@ public sealed class RenderPass
 
     private readonly List<IDrawCommand> _commands = new (64);
 
-    private readonly HashSet<int> _usedShaders = new(8);
+    private readonly HashSet<ushort> _usedShaders = new(8);
 
     private Matrix4X4<float> _projectionViewMatrix;
 

@@ -8,5 +8,5 @@ namespace ConcreteEngine.Core.Assets;
 
 public interface IGraphicAssetFile : IAssetFile
 {
-    public int ResourceId { get; init; }
+    public ushort ResourceId { get; init; }
 }

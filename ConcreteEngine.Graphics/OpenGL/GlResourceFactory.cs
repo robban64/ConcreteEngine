@@ -53,7 +53,7 @@ internal class GlResourceFactory(GlGraphicsContext ctx)
 
     public GlBuffer CreateBuffer(BufferTarget target, BufferUsage usage)
     {
-        uint handle = Gl.GenBuffer();
+        var handle = (ushort)Gl.GenBuffer();
 
         return target switch
         {
@@ -89,21 +89,22 @@ internal class GlResourceFactory(GlGraphicsContext ctx)
         return texture;
     }
 
-    public GlShader CreateShader(string vertexSource, string fragmentSource)
+    public (GlShader shader, uint handle, UniformTable uniformTable) CreateShader(string vertexSource, string fragmentSource)
     {
         uint vertexShader = CreateShader(ShaderType.VertexShader, vertexSource);
         uint fragmentShader = CreateShader(ShaderType.FragmentShader, fragmentSource);
         uint handle = CreateShaderProgram(vertexShader, fragmentShader);
 
-        var uniforms = GetUniformsFromProgram(handle);
-        var shader = new GlShader(handle, uniforms);
+        var uniformDict = GetUniformsFromProgram(handle);
+        var uniformTable = new UniformTable(uniformDict);
+        var shader = new GlShader(handle);
 
         Gl.DetachShader(handle, vertexShader);
         Gl.DetachShader(handle, fragmentShader);
         Gl.DeleteShader(vertexShader);
         Gl.DeleteShader(fragmentShader);
 
-        return shader;
+        return (shader, handle, uniformTable);
     }
 
     private uint CreateShaderProgram(uint vertexShader, uint fragmentShader)

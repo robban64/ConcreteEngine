@@ -13,5 +13,5 @@ public sealed class Shader : IGraphicAssetFile
 
     public AssetFileType AssetType => AssetFileType.Shader;
 
-    public int ResourceId { get; init; }
+    public ushort ResourceId { get; init; }
 }

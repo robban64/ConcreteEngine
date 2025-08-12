@@ -21,11 +21,11 @@ public sealed class GlGraphicsContext : IGraphicsContext
     
     private readonly GraphicsResourceStore _store;
 
-    private int _boundShader = 0;
-    private int _boundVertexBuffer  = 0;
-    private int _boundIndexBuffer  = 0;
-    private int _boundVao = 0;
-    private readonly int[] _boundTextures;
+    private ushort _boundShader = 0;
+    private ushort _boundVertexBuffer  = 0;
+    private ushort _boundIndexBuffer  = 0;
+    private ushort _boundVao = 0;
+    private readonly ushort[] _boundTextures;
     
     private UniformTable? _boundUniforms;
 
@@ -50,7 +50,7 @@ public sealed class GlGraphicsContext : IGraphicsContext
         Configuration = configuration;
         _store = store;
 
-        _boundTextures = new int[configuration.MaxTextureImageUnits];
+        _boundTextures = new ushort[configuration.MaxTextureImageUnits];
 
         _framebufferSize = initialFrameCtx.FramebufferSize;
         //_renderPipeline = new RenderPipeline(this);
@@ -106,7 +106,7 @@ public sealed class GlGraphicsContext : IGraphicsContext
         _gl.Clear(ClearBufferMask.ColorBufferBit | ClearBufferMask.DepthBufferBit);
     }
 
-    public void UseShader(int resourceId)
+    public void UseShader(ushort resourceId)
     {
         if (_boundShader == resourceId) return;
 
@@ -119,15 +119,16 @@ public sealed class GlGraphicsContext : IGraphicsContext
         }
         
         var resource = _store.Get<GlShader>(resourceId);
+        var uniformTable = _store.GetUniformTable(resourceId);
 
         _gl.UseProgram(resource!.Handle);
         _boundShader = resourceId;
-        _boundUniforms = resource.Uniforms;
+        _boundUniforms = uniformTable;
     }
 
-    public void BindTexture(int resourceId, uint slot)
+    public void BindTexture(ushort resourceId, uint slot)
     {
-        if ((int)slot >= Configuration.MaxTextureImageUnits)
+        if (slot >= Configuration.MaxTextureImageUnits)
              GraphicsException.ThrowCapabilityExceeded<GlTexture2D>("Texture slot", (int)slot,
                 Configuration.MaxTextureImageUnits);
 
@@ -148,7 +149,7 @@ public sealed class GlGraphicsContext : IGraphicsContext
         _boundTextures[slot] = resourceId;
     }
 
-    public void BindMesh(int resourceId)
+    public void BindMesh(ushort resourceId)
     {
         if (_boundShader == resourceId) return;
 
@@ -164,7 +165,7 @@ public sealed class GlGraphicsContext : IGraphicsContext
         _boundVao = resourceId;
     }
 
-    public void BindVertexBuffer(int resourceId)
+    public void BindVertexBuffer(ushort resourceId)
     {
         if (_boundShader == resourceId) return;
 
@@ -180,7 +181,7 @@ public sealed class GlGraphicsContext : IGraphicsContext
         _boundVertexBuffer = resourceId;
     }
 
-    public void BindIndexBuffer(int resourceId)
+    public void BindIndexBuffer(ushort resourceId)
     {
         if (_boundShader == resourceId) return;
 
@@ -206,7 +207,7 @@ public sealed class GlGraphicsContext : IGraphicsContext
         SetBufferData<GlIndexBuffer, uint>(_boundIndexBuffer, data);
     }
 
-    private void SetBufferData<TBuffer, TData>(int resourceId, ReadOnlySpan<TData> data) 
+    private void SetBufferData<TBuffer, TData>(ushort resourceId, ReadOnlySpan<TData> data) 
         where TBuffer : GlBuffer where TData : unmanaged
     {
         var buffer = _store.Get<TBuffer>(resourceId);
@@ -232,7 +233,7 @@ public sealed class GlGraphicsContext : IGraphicsContext
         UploadBufferData<GlIndexBuffer, uint>(_boundIndexBuffer, data, offsetElements);
     }
 
-    private void UploadBufferData<TBuffer, TData>(int resourceId, ReadOnlySpan<TData> data, int offsetElements) 
+    private void UploadBufferData<TBuffer, TData>(ushort resourceId, ReadOnlySpan<TData> data, int offsetElements) 
         where TBuffer : GlBuffer where TData : unmanaged
     {
         ArgumentOutOfRangeException.ThrowIfNegative(offsetElements, nameof(offsetElements));
@@ -360,14 +361,11 @@ public sealed class GlGraphicsContext : IGraphicsContext
             throw new OpenGlException(error);
     }
 
-    private static void ValidateBoundResource<T>([NotNull]T? resource) where T : OpenGLResource
+    private static void ValidateBoundResource<T>([NotNull]T? resource) where T : IGraphicsResource
     {
         if (resource is null)
             throw GraphicsException.ResourceIsNull<T>(nameof(resource));
-
-        if (resource.Handle == 0)
-            throw GraphicsException.MissingHandle<T>(nameof(resource));
-
+        
         if (resource.IsDisposed)
             throw GraphicsException.ResourceIsDisposed<T>(nameof(resource));
     }

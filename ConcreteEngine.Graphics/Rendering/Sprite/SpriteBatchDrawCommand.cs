@@ -9,9 +9,9 @@ namespace ConcreteEngine.Graphics.Rendering.Sprite;
 
 public sealed class SpriteBatchDrawCommand : IDrawCommand
 {
-    public int MeshId { get; set; }
-    public int ShaderId { get; set;}
-    public int TextureId { get; set;}
+    public ushort MeshId { get; set; }
+    public ushort ShaderId { get; set;}
+    public ushort TextureId { get; set;}
     public uint DrawCount { get; set;}
 
     private Matrix4X4<float> _transform;

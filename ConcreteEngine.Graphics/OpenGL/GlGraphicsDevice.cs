@@ -13,7 +13,6 @@ namespace ConcreteEngine.Graphics.OpenGL;
 
 public sealed class GlGraphicsDevice : IGraphicsDevice<GlGraphicsContext>
 {
-    private static int resourceCounter = 0;
 
     private readonly GlResourceFactory _resourceFactory;
 
@@ -61,13 +60,13 @@ public sealed class GlGraphicsDevice : IGraphicsDevice<GlGraphicsContext>
         _store.FlushRemoveQueue();
     }
 
-    public int CreateShader(string vertexSource, string fragmentSource)
+    public ushort CreateShader(string vertexSource, string fragmentSource)
     {
-        var resource = _resourceFactory.CreateShader(vertexSource, fragmentSource);
-        return _store.AddResource(resource);
+        var (resource, handle, uniformTable) = _resourceFactory.CreateShader(vertexSource, fragmentSource);
+        return _store.AddShaderResource(resource, uniformTable);
     }
 
-    public int CreateTexture2D(in TextureDescriptor textureDescriptor)
+    public ushort CreateTexture2D(in TextureDescriptor textureDescriptor)
     {
         var resource = _resourceFactory.CreateTexture2D(in textureDescriptor);
         return _store.AddResource(resource);
@@ -79,24 +78,24 @@ public sealed class GlGraphicsDevice : IGraphicsDevice<GlGraphicsContext>
         return new CreateMeshResult(meshId, resource.VertexBufferId, resource.IndexBufferId, resource.DrawCount);
     }
 
-    public void RemoveResource(int resourceId)
+    public void RemoveResource(ushort resourceId)
     {
         _store.EnqueueRemoveResource(resourceId);
     }
 
-    public int CreateBuffer(BufferTarget target, BufferUsage usage)
+    public ushort CreateBuffer(BufferTarget target, BufferUsage usage)
     {
         var resource = _resourceFactory.CreateBuffer(target, usage);
         return _store.AddResource(resource);
     }
-    public int CreateVertexBuffer(BufferUsage bufferUsage) => CreateBuffer(BufferTarget.VertexBuffer, bufferUsage);
-    public int CreateIndexBuffer(BufferUsage bufferUsage) => CreateBuffer(BufferTarget.IndexBuffer, bufferUsage);
+    public ushort CreateVertexBuffer(BufferUsage bufferUsage) => CreateBuffer(BufferTarget.VertexBuffer, bufferUsage);
+    public ushort CreateIndexBuffer(BufferUsage bufferUsage) => CreateBuffer(BufferTarget.IndexBuffer, bufferUsage);
 
 
     public void Dispose()
     {
-        Console.WriteLine($"Disposing {nameof(GlGraphicsDevice)} with {resourceCounter} resources");
-        for (int i = 0; i < resourceCounter; i++)
+        Console.WriteLine($"Disposing {nameof(GlGraphicsDevice)} with {_store.Count} resources");
+        for (ushort i = 0; i < _store.Count; i++)
         {
             var resource = _resources[i];
             if(resource == null || resource.IsDisposed) continue;

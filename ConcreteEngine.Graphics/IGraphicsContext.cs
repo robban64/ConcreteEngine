@@ -32,11 +32,11 @@ public interface IGraphicsContext
     void BindDefaultFramebuffer();
     void Clear(Color color);
 
-    void UseShader(int resourceId);
-    void BindTexture(int resourceId, uint slot);
-    void BindMesh(int resourceId);
-    void BindVertexBuffer(int resourceId);
-    void BindIndexBuffer(int resourceId);
+    void UseShader(ushort resourceId);
+    void BindTexture(ushort resourceId, uint slot);
+    void BindMesh(ushort resourceId);
+    void BindVertexBuffer(ushort resourceId);
+    void BindIndexBuffer(ushort resourceId);
 
     void SetVertexBuffer<T>(ReadOnlySpan<T> data) where T : unmanaged;
     void SetIndexBuffer(ReadOnlySpan<uint> data);

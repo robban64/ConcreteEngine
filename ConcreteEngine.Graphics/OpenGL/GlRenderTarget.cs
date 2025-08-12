@@ -8,16 +8,21 @@ using Silk.NET.OpenGL;
 
 namespace ConcreteEngine.Graphics.OpenGL;
 
-public sealed class GlRenderTarget : OpenGLResource, IRenderTarget
+public sealed class GlRenderTarget :  IRenderTarget
 {
+    public uint Handle { get; }
+
+    public bool IsDisposed { get; set; }
+
     public ITexture2D? Texture { get; private set; }
     public Rectangle<int> ViewportSize { get; set; }
     private Rectangle<int> _lastViewportSize = new Rectangle<int>(0, 0, 0, 0);
 
     private GL Gl { get; }
 
-    internal GlRenderTarget(GlGraphicsContext ctx, ITexture2D? texture = null) : base(0)
+    internal GlRenderTarget(GlGraphicsContext ctx, ITexture2D? texture = null)
     {
+        Handle = 0;
         Gl = ctx.Gl;
         Texture = texture;
     }
@@ -40,4 +45,5 @@ public sealed class GlRenderTarget : OpenGLResource, IRenderTarget
         Gl.ClearColor(color);
         Gl.Clear(ClearBufferMask.ColorBufferBit | ClearBufferMask.DepthBufferBit);
     }
+
 }

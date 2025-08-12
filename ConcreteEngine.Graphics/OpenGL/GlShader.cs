@@ -8,22 +8,17 @@ using ConcreteEngine.Graphics.Definitions;
 
 namespace ConcreteEngine.Graphics.OpenGL;
 
-public sealed class GlShader : OpenGLResource, IShader
+public sealed class GlShader :  IShader
 {
-    private readonly UniformTable _uniforms;
-    
-    public UniformTable Uniforms => _uniforms;
+    public uint Handle { get; }
+    public bool IsDisposed { get; set; } = false;
 
-    internal GlShader(uint handle, Dictionary<string, int> uniforms) : base(handle)
+    internal GlShader(uint handle)
     {
-        _uniforms = new UniformTable(uniforms);
+        Handle = handle;
     }
 
-    public int this[ShaderUniform u]
-    {
-        [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        get => _uniforms[u];
-    }
+
 
 /*
     internal GlShader(GlGraphicsContext ctx, string vertexSource, string fragmentSource) : base(ctx)

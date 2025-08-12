@@ -14,7 +14,7 @@ public class Texture2D : IGraphicAssetFile
     public required int Height { get; init; }
     public required EnginePixelFormat  PixelFormat { get; init; }
     public required string Path { get; init; }
-    public required int ResourceId { get; init; }
+    public required ushort ResourceId { get; init; }
 
     public AssetFileType AssetType => AssetFileType.Texture2D;
 

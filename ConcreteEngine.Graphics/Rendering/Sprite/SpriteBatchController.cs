@@ -20,8 +20,8 @@ public sealed class SpriteBatchController
     private readonly Dictionary<string, SpriteBatch> _spriteBatches;
 
     private Matrix4X4<float> _transformMatrix = Matrix4X4<float>.Identity;
-    private int _textureId = 0;
-    private int _shaderId = 0;
+    private ushort _textureId = 0;
+    private ushort _shaderId = 0;
 
     private static readonly Matrix4X4<float> DefaultTransform =
         Transform2D.CreateTransformMatrix(Vector2D<float>.Zero, Vector2D<float>.One, 0);
@@ -80,7 +80,7 @@ public sealed class SpriteBatchController
         _commandSize++;
     }
 
-    public void BeginBatch(string name, int textureId, int shaderId)
+    public void BeginBatch(string name, ushort textureId, ushort shaderId)
     {
         BeginBatch(name);
         _textureId = textureId;
@@ -88,7 +88,7 @@ public sealed class SpriteBatchController
         _transformMatrix = DefaultTransform;
     }
 
-    public void BeginBatch(string name, int textureId, int shaderId, in Matrix4X4<float> transform)
+    public void BeginBatch(string name, ushort textureId, ushort shaderId, in Matrix4X4<float> transform)
     {
         BeginBatch(name);
         _textureId = textureId;

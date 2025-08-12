@@ -1,4 +1,6 @@
-namespace ConcreteEngine.Graphics.Rendering.Tilemap;
+using ConcreteEngine.Graphics;
+
+namespace ConcreteEngine.Core.Rendering.Tilemap;
 
 internal class Tilemap
 {

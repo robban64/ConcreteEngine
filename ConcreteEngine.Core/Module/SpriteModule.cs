@@ -1,8 +1,8 @@
 using ConcreteEngine.Core.Assets;
+using ConcreteEngine.Core.Rendering.Sprite;
 using ConcreteEngine.Core.Utils;
 using ConcreteEngine.Graphics;
 using ConcreteEngine.Graphics.Definitions;
-using ConcreteEngine.Graphics.Rendering.Sprite;
 using Silk.NET.Input;
 using Silk.NET.Maths;
 
@@ -38,7 +38,7 @@ public sealed class SpriteModule : GameModule
         SpriteTexture = Context.Assets.Get<Texture2D>("SpriteTexture");
         SpriteAtlas = new SpriteAtlas(9, 4);
         
-        Context.Graphics.SpriteBatchController.CreateSpriteBatch("default", 128);
+        Context.Renderer.SpriteBatch.CreateSpriteBatch("default", 128);
 
     }
 
@@ -78,8 +78,8 @@ public sealed class SpriteModule : GameModule
             if (column >= 9) column = 0;
         }
         
-        Context.Graphics.RenderPipeline.BindRenderPass(RenderTargetId.None);
-        var spriteBatch = Context.Graphics.SpriteBatchController;
+        Context.Renderer.BindRenderPass(RenderTargetId.None);
+        var spriteBatch = Context.Renderer.SpriteBatch;
         spriteBatch.BeginBatch("default", SpriteTexture.ResourceId, SpriteShader.ResourceId);
         var cmd = SpriteBatchDrawItem.From(Transform, SpriteAtlas.GetOffset(column, row), SpriteAtlas.Scale);
         spriteBatch.SubmitSprite(cmd);

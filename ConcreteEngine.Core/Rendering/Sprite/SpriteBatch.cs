@@ -1,12 +1,13 @@
 #region
 
+using ConcreteEngine.Graphics;
 using ConcreteEngine.Graphics.Data;
 using ConcreteEngine.Graphics.Definitions;
 using ConcreteEngine.Graphics.Primitives;
 
 #endregion
 
-namespace ConcreteEngine.Graphics.Rendering.Sprite;
+namespace ConcreteEngine.Core.Rendering.Sprite;
 
 internal sealed class SpriteBatch : IDisposable
 {

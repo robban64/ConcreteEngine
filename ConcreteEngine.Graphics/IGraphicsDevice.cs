@@ -2,8 +2,6 @@
 
 using ConcreteEngine.Graphics.Data;
 using ConcreteEngine.Graphics.Definitions;
-using ConcreteEngine.Graphics.Rendering;
-using ConcreteEngine.Graphics.Rendering.Sprite;
 
 #endregion
 
@@ -14,9 +12,8 @@ public interface IGraphicsDevice : IDisposable
     IGraphicsContext Ctx { get; }
     GraphicsBackend BackendApi { get; }
     GraphicsConfiguration Configuration { get; }
-    RenderPipeline RenderPipeline { get; }
-    SpriteBatchController SpriteBatchController { get; }
     void StartFrame(in RenderFrameContext frameCtx);
+    void StartDraw();
     void EndFrame();
     ushort CreateShader(string vertexSource, string fragmentSource);
     ushort CreateTexture2D(in TextureDescriptor textureDescriptor);

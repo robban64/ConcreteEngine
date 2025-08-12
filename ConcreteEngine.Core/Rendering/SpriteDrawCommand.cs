@@ -1,4 +1,4 @@
-namespace ConcreteEngine.Graphics.Rendering;
+namespace ConcreteEngine.Core.Rendering;
 /*
 public sealed class SpriteDrawCommand: IDrawCommand
 {

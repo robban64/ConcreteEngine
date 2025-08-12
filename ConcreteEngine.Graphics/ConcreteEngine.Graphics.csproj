@@ -18,4 +18,8 @@
         <ProjectReference Include="..\ConcreteEngine.Common\ConcreteEngine.Common.csproj" />
     </ItemGroup>
 
+    <ItemGroup>
+      <Folder Include="Resources\" />
+    </ItemGroup>
+
 </Project>

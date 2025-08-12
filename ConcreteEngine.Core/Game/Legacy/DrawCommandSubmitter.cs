@@ -1,5 +1,5 @@
 using ConcreteEngine.Common.Collections;
-using ConcreteEngine.Graphics.Rendering;
+using ConcreteEngine.Core.Rendering;
 
 namespace ConcreteEngine.Core.Game.Legacy;
 

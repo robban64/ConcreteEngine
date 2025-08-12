@@ -1,24 +1,33 @@
 #region
 
+using ConcreteEngine.Core.Rendering.Sprite;
+using ConcreteEngine.Graphics;
 using ConcreteEngine.Graphics.Definitions;
 using ConcreteEngine.Graphics.Error;
 using Silk.NET.Maths;
 
 #endregion
 
-namespace ConcreteEngine.Graphics.Rendering;
+namespace ConcreteEngine.Core.Rendering;
 
 public sealed class RenderPipeline
 {
+    private readonly IGraphicsDevice _graphics;
     private readonly IGraphicsContext _ctx;
+    
     private readonly SortedList<RenderTargetId, RenderPass> _renderPasses;
-
     private RenderPass? _currentRenderPass;
 
-    internal RenderPipeline(IGraphicsContext ctx)
+    private readonly SpriteBatchController _spriteBatch;
+    
+    public SpriteBatchController SpriteBatch =>  _spriteBatch;
+    
+    internal RenderPipeline(IGraphicsDevice graphics)
     {
-        _ctx = ctx;
+        _graphics = graphics;
+        _ctx = graphics.Ctx;
         _renderPasses = new SortedList<RenderTargetId, RenderPass>(_ctx.Configuration.MaxRenderPasses);
+        _spriteBatch = new SpriteBatchController(graphics, this);
         CreateRenderPass(RenderTargetId.None, null);
     }
 

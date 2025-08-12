@@ -1,11 +1,12 @@
 #region
 
+using ConcreteEngine.Graphics;
 using ConcreteEngine.Graphics.Definitions;
 using Silk.NET.Maths;
 
 #endregion
 
-namespace ConcreteEngine.Graphics.Rendering.Sprite;
+namespace ConcreteEngine.Core.Rendering.Sprite;
 
 public sealed class SpriteBatchDrawCommand : IDrawCommand
 {

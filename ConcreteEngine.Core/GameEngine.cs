@@ -4,6 +4,7 @@ using ConcreteEngine.Core.Assets;
 using ConcreteEngine.Core.Configuration;
 using ConcreteEngine.Core.Input;
 using ConcreteEngine.Core.Pipeline;
+using ConcreteEngine.Core.Rendering;
 using ConcreteEngine.Graphics;
 using ConcreteEngine.Graphics.Data;
 using ConcreteEngine.Graphics.Definitions;
@@ -25,6 +26,7 @@ public sealed class GameEngine: IDisposable
     private IGraphicsDevice _graphics  = null!;
     private InputManager _input = null!;
     private AssetManager _assets = null!;
+    private RenderPipeline _renderer = null!;
     private GameMessagePipeline _pipeline  = null!;
     
     private bool _isDisposed = false;
@@ -79,11 +81,13 @@ public sealed class GameEngine: IDisposable
 
         _pipeline = new GameMessagePipeline();
 
+        _renderer = new RenderPipeline(_graphics);
         var context = new GameEngineContext(
             pipeline: _pipeline,
             input: _input,
             assets: _assets,
-            graphics: _graphics
+            graphics: _graphics,
+            renderer: _renderer 
         );
         
         _boundProgram.BindGameProgram(context);
@@ -120,6 +124,8 @@ public sealed class GameEngine: IDisposable
 
         _graphics.StartFrame(in frameCtx);
         _boundProgram.RenderInternal(dt);
+        _graphics.StartDraw();
+        _renderer.Execute();
         _graphics.EndFrame();
     }
 

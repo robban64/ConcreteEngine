@@ -1,17 +1,18 @@
 #region
 
+using ConcreteEngine.Graphics;
 using ConcreteEngine.Graphics.Error;
 using Silk.NET.Maths;
 
 #endregion
 
-namespace ConcreteEngine.Graphics.Rendering.Sprite;
+namespace ConcreteEngine.Core.Rendering.Sprite;
 
 public sealed class SpriteBatchController
 {
     private readonly IGraphicsDevice _graphics;
     private readonly IGraphicsContext _ctx;
-    private readonly RenderPipeline _renderPipeline;
+    private readonly RenderPipeline _renderer;
 
     private int _commandSize = 0;
     private readonly SpriteBatchDrawItem[] _commandBuffer;
@@ -26,11 +27,11 @@ public sealed class SpriteBatchController
     private static readonly Matrix4X4<float> DefaultTransform =
         Transform2D.CreateTransformMatrix(Vector2D<float>.Zero, Vector2D<float>.One, 0);
 
-    internal SpriteBatchController(IGraphicsDevice graphics)
+    internal SpriteBatchController(IGraphicsDevice graphics, RenderPipeline renderer)
     {
         _graphics = graphics;
         _ctx = graphics.Ctx;
-        _renderPipeline = graphics.RenderPipeline;
+        _renderer = renderer;
 
         _commandBuffer = new SpriteBatchDrawItem[_graphics.Configuration.MaxSpriteBatchSize];
         _spriteBatches = new Dictionary<string, SpriteBatch>(_graphics.Configuration.MaxSpriteBatchInstanceCount);
@@ -117,7 +118,7 @@ public sealed class SpriteBatchController
         cmd.ShaderId = _shaderId;
         cmd.Transform = _transformMatrix;
         cmd.TextureId = _textureId;
-        _renderPipeline.SubmitDraw(cmd);
+        _renderer.SubmitDraw(cmd);
 
         _boundSpriteBatch = null;
         _textureId = 0;

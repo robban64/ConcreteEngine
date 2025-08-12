@@ -1,10 +1,11 @@
 #region
 
+using ConcreteEngine.Graphics;
 using Silk.NET.Maths;
 
 #endregion
 
-namespace ConcreteEngine.Graphics.Rendering.Sprite;
+namespace ConcreteEngine.Core.Rendering.Sprite;
 
 public readonly struct SpriteBatchDrawItem
 {

@@ -16,6 +16,15 @@ internal sealed class GraphicsResourceStore(Action<IGraphicsResource> removeHand
 
     public int Count => _resourceCounter;
 
+    public IGraphicsResource[] ToArrayCopy()
+    {
+        var span = _resources.AsSpan().Slice(0, _resourceCounter - 1);
+        return span.ToArray();
+    }
+    
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public IGraphicsResource? Get(ushort i) =>  _resources[i - 1];
+
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public T? Get<T>(ushort i) where T : class, IGraphicsResource
     {

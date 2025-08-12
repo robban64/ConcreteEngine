@@ -1,39 +1,30 @@
-#region
+
 
 using ConcreteEngine.Graphics.Data;
 using ConcreteEngine.Graphics.Definitions;
-using ConcreteEngine.Graphics.Error;
-using ConcreteEngine.Graphics.Rendering;
-using ConcreteEngine.Graphics.Rendering.Sprite;
 using Silk.NET.OpenGL;
-
-#endregion
 
 namespace ConcreteEngine.Graphics.OpenGL;
 
 public sealed class GlGraphicsDevice : IGraphicsDevice<GlGraphicsContext>
 {
+    private readonly GL _gl;
 
     private readonly GlResourceFactory _resourceFactory;
 
-    private readonly IGraphicsResource[] _resources = new IGraphicsResource[128];
-
     private readonly GraphicsResourceStore _store;
 
-    private readonly List<int> _resourceDisposeQueue = [];
+    public GL Gl => _gl;
 
-    public GL Gl { get; }
     public GlGraphicsContext Ctx { get; }
     IGraphicsContext IGraphicsDevice.Ctx => Ctx;
 
     public GraphicsConfiguration Configuration { get; }
     public GraphicsBackend BackendApi => GraphicsBackend.OpenGL;
-    public RenderPipeline RenderPipeline { get; }
-    public SpriteBatchController SpriteBatchController { get; }
 
     public GlGraphicsDevice(GL gl, in RenderFrameContext initialFrameCtx)
     {
-        Gl = gl;
+        _gl = gl;
         Configuration = new GraphicsConfiguration(CreateDeviceCapabilities(gl));
         _store = new GraphicsResourceStore(FreeResource);
         Ctx = new GlGraphicsContext(gl, Configuration, _store, in initialFrameCtx);
@@ -41,22 +32,21 @@ public sealed class GlGraphicsDevice : IGraphicsDevice<GlGraphicsContext>
         Console.WriteLine(Configuration.Capabilities.ToString());
 
         _resourceFactory = new GlResourceFactory(Ctx);
-        RenderPipeline = new RenderPipeline(Ctx);
-        SpriteBatchController = new SpriteBatchController(this);
     }
 
     public void StartFrame(in RenderFrameContext frameCtx)
     {
         Ctx.Begin(in frameCtx);
-        SpriteBatchController.Prepare();
+    }
+
+    public void StartDraw()
+    {
+        Ctx.BeginRender();
     }
 
     public void EndFrame()
     {
-        Ctx.BeginRender();
-        RenderPipeline.Execute();
         Ctx.End();
-
         _store.FlushRemoveQueue();
     }
 
@@ -95,9 +85,10 @@ public sealed class GlGraphicsDevice : IGraphicsDevice<GlGraphicsContext>
     public void Dispose()
     {
         Console.WriteLine($"Disposing {nameof(GlGraphicsDevice)} with {_store.Count} resources");
-        for (ushort i = 0; i < _store.Count; i++)
+        
+        for (ushort i = 1; i <= _store.Count; i++)
         {
-            var resource = _resources[i];
+            var resource = _store.Get(i);
             if(resource == null || resource.IsDisposed) continue;
             FreeResource(resource);
         }

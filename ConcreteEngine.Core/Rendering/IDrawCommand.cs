@@ -1,10 +1,11 @@
 #region
 
+using ConcreteEngine.Graphics;
 using Silk.NET.Maths;
 
 #endregion
 
-namespace ConcreteEngine.Graphics.Rendering;
+namespace ConcreteEngine.Core.Rendering;
 
 public interface IDrawCommand
 {

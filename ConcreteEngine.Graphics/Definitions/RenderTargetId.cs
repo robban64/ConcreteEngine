@@ -1,9 +1,9 @@
 namespace ConcreteEngine.Graphics.Definitions;
 
-public enum RenderTargetId : byte
+public enum RenderTargetId : short
 {
     None,
     Scene,
-    Background,
-    UI,
+    //Background,
+    //UI,
 }

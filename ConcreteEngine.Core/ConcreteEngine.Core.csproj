@@ -21,6 +21,7 @@
 
     <ItemGroup>
       <Folder Include="Factory\" />
+      <Folder Include="Game\Legacy\" />
     </ItemGroup>
 
 </Project>

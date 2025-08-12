@@ -13,7 +13,7 @@ public sealed class RenderPass
     private readonly RenderTargetId _id;
     private readonly IRenderTarget? _renderTarget;
 
-    private readonly List<IDrawCommand> _commands = new (64);
+    //private readonly List<IDrawCommand> _commands = new (64);
 
     private readonly HashSet<ushort> _usedShaders = new(8);
 
@@ -25,7 +25,7 @@ public sealed class RenderPass
         set => _projectionViewMatrix = value;
     }
 
-    public bool HasData => _commands.Count > 0;
+   // public bool HasData => _commands.Count > 0;
     public RenderTargetId Id => _id;
 
     public RenderPass(RenderTargetId id, IRenderTarget? renderTarget)
@@ -33,7 +33,7 @@ public sealed class RenderPass
         _id = id;
         _renderTarget = renderTarget;
     }
-
+/*
 
     public void AddCommand<T>(T cmd) where T : IDrawCommand
     {
@@ -60,4 +60,5 @@ public sealed class RenderPass
         _commands.Clear();
         _usedShaders.Clear();
     }
+    */
 }

@@ -1,16 +1,31 @@
 namespace ConcreteEngine.Core.Module;
 
-public class ModuleRegistry
+public interface IModuleRegistry
 {
-    private readonly List<(Type, int)> _registeredModules = new(8);
-    private readonly SortedList<int, GameModule> _modules = new(8);
+    public ModuleRegistry RegisterModule<T>() where T : GameModule, new();
+    public T Get<T>() where T : GameModule;
+}
 
+public sealed class ModuleRegistry: IModuleRegistry
+{
+    private readonly List<(Func<GameEngineContext, GameModule> factory, int)> _registeredModules = new(8);
+    private readonly SortedList<int, GameModule> _modules = new(8);
+    
     public bool IsReady { get; private set; } = false;
     
-    public ModuleRegistry RegisterModule<T>() where T : GameModule
+    public ModuleRegistry RegisterModule<T>()where T : GameModule, new()
     {
-        _registeredModules.Add((typeof(T), _registeredModules.Count));
+        _registeredModules.Add((context => new T(), _registeredModules.Count));
         return this;
+    }
+    
+    public T Get<T>() where T : GameModule
+    {
+        foreach (var module in _modules.Values)
+        {
+            if(module is T tModule) return tModule;
+        }
+        throw new InvalidOperationException($"Module {typeof(T).Name} is not registered.");
     }
     
     internal void Update(float dt)
@@ -33,22 +48,22 @@ public class ModuleRegistry
 
     internal void Load(GameEngineContext context)
     {
-        foreach (var (type, order) in _registeredModules)
+        foreach (var (factory, order) in _registeredModules)
         {
             if (_modules.ContainsKey(order))
-                throw new InvalidOperationException($"Duplicate service registered for order: {order}");
+                throw new InvalidOperationException($"Duplicate module registered for order: {order}");
 
-            var service = (GameModule?)Activator.CreateInstance(type, context, order);
-            if (service == null)
-                throw new NullReferenceException($"Service {type.Name} returned null during creation.");
-            
-            _modules.Add(service.Order, service);
+            //var service = (GameModule?)Activator.CreateInstance(type, context, order);
+            var module = factory(context);
+            _modules.Add(order, module);
         }
+
+        foreach (var (order,module) in _modules)
+            module.AttatchContext(context, order);
         
-        foreach (var service in _modules.Values)
-        {
-            service.Load();
-        }
+        foreach (var module in _modules.Values)
+            module.Load();
+
 
         IsReady = true;
     }

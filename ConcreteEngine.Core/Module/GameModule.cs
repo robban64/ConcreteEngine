@@ -2,19 +2,17 @@ namespace ConcreteEngine.Core.Module;
 
 public abstract class GameModule
 {
-    private readonly GameEngineContext _context;
-    private readonly int _order;
+    private GameEngineContext _context = null!;
     
     public abstract bool IsUpdateable { get;  }
     public abstract bool IsRenderable { get;  }
-    
-    public int Order => _order;
+    public int Order { get; internal set; }
     protected GameEngineContext Context => _context;
 
-    protected GameModule(GameEngineContext context, int order)
+    internal void AttatchContext(GameEngineContext context, int order)
     {
         _context = context;
-        _order = order;
+        Order = order;
     }
     
     public virtual void Update(float dt) {}

@@ -21,10 +21,10 @@ public sealed class GlGraphicsContext : IGraphicsContext
     
     private readonly GraphicsResourceStore _store;
 
-    private ushort _boundShader = 0;
-    private ushort _boundVertexBuffer  = 0;
-    private ushort _boundIndexBuffer  = 0;
-    private ushort _boundVao = 0;
+    private ushort _boundShaderId = 0;
+    private ushort _boundVertexBufferId  = 0;
+    private ushort _boundIndexBufferId  = 0;
+    private ushort _boundVaoId = 0;
     private readonly ushort[] _boundTextures;
     
     private UniformTable? _boundUniforms;
@@ -108,11 +108,11 @@ public sealed class GlGraphicsContext : IGraphicsContext
 
     public void UseShader(ushort resourceId)
     {
-        if (_boundShader == resourceId) return;
+        if (_boundShaderId == resourceId) return;
 
         if (resourceId == 0)
         {
-            _boundShader = 0;
+            _boundShaderId = 0;
             _boundUniforms = null;
             _gl.UseProgram(0);
             return;
@@ -122,7 +122,7 @@ public sealed class GlGraphicsContext : IGraphicsContext
         var uniformTable = _store.GetUniformTable(resourceId);
 
         _gl.UseProgram(resource!.Handle);
-        _boundShader = resourceId;
+        _boundShaderId = resourceId;
         _boundUniforms = uniformTable;
     }
 
@@ -132,7 +132,7 @@ public sealed class GlGraphicsContext : IGraphicsContext
              GraphicsException.ThrowCapabilityExceeded<GlTexture2D>("Texture slot", (int)slot,
                 Configuration.MaxTextureImageUnits);
 
-        if (_boundShader == resourceId) return;
+        if (_boundShaderId == resourceId) return;
 
         if (resourceId == 0)
         {
@@ -151,60 +151,60 @@ public sealed class GlGraphicsContext : IGraphicsContext
 
     public void BindMesh(ushort resourceId)
     {
-        if (_boundShader == resourceId) return;
+        if (_boundShaderId == resourceId) return;
 
         if (resourceId == 0)
         {
             _gl.BindVertexArray(0);
-            _boundVao = 0;
+            _boundVaoId = 0;
             return;
         }
         
         var resource = _store.Get<GlMesh>(resourceId);
         _gl.BindVertexArray(resource!.Handle);
-        _boundVao = resourceId;
+        _boundVaoId = resourceId;
     }
 
     public void BindVertexBuffer(ushort resourceId)
     {
-        if (_boundShader == resourceId) return;
+        if (_boundShaderId == resourceId) return;
 
         if (resourceId == 0)
         {
             _gl.BindBuffer(BufferTargetARB.ArrayBuffer, 0);
-            _boundVertexBuffer = 0;
+            _boundVertexBufferId = 0;
             return;
         }
 
         var resource = _store.Get<GlVertexBuffer>(resourceId)!;
         _gl.BindBuffer(resource.GlBufferTarget, resource.Handle);
-        _boundVertexBuffer = resourceId;
+        _boundVertexBufferId = resourceId;
     }
 
     public void BindIndexBuffer(ushort resourceId)
     {
-        if (_boundShader == resourceId) return;
+        if (_boundShaderId == resourceId) return;
 
         if (resourceId == 0)
         {
             _gl.BindBuffer(BufferTargetARB.ElementArrayBuffer, 0);
-            _boundIndexBuffer = 0;
+            _boundIndexBufferId = 0;
             return;
         }
 
         var resource = _store.Get<GlIndexBuffer>(resourceId)!;
         _gl.BindBuffer(resource.GlBufferTarget, resource.Handle);
-        _boundIndexBuffer = resourceId;
+        _boundIndexBufferId = resourceId;
     }
 
     public void SetVertexBuffer<T>(ReadOnlySpan<T> data) where T : unmanaged
     {
-        SetBufferData<GlVertexBuffer, T>(_boundVertexBuffer, data);
+        SetBufferData<GlVertexBuffer, T>(_boundVertexBufferId, data);
     }
 
     public void SetIndexBuffer(ReadOnlySpan<uint> data)
     {
-        SetBufferData<GlIndexBuffer, uint>(_boundIndexBuffer, data);
+        SetBufferData<GlIndexBuffer, uint>(_boundIndexBufferId, data);
     }
 
     private void SetBufferData<TBuffer, TData>(ushort resourceId, ReadOnlySpan<TData> data) 
@@ -225,12 +225,12 @@ public sealed class GlGraphicsContext : IGraphicsContext
 
     public void UploadVertexBuffer<T>(ReadOnlySpan<T> data, int offsetElements) where T : unmanaged
     {
-        UploadBufferData<GlVertexBuffer,T>(_boundVertexBuffer, data, offsetElements);
+        UploadBufferData<GlVertexBuffer,T>(_boundVertexBufferId, data, offsetElements);
     }
 
     public void UploadIndexBuffer(ReadOnlySpan<uint> data, int offsetElements)
     {
-        UploadBufferData<GlIndexBuffer, uint>(_boundIndexBuffer, data, offsetElements);
+        UploadBufferData<GlIndexBuffer, uint>(_boundIndexBufferId, data, offsetElements);
     }
 
     private void UploadBufferData<TBuffer, TData>(ushort resourceId, ReadOnlySpan<TData> data, int offsetElements) 
@@ -263,7 +263,7 @@ public sealed class GlGraphicsContext : IGraphicsContext
 
     public void Draw(uint drawCount = 0)
     {
-        var mesh = _store.Get<GlMesh>(_boundVao);
+        var mesh = _store.Get<GlMesh>(_boundVaoId);
         ValidateBoundResource(mesh);
 
         if(mesh.VertexBufferId == 0) 
@@ -277,7 +277,7 @@ public sealed class GlGraphicsContext : IGraphicsContext
 
     public unsafe void DrawIndexed(uint drawCount = 0)
     {
-        var mesh = _store.Get<GlMesh>(_boundVao);
+        var mesh = _store.Get<GlMesh>(_boundVaoId);
         ValidateBoundResource(mesh);
         if(mesh.IndexBufferId == 0) 
             GraphicsException.ThrowInvalidState($"Mesh is missing IndexBuffer"); 

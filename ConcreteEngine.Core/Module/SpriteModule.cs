@@ -25,12 +25,9 @@ public sealed class SpriteModule : GameModule
 
     
     private float timer = 0;
-    private int column = 0;
-    private int row = 0;
+    public int column = 0;
+    public int row = 0;
     
-    public SpriteModule(GameEngineContext context, int order) : base(context, order)
-    {
-    }
 
     public override void Load()
     {

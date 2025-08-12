@@ -14,7 +14,8 @@ public abstract class GameScene
     protected AssetManager Assets => Context.Assets;
     protected IGraphicsDevice Graphics => Context.Graphics;
 
-    protected abstract void Load();
+    protected abstract void Configure();
+    protected abstract void OnReady();
     protected abstract void Unload();
 
 
@@ -22,8 +23,12 @@ public abstract class GameScene
     {
     }
 
-    protected ModuleRegistry RegisterModule<T>() where T : GameModule
+    protected ModuleRegistry RegisterModule<T>() where T : GameModule, new()
         => _moduleRegistry.RegisterModule<T>();
+    
+    protected T GetModule<T>() where T : GameModule
+        => _moduleRegistry.Get<T>();
+
 
     internal void AttachContext(GameEngineContext context)
     {
@@ -32,8 +37,9 @@ public abstract class GameScene
 
     internal void LoadInternal()
     {
-        Load();
+        Configure();
         _moduleRegistry.Load(Context);
+        OnReady();
     }
 
     internal void UnloadInternal()

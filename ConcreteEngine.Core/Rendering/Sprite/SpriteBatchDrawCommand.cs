@@ -8,32 +8,22 @@ using Silk.NET.Maths;
 
 namespace ConcreteEngine.Core.Rendering.Sprite;
 
-public sealed class SpriteBatchDrawCommand : IDrawCommand
+
+public readonly struct SpriteDrawCommand : IDrawCommandMessage
 {
-    public ushort MeshId { get; set; }
-    public ushort ShaderId { get; set;}
-    public ushort TextureId { get; set;}
-    public uint DrawCount { get; set;}
-
-    private Matrix4X4<float> _transform;
-
-    public Matrix4X4<float> Transform
+    public SpriteDrawCommand(ushort meshId, ushort shaderId, ushort textureId, uint drawCount, in Matrix4X4<float> transform)
     {
-        get => _transform;
-        set => _transform = value;
+        MeshId = meshId;
+        ShaderId = shaderId;
+        TextureId = textureId;
+        DrawCount = drawCount;
+        Transform = transform;
     }
 
+    public readonly ushort MeshId;
+    public readonly ushort ShaderId ;
+    public readonly ushort TextureId;
+    public readonly uint DrawCount;
 
-    public void Execute(IGraphicsContext ctx)
-    {
-        ctx.UseShader(ShaderId);
-
-        ctx.SetUniform(ShaderUniform.ModelMatrix, in _transform);
-        ctx.SetUniform(ShaderUniform.SampleTexture, 0);
-
-        ctx.BindTexture(TextureId, 0);
-
-        ctx.BindMesh(MeshId);
-        ctx.DrawIndexed(DrawCount);
-    }
+    public readonly Matrix4X4<float> Transform;
 }

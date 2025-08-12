@@ -9,6 +9,12 @@ using ConcreteEngine.Graphics.Primitives;
 
 namespace ConcreteEngine.Core.Rendering.Sprite;
 
+internal readonly struct SpriteBatchResult(ushort meshId, uint drawCount)
+{
+    public readonly ushort MeshId = meshId;
+    public readonly uint DrawCount = drawCount;
+}
+
 internal sealed class SpriteBatch : IDisposable
 {
     private const int VerticesPerSprite = 4;
@@ -18,7 +24,6 @@ internal sealed class SpriteBatch : IDisposable
     private readonly IGraphicsContext _ctx;
 
     private readonly int _capacity;
-    private readonly SpriteBatchDrawCommand _command;
 
     private readonly ushort _meshId;
     private readonly ushort _vertexBufferId;
@@ -61,7 +66,6 @@ internal sealed class SpriteBatch : IDisposable
         _ctx.BindIndexBuffer(meshResult.IndexBufferId);
         InitIndexBufferData();
         _ctx.BindIndexBuffer(0);
-        _command = new SpriteBatchDrawCommand { MeshId = _meshId };
     }
 
     private void InitVertexBufferData()
@@ -88,11 +92,11 @@ internal sealed class SpriteBatch : IDisposable
         _ctx.SetIndexBuffer(indices);
     }
 
-    public SpriteBatchDrawCommand BuildMesh(ReadOnlySpan<SpriteBatchDrawItem> commands)
+    public SpriteBatchResult BuildSpriteBatch(ReadOnlySpan<SpriteBatchDrawItem> commands)
     {
         int spriteCount = commands.Length;
         if (spriteCount == 0)
-            return _command;
+            return default;
 
         if (spriteCount > _capacity)
             throw new InvalidOperationException($"Sprite batch {spriteCount} exceeds maximum of {_capacity} sprites.");
@@ -149,10 +153,10 @@ internal sealed class SpriteBatch : IDisposable
         _ctx.UploadVertexBuffer<Vertex2D>(vertices, 0);
         _ctx.BindVertexBuffer(0);
 
-        _command.DrawCount = (uint)(spriteCount * IndicesPerSprite);
+        
+        var drawCount = (uint)(spriteCount * IndicesPerSprite);
 
-        _command.MeshId = _meshId;
-        return _command;
+        return new SpriteBatchResult(_meshId, drawCount);
     }
 
     public void Dispose()

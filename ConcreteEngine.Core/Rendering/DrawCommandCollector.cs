@@ -1,11 +1,14 @@
+using ConcreteEngine.Core.Rendering.Sprite;
 using ConcreteEngine.Graphics;
 
-namespace ConcreteEngine.Core.Game.Legacy;
+namespace ConcreteEngine.Core.Rendering;
 
-internal sealed class DrawCommandCollector
+internal sealed class DrawCommandCollector(int initialCapacity = 16)
 {
-    private readonly SortedList<int, IDrawCommandEmitter> _emitters = new(16);
+    private readonly SortedList<int, IDrawCommandEmitter> _emitters = new(initialCapacity);
 
+    public int Count => _emitters.Count;
+    
     public void RegisterEmitter<T>(T emitter) where T : class, IDrawCommandEmitter
     {
         if (_emitters.ContainsValue(emitter)) throw new InvalidOperationException("Duplicated emitter");
@@ -14,11 +17,11 @@ internal sealed class DrawCommandCollector
         _emitters.Add(emitter.Order, emitter);
     }
 
-    public void Collect(IGraphicsContext ctx, DrawCommandSubmitter submitter)
+    public void Collect(DrawEmitterContext context, DrawCommandSubmitter submitter)
     {
         foreach (var emitter in _emitters.Values)
         {
-            emitter.Emit(ctx, submitter);
+            emitter.Emit(context, submitter);
         }
     }
     

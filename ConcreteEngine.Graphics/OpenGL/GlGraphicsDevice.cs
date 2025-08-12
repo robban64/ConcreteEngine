@@ -118,8 +118,10 @@ public sealed class GlGraphicsDevice : IGraphicsDevice<GlGraphicsContext>
                 break;
             case GlMesh mesh:
                 Gl.DeleteVertexArray(mesh.Handle);
-                //if (mesh.VertexBuffer != null) FreeResource(mesh.VertexBuffer);
-                //if (mesh.IndexBuffer != null) FreeResource(mesh.IndexBuffer);
+                if (mesh.VertexBufferId != null && _store.TryGet<GlVertexBuffer>(mesh.VertexBufferId, out var vBuffer)) 
+                    FreeResource(vBuffer);
+                if (mesh.IndexBufferId != null && _store.TryGet<GlIndexBuffer>(mesh.IndexBufferId, out var iBuffer)) 
+                    FreeResource(iBuffer);
                 break;
         }
     }

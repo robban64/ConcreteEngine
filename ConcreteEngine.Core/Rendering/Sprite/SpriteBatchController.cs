@@ -55,8 +55,8 @@ public sealed class SpriteBatchController
                 _graphics.Configuration.MaxSpriteBatchInstanceCount
             );
         }
-        
-        if(_spriteBatches.ContainsKey(name))
+
+        if (_spriteBatches.ContainsKey(name))
             throw GraphicsException.ResourceAlreadyExists<SpriteBatch>(name);
 
         _spriteBatches.Add(name, new SpriteBatch(_graphics, capacity));
@@ -75,8 +75,6 @@ public sealed class SpriteBatchController
 
     public void SubmitSprite(in SpriteBatchDrawItem cmd)
     {
-        //if(_texture == null) throw new InvalidOperationException("No texture is bound to the sprite batch.");
-        //if(_shader == null) throw new InvalidOperationException("No shader is bound to the sprite batch.");
         _commandBuffer[_commandSize] = cmd;
         _commandSize++;
     }
@@ -100,29 +98,36 @@ public sealed class SpriteBatchController
     private void BeginBatch(string name)
     {
         if (!_spriteBatches.TryGetValue(name, out var value))
-            throw GraphicsException.ResourceNotFound<SpriteBatch>(name);
+            GraphicsException.ThrowResourceNotFound<SpriteBatch>(name);
 
         _commandSize = 0;
         _boundSpriteBatch = value;
     }
 
-    public void FlushBatch()
+    public SpriteDrawCommand FlushBatch()
     {
-        if (_boundSpriteBatch == null) throw GraphicsException.InvalidState("No sprite batch is bound.");
-        if (_commandSize <= 0) throw GraphicsException.InvalidState("No commands are available.");
-        if (_textureId == 0) throw GraphicsException.InvalidState("No texture is bound to the sprite batch.");
-        if (_shaderId == 0) throw GraphicsException.InvalidState("No shader is bound to the sprite batch.");
+        if (_boundSpriteBatch == null) GraphicsException.ThrowInvalidState("No sprite batch is bound.");
+        if (_commandSize <= 0) GraphicsException.ThrowInvalidState("No commands are available.");
+        if (_textureId == 0) GraphicsException.ThrowInvalidState("No texture is bound to the sprite batch.");
+        if (_shaderId == 0) GraphicsException.ThrowInvalidState("No shader is bound to the sprite batch.");
 
         var commandSpan = _commandBuffer.AsSpan().Slice(0, _commandSize);
-        var cmd = _boundSpriteBatch.BuildMesh(commandSpan);
-        cmd.ShaderId = _shaderId;
-        cmd.Transform = _transformMatrix;
-        cmd.TextureId = _textureId;
-        _renderer.SubmitDraw(cmd);
+        
+        var result = _boundSpriteBatch.BuildSpriteBatch(commandSpan);
+        
+        var cmd = new SpriteDrawCommand(
+            meshId: result.MeshId,
+            shaderId: _shaderId,
+            textureId: _textureId,
+            drawCount: result.DrawCount,
+            transform: in _transformMatrix
+        );
 
         _boundSpriteBatch = null;
         _textureId = 0;
         _shaderId = 0;
         _commandSize = 0;
+
+        return cmd;
     }
 }

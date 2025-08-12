@@ -8,9 +8,6 @@ public sealed class RtsCameraModule: GameModule
     public override bool IsUpdateable => true;
     public override bool IsRenderable => false;
 
-    public RtsCameraModule(GameEngineContext context, int order) : base(context, order)
-    {
-    }
 
     public override void Update(float dt)
     {

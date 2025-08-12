@@ -68,10 +68,10 @@ internal sealed class GraphicsResourceStore(Action<IGraphicsResource> removeHand
 
     public ushort AddShaderResource<TShader>(TShader resource, UniformTable uniforms) where TShader : IShader
     {
-        var id = _resourceCounter++;
+        var id = _resourceCounter;
         _resources[id - 1] = resource;
         _shaderUniforms.Add(id, uniforms);
-        return id;
+        return _resourceCounter++;
     }
 
     public void EnqueueRemoveResource(ushort resourceId)

@@ -41,7 +41,7 @@ public sealed class SpriteDrawEmitter : IDrawCommandEmitter
             }
         }
         var cmd = spriteBatch.FlushBatch();
-
-        submitter.SubmitDraw(cmd, new DrawCommandMeta(RenderTargetId.None, 0));
+        var meta = new DrawCommandMeta(DrawCommandId.Sprite, RenderTargetId.None, 0);
+        submitter.SubmitDraw(in cmd, in meta);
     }
 }

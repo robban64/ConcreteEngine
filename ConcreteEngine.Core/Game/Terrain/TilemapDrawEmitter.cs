@@ -23,14 +23,16 @@ public sealed class TilemapDrawEmitter : IDrawCommandEmitter
 
         var tilemapBatcher = context.TilemapBatch;
         var result = tilemapBatcher.BuildBatch();
-        var cmd = new TilemapDrawCommand(
+        var cmd = new DrawCommandData(
             meshId: result.GroundLayer.MeshId,
             drawCount: result.GroundLayer.DrawCount,
             shaderId: Tilemap.TilemapShader.ResourceId,
             textureId: Tilemap.TilemapTexture.ResourceId,
             transform: in transform
         );
-        submitter.SubmitDraw(cmd, new DrawCommandMeta(RenderTargetId.None, 0));
+        
+        var meta = new DrawCommandMeta(DrawCommandId.Tilemap, RenderTargetId.None, 0);
+        submitter.SubmitDraw(cmd, in meta);
 
     }
 }

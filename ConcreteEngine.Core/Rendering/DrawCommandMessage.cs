@@ -1,18 +1,39 @@
 using ConcreteEngine.Graphics.Definitions;
+using Silk.NET.Maths;
 
 namespace ConcreteEngine.Core.Rendering;
 
-public interface IDrawCommandMessage;
 
-public readonly struct DrawCommandMeta(RenderTargetId pass, short layer)
+public enum DrawCommandId : short
 {
-    public readonly RenderTargetId Pass = pass;
-    public readonly short Layer = layer;
+    Tilemap,
+    Sprite
 }
 
-public readonly struct EmitterMessage<T>(in T cmd, in DrawCommandMeta info)
-    where T : unmanaged, IDrawCommandMessage
+public readonly struct DrawCommandMessage(in DrawCommandData cmd, in DrawCommandMeta info)
 {
-    public readonly T Cmd = cmd;
-    public readonly DrawCommandMeta Info;
+    public readonly DrawCommandData Cmd = cmd;
+    public readonly DrawCommandMeta Info = info;
+}
+
+public readonly struct DrawCommandData(
+    ushort meshId,
+    ushort shaderId,
+    ushort textureId,
+    uint drawCount,
+    in Matrix4X4<float> transform)
+{
+    public readonly ushort MeshId = meshId;
+    public readonly ushort ShaderId = shaderId;
+    public readonly ushort TextureId = textureId;
+    public readonly uint DrawCount = drawCount;
+
+    public readonly Matrix4X4<float> Transform = transform;
+}
+
+public readonly struct DrawCommandMeta(DrawCommandId id, RenderTargetId target, short layer)
+{
+    public readonly DrawCommandId Id = id;
+    public readonly RenderTargetId Target = target;
+    public readonly short Layer = layer;
 }

@@ -16,7 +16,6 @@ namespace Demo;
 
 public class DemoScene : GameScene
 {
-
     protected override void Configure()
     {
         RegisterFeature<TilemapFeature>();
@@ -29,15 +28,14 @@ public class DemoScene : GameScene
         var spriteModule = GetFeature<SpriteFeature>();
         var tilemapFeature = GetFeature<TilemapFeature>();
 
-        Context.Renderer.RegisterCommand<TilemapDrawCommand>(RenderTargetId.None);
-        Context.Renderer.RegisterCommand<SpriteDrawCommand>(RenderTargetId.None);
-        Context.Renderer.RegisterEmitter(0,new TilemapDrawEmitter {Tilemap =  tilemapFeature});
-        Context.Renderer.RegisterEmitter(1,new SpriteDrawEmitter {SpriteFeature =  spriteModule});
-        
+        Context.Renderer.RegisterCommand(0, DrawCommandId.Tilemap, RenderTargetId.None, 4);
+        Context.Renderer.RegisterCommand(1, DrawCommandId.Sprite, RenderTargetId.None, 32);
+
+        Context.Renderer.RegisterEmitter(0, new TilemapDrawEmitter { Tilemap = tilemapFeature });
+        Context.Renderer.RegisterEmitter(1, new SpriteDrawEmitter { SpriteFeature = spriteModule });
     }
 
     protected override void Unload()
     {
     }
-
 }

@@ -104,7 +104,7 @@ public sealed class SpriteBatcher
         _boundSpriteBatch = value;
     }
 
-    public SpriteDrawCommand FlushBatch()
+    public DrawCommandData FlushBatch()
     {
         if (_boundSpriteBatch == null) GraphicsException.ThrowInvalidState("No sprite batch is bound.");
         if (_commandSize <= 0) GraphicsException.ThrowInvalidState("No commands are available.");
@@ -115,7 +115,7 @@ public sealed class SpriteBatcher
         
         var result = _boundSpriteBatch.BuildSpriteBatch(commandSpan);
         
-        var cmd = new SpriteDrawCommand(
+        var cmd = new DrawCommandData(
             meshId: result.MeshId,
             shaderId: _shaderId,
             textureId: _textureId,

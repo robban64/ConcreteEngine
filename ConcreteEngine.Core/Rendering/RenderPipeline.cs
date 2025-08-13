@@ -1,6 +1,7 @@
 #region
 
-using ConcreteEngine.Core.Rendering.Sprite;
+using ConcreteEngine.Core.Rendering.SpriteBatching;
+using ConcreteEngine.Core.Rendering.Tilemap;
 using ConcreteEngine.Graphics;
 using ConcreteEngine.Graphics.Definitions;
 using ConcreteEngine.Graphics.Error;
@@ -22,9 +23,10 @@ public sealed class RenderPipeline
     private readonly SortedList<RenderTargetId, RenderPass> _renderPasses;
     private RenderPass? _currentRenderPass;
 
-    private readonly SpriteBatchController _spriteBatch;
+    private readonly SpriteBatcher _spriteBatch;
+    private readonly TilemapBatcher _tilemapBatcher;
     
-    public SpriteBatchController SpriteBatch =>  _spriteBatch;
+    public SpriteBatcher SpriteBatch =>  _spriteBatch;
 
     
     internal RenderPipeline(IGraphicsDevice graphics)
@@ -36,12 +38,14 @@ public sealed class RenderPipeline
         _commandCollector = new DrawCommandCollector();
         _commandSubmitter = new DrawCommandSubmitter();
 
-        _spriteBatch = new SpriteBatchController(graphics, this);
+        _spriteBatch = new SpriteBatcher(graphics, this);
+        _tilemapBatcher = new TilemapBatcher(graphics,64,32);
 
         _emitterContext = new DrawEmitterContext
         {
             Graphics = _graphics,
             SpriteBatch = _spriteBatch,
+            TilemapBatch = _tilemapBatcher
         };
 
         CreateRenderPass(RenderTargetId.None, null);
@@ -51,8 +55,8 @@ public sealed class RenderPipeline
     public void RegisterCommand<T>(RenderTargetId target, int capacity = 32) where T : unmanaged, IDrawCommandMessage
         => _commandSubmitter.RegisterCommand<T>(target, capacity);
     
-    public void RegisterEmitter<T>(T emitter) where T : class, IDrawCommandEmitter
-        => _commandCollector.RegisterEmitter<T>(emitter);
+    public void RegisterEmitter<T>(int order, T emitter) where T : class, IDrawCommandEmitter
+        => _commandCollector.RegisterEmitter<T>(order, emitter);
 
     public void CreateRenderPass(RenderTargetId renderPassId, IRenderTarget? renderTarget)
     {
@@ -79,23 +83,40 @@ public sealed class RenderPipeline
 
     internal void Execute()
     {
-        _commandSubmitter.Clear();
+        _commandSubmitter.ClearData();
         
         _commandCollector.Collect(_emitterContext, _commandSubmitter);
-        var commands = _commandSubmitter.GetQueue<SpriteDrawCommand>(RenderTargetId.None);
-        foreach (var (cmd, meta) in commands)
+        
+        var tilemapCommands = _commandSubmitter.GetQueue<TilemapDrawCommand>(RenderTargetId.None);
+        for (int i = 0; i < tilemapCommands.Length; i++)
         {
-            _ctx.UseShader(cmd.ShaderId);
+            ref var msg = ref tilemapCommands[i];
+            _ctx.UseShader(msg.Cmd.ShaderId);
             _ctx.SetUniform(ShaderUniform.ProjectionViewMatrix, _ctx.ViewTransform.ProjectionViewMatrix);
 
-            _ctx.SetUniform(ShaderUniform.ModelMatrix, in cmd.Transform);
+            _ctx.SetUniform(ShaderUniform.ModelMatrix, in msg.Cmd.Transform);
             _ctx.SetUniform(ShaderUniform.SampleTexture, 0);
 
-            _ctx.BindTexture(cmd.TextureId, 0);
+            _ctx.BindTexture(msg.Cmd.TextureId, 0);
 
-            _ctx.BindMesh(cmd.MeshId);
-            _ctx.DrawIndexed(cmd.DrawCount);
+            _ctx.BindMesh(msg.Cmd.MeshId);
+            _ctx.DrawIndexed(msg.Cmd.DrawCount);
+        }
+        
+        var spriteCommands = _commandSubmitter.GetQueue<SpriteDrawCommand>(RenderTargetId.None);
+        for (int i = 0; i < spriteCommands.Length; i++)
+        {
+            ref var msg = ref spriteCommands[i];
+            _ctx.UseShader(msg.Cmd.ShaderId);
+            _ctx.SetUniform(ShaderUniform.ProjectionViewMatrix, _ctx.ViewTransform.ProjectionViewMatrix);
 
+            _ctx.SetUniform(ShaderUniform.ModelMatrix, in msg.Cmd.Transform);
+            _ctx.SetUniform(ShaderUniform.SampleTexture, 0);
+
+            _ctx.BindTexture(msg.Cmd.TextureId, 0);
+
+            _ctx.BindMesh(msg.Cmd.MeshId);
+            _ctx.DrawIndexed(msg.Cmd.DrawCount);
         }
 
 

@@ -9,11 +9,12 @@ using ConcreteEngine.Graphics.Error;
 
 namespace ConcreteEngine.Graphics.Data;
 
-public record MeshDescriptor<TBuffer> where TBuffer : unmanaged
+public record MeshDescriptor<TVertex, TIndex> where TVertex : unmanaged where TIndex : unmanaged
 {
     public VertexAttributeDescriptor[] VertexPointers { get; init; }
-    public MeshDataBufferDescriptor<TBuffer> VertexBuffer { get; init; }
-    public MeshDataBufferDescriptor<uint> IndexBuffer { get; init; }
+    public MeshDataBufferDescriptor<TVertex> VertexBuffer { get; init; }
+    public MeshDataBufferDescriptor<TIndex> IndexBuffer { get; init; }
+    public uint? DrawCount { get; set; } = null;
 }
 
 public record MeshDataBufferDescriptor<T>(

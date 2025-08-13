@@ -1,17 +1,10 @@
-#region
-
-using ConcreteEngine.Graphics;
-using ConcreteEngine.Graphics.Definitions;
 using Silk.NET.Maths;
 
-#endregion
+namespace ConcreteEngine.Core.Rendering.Tilemap;
 
-namespace ConcreteEngine.Core.Rendering.Sprite;
-
-
-public readonly struct SpriteDrawCommand : IDrawCommandMessage
+public readonly struct TilemapDrawCommand : IDrawCommandMessage
 {
-    public SpriteDrawCommand(ushort meshId, ushort shaderId, ushort textureId, uint drawCount, in Matrix4X4<float> transform)
+    public TilemapDrawCommand(ushort meshId, ushort shaderId, ushort textureId, uint drawCount, in Matrix4X4<float> transform)
     {
         MeshId = meshId;
         ShaderId = shaderId;

@@ -10,5 +10,9 @@ public readonly struct DrawCommandMeta(RenderTargetId pass, short layer)
     public readonly short Layer = layer;
 }
 
-public readonly record struct EmitterMessage<T>(in T Cmd, in DrawCommandMeta Info)
-    where T : unmanaged, IDrawCommandMessage;
+public readonly struct EmitterMessage<T>(in T cmd, in DrawCommandMeta info)
+    where T : unmanaged, IDrawCommandMessage
+{
+    public readonly T Cmd = cmd;
+    public readonly DrawCommandMeta Info;
+}

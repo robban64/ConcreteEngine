@@ -2,6 +2,7 @@
 
 using ConcreteEngine.Graphics.Data;
 using ConcreteEngine.Graphics.Definitions;
+using Silk.NET.OpenGL;
 
 #endregion
 
@@ -9,15 +10,15 @@ namespace ConcreteEngine.Graphics.OpenGL;
 
 public record GlMeshFactoryResult(GlVertexBuffer VertexBuffer, GlIndexBuffer IndexBuffer);
 
-public sealed class GlMesh :  IMesh
+public sealed class GlMesh : IMesh
 {
     public uint Handle { get; }
     public bool IsDisposed { get; set; } = false;
-    public ushort VertexBufferId { get; private set; }
-
-    public ushort IndexBufferId { get; private set; }
+    public ushort VertexBufferId { get; }
+    public ushort IndexBufferId { get; }
     public ICollection<VertexAttributeDescriptor> VertexAttributes { get; }
     public uint DrawCount { get; set; }
+    public DrawElementsType ElementType { get; }
 
     public bool HasIndices => IndexBufferId > 0;
 
@@ -26,7 +27,8 @@ public sealed class GlMesh :  IMesh
         ushort vertexBufferId,
         ushort indexBufferId,
         VertexAttributeDescriptor[] vertexAttributes,
-        uint drawCount
+        uint drawCount,
+        DrawElementsType elementType
     )
     {
         Handle = handle;
@@ -34,5 +36,6 @@ public sealed class GlMesh :  IMesh
         IndexBufferId = indexBufferId;
         VertexAttributes = vertexAttributes;
         DrawCount = drawCount;
+        ElementType = elementType;
     }
 }

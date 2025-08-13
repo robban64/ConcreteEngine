@@ -35,6 +35,8 @@ public sealed class GameEngine: IDisposable
     private int _simulationTick = 0;
     private float _accumulatorForTick = 0;
     
+    private float _accumulatorFpsCounter = 0;
+    
     internal GameEngine(
         GameProgram program,
         WindowOptions windowOptions,
@@ -113,11 +115,22 @@ public sealed class GameEngine: IDisposable
     private void Render(double delta)
     {
         float dt = (float)delta;
+        
+        float fps = dt > 0 ? 1.0f / dt : 0.0f;
 
+        /*
+        _accumulatorFpsCounter += dt;
+        if (_accumulatorFpsCounter >= 0.5f)
+        {
+            Console.WriteLine($"Fps: {fps}");
+            _accumulatorFpsCounter = 0;
+        }
+*/
+        
         var frameCtx = new RenderFrameContext
         {
             DeltaTime = dt,
-            FramesPerSecond = (float)_window.FramesPerSecond,
+            FramesPerSecond = fps,
             FramebufferSize = _window.FramebufferSize,
             ViewportSize = _window.Size
         };
@@ -127,6 +140,8 @@ public sealed class GameEngine: IDisposable
         _graphics.StartDraw();
         _renderer.Execute();
         _graphics.EndFrame();
+        
+
     }
 
     private void Close()

@@ -1,13 +1,12 @@
 using ConcreteEngine.Core.Assets;
 using ConcreteEngine.Core.Input;
-using ConcreteEngine.Core.Module;
 using ConcreteEngine.Graphics;
 
 namespace ConcreteEngine.Core;
 
 public abstract class GameScene
 {
-    private readonly ModuleRegistry _moduleRegistry = new();
+    private readonly FeatureRegistry _featureRegistry = new();
 
     protected GameEngineContext Context { get; private set; } = null!;
     protected InputManager Input => Context.Input;
@@ -23,11 +22,11 @@ public abstract class GameScene
     {
     }
 
-    protected ModuleRegistry RegisterModule<T>() where T : GameModule, new()
-        => _moduleRegistry.RegisterModule<T>();
+    protected FeatureRegistry RegisterFeature<T>() where T : GameFeature, new()
+        => _featureRegistry.RegisterFeature<T>();
     
-    protected T GetModule<T>() where T : GameModule
-        => _moduleRegistry.Get<T>();
+    protected T GetFeature<T>() where T : GameFeature
+        => _featureRegistry.Get<T>();
 
 
     internal void AttachContext(GameEngineContext context)
@@ -38,24 +37,22 @@ public abstract class GameScene
     internal void LoadInternal()
     {
         Configure();
-        _moduleRegistry.Load(Context);
+        _featureRegistry.Load(Context);
         OnReady();
     }
 
     internal void UnloadInternal()
     {
         Unload();
-        _moduleRegistry.Unload();
+        _featureRegistry.Unload();
     }
 
     internal void Update(float dt)
     {
-        _moduleRegistry.Update(dt);
+        _featureRegistry.Update(dt);
     }
 
     internal void Render(float dt)
     {
-        _moduleRegistry.Render(dt);
-
     }
 }

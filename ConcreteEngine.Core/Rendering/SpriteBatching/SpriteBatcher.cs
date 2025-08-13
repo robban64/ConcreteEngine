@@ -6,35 +6,35 @@ using Silk.NET.Maths;
 
 #endregion
 
-namespace ConcreteEngine.Core.Rendering.Sprite;
+namespace ConcreteEngine.Core.Rendering.SpriteBatching;
 
-public sealed class SpriteBatchController
+
+
+public sealed class SpriteBatcher
 {
     private readonly IGraphicsDevice _graphics;
     private readonly IGraphicsContext _ctx;
-    private readonly RenderPipeline _renderer;
 
     private int _commandSize = 0;
-    private readonly SpriteBatchDrawItem[] _commandBuffer;
+    private readonly SpriteDrawData[] _commandBuffer;
 
-    private SpriteBatch? _boundSpriteBatch;
-    private readonly Dictionary<string, SpriteBatch> _spriteBatches;
+    private SpriteBatchMesh? _boundSpriteBatch;
+    private readonly SortedList<int, SpriteBatchMesh> _spriteBatches;
+
+    private static readonly Matrix4X4<float> DefaultTransform =
+        Transform2D.CreateTransformMatrix(Vector2D<float>.Zero, Vector2D<float>.One, 0);
 
     private Matrix4X4<float> _transformMatrix = Matrix4X4<float>.Identity;
     private ushort _textureId = 0;
     private ushort _shaderId = 0;
 
-    private static readonly Matrix4X4<float> DefaultTransform =
-        Transform2D.CreateTransformMatrix(Vector2D<float>.Zero, Vector2D<float>.One, 0);
-
-    internal SpriteBatchController(IGraphicsDevice graphics, RenderPipeline renderer)
+    internal SpriteBatcher(IGraphicsDevice graphics, RenderPipeline renderer)
     {
         _graphics = graphics;
         _ctx = graphics.Ctx;
-        _renderer = renderer;
 
-        _commandBuffer = new SpriteBatchDrawItem[_graphics.Configuration.MaxSpriteBatchSize];
-        _spriteBatches = new Dictionary<string, SpriteBatch>(_graphics.Configuration.MaxSpriteBatchInstanceCount);
+        _commandBuffer = new SpriteDrawData[_graphics.Configuration.MaxSpriteBatchSize];
+        _spriteBatches = new (_graphics.Configuration.MaxSpriteBatchInstanceCount);
     }
 
     internal void Prepare()
@@ -45,60 +45,60 @@ public sealed class SpriteBatchController
         _shaderId = 0;
     }
 
-    public void CreateSpriteBatch(string name, int capacity)
+    public void CreateSpriteBatch(int id, int capacity)
     {
         if (_spriteBatches.Count >= _graphics.Configuration.MaxSpriteBatchInstanceCount - 1)
         {
-            throw GraphicsException.CapabilityExceeded<SpriteBatchController>(
+            throw GraphicsException.CapabilityExceeded<SpriteBatcher>(
                 "SpriteBatch Count",
                 _spriteBatches.Count,
                 _graphics.Configuration.MaxSpriteBatchInstanceCount
             );
         }
 
-        if (_spriteBatches.ContainsKey(name))
-            throw GraphicsException.ResourceAlreadyExists<SpriteBatch>(name);
+        if (_spriteBatches.ContainsKey(id))
+            throw GraphicsException.ResourceAlreadyExists<SpriteBatchMesh>(id);
 
-        _spriteBatches.Add(name, new SpriteBatch(_graphics, capacity));
+        _spriteBatches.Add(id, new SpriteBatchMesh(_graphics, capacity));
     }
 
-    public void RemoveSpriteBatch(string name)
+    public void RemoveSpriteBatch(int id)
     {
-        if (!_spriteBatches.TryGetValue(name, out var spriteBatch))
+        if (!_spriteBatches.TryGetValue(id, out var spriteBatch))
         {
-            throw GraphicsException.ResourceNotFound<SpriteBatch>(name);
+            throw GraphicsException.ResourceNotFound<SpriteBatchMesh>(id);
         }
 
         spriteBatch.Dispose();
-        _spriteBatches.Remove(name);
+        _spriteBatches.Remove(id);
     }
 
-    public void SubmitSprite(in SpriteBatchDrawItem cmd)
+    public void SubmitSprite(in SpriteDrawData cmd)
     {
         _commandBuffer[_commandSize] = cmd;
         _commandSize++;
     }
-
-    public void BeginBatch(string name, ushort textureId, ushort shaderId)
+    public void BeginBatch(int id, ushort textureId, ushort shaderId)
     {
-        BeginBatch(name);
+        BeginBatch(id);
         _textureId = textureId;
         _shaderId = shaderId;
         _transformMatrix = DefaultTransform;
     }
 
-    public void BeginBatch(string name, ushort textureId, ushort shaderId, in Matrix4X4<float> transform)
+    public void BeginBatch(int id, ushort textureId, ushort shaderId, in Matrix4X4<float> transform)
     {
-        BeginBatch(name);
-        _textureId = textureId;
-        _shaderId = shaderId;
-        _transformMatrix = transform;
-    }
+        if (!_spriteBatches.TryGetValue(id, out var value))
+            GraphicsException.ThrowResourceNotFound<SpriteBatchMesh>(id);
 
-    private void BeginBatch(string name)
+        _commandSize = 0;
+        _boundSpriteBatch = value;
+    }
+    
+    private void BeginBatch(int id)
     {
-        if (!_spriteBatches.TryGetValue(name, out var value))
-            GraphicsException.ThrowResourceNotFound<SpriteBatch>(name);
+        if (!_spriteBatches.TryGetValue(id, out var value))
+            GraphicsException.ThrowResourceNotFound<SpriteBatchMesh>(id);
 
         _commandSize = 0;
         _boundSpriteBatch = value;
@@ -124,8 +124,6 @@ public sealed class SpriteBatchController
         );
 
         _boundSpriteBatch = null;
-        _textureId = 0;
-        _shaderId = 0;
         _commandSize = 0;
 
         return cmd;

@@ -61,7 +61,8 @@ public sealed class GlGraphicsDevice : IGraphicsDevice<GlGraphicsContext>
         var resource = _resourceFactory.CreateTexture2D(in textureDescriptor);
         return _store.AddResource(resource);
     }
-    public CreateMeshResult CreateMesh<T>(MeshDescriptor<T> meshData) where T : unmanaged
+    public CreateMeshResult CreateMesh<TVertex, TIndex>(MeshDescriptor<TVertex, TIndex> meshData) 
+        where TVertex : unmanaged where TIndex : unmanaged
     {
         var resource = _resourceFactory.CreateMesh(this, meshData);
         var meshId = _store.AddResource(resource);

@@ -2,22 +2,23 @@ using ConcreteEngine.Graphics;
 
 namespace ConcreteEngine.Core.Rendering.Tilemap;
 
-internal class Tilemap
-{
-    private const int MinMapSize = 16;
-    private const int MaxMapSize = 1024 * 4;
 
+public class TilemapBatcher: RenderBatcher<TilemapBatchResult>
+{
+    private const int MinMapSize = 64;
+    private const int MaxMapSize = 512;
+    
     private const int MinTileSize = 16;
     private const int MaxTileSize = 128;
-
-    private const int ChunkSize = 64;
-
-    private IGraphicsDevice _device;
+    
+    private const int ChunkDimension = 64;
 
     public int MapSize { get; }
     public int TileSize { get; }
 
-    public Tilemap(IGraphicsDevice graphicsDevice, int mapSize, int tileSize)
+    private TilemapChunkMesh _chunk;
+
+    public TilemapBatcher(IGraphicsDevice graphics, int mapSize, int tileSize) : base(graphics)
     {
         ArgumentOutOfRangeException.ThrowIfLessThan(mapSize, MinMapSize, nameof(mapSize));
         ArgumentOutOfRangeException.ThrowIfGreaterThan(mapSize, MaxMapSize, nameof(mapSize));
@@ -28,5 +29,18 @@ internal class Tilemap
 
         MapSize = mapSize;
         TileSize = tileSize;
+        
+        _chunk = new TilemapChunkMesh(graphics, 64, tileSize);
+    }
+
+    public override TilemapBatchResult BuildBatch()
+    {
+        var ground = _chunk.BuildTilemapMesh();
+        return new TilemapBatchResult(in ground);
+    }
+
+    public override void Dispose()
+    {
+        _chunk.Dispose();
     }
 }

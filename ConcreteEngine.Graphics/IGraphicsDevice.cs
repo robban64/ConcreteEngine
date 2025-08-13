@@ -20,7 +20,11 @@ public interface IGraphicsDevice : IDisposable
     ushort CreateBuffer(BufferTarget target, BufferUsage usage);
     ushort CreateVertexBuffer(BufferUsage bufferUsage);
     ushort CreateIndexBuffer(BufferUsage bufferUsage);
-    CreateMeshResult CreateMesh<TBuffer>(MeshDescriptor<TBuffer> meshData) where TBuffer : unmanaged;
+
+    CreateMeshResult CreateMesh<TVertex, TIndex>(MeshDescriptor<TVertex, TIndex> meshData)
+        where TVertex : unmanaged
+        where TIndex : unmanaged;
+
     void RemoveResource(ushort resourceId);
 }
 

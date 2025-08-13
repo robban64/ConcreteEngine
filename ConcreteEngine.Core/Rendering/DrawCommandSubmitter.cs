@@ -1,4 +1,5 @@
 using System.Runtime.CompilerServices;
+using System.Runtime.InteropServices;
 using ConcreteEngine.Common.Collections;
 using ConcreteEngine.Graphics.Definitions;
 
@@ -7,9 +8,9 @@ namespace ConcreteEngine.Core.Rendering;
 public sealed class DrawCommandSubmitter
 {
     private readonly SortedList<RenderTargetId, TypeRegistryCollection<object>> _queueRegistry = new();
-    private readonly List<Action> _clearHandlers = new(16);
+    private readonly List<(RenderTargetId, TypeRegistryCollection<object>, Action)> _clearHandlers = new(32);
     
-    public void RegisterCommand<T>(RenderTargetId target, int capacity = 32) where T : unmanaged, IDrawCommandMessage
+    public void RegisterCommand<T>(RenderTargetId target, int capacity = 8) where T : unmanaged, IDrawCommandMessage
     {
         if (!_queueRegistry.TryGetValue(target, out var registry))
         {
@@ -17,9 +18,35 @@ public sealed class DrawCommandSubmitter
             _queueRegistry.Add(target, registry);
         }
         
-        var collection = new List<(T cmd, DrawCommandMeta meta)>(capacity);
+        var collection = new List<EmitterMessage<T>>(capacity);
         registry.Register<T>(collection);
-        _clearHandlers.Add(() => collection.Clear());
+        _clearHandlers.Add((target, registry, () => collection.Clear()));
+    }
+
+    public void UnregisterCommand<T>(RenderTargetId target) where T : unmanaged, IDrawCommandMessage
+    {
+        if (!_queueRegistry.TryGetValue(target, out var registry))
+            throw new InvalidOperationException($"RenderTarget {target} is not registered");
+        
+        if(!registry.TryGet<T>(out var collectionObj))
+            throw new InvalidOperationException($"Command {typeof(T).Name} is not registered.");
+        
+        int foundClearHandlerIndex = -1;
+        for (int i =0; i < _clearHandlers.Count; i++)
+        {
+            var handler = _clearHandlers[i];
+            if (handler.Item1 == target && handler.Item2 == registry)
+            {
+                foundClearHandlerIndex = i;
+                break;
+            }
+        }
+
+        var collection = (List<EmitterMessage<T>>)collectionObj;
+        collection.RemoveAt(foundClearHandlerIndex);
+        if (collection.Count == 0)
+            _queueRegistry.Remove(target);
+
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
@@ -27,75 +54,21 @@ public sealed class DrawCommandSubmitter
     {
         var queue = _queueRegistry[meta.Pass].Get<T>();
         // Direct cast; no boxing. JIT will devirtualize Enqueue.
-        ((List<(T cmd, DrawCommandMeta meta)>)queue).Add((cmd, meta));
+        ((List<EmitterMessage<T>>)queue).Add(new EmitterMessage<T>(in cmd, in meta));
     }
     
-    public List<(T cmd, DrawCommandMeta meta)> GetQueue<T>(RenderTargetId target) where T : unmanaged, IDrawCommandMessage
-        => (List<(T cmd, DrawCommandMeta meta)>)_queueRegistry[target].Get<T>();
+    public Span<EmitterMessage<T>> GetQueue<T>(RenderTargetId target) where T : unmanaged, IDrawCommandMessage
+        => CollectionsMarshal.AsSpan((List<EmitterMessage<T>>)_queueRegistry[target].Get<T>());
 
-    public void Clear()
+    public void ClearData()
     {
-        foreach (var clearHandler in _clearHandlers)
+        foreach (var (_,__,clearHandler) in _clearHandlers)
             clearHandler();
         /*
         foreach (var registry in _queueRegistry.Values)
-        {
             foreach (var obj in registry.Values)
-            {
                 ((dynamic)obj).Clear();
-
-            }
-            
-            //((dynamic)queue.Get()).Clear();
-        }
         */
     }
-
-    private interface IDrawCommandSubmitterBucket
-    {
-        public void Clear();
-    }
-    private sealed class DrawCommandSubmitterBucket<T>: IDrawCommandSubmitterBucket where T : unmanaged, IDrawCommandMessage
-    {
-        private readonly TypeRegistryCollection<List<(T cmd, DrawCommandMeta meta)>> _registryBucket;
-        private readonly Action _clearHandler;
-
-        public DrawCommandSubmitterBucket()
-        {
-            _registryBucket = new TypeRegistryCollection<List<(T cmd, DrawCommandMeta meta)>>();
-            _clearHandler = () =>
-            {
-                foreach (var registry in _registryBucket.Values)
-                {
-                    registry.Clear();
-                }
-            };
-        }
-
-        public void Clear()
-        {
-            foreach (var registry in _registryBucket.Values)
-            {
-                registry.Clear();
-            }
-        }
-
-    }
-    /*
-    private sealed class RegistryBucket<T> where T : unmanaged, IDrawCommandMessage
-    {
-        private TypeRegistryCollection<List<(T cmd, DrawCommandMeta meta)>> _registryBucket;
-        private Action _clearHandler;
-
-        public RegistryBucket()
-        {
-            _registryBucket = new TypeRegistryCollection<List<(T cmd, DrawCommandMeta meta)>>();
-            _clearHandler = () =>
-            {
-                _
-            }
-        }
-    }
-    */
 
 }

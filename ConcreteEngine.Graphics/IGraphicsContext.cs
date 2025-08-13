@@ -19,6 +19,7 @@ public interface IGraphicsContext
 
     void Begin(in RenderFrameContext frameCtx);
     void BeginRender();
+
     void End();
 /*
     void BindRenderPass();
@@ -39,10 +40,10 @@ public interface IGraphicsContext
     void BindIndexBuffer(ushort resourceId);
 
     void SetVertexBuffer<T>(ReadOnlySpan<T> data) where T : unmanaged;
-    void SetIndexBuffer(ReadOnlySpan<uint> data);
+    void SetIndexBuffer<T>(ReadOnlySpan<T> data) where T : unmanaged;
 
     void UploadVertexBuffer<T>(ReadOnlySpan<T> data, int offsetElements) where T : unmanaged;
-    void UploadIndexBuffer(ReadOnlySpan<uint> data, int offsetElements);
+    void UploadIndexBuffer<T>(ReadOnlySpan<T> data, int offsetElements) where T : unmanaged;
 
     void Draw(uint drawCount = 0);
     void DrawIndexed(uint drawCount = 0);

@@ -7,15 +7,15 @@ using ConcreteEngine.Graphics.Primitives;
 
 #endregion
 
-namespace ConcreteEngine.Core.Rendering.Sprite;
+namespace ConcreteEngine.Core.Rendering.SpriteBatching;
 
-internal readonly struct SpriteBatchResult(ushort meshId, uint drawCount)
+public readonly struct SpriteBatchBuildResult(ushort meshId, uint drawCount)
 {
     public readonly ushort MeshId = meshId;
     public readonly uint DrawCount = drawCount;
 }
 
-internal sealed class SpriteBatch : IDisposable
+internal sealed class SpriteBatchMesh : IDisposable
 {
     private const int VerticesPerSprite = 4;
     private const int IndicesPerSprite = 6;
@@ -31,7 +31,7 @@ internal sealed class SpriteBatch : IDisposable
 
     private bool _disposed = false;
 
-    public SpriteBatch(IGraphicsDevice graphics, int capacity)
+    public SpriteBatchMesh(IGraphicsDevice graphics, int capacity)
     {
         var minSpriteBatchSize = graphics.Configuration.MinSpriteBatchSize;
         var maxSpriteBatchSize = graphics.Configuration.MaxSpriteBatchSize;
@@ -43,10 +43,10 @@ internal sealed class SpriteBatch : IDisposable
         _ctx = graphics.Ctx;
         _capacity = capacity;
 
-        var meshData = new MeshDescriptor<Vertex2D>
+        var meshData = new MeshDescriptor<Vertex2D,ushort>
         {
             VertexBuffer = new MeshDataBufferDescriptor<Vertex2D>(BufferUsage.StreamDraw, null),
-            IndexBuffer = new MeshDataBufferDescriptor<uint>(BufferUsage.StaticDraw, null),
+            IndexBuffer = new MeshDataBufferDescriptor<ushort>(BufferUsage.StaticDraw, null),
             VertexPointers =
             [
                 VertexAttributeDescriptor.Make<Vertex2D>("aPos", nameof(Vertex2D.Position)),
@@ -76,23 +76,24 @@ internal sealed class SpriteBatch : IDisposable
 
     private void InitIndexBufferData()
     {
-        Span<uint> indices = stackalloc uint[_capacity * IndicesPerSprite];
+        Span<ushort> indices = stackalloc ushort[_capacity * IndicesPerSprite];
         for (int i = 0; i < _capacity; i++)
         {
-            int vi = i * 4;
-            int ii = i * 6;
-            indices[ii + 0] = (uint)(vi + 0);
-            indices[ii + 1] = (uint)(vi + 1);
-            indices[ii + 2] = (uint)(vi + 2);
-            indices[ii + 3] = (uint)(vi + 2);
-            indices[ii + 4] = (uint)(vi + 1);
-            indices[ii + 5] = (uint)(vi + 3);
+            int vi = (ushort)(i * 4);
+            int ii = (ushort)(i * 6);
+            indices[ii + 0] = (ushort)(vi + 0);
+            indices[ii + 1] = (ushort)(vi + 1);
+            indices[ii + 2] = (ushort)(vi + 2);
+            indices[ii + 3] = (ushort)(vi + 2);
+            indices[ii + 4] = (ushort)(vi + 1);
+            indices[ii + 5] = (ushort)(vi + 3);
         }
 
-        _ctx.SetIndexBuffer(indices);
+
+        _ctx.SetIndexBuffer<ushort>(indices);
     }
 
-    public SpriteBatchResult BuildSpriteBatch(ReadOnlySpan<SpriteBatchDrawItem> commands)
+    public SpriteBatchBuildResult BuildSpriteBatch(ReadOnlySpan<SpriteDrawData> commands)
     {
         int spriteCount = commands.Length;
         if (spriteCount == 0)
@@ -156,7 +157,7 @@ internal sealed class SpriteBatch : IDisposable
         
         var drawCount = (uint)(spriteCount * IndicesPerSprite);
 
-        return new SpriteBatchResult(_meshId, drawCount);
+        return new SpriteBatchBuildResult(_meshId, drawCount);
     }
 
     public void Dispose()

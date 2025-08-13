@@ -202,9 +202,9 @@ public sealed class GlGraphicsContext : IGraphicsContext
         SetBufferData<GlVertexBuffer, T>(_boundVertexBufferId, data);
     }
 
-    public void SetIndexBuffer(ReadOnlySpan<uint> data)
+    public void SetIndexBuffer<T>(ReadOnlySpan<T> data) where T: unmanaged
     {
-        SetBufferData<GlIndexBuffer, uint>(_boundIndexBufferId, data);
+        SetBufferData<GlIndexBuffer, T>(_boundIndexBufferId, data);
     }
 
     private void SetBufferData<TBuffer, TData>(ushort resourceId, ReadOnlySpan<TData> data) 
@@ -228,9 +228,9 @@ public sealed class GlGraphicsContext : IGraphicsContext
         UploadBufferData<GlVertexBuffer,T>(_boundVertexBufferId, data, offsetElements);
     }
 
-    public void UploadIndexBuffer(ReadOnlySpan<uint> data, int offsetElements)
+    public void UploadIndexBuffer<T>(ReadOnlySpan<T> data, int offsetElements)where T : unmanaged
     {
-        UploadBufferData<GlIndexBuffer, uint>(_boundIndexBufferId, data, offsetElements);
+        UploadBufferData<GlIndexBuffer, T>(_boundIndexBufferId, data, offsetElements);
     }
 
     private void UploadBufferData<TBuffer, TData>(ushort resourceId, ReadOnlySpan<TData> data, int offsetElements) 
@@ -284,7 +284,7 @@ public sealed class GlGraphicsContext : IGraphicsContext
 
         var count = drawCount > 0 ? drawCount : mesh.DrawCount;
 
-        _gl.DrawElements(PrimitiveType.Triangles, count, DrawElementsType.UnsignedInt, (void*)0);
+        _gl.DrawElements(PrimitiveType.Triangles, count, mesh.ElementType, (void*)0);
         _drawTriangleCount += (int)count;
         _drawCallCount++;
     }

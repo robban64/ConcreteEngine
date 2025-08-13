@@ -19,9 +19,4 @@
         <ProjectReference Include="..\ConcreteEngine.Graphics\ConcreteEngine.Graphics.csproj" />
     </ItemGroup>
 
-    <ItemGroup>
-      <Folder Include="Factory\" />
-      <Folder Include="Game\Legacy\" />
-    </ItemGroup>
-
 </Project>

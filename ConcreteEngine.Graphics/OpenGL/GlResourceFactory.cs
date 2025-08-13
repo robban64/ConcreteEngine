@@ -1,5 +1,6 @@
 #region
 
+using System.Runtime.CompilerServices;
 using ConcreteEngine.Graphics.Data;
 using ConcreteEngine.Graphics.Definitions;
 using ConcreteEngine.Graphics.Error;
@@ -14,7 +15,9 @@ internal class GlResourceFactory(GlGraphicsContext ctx)
 {
     private GL Gl = ctx.Gl;
 
-    public GlMesh CreateMesh<T>(GlGraphicsDevice graphics, MeshDescriptor<T> descriptor) where T : unmanaged
+    public GlMesh CreateMesh<TVertex, TIndex>(GlGraphicsDevice graphics, MeshDescriptor<TVertex, TIndex> descriptor)
+        where TVertex : unmanaged
+        where TIndex : unmanaged
     {
         var vertexBufferDesc = descriptor.VertexBuffer;
         var indexBufferDesc = descriptor.IndexBuffer;
@@ -25,12 +28,12 @@ internal class GlResourceFactory(GlGraphicsContext ctx)
         var vertexBuffer = graphics.CreateVertexBuffer(vertexBufferDesc.Usage);
         ctx.BindVertexBuffer(vertexBuffer);
         if (vertexBufferDesc.Data is not null)
-            ctx.SetVertexBuffer<T>(vertexBufferDesc.Data.AsSpan());
+            ctx.SetVertexBuffer<TVertex>(vertexBufferDesc.Data.AsSpan());
 
         var indexBuffer = graphics.CreateIndexBuffer(indexBufferDesc.Usage);
         ctx.BindIndexBuffer(indexBuffer);
         if (indexBufferDesc.Data is not null)
-            ctx.SetIndexBuffer(indexBufferDesc.Data.AsSpan());
+            ctx.SetIndexBuffer<TIndex>(indexBufferDesc.Data.AsSpan());
 
         for (int i = 0; i < descriptor.VertexPointers.Length; i++)
         {
@@ -45,9 +48,23 @@ internal class GlResourceFactory(GlGraphicsContext ctx)
 
         var vertexBufferSize = vertexBufferDesc.Data?.Length ?? 0;
         var indexBufferSize = indexBufferDesc.Data?.Length ?? 0;
+
+        uint drawCount = descriptor.DrawCount.HasValue switch
+        {
+            true => descriptor.DrawCount.Value,
+            _ => (uint)(indexBuffer > 0 ? indexBufferSize : vertexBufferSize)
+        };
+
+        var elementSize = Unsafe.SizeOf<TIndex>();
+        var elementType = elementSize switch
+        {
+            1 => DrawElementsType.UnsignedByte,
+            2 => DrawElementsType.UnsignedShort,
+            3 => DrawElementsType.UnsignedInt,
+            _ => throw new GraphicsException($"Index Element Size {elementSize} is not supported")
+        };
         
-        uint drawCount = (uint)(indexBuffer > 0 ? indexBufferSize : vertexBufferSize);
-        var mesh = new GlMesh(handle, vertexBuffer, indexBuffer, descriptor.VertexPointers, drawCount);
+        var mesh = new GlMesh(handle, vertexBuffer, indexBuffer, descriptor.VertexPointers, drawCount, elementType);
         return mesh;
     }
 
@@ -89,7 +106,8 @@ internal class GlResourceFactory(GlGraphicsContext ctx)
         return texture;
     }
 
-    public (GlShader shader, uint handle, UniformTable uniformTable) CreateShader(string vertexSource, string fragmentSource)
+    public (GlShader shader, uint handle, UniformTable uniformTable) CreateShader(string vertexSource,
+        string fragmentSource)
     {
         uint vertexShader = CreateShader(ShaderType.VertexShader, vertexSource);
         uint fragmentShader = CreateShader(ShaderType.FragmentShader, fragmentSource);

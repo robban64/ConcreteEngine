@@ -1,13 +1,19 @@
 using Silk.NET.Input;
 using Silk.NET.Maths;
 
-namespace ConcreteEngine.Core.Module;
+namespace ConcreteEngine.Core.Game.Camera;
 
-public sealed class RtsCameraModule: GameModule
+public sealed class RtsCameraFeature: GameFeature
 {
     public override bool IsUpdateable => true;
-    public override bool IsRenderable => false;
 
+    public override void Load()
+    {
+    }
+
+    public override void Unload()
+    {
+    }
 
     public override void Update(float dt)
     {
@@ -29,5 +35,5 @@ public sealed class RtsCameraModule: GameModule
         else if (input.IsKeyDown(Key.S)) camera.Position += new Vector2D<float>(0, dt * speed);
 
     }
-
+    
 }

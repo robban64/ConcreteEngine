@@ -6,7 +6,7 @@ using Silk.NET.Windowing;
 
 #endregion
 
-namespace ConcreteEngine.Core;
+namespace ConcreteEngine.Core.Utils;
 
 public sealed class GameEngineBuilder
 {

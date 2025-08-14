@@ -29,7 +29,7 @@ public sealed class FeatureRegistry: IFeatureRegistry
         throw new InvalidOperationException($"Feature {typeof(T).Name} is not registered.");
     }
     
-    internal void UpdateTick(int tick)
+    internal void GameTickUpdate(int tick)
     {
         if(_features.Values.Count == 0) return;
         

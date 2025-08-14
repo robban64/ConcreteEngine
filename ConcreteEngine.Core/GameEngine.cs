@@ -6,6 +6,7 @@ using ConcreteEngine.Core.Configuration;
 using ConcreteEngine.Core.Input;
 using ConcreteEngine.Core.Pipeline;
 using ConcreteEngine.Core.Rendering;
+using ConcreteEngine.Core.Time;
 using ConcreteEngine.Core.Utils;
 using ConcreteEngine.Graphics;
 using ConcreteEngine.Graphics.Data;
@@ -31,6 +32,8 @@ public sealed class GameEngine: IDisposable
     private readonly TypeRegistryCollection<IGameEngineSystem> _systems = new(4);
     private readonly FeatureRegistry _features = new();
     
+    private readonly GameTime _gameTime;
+
     private IGraphicsDevice _graphics  = null!;
     
     private InputSystem _input = null!;
@@ -39,16 +42,12 @@ public sealed class GameEngine: IDisposable
     private GameMessagePipelineSystem _pipeline  = null!;
     private CameraSystem _camera = null!;
     
-    
     private int? _nextSceneIndex = null;
     private GameScene _currentScene = null!;
-
     
     private bool _isDisposed = false;
 
-
-    private TickTimer _gameTimer = new TickTimer(1 / 30f);
-    private TickTimer _fpsCounter = new TickTimer(1);
+    private float _fps;
     
     internal GameEngine(
         WindowOptions windowOptions,
@@ -58,6 +57,7 @@ public sealed class GameEngine: IDisposable
     )
     {
         _sceneFactories = sceneFactories;
+        _gameTime = new GameTime(GameTickUpdate, FpsTickUpdate);
         
         _window = Window.Create(windowOptions);
 
@@ -78,6 +78,16 @@ public sealed class GameEngine: IDisposable
         => _features.RegisterFeature<T>();
 
     public T GetSystem<T>() where T: IGameEngineSystem =>  (T)_systems.Get<T>();
+
+    private void GameTickUpdate(int tick)
+    {
+        _features.GameTickUpdate(tick);
+    }
+
+    private void FpsTickUpdate(int tick)
+    {
+        Console.WriteLine($"Fps: {_fps} with tick {tick}");
+    }
 
     private void Load(GraphicsBackend backend, AssetManagerConfiguration assetPipelineConfiguration)
     {
@@ -136,6 +146,7 @@ public sealed class GameEngine: IDisposable
     {
         float dt = (float)delta;
         float fps = dt > 0 ? 1.0f / dt : 0.0f;
+        _fps = fps;
 
         var frameCtx = new RenderFrameContext
         {
@@ -145,30 +156,17 @@ public sealed class GameEngine: IDisposable
             ViewportSize = _window.Size
         };
         
-        _gameTimer.Accumulate(dt);
-        
         _input.Update();
         _camera.Update(in frameCtx);
         
         // fixed-step simulation
-        int tick;
-        while (_gameTimer.TryDequeueTick(out tick))
-        {
-            _currentScene?.TickUpdate(tick);
-            UpdateTick(tick);
-            //_pipeline.ProcessTick(_simulationTick);
-        }
+        _gameTime.Advance(dt);
 
         // TODO: Store for render use
         // Usage: Vector2.Lerp(prev.Pos, curr.Pos, renderAlpha);
-        float renderAlpha = _gameTimer.Accumulator / GameDt;
+        //float renderAlpha = _gameTimer.Accumulator / GameDt;
         
         UpdateSceneTransitionIfNeeded();
-    }
-
-    private void UpdateTick(int tick)
-    {
-        _features.UpdateTick(tick);
     }
 
     private void Render(double delta)
@@ -184,21 +182,11 @@ public sealed class GameEngine: IDisposable
             ViewportSize = _window.Size
         };
 
-        _fpsCounter.Accumulate(dt);
-
         _graphics.StartFrame(in frameCtx);
         _renderer.Prepare();
         _graphics.StartDraw();
         _renderer.Execute();
         _graphics.EndFrame();
-
-
-        int tick;
-        while (_fpsCounter.TryDequeueTick(out tick))
-        {
-            Console.WriteLine($"Fps: {fps} with tick {tick}");
-
-        }
     }
 
 

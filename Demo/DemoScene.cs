@@ -2,13 +2,10 @@
 
 using ConcreteEngine.Core;
 using ConcreteEngine.Core.Assets;
-using ConcreteEngine.Core.Game.Camera;
 using ConcreteEngine.Core.Game.SpriteBatch;
 using ConcreteEngine.Core.Game.Terrain;
 using ConcreteEngine.Core.Rendering;
 using ConcreteEngine.Core.Rendering.Materials;
-using ConcreteEngine.Core.Rendering.SpriteBatching;
-using ConcreteEngine.Core.Rendering.Tilemap;
 using ConcreteEngine.Graphics.Definitions;
 using Silk.NET.Maths;
 
@@ -18,24 +15,24 @@ namespace Demo;
 
 public class DemoScene : GameScene
 {
-    protected override void Configure()
+    public override void Configure()
     {
-        RegisterFeature<TilemapFeature>();
-        RegisterFeature<SpriteFeature>();
-        RegisterFeature<RtsCameraFeature>();
+        Context.RegisterFeature<TilemapFeature>();
+        Context.RegisterFeature<SpriteFeature>();
     }
 
-    protected override void OnReady()
+    public override void OnReady()
     {
-        var spriteModule = GetFeature<SpriteFeature>();
-        var tilemapFeature = GetFeature<TilemapFeature>();
+        var renderer = Context.GetSystem<RenderSystem>();
+        var assets = Context.GetSystem<AssetSystem>();
 
-        var renderer = Context.Renderer;
-        var assets = Context.Assets;
+        var spriteModule = Context.GetFeature<SpriteFeature>();
+        var tilemapFeature = Context.GetFeature<TilemapFeature>();
 
-        var spriteShader = Context.Assets.Get<Shader>("SpriteShader");
-        var spriteTexture = Context.Assets.Get<Texture2D>("SpriteTexture");
-        var tilemapTexture = Context.Assets.Get<Texture2D>("TilemapTextureAtlas");
+
+        var spriteShader = assets.Get<Shader>("SpriteShader");
+        var spriteTexture = assets.Get<Texture2D>("SpriteTexture");
+        var tilemapTexture = assets.Get<Texture2D>("TilemapTextureAtlas");
 
         
         renderer.AddMaterial(new MaterialDescription(
@@ -57,7 +54,11 @@ public class DemoScene : GameScene
         renderer.RegisterEmitter(1, new SpriteDrawEmitter { SpriteFeature = spriteModule });
     }
 
-    protected override void Unload()
+    public override void TickUpdate(int tick)
+    {
+    }
+
+    public override void Unload()
     {
     }
 }

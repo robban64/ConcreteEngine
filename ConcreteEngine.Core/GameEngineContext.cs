@@ -10,32 +10,31 @@ using ConcreteEngine.Graphics;
 
 namespace ConcreteEngine.Core;
 
-public sealed class GameEngineContext
+public sealed class GameSceneContext
 {
-    private readonly GameMessagePipeline _pipeline;
-    public InputManager Input { get; init; }
-    public AssetManager Assets { get; init; }
-    public IGraphicsDevice Graphics { get; init; }
-    
-    public RenderPipeline Renderer { get; init; }
+    private readonly GameEngine _engine;
 
-    internal GameEngineContext(
-        GameMessagePipeline pipeline, 
-        InputManager input, 
-        AssetManager assets,
-        IGraphicsDevice graphics,  
-        RenderPipeline renderer
-        )
+    public void RegisterFeature<T>() where T : IGameFeature, new()
+        => _engine.RegisterFeature<T>();
+
+    public T GetFeature<T>() where T : IGameFeature => _engine.GetFeature<T>();
+    public T GetSystem<T>() where T : IGameEngineSystem => _engine.GetSystem<T>();
+
+    internal GameSceneContext(GameEngine engine)
     {
-        _pipeline = pipeline;
-        Input = input;
-        Assets = assets;
-        Graphics = graphics;
-        Renderer = renderer;
+        _engine = engine;
+    }
+}
+
+public sealed class GameFeatureContext
+{
+    private readonly GameSceneContext _scene;
+
+    public T GetSystem<T>() where T : IGameEngineSystem => _scene.GetSystem<T>();
+
+    internal GameFeatureContext(GameSceneContext scene)
+    {
+        _scene = scene;
     }
 
-    public IDisposable Subscribe<TEvent>(Action<IGameEvent> handler) where TEvent : IGameEvent =>
-        _pipeline.Subscribe<TEvent>(handler);
-
-    public void Publish<TCommand>(TCommand command) where TCommand : IGameCommand => _pipeline.Enqueue(command);
 }

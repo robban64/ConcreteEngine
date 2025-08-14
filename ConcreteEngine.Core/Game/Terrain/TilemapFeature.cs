@@ -3,7 +3,7 @@ using ConcreteEngine.Core.Utils;
 
 namespace ConcreteEngine.Core.Game.Terrain;
 
-public class TilemapFeature: GameFeature
+public class TilemapFeature: IGameFeature
 {
     public int MapDimension { get; } = 64;
     public int TileSize { get; } = 32;
@@ -12,20 +12,22 @@ public class TilemapFeature: GameFeature
     public SpriteAtlas  TilemapAtlas { get; set; } = null!;
 
     
-    public override bool IsUpdateable => true;
-    
-    public override void Load()
+    public bool IsUpdateable => true;
+    public int Order { get; set; }
+
+    public void Load(GameFeatureContext context)
     {
-        TilemapShader = Context.Assets.Get<Shader>("SpriteShader");
-        TilemapTexture = Context.Assets.Get<Texture2D>("TilemapTextureAtlas");
+        var assets = context.GetSystem<AssetSystem>();
+        TilemapShader = assets.Get<Shader>("SpriteShader");
+        TilemapTexture = assets.Get<Texture2D>("TilemapTextureAtlas");
         TilemapAtlas = new SpriteAtlas(32, TilemapTexture);
         
     }
     
-    public override void Update(float dt)
+    public void UpdateTick(int tick)
     {
     }
-    public override void Unload()
+    public void Unload()
     {
     }
 }

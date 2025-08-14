@@ -15,7 +15,7 @@ using static ConcreteEngine.Core.Rendering.RenderConsts;
 
 namespace ConcreteEngine.Core.Rendering;
 
-public sealed class RenderPipeline
+public sealed class RenderSystem : IGameEngineSystem
 {
     private readonly IGraphicsDevice _graphics;
     private readonly IGraphicsContext _ctx;
@@ -37,7 +37,7 @@ public sealed class RenderPipeline
     
 
 
-    internal RenderPipeline(IGraphicsDevice graphics, Shader[] shaders)
+    internal RenderSystem(IGraphicsDevice graphics, Shader[] shaders)
     {
         _graphics = graphics;
         _ctx = graphics.Ctx;
@@ -118,5 +118,10 @@ public sealed class RenderPipeline
         _ctx.SetUniform(ShaderUniform.ModelMatrix, in data.Transform);
         _ctx.BindMesh(data.MeshId);
         _ctx.DrawIndexed(data.DrawCount);
+    }
+
+    public void Dispose()
+    {
+        
     }
 }

@@ -1,6 +1,6 @@
 namespace ConcreteEngine.Core.Pipeline;
 
-internal sealed class EventBus
+internal sealed class EventBus : IDisposable
 {
     private readonly Dictionary<Type, List<Action<IGameEvent>>> _subscribers = new();
     
@@ -99,5 +99,10 @@ internal sealed class EventBus
             _d();
             _x = true;
         }
+    }
+
+    public void Dispose()
+    {
+        throw new NotImplementedException();
     }
 }

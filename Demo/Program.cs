@@ -10,8 +10,6 @@ using Silk.NET.Windowing;
 
 #endregion
 
-var gameProgram = new DemoGameProgram();
-
 var builder = new GameEngineBuilder()
     .WithGraphicsBackend(GraphicsBackend.OpenGL)
     .WithWindowOptions(() =>
@@ -21,7 +19,7 @@ var builder = new GameEngineBuilder()
         return options;
     })
     .ConfigureAssetManager(new AssetManagerConfiguration())
-    .BindProgram(gameProgram);
+    .RegisterScene<DemoScene>();
 
 using (var gameEngine = builder.Build())
 {

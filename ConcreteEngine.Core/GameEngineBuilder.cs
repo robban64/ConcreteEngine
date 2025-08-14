@@ -13,7 +13,7 @@ public sealed class GameEngineBuilder
     private WindowOptions? _windowOptions = null;
     private GraphicsBackend? _graphicsBackend = null;
     private AssetManagerConfiguration? _assetPipelineConfiguration = null;
-    private GameProgram? _program = null;
+    private readonly List<Func<GameScene>> _sceneFactories = new();
 
 
     public GameEngine Build()
@@ -21,13 +21,13 @@ public sealed class GameEngineBuilder
         if (!_windowOptions.HasValue) throw new InvalidOperationException("WindowOptions not set");
         if (!_graphicsBackend.HasValue) throw new InvalidOperationException("GraphicsBackend not set");
         if (_assetPipelineConfiguration is null) throw new InvalidOperationException("AssetManager not configured");
-        if (_program is null) throw new InvalidOperationException("GameProgram not configured");
+        if (_sceneFactories.Count < 0) throw new InvalidOperationException("No GameScene registered");
 
         return new GameEngine(
-            program:_program,
             windowOptions: _windowOptions.Value,
             backend: _graphicsBackend.Value,
-            assetPipelineConfiguration: _assetPipelineConfiguration
+            assetPipelineConfiguration: _assetPipelineConfiguration,
+            sceneFactories: _sceneFactories
         );
     }
 
@@ -44,11 +44,12 @@ public sealed class GameEngineBuilder
         return this;
     }
     
-    public GameEngineBuilder BindProgram(GameProgram program)
+    public GameEngineBuilder RegisterScene<T>() where T : GameScene, new()
     {
-        _program = program;
+        _sceneFactories.Add(() => new T());
         return this;
     } 
+    
     public GameEngineBuilder ConfigureAssetManager(AssetManagerConfiguration assetPipelineConfiguration)
     {
         _assetPipelineConfiguration = assetPipelineConfiguration;

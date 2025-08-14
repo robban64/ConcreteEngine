@@ -18,7 +18,8 @@
     },
     {
       "name": "TilemapTextureAtlas",
-      "path": "terrain_tiles.png"
+      "path": "terrain_tiles.png",
+      "preset": "NearestClamp"
 
     }
   ]

@@ -3,24 +3,24 @@ namespace ConcreteEngine.Core;
 
 public interface IFeatureRegistry
 {
-    public FeatureRegistry RegisterFeature<T>() where T : GameFeature, new();
-    public T Get<T>() where T : GameFeature;
+    public FeatureRegistry RegisterFeature<T>() where T : IGameFeature, new();
+    public T Get<T>() where T : IGameFeature;
 }
 
 public sealed class FeatureRegistry: IFeatureRegistry
 {
-    private readonly List<(Func<GameEngineContext, GameFeature> factory, int)> _handlerRegistry = new(8);
-    private readonly SortedList<int, GameFeature> _features = new(8);
+    private readonly List<(Func<IGameFeature> factory, int)> _factoryRegistry = new(8);
+    private readonly SortedList<int, IGameFeature> _features = new(8);
     
     public bool IsReady { get; private set; } = false;
     
-    public FeatureRegistry RegisterFeature<T>()where T : GameFeature, new()
+    public FeatureRegistry RegisterFeature<T>()where T : IGameFeature, new()
     {
-        _handlerRegistry.Add((context => new T(), _handlerRegistry.Count));
+        _factoryRegistry.Add((() => new T(), _factoryRegistry.Count));
         return this;
     }
     
-    public T Get<T>() where T : GameFeature
+    public T Get<T>() where T : IGameFeature
     {
         foreach (var feature in _features.Values)
         {
@@ -29,33 +29,33 @@ public sealed class FeatureRegistry: IFeatureRegistry
         throw new InvalidOperationException($"Feature {typeof(T).Name} is not registered.");
     }
     
-    internal void Update(float dt)
+    internal void UpdateTick(int tick)
     {
+        if(_features.Values.Count == 0) return;
+        
         foreach (var service in _features.Values)
         {
             if (service.IsUpdateable)
-                service.Update(dt);
+                service.UpdateTick(tick);
         }
     }
 
-    internal void Load(GameEngineContext context)
+    internal void Load(GameFeatureContext context)
     {
-        foreach (var (factory, order) in _handlerRegistry)
+        foreach (var (factory, order) in _factoryRegistry)
         {
             if (_features.ContainsKey(order))
                 throw new InvalidOperationException($"Duplicate feature registered for order: {order}");
 
-            var feature = factory(context);
+            var feature = factory();
+            feature.Order = order;
             _features.Add(order, feature);
         }
 
-        foreach (var (order,feature) in _features)
-            feature.AttatchContext(context, order);
-        
         foreach (var feature in _features.Values)
-            feature.Load();
+            feature.Load(context);
 
-
+        _factoryRegistry.Clear();
         IsReady = true;
     }
 

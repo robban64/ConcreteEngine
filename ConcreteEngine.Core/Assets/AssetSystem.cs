@@ -8,11 +8,11 @@ using ConcreteEngine.Graphics;
 
 namespace ConcreteEngine.Core.Assets;
 
-public sealed class AssetManager(
+public sealed class AssetSystem(
     IGraphicsDevice graphics,
     string assetPath = "assets",
     string manifestFilename = "manifest.json"
-) : IDisposable
+) : IGameEngineSystem
 {
     private readonly Dictionary<string, IAssetFile> _store = new();
 

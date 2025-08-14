@@ -1,4 +1,6 @@
 using ConcreteEngine.Core.Assets;
+using ConcreteEngine.Core.Input;
+using ConcreteEngine.Core.Rendering;
 using ConcreteEngine.Core.Utils;
 using ConcreteEngine.Graphics;
 using Silk.NET.Input;
@@ -6,8 +8,16 @@ using Silk.NET.Maths;
 
 namespace ConcreteEngine.Core.Game.SpriteBatch;
 
-public sealed class SpriteFeature : GameFeature
+public sealed class SpriteFeature : IGameFeature
 {
+    
+    private float timer = 0;
+    public int column = 0;
+    public int row = 0;
+    
+    public bool IsUpdateable => true;
+    public int Order { get; set; }
+
     public Shader SpriteShader { get; set; } = null!;
     public Texture2D SpriteTexture { get; set; } = null!;
     public SpriteAtlas SpriteAtlas { get; set; } = null!;
@@ -17,55 +27,63 @@ public sealed class SpriteFeature : GameFeature
         Scale = new(100, 100),
     };
 
-    public override bool IsUpdateable => true;
-    
-    private float timer = 0;
-    public int column = 0;
-    public int row = 0;
-    
+    private InputSystem _input = null!;
 
-    public override void Load()
+
+    public void Load(GameFeatureContext context)
     {
-        SpriteShader = Context.Assets.Get<Shader>("SpriteShader");
-        SpriteTexture = Context.Assets.Get<Texture2D>("SpriteTexture");
+        var assets = context.GetSystem<AssetSystem>();
+        var renderer = context.GetSystem<RenderSystem>();
+        _input = context.GetSystem<InputSystem>();
+
+        SpriteShader = assets.Get<Shader>("SpriteShader");
+        SpriteTexture = assets.Get<Texture2D>("SpriteTexture");
         SpriteAtlas = new SpriteAtlas(9, 4);
         
-        Context.Renderer.SpriteBatch.CreateSpriteBatch(0, 1024);
+        renderer.SpriteBatch.CreateSpriteBatch(0, 1024);
 
     }
 
-    public override void Unload()
+    public void Unload()
     {
     }
 
 
-    public override void Update(float dt)
+    public void UpdateTick(int tick)
     {
-        const float speed = 100;
-        var input = Context.Input;
+        const float speed = 1;
+        var input = _input;
         if (input.IsKeyDown(Key.Left))
         {
-            Transform.Position -= new Vector2D<float>(dt * speed, 0);
+            Transform.Position -= new Vector2D<float>( speed, 0);
             row = 1;
         }
         else if (input.IsKeyDown(Key.Right))
         {
-            Transform.Position += new Vector2D<float>(dt * speed, 0);
+            Transform.Position += new Vector2D<float>( speed, 0);
             row = 3;
         }
         
 
-        if (input.IsKeyDown(Key.Up)) Transform.Position -= new Vector2D<float>(0, dt * speed);
-        else if (input.IsKeyDown(Key.Down)) Transform.Position += new Vector2D<float>(0, dt * speed);
-        
-        
-        timer += dt;
-        if (timer > 0.125f)
+        if (input.IsKeyDown(Key.Up)) Transform.Position -= new Vector2D<float>(0,  speed);
+        else if (input.IsKeyDown(Key.Down)) Transform.Position += new Vector2D<float>(0,  speed);
+
+        timer += 5;
+        if (timer >= 30)
+        {
+            timer -= 30;
+            column = (column + 1) % 9;
+        }
+            
+/*
+        timer += 0.33f;
+        if (timer > 1f)
         {
             timer = 0;
             column++;
             if (column >= 9) column = 0;
         }
+        */
     }
 
 }

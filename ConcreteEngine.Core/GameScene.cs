@@ -6,53 +6,21 @@ namespace ConcreteEngine.Core;
 
 public abstract class GameScene
 {
-    private readonly FeatureRegistry _featureRegistry = new();
+    protected GameSceneContext Context { get; private set; } = null!;
 
-    protected GameEngineContext Context { get; private set; } = null!;
-    protected InputManager Input => Context.Input;
-    protected AssetManager Assets => Context.Assets;
-    protected IGraphicsDevice Graphics => Context.Graphics;
-
-    protected abstract void Configure();
-    protected abstract void OnReady();
-    protected abstract void Unload();
-
+    public abstract void Configure();
+    public abstract void OnReady();
+    public abstract void TickUpdate(int tick);
+    public abstract void Unload();
 
     protected GameScene()
     {
     }
 
-    protected FeatureRegistry RegisterFeature<T>() where T : GameFeature, new()
-        => _featureRegistry.RegisterFeature<T>();
-    
-    protected T GetFeature<T>() where T : GameFeature
-        => _featureRegistry.Get<T>();
 
-
-    internal void AttachContext(GameEngineContext context)
+    internal void AttachContext(GameSceneContext context)
     {
         Context = context;
     }
 
-    internal void LoadInternal()
-    {
-        Configure();
-        _featureRegistry.Load(Context);
-        OnReady();
-    }
-
-    internal void UnloadInternal()
-    {
-        Unload();
-        _featureRegistry.Unload();
-    }
-
-    internal void Update(float dt)
-    {
-        _featureRegistry.Update(dt);
-    }
-
-    internal void Render(float dt)
-    {
-    }
 }

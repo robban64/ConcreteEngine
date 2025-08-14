@@ -2,7 +2,7 @@ using ConcreteEngine.Common.Collections;
 
 namespace ConcreteEngine.Core.Pipeline;
 
-internal sealed class GameMessagePipeline
+internal sealed class GameMessagePipelineSystem: IGameEngineSystem
 {
     private readonly EventBus _bus = new();
 
@@ -50,5 +50,9 @@ internal sealed class GameMessagePipeline
         // Example:
         // if (handler is ICommandHandler<CmdPlaceBuilding> h && cmd is CmdPlaceBuilding c)
         //     h.Handle(c, tick, _bus);
+    }
+
+    public void Dispose()
+    {
     }
 }

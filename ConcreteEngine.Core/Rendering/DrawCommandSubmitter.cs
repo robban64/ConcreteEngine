@@ -2,6 +2,7 @@ using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
 using ConcreteEngine.Common.Collections;
 using ConcreteEngine.Graphics.Definitions;
+using static ConcreteEngine.Core.Rendering.RenderConsts;
 
 namespace ConcreteEngine.Core.Rendering;
 
@@ -15,17 +16,15 @@ public sealed class DrawCommandSubmitter
 
     public DrawCommandSubmitter()
     {
-        int renderTargetCount = Enum.GetValues<RenderTargetId>().Length;
-        int drawCommandTypeCount = Enum.GetValues<DrawCommandId>().Length;
-        _commandQueues = new DrawCommandMessage[renderTargetCount][][];
-        _commandQueueIndexes = new int[renderTargetCount][];
+        _commandQueues = new DrawCommandMessage[RenderTargetCount][][];
+        _commandQueueIndexes = new int[RenderTargetCount][];
 
-        for (int i = 0; i < renderTargetCount; i++)
+        for (int i = 0; i < RenderTargetCount; i++)
         {
-            _commandQueueIndexes[i] = new int[drawCommandTypeCount];
-            _commandQueues[i] = new DrawCommandMessage[drawCommandTypeCount][];
+            _commandQueueIndexes[i] = new int[DrawCommandTypeCount];
+            _commandQueues[i] = new DrawCommandMessage[DrawCommandTypeCount][];
 
-            for (int j = 0; j < drawCommandTypeCount; j++)
+            for (int j = 0; j < DrawCommandTypeCount; j++)
                 _commandQueues[i][j] = [];
         }
     }

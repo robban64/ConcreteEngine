@@ -15,7 +15,7 @@ public interface IGraphicsDevice : IDisposable
     void StartFrame(in RenderFrameContext frameCtx);
     void StartDraw();
     void EndFrame();
-    ushort CreateShader(string vertexSource, string fragmentSource);
+    ushort CreateShader(string vertexSource, string fragmentSource, string[] samplers);
     ushort CreateTexture2D(in TextureDescriptor textureDescriptor);
     ushort CreateBuffer(BufferTarget target, BufferUsage usage);
     ushort CreateVertexBuffer(BufferUsage bufferUsage);

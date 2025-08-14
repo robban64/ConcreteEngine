@@ -1,4 +1,5 @@
 using ConcreteEngine.Core.Rendering;
+using ConcreteEngine.Core.Rendering.Materials;
 using ConcreteEngine.Core.Rendering.Tilemap;
 using ConcreteEngine.Graphics;
 using ConcreteEngine.Graphics.Definitions;
@@ -26,8 +27,7 @@ public sealed class TilemapDrawEmitter : IDrawCommandEmitter
         var cmd = new DrawCommandData(
             meshId: result.GroundLayer.MeshId,
             drawCount: result.GroundLayer.DrawCount,
-            shaderId: Tilemap.TilemapShader.ResourceId,
-            textureId: Tilemap.TilemapTexture.ResourceId,
+            materialId: MaterialId.Of(1), 
             transform: in transform
         );
         

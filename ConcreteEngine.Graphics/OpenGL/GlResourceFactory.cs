@@ -63,7 +63,7 @@ internal class GlResourceFactory(GlGraphicsContext ctx)
             3 => DrawElementsType.UnsignedInt,
             _ => throw new GraphicsException($"Index Element Size {elementSize} is not supported")
         };
-        
+
         var mesh = new GlMesh(handle, vertexBuffer, indexBuffer, descriptor.VertexPointers, drawCount, elementType);
         return mesh;
     }
@@ -95,10 +95,7 @@ internal class GlResourceFactory(GlGraphicsContext ctx)
             }
         }
 
-        Gl.TexParameter(GLEnum.Texture2D, GLEnum.TextureWrapS, (int)GLEnum.ClampToEdge);
-        Gl.TexParameter(GLEnum.Texture2D, GLEnum.TextureWrapT, (int)GLEnum.ClampToEdge);
-        Gl.TexParameter(GLEnum.Texture2D, GLEnum.TextureMinFilter, (int)GLEnum.Nearest);
-        Gl.TexParameter(GLEnum.Texture2D, GLEnum.TextureMagFilter, (int)GLEnum.Nearest);
+        SetTextureParameters(descriptor.Preset);
 
         Gl.BindTexture(GLEnum.Texture2D, 0);
 
@@ -106,8 +103,10 @@ internal class GlResourceFactory(GlGraphicsContext ctx)
         return texture;
     }
 
-    public (GlShader shader, uint handle, UniformTable uniformTable) CreateShader(string vertexSource,
-        string fragmentSource)
+    public (GlShader shader, uint handle, UniformTable uniformTable) CreateShader(
+        string vertexSource,
+        string fragmentSource, 
+        string[] samplers)
     {
         uint vertexShader = CreateShader(ShaderType.VertexShader, vertexSource);
         uint fragmentShader = CreateShader(ShaderType.FragmentShader, fragmentSource);
@@ -115,13 +114,13 @@ internal class GlResourceFactory(GlGraphicsContext ctx)
 
         var uniformDict = GetUniformsFromProgram(handle);
         var uniformTable = new UniformTable(uniformDict);
-        var shader = new GlShader(handle);
 
         Gl.DetachShader(handle, vertexShader);
         Gl.DetachShader(handle, fragmentShader);
         Gl.DeleteShader(vertexShader);
         Gl.DeleteShader(fragmentShader);
 
+        var shader = new GlShader(handle);
         return (shader, handle, uniformTable);
     }
 
@@ -182,5 +181,64 @@ internal class GlResourceFactory(GlGraphicsContext ctx)
             strideBytes,
             (void*)(offsetBytes)
         );
+    }
+
+    private void SetTextureParameters(TexturePreset preset)
+    {
+        switch (preset)
+        {
+            case TexturePreset.NearestClamp:
+                Gl.TexParameter(GLEnum.Texture2D, GLEnum.TextureWrapS, (int)GLEnum.ClampToEdge);
+                Gl.TexParameter(GLEnum.Texture2D, GLEnum.TextureWrapT, (int)GLEnum.ClampToEdge);
+                Gl.TexParameter(GLEnum.Texture2D, GLEnum.TextureMinFilter, (int)GLEnum.Nearest);
+                Gl.TexParameter(GLEnum.Texture2D, GLEnum.TextureMagFilter, (int)GLEnum.Nearest);
+                break;
+
+            case TexturePreset.NearestRepeat:
+                Gl.TexParameter(GLEnum.Texture2D, GLEnum.TextureWrapS, (int)GLEnum.Repeat);
+                Gl.TexParameter(GLEnum.Texture2D, GLEnum.TextureWrapT, (int)GLEnum.Repeat);
+                Gl.TexParameter(GLEnum.Texture2D, GLEnum.TextureMinFilter, (int)GLEnum.Nearest);
+                Gl.TexParameter(GLEnum.Texture2D, GLEnum.TextureMagFilter, (int)GLEnum.Nearest);
+                break;
+
+            case TexturePreset.LinearClamp:
+                Gl.TexParameter(GLEnum.Texture2D, GLEnum.TextureWrapS, (int)GLEnum.ClampToEdge);
+                Gl.TexParameter(GLEnum.Texture2D, GLEnum.TextureWrapT, (int)GLEnum.ClampToEdge);
+                Gl.TexParameter(GLEnum.Texture2D, GLEnum.TextureMinFilter, (int)GLEnum.Linear);
+                Gl.TexParameter(GLEnum.Texture2D, GLEnum.TextureMagFilter, (int)GLEnum.Linear);
+                break;
+
+            case TexturePreset.LinearRepeat:
+                Gl.TexParameter(GLEnum.Texture2D, GLEnum.TextureWrapS, (int)GLEnum.Repeat);
+                Gl.TexParameter(GLEnum.Texture2D, GLEnum.TextureWrapT, (int)GLEnum.Repeat);
+                Gl.TexParameter(GLEnum.Texture2D, GLEnum.TextureMinFilter, (int)GLEnum.Linear);
+                Gl.TexParameter(GLEnum.Texture2D, GLEnum.TextureMagFilter, (int)GLEnum.Linear);
+                break;
+
+            case TexturePreset.LinearMipmapClamp:
+                Gl.TexParameter(GLEnum.Texture2D, GLEnum.TextureWrapS, (int)GLEnum.ClampToEdge);
+                Gl.TexParameter(GLEnum.Texture2D, GLEnum.TextureWrapT, (int)GLEnum.ClampToEdge);
+                Gl.TexParameter(GLEnum.Texture2D, GLEnum.TextureMinFilter, (int)GLEnum.LinearMipmapLinear);
+                Gl.TexParameter(GLEnum.Texture2D, GLEnum.TextureMagFilter, (int)GLEnum.Linear);
+                break;
+
+            case TexturePreset.LinearMipmapRepeat:
+                Gl.TexParameter(GLEnum.Texture2D, GLEnum.TextureWrapS, (int)GLEnum.Repeat);
+                Gl.TexParameter(GLEnum.Texture2D, GLEnum.TextureWrapT, (int)GLEnum.Repeat);
+                Gl.TexParameter(GLEnum.Texture2D, GLEnum.TextureMinFilter, (int)GLEnum.LinearMipmapLinear);
+                Gl.TexParameter(GLEnum.Texture2D, GLEnum.TextureMagFilter, (int)GLEnum.Linear);
+                break;
+
+            case TexturePreset.PremultipliedUI:
+                Gl.TexParameter(GLEnum.Texture2D, GLEnum.TextureWrapS, (int)GLEnum.ClampToEdge);
+                Gl.TexParameter(GLEnum.Texture2D, GLEnum.TextureWrapT, (int)GLEnum.ClampToEdge);
+                Gl.TexParameter(GLEnum.Texture2D, GLEnum.TextureMinFilter, (int)GLEnum.Linear);
+                Gl.TexParameter(GLEnum.Texture2D, GLEnum.TextureMagFilter, (int)GLEnum.Linear);
+                // Could add sRGB decode disable if doing manual gamma
+                break;
+
+            default:
+                throw new ArgumentOutOfRangeException(nameof(preset), preset, null);
+        }
     }
 }

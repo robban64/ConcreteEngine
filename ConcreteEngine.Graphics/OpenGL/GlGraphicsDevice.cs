@@ -1,5 +1,3 @@
-
-
 using ConcreteEngine.Graphics.Data;
 using ConcreteEngine.Graphics.Definitions;
 using Silk.NET.OpenGL;
@@ -50,9 +48,13 @@ public sealed class GlGraphicsDevice : IGraphicsDevice<GlGraphicsContext>
         _store.FlushRemoveQueue();
     }
 
-    public ushort CreateShader(string vertexSource, string fragmentSource)
+    public ushort CreateShader(string vertexSource, string fragmentSource, string[] samplers)
     {
-        var (resource, handle, uniformTable) = _resourceFactory.CreateShader(vertexSource, fragmentSource);
+        var (resource, handle, uniformTable) = _resourceFactory.CreateShader(vertexSource, fragmentSource, samplers);
+        Gl.UseProgram(handle);
+        for (int i = 0; i < samplers.Length; i++)
+            Gl.Uniform1(uniformTable.GetUniformLocation(samplers[i]), i);
+        Gl.UseProgram(0);
         return _store.AddShaderResource(resource, uniformTable);
     }
 
@@ -61,7 +63,8 @@ public sealed class GlGraphicsDevice : IGraphicsDevice<GlGraphicsContext>
         var resource = _resourceFactory.CreateTexture2D(in textureDescriptor);
         return _store.AddResource(resource);
     }
-    public CreateMeshResult CreateMesh<TVertex, TIndex>(MeshDescriptor<TVertex, TIndex> meshData) 
+
+    public CreateMeshResult CreateMesh<TVertex, TIndex>(MeshDescriptor<TVertex, TIndex> meshData)
         where TVertex : unmanaged where TIndex : unmanaged
     {
         var resource = _resourceFactory.CreateMesh(this, meshData);
@@ -79,6 +82,7 @@ public sealed class GlGraphicsDevice : IGraphicsDevice<GlGraphicsContext>
         var resource = _resourceFactory.CreateBuffer(target, usage);
         return _store.AddResource(resource);
     }
+
     public ushort CreateVertexBuffer(BufferUsage bufferUsage) => CreateBuffer(BufferTarget.VertexBuffer, bufferUsage);
     public ushort CreateIndexBuffer(BufferUsage bufferUsage) => CreateBuffer(BufferTarget.IndexBuffer, bufferUsage);
 
@@ -86,11 +90,11 @@ public sealed class GlGraphicsDevice : IGraphicsDevice<GlGraphicsContext>
     public void Dispose()
     {
         Console.WriteLine($"Disposing {nameof(GlGraphicsDevice)} with {_store.Count} resources");
-        
+
         for (ushort i = 1; i <= _store.Count; i++)
         {
             var resource = _store.Get(i);
-            if(resource == null || resource.IsDisposed) continue;
+            if (resource == null || resource.IsDisposed) continue;
             FreeResource(resource);
         }
 
@@ -98,10 +102,9 @@ public sealed class GlGraphicsDevice : IGraphicsDevice<GlGraphicsContext>
     }
 
 
-
     private void FreeResource(IGraphicsResource resource)
     {
-        if(resource.IsDisposed) return;
+        if (resource.IsDisposed) return;
         resource.IsDisposed = true;
         switch (resource)
         {
@@ -119,9 +122,9 @@ public sealed class GlGraphicsDevice : IGraphicsDevice<GlGraphicsContext>
                 break;
             case GlMesh mesh:
                 Gl.DeleteVertexArray(mesh.Handle);
-                if (mesh.VertexBufferId != null && _store.TryGet<GlVertexBuffer>(mesh.VertexBufferId, out var vBuffer)) 
+                if (mesh.VertexBufferId != null && _store.TryGet<GlVertexBuffer>(mesh.VertexBufferId, out var vBuffer))
                     FreeResource(vBuffer);
-                if (mesh.IndexBufferId != null && _store.TryGet<GlIndexBuffer>(mesh.IndexBufferId, out var iBuffer)) 
+                if (mesh.IndexBufferId != null && _store.TryGet<GlIndexBuffer>(mesh.IndexBufferId, out var iBuffer))
                     FreeResource(iBuffer);
                 break;
         }

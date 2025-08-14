@@ -1,8 +1,10 @@
 namespace ConcreteEngine.Graphics.Definitions;
 
-public enum BlendMode
+public enum BlendMode : byte
 {
+    Unset,
     Alpha,
+    PremultipliedAlpha,
     Additive,
     None
 }

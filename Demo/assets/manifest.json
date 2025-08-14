@@ -2,11 +2,13 @@
   "shaders": [
     {
       "name": "SpriteShader",
-      "path": "sprite-shader.glsl"
+      "path": "sprite-shader.glsl",
+      "samplers": ["uTexture"]
     },
     {
       "name": "SpriteShaderOld",
-      "path": "sprite-shader-old.glsl"
+      "path": "sprite-shader-old.glsl",
+      "samplers": ["uTexture"]
     }
   ],
   "textures": [
@@ -17,6 +19,7 @@
     {
       "name": "TilemapTextureAtlas",
       "path": "terrain_tiles.png"
+
     }
   ]
 }

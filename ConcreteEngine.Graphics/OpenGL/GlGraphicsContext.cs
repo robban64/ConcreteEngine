@@ -21,6 +21,8 @@ public sealed class GlGraphicsContext : IGraphicsContext
     
     private readonly GraphicsResourceStore _store;
 
+    private BlendMode _blendMode = BlendMode.Alpha;
+    
     private ushort _boundShaderId = 0;
     private ushort _boundVertexBufferId  = 0;
     private ushort _boundIndexBufferId  = 0;
@@ -67,12 +69,21 @@ public sealed class GlGraphicsContext : IGraphicsContext
         int glVersion = glMajor * 100 + glMinor * 10;
         Console.WriteLine($"OpenGL version {glVersion} loaded ({glMajor}.{glMinor})");
         
-        SetBlendMode(BlendMode.Alpha);
         _gl.Disable(GLEnum.CullFace);
+        _gl.Disable(GLEnum.DepthTest);
+        _gl.Disable(GLEnum.Dither);
+        
+        _gl.Enable(GLEnum.Multisample);
+
+        _gl.PixelStore(GLEnum.UnpackAlignment, 1);
+
+        _gl.DepthMask(false);
     }
 
     public void Begin(in RenderFrameContext frameCtx)
     {
+        _blendMode = BlendMode.Unset;
+
         _deltaTime = frameCtx.DeltaTime;
         _framebufferSize = frameCtx.FramebufferSize;
         _viewPortSize = frameCtx.ViewportSize;
@@ -125,6 +136,38 @@ public sealed class GlGraphicsContext : IGraphicsContext
         _boundShaderId = resourceId;
         _boundUniforms = uniformTable;
     }
+    
+    public void SetBlendMode(BlendMode blendMode)
+    {
+        if(_blendMode != BlendMode.Unset && _blendMode == blendMode) return;
+
+        _blendMode = blendMode;
+        
+        switch (blendMode)
+        {
+            case BlendMode.Alpha:
+                _gl.Enable(EnableCap.Blend);
+                _gl.BlendEquation(GLEnum.FuncAdd);
+                _gl.BlendFunc(BlendingFactor.SrcAlpha, BlendingFactor.OneMinusSrcAlpha);
+                break;
+            case BlendMode.PremultipliedAlpha:
+                _gl.Enable(EnableCap.Blend);
+                _gl.BlendEquation(GLEnum.FuncAdd);
+                _gl.BlendFunc(BlendingFactor.One, BlendingFactor.OneMinusSrcAlpha);
+                break;
+            case BlendMode.Additive:
+                _gl.Enable(EnableCap.Blend);
+                _gl.BlendEquation(GLEnum.FuncAdd);
+                _gl.BlendFunc(BlendingFactor.SrcAlpha, BlendingFactor.One);
+                break;
+            case BlendMode.None:
+                _gl.Disable(EnableCap.Blend);
+                break;
+            default:
+                throw new ArgumentOutOfRangeException(nameof(blendMode), blendMode, null);
+        }
+    }
+
 
     public void BindTexture(ushort resourceId, uint slot)
     {
@@ -294,23 +337,6 @@ public sealed class GlGraphicsContext : IGraphicsContext
         _gl.BindFramebuffer(FramebufferTarget.Framebuffer, 0);
     }
 
-    public void SetBlendMode(BlendMode blendMode)
-    {
-        if (blendMode == BlendMode.Alpha)
-        {
-            _gl.Enable(EnableCap.Blend);
-            _gl.BlendFunc(BlendingFactor.SrcAlpha, BlendingFactor.OneMinusSrcAlpha);
-        }
-        else if (blendMode == BlendMode.Additive)
-        {
-            _gl.Enable(EnableCap.Blend);
-            _gl.BlendFunc(BlendingFactor.SrcAlpha, BlendingFactor.One);
-        }
-        else if (blendMode == BlendMode.None)
-        {
-            _gl.Disable(EnableCap.Blend);
-        }
-    }
 
     public IRenderTarget CreateRenderTarget()
     {

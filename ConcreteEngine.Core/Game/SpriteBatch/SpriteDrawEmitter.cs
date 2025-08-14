@@ -1,4 +1,5 @@
 using ConcreteEngine.Core.Rendering;
+using ConcreteEngine.Core.Rendering.Materials;
 using ConcreteEngine.Core.Rendering.SpriteBatching;
 using ConcreteEngine.Graphics;
 using ConcreteEngine.Graphics.Definitions;
@@ -47,8 +48,7 @@ public sealed class SpriteDrawEmitter : IDrawCommandEmitter
         
         var cmd = new DrawCommandData(
             meshId: result.MeshId,
-            shaderId: SpriteFeature.SpriteShader.ResourceId,
-            textureId: SpriteFeature.SpriteTexture.ResourceId,
+            materialId: MaterialId.Of(0), 
             drawCount: result.DrawCount,
             transform:  in DefaultTransform
         );

@@ -23,6 +23,8 @@ public sealed class UniformTable
             var uniformName = ShaderUniformValues[i].ToUniformName();
             _locs[i] = _uniformLocationDict.GetValueOrDefault(uniformName, -1);
         }
+        
+        Console.WriteLine("");
     }
 
 

@@ -1,6 +1,7 @@
 #region
 
 using System.Text.Json;
+using System.Text.Json.Serialization;
 using ConcreteEngine.Graphics;
 
 #endregion
@@ -15,6 +16,24 @@ public sealed class AssetManager(
 {
     private readonly Dictionary<string, IAssetFile> _store = new();
 
+    public T Get<T>(string name) where T : class, IAssetFile
+    {
+        if (_store.TryGetValue(name, out var asset) && asset is T typed)
+            return typed;
+
+        throw new InvalidCastException($"Asset '{name}' not found or incorrect type.");
+    }
+    
+    public List<T> GetAll<T>() where T : class, IAssetFile
+    {
+        var result = new List<T>(8);
+        foreach (var (name, asset) in _store)
+        {
+            if(asset is T typedAsset) result.Add(typedAsset);
+        }
+        return result;
+    }
+    
     internal void LoadFromManifest()
     {
         if (!Directory.Exists(assetPath))
@@ -30,7 +49,12 @@ public sealed class AssetManager(
 
         Console.WriteLine("Loading asset manifest...");
         var json = File.ReadAllText(manifestPath);
-        var jsonOptions = new JsonSerializerOptions { PropertyNamingPolicy = JsonNamingPolicy.CamelCase };
+        var jsonOptions = new JsonSerializerOptions
+        {
+            PropertyNamingPolicy = JsonNamingPolicy.CamelCase,
+            Converters = { new JsonStringEnumConverter() }
+        };
+        
         var assetEntries = JsonSerializer.Deserialize<AssetManifest>(json, jsonOptions) ??
                            throw new InvalidDataException("Invalid manifest.");
 
@@ -41,13 +65,7 @@ public sealed class AssetManager(
         Console.WriteLine("Asset manifest loaded. " + _store.Count);
     }
 
-    public T Get<T>(string name) where T : class, IAssetFile
-    {
-        if (_store.TryGetValue(name, out var asset) && asset is T typed)
-            return typed;
 
-        throw new InvalidCastException($"Asset '{name}' not found or incorrect type.");
-    }
 
     /*
     public void Remove<T>(T assetFile) where T : class, IAssetFile
@@ -74,7 +92,7 @@ public sealed class AssetManager(
     }
 
     private void LoadEntries<T, R>(List<T> entries, Func<T, R> loader)
-        where T : AssetManifestEntry where R : class, IAssetFile
+        where T : AssetManifestRecord where R : class, IAssetFile
     {
         foreach (var entry in entries)
         {

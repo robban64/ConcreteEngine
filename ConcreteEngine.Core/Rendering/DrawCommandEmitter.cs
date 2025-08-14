@@ -15,7 +15,7 @@ public interface IDrawCommandEmitter
 
 public sealed class DrawEmitterContext
 {
-    public IGraphicsDevice Graphics { get; init; }
-    public SpriteBatcher SpriteBatch { get; init; }
-    public TilemapBatcher TilemapBatch { get; init; }
+    public required IGraphicsDevice Graphics { get; init; }
+    public required SpriteBatcher SpriteBatch { get; init; }
+    public required TilemapBatcher TilemapBatch { get; init; }
 }

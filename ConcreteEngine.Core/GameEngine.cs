@@ -13,6 +13,7 @@ using ConcreteEngine.Graphics.OpenGL;
 using Silk.NET.Input;
 using Silk.NET.OpenGL;
 using Silk.NET.Windowing;
+using Shader = ConcreteEngine.Core.Assets.Shader;
 
 #endregion
 
@@ -71,19 +72,25 @@ public sealed class GameEngine: IDisposable
 
         _input = new InputManager(_window.CreateInput());
 
+        // graphics
         _graphics = backend switch
         {
             GraphicsBackend.OpenGL => new GlGraphicsDevice(_window.CreateOpenGL(), in initialFrameContext),
             _ => throw new GraphicsException("Invalid GraphicsBackend. Only OpenGL supported")
         };
-
+        
+        // assets
         _assets = new AssetManager(graphics: _graphics, assetPath: assetPipelineConfiguration.AssetPath,
             manifestFilename: assetPipelineConfiguration.ManifestFilename);
         _assets.LoadFromManifest();
-
+        
+        // messages
         _pipeline = new GameMessagePipeline();
 
-        _renderer = new RenderPipeline(_graphics);
+        // renderer
+        var shaders = _assets.GetAll<Shader>();
+        _renderer = new RenderPipeline(_graphics, shaders.ToArray());
+        
         var context = new GameEngineContext(
             pipeline: _pipeline,
             input: _input,
@@ -136,6 +143,7 @@ public sealed class GameEngine: IDisposable
         };
 
         _graphics.StartFrame(in frameCtx);
+        _renderer.Prepare();
         _boundProgram.RenderInternal(dt);
         _graphics.StartDraw();
         _renderer.Execute();

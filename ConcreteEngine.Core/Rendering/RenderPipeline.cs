@@ -1,12 +1,15 @@
 #region
 
 using System.Runtime.CompilerServices;
+using ConcreteEngine.Core.Assets;
+using ConcreteEngine.Core.Rendering.Materials;
 using ConcreteEngine.Core.Rendering.SpriteBatching;
 using ConcreteEngine.Core.Rendering.Tilemap;
 using ConcreteEngine.Graphics;
 using ConcreteEngine.Graphics.Definitions;
 using ConcreteEngine.Graphics.Error;
 using Silk.NET.Maths;
+using static ConcreteEngine.Core.Rendering.RenderConsts;
 
 #endregion
 
@@ -14,9 +17,10 @@ namespace ConcreteEngine.Core.Rendering;
 
 public sealed class RenderPipeline
 {
-    private static int RenderTargetCount = Enum.GetValues<RenderTargetId>().Length;
     private readonly IGraphicsDevice _graphics;
     private readonly IGraphicsContext _ctx;
+    
+    private readonly Shader[] _shaders;
 
     private readonly DrawCommandCollector _commandCollector;
     private readonly DrawCommandSubmitter _commandSubmitter;
@@ -27,13 +31,19 @@ public sealed class RenderPipeline
 
     private readonly SortedList<int, DrawCommandId>[] _renderPasses;
 
+    private readonly MaterialStore _materialStore;
+
     public SpriteBatcher SpriteBatch => _spriteBatch;
+    
 
 
-    internal RenderPipeline(IGraphicsDevice graphics)
+    internal RenderPipeline(IGraphicsDevice graphics, Shader[] shaders)
     {
         _graphics = graphics;
         _ctx = graphics.Ctx;
+        
+        _shaders =  shaders.ToArray();
+        _materialStore = new MaterialStore();
 
         _renderPasses = new SortedList<int, DrawCommandId>[RenderTargetCount];
         for (int i = 0; i < RenderTargetCount; i++)
@@ -62,17 +72,28 @@ public sealed class RenderPipeline
     public void RegisterEmitter<T>(int order, T emitter) where T : class, IDrawCommandEmitter
         => _commandCollector.RegisterEmitter<T>(order, emitter);
 
-
+    public void AddMaterial(MaterialDescription description)
+        => _materialStore.AddMaterial(description);
+    
     internal void Prepare()
     {
+        _commandSubmitter.ResetBufferPointer();
+        _commandCollector.Collect(_emitterContext, _commandSubmitter);
+
     }
 
     internal void Execute()
     {
-        _commandSubmitter.ResetBufferPointer();
-
-        _commandCollector.Collect(_emitterContext, _commandSubmitter);
-
+        var projectionViewMatrix = _ctx.ViewTransform.ProjectionViewMatrix;
+        
+        // setup the projection view matrix for all shaders
+        foreach (var shader in _shaders)
+        {
+            _ctx.UseShader(shader.ResourceId);
+            _ctx.SetUniform(ShaderUniform.ProjectionViewMatrix, in  projectionViewMatrix);
+        }
+        
+        
         for (int target = 0; target < RenderTargetCount; target++)
         {
             var renderTarget = (RenderTargetId)target;
@@ -92,14 +113,9 @@ public sealed class RenderPipeline
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     private void Draw(in DrawCommandData data, in DrawCommandMeta meta)
     {
-        _ctx.UseShader(data.ShaderId);
-        _ctx.SetUniform(ShaderUniform.ProjectionViewMatrix, _ctx.ViewTransform.ProjectionViewMatrix);
-
+        var material = _materialStore[data.MaterialId];
+        material.Bind(_ctx);
         _ctx.SetUniform(ShaderUniform.ModelMatrix, in data.Transform);
-        _ctx.SetUniform(ShaderUniform.SampleTexture, 0);
-
-        _ctx.BindTexture(data.TextureId, 0);
-
         _ctx.BindMesh(data.MeshId);
         _ctx.DrawIndexed(data.DrawCount);
     }

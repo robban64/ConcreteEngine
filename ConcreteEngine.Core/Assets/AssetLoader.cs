@@ -20,12 +20,12 @@ internal sealed class AssetLoader
         //StbImage.stbi_set_flip_vertically_on_load(1);
     }
 
-    private string GetEntryPath(string assetTypePath, AssetManifestEntry entry) =>
-        Path.Combine(_rootPath, assetTypePath, entry.Path);
+    private string GetEntryPath(string assetTypePath, AssetManifestRecord record) =>
+        Path.Combine(_rootPath, assetTypePath, record.Path);
 
-    public Shader LoadShader(AssetShaderEntry entry)
+    public Shader LoadShader(AssetShaderRecord record)
     {
-        var shaderText = File.ReadAllText(GetEntryPath("shaders", entry));
+        var shaderText = File.ReadAllText(GetEntryPath("shaders", record));
 
         var vertexIndex = shaderText.IndexOf("@vertex", StringComparison.Ordinal);
         var fragmentIndex = shaderText.IndexOf("@fragment", StringComparison.Ordinal);
@@ -41,39 +41,42 @@ internal sealed class AssetLoader
             .Trim();
         var fragmentSource = shaderText.Substring(fragmentIndex + "@fragment".Length).Trim();
 
-        var resourceId = _graphics.CreateShader(vertexSource, fragmentSource);
+        var resourceId = _graphics.CreateShader(vertexSource, fragmentSource, record.Samplers);
 
         return new Shader
         {
-            Name = entry.Name,
-            Path = entry.Path,
-            ResourceId = resourceId
+            Name = record.Name,
+            Path = record.Path,
+            ResourceId = resourceId,
+            Samplers = record.Samplers.Length
         };
     }
 
-    public Texture2D LoadTexture2D(AssetTextureEntry entry)
+    public Texture2D LoadTexture2D(AssetTextureRecord record)
     {
-        using var stream = File.OpenRead(GetEntryPath("textures", entry));
+        using var stream = File.OpenRead(GetEntryPath("textures", record));
         var result = ImageResult.FromStream(stream, ColorComponents.RedGreenBlueAlpha);
 
         var textureData = new TextureDescriptor
         (
-            pixelData: result.Data,
-            width: result.Width,
-            height: result.Height,
-            format: entry.PixelFormat
+            PixelData: result.Data,
+            Width: result.Width,
+            Height: result.Height,
+            Format: record.PixelFormat,
+            Preset: record.Preset
         );
 
         var resourceId = _graphics.CreateTexture2D(in textureData);
 
         return new Texture2D
         {
-            Name = entry.Name,
-            Path = entry.Path,
+            Name = record.Name,
+            Path = record.Path,
+            ResourceId = resourceId,
             Width = textureData.Width,
             Height = textureData.Height,
             PixelFormat = textureData.Format,
-            ResourceId = resourceId
+            Preset = record.Preset
         };
     }
 }

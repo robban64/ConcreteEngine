@@ -1,3 +1,4 @@
+using ConcreteEngine.Core.Rendering.Materials;
 using ConcreteEngine.Graphics.Definitions;
 using Silk.NET.Maths;
 
@@ -18,14 +19,12 @@ public readonly struct DrawCommandMessage(in DrawCommandData cmd, in DrawCommand
 
 public readonly struct DrawCommandData(
     ushort meshId,
-    ushort shaderId,
-    ushort textureId,
+    MaterialId materialId,
     uint drawCount,
     in Matrix4X4<float> transform)
 {
     public readonly ushort MeshId = meshId;
-    public readonly ushort ShaderId = shaderId;
-    public readonly ushort TextureId = textureId;
+    public readonly MaterialId MaterialId = materialId;
     public readonly uint DrawCount = drawCount;
 
     public readonly Matrix4X4<float> Transform = transform;

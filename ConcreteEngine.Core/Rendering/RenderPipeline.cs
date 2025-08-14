@@ -42,7 +42,7 @@ public sealed class RenderPipeline
         _commandCollector = new DrawCommandCollector();
         _commandSubmitter = new DrawCommandSubmitter();
 
-        _spriteBatch = new SpriteBatcher(graphics, this);
+        _spriteBatch = new SpriteBatcher(graphics);
         _tilemapBatcher = new TilemapBatcher(graphics, 64, 32);
 
         _emitterContext = new DrawEmitterContext

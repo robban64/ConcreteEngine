@@ -27,7 +27,7 @@ public sealed class SpriteDrawEmitter : IDrawCommandEmitter
     public void Emit(DrawEmitterContext context,  DrawCommandSubmitter submitter)
     {
         var spriteBatch = context.SpriteBatch;
-        spriteBatch.BeginBatch(0, SpriteFeature.SpriteTexture.ResourceId, SpriteFeature.SpriteShader.ResourceId);
+        spriteBatch.BeginBatch(0);
         for (int x = 0; x < 2; x++)
         {
             for (int y = 0; y < 2; y++)
@@ -40,8 +40,18 @@ public sealed class SpriteDrawEmitter : IDrawCommandEmitter
 
             }
         }
-        var cmd = spriteBatch.FlushBatch();
+        
+        
+        var result = spriteBatch.BuildBatch();
         var meta = new DrawCommandMeta(DrawCommandId.Sprite, RenderTargetId.None, 0);
+        
+        var cmd = new DrawCommandData(
+            meshId: result.MeshId,
+            shaderId: SpriteFeature.SpriteShader.ResourceId,
+            textureId: SpriteFeature.SpriteTexture.ResourceId,
+            drawCount: result.DrawCount,
+            transform:  in DefaultTransform
+        );
         submitter.SubmitDraw(in cmd, in meta);
     }
 }

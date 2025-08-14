@@ -2,7 +2,7 @@ using ConcreteEngine.Graphics;
 
 namespace ConcreteEngine.Core.Rendering;
 
-public abstract class RenderBatcher<T>: IDisposable where T : unmanaged
+public abstract class RenderBatcher<TBatchData>: IDisposable where TBatchData : unmanaged
 {
     protected readonly IGraphicsDevice Graphics;
     
@@ -11,7 +11,7 @@ public abstract class RenderBatcher<T>: IDisposable where T : unmanaged
         Graphics = graphics;
     }
     
-    public abstract T BuildBatch();
+    public abstract TBatchData BuildBatch();
     
     public abstract void Dispose();
 }

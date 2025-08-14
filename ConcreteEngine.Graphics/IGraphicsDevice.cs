@@ -12,7 +12,7 @@ public interface IGraphicsDevice : IDisposable
     IGraphicsContext Ctx { get; }
     GraphicsBackend BackendApi { get; }
     GraphicsConfiguration Configuration { get; }
-    void StartFrame(in RenderFrameContext frameCtx);
+    void StartFrame(in GraphicsFrameContext frameCtx);
     void StartDraw();
     void EndFrame();
     ushort CreateShader(string vertexSource, string fragmentSource, string[] samplers);

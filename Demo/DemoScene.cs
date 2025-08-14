@@ -2,7 +2,7 @@
 
 using ConcreteEngine.Core;
 using ConcreteEngine.Core.Assets;
-using ConcreteEngine.Core.Game.SpriteBatch;
+using ConcreteEngine.Core.Game.Sprite;
 using ConcreteEngine.Core.Game.Terrain;
 using ConcreteEngine.Core.Rendering;
 using ConcreteEngine.Core.Rendering.Materials;

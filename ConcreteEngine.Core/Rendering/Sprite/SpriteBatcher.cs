@@ -2,11 +2,10 @@
 
 using ConcreteEngine.Graphics;
 using ConcreteEngine.Graphics.Error;
-using Silk.NET.Maths;
 
 #endregion
 
-namespace ConcreteEngine.Core.Rendering.SpriteBatching;
+namespace ConcreteEngine.Core.Rendering.Sprite;
 
 
 

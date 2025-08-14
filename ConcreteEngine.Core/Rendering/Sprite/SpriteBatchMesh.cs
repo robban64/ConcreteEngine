@@ -7,7 +7,7 @@ using ConcreteEngine.Graphics.Primitives;
 
 #endregion
 
-namespace ConcreteEngine.Core.Rendering.SpriteBatching;
+namespace ConcreteEngine.Core.Rendering.Sprite;
 
 public readonly struct SpriteBatchBuildResult(ushort meshId, uint drawCount)
 {

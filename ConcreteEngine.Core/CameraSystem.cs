@@ -9,7 +9,7 @@ namespace ConcreteEngine.Core;
 public sealed class CameraSystem: IGameEngineSystem
 {
     private const int EdgeMarginPixels = 16;
-    private const float BaseSpeed = 900;
+    private const float BaseSpeed = 100; //= 900;
 
     private readonly InputSystem _input;
     private readonly ViewTransform2D _camera;
@@ -20,7 +20,7 @@ public sealed class CameraSystem: IGameEngineSystem
         _camera = camera;
     }
 
-    public void Update(in RenderFrameContext frameCtx)
+    public void Update(in GraphicsFrameContext frameCtx)
     {
         float speed = frameCtx.DeltaTime * BaseSpeed;
 

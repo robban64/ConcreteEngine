@@ -35,6 +35,10 @@ public sealed class SpriteAtlas
     
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public Vector2D<float> GetOffset(int column, int row) => new (Scale.X * column, Scale.Y * row);
+    
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public Vector2D<float> GetOffset(Vector2D<int> loc) => new (Scale.X * loc.X, Scale.Y * loc.Y);
+
 
     private static (int columns, int rows) FromTextureSize(int tileSize, int textureWidth, int textureHeight)
     {

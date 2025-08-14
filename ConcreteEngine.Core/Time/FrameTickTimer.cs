@@ -2,28 +2,27 @@ using System.Runtime.CompilerServices;
 
 namespace ConcreteEngine.Core.Time;
 
-internal struct TickTimer(float tickDt)
+internal struct FrameTickTimer(float tickDt)
 {
-    public readonly float TickDt = tickDt;
-    public int TickIndex = 0;
-    public float Accumulator = 0f;
+    private int _tickIndex = 0;
+    private float _accumulator = 0f;
 
     // Fraction (0..1) toward next tick for interpolation.
     public float Alpha
     {
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        get => TickDt > 0f ? Accumulator / TickDt : 0f;
+        get => tickDt > 0f ? _accumulator / tickDt : 0f;
     }
     
     
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public void Accumulate(float dt) => Accumulator += dt;
+    public void Accumulate(float dt) => _accumulator += dt;
 
     public bool TryDequeueTick(out int tickIndex)
     {
-        if (Accumulator < TickDt) { tickIndex = -1; return false; }
-        Accumulator -= TickDt;
-        tickIndex = TickIndex++;
+        if (_accumulator < tickDt) { tickIndex = -1; return false; }
+        _accumulator -= tickDt;
+        tickIndex = _tickIndex++;
         return true;
     }
     

@@ -3,7 +3,7 @@
 using System.Runtime.CompilerServices;
 using ConcreteEngine.Core.Assets;
 using ConcreteEngine.Core.Rendering.Materials;
-using ConcreteEngine.Core.Rendering.SpriteBatching;
+using ConcreteEngine.Core.Rendering.Sprite;
 using ConcreteEngine.Core.Rendering.Tilemap;
 using ConcreteEngine.Graphics;
 using ConcreteEngine.Graphics.Definitions;
@@ -82,7 +82,7 @@ public sealed class RenderSystem : IGameEngineSystem
 
     }
 
-    internal void Execute()
+    internal void Execute(float alpha)
     {
         var projectionViewMatrix = _ctx.ViewTransform.ProjectionViewMatrix;
         

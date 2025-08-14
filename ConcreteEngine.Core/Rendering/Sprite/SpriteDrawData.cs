@@ -5,7 +5,7 @@ using Silk.NET.Maths;
 
 #endregion
 
-namespace ConcreteEngine.Core.Rendering.SpriteBatching;
+namespace ConcreteEngine.Core.Rendering.Sprite;
 
 public readonly struct SpriteDrawData(
     Vector2D<float> position,

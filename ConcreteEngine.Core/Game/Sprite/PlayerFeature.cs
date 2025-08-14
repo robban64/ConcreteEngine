@@ -6,9 +6,9 @@ using ConcreteEngine.Graphics;
 using Silk.NET.Input;
 using Silk.NET.Maths;
 
-namespace ConcreteEngine.Core.Game.SpriteBatch;
+namespace ConcreteEngine.Core.Game.Sprite;
 
-public sealed class SpriteFeature : IGameFeature
+public sealed class PlayerFeature : IGameFeature
 {
     
     private float timer = 0;
@@ -51,7 +51,7 @@ public sealed class SpriteFeature : IGameFeature
 
     public void UpdateTick(int tick)
     {
-        const float speed = 1;
+        const float speed = 15;
         var input = _input;
         if (input.IsKeyDown(Key.Left))
         {

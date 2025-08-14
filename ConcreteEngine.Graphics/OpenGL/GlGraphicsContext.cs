@@ -46,7 +46,7 @@ public sealed class GlGraphicsContext : IGraphicsContext
     public GL Gl => _gl;
 
 
-    internal GlGraphicsContext(GL gl, GraphicsConfiguration configuration, GraphicsResourceStore store, in RenderFrameContext initialFrameCtx)
+    internal GlGraphicsContext(GL gl, GraphicsConfiguration configuration, GraphicsResourceStore store, in GraphicsFrameContext initialFrameCtx)
     {
         _gl = gl;
         Configuration = configuration;
@@ -80,7 +80,7 @@ public sealed class GlGraphicsContext : IGraphicsContext
         _gl.DepthMask(false);
     }
 
-    public void Begin(in RenderFrameContext frameCtx)
+    public void Begin(in GraphicsFrameContext frameCtx)
     {
         _blendMode = BlendMode.Unset;
 

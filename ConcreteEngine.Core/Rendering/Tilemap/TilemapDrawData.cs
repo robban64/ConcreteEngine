@@ -1,4 +1,3 @@
-using ConcreteEngine.Core.Rendering.SpriteBatching;
 using ConcreteEngine.Graphics;
 using Silk.NET.Maths;
 

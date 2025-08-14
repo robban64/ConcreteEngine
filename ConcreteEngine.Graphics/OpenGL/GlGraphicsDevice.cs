@@ -20,7 +20,7 @@ public sealed class GlGraphicsDevice : IGraphicsDevice<GlGraphicsContext>
     public GraphicsConfiguration Configuration { get; }
     public GraphicsBackend BackendApi => GraphicsBackend.OpenGL;
 
-    public GlGraphicsDevice(GL gl, in RenderFrameContext initialFrameCtx)
+    public GlGraphicsDevice(GL gl, in GraphicsFrameContext initialFrameCtx)
     {
         _gl = gl;
         Configuration = new GraphicsConfiguration(CreateDeviceCapabilities(gl));
@@ -32,7 +32,7 @@ public sealed class GlGraphicsDevice : IGraphicsDevice<GlGraphicsContext>
         _resourceFactory = new GlResourceFactory(Ctx);
     }
 
-    public void StartFrame(in RenderFrameContext frameCtx)
+    public void StartFrame(in GraphicsFrameContext frameCtx)
     {
         Ctx.Begin(in frameCtx);
     }

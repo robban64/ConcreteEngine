@@ -100,7 +100,7 @@ public sealed class GameEngine: IDisposable
 
     private void LoadGraphics(GraphicsBackend backend)
     {
-        var initialFrameContext = new RenderFrameContext
+        var initialFrameContext = new GraphicsFrameContext
         {
             DeltaTime = 0,
             FramebufferSize = _window.FramebufferSize,
@@ -148,7 +148,7 @@ public sealed class GameEngine: IDisposable
         float fps = dt > 0 ? 1.0f / dt : 0.0f;
         _fps = fps;
 
-        var frameCtx = new RenderFrameContext
+        var frameCtx = new GraphicsFrameContext
         {
             DeltaTime = dt,
             FramesPerSecond = fps,
@@ -174,7 +174,7 @@ public sealed class GameEngine: IDisposable
         float dt = (float)delta;
         float fps = dt > 0 ? 1.0f / dt : 0.0f;
         
-        var frameCtx = new RenderFrameContext
+        var frameCtx = new GraphicsFrameContext
         {
             DeltaTime = dt,
             FramesPerSecond = fps,
@@ -185,7 +185,7 @@ public sealed class GameEngine: IDisposable
         _graphics.StartFrame(in frameCtx);
         _renderer.Prepare();
         _graphics.StartDraw();
-        _renderer.Execute();
+        _renderer.Execute(_gameTime.Alpha);
         _graphics.EndFrame();
     }
 

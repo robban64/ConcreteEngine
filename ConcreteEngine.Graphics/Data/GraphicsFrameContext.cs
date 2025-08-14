@@ -6,7 +6,7 @@ using Silk.NET.Maths;
 
 namespace ConcreteEngine.Graphics.Data;
 
-public struct RenderFrameContext
+public struct GraphicsFrameContext
 {
     public float DeltaTime;
     public float FramesPerSecond;

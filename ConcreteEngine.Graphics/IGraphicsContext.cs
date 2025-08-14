@@ -17,7 +17,7 @@ public interface IGraphicsContext
     Vector2D<int> FramebufferSize { get; }
     Vector2D<int> ViewportSize { get; }
 
-    void Begin(in RenderFrameContext frameCtx);
+    void Begin(in GraphicsFrameContext frameCtx);
     void BeginRender();
 
     void End();

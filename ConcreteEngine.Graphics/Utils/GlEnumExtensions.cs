@@ -10,6 +10,18 @@ namespace ConcreteEngine.Graphics.Utils;
 
 public static class GlEnumExtensions
 {
+    public static ClearBufferMask ToGlEnum(this ClearBufferFlag flags)
+    {
+        return flags switch
+        {
+            ClearBufferFlag.None =>  ClearBufferMask.None,
+            ClearBufferFlag.Color => ClearBufferMask.ColorBufferBit,
+            ClearBufferFlag.Depth => ClearBufferMask.DepthBufferBit,
+            ClearBufferFlag.ColorAndDepth => ClearBufferMask.ColorBufferBit | ClearBufferMask.DepthBufferBit,
+            _ => throw GraphicsException.UnsupportedFeature(nameof(flags))
+        };
+    }
+    
     public static (PixelFormat glFormat, InternalFormat glInternalFormat) ToGlEnums(this EnginePixelFormat format)
     {
         return format switch

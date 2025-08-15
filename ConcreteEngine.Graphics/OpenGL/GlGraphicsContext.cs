@@ -7,6 +7,7 @@ using ConcreteEngine.Graphics.Data;
 using ConcreteEngine.Graphics.Definitions;
 using ConcreteEngine.Graphics.Error;
 using ConcreteEngine.Graphics.Resources;
+using ConcreteEngine.Graphics.Utils;
 using Silk.NET.Maths;
 using Silk.NET.OpenGL;
 
@@ -19,34 +20,40 @@ public sealed class GlGraphicsContext : IGraphicsContext
     private readonly GL _gl;
     private readonly int glMinor = 0;
     private readonly int glMajor = 0;
-    
+
     private readonly GraphicsResourceStore _store;
 
     private BlendMode _blendMode = BlendMode.Alpha;
-    
+
+    private ushort _boundFboId = 0;
     private ushort _boundShaderId = 0;
-    private ushort _boundVertexBufferId  = 0;
-    private ushort _boundIndexBufferId  = 0;
+    private ushort _boundVertexBufferId = 0;
+    private ushort _boundIndexBufferId = 0;
     private ushort _boundVaoId = 0;
     private readonly ushort[] _boundTextures;
-    
+
     private UniformTable? _boundUniforms;
 
-    private float _deltaTime = 0f;
     private Vector2D<int> _viewPortSize = Vector2D<int>.Zero;
     private Vector2D<int> _framebufferSize = Vector2D<int>.Zero;
 
+    private float _deltaTime = 0f;
     private int _drawTriangleCount = 0;
     private int _drawCallCount = 0;
+
+    public ushort QuadMeshId { get; internal set; }
     public GraphicsConfiguration Configuration { get; }
-    
-    public Vector2D<int> FramebufferSize => _framebufferSize;
+
     public Vector2D<int> ViewportSize => _viewPortSize;
 
     public GL Gl => _gl;
 
 
-    internal GlGraphicsContext(GL gl, GraphicsConfiguration configuration, GraphicsResourceStore store, in GraphicsFrameContext initialFrameCtx)
+    internal GlGraphicsContext(
+        GL gl,
+        GraphicsConfiguration configuration,
+        GraphicsResourceStore store,
+        in GraphicsFrameContext initialFrameCtx)
     {
         _gl = gl;
         Configuration = configuration;
@@ -60,12 +67,11 @@ public sealed class GlGraphicsContext : IGraphicsContext
         gl.GetInteger(GetPName.MajorVersion, out glMajor);
         gl.GetInteger(GetPName.MinorVersion, out glMinor);
         int glVersion = glMajor * 100 + glMinor * 10;
-        Console.WriteLine($"OpenGL version {glVersion} loaded ({glMajor}.{glMinor})");
-        
+
         _gl.Disable(GLEnum.CullFace);
         _gl.Disable(GLEnum.DepthTest);
         _gl.Disable(GLEnum.Dither);
-        
+
         _gl.Enable(GLEnum.Multisample);
 
         _gl.PixelStore(GLEnum.UnpackAlignment, 1);
@@ -73,7 +79,7 @@ public sealed class GlGraphicsContext : IGraphicsContext
         _gl.DepthMask(false);
     }
 
-    public void Begin(in GraphicsFrameContext frameCtx)
+    public void BeginFrame(in GraphicsFrameContext frameCtx)
     {
         _blendMode = BlendMode.Unset;
 
@@ -85,13 +91,7 @@ public sealed class GlGraphicsContext : IGraphicsContext
         _drawTriangleCount = 0;
     }
 
-    public void BeginRender()
-    {
-        _gl.Viewport(_viewPortSize);
-        Clear(Color.CornflowerBlue);
-    }
-
-    public void End()
+    public void EndFrame()
     {
         // unbind context
         UseShader(0);
@@ -104,38 +104,81 @@ public sealed class GlGraphicsContext : IGraphicsContext
         }
     }
 
-    public void Clear(Color color)
+    public void Clear(Color color, ClearBufferFlag flags)
     {
         _gl.ClearColor(color);
-        _gl.Clear(ClearBufferMask.ColorBufferBit | ClearBufferMask.DepthBufferBit);
+        _gl.Clear(flags.ToGlEnum());
     }
 
-    public void UseShader(ushort resourceId)
+
+    public void BeginScreenPass(Color? clear, ClearBufferFlag flags = ClearBufferFlag.Color)
     {
-        if (_boundShaderId == resourceId) return;
-
-        if (resourceId == 0)
-        {
-            _boundShaderId = 0;
-            _boundUniforms = null;
-            _gl.UseProgram(0);
-            return;
-        }
-        
-        var resource = _store.Get<GlShader>(resourceId);
-        var uniformTable = _store.GetUniformTable(resourceId);
-
-        _gl.UseProgram(resource!.Handle);
-        _boundShaderId = resourceId;
-        _boundUniforms = uniformTable;
+        if (_boundFboId != 0) GraphicsException.ThrowInvalidState("Cannot begin screen pass while FBO is bound.");
+        _gl.BindFramebuffer(FramebufferTarget.Framebuffer, 0);
+        _gl.Viewport(_viewPortSize);
+        if (clear.HasValue) Clear(clear.Value, flags);
     }
-    
+
+    public void BeginRenderPass(ushort fboId, Color? clear, ClearBufferFlag flags = ClearBufferFlag.Color)
+    {
+        ArgumentOutOfRangeException.ThrowIfZero(fboId, nameof(fboId));
+        if (_boundFboId == fboId) GraphicsException.ThrowInvalidState($"FBO is {fboId} already bound.");
+
+        var fbo = _store.Get<GlFramebuffer>(fboId);
+        ValidateResource(fbo);
+
+        Gl.BindFramebuffer(FramebufferTarget.Framebuffer, fbo.Handle);
+        _gl.Viewport(_framebufferSize);
+        if (clear.HasValue) Clear(clear.Value, flags);
+        _boundFboId = fboId;
+    }
+
+    public void EndRenderPass()
+    {
+        if (_boundFboId == 0) GraphicsException.ResourceNotBound<GlFramebuffer>(nameof(_boundFboId));
+
+        Gl.BindFramebuffer(FramebufferTarget.Framebuffer, 0);
+        Gl.Viewport(_viewPortSize);
+        _boundFboId = 0;
+    }
+
+    public void BlitFramebufferTo(ushort fromId, ushort toId = 0, Vector2D<int>? size = null,
+        bool linearFilter = true)
+    {
+        var fromFbo = _store.Get<GlFramebuffer>(fromId);
+        ValidateResource(fromFbo);
+
+        uint toFboHandle = 0;
+        var toFboSize = size ?? _viewPortSize;
+
+        if (toId > 0)
+        {
+            var toFbo = _store.Get<GlFramebuffer>(toId);
+            ValidateResource(toFbo);
+            toFboHandle = toFbo.Handle;
+        }
+
+        _gl.BindFramebuffer(FramebufferTarget.ReadFramebuffer, fromFbo.Handle);
+        _gl.BindFramebuffer(FramebufferTarget.DrawFramebuffer, toFboHandle);
+
+        var (sx, sy, dx, dy) = (fromFbo.Size.X, fromFbo.Size.Y, toFboSize.X, toFboSize.Y);
+        _gl.BlitFramebuffer(
+            0, 0, sx, sy,
+            0, 0, dx, dy,
+            ClearBufferMask.ColorBufferBit,
+            linearFilter ? BlitFramebufferFilter.Linear : BlitFramebufferFilter.Nearest
+        );
+
+        _gl.BindFramebuffer(FramebufferTarget.Framebuffer, 0);
+        _gl.Viewport(_viewPortSize);
+    }
+
     public void SetBlendMode(BlendMode blendMode)
     {
-        if(_blendMode != BlendMode.Unset && _blendMode == blendMode) return;
+        if (_blendMode != BlendMode.Unset && _blendMode == blendMode) return;
 
         _blendMode = blendMode;
-        
+
         switch (blendMode)
         {
             case BlendMode.Alpha:
@@ -161,11 +204,37 @@ public sealed class GlGraphicsContext : IGraphicsContext
         }
     }
 
+    public void BindFramebufferTexture(ushort framebufferId)
+    {
+        ArgumentOutOfRangeException.ThrowIfEqual(framebufferId, 0);
+        var frameBuffer = _store.Get<GlFramebuffer>(framebufferId);
+        ValidateResource(frameBuffer);
+        BindTexture(frameBuffer.ColorTextureId, 0);
+    }
+
+    public void BindFramebuffer(ushort resourceId)
+    {
+        if (_boundFboId == resourceId) return;
+        if (resourceId == 0)
+        {
+            Gl.BindFramebuffer(FramebufferTarget.Framebuffer, 0);
+            Gl.Viewport(_viewPortSize);
+            Gl.Clear((uint)ClearBufferMask.ColorBufferBit);
+            _boundFboId = 0;
+            return;
+        }
+
+        var resource = _store.Get<GlFramebuffer>(resourceId);
+        ValidateResource(resource);
+
+        Gl.BindFramebuffer(FramebufferTarget.Framebuffer, resource.Handle);
+        _boundFboId = resourceId;
+    }
 
     public void BindTexture(ushort resourceId, uint slot)
     {
         if (slot >= Configuration.MaxTextureImageUnits)
-             GraphicsException.ThrowCapabilityExceeded<GlTexture2D>("Texture slot", (int)slot,
+            GraphicsException.ThrowCapabilityExceeded<GlTexture2D>("Texture slot", (int)slot,
                 Configuration.MaxTextureImageUnits);
 
         if (_boundShaderId == resourceId) return;
@@ -195,7 +264,7 @@ public sealed class GlGraphicsContext : IGraphicsContext
             _boundVaoId = 0;
             return;
         }
-        
+
         var resource = _store.Get<GlMesh>(resourceId);
         _gl.BindVertexArray(resource!.Handle);
         _boundVaoId = resourceId;
@@ -238,19 +307,19 @@ public sealed class GlGraphicsContext : IGraphicsContext
         SetBufferData<GlVertexBuffer, T>(_boundVertexBufferId, data);
     }
 
-    public void SetIndexBuffer<T>(ReadOnlySpan<T> data) where T: unmanaged
+    public void SetIndexBuffer<T>(ReadOnlySpan<T> data) where T : unmanaged
     {
         SetBufferData<GlIndexBuffer, T>(_boundIndexBufferId, data);
     }
 
-    private void SetBufferData<TBuffer, TData>(ushort resourceId, ReadOnlySpan<TData> data) 
+    private void SetBufferData<TBuffer, TData>(ushort resourceId, ReadOnlySpan<TData> data)
         where TBuffer : GlBuffer where TData : unmanaged
     {
         var buffer = _store.Get<TBuffer>(resourceId);
-        ValidateBoundResource(buffer);
-        
+        ValidateResource(buffer);
+
         if (buffer!.IsStatic && buffer.BufferSizeInBytes > 0)
-             GraphicsException.ThrowInvalidBufferData<GlBuffer>(nameof(buffer), "Buffer is static");
+            GraphicsException.ThrowInvalidBufferData<GlBuffer>(nameof(buffer), "Buffer is static");
 
         buffer.ElementCount = data.Length;
         buffer.ElementSize = Unsafe.SizeOf<TData>();
@@ -261,32 +330,32 @@ public sealed class GlGraphicsContext : IGraphicsContext
 
     public void UploadVertexBuffer<T>(ReadOnlySpan<T> data, int offsetElements) where T : unmanaged
     {
-        UploadBufferData<GlVertexBuffer,T>(_boundVertexBufferId, data, offsetElements);
+        UploadBufferData<GlVertexBuffer, T>(_boundVertexBufferId, data, offsetElements);
     }
 
-    public void UploadIndexBuffer<T>(ReadOnlySpan<T> data, int offsetElements)where T : unmanaged
+    public void UploadIndexBuffer<T>(ReadOnlySpan<T> data, int offsetElements) where T : unmanaged
     {
         UploadBufferData<GlIndexBuffer, T>(_boundIndexBufferId, data, offsetElements);
     }
 
-    private void UploadBufferData<TBuffer, TData>(ushort resourceId, ReadOnlySpan<TData> data, int offsetElements) 
+    private void UploadBufferData<TBuffer, TData>(ushort resourceId, ReadOnlySpan<TData> data, int offsetElements)
         where TBuffer : GlBuffer where TData : unmanaged
     {
         ArgumentOutOfRangeException.ThrowIfNegative(offsetElements, nameof(offsetElements));
         var buffer = _store.Get<TBuffer>(resourceId);
-        ValidateBoundResource(buffer);
+        ValidateResource(buffer);
 
         if (buffer.IsStatic)
-             GraphicsException.ThrowInvalidBufferData<GlBuffer>(nameof(buffer), "Buffer is static");
+            GraphicsException.ThrowInvalidBufferData<GlBuffer>(nameof(buffer), "Buffer is static");
 
         var elementSize = Unsafe.SizeOf<TData>();
 
         if (elementSize != buffer.ElementSize)
-             GraphicsException.ThrowInvalidBufferData<GlBuffer>(nameof(elementSize), "Invalid element size");
+            GraphicsException.ThrowInvalidBufferData<GlBuffer>(nameof(elementSize), "Invalid element size");
 
         if (data.Length + offsetElements > buffer.ElementCount)
         {
-             GraphicsException.ThrowInvalidBufferData<GlBuffer>(null,
+            GraphicsException.ThrowInvalidBufferData<GlBuffer>(null,
                 $"Upload data {data.Length + offsetElements} cannot be bigger than {buffer.ElementCount} elements.");
         }
 
@@ -300,13 +369,16 @@ public sealed class GlGraphicsContext : IGraphicsContext
     public void Draw(uint drawCount = 0)
     {
         var mesh = _store.Get<GlMesh>(_boundVaoId);
-        ValidateBoundResource(mesh);
+        ValidateResource(mesh);
 
-        if(mesh.VertexBufferId == 0) 
+        if (mesh.VertexBufferId == 0)
             GraphicsException.ThrowInvalidState($"Mesh is missing VertexBuffer");
+        if (mesh.IndexBufferId > 0)
+            GraphicsException.ThrowInvalidState(
+                $"Elemental mesh must use {nameof(DrawIndexed)} instead of {nameof(Draw)}");
 
         var count = drawCount > 0 ? drawCount : mesh.DrawCount;
-        _gl.DrawArrays(PrimitiveType.Triangles, 0, count);
+        _gl.DrawArrays(mesh.PrimitiveType, 0, count);
         _drawTriangleCount += (int)count;
         _drawCallCount++;
     }
@@ -314,9 +386,9 @@ public sealed class GlGraphicsContext : IGraphicsContext
     public unsafe void DrawIndexed(uint drawCount = 0)
     {
         var mesh = _store.Get<GlMesh>(_boundVaoId);
-        ValidateBoundResource(mesh);
-        if(mesh.IndexBufferId == 0) 
-            GraphicsException.ThrowInvalidState($"Mesh is missing IndexBuffer"); 
+        ValidateResource(mesh);
+        if (mesh.IndexBufferId == 0)
+            GraphicsException.ThrowInvalidState($"Mesh is missing IndexBuffer");
 
         var count = drawCount > 0 ? drawCount : mesh.DrawCount;
 
@@ -325,17 +397,45 @@ public sealed class GlGraphicsContext : IGraphicsContext
         _drawCallCount++;
     }
 
-    public void BindDefaultFramebuffer()
+    public void DrawFboScreenQuad(ushort fboId, ushort shaderId)
     {
-        _gl.BindFramebuffer(FramebufferTarget.Framebuffer, 0);
+        ArgumentOutOfRangeException.ThrowIfZero(fboId, nameof(fboId));
+        ArgumentOutOfRangeException.ThrowIfZero(fboId, nameof(shaderId));
+
+        var fbo = _store.Get<GlFramebuffer>(fboId);
+        ValidateResource(fbo);
+        if (fbo.ColorTextureId == 0) GraphicsException.ThrowInvalidState("FBO has no color texture.");
+
+        var previousBlendMode = _blendMode;
+        
+        SetBlendMode(BlendMode.None);
+        UseShader(shaderId);
+        BindTexture(fbo.ColorTextureId, 0);
+        BindMesh(QuadMeshId);
+        Draw();
+        
+        SetBlendMode(previousBlendMode);
     }
 
-
-    public IRenderTarget CreateRenderTarget()
+    public void UseShader(ushort resourceId)
     {
-        return new GlRenderTarget(this);
-    }
+        if (_boundShaderId == resourceId) return;
 
+        if (resourceId == 0)
+        {
+            _boundShaderId = 0;
+            _boundUniforms = null;
+            _gl.UseProgram(0);
+            return;
+        }
+
+        var resource = _store.Get<GlShader>(resourceId);
+        var uniformTable = _store.GetUniformTable(resourceId);
+
+        _gl.UseProgram(resource!.Handle);
+        _boundShaderId = resourceId;
+        _boundUniforms = uniformTable;
+    }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public void SetUniforma(ShaderUniform uniform, int value) => _gl.Uniform1(_boundUniforms![uniform], value);
@@ -380,11 +480,11 @@ public sealed class GlGraphicsContext : IGraphicsContext
             throw new OpenGlException(error);
     }
 
-    private static void ValidateBoundResource<T>([NotNull]T? resource) where T : IGraphicsResource
+    private static void ValidateResource<T>([NotNull] T? resource) where T : IGraphicsResource
     {
         if (resource is null)
             throw GraphicsException.ResourceIsNull<T>(nameof(resource));
-        
+
         if (resource.IsDisposed)
             throw GraphicsException.ResourceIsDisposed<T>(nameof(resource));
     }

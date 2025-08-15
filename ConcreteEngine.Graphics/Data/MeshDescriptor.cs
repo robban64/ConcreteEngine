@@ -4,6 +4,7 @@ using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
 using ConcreteEngine.Graphics.Definitions;
 using ConcreteEngine.Graphics.Error;
+using Silk.NET.OpenGL;
 
 #endregion
 
@@ -11,10 +12,11 @@ namespace ConcreteEngine.Graphics.Data;
 
 public record MeshDescriptor<TVertex, TIndex> where TVertex : unmanaged where TIndex : unmanaged
 {
-    public VertexAttributeDescriptor[] VertexPointers { get; init; }
-    public MeshDataBufferDescriptor<TVertex> VertexBuffer { get; init; }
-    public MeshDataBufferDescriptor<TIndex> IndexBuffer { get; init; }
+    public required VertexAttributeDescriptor[] VertexPointers { get; init; }
+    public required MeshDataBufferDescriptor<TVertex> VertexBuffer { get; init; }
+    public MeshDataBufferDescriptor<TIndex>? IndexBuffer { get; init; }
     public uint? DrawCount { get; set; } = null;
+    public PrimitiveType Primitive { get; set; } = PrimitiveType.Triangles;
 }
 
 public record MeshDataBufferDescriptor<T>(

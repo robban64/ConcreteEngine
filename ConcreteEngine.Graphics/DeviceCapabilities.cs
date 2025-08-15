@@ -1,7 +1,13 @@
 namespace ConcreteEngine.Graphics;
 
+public readonly record struct OpenGlVersion(int Major, int Minor)
+{
+    public int Version =>  Major * 100 + Minor * 10;
+}
+
 public sealed record DeviceCapabilities
 {
+    public OpenGlVersion GlVersion { get; init; }
     public int MaxTextureSize { get; init; }
     public int MaxTextureImageUnits { get; init; }
     public int MaxArrayTextureLayers { get; init; }

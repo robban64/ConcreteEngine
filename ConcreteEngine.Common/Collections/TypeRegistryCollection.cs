@@ -5,6 +5,8 @@ namespace ConcreteEngine.Common.Collections;
 public sealed class TypeRegistryCollection<TValue>(int capacity = 16) : IEnumerable<KeyValuePair<Type, TValue>>
 {
     private readonly Dictionary<Type, TValue> _registry = new(capacity);
+    
+    public int Count => _registry.Count;
 
     public void Register<TKey>(TValue value) where TKey : notnull
     {

@@ -1,6 +1,6 @@
 namespace ConcreteEngine.Graphics.Definitions;
 
-public enum ClearFlags
+public enum ClearBufferFlag
 {
     None,
     Color,

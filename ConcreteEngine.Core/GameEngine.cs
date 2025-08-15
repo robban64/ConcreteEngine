@@ -96,6 +96,7 @@ public sealed class GameEngine: IDisposable
         LoadSystems(assetPipelineConfiguration);
         
         _nextSceneIndex = 0;
+
     }
 
     private void LoadGraphics(GraphicsBackend backend)
@@ -113,6 +114,7 @@ public sealed class GameEngine: IDisposable
             _ => throw new GraphicsException("Invalid GraphicsBackend. Only OpenGL supported")
         };
     }
+    
     private void LoadSystems(AssetManagerConfiguration assetPipelineConfiguration)
     {
         // input
@@ -181,11 +183,7 @@ public sealed class GameEngine: IDisposable
             ViewportSize = _window.Size
         };
 
-        _graphics.StartFrame(in frameCtx);
-        _renderer.Prepare();
-        _graphics.StartDraw();
-        _renderer.Execute(_gameTime.Alpha);
-        _graphics.EndFrame();
+        _renderer.Render(_gameTime.Alpha, in frameCtx);
     }
 
 

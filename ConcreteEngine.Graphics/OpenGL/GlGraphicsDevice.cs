@@ -1,6 +1,9 @@
+using System.Drawing;
 using ConcreteEngine.Graphics.Data;
 using ConcreteEngine.Graphics.Definitions;
+using ConcreteEngine.Graphics.Primitives;
 using ConcreteEngine.Graphics.Resources;
+using Silk.NET.Maths;
 using Silk.NET.OpenGL;
 
 namespace ConcreteEngine.Graphics.OpenGL;
@@ -8,18 +11,16 @@ namespace ConcreteEngine.Graphics.OpenGL;
 public sealed class GlGraphicsDevice : IGraphicsDevice<GlGraphicsContext>
 {
     private readonly GL _gl;
-
     private readonly GlResourceFactory _resourceFactory;
-
     private readonly GraphicsResourceStore _store;
-
-    public GL Gl => _gl;
+    private readonly ushort _quadMesh;
 
     public GlGraphicsContext Ctx { get; }
-    IGraphicsContext IGraphicsDevice.Ctx => Ctx;
-
     public GraphicsConfiguration Configuration { get; }
+
+    public GL Gl => _gl;
     public GraphicsBackend BackendApi => GraphicsBackend.OpenGL;
+    IGraphicsContext IGraphicsDevice.Ctx => Ctx;
 
     public GlGraphicsDevice(GL gl, in GraphicsFrameContext initialFrameCtx)
     {
@@ -27,25 +28,30 @@ public sealed class GlGraphicsDevice : IGraphicsDevice<GlGraphicsContext>
         Configuration = new GraphicsConfiguration(CreateDeviceCapabilities(gl));
         _store = new GraphicsResourceStore(FreeResource);
         Ctx = new GlGraphicsContext(gl, Configuration, _store, in initialFrameCtx);
-        Console.WriteLine("Device Capability");
+        
+        Console.WriteLine($"OpenGL version {Configuration.Capabilities.GlVersion} loaded.");
+        Console.WriteLine("--Device Capability--");
         Console.WriteLine(Configuration.Capabilities.ToString());
 
         _resourceFactory = new GlResourceFactory(Ctx);
+        var quadMeshResult = CreateMesh(new MeshDescriptor<Vertex2D, uint>
+        {
+            VertexBuffer = new MeshDataBufferDescriptor<Vertex2D>(BufferUsage.StaticDraw, Quad.Vertices),
+            IndexBuffer = null,
+            VertexPointers =
+            [
+                VertexAttributeDescriptor.Make<Vertex2D>("aPos", nameof(Vertex2D.Position)),
+                VertexAttributeDescriptor.Make<Vertex2D>("aTex", nameof(Vertex2D.Texture))
+            ],
+            Primitive = PrimitiveType.TriangleStrip
+        });
+
+        Ctx.QuadMeshId = quadMeshResult.MeshId;
     }
 
-    public void StartFrame(in GraphicsFrameContext frameCtx)
-    {
-        Ctx.Begin(in frameCtx);
-    }
 
-    public void StartDraw()
+    public void CleanupAfterRender()
     {
-        Ctx.BeginRender();
-    }
-
-    public void EndFrame()
-    {
-        Ctx.End();
         _store.FlushRemoveQueue();
     }
 
@@ -65,6 +71,16 @@ public sealed class GlGraphicsDevice : IGraphicsDevice<GlGraphicsContext>
         return _store.AddResource(resource);
     }
 
+    public ushort CreateVertexBuffer(BufferUsage bufferUsage) => CreateBuffer(BufferTarget.VertexBuffer, bufferUsage);
+    public ushort CreateIndexBuffer(BufferUsage bufferUsage) => CreateBuffer(BufferTarget.IndexBuffer, bufferUsage);
+
+    public ushort CreateBuffer(BufferTarget target, BufferUsage usage)
+    {
+        var resource = _resourceFactory.CreateBuffer(target, usage);
+        return _store.AddResource(resource);
+    }
+
+
     public CreateMeshResult CreateMesh<TVertex, TIndex>(MeshDescriptor<TVertex, TIndex> meshData)
         where TVertex : unmanaged where TIndex : unmanaged
     {
@@ -73,35 +89,64 @@ public sealed class GlGraphicsDevice : IGraphicsDevice<GlGraphicsContext>
         return new CreateMeshResult(meshId, resource.VertexBufferId, resource.IndexBufferId, resource.DrawCount);
     }
 
+
+    public RenderPassDesc CreateFrameBuffer(in CreateRenderPassDesc desc)
+    {
+        var size = desc.Size ?? Ctx.ViewportSize;
+        var result = _resourceFactory.CreateFrameBuffer(this, size);
+
+        var texture = new GlTexture2D(result.Texture, size.X, size.Y, EnginePixelFormat.Rgba);
+        var textureId = _store.AddResource(texture);
+
+        var fbo = new GlFramebuffer( result.Fbo, result.Renderbuffer, textureId, size);
+        var fboId = _store.AddResource(fbo);
+        return new RenderPassDesc(
+            Target: desc.Target,
+            Order: desc.Order,
+            FboId: fboId,
+            Size: desc.Size.Value,
+            Clear: true,
+            ClearColor: desc.ClearColor,
+            ClearMask: desc.ClearMask,
+            ResolveTo: desc.ResolveTo,
+            ResolveToFboId: desc.ResolveToFboId
+        );
+    }
+
     public void RemoveResource(ushort resourceId)
     {
+        var resource = _store.Get(resourceId);
+
         _store.EnqueueRemoveResource(resourceId);
+        if (resource is GlMesh mesh)
+        {
+            _store.EnqueueRemoveResource(mesh.VertexBufferId);
+            if (mesh.IndexBufferId > 0)
+                _store.EnqueueRemoveResource(mesh.IndexBufferId);
+        }
+        else if (resource is GlFramebuffer framebuffer)
+        {
+            _store.EnqueueRemoveResource(framebuffer.ColorTextureId);
+        }
     }
-
-    public ushort CreateBuffer(BufferTarget target, BufferUsage usage)
-    {
-        var resource = _resourceFactory.CreateBuffer(target, usage);
-        return _store.AddResource(resource);
-    }
-
-    public ushort CreateVertexBuffer(BufferUsage bufferUsage) => CreateBuffer(BufferTarget.VertexBuffer, bufferUsage);
-    public ushort CreateIndexBuffer(BufferUsage bufferUsage) => CreateBuffer(BufferTarget.IndexBuffer, bufferUsage);
-
 
     public void Dispose()
     {
-        Console.WriteLine($"Disposing {nameof(GlGraphicsDevice)} with {_store.Count} resources");
+        Console.WriteLine($"{nameof(GlGraphicsDevice)} Disposing {nameof(GlGraphicsDevice)} with {_store.Count} resources");
 
+        int counter = 0;
         for (ushort i = 1; i <= _store.Count; i++)
         {
             var resource = _store.Get(i);
             if (resource == null || resource.IsDisposed) continue;
             FreeResource(resource);
+            counter++;
         }
+        
+        Console.WriteLine($"{nameof(GlGraphicsDevice)} Disposed a total of {counter} resources");
 
         Gl.Dispose();
     }
-
 
     private void FreeResource(IGraphicsResource resource)
     {
@@ -123,10 +168,10 @@ public sealed class GlGraphicsDevice : IGraphicsDevice<GlGraphicsContext>
                 break;
             case GlMesh mesh:
                 Gl.DeleteVertexArray(mesh.Handle);
-                if (mesh.VertexBufferId != null && _store.TryGet<GlVertexBuffer>(mesh.VertexBufferId, out var vBuffer))
-                    FreeResource(vBuffer);
-                if (mesh.IndexBufferId != null && _store.TryGet<GlIndexBuffer>(mesh.IndexBufferId, out var iBuffer))
-                    FreeResource(iBuffer);
+                break;
+            case GlFramebuffer fbo:
+                Gl.DeleteRenderbuffer(fbo.RenderBufferHandle);
+                Gl.DeleteFramebuffer(fbo.Handle);
                 break;
         }
     }
@@ -135,6 +180,7 @@ public sealed class GlGraphicsDevice : IGraphicsDevice<GlGraphicsContext>
     {
         return new DeviceCapabilities
         {
+            GlVersion = new OpenGlVersion(gl.GetInteger(GetPName.MajorVersion), gl.GetInteger(GetPName.MinorVersion)),
             MaxTextureImageUnits = gl.GetInteger(GLEnum.MaxCombinedTextureImageUnits),
             MaxVertexAttribBindings = gl.GetInteger((GLEnum)0x82DA), // GL_MAX_VERTEX_ATTRIB_BINDINGS
             MaxTextureSize = gl.GetInteger(GLEnum.MaxTextureSize),

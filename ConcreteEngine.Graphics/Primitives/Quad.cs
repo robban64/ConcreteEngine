@@ -1,7 +1,20 @@
+using ConcreteEngine.Graphics.OpenGL;
+
 namespace ConcreteEngine.Graphics.Primitives;
 
-public class Quad
+internal static class Quad
 {
+    public static readonly Vertex2D[] Vertices = {
+        // pos     // uv
+        new (-1f, -1f,  0f, 0f),
+        new(1f, -1f,  1f, 0f),
+        new(-1f,  1f,  0f, 1f),
+        new (1f,  1f,  1f, 1f)
+    };
+
+    
+    
+    /*
     private static readonly float[] Vertices =
     [
 //       aPosition     | aTexCoords
@@ -16,4 +29,5 @@ public class Quad
         0u, 3u, 1u,
         1u, 3u, 2u
     ];
+    */
 }

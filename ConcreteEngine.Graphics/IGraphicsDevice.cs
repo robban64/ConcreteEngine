@@ -2,6 +2,7 @@
 
 using ConcreteEngine.Graphics.Data;
 using ConcreteEngine.Graphics.Definitions;
+using Silk.NET.Maths;
 
 #endregion
 
@@ -12,14 +13,13 @@ public interface IGraphicsDevice : IDisposable
     IGraphicsContext Ctx { get; }
     GraphicsBackend BackendApi { get; }
     GraphicsConfiguration Configuration { get; }
-    void StartFrame(in GraphicsFrameContext frameCtx);
-    void StartDraw();
-    void EndFrame();
+    void CleanupAfterRender();
     ushort CreateShader(string vertexSource, string fragmentSource, string[] samplers);
     ushort CreateTexture2D(in TextureDescriptor textureDescriptor);
     ushort CreateBuffer(BufferTarget target, BufferUsage usage);
     ushort CreateVertexBuffer(BufferUsage bufferUsage);
     ushort CreateIndexBuffer(BufferUsage bufferUsage);
+    RenderPassDesc CreateFrameBuffer(in CreateRenderPassDesc desc);
 
     CreateMeshResult CreateMesh<TVertex, TIndex>(MeshDescriptor<TVertex, TIndex> meshData)
         where TVertex : unmanaged

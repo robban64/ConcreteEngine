@@ -6,8 +6,8 @@
       "samplers": ["uTexture"]
     },
     {
-      "name": "SpriteShaderOld",
-      "path": "sprite-shader-old.glsl",
+      "name": "ScreenShader",
+      "path": "screen-shader.glsl",
       "samplers": ["uTexture"]
     }
   ],

@@ -49,7 +49,7 @@ public sealed class SpriteDrawEmitter : IDrawCommandEmitter
         */
         
         var result = spriteBatch.BuildBatch();
-        var meta = new DrawCommandMeta(DrawCommandId.Sprite, RenderTargetId.None, 0);
+        var meta = new DrawCommandMeta(DrawCommandId.Sprite, RenderTargetId.Scene, 0);
         
         var cmd = new DrawCommandData(
             meshId: result.MeshId,

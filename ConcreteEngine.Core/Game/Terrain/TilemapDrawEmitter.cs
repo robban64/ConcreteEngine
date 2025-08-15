@@ -31,7 +31,7 @@ public sealed class TilemapDrawEmitter : IDrawCommandEmitter
             transform: in transform
         );
         
-        var meta = new DrawCommandMeta(DrawCommandId.Tilemap, RenderTargetId.None, 0);
+        var meta = new DrawCommandMeta(DrawCommandId.Tilemap, RenderTargetId.Scene, 0);
         submitter.SubmitDraw(cmd, in meta);
 
     }

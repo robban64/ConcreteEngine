@@ -5,6 +5,7 @@ using ConcreteEngine.Graphics.Data;
 using ConcreteEngine.Graphics.Definitions;
 using ConcreteEngine.Graphics.Error;
 using ConcreteEngine.Graphics.Utils;
+using Silk.NET.Maths;
 using Silk.NET.OpenGL;
 
 #endregion
@@ -30,10 +31,14 @@ internal class GlResourceFactory(GlGraphicsContext ctx)
         if (vertexBufferDesc.Data is not null)
             ctx.SetVertexBuffer<TVertex>(vertexBufferDesc.Data.AsSpan());
 
-        var indexBuffer = graphics.CreateIndexBuffer(indexBufferDesc.Usage);
-        ctx.BindIndexBuffer(indexBuffer);
-        if (indexBufferDesc.Data is not null)
-            ctx.SetIndexBuffer<TIndex>(indexBufferDesc.Data.AsSpan());
+        ushort indexBuffer = 0;
+        if (indexBufferDesc != null)
+        {
+            indexBuffer = graphics.CreateIndexBuffer(indexBufferDesc.Usage);
+            ctx.BindIndexBuffer(indexBuffer);
+            if (indexBufferDesc.Data is not null)
+                ctx.SetIndexBuffer<TIndex>(indexBufferDesc.Data.AsSpan());
+        }
 
         for (int i = 0; i < descriptor.VertexPointers.Length; i++)
         {
@@ -46,13 +51,34 @@ internal class GlResourceFactory(GlGraphicsContext ctx)
         ctx.BindVertexBuffer(0);
         ctx.BindIndexBuffer(0);
 
+        if (indexBuffer > 0)
+        {
+            var indexBufferSize = indexBufferDesc?.Data?.Length ?? 0;
+            var drawCount = descriptor.DrawCount.GetValueOrDefault((uint)indexBufferSize);
+            var elementSize = Unsafe.SizeOf<TIndex>();
+            var elementType = elementSize switch
+            {
+                1 => DrawElementsType.UnsignedByte,
+                2 => DrawElementsType.UnsignedShort,
+                3 => DrawElementsType.UnsignedInt,
+                _ => throw new GraphicsException($"Index Element Size {elementSize} is not supported")
+            };
+            return new GlMesh(handle, vertexBuffer, indexBuffer, descriptor.VertexPointers, drawCount, elementType);
+        }
+        else
+        {
+            var vertexBufferSize = vertexBufferDesc?.Data?.Length ?? 0;
+            var drawCount = descriptor.DrawCount.GetValueOrDefault((uint)vertexBufferSize);
+            return new GlMesh(handle, vertexBuffer, descriptor.VertexPointers, drawCount, descriptor.Primitive);
+        }
+        /*
         var vertexBufferSize = vertexBufferDesc.Data?.Length ?? 0;
-        var indexBufferSize = indexBufferDesc.Data?.Length ?? 0;
+        var indexBufferSize = indexBufferDesc?.Data?.Length ?? 0;
 
         uint drawCount = descriptor.DrawCount.HasValue switch
         {
             true => descriptor.DrawCount.Value,
-            _ => (uint)(indexBuffer > 0 ? indexBufferSize : vertexBufferSize)
+            _ => (uint)(indexBufferDesc != null ? indexBufferSize : vertexBufferSize)
         };
 
         var elementSize = Unsafe.SizeOf<TIndex>();
@@ -66,6 +92,7 @@ internal class GlResourceFactory(GlGraphicsContext ctx)
 
         var mesh = new GlMesh(handle, vertexBuffer, indexBuffer, descriptor.VertexPointers, drawCount, elementType);
         return mesh;
+        */
     }
 
     public GlBuffer CreateBuffer(BufferTarget target, BufferUsage usage)
@@ -103,9 +130,54 @@ internal class GlResourceFactory(GlGraphicsContext ctx)
         return texture;
     }
 
+    public unsafe CreateGlFrameBufferResult CreateFrameBuffer(GlGraphicsDevice graphics, Vector2D<int> size)
+    {
+        ArgumentOutOfRangeException.ThrowIfLessThan(size.X, 1, nameof(size.X));
+        ArgumentOutOfRangeException.ThrowIfLessThan(size.Y, 1, nameof(size.Y));
+
+
+        var (width, height) = ((uint)size.X, (uint)size.Y);
+
+        // Color texture
+        var textureHandle = Gl.GenTexture();
+        Gl.BindTexture(TextureTarget.Texture2D, textureHandle);
+        Gl.TexImage2D(TextureTarget.Texture2D, 0, InternalFormat.Rgba8, width, height, 0, PixelFormat.Rgba,
+            PixelType.UnsignedByte, (void*)(0));
+        Gl.TexParameter(TextureTarget.Texture2D, GLEnum.TextureMinFilter, (int)GLEnum.Linear);
+        Gl.TexParameter(TextureTarget.Texture2D, GLEnum.TextureMagFilter, (int)GLEnum.Linear);
+        Gl.TexParameter(TextureTarget.Texture2D, GLEnum.TextureWrapS, (int)GLEnum.ClampToEdge);
+        Gl.TexParameter(TextureTarget.Texture2D, GLEnum.TextureWrapT, (int)GLEnum.ClampToEdge);
+        Gl.BindTexture(TextureTarget.Texture2D, 0);
+
+        // Depth-stencil renderbuffer
+        var renderBufferHandle = Gl.GenRenderbuffer();
+        Gl.BindRenderbuffer(RenderbufferTarget.Renderbuffer, renderBufferHandle);
+        Gl.RenderbufferStorage(RenderbufferTarget.Renderbuffer, InternalFormat.Depth24Stencil8, width, height);
+        Gl.BindRenderbuffer(RenderbufferTarget.Renderbuffer, 0);
+
+        // Framebuffer
+        var fbo = Gl.GenFramebuffer();
+        Gl.BindFramebuffer(FramebufferTarget.Framebuffer, fbo);
+        Gl.FramebufferTexture2D(FramebufferTarget.Framebuffer, FramebufferAttachment.ColorAttachment0,
+            TextureTarget.Texture2D, textureHandle, 0);
+        Gl.FramebufferRenderbuffer(FramebufferTarget.Framebuffer, FramebufferAttachment.DepthStencilAttachment,
+            RenderbufferTarget.Renderbuffer, renderBufferHandle);
+
+        //Gl.DrawBuffers(1, GLEnum.ColorAttachment0);
+        var status = Gl.CheckFramebufferStatus(FramebufferTarget.Framebuffer);
+        if (status != GLEnum.FramebufferComplete)
+        {
+            GraphicsException.ThrowFramebufferIncomplete(nameof(fbo), status.ToString());
+        }
+
+        Gl.BindFramebuffer(FramebufferTarget.Framebuffer, 0);
+
+        return new CreateGlFrameBufferResult(fbo, textureHandle, renderBufferHandle);
+    }
+
     public (GlShader shader, uint handle, UniformTable uniformTable) CreateShader(
         string vertexSource,
-        string fragmentSource, 
+        string fragmentSource,
         string[] samplers)
     {
         uint vertexShader = CreateShader(ShaderType.VertexShader, vertexSource);

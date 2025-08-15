@@ -20,6 +20,7 @@ public sealed class GlMesh : IMesh
     public ICollection<VertexAttributeDescriptor> VertexAttributes { get; }
     public uint DrawCount { get; set; }
     public DrawElementsType ElementType { get; }
+    public PrimitiveType  PrimitiveType { get; }
 
     public bool HasIndices => IndexBufferId > 0;
 
@@ -38,5 +39,20 @@ public sealed class GlMesh : IMesh
         VertexAttributes = vertexAttributes;
         DrawCount = drawCount;
         ElementType = elementType;
+    }
+    
+    internal GlMesh(
+        uint handle,
+        ushort vertexBufferId,
+        VertexAttributeDescriptor[] vertexAttributes,
+        uint drawCount,
+        PrimitiveType primitiveType
+    )
+    {
+        Handle = handle;
+        VertexBufferId = vertexBufferId;
+        VertexAttributes = vertexAttributes;
+        DrawCount = drawCount;
+        PrimitiveType = primitiveType;
     }
 }

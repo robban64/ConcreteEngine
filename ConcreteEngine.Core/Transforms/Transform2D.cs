@@ -6,7 +6,7 @@ using Silk.NET.Maths;
 
 #endregion
 
-namespace ConcreteEngine.Core;
+namespace ConcreteEngine.Core.Transforms;
 
 public sealed class Transform2D
 {

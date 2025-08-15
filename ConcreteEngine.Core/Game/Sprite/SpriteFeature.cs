@@ -1,5 +1,6 @@
 using ConcreteEngine.Core.Assets;
 using ConcreteEngine.Core.Rendering;
+using ConcreteEngine.Core.Resources;
 using ConcreteEngine.Core.Utils;
 using Silk.NET.Maths;
 

@@ -7,6 +7,7 @@ using ConcreteEngine.Core.Input;
 using ConcreteEngine.Core.Pipeline;
 using ConcreteEngine.Core.Rendering;
 using ConcreteEngine.Core.Time;
+using ConcreteEngine.Core.Transforms;
 using ConcreteEngine.Core.Utils;
 using ConcreteEngine.Graphics;
 using ConcreteEngine.Graphics.Data;
@@ -16,7 +17,7 @@ using ConcreteEngine.Graphics.OpenGL;
 using Silk.NET.Input;
 using Silk.NET.OpenGL;
 using Silk.NET.Windowing;
-using Shader = ConcreteEngine.Core.Assets.Shader;
+using Shader = ConcreteEngine.Core.Resources.Shader;
 
 #endregion
 

@@ -92,11 +92,11 @@ public sealed class AssetSystem(
     }
 
     private void LoadEntries<T, R>(List<T> entries, Func<T, R> loader)
-        where T : AssetManifestRecord where R : class, IAssetFile
+        where T : IAssetManifestRecord where R : class, IAssetFile
     {
         foreach (var entry in entries)
         {
-            Console.WriteLine($"Loading entry({entry.Name}) at {entry.Path}");
+            Console.WriteLine($"Loading entry - ({entry.Name})");
             var result = loader(entry);
             _store.TryAdd(result.Name, result);
         }

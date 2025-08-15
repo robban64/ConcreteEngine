@@ -1,5 +1,6 @@
 #region
 
+using ConcreteEngine.Core.Resources;
 using ConcreteEngine.Graphics;
 using ConcreteEngine.Graphics.Data;
 using StbImageSharp;
@@ -20,13 +21,12 @@ internal sealed class AssetLoader
         //StbImage.stbi_set_flip_vertically_on_load(1);
     }
 
-    private string GetEntryPath(string assetTypePath, AssetManifestRecord record) =>
-        Path.Combine(_rootPath, assetTypePath, record.Path);
+    private string GetPath(string assetTypePath, string fileName) =>
+        Path.Combine(_rootPath, assetTypePath, fileName);
 
     public Shader LoadShader(AssetShaderRecord record)
     {
-        var shaderText = File.ReadAllText(GetEntryPath("shaders", record));
-
+/*
         var vertexIndex = shaderText.IndexOf("@vertex", StringComparison.Ordinal);
         var fragmentIndex = shaderText.IndexOf("@fragment", StringComparison.Ordinal);
 
@@ -40,13 +40,18 @@ internal sealed class AssetLoader
             .Substring(vertexIndex + "@vertex".Length, fragmentIndex - vertexIndex - "@vertex".Length)
             .Trim();
         var fragmentSource = shaderText.Substring(fragmentIndex + "@fragment".Length).Trim();
+*/
+
+        var vertexSource = File.ReadAllText(GetPath("shaders", record.VertShaderPath));
+        var fragmentSource = File.ReadAllText(GetPath("shaders", record.FragShaderPath));
 
         var resourceId = _graphics.CreateShader(vertexSource, fragmentSource, record.Samplers);
 
         return new Shader
         {
             Name = record.Name,
-            Path = record.Path,
+            VertShaderFilename = record.VertShaderPath,
+            FragShaderFilename = record.FragShaderPath,
             ResourceId = resourceId,
             Samplers = record.Samplers.Length
         };
@@ -54,7 +59,7 @@ internal sealed class AssetLoader
 
     public Texture2D LoadTexture2D(AssetTextureRecord record)
     {
-        using var stream = File.OpenRead(GetEntryPath("textures", record));
+        using var stream = File.OpenRead(GetPath("textures", record.Path));
         var result = ImageResult.FromStream(stream, ColorComponents.RedGreenBlueAlpha);
 
         var textureData = new TextureDescriptor

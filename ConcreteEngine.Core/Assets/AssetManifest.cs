@@ -12,19 +12,17 @@ internal sealed class AssetManifest
     public required List<AssetTextureRecord> Textures { get; init; } = [];
 }
 
-internal record AssetManifestRecord
+internal interface IAssetManifestRecord
 {
-    public required string Name { get; init; }
-    public required string Path { get; init; }
+    string Name { get; }
 }
 
-internal sealed record AssetShaderRecord : AssetManifestRecord
-{
-    public required string[] Samplers { get; init; }
-}
+internal sealed record AssetShaderRecord(string Name, string VertShaderPath, string FragShaderPath, string[] Samplers)
+    : IAssetManifestRecord;
 
-internal sealed record AssetTextureRecord : AssetManifestRecord
-{
-    public EnginePixelFormat PixelFormat { get; init; } = EnginePixelFormat.Rgba;
-    public TexturePreset Preset { get; init; } = TexturePreset.LinearClamp;
-}
+internal sealed record AssetTextureRecord(
+    string Name,
+    string Path,
+    TexturePreset Preset,
+    EnginePixelFormat PixelFormat = EnginePixelFormat.Rgba)
+    : IAssetManifestRecord;

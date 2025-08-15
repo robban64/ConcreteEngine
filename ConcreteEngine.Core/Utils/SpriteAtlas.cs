@@ -2,6 +2,7 @@
 
 using System.Runtime.CompilerServices;
 using ConcreteEngine.Core.Assets;
+using ConcreteEngine.Core.Resources;
 using Silk.NET.Maths;
 
 #endregion

@@ -1,10 +1,9 @@
 using ConcreteEngine.Core.Input;
-using ConcreteEngine.Graphics;
 using ConcreteEngine.Graphics.Data;
 using Silk.NET.Input;
 using Silk.NET.Maths;
 
-namespace ConcreteEngine.Core;
+namespace ConcreteEngine.Core.Transforms;
 
 public sealed class CameraSystem: IGameEngineSystem
 {

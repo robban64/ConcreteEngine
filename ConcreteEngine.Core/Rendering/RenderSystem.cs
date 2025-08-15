@@ -6,6 +6,8 @@ using ConcreteEngine.Core.Assets;
 using ConcreteEngine.Core.Rendering.Materials;
 using ConcreteEngine.Core.Rendering.Sprite;
 using ConcreteEngine.Core.Rendering.Tilemap;
+using ConcreteEngine.Core.Resources;
+using ConcreteEngine.Core.Transforms;
 using ConcreteEngine.Graphics;
 using ConcreteEngine.Graphics.Data;
 using ConcreteEngine.Graphics.Definitions;
@@ -26,7 +28,7 @@ public sealed class RenderSystem : IGameEngineSystem
     private readonly Shader[] _shaders;
     private readonly MaterialStore _materialStore;
     private readonly SortedList<int, DrawCommandId>[] _renderPasses;
-    private readonly SortedList<int, RenderPassDesc>[] _renderPassDesc;
+    private readonly SortedList<int, RenderPass>[] _renderPassDesc;
 
     private readonly DrawCommandCollector _commandCollector;
     private readonly DrawCommandSubmitter _commandSubmitter;
@@ -51,11 +53,11 @@ public sealed class RenderSystem : IGameEngineSystem
         _materialStore = new MaterialStore();
 
         _renderPasses = new SortedList<int, DrawCommandId>[RenderTargetCount];
-        _renderPassDesc = new SortedList<int, RenderPassDesc>[RenderTargetCount];
+        _renderPassDesc = new SortedList<int, RenderPass>[RenderTargetCount];
         for (int i = 0; i < RenderTargetCount; i++)
         {
             _renderPasses[i] = new SortedList<int, DrawCommandId>(4);
-            _renderPassDesc[i] = new  SortedList<int, RenderPassDesc>(4);
+            _renderPassDesc[i] = new  SortedList<int, RenderPass>(4);
         }
 
         _commandCollector = new DrawCommandCollector();
@@ -78,7 +80,8 @@ public sealed class RenderSystem : IGameEngineSystem
     public void RegisterRenderPass(in CreateRenderPassDesc desc)
     {
         var fboCtx = _graphics.CreateFrameBuffer(in desc);
-        _renderPassDesc[(int)desc.Target].Add(desc.Order, fboCtx);
+        var target = RenderPass.From(fboCtx);
+        _renderPassDesc[(int)desc.Target].Add(desc.Order, target);
     }
     
     public void RegisterCommand(int order, DrawCommandId commandId, RenderTargetId target, int capacity)
@@ -136,10 +139,6 @@ public sealed class RenderSystem : IGameEngineSystem
             _ctx.SetUniform(ShaderUniform.ProjectionViewMatrix, in  projectionViewMatrix);
         }
         
-        //_ctx.BeginRenderPass(_framebufferId, Color.CornflowerBlue, ClearBufferFlag.ColorAndDepth);
-        //_ctx.EndRenderPass();
-        //_ctx.ResolveFramebufferTo(_framebufferId);
-        //_ctx.DrawFboScreenQuad(_framebufferId, _screenShader.ResourceId);
         for (int target = 0; target < RenderTargetCount; target++)
         {
             var renderTarget = (RenderTargetId)target;
@@ -168,7 +167,7 @@ public sealed class RenderSystem : IGameEngineSystem
                 switch (pass.ResolveTo)
                 {
                     case RenderPassResolveTarget.Blit:
-                        _ctx.BlitFramebufferTo(pass.FboId, pass.ResolveToFboId);
+                        _ctx.BlitFramebufferTo(pass.FboId, pass.ResolveToFbo?.FboId ?? 0);
                         break;
                     case RenderPassResolveTarget.FullscreenQuad:
                         _ctx.DrawFboScreenQuad(pass.FboId, _screenShader.ResourceId);

@@ -7,11 +7,12 @@ using ConcreteEngine.Core.Game.Sprite;
 using ConcreteEngine.Core.Game.Terrain;
 using ConcreteEngine.Core.Rendering;
 using ConcreteEngine.Core.Rendering.Materials;
+using ConcreteEngine.Core.Resources;
 using ConcreteEngine.Graphics;
 using ConcreteEngine.Graphics.Definitions;
 using Silk.NET.Maths;
 using Silk.NET.OpenGL;
-using Shader = ConcreteEngine.Core.Assets.Shader;
+using Shader = ConcreteEngine.Core.Resources.Shader;
 
 #endregion
 
@@ -45,7 +46,7 @@ public class DemoScene : GameScene
             Clear: true,
             ClearColor: Color.CornflowerBlue,
             ClearMask: ClearBufferFlag.ColorAndDepth,
-            ResolveTo: RenderPassResolveTarget.FullscreenQuad
+            ResolveTo: RenderPassResolveTarget.Blit
         ));
 
         renderer.AddMaterial(new MaterialDescription(

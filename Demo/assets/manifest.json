@@ -2,13 +2,39 @@
   "shaders": [
     {
       "name": "SpriteShader",
-      "path": "sprite-shader.glsl",
+      "vertShaderPath": "sprite.vert.glsl",
+      "fragShaderPath": "sprite.frag.glsl",
       "samplers": ["uTexture"]
     },
     {
       "name": "ScreenShader",
-      "path": "screen-shader.glsl",
+      "vertShaderPath": "screen.vert.glsl",
+      "fragShaderPath": "screen.frag.glsl",
       "samplers": ["uTexture"]
+    },
+    {
+      "name": "BlurHorizontal",
+      "vertShaderPath": "screen.vert.glsl",
+      "fragShaderPath": "blur_h.frag.glsl",
+      "samplers": ["uTexture"]
+    },
+    {
+      "name": "BlurVertical",
+      "vertShaderPath": "screen.vert.glsl",
+      "fragShaderPath": "blur_v.frag.glsl",
+      "samplers": ["uTexture"]
+    },
+    {
+      "name": "BrightPass",
+      "vertShaderPath": "screen.vert.glsl",
+      "fragShaderPath": "brightpass.frag.glsl",
+      "samplers": ["uSceneTex"]
+    },
+    {
+      "name": "ScreenComposite",
+      "vertShaderPath": "screen.vert.glsl",
+      "fragShaderPath": "composite.frag.glsl",
+      "samplers": ["uSceneTex", "uBloomTex"]
     }
   ],
   "textures": [

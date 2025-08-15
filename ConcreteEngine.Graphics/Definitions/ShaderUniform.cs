@@ -6,29 +6,42 @@ public enum ShaderUniform : byte
     ProjectionViewMatrix,
     TextureOffset,
     TextureScale,
-    SampleTexture
+
+    SampleTexture,
+    SamplerScene,
+    SamplerBloom,
+
+    TexelSize,
+    Threshold,
+    SoftKnee,
+    
+    BloomStrength,
+    VignetteRadius,
+    VignetteSoft,
+    VignetteGain
 }
 
 public static class ShaderUniforms
 {
-    // Vertex Shader
-    public const string ModelName = "uModel";
-    public const string ProjectionViewName = "uViewProj";
-    public const string TextureOffsetName = "uTexOffset";
-    public const string TextureScaleName = "uTexScale";
-
-    // Fragment Shader
-    public const string SamplerTextureName = "uTexture";
-
     public static string ToUniformName(this ShaderUniform uniform)
     {
         return uniform switch
         {
-            ShaderUniform.ModelMatrix => ModelName,
-            ShaderUniform.ProjectionViewMatrix => ProjectionViewName,
-            ShaderUniform.TextureOffset => TextureOffsetName,
-            ShaderUniform.TextureScale => TextureScaleName,
-            ShaderUniform.SampleTexture => SamplerTextureName,
+            ShaderUniform.ModelMatrix => "uModel",
+            ShaderUniform.ProjectionViewMatrix => "uViewProj",
+            ShaderUniform.TextureOffset => "uTexOffset",
+            ShaderUniform.TextureScale => "uTexScale",
+            ShaderUniform.SampleTexture => "uTexture",
+            ShaderUniform.SamplerScene => "uSceneTex",
+            ShaderUniform.SamplerBloom => "uBloomTex",
+            ShaderUniform.TexelSize => "uTexelSize",
+            ShaderUniform.Threshold => "uThreshold",
+            ShaderUniform.SoftKnee => "uSoftKnee",
+            ShaderUniform.BloomStrength => "uBloomStrength",
+            ShaderUniform.VignetteRadius => "uVignetteRadius",
+            ShaderUniform.VignetteSoft => "uVignetteSoft",
+            ShaderUniform.VignetteGain => "uVignetteGain",
+            _ => throw new ArgumentOutOfRangeException(nameof(uniform), uniform, null)
         };
     }
 }

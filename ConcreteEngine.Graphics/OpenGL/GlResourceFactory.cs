@@ -223,9 +223,9 @@ internal class GlResourceFactory(GlGraphicsContext ctx)
         return shader;
     }
 
-    private Dictionary<string, int> GetUniformsFromProgram(uint handle)
+    private Dictionary<string, short> GetUniformsFromProgram(uint handle)
     {
-        var uniforms = new Dictionary<string, int>();
+        var uniforms = new Dictionary<string, short>();
 
         Gl.GetProgram(handle, ProgramPropertyARB.ActiveUniforms, out int uniformsLength);
         for (uint uniformIndex = 0; uniformIndex < uniformsLength; uniformIndex++)
@@ -234,7 +234,7 @@ internal class GlResourceFactory(GlGraphicsContext ctx)
             int uniformLocation = Gl.GetUniformLocation(handle, uniformName);
             if (uniformLocation >= 0)
             {
-                uniforms.Add(uniformName, uniformLocation);
+                uniforms.Add(uniformName, (short)uniformLocation);
             }
         }
 

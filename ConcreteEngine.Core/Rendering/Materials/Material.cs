@@ -1,4 +1,5 @@
 using ConcreteEngine.Core.Assets;
+using ConcreteEngine.Core.Resources;
 using ConcreteEngine.Graphics;
 using ConcreteEngine.Graphics.Definitions;
 

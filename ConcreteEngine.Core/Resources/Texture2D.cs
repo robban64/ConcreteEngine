@@ -1,11 +1,11 @@
 #region
 
-using ConcreteEngine.Graphics;
+using ConcreteEngine.Core.Assets;
 using ConcreteEngine.Graphics.Definitions;
 
 #endregion
 
-namespace ConcreteEngine.Core.Assets;
+namespace ConcreteEngine.Core.Resources;
 
 public class Texture2D : IGraphicAssetFile
 {

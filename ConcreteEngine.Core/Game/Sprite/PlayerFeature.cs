@@ -1,6 +1,8 @@
 using ConcreteEngine.Core.Assets;
 using ConcreteEngine.Core.Input;
 using ConcreteEngine.Core.Rendering;
+using ConcreteEngine.Core.Resources;
+using ConcreteEngine.Core.Transforms;
 using ConcreteEngine.Core.Utils;
 using ConcreteEngine.Graphics;
 using Silk.NET.Input;

@@ -1,4 +1,5 @@
 using ConcreteEngine.Core.Assets;
+using ConcreteEngine.Core.Resources;
 using ConcreteEngine.Core.Utils;
 
 namespace ConcreteEngine.Core.Game.Terrain;

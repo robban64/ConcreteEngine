@@ -4,7 +4,7 @@ using ConcreteEngine.Graphics.Data;
 
 #endregion
 
-namespace ConcreteEngine.Graphics;
+namespace ConcreteEngine.Graphics.Resources;
 
 public interface IMesh : IGraphicsResource
 {

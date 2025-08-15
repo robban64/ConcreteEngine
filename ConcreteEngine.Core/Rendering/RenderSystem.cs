@@ -19,6 +19,7 @@ public sealed class RenderSystem : IGameEngineSystem
 {
     private readonly IGraphicsDevice _graphics;
     private readonly IGraphicsContext _ctx;
+    private readonly ViewTransform2D _camera;
     
     private readonly Shader[] _shaders;
 
@@ -37,10 +38,11 @@ public sealed class RenderSystem : IGameEngineSystem
     
 
 
-    internal RenderSystem(IGraphicsDevice graphics, Shader[] shaders)
+    internal RenderSystem(IGraphicsDevice graphics, ViewTransform2D camera, Shader[] shaders)
     {
         _graphics = graphics;
         _ctx = graphics.Ctx;
+        _camera = camera;
         
         _shaders =  shaders.ToArray();
         _materialStore = new MaterialStore();
@@ -84,7 +86,7 @@ public sealed class RenderSystem : IGameEngineSystem
 
     internal void Execute(float alpha)
     {
-        var projectionViewMatrix = _ctx.ViewTransform.ProjectionViewMatrix;
+        var projectionViewMatrix = _camera.ProjectionViewMatrix;
         
         // setup the projection view matrix for all shaders
         foreach (var shader in _shaders)

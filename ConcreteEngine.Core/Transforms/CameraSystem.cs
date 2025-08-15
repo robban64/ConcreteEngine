@@ -12,20 +12,26 @@ public sealed class CameraSystem: IGameEngineSystem
     private const float BaseSpeed = 100; //= 900;
 
     private readonly InputSystem _input;
-    private readonly ViewTransform2D _camera;
+    private readonly ViewTransform2D _transform = new()         {
+        Position = Vector2D<float>.Zero,
+        Rotation = 0f,
+        Zoom = 1f
+    };
     
-    internal CameraSystem(InputSystem input, ViewTransform2D camera)
+    public ViewTransform2D Transform => _transform;
+    
+    internal CameraSystem(InputSystem input)
     {
         _input = input;
-        _camera = camera;
     }
 
     public void Update(in GraphicsFrameContext frameCtx)
     {
+        _transform.ViewportSize = frameCtx.FramebufferSize;
+        
         float speed = frameCtx.DeltaTime * BaseSpeed;
 
         var input = _input;
-        var camera = _camera;
         
         var deltaPos = Vector2D<float>.Zero;
 
@@ -60,7 +66,7 @@ public sealed class CameraSystem: IGameEngineSystem
         if (len > 0f)
         {
             deltaPos /= len;
-            camera.Position += deltaPos * speed;
+            _transform.Position += deltaPos * speed;
         }
     }
 

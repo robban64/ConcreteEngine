@@ -33,7 +33,7 @@ public class SpriteFeature: IGameFeature
             {
                 SpriteEntities.Add(new SpriteEntity
                 {
-                    Position = new Vector2D<float>(64 * x + 128, 64 * y + 128),
+                    Position = new Vector2D<float>(64 * x , 64 * y ),
                     Scale = new Vector2D<float>(64, 64),
                 });
             }

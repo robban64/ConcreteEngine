@@ -4,6 +4,7 @@ using ConcreteEngine.Graphics;
 using ConcreteEngine.Graphics.Data;
 using ConcreteEngine.Graphics.Definitions;
 using ConcreteEngine.Graphics.Primitives;
+using static ConcreteEngine.Core.Rendering.RenderConsts;
 
 #endregion
 
@@ -19,18 +20,22 @@ internal sealed class SpriteBatchMesh : IDisposable
 {
     private const int VerticesPerSprite = 4;
     private const int IndicesPerSprite = 6;
+    
+    private static readonly Vertex2D[] Vertices = new Vertex2D[MaxSpriteBatchSize * VerticesPerSprite];
+    private static readonly ushort[] Indices = new ushort[MaxSpriteBatchSize * IndicesPerSprite];
 
     private readonly IGraphicsDevice _graphics;
     private readonly IGraphicsContext _ctx;
 
     private readonly int _capacity;
 
+
     private readonly ushort _meshId;
     private readonly ushort _vertexBufferId;
     private readonly ushort _indexBufferId;
 
     private bool _disposed = false;
-
+    
     public SpriteBatchMesh(IGraphicsDevice graphics, int capacity)
     {
         var minSpriteBatchSize = graphics.Configuration.MinSpriteBatchSize;
@@ -43,7 +48,7 @@ internal sealed class SpriteBatchMesh : IDisposable
         _ctx = graphics.Ctx;
         _capacity = capacity;
 
-        var meshData = new MeshDescriptor<Vertex2D,ushort>
+        var meshData = new MeshDescriptor<Vertex2D, ushort>
         {
             VertexBuffer = new MeshDataBufferDescriptor<Vertex2D>(BufferUsage.StreamDraw, null),
             IndexBuffer = new MeshDataBufferDescriptor<ushort>(BufferUsage.StaticDraw, null),
@@ -58,7 +63,7 @@ internal sealed class SpriteBatchMesh : IDisposable
         _meshId = meshResult.MeshId;
         _vertexBufferId = meshResult.VertexBufferId;
         _indexBufferId = meshResult.IndexBufferId;
-        
+
         _ctx.BindVertexBuffer(meshResult.VertexBufferId);
         InitVertexBufferData();
         _ctx.BindVertexBuffer(0);
@@ -70,13 +75,12 @@ internal sealed class SpriteBatchMesh : IDisposable
 
     private void InitVertexBufferData()
     {
-        Span<Vertex2D> vertices = stackalloc Vertex2D[_capacity * VerticesPerSprite];
-        _ctx.SetVertexBuffer<Vertex2D>(vertices);
+        _ctx.SetVertexBuffer<Vertex2D>(Vertices);
     }
 
     private void InitIndexBufferData()
     {
-        Span<ushort> indices = stackalloc ushort[_capacity * IndicesPerSprite];
+        var indices = Indices.AsSpan(0,_capacity * IndicesPerSprite);
         for (int i = 0; i < _capacity; i++)
         {
             int vi = (ushort)(i * 4);
@@ -102,7 +106,7 @@ internal sealed class SpriteBatchMesh : IDisposable
         if (spriteCount > _capacity)
             throw new InvalidOperationException($"Sprite batch {spriteCount} exceeds maximum of {_capacity} sprites.");
 
-        Span<Vertex2D> vertices = stackalloc Vertex2D[spriteCount * VerticesPerSprite];
+        var vertices = Vertices.AsSpan(0,spriteCount * VerticesPerSprite);
 
         for (int i = 0; i < spriteCount; i++)
         {
@@ -128,7 +132,19 @@ internal sealed class SpriteBatchMesh : IDisposable
 
             int vi = i * 4;
 
+            //top left origin
+            // Bottom-left
+            vertices[vi + 0] = new Vertex2D(x, y, u0, v0);
+            // Bottom-right
+            vertices[vi + 1] = new Vertex2D(x + w, y, u1, v0);
+            // Top-left
+            vertices[vi + 2] = new Vertex2D(x, y + h, u0, v1);
+            // Top-right
+            vertices[vi + 3] = new Vertex2D(x + w, y + h, u1, v1);
+
+
             // Bottom-left (centered origin)
+            /*
             vertices[vi + 0] = new Vertex2D(new(x - halfW, y - halfH), new(u0, v0));
             // Bottom-right
             vertices[vi + 1] = new Vertex2D(new(x + halfW, y - halfH), new(u1, v0));
@@ -136,25 +152,14 @@ internal sealed class SpriteBatchMesh : IDisposable
             vertices[vi + 2] = new Vertex2D(new(x - halfW, y + halfH), new(u0, v1));
             // Top-right
             vertices[vi + 3] = new Vertex2D(new(x + halfW, y + halfH), new(u1, v1));
-
-            //top left origin
-            /*
-                // Bottom-left
-               vertices[vi + 0] = new Vertex2D(new(x,     y    ), new(u0, v0));
-               // Bottom-right
-               vertices[vi + 1] = new Vertex2D(new(x + w, y    ), new(u1, v0));
-               // Top-left
-               vertices[vi + 2] = new Vertex2D(new(x,     y + h), new(u0, v1));
-               // Top-right
-               vertices[vi + 3] = new Vertex2D(new(x + w, y + h), new(u1, v1));
-             */
+            */
         }
 
         _ctx.BindVertexBuffer(_vertexBufferId);
         _ctx.UploadVertexBuffer<Vertex2D>(vertices, 0);
         _ctx.BindVertexBuffer(0);
 
-        
+
         var drawCount = (uint)(spriteCount * IndicesPerSprite);
 
         return new SpriteBatchBuildResult(_meshId, drawCount);

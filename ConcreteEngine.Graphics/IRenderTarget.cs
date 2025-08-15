@@ -1,6 +1,7 @@
 #region
 
 using System.Drawing;
+using ConcreteEngine.Graphics.Resources;
 using Silk.NET.Maths;
 
 #endregion

@@ -2,7 +2,7 @@ using System.Runtime.CompilerServices;
 using ConcreteEngine.Graphics.Data;
 using ConcreteEngine.Graphics.Error;
 
-namespace ConcreteEngine.Graphics;
+namespace ConcreteEngine.Graphics.Resources;
 
 internal sealed class GraphicsResourceStore(Action<IGraphicsResource> removeHandler)
 {

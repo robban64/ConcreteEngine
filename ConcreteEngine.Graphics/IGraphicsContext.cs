@@ -13,7 +13,6 @@ public interface IGraphicsContext
 {
     GraphicsConfiguration Configuration { get; }
 
-    ViewTransform2D ViewTransform { get; }
     Vector2D<int> FramebufferSize { get; }
     Vector2D<int> ViewportSize { get; }
 

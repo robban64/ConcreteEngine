@@ -6,6 +6,7 @@ using System.Runtime.CompilerServices;
 using ConcreteEngine.Graphics.Data;
 using ConcreteEngine.Graphics.Definitions;
 using ConcreteEngine.Graphics.Error;
+using ConcreteEngine.Graphics.Resources;
 using Silk.NET.Maths;
 using Silk.NET.OpenGL;
 
@@ -38,7 +39,6 @@ public sealed class GlGraphicsContext : IGraphicsContext
     private int _drawTriangleCount = 0;
     private int _drawCallCount = 0;
     public GraphicsConfiguration Configuration { get; }
-    public ViewTransform2D ViewTransform { get; }
     
     public Vector2D<int> FramebufferSize => _framebufferSize;
     public Vector2D<int> ViewportSize => _viewPortSize;
@@ -55,14 +55,7 @@ public sealed class GlGraphicsContext : IGraphicsContext
         _boundTextures = new ushort[configuration.MaxTextureImageUnits];
 
         _framebufferSize = initialFrameCtx.FramebufferSize;
-        //_renderPipeline = new RenderPipeline(this);
-        ViewTransform = new ViewTransform2D
-        {
-            Position = Vector2D<float>.Zero,
-            Rotation = 0f,
-            Zoom = 1f,
-            ViewportSize = initialFrameCtx.ViewportSize,
-        };
+
 
         gl.GetInteger(GetPName.MajorVersion, out glMajor);
         gl.GetInteger(GetPName.MinorVersion, out glMinor);

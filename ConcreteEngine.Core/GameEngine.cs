@@ -118,6 +118,9 @@ public sealed class GameEngine: IDisposable
         // input
         _input = new InputSystem(_window.CreateInput());
         
+        // camera
+        _camera = new CameraSystem(_input);
+
         // assets
         _assets = new AssetSystem(graphics: _graphics, assetPath: assetPipelineConfiguration.AssetPath,
             manifestFilename: assetPipelineConfiguration.ManifestFilename);
@@ -125,20 +128,16 @@ public sealed class GameEngine: IDisposable
 
         // messages
         _pipeline = new GameMessagePipelineSystem();
-
-        // camera
-        _camera = new CameraSystem(_input, _graphics.Ctx.ViewTransform);
-
         
         // renderer
         var shaders = _assets.GetAll<Shader>();
-        _renderer = new RenderSystem(_graphics, shaders.ToArray());
+        _renderer = new RenderSystem(_graphics, _camera.Transform, shaders.ToArray());
 
         _systems.Register<InputSystem>(_input);
+        _systems.Register<CameraSystem>(_camera);
         _systems.Register<GameMessagePipelineSystem>(_pipeline);
         _systems.Register<AssetSystem>(_assets);
         _systems.Register<RenderSystem>(_renderer);
-        _systems.Register<CameraSystem>(_camera);
 
     }
 

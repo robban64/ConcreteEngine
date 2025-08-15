@@ -1,6 +1,6 @@
 using Silk.NET.OpenGL;
 
-namespace ConcreteEngine.Graphics;
+namespace ConcreteEngine.Graphics.OpenGL;
 
 //TODO
 

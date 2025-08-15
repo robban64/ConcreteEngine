@@ -2,6 +2,7 @@
 
 using ConcreteEngine.Graphics.Data;
 using ConcreteEngine.Graphics.Definitions;
+using ConcreteEngine.Graphics.Resources;
 using Silk.NET.OpenGL;
 
 #endregion

@@ -4,7 +4,7 @@ using ConcreteEngine.Graphics.Definitions;
 
 #endregion
 
-namespace ConcreteEngine.Graphics;
+namespace ConcreteEngine.Graphics.Resources;
 
 public interface ITexture2D : IGraphicsResource
 {

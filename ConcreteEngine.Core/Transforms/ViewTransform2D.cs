@@ -4,7 +4,7 @@ using Silk.NET.Maths;
 
 #endregion
 
-namespace ConcreteEngine.Graphics;
+namespace ConcreteEngine.Core;
 
 public sealed class ViewTransform2D
 {

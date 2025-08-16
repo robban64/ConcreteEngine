@@ -29,6 +29,7 @@ public sealed partial class GraphicsException
     [DoesNotReturn]
     public static void ThrowResourceNotFound(int id) =>
         throw ResourceNotFound(id);
+
     
     [DoesNotReturn]
     public static void ThrowResourceAlreadyExists<T>(object name) =>

@@ -12,9 +12,9 @@ namespace ConcreteEngine.Graphics;
 public interface IGraphicsContext
 {
     GraphicsConfiguration Configuration { get; }
-    ushort QuadMeshId { get; }
 
     Vector2D<int> ViewportSize { get; }
+    BlendMode BlendMode { get; }
 
     void BeginFrame(in GraphicsFrameContext frameCtx);
     void EndFrame();
@@ -39,7 +39,6 @@ public interface IGraphicsContext
 
     void Draw(uint drawCount = 0);
     void DrawIndexed(uint drawCount = 0);
-    void DrawFboScreenQuad(ushort fboId, ushort shaderId);
     
     void UseShader(ushort resourceId);
     void SetUniform(ShaderUniform uniform, int value);

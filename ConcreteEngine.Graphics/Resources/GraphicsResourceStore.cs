@@ -4,17 +4,15 @@ using ConcreteEngine.Graphics.Error;
 
 namespace ConcreteEngine.Graphics.Resources;
 
-internal sealed class GraphicsResourceStore(Action<IGraphicsResource> removeHandler)
+internal sealed class GraphicsResourceStore
 {
     private const int MaxBufferSize = 1024;
     private const int BufferSize = 128;
 
-    private readonly SortedList<ushort, UniformTable> _shaderUniforms = new(8);
-    private readonly List<ushort> _resourceDisposeQueue = [];
-
-    private IGraphicsResource[] _resources = new IGraphicsResource[BufferSize];
     private int _capacity = BufferSize;
+
     private ushort _idx = 1;
+    private IGraphicsResource[] _resources = new IGraphicsResource[BufferSize];
 
     public int Count => _idx;
 
@@ -23,9 +21,9 @@ internal sealed class GraphicsResourceStore(Action<IGraphicsResource> removeHand
         var span = _resources.AsSpan().Slice(0, _idx - 1);
         return span.ToArray();
     }
-    
+
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public IGraphicsResource? Get(ushort i) =>  _resources[i - 1];
+    public IGraphicsResource? Get(ushort i) => _resources[i - 1];
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public T Get<T>(ushort i) where T : class, IGraphicsResource
@@ -48,35 +46,12 @@ internal sealed class GraphicsResourceStore(Action<IGraphicsResource> removeHand
         value = null!;
         return false;
     }
-    
-    [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public UniformTable GetUniformTable(ushort resourceId) 
-    {
-        var hasResource = _shaderUniforms.TryGetValue(resourceId, out var uniformTable);
-        if(!hasResource || uniformTable == null) GraphicsException.ThrowResourceNotFound(resourceId);
-        return uniformTable;
-    }
 
-    public ushort AddResource<TResource>(TResource resource) where TResource : IGraphicsResource
-    {
-        if (resource is IShader)
-            GraphicsException.ThrowUnsupportedFeature(
-                $"Use {nameof(AddShaderResource)} when creating shader resources");
-        
-        TryGrow();
 
-        var id = _idx;
-        _resources[id - 1] = resource;
-        return _idx++;
-    }
-
-    public ushort AddShaderResource<TShader>(TShader resource, UniformTable uniforms) where TShader : IShader
+    public ushort AddResource<TResource>(TResource resource) where TResource : class, IGraphicsResource
     {
         TryGrow();
-        
-        var id = _idx;
-        _resources[id - 1] = resource;
-        _shaderUniforms.Add(id, uniforms);
+        _resources[_idx - 1] = resource;
         return _idx++;
     }
 
@@ -90,52 +65,41 @@ internal sealed class GraphicsResourceStore(Action<IGraphicsResource> removeHand
         if (resource == null!)
             GraphicsException.ThrowResourceNotFound(resourceId);
 
+        //debug
         if (resource.IsDisposed)
             GraphicsException.ThrowResourceIsDisposed(resourceId);
 
-        _resourceDisposeQueue.Add(resourceId);
     }
 
-    public void FlushRemoveQueue()
+    public void ReplaceResource<T>(ushort resourceId, T newResource, out T previousResource)
+        where T : class, IGraphicsResource
     {
-        if (_resourceDisposeQueue.Count > 0)
-        {
-            foreach (var resourceId in _resourceDisposeQueue)
-            {
-                RemoveResource(resourceId);
-            }
+        ValidateResourceId(resourceId);
 
-            _resourceDisposeQueue.Clear();
-        }
+        var resource = Get<T>(resourceId);
+        _resources[resourceId - 1] = newResource;
 
-        _resourceDisposeQueue.Clear();
-    }
-
-
-    private void RemoveResource(ushort resourceId)
-    {
-        if (resourceId > _idx)
-            GraphicsException.ThrowCapabilityExceeded<GraphicsResourceStore>("resource counter", resourceId,
-                _idx);
-
-        var resource = _resources[resourceId];
-        if (resource is IShader)
-        {
-            _shaderUniforms.Remove(resourceId);
-        }
-
-        removeHandler(resource);
-        _resources[resourceId] = null!;
+        previousResource = resource;
+        
+        if(previousResource == newResource) GraphicsException.ThrowResourceAlreadyExists(resourceId);
     }
 
     private void TryGrow()
     {
         if (_idx < _capacity - 2) return;
         var newCapacity = _capacity + BufferSize;
-        if (newCapacity > MaxBufferSize) 
+        if (newCapacity > MaxBufferSize)
             throw new OutOfMemoryException($"Requested capacity {newCapacity} is too large, MAX:{MaxBufferSize}");
-        
+
         _capacity += BufferSize;
         Array.Resize(ref _resources, _capacity);
+    }
+
+    private void ValidateResourceId(ushort resourceId)
+    {
+        if (resourceId >= _idx)
+            throw GraphicsException.CapabilityExceeded<GraphicsResourceStore>("Out of bound resource access",
+                resourceId,
+                _idx);
     }
 }

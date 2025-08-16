@@ -22,6 +22,7 @@ public sealed class GlGraphicsContext : IGraphicsContext
     private readonly int glMajor = 0;
 
     private readonly GraphicsResourceStore _store;
+    private readonly UniformRegistry _uniformRegistry;
 
     private BlendMode _blendMode = BlendMode.Alpha;
 
@@ -34,17 +35,15 @@ public sealed class GlGraphicsContext : IGraphicsContext
 
     private UniformTable? _boundUniforms;
 
-    private Vector2D<int> _viewPortSize = Vector2D<int>.Zero;
-    private Vector2D<int> _framebufferSize = Vector2D<int>.Zero;
+    private Vector2D<int> _viewportSize;
 
     private float _deltaTime = 0f;
     private int _drawTriangleCount = 0;
     private int _drawCallCount = 0;
 
-    public ushort QuadMeshId { get; internal set; }
     public GraphicsConfiguration Configuration { get; }
-
-    public Vector2D<int> ViewportSize => _viewPortSize;
+    public BlendMode BlendMode => _blendMode;
+    public Vector2D<int> ViewportSize => _viewportSize;
 
     public GL Gl => _gl;
 
@@ -53,15 +52,17 @@ public sealed class GlGraphicsContext : IGraphicsContext
         GL gl,
         GraphicsConfiguration configuration,
         GraphicsResourceStore store,
+        UniformRegistry  uniformRegistry,
         in GraphicsFrameContext initialFrameCtx)
     {
         _gl = gl;
         Configuration = configuration;
         _store = store;
+        _uniformRegistry = uniformRegistry;
 
         _boundTextures = new ushort[configuration.MaxTextureImageUnits];
 
-        _framebufferSize = initialFrameCtx.FramebufferSize;
+        _viewportSize = initialFrameCtx.ViewportSize;
 
 
         gl.GetInteger(GetPName.MajorVersion, out glMajor);
@@ -84,8 +85,7 @@ public sealed class GlGraphicsContext : IGraphicsContext
         _blendMode = BlendMode.Unset;
 
         _deltaTime = frameCtx.DeltaTime;
-        _framebufferSize = frameCtx.FramebufferSize;
-        _viewPortSize = frameCtx.ViewportSize;
+        _viewportSize = frameCtx.ViewportSize;
 
         _drawCallCount = 0;
         _drawTriangleCount = 0;
@@ -94,10 +94,11 @@ public sealed class GlGraphicsContext : IGraphicsContext
     public void EndFrame()
     {
         // unbind context
-        UseShader(0);
         BindMesh(0);
         BindVertexBuffer(0);
         BindIndexBuffer(0);
+        BindFramebuffer(0);
+        UseShader(0);
         for (uint i = 0; i < _boundTextures.Length; i++)
         {
             BindTexture(0, i);
@@ -115,7 +116,7 @@ public sealed class GlGraphicsContext : IGraphicsContext
     {
         if (_boundFboId != 0) GraphicsException.ThrowInvalidState("Cannot begin screen pass while FBO is bound.");
         _gl.BindFramebuffer(FramebufferTarget.Framebuffer, 0);
-        _gl.Viewport(_viewPortSize);
+        _gl.Viewport(_viewportSize);
         if (clear.HasValue) Clear(clear.Value, flags);
     }
 
@@ -128,7 +129,7 @@ public sealed class GlGraphicsContext : IGraphicsContext
         ValidateResource(fbo);
 
         Gl.BindFramebuffer(FramebufferTarget.Framebuffer, fbo.Handle);
-        _gl.Viewport(_framebufferSize);
+        _gl.Viewport(_viewportSize);
         if (clear.HasValue) Clear(clear.Value, flags);
         _boundFboId = fboId;
     }
@@ -138,7 +139,7 @@ public sealed class GlGraphicsContext : IGraphicsContext
         if (_boundFboId == 0) GraphicsException.ResourceNotBound<GlFramebuffer>(nameof(_boundFboId));
 
         Gl.BindFramebuffer(FramebufferTarget.Framebuffer, 0);
-        Gl.Viewport(_viewPortSize);
+        Gl.Viewport(_viewportSize);
         _boundFboId = 0;
     }
 
@@ -149,7 +150,7 @@ public sealed class GlGraphicsContext : IGraphicsContext
         ValidateResource(fromFbo);
 
         uint toFboHandle = 0;
-        var toFboSize = size ?? _viewPortSize;
+        var toFboSize = size ?? _viewportSize;
 
         if (toId > 0)
         {
@@ -170,7 +171,7 @@ public sealed class GlGraphicsContext : IGraphicsContext
         );
 
         _gl.BindFramebuffer(FramebufferTarget.Framebuffer, 0);
-        _gl.Viewport(_viewPortSize);
+        _gl.Viewport(_viewportSize);
     }
 
     public void SetBlendMode(BlendMode blendMode)
@@ -218,7 +219,7 @@ public sealed class GlGraphicsContext : IGraphicsContext
         if (resourceId == 0)
         {
             Gl.BindFramebuffer(FramebufferTarget.Framebuffer, 0);
-            Gl.Viewport(_viewPortSize);
+            Gl.Viewport(_viewportSize);
             Gl.Clear((uint)ClearBufferMask.ColorBufferBit);
             _boundFboId = 0;
             return;
@@ -397,25 +398,6 @@ public sealed class GlGraphicsContext : IGraphicsContext
         _drawCallCount++;
     }
 
-    public void DrawFboScreenQuad(ushort fboId, ushort shaderId)
-    {
-        ArgumentOutOfRangeException.ThrowIfZero(fboId, nameof(fboId));
-        ArgumentOutOfRangeException.ThrowIfZero(fboId, nameof(shaderId));
-
-        var fbo = _store.Get<GlFramebuffer>(fboId);
-        ValidateResource(fbo);
-        if (fbo.ColorTextureId == 0) GraphicsException.ThrowInvalidState("FBO has no color texture.");
-
-        var previousBlendMode = _blendMode;
-        
-        SetBlendMode(BlendMode.None);
-        UseShader(shaderId);
-        BindTexture(fbo.ColorTextureId, 0);
-        BindMesh(QuadMeshId);
-        Draw();
-        
-        SetBlendMode(previousBlendMode);
-    }
 
     public void UseShader(ushort resourceId)
     {
@@ -430,7 +412,7 @@ public sealed class GlGraphicsContext : IGraphicsContext
         }
 
         var resource = _store.Get<GlShader>(resourceId);
-        var uniformTable = _store.GetUniformTable(resourceId);
+        var uniformTable = _uniformRegistry.Get(resourceId);
 
         _gl.UseProgram(resource!.Handle);
         _boundShaderId = resourceId;

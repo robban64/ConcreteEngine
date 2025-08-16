@@ -132,8 +132,8 @@ internal class GlResourceFactory(GlGraphicsContext ctx)
 
     public unsafe CreateGlFrameBufferResult CreateFrameBuffer(GlGraphicsDevice graphics, Vector2D<int> size)
     {
-        ArgumentOutOfRangeException.ThrowIfLessThan(size.X, 1, nameof(size.X));
-        ArgumentOutOfRangeException.ThrowIfLessThan(size.Y, 1, nameof(size.Y));
+        ArgumentOutOfRangeException.ThrowIfNegativeOrZero(size.X,  nameof(size.X));
+        ArgumentOutOfRangeException.ThrowIfNegativeOrZero(size.Y,  nameof(size.Y));
 
 
         var (width, height) = ((uint)size.X, (uint)size.Y);

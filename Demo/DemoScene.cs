@@ -38,17 +38,87 @@ public class DemoScene : GameScene
         var spriteShader = assets.Get<Shader>("SpriteShader");
         var spriteTexture = assets.Get<Texture2D>("SpriteTexture");
         var tilemapTexture = assets.Get<Texture2D>("TilemapTextureAtlas");
-        
-        renderer.RegisterRenderPass(new CreateRenderPassDesc(
+
+        var screenShader = assets.Get<Shader>("ScreenShader");
+
+        var blurHorizontalShader = assets.Get<Shader>("BlurHorizontal");
+        var blurVerticalShader = assets.Get<Shader>("BlurVertical");
+        var brightPassShader = assets.Get<Shader>("BrightPass");
+        var screenCompositeShader = assets.Get<Shader>("ScreenComposite");
+
+        var vSize = new Vector2D<int>(1280, 720);
+        var halfSize = new Vector2D<int>(vSize.X / 2, vSize.Y / 2);
+        renderer.RegisterRenderPass("Scene", screenShader, new RegisterRenderTargetDesc(
             Target: RenderTargetId.Scene,
             Order: 0,
-            Size: new Vector2D<int>(1280, 720),
+            SizeRatio: Vector2D<float>.One,
+            DoClear: true,
+            ClearColor: Color.CornflowerBlue,
+            ClearMask: ClearBufferFlag.ColorAndDepth,
+            ResolveTo: RenderPassResolveTarget.FullscreenQuad,
+            ResolveToTarget: new RenderTargetKey(0)
+        ));
+        
+/*
+        // Scene: default render
+        renderer.RegisterRenderPass("DefaultPass",null, new CreateRenderPassDesc(
+            Target: RenderTargetId.Scene,
+            Order: 0,
+            Size: vSize,
             Clear: true,
             ClearColor: Color.CornflowerBlue,
             ClearMask: ClearBufferFlag.ColorAndDepth,
             ResolveTo: RenderPassResolveTarget.Blit
         ));
 
+        // Bright-pass
+        renderer.RegisterRenderPass(brightPassShader, new CreateRenderPassDesc(
+            Target: RenderTargetId.Scene,
+            Order: 1,
+            Size: halfSize,
+            Clear: true,
+            ClearColor: default,
+            ClearMask: ClearBufferFlag.Color,
+            ResolveTo: RenderPassResolveTarget.FullscreenQuad,
+            ResolveToFboId: 0 //TODO
+        ));
+
+        // Blur horizontal
+        renderer.RegisterRenderPass(blurHorizontalShader,new CreateRenderPassDesc(
+            Target: RenderTargetId.Scene,
+            Order: 2,
+            Size: halfSize,
+            Clear: true,
+            ClearColor: default,
+            ClearMask: ClearBufferFlag.Color,
+            ResolveTo: RenderPassResolveTarget.FullscreenQuad,
+            ResolveToFboId: 0 //TODO
+        ));
+        
+        // Blur vertical
+        renderer.RegisterRenderPass(blurVerticalShader,new CreateRenderPassDesc(
+            Target: RenderTargetId.Scene,
+            Order: 3,
+            Size: halfSize,
+            Clear: true,
+            ClearColor: default,
+            ClearMask: ClearBufferFlag.Color,
+            ResolveTo: RenderPassResolveTarget.FullscreenQuad,
+            ResolveToFboId: 0 //TODO
+        ));
+        
+        // Final composite: Scene + Bloom + Vignette → screen
+        renderer.RegisterRenderPass(screenCompositeShader,new CreateRenderPassDesc(
+            Target: RenderTargetId.Scene,
+            Order: 4,
+            Size: vSize,
+            Clear: false,
+            ClearColor: default,
+            ClearMask: ClearBufferFlag.Color,
+            ResolveTo: RenderPassResolveTarget.FullscreenQuad,
+            ResolveToFboId: 0 //TODO
+        ));
+*/
         renderer.AddMaterial(new MaterialDescription(
             Shader: spriteShader,
             Texture: spriteTexture,

@@ -87,7 +87,8 @@ public sealed class GameEngine: IDisposable
 
     private void FpsTickUpdate(int tick)
     {
-        Console.WriteLine($"Fps: {_fps} with tick {tick}");
+        //Console.WriteLine($"Viewport: {_window.Size}, FrameBufSize: {_window.FramebufferSize}");
+        //Console.WriteLine($"Fps: {_fps} with tick {tick}");
     }
 
     private void Load(GraphicsBackend backend, AssetManagerConfiguration assetPipelineConfiguration)

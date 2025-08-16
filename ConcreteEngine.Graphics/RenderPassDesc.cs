@@ -4,25 +4,20 @@ using Silk.NET.Maths;
 
 namespace ConcreteEngine.Graphics;
 
-public readonly record struct RenderPassDesc(
-    RenderTargetId Target,
-    int Order,
+public readonly record struct RenderTargetData(
     ushort FboId,
-    Vector2D<int> Size,
-    bool Clear,
-    Color ClearColor,
-    ClearBufferFlag ClearMask,
-    RenderPassResolveTarget ResolveTo,
-    ushort ResolveToFboId = 0
+    ushort ColTexId,
+    RenderTargetId Target,
+    ushort Generation,
+    Vector2D<float> SizeRatio
 );
 
-public readonly record struct CreateRenderPassDesc(
+public readonly record struct RenderTargetKey(ushort Key);
+
+public readonly record struct RenderTargetHandlerResult(ushort FboId, ushort ColTexId);
+
+public readonly record struct NewRenderTargetDesc(
     RenderTargetId Target,
-    int Order,
-    Vector2D<int>? Size,
-    bool Clear,
-    Color ClearColor,
-    ClearBufferFlag ClearMask,
-    RenderPassResolveTarget ResolveTo,
-    ushort ResolveToFboId = 0
+    Vector2D<float> SizeRatio
 );
+

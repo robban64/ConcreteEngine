@@ -30,6 +30,8 @@ public sealed class RenderSystem : IGameEngineSystem
     private readonly SortedList<int, DrawCommandId>[] _renderPasses;
     private readonly SortedList<int, RenderPass>[] _renderPassDesc;
 
+    private readonly Dictionary<string, RenderPass> _renderPassDict;
+
     private readonly DrawCommandCollector _commandCollector;
     private readonly DrawCommandSubmitter _commandSubmitter;
     private readonly DrawEmitterContext _emitterContext;
@@ -37,14 +39,10 @@ public sealed class RenderSystem : IGameEngineSystem
     private readonly SpriteBatcher _spriteBatch;
     private readonly TilemapBatcher _tilemapBatcher;
 
-    private Shader _screenShader;
-
-
     public SpriteBatcher SpriteBatch => _spriteBatch;
 
     internal RenderSystem(IGraphicsDevice graphics, ViewTransform2D camera, Shader[] shaders)
     {
-        var a = new RenderPassDesc();
         _graphics = graphics;
         _ctx = graphics.Ctx;
         _camera = camera;
@@ -52,6 +50,7 @@ public sealed class RenderSystem : IGameEngineSystem
         _shaders =  shaders.ToArray();
         _materialStore = new MaterialStore();
 
+        _renderPassDict = new Dictionary<string, RenderPass>(4);
         _renderPasses = new SortedList<int, DrawCommandId>[RenderTargetCount];
         _renderPassDesc = new SortedList<int, RenderPass>[RenderTargetCount];
         for (int i = 0; i < RenderTargetCount; i++)
@@ -73,15 +72,13 @@ public sealed class RenderSystem : IGameEngineSystem
             TilemapBatch = _tilemapBatcher
         };
         
-        _screenShader = shaders.First(x => x.Name == "ScreenShader");
-
     }
 
-    public void RegisterRenderPass(in CreateRenderPassDesc desc)
+    public void RegisterRenderPass(string name, Shader? shader, in RegisterRenderTargetDesc param)
     {
-        var fboCtx = _graphics.CreateFrameBuffer(in desc);
-        var target = RenderPass.From(fboCtx);
-        _renderPassDesc[(int)desc.Target].Add(desc.Order, target);
+        var key = _graphics.CreateRenderTarget(param.Target, param.SizeRatio);
+        var renderPass = RenderPass.From(key, shader, in param);
+        _renderPassDesc[(int)param.Target].Add(param.Order, renderPass);
     }
     
     public void RegisterCommand(int order, DrawCommandId commandId, RenderTargetId target, int capacity)
@@ -99,18 +96,18 @@ public sealed class RenderSystem : IGameEngineSystem
 
     internal void Render(float alpha, in GraphicsFrameContext frameCtx)
     {
-        _ctx.BeginFrame(in frameCtx);
+        _graphics.StartFrame(in frameCtx);
         PrepareRenderer();
+        Execute(alpha);
+        _graphics.EndFrame();
+
         
         //_ctx.BeginRenderPass(_framebufferId, Color.CornflowerBlue, ClearBufferFlag.ColorAndDepth);
-        Execute(alpha);
         //_ctx.EndRenderPass();
         
         //_ctx.ResolveFramebufferTo(_framebufferId);
         //_ctx.DrawFboScreenQuad(_framebufferId, _screenShader.ResourceId);
         
-        _ctx.EndFrame();
-        _graphics.CleanupAfterRender();
 
         /*
         _ctx.SetBlendMode(BlendMode.None);
@@ -121,6 +118,28 @@ public sealed class RenderSystem : IGameEngineSystem
         */
         
     }
+    
+    /*
+     public void DrawFboScreenQuad(ushort fboId, ushort shaderId)
+       {
+           ArgumentOutOfRangeException.ThrowIfZero(fboId, nameof(fboId));
+           ArgumentOutOfRangeException.ThrowIfZero(fboId, nameof(shaderId));
+
+           var fbo = _store.Get<GlFramebuffer>(fboId);
+           ValidateResource(fbo);
+           if (fbo.ColorTextureId == 0) GraphicsException.ThrowInvalidState("FBO has no color texture.");
+
+           var previousBlendMode = _blendMode;
+
+           SetBlendMode(BlendMode.None);
+           UseShader(shaderId);
+           BindTexture(fbo.ColorTextureId, 0);
+           BindMesh(QuadMeshId);
+           Draw();
+
+           SetBlendMode(previousBlendMode);
+       }
+     */
     
     private void PrepareRenderer()
     {
@@ -145,36 +164,43 @@ public sealed class RenderSystem : IGameEngineSystem
             var passList = _renderPassDesc[target];
             for (int p = 0; p < passList.Count; p++)
             {
-                var pass = passList[p];
-                if (pass.FboId == 0)
-                    _ctx.BeginScreenPass(pass.Clear ? pass.ClearColor : null, pass.ClearMask);
-                else
-                    _ctx.BeginRenderPass(pass.FboId,  pass.Clear ? pass.ClearColor : null, pass.ClearMask);
-                
-                foreach (var (_, commandId) in _renderPasses[target])
-                {
-                    var commands = _commandSubmitter.GetQueue(renderTarget, commandId);
-
-                    for (int i = 0; i < commands.Length; i++)
-                    {
-                        ref readonly var msg = ref commands[i];
-                        Draw(in msg.Cmd, in msg.Info);
-                    }
-                }
-                
-                if(pass.FboId != 0) _ctx.EndRenderPass();
-
-                switch (pass.ResolveTo)
-                {
-                    case RenderPassResolveTarget.Blit:
-                        _ctx.BlitFramebufferTo(pass.FboId, pass.ResolveToFbo?.FboId ?? 0);
-                        break;
-                    case RenderPassResolveTarget.FullscreenQuad:
-                        _ctx.DrawFboScreenQuad(pass.FboId, _screenShader.ResourceId);
-                        break;
-                }
+                ExecutePass(passList[p]);
             }
             
+        }
+    }
+
+    private void ExecutePass(RenderPass pass)
+    {
+        var target =  pass.Target;
+        var (fboId, colTexId) = _graphics.GetRenderTarget(pass.GfxKey);
+        
+        if (fboId == 0)
+            _ctx.BeginScreenPass(pass.DoClear ? pass.ClearColor : null, pass.ClearMask);
+        else
+            _ctx.BeginRenderPass(fboId,  pass.DoClear ? pass.ClearColor : null, pass.ClearMask);
+                
+        foreach (var (_, commandId) in _renderPasses[(int)target])
+        {
+            var commands = _commandSubmitter.GetQueue(pass.Target, commandId);
+
+            for (int i = 0; i < commands.Length; i++)
+            {
+                ref readonly var msg = ref commands[i];
+                Draw(in msg.Cmd, in msg.Info);
+            }
+        }
+                
+        if(fboId != 0) _ctx.EndRenderPass();
+
+        switch (pass.ResolveTo)
+        {
+            case RenderPassResolveTarget.Blit:
+                _ctx.BlitFramebufferTo(fboId, pass.ResolveToTarget.Key);
+                break;
+            case RenderPassResolveTarget.FullscreenQuad:
+                DrawFboScreenQuad(fboId, colTexId, pass.ShaderId);
+                break;
         }
     }
 
@@ -188,6 +214,21 @@ public sealed class RenderSystem : IGameEngineSystem
         _ctx.DrawIndexed(data.DrawCount);
     }
 
+    private void DrawFboScreenQuad(ushort fboId, ushort colTexId, ushort shaderId)
+    {
+        ArgumentOutOfRangeException.ThrowIfZero(fboId, nameof(fboId));
+        ArgumentOutOfRangeException.ThrowIfZero(fboId, nameof(shaderId));
+        ArgumentOutOfRangeException.ThrowIfZero(fboId, nameof(colTexId));
+
+        var previousBlendMode = _ctx.BlendMode;
+        _ctx.SetBlendMode(BlendMode.None);
+        _ctx.UseShader(shaderId);
+        _ctx.BindTexture(colTexId, 0);
+        _ctx.BindMesh(_graphics.QuadMeshId);
+        _ctx.Draw();
+        _ctx.SetBlendMode(previousBlendMode);
+    }
+    
     public void Dispose()
     {
         

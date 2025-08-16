@@ -1,3 +1,4 @@
+using System.Numerics;
 using ConcreteEngine.Core.Rendering;
 using ConcreteEngine.Core.Rendering.Materials;
 using ConcreteEngine.Core.Rendering.Sprite;
@@ -10,12 +11,12 @@ namespace ConcreteEngine.Core.Game.Sprite;
 
 public sealed class SpriteDrawEmitter : IDrawCommandEmitter
 {
-    private static readonly Matrix4X4<float> DefaultTransform =
-        Transform2D.CreateTransformMatrix(Vector2D<float>.Zero, Vector2D<float>.One, 0);
+    private static readonly Matrix4x4 DefaultTransform =
+        Transform2D.CreateTransformMatrix(Vector2.Zero, Vector2.One, 0);
 
     public int Order { get; set; }
 
-    private List<Vector2D<float>> _previousPositions = new(64);
+    private List<Vector2> _previousPositions = new(64);
     public SpriteFeature SpriteFeature { get; set; } = null!;
 
     public void Initialize(IFeatureRegistry registry)
@@ -36,7 +37,7 @@ public sealed class SpriteDrawEmitter : IDrawCommandEmitter
             var entity = SpriteFeature.SpriteEntities[i];
             var pos = entity.Position;
             if (_previousPositions.Count > 0 && (i == 0 || i == 1)) 
-                pos = Vector2D.Lerp(entity.Position, _previousPositions[i], context.Alpha);
+                pos = Vector2.Lerp(entity.Position, _previousPositions[i], context.Alpha);
             var atlasLoc = atlas.GetOffset(entity.AtlasLocation);
             var item = new SpriteDrawData(pos, entity.Scale,atlasLoc, atlas.Scale);
             spriteBatch.SubmitSprite(item);
@@ -63,7 +64,7 @@ public sealed class SpriteDrawEmitter : IDrawCommandEmitter
         _previousPositions.Clear();
         foreach (var t in SpriteFeature.SpriteEntities)
         {
-            _previousPositions.Add(new  Vector2D<float>(t.Position.X, t.Position.Y));
+            _previousPositions.Add(new  Vector2(t.Position.X, t.Position.Y));
         }
     }
 }

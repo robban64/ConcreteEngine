@@ -1,3 +1,4 @@
+using System.Numerics;
 using ConcreteEngine.Core.Assets;
 using ConcreteEngine.Core.Rendering;
 using ConcreteEngine.Core.Resources;
@@ -34,8 +35,8 @@ public class SpriteFeature: IGameFeature
             {
                 SpriteEntities.Add(new SpriteEntity
                 {
-                    Position = new Vector2D<float>(64 * x , 64 * y ),
-                    Scale = new Vector2D<float>(64, 64),
+                    Position = new Vector2(64 * x , 64 * y ),
+                    Scale = new Vector2(64, 64),
                 });
             }
         }

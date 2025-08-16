@@ -1,4 +1,5 @@
 using System.Drawing;
+using System.Numerics;
 using ConcreteEngine.Core.Resources;
 using ConcreteEngine.Graphics;
 using ConcreteEngine.Graphics.Definitions;
@@ -9,7 +10,7 @@ namespace ConcreteEngine.Core.Rendering;
 public readonly record struct RegisterRenderTargetDesc(
     RenderTargetId Target,
     short Order,
-    Vector2D<float> SizeRatio,
+    Vector2 SizeRatio,
     bool DoClear,
     Color ClearColor,
     ClearBufferFlag ClearMask,
@@ -20,7 +21,7 @@ public readonly record struct RegisterRenderTargetDesc(
 public sealed class RenderPass
 {
     public required RenderTargetKey GfxKey { get; init; }
-    public required Vector2D<float> SizeRatio { get; set; }
+    public required Vector2 SizeRatio { get; set; }
     public required RenderTargetId Target { get; init; }
     public required int Order { get; init; }
     public required bool DoClear { get; init; }

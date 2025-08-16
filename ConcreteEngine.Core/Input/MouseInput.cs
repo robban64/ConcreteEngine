@@ -15,10 +15,10 @@ internal class MouseInput
     private readonly HashSet<MouseButton> _buttonsPressed = [];
     private readonly HashSet<MouseButton> _buttonsReleased = [];
 
-    public Vector2D<float> MousePosition { get; private set; }
-    public Vector2D<float> MouseDelta { get; private set; }
+    public Vector2 MousePosition { get; private set; }
+    public Vector2 MouseDelta { get; private set; }
 
-    private Vector2D<float> _lastMousePosition;
+    private Vector2 _lastMousePosition;
 
     public MouseInput(IMouse mouse)
     {
@@ -27,7 +27,7 @@ internal class MouseInput
         _mouse.MouseUp += OnMouseUp;
         _mouse.MouseMove += OnMouseMove;
 
-        MousePosition = _mouse.Position.ToGeneric();
+        MousePosition = _mouse.Position;
         _lastMousePosition = MousePosition;
     }
 
@@ -56,7 +56,7 @@ internal class MouseInput
 
     private void OnMouseMove(IMouse mouse, Vector2 position)
     {
-        MousePosition = position.ToGeneric();
+        MousePosition = position;
     }
 
     public bool IsMouseDown(MouseButton button) => _buttonsDown.Contains(button);

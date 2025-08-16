@@ -1,5 +1,6 @@
 #region
 
+using System.Numerics;
 using ConcreteEngine.Graphics.Data;
 using ConcreteEngine.Graphics.Definitions;
 using Silk.NET.Maths;
@@ -19,7 +20,7 @@ public interface IGraphicsDevice : IDisposable
     void EndFrame();
 
     RenderTargetHandlerResult GetRenderTarget(RenderTargetKey key);
-    RenderTargetKey CreateRenderTarget(RenderTargetId target, Vector2D<float> sizeRatio);
+    RenderTargetKey CreateRenderTarget(RenderTargetId target, Vector2 sizeRatio);
     RenderTargetKey ReplaceRenderTarget(RenderTargetKey key);
 
     ushort CreateShader(string vertexSource, string fragmentSource, string[] samplers);

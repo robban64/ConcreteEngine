@@ -4,9 +4,14 @@ namespace ConcreteEngine.Graphics.Resources;
 
 public class ResourceDisposeQueue(Action<IGraphicsResource> removeHandler)
 {
+    private const int DrainPerFrame = 4;
+    private const int DrainDelayTicks = 4;
+    
     private readonly record struct ResourceDeleteData(IGraphicsResource Resource, ushort ResourceId);
 
     private readonly Queue<ResourceDeleteData> _resourceDisposeQueue = new (8);
+    
+    private int _drainDelayTicks;
     
     public void Enqueue(IGraphicsResource resource, ushort resourceId)
     {
@@ -19,25 +24,23 @@ public class ResourceDisposeQueue(Action<IGraphicsResource> removeHandler)
     public void Drain(bool drainAll = false)
     {
         if (_resourceDisposeQueue.Count == 0) return;
+
+        _drainDelayTicks++;
+        if(_drainDelayTicks < DrainPerFrame) return;
+        
         int index = 0;
         while (true)
         {
             if (_resourceDisposeQueue.Count == 0) break;
-            if (index >= 1 && !drainAll) break;
+            if (index >= DrainPerFrame && !drainAll) break;
             
             var resource = _resourceDisposeQueue.Dequeue();
             removeHandler(resource.Resource);
             index++;
         }
-        /*
-        foreach (var deleteData in _resourceDisposeQueue)
-        {
-            if (!drainAll && index >= 4) break;
-            index++;
 
-            removeHandler(deleteData.Resource);
-        }*/
-        
+        _drainDelayTicks = 0;
+
     }
     
     

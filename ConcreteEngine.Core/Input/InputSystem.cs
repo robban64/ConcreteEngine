@@ -1,5 +1,6 @@
 #region
 
+using System.Numerics;
 using Silk.NET.Input;
 using Silk.NET.Maths;
 
@@ -37,8 +38,8 @@ public sealed class InputSystem: IGameEngineSystem
     public bool IsMousePressed(MouseButton button) => _mouseInput.IsMousePressed(button);
     public bool IsMouseReleased(MouseButton button) => _mouseInput.IsMouseReleased(button);
 
-    public Vector2D<float> MousePosition => _mouseInput.MousePosition;
-    public Vector2D<float> MouseDelta => _mouseInput.MouseDelta;
+    public Vector2 MousePosition => _mouseInput.MousePosition;
+    public Vector2 MouseDelta => _mouseInput.MouseDelta;
     
     public void Dispose()
     {

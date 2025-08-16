@@ -122,7 +122,7 @@ public sealed class GlGraphicsDevice : IGraphicsDevice<GlGraphicsContext>
         return new RenderTargetHandlerResult(target.FboId, target.ColTexId);
     }
 
-    public RenderTargetKey CreateRenderTarget(RenderTargetId target, Vector2D<float> sizeRatio)
+    public RenderTargetKey CreateRenderTarget(RenderTargetId target, Vector2 sizeRatio)
     {
         ArgumentOutOfRangeException.ThrowIfNegativeOrZero(sizeRatio.X, nameof(sizeRatio.X));
         ArgumentOutOfRangeException.ThrowIfNegativeOrZero(sizeRatio.Y, nameof(sizeRatio.Y));

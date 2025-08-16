@@ -1,3 +1,4 @@
+using System.Numerics;
 using ConcreteEngine.Core.Rendering;
 using ConcreteEngine.Core.Rendering.Materials;
 using ConcreteEngine.Core.Rendering.Tilemap;
@@ -21,7 +22,7 @@ public sealed class TilemapDrawEmitter : IDrawCommandEmitter
 
     public void Emit(DrawEmitterContext context, DrawCommandSubmitter submitter)
     {
-        var transform = Transform2D.CreateTransformMatrix(Vector2D<float>.Zero,new Vector2D<float>(1,1), 0);
+        var transform = Transform2D.CreateTransformMatrix(Vector2.Zero,new Vector2(1,1), 0);
 
         var tilemapBatcher = context.TilemapBatch;
         var result = tilemapBatcher.BuildBatch();

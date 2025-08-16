@@ -1,3 +1,4 @@
+using System.Numerics;
 using ConcreteEngine.Graphics;
 using Silk.NET.Maths;
 
@@ -10,13 +11,13 @@ public readonly struct TileData(ushort atlasX, ushort atlasY)
 }
 
 public readonly struct TilemapDrawData(
-    Vector2D<float> position,
-    Vector2D<float> scale,
-    Vector2D<float> textureScale)
+    Vector2 position,
+    Vector2 scale,
+    Vector2 textureScale)
 {
-    public readonly Vector2D<float> Position = position;
-    public readonly Vector2D<float> Scale = scale;
-    public readonly Vector2D<float> TextureScale = textureScale;
+    public readonly Vector2 Position = position;
+    public readonly Vector2 Scale = scale;
+    public readonly Vector2 TextureScale = textureScale;
 }
 
 public readonly struct TileChunkBuildResult(ushort meshId, uint drawCount)

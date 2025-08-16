@@ -1,6 +1,7 @@
 #region
 
 using System.Drawing;
+using System.Numerics;
 using ConcreteEngine.Core;
 using ConcreteEngine.Core.Assets;
 using ConcreteEngine.Core.Game.Sprite;
@@ -51,7 +52,7 @@ public class DemoScene : GameScene
         renderer.RegisterRenderPass("Scene", screenShader, new RegisterRenderTargetDesc(
             Target: RenderTargetId.Scene,
             Order: 0,
-            SizeRatio: Vector2D<float>.One,
+            SizeRatio: Vector2.One,
             DoClear: true,
             ClearColor: Color.CornflowerBlue,
             ClearMask: ClearBufferFlag.ColorAndDepth,

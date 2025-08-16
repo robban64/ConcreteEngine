@@ -1,6 +1,7 @@
 #region
 
 using System.Drawing;
+using System.Numerics;
 using ConcreteEngine.Graphics.Data;
 using ConcreteEngine.Graphics.Definitions;
 using Silk.NET.Maths;
@@ -44,8 +45,8 @@ public interface IGraphicsContext
     void SetUniform(ShaderUniform uniform, int value);
     void SetUniform(ShaderUniform uniform, uint value);
     void SetUniform(ShaderUniform uniform, float value);
-    void SetUniform(ShaderUniform uniform, Vector2D<float> value);
-    void SetUniform(ShaderUniform uniform, Vector3D<float> value);
-    void SetUniform(ShaderUniform uniform, Vector4D<float> value);
-    void SetUniform(ShaderUniform uniform, in Matrix4X4<float> value);
+    void SetUniform(ShaderUniform uniform, Vector2 value);
+    void SetUniform(ShaderUniform uniform, Vector3 value);
+    void SetUniform(ShaderUniform uniform, Vector4 value);
+    void SetUniform(ShaderUniform uniform, in Matrix4x4 value);
 }

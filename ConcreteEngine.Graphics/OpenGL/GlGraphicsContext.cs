@@ -2,6 +2,7 @@
 
 using System.Diagnostics.CodeAnalysis;
 using System.Drawing;
+using System.Numerics;
 using System.Runtime.CompilerServices;
 using ConcreteEngine.Graphics.Data;
 using ConcreteEngine.Graphics.Definitions;
@@ -432,24 +433,25 @@ public sealed class GlGraphicsContext : IGraphicsContext
     public void SetUniform(ShaderUniform uniform, float value) => _gl.Uniform1(_boundUniforms![uniform], value);
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public void SetUniform(ShaderUniform uniform, Vector2D<float> value) =>
+    public void SetUniform(ShaderUniform uniform, Vector2 value) =>
         _gl.Uniform2(_boundUniforms![uniform], value.X, value.Y);
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public void SetUniform(ShaderUniform uniform, Vector3D<float> value)
+    public void SetUniform(ShaderUniform uniform, Vector3 value)
     {
         _gl.Uniform3(_boundUniforms![uniform], value.X, value.Y, value.Z);
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public void SetUniform(ShaderUniform uniform, Vector4D<float> value)
+    public void SetUniform(ShaderUniform uniform, Vector4 value)
     {
         _gl.Uniform4(_boundUniforms![uniform], value.X, value.Y, value.Z, value.W);
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public unsafe void SetUniform(ShaderUniform uniform, in Matrix4X4<float> value)
+    public unsafe void SetUniform(ShaderUniform uniform, in Matrix4x4 value)
     {
+        //_gl.UniformMatrix4(_boundUniforms![uniform], 1, false, (float*) &value);
         var p = (float*)Unsafe.AsPointer(ref Unsafe.AsRef(in value));
         _gl.UniformMatrix4(_boundUniforms![uniform], 1, false, p);
     }

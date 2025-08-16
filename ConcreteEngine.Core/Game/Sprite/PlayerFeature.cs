@@ -1,3 +1,4 @@
+using System.Numerics;
 using ConcreteEngine.Core.Assets;
 using ConcreteEngine.Core.Input;
 using ConcreteEngine.Core.Rendering;
@@ -57,18 +58,18 @@ public sealed class PlayerFeature : IGameFeature
         var input = _input;
         if (input.IsKeyDown(Key.Left))
         {
-            Transform.Position -= new Vector2D<float>( speed, 0);
+            Transform.Position -= new Vector2( speed, 0);
             row = 1;
         }
         else if (input.IsKeyDown(Key.Right))
         {
-            Transform.Position += new Vector2D<float>( speed, 0);
+            Transform.Position += new Vector2( speed, 0);
             row = 3;
         }
         
 
-        if (input.IsKeyDown(Key.Up)) Transform.Position -= new Vector2D<float>(0,  speed);
-        else if (input.IsKeyDown(Key.Down)) Transform.Position += new Vector2D<float>(0,  speed);
+        if (input.IsKeyDown(Key.Up)) Transform.Position -= new Vector2(0,  speed);
+        else if (input.IsKeyDown(Key.Down)) Transform.Position += new Vector2(0,  speed);
 
         timer += 5;
         if (timer >= 30)

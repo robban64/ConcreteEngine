@@ -12,9 +12,9 @@ using Silk.NET.OpenGL;
 
 namespace ConcreteEngine.Graphics.OpenGL;
 
-internal class GlResourceFactory(GlGraphicsContext ctx)
+internal class GlResourceFactory(GlGraphicsContext gfx)
 {
-    private GL Gl = ctx.Gl;
+    private readonly GL _gl = gfx.Gl;
 
     public GlMesh CreateMesh<TVertex, TIndex>(GlGraphicsDevice graphics, MeshDescriptor<TVertex, TIndex> descriptor)
         where TVertex : unmanaged
@@ -23,21 +23,21 @@ internal class GlResourceFactory(GlGraphicsContext ctx)
         var vertexBufferDesc = descriptor.VertexBuffer;
         var indexBufferDesc = descriptor.IndexBuffer;
 
-        uint handle = Gl.GenVertexArray();
-        Gl.BindVertexArray(handle);
+        uint handle = _gl.GenVertexArray();
+        _gl.BindVertexArray(handle);
 
         var vertexBuffer = graphics.CreateVertexBuffer(vertexBufferDesc.Usage);
-        ctx.BindVertexBuffer(vertexBuffer);
+        gfx.BindVertexBuffer(vertexBuffer);
         if (vertexBufferDesc.Data is not null)
-            ctx.SetVertexBuffer<TVertex>(vertexBufferDesc.Data.AsSpan());
+            gfx.SetVertexBuffer<TVertex>(vertexBufferDesc.Data.AsSpan());
 
         ushort indexBuffer = 0;
         if (indexBufferDesc != null)
         {
             indexBuffer = graphics.CreateIndexBuffer(indexBufferDesc.Usage);
-            ctx.BindIndexBuffer(indexBuffer);
+            gfx.BindIndexBuffer(indexBuffer);
             if (indexBufferDesc.Data is not null)
-                ctx.SetIndexBuffer<TIndex>(indexBufferDesc.Data.AsSpan());
+                gfx.SetIndexBuffer<TIndex>(indexBufferDesc.Data.AsSpan());
         }
 
         for (int i = 0; i < descriptor.VertexPointers.Length; i++)
@@ -47,9 +47,9 @@ internal class GlResourceFactory(GlGraphicsContext ctx)
                 pointer.Normalized);
         }
 
-        Gl.BindVertexArray(0);
-        ctx.BindVertexBuffer(0);
-        ctx.BindIndexBuffer(0);
+        _gl.BindVertexArray(0);
+        gfx.BindVertexBuffer(0);
+        gfx.BindIndexBuffer(0);
 
         if (indexBuffer > 0)
         {
@@ -97,7 +97,7 @@ internal class GlResourceFactory(GlGraphicsContext ctx)
 
     public GlBuffer CreateBuffer(BufferTarget target, BufferUsage usage)
     {
-        var handle = (ushort)Gl.GenBuffer();
+        var handle = (ushort)_gl.GenBuffer();
 
         return target switch
         {
@@ -109,14 +109,14 @@ internal class GlResourceFactory(GlGraphicsContext ctx)
 
     public GlTexture2D CreateTexture2D(in TextureDescriptor descriptor)
     {
-        uint handle = Gl.GenTexture();
-        Gl.BindTexture(GLEnum.Texture2D, handle);
+        uint handle = _gl.GenTexture();
+        _gl.BindTexture(GLEnum.Texture2D, handle);
         var (glFormat, glInternalFormat) = descriptor.Format.ToGlEnums();
         unsafe
         {
             fixed (byte* ptr = descriptor.PixelData)
             {
-                Gl.TexImage2D(GLEnum.Texture2D, 0, (int)glInternalFormat,
+                _gl.TexImage2D(GLEnum.Texture2D, 0, (int)glInternalFormat,
                     (uint)descriptor.Width, (uint)descriptor.Height, 0,
                     glFormat, GLEnum.UnsignedByte, ptr);
             }
@@ -124,7 +124,7 @@ internal class GlResourceFactory(GlGraphicsContext ctx)
 
         SetTextureParameters(descriptor.Preset);
 
-        Gl.BindTexture(GLEnum.Texture2D, 0);
+        _gl.BindTexture(GLEnum.Texture2D, 0);
 
         var texture = new GlTexture2D(handle, descriptor.Width, descriptor.Height, descriptor.Format);
         return texture;
@@ -139,38 +139,38 @@ internal class GlResourceFactory(GlGraphicsContext ctx)
         var (width, height) = ((uint)size.X, (uint)size.Y);
 
         // Color texture
-        var textureHandle = Gl.GenTexture();
-        Gl.BindTexture(TextureTarget.Texture2D, textureHandle);
-        Gl.TexImage2D(TextureTarget.Texture2D, 0, InternalFormat.Rgba8, width, height, 0, PixelFormat.Rgba,
+        var textureHandle = _gl.GenTexture();
+        _gl.BindTexture(TextureTarget.Texture2D, textureHandle);
+        _gl.TexImage2D(TextureTarget.Texture2D, 0, InternalFormat.Rgba8, width, height, 0, PixelFormat.Rgba,
             PixelType.UnsignedByte, (void*)(0));
-        Gl.TexParameter(TextureTarget.Texture2D, GLEnum.TextureMinFilter, (int)GLEnum.Linear);
-        Gl.TexParameter(TextureTarget.Texture2D, GLEnum.TextureMagFilter, (int)GLEnum.Linear);
-        Gl.TexParameter(TextureTarget.Texture2D, GLEnum.TextureWrapS, (int)GLEnum.ClampToEdge);
-        Gl.TexParameter(TextureTarget.Texture2D, GLEnum.TextureWrapT, (int)GLEnum.ClampToEdge);
-        Gl.BindTexture(TextureTarget.Texture2D, 0);
+        _gl.TexParameter(TextureTarget.Texture2D, GLEnum.TextureMinFilter, (int)GLEnum.Linear);
+        _gl.TexParameter(TextureTarget.Texture2D, GLEnum.TextureMagFilter, (int)GLEnum.Linear);
+        _gl.TexParameter(TextureTarget.Texture2D, GLEnum.TextureWrapS, (int)GLEnum.ClampToEdge);
+        _gl.TexParameter(TextureTarget.Texture2D, GLEnum.TextureWrapT, (int)GLEnum.ClampToEdge);
+        _gl.BindTexture(TextureTarget.Texture2D, 0);
 
         // Depth-stencil renderbuffer
-        var renderBufferHandle = Gl.GenRenderbuffer();
-        Gl.BindRenderbuffer(RenderbufferTarget.Renderbuffer, renderBufferHandle);
-        Gl.RenderbufferStorage(RenderbufferTarget.Renderbuffer, InternalFormat.Depth24Stencil8, width, height);
-        Gl.BindRenderbuffer(RenderbufferTarget.Renderbuffer, 0);
+        var renderBufferHandle = _gl.GenRenderbuffer();
+        _gl.BindRenderbuffer(RenderbufferTarget.Renderbuffer, renderBufferHandle);
+        _gl.RenderbufferStorage(RenderbufferTarget.Renderbuffer, InternalFormat.Depth24Stencil8, width, height);
+        _gl.BindRenderbuffer(RenderbufferTarget.Renderbuffer, 0);
 
         // Framebuffer
-        var fbo = Gl.GenFramebuffer();
-        Gl.BindFramebuffer(FramebufferTarget.Framebuffer, fbo);
-        Gl.FramebufferTexture2D(FramebufferTarget.Framebuffer, FramebufferAttachment.ColorAttachment0,
+        var fbo = _gl.GenFramebuffer();
+        _gl.BindFramebuffer(FramebufferTarget.Framebuffer, fbo);
+        _gl.FramebufferTexture2D(FramebufferTarget.Framebuffer, FramebufferAttachment.ColorAttachment0,
             TextureTarget.Texture2D, textureHandle, 0);
-        Gl.FramebufferRenderbuffer(FramebufferTarget.Framebuffer, FramebufferAttachment.DepthStencilAttachment,
+        _gl.FramebufferRenderbuffer(FramebufferTarget.Framebuffer, FramebufferAttachment.DepthStencilAttachment,
             RenderbufferTarget.Renderbuffer, renderBufferHandle);
 
         //Gl.DrawBuffers(1, GLEnum.ColorAttachment0);
-        var status = Gl.CheckFramebufferStatus(FramebufferTarget.Framebuffer);
+        var status = _gl.CheckFramebufferStatus(FramebufferTarget.Framebuffer);
         if (status != GLEnum.FramebufferComplete)
         {
             GraphicsException.ThrowFramebufferIncomplete(nameof(fbo), status.ToString());
         }
 
-        Gl.BindFramebuffer(FramebufferTarget.Framebuffer, 0);
+        _gl.BindFramebuffer(FramebufferTarget.Framebuffer, 0);
 
         return new CreateGlFrameBufferResult(fbo, textureHandle, renderBufferHandle);
     }
@@ -187,10 +187,10 @@ internal class GlResourceFactory(GlGraphicsContext ctx)
         var uniformDict = GetUniformsFromProgram(handle);
         var uniformTable = new UniformTable(uniformDict);
 
-        Gl.DetachShader(handle, vertexShader);
-        Gl.DetachShader(handle, fragmentShader);
-        Gl.DeleteShader(vertexShader);
-        Gl.DeleteShader(fragmentShader);
+        _gl.DetachShader(handle, vertexShader);
+        _gl.DetachShader(handle, fragmentShader);
+        _gl.DeleteShader(vertexShader);
+        _gl.DeleteShader(fragmentShader);
 
         var shader = new GlShader(handle);
         return (shader, handle, uniformTable);
@@ -198,27 +198,27 @@ internal class GlResourceFactory(GlGraphicsContext ctx)
 
     private uint CreateShaderProgram(uint vertexShader, uint fragmentShader)
     {
-        uint program = Gl.CreateProgram();
-        Gl.AttachShader(program, vertexShader);
-        Gl.AttachShader(program, fragmentShader);
-        Gl.LinkProgram(program);
+        uint program = _gl.CreateProgram();
+        _gl.AttachShader(program, vertexShader);
+        _gl.AttachShader(program, fragmentShader);
+        _gl.LinkProgram(program);
 
-        Gl.GetProgram(program, ProgramPropertyARB.LinkStatus, out int lStatus);
+        _gl.GetProgram(program, ProgramPropertyARB.LinkStatus, out int lStatus);
         if (lStatus != (int)GLEnum.True)
-            throw GraphicsException.ShaderLinkFailed(program.ToString(), Gl.GetProgramInfoLog(program));
+            throw GraphicsException.ShaderLinkFailed(program.ToString(), _gl.GetProgramInfoLog(program));
 
         return program;
     }
 
     private uint CreateShader(ShaderType shaderType, string source)
     {
-        uint shader = Gl.CreateShader(shaderType);
-        Gl.ShaderSource(shader, source);
-        Gl.CompileShader(shader);
+        uint shader = _gl.CreateShader(shaderType);
+        _gl.ShaderSource(shader, source);
+        _gl.CompileShader(shader);
 
-        Gl.GetShader(shader, ShaderParameterName.CompileStatus, out int vStatus);
+        _gl.GetShader(shader, ShaderParameterName.CompileStatus, out int vStatus);
         if (vStatus != (int)GLEnum.True)
-            throw GraphicsException.ShaderCompileFailed(nameof(shaderType), Gl.GetShaderInfoLog(shader));
+            throw GraphicsException.ShaderCompileFailed(nameof(shaderType), _gl.GetShaderInfoLog(shader));
 
         return shader;
     }
@@ -227,11 +227,11 @@ internal class GlResourceFactory(GlGraphicsContext ctx)
     {
         var uniforms = new Dictionary<string, short>();
 
-        Gl.GetProgram(handle, ProgramPropertyARB.ActiveUniforms, out int uniformsLength);
+        _gl.GetProgram(handle, ProgramPropertyARB.ActiveUniforms, out int uniformsLength);
         for (uint uniformIndex = 0; uniformIndex < uniformsLength; uniformIndex++)
         {
-            string uniformName = Gl.GetActiveUniform(handle, uniformIndex, out _, out _);
-            int uniformLocation = Gl.GetUniformLocation(handle, uniformName);
+            string uniformName = _gl.GetActiveUniform(handle, uniformIndex, out _, out _);
+            int uniformLocation = _gl.GetUniformLocation(handle, uniformName);
             if (uniformLocation >= 0)
             {
                 uniforms.Add(uniformName, (short)uniformLocation);
@@ -244,8 +244,8 @@ internal class GlResourceFactory(GlGraphicsContext ctx)
     private unsafe void AddAttribPointer(uint index, int size, uint strideBytes, uint offsetBytes,
         bool normalized = false)
     {
-        Gl.EnableVertexAttribArray(index);
-        Gl.VertexAttribPointer(
+        _gl.EnableVertexAttribArray(index);
+        _gl.VertexAttribPointer(
             index,
             size,
             VertexAttribPointerType.Float,
@@ -260,52 +260,52 @@ internal class GlResourceFactory(GlGraphicsContext ctx)
         switch (preset)
         {
             case TexturePreset.NearestClamp:
-                Gl.TexParameter(GLEnum.Texture2D, GLEnum.TextureWrapS, (int)GLEnum.ClampToEdge);
-                Gl.TexParameter(GLEnum.Texture2D, GLEnum.TextureWrapT, (int)GLEnum.ClampToEdge);
-                Gl.TexParameter(GLEnum.Texture2D, GLEnum.TextureMinFilter, (int)GLEnum.Nearest);
-                Gl.TexParameter(GLEnum.Texture2D, GLEnum.TextureMagFilter, (int)GLEnum.Nearest);
+                _gl.TexParameter(GLEnum.Texture2D, GLEnum.TextureWrapS, (int)GLEnum.ClampToEdge);
+                _gl.TexParameter(GLEnum.Texture2D, GLEnum.TextureWrapT, (int)GLEnum.ClampToEdge);
+                _gl.TexParameter(GLEnum.Texture2D, GLEnum.TextureMinFilter, (int)GLEnum.Nearest);
+                _gl.TexParameter(GLEnum.Texture2D, GLEnum.TextureMagFilter, (int)GLEnum.Nearest);
                 break;
 
             case TexturePreset.NearestRepeat:
-                Gl.TexParameter(GLEnum.Texture2D, GLEnum.TextureWrapS, (int)GLEnum.Repeat);
-                Gl.TexParameter(GLEnum.Texture2D, GLEnum.TextureWrapT, (int)GLEnum.Repeat);
-                Gl.TexParameter(GLEnum.Texture2D, GLEnum.TextureMinFilter, (int)GLEnum.Nearest);
-                Gl.TexParameter(GLEnum.Texture2D, GLEnum.TextureMagFilter, (int)GLEnum.Nearest);
+                _gl.TexParameter(GLEnum.Texture2D, GLEnum.TextureWrapS, (int)GLEnum.Repeat);
+                _gl.TexParameter(GLEnum.Texture2D, GLEnum.TextureWrapT, (int)GLEnum.Repeat);
+                _gl.TexParameter(GLEnum.Texture2D, GLEnum.TextureMinFilter, (int)GLEnum.Nearest);
+                _gl.TexParameter(GLEnum.Texture2D, GLEnum.TextureMagFilter, (int)GLEnum.Nearest);
                 break;
 
             case TexturePreset.LinearClamp:
-                Gl.TexParameter(GLEnum.Texture2D, GLEnum.TextureWrapS, (int)GLEnum.ClampToEdge);
-                Gl.TexParameter(GLEnum.Texture2D, GLEnum.TextureWrapT, (int)GLEnum.ClampToEdge);
-                Gl.TexParameter(GLEnum.Texture2D, GLEnum.TextureMinFilter, (int)GLEnum.Linear);
-                Gl.TexParameter(GLEnum.Texture2D, GLEnum.TextureMagFilter, (int)GLEnum.Linear);
+                _gl.TexParameter(GLEnum.Texture2D, GLEnum.TextureWrapS, (int)GLEnum.ClampToEdge);
+                _gl.TexParameter(GLEnum.Texture2D, GLEnum.TextureWrapT, (int)GLEnum.ClampToEdge);
+                _gl.TexParameter(GLEnum.Texture2D, GLEnum.TextureMinFilter, (int)GLEnum.Linear);
+                _gl.TexParameter(GLEnum.Texture2D, GLEnum.TextureMagFilter, (int)GLEnum.Linear);
                 break;
 
             case TexturePreset.LinearRepeat:
-                Gl.TexParameter(GLEnum.Texture2D, GLEnum.TextureWrapS, (int)GLEnum.Repeat);
-                Gl.TexParameter(GLEnum.Texture2D, GLEnum.TextureWrapT, (int)GLEnum.Repeat);
-                Gl.TexParameter(GLEnum.Texture2D, GLEnum.TextureMinFilter, (int)GLEnum.Linear);
-                Gl.TexParameter(GLEnum.Texture2D, GLEnum.TextureMagFilter, (int)GLEnum.Linear);
+                _gl.TexParameter(GLEnum.Texture2D, GLEnum.TextureWrapS, (int)GLEnum.Repeat);
+                _gl.TexParameter(GLEnum.Texture2D, GLEnum.TextureWrapT, (int)GLEnum.Repeat);
+                _gl.TexParameter(GLEnum.Texture2D, GLEnum.TextureMinFilter, (int)GLEnum.Linear);
+                _gl.TexParameter(GLEnum.Texture2D, GLEnum.TextureMagFilter, (int)GLEnum.Linear);
                 break;
 
             case TexturePreset.LinearMipmapClamp:
-                Gl.TexParameter(GLEnum.Texture2D, GLEnum.TextureWrapS, (int)GLEnum.ClampToEdge);
-                Gl.TexParameter(GLEnum.Texture2D, GLEnum.TextureWrapT, (int)GLEnum.ClampToEdge);
-                Gl.TexParameter(GLEnum.Texture2D, GLEnum.TextureMinFilter, (int)GLEnum.LinearMipmapLinear);
-                Gl.TexParameter(GLEnum.Texture2D, GLEnum.TextureMagFilter, (int)GLEnum.Linear);
+                _gl.TexParameter(GLEnum.Texture2D, GLEnum.TextureWrapS, (int)GLEnum.ClampToEdge);
+                _gl.TexParameter(GLEnum.Texture2D, GLEnum.TextureWrapT, (int)GLEnum.ClampToEdge);
+                _gl.TexParameter(GLEnum.Texture2D, GLEnum.TextureMinFilter, (int)GLEnum.LinearMipmapLinear);
+                _gl.TexParameter(GLEnum.Texture2D, GLEnum.TextureMagFilter, (int)GLEnum.Linear);
                 break;
 
             case TexturePreset.LinearMipmapRepeat:
-                Gl.TexParameter(GLEnum.Texture2D, GLEnum.TextureWrapS, (int)GLEnum.Repeat);
-                Gl.TexParameter(GLEnum.Texture2D, GLEnum.TextureWrapT, (int)GLEnum.Repeat);
-                Gl.TexParameter(GLEnum.Texture2D, GLEnum.TextureMinFilter, (int)GLEnum.LinearMipmapLinear);
-                Gl.TexParameter(GLEnum.Texture2D, GLEnum.TextureMagFilter, (int)GLEnum.Linear);
+                _gl.TexParameter(GLEnum.Texture2D, GLEnum.TextureWrapS, (int)GLEnum.Repeat);
+                _gl.TexParameter(GLEnum.Texture2D, GLEnum.TextureWrapT, (int)GLEnum.Repeat);
+                _gl.TexParameter(GLEnum.Texture2D, GLEnum.TextureMinFilter, (int)GLEnum.LinearMipmapLinear);
+                _gl.TexParameter(GLEnum.Texture2D, GLEnum.TextureMagFilter, (int)GLEnum.Linear);
                 break;
 
             case TexturePreset.PremultipliedUI:
-                Gl.TexParameter(GLEnum.Texture2D, GLEnum.TextureWrapS, (int)GLEnum.ClampToEdge);
-                Gl.TexParameter(GLEnum.Texture2D, GLEnum.TextureWrapT, (int)GLEnum.ClampToEdge);
-                Gl.TexParameter(GLEnum.Texture2D, GLEnum.TextureMinFilter, (int)GLEnum.Linear);
-                Gl.TexParameter(GLEnum.Texture2D, GLEnum.TextureMagFilter, (int)GLEnum.Linear);
+                _gl.TexParameter(GLEnum.Texture2D, GLEnum.TextureWrapS, (int)GLEnum.ClampToEdge);
+                _gl.TexParameter(GLEnum.Texture2D, GLEnum.TextureWrapT, (int)GLEnum.ClampToEdge);
+                _gl.TexParameter(GLEnum.Texture2D, GLEnum.TextureMinFilter, (int)GLEnum.Linear);
+                _gl.TexParameter(GLEnum.Texture2D, GLEnum.TextureMagFilter, (int)GLEnum.Linear);
                 // Could add sRGB decode disable if doing manual gamma
                 break;
 

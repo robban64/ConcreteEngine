@@ -21,7 +21,7 @@ internal sealed class TilemapChunkMesh : IDisposable
         new ushort[ChunkSize * ChunkSize * IndicesPerTile];
 
     private readonly IGraphicsDevice _graphics;
-    private readonly IGraphicsContext _ctx;
+    private readonly IGraphicsContext _gfx;
 
     private readonly int _chunkDimension;
     private readonly int _tileCount;
@@ -37,7 +37,7 @@ internal sealed class TilemapChunkMesh : IDisposable
 
     public TilemapChunkMesh(IGraphicsDevice graphics, int chunkDimension, int tileSize)
     {
-        _ctx = graphics.Ctx;
+        _gfx = graphics.Gfx;
         _graphics = graphics;
         _chunkDimension = chunkDimension;
         _tileCount = _chunkDimension * _chunkDimension;

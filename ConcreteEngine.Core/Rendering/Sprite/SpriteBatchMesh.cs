@@ -25,7 +25,7 @@ internal sealed class SpriteBatchMesh : IDisposable
     private static readonly ushort[] Indices = new ushort[MaxSpriteBatchSize * IndicesPerSprite];
 
     private readonly IGraphicsDevice _graphics;
-    private readonly IGraphicsContext _ctx;
+    private readonly IGraphicsContext _gfx;
 
     private readonly int _capacity;
 
@@ -45,7 +45,7 @@ internal sealed class SpriteBatchMesh : IDisposable
         ArgumentOutOfRangeException.ThrowIfGreaterThan(capacity, maxSpriteBatchSize, nameof(capacity));
 
         _graphics = graphics;
-        _ctx = graphics.Ctx;
+        _gfx = graphics.Gfx;
         _capacity = capacity;
 
         var meshData = new MeshDescriptor<Vertex2D, ushort>
@@ -64,18 +64,18 @@ internal sealed class SpriteBatchMesh : IDisposable
         _vertexBufferId = meshResult.VertexBufferId;
         _indexBufferId = meshResult.IndexBufferId;
 
-        _ctx.BindVertexBuffer(meshResult.VertexBufferId);
+        _gfx.BindVertexBuffer(meshResult.VertexBufferId);
         InitVertexBufferData();
-        _ctx.BindVertexBuffer(0);
+        _gfx.BindVertexBuffer(0);
 
-        _ctx.BindIndexBuffer(meshResult.IndexBufferId);
+        _gfx.BindIndexBuffer(meshResult.IndexBufferId);
         InitIndexBufferData();
-        _ctx.BindIndexBuffer(0);
+        _gfx.BindIndexBuffer(0);
     }
 
     private void InitVertexBufferData()
     {
-        _ctx.SetVertexBuffer<Vertex2D>(Vertices);
+        _gfx.SetVertexBuffer<Vertex2D>(Vertices);
     }
 
     private void InitIndexBufferData()
@@ -94,7 +94,7 @@ internal sealed class SpriteBatchMesh : IDisposable
         }
 
 
-        _ctx.SetIndexBuffer<ushort>(indices);
+        _gfx.SetIndexBuffer<ushort>(indices);
     }
 
     public SpriteBatchBuildResult BuildSpriteBatch(ReadOnlySpan<SpriteDrawData> commands)
@@ -155,9 +155,9 @@ internal sealed class SpriteBatchMesh : IDisposable
             */
         }
 
-        _ctx.BindVertexBuffer(_vertexBufferId);
-        _ctx.UploadVertexBuffer<Vertex2D>(vertices, 0);
-        _ctx.BindVertexBuffer(0);
+        _gfx.BindVertexBuffer(_vertexBufferId);
+        _gfx.UploadVertexBuffer<Vertex2D>(vertices, 0);
+        _gfx.BindVertexBuffer(0);
 
 
         var drawCount = (uint)(spriteCount * IndicesPerSprite);

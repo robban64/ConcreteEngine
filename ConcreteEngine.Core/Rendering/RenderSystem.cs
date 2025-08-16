@@ -22,7 +22,7 @@ namespace ConcreteEngine.Core.Rendering;
 public sealed class RenderSystem : IGameEngineSystem
 {
     private readonly IGraphicsDevice _graphics;
-    private readonly IGraphicsContext _ctx;
+    private readonly IGraphicsContext _gfx;
     private readonly ViewTransform2D _camera;
     
     private readonly Shader[] _shaders;
@@ -44,7 +44,7 @@ public sealed class RenderSystem : IGameEngineSystem
     internal RenderSystem(IGraphicsDevice graphics, ViewTransform2D camera, Shader[] shaders)
     {
         _graphics = graphics;
-        _ctx = graphics.Ctx;
+        _gfx = graphics.Gfx;
         _camera = camera;
         
         _shaders =  shaders.ToArray();
@@ -102,19 +102,19 @@ public sealed class RenderSystem : IGameEngineSystem
         _graphics.EndFrame();
 
         
-        //_ctx.BeginRenderPass(_framebufferId, Color.CornflowerBlue, ClearBufferFlag.ColorAndDepth);
-        //_ctx.EndRenderPass();
+        //_gfx.BeginRenderPass(_framebufferId, Color.CornflowerBlue, ClearBufferFlag.ColorAndDepth);
+        //_gfx.EndRenderPass();
         
-        //_ctx.ResolveFramebufferTo(_framebufferId);
-        //_ctx.DrawFboScreenQuad(_framebufferId, _screenShader.ResourceId);
+        //_gfx.ResolveFramebufferTo(_framebufferId);
+        //_gfx.DrawFboScreenQuad(_framebufferId, _screenShader.ResourceId);
         
 
         /*
-        _ctx.SetBlendMode(BlendMode.None);
-        _ctx.UseShader(_screenShader.ResourceId);
-        _ctx.BindFramebufferTexture(_framebufferId);
-        _ctx.BindMesh(_graphics.Ctx.QuadMeshId);
-        _ctx.Draw();
+        _gfx.SetBlendMode(BlendMode.None);
+        _gfx.UseShader(_screenShader.ResourceId);
+        _gfx.BindFramebufferTexture(_framebufferId);
+        _gfx.BindMesh(_graphics.Ctx.QuadMeshId);
+        _gfx.Draw();
         */
         
     }
@@ -154,8 +154,8 @@ public sealed class RenderSystem : IGameEngineSystem
         // setup the projection view matrix for all shaders
         foreach (var shader in _shaders)
         {
-            _ctx.UseShader(shader.ResourceId);
-            _ctx.SetUniform(ShaderUniform.ProjectionViewMatrix, in  projectionViewMatrix);
+            _gfx.UseShader(shader.ResourceId);
+            _gfx.SetUniform(ShaderUniform.ProjectionViewMatrix, in  projectionViewMatrix);
         }
         
         for (int target = 0; target < RenderTargetCount; target++)
@@ -176,9 +176,9 @@ public sealed class RenderSystem : IGameEngineSystem
         var (fboId, colTexId) = _graphics.GetRenderTarget(pass.GfxKey);
         
         if (fboId == 0)
-            _ctx.BeginScreenPass(pass.DoClear ? pass.ClearColor : null, pass.ClearMask);
+            _gfx.BeginScreenPass(pass.DoClear ? pass.ClearColor : null, pass.ClearMask);
         else
-            _ctx.BeginRenderPass(fboId,  pass.DoClear ? pass.ClearColor : null, pass.ClearMask);
+            _gfx.BeginRenderPass(fboId,  pass.DoClear ? pass.ClearColor : null, pass.ClearMask);
                 
         foreach (var (_, commandId) in _renderPasses[(int)target])
         {
@@ -191,12 +191,12 @@ public sealed class RenderSystem : IGameEngineSystem
             }
         }
                 
-        if(fboId != 0) _ctx.EndRenderPass();
+        if(fboId != 0) _gfx.EndRenderPass();
 
         switch (pass.ResolveTo)
         {
             case RenderPassResolveTarget.Blit:
-                _ctx.BlitFramebufferTo(fboId, pass.ResolveToTarget.Key);
+                _gfx.BlitFramebufferTo(fboId, pass.ResolveToTarget.Key);
                 break;
             case RenderPassResolveTarget.FullscreenQuad:
                 DrawFboScreenQuad(fboId, colTexId, pass.ShaderId);
@@ -208,10 +208,10 @@ public sealed class RenderSystem : IGameEngineSystem
     private void Draw(in DrawCommandData data, in DrawCommandMeta meta)
     {
         var material = _materialStore[data.MaterialId];
-        material.Bind(_ctx);
-        _ctx.SetUniform(ShaderUniform.ModelMatrix, in data.Transform);
-        _ctx.BindMesh(data.MeshId);
-        _ctx.DrawIndexed(data.DrawCount);
+        material.Bind(_gfx);
+        _gfx.SetUniform(ShaderUniform.ModelMatrix, in data.Transform);
+        _gfx.BindMesh(data.MeshId);
+        _gfx.DrawIndexed(data.DrawCount);
     }
 
     private void DrawFboScreenQuad(ushort fboId, ushort colTexId, ushort shaderId)
@@ -220,13 +220,13 @@ public sealed class RenderSystem : IGameEngineSystem
         ArgumentOutOfRangeException.ThrowIfZero(fboId, nameof(shaderId));
         ArgumentOutOfRangeException.ThrowIfZero(fboId, nameof(colTexId));
 
-        var previousBlendMode = _ctx.BlendMode;
-        _ctx.SetBlendMode(BlendMode.None);
-        _ctx.UseShader(shaderId);
-        _ctx.BindTexture(colTexId, 0);
-        _ctx.BindMesh(_graphics.QuadMeshId);
-        _ctx.Draw();
-        _ctx.SetBlendMode(previousBlendMode);
+        var previousBlendMode = _gfx.BlendMode;
+        _gfx.SetBlendMode(BlendMode.None);
+        _gfx.UseShader(shaderId);
+        _gfx.BindTexture(colTexId, 0);
+        _gfx.BindMesh(_graphics.QuadMeshId);
+        _gfx.Draw();
+        _gfx.SetBlendMode(previousBlendMode);
     }
     
     public void Dispose()

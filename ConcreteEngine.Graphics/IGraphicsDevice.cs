@@ -11,7 +11,7 @@ namespace ConcreteEngine.Graphics;
 
 public interface IGraphicsDevice : IDisposable
 {
-    IGraphicsContext Ctx { get; }
+    IGraphicsContext Gfx { get; }
     GraphicsBackend BackendApi { get; }
     GraphicsConfiguration Configuration { get; }
     ushort QuadMeshId { get; }
@@ -38,5 +38,5 @@ public interface IGraphicsDevice : IDisposable
 
 public interface IGraphicsDevice<out TContext> : IGraphicsDevice where TContext : class, IGraphicsContext
 {
-    new TContext Ctx { get; }
+    new TContext Gfx { get; }
 }

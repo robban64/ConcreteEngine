@@ -14,7 +14,7 @@ namespace ConcreteEngine.Graphics.OpenGL;
 public sealed class GlGraphicsDevice : IGraphicsDevice<GlGraphicsContext>
 {
     private readonly GL _gl;
-    private readonly GlGraphicsContext _ctx;
+    private readonly GlGraphicsContext _gfx;
     private readonly GlResourceFactory _resourceFactory;
     private readonly GraphicsResourceStore _store;
     private readonly RenderTargetRegistry _targetRegistry;
@@ -31,10 +31,10 @@ public sealed class GlGraphicsDevice : IGraphicsDevice<GlGraphicsContext>
     public GraphicsConfiguration Configuration { get; }
 
     public GL Gl => _gl;
-    public GlGraphicsContext Ctx => _ctx;
+    public GlGraphicsContext Gfx => _gfx;
     public GraphicsBackend BackendApi => GraphicsBackend.OpenGL;
     public ushort QuadMeshId => _quadMesh;
-    IGraphicsContext IGraphicsDevice.Ctx => Ctx;
+    IGraphicsContext IGraphicsDevice.Gfx => Gfx;
 
     public GlGraphicsDevice(GL gl, in GraphicsFrameContext initialFrameCtx)
     {
@@ -48,9 +48,9 @@ public sealed class GlGraphicsDevice : IGraphicsDevice<GlGraphicsContext>
         _uniformRegistry = new UniformRegistry();
         _disposeQueue = new ResourceDisposeQueue(FreeResource);
 
-        _ctx = new GlGraphicsContext(gl, Configuration, _store, _uniformRegistry, in initialFrameCtx);
+        _gfx = new GlGraphicsContext(gl, Configuration, _store, _uniformRegistry, in initialFrameCtx);
 
-        _resourceFactory = new GlResourceFactory(_ctx);
+        _resourceFactory = new GlResourceFactory(_gfx);
 
         Console.WriteLine($"OpenGL version {Configuration.Capabilities.GlVersion} loaded.");
         Console.WriteLine("--Device Capability--");
@@ -74,12 +74,12 @@ public sealed class GlGraphicsDevice : IGraphicsDevice<GlGraphicsContext>
     public void StartFrame(in GraphicsFrameContext frameCtx)
     {
         _viewportSize = frameCtx.ViewportSize;
-        _ctx.BeginFrame(in frameCtx);
+        _gfx.BeginFrame(in frameCtx);
     }
 
     public void EndFrame()
     {
-        _ctx.EndFrame();
+        _gfx.EndFrame();
 
         // drain old resource
         _disposeQueue.Drain();
@@ -127,7 +127,7 @@ public sealed class GlGraphicsDevice : IGraphicsDevice<GlGraphicsContext>
         ArgumentOutOfRangeException.ThrowIfNegativeOrZero(sizeRatio.X, nameof(sizeRatio.X));
         ArgumentOutOfRangeException.ThrowIfNegativeOrZero(sizeRatio.Y, nameof(sizeRatio.Y));
         
-        var view = _ctx.ViewportSize;
+        var view = _gfx.ViewportSize;
         var size = new Vector2D<int>((int)(view.X * sizeRatio.X), (int)(view.Y * sizeRatio.Y));
 
         var result = _resourceFactory.CreateFrameBuffer(this, size);

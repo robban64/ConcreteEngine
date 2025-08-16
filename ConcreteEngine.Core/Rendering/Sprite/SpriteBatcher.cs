@@ -12,7 +12,7 @@ namespace ConcreteEngine.Core.Rendering.Sprite;
 public sealed class SpriteBatcher: RenderBatcher<SpriteBatchBuildResult>
 {
     private readonly IGraphicsDevice _graphics;
-    private readonly IGraphicsContext _ctx;
+    private readonly IGraphicsContext _gfx;
 
     private int _commandSize = 0;
     private readonly SpriteDrawData[] _commandBuffer;
@@ -23,7 +23,7 @@ public sealed class SpriteBatcher: RenderBatcher<SpriteBatchBuildResult>
     internal SpriteBatcher(IGraphicsDevice graphics): base(graphics)
     {
         _graphics = graphics;
-        _ctx = graphics.Ctx;
+        _gfx = graphics.Gfx;
 
         _commandBuffer = new SpriteDrawData[_graphics.Configuration.MaxSpriteBatchSize];
         _spriteBatches = new (_graphics.Configuration.MaxSpriteBatchInstanceCount);

@@ -44,14 +44,14 @@ public sealed class Material
         _blend = blend;
     }
 
-    public void Bind(IGraphicsContext ctx)
+    public void Bind(IGraphicsContext gfx)
     {
-        ctx.SetBlendMode(_blend);
-        ctx.UseShader(_shader.ResourceId);
-        //ctx.SetUniform(ShaderUniform.SampleTexture, 0);
+        gfx.SetBlendMode(_blend);
+        gfx.UseShader(_shader.ResourceId);
+        //gfx.SetUniform(ShaderUniform.SampleTexture, 0);
         for (int i = 0; i < _textures.Length; i++)
         {
-            ctx.BindTexture(_textures[i].ResourceId, (uint)i);
+            gfx.BindTexture(_textures[i].ResourceId, (uint)i);
 
         }
     }

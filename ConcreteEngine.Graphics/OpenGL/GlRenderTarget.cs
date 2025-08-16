@@ -17,34 +17,14 @@ public sealed class GlRenderTarget :  IRenderTarget
 
     public ITexture2D? Texture { get; private set; }
     public Rectangle<int> ViewportSize { get; set; }
-    private Rectangle<int> _lastViewportSize = new Rectangle<int>(0, 0, 0, 0);
 
     private GL Gl { get; }
 
-    internal GlRenderTarget(GlGraphicsContext ctx, ITexture2D? texture = null)
+    internal GlRenderTarget(GlGraphicsContext gfx, ITexture2D? texture = null)
     {
         Handle = 0;
-        Gl = ctx.Gl;
+        Gl = gfx.Gl;
         Texture = texture;
-    }
-
-    public void Bind()
-    {
-        _lastViewportSize = ViewportSize;
-
-        Gl.BindFramebuffer(FramebufferTarget.Framebuffer, Handle);
-        Gl.Viewport(_lastViewportSize);
-    }
-
-    public void Unbind()
-    {
-        Gl.BindFramebuffer(FramebufferTarget.Framebuffer, 0);
-    }
-
-    public void Clear(Color color)
-    {
-        Gl.ClearColor(color);
-        Gl.Clear(ClearBufferMask.ColorBufferBit | ClearBufferMask.DepthBufferBit);
     }
 
 }

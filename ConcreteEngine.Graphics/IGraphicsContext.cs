@@ -16,17 +16,18 @@ public interface IGraphicsContext
 
     Vector2D<int> ViewportSize { get; }
     BlendMode BlendMode { get; }
+    bool DepthTest { get; }
 
     void BeginFrame(in GraphicsFrameContext frameCtx);
     void EndFrame();
+    
     void Clear(Color color, ClearBufferFlag flags);
     void BeginScreenPass(Color? clear = null, ClearBufferFlag flags = ClearBufferFlag.Color);
     void BeginRenderPass(ushort fboId, Color? clear, ClearBufferFlag flags = ClearBufferFlag.Color);
     void EndRenderPass();
-    void BlitFramebufferTo(ushort fromId, ushort toId = 0, Vector2D<int>? size = null, bool linearFilter = true);
+    void BlitFramebuffer(ushort fromId, ushort toId = 0, bool linearFilter = true);
     void SetBlendMode(BlendMode blendMode);
-    void BindFramebufferTexture(ushort framebufferId);
-    void BindFramebuffer(ushort resourceId);
+    void SetDepthTest(bool depthTest);
     void BindTexture(ushort resourceId, uint slot);
     void BindMesh(ushort resourceId);
     void BindVertexBuffer(ushort resourceId);

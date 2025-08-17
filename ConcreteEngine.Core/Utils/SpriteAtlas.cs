@@ -12,44 +12,27 @@ namespace ConcreteEngine.Core.Utils;
 
 public sealed class SpriteAtlas
 {
-    public Vector2 Scale { get; }
-
-    public SpriteAtlas(int columns, int rows)
-    {
-        ArgumentOutOfRangeException.ThrowIfNegativeOrZero(columns, nameof(columns));
-        ArgumentOutOfRangeException.ThrowIfNegativeOrZero(rows, nameof(rows));
-        Scale = new Vector2(1f / columns, 1f / rows);
-    }
+    public int Columns { get; }
+    public int Rows { get; }
+    public int TileSize { get; }
+    public float InsetU { get; } // half-texel in UV
+    public float InsetV { get; }
+    public Vector2 Scale { get; } // 1/cols, 1/rows
 
     public SpriteAtlas(int tileSize, int textureWidth, int textureHeight)
     {
-        var (columns, rows) = FromTextureSize(tileSize, textureWidth, textureHeight);
-        Scale = new Vector2(1f / columns, 1f / rows);
+        TileSize = tileSize;
+        Columns = textureWidth / tileSize;
+        Rows = textureHeight / tileSize;
+
+        Scale = new Vector2(1f / Columns, 1f / Rows);
+        InsetU = 0.5f / (Columns * TileSize);
+        InsetV = 0.5f / (Rows * TileSize);
     }
 
-    public SpriteAtlas(int tileSize, Texture2D texture)
-    {
-        ArgumentNullException.ThrowIfNull(texture);
-
-        var (columns, rows) = FromTextureSize(tileSize, texture.Width, texture.Height);
-        Scale = new Vector2(1f / columns, 1f / rows);
-    }
-    
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public Vector2 GetOffset(int column, int row) => new (Scale.X * column, Scale.Y * row);
-    
-    [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public Vector2 GetOffset(Vector2D<int> loc) => new (Scale.X * loc.X, Scale.Y * loc.Y);
-
-
-    private static (int columns, int rows) FromTextureSize(int tileSize, int textureWidth, int textureHeight)
+    public UvRect GetUvRect(int col, int row)
     {
-        ArgumentOutOfRangeException.ThrowIfNegativeOrZero(tileSize, nameof(tileSize));
-        ArgumentOutOfRangeException.ThrowIfNegativeOrZero(textureWidth, nameof(textureWidth));
-        ArgumentOutOfRangeException.ThrowIfNegativeOrZero(textureHeight, nameof(textureHeight));
-        ArgumentOutOfRangeException.ThrowIfGreaterThan(tileSize, textureHeight, nameof(tileSize));
-        ArgumentOutOfRangeException.ThrowIfGreaterThan(tileSize, textureHeight, nameof(tileSize));
-
-        return (textureWidth / tileSize, textureHeight / tileSize);
+        return UvRect.GetInsetUv(col, row, TileSize, Scale);
     }
 }

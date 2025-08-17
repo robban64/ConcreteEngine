@@ -16,7 +16,9 @@ public sealed class GlGraphicsDevice : IGraphicsDevice<GlGraphicsContext>
     private readonly GL _gl;
     private readonly GlGraphicsContext _gfx;
     private readonly GlResourceFactory _resourceFactory;
+
     private readonly GraphicsResourceStore _store;
+
     //private readonly RenderTargetRegistry _targetRegistry;
     private readonly UniformRegistry _uniformRegistry;
     private readonly ResourceDisposeQueue _disposeQueue;
@@ -67,7 +69,7 @@ public sealed class GlGraphicsDevice : IGraphicsDevice<GlGraphicsContext>
             ],
             Primitive = PrimitiveType.TriangleStrip
         });
-        
+
         _quadMesh = quadMeshResult.MeshId;
     }
 
@@ -94,9 +96,9 @@ public sealed class GlGraphicsDevice : IGraphicsDevice<GlGraphicsContext>
         if (_viewportSize == _previousViewportSize) return;
         _previousViewportSize = _viewportSize;
 
-        Gl.BindFramebuffer(FramebufferTarget.Framebuffer, 0);
-        Gl.BindRenderbuffer(RenderbufferTarget.Renderbuffer, 0);
-        Gl.BindTexture(TextureTarget.Texture2D, 0);
+        _gl.BindFramebuffer(FramebufferTarget.Framebuffer, 0);
+        _gl.BindRenderbuffer(RenderbufferTarget.Renderbuffer, 0);
+        _gl.BindTexture(TextureTarget.Texture2D, 0);
 
         Console.WriteLine($"New viewport {_viewportSize} - old viewport {_previousViewportSize}");
         Console.WriteLine($"Recreating {_targetRegistry.Count} FBO");
@@ -172,15 +174,15 @@ public sealed class GlGraphicsDevice : IGraphicsDevice<GlGraphicsContext>
         return key;
     }
     */
-    
+
     private void RecreateRenderTargetsIfNeeded()
     {
         if (_viewportSize == _previousViewportSize) return;
         _previousViewportSize = _viewportSize;
 
-        Gl.BindFramebuffer(FramebufferTarget.Framebuffer, 0);
-        Gl.BindRenderbuffer(RenderbufferTarget.Renderbuffer, 0);
-        Gl.BindTexture(TextureTarget.Texture2D, 0);
+        _gl.BindFramebuffer(FramebufferTarget.Framebuffer, 0);
+        _gl.BindRenderbuffer(RenderbufferTarget.Renderbuffer, 0);
+        _gl.BindTexture(TextureTarget.Texture2D, 0);
 
         Console.WriteLine($"New viewport {_viewportSize} - old viewport {_previousViewportSize}");
         int counter = 0;
@@ -190,54 +192,54 @@ public sealed class GlGraphicsDevice : IGraphicsDevice<GlGraphicsContext>
             ReplaceFramebuffer(i);
             counter++;
         }
-        Console.WriteLine($"Recreating {counter} FBO");
 
+        Console.WriteLine($"Recreating {counter} FBO");
     }
-    
+
     private (ushort, ushort) ReplaceFramebuffer(ushort fboId)
     {
         var prevFbo = _store.Get<GlFramebuffer>(fboId);
-        var view = _gfx.ViewportSize;
-        var size = new Vector2D<int>((int)(view.X * prevFbo.SizeRatio.X), (int)(view.Y * prevFbo.SizeRatio.Y));
+        var view = _viewportSize;
 
-        var createRes = _resourceFactory.CreateFrameBuffer(size);
-        var newFbo = new GlFramebuffer(createRes.Fbo, createRes.Renderbuffer, prevFbo.ColorTextureId, size, prevFbo.SizeRatio);
-        var newTex = new GlTexture2D(createRes.Texture, size.X, size.Y, EnginePixelFormat.Rgba);
+        var res = _resourceFactory.CreateFrameBuffer(view, prevFbo.Descriptor);
+        var newFbo = new GlFramebuffer(res.Fbo, prevFbo.ColTextureId, res.Rbo, res.RboTexture, res.Size,
+            prevFbo.SizeRatio, prevFbo.Descriptor);
+        var newTex = new GlTexture2D(res.Texture, res.Size.X, res.Size.Y, EnginePixelFormat.Rgba);
 
-        
-        _store.ReplaceResource<GlTexture2D>(prevFbo.ColorTextureId, newTex, out var prevTex);
+
+        _store.ReplaceResource<GlTexture2D>(prevFbo.ColTextureId, newTex, out var prevTex);
         _store.ReplaceResource<GlFramebuffer>(fboId, newFbo, out var prevFbo2);
 
-        _disposeQueue.Enqueue(prevTex, prevFbo.ColorTextureId);
+        _disposeQueue.Enqueue(prevTex, prevFbo.ColTextureId);
         _disposeQueue.Enqueue(prevFbo, fboId);
 
 
-        return (fboId, newFbo.ColorTextureId);
+        return (fboId, newFbo.ColTextureId);
     }
 
-    public (ushort, ushort) CreateFramebuffer(Vector2 sizeRatio)
+    public (ushort, ushort) CreateFramebuffer(in FramebufferDescriptor desc)
     {
-        var view = _gfx.ViewportSize;
-        var size = new Vector2D<int>((int)(view.X * sizeRatio.X), (int)(view.Y * sizeRatio.Y));
+        var view = _viewportSize;
+        var res = _resourceFactory.CreateFrameBuffer(_viewportSize, in desc);
 
-        var result = _resourceFactory.CreateFrameBuffer(size);
+        
+        var newTex = new GlTexture2D(res.Texture, res.Size.X, res.Size.Y, EnginePixelFormat.Rgba);
+        var texId = _store.AddResource(newTex);
 
-        var colTex = new GlTexture2D(result.Texture, size.X, size.Y, EnginePixelFormat.Rgba);
-        var colTexId = _store.AddResource(colTex);
+        var newFbo = new GlFramebuffer(res.Fbo, texId, res.Rbo, res.RboTexture, res.Size, desc.SizeRatio, in desc);
 
-        var newFbo = new GlFramebuffer(result.Fbo, result.Renderbuffer, colTexId, size, sizeRatio);
         var fboId = _store.AddResource(newFbo);
 
-        return (fboId, colTexId);
+        return (fboId, texId);
     }
 
     public ushort CreateShader(string vertexSource, string fragmentSource, string[] samplers)
     {
         var (resource, handle, uniformTable) = _resourceFactory.CreateShader(vertexSource, fragmentSource, samplers);
-        Gl.UseProgram(handle);
+        _gl.UseProgram(handle);
         for (int i = 0; i < samplers.Length; i++)
-            Gl.Uniform1(uniformTable.GetUniformLocation(samplers[i]), i);
-        Gl.UseProgram(0);
+            _gl.Uniform1(uniformTable.GetUniformLocation(samplers[i]), i);
+        _gl.UseProgram(0);
 
         var resourceId = _store.AddResource(resource);
 
@@ -281,30 +283,11 @@ public sealed class GlGraphicsDevice : IGraphicsDevice<GlGraphicsContext>
             if (mesh.IndexBufferId > 0)
                 RemoveResource(mesh.IndexBufferId);
         }
-        else if (resource is GlFramebuffer framebuffer)
-            RemoveResource(framebuffer.ColorTextureId);
         else if (resource is GlShader shader)
             _uniformRegistry.Remove(resourceId);
-    }
 
-    public void Dispose()
-    {
-        Console.WriteLine(
-            $"{nameof(GlGraphicsDevice)} Disposing {nameof(GlGraphicsDevice)} with {_store.Count} resources");
-
-        int counter = 0;
-        for (ushort i = 1; i < _store.Count; i++)
-        {
-            var resource = _store.Get(i);
-            if (resource == null || resource.IsDisposed) continue;
-            FreeResource(resource);
-            counter++;
-        }
-
-        Console.WriteLine($"{nameof(GlGraphicsDevice)} Disposing finished");
-        Console.WriteLine($"Total of {counter} resources directly");
-
-        Gl.Dispose();
+        //else if (resource is GlFramebuffer framebuffer)
+            //RemoveResource(framebuffer.ColTextureHandle);
     }
 
     private void FreeResource(IGraphicsResource resource)
@@ -315,23 +298,25 @@ public sealed class GlGraphicsDevice : IGraphicsDevice<GlGraphicsContext>
         switch (resource)
         {
             case GlShader shader:
-                Gl.DeleteShader(shader.Handle);
+                _gl.DeleteShader(shader.Handle);
                 break;
             case GlTexture2D texture:
-                Gl.DeleteTexture(texture.Handle);
+                _gl.DeleteTexture(texture.Handle);
                 break;
             case GlBuffer buffer:
-                Gl.DeleteBuffer(buffer.Handle);
+                _gl.DeleteBuffer(buffer.Handle);
                 break;
             case GlRenderTarget renderTarget:
-                Gl.DeleteFramebuffer(renderTarget.Handle);
+                _gl.DeleteFramebuffer(renderTarget.Handle);
                 break;
             case GlMesh mesh:
-                Gl.DeleteVertexArray(mesh.Handle);
+                _gl.DeleteVertexArray(mesh.Handle);
                 break;
             case GlFramebuffer fbo:
-                Gl.DeleteRenderbuffer(fbo.RenderBufferHandle);
-                Gl.DeleteFramebuffer(fbo.Handle);
+                if (fbo.RboHandle > 0) _gl.DeleteRenderbuffer(fbo.RboHandle);
+                if (fbo.RboTextureHandle > 0) _gl.DeleteRenderbuffer(fbo.RboTextureHandle);
+                if (fbo.ColTextureId > 0) _gl.DeleteTexture(fbo.ColTextureId);
+                _gl.DeleteFramebuffer(fbo.Handle);
                 break;
         }
     }
@@ -351,5 +336,27 @@ public sealed class GlGraphicsDevice : IGraphicsDevice<GlGraphicsContext>
             MaxSamples = gl.GetInteger(GLEnum.MaxSamples),
             MaxColorAttachments = gl.GetInteger(GLEnum.MaxColorAttachments)
         };
+    }
+    
+    public void Dispose()
+    {
+        /*
+        Console.WriteLine(
+            $"{nameof(GlGraphicsDevice)} Disposing {nameof(GlGraphicsDevice)} with {_store.Count} resources");
+
+        int counter = 0;
+        for (ushort i = 1; i < _store.Count; i++)
+        {
+            var resource = _store.Get(i);
+            if (resource == null || resource.IsDisposed) continue;
+            FreeResource(resource);
+            counter++;
+        }
+
+        Console.WriteLine($"{nameof(GlGraphicsDevice)} Disposing finished");
+        Console.WriteLine($"Total of {counter} resources directly");
+
+        _gl.Dispose();
+        */
     }
 }

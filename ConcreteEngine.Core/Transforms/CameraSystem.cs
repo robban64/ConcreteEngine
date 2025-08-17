@@ -49,6 +49,10 @@ public sealed class CameraSystem : IGameEngineSystem
         if (input.IsKeyDown(Key.D))
             deltaPos.X += 1f;
 
+        if (input.IsKeyDown(Key.U))
+            _transform.Zoom += 0.1f;
+        if (input.IsKeyDown(Key.J))
+            _transform.Zoom -= 0.1f;
 
         var mouse = input.MousePosition;
         var sceeenSize = frameCtx.FramebufferSize;

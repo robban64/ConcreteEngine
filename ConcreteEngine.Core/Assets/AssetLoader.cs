@@ -26,22 +26,6 @@ internal sealed class AssetLoader
 
     public Shader LoadShader(AssetShaderRecord record)
     {
-/*
-        var vertexIndex = shaderText.IndexOf("@vertex", StringComparison.Ordinal);
-        var fragmentIndex = shaderText.IndexOf("@fragment", StringComparison.Ordinal);
-
-        if (vertexIndex < 0)
-            throw new InvalidDataException("Invalid vertex shader definition. Missing @vertex definition.");
-        if (fragmentIndex < 0)
-            throw new InvalidDataException("Invalid vertex shader definition. Missing @fragmentIndex definition.");
-
-
-        var vertexSource = shaderText
-            .Substring(vertexIndex + "@vertex".Length, fragmentIndex - vertexIndex - "@vertex".Length)
-            .Trim();
-        var fragmentSource = shaderText.Substring(fragmentIndex + "@fragment".Length).Trim();
-*/
-
         var vertexSource = File.ReadAllText(GetPath("shaders", record.VertShaderPath));
         var fragmentSource = File.ReadAllText(GetPath("shaders", record.FragShaderPath));
 
@@ -68,7 +52,8 @@ internal sealed class AssetLoader
             Width: result.Width,
             Height: result.Height,
             Format: record.PixelFormat,
-            Preset: record.Preset
+            Preset: record.Preset,
+            LodBias:record.LodBias
         );
 
         var resourceId = _graphics.CreateTexture2D(in textureData);

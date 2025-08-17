@@ -90,8 +90,7 @@ internal sealed class TilemapChunkMesh : IDisposable
         var vertices = Vertices;
         var w = _tileSize;
 
-        var atlas = new SpriteAtlas(10, 16);
-        var uvScale = atlas.Scale;
+        var atlas = new SpriteAtlas(_tileSize, 320,  512);
 
         for (int y = 0; y < _chunkDimension; y++)
         {
@@ -99,27 +98,18 @@ internal sealed class TilemapChunkMesh : IDisposable
             for (int x = 0; x < _chunkDimension; x++)
             {
                 ref var tile = ref _tileData[rowStart + x];
-                int tileId = rowStart + x;
-                int vi = tileId * 4;
+                int vi = (rowStart + x) * 4;
 
-                var uvOffset = atlas.GetOffset(tile.AtlasX, tile.AtlasY);
-                float px = x * w;
-                float py = y * w;
+                float px = x * _tileSize;
+                float py = y * _tileSize;
 
-                var u0 = uvOffset.X;
-                var v0 = uvOffset.Y;
-                var u1 = uvOffset.X + uvScale.X;
-                var v1 = uvOffset.Y + uvScale.Y;
+                var (u0, v0, u1, v1) = atlas.GetUvRect(tile.AtlasX, tile.AtlasY);
 
-                //top left origin
-                // Bottom-left
-                vertices[vi + 0] = new Vertex2D(px, py, u0, v0);
-                // Bottom-right
-                vertices[vi + 1] = new Vertex2D(px + w, py, u1, v0);
-                // Top-left
-                vertices[vi + 2] = new Vertex2D(px, py + w, u0, v1);
-                // Top-right
-                vertices[vi + 3] = new Vertex2D(px + w, py + w, u1, v1);
+                // bottom-left origin in your mesh => OK as long as your texture upload matches
+                vertices[vi + 0] = new Vertex2D(px,         py,         u0, v0);
+                vertices[vi + 1] = new Vertex2D(px + _tileSize, py,         u1, v0);
+                vertices[vi + 2] = new Vertex2D(px,         py + _tileSize, u0, v1);
+                vertices[vi + 3] = new Vertex2D(px + _tileSize, py + _tileSize, u1, v1);
             }
         }
     }

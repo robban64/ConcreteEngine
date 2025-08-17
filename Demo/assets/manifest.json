@@ -13,6 +13,12 @@
       "samplers": ["uTexture"]
     },
     {
+      "name": "ColorShader",
+      "vertShaderPath": "screen.vert.glsl",
+      "fragShaderPath": "color.frag.glsl",
+      "samplers": ["uTexture"]
+    },
+    {
       "name": "BlurHorizontal",
       "vertShaderPath": "screen.vert.glsl",
       "fragShaderPath": "blur_h.frag.glsl",
@@ -45,7 +51,8 @@
     {
       "name": "TilemapTextureAtlas",
       "path": "terrain_tiles.png",
-      "preset": "NearestClamp"
+      "preset": "NearestClamp",
+      "lodBias": -0.25
 
     }
   ]

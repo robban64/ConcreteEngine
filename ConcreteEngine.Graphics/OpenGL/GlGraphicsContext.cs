@@ -26,8 +26,14 @@ public sealed class GlGraphicsContext : IGraphicsContext
     private readonly UniformRegistry _uniformRegistry;
 
     private BlendMode _blendMode = BlendMode.Alpha;
+    private bool _depthTest = true;
+
+    private uint _currentDrawFboHandle = 0; // 0 = screen
+    private uint _currentReadFboHandle = 0; // 0 = screen
 
     private ushort _boundFboId = 0;
+    private ushort _boundReadFboId = 0;
+
     private ushort _boundShaderId = 0;
     private ushort _boundVertexBufferId = 0;
     private ushort _boundIndexBufferId = 0;
@@ -36,7 +42,8 @@ public sealed class GlGraphicsContext : IGraphicsContext
 
     private UniformTable? _boundUniforms;
 
-    private Vector2D<int> _viewportSize;
+    private Vector2D<int> _viewport;
+    private Vector2D<int> _currentViewport;
 
     private float _deltaTime = 0f;
     private int _drawTriangleCount = 0;
@@ -44,7 +51,8 @@ public sealed class GlGraphicsContext : IGraphicsContext
 
     public GraphicsConfiguration Configuration { get; }
     public BlendMode BlendMode => _blendMode;
-    public Vector2D<int> ViewportSize => _viewportSize;
+    public bool DepthTest => _depthTest;
+    public Vector2D<int> ViewportSize => _viewport;
 
     public GL Gl => _gl;
 
@@ -53,7 +61,7 @@ public sealed class GlGraphicsContext : IGraphicsContext
         GL gl,
         GraphicsConfiguration configuration,
         GraphicsResourceStore store,
-        UniformRegistry  uniformRegistry,
+        UniformRegistry uniformRegistry,
         in GraphicsFrameContext initialFrameCtx)
     {
         _gl = gl;
@@ -63,33 +71,38 @@ public sealed class GlGraphicsContext : IGraphicsContext
 
         _boundTextures = new ushort[configuration.MaxTextureImageUnits];
 
-        _viewportSize = initialFrameCtx.ViewportSize;
+        _viewport = initialFrameCtx.ViewportSize;
+        _currentViewport = initialFrameCtx.ViewportSize;
 
 
-        gl.GetInteger(GetPName.MajorVersion, out _glMajor);
-        gl.GetInteger(GetPName.MinorVersion, out _glMinor);
+        _gl.GetInteger(GetPName.MajorVersion, out _glMajor);
+        _gl.GetInteger(GetPName.MinorVersion, out _glMinor);
         int glVersion = _glMajor * 100 + _glMinor * 10;
 
         _gl.Disable(GLEnum.CullFace);
-        _gl.Disable(GLEnum.DepthTest);
-        _gl.Disable(GLEnum.Dither);
-
+        _gl.Enable(GLEnum.Dither);
         _gl.Enable(GLEnum.Multisample);
-
         _gl.PixelStore(GLEnum.UnpackAlignment, 1);
-
-        _gl.DepthMask(false);
+        //_gl.Enable(EnableCap.FramebufferSrgb);
+        
+        //_gl.Disable(GLEnum.DepthTest);
+        //_gl.DepthMask(false);
     }
 
     public void BeginFrame(in GraphicsFrameContext frameCtx)
     {
-        _blendMode = BlendMode.Unset;
+        _blendMode = BlendMode.Alpha;
+        _depthTest = true;
 
         _deltaTime = frameCtx.DeltaTime;
-        _viewportSize = frameCtx.ViewportSize;
+        _viewport = frameCtx.ViewportSize;
+        _currentViewport = frameCtx.ViewportSize;
 
         _drawCallCount = 0;
         _drawTriangleCount = 0;
+        
+        SetBlendMode(BlendMode.Alpha);
+        SetDepthTest(true);
     }
 
     public void EndFrame()
@@ -116,63 +129,93 @@ public sealed class GlGraphicsContext : IGraphicsContext
     public void BeginScreenPass(Color? clear, ClearBufferFlag flags = ClearBufferFlag.Color)
     {
         if (_boundFboId != 0) GraphicsException.ThrowInvalidState("Cannot begin screen pass while FBO is bound.");
+
         _gl.BindFramebuffer(FramebufferTarget.Framebuffer, 0);
-        _gl.Viewport(_viewportSize);
+        _gl.Viewport(_viewport);
         if (clear.HasValue) Clear(clear.Value, flags);
+
+        _currentDrawFboHandle = 0;
+        _currentReadFboHandle = 0;
+
+        _boundFboId = 0;
+        _boundReadFboId = 0;
+        _currentViewport = _viewport;
     }
 
     public void BeginRenderPass(ushort fboId, Color? clear, ClearBufferFlag flags = ClearBufferFlag.Color)
     {
         ArgumentOutOfRangeException.ThrowIfZero(fboId, nameof(fboId));
         if (_boundFboId == fboId) GraphicsException.ThrowInvalidState($"FBO is {fboId} already bound.");
-
         var fbo = _store.Get<GlFramebuffer>(fboId);
         ValidateResource(fbo);
 
-        Gl.BindFramebuffer(FramebufferTarget.Framebuffer, fbo.Handle);
-        _gl.Viewport(_viewportSize);
+        _gl.BindFramebuffer(FramebufferTarget.Framebuffer, fbo.Handle);
+        _gl.Viewport(fbo.Size);
         if (clear.HasValue) Clear(clear.Value, flags);
+
+        _currentDrawFboHandle = fbo.Handle;
+        _currentReadFboHandle = fbo.Handle;
+
         _boundFboId = fboId;
+        _boundReadFboId = fboId;
+        _currentViewport = fbo.Size;
     }
 
     public void EndRenderPass()
     {
         if (_boundFboId == 0) GraphicsException.ResourceNotBound<GlFramebuffer>(nameof(_boundFboId));
 
-        Gl.BindFramebuffer(FramebufferTarget.Framebuffer, 0);
-        Gl.Viewport(_viewportSize);
+        _gl.BindFramebuffer(FramebufferTarget.Framebuffer, 0);
+        _gl.Viewport(_viewport);
+
+        _currentDrawFboHandle = 0;
+        _currentReadFboHandle = 0;
+
         _boundFboId = 0;
+        _boundReadFboId = 0;
+        _currentViewport = _viewport;
     }
 
-    public void BlitFramebufferTo(ushort fromId, ushort toId = 0, Vector2D<int>? size = null,
-        bool linearFilter = true)
+    public void BlitFramebuffer(ushort fromId, ushort toId = 0, bool linearFilter = true)
     {
-        var fromFbo = _store.Get<GlFramebuffer>(fromId);
-        ValidateResource(fromFbo);
+        var fromFbo = fromId == 0 ? null : _store.Get<GlFramebuffer>(fromId);
+        var toFbo   = toId   == 0 ? null : _store.Get<GlFramebuffer>(toId);
 
-        uint toFboHandle = 0;
-        var toFboSize = size ?? _viewportSize;
+        uint fromHandle = fromFbo?.Handle ?? 0;
+        uint toHandle   = toFbo?.Handle   ?? 0;
+        var  srcSize    = fromFbo?.Size ?? _viewport;
+        var  dstSize    = toFbo?.Size   ?? _viewport;
 
-        if (toId > 0)
-        {
-            var toFbo = _store.Get<GlFramebuffer>(toId);
-            ValidateResource(toFbo);
-            toFboHandle = toFbo.Handle;
-        }
+        // Save current state …
+        var prevReadFbo  = _currentReadFboHandle;
+        var prevDrawFbo  = _currentDrawFboHandle;
+        var prevViewport = _currentViewport;
 
-        _gl.BindFramebuffer(FramebufferTarget.ReadFramebuffer, fromFbo.Handle);
-        _gl.BindFramebuffer(FramebufferTarget.DrawFramebuffer, toFboHandle);
+        
+        // If source is MSAA, filter must be NEAREST for the resolve.
+        var filter = (fromFbo?.Descriptor.Msaa == true) ? BlitFramebufferFilter.Nearest
+            : (linearFilter ? BlitFramebufferFilter.Linear
+                : BlitFramebufferFilter.Nearest);
 
-        var (sx, sy, dx, dy) = (fromFbo.Size.X, fromFbo.Size.Y, toFboSize.X, toFboSize.Y);
+        _gl.BindFramebuffer(FramebufferTarget.ReadFramebuffer, fromHandle);
+        _gl.BindFramebuffer(FramebufferTarget.DrawFramebuffer, toHandle);
+        
         _gl.BlitFramebuffer(
-            0, 0, sx, sy,
-            0, 0, dx, dy,
+            0, 0, srcSize.X, srcSize.Y,
+            0, 0, dstSize.X, dstSize.Y,
             ClearBufferMask.ColorBufferBit,
-            linearFilter ? BlitFramebufferFilter.Linear : BlitFramebufferFilter.Nearest
+            filter
         );
+        
+        // Restore previous bindings & viewport …
+        _gl.BindFramebuffer(FramebufferTarget.ReadFramebuffer, prevReadFbo);
+        _gl.BindFramebuffer(FramebufferTarget.DrawFramebuffer, prevDrawFbo);
+        _gl.Viewport(prevViewport);
 
-        _gl.BindFramebuffer(FramebufferTarget.Framebuffer, 0);
-        _gl.Viewport(_viewportSize);
+        _currentReadFboHandle = prevReadFbo;
+        _currentDrawFboHandle = prevDrawFbo;
+        _currentViewport      = prevViewport;
+        // _boundFboId stays whatever it was (0 for screen or the FBO id if inside a pass)
     }
 
     public void SetBlendMode(BlendMode blendMode)
@@ -186,6 +229,7 @@ public sealed class GlGraphicsContext : IGraphicsContext
             case BlendMode.Alpha:
                 _gl.Enable(EnableCap.Blend);
                 _gl.BlendEquation(GLEnum.FuncAdd);
+                _gl.BlendFuncSeparate(BlendingFactor.SrcAlpha, BlendingFactor.OneMinusSrcAlpha, GLEnum.One, GLEnum.One);
                 _gl.BlendFunc(BlendingFactor.SrcAlpha, BlendingFactor.OneMinusSrcAlpha);
                 break;
             case BlendMode.PremultipliedAlpha:
@@ -196,7 +240,7 @@ public sealed class GlGraphicsContext : IGraphicsContext
             case BlendMode.Additive:
                 _gl.Enable(EnableCap.Blend);
                 _gl.BlendEquation(GLEnum.FuncAdd);
-                _gl.BlendFunc(BlendingFactor.SrcAlpha, BlendingFactor.One);
+                _gl.BlendFunc(BlendingFactor.One, BlendingFactor.One);
                 break;
             case BlendMode.None:
                 _gl.Disable(EnableCap.Blend);
@@ -206,13 +250,13 @@ public sealed class GlGraphicsContext : IGraphicsContext
         }
     }
 
-    public void BindFramebufferTexture(ushort framebufferId)
+    public void SetDepthTest(bool depthTest)
     {
-        ArgumentOutOfRangeException.ThrowIfEqual(framebufferId, 0);
-        var frameBuffer = _store.Get<GlFramebuffer>(framebufferId);
-        ValidateResource(frameBuffer);
-        BindTexture(frameBuffer.ColorTextureId, 0);
+        if (_depthTest == depthTest) return;
+        if (depthTest) _gl.Enable(EnableCap.DepthTest);
+        else _gl.Disable(EnableCap.DepthTest);
     }
+
 
     public void BindFramebuffer(ushort resourceId)
     {
@@ -220,7 +264,7 @@ public sealed class GlGraphicsContext : IGraphicsContext
         if (resourceId == 0)
         {
             Gl.BindFramebuffer(FramebufferTarget.Framebuffer, 0);
-            Gl.Viewport(_viewportSize);
+            Gl.Viewport(_viewport);
             Gl.Clear((uint)ClearBufferMask.ColorBufferBit);
             _boundFboId = 0;
             return;

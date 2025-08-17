@@ -41,7 +41,7 @@ public sealed class PlayerFeature : IGameFeature
 
         SpriteShader = assets.Get<Shader>("SpriteShader");
         SpriteTexture = assets.Get<Texture2D>("SpriteTexture");
-        SpriteAtlas = new SpriteAtlas(9, 4);
+        SpriteAtlas = new SpriteAtlas(64, SpriteTexture.Width, SpriteTexture.Height);
         
         renderer.SpriteBatch.CreateSpriteBatch(0, 1024);
 

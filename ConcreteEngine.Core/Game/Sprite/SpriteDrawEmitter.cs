@@ -24,8 +24,6 @@ public sealed class SpriteDrawEmitter : IDrawCommandEmitter
         SpriteFeature = registry.Get<SpriteFeature>();
     }
 
-
-
     public void Emit(DrawEmitterContext context,  DrawCommandSubmitter submitter)
     {
         var atlas = SpriteFeature.SpriteAtlas;
@@ -38,8 +36,8 @@ public sealed class SpriteDrawEmitter : IDrawCommandEmitter
             var pos = entity.Position;
             if (_previousPositions.Count > 0 && (i == 0 || i == 1)) 
                 pos = Vector2.Lerp(entity.Position, _previousPositions[i], context.Alpha);
-            var atlasLoc = atlas.GetOffset(entity.AtlasLocation);
-            var item = new SpriteDrawData(pos, entity.Scale,atlasLoc, atlas.Scale);
+            var uv = atlas.GetUvRect(entity.AtlasLocation.X, entity.AtlasLocation.Y);
+            var item = new SpriteDrawData(pos, entity.Scale, uv);
             spriteBatch.SubmitSprite(item);
         }
 

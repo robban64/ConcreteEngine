@@ -24,5 +24,6 @@ internal sealed record AssetTextureRecord(
     string Name,
     string Path,
     TexturePreset Preset,
-    EnginePixelFormat PixelFormat = EnginePixelFormat.Rgba)
+    EnginePixelFormat PixelFormat = EnginePixelFormat.Rgba,
+    float LodBias = -0.25f)
     : IAssetManifestRecord;

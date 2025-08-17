@@ -7,47 +7,22 @@ using Silk.NET.Maths;
 
 namespace ConcreteEngine.Core.Rendering;
 
+public readonly struct RenderPassClearDesc(
+    Color ClearColor = default,
+    ClearBufferFlag ClearMask = ClearBufferFlag.Color
+);
+
+
 public readonly record struct RenderPassData(
     RenderPassOp Op,
-    ushort WriteFboId,
-    ushort? ReadTexId = null,
-    ushort? BlitFboId = null,
+    ushort TargetFboId,
+    ushort? SourceTexId = null,
+    ushort? BlitFboId = null, // only for blit
+    BlendMode Blend = BlendMode.None,
+    bool DepthTest = false,
     Vector2 SizeRatio = default,
-    bool DoClear = true,
+    bool DoClear = false,
     Color ClearColor = default,
     ClearBufferFlag ClearMask = ClearBufferFlag.Color,
     ushort ShaderId = 0
 );
-/*
-public sealed class RenderPass
-{
-    public required RenderTargetKey GfxKey { get; init; }
-    public required Vector2 SizeRatio { get; set; }
-    public required RenderTargetId Target { get; init; }
-    public required int Order { get; init; }
-    public required bool DoClear { get; init; }
-    public required Color ClearColor { get; init; }
-    public required ClearBufferFlag ClearMask { get; init; }
-    public required RenderPassOp ResolveTo { get; init; }
-    public required RenderTargetKey ResolveToTarget { get; init; }
-    public required ushort ShaderId { get; init; }
-
-
-    internal static RenderPass From(RenderTargetKey key, Shader? shader, in RegisterRenderTargetDesc desc)
-    {
-        return new RenderPass
-        {
-            GfxKey = key,
-            SizeRatio = desc.SizeRatio,
-            Order = desc.Order,
-            Target = desc.Target,
-            DoClear = desc.DoClear,
-            ClearColor = desc.ClearColor,
-            ClearMask = desc.ClearMask,
-            ResolveTo = desc.ResolveTo,
-            ResolveToTarget = desc.ResolveToTarget,
-            ShaderId = shader?.ResourceId ?? 0
-        };
-    }
-}
-*/

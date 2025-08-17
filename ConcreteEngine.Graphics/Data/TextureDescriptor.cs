@@ -11,4 +11,6 @@ public readonly record struct TextureDescriptor(
     int Width,
     int Height,
     EnginePixelFormat Format,
-    TexturePreset Preset);
+    TexturePreset Preset,
+    float LodBias
+);

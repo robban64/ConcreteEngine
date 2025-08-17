@@ -114,21 +114,13 @@ internal sealed class SpriteBatchMesh : IDisposable
 
             var pos = cmd.Position;
             var size = cmd.Scale;
-            var uvOffset = cmd.TextureOffset;
-            var uvScale = cmd.TextureScale;
 
             var x = pos.X;
             var y = pos.Y;
             var w = size.X;
             var h = size.Y;
 
-            var halfW = w * 0.5f;
-            var halfH = h * 0.5f;
-
-            var u0 = uvOffset.X;
-            var v0 = uvOffset.Y;
-            var u1 = uvOffset.X + uvScale.X;
-            var v1 = uvOffset.Y + uvScale.Y;
+            var (u0, v0, u1, v1) = cmd.Uv;
 
             int vi = i * 4;
 
@@ -145,6 +137,10 @@ internal sealed class SpriteBatchMesh : IDisposable
 
             // Bottom-left (centered origin)
             /*
+             
+           var halfW = w * 0.5f;
+           var halfH = h * 0.5f;
+
             vertices[vi + 0] = new Vertex2D(new(x - halfW, y - halfH), new(u0, v0));
             // Bottom-right
             vertices[vi + 1] = new Vertex2D(new(x + halfW, y - halfH), new(u1, v0));

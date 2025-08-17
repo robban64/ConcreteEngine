@@ -21,7 +21,7 @@ public class TilemapFeature: IGameFeature
         var assets = context.GetSystem<AssetSystem>();
         TilemapShader = assets.Get<Shader>("SpriteShader");
         TilemapTexture = assets.Get<Texture2D>("TilemapTextureAtlas");
-        TilemapAtlas = new SpriteAtlas(32, TilemapTexture);
+        TilemapAtlas = new SpriteAtlas(32, TilemapTexture.Width, TilemapTexture.Height);
         
     }
     

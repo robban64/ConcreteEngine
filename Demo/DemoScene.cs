@@ -10,6 +10,7 @@ using ConcreteEngine.Core.Rendering;
 using ConcreteEngine.Core.Rendering.Materials;
 using ConcreteEngine.Core.Resources;
 using ConcreteEngine.Graphics;
+using ConcreteEngine.Graphics.Data;
 using ConcreteEngine.Graphics.Definitions;
 using Silk.NET.Maths;
 using Silk.NET.OpenGL;
@@ -41,6 +42,7 @@ public class DemoScene : GameScene
         var tilemapTexture = assets.Get<Texture2D>("TilemapTextureAtlas");
 
         var screenShader = assets.Get<Shader>("ScreenShader");
+        var colorShader = assets.Get<Shader>("ColorShader");
 
         var blurHorizontalShader = assets.Get<Shader>("BlurHorizontal");
         var blurVerticalShader = assets.Get<Shader>("BlurVertical");
@@ -49,7 +51,7 @@ public class DemoScene : GameScene
 
         var halfSize = Vector2.One * 0.5f;
 
-        
+
         /*
         renderer.RegisterRenderPass(RenderTargetId.Scene, 0, new RenderPassData(
             Op: RenderPassOp.FullscreenQuad,
@@ -61,154 +63,73 @@ public class DemoScene : GameScene
             ClearMask: ClearBufferFlag.ColorAndDepth
         ));
         */
-        
-        var (albedoFboId, albedoTexId) = graphics.CreateFramebuffer(Vector2.One);
-        var (brightPassFboId, brightPassTexId) = graphics.CreateFramebuffer(halfSize);
-        var (bloomAFboId, bloomATexId) = graphics.CreateFramebuffer(Vector2.One);
-        var (bloomBFboId, bloomBTexId) = graphics.CreateFramebuffer(Vector2.One);
 
+        // Create a single-sample texture FBO for post-FX
+        var (sceneFboId, sceneTexId) =
+            graphics.CreateFramebuffer(new FramebufferDescriptor(SizeRatio: Vector2.One, DepthStencilBuffer: true));
+
+        // colorTexId will be 0 for MSAA
+        var msaaDesc = new FramebufferDescriptor(
+            SizeRatio: Vector2.One, DepthStencilBuffer: true, Msaa: true, Samples: 4);
+        var (msaaFboId, _) = graphics.CreateFramebuffer(msaaDesc); 
+
+
+        // Pass 0: draw scene into MSAA FBO
         renderer.RegisterRenderPass(RenderTargetId.Scene, 0, new RenderPassData(
             Op: RenderPassOp.DrawScene,
-            WriteFboId: albedoFboId,
-            SizeRatio: Vector2.One,
+            TargetFboId: msaaFboId,
+            DoClear: true,
+            ClearMask: ClearBufferFlag.ColorAndDepth,
             ClearColor: Color.CornflowerBlue,
-            ClearMask: ClearBufferFlag.ColorAndDepth
-        ));
+            Blend: BlendMode.Alpha,
+            DepthTest: true));
 
-         renderer.RegisterRenderPass(RenderTargetId.Scene, 1, new RenderPassData(
-            Op: RenderPassOp.FullscreenQuad,
-            WriteFboId: brightPassFboId,
-            ReadTexId: albedoTexId,
-            ShaderId: brightPassShader.ResourceId,
-            SizeRatio: halfSize,
-            DoClear: true,
-            ClearColor: default,
-            ClearMask: ClearBufferFlag.Color
-        ));
-         
-        renderer.RegisterRenderPass(RenderTargetId.Scene, 2, new RenderPassData(
-            Op: RenderPassOp.FullscreenQuad,
-            WriteFboId: bloomAFboId,
-            ReadTexId: brightPassTexId,
-            ShaderId: screenShader.ResourceId,
-            SizeRatio: Vector2.One,
-            DoClear: true,
-            ClearColor: default,
-            ClearMask: ClearBufferFlag.Color
-        ));
-        
-        renderer.RegisterRenderPass(RenderTargetId.Scene, 3, new RenderPassData(
-            Op: RenderPassOp.FullscreenQuad,
-            WriteFboId: bloomBFboId,
-            ReadTexId: bloomATexId,
-            ShaderId: blurVerticalShader.ResourceId,
-            SizeRatio: Vector2.One,
-            DoClear: true,
-            ClearColor: default,
-            ClearMask: ClearBufferFlag.Color
-        ));
-        
-        renderer.RegisterRenderPass(RenderTargetId.Scene, 4, new RenderPassData(
-            Op: RenderPassOp.FullscreenQuad,
-            WriteFboId: 0,
-            ReadTexId: albedoTexId,
-            ShaderId: screenCompositeShader.ResourceId,
-            SizeRatio: Vector2.One,
-            DoClear: true,
-            ClearColor: default,
-            ClearMask: ClearBufferFlag.Color
-        ));
-
-        /*
+        // Pass 1: resolve MSAA → single-sample texture FBO
         renderer.RegisterRenderPass(RenderTargetId.Scene, 1, new RenderPassData(
             Op: RenderPassOp.Blit,
-            WriteFboId: albedoFboId,
-            BlitFboId: 0,
-            SizeRatio: Vector2.One,
-            DoClear: false,
-            ClearColor: default,
-            ClearMask: ClearBufferFlag.Color
-        ));
-        */
+            TargetFboId: sceneFboId,
+            BlitFboId: msaaFboId));
+
+        // Pass 2: fullscreen color grade to screen
+        renderer.RegisterRenderPass(RenderTargetId.Scene, 2, new RenderPassData(
+            Op: RenderPassOp.FullscreenQuad,
+            TargetFboId: 0,
+            SourceTexId: sceneTexId,
+            ShaderId: screenShader.ResourceId,
+            Blend: BlendMode.None,
+            DepthTest: false));
+
 
         /*
         renderer.RegisterRenderPass(RenderTargetId.Scene, 0, new RenderPassData(
-            Op: RenderPassOp.None,
-            WriteFboId: screenFboId,
+            Op: RenderPassOp.DrawScene,
+            TargetFboId: sceneFboId,
             SizeRatio: Vector2.One,
+            DoClear: true,
             ClearColor: Color.CornflowerBlue,
-            ClearMask: ClearBufferFlag.ColorAndDepth
+            ClearMask: ClearBufferFlag.ColorAndDepth,
+            Blend: BlendMode.Alpha,
+            DepthTest: true
         ));
-        
-        // Bright-pass
+
         renderer.RegisterRenderPass(RenderTargetId.Scene, 1, new RenderPassData(
             Op: RenderPassOp.FullscreenQuad,
-            WriteFboId: bloomFboId,
-            ReadTexId: bloomTextId,
-            ShaderId: brightPassShader.ResourceId,
-            SizeRatio: halfSize,
-            DoClear: true,
-            ClearColor: default,
-            ClearMask: ClearBufferFlag.Color
+            TargetFboId: 0,
+            SourceTexId: sceneTexId,
+            ShaderId: screenShader.ResourceId,
+            SizeRatio: Vector2.One,
+            Blend: BlendMode.None,
+            DepthTest: false
         ));
+
         renderer.RegisterRenderPass(RenderTargetId.Scene, 2, new RenderPassData(
             Op: RenderPassOp.FullscreenQuad,
-            WriteFboId: screenFboId,
-            ReadTexId: screenTexId,
-            ShaderId: screenCompositeShader.ResourceId,
+            TargetFboId: 0,
+            SourceTexId: sceneTexId,
+            ShaderId: brightPassShader.ResourceId,
             SizeRatio: Vector2.One,
-            DoClear: true,
-            ClearColor: default,
-            ClearMask: ClearBufferFlag.Color
-        ));
-        */
-/*
-        var screenKey = renderer.RegisterRenderPass(screenShader, new RegisterRenderTargetDesc(
-            Target: RenderTargetId.Scene,
-            Order: 0,
-            SizeRatio: Vector2.One,
-            DoClear: true,
-            ClearColor: Color.CornflowerBlue,
-            ClearMask: ClearBufferFlag.ColorAndDepth
-        ));
-
-        // Bright-pass
-        var brightPKey = renderer.RegisterDrawRenderPass(screenKey, brightPassShader, new RegisterRenderTargetDesc(
-            Target: RenderTargetId.Scene,
-            Order: 1,
-            SizeRatio: halfSize,
-            DoClear: true,
-            ClearColor: default,
-            ClearMask: ClearBufferFlag.Color
-        ));
-
-        // Blur horizontal
-        var blurHKey = renderer.RegisterDrawRenderPass(brightPKey, blurHorizontalShader, new RegisterRenderTargetDesc(
-            Target: RenderTargetId.Scene,
-            Order: 2,
-            SizeRatio: Vector2.One,
-            DoClear: true,
-            ClearColor: default,
-            ClearMask: ClearBufferFlag.Color
-        ));
-
-        // Blur vertical
-        var blurVKey = renderer.RegisterDrawRenderPass(blurHKey, blurVerticalShader, new RegisterRenderTargetDesc(
-            Target: RenderTargetId.Scene,
-            Order: 3,
-            SizeRatio: Vector2.One,
-            DoClear: true,
-            ClearColor: default,
-            ClearMask: ClearBufferFlag.Color
-        ));
-
-        renderer.RegisterDrawRenderPass(new RenderTargetKey(0), screenCompositeShader, new RegisterRenderTargetDesc(
-            Target: RenderTargetId.Scene,
-            Order: 4,
-            SizeRatio: Vector2.One,
-            DoClear: true,
-            ClearColor: default,
-            ClearMask: ClearBufferFlag.Color
+            Blend: BlendMode.Additive,
+            DepthTest: false
         ));
         */
 
@@ -223,6 +144,7 @@ public class DemoScene : GameScene
             Texture: tilemapTexture,
             Blend: BlendMode.Alpha
         ));
+
 
         renderer.RegisterCommand(0, DrawCommandId.Tilemap, RenderTargetId.Scene, 4);
         renderer.RegisterCommand(1, DrawCommandId.Sprite, RenderTargetId.Scene, 32);

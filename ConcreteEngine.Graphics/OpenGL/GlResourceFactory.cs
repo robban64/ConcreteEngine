@@ -122,7 +122,7 @@ internal class GlResourceFactory(GlGraphicsContext gfx)
             }
         }
 
-        SetTextureParameters(descriptor.Preset);
+        SetTextureParameters(descriptor.Preset, descriptor.LodBias);
 
         _gl.BindTexture(GLEnum.Texture2D, 0);
 
@@ -130,40 +130,76 @@ internal class GlResourceFactory(GlGraphicsContext gfx)
         return texture;
     }
 
-    public unsafe CreateGlFrameBufferResult CreateFrameBuffer(Vector2D<int> size)
+    public unsafe CreateGlFrameBufferResult CreateFrameBuffer(Vector2D<int> viewport, in FramebufferDescriptor desc)
     {
-        ArgumentOutOfRangeException.ThrowIfNegativeOrZero(size.X,  nameof(size.X));
-        ArgumentOutOfRangeException.ThrowIfNegativeOrZero(size.Y,  nameof(size.Y));
+        ArgumentOutOfRangeException.ThrowIfNegativeOrZero(viewport.X, nameof(viewport.X));
+        ArgumentOutOfRangeException.ThrowIfNegativeOrZero(viewport.Y, nameof(viewport.Y));
+        ArgumentOutOfRangeException.ThrowIfNegativeOrZero(desc.SizeRatio.X, nameof(desc.SizeRatio.X));
+        ArgumentOutOfRangeException.ThrowIfNegativeOrZero(desc.SizeRatio.Y, nameof(desc.SizeRatio.Y));
 
 
+        var size = new Vector2D<int>((int)(viewport.X * desc.SizeRatio.X), (int)(viewport.Y * desc.SizeRatio.Y));
         var (width, height) = ((uint)size.X, (uint)size.Y);
 
-        // Color texture
-        var textureHandle = _gl.GenTexture();
-        _gl.BindTexture(TextureTarget.Texture2D, textureHandle);
-        _gl.TexImage2D(TextureTarget.Texture2D, 0, InternalFormat.Rgba8, width, height, 0, PixelFormat.Rgba,
-            PixelType.UnsignedByte, (void*)(0));
-        _gl.TexParameter(TextureTarget.Texture2D, GLEnum.TextureMinFilter, (int)GLEnum.Linear);
-        _gl.TexParameter(TextureTarget.Texture2D, GLEnum.TextureMagFilter, (int)GLEnum.Linear);
-        _gl.TexParameter(TextureTarget.Texture2D, GLEnum.TextureWrapS, (int)GLEnum.ClampToEdge);
-        _gl.TexParameter(TextureTarget.Texture2D, GLEnum.TextureWrapT, (int)GLEnum.ClampToEdge);
-        _gl.BindTexture(TextureTarget.Texture2D, 0);
-
-        // Depth-stencil renderbuffer
-        var renderBufferHandle = _gl.GenRenderbuffer();
-        _gl.BindRenderbuffer(RenderbufferTarget.Renderbuffer, renderBufferHandle);
-        _gl.RenderbufferStorage(RenderbufferTarget.Renderbuffer, InternalFormat.Depth24Stencil8, width, height);
-        _gl.BindRenderbuffer(RenderbufferTarget.Renderbuffer, 0);
-
-        // Framebuffer
+        var (colTexHandle, rboTexHandle, depthStencilRboHandle) = ((uint)0, (uint)0, (uint)0);
+        
         var fbo = _gl.GenFramebuffer();
         _gl.BindFramebuffer(FramebufferTarget.Framebuffer, fbo);
-        _gl.FramebufferTexture2D(FramebufferTarget.Framebuffer, FramebufferAttachment.ColorAttachment0,
-            TextureTarget.Texture2D, textureHandle, 0);
-        _gl.FramebufferRenderbuffer(FramebufferTarget.Framebuffer, FramebufferAttachment.DepthStencilAttachment,
-            RenderbufferTarget.Renderbuffer, renderBufferHandle);
 
-        //Gl.DrawBuffers(1, GLEnum.ColorAttachment0);
+        if (desc.Msaa)
+        {
+            // Renderbuffer texture
+            rboTexHandle = _gl.GenRenderbuffer();
+            _gl.BindRenderbuffer(RenderbufferTarget.Renderbuffer, rboTexHandle);
+            _gl.RenderbufferStorageMultisample(RenderbufferTarget.Renderbuffer, desc.Samples, InternalFormat.Rgba8,width, height);
+            _gl.FramebufferRenderbuffer(FramebufferTarget.Framebuffer, FramebufferAttachment.ColorAttachment0,
+                RenderbufferTarget.Renderbuffer, rboTexHandle);
+
+            // Depth-stencil renderbuffer (multisampled)
+            if (desc.DepthStencilBuffer)
+            {
+                depthStencilRboHandle = _gl.GenRenderbuffer();
+                _gl.BindRenderbuffer(RenderbufferTarget.Renderbuffer, depthStencilRboHandle);
+                _gl.RenderbufferStorageMultisample(RenderbufferTarget.Renderbuffer, desc.Samples, InternalFormat.Depth24Stencil8, width, height);
+                _gl.FramebufferRenderbuffer(FramebufferTarget.Framebuffer, FramebufferAttachment.DepthStencilAttachment,
+                    RenderbufferTarget.Renderbuffer, depthStencilRboHandle);
+            }
+
+            _gl.BindRenderbuffer(RenderbufferTarget.Renderbuffer, 0);
+        }
+        else
+        {
+            // Color texture
+            colTexHandle = _gl.GenTexture();
+            _gl.BindTexture(TextureTarget.Texture2D, colTexHandle);
+            _gl.TexImage2D(TextureTarget.Texture2D, 0, InternalFormat.Rgba8, width, height, 0, PixelFormat.Rgba,
+                PixelType.UnsignedByte, (void*)(0));
+            _gl.TexParameter(TextureTarget.Texture2D, GLEnum.TextureMinFilter, (int)GLEnum.Linear);
+            _gl.TexParameter(TextureTarget.Texture2D, GLEnum.TextureMagFilter, (int)GLEnum.Linear);
+            _gl.TexParameter(TextureTarget.Texture2D, GLEnum.TextureWrapS, (int)GLEnum.ClampToEdge);
+            _gl.TexParameter(TextureTarget.Texture2D, GLEnum.TextureWrapT, (int)GLEnum.ClampToEdge);
+            
+            // Framebuffer
+            _gl.FramebufferTexture2D(FramebufferTarget.Framebuffer, FramebufferAttachment.ColorAttachment0,
+                TextureTarget.Texture2D, colTexHandle, 0);
+            
+            // Depth-stencil renderbuffer (single-sample)
+            if (desc.DepthStencilBuffer)
+            {
+                depthStencilRboHandle = _gl.GenRenderbuffer();
+                _gl.BindRenderbuffer(RenderbufferTarget.Renderbuffer, depthStencilRboHandle);
+                _gl.RenderbufferStorage(RenderbufferTarget.Renderbuffer, InternalFormat.Depth24Stencil8, width, height);
+                _gl.FramebufferRenderbuffer(FramebufferTarget.Framebuffer, FramebufferAttachment.DepthStencilAttachment,
+                    RenderbufferTarget.Renderbuffer, depthStencilRboHandle);
+                _gl.BindRenderbuffer(RenderbufferTarget.Renderbuffer, 0);
+            }
+            
+            _gl.BindTexture(TextureTarget.Texture2D, 0);
+        }
+        
+        _gl.BindTexture(TextureTarget.Texture2D, 0);
+
+        //_gl.DrawBuffers(1, GLEnum.ColorAttachment0);
         var status = _gl.CheckFramebufferStatus(FramebufferTarget.Framebuffer);
         if (status != GLEnum.FramebufferComplete)
         {
@@ -172,7 +208,7 @@ internal class GlResourceFactory(GlGraphicsContext gfx)
 
         _gl.BindFramebuffer(FramebufferTarget.Framebuffer, 0);
 
-        return new CreateGlFrameBufferResult(fbo, textureHandle, renderBufferHandle);
+        return new CreateGlFrameBufferResult(fbo, colTexHandle, depthStencilRboHandle, rboTexHandle, size);
     }
 
     public (GlShader shader, uint handle, UniformTable uniformTable) CreateShader(
@@ -255,7 +291,7 @@ internal class GlResourceFactory(GlGraphicsContext gfx)
         );
     }
 
-    private void SetTextureParameters(TexturePreset preset)
+    private void SetTextureParameters(TexturePreset preset, float lodBias)
     {
         switch (preset)
         {
@@ -292,6 +328,8 @@ internal class GlResourceFactory(GlGraphicsContext gfx)
                 _gl.TexParameter(GLEnum.Texture2D, GLEnum.TextureWrapT, (int)GLEnum.ClampToEdge);
                 _gl.TexParameter(GLEnum.Texture2D, GLEnum.TextureMinFilter, (int)GLEnum.LinearMipmapLinear);
                 _gl.TexParameter(GLEnum.Texture2D, GLEnum.TextureMagFilter, (int)GLEnum.Linear);
+                _gl.GenerateMipmap(TextureTarget.Texture2D);
+                if(lodBias != 0) _gl.TexParameter(GLEnum.Texture2D, GLEnum.TextureLodBias, lodBias);
                 break;
 
             case TexturePreset.LinearMipmapRepeat:
@@ -299,6 +337,8 @@ internal class GlResourceFactory(GlGraphicsContext gfx)
                 _gl.TexParameter(GLEnum.Texture2D, GLEnum.TextureWrapT, (int)GLEnum.Repeat);
                 _gl.TexParameter(GLEnum.Texture2D, GLEnum.TextureMinFilter, (int)GLEnum.LinearMipmapLinear);
                 _gl.TexParameter(GLEnum.Texture2D, GLEnum.TextureMagFilter, (int)GLEnum.Linear);
+                _gl.GenerateMipmap(TextureTarget.Texture2D);
+                if(lodBias != 0) _gl.TexParameter(GLEnum.Texture2D, GLEnum.TextureLodBias, lodBias);
                 break;
 
             case TexturePreset.PremultipliedUI:
@@ -308,9 +348,9 @@ internal class GlResourceFactory(GlGraphicsContext gfx)
                 _gl.TexParameter(GLEnum.Texture2D, GLEnum.TextureMagFilter, (int)GLEnum.Linear);
                 // Could add sRGB decode disable if doing manual gamma
                 break;
-
             default:
                 throw new ArgumentOutOfRangeException(nameof(preset), preset, null);
         }
+
     }
 }

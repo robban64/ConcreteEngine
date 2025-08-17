@@ -17,7 +17,7 @@ public sealed class GlGraphicsDevice : IGraphicsDevice<GlGraphicsContext>
     private readonly GlGraphicsContext _gfx;
     private readonly GlResourceFactory _resourceFactory;
     private readonly GraphicsResourceStore _store;
-    private readonly RenderTargetRegistry _targetRegistry;
+    //private readonly RenderTargetRegistry _targetRegistry;
     private readonly UniformRegistry _uniformRegistry;
     private readonly ResourceDisposeQueue _disposeQueue;
 
@@ -44,7 +44,7 @@ public sealed class GlGraphicsDevice : IGraphicsDevice<GlGraphicsContext>
         Configuration = new GraphicsConfiguration(CreateDeviceCapabilities(gl));
 
         _store = new GraphicsResourceStore();
-        _targetRegistry = new RenderTargetRegistry();
+        //_targetRegistry = new RenderTargetRegistry();
         _uniformRegistry = new UniformRegistry();
         _disposeQueue = new ResourceDisposeQueue(FreeResource);
 
@@ -88,7 +88,7 @@ public sealed class GlGraphicsDevice : IGraphicsDevice<GlGraphicsContext>
         // TODO use a special tick or timer for disposing and recreating
         RecreateRenderTargetsIfNeeded();
     }
-
+/*
     private void RecreateRenderTargetsIfNeeded()
     {
         if (_viewportSize == _previousViewportSize) return;
@@ -109,6 +109,11 @@ public sealed class GlGraphicsDevice : IGraphicsDevice<GlGraphicsContext>
         }
     }
 
+    public ushort GetRenderTargetTexture(ushort fboId)
+    {
+        return _store.Get<GlFramebuffer>(fboId).ColorTextureId;
+    }
+
     public RenderTargetHandlerResult GetRenderTarget(RenderTargetKey key)
     {
         if (key.Key >= GraphicsConsts.MaxFboCount - 1)
@@ -126,11 +131,11 @@ public sealed class GlGraphicsDevice : IGraphicsDevice<GlGraphicsContext>
     {
         ArgumentOutOfRangeException.ThrowIfNegativeOrZero(sizeRatio.X, nameof(sizeRatio.X));
         ArgumentOutOfRangeException.ThrowIfNegativeOrZero(sizeRatio.Y, nameof(sizeRatio.Y));
-        
+
         var view = _gfx.ViewportSize;
         var size = new Vector2D<int>((int)(view.X * sizeRatio.X), (int)(view.Y * sizeRatio.Y));
 
-        var result = _resourceFactory.CreateFrameBuffer(this, size);
+        var result = _resourceFactory.CreateFrameBuffer(size);
 
         var colTex = new GlTexture2D(result.Texture, size.X, size.Y, EnginePixelFormat.Rgba);
         var colTexId = _store.AddResource(colTex);
@@ -148,16 +153,16 @@ public sealed class GlGraphicsDevice : IGraphicsDevice<GlGraphicsContext>
         _targetRegistry.Get(key, out var target);
         var (view, ratio) = (_viewportSize, target.SizeRatio);
         var size = new Vector2D<int>((int)(view.X * ratio.X), (int)(view.Y * ratio.Y));
-        
-        var createRes = _resourceFactory.CreateFrameBuffer(this, size);
+
+        var createRes = _resourceFactory.CreateFrameBuffer(size);
         var newFbo = new GlFramebuffer(createRes.Fbo, createRes.Renderbuffer, target.ColTexId, size);
         var newTex = new GlTexture2D(createRes.Texture, size.X, size.Y, EnginePixelFormat.Rgba);
 
         var gen = (ushort)(target.Generation + 1);
         var updateTarget = target with { Generation = gen };
-        
+
         _targetRegistry.Replace(key, in updateTarget, out _);
-        
+
         _store.ReplaceResource<GlTexture2D>(target.ColTexId, newTex, out var prevTex);
         _store.ReplaceResource<GlFramebuffer>(target.FboId, newFbo, out var prevFbo);
 
@@ -165,6 +170,65 @@ public sealed class GlGraphicsDevice : IGraphicsDevice<GlGraphicsContext>
         _disposeQueue.Enqueue(prevFbo, target.FboId);
 
         return key;
+    }
+    */
+    
+    private void RecreateRenderTargetsIfNeeded()
+    {
+        if (_viewportSize == _previousViewportSize) return;
+        _previousViewportSize = _viewportSize;
+
+        Gl.BindFramebuffer(FramebufferTarget.Framebuffer, 0);
+        Gl.BindRenderbuffer(RenderbufferTarget.Renderbuffer, 0);
+        Gl.BindTexture(TextureTarget.Texture2D, 0);
+
+        Console.WriteLine($"New viewport {_viewportSize} - old viewport {_previousViewportSize}");
+        int counter = 0;
+        for (ushort i = 1; i < _store.Count; i++)
+        {
+            if (!_store.TryGet<GlFramebuffer>(i, out var fbo)) continue;
+            ReplaceFramebuffer(i);
+            counter++;
+        }
+        Console.WriteLine($"Recreating {counter} FBO");
+
+    }
+    
+    private (ushort, ushort) ReplaceFramebuffer(ushort fboId)
+    {
+        var prevFbo = _store.Get<GlFramebuffer>(fboId);
+        var view = _gfx.ViewportSize;
+        var size = new Vector2D<int>((int)(view.X * prevFbo.SizeRatio.X), (int)(view.Y * prevFbo.SizeRatio.Y));
+
+        var createRes = _resourceFactory.CreateFrameBuffer(size);
+        var newFbo = new GlFramebuffer(createRes.Fbo, createRes.Renderbuffer, prevFbo.ColorTextureId, size, prevFbo.SizeRatio);
+        var newTex = new GlTexture2D(createRes.Texture, size.X, size.Y, EnginePixelFormat.Rgba);
+
+        
+        _store.ReplaceResource<GlTexture2D>(prevFbo.ColorTextureId, newTex, out var prevTex);
+        _store.ReplaceResource<GlFramebuffer>(fboId, newFbo, out var prevFbo2);
+
+        _disposeQueue.Enqueue(prevTex, prevFbo.ColorTextureId);
+        _disposeQueue.Enqueue(prevFbo, fboId);
+
+
+        return (fboId, newFbo.ColorTextureId);
+    }
+
+    public (ushort, ushort) CreateFramebuffer(Vector2 sizeRatio)
+    {
+        var view = _gfx.ViewportSize;
+        var size = new Vector2D<int>((int)(view.X * sizeRatio.X), (int)(view.Y * sizeRatio.Y));
+
+        var result = _resourceFactory.CreateFrameBuffer(size);
+
+        var colTex = new GlTexture2D(result.Texture, size.X, size.Y, EnginePixelFormat.Rgba);
+        var colTexId = _store.AddResource(colTex);
+
+        var newFbo = new GlFramebuffer(result.Fbo, result.Renderbuffer, colTexId, size, sizeRatio);
+        var fboId = _store.AddResource(newFbo);
+
+        return (fboId, colTexId);
     }
 
     public ushort CreateShader(string vertexSource, string fragmentSource, string[] samplers)

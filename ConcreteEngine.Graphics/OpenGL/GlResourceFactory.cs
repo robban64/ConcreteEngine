@@ -130,7 +130,7 @@ internal class GlResourceFactory(GlGraphicsContext gfx)
         return texture;
     }
 
-    public unsafe CreateGlFrameBufferResult CreateFrameBuffer(GlGraphicsDevice graphics, Vector2D<int> size)
+    public unsafe CreateGlFrameBufferResult CreateFrameBuffer(Vector2D<int> size)
     {
         ArgumentOutOfRangeException.ThrowIfNegativeOrZero(size.X,  nameof(size.X));
         ArgumentOutOfRangeException.ThrowIfNegativeOrZero(size.Y,  nameof(size.Y));

@@ -27,7 +27,7 @@ public class DemoScene : GameScene
         Context.RegisterFeature<SpriteFeature>();
     }
 
-    public override void OnReady()
+    public override void OnReady(IGraphicsDevice graphics)
     {
         var renderer = Context.GetSystem<RenderSystem>();
         var assets = Context.GetSystem<AssetSystem>();
@@ -47,79 +47,171 @@ public class DemoScene : GameScene
         var brightPassShader = assets.Get<Shader>("BrightPass");
         var screenCompositeShader = assets.Get<Shader>("ScreenComposite");
 
-        var vSize = new Vector2D<int>(1280, 720);
-        var halfSize = new Vector2D<int>(vSize.X / 2, vSize.Y / 2);
-        renderer.RegisterRenderPass("Scene", screenShader, new RegisterRenderTargetDesc(
+        var halfSize = Vector2.One * 0.5f;
+
+        
+        /*
+        renderer.RegisterRenderPass(RenderTargetId.Scene, 0, new RenderPassData(
+            Op: RenderPassOp.FullscreenQuad,
+            WriteFboId: screenFboId,
+            ReadTexId: screenTexId,
+            ShaderId: screenShader.ResourceId,
+            SizeRatio: Vector2.One,
+            ClearColor: Color.CornflowerBlue,
+            ClearMask: ClearBufferFlag.ColorAndDepth
+        ));
+        */
+        
+        var (albedoFboId, albedoTexId) = graphics.CreateFramebuffer(Vector2.One);
+        var (brightPassFboId, brightPassTexId) = graphics.CreateFramebuffer(halfSize);
+        var (bloomAFboId, bloomATexId) = graphics.CreateFramebuffer(Vector2.One);
+        var (bloomBFboId, bloomBTexId) = graphics.CreateFramebuffer(Vector2.One);
+
+        renderer.RegisterRenderPass(RenderTargetId.Scene, 0, new RenderPassData(
+            Op: RenderPassOp.DrawScene,
+            WriteFboId: albedoFboId,
+            SizeRatio: Vector2.One,
+            ClearColor: Color.CornflowerBlue,
+            ClearMask: ClearBufferFlag.ColorAndDepth
+        ));
+
+         renderer.RegisterRenderPass(RenderTargetId.Scene, 1, new RenderPassData(
+            Op: RenderPassOp.FullscreenQuad,
+            WriteFboId: brightPassFboId,
+            ReadTexId: albedoTexId,
+            ShaderId: brightPassShader.ResourceId,
+            SizeRatio: halfSize,
+            DoClear: true,
+            ClearColor: default,
+            ClearMask: ClearBufferFlag.Color
+        ));
+         
+        renderer.RegisterRenderPass(RenderTargetId.Scene, 2, new RenderPassData(
+            Op: RenderPassOp.FullscreenQuad,
+            WriteFboId: bloomAFboId,
+            ReadTexId: brightPassTexId,
+            ShaderId: screenShader.ResourceId,
+            SizeRatio: Vector2.One,
+            DoClear: true,
+            ClearColor: default,
+            ClearMask: ClearBufferFlag.Color
+        ));
+        
+        renderer.RegisterRenderPass(RenderTargetId.Scene, 3, new RenderPassData(
+            Op: RenderPassOp.FullscreenQuad,
+            WriteFboId: bloomBFboId,
+            ReadTexId: bloomATexId,
+            ShaderId: blurVerticalShader.ResourceId,
+            SizeRatio: Vector2.One,
+            DoClear: true,
+            ClearColor: default,
+            ClearMask: ClearBufferFlag.Color
+        ));
+        
+        renderer.RegisterRenderPass(RenderTargetId.Scene, 4, new RenderPassData(
+            Op: RenderPassOp.FullscreenQuad,
+            WriteFboId: 0,
+            ReadTexId: albedoTexId,
+            ShaderId: screenCompositeShader.ResourceId,
+            SizeRatio: Vector2.One,
+            DoClear: true,
+            ClearColor: default,
+            ClearMask: ClearBufferFlag.Color
+        ));
+
+        /*
+        renderer.RegisterRenderPass(RenderTargetId.Scene, 1, new RenderPassData(
+            Op: RenderPassOp.Blit,
+            WriteFboId: albedoFboId,
+            BlitFboId: 0,
+            SizeRatio: Vector2.One,
+            DoClear: false,
+            ClearColor: default,
+            ClearMask: ClearBufferFlag.Color
+        ));
+        */
+
+        /*
+        renderer.RegisterRenderPass(RenderTargetId.Scene, 0, new RenderPassData(
+            Op: RenderPassOp.None,
+            WriteFboId: screenFboId,
+            SizeRatio: Vector2.One,
+            ClearColor: Color.CornflowerBlue,
+            ClearMask: ClearBufferFlag.ColorAndDepth
+        ));
+        
+        // Bright-pass
+        renderer.RegisterRenderPass(RenderTargetId.Scene, 1, new RenderPassData(
+            Op: RenderPassOp.FullscreenQuad,
+            WriteFboId: bloomFboId,
+            ReadTexId: bloomTextId,
+            ShaderId: brightPassShader.ResourceId,
+            SizeRatio: halfSize,
+            DoClear: true,
+            ClearColor: default,
+            ClearMask: ClearBufferFlag.Color
+        ));
+        renderer.RegisterRenderPass(RenderTargetId.Scene, 2, new RenderPassData(
+            Op: RenderPassOp.FullscreenQuad,
+            WriteFboId: screenFboId,
+            ReadTexId: screenTexId,
+            ShaderId: screenCompositeShader.ResourceId,
+            SizeRatio: Vector2.One,
+            DoClear: true,
+            ClearColor: default,
+            ClearMask: ClearBufferFlag.Color
+        ));
+        */
+/*
+        var screenKey = renderer.RegisterRenderPass(screenShader, new RegisterRenderTargetDesc(
             Target: RenderTargetId.Scene,
             Order: 0,
             SizeRatio: Vector2.One,
             DoClear: true,
             ClearColor: Color.CornflowerBlue,
-            ClearMask: ClearBufferFlag.ColorAndDepth,
-            ResolveTo: RenderPassResolveTarget.FullscreenQuad,
-            ResolveToTarget: new RenderTargetKey(0)
-        ));
-        
-/*
-        // Scene: default render
-        renderer.RegisterRenderPass("DefaultPass",null, new CreateRenderPassDesc(
-            Target: RenderTargetId.Scene,
-            Order: 0,
-            Size: vSize,
-            Clear: true,
-            ClearColor: Color.CornflowerBlue,
-            ClearMask: ClearBufferFlag.ColorAndDepth,
-            ResolveTo: RenderPassResolveTarget.Blit
+            ClearMask: ClearBufferFlag.ColorAndDepth
         ));
 
         // Bright-pass
-        renderer.RegisterRenderPass(brightPassShader, new CreateRenderPassDesc(
+        var brightPKey = renderer.RegisterDrawRenderPass(screenKey, brightPassShader, new RegisterRenderTargetDesc(
             Target: RenderTargetId.Scene,
             Order: 1,
-            Size: halfSize,
-            Clear: true,
+            SizeRatio: halfSize,
+            DoClear: true,
             ClearColor: default,
-            ClearMask: ClearBufferFlag.Color,
-            ResolveTo: RenderPassResolveTarget.FullscreenQuad,
-            ResolveToFboId: 0 //TODO
+            ClearMask: ClearBufferFlag.Color
         ));
 
         // Blur horizontal
-        renderer.RegisterRenderPass(blurHorizontalShader,new CreateRenderPassDesc(
+        var blurHKey = renderer.RegisterDrawRenderPass(brightPKey, blurHorizontalShader, new RegisterRenderTargetDesc(
             Target: RenderTargetId.Scene,
             Order: 2,
-            Size: halfSize,
-            Clear: true,
+            SizeRatio: Vector2.One,
+            DoClear: true,
             ClearColor: default,
-            ClearMask: ClearBufferFlag.Color,
-            ResolveTo: RenderPassResolveTarget.FullscreenQuad,
-            ResolveToFboId: 0 //TODO
+            ClearMask: ClearBufferFlag.Color
         ));
-        
+
         // Blur vertical
-        renderer.RegisterRenderPass(blurVerticalShader,new CreateRenderPassDesc(
+        var blurVKey = renderer.RegisterDrawRenderPass(blurHKey, blurVerticalShader, new RegisterRenderTargetDesc(
             Target: RenderTargetId.Scene,
             Order: 3,
-            Size: halfSize,
-            Clear: true,
+            SizeRatio: Vector2.One,
+            DoClear: true,
             ClearColor: default,
-            ClearMask: ClearBufferFlag.Color,
-            ResolveTo: RenderPassResolveTarget.FullscreenQuad,
-            ResolveToFboId: 0 //TODO
+            ClearMask: ClearBufferFlag.Color
         ));
-        
-        // Final composite: Scene + Bloom + Vignette → screen
-        renderer.RegisterRenderPass(screenCompositeShader,new CreateRenderPassDesc(
+
+        renderer.RegisterDrawRenderPass(new RenderTargetKey(0), screenCompositeShader, new RegisterRenderTargetDesc(
             Target: RenderTargetId.Scene,
             Order: 4,
-            Size: vSize,
-            Clear: false,
+            SizeRatio: Vector2.One,
+            DoClear: true,
             ClearColor: default,
-            ClearMask: ClearBufferFlag.Color,
-            ResolveTo: RenderPassResolveTarget.FullscreenQuad,
-            ResolveToFboId: 0 //TODO
+            ClearMask: ClearBufferFlag.Color
         ));
-*/
+        */
+
         renderer.AddMaterial(new MaterialDescription(
             Shader: spriteShader,
             Texture: spriteTexture,

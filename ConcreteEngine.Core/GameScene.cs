@@ -9,7 +9,7 @@ public abstract class GameScene
     protected GameSceneContext Context { get; private set; } = null!;
 
     public abstract void Configure();
-    public abstract void OnReady();
+    public abstract void OnReady(IGraphicsDevice graphics);
     public abstract void TickUpdate(int tick);
     public abstract void Unload();
 

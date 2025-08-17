@@ -19,8 +19,8 @@ namespace ConcreteEngine.Graphics.OpenGL;
 public sealed class GlGraphicsContext : IGraphicsContext
 {
     private readonly GL _gl;
-    private readonly int glMinor = 0;
-    private readonly int glMajor = 0;
+    private readonly int _glMinor = 0;
+    private readonly int _glMajor = 0;
 
     private readonly GraphicsResourceStore _store;
     private readonly UniformRegistry _uniformRegistry;
@@ -66,9 +66,9 @@ public sealed class GlGraphicsContext : IGraphicsContext
         _viewportSize = initialFrameCtx.ViewportSize;
 
 
-        gl.GetInteger(GetPName.MajorVersion, out glMajor);
-        gl.GetInteger(GetPName.MinorVersion, out glMinor);
-        int glVersion = glMajor * 100 + glMinor * 10;
+        gl.GetInteger(GetPName.MajorVersion, out _glMajor);
+        gl.GetInteger(GetPName.MinorVersion, out _glMinor);
+        int glVersion = _glMajor * 100 + _glMinor * 10;
 
         _gl.Disable(GLEnum.CullFace);
         _gl.Disable(GLEnum.DepthTest);

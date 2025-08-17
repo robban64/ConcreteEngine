@@ -1,8 +1,8 @@
 namespace ConcreteEngine.Graphics.Definitions;
 
-public enum RenderPassResolveTarget : byte
+public enum RenderPassOp : byte
 {
-    None,
+    DrawScene,
     Blit,
     FullscreenQuad
 }

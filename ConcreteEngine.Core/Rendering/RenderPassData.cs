@@ -7,17 +7,18 @@ using Silk.NET.Maths;
 
 namespace ConcreteEngine.Core.Rendering;
 
-public readonly record struct RegisterRenderTargetDesc(
-    RenderTargetId Target,
-    short Order,
-    Vector2 SizeRatio,
-    bool DoClear,
-    Color ClearColor,
-    ClearBufferFlag ClearMask,
-    RenderPassResolveTarget ResolveTo,
-    RenderTargetKey ResolveToTarget
+public readonly record struct RenderPassData(
+    RenderPassOp Op,
+    ushort WriteFboId,
+    ushort? ReadTexId = null,
+    ushort? BlitFboId = null,
+    Vector2 SizeRatio = default,
+    bool DoClear = true,
+    Color ClearColor = default,
+    ClearBufferFlag ClearMask = ClearBufferFlag.Color,
+    ushort ShaderId = 0
 );
-
+/*
 public sealed class RenderPass
 {
     public required RenderTargetKey GfxKey { get; init; }
@@ -27,7 +28,7 @@ public sealed class RenderPass
     public required bool DoClear { get; init; }
     public required Color ClearColor { get; init; }
     public required ClearBufferFlag ClearMask { get; init; }
-    public required RenderPassResolveTarget ResolveTo { get; init; }
+    public required RenderPassOp ResolveTo { get; init; }
     public required RenderTargetKey ResolveToTarget { get; init; }
     public required ushort ShaderId { get; init; }
 
@@ -49,3 +50,4 @@ public sealed class RenderPass
         };
     }
 }
+*/

@@ -18,11 +18,7 @@ public interface IGraphicsDevice : IDisposable
 
     void StartFrame(in GraphicsFrameContext frameCtx);
     void EndFrame();
-
-    RenderTargetHandlerResult GetRenderTarget(RenderTargetKey key);
-    RenderTargetKey CreateRenderTarget(RenderTargetId target, Vector2 sizeRatio);
-    RenderTargetKey ReplaceRenderTarget(RenderTargetKey key);
-
+    (ushort, ushort) CreateFramebuffer(Vector2 sizeRatio);
     ushort CreateShader(string vertexSource, string fragmentSource, string[] samplers);
     ushort CreateTexture2D(in TextureDescriptor textureDescriptor);
     ushort CreateBuffer(BufferTarget target, BufferUsage usage);

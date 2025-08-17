@@ -216,7 +216,7 @@ public sealed class GameEngine: IDisposable
         newScene.AttachContext(sceneContext);
         newScene.Configure();
         _features.Load(new GameFeatureContext(sceneContext));
-        newScene.OnReady();
+        newScene.OnReady(_graphics);
         
         _currentScene = newScene;
         _nextSceneIndex = null;

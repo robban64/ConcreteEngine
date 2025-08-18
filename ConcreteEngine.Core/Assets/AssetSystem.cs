@@ -23,17 +23,18 @@ public sealed class AssetSystem(
 
         throw new InvalidCastException($"Asset '{name}' not found or incorrect type.");
     }
-    
+
     public List<T> GetAll<T>() where T : class, IAssetFile
     {
         var result = new List<T>(8);
         foreach (var (name, asset) in _store)
         {
-            if(asset is T typedAsset) result.Add(typedAsset);
+            if (asset is T typedAsset) result.Add(typedAsset);
         }
+
         return result;
     }
-    
+
     internal void LoadFromManifest()
     {
         if (!Directory.Exists(assetPath))
@@ -54,7 +55,7 @@ public sealed class AssetSystem(
             PropertyNamingPolicy = JsonNamingPolicy.CamelCase,
             Converters = { new JsonStringEnumConverter() }
         };
-        
+
         var assetEntries = JsonSerializer.Deserialize<AssetManifest>(json, jsonOptions) ??
                            throw new InvalidDataException("Invalid manifest.");
 
@@ -64,7 +65,6 @@ public sealed class AssetSystem(
         LoadEntries(assetEntries.Textures, loader.LoadTexture2D);
         Console.WriteLine("Asset manifest loaded. " + _store.Count);
     }
-
 
 
     /*

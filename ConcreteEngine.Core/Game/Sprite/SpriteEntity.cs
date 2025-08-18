@@ -1,5 +1,9 @@
+#region
+
 using System.Numerics;
 using Silk.NET.Maths;
+
+#endregion
 
 namespace ConcreteEngine.Core.Game.Sprite;
 

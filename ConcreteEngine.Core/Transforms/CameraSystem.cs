@@ -1,8 +1,11 @@
+#region
+
 using System.Numerics;
 using ConcreteEngine.Core.Input;
 using ConcreteEngine.Graphics.Data;
 using Silk.NET.Input;
-using Silk.NET.Maths;
+
+#endregion
 
 namespace ConcreteEngine.Core.Transforms;
 

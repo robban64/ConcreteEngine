@@ -1,4 +1,8 @@
+#region
+
 using System.Runtime.CompilerServices;
+
+#endregion
 
 namespace ConcreteEngine.Core.Rendering.Materials;
 
@@ -9,16 +13,16 @@ public class MaterialStore
 
     public int AddMaterial(MaterialDescription description)
     {
-        if(_materialIdx == _materials.Length - 1)
+        if (_materialIdx == _materials.Length - 1)
             throw new IndexOutOfRangeException($"Material Store is full with size: {_materials.Length}");
-        
+
         _materials[_materialIdx] = new Material(
             id: MaterialId.Of(_materialIdx),
             texture: description.Texture,
             shader: description.Shader,
             blend: description.Blend
         );
-        
+
         return _materialIdx++;
     }
 

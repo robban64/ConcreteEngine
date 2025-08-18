@@ -1,7 +1,10 @@
-using ConcreteEngine.Core.Assets;
+#region
+
 using ConcreteEngine.Core.Resources;
 using ConcreteEngine.Graphics;
 using ConcreteEngine.Graphics.Definitions;
+
+#endregion
 
 namespace ConcreteEngine.Core.Rendering.Materials;
 
@@ -52,7 +55,6 @@ public sealed class Material
         for (int i = 0; i < _textures.Length; i++)
         {
             gfx.BindTexture(_textures[i].ResourceId, (uint)i);
-
         }
     }
 }

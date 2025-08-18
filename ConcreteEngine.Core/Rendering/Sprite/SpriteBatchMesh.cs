@@ -21,7 +21,7 @@ internal sealed class SpriteBatchMesh : IDisposable
 {
     private const int VerticesPerSprite = 4;
     private const int IndicesPerSprite = 6;
-    
+
     private static readonly Vertex2D[] Vertices = new Vertex2D[MaxSpriteBatchSize * VerticesPerSprite];
     private static readonly ushort[] Indices = new ushort[MaxSpriteBatchSize * IndicesPerSprite];
 
@@ -36,7 +36,7 @@ internal sealed class SpriteBatchMesh : IDisposable
     private readonly IndexBufferId _indexBufferId;
 
     private bool _disposed = false;
-    
+
     public SpriteBatchMesh(IGraphicsDevice graphics, int capacity)
     {
         var minSpriteBatchSize = graphics.Configuration.MinSpriteBatchSize;
@@ -80,7 +80,7 @@ internal sealed class SpriteBatchMesh : IDisposable
 
     private void InitIndexBufferData()
     {
-        var indices = Indices.AsSpan(0,_capacity * IndicesPerSprite);
+        var indices = Indices.AsSpan(0, _capacity * IndicesPerSprite);
         for (int i = 0; i < _capacity; i++)
         {
             int vi = (ushort)(i * 4);
@@ -106,7 +106,7 @@ internal sealed class SpriteBatchMesh : IDisposable
         if (spriteCount > _capacity)
             throw new InvalidOperationException($"Sprite batch {spriteCount} exceeds maximum of {_capacity} sprites.");
 
-        var vertices = Vertices.AsSpan(0,spriteCount * VerticesPerSprite);
+        var vertices = Vertices.AsSpan(0, spriteCount * VerticesPerSprite);
 
         for (int i = 0; i < spriteCount; i++)
         {
@@ -137,7 +137,7 @@ internal sealed class SpriteBatchMesh : IDisposable
 
             // Bottom-left (centered origin)
             /*
-             
+
            var halfW = w * 0.5f;
            var halfH = h * 0.5f;
 

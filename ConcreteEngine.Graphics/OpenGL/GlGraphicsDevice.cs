@@ -1,6 +1,5 @@
-using System.Drawing;
-using System.Numerics;
-using ConcreteEngine.Graphics.Configuration;
+#region
+
 using ConcreteEngine.Graphics.Data;
 using ConcreteEngine.Graphics.Definitions;
 using ConcreteEngine.Graphics.Error;
@@ -8,6 +7,8 @@ using ConcreteEngine.Graphics.Primitives;
 using ConcreteEngine.Graphics.Resources;
 using Silk.NET.Maths;
 using Silk.NET.OpenGL;
+
+#endregion
 
 namespace ConcreteEngine.Graphics.OpenGL;
 
@@ -122,7 +123,6 @@ public sealed class GlGraphicsDevice : IGraphicsDevice<GlGraphicsContext>
             ],
             Primitive = DrawPrimitive.TriangleStrip
         }, out _);
-
     }
 
     public void StartFrame(in GraphicsFrameContext frameCtx)
@@ -142,7 +142,7 @@ public sealed class GlGraphicsDevice : IGraphicsDevice<GlGraphicsContext>
         // TODO use a special tick or timer for disposing and recreating
         RecreateRenderTargetsIfNeeded();
     }
-    
+
     private void RecreateRenderTargetsIfNeeded()
     {
         if (_viewportSize == _previousViewportSize) return;
@@ -159,7 +159,6 @@ public sealed class GlGraphicsDevice : IGraphicsDevice<GlGraphicsContext>
         {
             ReplaceFramebuffer(new FrameBufferId(i + 2));
         }
-
     }
 
     private FrameBufferMeta ReplaceFramebuffer(FrameBufferId fboId)
@@ -204,7 +203,7 @@ public sealed class GlGraphicsDevice : IGraphicsDevice<GlGraphicsContext>
             in desc,
             out var meta
         );
-        
+
         _fboStore.Replace(fboId, in meta, handle, out _);
         return meta;
     }
@@ -288,8 +287,8 @@ public sealed class GlGraphicsDevice : IGraphicsDevice<GlGraphicsContext>
             case MeshId meshId:
                 ref readonly var mesh = ref _meshStore.GetMeta(meshId);
                 var handleMesh = _meshStore.GetHandle(meshId).Handle;
-                if(mesh.VertexBufferId.Id > 0) EnqueueRemoveResource(mesh.VertexBufferId, reserve);
-                if(mesh.IndexBufferId.Id > 0) EnqueueRemoveResource(mesh.IndexBufferId, reserve);
+                if (mesh.VertexBufferId.Id > 0) EnqueueRemoveResource(mesh.VertexBufferId, reserve);
+                if (mesh.IndexBufferId.Id > 0) EnqueueRemoveResource(mesh.IndexBufferId, reserve);
                 _disposeQueue.Enqueue(ResourceKind.Mesh, () => FreeMesh(handleMesh));
                 if (!reserve) _meshStore.Remove(meshId, out _);
                 break;

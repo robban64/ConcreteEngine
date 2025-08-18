@@ -1,8 +1,12 @@
+#region
+
 using ConcreteEngine.Common.Collections;
+
+#endregion
 
 namespace ConcreteEngine.Core.Pipeline;
 
-internal sealed class GameMessagePipelineSystem: IGameEngineSystem
+internal sealed class GameMessagePipelineSystem : IGameEngineSystem
 {
     private readonly EventBus _bus = new();
 

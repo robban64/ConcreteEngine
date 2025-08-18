@@ -1,19 +1,17 @@
-using ConcreteEngine.Graphics.OpenGL;
-
 namespace ConcreteEngine.Graphics.Primitives;
 
 internal static class Quad
 {
-    public static readonly Vertex2D[] Vertices = {
+    public static readonly Vertex2D[] Vertices =
+    {
         // pos     // uv
-        new (-1f, -1f,  0f, 0f),
-        new(1f, -1f,  1f, 0f),
-        new(-1f,  1f,  0f, 1f),
-        new (1f,  1f,  1f, 1f)
+        new(-1f, -1f, 0f, 0f),
+        new(1f, -1f, 1f, 0f),
+        new(-1f, 1f, 0f, 1f),
+        new(1f, 1f, 1f, 1f)
     };
 
-    
-    
+
     /*
     private static readonly float[] Vertices =
     [

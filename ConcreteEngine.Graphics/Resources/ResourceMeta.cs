@@ -1,7 +1,11 @@
+#region
+
 using System.Numerics;
 using ConcreteEngine.Graphics.Data;
 using ConcreteEngine.Graphics.Definitions;
 using Silk.NET.Maths;
+
+#endregion
 
 namespace ConcreteEngine.Graphics.Resources;
 
@@ -13,7 +17,7 @@ public enum ResourceKind : ushort
     VertexBuffer = 3,
     IndexBuffer = 4,
     FrameBuffer = 5,
-    RenderBuffer = 6,
+    RenderBuffer = 6
 }
 
 public readonly struct TextureMeta(Vector2D<int> size, EnginePixelFormat format)

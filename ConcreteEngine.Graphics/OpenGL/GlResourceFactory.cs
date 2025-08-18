@@ -22,7 +22,7 @@ internal class GlResourceFactory(GlGraphicsContext gfx)
     {
         var elementSize = Unsafe.SizeOf<TData>();
         var size = data.Length * elementSize;
-        _gl.BufferData(target, (nuint)(size), data, usage);
+        _gl.BufferData(target, (nuint)size, data, usage);
     }
 
     public GlMeshHandle CreateMesh<TVertex, TIndex>(
@@ -78,7 +78,7 @@ internal class GlResourceFactory(GlGraphicsContext gfx)
 
         IndexBufferId iboId = default;
         IboElementType elementType = IboElementType.Invalid;
-        
+
         if (ibo.Handle > 0 && iboDesc != null)
         {
             var iboSize = (uint)(iboDesc.Data?.Length ?? 0);
@@ -129,14 +129,14 @@ internal class GlResourceFactory(GlGraphicsContext gfx)
         var handle = _gl.GenTexture();
         _gl.BindTexture(GLEnum.Texture2D, handle);
         var (glFormat, glInternalFormat) = desc.Format.ToGlEnums();
-        
+
         unsafe
         {
             if (desc.NullPtrData)
             {
                 _gl.TexImage2D(GLEnum.Texture2D, 0, (int)glInternalFormat,
                     (uint)desc.Width, (uint)desc.Height, 0,
-                    glFormat, GLEnum.UnsignedByte, (void*)(0));
+                    glFormat, GLEnum.UnsignedByte, (void*)0);
             }
             else
             {
@@ -147,7 +147,6 @@ internal class GlResourceFactory(GlGraphicsContext gfx)
                         glFormat, GLEnum.UnsignedByte, ptr);
                 }
             }
-
         }
 
         SetTextureParameters(desc.Preset, desc.LodBias);
@@ -183,7 +182,7 @@ internal class GlResourceFactory(GlGraphicsContext gfx)
             _gl.BindRenderbuffer(RenderbufferTarget.Renderbuffer, 0);
         }
  */
-        
+
         var (width, height) = ((uint)size.X, (uint)size.Y);
         var (format, attachment) = kind switch
         {
@@ -260,8 +259,8 @@ internal class GlResourceFactory(GlGraphicsContext gfx)
                 rboDepthHandle =
                     CreateRenderBufferForFbo(RenderBufferKind.DepthStencil, size, false, 0, out rboDepthMeta);
             }
-            _gl.BindTexture(TextureTarget.Texture2D, 0);
 
+            _gl.BindTexture(TextureTarget.Texture2D, 0);
         }
 
         _gl.DrawBuffers(1, GLEnum.ColorAttachment0);
@@ -278,8 +277,8 @@ internal class GlResourceFactory(GlGraphicsContext gfx)
         var rboDepthId = rboDepthHandle.Handle > 0 ? rboDepthHandler(rboDepthHandle, rboDepthMeta) : default;
 
         meta = new FrameBufferMeta(
-            colTexId, rboTexId, rboDepthId, 
-            desc.SizeRatio, size, 
+            colTexId, rboTexId, rboDepthId,
+            desc.SizeRatio, size,
             desc.DepthStencilBuffer, desc.Msaa, (byte)desc.Samples
         );
 
@@ -366,7 +365,7 @@ internal class GlResourceFactory(GlGraphicsContext gfx)
             VertexAttribPointerType.Float,
             normalized,
             strideBytes,
-            (void*)(offsetBytes)
+            (void*)offsetBytes
         );
     }
 

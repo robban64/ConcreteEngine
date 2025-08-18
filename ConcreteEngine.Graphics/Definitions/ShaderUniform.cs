@@ -14,7 +14,7 @@ public enum ShaderUniform : byte
     TexelSize,
     Threshold,
     SoftKnee,
-    
+
     BloomStrength,
     VignetteRadius,
     VignetteSoft,

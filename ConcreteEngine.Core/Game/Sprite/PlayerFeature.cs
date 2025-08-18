@@ -1,3 +1,5 @@
+#region
+
 using System.Numerics;
 using ConcreteEngine.Core.Assets;
 using ConcreteEngine.Core.Input;
@@ -5,19 +7,18 @@ using ConcreteEngine.Core.Rendering;
 using ConcreteEngine.Core.Resources;
 using ConcreteEngine.Core.Transforms;
 using ConcreteEngine.Core.Utils;
-using ConcreteEngine.Graphics;
 using Silk.NET.Input;
-using Silk.NET.Maths;
+
+#endregion
 
 namespace ConcreteEngine.Core.Game.Sprite;
 
 public sealed class PlayerFeature : IGameFeature
 {
-    
     private float timer = 0;
     public int column = 0;
     public int row = 0;
-    
+
     public bool IsUpdateable => true;
     public int Order { get; set; }
 
@@ -27,7 +28,7 @@ public sealed class PlayerFeature : IGameFeature
 
     public Transform2D Transform { get; set; } = new()
     {
-        Scale = new(100, 100),
+        Scale = new(100, 100)
     };
 
     private InputSystem _input = null!;
@@ -42,9 +43,8 @@ public sealed class PlayerFeature : IGameFeature
         SpriteShader = assets.Get<Shader>("SpriteShader");
         SpriteTexture = assets.Get<Texture2D>("SpriteTexture");
         SpriteAtlas = new SpriteAtlas(64, SpriteTexture.Width, SpriteTexture.Height);
-        
-        renderer.SpriteBatch.CreateSpriteBatch(0, 1024);
 
+        renderer.SpriteBatch.CreateSpriteBatch(0, 1024);
     }
 
     public void Unload()
@@ -58,18 +58,18 @@ public sealed class PlayerFeature : IGameFeature
         var input = _input;
         if (input.IsKeyDown(Key.Left))
         {
-            Transform.Position -= new Vector2( speed, 0);
+            Transform.Position -= new Vector2(speed, 0);
             row = 1;
         }
         else if (input.IsKeyDown(Key.Right))
         {
-            Transform.Position += new Vector2( speed, 0);
+            Transform.Position += new Vector2(speed, 0);
             row = 3;
         }
-        
 
-        if (input.IsKeyDown(Key.Up)) Transform.Position -= new Vector2(0,  speed);
-        else if (input.IsKeyDown(Key.Down)) Transform.Position += new Vector2(0,  speed);
+
+        if (input.IsKeyDown(Key.Up)) Transform.Position -= new Vector2(0, speed);
+        else if (input.IsKeyDown(Key.Down)) Transform.Position += new Vector2(0, speed);
 
         timer += 5;
         if (timer >= 30)
@@ -77,7 +77,7 @@ public sealed class PlayerFeature : IGameFeature
             timer -= 30;
             column = (column + 1) % 9;
         }
-            
+
 /*
         timer += 0.33f;
         if (timer > 1f)
@@ -88,5 +88,4 @@ public sealed class PlayerFeature : IGameFeature
         }
         */
     }
-
 }

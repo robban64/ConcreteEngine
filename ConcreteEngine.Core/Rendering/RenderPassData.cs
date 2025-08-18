@@ -1,14 +1,13 @@
+#region
+
 using System.Drawing;
 using System.Numerics;
-using ConcreteEngine.Core.Resources;
-using ConcreteEngine.Graphics;
 using ConcreteEngine.Graphics.Definitions;
 using ConcreteEngine.Graphics.Resources;
-using Silk.NET.Maths;
+
+#endregion
 
 namespace ConcreteEngine.Core.Rendering;
-
-
 
 public readonly record struct RenderPassData(
     RenderPassOp Op,

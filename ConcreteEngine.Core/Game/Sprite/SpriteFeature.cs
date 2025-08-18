@@ -1,17 +1,20 @@
+#region
+
 using System.Numerics;
 using ConcreteEngine.Core.Assets;
 using ConcreteEngine.Core.Rendering;
 using ConcreteEngine.Core.Resources;
 using ConcreteEngine.Core.Utils;
-using Silk.NET.Maths;
+
+#endregion
 
 namespace ConcreteEngine.Core.Game.Sprite;
 
-public class SpriteFeature: IGameFeature
+public class SpriteFeature : IGameFeature
 {
     public int Order { get; set; }
     public bool IsUpdateable => true;
-    
+
     public Shader SpriteShader { get; set; } = null!;
     public Texture2D SpriteTexture { get; set; } = null!;
     public SpriteAtlas SpriteAtlas { get; set; } = null!;
@@ -35,13 +38,13 @@ public class SpriteFeature: IGameFeature
             {
                 SpriteEntities.Add(new SpriteEntity
                 {
-                    Position = new Vector2(64 * x , 64 * y ),
-                    Scale = new Vector2(64, 64),
+                    Position = new Vector2(64 * x, 64 * y),
+                    Scale = new Vector2(64, 64)
                 });
             }
         }
     }
-    
+
     private float timer = 0;
     private int column = 0;
     private int row = 0;
@@ -56,8 +59,8 @@ public class SpriteFeature: IGameFeature
         {
             entity.Position.X += speed * direction;
         }
-        
-        
+
+
         timer += 1;
         if (timer >= 100)
         {

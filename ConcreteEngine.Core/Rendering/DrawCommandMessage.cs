@@ -1,11 +1,13 @@
+#region
+
 using System.Numerics;
 using ConcreteEngine.Core.Rendering.Materials;
 using ConcreteEngine.Graphics.Definitions;
 using ConcreteEngine.Graphics.Resources;
-using Silk.NET.Maths;
+
+#endregion
 
 namespace ConcreteEngine.Core.Rendering;
-
 
 public enum DrawCommandId : short
 {

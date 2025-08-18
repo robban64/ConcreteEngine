@@ -1,5 +1,3 @@
-using ConcreteEngine.Graphics.Error;
-
 namespace ConcreteEngine.Graphics.Resources;
 
 public class ResourceDisposeQueue

@@ -1,18 +1,22 @@
+#region
+
 using ConcreteEngine.Core.Assets;
 using ConcreteEngine.Core.Resources;
 using ConcreteEngine.Core.Utils;
 
+#endregion
+
 namespace ConcreteEngine.Core.Game.Terrain;
 
-public class TilemapFeature: IGameFeature
+public class TilemapFeature : IGameFeature
 {
     public int MapDimension { get; } = 64;
     public int TileSize { get; } = 32;
     public Shader TilemapShader { get; set; } = null!;
     public Texture2D TilemapTexture { get; set; } = null!;
-    public SpriteAtlas  TilemapAtlas { get; set; } = null!;
+    public SpriteAtlas TilemapAtlas { get; set; } = null!;
 
-    
+
     public bool IsUpdateable => true;
     public int Order { get; set; }
 
@@ -22,12 +26,12 @@ public class TilemapFeature: IGameFeature
         TilemapShader = assets.Get<Shader>("SpriteShader");
         TilemapTexture = assets.Get<Texture2D>("TilemapTextureAtlas");
         TilemapAtlas = new SpriteAtlas(32, TilemapTexture.Width, TilemapTexture.Height);
-        
     }
-    
+
     public void UpdateTick(int tick)
     {
     }
+
     public void Unload()
     {
     }

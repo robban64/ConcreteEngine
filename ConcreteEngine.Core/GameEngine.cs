@@ -8,7 +8,6 @@ using ConcreteEngine.Core.Pipeline;
 using ConcreteEngine.Core.Rendering;
 using ConcreteEngine.Core.Time;
 using ConcreteEngine.Core.Transforms;
-using ConcreteEngine.Core.Utils;
 using ConcreteEngine.Graphics;
 using ConcreteEngine.Graphics.Data;
 using ConcreteEngine.Graphics.Definitions;
@@ -23,7 +22,7 @@ using Shader = ConcreteEngine.Core.Resources.Shader;
 
 namespace ConcreteEngine.Core;
 
-public sealed class GameEngine: IDisposable
+public sealed class GameEngine : IDisposable
 {
     private const float GameDt = 1f / 30f; // 30 Hz
 
@@ -32,24 +31,24 @@ public sealed class GameEngine: IDisposable
     private readonly List<Func<GameScene>> _sceneFactories;
     private readonly TypeRegistryCollection<IGameEngineSystem> _systems = new(4);
     private readonly FeatureRegistry _features = new();
-    
+
     private readonly GameTime _gameTime;
 
-    private IGraphicsDevice _graphics  = null!;
-    
+    private IGraphicsDevice _graphics = null!;
+
     private InputSystem _input = null!;
     private AssetSystem _assets = null!;
     private RenderSystem _renderer = null!;
-    private GameMessagePipelineSystem _pipeline  = null!;
+    private GameMessagePipelineSystem _pipeline = null!;
     private CameraSystem _camera = null!;
-    
+
     private int? _nextSceneIndex = null;
     private GameScene _currentScene = null!;
-    
+
     private bool _isDisposed = false;
 
     private float _fps;
-    
+
     internal GameEngine(
         WindowOptions windowOptions,
         GraphicsBackend backend,
@@ -59,7 +58,7 @@ public sealed class GameEngine: IDisposable
     {
         _sceneFactories = sceneFactories;
         _gameTime = new GameTime(GameTickUpdate, FpsTickUpdate);
-        
+
         _window = Window.Create(windowOptions);
 
         _window.Load += () => Load(backend, assetPipelineConfiguration);
@@ -73,12 +72,13 @@ public sealed class GameEngine: IDisposable
         _window.Run();
         _window?.Dispose();
     }
-    
+
     public T GetFeature<T>() where T : IGameFeature => _features.Get<T>();
+
     public void RegisterFeature<T>() where T : IGameFeature, new()
         => _features.RegisterFeature<T>();
 
-    public T GetSystem<T>() where T: IGameEngineSystem =>  (T)_systems.Get<T>();
+    public T GetSystem<T>() where T : IGameEngineSystem => (T)_systems.Get<T>();
 
     private void GameTickUpdate(int tick)
     {
@@ -93,12 +93,10 @@ public sealed class GameEngine: IDisposable
 
     private void Load(GraphicsBackend backend, AssetManagerConfiguration assetPipelineConfiguration)
     {
-
         LoadGraphics(backend);
         LoadSystems(assetPipelineConfiguration);
-        
-        _nextSceneIndex = 0;
 
+        _nextSceneIndex = 0;
     }
 
     private void LoadGraphics(GraphicsBackend backend)
@@ -116,12 +114,12 @@ public sealed class GameEngine: IDisposable
             _ => throw new GraphicsException("Invalid GraphicsBackend. Only OpenGL supported")
         };
     }
-    
+
     private void LoadSystems(AssetManagerConfiguration assetPipelineConfiguration)
     {
         // input
         _input = new InputSystem(_window.CreateInput());
-        
+
         // camera
         _camera = new CameraSystem(_input);
 
@@ -132,7 +130,7 @@ public sealed class GameEngine: IDisposable
 
         // messages
         _pipeline = new GameMessagePipelineSystem();
-        
+
         // renderer
         var shaders = _assets.GetAll<Shader>();
         _renderer = new RenderSystem(_graphics, _camera.Transform, shaders.ToArray());
@@ -142,7 +140,6 @@ public sealed class GameEngine: IDisposable
         _systems.Register<GameMessagePipelineSystem>(_pipeline);
         _systems.Register<AssetSystem>(_assets);
         _systems.Register<RenderSystem>(_renderer);
-
     }
 
     private void Update(double delta)
@@ -158,17 +155,17 @@ public sealed class GameEngine: IDisposable
             FramebufferSize = _window.FramebufferSize,
             ViewportSize = _window.Size
         };
-        
+
         _input.Update();
         _camera.Update(in frameCtx);
-        
+
         // fixed-step simulation
         _gameTime.Advance(dt);
 
         // TODO: Store for render use
         // Usage: Vector2.Lerp(prev.Pos, curr.Pos, renderAlpha);
         //float renderAlpha = _gameTimer.Accumulator / GameDt;
-        
+
         UpdateSceneTransitionIfNeeded();
     }
 
@@ -176,7 +173,7 @@ public sealed class GameEngine: IDisposable
     {
         float dt = (float)delta;
         float fps = dt > 0 ? 1.0f / dt : 0.0f;
-        
+
         var frameCtx = new GraphicsFrameContext
         {
             DeltaTime = dt,
@@ -193,44 +190,42 @@ public sealed class GameEngine: IDisposable
     {
         Console.WriteLine("Closing GameEngine");
         _isDisposed = true;
-        
+
         _assets?.Dispose();
         _graphics?.Dispose();
     }
-    
-    
-    
+
+
     private void UpdateSceneTransitionIfNeeded()
     {
         if (!_nextSceneIndex.HasValue) return;
         var index = _nextSceneIndex.Value;
-        if(index >= _sceneFactories.Count)
+        if (index >= _sceneFactories.Count)
             throw new IndexOutOfRangeException($"Switch scene, index {index} is out of range.");
-        
+
         var previous = _currentScene;
         previous?.Unload();
 
         var sceneContext = new GameSceneContext(this);
-        
+
         var newScene = _sceneFactories[index]();
         newScene.AttachContext(sceneContext);
         newScene.Configure();
         _features.Load(new GameFeatureContext(sceneContext));
         newScene.OnReady(_graphics);
-        
+
         _currentScene = newScene;
         _nextSceneIndex = null;
     }
 
-    
+
     public void Dispose()
     {
-        if(_isDisposed) return;
+        if (_isDisposed) return;
         Console.WriteLine("Disposing GameEngine");
         _isDisposed = true;
 
         _assets?.Dispose();
         _graphics?.Dispose();
     }
-    
 }

@@ -1,7 +1,9 @@
+#region
+
 using System.Numerics;
-using ConcreteEngine.Graphics;
 using ConcreteEngine.Graphics.Resources;
-using Silk.NET.Maths;
+
+#endregion
 
 namespace ConcreteEngine.Core.Rendering.Tilemap;
 

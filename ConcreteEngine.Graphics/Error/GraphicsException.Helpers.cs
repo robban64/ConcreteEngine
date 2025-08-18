@@ -1,40 +1,43 @@
+#region
+
 using System.Diagnostics.CodeAnalysis;
+
+#endregion
 
 namespace ConcreteEngine.Graphics.Error;
 
 public sealed partial class GraphicsException
 {
-
     [DoesNotReturn]
     public static void ThrowResourceIsNull<T>(string? name = null) =>
         throw ResourceIsNull<T>(name);
 
-    
-      [DoesNotReturn]
+
+    [DoesNotReturn]
     public static void ThrowResourceNotBound<T>(string? name = null) =>
         throw ResourceNotBound<T>(name);
 
     [DoesNotReturn]
     public static void ThrowResourceIsDisposed<T>(string? name = null) =>
         throw ResourceIsDisposed<T>(name);
-    
-    public static void ThrowResourceIsDisposed(int id) => 
+
+    public static void ThrowResourceIsDisposed(int id) =>
         throw ResourceIsDisposed(id);
 
 
     [DoesNotReturn]
     public static void ThrowResourceNotFound<T>(object name) =>
         throw ResourceNotFound<T>(name);
-    
+
     [DoesNotReturn]
     public static void ThrowResourceNotFound(int id) =>
         throw ResourceNotFound(id);
 
-    
+
     [DoesNotReturn]
     public static void ThrowResourceAlreadyExists<T>(object name) =>
         throw ResourceAlreadyExists<T>(name);
-    
+
     [DoesNotReturn]
     public static void ThrowResourceAlreadyExists(int id) =>
         throw ResourceAlreadyExists(id);

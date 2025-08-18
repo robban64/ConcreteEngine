@@ -7,9 +7,7 @@ using ConcreteEngine.Graphics.Error;
 
 namespace ConcreteEngine.Core.Rendering.Sprite;
 
-
-
-public sealed class SpriteBatcher: RenderBatcher<SpriteBatchBuildResult>
+public sealed class SpriteBatcher : RenderBatcher<SpriteBatchBuildResult>
 {
     private readonly IGraphicsDevice _graphics;
     private readonly IGraphicsContext _gfx;
@@ -20,13 +18,13 @@ public sealed class SpriteBatcher: RenderBatcher<SpriteBatchBuildResult>
     private SpriteBatchMesh? _boundSpriteBatch;
     private readonly SortedList<int, SpriteBatchMesh> _spriteBatches;
 
-    internal SpriteBatcher(IGraphicsDevice graphics): base(graphics)
+    internal SpriteBatcher(IGraphicsDevice graphics) : base(graphics)
     {
         _graphics = graphics;
         _gfx = graphics.Gfx;
 
         _commandBuffer = new SpriteDrawData[_graphics.Configuration.MaxSpriteBatchSize];
-        _spriteBatches = new (_graphics.Configuration.MaxSpriteBatchInstanceCount);
+        _spriteBatches = new(_graphics.Configuration.MaxSpriteBatchInstanceCount);
     }
 
     internal void Prepare()
@@ -84,7 +82,7 @@ public sealed class SpriteBatcher: RenderBatcher<SpriteBatchBuildResult>
         if (_commandSize <= 0) GraphicsException.ThrowInvalidState("No commands are available.");
 
         var commandSpan = _commandBuffer.AsSpan().Slice(0, _commandSize);
-        
+
         var result = _boundSpriteBatch.BuildSpriteBatch(commandSpan);
 
         _boundSpriteBatch = null;
@@ -96,8 +94,8 @@ public sealed class SpriteBatcher: RenderBatcher<SpriteBatchBuildResult>
     public override void Dispose()
     {
         _boundSpriteBatch = null;
-        
-        foreach(var spriteBatch in _spriteBatches.Values)
+
+        foreach (var spriteBatch in _spriteBatches.Values)
             spriteBatch.Dispose();
     }
 }

@@ -1,4 +1,8 @@
+#region
+
 using System.Runtime.CompilerServices;
+
+#endregion
 
 namespace ConcreteEngine.Core.Time;
 
@@ -13,19 +17,24 @@ internal struct FrameTickTimer(float tickDt)
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         get => tickDt > 0f ? _accumulator / tickDt : 0f;
     }
-    
-    
+
+
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public void Accumulate(float dt) => _accumulator += dt;
 
     public bool TryDequeueTick(out int tickIndex)
     {
-        if (_accumulator < tickDt) { tickIndex = -1; return false; }
+        if (_accumulator < tickDt)
+        {
+            tickIndex = -1;
+            return false;
+        }
+
         _accumulator -= tickDt;
         tickIndex = _tickIndex++;
         return true;
     }
-    
+
     //Alternative method
     /*
     public int Drain(int max, Span<int> outTicks)
@@ -38,7 +47,7 @@ internal struct FrameTickTimer(float tickDt)
         }
         return n;
     }
-    
+
     Usage:
         Span<int> buf = stackalloc int[max];
         int count = timer.Drain(max, buf);

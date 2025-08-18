@@ -2,13 +2,12 @@
 
 using System.Numerics;
 using Silk.NET.Input;
-using Silk.NET.Maths;
 
 #endregion
 
 namespace ConcreteEngine.Core.Input;
 
-public sealed class InputSystem: IGameEngineSystem
+public sealed class InputSystem : IGameEngineSystem
 {
     private readonly KeyboardInput _keyboardInput;
     private readonly MouseInput _mouseInput;
@@ -40,7 +39,7 @@ public sealed class InputSystem: IGameEngineSystem
 
     public Vector2 MousePosition => _mouseInput.MousePosition;
     public Vector2 MouseDelta => _mouseInput.MouseDelta;
-    
+
     public void Dispose()
     {
     }

@@ -53,7 +53,7 @@ internal sealed class AssetLoader
             Height: result.Height,
             Format: record.PixelFormat,
             Preset: record.Preset,
-            LodBias:record.LodBias
+            LodBias: record.LodBias
         );
 
         var resourceId = _graphics.CreateTexture2D(in textureData);

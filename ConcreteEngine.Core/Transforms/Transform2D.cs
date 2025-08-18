@@ -3,7 +3,6 @@
 using System.Numerics;
 using System.Runtime.CompilerServices;
 using ConcreteEngine.Common.Extensions;
-using Silk.NET.Maths;
 
 #endregion
 

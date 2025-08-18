@@ -1,8 +1,10 @@
+#region
+
 using System.Runtime.CompilerServices;
-using System.Runtime.InteropServices;
-using ConcreteEngine.Common.Collections;
 using ConcreteEngine.Graphics.Definitions;
 using static ConcreteEngine.Core.Rendering.RenderConsts;
+
+#endregion
 
 namespace ConcreteEngine.Core.Rendering;
 
@@ -37,7 +39,7 @@ public sealed class DrawCommandSubmitter
         if (_commandQueues[(int)target][(int)commandId].Length != 0)
             throw new InvalidOperationException(
                 $"Command {Enum.GetName(commandId)} is already registered at target: {Enum.GetName(target)}");
-        
+
         _commandQueues[(int)target][(int)commandId] = new DrawCommandMessage[capacity];
         _commandQueueIndexes[(int)target][(int)commandId] = 0;
     }

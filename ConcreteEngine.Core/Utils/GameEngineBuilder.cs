@@ -43,18 +43,16 @@ public sealed class GameEngineBuilder
         _graphicsBackend = graphicsBackend;
         return this;
     }
-    
+
     public GameEngineBuilder RegisterScene<T>() where T : GameScene, new()
     {
         _sceneFactories.Add(() => new T());
         return this;
-    } 
-    
+    }
+
     public GameEngineBuilder ConfigureAssetManager(AssetManagerConfiguration assetPipelineConfiguration)
     {
         _assetPipelineConfiguration = assetPipelineConfiguration;
         return this;
     }
-    
-
 }

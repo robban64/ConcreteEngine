@@ -1,5 +1,8 @@
-using System.Runtime.CompilerServices;
+#region
+
 using ConcreteEngine.Graphics.Resources;
+
+#endregion
 
 namespace ConcreteEngine.Graphics.OpenGL;
 
@@ -52,7 +55,7 @@ internal class GlContextBindingView
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public uint GetRenderBufferHandle(RenderBufferId id) => RboStore.GetHandle(id).Handle;
 
-    
+
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public ref readonly TextureMeta GetTextureMeta(TextureId id) => ref TextureStore.GetMeta(id);
 
@@ -75,7 +78,7 @@ internal class GlContextBindingView
     public ref readonly RenderBufferMeta GetRenderBufferMeta(RenderBufferId id) => ref RboStore.GetMeta(id);
     */
     /*
-    
+
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public uint GetTextureHandleMeta(TextureId id, out TextureMeta meta) => _textureStore.GetHandleAndMeta(id, out meta).Handle;
 
@@ -97,5 +100,4 @@ internal class GlContextBindingView
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public uint GetRenderBufferHandleMeta(RenderBufferId id) => _rboStore.GetHandle(id).Handle;
     */
-
 }

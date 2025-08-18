@@ -1,4 +1,8 @@
+#region
+
 using Silk.NET.Maths;
+
+#endregion
 
 namespace ConcreteEngine.Core.Game.Sprite;
 

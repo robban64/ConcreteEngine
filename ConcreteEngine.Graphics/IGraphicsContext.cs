@@ -21,7 +21,7 @@ public interface IGraphicsContext
 
     void BeginFrame(in GraphicsFrameContext frameCtx);
     void EndFrame();
-    
+
     void Clear(Color color, ClearBufferFlag flags);
     void BeginScreenPass(Color? clear = null, ClearBufferFlag flags = ClearBufferFlag.Color);
     void BeginRenderPass(FrameBufferId fboId, Color? clear, ClearBufferFlag flags = ClearBufferFlag.Color);
@@ -42,7 +42,7 @@ public interface IGraphicsContext
 
     void Draw(uint drawCount = 0);
     void DrawIndexed(uint drawCount = 0);
-    
+
     void UseShader(ShaderId resourceId);
     void SetUniform(ShaderUniform uniform, int value);
     void SetUniform(ShaderUniform uniform, uint value);

@@ -1,6 +1,6 @@
 namespace ConcreteEngine.Core.Pipeline;
 
-internal sealed class CommandQueue 
+internal sealed class CommandQueue
 {
     private readonly List<IGameCommand> _queue = new(64);
 
@@ -10,12 +10,11 @@ internal sealed class CommandQueue
     {
         _queue.Add(cmd);
     }
-    
+
     public void DequeueAll(List<IGameCommand> outBatch)
     {
         outBatch.Clear();
         outBatch.AddRange(_queue);
         _queue.Clear();
     }
-    
 }

@@ -1,5 +1,9 @@
+#region
+
 using ConcreteEngine.Graphics.Data;
 using ConcreteEngine.Graphics.Error;
+
+#endregion
 
 namespace ConcreteEngine.Graphics.Resources;
 
@@ -11,7 +15,7 @@ internal sealed class UniformRegistry
     {
         _shaderUniforms.Add(shaderId.Id, uniformTable);
     }
-    
+
     public UniformTable Get(ShaderId shaderId)
     {
         var hasResource = _shaderUniforms.TryGetValue(shaderId.Id, out var uniformTable);
@@ -23,5 +27,4 @@ internal sealed class UniformRegistry
     {
         return _shaderUniforms.Remove(shaderId.Id);
     }
-    
 }

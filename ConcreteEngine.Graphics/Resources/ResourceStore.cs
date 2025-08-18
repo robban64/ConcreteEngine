@@ -1,6 +1,8 @@
+#region
+
 using System.Runtime.CompilerServices;
-using ConcreteEngine.Graphics.Data;
-using ConcreteEngine.Graphics.Error;
+
+#endregion
 
 namespace ConcreteEngine.Graphics.Resources;
 
@@ -19,11 +21,11 @@ internal sealed class ResourceStore<TId, TMeta, THandle>
 
     private int[] _free;
     private int _freeCount;
-    
+
     public int Count => _idx;
 
     public ResourceStore(
-        int initialCapacity, 
+        int initialCapacity,
         Func<int, TId> makeId,
         Func<TId, int> toIndex)
     {
@@ -31,7 +33,7 @@ internal sealed class ResourceStore<TId, TMeta, THandle>
         ArgumentOutOfRangeException.ThrowIfGreaterThan(initialCapacity, MaxBufferSize, nameof(initialCapacity));
         ArgumentNullException.ThrowIfNull(makeId);
         ArgumentNullException.ThrowIfNull(toIndex);
-        
+
         _makeId = makeId;
         _toIndex = toIndex;
 
@@ -43,7 +45,7 @@ internal sealed class ResourceStore<TId, TMeta, THandle>
 
     public TId Add(in TMeta meta, in THandle handle)
     {
-        int idx = (_freeCount > 0) ? _free[--_freeCount] : Allocate();
+        int idx = _freeCount > 0 ? _free[--_freeCount] : Allocate();
         _meta[idx] = meta;
         _handle[idx] = handle;
         return _makeId(idx + 1); // expose index+1
@@ -77,7 +79,7 @@ internal sealed class ResourceStore<TId, TMeta, THandle>
         meta = _meta[idx];
         return _handle[idx];
     }
-    
+
     public TId Replace(TId id, in TMeta newMeta, in THandle newHandle, out THandle oldHandle)
     {
         int idx = _toIndex(id) - 1;
@@ -86,7 +88,7 @@ internal sealed class ResourceStore<TId, TMeta, THandle>
         _handle[idx] = newHandle;
         return id;
     }
-    
+
     private int Allocate()
     {
         if (_idx == _meta.Length)
@@ -96,6 +98,7 @@ internal sealed class ResourceStore<TId, TMeta, THandle>
             Array.Resize(ref _handle, newCap);
             Array.Resize(ref _free, Math.Max(_free.Length, newCap));
         }
+
         return _idx++;
     }
 

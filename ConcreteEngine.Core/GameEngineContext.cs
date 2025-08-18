@@ -1,11 +1,5 @@
 #region
 
-using ConcreteEngine.Core.Assets;
-using ConcreteEngine.Core.Input;
-using ConcreteEngine.Core.Pipeline;
-using ConcreteEngine.Core.Rendering;
-using ConcreteEngine.Graphics;
-
 #endregion
 
 namespace ConcreteEngine.Core;
@@ -36,5 +30,4 @@ public sealed class GameFeatureContext
     {
         _scene = scene;
     }
-
 }

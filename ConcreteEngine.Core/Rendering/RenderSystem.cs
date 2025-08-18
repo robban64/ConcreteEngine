@@ -1,8 +1,6 @@
 #region
 
-using System.Drawing;
 using System.Runtime.CompilerServices;
-using ConcreteEngine.Core.Assets;
 using ConcreteEngine.Core.Rendering.Materials;
 using ConcreteEngine.Core.Rendering.Sprite;
 using ConcreteEngine.Core.Rendering.Tilemap;
@@ -11,10 +9,7 @@ using ConcreteEngine.Core.Transforms;
 using ConcreteEngine.Graphics;
 using ConcreteEngine.Graphics.Data;
 using ConcreteEngine.Graphics.Definitions;
-using ConcreteEngine.Graphics.Error;
-using ConcreteEngine.Graphics.OpenGL;
 using ConcreteEngine.Graphics.Resources;
-using Silk.NET.Maths;
 using static ConcreteEngine.Core.Rendering.RenderConsts;
 
 #endregion
@@ -142,7 +137,7 @@ public sealed class RenderSystem : IGameEngineSystem
         if (pass.Op == RenderPassOp.Blit)
         {
             // preserves bindings internally
-            _gfx.BlitFramebuffer(pass.BlitFboId!.Value, pass.TargetFboId, linearFilter: true); 
+            _gfx.BlitFramebuffer(pass.BlitFboId!.Value, pass.TargetFboId, linearFilter: true);
             return;
         }
 

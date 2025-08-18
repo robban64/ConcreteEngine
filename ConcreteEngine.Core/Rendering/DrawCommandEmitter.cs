@@ -1,9 +1,10 @@
+#region
+
 using ConcreteEngine.Core.Rendering.Sprite;
 using ConcreteEngine.Core.Rendering.Tilemap;
-using ConcreteEngine.Core.Utils;
 using ConcreteEngine.Graphics;
-using ConcreteEngine.Graphics.Data;
-using ConcreteEngine.Graphics.Definitions;
+
+#endregion
 
 namespace ConcreteEngine.Core.Rendering;
 
@@ -21,4 +22,3 @@ public sealed class DrawEmitterContext
     public required SpriteBatcher SpriteBatch { get; init; }
     public required TilemapBatcher TilemapBatch { get; init; }
 }
-

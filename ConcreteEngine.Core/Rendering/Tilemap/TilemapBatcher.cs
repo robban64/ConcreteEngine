@@ -1,16 +1,19 @@
+#region
+
 using ConcreteEngine.Graphics;
+
+#endregion
 
 namespace ConcreteEngine.Core.Rendering.Tilemap;
 
-
-public class TilemapBatcher: RenderBatcher<TilemapBatchResult>
+public class TilemapBatcher : RenderBatcher<TilemapBatchResult>
 {
     private const int MinMapSize = 64;
     private const int MaxMapSize = 512;
-    
+
     private const int MinTileSize = 16;
     private const int MaxTileSize = 128;
-    
+
     private const int ChunkDimension = 64;
 
     public int MapSize { get; }
@@ -29,7 +32,7 @@ public class TilemapBatcher: RenderBatcher<TilemapBatchResult>
 
         MapSize = mapSize;
         TileSize = tileSize;
-        
+
         _chunk = new TilemapChunkMesh(graphics, 64, tileSize);
     }
 

@@ -21,9 +21,10 @@ public static class GlEnumExtensions
             DrawPrimitive.Lines => PrimitiveType.Lines,
             DrawPrimitive.LineLoop => PrimitiveType.LineLoop,
             DrawPrimitive.LineStrip => PrimitiveType.LineStrip,
-            _ => throw  GraphicsException.UnsupportedFeature(nameof(value))
+            _ => throw GraphicsException.UnsupportedFeature(nameof(value))
         };
     }
+
     public static DrawElementsType ToGlEnum(this IboElementType value)
     {
         return value switch
@@ -31,22 +32,22 @@ public static class GlEnumExtensions
             IboElementType.UnsignedByte => DrawElementsType.UnsignedByte,
             IboElementType.UnsignedShort => DrawElementsType.UnsignedShort,
             IboElementType.UnsignedInt => DrawElementsType.UnsignedInt,
-            _ => throw  GraphicsException.UnsupportedFeature($"Index Element Type {value}")
+            _ => throw GraphicsException.UnsupportedFeature($"Index Element Type {value}")
         };
     }
-    
+
     public static ClearBufferMask ToGlEnum(this ClearBufferFlag flags)
     {
         return flags switch
         {
-            ClearBufferFlag.None =>  ClearBufferMask.None,
+            ClearBufferFlag.None => ClearBufferMask.None,
             ClearBufferFlag.Color => ClearBufferMask.ColorBufferBit,
             ClearBufferFlag.Depth => ClearBufferMask.DepthBufferBit,
             ClearBufferFlag.ColorAndDepth => ClearBufferMask.ColorBufferBit | ClearBufferMask.DepthBufferBit,
             _ => throw GraphicsException.UnsupportedFeature(nameof(flags))
         };
     }
-    
+
     public static (PixelFormat glFormat, InternalFormat glInternalFormat) ToGlEnums(this EnginePixelFormat format)
     {
         return format switch

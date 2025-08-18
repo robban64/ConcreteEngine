@@ -4,7 +4,6 @@ using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
 using ConcreteEngine.Graphics.Definitions;
 using ConcreteEngine.Graphics.Error;
-using Silk.NET.OpenGL;
 
 #endregion
 

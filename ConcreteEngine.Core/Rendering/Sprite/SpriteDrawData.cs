@@ -1,10 +1,7 @@
 #region
 
 using System.Numerics;
-using ConcreteEngine.Core.Transforms;
 using ConcreteEngine.Core.Utils;
-using ConcreteEngine.Graphics;
-using Silk.NET.Maths;
 
 #endregion
 

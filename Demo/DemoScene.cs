@@ -12,8 +12,6 @@ using ConcreteEngine.Core.Resources;
 using ConcreteEngine.Graphics;
 using ConcreteEngine.Graphics.Data;
 using ConcreteEngine.Graphics.Definitions;
-using Silk.NET.Maths;
-using Silk.NET.OpenGL;
 using Shader = ConcreteEngine.Core.Resources.Shader;
 
 #endregion
@@ -75,8 +73,7 @@ public class DemoScene : GameScene
             TargetFboId: default,
             BlitFboId: sceneFboId));
 */
-        
-       
+
 
         // Create a single-sample texture FBO for post-FX
         var sceneFboId =

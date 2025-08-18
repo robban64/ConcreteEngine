@@ -1,11 +1,13 @@
+#region
+
 using System.Numerics;
 using ConcreteEngine.Core.Rendering;
 using ConcreteEngine.Core.Rendering.Materials;
 using ConcreteEngine.Core.Rendering.Sprite;
 using ConcreteEngine.Core.Transforms;
-using ConcreteEngine.Graphics;
 using ConcreteEngine.Graphics.Definitions;
-using Silk.NET.Maths;
+
+#endregion
 
 namespace ConcreteEngine.Core.Game.Sprite;
 
@@ -24,17 +26,17 @@ public sealed class SpriteDrawEmitter : IDrawCommandEmitter
         SpriteFeature = registry.Get<SpriteFeature>();
     }
 
-    public void Emit(DrawEmitterContext context,  DrawCommandSubmitter submitter)
+    public void Emit(DrawEmitterContext context, DrawCommandSubmitter submitter)
     {
         var atlas = SpriteFeature.SpriteAtlas;
         var spriteBatch = context.SpriteBatch;
         spriteBatch.BeginBatch(0);
 
-        for (int i = 0; i < SpriteFeature.SpriteEntities.Count; i++ )
+        for (int i = 0; i < SpriteFeature.SpriteEntities.Count; i++)
         {
             var entity = SpriteFeature.SpriteEntities[i];
             var pos = entity.Position;
-            if (_previousPositions.Count > 0 && (i == 0 || i == 1)) 
+            if (_previousPositions.Count > 0 && (i == 0 || i == 1))
                 pos = Vector2.Lerp(entity.Position, _previousPositions[i], context.Alpha);
             var uv = atlas.GetUvRect(entity.AtlasLocation.X, entity.AtlasLocation.Y);
             var item = new SpriteDrawData(pos, entity.Scale, uv);
@@ -43,26 +45,26 @@ public sealed class SpriteDrawEmitter : IDrawCommandEmitter
 
         /*
         var pos = PlayerFeature.Transform.Position;
-        var item = new SpriteDrawData(pos, PlayerFeature.Transform.Scale, 
+        var item = new SpriteDrawData(pos, PlayerFeature.Transform.Scale,
             PlayerFeature.SpriteAtlas.GetOffset(PlayerFeature.column, PlayerFeature.row), PlayerFeature.SpriteAtlas.Scale);
         spriteBatch.SubmitSprite(item);
         */
-        
+
         var result = spriteBatch.BuildBatch();
         var meta = new DrawCommandMeta(DrawCommandId.Sprite, RenderTargetId.Scene, 0);
-        
+
         var cmd = new DrawCommandData(
             meshId: result.MeshId,
-            materialId: MaterialId.Of(0), 
+            materialId: MaterialId.Of(0),
             drawCount: result.DrawCount,
-            transform:  in DefaultTransform
+            transform: in DefaultTransform
         );
         submitter.SubmitDraw(in cmd, in meta);
-        
+
         _previousPositions.Clear();
         foreach (var t in SpriteFeature.SpriteEntities)
         {
-            _previousPositions.Add(new  Vector2(t.Position.X, t.Position.Y));
+            _previousPositions.Add(new Vector2(t.Position.X, t.Position.Y));
         }
     }
 }

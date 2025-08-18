@@ -25,7 +25,7 @@ public sealed partial class GraphicsException : InvalidOperationException
 
     public static GraphicsException ResourceAlreadyExists<T>(object name) =>
         new($"{Label<T>(name.ToString())} already exists.");
-    
+
     public static GraphicsException ResourceAlreadyExists(int id) => new($"{id} already exists.");
 
 
@@ -34,7 +34,7 @@ public sealed partial class GraphicsException : InvalidOperationException
 
     public static GraphicsException InvalidBufferData<T>(string? name, string reason) =>
         new($"{Label<T>(name)} invalid buffer data: {reason}");
-    
+
 
     public static GraphicsException InvalidState(string description) =>
         new($"Invalid graphics state: {description}");

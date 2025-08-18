@@ -1,7 +1,6 @@
 #region
 
 using System.Diagnostics;
-using System.Diagnostics.CodeAnalysis;
 using System.Drawing;
 using System.Numerics;
 using System.Runtime.CompilerServices;
@@ -204,11 +203,11 @@ public sealed class GlGraphicsContext : IGraphicsContext
 
 
         // If source is MSAA, filter must be NEAREST for the resolve.
-        var filter = (fromFbo.Msaa)
+        var filter = fromFbo.Msaa
             ? BlitFramebufferFilter.Nearest
-            : (linearFilter
+            : linearFilter
                 ? BlitFramebufferFilter.Linear
-                : BlitFramebufferFilter.Nearest);
+                : BlitFramebufferFilter.Nearest;
 
         _gl.BindFramebuffer(FramebufferTarget.ReadFramebuffer, fromHandle);
         _gl.BindFramebuffer(FramebufferTarget.DrawFramebuffer, toHandle);
@@ -364,15 +363,15 @@ public sealed class GlGraphicsContext : IGraphicsContext
         if (meta.Usage == BufferUsage.StaticDraw && meta.ElementCount * meta.ElementSize > 0)
             GraphicsException.ThrowInvalidBufferData<GlVertexBufferHandle>(_boundVertexBufferId.ToString(),
                 "Buffer is static");
-        
+
         var elementCount = data.Length;
         var elementSize = Unsafe.SizeOf<T>();
-        var size =  elementSize * elementCount;
+        var size = elementSize * elementCount;
 
-        
+
         Gl.BufferData(BufferTargetARB.ArrayBuffer, (nuint)size, data, meta.Usage.ToGlEnum());
         CheckGlError();
-        
+
         var newMeta = new VertexBufferMeta(meta.Usage, (uint)elementCount, (uint)elementSize);
         _store.VboStore.Replace(_boundVertexBufferId, in newMeta, handle, out _);
     }
@@ -385,19 +384,18 @@ public sealed class GlGraphicsContext : IGraphicsContext
         if (meta.Usage == BufferUsage.StaticDraw && meta.ElementCount * meta.ElementSize > 0)
             GraphicsException.ThrowInvalidBufferData<GlIndexBufferHandle>(_boundIndexBufferId.ToString(),
                 "Buffer is static");
-        
+
         var elementCount = data.Length;
         var elementSize = Unsafe.SizeOf<T>();
-        var size =  elementSize * elementCount;
-        
+        var size = elementSize * elementCount;
+
         Gl.BufferData(BufferTargetARB.ElementArrayBuffer, (nuint)size, data, meta.Usage.ToGlEnum());
         CheckGlError();
-        
+
         var newMeta = new IndexBufferMeta(meta.Usage, (uint)elementCount, (uint)elementSize);
         _store.IboStore.Replace(_boundIndexBufferId, in newMeta, handle, out _);
-
     }
-    
+
     public void UploadVertexBuffer<T>(ReadOnlySpan<T> data, int offsetElements) where T : unmanaged
     {
         ref readonly var meta = ref _store.VboStore.GetMeta(_boundVertexBufferId);
@@ -405,7 +403,7 @@ public sealed class GlGraphicsContext : IGraphicsContext
         if (meta.Usage == BufferUsage.StaticDraw && meta.ElementCount * meta.ElementSize > 0)
             GraphicsException.ThrowInvalidBufferData<GlVertexBufferHandle>(_boundVertexBufferId.ToString(),
                 "Buffer is static");
-        
+
         var elementSize = Unsafe.SizeOf<T>();
 
         if (elementSize != meta.ElementSize)
@@ -421,7 +419,6 @@ public sealed class GlGraphicsContext : IGraphicsContext
         Gl.BufferSubData(BufferTargetARB.ArrayBuffer, byteOffset, data);
 
         CheckGlError(); // throws here
-
     }
 
     public void UploadIndexBuffer<T>(ReadOnlySpan<T> data, int offsetElements) where T : unmanaged
@@ -431,7 +428,7 @@ public sealed class GlGraphicsContext : IGraphicsContext
         if (meta.Usage == BufferUsage.StaticDraw && meta.ElementCount * meta.ElementSize > 0)
             GraphicsException.ThrowInvalidBufferData<GlVertexBufferHandle>(_boundIndexBufferId.ToString(),
                 "Buffer is static");
-        
+
         var elementSize = Unsafe.SizeOf<T>();
 
         if (elementSize != meta.ElementSize)
@@ -462,7 +459,7 @@ public sealed class GlGraphicsContext : IGraphicsContext
 
         var count = drawCount > 0 ? drawCount : meta.DrawCount;
         _gl.DrawArrays(meta.Primitive.ToGlEnum(), 0, count);
-        
+
         _drawTriangleCount += (int)count;
         _drawCallCount++;
     }

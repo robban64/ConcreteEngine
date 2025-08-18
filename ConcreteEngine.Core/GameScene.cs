@@ -1,6 +1,8 @@
-using ConcreteEngine.Core.Assets;
-using ConcreteEngine.Core.Input;
+#region
+
 using ConcreteEngine.Graphics;
+
+#endregion
 
 namespace ConcreteEngine.Core;
 
@@ -22,5 +24,4 @@ public abstract class GameScene
     {
         Context = context;
     }
-
 }

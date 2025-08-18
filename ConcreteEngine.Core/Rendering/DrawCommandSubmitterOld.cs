@@ -1,15 +1,10 @@
-using System.Runtime.CompilerServices;
-using System.Runtime.InteropServices;
-using ConcreteEngine.Common.Collections;
-using ConcreteEngine.Graphics.Definitions;
-
 namespace ConcreteEngine.Core.Rendering;
 /*
 public sealed class DrawCommandSubmitter2
 {
     private readonly SortedList<RenderTargetId, TypeRegistryCollection<object>> _queueRegistry = new();
     private readonly List<(RenderTargetId, TypeRegistryCollection<object>, Action)> _clearHandlers = new(32);
-    
+
     public void RegisterCommand<T>(RenderTargetId target, int capacity = 8) where T : unmanaged, IDrawCommandMessage
     {
         if (!_queueRegistry.TryGetValue(target, out var registry))
@@ -17,7 +12,7 @@ public sealed class DrawCommandSubmitter2
             registry = new TypeRegistryCollection<object>();
             _queueRegistry.Add(target, registry);
         }
-        
+
         var collection = new List<DrawCommandMessage<T>>(capacity);
         registry.Register<T>(collection);
         _clearHandlers.Add((target, registry, () => collection.Clear()));
@@ -27,10 +22,10 @@ public sealed class DrawCommandSubmitter2
     {
         if (!_queueRegistry.TryGetValue(target, out var registry))
             throw new InvalidOperationException($"RenderTarget {target} is not registered");
-        
+
         if(!registry.TryGet<T>(out var collectionObj))
             throw new InvalidOperationException($"Command {typeof(T).Name} is not registered.");
-        
+
         int foundClearHandlerIndex = -1;
         for (int i =0; i < _clearHandlers.Count; i++)
         {
@@ -56,7 +51,7 @@ public sealed class DrawCommandSubmitter2
         // Direct cast; no boxing. JIT will devirtualize Enqueue.
         ((List<DrawCommandMessage<T>>)queue).Add(new DrawCommandMessage<T>(in cmd, in meta));
     }
-    
+
     public Span<DrawCommandMessage<T>> GetQueue<T>(RenderTargetId target) where T : unmanaged, IDrawCommandMessage
         => CollectionsMarshal.AsSpan((List<DrawCommandMessage<T>>)_queueRegistry[target].Get<T>());
 
@@ -64,7 +59,7 @@ public sealed class DrawCommandSubmitter2
     {
         foreach (var (_,__,clearHandler) in _clearHandlers)
             clearHandler();
-        
+
         foreach (var registry in _queueRegistry.Values)
             foreach (var obj in registry.Values)
                 ((dynamic)obj).Clear();

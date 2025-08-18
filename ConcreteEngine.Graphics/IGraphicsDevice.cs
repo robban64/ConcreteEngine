@@ -1,10 +1,8 @@
 #region
 
-using System.Numerics;
 using ConcreteEngine.Graphics.Data;
 using ConcreteEngine.Graphics.Definitions;
 using ConcreteEngine.Graphics.Resources;
-using Silk.NET.Maths;
 
 #endregion
 
@@ -25,7 +23,7 @@ public interface IGraphicsDevice : IDisposable
     VertexBufferId CreateVertexBuffer(BufferUsage bufferUsage);
     IndexBufferId CreateIndexBuffer(BufferUsage usage, IboElementType elementType);
 
-   MeshId CreateMesh<TVertex, TIndex>(MeshDescriptor<TVertex, TIndex> meshData, out MeshMeta meta)
+    MeshId CreateMesh<TVertex, TIndex>(MeshDescriptor<TVertex, TIndex> meshData, out MeshMeta meta)
         where TVertex : unmanaged
         where TIndex : unmanaged;
 

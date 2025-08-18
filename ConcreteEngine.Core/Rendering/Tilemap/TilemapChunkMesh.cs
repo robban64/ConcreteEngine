@@ -1,11 +1,13 @@
-using System.Numerics;
+#region
+
 using ConcreteEngine.Core.Utils;
 using ConcreteEngine.Graphics;
 using ConcreteEngine.Graphics.Data;
 using ConcreteEngine.Graphics.Definitions;
 using ConcreteEngine.Graphics.Primitives;
 using ConcreteEngine.Graphics.Resources;
-using Silk.NET.Maths;
+
+#endregion
 
 namespace ConcreteEngine.Core.Rendering.Tilemap;
 
@@ -15,10 +17,10 @@ internal sealed class TilemapChunkMesh : IDisposable
     private const int IndicesPerTile = 6;
     private const int ChunkSize = 64;
 
-    private static readonly Vertex2D[] Vertices = 
+    private static readonly Vertex2D[] Vertices =
         new Vertex2D[ChunkSize * ChunkSize * VerticesPerTile];
-    
-    private static readonly ushort[] Indices = 
+
+    private static readonly ushort[] Indices =
         new ushort[ChunkSize * ChunkSize * IndicesPerTile];
 
     private readonly IGraphicsDevice _graphics;
@@ -89,7 +91,7 @@ internal sealed class TilemapChunkMesh : IDisposable
         var vertices = Vertices;
         var w = _tileSize;
 
-        var atlas = new SpriteAtlas(_tileSize, 320,  512);
+        var atlas = new SpriteAtlas(_tileSize, 320, 512);
 
         for (int y = 0; y < _chunkDimension; y++)
         {
@@ -105,9 +107,9 @@ internal sealed class TilemapChunkMesh : IDisposable
                 var (u0, v0, u1, v1) = atlas.GetUvRect(tile.AtlasX, tile.AtlasY);
 
                 // bottom-left origin in your mesh => OK as long as your texture upload matches
-                vertices[vi + 0] = new Vertex2D(px,         py,         u0, v0);
-                vertices[vi + 1] = new Vertex2D(px + _tileSize, py,         u1, v0);
-                vertices[vi + 2] = new Vertex2D(px,         py + _tileSize, u0, v1);
+                vertices[vi + 0] = new Vertex2D(px, py, u0, v0);
+                vertices[vi + 1] = new Vertex2D(px + _tileSize, py, u1, v0);
+                vertices[vi + 2] = new Vertex2D(px, py + _tileSize, u0, v1);
                 vertices[vi + 3] = new Vertex2D(px + _tileSize, py + _tileSize, u1, v1);
             }
         }

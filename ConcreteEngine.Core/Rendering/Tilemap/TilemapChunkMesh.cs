@@ -4,6 +4,7 @@ using ConcreteEngine.Graphics;
 using ConcreteEngine.Graphics.Data;
 using ConcreteEngine.Graphics.Definitions;
 using ConcreteEngine.Graphics.Primitives;
+using ConcreteEngine.Graphics.Resources;
 using Silk.NET.Maths;
 
 namespace ConcreteEngine.Core.Rendering.Tilemap;
@@ -27,9 +28,9 @@ internal sealed class TilemapChunkMesh : IDisposable
     private readonly int _tileCount;
     private readonly int _tileSize;
 
-    private readonly ushort _meshId;
-    private readonly ushort _vertexBufferId;
-    private readonly ushort _indexBufferId;
+    private readonly MeshId _meshId;
+    private readonly VertexBufferId _vertexBufferId;
+    private readonly IndexBufferId _indexBufferId;
 
     private readonly TileData[] _tileData;
 
@@ -55,17 +56,15 @@ internal sealed class TilemapChunkMesh : IDisposable
             IndexBuffer = new MeshDataBufferDescriptor<ushort>(BufferUsage.DynamicDraw, Indices),
             VertexPointers =
             [
-                VertexAttributeDescriptor.Make<Vertex2D>("aPos", nameof(Vertex2D.Position)),
-                VertexAttributeDescriptor.Make<Vertex2D>("aTex", nameof(Vertex2D.Texture))
+                VertexAttributeDescriptor.Make<Vertex2D>(nameof(Vertex2D.Position)),
+                VertexAttributeDescriptor.Make<Vertex2D>(nameof(Vertex2D.Texture))
             ],
             DrawCount = (uint)(_tileCount * IndicesPerTile)
         };
 
-        var meshResult = _graphics.CreateMesh(meshData);
-
-        _meshId = meshResult.MeshId;
-        _vertexBufferId = meshResult.VertexBufferId;
-        _indexBufferId = meshResult.IndexBufferId;
+        _meshId = _graphics.CreateMesh(meshData, out var meta);
+        _vertexBufferId = meta.VertexBufferId;
+        _indexBufferId = meta.IndexBufferId;
     }
 
     public TileChunkBuildResult BuildTilemapMesh()
@@ -134,7 +133,7 @@ internal sealed class TilemapChunkMesh : IDisposable
     public void Dispose()
     {
         if (_disposed) return;
-        _graphics.RemoveResource(_meshId);
+        _graphics.EnqueueRemoveResource(_meshId);
         _disposed = true;
     }
 }

@@ -1,6 +1,7 @@
 using System.Numerics;
 using ConcreteEngine.Core.Rendering.Materials;
 using ConcreteEngine.Graphics.Definitions;
+using ConcreteEngine.Graphics.Resources;
 using Silk.NET.Maths;
 
 namespace ConcreteEngine.Core.Rendering;
@@ -19,12 +20,12 @@ public readonly struct DrawCommandMessage(in DrawCommandData cmd, in DrawCommand
 }
 
 public readonly struct DrawCommandData(
-    ushort meshId,
+    MeshId meshId,
     MaterialId materialId,
     uint drawCount,
     in Matrix4x4 transform)
 {
-    public readonly ushort MeshId = meshId;
+    public readonly MeshId MeshId = meshId;
     public readonly MaterialId MaterialId = materialId;
     public readonly uint DrawCount = drawCount;
 

@@ -6,11 +6,12 @@ using ConcreteEngine.Graphics.Definitions;
 
 namespace ConcreteEngine.Graphics.Data;
 
-public readonly record struct TextureDescriptor(
+public readonly record struct TextureDesc(
     byte[] PixelData,
     int Width,
     int Height,
     EnginePixelFormat Format,
     TexturePreset Preset,
-    float LodBias
+    float LodBias = 0,
+    bool NullPtrData = false
 );

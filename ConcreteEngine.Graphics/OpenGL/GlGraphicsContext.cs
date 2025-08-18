@@ -1,5 +1,6 @@
 #region
 
+using System.Diagnostics;
 using System.Diagnostics.CodeAnalysis;
 using System.Drawing;
 using System.Numerics;
@@ -22,7 +23,7 @@ public sealed class GlGraphicsContext : IGraphicsContext
     private readonly int _glMinor = 0;
     private readonly int _glMajor = 0;
 
-    private readonly GraphicsResourceStore _store;
+    private readonly GlContextBindingView _store;
     private readonly UniformRegistry _uniformRegistry;
 
     private BlendMode _blendMode = BlendMode.Alpha;
@@ -31,14 +32,14 @@ public sealed class GlGraphicsContext : IGraphicsContext
     private uint _currentDrawFboHandle = 0; // 0 = screen
     private uint _currentReadFboHandle = 0; // 0 = screen
 
-    private ushort _boundFboId = 0;
-    private ushort _boundReadFboId = 0;
+    private FrameBufferId _boundFboId = new(0);
+    private FrameBufferId _boundReadFboId = new(0);
 
-    private ushort _boundShaderId = 0;
-    private ushort _boundVertexBufferId = 0;
-    private ushort _boundIndexBufferId = 0;
-    private ushort _boundVaoId = 0;
-    private readonly ushort[] _boundTextures;
+    private ShaderId _boundShaderId = new(0);
+    private VertexBufferId _boundVertexBufferId = new(0);
+    private IndexBufferId _boundIndexBufferId = new(0);
+    private MeshId _boundVaoId = new(0);
+    private readonly TextureId[] _boundTextures;
 
     private UniformTable? _boundUniforms;
 
@@ -60,7 +61,7 @@ public sealed class GlGraphicsContext : IGraphicsContext
     internal GlGraphicsContext(
         GL gl,
         GraphicsConfiguration configuration,
-        GraphicsResourceStore store,
+        GlContextBindingView store,
         UniformRegistry uniformRegistry,
         in GraphicsFrameContext initialFrameCtx)
     {
@@ -69,7 +70,7 @@ public sealed class GlGraphicsContext : IGraphicsContext
         _store = store;
         _uniformRegistry = uniformRegistry;
 
-        _boundTextures = new ushort[configuration.MaxTextureImageUnits];
+        _boundTextures = new TextureId[configuration.MaxTextureImageUnits];
 
         _viewport = initialFrameCtx.ViewportSize;
         _currentViewport = initialFrameCtx.ViewportSize;
@@ -84,7 +85,7 @@ public sealed class GlGraphicsContext : IGraphicsContext
         _gl.Enable(GLEnum.Multisample);
         _gl.PixelStore(GLEnum.UnpackAlignment, 1);
         //_gl.Enable(EnableCap.FramebufferSrgb);
-        
+
         //_gl.Disable(GLEnum.DepthTest);
         //_gl.DepthMask(false);
     }
@@ -100,22 +101,23 @@ public sealed class GlGraphicsContext : IGraphicsContext
 
         _drawCallCount = 0;
         _drawTriangleCount = 0;
-        
+
         SetBlendMode(BlendMode.Alpha);
         SetDepthTest(true);
+        Clear(Color.CornflowerBlue, ClearBufferFlag.ColorAndDepth);
     }
 
     public void EndFrame()
     {
         // unbind context
-        BindMesh(0);
-        BindVertexBuffer(0);
-        BindIndexBuffer(0);
-        BindFramebuffer(0);
-        UseShader(0);
+        BindMesh(default);
+        BindVertexBuffer(default);
+        BindIndexBuffer(default);
+        BindFramebuffer(default);
+        UseShader(default);
         for (uint i = 0; i < _boundTextures.Length; i++)
         {
-            BindTexture(0, i);
+            BindTexture(default, i);
         }
     }
 
@@ -128,7 +130,7 @@ public sealed class GlGraphicsContext : IGraphicsContext
 
     public void BeginScreenPass(Color? clear, ClearBufferFlag flags = ClearBufferFlag.Color)
     {
-        if (_boundFboId != 0) GraphicsException.ThrowInvalidState("Cannot begin screen pass while FBO is bound.");
+        if (_boundFboId != default) GraphicsException.ThrowInvalidState("Cannot begin screen pass while FBO is bound.");
 
         _gl.BindFramebuffer(FramebufferTarget.Framebuffer, 0);
         _gl.Viewport(_viewport);
@@ -137,33 +139,34 @@ public sealed class GlGraphicsContext : IGraphicsContext
         _currentDrawFboHandle = 0;
         _currentReadFboHandle = 0;
 
-        _boundFboId = 0;
-        _boundReadFboId = 0;
+        _boundFboId = default;
+        _boundReadFboId = default;
         _currentViewport = _viewport;
     }
 
-    public void BeginRenderPass(ushort fboId, Color? clear, ClearBufferFlag flags = ClearBufferFlag.Color)
+    public void BeginRenderPass(FrameBufferId fboId, Color? clear, ClearBufferFlag flags = ClearBufferFlag.Color)
     {
-        ArgumentOutOfRangeException.ThrowIfZero(fboId, nameof(fboId));
+        ArgumentOutOfRangeException.ThrowIfNegativeOrZero(fboId.Id, nameof(fboId));
         if (_boundFboId == fboId) GraphicsException.ThrowInvalidState($"FBO is {fboId} already bound.");
-        var fbo = _store.Get<GlFramebuffer>(fboId);
-        ValidateResource(fbo);
 
-        _gl.BindFramebuffer(FramebufferTarget.Framebuffer, fbo.Handle);
-        _gl.Viewport(fbo.Size);
+        ref readonly var meta = ref _store.FboStore.GetMeta(fboId);
+        var handle = _store.FboStore.GetHandle(fboId).Handle;
+
+        _gl.BindFramebuffer(FramebufferTarget.Framebuffer, handle);
+        _gl.Viewport(meta.Size);
         if (clear.HasValue) Clear(clear.Value, flags);
 
-        _currentDrawFboHandle = fbo.Handle;
-        _currentReadFboHandle = fbo.Handle;
+        _currentDrawFboHandle = handle;
+        _currentReadFboHandle = handle;
 
         _boundFboId = fboId;
         _boundReadFboId = fboId;
-        _currentViewport = fbo.Size;
+        _currentViewport = meta.Size;
     }
 
     public void EndRenderPass()
     {
-        if (_boundFboId == 0) GraphicsException.ResourceNotBound<GlFramebuffer>(nameof(_boundFboId));
+        if (_boundFboId == default) GraphicsException.ResourceNotBound<GlFrameBufferHandle>(nameof(_boundFboId));
 
         _gl.BindFramebuffer(FramebufferTarget.Framebuffer, 0);
         _gl.Viewport(_viewport);
@@ -171,42 +174,52 @@ public sealed class GlGraphicsContext : IGraphicsContext
         _currentDrawFboHandle = 0;
         _currentReadFboHandle = 0;
 
-        _boundFboId = 0;
-        _boundReadFboId = 0;
+        _boundFboId = default;
+        _boundReadFboId = default;
         _currentViewport = _viewport;
     }
 
-    public void BlitFramebuffer(ushort fromId, ushort toId = 0, bool linearFilter = true)
+    public void BlitFramebuffer(FrameBufferId fromId, FrameBufferId toId = default, bool linearFilter = true)
     {
-        var fromFbo = fromId == 0 ? null : _store.Get<GlFramebuffer>(fromId);
-        var toFbo   = toId   == 0 ? null : _store.Get<GlFramebuffer>(toId);
+        ref readonly var fromFbo = ref _store.FboStore.GetMeta(fromId);
+        var fromHandle = _store.FboStore.GetHandle(fromId).Handle;
 
-        uint fromHandle = fromFbo?.Handle ?? 0;
-        uint toHandle   = toFbo?.Handle   ?? 0;
-        var  srcSize    = fromFbo?.Size ?? _viewport;
-        var  dstSize    = toFbo?.Size   ?? _viewport;
+        var srcSize = fromFbo.Size;
+
+        uint toHandle = 0;
+        var dstSize = _viewport;
+        if (toId != default)
+        {
+            ref readonly var toFbo = ref _store.FboStore.GetMeta(toId);
+            toHandle = _store.FboStore.GetHandle(toId).Handle;
+            dstSize = toFbo.Size;
+        }
+
+        Debug.Assert(toHandle != fromHandle, "READ and DRAW FBO must differ for resolve.");
 
         // Save current state …
-        var prevReadFbo  = _currentReadFboHandle;
-        var prevDrawFbo  = _currentDrawFboHandle;
+        var prevReadFbo = _currentReadFboHandle;
+        var prevDrawFbo = _currentDrawFboHandle;
         var prevViewport = _currentViewport;
 
-        
+
         // If source is MSAA, filter must be NEAREST for the resolve.
-        var filter = (fromFbo?.Descriptor.Msaa == true) ? BlitFramebufferFilter.Nearest
-            : (linearFilter ? BlitFramebufferFilter.Linear
+        var filter = (fromFbo.Msaa)
+            ? BlitFramebufferFilter.Nearest
+            : (linearFilter
+                ? BlitFramebufferFilter.Linear
                 : BlitFramebufferFilter.Nearest);
 
         _gl.BindFramebuffer(FramebufferTarget.ReadFramebuffer, fromHandle);
         _gl.BindFramebuffer(FramebufferTarget.DrawFramebuffer, toHandle);
-        
+
         _gl.BlitFramebuffer(
             0, 0, srcSize.X, srcSize.Y,
             0, 0, dstSize.X, dstSize.Y,
             ClearBufferMask.ColorBufferBit,
             filter
         );
-        
+
         // Restore previous bindings & viewport …
         _gl.BindFramebuffer(FramebufferTarget.ReadFramebuffer, prevReadFbo);
         _gl.BindFramebuffer(FramebufferTarget.DrawFramebuffer, prevDrawFbo);
@@ -214,7 +227,7 @@ public sealed class GlGraphicsContext : IGraphicsContext
 
         _currentReadFboHandle = prevReadFbo;
         _currentDrawFboHandle = prevDrawFbo;
-        _currentViewport      = prevViewport;
+        _currentViewport = prevViewport;
         // _boundFboId stays whatever it was (0 for screen or the FBO id if inside a pass)
     }
 
@@ -229,7 +242,6 @@ public sealed class GlGraphicsContext : IGraphicsContext
             case BlendMode.Alpha:
                 _gl.Enable(EnableCap.Blend);
                 _gl.BlendEquation(GLEnum.FuncAdd);
-                _gl.BlendFuncSeparate(BlendingFactor.SrcAlpha, BlendingFactor.OneMinusSrcAlpha, GLEnum.One, GLEnum.One);
                 _gl.BlendFunc(BlendingFactor.SrcAlpha, BlendingFactor.OneMinusSrcAlpha);
                 break;
             case BlendMode.PremultipliedAlpha:
@@ -258,209 +270,233 @@ public sealed class GlGraphicsContext : IGraphicsContext
     }
 
 
-    public void BindFramebuffer(ushort resourceId)
+    public void BindFramebuffer(FrameBufferId id)
     {
-        if (_boundFboId == resourceId) return;
-        if (resourceId == 0)
+        if (_boundFboId == id) return;
+        if (id == default)
         {
             Gl.BindFramebuffer(FramebufferTarget.Framebuffer, 0);
-            Gl.Viewport(_viewport);
-            Gl.Clear((uint)ClearBufferMask.ColorBufferBit);
-            _boundFboId = 0;
+            _boundFboId = default;
             return;
         }
 
-        var resource = _store.Get<GlFramebuffer>(resourceId);
-        ValidateResource(resource);
+        var handle = _store.FboStore.GetHandle(id).Handle;
 
-        Gl.BindFramebuffer(FramebufferTarget.Framebuffer, resource.Handle);
-        _boundFboId = resourceId;
+        Gl.BindFramebuffer(FramebufferTarget.Framebuffer, handle);
+        _boundFboId = id;
     }
 
-    public void BindTexture(ushort resourceId, uint slot)
+    public void BindTexture(TextureId id, uint slot)
     {
         if (slot >= Configuration.MaxTextureImageUnits)
-            GraphicsException.ThrowCapabilityExceeded<GlTexture2D>("Texture slot", (int)slot,
+            GraphicsException.ThrowCapabilityExceeded<TextureId>("Texture slot", (int)slot,
                 Configuration.MaxTextureImageUnits);
 
-        if (_boundShaderId == resourceId) return;
+        if (_boundTextures[slot] == id) return;
 
-        if (resourceId == 0)
+        if (id == default)
         {
             _gl.BindTextureUnit(slot, 0);
-            _boundTextures[slot] = 0;
+            _boundTextures[slot] = default;
             return;
         }
 
-        if (_boundTextures[slot] == resourceId) return;
+        if (_boundTextures[slot] == id) return;
 
-        var resource = _store.Get<GlTexture2D>(resourceId);
+        var handle = _store.TextureStore.GetHandle(id).Handle;
 
-        _gl.BindTextureUnit(slot, resource!.Handle);
-        _boundTextures[slot] = resourceId;
+        _gl.BindTextureUnit(slot, handle);
+        _boundTextures[slot] = id;
     }
 
-    public void BindMesh(ushort resourceId)
+    public void BindMesh(MeshId id)
     {
-        if (_boundShaderId == resourceId) return;
+        if (_boundVaoId == id) return;
 
-        if (resourceId == 0)
+        if (id == default)
         {
             _gl.BindVertexArray(0);
-            _boundVaoId = 0;
+            _boundVaoId = default;
             return;
         }
 
-        var resource = _store.Get<GlMesh>(resourceId);
-        _gl.BindVertexArray(resource!.Handle);
-        _boundVaoId = resourceId;
+        var handle = _store.MeshStore.GetHandle(id).Handle;
+        _gl.BindVertexArray(handle);
+        _boundVaoId = id;
     }
 
-    public void BindVertexBuffer(ushort resourceId)
+    public void BindVertexBuffer(VertexBufferId id)
     {
-        if (_boundShaderId == resourceId) return;
+        if (_boundVertexBufferId == id) return;
 
-        if (resourceId == 0)
+        if (id == default)
         {
             _gl.BindBuffer(BufferTargetARB.ArrayBuffer, 0);
-            _boundVertexBufferId = 0;
+            _boundVertexBufferId = default;
             return;
         }
 
-        var resource = _store.Get<GlVertexBuffer>(resourceId)!;
-        _gl.BindBuffer(resource.GlBufferTarget, resource.Handle);
-        _boundVertexBufferId = resourceId;
+        var handle = _store.VboStore.GetHandle(id).Handle;
+        _gl.BindBuffer(BufferTargetARB.ArrayBuffer, handle);
+        _boundVertexBufferId = id;
     }
 
-    public void BindIndexBuffer(ushort resourceId)
+    public void BindIndexBuffer(IndexBufferId id)
     {
-        if (_boundShaderId == resourceId) return;
+        if (_boundIndexBufferId == id) return;
 
-        if (resourceId == 0)
+        if (id == default)
         {
             _gl.BindBuffer(BufferTargetARB.ElementArrayBuffer, 0);
-            _boundIndexBufferId = 0;
+            _boundIndexBufferId = default;
             return;
         }
 
-        var resource = _store.Get<GlIndexBuffer>(resourceId)!;
-        _gl.BindBuffer(resource.GlBufferTarget, resource.Handle);
-        _boundIndexBufferId = resourceId;
+        var handle = _store.IboStore.GetHandle(id).Handle;
+        _gl.BindBuffer(BufferTargetARB.ElementArrayBuffer, handle);
+        _boundIndexBufferId = id;
     }
 
     public void SetVertexBuffer<T>(ReadOnlySpan<T> data) where T : unmanaged
     {
-        SetBufferData<GlVertexBuffer, T>(_boundVertexBufferId, data);
+        ref readonly var meta = ref _store.VboStore.GetMeta(_boundVertexBufferId);
+        var handle = _store.VboStore.GetHandle(_boundVertexBufferId);
+        if (meta.Usage == BufferUsage.StaticDraw && meta.ElementCount * meta.ElementSize > 0)
+            GraphicsException.ThrowInvalidBufferData<GlVertexBufferHandle>(_boundVertexBufferId.ToString(),
+                "Buffer is static");
+        
+        var elementCount = data.Length;
+        var elementSize = Unsafe.SizeOf<T>();
+        var size =  elementSize * elementCount;
+
+        
+        Gl.BufferData(BufferTargetARB.ArrayBuffer, (nuint)size, data, meta.Usage.ToGlEnum());
+        CheckGlError();
+        
+        var newMeta = new VertexBufferMeta(meta.Usage, (uint)elementCount, (uint)elementSize);
+        _store.VboStore.Replace(_boundVertexBufferId, in newMeta, handle, out _);
     }
 
     public void SetIndexBuffer<T>(ReadOnlySpan<T> data) where T : unmanaged
     {
-        SetBufferData<GlIndexBuffer, T>(_boundIndexBufferId, data);
-    }
+        ref readonly var meta = ref _store.IboStore.GetMeta(_boundIndexBufferId);
+        var handle = _store.IboStore.GetHandle(_boundIndexBufferId);
 
-    private void SetBufferData<TBuffer, TData>(ushort resourceId, ReadOnlySpan<TData> data)
-        where TBuffer : GlBuffer where TData : unmanaged
-    {
-        var buffer = _store.Get<TBuffer>(resourceId);
-        ValidateResource(buffer);
-
-        if (buffer!.IsStatic && buffer.BufferSizeInBytes > 0)
-            GraphicsException.ThrowInvalidBufferData<GlBuffer>(nameof(buffer), "Buffer is static");
-
-        buffer.ElementCount = data.Length;
-        buffer.ElementSize = Unsafe.SizeOf<TData>();
-        Gl.BufferData(buffer.GlBufferTarget, (nuint)buffer.BufferSizeInBytes, data, buffer.GlBufferUsage);
-
+        if (meta.Usage == BufferUsage.StaticDraw && meta.ElementCount * meta.ElementSize > 0)
+            GraphicsException.ThrowInvalidBufferData<GlIndexBufferHandle>(_boundIndexBufferId.ToString(),
+                "Buffer is static");
+        
+        var elementCount = data.Length;
+        var elementSize = Unsafe.SizeOf<T>();
+        var size =  elementSize * elementCount;
+        
+        Gl.BufferData(BufferTargetARB.ElementArrayBuffer, (nuint)size, data, meta.Usage.ToGlEnum());
         CheckGlError();
-    }
+        
+        var newMeta = new IndexBufferMeta(meta.Usage, (uint)elementCount, (uint)elementSize);
+        _store.IboStore.Replace(_boundIndexBufferId, in newMeta, handle, out _);
 
+    }
+    
     public void UploadVertexBuffer<T>(ReadOnlySpan<T> data, int offsetElements) where T : unmanaged
     {
-        UploadBufferData<GlVertexBuffer, T>(_boundVertexBufferId, data, offsetElements);
+        ref readonly var meta = ref _store.VboStore.GetMeta(_boundVertexBufferId);
+        var handle = _store.VboStore.GetHandle(_boundVertexBufferId);
+        if (meta.Usage == BufferUsage.StaticDraw && meta.ElementCount * meta.ElementSize > 0)
+            GraphicsException.ThrowInvalidBufferData<GlVertexBufferHandle>(_boundVertexBufferId.ToString(),
+                "Buffer is static");
+        
+        var elementSize = Unsafe.SizeOf<T>();
+
+        if (elementSize != meta.ElementSize)
+            GraphicsException.ThrowInvalidBufferData<GlVertexBufferHandle>(nameof(elementSize), "Invalid element size");
+
+        if (data.Length + offsetElements > meta.ElementCount)
+        {
+            GraphicsException.ThrowInvalidBufferData<GlVertexBufferHandle>(null,
+                $"Upload data {data.Length + offsetElements} cannot be bigger than {meta.ElementCount} elements.");
+        }
+
+        nint byteOffset = (nint)((long)offsetElements * elementSize);
+        Gl.BufferSubData(BufferTargetARB.ArrayBuffer, byteOffset, data);
+
+        CheckGlError(); // throws here
+
     }
 
     public void UploadIndexBuffer<T>(ReadOnlySpan<T> data, int offsetElements) where T : unmanaged
     {
-        UploadBufferData<GlIndexBuffer, T>(_boundIndexBufferId, data, offsetElements);
-    }
+        ref readonly var meta = ref _store.IboStore.GetMeta(_boundIndexBufferId);
+        var handle = _store.IboStore.GetHandle(_boundIndexBufferId);
+        if (meta.Usage == BufferUsage.StaticDraw && meta.ElementCount * meta.ElementSize > 0)
+            GraphicsException.ThrowInvalidBufferData<GlVertexBufferHandle>(_boundIndexBufferId.ToString(),
+                "Buffer is static");
+        
+        var elementSize = Unsafe.SizeOf<T>();
 
-    private void UploadBufferData<TBuffer, TData>(ushort resourceId, ReadOnlySpan<TData> data, int offsetElements)
-        where TBuffer : GlBuffer where TData : unmanaged
-    {
-        ArgumentOutOfRangeException.ThrowIfNegative(offsetElements, nameof(offsetElements));
-        var buffer = _store.Get<TBuffer>(resourceId);
-        ValidateResource(buffer);
+        if (elementSize != meta.ElementSize)
+            GraphicsException.ThrowInvalidBufferData<GlVertexBufferHandle>(nameof(elementSize), "Invalid element size");
 
-        if (buffer.IsStatic)
-            GraphicsException.ThrowInvalidBufferData<GlBuffer>(nameof(buffer), "Buffer is static");
-
-        var elementSize = Unsafe.SizeOf<TData>();
-
-        if (elementSize != buffer.ElementSize)
-            GraphicsException.ThrowInvalidBufferData<GlBuffer>(nameof(elementSize), "Invalid element size");
-
-        if (data.Length + offsetElements > buffer.ElementCount)
+        if (data.Length + offsetElements > meta.ElementCount)
         {
-            GraphicsException.ThrowInvalidBufferData<GlBuffer>(null,
-                $"Upload data {data.Length + offsetElements} cannot be bigger than {buffer.ElementCount} elements.");
+            GraphicsException.ThrowInvalidBufferData<GlVertexBufferHandle>(null,
+                $"Upload data {data.Length + offsetElements} cannot be bigger than {meta.ElementCount} elements.");
         }
 
-
         nint byteOffset = (nint)((long)offsetElements * elementSize);
-        Gl.BufferSubData(buffer.GlBufferTarget, byteOffset, data);
+        Gl.BufferSubData(BufferTargetARB.ElementArrayBuffer, byteOffset, data);
 
         CheckGlError(); // throws here
     }
 
+
     public void Draw(uint drawCount = 0)
     {
-        var mesh = _store.Get<GlMesh>(_boundVaoId);
-        ValidateResource(mesh);
+        ref readonly var meta = ref _store.MeshStore.GetMeta(_boundVaoId);
 
-        if (mesh.VertexBufferId == 0)
+        if (meta.VertexBufferId == default)
             GraphicsException.ThrowInvalidState($"Mesh is missing VertexBuffer");
-        if (mesh.IndexBufferId > 0)
+        if (meta.IndexBufferId.Id > 0)
             GraphicsException.ThrowInvalidState(
                 $"Elemental mesh must use {nameof(DrawIndexed)} instead of {nameof(Draw)}");
 
-        var count = drawCount > 0 ? drawCount : mesh.DrawCount;
-        _gl.DrawArrays(mesh.PrimitiveType, 0, count);
+        var count = drawCount > 0 ? drawCount : meta.DrawCount;
+        _gl.DrawArrays(meta.Primitive.ToGlEnum(), 0, count);
+        
         _drawTriangleCount += (int)count;
         _drawCallCount++;
     }
 
     public unsafe void DrawIndexed(uint drawCount = 0)
     {
-        var mesh = _store.Get<GlMesh>(_boundVaoId);
-        ValidateResource(mesh);
-        if (mesh.IndexBufferId == 0)
+        ref readonly var meta = ref _store.MeshStore.GetMeta(_boundVaoId);
+        if (meta.IndexBufferId == default)
             GraphicsException.ThrowInvalidState($"Mesh is missing IndexBuffer");
 
-        var count = drawCount > 0 ? drawCount : mesh.DrawCount;
-
-        _gl.DrawElements(PrimitiveType.Triangles, count, mesh.ElementType, (void*)0);
+        var count = drawCount > 0 ? drawCount : meta.DrawCount;
+        _gl.DrawElements(PrimitiveType.Triangles, count, meta.ElementType.ToGlEnum(), (void*)0);
         _drawTriangleCount += (int)count;
         _drawCallCount++;
     }
 
 
-    public void UseShader(ushort resourceId)
+    public void UseShader(ShaderId id)
     {
-        if (_boundShaderId == resourceId) return;
+        if (_boundShaderId == id) return;
 
-        if (resourceId == 0)
+        if (id == default)
         {
-            _boundShaderId = 0;
+            _boundShaderId = default;
             _boundUniforms = null;
             _gl.UseProgram(0);
             return;
         }
 
-        var resource = _store.Get<GlShader>(resourceId);
-        var uniformTable = _uniformRegistry.Get(resourceId);
+        var handle = _store.ShaderStore.GetHandle(id);
+        var uniformTable = _uniformRegistry.Get(id);
 
-        _gl.UseProgram(resource!.Handle);
-        _boundShaderId = resourceId;
+        _gl.UseProgram(handle.Handle);
+        _boundShaderId = id;
         _boundUniforms = uniformTable;
     }
 
@@ -506,14 +542,5 @@ public sealed class GlGraphicsContext : IGraphicsContext
         var error = Gl.GetError();
         if (error != (GLEnum)ErrorCode.NoError)
             throw new OpenGlException(error);
-    }
-
-    private static void ValidateResource<T>([NotNull] T? resource) where T : IGraphicsResource
-    {
-        if (resource is null)
-            throw GraphicsException.ResourceIsNull<T>(nameof(resource));
-
-        if (resource.IsDisposed)
-            throw GraphicsException.ResourceIsDisposed<T>(nameof(resource));
     }
 }

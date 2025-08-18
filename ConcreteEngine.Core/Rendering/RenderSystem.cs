@@ -13,6 +13,7 @@ using ConcreteEngine.Graphics.Data;
 using ConcreteEngine.Graphics.Definitions;
 using ConcreteEngine.Graphics.Error;
 using ConcreteEngine.Graphics.OpenGL;
+using ConcreteEngine.Graphics.Resources;
 using Silk.NET.Maths;
 using static ConcreteEngine.Core.Rendering.RenderConsts;
 
@@ -145,12 +146,9 @@ public sealed class RenderSystem : IGameEngineSystem
             return;
         }
 
-        var isScreenPass = pass.TargetFboId == 0;
+        var isScreenPass = pass.TargetFboId == default;
 
-        _gfx.SetBlendMode(pass.Blend);
-        _gfx.SetDepthTest(pass.DepthTest);
-
-        if (pass.TargetFboId == 0)
+        if (pass.TargetFboId == default)
             _gfx.BeginScreenPass(pass.DoClear ? pass.ClearColor : null, pass.ClearMask);
         else
             _gfx.BeginRenderPass(pass.TargetFboId, pass.DoClear ? pass.ClearColor : null, pass.ClearMask);
@@ -158,8 +156,6 @@ public sealed class RenderSystem : IGameEngineSystem
 
         if (pass.Op == RenderPassOp.DrawScene)
         {
-            _gfx.SetBlendMode(pass.Blend);
-            _gfx.SetDepthTest(pass.DepthTest);
             ExecuteDrawScenePass(target);
             _gfx.EndRenderPass();
         }
@@ -204,7 +200,7 @@ public sealed class RenderSystem : IGameEngineSystem
         _gfx.DrawIndexed(data.DrawCount);
     }
 
-    private void DrawFboScreenQuad(ushort colTexId, ushort shaderId)
+    private void DrawFboScreenQuad(TextureId colTexId, ShaderId shaderId)
     {
         _gfx.UseShader(shaderId);
         _gfx.BindTexture(colTexId, 0);

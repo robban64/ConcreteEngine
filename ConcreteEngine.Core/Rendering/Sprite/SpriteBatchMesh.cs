@@ -4,15 +4,16 @@ using ConcreteEngine.Graphics;
 using ConcreteEngine.Graphics.Data;
 using ConcreteEngine.Graphics.Definitions;
 using ConcreteEngine.Graphics.Primitives;
+using ConcreteEngine.Graphics.Resources;
 using static ConcreteEngine.Core.Rendering.RenderConsts;
 
 #endregion
 
 namespace ConcreteEngine.Core.Rendering.Sprite;
 
-public readonly struct SpriteBatchBuildResult(ushort meshId, uint drawCount)
+public readonly struct SpriteBatchBuildResult(MeshId meshId, uint drawCount)
 {
-    public readonly ushort MeshId = meshId;
+    public readonly MeshId MeshId = meshId;
     public readonly uint DrawCount = drawCount;
 }
 
@@ -30,9 +31,9 @@ internal sealed class SpriteBatchMesh : IDisposable
     private readonly int _capacity;
 
 
-    private readonly ushort _meshId;
-    private readonly ushort _vertexBufferId;
-    private readonly ushort _indexBufferId;
+    private readonly MeshId _meshId;
+    private readonly VertexBufferId _vertexBufferId;
+    private readonly IndexBufferId _indexBufferId;
 
     private bool _disposed = false;
     
@@ -54,23 +55,22 @@ internal sealed class SpriteBatchMesh : IDisposable
             IndexBuffer = new MeshDataBufferDescriptor<ushort>(BufferUsage.StaticDraw, null),
             VertexPointers =
             [
-                VertexAttributeDescriptor.Make<Vertex2D>("aPos", nameof(Vertex2D.Position)),
-                VertexAttributeDescriptor.Make<Vertex2D>("aTex", nameof(Vertex2D.Texture))
+                VertexAttributeDescriptor.Make<Vertex2D>(nameof(Vertex2D.Position)),
+                VertexAttributeDescriptor.Make<Vertex2D>(nameof(Vertex2D.Texture))
             ]
         };
 
-        var meshResult = _graphics.CreateMesh(meshData);
-        _meshId = meshResult.MeshId;
-        _vertexBufferId = meshResult.VertexBufferId;
-        _indexBufferId = meshResult.IndexBufferId;
+        _meshId = _graphics.CreateMesh(meshData, out var meta);
+        _vertexBufferId = meta.VertexBufferId;
+        _indexBufferId = meta.IndexBufferId;
 
-        _gfx.BindVertexBuffer(meshResult.VertexBufferId);
+        _gfx.BindVertexBuffer(_vertexBufferId);
         InitVertexBufferData();
-        _gfx.BindVertexBuffer(0);
+        _gfx.BindVertexBuffer(default);
 
-        _gfx.BindIndexBuffer(meshResult.IndexBufferId);
+        _gfx.BindIndexBuffer(_indexBufferId);
         InitIndexBufferData();
-        _gfx.BindIndexBuffer(0);
+        _gfx.BindIndexBuffer(default);
     }
 
     private void InitVertexBufferData()
@@ -153,7 +153,7 @@ internal sealed class SpriteBatchMesh : IDisposable
 
         _gfx.BindVertexBuffer(_vertexBufferId);
         _gfx.UploadVertexBuffer<Vertex2D>(vertices, 0);
-        _gfx.BindVertexBuffer(0);
+        _gfx.BindVertexBuffer(default);
 
 
         var drawCount = (uint)(spriteCount * IndicesPerSprite);
@@ -164,7 +164,7 @@ internal sealed class SpriteBatchMesh : IDisposable
     public void Dispose()
     {
         if (_disposed) return;
-        _graphics.RemoveResource(_meshId);
+        _graphics.EnqueueRemoveResource(_meshId);
         _disposed = true;
     }
 }

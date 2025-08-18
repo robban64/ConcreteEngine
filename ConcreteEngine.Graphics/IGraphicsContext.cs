@@ -4,6 +4,7 @@ using System.Drawing;
 using System.Numerics;
 using ConcreteEngine.Graphics.Data;
 using ConcreteEngine.Graphics.Definitions;
+using ConcreteEngine.Graphics.Resources;
 using Silk.NET.Maths;
 
 #endregion
@@ -23,15 +24,15 @@ public interface IGraphicsContext
     
     void Clear(Color color, ClearBufferFlag flags);
     void BeginScreenPass(Color? clear = null, ClearBufferFlag flags = ClearBufferFlag.Color);
-    void BeginRenderPass(ushort fboId, Color? clear, ClearBufferFlag flags = ClearBufferFlag.Color);
+    void BeginRenderPass(FrameBufferId fboId, Color? clear, ClearBufferFlag flags = ClearBufferFlag.Color);
     void EndRenderPass();
-    void BlitFramebuffer(ushort fromId, ushort toId = 0, bool linearFilter = true);
+    void BlitFramebuffer(FrameBufferId fromId, FrameBufferId toId = default, bool linearFilter = true);
     void SetBlendMode(BlendMode blendMode);
     void SetDepthTest(bool depthTest);
-    void BindTexture(ushort resourceId, uint slot);
-    void BindMesh(ushort resourceId);
-    void BindVertexBuffer(ushort resourceId);
-    void BindIndexBuffer(ushort resourceId);
+    void BindTexture(TextureId resourceId, uint slot);
+    void BindMesh(MeshId resourceId);
+    void BindVertexBuffer(VertexBufferId resourceId);
+    void BindIndexBuffer(IndexBufferId resourceId);
 
     void SetVertexBuffer<T>(ReadOnlySpan<T> data) where T : unmanaged;
     void SetIndexBuffer<T>(ReadOnlySpan<T> data) where T : unmanaged;
@@ -42,7 +43,7 @@ public interface IGraphicsContext
     void Draw(uint drawCount = 0);
     void DrawIndexed(uint drawCount = 0);
     
-    void UseShader(ushort resourceId);
+    void UseShader(ShaderId resourceId);
     void SetUniform(ShaderUniform uniform, int value);
     void SetUniform(ShaderUniform uniform, uint value);
     void SetUniform(ShaderUniform uniform, float value);

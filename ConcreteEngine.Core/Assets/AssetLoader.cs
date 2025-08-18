@@ -46,7 +46,7 @@ internal sealed class AssetLoader
         using var stream = File.OpenRead(GetPath("textures", record.Path));
         var result = ImageResult.FromStream(stream, ColorComponents.RedGreenBlueAlpha);
 
-        var textureData = new TextureDescriptor
+        var textureData = new TextureDesc
         (
             PixelData: result.Data,
             Width: result.Width,

@@ -2,16 +2,17 @@
 
 using ConcreteEngine.Core.Assets;
 using ConcreteEngine.Graphics.Definitions;
+using ConcreteEngine.Graphics.Resources;
 
 #endregion
 
 namespace ConcreteEngine.Core.Resources;
 
-public class Texture2D : IGraphicAssetFile
+public class Texture2D : IGraphicAssetFile<TextureId>
 {
     public required string Name { get; init; }
     public required string Path { get; init; }
-    public required ushort ResourceId { get; init; }
+    public required TextureId ResourceId { get; init; }
     public required int Width { get; init; }
     public required int Height { get; init; }
     public required EnginePixelFormat  PixelFormat { get; init; }

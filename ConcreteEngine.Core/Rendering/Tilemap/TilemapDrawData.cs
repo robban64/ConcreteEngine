@@ -1,5 +1,6 @@
 using System.Numerics;
 using ConcreteEngine.Graphics;
+using ConcreteEngine.Graphics.Resources;
 using Silk.NET.Maths;
 
 namespace ConcreteEngine.Core.Rendering.Tilemap;
@@ -20,9 +21,9 @@ public readonly struct TilemapDrawData(
     public readonly Vector2 TextureScale = textureScale;
 }
 
-public readonly struct TileChunkBuildResult(ushort meshId, uint drawCount)
+public readonly struct TileChunkBuildResult(MeshId meshId, uint drawCount)
 {
-    public readonly ushort MeshId = meshId;
+    public readonly MeshId MeshId = meshId;
     public readonly uint DrawCount = drawCount;
 }
 

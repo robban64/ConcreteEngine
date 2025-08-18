@@ -16,7 +16,7 @@ public record MeshDescriptor<TVertex, TIndex> where TVertex : unmanaged where TI
     public required MeshDataBufferDescriptor<TVertex> VertexBuffer { get; init; }
     public MeshDataBufferDescriptor<TIndex>? IndexBuffer { get; init; }
     public uint? DrawCount { get; set; } = null;
-    public PrimitiveType Primitive { get; set; } = PrimitiveType.Triangles;
+    public DrawPrimitive Primitive { get; set; } = DrawPrimitive.Triangles;
 }
 
 public record MeshDataBufferDescriptor<T>(
@@ -24,8 +24,7 @@ public record MeshDataBufferDescriptor<T>(
     T[]? Data
 ) where T : unmanaged;
 
-public record VertexAttributeDescriptor(
-    string Name, // e.g., "aPosition"
+public readonly record struct VertexAttributeDescriptor(
     uint StrideBytes, // total size of one vertex in bytes
     uint OffsetBytes, // offset of this attribute in the vertex struct
     VertexElementFormat Format = VertexElementFormat.Float2,
@@ -33,7 +32,6 @@ public record VertexAttributeDescriptor(
 )
 {
     public static VertexAttributeDescriptor Make<TStruct>(
-        string name,
         string fieldName,
         VertexElementFormat format = VertexElementFormat.Float2,
         bool normalized = false)
@@ -59,7 +57,6 @@ public record VertexAttributeDescriptor(
         ArgumentOutOfRangeException.ThrowIfGreaterThanOrEqual((int)offsetBytes, structSize, nameof(offsetBytes));
 
         return new VertexAttributeDescriptor(
-            Name: name,
             StrideBytes: (uint)Unsafe.SizeOf<TStruct>(),
             OffsetBytes: (uint)Marshal.OffsetOf<TStruct>(fieldName)!.ToInt32(),
             Format: format,
@@ -68,7 +65,6 @@ public record VertexAttributeDescriptor(
     }
 
     public static VertexAttributeDescriptor Make<TPrimitive>(
-        string name,
         uint strideCount,
         uint offsetCount,
         VertexElementFormat format = VertexElementFormat.Float2,
@@ -87,7 +83,6 @@ public record VertexAttributeDescriptor(
             ArgumentOutOfRangeException.ThrowIfGreaterThanOrEqual(offsetBytes, strideBytes, nameof(offsetBytes));
 
         return new VertexAttributeDescriptor(
-            Name: name,
             StrideBytes: strideBytes,
             OffsetBytes: offsetBytes,
             Format: format,

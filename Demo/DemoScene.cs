@@ -64,15 +64,28 @@ public class DemoScene : GameScene
         ));
         */
 
+
+        /*
+        renderer.RegisterRenderPass(RenderTargetId.Scene, 0, new RenderPassData(
+            Op: RenderPassOp.DrawScene,
+            TargetFboId: sceneFboId,
+            DepthTest: true,  Blend: BlendMode.Alpha, DoClear:true, ClearColor:Color.CornflowerBlue));
+        renderer.RegisterRenderPass(RenderTargetId.Scene, 1, new RenderPassData(
+            Op: RenderPassOp.Blit,
+            TargetFboId: default,
+            BlitFboId: sceneFboId));
+*/
+        
+       
+
         // Create a single-sample texture FBO for post-FX
-        var (sceneFboId, sceneTexId) =
-            graphics.CreateFramebuffer(new FramebufferDescriptor(SizeRatio: Vector2.One, DepthStencilBuffer: true));
+        var sceneFboId =
+            graphics.CreateFramebuffer(new FrameBufferDesc(SizeRatio: Vector2.One, DepthStencilBuffer: true),
+                out var sceneFboMeta);
 
         // colorTexId will be 0 for MSAA
-        var msaaDesc = new FramebufferDescriptor(
-            SizeRatio: Vector2.One, DepthStencilBuffer: true, Msaa: true, Samples: 4);
-        var (msaaFboId, _) = graphics.CreateFramebuffer(msaaDesc); 
-
+        var msaaFboId = graphics.CreateFramebuffer(new FrameBufferDesc(
+            SizeRatio: Vector2.One, DepthStencilBuffer: true, Msaa: true, Samples: 4), out _);
 
         // Pass 0: draw scene into MSAA FBO
         renderer.RegisterRenderPass(RenderTargetId.Scene, 0, new RenderPassData(
@@ -81,7 +94,7 @@ public class DemoScene : GameScene
             DoClear: true,
             ClearMask: ClearBufferFlag.ColorAndDepth,
             ClearColor: Color.CornflowerBlue,
-            Blend: BlendMode.Alpha,
+            Blend: BlendMode.None,
             DepthTest: true));
 
         // Pass 1: resolve MSAA → single-sample texture FBO
@@ -93,10 +106,10 @@ public class DemoScene : GameScene
         // Pass 2: fullscreen color grade to screen
         renderer.RegisterRenderPass(RenderTargetId.Scene, 2, new RenderPassData(
             Op: RenderPassOp.FullscreenQuad,
-            TargetFboId: 0,
-            SourceTexId: sceneTexId,
+            TargetFboId: default,
+            SourceTexId: sceneFboMeta.ColTexId,
             ShaderId: screenShader.ResourceId,
-            Blend: BlendMode.None,
+            Blend: BlendMode.Alpha,
             DepthTest: false));
 
 

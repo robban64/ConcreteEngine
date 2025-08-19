@@ -4,7 +4,7 @@ using ConcreteEngine.Graphics;
 
 #endregion
 
-namespace ConcreteEngine.Core.Rendering;
+namespace ConcreteEngine.Core.Rendering.Batchers;
 
 public abstract class RenderBatcher<TBatchData> : IDisposable where TBatchData : unmanaged
 {

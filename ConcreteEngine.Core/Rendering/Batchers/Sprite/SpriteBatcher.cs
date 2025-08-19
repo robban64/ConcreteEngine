@@ -5,7 +5,7 @@ using ConcreteEngine.Graphics.Error;
 
 #endregion
 
-namespace ConcreteEngine.Core.Rendering.Sprite;
+namespace ConcreteEngine.Core.Rendering.Batchers.Sprite;
 
 public sealed class SpriteBatcher : RenderBatcher<SpriteBatchBuildResult>
 {

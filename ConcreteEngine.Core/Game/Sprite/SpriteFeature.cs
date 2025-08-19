@@ -25,10 +25,12 @@ public struct SpriteDrawEntity
     }
 }
 
-public class SpriteFeature : IGameFeature, IDrawableFeature<SpriteDrawEntity>
+public class SpriteFeature : IDrawableFeature<SpriteDrawEntity>
 {
     public int Order { get; set; }
     public bool IsUpdateable => true;
+    public bool IsDrawable => true;
+    public int DrawOrder => 0;
 
     public Shader SpriteShader { get; set; } = null!;
     public Texture2D SpriteTexture { get; set; } = null!;
@@ -36,8 +38,9 @@ public class SpriteFeature : IGameFeature, IDrawableFeature<SpriteDrawEntity>
 
     private readonly List<SpriteDrawEntity> _spriteEntities = new(900);
 
-    public void Load(GameFeatureContext context)
+    public void Load(GameFeatureContext context, int order)
     {
+        Order = order;
         var assets = context.GetSystem<AssetSystem>();
         var renderer = context.GetSystem<RenderSystem>();
 
@@ -143,4 +146,5 @@ public class SpriteFeature : IGameFeature, IDrawableFeature<SpriteDrawEntity>
     {
         return CollectionsMarshal.AsSpan(_spriteEntities);
     }
+
 }

@@ -1,15 +1,14 @@
 #region
 
 using System.Numerics;
-using ConcreteEngine.Core.Game.Sprite;
-using ConcreteEngine.Core.Rendering;
+using ConcreteEngine.Core.Game.Terrain;
 using ConcreteEngine.Core.Rendering.Materials;
 using ConcreteEngine.Core.Transforms;
 using ConcreteEngine.Graphics.Definitions;
 
 #endregion
 
-namespace ConcreteEngine.Core.Game.Terrain;
+namespace ConcreteEngine.Core.Rendering.Emitters;
 
 public sealed class TilemapDrawEmitter : DrawCommandEmitter<TilemapStruct>
 {

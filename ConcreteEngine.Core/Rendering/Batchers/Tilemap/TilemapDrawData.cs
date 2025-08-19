@@ -5,7 +5,7 @@ using ConcreteEngine.Graphics.Resources;
 
 #endregion
 
-namespace ConcreteEngine.Core.Rendering.Tilemap;
+namespace ConcreteEngine.Core.Rendering.Batchers.Tilemap;
 
 public readonly struct TileData(ushort atlasX, ushort atlasY)
 {

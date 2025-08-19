@@ -1,9 +1,11 @@
 #region
 
+using System.Numerics;
 using System.Runtime.CompilerServices;
+using ConcreteEngine.Core.Configuration;
+using ConcreteEngine.Core.Rendering.Batchers.Sprite;
+using ConcreteEngine.Core.Rendering.Batchers.Tilemap;
 using ConcreteEngine.Core.Rendering.Materials;
-using ConcreteEngine.Core.Rendering.Sprite;
-using ConcreteEngine.Core.Rendering.Tilemap;
 using ConcreteEngine.Core.Resources;
 using ConcreteEngine.Core.Transforms;
 using ConcreteEngine.Graphics;
@@ -67,6 +69,35 @@ public sealed class RenderSystem : IGameEngineSystem
         };
     }
 
+    internal void Initialize(GameSceneConfigBuilder builder)
+    {
+        foreach (var (order, emitter) in builder.Emitters)
+            _emitterCollector.AddEmitter(order, emitter());
+        
+        _emitterCollector.Initialize();
+        
+        foreach (var (order, meta) in builder.Passes)
+            RegisterRenderPass(meta.Target, order, meta.Param);
+        
+        foreach (var (order, meta) in builder.Commands)
+            RegisterCommand(order, meta.CommandId, meta.Target, meta.Capacity);
+    }
+    
+    public void RegisterDrawFeature(int order, IDrawableFeature feature, Type emitterType)
+    {
+        var emitter = _emitterCollector.GetEmitter(emitterType);
+        emitter.RegisterFeature(order, feature);
+    }
+    
+    public void RegisterDrawFeature<TEmitter, TFeature, TEntity>(int order, TFeature feature)
+        where TEmitter : DrawCommandEmitter<TEntity>
+        where TFeature : class, IGameFeature, IDrawableFeature<TEntity>
+        where TEntity : struct
+    {
+        var emitter = _emitterCollector.GetEmitter<TEmitter, TEntity>();
+        emitter.RegisterFeature<TFeature>(order, feature);
+    }
+    
     public void RegisterRenderPass(RenderTargetId target, int order, in RenderPassData param)
     {
         if (param.Op == RenderPassOp.FullscreenQuad && param.SourceTexId == null)
@@ -89,21 +120,7 @@ public sealed class RenderSystem : IGameEngineSystem
         _commandSubmitter.RegisterCommand(commandId, target, capacity);
         _renderPasses[(int)target].Add(order, commandId);
     }
-
-    public void RegisterEmitter<TEmitter, TEntity>(int order, TEmitter emitter)
-        where TEmitter : DrawCommandEmitter<TEntity>
-        where TEntity : struct
-        => _emitterCollector.RegisterEmitter<TEmitter, TEntity>(order, emitter);
-
-    public void RegisterDrawFeature<TEmitter, TFeature, TEntity>(int order, TFeature feature)
-        where TEmitter : DrawCommandEmitter<TEntity>
-        where TFeature : class, IDrawableFeature<TEntity>
-        where TEntity : struct
-    {
-        var emitter = _emitterCollector.GetEmitter<TEmitter, TEntity>();
-        emitter.RegisterFeature(order, feature);
-    }
-
+    
     public void AddMaterial(MaterialDescription description)
         => _materialStore.AddMaterial(description);
 
@@ -180,6 +197,7 @@ public sealed class RenderSystem : IGameEngineSystem
 
     private void ExecuteDrawScenePass(RenderTargetId target)
     {
+        var projView = _camera.ProjectionViewMatrix;
         foreach (var (_, commandId) in _renderPasses[(int)target])
         {
             var commands = _commandSubmitter.GetQueue(target, commandId);
@@ -187,20 +205,18 @@ public sealed class RenderSystem : IGameEngineSystem
             for (int i = 0; i < commands.Length; i++)
             {
                 ref readonly var msg = ref commands[i];
-                Draw(in msg.Cmd, in msg.Info);
+                Draw(in msg.Cmd, in msg.Info, in projView);
             }
         }
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    private void Draw(in DrawCommandData data, in DrawCommandMeta meta)
+    private void Draw(in DrawCommandData data, in DrawCommandMeta meta, in Matrix4x4 projView)
     {
-        var projectionViewMatrix = _camera.ProjectionViewMatrix;
-
         var material = _materialStore[data.MaterialId];
         material.Bind(_gfx);
         _gfx.UseShader(material.Shader.ResourceId);
-        _gfx.SetUniform(ShaderUniform.ProjectionViewMatrix, in projectionViewMatrix);
+        _gfx.SetUniform(ShaderUniform.ProjectionViewMatrix, in projView);
 
         _gfx.SetUniform(ShaderUniform.ModelMatrix, in data.Transform);
         _gfx.BindMesh(data.MeshId);

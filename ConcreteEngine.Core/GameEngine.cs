@@ -3,8 +3,8 @@
 using ConcreteEngine.Common.Collections;
 using ConcreteEngine.Core.Assets;
 using ConcreteEngine.Core.Configuration;
-using ConcreteEngine.Core.Input;
 using ConcreteEngine.Core.Pipeline;
+using ConcreteEngine.Core.Platform;
 using ConcreteEngine.Core.Rendering;
 using ConcreteEngine.Core.Time;
 using ConcreteEngine.Core.Transforms;
@@ -26,7 +26,7 @@ public sealed class GameEngine : IDisposable
 {
     private const float GameDt = 1f / 10f; // 30 Hz
 
-    private readonly IWindow _window;
+    private readonly IEngineWindowHost _window;
 
     private readonly List<Func<GameScene>> _sceneFactories;
     private readonly TypeRegistryCollection<IGameEngineSystem> _systems = new(4);
@@ -34,13 +34,13 @@ public sealed class GameEngine : IDisposable
 
     private readonly GameTime _gameTime;
 
-    private IGraphicsDevice _graphics = null!;
+    private readonly IGraphicsDevice _graphics;
 
-    private InputSystem _input = null!;
-    private AssetSystem _assets = null!;
-    private RenderSystem _renderer = null!;
-    private GameMessagePipelineSystem _pipeline = null!;
-    private CameraSystem _camera = null!;
+    private readonly IEngineInputSource _input;
+    private readonly AssetSystem _assets;
+    private readonly RenderSystem _renderer;
+    private readonly GameMessagePipelineSystem _pipeline;
+    private readonly CameraSystem _camera;
 
     private int? _nextSceneIndex = null;
     private GameScene _currentScene = null!;
@@ -50,82 +50,26 @@ public sealed class GameEngine : IDisposable
     private float _fps;
 
     internal GameEngine(
-        WindowOptions windowOptions,
-        GraphicsBackend backend,
-        AssetManagerConfiguration assetPipelineConfiguration,
+        IEngineWindowHost windowHost,
+        IGraphicsDevice graphics,
+        IEngineInputSource input,
+        AssetManagerConfiguration assetConfig,
         List<Func<GameScene>> sceneFactories
     )
     {
+        _window = windowHost;
+        _graphics = graphics;
+        _input = input;
         _sceneFactories = sceneFactories;
+        
+        // time
         _gameTime = new GameTime(GameTickUpdate, FpsTickUpdate);
-
-        _window = Window.Create(windowOptions);
-
-        _window.Load += () => Load(backend, assetPipelineConfiguration);
-        _window.Update += Update;
-        _window.Render += Render;
-        _window.Closing += Close;
-    }
-
-    public void Run()
-    {
-        _window.Run();
-        _window?.Dispose();
-    }
-
-    public T GetFeature<T>() where T : IGameFeature => _features.Get<T>();
-
-    public void RegisterFeature<T>() where T : IGameFeature, new()
-        => _features.RegisterFeature<T>();
-
-    public T GetSystem<T>() where T : IGameEngineSystem => (T)_systems.Get<T>();
-
-    private void GameTickUpdate(int tick)
-    {
-        _features.GameTickUpdate(tick);
-    }
-
-    private void FpsTickUpdate(int tick)
-    {
-        //Console.WriteLine($"Viewport: {_window.Size}, FrameBufSize: {_window.FramebufferSize}");
-        Console.WriteLine($"Fps: {_fps} with tick {tick}");
-    }
-
-    private void Load(GraphicsBackend backend, AssetManagerConfiguration assetPipelineConfiguration)
-    {
-        LoadGraphics(backend);
-        LoadSystems(assetPipelineConfiguration);
-
-        _nextSceneIndex = 0;
-    }
-
-    private void LoadGraphics(GraphicsBackend backend)
-    {
-        var initialFrameContext = new GraphicsFrameContext
-        {
-            DeltaTime = 0,
-            FramebufferSize = _window.FramebufferSize,
-            ViewportSize = _window.Size
-        };
-
-        _graphics = backend switch
-        {
-            GraphicsBackend.OpenGL => new GlGraphicsDevice(_window.CreateOpenGL(), in initialFrameContext),
-            _ => throw new GraphicsException("Invalid GraphicsBackend. Only OpenGL supported")
-        };
-    }
-
-    private void LoadSystems(AssetManagerConfiguration assetPipelineConfiguration)
-    {
-        // input
-        _input = new InputSystem(_window.CreateInput());
-
+        
         // camera
         _camera = new CameraSystem(_input);
 
         // assets
-        _assets = new AssetSystem(graphics: _graphics, assetPath: assetPipelineConfiguration.AssetPath,
-            manifestFilename: assetPipelineConfiguration.ManifestFilename);
+        _assets = new AssetSystem(_graphics, assetConfig.AssetPath, assetConfig.ManifestFilename);
         _assets.LoadFromManifest();
 
         // messages
@@ -135,14 +79,33 @@ public sealed class GameEngine : IDisposable
         var shaders = _assets.GetAll<Shader>();
         _renderer = new RenderSystem(_graphics, _camera.Transform, shaders.ToArray());
 
-        _systems.Register<InputSystem>(_input);
         _systems.Register<CameraSystem>(_camera);
         _systems.Register<GameMessagePipelineSystem>(_pipeline);
         _systems.Register<AssetSystem>(_assets);
         _systems.Register<RenderSystem>(_renderer);
+
+        _nextSceneIndex = 0;
     }
 
-    private void Update(double delta)
+    public T GetFeature<T>() where T : IGameFeature => _features.Get<T>();
+
+    public T GetSystem<T>() where T : IGameEngineSystem => (T)_systems.Get<T>();
+
+    private void GameTickUpdate(int tick)
+    {
+        var viewportSize = _window.Size;
+        _input.Update();
+
+        _features.GameTickUpdate(tick);
+    }
+
+    private void FpsTickUpdate(int tick)
+    {
+        //Console.WriteLine($"Viewport: {_window.Size}, FrameBufSize: {_window.FramebufferSize}");
+        Console.WriteLine($"Fps: {_fps} with tick {tick}");
+    }
+    
+    internal void Update(double delta)
     {
         float dt = (float)delta;
         float fps = dt > 0 ? 1.0f / dt : 0.0f;
@@ -156,7 +119,6 @@ public sealed class GameEngine : IDisposable
             ViewportSize = _window.Size
         };
 
-        _input.Update();
         _camera.Update(in frameCtx);
 
         // fixed-step simulation
@@ -169,7 +131,7 @@ public sealed class GameEngine : IDisposable
         UpdateSceneTransitionIfNeeded();
     }
 
-    private void Render(double delta)
+    internal void Render(double delta)
     {
         float dt = (float)delta;
         float fps = dt > 0 ? 1.0f / dt : 0.0f;
@@ -186,7 +148,7 @@ public sealed class GameEngine : IDisposable
     }
 
 
-    private void Close()
+    internal void Close()
     {
         Console.WriteLine("Closing GameEngine");
         _isDisposed = true;
@@ -208,11 +170,31 @@ public sealed class GameEngine : IDisposable
 
         var sceneContext = new GameSceneContext(this);
 
+        var builder = new GameSceneConfigBuilder();
+        
+        
         var newScene = _sceneFactories[index]();
         newScene.AttachContext(sceneContext);
-        newScene.Configure();
+        
+        newScene.ConfigureRenderer(builder);
+        _renderer.Initialize(builder);
+        
+        newScene.ConfigureFeatures(builder);
+
+        foreach (var (order, factory) in builder.Features)
+            _features.AddFeature(order, factory());
+
+        foreach (var (order, it) in builder.DrawFeatures)
+        {
+            var (factory, emitterType) = it;
+            var feature = factory();
+            _features.AddFeature(order, feature);
+            _renderer.RegisterDrawFeature(order, feature, emitterType);
+        }
+        
         _features.Load(new GameFeatureContext(sceneContext));
-        newScene.OnReady(_graphics);
+
+        newScene.Initialize(_graphics);
 
         _currentScene = newScene;
         _nextSceneIndex = null;

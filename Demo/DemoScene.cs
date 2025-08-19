@@ -4,9 +4,11 @@ using System.Drawing;
 using System.Numerics;
 using ConcreteEngine.Core;
 using ConcreteEngine.Core.Assets;
+using ConcreteEngine.Core.Configuration;
 using ConcreteEngine.Core.Game.Sprite;
 using ConcreteEngine.Core.Game.Terrain;
 using ConcreteEngine.Core.Rendering;
+using ConcreteEngine.Core.Rendering.Emitters;
 using ConcreteEngine.Core.Rendering.Materials;
 using ConcreteEngine.Core.Resources;
 using ConcreteEngine.Graphics;
@@ -18,35 +20,52 @@ using Shader = ConcreteEngine.Core.Resources.Shader;
 
 namespace Demo;
 
-public class DemoScene : GameScene
+public sealed class DemoScene : GameScene
 {
-    public override void Configure()
+    public override void ConfigureFeatures(IGameSceneFeatureBuilder builder)
     {
-        Context.RegisterFeature<TilemapFeature>();
-        Context.RegisterFeature<SpriteFeature>();
+        builder.RegisterDrawFeature<TilemapDrawEmitter,TilemapFeature, TilemapStruct>(0);
+        builder.RegisterDrawFeature<SpriteDrawEmitter, SpriteFeature, SpriteDrawEntity>(1);
+    }
+    public override void ConfigureRenderer(IGameSceneRenderBuilder builder)
+    {
+        builder.RegisterCommand(0, DrawCommandId.Tilemap, RenderTargetId.Scene, 4);
+        builder.RegisterCommand(1, DrawCommandId.Sprite, RenderTargetId.Scene, 32);
+
+        builder.RegisterEmitter<TilemapDrawEmitter, TilemapStruct>(0);
+        builder.RegisterEmitter<SpriteDrawEmitter, SpriteDrawEntity>(1);
+
     }
 
-    public override void OnReady(IGraphicsDevice graphics)
+    public override void Initialize(IGraphicsDevice graphics)
     {
         var renderer = Context.GetSystem<RenderSystem>();
         var assets = Context.GetSystem<AssetSystem>();
-
-        var spriteModule = Context.GetFeature<SpriteFeature>();
-        var tilemapFeature = Context.GetFeature<TilemapFeature>();
-
 
         var spriteShader = assets.Get<Shader>("SpriteShader");
         var spriteTexture = assets.Get<Texture2D>("SpriteTexture");
         var tilemapTexture = assets.Get<Texture2D>("TilemapTextureAtlas");
 
-        var screenShader = assets.Get<Shader>("ScreenShader");
-        var colorShader = assets.Get<Shader>("ColorShader");
+        renderer.AddMaterial(new MaterialDescription(
+            Shader: spriteShader,
+            Texture: spriteTexture,
+            Blend: BlendMode.Alpha
+        ));
 
+        renderer.AddMaterial(new MaterialDescription(
+            Shader: spriteShader,
+            Texture: tilemapTexture,
+            Blend: BlendMode.Alpha
+        ));
+        
+         var screenShader = assets.Get<Shader>("ScreenShader");
+        /*
+        var colorShader = assets.Get<Shader>("ColorShader");
         var blurHorizontalShader = assets.Get<Shader>("BlurHorizontal");
         var blurVerticalShader = assets.Get<Shader>("BlurVertical");
         var brightPassShader = assets.Get<Shader>("BrightPass");
         var screenCompositeShader = assets.Get<Shader>("ScreenComposite");
-
+        */
         var halfSize = Vector2.One * 0.5f;
 
 
@@ -83,38 +102,8 @@ public class DemoScene : GameScene
             ShaderId: screenShader.ResourceId,
             Blend: BlendMode.Alpha,
             DepthTest: false));
-
-
-        renderer.AddMaterial(new MaterialDescription(
-            Shader: spriteShader,
-            Texture: spriteTexture,
-            Blend: BlendMode.Alpha
-        ));
-
-        renderer.AddMaterial(new MaterialDescription(
-            Shader: spriteShader,
-            Texture: tilemapTexture,
-            Blend: BlendMode.Alpha
-        ));
-
-
-        renderer.RegisterCommand(0, DrawCommandId.Tilemap, RenderTargetId.Scene, 4);
-        renderer.RegisterCommand(1, DrawCommandId.Sprite, RenderTargetId.Scene, 32);
-
-        renderer.RegisterEmitter<TilemapDrawEmitter, TilemapStruct>(0, new TilemapDrawEmitter());
-        renderer.RegisterEmitter<SpriteDrawEmitter, SpriteDrawEntity>(1, new SpriteDrawEmitter());
-
-        renderer.RegisterDrawFeature<SpriteDrawEmitter, SpriteFeature, SpriteDrawEntity>(0,
-            Context.GetFeature<SpriteFeature>());
-
-        renderer.RegisterDrawFeature<TilemapDrawEmitter, TilemapFeature, TilemapStruct>(0,
-            Context.GetFeature<TilemapFeature>());
     }
-
-    public override void TickUpdate(int tick)
-    {
-    }
-
+    
     public override void Unload()
     {
     }

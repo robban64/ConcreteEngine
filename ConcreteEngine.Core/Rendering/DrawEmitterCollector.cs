@@ -12,31 +12,45 @@ internal sealed class DrawEmitterCollector
         where TEmitter : DrawCommandEmitter<TEntity>
         where TEntity : struct
     {
-        foreach (var emitter in _emitters.Values)
+        foreach (var (_, emitter) in _emitters)
         {
             if (emitter is TEmitter tEmitter) return tEmitter;
         }
 
         throw new InvalidOperationException($"Emitter {typeof(TEmitter).Name} not registered");
     }
+    
+    public IDrawCommandEmitter GetEmitter(Type emitterType)
+    {
+        foreach (var (_, emitter) in _emitters)
+        {
+            if (emitter.GetType() == emitterType) return emitter;
+        }
 
-    public void RegisterEmitter<TEmitter, TEntity>(int order, TEmitter emitter)
-        where TEmitter : DrawCommandEmitter<TEntity>
-        where TEntity : struct
+        throw new InvalidOperationException($"Emitter {emitterType.Name} not registered");
+    }
+
+    public void AddEmitter(int order, IDrawCommandEmitter emitter)
     {
         ArgumentNullException.ThrowIfNull(emitter, nameof(emitter));
-        ArgumentOutOfRangeException.ThrowIfNegative(order, nameof(order));
-        if (_emitters.ContainsValue(emitter)) throw new InvalidOperationException("Duplicated emitter");
-        if (_emitters.ContainsKey(order))
-            throw new InvalidOperationException($"Order {emitter.Order} is already registered");
+        if(_emitters.ContainsValue(emitter))
+            throw new InvalidOperationException($"Emitter {emitter.GetType().Name} is already registered");
 
-        emitter.Order = order;
         _emitters.Add(order, emitter);
+    }
+
+    public void Initialize()
+    {
+        foreach (var (order, emitter) in _emitters)
+        {
+            emitter.Initialize(order);
+        }
     }
 
     public void Collect(DrawEmitterContext context, DrawCommandSubmitter submitter)
     {
-        foreach (var emitter in _emitters.Values)
+        var emitters = _emitters.Values;
+        foreach (var emitter in emitters)
         {
             emitter.Emit(context, submitter);
         }

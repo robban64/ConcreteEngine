@@ -1,15 +1,15 @@
 #region
 
 using System.Numerics;
-using ConcreteEngine.Core.Rendering;
+using ConcreteEngine.Core.Game.Sprite;
+using ConcreteEngine.Core.Rendering.Batchers.Sprite;
 using ConcreteEngine.Core.Rendering.Materials;
-using ConcreteEngine.Core.Rendering.Sprite;
 using ConcreteEngine.Core.Transforms;
 using ConcreteEngine.Graphics.Definitions;
 
 #endregion
 
-namespace ConcreteEngine.Core.Game.Sprite;
+namespace ConcreteEngine.Core.Rendering.Emitters;
 
 public sealed class SpriteDrawEmitter : DrawCommandEmitter<SpriteDrawEntity>
 {

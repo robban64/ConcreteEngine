@@ -9,7 +9,7 @@ using ConcreteEngine.Graphics.Resources;
 
 #endregion
 
-namespace ConcreteEngine.Core.Rendering.Tilemap;
+namespace ConcreteEngine.Core.Rendering.Batchers.Tilemap;
 
 internal sealed class TilemapChunkMesh : IDisposable
 {

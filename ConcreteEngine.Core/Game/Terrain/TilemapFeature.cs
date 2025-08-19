@@ -24,6 +24,9 @@ public struct TilemapStruct
 }
 public class TilemapFeature : IGameFeature, IDrawableFeature<TilemapStruct>
 {
+    public bool IsDrawable => true;
+    public int DrawOrder => 0;
+
     public int MapDimension { get; } = 64;
     public int TileSize { get; } = 32;
     public Shader TilemapShader { get; set; } = null!;
@@ -37,8 +40,9 @@ public class TilemapFeature : IGameFeature, IDrawableFeature<TilemapStruct>
 
     private readonly TilemapStruct[] _tilemaps = new TilemapStruct[1];
 
-    public void Load(GameFeatureContext context)
+    public void Load(GameFeatureContext context, int order)
     {
+        Order = order;
         var assets = context.GetSystem<AssetSystem>();
         TilemapShader = assets.Get<Shader>("SpriteShader");
         TilemapTexture = assets.Get<Texture2D>("TilemapTextureAtlas");
@@ -57,4 +61,5 @@ public class TilemapFeature : IGameFeature, IDrawableFeature<TilemapStruct>
         _tilemaps[0] = _tilemap;
         return _tilemaps;
     }
+
 }

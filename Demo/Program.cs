@@ -2,7 +2,9 @@
 
 #region
 
+using ConcreteEngine.Core;
 using ConcreteEngine.Core.Configuration;
+using ConcreteEngine.Core.Platform;
 using ConcreteEngine.Core.Utils;
 using ConcreteEngine.Graphics.Definitions;
 using Demo;
@@ -11,17 +13,15 @@ using Silk.NET.Windowing;
 #endregion
 
 var builder = new GameEngineBuilder()
-    .WithGraphicsBackend(GraphicsBackend.OpenGL)
-    .WithWindowOptions(() =>
-    {
-        var options = WindowOptions.Default;
-        options.Title = "Demo Game Engine";
-        return options;
-    })
     .ConfigureAssetManager(new AssetManagerConfiguration())
     .RegisterScene<DemoScene>();
 
-using (var gameEngine = builder.Build())
-{
-    gameEngine.Run();
-}
+
+var options = WindowOptions.Default with { Title = "Demo Game Engine" };
+
+var host = new EngineWindowHost(
+    options: options,
+    backend: GraphicsBackend.OpenGL
+);
+
+host.Run(builder);

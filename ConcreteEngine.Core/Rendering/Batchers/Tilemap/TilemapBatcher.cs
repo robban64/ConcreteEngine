@@ -4,7 +4,7 @@ using ConcreteEngine.Graphics;
 
 #endregion
 
-namespace ConcreteEngine.Core.Rendering.Tilemap;
+namespace ConcreteEngine.Core.Rendering.Batchers.Tilemap;
 
 public class TilemapBatcher : RenderBatcher<TilemapBatchResult>
 {

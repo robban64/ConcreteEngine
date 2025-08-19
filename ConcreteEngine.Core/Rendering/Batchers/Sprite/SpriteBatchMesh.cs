@@ -9,7 +9,7 @@ using static ConcreteEngine.Core.Rendering.RenderConsts;
 
 #endregion
 
-namespace ConcreteEngine.Core.Rendering.Sprite;
+namespace ConcreteEngine.Core.Rendering.Batchers.Sprite;
 
 public readonly struct SpriteBatchBuildResult(MeshId meshId, uint drawCount)
 {

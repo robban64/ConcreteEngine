@@ -5,7 +5,7 @@ using ConcreteEngine.Core.Utils;
 
 #endregion
 
-namespace ConcreteEngine.Core.Rendering.Sprite;
+namespace ConcreteEngine.Core.Rendering.Batchers.Sprite;
 
 public readonly record struct SpriteDrawData(
     Vector2 Position,

@@ -1,7 +1,7 @@
 #region
 
-using ConcreteEngine.Core.Rendering.Sprite;
-using ConcreteEngine.Core.Rendering.Tilemap;
+using ConcreteEngine.Core.Rendering.Batchers.Sprite;
+using ConcreteEngine.Core.Rendering.Batchers.Tilemap;
 using ConcreteEngine.Graphics;
 
 #endregion
@@ -12,23 +12,32 @@ public interface IDrawCommandEmitter
 {
     int Order { get;  }
     Type EntityType { get; }
-    void Initialize();
+    void Initialize(int order);
     void Emit(DrawEmitterContext context, DrawCommandSubmitter submitter);
+
+    void RegisterFeature(int order, IDrawableFeature feature);
 }
 
 public abstract class DrawCommandEmitter<TEntity> : IDrawCommandEmitter
     where TEntity : struct
 {
-    public int Order { get; internal set; }
+    public int Order { get; private set; }
     public Type EntityType => typeof(TEntity);
 
     private readonly SortedList<int, IDrawableFeature<TEntity>> _features = new(8);
 
-    internal void RegisterFeature<TFeature>(int order, TFeature feature)
-        where TFeature : IDrawableFeature<TEntity>
-
+    public void Initialize(int order)
     {
-        _features.Add(order, feature);
+        Order = order;
+ 
+    }
+
+    public void Emit(DrawEmitterContext ctx, DrawCommandSubmitter submitter)
+    {
+        foreach (var (order, feature) in _features)
+        {
+            EmitBatch(feature.GetDrawables(), in ctx, submitter, order);
+        }
     }
     
     protected abstract void EmitBatch(
@@ -36,15 +45,21 @@ public abstract class DrawCommandEmitter<TEntity> : IDrawCommandEmitter
         in DrawEmitterContext ctx,
         DrawCommandSubmitter submitter,
         int order);
-
-    public void Emit(DrawEmitterContext ctx, DrawCommandSubmitter submitter)
+    
+    
+    public void RegisterFeature(int order,  IDrawableFeature feature)
     {
-        foreach (var (order, feature) in _features)
-            EmitBatch(feature.GetDrawables(), in ctx, submitter, order);
+        if (feature is not IDrawableFeature<TEntity> featureEntity)
+            throw new ArgumentException($"Feature type {feature.GetType()} is not supported");
+        
+        _features.Add(order, featureEntity);
     }
     
-    public void Initialize()
+    internal void RegisterFeature<TFeature>(int order,  IDrawableFeature<TEntity> feature)
+        where TFeature : IDrawableFeature<TEntity>
+
     {
+        _features.Add(order, feature);
     }
 }
 

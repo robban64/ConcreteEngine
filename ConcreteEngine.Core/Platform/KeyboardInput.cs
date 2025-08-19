@@ -4,9 +4,9 @@ using Silk.NET.Input;
 
 #endregion
 
-namespace ConcreteEngine.Core.Input;
+namespace ConcreteEngine.Core.Platform;
 
-internal sealed class KeyboardInput
+internal sealed class KeyboardInput : IDisposable
 {
     private readonly IKeyboard _keyboard;
     private readonly HashSet<Key> _keysDown = [];
@@ -44,4 +44,10 @@ internal sealed class KeyboardInput
     public bool IsKeyDown(Key key) => _keysDown.Contains(key);
     public bool IsKeyPressed(Key key) => _keysPressed.Contains(key);
     public bool IsKeyReleased(Key key) => _keysReleased.Contains(key);
+    
+    public void Dispose()
+    {
+        _keyboard.KeyDown -= OnKeyDown;
+        _keyboard.KeyUp -= OnKeyUp;
+    }
 }

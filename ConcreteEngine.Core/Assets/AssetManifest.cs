@@ -17,7 +17,7 @@ internal interface IAssetManifestRecord
     string Name { get; }
 }
 
-internal sealed record AssetShaderRecord(string Name, string VertShaderPath, string FragShaderPath, string[] Samplers)
+internal sealed record AssetShaderRecord(string Name, string VertShaderPath, string FragShaderPath, string[]? Samplers)
     : IAssetManifestRecord;
 
 internal sealed record AssetTextureRecord(

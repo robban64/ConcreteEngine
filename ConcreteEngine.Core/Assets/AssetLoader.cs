@@ -37,7 +37,7 @@ internal sealed class AssetLoader
             VertShaderFilename = record.VertShaderPath,
             FragShaderFilename = record.FragShaderPath,
             ResourceId = resourceId,
-            Samplers = record.Samplers.Length
+            Samplers = record.Samplers?.Length ?? 0
         };
     }
 

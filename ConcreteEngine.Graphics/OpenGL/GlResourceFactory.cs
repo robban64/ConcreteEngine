@@ -159,30 +159,6 @@ internal class GlResourceFactory(GlGraphicsContext gfx)
     private GlRenderBufferHandle CreateRenderBufferForFbo(RenderBufferKind kind, Vector2D<int> size, bool multisample,
         uint samples, out RenderBufferMeta meta)
     {
-        /*
- *         if (desc.Msaa)
-        {
-            // Renderbuffer texture
-            rboTexHandle = _gl.GenRenderbuffer();
-            _gl.BindRenderbuffer(RenderbufferTarget.Renderbuffer, rboTexHandle);
-            _gl.RenderbufferStorageMultisample(RenderbufferTarget.Renderbuffer, desc.Samples, InternalFormat.Rgba8,width, height);
-            _gl.FramebufferRenderbuffer(FramebufferTarget.Framebuffer, FramebufferAttachment.ColorAttachment0,
-                RenderbufferTarget.Renderbuffer, rboTexHandle);
-
-            // Depth-stencil renderbuffer (multisampled)
-            if (desc.DepthStencilBuffer)
-            {
-                depthStencilRboHandle = _gl.GenRenderbuffer();
-                _gl.BindRenderbuffer(RenderbufferTarget.Renderbuffer, depthStencilRboHandle);
-                _gl.RenderbufferStorageMultisample(RenderbufferTarget.Renderbuffer, desc.Samples, InternalFormat.Depth24Stencil8, width, height);
-                _gl.FramebufferRenderbuffer(FramebufferTarget.Framebuffer, FramebufferAttachment.DepthStencilAttachment,
-                    RenderbufferTarget.Renderbuffer, depthStencilRboHandle);
-            }
-
-            _gl.BindRenderbuffer(RenderbufferTarget.Renderbuffer, 0);
-        }
- */
-
         var (width, height) = ((uint)size.X, (uint)size.Y);
         var (format, attachment) = kind switch
         {
@@ -247,7 +223,7 @@ internal class GlResourceFactory(GlGraphicsContext gfx)
         else
         {
             colTexHandle = CreateTexture2D(new TextureDesc([], size.X, size.Y, EnginePixelFormat.Rgba,
-                TexturePreset.LinearClamp, NullPtrData: true), out colTexMeta);
+                desc.TexturePreset, NullPtrData: true), out colTexMeta);
 
             _gl.BindTexture(TextureTarget.Texture2D, colTexHandle.Handle);
             _gl.FramebufferTexture2D(FramebufferTarget.Framebuffer, FramebufferAttachment.ColorAttachment0,
@@ -277,7 +253,7 @@ internal class GlResourceFactory(GlGraphicsContext gfx)
         var rboDepthId = rboDepthHandle.Handle > 0 ? rboDepthHandler(rboDepthHandle, rboDepthMeta) : default;
 
         meta = new FrameBufferMeta(
-            colTexId, rboTexId, rboDepthId,
+            colTexId, rboTexId, rboDepthId, desc.TexturePreset,
             desc.SizeRatio, size,
             desc.DepthStencilBuffer, desc.Msaa, (byte)desc.Samples
         );
@@ -289,7 +265,7 @@ internal class GlResourceFactory(GlGraphicsContext gfx)
     public GlShaderHandle CreateShader(
         string vertexSource,
         string fragmentSource,
-        string[] samplers,
+        string[]? samplers,
         out UniformTable uniformTable,
         out ShaderMeta meta
     )
@@ -306,7 +282,8 @@ internal class GlResourceFactory(GlGraphicsContext gfx)
         _gl.DeleteShader(vertexShader);
         _gl.DeleteShader(fragmentShader);
 
-        meta = new ShaderMeta((uint)samplers.Length);
+        var samplerLength = samplers != null ? (uint)samplers.Length : 0;
+        meta = new ShaderMeta(samplerLength);
         return new GlShaderHandle(handle);
     }
 

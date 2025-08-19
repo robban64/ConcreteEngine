@@ -7,7 +7,7 @@ using Silk.NET.Input;
 
 namespace ConcreteEngine.Core.Platform;
 
-internal class MouseInput: IDisposable
+internal class MouseInput : IDisposable
 {
     private const int BufferSize = 16;
     private readonly IMouse _mouse;
@@ -15,10 +15,11 @@ internal class MouseInput: IDisposable
     private readonly byte[] _buttonsPressed = new byte[BufferSize];
     private readonly byte[] _buttonsReleased = new byte[BufferSize];
 
-    public Vector2 MousePosition { get; private set; }
-    public Vector2 MouseDelta { get; private set; }
+    public Vector2 Position { get; private set; }
+    public Vector2 PositionDelta { get; private set; }
+    public Vector2 Scroll { get; private set; }
 
-    private Vector2 _lastMousePosition;
+    private Vector2 _lastPos;
 
     public MouseInput(IMouse mouse)
     {
@@ -27,8 +28,8 @@ internal class MouseInput: IDisposable
         _mouse.MouseUp += OnMouseUp;
         _mouse.MouseMove += OnMouseMove;
 
-        MousePosition = _mouse.Position;
-        _lastMousePosition = MousePosition;
+        Position = _mouse.Position;
+        _lastPos = Position;
     }
 
     public void Update()
@@ -39,14 +40,29 @@ internal class MouseInput: IDisposable
             _buttonsReleased[i] = 0;
         }
 
-        MouseDelta = MousePosition - _lastMousePosition;
-        _lastMousePosition = MousePosition;
+        PositionDelta = Position - _lastPos;
+        _lastPos = Position;
+
+        var scrollWheel = _mouse.ScrollWheels[0];
+        Scroll = new Vector2(scrollWheel.X, scrollWheel.Y);
+        
+    }
+
+
+    private void OnScroll(IMouse mouse, ScrollWheel scroll)
+    {
+        Scroll = new Vector2(scroll.X, scroll.Y);
+    }
+
+    private void OnMouseMove(IMouse mouse, Vector2 position)
+    {
+        Position = position;
     }
 
     private void OnMouseDown(IMouse mouse, MouseButton button)
     {
-        if((int)button < 0) return;
-        
+        if ((int)button < 0) return;
+
         if (_buttonsDown[(int)button] == 0)
         {
             _buttonsPressed[(int)button] = 1;
@@ -57,21 +73,17 @@ internal class MouseInput: IDisposable
 
     private void OnMouseUp(IMouse mouse, MouseButton button)
     {
-        if((int)button < 0) return;
+        if ((int)button < 0) return;
 
         _buttonsDown[(int)button] = 0;
         _buttonsReleased[(int)button] = 1;
     }
-
-    private void OnMouseMove(IMouse mouse, Vector2 position)
-    {
-        MousePosition = position;
-    }
+    
 
     public bool IsMouseDown(MouseButton button) => _buttonsDown[(int)button] == 1;
     public bool IsMousePressed(MouseButton button) => _buttonsPressed[(int)button] == 1;
     public bool IsMouseReleased(MouseButton button) => _buttonsReleased[(int)button] == 1;
-    
+
     public void Dispose()
     {
         _mouse.MouseDown -= OnMouseDown;

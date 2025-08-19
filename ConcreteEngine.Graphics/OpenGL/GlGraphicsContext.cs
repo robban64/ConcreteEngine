@@ -91,7 +91,7 @@ public sealed class GlGraphicsContext : IGraphicsContext
 
     public void BeginFrame(in GraphicsFrameContext frameCtx)
     {
-        _blendMode = BlendMode.Alpha;
+        _blendMode = BlendMode.None;
         _depthTest = true;
 
         _deltaTime = frameCtx.DeltaTime;
@@ -101,7 +101,7 @@ public sealed class GlGraphicsContext : IGraphicsContext
         _drawCallCount = 0;
         _drawTriangleCount = 0;
 
-        SetBlendMode(BlendMode.Alpha);
+        SetBlendMode(BlendMode.None);
         SetDepthTest(true);
         Clear(Color.CornflowerBlue, ClearBufferFlag.ColorAndDepth);
     }
@@ -240,17 +240,17 @@ public sealed class GlGraphicsContext : IGraphicsContext
         {
             case BlendMode.Alpha:
                 _gl.Enable(EnableCap.Blend);
-                _gl.BlendEquation(GLEnum.FuncAdd);
+                _gl.BlendEquation(BlendEquationModeEXT.FuncAdd);
                 _gl.BlendFunc(BlendingFactor.SrcAlpha, BlendingFactor.OneMinusSrcAlpha);
                 break;
             case BlendMode.PremultipliedAlpha:
                 _gl.Enable(EnableCap.Blend);
-                _gl.BlendEquation(GLEnum.FuncAdd);
+                _gl.BlendEquation(BlendEquationModeEXT.FuncAdd);
                 _gl.BlendFunc(BlendingFactor.One, BlendingFactor.OneMinusSrcAlpha);
                 break;
             case BlendMode.Additive:
                 _gl.Enable(EnableCap.Blend);
-                _gl.BlendEquation(GLEnum.FuncAdd);
+                _gl.BlendEquation(BlendEquationModeEXT.FuncAdd);
                 _gl.BlendFunc(BlendingFactor.One, BlendingFactor.One);
                 break;
             case BlendMode.None:

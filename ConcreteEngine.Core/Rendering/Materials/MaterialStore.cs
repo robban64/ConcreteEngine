@@ -19,8 +19,7 @@ public class MaterialStore
         _materials[_materialIdx] = new Material(
             id: MaterialId.Of(_materialIdx),
             texture: description.Texture,
-            shader: description.Shader,
-            blend: description.Blend
+            shader: description.Shader
         );
 
         return _materialIdx++;

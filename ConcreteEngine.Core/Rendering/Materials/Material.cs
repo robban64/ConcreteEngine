@@ -10,8 +10,7 @@ namespace ConcreteEngine.Core.Rendering.Materials;
 
 public readonly record struct MaterialDescription(
     Shader Shader,
-    Texture2D Texture,
-    BlendMode Blend = BlendMode.Alpha
+    Texture2D Texture
 );
 
 public readonly record struct MaterialId(int Id)
@@ -49,7 +48,6 @@ public sealed class Material
 
     public void Bind(IGraphicsContext gfx)
     {
-        gfx.SetBlendMode(_blend);
         gfx.UseShader(_shader.ResourceId);
         //gfx.SetUniform(ShaderUniform.SampleTexture, 0);
         for (int i = 0; i < _textures.Length; i++)

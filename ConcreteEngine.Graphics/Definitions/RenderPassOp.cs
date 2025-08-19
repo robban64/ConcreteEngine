@@ -4,5 +4,6 @@ public enum RenderPassOp : byte
 {
     DrawScene,
     Blit,
-    FullscreenQuad
+    FullscreenQuad,
+    DrawLight
 }

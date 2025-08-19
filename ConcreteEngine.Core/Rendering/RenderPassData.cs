@@ -9,16 +9,18 @@ using ConcreteEngine.Graphics.Resources;
 
 namespace ConcreteEngine.Core.Rendering;
 
-public readonly record struct RenderPassData(
-    RenderPassOp Op,
-    FrameBufferId TargetFboId,
-    TextureId? SourceTexId = null,
-    FrameBufferId? BlitFboId = null, // only for blit
-    BlendMode Blend = BlendMode.None,
-    bool DepthTest = false,
-    Vector2 SizeRatio = default,
-    bool DoClear = false,
-    Color ClearColor = default,
-    ClearBufferFlag ClearMask = ClearBufferFlag.Color,
-    ShaderId ShaderId = default
-);
+public sealed class RenderPassData
+{
+    public RenderPassOp Op { get; init; }
+    public FrameBufferId TargetFboId { get; init; }
+    public List<TextureId>? SourceTexId { get; init; }
+    public FrameBufferId? BlitFboId { get; set; } = null;
+    public BlendMode Blend { get; set; } = BlendMode.None;
+    public bool DepthTest { get; init; } = false;
+    public Vector2 SizeRatio { get; set; } = Vector2.One;
+    public bool DoClear { get; init; } = false;
+    public Color ClearColor { get; set; } = Color.Black;
+    public ClearBufferFlag ClearMask { get; init; } = ClearBufferFlag.Color;
+    public ShaderId ShaderId { get; init; } = default;
+
+}

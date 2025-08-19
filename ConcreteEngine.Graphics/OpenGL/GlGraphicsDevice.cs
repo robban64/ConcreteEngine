@@ -192,8 +192,8 @@ public sealed class GlGraphicsDevice : IGraphicsDevice<GlGraphicsContext>
         }
 
         FrameBufferMeta.GetResizeCopy(in prevMeta, _viewportSize, out var fboMeta);
-        var desc = new FrameBufferDesc(prevMeta.SizeRatio, size, prevMeta.DepthStencilBuffer, prevMeta.Msaa,
-            prevMeta.Samples);
+        var desc = new FrameBufferDesc(prevMeta.SizeRatio, size, prevMeta.DepthStencilBuffer, prevMeta.TexturePreset,
+            prevMeta.Msaa, prevMeta.Samples);
 
         var handle = _resourceFactory.CreateFrameBuffer(
             (handle, m) => _textureStore.Replace(colTexId, in colTexMeta, handle, out _),
@@ -222,15 +222,18 @@ public sealed class GlGraphicsDevice : IGraphicsDevice<GlGraphicsContext>
         return _fboStore.Add(in meta, in handle);
     }
 
-    public ShaderId CreateShader(string vertexSource, string fragmentSource, string[] samplers)
+    public ShaderId CreateShader(string vertexSource, string fragmentSource, string[]? samplers)
     {
         var handle = _resourceFactory.CreateShader(vertexSource, fragmentSource, samplers,
             out var uniformTable, out var meta);
 
-        _gl.UseProgram(handle.Handle);
-        for (int i = 0; i < samplers.Length; i++)
-            _gl.Uniform1(uniformTable.GetUniformLocation(samplers[i]), i);
-        _gl.UseProgram(0);
+        if (samplers != null)
+        {
+            _gl.UseProgram(handle.Handle);
+            for (int i = 0; i < samplers.Length; i++)
+                _gl.Uniform1(uniformTable.GetUniformLocation(samplers[i]), i);
+            _gl.UseProgram(0);
+        }
 
         var shaderId = _shaderStore.Add(in meta, in handle);
 

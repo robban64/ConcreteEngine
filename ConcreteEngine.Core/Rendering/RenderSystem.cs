@@ -149,14 +149,14 @@ public sealed class RenderSystem : IGameEngineSystem
             for (int p = 0; p < passList.Count; p++)
             {
                 var pass = passList[p];
-                var (prevBlend, prevDepthTest) = (_gfx.BlendMode, _gfx.DepthTest);
+                //var (prevBlend, prevDepthTest) = (_gfx.BlendMode, _gfx.DepthTest);
                 _gfx.SetBlendMode(pass.Blend);
                 _gfx.SetDepthTest(pass.DepthTest);
 
                 ExecutePass(renderTarget, in pass);
 
-                _gfx.SetBlendMode(prevBlend);
-                _gfx.SetDepthTest(prevDepthTest);
+                //_gfx.SetBlendMode(prevBlend);
+                //_gfx.SetDepthTest(prevDepthTest);
             }
         }
     }
@@ -185,8 +185,10 @@ public sealed class RenderSystem : IGameEngineSystem
         }
         else if (pass.Op == RenderPassOp.FullscreenQuad)
         {
-            var colTex = pass.SourceTexId!.Value;
-            DrawFboScreenQuad(colTex, pass.ShaderId);
+            DrawRenderPassQuad(pass);
+        }else if (pass.Op == RenderPassOp.DrawLight)
+        {
+            DrawLightPass(pass);
         }
 
         if (!isScreenPass)
@@ -223,12 +225,62 @@ public sealed class RenderSystem : IGameEngineSystem
         _gfx.DrawIndexed(data.DrawCount);
     }
 
-    private void DrawFboScreenQuad(TextureId colTexId, ShaderId shaderId)
+    private void DrawRenderPassQuad(RenderPassData pass)
     {
-        _gfx.UseShader(shaderId);
-        _gfx.BindTexture(colTexId, 0);
+        ArgumentNullException.ThrowIfNull(pass);
+        ArgumentNullException.ThrowIfNull(pass.SourceTexId);
+        ArgumentOutOfRangeException.ThrowIfZero(pass.SourceTexId.Count);
+        ArgumentOutOfRangeException.ThrowIfGreaterThan(pass.SourceTexId.Count, 4, nameof(pass.SourceTexId));
+
+        var viewport = _camera.ViewportSize;
+        _gfx.UseShader(pass.ShaderId);
+        _gfx.SetUniform(ShaderUniform.TexelSize, new Vector2(viewport.X, viewport.Y) * 0.3f);
+
+        for (int i = 0; i < pass.SourceTexId.Count; i++)
+        {
+            _gfx.BindTexture(pass.SourceTexId[i],(uint)i);
+
+        }
         _gfx.BindMesh(_graphics.QuadMeshId);
         _gfx.Draw();
+    }
+    
+    
+    public struct Light
+    {
+        public Vector2 Position;   // in world units
+        public float   Radius;     // in world units
+        public Vector3 Color;      // 0..1
+        public float   Intensity;  // 0..N (e.g. 1.0)
+    }
+
+    private List<Light> _lights = [
+        new() { Position = new(500, 200), Radius = 80.5f, Color = new(1.0f, 0.75f, 0.45f), Intensity = 1.5f }, // campfire
+        new() { Position = new(200,  500), Radius = 80.0f, Color = new(0.7f, 0.8f, 1.0f),   Intensity = 1.8f }, // moon-ish fill
+    ];
+
+    private float tick = 0.01f;
+    private void DrawLightPass(RenderPassData pass)
+    {
+        _gfx.UseShader(pass.ShaderId);
+        _gfx.BindMesh(_graphics.QuadMeshId);
+
+        _gfx.SetUniform(ShaderUniform.ProjectionViewMatrix, _camera.ProjectionViewMatrix);
+
+        tick += 0.01f;
+        foreach (var light in _lights)
+        {
+            _gfx.SetUniform(ShaderUniform.LightPos, light.Position);
+            _gfx.SetUniform(ShaderUniform.Radius, light.Radius);
+            _gfx.SetUniform(ShaderUniform.Color, light.Color);
+            _gfx.SetUniform(ShaderUniform.Intensity, light.Intensity + MathF.Sin(tick));
+            _gfx.SetUniform(ShaderUniform.Softness, 2.5f);
+            _gfx.SetUniform(ShaderUniform.Shape, 0);
+
+            _gfx.Draw();
+        }
+        
+        
     }
 
     public void Dispose()

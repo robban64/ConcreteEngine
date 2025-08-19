@@ -16,6 +16,8 @@ public interface IEngineInputSource
 
     public Vector2 MousePosition { get; }
     public Vector2 MouseDelta { get; }
+    public Vector2 Scroll { get;  }
+
 
     void Update();
 }
@@ -33,6 +35,7 @@ public sealed class EngineInputSource : IEngineInputSource
         _mouseInput = new MouseInput(mouse);
     }
 
+
     public void Update()
     {
         _keyboardInput.Update();
@@ -49,8 +52,9 @@ public sealed class EngineInputSource : IEngineInputSource
     public bool IsMousePressed(MouseButton button) => _mouseInput.IsMousePressed(button);
     public bool IsMouseReleased(MouseButton button) => _mouseInput.IsMouseReleased(button);
 
-    public Vector2 MousePosition => _mouseInput.MousePosition;
-    public Vector2 MouseDelta => _mouseInput.MouseDelta;
+    public Vector2 MousePosition => _mouseInput.Position;
+    public Vector2 MouseDelta => _mouseInput.PositionDelta;
+    public Vector2 Scroll => _mouseInput.Scroll;
 
     public void Dispose()
     {

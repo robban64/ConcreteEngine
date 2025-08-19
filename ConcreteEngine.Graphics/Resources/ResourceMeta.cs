@@ -82,6 +82,7 @@ public readonly struct FrameBufferMeta(
     TextureId colTexId,
     RenderBufferId rboTexId,
     RenderBufferId rboDepthId,
+    TexturePreset texturePreset,
     Vector2 sizeRatio,
     Vector2D<int> size,
     bool depthStencilBuffer,
@@ -92,6 +93,7 @@ public readonly struct FrameBufferMeta(
     public readonly TextureId ColTexId = colTexId;
     public readonly RenderBufferId RboTexId = rboTexId;
     public readonly RenderBufferId RboDepthId = rboDepthId;
+    public readonly TexturePreset TexturePreset = texturePreset;
     public readonly Vector2 SizeRatio = sizeRatio;
     public readonly Vector2D<int> Size = size;
     public readonly bool DepthStencilBuffer = depthStencilBuffer;
@@ -100,7 +102,8 @@ public readonly struct FrameBufferMeta(
 
     public static void GetResizeCopy(in FrameBufferMeta m, Vector2D<int> size, out FrameBufferMeta meta)
     {
-        meta = new FrameBufferMeta(m.ColTexId, m.RboTexId, m.RboDepthId, m.SizeRatio, size, m.DepthStencilBuffer,
+        meta = new FrameBufferMeta(m.ColTexId, m.RboTexId, m.RboDepthId, m.TexturePreset, m.SizeRatio, size,
+            m.DepthStencilBuffer,
             m.Msaa, m.Samples);
     }
 }

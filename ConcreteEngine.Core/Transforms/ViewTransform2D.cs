@@ -107,7 +107,6 @@ public sealed class ViewTransform2D
         var rotate = _rotation != 0f ? Matrix4x4.CreateRotationZ(-_rotation) : Matrix4x4.Identity;
         _viewMat = rotate * translate;
 
-        // zoom
         float w = MathF.Max(_viewportSize.X, 1);
         float h = MathF.Max(_viewportSize.Y, 1);
         float invZ = 1f / _zoom;

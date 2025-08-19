@@ -70,6 +70,7 @@ public sealed class CameraSystem : IGameEngineSystem
         if (mouse.Y <= EdgeMarginPixels) deltaPos.Y -= 1f;
         else if (mouse.Y >= h) deltaPos.Y += 1f;
 
+
         // Normalize so diagonals aren’t faster.
         var len = MathF.Sqrt(deltaPos.X * deltaPos.X + deltaPos.Y * deltaPos.Y);
         if (len > 0f)

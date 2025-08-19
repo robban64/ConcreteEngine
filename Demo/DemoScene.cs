@@ -50,31 +50,6 @@ public class DemoScene : GameScene
         var halfSize = Vector2.One * 0.5f;
 
 
-        /*
-        renderer.RegisterRenderPass(RenderTargetId.Scene, 0, new RenderPassData(
-            Op: RenderPassOp.FullscreenQuad,
-            WriteFboId: screenFboId,
-            ReadTexId: screenTexId,
-            ShaderId: screenShader.ResourceId,
-            SizeRatio: Vector2.One,
-            ClearColor: Color.CornflowerBlue,
-            ClearMask: ClearBufferFlag.ColorAndDepth
-        ));
-        */
-
-
-        /*
-        renderer.RegisterRenderPass(RenderTargetId.Scene, 0, new RenderPassData(
-            Op: RenderPassOp.DrawScene,
-            TargetFboId: sceneFboId,
-            DepthTest: true,  Blend: BlendMode.Alpha, DoClear:true, ClearColor:Color.CornflowerBlue));
-        renderer.RegisterRenderPass(RenderTargetId.Scene, 1, new RenderPassData(
-            Op: RenderPassOp.Blit,
-            TargetFboId: default,
-            BlitFboId: sceneFboId));
-*/
-
-
         // Create a single-sample texture FBO for post-FX
         var sceneFboId =
             graphics.CreateFramebuffer(new FrameBufferDesc(SizeRatio: Vector2.One, DepthStencilBuffer: true),
@@ -110,39 +85,6 @@ public class DemoScene : GameScene
             DepthTest: false));
 
 
-        /*
-        renderer.RegisterRenderPass(RenderTargetId.Scene, 0, new RenderPassData(
-            Op: RenderPassOp.DrawScene,
-            TargetFboId: sceneFboId,
-            SizeRatio: Vector2.One,
-            DoClear: true,
-            ClearColor: Color.CornflowerBlue,
-            ClearMask: ClearBufferFlag.ColorAndDepth,
-            Blend: BlendMode.Alpha,
-            DepthTest: true
-        ));
-
-        renderer.RegisterRenderPass(RenderTargetId.Scene, 1, new RenderPassData(
-            Op: RenderPassOp.FullscreenQuad,
-            TargetFboId: 0,
-            SourceTexId: sceneTexId,
-            ShaderId: screenShader.ResourceId,
-            SizeRatio: Vector2.One,
-            Blend: BlendMode.None,
-            DepthTest: false
-        ));
-
-        renderer.RegisterRenderPass(RenderTargetId.Scene, 2, new RenderPassData(
-            Op: RenderPassOp.FullscreenQuad,
-            TargetFboId: 0,
-            SourceTexId: sceneTexId,
-            ShaderId: brightPassShader.ResourceId,
-            SizeRatio: Vector2.One,
-            Blend: BlendMode.Additive,
-            DepthTest: false
-        ));
-        */
-
         renderer.AddMaterial(new MaterialDescription(
             Shader: spriteShader,
             Texture: spriteTexture,
@@ -159,8 +101,14 @@ public class DemoScene : GameScene
         renderer.RegisterCommand(0, DrawCommandId.Tilemap, RenderTargetId.Scene, 4);
         renderer.RegisterCommand(1, DrawCommandId.Sprite, RenderTargetId.Scene, 32);
 
-        renderer.RegisterEmitter(0, new TilemapDrawEmitter { Tilemap = tilemapFeature });
-        renderer.RegisterEmitter(1, new SpriteDrawEmitter { SpriteFeature = spriteModule });
+        renderer.RegisterEmitter<TilemapDrawEmitter, TilemapStruct>(0, new TilemapDrawEmitter());
+        renderer.RegisterEmitter<SpriteDrawEmitter, SpriteDrawEntity>(1, new SpriteDrawEmitter());
+
+        renderer.RegisterDrawFeature<SpriteDrawEmitter, SpriteFeature, SpriteDrawEntity>(0,
+            Context.GetFeature<SpriteFeature>());
+
+        renderer.RegisterDrawFeature<TilemapDrawEmitter, TilemapFeature, TilemapStruct>(0,
+            Context.GetFeature<TilemapFeature>());
     }
 
     public override void TickUpdate(int tick)

@@ -1,12 +1,28 @@
+using ConcreteEngine.Common.Collections;
+
 namespace ConcreteEngine.Core.Rendering;
 
-internal sealed class DrawCommandCollector()
+internal sealed class DrawEmitterCollector
 {
     private readonly SortedList<int, IDrawCommandEmitter> _emitters = new(8);
 
     public int Count => _emitters.Count;
 
-    public void RegisterEmitter<T>(int order, T emitter) where T : class, IDrawCommandEmitter
+    public DrawCommandEmitter<TEntity> GetEmitter<TEmitter, TEntity>()
+        where TEmitter : DrawCommandEmitter<TEntity>
+        where TEntity : struct
+    {
+        foreach (var emitter in _emitters.Values)
+        {
+            if (emitter is TEmitter tEmitter) return tEmitter;
+        }
+
+        throw new InvalidOperationException($"Emitter {typeof(TEmitter).Name} not registered");
+    }
+
+    public void RegisterEmitter<TEmitter, TEntity>(int order, TEmitter emitter)
+        where TEmitter : DrawCommandEmitter<TEntity>
+        where TEntity : struct
     {
         ArgumentNullException.ThrowIfNull(emitter, nameof(emitter));
         ArgumentOutOfRangeException.ThrowIfNegative(order, nameof(order));

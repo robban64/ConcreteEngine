@@ -11,37 +11,25 @@ using ConcreteEngine.Graphics.Definitions;
 
 namespace ConcreteEngine.Core.Game.Sprite;
 
-public sealed class SpriteDrawEmitter : IDrawCommandEmitter
+public sealed class SpriteDrawEmitter : DrawCommandEmitter<SpriteDrawEntity>
 {
     private static readonly Matrix4x4 DefaultTransform =
         Transform2D.CreateTransformMatrix(Vector2.Zero, Vector2.One, 0);
 
-    public int Order { get; set; }
-
-    public SpriteFeature SpriteFeature { get; set; } = null!;
-
-    public void Initialize(IFeatureRegistry registry)
+    protected override void EmitBatch(ReadOnlySpan<SpriteDrawEntity> entities, in DrawEmitterContext ctx,
+        DrawCommandSubmitter submitter, int order)
     {
-        SpriteFeature = registry.Get<SpriteFeature>();
-    }
-
-    public void Emit(DrawEmitterContext context, DrawCommandSubmitter submitter)
-    {
-        var atlas = SpriteFeature.SpriteAtlas;
-        var spriteBatch = context.SpriteBatch;
+        var alpha = ctx.Alpha;
+        var spriteBatch = ctx.SpriteBatch;
         spriteBatch.BeginBatch(0);
 
-        var entities = SpriteFeature.GetDrawables();
-        
-        
         for (int i = 0; i < entities.Length; i++)
         {
             ref readonly var entity = ref entities[i];
             var pos = entity.Position;
             if (entity.PreviousPosition != default)
-                pos = Vector2.Lerp(entity.PreviousPosition, entity.Position, context.Alpha);
-            var uv = atlas.GetUvRect(entity.AtlasLocation.X, entity.AtlasLocation.Y);
-            var item = new SpriteDrawData(pos, entity.Scale, uv);
+                pos = Vector2.Lerp(entity.PreviousPosition, entity.Position, alpha);
+            var item = new SpriteDrawData(pos, entity.Scale, entity.Uv);
             spriteBatch.SubmitSprite(item);
         }
 
@@ -56,6 +44,5 @@ public sealed class SpriteDrawEmitter : IDrawCommandEmitter
             transform: in DefaultTransform
         );
         submitter.SubmitDraw(in cmd, in meta);
-
     }
 }

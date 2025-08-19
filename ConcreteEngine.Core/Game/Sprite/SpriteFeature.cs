@@ -12,20 +12,20 @@ using Silk.NET.Maths;
 
 namespace ConcreteEngine.Core.Game.Sprite;
 
-public struct SpriteStruct
+public struct SpriteDrawEntity
 {
     public Vector2 Position = Vector2.Zero;
     public Vector2 PreviousPosition = Vector2.Zero;
     public Vector2 Scale = Vector2.One;
-    public float Rotation = 0;
     public Vector2D<int> AtlasLocation = Vector2D<int>.Zero;
-
-    public SpriteStruct()
+    public Vector2D<int> Direction = Vector2D<int>.Zero;
+    public UvRect Uv = default;
+    public SpriteDrawEntity()
     {
     }
 }
 
-public class SpriteFeature : IGameFeature, IDrawableFeature<SpriteStruct>
+public class SpriteFeature : IGameFeature, IDrawableFeature<SpriteDrawEntity>
 {
     public int Order { get; set; }
     public bool IsUpdateable => true;
@@ -34,7 +34,7 @@ public class SpriteFeature : IGameFeature, IDrawableFeature<SpriteStruct>
     public Texture2D SpriteTexture { get; set; } = null!;
     public SpriteAtlas SpriteAtlas { get; set; } = null!;
 
-    private readonly List<SpriteStruct> _spriteEntities = new(16);
+    private readonly List<SpriteDrawEntity> _spriteEntities = new(900);
 
     public void Load(GameFeatureContext context)
     {
@@ -47,59 +47,91 @@ public class SpriteFeature : IGameFeature, IDrawableFeature<SpriteStruct>
 
         renderer.SpriteBatch.CreateSpriteBatch(0, 1024);
 
-        for (int x = 0; x < 20; x++)
+        for (int x = 0; x < 30; x++)
         {
-            for (int y = 0; y < 20; y++)
+            for (int y = 0; y < 30; y++)
             {
-                _spriteEntities.Add(new SpriteStruct
+                _spriteEntities.Add(new SpriteDrawEntity
                 {
                     Position = new Vector2(64 * x, 64 * y),
                     Scale = new Vector2(64, 64),
                     AtlasLocation = new Vector2D<int>(0, 3),
+                    Direction = new Vector2D<int>(-1, 0),
+                    Uv = SpriteAtlas.GetUvRect(0, 3)
                 });
             }
         }
     }
 
-    private float timer = 0;
-    private float timer2 = 0;
-    private int column = 0;
-    private int row = 3;
-
-    private int direction = 1;
+    int _animationCountdown = 3;
+    int _dirCountdown = 20;
+    private int _currentFrame = 0;
 
     public void UpdateTick(int tick)
     {
-        const float speed = 6;
+        const float speed = 2;
+
+        _animationCountdown--;
+        _dirCountdown--;
+        bool doAnimate = _animationCountdown == 0;
+        bool doRandomize = _dirCountdown == 0;
+        if (doAnimate)
+        {
+            if (++_currentFrame % 9 == 0) _currentFrame = 0;
+            _animationCountdown = 3;
+        }
+
 
         var spanEntities = CollectionsMarshal.AsSpan(_spriteEntities);
 
-        foreach (ref var entity in spanEntities)
+
+        for (int i = 0; i < spanEntities.Length; i++)
         {
-            entity.PreviousPosition  = entity.Position;
-            entity.Position.X += speed * direction;
+            ref var entity = ref spanEntities[i];
+            entity.PreviousPosition = entity.Position;
+            entity.Position.X += speed * entity.Direction.X;
+            entity.Position.Y += speed * entity.Direction.Y;
+            var d = (int)MathF.Ceiling((Math.Abs(entity.Direction.X) + Math.Abs(entity.Direction.Y)) / 2f);
+            entity.AtlasLocation.X = _currentFrame * d;
+            entity.Uv = SpriteAtlas.GetUvRect(entity.AtlasLocation.X, entity.AtlasLocation.Y);
         }
 
-        timer2 += 1;
-        timer += 1;
-        if (timer2 > 2)
+        if (doRandomize)
         {
-            foreach (ref var entity in spanEntities)
+            for (int i = 0; i < spanEntities.Length; i++)
             {
-                entity.AtlasLocation.X = (entity.AtlasLocation.X + 1) % SpriteAtlas.Columns;
+                ref var e = ref spanEntities[i];
+                e.Direction.X = 0;
+                e.Direction.Y = 0;
+
+                var r = Random.Shared.Next(0, 5);
+                if (r == 0 && e.Position.X < 50) r = 1;
+                else if (r == 1 && e.Position.X > 800) r = 0;
+                else if(r ==  2 && e.Position.Y > 800) r = 3;
+                else if(r ==  3 && e.Position.Y < 50) r = 2;
+
+                switch (r)
+                {
+                    case 0:
+                        e.Direction.X = -1;
+                        e.AtlasLocation.Y = 1;
+                        break;
+                    case 1:
+                        e.Direction.X = 1;
+                        e.AtlasLocation.Y = 3;
+                        break;
+                    case 2:
+                        e.Direction.Y = 1;
+                        e.AtlasLocation.Y = 2;
+                        break;
+                    case 3:
+                        e.Direction.Y = -1;
+                        e.AtlasLocation.Y = 0;
+                        break;
+                }
             }
-            timer2 = 0;
-        }
-        if (timer >= 100)
-        {
-            direction = direction == 1 ? -1 : 1;
-            timer -= 100;
-            column = (column + 1) % 9;
-            row += direction - 1;
-            foreach (ref var entity in spanEntities)
-            {
-                entity.AtlasLocation.Y = entity.AtlasLocation.Y == 3 ? 1 : 3;
-            }
+
+            _dirCountdown = 20;
         }
     }
 
@@ -107,7 +139,7 @@ public class SpriteFeature : IGameFeature, IDrawableFeature<SpriteStruct>
     {
     }
 
-    public ReadOnlySpan<SpriteStruct> GetDrawables()
+    public ReadOnlySpan<SpriteDrawEntity> GetDrawables()
     {
         return CollectionsMarshal.AsSpan(_spriteEntities);
     }

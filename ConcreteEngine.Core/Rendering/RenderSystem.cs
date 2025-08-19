@@ -27,7 +27,7 @@ public sealed class RenderSystem : IGameEngineSystem
     private readonly SortedList<int, DrawCommandId>[] _renderPasses;
     private readonly SortedList<int, RenderPassData>[] _renderPassDesc;
 
-    private readonly DrawCommandCollector _commandCollector;
+    private readonly DrawEmitterCollector _emitterCollector;
     private readonly DrawCommandSubmitter _commandSubmitter;
     private readonly DrawEmitterContext _emitterContext;
 
@@ -53,7 +53,7 @@ public sealed class RenderSystem : IGameEngineSystem
             _renderPassDesc[i] = new SortedList<int, RenderPassData>(4);
         }
 
-        _commandCollector = new DrawCommandCollector();
+        _emitterCollector = new DrawEmitterCollector();
         _commandSubmitter = new DrawCommandSubmitter();
 
         _spriteBatch = new SpriteBatcher(graphics);
@@ -90,8 +90,19 @@ public sealed class RenderSystem : IGameEngineSystem
         _renderPasses[(int)target].Add(order, commandId);
     }
 
-    public void RegisterEmitter<T>(int order, T emitter) where T : class, IDrawCommandEmitter
-        => _commandCollector.RegisterEmitter<T>(order, emitter);
+    public void RegisterEmitter<TEmitter, TEntity>(int order, TEmitter emitter)
+        where TEmitter : DrawCommandEmitter<TEntity>
+        where TEntity : struct
+        => _emitterCollector.RegisterEmitter<TEmitter, TEntity>(order, emitter);
+
+    public void RegisterDrawFeature<TEmitter, TFeature, TEntity>(int order, TFeature feature)
+        where TEmitter : DrawCommandEmitter<TEntity>
+        where TFeature : class, IDrawableFeature<TEntity>
+        where TEntity : struct
+    {
+        var emitter = _emitterCollector.GetEmitter<TEmitter, TEntity>();
+        emitter.RegisterFeature(order, feature);
+    }
 
     public void AddMaterial(MaterialDescription description)
         => _materialStore.AddMaterial(description);
@@ -109,7 +120,7 @@ public sealed class RenderSystem : IGameEngineSystem
     private void PrepareRenderer()
     {
         _commandSubmitter.ResetBufferPointer();
-        _commandCollector.Collect(_emitterContext, _commandSubmitter);
+        _emitterCollector.Collect(_emitterContext, _commandSubmitter);
     }
 
     private void Execute(float alpha)

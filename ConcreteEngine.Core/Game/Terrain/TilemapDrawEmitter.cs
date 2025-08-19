@@ -1,6 +1,7 @@
 #region
 
 using System.Numerics;
+using ConcreteEngine.Core.Game.Sprite;
 using ConcreteEngine.Core.Rendering;
 using ConcreteEngine.Core.Rendering.Materials;
 using ConcreteEngine.Core.Transforms;
@@ -10,22 +11,13 @@ using ConcreteEngine.Graphics.Definitions;
 
 namespace ConcreteEngine.Core.Game.Terrain;
 
-public sealed class TilemapDrawEmitter : IDrawCommandEmitter
+public sealed class TilemapDrawEmitter : DrawCommandEmitter<TilemapStruct>
 {
-    public int Order { get; set; }
-
-    public TilemapFeature Tilemap { get; set; } = null!;
-
-    public void Initialize(IFeatureRegistry registry)
-    {
-        Tilemap = registry.Get<TilemapFeature>();
-    }
-
-    public void Emit(DrawEmitterContext context, DrawCommandSubmitter submitter)
+    protected override void EmitBatch(ReadOnlySpan<TilemapStruct> entities, in DrawEmitterContext ctx, DrawCommandSubmitter submitter, int order)
     {
         var transform = Transform2D.CreateTransformMatrix(Vector2.Zero, new Vector2(1, 1), 0);
 
-        var tilemapBatcher = context.TilemapBatch;
+        var tilemapBatcher = ctx.TilemapBatch;
         var result = tilemapBatcher.BuildBatch();
         var cmd = new DrawCommandData(
             meshId: result.GroundLayer.MeshId,

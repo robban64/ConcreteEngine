@@ -24,7 +24,7 @@ namespace ConcreteEngine.Core;
 
 public sealed class GameEngine : IDisposable
 {
-    private const float GameDt = 1f / 30f; // 30 Hz
+    private const float GameDt = 1f / 10f; // 30 Hz
 
     private readonly IWindow _window;
 

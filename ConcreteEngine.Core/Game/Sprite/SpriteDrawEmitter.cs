@@ -18,7 +18,6 @@ public sealed class SpriteDrawEmitter : IDrawCommandEmitter
 
     public int Order { get; set; }
 
-    private List<Vector2> _previousPositions = new(64);
     public SpriteFeature SpriteFeature { get; set; } = null!;
 
     public void Initialize(IFeatureRegistry registry)
@@ -32,23 +31,20 @@ public sealed class SpriteDrawEmitter : IDrawCommandEmitter
         var spriteBatch = context.SpriteBatch;
         spriteBatch.BeginBatch(0);
 
-        for (int i = 0; i < SpriteFeature.SpriteEntities.Count; i++)
+        var entities = SpriteFeature.GetDrawables();
+        
+        
+        for (int i = 0; i < entities.Length; i++)
         {
-            var entity = SpriteFeature.SpriteEntities[i];
+            ref readonly var entity = ref entities[i];
             var pos = entity.Position;
-            if (_previousPositions.Count > 0 && (i == 0 || i == 1))
-                pos = Vector2.Lerp(entity.Position, _previousPositions[i], context.Alpha);
+            if (entity.PreviousPosition != default)
+                pos = Vector2.Lerp(entity.PreviousPosition, entity.Position, context.Alpha);
             var uv = atlas.GetUvRect(entity.AtlasLocation.X, entity.AtlasLocation.Y);
             var item = new SpriteDrawData(pos, entity.Scale, uv);
             spriteBatch.SubmitSprite(item);
         }
 
-        /*
-        var pos = PlayerFeature.Transform.Position;
-        var item = new SpriteDrawData(pos, PlayerFeature.Transform.Scale,
-            PlayerFeature.SpriteAtlas.GetOffset(PlayerFeature.column, PlayerFeature.row), PlayerFeature.SpriteAtlas.Scale);
-        spriteBatch.SubmitSprite(item);
-        */
 
         var result = spriteBatch.BuildBatch();
         var meta = new DrawCommandMeta(DrawCommandId.Sprite, RenderTargetId.Scene, 0);
@@ -61,10 +57,5 @@ public sealed class SpriteDrawEmitter : IDrawCommandEmitter
         );
         submitter.SubmitDraw(in cmd, in meta);
 
-        _previousPositions.Clear();
-        foreach (var t in SpriteFeature.SpriteEntities)
-        {
-            _previousPositions.Add(new Vector2(t.Position.X, t.Position.Y));
-        }
     }
 }

@@ -99,6 +99,7 @@ public sealed class RenderSystem : IGameEngineSystem
 
     internal void Render(float alpha, in GraphicsFrameContext frameCtx)
     {
+        _emitterContext.Alpha = alpha;
         _graphics.StartFrame(in frameCtx);
         PrepareRenderer();
         Execute(alpha);

@@ -9,3 +9,9 @@ public interface IGameFeature
     public void Load(GameFeatureContext context);
     public void Unload();
 }
+
+public interface IDrawableFeature<T> where T : struct
+{
+    public ReadOnlySpan<T> GetDrawables();
+}
+

@@ -1,31 +1,34 @@
-#region
-
 using System.Runtime.CompilerServices;
-using ConcreteEngine.Graphics.Definitions;
-using static ConcreteEngine.Core.Rendering.RenderConsts;
 
-#endregion
-
-namespace ConcreteEngine.Core.Rendering;
+namespace ConcreteEngine.Core.Rendering.Experimental;
 
 
 
-public sealed class DrawCommandSubmitter
+
+
+public sealed class DrawCommandSubmitterTree
 {
     // 1. RenderTargetId        ex Scene
     // 2. DrawCommandMeta.Id    ex Tilemap
     // 3. DrawCommandMessage 
+    /*
     private readonly DrawCommandTargetQueue<DrawCommandMesh> _sceneQueue;
     private readonly DrawCommandTargetQueue<DrawCommandLight> _lightQueue;
     
     internal DrawCommandTargetQueue<DrawCommandMesh> SceneQueue => _sceneQueue;
     internal DrawCommandTargetQueue<DrawCommandLight> LightQueue => _lightQueue;
- 
+*/
+    
+    public readonly TreeSubmitter<DrawCommandMesh> SceneQueue;
+    public readonly TreeSubmitter<DrawCommandLight> LightQueue;
 
-    public DrawCommandSubmitter()
+    private static readonly RenderTargetId[] RenderTargetIds = Enum.GetValues<RenderTargetId>();
+    private static readonly DrawCommandId[] DrawCommandIds = Enum.GetValues<DrawCommandId>();
+
+    public DrawCommandSubmitterTree()
     {
-        _sceneQueue = new DrawCommandTargetQueue<DrawCommandMesh>(RenderTargetId.Scene);
-        _lightQueue = new DrawCommandTargetQueue<DrawCommandLight>(RenderTargetId.SceneLight);
+        SceneQueue = new TreeSubmitter<DrawCommandMesh>();
+        LightQueue = new TreeSubmitter<DrawCommandLight>();
     }
 
     public void RegisterCommand(DrawCommandId commandId, RenderTargetId target, int capacity)
@@ -33,10 +36,10 @@ public sealed class DrawCommandSubmitter
         switch (target)
         {
             case RenderTargetId.Scene:
-                _sceneQueue.RegisterCommand(commandId, capacity);
+                SceneQueue.Register(target, commandId, capacity);
                 break;
             case RenderTargetId.SceneLight:
-                _lightQueue.RegisterCommand(commandId, capacity);
+                LightQueue.Register(target, commandId, capacity);
                 break;
             default:
                 throw new NotSupportedException(nameof(target));
@@ -45,17 +48,24 @@ public sealed class DrawCommandSubmitter
     
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public void SubmitMeshDraw(in DrawCommandMesh cmd, in DrawCommandMeta meta) 
-        => _sceneQueue.SubmitDraw(in cmd, in meta);
+        => SceneQueue.SubmitDraw(in cmd, in meta);
     
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public void SubmitLightDraw(in DrawCommandLight cmd, in DrawCommandMeta meta) 
-        => _lightQueue.SubmitDraw(in cmd, in meta);
+        => LightQueue.SubmitDraw(in cmd, in meta);
 
 
     public void Reset()
     {
-        _sceneQueue.Reset();
-        _lightQueue.Reset();
+        foreach (var target in RenderTargetIds)
+        {
+            foreach (var cmd in DrawCommandIds)
+            {
+                SceneQueue.Reset(target, cmd);
+                LightQueue.Reset(target, cmd);
+
+            }
+        }
     }
 }
 
@@ -65,15 +75,18 @@ internal sealed class DrawCommandTargetQueue<T> where T : unmanaged
     private readonly DrawCommandMeta[][] _metaQueue;
     private readonly T[][] _dataQueue;
     private readonly int[] _idx;
+    
+    public int Capacity { get; private set; }
     public RenderTargetId Target { get;  }
 
-    public DrawCommandTargetQueue(RenderTargetId target)
+    public DrawCommandTargetQueue(RenderTargetId target, int cmdCapacity)
     {
+        Capacity = cmdCapacity;
         Target = target;
 
-        _idx = new int[DrawCommandTypeCount];
-        _metaQueue = new DrawCommandMeta[DrawCommandTypeCount][];
-        _dataQueue = new T[DrawCommandTypeCount][];
+        _idx = new int[RenderConsts.DrawCommandTypeCount];
+        _metaQueue = new DrawCommandMeta[cmdCapacity][];
+        _dataQueue = new T[cmdCapacity][];
     }
     
     public void RegisterCommand(DrawCommandId commandId, int capacity)

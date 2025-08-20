@@ -34,6 +34,8 @@ public sealed class RenderSystem : IGameEngineSystem
     private readonly DrawEmitterCollector _emitterCollector;
     private readonly DrawCommandSubmitter _commandSubmitter;
     private readonly DrawEmitterContext _emitterContext;
+    
+    private readonly CommandRenderer  _commandRenderer;
 
     private readonly SpriteBatcher _spriteBatch;
     private readonly TilemapBatcher _tilemapBatcher;
@@ -59,6 +61,8 @@ public sealed class RenderSystem : IGameEngineSystem
 
         _emitterCollector = new DrawEmitterCollector();
         _commandSubmitter = new DrawCommandSubmitter();
+
+        _commandRenderer = new CommandRenderer(_graphics, _camera, _materialStore);
 
         _spriteBatch = new SpriteBatcher(graphics);
         _tilemapBatcher = new TilemapBatcher(graphics, 64, 32);
@@ -190,7 +194,7 @@ public sealed class RenderSystem : IGameEngineSystem
 
         if (pass.Op == RenderPassOp.FullscreenQuad && pass is FsqRenderPass fsqPass)
         {
-            DrawRenderPassQuad(fsqPass);
+            _commandRenderer.DrawFullscreenQuad(fsqPass);
         }
 
         if (!isScreenPass)
@@ -210,15 +214,8 @@ public sealed class RenderSystem : IGameEngineSystem
         foreach (var commandId in pass)
         {
             var commands = _commandSubmitter.SceneQueue.GetCmdQueue(commandId);
-            var meta = _commandSubmitter.SceneQueue.GetMetaQueue(commandId);
-
-            for (int i = 0; i < commands.Length; i++)
-            {
-                ref readonly var cmd = ref commands[i];
-                ref readonly var m = ref meta[i];
-
-                Draw(in cmd, in m, in projView);
-            }
+            //var meta = _commandSubmitter.SceneQueue.GetMetaQueue(commandId);
+            _commandRenderer.DrawMeshCommands(commands);
         }
     }
 
@@ -233,76 +230,15 @@ public sealed class RenderSystem : IGameEngineSystem
         for (int p = 0; p < passCommands.Count; p++)
         {
             var commandId = passCommands[p];
-            var pass = passDesc[p];
+            //var pass = passDesc[p];
             var commands = _commandSubmitter.LightQueue.GetCmdQueue(commandId);
-            var meta = _commandSubmitter.LightQueue.GetMetaQueue(commandId);
+            //var meta = _commandSubmitter.LightQueue.GetMetaQueue(commandId);
 
-            for (int c = 0; c < commands.Length; c++)
-            {
-                ref readonly var cmd = ref commands[c];
-                ref readonly var m = ref meta[c];
+            _commandRenderer.RenderLightCommands(lightPass, commands);
 
-                DrawLightQuad(lightPass, in cmd, in m, in projView);
-            }
         }
     }
 
-
-    [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    private void Draw(in DrawCommandMesh cmd, in DrawCommandMeta meta, in Matrix4x4 projView)
-    {
-        var material = _materialStore[cmd.MaterialId];
-        material.Bind(_gfx);
-        _gfx.UseShader(material.Shader.ResourceId);
-        _gfx.SetUniform(ShaderUniform.ProjectionViewMatrix, in projView);
-
-        _gfx.SetUniform(ShaderUniform.ModelMatrix, in cmd.Transform);
-        _gfx.BindMesh(cmd.MeshId);
-        _gfx.DrawIndexed(cmd.DrawCount);
-    }
-
-    private void DrawRenderPassQuad(FsqRenderPass pass)
-    {
-        ArgumentNullException.ThrowIfNull(pass);
-        ArgumentNullException.ThrowIfNull(pass.SourceTextures);
-        ArgumentOutOfRangeException.ThrowIfZero(pass.SourceTextures.Length);
-        ArgumentOutOfRangeException.ThrowIfGreaterThan(pass.SourceTextures.Length, 4, nameof(pass.SourceTextures));
-
-        var viewport = _camera.ViewportSize;
-        _gfx.UseShader(pass.Shader);
-        _gfx.SetUniform(ShaderUniform.TexelSize, viewport.ToSystemVec2() * pass.SizeRatio);
-
-        for (int i = 0; i < pass.SourceTextures.Length; i++)
-        {
-            _gfx.BindTexture(pass.SourceTextures[i], (uint)i);
-        }
-
-        _gfx.BindMesh(_graphics.QuadMeshId);
-        _gfx.Draw();
-    }
-
-    private void DrawLightQuad(LightRenderPass pass, in DrawCommandLight cmd, in DrawCommandMeta meta,
-        in Matrix4x4 projView)
-    {
-        _gfx.UseShader(pass.Shader);
-        _gfx.BindMesh(_graphics.QuadMeshId);
-
-        _gfx.SetUniform(ShaderUniform.ProjectionViewMatrix, in projView);
-
-
-        _gfx.SetUniform(ShaderUniform.LightPos, cmd.Position);
-        _gfx.SetUniform(ShaderUniform.Radius, cmd.Radius);
-        _gfx.SetUniform(ShaderUniform.Color, cmd.Color);
-        _gfx.SetUniform(ShaderUniform.Intensity, cmd.Intensity);
-        _gfx.SetUniform(ShaderUniform.Softness, 2.5f);
-        _gfx.SetUniform(ShaderUniform.Shape, 0);
-
-        _gfx.Draw();
-    }
-
-/*
-
-*/
     public void Dispose()
     {
     }

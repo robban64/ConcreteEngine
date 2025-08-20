@@ -48,11 +48,6 @@ public sealed class Material
 
     public void Bind(IGraphicsContext gfx)
     {
-        gfx.UseShader(_shader.ResourceId);
-        //gfx.SetUniform(ShaderUniform.SampleTexture, 0);
-        for (int i = 0; i < _textures.Length; i++)
-        {
-            gfx.BindTexture(_textures[i].ResourceId, (uint)i);
-        }
+
     }
 }

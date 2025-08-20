@@ -1,7 +1,9 @@
 #region
 
+using System.Diagnostics;
 using System.Numerics;
 using System.Runtime.CompilerServices;
+using ConcreteEngine.Common.Extensions;
 using ConcreteEngine.Core.Configuration;
 using ConcreteEngine.Core.Rendering.Batchers.Sprite;
 using ConcreteEngine.Core.Rendering.Batchers.Tilemap;
@@ -26,8 +28,8 @@ public sealed class RenderSystem : IGameEngineSystem
 
     private readonly Shader[] _shaders;
     private readonly MaterialStore _materialStore;
-    private readonly SortedList<int, DrawCommandId>[] _renderPasses;
-    private readonly SortedList<int, RenderPassData>[] _renderPassDesc;
+    private readonly List<DrawCommandId>[] _renderPasses;
+    private readonly List<IRenderPass>[] _renderPassDesc;
 
     private readonly DrawEmitterCollector _emitterCollector;
     private readonly DrawCommandSubmitter _commandSubmitter;
@@ -47,12 +49,12 @@ public sealed class RenderSystem : IGameEngineSystem
         _shaders = shaders.ToArray();
         _materialStore = new MaterialStore();
 
-        _renderPasses = new SortedList<int, DrawCommandId>[RenderTargetCount];
-        _renderPassDesc = new SortedList<int, RenderPassData>[RenderTargetCount];
+        _renderPasses = new List<DrawCommandId>[RenderTargetCount];
+        _renderPassDesc = new List<IRenderPass>[RenderTargetCount];
         for (int i = 0; i < RenderTargetCount; i++)
         {
-            _renderPasses[i] = new SortedList<int, DrawCommandId>(4);
-            _renderPassDesc[i] = new SortedList<int, RenderPassData>(4);
+            _renderPasses[i] = new List<DrawCommandId>(4);
+            _renderPassDesc[i] = new List<IRenderPass>(4);
         }
 
         _emitterCollector = new DrawEmitterCollector();
@@ -73,22 +75,22 @@ public sealed class RenderSystem : IGameEngineSystem
     {
         foreach (var (order, emitter) in builder.Emitters)
             _emitterCollector.AddEmitter(order, emitter());
-        
+
         _emitterCollector.Initialize();
-        
-        foreach (var (order, meta) in builder.Passes)
-            RegisterRenderPass(meta.Target, order, meta.Param);
-        
-        foreach (var (order, meta) in builder.Commands)
-            RegisterCommand(order, meta.CommandId, meta.Target, meta.Capacity);
+
+        foreach (var pass in builder.Passes.Values)
+            RegisterRenderPass(pass.Target,  pass.Pass);
+
+        foreach (var cmd in builder.Commands)
+            RegisterCommand( cmd.Target, cmd.CommandId, cmd.Capacity);
     }
-    
+
     public void RegisterDrawFeature(int order, IDrawableFeature feature, Type emitterType)
     {
         var emitter = _emitterCollector.GetEmitter(emitterType);
         emitter.RegisterFeature(order, feature);
     }
-    
+
     public void RegisterDrawFeature<TEmitter, TFeature, TEntity>(int order, TFeature feature)
         where TEmitter : DrawCommandEmitter<TEntity>
         where TFeature : class, IGameFeature, IDrawableFeature<TEntity>
@@ -97,30 +99,25 @@ public sealed class RenderSystem : IGameEngineSystem
         var emitter = _emitterCollector.GetEmitter<TEmitter, TEntity>();
         emitter.RegisterFeature<TFeature>(order, feature);
     }
-    
-    public void RegisterRenderPass(RenderTargetId target, int order, in RenderPassData param)
+
+    public void RegisterRenderPass(RenderTargetId target, IRenderPass pass)
     {
-        if (param.Op == RenderPassOp.FullscreenQuad && param.SourceTexId == null)
-        {
-            throw new InvalidOperationException(
-                $"FullscreenQuad requires {nameof(param.SourceTexId)} (source texture).");
-        }
+        if (pass.Op == RenderPassOp.FullscreenQuad && pass is not FsqRenderPass)
+            throw new InvalidOperationException($"RenderPass: FullscreenQuad require {nameof(FsqRenderPass)}");
 
-        if (param.Op == RenderPassOp.Blit && param.SourceTexId != null)
-        {
-            throw new InvalidOperationException(
-                $"Blit op requires {nameof(param.BlitFboId)} (source framebuffer).");
-        }
+        if (pass.Op == RenderPassOp.Blit && pass is not BlitRenderPass)
+            throw new InvalidOperationException($"RenderPass: Blit require {nameof(BlitRenderPass)}");
+        
 
-        _renderPassDesc[(int)target].Add(order, param);
+        _renderPassDesc[(int)target].Add(pass);
     }
 
-    public void RegisterCommand(int order, DrawCommandId commandId, RenderTargetId target, int capacity)
+    public void RegisterCommand(RenderTargetId target, DrawCommandId commandId, int capacity)
     {
         _commandSubmitter.RegisterCommand(commandId, target, capacity);
-        _renderPasses[(int)target].Add(order, commandId);
+        _renderPasses[(int)target].Add(commandId);
     }
-    
+
     public void AddMaterial(MaterialDescription description)
         => _materialStore.AddMaterial(description);
 
@@ -136,24 +133,24 @@ public sealed class RenderSystem : IGameEngineSystem
 
     private void PrepareRenderer()
     {
-        _commandSubmitter.ResetBufferPointer();
+        _commandSubmitter.Reset();
         _emitterCollector.Collect(_emitterContext, _commandSubmitter);
     }
 
     private void Execute(float alpha)
     {
-        for (int target = 0; target < 1; target++)
+        for (int target = 0; target < RenderTargetCount; target++)
         {
             var renderTarget = (RenderTargetId)target;
             var passList = _renderPassDesc[target];
-            for (int p = 0; p < passList.Count; p++)
+
+            foreach (var pass in passList)
             {
-                var pass = passList[p];
                 //var (prevBlend, prevDepthTest) = (_gfx.BlendMode, _gfx.DepthTest);
                 _gfx.SetBlendMode(pass.Blend);
                 _gfx.SetDepthTest(pass.DepthTest);
 
-                ExecutePass(renderTarget, in pass);
+                ExecutePass(renderTarget, pass);
 
                 //_gfx.SetBlendMode(prevBlend);
                 //_gfx.SetDepthTest(prevDepthTest);
@@ -161,34 +158,39 @@ public sealed class RenderSystem : IGameEngineSystem
         }
     }
 
-    private void ExecutePass(RenderTargetId target, in RenderPassData pass)
+    private void ExecutePass(RenderTargetId target, IRenderPass pass)
     {
-        if (pass.Op == RenderPassOp.Blit)
+        
+        if (pass.Op == RenderPassOp.Blit && pass is BlitRenderPass blitPass)
         {
             // preserves bindings internally
-            _gfx.BlitFramebuffer(pass.BlitFboId!.Value, pass.TargetFboId, linearFilter: true);
+            _gfx.BlitFramebuffer(blitPass.BlitFbo, blitPass.TargetFbo, blitPass.LinearFilter);
             return;
         }
+        
+        var isScreenPass = pass.TargetFbo == default;
 
-        var isScreenPass = pass.TargetFboId == default;
-
-        if (pass.TargetFboId == default)
-            _gfx.BeginScreenPass(pass.DoClear ? pass.ClearColor : null, pass.ClearMask);
+        if (pass.TargetFbo == default)
+            _gfx.BeginScreenPass(pass.Clear?.ClearColor, pass.Clear?.ClearMask);
         else
-            _gfx.BeginRenderPass(pass.TargetFboId, pass.DoClear ? pass.ClearColor : null, pass.ClearMask);
-
+            _gfx.BeginRenderPass(pass.TargetFbo, pass.Clear?.ClearColor, pass.Clear?.ClearMask);
 
         if (pass.Op == RenderPassOp.DrawScene)
         {
-            ExecuteDrawScenePass(target);
+            if (pass is SceneRenderPass scenePass)
+                RenderScenePass(scenePass);
+
+            if (pass is LightRenderPass lightPass)
+                RenderLightPass(lightPass);
+
             _gfx.EndRenderPass();
+            return;
         }
-        else if (pass.Op == RenderPassOp.FullscreenQuad)
+
+
+        if (pass.Op == RenderPassOp.FullscreenQuad && pass is FsqRenderPass fsqPass)
         {
-            DrawRenderPassQuad(pass);
-        }else if (pass.Op == RenderPassOp.DrawLight)
-        {
-            DrawLightPass(pass);
+            DrawRenderPassQuad(fsqPass);
         }
 
         if (!isScreenPass)
@@ -197,92 +199,110 @@ public sealed class RenderSystem : IGameEngineSystem
         }
     }
 
-    private void ExecuteDrawScenePass(RenderTargetId target)
+
+    private void RenderScenePass(SceneRenderPass scenePass)
     {
         var projView = _camera.ProjectionViewMatrix;
-        foreach (var (_, commandId) in _renderPasses[(int)target])
+
+        var target = RenderTargetId.Scene;
+        var pass = _renderPasses[(int)target];
+
+        foreach (var commandId in pass)
         {
-            var commands = _commandSubmitter.GetQueue(target, commandId);
+            var commands = _commandSubmitter.SceneQueue.GetCmdQueue(commandId);
+            var meta = _commandSubmitter.SceneQueue.GetMetaQueue(commandId);
 
             for (int i = 0; i < commands.Length; i++)
             {
-                ref readonly var msg = ref commands[i];
-                Draw(in msg.Cmd, in msg.Info, in projView);
+                ref readonly var cmd = ref commands[i];
+                ref readonly var m = ref meta[i];
+
+                Draw(in cmd, in m, in projView);
             }
         }
     }
 
-    [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    private void Draw(in DrawCommandData data, in DrawCommandMeta meta, in Matrix4x4 projView)
+    private void RenderLightPass(LightRenderPass lightPass)
     {
-        var material = _materialStore[data.MaterialId];
+        var projView = _camera.ProjectionViewMatrix;
+
+        var target = RenderTargetId.SceneLight;
+        var passDesc = _renderPassDesc[(int)target];
+        var passCommands = _renderPasses[(int)target];
+
+        for (int p = 0; p < passCommands.Count; p++)
+        {
+            var commandId = passCommands[p];
+            var pass = passDesc[p];
+            var commands = _commandSubmitter.LightQueue.GetCmdQueue(commandId);
+            var meta = _commandSubmitter.LightQueue.GetMetaQueue(commandId);
+
+            for (int c = 0; c < commands.Length; c++)
+            {
+                ref readonly var cmd = ref commands[c];
+                ref readonly var m = ref meta[c];
+
+                DrawLightQuad(lightPass, in cmd, in m, in projView);
+            }
+        }
+    }
+
+
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    private void Draw(in DrawCommandMesh cmd, in DrawCommandMeta meta, in Matrix4x4 projView)
+    {
+        var material = _materialStore[cmd.MaterialId];
         material.Bind(_gfx);
         _gfx.UseShader(material.Shader.ResourceId);
         _gfx.SetUniform(ShaderUniform.ProjectionViewMatrix, in projView);
 
-        _gfx.SetUniform(ShaderUniform.ModelMatrix, in data.Transform);
-        _gfx.BindMesh(data.MeshId);
-        _gfx.DrawIndexed(data.DrawCount);
+        _gfx.SetUniform(ShaderUniform.ModelMatrix, in cmd.Transform);
+        _gfx.BindMesh(cmd.MeshId);
+        _gfx.DrawIndexed(cmd.DrawCount);
     }
 
-    private void DrawRenderPassQuad(RenderPassData pass)
+    private void DrawRenderPassQuad(FsqRenderPass pass)
     {
         ArgumentNullException.ThrowIfNull(pass);
-        ArgumentNullException.ThrowIfNull(pass.SourceTexId);
-        ArgumentOutOfRangeException.ThrowIfZero(pass.SourceTexId.Count);
-        ArgumentOutOfRangeException.ThrowIfGreaterThan(pass.SourceTexId.Count, 4, nameof(pass.SourceTexId));
+        ArgumentNullException.ThrowIfNull(pass.SourceTextures);
+        ArgumentOutOfRangeException.ThrowIfZero(pass.SourceTextures.Length);
+        ArgumentOutOfRangeException.ThrowIfGreaterThan(pass.SourceTextures.Length, 4, nameof(pass.SourceTextures));
 
         var viewport = _camera.ViewportSize;
-        _gfx.UseShader(pass.ShaderId);
-        _gfx.SetUniform(ShaderUniform.TexelSize, new Vector2(viewport.X, viewport.Y) * 0.3f);
+        _gfx.UseShader(pass.Shader);
+        _gfx.SetUniform(ShaderUniform.TexelSize, viewport.ToSystemVec2() * pass.SizeRatio);
 
-        for (int i = 0; i < pass.SourceTexId.Count; i++)
+        for (int i = 0; i < pass.SourceTextures.Length; i++)
         {
-            _gfx.BindTexture(pass.SourceTexId[i],(uint)i);
-
+            _gfx.BindTexture(pass.SourceTextures[i], (uint)i);
         }
+
         _gfx.BindMesh(_graphics.QuadMeshId);
         _gfx.Draw();
     }
-    
-    
-    public struct Light
-    {
-        public Vector2 Position;   // in world units
-        public float   Radius;     // in world units
-        public Vector3 Color;      // 0..1
-        public float   Intensity;  // 0..N (e.g. 1.0)
-    }
 
-    private List<Light> _lights = [
-        new() { Position = new(500, 200), Radius = 80.5f, Color = new(1.0f, 0.75f, 0.45f), Intensity = 1.5f }, // campfire
-        new() { Position = new(200,  500), Radius = 80.0f, Color = new(0.7f, 0.8f, 1.0f),   Intensity = 1.8f }, // moon-ish fill
-    ];
-
-    private float tick = 0.01f;
-    private void DrawLightPass(RenderPassData pass)
+    private void DrawLightQuad(LightRenderPass pass, in DrawCommandLight cmd, in DrawCommandMeta meta,
+        in Matrix4x4 projView)
     {
-        _gfx.UseShader(pass.ShaderId);
+        _gfx.UseShader(pass.Shader);
         _gfx.BindMesh(_graphics.QuadMeshId);
 
-        _gfx.SetUniform(ShaderUniform.ProjectionViewMatrix, _camera.ProjectionViewMatrix);
+        _gfx.SetUniform(ShaderUniform.ProjectionViewMatrix, in projView);
 
-        tick += 0.01f;
-        foreach (var light in _lights)
-        {
-            _gfx.SetUniform(ShaderUniform.LightPos, light.Position);
-            _gfx.SetUniform(ShaderUniform.Radius, light.Radius);
-            _gfx.SetUniform(ShaderUniform.Color, light.Color);
-            _gfx.SetUniform(ShaderUniform.Intensity, light.Intensity + MathF.Sin(tick));
-            _gfx.SetUniform(ShaderUniform.Softness, 2.5f);
-            _gfx.SetUniform(ShaderUniform.Shape, 0);
 
-            _gfx.Draw();
-        }
-        
-        
+        _gfx.SetUniform(ShaderUniform.LightPos, cmd.Position);
+        _gfx.SetUniform(ShaderUniform.Radius, cmd.Radius);
+        _gfx.SetUniform(ShaderUniform.Color, cmd.Color);
+        _gfx.SetUniform(ShaderUniform.Intensity, cmd.Intensity);
+        _gfx.SetUniform(ShaderUniform.Softness, 2.5f);
+        _gfx.SetUniform(ShaderUniform.Shape, 0);
+
+        _gfx.Draw();
     }
 
+/*
+
+*/
     public void Dispose()
     {
     }

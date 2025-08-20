@@ -8,65 +8,115 @@ using static ConcreteEngine.Core.Rendering.RenderConsts;
 
 namespace ConcreteEngine.Core.Rendering;
 
+
+
 public sealed class DrawCommandSubmitter
 {
     // 1. RenderTargetId        ex Scene
     // 2. DrawCommandMeta.Id    ex Tilemap
     // 3. DrawCommandMessage 
-    private readonly DrawCommandMessage[][][] _commandQueues;
-    private readonly int[][] _commandQueueIndexes;
+    private readonly DrawCommandTargetQueue<DrawCommandMesh> _sceneQueue;
+    private readonly DrawCommandTargetQueue<DrawCommandLight> _lightQueue;
+    
+    internal DrawCommandTargetQueue<DrawCommandMesh> SceneQueue => _sceneQueue;
+    internal DrawCommandTargetQueue<DrawCommandLight> LightQueue => _lightQueue;
+ 
 
     public DrawCommandSubmitter()
     {
-        _commandQueues = new DrawCommandMessage[RenderTargetCount][][];
-        _commandQueueIndexes = new int[RenderTargetCount][];
-
-        for (int i = 0; i < RenderTargetCount; i++)
-        {
-            _commandQueueIndexes[i] = new int[DrawCommandTypeCount];
-            _commandQueues[i] = new DrawCommandMessage[DrawCommandTypeCount][];
-
-            for (int j = 0; j < DrawCommandTypeCount; j++)
-                _commandQueues[i][j] = [];
-        }
+        _sceneQueue = new DrawCommandTargetQueue<DrawCommandMesh>(RenderTargetId.Scene,8);
+        _lightQueue = new DrawCommandTargetQueue<DrawCommandLight>(RenderTargetId.SceneLight, 4);
     }
 
     public void RegisterCommand(DrawCommandId commandId, RenderTargetId target, int capacity)
     {
+        switch (target)
+        {
+            case RenderTargetId.Scene:
+                _sceneQueue.RegisterCommand(commandId, capacity);
+                break;
+            case RenderTargetId.SceneLight:
+                _lightQueue.RegisterCommand(commandId, capacity);
+                break;
+            default:
+                throw new NotSupportedException(nameof(target));
+        }
+    }
+    
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public void SubmitMeshDraw(in DrawCommandMesh cmd, in DrawCommandMeta meta) 
+        => _sceneQueue.SubmitDraw(in cmd, in meta);
+    
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public void SubmitLightDraw(in DrawCommandLight cmd, in DrawCommandMeta meta) 
+        => _lightQueue.SubmitDraw(in cmd, in meta);
+
+
+    public void Reset()
+    {
+        _sceneQueue.Reset();
+        _lightQueue.Reset();
+    }
+}
+
+
+internal sealed class DrawCommandTargetQueue<T> where T : unmanaged
+{
+    private readonly DrawCommandMeta[][] _metaQueue;
+    private readonly T[][] _dataQueue;
+    private readonly int[] _idx;
+    
+    public int Capacity { get; private set; }
+    public RenderTargetId Target { get;  }
+
+    public DrawCommandTargetQueue(RenderTargetId target, int cmdCapacity)
+    {
+        Capacity = cmdCapacity;
+        Target = target;
+
+        _idx = new int[DrawCommandTypeCount];
+        _metaQueue = new DrawCommandMeta[cmdCapacity][];
+        _dataQueue = new T[cmdCapacity][];
+    }
+    
+    public void RegisterCommand(DrawCommandId commandId, int capacity)
+    {
         ArgumentOutOfRangeException.ThrowIfZero(capacity, nameof(capacity));
         ArgumentOutOfRangeException.ThrowIfLessThan(capacity, 4, nameof(capacity));
 
-        if (_commandQueues[(int)target][(int)commandId].Length != 0)
+        if (_metaQueue[(int)commandId] != null)
             throw new InvalidOperationException(
-                $"Command {Enum.GetName(commandId)} is already registered at target: {Enum.GetName(target)}");
+                $"Command {Enum.GetName(commandId)} is already registered at target: {Enum.GetName(Target)}");
 
-        _commandQueues[(int)target][(int)commandId] = new DrawCommandMessage[capacity];
-        _commandQueueIndexes[(int)target][(int)commandId] = 0;
+        _metaQueue[(int)commandId] = new DrawCommandMeta[capacity];
+        _dataQueue[(int)commandId] = new T[capacity];
+        _idx[(int)commandId] = 0;
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public void SubmitDraw(in DrawCommandData cmd, in DrawCommandMeta meta)
+    public void SubmitDraw(in T cmd, in DrawCommandMeta meta)
     {
-        int target = (int)meta.Target;
-        int commandId = (int)meta.Id;
-        int index = _commandQueueIndexes[target][commandId]++;
-        _commandQueues[target][commandId][index] = new DrawCommandMessage(in cmd, in meta);
+        var index = _idx[(int)meta.Id];
+        _dataQueue[(int)meta.Id][index] = cmd;
+        _metaQueue[(int)meta.Id][index] = meta;
+        _idx[(int)meta.Id]++;
     }
 
-    public ReadOnlySpan<DrawCommandMessage> GetQueue(RenderTargetId target, DrawCommandId commandId)
-    {
-        var index = _commandQueueIndexes[(int)target][(int)commandId];
-        return _commandQueues[(int)target][(int)commandId].AsSpan(0, index);
-    }
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public ReadOnlySpan<DrawCommandMeta> GetMetaQueue(DrawCommandId commandId) 
+        => _metaQueue[(int)commandId].AsSpan(0, _idx[(int)commandId]);
 
-    public void ResetBufferPointer()
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public ReadOnlySpan<T> GetCmdQueue(DrawCommandId commandId) 
+        => _dataQueue[(int)commandId].AsSpan(0, _idx[(int)commandId]);
+
+
+    public void Reset()
     {
-        for (int i = 0; i < _commandQueueIndexes.Length; i++)
+        int len = _idx.Length;
+        for (int i = 0; i < len; i++)
         {
-            for (int j = 0; j < _commandQueueIndexes[i].Length; j++)
-            {
-                _commandQueueIndexes[i][j] = 0;
-            }
+            _idx[i] = 0;
         }
     }
 }

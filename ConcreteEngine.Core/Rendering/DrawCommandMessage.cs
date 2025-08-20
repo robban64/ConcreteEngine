@@ -9,19 +9,21 @@ using ConcreteEngine.Graphics.Resources;
 
 namespace ConcreteEngine.Core.Rendering;
 
-public enum DrawCommandId : short
+public enum DrawCommandId : byte
 {
     Tilemap,
-    Sprite
+    Sprite,
+    Effect
 }
 
-public readonly struct DrawCommandMessage(in DrawCommandData cmd, in DrawCommandMeta info)
+public enum DrawCommandKind : byte
 {
-    public readonly DrawCommandData Cmd = cmd;
-    public readonly DrawCommandMeta Info = info;
+    Mesh,
+    Light
 }
 
-public readonly struct DrawCommandData(
+
+public readonly struct DrawCommandMesh(
     MeshId meshId,
     MaterialId materialId,
     uint drawCount,
@@ -30,13 +32,22 @@ public readonly struct DrawCommandData(
     public readonly MeshId MeshId = meshId;
     public readonly MaterialId MaterialId = materialId;
     public readonly uint DrawCount = drawCount;
-
     public readonly Matrix4x4 Transform = transform;
 }
 
-public readonly struct DrawCommandMeta(DrawCommandId id, RenderTargetId target, short layer)
+public struct DrawCommandLight(Vector2 position, float radius, Vector3 color, float intensity)
+{
+    public Vector2 Position = position; 
+    public float   Radius = radius;   
+    public Vector3 Color = color;    
+    public float   Intensity = intensity;
+}
+
+public readonly struct DrawCommandMeta(DrawCommandId id, RenderTargetId target,DrawCommandKind kind,  byte layer)
 {
     public readonly DrawCommandId Id = id;
     public readonly RenderTargetId Target = target;
-    public readonly short Layer = layer;
+    //public readonly RenderPassOp Pass = pass;
+    public readonly DrawCommandKind Kind = kind;
+    public readonly byte Layer = layer;
 }

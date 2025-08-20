@@ -176,7 +176,7 @@ public sealed class GameEngine : IDisposable
         var newScene = _sceneFactories[index]();
         newScene.AttachContext(sceneContext);
         
-        newScene.ConfigureRenderer(builder);
+        newScene.ConfigureRenderer(builder, _graphics);
         _renderer.Initialize(builder);
         
         newScene.ConfigureFeatures(builder);

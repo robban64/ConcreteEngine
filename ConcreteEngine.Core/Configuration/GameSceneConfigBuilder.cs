@@ -5,13 +5,14 @@ namespace ConcreteEngine.Core.Configuration;
 
 public interface IGameSceneRenderBuilder
 {
-    void RegisterRenderPass(RenderTargetId target, int order, in RenderPassData param);
+    void RegisterRenderPass(RenderTargetId target, int order, IRenderPass pass);
+
     void RegisterEmitter<TEmitter, TEntity>(int order)
         where TEmitter : DrawCommandEmitter<TEntity>, new()
         where TEntity : struct;
 
 
-    void RegisterCommand(int order, DrawCommandId commandId, RenderTargetId target, int capacity);
+    void RegisterCommand(RenderTargetId target, DrawCommandId commandId, int capacity);
 }
 
 public interface IGameSceneFeatureBuilder
@@ -22,7 +23,6 @@ public interface IGameSceneFeatureBuilder
         where TEntity : struct;
 
     void RegisterFeature<T>(int order) where T : IGameFeature, new();
-    
 }
 
 public sealed class GameSceneConfigBuilder()
@@ -33,7 +33,7 @@ public sealed class GameSceneConfigBuilder()
 
     private readonly SortedList<int, Func<IDrawCommandEmitter>> _emitters = new(8);
     private readonly SortedList<int, RenderPassRegistryMeta> _passes = new(8);
-    private readonly SortedList<int, CommandRegistryMeta> _commands = new(8);
+    private readonly List<CommandRegistryMeta> _commands = new(8);
 
     internal void Clear()
     {
@@ -43,19 +43,11 @@ public sealed class GameSceneConfigBuilder()
         _commands.Clear();
     }
 
-    internal void DrainFeatures()
-    {
-        SortedList<int, IGameFeature> features = new(_features.Count + _drawFeatures.Count);
-        foreach (var (order, feature) in _features)
-        {
-        }
-    }
-
-    public IReadOnlyDictionary<int, Func<IGameFeature>> Features => _features.AsReadOnly();
-    public IReadOnlyDictionary<int,  (Func<IDrawableFeature>, Type)> DrawFeatures => _drawFeatures.AsReadOnly();
-    public IReadOnlyDictionary<int, Func<IDrawCommandEmitter>> Emitters => _emitters.AsReadOnly();
-    public IReadOnlyDictionary<int, RenderPassRegistryMeta> Passes => _passes.AsReadOnly();
-    public IReadOnlyDictionary<int, CommandRegistryMeta> Commands => _commands.AsReadOnly();
+    public SortedList<int, Func<IGameFeature>> Features => _features;
+    public SortedList<int, (Func<IDrawableFeature>, Type)> DrawFeatures => _drawFeatures;
+    public SortedList<int, Func<IDrawCommandEmitter>> Emitters => _emitters;
+    public SortedList<int, RenderPassRegistryMeta> Passes => _passes;
+    public List<CommandRegistryMeta> Commands => _commands;
 
 
     public void RegisterFeature<T>(int order) where T : IGameFeature, new()
@@ -70,7 +62,7 @@ public sealed class GameSceneConfigBuilder()
         where TEntity : struct
     {
         ArgumentOutOfRangeException.ThrowIfNegative(order, nameof(order));
-        
+
         _drawFeatures.Add(order, (() => new TFeature(), typeof(TEmitter)));
     }
 
@@ -82,20 +74,19 @@ public sealed class GameSceneConfigBuilder()
         _emitters.Add(order, () => new TEmitter());
     }
 
-    public void RegisterRenderPass(RenderTargetId target, int order, in RenderPassData param)
+    public void RegisterRenderPass(RenderTargetId target, int order, IRenderPass pass)
     {
         ArgumentOutOfRangeException.ThrowIfNegative(order, nameof(order));
-        _passes.Add(order, new RenderPassRegistryMeta(target, param));
+        _passes.Add(order, new RenderPassRegistryMeta( target, pass));
     }
 
-    public void RegisterCommand(int order, DrawCommandId commandId, RenderTargetId target, int capacity)
+    public void RegisterCommand(RenderTargetId target, DrawCommandId commandId, int capacity)
     {
-        ArgumentOutOfRangeException.ThrowIfNegative(order, nameof(order));
-        ArgumentOutOfRangeException.ThrowIfNegativeOrZero(capacity, nameof(capacity));
-        _commands.Add(order, new CommandRegistryMeta(commandId, target, capacity));
+        ArgumentOutOfRangeException.ThrowIfLessThan(capacity, 4, nameof(capacity));
+        _commands.Add(new CommandRegistryMeta(commandId, target, capacity));
     }
 
-    public record struct RenderPassRegistryMeta(RenderTargetId Target, in RenderPassData Param);
+    public record struct RenderPassRegistryMeta(RenderTargetId Target, IRenderPass Pass);
 
     public record struct CommandRegistryMeta(DrawCommandId CommandId, RenderTargetId Target, int Capacity);
 }

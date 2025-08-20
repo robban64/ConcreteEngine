@@ -17,7 +17,7 @@ public abstract class GameScene
 
 
     public abstract void ConfigureFeatures(IGameSceneFeatureBuilder builder);
-    public abstract void ConfigureRenderer(IGameSceneRenderBuilder builder);
+    public abstract void ConfigureRenderer(IGameSceneRenderBuilder builder, IGraphicsDevice graphics);
     public abstract void Initialize(IGraphicsDevice graphics);
     public abstract void Unload();
 

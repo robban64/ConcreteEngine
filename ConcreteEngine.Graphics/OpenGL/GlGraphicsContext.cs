@@ -127,13 +127,13 @@ public sealed class GlGraphicsContext : IGraphicsContext
     }
 
 
-    public void BeginScreenPass(Color? clear, ClearBufferFlag flags = ClearBufferFlag.Color)
+    public void BeginScreenPass(Color? clear, ClearBufferFlag? flags)
     {
         if (_boundFboId != default) GraphicsException.ThrowInvalidState("Cannot begin screen pass while FBO is bound.");
 
         _gl.BindFramebuffer(FramebufferTarget.Framebuffer, 0);
         _gl.Viewport(_viewport);
-        if (clear.HasValue) Clear(clear.Value, flags);
+        if (clear.HasValue && flags.HasValue) Clear(clear.Value, flags.Value);
 
         _currentDrawFboHandle = 0;
         _currentReadFboHandle = 0;
@@ -143,7 +143,7 @@ public sealed class GlGraphicsContext : IGraphicsContext
         _currentViewport = _viewport;
     }
 
-    public void BeginRenderPass(FrameBufferId fboId, Color? clear, ClearBufferFlag flags = ClearBufferFlag.Color)
+    public void BeginRenderPass(FrameBufferId fboId, Color? clear, ClearBufferFlag? flags)
     {
         ArgumentOutOfRangeException.ThrowIfNegativeOrZero(fboId.Id, nameof(fboId));
         if (_boundFboId == fboId) GraphicsException.ThrowInvalidState($"FBO is {fboId} already bound.");
@@ -153,7 +153,7 @@ public sealed class GlGraphicsContext : IGraphicsContext
 
         _gl.BindFramebuffer(FramebufferTarget.Framebuffer, handle);
         _gl.Viewport(meta.Size);
-        if (clear.HasValue) Clear(clear.Value, flags);
+        if (clear.HasValue && flags.HasValue) Clear(clear.Value, flags.Value);
 
         _currentDrawFboHandle = handle;
         _currentReadFboHandle = handle;

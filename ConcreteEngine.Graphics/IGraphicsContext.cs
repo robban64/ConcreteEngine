@@ -23,8 +23,8 @@ public interface IGraphicsContext
     void EndFrame();
 
     void Clear(Color color, ClearBufferFlag flags);
-    void BeginScreenPass(Color? clear = null, ClearBufferFlag flags = ClearBufferFlag.Color);
-    void BeginRenderPass(FrameBufferId fboId, Color? clear, ClearBufferFlag flags = ClearBufferFlag.Color);
+    void BeginScreenPass(Color? clear = null, ClearBufferFlag? flags = null);
+    void BeginRenderPass(FrameBufferId fboId, Color? clear, ClearBufferFlag? flags);
     void EndRenderPass();
     void BlitFramebuffer(FrameBufferId fromId, FrameBufferId toId = default, bool linearFilter = true);
     void SetBlendMode(BlendMode blendMode);

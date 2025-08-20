@@ -28,13 +28,91 @@ public sealed class DemoScene : GameScene
         builder.RegisterDrawFeature<SpriteDrawEmitter, SpriteFeature, SpriteDrawEntity>(1);
     }
 
-    public override void ConfigureRenderer(IGameSceneRenderBuilder builder)
+    public override void ConfigureRenderer(IGameSceneRenderBuilder builder, IGraphicsDevice graphics)
     {
-        builder.RegisterCommand(0, DrawCommandId.Tilemap, RenderTargetId.Scene, 4);
-        builder.RegisterCommand(1, DrawCommandId.Sprite, RenderTargetId.Scene, 32);
+        builder.RegisterCommand(RenderTargetId.Scene, DrawCommandId.Tilemap, 4);
+        builder.RegisterCommand(RenderTargetId.Scene, DrawCommandId.Sprite, 32);
+        builder.RegisterCommand(RenderTargetId.SceneLight, DrawCommandId.Effect, 32);
 
         builder.RegisterEmitter<TilemapDrawEmitter, TilemapStruct>(0);
         builder.RegisterEmitter<SpriteDrawEmitter, SpriteDrawEntity>(1);
+
+        var renderer = Context.GetSystem<RenderSystem>();
+        var assets = Context.GetSystem<AssetSystem>();
+
+        var spriteShader = assets.Get<Shader>("SpriteShader");
+        var screenShader = assets.Get<Shader>("ScreenShader");
+        var lightPassShader = assets.Get<Shader>("LightPassShader");
+        var lightComposite = assets.Get<Shader>("LightComposite");
+
+
+        var spriteTexture = assets.Get<Texture2D>("SpriteTexture");
+        var tilemapTexture = assets.Get<Texture2D>("TilemapTextureAtlas");
+
+        var halfSize = Vector2.One * 0.5f;
+
+        // Create a single-sample texture FBO for post-FX
+        var sceneFboId =
+            graphics.CreateFramebuffer(new FrameBufferDesc(SizeRatio: Vector2.One, DepthStencilBuffer: true),
+                out var sceneFboMeta);
+
+        var lightFboId =
+            graphics.CreateFramebuffer(
+                new FrameBufferDesc(SizeRatio: new Vector2(0.3f, 0.3f), TexturePreset: TexturePreset.NearestClamp,
+                    DepthStencilBuffer: false),
+                out var lightFboMeta);
+
+
+        // colorTexId will be 0 for MSAA
+        var msaaFboId = graphics.CreateFramebuffer(new FrameBufferDesc(
+            SizeRatio: Vector2.One, DepthStencilBuffer: true, Msaa: true, Samples: 4), out _);
+
+        // Pass 0: draw scene into MSAA FBO
+        builder.RegisterRenderPass(RenderTargetId.Scene, 0, new SceneRenderPass
+        {
+            TargetFbo = msaaFboId,
+            Clear = new RenderPassClearDesc(Color.Black, ClearBufferFlag.ColorAndDepth),
+        });
+
+        // Pass 1: resolve MSAA → single-sample texture FBO
+        builder.RegisterRenderPass(RenderTargetId.Scene, 1, new BlitRenderPass
+            {
+                TargetFbo = sceneFboId,
+                BlitFbo = msaaFboId,
+                Multisample = true,
+                Samples = 4
+            }
+        );
+
+        // Pass 2: Draw light into FBO
+        //SourceTexId = [lightFboMeta.ColTexId],
+        builder.RegisterRenderPass(RenderTargetId.SceneLight, 2, new LightRenderPass
+            {
+                TargetFbo = lightFboId,
+                Shader = lightPassShader.ResourceId,
+                Clear = new RenderPassClearDesc(Color.FromArgb(255, 200, 200, 255), ClearBufferFlag.Color),
+                Blend = BlendMode.Additive,
+                DepthTest = false
+            }
+        );
+
+        // Pass 3: Combine scene and light fbo texture into final scene
+        builder.RegisterRenderPass(RenderTargetId.Scene, 3, new FsqRenderPass
+        {
+            TargetFbo = default,
+            SourceTextures = [sceneFboMeta.ColTexId, lightFboMeta.ColTexId],
+            Shader = lightComposite.ResourceId,
+        });
+
+        renderer.AddMaterial(new MaterialDescription(
+            Shader: spriteShader,
+            Texture: spriteTexture
+        ));
+
+        renderer.AddMaterial(new MaterialDescription(
+            Shader: spriteShader,
+            Texture: tilemapTexture
+        ));
     }
 
     public override void Initialize(IGraphicsDevice graphics)
@@ -47,19 +125,10 @@ public sealed class DemoScene : GameScene
         var lightPassShader = assets.Get<Shader>("LightPassShader");
         var lightComposite = assets.Get<Shader>("LightComposite");
 
-        
+
         var spriteTexture = assets.Get<Texture2D>("SpriteTexture");
         var tilemapTexture = assets.Get<Texture2D>("TilemapTextureAtlas");
 
-        renderer.AddMaterial(new MaterialDescription(
-            Shader: spriteShader,
-            Texture: spriteTexture
-        ));
-
-        renderer.AddMaterial(new MaterialDescription(
-            Shader: spriteShader,
-            Texture: tilemapTexture
-        ));
 
         /*
         var colorShader = assets.Get<Shader>("ColorShader");
@@ -68,71 +137,6 @@ public sealed class DemoScene : GameScene
         var brightPassShader = assets.Get<Shader>("BrightPass");
         var screenCompositeShader = assets.Get<Shader>("ScreenComposite");
         */
-        var halfSize = Vector2.One * 0.5f;
-
-
-        // Create a single-sample texture FBO for post-FX
-        var sceneFboId =
-            graphics.CreateFramebuffer(new FrameBufferDesc(SizeRatio: Vector2.One, DepthStencilBuffer: true),
-                out var sceneFboMeta);
-
-        var lightFboId =
-            graphics.CreateFramebuffer(
-                new FrameBufferDesc(SizeRatio: new Vector2(0.3f,0.3f), TexturePreset:TexturePreset.NearestClamp, DepthStencilBuffer: false), 
-                out var lightFboMeta);
-
-
-        // colorTexId will be 0 for MSAA
-        var msaaFboId = graphics.CreateFramebuffer(new FrameBufferDesc(
-            SizeRatio: Vector2.One, DepthStencilBuffer: true, Msaa: true, Samples: 4), out _);
-
-        // Pass 0: draw scene into MSAA FBO
-        renderer.RegisterRenderPass(RenderTargetId.Scene, 0, new RenderPassData
-        {
-            Op = RenderPassOp.DrawScene,
-            TargetFboId = msaaFboId,
-            DoClear = true,
-            ClearMask = ClearBufferFlag.ColorAndDepth,
-            ClearColor = Color.Black,
-            Blend = BlendMode.Alpha,
-            DepthTest = true
-        });
-
-        // Pass 1: resolve MSAA → single-sample texture FBO
-        renderer.RegisterRenderPass(RenderTargetId.Scene, 1, new RenderPassData
-            {
-                Op = RenderPassOp.Blit,
-                TargetFboId = sceneFboId,
-                BlitFboId = msaaFboId
-            }
-        );
-
-        // Pass 2: Draw light into FBO
-        renderer.RegisterRenderPass(RenderTargetId.Scene, 2, new RenderPassData
-            {
-                Op = RenderPassOp.DrawLight,
-                TargetFboId = lightFboId,
-                SourceTexId = [lightFboMeta.ColTexId],
-                ShaderId = lightPassShader.ResourceId,
-                DoClear = true,
-                ClearMask = ClearBufferFlag.Color,
-                ClearColor = Color.FromArgb(255, 200, 200, 200),
-                Blend = BlendMode.Additive,
-                DepthTest = false
-            }
-        );
-
-
-        // Pass 2: fullscreen color grade to screen
-        renderer.RegisterRenderPass(RenderTargetId.Scene, 3, new RenderPassData
-        {
-            Op = RenderPassOp.FullscreenQuad,
-            TargetFboId = default,
-            SourceTexId = [sceneFboMeta.ColTexId, lightFboMeta.ColTexId],
-            ShaderId = lightComposite.ResourceId,
-            Blend = BlendMode.None,
-            DepthTest = false
-        });
     }
 
     public override void Unload()

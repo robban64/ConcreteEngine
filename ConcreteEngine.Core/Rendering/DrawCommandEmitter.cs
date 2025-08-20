@@ -8,6 +8,15 @@ using ConcreteEngine.Graphics;
 
 namespace ConcreteEngine.Core.Rendering;
 
+
+public sealed class DrawEmitterContext
+{
+    public float Alpha;
+    public required IGraphicsDevice Graphics { get; init; }
+    public required SpriteBatcher SpriteBatch { get; init; }
+    public required TilemapBatcher TilemapBatch { get; init; }
+}
+
 public interface IDrawCommandEmitter
 {
     int Order { get;  }
@@ -61,12 +70,4 @@ public abstract class DrawCommandEmitter<TEntity> : IDrawCommandEmitter
     {
         _features.Add(order, feature);
     }
-}
-
-public sealed class DrawEmitterContext
-{
-    public float Alpha;
-    public required IGraphicsDevice Graphics { get; init; }
-    public required SpriteBatcher SpriteBatch { get; init; }
-    public required TilemapBatcher TilemapBatch { get; init; }
 }

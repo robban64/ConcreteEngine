@@ -35,14 +35,14 @@ public sealed class SpriteDrawEmitter : DrawCommandEmitter<SpriteDrawEntity>
 
 
         var result = spriteBatch.BuildBatch();
-        var meta = new DrawCommandMeta(DrawCommandId.Sprite, RenderTargetId.Scene, 0);
+        var meta = new DrawCommandMeta(DrawCommandId.Sprite, RenderTargetId.Scene, DrawCommandKind.Mesh, 0);
 
-        var cmd = new DrawCommandData(
+        var cmd = new DrawCommandMesh(
             meshId: result.MeshId,
             materialId: MaterialId.Of(0),
             drawCount: result.DrawCount,
             transform: in DefaultTransform
         );
-        submitter.SubmitDraw(in cmd, in meta);
+        submitter.SubmitMeshDraw(in cmd, in meta);
     }
 }

@@ -274,14 +274,14 @@ public sealed class GlGraphicsContext : IGraphicsContext
         if (_boundFboId == id) return;
         if (id == default)
         {
-            Gl.BindFramebuffer(FramebufferTarget.Framebuffer, 0);
+            _gl.BindFramebuffer(FramebufferTarget.Framebuffer, 0);
             _boundFboId = default;
             return;
         }
 
         var handle = _store.FboStore.GetHandle(id).Handle;
 
-        Gl.BindFramebuffer(FramebufferTarget.Framebuffer, handle);
+        _gl.BindFramebuffer(FramebufferTarget.Framebuffer, handle);
         _boundFboId = id;
     }
 
@@ -369,7 +369,7 @@ public sealed class GlGraphicsContext : IGraphicsContext
         var size = elementSize * elementCount;
 
 
-        Gl.BufferData(BufferTargetARB.ArrayBuffer, (nuint)size, data, meta.Usage.ToGlEnum());
+        _gl.BufferData(BufferTargetARB.ArrayBuffer, (nuint)size, data, meta.Usage.ToGlEnum());
         CheckGlError();
 
         var newMeta = new VertexBufferMeta(meta.Usage, (uint)elementCount, (uint)elementSize);
@@ -389,7 +389,7 @@ public sealed class GlGraphicsContext : IGraphicsContext
         var elementSize = Unsafe.SizeOf<T>();
         var size = elementSize * elementCount;
 
-        Gl.BufferData(BufferTargetARB.ElementArrayBuffer, (nuint)size, data, meta.Usage.ToGlEnum());
+        _gl.BufferData(BufferTargetARB.ElementArrayBuffer, (nuint)size, data, meta.Usage.ToGlEnum());
         CheckGlError();
 
         var newMeta = new IndexBufferMeta(meta.Usage, (uint)elementCount, (uint)elementSize);
@@ -416,7 +416,7 @@ public sealed class GlGraphicsContext : IGraphicsContext
         }
 
         nint byteOffset = (nint)((long)offsetElements * elementSize);
-        Gl.BufferSubData(BufferTargetARB.ArrayBuffer, byteOffset, data);
+        _gl.BufferSubData(BufferTargetARB.ArrayBuffer, byteOffset, data);
 
         CheckGlError(); // throws here
     }
@@ -441,7 +441,7 @@ public sealed class GlGraphicsContext : IGraphicsContext
         }
 
         nint byteOffset = (nint)((long)offsetElements * elementSize);
-        Gl.BufferSubData(BufferTargetARB.ElementArrayBuffer, byteOffset, data);
+        _gl.BufferSubData(BufferTargetARB.ElementArrayBuffer, byteOffset, data);
 
         CheckGlError(); // throws here
     }
@@ -536,7 +536,7 @@ public sealed class GlGraphicsContext : IGraphicsContext
 
     private void CheckGlError()
     {
-        var error = Gl.GetError();
+        var error = _gl.GetError();
         if (error != (GLEnum)ErrorCode.NoError)
             throw new OpenGlException(error);
     }

@@ -1,7 +1,6 @@
 #region
 
 using ConcreteEngine.Core.Resources;
-using ConcreteEngine.Graphics;
 using ConcreteEngine.Graphics.Definitions;
 
 #endregion
@@ -18,14 +17,21 @@ public readonly record struct MaterialId(int Id)
     public static MaterialId Of(int id) => new(id);
 }
 
-public sealed class Material
+public interface IMaterial
 {
-    private readonly MaterialId _id;
+    public string Name { get; }
+    public Shader Shader { get; }
+    public Texture2D[] Textures { get; }
+    public BlendMode Blend { get; }
+}
+
+public sealed class Material: IMaterial
+{
     private readonly Texture2D[] _textures;
     private readonly Shader _shader;
     private readonly BlendMode _blend;
 
-    public MaterialId Id => _id;
+    public string Name { get; }
 
     public Texture2D[] Textures => _textures;
 
@@ -44,10 +50,5 @@ public sealed class Material
         _textures = [texture];
         _shader = shader;
         _blend = blend;
-    }
-
-    public void Bind(IGraphicsContext gfx)
-    {
-
     }
 }

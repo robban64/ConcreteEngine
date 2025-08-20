@@ -25,11 +25,13 @@ public sealed class UniformTable
         }
     }
 
+    public bool ContainsKey(ShaderUniform uniform) => _locs[(int)uniform] >= 0;
 
-    public int this[ShaderUniform u]
+
+    public int this[ShaderUniform uniform]
     {
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        get => _locs[(int)u];
+        get => _locs[(int)uniform];
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]

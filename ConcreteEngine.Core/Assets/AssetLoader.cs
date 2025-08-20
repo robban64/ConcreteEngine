@@ -30,7 +30,8 @@ internal sealed class AssetLoader
         var fragmentSource = File.ReadAllText(GetPath("shaders", record.FragShaderPath));
 
         var resourceId = _graphics.CreateShader(vertexSource, fragmentSource, record.Samplers);
-
+        var uniforms = _graphics.GetShaderUniforms(resourceId);
+    
         return new Shader
         {
             Name = record.Name,

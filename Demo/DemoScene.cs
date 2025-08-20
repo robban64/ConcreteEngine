@@ -97,7 +97,7 @@ public sealed class DemoScene : GameScene
         );
 
         // Pass 3: Combine scene and light fbo texture into final scene
-        builder.RegisterRenderPass(RenderTargetId.Scene, 3, new FsqRenderPass
+        builder.RegisterRenderPass(RenderTargetId.SceneLight, 3, new FsqRenderPass
         {
             TargetFbo = default,
             SourceTextures = [sceneFboMeta.ColTexId, lightFboMeta.ColTexId],

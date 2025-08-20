@@ -143,6 +143,11 @@ public sealed class GlGraphicsDevice : IGraphicsDevice<GlGraphicsContext>
         RecreateRenderTargetsIfNeeded();
     }
 
+    public UniformTable GetShaderUniforms(ShaderId shaderId)
+    {
+        return _uniformRegistry.Get(shaderId);
+    }
+
     private void RecreateRenderTargetsIfNeeded()
     {
         if (_viewportSize == _previousViewportSize) return;

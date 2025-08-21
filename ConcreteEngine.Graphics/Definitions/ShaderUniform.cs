@@ -1,3 +1,5 @@
+using static ConcreteEngine.Graphics.Definitions.ShaderUniform;
+
 namespace ConcreteEngine.Graphics.Definitions;
 
 public enum ShaderUniform : byte
@@ -13,53 +15,56 @@ public enum ShaderUniform : byte
     SamplerLight,
     SamplerBloom,
 
-    Time,
+    Color,
     TexelSize,
+    LightPos,
+
+    Time,
     Threshold,
     SoftKnee,
-    
-    LightPos,
     Radius,
-    Color,
     Intensity,
     Softness,
     Shape,
-
-    BloomStrength,
-    VignetteRadius,
-    VignetteSoft,
-    VignetteGain
 }
 
 public static class ShaderUniforms
 {
+    public static readonly ShaderUniform[] SamplerUniforms = 
+        [SampleTexture, SamplerScene, SamplerLight, SamplerBloom];
+
+    public static readonly ShaderUniform[] Matrix4Uniforms = 
+        [ModelMatrix, ProjectionMatrix, ProjectionViewMatrix];
+
+    public static readonly ShaderUniform[] VectorUniforms = 
+        [Color, TexelSize, LightPos];
+
+    public static readonly ShaderUniform[] PrimitiveUniforms =
+        [Time, Threshold, SoftKnee, Radius, Intensity, Softness, Shape];
+
     public static string ToUniformName(this ShaderUniform uniform)
     {
         return uniform switch
         {
-            ShaderUniform.ModelMatrix => "uModel",
-            ShaderUniform.ProjectionViewMatrix => "uViewProj",
-            ShaderUniform.ProjectionMatrix => "uProj",
-            ShaderUniform.TextureOffset => "uTexOffset",
-            ShaderUniform.TextureScale => "uTexScale",
-            ShaderUniform.SampleTexture => "uTexture",
-            ShaderUniform.SamplerScene => "uSceneTex",
-            ShaderUniform.SamplerLight => "uLightTex",
-            ShaderUniform.SamplerBloom => "uBloomTex",
-            ShaderUniform.Time => "uTime",
-            ShaderUniform.TexelSize => "uTexelSize",
-            ShaderUniform.Threshold => "uThreshold",
-            ShaderUniform.SoftKnee => "uSoftKnee",
-            ShaderUniform.LightPos => "uLightPos",
-            ShaderUniform.Radius => "uRadius",
-            ShaderUniform.Color => "uColor",
-            ShaderUniform.Intensity => "uIntensity",
-            ShaderUniform.Softness => "uSoftness",
-            ShaderUniform.Shape => "uShape",
-            ShaderUniform.BloomStrength => "uBloomStrength",
-            ShaderUniform.VignetteRadius => "uVignetteRadius",
-            ShaderUniform.VignetteSoft => "uVignetteSoft",
-            ShaderUniform.VignetteGain => "uVignetteGain",
+            ModelMatrix => "uModel",
+            ProjectionViewMatrix => "uViewProj",
+            ProjectionMatrix => "uProj",
+            TextureOffset => "uTexOffset",
+            TextureScale => "uTexScale",
+            SampleTexture => "uTexture",
+            SamplerScene => "uSceneTex",
+            SamplerLight => "uLightTex",
+            SamplerBloom => "uBloomTex",
+            Time => "uTime",
+            TexelSize => "uTexelSize",
+            Threshold => "uThreshold",
+            SoftKnee => "uSoftKnee",
+            LightPos => "uLightPos",
+            Radius => "uRadius",
+            Color => "uColor",
+            Intensity => "uIntensity",
+            Softness => "uSoftness",
+            Shape => "uShape",
             _ => throw new ArgumentOutOfRangeException(nameof(uniform), uniform, null)
         };
     }

@@ -22,44 +22,37 @@ public sealed class GlGraphicsDevice : IGraphicsDevice<GlGraphicsContext>
 
     private readonly ResourceStore<TextureId, TextureMeta, GlTextureHandle> _textureStore = new(
         initialCapacity: StoreTier1,
-        i => new TextureId(i + 1),
-        id => id.Id - 1
+        i => new TextureId(i + 1)
     );
 
     private readonly ResourceStore<ShaderId, ShaderMeta, GlShaderHandle> _shaderStore = new(
         initialCapacity: StoreTier2,
-        i => new ShaderId(i + 1),
-        id => id.Id - 1
+        i => new ShaderId(i + 1)
     );
 
     private readonly ResourceStore<MeshId, MeshMeta, GlMeshHandle> _meshStore = new(
         initialCapacity: StoreTier2,
-        i => new MeshId(i + 1),
-        id => id.Id - 1
+        i => new MeshId(i + 1)
     );
 
     private readonly ResourceStore<VertexBufferId, VertexBufferMeta, GlVertexBufferHandle> _vboStore = new(
         initialCapacity: StoreTier2,
-        i => new VertexBufferId(i + 1),
-        id => id.Id - 1
+        i => new VertexBufferId(i + 1)
     );
 
     private readonly ResourceStore<IndexBufferId, IndexBufferMeta, GlIndexBufferHandle> _iboStore = new(
         initialCapacity: StoreTier2,
-        i => new IndexBufferId(i + 1),
-        id => id.Id - 1
+        i => new IndexBufferId(i + 1)
     );
 
     private readonly ResourceStore<FrameBufferId, FrameBufferMeta, GlFrameBufferHandle> _fboStore = new(
         initialCapacity: StoreTier3,
-        i => new FrameBufferId(i + 1),
-        id => id.Id - 1
+        i => new FrameBufferId(i + 1)
     );
 
     private readonly ResourceStore<RenderBufferId, RenderBufferMeta, GlRenderBufferHandle> _rboStore = new(
         initialCapacity: StoreTier3,
-        i => new RenderBufferId(i + 1),
-        id => id.Id - 1
+        i => new RenderBufferId(i + 1)
     );
 
     #endregion
@@ -227,18 +220,11 @@ public sealed class GlGraphicsDevice : IGraphicsDevice<GlGraphicsContext>
         return _fboStore.Add(in meta, in handle);
     }
 
-    public ShaderId CreateShader(string vertexSource, string fragmentSource, string[]? samplers)
+    public ShaderId CreateShader(string vertexSource, string fragmentSource, string[] samplers)
     {
         var handle = _resourceFactory.CreateShader(vertexSource, fragmentSource, samplers,
             out var uniformTable, out var meta);
 
-        if (samplers != null)
-        {
-            _gl.UseProgram(handle.Handle);
-            for (int i = 0; i < samplers.Length; i++)
-                _gl.Uniform1(uniformTable.GetUniformLocation(samplers[i]), i);
-            _gl.UseProgram(0);
-        }
 
         var shaderId = _shaderStore.Add(in meta, in handle);
 

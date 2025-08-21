@@ -7,13 +7,12 @@ using System.Runtime.CompilerServices;
 namespace ConcreteEngine.Graphics.Resources;
 
 internal sealed class ResourceStore<TId, TMeta, THandle>
-    where TId : struct where TMeta : struct where THandle : struct
+    where TId : struct, IResourceId where TMeta : struct where THandle : struct
 {
     private const int MaxBufferSize = 1024;
     private const int BufferSize = 128;
 
     private readonly Func<int, TId> _makeId;
-    private readonly Func<TId, int> _toIndex;
 
     private ushort _idx = 0;
     private TMeta[] _meta;
@@ -26,16 +25,13 @@ internal sealed class ResourceStore<TId, TMeta, THandle>
 
     public ResourceStore(
         int initialCapacity,
-        Func<int, TId> makeId,
-        Func<TId, int> toIndex)
+        Func<int, TId> makeId)
     {
         ArgumentOutOfRangeException.ThrowIfLessThan(initialCapacity, 4, nameof(initialCapacity));
         ArgumentOutOfRangeException.ThrowIfGreaterThan(initialCapacity, MaxBufferSize, nameof(initialCapacity));
         ArgumentNullException.ThrowIfNull(makeId);
-        ArgumentNullException.ThrowIfNull(toIndex);
 
         _makeId = makeId;
-        _toIndex = toIndex;
 
         _meta = new TMeta[initialCapacity];
         _handle = new THandle[initialCapacity];
@@ -54,7 +50,7 @@ internal sealed class ResourceStore<TId, TMeta, THandle>
     // Remove slot, return the handle for the caller (device) to actually delete later.
     public THandle Remove(TId id, out TMeta oldMeta)
     {
-        int idx = _toIndex(id) - 1;
+        int idx = id.Id - 2;
         oldMeta = _meta[idx];
         var h = _handle[idx];
         _meta[idx] = default!;
@@ -66,23 +62,23 @@ internal sealed class ResourceStore<TId, TMeta, THandle>
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public ref readonly TMeta GetMeta(TId id)
-        => ref _meta[_toIndex(id) - 1];
+        => ref _meta[id.Id - 2];
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public THandle GetHandle(TId id)
-        => _handle[_toIndex(id) - 1];
+        => _handle[id.Id - 2];
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public THandle GetHandleAndMeta(TId id, out TMeta meta)
     {
-        int idx = _toIndex(id) - 1;
+        int idx = id.Id - 2;
         meta = _meta[idx];
         return _handle[idx];
     }
 
     public TId Replace(TId id, in TMeta newMeta, in THandle newHandle, out THandle oldHandle)
     {
-        int idx = _toIndex(id) - 1;
+        int idx = id.Id - 2;
         oldHandle = _handle[idx];
         _meta[idx] = newMeta;
         _handle[idx] = newHandle;

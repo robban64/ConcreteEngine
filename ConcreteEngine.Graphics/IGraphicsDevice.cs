@@ -21,7 +21,7 @@ public interface IGraphicsDevice : IDisposable
     UniformTable GetShaderUniforms(ShaderId shaderId);
     
     FrameBufferId CreateFramebuffer(in FrameBufferDesc desc, out FrameBufferMeta meta);
-    ShaderId CreateShader(string vertexSource, string fragmentSource, string[]? samplers);
+    ShaderId CreateShader(string vertexSource, string fragmentSource, string[] samplers);
     TextureId CreateTexture2D(in TextureDesc textureDesc);
     VertexBufferId CreateVertexBuffer(BufferUsage bufferUsage);
     IndexBufferId CreateIndexBuffer(BufferUsage usage, IboElementType elementType);

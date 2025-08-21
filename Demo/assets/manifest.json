@@ -1,40 +1,64 @@
 {
   "shaders": [
-    {
-      "name": "SpriteShader",
-      "vertShaderPath": "sprite.vert.glsl",
-      "fragShaderPath": "sprite.frag.glsl",
-      "samplers": ["uTexture"]
-    },
-    {
-      "name": "ScreenShader",
-      "vertShaderPath": "screen.vert.glsl",
-      "fragShaderPath": "screen.frag.glsl",
-      "samplers": ["uTexture"]
-    },
-    {
-      "name": "LightPassShader",
-      "vertShaderPath": "screen.vert.glsl",
-      "fragShaderPath": "light-pass.frag.glsl"
-    },
-    {
-      "name": "LightComposite",
-      "vertShaderPath": "screen.vert.glsl",
-      "fragShaderPath": "light-composite.frag.glsl",
-      "samplers": ["uSceneTex", "uLightTex"]
-    }
+	{
+	  "name": "SpriteShader",
+	  "vertShaderPath": "sprite.vert.glsl",
+	  "fragShaderPath": "sprite.frag.glsl",
+	  "samplers": ["uTexture"]
+	},
+	{
+	  "name": "ScreenShader",
+	  "vertShaderPath": "screen.vert.glsl",
+	  "fragShaderPath": "screen.frag.glsl",
+	  "samplers": ["uTexture"]
+	},
+	{
+	  "name": "LightPassShader",
+	  "vertShaderPath": "screen.vert.glsl",
+	  "fragShaderPath": "light-pass.frag.glsl"
+	},
+	{
+	  "name": "LightComposite",
+	  "vertShaderPath": "screen.vert.glsl",
+	  "fragShaderPath": "light-composite.frag.glsl",
+	  "samplers": ["uSceneTex", "uLightTex"]
+	}
   ],
   "textures": [
-    {
-      "name": "SpriteTexture",
-      "path": "sprite.png"
-    },
-    {
-      "name": "TilemapTextureAtlas",
-      "path": "terrain_tiles.png",
-      "preset": "NearestClamp",
-      "lodBias": -0.25
-
-    }
+	{
+	  "name": "SpriteTexture",
+	  "path": "sprite.png"
+	},
+	{
+	  "name": "TilemapTextureAtlas",
+	  "path": "terrain_tiles.png",
+	  "preset": "NearestClamp",
+	  "lodBias": -0.25
+	}
+  ],
+  "materials": [
+	{
+	  "name": "SpriteMaterial",
+	  "shader": "SpriteShader",
+	  "textures": ["SpriteTexture"]
+	},
+	{
+	  "name": "TilemapMaterial",
+	  "shader": "SpriteShader",
+	  "textures": ["TilemapTextureAtlas"]
+	},
+	{
+	  "name": "LightMaterial",
+	  "shader": "LightPassShader",
+	  "textures": [],
+	  "defaults": {
+		"Color": {"value": [255, 255, 255], "kind": "Vec3"},
+		"LightPos": {"value": [255, 255], "kind": "Vec2"},
+		"Radius": 80.0,
+		"Intensity": 1.8,
+		"Softness": 2.5,
+		"Shape": 0
+	  }
+	}
   ]
 }

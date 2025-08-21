@@ -1,5 +1,6 @@
 #region
 
+using System.Collections.Immutable;
 using ConcreteEngine.Common.Collections;
 using ConcreteEngine.Core.Assets;
 using ConcreteEngine.Core.Configuration;
@@ -76,8 +77,7 @@ public sealed class GameEngine : IDisposable
         _pipeline = new GameMessagePipelineSystem();
 
         // renderer
-        var shaders = _assets.GetAll<Shader>();
-        _renderer = new RenderSystem(_graphics, _camera.Transform, shaders.ToArray());
+        _renderer = new RenderSystem(_graphics, _camera.Transform, _assets.MaterialStore);
 
         _systems.Register<CameraSystem>(_camera);
         _systems.Register<GameMessagePipelineSystem>(_pipeline);

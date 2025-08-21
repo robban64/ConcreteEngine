@@ -3,7 +3,7 @@
 using System.Numerics;
 using ConcreteEngine.Core.Game.Sprite;
 using ConcreteEngine.Core.Rendering.Batchers.Sprite;
-using ConcreteEngine.Core.Rendering.Materials;
+using ConcreteEngine.Core.Resources;
 using ConcreteEngine.Core.Transforms;
 using ConcreteEngine.Graphics.Definitions;
 
@@ -39,7 +39,7 @@ public sealed class SpriteDrawEmitter : DrawCommandEmitter<SpriteDrawEntity>
 
         var cmd = new DrawCommandMesh(
             meshId: result.MeshId,
-            materialId: MaterialId.Of(0),
+            materialId: MaterialId.Of(1),
             drawCount: result.DrawCount,
             transform: in DefaultTransform
         );

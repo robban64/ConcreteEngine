@@ -9,7 +9,6 @@ using ConcreteEngine.Core.Game.Sprite;
 using ConcreteEngine.Core.Game.Terrain;
 using ConcreteEngine.Core.Rendering;
 using ConcreteEngine.Core.Rendering.Emitters;
-using ConcreteEngine.Core.Rendering.Materials;
 using ConcreteEngine.Core.Resources;
 using ConcreteEngine.Graphics;
 using ConcreteEngine.Graphics.Data;
@@ -40,14 +39,14 @@ public sealed class DemoScene : GameScene
         var renderer = Context.GetSystem<RenderSystem>();
         var assets = Context.GetSystem<AssetSystem>();
 
-        var spriteShader = assets.Get<Shader>("SpriteShader");
+        //var spriteShader = assets.Get<Shader>("SpriteShader");
         var screenShader = assets.Get<Shader>("ScreenShader");
         var lightPassShader = assets.Get<Shader>("LightPassShader");
         var lightComposite = assets.Get<Shader>("LightComposite");
 
 
-        var spriteTexture = assets.Get<Texture2D>("SpriteTexture");
-        var tilemapTexture = assets.Get<Texture2D>("TilemapTextureAtlas");
+        //var spriteTexture = assets.Get<Texture2D>("SpriteTexture");
+        //var tilemapTexture = assets.Get<Texture2D>("TilemapTextureAtlas");
 
         var halfSize = Vector2.One * 0.5f;
 
@@ -104,15 +103,6 @@ public sealed class DemoScene : GameScene
             Shader = lightComposite.ResourceId,
         });
 
-        renderer.AddMaterial(new MaterialDescription(
-            Shader: spriteShader,
-            Texture: spriteTexture
-        ));
-
-        renderer.AddMaterial(new MaterialDescription(
-            Shader: spriteShader,
-            Texture: tilemapTexture
-        ));
     }
 
     public override void Initialize(IGraphicsDevice graphics)
@@ -129,6 +119,9 @@ public sealed class DemoScene : GameScene
         var spriteTexture = assets.Get<Texture2D>("SpriteTexture");
         var tilemapTexture = assets.Get<Texture2D>("TilemapTextureAtlas");
 
+        renderer.CreateMaterialFromTemplate("SpriteMaterial");
+        renderer.CreateMaterialFromTemplate("TilemapMaterial");
+        renderer.CreateMaterialFromTemplate("LightMaterial");
 
         /*
         var colorShader = assets.Get<Shader>("ColorShader");

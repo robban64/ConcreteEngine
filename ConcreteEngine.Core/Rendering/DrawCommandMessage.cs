@@ -1,7 +1,7 @@
 #region
 
 using System.Numerics;
-using ConcreteEngine.Core.Rendering.Materials;
+using ConcreteEngine.Core.Resources;
 using ConcreteEngine.Graphics.Definitions;
 using ConcreteEngine.Graphics.Resources;
 
@@ -35,11 +35,11 @@ public readonly struct DrawCommandMesh(
     public readonly Matrix4x4 Transform = transform;
 }
 
-public struct DrawCommandLight(Vector2 position, float radius, Vector3 color, float intensity)
+public struct DrawCommandLight(Vector2 position, Vector3 color, float radius, float intensity)
 {
     public Vector2 Position = position; 
-    public float   Radius = radius;   
     public Vector3 Color = color;    
+    public float   Radius = radius;   
     public float   Intensity = intensity;
 }
 

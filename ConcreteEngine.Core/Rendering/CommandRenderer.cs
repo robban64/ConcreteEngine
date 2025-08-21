@@ -1,7 +1,9 @@
+using System.Numerics;
 using ConcreteEngine.Common.Extensions;
-using ConcreteEngine.Core.Rendering.Materials;
+using ConcreteEngine.Core.Resources;
 using ConcreteEngine.Core.Transforms;
 using ConcreteEngine.Graphics;
+using ConcreteEngine.Graphics.Data;
 using ConcreteEngine.Graphics.Definitions;
 using Silk.NET.Maths;
 
@@ -21,46 +23,84 @@ public sealed class CommandRenderer
         _graphics = graphics;
         _gfx = graphics.Gfx;
         _view = view;
-        _materialStore  = materialStore;
+        _materialStore = materialStore;
     }
-    
-    
+
+    private void BindMaterialSlots(Material material)
+    {
+        _gfx.UseShader(material.ShaderId);
+        for (int t = 0; t < material.SamplerSlots.Length; t++)
+        {
+            _gfx.BindTexture(material.SamplerSlots[t], (uint)t);
+        }
+
+        var properties = material.GetProperties();
+        foreach (var property in properties)
+        {
+            var uniform = property.Uniform;
+            var kind = property.Kind;
+
+            if (!material.TryGetValue(uniform, out var mv)) continue;
+
+            switch (kind)
+            {
+                case UniformValueKind.Float:
+                    if (mv is MaterialValue<float> f) _gfx.SetUniform(uniform, f.Value);
+                    break;
+                case UniformValueKind.Int:
+                    if (mv is MaterialValue<int> i) _gfx.SetUniform(uniform, i.Value);
+                    break;
+                case UniformValueKind.Vec2:
+                    if (mv is MaterialValue<Vector2> v2) _gfx.SetUniform(uniform, v2.Value);
+                    break;
+                case UniformValueKind.Vec3:
+                    if (mv is MaterialValue<Vector3> v3) _gfx.SetUniform(uniform, v3.Value);
+                    break;
+                case UniformValueKind.Vec4:
+                    if (mv is MaterialValue<Vector4> v4) _gfx.SetUniform(uniform, v4.Value);
+                    break;
+            }
+        }
+    }
+
     public void DrawMeshCommands(ReadOnlySpan<DrawCommandMesh> commands)
     {
         var projView = _view.ProjectionViewMatrix;
-        
+
         _gfx.BindMesh(_graphics.QuadMeshId);
 
         foreach (ref readonly var cmd in commands)
         {
             if (_previousMaterial != cmd.MaterialId)
             {
+                /*
                 var material = _materialStore[cmd.MaterialId];
-                _gfx.UseShader(material.Shader.ResourceId);
-                _gfx.SetUniform(ShaderUniform.ProjectionViewMatrix, in projView);
-                for (int t = 0; t < material.Textures.Length; t++)
+                _gfx.UseShader(material.ShaderId);
+                for (int t = 0; t < material.SamplerSlots.Length; t++)
                 {
-                    _gfx.BindTexture(material.Textures[t].ResourceId, (uint)t);
+                    _gfx.BindTexture(material.SamplerSlots[t], (uint)t);
                 }
-
-                _previousMaterial =  cmd.MaterialId;
+                */
+                var material = _materialStore[cmd.MaterialId];
+                BindMaterialSlots(material);
+                _previousMaterial = cmd.MaterialId;
             }
-            
+
             _gfx.SetUniform(ShaderUniform.ModelMatrix, in cmd.Transform);
             _gfx.BindMesh(cmd.MeshId);
             _gfx.DrawIndexed(cmd.DrawCount);
         }
     }
-    
+
     public void RenderLightCommands(LightRenderPass pass, ReadOnlySpan<DrawCommandLight> commands)
     {
         _gfx.UseShader(pass.Shader);
         _gfx.BindMesh(_graphics.QuadMeshId);
-        _gfx.SetUniform(ShaderUniform.ProjectionViewMatrix, _view.ProjectionViewMatrix);
 
         for (int i = 0; i < commands.Length; i++)
         {
             ref readonly var cmd = ref commands[i];
+
             _gfx.SetUniform(ShaderUniform.LightPos, cmd.Position);
             _gfx.SetUniform(ShaderUniform.Radius, cmd.Radius);
             _gfx.SetUniform(ShaderUniform.Color, cmd.Color);
@@ -71,7 +111,7 @@ public sealed class CommandRenderer
             _gfx.Draw();
         }
     }
-    
+
     public void DrawFullscreenQuad(FsqRenderPass pass)
     {
         ArgumentNullException.ThrowIfNull(pass);

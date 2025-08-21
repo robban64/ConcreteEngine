@@ -4,10 +4,10 @@ using System.Diagnostics;
 using System.Numerics;
 using System.Runtime.CompilerServices;
 using ConcreteEngine.Common.Extensions;
+using ConcreteEngine.Core.Assets;
 using ConcreteEngine.Core.Configuration;
 using ConcreteEngine.Core.Rendering.Batchers.Sprite;
 using ConcreteEngine.Core.Rendering.Batchers.Tilemap;
-using ConcreteEngine.Core.Rendering.Materials;
 using ConcreteEngine.Core.Resources;
 using ConcreteEngine.Core.Transforms;
 using ConcreteEngine.Graphics;
@@ -26,7 +26,6 @@ public sealed class RenderSystem : IGameEngineSystem
     private readonly IGraphicsContext _gfx;
     private readonly ViewTransform2D _camera;
 
-    private readonly Shader[] _shaders;
     private readonly MaterialStore _materialStore;
     private readonly List<DrawCommandId>[] _renderPasses;
     private readonly List<IRenderPass>[] _renderPassDesc;
@@ -42,14 +41,13 @@ public sealed class RenderSystem : IGameEngineSystem
 
     public SpriteBatcher SpriteBatch => _spriteBatch;
 
-    internal RenderSystem(IGraphicsDevice graphics, ViewTransform2D camera, Shader[] shaders)
+    internal RenderSystem(IGraphicsDevice graphics, ViewTransform2D camera, MaterialStore materialStore)
     {
         _graphics = graphics;
         _gfx = graphics.Gfx;
         _camera = camera;
 
-        _shaders = shaders.ToArray();
-        _materialStore = new MaterialStore();
+        _materialStore = materialStore;
 
         _renderPasses = new List<DrawCommandId>[RenderTargetCount];
         _renderPassDesc = new List<IRenderPass>[RenderTargetCount];
@@ -122,8 +120,8 @@ public sealed class RenderSystem : IGameEngineSystem
         _renderPasses[(int)target].Add(commandId);
     }
 
-    public void AddMaterial(MaterialDescription description)
-        => _materialStore.AddMaterial(description);
+    public Material CreateMaterialFromTemplate(string templateName)
+        => _materialStore.CreateMaterialFromTemplate(templateName);
 
 
     internal void Render(float alpha, in GraphicsFrameContext frameCtx)
@@ -139,6 +137,16 @@ public sealed class RenderSystem : IGameEngineSystem
     {
         _commandSubmitter.Reset();
         _emitterCollector.Collect(_emitterContext, _commandSubmitter);
+
+        var projectionViewMatrix = _camera.ProjectionViewMatrix;
+        foreach (var material in _materialStore.Materials)
+        {
+            if (material.HasViewProjection)
+            {
+                _gfx.UseShader(material.ShaderId);
+                _gfx.SetUniform(ShaderUniform.ProjectionViewMatrix, in projectionViewMatrix);
+            }
+        }
     }
 
     private void Execute(float alpha)

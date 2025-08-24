@@ -12,7 +12,8 @@ public interface IGameSceneRenderBuilder
         where TEntity : struct;
 
 
-    void RegisterCommand(RenderTargetId target, DrawCommandId commandId, int capacity);
+    public void RegisterCommand<T>(DrawCommandId commandId) where T : struct, IDrawCommand;
+
 }
 
 public interface IGameSceneFeatureBuilder
@@ -80,13 +81,14 @@ public sealed class GameSceneConfigBuilder()
         _passes.Add(order, new RenderPassRegistryMeta( target, pass));
     }
 
-    public void RegisterCommand(RenderTargetId target, DrawCommandId commandId, int capacity)
+    public void RegisterCommand<T>(DrawCommandId commandId) where T : struct, IDrawCommand
     {
-        ArgumentOutOfRangeException.ThrowIfLessThan(capacity, 4, nameof(capacity));
-        _commands.Add(new CommandRegistryMeta(commandId, target, capacity));
+        var registry = new CommandRegistryMeta(commandId, (submitter, cmdId) => submitter.Register<T>(cmdId));
+        //_receiverBindings.Add(new ReceiverRegistry(reqId, (r, reqId) => r.Register<T>(reqId)));
+        _commands.Add(registry);
     }
 
     public record struct RenderPassRegistryMeta(RenderTargetId Target, IRenderPass Pass);
 
-    public record struct CommandRegistryMeta(DrawCommandId CommandId, RenderTargetId Target, int Capacity);
+    public record struct CommandRegistryMeta(DrawCommandId CommandId, Action<DrawCommandSubmitter, DrawCommandId> Bind);
 }

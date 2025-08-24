@@ -47,20 +47,20 @@ public sealed class TilemapDrawEmitter : DrawCommandEmitter<TilemapStruct>
             transform: in transform
         );
 
-        var meta = new DrawCommandMeta(DrawCommandId.Tilemap, RenderTargetId.Scene, DrawCommandKind.Mesh, 0);
-        submitter.SubmitMeshDraw(cmd, in meta);
+        var meta = new DrawCommandMeta(DrawCommandId.Tilemap, DrawCommandTag.SpriteRenderer, RenderTargetId.Scene,  0);
+        submitter.SubmitDraw(in cmd, in meta);
 
 
         var lightSpan = CollectionsMarshal.AsSpan(_lights);
         for (int i = 0; i < lightSpan.Length; i++)
         {
             ref var light = ref lightSpan[i];
-            var m = new DrawCommandMeta(DrawCommandId.Effect, RenderTargetId.SceneLight, DrawCommandKind.Light, 0);
+            var m = new DrawCommandMeta(DrawCommandId.Effect, DrawCommandTag.LightRenderer, RenderTargetId.SceneLight,  0);
 
             var td = tick > 0 ? 1 : -1;
             light.Position.Y += 2f * td;
 
-            submitter.SubmitLightDraw(in light, in m);
+            submitter.SubmitDraw(in light, in m);
         }
 
         tick += 0.1f;

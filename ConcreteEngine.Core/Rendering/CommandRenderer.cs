@@ -9,6 +9,7 @@ using Silk.NET.Maths;
 
 namespace ConcreteEngine.Core.Rendering;
 
+
 public sealed class CommandRenderer
 {
     private readonly ViewTransform2D _view;
@@ -63,24 +64,14 @@ public sealed class CommandRenderer
         }
     }
 
-    public void DrawMeshCommands(ReadOnlySpan<DrawCommandMesh> commands)
+    public void DrawMeshCommands(ReadOnlySpan<CommandContainer<DrawCommandMesh>> commands)
     {
-        var projView = _view.ProjectionViewMatrix;
-
-        _gfx.BindMesh(_graphics.QuadMeshId);
-
-        foreach (ref readonly var cmd in commands)
+        _previousMaterial = default;
+        foreach (ref readonly var command in commands)
         {
+            ref readonly var cmd = ref command.Cmd;
             if (_previousMaterial != cmd.MaterialId)
             {
-                /*
-                var material = _materialStore[cmd.MaterialId];
-                _gfx.UseShader(material.ShaderId);
-                for (int t = 0; t < material.SamplerSlots.Length; t++)
-                {
-                    _gfx.BindTexture(material.SamplerSlots[t], (uint)t);
-                }
-                */
                 var material = _materialStore[cmd.MaterialId];
                 BindMaterialSlots(material);
                 _previousMaterial = cmd.MaterialId;
@@ -92,14 +83,14 @@ public sealed class CommandRenderer
         }
     }
 
-    public void RenderLightCommands(LightRenderPass pass, ReadOnlySpan<DrawCommandLight> commands)
+    public void RenderLightCommands(LightRenderPass pass, ReadOnlySpan<CommandContainer<DrawCommandLight>> commands)
     {
         _gfx.UseShader(pass.Shader);
         _gfx.BindMesh(_graphics.QuadMeshId);
 
         for (int i = 0; i < commands.Length; i++)
         {
-            ref readonly var cmd = ref commands[i];
+            ref readonly var cmd = ref commands[i].Cmd;
 
             _gfx.SetUniform(ShaderUniform.LightPos, cmd.Position);
             _gfx.SetUniform(ShaderUniform.Radius, cmd.Radius);

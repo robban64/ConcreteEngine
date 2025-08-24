@@ -29,9 +29,9 @@ public sealed class DemoScene : GameScene
 
     public override void ConfigureRenderer(IGameSceneRenderBuilder builder, IGraphicsDevice graphics)
     {
-        builder.RegisterCommand(RenderTargetId.Scene, DrawCommandId.Tilemap, 4);
-        builder.RegisterCommand(RenderTargetId.Scene, DrawCommandId.Sprite, 32);
-        builder.RegisterCommand(RenderTargetId.SceneLight, DrawCommandId.Effect, 32);
+        builder.RegisterCommand<DrawCommandMesh>(DrawCommandId.Tilemap);
+        builder.RegisterCommand<DrawCommandMesh>(DrawCommandId.Sprite);
+        builder.RegisterCommand<DrawCommandLight>(DrawCommandId.Effect);
 
         builder.RegisterEmitter<TilemapDrawEmitter, TilemapStruct>(0);
         builder.RegisterEmitter<SpriteDrawEmitter, SpriteDrawEntity>(1);

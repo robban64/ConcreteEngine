@@ -1,6 +1,9 @@
 #region
 
+using System.Reflection;
+using System.Reflection.Emit;
 using System.Runtime.CompilerServices;
+using System.Runtime.InteropServices;
 using ConcreteEngine.Graphics.Definitions;
 using static ConcreteEngine.Core.Rendering.RenderConsts;
 
@@ -9,111 +12,268 @@ using static ConcreteEngine.Core.Rendering.RenderConsts;
 namespace ConcreteEngine.Core.Rendering;
 
 
+interface IDrawCommandTargetQueue
+{
+    IReadOnlyList<DrawCommandId> CommandIds { get; }
+    int Count { get; }
+    void Reset();
+}
 
 public sealed class DrawCommandSubmitter
 {
-    // 1. RenderTargetId        ex Scene
-    // 2. DrawCommandMeta.Id    ex Tilemap
-    // 3. DrawCommandMessage 
-    private readonly DrawCommandTargetQueue<DrawCommandMesh> _sceneQueue;
-    private readonly DrawCommandTargetQueue<DrawCommandLight> _lightQueue;
+    private const int DefaultQueueCapacity = 32;
+    private delegate void SubmitDelegate<T>(DrawCommandSubmitter queue, in T cmd, in DrawCommandMeta meta, int idx)
+        where T : struct, IDrawCommand;
+
+    private delegate void DrainDelegate(DrawCommandSubmitter queue, int layer);
+
+
+    private static class Slot<T> where T : struct, IDrawCommand
+    {
+        internal static DrawCommandTargetQueue<T>? Queue;
+
+        internal static readonly SubmitDelegate<T> SubmitDraw =
+            static (DrawCommandSubmitter _, in T cmd, in DrawCommandMeta meta, int idx) =>
+                Queue!.Enqueue(in cmd, in meta, idx);
+        
+        /*internal static readonly DrainDelegate Drain = 
+        static (DrawCommandSubmitter _, int layer) =>*/
+        
+    }
+    private static FieldInfo EnsureQueueField(Type tReq)
+        => typeof(Slot<>).MakeGenericType(tReq)
+            .GetField("Queue", BindingFlags.Static | BindingFlags.Public | BindingFlags.NonPublic)!;
+
+
+    private readonly List<CommandSegment>[] _passSegments;
+    private readonly List<IDrawCommandTargetQueue> _queues;
+
+    // key = DrawCommandId
+    private readonly DrawCommandTag[] cmdRendererRegistry;
     
-    internal DrawCommandTargetQueue<DrawCommandMesh> SceneQueue => _sceneQueue;
-    internal DrawCommandTargetQueue<DrawCommandLight> LightQueue => _lightQueue;
- 
+
+    private int _size = 0;
 
     public DrawCommandSubmitter()
     {
-        _sceneQueue = new DrawCommandTargetQueue<DrawCommandMesh>(RenderTargetId.Scene);
-        _lightQueue = new DrawCommandTargetQueue<DrawCommandLight>(RenderTargetId.SceneLight);
+        _queues = new List<IDrawCommandTargetQueue>(4);
+        cmdRendererRegistry = new DrawCommandTag[Enum.GetValues<DrawCommandId>().Length];
+        _passSegments = new List<CommandSegment>[Enum.GetValues<RenderTargetId>().Length];
+        for (int i = 0; i < _passSegments.Length; i++)
+            _passSegments[i] = new List<CommandSegment>(8);
     }
 
-    public void RegisterCommand(DrawCommandId commandId, RenderTargetId target, int capacity)
+    public void Register(Type cmdType, DrawCommandId cmdId)
     {
-        switch (target)
-        {
-            case RenderTargetId.Scene:
-                _sceneQueue.RegisterCommand(commandId, capacity);
-                break;
-            case RenderTargetId.SceneLight:
-                _lightQueue.RegisterCommand(commandId, capacity);
-                break;
-            default:
-                throw new NotSupportedException(nameof(target));
-        }
-    }
-    
-    [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public void SubmitMeshDraw(in DrawCommandMesh cmd, in DrawCommandMeta meta) 
-        => _sceneQueue.SubmitDraw(in cmd, in meta);
-    
-    [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public void SubmitLightDraw(in DrawCommandLight cmd, in DrawCommandMeta meta) 
-        => _lightQueue.SubmitDraw(in cmd, in meta);
+        var queueType = typeof(DrawCommandTargetQueue<>).MakeGenericType(cmdType);
+        var queue = Activator.CreateInstance(queueType);
 
+        Type[] argTypes = [typeof(DrawCommandSubmitter), cmdType.MakeByRefType(), typeof(DrawCommandMeta), typeof(int)];
 
-    public void Reset()
-    {
-        _sceneQueue.Reset();
-        _lightQueue.Reset();
-    }
-}
+        // Get 'void Enqueue(in TReq)' MethodInfo
+        var mi = queueType.GetMethod(
+            "Enqueue",
+            BindingFlags.Instance | BindingFlags.Public,
+            binder: null,
+            types: [cmdType.MakeByRefType()], // 'in' shows as ByRef in reflection
+            modifiers: null);
 
+        // Build an open delegate: (Receiver r, in TReq req) => ((ReceiverQueue<TReq>)q).Enqueue(in req)
+        var delType = typeof(SubmitDelegate<>).MakeGenericType(cmdType);
+        var dm = new DynamicMethod(
+            name: "Enq_" + cmdType.Name,
+            returnType: typeof(void),
+            parameterTypes: argTypes,
+            m: typeof(DrawCommandSubmitter).Module, skipVisibility: true);
 
-internal sealed class DrawCommandTargetQueue<T> where T : unmanaged
-{
-    private readonly DrawCommandMeta[][] _metaQueue;
-    private readonly T[][] _dataQueue;
-    private readonly int[] _idx;
-    public RenderTargetId Target { get;  }
+        var il = dm.GetILGenerator();
+        il.Emit(OpCodes.Ldsfld, EnsureQueueField(cmdType)); // or emit a constant with 'q'
+        il.Emit(OpCodes.Ldarg_1);                        // push 'in TReq' (byref)
+        il.Emit(OpCodes.Callvirt, mi);                   // call Enqueue(in TReq)
+        il.Emit(OpCodes.Ret);
 
-    public DrawCommandTargetQueue(RenderTargetId target)
-    {
-        Target = target;
+        var enq = dm.CreateDelegate(delType);
 
-        _idx = new int[DrawCommandTypeCount];
-        _metaQueue = new DrawCommandMeta[DrawCommandTypeCount][];
-        _dataQueue = new T[DrawCommandTypeCount][];
+        // Assign strongly-typed fields: Slot<TReq>.Queue / .Enqueue
+        typeof(DrawCommandSubmitter)
+            .GetMethod(nameof(Register), BindingFlags.NonPublic | BindingFlags.Instance)!
+            .MakeGenericMethod(cmdType)
+            .Invoke(this, [queue, enq]);
     }
     
-    public void RegisterCommand(DrawCommandId commandId, int capacity)
+    public void Register<T>(DrawCommandId commandId) where T : struct, IDrawCommand
     {
-        ArgumentOutOfRangeException.ThrowIfZero(capacity, nameof(capacity));
-        ArgumentOutOfRangeException.ThrowIfLessThan(capacity, 4, nameof(capacity));
-
-        if (_metaQueue[(int)commandId] != null)
+        if (commandId == DrawCommandId.Invalid) throw new ArgumentException("Invalid command id", nameof(commandId));
+        if (cmdRendererRegistry[(int)commandId] != DrawCommandTag.Invalid)
             throw new InvalidOperationException(
-                $"Command {Enum.GetName(commandId)} is already registered at target: {Enum.GetName(Target)}");
+                $"Command: {Enum.GetName(commandId)} is already registered at a renderer: {typeof(T).Name}");
 
-        _metaQueue[(int)commandId] = new DrawCommandMeta[capacity];
-        _dataQueue[(int)commandId] = new T[capacity];
-        _idx[(int)commandId] = 0;
+        if (Slot<T>.Queue == null)
+        {
+            var queue = new DrawCommandTargetQueue<T>(DefaultQueueCapacity);
+            _queues.Add(queue);
+            Slot<T>.Queue = queue;
+        }
+        Slot<T>.Queue!.RegisterCommand(commandId);
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public void SubmitDraw(in T cmd, in DrawCommandMeta meta)
+    public void SubmitDraw<T>(in T cmd, in DrawCommandMeta meta) where T : struct, IDrawCommand
     {
-        var index = _idx[(int)meta.Id];
-        _dataQueue[(int)meta.Id][index] = cmd;
-        _metaQueue[(int)meta.Id][index] = meta;
-        _idx[(int)meta.Id]++;
+        Slot<T>.SubmitDraw(this, in cmd, in meta, _size++);
     }
 
-    [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public ReadOnlySpan<DrawCommandMeta> GetMetaQueue(DrawCommandId commandId) 
-        => _metaQueue[(int)commandId].AsSpan(0, _idx[(int)commandId]);
-
-    [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public ReadOnlySpan<T> GetCmdQueue(DrawCommandId commandId) 
-        => _dataQueue[(int)commandId].AsSpan(0, _idx[(int)commandId]);
+    public ReadOnlySpan<CommandContainer<T>> DrainCommandQueue<T>() where T : struct, IDrawCommand
+    {
+        return Slot<T>.Queue!.DrainQueue();
+    }
 
 
     public void Reset()
     {
-        int len = _idx.Length;
-        for (int i = 0; i < len; i++)
+        foreach (var queue in _queues)
+            queue.Reset();
+
+        _size = 0;
+    }
+
+/*
+    public ReadOnlySpan<CommandSegment> DrainCommandQueue()
+    {
+        var metaQueue = _metaQueue.DrainMetaQueue();
+        metaQueue.Sort();
+
+        int start = 0, end = metaQueue.Length;
+        var previousTarget = RenderTargetId.Scene;
+
+        for (short i = 0; i < end; i++)
         {
-            _idx[i] = 0;
+            ref readonly var meta = ref metaQueue[i];
+            if (previousTarget == meta.Target) continue;
+            var segment = new CommandSegment(meta.Target, meta.Tag, meta.Layer, (short)start, (short)(i - start + 1));
+            _segments.Add(segment);
+            previousTarget = meta.Tag;
+            start = i;
+        }
+
+
+        var previous
+        for (int i = 0; i < _segments.Count; i++)
+        {
+            var segment = _segments[i];
+            segment.
         }
     }
+*/
+
+/*
+    private ReadOnlySpan<CommandSegment> BuildSegmentsBucket(RenderTargetId target, int layer)
+    {
+        var meshQueue = _meshQueue.DrainQueue();
+        var metaQueue = _metaQueue.DrainMetaQueue();
+        var end = metaQueue.Length;
+        int offset = 0;
+        int emitted = 0;
+        for (int i = 0; i < end; i++)
+        {
+            ref readonly var meta = ref metaQueue[i];
+            if (meta.Target == target && meta.Layer == layer) continue;
+            int length = i - offset + 1;
+            var a = new CommandSegment(meta.Target, meta.Layer, meta.Tag, (short)offset, (short)length);
+
+
+            emitted++;
+            offset = i + 1;
+        }
+    }
+*/
+
 }
+
+internal sealed class DrawCommandTargetQueue<T> : IDrawCommandTargetQueue where T : struct, IDrawCommand
+{
+    private readonly List<CommandContainer<T>> _queue;
+    private readonly List<DrawCommandId> _commandIds = new();
+    public IReadOnlyList<DrawCommandId> CommandIds => _commandIds;
+    public int Count => _queue.Count;
+
+    public DrawCommandTargetQueue(int capacity)
+    {
+        _queue = new List<CommandContainer<T>>(capacity);
+    }
+
+    public void RegisterCommand(DrawCommandId cmdId)
+    {
+        if(_commandIds.Contains(cmdId)) 
+            throw new InvalidOperationException($"Command {cmdId} is already registered at a DrawCommandQueue: {typeof(DrawCommandTargetQueue<T>).Name}");
+        _commandIds.Add(cmdId);
+    }
+
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public void Enqueue(in T cmd, in DrawCommandMeta meta, int idx)
+    {
+        _queue.Add(new CommandContainer<T>(in cmd, in meta, idx));
+    }
+
+
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public Span<CommandContainer<T>> DrainQueue()
+    {
+        var span = CollectionsMarshal.AsSpan(_queue);
+        return span;
+    }
+
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public void Reset()
+    {
+        _queue.Clear();
+    }
+}
+
+internal sealed class DrawCommandMetaQueue
+{
+    private readonly DrawCommandMetaRef[] _queue;
+    private int _idx = 0;
+    public int Count => _idx;
+
+    public DrawCommandMetaQueue(int capacity)
+    {
+        _queue = new DrawCommandMetaRef[capacity];
+    }
+
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public void Enqueue(in DrawCommandMeta meta, int cmdIdx)
+    {
+        _queue[_idx++] = new DrawCommandMetaRef(meta.Tag, meta.Target, meta.Layer, cmdIdx);
+    }
+
+
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public Span<DrawCommandMetaRef> DrainMetaQueue()
+    {
+        return _queue.AsSpan(0, _idx);
+    }
+
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public void Reset() => _idx = 0;
+}
+
+
+public readonly record struct DrawCommandMetaRef(
+    DrawCommandTag Tag,
+    RenderTargetId Target,
+    byte Layer,
+    int Index) : IComparable<DrawCommandMetaRef>
+{
+    public readonly uint Key24 = ((uint)(byte)Target << 16) | ((uint)Tag << 8) | (byte)Layer;
+
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public int CompareTo(DrawCommandMetaRef other) => Key24.CompareTo(other.Key24);
+}
+
+public readonly record struct CommandSegment(
+    RenderTargetId Target,
+    DrawCommandTag Tag,
+    byte Layer,
+    short Start,
+    short Length);

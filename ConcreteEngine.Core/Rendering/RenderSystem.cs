@@ -27,7 +27,6 @@ public sealed class RenderSystem : IGameEngineSystem
     private readonly ViewTransform2D _camera;
 
     private readonly MaterialStore _materialStore;
-    private readonly List<DrawCommandId>[] _renderPasses;
     private readonly List<IRenderPass>[] _renderPassDesc;
 
     private readonly DrawEmitterCollector _emitterCollector;
@@ -49,11 +48,9 @@ public sealed class RenderSystem : IGameEngineSystem
 
         _materialStore = materialStore;
 
-        _renderPasses = new List<DrawCommandId>[RenderTargetCount];
         _renderPassDesc = new List<IRenderPass>[RenderTargetCount];
         for (int i = 0; i < RenderTargetCount; i++)
         {
-            _renderPasses[i] = new List<DrawCommandId>(4);
             _renderPassDesc[i] = new List<IRenderPass>(4);
         }
 
@@ -84,7 +81,7 @@ public sealed class RenderSystem : IGameEngineSystem
             RegisterRenderPass(pass.Target,  pass.Pass);
 
         foreach (var cmd in builder.Commands)
-            RegisterCommand( cmd.Target, cmd.CommandId, cmd.Capacity);
+            cmd.Bind(_commandSubmitter, cmd.CommandId);
     }
 
     public void RegisterDrawFeature(int order, IDrawableFeature feature, Type emitterType)
@@ -114,10 +111,9 @@ public sealed class RenderSystem : IGameEngineSystem
         _renderPassDesc[(int)target].Add(pass);
     }
 
-    public void RegisterCommand(RenderTargetId target, DrawCommandId commandId, int capacity)
+    public void RegisterCommand<T>(DrawCommandId commandId) where T : struct, IDrawCommand
     {
-        _commandSubmitter.RegisterCommand(commandId, target, capacity);
-        _renderPasses[(int)target].Add(commandId);
+        _commandSubmitter.Register<T>(commandId);
     }
 
     public Material CreateMaterialFromTemplate(string templateName)
@@ -215,16 +211,10 @@ public sealed class RenderSystem : IGameEngineSystem
     private void RenderScenePass(SceneRenderPass scenePass)
     {
         var projView = _camera.ProjectionViewMatrix;
-
         var target = RenderTargetId.Scene;
-        var pass = _renderPasses[(int)target];
+        var commands = _commandSubmitter.DrainCommandQueue<DrawCommandMesh>();
+        _commandRenderer.DrawMeshCommands(commands);
 
-        foreach (var commandId in pass)
-        {
-            var commands = _commandSubmitter.SceneQueue.GetCmdQueue(commandId);
-            //var meta = _commandSubmitter.SceneQueue.GetMetaQueue(commandId);
-            _commandRenderer.DrawMeshCommands(commands);
-        }
     }
 
     private void RenderLightPass(LightRenderPass lightPass)
@@ -233,18 +223,11 @@ public sealed class RenderSystem : IGameEngineSystem
 
         var target = RenderTargetId.SceneLight;
         var passDesc = _renderPassDesc[(int)target];
-        var passCommands = _renderPasses[(int)target];
 
-        for (int p = 0; p < passCommands.Count; p++)
-        {
-            var commandId = passCommands[p];
-            //var pass = passDesc[p];
-            var commands = _commandSubmitter.LightQueue.GetCmdQueue(commandId);
-            //var meta = _commandSubmitter.LightQueue.GetMetaQueue(commandId);
+        var commands = _commandSubmitter.DrainCommandQueue<DrawCommandLight>();
+        _commandRenderer.RenderLightCommands(lightPass, commands);
 
-            _commandRenderer.RenderLightCommands(lightPass, commands);
 
-        }
     }
 
     public void Dispose()

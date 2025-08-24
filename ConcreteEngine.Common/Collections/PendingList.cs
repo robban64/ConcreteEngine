@@ -2,7 +2,7 @@ namespace ConcreteEngine.Common.Collections;
 
 public class PendingList<T>(Action<T> handler)
 {
-    private readonly List<T> _pending = new(32);
+    private readonly List<T> _pending = new(8);
     public void Enqueue(T item) => _pending.Add(item);
 
     public void Flush()

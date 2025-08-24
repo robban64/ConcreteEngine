@@ -25,19 +25,17 @@ public readonly struct MaterialValueProperty(ShaderUniform uniform, UniformValue
 
 public sealed class Material
 {
-    private readonly Dictionary<ShaderUniform, IMaterialValue> _uniforms;
+    private readonly Dictionary<ShaderUniform, IMaterialValue> _values;
     private readonly MaterialValueProperty[] _properties;
     private readonly TextureId[] _samplerSlots = [];
 
     public MaterialId Id { get; }
-    public MaterialTemplate Template { get; }
+    public string TemplateName { get; }
     public ShaderId ShaderId { get; set; }
     public TextureId[] SamplerSlots => _samplerSlots;
-    public Vector4 Color { get; set; } = Vector4.One;
+    public Vector4 Color { get; set; }
 
-    public IReadOnlyDictionary<ShaderUniform, IMaterialValue> UniformDict => _uniforms;
-    public IReadOnlyList<ShaderUniform> ActiveUniforms => Template.Shader.UniformTable.Uniforms;
-
+    public IReadOnlyDictionary<ShaderUniform, IMaterialValue> Values => _values;
     
     // Helpers
     public bool HasViewProjection { get; private set; }
@@ -53,22 +51,22 @@ public sealed class Material
             nameof(defaultUniforms));
 
         Id = id;
-        Template = template;
+        TemplateName = template.Name;
         ShaderId = template.Shader.ResourceId;
         Color = template.Color;
 
-        _uniforms = new Dictionary<ShaderUniform, IMaterialValue>(4);
+        _values = new Dictionary<ShaderUniform, IMaterialValue>(4);
 
 
         foreach (var uniform in defaultUniforms)
         {
-            _uniforms.Add(uniform.Key, uniform.Value);
+            _values.Add(uniform.Key, uniform.Value);
 
         }
-        _properties = new MaterialValueProperty[_uniforms.Count];
+        _properties = new MaterialValueProperty[_values.Count];
 
         int idx = 0;
-        foreach (var (uniform, value) in _uniforms)
+        foreach (var (uniform, value) in _values)
         {
             _properties[idx++] = new MaterialValueProperty(uniform, value.Kind);
         }
@@ -94,13 +92,13 @@ public sealed class Material
 
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public bool TryGetValue(ShaderUniform u, out IMaterialValue mv) => _uniforms.TryGetValue(u, out mv);
+    public bool TryGetValue(ShaderUniform u, out IMaterialValue mv) => _values.TryGetValue(u, out mv);
 
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public T Get<T>(ShaderUniform u) where T : struct
     {
-        if (!_uniforms.TryGetValue(u, out var mv)) return default;
+        if (!_values.TryGetValue(u, out var mv)) return default;
 
         if (typeof(T) == typeof(int) && mv is MaterialValue<int> mi) return (T)(object)mi.Value;
         if (typeof(T) == typeof(float) && mv is MaterialValue<float> mf) return (T)(object)mf.Value;
@@ -120,38 +118,33 @@ public sealed class Material
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public void SetFloat(ShaderUniform uniform, float value)
-        => _uniforms[uniform] = new MaterialValue<float>(value, UniformValueKind.Float);
+        => _values[uniform] = new MaterialValue<float>(value, UniformValueKind.Float);
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public void SetInt(ShaderUniform uniform, int value)
-        => _uniforms[uniform] = new MaterialValue<int>(value, UniformValueKind.Int);
+        => _values[uniform] = new MaterialValue<int>(value, UniformValueKind.Int);
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public void SetVec2(ShaderUniform uniform, Vector2 value)
-        => _uniforms[uniform] = new MaterialValue<Vector2>(value, UniformValueKind.Vec2);
+        => _values[uniform] = new MaterialValue<Vector2>(value, UniformValueKind.Vec2);
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public void SetVec3(ShaderUniform uniform, Vector3 value)
-        => _uniforms[uniform] = new MaterialValue<Vector3>(value, UniformValueKind.Vec3);
+        => _values[uniform] = new MaterialValue<Vector3>(value, UniformValueKind.Vec3);
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public void SetVec4(ShaderUniform uniform, Vector4 value)
-        => _uniforms[uniform] = new MaterialValue<Vector4>(value, UniformValueKind.Vec4);
+        => _values[uniform] = new MaterialValue<Vector4>(value, UniformValueKind.Vec4);
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public void SetMat3(ShaderUniform uniform, Matrix3x2 value)
-        => _uniforms[uniform] = new MaterialValue<Matrix3x2>(value, UniformValueKind.Mat3);
+        => _values[uniform] = new MaterialValue<Matrix3x2>(value, UniformValueKind.Mat3);
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public void SetMat4(ShaderUniform uniform, in Matrix4x4 value)
-        => _uniforms[uniform] = new MaterialValue<Matrix4x4>(in value, UniformValueKind.Mat4);
+        => _values[uniform] = new MaterialValue<Matrix4x4>(in value, UniformValueKind.Mat4);
 
-    [DoesNotReturn]
-    private static void ThrowUniformWrongType(ShaderUniform u, Type requested, UniformValueKind actual)
-    {
-        throw new InvalidOperationException(
-            $"Shader uniform '{u}' has kind {actual}, request was {requested.Name}.");
-    }
+
     /*
     public float GetFloat(ShaderUniform u)
     {

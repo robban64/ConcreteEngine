@@ -9,6 +9,8 @@ using ConcreteEngine.Core.Game.Sprite;
 using ConcreteEngine.Core.Game.Terrain;
 using ConcreteEngine.Core.Rendering;
 using ConcreteEngine.Core.Rendering.Emitters;
+using ConcreteEngine.Core.Rendering.Pipeline;
+using ConcreteEngine.Core.Rendering.Renderers;
 using ConcreteEngine.Core.Resources;
 using ConcreteEngine.Graphics;
 using ConcreteEngine.Graphics.Data;
@@ -24,33 +26,26 @@ public sealed class DemoScene : GameScene
     public override void ConfigureFeatures(IGameSceneFeatureBuilder builder)
     {
         builder.RegisterDrawFeature<TilemapDrawEmitter, TilemapFeature, TilemapStruct>(0);
-        builder.RegisterDrawFeature<SpriteDrawEmitter, SpriteFeature, SpriteDrawEntity>(1);
+        builder.RegisterDrawFeature<SpriteDrawEmitter, SpriteFeature, SpriteDrawEntityBatch>(1);
     }
 
     public override void ConfigureRenderer(IGameSceneRenderBuilder builder, IGraphicsDevice graphics)
     {
-        builder.RegisterCommand<DrawCommandMesh>(DrawCommandId.Tilemap);
-        builder.RegisterCommand<DrawCommandMesh>(DrawCommandId.Sprite);
-        builder.RegisterCommand<DrawCommandLight>(DrawCommandId.Effect);
+        builder.RegisterRenderer<DrawCommandMesh, SpriteRenderer>(DrawCommandId.Tilemap, DrawCommandTag.SpriteRenderer);
+        builder.RegisterRenderer<DrawCommandMesh, SpriteRenderer>(DrawCommandId.Sprite, DrawCommandTag.SpriteRenderer);
+        builder.RegisterRenderer<DrawCommandLight, LightRenderer>(DrawCommandId.Effect, DrawCommandTag.LightRenderer);
 
         builder.RegisterEmitter<TilemapDrawEmitter, TilemapStruct>(0);
-        builder.RegisterEmitter<SpriteDrawEmitter, SpriteDrawEntity>(1);
+        builder.RegisterEmitter<SpriteDrawEmitter, SpriteDrawEntityBatch>(1);
+        builder.RegisterEmitter<LightEmitter, DrawCommandLight>(2);
 
-        var renderer = Context.GetSystem<RenderSystem>();
         var assets = Context.GetSystem<AssetSystem>();
 
-        //var spriteShader = assets.Get<Shader>("SpriteShader");
-        var screenShader = assets.Get<Shader>("ScreenShader");
         var lightPassShader = assets.Get<Shader>("LightPassShader");
         var lightComposite = assets.Get<Shader>("LightComposite");
 
 
-        //var spriteTexture = assets.Get<Texture2D>("SpriteTexture");
-        //var tilemapTexture = assets.Get<Texture2D>("TilemapTextureAtlas");
-
-        var halfSize = Vector2.One * 0.5f;
-
-        // Create a single-sample texture FBO for post-FX
+        // single-sample scene FBO
         var sceneFboId =
             graphics.CreateFramebuffer(new FrameBufferDesc(SizeRatio: Vector2.One, DepthStencilBuffer: true),
                 out var sceneFboMeta);
@@ -73,7 +68,7 @@ public sealed class DemoScene : GameScene
             Clear = new RenderPassClearDesc(Color.Black, ClearBufferFlag.ColorAndDepth),
         });
 
-        // Pass 1: resolve MSAA → single-sample texture FBO
+        // Pass 1: resolve MSAA into single-sample texture FBO
         builder.RegisterRenderPass(RenderTargetId.Scene, 1, new BlitRenderPass
             {
                 TargetFbo = sceneFboId,
@@ -89,7 +84,7 @@ public sealed class DemoScene : GameScene
             {
                 TargetFbo = lightFboId,
                 Shader = lightPassShader.ResourceId,
-                Clear = new RenderPassClearDesc(Color.FromArgb(255, 200, 200, 255), ClearBufferFlag.Color),
+                Clear = new RenderPassClearDesc(Color.FromArgb(255, 50, 50, 100), ClearBufferFlag.Color),
                 Blend = BlendMode.Additive,
                 DepthTest = false
             }
@@ -102,34 +97,17 @@ public sealed class DemoScene : GameScene
             SourceTextures = [sceneFboMeta.ColTexId, lightFboMeta.ColTexId],
             Shader = lightComposite.ResourceId,
         });
-
     }
 
     public override void Initialize(IGraphicsDevice graphics)
     {
         var renderer = Context.GetSystem<RenderSystem>();
-        var assets = Context.GetSystem<AssetSystem>();
-
-        var spriteShader = assets.Get<Shader>("SpriteShader");
-        var screenShader = assets.Get<Shader>("ScreenShader");
-        var lightPassShader = assets.Get<Shader>("LightPassShader");
-        var lightComposite = assets.Get<Shader>("LightComposite");
-
-
-        var spriteTexture = assets.Get<Texture2D>("SpriteTexture");
-        var tilemapTexture = assets.Get<Texture2D>("TilemapTextureAtlas");
 
         renderer.CreateMaterialFromTemplate("SpriteMaterial");
         renderer.CreateMaterialFromTemplate("TilemapMaterial");
         renderer.CreateMaterialFromTemplate("LightMaterial");
 
-        /*
-        var colorShader = assets.Get<Shader>("ColorShader");
-        var blurHorizontalShader = assets.Get<Shader>("BlurHorizontal");
-        var blurVerticalShader = assets.Get<Shader>("BlurVertical");
-        var brightPassShader = assets.Get<Shader>("BrightPass");
-        var screenCompositeShader = assets.Get<Shader>("ScreenComposite");
-        */
+
     }
 
     public override void Unload()

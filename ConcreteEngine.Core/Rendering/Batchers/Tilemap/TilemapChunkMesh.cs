@@ -106,7 +106,6 @@ internal sealed class TilemapChunkMesh : IDisposable
 
                 var (u0, v0, u1, v1) = atlas.GetUvRect(tile.AtlasX, tile.AtlasY);
 
-                // bottom-left origin in your mesh => OK as long as your texture upload matches
                 vertices[vi + 0] = new Vertex2D(px, py, u0, v0);
                 vertices[vi + 1] = new Vertex2D(px + _tileSize, py, u1, v0);
                 vertices[vi + 2] = new Vertex2D(px, py + _tileSize, u0, v1);

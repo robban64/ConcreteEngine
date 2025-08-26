@@ -44,10 +44,9 @@ internal sealed class ResourceStore<TId, TMeta, THandle>
         int idx = _freeCount > 0 ? _free[--_freeCount] : Allocate();
         _meta[idx] = meta;
         _handle[idx] = handle;
-        return _makeId(idx + 1); // expose index+1
+        return _makeId(idx + 1);
     }
 
-    // Remove slot, return the handle for the caller (device) to actually delete later.
     public THandle Remove(TId id, out TMeta oldMeta)
     {
         int idx = id.Id - 2;
@@ -98,81 +97,4 @@ internal sealed class ResourceStore<TId, TMeta, THandle>
         return _idx++;
     }
 
-/*
-    [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public IGraphicsResource? Get(ushort i) => _resources[i - 1];
-
-    [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public T Get<T>(ushort i) where T : class, IGraphicsResource
-    {
-        var resource = _resources[i - 1];
-        if (resource is T t) return t;
-        return null;
-    }
-
-    public ushort AddResource<TResource>(TResource resource) where TResource : class, IGraphicsResource
-    {
-        TryGrow();
-        _resources[_idx - 1] = resource;
-        return _idx++;
-    }
-
-    private void TryGrow()
-    {
-        if (_idx < _capacity - 2) return;
-        var newCapacity = _capacity + BufferSize;
-        if (newCapacity > MaxBufferSize)
-            throw new OutOfMemoryException($"Requested capacity {newCapacity} is too large, MAX:{MaxBufferSize}");
-
-        _capacity += BufferSize;
-        Array.Resize(ref _resources, _capacity);
-    }
-
-    public void EnqueueRemoveResource(ushort resourceId)
-    {
-        if (resourceId > _idx)
-            GraphicsException.ThrowCapabilityExceeded<GraphicsResourceStore>("resource counter", resourceId,
-                _idx);
-
-        var resource = _resources[resourceId];
-        if (resource == null!)
-            GraphicsException.ThrowResourceNotFound(resourceId);
-
-        //debug
-        if (resource.IsDisposed)
-            GraphicsException.ThrowResourceIsDisposed(resourceId);
-    }
-
-    public void ReplaceResource<T>(ushort resourceId, T newResource, out T previousResource)
-        where T : class, IGraphicsResource
-    {
-        ValidateResourceId(resourceId);
-
-        var resource = Get<T>(resourceId);
-        _resources[resourceId - 1] = newResource;
-
-        previousResource = resource;
-
-        if (previousResource == newResource) GraphicsException.ThrowResourceAlreadyExists(resourceId);
-    }
-
-    private void TryGrow()
-    {
-        if (_idx < _capacity - 2) return;
-        var newCapacity = _capacity + BufferSize;
-        if (newCapacity > MaxBufferSize)
-            throw new OutOfMemoryException($"Requested capacity {newCapacity} is too large, MAX:{MaxBufferSize}");
-
-        _capacity += BufferSize;
-        Array.Resize(ref _resources, _capacity);
-    }
-
-    private void ValidateResourceId(ushort resourceId)
-    {
-        if (resourceId >= _idx)
-            throw GraphicsException.CapabilityExceeded<GraphicsResourceStore>("Out of bound resource access",
-                resourceId,
-                _idx);
-    }
-    */
 }

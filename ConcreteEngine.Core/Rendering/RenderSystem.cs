@@ -8,6 +8,9 @@ using ConcreteEngine.Core.Assets;
 using ConcreteEngine.Core.Configuration;
 using ConcreteEngine.Core.Rendering.Batchers.Sprite;
 using ConcreteEngine.Core.Rendering.Batchers.Tilemap;
+using ConcreteEngine.Core.Rendering.Emitters;
+using ConcreteEngine.Core.Rendering.Pipeline;
+using ConcreteEngine.Core.Rendering.Renderers;
 using ConcreteEngine.Core.Resources;
 using ConcreteEngine.Core.Transforms;
 using ConcreteEngine.Graphics;
@@ -33,7 +36,8 @@ public sealed class RenderSystem : IGameEngineSystem
     private readonly DrawCommandSubmitter _commandSubmitter;
     private readonly DrawEmitterContext _emitterContext;
     
-    private readonly CommandRenderer  _commandRenderer;
+    private readonly SpriteRenderer  _spriteRenderer;
+    private readonly LightRenderer  _lightRenderer;
 
     private readonly SpriteBatcher _spriteBatch;
     private readonly TilemapBatcher _tilemapBatcher;
@@ -55,9 +59,10 @@ public sealed class RenderSystem : IGameEngineSystem
         }
 
         _emitterCollector = new DrawEmitterCollector();
-        _commandSubmitter = new DrawCommandSubmitter();
 
-        _commandRenderer = new CommandRenderer(_graphics, _camera, _materialStore);
+        _spriteRenderer = new SpriteRenderer(_graphics, _camera, _materialStore);
+        _lightRenderer= new LightRenderer(_graphics, _camera, _materialStore);
+        _commandSubmitter = new DrawCommandSubmitter([_spriteRenderer, _lightRenderer]);
 
         _spriteBatch = new SpriteBatcher(graphics);
         _tilemapBatcher = new TilemapBatcher(graphics, 64, 32);
@@ -80,8 +85,8 @@ public sealed class RenderSystem : IGameEngineSystem
         foreach (var pass in builder.Passes.Values)
             RegisterRenderPass(pass.Target,  pass.Pass);
 
-        foreach (var cmd in builder.Commands)
-            cmd.Bind(_commandSubmitter, cmd.CommandId);
+        foreach (var cmd in builder.Renderers)
+            cmd.Bind(_commandSubmitter, cmd.CommandId, cmd.CommandTag);
     }
 
     public void RegisterDrawFeature(int order, IDrawableFeature feature, Type emitterType)
@@ -111,9 +116,11 @@ public sealed class RenderSystem : IGameEngineSystem
         _renderPassDesc[(int)target].Add(pass);
     }
 
-    public void RegisterCommand<T>(DrawCommandId commandId) where T : struct, IDrawCommand
+    public void RegisterRenderer<TCommand,TRenderer>(DrawCommandId id, DrawCommandTag tag) 
+        where TCommand : struct, IDrawCommand
+        where TRenderer : class, ICommandRenderer<TCommand>
     {
-        _commandSubmitter.Register<T>(commandId);
+        _commandSubmitter.Register<TCommand,TRenderer>(id, tag);
     }
 
     public Material CreateMaterialFromTemplate(string templateName)
@@ -127,12 +134,14 @@ public sealed class RenderSystem : IGameEngineSystem
         PrepareRenderer();
         Execute(alpha);
         _graphics.EndFrame();
+        
+        _commandSubmitter.Reset();
     }
 
     private void PrepareRenderer()
     {
-        _commandSubmitter.Reset();
         _emitterCollector.Collect(_emitterContext, _commandSubmitter);
+        _commandSubmitter.Prepare();
 
         var projectionViewMatrix = _camera.ProjectionViewMatrix;
         foreach (var material in _materialStore.Materials)
@@ -143,6 +152,8 @@ public sealed class RenderSystem : IGameEngineSystem
                 _gfx.SetUniform(ShaderUniform.ProjectionViewMatrix, in projectionViewMatrix);
             }
         }
+
+        
     }
 
     private void Execute(float alpha)
@@ -198,7 +209,7 @@ public sealed class RenderSystem : IGameEngineSystem
 
         if (pass.Op == RenderPassOp.FullscreenQuad && pass is FsqRenderPass fsqPass)
         {
-            _commandRenderer.DrawFullscreenQuad(fsqPass);
+            DrawFullscreenQuad(fsqPass);
         }
 
         if (!isScreenPass)
@@ -210,25 +221,35 @@ public sealed class RenderSystem : IGameEngineSystem
 
     private void RenderScenePass(SceneRenderPass scenePass)
     {
-        var projView = _camera.ProjectionViewMatrix;
-        var target = RenderTargetId.Scene;
-        var commands = _commandSubmitter.DrainCommandQueue<DrawCommandMesh>();
-        _commandRenderer.DrawMeshCommands(commands);
-
+        _commandSubmitter.DrainCommandQueue(RenderTargetId.Scene);
     }
 
     private void RenderLightPass(LightRenderPass lightPass)
     {
-        var projView = _camera.ProjectionViewMatrix;
-
-        var target = RenderTargetId.SceneLight;
-        var passDesc = _renderPassDesc[(int)target];
-
-        var commands = _commandSubmitter.DrainCommandQueue<DrawCommandLight>();
-        _commandRenderer.RenderLightCommands(lightPass, commands);
-
-
+        _gfx.UseShader(lightPass.Shader);
+        _commandSubmitter.DrainCommandQueue(RenderTargetId.SceneLight);
     }
+    
+    private void DrawFullscreenQuad(FsqRenderPass pass)
+    {
+        ArgumentNullException.ThrowIfNull(pass);
+        ArgumentNullException.ThrowIfNull(pass.SourceTextures);
+        ArgumentOutOfRangeException.ThrowIfZero(pass.SourceTextures.Length);
+        ArgumentOutOfRangeException.ThrowIfGreaterThan(pass.SourceTextures.Length, 4, nameof(pass.SourceTextures));
+
+        var viewport = _camera.ViewportSize;
+        _gfx.UseShader(pass.Shader);
+        _gfx.SetUniform(ShaderUniform.TexelSize, viewport.ToSystemVec2() * pass.SizeRatio);
+
+        for (int i = 0; i < pass.SourceTextures.Length; i++)
+        {
+            _gfx.BindTexture(pass.SourceTextures[i], (uint)i);
+        }
+
+        _gfx.BindMesh(_graphics.QuadMeshId);
+        _gfx.DrawMesh();
+    }
+
 
     public void Dispose()
     {

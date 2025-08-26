@@ -2,11 +2,12 @@
 
 using ConcreteEngine.Core.Rendering.Batchers.Sprite;
 using ConcreteEngine.Core.Rendering.Batchers.Tilemap;
+using ConcreteEngine.Core.Rendering.Pipeline;
 using ConcreteEngine.Graphics;
 
 #endregion
 
-namespace ConcreteEngine.Core.Rendering;
+namespace ConcreteEngine.Core.Rendering.Emitters;
 
 
 public sealed class DrawEmitterContext
@@ -43,6 +44,12 @@ public abstract class DrawCommandEmitter<TEntity> : IDrawCommandEmitter
 
     public void Emit(DrawEmitterContext ctx, DrawCommandSubmitter submitter)
     {
+        if (_features.Count == 0)
+        {
+            EmitBatch(ReadOnlySpan<TEntity>.Empty, in ctx, submitter, 0);
+            return;
+        }
+
         foreach (var (order, feature) in _features)
         {
             EmitBatch(feature.GetDrawables(), in ctx, submitter, order);

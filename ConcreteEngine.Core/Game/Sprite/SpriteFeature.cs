@@ -12,6 +12,11 @@ using Silk.NET.Maths;
 
 namespace ConcreteEngine.Core.Game.Sprite;
 
+
+public struct SpriteDrawEntityBatch(List<SpriteDrawEntity> batch)
+{
+    public readonly List<SpriteDrawEntity> Batches = batch;
+}
 public struct SpriteDrawEntity
 {
     public Vector2 Position = Vector2.Zero;
@@ -25,7 +30,7 @@ public struct SpriteDrawEntity
     }
 }
 
-public class SpriteFeature : IDrawableFeature<SpriteDrawEntity>
+public class SpriteFeature : IDrawableFeature<SpriteDrawEntityBatch>
 {
     public int Order { get; set; }
     public bool IsUpdateable => true;
@@ -36,7 +41,10 @@ public class SpriteFeature : IDrawableFeature<SpriteDrawEntity>
     public Texture2D SpriteTexture { get; set; } = null!;
     public SpriteAtlas SpriteAtlas { get; set; } = null!;
 
-    private readonly List<SpriteDrawEntity> _spriteEntities = new(900);
+    private readonly List<SpriteDrawEntity> _batch1 = new(900);
+    private readonly List<SpriteDrawEntity> _batch2 = new(900);
+    private readonly List<SpriteDrawEntity> _batch3 = new(900);
+    private readonly List<SpriteDrawEntity> _batch4 = new(900);
 
     public void Load(GameFeatureContext context, int order)
     {
@@ -47,23 +55,16 @@ public class SpriteFeature : IDrawableFeature<SpriteDrawEntity>
         SpriteShader = assets.Get<Shader>("SpriteShader");
         SpriteTexture = assets.Get<Texture2D>("SpriteTexture");
         SpriteAtlas = new SpriteAtlas(64, SpriteTexture.Width, SpriteTexture.Height);
-
         renderer.SpriteBatch.CreateSpriteBatch(0, 1024);
+        renderer.SpriteBatch.CreateSpriteBatch(1, 1024);
+        renderer.SpriteBatch.CreateSpriteBatch(2, 1024);
+        renderer.SpriteBatch.CreateSpriteBatch(3, 1024);
 
-        for (int x = 0; x < 30; x++)
-        {
-            for (int y = 0; y < 30; y++)
-            {
-                _spriteEntities.Add(new SpriteDrawEntity
-                {
-                    Position = new Vector2(64 * x, 64 * y),
-                    Scale = new Vector2(64, 64),
-                    AtlasLocation = new Vector2D<int>(0, 3),
-                    Direction = new Vector2D<int>(-1, 0),
-                    Uv = SpriteAtlas.GetUvRect(0, 3)
-                });
-            }
-        }
+        CreateBatch(_batch1, new Vector2(0,0));
+        CreateBatch(_batch2, new Vector2(0,1));
+        CreateBatch(_batch3, new Vector2(1,0));
+        CreateBatch(_batch4, new Vector2(1,1));
+
     }
 
     int _animationCountdown = 3;
@@ -84,8 +85,35 @@ public class SpriteFeature : IDrawableFeature<SpriteDrawEntity>
             _animationCountdown = 3;
         }
 
+        UpdateEntities(_batch1, doRandomize, speed);
+        UpdateEntities(_batch2, doRandomize, speed);
+        UpdateEntities(_batch3, doRandomize, speed);
+        UpdateEntities(_batch4, doRandomize, speed);
 
-        var spanEntities = CollectionsMarshal.AsSpan(_spriteEntities);
+    }
+
+    private void CreateBatch(List<SpriteDrawEntity> batch, Vector2 offsetPosition)
+    {
+        for (int x = 0; x < 30; x++)
+        {
+            for (int y = 0; y < 30; y++)
+            {
+                batch.Add(new SpriteDrawEntity
+                {
+                    Position = new Vector2(64 * x, 64 * y) + (offsetPosition * 64 * 4),
+                    Scale = new Vector2(64, 64),
+                    AtlasLocation = new Vector2D<int>(0, 3),
+                    Direction = new Vector2D<int>(-1, 0),
+                    Uv = SpriteAtlas.GetUvRect(0, 3)
+                });
+            }
+        }
+    }
+
+    private void UpdateEntities(List<SpriteDrawEntity> list,bool doRandomize, float speed)
+    {
+        
+        var spanEntities = CollectionsMarshal.AsSpan(list);
 
 
         for (int i = 0; i < spanEntities.Length; i++)
@@ -108,10 +136,10 @@ public class SpriteFeature : IDrawableFeature<SpriteDrawEntity>
                 e.Direction.Y = 0;
 
                 var r = Random.Shared.Next(0, 5);
-                if (r == 0 && e.Position.X < 50) r = 1;
-                else if (r == 1 && e.Position.X > 800) r = 0;
-                else if(r ==  2 && e.Position.Y > 800) r = 3;
-                else if(r ==  3 && e.Position.Y < 50) r = 2;
+                if (r == 0 && e.Position.X < 10) r = 1;
+                else if (r == 1 && e.Position.X >= 2048) r = 0;
+                else if(r ==  2 && e.Position.Y >= 2048) r = 3;
+                else if(r ==  3 && e.Position.Y < 10) r = 2;
 
                 switch (r)
                 {
@@ -142,9 +170,11 @@ public class SpriteFeature : IDrawableFeature<SpriteDrawEntity>
     {
     }
 
-    public ReadOnlySpan<SpriteDrawEntity> GetDrawables()
+    public ReadOnlySpan<SpriteDrawEntityBatch> GetDrawables()
     {
-        return CollectionsMarshal.AsSpan(_spriteEntities);
+        List<SpriteDrawEntityBatch> batch = [new (_batch1),new(_batch2), new (_batch3), new (_batch4)];
+        return CollectionsMarshal.AsSpan(batch);
     }
+
 
 }

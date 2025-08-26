@@ -446,34 +446,33 @@ public sealed class GlGraphicsContext : IGraphicsContext
         CheckGlError(); // throws here
     }
 
-
-    public void Draw(uint drawCount = 0)
+    public void DrawMesh(uint drawCount = 0)
     {
         ref readonly var meta = ref _store.MeshStore.GetMeta(_boundVaoId);
 
         if (meta.VertexBufferId == default)
             GraphicsException.ThrowInvalidState($"Mesh is missing VertexBuffer");
-        if (meta.IndexBufferId.Id > 0)
-            GraphicsException.ThrowInvalidState(
-                $"Elemental mesh must use {nameof(DrawIndexed)} instead of {nameof(Draw)}");
-
+        
         var count = drawCount > 0 ? drawCount : meta.DrawCount;
-        _gl.DrawArrays(meta.Primitive.ToGlEnum(), 0, count);
+
+        if(meta.ElementType == IboElementType.Invalid)
+            DrawArrays(in meta, count);
+        else
+            DrawElements(in meta, count);
 
         _drawTriangleCount += (int)count;
         _drawCallCount++;
     }
 
-    public unsafe void DrawIndexed(uint drawCount = 0)
-    {
-        ref readonly var meta = ref _store.MeshStore.GetMeta(_boundVaoId);
-        if (meta.IndexBufferId == default)
-            GraphicsException.ThrowInvalidState($"Mesh is missing IndexBuffer");
 
-        var count = drawCount > 0 ? drawCount : meta.DrawCount;
-        _gl.DrawElements(PrimitiveType.Triangles, count, meta.ElementType.ToGlEnum(), (void*)0);
-        _drawTriangleCount += (int)count;
-        _drawCallCount++;
+    private void DrawArrays(in MeshMeta meta, uint drawCount)
+    {
+        _gl.DrawArrays(meta.Primitive.ToGlEnum(), 0, drawCount);
+    }
+
+    public unsafe void DrawElements(in MeshMeta meta, uint drawCount)
+    {
+        _gl.DrawElements(meta.Primitive.ToGlEnum(), drawCount, meta.ElementType.ToGlEnum(), (void*)0);
     }
 
 

@@ -40,8 +40,7 @@ public interface IGraphicsContext
     void UploadVertexBuffer<T>(ReadOnlySpan<T> data, int offsetElements) where T : unmanaged;
     void UploadIndexBuffer<T>(ReadOnlySpan<T> data, int offsetElements) where T : unmanaged;
 
-    void Draw(uint drawCount = 0);
-    void DrawIndexed(uint drawCount = 0);
+    void DrawMesh(uint drawCount = 0);
 
     void UseShader(ShaderId resourceId);
     void SetUniform(ShaderUniform uniform, int value);

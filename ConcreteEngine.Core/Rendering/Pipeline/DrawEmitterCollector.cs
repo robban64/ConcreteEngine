@@ -1,6 +1,6 @@
-using ConcreteEngine.Common.Collections;
+using ConcreteEngine.Core.Rendering.Emitters;
 
-namespace ConcreteEngine.Core.Rendering;
+namespace ConcreteEngine.Core.Rendering.Pipeline;
 
 internal sealed class DrawEmitterCollector
 {

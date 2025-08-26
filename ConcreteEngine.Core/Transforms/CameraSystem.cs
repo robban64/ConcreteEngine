@@ -66,12 +66,9 @@ public sealed class CameraSystem : IGameEngineSystem
         if (mouse.X <= EdgeMarginPixels) deltaPos.X -= 1f;
         else if (mouse.X >= w) deltaPos.X += 1f;
 
-        // Top / Bottom (note: top-left origin in window coords)
         if (mouse.Y <= EdgeMarginPixels) deltaPos.Y -= 1f;
         else if (mouse.Y >= h) deltaPos.Y += 1f;
 
-
-        // Normalize so diagonals aren’t faster.
         var len = MathF.Sqrt(deltaPos.X * deltaPos.X + deltaPos.Y * deltaPos.Y);
         if (len > 0f)
         {

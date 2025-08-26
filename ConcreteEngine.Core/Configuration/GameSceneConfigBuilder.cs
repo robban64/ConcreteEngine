@@ -1,4 +1,7 @@
 using ConcreteEngine.Core.Rendering;
+using ConcreteEngine.Core.Rendering.Emitters;
+using ConcreteEngine.Core.Rendering.Pipeline;
+using ConcreteEngine.Core.Rendering.Renderers;
 using ConcreteEngine.Graphics.Definitions;
 
 namespace ConcreteEngine.Core.Configuration;
@@ -12,8 +15,9 @@ public interface IGameSceneRenderBuilder
         where TEntity : struct;
 
 
-    public void RegisterCommand<T>(DrawCommandId commandId) where T : struct, IDrawCommand;
-
+    public void RegisterRenderer<TCommand, TRenderer>(DrawCommandId commandId, DrawCommandTag commandTag)
+        where TCommand : struct, IDrawCommand
+        where TRenderer : class, ICommandRenderer<TCommand>;
 }
 
 public interface IGameSceneFeatureBuilder
@@ -34,21 +38,21 @@ public sealed class GameSceneConfigBuilder()
 
     private readonly SortedList<int, Func<IDrawCommandEmitter>> _emitters = new(8);
     private readonly SortedList<int, RenderPassRegistryMeta> _passes = new(8);
-    private readonly List<CommandRegistryMeta> _commands = new(8);
+    private readonly List<RendererRegistry> _renderers = new(8);
 
     internal void Clear()
     {
         _features.Clear();
         _emitters.Clear();
         _passes.Clear();
-        _commands.Clear();
+        _renderers.Clear();
     }
 
     public SortedList<int, Func<IGameFeature>> Features => _features;
     public SortedList<int, (Func<IDrawableFeature>, Type)> DrawFeatures => _drawFeatures;
     public SortedList<int, Func<IDrawCommandEmitter>> Emitters => _emitters;
     public SortedList<int, RenderPassRegistryMeta> Passes => _passes;
-    public List<CommandRegistryMeta> Commands => _commands;
+    public List<RendererRegistry> Renderers => _renderers;
 
 
     public void RegisterFeature<T>(int order) where T : IGameFeature, new()
@@ -81,14 +85,20 @@ public sealed class GameSceneConfigBuilder()
         _passes.Add(order, new RenderPassRegistryMeta( target, pass));
     }
 
-    public void RegisterCommand<T>(DrawCommandId commandId) where T : struct, IDrawCommand
+    public void RegisterRenderer<TCommand,TRenderer>(DrawCommandId commandId, DrawCommandTag commandTag)
+        where TCommand : struct, IDrawCommand
+        where TRenderer : class, ICommandRenderer<TCommand>
     {
-        var registry = new CommandRegistryMeta(commandId, (submitter, cmdId) => submitter.Register<T>(cmdId));
+        var registry = new RendererRegistry(commandId, commandTag,
+            (submitter, cmdId, tag) => submitter.Register<TCommand, TRenderer>(cmdId,tag));
         //_receiverBindings.Add(new ReceiverRegistry(reqId, (r, reqId) => r.Register<T>(reqId)));
-        _commands.Add(registry);
+        _renderers.Add(registry);
     }
 
     public record struct RenderPassRegistryMeta(RenderTargetId Target, IRenderPass Pass);
 
-    public record struct CommandRegistryMeta(DrawCommandId CommandId, Action<DrawCommandSubmitter, DrawCommandId> Bind);
+    public record struct RendererRegistry(
+        DrawCommandId CommandId,
+        DrawCommandTag CommandTag,
+        Action<DrawCommandSubmitter, DrawCommandId, DrawCommandTag> Bind);
 }

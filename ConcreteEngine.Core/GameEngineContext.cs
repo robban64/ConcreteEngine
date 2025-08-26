@@ -1,22 +1,14 @@
 #region
 
-using ConcreteEngine.Core.Assets;
-using ConcreteEngine.Core.Input;
-using ConcreteEngine.Core.Pipeline;
-using ConcreteEngine.Core.Rendering;
-using ConcreteEngine.Graphics;
-
 #endregion
+
+using ConcreteEngine.Core.Rendering;
 
 namespace ConcreteEngine.Core;
 
 public sealed class GameSceneContext
 {
     private readonly GameEngine _engine;
-
-    public void RegisterFeature<T>() where T : IGameFeature, new()
-        => _engine.RegisterFeature<T>();
-
     public T GetFeature<T>() where T : IGameFeature => _engine.GetFeature<T>();
     public T GetSystem<T>() where T : IGameEngineSystem => _engine.GetSystem<T>();
 
@@ -36,5 +28,4 @@ public sealed class GameFeatureContext
     {
         _scene = scene;
     }
-
 }

@@ -19,4 +19,8 @@
         <ProjectReference Include="..\ConcreteEngine.Graphics\ConcreteEngine.Graphics.csproj" />
     </ItemGroup>
 
+    <ItemGroup>
+      <Compile Remove="Rendering\DrawCommandSubmitterTemp.cs" />
+    </ItemGroup>
+
 </Project>

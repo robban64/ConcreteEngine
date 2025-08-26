@@ -4,235 +4,110 @@ using System.Drawing;
 using System.Numerics;
 using ConcreteEngine.Core;
 using ConcreteEngine.Core.Assets;
+using ConcreteEngine.Core.Configuration;
 using ConcreteEngine.Core.Game.Sprite;
 using ConcreteEngine.Core.Game.Terrain;
 using ConcreteEngine.Core.Rendering;
-using ConcreteEngine.Core.Rendering.Materials;
+using ConcreteEngine.Core.Rendering.Emitters;
+using ConcreteEngine.Core.Rendering.Pipeline;
+using ConcreteEngine.Core.Rendering.Renderers;
 using ConcreteEngine.Core.Resources;
 using ConcreteEngine.Graphics;
+using ConcreteEngine.Graphics.Data;
 using ConcreteEngine.Graphics.Definitions;
-using Silk.NET.Maths;
-using Silk.NET.OpenGL;
 using Shader = ConcreteEngine.Core.Resources.Shader;
 
 #endregion
 
 namespace Demo;
 
-public class DemoScene : GameScene
+public sealed class DemoScene : GameScene
 {
-    public override void Configure()
+    public override void ConfigureFeatures(IGameSceneFeatureBuilder builder)
     {
-        Context.RegisterFeature<TilemapFeature>();
-        Context.RegisterFeature<SpriteFeature>();
+        builder.RegisterDrawFeature<TilemapDrawEmitter, TilemapFeature, TilemapStruct>(0);
+        builder.RegisterDrawFeature<SpriteDrawEmitter, SpriteFeature, SpriteDrawEntityBatch>(1);
     }
 
-    public override void OnReady(IGraphicsDevice graphics)
+    public override void ConfigureRenderer(IGameSceneRenderBuilder builder, IGraphicsDevice graphics)
     {
-        var renderer = Context.GetSystem<RenderSystem>();
+        builder.RegisterRenderer<DrawCommandMesh, SpriteRenderer>(DrawCommandId.Tilemap, DrawCommandTag.SpriteRenderer);
+        builder.RegisterRenderer<DrawCommandMesh, SpriteRenderer>(DrawCommandId.Sprite, DrawCommandTag.SpriteRenderer);
+        builder.RegisterRenderer<DrawCommandLight, LightRenderer>(DrawCommandId.Effect, DrawCommandTag.LightRenderer);
+
+        builder.RegisterEmitter<TilemapDrawEmitter, TilemapStruct>(0);
+        builder.RegisterEmitter<SpriteDrawEmitter, SpriteDrawEntityBatch>(1);
+        builder.RegisterEmitter<LightEmitter, DrawCommandLight>(2);
+
         var assets = Context.GetSystem<AssetSystem>();
 
-        var spriteModule = Context.GetFeature<SpriteFeature>();
-        var tilemapFeature = Context.GetFeature<TilemapFeature>();
+        var lightPassShader = assets.Get<Shader>("LightPassShader");
+        var lightComposite = assets.Get<Shader>("LightComposite");
 
 
-        var spriteShader = assets.Get<Shader>("SpriteShader");
-        var spriteTexture = assets.Get<Texture2D>("SpriteTexture");
-        var tilemapTexture = assets.Get<Texture2D>("TilemapTextureAtlas");
+        // single-sample scene FBO
+        var sceneFboId =
+            graphics.CreateFramebuffer(new FrameBufferDesc(SizeRatio: Vector2.One, DepthStencilBuffer: true),
+                out var sceneFboMeta);
 
-        var screenShader = assets.Get<Shader>("ScreenShader");
+        var lightFboId =
+            graphics.CreateFramebuffer(
+                new FrameBufferDesc(SizeRatio: new Vector2(0.3f, 0.3f), TexturePreset: TexturePreset.NearestClamp,
+                    DepthStencilBuffer: false),
+                out var lightFboMeta);
 
-        var blurHorizontalShader = assets.Get<Shader>("BlurHorizontal");
-        var blurVerticalShader = assets.Get<Shader>("BlurVertical");
-        var brightPassShader = assets.Get<Shader>("BrightPass");
-        var screenCompositeShader = assets.Get<Shader>("ScreenComposite");
 
-        var halfSize = Vector2.One * 0.5f;
+        // colorTexId will be 0 for MSAA
+        var msaaFboId = graphics.CreateFramebuffer(new FrameBufferDesc(
+            SizeRatio: Vector2.One, DepthStencilBuffer: true, Msaa: true, Samples: 4), out _);
 
-        
-        /*
-        renderer.RegisterRenderPass(RenderTargetId.Scene, 0, new RenderPassData(
-            Op: RenderPassOp.FullscreenQuad,
-            WriteFboId: screenFboId,
-            ReadTexId: screenTexId,
-            ShaderId: screenShader.ResourceId,
-            SizeRatio: Vector2.One,
-            ClearColor: Color.CornflowerBlue,
-            ClearMask: ClearBufferFlag.ColorAndDepth
-        ));
-        */
-        
-        var (albedoFboId, albedoTexId) = graphics.CreateFramebuffer(Vector2.One);
-        var (brightPassFboId, brightPassTexId) = graphics.CreateFramebuffer(halfSize);
-        var (bloomAFboId, bloomATexId) = graphics.CreateFramebuffer(Vector2.One);
-        var (bloomBFboId, bloomBTexId) = graphics.CreateFramebuffer(Vector2.One);
+        // Pass 0: draw scene into MSAA FBO
+        builder.RegisterRenderPass(RenderTargetId.Scene, 0, new SceneRenderPass
+        {
+            TargetFbo = msaaFboId,
+            Clear = new RenderPassClearDesc(Color.Black, ClearBufferFlag.ColorAndDepth),
+        });
 
-        renderer.RegisterRenderPass(RenderTargetId.Scene, 0, new RenderPassData(
-            Op: RenderPassOp.DrawScene,
-            WriteFboId: albedoFboId,
-            SizeRatio: Vector2.One,
-            ClearColor: Color.CornflowerBlue,
-            ClearMask: ClearBufferFlag.ColorAndDepth
-        ));
+        // Pass 1: resolve MSAA into single-sample texture FBO
+        builder.RegisterRenderPass(RenderTargetId.Scene, 1, new BlitRenderPass
+            {
+                TargetFbo = sceneFboId,
+                BlitFbo = msaaFboId,
+                Multisample = true,
+                Samples = 4
+            }
+        );
 
-         renderer.RegisterRenderPass(RenderTargetId.Scene, 1, new RenderPassData(
-            Op: RenderPassOp.FullscreenQuad,
-            WriteFboId: brightPassFboId,
-            ReadTexId: albedoTexId,
-            ShaderId: brightPassShader.ResourceId,
-            SizeRatio: halfSize,
-            DoClear: true,
-            ClearColor: default,
-            ClearMask: ClearBufferFlag.Color
-        ));
-         
-        renderer.RegisterRenderPass(RenderTargetId.Scene, 2, new RenderPassData(
-            Op: RenderPassOp.FullscreenQuad,
-            WriteFboId: bloomAFboId,
-            ReadTexId: brightPassTexId,
-            ShaderId: screenShader.ResourceId,
-            SizeRatio: Vector2.One,
-            DoClear: true,
-            ClearColor: default,
-            ClearMask: ClearBufferFlag.Color
-        ));
-        
-        renderer.RegisterRenderPass(RenderTargetId.Scene, 3, new RenderPassData(
-            Op: RenderPassOp.FullscreenQuad,
-            WriteFboId: bloomBFboId,
-            ReadTexId: bloomATexId,
-            ShaderId: blurVerticalShader.ResourceId,
-            SizeRatio: Vector2.One,
-            DoClear: true,
-            ClearColor: default,
-            ClearMask: ClearBufferFlag.Color
-        ));
-        
-        renderer.RegisterRenderPass(RenderTargetId.Scene, 4, new RenderPassData(
-            Op: RenderPassOp.FullscreenQuad,
-            WriteFboId: 0,
-            ReadTexId: albedoTexId,
-            ShaderId: screenCompositeShader.ResourceId,
-            SizeRatio: Vector2.One,
-            DoClear: true,
-            ClearColor: default,
-            ClearMask: ClearBufferFlag.Color
-        ));
+        // Pass 2: Draw light into FBO
+        //SourceTexId = [lightFboMeta.ColTexId],
+        builder.RegisterRenderPass(RenderTargetId.SceneLight, 2, new LightRenderPass
+            {
+                TargetFbo = lightFboId,
+                Shader = lightPassShader.ResourceId,
+                Clear = new RenderPassClearDesc(Color.FromArgb(255, 50, 50, 100), ClearBufferFlag.Color),
+                Blend = BlendMode.Additive,
+                DepthTest = false
+            }
+        );
 
-        /*
-        renderer.RegisterRenderPass(RenderTargetId.Scene, 1, new RenderPassData(
-            Op: RenderPassOp.Blit,
-            WriteFboId: albedoFboId,
-            BlitFboId: 0,
-            SizeRatio: Vector2.One,
-            DoClear: false,
-            ClearColor: default,
-            ClearMask: ClearBufferFlag.Color
-        ));
-        */
-
-        /*
-        renderer.RegisterRenderPass(RenderTargetId.Scene, 0, new RenderPassData(
-            Op: RenderPassOp.None,
-            WriteFboId: screenFboId,
-            SizeRatio: Vector2.One,
-            ClearColor: Color.CornflowerBlue,
-            ClearMask: ClearBufferFlag.ColorAndDepth
-        ));
-        
-        // Bright-pass
-        renderer.RegisterRenderPass(RenderTargetId.Scene, 1, new RenderPassData(
-            Op: RenderPassOp.FullscreenQuad,
-            WriteFboId: bloomFboId,
-            ReadTexId: bloomTextId,
-            ShaderId: brightPassShader.ResourceId,
-            SizeRatio: halfSize,
-            DoClear: true,
-            ClearColor: default,
-            ClearMask: ClearBufferFlag.Color
-        ));
-        renderer.RegisterRenderPass(RenderTargetId.Scene, 2, new RenderPassData(
-            Op: RenderPassOp.FullscreenQuad,
-            WriteFboId: screenFboId,
-            ReadTexId: screenTexId,
-            ShaderId: screenCompositeShader.ResourceId,
-            SizeRatio: Vector2.One,
-            DoClear: true,
-            ClearColor: default,
-            ClearMask: ClearBufferFlag.Color
-        ));
-        */
-/*
-        var screenKey = renderer.RegisterRenderPass(screenShader, new RegisterRenderTargetDesc(
-            Target: RenderTargetId.Scene,
-            Order: 0,
-            SizeRatio: Vector2.One,
-            DoClear: true,
-            ClearColor: Color.CornflowerBlue,
-            ClearMask: ClearBufferFlag.ColorAndDepth
-        ));
-
-        // Bright-pass
-        var brightPKey = renderer.RegisterDrawRenderPass(screenKey, brightPassShader, new RegisterRenderTargetDesc(
-            Target: RenderTargetId.Scene,
-            Order: 1,
-            SizeRatio: halfSize,
-            DoClear: true,
-            ClearColor: default,
-            ClearMask: ClearBufferFlag.Color
-        ));
-
-        // Blur horizontal
-        var blurHKey = renderer.RegisterDrawRenderPass(brightPKey, blurHorizontalShader, new RegisterRenderTargetDesc(
-            Target: RenderTargetId.Scene,
-            Order: 2,
-            SizeRatio: Vector2.One,
-            DoClear: true,
-            ClearColor: default,
-            ClearMask: ClearBufferFlag.Color
-        ));
-
-        // Blur vertical
-        var blurVKey = renderer.RegisterDrawRenderPass(blurHKey, blurVerticalShader, new RegisterRenderTargetDesc(
-            Target: RenderTargetId.Scene,
-            Order: 3,
-            SizeRatio: Vector2.One,
-            DoClear: true,
-            ClearColor: default,
-            ClearMask: ClearBufferFlag.Color
-        ));
-
-        renderer.RegisterDrawRenderPass(new RenderTargetKey(0), screenCompositeShader, new RegisterRenderTargetDesc(
-            Target: RenderTargetId.Scene,
-            Order: 4,
-            SizeRatio: Vector2.One,
-            DoClear: true,
-            ClearColor: default,
-            ClearMask: ClearBufferFlag.Color
-        ));
-        */
-
-        renderer.AddMaterial(new MaterialDescription(
-            Shader: spriteShader,
-            Texture: spriteTexture,
-            Blend: BlendMode.Alpha
-        ));
-
-        renderer.AddMaterial(new MaterialDescription(
-            Shader: spriteShader,
-            Texture: tilemapTexture,
-            Blend: BlendMode.Alpha
-        ));
-
-        renderer.RegisterCommand(0, DrawCommandId.Tilemap, RenderTargetId.Scene, 4);
-        renderer.RegisterCommand(1, DrawCommandId.Sprite, RenderTargetId.Scene, 32);
-
-        renderer.RegisterEmitter(0, new TilemapDrawEmitter { Tilemap = tilemapFeature });
-        renderer.RegisterEmitter(1, new SpriteDrawEmitter { SpriteFeature = spriteModule });
+        // Pass 3: Combine scene and light fbo texture into final scene
+        builder.RegisterRenderPass(RenderTargetId.SceneLight, 3, new FsqRenderPass
+        {
+            TargetFbo = default,
+            SourceTextures = [sceneFboMeta.ColTexId, lightFboMeta.ColTexId],
+            Shader = lightComposite.ResourceId,
+        });
     }
 
-    public override void TickUpdate(int tick)
+    public override void Initialize(IGraphicsDevice graphics)
     {
+        var renderer = Context.GetSystem<RenderSystem>();
+
+        renderer.CreateMaterialFromTemplate("SpriteMaterial");
+        renderer.CreateMaterialFromTemplate("TilemapMaterial");
+        renderer.CreateMaterialFromTemplate("LightMaterial");
+
+
     }
 
     public override void Unload()

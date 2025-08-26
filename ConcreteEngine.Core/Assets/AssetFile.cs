@@ -3,7 +3,8 @@ namespace ConcreteEngine.Core.Assets;
 public enum AssetFileType
 {
     Texture2D,
-    Shader
+    Shader,
+    Material
 }
 
 public interface IAssetFile
@@ -12,7 +13,7 @@ public interface IAssetFile
     AssetFileType AssetType { get; }
 }
 
-public interface IGraphicAssetFile : IAssetFile
+public interface IGraphicAssetFile<THandle> : IAssetFile where THandle : unmanaged
 {
-    public ushort ResourceId { get; init; }
+    public THandle ResourceId { get; init; }
 }

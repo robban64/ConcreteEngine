@@ -10,18 +10,44 @@ namespace ConcreteEngine.Graphics.Utils;
 
 public static class GlEnumExtensions
 {
+    public static PrimitiveType ToGlEnum(this DrawPrimitive value)
+    {
+        return value switch
+        {
+            DrawPrimitive.Triangles => PrimitiveType.Triangles,
+            DrawPrimitive.TriangleStrip => PrimitiveType.TriangleStrip,
+            DrawPrimitive.TriangleFan => PrimitiveType.TriangleFan,
+            DrawPrimitive.Points => PrimitiveType.Points,
+            DrawPrimitive.Lines => PrimitiveType.Lines,
+            DrawPrimitive.LineLoop => PrimitiveType.LineLoop,
+            DrawPrimitive.LineStrip => PrimitiveType.LineStrip,
+            _ => throw GraphicsException.UnsupportedFeature(nameof(value))
+        };
+    }
+
+    public static DrawElementsType ToGlEnum(this IboElementType value)
+    {
+        return value switch
+        {
+            IboElementType.UnsignedByte => DrawElementsType.UnsignedByte,
+            IboElementType.UnsignedShort => DrawElementsType.UnsignedShort,
+            IboElementType.UnsignedInt => DrawElementsType.UnsignedInt,
+            _ => throw GraphicsException.UnsupportedFeature($"Index Element Type {value}")
+        };
+    }
+
     public static ClearBufferMask ToGlEnum(this ClearBufferFlag flags)
     {
         return flags switch
         {
-            ClearBufferFlag.None =>  ClearBufferMask.None,
+            ClearBufferFlag.None => ClearBufferMask.None,
             ClearBufferFlag.Color => ClearBufferMask.ColorBufferBit,
             ClearBufferFlag.Depth => ClearBufferMask.DepthBufferBit,
             ClearBufferFlag.ColorAndDepth => ClearBufferMask.ColorBufferBit | ClearBufferMask.DepthBufferBit,
             _ => throw GraphicsException.UnsupportedFeature(nameof(flags))
         };
     }
-    
+
     public static (PixelFormat glFormat, InternalFormat glInternalFormat) ToGlEnums(this EnginePixelFormat format)
     {
         return format switch

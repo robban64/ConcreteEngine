@@ -1,17 +1,21 @@
+#region
+
 using System.Numerics;
-using ConcreteEngine.Core.Input;
+using ConcreteEngine.Core.Platform;
 using ConcreteEngine.Graphics.Data;
 using Silk.NET.Input;
 using Silk.NET.Maths;
+
+#endregion
 
 namespace ConcreteEngine.Core.Transforms;
 
 public sealed class CameraSystem : IGameEngineSystem
 {
     private const int EdgeMarginPixels = 16;
-    private const float BaseSpeed = 100; //= 900;
+    private const float BaseSpeed = 200;
 
-    private readonly InputSystem _input;
+    private readonly IEngineInputSource _input;
 
     private readonly ViewTransform2D _transform = new()
     {
@@ -22,16 +26,16 @@ public sealed class CameraSystem : IGameEngineSystem
 
     public ViewTransform2D Transform => _transform;
 
-    internal CameraSystem(InputSystem input)
+    internal CameraSystem(IEngineInputSource input)
     {
         _input = input;
     }
 
     public void Update(in GraphicsFrameContext frameCtx)
     {
-        _transform.ViewportSize = frameCtx.FramebufferSize;
+        _transform.ViewportSize = frameCtx.ViewportSize;
 
-        float speed = frameCtx.DeltaTime * BaseSpeed;
+        float speed = BaseSpeed * frameCtx.DeltaTime;
 
         var input = _input;
 
@@ -49,21 +53,22 @@ public sealed class CameraSystem : IGameEngineSystem
         if (input.IsKeyDown(Key.D))
             deltaPos.X += 1f;
 
+        if (input.IsKeyDown(Key.U))
+            _transform.Zoom += 0.1f;
+        if (input.IsKeyDown(Key.J))
+            _transform.Zoom -= 0.1f;
 
         var mouse = input.MousePosition;
-        var sceeenSize = frameCtx.FramebufferSize;
-        var w = sceeenSize.X - EdgeMarginPixels;
-        var h = sceeenSize.Y - EdgeMarginPixels;
+        var w = frameCtx.ViewportSize.X - EdgeMarginPixels;
+        var h = frameCtx.ViewportSize.Y - EdgeMarginPixels;
 
         // Left / Right
         if (mouse.X <= EdgeMarginPixels) deltaPos.X -= 1f;
         else if (mouse.X >= w) deltaPos.X += 1f;
 
-        // Top / Bottom (note: top-left origin in window coords)
         if (mouse.Y <= EdgeMarginPixels) deltaPos.Y -= 1f;
         else if (mouse.Y >= h) deltaPos.Y += 1f;
 
-        // Normalize so diagonals aren’t faster.
         var len = MathF.Sqrt(deltaPos.X * deltaPos.X + deltaPos.Y * deltaPos.Y);
         if (len > 0f)
         {

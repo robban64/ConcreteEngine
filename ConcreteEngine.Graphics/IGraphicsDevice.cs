@@ -1,9 +1,8 @@
 #region
 
-using System.Numerics;
 using ConcreteEngine.Graphics.Data;
 using ConcreteEngine.Graphics.Definitions;
-using Silk.NET.Maths;
+using ConcreteEngine.Graphics.Resources;
 
 #endregion
 
@@ -14,22 +13,24 @@ public interface IGraphicsDevice : IDisposable
     IGraphicsContext Gfx { get; }
     GraphicsBackend BackendApi { get; }
     GraphicsConfiguration Configuration { get; }
-    ushort QuadMeshId { get; }
+    MeshId QuadMeshId { get; }
 
     void StartFrame(in GraphicsFrameContext frameCtx);
     void EndFrame();
-    (ushort, ushort) CreateFramebuffer(Vector2 sizeRatio);
-    ushort CreateShader(string vertexSource, string fragmentSource, string[] samplers);
-    ushort CreateTexture2D(in TextureDescriptor textureDescriptor);
-    ushort CreateBuffer(BufferTarget target, BufferUsage usage);
-    ushort CreateVertexBuffer(BufferUsage bufferUsage);
-    ushort CreateIndexBuffer(BufferUsage bufferUsage);
+    
+    UniformTable GetShaderUniforms(ShaderId shaderId);
+    
+    FrameBufferId CreateFramebuffer(in FrameBufferDesc desc, out FrameBufferMeta meta);
+    ShaderId CreateShader(string vertexSource, string fragmentSource, string[] samplers);
+    TextureId CreateTexture2D(in TextureDesc textureDesc);
+    VertexBufferId CreateVertexBuffer(BufferUsage bufferUsage);
+    IndexBufferId CreateIndexBuffer(BufferUsage usage, IboElementType elementType);
 
-    CreateMeshResult CreateMesh<TVertex, TIndex>(MeshDescriptor<TVertex, TIndex> meshData)
+    MeshId CreateMesh<TVertex, TIndex>(MeshDescriptor<TVertex, TIndex> meshData, out MeshMeta meta)
         where TVertex : unmanaged
         where TIndex : unmanaged;
 
-    void RemoveResource(ushort resourceId);
+    void EnqueueRemoveResource<TId>(TId id, bool replace = false) where TId : struct;
 }
 
 public interface IGraphicsDevice<out TContext> : IGraphicsDevice where TContext : class, IGraphicsContext

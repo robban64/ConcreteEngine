@@ -3,6 +3,7 @@
 using ConcreteEngine.Core.Resources;
 using ConcreteEngine.Graphics;
 using ConcreteEngine.Graphics.Data;
+using ConcreteEngine.Graphics.Definitions;
 using StbImageSharp;
 
 #endregion
@@ -23,52 +24,21 @@ internal sealed class AssetLoader
 
     private string GetPath(string assetTypePath, string fileName) =>
         Path.Combine(_rootPath, assetTypePath, fileName);
-
-    public Shader LoadShader(AssetShaderRecord record)
-    {
-/*
-        var vertexIndex = shaderText.IndexOf("@vertex", StringComparison.Ordinal);
-        var fragmentIndex = shaderText.IndexOf("@fragment", StringComparison.Ordinal);
-
-        if (vertexIndex < 0)
-            throw new InvalidDataException("Invalid vertex shader definition. Missing @vertex definition.");
-        if (fragmentIndex < 0)
-            throw new InvalidDataException("Invalid vertex shader definition. Missing @fragmentIndex definition.");
-
-
-        var vertexSource = shaderText
-            .Substring(vertexIndex + "@vertex".Length, fragmentIndex - vertexIndex - "@vertex".Length)
-            .Trim();
-        var fragmentSource = shaderText.Substring(fragmentIndex + "@fragment".Length).Trim();
-*/
-
-        var vertexSource = File.ReadAllText(GetPath("shaders", record.VertShaderPath));
-        var fragmentSource = File.ReadAllText(GetPath("shaders", record.FragShaderPath));
-
-        var resourceId = _graphics.CreateShader(vertexSource, fragmentSource, record.Samplers);
-
-        return new Shader
-        {
-            Name = record.Name,
-            VertShaderFilename = record.VertShaderPath,
-            FragShaderFilename = record.FragShaderPath,
-            ResourceId = resourceId,
-            Samplers = record.Samplers.Length
-        };
-    }
+    
 
     public Texture2D LoadTexture2D(AssetTextureRecord record)
     {
         using var stream = File.OpenRead(GetPath("textures", record.Path));
         var result = ImageResult.FromStream(stream, ColorComponents.RedGreenBlueAlpha);
 
-        var textureData = new TextureDescriptor
+        var textureData = new TextureDesc
         (
             PixelData: result.Data,
             Width: result.Width,
             Height: result.Height,
             Format: record.PixelFormat,
-            Preset: record.Preset
+            Preset: record.Preset,
+            LodBias: record.LodBias
         );
 
         var resourceId = _graphics.CreateTexture2D(in textureData);
@@ -82,6 +52,59 @@ internal sealed class AssetLoader
             Height = textureData.Height,
             PixelFormat = textureData.Format,
             Preset = record.Preset
+        };
+    }
+    
+    public Shader LoadShader(AssetShaderRecord record)
+    {
+        var vertexSource = File.ReadAllText(GetPath("shaders", record.VertShaderPath));
+        var fragmentSource = File.ReadAllText(GetPath("shaders", record.FragShaderPath));
+
+        var resourceId = _graphics.CreateShader(vertexSource, fragmentSource, record.Samplers ?? []);
+        var uniforms = _graphics.GetShaderUniforms(resourceId);
+
+        return new Shader
+        {
+            Name = record.Name,
+            VertShaderFilename = record.VertShaderPath,
+            FragShaderFilename = record.FragShaderPath,
+            ResourceId = resourceId,
+            Samplers = record.Samplers?.Length ?? 0,
+            UniformTable = uniforms
+        };
+    }
+
+    public MaterialTemplate LoadMaterialTemplate(AssetMaterialTemplate record, Func<string, Shader> getShader,
+        Func<string, Texture2D> getTexture)
+    {
+        Texture2D[] textures = [];
+        if (record.Textures != null)
+        {
+            textures = new Texture2D[record.Textures.Length];
+            for (var i = 0; i < record.Textures.Length; i++)
+            {
+                textures[i] = getTexture(record.Textures[i]);
+            }
+        }
+
+        var valuesCount = record.Defaults?.Count ?? 4;
+        Dictionary<ShaderUniform, IMaterialValue> materialValues = new(valuesCount);
+        
+        if (record.Defaults != null)
+        {
+            foreach (var (uniform, value) in record.Defaults)
+            {
+                materialValues.Add(uniform, value.ToMaterialValue());
+            }
+        }
+
+        
+        return new MaterialTemplate(materialValues)
+        {
+            Name = record.Name,
+            Shader = getShader(record.Shader),
+            Textures = textures,
+            Color = record.Color,
         };
     }
 }

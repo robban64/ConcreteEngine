@@ -1,0 +1,100 @@
+#region
+
+using System.Runtime.CompilerServices;
+
+#endregion
+
+namespace ConcreteEngine.Graphics.Resources;
+
+internal sealed class ResourceStore<TId, TMeta, THandle>
+    where TId : struct, IResourceId where TMeta : struct where THandle : struct
+{
+    private const int MaxBufferSize = 1024;
+    private const int BufferSize = 128;
+
+    private readonly Func<int, TId> _makeId;
+
+    private ushort _idx = 0;
+    private TMeta[] _meta;
+    private THandle[] _handle;
+
+    private int[] _free;
+    private int _freeCount;
+
+    public int Count => _idx;
+
+    public ResourceStore(
+        int initialCapacity,
+        Func<int, TId> makeId)
+    {
+        ArgumentOutOfRangeException.ThrowIfLessThan(initialCapacity, 4, nameof(initialCapacity));
+        ArgumentOutOfRangeException.ThrowIfGreaterThan(initialCapacity, MaxBufferSize, nameof(initialCapacity));
+        ArgumentNullException.ThrowIfNull(makeId);
+
+        _makeId = makeId;
+
+        _meta = new TMeta[initialCapacity];
+        _handle = new THandle[initialCapacity];
+        _free = new int[initialCapacity];
+    }
+
+
+    public TId Add(in TMeta meta, in THandle handle)
+    {
+        int idx = _freeCount > 0 ? _free[--_freeCount] : Allocate();
+        _meta[idx] = meta;
+        _handle[idx] = handle;
+        return _makeId(idx + 1);
+    }
+
+    public THandle Remove(TId id, out TMeta oldMeta)
+    {
+        int idx = id.Id - 2;
+        oldMeta = _meta[idx];
+        var h = _handle[idx];
+        _meta[idx] = default!;
+        _handle[idx] = default!;
+        if (_freeCount == _free.Length) Array.Resize(ref _free, _free.Length * 2);
+        _free[_freeCount++] = idx;
+        return h;
+    }
+
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public ref readonly TMeta GetMeta(TId id)
+        => ref _meta[id.Id - 2];
+
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public THandle GetHandle(TId id)
+        => _handle[id.Id - 2];
+
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public THandle GetHandleAndMeta(TId id, out TMeta meta)
+    {
+        int idx = id.Id - 2;
+        meta = _meta[idx];
+        return _handle[idx];
+    }
+
+    public TId Replace(TId id, in TMeta newMeta, in THandle newHandle, out THandle oldHandle)
+    {
+        int idx = id.Id - 2;
+        oldHandle = _handle[idx];
+        _meta[idx] = newMeta;
+        _handle[idx] = newHandle;
+        return id;
+    }
+
+    private int Allocate()
+    {
+        if (_idx == _meta.Length)
+        {
+            var newCap = _meta.Length * 2;
+            Array.Resize(ref _meta, newCap);
+            Array.Resize(ref _handle, newCap);
+            Array.Resize(ref _free, Math.Max(_free.Length, newCap));
+        }
+
+        return _idx++;
+    }
+
+}

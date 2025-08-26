@@ -5,18 +5,18 @@ public sealed class GameTime
 {
     public const int GameTicksPerSecond = 30;
     public const float GameTimeDelta = 1f / GameTicksPerSecond;
-    
+
     private const int MaxTicksPerFrame = 6;
-    
+
     private readonly Action<int> _gameTickAction;
     private readonly Action<int> _fpsTickAction;
-    
-    private FrameTickTimer _gameTicker = new (GameTimeDelta);
-    private FrameTickTimer _fpsTicker = new (1);
 
-    private GameTickTimer _animationClock = new GameTickTimer(5,GameTicksPerSecond);
-    
-    
+    private FrameTickTimer _gameTicker = new(GameTimeDelta);
+    private FrameTickTimer _fpsTicker = new(1);
+
+    private GameTickTimer _animationClock = new GameTickTimer(5, GameTicksPerSecond);
+
+
     private float _alpha;
     private float _speed = 1f;
 
@@ -25,13 +25,13 @@ public sealed class GameTime
         _gameTickAction = gameTickAction;
         _fpsTickAction = fpsTickAction;
     }
-    
+
     public float Alpha => _alpha;
 
     public void Advance(float deltaTime)
     {
         float dt = deltaTime * _speed;
-        
+
         _gameTicker.Accumulate(dt);
         _fpsTicker.Accumulate(dt);
 
@@ -42,8 +42,8 @@ public sealed class GameTime
             GameTickUpdate(t);
             tickCounter++;
         }
-        
-        while (_fpsTicker.TryDequeueTick(out t))  _fpsTickAction(t);
+
+        while (_fpsTicker.TryDequeueTick(out t)) _fpsTickAction(t);
 
 
         _alpha = _gameTicker.Alpha;

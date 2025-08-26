@@ -1,7 +1,11 @@
+#region
+
 using System.Numerics;
 using System.Text.Json;
 using System.Text.Json.Serialization;
 using ConcreteEngine.Graphics.Data;
+
+#endregion
 
 namespace ConcreteEngine.Core.Assets.IO;
 

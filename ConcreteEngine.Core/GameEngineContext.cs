@@ -2,8 +2,6 @@
 
 #endregion
 
-using ConcreteEngine.Core.Rendering;
-
 namespace ConcreteEngine.Core;
 
 public sealed class GameSceneContext

@@ -1,6 +1,5 @@
 #region
 
-using System.Diagnostics.CodeAnalysis;
 using ConcreteEngine.Core.Assets;
 using ConcreteEngine.Graphics.Data;
 using ConcreteEngine.Graphics.Definitions;
@@ -21,5 +20,4 @@ public sealed class Shader : IGraphicAssetFile<ShaderId>
     public IReadOnlyList<ShaderUniform> Uniforms => UniformTable.Uniforms;
 
     public AssetFileType AssetType => AssetFileType.Shader;
-
 }

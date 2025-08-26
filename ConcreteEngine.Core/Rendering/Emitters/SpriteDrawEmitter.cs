@@ -7,7 +7,6 @@ using ConcreteEngine.Core.Rendering.Batchers.Sprite;
 using ConcreteEngine.Core.Rendering.Pipeline;
 using ConcreteEngine.Core.Resources;
 using ConcreteEngine.Core.Transforms;
-using ConcreteEngine.Graphics.Definitions;
 
 #endregion
 
@@ -23,8 +22,7 @@ public sealed class SpriteDrawEmitter : DrawCommandEmitter<SpriteDrawEntityBatch
     {
         var alpha = ctx.Alpha;
         var spriteBatch = ctx.SpriteBatch;
-        
-        
+
 
         for (int i = 0; i < entities.Length; i++)
         {
@@ -40,11 +38,11 @@ public sealed class SpriteDrawEmitter : DrawCommandEmitter<SpriteDrawEntityBatch
                     pos = Vector2.Lerp(entity.PreviousPosition, entity.Position, alpha);
                 var item = new SpriteDrawData(pos, entity.Scale, entity.Uv);
                 spriteBatch.SubmitSprite(item);
-
             }
-            
+
             var result = spriteBatch.BuildBatch();
-            var meta = new DrawCommandMeta(DrawCommandId.Sprite, DrawCommandTag.SpriteRenderer, RenderTargetId.Scene,  0);
+            var meta = new DrawCommandMeta(DrawCommandId.Sprite, DrawCommandTag.SpriteRenderer, RenderTargetId.Scene,
+                0);
 
             var cmd = new DrawCommandMesh(
                 meshId: result.MeshId,
@@ -53,9 +51,6 @@ public sealed class SpriteDrawEmitter : DrawCommandEmitter<SpriteDrawEntityBatch
                 transform: in DefaultTransform
             );
             submitter.SubmitDraw(in cmd, in meta);
-
         }
-
-
     }
 }

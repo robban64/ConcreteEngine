@@ -1,13 +1,10 @@
-using System.Numerics;
-using System.Runtime.CompilerServices;
-
 namespace ConcreteEngine.Common.Collections;
 /*
 public sealed class ArrayListBuffer<TKey, TData> where TKey : struct, IBinaryInteger<TKey>
 {
     private readonly TData[] _buffer;
     private int[] _emptySlots;
-    
+
     private int _idx = 1;
     private int _emptyIdx = 0;
 
@@ -66,5 +63,3 @@ public sealed class ArrayStructListBuffer<T> where T : struct
 }
 
 */
-    
-    

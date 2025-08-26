@@ -276,8 +276,8 @@ internal class GlResourceFactory(GlGraphicsContext gfx)
 
         var uniformDict = GetUniformsFromProgram(handle);
         uniformTable = new UniformTable(uniformDict);
-        
-        
+
+
         if (samplers?.Length > 0)
         {
             _gl.UseProgram(handle);

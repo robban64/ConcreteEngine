@@ -1,10 +1,10 @@
 namespace ConcreteEngine.Graphics.Resources;
 
-
 public interface IResourceId
 {
     int Id { get; }
 }
+
 public readonly record struct TextureId(int Id) : IResourceId;
 
 public readonly record struct ShaderId(int Id) : IResourceId;

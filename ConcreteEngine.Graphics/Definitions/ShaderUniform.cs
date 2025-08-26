@@ -1,4 +1,8 @@
+#region
+
 using static ConcreteEngine.Graphics.Definitions.ShaderUniform;
+
+#endregion
 
 namespace ConcreteEngine.Graphics.Definitions;
 
@@ -25,18 +29,18 @@ public enum ShaderUniform : byte
     Radius,
     Intensity,
     Softness,
-    Shape,
+    Shape
 }
 
 public static class ShaderUniforms
 {
-    public static readonly ShaderUniform[] SamplerUniforms = 
+    public static readonly ShaderUniform[] SamplerUniforms =
         [SampleTexture, SamplerScene, SamplerLight, SamplerBloom];
 
-    public static readonly ShaderUniform[] Matrix4Uniforms = 
+    public static readonly ShaderUniform[] Matrix4Uniforms =
         [ModelMatrix, ProjectionMatrix, ProjectionViewMatrix];
 
-    public static readonly ShaderUniform[] VectorUniforms = 
+    public static readonly ShaderUniform[] VectorUniforms =
         [Color, TexelSize, LightPos];
 
     public static readonly ShaderUniform[] PrimitiveUniforms =

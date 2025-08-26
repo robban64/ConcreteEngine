@@ -33,11 +33,10 @@ public sealed class SpriteAtlas
     {
         return UvRect.GetInsetUv(col, row, TileSize, Scale);
     }
-    
+
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public UvRect GetUvRect(Vector2D<int> location)
     {
         return UvRect.GetInsetUv(location.X, location.Y, TileSize, Scale);
     }
-
 }

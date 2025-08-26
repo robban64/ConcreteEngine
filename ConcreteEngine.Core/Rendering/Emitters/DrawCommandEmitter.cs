@@ -9,7 +9,6 @@ using ConcreteEngine.Graphics;
 
 namespace ConcreteEngine.Core.Rendering.Emitters;
 
-
 public sealed class DrawEmitterContext
 {
     public float Alpha;
@@ -20,7 +19,7 @@ public sealed class DrawEmitterContext
 
 public interface IDrawCommandEmitter
 {
-    int Order { get;  }
+    int Order { get; }
     Type EntityType { get; }
     void Initialize(int order);
     void Emit(DrawEmitterContext context, DrawCommandSubmitter submitter);
@@ -39,7 +38,6 @@ public abstract class DrawCommandEmitter<TEntity> : IDrawCommandEmitter
     public void Initialize(int order)
     {
         Order = order;
- 
     }
 
     public void Emit(DrawEmitterContext ctx, DrawCommandSubmitter submitter)
@@ -55,23 +53,23 @@ public abstract class DrawCommandEmitter<TEntity> : IDrawCommandEmitter
             EmitBatch(feature.GetDrawables(), in ctx, submitter, order);
         }
     }
-    
+
     protected abstract void EmitBatch(
         ReadOnlySpan<TEntity> entities,
         in DrawEmitterContext ctx,
         DrawCommandSubmitter submitter,
         int order);
-    
-    
-    public void RegisterFeature(int order,  IDrawableFeature feature)
+
+
+    public void RegisterFeature(int order, IDrawableFeature feature)
     {
         if (feature is not IDrawableFeature<TEntity> featureEntity)
             throw new ArgumentException($"Feature type {feature.GetType()} is not supported");
-        
+
         _features.Add(order, featureEntity);
     }
-    
-    internal void RegisterFeature<TFeature>(int order,  IDrawableFeature<TEntity> feature)
+
+    internal void RegisterFeature<TFeature>(int order, IDrawableFeature<TEntity> feature)
         where TFeature : IDrawableFeature<TEntity>
 
     {

@@ -1,6 +1,5 @@
 #region
 
-using System.Collections.Immutable;
 using ConcreteEngine.Common.Collections;
 using ConcreteEngine.Core.Assets;
 using ConcreteEngine.Core.Configuration;
@@ -11,13 +10,6 @@ using ConcreteEngine.Core.Time;
 using ConcreteEngine.Core.Transforms;
 using ConcreteEngine.Graphics;
 using ConcreteEngine.Graphics.Data;
-using ConcreteEngine.Graphics.Definitions;
-using ConcreteEngine.Graphics.Error;
-using ConcreteEngine.Graphics.OpenGL;
-using Silk.NET.Input;
-using Silk.NET.OpenGL;
-using Silk.NET.Windowing;
-using Shader = ConcreteEngine.Core.Resources.Shader;
 
 #endregion
 
@@ -62,10 +54,10 @@ public sealed class GameEngine : IDisposable
         _graphics = graphics;
         _input = input;
         _sceneFactories = sceneFactories;
-        
+
         // time
         _gameTime = new GameTime(GameTickUpdate, FpsTickUpdate);
-        
+
         // camera
         _camera = new CameraSystem(_input);
 
@@ -104,7 +96,7 @@ public sealed class GameEngine : IDisposable
         //Console.WriteLine($"Viewport: {_window.Size}, FrameBufSize: {_window.FramebufferSize}");
         Console.WriteLine($"Fps: {_fps} with tick {tick}");
     }
-    
+
     internal void Update(double delta)
     {
         float dt = (float)delta;
@@ -171,14 +163,14 @@ public sealed class GameEngine : IDisposable
         var sceneContext = new GameSceneContext(this);
 
         var builder = new GameSceneConfigBuilder();
-        
-        
+
+
         var newScene = _sceneFactories[index]();
         newScene.AttachContext(sceneContext);
-        
+
         newScene.ConfigureRenderer(builder, _graphics);
         _renderer.Initialize(builder);
-        
+
         newScene.ConfigureFeatures(builder);
 
         foreach (var (order, factory) in builder.Features)
@@ -191,7 +183,7 @@ public sealed class GameEngine : IDisposable
             _features.AddFeature(order, feature);
             _renderer.RegisterDrawFeature(order, feature, emitterType);
         }
-        
+
         _features.Load(new GameFeatureContext(sceneContext));
 
         newScene.Initialize(_graphics);

@@ -1,7 +1,11 @@
+#region
+
 using System.Numerics;
 using ConcreteEngine.Core.Assets;
 using ConcreteEngine.Graphics.Data;
 using ConcreteEngine.Graphics.Definitions;
+
+#endregion
 
 namespace ConcreteEngine.Core.Resources;
 

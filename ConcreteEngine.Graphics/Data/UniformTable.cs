@@ -7,7 +7,6 @@ using ConcreteEngine.Graphics.Definitions;
 
 namespace ConcreteEngine.Graphics.Data;
 
-
 public enum UniformValueKind : byte
 {
     Float,
@@ -25,12 +24,11 @@ public sealed class UniformTable
 
     private readonly short[] _locs = new short[ShaderUniformValues.Length];
     private readonly List<ShaderUniform> _uniforms;
-    
+
     public IReadOnlyList<ShaderUniform> Uniforms => _uniforms;
-    
+
     public UniformTable(Dictionary<string, short> uniformLocationDict)
     {
-        
         _uniforms = new List<ShaderUniform>(uniformLocationDict.Count);
         _uniforms.Sort();
 
@@ -43,14 +41,14 @@ public sealed class UniformTable
                 _locs[i] = uniformLocation;
                 continue;
             }
+
             _locs[i] = -1;
         }
-        
-        
     }
+
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public bool ContainsKey(ShaderUniform uniform) => _locs[(int)uniform] >= 0;
-    
+
     public int this[ShaderUniform uniform]
     {
         [MethodImpl(MethodImplOptions.AggressiveInlining)]

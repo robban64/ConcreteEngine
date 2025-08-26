@@ -1,12 +1,10 @@
 #region
 
 using System.Numerics;
-using System.Runtime.InteropServices;
 using ConcreteEngine.Core.Game.Terrain;
 using ConcreteEngine.Core.Rendering.Pipeline;
 using ConcreteEngine.Core.Resources;
 using ConcreteEngine.Core.Transforms;
-using ConcreteEngine.Graphics.Definitions;
 
 #endregion
 
@@ -14,7 +12,6 @@ namespace ConcreteEngine.Core.Rendering.Emitters;
 
 public sealed class TilemapDrawEmitter : DrawCommandEmitter<TilemapStruct>
 {
-
     protected override void EmitBatch(ReadOnlySpan<TilemapStruct> entities, in DrawEmitterContext ctx,
         DrawCommandSubmitter submitter, int order)
     {
@@ -29,7 +26,7 @@ public sealed class TilemapDrawEmitter : DrawCommandEmitter<TilemapStruct>
             transform: in transform
         );
 
-        var meta = new DrawCommandMeta(DrawCommandId.Tilemap, DrawCommandTag.SpriteRenderer, RenderTargetId.Scene,  0);
+        var meta = new DrawCommandMeta(DrawCommandId.Tilemap, DrawCommandTag.SpriteRenderer, RenderTargetId.Scene, 0);
         submitter.SubmitDraw(in cmd, in meta);
     }
 }

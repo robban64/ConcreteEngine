@@ -1,6 +1,5 @@
 #region
 
-using System.Diagnostics.CodeAnalysis;
 using System.Numerics;
 using System.Runtime.CompilerServices;
 using ConcreteEngine.Graphics.Data;
@@ -36,13 +35,13 @@ public sealed class Material
     public Vector4 Color { get; set; }
 
     public IReadOnlyDictionary<ShaderUniform, IMaterialValue> Values => _values;
-    
+
     // Helpers
     public bool HasViewProjection { get; private set; }
     //public bool HasModelMatrix { get; private set; }
     //public bool HasModelMatrix { get; private set; }
 
-    
+
     internal Material(MaterialId id, MaterialTemplate template)
     {
         var defaultUniforms = template.DefaultUniforms;
@@ -61,8 +60,8 @@ public sealed class Material
         foreach (var uniform in defaultUniforms)
         {
             _values.Add(uniform.Key, uniform.Value);
-
         }
+
         _properties = new MaterialValueProperty[_values.Count];
 
         int idx = 0;

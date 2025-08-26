@@ -1,5 +1,6 @@
+#region
+
 using System.Numerics;
-using ConcreteEngine.Common.Extensions;
 using ConcreteEngine.Core.Rendering.Pipeline;
 using ConcreteEngine.Core.Resources;
 using ConcreteEngine.Core.Transforms;
@@ -7,18 +8,20 @@ using ConcreteEngine.Graphics;
 using ConcreteEngine.Graphics.Data;
 using ConcreteEngine.Graphics.Definitions;
 
+#endregion
+
 namespace ConcreteEngine.Core.Rendering.Renderers;
 
 public interface ICommandRenderer
 {
 }
 
-public interface ICommandRenderer<T>: ICommandRenderer where T : struct, IDrawCommand
+public interface ICommandRenderer<T> : ICommandRenderer where T : struct, IDrawCommand
 {
     public void Handle(in T cmd);
 }
 
-public abstract class CommandRenderer<T> :  ICommandRenderer<T> where T : struct, IDrawCommand
+public abstract class CommandRenderer<T> : ICommandRenderer<T> where T : struct, IDrawCommand
 {
     protected readonly ViewTransform2D View;
     protected readonly IGraphicsDevice Graphics;
@@ -73,7 +76,6 @@ public abstract class CommandRenderer<T> :  ICommandRenderer<T> where T : struct
     }
 
     public abstract void Handle(in T cmd);
-
 }
 
 public sealed class SpriteRenderer(IGraphicsDevice graphics, ViewTransform2D view, MaterialStore materialStore)

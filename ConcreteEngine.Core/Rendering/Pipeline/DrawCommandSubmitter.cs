@@ -1,6 +1,10 @@
+#region
+
 using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
 using ConcreteEngine.Core.Rendering.Renderers;
+
+#endregion
 
 namespace ConcreteEngine.Core.Rendering.Pipeline;
 
@@ -88,7 +92,7 @@ public class DrawCommandSubmitter
     private void EnsureCapacity()
     {
         var idx = _submitIdx + 1;
-        
+
         var sizeInBytes = idx * _stride;
         if (sizeInBytes >= _buffer.Length)
         {
@@ -96,7 +100,7 @@ public class DrawCommandSubmitter
             if (newSize > MaxBufferCapacity) throw new OutOfMemoryException("Command Buffer too big");
             var newArr = new byte[newSize];
 
-            _buffer.Span.Slice(0,int.Min(_submitIdx * _stride, _buffer.Length)).CopyTo(newArr);
+            _buffer.Span.Slice(0, int.Min(_submitIdx * _stride, _buffer.Length)).CopyTo(newArr);
             _buffer = newArr;
         }
 

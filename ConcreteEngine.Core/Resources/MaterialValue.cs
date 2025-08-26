@@ -1,4 +1,8 @@
+#region
+
 using ConcreteEngine.Graphics.Data;
+
+#endregion
 
 namespace ConcreteEngine.Core.Resources;
 
@@ -10,12 +14,12 @@ public interface IMaterialValue : IEquatable<IMaterialValue>
 public readonly struct MaterialValue<T> : IMaterialValue
     where T : struct, IEquatable<T>
 {
-    
     public MaterialValue(T value, UniformValueKind kind)
     {
         Value = value;
         Kind = kind;
     }
+
     public MaterialValue(in T value, UniformValueKind kind)
     {
         Value = value;

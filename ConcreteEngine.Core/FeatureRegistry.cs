@@ -35,9 +35,9 @@ public sealed class FeatureRegistry : IFeatureRegistry
         }
     }
 
-    internal void Load( GameFeatureContext context)
+    internal void Load(GameFeatureContext context)
     {
-        foreach (var (order ,feature) in _features)
+        foreach (var (order, feature) in _features)
         {
             feature.Load(context, order);
         }
@@ -45,7 +45,7 @@ public sealed class FeatureRegistry : IFeatureRegistry
 
     internal void Unload()
     {
-        foreach (var (order ,feature) in _features)
+        foreach (var (order, feature) in _features)
         {
             feature.Unload();
         }

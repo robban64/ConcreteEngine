@@ -1,7 +1,6 @@
 #region
 
 using System.Numerics;
-using System.Runtime.CompilerServices;
 using ConcreteEngine.Core.Resources;
 using ConcreteEngine.Graphics.Resources;
 

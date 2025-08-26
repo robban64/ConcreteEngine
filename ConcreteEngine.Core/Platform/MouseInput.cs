@@ -45,7 +45,6 @@ internal class MouseInput : IDisposable
 
         var scrollWheel = _mouse.ScrollWheels[0];
         Scroll = new Vector2(scrollWheel.X, scrollWheel.Y);
-        
     }
 
 
@@ -78,7 +77,7 @@ internal class MouseInput : IDisposable
         _buttonsDown[(int)button] = 0;
         _buttonsReleased[(int)button] = 1;
     }
-    
+
 
     public bool IsMouseDown(MouseButton button) => _buttonsDown[(int)button] == 1;
     public bool IsMousePressed(MouseButton button) => _buttonsPressed[(int)button] == 1;

@@ -24,7 +24,7 @@ internal sealed class AssetLoader
 
     private string GetPath(string assetTypePath, string fileName) =>
         Path.Combine(_rootPath, assetTypePath, fileName);
-    
+
 
     public Texture2D LoadTexture2D(AssetTextureRecord record)
     {
@@ -54,7 +54,7 @@ internal sealed class AssetLoader
             Preset = record.Preset
         };
     }
-    
+
     public Shader LoadShader(AssetShaderRecord record)
     {
         var vertexSource = File.ReadAllText(GetPath("shaders", record.VertShaderPath));
@@ -89,7 +89,7 @@ internal sealed class AssetLoader
 
         var valuesCount = record.Defaults?.Count ?? 4;
         Dictionary<ShaderUniform, IMaterialValue> materialValues = new(valuesCount);
-        
+
         if (record.Defaults != null)
         {
             foreach (var (uniform, value) in record.Defaults)
@@ -98,13 +98,13 @@ internal sealed class AssetLoader
             }
         }
 
-        
+
         return new MaterialTemplate(materialValues)
         {
             Name = record.Name,
             Shader = getShader(record.Shader),
             Textures = textures,
-            Color = record.Color,
+            Color = record.Color
         };
     }
 }

@@ -1,11 +1,8 @@
 #region
 
-using System.Numerics;
 using ConcreteEngine.Core.Assets;
 using ConcreteEngine.Core.Resources;
-using ConcreteEngine.Core.Utils;
 using ConcreteEngine.Graphics.Resources;
-using Silk.NET.Maths;
 
 #endregion
 
@@ -22,6 +19,7 @@ public struct TilemapStruct
     {
     }
 }
+
 public class TilemapFeature : IGameFeature, IDrawableFeature<TilemapStruct>
 {
     public bool IsDrawable => true;
@@ -35,7 +33,7 @@ public class TilemapFeature : IGameFeature, IDrawableFeature<TilemapStruct>
 
     public bool IsUpdateable => true;
     public int Order { get; set; }
-    
+
     private TilemapStruct _tilemap;
 
     private readonly TilemapStruct[] _tilemaps = new TilemapStruct[1];
@@ -61,5 +59,4 @@ public class TilemapFeature : IGameFeature, IDrawableFeature<TilemapStruct>
         _tilemaps[0] = _tilemap;
         return _tilemaps;
     }
-
 }

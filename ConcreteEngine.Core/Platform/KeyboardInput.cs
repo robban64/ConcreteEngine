@@ -44,7 +44,7 @@ internal sealed class KeyboardInput : IDisposable
     public bool IsKeyDown(Key key) => _keysDown.Contains(key);
     public bool IsKeyPressed(Key key) => _keysPressed.Contains(key);
     public bool IsKeyReleased(Key key) => _keysReleased.Contains(key);
-    
+
     public void Dispose()
     {
         _keyboard.KeyDown -= OnKeyDown;

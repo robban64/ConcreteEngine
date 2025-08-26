@@ -2,7 +2,6 @@
 
 #region
 
-using ConcreteEngine.Core;
 using ConcreteEngine.Core.Configuration;
 using ConcreteEngine.Core.Platform;
 using ConcreteEngine.Core.Utils;

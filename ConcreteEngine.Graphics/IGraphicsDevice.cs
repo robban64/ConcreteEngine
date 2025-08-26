@@ -17,9 +17,9 @@ public interface IGraphicsDevice : IDisposable
 
     void StartFrame(in GraphicsFrameContext frameCtx);
     void EndFrame();
-    
+
     UniformTable GetShaderUniforms(ShaderId shaderId);
-    
+
     FrameBufferId CreateFramebuffer(in FrameBufferDesc desc, out FrameBufferMeta meta);
     ShaderId CreateShader(string vertexSource, string fragmentSource, string[] samplers);
     TextureId CreateTexture2D(in TextureDesc textureDesc);

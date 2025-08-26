@@ -1,8 +1,11 @@
+#region
+
 using ConcreteEngine.Core.Rendering;
 using ConcreteEngine.Core.Rendering.Emitters;
 using ConcreteEngine.Core.Rendering.Pipeline;
 using ConcreteEngine.Core.Rendering.Renderers;
-using ConcreteEngine.Graphics.Definitions;
+
+#endregion
 
 namespace ConcreteEngine.Core.Configuration;
 
@@ -82,15 +85,15 @@ public sealed class GameSceneConfigBuilder()
     public void RegisterRenderPass(RenderTargetId target, int order, IRenderPass pass)
     {
         ArgumentOutOfRangeException.ThrowIfNegative(order, nameof(order));
-        _passes.Add(order, new RenderPassRegistryMeta( target, pass));
+        _passes.Add(order, new RenderPassRegistryMeta(target, pass));
     }
 
-    public void RegisterRenderer<TCommand,TRenderer>(DrawCommandId commandId, DrawCommandTag commandTag)
+    public void RegisterRenderer<TCommand, TRenderer>(DrawCommandId commandId, DrawCommandTag commandTag)
         where TCommand : struct, IDrawCommand
         where TRenderer : class, ICommandRenderer<TCommand>
     {
         var registry = new RendererRegistry(commandId, commandTag,
-            (submitter, cmdId, tag) => submitter.Register<TCommand, TRenderer>(cmdId,tag));
+            (submitter, cmdId, tag) => submitter.Register<TCommand, TRenderer>(cmdId, tag));
         //_receiverBindings.Add(new ReceiverRegistry(reqId, (r, reqId) => r.Register<T>(reqId)));
         _renderers.Add(registry);
     }

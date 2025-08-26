@@ -1,5 +1,9 @@
+#region
+
 using System.Numerics;
 using Silk.NET.Input;
+
+#endregion
 
 namespace ConcreteEngine.Core.Platform;
 
@@ -7,20 +11,21 @@ public interface IEngineInputSource
 {
     public bool IsKeyDown(Key key);
     public bool IsKeyPressed(Key key);
-    public bool IsKeyReleased(Key key) ;
+    public bool IsKeyReleased(Key key);
 
     // Mouse API
     public bool IsMouseDown(MouseButton button);
-    public bool IsMousePressed(MouseButton button) ;
+    public bool IsMousePressed(MouseButton button);
     public bool IsMouseReleased(MouseButton button);
 
     public Vector2 MousePosition { get; }
     public Vector2 MouseDelta { get; }
-    public Vector2 Scroll { get;  }
+    public Vector2 Scroll { get; }
 
 
     void Update();
 }
+
 public sealed class EngineInputSource : IEngineInputSource
 {
     private readonly KeyboardInput _keyboardInput;

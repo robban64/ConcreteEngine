@@ -1,10 +1,6 @@
 #region
 
-using System.Diagnostics;
-using System.Numerics;
-using System.Runtime.CompilerServices;
 using ConcreteEngine.Common.Extensions;
-using ConcreteEngine.Core.Assets;
 using ConcreteEngine.Core.Configuration;
 using ConcreteEngine.Core.Rendering.Batchers.Sprite;
 using ConcreteEngine.Core.Rendering.Batchers.Tilemap;
@@ -16,7 +12,6 @@ using ConcreteEngine.Core.Transforms;
 using ConcreteEngine.Graphics;
 using ConcreteEngine.Graphics.Data;
 using ConcreteEngine.Graphics.Definitions;
-using ConcreteEngine.Graphics.Resources;
 using static ConcreteEngine.Core.Rendering.RenderConsts;
 
 #endregion
@@ -35,9 +30,9 @@ public sealed class RenderSystem : IGameEngineSystem
     private readonly DrawEmitterCollector _emitterCollector;
     private readonly DrawCommandSubmitter _commandSubmitter;
     private readonly DrawEmitterContext _emitterContext;
-    
-    private readonly SpriteRenderer  _spriteRenderer;
-    private readonly LightRenderer  _lightRenderer;
+
+    private readonly SpriteRenderer _spriteRenderer;
+    private readonly LightRenderer _lightRenderer;
 
     private readonly SpriteBatcher _spriteBatch;
     private readonly TilemapBatcher _tilemapBatcher;
@@ -61,7 +56,7 @@ public sealed class RenderSystem : IGameEngineSystem
         _emitterCollector = new DrawEmitterCollector();
 
         _spriteRenderer = new SpriteRenderer(_graphics, _camera, _materialStore);
-        _lightRenderer= new LightRenderer(_graphics, _camera, _materialStore);
+        _lightRenderer = new LightRenderer(_graphics, _camera, _materialStore);
         _commandSubmitter = new DrawCommandSubmitter([_spriteRenderer, _lightRenderer]);
 
         _spriteBatch = new SpriteBatcher(graphics);
@@ -83,7 +78,7 @@ public sealed class RenderSystem : IGameEngineSystem
         _emitterCollector.Initialize();
 
         foreach (var pass in builder.Passes.Values)
-            RegisterRenderPass(pass.Target,  pass.Pass);
+            RegisterRenderPass(pass.Target, pass.Pass);
 
         foreach (var cmd in builder.Renderers)
             cmd.Bind(_commandSubmitter, cmd.CommandId, cmd.CommandTag);
@@ -111,16 +106,16 @@ public sealed class RenderSystem : IGameEngineSystem
 
         if (pass.Op == RenderPassOp.Blit && pass is not BlitRenderPass)
             throw new InvalidOperationException($"RenderPass: Blit require {nameof(BlitRenderPass)}");
-        
+
 
         _renderPassDesc[(int)target].Add(pass);
     }
 
-    public void RegisterRenderer<TCommand,TRenderer>(DrawCommandId id, DrawCommandTag tag) 
+    public void RegisterRenderer<TCommand, TRenderer>(DrawCommandId id, DrawCommandTag tag)
         where TCommand : struct, IDrawCommand
         where TRenderer : class, ICommandRenderer<TCommand>
     {
-        _commandSubmitter.Register<TCommand,TRenderer>(id, tag);
+        _commandSubmitter.Register<TCommand, TRenderer>(id, tag);
     }
 
     public Material CreateMaterialFromTemplate(string templateName)
@@ -134,7 +129,7 @@ public sealed class RenderSystem : IGameEngineSystem
         PrepareRenderer();
         Execute(alpha);
         _graphics.EndFrame();
-        
+
         _commandSubmitter.Reset();
     }
 
@@ -152,8 +147,6 @@ public sealed class RenderSystem : IGameEngineSystem
                 _gfx.SetUniform(ShaderUniform.ProjectionViewMatrix, in projectionViewMatrix);
             }
         }
-
-        
     }
 
     private void Execute(float alpha)
@@ -179,14 +172,13 @@ public sealed class RenderSystem : IGameEngineSystem
 
     private void ExecutePass(RenderTargetId target, IRenderPass pass)
     {
-        
         if (pass.Op == RenderPassOp.Blit && pass is BlitRenderPass blitPass)
         {
             // preserves bindings internally
             _gfx.BlitFramebuffer(blitPass.BlitFbo, blitPass.TargetFbo, blitPass.LinearFilter);
             return;
         }
-        
+
         var isScreenPass = pass.TargetFbo == default;
 
         if (pass.TargetFbo == default)
@@ -229,7 +221,7 @@ public sealed class RenderSystem : IGameEngineSystem
         _gfx.UseShader(lightPass.Shader);
         _commandSubmitter.DrainCommandQueue(RenderTargetId.SceneLight);
     }
-    
+
     private void DrawFullscreenQuad(FsqRenderPass pass)
     {
         ArgumentNullException.ThrowIfNull(pass);

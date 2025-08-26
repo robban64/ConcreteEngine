@@ -50,10 +50,6 @@ internal sealed class GameMessagePipelineSystem : IGameEngineSystem
 
     private void Dispatch(object handler, IGameCommand cmd, int tick)
     {
-        // Replace with explicit cases as you add commands; dynamic fallback removed for clarity.
-        // Example:
-        // if (handler is ICommandHandler<CmdPlaceBuilding> h && cmd is CmdPlaceBuilding c)
-        //     h.Handle(c, tick, _bus);
     }
 
     public void Dispose()

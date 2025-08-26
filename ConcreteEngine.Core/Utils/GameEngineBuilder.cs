@@ -3,8 +3,6 @@
 using ConcreteEngine.Core.Configuration;
 using ConcreteEngine.Core.Platform;
 using ConcreteEngine.Graphics;
-using ConcreteEngine.Graphics.Definitions;
-using Silk.NET.Windowing;
 
 #endregion
 

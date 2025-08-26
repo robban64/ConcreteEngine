@@ -14,6 +14,6 @@ public static class VectorMathExtensions
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static Vector3 ToVec3(this Vector2 v, float z = 0) => new(v.X, v.Y, z);
-    
+
     public static Vector2 ToSystemVec2(this Vector2D<int> v) => new(v.X, v.Y);
 }

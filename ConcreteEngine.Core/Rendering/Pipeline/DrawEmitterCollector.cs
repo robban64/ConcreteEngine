@@ -1,4 +1,8 @@
+#region
+
 using ConcreteEngine.Core.Rendering.Emitters;
+
+#endregion
 
 namespace ConcreteEngine.Core.Rendering.Pipeline;
 
@@ -19,7 +23,7 @@ internal sealed class DrawEmitterCollector
 
         throw new InvalidOperationException($"Emitter {typeof(TEmitter).Name} not registered");
     }
-    
+
     public IDrawCommandEmitter GetEmitter(Type emitterType)
     {
         foreach (var (_, emitter) in _emitters)
@@ -33,7 +37,7 @@ internal sealed class DrawEmitterCollector
     public void AddEmitter(int order, IDrawCommandEmitter emitter)
     {
         ArgumentNullException.ThrowIfNull(emitter, nameof(emitter));
-        if(_emitters.ContainsValue(emitter))
+        if (_emitters.ContainsValue(emitter))
             throw new InvalidOperationException($"Emitter {emitter.GetType().Name} is already registered");
 
         _emitters.Add(order, emitter);

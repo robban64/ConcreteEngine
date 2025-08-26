@@ -452,10 +452,10 @@ public sealed class GlGraphicsContext : IGraphicsContext
 
         if (meta.VertexBufferId == default)
             GraphicsException.ThrowInvalidState($"Mesh is missing VertexBuffer");
-        
+
         var count = drawCount > 0 ? drawCount : meta.DrawCount;
 
-        if(meta.ElementType == IboElementType.Invalid)
+        if (meta.ElementType == IboElementType.Invalid)
             DrawArrays(in meta, count);
         else
             DrawElements(in meta, count);

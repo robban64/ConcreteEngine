@@ -4,7 +4,6 @@ using System.Numerics;
 using ConcreteEngine.Core.Platform;
 using ConcreteEngine.Graphics.Data;
 using Silk.NET.Input;
-using Silk.NET.Maths;
 
 #endregion
 

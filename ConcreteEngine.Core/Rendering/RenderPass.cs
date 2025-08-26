@@ -13,7 +13,7 @@ public enum RenderPassOp : byte
 {
     DrawScene,
     Blit,
-    FullscreenQuad,
+    FullscreenQuad
 }
 
 public enum RenderTargetId : byte
@@ -33,7 +33,6 @@ public interface IRenderPass
     public RenderPassClearDesc? Clear { get; }
     public Vector2 SizeRatio { get; }
     public FrameBufferId TargetFbo { get; }
-
 }
 
 public sealed class SceneRenderPass : IRenderPass
@@ -42,9 +41,11 @@ public sealed class SceneRenderPass : IRenderPass
     public BlendMode Blend { get; set; } = BlendMode.Alpha;
     public Vector2 SizeRatio { get; set; } = Vector2.One;
     public bool DepthTest { get; set; } = true;
-    public RenderPassClearDesc? Clear { get; set; } = new RenderPassClearDesc(Color.Black, ClearBufferFlag.ColorAndDepth);
+
+    public RenderPassClearDesc? Clear { get; set; } =
+        new RenderPassClearDesc(Color.Black, ClearBufferFlag.ColorAndDepth);
+
     public required FrameBufferId TargetFbo { get; set; }
-    
 }
 
 public sealed class LightRenderPass : IRenderPass
@@ -53,11 +54,10 @@ public sealed class LightRenderPass : IRenderPass
     public BlendMode Blend { get; set; } = BlendMode.Additive;
     public Vector2 SizeRatio { get; set; } = Vector2.One;
     public bool DepthTest { get; set; } = false;
-    public RenderPassClearDesc? Clear { get; set; }= new RenderPassClearDesc(Color.Black, ClearBufferFlag.Color);
+    public RenderPassClearDesc? Clear { get; set; } = new RenderPassClearDesc(Color.Black, ClearBufferFlag.Color);
 
     public required FrameBufferId TargetFbo { get; set; }
     public required ShaderId Shader { get; set; }
-
 }
 
 public sealed class BlitRenderPass : IRenderPass
@@ -82,7 +82,7 @@ public sealed class FsqRenderPass : IRenderPass
     public bool DepthTest => false;
     public RenderPassClearDesc? Clear => null;
     public Vector2 SizeRatio { get; set; } = Vector2.One;
-    public FrameBufferId TargetFbo { get; set; } 
+    public FrameBufferId TargetFbo { get; set; }
     public required TextureId[] SourceTextures { get; set; }
     public required ShaderId Shader { get; set; }
 }

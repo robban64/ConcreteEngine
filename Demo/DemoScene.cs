@@ -11,7 +11,6 @@ using ConcreteEngine.Core.Rendering;
 using ConcreteEngine.Core.Rendering.Emitters;
 using ConcreteEngine.Core.Rendering.Pipeline;
 using ConcreteEngine.Core.Rendering.Renderers;
-using ConcreteEngine.Core.Resources;
 using ConcreteEngine.Graphics;
 using ConcreteEngine.Graphics.Data;
 using ConcreteEngine.Graphics.Definitions;
@@ -65,7 +64,7 @@ public sealed class DemoScene : GameScene
         builder.RegisterRenderPass(RenderTargetId.Scene, 0, new SceneRenderPass
         {
             TargetFbo = msaaFboId,
-            Clear = new RenderPassClearDesc(Color.Black, ClearBufferFlag.ColorAndDepth),
+            Clear = new RenderPassClearDesc(Color.Black, ClearBufferFlag.ColorAndDepth)
         });
 
         // Pass 1: resolve MSAA into single-sample texture FBO
@@ -95,7 +94,7 @@ public sealed class DemoScene : GameScene
         {
             TargetFbo = default,
             SourceTextures = [sceneFboMeta.ColTexId, lightFboMeta.ColTexId],
-            Shader = lightComposite.ResourceId,
+            Shader = lightComposite.ResourceId
         });
     }
 
@@ -106,8 +105,6 @@ public sealed class DemoScene : GameScene
         renderer.CreateMaterialFromTemplate("SpriteMaterial");
         renderer.CreateMaterialFromTemplate("TilemapMaterial");
         renderer.CreateMaterialFromTemplate("LightMaterial");
-
-
     }
 
     public override void Unload()

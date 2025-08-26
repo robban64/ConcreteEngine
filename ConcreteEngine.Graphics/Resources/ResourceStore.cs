@@ -96,5 +96,4 @@ internal sealed class ResourceStore<TId, TMeta, THandle>
 
         return _idx++;
     }
-
 }

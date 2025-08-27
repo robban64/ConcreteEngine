@@ -1,9 +1,7 @@
 using System.Numerics;
-using ConcreteEngine.Core.Game.Sprite;
-using ConcreteEngine.Core.Rendering.Emitters;
 using ConcreteEngine.Core.Rendering.Pipeline;
 
-namespace ConcreteEngine.Core.Game.Effects;
+namespace ConcreteEngine.Core.Features.Effects;
 
 public struct LightEntity(Vector2 position, Vector3 color, float radius, float intensity)
 {

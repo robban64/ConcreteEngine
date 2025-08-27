@@ -1,7 +1,7 @@
 #region
 
 using System.Numerics;
-using ConcreteEngine.Core.Game.Terrain;
+using ConcreteEngine.Core.Features.Terrain;
 using ConcreteEngine.Core.Rendering.Pipeline;
 using ConcreteEngine.Core.Resources;
 using ConcreteEngine.Core.Transforms;

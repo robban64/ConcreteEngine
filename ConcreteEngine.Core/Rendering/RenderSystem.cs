@@ -2,12 +2,14 @@
 
 using ConcreteEngine.Common.Extensions;
 using ConcreteEngine.Core.Configuration;
+using ConcreteEngine.Core.Features;
 using ConcreteEngine.Core.Rendering.Batchers.Sprite;
 using ConcreteEngine.Core.Rendering.Batchers.Tilemap;
 using ConcreteEngine.Core.Rendering.Emitters;
 using ConcreteEngine.Core.Rendering.Pipeline;
 using ConcreteEngine.Core.Rendering.Renderers;
 using ConcreteEngine.Core.Resources;
+using ConcreteEngine.Core.Systems;
 using ConcreteEngine.Core.Transforms;
 using ConcreteEngine.Graphics;
 using ConcreteEngine.Graphics.Data;
@@ -121,8 +123,13 @@ public sealed class RenderSystem : IGameEngineSystem
     public Material CreateMaterialFromTemplate(string templateName)
         => _materialStore.CreateMaterialFromTemplate(templateName);
 
+    
+    public void Shutdown()
+    {
+        
+    }
 
-    internal void Render(float alpha, in GraphicsFrameContext frameCtx, out GraphicsFrameResult result)
+    internal void Render(float alpha, in FrameMetaInfo frameCtx, out FrameRenderResult result)
     {
         _emitterContext.Alpha = alpha;
         _graphics.StartFrame(in frameCtx);
@@ -243,7 +250,5 @@ public sealed class RenderSystem : IGameEngineSystem
     }
 
 
-    public void Dispose()
-    {
-    }
+
 }

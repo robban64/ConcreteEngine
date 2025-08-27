@@ -2,6 +2,7 @@
 
 using ConcreteEngine.Core.Configuration;
 using ConcreteEngine.Core.Platform;
+using ConcreteEngine.Core.Scene;
 using ConcreteEngine.Graphics;
 
 #endregion

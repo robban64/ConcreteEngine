@@ -5,13 +5,14 @@ using System.Numerics;
 using ConcreteEngine.Core;
 using ConcreteEngine.Core.Assets;
 using ConcreteEngine.Core.Configuration;
-using ConcreteEngine.Core.Game.Effects;
-using ConcreteEngine.Core.Game.Sprite;
-using ConcreteEngine.Core.Game.Terrain;
+using ConcreteEngine.Core.Features.Effects;
+using ConcreteEngine.Core.Features.Sprite;
+using ConcreteEngine.Core.Features.Terrain;
 using ConcreteEngine.Core.Rendering;
 using ConcreteEngine.Core.Rendering.Emitters;
 using ConcreteEngine.Core.Rendering.Pipeline;
 using ConcreteEngine.Core.Rendering.Renderers;
+using ConcreteEngine.Core.Scene;
 using ConcreteEngine.Graphics;
 using ConcreteEngine.Graphics.Data;
 using ConcreteEngine.Graphics.Definitions;
@@ -101,7 +102,7 @@ public sealed class DemoScene : GameScene
         });
     }
 
-    public override void Initialize(IGraphicsDevice graphics)
+    public override void Initialize()
     {
         var renderer = Context.GetSystem<RenderSystem>();
 

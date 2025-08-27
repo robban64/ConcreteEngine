@@ -1,4 +1,6 @@
-namespace ConcreteEngine.Core;
+using ConcreteEngine.Core.Features;
+
+namespace ConcreteEngine.Core.Scene;
 
 public interface IFeatureRegistry
 {
@@ -39,8 +41,14 @@ public sealed class FeatureRegistry : IFeatureRegistry
     {
         foreach (var (order, feature) in _features)
         {
-            feature.Load(context, order);
+            feature.AttachContext(context, order);
         }
+        
+        foreach (var (_, feature) in _features)
+        {
+            feature.Initialize();
+        }
+
     }
 
     internal void Unload()

@@ -2,48 +2,45 @@
 
 using ConcreteEngine.Core.Assets;
 using ConcreteEngine.Core.Resources;
-using ConcreteEngine.Graphics.Resources;
+using ConcreteEngine.Graphics.Data;
 
 #endregion
 
-namespace ConcreteEngine.Core.Game.Terrain;
+namespace ConcreteEngine.Core.Features.Terrain;
 
 
 
-public class TilemapFeature : IGameFeature, IDrawableFeature<TilemapDrawData>
+public class TilemapFeature : GameFeature, IDrawableFeature<TilemapDrawData>
 {
-    public bool IsDrawable => true;
-    public int DrawOrder => 0;
 
     private TilemapDrawData _drawData = new();
     public Shader TilemapShader { get; set; } = null!;
     public Texture2D TilemapTexture { get; set; } = null!;
-
-    public bool IsUpdateable => true;
-    public int Order { get; set; }
-
+    
     private TilemapDrawData _tilemap;
     
-    public void Load(GameFeatureContext context, int order)
+    public override bool IsUpdateable => true;
+    public bool IsDrawable { get; set; } = true;
+    public int DrawOrder { get; set; } = 0;
+
+    public override void Initialize()
     {
-        Order = order;
-        var assets = context.GetSystem<AssetSystem>();
+        var assets = Context.GetSystem<AssetSystem>();
         TilemapShader = assets.Get<Shader>("SpriteShader");
         TilemapTexture = assets.Get<Texture2D>("TilemapTextureAtlas");
         _drawData.Shader =  TilemapShader.ResourceId;
         _drawData.Texture =  TilemapTexture.ResourceId;
     }
 
-    public void UpdateTick(int tick)
+    public override void UpdateTick(int tick)
     {
     }
-    
-    
+
+    public override void Update(in FrameMetaInfo frameCtx)
+    {
+    }
+
 
     public TilemapDrawData GetDrawables() => _drawData;
-
-    public void Unload()
-    {
-    }
 
 }

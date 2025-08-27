@@ -2,6 +2,7 @@
 
 using System.Numerics;
 using ConcreteEngine.Core.Platform;
+using ConcreteEngine.Core.Systems;
 using ConcreteEngine.Graphics.Data;
 using Silk.NET.Input;
 
@@ -30,7 +31,7 @@ public sealed class CameraSystem : IGameEngineSystem
         _input = input;
     }
 
-    public void Update(in GraphicsFrameContext frameCtx)
+    public void Update(in FrameMetaInfo frameCtx)
     {
         _transform.ViewportSize = frameCtx.ViewportSize;
 
@@ -76,11 +77,8 @@ public sealed class CameraSystem : IGameEngineSystem
         }
     }
 
-    public void TickUpdate()
+    public void Shutdown()
     {
     }
 
-    public void Dispose()
-    {
-    }
 }

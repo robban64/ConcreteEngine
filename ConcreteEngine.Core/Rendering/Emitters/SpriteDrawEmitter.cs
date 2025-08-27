@@ -2,7 +2,7 @@
 
 using System.Numerics;
 using System.Runtime.InteropServices;
-using ConcreteEngine.Core.Game.Sprite;
+using ConcreteEngine.Core.Features.Sprite;
 using ConcreteEngine.Core.Rendering.Batchers.Sprite;
 using ConcreteEngine.Core.Rendering.Pipeline;
 using ConcreteEngine.Core.Resources;

@@ -63,7 +63,7 @@ public sealed class GlGraphicsContext : IGraphicsContext
         GraphicsConfiguration configuration,
         GlContextBindingView store,
         UniformRegistry uniformRegistry,
-        in GraphicsFrameContext initialFrameCtx)
+        in FrameMetaInfo initialFrameCtx)
     {
         _gl = gl;
         Configuration = configuration;
@@ -90,7 +90,7 @@ public sealed class GlGraphicsContext : IGraphicsContext
         //_gl.DepthMask(false);
     }
 
-    public void BeginFrame(in GraphicsFrameContext frameCtx)
+    public void BeginFrame(in FrameMetaInfo frameCtx)
     {
         _blendMode = BlendMode.None;
         _depthTest = true;
@@ -107,9 +107,9 @@ public sealed class GlGraphicsContext : IGraphicsContext
         Clear(Color.CornflowerBlue, ClearBufferFlag.ColorAndDepth);
     }
 
-    public void EndFrame(out GraphicsFrameResult result)
+    public void EndFrame(out FrameRenderResult result)
     {
-        result = new GraphicsFrameResult(_drawCallCount, _drawTriangleCount);
+        result = new FrameRenderResult(_drawCallCount, _drawTriangleCount);
         // unbind context
         BindMesh(default);
         BindVertexBuffer(default);

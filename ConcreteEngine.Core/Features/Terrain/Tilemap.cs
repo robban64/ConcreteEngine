@@ -1,4 +1,4 @@
-namespace ConcreteEngine.Core.Game.Terrain;
+namespace ConcreteEngine.Core.Features.Terrain;
 
 public readonly struct TileData
 {

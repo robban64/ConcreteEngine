@@ -2,7 +2,7 @@
 
 using System.Numerics;
 using System.Runtime.InteropServices;
-using ConcreteEngine.Core.Game.Effects;
+using ConcreteEngine.Core.Features.Effects;
 using ConcreteEngine.Core.Rendering.Pipeline;
 
 #endregion

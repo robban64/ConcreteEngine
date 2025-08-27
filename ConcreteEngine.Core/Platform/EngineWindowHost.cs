@@ -104,7 +104,7 @@ public sealed class EngineWindowHost : IEngineWindowHost
     private void OnLoad(GameEngineBuilder builder)
     {
         // Build graphics from the real GL context
-        var initialFrameContext = new GraphicsFrameContext
+        var initialFrameContext = new FrameMetaInfo
         {
             DeltaTime = 0,
             FramebufferSize = _window.FramebufferSize,

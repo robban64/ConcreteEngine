@@ -77,7 +77,7 @@ public sealed class GlGraphicsDevice : IGraphicsDevice<GlGraphicsContext>
     public MeshId QuadMeshId => _quadMesh;
     IGraphicsContext IGraphicsDevice.Gfx => Gfx;
 
-    public GlGraphicsDevice(GL gl, in GraphicsFrameContext initialFrameCtx)
+    public GlGraphicsDevice(GL gl, in FrameMetaInfo initialFrameCtx)
     {
         _gl = gl;
         _viewportSize = initialFrameCtx.ViewportSize;
@@ -118,13 +118,13 @@ public sealed class GlGraphicsDevice : IGraphicsDevice<GlGraphicsContext>
         }, out _);
     }
 
-    public void StartFrame(in GraphicsFrameContext frameCtx)
+    public void StartFrame(in FrameMetaInfo frameCtx)
     {
         _viewportSize = frameCtx.ViewportSize;
         _gfx.BeginFrame(in frameCtx);
     }
 
-    public void EndFrame(out GraphicsFrameResult result)
+    public void EndFrame(out FrameRenderResult result)
     {
         _gfx.EndFrame(out result);
 

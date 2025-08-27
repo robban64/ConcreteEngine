@@ -6,10 +6,12 @@ using Silk.NET.Maths;
 
 namespace ConcreteEngine.Graphics.Data;
 
-public struct GraphicsFrameContext
+public struct FrameMetaInfo
 {
     public float DeltaTime;
-    public float FramesPerSecond;
+    public float Fps;
     public Vector2D<int> ViewportSize;
     public Vector2D<int> FramebufferSize;
 }
+
+public readonly record struct FrameRenderResult(int DrawCalls, int TriangleCount);

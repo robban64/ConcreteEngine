@@ -19,8 +19,8 @@ public interface IGraphicsContext
     BlendMode BlendMode { get; }
     bool DepthTest { get; }
 
-    void BeginFrame(in GraphicsFrameContext frameCtx);
-    void EndFrame(out GraphicsFrameResult result);
+    void BeginFrame(in FrameMetaInfo frameCtx);
+    void EndFrame(out FrameRenderResult result);
 
     void Clear(Color color, ClearBufferFlag flags);
     void BeginScreenPass(Color? clear = null, ClearBufferFlag? flags = null);

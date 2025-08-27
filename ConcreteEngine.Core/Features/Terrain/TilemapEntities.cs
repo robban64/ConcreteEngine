@@ -1,6 +1,6 @@
 using ConcreteEngine.Graphics.Resources;
 
-namespace ConcreteEngine.Core.Game.Terrain;
+namespace ConcreteEngine.Core.Features.Terrain;
 
 
 public class TilemapDrawData

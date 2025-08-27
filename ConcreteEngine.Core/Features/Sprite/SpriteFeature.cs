@@ -1,26 +1,25 @@
 #region
 
 using System.Numerics;
-using System.Runtime.InteropServices;
 using ConcreteEngine.Core.Assets;
 using ConcreteEngine.Core.Rendering;
 using ConcreteEngine.Core.Resources;
 using ConcreteEngine.Core.Utils;
+using ConcreteEngine.Graphics.Data;
 using Silk.NET.Maths;
 
 #endregion
 
-namespace ConcreteEngine.Core.Game.Sprite;
+namespace ConcreteEngine.Core.Features.Sprite;
 
 
 
 
-public class SpriteFeature : IDrawableFeature<SpriteFeatureDrawData>
+public class SpriteFeature : GameFeature, IDrawableFeature<SpriteFeatureDrawData>
 {
-    public int Order { get; set; }
-    public bool IsUpdateable => true;
-    public bool IsDrawable => true;
-    public int DrawOrder => 0;
+    public override bool IsUpdateable => true;
+    public bool IsDrawable { get; set; } = true;
+    public int DrawOrder { get; set; } = 0;
 
     public Shader SpriteShader { get; set; } = null!;
     public Texture2D SpriteTexture { get; set; } = null!;
@@ -29,13 +28,16 @@ public class SpriteFeature : IDrawableFeature<SpriteFeatureDrawData>
     private readonly List<(int, int)> _batches = [];
     private SpriteDrawEntity[] _entities = null!;
 
-    private SpriteFeatureDrawData _drawData = new();
+    private readonly SpriteFeatureDrawData _drawData = new();
+    
+    private int _animationCountdown = 3;
+    private int _dirCountdown = 20;
+    private int _currentFrame = 0;
 
-    public void Load(GameFeatureContext context, int order)
+    public override void Initialize()
     {
-        Order = order;
-        var assets = context.GetSystem<AssetSystem>();
-        var renderer = context.GetSystem<RenderSystem>();
+        var assets = Context.GetSystem<AssetSystem>();
+        var renderer = Context.GetSystem<RenderSystem>();
 
         SpriteShader = assets.Get<Shader>("SpriteShader");
         SpriteTexture = assets.Get<Texture2D>("SpriteTexture");
@@ -59,11 +61,7 @@ public class SpriteFeature : IDrawableFeature<SpriteFeatureDrawData>
         }
     }
 
-    int _animationCountdown = 3;
-    int _dirCountdown = 20;
-    private int _currentFrame = 0;
-
-    public void UpdateTick(int tick)
+    public override void UpdateTick(int tick)
     {
         const float speed = 2;
 
@@ -78,6 +76,17 @@ public class SpriteFeature : IDrawableFeature<SpriteFeatureDrawData>
         }
 
         UpdateEntities(doRandomize, speed);
+    }
+
+    public override void Update(in FrameMetaInfo frameCtx)
+    {
+    }
+    
+    public SpriteFeatureDrawData GetDrawables()
+    {
+        _drawData.Batches = _batches;
+        _drawData.Entities = _entities;
+        return _drawData;
     }
 
     private void CreateBatch(SpriteDrawEntity[] batch, int start, Vector2 offsetPosition)
@@ -154,14 +163,5 @@ public class SpriteFeature : IDrawableFeature<SpriteFeatureDrawData>
         }
     }
 
-    public void Unload()
-    {
-    }
 
-    public SpriteFeatureDrawData GetDrawables()
-    {
-        _drawData.Batches = _batches;
-        _drawData.Entities = _entities;
-        return _drawData;
-    }
 }

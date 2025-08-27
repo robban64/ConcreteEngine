@@ -3,9 +3,12 @@
 using ConcreteEngine.Common.Collections;
 using ConcreteEngine.Core.Assets;
 using ConcreteEngine.Core.Configuration;
+using ConcreteEngine.Core.Features;
 using ConcreteEngine.Core.Pipeline;
 using ConcreteEngine.Core.Platform;
 using ConcreteEngine.Core.Rendering;
+using ConcreteEngine.Core.Scene;
+using ConcreteEngine.Core.Systems;
 using ConcreteEngine.Core.Time;
 using ConcreteEngine.Core.Transforms;
 using ConcreteEngine.Graphics;
@@ -41,7 +44,7 @@ public sealed class GameEngine : IDisposable
     private bool _isDisposed = false;
 
     private float _fps;
-    private GraphicsFrameResult _frameResult = default;
+    private FrameRenderResult _frameResult = default;
 
     internal GameEngine(
         IEngineWindowHost windowHost,
@@ -64,7 +67,7 @@ public sealed class GameEngine : IDisposable
 
         // assets
         _assets = new AssetSystem(_graphics, assetConfig.AssetPath, assetConfig.ManifestFilename);
-        _assets.LoadFromManifest();
+        _assets.Initialize();
 
         // messages
         _pipeline = new GameMessagePipelineSystem();
@@ -105,10 +108,10 @@ public sealed class GameEngine : IDisposable
         float fps = dt > 0 ? 1.0f / dt : 0.0f;
         _fps = fps;
 
-        var frameCtx = new GraphicsFrameContext
+        var frameCtx = new FrameMetaInfo
         {
             DeltaTime = dt,
-            FramesPerSecond = fps,
+            Fps = fps,
             FramebufferSize = _window.FramebufferSize,
             ViewportSize = _window.Size
         };
@@ -130,10 +133,10 @@ public sealed class GameEngine : IDisposable
         float dt = (float)delta;
         float fps = dt > 0 ? 1.0f / dt : 0.0f;
 
-        var frameCtx = new GraphicsFrameContext
+        var frameCtx = new FrameMetaInfo
         {
             DeltaTime = dt,
-            FramesPerSecond = fps,
+            Fps = fps,
             FramebufferSize = _window.FramebufferSize,
             ViewportSize = _window.Size
         };
@@ -147,7 +150,7 @@ public sealed class GameEngine : IDisposable
         Console.WriteLine("Closing GameEngine");
         _isDisposed = true;
 
-        _assets?.Dispose();
+        _assets?.Shutdown();
         _graphics?.Dispose();
     }
 
@@ -188,11 +191,12 @@ public sealed class GameEngine : IDisposable
 
         _features.Load(new GameFeatureContext(sceneContext));
 
-        newScene.Initialize(_graphics);
+        newScene.Initialize();
 
         _currentScene = newScene;
         _nextSceneIndex = null;
     }
+
 
 
     public void Dispose()
@@ -201,7 +205,7 @@ public sealed class GameEngine : IDisposable
         Console.WriteLine("Disposing GameEngine");
         _isDisposed = true;
 
-        _assets?.Dispose();
+        _assets?.Shutdown();
         _graphics?.Dispose();
     }
 }

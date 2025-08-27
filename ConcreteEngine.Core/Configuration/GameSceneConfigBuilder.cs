@@ -1,5 +1,6 @@
 #region
 
+using ConcreteEngine.Core.Features;
 using ConcreteEngine.Core.Rendering;
 using ConcreteEngine.Core.Rendering.Emitters;
 using ConcreteEngine.Core.Rendering.Pipeline;

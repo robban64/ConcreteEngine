@@ -4,6 +4,7 @@ using System.Text.Json;
 using System.Text.Json.Serialization;
 using ConcreteEngine.Core.Assets.IO;
 using ConcreteEngine.Core.Resources;
+using ConcreteEngine.Core.Systems;
 using ConcreteEngine.Graphics;
 
 #endregion
@@ -18,6 +19,7 @@ public sealed class AssetSystem : IGameEngineSystem
     private readonly string _manifestFilename;
 
     private MaterialStore _materialStore = null!;
+    private static bool _initialized = false;
 
     public MaterialStore MaterialStore => _materialStore;
 
@@ -61,7 +63,23 @@ public sealed class AssetSystem : IGameEngineSystem
         return result;
     }
 
-    internal void LoadFromManifest()
+    public void Initialize()
+    {
+        if (_initialized)
+            throw new InvalidOperationException($"{nameof(AssetSystem)} is already initialized");
+
+        LoadFromManifest();
+        _initialized = true;
+    }
+
+    public void Shutdown()
+    {
+        foreach (var asset in _store.Values)
+            if (asset is IDisposable disposable)
+                disposable.Dispose();
+    }
+
+    private void LoadFromManifest()
     {
         if (!Directory.Exists(_assetPath))
         {
@@ -129,17 +147,6 @@ public sealed class AssetSystem : IGameEngineSystem
         _store.Remove(assetFile.Name);
     }
     */
-
-    public void Dispose()
-    {
-        foreach (var asset in _store.Values)
-        {
-            if (asset is IDisposable disposable)
-            {
-                disposable.Dispose();
-            }
-        }
-    }
 
     private void LoadEntries<T, R>(List<T> entries, Func<T, R> loader)
         where T : IAssetManifestRecord where R : class, IAssetFile

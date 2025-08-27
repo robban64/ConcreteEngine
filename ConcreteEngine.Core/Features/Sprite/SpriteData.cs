@@ -4,7 +4,7 @@ using Silk.NET.Maths;
 
 #endregion
 
-namespace ConcreteEngine.Core.Game.Sprite;
+namespace ConcreteEngine.Core.Features.Sprite;
 
 public struct SpriteData
 {

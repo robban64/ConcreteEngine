@@ -10,9 +10,9 @@ using ConcreteEngine.Core.Transforms;
 
 namespace ConcreteEngine.Core.Rendering.Emitters;
 
-public sealed class TilemapDrawEmitter : DrawCommandEmitter<TilemapStruct>
+public sealed class TilemapDrawEmitter : DrawCommandEmitter<TilemapDrawData>
 {
-    protected override void EmitBatch(ReadOnlySpan<TilemapStruct> entities, in DrawEmitterContext ctx,
+    protected override void EmitBatch(TilemapDrawData data, in DrawEmitterContext ctx,
         DrawCommandSubmitter submitter, int order)
     {
         var transform = Transform2D.CreateTransformMatrix(Vector2.Zero, new Vector2(1, 1), 0);

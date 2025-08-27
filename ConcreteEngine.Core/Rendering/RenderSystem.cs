@@ -90,12 +90,12 @@ public sealed class RenderSystem : IGameEngineSystem
         emitter.RegisterFeature(order, feature);
     }
 
-    public void RegisterDrawFeature<TEmitter, TFeature, TEntity>(int order, TFeature feature)
-        where TEmitter : DrawCommandEmitter<TEntity>
-        where TFeature : class, IGameFeature, IDrawableFeature<TEntity>
-        where TEntity : struct
+    public void RegisterDrawFeature<TEmitter, TFeature, TDrawData>(int order, TFeature feature)
+        where TEmitter : DrawCommandEmitter<TDrawData>
+        where TFeature : class, IGameFeature, IDrawableFeature<TDrawData>
+        where TDrawData : class
     {
-        var emitter = _emitterCollector.GetEmitter<TEmitter, TEntity>();
+        var emitter = _emitterCollector.GetEmitter<TEmitter, TDrawData>();
         emitter.RegisterFeature<TFeature>(order, feature);
     }
 
@@ -122,13 +122,13 @@ public sealed class RenderSystem : IGameEngineSystem
         => _materialStore.CreateMaterialFromTemplate(templateName);
 
 
-    internal void Render(float alpha, in GraphicsFrameContext frameCtx)
+    internal void Render(float alpha, in GraphicsFrameContext frameCtx, out GraphicsFrameResult result)
     {
         _emitterContext.Alpha = alpha;
         _graphics.StartFrame(in frameCtx);
         PrepareRenderer();
         Execute(alpha);
-        _graphics.EndFrame();
+        _graphics.EndFrame(out result);
 
         _commandSubmitter.Reset();
     }

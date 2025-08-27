@@ -124,9 +124,9 @@ public sealed class GlGraphicsDevice : IGraphicsDevice<GlGraphicsContext>
         _gfx.BeginFrame(in frameCtx);
     }
 
-    public void EndFrame()
+    public void EndFrame(out GraphicsFrameResult result)
     {
-        _gfx.EndFrame();
+        _gfx.EndFrame(out result);
 
         // drain old resource
         _disposeQueue.Drain();

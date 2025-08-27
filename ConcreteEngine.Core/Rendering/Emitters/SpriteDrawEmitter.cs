@@ -12,24 +12,24 @@ using ConcreteEngine.Core.Transforms;
 
 namespace ConcreteEngine.Core.Rendering.Emitters;
 
-public sealed class SpriteDrawEmitter : DrawCommandEmitter<SpriteDrawEntityBatch>
+public sealed class SpriteDrawEmitter : DrawCommandEmitter<SpriteFeatureDrawData>
 {
     private static readonly Matrix4x4 DefaultTransform =
         Transform2D.CreateTransformMatrix(Vector2.Zero, Vector2.One, 0);
 
-    protected override void EmitBatch(ReadOnlySpan<SpriteDrawEntityBatch> entities, in DrawEmitterContext ctx,
+    protected override void EmitBatch(SpriteFeatureDrawData data, in DrawEmitterContext ctx,
         DrawCommandSubmitter submitter, int order)
     {
         var alpha = ctx.Alpha;
         var spriteBatch = ctx.SpriteBatch;
+        var batches = data.Batches;
+        var entities = data.Entities.AsSpan();
 
-
-        for (int i = 0; i < entities.Length; i++)
+        int batchIdx = 0;
+        foreach (var (start, size) in batches)
         {
-            spriteBatch.BeginBatch(i);
-
-            ref readonly var list = ref entities[i];
-            var span = CollectionsMarshal.AsSpan(list.Batches);
+            var span = entities.Slice(start, size);
+            spriteBatch.BeginBatch(batchIdx++);
 
             foreach (ref readonly var entity in span)
             {
@@ -39,7 +39,7 @@ public sealed class SpriteDrawEmitter : DrawCommandEmitter<SpriteDrawEntityBatch
                 var item = new SpriteDrawData(pos, entity.Scale, entity.Uv);
                 spriteBatch.SubmitSprite(item);
             }
-
+            
             var result = spriteBatch.BuildBatch();
             var meta = new DrawCommandMeta(DrawCommandId.Sprite, DrawCommandTag.SpriteRenderer, RenderTargetId.Scene,
                 0);
@@ -51,6 +51,9 @@ public sealed class SpriteDrawEmitter : DrawCommandEmitter<SpriteDrawEntityBatch
                 transform: in DefaultTransform
             );
             submitter.SubmitDraw(in cmd, in meta);
+
         }
+
+       
     }
 }

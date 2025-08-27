@@ -46,6 +46,7 @@ public sealed class GlGraphicsContext : IGraphicsContext
     private Vector2D<int> _currentViewport;
 
     private float _deltaTime = 0f;
+    
     private int _drawTriangleCount = 0;
     private int _drawCallCount = 0;
 
@@ -106,8 +107,9 @@ public sealed class GlGraphicsContext : IGraphicsContext
         Clear(Color.CornflowerBlue, ClearBufferFlag.ColorAndDepth);
     }
 
-    public void EndFrame()
+    public void EndFrame(out GraphicsFrameResult result)
     {
+        result = new GraphicsFrameResult(_drawCallCount, _drawTriangleCount);
         // unbind context
         BindMesh(default);
         BindVertexBuffer(default);

@@ -16,7 +16,7 @@ public interface IDrawableFeature : IGameFeature
     public int DrawOrder { get; }
 }
 
-public interface IDrawableFeature<T> : IDrawableFeature where T : struct
+public interface IDrawableFeature<out T> : IDrawableFeature
 {
-    public ReadOnlySpan<T> GetDrawables();
+    public T GetDrawables();
 }

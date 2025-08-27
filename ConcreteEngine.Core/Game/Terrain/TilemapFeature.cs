@@ -8,55 +8,42 @@ using ConcreteEngine.Graphics.Resources;
 
 namespace ConcreteEngine.Core.Game.Terrain;
 
-public struct TilemapStruct
-{
-    public int MapDimension { get; } = 64;
-    public int TileSize { get; } = 32;
-    public ShaderId Shader = default;
-    public TextureId Texture = default;
 
-    public TilemapStruct()
-    {
-    }
-}
 
-public class TilemapFeature : IGameFeature, IDrawableFeature<TilemapStruct>
+public class TilemapFeature : IGameFeature, IDrawableFeature<TilemapDrawData>
 {
     public bool IsDrawable => true;
     public int DrawOrder => 0;
 
-    public int MapDimension { get; } = 64;
-    public int TileSize { get; } = 32;
+    private TilemapDrawData _drawData = new();
     public Shader TilemapShader { get; set; } = null!;
     public Texture2D TilemapTexture { get; set; } = null!;
-
 
     public bool IsUpdateable => true;
     public int Order { get; set; }
 
-    private TilemapStruct _tilemap;
-
-    private readonly TilemapStruct[] _tilemaps = new TilemapStruct[1];
-
+    private TilemapDrawData _tilemap;
+    
     public void Load(GameFeatureContext context, int order)
     {
         Order = order;
         var assets = context.GetSystem<AssetSystem>();
         TilemapShader = assets.Get<Shader>("SpriteShader");
         TilemapTexture = assets.Get<Texture2D>("TilemapTextureAtlas");
+        _drawData.Shader =  TilemapShader.ResourceId;
+        _drawData.Texture =  TilemapTexture.ResourceId;
     }
 
     public void UpdateTick(int tick)
     {
     }
+    
+    
+
+    public TilemapDrawData GetDrawables() => _drawData;
 
     public void Unload()
     {
     }
 
-    public ReadOnlySpan<TilemapStruct> GetDrawables()
-    {
-        _tilemaps[0] = _tilemap;
-        return _tilemaps;
-    }
 }

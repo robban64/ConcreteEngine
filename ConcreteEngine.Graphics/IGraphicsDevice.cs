@@ -16,7 +16,7 @@ public interface IGraphicsDevice : IDisposable
     MeshId QuadMeshId { get; }
 
     void StartFrame(in GraphicsFrameContext frameCtx);
-    void EndFrame();
+    void EndFrame(out GraphicsFrameResult result);
 
     UniformTable GetShaderUniforms(ShaderId shaderId);
 

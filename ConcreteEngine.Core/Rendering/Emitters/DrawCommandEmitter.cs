@@ -27,13 +27,12 @@ public interface IDrawCommandEmitter
     void RegisterFeature(int order, IDrawableFeature feature);
 }
 
-public abstract class DrawCommandEmitter<TEntity> : IDrawCommandEmitter
-    where TEntity : struct
+public abstract class DrawCommandEmitter<TDrawData> : IDrawCommandEmitter where TDrawData : class
 {
     public int Order { get; private set; }
-    public Type EntityType => typeof(TEntity);
+    public Type EntityType => typeof(TDrawData);
 
-    private readonly SortedList<int, IDrawableFeature<TEntity>> _features = new(8);
+    private readonly SortedList<int, IDrawableFeature<TDrawData>> _features = new(8);
 
     public void Initialize(int order)
     {
@@ -44,7 +43,7 @@ public abstract class DrawCommandEmitter<TEntity> : IDrawCommandEmitter
     {
         if (_features.Count == 0)
         {
-            EmitBatch(ReadOnlySpan<TEntity>.Empty, in ctx, submitter, 0);
+            EmitBatch(null!, in ctx, submitter, 0);
             return;
         }
 
@@ -55,7 +54,7 @@ public abstract class DrawCommandEmitter<TEntity> : IDrawCommandEmitter
     }
 
     protected abstract void EmitBatch(
-        ReadOnlySpan<TEntity> entities,
+        TDrawData data,
         in DrawEmitterContext ctx,
         DrawCommandSubmitter submitter,
         int order);
@@ -63,14 +62,14 @@ public abstract class DrawCommandEmitter<TEntity> : IDrawCommandEmitter
 
     public void RegisterFeature(int order, IDrawableFeature feature)
     {
-        if (feature is not IDrawableFeature<TEntity> featureEntity)
+        if (feature is not IDrawableFeature<TDrawData> featureEntity)
             throw new ArgumentException($"Feature type {feature.GetType()} is not supported");
 
         _features.Add(order, featureEntity);
     }
 
-    internal void RegisterFeature<TFeature>(int order, IDrawableFeature<TEntity> feature)
-        where TFeature : IDrawableFeature<TEntity>
+    internal void RegisterFeature<TFeature>(int order, IDrawableFeature<TDrawData> feature)
+        where TFeature : IDrawableFeature<TDrawData>
 
     {
         _features.Add(order, feature);

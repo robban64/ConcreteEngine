@@ -12,26 +12,10 @@ using Silk.NET.Maths;
 
 namespace ConcreteEngine.Core.Game.Sprite;
 
-public struct SpriteDrawEntityBatch(List<SpriteDrawEntity> batch)
-{
-    public readonly List<SpriteDrawEntity> Batches = batch;
-}
 
-public struct SpriteDrawEntity
-{
-    public Vector2 Position = Vector2.Zero;
-    public Vector2 PreviousPosition = Vector2.Zero;
-    public Vector2 Scale = Vector2.One;
-    public Vector2D<int> AtlasLocation = Vector2D<int>.Zero;
-    public Vector2D<int> Direction = Vector2D<int>.Zero;
-    public UvRect Uv = default;
 
-    public SpriteDrawEntity()
-    {
-    }
-}
 
-public class SpriteFeature : IDrawableFeature<SpriteDrawEntityBatch>
+public class SpriteFeature : IDrawableFeature<SpriteFeatureDrawData>
 {
     public int Order { get; set; }
     public bool IsUpdateable => true;
@@ -42,10 +26,10 @@ public class SpriteFeature : IDrawableFeature<SpriteDrawEntityBatch>
     public Texture2D SpriteTexture { get; set; } = null!;
     public SpriteAtlas SpriteAtlas { get; set; } = null!;
 
-    private readonly List<SpriteDrawEntity> _batch1 = new(900);
-    private readonly List<SpriteDrawEntity> _batch2 = new(900);
-    private readonly List<SpriteDrawEntity> _batch3 = new(900);
-    private readonly List<SpriteDrawEntity> _batch4 = new(900);
+    private readonly List<(int, int)> _batches = [];
+    private SpriteDrawEntity[] _entities = null!;
+
+    private SpriteFeatureDrawData _drawData = new();
 
     public void Load(GameFeatureContext context, int order)
     {
@@ -56,15 +40,23 @@ public class SpriteFeature : IDrawableFeature<SpriteDrawEntityBatch>
         SpriteShader = assets.Get<Shader>("SpriteShader");
         SpriteTexture = assets.Get<Texture2D>("SpriteTexture");
         SpriteAtlas = new SpriteAtlas(64, SpriteTexture.Width, SpriteTexture.Height);
+        
         renderer.SpriteBatch.CreateSpriteBatch(0, 1024);
         renderer.SpriteBatch.CreateSpriteBatch(1, 1024);
         renderer.SpriteBatch.CreateSpriteBatch(2, 1024);
         renderer.SpriteBatch.CreateSpriteBatch(3, 1024);
 
-        CreateBatch(_batch1, new Vector2(0, 0));
-        CreateBatch(_batch2, new Vector2(0, 1));
-        CreateBatch(_batch3, new Vector2(1, 0));
-        CreateBatch(_batch4, new Vector2(1, 1));
+        _entities = new SpriteDrawEntity[900*4];
+
+        for (int i = 0; i < 4; i++)
+        {
+            _batches.Add((i*900, 900));
+            for (int j = 0; j < 900; j++)
+            {
+                var dir = new Vector2(i == 0 || i == 2 ? 1 : 0, i == 1 || i == 3 ? 1 : 0);
+                CreateBatch(_entities, i*900, dir);
+            }
+        }
     }
 
     int _animationCountdown = 3;
@@ -85,34 +77,32 @@ public class SpriteFeature : IDrawableFeature<SpriteDrawEntityBatch>
             _animationCountdown = 3;
         }
 
-        UpdateEntities(_batch1, doRandomize, speed);
-        UpdateEntities(_batch2, doRandomize, speed);
-        UpdateEntities(_batch3, doRandomize, speed);
-        UpdateEntities(_batch4, doRandomize, speed);
+        UpdateEntities(doRandomize, speed);
     }
 
-    private void CreateBatch(List<SpriteDrawEntity> batch, Vector2 offsetPosition)
+    private void CreateBatch(SpriteDrawEntity[] batch, int start, Vector2 offsetPosition)
     {
+        int i = 0;
         for (int x = 0; x < 30; x++)
         {
             for (int y = 0; y < 30; y++)
             {
-                batch.Add(new SpriteDrawEntity
+                batch[i+start] = (new SpriteDrawEntity
                 {
                     Position = new Vector2(64 * x, 64 * y) + offsetPosition * 64 * 4,
                     Scale = new Vector2(64, 64),
                     AtlasLocation = new Vector2D<int>(0, 3),
-                    Direction = new Vector2D<int>(-1, 0),
+                    Direction = new Vector2(-1, 0),
                     Uv = SpriteAtlas.GetUvRect(0, 3)
                 });
+                i++;
             }
         }
     }
 
-    private void UpdateEntities(List<SpriteDrawEntity> list, bool doRandomize, float speed)
+    private void UpdateEntities(bool doRandomize, float speed)
     {
-        var spanEntities = CollectionsMarshal.AsSpan(list);
-
+        var spanEntities = _entities.AsSpan();
 
         for (int i = 0; i < spanEntities.Length; i++)
         {
@@ -120,7 +110,7 @@ public class SpriteFeature : IDrawableFeature<SpriteDrawEntityBatch>
             entity.PreviousPosition = entity.Position;
             entity.Position.X += speed * entity.Direction.X;
             entity.Position.Y += speed * entity.Direction.Y;
-            var d = (int)MathF.Ceiling((Math.Abs(entity.Direction.X) + Math.Abs(entity.Direction.Y)) / 2f);
+            var d = (int)MathF.Ceiling((MathF.Abs(entity.Direction.X) + MathF.Abs(entity.Direction.Y)) / 2f);
             entity.AtlasLocation.X = _currentFrame * d;
             entity.Uv = SpriteAtlas.GetUvRect(entity.AtlasLocation.X, entity.AtlasLocation.Y);
         }
@@ -168,9 +158,10 @@ public class SpriteFeature : IDrawableFeature<SpriteDrawEntityBatch>
     {
     }
 
-    public ReadOnlySpan<SpriteDrawEntityBatch> GetDrawables()
+    public SpriteFeatureDrawData GetDrawables()
     {
-        List<SpriteDrawEntityBatch> batch = [new(_batch1), new(_batch2), new(_batch3), new(_batch4)];
-        return CollectionsMarshal.AsSpan(batch);
+        _drawData.Batches = _batches;
+        _drawData.Entities = _entities;
+        return _drawData;
     }
 }

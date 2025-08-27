@@ -5,6 +5,7 @@ using System.Numerics;
 using ConcreteEngine.Core;
 using ConcreteEngine.Core.Assets;
 using ConcreteEngine.Core.Configuration;
+using ConcreteEngine.Core.Game.Effects;
 using ConcreteEngine.Core.Game.Sprite;
 using ConcreteEngine.Core.Game.Terrain;
 using ConcreteEngine.Core.Rendering;
@@ -24,8 +25,10 @@ public sealed class DemoScene : GameScene
 {
     public override void ConfigureFeatures(IGameSceneFeatureBuilder builder)
     {
-        builder.RegisterDrawFeature<TilemapDrawEmitter, TilemapFeature, TilemapStruct>(0);
-        builder.RegisterDrawFeature<SpriteDrawEmitter, SpriteFeature, SpriteDrawEntityBatch>(1);
+        builder.RegisterDrawFeature<TilemapDrawEmitter, TilemapFeature, TilemapDrawData>(0);
+        builder.RegisterDrawFeature<SpriteDrawEmitter, SpriteFeature, SpriteFeatureDrawData>(1);
+        builder.RegisterDrawFeature<LightEmitter, LightFeature, LightFeatureDrawData>(2);
+
     }
 
     public override void ConfigureRenderer(IGameSceneRenderBuilder builder, IGraphicsDevice graphics)
@@ -34,9 +37,9 @@ public sealed class DemoScene : GameScene
         builder.RegisterRenderer<DrawCommandMesh, SpriteRenderer>(DrawCommandId.Sprite, DrawCommandTag.SpriteRenderer);
         builder.RegisterRenderer<DrawCommandLight, LightRenderer>(DrawCommandId.Effect, DrawCommandTag.LightRenderer);
 
-        builder.RegisterEmitter<TilemapDrawEmitter, TilemapStruct>(0);
-        builder.RegisterEmitter<SpriteDrawEmitter, SpriteDrawEntityBatch>(1);
-        builder.RegisterEmitter<LightEmitter, DrawCommandLight>(2);
+        builder.RegisterEmitter<TilemapDrawEmitter, TilemapDrawData>(0);
+        builder.RegisterEmitter<SpriteDrawEmitter, SpriteFeatureDrawData>(1);
+        builder.RegisterEmitter<LightEmitter, LightFeatureDrawData>(2);
 
         var assets = Context.GetSystem<AssetSystem>();
 
@@ -64,7 +67,7 @@ public sealed class DemoScene : GameScene
         builder.RegisterRenderPass(RenderTargetId.Scene, 0, new SceneRenderPass
         {
             TargetFbo = msaaFboId,
-            Clear = new RenderPassClearDesc(Color.Black, ClearBufferFlag.ColorAndDepth)
+            Clear = new RenderPassClearDesc(Color.CornflowerBlue, ClearBufferFlag.ColorAndDepth)
         });
 
         // Pass 1: resolve MSAA into single-sample texture FBO
@@ -83,7 +86,7 @@ public sealed class DemoScene : GameScene
             {
                 TargetFbo = lightFboId,
                 Shader = lightPassShader.ResourceId,
-                Clear = new RenderPassClearDesc(Color.FromArgb(255, 50, 50, 100), ClearBufferFlag.Color),
+                Clear = new RenderPassClearDesc(Color.FromArgb(255, 125, 125, 150), ClearBufferFlag.Color),
                 Blend = BlendMode.Additive,
                 DepthTest = false
             }

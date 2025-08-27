@@ -41,6 +41,7 @@ public sealed class GameEngine : IDisposable
     private bool _isDisposed = false;
 
     private float _fps;
+    private GraphicsFrameResult _frameResult = default;
 
     internal GameEngine(
         IEngineWindowHost windowHost,
@@ -94,7 +95,8 @@ public sealed class GameEngine : IDisposable
     private void FpsTickUpdate(int tick)
     {
         //Console.WriteLine($"Viewport: {_window.Size}, FrameBufSize: {_window.FramebufferSize}");
-        Console.WriteLine($"Fps: {_fps} with tick {tick}");
+        Console.WriteLine($"Tick {tick}");
+        Console.WriteLine($"Fps: {_fps}; Draw Calls: {_frameResult.DrawCalls}; Triangle Count: {_frameResult.TriangleCount}");
     }
 
     internal void Update(double delta)
@@ -136,7 +138,7 @@ public sealed class GameEngine : IDisposable
             ViewportSize = _window.Size
         };
 
-        _renderer.Render(_gameTime.Alpha, in frameCtx);
+        _renderer.Render(_gameTime.Alpha, in frameCtx, out _frameResult);
     }
 
 

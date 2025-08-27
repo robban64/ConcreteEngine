@@ -12,9 +12,9 @@ internal sealed class DrawEmitterCollector
 
     public int Count => _emitters.Count;
 
-    public DrawCommandEmitter<TEntity> GetEmitter<TEmitter, TEntity>()
-        where TEmitter : DrawCommandEmitter<TEntity>
-        where TEntity : struct
+    public DrawCommandEmitter<TDrawData> GetEmitter<TEmitter, TDrawData>()
+        where TEmitter : DrawCommandEmitter<TDrawData>
+        where TDrawData : class
     {
         foreach (var (_, emitter) in _emitters)
         {

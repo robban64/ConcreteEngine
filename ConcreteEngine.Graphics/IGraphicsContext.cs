@@ -20,7 +20,7 @@ public interface IGraphicsContext
     bool DepthTest { get; }
 
     void BeginFrame(in GraphicsFrameContext frameCtx);
-    void EndFrame();
+    void EndFrame(out GraphicsFrameResult result);
 
     void Clear(Color color, ClearBufferFlag flags);
     void BeginScreenPass(Color? clear = null, ClearBufferFlag? flags = null);

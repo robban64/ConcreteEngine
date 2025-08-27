@@ -15,7 +15,7 @@ public interface IGameSceneRenderBuilder
 
     void RegisterEmitter<TEmitter, TEntity>(int order)
         where TEmitter : DrawCommandEmitter<TEntity>, new()
-        where TEntity : struct;
+        where TEntity : class;
 
 
     public void RegisterRenderer<TCommand, TRenderer>(DrawCommandId commandId, DrawCommandTag commandTag)
@@ -25,10 +25,10 @@ public interface IGameSceneRenderBuilder
 
 public interface IGameSceneFeatureBuilder
 {
-    void RegisterDrawFeature<TEmitter, TFeature, TEntity>(int order)
-        where TFeature : class, IGameFeature, IDrawableFeature<TEntity>, new()
-        where TEmitter : DrawCommandEmitter<TEntity>
-        where TEntity : struct;
+    void RegisterDrawFeature<TEmitter, TFeature, TDrawData>(int order)
+        where TFeature : class, IGameFeature, IDrawableFeature<TDrawData>, new()
+        where TEmitter : DrawCommandEmitter<TDrawData>
+        where TDrawData : class;
 
     void RegisterFeature<T>(int order) where T : IGameFeature, new();
 }
@@ -64,19 +64,19 @@ public sealed class GameSceneConfigBuilder()
         _features.Add(order, () => new T());
     }
 
-    public void RegisterDrawFeature<TEmitter, TFeature, TEntity>(int order)
-        where TFeature : class, IGameFeature, IDrawableFeature<TEntity>, new()
-        where TEmitter : DrawCommandEmitter<TEntity>
-        where TEntity : struct
+    public void RegisterDrawFeature<TEmitter, TFeature, TDrawData>(int order)
+        where TFeature : class, IGameFeature, IDrawableFeature<TDrawData>, new()
+        where TEmitter : DrawCommandEmitter<TDrawData>
+        where TDrawData : class
     {
         ArgumentOutOfRangeException.ThrowIfNegative(order, nameof(order));
 
         _drawFeatures.Add(order, (() => new TFeature(), typeof(TEmitter)));
     }
 
-    public void RegisterEmitter<TEmitter, TEntity>(int order)
-        where TEmitter : DrawCommandEmitter<TEntity>, new()
-        where TEntity : struct
+    public void RegisterEmitter<TEmitter, TDrawData>(int order)
+        where TEmitter : DrawCommandEmitter<TDrawData>, new()
+        where TDrawData : class
     {
         ArgumentOutOfRangeException.ThrowIfNegative(order, nameof(order));
         _emitters.Add(order, () => new TEmitter());

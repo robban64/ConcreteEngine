@@ -5,10 +5,17 @@ using ConcreteEngine.Core.Rendering;
 using ConcreteEngine.Core.Rendering.Emitters;
 using ConcreteEngine.Core.Rendering.Pipeline;
 using ConcreteEngine.Core.Rendering.Renderers;
+using ConcreteEngine.Core.Scene;
+using ConcreteEngine.Graphics;
 
 #endregion
 
 namespace ConcreteEngine.Core.Configuration;
+
+public interface IGameSceneModuleBuilder
+{
+    void RegisterModule<T>(int order) where T : GameModule, new();
+}
 
 public interface IGameSceneRenderBuilder
 {
@@ -17,7 +24,6 @@ public interface IGameSceneRenderBuilder
     void RegisterEmitter<TEmitter, TEntity>(int order)
         where TEmitter : DrawCommandEmitter<TEntity>, new()
         where TEntity : class;
-
 
     public void RegisterRenderer<TCommand, TRenderer>(DrawCommandId commandId, DrawCommandTag commandTag)
         where TCommand : struct, IDrawCommand
@@ -34,15 +40,15 @@ public interface IGameSceneFeatureBuilder
     void RegisterFeature<T>(int order) where T : IGameFeature, new();
 }
 
-public sealed class GameSceneConfigBuilder()
-    : IGameSceneRenderBuilder, IGameSceneFeatureBuilder
+public sealed class GameSceneConfigBuilder(IGraphicsDevice graphics, FeatureManager features, ModuleManager modules)
+    : IGameSceneRenderBuilder, IGameSceneFeatureBuilder, IGameSceneModuleBuilder
 {
-    private readonly SortedList<int, Func<IGameFeature>> _features = new(8);
-    private readonly SortedList<int, (Func<IDrawableFeature>, Type)> _drawFeatures = new(8);
-
-    private readonly SortedList<int, Func<IDrawCommandEmitter>> _emitters = new(8);
-    private readonly SortedList<int, RenderPassRegistryMeta> _passes = new(8);
-    private readonly List<RendererRegistry> _renderers = new(8);
+    private readonly SortedList<int, Func<IGameFeature>> _features = new();
+    private readonly SortedList<int, (Func<IDrawableFeature>, Type)> _drawFeatures = new();
+    private readonly SortedList<int, RenderPassRegistryMeta> _passes = new();
+    private readonly SortedList<int, Func<IDrawCommandEmitter>> _emitters = new();
+    private readonly SortedList<int, Func<GameModule>> _modules = new();
+    private readonly List<RendererRegistry> _renderers = new();
 
     internal void Clear()
     {
@@ -52,13 +58,20 @@ public sealed class GameSceneConfigBuilder()
         _renderers.Clear();
     }
 
+    public IGraphicsDevice GraphicsDevice { get; } = graphics;
+
+    public FeatureManager FeatureManager { get; } = features;
+    public ModuleManager ModuleManager { get; } = modules;
+
     public SortedList<int, Func<IGameFeature>> Features => _features;
     public SortedList<int, (Func<IDrawableFeature>, Type)> DrawFeatures => _drawFeatures;
     public SortedList<int, Func<IDrawCommandEmitter>> Emitters => _emitters;
     public SortedList<int, RenderPassRegistryMeta> Passes => _passes;
+    public SortedList<int, Func<GameModule>> Modules => _modules;
+
     public List<RendererRegistry> Renderers => _renderers;
 
-
+    
     public void RegisterFeature<T>(int order) where T : IGameFeature, new()
     {
         ArgumentOutOfRangeException.ThrowIfNegative(order, nameof(order));
@@ -105,4 +118,10 @@ public sealed class GameSceneConfigBuilder()
         DrawCommandId CommandId,
         DrawCommandTag CommandTag,
         Action<DrawCommandSubmitter, DrawCommandId, DrawCommandTag> Bind);
+
+    public void RegisterModule<T>(int order) where T : GameModule, new()
+    {
+        ArgumentOutOfRangeException.ThrowIfNegative(order, nameof(order));
+        _modules.Add(order, () => new T());
+    }
 }

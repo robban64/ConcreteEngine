@@ -1,4 +1,4 @@
-namespace ConcreteEngine.Core.Pipeline;
+namespace ConcreteEngine.Core.Messaging;
 
 internal sealed class CommandQueue
 {

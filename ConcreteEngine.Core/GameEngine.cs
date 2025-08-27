@@ -4,13 +4,12 @@ using ConcreteEngine.Common.Collections;
 using ConcreteEngine.Core.Assets;
 using ConcreteEngine.Core.Configuration;
 using ConcreteEngine.Core.Features;
-using ConcreteEngine.Core.Pipeline;
+using ConcreteEngine.Core.Messaging;
 using ConcreteEngine.Core.Platform;
 using ConcreteEngine.Core.Rendering;
 using ConcreteEngine.Core.Scene;
 using ConcreteEngine.Core.Systems;
 using ConcreteEngine.Core.Time;
-using ConcreteEngine.Core.Transforms;
 using ConcreteEngine.Graphics;
 using ConcreteEngine.Graphics.Data;
 
@@ -26,16 +25,18 @@ public sealed class GameEngine : IDisposable
 
     private readonly List<Func<GameScene>> _sceneFactories;
     private readonly TypeRegistryCollection<IGameEngineSystem> _systems = new(4);
-    private readonly FeatureRegistry _features = new();
+    private ModuleManager  _modules;
+    private FeatureManager   _features;
 
     private readonly GameTime _gameTime;
 
     private readonly IGraphicsDevice _graphics;
 
     private readonly IEngineInputSource _input;
+    private readonly InputSystem _inputSystem;
     private readonly AssetSystem _assets;
     private readonly RenderSystem _renderer;
-    private readonly GameMessagePipelineSystem _pipeline;
+    private readonly GameMessagePipeline _pipeline;
     private readonly CameraSystem _camera;
 
     private int? _nextSceneIndex = null;
@@ -58,10 +59,15 @@ public sealed class GameEngine : IDisposable
         _graphics = graphics;
         _input = input;
         _sceneFactories = sceneFactories;
+        
+        _modules =  new ModuleManager();
+        _features = new FeatureManager();
 
         // time
         _gameTime = new GameTime(GameTickUpdate, FpsTickUpdate);
 
+        _inputSystem = new InputSystem(_input);
+        
         // camera
         _camera = new CameraSystem(_input);
 
@@ -70,13 +76,15 @@ public sealed class GameEngine : IDisposable
         _assets.Initialize();
 
         // messages
-        _pipeline = new GameMessagePipelineSystem();
+        _pipeline = new GameMessagePipeline();
 
         // renderer
-        _renderer = new RenderSystem(_graphics, _camera.Transform, _assets.MaterialStore);
+        _renderer = new RenderSystem(_graphics, _camera.Camera, _assets.MaterialStore);
 
+        
+        
+        _systems.Register<InputSystem>(_inputSystem);
         _systems.Register<CameraSystem>(_camera);
-        _systems.Register<GameMessagePipelineSystem>(_pipeline);
         _systems.Register<AssetSystem>(_assets);
         _systems.Register<RenderSystem>(_renderer);
 
@@ -87,20 +95,7 @@ public sealed class GameEngine : IDisposable
 
     public T GetSystem<T>() where T : IGameEngineSystem => (T)_systems.Get<T>();
 
-    private void GameTickUpdate(int tick)
-    {
-        var viewportSize = _window.Size;
-        _input.Update();
 
-        _features.GameTickUpdate(tick);
-    }
-
-    private void FpsTickUpdate(int tick)
-    {
-        //Console.WriteLine($"Viewport: {_window.Size}, FrameBufSize: {_window.FramebufferSize}");
-        Console.WriteLine($"Tick {tick}");
-        Console.WriteLine($"Fps: {_fps}; Draw Calls: {_frameResult.DrawCalls}; Triangle Count: {_frameResult.TriangleCount}");
-    }
 
     internal void Update(double delta)
     {
@@ -117,6 +112,7 @@ public sealed class GameEngine : IDisposable
         };
 
         _camera.Update(in frameCtx);
+        _currentScene?.Update(in frameCtx);
 
         // fixed-step simulation
         _gameTime.Advance(dt);
@@ -126,6 +122,19 @@ public sealed class GameEngine : IDisposable
         //float renderAlpha = _gameTimer.Accumulator / GameDt;
 
         UpdateSceneTransitionIfNeeded();
+    }
+    
+    private void GameTickUpdate(int tick)
+    {
+        var viewportSize = _window.Size;
+        _input.Update();
+        _currentScene?.UpdateTick(tick);
+    }
+
+    private void FpsTickUpdate(int tick)
+    {
+        Console.WriteLine($"Tick {tick}");
+        Console.WriteLine($"Fps: {_fps}; Draw Calls: {_frameResult.DrawCalls}; Triangle Count: {_frameResult.TriangleCount}");
     }
 
     internal void Render(double delta)
@@ -149,7 +158,7 @@ public sealed class GameEngine : IDisposable
     {
         Console.WriteLine("Closing GameEngine");
         _isDisposed = true;
-
+        _currentScene?.Unload();
         _assets?.Shutdown();
         _graphics?.Dispose();
     }
@@ -165,18 +174,23 @@ public sealed class GameEngine : IDisposable
         var previous = _currentScene;
         previous?.Unload();
 
-        var sceneContext = new GameSceneContext(this);
-
-        var builder = new GameSceneConfigBuilder();
+        var sceneContext = new GameSceneContext
+        {
+            InputSystem = _inputSystem,
+            CameraSystem = _camera,
+            RenderSystem = _renderer,
+            AssetSystem = _assets,
+            Features = _features,
+            Modules = _modules,
+        };
 
 
         var newScene = _sceneFactories[index]();
         newScene.AttachContext(sceneContext);
-
-        newScene.ConfigureRenderer(builder, _graphics);
+        
+        var builder = new GameSceneConfigBuilder(_graphics, _features, _modules);
+        newScene.Build(builder);
         _renderer.Initialize(builder);
-
-        newScene.ConfigureFeatures(builder);
 
         foreach (var (order, factory) in builder.Features)
             _features.AddFeature(order, factory());
@@ -191,7 +205,12 @@ public sealed class GameEngine : IDisposable
 
         _features.Load(new GameFeatureContext(sceneContext));
 
-        newScene.Initialize();
+        foreach (var (order, factory) in builder.Modules)
+            _modules.AddModule(order, factory());
+        
+        _modules.Load(new  GameModuleContext(sceneContext));
+
+        newScene.InitializeInternal();
 
         _currentScene = newScene;
         _nextSceneIndex = null;

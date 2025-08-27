@@ -2,20 +2,28 @@
 
 #endregion
 
+using ConcreteEngine.Core.Assets;
 using ConcreteEngine.Core.Features;
+using ConcreteEngine.Core.Platform;
+using ConcreteEngine.Core.Rendering;
+using ConcreteEngine.Core.Scene;
 using ConcreteEngine.Core.Systems;
+using ConcreteEngine.Core.Transforms;
 
 namespace ConcreteEngine.Core;
 
 public sealed class GameSceneContext
 {
-    private readonly GameEngine _engine;
-    public T GetFeature<T>() where T : IGameFeature => _engine.GetFeature<T>();
-    public T GetSystem<T>() where T : IGameEngineSystem => _engine.GetSystem<T>();
+    public required FeatureManager Features { get; init; }
+    public required ModuleManager Modules { get; init; }
+    public required InputSystem InputSystem { get; init; }
+    public required CameraSystem CameraSystem { get; init; }
+    public required RenderSystem RenderSystem { get; init; }
+    public required AssetSystem AssetSystem { get; init; }
 
-    internal GameSceneContext(GameEngine engine)
+
+    internal GameSceneContext()
     {
-        _engine = engine;
     }
 }
 
@@ -23,10 +31,30 @@ public sealed class GameFeatureContext
 {
     private readonly GameSceneContext _scene;
 
-    public T GetSystem<T>() where T : IGameEngineSystem => _scene.GetSystem<T>();
+    public ModuleManager Modules => _scene.Modules;
+    public InputSystem InputSystem => _scene.InputSystem;
+    public CameraSystem CameraSystem => _scene.CameraSystem;
+    public RenderSystem RenderSystem => _scene.RenderSystem;
+    public AssetSystem AssetSystem => _scene.AssetSystem;
+
 
     internal GameFeatureContext(GameSceneContext scene)
     {
         _scene = scene;
     }
+}
+
+public sealed class GameModuleContext
+{
+    private readonly GameSceneContext _scene;
+    
+    public CameraSystem CameraSystem => _scene.CameraSystem;
+    public InputSystem InputSystem => _scene.InputSystem;
+    public AssetSystem AssetSystem => _scene.AssetSystem;
+
+    internal GameModuleContext(GameSceneContext scene)
+    {
+        _scene = scene;
+    }
+
 }

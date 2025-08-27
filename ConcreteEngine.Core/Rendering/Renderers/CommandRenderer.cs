@@ -23,18 +23,18 @@ public interface ICommandRenderer<T> : ICommandRenderer where T : struct, IDrawC
 
 public abstract class CommandRenderer<T> : ICommandRenderer<T> where T : struct, IDrawCommand
 {
-    protected readonly ViewTransform2D View;
+    protected readonly IGameCamera Camera;
     protected readonly IGraphicsDevice Graphics;
     protected readonly IGraphicsContext Gfx;
     protected readonly MaterialStore MaterialStore;
 
     protected MaterialId PreviousMaterial = default;
 
-    protected CommandRenderer(IGraphicsDevice graphics, ViewTransform2D view, MaterialStore materialStore)
+    protected CommandRenderer(IGraphicsDevice graphics, IGameCamera camera, MaterialStore materialStore)
     {
         Graphics = graphics;
         Gfx = graphics.Gfx;
-        View = view;
+        Camera = camera;
         MaterialStore = materialStore;
     }
 
@@ -78,8 +78,8 @@ public abstract class CommandRenderer<T> : ICommandRenderer<T> where T : struct,
     public abstract void Handle(in T cmd);
 }
 
-public sealed class SpriteRenderer(IGraphicsDevice graphics, ViewTransform2D view, MaterialStore materialStore)
-    : CommandRenderer<DrawCommandMesh>(graphics, view, materialStore)
+public sealed class SpriteRenderer(IGraphicsDevice graphics, IGameCamera camera, MaterialStore materialStore)
+    : CommandRenderer<DrawCommandMesh>(graphics, camera, materialStore)
 {
     public override void Handle(in DrawCommandMesh cmd)
     {
@@ -92,8 +92,8 @@ public sealed class SpriteRenderer(IGraphicsDevice graphics, ViewTransform2D vie
     }
 }
 
-public sealed class LightRenderer(IGraphicsDevice graphics, ViewTransform2D view, MaterialStore materialStore)
-    : CommandRenderer<DrawCommandLight>(graphics, view, materialStore)
+public sealed class LightRenderer(IGraphicsDevice graphics, IGameCamera camera, MaterialStore materialStore)
+    : CommandRenderer<DrawCommandLight>(graphics, camera, materialStore)
 {
     public override void Handle(in DrawCommandLight cmd)
     {

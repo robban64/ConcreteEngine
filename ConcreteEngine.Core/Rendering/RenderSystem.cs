@@ -24,7 +24,7 @@ public sealed class RenderSystem : IGameEngineSystem
 {
     private readonly IGraphicsDevice _graphics;
     private readonly IGraphicsContext _gfx;
-    private readonly ViewTransform2D _camera;
+    private readonly GameCamera _camera;
 
     private readonly MaterialStore _materialStore;
     private readonly List<IRenderPass>[] _renderPassDesc;
@@ -40,8 +40,9 @@ public sealed class RenderSystem : IGameEngineSystem
     private readonly TilemapBatcher _tilemapBatcher;
 
     public SpriteBatcher SpriteBatch => _spriteBatch;
+    
 
-    internal RenderSystem(IGraphicsDevice graphics, ViewTransform2D camera, MaterialStore materialStore)
+    internal RenderSystem(IGraphicsDevice graphics, GameCamera camera, MaterialStore materialStore)
     {
         _graphics = graphics;
         _gfx = graphics.Gfx;
@@ -142,10 +143,11 @@ public sealed class RenderSystem : IGameEngineSystem
 
     private void PrepareRenderer()
     {
+        _camera.PrepareRender();
         _emitterCollector.Collect(_emitterContext, _commandSubmitter);
         _commandSubmitter.Prepare();
 
-        var projectionViewMatrix = _camera.ProjectionViewMatrix;
+        var projectionViewMatrix = _camera.RenderTransform.ProjectionViewMatrix;
         foreach (var material in _materialStore.Materials)
         {
             if (material.HasViewProjection)
@@ -236,7 +238,7 @@ public sealed class RenderSystem : IGameEngineSystem
         ArgumentOutOfRangeException.ThrowIfZero(pass.SourceTextures.Length);
         ArgumentOutOfRangeException.ThrowIfGreaterThan(pass.SourceTextures.Length, 4, nameof(pass.SourceTextures));
 
-        var viewport = _camera.ViewportSize;
+        var viewport = _camera.RenderTransform.ViewportSize;
         _gfx.UseShader(pass.Shader);
         _gfx.SetUniform(ShaderUniform.TexelSize, viewport.ToSystemVec2() * pass.SizeRatio);
 

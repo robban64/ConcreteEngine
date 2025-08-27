@@ -127,4 +127,14 @@ public sealed class ViewTransform2D
              );
            */
     }
+
+    internal void CopyFrom(ViewTransform2D from)
+    {
+        _position = from.Position;
+        _rotation = from.Rotation;
+        _zoom = from.Zoom;
+        _viewportSize = from.ViewportSize;
+        _dirty = true;
+        Ensure();
+    }
 }

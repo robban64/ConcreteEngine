@@ -36,17 +36,14 @@ public class SpriteFeature : GameFeature, IDrawableFeature<SpriteFeatureDrawData
 
     public override void Initialize()
     {
-        var assets = Context.GetSystem<AssetSystem>();
-        var renderer = Context.GetSystem<RenderSystem>();
-
-        SpriteShader = assets.Get<Shader>("SpriteShader");
-        SpriteTexture = assets.Get<Texture2D>("SpriteTexture");
+        SpriteShader = Context.AssetSystem.Get<Shader>("SpriteShader");
+        SpriteTexture = Context.AssetSystem.Get<Texture2D>("SpriteTexture");
         SpriteAtlas = new SpriteAtlas(64, SpriteTexture.Width, SpriteTexture.Height);
         
-        renderer.SpriteBatch.CreateSpriteBatch(0, 1024);
-        renderer.SpriteBatch.CreateSpriteBatch(1, 1024);
-        renderer.SpriteBatch.CreateSpriteBatch(2, 1024);
-        renderer.SpriteBatch.CreateSpriteBatch(3, 1024);
+        Context.RenderSystem.SpriteBatch.CreateSpriteBatch(0, 1024);
+        Context.RenderSystem.SpriteBatch.CreateSpriteBatch(1, 1024);
+        Context.RenderSystem.SpriteBatch.CreateSpriteBatch(2, 1024);
+        Context.RenderSystem.SpriteBatch.CreateSpriteBatch(3, 1024);
 
         _entities = new SpriteDrawEntity[900*4];
 

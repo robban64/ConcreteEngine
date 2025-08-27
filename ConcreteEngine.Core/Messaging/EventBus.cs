@@ -1,4 +1,4 @@
-namespace ConcreteEngine.Core.Pipeline;
+namespace ConcreteEngine.Core.Messaging;
 
 internal sealed class EventBus : IDisposable
 {
@@ -105,6 +105,5 @@ internal sealed class EventBus : IDisposable
 
     public void Dispose()
     {
-        throw new NotImplementedException();
     }
 }

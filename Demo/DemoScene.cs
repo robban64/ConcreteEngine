@@ -13,6 +13,7 @@ using ConcreteEngine.Core.Rendering.Emitters;
 using ConcreteEngine.Core.Rendering.Pipeline;
 using ConcreteEngine.Core.Rendering.Renderers;
 using ConcreteEngine.Core.Scene;
+using ConcreteEngine.Core.Scene.Modules;
 using ConcreteEngine.Graphics;
 using ConcreteEngine.Graphics.Data;
 using ConcreteEngine.Graphics.Definitions;
@@ -24,7 +25,7 @@ namespace Demo;
 
 public sealed class DemoScene : GameScene
 {
-    public override void ConfigureFeatures(IGameSceneFeatureBuilder builder)
+    protected override void ConfigureFeatures(IGameSceneFeatureBuilder builder)
     {
         builder.RegisterDrawFeature<TilemapDrawEmitter, TilemapFeature, TilemapDrawData>(0);
         builder.RegisterDrawFeature<SpriteDrawEmitter, SpriteFeature, SpriteFeatureDrawData>(1);
@@ -32,7 +33,12 @@ public sealed class DemoScene : GameScene
 
     }
 
-    public override void ConfigureRenderer(IGameSceneRenderBuilder builder, IGraphicsDevice graphics)
+    protected override void ConfigureModules(IGameSceneModuleBuilder builder)
+    {
+        builder.RegisterModule<RtsCameraModule>(0);
+    }
+
+    protected override void ConfigureRenderer(IGameSceneRenderBuilder builder, IGraphicsDevice graphics)
     {
         builder.RegisterRenderer<DrawCommandMesh, SpriteRenderer>(DrawCommandId.Tilemap, DrawCommandTag.SpriteRenderer);
         builder.RegisterRenderer<DrawCommandMesh, SpriteRenderer>(DrawCommandId.Sprite, DrawCommandTag.SpriteRenderer);
@@ -42,7 +48,7 @@ public sealed class DemoScene : GameScene
         builder.RegisterEmitter<SpriteDrawEmitter, SpriteFeatureDrawData>(1);
         builder.RegisterEmitter<LightEmitter, LightFeatureDrawData>(2);
 
-        var assets = Context.GetSystem<AssetSystem>();
+        var assets = Context.AssetSystem;
 
         var lightPassShader = assets.Get<Shader>("LightPassShader");
         var lightComposite = assets.Get<Shader>("LightComposite");
@@ -104,7 +110,7 @@ public sealed class DemoScene : GameScene
 
     public override void Initialize()
     {
-        var renderer = Context.GetSystem<RenderSystem>();
+        var renderer = Context.RenderSystem;
 
         renderer.CreateMaterialFromTemplate("SpriteMaterial");
         renderer.CreateMaterialFromTemplate("TilemapMaterial");

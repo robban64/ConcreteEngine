@@ -2,13 +2,14 @@
 
 using System.Numerics;
 using ConcreteEngine.Core.Platform;
-using ConcreteEngine.Core.Systems;
+using ConcreteEngine.Core.Transforms;
 using ConcreteEngine.Graphics.Data;
 using Silk.NET.Input;
+using Silk.NET.Maths;
 
 #endregion
 
-namespace ConcreteEngine.Core.Transforms;
+namespace ConcreteEngine.Core.Systems;
 
 public sealed class CameraSystem : IGameEngineSystem
 {
@@ -16,65 +17,19 @@ public sealed class CameraSystem : IGameEngineSystem
     private const float BaseSpeed = 200;
 
     private readonly IEngineInputSource _input;
+    private readonly GameCamera _camera;
 
-    private readonly ViewTransform2D _transform = new()
-    {
-        Position = Vector2.Zero,
-        Rotation = 0f,
-        Zoom = 1f
-    };
-
-    public ViewTransform2D Transform => _transform;
+    public GameCamera Camera => _camera;
 
     internal CameraSystem(IEngineInputSource input)
     {
         _input = input;
+        _camera = new GameCamera();
     }
 
     public void Update(in FrameMetaInfo frameCtx)
     {
-        _transform.ViewportSize = frameCtx.ViewportSize;
-
-        float speed = BaseSpeed * frameCtx.DeltaTime;
-
-        var input = _input;
-
-        var deltaPos = Vector2.Zero;
-
-        if (input.IsKeyDown(Key.W))
-            deltaPos.Y -= 1f;
-
-        if (input.IsKeyDown(Key.S))
-            deltaPos.Y += 1f;
-
-        if (input.IsKeyDown(Key.A))
-            deltaPos.X -= 1f;
-
-        if (input.IsKeyDown(Key.D))
-            deltaPos.X += 1f;
-
-        if (input.IsKeyDown(Key.U))
-            _transform.Zoom += 0.1f;
-        if (input.IsKeyDown(Key.J))
-            _transform.Zoom -= 0.1f;
-
-        var mouse = input.MousePosition;
-        var w = frameCtx.ViewportSize.X - EdgeMarginPixels;
-        var h = frameCtx.ViewportSize.Y - EdgeMarginPixels;
-
-        // Left / Right
-        if (mouse.X <= EdgeMarginPixels) deltaPos.X -= 1f;
-        else if (mouse.X >= w) deltaPos.X += 1f;
-
-        if (mouse.Y <= EdgeMarginPixels) deltaPos.Y -= 1f;
-        else if (mouse.Y >= h) deltaPos.Y += 1f;
-
-        var len = MathF.Sqrt(deltaPos.X * deltaPos.X + deltaPos.Y * deltaPos.Y);
-        if (len > 0f)
-        {
-            deltaPos /= len;
-            _transform.Position += deltaPos * speed;
-        }
+        _camera.SetViewport(frameCtx.ViewportSize);
     }
 
     public void Shutdown()
@@ -82,3 +37,5 @@ public sealed class CameraSystem : IGameEngineSystem
     }
 
 }
+
+

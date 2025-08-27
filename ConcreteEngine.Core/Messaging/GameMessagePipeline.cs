@@ -5,9 +5,9 @@ using ConcreteEngine.Core.Systems;
 
 #endregion
 
-namespace ConcreteEngine.Core.Pipeline;
+namespace ConcreteEngine.Core.Messaging;
 
-internal sealed class GameMessagePipelineSystem : IGameEngineSystem
+internal sealed class GameMessagePipeline
 {
     private readonly EventBus _bus = new();
 

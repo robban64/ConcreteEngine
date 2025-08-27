@@ -25,9 +25,8 @@ public class TilemapFeature : GameFeature, IDrawableFeature<TilemapDrawData>
 
     public override void Initialize()
     {
-        var assets = Context.GetSystem<AssetSystem>();
-        TilemapShader = assets.Get<Shader>("SpriteShader");
-        TilemapTexture = assets.Get<Texture2D>("TilemapTextureAtlas");
+        TilemapShader = Context.AssetSystem.Get<Shader>("SpriteShader");
+        TilemapTexture = Context.AssetSystem.Get<Texture2D>("TilemapTextureAtlas");
         _drawData.Shader =  TilemapShader.ResourceId;
         _drawData.Texture =  TilemapTexture.ResourceId;
     }

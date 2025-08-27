@@ -1,13 +1,14 @@
 using ConcreteEngine.Core.Features;
+using ConcreteEngine.Graphics.Data;
 
 namespace ConcreteEngine.Core.Scene;
 
-public interface IFeatureRegistry
+public interface IGameFeatureManager
 {
     public T Get<T>() where T : IGameFeature;
 }
 
-public sealed class FeatureRegistry : IFeatureRegistry
+public sealed class FeatureManager : IGameFeatureManager
 {
     private readonly SortedList<int, IGameFeature> _features = new(8);
 
@@ -18,7 +19,7 @@ public sealed class FeatureRegistry : IFeatureRegistry
 
     public T Get<T>() where T : IGameFeature
     {
-        foreach (var (_, feature) in _features)
+        foreach (var feature in _features.Values)
         {
             if (feature is T tFeature) return tFeature;
         }
@@ -26,14 +27,26 @@ public sealed class FeatureRegistry : IFeatureRegistry
         throw new InvalidOperationException($"Feature {typeof(T).Name} is not registered.");
     }
 
+    internal void Update(in FrameMetaInfo frameInfo)
+    {
+        if (_features.Count == 0) return;
+
+        foreach (var feature in _features.Values)
+        {
+            if (feature.IsUpdateable)
+                feature.Update(frameInfo);
+        }
+
+    }
+
     internal void GameTickUpdate(int tick)
     {
         if (_features.Count == 0) return;
 
-        foreach (var (_, service) in _features)
+        foreach (var feature in _features.Values)
         {
-            if (service.IsUpdateable)
-                service.UpdateTick(tick);
+            if (feature.IsUpdateable)
+                feature.UpdateTick(tick);
         }
     }
 
@@ -44,7 +57,7 @@ public sealed class FeatureRegistry : IFeatureRegistry
             feature.AttachContext(context, order);
         }
         
-        foreach (var (_, feature) in _features)
+        foreach (var feature in _features.Values)
         {
             feature.Initialize();
         }
@@ -53,7 +66,7 @@ public sealed class FeatureRegistry : IFeatureRegistry
 
     internal void Unload()
     {
-        foreach (var (order, feature) in _features)
+        foreach (var feature in _features.Values)
         {
             feature.Unload();
         }

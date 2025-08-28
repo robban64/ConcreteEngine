@@ -2,6 +2,7 @@
 
 using ConcreteEngine.Core.Assets;
 using ConcreteEngine.Core.Resources;
+using ConcreteEngine.Core.Scene.Nodes;
 using ConcreteEngine.Graphics.Data;
 
 #endregion
@@ -25,10 +26,17 @@ public class TilemapFeature : GameFeature, IDrawableFeature<TilemapDrawData>
 
     public override void Initialize()
     {
-        TilemapShader = Context.AssetSystem.Get<Shader>("SpriteShader");
-        TilemapTexture = Context.AssetSystem.Get<Texture2D>("TilemapTextureAtlas");
+        var assets = Context.GetSystem<IAssetSystem>();
+        TilemapShader = assets.Get<Shader>("SpriteShader");
+        TilemapTexture = assets.Get<Texture2D>("TilemapTextureAtlas");
         _drawData.Shader =  TilemapShader.ResourceId;
         _drawData.Texture =  TilemapTexture.ResourceId;
+    }
+
+    public override void CollectFrame(ISceneNodeCollector collector)
+    {
+        var tilemaps = collector.GetSceneNodes<TilemapBehaviour>();
+        
     }
 
     public override void UpdateTick(int tick)

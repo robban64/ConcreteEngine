@@ -11,7 +11,13 @@ using ConcreteEngine.Graphics;
 
 namespace ConcreteEngine.Core.Assets;
 
-public sealed class AssetSystem : IGameEngineSystem
+public interface IAssetSystem : IGameEngineSystem
+{
+    bool TryGet<T>(string name, out T resource) where T : class, IAssetFile;
+    T Get<T>(string name) where T : class, IAssetFile;
+    List<T> GetAll<T>() where T : class, IAssetFile;
+}
+public sealed class AssetSystem :IAssetSystem
 {
     private readonly Dictionary<string, IAssetFile> _store = new(64);
     private readonly IGraphicsDevice _graphics;

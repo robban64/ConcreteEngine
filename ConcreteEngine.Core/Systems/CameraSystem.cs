@@ -11,7 +11,13 @@ using Silk.NET.Maths;
 
 namespace ConcreteEngine.Core.Systems;
 
-public sealed class CameraSystem : IGameEngineSystem
+
+public interface ICameraSystem: IGameEngineSystem
+{
+    public GameCamera Camera { get; }
+
+}
+public sealed class CameraSystem :ICameraSystem
 {
     private const int EdgeMarginPixels = 16;
     private const float BaseSpeed = 200;

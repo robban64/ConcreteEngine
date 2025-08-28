@@ -1,5 +1,6 @@
 using System.Numerics;
 using System.Runtime.InteropServices;
+using ConcreteEngine.Core.Scene.Nodes;
 using ConcreteEngine.Graphics.Data;
 
 namespace ConcreteEngine.Core.Features.Effects;
@@ -15,19 +16,23 @@ public sealed class LightFeature : GameFeature, IDrawableFeature<LightFeatureDra
 
     private LightFeatureDrawData _drawData = new();
     
-    private List<LightEntity> _lights = new(64);
+    private List<LightEntity> _lights = [];
 
     public override void Initialize()
     {
-        var r = Random.Shared;
-        for (int i = 0; i < 64; i++)
+
+    }
+
+    public override void CollectFrame(ISceneNodeCollector collector)
+    {
+        _lights.Clear();
+        
+        var nodes = collector.GetSceneNodes<LightBehaviour>();
+        foreach (var node in nodes)
         {
-            var l = new LightEntity(new(r.Next(0, 2048), r.Next(0, 2048)),
-                new(0.7f, 0.8f, 1.0f), r.Next(100, 280),
-                r.NextSingle() * 2);
+            var behaviour = (LightBehaviour)node.Behaviour;
+            _lights.Add(new LightEntity(behaviour.Position,behaviour.Color,behaviour.Radius,behaviour.Intensity));
             
-            l.Delta =new Vector2(r.NextSingle(), r.NextSingle());
-            _lights.Add(l);
         }
     }
 

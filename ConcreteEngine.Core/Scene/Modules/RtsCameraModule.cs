@@ -17,8 +17,8 @@ public class RtsCameraModule : GameModule
     
     public override void Initialize()
     {
-        _camera = Context.CameraSystem.Camera;
-        _input = Context.InputSystem.InputSource;
+        _camera = Context.GetSystem<ICameraSystem>().Camera;
+        _input = Context.GetSystem<IInputSystem>().InputSource;
     }
 
     public override void Update(in FrameMetaInfo frameCtx)

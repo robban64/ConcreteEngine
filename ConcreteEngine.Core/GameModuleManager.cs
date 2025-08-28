@@ -1,3 +1,4 @@
+using ConcreteEngine.Core.Scene.Modules;
 using ConcreteEngine.Graphics.Data;
 
 namespace ConcreteEngine.Core.Scene;

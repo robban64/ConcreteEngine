@@ -1,6 +1,7 @@
 #region
 
 using System.Numerics;
+using System.Runtime.InteropServices;
 using ConcreteEngine.Core.Utils;
 using Silk.NET.Maths;
 
@@ -10,13 +11,13 @@ namespace ConcreteEngine.Core.Features.Sprite;
 
 public sealed class SpriteFeatureDrawData
 {
-    public SpriteDrawEntity[] Entities { get; set; } = null!;
+    public List<SpriteDrawEntity> Entities { get; set; } = null!;
     public List<(int, int)> Batches { get; set; } = null!;
 
     public ReadOnlySpan<SpriteDrawEntity> GetBatch(int batch)
     {
         (int start, int size) = Batches[batch];
-        var entities = Entities.AsSpan(start, size);
+        var entities = CollectionsMarshal.AsSpan(Entities).Slice(start, size);
         return entities;
     }
 }

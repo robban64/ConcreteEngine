@@ -20,7 +20,16 @@ using static ConcreteEngine.Core.Rendering.RenderConsts;
 
 namespace ConcreteEngine.Core.Rendering;
 
-public sealed class RenderSystem : IGameEngineSystem
+public interface IRenderSystem : IGameEngineSystem
+{
+    SpriteBatcher SpriteBatch { get; }
+    TilemapBatcher TilemapBatch { get; }
+
+    Material CreateMaterial(string templateName);
+
+}
+
+public sealed class RenderSystem : IRenderSystem
 {
     private readonly IGraphicsDevice _graphics;
     private readonly IGraphicsContext _gfx;
@@ -40,7 +49,8 @@ public sealed class RenderSystem : IGameEngineSystem
     private readonly TilemapBatcher _tilemapBatcher;
 
     public SpriteBatcher SpriteBatch => _spriteBatch;
-    
+    public TilemapBatcher TilemapBatch => _tilemapBatcher;
+
 
     internal RenderSystem(IGraphicsDevice graphics, GameCamera camera, MaterialStore materialStore)
     {
@@ -83,8 +93,13 @@ public sealed class RenderSystem : IGameEngineSystem
         foreach (var pass in builder.Passes.Values)
             RegisterRenderPass(pass.Target, pass.Pass);
 
-        foreach (var cmd in builder.Renderers)
-            cmd.Bind(_commandSubmitter, cmd.CommandId, cmd.CommandTag);
+        foreach (var registry in builder.Renderers)
+        {
+            foreach (var cmdId in registry.CommandIds)
+            {
+                registry.Bind(_commandSubmitter, cmdId, registry.CommandTag);
+            }
+        }
     }
 
     public void RegisterDrawFeature(int order, IDrawableFeature feature, Type emitterType)
@@ -121,13 +136,12 @@ public sealed class RenderSystem : IGameEngineSystem
         _commandSubmitter.Register<TCommand, TRenderer>(id, tag);
     }
 
-    public Material CreateMaterialFromTemplate(string templateName)
+    public Material CreateMaterial(string templateName)
         => _materialStore.CreateMaterialFromTemplate(templateName);
 
-    
+
     public void Shutdown()
     {
-        
     }
 
     internal void Render(float alpha, in FrameMetaInfo frameCtx, out FrameRenderResult result)
@@ -250,7 +264,4 @@ public sealed class RenderSystem : IGameEngineSystem
         _gfx.BindMesh(_graphics.QuadMeshId);
         _gfx.DrawMesh();
     }
-
-
-
 }

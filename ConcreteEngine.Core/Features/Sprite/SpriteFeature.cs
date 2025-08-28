@@ -1,9 +1,11 @@
 #region
 
 using System.Numerics;
+using System.Runtime.InteropServices;
 using ConcreteEngine.Core.Assets;
 using ConcreteEngine.Core.Rendering;
 using ConcreteEngine.Core.Resources;
+using ConcreteEngine.Core.Scene.Nodes;
 using ConcreteEngine.Core.Utils;
 using ConcreteEngine.Graphics.Data;
 using Silk.NET.Maths;
@@ -11,9 +13,6 @@ using Silk.NET.Maths;
 #endregion
 
 namespace ConcreteEngine.Core.Features.Sprite;
-
-
-
 
 public class SpriteFeature : GameFeature, IDrawableFeature<SpriteFeatureDrawData>
 {
@@ -26,7 +25,7 @@ public class SpriteFeature : GameFeature, IDrawableFeature<SpriteFeatureDrawData
     public SpriteAtlas SpriteAtlas { get; set; } = null!;
 
     private readonly List<(int, int)> _batches = [];
-    private SpriteDrawEntity[] _entities = null!;
+    private readonly List<SpriteDrawEntity> _entities = [];
 
     private readonly SpriteFeatureDrawData _drawData = new();
     
@@ -36,25 +35,36 @@ public class SpriteFeature : GameFeature, IDrawableFeature<SpriteFeatureDrawData
 
     public override void Initialize()
     {
-        SpriteShader = Context.AssetSystem.Get<Shader>("SpriteShader");
-        SpriteTexture = Context.AssetSystem.Get<Texture2D>("SpriteTexture");
+        var assets = Context.GetSystem<IAssetSystem>();
+        var renderer = Context.GetSystem<IRenderSystem>();
+        
+        SpriteShader = assets.Get<Shader>("SpriteShader");
+        SpriteTexture = assets.Get<Texture2D>("SpriteTexture");
         SpriteAtlas = new SpriteAtlas(64, SpriteTexture.Width, SpriteTexture.Height);
         
-        Context.RenderSystem.SpriteBatch.CreateSpriteBatch(0, 1024);
-        Context.RenderSystem.SpriteBatch.CreateSpriteBatch(1, 1024);
-        Context.RenderSystem.SpriteBatch.CreateSpriteBatch(2, 1024);
-        Context.RenderSystem.SpriteBatch.CreateSpriteBatch(3, 1024);
+        renderer.SpriteBatch.CreateSpriteBatch(0, 64);
 
-        _entities = new SpriteDrawEntity[900*4];
+    }
 
-        for (int i = 0; i < 4; i++)
+    public override void CollectFrame(ISceneNodeCollector collector)
+    {
+        var spriteNodes = collector.GetSceneNodes<SpriteBehaviour>();
+        if(spriteNodes.Count == 0) return;
+        _entities.Clear();
+        _batches.Clear();
+
+        foreach (var spriteNode in spriteNodes)
         {
-            _batches.Add((i*900, 900));
-            for (int j = 0; j < 900; j++)
+            var behaviour = (SpriteBehaviour)spriteNode.Behaviour;
+            _entities.Add(new SpriteDrawEntity
             {
-                var dir = new Vector2(i == 0 || i == 2 ? 1 : 0, i == 1 || i == 3 ? 1 : 0);
-                CreateBatch(_entities, i*900, dir);
-            }
+                AtlasLocation = behaviour.TextureRect.Origin,
+                Direction = Vector2.Zero,
+                Position = new Vector2(100,100),
+                Scale = new Vector2(64,64),
+                Uv = SpriteAtlas.GetUvRect(0, 3)
+            });
+            
         }
     }
 
@@ -81,34 +91,16 @@ public class SpriteFeature : GameFeature, IDrawableFeature<SpriteFeatureDrawData
     
     public SpriteFeatureDrawData GetDrawables()
     {
-        _drawData.Batches = _batches;
+        _drawData.Batches = [(0, _entities.Count)];
         _drawData.Entities = _entities;
         return _drawData;
     }
 
-    private void CreateBatch(SpriteDrawEntity[] batch, int start, Vector2 offsetPosition)
-    {
-        int i = 0;
-        for (int x = 0; x < 30; x++)
-        {
-            for (int y = 0; y < 30; y++)
-            {
-                batch[i+start] = (new SpriteDrawEntity
-                {
-                    Position = new Vector2(64 * x, 64 * y) + offsetPosition * 64 * 4,
-                    Scale = new Vector2(64, 64),
-                    AtlasLocation = new Vector2D<int>(0, 3),
-                    Direction = new Vector2(-1, 0),
-                    Uv = SpriteAtlas.GetUvRect(0, 3)
-                });
-                i++;
-            }
-        }
-    }
+
 
     private void UpdateEntities(bool doRandomize, float speed)
     {
-        var spanEntities = _entities.AsSpan();
+        var spanEntities = CollectionsMarshal.AsSpan(_entities);
 
         for (int i = 0; i < spanEntities.Length; i++)
         {
@@ -160,5 +152,23 @@ public class SpriteFeature : GameFeature, IDrawableFeature<SpriteFeatureDrawData
         }
     }
 
-
+    private void CreateBatch(SpriteDrawEntity[] batch, int start, Vector2 offsetPosition)
+    {
+        int i = 0;
+        for (int x = 0; x < 30; x++)
+        {
+            for (int y = 0; y < 30; y++)
+            {
+                batch[i+start] = (new SpriteDrawEntity
+                {
+                    Position = new Vector2(64 * x, 64 * y) + offsetPosition * 64 * 4,
+                    Scale = new Vector2(64, 64),
+                    AtlasLocation = new Vector2D<int>(0, 3),
+                    Direction = new Vector2(-1, 0),
+                    Uv = SpriteAtlas.GetUvRect(0, 3)
+                });
+                i++;
+            }
+        }
+    }
 }

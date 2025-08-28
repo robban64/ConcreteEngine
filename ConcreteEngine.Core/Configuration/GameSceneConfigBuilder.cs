@@ -6,6 +6,7 @@ using ConcreteEngine.Core.Rendering.Emitters;
 using ConcreteEngine.Core.Rendering.Pipeline;
 using ConcreteEngine.Core.Rendering.Renderers;
 using ConcreteEngine.Core.Scene;
+using ConcreteEngine.Core.Scene.Modules;
 using ConcreteEngine.Graphics;
 
 #endregion
@@ -25,7 +26,7 @@ public interface IGameSceneRenderBuilder
         where TEmitter : DrawCommandEmitter<TEntity>, new()
         where TEntity : class;
 
-    public void RegisterRenderer<TCommand, TRenderer>(DrawCommandId commandId, DrawCommandTag commandTag)
+    public void RegisterRenderer<TCommand, TRenderer>(DrawCommandTag commandTag, params DrawCommandId[] commandIds)
         where TCommand : struct, IDrawCommand
         where TRenderer : class, ICommandRenderer<TCommand>;
 }
@@ -71,7 +72,7 @@ public sealed class GameSceneConfigBuilder(IGraphicsDevice graphics, FeatureMana
 
     public List<RendererRegistry> Renderers => _renderers;
 
-    
+
     public void RegisterFeature<T>(int order) where T : IGameFeature, new()
     {
         ArgumentOutOfRangeException.ThrowIfNegative(order, nameof(order));
@@ -102,20 +103,19 @@ public sealed class GameSceneConfigBuilder(IGraphicsDevice graphics, FeatureMana
         _passes.Add(order, new RenderPassRegistryMeta(target, pass));
     }
 
-    public void RegisterRenderer<TCommand, TRenderer>(DrawCommandId commandId, DrawCommandTag commandTag)
+    public void RegisterRenderer<TCommand, TRenderer>(DrawCommandTag commandTag, params DrawCommandId[] commandIds)
         where TCommand : struct, IDrawCommand
         where TRenderer : class, ICommandRenderer<TCommand>
     {
-        var registry = new RendererRegistry(commandId, commandTag,
+        var registry = new RendererRegistry(commandIds, commandTag,
             (submitter, cmdId, tag) => submitter.Register<TCommand, TRenderer>(cmdId, tag));
-        //_receiverBindings.Add(new ReceiverRegistry(reqId, (r, reqId) => r.Register<T>(reqId)));
         _renderers.Add(registry);
     }
 
     public record struct RenderPassRegistryMeta(RenderTargetId Target, IRenderPass Pass);
 
-    public record struct RendererRegistry(
-        DrawCommandId CommandId,
+    public record  RendererRegistry(
+        DrawCommandId[] CommandIds,
         DrawCommandTag CommandTag,
         Action<DrawCommandSubmitter, DrawCommandId, DrawCommandTag> Bind);
 

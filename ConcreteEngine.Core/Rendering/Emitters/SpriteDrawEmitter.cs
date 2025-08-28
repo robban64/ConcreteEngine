@@ -20,10 +20,12 @@ public sealed class SpriteDrawEmitter : DrawCommandEmitter<SpriteFeatureDrawData
     protected override void EmitBatch(SpriteFeatureDrawData data, in DrawEmitterContext ctx,
         DrawCommandSubmitter submitter, int order)
     {
+        if(data.Entities.Count == 0) return;
+        
         var alpha = ctx.Alpha;
         var spriteBatch = ctx.SpriteBatch;
         var batches = data.Batches;
-        var entities = data.Entities.AsSpan();
+        var entities = CollectionsMarshal.AsSpan(data.Entities);
 
         int batchIdx = 0;
         foreach (var (start, size) in batches)

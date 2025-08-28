@@ -24,15 +24,16 @@ public sealed class GameEngine : IDisposable
     private readonly IEngineWindowHost _window;
 
     private readonly List<Func<GameScene>> _sceneFactories;
-    private readonly TypeRegistryCollection<IGameEngineSystem> _systems = new(4);
-    private ModuleManager  _modules;
-    private FeatureManager   _features;
+    private readonly ModuleManager  _modules;
+    private readonly FeatureManager   _features;
 
     private readonly GameTime _gameTime;
 
     private readonly IGraphicsDevice _graphics;
 
     private readonly IEngineInputSource _input;
+    
+    private readonly EngineSystemManagerManager _systems;
     private readonly InputSystem _inputSystem;
     private readonly AssetSystem _assets;
     private readonly RenderSystem _renderer;
@@ -81,19 +82,15 @@ public sealed class GameEngine : IDisposable
         // renderer
         _renderer = new RenderSystem(_graphics, _camera.Camera, _assets.MaterialStore);
 
-        
-        
-        _systems.Register<InputSystem>(_inputSystem);
-        _systems.Register<CameraSystem>(_camera);
-        _systems.Register<AssetSystem>(_assets);
-        _systems.Register<RenderSystem>(_renderer);
+
+        _systems = new EngineSystemManagerManager(_renderer, _inputSystem, _assets, _camera);
+        _systems.RegisterSystems();
 
         _nextSceneIndex = 0;
     }
 
     public T GetFeature<T>() where T : IGameFeature => _features.Get<T>();
 
-    public T GetSystem<T>() where T : IGameEngineSystem => (T)_systems.Get<T>();
 
 
 
@@ -174,12 +171,8 @@ public sealed class GameEngine : IDisposable
         var previous = _currentScene;
         previous?.Unload();
 
-        var sceneContext = new GameSceneContext
+        var sceneContext = new GameSceneContext(_systems)
         {
-            InputSystem = _inputSystem,
-            CameraSystem = _camera,
-            RenderSystem = _renderer,
-            AssetSystem = _assets,
             Features = _features,
             Modules = _modules,
         };

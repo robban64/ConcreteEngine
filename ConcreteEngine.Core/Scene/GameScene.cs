@@ -2,6 +2,8 @@
 
 using ConcreteEngine.Core.Configuration;
 using ConcreteEngine.Core.Rendering;
+using ConcreteEngine.Core.Scene.Entities;
+using ConcreteEngine.Core.Scene.Nodes;
 using ConcreteEngine.Graphics;
 using ConcreteEngine.Graphics.Data;
 
@@ -9,9 +11,18 @@ using ConcreteEngine.Graphics.Data;
 
 namespace ConcreteEngine.Core.Scene;
 
+
+public interface IEntityRegistry
+{
+    
+}
+
 public abstract class GameScene
 {
+    protected SceneNodes SceneNodes { get; } = new ();
     protected GameSceneContext Context { get; private set; } = null!;
+    protected GameEntityManager Entities { get; } = new();
+    
     
     protected GameScene()
     {
@@ -21,17 +32,24 @@ public abstract class GameScene
     {
         Context.Features.Update(in frameInfo);
         Context.Modules.Update(in frameInfo);
-
     }
 
+    //        Entities.FlushQueue();
     internal void UpdateTick(int tick)
     {
-        Context.Features.GameTickUpdate(tick);
+        SceneNodes.ApplyPending();
         Context.Modules.GameTickUpdate(tick);
+        var collectedNodes = SceneNodes.Collect();
+        Context.Features.Collect(collectedNodes);
+        Context.Features.GameTickUpdate(tick);
     }
-    
-    
-    internal void AttachContext(GameSceneContext context) => Context = context;
+
+
+    internal void AttachContext(GameSceneContext context)
+    {
+        context.Nodes = SceneNodes;
+        Context = context;
+    }
 
     internal void Build(GameSceneConfigBuilder builder)
     {
@@ -45,9 +63,9 @@ public abstract class GameScene
         Initialize();
     }
 
-    protected abstract void ConfigureRenderer(IGameSceneRenderBuilder builder, IGraphicsDevice graphics);
     protected abstract void ConfigureFeatures(IGameSceneFeatureBuilder builder);
     protected abstract void ConfigureModules(IGameSceneModuleBuilder builder);
+    protected abstract void ConfigureRenderer(IGameSceneRenderBuilder builder, IGraphicsDevice graphics);
 
     public abstract void Initialize();
     public abstract void Unload();

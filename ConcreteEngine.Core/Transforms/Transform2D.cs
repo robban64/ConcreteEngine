@@ -27,4 +27,7 @@ public sealed class Transform2D
 
         return scaleMat * rotationMat * translationMat;
     }
+
+
+    public static Transform2D Identity => new();
 }

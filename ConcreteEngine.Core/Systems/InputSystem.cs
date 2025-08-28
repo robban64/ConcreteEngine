@@ -2,8 +2,13 @@ using ConcreteEngine.Core.Platform;
 
 namespace ConcreteEngine.Core.Systems;
 
+interface IInputSystem : IGameEngineSystem
+{
+    IEngineInputSource InputSource { get; }
 
-public class InputSystem : IGameEngineSystem
+}
+
+public class InputSystem : IInputSystem
 {
     private IEngineInputSource _inputSource;
     
@@ -16,6 +21,11 @@ public class InputSystem : IGameEngineSystem
     
     public void Initialize()
     {
+    }
+
+    public void Update()
+    {
+        _inputSource.Update();
     }
 
     public void Shutdown()

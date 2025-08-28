@@ -1,3 +1,4 @@
+using ConcreteEngine.Core.Scene.Nodes;
 using ConcreteEngine.Graphics.Data;
 
 namespace ConcreteEngine.Core.Features;
@@ -6,10 +7,11 @@ public interface IGameFeature
 {
     bool IsUpdateable { get; }
     int Order { get; }
+    void Initialize();
+    void CollectFrame(ISceneNodeCollector collector);
     void UpdateTick(int tick);
     void Update(in FrameMetaInfo frameCtx);
     void AttachContext(GameFeatureContext context, int order);
-    void Initialize();
     void Unload();
 }
 
@@ -37,6 +39,8 @@ public abstract class GameFeature : IGameFeature
     
     public abstract bool IsUpdateable { get; }
     public abstract void Initialize();
+    public abstract void CollectFrame(ISceneNodeCollector collector);
+
     public abstract void UpdateTick(int tick);
     public abstract void Update(in FrameMetaInfo frameCtx);
 

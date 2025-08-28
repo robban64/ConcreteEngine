@@ -1,6 +1,6 @@
 using ConcreteEngine.Graphics.Data;
 
-namespace ConcreteEngine.Core.Scene;
+namespace ConcreteEngine.Core.Scene.Modules;
 
 public abstract class GameModule
 {

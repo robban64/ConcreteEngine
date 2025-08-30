@@ -2,21 +2,15 @@
 
 #endregion
 
-using ConcreteEngine.Core.Assets;
-using ConcreteEngine.Core.Features;
-using ConcreteEngine.Core.Platform;
-using ConcreteEngine.Core.Rendering;
-using ConcreteEngine.Core.Scene;
 using ConcreteEngine.Core.Scene.Nodes;
 using ConcreteEngine.Core.Systems;
-using ConcreteEngine.Core.Transforms;
 
 namespace ConcreteEngine.Core;
 
 public sealed class GameSceneContext
 {
     private readonly IEngineSystemManager _systems;
-    
+
     public required FeatureManager Features { get; init; }
     public required ModuleManager Modules { get; init; }
     public SceneNodes Nodes { get; internal set; } = null!;
@@ -35,7 +29,7 @@ public sealed class GameFeatureContext
     public FeatureManager Features => _scene.Features;
     public ModuleManager Modules => _scene.Modules;
     public SceneNodes Nodes => _scene.Nodes;
-    
+
     public T GetSystem<T>() where T : IGameEngineSystem => _scene.GetSystem<T>();
 
 
@@ -51,7 +45,7 @@ public sealed class GameModuleContext
 
     public FeatureManager Features => _scene.Features;
     public ModuleManager Modules => _scene.Modules;
-    
+
     public SceneNodes Nodes => _scene.Nodes;
 
     public T GetSystem<T>() where T : IGameEngineSystem => _scene.GetSystem<T>();
@@ -60,5 +54,4 @@ public sealed class GameModuleContext
     {
         _scene = scene;
     }
-
 }

@@ -20,8 +20,8 @@ public sealed class SpriteDrawEmitter : DrawCommandEmitter<SpriteFeatureDrawData
     protected override void EmitBatch(SpriteFeatureDrawData data, in DrawEmitterContext ctx,
         DrawCommandSubmitter submitter, int order)
     {
-        if(data.Entities.Count == 0) return;
-        
+        if (data.Entities.Count == 0) return;
+
         var alpha = ctx.Alpha;
         var spriteBatch = ctx.SpriteBatch;
         var batches = data.Batches;
@@ -41,7 +41,7 @@ public sealed class SpriteDrawEmitter : DrawCommandEmitter<SpriteFeatureDrawData
                 var item = new SpriteDrawData(pos, entity.Scale, entity.Uv);
                 spriteBatch.SubmitSprite(item);
             }
-            
+
             var result = spriteBatch.BuildBatch();
             var meta = new DrawCommandMeta(DrawCommandId.Sprite, DrawCommandTag.SpriteRenderer, RenderTargetId.Scene,
                 0);
@@ -53,7 +53,6 @@ public sealed class SpriteDrawEmitter : DrawCommandEmitter<SpriteFeatureDrawData
                 transform: in DefaultTransform
             );
             submitter.SubmitDraw(in cmd, in meta);
-
         }
     }
 }

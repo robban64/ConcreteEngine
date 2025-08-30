@@ -36,7 +36,7 @@ public abstract class GameFeature : IGameFeature
         Context = context;
         Order = order;
     }
-    
+
     public abstract bool IsUpdateable { get; }
     public abstract void Initialize();
     public abstract void CollectFrame(ISceneNodeCollector collector);
@@ -46,6 +46,5 @@ public abstract class GameFeature : IGameFeature
 
     public virtual void Unload()
     {
-        
     }
 }

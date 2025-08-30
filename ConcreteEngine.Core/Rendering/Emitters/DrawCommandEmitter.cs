@@ -1,6 +1,5 @@
 #region
 
-using ConcreteEngine.Core.Features;
 using ConcreteEngine.Core.Rendering.Batchers.Sprite;
 using ConcreteEngine.Core.Rendering.Batchers.Tilemap;
 using ConcreteEngine.Core.Rendering.Pipeline;

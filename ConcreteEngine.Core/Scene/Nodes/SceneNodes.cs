@@ -24,13 +24,13 @@ public sealed class SceneNodes
     {
         if (!_hierarchy.TryGetNode(name, out var node))
             throw new InvalidOperationException($"Node '{name}' does not exists.");
-        
+
         if (node.Behaviour is not TBehaviour tBehaviour)
         {
             throw new InvalidOperationException(
                 $"Node '{name}' does not have behaviour {typeof(TBehaviour).Name} but instead {node.Behaviour.GetType().Name}.");
         }
-        
+
         return (node, tBehaviour);
     }
 

@@ -1,5 +1,3 @@
-using ConcreteEngine.Core.Transforms;
-
 namespace ConcreteEngine.Core.Scene.Nodes;
 
 internal class SceneHierarchy
@@ -45,5 +43,4 @@ internal class SceneHierarchy
     private void ValidateRootNode(SceneNode node)
     {
     }
-    
 }

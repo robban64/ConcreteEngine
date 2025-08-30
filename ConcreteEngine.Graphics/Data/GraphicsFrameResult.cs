@@ -1,2 +1,1 @@
 namespace ConcreteEngine.Graphics.Data;
-

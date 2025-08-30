@@ -8,23 +8,23 @@ public enum SceneNodeStatus
     Alive,
     Destroyed,
 }
+
 public sealed class SceneNode
 {
-
     private string _name = null!;
     private SceneNode? _parent;
     private INodeBehaviour _behaviour = null!;
 
     private readonly List<SceneNode> _children = new();
-    
+
     public SceneNodeStatus Status { get; internal set; } = SceneNodeStatus.Pending;
-    
+
     public int Id { get; internal set; } = -1;
     public bool Enabled { get; internal set; } = true;
     public bool Visible { get; internal set; } = true;
     public Transform2D LocalTransform { get; } = new();
     public WorldTransform WorldTransform { get; } = new();
-    
+
     public SceneNode? Parent
     {
         get => _parent;
@@ -35,6 +35,7 @@ public sealed class SceneNode
             _parent?._children.Add(this);
         }
     }
+
     public string Name
     {
         get => _name;
@@ -48,14 +49,14 @@ public sealed class SceneNode
 
     public IReadOnlyList<SceneNode> Children => _children;
     public INodeBehaviour Behaviour => _behaviour;
-    
+
     public bool IsRoot => Parent == null;
     public bool IsLeaf => Children.Count == 0;
-    
+
     internal SceneNode()
     {
     }
-    
+
     public void AddChild(SceneNode child)
     {
         _behaviour.ValidateChildNode(child);
@@ -70,9 +71,10 @@ public sealed class SceneNode
 
     public T GetBehaviour<T>() where T : INodeBehaviour
     {
-        if(Behaviour is T t) return t;
-        
-        throw new ArgumentException($"Invalid behaviour type expected {Behaviour.GetType().Name} got  {typeof(T).Name}");
+        if (Behaviour is T t) return t;
+
+        throw new ArgumentException(
+            $"Invalid behaviour type expected {Behaviour.GetType().Name} got  {typeof(T).Name}");
     }
 
     internal void Initialize(string name, int id, INodeBehaviour behaviour)
@@ -89,7 +91,7 @@ public sealed class SceneNode
     {
         WorldTransform.UpdateWorldTransform(LocalTransform, _parent?.WorldTransform);
     }
-    
+
     internal void Destroy()
     {
         Status = SceneNodeStatus.Destroyed;
@@ -100,14 +102,11 @@ public sealed class SceneNode
             {
                 child.Destroy();
             }
-            
+
             _children.Clear();
         }
-        
+
         _behaviour = null;
         _parent = null;
     }
-
-
-    
 }

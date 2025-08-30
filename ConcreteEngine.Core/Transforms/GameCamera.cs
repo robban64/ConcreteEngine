@@ -11,7 +11,6 @@ public interface IGameCamera
 
 public sealed class GameCamera : IGameCamera
 {
-
     private readonly ViewTransform2D _transform;
     private readonly ViewTransform2D _renderTransform;
 

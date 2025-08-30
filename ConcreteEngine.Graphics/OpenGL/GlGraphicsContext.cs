@@ -46,7 +46,7 @@ public sealed class GlGraphicsContext : IGraphicsContext
     private Vector2D<int> _currentViewport;
 
     private float _deltaTime = 0f;
-    
+
     private int _drawTriangleCount = 0;
     private int _drawCallCount = 0;
 

@@ -2,8 +2,6 @@ using System.Numerics;
 using ConcreteEngine.Core;
 using ConcreteEngine.Core.Assets;
 using ConcreteEngine.Core.Resources;
-using ConcreteEngine.Core.Scene;
-using ConcreteEngine.Core.Scene.Modules;
 using ConcreteEngine.Core.Scene.Nodes;
 using ConcreteEngine.Core.Utils;
 using ConcreteEngine.Graphics.Data;
@@ -15,7 +13,7 @@ public class NpcSpriteModule : GameModule
 {
     private readonly List<(SceneNode, SpriteBehaviour)> _spriteNodes = [];
     private readonly SpriteAtlas _spriteAtlas = new();
-    
+
     private int _animationCountdown = 3;
     private int _currentFrame = 0;
 
@@ -42,17 +40,17 @@ public class NpcSpriteModule : GameModule
         const float speed = 2;
 
         _animationCountdown--;
-        
+
         if (_animationCountdown == 0)
         {
             if (++_currentFrame % 9 == 0) _currentFrame = 0;
             _animationCountdown = 3;
         }
-        
+
         foreach (var (node, behaviour) in _spriteNodes)
         {
             behaviour.PreviousPosition = node.LocalTransform.Position;
-            
+
             node.LocalTransform.Position += new Vector2(0.4f, 0);
             behaviour.SourceRectangle = _spriteAtlas.At(_currentFrame, 1);
         }

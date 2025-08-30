@@ -10,9 +10,9 @@ public interface IModuleManager
 public sealed class ModuleManager : IModuleManager
 {
     private readonly SortedList<int, GameModule> _modules = new(8);
-    
+
     public ICollection<GameModule> Modules => _modules.Values;
-    
+
     public void AddModule<T>(int order, T module) where T : GameModule
     {
         _modules.Add(order, module);
@@ -37,7 +37,7 @@ public sealed class ModuleManager : IModuleManager
             module.UpdateTick(tick);
         }
     }
-    
+
     internal void Update(in FrameMetaInfo frameInfo)
     {
         if (_modules.Count == 0) return;
@@ -54,12 +54,11 @@ public sealed class ModuleManager : IModuleManager
         {
             module.AttachContext(context, order);
         }
-        
+
         foreach (var module in _modules.Values)
         {
             module.Initialize();
         }
-
     }
 
 

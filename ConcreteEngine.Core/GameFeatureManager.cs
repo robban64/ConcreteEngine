@@ -44,7 +44,6 @@ public sealed class FeatureManager : IGameFeatureManager
             if (feature.IsUpdateable)
                 feature.Update(frameInfo);
         }
-
     }
 
     internal void GameTickUpdate(int tick)
@@ -64,12 +63,11 @@ public sealed class FeatureManager : IGameFeatureManager
         {
             feature.AttachContext(context, order);
         }
-        
+
         foreach (var feature in _features.Values)
         {
             feature.Initialize();
         }
-
     }
 
     internal void Unload()

@@ -1,7 +1,6 @@
 #region
 
 using ConcreteEngine.Core.Configuration;
-using ConcreteEngine.Core.Rendering;
 using ConcreteEngine.Core.Scene.Entities;
 using ConcreteEngine.Core.Scene.Nodes;
 using ConcreteEngine.Graphics;
@@ -11,23 +10,21 @@ using ConcreteEngine.Graphics.Data;
 
 namespace ConcreteEngine.Core.Scene;
 
-
 public interface IEntityRegistry
 {
-    
 }
 
 public abstract class GameScene
 {
-    protected SceneNodes SceneNodes { get; } = new ();
+    protected SceneNodes SceneNodes { get; } = new();
     protected GameSceneContext Context { get; private set; } = null!;
     protected GameEntityManager Entities { get; } = new();
-    
-    
+
+
     protected GameScene()
     {
     }
-    
+
     internal void Update(in FrameMetaInfo frameInfo)
     {
         Context.Features.Update(in frameInfo);
@@ -38,9 +35,9 @@ public abstract class GameScene
     internal void UpdateTick(int tick)
     {
         SceneNodes.ApplyPending();
-        
+
         Context.Modules.GameTickUpdate(tick);
-        
+
         var collectedNodes = SceneNodes.Collect();
         Context.Features.Collect(collectedNodes);
         Context.Features.GameTickUpdate(tick);
@@ -76,6 +73,4 @@ public abstract class GameScene
 
     public abstract void Initialize();
     public abstract void Unload();
-    
-
 }

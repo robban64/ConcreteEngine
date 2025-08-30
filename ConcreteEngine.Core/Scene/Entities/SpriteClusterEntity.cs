@@ -19,7 +19,6 @@ public class SpriteClusterEntity : IGameEntity
         var entities = Entities.AsSpan(start, size);
         return entities;
     }
-
 }
 
 public struct SpriteClusterEntityUnit

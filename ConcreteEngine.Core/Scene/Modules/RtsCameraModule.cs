@@ -14,7 +14,7 @@ public class RtsCameraModule : GameModule
 
     private IGameCamera _camera;
     private IEngineInputSource _input;
-    
+
     public override void Initialize()
     {
         _camera = Context.GetSystem<ICameraSystem>().Camera;
@@ -24,7 +24,7 @@ public class RtsCameraModule : GameModule
     public override void Update(in FrameMetaInfo frameCtx)
     {
         var _transform = _camera.Transform;
-        
+
         _transform.ViewportSize = frameCtx.ViewportSize;
 
         float speed = BaseSpeed * frameCtx.DeltaTime;
@@ -68,10 +68,8 @@ public class RtsCameraModule : GameModule
             _transform.Position += deltaPos * speed;
         }
     }
-    
+
     public override void UpdateTick(int tick)
     {
     }
-
- 
 }

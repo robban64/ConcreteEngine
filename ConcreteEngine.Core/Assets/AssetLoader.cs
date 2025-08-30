@@ -16,7 +16,7 @@ internal sealed class AssetLoader
     private readonly IGraphicsDevice _graphics;
 
     private readonly Dictionary<string, string> _vertexShaderCache = new();
-    
+
     public AssetLoader(IGraphicsDevice graphics, string rootPath)
     {
         _graphics = graphics;
@@ -32,7 +32,7 @@ internal sealed class AssetLoader
     private string GetFilePath(string assetTypePath, string fileName)
     {
         var path = Path.Combine(Directory.GetCurrentDirectory(), _rootPath, assetTypePath, fileName);
-        if(!File.Exists(path)) throw new FileNotFoundException($"Asset Resource Path not found", path);
+        if (!File.Exists(path)) throw new FileNotFoundException($"Asset Resource Path not found", path);
         return path;
     }
 
@@ -66,7 +66,7 @@ internal sealed class AssetLoader
         };
     }
 
-    
+
     public Shader LoadShader(AssetShaderRecord record)
     {
         if (!_vertexShaderCache.TryGetValue(record.VertexFilename, out var vertexSource))
@@ -74,7 +74,7 @@ internal sealed class AssetLoader
             var path = GetFilePath("shaders", record.VertexFilename);
             _vertexShaderCache[record.VertexFilename] = vertexSource = File.ReadAllText(path);
         }
-        
+
         var fragmentSource = File.ReadAllText(GetFilePath("shaders", record.FragmentFilename));
 
         var resourceId = _graphics.CreateShader(vertexSource, fragmentSource, record.Samplers ?? []);

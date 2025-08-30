@@ -1,9 +1,7 @@
 #region
 
-using ConcreteEngine.Common.Collections;
 using ConcreteEngine.Core.Assets;
 using ConcreteEngine.Core.Configuration;
-using ConcreteEngine.Core.Features;
 using ConcreteEngine.Core.Messaging;
 using ConcreteEngine.Core.Platform;
 using ConcreteEngine.Core.Rendering;
@@ -24,15 +22,15 @@ public sealed class GameEngine : IDisposable
     private readonly IEngineWindowHost _window;
 
     private readonly List<Func<GameScene>> _sceneFactories;
-    private readonly ModuleManager  _modules;
-    private readonly FeatureManager   _features;
+    private readonly ModuleManager _modules;
+    private readonly FeatureManager _features;
 
     private readonly GameTime _gameTime;
 
     private readonly IGraphicsDevice _graphics;
 
     private readonly IEngineInputSource _input;
-    
+
     private readonly EngineSystemManagerManager _systems;
     private readonly InputSystem _inputSystem;
     private readonly AssetSystem _assets;
@@ -60,15 +58,15 @@ public sealed class GameEngine : IDisposable
         _graphics = graphics;
         _input = input;
         _sceneFactories = sceneFactories;
-        
-        _modules =  new ModuleManager();
+
+        _modules = new ModuleManager();
         _features = new FeatureManager();
 
         // time
         _gameTime = new GameTime(GameTickUpdate, FpsTickUpdate);
 
         _inputSystem = new InputSystem(_input);
-        
+
         // camera
         _camera = new CameraSystem(_input);
 
@@ -90,8 +88,6 @@ public sealed class GameEngine : IDisposable
     }
 
     public T GetFeature<T>() where T : IGameFeature => _features.Get<T>();
-
-
 
 
     internal void Update(double delta)
@@ -120,7 +116,7 @@ public sealed class GameEngine : IDisposable
 
         UpdateSceneTransitionIfNeeded();
     }
-    
+
     private void GameTickUpdate(int tick)
     {
         var viewportSize = _window.Size;
@@ -131,7 +127,8 @@ public sealed class GameEngine : IDisposable
     private void FpsTickUpdate(int tick)
     {
         Console.WriteLine($"Tick {tick}");
-        Console.WriteLine($"Fps: {_fps}; Draw Calls: {_frameResult.DrawCalls}; Triangle Count: {_frameResult.TriangleCount}");
+        Console.WriteLine(
+            $"Fps: {_fps}; Draw Calls: {_frameResult.DrawCalls}; Triangle Count: {_frameResult.TriangleCount}");
     }
 
     internal void Render(double delta)
@@ -180,7 +177,7 @@ public sealed class GameEngine : IDisposable
 
         var newScene = _sceneFactories[index]();
         newScene.AttachContext(sceneContext);
-        
+
         var builder = new GameSceneConfigBuilder(_graphics, _features, _modules);
         newScene.Build(builder);
         _renderer.Initialize(builder);
@@ -200,7 +197,7 @@ public sealed class GameEngine : IDisposable
 
         foreach (var (order, factory) in builder.Modules)
             _modules.AddModule(order, factory());
-        
+
         _modules.Load(new GameModuleContext(sceneContext));
 
         newScene.InitializeInternal();
@@ -208,7 +205,6 @@ public sealed class GameEngine : IDisposable
         _currentScene = newScene;
         _nextSceneIndex = null;
     }
-
 
 
     public void Dispose()

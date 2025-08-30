@@ -2,7 +2,6 @@
 
 using ConcreteEngine.Common.Extensions;
 using ConcreteEngine.Core.Configuration;
-using ConcreteEngine.Core.Features;
 using ConcreteEngine.Core.Rendering.Batchers.Sprite;
 using ConcreteEngine.Core.Rendering.Batchers.Tilemap;
 using ConcreteEngine.Core.Rendering.Emitters;
@@ -26,7 +25,6 @@ public interface IRenderSystem : IGameEngineSystem
     TilemapBatcher TilemapBatch { get; }
 
     Material CreateMaterial(string templateName);
-
 }
 
 public sealed class RenderSystem : IRenderSystem

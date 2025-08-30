@@ -8,10 +8,9 @@ using ConcreteEngine.Common.Extensions;
 
 namespace ConcreteEngine.Core.Transforms;
 
-
 public sealed class WorldTransform
 {
-    private Matrix4x4 _transformMat =  Matrix4x4.Identity;
+    private Matrix4x4 _transformMat = Matrix4x4.Identity;
     private Vector2 _position = Vector2.Zero;
     private Vector2 _scale = Vector2.Zero;
     private float _rotation;
@@ -26,7 +25,7 @@ public sealed class WorldTransform
         if (parentWorldTransform != null)
         {
             _transformMat = parentWorldTransform.TransformMatrix * localTransform.TransformMatrix;
-            _position = parentWorldTransform.Position *  localTransform.Position;
+            _position = parentWorldTransform.Position * localTransform.Position;
             _scale = parentWorldTransform.Scale * localTransform.Scale;
             _rotation = parentWorldTransform.Rotation * localTransform.Rotation;
         }
@@ -38,8 +37,8 @@ public sealed class WorldTransform
             _rotation = localTransform.Rotation;
         }
     }
-
 }
+
 public sealed class Transform2D
 {
     private bool _dirty = true;
@@ -48,9 +47,9 @@ public sealed class Transform2D
     private Vector2 _position = Vector2.Zero;
     private Vector2 _scale = Vector2.One;
     private float _rotation = 0;
-    
+
     private Matrix4x4 _transformMat = Matrix4x4.Identity;
-    
+
     public Vector2 Position
     {
         get => _position;
@@ -60,7 +59,7 @@ public sealed class Transform2D
             _dirty = true;
         }
     }
-    
+
     public Vector2 Scale
     {
         get => _scale;
@@ -70,7 +69,7 @@ public sealed class Transform2D
             _dirty = true;
         }
     }
-    
+
     public float Rotation
     {
         get => _rotation;
@@ -87,9 +86,10 @@ public sealed class Transform2D
         {
             if (_dirty)
             {
-                _transformMat = CreateTransformMatrix(_position, _scale,  _rotation);
+                _transformMat = CreateTransformMatrix(_position, _scale, _rotation);
                 _dirty = false;
             }
+
             return _transformMat;
         }
     }

@@ -1,14 +1,10 @@
 #region
 
-using System.Numerics;
-using System.Runtime.InteropServices;
 using ConcreteEngine.Core.Assets;
 using ConcreteEngine.Core.Rendering;
 using ConcreteEngine.Core.Resources;
 using ConcreteEngine.Core.Scene.Nodes;
-using ConcreteEngine.Core.Utils;
 using ConcreteEngine.Graphics.Data;
-using Silk.NET.Maths;
 
 #endregion
 
@@ -27,7 +23,7 @@ public class SpriteFeature : GameFeature, IDrawableFeature<SpriteFeatureDrawData
     private readonly List<SpriteDrawEntity> _entities = [];
 
     private readonly SpriteFeatureDrawData _drawData = new();
-    
+
     private int _animationCountdown = 3;
     private int _dirCountdown = 20;
     private int _currentFrame = 0;
@@ -36,18 +32,17 @@ public class SpriteFeature : GameFeature, IDrawableFeature<SpriteFeatureDrawData
     {
         var assets = Context.GetSystem<IAssetSystem>();
         var renderer = Context.GetSystem<IRenderSystem>();
-        
+
         SpriteShader = assets.Get<Shader>("SpriteShader");
         SpriteTexture = assets.Get<Texture2D>("SpriteTexture");
-        
-        renderer.SpriteBatch.CreateSpriteBatch(0, 64);
 
+        renderer.SpriteBatch.CreateSpriteBatch(0, 64);
     }
 
     public override void CollectFrame(ISceneNodeCollector collector)
     {
         var spriteNodes = collector.GetSceneNodes<SpriteBehaviour>();
-        if(spriteNodes.Count == 0) return;
+        if (spriteNodes.Count == 0) return;
         _entities.Clear();
         _batches.Clear();
 
@@ -71,7 +66,7 @@ public class SpriteFeature : GameFeature, IDrawableFeature<SpriteFeatureDrawData
     public override void Update(in FrameMetaInfo frameCtx)
     {
     }
-    
+
     public SpriteFeatureDrawData GetDrawables()
     {
         _drawData.Batches = [(0, _entities.Count)];

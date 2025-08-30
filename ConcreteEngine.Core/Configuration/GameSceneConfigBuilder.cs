@@ -1,12 +1,9 @@
 #region
 
-using ConcreteEngine.Core.Features;
 using ConcreteEngine.Core.Rendering;
 using ConcreteEngine.Core.Rendering.Emitters;
 using ConcreteEngine.Core.Rendering.Pipeline;
 using ConcreteEngine.Core.Rendering.Renderers;
-using ConcreteEngine.Core.Scene;
-using ConcreteEngine.Core.Scene.Modules;
 using ConcreteEngine.Graphics;
 
 #endregion
@@ -114,7 +111,7 @@ public sealed class GameSceneConfigBuilder(IGraphicsDevice graphics, FeatureMana
 
     public record struct RenderPassRegistryMeta(RenderTargetId Target, IRenderPass Pass);
 
-    public record  RendererRegistry(
+    public record RendererRegistry(
         DrawCommandId[] CommandIds,
         DrawCommandTag CommandTag,
         Action<DrawCommandSubmitter, DrawCommandId, DrawCommandTag> Bind);

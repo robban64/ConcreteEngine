@@ -17,9 +17,7 @@ public struct LightEntity(Vector2 position, Vector3 color, float radius, float i
     }
 }
 
-
 public sealed class LightFeatureDrawData
 {
     public List<LightEntity> Entities { get; set; }
-
 }

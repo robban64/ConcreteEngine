@@ -1,7 +1,6 @@
 #region
 
 using ConcreteEngine.Common.Collections;
-using ConcreteEngine.Core.Systems;
 
 #endregion
 
@@ -59,6 +58,5 @@ internal sealed class GameMessagePipeline
 
     public void Shutdown()
     {
-        
     }
 }

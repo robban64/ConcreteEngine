@@ -2,7 +2,6 @@
 
 using System.Drawing;
 using System.Numerics;
-using ConcreteEngine.Core;
 using ConcreteEngine.Core.Assets;
 using ConcreteEngine.Core.Configuration;
 using ConcreteEngine.Core.Features.Effects;
@@ -27,7 +26,6 @@ namespace Demo;
 
 public sealed class DemoScene : GameScene
 {
-    
     public override void Initialize()
     {
         var renderer = Context.GetSystem<IRenderSystem>();
@@ -35,28 +33,23 @@ public sealed class DemoScene : GameScene
         var spriteMaterial = renderer.CreateMaterial("SpriteMaterial");
         renderer.CreateMaterial("TilemapMaterial");
         renderer.CreateMaterial("LightMaterial");
-        
-        var tilemap = SceneNodes.CreateNode<TilemapBehaviour>("tilemap", null, behaviour =>
-        {
-            
-        });
+
+        var tilemap = SceneNodes.CreateNode<TilemapBehaviour>("tilemap", null, behaviour => { });
 
         var dummyLightNode = SceneNodes.CreateEmptyNode("LightNodes");
         for (int i = 0; i < 10; i++)
         {
-            SceneNodes.CreateNode<LightBehaviour>($"light-{i}", dummyLightNode, b =>
-            {
-                b.Position = new Vector2(64 * i, 64 * i);
-            });
+            SceneNodes.CreateNode<LightBehaviour>($"light-{i}", dummyLightNode,
+                b => { b.Position = new Vector2(64 * i, 64 * i); });
         }
-        
+
         var sprite1 = SceneNodes.CreateNode<SpriteBehaviour>("node1", null, behaviour =>
         {
             behaviour.MaterialId = spriteMaterial.Id;
             behaviour.SourceRectangle = new Rectangle<int>(0, 0, 64, 64);
             behaviour.Batched = true;
         });
-        
+
         var sprite2 = SceneNodes.CreateNode<SpriteBehaviour>("node2", null, behaviour =>
         {
             behaviour.MaterialId = spriteMaterial.Id;
@@ -69,27 +62,25 @@ public sealed class DemoScene : GameScene
 
         sprite1.LocalTransform.Position = new Vector2(64, 64);
         sprite2.LocalTransform.Position = new Vector2(64, 128);
-
     }
-    
+
     protected override void ConfigureFeatures(IGameSceneFeatureBuilder builder)
     {
         builder.RegisterDrawFeature<TilemapDrawEmitter, TilemapFeature, TilemapDrawData>(0);
         builder.RegisterDrawFeature<SpriteDrawEmitter, SpriteFeature, SpriteFeatureDrawData>(1);
         builder.RegisterDrawFeature<LightEmitter, LightFeature, LightFeatureDrawData>(2);
-
     }
 
     protected override void ConfigureModules(IGameSceneModuleBuilder builder)
     {
         builder.RegisterModule<RtsCameraModule>(0);
         builder.RegisterModule<NpcSpriteModule>(1);
-
     }
 
     protected override void ConfigureRenderer(IGameSceneRenderBuilder builder, IGraphicsDevice graphics)
     {
-        builder.RegisterRenderer<DrawCommandMesh, SpriteRenderer>(DrawCommandTag.SpriteRenderer, DrawCommandId.Tilemap, DrawCommandId.Sprite);
+        builder.RegisterRenderer<DrawCommandMesh, SpriteRenderer>(DrawCommandTag.SpriteRenderer, DrawCommandId.Tilemap,
+            DrawCommandId.Sprite);
         builder.RegisterRenderer<DrawCommandLight, LightRenderer>(DrawCommandTag.LightRenderer, DrawCommandId.Effect);
 
         builder.RegisterEmitter<TilemapDrawEmitter, TilemapDrawData>(0);

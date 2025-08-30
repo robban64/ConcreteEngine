@@ -116,11 +116,11 @@ public sealed class AssetSystem : IAssetSystem
             throw new FileNotFoundException($"Manifest '{manifestPath}' not found.");
 
         Console.WriteLine("Loading Asset Manifest...");
-        
+
         var json = File.ReadAllText(manifestPath);
         var assetManifest = JsonSerializer.Deserialize<AssetManifest>(json, _jsonOptions) ??
                             throw new InvalidDataException("Invalid manifest.");
-        
+
         var resourceManifest = assetManifest.ResourceManifest;
         var loader = new AssetLoader(_graphics, _assetPath);
 
@@ -132,7 +132,7 @@ public sealed class AssetSystem : IAssetSystem
 
         // Material
         LoadMaterialStore(resourceManifest.Material, loader);
-        
+
         loader.ClearCache();
     }
 

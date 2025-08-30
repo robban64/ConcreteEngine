@@ -1,38 +1,33 @@
-using System.Numerics;
 using System.Runtime.InteropServices;
 using ConcreteEngine.Core.Scene.Nodes;
 using ConcreteEngine.Graphics.Data;
 
 namespace ConcreteEngine.Core.Features.Effects;
 
-
 public sealed class LightFeature : GameFeature, IDrawableFeature<LightFeatureDrawData>
 {
-    
     public bool IsDrawable { get; set; } = true;
     public int DrawOrder { get; set; } = 0;
 
     public override bool IsUpdateable => true;
 
     private LightFeatureDrawData _drawData = new();
-    
+
     private List<LightEntity> _lights = [];
 
     public override void Initialize()
     {
-
     }
 
     public override void CollectFrame(ISceneNodeCollector collector)
     {
         _lights.Clear();
-        
+
         var nodes = collector.GetSceneNodes<LightBehaviour>();
         foreach (var node in nodes)
         {
             var behaviour = (LightBehaviour)node.Behaviour;
-            _lights.Add(new LightEntity(behaviour.Position,behaviour.Color,behaviour.Radius,behaviour.Intensity));
-            
+            _lights.Add(new LightEntity(behaviour.Position, behaviour.Color, behaviour.Radius, behaviour.Intensity));
         }
     }
 
@@ -56,9 +51,7 @@ public sealed class LightFeature : GameFeature, IDrawableFeature<LightFeatureDra
 
     public LightFeatureDrawData GetDrawables()
     {
-        _drawData.Entities =  _lights;
+        _drawData.Entities = _lights;
         return _drawData;
     }
-
-
 }

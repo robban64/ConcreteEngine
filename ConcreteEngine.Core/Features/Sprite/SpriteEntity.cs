@@ -3,7 +3,6 @@
 using System.Numerics;
 using System.Runtime.InteropServices;
 using ConcreteEngine.Core.Utils;
-using Silk.NET.Maths;
 
 #endregion
 
@@ -29,5 +28,3 @@ public struct SpriteDrawEntity()
     public Vector2 Scale = Vector2.One;
     public UvRect Uv = default;
 }
-
-

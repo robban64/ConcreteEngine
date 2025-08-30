@@ -1,4 +1,3 @@
-using System.Runtime.InteropServices;
 using ConcreteEngine.Common.Collections;
 
 namespace ConcreteEngine.Core.Scene.Entities;
@@ -17,10 +16,10 @@ public class GameEntityManager : IEntityManager
 {
     private int _idIdx = 1;
     private int _instanceIdx = 1;
-    
 
-    private readonly TypeRegistryCollection<GameEntityId> _registry = new (4);
-    
+
+    private readonly TypeRegistryCollection<GameEntityId> _registry = new(4);
+
     // TODO break out into more efficient solution
     private readonly List<IGameEntity> _entities = new(32);
 
@@ -34,12 +33,12 @@ public class GameEntityManager : IEntityManager
     {
         while (_removeQueue.Count > 0)
         {
-            var  entity = _removeQueue.Dequeue();
+            var entity = _removeQueue.Dequeue();
             var idx = BinarySearchEntity(_entities, entity.InstanceId);
             _entities.RemoveAt(idx);
         }
 
-        
+
         while (_pendingQueue.Count > 0)
         {
             var entity = _pendingQueue.Dequeue();
@@ -47,7 +46,7 @@ public class GameEntityManager : IEntityManager
             entity.Status = GameEntityStatus.Active;
         }
     }
-    
+
     public void Register<TEntity>() where TEntity : class, IGameEntity
     {
         _registry.Register<TEntity>(new GameEntityId(_idIdx++));
@@ -55,9 +54,9 @@ public class GameEntityManager : IEntityManager
 
     public TEntity Create<TEntity>() where TEntity : class, IGameEntity, new()
     {
-        if(!_registry.TryGet<TEntity>(out var id))
+        if (!_registry.TryGet<TEntity>(out var id))
             throw new InvalidOperationException($"Entity {typeof(TEntity).Name} is not registered");
-       
+
         var entity = new TEntity
         {
             Id = id,
@@ -87,7 +86,7 @@ public class GameEntityManager : IEntityManager
         if (found is not TEntity tEntity)
             throw new InvalidOperationException(
                 $"Found Entity {found.GetType().Name} does not match request type {typeof(TEntity).Name}");
-        
+
         entity = tEntity;
         return true;
     }
@@ -103,7 +102,8 @@ public class GameEntityManager : IEntityManager
     }
 
 
-    private static int BinarySearchEntity<T>(List<T> collection, GameEntityInstanceId instanceId) where T : class, IGameEntity
+    private static int BinarySearchEntity<T>(List<T> collection, GameEntityInstanceId instanceId)
+        where T : class, IGameEntity
     {
         var id = instanceId.Id;
 

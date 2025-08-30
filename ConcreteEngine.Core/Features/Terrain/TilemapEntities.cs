@@ -1,11 +1,13 @@
+using ConcreteEngine.Core.Resources;
 using ConcreteEngine.Graphics.Resources;
 
 namespace ConcreteEngine.Core.Features.Terrain;
 
-public class TilemapDrawData
+public sealed class TilemapDrawData
 {
-    public ShaderId Shader = default;
-    public TextureId Texture = default;
-    public int MapDimension = 64;
-    public int TileSize { get; } = 32;
+    public MaterialId MaterialId { get; set; }
+    public int MapDimension { get; set; } = 64;
+    public int TileSize { get; set; } = 32;
+
+    public int Count { get; set; } = 0;
 }

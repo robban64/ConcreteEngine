@@ -5,6 +5,7 @@ public interface ISceneNodeCollector
     IReadOnlyList<SceneNode> GetSceneNodes<T>() where T : INodeBehaviour;
 }
 
+
 public sealed class SceneNodeCollector : ISceneNodeCollector
 {
     private readonly Queue<SceneNode> _traverseQueue = new();
@@ -16,6 +17,7 @@ public sealed class SceneNodeCollector : ISceneNodeCollector
             return [];
 
         return nodes;
+        
     }
 
     public void Collect(IReadOnlyList<SceneNode> roots)

@@ -15,14 +15,17 @@ public sealed class TilemapDrawEmitter : DrawCommandEmitter<TilemapDrawData>
     protected override void EmitBatch(TilemapDrawData data, in DrawEmitterContext ctx,
         DrawCommandSubmitter submitter, int order)
     {
+        if(data.Count == 0) return;
+        
         var transform = Transform2D.CreateTransformMatrix(Vector2.Zero, new Vector2(1, 1), 0);
 
         var tilemapBatcher = ctx.TilemapBatch;
         var result = tilemapBatcher.BuildBatch();
+        
         var cmd = new DrawCommandMesh(
             meshId: result.GroundLayer.MeshId,
             drawCount: result.GroundLayer.DrawCount,
-            materialId: MaterialId.Of(2),
+            materialId: data.MaterialId,
             transform: in transform
         );
 

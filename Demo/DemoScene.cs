@@ -12,7 +12,6 @@ using ConcreteEngine.Core.Rendering.Emitters;
 using ConcreteEngine.Core.Rendering.Pipeline;
 using ConcreteEngine.Core.Rendering.Renderers;
 using ConcreteEngine.Core.Scene;
-using ConcreteEngine.Core.Scene.Modules;
 using ConcreteEngine.Core.Scene.Nodes;
 using ConcreteEngine.Graphics;
 using ConcreteEngine.Graphics.Data;
@@ -31,10 +30,13 @@ public sealed class DemoScene : GameScene
         var renderer = Context.GetSystem<IRenderSystem>();
 
         var spriteMaterial = renderer.CreateMaterial("SpriteMaterial");
-        renderer.CreateMaterial("TilemapMaterial");
+        var tilemapMaterial = renderer.CreateMaterial("TilemapMaterial");
         renderer.CreateMaterial("LightMaterial");
 
-        var tilemap = SceneNodes.CreateNode<TilemapBehaviour>("tilemap", null, behaviour => { });
+        var tilemap = SceneNodes.CreateNode<TilemapBehaviour>("tilemap", null, behaviour =>
+        {
+            behaviour.MaterialId = tilemapMaterial.Id;
+        });
 
         var dummyLightNode = SceneNodes.CreateEmptyNode("LightNodes");
         for (int i = 0; i < 10; i++)

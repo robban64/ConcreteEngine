@@ -12,10 +12,6 @@ namespace ConcreteEngine.Core.Features.Terrain;
 public class TilemapFeature : GameFeature, IDrawableFeature<TilemapDrawData>
 {
     private TilemapDrawData _drawData = new();
-    public Shader TilemapShader { get; set; } = null!;
-    public Texture2D TilemapTexture { get; set; } = null!;
-
-    private TilemapDrawData _tilemap;
 
     public override bool IsUpdateable => true;
     public bool IsDrawable { get; set; } = true;
@@ -23,16 +19,21 @@ public class TilemapFeature : GameFeature, IDrawableFeature<TilemapDrawData>
 
     public override void Initialize()
     {
-        var assets = Context.GetSystem<IAssetSystem>();
-        TilemapShader = assets.Get<Shader>("SpriteShader");
-        TilemapTexture = assets.Get<Texture2D>("TilemapTextureAtlas");
-        _drawData.Shader = TilemapShader.ResourceId;
-        _drawData.Texture = TilemapTexture.ResourceId;
     }
 
     public override void CollectFrame(ISceneNodeCollector collector)
     {
         var tilemaps = collector.GetSceneNodes<TilemapBehaviour>();
+        _drawData.Count = tilemaps.Count;
+        if (tilemaps.Count > 0)
+        {
+            var node = tilemaps[0];
+            var behaviour = (TilemapBehaviour)node.Behaviour;
+
+            _drawData.MapDimension = behaviour.MapSize;
+            _drawData.TileSize = behaviour.TileSize;
+            _drawData.MaterialId = behaviour.MaterialId;
+        }
     }
 
     public override void UpdateTick(int tick)

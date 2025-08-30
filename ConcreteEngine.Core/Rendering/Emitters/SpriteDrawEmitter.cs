@@ -28,7 +28,7 @@ public sealed class SpriteDrawEmitter : DrawCommandEmitter<SpriteFeatureDrawData
         var entities = CollectionsMarshal.AsSpan(data.Entities);
 
         int batchIdx = 0;
-        foreach (var (start, size) in batches)
+        foreach (var (materialId, start, size, layer) in batches)
         {
             var span = entities.Slice(start, size);
             spriteBatch.BeginBatch(batchIdx++);
@@ -43,12 +43,12 @@ public sealed class SpriteDrawEmitter : DrawCommandEmitter<SpriteFeatureDrawData
             }
 
             var result = spriteBatch.BuildBatch();
-            var meta = new DrawCommandMeta(DrawCommandId.Sprite, DrawCommandTag.SpriteRenderer, RenderTargetId.Scene,
-                0);
+            var meta = new DrawCommandMeta(DrawCommandId.Sprite, DrawCommandTag.SpriteRenderer,
+                RenderTargetId.Scene, layer);
 
             var cmd = new DrawCommandMesh(
                 meshId: result.MeshId,
-                materialId: MaterialId.Of(1),
+                materialId: materialId,
                 drawCount: result.DrawCount,
                 transform: in DefaultTransform
             );

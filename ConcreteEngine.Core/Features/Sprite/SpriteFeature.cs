@@ -16,9 +16,6 @@ public class SpriteFeature : GameFeature, IDrawableFeature<SpriteFeatureDrawData
     public bool IsDrawable { get; set; } = true;
     public int DrawOrder { get; set; } = 0;
 
-    public Shader SpriteShader { get; set; } = null!;
-    public Texture2D SpriteTexture { get; set; } = null!;
-
     private readonly List<(int, int)> _batches = [];
     private readonly List<SpriteDrawEntity> _entities = [];
 
@@ -30,12 +27,7 @@ public class SpriteFeature : GameFeature, IDrawableFeature<SpriteFeatureDrawData
 
     public override void Initialize()
     {
-        var assets = Context.GetSystem<IAssetSystem>();
         var renderer = Context.GetSystem<IRenderSystem>();
-
-        SpriteShader = assets.Get<Shader>("SpriteShader");
-        SpriteTexture = assets.Get<Texture2D>("SpriteTexture");
-
         renderer.SpriteBatch.CreateSpriteBatch(0, 64);
     }
 
@@ -46,15 +38,16 @@ public class SpriteFeature : GameFeature, IDrawableFeature<SpriteFeatureDrawData
         _entities.Clear();
         _batches.Clear();
 
-        foreach (var spriteNode in spriteNodes)
+        foreach (var node in spriteNodes)
         {
-            var behaviour = (SpriteBehaviour)spriteNode.Behaviour;
+            var behaviour = (SpriteBehaviour)node.Behaviour;
             _entities.Add(new SpriteDrawEntity
             {
-                Position = spriteNode.LocalTransform.Position,
+                Position = node.LocalTransform.Position,
                 PreviousPosition = behaviour.PreviousPosition,
-                Scale = spriteNode.LocalTransform.Scale,
-                Uv = behaviour.GetUvRect()
+                Scale = node.LocalTransform.Scale,
+                Uv = behaviour.GetUvRect(),
+                MaterialId = behaviour.MaterialId,
             });
         }
     }
@@ -69,7 +62,11 @@ public class SpriteFeature : GameFeature, IDrawableFeature<SpriteFeatureDrawData
 
     public SpriteFeatureDrawData GetDrawables()
     {
-        _drawData.Batches = [(0, _entities.Count)];
+        if(_entities.Count > 0)   
+            _drawData.Batches = [new SpriteDrawBatchData(_entities[0].MaterialId,0, _entities.Count)];
+        else 
+            _drawData.Batches = [];
+        
         _drawData.Entities = _entities;
         return _drawData;
     }

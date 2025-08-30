@@ -2,7 +2,7 @@ using ConcreteEngine.Core.Platform;
 
 namespace ConcreteEngine.Core.Systems;
 
-interface IInputSystem : IGameEngineSystem
+public interface IInputSystem : IGameEngineSystem
 {
     IEngineInputSource InputSource { get; }
 }

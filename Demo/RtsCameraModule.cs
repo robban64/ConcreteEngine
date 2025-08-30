@@ -1,11 +1,12 @@
 using System.Numerics;
+using ConcreteEngine.Core;
 using ConcreteEngine.Core.Platform;
 using ConcreteEngine.Core.Systems;
 using ConcreteEngine.Core.Transforms;
 using ConcreteEngine.Graphics.Data;
 using Silk.NET.Input;
 
-namespace ConcreteEngine.Core.Scene.Modules;
+namespace Demo;
 
 public class RtsCameraModule : GameModule
 {

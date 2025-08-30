@@ -45,6 +45,10 @@ public sealed class TilemapBehaviour : INodeBehaviour
 {
     public NodeBehaviorKind BehaviorKind => NodeBehaviorKind.Tilemap;
 
+    public MaterialId MaterialId { get; set; }
+    public int TileSize { get; set; } = 32;
+    public int MapSize { get; set; } = 64;
+    
     public bool ValidateChildNode(SceneNode child) => true;
 }
 

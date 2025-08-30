@@ -23,6 +23,7 @@ public sealed class SceneNode
     public bool Enabled { get; internal set; } = true;
     public bool Visible { get; internal set; } = true;
     public Transform2D LocalTransform { get; } = new();
+    public WorldTransform WorldTransform { get; } = new();
     
     public SceneNode? Parent
     {
@@ -82,6 +83,11 @@ public sealed class SceneNode
         Id = id;
         _behaviour = behaviour;
         Status = SceneNodeStatus.Alive;
+    }
+
+    internal void UpdateWorldTransform()
+    {
+        WorldTransform.UpdateWorldTransform(LocalTransform, _parent?.WorldTransform);
     }
     
     internal void Destroy()

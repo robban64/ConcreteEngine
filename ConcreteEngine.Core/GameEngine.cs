@@ -201,7 +201,7 @@ public sealed class GameEngine : IDisposable
         foreach (var (order, factory) in builder.Modules)
             _modules.AddModule(order, factory());
         
-        _modules.Load(new  GameModuleContext(sceneContext));
+        _modules.Load(new GameModuleContext(sceneContext));
 
         newScene.InitializeInternal();
 

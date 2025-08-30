@@ -55,7 +55,5 @@ public sealed class SpriteDrawEmitter : DrawCommandEmitter<SpriteFeatureDrawData
             submitter.SubmitDraw(in cmd, in meta);
 
         }
-
-       
     }
 }

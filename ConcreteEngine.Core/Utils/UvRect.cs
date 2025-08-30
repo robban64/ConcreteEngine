@@ -1,6 +1,7 @@
 #region
 
 using System.Numerics;
+using Silk.NET.Maths;
 
 #endregion
 
@@ -8,25 +9,19 @@ namespace ConcreteEngine.Core.Utils;
 
 public readonly record struct UvRect(float U0, float V0, float U1, float V1)
 {
-    public static UvRect GetInsetUv(int col, int row, int tileSize, Vector2 scale)
+    public static UvRect GetInsetUv(Rectangle<int> sourcePxRect, Vector2 invTexSize)
     {
-        var cols = (int)MathF.Round(1f / scale.X);
-        var rows = (int)MathF.Round(1f / scale.Y);
+        // UV space
+        var insetU = 0.5f * invTexSize.X;
+        var insetV = 0.5f * invTexSize.Y;
 
-        float texW = cols * tileSize;
-        float texH = rows * tileSize;
-
-        float du = scale.X;
-        float dv = scale.Y;
-
-        float insetU = 0.5f / texW; // half-texel
-        float insetV = 0.5f / texH;
-
-        float u0 = col * du + insetU;
-        float v0 = row * dv + insetV;
-        float u1 = (col + 1) * du - insetU;
-        float v1 = (row + 1) * dv - insetV;
+        // Pixel to UV
+        var u0 = sourcePxRect.Origin.X * invTexSize.X + insetU;
+        var v0 = sourcePxRect.Origin.Y * invTexSize.Y + insetV;
+        var u1 = (sourcePxRect.Origin.X + sourcePxRect.Size.X) * invTexSize.X - insetU;
+        var v1 = (sourcePxRect.Origin.Y + sourcePxRect.Size.Y) * invTexSize.Y - insetV;
 
         return new UvRect(u0, v0, u1, v1);
     }
+    
 }

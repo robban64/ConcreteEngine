@@ -22,18 +22,12 @@ public sealed class SpriteFeatureDrawData
     }
 }
 
-public struct SpriteDrawEntity
+public struct SpriteDrawEntity()
 {
     public Vector2 Position = Vector2.Zero;
     public Vector2 PreviousPosition = Vector2.Zero;
     public Vector2 Scale = Vector2.One;
-    public Vector2D<int> AtlasLocation = Vector2D<int>.Zero;
-    public Vector2 Direction = Vector2.Zero;
     public UvRect Uv = default;
-
-    public SpriteDrawEntity()
-    {
-    }
 }
 
 

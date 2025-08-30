@@ -9,44 +9,62 @@ public sealed class SceneNodes
     private readonly List<SceneNode> _pendingRemove = [];
     private readonly List<NodeMutation> _pendingMutations = [];
     private readonly HashSet<SceneNode> _removed = [];
-    
+
     private readonly SceneNodeCollector _collector = new();
-    
+
     private bool _isFirstFrame = true;
-    
+
     internal SceneNodes()
     {
     }
 
-    public SceneNode CreateEmptyNode(string name, SceneNode? parent = null) 
+    public bool TryGetNode(string name, out SceneNode node) => _hierarchy.TryGetNode(name, out node!);
+
+    public (SceneNode, TBehaviour) GetNodeWithBehaviour<TBehaviour>(string name) where TBehaviour : INodeBehaviour
+    {
+        if (!_hierarchy.TryGetNode(name, out var node))
+            throw new InvalidOperationException($"Node '{name}' does not exists.");
+        
+        if (node.Behaviour is not TBehaviour tBehaviour)
+        {
+            throw new InvalidOperationException(
+                $"Node '{name}' does not have behaviour {typeof(TBehaviour).Name} but instead {node.Behaviour.GetType().Name}.");
+        }
+        
+        return (node, tBehaviour);
+    }
+
+
+    public SceneNode CreateEmptyNode(string name, SceneNode? parent = null)
     {
         ArgumentNullException.ThrowIfNull(name);
-        
+
         var node = new SceneNode();
         var behaviour = NothingBehaviour.Instance;
         var create = new NodeCreate(node, name, behaviour, parent);
-        if(_isFirstFrame)
+        if (_isFirstFrame)
             ApplyCreate(create);
         else
             _pendingCreate.Add(create);
-        
+
         return node;
     }
-    
-    public SceneNode CreateNode<TBehaviour>(string name, SceneNode? parent = null, Action<TBehaviour>? initHandler = null) 
+
+    public SceneNode CreateNode<TBehaviour>(string name, SceneNode? parent = null,
+        Action<TBehaviour>? initHandler = null)
         where TBehaviour : class, INodeBehaviour, new()
     {
         ArgumentNullException.ThrowIfNull(name);
-        
+
         var node = new SceneNode();
         var behaviour = new TBehaviour();
         initHandler?.Invoke(behaviour);
         var create = new NodeCreate(node, name, behaviour, parent);
-        if(_isFirstFrame)
+        if (_isFirstFrame)
             ApplyCreate(create);
         else
             _pendingCreate.Add(create);
-        
+
         return node;
     }
 
@@ -55,7 +73,7 @@ public sealed class SceneNodes
         ArgumentNullException.ThrowIfNull(node);
         _pendingRemove.Add(node);
     }
-    
+
     public void SetVisible(SceneNode node, bool visible)
     {
         ArgumentNullException.ThrowIfNull(node);
@@ -83,7 +101,7 @@ public sealed class SceneNodes
     internal void ApplyPending()
     {
         _isFirstFrame = false;
-        
+
         // Create new nodes
         if (_pendingCreate.Count > 0)
         {
@@ -98,7 +116,7 @@ public sealed class SceneNodes
 
             _pendingCreate.Clear();
         }
-        
+
         // Apply action
         if (_pendingRemove.Count > 0)
         {
@@ -111,7 +129,7 @@ public sealed class SceneNodes
             }
 
             _pendingRemove.Clear();
-        }     
+        }
 
         // Apply mutations / changes stuff
         if (_pendingMutations.Count > 0)
@@ -126,7 +144,7 @@ public sealed class SceneNodes
 
             _pendingMutations.Clear();
         }
-        
+
         if (_removed.Count > 0)
             _removed.Clear();
     }
@@ -135,11 +153,10 @@ public sealed class SceneNodes
     {
         var newNode = create.Node;
         newNode.Initialize(create.Name, _nodeIdx++, create.Behaviour);
-        if(newNode.Parent == null)
+        if (newNode.Parent == null)
             _hierarchy.AddRoot(newNode);
         else
             _hierarchy.AddChild(newNode.Parent, newNode);
-        
     }
 
 
@@ -156,7 +173,7 @@ public sealed class SceneNodes
                 break;
         }
     }
-    
+
     private readonly record struct NodeCreate(SceneNode Node, string Name, INodeBehaviour Behaviour, SceneNode? Parent);
 
     private enum NodeMutationKind

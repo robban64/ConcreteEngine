@@ -6,6 +6,7 @@ using ConcreteEngine.Graphics.Data;
 using ConcreteEngine.Graphics.Definitions;
 using ConcreteEngine.Graphics.Primitives;
 using ConcreteEngine.Graphics.Resources;
+using Silk.NET.Maths;
 
 #endregion
 
@@ -91,7 +92,7 @@ internal sealed class TilemapChunkMesh : IDisposable
         var vertices = Vertices;
         var w = _tileSize;
 
-        var atlas = new SpriteAtlas(_tileSize, 320, 512);
+        var atlas = new SpriteAtlas(new Vector2D<int>(_tileSize, _tileSize), new Vector2D<int>(320, 512));
 
         for (int y = 0; y < _chunkDimension; y++)
         {

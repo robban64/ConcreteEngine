@@ -1,6 +1,6 @@
 using ConcreteEngine.Graphics.Data;
 
-namespace ConcreteEngine.Core.Scene.Modules;
+namespace ConcreteEngine.Core;
 
 public abstract class GameModule
 {
@@ -10,18 +10,10 @@ public abstract class GameModule
     protected GameModule(){}
     
     public abstract void Initialize();
-    public abstract void UpdateTick(int tick);
-    public abstract void Update(in FrameMetaInfo frameCtx);
-
-    public virtual void OnSceneLoad()
-    {
-        
-    }
-
-    public virtual void OnSceneUnload()
-    {
-        
-    }
+    public virtual void UpdateTick(int tick){}
+    public virtual void Update(in FrameMetaInfo frameCtx) {}
+    public virtual void OnSceneReady() { }
+    public virtual void OnSceneUnload() { }
 
     public virtual void Unload(){}
     

@@ -35,6 +35,7 @@ public sealed class GameFeatureContext
     public FeatureManager Features => _scene.Features;
     public ModuleManager Modules => _scene.Modules;
     public SceneNodes Nodes => _scene.Nodes;
+    
     public T GetSystem<T>() where T : IGameEngineSystem => _scene.GetSystem<T>();
 
 
@@ -50,6 +51,9 @@ public sealed class GameModuleContext
 
     public FeatureManager Features => _scene.Features;
     public ModuleManager Modules => _scene.Modules;
+    
+    public SceneNodes Nodes => _scene.Nodes;
+
     public T GetSystem<T>() where T : IGameEngineSystem => _scene.GetSystem<T>();
 
     internal GameModuleContext(GameSceneContext scene)

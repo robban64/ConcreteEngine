@@ -22,7 +22,6 @@ public class SpriteFeature : GameFeature, IDrawableFeature<SpriteFeatureDrawData
 
     public Shader SpriteShader { get; set; } = null!;
     public Texture2D SpriteTexture { get; set; } = null!;
-    public SpriteAtlas SpriteAtlas { get; set; } = null!;
 
     private readonly List<(int, int)> _batches = [];
     private readonly List<SpriteDrawEntity> _entities = [];
@@ -40,7 +39,6 @@ public class SpriteFeature : GameFeature, IDrawableFeature<SpriteFeatureDrawData
         
         SpriteShader = assets.Get<Shader>("SpriteShader");
         SpriteTexture = assets.Get<Texture2D>("SpriteTexture");
-        SpriteAtlas = new SpriteAtlas(64, SpriteTexture.Width, SpriteTexture.Height);
         
         renderer.SpriteBatch.CreateSpriteBatch(0, 64);
 
@@ -58,31 +56,16 @@ public class SpriteFeature : GameFeature, IDrawableFeature<SpriteFeatureDrawData
             var behaviour = (SpriteBehaviour)spriteNode.Behaviour;
             _entities.Add(new SpriteDrawEntity
             {
-                AtlasLocation = behaviour.TextureRect.Origin,
-                Direction = Vector2.Zero,
-                Position = new Vector2(100,100),
-                Scale = new Vector2(64,64),
-                Uv = SpriteAtlas.GetUvRect(0, 3)
+                Position = spriteNode.LocalTransform.Position,
+                PreviousPosition = behaviour.PreviousPosition,
+                Scale = spriteNode.LocalTransform.Scale,
+                Uv = behaviour.GetUvRect()
             });
-            
         }
     }
 
     public override void UpdateTick(int tick)
     {
-        const float speed = 2;
-
-        _animationCountdown--;
-        _dirCountdown--;
-        bool doAnimate = _animationCountdown == 0;
-        bool doRandomize = _dirCountdown == 0;
-        if (doAnimate)
-        {
-            if (++_currentFrame % 9 == 0) _currentFrame = 0;
-            _animationCountdown = 3;
-        }
-
-        UpdateEntities(doRandomize, speed);
     }
 
     public override void Update(in FrameMetaInfo frameCtx)
@@ -96,63 +79,7 @@ public class SpriteFeature : GameFeature, IDrawableFeature<SpriteFeatureDrawData
         return _drawData;
     }
 
-
-
-    private void UpdateEntities(bool doRandomize, float speed)
-    {
-        var spanEntities = CollectionsMarshal.AsSpan(_entities);
-
-        for (int i = 0; i < spanEntities.Length; i++)
-        {
-            ref var entity = ref spanEntities[i];
-            entity.PreviousPosition = entity.Position;
-            entity.Position.X += speed * entity.Direction.X;
-            entity.Position.Y += speed * entity.Direction.Y;
-            var d = (int)MathF.Ceiling((MathF.Abs(entity.Direction.X) + MathF.Abs(entity.Direction.Y)) / 2f);
-            entity.AtlasLocation.X = _currentFrame * d;
-            entity.Uv = SpriteAtlas.GetUvRect(entity.AtlasLocation.X, entity.AtlasLocation.Y);
-        }
-
-        if (doRandomize)
-        {
-            for (int i = 0; i < spanEntities.Length; i++)
-            {
-                ref var e = ref spanEntities[i];
-                e.Direction.X = 0;
-                e.Direction.Y = 0;
-
-                var r = Random.Shared.Next(0, 5);
-                if (r == 0 && e.Position.X < 10) r = 1;
-                else if (r == 1 && e.Position.X >= 2048) r = 0;
-                else if (r == 2 && e.Position.Y >= 2048) r = 3;
-                else if (r == 3 && e.Position.Y < 10) r = 2;
-
-                switch (r)
-                {
-                    case 0:
-                        e.Direction.X = -1;
-                        e.AtlasLocation.Y = 1;
-                        break;
-                    case 1:
-                        e.Direction.X = 1;
-                        e.AtlasLocation.Y = 3;
-                        break;
-                    case 2:
-                        e.Direction.Y = 1;
-                        e.AtlasLocation.Y = 2;
-                        break;
-                    case 3:
-                        e.Direction.Y = -1;
-                        e.AtlasLocation.Y = 0;
-                        break;
-                }
-            }
-
-            _dirCountdown = 20;
-        }
-    }
-
-    private void CreateBatch(SpriteDrawEntity[] batch, int start, Vector2 offsetPosition)
+/*    private void CreateBatch(SpriteDrawEntity[] batch, int start, Vector2 offsetPosition)
     {
         int i = 0;
         for (int x = 0; x < 30; x++)
@@ -171,4 +98,5 @@ public class SpriteFeature : GameFeature, IDrawableFeature<SpriteFeatureDrawData
             }
         }
     }
+    */
 }

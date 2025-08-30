@@ -53,14 +53,14 @@ public sealed class DemoScene : GameScene
         var sprite1 = SceneNodes.CreateNode<SpriteBehaviour>("node1", null, behaviour =>
         {
             behaviour.MaterialId = spriteMaterial.Id;
-            behaviour.TextureRect = new Rectangle<int>(0, 0, 64, 64);
+            behaviour.SourceRectangle = new Rectangle<int>(0, 0, 64, 64);
             behaviour.Batched = true;
         });
         
         var sprite2 = SceneNodes.CreateNode<SpriteBehaviour>("node2", null, behaviour =>
         {
             behaviour.MaterialId = spriteMaterial.Id;
-            behaviour.TextureRect = new Rectangle<int>(0, 0, 64, 64);
+            behaviour.SourceRectangle = new Rectangle<int>(0, 0, 64, 64);
             behaviour.Batched = true;
         });
 
@@ -83,6 +83,8 @@ public sealed class DemoScene : GameScene
     protected override void ConfigureModules(IGameSceneModuleBuilder builder)
     {
         builder.RegisterModule<RtsCameraModule>(0);
+        builder.RegisterModule<NpcSpriteModule>(1);
+
     }
 
     protected override void ConfigureRenderer(IGameSceneRenderBuilder builder, IGraphicsDevice graphics)

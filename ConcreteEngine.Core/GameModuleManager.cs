@@ -1,7 +1,6 @@
-using ConcreteEngine.Core.Scene.Modules;
 using ConcreteEngine.Graphics.Data;
 
-namespace ConcreteEngine.Core.Scene;
+namespace ConcreteEngine.Core;
 
 public interface IModuleManager
 {
@@ -11,6 +10,8 @@ public interface IModuleManager
 public sealed class ModuleManager : IModuleManager
 {
     private readonly SortedList<int, GameModule> _modules = new(8);
+    
+    public ICollection<GameModule> Modules => _modules.Values;
     
     public void AddModule<T>(int order, T module) where T : GameModule
     {
@@ -60,6 +61,7 @@ public sealed class ModuleManager : IModuleManager
         }
 
     }
+
 
     internal void Unload()
     {

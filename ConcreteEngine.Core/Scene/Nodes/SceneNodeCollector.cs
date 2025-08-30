@@ -38,9 +38,8 @@ public sealed class SceneNodeCollector : ISceneNodeCollector
         {
             var node = _traverseQueue.Dequeue();
             if(!node.Enabled) continue;
-
-            var parentTransform = node.Parent is null ? Transform2D.Identity : node.Parent.LocalTransform;
-            var transform = parentTransform.TransformMatrix * node.LocalTransform.TransformMatrix;
+            
+            node.UpdateWorldTransform();
             
             ProcessNode(node);
             

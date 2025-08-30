@@ -11,9 +11,15 @@ namespace ConcreteEngine.Core.Assets;
 
 internal sealed class AssetManifest
 {
-    public required List<AssetShaderRecord> Shaders { get; init; } = [];
-    public required List<AssetTextureRecord> Textures { get; init; } = [];
-    public required List<AssetMaterialTemplate> Materials { get; init; } = [];
+    public required AssetResourceManifestDesc ResourceManifest { get; init; }
+
+    public record AssetResourceManifestDesc(string Material, string Shader, string Texture);
+}
+
+internal sealed class AssetResourceManifest<T> where T : IAssetManifestRecord
+{
+    public string? Folder { get; init; }
+    public List<T> Resources { get; init; }
 }
 
 internal interface IAssetManifestRecord
@@ -21,12 +27,16 @@ internal interface IAssetManifestRecord
     string Name { get; }
 }
 
-internal sealed record AssetShaderRecord(string Name, string VertShaderPath, string FragShaderPath, string[]? Samplers)
+internal sealed record AssetShaderRecord(
+    string Name,
+    string VertexFilename,
+    string FragmentFilename,
+    string[]? Samplers)
     : IAssetManifestRecord;
 
 internal sealed record AssetTextureRecord(
     string Name,
-    string Path,
+    string Filename,
     TexturePreset Preset,
     EnginePixelFormat PixelFormat = EnginePixelFormat.Rgba,
     float LodBias = -0.25f)

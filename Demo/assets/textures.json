@@ -1,0 +1,15 @@
+{
+  "folder": "./textures",
+  "resources": [
+    {
+      "name": "SpriteTexture",
+      "filename": "sprite.png"
+    },
+    {
+      "name": "TilemapTextureAtlas",
+      "filename": "terrain_tiles.png",
+      "preset": "NearestClamp",
+      "lodBias": -0.25
+    }
+  ]
+}

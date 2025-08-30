@@ -1,0 +1,28 @@
+{
+  "folder": "./shaders",
+  "resources": [
+    {
+      "name": "SpriteShader",
+      "vertexFilename": "sprite.vert.glsl",
+      "fragmentFilename": "sprite.frag.glsl",
+      "samplers": ["uTexture"]
+    },
+    {
+      "name": "ScreenShader",
+      "vertexFilename": "screen.vert.glsl",
+      "fragmentFilename": "screen.frag.glsl",
+      "samplers": ["uTexture"]
+    },
+    {
+      "name": "LightPassShader",
+      "vertexFilename": "screen.vert.glsl",
+      "fragmentFilename": "light-pass.frag.glsl"
+    },
+    {
+      "name": "LightComposite",
+      "vertexFilename": "screen.vert.glsl",
+      "fragmentFilename": "light-composite.frag.glsl",
+      "samplers": ["uSceneTex", "uLightTex"]
+    }
+  ]
+}

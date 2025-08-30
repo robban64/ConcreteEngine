@@ -15,6 +15,8 @@ internal sealed class AssetLoader
     private readonly string _rootPath;
     private readonly IGraphicsDevice _graphics;
 
+    private readonly Dictionary<string, string> _vertexShaderCache = new();
+    
     public AssetLoader(IGraphicsDevice graphics, string rootPath)
     {
         _graphics = graphics;
@@ -22,13 +24,22 @@ internal sealed class AssetLoader
         //StbImage.stbi_set_flip_vertically_on_load(1);
     }
 
-    private string GetPath(string assetTypePath, string fileName) =>
-        Path.Combine(_rootPath, assetTypePath, fileName);
+    public void ClearCache()
+    {
+        _vertexShaderCache.Clear();
+    }
+
+    private string GetFilePath(string assetTypePath, string fileName)
+    {
+        var path = Path.Combine(Directory.GetCurrentDirectory(), _rootPath, assetTypePath, fileName);
+        if(!File.Exists(path)) throw new FileNotFoundException($"Asset Resource Path not found", path);
+        return path;
+    }
 
 
     public Texture2D LoadTexture2D(AssetTextureRecord record)
     {
-        using var stream = File.OpenRead(GetPath("textures", record.Path));
+        using var stream = File.OpenRead(GetFilePath("textures", record.Filename));
         var result = ImageResult.FromStream(stream, ColorComponents.RedGreenBlueAlpha);
 
         var textureData = new TextureDesc
@@ -46,7 +57,7 @@ internal sealed class AssetLoader
         return new Texture2D
         {
             Name = record.Name,
-            Path = record.Path,
+            Path = record.Filename,
             ResourceId = resourceId,
             Width = textureData.Width,
             Height = textureData.Height,
@@ -55,10 +66,16 @@ internal sealed class AssetLoader
         };
     }
 
+    
     public Shader LoadShader(AssetShaderRecord record)
     {
-        var vertexSource = File.ReadAllText(GetPath("shaders", record.VertShaderPath));
-        var fragmentSource = File.ReadAllText(GetPath("shaders", record.FragShaderPath));
+        if (!_vertexShaderCache.TryGetValue(record.VertexFilename, out var vertexSource))
+        {
+            var path = GetFilePath("shaders", record.VertexFilename);
+            _vertexShaderCache[record.VertexFilename] = vertexSource = File.ReadAllText(path);
+        }
+        
+        var fragmentSource = File.ReadAllText(GetFilePath("shaders", record.FragmentFilename));
 
         var resourceId = _graphics.CreateShader(vertexSource, fragmentSource, record.Samplers ?? []);
         var uniforms = _graphics.GetShaderUniforms(resourceId);
@@ -66,8 +83,8 @@ internal sealed class AssetLoader
         return new Shader
         {
             Name = record.Name,
-            VertShaderFilename = record.VertShaderPath,
-            FragShaderFilename = record.FragShaderPath,
+            VertShaderFilename = record.VertexFilename,
+            FragShaderFilename = record.FragmentFilename,
             ResourceId = resourceId,
             Samplers = record.Samplers?.Length ?? 0,
             UniformTable = uniforms

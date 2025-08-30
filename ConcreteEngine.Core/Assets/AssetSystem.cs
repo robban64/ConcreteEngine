@@ -17,7 +17,8 @@ public interface IAssetSystem : IGameEngineSystem
     T Get<T>(string name) where T : class, IAssetFile;
     List<T> GetAll<T>() where T : class, IAssetFile;
 }
-public sealed class AssetSystem :IAssetSystem
+
+public sealed class AssetSystem : IAssetSystem
 {
     private readonly Dictionary<string, IAssetFile> _store = new(64);
     private readonly IGraphicsDevice _graphics;
@@ -29,14 +30,32 @@ public sealed class AssetSystem :IAssetSystem
 
     public MaterialStore MaterialStore => _materialStore;
 
-    public AssetSystem(IGraphicsDevice graphics,
+    private readonly JsonSerializerOptions _jsonOptions;
+
+    internal AssetSystem(IGraphicsDevice graphics,
         string assetPath = "assets",
         string manifestFilename = "manifest.json")
     {
         _graphics = graphics;
         _assetPath = assetPath;
         _manifestFilename = manifestFilename;
+
+        _jsonOptions = new JsonSerializerOptions
+        {
+            PropertyNamingPolicy = JsonNamingPolicy.CamelCase,
+            WriteIndented = true,
+            Converters =
+            {
+                new JsonStringEnumConverter(JsonNamingPolicy.CamelCase),
+                new Vector2Converter(),
+                new Vector3Converter(),
+                new Vector4Converter(),
+                new MaterialValueConverter()
+            }
+        };
     }
+
+    private string BasePath => Path.Combine(Directory.GetCurrentDirectory(), _assetPath);
 
     public bool TryGet<T>(string name, out T resource) where T : class, IAssetFile
     {
@@ -92,54 +111,30 @@ public sealed class AssetSystem :IAssetSystem
             throw new DirectoryNotFoundException($"Asset manifest '{_assetPath}' directory not found.");
         }
 
-        var manifestPath = Path.Combine(_assetPath, _manifestFilename);
+        var manifestPath = Path.Combine(BasePath, _manifestFilename);
         if (!File.Exists(manifestPath))
-        {
             throw new FileNotFoundException($"Manifest '{manifestPath}' not found.");
-        }
 
-        Console.WriteLine("Loading asset manifest...");
+        Console.WriteLine("Loading Asset Manifest...");
+        
         var json = File.ReadAllText(manifestPath);
-        var jsonOptions = new JsonSerializerOptions
-        {
-            PropertyNamingPolicy = JsonNamingPolicy.CamelCase,
-            WriteIndented = true,
-            Converters =
-            {
-                new JsonStringEnumConverter(JsonNamingPolicy.CamelCase), new Vector2Converter(), new Vector3Converter(),
-                new Vector4Converter(),
-                new MaterialValueConverter()
-            }
-        };
-
-        var assetEntries = JsonSerializer.Deserialize<AssetManifest>(json, jsonOptions) ??
-                           throw new InvalidDataException("Invalid manifest.");
-
-        Console.WriteLine("Asset manifest loaded. " + _store.Count);
-
+        var assetManifest = JsonSerializer.Deserialize<AssetManifest>(json, _jsonOptions) ??
+                            throw new InvalidDataException("Invalid manifest.");
+        
+        var resourceManifest = assetManifest.ResourceManifest;
         var loader = new AssetLoader(_graphics, _assetPath);
 
         // Texture2D
-        LoadEntries(assetEntries.Textures, loader.LoadTexture2D);
+        LoadEntries<AssetTextureRecord, Texture2D>(resourceManifest.Texture, loader.LoadTexture2D);
 
         // Shader
-        LoadEntries(assetEntries.Shaders, loader.LoadShader);
+        LoadEntries<AssetShaderRecord, Shader>(resourceManifest.Shader, loader.LoadShader);
 
         // Material
-        LoadMaterialStore(assetEntries, loader);
+        LoadMaterialStore(resourceManifest.Material, loader);
+        
+        loader.ClearCache();
     }
-
-    private void LoadMaterialStore(AssetManifest assetEntries, AssetLoader loader)
-    {
-        var templates = LoadEntriesWithReturn(assetEntries.Materials, MaterialHandler);
-
-        _materialStore = new MaterialStore(templates);
-        return;
-
-        MaterialTemplate MaterialHandler(AssetMaterialTemplate template) =>
-            loader.LoadMaterialTemplate(template, Get<Shader>, Get<Texture2D>);
-    }
-
 
     /*
     public void Remove<T>(T assetFile) where T : class, IAssetFile
@@ -154,31 +149,44 @@ public sealed class AssetSystem :IAssetSystem
     }
     */
 
-    private void LoadEntries<T, R>(List<T> entries, Func<T, R> loader)
-        where T : IAssetManifestRecord where R : class, IAssetFile
+    private void LoadEntries<TRecord, TResult>(string manifestFilename, Func<TRecord, TResult> loader,
+        Action<TResult>? onAdd = null)
+        where TRecord : IAssetManifestRecord where TResult : class, IAssetFile
     {
-        Console.WriteLine($"Loading Store - ({typeof(T).Name})");
+        var path = Path.Combine(BasePath, manifestFilename);
+        if (!File.Exists(path))
+            throw new FileNotFoundException(
+                $"Resource manifest {typeof(TRecord).Name} with path {path} does not exists.");
 
-        foreach (var entry in entries)
+        var json = File.ReadAllText(path);
+        var manifest = JsonSerializer.Deserialize<AssetResourceManifest<TRecord>>(json, _jsonOptions) ??
+                       throw new InvalidDataException($"Invalid resource manifest for {typeof(TRecord).Name}.");
+
+        if (manifest.Resources == null)
+            throw new InvalidDataException($"{typeof(TRecord).Name} manifest have null resources.");
+
+        Console.WriteLine($"Loading Assets - ({typeof(TRecord).Name})");
+
+        foreach (var entry in manifest.Resources)
         {
             var asset = loader(entry);
             _store.TryAdd(asset.Name, asset);
+            onAdd?.Invoke(asset);
         }
     }
 
-    private List<R> LoadEntriesWithReturn<T, R>(List<T> entries, Func<T, R> loader)
-        where T : IAssetManifestRecord where R : class, IAssetFile
+    private void LoadMaterialStore(string manifestFilename, AssetLoader loader)
     {
-        Console.WriteLine($"Loading Store - ({typeof(T).Name})");
+        var result = new List<MaterialTemplate>();
+        LoadEntries<AssetMaterialTemplate, MaterialTemplate>(
+            manifestFilename,
+            MaterialHandler,
+            (mat) => result.Add(mat));
 
-        var result = new List<R>();
-        foreach (var entry in entries)
-        {
-            var asset = loader(entry);
-            _store.TryAdd(asset.Name, asset);
-            result.Add(asset);
-        }
+        _materialStore = new MaterialStore(result);
+        return;
 
-        return result;
+        MaterialTemplate MaterialHandler(AssetMaterialTemplate template) =>
+            loader.LoadMaterialTemplate(template, Get<Shader>, Get<Texture2D>);
     }
 }

@@ -1,0 +1,27 @@
+{
+  "resources": [
+    {
+      "name": "SpriteMaterial",
+      "shader": "SpriteShader",
+      "textures": ["SpriteTexture"]
+    },
+    {
+      "name": "TilemapMaterial",
+      "shader": "SpriteShader",
+      "textures": ["TilemapTextureAtlas"]
+    },
+    {
+      "name": "LightMaterial",
+      "shader": "LightPassShader",
+      "textures": [],
+      "defaults": {
+        "Color": {"value": [255, 255, 255], "kind": "Vec3"},
+        "LightPos": {"value": [255, 255], "kind": "Vec2"},
+        "Radius": 80.0,
+        "Intensity": 1.8,
+        "Softness": 2.5,
+        "Shape": 0
+      }
+    }
+  ]
+}

@@ -41,9 +41,9 @@ public sealed class DemoScene : GameScene
         }
 
         int currSpriteId = 2;
-        for (int x = 0; x < 2; x++)
+        for (int x = 0; x < 22; x++)
         {
-            for (int y = 0; y < 2; y++)
+            for (int y = 0; y < 22; y++)
             {
                 var spriteId = World.Create();
                 World.Transforms2D.Add(spriteId, 
@@ -55,10 +55,10 @@ public sealed class DemoScene : GameScene
             }
         }
 
-        int offset = 64 * 4;
-        for (int x = 0; x < 2; x++)
+        int offset = 32;
+        for (int x = 0; x < 22; x++)
         {
-            for (int y = 0; y < 2; y++)
+            for (int y = 0; y < 22; y++)
             {
                 var spriteId = World.Create();
                 World.Transforms2D.Add(spriteId, 

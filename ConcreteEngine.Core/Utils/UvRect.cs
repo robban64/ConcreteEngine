@@ -1,6 +1,7 @@
 #region
 
 using System.Numerics;
+using System.Runtime.CompilerServices;
 using Silk.NET.Maths;
 
 #endregion
@@ -9,6 +10,7 @@ namespace ConcreteEngine.Core.Utils;
 
 public readonly record struct UvRect(float U0, float V0, float U1, float V1)
 {
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static UvRect GetInsetUv(Rectangle<int> sourcePxRect, Vector2 invTexSize)
     {
         // UV space

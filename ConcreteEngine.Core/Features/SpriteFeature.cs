@@ -1,12 +1,17 @@
 #region
 
+using System.Numerics;
+using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
 using ConcreteEngine.Core.Rendering;
 using ConcreteEngine.Core.Resources;
 using ConcreteEngine.Core.Scene;
 using ConcreteEngine.Core.Scene.Nodes;
+using ConcreteEngine.Core.Systems;
+using ConcreteEngine.Core.Transforms;
 using ConcreteEngine.Core.Utils;
 using ConcreteEngine.Graphics.Data;
+using Silk.NET.Maths;
 
 #endregion
 
@@ -17,17 +22,9 @@ public sealed class SpriteFeatureDrawData
     public int Count { get; set; }
     public SpriteDrawEntity[] Entities { get; set; } = null!;
     public List<(MaterialId, int)> Batches { get; set; } = [];
-
-    /*
-    public ReadOnlySpan<SpriteDrawEntity> GetBatch(int batch)
-    {
-        var batchData  = Batches[batch];
-        var entities = Entities.AsSpan(batchData.Start, batchData.End);
-        return entities;
-    }*/
 }
 
-
+//TODO QuadTree
 public class SpriteFeature : GameFeature, IDrawableFeature<SpriteFeatureDrawData>
 {
     public override bool IsUpdateable => true;
@@ -40,12 +37,12 @@ public class SpriteFeature : GameFeature, IDrawableFeature<SpriteFeatureDrawData
 
     private readonly SpriteFeatureDrawData _drawData = new();
 
-    private int _animationCountdown = 3;
-    private int _dirCountdown = 20;
-    private int _currentFrame = 0;
+    
+    private ICameraSystem  _cameraSystem;
 
     public override void Initialize()
     {
+        _cameraSystem = Context.GetSystem<ICameraSystem>();
     }
     
     public override void UpdateTick(int tick)
@@ -61,12 +58,14 @@ public class SpriteFeature : GameFeature, IDrawableFeature<SpriteFeatureDrawData
             Array.Resize(ref _entities, spriteRegistry.Count);
         }
 
+        var camera = _cameraSystem.Camera.Transform;
         var transforms = Context.World.Transforms2D;
         
-        foreach (var entry in spriteRegistry.GetEnumerator())
+        foreach (var entry in spriteRegistry)
         {
             ref var sprite = ref entry.Value;
             ref var transform = ref transforms.Get(entry.Entity);
+            
             _entities[_entityIdx++] = new SpriteDrawEntity
             {
                 Position = transform.Position,
@@ -96,29 +95,6 @@ public class SpriteFeature : GameFeature, IDrawableFeature<SpriteFeatureDrawData
         _batches.Add((curMaterialId, _entityIdx));
         
         
-/*
-        int prevMaterialId = -1;
-        foreach (var entry in spriteRegistry.GetEnumerator())
-        {
-            ref var sprite = ref entry.Value;
-            ref var transform = ref transforms.Get(entry.Entity);
-            if (prevMaterialId == -1 || prevMaterialId == sprite.MaterialId.Id)
-            {
-                if(!_batches.TryGetValue(sprite.MaterialId, out var batch))
-                    _batches[sprite.MaterialId] = batch = (_entityIdx, _entityIdx);
-
-                _batches[sprite.MaterialId] = (batch.Item1, _entityIdx + 1);
-            }
-            prevMaterialId =  sprite.MaterialId.Id;
-            _entities[_entityIdx++] = new SpriteDrawEntity
-            {
-                Position = transform.Position,
-                PreviousPosition = sprite.PreviousPosition,
-                Scale = transform.Scale,
-                Uv = UvRect.GetInsetUv(sprite.SourceRectangle, sprite.UvScale),
-                MaterialId = sprite.MaterialId,
-            };
-        }*/
     }
 
     public SpriteFeatureDrawData GetDrawables()
@@ -135,4 +111,5 @@ public class SpriteFeature : GameFeature, IDrawableFeature<SpriteFeatureDrawData
             
         return _drawData;
     }
+    
 }

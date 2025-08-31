@@ -15,13 +15,13 @@ public class DayNightModule : GameModule
     private IRenderSystem _renderer = null!;
 
     private readonly Color4 _dayColor   = Color4.FromRgba(200, 200, 255);
-    private readonly Color4 _nightColor = Color4.FromRgba(80, 80, 140);
+    private readonly Color4 _nightColor = Color4.FromRgba(50, 50, 100);
     
     private Color4 _ambientColor = Color4.FromRgba(125, 125, 150);
     private Color4 _targetColor;
 
     private bool _towardsDay = true;
-    private const float LerpSpeed = 0.05f;
+    private const float LerpSpeed = 0.02f;
 
     private List<float> _originalIntensity = [];
 

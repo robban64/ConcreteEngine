@@ -52,8 +52,8 @@ public sealed class SpriteDrawProducer : DrawCommandProducer<SpriteFeatureDrawDa
 
     public override void OnInitialize( CommandProducerContext ctx)
     {
-        ctx.SpriteBatch.CreateSpriteBatch(0,64);
-        ctx.SpriteBatch.CreateSpriteBatch(1,64);
+        ctx.SpriteBatch.CreateSpriteBatch(0,1024);
+        ctx.SpriteBatch.CreateSpriteBatch(1,1024);
 
     }
 

@@ -1,7 +1,7 @@
 #region
 
 using System.Runtime.InteropServices;
-using ConcreteEngine.Core.Features.Effects;
+using ConcreteEngine.Core.Features;
 using ConcreteEngine.Core.Rendering.Pipeline;
 
 #endregion
@@ -16,7 +16,7 @@ public sealed class LightEmitter : DrawCommandEmitter<LightFeatureDrawData>
         var lights = CollectionsMarshal.AsSpan(data.Entities);
         foreach (ref var light in lights)
         {
-            var cmd = LightEntity.ToCmd(light);
+            var cmd = new DrawCommandLight(light.Position, light.Color, light.Radius, light.Intensity);
             var meta = new DrawCommandMeta(DrawCommandId.Effect, DrawCommandTag.LightRenderer,
                 RenderTargetId.SceneLight, 0);
 

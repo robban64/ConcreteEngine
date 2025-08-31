@@ -94,16 +94,14 @@ public sealed class ViewTransform2D
         if (!_dirty) return;
         _dirty = false;
 
-        var camPos = _position;
-
         if (PixelSnap && _zoom > 0f)
         {
             float step = 1f / _zoom; // world units per screen pixel at current zoom
-            camPos.X = MathF.Round(camPos.X / step) * step;
-            camPos.Y = MathF.Round(camPos.Y / step) * step;
+            _position.X = MathF.Round(_position.X / step) * step;
+            _position.Y = MathF.Round(_position.Y / step) * step;
         }
 
-        var translate = Matrix4x4.CreateTranslation(new Vector3(-camPos, 0f));
+        var translate = Matrix4x4.CreateTranslation(new Vector3(-_position, 0f));
         var rotate = _rotation != 0f ? Matrix4x4.CreateRotationZ(-_rotation) : Matrix4x4.Identity;
         _viewMat = rotate * translate;
 
@@ -127,6 +125,23 @@ public sealed class ViewTransform2D
              );
            */
     }
+    
+    public bool IsAabbInView(Vector2 worldCenter, Vector2 halfExtents)
+    {
+        // world -> view
+        var v = Vector4.Transform(new Vector4(worldCenter, 0f, 1f), _viewMat);
+        var viewCenter = new Vector2(v.X, v.Y);
+
+        var wv = MathF.Max(_viewportSize.X, 1) * (1f / _zoom); // camera width in view space
+        var hv = MathF.Max(_viewportSize.Y, 1) * (1f / _zoom); // camera height in view space
+
+        return !( (viewCenter.X + halfExtents.X) < 0f   ||
+                  (viewCenter.X - halfExtents.X) > wv   ||
+                  (viewCenter.Y + halfExtents.Y) < 0f   ||
+                  (viewCenter.Y - halfExtents.Y) > hv );
+    }
+
+
 
     internal void CopyFrom(ViewTransform2D from)
     {

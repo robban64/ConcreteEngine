@@ -1,13 +1,20 @@
 #region
 
-using ConcreteEngine.Core.Assets;
 using ConcreteEngine.Core.Resources;
 using ConcreteEngine.Core.Scene.Nodes;
 using ConcreteEngine.Graphics.Data;
 
 #endregion
 
-namespace ConcreteEngine.Core.Features.Terrain;
+namespace ConcreteEngine.Core.Features;
+
+public sealed class TilemapDrawData
+{
+    public MaterialId MaterialId { get; set; }
+    public int MapDimension { get; set; } = 64;
+    public int TileSize { get; set; } = 32;
+    public int Count { get; set; } = 0;
+}
 
 public class TilemapFeature : GameFeature, IDrawableFeature<TilemapDrawData>
 {
@@ -21,23 +28,18 @@ public class TilemapFeature : GameFeature, IDrawableFeature<TilemapDrawData>
     {
     }
 
-    public override void CollectFrame(ISceneNodeCollector collector)
+    public override void UpdateTick(int tick)
     {
-        var tilemaps = collector.GetSceneNodes<TilemapBehaviour>();
+        var tilemaps = Context.World.Tilemaps;
         _drawData.Count = tilemaps.Count;
         if (tilemaps.Count > 0)
         {
-            var node = tilemaps[0];
-            var behaviour = (TilemapBehaviour)node.Behaviour;
+            ref var node = ref tilemaps.ByIndex(0);
 
-            _drawData.MapDimension = behaviour.MapSize;
-            _drawData.TileSize = behaviour.TileSize;
-            _drawData.MaterialId = behaviour.MaterialId;
+            _drawData.MapDimension = node.MapSize;
+            _drawData.TileSize = node.TileSize;
+            _drawData.MaterialId = node.MaterialId;
         }
-    }
-
-    public override void UpdateTick(int tick)
-    {
     }
 
     public override void Update(in FrameMetaInfo frameCtx)

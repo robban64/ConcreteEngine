@@ -2,21 +2,35 @@
 
 using System.Numerics;
 using System.Runtime.InteropServices;
-using ConcreteEngine.Core.Features.Sprite;
-using ConcreteEngine.Core.Rendering.Batchers.Sprite;
+using ConcreteEngine.Core.Features;
+using ConcreteEngine.Core.Rendering.Batchers;
 using ConcreteEngine.Core.Rendering.Pipeline;
 using ConcreteEngine.Core.Resources;
 using ConcreteEngine.Core.Transforms;
+using ConcreteEngine.Core.Utils;
 
 #endregion
 
 namespace ConcreteEngine.Core.Rendering.Emitters;
 
+public readonly record struct SpriteDrawBatch(MaterialId MaterialId, int Start, int End, byte Layer = 0);
+
+public struct SpriteDrawEntity()
+{
+    public Vector2 Position = Vector2.Zero;
+    public Vector2 PreviousPosition = Vector2.Zero;
+    public Vector2 Scale = Vector2.One;
+    public UvRect Uv = default;
+    public MaterialId MaterialId = default;
+}
+
 public sealed class SpriteDrawEmitter : DrawCommandEmitter<SpriteFeatureDrawData>
 {
     private static readonly Matrix4x4 DefaultTransform =
-        Transform2D.CreateTransformMatrix(Vector2.Zero, Vector2.One, 0);
-
+        ModelTransform2D.CreateTransformMatrix(Vector2.Zero, Vector2.One, 0);
+    
+    public byte Layer { get; set; } = 1;
+    
     protected override void EmitBatch(SpriteFeatureDrawData data, in DrawEmitterContext ctx,
         DrawCommandSubmitter submitter, int order)
     {
@@ -38,13 +52,13 @@ public sealed class SpriteDrawEmitter : DrawCommandEmitter<SpriteFeatureDrawData
                 var pos = entity.Position;
                 if (entity.PreviousPosition != default)
                     pos = Vector2.Lerp(entity.PreviousPosition, entity.Position, alpha);
-                var item = new SpriteDrawData(pos, entity.Scale, entity.Uv);
+                var item = new SpriteBatchDrawItem(pos, entity.Scale, entity.Uv);
                 spriteBatch.SubmitSprite(item);
             }
 
             var result = spriteBatch.BuildBatch();
             var meta = new DrawCommandMeta(DrawCommandId.Sprite, DrawCommandTag.SpriteRenderer,
-                RenderTargetId.Scene, layer);
+                RenderTargetId.Scene, Layer);
 
             var cmd = new DrawCommandMesh(
                 meshId: result.MeshId,

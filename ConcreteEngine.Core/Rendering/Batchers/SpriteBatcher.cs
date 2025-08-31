@@ -5,7 +5,10 @@ using ConcreteEngine.Graphics.Error;
 
 #endregion
 
-namespace ConcreteEngine.Core.Rendering.Batchers.Sprite;
+namespace ConcreteEngine.Core.Rendering.Batchers;
+
+
+
 
 public sealed class SpriteBatcher : RenderBatcher<SpriteBatchBuildResult>
 {
@@ -13,7 +16,7 @@ public sealed class SpriteBatcher : RenderBatcher<SpriteBatchBuildResult>
     private readonly IGraphicsContext _gfx;
 
     private int _commandSize = 0;
-    private readonly SpriteDrawData[] _commandBuffer;
+    private readonly SpriteBatchDrawItem[] _commandBuffer;
 
     private SpriteBatchMesh? _boundSpriteBatch;
     private readonly SortedList<int, SpriteBatchMesh> _spriteBatches;
@@ -23,7 +26,7 @@ public sealed class SpriteBatcher : RenderBatcher<SpriteBatchBuildResult>
         _graphics = graphics;
         _gfx = graphics.Gfx;
 
-        _commandBuffer = new SpriteDrawData[_graphics.Configuration.MaxSpriteBatchSize];
+        _commandBuffer = new SpriteBatchDrawItem[_graphics.Configuration.MaxSpriteBatchSize];
         _spriteBatches = new(_graphics.Configuration.MaxSpriteBatchInstanceCount);
     }
 
@@ -61,7 +64,7 @@ public sealed class SpriteBatcher : RenderBatcher<SpriteBatchBuildResult>
         _spriteBatches.Remove(id);
     }
 
-    public void SubmitSprite(in SpriteDrawData cmd)
+    public void SubmitSprite(in SpriteBatchDrawItem cmd)
     {
         _commandBuffer[_commandSize] = cmd;
         _commandSize++;

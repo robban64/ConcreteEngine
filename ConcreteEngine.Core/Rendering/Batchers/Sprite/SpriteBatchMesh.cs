@@ -9,13 +9,8 @@ using static ConcreteEngine.Core.Rendering.RenderConsts;
 
 #endregion
 
-namespace ConcreteEngine.Core.Rendering.Batchers.Sprite;
+namespace ConcreteEngine.Core.Rendering.Batchers;
 
-public readonly struct SpriteBatchBuildResult(MeshId meshId, uint drawCount)
-{
-    public readonly MeshId MeshId = meshId;
-    public readonly uint DrawCount = drawCount;
-}
 
 internal sealed class SpriteBatchMesh : IDisposable
 {
@@ -97,7 +92,7 @@ internal sealed class SpriteBatchMesh : IDisposable
         _gfx.SetIndexBuffer<ushort>(indices);
     }
 
-    public SpriteBatchBuildResult BuildSpriteBatch(ReadOnlySpan<SpriteDrawData> commands)
+    public SpriteBatchBuildResult BuildSpriteBatch(ReadOnlySpan<SpriteBatchDrawItem> commands)
     {
         int spriteCount = commands.Length;
         if (spriteCount == 0)

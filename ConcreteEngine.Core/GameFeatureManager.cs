@@ -27,13 +27,6 @@ public sealed class FeatureManager : IGameFeatureManager
         throw new InvalidOperationException($"Feature {typeof(T).Name} is not registered.");
     }
 
-    internal void Collect(ISceneNodeCollector collector)
-    {
-        foreach (var feature in _features.Values)
-        {
-            feature.CollectFrame(collector);
-        }
-    }
 
     internal void Update(in FrameMetaInfo frameInfo)
     {

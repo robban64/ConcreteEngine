@@ -10,7 +10,7 @@ using Silk.NET.Maths;
 
 #endregion
 
-namespace ConcreteEngine.Core.Rendering.Batchers.Tilemap;
+namespace ConcreteEngine.Core.Rendering.Batchers;
 
 internal sealed class TilemapChunkMesh : IDisposable
 {
@@ -35,7 +35,7 @@ internal sealed class TilemapChunkMesh : IDisposable
     private readonly VertexBufferId _vertexBufferId;
     private readonly IndexBufferId _indexBufferId;
 
-    private readonly TileData[] _tileData;
+    private readonly TileDrawItem[] _tileData;
 
     private bool _disposed = false;
 
@@ -47,7 +47,7 @@ internal sealed class TilemapChunkMesh : IDisposable
         _tileCount = _chunkDimension * _chunkDimension;
         _tileSize = tileSize;
 
-        _tileData = new TileData[_tileCount];
+        _tileData = new TileDrawItem[_tileCount];
 
         CreateTileData();
         CreateVertexBufferData();
@@ -82,7 +82,7 @@ internal sealed class TilemapChunkMesh : IDisposable
             int rowStart = y * _chunkDimension;
             for (int x = 0; x < _chunkDimension; x++)
             {
-                _tileData[rowStart + x] = new TileData((ushort)(x % 3), (ushort)(y % 3));
+                _tileData[rowStart + x] = new TileDrawItem((ushort)(x % 3), (ushort)(y % 3));
             }
         }
     }

@@ -1,1 +1,0 @@
-namespace ConcreteEngine.Core.Scene.Entities;

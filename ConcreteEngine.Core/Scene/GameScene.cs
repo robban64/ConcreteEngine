@@ -1,7 +1,6 @@
 #region
 
 using ConcreteEngine.Core.Configuration;
-using ConcreteEngine.Core.Scene.Entities;
 using ConcreteEngine.Core.Scene.Nodes;
 using ConcreteEngine.Graphics;
 using ConcreteEngine.Graphics.Data;
@@ -16,10 +15,8 @@ public interface IEntityRegistry
 
 public abstract class GameScene
 {
-    protected SceneNodes SceneNodes { get; } = new();
     protected GameSceneContext Context { get; private set; } = null!;
-    protected GameEntityManager Entities { get; } = new();
-
+    protected World World { get; } = new();
 
     protected GameScene()
     {
@@ -31,22 +28,21 @@ public abstract class GameScene
         Context.Modules.Update(in frameInfo);
     }
 
-    //        Entities.FlushQueue();
     internal void UpdateTick(int tick)
     {
-        SceneNodes.ApplyPending();
+        //SceneNodes.ApplyPending();
 
         Context.Modules.GameTickUpdate(tick);
 
-        var collectedNodes = SceneNodes.Collect();
-        Context.Features.Collect(collectedNodes);
+       // var collectedNodes = SceneNodes.Collect();
+        //Context.Features.Collect(collectedNodes);
         Context.Features.GameTickUpdate(tick);
     }
 
 
     internal void AttachContext(GameSceneContext context)
     {
-        context.Nodes = SceneNodes;
+        context.World = World;
         Context = context;
     }
 

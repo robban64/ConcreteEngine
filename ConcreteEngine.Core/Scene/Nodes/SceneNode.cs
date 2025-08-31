@@ -22,7 +22,7 @@ public sealed class SceneNode
     public int Id { get; internal set; } = -1;
     public bool Enabled { get; internal set; } = true;
     public bool Visible { get; internal set; } = true;
-    public Transform2D LocalTransform { get; } = new();
+    public ModelTransform2D LocalTransform { get; } = new();
     public WorldTransform WorldTransform { get; } = new();
 
     public SceneNode? Parent

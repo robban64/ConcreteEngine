@@ -1,7 +1,7 @@
 #region
 
 using System.Numerics;
-using ConcreteEngine.Core.Features.Terrain;
+using ConcreteEngine.Core.Features;
 using ConcreteEngine.Core.Rendering.Pipeline;
 using ConcreteEngine.Core.Resources;
 using ConcreteEngine.Core.Transforms;
@@ -17,7 +17,7 @@ public sealed class TilemapDrawEmitter : DrawCommandEmitter<TilemapDrawData>
     {
         if(data.Count == 0) return;
         
-        var transform = Transform2D.CreateTransformMatrix(Vector2.Zero, new Vector2(1, 1), 0);
+        var transform = ModelTransform2D.CreateTransformMatrix(Vector2.Zero, new Vector2(1, 1), 0);
 
         var tilemapBatcher = ctx.TilemapBatch;
         var result = tilemapBatcher.BuildBatch();

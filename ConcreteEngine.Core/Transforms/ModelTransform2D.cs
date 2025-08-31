@@ -20,7 +20,7 @@ public sealed class WorldTransform
     public float Rotation => _rotation;
     public Matrix4x4 TransformMatrix => _transformMat;
 
-    internal void UpdateWorldTransform(Transform2D localTransform, WorldTransform? parentWorldTransform)
+    internal void UpdateWorldTransform(ModelTransform2D localTransform, WorldTransform? parentWorldTransform)
     {
         if (parentWorldTransform != null)
         {
@@ -39,7 +39,7 @@ public sealed class WorldTransform
     }
 }
 
-public sealed class Transform2D
+public sealed class ModelTransform2D
 {
     private bool _dirty = true;
     private bool _world = false;
@@ -107,5 +107,5 @@ public sealed class Transform2D
     }
 
 
-    public static Transform2D Identity => new();
+    public static ModelTransform2D Identity => new();
 }

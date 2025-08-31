@@ -4,19 +4,19 @@ using System.Drawing;
 using System.Numerics;
 using ConcreteEngine.Core.Assets;
 using ConcreteEngine.Core.Configuration;
-using ConcreteEngine.Core.Features.Effects;
-using ConcreteEngine.Core.Features.Sprite;
-using ConcreteEngine.Core.Features.Terrain;
+using ConcreteEngine.Core.Features;
 using ConcreteEngine.Core.Rendering;
 using ConcreteEngine.Core.Rendering.Emitters;
 using ConcreteEngine.Core.Rendering.Pipeline;
 using ConcreteEngine.Core.Rendering.Renderers;
 using ConcreteEngine.Core.Scene;
 using ConcreteEngine.Core.Scene.Nodes;
+using ConcreteEngine.Core.Transforms;
 using ConcreteEngine.Graphics;
 using ConcreteEngine.Graphics.Data;
 using ConcreteEngine.Graphics.Definitions;
 using Silk.NET.Maths;
+using LightEntity = ConcreteEngine.Core.Scene.LightEntity;
 using Shader = ConcreteEngine.Core.Resources.Shader;
 
 #endregion
@@ -33,37 +33,48 @@ public sealed class DemoScene : GameScene
         var tilemapMaterial = renderer.CreateMaterial("TilemapMaterial");
         renderer.CreateMaterial("LightMaterial");
 
-        var tilemap = SceneNodes.CreateNode<TilemapBehaviour>("tilemap", null, behaviour =>
         {
-            behaviour.MaterialId = tilemapMaterial.Id;
-        });
-
-        var dummyLightNode = SceneNodes.CreateEmptyNode("LightNodes");
-        for (int i = 0; i < 10; i++)
-        {
-            SceneNodes.CreateNode<LightBehaviour>($"light-{i}", dummyLightNode,
-                b => { b.Position = new Vector2(64 * i, 64 * i); });
+            var spriteId = World.Create();
+            World.Transforms2D.Add(spriteId, 
+                new Transform2D(new Vector2(64, 64), new Vector2(64, 64), 0));
+            World.Sprites.Add(spriteId, new SpriteEntity(1, spriteMaterial.Id, false));
         }
 
-        var sprite1 = SceneNodes.CreateNode<SpriteBehaviour>("node1", null, behaviour =>
         {
-            behaviour.MaterialId = spriteMaterial.Id;
-            behaviour.SourceRectangle = new Rectangle<int>(0, 0, 64, 64);
-            behaviour.Batched = true;
-        });
+            var spriteId = World.Create();
+            World.Transforms2D.Add(spriteId, 
+                new Transform2D(new Vector2(128, 128), new Vector2(64, 64), 0));
+            World.Sprites.Add(spriteId, new SpriteEntity(2, spriteMaterial.Id, false)
+            {
+                SourceRectangle = new Rectangle<int>(0, 0, 64, 64)
+            });
+        }
 
-        var sprite2 = SceneNodes.CreateNode<SpriteBehaviour>("node2", null, behaviour =>
         {
-            behaviour.MaterialId = spriteMaterial.Id;
-            behaviour.SourceRectangle = new Rectangle<int>(0, 0, 64, 64);
-            behaviour.Batched = true;
-        });
+            var tilemapId = World.Create();
+            World.Transforms2D.Add(tilemapId, 
+                new Transform2D(Vector2.Zero, Vector2.One, 0));
+            World.Tilemaps.Add(tilemapId, new TilemapEntity(tilemapMaterial.Id, 64, 32));
+        }
 
-        sprite1.LocalTransform.Scale = new Vector2(64, 64);
-        sprite2.LocalTransform.Scale = new Vector2(64, 64);
+        {
+            var rng = new Random(1234);
+            for (int i = 0; i < 10; i++)
+            {
+                for (int j = 0; j < 10; j++)
+                {
+                    var lightId = World.Create();
+                    World.Lights.Add(lightId, new LightEntity
+                    {
+                        Position =  new Vector2(i * 256, j * 256),
+                        Color = new Vector3(rng.NextSingle(),  rng.NextSingle(), rng.NextSingle()),
+                        Intensity =  rng.NextSingle() * (3 - 1) + 1,
+                        Radius = rng.Next(150,200)
+                    });
+                }
+            }
 
-        sprite1.LocalTransform.Position = new Vector2(64, 64);
-        sprite2.LocalTransform.Position = new Vector2(64, 128);
+        }
     }
 
     protected override void ConfigureFeatures(IGameSceneFeatureBuilder builder)

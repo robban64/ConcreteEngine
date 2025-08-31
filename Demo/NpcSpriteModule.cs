@@ -1,6 +1,8 @@
 using System.Numerics;
+using ConcreteEngine.Common;
 using ConcreteEngine.Core;
 using ConcreteEngine.Core.Assets;
+using ConcreteEngine.Core.Rendering;
 using ConcreteEngine.Core.Resources;
 using ConcreteEngine.Core.Scene;
 using ConcreteEngine.Core.Scene.Nodes;
@@ -16,7 +18,6 @@ public class NpcSpriteModule : GameModule
 
     private int _animationCountdown = 3;
     private int _currentFrame = 0;
-
 
     public override void Initialize()
     {
@@ -51,9 +52,7 @@ public class NpcSpriteModule : GameModule
         {
             sprite.SourceRectangle = _spriteAtlas.At(_currentFrame, 1);
         }
+
     }
 
-    public override void Update(in FrameMetaInfo frameCtx)
-    {
-    }
 }

@@ -23,7 +23,7 @@ public enum RenderTargetId : byte
     Screen
 }
 
-public record struct RenderPassClearDesc(Color4 ClearColor, ClearBufferFlag ClearMask);
+public readonly record struct RenderPassClearDesc(Color4 ClearColor, ClearBufferFlag ClearMask);
 
 public interface IRenderPass
 {

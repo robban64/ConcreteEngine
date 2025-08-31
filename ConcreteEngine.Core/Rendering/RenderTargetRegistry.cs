@@ -7,6 +7,11 @@ using ConcreteEngine.Graphics.Resources;
 
 namespace ConcreteEngine.Core.Rendering;
 
+public struct RenderPassMutation
+{
+    public Color4? ClearColor;
+}
+
 internal class RenderTargetRegistry
 {
     private readonly IGraphicsDevice _graphics;
@@ -25,11 +30,30 @@ internal class RenderTargetRegistry
     public RenderTargetRegistry(IGraphicsDevice graphics)
     {
         _graphics = graphics;
-
+        
         _renderTargets = new List<IRenderPass>[RenderConsts.RenderTargetCount];
         for (int i = 0; i < RenderConsts.RenderTargetCount; i++)
         {
             _renderTargets[i] = new List<IRenderPass>(4);
+        }
+    }
+
+    public void MutateRenderPass(RenderTargetId targetId, in RenderPassMutation mutation)
+    {
+        switch (targetId)
+        {
+            case RenderTargetId.Scene:
+                var scenePass = (SceneRenderPass)(_renderTargets[(int)RenderTargetId.Scene][0]);
+                var sceneClear = scenePass.Clear!.Value;
+                scenePass.Clear = sceneClear with { ClearColor = mutation.ClearColor!.Value };
+                break;
+            case RenderTargetId.SceneLight:
+                var lightPass = (LightRenderPass)(_renderTargets[(int)RenderTargetId.SceneLight][0]);
+                var lightClear = lightPass.Clear!.Value;
+                lightPass.Clear = lightClear with { ClearColor = mutation.ClearColor!.Value };
+                break;
+            case RenderTargetId.Screen:
+                break;
         }
     }
 
@@ -50,7 +74,8 @@ internal class RenderTargetRegistry
         // Light Target setup
         var lightTarget = desc.LightTarget;
         CreateLightBuffer(lightTarget.SizeRatio, lightTarget.TexPreset);
-
+        
+        
         // Screen Target setup
         var screenTarget = desc.ScreenTarget;
 

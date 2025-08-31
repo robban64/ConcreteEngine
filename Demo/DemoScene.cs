@@ -109,6 +109,8 @@ public sealed class DemoScene : GameScene
     {
         builder.RegisterModule<RtsCameraModule>(0);
         builder.RegisterModule<NpcSpriteModule>(1);
+        builder.RegisterModule<DayNightModule>(2);
+
     }
 
     protected override void ConfigureRenderer(IGameSceneRenderBuilder builder, IGraphicsDevice graphics)
@@ -146,62 +148,6 @@ public sealed class DemoScene : GameScene
                 CompositeShaderId = lightComposite.ResourceId,
             }
         });
-/*
-        // single-sample scene FBO
-        var sceneFboId =
-            graphics.CreateFramebuffer(new FrameBufferDesc(SizeRatio: Vector2.One, DepthStencilBuffer: true),
-                out var sceneFboMeta);
-
-        var lightFboId =
-            graphics.CreateFramebuffer(
-                new FrameBufferDesc(SizeRatio: new Vector2(0.3f, 0.3f), TexturePreset: TexturePreset.NearestClamp,
-                    DepthStencilBuffer: false),
-                out var lightFboMeta);
-
-
-        // colorTexId will be 0 for MSAA
-        var msaaFboId = graphics.CreateFramebuffer(new FrameBufferDesc(
-            SizeRatio: Vector2.One, DepthStencilBuffer: true, Msaa: true, Samples: 4), out _);
-
-        // Pass 0: draw scene into MSAA FBO
-        builder.RegisterRenderPass(RenderTargetId.Scene, 0, new SceneRenderPass
-        {
-            TargetFbo = msaaFboId,
-            Clear = new RenderPassClearDesc(Colors.CornflowerBlue, ClearBufferFlag.ColorAndDepth)
-        });
-
-        // Pass 1: resolve MSAA into single-sample texture FBO
-        builder.RegisterRenderPass(RenderTargetId.Scene, 1, new BlitRenderPass
-            {
-                TargetFbo = sceneFboId,
-                BlitFbo = msaaFboId,
-                Multisample = true,
-                Samples = 4
-            }
-        );
-
-        // Pass 2: Draw light into FBO
-        //SourceTexId = [lightFboMeta.ColTexId],
-        builder.RegisterRenderPass(RenderTargetId.SceneLight, 2, new LightRenderPass
-            {
-                TargetFbo = lightFboId,
-                Shader = lightPassShader.ResourceId,
-                Clear = new RenderPassClearDesc(Color4.FromRgba(125, 125, 150), ClearBufferFlag.Color),
-                Blend = BlendMode.Additive,
-                DepthTest = false
-            }
-        );
-        
-        
-
-        // Pass 3: Combine scene and light fbo texture into final scene
-        builder.RegisterRenderPass(RenderTargetId.Screen, 3, new FsqRenderPass
-        {
-            TargetFbo = default,
-            SourceTextures = [sceneFboMeta.ColTexId, lightFboMeta.ColTexId],
-            Shader = lightComposite.ResourceId
-        });
-        */
     }
 
     public override void Unload()

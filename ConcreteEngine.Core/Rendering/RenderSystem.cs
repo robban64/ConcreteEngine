@@ -19,6 +19,7 @@ namespace ConcreteEngine.Core.Rendering;
 public interface IRenderSystem : IGameEngineSystem
 {
     Material CreateMaterial(string templateName);
+    void MutateRenderPass(RenderTargetId targetId, in RenderPassMutation mutation);
 }
 
 public sealed class RenderSystem : IRenderSystem
@@ -121,7 +122,9 @@ public sealed class RenderSystem : IRenderSystem
     public Material CreateMaterial(string templateName)
         => _materialStore.CreateMaterialFromTemplate(templateName);
 
-
+    public void MutateRenderPass(RenderTargetId targetId, in RenderPassMutation mutation) 
+        => _renderTargetRegistry.MutateRenderPass(targetId, in mutation);
+    
     public void Shutdown()
     {
     }

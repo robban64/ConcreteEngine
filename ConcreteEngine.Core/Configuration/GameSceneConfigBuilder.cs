@@ -3,6 +3,7 @@
 using ConcreteEngine.Core.Features;
 using ConcreteEngine.Core.Rendering;
 using ConcreteEngine.Graphics;
+using ConcreteEngine.Graphics.Resources;
 
 #endregion
 
@@ -15,8 +16,8 @@ public interface IGameSceneModuleBuilder
 
 public interface IGameSceneRenderBuilder
 {
-    void RegisterRenderPass(RenderTargetId target, int order, IRenderPass pass);
-
+    void RegisterRenderTargets(RenderTargetDescription desc);
+    
     void RegisterDrawProducer<TProducer, TEntity>(int order)
         where TProducer : DrawCommandProducer<TEntity>, new()
         where TEntity : class;
@@ -41,16 +42,16 @@ public sealed class GameSceneConfigBuilder(IGraphicsDevice graphics, FeatureMana
 {
     private readonly SortedList<int, Func<IGameFeature>> _features = new();
     private readonly SortedList<int, (Func<IDrawableFeature>, Type)> _drawFeatures = new();
-    private readonly SortedList<int, RenderPassRegistryMeta> _passes = new();
     private readonly SortedList<int, Func<IDrawCommandProducer>> _drawProducers = new();
     private readonly SortedList<int, Func<GameModule>> _modules = new();
     private readonly List<RendererRegistry> _renderers = new();
+
+    private RenderTargetDescription _renderTargetsDesc = null!;
 
     internal void Clear()
     {
         _features.Clear();
         _drawProducers.Clear();
-        _passes.Clear();
         _renderers.Clear();
     }
 
@@ -62,12 +63,23 @@ public sealed class GameSceneConfigBuilder(IGraphicsDevice graphics, FeatureMana
     public SortedList<int, Func<IGameFeature>> Features => _features;
     public SortedList<int, (Func<IDrawableFeature>, Type)> DrawFeatures => _drawFeatures;
     public SortedList<int, Func<IDrawCommandProducer>> DrawProducers => _drawProducers;
-    public SortedList<int, RenderPassRegistryMeta> Passes => _passes;
+    public RenderTargetDescription RenderTargetsDesc => _renderTargetsDesc;
     public SortedList<int, Func<GameModule>> Modules => _modules;
 
     public List<RendererRegistry> Renderers => _renderers;
 
 
+    public void RegisterRenderTargets(RenderTargetDescription desc)
+    {
+        ArgumentNullException.ThrowIfNull(desc);
+        ArgumentNullException.ThrowIfNull(desc.SceneTarget);
+        ArgumentNullException.ThrowIfNull(desc.LightTarget);
+        ArgumentNullException.ThrowIfNull(desc.ScreenTarget);
+        desc.LightTarget.LightShader.IsValidOrThrow();
+        desc.ScreenTarget.CompositeShaderId.IsValidOrThrow();
+        
+        _renderTargetsDesc = desc;
+    }
     public void RegisterFeature<T>(int order) where T : IGameFeature, new()
     {
         ArgumentOutOfRangeException.ThrowIfNegative(order, nameof(order));
@@ -92,12 +104,6 @@ public sealed class GameSceneConfigBuilder(IGraphicsDevice graphics, FeatureMana
         _drawProducers.Add(order, () => new TProducer());
     }
 
-    public void RegisterRenderPass(RenderTargetId target, int order, IRenderPass pass)
-    {
-        ArgumentOutOfRangeException.ThrowIfNegative(order, nameof(order));
-        _passes.Add(order, new RenderPassRegistryMeta(target, pass));
-    }
-
     public void RegisterRenderer<TCommand, TRenderer>(DrawCommandTag commandTag, params DrawCommandId[] commandIds)
         where TCommand : struct, IDrawCommand
         where TRenderer : class, ICommandRenderer<TCommand>
@@ -107,7 +113,6 @@ public sealed class GameSceneConfigBuilder(IGraphicsDevice graphics, FeatureMana
         _renderers.Add(registry);
     }
 
-    public record struct RenderPassRegistryMeta(RenderTargetId Target, IRenderPass Pass);
 
     public record RendererRegistry(
         DrawCommandId[] CommandIds,

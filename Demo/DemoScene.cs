@@ -125,7 +125,28 @@ public sealed class DemoScene : GameScene
 
         var lightPassShader = assets.Get<Shader>("LightPassShader");
         var lightComposite = assets.Get<Shader>("LightComposite");
-
+        
+        builder.RegisterRenderTargets(new RenderTargetDescription
+        {
+            SceneTarget = new SceneTargetDesc
+            {
+                ClearColor = Colors.CornflowerBlue,
+                Samples = 4
+            },
+            LightTarget = new LightTargetDesc
+            {
+                LightShader = lightPassShader.ResourceId,
+                Blend = BlendMode.Additive,
+                ClearColor = Color4.FromRgba(125, 125, 150),
+                SizeRatio = new Vector2(0.3f, 0.3f),
+                TexPreset = TexturePreset.NearestClamp
+            },
+            ScreenTarget = new ScreenTargetDesc
+            {
+                CompositeShaderId = lightComposite.ResourceId,
+            }
+        });
+/*
         // single-sample scene FBO
         var sceneFboId =
             graphics.CreateFramebuffer(new FrameBufferDesc(SizeRatio: Vector2.One, DepthStencilBuffer: true),
@@ -180,6 +201,7 @@ public sealed class DemoScene : GameScene
             SourceTextures = [sceneFboMeta.ColTexId, lightFboMeta.ColTexId],
             Shader = lightComposite.ResourceId
         });
+        */
     }
 
     public override void Unload()

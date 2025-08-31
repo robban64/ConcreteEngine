@@ -28,7 +28,7 @@ public sealed class RenderSystem : IRenderSystem
     private readonly GameCamera _camera;
 
     private readonly MaterialStore _materialStore;
-    private readonly List<IRenderPass>[] _renderPassDesc;
+    private readonly RenderTargetRegistry _renderTargetRegistry;
 
     private readonly DrawCommandCollector _commandCollector;
     private readonly DrawCommandSubmitter _commandSubmitter;
@@ -53,11 +53,7 @@ public sealed class RenderSystem : IRenderSystem
 
         _materialStore = materialStore;
 
-        _renderPassDesc = new List<IRenderPass>[RenderTargetCount];
-        for (int i = 0; i < RenderTargetCount; i++)
-        {
-            _renderPassDesc[i] = new List<IRenderPass>(4);
-        }
+        _renderTargetRegistry = new RenderTargetRegistry(_graphics);
 
         _commandCollector = new DrawCommandCollector();
 
@@ -78,14 +74,13 @@ public sealed class RenderSystem : IRenderSystem
 
     internal void Initialize(GameSceneConfigBuilder builder)
     {
+        // Command Collector
         foreach (var (order, producer) in builder.DrawProducers)
             _commandCollector.AddProducer(order, producer());
 
         _commandCollector.Initialize(_commandProducerContext);
 
-        foreach (var pass in builder.Passes.Values)
-            RegisterRenderPass(pass.Target, pass.Pass);
-
+        // Renderers
         foreach (var registry in builder.Renderers)
         {
             foreach (var cmdId in registry.CommandIds)
@@ -93,6 +88,11 @@ public sealed class RenderSystem : IRenderSystem
                 registry.Bind(_commandSubmitter, cmdId, registry.CommandTag);
             }
         }
+        
+        // RenderPasses
+        _renderTargetRegistry.RegisterRenderTargetsFrom(builder.RenderTargetsDesc);
+        
+        
     }
 
     public void RegisterDrawFeature(int order, IDrawableFeature feature, Type producerType)
@@ -110,17 +110,6 @@ public sealed class RenderSystem : IRenderSystem
         producer.RegisterFeature<TFeature>(order, feature);
     }
 
-    public void RegisterRenderPass(RenderTargetId target, IRenderPass pass)
-    {
-        if (pass.Op == RenderPassOp.FullscreenQuad && pass is not FsqRenderPass)
-            throw new InvalidOperationException($"RenderPass: FullscreenQuad require {nameof(FsqRenderPass)}");
-
-        if (pass.Op == RenderPassOp.Blit && pass is not BlitRenderPass)
-            throw new InvalidOperationException($"RenderPass: Blit require {nameof(BlitRenderPass)}");
-
-
-        _renderPassDesc[(int)target].Add(pass);
-    }
 
     public void RegisterRenderer<TCommand, TRenderer>(DrawCommandId id, DrawCommandTag tag)
         where TCommand : struct, IDrawCommand
@@ -167,10 +156,26 @@ public sealed class RenderSystem : IRenderSystem
 
     private void Execute(float alpha)
     {
+        foreach (var (renderTarget, passes) in _renderTargetRegistry)
+        {
+            foreach (var pass in passes)
+            {
+                //var (prevBlend, prevDepthTest) = (_gfx.BlendMode, _gfx.DepthTest);
+                _gfx.SetBlendMode(pass.Blend);
+                _gfx.SetDepthTest(pass.DepthTest);
+
+                ExecutePass(renderTarget, pass);
+
+                //_gfx.SetBlendMode(prevBlend);
+                //_gfx.SetDepthTest(prevDepthTest);
+            }
+        }
+        
+        /*
         for (int target = 0; target < RenderTargetCount; target++)
         {
             var renderTarget = (RenderTargetId)target;
-            var passList = _renderPassDesc[target];
+            var passList = renderPasses[target];
 
             foreach (var pass in passList)
             {
@@ -183,7 +188,7 @@ public sealed class RenderSystem : IRenderSystem
                 //_gfx.SetBlendMode(prevBlend);
                 //_gfx.SetDepthTest(prevDepthTest);
             }
-        }
+        }*/
     }
 
     private void ExecutePass(RenderTargetId target, IRenderPass pass)

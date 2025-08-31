@@ -72,7 +72,7 @@ public sealed class BlitRenderPass : IRenderPass
     public required FrameBufferId TargetFbo { get; set; }
     public required FrameBufferId BlitFbo { get; set; }
     public bool Multisample { get; set; } = false;
-    public int Samples { get; init; } = 0;
+    public uint Samples { get; init; } = 0;
 }
 
 public sealed class FsqRenderPass : IRenderPass

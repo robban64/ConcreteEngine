@@ -4,6 +4,7 @@ using System.Diagnostics;
 using System.Drawing;
 using System.Numerics;
 using System.Runtime.CompilerServices;
+using ConcreteEngine.Common;
 using ConcreteEngine.Graphics.Data;
 using ConcreteEngine.Graphics.Definitions;
 using ConcreteEngine.Graphics.Error;
@@ -104,7 +105,7 @@ public sealed class GlGraphicsContext : IGraphicsContext
 
         SetBlendMode(BlendMode.None);
         SetDepthTest(true);
-        Clear(Color.CornflowerBlue, ClearBufferFlag.ColorAndDepth);
+        Clear(Colors.CornflowerBlue, ClearBufferFlag.ColorAndDepth);
     }
 
     public void EndFrame(out FrameRenderResult result)
@@ -122,14 +123,14 @@ public sealed class GlGraphicsContext : IGraphicsContext
         }
     }
 
-    public void Clear(Color color, ClearBufferFlag flags)
+    public void Clear(Color4 color, ClearBufferFlag flags)
     {
-        _gl.ClearColor(color);
+        ClearColor(_gl, color);
         _gl.Clear(flags.ToGlEnum());
     }
 
 
-    public void BeginScreenPass(Color? clear, ClearBufferFlag? flags)
+    public void BeginScreenPass(Color4? clear, ClearBufferFlag? flags)
     {
         if (_boundFboId != default) GraphicsException.ThrowInvalidState("Cannot begin screen pass while FBO is bound.");
 
@@ -145,7 +146,7 @@ public sealed class GlGraphicsContext : IGraphicsContext
         _currentViewport = _viewport;
     }
 
-    public void BeginRenderPass(FrameBufferId fboId, Color? clear, ClearBufferFlag? flags)
+    public void BeginRenderPass(FrameBufferId fboId, Color4? clear, ClearBufferFlag? flags)
     {
         ArgumentOutOfRangeException.ThrowIfNegativeOrZero(fboId.Id, nameof(fboId));
         if (_boundFboId == fboId) GraphicsException.ThrowInvalidState($"FBO is {fboId} already bound.");
@@ -541,4 +542,6 @@ public sealed class GlGraphicsContext : IGraphicsContext
         if (error != (GLEnum)ErrorCode.NoError)
             throw new OpenGlException(error);
     }
+
+    private static void ClearColor(GL gl, Color4 c) => gl.ClearColor(c.R, c.G, c.B, 1);
 }

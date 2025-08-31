@@ -1,7 +1,7 @@
 #region
 
-using System.Drawing;
 using System.Numerics;
+using ConcreteEngine.Common;
 using ConcreteEngine.Graphics.Definitions;
 using ConcreteEngine.Graphics.Resources;
 
@@ -20,10 +20,10 @@ public enum RenderTargetId : byte
 {
     Scene,
     SceneLight,
-    UI
+    Screen
 }
 
-public record struct RenderPassClearDesc(Color ClearColor, ClearBufferFlag ClearMask);
+public record struct RenderPassClearDesc(Color4 ClearColor, ClearBufferFlag ClearMask);
 
 public interface IRenderPass
 {
@@ -43,7 +43,7 @@ public sealed class SceneRenderPass : IRenderPass
     public bool DepthTest { get; set; } = true;
 
     public RenderPassClearDesc? Clear { get; set; } =
-        new RenderPassClearDesc(Color.Black, ClearBufferFlag.ColorAndDepth);
+        new RenderPassClearDesc(Colors.Black, ClearBufferFlag.ColorAndDepth);
 
     public required FrameBufferId TargetFbo { get; set; }
 }
@@ -54,7 +54,7 @@ public sealed class LightRenderPass : IRenderPass
     public BlendMode Blend { get; set; } = BlendMode.Additive;
     public Vector2 SizeRatio { get; set; } = Vector2.One;
     public bool DepthTest { get; set; } = false;
-    public RenderPassClearDesc? Clear { get; set; } = new RenderPassClearDesc(Color.Black, ClearBufferFlag.Color);
+    public RenderPassClearDesc? Clear { get; set; } = new RenderPassClearDesc(Colors.Black, ClearBufferFlag.Color);
 
     public required FrameBufferId TargetFbo { get; set; }
     public required ShaderId Shader { get; set; }

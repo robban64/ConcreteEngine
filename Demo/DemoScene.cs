@@ -2,6 +2,7 @@
 
 using System.Drawing;
 using System.Numerics;
+using ConcreteEngine.Common;
 using ConcreteEngine.Core.Assets;
 using ConcreteEngine.Core.Configuration;
 using ConcreteEngine.Core.Features;
@@ -145,7 +146,7 @@ public sealed class DemoScene : GameScene
         builder.RegisterRenderPass(RenderTargetId.Scene, 0, new SceneRenderPass
         {
             TargetFbo = msaaFboId,
-            Clear = new RenderPassClearDesc(Color.CornflowerBlue, ClearBufferFlag.ColorAndDepth)
+            Clear = new RenderPassClearDesc(Colors.CornflowerBlue, ClearBufferFlag.ColorAndDepth)
         });
 
         // Pass 1: resolve MSAA into single-sample texture FBO
@@ -164,14 +165,16 @@ public sealed class DemoScene : GameScene
             {
                 TargetFbo = lightFboId,
                 Shader = lightPassShader.ResourceId,
-                Clear = new RenderPassClearDesc(Color.FromArgb(255, 125, 125, 150), ClearBufferFlag.Color),
+                Clear = new RenderPassClearDesc(Color4.FromRgba(125, 125, 150), ClearBufferFlag.Color),
                 Blend = BlendMode.Additive,
                 DepthTest = false
             }
         );
+        
+        
 
         // Pass 3: Combine scene and light fbo texture into final scene
-        builder.RegisterRenderPass(RenderTargetId.SceneLight, 3, new FsqRenderPass
+        builder.RegisterRenderPass(RenderTargetId.Screen, 3, new FsqRenderPass
         {
             TargetFbo = default,
             SourceTextures = [sceneFboMeta.ColTexId, lightFboMeta.ColTexId],

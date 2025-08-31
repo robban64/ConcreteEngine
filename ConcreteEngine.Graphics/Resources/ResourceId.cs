@@ -1,3 +1,6 @@
+using System.Diagnostics.CodeAnalysis;
+using ConcreteEngine.Graphics.Error;
+
 namespace ConcreteEngine.Graphics.Resources;
 
 public interface IResourceId
@@ -18,3 +21,16 @@ public readonly record struct IndexBufferId(int Id) : IResourceId;
 public readonly record struct FrameBufferId(int Id) : IResourceId;
 
 public readonly record struct RenderBufferId(int Id) : IResourceId;
+
+public static class ResourceIdExtensions
+{
+    public static bool IsValid<T>(this T t) where T : struct, IResourceId
+        => t.Id > 0;
+
+    public static void IsValidOrThrow<T>(this T t) where T : struct, IResourceId
+    {
+        if (!IsValid(t))
+            throw new GraphicsException($"ResourceId {t.Id} is not valid");
+    }
+
+}

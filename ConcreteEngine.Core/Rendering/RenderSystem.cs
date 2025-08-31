@@ -9,6 +9,7 @@ using ConcreteEngine.Core.Transforms;
 using ConcreteEngine.Graphics;
 using ConcreteEngine.Graphics.Data;
 using ConcreteEngine.Graphics.Definitions;
+using ConcreteEngine.Graphics.Resources;
 using static ConcreteEngine.Core.Rendering.RenderConsts;
 
 #endregion
@@ -17,9 +18,6 @@ namespace ConcreteEngine.Core.Rendering;
 
 public interface IRenderSystem : IGameEngineSystem
 {
-    SpriteBatcher SpriteBatch { get; }
-    TilemapBatcher TilemapBatch { get; }
-
     Material CreateMaterial(string templateName);
 }
 
@@ -35,6 +33,7 @@ public sealed class RenderSystem : IRenderSystem
     private readonly DrawCommandCollector _commandCollector;
     private readonly DrawCommandSubmitter _commandSubmitter;
     private readonly CommandProducerContext _commandProducerContext;
+
 
     private readonly SpriteRenderer _spriteRenderer;
     private readonly LightRenderer _lightRenderer;

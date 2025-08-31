@@ -2,6 +2,7 @@
 
 using ConcreteEngine.Core.Assets;
 using ConcreteEngine.Core.Configuration;
+using ConcreteEngine.Core.Features;
 using ConcreteEngine.Core.Messaging;
 using ConcreteEngine.Core.Platform;
 using ConcreteEngine.Core.Rendering;

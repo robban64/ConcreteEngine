@@ -9,7 +9,7 @@ namespace ConcreteEngine.Core.Rendering;
 
 public sealed class LightProducer : DrawCommandProducer<LightFeatureDrawData>
 {
-    protected override void EmitBatch(LightFeatureDrawData data, in CommandProducerContext ctx,
+    protected override void EmitCommands(LightFeatureDrawData data,  CommandProducerContext ctx,
         DrawCommandSubmitter submitter, int order)
     {
         var lights = CollectionsMarshal.AsSpan(data.Entities);

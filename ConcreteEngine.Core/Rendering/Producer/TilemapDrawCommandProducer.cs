@@ -10,7 +10,7 @@ namespace ConcreteEngine.Core.Rendering;
 
 public sealed class TilemapDrawProducer : DrawCommandProducer<TilemapDrawData>
 {
-    protected override void EmitBatch(TilemapDrawData data, in CommandProducerContext ctx,
+    protected override void EmitCommands(TilemapDrawData data,  CommandProducerContext ctx,
         DrawCommandSubmitter submitter, int order)
     {
         if(data.Count == 0) return;

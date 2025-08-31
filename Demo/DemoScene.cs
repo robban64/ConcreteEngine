@@ -27,6 +27,8 @@ public sealed class DemoScene : GameScene
         var renderer = Context.GetSystem<IRenderSystem>();
 
         var spriteMaterial = renderer.CreateMaterial("SpriteMaterial");
+        var spriteMaterial2 = renderer.CreateMaterial("SpriteMaterial");
+
         var tilemapMaterial = renderer.CreateMaterial("TilemapMaterial");
         renderer.CreateMaterial("LightMaterial");
 
@@ -37,15 +39,36 @@ public sealed class DemoScene : GameScene
             World.Sprites.Add(spriteId, new SpriteEntity(1, spriteMaterial.Id, false));
         }
 
+        int currSpriteId = 2;
+        for (int x = 0; x < 2; x++)
         {
-            var spriteId = World.Create();
-            World.Transforms2D.Add(spriteId, 
-                new Transform2D(new Vector2(128, 128), new Vector2(64, 64), 0));
-            World.Sprites.Add(spriteId, new SpriteEntity(2, spriteMaterial.Id, false)
+            for (int y = 0; y < 2; y++)
             {
-                SourceRectangle = new Rectangle<int>(0, 0, 64, 64)
-            });
+                var spriteId = World.Create();
+                World.Transforms2D.Add(spriteId, 
+                    new Transform2D(new Vector2(64 * x + 64, 64 * y + 64), new Vector2(64, 64), 0));
+                World.Sprites.Add(spriteId, new SpriteEntity(currSpriteId++, spriteMaterial.Id, false)
+                {
+                    SourceRectangle = new Rectangle<int>(0, 0, 64, 64)
+                });
+            }
         }
+
+        int offset = 64 * 4;
+        for (int x = 0; x < 2; x++)
+        {
+            for (int y = 0; y < 2; y++)
+            {
+                var spriteId = World.Create();
+                World.Transforms2D.Add(spriteId, 
+                    new Transform2D(new Vector2(64 * x + offset, 64 * y + offset), new Vector2(64, 64), 0));
+                World.Sprites.Add(spriteId, new SpriteEntity(currSpriteId++, spriteMaterial2.Id, false)
+                {
+                    SourceRectangle = new Rectangle<int>(0, 0, 64, 64)
+                });
+            }
+        }
+ 
 
         {
             var tilemapId = World.Create();

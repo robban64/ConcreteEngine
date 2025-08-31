@@ -1,5 +1,6 @@
 #region
 
+using ConcreteEngine.Core.Features;
 using ConcreteEngine.Core.Rendering;
 using ConcreteEngine.Graphics;
 

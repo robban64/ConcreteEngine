@@ -1,5 +1,6 @@
 #region
 
+using ConcreteEngine.Core.Features;
 using ConcreteEngine.Graphics;
 
 #endregion
@@ -18,7 +19,7 @@ public interface IDrawCommandProducer
 {
     int Order { get; }
     Type EntityType { get; }
-    void Initialize(int order);
+    void Initialize(CommandProducerContext ctx, int order);
     void Produce(CommandProducerContext context, DrawCommandSubmitter submitter);
 
     void RegisterFeature(int order, IDrawableFeature feature);
@@ -30,31 +31,38 @@ public abstract class DrawCommandProducer<TDrawData> : IDrawCommandProducer wher
     public Type EntityType => typeof(TDrawData);
 
     private readonly SortedList<int, IDrawableFeature<TDrawData>> _features = new(8);
+    
+    
+    public virtual void OnInitialize(CommandProducerContext ctx)
+    {
+        
+    }
+    
+    protected abstract void EmitCommands(
+        TDrawData data,
+         CommandProducerContext ctx,
+        DrawCommandSubmitter submitter,
+        int order);
 
-    public void Initialize(int order)
+    public void Initialize(CommandProducerContext ctx, int order)
     {
         Order = order;
+        OnInitialize(ctx);
     }
 
     public void Produce(CommandProducerContext ctx, DrawCommandSubmitter submitter)
     {
         if (_features.Count == 0)
         {
-            EmitBatch(null!, in ctx, submitter, 0);
+            EmitCommands(null!,  ctx, submitter, 0);
             return;
         }
 
         foreach (var (order, feature) in _features)
         {
-            EmitBatch(feature.GetDrawables(), in ctx, submitter, order);
+            EmitCommands(feature.GetDrawables(),  ctx, submitter, order);
         }
     }
-
-    protected abstract void EmitBatch(
-        TDrawData data,
-        in CommandProducerContext ctx,
-        DrawCommandSubmitter submitter,
-        int order);
 
 
     public void RegisterFeature(int order, IDrawableFeature feature)

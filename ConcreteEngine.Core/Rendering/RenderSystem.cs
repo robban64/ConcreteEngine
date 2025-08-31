@@ -2,6 +2,7 @@
 
 using ConcreteEngine.Common.Extensions;
 using ConcreteEngine.Core.Configuration;
+using ConcreteEngine.Core.Features;
 using ConcreteEngine.Core.Resources;
 using ConcreteEngine.Core.Systems;
 using ConcreteEngine.Core.Transforms;
@@ -81,7 +82,7 @@ public sealed class RenderSystem : IRenderSystem
         foreach (var (order, producer) in builder.DrawProducers)
             _commandCollector.AddProducer(order, producer());
 
-        _commandCollector.Initialize();
+        _commandCollector.Initialize(_commandProducerContext);
 
         foreach (var pass in builder.Passes.Values)
             RegisterRenderPass(pass.Target, pass.Pass);

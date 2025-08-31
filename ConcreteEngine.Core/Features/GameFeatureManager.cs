@@ -1,7 +1,6 @@
-using ConcreteEngine.Core.Scene.Nodes;
 using ConcreteEngine.Graphics.Data;
 
-namespace ConcreteEngine.Core;
+namespace ConcreteEngine.Core.Features;
 
 public interface IGameFeatureManager
 {

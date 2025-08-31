@@ -41,11 +41,11 @@ internal sealed class DrawCommandCollector
         _producers.Add(order, producer);
     }
 
-    public void Initialize()
+    public void Initialize(CommandProducerContext context)
     {
         foreach (var (order, producer) in _producers)
         {
-            producer.Initialize(order);
+            producer.Initialize(context, order);
         }
     }
 

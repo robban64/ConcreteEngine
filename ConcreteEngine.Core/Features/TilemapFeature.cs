@@ -18,7 +18,7 @@ public sealed class TilemapDrawData
 
 public class TilemapFeature : GameFeature, IDrawableFeature<TilemapDrawData>
 {
-    private TilemapDrawData _drawData = new();
+    private readonly TilemapDrawData _drawData = new();
 
     public override bool IsUpdateable => true;
     public bool IsDrawable { get; set; } = true;

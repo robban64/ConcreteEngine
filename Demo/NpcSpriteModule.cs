@@ -12,7 +12,6 @@ namespace Demo;
 
 public class NpcSpriteModule : GameModule
 {
-    private readonly List<SpriteEntity> _spriteNodes = [];
     private readonly SpriteAtlas _spriteAtlas = new();
 
     private int _animationCountdown = 3;
@@ -33,8 +32,6 @@ public class NpcSpriteModule : GameModule
         {
             node.UvScale = _spriteAtlas.InvTexSizePx;
         }
-        _spriteNodes.AddRange(nodes);
-       
     }
 
     public override void UpdateTick(int tick)
@@ -49,7 +46,8 @@ public class NpcSpriteModule : GameModule
             _animationCountdown = 3;
         }
 
-        foreach (ref var sprite in Context.World.Sprites.AsSpan())
+        var sprites = Context.World.Sprites.AsSpan();
+        foreach (ref var sprite in sprites)
         {
             sprite.SourceRectangle = _spriteAtlas.At(_currentFrame, 1);
         }

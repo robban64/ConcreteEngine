@@ -2,15 +2,14 @@
 
 using System.Runtime.InteropServices;
 using ConcreteEngine.Core.Features;
-using ConcreteEngine.Core.Rendering.Pipeline;
 
 #endregion
 
-namespace ConcreteEngine.Core.Rendering.Emitters;
+namespace ConcreteEngine.Core.Rendering;
 
-public sealed class LightEmitter : DrawCommandEmitter<LightFeatureDrawData>
+public sealed class LightProducer : DrawCommandProducer<LightFeatureDrawData>
 {
-    protected override void EmitBatch(LightFeatureDrawData data, in DrawEmitterContext ctx,
+    protected override void EmitBatch(LightFeatureDrawData data, in CommandProducerContext ctx,
         DrawCommandSubmitter submitter, int order)
     {
         var lights = CollectionsMarshal.AsSpan(data.Entities);

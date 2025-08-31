@@ -2,11 +2,10 @@
 
 using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
-using ConcreteEngine.Core.Rendering.Renderers;
 
 #endregion
 
-namespace ConcreteEngine.Core.Rendering.Pipeline;
+namespace ConcreteEngine.Core.Rendering;
 
 public class DrawCommandSubmitter
 {

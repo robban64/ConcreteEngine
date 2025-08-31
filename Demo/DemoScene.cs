@@ -6,9 +6,6 @@ using ConcreteEngine.Core.Assets;
 using ConcreteEngine.Core.Configuration;
 using ConcreteEngine.Core.Features;
 using ConcreteEngine.Core.Rendering;
-using ConcreteEngine.Core.Rendering.Emitters;
-using ConcreteEngine.Core.Rendering.Pipeline;
-using ConcreteEngine.Core.Rendering.Renderers;
 using ConcreteEngine.Core.Scene;
 using ConcreteEngine.Core.Scene.Nodes;
 using ConcreteEngine.Core.Transforms;
@@ -79,9 +76,9 @@ public sealed class DemoScene : GameScene
 
     protected override void ConfigureFeatures(IGameSceneFeatureBuilder builder)
     {
-        builder.RegisterDrawFeature<TilemapDrawEmitter, TilemapFeature, TilemapDrawData>(0);
-        builder.RegisterDrawFeature<SpriteDrawEmitter, SpriteFeature, SpriteFeatureDrawData>(1);
-        builder.RegisterDrawFeature<LightEmitter, LightFeature, LightFeatureDrawData>(2);
+        builder.RegisterDrawFeature<TilemapDrawProducer, TilemapFeature, TilemapDrawData>(0);
+        builder.RegisterDrawFeature<SpriteDrawProducer, SpriteFeature, SpriteFeatureDrawData>(1);
+        builder.RegisterDrawFeature<LightProducer, LightFeature, LightFeatureDrawData>(2);
     }
 
     protected override void ConfigureModules(IGameSceneModuleBuilder builder)
@@ -96,9 +93,9 @@ public sealed class DemoScene : GameScene
             DrawCommandId.Sprite);
         builder.RegisterRenderer<DrawCommandLight, LightRenderer>(DrawCommandTag.LightRenderer, DrawCommandId.Effect);
 
-        builder.RegisterEmitter<TilemapDrawEmitter, TilemapDrawData>(0);
-        builder.RegisterEmitter<SpriteDrawEmitter, SpriteFeatureDrawData>(1);
-        builder.RegisterEmitter<LightEmitter, LightFeatureDrawData>(2);
+        builder.RegisterDrawProducer<TilemapDrawProducer, TilemapDrawData>(0);
+        builder.RegisterDrawProducer<SpriteDrawProducer, SpriteFeatureDrawData>(1);
+        builder.RegisterDrawProducer<LightProducer, LightFeatureDrawData>(2);
 
         var assets = Context.GetSystem<IAssetSystem>();
 

@@ -2,17 +2,15 @@
 
 using System.Numerics;
 using ConcreteEngine.Core.Features;
-using ConcreteEngine.Core.Rendering.Pipeline;
-using ConcreteEngine.Core.Resources;
 using ConcreteEngine.Core.Transforms;
 
 #endregion
 
-namespace ConcreteEngine.Core.Rendering.Emitters;
+namespace ConcreteEngine.Core.Rendering;
 
-public sealed class TilemapDrawEmitter : DrawCommandEmitter<TilemapDrawData>
+public sealed class TilemapDrawProducer : DrawCommandProducer<TilemapDrawData>
 {
-    protected override void EmitBatch(TilemapDrawData data, in DrawEmitterContext ctx,
+    protected override void EmitBatch(TilemapDrawData data, in CommandProducerContext ctx,
         DrawCommandSubmitter submitter, int order)
     {
         if(data.Count == 0) return;

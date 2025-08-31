@@ -1,7 +1,6 @@
 #region
 
 using System.Numerics;
-using ConcreteEngine.Core.Rendering.Pipeline;
 using ConcreteEngine.Core.Resources;
 using ConcreteEngine.Core.Transforms;
 using ConcreteEngine.Graphics;
@@ -10,7 +9,7 @@ using ConcreteEngine.Graphics.Definitions;
 
 #endregion
 
-namespace ConcreteEngine.Core.Rendering.Renderers;
+namespace ConcreteEngine.Core.Rendering;
 
 public interface ICommandRenderer
 {

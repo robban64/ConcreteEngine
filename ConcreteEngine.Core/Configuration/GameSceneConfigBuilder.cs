@@ -1,9 +1,6 @@
 #region
 
 using ConcreteEngine.Core.Rendering;
-using ConcreteEngine.Core.Rendering.Emitters;
-using ConcreteEngine.Core.Rendering.Pipeline;
-using ConcreteEngine.Core.Rendering.Renderers;
 using ConcreteEngine.Graphics;
 
 #endregion
@@ -19,8 +16,8 @@ public interface IGameSceneRenderBuilder
 {
     void RegisterRenderPass(RenderTargetId target, int order, IRenderPass pass);
 
-    void RegisterEmitter<TEmitter, TEntity>(int order)
-        where TEmitter : DrawCommandEmitter<TEntity>, new()
+    void RegisterDrawProducer<TProducer, TEntity>(int order)
+        where TProducer : DrawCommandProducer<TEntity>, new()
         where TEntity : class;
 
     public void RegisterRenderer<TCommand, TRenderer>(DrawCommandTag commandTag, params DrawCommandId[] commandIds)
@@ -30,9 +27,9 @@ public interface IGameSceneRenderBuilder
 
 public interface IGameSceneFeatureBuilder
 {
-    void RegisterDrawFeature<TEmitter, TFeature, TDrawData>(int order)
+    void RegisterDrawFeature<TProducer, TFeature, TDrawData>(int order)
         where TFeature : class, IGameFeature, IDrawableFeature<TDrawData>, new()
-        where TEmitter : DrawCommandEmitter<TDrawData>
+        where TProducer : DrawCommandProducer<TDrawData>
         where TDrawData : class;
 
     void RegisterFeature<T>(int order) where T : IGameFeature, new();
@@ -44,14 +41,14 @@ public sealed class GameSceneConfigBuilder(IGraphicsDevice graphics, FeatureMana
     private readonly SortedList<int, Func<IGameFeature>> _features = new();
     private readonly SortedList<int, (Func<IDrawableFeature>, Type)> _drawFeatures = new();
     private readonly SortedList<int, RenderPassRegistryMeta> _passes = new();
-    private readonly SortedList<int, Func<IDrawCommandEmitter>> _emitters = new();
+    private readonly SortedList<int, Func<IDrawCommandProducer>> _drawProducers = new();
     private readonly SortedList<int, Func<GameModule>> _modules = new();
     private readonly List<RendererRegistry> _renderers = new();
 
     internal void Clear()
     {
         _features.Clear();
-        _emitters.Clear();
+        _drawProducers.Clear();
         _passes.Clear();
         _renderers.Clear();
     }
@@ -63,7 +60,7 @@ public sealed class GameSceneConfigBuilder(IGraphicsDevice graphics, FeatureMana
 
     public SortedList<int, Func<IGameFeature>> Features => _features;
     public SortedList<int, (Func<IDrawableFeature>, Type)> DrawFeatures => _drawFeatures;
-    public SortedList<int, Func<IDrawCommandEmitter>> Emitters => _emitters;
+    public SortedList<int, Func<IDrawCommandProducer>> DrawProducers => _drawProducers;
     public SortedList<int, RenderPassRegistryMeta> Passes => _passes;
     public SortedList<int, Func<GameModule>> Modules => _modules;
 
@@ -76,22 +73,22 @@ public sealed class GameSceneConfigBuilder(IGraphicsDevice graphics, FeatureMana
         _features.Add(order, () => new T());
     }
 
-    public void RegisterDrawFeature<TEmitter, TFeature, TDrawData>(int order)
+    public void RegisterDrawFeature<TProducer, TFeature, TDrawData>(int order)
         where TFeature : class, IGameFeature, IDrawableFeature<TDrawData>, new()
-        where TEmitter : DrawCommandEmitter<TDrawData>
+        where TProducer : DrawCommandProducer<TDrawData>
         where TDrawData : class
     {
         ArgumentOutOfRangeException.ThrowIfNegative(order, nameof(order));
 
-        _drawFeatures.Add(order, (() => new TFeature(), typeof(TEmitter)));
+        _drawFeatures.Add(order, (() => new TFeature(), typeof(TProducer)));
     }
 
-    public void RegisterEmitter<TEmitter, TDrawData>(int order)
-        where TEmitter : DrawCommandEmitter<TDrawData>, new()
+    public void RegisterDrawProducer<TProducer, TDrawData>(int order)
+        where TProducer : DrawCommandProducer<TDrawData>, new()
         where TDrawData : class
     {
         ArgumentOutOfRangeException.ThrowIfNegative(order, nameof(order));
-        _emitters.Add(order, () => new TEmitter());
+        _drawProducers.Add(order, () => new TProducer());
     }
 
     public void RegisterRenderPass(RenderTargetId target, int order, IRenderPass pass)

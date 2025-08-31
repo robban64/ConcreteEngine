@@ -2,10 +2,6 @@
 
 using ConcreteEngine.Common.Extensions;
 using ConcreteEngine.Core.Configuration;
-using ConcreteEngine.Core.Rendering.Batchers;
-using ConcreteEngine.Core.Rendering.Emitters;
-using ConcreteEngine.Core.Rendering.Pipeline;
-using ConcreteEngine.Core.Rendering.Renderers;
 using ConcreteEngine.Core.Resources;
 using ConcreteEngine.Core.Systems;
 using ConcreteEngine.Core.Transforms;
@@ -35,9 +31,9 @@ public sealed class RenderSystem : IRenderSystem
     private readonly MaterialStore _materialStore;
     private readonly List<IRenderPass>[] _renderPassDesc;
 
-    private readonly DrawEmitterCollector _emitterCollector;
+    private readonly DrawCommandCollector _commandCollector;
     private readonly DrawCommandSubmitter _commandSubmitter;
-    private readonly DrawEmitterContext _emitterContext;
+    private readonly CommandProducerContext _commandProducerContext;
 
     private readonly SpriteRenderer _spriteRenderer;
     private readonly LightRenderer _lightRenderer;
@@ -63,7 +59,7 @@ public sealed class RenderSystem : IRenderSystem
             _renderPassDesc[i] = new List<IRenderPass>(4);
         }
 
-        _emitterCollector = new DrawEmitterCollector();
+        _commandCollector = new DrawCommandCollector();
 
         _spriteRenderer = new SpriteRenderer(_graphics, _camera, _materialStore);
         _lightRenderer = new LightRenderer(_graphics, _camera, _materialStore);
@@ -72,7 +68,7 @@ public sealed class RenderSystem : IRenderSystem
         _spriteBatch = new SpriteBatcher(graphics);
         _tilemapBatcher = new TilemapBatcher(graphics, 64, 32);
 
-        _emitterContext = new DrawEmitterContext
+        _commandProducerContext = new CommandProducerContext
         {
             Graphics = _graphics,
             SpriteBatch = _spriteBatch,
@@ -82,10 +78,10 @@ public sealed class RenderSystem : IRenderSystem
 
     internal void Initialize(GameSceneConfigBuilder builder)
     {
-        foreach (var (order, emitter) in builder.Emitters)
-            _emitterCollector.AddEmitter(order, emitter());
+        foreach (var (order, producer) in builder.DrawProducers)
+            _commandCollector.AddProducer(order, producer());
 
-        _emitterCollector.Initialize();
+        _commandCollector.Initialize();
 
         foreach (var pass in builder.Passes.Values)
             RegisterRenderPass(pass.Target, pass.Pass);
@@ -99,19 +95,19 @@ public sealed class RenderSystem : IRenderSystem
         }
     }
 
-    public void RegisterDrawFeature(int order, IDrawableFeature feature, Type emitterType)
+    public void RegisterDrawFeature(int order, IDrawableFeature feature, Type producerType)
     {
-        var emitter = _emitterCollector.GetEmitter(emitterType);
-        emitter.RegisterFeature(order, feature);
+        var producer = _commandCollector.GetProducer(producerType);
+        producer.RegisterFeature(order, feature);
     }
 
-    public void RegisterDrawFeature<TEmitter, TFeature, TDrawData>(int order, TFeature feature)
-        where TEmitter : DrawCommandEmitter<TDrawData>
+    public void RegisterDrawFeature<TProducer, TFeature, TDrawData>(int order, TFeature feature)
+        where TProducer : DrawCommandProducer<TDrawData>
         where TFeature : class, IGameFeature, IDrawableFeature<TDrawData>
         where TDrawData : class
     {
-        var emitter = _emitterCollector.GetEmitter<TEmitter, TDrawData>();
-        emitter.RegisterFeature<TFeature>(order, feature);
+        var producer = _commandCollector.GetProducer<TProducer, TDrawData>();
+        producer.RegisterFeature<TFeature>(order, feature);
     }
 
     public void RegisterRenderPass(RenderTargetId target, IRenderPass pass)
@@ -143,7 +139,7 @@ public sealed class RenderSystem : IRenderSystem
 
     internal void Render(float alpha, in FrameMetaInfo frameCtx, out FrameRenderResult result)
     {
-        _emitterContext.Alpha = alpha;
+        _commandProducerContext.Alpha = alpha;
         _graphics.StartFrame(in frameCtx);
         PrepareRenderer();
         Execute(alpha);
@@ -155,7 +151,7 @@ public sealed class RenderSystem : IRenderSystem
     private void PrepareRenderer()
     {
         _camera.PrepareRender();
-        _emitterCollector.Collect(_emitterContext, _commandSubmitter);
+        _commandCollector.Collect(_commandProducerContext, _commandSubmitter);
         _commandSubmitter.Prepare();
 
         var projectionViewMatrix = _camera.RenderTransform.ProjectionViewMatrix;

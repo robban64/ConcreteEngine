@@ -10,7 +10,7 @@ using Silk.NET.Maths;
 
 #endregion
 
-namespace ConcreteEngine.Core.Rendering.Batchers;
+namespace ConcreteEngine.Core.Rendering;
 
 internal sealed class TilemapChunkMesh : IDisposable
 {

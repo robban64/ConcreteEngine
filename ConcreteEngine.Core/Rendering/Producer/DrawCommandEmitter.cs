@@ -1,14 +1,12 @@
 #region
 
-using ConcreteEngine.Core.Rendering.Batchers;
-using ConcreteEngine.Core.Rendering.Pipeline;
 using ConcreteEngine.Graphics;
 
 #endregion
 
-namespace ConcreteEngine.Core.Rendering.Emitters;
+namespace ConcreteEngine.Core.Rendering;
 
-public sealed class DrawEmitterContext
+public sealed class CommandProducerContext
 {
     public float Alpha;
     public required IGraphicsDevice Graphics { get; init; }
@@ -16,17 +14,17 @@ public sealed class DrawEmitterContext
     public required TilemapBatcher TilemapBatch { get; init; }
 }
 
-public interface IDrawCommandEmitter
+public interface IDrawCommandProducer
 {
     int Order { get; }
     Type EntityType { get; }
     void Initialize(int order);
-    void Emit(DrawEmitterContext context, DrawCommandSubmitter submitter);
+    void Produce(CommandProducerContext context, DrawCommandSubmitter submitter);
 
     void RegisterFeature(int order, IDrawableFeature feature);
 }
 
-public abstract class DrawCommandEmitter<TDrawData> : IDrawCommandEmitter where TDrawData : class
+public abstract class DrawCommandProducer<TDrawData> : IDrawCommandProducer where TDrawData : class
 {
     public int Order { get; private set; }
     public Type EntityType => typeof(TDrawData);
@@ -38,7 +36,7 @@ public abstract class DrawCommandEmitter<TDrawData> : IDrawCommandEmitter where 
         Order = order;
     }
 
-    public void Emit(DrawEmitterContext ctx, DrawCommandSubmitter submitter)
+    public void Produce(CommandProducerContext ctx, DrawCommandSubmitter submitter)
     {
         if (_features.Count == 0)
         {
@@ -54,7 +52,7 @@ public abstract class DrawCommandEmitter<TDrawData> : IDrawCommandEmitter where 
 
     protected abstract void EmitBatch(
         TDrawData data,
-        in DrawEmitterContext ctx,
+        in CommandProducerContext ctx,
         DrawCommandSubmitter submitter,
         int order);
 

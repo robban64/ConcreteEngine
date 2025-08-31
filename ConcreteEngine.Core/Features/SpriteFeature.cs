@@ -2,7 +2,6 @@
 
 using System.Runtime.InteropServices;
 using ConcreteEngine.Core.Rendering;
-using ConcreteEngine.Core.Rendering.Emitters;
 using ConcreteEngine.Core.Scene;
 using ConcreteEngine.Core.Scene.Nodes;
 using ConcreteEngine.Core.Utils;

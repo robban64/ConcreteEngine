@@ -3,15 +3,13 @@
 using System.Numerics;
 using System.Runtime.InteropServices;
 using ConcreteEngine.Core.Features;
-using ConcreteEngine.Core.Rendering.Batchers;
-using ConcreteEngine.Core.Rendering.Pipeline;
 using ConcreteEngine.Core.Resources;
 using ConcreteEngine.Core.Transforms;
 using ConcreteEngine.Core.Utils;
 
 #endregion
 
-namespace ConcreteEngine.Core.Rendering.Emitters;
+namespace ConcreteEngine.Core.Rendering;
 
 public readonly record struct SpriteDrawBatch(MaterialId MaterialId, int Start, int End, byte Layer = 0);
 
@@ -24,14 +22,14 @@ public struct SpriteDrawEntity()
     public MaterialId MaterialId = default;
 }
 
-public sealed class SpriteDrawEmitter : DrawCommandEmitter<SpriteFeatureDrawData>
+public sealed class SpriteDrawProducer : DrawCommandProducer<SpriteFeatureDrawData>
 {
     private static readonly Matrix4x4 DefaultTransform =
         ModelTransform2D.CreateTransformMatrix(Vector2.Zero, Vector2.One, 0);
     
     public byte Layer { get; set; } = 1;
     
-    protected override void EmitBatch(SpriteFeatureDrawData data, in DrawEmitterContext ctx,
+    protected override void EmitBatch(SpriteFeatureDrawData data, in CommandProducerContext ctx,
         DrawCommandSubmitter submitter, int order)
     {
         if (data.Entities.Count == 0) return;

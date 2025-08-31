@@ -9,7 +9,7 @@ using static ConcreteEngine.Core.Rendering.RenderConsts;
 
 #endregion
 
-namespace ConcreteEngine.Core.Rendering.Batchers;
+namespace ConcreteEngine.Core.Rendering;
 
 
 internal sealed class SpriteBatchMesh : IDisposable

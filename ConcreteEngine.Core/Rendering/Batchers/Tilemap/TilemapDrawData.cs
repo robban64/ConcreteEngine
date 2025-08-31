@@ -4,7 +4,7 @@ using ConcreteEngine.Graphics.Resources;
 
 #endregion
 
-namespace ConcreteEngine.Core.Rendering.Batchers;
+namespace ConcreteEngine.Core.Rendering;
 
 public readonly struct TileDrawItem(ushort atlasX, ushort atlasY)
 {

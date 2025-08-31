@@ -187,10 +187,10 @@ public sealed class GameEngine : IDisposable
 
         foreach (var (order, it) in builder.DrawFeatures)
         {
-            var (factory, emitterType) = it;
+            var (factory, producerType) = it;
             var feature = factory();
             _features.AddFeature(order, feature);
-            _renderer.RegisterDrawFeature(order, feature, emitterType);
+            _renderer.RegisterDrawFeature(order, feature, producerType);
         }
 
         _features.Load(new GameFeatureContext(sceneContext));

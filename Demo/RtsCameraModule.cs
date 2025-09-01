@@ -51,6 +51,7 @@ public class RtsCameraModule : GameModule
         if (input.IsKeyDown(Key.J))
             _transform.Zoom -= 0.1f;
 
+       
         var mouse = input.MousePosition;
         var w = frameCtx.ViewportSize.X - EdgeMarginPixels;
         var h = frameCtx.ViewportSize.Y - EdgeMarginPixels;

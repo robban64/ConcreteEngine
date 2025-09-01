@@ -16,6 +16,7 @@ public readonly record struct SpriteDrawBatch(MaterialId MaterialId, int Start, 
 
 public struct SpriteDrawEntity(): IComparable<SpriteDrawEntity>
 {
+    public int SpriteId;
     public Vector2 Position = Vector2.Zero;
     public Vector2 PreviousPosition = Vector2.Zero;
     public Vector2 Scale = Vector2.One;
@@ -53,7 +54,6 @@ public sealed class SpriteDrawProducer : DrawCommandProducer<SpriteFeatureDrawDa
     public override void OnInitialize( CommandProducerContext ctx)
     {
         ctx.SpriteBatch.CreateSpriteBatch(0,1024);
-        ctx.SpriteBatch.CreateSpriteBatch(1,1024);
 
     }
 
@@ -65,31 +65,6 @@ public sealed class SpriteDrawProducer : DrawCommandProducer<SpriteFeatureDrawDa
         _alpha = ctx.Alpha;
 
         var batches = data.Batches;
-        /*
-        bool isDirty = true;
-        if (batches.Count == _spriteBatches.Count)
-        {
-            isDirty = false;
-            for (int i = 0; i < batches.Count; i++)
-            {
-                var batch = batches[i];
-                var sp = _spriteBatches[i];
-                if (batch.Item1 != sp.MaterialId || batch.Item2 != sp.Length)
-                {
-                    isDirty =  true;
-                    break;
-                }
-            }
-        }
-
-        if (!isDirty)
-        {
-            foreach (var batch in _spriteBatches)
-            {
-                submitter.SubmitDraw(in batch.Cmd, in batch.Meta);
-            }
-            return;
-        }*/
         
         var spriteBatch = ctx.SpriteBatch;
         var entities = data.Entities.AsSpan();
@@ -119,9 +94,7 @@ public sealed class SpriteDrawProducer : DrawCommandProducer<SpriteFeatureDrawDa
         sp.BeginBatch(batchIdx);
         foreach (ref readonly var entity in span)
         {
-            var pos = entity.Position;
-            if (entity.PreviousPosition != default)
-                pos = Vector2.Lerp(entity.PreviousPosition, entity.Position, _alpha);
+            var pos = Vector2.Lerp(entity.PreviousPosition, entity.Position, _alpha);
             var item = new SpriteBatchDrawItem(pos, entity.Scale, entity.Uv);
             sp.SubmitSprite(item);
         }

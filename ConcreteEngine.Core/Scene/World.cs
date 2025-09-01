@@ -5,10 +5,11 @@ namespace ConcreteEngine.Core.Scene;
 public interface IWorld
 {
     GameEntityId Create();
-    GameEntityRegistry<Transform2D> Transforms2D { get; }
-    GameEntityRegistry<SpriteEntity> Sprites { get; }
-    GameEntityRegistry<TilemapEntity> Tilemaps { get; } 
-    GameEntityRegistry<LightEntity> Lights { get; }
+    GameComponentRegistry<Transform2D> Transforms2D { get; }
+    GameComponentRegistry<Transform2D> PrevTransforms2D { get; }
+    GameComponentRegistry<SpriteComponent> Sprites { get; }
+    GameComponentRegistry<TilemapComponent> Tilemaps { get; } 
+    GameComponentRegistry<LightComponent> Lights { get; }
 }
 
 public sealed class World : IWorld
@@ -17,9 +18,29 @@ public sealed class World : IWorld
 
     public GameEntityId Create() => new (_idIdx++);
     
-    public GameEntityRegistry<Transform2D> Transforms2D { get; } = new();
-    public GameEntityRegistry<SpriteEntity> Sprites { get; } = new();
-    public GameEntityRegistry<TilemapEntity> Tilemaps { get; } = new(4);
-    public GameEntityRegistry<LightEntity> Lights { get; } = new();
+    public GameComponentRegistry<Transform2D> Transforms2D { get; } = new();
+    public GameComponentRegistry<Transform2D> PrevTransforms2D { get; } = new();
+
+    public GameComponentRegistry<SpriteComponent> Sprites { get; } = new();
+    public GameComponentRegistry<TilemapComponent> Tilemaps { get; } = new(4);
+    public GameComponentRegistry<LightComponent> Lights { get; } = new();
+    
+
+    public void Cleanup()
+    {
+        Transforms2D.Cleanup();
+        PrevTransforms2D.Cleanup();
+        Sprites.Cleanup();
+        Tilemaps.Cleanup();
+        Lights.Cleanup();
+
+
+        foreach (var view in PrevTransforms2D.View2(Transforms2D))
+        {
+            ref var prev = ref view.Value1;
+            ref var curr = ref view.Value2;
+            prev.Position = curr.Position;
+        }
+    }
     
 }

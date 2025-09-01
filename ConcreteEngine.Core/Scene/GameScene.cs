@@ -30,13 +30,9 @@ public abstract class GameScene
 
     internal void UpdateTick(int tick)
     {
-        //SceneNodes.ApplyPending();
-
         Context.Modules.GameTickUpdate(tick);
-
-       // var collectedNodes = SceneNodes.Collect();
-        //Context.Features.Collect(collectedNodes);
         Context.Features.GameTickUpdate(tick);
+        World.Cleanup();
     }
 
 

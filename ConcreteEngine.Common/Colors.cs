@@ -57,34 +57,33 @@ public static class Colors
     }
 }
 
-public readonly record struct Color4
+public readonly record struct Color4(float R, float G, float B, float A = 1f)
 {
-    private readonly Vector4 _v; // (r,g,b,a), normalized [0..1]
-
-    private Color4(Vector4 normalized) => _v = normalized;
-
     public static Color4 FromNormalized(float r, float g, float b, float a = 1f)
-        => new(new Vector4(ClampNorm(r), ClampNorm(g), ClampNorm(b), ClampNorm(a)));
+        => new(ClampNorm(r), ClampNorm(g), ClampNorm(b), ClampNorm(a));
 
     public static Color4 FromRgba(byte r, byte g, byte b, byte a = 255)
-        => FromNormalized(r / 255f, g / 255f, b / 255f, a / 255f);
+        => new(r / 255f, g / 255f, b / 255f, a / 255f);
 
-    public Vector4 AsVec4() => _v;
-    public Vector3 AsVec3() => _v.AsVector3();
+    public Vector4 AsVec4() => new(R, G, B, A);
+    public Vector3 AsVec3() => new(R, G, B);
 
-    public float R => _v.X;
-    public float G => _v.Y;
-    public float B => _v.Z;
-    public float A => _v.W;
-
-    public Color4 WithAlpha(float a) => FromNormalized(R, G, B, a);
-    public Color4 WithAlphaByte(byte a) => FromRgba((byte)(R * 255f), (byte)(G * 255f), (byte)(B * 255f), a);
+    public Color4 WithAlpha(float a) => new(R, G, B, ClampNorm(a));
+    public Color4 WithAlphaByte(byte a) => new(R, G, B, a / 255f);
 
     public static Color4 Lerp(Color4 from, Color4 to, float t)
-        => new Color4(Vector4.Lerp(from._v, to._v, ClampNorm(t)));
+    {
+        t = ClampNorm(t);
+        return new(
+            from.R + (to.R - from.R) * t,
+            from.G + (to.G - from.G) * t,
+            from.B + (to.B - from.B) * t,
+            from.A + (to.A - from.A) * t
+        );
+    }
 
     public Color4 Multiply(float scalar)
-        => FromNormalized(R * scalar, G * scalar, B * scalar, A);
+        => new(ClampNorm(R * scalar), ClampNorm(G * scalar), ClampNorm(B * scalar), A);
 
     public (byte R, byte G, byte B, byte A) ToBytes()
         => ((byte)MathF.Round(R * 255f),
@@ -92,5 +91,6 @@ public readonly record struct Color4
             (byte)MathF.Round(B * 255f),
             (byte)MathF.Round(A * 255f));
 
-    private static float ClampNorm(float v) => v < 0f ? 0f : (v > 1f ? 1f : v);
+    private static float ClampNorm(float v)
+        => v < 0f ? 0f : (v > 1f ? 1f : v);
 }

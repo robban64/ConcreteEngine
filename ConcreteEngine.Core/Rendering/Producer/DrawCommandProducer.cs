@@ -31,16 +31,15 @@ public abstract class DrawCommandProducer<TDrawData> : IDrawCommandProducer wher
     public Type EntityType => typeof(TDrawData);
 
     private readonly SortedList<int, IDrawableFeature<TDrawData>> _features = new(8);
-    
-    
+
+
     public virtual void OnInitialize(CommandProducerContext ctx)
     {
-        
     }
-    
+
     protected abstract void EmitCommands(
         TDrawData data,
-         CommandProducerContext ctx,
+        CommandProducerContext ctx,
         DrawCommandSubmitter submitter,
         int order);
 
@@ -54,13 +53,13 @@ public abstract class DrawCommandProducer<TDrawData> : IDrawCommandProducer wher
     {
         if (_features.Count == 0)
         {
-            EmitCommands(null!,  ctx, submitter, 0);
+            EmitCommands(null!, ctx, submitter, 0);
             return;
         }
 
         foreach (var (order, feature) in _features)
         {
-            EmitCommands(feature.GetDrawables(),  ctx, submitter, order);
+            EmitCommands(feature.GetDrawables(), ctx, submitter, order);
         }
     }
 

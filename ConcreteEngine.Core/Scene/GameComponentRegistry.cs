@@ -1,16 +1,19 @@
 using System.Collections.Immutable;
+using System.Diagnostics;
 
 namespace ConcreteEngine.Core.Scene;
 
-public sealed class GameEntityRegistry<T> where T : struct
+public sealed class GameComponentRegistry<T> where T : struct
 {
     private readonly Dictionary<GameEntityId, int> _map;
     private T[] _data;
     private GameEntityId[] _entities;
-    
-    private int _idx;
 
-    public GameEntityRegistry(int initialCapacity = 16)
+    private int _idx;
+    
+    public bool IsDirty { get; set; }
+
+    public GameComponentRegistry(int initialCapacity = 16)
     {
         _map = new Dictionary<GameEntityId, int>(initialCapacity);
         _data = new T[initialCapacity];
@@ -32,40 +35,38 @@ public sealed class GameEntityRegistry<T> where T : struct
     {
         if (_idx == _data.Length)
         {
-            ArgumentOutOfRangeException.ThrowIfNotEqual(_data.Length, _entities.Length);
+            Debug.Assert(_data.Length == _entities.Length);
             var newSize = Math.Max(_data.Length * 2, 8);
             Array.Resize(ref _data, newSize);
             Array.Resize(ref _entities, newSize);
         }
+
+        IsDirty = true;
 
         _map[e] = _idx;
         _entities[_idx] = e;
         _data[_idx] = value;
         return ref _data[_idx++];
     }
-    
-    public Span<T> AsSpan() => _data.AsSpan(0, _idx);
-    public EntityEnumerator<T> GetEnumerator() => new(this);
 
-    public struct EntityEnumerator<T1>(GameEntityRegistry<T1> r)
-        where T1 : struct
+    internal void Cleanup()
     {
-        private int _i = -1;
-
-        public bool MoveNext() => ++_i < r.Count;
-        public Item Current => new Item(r.EntityByIndex(_i), _i, r);
-
-        public readonly ref struct Item(GameEntityId e, int idx, GameEntityRegistry<T1> r)
-        {
-            public readonly GameEntityId Entity = e;
-            public readonly int Index = idx;
-            public ref T1 Value => ref r.ByIndex(Index);
-        }
-
-        public EntityEnumerator<T1> GetEnumerator() => this;
+        IsDirty = false;
     }
+
+    public Span<GameEntityId> AsEntitySpan() => _entities.AsSpan(0, _idx);
+    public Span<T> AsSpan() => _data.AsSpan(0, _idx);
     
-    
+    public EntityEnumerator<T> GetEnumerator() => new(this);
+    public EntityEnumerator<T, T2> View2<T2>(GameComponentRegistry<T2> r2) 
+        where T2 : struct => new(this, r2);
+
+    public EntityEnumerator<T, T2, T3> View3<T2, T3>(GameComponentRegistry<T2> r2,
+        GameComponentRegistry<T3> r3)
+        where T2 : struct
+        where T3 : struct => new(this, r2, r3);
+
+
     private static int BinarySearchEntity<T2>(ReadOnlySpan<GameEntityId> collection, GameEntityId entity)
     {
         var id = entity.Id;

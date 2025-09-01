@@ -77,6 +77,7 @@ internal sealed class TilemapChunkMesh : IDisposable
 
     private void CreateTileData()
     {
+        /*
         for (int y = 0; y < _chunkDimension; y++)
         {
             int rowStart = y * _chunkDimension;
@@ -84,6 +85,28 @@ internal sealed class TilemapChunkMesh : IDisposable
             {
                 _tileData[rowStart + x] = new TileDrawItem((ushort)(x % 3), (ushort)(y % 3));
             }
+        }*/
+        
+        
+        for (int y = 0; y < _chunkDimension; y++)
+        {
+            int rowStart = y * _chunkDimension;
+            for (int x = 0; x < _chunkDimension; x++)
+            {
+                var idx = x % 3 == 0 && y % 3 == 0 ? 51 : 55;
+                _tileData[rowStart + x] = new TileDrawItem((ushort)idx);
+            }
+        }
+
+        var middle = _chunkDimension / 2;
+        for (int y = 0; y < _chunkDimension; y++)
+        {
+            int rowStart = y * _chunkDimension;
+            _tileData[rowStart + middle-2] = new TileDrawItem(10);
+            _tileData[rowStart + middle-1] = new TileDrawItem(11);
+            _tileData[rowStart + middle] = new TileDrawItem(11);
+            _tileData[rowStart + middle+1] = new TileDrawItem(11);
+            _tileData[rowStart + middle+2] = new TileDrawItem(12);
         }
     }
 
@@ -105,7 +128,7 @@ internal sealed class TilemapChunkMesh : IDisposable
                 float px = x * _tileSize;
                 float py = y * _tileSize;
 
-                var (u0, v0, u1, v1) = atlas.GetUvRect(tile.AtlasX, tile.AtlasY);
+                var (u0, v0, u1, v1) = atlas.GetUvRect(tile.TextureIndex);
 
                 vertices[vi + 0] = new Vertex2D(px, py, u0, v0);
                 vertices[vi + 1] = new Vertex2D(px + _tileSize, py, u1, v0);

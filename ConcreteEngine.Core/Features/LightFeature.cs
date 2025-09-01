@@ -8,7 +8,7 @@ namespace ConcreteEngine.Core.Features;
 
 public sealed class LightFeatureDrawData
 {
-    public List<LightEntity> Entities { get; set; } = [];
+    public List<LightComponent> Entities { get; set; } = [];
 }
 
 public sealed class LightFeature : GameFeature, IDrawableFeature<LightFeatureDrawData>

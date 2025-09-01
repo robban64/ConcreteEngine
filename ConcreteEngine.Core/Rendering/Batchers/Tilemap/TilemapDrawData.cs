@@ -6,10 +6,9 @@ using ConcreteEngine.Graphics.Resources;
 
 namespace ConcreteEngine.Core.Rendering;
 
-public readonly struct TileDrawItem(ushort atlasX, ushort atlasY)
+public readonly struct TileDrawItem(ushort textureIndex)
 {
-    public readonly ushort AtlasX = atlasX;
-    public readonly ushort AtlasY = atlasY;
+    public readonly ushort TextureIndex = textureIndex;
 }
 
 public readonly struct TileChunkBuildResult(MeshId meshId, uint drawCount)

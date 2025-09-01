@@ -1,6 +1,7 @@
 #region
 
 using System.Numerics;
+using ConcreteEngine.Common;
 using Silk.NET.Maths;
 
 #endregion
@@ -132,8 +133,8 @@ public sealed class ViewTransform2D
         var v = Vector4.Transform(new Vector4(worldCenter, 0f, 1f), _viewMat);
         var viewCenter = new Vector2(v.X, v.Y);
 
-        var wv = MathF.Max(_viewportSize.X, 1) * (1f / _zoom); // camera width in view space
-        var hv = MathF.Max(_viewportSize.Y, 1) * (1f / _zoom); // camera height in view space
+        var wv = _viewportSize.X * (1f / _zoom); // camera width in view space
+        var hv = _viewportSize.Y * (1f / _zoom); // camera height in view space
 
         return !( (viewCenter.X + halfExtents.X) < 0f   ||
                   (viewCenter.X - halfExtents.X) > wv   ||
@@ -141,7 +142,13 @@ public sealed class ViewTransform2D
                   (viewCenter.Y - halfExtents.Y) > hv );
     }
 
-
+    public RectF GetSimpleViewRect()
+    {
+        float invZoom = 1f / _zoom;
+        float viewWidth = _viewportSize.X * invZoom;
+        float viewHeight = _viewportSize.Y * invZoom;
+        return new RectF(_position.X, _position.Y, viewWidth, viewHeight);
+    }
 
     internal void CopyFrom(ViewTransform2D from)
     {

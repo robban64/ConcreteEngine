@@ -6,15 +6,12 @@ namespace ConcreteEngine.Core.Rendering;
 
 internal sealed class DrawCommandCollector
 {
-    private readonly SortedList<int, IDrawCommandProducer> _producers = new(8);
-
+    private readonly List<IDrawCommandProducer> _producers = new(8);
     public int Count => _producers.Count;
 
-    public DrawCommandProducer<TDrawData> GetProducer<TProducer, TDrawData>()
-        where TProducer : DrawCommandProducer<TDrawData>
-        where TDrawData : class
+    public TProducer GetProducer<TProducer>() where TProducer : IDrawCommandProducer
     {
-        foreach (var producer in _producers.Values)
+        foreach (var producer in _producers)
         {
             if (producer is TProducer tProducer) return tProducer;
         }
@@ -24,7 +21,7 @@ internal sealed class DrawCommandCollector
 
     public IDrawCommandProducer GetProducer(Type producerType)
     {
-        foreach (var producer in _producers.Values)
+        foreach (var producer in _producers)
         {
             if (producer.GetType() == producerType) return producer;
         }
@@ -32,29 +29,28 @@ internal sealed class DrawCommandCollector
         throw new InvalidOperationException($"DrawCommandProducer {producerType.Name} not registered");
     }
 
-    public void AddProducer(int order, IDrawCommandProducer producer)
+    public void AddProducer(IDrawCommandProducer producer)
     {
         ArgumentNullException.ThrowIfNull(producer, nameof(producer));
-        if (_producers.ContainsValue(producer))
+        if (_producers.Contains(producer))
             throw new InvalidOperationException($"DrawCommandProducer {producer.GetType().Name} is already registered");
 
-        _producers.Add(order, producer);
+        _producers.Add(producer);
     }
 
-    public void Initialize(CommandProducerContext context)
+    public void AttachContext(CommandProducerContext context)
     {
-        foreach (var (order, producer) in _producers)
+        foreach (var producer in _producers)
         {
-            producer.Initialize(context, order);
+            producer.AttachContext(context);
         }
     }
 
-    public void Collect(CommandProducerContext context, DrawCommandSubmitter submitter)
+    public void Collect(float alpha, DrawCommandSubmitter submitter)
     {
-        var producers = _producers.Values;
-        foreach (var producer in producers)
+        foreach (var producer in _producers)
         {
-            producer.Produce(context, submitter);
+            producer.Produce(alpha, submitter);
         }
     }
 }

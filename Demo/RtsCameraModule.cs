@@ -18,12 +18,12 @@ public class RtsCameraModule : GameModule
     private const int EdgeMarginPixels = 16;
     private const float BaseSpeed = 200;
 
-    private IGameCamera _camera;
+    private ICamera _camera;
     private IEngineInputSource _input;
 
     public override void Initialize()
     {
-        _camera = Context.GetSystem<IRenderSystem>().Camera;
+        _camera = Context.World.Camera;
         _input = Context.GetSystem<IInputSystem>().InputSource;
     }
 

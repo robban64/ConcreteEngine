@@ -6,7 +6,9 @@ using ConcreteEngine.Graphics;
 
 namespace ConcreteEngine.Core.Rendering.Batchers;
 
-public abstract class RenderBatcher<TBatchData> : IDisposable where TBatchData : unmanaged
+public interface IRenderBatcher : IDisposable;
+
+public abstract class RenderBatcher<TBatchData> : IRenderBatcher where TBatchData : unmanaged
 {
     protected readonly IGraphicsDevice Graphics;
 

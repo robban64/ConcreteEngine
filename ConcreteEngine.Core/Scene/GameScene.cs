@@ -14,8 +14,11 @@ public interface IEntityRegistry
 
 public abstract class GameScene
 {
+    private World _world = null!;
+    
     protected GameSceneContext Context { get; private set; } = null!;
-    protected World World { get; } = new();
+
+    protected World World => _world;
 
     protected GameScene()
     {
@@ -35,16 +38,16 @@ public abstract class GameScene
     }
 
 
-    internal void AttachContext(GameSceneContext context)
+    internal void AttachContext(ICamera camera, GameSceneContext context)
     {
+        _world = new World(camera);
         context.World = World;
         Context = context;
     }
 
     internal void Build(GameSceneConfigBuilder builder)
     {
-        ConfigureRenderer(builder, builder.GraphicsDevice);
-        ConfigureFeatures(builder);
+        ConfigureRenderer(builder);
         ConfigureModules(builder);
     }
 
@@ -58,9 +61,9 @@ public abstract class GameScene
         }
     }
 
-    protected abstract void ConfigureFeatures(IGameSceneFeatureBuilder builder);
     protected abstract void ConfigureModules(IGameSceneModuleBuilder builder);
-    protected abstract void ConfigureRenderer(IGameSceneRenderBuilder builder, IGraphicsDevice graphics);
+    protected abstract void ConfigureRenderer(IGameSceneRenderBuilder builder);
+    
 
     public abstract void Initialize();
     public abstract void Unload();

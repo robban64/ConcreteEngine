@@ -1,15 +1,16 @@
 using System.Numerics;
+using ConcreteEngine.Core.Transforms;
 using Silk.NET.Maths;
 
-namespace ConcreteEngine.Core.Transforms;
+namespace ConcreteEngine.Core;
 
-public interface IGameCamera
+public interface ICamera
 {
     public ViewTransform2D Transform { get; }
     public ViewTransform2D RenderTransform { get; }
 }
 
-public sealed class GameCamera : IGameCamera
+public sealed class Camera2D : ICamera
 {
     private readonly ViewTransform2D _transform;
     private readonly ViewTransform2D _renderTransform;
@@ -17,7 +18,7 @@ public sealed class GameCamera : IGameCamera
     public ViewTransform2D Transform => _transform;
     public ViewTransform2D RenderTransform => _renderTransform;
 
-    internal GameCamera()
+    internal Camera2D()
     {
         _transform = new()
         {
@@ -39,3 +40,4 @@ public sealed class GameCamera : IGameCamera
         _renderTransform.CopyFrom(_transform);
     }
 }
+

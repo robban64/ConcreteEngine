@@ -17,7 +17,7 @@ public class DrawCommandSubmitter
 
     // key = DrawCommandId
     private readonly DispatchRegistry _registry = new();
-    private readonly List<ICommandRenderer> _renderers;
+    private IReadOnlyList<ICommandRenderer> _renderers;
 
     private Memory<byte> _buffer;
     private DrawCommandMetaIndex[] _indices;
@@ -26,29 +26,30 @@ public class DrawCommandSubmitter
     private int _iteratorIdx = 0;
     private int _stride = 0;
 
-    public DrawCommandSubmitter(List<ICommandRenderer> renderers)
+    public DrawCommandSubmitter()
     {
-        _renderers = renderers;
-
         _buffer = new byte[DefaultBufferCapacity];
         _indices = new DrawCommandMetaIndex[DefaultIndicesCapacity];
         _submitIdx = 0;
     }
+    
+    internal void Initialize(IReadOnlyList<ICommandRenderer> renderers) => _renderers = renderers;
 
-    public void Register<T, TRenderer>(DrawCommandId id, DrawCommandTag tag)
+    public void Register<T, TRenderer>(DrawCommandTag tag, params DrawCommandId[] cmdIds)
         where T : struct, IDrawCommand
         where TRenderer : class, ICommandRenderer<T>
     {
-        if (id == DrawCommandId.Invalid) throw new ArgumentException("Invalid command id", nameof(id));
-
-
-        if (_renderers.Find(x => x.GetType() == typeof(TRenderer)) is not TRenderer renderer)
+        if (_renderers.Single(x => x.GetType() == typeof(TRenderer)) is not TRenderer renderer)
             throw new InvalidOperationException($"Renderer not found: {typeof(TRenderer).Name}");
-
-        _registry.Register<T, TRenderer>(id, tag, renderer!);
 
         var size = Unsafe.SizeOf<T>();
         if (size > _stride) _stride = size;
+
+        foreach (var id in cmdIds)
+        {
+            if (id == DrawCommandId.Invalid) throw new ArgumentException("Invalid command id", nameof(id));
+            _registry.Register<T, TRenderer>(id, tag, renderer!);
+        }
     }
 
 

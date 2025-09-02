@@ -12,6 +12,7 @@ public sealed class ModuleManager : IModuleManager
     private readonly SortedList<int, GameModule> _modules = new(8);
 
     public ICollection<GameModule> Modules => _modules.Values;
+    
 
     public void AddModule<T>(int order, T module) where T : GameModule
     {
@@ -68,5 +69,6 @@ public sealed class ModuleManager : IModuleManager
         {
             module.Unload();
         }
+        _modules.Clear();
     }
 }

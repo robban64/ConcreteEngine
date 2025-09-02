@@ -49,25 +49,21 @@ public sealed class SpriteDrawProducer : DrawCommandProducer<SpriteFeatureDrawDa
 
     private readonly List<SpriteBatchCache> _spriteBatches = [];
 
-    private float _alpha = 0;
-    
+    private SpriteBatcher _spriteBatch = null!;
 
-    public override void OnInitialize( CommandProducerContext ctx)
+
+    public override void OnInitialize( )
     {
-        ctx.SpriteBatch.CreateSpriteBatch(0,1024);
+        _spriteBatch = Context.DrawBatchers.Get<SpriteBatcher>();
+        _spriteBatch.CreateSpriteBatch(0,1024);
 
     }
 
-    protected override void EmitCommands(SpriteFeatureDrawData data,  CommandProducerContext ctx,
-        DrawCommandSubmitter submitter, int order)
+    protected override void EmitCommands(float alpha, SpriteFeatureDrawData data, DrawCommandSubmitter submitter)
     {
         if (data.Count == 0) return;
 
-        _alpha = ctx.Alpha;
-
         var batches = data.Batches;
-        
-        var spriteBatch = ctx.SpriteBatch;
         var entities = data.Entities.AsSpan();
         
         var batchIdx = 0;
@@ -75,7 +71,7 @@ public sealed class SpriteDrawProducer : DrawCommandProducer<SpriteFeatureDrawDa
         {
             var start = batchIdx == 0 ? 0 : batches[batchIdx - 1].Item2 + 1;
             var length = batchEnd - start;
-            ProcessBatch(entities, spriteBatch, batchIdx, materialId, start, length);
+            ProcessBatch(entities, alpha, batchIdx, materialId, start, length);
             batchIdx++;
         }
 
@@ -87,22 +83,21 @@ public sealed class SpriteDrawProducer : DrawCommandProducer<SpriteFeatureDrawDa
         _spriteBatches.Clear();
     }
 
-    private void ProcessBatch(Span<SpriteDrawEntity> entities, SpriteBatcher sp, int batchIdx, MaterialId materialId, int start,int length)
+    private void ProcessBatch(Span<SpriteDrawEntity> entities, float alpha, int batchIdx, MaterialId materialId, int start,int length)
     {
         var span = entities.Slice(start, length);
-        
 
-        sp.BeginBatch(batchIdx);
+        _spriteBatch.BeginBatch(batchIdx);
         foreach (ref readonly var entity in span)
         {
-            var pos = Vector2.Lerp(entity.PreviousPosition, entity.Position, _alpha);
+            var pos = Vector2.Lerp(entity.PreviousPosition, entity.Position, alpha);
             var item = new SpriteBatchDrawItem(pos, entity.Scale, entity.Uv);
-            sp.SubmitSprite(item);
+            _spriteBatch.SubmitSprite(item);
         }
             
-        var result = sp.BuildBatch();
+        var result = _spriteBatch.BuildBatch();
         
-        var meta = new DrawCommandMeta(DrawCommandId.Sprite, DrawCommandTag.SpriteRenderer,
+        var meta = new DrawCommandMeta(DrawCommandId.Sprite, DrawCommandTag.Mesh2D,
             RenderTargetId.Scene, Layer);
 
         var cmd = new DrawCommandMesh(

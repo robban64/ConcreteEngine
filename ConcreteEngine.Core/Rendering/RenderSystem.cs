@@ -1,5 +1,6 @@
 #region
 
+using ConcreteEngine.Common.Collections;
 using ConcreteEngine.Common.Extensions;
 using ConcreteEngine.Core.Configuration;
 using ConcreteEngine.Core.Features;
@@ -18,36 +19,28 @@ namespace ConcreteEngine.Core.Rendering;
 
 public interface IRenderSystem : IGameEngineSystem
 {
-    IGameCamera Camera { get; }
+    ICamera Camera { get; }
     Material CreateMaterial(string templateName);
     void MutateRenderPass(RenderTargetId targetId, in RenderPassMutation mutation);
 }
+
 
 public sealed class RenderSystem : IRenderSystem
 {
     private readonly IGraphicsDevice _graphics;
     private readonly IGraphicsContext _gfx;
-    private readonly GameCamera _camera;
+    private readonly Camera2D _camera;
 
     private readonly MaterialStore _materialStore;
     private readonly RenderTargetRegistry _renderTargetRegistry;
 
     private readonly DrawCommandCollector _commandCollector;
     private readonly DrawCommandSubmitter _commandSubmitter;
-    private readonly CommandProducerContext _commandProducerContext;
-
-
-    private readonly SpriteRenderer _spriteRenderer;
-    private readonly LightRenderer _lightRenderer;
-
-    private readonly SpriteBatcher _spriteBatch;
-    private readonly TilemapBatcher _tilemapBatcher;
-
-    public SpriteBatcher SpriteBatch => _spriteBatch;
-    public TilemapBatcher TilemapBatch => _tilemapBatcher;
     
-    public IGameCamera Camera => _camera;
+    private readonly List<ICommandRenderer> _renderers = new();
+    private readonly BatcherRegistry _batches = new ();
 
+    public ICamera Camera => _camera;
 
     internal RenderSystem(IGraphicsDevice graphics, MaterialStore materialStore)
     {
@@ -55,71 +48,53 @@ public sealed class RenderSystem : IRenderSystem
         _gfx = graphics.Gfx;
         _materialStore = materialStore;
 
-        _camera = new GameCamera();
+        _camera = new Camera2D();
 
         _renderTargetRegistry = new RenderTargetRegistry(_graphics);
-
         _commandCollector = new DrawCommandCollector();
+        _commandSubmitter = new DrawCommandSubmitter();
 
-        _spriteRenderer = new SpriteRenderer(_graphics, _camera, _materialStore);
-        _lightRenderer = new LightRenderer(_graphics, _camera, _materialStore);
-        _commandSubmitter = new DrawCommandSubmitter([_spriteRenderer, _lightRenderer]);
+    }
 
-        _spriteBatch = new SpriteBatcher(graphics);
-        _tilemapBatcher = new TilemapBatcher(graphics, 64, 32);
-
-        _commandProducerContext = new CommandProducerContext
+    internal void Initialize(IGameFeatureManager features)
+    {
+        _batches.Register(new SpriteBatcher(_graphics));
+        _batches.Register(new TilemapBatcher(_graphics, 64, 32));
+        
+        var cmdProducerCtx = new CommandProducerContext
         {
             Graphics = _graphics,
-            SpriteBatch = _spriteBatch,
-            TilemapBatch = _tilemapBatcher
+            DrawBatchers = _batches,
         };
-    }
-
-    internal void Initialize(GameSceneConfigBuilder builder)
-    {
-        // Command Collector
-        foreach (var (order, producer) in builder.DrawProducers)
-            _commandCollector.AddProducer(order, producer());
-
-        _commandCollector.Initialize(_commandProducerContext);
-
-        // Renderers
-        foreach (var registry in builder.Renderers)
-        {
-            foreach (var cmdId in registry.CommandIds)
-            {
-                registry.Bind(_commandSubmitter, cmdId, registry.CommandTag);
-            }
-        }
         
-        // RenderPasses
-        _renderTargetRegistry.RegisterRenderTargetsFrom(builder.RenderTargetsDesc);
+        // Collector
+        _commandCollector.AddProducer(new TilemapDrawProducer());
+        _commandCollector.AddProducer(new SpriteDrawProducer());
+        _commandCollector.AddProducer(new LightProducer());
         
+        _commandCollector.GetProducer<TilemapDrawProducer>()
+            .RegisterFeature<TilemapFeature>(features.Get<TilemapFeature>());
         
+        _commandCollector.GetProducer<SpriteDrawProducer>()
+            .RegisterFeature<SpriteFeature>(features.Get<SpriteFeature>());
+
+        _commandCollector.GetProducer<LightProducer>()
+            .RegisterFeature<LightFeature>(features.Get<LightFeature>());
+
+        
+        _commandCollector.AttachContext(cmdProducerCtx);
+        
+        _renderers.Add(new SpriteRenderer(_graphics, _camera, _materialStore));
+        _renderers.Add(new LightRenderer(_graphics, _camera, _materialStore));
+
+        _commandSubmitter.Initialize(_renderers);
+        _commandSubmitter.Register<DrawCommandMesh, SpriteRenderer>(DrawCommandTag.Mesh2D, DrawCommandId.Tilemap, DrawCommandId.Sprite);
+        _commandSubmitter.Register<DrawCommandLight, LightRenderer>(DrawCommandTag.Effect2D, DrawCommandId.Light);
     }
 
-    public void RegisterDrawFeature(int order, IDrawableFeature feature, Type producerType)
+    internal void RegisterScene(RenderTargetDescription desc)
     {
-        var producer = _commandCollector.GetProducer(producerType);
-        producer.RegisterFeature(order, feature);
-    }
-
-    public void RegisterDrawFeature<TProducer, TFeature, TDrawData>(int order, TFeature feature)
-        where TProducer : DrawCommandProducer<TDrawData>
-        where TFeature : class, IGameFeature, IDrawableFeature<TDrawData>
-        where TDrawData : class
-    {
-        var producer = _commandCollector.GetProducer<TProducer, TDrawData>();
-        producer.RegisterFeature<TFeature>(order, feature);
-    }
-
-
-    public void RegisterRenderer<TCommand, TRenderer>(DrawCommandId id, DrawCommandTag tag)
-        where TCommand : struct, IDrawCommand
-        where TRenderer : class, ICommandRenderer<TCommand>
-    {
-        _commandSubmitter.Register<TCommand, TRenderer>(id, tag);
+        _renderTargetRegistry.RegisterRenderTargetsFrom(desc);
     }
 
     public Material CreateMaterial(string templateName)
@@ -134,22 +109,20 @@ public sealed class RenderSystem : IRenderSystem
 
     internal void Render(float alpha, in FrameMetaInfo frameCtx, out FrameRenderResult result)
     {
-        _commandProducerContext.Alpha = alpha;
-        
         _camera.SetViewport(frameCtx.ViewportSize);
         
         _graphics.StartFrame(in frameCtx);
-        PrepareRenderer();
+        PrepareRenderer(alpha);
         Execute(alpha);
         _graphics.EndFrame(out result);
 
         _commandSubmitter.Reset();
     }
 
-    private void PrepareRenderer()
+    private void PrepareRenderer(float alpha)
     {
         _camera.PrepareRender();
-        _commandCollector.Collect(_commandProducerContext, _commandSubmitter);
+        _commandCollector.Collect(alpha, _commandSubmitter);
         _commandSubmitter.Prepare();
 
         var projectionViewMatrix = _camera.RenderTransform.ProjectionViewMatrix;
@@ -179,25 +152,7 @@ public sealed class RenderSystem : IRenderSystem
                 //_gfx.SetDepthTest(prevDepthTest);
             }
         }
-        
-        /*
-        for (int target = 0; target < RenderTargetCount; target++)
-        {
-            var renderTarget = (RenderTargetId)target;
-            var passList = renderPasses[target];
 
-            foreach (var pass in passList)
-            {
-                //var (prevBlend, prevDepthTest) = (_gfx.BlendMode, _gfx.DepthTest);
-                _gfx.SetBlendMode(pass.Blend);
-                _gfx.SetDepthTest(pass.DepthTest);
-
-                ExecutePass(renderTarget, pass);
-
-                //_gfx.SetBlendMode(prevBlend);
-                //_gfx.SetDepthTest(prevDepthTest);
-            }
-        }*/
     }
 
     private void ExecutePass(RenderTargetId target, IRenderPass pass)

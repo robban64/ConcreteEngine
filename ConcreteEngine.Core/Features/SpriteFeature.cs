@@ -29,12 +29,12 @@ public class SpriteFeature : GameFeature, IDrawableFeature<SpriteFeatureDrawData
 
     private readonly SpriteFeatureDrawData _drawData = new();
 
-    private IGameCamera _camera;
+    private ICamera _camera;
 
 
     public override void Initialize()
     {
-        _camera = Context.GetSystem<IRenderSystem>().Camera;
+        _camera = Context.World.Camera;
     }
 
     public override void UpdateTick(int tick)

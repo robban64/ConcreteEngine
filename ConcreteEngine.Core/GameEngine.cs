@@ -76,10 +76,10 @@ public sealed class GameEngine : IDisposable
 
         // renderer
         _renderer = new RenderSystem(_graphics, _assets.MaterialStore);
-
+        _renderer.Initialize(_features);
 
         _systems = new EngineSystemManagerManager(_renderer, _inputSystem, _assets);
-        _systems.RegisterSystems();
+        _systems.Initialize();
 
         _nextSceneIndex = 0;
     }
@@ -167,30 +167,22 @@ public sealed class GameEngine : IDisposable
 
 
         var newScene = _sceneFactories[index]();
-        newScene.AttachContext(sceneContext);
+        newScene.AttachContext(_renderer.Camera, sceneContext);
 
-        var builder = new GameSceneConfigBuilder(_graphics, _features, _modules);
+        var builder = new GameSceneConfigBuilder(_features, _modules);
         newScene.Build(builder);
-        _renderer.Initialize(builder);
-
-        foreach (var (order, factory) in builder.Features)
-            _features.AddFeature(order, factory());
-
-        foreach (var (order, it) in builder.DrawFeatures)
-        {
-            var (factory, producerType) = it;
-            var feature = factory();
-            _features.AddFeature(order, feature);
-            _renderer.RegisterDrawFeature(order, feature, producerType);
-        }
+        
+        _renderer.RegisterScene(builder.RenderTargetsDesc);
 
         _features.Load(new GameFeatureContext(sceneContext));
 
+        // Modules
         foreach (var (order, factory) in builder.Modules)
             _modules.AddModule(order, factory());
 
         _modules.Load(new GameModuleContext(sceneContext));
 
+        // Prepare scene
         newScene.InitializeInternal();
 
         _currentScene = newScene;

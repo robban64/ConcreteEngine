@@ -2,6 +2,7 @@
 
 using System.Numerics;
 using ConcreteEngine.Core.Features;
+using ConcreteEngine.Core.Rendering.Batchers;
 using ConcreteEngine.Core.Transforms;
 
 #endregion
@@ -10,24 +11,31 @@ namespace ConcreteEngine.Core.Rendering;
 
 public sealed class TilemapDrawProducer : DrawCommandProducer<TilemapDrawData>
 {
-    protected override void EmitCommands(TilemapDrawData data,  CommandProducerContext ctx,
-        DrawCommandSubmitter submitter, int order)
+    private static readonly Matrix4x4  TilemapTransform = 
+        Transform.CreateTransform2D(Vector2.Zero, new Vector2(1, 1), 0);
+    
+    private TilemapBatcher _tilemapBatcher = null!;
+    
+    public override void OnInitialize()
+    {
+        _tilemapBatcher = Context.DrawBatchers.Get<TilemapBatcher>();
+
+    }
+
+    protected override void EmitCommands(float alpha, TilemapDrawData data, DrawCommandSubmitter submitter)
     {
         if(data.Count == 0) return;
         
-        var transform = Transform.CreateTransform2D(Vector2.Zero, new Vector2(1, 1), 0);
-
-        var tilemapBatcher = ctx.TilemapBatch;
-        var result = tilemapBatcher.BuildBatch();
+        var result = _tilemapBatcher.BuildBatch();
         
         var cmd = new DrawCommandMesh(
             meshId: result.GroundLayer.MeshId,
             drawCount: result.GroundLayer.DrawCount,
             materialId: data.MaterialId,
-            transform: in transform
+            transform: in TilemapTransform
         );
 
-        var meta = new DrawCommandMeta(DrawCommandId.Tilemap, DrawCommandTag.SpriteRenderer, RenderTargetId.Scene, 0);
+        var meta = new DrawCommandMeta(DrawCommandId.Tilemap, DrawCommandTag.Mesh2D, RenderTargetId.Scene, 0);
         submitter.SubmitDraw(in cmd, in meta);
     }
 }

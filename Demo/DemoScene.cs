@@ -51,48 +51,6 @@ public sealed class DemoScene : GameScene
             }
         }
 
-/*
-        {
-            var spriteId = World.Create();
-            World.Transforms2D.Add(spriteId,
-                new Transform2D(new Vector2(64, 64), new Vector2(64, 64), 0));
-            World.Sprites.Add(spriteId, new SpriteComponent(1, spriteMaterial.Id, false));
-        }
-
-        int currSpriteId = 2;
-        for (int x = 0; x < 22; x++)
-        {
-            for (int y = 0; y < 22; y++)
-            {
-                var spriteId = World.Create();
-                World.Transforms2D.Add(spriteId,
-                    new Transform2D(new Vector2(64 * x + 64, 64 * y + 64), new Vector2(64, 64), 0));
-                World.Sprites.Add(spriteId, new SpriteComponent(currSpriteId++, spriteMaterial.Id, false)
-                {
-                    SourceRectangle = new Rectangle<int>(0, 0, 64, 64)
-                });
-            }
-        }
-
-        int offset = 32;
-        for (int x = 0; x < 22; x++)
-        {
-            for (int y = 0; y < 22; y++)
-            {
-                var spriteId = World.Create();
-                World.Transforms2D.Add(spriteId,
-                    new Transform2D(new Vector2(64 * x + offset, 64 * y + offset), new Vector2(64, 64), 0));
-                World.Sprites.Add(spriteId, new SpriteComponent(currSpriteId++, spriteMaterial2.Id, false)
-                {
-                    SourceRectangle = new Rectangle<int>(0, 0, 64, 64)
-                });
-            }
-        }
-
-
-
-*/
-
         {
             var tilemapId = World.Create();
             World.Transforms2D.Add(tilemapId,
@@ -119,13 +77,6 @@ public sealed class DemoScene : GameScene
         }
     }
 
-    protected override void ConfigureFeatures(IGameSceneFeatureBuilder builder)
-    {
-        builder.RegisterDrawFeature<TilemapDrawProducer, TilemapFeature, TilemapDrawData>(0);
-        builder.RegisterDrawFeature<SpriteDrawProducer, SpriteFeature, SpriteFeatureDrawData>(1);
-        builder.RegisterDrawFeature<LightProducer, LightFeature, LightFeatureDrawData>(2);
-    }
-
     protected override void ConfigureModules(IGameSceneModuleBuilder builder)
     {
         builder.RegisterModule<RtsCameraModule>(0);
@@ -133,16 +84,8 @@ public sealed class DemoScene : GameScene
         builder.RegisterModule<DayNightModule>(2);
     }
 
-    protected override void ConfigureRenderer(IGameSceneRenderBuilder builder, IGraphicsDevice graphics)
+    protected override void ConfigureRenderer(IGameSceneRenderBuilder builder)
     {
-        builder.RegisterRenderer<DrawCommandMesh, SpriteRenderer>(DrawCommandTag.SpriteRenderer, DrawCommandId.Tilemap,
-            DrawCommandId.Sprite);
-        builder.RegisterRenderer<DrawCommandLight, LightRenderer>(DrawCommandTag.LightRenderer, DrawCommandId.Effect);
-
-        builder.RegisterDrawProducer<TilemapDrawProducer, TilemapDrawData>(0);
-        builder.RegisterDrawProducer<SpriteDrawProducer, SpriteFeatureDrawData>(1);
-        builder.RegisterDrawProducer<LightProducer, LightFeatureDrawData>(2);
-
         var assets = Context.GetSystem<IAssetSystem>();
 
         var lightPassShader = assets.Get<Shader>("LightPassShader");

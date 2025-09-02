@@ -10,73 +10,68 @@ namespace ConcreteEngine.Core.Rendering;
 
 public sealed class CommandProducerContext
 {
-    public float Alpha;
     public required IGraphicsDevice Graphics { get; init; }
-    public required SpriteBatcher SpriteBatch { get; init; }
-    public required TilemapBatcher TilemapBatch { get; init; }
+    public required BatcherRegistry DrawBatchers { get; init; }
 }
 
 public interface IDrawCommandProducer
 {
-    int Order { get; }
     Type EntityType { get; }
-    void Initialize(CommandProducerContext ctx, int order);
-    void Produce(CommandProducerContext context, DrawCommandSubmitter submitter);
+    void AttachContext(CommandProducerContext ctx);
+    void Produce(float alpha, DrawCommandSubmitter submitter);
 
-    void RegisterFeature(int order, IDrawableFeature feature);
+    void RegisterFeature(IDrawableFeature feature);
 }
 
 public abstract class DrawCommandProducer<TDrawData> : IDrawCommandProducer where TDrawData : class
 {
-    public int Order { get; private set; }
     public Type EntityType => typeof(TDrawData);
 
-    private readonly SortedList<int, IDrawableFeature<TDrawData>> _features = new(8);
+    private readonly List<IDrawableFeature<TDrawData>> _features = new(8);
+    
+    protected CommandProducerContext Context { get; private set; } = null!;
 
-
-    public virtual void OnInitialize(CommandProducerContext ctx)
+    public virtual void OnInitialize()
     {
     }
 
     protected abstract void EmitCommands(
+        float alpha,
         TDrawData data,
-        CommandProducerContext ctx,
-        DrawCommandSubmitter submitter,
-        int order);
+        DrawCommandSubmitter submitter);
 
-    public void Initialize(CommandProducerContext ctx, int order)
+    public void AttachContext(CommandProducerContext ctx)
     {
-        Order = order;
-        OnInitialize(ctx);
+        Context = ctx;
+        OnInitialize();
     }
 
-    public void Produce(CommandProducerContext ctx, DrawCommandSubmitter submitter)
+    public void Produce(float alpha, DrawCommandSubmitter submitter)
     {
         if (_features.Count == 0)
         {
-            EmitCommands(null!, ctx, submitter, 0);
             return;
         }
 
-        foreach (var (order, feature) in _features)
+        foreach (var feature in _features)
         {
-            EmitCommands(feature.GetDrawables(), ctx, submitter, order);
+            EmitCommands(alpha, feature.GetDrawables(),  submitter);
         }
     }
 
 
-    public void RegisterFeature(int order, IDrawableFeature feature)
+    public void RegisterFeature(IDrawableFeature feature)
     {
         if (feature is not IDrawableFeature<TDrawData> featureEntity)
             throw new ArgumentException($"Feature type {feature.GetType()} is not supported");
 
-        _features.Add(order, featureEntity);
+        _features.Add(featureEntity);
     }
 
-    internal void RegisterFeature<TFeature>(int order, IDrawableFeature<TDrawData> feature)
+    internal void RegisterFeature<TFeature>( IDrawableFeature<TDrawData> feature)
         where TFeature : IDrawableFeature<TDrawData>
 
     {
-        _features.Add(order, feature);
+        _features.Add(feature);
     }
 }

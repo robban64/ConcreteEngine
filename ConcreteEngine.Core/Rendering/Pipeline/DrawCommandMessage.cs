@@ -13,14 +13,14 @@ public enum DrawCommandId : byte
     Invalid,
     Tilemap,
     Sprite,
-    Effect
+    Light
 }
 
 public enum DrawCommandTag : byte
 {
     Invalid,
-    SpriteRenderer,
-    LightRenderer
+    Mesh2D,
+    Effect2D
 }
 
 public interface IDrawCommand

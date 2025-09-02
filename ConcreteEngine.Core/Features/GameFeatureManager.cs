@@ -9,16 +9,20 @@ public interface IGameFeatureManager
 
 public sealed class FeatureManager : IGameFeatureManager
 {
-    private readonly SortedList<int, IGameFeature> _features = new(8);
+    private readonly List<IGameFeature> _features = new(4);
+    private readonly List<IDrawableFeature> _drawableFeatures = new(4);
 
-    public void AddFeature<T>(int order, T feature) where T : class, IGameFeature
+    internal FeatureManager()
     {
-        _features.Add(order, feature);
+        AddFeature<TilemapFeature>();
+        AddFeature<SpriteFeature>();
+        AddFeature<LightFeature>();
     }
+
 
     public T Get<T>() where T : IGameFeature
     {
-        foreach (var feature in _features.Values)
+        foreach (var feature in _features)
         {
             if (feature is T tFeature) return tFeature;
         }
@@ -31,7 +35,7 @@ public sealed class FeatureManager : IGameFeatureManager
     {
         if (_features.Count == 0) return;
 
-        foreach (var feature in _features.Values)
+        foreach (var feature in _features)
         {
             if (feature.IsUpdateable)
                 feature.Update(frameInfo);
@@ -42,7 +46,7 @@ public sealed class FeatureManager : IGameFeatureManager
     {
         if (_features.Count == 0) return;
 
-        foreach (var feature in _features.Values)
+        foreach (var feature in _features)
         {
             if (feature.IsUpdateable)
                 feature.UpdateTick(tick);
@@ -51,12 +55,12 @@ public sealed class FeatureManager : IGameFeatureManager
 
     internal void Load(GameFeatureContext context)
     {
-        foreach (var (order, feature) in _features)
+        foreach (var feature in _features)
         {
-            feature.AttachContext(context, order);
+            feature.AttachContext(context);
         }
 
-        foreach (var feature in _features.Values)
+        foreach (var feature in _features)
         {
             feature.Initialize();
         }
@@ -64,9 +68,17 @@ public sealed class FeatureManager : IGameFeatureManager
 
     internal void Unload()
     {
-        foreach (var feature in _features.Values)
+        foreach (var feature in _features)
         {
             feature.Unload();
         }
+    }
+    
+    private void AddFeature<T>() where T : class, IGameFeature, new()
+    {
+        var newFeature = new T();
+        _features.Add(newFeature);
+        if(newFeature is IDrawableFeature drawableFeature)
+            _drawableFeatures.Add(drawableFeature);
     }
 }

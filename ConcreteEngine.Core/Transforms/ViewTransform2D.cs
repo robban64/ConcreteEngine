@@ -6,7 +6,7 @@ using Silk.NET.Maths;
 
 #endregion
 
-namespace ConcreteEngine.Core.Transforms;
+namespace ConcreteEngine.Core;
 
 public sealed class ViewTransform2D
 {
@@ -18,6 +18,11 @@ public sealed class ViewTransform2D
     private Vector2D<int> _viewportSize;
 
     private Matrix4x4 _projectionMat, _viewMat;
+    
+    public float Fov { get; set; } = 70;
+    public float FarPlane { get; set; } = 2000;
+    public float NearPlane { get; set; } = 0.1f;
+    public float AspectRatio { get; set; }
 
     public Vector2 Position
     {

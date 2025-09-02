@@ -4,6 +4,7 @@ namespace ConcreteEngine.Core.Scene;
 
 public interface IWorld
 {
+    public ICamera Camera { get; }
     GameEntityId Create();
     GameComponentStore<Transform2D> Transforms2D { get; }
     GameComponentStore<Transform2D> PrevTransforms2D { get; }
@@ -16,11 +17,17 @@ public sealed class World : IWorld
 {
     private int _idIdx = 1;
 
+    internal World(ICamera camera)
+    {
+        Camera = camera;
+    }
+
+    public ICamera Camera { get; }
+    
     public GameEntityId Create() => new (_idIdx++);
     
     public GameComponentStore<Transform2D> Transforms2D { get; } = new();
     public GameComponentStore<Transform2D> PrevTransforms2D { get; } = new();
-
     public GameComponentStore<SpriteComponent> Sprites { get; } = new();
     public GameComponentStore<TilemapComponent> Tilemaps { get; } = new(4);
     public GameComponentStore<LightComponent> Lights { get; } = new();

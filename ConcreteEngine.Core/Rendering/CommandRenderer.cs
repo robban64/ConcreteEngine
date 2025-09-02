@@ -10,9 +10,7 @@ using ConcreteEngine.Graphics.Resources;
 
 namespace ConcreteEngine.Core.Rendering;
 
-public interface ICommandRenderer
-{
-}
+public interface ICommandRenderer;
 
 public interface ICommandRenderer<T> : ICommandRenderer where T : struct, IDrawCommand
 {
@@ -21,14 +19,14 @@ public interface ICommandRenderer<T> : ICommandRenderer where T : struct, IDrawC
 
 public abstract class CommandRenderer<T> : ICommandRenderer<T> where T : struct, IDrawCommand
 {
-    protected readonly IGameCamera Camera;
+    protected readonly ICamera Camera;
     protected readonly IGraphicsDevice Graphics;
     protected readonly IGraphicsContext Gfx;
     protected readonly MaterialStore MaterialStore;
 
     protected MaterialId PreviousMaterial = default;
 
-    protected CommandRenderer(IGraphicsDevice graphics, IGameCamera camera, MaterialStore materialStore)
+    protected CommandRenderer(IGraphicsDevice graphics, ICamera camera, MaterialStore materialStore)
     {
         Graphics = graphics;
         Gfx = graphics.Gfx;
@@ -76,7 +74,7 @@ public abstract class CommandRenderer<T> : ICommandRenderer<T> where T : struct,
     public abstract void Handle(in T cmd);
 }
 
-public sealed class SpriteRenderer(IGraphicsDevice graphics, IGameCamera camera, MaterialStore materialStore)
+public sealed class SpriteRenderer(IGraphicsDevice graphics, ICamera camera, MaterialStore materialStore)
     : CommandRenderer<DrawCommandMesh>(graphics, camera, materialStore)
 {
     public override void Handle(in DrawCommandMesh cmd)
@@ -90,7 +88,7 @@ public sealed class SpriteRenderer(IGraphicsDevice graphics, IGameCamera camera,
     }
 }
 
-public sealed class LightRenderer(IGraphicsDevice graphics, IGameCamera camera, MaterialStore materialStore)
+public sealed class LightRenderer(IGraphicsDevice graphics, ICamera camera, MaterialStore materialStore)
     : CommandRenderer<DrawCommandLight>(graphics, camera, materialStore)
 {
     public override void Handle(in DrawCommandLight cmd)

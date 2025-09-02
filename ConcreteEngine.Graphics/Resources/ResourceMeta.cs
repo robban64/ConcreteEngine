@@ -1,8 +1,7 @@
 #region
 
 using System.Numerics;
-using ConcreteEngine.Graphics.Data;
-using ConcreteEngine.Graphics.Definitions;
+using ConcreteEngine.Graphics.Descriptors;
 using Silk.NET.Maths;
 
 #endregion
@@ -36,8 +35,8 @@ public readonly struct MeshMeta(
     IndexBufferId indexBufferId,
     DrawPrimitive primitive,
     IboElementType elementType,
-    uint drawCount,
     bool isStatic,
+    uint drawCount,
     uint vertexLayoutCount,
     VertexAttributeDescriptor vertexLayout1,
     VertexAttributeDescriptor vertexLayout2 = default,
@@ -48,8 +47,8 @@ public readonly struct MeshMeta(
     public readonly IndexBufferId IndexBufferId = indexBufferId;
     public readonly DrawPrimitive Primitive = primitive;
     public readonly IboElementType ElementType = elementType;
-    public readonly uint DrawCount = drawCount;
     public readonly bool IsStatic = isStatic;
+    public readonly uint DrawCount = drawCount;
     public readonly uint VertexLayoutCount = vertexLayoutCount;
     public readonly VertexAttributeDescriptor VertexLayout1 = vertexLayout1;
     public readonly VertexAttributeDescriptor VertexLayout2 = vertexLayout2;

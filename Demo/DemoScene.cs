@@ -1,21 +1,13 @@
 #region
 
-using System.Drawing;
 using System.Numerics;
+using ConcreteEngine.Common;
 using ConcreteEngine.Core.Assets;
 using ConcreteEngine.Core.Configuration;
-using ConcreteEngine.Core.Features.Effects;
-using ConcreteEngine.Core.Features.Sprite;
-using ConcreteEngine.Core.Features.Terrain;
+using ConcreteEngine.Core.Features;
 using ConcreteEngine.Core.Rendering;
-using ConcreteEngine.Core.Rendering.Emitters;
-using ConcreteEngine.Core.Rendering.Pipeline;
-using ConcreteEngine.Core.Rendering.Renderers;
 using ConcreteEngine.Core.Scene;
-using ConcreteEngine.Core.Scene.Nodes;
 using ConcreteEngine.Graphics;
-using ConcreteEngine.Graphics.Data;
-using ConcreteEngine.Graphics.Definitions;
 using Silk.NET.Maths;
 using Shader = ConcreteEngine.Core.Resources.Shader;
 
@@ -30,53 +22,115 @@ public sealed class DemoScene : GameScene
         var renderer = Context.GetSystem<IRenderSystem>();
 
         var spriteMaterial = renderer.CreateMaterial("SpriteMaterial");
+        var spriteMaterial2 = renderer.CreateMaterial("SpriteMaterial");
+
         var tilemapMaterial = renderer.CreateMaterial("TilemapMaterial");
         renderer.CreateMaterial("LightMaterial");
 
-        var tilemap = SceneNodes.CreateNode<TilemapBehaviour>("tilemap", null, behaviour =>
+        int currSpriteId = 1;
+        for (int x = 0; x < 4; x++)
         {
-            behaviour.MaterialId = tilemapMaterial.Id;
-        });
+            for (int y = 0; y < 4; y++)
+            {
+                for (int i = 0; i < 64; i++)
+                {
+                    var spriteId = World.Create();
+                    var offsetX = MathF.Cos(i * MathF.PI / 64f) + i;
+                    var offsetY = MathF.Sin(i * MathF.PI / 64f) + i;
 
-        var dummyLightNode = SceneNodes.CreateEmptyNode("LightNodes");
-        for (int i = 0; i < 10; i++)
-        {
-            SceneNodes.CreateNode<LightBehaviour>($"light-{i}", dummyLightNode,
-                b => { b.Position = new Vector2(64 * i, 64 * i); });
+                    var t = new Transform2D(new Vector2(512 * x + offsetX, 512 * y + offsetY), new Vector2(64, 64), 0);
+
+                    World.Transforms2D.Add(spriteId, t);
+                    World.PrevTransforms2D.Add(spriteId, t);
+
+                    World.Sprites.Add(spriteId, new SpriteComponent(currSpriteId++, spriteMaterial.Id, false)
+                    {
+                        SourceRectangle = new Rectangle<int>(0, 0, 64, 64)
+                    });
+                }
+            }
         }
 
-        var sprite1 = SceneNodes.CreateNode<SpriteBehaviour>("node1", null, behaviour =>
+/*
         {
-            behaviour.MaterialId = spriteMaterial.Id;
-            behaviour.SourceRectangle = new Rectangle<int>(0, 0, 64, 64);
-            behaviour.Batched = true;
-        });
+            var spriteId = World.Create();
+            World.Transforms2D.Add(spriteId,
+                new Transform2D(new Vector2(64, 64), new Vector2(64, 64), 0));
+            World.Sprites.Add(spriteId, new SpriteComponent(1, spriteMaterial.Id, false));
+        }
 
-        var sprite2 = SceneNodes.CreateNode<SpriteBehaviour>("node2", null, behaviour =>
+        int currSpriteId = 2;
+        for (int x = 0; x < 22; x++)
         {
-            behaviour.MaterialId = spriteMaterial.Id;
-            behaviour.SourceRectangle = new Rectangle<int>(0, 0, 64, 64);
-            behaviour.Batched = true;
-        });
+            for (int y = 0; y < 22; y++)
+            {
+                var spriteId = World.Create();
+                World.Transforms2D.Add(spriteId,
+                    new Transform2D(new Vector2(64 * x + 64, 64 * y + 64), new Vector2(64, 64), 0));
+                World.Sprites.Add(spriteId, new SpriteComponent(currSpriteId++, spriteMaterial.Id, false)
+                {
+                    SourceRectangle = new Rectangle<int>(0, 0, 64, 64)
+                });
+            }
+        }
 
-        sprite1.LocalTransform.Scale = new Vector2(64, 64);
-        sprite2.LocalTransform.Scale = new Vector2(64, 64);
+        int offset = 32;
+        for (int x = 0; x < 22; x++)
+        {
+            for (int y = 0; y < 22; y++)
+            {
+                var spriteId = World.Create();
+                World.Transforms2D.Add(spriteId,
+                    new Transform2D(new Vector2(64 * x + offset, 64 * y + offset), new Vector2(64, 64), 0));
+                World.Sprites.Add(spriteId, new SpriteComponent(currSpriteId++, spriteMaterial2.Id, false)
+                {
+                    SourceRectangle = new Rectangle<int>(0, 0, 64, 64)
+                });
+            }
+        }
 
-        sprite1.LocalTransform.Position = new Vector2(64, 64);
-        sprite2.LocalTransform.Position = new Vector2(64, 128);
+
+
+*/
+
+        {
+            var tilemapId = World.Create();
+            World.Transforms2D.Add(tilemapId,
+                new Transform2D(Vector2.Zero, Vector2.One, 0));
+            World.Tilemaps.Add(tilemapId, new TilemapComponent(tilemapMaterial.Id, 64, 32));
+        }
+
+        {
+            var rng = new Random(1234);
+            for (int i = 0; i < 10; i++)
+            {
+                for (int j = 0; j < 10; j++)
+                {
+                    var lightId = World.Create();
+                    World.Lights.Add(lightId, new LightComponent
+                    {
+                        Position = new Vector2(i * 256, j * 256),
+                        Color = new Vector3(rng.NextSingle(), rng.NextSingle(), rng.NextSingle()),
+                        Intensity = rng.NextSingle() * (3 - 1) + 1,
+                        Radius = rng.Next(150, 200)
+                    });
+                }
+            }
+        }
     }
 
     protected override void ConfigureFeatures(IGameSceneFeatureBuilder builder)
     {
-        builder.RegisterDrawFeature<TilemapDrawEmitter, TilemapFeature, TilemapDrawData>(0);
-        builder.RegisterDrawFeature<SpriteDrawEmitter, SpriteFeature, SpriteFeatureDrawData>(1);
-        builder.RegisterDrawFeature<LightEmitter, LightFeature, LightFeatureDrawData>(2);
+        builder.RegisterDrawFeature<TilemapDrawProducer, TilemapFeature, TilemapDrawData>(0);
+        builder.RegisterDrawFeature<SpriteDrawProducer, SpriteFeature, SpriteFeatureDrawData>(1);
+        builder.RegisterDrawFeature<LightProducer, LightFeature, LightFeatureDrawData>(2);
     }
 
     protected override void ConfigureModules(IGameSceneModuleBuilder builder)
     {
         builder.RegisterModule<RtsCameraModule>(0);
         builder.RegisterModule<NpcSpriteModule>(1);
+        builder.RegisterModule<DayNightModule>(2);
     }
 
     protected override void ConfigureRenderer(IGameSceneRenderBuilder builder, IGraphicsDevice graphics)
@@ -85,66 +139,34 @@ public sealed class DemoScene : GameScene
             DrawCommandId.Sprite);
         builder.RegisterRenderer<DrawCommandLight, LightRenderer>(DrawCommandTag.LightRenderer, DrawCommandId.Effect);
 
-        builder.RegisterEmitter<TilemapDrawEmitter, TilemapDrawData>(0);
-        builder.RegisterEmitter<SpriteDrawEmitter, SpriteFeatureDrawData>(1);
-        builder.RegisterEmitter<LightEmitter, LightFeatureDrawData>(2);
+        builder.RegisterDrawProducer<TilemapDrawProducer, TilemapDrawData>(0);
+        builder.RegisterDrawProducer<SpriteDrawProducer, SpriteFeatureDrawData>(1);
+        builder.RegisterDrawProducer<LightProducer, LightFeatureDrawData>(2);
 
         var assets = Context.GetSystem<IAssetSystem>();
 
         var lightPassShader = assets.Get<Shader>("LightPassShader");
         var lightComposite = assets.Get<Shader>("LightComposite");
 
-        // single-sample scene FBO
-        var sceneFboId =
-            graphics.CreateFramebuffer(new FrameBufferDesc(SizeRatio: Vector2.One, DepthStencilBuffer: true),
-                out var sceneFboMeta);
-
-        var lightFboId =
-            graphics.CreateFramebuffer(
-                new FrameBufferDesc(SizeRatio: new Vector2(0.3f, 0.3f), TexturePreset: TexturePreset.NearestClamp,
-                    DepthStencilBuffer: false),
-                out var lightFboMeta);
-
-
-        // colorTexId will be 0 for MSAA
-        var msaaFboId = graphics.CreateFramebuffer(new FrameBufferDesc(
-            SizeRatio: Vector2.One, DepthStencilBuffer: true, Msaa: true, Samples: 4), out _);
-
-        // Pass 0: draw scene into MSAA FBO
-        builder.RegisterRenderPass(RenderTargetId.Scene, 0, new SceneRenderPass
+        builder.RegisterRenderTargets(new RenderTargetDescription
         {
-            TargetFbo = msaaFboId,
-            Clear = new RenderPassClearDesc(Color.CornflowerBlue, ClearBufferFlag.ColorAndDepth)
-        });
-
-        // Pass 1: resolve MSAA into single-sample texture FBO
-        builder.RegisterRenderPass(RenderTargetId.Scene, 1, new BlitRenderPass
+            SceneTarget = new SceneTargetDesc
             {
-                TargetFbo = sceneFboId,
-                BlitFbo = msaaFboId,
-                Multisample = true,
+                ClearColor = Colors.CornflowerBlue,
                 Samples = 4
-            }
-        );
-
-        // Pass 2: Draw light into FBO
-        //SourceTexId = [lightFboMeta.ColTexId],
-        builder.RegisterRenderPass(RenderTargetId.SceneLight, 2, new LightRenderPass
+            },
+            LightTarget = new LightTargetDesc
             {
-                TargetFbo = lightFboId,
-                Shader = lightPassShader.ResourceId,
-                Clear = new RenderPassClearDesc(Color.FromArgb(255, 125, 125, 150), ClearBufferFlag.Color),
+                LightShader = lightPassShader.ResourceId,
                 Blend = BlendMode.Additive,
-                DepthTest = false
+                ClearColor = Color4.FromRgba(125, 125, 150),
+                SizeRatio = new Vector2(0.2f, 0.2f),
+                TexPreset = TexturePreset.NearestClamp
+            },
+            ScreenTarget = new ScreenTargetDesc
+            {
+                CompositeShaderId = lightComposite.ResourceId
             }
-        );
-
-        // Pass 3: Combine scene and light fbo texture into final scene
-        builder.RegisterRenderPass(RenderTargetId.SceneLight, 3, new FsqRenderPass
-        {
-            TargetFbo = default,
-            SourceTextures = [sceneFboMeta.ColTexId, lightFboMeta.ColTexId],
-            Shader = lightComposite.ResourceId
         });
     }
 

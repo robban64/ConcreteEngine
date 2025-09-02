@@ -4,8 +4,8 @@ using System.Diagnostics;
 using System.Drawing;
 using System.Numerics;
 using System.Runtime.CompilerServices;
-using ConcreteEngine.Graphics.Data;
-using ConcreteEngine.Graphics.Definitions;
+using ConcreteEngine.Common;
+using ConcreteEngine.Graphics.Descriptors;
 using ConcreteEngine.Graphics.Error;
 using ConcreteEngine.Graphics.Resources;
 using ConcreteEngine.Graphics.Utils;
@@ -85,9 +85,6 @@ public sealed class GlGraphicsContext : IGraphicsContext
         _gl.Enable(GLEnum.Multisample);
         _gl.PixelStore(GLEnum.UnpackAlignment, 1);
         //_gl.Enable(EnableCap.FramebufferSrgb);
-
-        //_gl.Disable(GLEnum.DepthTest);
-        //_gl.DepthMask(false);
     }
 
     public void BeginFrame(in FrameMetaInfo frameCtx)
@@ -104,12 +101,13 @@ public sealed class GlGraphicsContext : IGraphicsContext
 
         SetBlendMode(BlendMode.None);
         SetDepthTest(true);
-        Clear(Color.CornflowerBlue, ClearBufferFlag.ColorAndDepth);
+        Clear(Colors.CornflowerBlue, ClearBufferFlag.ColorAndDepth);
     }
 
     public void EndFrame(out FrameRenderResult result)
     {
         result = new FrameRenderResult(_drawCallCount, _drawTriangleCount);
+        
         // unbind context
         BindMesh(default);
         BindVertexBuffer(default);
@@ -122,14 +120,14 @@ public sealed class GlGraphicsContext : IGraphicsContext
         }
     }
 
-    public void Clear(Color color, ClearBufferFlag flags)
+    public void Clear(Color4 color, ClearBufferFlag flags)
     {
-        _gl.ClearColor(color);
+        ClearColor(_gl, color);
         _gl.Clear(flags.ToGlEnum());
     }
 
 
-    public void BeginScreenPass(Color? clear, ClearBufferFlag? flags)
+    public void BeginScreenPass(Color4? clear, ClearBufferFlag? flags)
     {
         if (_boundFboId != default) GraphicsException.ThrowInvalidState("Cannot begin screen pass while FBO is bound.");
 
@@ -145,7 +143,7 @@ public sealed class GlGraphicsContext : IGraphicsContext
         _currentViewport = _viewport;
     }
 
-    public void BeginRenderPass(FrameBufferId fboId, Color? clear, ClearBufferFlag? flags)
+    public void BeginRenderPass(FrameBufferId fboId, Color4? clear, ClearBufferFlag? flags)
     {
         ArgumentOutOfRangeException.ThrowIfNegativeOrZero(fboId.Id, nameof(fboId));
         if (_boundFboId == fboId) GraphicsException.ThrowInvalidState($"FBO is {fboId} already bound.");
@@ -198,13 +196,12 @@ public sealed class GlGraphicsContext : IGraphicsContext
 
         Debug.Assert(toHandle != fromHandle, "READ and DRAW FBO must differ for resolve.");
 
-        // Save current state …
         var prevReadFbo = _currentReadFboHandle;
         var prevDrawFbo = _currentDrawFboHandle;
         var prevViewport = _currentViewport;
 
 
-        // If source is MSAA, filter must be NEAREST for the resolve.
+        // MSAA NEAREST.
         var filter = fromFbo.Msaa
             ? BlitFramebufferFilter.Nearest
             : linearFilter
@@ -221,7 +218,7 @@ public sealed class GlGraphicsContext : IGraphicsContext
             filter
         );
 
-        // Restore previous bindings & viewport …
+        // restore previous fbo and viewport state
         _gl.BindFramebuffer(FramebufferTarget.ReadFramebuffer, prevReadFbo);
         _gl.BindFramebuffer(FramebufferTarget.DrawFramebuffer, prevDrawFbo);
         _gl.Viewport(prevViewport);
@@ -229,7 +226,6 @@ public sealed class GlGraphicsContext : IGraphicsContext
         _currentReadFboHandle = prevReadFbo;
         _currentDrawFboHandle = prevDrawFbo;
         _currentViewport = prevViewport;
-        // _boundFboId stays whatever it was (0 for screen or the FBO id if inside a pass)
     }
 
     public void SetBlendMode(BlendMode blendMode)
@@ -452,8 +448,7 @@ public sealed class GlGraphicsContext : IGraphicsContext
     {
         ref readonly var meta = ref _store.MeshStore.GetMeta(_boundVaoId);
 
-        if (meta.VertexBufferId == default)
-            GraphicsException.ThrowInvalidState($"Mesh is missing VertexBuffer");
+        meta.VertexBufferId.DebugValidate();
 
         var count = drawCount > 0 ? drawCount : meta.DrawCount;
 
@@ -469,11 +464,13 @@ public sealed class GlGraphicsContext : IGraphicsContext
 
     private void DrawArrays(in MeshMeta meta, uint drawCount)
     {
+        Debug.Assert(drawCount != 0, "DrawArrays called with drawCount = 0");
         _gl.DrawArrays(meta.Primitive.ToGlEnum(), 0, drawCount);
     }
 
-    public unsafe void DrawElements(in MeshMeta meta, uint drawCount)
+    private unsafe void DrawElements(in MeshMeta meta, uint drawCount)
     {
+        Debug.Assert(drawCount != 0, "DrawElements called with drawCount = 0");
         _gl.DrawElements(meta.Primitive.ToGlEnum(), drawCount, meta.ElementType.ToGlEnum(), (void*)0);
     }
 
@@ -541,4 +538,6 @@ public sealed class GlGraphicsContext : IGraphicsContext
         if (error != (GLEnum)ErrorCode.NoError)
             throw new OpenGlException(error);
     }
+
+    private static void ClearColor(GL gl, Color4 c) => gl.ClearColor(c.R, c.G, c.B, 1);
 }

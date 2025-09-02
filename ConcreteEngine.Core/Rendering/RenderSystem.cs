@@ -2,17 +2,14 @@
 
 using ConcreteEngine.Common.Extensions;
 using ConcreteEngine.Core.Configuration;
-using ConcreteEngine.Core.Rendering.Batchers.Sprite;
-using ConcreteEngine.Core.Rendering.Batchers.Tilemap;
-using ConcreteEngine.Core.Rendering.Emitters;
-using ConcreteEngine.Core.Rendering.Pipeline;
-using ConcreteEngine.Core.Rendering.Renderers;
+using ConcreteEngine.Core.Features;
+using ConcreteEngine.Core.Rendering.Batchers;
 using ConcreteEngine.Core.Resources;
 using ConcreteEngine.Core.Systems;
 using ConcreteEngine.Core.Transforms;
 using ConcreteEngine.Graphics;
-using ConcreteEngine.Graphics.Data;
-using ConcreteEngine.Graphics.Definitions;
+using ConcreteEngine.Graphics.Descriptors;
+using ConcreteEngine.Graphics.Resources;
 using static ConcreteEngine.Core.Rendering.RenderConsts;
 
 #endregion
@@ -21,10 +18,9 @@ namespace ConcreteEngine.Core.Rendering;
 
 public interface IRenderSystem : IGameEngineSystem
 {
-    SpriteBatcher SpriteBatch { get; }
-    TilemapBatcher TilemapBatch { get; }
-
+    IGameCamera Camera { get; }
     Material CreateMaterial(string templateName);
+    void MutateRenderPass(RenderTargetId targetId, in RenderPassMutation mutation);
 }
 
 public sealed class RenderSystem : IRenderSystem
@@ -34,11 +30,12 @@ public sealed class RenderSystem : IRenderSystem
     private readonly GameCamera _camera;
 
     private readonly MaterialStore _materialStore;
-    private readonly List<IRenderPass>[] _renderPassDesc;
+    private readonly RenderTargetRegistry _renderTargetRegistry;
 
-    private readonly DrawEmitterCollector _emitterCollector;
+    private readonly DrawCommandCollector _commandCollector;
     private readonly DrawCommandSubmitter _commandSubmitter;
-    private readonly DrawEmitterContext _emitterContext;
+    private readonly CommandProducerContext _commandProducerContext;
+
 
     private readonly SpriteRenderer _spriteRenderer;
     private readonly LightRenderer _lightRenderer;
@@ -48,23 +45,21 @@ public sealed class RenderSystem : IRenderSystem
 
     public SpriteBatcher SpriteBatch => _spriteBatch;
     public TilemapBatcher TilemapBatch => _tilemapBatcher;
+    
+    public IGameCamera Camera => _camera;
 
 
-    internal RenderSystem(IGraphicsDevice graphics, GameCamera camera, MaterialStore materialStore)
+    internal RenderSystem(IGraphicsDevice graphics, MaterialStore materialStore)
     {
         _graphics = graphics;
         _gfx = graphics.Gfx;
-        _camera = camera;
-
         _materialStore = materialStore;
 
-        _renderPassDesc = new List<IRenderPass>[RenderTargetCount];
-        for (int i = 0; i < RenderTargetCount; i++)
-        {
-            _renderPassDesc[i] = new List<IRenderPass>(4);
-        }
+        _camera = new GameCamera();
 
-        _emitterCollector = new DrawEmitterCollector();
+        _renderTargetRegistry = new RenderTargetRegistry(_graphics);
+
+        _commandCollector = new DrawCommandCollector();
 
         _spriteRenderer = new SpriteRenderer(_graphics, _camera, _materialStore);
         _lightRenderer = new LightRenderer(_graphics, _camera, _materialStore);
@@ -73,7 +68,7 @@ public sealed class RenderSystem : IRenderSystem
         _spriteBatch = new SpriteBatcher(graphics);
         _tilemapBatcher = new TilemapBatcher(graphics, 64, 32);
 
-        _emitterContext = new DrawEmitterContext
+        _commandProducerContext = new CommandProducerContext
         {
             Graphics = _graphics,
             SpriteBatch = _spriteBatch,
@@ -83,14 +78,13 @@ public sealed class RenderSystem : IRenderSystem
 
     internal void Initialize(GameSceneConfigBuilder builder)
     {
-        foreach (var (order, emitter) in builder.Emitters)
-            _emitterCollector.AddEmitter(order, emitter());
+        // Command Collector
+        foreach (var (order, producer) in builder.DrawProducers)
+            _commandCollector.AddProducer(order, producer());
 
-        _emitterCollector.Initialize();
+        _commandCollector.Initialize(_commandProducerContext);
 
-        foreach (var pass in builder.Passes.Values)
-            RegisterRenderPass(pass.Target, pass.Pass);
-
+        // Renderers
         foreach (var registry in builder.Renderers)
         {
             foreach (var cmdId in registry.CommandIds)
@@ -98,34 +92,28 @@ public sealed class RenderSystem : IRenderSystem
                 registry.Bind(_commandSubmitter, cmdId, registry.CommandTag);
             }
         }
+        
+        // RenderPasses
+        _renderTargetRegistry.RegisterRenderTargetsFrom(builder.RenderTargetsDesc);
+        
+        
     }
 
-    public void RegisterDrawFeature(int order, IDrawableFeature feature, Type emitterType)
+    public void RegisterDrawFeature(int order, IDrawableFeature feature, Type producerType)
     {
-        var emitter = _emitterCollector.GetEmitter(emitterType);
-        emitter.RegisterFeature(order, feature);
+        var producer = _commandCollector.GetProducer(producerType);
+        producer.RegisterFeature(order, feature);
     }
 
-    public void RegisterDrawFeature<TEmitter, TFeature, TDrawData>(int order, TFeature feature)
-        where TEmitter : DrawCommandEmitter<TDrawData>
+    public void RegisterDrawFeature<TProducer, TFeature, TDrawData>(int order, TFeature feature)
+        where TProducer : DrawCommandProducer<TDrawData>
         where TFeature : class, IGameFeature, IDrawableFeature<TDrawData>
         where TDrawData : class
     {
-        var emitter = _emitterCollector.GetEmitter<TEmitter, TDrawData>();
-        emitter.RegisterFeature<TFeature>(order, feature);
+        var producer = _commandCollector.GetProducer<TProducer, TDrawData>();
+        producer.RegisterFeature<TFeature>(order, feature);
     }
 
-    public void RegisterRenderPass(RenderTargetId target, IRenderPass pass)
-    {
-        if (pass.Op == RenderPassOp.FullscreenQuad && pass is not FsqRenderPass)
-            throw new InvalidOperationException($"RenderPass: FullscreenQuad require {nameof(FsqRenderPass)}");
-
-        if (pass.Op == RenderPassOp.Blit && pass is not BlitRenderPass)
-            throw new InvalidOperationException($"RenderPass: Blit require {nameof(BlitRenderPass)}");
-
-
-        _renderPassDesc[(int)target].Add(pass);
-    }
 
     public void RegisterRenderer<TCommand, TRenderer>(DrawCommandId id, DrawCommandTag tag)
         where TCommand : struct, IDrawCommand
@@ -137,14 +125,19 @@ public sealed class RenderSystem : IRenderSystem
     public Material CreateMaterial(string templateName)
         => _materialStore.CreateMaterialFromTemplate(templateName);
 
-
+    public void MutateRenderPass(RenderTargetId targetId, in RenderPassMutation mutation) 
+        => _renderTargetRegistry.MutateRenderPass(targetId, in mutation);
+    
     public void Shutdown()
     {
     }
 
     internal void Render(float alpha, in FrameMetaInfo frameCtx, out FrameRenderResult result)
     {
-        _emitterContext.Alpha = alpha;
+        _commandProducerContext.Alpha = alpha;
+        
+        _camera.SetViewport(frameCtx.ViewportSize);
+        
         _graphics.StartFrame(in frameCtx);
         PrepareRenderer();
         Execute(alpha);
@@ -156,7 +149,7 @@ public sealed class RenderSystem : IRenderSystem
     private void PrepareRenderer()
     {
         _camera.PrepareRender();
-        _emitterCollector.Collect(_emitterContext, _commandSubmitter);
+        _commandCollector.Collect(_commandProducerContext, _commandSubmitter);
         _commandSubmitter.Prepare();
 
         var projectionViewMatrix = _camera.RenderTransform.ProjectionViewMatrix;
@@ -172,10 +165,26 @@ public sealed class RenderSystem : IRenderSystem
 
     private void Execute(float alpha)
     {
+        foreach (var (renderTarget, passes) in _renderTargetRegistry)
+        {
+            foreach (var pass in passes)
+            {
+                //var (prevBlend, prevDepthTest) = (_gfx.BlendMode, _gfx.DepthTest);
+                _gfx.SetBlendMode(pass.Blend);
+                _gfx.SetDepthTest(pass.DepthTest);
+
+                ExecutePass(renderTarget, pass);
+
+                //_gfx.SetBlendMode(prevBlend);
+                //_gfx.SetDepthTest(prevDepthTest);
+            }
+        }
+        
+        /*
         for (int target = 0; target < RenderTargetCount; target++)
         {
             var renderTarget = (RenderTargetId)target;
-            var passList = _renderPassDesc[target];
+            var passList = renderPasses[target];
 
             foreach (var pass in passList)
             {
@@ -188,7 +197,7 @@ public sealed class RenderSystem : IRenderSystem
                 //_gfx.SetBlendMode(prevBlend);
                 //_gfx.SetDepthTest(prevDepthTest);
             }
-        }
+        }*/
     }
 
     private void ExecutePass(RenderTargetId target, IRenderPass pass)

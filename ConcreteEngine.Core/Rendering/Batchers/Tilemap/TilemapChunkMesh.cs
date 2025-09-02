@@ -2,15 +2,14 @@
 
 using ConcreteEngine.Core.Utils;
 using ConcreteEngine.Graphics;
-using ConcreteEngine.Graphics.Data;
-using ConcreteEngine.Graphics.Definitions;
+using ConcreteEngine.Graphics.Descriptors;
 using ConcreteEngine.Graphics.Primitives;
 using ConcreteEngine.Graphics.Resources;
 using Silk.NET.Maths;
 
 #endregion
 
-namespace ConcreteEngine.Core.Rendering.Batchers.Tilemap;
+namespace ConcreteEngine.Core.Rendering.Batchers;
 
 internal sealed class TilemapChunkMesh : IDisposable
 {
@@ -35,7 +34,7 @@ internal sealed class TilemapChunkMesh : IDisposable
     private readonly VertexBufferId _vertexBufferId;
     private readonly IndexBufferId _indexBufferId;
 
-    private readonly TileData[] _tileData;
+    private readonly TileDrawItem[] _tileData;
 
     private bool _disposed = false;
 
@@ -47,7 +46,7 @@ internal sealed class TilemapChunkMesh : IDisposable
         _tileCount = _chunkDimension * _chunkDimension;
         _tileSize = tileSize;
 
-        _tileData = new TileData[_tileCount];
+        _tileData = new TileDrawItem[_tileCount];
 
         CreateTileData();
         CreateVertexBufferData();
@@ -77,13 +76,36 @@ internal sealed class TilemapChunkMesh : IDisposable
 
     private void CreateTileData()
     {
+        /*
         for (int y = 0; y < _chunkDimension; y++)
         {
             int rowStart = y * _chunkDimension;
             for (int x = 0; x < _chunkDimension; x++)
             {
-                _tileData[rowStart + x] = new TileData((ushort)(x % 3), (ushort)(y % 3));
+                _tileData[rowStart + x] = new TileDrawItem((ushort)(x % 3), (ushort)(y % 3));
             }
+        }*/
+        
+        
+        for (int y = 0; y < _chunkDimension; y++)
+        {
+            int rowStart = y * _chunkDimension;
+            for (int x = 0; x < _chunkDimension; x++)
+            {
+                var idx = x % 3 == 0 && y % 3 == 0 ? 51 : 55;
+                _tileData[rowStart + x] = new TileDrawItem((ushort)idx);
+            }
+        }
+
+        var middle = _chunkDimension / 2;
+        for (int y = 0; y < _chunkDimension; y++)
+        {
+            int rowStart = y * _chunkDimension;
+            _tileData[rowStart + middle-2] = new TileDrawItem(10);
+            _tileData[rowStart + middle-1] = new TileDrawItem(11);
+            _tileData[rowStart + middle] = new TileDrawItem(11);
+            _tileData[rowStart + middle+1] = new TileDrawItem(11);
+            _tileData[rowStart + middle+2] = new TileDrawItem(12);
         }
     }
 
@@ -105,7 +127,7 @@ internal sealed class TilemapChunkMesh : IDisposable
                 float px = x * _tileSize;
                 float py = y * _tileSize;
 
-                var (u0, v0, u1, v1) = atlas.GetUvRect(tile.AtlasX, tile.AtlasY);
+                var (u0, v0, u1, v1) = atlas.GetUvRect(tile.TextureIndex);
 
                 vertices[vi + 0] = new Vertex2D(px, py, u0, v0);
                 vertices[vi + 1] = new Vertex2D(px + _tileSize, py, u1, v0);

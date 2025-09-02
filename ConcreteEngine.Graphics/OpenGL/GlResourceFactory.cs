@@ -1,8 +1,7 @@
 #region
 
 using System.Runtime.CompilerServices;
-using ConcreteEngine.Graphics.Data;
-using ConcreteEngine.Graphics.Definitions;
+using ConcreteEngine.Graphics.Descriptors;
 using ConcreteEngine.Graphics.Error;
 using ConcreteEngine.Graphics.Resources;
 using ConcreteEngine.Graphics.Utils;
@@ -13,7 +12,7 @@ using Silk.NET.OpenGL;
 
 namespace ConcreteEngine.Graphics.OpenGL;
 
-internal class GlResourceFactory(GlGraphicsContext gfx)
+internal sealed class GlResourceFactory(GlGraphicsContext gfx)
 {
     private readonly GL _gl = gfx.Gl;
 
@@ -105,8 +104,8 @@ internal class GlResourceFactory(GlGraphicsContext gfx)
         var vboId = vboHandler(vbo, new VertexBufferMeta(vboDesc.Usage, vboSize, vboElementSize));
 
 
-        meta = new MeshMeta(vboId, iboId, descriptor.Primitive, elementType,
-            drawCount, isStatic, (uint)vp.Length,
+        meta = new MeshMeta(vboId, iboId, descriptor.Primitive, elementType, isStatic,
+            drawCount, (uint)vp.Length,
             pointer1, pointer2, pointer3);
 
         return new GlMeshHandle(handle);

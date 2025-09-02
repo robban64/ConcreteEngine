@@ -2,8 +2,7 @@
 
 using ConcreteEngine.Core.Utils;
 using ConcreteEngine.Graphics;
-using ConcreteEngine.Graphics.Data;
-using ConcreteEngine.Graphics.Definitions;
+using ConcreteEngine.Graphics.Descriptors;
 using ConcreteEngine.Graphics.Error;
 using ConcreteEngine.Graphics.OpenGL;
 using Silk.NET.Input;

@@ -6,7 +6,7 @@ using ConcreteEngine.Graphics.Resources;
 
 #endregion
 
-namespace ConcreteEngine.Core.Rendering.Pipeline;
+namespace ConcreteEngine.Core.Rendering;
 
 public enum DrawCommandId : byte
 {

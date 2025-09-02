@@ -22,7 +22,6 @@ void main()
 
     vec2 uvLight = snapToTexel(TexCoord, uTexelSize);
     vec3 light = texture(uLightTex, uvLight).rgb;
-//    vec3 light = texture(uLightTex, TexCoord).rgb;
 
     // Multiply: scene * (ambient + lights)
     vec3 lit = scene.rgb * light;

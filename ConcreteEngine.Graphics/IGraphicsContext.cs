@@ -2,8 +2,8 @@
 
 using System.Drawing;
 using System.Numerics;
-using ConcreteEngine.Graphics.Data;
-using ConcreteEngine.Graphics.Definitions;
+using ConcreteEngine.Common;
+using ConcreteEngine.Graphics.Descriptors;
 using ConcreteEngine.Graphics.Resources;
 using Silk.NET.Maths;
 
@@ -22,9 +22,9 @@ public interface IGraphicsContext
     void BeginFrame(in FrameMetaInfo frameCtx);
     void EndFrame(out FrameRenderResult result);
 
-    void Clear(Color color, ClearBufferFlag flags);
-    void BeginScreenPass(Color? clear = null, ClearBufferFlag? flags = null);
-    void BeginRenderPass(FrameBufferId fboId, Color? clear, ClearBufferFlag? flags);
+    void Clear(Color4 color, ClearBufferFlag flags);
+    void BeginScreenPass(Color4? clear = null, ClearBufferFlag? flags = null);
+    void BeginRenderPass(FrameBufferId fboId, Color4? clear, ClearBufferFlag? flags);
     void EndRenderPass();
     void BlitFramebuffer(FrameBufferId fromId, FrameBufferId toId = default, bool linearFilter = true);
     void SetBlendMode(BlendMode blendMode);

@@ -1,7 +1,5 @@
 #region
 
-using ConcreteEngine.Core.Rendering.Pipeline;
-
 #endregion
 
 namespace ConcreteEngine.Core.Rendering;

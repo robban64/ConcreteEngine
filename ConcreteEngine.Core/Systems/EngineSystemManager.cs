@@ -21,15 +21,12 @@ public class EngineSystemManagerManager : IEngineSystemManager
     private readonly RenderSystem _renderer;
     private readonly InputSystem _inputSystem;
     private readonly AssetSystem _assets;
-    private readonly CameraSystem _camera;
 
-    internal EngineSystemManagerManager(RenderSystem renderer, InputSystem inputSystem, AssetSystem assets,
-        CameraSystem camera)
+    internal EngineSystemManagerManager(RenderSystem renderer, InputSystem inputSystem, AssetSystem assets)
     {
         _renderer = renderer;
         _inputSystem = inputSystem;
         _assets = assets;
-        _camera = camera;
     }
 
 
@@ -52,7 +49,6 @@ public class EngineSystemManagerManager : IEngineSystemManager
     internal void RegisterSystems()
     {
         _systems.Register<IInputSystem>(_inputSystem);
-        _systems.Register<ICameraSystem>(_camera);
         _systems.Register<IAssetSystem>(_assets);
         _systems.Register<IRenderSystem>(_renderer);
     }

@@ -22,7 +22,7 @@ public struct Transform2D(Vector2 position, Vector2 scale, float rotation)
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public Matrix4x4 GetTransform()
-        => ModelTransform2D.CreateTransformMatrix(Position, Scale, Rotation);
+        => Transform.CreateTransform2D(Position, Scale, Rotation);
 }
 
 public struct SpriteComponent(int spriteId, MaterialId materialId, bool isStatic)

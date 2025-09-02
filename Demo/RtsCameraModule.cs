@@ -1,10 +1,15 @@
+#region
+
 using System.Numerics;
 using ConcreteEngine.Core;
 using ConcreteEngine.Core.Platform;
+using ConcreteEngine.Core.Rendering;
 using ConcreteEngine.Core.Systems;
 using ConcreteEngine.Core.Transforms;
 using ConcreteEngine.Graphics.Data;
 using Silk.NET.Input;
+
+#endregion
 
 namespace Demo;
 
@@ -18,7 +23,7 @@ public class RtsCameraModule : GameModule
 
     public override void Initialize()
     {
-        _camera = Context.GetSystem<ICameraSystem>().Camera;
+        _camera = Context.GetSystem<IRenderSystem>().Camera;
         _input = Context.GetSystem<IInputSystem>().InputSource;
     }
 
@@ -51,7 +56,7 @@ public class RtsCameraModule : GameModule
         if (input.IsKeyDown(Key.J))
             _transform.Zoom -= 0.1f;
 
-       
+
         var mouse = input.MousePosition;
         var w = frameCtx.ViewportSize.X - EdgeMarginPixels;
         var h = frameCtx.ViewportSize.Y - EdgeMarginPixels;

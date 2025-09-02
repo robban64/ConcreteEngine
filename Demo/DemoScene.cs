@@ -1,6 +1,5 @@
 #region
 
-using System.Drawing;
 using System.Numerics;
 using ConcreteEngine.Common;
 using ConcreteEngine.Core.Assets;
@@ -8,10 +7,7 @@ using ConcreteEngine.Core.Configuration;
 using ConcreteEngine.Core.Features;
 using ConcreteEngine.Core.Rendering;
 using ConcreteEngine.Core.Scene;
-using ConcreteEngine.Core.Scene.Nodes;
-using ConcreteEngine.Core.Transforms;
 using ConcreteEngine.Graphics;
-using ConcreteEngine.Graphics.Data;
 using ConcreteEngine.Graphics.Definitions;
 using Silk.NET.Maths;
 using Shader = ConcreteEngine.Core.Resources.Shader;
@@ -31,7 +27,7 @@ public sealed class DemoScene : GameScene
 
         var tilemapMaterial = renderer.CreateMaterial("TilemapMaterial");
         renderer.CreateMaterial("LightMaterial");
-        
+
         int currSpriteId = 1;
         for (int x = 0; x < 4; x++)
         {
@@ -44,10 +40,10 @@ public sealed class DemoScene : GameScene
                     var offsetY = MathF.Sin(i * MathF.PI / 64f) + i;
 
                     var t = new Transform2D(new Vector2(512 * x + offsetX, 512 * y + offsetY), new Vector2(64, 64), 0);
-                    
-                    World.Transforms2D.Add(spriteId,t);
-                    World.PrevTransforms2D.Add(spriteId,t);
-                    
+
+                    World.Transforms2D.Add(spriteId, t);
+                    World.PrevTransforms2D.Add(spriteId, t);
+
                     World.Sprites.Add(spriteId, new SpriteComponent(currSpriteId++, spriteMaterial.Id, false)
                     {
                         SourceRectangle = new Rectangle<int>(0, 0, 64, 64)
@@ -55,11 +51,11 @@ public sealed class DemoScene : GameScene
                 }
             }
         }
-        
+
 /*
         {
             var spriteId = World.Create();
-            World.Transforms2D.Add(spriteId, 
+            World.Transforms2D.Add(spriteId,
                 new Transform2D(new Vector2(64, 64), new Vector2(64, 64), 0));
             World.Sprites.Add(spriteId, new SpriteComponent(1, spriteMaterial.Id, false));
         }
@@ -70,7 +66,7 @@ public sealed class DemoScene : GameScene
             for (int y = 0; y < 22; y++)
             {
                 var spriteId = World.Create();
-                World.Transforms2D.Add(spriteId, 
+                World.Transforms2D.Add(spriteId,
                     new Transform2D(new Vector2(64 * x + 64, 64 * y + 64), new Vector2(64, 64), 0));
                 World.Sprites.Add(spriteId, new SpriteComponent(currSpriteId++, spriteMaterial.Id, false)
                 {
@@ -85,7 +81,7 @@ public sealed class DemoScene : GameScene
             for (int y = 0; y < 22; y++)
             {
                 var spriteId = World.Create();
-                World.Transforms2D.Add(spriteId, 
+                World.Transforms2D.Add(spriteId,
                     new Transform2D(new Vector2(64 * x + offset, 64 * y + offset), new Vector2(64, 64), 0));
                 World.Sprites.Add(spriteId, new SpriteComponent(currSpriteId++, spriteMaterial2.Id, false)
                 {
@@ -93,18 +89,18 @@ public sealed class DemoScene : GameScene
                 });
             }
         }
- 
+
 
 
 */
 
         {
             var tilemapId = World.Create();
-            World.Transforms2D.Add(tilemapId, 
+            World.Transforms2D.Add(tilemapId,
                 new Transform2D(Vector2.Zero, Vector2.One, 0));
             World.Tilemaps.Add(tilemapId, new TilemapComponent(tilemapMaterial.Id, 64, 32));
         }
-        
+
         {
             var rng = new Random(1234);
             for (int i = 0; i < 10; i++)
@@ -114,14 +110,13 @@ public sealed class DemoScene : GameScene
                     var lightId = World.Create();
                     World.Lights.Add(lightId, new LightComponent
                     {
-                        Position =  new Vector2(i * 256, j * 256),
-                        Color = new Vector3(rng.NextSingle(),  rng.NextSingle(), rng.NextSingle()),
-                        Intensity =  rng.NextSingle() * (3 - 1) + 1,
-                        Radius = rng.Next(150,200)
+                        Position = new Vector2(i * 256, j * 256),
+                        Color = new Vector3(rng.NextSingle(), rng.NextSingle(), rng.NextSingle()),
+                        Intensity = rng.NextSingle() * (3 - 1) + 1,
+                        Radius = rng.Next(150, 200)
                     });
                 }
             }
-
         }
     }
 
@@ -137,7 +132,6 @@ public sealed class DemoScene : GameScene
         builder.RegisterModule<RtsCameraModule>(0);
         builder.RegisterModule<NpcSpriteModule>(1);
         builder.RegisterModule<DayNightModule>(2);
-
     }
 
     protected override void ConfigureRenderer(IGameSceneRenderBuilder builder, IGraphicsDevice graphics)
@@ -154,7 +148,7 @@ public sealed class DemoScene : GameScene
 
         var lightPassShader = assets.Get<Shader>("LightPassShader");
         var lightComposite = assets.Get<Shader>("LightComposite");
-        
+
         builder.RegisterRenderTargets(new RenderTargetDescription
         {
             SceneTarget = new SceneTargetDesc
@@ -172,7 +166,7 @@ public sealed class DemoScene : GameScene
             },
             ScreenTarget = new ScreenTargetDesc
             {
-                CompositeShaderId = lightComposite.ResourceId,
+                CompositeShaderId = lightComposite.ResourceId
             }
         });
     }

@@ -18,6 +18,7 @@ namespace ConcreteEngine.Core.Rendering;
 
 public interface IRenderSystem : IGameEngineSystem
 {
+    IGameCamera Camera { get; }
     Material CreateMaterial(string templateName);
     void MutateRenderPass(RenderTargetId targetId, in RenderPassMutation mutation);
 }
@@ -44,15 +45,17 @@ public sealed class RenderSystem : IRenderSystem
 
     public SpriteBatcher SpriteBatch => _spriteBatch;
     public TilemapBatcher TilemapBatch => _tilemapBatcher;
+    
+    public IGameCamera Camera => _camera;
 
 
-    internal RenderSystem(IGraphicsDevice graphics, GameCamera camera, MaterialStore materialStore)
+    internal RenderSystem(IGraphicsDevice graphics, MaterialStore materialStore)
     {
         _graphics = graphics;
         _gfx = graphics.Gfx;
-        _camera = camera;
-
         _materialStore = materialStore;
+
+        _camera = new GameCamera();
 
         _renderTargetRegistry = new RenderTargetRegistry(_graphics);
 
@@ -132,6 +135,9 @@ public sealed class RenderSystem : IRenderSystem
     internal void Render(float alpha, in FrameMetaInfo frameCtx, out FrameRenderResult result)
     {
         _commandProducerContext.Alpha = alpha;
+        
+        _camera.SetViewport(frameCtx.ViewportSize);
+        
         _graphics.StartFrame(in frameCtx);
         PrepareRenderer();
         Execute(alpha);

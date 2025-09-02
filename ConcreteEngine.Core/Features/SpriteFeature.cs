@@ -1,17 +1,9 @@
 #region
 
-using System.Numerics;
-using System.Runtime.CompilerServices;
-using System.Runtime.InteropServices;
 using ConcreteEngine.Core.Rendering;
 using ConcreteEngine.Core.Resources;
-using ConcreteEngine.Core.Scene;
-using ConcreteEngine.Core.Scene.Nodes;
-using ConcreteEngine.Core.Systems;
 using ConcreteEngine.Core.Transforms;
 using ConcreteEngine.Core.Utils;
-using ConcreteEngine.Graphics.Data;
-using Silk.NET.Maths;
 
 #endregion
 
@@ -32,17 +24,17 @@ public class SpriteFeature : GameFeature, IDrawableFeature<SpriteFeatureDrawData
 
     private readonly List<(MaterialId, int)> _batches = [];
     private SpriteDrawEntity[] _entities = new SpriteDrawEntity[16];
-    
+
     private int _entityIdx = 0;
 
     private readonly SpriteFeatureDrawData _drawData = new();
 
-    private ICameraSystem _cameraSystem;
+    private IGameCamera _camera;
 
 
     public override void Initialize()
     {
-        _cameraSystem = Context.GetSystem<ICameraSystem>();
+        _camera = Context.GetSystem<IRenderSystem>().Camera;
     }
 
     public override void UpdateTick(int tick)
@@ -52,7 +44,6 @@ public class SpriteFeature : GameFeature, IDrawableFeature<SpriteFeatureDrawData
         var spriteRegistry = Context.World.Sprites;
         if (spriteRegistry.Count == 0) return;
 
-        var camera = _cameraSystem.Camera.Transform;
         var transforms = Context.World.Transforms2D;
         var prevTransforms = Context.World.PrevTransforms2D;
 
@@ -74,7 +65,7 @@ public class SpriteFeature : GameFeature, IDrawableFeature<SpriteFeatureDrawData
                 PreviousPosition = prevTransform.Position,
                 Scale = transform.Scale,
                 Uv = UvRect.GetInsetUv(sprite.SourceRectangle, sprite.UvScale),
-                MaterialId = sprite.MaterialId,
+                MaterialId = sprite.MaterialId
             };
         }
 

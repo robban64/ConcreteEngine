@@ -1,10 +1,10 @@
-using System.Runtime.InteropServices;
+#region
+
 using ConcreteEngine.Core.Scene;
-using ConcreteEngine.Core.Scene.Nodes;
-using ConcreteEngine.Graphics.Data;
+
+#endregion
 
 namespace ConcreteEngine.Core.Features;
-
 
 public sealed class LightFeatureDrawData
 {
@@ -27,7 +27,7 @@ public sealed class LightFeature : GameFeature, IDrawableFeature<LightFeatureDra
     public override void UpdateTick(int tick)
     {
         _drawData.Entities.Clear();
-        
+
         var lights = Context.World.Lights;
         foreach (var entry in lights)
         {

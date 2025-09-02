@@ -37,7 +37,6 @@ public sealed class GameEngine : IDisposable
     private readonly AssetSystem _assets;
     private readonly RenderSystem _renderer;
     private readonly GameMessagePipeline _pipeline;
-    private readonly CameraSystem _camera;
 
     private int? _nextSceneIndex = null;
     private GameScene _currentScene = null!;
@@ -68,9 +67,6 @@ public sealed class GameEngine : IDisposable
 
         _inputSystem = new InputSystem(_input);
 
-        // camera
-        _camera = new CameraSystem(_input);
-
         // assets
         _assets = new AssetSystem(_graphics, assetConfig.AssetPath, assetConfig.ManifestFilename);
         _assets.Initialize();
@@ -79,10 +75,10 @@ public sealed class GameEngine : IDisposable
         _pipeline = new GameMessagePipeline();
 
         // renderer
-        _renderer = new RenderSystem(_graphics, _camera.Camera, _assets.MaterialStore);
+        _renderer = new RenderSystem(_graphics, _assets.MaterialStore);
 
 
-        _systems = new EngineSystemManagerManager(_renderer, _inputSystem, _assets, _camera);
+        _systems = new EngineSystemManagerManager(_renderer, _inputSystem, _assets);
         _systems.RegisterSystems();
 
         _nextSceneIndex = 0;
@@ -105,22 +101,16 @@ public sealed class GameEngine : IDisposable
             ViewportSize = _window.Size
         };
 
-        _camera.Update(in frameCtx);
         _currentScene?.Update(in frameCtx);
-
+        
         // fixed-step simulation
         _gameTime.Advance(dt);
-
-        // TODO: Store for render use
-        // Usage: Vector2.Lerp(prev.Pos, curr.Pos, renderAlpha);
-        //float renderAlpha = _gameTimer.Accumulator / GameDt;
-
+        
         UpdateSceneTransitionIfNeeded();
     }
 
     private void GameTickUpdate(int tick)
     {
-        var viewportSize = _window.Size;
         _input.Update();
         _currentScene?.UpdateTick(tick);
     }

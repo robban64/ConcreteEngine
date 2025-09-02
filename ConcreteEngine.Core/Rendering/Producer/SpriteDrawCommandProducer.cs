@@ -30,7 +30,7 @@ public struct SpriteDrawEntity(): IComparable<SpriteDrawEntity>
 public sealed class SpriteDrawProducer : DrawCommandProducer<SpriteFeatureDrawData>
 {
     private static readonly Matrix4x4 DefaultTransform =
-        ModelTransform2D.CreateTransformMatrix(Vector2.Zero, Vector2.One, 0);
+        Transform.CreateTransform2D(Vector2.Zero, Vector2.One, 0);
     
     private readonly struct SpriteBatchCache(
         MaterialId materialId,

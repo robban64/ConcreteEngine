@@ -1,14 +1,13 @@
+#region
+
 using System.Numerics;
-using ConcreteEngine.Common;
 using ConcreteEngine.Core;
 using ConcreteEngine.Core.Assets;
-using ConcreteEngine.Core.Rendering;
 using ConcreteEngine.Core.Resources;
-using ConcreteEngine.Core.Scene;
-using ConcreteEngine.Core.Scene.Nodes;
 using ConcreteEngine.Core.Utils;
-using ConcreteEngine.Graphics.Data;
 using Silk.NET.Maths;
+
+#endregion
 
 namespace Demo;
 
@@ -17,10 +16,10 @@ public class NpcSpriteModule : GameModule
     private readonly SpriteAtlas _spriteAtlas = new();
 
     private int _directionCountdown = 5;
-    
+
     private int _dirChunckSize = 32;
     private int _dirChunckOffset = 0;
-    
+
     private int _animationCountdown = 3;
     private int _currentFrame = 0;
 
@@ -28,8 +27,8 @@ public class NpcSpriteModule : GameModule
 
     private Random _random = new();
 
-    private readonly Vector2 _mapUpperBounds = new (64*32, 64*32);
-    
+    private readonly Vector2 _mapUpperBounds = new(64 * 32, 64 * 32);
+
     public override void Initialize()
     {
     }
@@ -44,17 +43,17 @@ public class NpcSpriteModule : GameModule
         {
             node.UvScale = _spriteAtlas.InvTexSizePx;
         }
-        
+
         _entityDirs = new Vector2[nodes.Length];
         for (int i = 0; i < _entityDirs.Length; i++)
         {
             var v = _random.Next(0, 4);
             switch (v)
             {
-              case 0: _entityDirs[i] = -Vector2.UnitX; break;
-              case 1: _entityDirs[i] = Vector2.UnitX; break;
-              case 2: _entityDirs[i] = -Vector2.UnitY; break;
-              case 3: _entityDirs[i] = Vector2.UnitY; break;
+                case 0: _entityDirs[i] = -Vector2.UnitX; break;
+                case 1: _entityDirs[i] = Vector2.UnitX; break;
+                case 2: _entityDirs[i] = -Vector2.UnitY; break;
+                case 3: _entityDirs[i] = Vector2.UnitY; break;
             }
         }
     }
@@ -62,7 +61,7 @@ public class NpcSpriteModule : GameModule
     public override void UpdateTick(int tick)
     {
         const float speed = 2;
-        
+
         bool shouldAnimate = false;
         bool shouldRotate = false;
 
@@ -80,7 +79,7 @@ public class NpcSpriteModule : GameModule
             _directionCountdown = 5;
             shouldRotate = true;
         }
-        
+
         var sprites = Context.World.Sprites;
         var transforms = Context.World.Transforms2D;
         var directions = _entityDirs.AsSpan();
@@ -94,12 +93,13 @@ public class NpcSpriteModule : GameModule
                 var dir = directions[idx];
                 var row = 0;
                 if (dir.X < 0) row = 1;
-                else if(dir.X > 0) row = 3;
-                else if(dir.Y < 0) row = 0;
-                else if(dir.Y > 0) row = 2;
+                else if (dir.X > 0) row = 3;
+                else if (dir.Y < 0) row = 0;
+                else if (dir.Y > 0) row = 2;
                 sprite.SourceRectangle = _spriteAtlas.At(_currentFrame, row);
                 idx++;
             }
+
             idx = 0;
         }
 
@@ -111,7 +111,7 @@ public class NpcSpriteModule : GameModule
 
             if (transform.Position.Y > _mapUpperBounds.Y) dir.Y = -1;
             else if (transform.Position.Y < 0) dir.Y = 1;
-            if(transform.Position.X > _mapUpperBounds.X)  dir.X = -1;
+            if (transform.Position.X > _mapUpperBounds.X) dir.X = -1;
             else if (transform.Position.X < 0) dir.X = 1;
             idx++;
         }
@@ -126,7 +126,7 @@ public class NpcSpriteModule : GameModule
                 _dirChunckOffset = 0;
                 diff = end - _dirChunckSize;
             }
-            
+
             var length = int.Min(_dirChunckSize, diff);
             var dirChunk = directions.Slice(_dirChunckOffset, length);
 
@@ -141,15 +141,12 @@ public class NpcSpriteModule : GameModule
                     case 3: dirChunk[i] = Vector2.UnitY; break;
                 }
             }
-            
+
             _dirChunckOffset += _dirChunckSize;
             if (_dirChunckOffset >= _entityDirs.Length - 1)
             {
                 _dirChunckOffset = 0;
             }
         }
-
     }
-
-    
 }

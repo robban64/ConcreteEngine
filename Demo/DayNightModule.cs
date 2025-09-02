@@ -1,22 +1,20 @@
+#region
+
 using ConcreteEngine.Common;
 using ConcreteEngine.Core;
-using ConcreteEngine.Core.Assets;
 using ConcreteEngine.Core.Rendering;
-using ConcreteEngine.Core.Resources;
-using ConcreteEngine.Core.Utils;
-using ConcreteEngine.Graphics.Data;
-using Silk.NET.Maths;
+
+#endregion
 
 namespace Demo;
 
 public class DayNightModule : GameModule
 {
-
     private IRenderSystem _renderer = null!;
 
-    private readonly Color4 _dayColor   = Color4.FromRgba(200, 200, 255);
+    private readonly Color4 _dayColor = Color4.FromRgba(200, 200, 255);
     private readonly Color4 _nightColor = Color4.FromRgba(50, 50, 100);
-    
+
     private Color4 _ambientColor = Color4.FromRgba(125, 125, 150);
     private Color4 _targetColor;
 
@@ -44,9 +42,10 @@ public class DayNightModule : GameModule
             _towardsDay = !_towardsDay;
             _targetColor = _towardsDay ? _dayColor : _nightColor;
         }
+
         _renderer.MutateRenderPass(RenderTargetId.SceneLight, new RenderPassMutation { ClearColor = _ambientColor });
-        
-        
+
+
         // Just a demo
         var lights = Context.World.Lights.AsSpan();
         if (_originalIntensity.Count == 0)
@@ -72,7 +71,5 @@ public class DayNightModule : GameModule
                 light.Intensity = float.Lerp(light.Intensity, 0.5f, LerpSpeed);
             }
         }
-
     }
-
 }

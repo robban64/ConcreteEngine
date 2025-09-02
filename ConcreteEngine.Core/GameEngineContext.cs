@@ -4,7 +4,6 @@
 
 using ConcreteEngine.Core.Features;
 using ConcreteEngine.Core.Scene;
-using ConcreteEngine.Core.Scene.Nodes;
 using ConcreteEngine.Core.Systems;
 
 namespace ConcreteEngine.Core;
@@ -12,7 +11,6 @@ namespace ConcreteEngine.Core;
 public sealed class GameSceneContext
 {
     private readonly IEngineSystemManager _systems;
-
     public required FeatureManager Features { get; init; }
     public required ModuleManager Modules { get; init; }
     public IWorld World { get; internal set; } = null!;

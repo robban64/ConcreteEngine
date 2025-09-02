@@ -15,7 +15,7 @@ public sealed class TilemapDrawProducer : DrawCommandProducer<TilemapDrawData>
     {
         if(data.Count == 0) return;
         
-        var transform = ModelTransform2D.CreateTransformMatrix(Vector2.Zero, new Vector2(1, 1), 0);
+        var transform = Transform.CreateTransform2D(Vector2.Zero, new Vector2(1, 1), 0);
 
         var tilemapBatcher = ctx.TilemapBatch;
         var result = tilemapBatcher.BuildBatch();

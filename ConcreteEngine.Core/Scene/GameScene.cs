@@ -1,7 +1,6 @@
 #region
 
 using ConcreteEngine.Core.Configuration;
-using ConcreteEngine.Core.Scene.Nodes;
 using ConcreteEngine.Graphics;
 using ConcreteEngine.Graphics.Data;
 

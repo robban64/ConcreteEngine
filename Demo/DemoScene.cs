@@ -161,7 +161,7 @@ public sealed class DemoScene : GameScene
                 LightShader = lightPassShader.ResourceId,
                 Blend = BlendMode.Additive,
                 ClearColor = Color4.FromRgba(125, 125, 150),
-                SizeRatio = new Vector2(0.3f, 0.3f),
+                SizeRatio = new Vector2(0.2f, 0.2f),
                 TexPreset = TexturePreset.NearestClamp
             },
             ScreenTarget = new ScreenTargetDesc

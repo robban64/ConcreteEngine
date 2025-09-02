@@ -1,5 +1,4 @@
-﻿// See https://aka.ms/new-console-template for more information
-
+﻿
 #region
 
 using ConcreteEngine.Core.Configuration;

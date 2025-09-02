@@ -38,13 +38,13 @@ public class NpcSpriteModule : GameModule
         var spriteTexture = Context.GetSystem<IAssetSystem>().Get<Texture2D>("SpriteTexture");
         _spriteAtlas.Set(new Vector2D<int>(64, 64), new Vector2D<int>(spriteTexture.Width, spriteTexture.Height));
 
-        var nodes = Context.World.Sprites.AsSpan();
-        foreach (ref var node in nodes)
+        var spriteSpan = Context.World.Sprites.AsSpan();
+        foreach (ref var node in spriteSpan)
         {
             node.UvScale = _spriteAtlas.InvTexSizePx;
         }
 
-        _entityDirs = new Vector2[nodes.Length];
+        _entityDirs = new Vector2[spriteSpan.Length];
         for (int i = 0; i < _entityDirs.Length; i++)
         {
             var v = _random.Next(0, 4);
@@ -80,14 +80,14 @@ public class NpcSpriteModule : GameModule
             shouldRotate = true;
         }
 
-        var sprites = Context.World.Sprites;
-        var transforms = Context.World.Transforms2D;
+        var spriteStore = Context.World.Sprites;
+        var transformStore = Context.World.Transforms2D;
         var directions = _entityDirs.AsSpan();
 
         int idx = 0;
         if (shouldAnimate)
         {
-            var spritesSpan = sprites.AsSpan();
+            var spritesSpan = spriteStore.AsSpan();
             foreach (ref var sprite in spritesSpan)
             {
                 var dir = directions[idx];
@@ -103,9 +103,9 @@ public class NpcSpriteModule : GameModule
             idx = 0;
         }
 
-        foreach (var it in sprites)
+        foreach (var it in spriteStore)
         {
-            ref var transform = ref transforms.Get(it.Entity);
+            ref var transform = ref transformStore.Get(it.Entity);
             ref var dir = ref _entityDirs[idx];
             transform.Position += dir * speed;
 

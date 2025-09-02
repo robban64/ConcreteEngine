@@ -3,7 +3,7 @@ using System.Diagnostics;
 
 namespace ConcreteEngine.Core.Scene;
 
-public sealed class GameComponentRegistry<T> where T : struct
+public sealed class GameComponentStore<T> where T : struct
 {
     private readonly Dictionary<GameEntityId, int> _map;
     private T[] _data;
@@ -13,7 +13,7 @@ public sealed class GameComponentRegistry<T> where T : struct
     
     public bool IsDirty { get; set; }
 
-    public GameComponentRegistry(int initialCapacity = 16)
+    public GameComponentStore(int initialCapacity = 16)
     {
         _map = new Dictionary<GameEntityId, int>(initialCapacity);
         _data = new T[initialCapacity];
@@ -58,11 +58,11 @@ public sealed class GameComponentRegistry<T> where T : struct
     public Span<T> AsSpan() => _data.AsSpan(0, _idx);
     
     public EntityEnumerator<T> GetEnumerator() => new(this);
-    public EntityEnumerator<T, T2> View2<T2>(GameComponentRegistry<T2> r2) 
+    public EntityEnumerator<T, T2> View2<T2>(GameComponentStore<T2> r2) 
         where T2 : struct => new(this, r2);
 
-    public EntityEnumerator<T, T2, T3> View3<T2, T3>(GameComponentRegistry<T2> r2,
-        GameComponentRegistry<T3> r3)
+    public EntityEnumerator<T, T2, T3> View3<T2, T3>(GameComponentStore<T2> r2,
+        GameComponentStore<T3> r3)
         where T2 : struct
         where T3 : struct => new(this, r2, r3);
 

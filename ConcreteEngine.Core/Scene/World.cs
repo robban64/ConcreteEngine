@@ -5,11 +5,11 @@ namespace ConcreteEngine.Core.Scene;
 public interface IWorld
 {
     GameEntityId Create();
-    GameComponentRegistry<Transform2D> Transforms2D { get; }
-    GameComponentRegistry<Transform2D> PrevTransforms2D { get; }
-    GameComponentRegistry<SpriteComponent> Sprites { get; }
-    GameComponentRegistry<TilemapComponent> Tilemaps { get; } 
-    GameComponentRegistry<LightComponent> Lights { get; }
+    GameComponentStore<Transform2D> Transforms2D { get; }
+    GameComponentStore<Transform2D> PrevTransforms2D { get; }
+    GameComponentStore<SpriteComponent> Sprites { get; }
+    GameComponentStore<TilemapComponent> Tilemaps { get; } 
+    GameComponentStore<LightComponent> Lights { get; }
 }
 
 public sealed class World : IWorld
@@ -18,12 +18,12 @@ public sealed class World : IWorld
 
     public GameEntityId Create() => new (_idIdx++);
     
-    public GameComponentRegistry<Transform2D> Transforms2D { get; } = new();
-    public GameComponentRegistry<Transform2D> PrevTransforms2D { get; } = new();
+    public GameComponentStore<Transform2D> Transforms2D { get; } = new();
+    public GameComponentStore<Transform2D> PrevTransforms2D { get; } = new();
 
-    public GameComponentRegistry<SpriteComponent> Sprites { get; } = new();
-    public GameComponentRegistry<TilemapComponent> Tilemaps { get; } = new(4);
-    public GameComponentRegistry<LightComponent> Lights { get; } = new();
+    public GameComponentStore<SpriteComponent> Sprites { get; } = new();
+    public GameComponentStore<TilemapComponent> Tilemaps { get; } = new(4);
+    public GameComponentStore<LightComponent> Lights { get; } = new();
     
 
     public void Cleanup()

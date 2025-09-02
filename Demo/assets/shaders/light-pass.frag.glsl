@@ -3,13 +3,12 @@
 in vec2 TexCoord;
 out vec4 FragColor;
 
-// World reconstruction
-uniform mat4 uViewProj; // world->clip
-uniform vec2 uLightPos;   // world
-uniform float uRadius;    // world
+uniform mat4 uViewProj;
+uniform vec2 uLightPos;
+uniform float uRadius;
 uniform vec3 uColor;      // 0..1
 uniform float uIntensity; // scalar
-uniform float uSoftness;  // falloff exponent (e.g. 2.0..3.0)
+uniform float uSoftness;  
 uniform int uShape;       // 0=circle, 1=diamond, 2=square-soft
 
 vec2 ScreenToWorld(vec2 uv, mat4 invProj)

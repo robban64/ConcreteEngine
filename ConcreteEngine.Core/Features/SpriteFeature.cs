@@ -41,18 +41,18 @@ public class SpriteFeature : GameFeature, IDrawableFeature<SpriteFeatureDrawData
     {
         _entityIdx = 0;
 
-        var spriteRegistry = Context.World.Sprites;
-        if (spriteRegistry.Count == 0) return;
+        var spriteStore = Context.World.Sprites;
+        if (spriteStore.Count == 0) return;
 
         var transforms = Context.World.Transforms2D;
         var prevTransforms = Context.World.PrevTransforms2D;
 
-        if (_entities.Length < spriteRegistry.Count)
+        if (_entities.Length < spriteStore.Count)
         {
-            Array.Resize(ref _entities, spriteRegistry.Count);
+            Array.Resize(ref _entities, spriteStore.Count);
         }
 
-        foreach (var entry in spriteRegistry.View3(transforms, prevTransforms))
+        foreach (var entry in spriteStore.View3(transforms, prevTransforms))
         {
             ref var sprite = ref entry.Value1;
             ref var transform = ref entry.Value2;

@@ -2,12 +2,11 @@
 
 using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
-using ConcreteEngine.Graphics.Definitions;
 using ConcreteEngine.Graphics.Error;
 
 #endregion
 
-namespace ConcreteEngine.Graphics.Data;
+namespace ConcreteEngine.Graphics.Descriptors;
 
 public record MeshDescriptor<TVertex, TIndex> where TVertex : unmanaged where TIndex : unmanaged
 {

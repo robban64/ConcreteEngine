@@ -3,8 +3,7 @@
 using System.Drawing;
 using System.Numerics;
 using ConcreteEngine.Common;
-using ConcreteEngine.Graphics.Data;
-using ConcreteEngine.Graphics.Definitions;
+using ConcreteEngine.Graphics.Descriptors;
 using ConcreteEngine.Graphics.Resources;
 using Silk.NET.Maths;
 

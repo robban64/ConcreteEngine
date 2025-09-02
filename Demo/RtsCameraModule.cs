@@ -6,7 +6,7 @@ using ConcreteEngine.Core.Platform;
 using ConcreteEngine.Core.Rendering;
 using ConcreteEngine.Core.Systems;
 using ConcreteEngine.Core.Transforms;
-using ConcreteEngine.Graphics.Data;
+using ConcreteEngine.Graphics.Descriptors;
 using Silk.NET.Input;
 
 #endregion

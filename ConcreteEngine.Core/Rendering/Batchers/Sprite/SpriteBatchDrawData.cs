@@ -2,7 +2,7 @@ using System.Numerics;
 using ConcreteEngine.Core.Utils;
 using ConcreteEngine.Graphics.Resources;
 
-namespace ConcreteEngine.Core.Rendering;
+namespace ConcreteEngine.Core.Rendering.Batchers;
 
 public readonly record struct SpriteBatchDrawItem(
     Vector2 Position,

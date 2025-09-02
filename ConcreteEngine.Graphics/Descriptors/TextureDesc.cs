@@ -1,10 +1,8 @@
 #region
 
-using ConcreteEngine.Graphics.Definitions;
-
 #endregion
 
-namespace ConcreteEngine.Graphics.Data;
+namespace ConcreteEngine.Graphics.Descriptors;
 
 public readonly record struct TextureDesc(
     byte[] PixelData,

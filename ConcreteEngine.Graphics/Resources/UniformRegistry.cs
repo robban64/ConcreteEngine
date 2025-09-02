@@ -1,6 +1,5 @@
 #region
 
-using ConcreteEngine.Graphics.Data;
 using ConcreteEngine.Graphics.Error;
 
 #endregion

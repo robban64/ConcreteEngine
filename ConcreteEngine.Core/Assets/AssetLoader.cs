@@ -2,8 +2,7 @@
 
 using ConcreteEngine.Core.Resources;
 using ConcreteEngine.Graphics;
-using ConcreteEngine.Graphics.Data;
-using ConcreteEngine.Graphics.Definitions;
+using ConcreteEngine.Graphics.Descriptors;
 using StbImageSharp;
 
 #endregion

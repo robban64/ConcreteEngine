@@ -1,4 +1,4 @@
-namespace ConcreteEngine.Graphics.Definitions;
+namespace ConcreteEngine.Graphics;
 
 public enum DrawPrimitive
 {

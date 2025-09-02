@@ -3,12 +3,12 @@
 using ConcreteEngine.Common.Extensions;
 using ConcreteEngine.Core.Configuration;
 using ConcreteEngine.Core.Features;
+using ConcreteEngine.Core.Rendering.Batchers;
 using ConcreteEngine.Core.Resources;
 using ConcreteEngine.Core.Systems;
 using ConcreteEngine.Core.Transforms;
 using ConcreteEngine.Graphics;
-using ConcreteEngine.Graphics.Data;
-using ConcreteEngine.Graphics.Definitions;
+using ConcreteEngine.Graphics.Descriptors;
 using ConcreteEngine.Graphics.Resources;
 using static ConcreteEngine.Core.Rendering.RenderConsts;
 

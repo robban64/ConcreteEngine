@@ -1,12 +1,11 @@
 #region
 
 using System.Numerics;
-using ConcreteEngine.Graphics.Definitions;
 using Silk.NET.Maths;
 
 #endregion
 
-namespace ConcreteEngine.Graphics.Data;
+namespace ConcreteEngine.Graphics.Descriptors;
 
 public readonly record struct FrameBufferDesc(
     Vector2 SizeRatio,

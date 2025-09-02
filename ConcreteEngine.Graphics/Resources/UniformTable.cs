@@ -1,22 +1,11 @@
 #region
 
 using System.Runtime.CompilerServices;
-using ConcreteEngine.Graphics.Definitions;
 
 #endregion
 
-namespace ConcreteEngine.Graphics.Data;
+namespace ConcreteEngine.Graphics.Resources;
 
-public enum UniformValueKind : byte
-{
-    Float,
-    Int,
-    Vec2,
-    Vec3,
-    Vec4,
-    Mat3,
-    Mat4
-}
 
 public sealed class UniformTable
 {

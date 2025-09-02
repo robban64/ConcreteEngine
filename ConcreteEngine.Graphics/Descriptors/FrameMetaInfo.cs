@@ -4,7 +4,7 @@ using Silk.NET.Maths;
 
 #endregion
 
-namespace ConcreteEngine.Graphics.Data;
+namespace ConcreteEngine.Graphics.Descriptors;
 
 public struct FrameMetaInfo
 {

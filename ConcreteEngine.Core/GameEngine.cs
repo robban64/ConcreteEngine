@@ -10,7 +10,7 @@ using ConcreteEngine.Core.Scene;
 using ConcreteEngine.Core.Systems;
 using ConcreteEngine.Core.Time;
 using ConcreteEngine.Graphics;
-using ConcreteEngine.Graphics.Data;
+using ConcreteEngine.Graphics.Descriptors;
 
 #endregion
 

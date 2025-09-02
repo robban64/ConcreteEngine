@@ -5,7 +5,7 @@ using ConcreteEngine.Graphics.Error;
 
 #endregion
 
-namespace ConcreteEngine.Core.Rendering;
+namespace ConcreteEngine.Core.Rendering.Batchers;
 
 
 

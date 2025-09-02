@@ -8,7 +8,6 @@ using ConcreteEngine.Core.Features;
 using ConcreteEngine.Core.Rendering;
 using ConcreteEngine.Core.Scene;
 using ConcreteEngine.Graphics;
-using ConcreteEngine.Graphics.Definitions;
 using Silk.NET.Maths;
 using Shader = ConcreteEngine.Core.Resources.Shader;
 

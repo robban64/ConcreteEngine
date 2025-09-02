@@ -4,7 +4,7 @@
 using ConcreteEngine.Core.Configuration;
 using ConcreteEngine.Core.Platform;
 using ConcreteEngine.Core.Utils;
-using ConcreteEngine.Graphics.Definitions;
+using ConcreteEngine.Graphics;
 using Demo;
 using Silk.NET.Windowing;
 

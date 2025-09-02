@@ -1,4 +1,4 @@
-using ConcreteEngine.Graphics.Data;
+using ConcreteEngine.Graphics.Descriptors;
 
 namespace ConcreteEngine.Core.Features;
 

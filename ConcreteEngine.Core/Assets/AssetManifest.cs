@@ -13,7 +13,7 @@ internal sealed class AssetManifest
 {
     public required AssetResourceManifestDesc ResourceManifest { get; init; }
 
-    public record AssetResourceManifestDesc(string Material, string Shader, string Texture);
+    public record AssetResourceManifestDesc(string Material, string Shader, string Texture, string Mesh);
 }
 
 internal sealed class AssetResourceManifest<T> where T : IAssetManifestRecord
@@ -40,6 +40,12 @@ internal sealed record AssetTextureRecord(
     TexturePreset Preset,
     EnginePixelFormat PixelFormat = EnginePixelFormat.Rgba,
     float LodBias = -0.25f)
+    : IAssetManifestRecord;
+
+
+internal sealed record AssetMeshRecord(
+    string Name,
+    string Filename)
     : IAssetManifestRecord;
 
 interface IAssetMaterialValue

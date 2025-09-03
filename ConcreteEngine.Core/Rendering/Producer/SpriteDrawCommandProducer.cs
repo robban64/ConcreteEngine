@@ -4,9 +4,7 @@ using System.Numerics;
 using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
 using ConcreteEngine.Core.Features;
-using ConcreteEngine.Core.Rendering.Batchers;
 using ConcreteEngine.Core.Resources;
-using ConcreteEngine.Core.Transforms;
 using ConcreteEngine.Core.Utils;
 
 #endregion
@@ -31,17 +29,17 @@ public struct SpriteDrawEntity(): IComparable<SpriteDrawEntity>
 public sealed class SpriteDrawProducer : DrawCommandProducer<SpriteFeatureDrawData>
 {
     private static readonly Matrix4x4 DefaultTransform =
-        Transform.CreateTransform2D(Vector2.Zero, Vector2.One, 0);
+        TransformHelper.CreateTransform2D(Vector2.Zero, Vector2.One, 0);
     
     private readonly struct SpriteBatchCache(
         MaterialId materialId,
         int length,
-        in DrawCommandMesh cmd,
+        in DrawCommandSprite cmd,
         in DrawCommandMeta meta)
     {
         public readonly MaterialId MaterialId = materialId;
         public readonly int Length = length;
-        public readonly DrawCommandMesh Cmd = cmd;
+        public readonly DrawCommandSprite Cmd = cmd;
         public readonly DrawCommandMeta Meta = meta;
     }
 
@@ -100,7 +98,7 @@ public sealed class SpriteDrawProducer : DrawCommandProducer<SpriteFeatureDrawDa
         var meta = new DrawCommandMeta(DrawCommandId.Sprite, DrawCommandTag.Mesh2D,
             RenderTargetId.Scene, Layer);
 
-        var cmd = new DrawCommandMesh(
+        var cmd = new DrawCommandSprite(
             meshId: result.MeshId,
             materialId: materialId,
             drawCount: result.DrawCount,

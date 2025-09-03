@@ -111,7 +111,7 @@ public sealed class GlGraphicsDevice : IGraphicsDevice<GlGraphicsContext>
             VertexPointers =
             [
                 VertexAttributeDescriptor.Make<Vertex2D>(nameof(Vertex2D.Position)),
-                VertexAttributeDescriptor.Make<Vertex2D>(nameof(Vertex2D.Texture))
+                VertexAttributeDescriptor.Make<Vertex2D>(nameof(Vertex2D.TexCoords))
             ],
             Primitive = DrawPrimitive.TriangleStrip
         }, out _);

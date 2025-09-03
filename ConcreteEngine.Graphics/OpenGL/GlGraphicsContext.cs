@@ -107,7 +107,7 @@ public sealed class GlGraphicsContext : IGraphicsContext
     public void EndFrame(out FrameRenderResult result)
     {
         result = new FrameRenderResult(_drawCallCount, _drawTriangleCount);
-        
+
         // unbind context
         BindMesh(default);
         BindVertexBuffer(default);
@@ -286,7 +286,7 @@ public sealed class GlGraphicsContext : IGraphicsContext
     public void BindTexture(TextureId id, uint slot)
     {
         if (slot >= Configuration.MaxTextureImageUnits)
-            GraphicsException.ThrowCapabilityExceeded<TextureId>("Texture slot", (int)slot,
+            GraphicsException.ThrowCapabilityExceeded<TextureId>("TexCoords slot", (int)slot,
                 Configuration.MaxTextureImageUnits);
 
         if (_boundTextures[slot] == id) return;
@@ -526,9 +526,25 @@ public sealed class GlGraphicsContext : IGraphicsContext
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public unsafe void SetUniform(ShaderUniform uniform, in Matrix4x4 value)
     {
-        //_gl.UniformMatrix4(_boundUniforms![uniform], 1, false, (float*) &value);
         var p = (float*)Unsafe.AsPointer(ref Unsafe.AsRef(in value));
         _gl.UniformMatrix4(_boundUniforms![uniform], 1, false, p);
+    }
+
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public unsafe void SetUniformMat3(ShaderUniform uniform, in Matrix4x4 value)
+    {
+        Span<float> m = stackalloc float[9];
+        m[0] = value.M11;
+        m[1] = value.M21;
+        m[2] = value.M31;
+        m[3] = value.M12;
+        m[4] = value.M22;
+        m[5] = value.M32;
+        m[6] = value.M13;
+        m[7] = value.M23;
+        m[8] = value.M33;
+        fixed (float* p = m)
+            _gl.UniformMatrix3(_boundUniforms![uniform], 1, false, p);
     }
 
 

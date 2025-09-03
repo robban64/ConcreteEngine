@@ -1,0 +1,17 @@
+{
+  "folder": "./shaders",
+  "resources": [
+    {
+      "name": "ScreenShader",
+      "vertexFilename": "screen.vert.glsl",
+      "fragmentFilename": "screen.frag.glsl",
+      "samplers": ["uTexture"]
+    },
+	{
+	  "name": "Diffuse",
+	  "vertexFilename": "diffuse.vert.glsl",
+	  "fragmentFilename": "diffuse.frag.glsl",
+	  "samplers": ["uTexture"]
+	}
+  ]
+}

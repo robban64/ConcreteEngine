@@ -37,6 +37,7 @@ public sealed class Material
 
     // Helpers
     public bool HasViewProjection { get; private set; }
+    public bool HasNormalMatrix { get; private set; }
     //public bool HasModelMatrix { get; private set; }
     //public bool HasModelMatrix { get; private set; }
 
@@ -82,7 +83,9 @@ public sealed class Material
             }
         }
 
-        HasViewProjection = template.Shader.UniformTable.ContainsKey(ShaderUniform.ProjectionViewMatrix);
+        var table = template.Shader.UniformTable;
+        HasViewProjection = table.ContainsKey(ShaderUniform.ProjectionViewMatrix);
+        HasNormalMatrix = table.ContainsKey(ShaderUniform.NormalMatrix);
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]

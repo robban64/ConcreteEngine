@@ -1,7 +1,7 @@
 using System.Numerics;
 using System.Runtime.CompilerServices;
 using ConcreteEngine.Core.Resources;
-using ConcreteEngine.Core.Transforms;
+using ConcreteEngine.Graphics.Resources;
 using Silk.NET.Maths;
 
 namespace ConcreteEngine.Core.Scene;
@@ -22,7 +22,25 @@ public struct Transform2D(Vector2 position, Vector2 scale, float rotation)
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public Matrix4x4 GetTransform()
-        => Transform.CreateTransform2D(Position, Scale, Rotation);
+        => TransformHelper.CreateTransform2D(Position, Scale, Rotation);
+}
+
+public struct Transform(Vector3 position, Vector3 scale, Quaternion rotation)
+{
+    public Vector3 Position = position;
+    public Vector3 Scale = scale;
+    public Quaternion Rotation = rotation;
+
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public Matrix4x4 GetTransform()
+        => TransformHelper.CreateTransform(Position, Scale, Rotation);
+}
+
+public struct MeshComponent(MeshId meshId, MaterialId materialId, uint drawCount)
+{
+    public MeshId MeshId = meshId;
+    public MaterialId MaterialId = materialId;
+    public uint DrawCount = drawCount;
 }
 
 public struct SpriteComponent(int spriteId, MaterialId materialId, bool isStatic)

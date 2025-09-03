@@ -25,7 +25,7 @@ public enum RenderTargetId : byte
 
 public readonly record struct RenderPassClearDesc(Color4 ClearColor, ClearBufferFlag ClearMask);
 
-public interface IRenderPass
+public interface IRenderPassDescriptor
 {
     public RenderPassOp Op { get; }
     public BlendMode Blend { get; }
@@ -35,7 +35,7 @@ public interface IRenderPass
     public FrameBufferId TargetFbo { get; }
 }
 
-public sealed class SceneRenderPass : IRenderPass
+public sealed class SceneRenderPass : IRenderPassDescriptor
 {
     public RenderPassOp Op => RenderPassOp.DrawScene;
     public BlendMode Blend { get; set; } = BlendMode.Alpha;
@@ -48,7 +48,7 @@ public sealed class SceneRenderPass : IRenderPass
     public required FrameBufferId TargetFbo { get; set; }
 }
 
-public sealed class LightRenderPass : IRenderPass
+public sealed class LightRenderPass : IRenderPassDescriptor
 {
     public RenderPassOp Op => RenderPassOp.DrawScene;
     public BlendMode Blend { get; set; } = BlendMode.Additive;
@@ -60,7 +60,7 @@ public sealed class LightRenderPass : IRenderPass
     public required ShaderId Shader { get; set; }
 }
 
-public sealed class BlitRenderPass : IRenderPass
+public sealed class BlitRenderPass : IRenderPassDescriptor
 {
     public RenderPassOp Op => RenderPassOp.Blit;
     public BlendMode Blend => BlendMode.None;
@@ -75,7 +75,7 @@ public sealed class BlitRenderPass : IRenderPass
     public uint Samples { get; init; } = 0;
 }
 
-public sealed class FsqRenderPass : IRenderPass
+public sealed class FsqRenderPass : IRenderPassDescriptor
 {
     public RenderPassOp Op => RenderPassOp.FullscreenQuad;
     public BlendMode Blend => BlendMode.None;

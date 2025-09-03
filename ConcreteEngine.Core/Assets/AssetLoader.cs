@@ -3,6 +3,7 @@
 using ConcreteEngine.Core.Resources;
 using ConcreteEngine.Graphics;
 using ConcreteEngine.Graphics.Descriptors;
+using ConcreteEngine.Graphics.Primitives;
 using StbImageSharp;
 
 #endregion
@@ -13,6 +14,7 @@ internal sealed class AssetLoader
 {
     private readonly string _rootPath;
     private readonly IGraphicsDevice _graphics;
+    private readonly MeshLoader _meshLoader;
 
     private readonly Dictionary<string, string> _vertexShaderCache = new();
 
@@ -20,12 +22,14 @@ internal sealed class AssetLoader
     {
         _graphics = graphics;
         _rootPath = rootPath;
+        _meshLoader = new MeshLoader();
         //StbImage.stbi_set_flip_vertically_on_load(1);
     }
 
     public void ClearCache()
     {
         _vertexShaderCache.Clear();
+        _meshLoader.ClearCache();
     }
 
     private string GetFilePath(string assetTypePath, string fileName)
@@ -34,7 +38,34 @@ internal sealed class AssetLoader
         if (!File.Exists(path)) throw new FileNotFoundException($"Asset Resource Path not found", path);
         return path;
     }
+    
+    public Mesh LoadMesh(AssetMeshRecord record)
+    {
+        var data = _meshLoader.LoadModel(GetFilePath("meshes", record.Filename));
+        var descriptor = new MeshDescriptor<Vertex3D, uint>
+        {
+            VertexBuffer = new MeshDataBufferDescriptor<Vertex3D>(BufferUsage.StaticDraw, data.Vertices),
+            IndexBuffer = new MeshDataBufferDescriptor<uint>(BufferUsage.StaticDraw, data.Indices),
+            VertexPointers =
+            [
+                VertexAttributeDescriptor.Make<Vertex3D>(nameof(Vertex3D.Position)),
+                VertexAttributeDescriptor.Make<Vertex3D>(nameof(Vertex3D.TexCoords)),
+                VertexAttributeDescriptor.Make<Vertex3D>(nameof(Vertex3D.Normal)),
+                VertexAttributeDescriptor.Make<Vertex3D>(nameof(Vertex3D.Tangent)),
 
+            ]
+        };
+
+        var meshId = _graphics.CreateMesh(descriptor, out var meta);
+        return new Mesh
+        {
+            Name = record.Name,
+            Filename = record.Filename,
+            ResourceId = meshId,
+            Meta = meta,
+        };
+
+    }
 
     public Texture2D LoadTexture2D(AssetTextureRecord record)
     {
@@ -123,4 +154,5 @@ internal sealed class AssetLoader
             Color = record.Color
         };
     }
+
 }

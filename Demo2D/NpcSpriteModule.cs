@@ -9,7 +9,7 @@ using Silk.NET.Maths;
 
 #endregion
 
-namespace Demo;
+namespace Demo2D;
 
 public class NpcSpriteModule : GameModule
 {

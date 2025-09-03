@@ -8,7 +8,7 @@ using static ConcreteEngine.Core.Rendering.RenderConsts;
 
 #endregion
 
-namespace ConcreteEngine.Core.Rendering.Batchers;
+namespace ConcreteEngine.Core.Rendering;
 
 
 internal sealed class SpriteBatchMesh : IDisposable
@@ -50,7 +50,7 @@ internal sealed class SpriteBatchMesh : IDisposable
             VertexPointers =
             [
                 VertexAttributeDescriptor.Make<Vertex2D>(nameof(Vertex2D.Position)),
-                VertexAttributeDescriptor.Make<Vertex2D>(nameof(Vertex2D.Texture))
+                VertexAttributeDescriptor.Make<Vertex2D>(nameof(Vertex2D.TexCoords))
             ]
         };
 

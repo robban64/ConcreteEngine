@@ -13,7 +13,7 @@ using Shader = ConcreteEngine.Core.Resources.Shader;
 
 #endregion
 
-namespace Demo;
+namespace Demo2D;
 
 public sealed class DemoScene : GameScene
 {
@@ -79,9 +79,9 @@ public sealed class DemoScene : GameScene
 
     protected override void ConfigureModules(IGameSceneModuleBuilder builder)
     {
-        builder.RegisterModule<RtsCameraModule>(0);
-        builder.RegisterModule<NpcSpriteModule>(1);
-        builder.RegisterModule<DayNightModule>(2);
+        //builder.RegisterModule<RtsCameraModule>(0);
+        builder.RegisterModule<NpcSpriteModule>(0);
+        builder.RegisterModule<DayNightModule>(1);
     }
 
     protected override void ConfigureRenderer(IGameSceneRenderBuilder builder)
@@ -91,7 +91,7 @@ public sealed class DemoScene : GameScene
         var lightPassShader = assets.Get<Shader>("LightPassShader");
         var lightComposite = assets.Get<Shader>("LightComposite");
 
-        builder.RegisterRenderTargets(new RenderTargetDescription
+        builder.RegisterRender2D(new RenderTargetDescriptor
         {
             SceneTarget = new SceneTargetDesc
             {

@@ -6,7 +6,7 @@ using ConcreteEngine.Core.Rendering;
 
 #endregion
 
-namespace Demo;
+namespace Demo2D;
 
 public class DayNightModule : GameModule
 {

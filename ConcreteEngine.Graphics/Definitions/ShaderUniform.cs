@@ -11,6 +11,8 @@ public enum ShaderUniform : byte
     ModelMatrix,
     ProjectionMatrix,
     ProjectionViewMatrix,
+    NormalMatrix,
+    
     TextureOffset,
     TextureScale,
 
@@ -53,6 +55,7 @@ public static class ShaderUniforms
             ModelMatrix => "uModel",
             ProjectionViewMatrix => "uViewProj",
             ProjectionMatrix => "uProj",
+            NormalMatrix => "uNormalMatrix",
             TextureOffset => "uTexOffset",
             TextureScale => "uTexScale",
             SampleTexture => "uTexture",

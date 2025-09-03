@@ -1,21 +1,16 @@
-﻿
-#region
-
-using ConcreteEngine.Core.Configuration;
+﻿using ConcreteEngine.Core.Configuration;
 using ConcreteEngine.Core.Platform;
 using ConcreteEngine.Core.Utils;
 using ConcreteEngine.Graphics;
-using Demo;
+using Demo3D;
 using Silk.NET.Windowing;
-
-#endregion
 
 var builder = new GameEngineBuilder()
     .ConfigureAssetManager(new AssetManagerConfiguration())
-    .RegisterScene<DemoScene>();
+    .RegisterScene<Demo3DScene>();
 
 
-var options = WindowOptions.Default with { Title = "Demo Game Engine" };
+var options = WindowOptions.Default with { Title = "Demo 3D Game Engine" };
 
 var host = new EngineWindowHost(
     options: options,

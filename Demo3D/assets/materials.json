@@ -1,0 +1,9 @@
+{
+  "resources": [
+	{
+	  "name": "BoatMat",
+	  "shader": "Diffuse",
+	  "textures": ["Boat"]
+	}
+  ]
+}

@@ -4,6 +4,7 @@ public enum AssetFileType
 {
     Texture2D,
     Shader,
+    Mesh,
     Material
 }
 

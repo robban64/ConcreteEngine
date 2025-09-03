@@ -9,7 +9,7 @@ using Silk.NET.Maths;
 
 #endregion
 
-namespace ConcreteEngine.Core.Rendering.Batchers;
+namespace ConcreteEngine.Core.Rendering;
 
 internal sealed class TilemapChunkMesh : IDisposable
 {
@@ -59,7 +59,7 @@ internal sealed class TilemapChunkMesh : IDisposable
             VertexPointers =
             [
                 VertexAttributeDescriptor.Make<Vertex2D>(nameof(Vertex2D.Position)),
-                VertexAttributeDescriptor.Make<Vertex2D>(nameof(Vertex2D.Texture))
+                VertexAttributeDescriptor.Make<Vertex2D>(nameof(Vertex2D.TexCoords))
             ],
             DrawCount = (uint)(_tileCount * IndicesPerTile)
         };

@@ -86,7 +86,7 @@ internal sealed class GlResourceFactory(GlGraphicsContext gfx)
             {
                 1 => IboElementType.UnsignedByte,
                 2 => IboElementType.UnsignedShort,
-                3 => IboElementType.UnsignedInt,
+                4 => IboElementType.UnsignedInt,
                 _ => throw GraphicsException.UnsupportedFeature($"Index Element Size {iboElementSize}")
             };
 

@@ -5,20 +5,19 @@ using ConcreteEngine.Core;
 using ConcreteEngine.Core.Platform;
 using ConcreteEngine.Core.Rendering;
 using ConcreteEngine.Core.Systems;
-using ConcreteEngine.Core.Transforms;
 using ConcreteEngine.Graphics.Descriptors;
 using Silk.NET.Input;
 
 #endregion
 
-namespace Demo;
-
+namespace Demo2D;
+/*
 public class RtsCameraModule : GameModule
 {
     private const int EdgeMarginPixels = 16;
     private const float BaseSpeed = 200;
 
-    private ICamera _camera;
+    private Camera _camera;
     private IEngineInputSource _input;
 
     public override void Initialize()
@@ -29,10 +28,6 @@ public class RtsCameraModule : GameModule
 
     public override void Update(in FrameMetaInfo frameCtx)
     {
-        var _transform = _camera.Transform;
-
-        _transform.ViewportSize = frameCtx.ViewportSize;
-
         float speed = BaseSpeed * frameCtx.DeltaTime;
 
         var input = _input;
@@ -72,11 +67,11 @@ public class RtsCameraModule : GameModule
         if (len > 0f)
         {
             deltaPos /= len;
-            _transform.Position += deltaPos * speed;
+            _transform.Translation += deltaPos * speed;
         }
     }
 
     public override void UpdateTick(int tick)
     {
     }
-}
+}*/

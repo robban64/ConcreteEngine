@@ -129,6 +129,9 @@ public sealed class AssetSystem : IAssetSystem
 
         // Shader
         LoadEntries<AssetShaderRecord, Shader>(resourceManifest.Shader, loader.LoadShader);
+        
+        // Mesh
+        LoadEntries<AssetMeshRecord, Mesh>(resourceManifest.Mesh, loader.LoadMesh);
 
         // Material
         LoadMaterialStore(resourceManifest.Material, loader);
@@ -170,7 +173,9 @@ public sealed class AssetSystem : IAssetSystem
         foreach (var entry in manifest.Resources)
         {
             var asset = loader(entry);
-            _store.TryAdd(asset.Name, asset);
+            if(!_store.TryAdd(asset.Name, asset))
+                throw new InvalidOperationException($"Asset '{asset.Name}' is already exists.");
+            
             onAdd?.Invoke(asset);
         }
     }

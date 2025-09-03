@@ -16,7 +16,9 @@ public interface IGameSceneModuleBuilder
 
 public interface IGameSceneRenderBuilder
 {
-    void RegisterRenderTargets(RenderTargetDescription desc);
+    void RegisterRender2D(RenderTargetDescriptor desc);
+    void RegisterRender3D(RenderTargetDescriptor desc);
+
 }
 
 
@@ -24,28 +26,30 @@ public sealed class GameSceneConfigBuilder(FeatureManager features, ModuleManage
     : IGameSceneRenderBuilder, IGameSceneModuleBuilder
 {
     private readonly SortedList<int, Func<GameModule>> _modules = new();
-    private RenderTargetDescription _renderTargetsDesc = null!;
+    private RenderTargetDescriptor _renderTargetsDesc = null!;
 
     
     internal void Clear()
     {
         _modules.Clear();
     }
+    
+    public RenderType  RenderType { get; private set; }
 
-    public RenderTargetDescription RenderTargetsDesc => _renderTargetsDesc;
+    public RenderTargetDescriptor RenderTargetsDesc => _renderTargetsDesc;
     public SortedList<int, Func<GameModule>> Modules => _modules;
 
 
-    public void RegisterRenderTargets(RenderTargetDescription desc)
+    public void RegisterRender2D(RenderTargetDescriptor desc)
     {
-        ArgumentNullException.ThrowIfNull(desc);
-        ArgumentNullException.ThrowIfNull(desc.SceneTarget);
-        ArgumentNullException.ThrowIfNull(desc.LightTarget);
-        ArgumentNullException.ThrowIfNull(desc.ScreenTarget);
-        desc.LightTarget.LightShader.IsValidOrThrow();
-        desc.ScreenTarget.CompositeShaderId.IsValidOrThrow();
-        
         _renderTargetsDesc = desc;
+        RenderType  = RenderType.Render2D;
+    }
+    
+    public void RegisterRender3D(RenderTargetDescriptor desc)
+    {
+        _renderTargetsDesc = desc;
+        RenderType = RenderType.Render3D;
     }
 
     public void RegisterModule<T>(int order) where T : GameModule, new()

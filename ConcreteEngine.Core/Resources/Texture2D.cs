@@ -16,8 +16,8 @@ public class Texture2D : IGraphicAssetFile<TextureId>
     public required int Width { get; init; }
     public required int Height { get; init; }
     public required EnginePixelFormat PixelFormat { get; init; }
-
     public TexturePreset Preset { get; init; }
-
     public AssetFileType AssetType => AssetFileType.Texture2D;
+    // Todo use handler for IO
+    public byte[]? Data { get; set; }
 }

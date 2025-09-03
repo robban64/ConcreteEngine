@@ -1,0 +1,9 @@
+{
+  "folder": "./meshes",
+  "resources": [
+	{
+	  "name": "BoatMesh",
+	  "filename": "boat.obj"
+	}
+  ]
+}

@@ -13,44 +13,44 @@ public enum DrawCommandId : byte
     Invalid,
     Tilemap,
     Sprite,
-    Light
+    Light,
+    Diffuse
 }
 
 public enum DrawCommandTag : byte
 {
     Invalid,
     Mesh2D,
-    Effect2D
+    Effect2D,
+    Mesh3D,
 }
 
-public interface IDrawCommand
+[Flags]
+public enum DrawCommandFlags : byte
 {
-    uint DrawCount { get; }
+    None = 0,
+    Visible = 1 << 0,
+    DoubleSided = 1 << 1,
+    CastShadows = 1 << 2,
+    ReceiveShadows = 1 << 3,
+
+    Shadows = CastShadows | ReceiveShadows,
 }
 
-public readonly struct DrawCommandMeta(DrawCommandId id, DrawCommandTag tag, RenderTargetId target, byte layer)
+public readonly struct DrawCommandMeta(
+    DrawCommandId id,
+    DrawCommandTag tag,
+    RenderTargetId target,
+    byte layer,
+    byte view = 0,
+    byte queue = 0,
+    ushort depthKey = 0)
 {
     public readonly DrawCommandId Id = id;
     public readonly DrawCommandTag Tag = tag;
     public readonly RenderTargetId Target = target;
     public readonly byte Layer = layer;
-}
-
-public readonly struct DrawCommandMesh(MeshId meshId, MaterialId materialId, uint drawCount, in Matrix4x4 transform)
-    : IDrawCommand
-{
-    public readonly MeshId MeshId = meshId;
-    public readonly MaterialId MaterialId = materialId;
-    public readonly Matrix4x4 Transform = transform;
-    public uint DrawCount { get; } = drawCount;
-}
-
-//TODO Make read only
-public struct DrawCommandLight(Vector2 position, Vector3 color, float radius, float intensity) : IDrawCommand
-{
-    public Vector2 Position = position;
-    public Vector3 Color = color;
-    public float Radius = radius;
-    public float Intensity = intensity;
-    public uint DrawCount => 4;
+    public readonly byte View = view;
+    public readonly byte Queue = queue;
+    public readonly ushort DepthKey = depthKey;
 }

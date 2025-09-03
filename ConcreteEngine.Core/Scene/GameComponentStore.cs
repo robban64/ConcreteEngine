@@ -9,7 +9,7 @@ public sealed class GameComponentStore<T> where T : struct
     private T[] _data;
     private GameEntityId[] _entities;
 
-    private int _idx;
+    private int _idx = 0;
     
     public bool IsDirty { get; set; }
 

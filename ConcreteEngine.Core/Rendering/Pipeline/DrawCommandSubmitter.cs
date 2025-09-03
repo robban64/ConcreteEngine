@@ -32,11 +32,11 @@ public class DrawCommandSubmitter
         _indices = new DrawCommandMetaIndex[DefaultIndicesCapacity];
         _submitIdx = 0;
     }
-    
+
     internal void Initialize(IReadOnlyList<ICommandRenderer> renderers) => _renderers = renderers;
 
     public void Register<T, TRenderer>(DrawCommandTag tag, params DrawCommandId[] cmdIds)
-        where T : struct, IDrawCommand
+        where T : unmanaged, IDrawCommand
         where TRenderer : class, ICommandRenderer<T>
     {
         if (_renderers.Single(x => x.GetType() == typeof(TRenderer)) is not TRenderer renderer)
@@ -54,12 +54,15 @@ public class DrawCommandSubmitter
 
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public void SubmitDraw<T>(in T cmd, in DrawCommandMeta meta) where T : struct, IDrawCommand
+    public void SubmitDraw<T>(in T cmd, in DrawCommandMeta meta) where T : unmanaged, IDrawCommand
     {
-        int size = Unsafe.SizeOf<T>();
         EnsureCapacity();
-        var slot = _buffer.Span.Slice(_submitIdx * _stride, size);
-        MemoryMarshal.Write(slot, in cmd);
+        var span = _buffer.Span;
+        int size  = Unsafe.SizeOf<T>();
+        int offset = _submitIdx * _stride;
+        ref byte dest = ref span[offset];
+        var slot = MemoryMarshal.CreateSpan(ref dest, size);
+        MemoryMarshal.Write(slot, in cmd);   
         _indices[_submitIdx] = new DrawCommandMetaIndex(in meta, _submitIdx);
         _submitIdx++;
     }
@@ -73,13 +76,13 @@ public class DrawCommandSubmitter
 
     public void DrainCommandQueue(RenderTargetId targetId)
     {
-        while (_iteratorIdx < _submitIdx)
+        for (int i = _iteratorIdx; i < _submitIdx; i++)
         {
             ref readonly var it = ref _indices[_iteratorIdx++];
             if (it.Meta.Target < targetId) continue;
             if (it.Meta.Target > targetId) break;
 
-            _registry.Process(in it.Meta, _buffer, it.Idx, _stride);
+            _registry.Process(in it.Meta, _buffer.Span, it.Idx, _stride);
         }
     }
 
@@ -117,46 +120,45 @@ public class DrawCommandSubmitter
 
     private class DispatchRegistry
     {
-        private readonly Dictionary<(DrawCommandId, DrawCommandTag), Delegate> _dispatchRegistry = new();
-        private readonly Dictionary<DrawCommandId, ProcessDelegate> _commandRegistry = new();
+        private readonly Dictionary<(DrawCommandId, DrawCommandTag), ProcessDelegate> _delegateRegistry = new();
 
-        internal void Process(in DrawCommandMeta meta, Memory<byte> buffer, int idx, int stride)
-        {
-            var cmdHandler = _commandRegistry[meta.Id];
-            cmdHandler(in meta, buffer, idx, stride);
-        }
+        public void Process(in DrawCommandMeta meta, ReadOnlySpan<byte> buffer, int idx, int stride)
+            => _delegateRegistry[(meta.Id, meta.Tag)](in meta, buffer, idx, stride);
 
         internal void Register<T, TRenderer>(DrawCommandId cmdId, DrawCommandTag tag, TRenderer handler)
-            where T : struct, IDrawCommand
+            where T : unmanaged, IDrawCommand
             where TRenderer : class, ICommandRenderer<T>
 
         {
             // Handler
+            /*
             var handlerType = typeof(ICommandRenderer<>).MakeGenericType(typeof(T));
             var method = handlerType.GetMethod(nameof(ICommandRenderer<T>.Handle));
             var action = typeof(DispatchToRendererDelegate<>).MakeGenericType(typeof(T));
             var del = (DispatchToRendererDelegate<T>)Delegate.CreateDelegate(action, handler, method!);
-            _dispatchRegistry[(cmdId, tag)] = del;
+            */
+            var method = typeof(ICommandRenderer<T>).GetMethod(nameof(ICommandRenderer<T>.Handle))!;
+            var del = (DispatchToRendererDelegate<T>)Delegate.CreateDelegate(typeof(DispatchToRendererDelegate<T>),
+                handler, method);
+            int sizeT = Unsafe.SizeOf<T>();
 
-            _commandRegistry[cmdId] = ProcessHandler;
+            _delegateRegistry[(cmdId, tag)] = ProcessHandler;
+
 
             return;
 
-            // Reader
-            void ProcessHandler(in DrawCommandMeta meta, Memory<byte> buffer, int idx, int stride)
+            void ProcessHandler(in DrawCommandMeta meta, ReadOnlySpan<byte> buffer, int idx, int stride)
             {
-                var structSize = Unsafe.SizeOf<T>();
-
-                var slot = buffer.Span.Slice(idx * stride, structSize);
+                var slot = buffer.Slice(idx * stride, sizeT);
                 var payload = MemoryMarshal.Read<T>(slot);
-                ((DispatchToRendererDelegate<T>)_dispatchRegistry[(meta.Id, meta.Tag)])(in payload);
+                del(in payload);
             }
         }
     }
 
-    private delegate void DispatchToRendererDelegate<T>(in T payload) where T : struct, IDrawCommand;
+    private delegate void DispatchToRendererDelegate<T>(in T payload) where T : unmanaged, IDrawCommand;
 
-    private delegate void ProcessDelegate(in DrawCommandMeta meta, Memory<byte> buffer, int idx, int stride);
+    private delegate void ProcessDelegate(in DrawCommandMeta meta, ReadOnlySpan<byte> buffer, int idx, int stride);
 
 
     private readonly struct DrawCommandMetaIndex(in DrawCommandMeta meta, int idx)
@@ -165,7 +167,13 @@ public class DrawCommandSubmitter
         public readonly DrawCommandMeta Meta = meta;
         public readonly int Idx = idx;
 
-        private readonly uint _sortKey = (uint)((byte)meta.Target << 16 | (meta.Layer << 8) | (ushort)idx);
+        private readonly ulong _sortKey =
+            ((ulong)(byte)meta.Target << 56) |
+            ((ulong)meta.View << 48) |
+            ((ulong)meta.Queue << 40) |
+            ((ulong)meta.DepthKey << 24) |
+            ((ulong)meta.Layer << 16) |
+            (ushort)idx;
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public int CompareTo(DrawCommandMetaIndex other) => _sortKey.CompareTo(other._sortKey);

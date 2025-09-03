@@ -2,8 +2,6 @@
 
 using System.Numerics;
 using ConcreteEngine.Core.Features;
-using ConcreteEngine.Core.Rendering.Batchers;
-using ConcreteEngine.Core.Transforms;
 
 #endregion
 
@@ -12,7 +10,7 @@ namespace ConcreteEngine.Core.Rendering;
 public sealed class TilemapDrawProducer : DrawCommandProducer<TilemapDrawData>
 {
     private static readonly Matrix4x4  TilemapTransform = 
-        Transform.CreateTransform2D(Vector2.Zero, new Vector2(1, 1), 0);
+        TransformHelper.CreateTransform2D(Vector2.Zero, new Vector2(1, 1), 0);
     
     private TilemapBatcher _tilemapBatcher = null!;
     
@@ -28,7 +26,7 @@ public sealed class TilemapDrawProducer : DrawCommandProducer<TilemapDrawData>
         
         var result = _tilemapBatcher.BuildBatch();
         
-        var cmd = new DrawCommandMesh(
+        var cmd = new DrawCommandSprite(
             meshId: result.GroundLayer.MeshId,
             drawCount: result.GroundLayer.DrawCount,
             materialId: data.MaterialId,

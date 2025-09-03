@@ -14,18 +14,26 @@ public interface IEntityRegistry
 
 public abstract class GameScene
 {
+    private readonly Camera3D _camera3D;
+
     private World _world = null!;
-    
+
     protected GameSceneContext Context { get; private set; } = null!;
 
     protected World World => _world;
 
     protected GameScene()
     {
+        _camera3D = new Camera3D();
     }
 
     internal void Update(in FrameMetaInfo frameInfo)
     {
+        if (_camera3D.ViewportSize != frameInfo.FramebufferSize)
+        {
+            _camera3D.ViewportSize = frameInfo.FramebufferSize;
+        }
+        
         Context.Features.Update(in frameInfo);
         Context.Modules.Update(in frameInfo);
     }
@@ -38,9 +46,9 @@ public abstract class GameScene
     }
 
 
-    internal void AttachContext(ICamera camera, GameSceneContext context)
+    internal void AttachContext(GameSceneContext context)
     {
-        _world = new World(camera);
+        _world = new World(_camera3D);
         context.World = World;
         Context = context;
     }

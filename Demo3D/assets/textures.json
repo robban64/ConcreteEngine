@@ -1,0 +1,9 @@
+{
+  "folder": "./textures",
+  "resources": [
+    {
+      "name": "Boat",
+      "filename": "boat.png"
+    }
+  ]
+}

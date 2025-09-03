@@ -4,8 +4,10 @@ namespace ConcreteEngine.Core.Scene;
 
 public interface IWorld
 {
-    public ICamera Camera { get; }
+    public Camera3D Camera3D { get; }
     GameEntityId Create();
+    GameComponentStore<Transform> Transforms { get; }
+    GameComponentStore<MeshComponent> Meshes { get; }
     GameComponentStore<Transform2D> Transforms2D { get; }
     GameComponentStore<Transform2D> PrevTransforms2D { get; }
     GameComponentStore<SpriteComponent> Sprites { get; }
@@ -17,37 +19,45 @@ public sealed class World : IWorld
 {
     private int _idIdx = 1;
 
-    internal World(ICamera camera)
+    internal World(Camera3D camera3D)
     {
-        Camera = camera;
+        Camera3D = camera3D;
     }
 
-    public ICamera Camera { get; }
+    public Camera3D Camera3D { get; }
     
     public GameEntityId Create() => new (_idIdx++);
     
+    public GameComponentStore<Transform> Transforms { get; } = new();
+    public GameComponentStore<MeshComponent> Meshes { get; } = new();
+
     public GameComponentStore<Transform2D> Transforms2D { get; } = new();
     public GameComponentStore<Transform2D> PrevTransforms2D { get; } = new();
     public GameComponentStore<SpriteComponent> Sprites { get; } = new();
     public GameComponentStore<TilemapComponent> Tilemaps { get; } = new(4);
     public GameComponentStore<LightComponent> Lights { get; } = new();
-    
+
 
     public void Cleanup()
     {
+        Transforms.Cleanup();
         Transforms2D.Cleanup();
         PrevTransforms2D.Cleanup();
         Sprites.Cleanup();
         Tilemaps.Cleanup();
         Lights.Cleanup();
+        Meshes.Cleanup();
 
-
-        foreach (var view in PrevTransforms2D.View2(Transforms2D))
+        if (PrevTransforms2D.Count > 0)
         {
-            ref var prev = ref view.Value1;
-            ref var curr = ref view.Value2;
-            prev.Position = curr.Position;
+            foreach (var view in PrevTransforms2D.View2(Transforms2D))
+            {
+                ref var prev = ref view.Value1;
+                ref var curr = ref view.Value2;
+                prev.Position = curr.Position;
+            }
         }
+
     }
     
 }

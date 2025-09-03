@@ -1,6 +1,6 @@
 using ConcreteEngine.Common.Collections;
 
-namespace ConcreteEngine.Core.Rendering.Batchers;
+namespace ConcreteEngine.Core.Rendering;
 
 public sealed class BatcherRegistry
 {

@@ -2,7 +2,6 @@
 
 using System.Numerics;
 using ConcreteEngine.Core.Resources;
-using ConcreteEngine.Core.Transforms;
 using ConcreteEngine.Graphics;
 using ConcreteEngine.Graphics.Resources;
 
@@ -19,18 +18,16 @@ public interface ICommandRenderer<T> : ICommandRenderer where T : struct, IDrawC
 
 public abstract class CommandRenderer<T> : ICommandRenderer<T> where T : struct, IDrawCommand
 {
-    protected readonly ICamera Camera;
     protected readonly IGraphicsDevice Graphics;
     protected readonly IGraphicsContext Gfx;
     protected readonly MaterialStore MaterialStore;
 
     protected MaterialId PreviousMaterial = default;
 
-    protected CommandRenderer(IGraphicsDevice graphics, ICamera camera, MaterialStore materialStore)
+    protected CommandRenderer(IGraphicsDevice graphics, MaterialStore materialStore)
     {
         Graphics = graphics;
         Gfx = graphics.Gfx;
-        Camera = camera;
         MaterialStore = materialStore;
     }
 
@@ -74,10 +71,10 @@ public abstract class CommandRenderer<T> : ICommandRenderer<T> where T : struct,
     public abstract void Handle(in T cmd);
 }
 
-public sealed class SpriteRenderer(IGraphicsDevice graphics, ICamera camera, MaterialStore materialStore)
-    : CommandRenderer<DrawCommandMesh>(graphics, camera, materialStore)
+public sealed class SpriteRenderer(IGraphicsDevice graphics,  MaterialStore materialStore)
+    : CommandRenderer<DrawCommandSprite>(graphics,  materialStore)
 {
-    public override void Handle(in DrawCommandMesh cmd)
+    public override void Handle(in DrawCommandSprite cmd)
     {
         var material = MaterialStore[cmd.MaterialId];
         BindMaterialSlots(material);
@@ -88,8 +85,8 @@ public sealed class SpriteRenderer(IGraphicsDevice graphics, ICamera camera, Mat
     }
 }
 
-public sealed class LightRenderer(IGraphicsDevice graphics, ICamera camera, MaterialStore materialStore)
-    : CommandRenderer<DrawCommandLight>(graphics, camera, materialStore)
+public sealed class LightRenderer(IGraphicsDevice graphics, MaterialStore materialStore)
+    : CommandRenderer<DrawCommandLight>(graphics, materialStore)
 {
     public override void Handle(in DrawCommandLight cmd)
     {
@@ -101,5 +98,19 @@ public sealed class LightRenderer(IGraphicsDevice graphics, ICamera camera, Mate
         Gfx.SetUniform(ShaderUniform.Softness, 2.5f);
         Gfx.SetUniform(ShaderUniform.Shape, 0);
         Gfx.DrawMesh();
+    }
+}
+
+public sealed class MeshRenderer(IGraphicsDevice graphics,  MaterialStore materialStore)
+    : CommandRenderer<DrawCommandSprite>(graphics,  materialStore)
+{
+    public override void Handle(in DrawCommandSprite cmd)
+    {
+        var material = MaterialStore[cmd.MaterialId];
+        BindMaterialSlots(material);
+
+        Gfx.SetUniform(ShaderUniform.ModelMatrix, in cmd.Transform);
+        Gfx.BindMesh(cmd.MeshId);
+        Gfx.DrawMesh(cmd.DrawCount);
     }
 }

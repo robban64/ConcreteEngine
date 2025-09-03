@@ -1,7 +1,7 @@
 #region
 
 using ConcreteEngine.Core.Features;
-using ConcreteEngine.Core.Rendering.Batchers;
+using ConcreteEngine.Core.Scene;
 using ConcreteEngine.Graphics;
 
 #endregion
@@ -10,6 +10,7 @@ namespace ConcreteEngine.Core.Rendering;
 
 public sealed class CommandProducerContext
 {
+    public IWorld World { get; set; } = null!;
     public required IGraphicsDevice Graphics { get; init; }
     public required BatcherRegistry DrawBatchers { get; init; }
 }
@@ -48,6 +49,11 @@ public abstract class DrawCommandProducer<TDrawData> : IDrawCommandProducer wher
 
     public void Produce(float alpha, DrawCommandSubmitter submitter)
     {
+        if(this is MeshDrawProducer)
+        {
+            EmitCommands(alpha, null,  submitter);
+            return;
+        }
         if (_features.Count == 0)
         {
             return;

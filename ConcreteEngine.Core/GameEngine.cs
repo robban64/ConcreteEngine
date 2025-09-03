@@ -167,12 +167,12 @@ public sealed class GameEngine : IDisposable
 
 
         var newScene = _sceneFactories[index]();
-        newScene.AttachContext(_renderer.Camera, sceneContext);
+        newScene.AttachContext(sceneContext);
 
         var builder = new GameSceneConfigBuilder(_features, _modules);
         newScene.Build(builder);
         
-        _renderer.RegisterScene(builder.RenderTargetsDesc);
+        _renderer.RegisterScene(builder.RenderType, builder.RenderTargetsDesc, sceneContext.World);
 
         _features.Load(new GameFeatureContext(sceneContext));
 

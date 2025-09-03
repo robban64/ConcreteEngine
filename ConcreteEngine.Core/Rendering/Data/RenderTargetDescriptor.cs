@@ -6,10 +6,10 @@ using ConcreteEngine.Graphics.Resources;
 
 namespace ConcreteEngine.Core.Rendering;
 
-public sealed class RenderTargetDescription
+public sealed class RenderTargetDescriptor
 {
     public required SceneTargetDesc SceneTarget { get; init; }
-    public required LightTargetDesc LightTarget { get; init; }
+    public LightTargetDesc LightTarget { get; init; }
     public required ScreenTargetDesc ScreenTarget { get; init; }
 }
 

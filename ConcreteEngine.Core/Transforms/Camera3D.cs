@@ -4,12 +4,11 @@ using Silk.NET.Maths;
 
 namespace ConcreteEngine.Core;
 
-public sealed class Camera3D
+public sealed class Camera3D : ICamera
 {
     private bool _dirty = true;
 
-
-    private Vector3 _position = Vector3.Zero;
+    private Vector3 _translation = Vector3.Zero;
     private Vector3 _scale = Vector3.One;
     private Quaternion _rotation = Quaternion.Identity;
     private Matrix4x4 _viewMatrix = Matrix4x4.Identity;
@@ -23,12 +22,12 @@ public sealed class Camera3D
     private float _nearPlane = 0.2f;
     private float _aspectRatio;
 
-    public Vector3 Position
+    public Vector3 Translation
     {
-        get => _position;
+        get => _translation;
         set
         {
-            _position = value;
+            _translation = value;
             _dirty = true;
         }
     }
@@ -130,7 +129,7 @@ public sealed class Camera3D
         _viewMatrix = Matrix4x4.Identity *
                       Matrix4x4.CreateFromQuaternion(_rotation) *
                       Matrix4x4.CreateScale(_scale) *
-                      Matrix4x4.CreateTranslation(_position);
+                      Matrix4x4.CreateTranslation(_translation);
 
         var fov = MathHelper.ToRadians(_fov / 2f);
         _projectionMatrix = Matrix4x4.CreatePerspectiveFieldOfView(fov, _aspectRatio, _nearPlane, _farPlane);

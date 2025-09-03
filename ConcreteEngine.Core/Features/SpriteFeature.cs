@@ -2,7 +2,6 @@
 
 using ConcreteEngine.Core.Rendering;
 using ConcreteEngine.Core.Resources;
-using ConcreteEngine.Core.Transforms;
 using ConcreteEngine.Core.Utils;
 
 #endregion
@@ -29,12 +28,8 @@ public class SpriteFeature : GameFeature, IDrawableFeature<SpriteFeatureDrawData
 
     private readonly SpriteFeatureDrawData _drawData = new();
 
-    private ICamera _camera;
-
-
     public override void Initialize()
     {
-        _camera = Context.World.Camera;
     }
 
     public override void UpdateTick(int tick)

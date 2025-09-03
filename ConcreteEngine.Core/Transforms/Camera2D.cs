@@ -1,43 +1,163 @@
 using System.Numerics;
-using ConcreteEngine.Core.Transforms;
+using ConcreteEngine.Common;
 using Silk.NET.Maths;
 
 namespace ConcreteEngine.Core;
 
-public interface ICamera
-{
-    public ViewTransform2D Transform { get; }
-    public ViewTransform2D RenderTransform { get; }
-}
-
 public sealed class Camera2D : ICamera
 {
-    private readonly ViewTransform2D _transform;
-    private readonly ViewTransform2D _renderTransform;
+    private bool _dirty = true;
 
-    public ViewTransform2D Transform => _transform;
-    public ViewTransform2D RenderTransform => _renderTransform;
+    private Vector2 _translation = Vector2.Zero;
+    private float _rotation = 0f;
+    private float _zoom = 1f;
+    private Vector2D<int> _viewportSize;
 
-    internal Camera2D()
+    private Matrix4x4 _viewMatrix = Matrix4x4.Identity;
+    private Matrix4x4 _projectionMatrix = Matrix4x4.Identity;
+    private Matrix4x4 _projectionViewMatrix = Matrix4x4.Identity;
+    
+    public Vector2 Translation
     {
-        _transform = new()
+        get => _translation;
+        set
         {
-            Position = Vector2.Zero,
-            Rotation = 0f,
-            Zoom = 1f
-        };
-        _renderTransform = new ViewTransform2D();
-        _renderTransform.CopyFrom(Transform);
+            _translation = value;
+            _dirty = true;
+        }
     }
 
-    public void SetViewport(Vector2D<int> viewport)
+    public float Rotation
     {
-        _transform.ViewportSize = viewport;
+        get => _rotation;
+        set
+        {
+            _rotation = value;
+            _dirty = true;
+        }
+    } // In radians
+
+    public float Zoom
+    {
+        get => _zoom;
+        set
+        {
+            _zoom = MathF.Max(Math.Min(value, 4), 0.1f);
+            _dirty = true;
+        }
+    } // >1: zoom in, <1: zoom out
+
+    public Vector2D<int> ViewportSize
+    {
+        get => _viewportSize;
+        set
+        {
+            _viewportSize = value;
+            _dirty = true;
+        }
     }
 
-    internal void PrepareRender()
+    public Matrix4x4 ViewMatrix
     {
-        _renderTransform.CopyFrom(_transform);
+        get
+        {
+            Ensure();
+            return _viewMatrix;
+        }
+    }
+
+    public Matrix4x4 ProjectionMatrix
+    {
+        get
+        {
+            Ensure();
+            return _projectionMatrix;
+        }
+    }
+
+    public Matrix4x4 ProjectionViewMatrix
+    {
+        get
+        {
+            Ensure();
+            return _projectionViewMatrix;
+        }
+    }
+
+    /// <summary>Snap camera to pixel grid (world step = 1/Zoom).</summary>
+    public bool PixelSnap { get; set; } = true;
+
+
+    private void Ensure()
+    {
+        if (!_dirty) return;
+        _dirty = false;
+
+        if (PixelSnap && _zoom > 0f)
+        {
+            float step = 1f / _zoom; // world units per screen pixel at current zoom
+            _translation.X = MathF.Round(_translation.X / step) * step;
+            _translation.Y = MathF.Round(_translation.Y / step) * step;
+        }
+
+        var translate = Matrix4x4.CreateTranslation(new Vector3(-_translation, 0f));
+        var rotate = _rotation != 0f ? Matrix4x4.CreateRotationZ(-_rotation) : Matrix4x4.Identity;
+        _viewMatrix = rotate * translate;
+
+        float w = MathF.Max(_viewportSize.X, 1);
+        float h = MathF.Max(_viewportSize.Y, 1);
+        float invZ = 1f / _zoom;
+
+        _projectionMatrix = Matrix4x4.CreateOrthographicOffCenter(
+            0f, w * invZ, // left, right
+            h * invZ, 0f, // bottom, top (Y-down)
+            -1f, 1f
+        );
+
+        _projectionViewMatrix = _viewMatrix * _projectionMatrix;
+
+        /*
+              float halfW = (ViewportSize.X * 0.5f) / Zoom;
+              float halfH = (ViewportSize.Y * 0.5f) / Zoom;
+              return Matrix4X4.CreateOrthographicOffCenter(
+                 -halfW, halfW,
+                 -halfH, halfH,
+                 -1f, 1f
+             );
+           */
+    }
+    
+    public bool IsAabbInView(Vector2 worldCenter, Vector2 halfExtents)
+    {
+        // world -> view
+        var v = Vector4.Transform(new Vector4(worldCenter, 0f, 1f), _viewMatrix);
+        var viewCenter = new Vector2(v.X, v.Y);
+
+        var wv = _viewportSize.X * (1f / _zoom); // camera width in view space
+        var hv = _viewportSize.Y * (1f / _zoom); // camera height in view space
+
+        return !( (viewCenter.X + halfExtents.X) < 0f   ||
+                  (viewCenter.X - halfExtents.X) > wv   ||
+                  (viewCenter.Y + halfExtents.Y) < 0f   ||
+                  (viewCenter.Y - halfExtents.Y) > hv );
+    }
+
+    public RectF GetSimpleViewRect()
+    {
+        float invZoom = 1f / _zoom;
+        float viewWidth = _viewportSize.X * invZoom;
+        float viewHeight = _viewportSize.Y * invZoom;
+        return new RectF(_translation.X, _translation.Y, viewWidth, viewHeight);
+    }
+
+    internal void CopyFrom(Camera2D from)
+    {
+        _translation = from.Translation;
+        _rotation = from.Rotation;
+        _zoom = from.Zoom;
+        _viewportSize = from.ViewportSize;
+        _dirty = true;
+        Ensure();
     }
 }
 

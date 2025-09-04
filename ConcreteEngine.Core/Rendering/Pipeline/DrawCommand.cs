@@ -18,6 +18,16 @@ public readonly struct DrawCommandMesh(MeshId meshId, MaterialId materialId, uin
     public uint DrawCount { get; } = drawCount;
 }
 
+
+public readonly struct DrawCommandTerrain(MeshId meshId, MaterialId materialId, uint drawCount, in Matrix4x4 transform)
+    : IDrawCommand
+{
+    public readonly MeshId MeshId = meshId;
+    public readonly MaterialId MaterialId = materialId;
+    public readonly Matrix4x4 Transform = transform;
+    public uint DrawCount { get; } = drawCount;
+}
+
 public readonly struct DrawCommandSprite(MeshId meshId, MaterialId materialId, uint drawCount, in Matrix4x4 transform)
     : IDrawCommand
 {

@@ -4,6 +4,30 @@
     {
       "name": "Boat",
       "filename": "boat.png"
-    }
+    },
+	{
+	  "name": "Grass",
+	  "filename": "grass.jpg",
+	  "preset": "LinearMipmapRepeat",
+	  "lod": -0.25,
+	  "anisotropy": 8
+	},
+	{
+	  "name": "Mud",
+	  "filename": "mud.jpg"
+	},
+	{
+	  "name": "Rock",
+	  "filename": "rock.jpg"
+	},
+	{
+	  "name": "Stone",
+	  "filename": "stone.jpg"
+	},
+	{
+	  "name": "Heightmap",
+	  "filename": "heightmap.png",
+	  "inMemory": true
+	}
   ]
 }

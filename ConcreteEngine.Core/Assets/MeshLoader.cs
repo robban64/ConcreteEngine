@@ -68,14 +68,15 @@ internal sealed class MeshLoader
             // tangent
             if (mesh->MTangents != null)
                 vertex.Tangent = mesh->MTangents[i];
+            
             // bitangent
-            if (mesh->MBitangents != null)
-                vertex.Bitangent = mesh->MBitangents[i];
+            // if (mesh->MBitangents != null)
+                // vertex.Bitangent = mesh->MBitangents[i];
 
             // texture coordinates
             if (mesh->MTextureCoords[0] != null)
             {
-                Vector3 texcoord3 = mesh->MTextureCoords[0][i];
+                var texcoord3 = mesh->MTextureCoords[0][i];
                 vertex.TexCoords = new Vector2(texcoord3.X, texcoord3.Y);
             }
 
@@ -84,8 +85,7 @@ internal sealed class MeshLoader
         
         for (uint i = 0; i < mesh->MNumFaces; i++)
         {
-            Face face = mesh->MFaces[i];
-            // retrieve all indices of the face and store them in the indices vector
+            var face = mesh->MFaces[i];
             for (uint j = 0; j < face.MNumIndices; j++)
                 _indices.Add(face.MIndices[j]);
         }

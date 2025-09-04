@@ -8,7 +8,7 @@ using ConcreteEngine.Graphics.Resources;
 
 namespace ConcreteEngine.Core.Resources;
 
-public class Texture2D : IGraphicAssetFile<TextureId>
+public sealed class Texture2D : IGraphicAssetFile<TextureId>
 {
     public required string Name { get; init; }
     public required string Path { get; init; }
@@ -17,7 +17,11 @@ public class Texture2D : IGraphicAssetFile<TextureId>
     public required int Height { get; init; }
     public required EnginePixelFormat PixelFormat { get; init; }
     public TexturePreset Preset { get; init; }
+    
+    public int? Anisotropy  { get; init; }
+
     public AssetFileType AssetType => AssetFileType.Texture2D;
+    
     // Todo use handler for IO
     public byte[]? Data { get; set; }
 }

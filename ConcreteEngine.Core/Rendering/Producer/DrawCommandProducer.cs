@@ -49,11 +49,6 @@ public abstract class DrawCommandProducer<TDrawData> : IDrawCommandProducer wher
 
     public void Produce(float alpha, DrawCommandSubmitter submitter)
     {
-        if(this is MeshDrawProducer)
-        {
-            EmitCommands(alpha, null,  submitter);
-            return;
-        }
         if (_features.Count == 0)
         {
             return;

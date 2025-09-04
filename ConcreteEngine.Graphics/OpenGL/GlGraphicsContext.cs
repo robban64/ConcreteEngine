@@ -161,6 +161,14 @@ public sealed class GlGraphicsContext : IGraphicsContext
         _boundFboId = fboId;
         _boundReadFboId = fboId;
         _currentViewport = meta.Size;
+        
+        _gl.Enable(EnableCap.DepthTest);
+        _gl.DepthFunc(DepthFunction.Lequal);
+        _gl.DepthMask(true);
+        
+        _gl.Enable(EnableCap.CullFace);
+        _gl.CullFace(TriangleFace.Back);
+        _gl.FrontFace(FrontFaceDirection.Ccw);
     }
 
     public void EndRenderPass()

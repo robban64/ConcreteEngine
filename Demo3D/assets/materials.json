@@ -4,6 +4,11 @@
 	  "name": "BoatMat",
 	  "shader": "Diffuse",
 	  "textures": ["Boat"]
+	},
+	{
+	  "name": "TerrainMat",
+	  "shader": "TerrainShader",
+	  "textures": ["Grass"]
 	}
   ]
 }

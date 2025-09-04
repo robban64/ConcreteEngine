@@ -44,7 +44,8 @@ public class SpriteFeature : GameFeature, IDrawableFeature<SpriteFeatureDrawData
 
         if (_entities.Length < spriteStore.Count)
         {
-            Array.Resize(ref _entities, spriteStore.Count);
+            var newSize = int.Max(_entities.Length * 2, spriteStore.Count);
+            Array.Resize(ref _entities, newSize);
         }
 
         foreach (var entry in spriteStore.View3(transforms, prevTransforms))

@@ -48,10 +48,10 @@ internal sealed class AssetLoader
             IndexBuffer = new MeshDataBufferDescriptor<uint>(BufferUsage.StaticDraw, data.Indices),
             VertexPointers =
             [
-                VertexAttributeDescriptor.Make<Vertex3D>(nameof(Vertex3D.Position)),
-                VertexAttributeDescriptor.Make<Vertex3D>(nameof(Vertex3D.TexCoords)),
-                VertexAttributeDescriptor.Make<Vertex3D>(nameof(Vertex3D.Normal)),
-                VertexAttributeDescriptor.Make<Vertex3D>(nameof(Vertex3D.Tangent)),
+                VertexAttributeDescriptor.Make<Vertex3D>(nameof(Vertex3D.Position), VertexElementFormat.Float3),
+                VertexAttributeDescriptor.Make<Vertex3D>(nameof(Vertex3D.TexCoords), VertexElementFormat.Float2),
+                VertexAttributeDescriptor.Make<Vertex3D>(nameof(Vertex3D.Normal), VertexElementFormat.Float3),
+                VertexAttributeDescriptor.Make<Vertex3D>(nameof(Vertex3D.Tangent), VertexElementFormat.Float3),
 
             ]
         };
@@ -79,7 +79,8 @@ internal sealed class AssetLoader
             Height: result.Height,
             Format: record.PixelFormat,
             Preset: record.Preset,
-            LodBias: record.LodBias
+            LodBias: record.LodBias,
+            Anisotropy: record.Anisotropy
         );
 
         var resourceId = _graphics.CreateTexture2D(in textureData);
@@ -92,7 +93,9 @@ internal sealed class AssetLoader
             Width = textureData.Width,
             Height = textureData.Height,
             PixelFormat = textureData.Format,
-            Preset = record.Preset
+            Preset = record.Preset,
+            Anisotropy = record.Anisotropy,
+            Data = record.InMemory ? result.Data : null
         };
     }
 

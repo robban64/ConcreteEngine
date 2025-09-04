@@ -14,7 +14,8 @@ public enum DrawCommandId : byte
     Tilemap,
     Sprite,
     Light,
-    Diffuse
+    Mesh,
+    Terrain,
 }
 
 public enum DrawCommandTag : byte
@@ -23,6 +24,23 @@ public enum DrawCommandTag : byte
     Mesh2D,
     Effect2D,
     Mesh3D,
+    Terrain
+}
+
+public enum DrawCommandQueue : byte
+{
+    None = 0,
+    Skybox = 1,
+    
+    Opaque = 20,
+    OpaqueTerrain = 10,
+    
+    AlphaTest = 60,
+    
+    Transparent = 100,
+    Particle = 101,
+    
+    Overlay = 200,
 }
 
 [Flags]
@@ -41,16 +59,19 @@ public readonly struct DrawCommandMeta(
     DrawCommandId id,
     DrawCommandTag tag,
     RenderTargetId target,
-    byte layer,
+    DrawCommandQueue queue,
+    byte layer = 0,
     byte view = 0,
-    byte queue = 0,
     ushort depthKey = 0)
 {
     public readonly DrawCommandId Id = id;
     public readonly DrawCommandTag Tag = tag;
     public readonly RenderTargetId Target = target;
+    public readonly DrawCommandQueue Queue = queue;
     public readonly byte Layer = layer;
     public readonly byte View = view;
-    public readonly byte Queue = queue;
     public readonly ushort DepthKey = depthKey;
+
+    public static DrawCommandMeta Make2D(DrawCommandId id, DrawCommandTag tag, RenderTargetId target, byte layer = 0)
+        => new (id, tag, target, DrawCommandQueue.None, layer: layer);
 }

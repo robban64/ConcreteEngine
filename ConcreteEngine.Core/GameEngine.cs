@@ -172,7 +172,7 @@ public sealed class GameEngine : IDisposable
         var builder = new GameSceneConfigBuilder(_features, _modules);
         newScene.Build(builder);
         
-        _renderer.RegisterScene(builder.RenderType, builder.RenderTargetsDesc, sceneContext.World);
+        _renderer.RegisterScene(builder.RenderType, builder.RenderTargetsDesc);
 
         _features.Load(new GameFeatureContext(sceneContext));
 

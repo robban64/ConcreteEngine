@@ -15,8 +15,7 @@ public sealed class LightProducer : DrawCommandProducer<LightFeatureDrawData>
         foreach (ref var light in lights)
         {
             var cmd = new DrawCommandLight(light.Position, light.Color, light.Radius, light.Intensity);
-            var meta = new DrawCommandMeta(DrawCommandId.Light, DrawCommandTag.Effect2D,
-                RenderTargetId.SceneLight, 0);
+            var meta = DrawCommandMeta.Make2D(DrawCommandId.Light, DrawCommandTag.Effect2D, RenderTargetId.SceneLight);
 
             submitter.SubmitDraw(in cmd, in meta);
         }

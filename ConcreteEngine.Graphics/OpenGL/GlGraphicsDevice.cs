@@ -81,6 +81,7 @@ public sealed class GlGraphicsDevice : IGraphicsDevice<GlGraphicsContext>
         _gl = gl;
         _viewportSize = initialFrameCtx.ViewportSize;
         _previousViewportSize = initialFrameCtx.ViewportSize;
+        var capabilities = CreateDeviceCapabilities(gl);
         Configuration = new GraphicsConfiguration(CreateDeviceCapabilities(gl));
 
         //_targetRegistry = new RenderTargetRegistry();
@@ -98,11 +99,11 @@ public sealed class GlGraphicsDevice : IGraphicsDevice<GlGraphicsContext>
         );
         _gfx = new GlGraphicsContext(gl, Configuration, contextBindingView, _uniformRegistry, in initialFrameCtx);
 
-        _resourceFactory = new GlResourceFactory(_gfx);
+        _resourceFactory = new GlResourceFactory(_gfx, capabilities);
 
-        Console.WriteLine($"OpenGL version {Configuration.Capabilities.GlVersion} loaded.");
+        Console.WriteLine($"OpenGL version {capabilities.GlVersion} loaded.");
         Console.WriteLine("--Device Capability--");
-        Console.WriteLine(Configuration.Capabilities.ToString());
+        Console.WriteLine(capabilities.ToString());
 
         _quadMesh = CreateMesh(new MeshDescriptor<Vertex2D, uint>
         {
@@ -110,8 +111,8 @@ public sealed class GlGraphicsDevice : IGraphicsDevice<GlGraphicsContext>
             IndexBuffer = null,
             VertexPointers =
             [
-                VertexAttributeDescriptor.Make<Vertex2D>(nameof(Vertex2D.Position)),
-                VertexAttributeDescriptor.Make<Vertex2D>(nameof(Vertex2D.TexCoords))
+                VertexAttributeDescriptor.Make<Vertex2D>(nameof(Vertex2D.Position), VertexElementFormat.Float2),
+                VertexAttributeDescriptor.Make<Vertex2D>(nameof(Vertex2D.TexCoords), VertexElementFormat.Float2)
             ],
             Primitive = DrawPrimitive.TriangleStrip
         }, out _);
@@ -379,7 +380,9 @@ public sealed class GlGraphicsDevice : IGraphicsDevice<GlGraphicsContext>
             MaxFramebufferWidth = gl.GetInteger((GLEnum)0x9315), // GL_MAX_FRAMEBUFFER_WIDTH
             MaxFramebufferHeight = gl.GetInteger((GLEnum)0x9316), // GL_MAX_FRAMEBUFFER_HEIGHT
             MaxSamples = gl.GetInteger(GLEnum.MaxSamples),
-            MaxColorAttachments = gl.GetInteger(GLEnum.MaxColorAttachments)
+            MaxColorAttachments = gl.GetInteger(GLEnum.MaxColorAttachments),
+            MaxAnisotropy = gl.GetFloat(GLEnum.MaxTextureMaxAnisotropy)
+
         };
     }
 

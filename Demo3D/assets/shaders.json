@@ -12,6 +12,12 @@
 	  "vertexFilename": "diffuse.vert.glsl",
 	  "fragmentFilename": "diffuse.frag.glsl",
 	  "samplers": ["uTexture"]
+	},
+	{
+	  "name": "TerrainShader",
+	  "vertexFilename": "diffuse.vert.glsl",
+	  "fragmentFilename": "terrain.frag.glsl",
+	  "samplers": ["uTexture"]
 	}
   ]
 }

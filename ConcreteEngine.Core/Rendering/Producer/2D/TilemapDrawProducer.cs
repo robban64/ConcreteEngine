@@ -33,7 +33,7 @@ public sealed class TilemapDrawProducer : DrawCommandProducer<TilemapDrawData>
             transform: in TilemapTransform
         );
 
-        var meta = new DrawCommandMeta(DrawCommandId.Tilemap, DrawCommandTag.Mesh2D, RenderTargetId.Scene, 0);
+        var meta = DrawCommandMeta.Make2D(DrawCommandId.Tilemap, DrawCommandTag.Mesh2D, RenderTargetId.Scene);
         submitter.SubmitDraw(in cmd, in meta);
     }
 }

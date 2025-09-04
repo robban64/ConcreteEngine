@@ -4,7 +4,6 @@ namespace ConcreteEngine.Core.Scene;
 
 public interface IWorld
 {
-    public Camera3D Camera3D { get; }
     GameEntityId Create();
     GameComponentStore<Transform> Transforms { get; }
     GameComponentStore<MeshComponent> Meshes { get; }
@@ -18,13 +17,12 @@ public interface IWorld
 public sealed class World : IWorld
 {
     private int _idIdx = 1;
+    
 
-    internal World(Camera3D camera3D)
+    internal World()
     {
-        Camera3D = camera3D;
     }
 
-    public Camera3D Camera3D { get; }
     
     public GameEntityId Create() => new (_idIdx++);
     

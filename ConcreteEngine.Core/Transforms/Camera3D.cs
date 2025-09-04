@@ -8,6 +8,9 @@ public sealed class Camera3D : ICamera
 {
     private bool _dirty = true;
 
+    private float _yaw = 0;
+    private float _pitch = 0;
+
     private Vector3 _translation = Vector3.Zero;
     private Vector3 _scale = Vector3.One;
     private Quaternion _rotation = Quaternion.Identity;
@@ -21,6 +24,33 @@ public sealed class Camera3D : ICamera
     private float _farPlane = 2000;
     private float _nearPlane = 0.2f;
     private float _aspectRatio;
+
+
+    public Vector3 Right => Vector3.Normalize(Vector3.Transform(Vector3.UnitX, _rotation));
+    public Vector3 Up => Vector3.Normalize(Vector3.Transform(Vector3.UnitY, _rotation));
+    public Vector3 Forward => Vector3.Normalize(Vector3.Transform(-Vector3.UnitZ, _rotation));
+
+
+    public float Yaw
+    {
+        get => _yaw;
+        set
+        {
+            _yaw = value;
+            _dirty = true;
+        }
+    }
+
+    public float Pitch
+    {
+        get => _pitch;
+        set
+        {
+            _pitch = value;
+            _dirty = true;
+        }
+    }
+
 
     public Vector3 Translation
     {
@@ -38,16 +68,6 @@ public sealed class Camera3D : ICamera
         set
         {
             _scale = value;
-            _dirty = true;
-        }
-    }
-
-    public Quaternion Identity
-    {
-        get => _rotation;
-        set
-        {
-            _rotation = value;
             _dirty = true;
         }
     }
@@ -95,6 +115,15 @@ public sealed class Camera3D : ICamera
 
     public float AspectRatio => _aspectRatio;
 
+    
+    public Quaternion Rotation
+    {
+        get
+        {
+            Ensure();
+            return _rotation;
+        }
+    }
 
     public Matrix4x4 ViewMatrix
     {
@@ -125,11 +154,9 @@ public sealed class Camera3D : ICamera
 
     private void Ensure()
     {
-
-        _viewMatrix = Matrix4x4.Identity *
-                      Matrix4x4.CreateFromQuaternion(_rotation) *
-                      Matrix4x4.CreateScale(_scale) *
-                      Matrix4x4.CreateTranslation(_translation);
+        _rotation = Quaternion.CreateFromYawPitchRoll(_yaw, _pitch, 0);
+        var model = TransformHelper.CreateTransform(_translation, _scale, _rotation);
+        Matrix4x4.Invert(model, out _viewMatrix);
 
         var fov = MathHelper.ToRadians(_fov / 2f);
         _projectionMatrix = Matrix4x4.CreatePerspectiveFieldOfView(fov, _aspectRatio, _nearPlane, _farPlane);

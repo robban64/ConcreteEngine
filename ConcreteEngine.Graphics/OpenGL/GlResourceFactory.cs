@@ -12,15 +12,17 @@ using Silk.NET.OpenGL;
 
 namespace ConcreteEngine.Graphics.OpenGL;
 
-internal sealed class GlResourceFactory(GlGraphicsContext gfx)
+internal sealed class GlResourceFactory(GlGraphicsContext gfx, DeviceCapabilities caps)
 {
     private readonly GL _gl = gfx.Gl;
+    private readonly DeviceCapabilities _caps =  caps;
 
-    private void SetBufferData<TData>(BufferTargetARB target, BufferUsageARB usage, ReadOnlySpan<TData> data)
+    private void SetBufferData<TData>(BufferTargetARB target, BufferUsageARB usage, ReadOnlySpan<TData> data, int? dataLength = null)
         where TData : unmanaged
     {
         var elementSize = Unsafe.SizeOf<TData>();
-        var size = data.Length * elementSize;
+        var length = dataLength.GetValueOrDefault(data.Length);
+        var size =  length * elementSize;
         _gl.BufferData(target, (nuint)size, data, usage);
     }
 
@@ -42,7 +44,7 @@ internal sealed class GlResourceFactory(GlGraphicsContext gfx)
         _gl.BindBuffer(BufferTargetARB.ArrayBuffer, vbo.Handle);
 
         if (vboDesc.Data is not null)
-            SetBufferData<TVertex>(BufferTargetARB.ArrayBuffer, vboDesc.Usage.ToGlEnum(), vboDesc.Data);
+            SetBufferData<TVertex>(BufferTargetARB.ArrayBuffer, vboDesc.Usage.ToGlEnum(), vboDesc.Data, vboDesc.DataLength);
 
         GlIndexBufferHandle ibo = default;
         if (iboDesc != null)
@@ -50,7 +52,7 @@ internal sealed class GlResourceFactory(GlGraphicsContext gfx)
             ibo = CreateIndexBuffer();
             _gl.BindBuffer(BufferTargetARB.ElementArrayBuffer, ibo.Handle);
             if (iboDesc.Data is not null)
-                SetBufferData<TIndex>(BufferTargetARB.ElementArrayBuffer, iboDesc.Usage.ToGlEnum(), iboDesc.Data);
+                SetBufferData<TIndex>(BufferTargetARB.ElementArrayBuffer, iboDesc.Usage.ToGlEnum(), iboDesc.Data, iboDesc.DataLength);
         }
 
         for (int i = 0; i < descriptor.VertexPointers.Length; i++)
@@ -149,6 +151,12 @@ internal sealed class GlResourceFactory(GlGraphicsContext gfx)
         }
 
         SetTextureParameters(desc.Preset, desc.LodBias);
+        if (desc.Anisotropy.HasValue && caps.MaxAnisotropy > 0)
+        {
+            var value = MathF.Min(desc.Anisotropy.Value, caps.MaxAnisotropy);
+            _gl.TexParameter(GLEnum.Texture2D, GLEnum.TextureMaxAnisotropy, value);
+
+        }
         _gl.BindTexture(GLEnum.Texture2D, 0);
 
         meta = new TextureMeta(new Vector2D<int>(desc.Width, desc.Height), desc.Format);

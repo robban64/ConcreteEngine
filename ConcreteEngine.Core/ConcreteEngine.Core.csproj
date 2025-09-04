@@ -25,4 +25,8 @@
       <Compile Remove="Rendering\DrawCommandSubmitterTemp.cs" />
     </ItemGroup>
 
+    <ItemGroup>
+      <Folder Include="Rendering\Batchers\Terrain\" />
+    </ItemGroup>
+
 </Project>

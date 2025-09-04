@@ -102,14 +102,35 @@ public sealed class LightRenderer(IGraphicsDevice graphics, MaterialStore materi
 }
 
 public sealed class MeshRenderer(IGraphicsDevice graphics,  MaterialStore materialStore)
-    : CommandRenderer<DrawCommandSprite>(graphics,  materialStore)
+    : CommandRenderer<DrawCommandMesh>(graphics,  materialStore)
 {
-    public override void Handle(in DrawCommandSprite cmd)
+    public override void Handle(in DrawCommandMesh cmd)
     {
         var material = MaterialStore[cmd.MaterialId];
         BindMaterialSlots(material);
 
+        TransformHelper.GetNormalMatrix(in cmd.Transform, out var normalMatrix);
         Gfx.SetUniform(ShaderUniform.ModelMatrix, in cmd.Transform);
+        Gfx.SetUniform(ShaderUniform.NormalMatrix, in normalMatrix);
+
+        Gfx.BindMesh(cmd.MeshId);
+        Gfx.DrawMesh(cmd.DrawCount);
+    }
+}
+
+public sealed class TerrainRenderer(IGraphicsDevice graphics,  MaterialStore materialStore)
+    : CommandRenderer<DrawCommandTerrain>(graphics,  materialStore)
+{
+    public override void Handle(in DrawCommandTerrain cmd)
+    {
+        var material = MaterialStore[cmd.MaterialId];
+        BindMaterialSlots(material);
+
+        TransformHelper.GetNormalMatrix(in cmd.Transform, out var normalMatrix);
+        Gfx.SetUniform(ShaderUniform.ModelMatrix, in cmd.Transform);
+        Gfx.SetUniform(ShaderUniform.NormalMatrix, in normalMatrix);
+        Gfx.SetUniform(ShaderUniform.TexCoordRepeat, 20f);
+        
         Gfx.BindMesh(cmd.MeshId);
         Gfx.DrawMesh(cmd.DrawCount);
     }

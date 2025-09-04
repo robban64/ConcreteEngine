@@ -17,4 +17,5 @@ public sealed record DeviceCapabilities
     public int MaxColorAttachments { get; init; }
     public int MaxUniformBlockSize { get; init; }
     public int MaxVertexAttribBindings { get; init; }
+    public float MaxAnisotropy  { get; init; }
 }

@@ -39,9 +39,10 @@ internal sealed record AssetTextureRecord(
     string Filename,
     TexturePreset Preset,
     EnginePixelFormat PixelFormat = EnginePixelFormat.Rgba,
+    int? Anisotropy = null,
+    bool InMemory = false,
     float LodBias = -0.25f)
     : IAssetManifestRecord;
-
 
 internal sealed record AssetMeshRecord(
     string Name,

@@ -19,19 +19,20 @@ public record MeshDescriptor<TVertex, TIndex> where TVertex : unmanaged where TI
 
 public record MeshDataBufferDescriptor<T>(
     BufferUsage Usage,
-    T[]? Data
+    T[]? Data,
+    int? DataLength = null
 ) where T : unmanaged;
 
 public readonly record struct VertexAttributeDescriptor(
     uint StrideBytes, // total size of one vertex in bytes
     uint OffsetBytes, // offset of this attribute in the vertex struct
-    VertexElementFormat Format = VertexElementFormat.Float2,
+    VertexElementFormat Format,
     bool Normalized = false
 )
 {
     public static VertexAttributeDescriptor Make<TStruct>(
         string fieldName,
-        VertexElementFormat format = VertexElementFormat.Float2,
+        VertexElementFormat format,
         bool normalized = false)
         where TStruct : struct
     {

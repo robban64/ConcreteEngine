@@ -10,6 +10,7 @@ public readonly record struct TextureDesc(
     int Height,
     EnginePixelFormat Format,
     TexturePreset Preset,
+    int? Anisotropy = null,
     float LodBias = 0,
     bool NullPtrData = false
 );

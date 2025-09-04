@@ -14,6 +14,8 @@ public sealed class FeatureManager : IGameFeatureManager
 
     internal FeatureManager()
     {
+        AddFeature<MeshEntityFeature>();
+        AddFeature<TerrainFeature>();
         AddFeature<TilemapFeature>();
         AddFeature<SpriteFeature>();
         AddFeature<LightFeature>();

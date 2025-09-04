@@ -95,8 +95,7 @@ public sealed class SpriteDrawProducer : DrawCommandProducer<SpriteFeatureDrawDa
             
         var result = _spriteBatch.BuildBatch();
         
-        var meta = new DrawCommandMeta(DrawCommandId.Sprite, DrawCommandTag.Mesh2D,
-            RenderTargetId.Scene, Layer);
+        var meta = DrawCommandMeta.Make2D(DrawCommandId.Sprite, DrawCommandTag.Mesh2D, RenderTargetId.Scene, Layer);
 
         var cmd = new DrawCommandSprite(
             meshId: result.MeshId,

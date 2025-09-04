@@ -2,27 +2,64 @@
 
 using System.Numerics;
 using ConcreteEngine.Core.Features;
+using ConcreteEngine.Core.Resources;
+using ConcreteEngine.Graphics.Descriptors;
 
 #endregion
 
 namespace ConcreteEngine.Core.Rendering;
 
-public sealed class TilemapDrawProducer : DrawCommandProducer<TilemapDrawData>
+
+public struct TilemapDrawData()
+{
+    public MaterialId MaterialId;
+    public int MapDimension = 64;
+    public int TileSize  = 32;
+    public int Count  = 0;
+}
+
+public interface ITilemapDrawSink : IDrawSink
+{
+    void Send(TilemapDrawData payload);
+}
+public sealed class TilemapDrawProducer : IDrawCommandProducer, ITilemapDrawSink
 {
     private static readonly Matrix4x4  TilemapTransform = 
         TransformHelper.CreateTransform2D(Vector2.Zero, new Vector2(1, 1), 0);
     
     private TilemapBatcher _tilemapBatcher = null!;
     
-    public override void OnInitialize()
-    {
-        _tilemapBatcher = Context.DrawBatchers.Get<TilemapBatcher>();
+    private CommandProducerContext _context = null!;
 
+    private TilemapDrawData? _data = null;
+
+    public void Send(TilemapDrawData payload)
+    {
+        _data = payload;
     }
 
-    protected override void EmitCommands(float alpha, TilemapDrawData data, DrawCommandSubmitter submitter)
+    public void AttachContext(CommandProducerContext ctx)
     {
-        if(data.Count == 0) return;
+        _context = ctx;
+    }
+    
+    public void Initialize()
+    {
+        _tilemapBatcher = _context.DrawBatchers.Get<TilemapBatcher>();
+    }
+    
+    public void BeginTick(in UpdateMetaInfo updateMeta)
+    {
+    }
+
+    public void EndTick()
+    {
+    }
+
+    public void EmitFrame(float alpha, RenderPipeline submitter)
+    {
+        if(_data == null) return;
+        var data = _data.Value;
         
         var result = _tilemapBatcher.BuildBatch();
         

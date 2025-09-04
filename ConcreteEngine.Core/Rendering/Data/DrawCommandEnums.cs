@@ -55,23 +55,3 @@ public enum DrawCommandFlags : byte
     Shadows = CastShadows | ReceiveShadows,
 }
 
-public readonly struct DrawCommandMeta(
-    DrawCommandId id,
-    DrawCommandTag tag,
-    RenderTargetId target,
-    DrawCommandQueue queue,
-    byte layer = 0,
-    byte view = 0,
-    ushort depthKey = 0)
-{
-    public readonly DrawCommandId Id = id;
-    public readonly DrawCommandTag Tag = tag;
-    public readonly RenderTargetId Target = target;
-    public readonly DrawCommandQueue Queue = queue;
-    public readonly byte Layer = layer;
-    public readonly byte View = view;
-    public readonly ushort DepthKey = depthKey;
-
-    public static DrawCommandMeta Make2D(DrawCommandId id, DrawCommandTag tag, RenderTargetId target, byte layer = 0)
-        => new (id, tag, target, DrawCommandQueue.None, layer: layer);
-}

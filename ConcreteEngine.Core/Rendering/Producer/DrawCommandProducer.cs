@@ -3,6 +3,7 @@
 using ConcreteEngine.Core.Features;
 using ConcreteEngine.Core.Scene;
 using ConcreteEngine.Graphics;
+using ConcreteEngine.Graphics.Descriptors;
 
 #endregion
 
@@ -17,62 +18,37 @@ public sealed class CommandProducerContext
 
 public interface IDrawCommandProducer
 {
-    Type EntityType { get; }
     void AttachContext(CommandProducerContext ctx);
-    void Produce(float alpha, DrawCommandSubmitter submitter);
-
-    void RegisterFeature(IDrawableFeature feature);
+    void Initialize();
+    void BeginTick(in UpdateMetaInfo updateMeta);
+    void EndTick();
+    void EmitFrame(float alpha, RenderPipeline submitter);
 }
 
-public abstract class DrawCommandProducer<TDrawData> : IDrawCommandProducer where TDrawData : class
+public interface IDrawSink;
+
+
+internal sealed class DrawProduceArray<T> where T : unmanaged
 {
-    public Type EntityType => typeof(TDrawData);
+    public T[] Data;
+    public Span<T> AsSpan() => Data.AsSpan();
+    public Span<T> AsSpan(int start) => Data.AsSpan(start);
+    public Span<T> AsSpan(int start, int length) => Data.AsSpan(start, length);
 
-    private readonly List<IDrawableFeature<TDrawData>> _features = new(8);
-    
-    protected CommandProducerContext Context { get; private set; } = null!;
 
-    public virtual void OnInitialize()
+    public DrawProduceArray(int capacity)
     {
+        Data = new T[capacity];
     }
 
-    protected abstract void EmitCommands(
-        float alpha,
-        TDrawData data,
-        DrawCommandSubmitter submitter);
-
-    public void AttachContext(CommandProducerContext ctx)
+    public void EnsureCapacity(int size)
     {
-        Context = ctx;
-        OnInitialize();
-    }
-
-    public void Produce(float alpha, DrawCommandSubmitter submitter)
-    {
-        if (_features.Count == 0)
+        if (Data.Length < size)
         {
-            return;
-        }
-
-        foreach (var feature in _features)
-        {
-            EmitCommands(alpha, feature.GetDrawables(),  submitter);
+            ArgumentOutOfRangeException.ThrowIfGreaterThan(size, 50_000);
+            var newSize = int.Max(Data.Length * 2, size);
+            Array.Resize(ref Data, newSize);
         }
     }
 
-
-    public void RegisterFeature(IDrawableFeature feature)
-    {
-        if (feature is not IDrawableFeature<TDrawData> featureEntity)
-            throw new ArgumentException($"Feature type {feature.GetType()} is not supported");
-
-        _features.Add(featureEntity);
-    }
-
-    internal void RegisterFeature<TFeature>( IDrawableFeature<TDrawData> feature)
-        where TFeature : IDrawableFeature<TDrawData>
-
-    {
-        _features.Add(feature);
-    }
 }

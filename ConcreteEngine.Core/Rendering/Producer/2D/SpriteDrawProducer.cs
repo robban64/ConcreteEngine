@@ -6,6 +6,7 @@ using System.Runtime.InteropServices;
 using ConcreteEngine.Core.Features;
 using ConcreteEngine.Core.Resources;
 using ConcreteEngine.Core.Utils;
+using ConcreteEngine.Graphics.Descriptors;
 
 #endregion
 
@@ -26,48 +27,78 @@ public struct SpriteDrawEntity(): IComparable<SpriteDrawEntity>
     public int CompareTo(SpriteDrawEntity other) => other.MaterialId.Id.CompareTo(MaterialId.Id);
 }
 
-public sealed class SpriteDrawProducer : DrawCommandProducer<SpriteFeatureDrawData>
+public interface ISpriteDrawSink : IDrawSink
+{
+    void Send(ReadOnlySpan<SpriteDrawEntity> payload);
+    void BuildBatches(List<(MaterialId, int)> batches);
+}
+
+public sealed class SpriteDrawProducer : IDrawCommandProducer, ISpriteDrawSink
 {
     private static readonly Matrix4x4 DefaultTransform =
         TransformHelper.CreateTransform2D(Vector2.Zero, Vector2.One, 0);
-    
-    private readonly struct SpriteBatchCache(
-        MaterialId materialId,
-        int length,
-        in DrawCommandSprite cmd,
-        in DrawCommandMeta meta)
-    {
-        public readonly MaterialId MaterialId = materialId;
-        public readonly int Length = length;
-        public readonly DrawCommandSprite Cmd = cmd;
-        public readonly DrawCommandMeta Meta = meta;
-    }
 
-    public byte Layer { get; set; } = 1;
 
     private readonly List<SpriteBatchCache> _spriteBatches = [];
+    private List<(MaterialId, int)> _batches = [];
 
     private SpriteBatcher _spriteBatch = null!;
 
+    private CommandProducerContext _context = null!;
 
-    public override void OnInitialize( )
+    private int _idx = 0;
+    private DrawProduceArray<SpriteDrawEntity> _entities = new(32);
+    
+
+    private UpdateMetaInfo _updateMeta;
+
+    public void AttachContext(CommandProducerContext ctx)
     {
-        _spriteBatch = Context.DrawBatchers.Get<SpriteBatcher>();
+        _context = ctx;
+    }
+
+    public void Initialize( )
+    {
+        _spriteBatch = _context.DrawBatchers.Get<SpriteBatcher>();
         _spriteBatch.CreateSpriteBatch(0,1024);
 
     }
-
-    protected override void EmitCommands(float alpha, SpriteFeatureDrawData data, DrawCommandSubmitter submitter)
+    
+    public void Send(ReadOnlySpan<SpriteDrawEntity> payload)
     {
-        if (data.Count == 0) return;
+        _entities.EnsureCapacity(payload.Length);
+        var entities = _entities.AsSpan();
+        foreach (ref readonly var entity in payload)
+        {
+            entities[_idx++] = entity;
+        }
+    }
 
-        var batches = data.Batches;
-        var entities = data.Entities.AsSpan();
+    public void BuildBatches(List<(MaterialId, int)> batches)
+    {
+        _batches = batches;
+    }
+
+    public void BeginTick(in UpdateMetaInfo updateMeta)
+    {
+        _idx = 0;
+        _updateMeta = updateMeta;
+    }
+
+    public void EndTick()
+    {
+    }
+
+    public void EmitFrame(float alpha, RenderPipeline submitter)
+    {
+        if (_idx == 0) return;
+
+        var entities = _entities.AsSpan();
         
         var batchIdx = 0;
-        foreach (var (materialId, batchEnd) in batches)
+        foreach (var (materialId, batchEnd) in _batches)
         {
-            var start = batchIdx == 0 ? 0 : batches[batchIdx - 1].Item2 + 1;
+            var start = batchIdx == 0 ? 0 : _batches[batchIdx - 1].Item2 + 1;
             var length = batchEnd - start;
             ProcessBatch(entities, alpha, batchIdx, materialId, start, length);
             batchIdx++;
@@ -95,7 +126,7 @@ public sealed class SpriteDrawProducer : DrawCommandProducer<SpriteFeatureDrawDa
             
         var result = _spriteBatch.BuildBatch();
         
-        var meta = DrawCommandMeta.Make2D(DrawCommandId.Sprite, DrawCommandTag.Mesh2D, RenderTargetId.Scene, Layer);
+        var meta = DrawCommandMeta.Make2D(DrawCommandId.Sprite, DrawCommandTag.Mesh2D, RenderTargetId.Scene, 1);
 
         var cmd = new DrawCommandSprite(
             meshId: result.MeshId,
@@ -107,4 +138,18 @@ public sealed class SpriteDrawProducer : DrawCommandProducer<SpriteFeatureDrawDa
         _spriteBatches.Add(new SpriteBatchCache(materialId, length, in cmd, in meta));
 
     }
+    
+    private readonly struct SpriteBatchCache(
+        MaterialId materialId,
+        int length,
+        in DrawCommandSprite cmd,
+        in DrawCommandMeta meta)
+    {
+        public readonly MaterialId MaterialId = materialId;
+        public readonly int Length = length;
+        public readonly DrawCommandSprite Cmd = cmd;
+        public readonly DrawCommandMeta Meta = meta;
+    }
+
+
 }

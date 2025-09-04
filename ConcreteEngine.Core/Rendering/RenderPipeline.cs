@@ -7,7 +7,7 @@ using System.Runtime.InteropServices;
 
 namespace ConcreteEngine.Core.Rendering;
 
-public class DrawCommandSubmitter
+public class RenderPipeline
 {
     // 10kb
     private const int DefaultBufferCapacity = 1024;
@@ -26,7 +26,7 @@ public class DrawCommandSubmitter
     private int _iteratorIdx = 0;
     private int _stride = 0;
 
-    public DrawCommandSubmitter()
+    public RenderPipeline()
     {
         _buffer = new byte[DefaultBufferCapacity];
         _indices = new DrawCommandMetaIndex[DefaultIndicesCapacity];
@@ -58,11 +58,11 @@ public class DrawCommandSubmitter
     {
         EnsureCapacity();
         var span = _buffer.Span;
-        int size  = Unsafe.SizeOf<T>();
+        int size = Unsafe.SizeOf<T>();
         int offset = _submitIdx * _stride;
         ref byte dest = ref span[offset];
         var slot = MemoryMarshal.CreateSpan(ref dest, size);
-        MemoryMarshal.Write(slot, in cmd);   
+        MemoryMarshal.Write(slot, in cmd);
         _indices[_submitIdx] = new DrawCommandMetaIndex(in meta, _submitIdx);
         _submitIdx++;
     }
@@ -159,23 +159,4 @@ public class DrawCommandSubmitter
     private delegate void DispatchToRendererDelegate<T>(in T payload) where T : unmanaged, IDrawCommand;
 
     private delegate void ProcessDelegate(in DrawCommandMeta meta, ReadOnlySpan<byte> buffer, int idx, int stride);
-
-
-    private readonly struct DrawCommandMetaIndex(in DrawCommandMeta meta, int idx)
-        : IComparable<DrawCommandMetaIndex>
-    {
-        public readonly DrawCommandMeta Meta = meta;
-        public readonly int Idx = idx;
-
-        private readonly ulong _sortKey =
-            ((ulong)(byte)meta.Target << 56) |
-            ((ulong)meta.View << 48) |
-            ((ulong)meta.Queue << 40) |
-            ((ulong)meta.DepthKey << 24) |
-            ((ulong)meta.Layer << 16) |
-            (ushort)idx;
-
-        [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public int CompareTo(DrawCommandMetaIndex other) => _sortKey.CompareTo(other._sortKey);
-    }
 }

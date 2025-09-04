@@ -47,12 +47,12 @@ internal sealed class Render3D: IRender
         
     }
 
-    public void RenderScenePass(SceneRenderPass pass, DrawCommandSubmitter submitter)
+    public void RenderScenePass(SceneRenderPass pass, RenderPipeline submitter)
     {
         submitter.DrainCommandQueue(RenderTargetId.Scene);
     }
 
-    public void RenderLightPass(LightRenderPass lightPass, DrawCommandSubmitter submitter)
+    public void RenderLightPass(LightRenderPass lightPass, RenderPipeline submitter)
     {
     }
     

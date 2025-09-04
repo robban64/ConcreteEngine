@@ -25,6 +25,8 @@ public enum RenderType
 public interface IRenderSystem : IGameEngineSystem
 {
     ICamera Camera { get;  }
+
+    TSink GetSink<TSink>() where TSink : IDrawSink;
     Material CreateMaterial(string templateName);
     void MutateRenderPass(RenderTargetId targetId, in RenderPassMutation mutation);
 }
@@ -37,8 +39,8 @@ public sealed class RenderSystem : IRenderSystem
     private readonly MaterialStore _materialStore;
     private IRender _render;
 
-    private readonly DrawCommandCollector _commandCollector;
-    private readonly DrawCommandSubmitter _commandSubmitter;
+    private readonly DrawCollector _collector;
+    private readonly RenderPipeline _commandSubmitter;
 
     private readonly List<ICommandRenderer> _renderers = new();
     private readonly BatcherRegistry _batches = new();
@@ -53,8 +55,8 @@ public sealed class RenderSystem : IRenderSystem
         _gfx = graphics.Gfx;
         _materialStore = materialStore;
 
-        _commandCollector = new DrawCommandCollector();
-        _commandSubmitter = new DrawCommandSubmitter();
+        _collector = new DrawCollector();
+        _commandSubmitter = new RenderPipeline();
     }
 
     internal void Initialize(IGameFeatureManager features)
@@ -70,31 +72,14 @@ public sealed class RenderSystem : IRenderSystem
         };
 
         // Collector
-        _commandCollector.AddProducer(new MeshDrawProducer());
-        _commandCollector.AddProducer(new TerrainDrawProducer());
+        _collector.RegisterProducer<IMeshDrawSink>(new MeshDrawProducer());
+        _collector.RegisterProducer<ITerrainDrawSink>(new TerrainDrawProducer());
 
-        _commandCollector.AddProducer(new TilemapDrawProducer());
-        _commandCollector.AddProducer(new SpriteDrawProducer());
-        _commandCollector.AddProducer(new LightProducer());
+        _collector.RegisterProducer<ITilemapDrawSink>(new TilemapDrawProducer());
+        _collector.RegisterProducer<ISpriteDrawSink>(new SpriteDrawProducer());
+        _collector.RegisterProducer<ILightDrawSink>(new LightProducer());
 
-        _commandCollector.GetProducer<MeshDrawProducer>()
-            .RegisterFeature<MeshEntityFeature>(features.Get<MeshEntityFeature>());
-        
-        _commandCollector.GetProducer<TerrainDrawProducer>()
-            .RegisterFeature<TerrainFeature>(features.Get<TerrainFeature>());
-
-
-        _commandCollector.GetProducer<TilemapDrawProducer>()
-            .RegisterFeature<TilemapFeature>(features.Get<TilemapFeature>());
-
-        _commandCollector.GetProducer<SpriteDrawProducer>()
-            .RegisterFeature<SpriteFeature>(features.Get<SpriteFeature>());
-
-        _commandCollector.GetProducer<LightProducer>()
-            .RegisterFeature<LightFeature>(features.Get<LightFeature>());
-
-
-        _commandCollector.AttachContext(cmdProducerCtx);
+        _collector.AttachContext(cmdProducerCtx);
 
         _renderers.Add(new MeshRenderer(_graphics, _materialStore));
         _renderers.Add(new TerrainRenderer(_graphics, _materialStore));
@@ -114,6 +99,9 @@ public sealed class RenderSystem : IRenderSystem
 
         _commandSubmitter.Register<DrawCommandLight, LightRenderer>
             (DrawCommandTag.Effect2D, DrawCommandId.Light);
+        
+        
+        _collector.InitializeProducers();
     }
 
     internal void RegisterScene(RenderType renderType, RenderTargetDescriptor desc)
@@ -126,6 +114,8 @@ public sealed class RenderSystem : IRenderSystem
         _render.RegisterRenderTargetsFrom(desc);
     }
 
+    public TSink GetSink<TSink>() where TSink : IDrawSink => _collector.GetSink<TSink>();
+
 
     public Material CreateMaterial(string templateName)
         => _materialStore.CreateMaterialFromTemplate(templateName);
@@ -136,6 +126,9 @@ public sealed class RenderSystem : IRenderSystem
     public void Shutdown()
     {
     }
+
+    internal void BeginTick(in UpdateMetaInfo updateMeta) => _collector.BeginTick(updateMeta);
+    internal void EndTick() => _collector.EndTick();
 
     internal void Render(float alpha, in FrameMetaInfo frameCtx, out FrameRenderResult result)
     {
@@ -153,7 +146,7 @@ public sealed class RenderSystem : IRenderSystem
     private void PrepareRenderer(float alpha)
     {
         _render.PrepareRender(alpha);
-        _commandCollector.Collect(alpha, _commandSubmitter);
+        _collector.Collect(alpha, _commandSubmitter);
         _commandSubmitter.Prepare();
     }
 

@@ -45,6 +45,8 @@ public sealed class GameEngine : IDisposable
 
     private float _fps;
     private FrameRenderResult _frameResult = default;
+    
+    private UpdateMetaInfo  _updateMeta = default;
 
     internal GameEngine(
         IEngineWindowHost windowHost,
@@ -101,6 +103,9 @@ public sealed class GameEngine : IDisposable
             ViewportSize = _window.Size
         };
 
+        _updateMeta.DeltaTime = dt;
+        _updateMeta.Fps = fps;
+
         _currentScene?.Update(in frameCtx);
         
         // fixed-step simulation
@@ -111,8 +116,11 @@ public sealed class GameEngine : IDisposable
 
     private void GameTickUpdate(int tick)
     {
+        _updateMeta.GameTick = tick;
+        _renderer.BeginTick(in _updateMeta);
         _input.Update();
         _currentScene?.UpdateTick(tick);
+        _renderer.EndTick();
     }
 
     private void FpsTickUpdate(int tick)
@@ -135,7 +143,7 @@ public sealed class GameEngine : IDisposable
             ViewportSize = _window.Size
         };
 
-        _renderer.Render(_gameTime.Alpha, in frameCtx, out _frameResult);
+        _renderer.Render(_updateMeta.Alpha, in frameCtx,  out _frameResult);
     }
 
 

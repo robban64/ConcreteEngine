@@ -30,9 +30,7 @@ public sealed class GameFeatureContext
     public ModuleManager Modules => _scene.Modules;
     public IWorld World => _scene.World;
     
-
     public T GetSystem<T>() where T : IGameEngineSystem => _scene.GetSystem<T>();
-
 
     internal GameFeatureContext(GameSceneContext scene)
     {

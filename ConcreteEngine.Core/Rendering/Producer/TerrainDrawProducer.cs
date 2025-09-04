@@ -1,31 +1,63 @@
 using System.Numerics;
 using ConcreteEngine.Core.Resources;
+using ConcreteEngine.Graphics.Descriptors;
 using ConcreteEngine.Graphics.Resources;
 
 namespace ConcreteEngine.Core.Rendering;
 
-public sealed class TerrainDrawData
+public struct TerrainDrawData
 {
-    public Texture2D? Heightmap { get; set; }
-    public MaterialId MaterialId { get; set; }
-    public int MaxHeight { get; set; }
+    public Texture2D? Heightmap;
+    public MaterialId MaterialId;
+    public int MaxHeight;
+    public int Step;
 }
 
-
-public sealed class TerrainDrawProducer : DrawCommandProducer<TerrainDrawData>
+public interface ITerrainDrawSink : IDrawSink
+{
+    void Send(TerrainDrawData payload);
+}
+public sealed class TerrainDrawProducer : IDrawCommandProducer, ITerrainDrawSink
 {
     private TerrainBatcher _terrain = null!;
     
-    public override void OnInitialize()
+    private CommandProducerContext _context = null!;
+
+    private TerrainDrawData? _data = null;
+    
+    public void Send(TerrainDrawData payload)
     {
-        _terrain = Context.DrawBatchers.Get<TerrainBatcher>();
+        _data = payload;
     }
 
-    protected override void EmitCommands(float alpha, TerrainDrawData data, DrawCommandSubmitter submitter)
+    public void AttachContext(CommandProducerContext ctx)
     {
+        _context = ctx;
+    }
+    
+    public void Initialize()
+    {
+        _terrain = _context.DrawBatchers.Get<TerrainBatcher>();
+    }
+    
+    public void BeginTick(in UpdateMetaInfo updateMeta)
+    {
+    }
+
+    public void EndTick()
+    {
+    }
+    
+
+    public void EmitFrame(float alpha, RenderPipeline submitter)
+    {
+        if(_data == null) return;
+        
+        var data = _data.Value;
+        
         if (data.Heightmap != null && _terrain.HeightMap == null)
         {
-            _terrain.Initialize(data.Heightmap, 8, 1);
+            _terrain.Initialize(data.Heightmap, data.MaxHeight, data.Step);
             _terrain.BuildBatch();
         }
         

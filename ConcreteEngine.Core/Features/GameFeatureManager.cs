@@ -10,7 +10,6 @@ public interface IGameFeatureManager
 public sealed class FeatureManager : IGameFeatureManager
 {
     private readonly List<IGameFeature> _features = new(4);
-    private readonly List<IDrawableFeature> _drawableFeatures = new(4);
 
     internal FeatureManager()
     {
@@ -39,8 +38,7 @@ public sealed class FeatureManager : IGameFeatureManager
 
         foreach (var feature in _features)
         {
-            if (feature.IsUpdateable)
-                feature.Update(frameInfo);
+            feature.Update(frameInfo);
         }
     }
 
@@ -50,8 +48,7 @@ public sealed class FeatureManager : IGameFeatureManager
 
         foreach (var feature in _features)
         {
-            if (feature.IsUpdateable)
-                feature.UpdateTick(tick);
+            feature.UpdateTick(tick);
         }
     }
 
@@ -80,7 +77,5 @@ public sealed class FeatureManager : IGameFeatureManager
     {
         var newFeature = new T();
         _features.Add(newFeature);
-        if(newFeature is IDrawableFeature drawableFeature)
-            _drawableFeatures.Add(drawableFeature);
     }
 }

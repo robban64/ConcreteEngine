@@ -8,6 +8,6 @@ internal interface IRender
     void MutateRenderPass(RenderTargetId targetId, in RenderPassMutation mutation);
     void RegisterRenderTargetsFrom(RenderTargetDescriptor desc);
     void PrepareRender(float alpha);
-    void RenderScenePass(SceneRenderPass pass, DrawCommandSubmitter submitter);
-    void RenderLightPass(LightRenderPass lightPass, DrawCommandSubmitter submitter);
+    void RenderScenePass(SceneRenderPass pass, RenderPipeline submitter);
+    void RenderLightPass(LightRenderPass lightPass, RenderPipeline submitter);
 }

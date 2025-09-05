@@ -5,7 +5,7 @@
 namespace ConcreteEngine.Core.Rendering;
 
 
-internal sealed class DrawCollector
+internal sealed class DrawCommandCollector
 {
     private readonly Dictionary<Type, IDrawCommandProducer> _producers = new(8);
 
@@ -13,7 +13,7 @@ internal sealed class DrawCollector
     
     public int Count => _producerList.Count;
 
-    internal DrawCollector()
+    internal DrawCommandCollector()
     {
         
     }

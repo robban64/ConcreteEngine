@@ -49,7 +49,7 @@ public sealed class LightProducer : IDrawCommandProducer, ILightDrawSink
     {
     }
     
-    public void EmitFrame(float alpha, RenderPipeline submitter)
+    public void EmitFrame(float alpha, IRenderPipeline submitter)
     {
         var lights = CollectionsMarshal.AsSpan(_lights);
         foreach (ref var light in lights)

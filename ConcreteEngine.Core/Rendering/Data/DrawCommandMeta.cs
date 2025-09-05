@@ -37,6 +37,7 @@ internal readonly struct DrawCommandMetaIndex(in DrawCommandMeta meta, int idx)
         ((ulong)meta.Layer << 16) |
         (ushort)idx;
 
+
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public int CompareTo(DrawCommandMetaIndex other) => _sortKey.CompareTo(other._sortKey);
 }

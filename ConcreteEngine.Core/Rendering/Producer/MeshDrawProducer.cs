@@ -65,7 +65,7 @@ public sealed class MeshDrawProducer : IDrawCommandProducer, IMeshDrawSink
     }
 
 
-    public void EmitFrame(float alpha, RenderPipeline submitter)
+    public void EmitFrame(float alpha, IRenderPipeline submitter)
     {
         if(_idx == 0) return;
         var entities = _entities.AsSpan(0, _idx);

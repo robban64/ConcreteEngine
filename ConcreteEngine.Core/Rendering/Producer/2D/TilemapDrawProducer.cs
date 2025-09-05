@@ -56,7 +56,7 @@ public sealed class TilemapDrawProducer : IDrawCommandProducer, ITilemapDrawSink
     {
     }
 
-    public void EmitFrame(float alpha, RenderPipeline submitter)
+    public void EmitFrame(float alpha, IRenderPipeline submitter)
     {
         if(_data == null) return;
         var data = _data.Value;

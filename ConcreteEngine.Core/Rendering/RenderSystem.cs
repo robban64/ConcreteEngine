@@ -35,20 +35,14 @@ public sealed class RenderSystem : IRenderSystem
 {
     private readonly IGraphicsDevice _graphics;
     private readonly IGraphicsContext _gfx;
-
     private readonly MaterialStore _materialStore;
-    private IRender _render;
-
-    private readonly DrawCollector _collector;
-    
+    private readonly DrawCommandCollector _commandCollector;
     private readonly RenderPipeline _commandSubmitter;
-
-    private readonly List<ICommandRenderer> _renderers = new();
     private readonly BatcherRegistry _batches = new();
+    private readonly CommandDrawerRegistry _drawRegistry;
 
+    private IRender _render;
     private SceneDrawProducer _sceneDrawProducer = null!;
-    private SkyboxRenderer _skyboxRenderer;
-    
     private CommandProducerContext cmdProducerCtx = null!;
 
     public ICamera Camera => _render.Camera;
@@ -59,8 +53,9 @@ public sealed class RenderSystem : IRenderSystem
         _gfx = graphics.Gfx;
         _materialStore = materialStore;
 
-        _collector = new DrawCollector();
+        _commandCollector = new DrawCommandCollector();
         _commandSubmitter = new RenderPipeline();
+        _drawRegistry = new CommandDrawerRegistry(_graphics, _materialStore);
     }
 
     internal void Initialize(IGameFeatureManager features)
@@ -76,45 +71,44 @@ public sealed class RenderSystem : IRenderSystem
         };
 
         // Collector
-        _collector.RegisterProducerSink<IMeshDrawSink>(new MeshDrawProducer());
-        _collector.RegisterProducerSink<ITerrainDrawSink>(new TerrainDrawProducer());
+        _commandCollector.RegisterProducerSink<IMeshDrawSink>(new MeshDrawProducer());
+        _commandCollector.RegisterProducerSink<ITerrainDrawSink>(new TerrainDrawProducer());
 
-        _collector.RegisterProducerSink<ITilemapDrawSink>(new TilemapDrawProducer());
-        _collector.RegisterProducerSink<ISpriteDrawSink>(new SpriteDrawProducer());
-        _collector.RegisterProducerSink<ILightDrawSink>(new LightProducer());
+        _commandCollector.RegisterProducerSink<ITilemapDrawSink>(new TilemapDrawProducer());
+        _commandCollector.RegisterProducerSink<ISpriteDrawSink>(new SpriteDrawProducer());
+        _commandCollector.RegisterProducerSink<ILightDrawSink>(new LightProducer());
         
         _sceneDrawProducer = new  SceneDrawProducer();
-        _collector.RegisterProducer<SceneDrawProducer>(_sceneDrawProducer);
+        _commandCollector.RegisterProducer<SceneDrawProducer>(_sceneDrawProducer);
 
-        _collector.AttachContext(cmdProducerCtx);
+        _commandCollector.AttachContext(cmdProducerCtx);
 
-        _renderers.Add(new MeshRenderer(_graphics, _materialStore));
-        _renderers.Add(new TerrainRenderer(_graphics, _materialStore));
-        _renderers.Add(new SpriteRenderer(_graphics, _materialStore));
-        _renderers.Add(new LightRenderer(_graphics, _materialStore));
-        _skyboxRenderer = new  SkyboxRenderer(_graphics, _materialStore);
-        _renderers.Add(_skyboxRenderer);
+        _drawRegistry.Register<MeshDrawer>();
+        _drawRegistry.Register<TerrainDrawer>();
+        _drawRegistry.Register<SpriteDrawer>();
+        _drawRegistry.Register<LightDrawer>();
+        _drawRegistry.Register<SkyboxDrawer>();
 
-        _commandSubmitter.Initialize(_renderers);
+        _commandSubmitter.Initialize(_drawRegistry.Drawers);
 
-        _commandSubmitter.Register<DrawCommandMesh, MeshRenderer>
+        _commandSubmitter.Register<DrawCommandMesh, MeshDrawer>
             (DrawCommandTag.Mesh3D, DrawCommandId.Mesh);
 
-        _commandSubmitter.Register<DrawCommandTerrain, TerrainRenderer>
+        _commandSubmitter.Register<DrawCommandTerrain, TerrainDrawer>
             (DrawCommandTag.Terrain, DrawCommandId.Terrain);
         
-        _commandSubmitter.Register<DrawCommandSkybox, SkyboxRenderer>
+        _commandSubmitter.Register<DrawCommandSkybox, SkyboxDrawer>
             (DrawCommandTag.Skybox, DrawCommandId.Skybox);
 
 
-        _commandSubmitter.Register<DrawCommandSprite, SpriteRenderer>
+        _commandSubmitter.Register<DrawCommandSprite, SpriteDrawer>
             (DrawCommandTag.Mesh2D, DrawCommandId.Tilemap, DrawCommandId.Sprite);
 
-        _commandSubmitter.Register<DrawCommandLight, LightRenderer>
+        _commandSubmitter.Register<DrawCommandLight, LightDrawer>
             (DrawCommandTag.Effect2D, DrawCommandId.Light);
 
 
-        _collector.InitializeProducers();
+        _commandCollector.InitializeProducers();
     }
 
     internal void RegisterScene(RenderType renderType, RenderTargetDescriptor desc)
@@ -125,11 +119,10 @@ public sealed class RenderSystem : IRenderSystem
             _render = new Render3D(_graphics, _materialStore);
         
         _render.RegisterRenderTargetsFrom(desc);
-
-        _skyboxRenderer.Camera = (Camera3D)_render.Camera;
+        _drawRegistry.Initialize(null, (Render3D)_render);
     }
 
-    public TSink GetSink<TSink>() where TSink : IDrawSink => _collector.GetSink<TSink>();
+    public TSink GetSink<TSink>() where TSink : IDrawSink => _commandCollector.GetSink<TSink>();
 
 
     public Material CreateMaterial(string templateName)
@@ -142,8 +135,8 @@ public sealed class RenderSystem : IRenderSystem
     {
     }
 
-    internal void BeginTick(in UpdateMetaInfo updateMeta) => _collector.BeginTick(updateMeta);
-    internal void EndTick() => _collector.EndTick();
+    internal void BeginTick(in UpdateMetaInfo updateMeta) => _commandCollector.BeginTick(updateMeta);
+    internal void EndTick() => _commandCollector.EndTick();
 
     internal void Render(float alpha, in FrameMetaInfo frameCtx, in SceneRenderGlobalSnapshot renderGlobals,
         out FrameRenderResult result)
@@ -164,7 +157,7 @@ public sealed class RenderSystem : IRenderSystem
     private void PrepareRenderer(float alpha)
     {
         _render.PrepareRender(alpha);
-        _collector.Collect(alpha, _commandSubmitter);
+        _commandCollector.Collect(alpha, _commandSubmitter);
         _commandSubmitter.Prepare();
     }
 

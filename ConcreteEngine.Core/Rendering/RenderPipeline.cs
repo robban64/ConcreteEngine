@@ -7,7 +7,12 @@ using System.Runtime.InteropServices;
 
 namespace ConcreteEngine.Core.Rendering;
 
-public class RenderPipeline
+public interface IRenderPipeline
+{
+    public void SubmitDraw<T>(in T cmd, in DrawCommandMeta meta) where T : unmanaged, IDrawCommand;
+}
+
+internal sealed class RenderPipeline : IRenderPipeline
 {
     // 10kb
     private const int DefaultBufferCapacity = 1024;
@@ -17,7 +22,7 @@ public class RenderPipeline
 
     // key = DrawCommandId
     private readonly DispatchRegistry _registry = new();
-    private IReadOnlyList<ICommandRenderer> _renderers;
+    private IReadOnlyList<ICommandDrawer> _renderers;
 
     private Memory<byte> _buffer;
     private DrawCommandMetaIndex[] _indices;
@@ -33,11 +38,11 @@ public class RenderPipeline
         _submitIdx = 0;
     }
 
-    internal void Initialize(IReadOnlyList<ICommandRenderer> renderers) => _renderers = renderers;
+    internal void Initialize(IReadOnlyList<ICommandDrawer> renderers) => _renderers = renderers;
 
     public void Register<T, TRenderer>(DrawCommandTag tag, params DrawCommandId[] cmdIds)
         where T : unmanaged, IDrawCommand
-        where TRenderer : class, ICommandRenderer<T>
+        where TRenderer : CommandDrawer<T>
     {
         if (_renderers.Single(x => x.GetType() == typeof(TRenderer)) is not TRenderer renderer)
             throw new InvalidOperationException($"Renderer not found: {typeof(TRenderer).Name}");
@@ -127,17 +132,17 @@ public class RenderPipeline
 
         internal void Register<T, TRenderer>(DrawCommandId cmdId, DrawCommandTag tag, TRenderer handler)
             where T : unmanaged, IDrawCommand
-            where TRenderer : class, ICommandRenderer<T>
+            where TRenderer : CommandDrawer<T>
 
         {
             // Handler
             /*
-            var handlerType = typeof(ICommandRenderer<>).MakeGenericType(typeof(T));
-            var method = handlerType.GetMethod(nameof(ICommandRenderer<T>.Handle));
+            var handlerType = typeof(ICommandDrawer<>).MakeGenericType(typeof(T));
+            var method = handlerType.GetMethod(nameof(ICommandDrawer<T>.Handle));
             var action = typeof(DispatchToRendererDelegate<>).MakeGenericType(typeof(T));
             var del = (DispatchToRendererDelegate<T>)Delegate.CreateDelegate(action, handler, method!);
             */
-            var method = typeof(ICommandRenderer<T>).GetMethod(nameof(ICommandRenderer<T>.Handle))!;
+            var method = typeof(CommandDrawer<T>).GetMethod(nameof(CommandDrawer<T>.Handle))!;
             var del = (DispatchToRendererDelegate<T>)Delegate.CreateDelegate(typeof(DispatchToRendererDelegate<T>),
                 handler, method);
             int sizeT = Unsafe.SizeOf<T>();

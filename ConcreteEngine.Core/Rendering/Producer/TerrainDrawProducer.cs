@@ -49,7 +49,7 @@ public sealed class TerrainDrawProducer : IDrawCommandProducer, ITerrainDrawSink
     }
     
 
-    public void EmitFrame(float alpha, RenderPipeline submitter)
+    public void EmitFrame(float alpha, IRenderPipeline submitter)
     {
         if(_data == null) return;
         

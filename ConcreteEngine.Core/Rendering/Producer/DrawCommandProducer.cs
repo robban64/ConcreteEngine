@@ -22,7 +22,7 @@ public interface IDrawCommandProducer
     void Initialize();
     void BeginTick(in UpdateMetaInfo updateMeta);
     void EndTick();
-    void EmitFrame(float alpha, RenderPipeline submitter);
+    void EmitFrame(float alpha, IRenderPipeline submitter);
 }
 
 public interface IDrawSink;

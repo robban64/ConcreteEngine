@@ -89,7 +89,7 @@ public sealed class SpriteDrawProducer : IDrawCommandProducer, ISpriteDrawSink
     {
     }
 
-    public void EmitFrame(float alpha, RenderPipeline submitter)
+    public void EmitFrame(float alpha, IRenderPipeline submitter)
     {
         if (_idx == 0) return;
 

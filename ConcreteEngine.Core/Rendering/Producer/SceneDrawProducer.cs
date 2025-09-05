@@ -33,7 +33,7 @@ public sealed class SceneDrawProducer : IDrawCommandProducer
     }
     
 
-    public void EmitFrame(float alpha, RenderPipeline submitter)
+    public void EmitFrame(float alpha, IRenderPipeline submitter)
     {
         if (_snapshot.Skybox.CubemapId.IsValid())
         {

@@ -9,7 +9,10 @@ namespace ConcreteEngine.Core.Rendering;
 
 public interface IRenderPipeline
 {
-    public void SubmitDraw<T>(in T cmd, in DrawCommandMeta meta) where T : unmanaged, IDrawCommand;
+    void SubmitDraw<T>(in T cmd, in DrawCommandMeta meta) where T : unmanaged, IDrawCommand;
+
+    void SubmitDrawBatch<T>(ReadOnlySpan<T> cmds, ReadOnlySpan<DrawCommandMeta> metas)
+        where T : unmanaged, IDrawCommand;
 }
 
 internal sealed class RenderPipeline : IRenderPipeline
@@ -21,8 +24,7 @@ internal sealed class RenderPipeline : IRenderPipeline
     private const int MaxIndicesCapacity = 64 * 100;
 
     // key = DrawCommandId
-    private readonly DispatchRegistry _registry = new();
-    private IReadOnlyList<ICommandDrawer> _renderers;
+    private readonly DispatchRegistry _registry;
 
     private Memory<byte> _buffer;
     private DrawCommandMetaIndex[] _indices;
@@ -33,35 +35,27 @@ internal sealed class RenderPipeline : IRenderPipeline
 
     public RenderPipeline()
     {
+        _registry = new DispatchRegistry();
         _buffer = new byte[DefaultBufferCapacity];
         _indices = new DrawCommandMetaIndex[DefaultIndicesCapacity];
         _submitIdx = 0;
     }
 
-    internal void Initialize(IReadOnlyList<ICommandDrawer> renderers) => _renderers = renderers;
+    internal void Initialize() {}
 
-    public void Register<T, TRenderer>(DrawCommandTag tag, params DrawCommandId[] cmdIds)
-        where T : unmanaged, IDrawCommand
-        where TRenderer : CommandDrawer<T>
+    public void Register<T>(DrawCommandId commandId) where T : unmanaged, IDrawCommand
     {
-        if (_renderers.Single(x => x.GetType() == typeof(TRenderer)) is not TRenderer renderer)
-            throw new InvalidOperationException($"Renderer not found: {typeof(TRenderer).Name}");
-
         var size = Unsafe.SizeOf<T>();
         if (size > _stride) _stride = size;
-
-        foreach (var id in cmdIds)
-        {
-            if (id == DrawCommandId.Invalid) throw new ArgumentException("Invalid command id", nameof(id));
-            _registry.Register<T, TRenderer>(id, tag, renderer!);
-        }
+        if (commandId == DrawCommandId.Invalid) throw new ArgumentException("Invalid command id", nameof(commandId));
+        _registry.Register<T>(commandId);
     }
 
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public void SubmitDraw<T>(in T cmd, in DrawCommandMeta meta) where T : unmanaged, IDrawCommand
     {
-        EnsureCapacity();
+        EnsureCapacity(1);
         var span = _buffer.Span;
         int size = Unsafe.SizeOf<T>();
         int offset = _submitIdx * _stride;
@@ -70,6 +64,41 @@ internal sealed class RenderPipeline : IRenderPipeline
         MemoryMarshal.Write(slot, in cmd);
         _indices[_submitIdx] = new DrawCommandMetaIndex(in meta, _submitIdx);
         _submitIdx++;
+    }
+    
+    public void SubmitDrawBatch<T>(ReadOnlySpan<T> cmds, ReadOnlySpan<DrawCommandMeta> metas)
+        where T : unmanaged, IDrawCommand
+    {
+        ArgumentOutOfRangeException.ThrowIfNotEqual(cmds.Length, metas.Length);
+
+        int count = cmds.Length;
+        if (count == 0) return;
+
+        EnsureCapacity(count);
+
+        int size   = Unsafe.SizeOf<T>();
+        int offset = _submitIdx * _stride;
+        var span    = _buffer.Span;
+
+        // If stride = size we can bulk insert it
+        if (_stride == size)
+        {
+            MemoryMarshal.AsBytes(cmds).CopyTo(span.Slice(offset, count * size));
+
+            for (int i = 0; i < count; i++)
+                _indices[_submitIdx + i] = new DrawCommandMetaIndex(in metas[i], _submitIdx + i);
+
+            _submitIdx += count;
+            return;
+        }
+
+        for (int i = 0; i < count; i++)
+        {
+            var dst = span.Slice(offset + i * _stride, size);
+            MemoryMarshal.Write(dst, in cmds[i]);
+            _indices[_submitIdx + i] = new DrawCommandMetaIndex(in metas[i], _submitIdx + i);
+        }
+        _submitIdx += count;
     }
 
     public void Prepare()
@@ -81,13 +110,13 @@ internal sealed class RenderPipeline : IRenderPipeline
 
     public void DrainCommandQueue(RenderTargetId targetId)
     {
+        var bufferSpan = _buffer.Span;
         for (int i = _iteratorIdx; i < _submitIdx; i++)
         {
             ref readonly var it = ref _indices[_iteratorIdx++];
             if (it.Meta.Target < targetId) continue;
             if (it.Meta.Target > targetId) break;
-
-            _registry.Process(in it.Meta, _buffer.Span, it.Idx, _stride);
+            _registry.Dispatch(it.Meta.Id, bufferSpan, it.Idx, _stride);
         }
     }
 
@@ -97,9 +126,9 @@ internal sealed class RenderPipeline : IRenderPipeline
         _iteratorIdx = 0;
     }
 
-    private void EnsureCapacity()
+    private void EnsureCapacity(int amount)
     {
-        var idx = _submitIdx + 1;
+        var idx = _submitIdx + amount;
 
         var sizeInBytes = idx * _stride;
         if (sizeInBytes >= _buffer.Length)
@@ -125,43 +154,27 @@ internal sealed class RenderPipeline : IRenderPipeline
 
     private class DispatchRegistry
     {
-        private readonly Dictionary<(DrawCommandId, DrawCommandTag), ProcessDelegate> _delegateRegistry = new();
-
-        public void Process(in DrawCommandMeta meta, ReadOnlySpan<byte> buffer, int idx, int stride)
-            => _delegateRegistry[(meta.Id, meta.Tag)](in meta, buffer, idx, stride);
-
-        internal void Register<T, TRenderer>(DrawCommandId cmdId, DrawCommandTag tag, TRenderer handler)
-            where T : unmanaged, IDrawCommand
-            where TRenderer : CommandDrawer<T>
-
+        private readonly ProcessDelegate[] _delegates = new ProcessDelegate[Enum.GetValues<DrawCommandId>().Length];
+        
+        internal void Register<T>(DrawCommandId cmdId) where T : unmanaged, IDrawCommand
         {
-            // Handler
-            /*
-            var handlerType = typeof(ICommandDrawer<>).MakeGenericType(typeof(T));
-            var method = handlerType.GetMethod(nameof(ICommandDrawer<T>.Handle));
-            var action = typeof(DispatchToRendererDelegate<>).MakeGenericType(typeof(T));
-            var del = (DispatchToRendererDelegate<T>)Delegate.CreateDelegate(action, handler, method!);
-            */
-            var method = typeof(CommandDrawer<T>).GetMethod(nameof(CommandDrawer<T>.Handle))!;
-            var del = (DispatchToRendererDelegate<T>)Delegate.CreateDelegate(typeof(DispatchToRendererDelegate<T>),
-                handler, method);
-            int sizeT = Unsafe.SizeOf<T>();
+            _delegates[(int)cmdId] = ProcessHandler<T>;
+        }
 
-            _delegateRegistry[(cmdId, tag)] = ProcessHandler;
-
-
-            return;
-
-            void ProcessHandler(in DrawCommandMeta meta, ReadOnlySpan<byte> buffer, int idx, int stride)
-            {
-                var slot = buffer.Slice(idx * stride, sizeT);
-                var payload = MemoryMarshal.Read<T>(slot);
-                del(in payload);
-            }
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public void Dispatch(DrawCommandId cmdId, ReadOnlySpan<byte> buffer, int idx, int stride)
+            => _delegates[(int)cmdId](cmdId, buffer, idx, stride);
+        
+        
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        static void ProcessHandler<T>(DrawCommandId commandId, ReadOnlySpan<byte> buffer, int idx, int stride) where T : unmanaged, IDrawCommand
+        {
+            var slot = buffer.Slice(idx * stride, Unsafe.SizeOf<T>());
+            var payload = MemoryMarshal.Read<T>(slot);
+            DrawProcessor.DrawDispatcher<T>.ExecuteDrawCall(in payload);
         }
     }
 
-    private delegate void DispatchToRendererDelegate<T>(in T payload) where T : unmanaged, IDrawCommand;
 
-    private delegate void ProcessDelegate(in DrawCommandMeta meta, ReadOnlySpan<byte> buffer, int idx, int stride);
+    private delegate void ProcessDelegate(DrawCommandId commandId, ReadOnlySpan<byte> buffer, int idx, int stride);
 }

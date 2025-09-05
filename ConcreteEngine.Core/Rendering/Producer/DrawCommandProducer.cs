@@ -32,7 +32,6 @@ internal sealed class DrawProduceArray<T> where T : unmanaged
 {
     public T[] Data;
     public Span<T> AsSpan() => Data.AsSpan();
-    public Span<T> AsSpan(int start) => Data.AsSpan(start);
     public Span<T> AsSpan(int start, int length) => Data.AsSpan(start, length);
 
 
@@ -43,12 +42,11 @@ internal sealed class DrawProduceArray<T> where T : unmanaged
 
     public void EnsureCapacity(int size)
     {
-        if (Data.Length < size)
+        if (Data.Length < size + 1)
         {
             ArgumentOutOfRangeException.ThrowIfGreaterThan(size, 50_000);
             var newSize = int.Max(Data.Length * 2, size);
             Array.Resize(ref Data, newSize);
         }
     }
-
 }

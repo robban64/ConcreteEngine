@@ -4,7 +4,7 @@ namespace ConcreteEngine.Core.Rendering;
 
 internal sealed class MeshDrawer: CommandDrawer<DrawCommandMesh>
 {
-    public override void Handle(in DrawCommandMesh cmd)
+    public override void Draw(in DrawCommandMesh cmd)
     {
         Context.MaterialBinder.BindMaterialSlots(cmd.MaterialId);
 
@@ -19,7 +19,7 @@ internal sealed class MeshDrawer: CommandDrawer<DrawCommandMesh>
 
 internal sealed class TerrainDrawer : CommandDrawer<DrawCommandTerrain>
 {
-    public override void Handle(in DrawCommandTerrain cmd)
+    public override void Draw(in DrawCommandTerrain cmd)
     {
         Context.MaterialBinder.BindMaterialSlots(cmd.MaterialId);
 
@@ -35,7 +35,7 @@ internal sealed class TerrainDrawer : CommandDrawer<DrawCommandTerrain>
 
 internal sealed class SkyboxDrawer: CommandDrawer<DrawCommandSkybox>
 {
-    public override void Handle(in DrawCommandSkybox cmd)
+    public override void Draw(in DrawCommandSkybox cmd)
     {
         var camera = Context.Render3D.Camera;
         Gfx.UseShader(cmd.ShaderId);

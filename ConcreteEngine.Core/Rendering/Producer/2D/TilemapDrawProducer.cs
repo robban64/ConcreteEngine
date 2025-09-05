@@ -70,7 +70,7 @@ public sealed class TilemapDrawProducer : IDrawCommandProducer, ITilemapDrawSink
             transform: in TilemapTransform
         );
 
-        var meta = DrawCommandMeta.Make2D(DrawCommandId.Tilemap, DrawCommandTag.Mesh2D, RenderTargetId.Scene);
+        var meta = DrawCommandMeta.Make2D(DrawCommandId.Tilemap, RenderTargetId.Scene);
         submitter.SubmitDraw(in cmd, in meta);
     }
 }

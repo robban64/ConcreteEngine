@@ -11,7 +11,7 @@ public struct RenderPassMutation
     public Color4? ClearColor;
 }
 
-internal class RenderTargetRegistry
+internal class RenderPasses
 {
     private readonly IGraphicsDevice _graphics;
 
@@ -30,7 +30,7 @@ internal class RenderTargetRegistry
 
     public RenderTargetEnumerator GetEnumerator() => new(_renderTargets);
 
-    public RenderTargetRegistry(IGraphicsDevice graphics)
+    public RenderPasses(IGraphicsDevice graphics)
     {
         _graphics = graphics;
         

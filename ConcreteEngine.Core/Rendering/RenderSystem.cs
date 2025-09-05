@@ -39,7 +39,7 @@ public sealed class RenderSystem : IRenderSystem
     private readonly DrawCommandCollector _commandCollector;
     private readonly RenderPipeline _commandSubmitter;
     private readonly BatcherRegistry _batches = new();
-    private readonly CommandDrawerRegistry _drawRegistry;
+    private readonly DrawProcessor _drawRegistry;
 
     private IRender _render;
     private SceneDrawProducer _sceneDrawProducer = null!;
@@ -53,9 +53,10 @@ public sealed class RenderSystem : IRenderSystem
         _gfx = graphics.Gfx;
         _materialStore = materialStore;
 
+        _drawRegistry = new DrawProcessor(_graphics, _materialStore);
+
         _commandCollector = new DrawCommandCollector();
         _commandSubmitter = new RenderPipeline();
-        _drawRegistry = new CommandDrawerRegistry(_graphics, _materialStore);
     }
 
     internal void Initialize(IGameFeatureManager features)
@@ -83,31 +84,22 @@ public sealed class RenderSystem : IRenderSystem
 
         _commandCollector.AttachContext(cmdProducerCtx);
 
-        _drawRegistry.Register<MeshDrawer>();
-        _drawRegistry.Register<TerrainDrawer>();
-        _drawRegistry.Register<SpriteDrawer>();
-        _drawRegistry.Register<LightDrawer>();
-        _drawRegistry.Register<SkyboxDrawer>();
+        _drawRegistry.Register<MeshDrawer, DrawCommandMesh>();
+        _drawRegistry.Register<TerrainDrawer, DrawCommandTerrain>();
+        _drawRegistry.Register<TilemapDrawer, DrawCommandTilemap>();
+        _drawRegistry.Register<SpriteDrawer, DrawCommandSprite>();
+        _drawRegistry.Register<LightDrawer, DrawCommandLight>();
+        _drawRegistry.Register<SkyboxDrawer, DrawCommandSkybox>();
 
-        _commandSubmitter.Initialize(_drawRegistry.Drawers);
+        _commandSubmitter.Initialize();
 
-        _commandSubmitter.Register<DrawCommandMesh, MeshDrawer>
-            (DrawCommandTag.Mesh3D, DrawCommandId.Mesh);
-
-        _commandSubmitter.Register<DrawCommandTerrain, TerrainDrawer>
-            (DrawCommandTag.Terrain, DrawCommandId.Terrain);
+        _commandSubmitter.Register<DrawCommandMesh>(DrawCommandId.Mesh);
+        _commandSubmitter.Register<DrawCommandTerrain>(DrawCommandId.Terrain);
+        _commandSubmitter.Register<DrawCommandSkybox>( DrawCommandId.Skybox);
+        _commandSubmitter.Register<DrawCommandSprite> ( DrawCommandId.Sprite);
+        _commandSubmitter.Register<DrawCommandTilemap>( DrawCommandId.Tilemap);
+        _commandSubmitter.Register<DrawCommandLight>( DrawCommandId.Light);
         
-        _commandSubmitter.Register<DrawCommandSkybox, SkyboxDrawer>
-            (DrawCommandTag.Skybox, DrawCommandId.Skybox);
-
-
-        _commandSubmitter.Register<DrawCommandSprite, SpriteDrawer>
-            (DrawCommandTag.Mesh2D, DrawCommandId.Tilemap, DrawCommandId.Sprite);
-
-        _commandSubmitter.Register<DrawCommandLight, LightDrawer>
-            (DrawCommandTag.Effect2D, DrawCommandId.Light);
-
-
         _commandCollector.InitializeProducers();
     }
 

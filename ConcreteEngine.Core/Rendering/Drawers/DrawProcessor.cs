@@ -1,4 +1,5 @@
 using System.Numerics;
+using System.Runtime.CompilerServices;
 using ConcreteEngine.Core.Resources;
 using ConcreteEngine.Graphics;
 
@@ -14,7 +15,7 @@ internal sealed class CommandDrawerContext
 
 }
 
-internal sealed class CommandDrawerRegistry
+internal sealed class DrawProcessor
 {
     private readonly Dictionary<Type, ICommandDrawer> _registry = new(8);
     private readonly List<ICommandDrawer> _drawers = new(8);
@@ -25,7 +26,7 @@ internal sealed class CommandDrawerRegistry
     
     public IReadOnlyList<ICommandDrawer> Drawers => _drawers;
 
-    internal CommandDrawerRegistry(IGraphicsDevice graphics, MaterialStore materialStore)
+    internal DrawProcessor(IGraphicsDevice graphics, MaterialStore materialStore)
     {
         _graphics = graphics;
         _materialBinder = new MaterialBinder(graphics, materialStore);
@@ -49,11 +50,25 @@ internal sealed class CommandDrawerRegistry
         }
     }
 
-    public void Register<TRenderer>() where TRenderer : ICommandDrawer, new()
+    public void Register<TRenderer, TCommand>() where TCommand : unmanaged, IDrawCommand where TRenderer : CommandDrawer<TCommand>, new()
     {
         if (!_registry.TryAdd(typeof(TRenderer), new TRenderer()))
             throw new InvalidOperationException($"Renderer already {typeof(TRenderer).Name} registered");
-        
-        _drawers.Add(_registry[typeof(TRenderer)]);
+
+        var drawer = (CommandDrawer<TCommand>)_registry[typeof(TRenderer)];
+        _drawers.Add(drawer);
+        DrawDispatcher<TCommand>.Instance = drawer;
+    }
+    
+    internal static class DrawDispatcher<TCommand> where TCommand : unmanaged, IDrawCommand
+    {
+        public static CommandDrawer<TCommand> Instance = null!;
+
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public static void ExecuteDrawCall(in TCommand cmd)
+        {
+            Instance.Draw(in cmd);
+        }
     }
 }
+

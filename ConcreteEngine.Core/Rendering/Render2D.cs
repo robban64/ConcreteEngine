@@ -13,7 +13,7 @@ internal class Render2D : IRender
 {
     private readonly IGraphicsDevice _graphics;
     private readonly IGraphicsContext _gfx;
-    private readonly RenderTargetRegistry _registry;
+    private readonly RenderPasses _registry;
     private readonly MaterialStore _materialStore;
     private readonly Camera2D _camera;
     public ICamera Camera => _camera;
@@ -27,7 +27,7 @@ internal class Render2D : IRender
         _gfx = graphics.Gfx;
         _materialStore = materialStore;
         _camera = new Camera2D();
-        _registry = new RenderTargetRegistry(graphics);
+        _registry = new RenderPasses(graphics);
     }
 
 

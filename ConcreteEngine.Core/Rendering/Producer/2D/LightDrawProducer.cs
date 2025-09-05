@@ -55,7 +55,7 @@ public sealed class LightProducer : IDrawCommandProducer, ILightDrawSink
         foreach (ref var light in lights)
         {
             var cmd = new DrawCommandLight(light.Position, light.Color, light.Radius, light.Intensity);
-            var meta = DrawCommandMeta.Make2D(DrawCommandId.Light, DrawCommandTag.Effect2D, RenderTargetId.SceneLight);
+            var meta = DrawCommandMeta.Make2D(DrawCommandId.Light,  RenderTargetId.SceneLight);
 
             submitter.SubmitDraw(in cmd, in meta);
         }

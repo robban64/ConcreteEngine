@@ -30,12 +30,16 @@ public sealed class Demo3DScene : GameScene
         var boatMat = renderer.CreateMaterial("BoatMat");
         var boatMesh = assets.Get<Mesh>("BoatMesh");
 
+        var rng = Random.Shared;
+        for(int i = 0; i < 12; i++)
         {
             var entityId = World.Create();
+            var x = rng.Next(0, 20);
+            var y = rng.Next(0, 20);
             World.Meshes.Add(entityId,
                 new MeshComponent(boatMesh.ResourceId, boatMat.Id, boatMesh.Meta.DrawCount));
             World.Transforms.Add(entityId,
-                new Transform(new Vector3(0,0,-10), Vector3.One, Quaternion.Identity));
+                new Transform(new Vector3(x,0,y), Vector3.One, Quaternion.Identity));
         }
 
     }

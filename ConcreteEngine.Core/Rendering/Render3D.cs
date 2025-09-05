@@ -13,7 +13,7 @@ internal sealed class Render3D: IRender
     private readonly IGraphicsContext _gfx;
     private readonly MaterialStore _materialStore;
 
-    private readonly RenderTargetRegistry _registry;
+    private readonly RenderPasses _registry;
     private readonly Camera3D _camera;
 
     public ICamera Camera => _camera;
@@ -28,7 +28,7 @@ internal sealed class Render3D: IRender
         _gfx = _graphics.Gfx;
         _materialStore = materialStore;
         _camera = new Camera3D();
-        _registry =  new RenderTargetRegistry(graphics);
+        _registry =  new RenderPasses(graphics);
 
     }
     

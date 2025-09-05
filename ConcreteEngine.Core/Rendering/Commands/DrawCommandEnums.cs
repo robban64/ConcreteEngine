@@ -19,29 +19,18 @@ public enum DrawCommandId : byte
     Skybox,
 }
 
-public enum DrawCommandTag : byte
-{
-    Invalid,
-    Mesh2D,
-    Effect2D,
-    Mesh3D,
-    Terrain,
-    Skybox
-}
 
 public enum DrawCommandQueue : byte
 {
     None = 0,
-    
-    OpaqueTerrain = 10,
-    Skybox = 20,
-
-    AlphaTest = 60,
-    
-    Transparent = 100,
-    Particle = 101,
-    
-    Overlay = 200,
+    Opaque = 10,
+    Terrain = 20,
+    Skybox = 30,
+    AlphaTest = 40,
+    Decals = 50,
+    Transparent = 60,
+    Additive = 70,
+    Overlay = 100
 }
 
 [Flags]

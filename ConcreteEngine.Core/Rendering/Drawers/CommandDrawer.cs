@@ -14,13 +14,13 @@ internal interface ICommandDrawer
     public void AttachContext(CommandDrawerContext context);
 }
 
-internal abstract class CommandDrawer<T> : ICommandDrawer where T : struct, IDrawCommand
+internal abstract class CommandDrawer<T> : ICommandDrawer where T : unmanaged, IDrawCommand
 {
     public CommandDrawerContext  Context {get; private set;} = null!;
 
     protected IGraphicsContext Gfx = null!;
 
-    public abstract void Handle(in T cmd);
+    public abstract void Draw(in T cmd);
     protected virtual void Initialize()
     {
     }

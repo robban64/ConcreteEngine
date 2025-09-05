@@ -75,8 +75,7 @@ public sealed class TerrainDrawProducer : IDrawCommandProducer, ITerrainDrawSink
         );
         
 
-        var meta = new DrawCommandMeta(
-            DrawCommandId.Terrain, DrawCommandTag.Terrain, RenderTargetId.Scene, DrawCommandQueue.OpaqueTerrain);
+        var meta = new DrawCommandMeta( DrawCommandId.Terrain, RenderTargetId.Scene, DrawCommandQueue.Terrain);
         submitter.SubmitDraw(in cmd, in meta);
 
     }

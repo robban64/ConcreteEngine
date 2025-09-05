@@ -4,26 +4,24 @@ using ConcreteEngine.Graphics.Resources;
 
 namespace ConcreteEngine.Core.Rendering;
 
-
 public sealed class SceneDrawProducer : IDrawCommandProducer
 {
     private CommandProducerContext _context = null!;
 
     private SceneRenderGlobalSnapshot _snapshot;
-    
-    
+
 
     public void AttachContext(CommandProducerContext ctx)
     {
         _context = ctx;
     }
-    
+
     public void Initialize()
     {
     }
-    
-    public void SetSceneGlobals(in SceneRenderGlobalSnapshot snapshot) => _snapshot  = snapshot;
-    
+
+    public void SetSceneGlobals(in SceneRenderGlobalSnapshot snapshot) => _snapshot = snapshot;
+
     public void BeginTick(in UpdateMetaInfo updateMeta)
     {
     }
@@ -31,26 +29,22 @@ public sealed class SceneDrawProducer : IDrawCommandProducer
     public void EndTick()
     {
     }
-    
+
 
     public void EmitFrame(float alpha, IRenderPipeline submitter)
     {
-        if (_snapshot.Skybox.CubemapId.IsValid())
-        {
-            var skybox = _snapshot.Skybox;
-            var cmd = new DrawCommandSkybox(
-                textureId: skybox.CubemapId,
-                shaderId:skybox.ShaderId,
-                transform: Matrix4x4.Identity
-            );
-        
+        if (!_snapshot.Skybox.CubemapId.IsValid()) return;
 
-            var meta = new DrawCommandMeta(
-                DrawCommandId.Skybox, DrawCommandTag.Skybox, RenderTargetId.Scene, DrawCommandQueue.Skybox);
-            
-            submitter.SubmitDraw(in cmd, in meta);
+        var skybox = _snapshot.Skybox;
+        var cmd = new DrawCommandSkybox(
+            textureId: skybox.CubemapId,
+            shaderId: skybox.ShaderId,
+            transform: Matrix4x4.Identity
+        );
 
-        }
 
+        var meta = new DrawCommandMeta( DrawCommandId.Skybox, RenderTargetId.Scene, DrawCommandQueue.Skybox);
+
+        submitter.SubmitDraw(in cmd, in meta);
     }
 }

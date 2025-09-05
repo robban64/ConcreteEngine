@@ -22,16 +22,16 @@ public sealed class Demo3DScene : GameScene
         var renderer = Context.GetSystem<IRenderSystem>();
         var assets = Context.GetSystem<IAssetSystem>();
         
-        var skyboxShader = assets.Get<Shader>("SkyboxShader");
+        var skyboxShader = assets.Get<Shader>("Skybox");
         var skyboxCubeMap = assets.Get<CubeMap>("Skybox");
         
         RenderGlobals.SetSkybox(skyboxShader.ResourceId, skyboxCubeMap.ResourceId, Quaternion.Identity);
 
         var boatMat = renderer.CreateMaterial("BoatMat");
-        var boatMesh = assets.Get<Mesh>("BoatMesh");
+        var boatMesh = assets.Get<Mesh>("Boat");
 
         var rng = Random.Shared;
-        for(int i = 0; i < 12; i++)
+        for(int i = 0; i < 120; i++)
         {
             var entityId = World.Create();
             var x = rng.Next(0, 20);
@@ -53,7 +53,7 @@ public sealed class Demo3DScene : GameScene
     {
         var assets = Context.GetSystem<IAssetSystem>();
 
-        var screenShader = assets.Get<Shader>("ScreenShader");
+        var screenShader = assets.Get<Shader>("Screen");
 
         builder.RegisterRender3D(new RenderTargetDescriptor
         {

@@ -133,7 +133,7 @@ internal sealed class RenderPipeline : IRenderPipeline
         var sizeInBytes = idx * _stride;
         if (sizeInBytes >= _buffer.Length)
         {
-            int newSize = _buffer.Length + DefaultBufferCapacity;
+            int newSize = Math.Max(sizeInBytes + DefaultBufferCapacity, _buffer.Length * 2);
             if (newSize > MaxBufferCapacity) throw new OutOfMemoryException("Command Buffer too big");
             var newArr = new byte[newSize];
 
@@ -143,7 +143,7 @@ internal sealed class RenderPipeline : IRenderPipeline
 
         if (idx >= _indices.Length)
         {
-            int newSize = _indices.Length + DefaultBufferCapacity;
+            int newSize = Math.Max(idx + DefaultIndicesCapacity, _indices.Length * 2);
             if (newSize > MaxIndicesCapacity) throw new OutOfMemoryException("DrawCommandMeta Buffer too big");
             var newArr = new DrawCommandMetaIndex[newSize];
             _indices.AsSpan(0, int.Min(_submitIdx, _indices.Length)).CopyTo(newArr);

@@ -18,9 +18,15 @@ public interface IAssetSystem : IGameEngineSystem
     List<T> GetAll<T>() where T : class, IAssetFile;
 }
 
+
 public sealed class AssetSystem : IAssetSystem
 {
-    private readonly Dictionary<string, IAssetFile> _store = new(64);
+    private readonly record struct AssetKey(Type RegistryType, string Name)
+    {
+        public static AssetKey For<T>(string name) => new(typeof(T), name);
+    }
+    
+    private readonly Dictionary<AssetKey, IAssetFile> _store = new(64);
     private readonly IGraphicsDevice _graphics;
     private readonly string _assetPath;
     private readonly string _manifestFilename;
@@ -59,7 +65,8 @@ public sealed class AssetSystem : IAssetSystem
 
     public bool TryGet<T>(string name, out T resource) where T : class, IAssetFile
     {
-        if (_store.TryGetValue(name, out var asset) && asset is T typed)
+        var key = AssetKey.For<T>(name);
+        if (_store.TryGetValue(key, out var asset) && asset is T typed)
         {
             resource = typed;
             return true;
@@ -71,7 +78,9 @@ public sealed class AssetSystem : IAssetSystem
 
     public T Get<T>(string name) where T : class, IAssetFile
     {
-        if (_store.TryGetValue(name, out var asset) && asset is T typed)
+        var key = AssetKey.For<T>(name);
+
+        if (_store.TryGetValue(key, out var asset) && asset is T typed)
             return typed;
 
         throw new InvalidCastException($"Asset '{name}' not found or incorrect type.");
@@ -178,7 +187,8 @@ public sealed class AssetSystem : IAssetSystem
         foreach (var entry in manifest.Resources)
         {
             var asset = loader(entry);
-            if(!_store.TryAdd(asset.Name, asset))
+            var key = AssetKey.For<TResult>(asset.Name);
+            if(!_store.TryAdd(key, asset))
                 throw new InvalidOperationException($"Asset '{asset.Name}' is already exists.");
             
             onAdd?.Invoke(asset);

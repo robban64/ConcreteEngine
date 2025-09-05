@@ -7,7 +7,7 @@
 	},
 	{
 	  "name": "TerrainMat",
-	  "shader": "TerrainShader",
+	  "shader": "Terrain",
 	  "textures": ["Grass"]
 	}
   ]

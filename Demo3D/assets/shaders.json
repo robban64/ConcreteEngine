@@ -2,7 +2,7 @@
   "folder": "./shaders",
   "resources": [
     {
-      "name": "ScreenShader",
+      "name": "Screen",
       "vertexFilename": "screen.vert.glsl",
       "fragmentFilename": "screen.frag.glsl",
       "samplers": ["uTexture"]
@@ -14,13 +14,13 @@
 	  "samplers": ["uTexture"]
 	},
 	{
-	  "name": "TerrainShader",
+	  "name": "Terrain",
 	  "vertexFilename": "diffuse.vert.glsl",
 	  "fragmentFilename": "terrain.frag.glsl",
 	  "samplers": ["uTexture"]
 	},
 	{
-	  "name": "SkyboxShader",
+	  "name": "Skybox",
 	  "vertexFilename": "skybox.vert.glsl",
 	  "fragmentFilename": "skybox.frag.glsl",
 	  "samplers": ["uCubemapTex"]

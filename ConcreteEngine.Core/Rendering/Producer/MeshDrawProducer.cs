@@ -23,33 +23,31 @@ public interface IMeshDrawSink : IDrawSink
 
 public sealed class MeshDrawProducer : IDrawCommandProducer, IMeshDrawSink
 {
+    private const int BatchSize = 32;
+
     private CommandProducerContext _context = null!;
 
     private int _idx = 0;
 
     private MeshDrawEntity[] _entities = new MeshDrawEntity[32];
 
+    private readonly DrawCommandMesh[] _commands = new DrawCommandMesh[BatchSize];
+    private readonly DrawCommandMeta[] _meta = new DrawCommandMeta[BatchSize];
+
+
     public void Send(ReadOnlySpan<MeshDrawEntity> payload)
     {
         EnsureCapacity(_idx + payload.Length);
-        var entities = _entities.AsSpan();
-        foreach (ref readonly var entity in payload)
-        {
-            entities[_idx++] = entity;
-        }
+        payload.CopyTo(_entities.AsSpan(_idx));
+        _idx += payload.Length;
     }
-    
-        
+
     public void SendSingle(in MeshDrawEntity payload)
     {
         EnsureCapacity(_idx);
         _entities[_idx++] = payload;
     }
-    
-    public void AttachContext(CommandProducerContext ctx)
-    {
-        _context = ctx;
-    }
+
 
     public void Initialize()
     {
@@ -67,23 +65,44 @@ public sealed class MeshDrawProducer : IDrawCommandProducer, IMeshDrawSink
     public void EmitFrame(float alpha, IRenderPipeline submitter)
     {
         if (_idx == 0) return;
-        var entities = _entities.AsSpan(0, _idx);
-        foreach (ref var entity in entities)
+
+        int counter = 0;
+        for (int i = 0; i < _idx; i++)
         {
-            var cmd = new DrawCommandMesh(
+            ref var entity = ref _entities[i];
+
+            _commands[counter] = new DrawCommandMesh(
                 meshId: entity.MeshId,
                 drawCount: 0,
                 materialId: entity.MaterialId,
                 transform: entity.Transform.GetTransform()
             );
 
-            var meta = new DrawCommandMeta(DrawCommandId.Mesh,  RenderTargetId.Scene,
-                DrawCommandQueue.Opaque, order: MetaOrders.OpaqueOrder(entity.MaterialId));
-            
-            submitter.SubmitDraw(in cmd, in meta);
+            _meta[counter] = new DrawCommandMeta(
+                DrawCommandId.Mesh,
+                RenderTargetId.Scene,
+                DrawCommandQueue.Opaque,
+                order: MetaOrders.OpaqueOrder(entity.MaterialId)
+            );
+
+            counter++;
+            if (counter >= BatchSize)
+            {
+                submitter.SubmitDrawBatch<DrawCommandMesh>(_commands, _meta);
+                counter = 0;
+            }
+        }
+
+        if (counter > 0)
+        {
+            submitter.SubmitDrawBatch<DrawCommandMesh>(
+                _commands.AsSpan(0, counter), _meta.AsSpan(0, counter));
         }
     }
-    
+
+    public void AttachContext(CommandProducerContext ctx) => _context = ctx;
+
+
     private void EnsureCapacity(int size)
     {
         if (_entities.Length < size + 1)

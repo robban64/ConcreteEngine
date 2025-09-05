@@ -3,14 +3,14 @@
   "resources": [
     {
       "name": "Boat",
-      "filename": "boat.png"
+      "filename": "boat.png",
+	  "preset": "LinearMipmapClamp"
     },
 	{
 	  "name": "Grass",
 	  "filename": "grass.jpg",
 	  "preset": "LinearMipmapRepeat",
-	  "lod": -0.25,
-	  "anisotropy": 8
+	  "lod": -0.25
 	},
 	{
 	  "name": "Mud",

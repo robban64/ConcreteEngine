@@ -47,7 +47,7 @@ public sealed class SpriteDrawProducer : IDrawCommandProducer, ISpriteDrawSink
     private CommandProducerContext _context = null!;
 
     private int _idx = 0;
-    private DrawProduceArray<SpriteDrawEntity> _entities = new(32);
+    private SpriteDrawEntity[] _entities = new SpriteDrawEntity[32];
     
 
     private UpdateMetaInfo _updateMeta;
@@ -66,7 +66,7 @@ public sealed class SpriteDrawProducer : IDrawCommandProducer, ISpriteDrawSink
     
     public void Send(ReadOnlySpan<SpriteDrawEntity> payload)
     {
-        _entities.EnsureCapacity(payload.Length);
+        EnsureCapacity(payload.Length);
         var entities = _entities.AsSpan();
         foreach (ref readonly var entity in payload)
         {
@@ -137,6 +137,16 @@ public sealed class SpriteDrawProducer : IDrawCommandProducer, ISpriteDrawSink
         
         _spriteBatches.Add(new SpriteBatchCache(materialId, length, in cmd, in meta));
 
+    }
+    
+    private void EnsureCapacity(int size)
+    {
+        if (_entities.Length < size + 1)
+        {
+            ArgumentOutOfRangeException.ThrowIfGreaterThan(size, 50_000);
+            var newSize = int.Max(_entities.Length * 2, size);
+            Array.Resize(ref _entities, newSize);
+        }
     }
     
     private readonly struct SpriteBatchCache(

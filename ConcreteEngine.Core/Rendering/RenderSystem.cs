@@ -130,7 +130,7 @@ public sealed class RenderSystem : IRenderSystem
     internal void BeginTick(in UpdateMetaInfo updateMeta) => _commandCollector.BeginTick(updateMeta);
     internal void EndTick() => _commandCollector.EndTick();
 
-    internal void Render(float alpha, in FrameMetaInfo frameCtx, in SceneRenderGlobalSnapshot renderGlobals,
+    internal void Render(float alpha, in FrameMetaInfo frameCtx, in RenderGlobalSnapshot renderGlobals,
         out FrameRenderResult result)
     {
         if (frameCtx.ViewportSize != _render.Camera.ViewportSize)
@@ -139,21 +139,21 @@ public sealed class RenderSystem : IRenderSystem
         _sceneDrawProducer.SetSceneGlobals(in renderGlobals);
 
         _graphics.StartFrame(in frameCtx);
-        PrepareRenderer(alpha);
-        Execute(alpha);
+        PrepareRenderer(alpha, in renderGlobals);
+        Execute(alpha, in renderGlobals);
         _graphics.EndFrame(out result);
 
         _commandSubmitter.Reset();
     }
 
-    private void PrepareRenderer(float alpha)
+    private void PrepareRenderer(float alpha, in RenderGlobalSnapshot renderGlobals)
     {
-        _render.PrepareRender(alpha);
+        _render.PrepareRender(alpha, in renderGlobals);
         _commandCollector.Collect(alpha, _commandSubmitter);
         _commandSubmitter.Prepare();
     }
 
-    private void Execute(float alpha)
+    private void Execute(float alpha, in RenderGlobalSnapshot renderGlobals)
     {
         foreach (var (renderTarget, passes) in _render)
         {

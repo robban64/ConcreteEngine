@@ -203,13 +203,15 @@ internal sealed class AssetLoader
         }
 
 
-        return new MaterialTemplate(materialValues)
+        var template = new MaterialTemplate(materialValues)
         {
             Name = record.Name,
             Shader = getShader(record.Shader),
             Textures = textures,
             Color = record.Color
         };
+        template.Process();
+        return template;
     }
 
 }

@@ -137,7 +137,6 @@ public sealed class GlGraphicsDevice : IGraphicsDevice<GlGraphicsContext>
     private void RecreateRenderTargetsIfNeeded()
     {
         if (_viewportSize == _previousViewportSize) return;
-        _previousViewportSize = _viewportSize;
 
         _gl.BindFramebuffer(FramebufferTarget.Framebuffer, 0);
         _gl.BindRenderbuffer(RenderbufferTarget.Renderbuffer, 0);
@@ -145,6 +144,8 @@ public sealed class GlGraphicsDevice : IGraphicsDevice<GlGraphicsContext>
 
         Console.WriteLine($"New viewport {_viewportSize} - old viewport {_previousViewportSize}");
         Console.WriteLine($"Recreating {_fboStore.Count} FBO");
+
+        _previousViewportSize = _viewportSize;
 
         for (int i = 0; i < _fboStore.Count; i++)
         {

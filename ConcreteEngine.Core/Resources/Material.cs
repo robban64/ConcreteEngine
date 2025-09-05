@@ -38,8 +38,8 @@ public sealed class Material
     // Helpers
     public bool HasViewProjection { get; private set; }
     public bool HasNormalMatrix { get; private set; }
-    //public bool HasModelMatrix { get; private set; }
-    //public bool HasModelMatrix { get; private set; }
+    public bool HasAmbient { get; private set; }
+    public DirectionalLightUniform? DirLightUniforms { get; }
 
 
     internal Material(MaterialId id, MaterialTemplate template)
@@ -84,8 +84,14 @@ public sealed class Material
         }
 
         var table = template.Shader.UniformTable;
+        DirLightUniforms = template.DirLightUniforms;
+        
         HasViewProjection = table.ContainsKey(ShaderUniform.ProjectionViewMatrix);
         HasNormalMatrix = table.ContainsKey(ShaderUniform.NormalMatrix);
+        HasAmbient = table.ContainsKey(ShaderUniform.Ambient);
+        
+        
+
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]

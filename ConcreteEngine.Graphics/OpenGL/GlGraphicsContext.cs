@@ -505,8 +505,6 @@ public sealed class GlGraphicsContext : IGraphicsContext
         _boundUniforms = uniformTable;
     }
 
-    [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public void SetUniforma(ShaderUniform uniform, int value) => _gl.Uniform1(_boundUniforms![uniform], value);
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public void SetUniform(ShaderUniform uniform, int value) => _gl.Uniform1(_boundUniforms![uniform], value);
@@ -543,6 +541,28 @@ public sealed class GlGraphicsContext : IGraphicsContext
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public unsafe void SetUniformMat3(ShaderUniform uniform, in Matrix4x4 value)
     {
+        SetRawUniformMat3(_boundUniforms![uniform], in value);
+    }
+
+    public void SetRawUniform(int uniform, int value) =>  _gl.Uniform1(uniform, value);
+
+    public void SetRawUniform(int uniform, uint value) =>  _gl.Uniform1(uniform, value);
+
+    public void SetRawUniform(int uniform, float value) =>  _gl.Uniform1(uniform, value);
+
+    public void SetRawUniform(int uniform, Vector2 value) =>  _gl.Uniform2(uniform, value.X, value.Y);
+
+    public void SetRawUniform(int uniform, Vector3 value) =>  _gl.Uniform3(uniform, value.X, value.Y, value.Z);
+
+    public void SetRawUniform(int uniform, Vector4 value) =>  _gl.Uniform4(uniform, value.X, value.Y, value.Z, value.W);
+    public unsafe void SetRawUniform(int uniform, in Matrix4x4 value)
+    {
+        var p = (float*)Unsafe.AsPointer(ref Unsafe.AsRef(in value));
+        _gl.UniformMatrix4(uniform, 1, false, p);
+    }
+
+    public unsafe void SetRawUniformMat3(int uniform, in Matrix4x4 value)
+    {
         Span<float> m = stackalloc float[9];
         m[0] = value.M11;
         m[1] = value.M21;
@@ -554,7 +574,7 @@ public sealed class GlGraphicsContext : IGraphicsContext
         m[7] = value.M23;
         m[8] = value.M33;
         fixed (float* p = m)
-            _gl.UniformMatrix3(_boundUniforms![uniform], 1, false, p);
+            _gl.UniformMatrix3(uniform, 1, false, p);
     }
 
 

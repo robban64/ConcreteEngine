@@ -1,6 +1,7 @@
 using System.Numerics;
 using ConcreteEngine.Common;
 using ConcreteEngine.Core.Resources;
+using ConcreteEngine.Core.Scene;
 using ConcreteEngine.Graphics;
 using ConcreteEngine.Graphics.Resources;
 
@@ -31,7 +32,7 @@ internal class Render2D : IRender
     }
 
 
-    public void PrepareRender(float alpha)
+    public void PrepareRender(float alpha, in RenderGlobalSnapshot renderGlobals)
     {
         var projectionViewMatrix = _camera.ProjectionViewMatrix;
         foreach (var material in _materialStore.Materials)

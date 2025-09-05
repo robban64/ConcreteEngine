@@ -51,4 +51,15 @@ public interface IGraphicsContext
     void SetUniform(ShaderUniform uniform, Vector4 value);
     void SetUniform(ShaderUniform uniform, in Matrix4x4 value);
     void SetUniformMat3(ShaderUniform uniform, in Matrix4x4 value);
+    
+    
+    void SetRawUniform(int uniform, int value);
+    void SetRawUniform(int uniform, uint value);
+    void SetRawUniform(int uniform, float value);
+    void SetRawUniform(int uniform, Vector2 value);
+    void SetRawUniform(int uniform, Vector3 value);
+    void SetRawUniform(int uniform, Vector4 value);
+    void SetRawUniform(int uniform, in Matrix4x4 value);
+    void SetRawUniformMat3(int uniform, in Matrix4x4 value);
+
 }

@@ -26,6 +26,8 @@ public enum ShaderUniform : byte
     SampleCubemap,
 
     Color,
+    Ambient,
+    
     TexelSize,
     LightPos,
 
@@ -47,7 +49,8 @@ public static class ShaderUniforms
         [ModelMatrix, NormalMatrix, ViewMatrix, ProjectionMatrix, ProjectionViewMatrix];
 
     public static readonly ShaderUniform[] VectorUniforms =
-        [Color, TexelSize, LightPos];
+        [Color, Ambient, TexelSize, LightPos];
+    
 
     public static readonly ShaderUniform[] PrimitiveUniforms =
         [Time, Threshold, SoftKnee, Radius, Intensity, Softness, Shape];
@@ -76,6 +79,7 @@ public static class ShaderUniforms
             LightPos => "uLightPos",
             Radius => "uRadius",
             Color => "uColor",
+            Ambient => "uAmbient",
             Intensity => "uIntensity",
             Softness => "uSoftness",
             Shape => "uShape",

@@ -1,6 +1,7 @@
 using System.Numerics;
 using ConcreteEngine.Common;
 using ConcreteEngine.Core.Resources;
+using ConcreteEngine.Core.Scene;
 using ConcreteEngine.Graphics;
 using ConcreteEngine.Graphics.Descriptors;
 using ConcreteEngine.Graphics.Resources;
@@ -33,9 +34,11 @@ internal sealed class Render3D: IRender
     }
     
     
-    public void PrepareRender(float alpha)
+    public void PrepareRender(float alpha, in RenderGlobalSnapshot renderGlobals )
     {
         var projectionViewMatrix = _camera.ProjectionViewMatrix;
+        
+        
         foreach (var material in _materialStore.Materials)
         {
             if (material.HasViewProjection)
@@ -43,6 +46,25 @@ internal sealed class Render3D: IRender
                 _gfx.UseShader(material.ShaderId);
                 _gfx.SetUniform(ShaderUniform.ProjectionViewMatrix, in projectionViewMatrix);
             }
+            
+            if (material.HasAmbient)
+            {
+                _gfx.UseShader(material.ShaderId);
+                _gfx.SetUniform(ShaderUniform.Ambient,  renderGlobals.Ambient);
+            }
+
+            if (material.DirLightUniforms.HasValue)
+            {
+                var unforms = material.DirLightUniforms.Value;
+                var exposure = renderGlobals.Exposure;
+                _gfx.UseShader(material.ShaderId);
+                _gfx.SetRawUniform(unforms.Direction, renderGlobals.DirLight.Direction );
+                _gfx.SetRawUniform(unforms.Diffuse,  renderGlobals.DirLight.Diffuse );
+                _gfx.SetRawUniform(unforms.Specular,  renderGlobals.DirLight.Specular );
+                _gfx.SetRawUniform(unforms.Intensity,  renderGlobals.DirLight.Intensity );
+
+            }
+
         }
         
     }

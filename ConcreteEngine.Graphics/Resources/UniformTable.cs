@@ -14,10 +14,13 @@ public sealed class UniformTable
     private readonly short[] _locs = new short[ShaderUniformValues.Length];
     private readonly List<ShaderUniform> _uniforms;
 
+    private readonly Dictionary<string, short> _rawUniforms;
+
     public IReadOnlyList<ShaderUniform> Uniforms => _uniforms;
 
     public UniformTable(Dictionary<string, short> uniformLocationDict)
     {
+        _rawUniforms = uniformLocationDict;
         _uniforms = new List<ShaderUniform>(uniformLocationDict.Count);
         _uniforms.Sort();
 
@@ -37,6 +40,13 @@ public sealed class UniformTable
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public bool ContainsKey(ShaderUniform uniform) => _locs[(int)uniform] >= 0;
+
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public int GetUniformLocation(string key, int defaultValue = -1)
+    {
+        return _rawUniforms.TryGetValue(key, out var uniformLocation) ? uniformLocation : defaultValue;
+    }
+
 
     public int this[ShaderUniform uniform]
     {

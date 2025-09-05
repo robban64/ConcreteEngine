@@ -20,10 +20,30 @@ public sealed class MaterialTemplate : IAssetFile
     public IReadOnlyDictionary<ShaderUniform, IMaterialValue> DefaultUniforms => _uniforms;
 
     public AssetFileType AssetType => AssetFileType.Material;
+    
+    public DirectionalLightUniform? DirLightUniforms { get; private set; } = null;
+
 
     internal MaterialTemplate(Dictionary<ShaderUniform, IMaterialValue> loadedUniforms)
     {
         _uniforms = loadedUniforms;
+
+    }
+
+    internal void Process()
+    {
+        var table = Shader.UniformTable;
+        bool hasLight = table.GetUniformLocation(DirectionalLightUniform.DirectionUniform) > 0;
+        if (hasLight)
+        {
+            DirLightUniforms = new DirectionalLightUniform(
+                table.GetUniformLocation(DirectionalLightUniform.DirectionUniform),
+                table.GetUniformLocation(DirectionalLightUniform.DiffuseUniform),
+                table.GetUniformLocation(DirectionalLightUniform.SpecularUniform),
+                table.GetUniformLocation(DirectionalLightUniform.IntensityUniform)
+            );
+        }
+
     }
 
 

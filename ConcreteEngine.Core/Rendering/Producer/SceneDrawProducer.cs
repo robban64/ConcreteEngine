@@ -8,7 +8,7 @@ public sealed class SceneDrawProducer : IDrawCommandProducer
 {
     private CommandProducerContext _context = null!;
 
-    private SceneRenderGlobalSnapshot _snapshot;
+    private RenderGlobalSnapshot _snapshot;
 
 
     public void AttachContext(CommandProducerContext ctx)
@@ -20,7 +20,7 @@ public sealed class SceneDrawProducer : IDrawCommandProducer
     {
     }
 
-    public void SetSceneGlobals(in SceneRenderGlobalSnapshot snapshot) => _snapshot = snapshot;
+    public void SetSceneGlobals(in RenderGlobalSnapshot snapshot) => _snapshot = snapshot;
 
     public void BeginTick(in UpdateMetaInfo updateMeta)
     {

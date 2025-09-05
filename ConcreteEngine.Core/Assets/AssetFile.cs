@@ -5,7 +5,8 @@ public enum AssetFileType
     Texture2D,
     Shader,
     Mesh,
-    Material
+    Material,
+    Cubemap
 }
 
 public interface IAssetFile

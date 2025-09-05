@@ -1,5 +1,6 @@
 #region
 
+using System.Text;
 using ConcreteEngine.Core.Resources;
 using ConcreteEngine.Graphics;
 using ConcreteEngine.Graphics.Descriptors;
@@ -16,7 +17,7 @@ internal sealed class AssetLoader
     private readonly IGraphicsDevice _graphics;
     private readonly MeshLoader _meshLoader;
 
-    private readonly Dictionary<string, string> _vertexShaderCache = new();
+    private readonly Dictionary<string, string> _vertexShaderCache = new(StringComparer.Ordinal);
 
     public AssetLoader(IGraphicsDevice graphics, string rootPath)
     {
@@ -67,10 +68,12 @@ internal sealed class AssetLoader
 
     }
 
+
     public Texture2D LoadTexture2D(AssetTextureRecord record)
     {
         using var stream = File.OpenRead(GetFilePath("textures", record.Filename));
         var result = ImageResult.FromStream(stream, ColorComponents.RedGreenBlueAlpha);
+        ValidateImageResult(result);
 
         var textureData = new TextureDesc
         (
@@ -97,6 +100,57 @@ internal sealed class AssetLoader
             Anisotropy = record.Anisotropy,
             Data = record.InMemory ? result.Data : null
         };
+    }
+
+    public CubeMap LoadCubeMap(AssetCubeMapRecord record)
+    {
+        ArgumentNullException.ThrowIfNull(record, nameof(record));
+        ArgumentNullException.ThrowIfNull(record.Textures, nameof(record.Textures));
+        ArgumentOutOfRangeException.ThrowIfNotEqual(record.Textures.Length, 6, nameof(record.Textures));
+        ArgumentOutOfRangeException.ThrowIfNotEqual(record.Width, record.Height);
+
+        var loaders = new Func<CubemapFaceDesc>[6];
+        for (var i = 0; i < record.Textures.Length; i++)
+        {
+            var filename = record.Textures[i];
+            loaders[i] = () => CubeMapFaceLoader(filename);
+        }
+
+        var desc = new CreateCubemapDesc(loaders, record.Width, record.Height, record.PixelFormat);
+        var resourceId = _graphics.CreateCubeMap(in desc);
+        
+        return new CubeMap
+        {
+            Name = record.Name,
+            ResourceId = resourceId,
+            Width = record.Width,
+            Height = record.Height,
+            PixelFormat = EnginePixelFormat.Rgba,
+            Textures = record.Textures,
+        };
+
+        CubemapFaceDesc CubeMapFaceLoader(string filename)
+        {
+            using var stream = File.OpenRead(GetFilePath("cubemaps", filename));
+            var result = ImageResult.FromStream(stream, ColorComponents.RedGreenBlueAlpha);
+            ValidateImageResult(result);
+            return new CubemapFaceDesc(
+                PixelData: result.Data,
+                Width: result.Width,
+                Height: result.Height,
+                Format: EnginePixelFormat.Rgba
+            );
+
+        }
+    }
+
+    private static void ValidateImageResult(ImageResult result)
+    {
+        ArgumentNullException.ThrowIfNull(result, nameof(result));
+        ArgumentNullException.ThrowIfNull(result.Data, nameof(result.Data));
+        ArgumentOutOfRangeException.ThrowIfLessThanOrEqual(result.Data.Length, 0, nameof(result.Data));
+        ArgumentOutOfRangeException.ThrowIfLessThanOrEqual(result.Width, 0, nameof(result.Width));
+        ArgumentOutOfRangeException.ThrowIfLessThanOrEqual(result.Height, 0, nameof(result.Height));
     }
 
 

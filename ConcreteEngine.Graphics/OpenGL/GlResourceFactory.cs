@@ -159,8 +159,51 @@ internal sealed class GlResourceFactory(GlGraphicsContext gfx, DeviceCapabilitie
         }
         _gl.BindTexture(GLEnum.Texture2D, 0);
 
-        meta = new TextureMeta(new Vector2D<int>(desc.Width, desc.Height), desc.Format);
+        meta = new TextureMeta(desc.Width, desc.Height, desc.Format);
         return new GlTextureHandle(handle);
+    }
+
+    public unsafe GlTextureHandle CreateCubeMap(in CreateCubemapDesc cubemapDesc, out TextureMeta meta)
+    {
+        var loaders = cubemapDesc.Loaders;
+        var (width, height) = (cubemapDesc.Width, cubemapDesc.Height);
+        
+        ArgumentNullException.ThrowIfNull(loaders);
+        ArgumentOutOfRangeException.ThrowIfLessThan(loaders.Length, 0, nameof(loaders));
+
+        var target = (int)TextureTarget.TextureCubeMapPositiveX;
+        
+        var handle = _gl.GenTexture();
+        _gl.BindTexture(GLEnum.TextureCubeMap, handle);
+        
+        for (int i = 0; i < 6; i++)
+        {
+            var result = loaders[i]();
+            var (format, internalFormat) = result.Format.ToGlEnums();
+
+            if (width != height)
+                throw new InvalidOperationException("Width and Height are not the same size");
+
+            if (width != result.Width || height != result.Height)
+                throw new InvalidOperationException("Miss match between cubemap size");
+
+            fixed (byte* ptr = result.PixelData)
+            {
+                _gl.TexImage2D((TextureTarget)(target + i), 0, (int)internalFormat,
+                    (uint)width, (uint)height, 0,
+                    format, GLEnum.UnsignedByte, ptr);
+            }
+        }
+        _gl.TexParameter(TextureTarget.TextureCubeMap, TextureParameterName.TextureWrapS,  (int)GLEnum.ClampToEdge);
+        _gl.TexParameter(TextureTarget.TextureCubeMap, TextureParameterName.TextureWrapT,  (int)GLEnum.ClampToEdge);
+        _gl.TexParameter(TextureTarget.TextureCubeMap, TextureParameterName.TextureWrapR,  (int)GLEnum.ClampToEdge);
+        _gl.TexParameter(TextureTarget.TextureCubeMap, TextureParameterName.TextureMinFilter, (int)GLEnum.Linear);
+        _gl.TexParameter(TextureTarget.TextureCubeMap, TextureParameterName.TextureMagFilter, (int)GLEnum.Linear);
+        _gl.BindTexture(TextureTarget.TextureCubeMap, 0);
+
+        meta = new TextureMeta(width, height, cubemapDesc.Format);
+        return new GlTextureHandle(handle);
+
     }
 
     private GlRenderBufferHandle CreateRenderBufferForFbo(RenderBufferKind kind, Vector2D<int> size, bool multisample,

@@ -24,7 +24,7 @@ public enum RenderType
 
 public interface IRenderSystem : IGameEngineSystem
 {
-    ICamera Camera { get;  }
+    ICamera Camera { get; }
 
     TSink GetSink<TSink>() where TSink : IDrawSink;
     Material CreateMaterial(string templateName);
@@ -40,11 +40,15 @@ public sealed class RenderSystem : IRenderSystem
     private IRender _render;
 
     private readonly DrawCollector _collector;
+    
     private readonly RenderPipeline _commandSubmitter;
 
     private readonly List<ICommandRenderer> _renderers = new();
     private readonly BatcherRegistry _batches = new();
 
+    private SceneDrawProducer _sceneDrawProducer = null!;
+    private SkyboxRenderer _skyboxRenderer;
+    
     private CommandProducerContext cmdProducerCtx = null!;
 
     public ICamera Camera => _render.Camera;
@@ -72,12 +76,15 @@ public sealed class RenderSystem : IRenderSystem
         };
 
         // Collector
-        _collector.RegisterProducer<IMeshDrawSink>(new MeshDrawProducer());
-        _collector.RegisterProducer<ITerrainDrawSink>(new TerrainDrawProducer());
+        _collector.RegisterProducerSink<IMeshDrawSink>(new MeshDrawProducer());
+        _collector.RegisterProducerSink<ITerrainDrawSink>(new TerrainDrawProducer());
 
-        _collector.RegisterProducer<ITilemapDrawSink>(new TilemapDrawProducer());
-        _collector.RegisterProducer<ISpriteDrawSink>(new SpriteDrawProducer());
-        _collector.RegisterProducer<ILightDrawSink>(new LightProducer());
+        _collector.RegisterProducerSink<ITilemapDrawSink>(new TilemapDrawProducer());
+        _collector.RegisterProducerSink<ISpriteDrawSink>(new SpriteDrawProducer());
+        _collector.RegisterProducerSink<ILightDrawSink>(new LightProducer());
+        
+        _sceneDrawProducer = new  SceneDrawProducer();
+        _collector.RegisterProducer<SceneDrawProducer>(_sceneDrawProducer);
 
         _collector.AttachContext(cmdProducerCtx);
 
@@ -85,6 +92,8 @@ public sealed class RenderSystem : IRenderSystem
         _renderers.Add(new TerrainRenderer(_graphics, _materialStore));
         _renderers.Add(new SpriteRenderer(_graphics, _materialStore));
         _renderers.Add(new LightRenderer(_graphics, _materialStore));
+        _skyboxRenderer = new  SkyboxRenderer(_graphics, _materialStore);
+        _renderers.Add(_skyboxRenderer);
 
         _commandSubmitter.Initialize(_renderers);
 
@@ -93,14 +102,18 @@ public sealed class RenderSystem : IRenderSystem
 
         _commandSubmitter.Register<DrawCommandTerrain, TerrainRenderer>
             (DrawCommandTag.Terrain, DrawCommandId.Terrain);
+        
+        _commandSubmitter.Register<DrawCommandSkybox, SkyboxRenderer>
+            (DrawCommandTag.Skybox, DrawCommandId.Skybox);
+
 
         _commandSubmitter.Register<DrawCommandSprite, SpriteRenderer>
             (DrawCommandTag.Mesh2D, DrawCommandId.Tilemap, DrawCommandId.Sprite);
 
         _commandSubmitter.Register<DrawCommandLight, LightRenderer>
             (DrawCommandTag.Effect2D, DrawCommandId.Light);
-        
-        
+
+
         _collector.InitializeProducers();
     }
 
@@ -110,8 +123,10 @@ public sealed class RenderSystem : IRenderSystem
             _render = new Render2D(_graphics, _materialStore);
         else
             _render = new Render3D(_graphics, _materialStore);
-
+        
         _render.RegisterRenderTargetsFrom(desc);
+
+        _skyboxRenderer.Camera = (Camera3D)_render.Camera;
     }
 
     public TSink GetSink<TSink>() where TSink : IDrawSink => _collector.GetSink<TSink>();
@@ -130,10 +145,13 @@ public sealed class RenderSystem : IRenderSystem
     internal void BeginTick(in UpdateMetaInfo updateMeta) => _collector.BeginTick(updateMeta);
     internal void EndTick() => _collector.EndTick();
 
-    internal void Render(float alpha, in FrameMetaInfo frameCtx, out FrameRenderResult result)
+    internal void Render(float alpha, in FrameMetaInfo frameCtx, in SceneRenderGlobalSnapshot renderGlobals,
+        out FrameRenderResult result)
     {
         if (frameCtx.ViewportSize != _render.Camera.ViewportSize)
             _render.Camera.ViewportSize = frameCtx.ViewportSize;
+        
+        _sceneDrawProducer.SetSceneGlobals(in renderGlobals);
 
         _graphics.StartFrame(in frameCtx);
         PrepareRenderer(alpha);
@@ -224,7 +242,11 @@ public sealed class RenderSystem : IRenderSystem
             _gfx.BindTexture(pass.SourceTextures[i], (uint)i);
         }
 
-        _gfx.BindMesh(_graphics.QuadMeshId);
+        _gfx.BindMesh(_graphics.Primitives.FsqQuad);
         _gfx.DrawMesh();
+    }
+
+    private void DrawSkybox()
+    {
     }
 }

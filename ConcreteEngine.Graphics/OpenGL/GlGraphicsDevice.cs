@@ -63,7 +63,7 @@ public sealed class GlGraphicsDevice : IGraphicsDevice<GlGraphicsContext>
     private readonly UniformRegistry _uniformRegistry;
     private readonly ResourceDisposeQueue _disposeQueue;
 
-    private readonly MeshId _quadMesh;
+    private readonly PrimitiveMeshes _primitives;
 
     private Vector2D<int> _previousViewportSize;
     private Vector2D<int> _viewportSize;
@@ -73,8 +73,9 @@ public sealed class GlGraphicsDevice : IGraphicsDevice<GlGraphicsContext>
     public GL Gl => _gl;
     public GlGraphicsContext Gfx => _gfx;
     public GraphicsBackend BackendApi => GraphicsBackend.OpenGL;
-    public MeshId QuadMeshId => _quadMesh;
     IGraphicsContext IGraphicsDevice.Gfx => Gfx;
+    
+    public IPrimitiveMeshes Primitives => _primitives;
 
     public GlGraphicsDevice(GL gl, in FrameMetaInfo initialFrameCtx)
     {
@@ -105,17 +106,9 @@ public sealed class GlGraphicsDevice : IGraphicsDevice<GlGraphicsContext>
         Console.WriteLine("--Device Capability--");
         Console.WriteLine(capabilities.ToString());
 
-        _quadMesh = CreateMesh(new MeshDescriptor<Vertex2D, uint>
-        {
-            VertexBuffer = new MeshDataBufferDescriptor<Vertex2D>(BufferUsage.StaticDraw, Quad.Vertices),
-            IndexBuffer = null,
-            VertexPointers =
-            [
-                VertexAttributeDescriptor.Make<Vertex2D>(nameof(Vertex2D.Position), VertexElementFormat.Float2),
-                VertexAttributeDescriptor.Make<Vertex2D>(nameof(Vertex2D.TexCoords), VertexElementFormat.Float2)
-            ],
-            Primitive = DrawPrimitive.TriangleStrip
-        }, out _);
+        
+        _primitives =  new PrimitiveMeshes();
+        _primitives.CreatePrimitives(this);
     }
 
     public void StartFrame(in FrameMetaInfo frameCtx)
@@ -174,7 +167,7 @@ public sealed class GlGraphicsDevice : IGraphicsDevice<GlGraphicsContext>
         if (colTexId.Id > 0)
         {
             ref readonly var prevTexMeta = ref _textureStore.GetMeta(colTexId);
-            colTexMeta = new TextureMeta(size, prevTexMeta.Format);
+            colTexMeta = new TextureMeta(size.X,size.Y, prevTexMeta.Format);
         }
 
         if (rboTexId.Id > 0)
@@ -238,6 +231,12 @@ public sealed class GlGraphicsDevice : IGraphicsDevice<GlGraphicsContext>
         return _textureStore.Add(in meta, handle);
     }
 
+    public TextureId CreateCubeMap(in CreateCubemapDesc cubemapDesc)
+    {
+        var handle = _resourceFactory.CreateCubeMap(cubemapDesc, out var meta);
+        return _textureStore.Add(in meta, handle);
+    }
+    
     public MeshId CreateMesh<TVertex, TIndex>(MeshDescriptor<TVertex, TIndex> descriptor, out MeshMeta meta)
         where TVertex : unmanaged where TIndex : unmanaged
     {

@@ -1,6 +1,7 @@
 #region
 
 using System.Numerics;
+using System.Text.Json.Serialization;
 using ConcreteEngine.Core.Resources;
 using ConcreteEngine.Graphics;
 using ConcreteEngine.Graphics.Resources;
@@ -13,7 +14,13 @@ internal sealed class AssetManifest
 {
     public required AssetResourceManifestDesc ResourceManifest { get; init; }
 
-    public record AssetResourceManifestDesc(string Material, string Shader, string Texture, string Mesh);
+    public record AssetResourceManifestDesc(
+        string Material,
+        string Shader,
+        string Texture,
+        string Mesh,
+        [property: JsonPropertyName("cubemaps")]
+        string? CubeMaps = null);
 }
 
 internal sealed class AssetResourceManifest<T> where T : IAssetManifestRecord
@@ -47,6 +54,16 @@ internal sealed record AssetTextureRecord(
 internal sealed record AssetMeshRecord(
     string Name,
     string Filename)
+    : IAssetManifestRecord;
+
+internal sealed record AssetCubeMapRecord(
+    string Name,
+    string[] Textures,
+    int Width,
+    int Height,
+    TexturePreset Preset,
+    EnginePixelFormat PixelFormat = EnginePixelFormat.Rgba
+)
     : IAssetManifestRecord;
 
 interface IAssetMaterialValue

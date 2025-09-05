@@ -21,6 +21,11 @@ public sealed class Demo3DScene : GameScene
     {
         var renderer = Context.GetSystem<IRenderSystem>();
         var assets = Context.GetSystem<IAssetSystem>();
+        
+        var skyboxShader = assets.Get<Shader>("SkyboxShader");
+        var skyboxCubeMap = assets.Get<CubeMap>("Skybox");
+        
+        RenderGlobals.SetSkybox(skyboxShader.ResourceId, skyboxCubeMap.ResourceId, Quaternion.Identity);
 
         var boatMat = renderer.CreateMaterial("BoatMat");
         var boatMesh = assets.Get<Mesh>("BoatMesh");

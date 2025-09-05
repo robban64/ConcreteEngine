@@ -4,6 +4,8 @@ namespace ConcreteEngine.Core.Scene;
 
 public interface IWorld
 {
+    SceneRenderGlobals RenderGlobals { get; }
+    
     GameEntityId Create();
     GameComponentStore<Transform> Transforms { get; }
     GameComponentStore<MeshComponent> Meshes { get; }
@@ -18,9 +20,11 @@ public sealed class World : IWorld
 {
     private int _idIdx = 1;
     
+    public SceneRenderGlobals RenderGlobals { get; }
 
-    internal World()
+    internal World(SceneRenderGlobals  renderGlobals)
     {
+        RenderGlobals =  renderGlobals;
     }
 
     
@@ -28,7 +32,6 @@ public sealed class World : IWorld
     
     public GameComponentStore<Transform> Transforms { get; } = new();
     public GameComponentStore<MeshComponent> Meshes { get; } = new();
-
     public GameComponentStore<Transform2D> Transforms2D { get; } = new();
     public GameComponentStore<Transform2D> PrevTransforms2D { get; } = new();
     public GameComponentStore<SpriteComponent> Sprites { get; } = new();

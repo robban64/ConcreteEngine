@@ -84,6 +84,8 @@ public sealed class GlGraphicsContext : IGraphicsContext
         _gl.Enable(GLEnum.Dither);
         _gl.Enable(GLEnum.Multisample);
         _gl.PixelStore(GLEnum.UnpackAlignment, 1);
+        _gl.Enable(EnableCap.TextureCubeMapSeamless);
+
         //_gl.Enable(EnableCap.FramebufferSrgb);
     }
 

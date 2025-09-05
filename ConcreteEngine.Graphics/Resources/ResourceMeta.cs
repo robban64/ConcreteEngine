@@ -19,9 +19,10 @@ public enum ResourceKind : ushort
     RenderBuffer = 6
 }
 
-public readonly struct TextureMeta(Vector2D<int> size, EnginePixelFormat format)
+public readonly struct TextureMeta(int width, int height, EnginePixelFormat format)
 {
-    public readonly Vector2D<int> Size = size;
+    public readonly int Width = width;
+    public readonly int Height = height;
     public readonly EnginePixelFormat Format = format;
 }
 

@@ -133,6 +133,11 @@ public sealed class AssetSystem : IAssetSystem
         // Mesh
         LoadEntries<AssetMeshRecord, Mesh>(resourceManifest.Mesh, loader.LoadMesh);
 
+        if (resourceManifest.CubeMaps != null)
+        {
+            LoadEntries<AssetCubeMapRecord, CubeMap>(resourceManifest.CubeMaps, loader.LoadCubeMap);
+        }
+
         // Material
         LoadMaterialStore(resourceManifest.Material, loader);
 

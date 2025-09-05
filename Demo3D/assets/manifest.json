@@ -3,6 +3,7 @@
     "material": "materials.json",
     "shader": "shaders.json",
     "texture": "textures.json",
+	"cubemaps": "cubemaps.json",
 	"mesh": "meshes.json"
   }
 }

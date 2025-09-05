@@ -90,7 +90,7 @@ public sealed class LightRenderer(IGraphicsDevice graphics, MaterialStore materi
 {
     public override void Handle(in DrawCommandLight cmd)
     {
-        Gfx.BindMesh(Graphics.QuadMeshId);
+        Gfx.BindMesh(Graphics.Primitives.FsqQuad);
         Gfx.SetUniform(ShaderUniform.LightPos, cmd.Position);
         Gfx.SetUniform(ShaderUniform.Radius, cmd.Radius);
         Gfx.SetUniform(ShaderUniform.Color, cmd.Color);
@@ -132,6 +132,24 @@ public sealed class TerrainRenderer(IGraphicsDevice graphics,  MaterialStore mat
         Gfx.SetUniform(ShaderUniform.TexCoordRepeat, 20f);
         
         Gfx.BindMesh(cmd.MeshId);
+        Gfx.DrawMesh(cmd.DrawCount);
+    }
+}
+
+public sealed class SkyboxRenderer(IGraphicsDevice graphics,  MaterialStore materialStore)
+    : CommandRenderer<DrawCommandSkybox>(graphics,  materialStore)
+{
+    public Camera3D Camera { get; set; }
+    
+    public override void Handle(in DrawCommandSkybox cmd)
+    {
+        Gfx.UseShader(cmd.ShaderId);
+        Gfx.SetUniform(ShaderUniform.ProjectionMatrix, Camera.ProjectionMatrix);
+        Gfx.SetUniform(ShaderUniform.ViewMatrix, TransformHelper.RemoveTranslation(Camera.ViewMatrix));
+        Gfx.BindTexture(cmd.TextureId,0);
+
+        var mesh = Graphics.Primitives.SkyboxCube;
+        Gfx.BindMesh(mesh);
         Gfx.DrawMesh(cmd.DrawCount);
     }
 }

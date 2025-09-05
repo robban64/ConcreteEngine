@@ -9,6 +9,7 @@ namespace ConcreteEngine.Graphics;
 public enum ShaderUniform : byte
 {
     ModelMatrix,
+    ViewMatrix,
     ProjectionMatrix,
     ProjectionViewMatrix,
     NormalMatrix,
@@ -21,6 +22,8 @@ public enum ShaderUniform : byte
     SamplerScene,
     SamplerLight,
     SamplerBloom,
+    
+    SampleCubemap,
 
     Color,
     TexelSize,
@@ -38,10 +41,10 @@ public enum ShaderUniform : byte
 public static class ShaderUniforms
 {
     public static readonly ShaderUniform[] SamplerUniforms =
-        [SampleTexture, SamplerScene, SamplerLight, SamplerBloom];
+        [SampleTexture, SamplerScene, SamplerLight, SamplerBloom, SampleCubemap];
 
     public static readonly ShaderUniform[] Matrix4Uniforms =
-        [ModelMatrix, ProjectionMatrix, ProjectionViewMatrix];
+        [ModelMatrix, NormalMatrix, ViewMatrix, ProjectionMatrix, ProjectionViewMatrix];
 
     public static readonly ShaderUniform[] VectorUniforms =
         [Color, TexelSize, LightPos];
@@ -54,8 +57,9 @@ public static class ShaderUniforms
         return uniform switch
         {
             ModelMatrix => "uModel",
-            ProjectionViewMatrix => "uViewProj",
             ProjectionMatrix => "uProj",
+            ViewMatrix => "uView",
+            ProjectionViewMatrix => "uViewProj",
             NormalMatrix => "uNormalMat",
             TextureOffset => "uTexOffset",
             TextureScale => "uTexScale",
@@ -64,6 +68,7 @@ public static class ShaderUniforms
             SamplerScene => "uSceneTex",
             SamplerLight => "uLightTex",
             SamplerBloom => "uBloomTex",
+            SampleCubemap => "uCubemapTex",
             Time => "uTime",
             TexelSize => "uTexelSize",
             Threshold => "uThreshold",

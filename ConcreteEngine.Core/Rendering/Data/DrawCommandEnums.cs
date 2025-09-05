@@ -16,6 +16,7 @@ public enum DrawCommandId : byte
     Light,
     Mesh,
     Terrain,
+    Skybox,
 }
 
 public enum DrawCommandTag : byte
@@ -24,17 +25,17 @@ public enum DrawCommandTag : byte
     Mesh2D,
     Effect2D,
     Mesh3D,
-    Terrain
+    Terrain,
+    Skybox
 }
 
 public enum DrawCommandQueue : byte
 {
     None = 0,
-    Skybox = 1,
     
-    Opaque = 20,
     OpaqueTerrain = 10,
-    
+    Skybox = 20,
+
     AlphaTest = 60,
     
     Transparent = 100,

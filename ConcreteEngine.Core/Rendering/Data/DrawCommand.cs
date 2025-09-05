@@ -28,6 +28,16 @@ public readonly struct DrawCommandTerrain(MeshId meshId, MaterialId materialId, 
     public uint DrawCount { get; } = drawCount;
 }
 
+public readonly struct DrawCommandSkybox(TextureId textureId, ShaderId shaderId, in Matrix4x4 transform)
+    : IDrawCommand
+{
+    public readonly TextureId TextureId = textureId;
+    public readonly ShaderId ShaderId = shaderId;
+    public readonly Matrix4x4 Transform = transform;
+    public uint DrawCount { get; } = 36;
+}
+
+
 public readonly struct DrawCommandSprite(MeshId meshId, MaterialId materialId, uint drawCount, in Matrix4x4 transform)
     : IDrawCommand
 {

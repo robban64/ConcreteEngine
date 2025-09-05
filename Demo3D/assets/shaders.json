@@ -18,6 +18,13 @@
 	  "vertexFilename": "diffuse.vert.glsl",
 	  "fragmentFilename": "terrain.frag.glsl",
 	  "samplers": ["uTexture"]
+	},
+	{
+	  "name": "SkyboxShader",
+	  "vertexFilename": "skybox.vert.glsl",
+	  "fragmentFilename": "skybox.frag.glsl",
+	  "samplers": ["uCubemapTex"]
 	}
+
   ]
 }

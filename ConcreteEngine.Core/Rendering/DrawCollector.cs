@@ -20,18 +20,29 @@ internal sealed class DrawCollector
 
     public TSink GetSink<TSink>() where TSink : IDrawSink
     {
+        if (typeof(TSink).IsClass)
+            throw new InvalidOperationException("TSink is not an interface of IDrawSink");
+        
         if(_producers.TryGetValue(typeof(TSink), out var producer))
             return (TSink)producer;
         
         throw new InvalidOperationException($"{typeof(TSink).Name} is not registered");
     }
     
-    public void RegisterProducer<TSink>(TSink producer) where TSink: IDrawSink
+    public void RegisterProducerSink<TSink>(TSink producer) where TSink: IDrawSink
     {
         ArgumentNullException.ThrowIfNull(producer, nameof(producer));
         if(!_producers.TryAdd(typeof(TSink), (IDrawCommandProducer)producer))
             throw new InvalidOperationException($"{producer.GetType().Name} is already registered");
     }
+    
+    public void RegisterProducer<TProducer>(TProducer producer) where TProducer: IDrawCommandProducer
+    {
+        ArgumentNullException.ThrowIfNull(producer, nameof(producer));
+        if(!_producers.TryAdd(typeof(TProducer), producer))
+            throw new InvalidOperationException($"{producer.GetType().Name} is already registered");
+    }
+
 
     public void AttachContext(CommandProducerContext context)
     {

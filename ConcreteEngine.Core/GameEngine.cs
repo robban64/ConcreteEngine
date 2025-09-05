@@ -143,7 +143,8 @@ public sealed class GameEngine : IDisposable
             ViewportSize = _window.Size
         };
 
-        _renderer.Render(_updateMeta.Alpha, in frameCtx,  out _frameResult);
+        var snapshot = _currentScene.RenderGlobals.Snapshot;
+        _renderer.Render(_updateMeta.Alpha, in frameCtx, in snapshot,  out _frameResult);
     }
 
 

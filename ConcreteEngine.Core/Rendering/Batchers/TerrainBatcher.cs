@@ -78,10 +78,10 @@ public sealed class TerrainBatcher : RenderBatcher<TerrainBatchResult>
         ArgumentOutOfRangeException.ThrowIfLessThan(_vertices.Length, 8);
         ArgumentOutOfRangeException.ThrowIfLessThan(_indices.Length, 8);
 
-        var descriptor = new MeshDescriptor<Vertex3D, uint>
+        var dataDesc = new MeshDataDescriptor<Vertex3D, uint>(_vertices, _indices);
+
+        var metaDesc = new MeshMetaDescriptor
         {
-            VertexBuffer = new MeshDataBufferDescriptor<Vertex3D>(BufferUsage.StaticDraw, _vertices),
-            IndexBuffer = new MeshDataBufferDescriptor<uint>(BufferUsage.StaticDraw, _indices, (int)DrawCount),
             VertexPointers =
             [
                 VertexAttributeDescriptor.Make<Vertex3D>(nameof(Vertex3D.Position), VertexElementFormat.Float3),
@@ -92,7 +92,7 @@ public sealed class TerrainBatcher : RenderBatcher<TerrainBatchResult>
             DrawKind = MeshDrawKind.Elements
         };
 
-        MeshId = Graphics.CreateMesh(descriptor, out var meta);
+        MeshId = Graphics.CreateMesh(in dataDesc, in metaDesc, out _);
     }
 
     private void GenerateVertex(ReadOnlySpan<byte> heightmap, int vertexRowCount)

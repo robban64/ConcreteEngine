@@ -8,22 +8,35 @@ using ConcreteEngine.Graphics.Error;
 
 namespace ConcreteEngine.Graphics.Descriptors;
 
-public record MeshDescriptor<TVertex, TIndex> where TVertex : unmanaged where TIndex : unmanaged
+public readonly struct MeshMetaDescriptor()
 {
     public required VertexAttributeDescriptor[] VertexPointers { get; init; }
-    public required MeshDataBufferDescriptor<TVertex> VertexBuffer { get; init; }
-    public MeshDataBufferDescriptor<TIndex>? IndexBuffer { get; init; }
-    
-    public required MeshDrawKind DrawKind { get; set; }
-    public uint? DrawCount { get; set; } = null;
-    public DrawPrimitive Primitive { get; set; } = DrawPrimitive.Triangles;
+    public required MeshDrawKind DrawKind { get; init; }
+    public uint? DrawCount { get; init; } = null;
+    public DrawPrimitive? Primitive { get; init; } = null;
+    public BufferUsage VboUsage { get; init; } = BufferUsage.StaticDraw;
+    public BufferUsage IboUsage { get; init; } = BufferUsage.StaticDraw;
 }
 
-public record MeshDataBufferDescriptor<T>(
-    BufferUsage Usage,
-    T[]? Data,
-    int? DataLength = null
-) where T : unmanaged;
+public readonly ref struct MeshDataDescriptor<T, I> where T : unmanaged where I : unmanaged
+{
+    public readonly ReadOnlySpan<T> Vertices;
+    public readonly ReadOnlySpan<I> Indices;
+    public readonly bool Elemental;
+
+    public MeshDataDescriptor(ReadOnlySpan<T> vertices)
+    {
+        Vertices = vertices;
+        Indices = ReadOnlySpan<I>.Empty;
+        Elemental = false;
+    }
+    public MeshDataDescriptor(ReadOnlySpan<T> vertices, ReadOnlySpan<I> indices)
+    {
+        Vertices = vertices;
+        Indices = indices;
+        Elemental = true;
+    }
+}
 
 public readonly record struct VertexAttributeDescriptor(
     uint StrideBytes, // total size of one vertex in bytes

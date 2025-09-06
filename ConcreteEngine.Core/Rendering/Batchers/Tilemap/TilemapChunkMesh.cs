@@ -52,20 +52,22 @@ internal sealed class TilemapChunkMesh : IDisposable
         CreateVertexBufferData();
         CreateIndexBufferData();
 
-        var meshData = new MeshDescriptor<Vertex2D, ushort>
+        var dataDesc = new MeshDataDescriptor<Vertex2D, ushort>(Vertices, Indices);
+
+        var metaDesc = new MeshMetaDescriptor
         {
-            VertexBuffer = new MeshDataBufferDescriptor<Vertex2D>(BufferUsage.DynamicDraw, Vertices),
-            IndexBuffer = new MeshDataBufferDescriptor<ushort>(BufferUsage.DynamicDraw, Indices),
             VertexPointers =
             [
                 VertexAttributeDescriptor.Make<Vertex2D>(nameof(Vertex2D.Position), VertexElementFormat.Float2),
                 VertexAttributeDescriptor.Make<Vertex2D>(nameof(Vertex2D.TexCoords), VertexElementFormat.Float2)
             ],
+            VboUsage = BufferUsage.DynamicDraw,
+            IboUsage = BufferUsage.DynamicDraw,
             DrawKind = MeshDrawKind.Elements,
             DrawCount = (uint)(_tileCount * IndicesPerTile)
         };
 
-        _meshId = _graphics.CreateMesh(meshData, out var meta);
+        _meshId = _graphics.CreateMesh(in dataDesc, in metaDesc, out var meta);
         _vertexBufferId = meta.VertexBufferId;
         _indexBufferId = meta.IndexBufferId;
     }
@@ -77,17 +79,6 @@ internal sealed class TilemapChunkMesh : IDisposable
 
     private void CreateTileData()
     {
-        /*
-        for (int y = 0; y < _chunkDimension; y++)
-        {
-            int rowStart = y * _chunkDimension;
-            for (int x = 0; x < _chunkDimension; x++)
-            {
-                _tileData[rowStart + x] = new TileDrawItem((ushort)(x % 3), (ushort)(y % 3));
-            }
-        }*/
-        
-        
         for (int y = 0; y < _chunkDimension; y++)
         {
             int rowStart = y * _chunkDimension;

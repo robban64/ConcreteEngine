@@ -35,6 +35,7 @@ internal sealed class MaterialBinder
         var gfx = _graphics.Gfx;
         var material = _materialStore.GetMaterial(materialId);
         gfx.UseShader(material.ShaderId);
+        
         for (int t = 0; t < material.SamplerSlots.Length; t++)
         {
             gfx.BindTexture(material.SamplerSlots[t], (uint)t);
@@ -43,6 +44,13 @@ internal sealed class MaterialBinder
         if (material.HasAmbient)
         {
             gfx.SetUniform(ShaderUniform.Ambient,  _renderGlobals.Ambient);
+        }
+        
+        if (material.MaterialUniforms.HasValue)
+        {
+            var unforms = material.MaterialUniforms.Value;
+            gfx.SetRawUniform(unforms.Shininess, material.Shininess);
+            gfx.SetRawUniform(unforms.SpecularStrength, material.SpecularStrength);
         }
         
         /*

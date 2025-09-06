@@ -28,9 +28,9 @@ public interface IGraphicsDevice : IDisposable
     VertexBufferId CreateVertexBuffer(BufferUsage bufferUsage);
     IndexBufferId CreateIndexBuffer(BufferUsage usage, IboElementType elementType);
 
-    MeshId CreateMesh<TVertex, TIndex>(MeshDescriptor<TVertex, TIndex> meshData, out MeshMeta meta)
-        where TVertex : unmanaged
-        where TIndex : unmanaged;
+    MeshId CreateMesh<TVertex, TIndex>(in MeshDataDescriptor<TVertex, TIndex> dataDesc, in MeshMetaDescriptor metaDesc,
+        out MeshMeta meta) where TVertex : unmanaged where TIndex : unmanaged;
+
 
     void EnqueueRemoveResource<TId>(TId id, bool replace = false) where TId : struct;
 }

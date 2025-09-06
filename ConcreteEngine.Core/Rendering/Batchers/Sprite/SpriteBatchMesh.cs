@@ -42,35 +42,30 @@ internal sealed class SpriteBatchMesh : IDisposable
         _graphics = graphics;
         _gfx = graphics.Gfx;
         _capacity = capacity;
+        
 
-        var meshData = new MeshDescriptor<Vertex2D, ushort>
+
+        InitIndexBufferData();
+
+        var indices = Indices.AsSpan(0, _capacity * IndicesPerSprite);
+        var dataDesc = new MeshDataDescriptor<Vertex2D, ushort>(Vertices, indices);
+
+        var metaDesc = new MeshMetaDescriptor
         {
-            VertexBuffer = new MeshDataBufferDescriptor<Vertex2D>(BufferUsage.StreamDraw, null),
-            IndexBuffer = new MeshDataBufferDescriptor<ushort>(BufferUsage.StaticDraw, null),
             VertexPointers =
             [
                 VertexAttributeDescriptor.Make<Vertex2D>(nameof(Vertex2D.Position), VertexElementFormat.Float2),
                 VertexAttributeDescriptor.Make<Vertex2D>(nameof(Vertex2D.TexCoords), VertexElementFormat.Float2)
             ],
+            VboUsage = BufferUsage.StreamDraw,
             DrawKind = MeshDrawKind.Elements
         };
 
-        _meshId = _graphics.CreateMesh(meshData, out var meta);
+        
+        _meshId = _graphics.CreateMesh(in dataDesc, in metaDesc, out var meta);
         _vertexBufferId = meta.VertexBufferId;
         _indexBufferId = meta.IndexBufferId;
 
-        _gfx.BindVertexBuffer(_vertexBufferId);
-        InitVertexBufferData();
-        _gfx.BindVertexBuffer(default);
-
-        _gfx.BindIndexBuffer(_indexBufferId);
-        InitIndexBufferData();
-        _gfx.BindIndexBuffer(default);
-    }
-
-    private void InitVertexBufferData()
-    {
-        _gfx.SetVertexBuffer<Vertex2D>(Vertices);
     }
 
     private void InitIndexBufferData()
@@ -87,9 +82,6 @@ internal sealed class SpriteBatchMesh : IDisposable
             indices[ii + 4] = (ushort)(vi + 1);
             indices[ii + 5] = (ushort)(vi + 3);
         }
-
-
-        _gfx.SetIndexBuffer<ushort>(indices);
     }
 
     public SpriteBatchBuildResult BuildSpriteBatch(ReadOnlySpan<SpriteBatchDrawItem> commands)

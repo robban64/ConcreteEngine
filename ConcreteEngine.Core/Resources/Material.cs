@@ -32,15 +32,21 @@ public sealed class Material
     public ShaderId ShaderId { get; set; }
     public TextureId[] SamplerSlots => _samplerSlots;
     public Vector4 Color { get; set; }
+    public float Shininess { get; set; } = 32f;
+    public float SpecularStrength { get; set; } = 1f;
+
 
     public IReadOnlyDictionary<ShaderUniform, IMaterialValue> Values => _values;
 
     // Helpers
     public bool HasViewProjection { get; private set; }
+    public bool HasCameraPos { get; private set; }
     public bool HasNormalMatrix { get; private set; }
     public bool HasAmbient { get; private set; }
     public DirectionalLightUniform? DirLightUniforms { get; }
+    public MaterialUniform? MaterialUniforms { get; }
 
+    
 
     internal Material(MaterialId id, MaterialTemplate template)
     {
@@ -78,20 +84,21 @@ public sealed class Material
             _samplerSlots = new TextureId[template.Shader.Samplers];
             if (template.Textures?.Length > 0)
             {
-                for (int i = 0; i < template.Shader.Samplers; i++)
+                int length = int.Min(template.Shader.Samplers, template.Textures.Length);
+                for (int i = 0; i < length; i++)
                     SamplerSlots[i] = template.Textures[i].ResourceId;
             }
         }
 
         var table = template.Shader.UniformTable;
         DirLightUniforms = template.DirLightUniforms;
+        MaterialUniforms = template.MaterialUniforms;
         
         HasViewProjection = table.ContainsKey(ShaderUniform.ProjectionViewMatrix);
         HasNormalMatrix = table.ContainsKey(ShaderUniform.NormalMatrix);
         HasAmbient = table.ContainsKey(ShaderUniform.Ambient);
+        HasCameraPos = table.ContainsKey(ShaderUniform.CameraPos);
         
-        
-
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]

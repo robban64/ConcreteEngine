@@ -6,6 +6,11 @@
 	  "textures": ["Boat"]
 	},
 	{
+	  "name": "Rock01Mat",
+	  "shader": "Diffuse",
+	  "textures": ["Rock01", "Rock01-Normal"]
+	},
+	{
 	  "name": "TerrainMat",
 	  "shader": "Terrain",
 	  "textures": ["Grass"]

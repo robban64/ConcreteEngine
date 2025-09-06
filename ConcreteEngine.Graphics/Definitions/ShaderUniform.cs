@@ -18,7 +18,8 @@ public enum ShaderUniform : byte
     TextureScale,
     TexCoordRepeat,
 
-    SampleTexture,
+    SamplerTexture,
+    SamplerNormal,
     SamplerScene,
     SamplerLight,
     SamplerBloom,
@@ -30,6 +31,7 @@ public enum ShaderUniform : byte
     
     TexelSize,
     LightPos,
+    CameraPos,
 
     Time,
     Threshold,
@@ -43,13 +45,13 @@ public enum ShaderUniform : byte
 public static class ShaderUniforms
 {
     public static readonly ShaderUniform[] SamplerUniforms =
-        [SampleTexture, SamplerScene, SamplerLight, SamplerBloom, SampleCubemap];
+        [SamplerTexture, SamplerNormal, SamplerScene, SamplerLight, SamplerBloom, SampleCubemap];
 
     public static readonly ShaderUniform[] Matrix4Uniforms =
         [ModelMatrix, NormalMatrix, ViewMatrix, ProjectionMatrix, ProjectionViewMatrix];
 
     public static readonly ShaderUniform[] VectorUniforms =
-        [Color, Ambient, TexelSize, LightPos];
+        [Color, Ambient, TexelSize, LightPos, CameraPos];
     
 
     public static readonly ShaderUniform[] PrimitiveUniforms =
@@ -67,7 +69,8 @@ public static class ShaderUniforms
             TextureOffset => "uTexOffset",
             TextureScale => "uTexScale",
             TexCoordRepeat => "uTexCoordRepeat",
-            SampleTexture => "uTexture",
+            SamplerTexture => "uTexture",
+            SamplerNormal => "uNormalTex",
             SamplerScene => "uSceneTex",
             SamplerLight => "uLightTex",
             SamplerBloom => "uBloomTex",
@@ -77,6 +80,7 @@ public static class ShaderUniforms
             Threshold => "uThreshold",
             SoftKnee => "uSoftKnee",
             LightPos => "uLightPos",
+            CameraPos => "uCameraPos",
             Radius => "uRadius",
             Color => "uColor",
             Ambient => "uAmbient",

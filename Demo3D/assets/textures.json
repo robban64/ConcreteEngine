@@ -7,6 +7,21 @@
 	  "preset": "LinearMipmapClamp"
     },
 	{
+	  "name": "Rock01",
+	  "filename": "rocks_01.jpg",
+	  "preset": "LinearMipmapClamp"
+	},
+	{
+	  "name": "Rock01-Normal",
+	  "filename": "rocks_01_normal.jpg",
+	  "preset": "LinearMipmapRepeat"
+	},
+	{
+	  "name": "Rock01-Specular",
+	  "filename": "rocks_01_specular.jpg",
+	  "preset": "LinearMipmapRepeat"
+	},
+	{
 	  "name": "Grass",
 	  "filename": "grass.jpg",
 	  "preset": "LinearMipmapRepeat",

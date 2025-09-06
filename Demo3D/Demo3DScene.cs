@@ -19,6 +19,8 @@ public sealed class Demo3DScene : GameScene
 {
     public override void Initialize()
     {
+        var rng = Random.Shared;
+
         var renderer = Context.GetSystem<IRenderSystem>();
         var assets = Context.GetSystem<IAssetSystem>();
 
@@ -28,11 +30,26 @@ public sealed class Demo3DScene : GameScene
         RenderGlobals.SetSkybox(skyboxShader.ResourceId, skyboxCubeMap.ResourceId, Quaternion.Identity);
         RenderGlobals.SetDirLight(new Vector3(-0.3f, -1.0f, -0.2f), new Vector3(1.0f, 0.95f, 0.9f), Vector3.One,1);
         RenderGlobals.SetAmbient(new Vector3(0.8f,0.75f,0.8f));
+
+        var rockMat = renderer.CreateMaterial("Rock01Mat");
+        var rockMesh = assets.Get<Mesh>("Rock1");
+        var rock2Mesh = assets.Get<Mesh>("Rock2");
+
+        for (int i = 0; i < 40; i++)
+        {
+            var entityId = World.Create();
+            World.Meshes.Add(entityId,
+                new MeshComponent(rockMesh.ResourceId, rockMat.Id, rockMesh.Meta.DrawCount));
+            World.Transforms.Add(entityId,
+                new Transform(new Vector3(i * 5, -3, i * 5), Vector3.One, Quaternion.Identity));
+        }
+
+        
+        
         var boatMat = renderer.CreateMaterial("BoatMat");
         var boatMesh = assets.Get<Mesh>("Boat");
 
-        var rng = Random.Shared;
-        for (int i = 0; i < 120; i++)
+        for (int i = 0; i < 12; i++)
         {
             var entityId = World.Create();
             var x = rng.Next(0, 20);

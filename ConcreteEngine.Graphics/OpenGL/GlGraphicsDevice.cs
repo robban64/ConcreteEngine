@@ -238,13 +238,13 @@ public sealed class GlGraphicsDevice : IGraphicsDevice<GlGraphicsContext>
         return _textureStore.Add(in meta, handle);
     }
     
-    public MeshId CreateMesh<TVertex, TIndex>(MeshDescriptor<TVertex, TIndex> descriptor, out MeshMeta meta)
-        where TVertex : unmanaged where TIndex : unmanaged
+    public MeshId CreateMesh<TVertex, TIndex>(in MeshDataDescriptor<TVertex, TIndex> dataDesc, in MeshMetaDescriptor metaDesc,
+        out MeshMeta meta) where TVertex : unmanaged where TIndex : unmanaged
     {
         var handle = _resourceFactory.CreateMesh(
             (handle, m) => _vboStore.Add(in m, in handle),
             (handle, m) => _iboStore.Add(in m, in handle),
-            descriptor, out meta);
+            in dataDesc, in metaDesc, out meta);
 
         return _meshStore.Add(in meta, handle);
     }

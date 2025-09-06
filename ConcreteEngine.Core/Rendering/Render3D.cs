@@ -47,6 +47,12 @@ internal sealed class Render3D: IRender
                 _gfx.SetUniform(ShaderUniform.ProjectionViewMatrix, in projectionViewMatrix);
             }
             
+            if (material.HasCameraPos)
+            {
+                _gfx.UseShader(material.ShaderId);
+                _gfx.SetUniform(ShaderUniform.CameraPos, _camera.Translation);
+            }
+            
             if (material.HasAmbient)
             {
                 _gfx.UseShader(material.ShaderId);
@@ -62,8 +68,9 @@ internal sealed class Render3D: IRender
                 _gfx.SetRawUniform(unforms.Diffuse,  renderGlobals.DirLight.Diffuse );
                 _gfx.SetRawUniform(unforms.Specular,  renderGlobals.DirLight.Specular );
                 _gfx.SetRawUniform(unforms.Intensity,  renderGlobals.DirLight.Intensity );
-
             }
+            
+            
 
         }
         

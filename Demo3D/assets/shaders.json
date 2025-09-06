@@ -11,7 +11,7 @@
 	  "name": "Diffuse",
 	  "vertexFilename": "diffuse.vert.glsl",
 	  "fragmentFilename": "diffuse.frag.glsl",
-	  "samplers": ["uTexture"]
+	  "samplers": ["uTexture", "uNormalTex"]
 	},
 	{
 	  "name": "Terrain",

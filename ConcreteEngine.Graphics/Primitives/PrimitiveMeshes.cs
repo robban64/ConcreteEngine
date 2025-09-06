@@ -32,9 +32,8 @@ internal sealed class PrimitiveMeshes : IPrimitiveMeshes
             new Vertex2D(1f, 1f, 1f, 1f)
         };
 
-        var desc = new MeshDescriptor<Vertex2D, uint>
+        var metaDesc = new MeshMetaDescriptor
         {
-            VertexBuffer = new MeshDataBufferDescriptor<Vertex2D>(BufferUsage.StaticDraw, null),
             VertexPointers =
             [
                 VertexAttributeDescriptor.Make<Vertex2D>(nameof(Vertex2D.Position), VertexElementFormat.Float2),
@@ -44,11 +43,10 @@ internal sealed class PrimitiveMeshes : IPrimitiveMeshes
             DrawKind = MeshDrawKind.Arrays,
             DrawCount = 4
         };
+        
+        var dataDesc = new MeshDataDescriptor<Vertex2D, uint>(vertices);
 
-        FsqQuad = graphics.CreateMesh(desc, out var meta);
-        graphics.Gfx.BindVertexBuffer(meta.VertexBufferId);
-        graphics.Gfx.SetVertexBuffer<Vertex2D>(vertices);
-        graphics.Gfx.BindVertexBuffer(default);
+        FsqQuad = graphics.CreateMesh(in dataDesc, in metaDesc, out _);
     }
 
     private void CreateSkyboxCube(IGraphicsDevice graphics)
@@ -74,10 +72,10 @@ internal sealed class PrimitiveMeshes : IPrimitiveMeshes
             1f, 1f, -1f, -1f, 1f, -1f, -1f, -1f, -1f,
             1f, 1f, -1f, -1f, -1f, -1f, 1f, -1f, -1f,
         };
-
-        var desc = new MeshDescriptor<Vertex2D, uint>
+         var dataDesc = new MeshDataDescriptor<float, uint>(vertices);
+        
+        var metaDesc = new MeshMetaDescriptor
         {
-            VertexBuffer = new MeshDataBufferDescriptor<Vertex2D>(BufferUsage.StaticDraw, null),
             VertexPointers =
             [
                 new VertexAttributeDescriptor(sizeof(float) * 3, 0, VertexElementFormat.Float3),
@@ -87,9 +85,6 @@ internal sealed class PrimitiveMeshes : IPrimitiveMeshes
             DrawCount = 36
         };
 
-        SkyboxCube = graphics.CreateMesh(desc, out var meta);
-        graphics.Gfx.BindVertexBuffer(meta.VertexBufferId);
-        graphics.Gfx.SetVertexBuffer<float>(vertices);
-        graphics.Gfx.BindVertexBuffer(default);
+        SkyboxCube = graphics.CreateMesh(in dataDesc, in metaDesc, out _);
     }
 }

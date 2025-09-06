@@ -1,5 +1,6 @@
 #region
 
+using System.Runtime.InteropServices;
 using System.Text;
 using ConcreteEngine.Core.Resources;
 using ConcreteEngine.Graphics;
@@ -42,11 +43,9 @@ internal sealed class AssetLoader
     
     public Mesh LoadMesh(AssetMeshRecord record)
     {
-        var data = _meshLoader.LoadModel(GetFilePath("meshes", record.Filename));
-        var descriptor = new MeshDescriptor<Vertex3D, uint>
+        var dataDesc = _meshLoader.LoadModel(GetFilePath("meshes", record.Filename));
+        var metaDesc = new MeshMetaDescriptor
         {
-            VertexBuffer = new MeshDataBufferDescriptor<Vertex3D>(BufferUsage.StaticDraw, data.Vertices),
-            IndexBuffer = new MeshDataBufferDescriptor<uint>(BufferUsage.StaticDraw, data.Indices),
             VertexPointers =
             [
                 VertexAttributeDescriptor.Make<Vertex3D>(nameof(Vertex3D.Position), VertexElementFormat.Float3),
@@ -55,10 +54,12 @@ internal sealed class AssetLoader
                 VertexAttributeDescriptor.Make<Vertex3D>(nameof(Vertex3D.Tangent), VertexElementFormat.Float3),
 
             ],
-            DrawKind = MeshDrawKind.Elements
+            DrawKind = MeshDrawKind.Elements,
+            DrawCount = (uint)dataDesc.Indices.Length
         };
 
-        var meshId = _graphics.CreateMesh(descriptor, out var meta);
+        var meshId = _graphics.CreateMesh(in dataDesc, in metaDesc, out var meta);
+        
         return new Mesh
         {
             Name = record.Name,

@@ -22,6 +22,7 @@ public sealed class MaterialTemplate : IAssetFile
     public AssetFileType AssetType => AssetFileType.Material;
     
     public DirectionalLightUniform? DirLightUniforms { get; private set; } = null;
+    public MaterialUniform? MaterialUniforms { get; private set; } = null;
 
 
     internal MaterialTemplate(Dictionary<ShaderUniform, IMaterialValue> loadedUniforms)
@@ -33,14 +34,21 @@ public sealed class MaterialTemplate : IAssetFile
     internal void Process()
     {
         var table = Shader.UniformTable;
-        bool hasLight = table.GetUniformLocation(DirectionalLightUniform.DirectionUniform) > 0;
-        if (hasLight)
+        if (table.GetUniformLocation(DirectionalLightUniform.DirectionUniform) > 0)
         {
             DirLightUniforms = new DirectionalLightUniform(
-                table.GetUniformLocation(DirectionalLightUniform.DirectionUniform),
-                table.GetUniformLocation(DirectionalLightUniform.DiffuseUniform),
-                table.GetUniformLocation(DirectionalLightUniform.SpecularUniform),
-                table.GetUniformLocation(DirectionalLightUniform.IntensityUniform)
+                Direction:table.GetUniformLocation(DirectionalLightUniform.DirectionUniform),
+                Diffuse:table.GetUniformLocation(DirectionalLightUniform.DiffuseUniform),
+                Specular:table.GetUniformLocation(DirectionalLightUniform.SpecularUniform),
+                Intensity: table.GetUniformLocation(DirectionalLightUniform.IntensityUniform)
+            );
+        }
+
+        if (table.GetUniformLocation(MaterialUniform.ShininessUniform) > 0)
+        {
+            MaterialUniforms = new MaterialUniform(
+                Shininess: table.GetUniformLocation(MaterialUniform.ShininessUniform),
+                SpecularStrength: table.GetUniformLocation(MaterialUniform.SpecularStrengthUniform)
             );
         }
 

@@ -18,7 +18,6 @@ public struct Vertex3D
 
     public Vertex3D()
     {
-        
     }
 
     public Vertex3D(Vector3 position, Vector2 texCoords, Vector3 normal, Vector3 tangent)

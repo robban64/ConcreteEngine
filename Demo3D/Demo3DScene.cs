@@ -26,7 +26,8 @@ public sealed class Demo3DScene : GameScene
         var skyboxCubeMap = assets.Get<CubeMap>("Skybox");
 
         RenderGlobals.SetSkybox(skyboxShader.ResourceId, skyboxCubeMap.ResourceId, Quaternion.Identity);
-        RenderGlobals.SetDirLight(new Vector3(-0.3f, -1.0f, -0.2f), new Vector3(1.0f, 0.95f, 0.9f), Vector3.One,2);
+        RenderGlobals.SetDirLight(new Vector3(-0.3f, -1.0f, -0.2f), new Vector3(1.0f, 0.95f, 0.9f), Vector3.One,1);
+        RenderGlobals.SetAmbient(new Vector3(0.8f,0.75f,0.8f));
         var boatMat = renderer.CreateMaterial("BoatMat");
         var boatMesh = assets.Get<Mesh>("Boat");
 

@@ -7,6 +7,7 @@ using System.Runtime.CompilerServices;
 using ConcreteEngine.Common;
 using ConcreteEngine.Graphics.Descriptors;
 using ConcreteEngine.Graphics.Error;
+using ConcreteEngine.Graphics.Primitives;
 using ConcreteEngine.Graphics.Resources;
 using ConcreteEngine.Graphics.Utils;
 using Silk.NET.Maths;
@@ -462,10 +463,18 @@ public sealed class GlGraphicsContext : IGraphicsContext
 
         var count = drawCount > 0 ? drawCount : meta.DrawCount;
 
-        if (meta.ElementType == IboElementType.Invalid)
-            DrawArrays(in meta, count);
-        else
-            DrawElements(in meta, count);
+        switch (meta.DrawKind)
+        {
+            case MeshDrawKind.Arrays:
+                DrawArrays(in meta, count);
+                break;
+            case MeshDrawKind.Elements:
+                DrawElements(in meta, count);
+                break;
+            default:
+                GraphicsException.ThrowUnsupportedFeature(nameof(meta.DrawKind));
+                break;
+        }
 
         _drawTriangleCount += (int)count;
         _drawCallCount++;
@@ -520,16 +529,12 @@ public sealed class GlGraphicsContext : IGraphicsContext
         _gl.Uniform2(_boundUniforms![uniform], value.X, value.Y);
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public void SetUniform(ShaderUniform uniform, Vector3 value)
-    {
-        _gl.Uniform3(_boundUniforms![uniform], value.X, value.Y, value.Z);
-    }
+    public void SetUniform(ShaderUniform uniform, Vector3 value) 
+        =>  _gl.Uniform3(_boundUniforms![uniform], value.X, value.Y, value.Z);
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public void SetUniform(ShaderUniform uniform, Vector4 value)
-    {
-        _gl.Uniform4(_boundUniforms![uniform], value.X, value.Y, value.Z, value.W);
-    }
+        => _gl.Uniform4(_boundUniforms![uniform], value.X, value.Y, value.Z, value.W);
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public unsafe void SetUniform(ShaderUniform uniform, in Matrix4x4 value)
@@ -539,42 +544,39 @@ public sealed class GlGraphicsContext : IGraphicsContext
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public unsafe void SetUniformMat3(ShaderUniform uniform, in Matrix4x4 value)
-    {
-        SetRawUniformMat3(_boundUniforms![uniform], in value);
-    }
+    public unsafe void SetUniform(ShaderUniform uniform, in Matrix3 value) 
+        => SetRawUniform(_boundUniforms![uniform], in value);
 
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public void SetRawUniform(int uniform, int value) =>  _gl.Uniform1(uniform, value);
 
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public void SetRawUniform(int uniform, uint value) =>  _gl.Uniform1(uniform, value);
 
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public void SetRawUniform(int uniform, float value) =>  _gl.Uniform1(uniform, value);
 
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public void SetRawUniform(int uniform, Vector2 value) =>  _gl.Uniform2(uniform, value.X, value.Y);
 
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public void SetRawUniform(int uniform, Vector3 value) =>  _gl.Uniform3(uniform, value.X, value.Y, value.Z);
 
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public void SetRawUniform(int uniform, Vector4 value) =>  _gl.Uniform4(uniform, value.X, value.Y, value.Z, value.W);
+    
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public unsafe void SetRawUniform(int uniform, in Matrix4x4 value)
     {
         var p = (float*)Unsafe.AsPointer(ref Unsafe.AsRef(in value));
         _gl.UniformMatrix4(uniform, 1, false, p);
     }
 
-    public unsafe void SetRawUniformMat3(int uniform, in Matrix4x4 value)
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public unsafe void SetRawUniform(int uniform, in Matrix3 value)
     {
-        Span<float> m = stackalloc float[9];
-        m[0] = value.M11;
-        m[1] = value.M21;
-        m[2] = value.M31;
-        m[3] = value.M12;
-        m[4] = value.M22;
-        m[5] = value.M32;
-        m[6] = value.M13;
-        m[7] = value.M23;
-        m[8] = value.M33;
-        fixed (float* p = m)
-            _gl.UniformMatrix3(uniform, 1, false, p);
+        var p = (float*)Unsafe.AsPointer(ref Unsafe.AsRef(in value));
+        _gl.UniformMatrix3(uniform, 1, false, p);
     }
 
 

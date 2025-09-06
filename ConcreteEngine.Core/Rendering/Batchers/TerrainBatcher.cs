@@ -88,7 +88,8 @@ public sealed class TerrainBatcher : RenderBatcher<TerrainBatchResult>
                 VertexAttributeDescriptor.Make<Vertex3D>(nameof(Vertex3D.TexCoords), VertexElementFormat.Float2),
                 VertexAttributeDescriptor.Make<Vertex3D>(nameof(Vertex3D.Normal), VertexElementFormat.Float3),
                 VertexAttributeDescriptor.Make<Vertex3D>(nameof(Vertex3D.Tangent), VertexElementFormat.Float3),
-            ]
+            ],
+            DrawKind = MeshDrawKind.Elements
         };
 
         MeshId = Graphics.CreateMesh(descriptor, out var meta);

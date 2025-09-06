@@ -1,5 +1,6 @@
 using System.Numerics;
 using ConcreteEngine.Core.Resources;
+using ConcreteEngine.Core.Scene;
 using ConcreteEngine.Graphics;
 
 namespace ConcreteEngine.Core.Rendering;
@@ -10,6 +11,8 @@ internal sealed class MaterialBinder
     private readonly MaterialStore _materialStore;
 
     private int _previousMaterialId = -1;
+    
+    private RenderGlobalSnapshot _renderGlobals;
 
     internal MaterialBinder(IGraphicsDevice graphics, MaterialStore materialStore)
     {
@@ -17,9 +20,11 @@ internal sealed class MaterialBinder
         _materialStore = materialStore;
     }
 
-    public void ClearPreviousMaterial()
+
+    public void Prepare(in RenderGlobalSnapshot renderGlobals)
     {
         _previousMaterialId = -1;
+        _renderGlobals =  renderGlobals;
     }
 
     public void BindMaterialSlots(MaterialId materialId)
@@ -34,6 +39,22 @@ internal sealed class MaterialBinder
         {
             gfx.BindTexture(material.SamplerSlots[t], (uint)t);
         }
+
+        if (material.HasAmbient)
+        {
+            gfx.SetUniform(ShaderUniform.Ambient,  _renderGlobals.Ambient);
+        }
+        
+        /*
+        if (material.DirLightUniforms.HasValue)
+        {
+            var unforms = material.DirLightUniforms.Value;
+            gfx.SetRawUniform(unforms.Direction, _renderGlobals.DirLight.Direction );
+            gfx.SetRawUniform(unforms.Diffuse,  _renderGlobals.DirLight.Diffuse );
+            gfx.SetRawUniform(unforms.Specular,  _renderGlobals.DirLight.Specular );
+            gfx.SetRawUniform(unforms.Intensity,  _renderGlobals.DirLight.Intensity );
+        }
+        */
 
         var properties = material.GetProperties();
         foreach (var property in properties)

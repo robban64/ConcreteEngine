@@ -28,7 +28,7 @@ public sealed partial class GraphicsException : InvalidOperationException
 
     public static GraphicsException ResourceAlreadyExists(int id) => new($"{id} already exists.");
 
-
+    
     public static GraphicsException MissingHandle<T>(string? name = null) =>
         new($"{Label<T>(name)} has no valid GPU handle (was it created?).");
 

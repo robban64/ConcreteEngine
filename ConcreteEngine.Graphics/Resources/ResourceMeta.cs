@@ -36,6 +36,7 @@ public readonly struct MeshMeta(
     IndexBufferId indexBufferId,
     DrawPrimitive primitive,
     IboElementType elementType,
+    MeshDrawKind drawKind,
     bool isStatic,
     uint drawCount,
     uint vertexLayoutCount,
@@ -48,6 +49,7 @@ public readonly struct MeshMeta(
     public readonly IndexBufferId IndexBufferId = indexBufferId;
     public readonly DrawPrimitive Primitive = primitive;
     public readonly IboElementType ElementType = elementType;
+    public readonly MeshDrawKind DrawKind = drawKind;
     public readonly bool IsStatic = isStatic;
     public readonly uint DrawCount = drawCount;
     public readonly uint VertexLayoutCount = vertexLayoutCount;

@@ -51,7 +51,8 @@ internal sealed class SpriteBatchMesh : IDisposable
             [
                 VertexAttributeDescriptor.Make<Vertex2D>(nameof(Vertex2D.Position), VertexElementFormat.Float2),
                 VertexAttributeDescriptor.Make<Vertex2D>(nameof(Vertex2D.TexCoords), VertexElementFormat.Float2)
-            ]
+            ],
+            DrawKind = MeshDrawKind.Elements
         };
 
         _meshId = _graphics.CreateMesh(meshData, out var meta);

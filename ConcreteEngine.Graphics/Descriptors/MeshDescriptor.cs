@@ -13,6 +13,8 @@ public record MeshDescriptor<TVertex, TIndex> where TVertex : unmanaged where TI
     public required VertexAttributeDescriptor[] VertexPointers { get; init; }
     public required MeshDataBufferDescriptor<TVertex> VertexBuffer { get; init; }
     public MeshDataBufferDescriptor<TIndex>? IndexBuffer { get; init; }
+    
+    public required MeshDrawKind DrawKind { get; set; }
     public uint? DrawCount { get; set; } = null;
     public DrawPrimitive Primitive { get; set; } = DrawPrimitive.Triangles;
 }

@@ -15,14 +15,15 @@ namespace ConcreteEngine.Graphics.OpenGL;
 internal sealed class GlResourceFactory(GlGraphicsContext gfx, DeviceCapabilities caps)
 {
     private readonly GL _gl = gfx.Gl;
-    private readonly DeviceCapabilities _caps =  caps;
+    private readonly DeviceCapabilities _caps = caps;
 
-    private void SetBufferData<TData>(BufferTargetARB target, BufferUsageARB usage, ReadOnlySpan<TData> data, int? dataLength = null)
+    private void SetBufferData<TData>(BufferTargetARB target, BufferUsageARB usage, ReadOnlySpan<TData> data,
+        int? dataLength = null)
         where TData : unmanaged
     {
         var elementSize = Unsafe.SizeOf<TData>();
         var length = dataLength.GetValueOrDefault(data.Length);
-        var size =  length * elementSize;
+        var size = length * elementSize;
         _gl.BufferData(target, (nuint)size, data, usage);
     }
 
@@ -44,7 +45,8 @@ internal sealed class GlResourceFactory(GlGraphicsContext gfx, DeviceCapabilitie
         _gl.BindBuffer(BufferTargetARB.ArrayBuffer, vbo.Handle);
 
         if (vboDesc.Data is not null)
-            SetBufferData<TVertex>(BufferTargetARB.ArrayBuffer, vboDesc.Usage.ToGlEnum(), vboDesc.Data, vboDesc.DataLength);
+            SetBufferData<TVertex>(BufferTargetARB.ArrayBuffer, vboDesc.Usage.ToGlEnum(), vboDesc.Data,
+                vboDesc.DataLength);
 
         GlIndexBufferHandle ibo = default;
         if (iboDesc != null)
@@ -52,7 +54,8 @@ internal sealed class GlResourceFactory(GlGraphicsContext gfx, DeviceCapabilitie
             ibo = CreateIndexBuffer();
             _gl.BindBuffer(BufferTargetARB.ElementArrayBuffer, ibo.Handle);
             if (iboDesc.Data is not null)
-                SetBufferData<TIndex>(BufferTargetARB.ElementArrayBuffer, iboDesc.Usage.ToGlEnum(), iboDesc.Data, iboDesc.DataLength);
+                SetBufferData<TIndex>(BufferTargetARB.ElementArrayBuffer, iboDesc.Usage.ToGlEnum(), iboDesc.Data,
+                    iboDesc.DataLength);
         }
 
         for (int i = 0; i < descriptor.VertexPointers.Length; i++)
@@ -105,8 +108,11 @@ internal sealed class GlResourceFactory(GlGraphicsContext gfx, DeviceCapabilitie
 
         var vboId = vboHandler(vbo, new VertexBufferMeta(vboDesc.Usage, vboSize, vboElementSize));
 
+        var drawKind = descriptor.DrawKind;
+        if (drawKind == MeshDrawKind.Arrays && iboId.Id > 0)
+            GraphicsException.ThrowInvalidState("MeshDraw is arrays but has index buffer");
 
-        meta = new MeshMeta(vboId, iboId, descriptor.Primitive, elementType, isStatic,
+        meta = new MeshMeta(vboId, iboId, descriptor.Primitive, elementType, drawKind, isStatic,
             drawCount, (uint)vp.Length,
             pointer1, pointer2, pointer3);
 
@@ -162,15 +168,15 @@ internal sealed class GlResourceFactory(GlGraphicsContext gfx, DeviceCapabilitie
     {
         var loaders = cubemapDesc.Loaders;
         var (width, height) = (cubemapDesc.Width, cubemapDesc.Height);
-        
+
         ArgumentNullException.ThrowIfNull(loaders);
         ArgumentOutOfRangeException.ThrowIfLessThan(loaders.Length, 0, nameof(loaders));
 
         var target = (int)TextureTarget.TextureCubeMapPositiveX;
-        
+
         var handle = _gl.GenTexture();
         _gl.BindTexture(GLEnum.TextureCubeMap, handle);
-        
+
         for (int i = 0; i < 6; i++)
         {
             var result = loaders[i]();
@@ -189,16 +195,16 @@ internal sealed class GlResourceFactory(GlGraphicsContext gfx, DeviceCapabilitie
                     format, GLEnum.UnsignedByte, ptr);
             }
         }
-        _gl.TexParameter(TextureTarget.TextureCubeMap, TextureParameterName.TextureWrapS,  (int)GLEnum.ClampToEdge);
-        _gl.TexParameter(TextureTarget.TextureCubeMap, TextureParameterName.TextureWrapT,  (int)GLEnum.ClampToEdge);
-        _gl.TexParameter(TextureTarget.TextureCubeMap, TextureParameterName.TextureWrapR,  (int)GLEnum.ClampToEdge);
+
+        _gl.TexParameter(TextureTarget.TextureCubeMap, TextureParameterName.TextureWrapS, (int)GLEnum.ClampToEdge);
+        _gl.TexParameter(TextureTarget.TextureCubeMap, TextureParameterName.TextureWrapT, (int)GLEnum.ClampToEdge);
+        _gl.TexParameter(TextureTarget.TextureCubeMap, TextureParameterName.TextureWrapR, (int)GLEnum.ClampToEdge);
         _gl.TexParameter(TextureTarget.TextureCubeMap, TextureParameterName.TextureMinFilter, (int)GLEnum.Linear);
         _gl.TexParameter(TextureTarget.TextureCubeMap, TextureParameterName.TextureMagFilter, (int)GLEnum.Linear);
         _gl.BindTexture(TextureTarget.TextureCubeMap, 0);
 
         meta = new TextureMeta(width, height, cubemapDesc.Format);
         return new GlTextureHandle(handle);
-
     }
 
     private GlRenderBufferHandle CreateRenderBufferForFbo(RenderBufferKind kind, Vector2D<int> size, bool multisample,
@@ -402,9 +408,6 @@ internal sealed class GlResourceFactory(GlGraphicsContext gfx, DeviceCapabilitie
 
     private void SetTextureParameters(TexturePreset preset, TextureAnisotropy anisotropy, float lodBias)
     {
-
-        
-        
         switch (preset)
         {
             case TexturePreset.NearestClamp:
@@ -461,19 +464,17 @@ internal sealed class GlResourceFactory(GlGraphicsContext gfx, DeviceCapabilitie
             default:
                 throw new ArgumentOutOfRangeException(nameof(preset), preset, null);
         }
-        
-        bool isMipMap = preset == TexturePreset.LinearMipmapClamp ||  preset == TexturePreset.LinearMipmapRepeat;
+
+        bool isMipMap = preset == TexturePreset.LinearMipmapClamp || preset == TexturePreset.LinearMipmapRepeat;
         if (isMipMap)
         {
             var anisotropyValue = GetAnisotropy(anisotropy);
-            if(anisotropyValue > 1)
+            if (anisotropyValue > 1)
                 _gl.TexParameter(GLEnum.Texture2D, GLEnum.TextureMaxAnisotropy, anisotropyValue);
 
-            if (lodBias != 0) 
+            if (lodBias != 0)
                 _gl.TexParameter(GLEnum.Texture2D, GLEnum.TextureLodBias, lodBias);
- 
         }
-  
     }
 
     private float GetAnisotropy(TextureAnisotropy anisotropy)
@@ -488,7 +489,7 @@ internal sealed class GlResourceFactory(GlGraphicsContext gfx, DeviceCapabilitie
             TextureAnisotropy.X16 => 16,
             _ => throw new ArgumentOutOfRangeException(nameof(anisotropy), anisotropy, null),
         };
-        
+
         return Math.Min(value, caps.MaxAnisotropy);
     }
 }

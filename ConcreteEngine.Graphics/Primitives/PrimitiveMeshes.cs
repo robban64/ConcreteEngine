@@ -41,6 +41,7 @@ internal sealed class PrimitiveMeshes : IPrimitiveMeshes
                 VertexAttributeDescriptor.Make<Vertex2D>(nameof(Vertex2D.TexCoords), VertexElementFormat.Float2)
             ],
             Primitive = DrawPrimitive.TriangleStrip,
+            DrawKind = MeshDrawKind.Arrays,
             DrawCount = 4
         };
 
@@ -81,6 +82,7 @@ internal sealed class PrimitiveMeshes : IPrimitiveMeshes
             [
                 new VertexAttributeDescriptor(sizeof(float) * 3, 0, VertexElementFormat.Float3),
             ],
+            DrawKind = MeshDrawKind.Arrays,
             Primitive = DrawPrimitive.Triangles,
             DrawCount = 36
         };

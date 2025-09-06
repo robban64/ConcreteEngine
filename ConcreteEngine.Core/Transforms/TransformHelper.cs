@@ -1,6 +1,7 @@
 using System.Numerics;
 using System.Runtime.CompilerServices;
 using ConcreteEngine.Common.Extensions;
+using ConcreteEngine.Graphics;
 
 namespace ConcreteEngine.Core;
 
@@ -34,9 +35,11 @@ public static class TransformHelper
     
     
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public static void GetNormalMatrix(in Matrix4x4 matrix, out Matrix4x4 normal)
+    public static void GetNormalMatrix(in Matrix4x4 matrix, out Matrix3 normal)
     {
-        Matrix4x4.Invert(matrix, out var inverted);
-        normal = Matrix4x4.Transpose(inverted);
+        if (!Matrix4x4.Invert(matrix, out var inv)) inv = Matrix4x4.Identity;
+        var invT = Matrix4x4.Transpose(inv);
+        
+        normal = new Matrix3(in invT);
     }
 }

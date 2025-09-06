@@ -1,6 +1,7 @@
 using System.Numerics;
 using System.Runtime.CompilerServices;
 using ConcreteEngine.Core.Resources;
+using ConcreteEngine.Core.Scene;
 using ConcreteEngine.Graphics;
 
 namespace ConcreteEngine.Core.Rendering;
@@ -47,6 +48,15 @@ internal sealed class DrawProcessor
         foreach (var renderer in _drawers)
         {
             renderer.AttachContext(_context);
+        }
+    }
+
+    public void Prepare(in RenderGlobalSnapshot renderGlobals)
+    {
+        _materialBinder.Prepare(in  renderGlobals);
+        foreach (var drawer in _drawers)
+        {
+            drawer.Prepare(in  renderGlobals);
         }
     }
 

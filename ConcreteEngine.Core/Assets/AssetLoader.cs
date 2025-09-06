@@ -54,7 +54,8 @@ internal sealed class AssetLoader
                 VertexAttributeDescriptor.Make<Vertex3D>(nameof(Vertex3D.Normal), VertexElementFormat.Float3),
                 VertexAttributeDescriptor.Make<Vertex3D>(nameof(Vertex3D.Tangent), VertexElementFormat.Float3),
 
-            ]
+            ],
+            DrawKind = MeshDrawKind.Elements
         };
 
         var meshId = _graphics.CreateMesh(descriptor, out var meta);

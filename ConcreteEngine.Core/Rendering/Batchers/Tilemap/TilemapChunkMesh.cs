@@ -61,6 +61,7 @@ internal sealed class TilemapChunkMesh : IDisposable
                 VertexAttributeDescriptor.Make<Vertex2D>(nameof(Vertex2D.Position), VertexElementFormat.Float2),
                 VertexAttributeDescriptor.Make<Vertex2D>(nameof(Vertex2D.TexCoords), VertexElementFormat.Float2)
             ],
+            DrawKind = MeshDrawKind.Elements,
             DrawCount = (uint)(_tileCount * IndicesPerTile)
         };
 

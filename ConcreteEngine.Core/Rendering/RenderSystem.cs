@@ -149,6 +149,7 @@ public sealed class RenderSystem : IRenderSystem
     private void PrepareRenderer(float alpha, in RenderGlobalSnapshot renderGlobals)
     {
         _render.PrepareRender(alpha, in renderGlobals);
+        _drawRegistry.Prepare(in renderGlobals);
         _commandCollector.Collect(alpha, _commandSubmitter);
         _commandSubmitter.Prepare();
     }

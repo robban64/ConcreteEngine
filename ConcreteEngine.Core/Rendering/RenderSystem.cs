@@ -160,23 +160,17 @@ public sealed class RenderSystem : IRenderSystem
         {
             foreach (var pass in passes)
             {
-                //var (prevBlend, prevDepthTest) = (_gfx.BlendMode, _gfx.DepthTest);
                 _gfx.SetBlendMode(pass.Blend);
                 _gfx.SetDepthTest(pass.DepthTest);
-
                 ExecutePass(renderTarget, pass);
-
-                //_gfx.SetBlendMode(prevBlend);
-                //_gfx.SetDepthTest(prevDepthTest);
             }
         }
     }
 
     private void ExecutePass(RenderTargetId target, IRenderPassDescriptor pass)
     {
-        if (pass.Op == RenderPassOp.Blit && pass is BlitRenderPass blitPass)
+        if (pass is BlitRenderPass blitPass)
         {
-            // preserves bindings internally
             _gfx.BlitFramebuffer(blitPass.BlitFbo, blitPass.TargetFbo, blitPass.LinearFilter);
             return;
         }
@@ -188,20 +182,28 @@ public sealed class RenderSystem : IRenderSystem
         else
             _gfx.BeginRenderPass(pass.TargetFbo, pass.Clear?.ClearColor, pass.Clear?.ClearMask);
 
+        
+        switch (pass)
+        {
+            case IScenePass scenePass:
+                _render.RenderScenePass(scenePass, _commandSubmitter); // handles Scene/Light via runtime type
+                break;
+            case IFsqPass fsq:
+                DrawFullscreenQuad(fsq);
+                break;
+            case IDepthPass depthPass:
+                _render.RenderDepthPass(depthPass, _commandSubmitter);
+                break;
+        }
+        
         if (pass.Op == RenderPassOp.DrawScene)
         {
-            if (pass is SceneRenderPass scenePass)
-                _render.RenderScenePass(scenePass, _commandSubmitter);
-
-            if (pass is LightRenderPass lightPass)
-                _render.RenderLightPass(lightPass, _commandSubmitter);
 
             _gfx.EndRenderPass();
             return;
         }
 
-
-        if (pass.Op == RenderPassOp.FullscreenQuad && pass is FsqRenderPass fsqPass)
+        if (pass.Op == RenderPassOp.FullscreenQuad && pass is IFsqPass fsqPass)
         {
             DrawFullscreenQuad(fsqPass);
         }
@@ -212,7 +214,7 @@ public sealed class RenderSystem : IRenderSystem
         }
     }
 
-    private void DrawFullscreenQuad(FsqRenderPass pass)
+    private void DrawFullscreenQuad(IFsqPass pass)
     {
         ArgumentNullException.ThrowIfNull(pass);
         ArgumentNullException.ThrowIfNull(pass.SourceTextures);

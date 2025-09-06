@@ -4,6 +4,7 @@ using System.Numerics;
 using ConcreteEngine.Common;
 using ConcreteEngine.Graphics;
 using ConcreteEngine.Graphics.Resources;
+using Silk.NET.Maths;
 
 #endregion
 
@@ -12,15 +13,9 @@ namespace ConcreteEngine.Core.Rendering;
 public enum RenderPassOp : byte
 {
     DrawScene,
+    DrawShadows,
     Blit,
     FullscreenQuad
-}
-
-public enum RenderTargetId : byte
-{
-    Scene,
-    SceneLight,
-    Screen
 }
 
 public readonly record struct RenderPassClearDesc(Color4 ClearColor, ClearBufferFlag ClearMask);
@@ -32,57 +27,92 @@ public interface IRenderPassDescriptor
     public bool DepthTest { get; }
     public RenderPassClearDesc? Clear { get; }
     public Vector2 SizeRatio { get; }
+    public Vector2D<int> AbsoluteSize { get; } // Zero = full width/height
     public FrameBufferId TargetFbo { get; }
 }
 
-public sealed class SceneRenderPass : IRenderPassDescriptor
+public interface IFsqPass : IRenderPassDescriptor
 {
-    public RenderPassOp Op => RenderPassOp.DrawScene;
-    public BlendMode Blend { get; set; } = BlendMode.Alpha;
-    public Vector2 SizeRatio { get; set; } = Vector2.One;
-    public bool DepthTest { get; set; } = true;
-
-    public RenderPassClearDesc? Clear { get; set; } =
-        new RenderPassClearDesc(Colors.Black, ClearBufferFlag.ColorAndDepth);
-
-    public required FrameBufferId TargetFbo { get; set; }
+    public TextureId[] SourceTextures { get; }
+    public ShaderId Shader { get; }
 }
 
-public sealed class LightRenderPass : IRenderPassDescriptor
+public interface IScenePass
 {
-    public RenderPassOp Op => RenderPassOp.DrawScene;
-    public BlendMode Blend { get; set; } = BlendMode.Additive;
-    public Vector2 SizeRatio { get; set; } = Vector2.One;
-    public bool DepthTest { get; set; } = false;
-    public RenderPassClearDesc? Clear { get; set; } = new RenderPassClearDesc(Colors.Black, ClearBufferFlag.Color);
-
-    public required FrameBufferId TargetFbo { get; set; }
-    public required ShaderId Shader { get; set; }
+    public RenderPassClearDesc? Clear { get; set; }
 }
 
-public sealed class BlitRenderPass : IRenderPassDescriptor
+public interface IDepthPass
 {
-    public RenderPassOp Op => RenderPassOp.Blit;
-    public BlendMode Blend => BlendMode.None;
-    public bool DepthTest => false;
-    public RenderPassClearDesc? Clear => null;
+}
+
+public abstract class RenderPassDescBase : IRenderPassDescriptor
+{
+    public abstract RenderPassOp Op { get; }
+    public virtual BlendMode Blend { get; init; } = BlendMode.None;
+    public virtual bool DepthTest { get; init; } = false;
+    public virtual RenderPassClearDesc? Clear { get; set; } = null;
 
     public Vector2 SizeRatio { get; set; } = Vector2.One;
+    public Vector2D<int> AbsoluteSize { get; set; } = Vector2D<int>.Zero;
+    public FrameBufferId TargetFbo { get; init; }
+}
+
+public sealed class BlitRenderPass : RenderPassDescBase
+{
+    public override RenderPassOp Op => RenderPassOp.Blit;
     public bool LinearFilter { get; set; } = true;
-    public required FrameBufferId TargetFbo { get; set; }
-    public required FrameBufferId BlitFbo { get; set; }
-    public bool Multisample { get; set; } = false;
+    public required FrameBufferId BlitFbo { get; init; }
+    public bool Multisample { get; init; } = false;
     public uint Samples { get; init; } = 0;
 }
 
-public sealed class FsqRenderPass : IRenderPassDescriptor
+public class IfsqPass : RenderPassDescBase, IFsqPass
 {
-    public RenderPassOp Op => RenderPassOp.FullscreenQuad;
-    public BlendMode Blend => BlendMode.None;
-    public bool DepthTest => false;
-    public RenderPassClearDesc? Clear => null;
-    public Vector2 SizeRatio { get; set; } = Vector2.One;
-    public FrameBufferId TargetFbo { get; set; }
-    public required TextureId[] SourceTextures { get; set; }
-    public required ShaderId Shader { get; set; }
+    public override RenderPassOp Op => RenderPassOp.FullscreenQuad;
+    public required TextureId[] SourceTextures { get; init; }
+    public required ShaderId Shader { get; init; }
+}
+
+public sealed class SceneRenderPass : RenderPassDescBase, IScenePass
+{
+    public override RenderPassOp Op => RenderPassOp.DrawScene;
+
+    public override BlendMode Blend { get; init; } = BlendMode.Alpha;
+    public override bool DepthTest { get; init; } = true;
+
+    public override RenderPassClearDesc? Clear { get; set; } =
+        new RenderPassClearDesc(Colors.Black, ClearBufferFlag.ColorAndDepth);
+}
+
+public sealed class LightRenderPass : RenderPassDescBase, IScenePass
+{
+    public override RenderPassOp Op => RenderPassOp.DrawScene;
+    public override BlendMode Blend { get; init; } = BlendMode.Additive;
+    public override bool DepthTest => false;
+
+    public override RenderPassClearDesc? Clear { get; set; } =
+        new RenderPassClearDesc(Colors.Black, ClearBufferFlag.Color);
+
+    public new required FrameBufferId TargetFbo { get; init; }
+    public required ShaderId Shader { get; init; }
+}
+
+public sealed class PostEffectPass : RenderPassDescBase, IFsqPass
+{
+    public override RenderPassOp Op => RenderPassOp.FullscreenQuad;
+    public required TextureId[] SourceTextures { get; init; }
+    public required ShaderId Shader { get; init; }
+}
+
+public sealed class ShadowRenderPass : RenderPassDescBase, IDepthPass
+{
+    public override RenderPassOp Op => RenderPassOp.DrawShadows;
+    public override bool DepthTest { get; init; } = true;
+
+    public override RenderPassClearDesc? Clear { get; set; } =
+        new RenderPassClearDesc(Colors.Black, ClearBufferFlag.Depth);
+
+    public required ShaderId Shader { get; init; }
+    public Vector2D<int> AtlasOffset { get; init; } = Vector2D<int>.Zero; // viewport origin within atlas
 }

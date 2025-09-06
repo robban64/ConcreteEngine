@@ -3,6 +3,7 @@ using ConcreteEngine.Common;
 using ConcreteEngine.Graphics;
 using ConcreteEngine.Graphics.Descriptors;
 using ConcreteEngine.Graphics.Resources;
+using Silk.NET.Maths;
 
 namespace ConcreteEngine.Core.Rendering;
 
@@ -15,16 +16,12 @@ internal class RenderPasses
 {
     private readonly IGraphicsDevice _graphics;
 
-    // Scene Fbo
-    private RenderPassEntry _multisampleFbo;
-    private RenderPassEntry _sceneFbo;
-
-    // Effect Fbo
-    private RenderPassEntry _lightFbo;
-    
-    public RenderPassEntry MultisampleFbo => _multisampleFbo;
-    public RenderPassEntry SceneFbo => _sceneFbo;
-    public RenderPassEntry LightFbo => _lightFbo;
+    public RenderPassFboEntry MultisampleFbo { get; private set; }
+    public RenderPassFboEntry SceneFbo { get; private set; }
+    public RenderPassFboEntry LightFbo { get; private set; }
+    public RenderPassFboEntry ShadowFbo { get; private set; }
+    public RenderPassFboEntry PostFboA { get; private set; }
+    public RenderPassFboEntry PostFboB { get; private set; }
 
     private readonly List<IRenderPassDescriptor>[] _renderTargets;
 
@@ -46,12 +43,12 @@ internal class RenderPasses
         switch (targetId)
         {
             case RenderTargetId.Scene:
-                var scenePass = (SceneRenderPass)(_renderTargets[(int)RenderTargetId.Scene][0]);
+                var scenePass = (IScenePass)(_renderTargets[(int)RenderTargetId.Scene][0]);
                 var sceneClear = scenePass.Clear!.Value;
                 scenePass.Clear = sceneClear with { ClearColor = mutation.ClearColor!.Value };
                 break;
-            case RenderTargetId.SceneLight:
-                var lightPass = (LightRenderPass)(_renderTargets[(int)RenderTargetId.SceneLight][0]);
+            case RenderTargetId.Light:
+                var lightPass = (LightRenderPass)(_renderTargets[(int)RenderTargetId.Light][0]);
                 var lightClear = lightPass.Clear!.Value;
                 lightPass.Clear = lightClear with { ClearColor = mutation.ClearColor!.Value };
                 break;
@@ -62,12 +59,8 @@ internal class RenderPasses
 
     public void RegisterRenderPass(RenderTargetId target, IRenderPassDescriptor pass)
     {
-        if (pass.Op == RenderPassOp.FullscreenQuad && pass is not FsqRenderPass)
-            throw new InvalidOperationException($"RenderPass: FullscreenQuad require {nameof(FsqRenderPass)}");
-
         if (pass.Op == RenderPassOp.Blit && pass is not BlitRenderPass)
             throw new InvalidOperationException($"RenderPass: Blit require {nameof(BlitRenderPass)}");
-
 
         _renderTargets[(int)target].Add(pass);
     }
@@ -75,14 +68,13 @@ internal class RenderPasses
 
     public void CreateSceneBuffer()
     {
-        if (_sceneFbo.IsValid())
+        if (SceneFbo.IsValid)
             throw new InvalidOperationException("Scene buffer is already created");
 
-        var fboId =
-            _graphics.CreateFramebuffer(new FrameBufferDesc(SizeRatio: Vector2.One, DepthStencilBuffer: true),
-                out var meta);
+        var desc = new FrameBufferDesc(SizeRatio: Vector2.One, DepthStencilBuffer: true);
+        var fboId = _graphics.CreateFramebuffer(in desc, out var meta);
 
-        _sceneFbo = new RenderPassEntry(fboId, meta);
+        SceneFbo = RenderPassFboEntry.From(fboId, in meta);
     }
 
     public void CreateMultisampleBuffer(Vector2 sizeRatio, uint samples)
@@ -91,27 +83,78 @@ internal class RenderPasses
         if (samples is not (0 or 2 or 4 or 8))
             throw new ArgumentOutOfRangeException(nameof(samples), "Valid samples are 0,2,4,8");
 
-        if (_multisampleFbo.IsValid())
+        if (MultisampleFbo.IsValid)
             throw new InvalidOperationException("Multisample buffer is already created");
 
-        var fboId = _graphics.CreateFramebuffer(new FrameBufferDesc(
-            SizeRatio: sizeRatio, DepthStencilBuffer: true, Msaa: samples > 0, Samples: samples), out var meta);
+        var desc = new FrameBufferDesc(
+            SizeRatio: sizeRatio, DepthStencilBuffer: true, Msaa: samples > 0, Samples: samples);
+        
+        var fboId = _graphics.CreateFramebuffer(in desc, out var meta);
 
-        _multisampleFbo = new RenderPassEntry(fboId, meta);
+        MultisampleFbo = RenderPassFboEntry.From(fboId, in meta);
+    }
+    
+    public void CreateShadowBuffer(Vector2D<int> absoluteSize)
+    {
+        ArgumentOutOfRangeException.ThrowIfLessThan(absoluteSize.X, 64);
+        ArgumentOutOfRangeException.ThrowIfLessThan( absoluteSize.Y, 64);
+        ArgumentOutOfRangeException.ThrowIfGreaterThan(absoluteSize.X, 4096);
+        ArgumentOutOfRangeException.ThrowIfGreaterThan(absoluteSize.Y, 4096);
+
+        if (ShadowFbo.IsValid)
+            throw new InvalidOperationException("Shadow buffer is already created");
+
+        var desc = new FrameBufferDesc(SizeRatio:Vector2.One, AbsoluteSize: absoluteSize, DepthStencilBuffer: true);
+        
+        var fboId = _graphics.CreateFramebuffer(in desc , out var meta);
+
+        ShadowFbo =  RenderPassFboEntry.From(fboId, in meta);
     }
 
     public void CreateLightBuffer(Vector2 sizeRatio, TexturePreset preset)
     {
         ValidateSizeRatio(sizeRatio);
-        if (_lightFbo.IsValid())
+        if (LightFbo.IsValid)
             throw new InvalidOperationException("Light buffer is already created");
 
-        var fboId = _graphics.CreateFramebuffer(
-            new FrameBufferDesc(SizeRatio: sizeRatio, TexturePreset: preset,
-                DepthStencilBuffer: false), out var meta);
+        var desc = new FrameBufferDesc(SizeRatio: sizeRatio,
+            TexturePreset: preset,
+            DepthStencilBuffer: false);
+        
+        var fboId = _graphics.CreateFramebuffer(in desc , out var meta);
 
-        _lightFbo = new RenderPassEntry(fboId, meta);
+        LightFbo = RenderPassFboEntry.From(fboId, in meta);
     }
+    
+    public void CreatePostProcessBuffer_A(Vector2 sizeRatio)
+    {
+        if (PostFboA.IsValid)
+            throw new InvalidOperationException("Post Process buffer is already created");
+
+        PostFboA= CreatePostProcessBuffer(sizeRatio);
+    }
+    
+    public void CreatePostProcessBuffer_B(Vector2 sizeRatio)
+    {
+        if (PostFboB.IsValid)
+            throw new InvalidOperationException("Post Process buffer is already created");
+
+        PostFboB = CreatePostProcessBuffer(sizeRatio);
+    }
+
+    private RenderPassFboEntry CreatePostProcessBuffer(Vector2 sizeRatio)
+    {
+        ValidateSizeRatio(sizeRatio);
+
+        var desc = new FrameBufferDesc(SizeRatio:Vector2.One, 
+            TexturePreset: TexturePreset.LinearMipmapRepeat, 
+            DepthStencilBuffer: false);
+        
+        var fboId = _graphics.CreateFramebuffer(in desc , out var meta);
+
+        return RenderPassFboEntry.From(fboId, in meta);
+    }
+
 
     private void ValidateSizeRatio(Vector2 sizeRatio)
     {
@@ -119,15 +162,6 @@ internal class RenderPasses
         ArgumentOutOfRangeException.ThrowIfLessThanOrEqual(sizeRatio.Y, 0, nameof(sizeRatio.Y));
         ArgumentOutOfRangeException.ThrowIfGreaterThan(sizeRatio.X, 1, nameof(sizeRatio.X));
         ArgumentOutOfRangeException.ThrowIfGreaterThan(sizeRatio.Y, 1, nameof(sizeRatio.Y));
-    }
-
-    public struct RenderPassEntry(FrameBufferId fboId, FrameBufferMeta fboMeta)
-    {
-        public readonly FrameBufferId FboId = fboId;
-        public readonly FrameBufferMeta FboMeta = fboMeta;
-        public ShaderId ShaderId = default;
-
-        public bool IsValid() => FboId.IsValid();
     }
 }
 

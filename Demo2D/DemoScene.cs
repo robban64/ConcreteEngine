@@ -100,7 +100,7 @@ public sealed class DemoScene : GameScene
             },
             LightTarget = new LightTargetDesc
             {
-                LightShader = lightPassShader.ResourceId,
+                LightShaderId = lightPassShader.ResourceId,
                 Blend = BlendMode.Additive,
                 ClearColor = Color4.FromRgba(125, 125, 150),
                 SizeRatio = new Vector2(0.2f, 0.2f),
@@ -108,7 +108,7 @@ public sealed class DemoScene : GameScene
             },
             ScreenTarget = new ScreenTargetDesc
             {
-                CompositeShaderId = lightComposite.ResourceId
+                ScreenShaderId = lightComposite.ResourceId
             }
         });
     }

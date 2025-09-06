@@ -45,15 +45,22 @@ internal class Render2D : IRender
         }
     }
 
-    public void RenderScenePass(SceneRenderPass pass, RenderPipeline submitter)
+    public void RenderScenePass(IScenePass pass, RenderPipeline submitter)
     {
-        submitter.DrainCommandQueue(RenderTargetId.Scene);
+        if (pass is SceneRenderPass)
+        {
+            submitter.DrainCommandQueue(RenderTargetId.Scene);
+        }
+        else if (pass is LightRenderPass lightPass)
+        {
+            _gfx.UseShader(lightPass.Shader);
+            submitter.DrainCommandQueue(RenderTargetId.Light);
+        }
+            
     }
 
-    public void RenderLightPass(LightRenderPass lightPass, RenderPipeline submitter)
+    public void RenderDepthPass(IDepthPass depthPass, RenderPipeline submitter)
     {
-        _gfx.UseShader(lightPass.Shader);
-        submitter.DrainCommandQueue(RenderTargetId.SceneLight);
     }
 
     public void MutateRenderPass(RenderTargetId targetId, in RenderPassMutation mutation)
@@ -65,8 +72,8 @@ internal class Render2D : IRender
         ArgumentNullException.ThrowIfNull(desc.SceneTarget);
         ArgumentNullException.ThrowIfNull(desc.LightTarget);
         ArgumentNullException.ThrowIfNull(desc.ScreenTarget);
-        desc.LightTarget.LightShader.IsValidOrThrow();
-        desc.ScreenTarget.CompositeShaderId.IsValidOrThrow();
+        desc.LightTarget.LightShaderId.IsValidOrThrow();
+        desc.ScreenTarget.ScreenShaderId.IsValidOrThrow();
 
         // Scene Target setup
         var sceneTarget = desc.SceneTarget;
@@ -100,22 +107,21 @@ internal class Render2D : IRender
 
         // Light Passes
         // Pass 0: Draw light into FBO
-        _registry.RegisterRenderPass(RenderTargetId.SceneLight, new LightRenderPass
+        _registry.RegisterRenderPass(RenderTargetId.Light, new LightRenderPass
         {
             TargetFbo = _registry.LightFbo.FboId,
-            Shader = lightTarget.LightShader,
+            Shader = lightTarget.LightShaderId,
             Clear = new RenderPassClearDesc(lightTarget.ClearColor, ClearBufferFlag.Color),
             Blend = lightTarget.Blend,
-            DepthTest = false
         });
 
         // Screen Passes
         // Pass 0: Combine scene and light fbo texture into final scene
-        _registry.RegisterRenderPass(RenderTargetId.Screen, new FsqRenderPass
+        _registry.RegisterRenderPass(RenderTargetId.Screen, new IfsqPass
         {
             TargetFbo = default,
-            SourceTextures = [_registry.SceneFbo.FboMeta.ColTexId, _registry.LightFbo.FboMeta.ColTexId],
-            Shader = screenTarget.CompositeShaderId
+            SourceTextures = [_registry.SceneFbo.ColTexId, _registry.LightFbo.ColTexId],
+            Shader = screenTarget.ScreenShaderId
         });
     }
 }

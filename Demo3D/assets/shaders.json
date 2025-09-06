@@ -8,6 +8,29 @@
       "samplers": ["uTexture"]
     },
 	{
+	  "name": "Composite",
+	  "vertexFilename": "screen.vert.glsl",
+	  "fragmentFilename": "composite.frag.glsl",
+	  "samplers": ["uSceneTex", "uLightTex"]
+	},
+	{
+	  "name": "Present",
+	  "vertexFilename": "screen.vert.glsl",
+	  "fragmentFilename": "present.frag.glsl",
+	  "samplers": ["uTexture"]
+	},
+	{
+	  "name": "ColorFilter",
+	  "vertexFilename": "screen.vert.glsl",
+	  "fragmentFilename": "color-filter.frag.glsl",
+	  "samplers": ["uScene"]
+	},
+	{
+	  "name": "LightPass",
+	  "vertexFilename": "screen.vert.glsl",
+	  "fragmentFilename": "light-pass.frag.glsl"
+	},
+	{
 	  "name": "Diffuse",
 	  "vertexFilename": "diffuse.vert.glsl",
 	  "fragmentFilename": "diffuse.frag.glsl",

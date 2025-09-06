@@ -71,7 +71,13 @@ public sealed class Demo3DScene : GameScene
         var assets = Context.GetSystem<IAssetSystem>();
 
         var screenShader = assets.Get<Shader>("Screen");
+        var compositeShader = assets.Get<Shader>("Composite");
+        var presentShader = assets.Get<Shader>("Present");
 
+        var lightShader = assets.Get<Shader>("LightPass");
+        var colorFilterShader = assets.Get<Shader>("ColorFilter");
+
+        
         builder.RegisterRender3D(new RenderTargetDescriptor
         {
             SceneTarget = new SceneTargetDesc
@@ -79,10 +85,21 @@ public sealed class Demo3DScene : GameScene
                 ClearColor = Colors.CornflowerBlue,
                 Samples = 4
             },
+            LightTarget = new LightTargetDesc
+            {
+                LightShaderId = lightShader.ResourceId,
+                Blend = BlendMode.Additive,
+                TexPreset = TexturePreset.LinearMipmapRepeat
+            },
+            PostEffectTarget = new PostEffectTargetDesc
+            {
+                EffectShaderId = colorFilterShader.ResourceId,
+                CompositeShaderId = compositeShader.ResourceId,
+            },
             ScreenTarget = new ScreenTargetDesc
             {
-                CompositeShaderId = screenShader.ResourceId
-            }
+                ScreenShaderId = presentShader.ResourceId
+            },
         });
     }
 

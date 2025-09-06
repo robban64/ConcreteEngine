@@ -10,6 +10,6 @@ internal interface IRender
     void MutateRenderPass(RenderTargetId targetId, in RenderPassMutation mutation);
     void RegisterRenderTargetsFrom(RenderTargetDescriptor desc);
     void PrepareRender(float alpha, in RenderGlobalSnapshot renderGlobals);
-    void RenderScenePass(SceneRenderPass pass, RenderPipeline submitter);
-    void RenderLightPass(LightRenderPass lightPass, RenderPipeline submitter);
+    void RenderScenePass(IScenePass pass, RenderPipeline submitter);
+    void RenderDepthPass(IDepthPass depthPass, RenderPipeline submitter);
 }

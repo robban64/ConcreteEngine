@@ -1,5 +1,6 @@
 using System.Numerics;
 using ConcreteEngine.Common;
+using ConcreteEngine.Common.Extensions;
 using Silk.NET.Maths;
 
 namespace ConcreteEngine.Core;
@@ -8,7 +9,7 @@ public sealed class Camera2D : ICamera
 {
     private bool _dirty = true;
 
-    private Vector2 _translation = Vector2.Zero;
+    private Vector2 _position = Vector2.Zero;
     private float _rotation = 0f;
     private float _zoom = 1f;
     private Vector2D<int> _viewportSize;
@@ -16,13 +17,15 @@ public sealed class Camera2D : ICamera
     private Matrix4x4 _viewMatrix = Matrix4x4.Identity;
     private Matrix4x4 _projectionMatrix = Matrix4x4.Identity;
     private Matrix4x4 _projectionViewMatrix = Matrix4x4.Identity;
+
+    public Vector3 Translation => _position.ToVec3();
     
-    public Vector2 Translation
+    public Vector2 Position
     {
-        get => _translation;
+        get => _position;
         set
         {
-            _translation = value;
+            _position = value;
             _dirty = true;
         }
     }
@@ -96,11 +99,11 @@ public sealed class Camera2D : ICamera
         if (PixelSnap && _zoom > 0f)
         {
             float step = 1f / _zoom; // world units per screen pixel at current zoom
-            _translation.X = MathF.Round(_translation.X / step) * step;
-            _translation.Y = MathF.Round(_translation.Y / step) * step;
+            _position.X = MathF.Round(_position.X / step) * step;
+            _position.Y = MathF.Round(_position.Y / step) * step;
         }
 
-        var translate = Matrix4x4.CreateTranslation(new Vector3(-_translation, 0f));
+        var translate = Matrix4x4.CreateTranslation(new Vector3(-_position, 0f));
         var rotate = _rotation != 0f ? Matrix4x4.CreateRotationZ(-_rotation) : Matrix4x4.Identity;
         _viewMatrix = rotate * translate;
 
@@ -147,12 +150,12 @@ public sealed class Camera2D : ICamera
         float invZoom = 1f / _zoom;
         float viewWidth = _viewportSize.X * invZoom;
         float viewHeight = _viewportSize.Y * invZoom;
-        return new RectF(_translation.X, _translation.Y, viewWidth, viewHeight);
+        return new RectF(_position.X, _position.Y, viewWidth, viewHeight);
     }
 
     internal void CopyFrom(Camera2D from)
     {
-        _translation = from.Translation;
+        _position = from.Position;
         _rotation = from.Rotation;
         _zoom = from.Zoom;
         _viewportSize = from.ViewportSize;

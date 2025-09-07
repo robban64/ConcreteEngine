@@ -37,11 +37,6 @@ internal class Render2D : IRender
         var projectionViewMatrix = _camera.ProjectionViewMatrix;
         foreach (var material in _materialStore.Materials)
         {
-            if (material.HasViewProjection)
-            {
-                _gfx.UseShader(material.ShaderId);
-                _gfx.SetUniform(ShaderUniform.ProjectionViewMatrix, in projectionViewMatrix);
-            }
         }
     }
 

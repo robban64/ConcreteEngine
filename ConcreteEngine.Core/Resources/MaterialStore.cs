@@ -20,6 +20,7 @@ public sealed class MaterialStore
     private int[] _emptySlots;
 
     public IReadOnlyList<Material> Materials => _materials;
+    
 
     internal MaterialStore(IReadOnlyList<MaterialTemplate> templates)
     {

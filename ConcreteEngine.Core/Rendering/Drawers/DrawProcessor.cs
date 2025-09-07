@@ -27,10 +27,10 @@ internal sealed class DrawProcessor
     
     public IReadOnlyList<ICommandDrawer> Drawers => _drawers;
 
-    internal DrawProcessor(IGraphicsDevice graphics, MaterialStore materialStore)
+    internal DrawProcessor(IGraphicsDevice graphics, MaterialBinder materialBinder)
     {
         _graphics = graphics;
-        _materialBinder = new MaterialBinder(graphics, materialStore);
+        _materialBinder = materialBinder;
 
     }
 
@@ -53,10 +53,9 @@ internal sealed class DrawProcessor
 
     public void Prepare(in RenderGlobalSnapshot renderGlobals)
     {
-        _materialBinder.Prepare(in  renderGlobals);
         foreach (var drawer in _drawers)
         {
-            drawer.Prepare(in  renderGlobals);
+            drawer.Prepare(in renderGlobals);
         }
     }
 

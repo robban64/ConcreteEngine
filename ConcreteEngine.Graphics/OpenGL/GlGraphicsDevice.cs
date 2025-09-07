@@ -60,7 +60,8 @@ public sealed class GlGraphicsDevice : IGraphicsDevice<GlGraphicsContext>
     private readonly GL _gl;
     private readonly GlGraphicsContext _gfx;
     private readonly GlResourceFactory _resourceFactory;
-    private readonly UniformRegistry _uniformRegistry;
+    private readonly GlShaderFactory _shaderFactory;
+    private readonly UniformTableRegistry _uniformTableRegistry;
     private readonly ResourceDisposeQueue _disposeQueue;
 
     private readonly PrimitiveMeshes _primitives;
@@ -86,7 +87,7 @@ public sealed class GlGraphicsDevice : IGraphicsDevice<GlGraphicsContext>
         Configuration = new GraphicsConfiguration(CreateDeviceCapabilities(gl));
 
         //_targetRegistry = new RenderTargetRegistry();
-        _uniformRegistry = new UniformRegistry();
+        _uniformTableRegistry = new UniformTableRegistry();
         _disposeQueue = new ResourceDisposeQueue();
 
         var contextBindingView = new GlContextBindingView(
@@ -98,9 +99,10 @@ public sealed class GlGraphicsDevice : IGraphicsDevice<GlGraphicsContext>
             fboStore: _fboStore,
             rboStore: _rboStore
         );
-        _gfx = new GlGraphicsContext(gl, Configuration, contextBindingView, _uniformRegistry, in initialFrameCtx);
+        _gfx = new GlGraphicsContext(gl, Configuration, contextBindingView, _uniformTableRegistry, in initialFrameCtx);
 
         _resourceFactory = new GlResourceFactory(_gfx, capabilities);
+        _shaderFactory = new GlShaderFactory(_gfx, capabilities);
 
         Console.WriteLine($"OpenGL version {capabilities.GlVersion} loaded.");
         Console.WriteLine("--Device Capability--");
@@ -131,7 +133,7 @@ public sealed class GlGraphicsDevice : IGraphicsDevice<GlGraphicsContext>
 
     public UniformTable GetShaderUniforms(ShaderId shaderId)
     {
-        return _uniformRegistry.Get(shaderId);
+        return _uniformTableRegistry.Get(shaderId);
     }
 
     private void RecreateRenderTargetsIfNeeded()
@@ -216,13 +218,12 @@ public sealed class GlGraphicsDevice : IGraphicsDevice<GlGraphicsContext>
 
     public ShaderId CreateShader(string vertexSource, string fragmentSource, string[] samplers)
     {
-        var handle = _resourceFactory.CreateShader(vertexSource, fragmentSource, samplers,
+        var handle = _shaderFactory.CreateShader(vertexSource, fragmentSource, samplers,
             out var uniformTable, out var meta);
-
 
         var shaderId = _shaderStore.Add(in meta, in handle);
 
-        _uniformRegistry.Add(shaderId, uniformTable);
+        _uniformTableRegistry.Add(shaderId, uniformTable);
         return shaderId;
     }
 

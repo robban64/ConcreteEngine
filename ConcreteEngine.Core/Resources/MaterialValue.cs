@@ -1,5 +1,6 @@
 #region
 
+using System.Numerics;
 using ConcreteEngine.Graphics;
 using ConcreteEngine.Graphics.Resources;
 
@@ -7,28 +8,20 @@ using ConcreteEngine.Graphics.Resources;
 
 namespace ConcreteEngine.Core.Resources;
 
-public interface IMaterialValue : IEquatable<IMaterialValue>
+public interface IMaterialValue;
+
+public static class MatValues
 {
-    UniformValueKind Kind { get; }
+    public readonly record struct IntVal(int Value): IMaterialValue;
+    public readonly record struct FloatVal(float Value): IMaterialValue;
+    public readonly record struct Vec2Val(Vector2 Value): IMaterialValue;
+    public readonly record struct Vec3Val(Vector3 Value): IMaterialValue;
+    public readonly record struct Vec4Val(Vector4 Value): IMaterialValue;
+    public readonly record struct Mat3Val(in Matrix3 Value): IMaterialValue;
+
+    public readonly struct Mat4Val(in Matrix4x4 value) : IMaterialValue
+    {
+        public readonly Matrix4x4 Value = value;
+    }
 }
 
-public readonly struct MaterialValue<T> : IMaterialValue
-    where T : struct, IEquatable<T>
-{
-    public MaterialValue(T value, UniformValueKind kind)
-    {
-        Value = value;
-        Kind = kind;
-    }
-
-    public MaterialValue(in T value, UniformValueKind kind)
-    {
-        Value = value;
-        Kind = kind;
-    }
-
-    public T Value { get; }
-    public UniformValueKind Kind { get; }
-
-    public bool Equals(IMaterialValue? other) => other is MaterialValue<T> tOther && Value.Equals(tOther.Value);
-}

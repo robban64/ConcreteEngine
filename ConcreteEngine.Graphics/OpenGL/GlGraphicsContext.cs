@@ -24,7 +24,7 @@ public sealed class GlGraphicsContext : IGraphicsContext
     private readonly int _glMajor = 0;
 
     private readonly GlContextBindingView _store;
-    private readonly UniformRegistry _uniformRegistry;
+    private readonly UniformTableRegistry _uniformTableRegistry;
 
     private BlendMode _blendMode = BlendMode.Alpha;
     private bool _depthTest = true;
@@ -63,13 +63,13 @@ public sealed class GlGraphicsContext : IGraphicsContext
         GL gl,
         GraphicsConfiguration configuration,
         GlContextBindingView store,
-        UniformRegistry uniformRegistry,
+        UniformTableRegistry uniformTableRegistry,
         in FrameMetaInfo initialFrameCtx)
     {
         _gl = gl;
         Configuration = configuration;
         _store = store;
-        _uniformRegistry = uniformRegistry;
+        _uniformTableRegistry = uniformTableRegistry;
 
         _boundTextures = new TextureId[configuration.MaxTextureImageUnits];
 
@@ -507,7 +507,7 @@ public sealed class GlGraphicsContext : IGraphicsContext
         }
 
         var handle = _store.ShaderStore.GetHandle(id);
-        var uniformTable = _uniformRegistry.Get(id);
+        var uniformTable = _uniformTableRegistry.Get(id);
 
         _gl.UseProgram(handle.Handle);
         _boundShaderId = id;

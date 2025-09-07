@@ -6,7 +6,7 @@ using ConcreteEngine.Graphics.Error;
 
 namespace ConcreteEngine.Graphics.Resources;
 
-internal sealed class UniformRegistry
+internal sealed class UniformTableRegistry
 {
     private readonly SortedList<int, UniformTable> _shaderUniforms = new(8);
 

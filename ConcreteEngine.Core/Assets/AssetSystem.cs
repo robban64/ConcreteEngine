@@ -55,8 +55,7 @@ public sealed class AssetSystem : IAssetSystem
                 new JsonStringEnumConverter(JsonNamingPolicy.CamelCase),
                 new Vector2Converter(),
                 new Vector3Converter(),
-                new Vector4Converter(),
-                new MaterialValueConverter()
+                new Vector4Converter()
             }
         };
     }

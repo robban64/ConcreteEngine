@@ -73,19 +73,11 @@ interface IAssetMaterialValue
     IMaterialValue ToMaterialValue();
 }
 
-public readonly struct AssetMaterialValue<T> : IAssetMaterialValue where T : struct, IEquatable<T>
-{
-    public T Value { get; init; }
-    public UniformValueKind Kind { get; init; }
-    public IMaterialValue ToMaterialValue() => ToMaterialValueInternal();
-    private MaterialValue<T> ToMaterialValueInternal() => new(Value, Kind);
-}
 
 internal sealed record AssetMaterialTemplate(
     string Name,
     string Shader,
-    string[]? Textures,
-    Dictionary<ShaderUniform, IAssetMaterialValue>? Defaults
+    string[]? Textures
 ) : IAssetManifestRecord
 {
     public Vector4 Color { get; init; } = Vector4.One;

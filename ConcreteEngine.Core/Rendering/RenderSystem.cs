@@ -36,10 +36,12 @@ public sealed class RenderSystem : IRenderSystem
     private readonly IGraphicsDevice _graphics;
     private readonly IGraphicsContext _gfx;
     private readonly MaterialStore _materialStore;
+    private readonly MaterialBinder _materialBinder;
     private readonly DrawCommandCollector _commandCollector;
     private readonly RenderPipeline _commandSubmitter;
-    private readonly BatcherRegistry _batches = new();
     private readonly DrawProcessor _drawRegistry;
+
+    private readonly BatcherRegistry _batches = new();
 
     private IRender _render;
     private SceneDrawProducer _sceneDrawProducer = null!;
@@ -52,8 +54,9 @@ public sealed class RenderSystem : IRenderSystem
         _graphics = graphics;
         _gfx = graphics.Gfx;
         _materialStore = materialStore;
-
-        _drawRegistry = new DrawProcessor(_graphics, _materialStore);
+        
+        _materialBinder = new MaterialBinder(_graphics, _materialStore);
+        _drawRegistry = new DrawProcessor(_graphics, _materialBinder);
 
         _commandCollector = new DrawCommandCollector();
         _commandSubmitter = new RenderPipeline();
@@ -108,7 +111,7 @@ public sealed class RenderSystem : IRenderSystem
         if (renderType == RenderType.Render2D)
             _render = new Render2D(_graphics, _materialStore);
         else
-            _render = new Render3D(_graphics, _materialStore);
+            _render = new Render3D(_graphics, _materialStore, _materialBinder);
         
         _render.RegisterRenderTargetsFrom(desc);
         _drawRegistry.Initialize(null, (Render3D)_render);
@@ -136,7 +139,6 @@ public sealed class RenderSystem : IRenderSystem
         if (frameCtx.ViewportSize != _render.Camera.ViewportSize)
             _render.Camera.ViewportSize = frameCtx.ViewportSize;
         
-        _sceneDrawProducer.SetSceneGlobals(in renderGlobals);
 
         _graphics.StartFrame(in frameCtx);
         PrepareRenderer(alpha, in renderGlobals);
@@ -148,6 +150,9 @@ public sealed class RenderSystem : IRenderSystem
 
     private void PrepareRenderer(float alpha, in RenderGlobalSnapshot renderGlobals)
     {
+        _sceneDrawProducer.SetSceneGlobals(in renderGlobals);
+        
+        _materialBinder.Prepare(Camera, in renderGlobals);
         _render.PrepareRender(alpha, in renderGlobals);
         _drawRegistry.Prepare(in renderGlobals);
         _commandCollector.Collect(alpha, _commandSubmitter);

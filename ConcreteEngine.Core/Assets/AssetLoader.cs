@@ -176,7 +176,6 @@ internal sealed class AssetLoader
             FragShaderFilename = record.FragmentFilename,
             ResourceId = resourceId,
             Samplers = record.Samplers?.Length ?? 0,
-            UniformTable = uniforms
         };
     }
 
@@ -193,26 +192,15 @@ internal sealed class AssetLoader
             }
         }
 
-        var valuesCount = record.Defaults?.Count ?? 4;
-        Dictionary<ShaderUniform, IMaterialValue> materialValues = new(valuesCount);
-
-        if (record.Defaults != null)
-        {
-            foreach (var (uniform, value) in record.Defaults)
-            {
-                materialValues.Add(uniform, value.ToMaterialValue());
-            }
-        }
-
-
-        var template = new MaterialTemplate(materialValues)
+        var shader = getShader(record.Shader);
+        var template = new MaterialTemplate
         {
             Name = record.Name,
-            Shader = getShader(record.Shader),
+            Shader = shader,
             Textures = textures,
             Color = record.Color
         };
-        template.Process();
+
         return template;
     }
 

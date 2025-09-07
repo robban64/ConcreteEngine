@@ -5,7 +5,7 @@ namespace ConcreteEngine.Graphics;
 
 
 [StructLayout(LayoutKind.Sequential, Pack = 4)]
-public readonly struct Matrix3
+public readonly record struct Matrix3
 {
     public readonly float M11, M12, M13;
     public readonly float M21, M22, M23;

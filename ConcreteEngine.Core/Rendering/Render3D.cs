@@ -14,6 +14,7 @@ internal sealed class Render3D: IRender
     private readonly IGraphicsDevice _graphics;
     private readonly IGraphicsContext _gfx;
     private readonly MaterialStore _materialStore;
+    private readonly MaterialBinder _materialBinder;
 
     private readonly RenderPasses _registry;
     private readonly Camera3D _camera;
@@ -24,22 +25,47 @@ internal sealed class Render3D: IRender
  
 
 
-    public Render3D(IGraphicsDevice graphics, MaterialStore  materialStore)
+    public Render3D(IGraphicsDevice graphics, MaterialStore  materialStore, MaterialBinder materialBinder)
     {
         _graphics = graphics;
         _gfx = _graphics.Gfx;
         _materialStore = materialStore;
+        _materialBinder = materialBinder;
         _camera = new Camera3D();
         _registry =  new RenderPasses(graphics);
 
     }
     
     
-    public void PrepareRender(float alpha, in RenderGlobalSnapshot renderGlobals )
+    public void PrepareRender(float alpha, in RenderGlobalSnapshot snapshot )
     {
         var projectionViewMatrix = _camera.ProjectionViewMatrix;
+
+        var cameraUniforms = new GlobalCameraUniformValues(
+             viewMat: _camera.ViewMatrix,
+             projMat: _camera.ProjectionMatrix,
+             projViewMat: in projectionViewMatrix,
+             cameraPos: _camera.Translation
+        );
+
+        var lightUniforms = new GlobalLightUniformValues(
+            ambient: snapshot.Ambient,
+            dirLight: new DirLightUniformValues(
+                direction: snapshot.DirLight.Direction,
+                diffuse:snapshot.DirLight.Diffuse,
+                specular:snapshot.DirLight.Specular,
+                intensity: snapshot.DirLight.Intensity
+            )
+        );
         
-        
+        var globalUniforms = new GlobalUniformValues(in cameraUniforms, in lightUniforms);
+
+        foreach (var material in _materialStore.Materials)
+        {
+            _materialBinder.BindGlobalSlots(material.ShaderId);
+        }
+
+        /*
         foreach (var material in _materialStore.Materials)
         {
             if (material.HasViewProjection)
@@ -47,13 +73,13 @@ internal sealed class Render3D: IRender
                 _gfx.UseShader(material.ShaderId);
                 _gfx.SetUniform(ShaderUniform.ProjectionViewMatrix, in projectionViewMatrix);
             }
-            
+
             if (material.HasCameraPos)
             {
                 _gfx.UseShader(material.ShaderId);
                 _gfx.SetUniform(ShaderUniform.CameraPos, _camera.Translation);
             }
-            
+
             if (material.HasAmbient)
             {
                 _gfx.UseShader(material.ShaderId);
@@ -71,7 +97,7 @@ internal sealed class Render3D: IRender
                 _gfx.SetRawUniform(unforms.Intensity,  renderGlobals.DirLight.Intensity );
             }
 
-        }
+        }*/
         
     }
 

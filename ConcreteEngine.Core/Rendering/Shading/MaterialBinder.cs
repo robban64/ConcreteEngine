@@ -68,18 +68,15 @@ internal sealed class MaterialBinder
 {
     private readonly IGraphicsDevice _graphics;
     private readonly MaterialStore _materialStore;
+    private readonly UniformBinder _uniformBinder;
 
     private int _previousMaterialId = -1;
 
-    private GlobalUniformValues _globalUniformValues;
-
-    private Dictionary<ShaderId, ShaderGlobalBindings> _shaderBindingMap = new();
-    private Dictionary<MaterialId, MaterialBindings> _materialBindingMap = new();
-
-    internal MaterialBinder(IGraphicsDevice graphics, MaterialStore materialStore)
+    internal MaterialBinder(IGraphicsDevice graphics, MaterialStore materialStore,UniformBinder uniformBinder)
     {
         _graphics = graphics;
         _materialStore = materialStore;
+        _uniformBinder = uniformBinder;
     }
 
 
@@ -87,78 +84,24 @@ internal sealed class MaterialBinder
     {
         _previousMaterialId = -1;
         
-        var cameraUniforms = new GlobalCameraUniformValues(
-            viewMat: camera.ViewMatrix,
-            projMat: camera.ProjectionMatrix,
-            projViewMat: camera.ProjectionViewMatrix,
-            cameraPos: camera.Translation
-        );
-
-        var lightUniforms = new GlobalLightUniformValues(
-            ambient: snapshot.Ambient,
-            dirLight: new DirLightUniformValues(
-                direction: snapshot.DirLight.Direction,
-                diffuse:snapshot.DirLight.Diffuse,
-                specular:snapshot.DirLight.Specular,
-                intensity: snapshot.DirLight.Intensity
-            )
-        );
-        
-        _globalUniformValues = new GlobalUniformValues(in cameraUniforms, in lightUniforms);
     }
 
-    public void BindGlobalSlots(ShaderId shaderId)
+    public void BindDraw(in DrawObjectUniformRecord rec)
     {
-        var gfx = _graphics.Gfx;
-
-        if (!_shaderBindingMap.TryGetValue(shaderId, out var shaderBindings))
-        {
-            var table = _graphics.GetShaderUniforms(shaderId);
-            _shaderBindingMap[shaderId] = shaderBindings = new ShaderGlobalBindings(table);
-        }
-
-        gfx.UseShader(shaderId);
-
-        var cb = shaderBindings.GlobalCameraBinding;
-        var cv = _globalUniformValues.CameraUniformValues;
-        if(cb.ViewMat)
-            gfx.SetUniform(ShaderUniform.ViewMatrix, in cv.ViewMat);
-        if(cb.ProjMat)
-            gfx.SetUniform(ShaderUniform.ProjectionMatrix, in cv.ProjMat);
-        if(cb.ProjViewMat)
-            gfx.SetUniform(ShaderUniform.ProjectionViewMatrix, in cv.ProjViewMat);
-        if(cb.CameraPos)
-            gfx.SetUniform(ShaderUniform.CameraPos, in cv.ProjMat);
-        
-        var lb = shaderBindings.GlobalLightUniformsBinding;
-        var cl = _globalUniformValues.LightUniformValues;
-        
-        if(lb.Ambient)
-            gfx.SetUniform(ShaderUniform.Ambient, cl.Ambient);
-        
-        if (lb.HasDirLight)
-        {
-            var dirLight = _globalUniformValues.LightUniformValues.DirLight;
-            gfx.SetRawUniform(lb.DirLight.Direction, dirLight.Direction );
-            gfx.SetRawUniform(lb.DirLight.Diffuse,  dirLight.Diffuse );
-            gfx.SetRawUniform(lb.DirLight.Specular,  dirLight.Specular );
-            gfx.SetRawUniform(lb.DirLight.Intensity,  dirLight.Intensity );
-
-        }
-        
+        _uniformBinder.ApplyDrawObject(in rec);
     }
+
 
     public void BindMaterialSlots(MaterialId materialId)
     {
         if (_previousMaterialId != -1) _previousMaterialId = materialId.Id;
         if (_previousMaterialId == materialId.Id) return;
 
-        if (!_materialBindingMap.TryGetValue(materialId, out var materialBindings))
-            _materialBindingMap[materialId] = materialBindings = new MaterialBindings();
-
 
         var gfx = _graphics.Gfx;
         var material = _materialStore.GetMaterial(materialId);
+        
+        _uniformBinder.ApplyMaterial(new MaterialUniformRecord(materialId, Vector3.One, 24, 1));
 
         gfx.UseShader(material.ShaderId);
 
@@ -166,8 +109,7 @@ internal sealed class MaterialBinder
         {
             gfx.BindTexture(material.SamplerSlots[t], (uint)t);
         }
-
-
+        /*
         foreach (var (uniform, value) in materialBindings.UniformValues)
         {
             switch (value)
@@ -195,6 +137,6 @@ internal sealed class MaterialBinder
                     break;
 
             }
-        }
+        }*/
     }
 }

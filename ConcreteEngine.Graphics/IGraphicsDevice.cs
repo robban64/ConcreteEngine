@@ -15,10 +15,14 @@ public interface IGraphicsDevice : IDisposable
     GraphicsConfiguration Configuration { get; }
     IPrimitiveMeshes Primitives { get; }
 
+    void InitializeData();
+
     void StartFrame(in FrameMetaInfo frameCtx);
     void EndFrame(out FrameRenderResult result);
 
     UniformTable GetShaderUniforms(ShaderId shaderId);
+    IReadOnlyList<UniformBufferId> GetUniformBuffersBySlot(ShaderBufferUniform slot);
+    UniformBufferId GetUboIdBySlot(ShaderBufferUniform slot);
 
     FrameBufferId CreateFramebuffer(in FrameBufferDesc desc, out FrameBufferMeta meta);
     ShaderId CreateShader(string vertexSource, string fragmentSource, string[] samplers);

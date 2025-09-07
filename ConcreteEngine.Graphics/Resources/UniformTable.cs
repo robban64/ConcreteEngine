@@ -10,9 +10,7 @@ namespace ConcreteEngine.Graphics.Resources;
 
 public sealed class UniformTable
 {
-    private static readonly ShaderUniform[] ShaderUniformValues = Enum.GetValues<ShaderUniform>();
-
-    private readonly int[] _locs = new int[ShaderUniformValues.Length];
+    private readonly int[] _locs;
 
     private readonly Dictionary<string, int> _rawUniforms;
     
@@ -23,6 +21,7 @@ public sealed class UniformTable
 
     public UniformTable(List<(string, int)> uniformPairs)
     {
+        _locs = new int [GraphicsEnumCache.ShaderUniformVals.Length];
         _rawUniforms = new Dictionary<string, int>(uniformPairs.Count);
         _uniforms = new List<ShaderUniform>(4);
         _structUniforms = [];
@@ -41,7 +40,7 @@ public sealed class UniformTable
             
         for (int i = 0; i < _locs.Length; i++)
         {
-            var uniformName = ShaderUniformValues[i].ToUniformName();
+            var uniformName = GraphicsEnumCache.ShaderUniformVals[i].ToUniformName();
             if (_rawUniforms.TryGetValue(uniformName, out var uniformLocation))
             {
                 _uniforms.Add((ShaderUniform)uniformLocation);

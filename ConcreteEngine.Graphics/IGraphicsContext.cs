@@ -30,10 +30,12 @@ public interface IGraphicsContext
     void BlitFramebuffer(FrameBufferId fromId, FrameBufferId toId = default, bool linearFilter = true);
     void SetBlendMode(BlendMode blendMode);
     void SetDepthTest(bool depthTest);
+    
     void BindTexture(TextureId resourceId, uint slot);
     void BindMesh(MeshId resourceId);
     void BindVertexBuffer(VertexBufferId resourceId);
     void BindIndexBuffer(IndexBufferId resourceId);
+    void BindUniformBuffer(UniformBufferId resourceId);
 
     void SetVertexBuffer<T>(ReadOnlySpan<T> data) where T : unmanaged;
     void SetIndexBuffer<T>(ReadOnlySpan<T> data) where T : unmanaged;
@@ -41,6 +43,8 @@ public interface IGraphicsContext
     void UploadVertexBuffer<T>(ReadOnlySpan<T> data, int offsetElements) where T : unmanaged;
     void UploadIndexBuffer<T>(ReadOnlySpan<T> data, int offsetElements) where T : unmanaged;
 
+    void UploadUniformGpuData<T>(ShaderBufferUniform slot, in T data) where T : unmanaged, IUniformGpuData;
+    
     void DrawMesh(uint drawCount = 0);
 
     void UseShader(ShaderId resourceId);

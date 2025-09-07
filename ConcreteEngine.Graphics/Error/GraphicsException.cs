@@ -1,3 +1,5 @@
+using System.Runtime.CompilerServices;
+
 namespace ConcreteEngine.Graphics.Error;
 
 public sealed partial class GraphicsException : InvalidOperationException
@@ -41,6 +43,7 @@ public sealed partial class GraphicsException : InvalidOperationException
 
     public static GraphicsException InvalidType<T>(string? name, object other) =>
         new($"Expected type: {Label<T>(name)}. Actual type: {other.GetType().Name}");
+    
 
     public static GraphicsException ShaderLinkFailed(string shaderName, string log) =>
         new($"Failed to link shader '{shaderName}'. Compiler log:\n{log}");
@@ -60,6 +63,9 @@ public sealed partial class GraphicsException : InvalidOperationException
 
     public static GraphicsException CapabilityTooLow<T>(string capabilityName, int attempted, int minimum) =>
         new($"{Label<T>()}: {capabilityName} value {attempted} is below the minimum required ({minimum}).");
+
+    public static GraphicsException InvalidStd140Layout<T>() =>
+        new($"{Label<T>()} contains invalid std layout with size: {Unsafe.SizeOf<T>()}");
 
 
     private static string Label<T>(string? name = null)

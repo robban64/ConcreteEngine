@@ -47,6 +47,9 @@ public sealed class GameEngine : IDisposable
     private FrameRenderResult _frameResult = default;
     
     private UpdateMetaInfo  _updateMeta = default;
+    
+    public T GetFeature<T>() where T : IGameFeature => _features.Get<T>();
+
 
     internal GameEngine(
         IEngineWindowHost windowHost,
@@ -67,8 +70,12 @@ public sealed class GameEngine : IDisposable
         // time
         _gameTime = new GameTime(GameTickUpdate, FpsTickUpdate);
 
+        // input
         _inputSystem = new InputSystem(_input);
 
+        // load static graphics data before assets
+        _graphics.InitializeData();
+        
         // assets
         _assets = new AssetSystem(_graphics, assetConfig.AssetPath, assetConfig.ManifestFilename);
         _assets.Initialize();
@@ -78,16 +85,14 @@ public sealed class GameEngine : IDisposable
 
         // renderer
         _renderer = new RenderSystem(_graphics, _assets.MaterialStore);
-        _renderer.Initialize(_features);
+        _renderer.Initialize();
 
         _systems = new EngineSystemManagerManager(_renderer, _inputSystem, _assets);
         _systems.Initialize();
 
         _nextSceneIndex = 0;
     }
-
-    public T GetFeature<T>() where T : IGameFeature => _features.Get<T>();
-
+    
 
     internal void Update(double delta)
     {

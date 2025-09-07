@@ -24,7 +24,7 @@ public sealed class GlGraphicsContext : IGraphicsContext
     private readonly int _glMajor = 0;
 
     private readonly GlContextBindingView _store;
-    private readonly UniformTableRegistry _uniformTableRegistry;
+    private readonly UniformRegistry _uniformRegistry;
 
     private BlendMode _blendMode = BlendMode.Alpha;
     private bool _depthTest = true;
@@ -38,6 +38,7 @@ public sealed class GlGraphicsContext : IGraphicsContext
     private ShaderId _boundShaderId = new(0);
     private VertexBufferId _boundVertexBufferId = new(0);
     private IndexBufferId _boundIndexBufferId = new(0);
+    private UniformBufferId _boundUniformBufferId = new(0);
     private MeshId _boundVaoId = new(0);
     private readonly TextureId[] _boundTextures;
 
@@ -50,6 +51,8 @@ public sealed class GlGraphicsContext : IGraphicsContext
 
     private int _drawTriangleCount = 0;
     private int _drawCallCount = 0;
+    
+    private readonly DeviceCapabilities _capabilities;
 
     public GraphicsConfiguration Configuration { get; }
     public BlendMode BlendMode => _blendMode;
@@ -61,15 +64,17 @@ public sealed class GlGraphicsContext : IGraphicsContext
 
     internal GlGraphicsContext(
         GL gl,
+        DeviceCapabilities  capabilities,
         GraphicsConfiguration configuration,
         GlContextBindingView store,
-        UniformTableRegistry uniformTableRegistry,
+        UniformRegistry uniformRegistry,
         in FrameMetaInfo initialFrameCtx)
     {
         _gl = gl;
+        _capabilities = capabilities;
         Configuration = configuration;
         _store = store;
-        _uniformTableRegistry = uniformTableRegistry;
+        _uniformRegistry = uniformRegistry;
 
         _boundTextures = new TextureId[configuration.MaxTextureImageUnits];
 
@@ -116,6 +121,7 @@ public sealed class GlGraphicsContext : IGraphicsContext
         BindVertexBuffer(default);
         BindIndexBuffer(default);
         BindFramebuffer(default);
+        BindUniformBuffer(default);
         UseShader(default);
         for (uint i = 0; i < _boundTextures.Length; i++)
         {
@@ -144,6 +150,7 @@ public sealed class GlGraphicsContext : IGraphicsContext
         _boundFboId = default;
         _boundReadFboId = default;
         _currentViewport = _viewport;
+        
     }
 
     public void BeginRenderPass(FrameBufferId fboId, Color4? clear, ClearBufferFlag? flags)
@@ -365,6 +372,21 @@ public sealed class GlGraphicsContext : IGraphicsContext
         _boundIndexBufferId = id;
     }
 
+    public void BindUniformBuffer(UniformBufferId resourceId)
+    {
+        if (_boundUniformBufferId == resourceId) return;
+        if (resourceId == default)
+        {
+            _gl.BindBuffer(BufferTargetARB.ElementArrayBuffer, 0);
+            _boundUniformBufferId = default;
+            return;
+        }
+
+        var handle = _store.UboStore.GetHandle(resourceId);
+        _gl.BindBuffer(BufferTargetARB.UniformBuffer, handle.Handle);
+        _boundUniformBufferId = resourceId;
+    }
+
     public void SetVertexBuffer<T>(ReadOnlySpan<T> data) where T : unmanaged
     {
         ref readonly var meta = ref _store.VboStore.GetMeta(_boundVertexBufferId);
@@ -455,6 +477,38 @@ public sealed class GlGraphicsContext : IGraphicsContext
         CheckGlError(); // throws here
     }
 
+    public unsafe void UploadUniformGpuData<T>(ShaderBufferUniform slot, in T data) where T : unmanaged, IUniformGpuData
+    {
+        var size = (nuint)Unsafe.SizeOf<T>();
+        ref readonly var meta = ref _store.UboStore.GetMeta(_boundUniformBufferId);
+        var handle = _store.UboStore.GetHandle(_boundUniformBufferId);
+        
+        fixed (T* p = &data)
+            _gl.BufferSubData(BufferTargetARB.UniformBuffer, 0, size, p);
+        
+        CheckGlError(); // throws here
+    }
+    public unsafe nuint UploadUniformGpuDataSlice<T>(ShaderBufferUniform slot, in T data, nuint cursorBytes)
+        where T : unmanaged, IUniformGpuData
+    {
+        var size = (nuint)Unsafe.SizeOf<T>();
+        ref readonly var meta = ref _store.UboStore.GetMeta(_boundUniformBufferId);
+        var handle = _store.UboStore.GetHandle(_boundUniformBufferId);
+
+        nuint align = (nuint)_capabilities.GetAlignedStride();
+        nuint offset = AlignUp(cursorBytes, align);
+
+        fixed (T* p = &data)
+            _gl.BufferSubData(BufferTargetARB.UniformBuffer, (nint)offset, size, p);
+
+        _gl.BindBufferRange(BufferTargetARB.UniformBuffer, (uint)slot, handle.Handle, (nint)offset, size);
+        CheckGlError();
+
+        return offset + size;
+
+        static nuint AlignUp(nuint v, nuint a) => a == 0 ? v : (v + (a - 1)) & ~(a - 1);
+    }
+
     public void DrawMesh(uint drawCount = 0)
     {
         ref readonly var meta = ref _store.MeshStore.GetMeta(_boundVaoId);
@@ -507,7 +561,7 @@ public sealed class GlGraphicsContext : IGraphicsContext
         }
 
         var handle = _store.ShaderStore.GetHandle(id);
-        var uniformTable = _uniformTableRegistry.Get(id);
+        var uniformTable = _uniformRegistry.Get(id);
 
         _gl.UseProgram(handle.Handle);
         _boundShaderId = id;

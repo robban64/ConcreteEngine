@@ -4,11 +4,12 @@ using ConcreteEngine.Graphics.Resources;
 
 namespace ConcreteEngine.Core.Rendering;
 
+
 public readonly struct DrawCommandMeta(
-    DrawCommandId id,
-    RenderTargetId target,
-    DrawCommandQueue queue,
-    byte order = 0,
+    DrawCommandId id,   // Id of the type
+    RenderTargetId target, // when to draw
+    DrawCommandQueue queue, // priority
+    byte order = 0, // used for 2D mostly, ZIndex,
     ushort depthKey = 0)
 {
     public readonly DrawCommandId Id = id;
@@ -21,11 +22,12 @@ public readonly struct DrawCommandMeta(
         => new(id,  target, DrawCommandQueue.None, order: layer);
 }
 
+// used for sorting all commands and getting them by idx size stride
 internal readonly struct DrawCommandMetaIndex(in DrawCommandMeta meta, int idx)
     : IComparable<DrawCommandMetaIndex>
 {
     public readonly DrawCommandMeta Meta = meta;
-    public readonly int Idx = idx;
+    public readonly int Idx = idx; // submit index, stable sort
 
     private readonly ulong _sortKey =
         ((ulong)(byte)meta.Target << 56) |

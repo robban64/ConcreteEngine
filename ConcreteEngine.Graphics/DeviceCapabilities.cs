@@ -18,4 +18,9 @@ public sealed record DeviceCapabilities
     public int MaxUniformBlockSize { get; init; }
     public int MaxVertexAttribBindings { get; init; }
     public float MaxAnisotropy  { get; init; }
+    
+    public int UniformBufferOffsetAlignment { get; init; }
+    
+    public uint GetAlignedStride() => ((uint)UniformBufferOffsetAlignment + 15u) & ~15u;
+
 }

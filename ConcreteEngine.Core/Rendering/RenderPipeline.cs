@@ -2,6 +2,7 @@
 
 using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
+using ConcreteEngine.Core.Utils;
 
 #endregion
 
@@ -154,7 +155,7 @@ internal sealed class RenderPipeline : IRenderPipeline
 
     private class DispatchRegistry
     {
-        private readonly ProcessDelegate[] _delegates = new ProcessDelegate[Enum.GetValues<DrawCommandId>().Length];
+        private readonly ProcessDelegate[] _delegates = new ProcessDelegate[EnumCache.DrawCommandVals.Length];
         
         internal void Register<T>(DrawCommandId cmdId) where T : unmanaged, IDrawCommand
         {

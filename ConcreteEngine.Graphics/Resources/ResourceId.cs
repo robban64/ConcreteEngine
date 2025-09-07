@@ -25,6 +25,9 @@ public readonly record struct FrameBufferId(int Id) : IResourceId;
 
 public readonly record struct RenderBufferId(int Id) : IResourceId;
 
+public readonly record struct UniformBufferId(int Id) : IResourceId;
+
+
 public static class ResourceIdExtensions
 {
     [MethodImpl(MethodImplOptions.AggressiveInlining)]

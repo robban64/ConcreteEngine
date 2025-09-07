@@ -1,8 +1,9 @@
-#version 330 core
+#version 420 core
+
 in vec3 Pos;
 out vec4 FragColor;
 
-uniform samplerCube uCubemapTex;
+layout(binding = 0) uniform samplerCube uCubemapTex;
 
 void main()
 {

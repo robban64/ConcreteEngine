@@ -1,9 +1,9 @@
-#version 330 core
+#version 420 core
 
 in vec2 TexCoord; 
 out vec4 FragColor;
 
-uniform sampler2D uTexture; 
+layout(binding = 0) uniform sampler2D uTexture; 
 uniform float uGamma = 1.0;
 
 void main() {

@@ -9,8 +9,8 @@ internal sealed class MeshDrawer: CommandDrawer<DrawCommandMesh>
         Context.MaterialBinder.BindMaterialSlots(cmd.MaterialId);
 
         TransformHelper.GetNormalMatrix(in cmd.Transform, out var normalMatrix);
-        Gfx.SetUniform(ShaderUniform.ModelMatrix, in cmd.Transform);
-        Gfx.SetUniform(ShaderUniform.NormalMatrix, in normalMatrix);
+        Context.MaterialBinder.BindDraw(new DrawObjectUniformRecord(in cmd.Transform, in normalMatrix));
+
 
         Gfx.BindMesh(cmd.MeshId);
         Gfx.DrawMesh(cmd.DrawCount);
@@ -24,8 +24,7 @@ internal sealed class TerrainDrawer : CommandDrawer<DrawCommandTerrain>
         Context.MaterialBinder.BindMaterialSlots(cmd.MaterialId);
 
         TransformHelper.GetNormalMatrix(in cmd.Transform, out var normalMatrix);
-        Gfx.SetUniform(ShaderUniform.ModelMatrix, in cmd.Transform);
-        Gfx.SetUniform(ShaderUniform.NormalMatrix, in normalMatrix);
+        Context.MaterialBinder.BindDraw(new DrawObjectUniformRecord(in cmd.Transform, in normalMatrix));
         Gfx.SetUniform(ShaderUniform.TexCoordRepeat, 20f);
         
         Gfx.BindMesh(cmd.MeshId);

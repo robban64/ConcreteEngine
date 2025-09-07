@@ -20,39 +20,28 @@ public sealed class GlGraphicsDevice : IGraphicsDevice<GlGraphicsContext>
     private const int StoreTier3 = 16;
 
     private readonly ResourceStore<TextureId, TextureMeta, GlTextureHandle> _textureStore = new(
-        initialCapacity: StoreTier1,
-        i => new TextureId(i + 1)
-    );
+        initialCapacity: StoreTier1, i => new TextureId(i + 1));
 
     private readonly ResourceStore<ShaderId, ShaderMeta, GlShaderHandle> _shaderStore = new(
-        initialCapacity: StoreTier2,
-        i => new ShaderId(i + 1)
-    );
+        initialCapacity: StoreTier2, i => new ShaderId(i + 1));
 
-    private readonly ResourceStore<MeshId, MeshMeta, GlMeshHandle> _meshStore = new(
-        initialCapacity: StoreTier2,
-        i => new MeshId(i + 1)
-    );
+    private readonly ResourceStore<MeshId, MeshMeta, GlMeshHandle> _meshStore = new(initialCapacity: StoreTier2,
+        i => new MeshId(i + 1));
 
     private readonly ResourceStore<VertexBufferId, VertexBufferMeta, GlVertexBufferHandle> _vboStore = new(
-        initialCapacity: StoreTier2,
-        i => new VertexBufferId(i + 1)
-    );
+        initialCapacity: StoreTier2, i => new VertexBufferId(i + 1));
 
     private readonly ResourceStore<IndexBufferId, IndexBufferMeta, GlIndexBufferHandle> _iboStore = new(
-        initialCapacity: StoreTier2,
-        i => new IndexBufferId(i + 1)
-    );
+        initialCapacity: StoreTier2, i => new IndexBufferId(i + 1));
 
     private readonly ResourceStore<FrameBufferId, FrameBufferMeta, GlFrameBufferHandle> _fboStore = new(
-        initialCapacity: StoreTier3,
-        i => new FrameBufferId(i + 1)
-    );
+        initialCapacity: StoreTier3, i => new FrameBufferId(i + 1));
 
     private readonly ResourceStore<RenderBufferId, RenderBufferMeta, GlRenderBufferHandle> _rboStore = new(
-        initialCapacity: StoreTier3,
-        i => new RenderBufferId(i + 1)
-    );
+        initialCapacity: StoreTier3, i => new RenderBufferId(i + 1));
+
+    private readonly ResourceStore<UniformBufferId, UniformBufferMeta, GlUniformBufferHandle> _uboStore = new(
+        initialCapacity: StoreTier3, i => new UniformBufferId(i + 1));
 
     #endregion
 
@@ -61,7 +50,7 @@ public sealed class GlGraphicsDevice : IGraphicsDevice<GlGraphicsContext>
     private readonly GlGraphicsContext _gfx;
     private readonly GlResourceFactory _resourceFactory;
     private readonly GlShaderFactory _shaderFactory;
-    private readonly UniformTableRegistry _uniformTableRegistry;
+    private readonly UniformRegistry _uniformRegistry;
     private readonly ResourceDisposeQueue _disposeQueue;
 
     private readonly PrimitiveMeshes _primitives;
@@ -75,7 +64,7 @@ public sealed class GlGraphicsDevice : IGraphicsDevice<GlGraphicsContext>
     public GlGraphicsContext Gfx => _gfx;
     public GraphicsBackend BackendApi => GraphicsBackend.OpenGL;
     IGraphicsContext IGraphicsDevice.Gfx => Gfx;
-    
+
     public IPrimitiveMeshes Primitives => _primitives;
 
     public GlGraphicsDevice(GL gl, in FrameMetaInfo initialFrameCtx)
@@ -84,34 +73,41 @@ public sealed class GlGraphicsDevice : IGraphicsDevice<GlGraphicsContext>
         _viewportSize = initialFrameCtx.ViewportSize;
         _previousViewportSize = initialFrameCtx.ViewportSize;
         var capabilities = CreateDeviceCapabilities(gl);
-        Configuration = new GraphicsConfiguration(CreateDeviceCapabilities(gl));
+        Configuration = new GraphicsConfiguration();
 
         //_targetRegistry = new RenderTargetRegistry();
-        _uniformTableRegistry = new UniformTableRegistry();
+        _uniformRegistry = new UniformRegistry();
         _disposeQueue = new ResourceDisposeQueue();
 
-        var contextBindingView = new GlContextBindingView(
-            textureStore: _textureStore,
-            shaderStore: _shaderStore,
-            meshStore: _meshStore,
-            vboStore: _vboStore,
-            iboStore: _iboStore,
-            fboStore: _fboStore,
-            rboStore: _rboStore
-        );
-        _gfx = new GlGraphicsContext(gl, Configuration, contextBindingView, _uniformTableRegistry, in initialFrameCtx);
+        var contextBindingView = new GlContextBindingView(textureStore: _textureStore, shaderStore: _shaderStore,
+            meshStore: _meshStore, vboStore: _vboStore, iboStore: _iboStore, fboStore: _fboStore, rboStore: _rboStore,
+            uboStore: _uboStore);
+        
+        _gfx = new GlGraphicsContext(gl, capabilities, Configuration, contextBindingView, _uniformRegistry, in initialFrameCtx);
 
         _resourceFactory = new GlResourceFactory(_gfx, capabilities);
         _shaderFactory = new GlShaderFactory(_gfx, capabilities);
 
+        _primitives = new PrimitiveMeshes();
+
         Console.WriteLine($"OpenGL version {capabilities.GlVersion} loaded.");
         Console.WriteLine("--Device Capability--");
         Console.WriteLine(capabilities.ToString());
-
-        
-        _primitives =  new PrimitiveMeshes();
-        _primitives.CreatePrimitives(this);
     }
+
+    public void InitializeData()
+    {
+        _primitives.CreatePrimitives(this);
+        _shaderFactory.InitializeUniformBuffers(SaveUbo);
+        return;
+
+        void SaveUbo(GlUniformBufferHandle handle, UniformBufferMeta meta)
+        {
+            var uboId = _uboStore.Add(in meta, in handle);
+            _uniformRegistry.AddUboToSlot(meta.Binding, uboId);
+        }
+    }
+
 
     public void StartFrame(in FrameMetaInfo frameCtx)
     {
@@ -133,8 +129,14 @@ public sealed class GlGraphicsDevice : IGraphicsDevice<GlGraphicsContext>
 
     public UniformTable GetShaderUniforms(ShaderId shaderId)
     {
-        return _uniformTableRegistry.Get(shaderId);
+        return _uniformRegistry.Get(shaderId);
     }
+
+    public IReadOnlyList<UniformBufferId> GetUniformBuffersBySlot(ShaderBufferUniform slot) =>
+        _uniformRegistry.GetUniformBuffersBySlot(slot);
+
+    public UniformBufferId GetUboIdBySlot(ShaderBufferUniform slot)
+        => _uniformRegistry.GetUboId(slot);
 
     private void RecreateRenderTargetsIfNeeded()
     {
@@ -170,7 +172,7 @@ public sealed class GlGraphicsDevice : IGraphicsDevice<GlGraphicsContext>
         if (colTexId.Id > 0)
         {
             ref readonly var prevTexMeta = ref _textureStore.GetMeta(colTexId);
-            colTexMeta = new TextureMeta(size.X,size.Y, prevTexMeta.Format);
+            colTexMeta = new TextureMeta(size.X, size.Y, prevTexMeta.Format);
         }
 
         if (rboTexId.Id > 0)
@@ -192,11 +194,8 @@ public sealed class GlGraphicsDevice : IGraphicsDevice<GlGraphicsContext>
         var handle = _resourceFactory.CreateFrameBuffer(
             (handle, m) => _textureStore.Replace(colTexId, in colTexMeta, handle, out _),
             (handle, m) => _rboStore.Replace(rboTexId, in rboTexMeta, handle, out _),
-            (handle, m) => _rboStore.Replace(rboDepthId, in rboDepthMeta, handle, out _),
-            _viewportSize,
-            in desc,
-            out var meta
-        );
+            (handle, m) => _rboStore.Replace(rboDepthId, in rboDepthMeta, handle, out _), _viewportSize, in desc,
+            out var meta);
 
         _fboStore.Replace(fboId, in meta, handle, out _);
         return meta;
@@ -204,14 +203,9 @@ public sealed class GlGraphicsDevice : IGraphicsDevice<GlGraphicsContext>
 
     public FrameBufferId CreateFramebuffer(in FrameBufferDesc desc, out FrameBufferMeta meta)
     {
-        var handle = _resourceFactory.CreateFrameBuffer(
-            (handle, m) => _textureStore.Add(in m, in handle),
-            (handle, m) => _rboStore.Add(in m, in handle),
-            (handle, m) => _rboStore.Add(in m, in handle),
-            _viewportSize,
-            in desc,
-            out meta
-        );
+        var handle = _resourceFactory.CreateFrameBuffer((handle, m) => _textureStore.Add(in m, in handle),
+            (handle, m) => _rboStore.Add(in m, in handle), (handle, m) => _rboStore.Add(in m, in handle), _viewportSize,
+            in desc, out meta);
 
         return _fboStore.Add(in meta, in handle);
     }
@@ -223,7 +217,7 @@ public sealed class GlGraphicsDevice : IGraphicsDevice<GlGraphicsContext>
 
         var shaderId = _shaderStore.Add(in meta, in handle);
 
-        _uniformTableRegistry.Add(shaderId, uniformTable);
+        _uniformRegistry.Add(shaderId, uniformTable);
         return shaderId;
     }
 
@@ -238,14 +232,12 @@ public sealed class GlGraphicsDevice : IGraphicsDevice<GlGraphicsContext>
         var handle = _resourceFactory.CreateCubeMap(cubemapDesc, out var meta);
         return _textureStore.Add(in meta, handle);
     }
-    
-    public MeshId CreateMesh<TVertex, TIndex>(in MeshDataDescriptor<TVertex, TIndex> dataDesc, in MeshMetaDescriptor metaDesc,
-        out MeshMeta meta) where TVertex : unmanaged where TIndex : unmanaged
+
+    public MeshId CreateMesh<TVertex, TIndex>(in MeshDataDescriptor<TVertex, TIndex> dataDesc,
+        in MeshMetaDescriptor metaDesc, out MeshMeta meta) where TVertex : unmanaged where TIndex : unmanaged
     {
-        var handle = _resourceFactory.CreateMesh(
-            (handle, m) => _vboStore.Add(in m, in handle),
-            (handle, m) => _iboStore.Add(in m, in handle),
-            in dataDesc, in metaDesc, out meta);
+        var handle = _resourceFactory.CreateMesh((handle, m) => _vboStore.Add(in m, in handle),
+            (handle, m) => _iboStore.Add(in m, in handle), in dataDesc, in metaDesc, out meta);
 
         return _meshStore.Add(in meta, handle);
     }
@@ -382,8 +374,8 @@ public sealed class GlGraphicsDevice : IGraphicsDevice<GlGraphicsContext>
             MaxFramebufferHeight = gl.GetInteger((GLEnum)0x9316), // GL_MAX_FRAMEBUFFER_HEIGHT
             MaxSamples = gl.GetInteger(GLEnum.MaxSamples),
             MaxColorAttachments = gl.GetInteger(GLEnum.MaxColorAttachments),
-            MaxAnisotropy = gl.GetFloat(GLEnum.MaxTextureMaxAnisotropy)
-
+            MaxAnisotropy = gl.GetFloat(GLEnum.MaxTextureMaxAnisotropy),
+            UniformBufferOffsetAlignment = gl.GetInteger(GLEnum.UniformBufferOffsetAlignment),
         };
     }
 

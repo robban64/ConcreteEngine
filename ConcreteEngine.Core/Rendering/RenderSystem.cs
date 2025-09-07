@@ -36,10 +36,12 @@ public sealed class RenderSystem : IRenderSystem
     private readonly IGraphicsDevice _graphics;
     private readonly IGraphicsContext _gfx;
     private readonly MaterialStore _materialStore;
-    private readonly MaterialBinder _materialBinder;
+    
     private readonly DrawCommandCollector _commandCollector;
     private readonly RenderPipeline _commandSubmitter;
     private readonly DrawProcessor _drawRegistry;
+    private readonly MaterialBinder _materialBinder;
+    private readonly UniformBinder _uniformBinder;
 
     private readonly BatcherRegistry _batches = new();
 
@@ -55,14 +57,16 @@ public sealed class RenderSystem : IRenderSystem
         _gfx = graphics.Gfx;
         _materialStore = materialStore;
         
-        _materialBinder = new MaterialBinder(_graphics, _materialStore);
+        _uniformBinder = new UniformBinder(_graphics);
+        _materialBinder = new MaterialBinder(_graphics, _materialStore, _uniformBinder);
+        
         _drawRegistry = new DrawProcessor(_graphics, _materialBinder);
 
         _commandCollector = new DrawCommandCollector();
         _commandSubmitter = new RenderPipeline();
     }
 
-    internal void Initialize(IGameFeatureManager features)
+    internal void Initialize()
     {
         _batches.Register(new TerrainBatcher(_graphics));
         _batches.Register(new SpriteBatcher(_graphics));
@@ -104,6 +108,8 @@ public sealed class RenderSystem : IRenderSystem
         _commandSubmitter.Register<DrawCommandLight>( DrawCommandId.Light);
         
         _commandCollector.InitializeProducers();
+        
+        _uniformBinder.Initialize();
     }
 
     internal void RegisterScene(RenderType renderType, RenderTargetDescriptor desc)
@@ -111,7 +117,7 @@ public sealed class RenderSystem : IRenderSystem
         if (renderType == RenderType.Render2D)
             _render = new Render2D(_graphics, _materialStore);
         else
-            _render = new Render3D(_graphics, _materialStore, _materialBinder);
+            _render = new Render3D(_graphics, _materialStore, _materialBinder, _uniformBinder);
         
         _render.RegisterRenderTargetsFrom(desc);
         _drawRegistry.Initialize(null, (Render3D)_render);
@@ -228,7 +234,7 @@ public sealed class RenderSystem : IRenderSystem
 
         var viewport = _render.Camera.ViewportSize;
         _gfx.UseShader(pass.Shader);
-        _gfx.SetUniform(ShaderUniform.TexelSize, viewport.ToSystemVec2() * pass.SizeRatio);
+        _gfx.SetUniform(ShaderUniform.TexelSize, viewport.ConvertToVec2() * pass.SizeRatio);
 
         for (int i = 0; i < pass.SourceTextures.Length; i++)
         {

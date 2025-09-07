@@ -37,9 +37,8 @@ internal interface IAssetManifestRecord
 internal sealed record AssetShaderRecord(
     string Name,
     string VertexFilename,
-    string FragmentFilename,
-    string[]? Samplers)
-    : IAssetManifestRecord;
+    string FragmentFilename
+) : IAssetManifestRecord;
 
 internal sealed record AssetTextureRecord(
     string Name,

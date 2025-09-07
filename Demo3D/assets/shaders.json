@@ -4,26 +4,22 @@
     {
       "name": "Screen",
       "vertexFilename": "screen.vert.glsl",
-      "fragmentFilename": "screen.frag.glsl",
-      "samplers": ["uTexture"]
+      "fragmentFilename": "screen.frag.glsl"
     },
 	{
 	  "name": "Composite",
 	  "vertexFilename": "screen.vert.glsl",
-	  "fragmentFilename": "composite.frag.glsl",
-	  "samplers": ["uSceneTex", "uLightTex"]
+	  "fragmentFilename": "composite.frag.glsl"
 	},
 	{
 	  "name": "Present",
 	  "vertexFilename": "screen.vert.glsl",
-	  "fragmentFilename": "present.frag.glsl",
-	  "samplers": ["uTexture"]
+	  "fragmentFilename": "present.frag.glsl"
 	},
 	{
 	  "name": "ColorFilter",
 	  "vertexFilename": "screen.vert.glsl",
-	  "fragmentFilename": "color-filter.frag.glsl",
-	  "samplers": ["uScene"]
+	  "fragmentFilename": "color-filter.frag.glsl"
 	},
 	{
 	  "name": "LightPass",
@@ -33,20 +29,17 @@
 	{
 	  "name": "Diffuse",
 	  "vertexFilename": "diffuse.vert.glsl",
-	  "fragmentFilename": "diffuse.frag.glsl",
-	  "samplers": ["uTexture", "uNormalTex"]
+	  "fragmentFilename": "diffuse.frag.glsl"
 	},
 	{
 	  "name": "Terrain",
-	  "vertexFilename": "diffuse.vert.glsl",
-	  "fragmentFilename": "terrain.frag.glsl",
-	  "samplers": ["uTexture"]
+	  "vertexFilename": "terrain.vert.glsl",
+	  "fragmentFilename": "terrain.frag.glsl"
 	},
 	{
 	  "name": "Skybox",
 	  "vertexFilename": "skybox.vert.glsl",
-	  "fragmentFilename": "skybox.frag.glsl",
-	  "samplers": ["uCubemapTex"]
+	  "fragmentFilename": "skybox.frag.glsl"
 	}
 
   ]

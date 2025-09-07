@@ -25,3 +25,19 @@ public readonly record struct Matrix3
         span[6] = M31; span[7] = M32; span[8] = M33;
     }
 }
+
+[StructLayout(LayoutKind.Sequential)]
+public readonly struct Mat3Std140
+{
+    public readonly Vector4 C0; // xyz = col0, w pad
+    public readonly Vector4 C1; // xyz = col1, w pad
+    public readonly Vector4 C2; // xyz = col2, w pad
+
+    public Mat3Std140(in Matrix3 m)
+    {
+        C0 = new(m.M11, m.M21, m.M31, 0f);
+        C1 = new(m.M12, m.M22, m.M32, 0f);
+        C2 = new(m.M13, m.M23, m.M33, 0f);
+    }
+    public Mat3Std140(in Matrix4x4 m) : this(new Matrix3(m)) { }
+}

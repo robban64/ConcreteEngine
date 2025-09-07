@@ -16,6 +16,7 @@ internal sealed class GlContextBindingView
     public ResourceStore<FrameBufferId, FrameBufferMeta, GlFrameBufferHandle> FboStore { get; }
     public ResourceStore<RenderBufferId, RenderBufferMeta, GlRenderBufferHandle> RboStore { get; }
 
+    public ResourceStore<UniformBufferId, UniformBufferMeta, GlUniformBufferHandle>  UboStore { get; }
 
     public GlContextBindingView(ResourceStore<TextureId, TextureMeta, GlTextureHandle> textureStore,
         ResourceStore<ShaderId, ShaderMeta, GlShaderHandle> shaderStore,
@@ -23,7 +24,8 @@ internal sealed class GlContextBindingView
         ResourceStore<VertexBufferId, VertexBufferMeta, GlVertexBufferHandle> vboStore,
         ResourceStore<IndexBufferId, IndexBufferMeta, GlIndexBufferHandle> iboStore,
         ResourceStore<FrameBufferId, FrameBufferMeta, GlFrameBufferHandle> fboStore,
-        ResourceStore<RenderBufferId, RenderBufferMeta, GlRenderBufferHandle> rboStore)
+        ResourceStore<RenderBufferId, RenderBufferMeta, GlRenderBufferHandle> rboStore, 
+        ResourceStore<UniformBufferId, UniformBufferMeta, GlUniformBufferHandle> uboStore)
     {
         TextureStore = textureStore;
         ShaderStore = shaderStore;
@@ -32,5 +34,6 @@ internal sealed class GlContextBindingView
         IboStore = iboStore;
         FboStore = fboStore;
         RboStore = rboStore;
+        UboStore = uboStore;
     }
 }

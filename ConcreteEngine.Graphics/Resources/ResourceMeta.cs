@@ -110,7 +110,6 @@ public readonly struct FrameBufferMeta(
     }
 }
 
-//TODO
 public readonly struct RenderBufferMeta(
     RenderBufferKind kind,
     Vector2D<int> size,
@@ -120,4 +119,15 @@ public readonly struct RenderBufferMeta(
     public readonly RenderBufferKind Kind = kind;
     public readonly Vector2D<int> Size = size;
     public readonly bool Multisample = multisample;
+}
+
+public readonly struct UniformBufferMeta(
+    ShaderBufferUniform binding,
+    uint bindingIndex, // layout(binding = N)
+    uint blockSize
+)
+{
+    public readonly ShaderBufferUniform Binding = binding;
+    public readonly uint BlockSize = blockSize;
+    public readonly uint BindingIndex = bindingIndex;
 }

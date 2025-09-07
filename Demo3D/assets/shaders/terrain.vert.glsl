@@ -1,53 +1,46 @@
-﻿#version 420 core
+#version 420 core
 
 layout (location = 0) in vec3 aPos;
 layout (location = 1) in vec2 aTexCoord;
 layout (location = 2) in vec3 aNormal;
-layout (location = 3) in vec3 aTangent;
 
 out vec3 FragPos;
 out vec2 TexCoord;
-out vec3 N_world;
-out vec3 T_world;
-out vec3 B_world;
-
-// === UBOs (std140) ===
-
+out vec3 Normal;
 
 // FrameGlobalUniformGpuData
 layout(std140, binding = 0) uniform FrameGlobalUniform {
-    vec4 uAmbient;   // xyz=color, w=intensity
-    vec4 uFogColor;  // xyz=color, w=density
-    vec4 uFogDetail; // x=near, y=far, z=type, w=0
+    vec4 uAmbient;
+    vec4 uFogColor;
+    vec4 uFogDetail;
 };
-
 
 // CameraUniformGpuData
 layout(std140, binding = 1) uniform CameraUniform {
     mat4 uViewMat;
     mat4 uProjMat;
     mat4 uProjViewMat;
-    vec4 uCameraPos; // C# has vec3 + float pad; use .xyz
+    vec4 uCameraPos;
 };
 
-// DirLightUniformGpuData (not used in VS)
+// DirLightUniformGpuData
 layout(std140, binding = 2) uniform DirLightUniform {
-    vec4 uLightDirection;            // xyz, w unused
-    vec4 uLightDiffuse;              // rgb, w unused
-    vec4 uLightSpecularIntensity;    // xyz=specular, w=intensity
+    vec4 uLightDirection;
+    vec4 uLightDiffuse;
+    vec4 uLightSpecularIntensity;
 };
 
+// MaterialUniformGpuData (not used here, present for completeness)
 layout(std140, binding = 3) uniform MaterialUniform {
-    vec4 MaterialColor;     // xyz=color, w (unused)
+    vec4 MaterialColor;
     float Shininess;
     float SpecularStrength;
-    vec2 _materialPad0;     
+    vec2 _materialPad0;
 };
 
 // DrawUniformGpuData
 layout(std140, binding = 4) uniform DrawUniform {
     mat4 uModel;
-    // normal matrix as vec4 (xyz used)
     vec4 uNormalCol0;
     vec4 uNormalCol1;
     vec4 uNormalCol2;
@@ -59,17 +52,8 @@ void main()
     FragPos = worldPosition.xyz;
     TexCoord = aTexCoord;
 
-    // Reconstruct mat3 from column
     mat3 normalMat = mat3(uNormalCol0.xyz, uNormalCol1.xyz, uNormalCol2.xyz);
-
-    vec3 N = normalize(normalMat * aNormal);
-    vec3 T = normalize(normalMat * aTangent);
-    T = normalize(T - N * dot(T, N));
-    vec3 B = normalize(cross(N, T));
-
-    N_world = N;
-    T_world = T;
-    B_world = B;
+    Normal = normalize(normalMat * aNormal);
 
     gl_Position = uProjViewMat * worldPosition;
 }

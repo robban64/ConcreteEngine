@@ -122,12 +122,12 @@ public readonly struct RenderBufferMeta(
 }
 
 public readonly struct UniformBufferMeta(
-    ShaderBufferUniform binding,
+    UniformGpuData binding,
     uint bindingIndex, // layout(binding = N)
     uint blockSize
 )
 {
-    public readonly ShaderBufferUniform Binding = binding;
+    public readonly UniformGpuData Binding = binding;
     public readonly uint BlockSize = blockSize;
     public readonly uint BindingIndex = bindingIndex;
 }

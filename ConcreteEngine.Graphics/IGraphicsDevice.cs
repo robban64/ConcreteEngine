@@ -20,9 +20,8 @@ public interface IGraphicsDevice : IDisposable
     void StartFrame(in FrameMetaInfo frameCtx);
     void EndFrame(out FrameRenderResult result);
 
-    UniformTable GetShaderUniforms(ShaderId shaderId);
-    IReadOnlyList<UniformBufferId> GetUniformBuffersBySlot(ShaderBufferUniform slot);
-    UniformBufferId GetUboIdBySlot(ShaderBufferUniform slot);
+    IReadOnlyList<UniformBufferId> GetUniformBuffersBySlot(UniformGpuData slot);
+    UniformBufferId GetUboIdBySlot(UniformGpuData slot);
 
     FrameBufferId CreateFramebuffer(in FrameBufferDesc desc, out FrameBufferMeta meta);
     ShaderId CreateShader(string vertexSource, string fragmentSource, out ShaderMeta meta);

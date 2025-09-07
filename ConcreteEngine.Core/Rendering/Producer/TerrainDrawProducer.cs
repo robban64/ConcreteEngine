@@ -71,7 +71,7 @@ public sealed class TerrainDrawProducer : IDrawCommandProducer, ITerrainDrawSink
             meshId: _terrain.MeshId,
             drawCount: _terrain.DrawCount,
             materialId: data.MaterialId,
-            transform: in transform // TODO Move to UBO Record
+            transform: in transform 
         );
 
         var meta = new DrawCommandMeta( DrawCommandId.Terrain, RenderTargetId.Scene, DrawCommandQueue.Terrain);

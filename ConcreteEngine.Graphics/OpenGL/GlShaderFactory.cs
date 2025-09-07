@@ -16,14 +16,14 @@ internal sealed class GlShaderFactory(GlGraphicsContext gfx, DeviceCapabilities 
     {
         var length = GraphicsEnumCache.ShaderBufferUniformVals.Length;
 
-        Span<(ShaderBufferUniform, GlUniformBufferHandle)> handles =
-            stackalloc (ShaderBufferUniform, GlUniformBufferHandle)[length];
+        Span<(UniformGpuData, GlUniformBufferHandle)> handles =
+            stackalloc (UniformGpuData, GlUniformBufferHandle)[length];
 
-        handles[0] = CreateAndSaveUniformBuffer<FrameUniformGpuData>(ShaderBufferUniform.Frame, save);
-        handles[1] = CreateAndSaveUniformBuffer<CameraUniformGpuData>(ShaderBufferUniform.Camera, save);
-        handles[2] = CreateAndSaveUniformBuffer<DirLightUniformGpuData>(ShaderBufferUniform.DirLight, save);
-        handles[3] = CreateAndSaveUniformBuffer<MaterialUniformGpuData>(ShaderBufferUniform.Material, save);
-        handles[4] = CreateAndSaveUniformBuffer<DrawObjectUniformGpuData>(ShaderBufferUniform.DrawObject, save);
+        handles[0] = CreateAndSaveUniformBuffer<FrameUniformGpuData>(UniformGpuData.Frame, save);
+        handles[1] = CreateAndSaveUniformBuffer<CameraUniformGpuData>(UniformGpuData.Camera, save);
+        handles[2] = CreateAndSaveUniformBuffer<DirLightUniformGpuData>(UniformGpuData.DirLight, save);
+        handles[3] = CreateAndSaveUniformBuffer<MaterialUniformGpuData>(UniformGpuData.Material, save);
+        handles[4] = CreateAndSaveUniformBuffer<DrawObjectUniformGpuData>(UniformGpuData.DrawObject, save);
 
         foreach (var (slot, handle) in handles)
         {
@@ -64,7 +64,7 @@ internal sealed class GlShaderFactory(GlGraphicsContext gfx, DeviceCapabilities 
         return new GlShaderHandle(handle);
     }
 
-    private GlUniformBufferHandle CreateUniformBuffer<T>(ShaderBufferUniform slot, out UniformBufferMeta meta)
+    private GlUniformBufferHandle CreateUniformBuffer<T>(UniformGpuData slot, out UniformBufferMeta meta)
         where T : struct, IUniformGpuData
     {
         IsStd140rThrow<T>();
@@ -111,7 +111,7 @@ internal sealed class GlShaderFactory(GlGraphicsContext gfx, DeviceCapabilities 
     }
 
 
-    private (ShaderBufferUniform, GlUniformBufferHandle) CreateAndSaveUniformBuffer<T>(ShaderBufferUniform slot,
+    private (UniformGpuData, GlUniformBufferHandle) CreateAndSaveUniformBuffer<T>(UniformGpuData slot,
         SaveDelegate save) where T : struct, IUniformGpuData
     {
         var handle = CreateUniformBuffer<T>(slot, out var meta);

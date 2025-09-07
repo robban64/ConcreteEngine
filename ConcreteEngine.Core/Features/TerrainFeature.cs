@@ -7,9 +7,6 @@ namespace ConcreteEngine.Core.Features;
 
 public sealed class TerrainFeature: GameFeature
 {
-    public bool IsDrawable { get; set; } = true;
-    public int DrawOrder { get; set; } = 0;
-    
     
     private ITerrainDrawSink _drawSink = null!;
 
@@ -22,6 +19,9 @@ public sealed class TerrainFeature: GameFeature
         var renderer = Context.GetSystem<IRenderSystem>();
         var material = renderer.CreateMaterial("TerrainMat");
         var heightmap = assets.Get<Texture2D>("Heightmap");
+        
+        material.UvRepeat = 20;
+
         
         _drawSink = renderer.GetSink<ITerrainDrawSink>();
 

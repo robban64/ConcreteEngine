@@ -65,15 +65,15 @@ public sealed class RenderPipeline
 
     public void DrainCommandQueue(RenderTargetId targetId)
     {
-        var cmdSpan = _commands.AsSpan();
-        var metaSpan = _commands.AsSpan();
+        var cmdSpan = (ReadOnlySpan<DrawCommand>)_commands.AsSpan();
+        var metaSpan = (ReadOnlySpan<DrawCommandMetaIndex>)_indices;
 
         for (int i = _iteratorIdx; i < _submitIdx; i++)
         {
-            ref readonly var it = ref _indices[_iteratorIdx++];
+            ref readonly var it = ref metaSpan[_iteratorIdx++];
             if (it.Meta.Target < targetId) continue;
             if (it.Meta.Target > targetId) break;
-            ref readonly var cmd = ref _commands[it.Idx];
+            ref readonly var cmd = ref cmdSpan[it.Idx];
             _drawProcessor.DrawMesh(in cmd);
         }
     }

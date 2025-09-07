@@ -25,7 +25,6 @@ public sealed class Demo3DScene : GameScene
         var assets = Context.GetSystem<IAssetSystem>();
 
         var skyboxMaterial = renderer.CreateMaterial("SkyboxMat");
-        skyboxMaterial.UvRepeat = 20;
 
         RenderGlobals.SetSkybox(skyboxMaterial.Id, Quaternion.Identity);
         RenderGlobals.SetDirLight(new Vector3(-0.3f, -1.0f, -0.2f), new Vector3(1.0f, 0.95f, 0.9f), Vector3.One,1);

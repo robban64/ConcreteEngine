@@ -23,11 +23,11 @@ public sealed class UniformBinder
 
     public void Initialize()
     {
-        _uboFrame = _graphics.GetUboIdBySlot(ShaderBufferUniform.Frame);
-        _uboView = _graphics.GetUboIdBySlot(ShaderBufferUniform.Camera);
-        _uboLight = _graphics.GetUboIdBySlot(ShaderBufferUniform.DirLight);
-        _uboMaterial = _graphics.GetUboIdBySlot(ShaderBufferUniform.Material);
-        _uboDraw = _graphics.GetUboIdBySlot(ShaderBufferUniform.DrawObject);
+        _uboFrame = _graphics.GetUboIdBySlot(UniformGpuData.Frame);
+        _uboView = _graphics.GetUboIdBySlot(UniformGpuData.Camera);
+        _uboLight = _graphics.GetUboIdBySlot(UniformGpuData.DirLight);
+        _uboMaterial = _graphics.GetUboIdBySlot(UniformGpuData.Material);
+        _uboDraw = _graphics.GetUboIdBySlot(UniformGpuData.DrawObject);
         _uboFrame.IsValidOrThrow();
         _uboView.IsValidOrThrow();
         _uboLight.IsValidOrThrow();
@@ -48,7 +48,7 @@ public sealed class UniformBinder
         );
 
         _gfx.BindUniformBuffer(_uboFrame);
-        _gfx.UploadUniformGpuData(ShaderBufferUniform.Frame, in data);
+        _gfx.UploadUniformGpuData(UniformGpuData.Frame, in data);
     }
 
     public void ApplyCamera(in CameraUniformRecord rec)
@@ -61,7 +61,7 @@ public sealed class UniformBinder
         );
 
         _gfx.BindUniformBuffer(_uboView);
-        _gfx.UploadUniformGpuData(ShaderBufferUniform.Camera, in data);
+        _gfx.UploadUniformGpuData(UniformGpuData.Camera, in data);
     }
 
     public void ApplyDirLight(in DirLightUniformRecord rec)
@@ -74,7 +74,7 @@ public sealed class UniformBinder
         );
 
         _gfx.BindUniformBuffer(_uboLight);
-        _gfx.UploadUniformGpuData(ShaderBufferUniform.DirLight, in data);
+        _gfx.UploadUniformGpuData(UniformGpuData.DirLight, in data);
     }
 
     public void ApplyMaterial(in MaterialUniformRecord rec)
@@ -87,7 +87,7 @@ public sealed class UniformBinder
         );
 
         _gfx.BindUniformBuffer(_uboMaterial);
-        _gfx.UploadUniformGpuData(ShaderBufferUniform.Material, in data);
+        _gfx.UploadUniformGpuData(UniformGpuData.Material, in data);
     }
 
     public void ApplyDrawObject(in DrawObjectUniformRecord rec)
@@ -98,6 +98,6 @@ public sealed class UniformBinder
         );
 
         _gfx.BindUniformBuffer(_uboDraw);
-        _gfx.UploadUniformGpuData(ShaderBufferUniform.DrawObject, in data);
+        _gfx.UploadUniformGpuData(UniformGpuData.DrawObject, in data);
     }
 }

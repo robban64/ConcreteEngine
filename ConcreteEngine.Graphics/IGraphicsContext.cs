@@ -43,7 +43,7 @@ public interface IGraphicsContext
     void UploadVertexBuffer<T>(ReadOnlySpan<T> data, int offsetElements) where T : unmanaged;
     void UploadIndexBuffer<T>(ReadOnlySpan<T> data, int offsetElements) where T : unmanaged;
 
-    void UploadUniformGpuData<T>(ShaderBufferUniform slot, in T data) where T : unmanaged, IUniformGpuData;
+    void UploadUniformGpuData<T>(UniformGpuData slot, in T data) where T : unmanaged, IUniformGpuData;
     
     void DrawMesh(uint drawCount = 0);
 
@@ -57,14 +57,4 @@ public interface IGraphicsContext
     void SetUniform(ShaderUniform uniform, in Matrix4x4 value);
     void SetUniform(ShaderUniform uniform, in Matrix3 value);
     
-    
-    void SetRawUniform(int uniform, int value);
-    void SetRawUniform(int uniform, uint value);
-    void SetRawUniform(int uniform, float value);
-    void SetRawUniform(int uniform, Vector2 value);
-    void SetRawUniform(int uniform, Vector3 value);
-    void SetRawUniform(int uniform, Vector4 value);
-    void SetRawUniform(int uniform, in Matrix4x4 value);
-    void SetRawUniform(int uniform, in Matrix3 value);
-
 }

@@ -15,7 +15,6 @@ public sealed class UniformTable
     private readonly Dictionary<string, int> _rawUniforms;
     
     private readonly List<ShaderUniform> _uniforms;
-    private readonly HashSet<ShaderStructUniform> _structUniforms;
 
     public IReadOnlyList<ShaderUniform> Uniforms => _uniforms;
 
@@ -24,7 +23,6 @@ public sealed class UniformTable
         _locs = new int [GraphicsEnumCache.ShaderUniformVals.Length];
         _rawUniforms = new Dictionary<string, int>(uniformPairs.Count);
         _uniforms = new List<ShaderUniform>(4);
-        _structUniforms = [];
 
 
         foreach (var (uniform, location) in uniformPairs)
@@ -34,8 +32,6 @@ public sealed class UniformTable
             if (idx <= 0) continue;
             
             var uniformName = uniform.AsSpan(0, idx);
-            var value = ShaderStructUniforms.ToUniform(uniformName);
-            _structUniforms.Add(value);
         }
             
         for (int i = 0; i < _locs.Length; i++)
@@ -52,10 +48,6 @@ public sealed class UniformTable
         }
     }
     
-    [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public bool ContainsStruct(ShaderStructUniform sUniform) => _structUniforms.Contains(sUniform);
-
-
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public bool ContainsKey(ShaderUniform uniform) => _locs[(int)uniform] >= 0;
     

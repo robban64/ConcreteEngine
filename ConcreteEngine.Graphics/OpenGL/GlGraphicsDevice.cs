@@ -127,15 +127,10 @@ public sealed class GlGraphicsDevice : IGraphicsDevice<GlGraphicsContext>
         RecreateRenderTargetsIfNeeded();
     }
 
-    public UniformTable GetShaderUniforms(ShaderId shaderId)
-    {
-        return _uniformRegistry.Get(shaderId);
-    }
-
-    public IReadOnlyList<UniformBufferId> GetUniformBuffersBySlot(ShaderBufferUniform slot) =>
+    public IReadOnlyList<UniformBufferId> GetUniformBuffersBySlot(UniformGpuData slot) =>
         _uniformRegistry.GetUniformBuffersBySlot(slot);
 
-    public UniformBufferId GetUboIdBySlot(ShaderBufferUniform slot)
+    public UniformBufferId GetUboIdBySlot(UniformGpuData slot)
         => _uniformRegistry.GetUboId(slot);
 
     private void RecreateRenderTargetsIfNeeded()

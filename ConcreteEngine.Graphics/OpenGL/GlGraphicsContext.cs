@@ -477,7 +477,7 @@ public sealed class GlGraphicsContext : IGraphicsContext
         CheckGlError(); // throws here
     }
 
-    public unsafe void UploadUniformGpuData<T>(ShaderBufferUniform slot, in T data) where T : unmanaged, IUniformGpuData
+    public unsafe void UploadUniformGpuData<T>(UniformGpuData slot, in T data) where T : unmanaged, IUniformGpuData
     {
         var size = (nuint)Unsafe.SizeOf<T>();
         ref readonly var meta = ref _store.UboStore.GetMeta(_boundUniformBufferId);
@@ -488,7 +488,7 @@ public sealed class GlGraphicsContext : IGraphicsContext
         
         CheckGlError(); // throws here
     }
-    public unsafe nuint UploadUniformGpuDataSlice<T>(ShaderBufferUniform slot, in T data, nuint cursorBytes)
+    public unsafe nuint UploadUniformGpuDataSlice<T>(UniformGpuData slot, in T data, nuint cursorBytes)
         where T : unmanaged, IUniformGpuData
     {
         var size = (nuint)Unsafe.SizeOf<T>();
@@ -599,38 +599,9 @@ public sealed class GlGraphicsContext : IGraphicsContext
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public unsafe void SetUniform(ShaderUniform uniform, in Matrix3 value) 
-        => SetRawUniform(_boundUniforms![uniform], in value);
-
-    [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public void SetRawUniform(int uniform, int value) =>  _gl.Uniform1(uniform, value);
-
-    [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public void SetRawUniform(int uniform, uint value) =>  _gl.Uniform1(uniform, value);
-
-    [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public void SetRawUniform(int uniform, float value) =>  _gl.Uniform1(uniform, value);
-
-    [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public void SetRawUniform(int uniform, Vector2 value) =>  _gl.Uniform2(uniform, value.X, value.Y);
-
-    [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public void SetRawUniform(int uniform, Vector3 value) =>  _gl.Uniform3(uniform, value.X, value.Y, value.Z);
-
-    [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public void SetRawUniform(int uniform, Vector4 value) =>  _gl.Uniform4(uniform, value.X, value.Y, value.Z, value.W);
-    
-    [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public unsafe void SetRawUniform(int uniform, in Matrix4x4 value)
     {
         var p = (float*)Unsafe.AsPointer(ref Unsafe.AsRef(in value));
-        _gl.UniformMatrix4(uniform, 1, false, p);
-    }
-
-    [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public unsafe void SetRawUniform(int uniform, in Matrix3 value)
-    {
-        var p = (float*)Unsafe.AsPointer(ref Unsafe.AsRef(in value));
-        _gl.UniformMatrix3(uniform, 1, false, p);
+        _gl.UniformMatrix3(_boundUniforms![uniform], 1, false, p);
     }
 
 

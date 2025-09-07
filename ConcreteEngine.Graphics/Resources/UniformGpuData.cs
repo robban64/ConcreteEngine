@@ -4,7 +4,7 @@ using ConcreteEngine.Common.Extensions;
 
 namespace ConcreteEngine.Graphics.Resources;
 
-public enum ShaderBufferUniform
+public enum UniformGpuData
 {
     Frame = 0,
     Camera = 1,

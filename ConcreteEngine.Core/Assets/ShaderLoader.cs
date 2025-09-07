@@ -58,7 +58,7 @@ internal sealed class ShaderLoader
                 any = true;
                 var name = m.Groups["name"].Value;
 
-                if (!Enum.TryParse<ShaderBufferUniform>(name, ignoreCase: true, out var key))
+                if (!Enum.TryParse<UniformGpuData>(name, ignoreCase: true, out var key))
                     throw new InvalidOperationException($"Unknown ShaderBufferUniform '{name}' in include.");
 
                 if (!ShaderUniformLayouts.Map.TryGetValue(key, out var layout))
@@ -75,14 +75,14 @@ internal sealed class ShaderLoader
 
     private static class ShaderUniformLayouts
     {
-        public static readonly IReadOnlyDictionary<ShaderBufferUniform, string> Map =
-            new Dictionary<ShaderBufferUniform, string>
+        public static readonly IReadOnlyDictionary<UniformGpuData, string> Map =
+            new Dictionary<UniformGpuData, string>
             {
-                { ShaderBufferUniform.Frame, FrameGlobalUniform },
-                { ShaderBufferUniform.Camera, CameraUniform },
-                { ShaderBufferUniform.DirLight, DirLightUniform },
-                { ShaderBufferUniform.Material, MaterialUniform },
-                { ShaderBufferUniform.DrawObject, DrawUniform },
+                { UniformGpuData.Frame, FrameGlobalUniform },
+                { UniformGpuData.Camera, CameraUniform },
+                { UniformGpuData.DirLight, DirLightUniform },
+                { UniformGpuData.Material, MaterialUniform },
+                { UniformGpuData.DrawObject, DrawUniform },
             };
 
         private const string FrameGlobalUniform =

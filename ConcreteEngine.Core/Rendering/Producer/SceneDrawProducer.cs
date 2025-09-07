@@ -31,14 +31,14 @@ public sealed class SceneDrawProducer : IDrawCommandProducer
     }
 
 
-    public void EmitFrame(float alpha, IRenderPipeline submitter)
+    public void EmitFrame(float alpha, RenderPipeline submitter)
     {
-        if (!_snapshot.Skybox.CubemapId.IsValid()) return;
+        if (_snapshot.Skybox.MaterialId.Id == 0) return;
 
         var skybox = _snapshot.Skybox;
-        var cmd = new DrawCommandSkybox(
-            textureId: skybox.CubemapId,
-            shaderId: skybox.ShaderId,
+        var cmd = new DrawCommand(
+            meshId: _context.Graphics.Primitives.SkyboxCube,
+            materialId: _snapshot.Skybox.MaterialId,
             transform: Matrix4x4.Identity
         );
 

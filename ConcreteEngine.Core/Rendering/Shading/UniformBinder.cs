@@ -82,7 +82,8 @@ public sealed class UniformBinder
         var data = new MaterialUniformGpuData(
             color: rec.Color,
             shininess: rec.Shininess,
-            specularStrength: rec.SpecularStrength
+            specularStrength: rec.SpecularStrength,
+            uvRepeat: rec.UvRepeat
         );
 
         _gfx.BindUniformBuffer(_uboMaterial);

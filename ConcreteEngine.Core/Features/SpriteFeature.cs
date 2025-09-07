@@ -19,15 +19,15 @@ public class SpriteFeature : GameFeature
 
     private int _entityIdx = 0;
 
-    private ISpriteDrawSink _drawSink = null!;
+    //private ISpriteDrawSink _drawSink = null!;
 
     public override void Initialize()
     {
-        _drawSink = Context.GetSystem<IRenderSystem>().GetSink<ISpriteDrawSink>();
+        //_drawSink = Context.GetSystem<IRenderSystem>().GetSink<ISpriteDrawSink>();
     }
 
     public override void UpdateTick(int tick)
-    {
+    {/*
         _entityIdx = 0;
 
         var spriteStore = Context.World.Sprites;
@@ -81,7 +81,7 @@ public class SpriteFeature : GameFeature
         
         _drawSink.Send(entitiesSpan);
         _drawSink.BuildBatches(_batches);
-        
+        */
         
     }
 

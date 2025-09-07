@@ -24,10 +24,10 @@ public sealed class Demo3DScene : GameScene
         var renderer = Context.GetSystem<IRenderSystem>();
         var assets = Context.GetSystem<IAssetSystem>();
 
-        var skyboxShader = assets.Get<Shader>("Skybox");
-        var skyboxCubeMap = assets.Get<CubeMap>("Skybox");
+        var skyboxMaterial = renderer.CreateMaterial("SkyboxMat");
+        skyboxMaterial.UvRepeat = 20;
 
-        RenderGlobals.SetSkybox(skyboxShader.ResourceId, skyboxCubeMap.ResourceId, Quaternion.Identity);
+        RenderGlobals.SetSkybox(skyboxMaterial.Id, Quaternion.Identity);
         RenderGlobals.SetDirLight(new Vector3(-0.3f, -1.0f, -0.2f), new Vector3(1.0f, 0.95f, 0.9f), Vector3.One,1);
         RenderGlobals.SetAmbient(new Vector3(0.8f,0.75f,0.8f));
 

@@ -164,11 +164,16 @@ internal sealed class AssetLoader
         return _shaderLoader.LoadShader(record, _graphics, vPath, fPath);
     }
 
-    public MaterialTemplate LoadMaterialTemplate(AssetMaterialTemplate record, Func<string, Shader> getShader,
-        Func<string, Texture2D> getTexture)
+    public MaterialTemplate LoadMaterialTemplate(AssetMaterialTemplate record, 
+        Func<string, Shader> getShader, Func<string, Texture2D> getTexture, Func<string, CubeMap> getCubemap)
     {
         Texture2D[] textures = [];
-        if (record.Textures != null)
+        CubeMap? cubeMap = null;
+        if (record.Cubemap != null)
+        {
+            cubeMap = getCubemap(record.Cubemap);
+        }
+        else if (record.Textures != null)
         {
             textures = new Texture2D[record.Textures.Length];
             for (var i = 0; i < record.Textures.Length; i++)
@@ -182,8 +187,9 @@ internal sealed class AssetLoader
         {
             Name = record.Name,
             Shader = shader,
+            Color = record.Color,
             Textures = textures,
-            Color = record.Color
+            CubeMap = cubeMap,
         };
 
         return template;

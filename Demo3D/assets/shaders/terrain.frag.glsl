@@ -13,8 +13,6 @@ out vec4 FragColor;
 
 layout(binding = 0) uniform sampler2D uTexture;
 
-// Tiling factor
-uniform float uTexCoordRepeat;
 
 vec3 CalcDirLight(vec3 normal, vec3 texColor)
 {
@@ -31,7 +29,7 @@ vec3 CalcDirLight(vec3 normal, vec3 texColor)
 void main()
 {
     vec3 n = normalize(Normal);
-    vec2 tiled = TexCoord * uTexCoordRepeat;
+    vec2 tiled = TexCoord * uvRepeat;
     vec3 texColor = texture(uTexture, tiled).rgb;
 
     vec3 color = CalcDirLight(n, texColor);

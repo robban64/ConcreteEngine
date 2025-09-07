@@ -6,10 +6,10 @@ namespace ConcreteEngine.Core.Rendering;
 
 
 public readonly struct DrawCommandMeta(
-    DrawCommandId id,   // Id of the type
-    RenderTargetId target, // when to draw
-    DrawCommandQueue queue, // priority
-    byte order = 0, // used for 2D mostly, ZIndex,
+    DrawCommandId id,
+    RenderTargetId target,
+    DrawCommandQueue queue, 
+    byte order = 0, 
     ushort depthKey = 0)
 {
     public readonly DrawCommandId Id = id;
@@ -22,7 +22,6 @@ public readonly struct DrawCommandMeta(
         => new(id,  target, DrawCommandQueue.None, order: layer);
 }
 
-// used for sorting all commands and getting them by idx size stride
 internal readonly struct DrawCommandMetaIndex(in DrawCommandMeta meta, int idx)
     : IComparable<DrawCommandMetaIndex>
 {

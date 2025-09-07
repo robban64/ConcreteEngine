@@ -49,7 +49,7 @@ public sealed class TerrainDrawProducer : IDrawCommandProducer, ITerrainDrawSink
     }
     
 
-    public void EmitFrame(float alpha, IRenderPipeline submitter)
+    public void EmitFrame(float alpha, RenderPipeline submitter)
     {
         if(_data == null) return;
         
@@ -67,13 +67,12 @@ public sealed class TerrainDrawProducer : IDrawCommandProducer, ITerrainDrawSink
         var transform = TransformHelper
             .CreateTransform(new Vector3(-100, -10, -100), Vector3.One, Quaternion.Identity);
         
-        var cmd = new DrawCommandTerrain(
+        var cmd = new DrawCommand(
             meshId: _terrain.MeshId,
             drawCount: _terrain.DrawCount,
             materialId: data.MaterialId,
-            transform: in transform
+            transform: in transform // TODO Move to UBO Record
         );
-        
 
         var meta = new DrawCommandMeta( DrawCommandId.Terrain, RenderTargetId.Scene, DrawCommandQueue.Terrain);
         submitter.SubmitDraw(in cmd, in meta);

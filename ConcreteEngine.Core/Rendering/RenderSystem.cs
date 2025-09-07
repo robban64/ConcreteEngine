@@ -39,8 +39,7 @@ public sealed class RenderSystem : IRenderSystem
     
     private readonly DrawCommandCollector _commandCollector;
     private readonly RenderPipeline _commandSubmitter;
-    private readonly DrawProcessor _drawRegistry;
-    private readonly MaterialBinder _materialBinder;
+    private readonly DrawProcessor _drawProcessor;
     private readonly UniformBinder _uniformBinder;
 
     private readonly BatcherRegistry _batches = new();
@@ -58,12 +57,11 @@ public sealed class RenderSystem : IRenderSystem
         _materialStore = materialStore;
         
         _uniformBinder = new UniformBinder(_graphics);
-        _materialBinder = new MaterialBinder(_graphics, _materialStore, _uniformBinder);
         
-        _drawRegistry = new DrawProcessor(_graphics, _materialBinder);
+        _drawProcessor = new DrawProcessor(_graphics, _materialStore, _uniformBinder);
 
         _commandCollector = new DrawCommandCollector();
-        _commandSubmitter = new RenderPipeline();
+        _commandSubmitter = new RenderPipeline(_drawProcessor);
     }
 
     internal void Initialize()
@@ -81,32 +79,26 @@ public sealed class RenderSystem : IRenderSystem
         // Collector
         _commandCollector.RegisterProducerSink<IMeshDrawSink>(new MeshDrawProducer());
         _commandCollector.RegisterProducerSink<ITerrainDrawSink>(new TerrainDrawProducer());
-
-        _commandCollector.RegisterProducerSink<ITilemapDrawSink>(new TilemapDrawProducer());
-        _commandCollector.RegisterProducerSink<ISpriteDrawSink>(new SpriteDrawProducer());
-        _commandCollector.RegisterProducerSink<ILightDrawSink>(new LightProducer());
-        
         _sceneDrawProducer = new  SceneDrawProducer();
         _commandCollector.RegisterProducer<SceneDrawProducer>(_sceneDrawProducer);
 
-        _commandCollector.AttachContext(cmdProducerCtx);
+/*
+        _commandCollector.RegisterProducerSink<ITilemapDrawSink>(new TilemapDrawProducer());
+        _commandCollector.RegisterProducerSink<ISpriteDrawSink>(new SpriteDrawProducer());
+        _commandCollector.RegisterProducerSink<ILightDrawSink>(new LightProducer());
+       */ 
 
+        _commandCollector.AttachContext(cmdProducerCtx);
+/*
         _drawRegistry.Register<MeshDrawer, DrawCommandMesh>();
         _drawRegistry.Register<TerrainDrawer, DrawCommandTerrain>();
         _drawRegistry.Register<TilemapDrawer, DrawCommandTilemap>();
         _drawRegistry.Register<SpriteDrawer, DrawCommandSprite>();
         _drawRegistry.Register<LightDrawer, DrawCommandLight>();
         _drawRegistry.Register<SkyboxDrawer, DrawCommandSkybox>();
-
+*/
         _commandSubmitter.Initialize();
 
-        _commandSubmitter.Register<DrawCommandMesh>(DrawCommandId.Mesh);
-        _commandSubmitter.Register<DrawCommandTerrain>(DrawCommandId.Terrain);
-        _commandSubmitter.Register<DrawCommandSkybox>( DrawCommandId.Skybox);
-        _commandSubmitter.Register<DrawCommandSprite> ( DrawCommandId.Sprite);
-        _commandSubmitter.Register<DrawCommandTilemap>( DrawCommandId.Tilemap);
-        _commandSubmitter.Register<DrawCommandLight>( DrawCommandId.Light);
-        
         _commandCollector.InitializeProducers();
         
         _uniformBinder.Initialize();
@@ -117,10 +109,10 @@ public sealed class RenderSystem : IRenderSystem
         if (renderType == RenderType.Render2D)
             _render = new Render2D(_graphics, _materialStore);
         else
-            _render = new Render3D(_graphics, _materialStore, _materialBinder, _uniformBinder);
+            _render = new Render3D(_graphics, _materialStore, _uniformBinder);
         
         _render.RegisterRenderTargetsFrom(desc);
-        _drawRegistry.Initialize(null, (Render3D)_render);
+        _drawProcessor.Initialize(null, (Render3D)_render);
     }
 
     public TSink GetSink<TSink>() where TSink : IDrawSink => _commandCollector.GetSink<TSink>();
@@ -158,9 +150,8 @@ public sealed class RenderSystem : IRenderSystem
     {
         _sceneDrawProducer.SetSceneGlobals(in renderGlobals);
         
-        _materialBinder.Prepare(Camera, in renderGlobals);
         _render.PrepareRender(alpha, in renderGlobals);
-        _drawRegistry.Prepare(in renderGlobals);
+        _drawProcessor.Prepare(in renderGlobals);
         _commandCollector.Collect(alpha, _commandSubmitter);
         _commandSubmitter.Prepare();
     }

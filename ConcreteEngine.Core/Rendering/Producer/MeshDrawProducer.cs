@@ -31,7 +31,7 @@ public sealed class MeshDrawProducer : IDrawCommandProducer, IMeshDrawSink
 
     private MeshDrawEntity[] _entities = new MeshDrawEntity[32];
 
-    private readonly DrawCommandMesh[] _commands = new DrawCommandMesh[BatchSize];
+    private readonly DrawCommand[] _commands = new DrawCommand[BatchSize];
     private readonly DrawCommandMeta[] _meta = new DrawCommandMeta[BatchSize];
 
 
@@ -62,7 +62,7 @@ public sealed class MeshDrawProducer : IDrawCommandProducer, IMeshDrawSink
     {
     }
 
-    public void EmitFrame(float alpha, IRenderPipeline submitter)
+    public void EmitFrame(float alpha, RenderPipeline submitter)
     {
         if (_idx == 0) return;
 
@@ -71,7 +71,7 @@ public sealed class MeshDrawProducer : IDrawCommandProducer, IMeshDrawSink
         {
             ref var entity = ref _entities[i];
 
-            _commands[counter] = new DrawCommandMesh(
+            _commands[counter] = new DrawCommand(
                 meshId: entity.MeshId,
                 drawCount: 0,
                 materialId: entity.MaterialId,
@@ -88,15 +88,16 @@ public sealed class MeshDrawProducer : IDrawCommandProducer, IMeshDrawSink
             counter++;
             if (counter >= BatchSize)
             {
-                submitter.SubmitDrawBatch<DrawCommandMesh>(_commands, _meta);
+                submitter.SubmitDrawBatch(_commands, _meta);
                 counter = 0;
             }
         }
 
         if (counter > 0)
         {
-            submitter.SubmitDrawBatch<DrawCommandMesh>(
-                _commands.AsSpan(0, counter), _meta.AsSpan(0, counter));
+            var commands = _commands.AsSpan(0, counter);
+            var metas = _meta.AsSpan(0, counter);
+            submitter.SubmitDrawBatch(commands, metas);
         }
     }
 

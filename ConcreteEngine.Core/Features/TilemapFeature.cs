@@ -14,14 +14,15 @@ public class TilemapFeature : GameFeature
     public bool IsDrawable { get; set; } = true;
     public int DrawOrder { get; set; } = 0;
 
-    private ITilemapDrawSink _drawSink = null!;
+    //private ITilemapDrawSink _drawSink = null!;
     public override void Initialize()
     {
-        _drawSink = Context.GetSystem<IRenderSystem>().GetSink<ITilemapDrawSink>();
+        //_drawSink = Context.GetSystem<IRenderSystem>().GetSink<ITilemapDrawSink>();
     }
 
     public override void UpdateTick(int tick)
     {
+        /*
         var tilemaps = Context.World.Tilemaps;
         if (tilemaps.Count > 0)
         {
@@ -34,6 +35,7 @@ public class TilemapFeature : GameFeature
                 TileSize = node.TileSize,
             });
         }
+        */
     }
 
 }

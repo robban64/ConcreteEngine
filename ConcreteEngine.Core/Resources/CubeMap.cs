@@ -4,7 +4,7 @@ using ConcreteEngine.Graphics.Resources;
 
 namespace ConcreteEngine.Core.Resources;
 
-public sealed class CubeMap : IGraphicAssetFile<TextureId>
+public sealed class CubeMap : IGraphicAssetFile<TextureId>, IResourceTexture
 {
     public required string Name { get; init; }
     public required TextureId ResourceId { get; init; }

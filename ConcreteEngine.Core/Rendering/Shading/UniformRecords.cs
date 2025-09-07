@@ -55,11 +55,13 @@ public readonly struct DirLightUniformRecord(
     public readonly float Intensity = intensity;
 }
 
-public readonly struct MaterialUniformRecord(MaterialId Id, Vector3 color, float shininess, float specularStrength)
+public readonly struct MaterialUniformRecord(MaterialId Id, Vector3 color, float shininess, float specularStrength, float uvRepeat)
 {
     public readonly Vector3 Color = color;
     public readonly float Shininess = shininess;
     public readonly float SpecularStrength = specularStrength;
+    public readonly float UvRepeat = uvRepeat;
+
 }
 
 public readonly struct DrawObjectUniformRecord(in Matrix4x4 model, in Matrix3 normalModel)

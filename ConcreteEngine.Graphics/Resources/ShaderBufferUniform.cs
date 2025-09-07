@@ -13,9 +13,7 @@ public enum ShaderBufferUniform
     DrawObject = 4
 }
 
-
 public interface IUniformGpuData;
-
 
 [StructLayout(LayoutKind.Sequential)]
 public readonly struct FrameUniformGpuData(
@@ -25,13 +23,12 @@ public readonly struct FrameUniformGpuData(
     float fogDensity,
     float fogNear,
     float fogFar,
-    float fogType): IUniformGpuData
+    float fogType) : IUniformGpuData
 {
     public readonly Vector4 Ambient = new(ambient, ambientIntensity);
     public readonly Vector4 FogColor = new(fogColor, fogDensity);
     public readonly Vector4 FogDetail = new(fogNear, fogFar, fogType, 0);
 }
-
 
 [StructLayout(LayoutKind.Sequential)]
 public readonly struct CameraUniformGpuData(
@@ -52,43 +49,45 @@ public readonly struct DirLightUniformGpuData(
     Vector3 direction,
     Vector3 diffuse,
     Vector3 specular,
-    float intensity): IUniformGpuData
+    float intensity) : IUniformGpuData
 {
-    public readonly Vector4 Direction  = direction.AsVector4();
-    public readonly Vector4 Diffuse  = diffuse.AsVector4();
-    public readonly Vector4 SpecularIntensity  = new (specular, intensity);
+    public readonly Vector4 Direction = direction.AsVector4();
+    public readonly Vector4 Diffuse = diffuse.AsVector4();
+    public readonly Vector4 SpecularIntensity = new(specular, intensity);
 
     public Vector3 Specular => SpecularIntensity.AsVector3();
-    public float Intensity  => SpecularIntensity.W;
+    public float Intensity => SpecularIntensity.W;
 }
-
 
 [StructLayout(LayoutKind.Sequential)]
 public readonly struct MaterialUniformGpuData(
     Vector3 color,
     float shininess,
-    float specularStrength
-    ): IUniformGpuData
+    float specularStrength,
+    float uvRepeat
+) : IUniformGpuData
 {
-    public readonly Vector4 Color = new(color, 0);
+    public readonly Vector3 Color = color;
     public readonly float Shininess = shininess;
     public readonly float SpecularStrength = specularStrength;
-    private readonly Vector2 _pad0 = default; // <-- ensures 32 bytes total
+    public readonly float uvRepeat = uvRepeat;
+    private readonly Vector2 _pad0 = default;
 }
 
 [StructLayout(LayoutKind.Sequential)]
 public readonly struct DrawObjectUniformGpuData(
     in Matrix4x4 model,
     in Matrix3 normal
-): IUniformGpuData
+) : IUniformGpuData
 {
     public readonly Matrix4x4 Model = model;
 
     public readonly Vector4 NormalCol0 = new(
         normal.M11, normal.M21, normal.M31, 0f);
+
     public readonly Vector4 NormalCol1 = new(
         normal.M12, normal.M22, normal.M32, 0f);
+
     public readonly Vector4 NormalCol2 = new(
         normal.M13, normal.M23, normal.M33, 0f);
-    
 }

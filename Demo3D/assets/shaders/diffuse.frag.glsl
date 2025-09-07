@@ -52,7 +52,7 @@ void main()
     vec3 V = normalize(uCameraPos.xyz - FragPos);
 
     vec3 baseColor = texture(uTexture, TexCoord).rgb;
-    baseColor *= MaterialColor.rgb;
+    baseColor *= MaterialColor;
 
     vec3 color = CalcDirLight(N, V, baseColor);
     FragColor = vec4(color, 1.0);

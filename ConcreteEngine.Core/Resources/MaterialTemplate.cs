@@ -15,7 +15,9 @@ public sealed class MaterialTemplate : IAssetFile
 {
     public required string Name { get; init; }
     public required Shader Shader { get; set; }
-    public required Texture2D[] Textures { get; init; }
+    public Texture2D[] Textures { get; init; } = [];
+    public CubeMap? CubeMap { get; init; } = null;
+
     public Vector4 Color { get; set; } = Vector4.One;
 
     public AssetFileType AssetType => AssetFileType.Material;

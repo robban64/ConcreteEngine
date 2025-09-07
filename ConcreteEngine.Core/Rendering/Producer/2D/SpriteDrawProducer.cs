@@ -26,7 +26,7 @@ public struct SpriteDrawEntity(): IComparable<SpriteDrawEntity>
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public int CompareTo(SpriteDrawEntity other) => other.MaterialId.Id.CompareTo(MaterialId.Id);
 }
-
+/*
 public interface ISpriteDrawSink : IDrawSink
 {
     void Send(ReadOnlySpan<SpriteDrawEntity> payload);
@@ -162,4 +162,4 @@ public sealed class SpriteDrawProducer : IDrawCommandProducer, ISpriteDrawSink
     }
 
 
-}
+}*/

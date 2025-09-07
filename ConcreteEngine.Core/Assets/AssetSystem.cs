@@ -206,6 +206,6 @@ public sealed class AssetSystem : IAssetSystem
         return;
 
         MaterialTemplate MaterialHandler(AssetMaterialTemplate template) =>
-            loader.LoadMaterialTemplate(template, Get<Shader>, Get<Texture2D>);
+            loader.LoadMaterialTemplate(template, Get<Shader>, Get<Texture2D>, Get<CubeMap>);
     }
 }

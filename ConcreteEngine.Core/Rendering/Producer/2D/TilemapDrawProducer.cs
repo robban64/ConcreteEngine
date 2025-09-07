@@ -17,7 +17,7 @@ public struct TilemapDrawData()
     public int TileSize  = 32;
     public int Count  = 0;
 }
-
+/*
 public interface ITilemapDrawSink : IDrawSink
 {
     void Send(TilemapDrawData payload);
@@ -73,4 +73,4 @@ public sealed class TilemapDrawProducer : IDrawCommandProducer, ITilemapDrawSink
         var meta = DrawCommandMeta.Make2D(DrawCommandId.Tilemap, RenderTargetId.Scene);
         submitter.SubmitDraw(in cmd, in meta);
     }
-}
+}*/

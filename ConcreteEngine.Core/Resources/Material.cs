@@ -2,6 +2,7 @@
 
 using System.Numerics;
 using System.Runtime.CompilerServices;
+using ConcreteEngine.Common;
 using ConcreteEngine.Graphics;
 using ConcreteEngine.Graphics.Resources;
 
@@ -18,7 +19,16 @@ public sealed class Material
     public MaterialId Id { get; }
     public string TemplateName { get; }
     public ShaderId ShaderId { get; set; }
+    
+    public CubeMap? CubeMap { get;  }
+
     public TextureId[] SamplerSlots => _samplerSlots;
+
+
+    public Color4 Color { get; set; } = Colors.White;
+    public float Shininess { get; set; } = 12;
+    public float SpecularStrength { get; set; } = 1;
+    public float UvRepeat { get; set; } = 1;
 
 
     internal Material(MaterialId id, MaterialTemplate template)
@@ -26,10 +36,19 @@ public sealed class Material
         Id = id;
         TemplateName = template.Name;
         ShaderId = template.Shader.ResourceId;
+        CubeMap = template.CubeMap;
 
         _values = new Dictionary<ShaderUniform, IMaterialValue>(4);
+        
+        if (template.Shader.Samplers == 0)
+            return;
 
-        if (template.Shader.Samplers > 0)
+        if (CubeMap != null)
+        {
+            _samplerSlots = new TextureId[1];
+            _samplerSlots[0] = CubeMap.ResourceId;
+        }
+        else
         {
             _samplerSlots = new TextureId[template.Shader.Samplers];
             if (template.Textures?.Length > 0)

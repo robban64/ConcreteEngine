@@ -76,7 +76,9 @@ interface IAssetMaterialValue
 internal sealed record AssetMaterialTemplate(
     string Name,
     string Shader,
-    string[]? Textures
+    string[]? Textures,
+    [property: JsonPropertyName("cubemap")]
+    string? Cubemap
 ) : IAssetManifestRecord
 {
     public Vector4 Color { get; init; } = Vector4.One;

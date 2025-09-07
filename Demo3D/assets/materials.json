@@ -1,6 +1,11 @@
 {
   "resources": [
 	{
+	  "name": "SkyboxMat",
+	  "shader": "Skybox",
+	  "cubemap": "Skybox"
+	},
+	{
 	  "name": "BoatMat",
 	  "shader": "Diffuse",
 	  "textures": ["Boat"]

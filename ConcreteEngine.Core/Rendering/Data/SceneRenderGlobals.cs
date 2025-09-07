@@ -1,4 +1,5 @@
 using System.Numerics;
+using ConcreteEngine.Core.Resources;
 using ConcreteEngine.Graphics.Resources;
 
 namespace ConcreteEngine.Core.Scene;
@@ -24,9 +25,9 @@ public sealed class SceneRenderGlobals
         _dirty = true;
     }
 
-    public void SetSkybox(ShaderId shaderId, TextureId cubemapId, Quaternion rotation, float intensity = 1f)
+    public void SetSkybox(MaterialId materialId, Quaternion rotation, float intensity = 1f)
     {
-        _skybox = new Skybox(shaderId, cubemapId, rotation, intensity);
+        _skybox = new Skybox(materialId, rotation, intensity);
         _dirty = true;
     }
 
@@ -67,8 +68,7 @@ public readonly record struct RenderGlobalSnapshot(
 );
 
 public readonly record struct Skybox(
-    ShaderId ShaderId,
-    TextureId CubemapId,
+    MaterialId MaterialId,
     Quaternion Rotation,
     float Intensity = 1);
 

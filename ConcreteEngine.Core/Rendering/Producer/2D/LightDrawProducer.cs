@@ -8,7 +8,7 @@ using ConcreteEngine.Core.Scene;
 
 namespace ConcreteEngine.Core.Rendering;
 
-
+/*
 public interface ILightDrawSink : IDrawSink
 {
     void Send(ReadOnlySpan<LightComponent> payload);
@@ -49,7 +49,7 @@ public sealed class LightProducer : IDrawCommandProducer, ILightDrawSink
     {
     }
     
-    public void EmitFrame(float alpha, IRenderPipeline submitter)
+    public void EmitFrame(float alpha, RenderPipeline submitter)
     {
         var lights = CollectionsMarshal.AsSpan(_lights);
         foreach (ref var light in lights)
@@ -60,4 +60,4 @@ public sealed class LightProducer : IDrawCommandProducer, ILightDrawSink
             submitter.SubmitDraw(in cmd, in meta);
         }
     }
-}
+}*/

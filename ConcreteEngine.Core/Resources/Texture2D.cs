@@ -8,7 +8,16 @@ using ConcreteEngine.Graphics.Resources;
 
 namespace ConcreteEngine.Core.Resources;
 
-public sealed class Texture2D : IGraphicAssetFile<TextureId>
+public interface IResourceTexture
+{
+    public string Name { get;  }
+    public TextureId ResourceId { get;  }
+    public int Width { get;  }
+    public int Height { get;  }
+    public EnginePixelFormat PixelFormat { get;  }
+
+}
+public sealed class Texture2D : IGraphicAssetFile<TextureId>, IResourceTexture
 {
     public required string Name { get; init; }
     public required string Path { get; init; }

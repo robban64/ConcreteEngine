@@ -116,9 +116,10 @@ internal sealed class ShaderLoader
         private const string MaterialUniform =
             """
             layout(std140, binding = 3) uniform MaterialUniform {
-                vec4 MaterialColor;     // xyz=color, w (unused)
+                vec3 MaterialColor;
                 float Shininess;
                 float SpecularStrength;
+                float uvRepeat;                
                 vec2 _materialPad0;
             };
             """;

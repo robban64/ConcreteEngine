@@ -14,7 +14,6 @@ internal sealed class Render3D : IRender
     private readonly IGraphicsDevice _graphics;
     private readonly IGraphicsContext _gfx;
     private readonly MaterialStore _materialStore;
-    private readonly MaterialBinder _materialBinder;
     private readonly UniformBinder _uniformBinder;
 
     private readonly RenderPasses _registry;
@@ -25,13 +24,11 @@ internal sealed class Render3D : IRender
     public RenderTargetEnumerator GetEnumerator() => _registry.GetEnumerator();
 
 
-    public Render3D(IGraphicsDevice graphics, MaterialStore materialStore, MaterialBinder materialBinder,
-        UniformBinder uniformBinder)
+    public Render3D(IGraphicsDevice graphics, MaterialStore materialStore, UniformBinder uniformBinder)
     {
         _graphics = graphics;
         _gfx = _graphics.Gfx;
         _materialStore = materialStore;
-        _materialBinder = materialBinder;
         _uniformBinder = uniformBinder;
         _camera = new Camera3D();
         _registry = new RenderPasses(graphics);
@@ -71,33 +68,6 @@ internal sealed class Render3D : IRender
         _uniformBinder.ApplyCamera(in cameraUniforms);
         _uniformBinder.ApplyDirLight(in dirLightUniforms);
 
-        /*
-        var projectionViewMatrix = _camera.ProjectionViewMatrix;
-
-        var cameraUniforms = new GlobalCameraUniformValues(
-             viewMat: _camera.ViewMatrix,
-             projMat: _camera.ProjectionMatrix,
-             projViewMat: in projectionViewMatrix,
-             cameraPos: _camera.Translation
-        );
-
-        var lightUniforms = new GlobalLightUniformValues(
-            ambient: snapshot.Ambient,
-            dirLight: new DirLightUniformValues(
-                direction: snapshot.DirLight.Direction,
-                diffuse:snapshot.DirLight.Diffuse,
-                specular:snapshot.DirLight.Specular,
-                intensity: snapshot.DirLight.Intensity
-            )
-        );
-
-        var globalUniforms = new GlobalUniformValues(in cameraUniforms, in lightUniforms);
-
-        foreach (var material in _materialStore.Materials)
-        {
-            _materialBinder.BindGlobalSlots(material.ShaderId);
-        }
-*/
     }
 
     public void RenderScenePass(IScenePass pass, RenderPipeline submitter)

@@ -34,7 +34,7 @@ public sealed class Material
             _samplerSlots = new TextureId[template.Shader.Samplers];
             if (template.Textures?.Length > 0)
             {
-                int length = int.Min(template.Shader.Samplers, template.Textures.Length);
+                int length = int.Min((int)template.Shader.Samplers, template.Textures.Length);
                 for (int i = 0; i < length; i++)
                     SamplerSlots[i] = template.Textures[i].ResourceId;
             }

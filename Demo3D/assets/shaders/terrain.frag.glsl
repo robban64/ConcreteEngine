@@ -6,35 +6,10 @@ in vec3 Normal;
 
 out vec4 FragColor;
 
-// FrameGlobalUniformGpuData
-layout(std140, binding = 0) uniform FrameGlobalUniform {
-    vec4 uAmbient;   // xyz=color, w=intensity
-    vec4 uFogColor;  // xyz=color, w=density
-    vec4 uFogDetail; // x=near, y=far, z=type, w=0
-};
-
-// CameraUniformGpuData (unused here but available)
-layout(std140, binding = 1) uniform CameraUniform {
-    mat4 uViewMat;
-    mat4 uProjMat;
-    mat4 uProjViewMat;
-    vec4 uCameraPos;
-};
-
-// DirLightUniformGpuData
-layout(std140, binding = 2) uniform DirLightUniform {
-    vec4 uLightDirection;            // xyz, w unused
-    vec4 uLightDiffuse;              // rgb, w unused
-    vec4 uLightSpecularIntensity;    // xyz=specular, w=intensity
-};
-
-// MaterialUniformGpuData (unused for terrain lighting here)
-layout(std140, binding = 3) uniform MaterialUniform {
-    vec4 MaterialColor;
-    float Shininess;
-    float SpecularStrength;
-    vec2 _materialPad0;
-};
+#include(Frame)
+#include(Camera)
+#include(DirLight)
+#include(Material)
 
 layout(binding = 0) uniform sampler2D uTexture;
 

@@ -210,10 +210,10 @@ public sealed class GlGraphicsDevice : IGraphicsDevice<GlGraphicsContext>
         return _fboStore.Add(in meta, in handle);
     }
 
-    public ShaderId CreateShader(string vertexSource, string fragmentSource, string[] samplers)
+    public ShaderId CreateShader(string vertexSource, string fragmentSource, out ShaderMeta meta)
     {
-        var handle = _shaderFactory.CreateShader(vertexSource, fragmentSource, samplers,
-            out var uniformTable, out var meta);
+        var handle = _shaderFactory.CreateShader(vertexSource, fragmentSource,
+            out var uniformTable, out  meta);
 
         var shaderId = _shaderStore.Add(in meta, in handle);
 

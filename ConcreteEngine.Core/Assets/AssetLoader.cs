@@ -17,21 +17,22 @@ internal sealed class AssetLoader
     private readonly string _rootPath;
     private readonly IGraphicsDevice _graphics;
     private readonly MeshLoader _meshLoader;
+    private readonly ShaderLoader _shaderLoader;
 
-    private readonly Dictionary<string, string> _vertexShaderCache = new(StringComparer.Ordinal);
 
     public AssetLoader(IGraphicsDevice graphics, string rootPath)
     {
         _graphics = graphics;
         _rootPath = rootPath;
         _meshLoader = new MeshLoader();
+        _shaderLoader = new ShaderLoader();
         //StbImage.stbi_set_flip_vertically_on_load(1);
     }
 
     public void ClearCache()
     {
-        _vertexShaderCache.Clear();
         _meshLoader.ClearCache();
+        _shaderLoader.CleanCache();
     }
 
     private string GetFilePath(string assetTypePath, string fileName)
@@ -158,25 +159,9 @@ internal sealed class AssetLoader
 
     public Shader LoadShader(AssetShaderRecord record)
     {
-        if (!_vertexShaderCache.TryGetValue(record.VertexFilename, out var vertexSource))
-        {
-            var path = GetFilePath("shaders", record.VertexFilename);
-            _vertexShaderCache[record.VertexFilename] = vertexSource = File.ReadAllText(path);
-        }
-
-        var fragmentSource = File.ReadAllText(GetFilePath("shaders", record.FragmentFilename));
-
-        var resourceId = _graphics.CreateShader(vertexSource, fragmentSource, record.Samplers ?? []);
-        var uniforms = _graphics.GetShaderUniforms(resourceId);
-
-        return new Shader
-        {
-            Name = record.Name,
-            VertShaderFilename = record.VertexFilename,
-            FragShaderFilename = record.FragmentFilename,
-            ResourceId = resourceId,
-            Samplers = record.Samplers?.Length ?? 0,
-        };
+        var vPath = GetFilePath("shaders", record.VertexFilename);
+        var fPath = GetFilePath("shaders", record.FragmentFilename);
+        return _shaderLoader.LoadShader(record, _graphics, vPath, fPath);
     }
 
     public MaterialTemplate LoadMaterialTemplate(AssetMaterialTemplate record, Func<string, Shader> getShader,

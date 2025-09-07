@@ -50,11 +50,6 @@ public sealed class UniformTable
 
             _locs[i] = -1;
         }
-
-        if (_rawUniforms.ContainsKey(""))
-        {
-            return;
-        }
     }
     
     [MethodImpl(MethodImplOptions.AggressiveInlining)]

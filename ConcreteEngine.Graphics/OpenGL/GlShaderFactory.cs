@@ -15,10 +15,10 @@ internal sealed class GlShaderFactory(GlGraphicsContext gfx, DeviceCapabilities 
     public void InitializeUniformBuffers(SaveDelegate save)
     {
         var length = GraphicsEnumCache.ShaderBufferUniformVals.Length;
-        
+
         Span<(ShaderBufferUniform, GlUniformBufferHandle)> handles =
             stackalloc (ShaderBufferUniform, GlUniformBufferHandle)[length];
-        
+
         handles[0] = CreateAndSaveUniformBuffer<FrameUniformGpuData>(ShaderBufferUniform.Frame, save);
         handles[1] = CreateAndSaveUniformBuffer<CameraUniformGpuData>(ShaderBufferUniform.Camera, save);
         handles[2] = CreateAndSaveUniformBuffer<DirLightUniformGpuData>(ShaderBufferUniform.DirLight, save);
@@ -30,6 +30,7 @@ internal sealed class GlShaderFactory(GlGraphicsContext gfx, DeviceCapabilities 
             _gl.BindBufferBase(BufferTargetARB.UniformBuffer, (uint)slot, handle.Handle);
         }
     }
+
 /*
     public void BindShaderUniformBuffers(UniformRegistry registry,
         Func<UniformBufferId, GlUniformBufferHandle> getHandle)
@@ -42,7 +43,7 @@ internal sealed class GlShaderFactory(GlGraphicsContext gfx, DeviceCapabilities 
         }
     }
 */
-    public GlShaderHandle CreateShader(string vertexSource, string fragmentSource, string[]? samplers,
+    public GlShaderHandle CreateShader(string vertexSource, string fragmentSource,
         out UniformTable uniformTable, out ShaderMeta meta)
     {
         uint vertexShader = CreateShader(ShaderType.VertexShader, vertexSource);
@@ -55,20 +56,11 @@ internal sealed class GlShaderFactory(GlGraphicsContext gfx, DeviceCapabilities 
 
 
         _gl.UseProgram(handle);
-        var uniformDict = GetUniformsFromProgram(handle);
-        uniformTable = new UniformTable(uniformDict);
-
-        if (samplers?.Length > 0)
-        {
-            for (int i = 0; i < samplers.Length; i++)
-                _gl.Uniform1(uniformTable.GetUniformLocation(samplers[i]), i);
-        }
-
+        GetUniformsFromProgram(handle, out var uniformPair, out var samplers);
+        uniformTable = new UniformTable(uniformPair);
         _gl.UseProgram(0);
 
-
-        var samplerLength = samplers != null ? (uint)samplers.Length : 0;
-        meta = new ShaderMeta(samplerLength);
+        meta = new ShaderMeta((uint)samplers);
         return new GlShaderHandle(handle);
     }
 
@@ -79,7 +71,7 @@ internal sealed class GlShaderFactory(GlGraphicsContext gfx, DeviceCapabilities 
         uint size = (uint)Unsafe.SizeOf<T>();
         meta = new UniformBufferMeta(slot, size, (uint)_caps.MaxUniformBlockSize);
 
-        nuint capacity = AlignUp(size, (nuint)Math.Max(16, _caps.UniformBufferOffsetAlignment));  // >= 48
+        nuint capacity = AlignUp(size, (nuint)Math.Max(16, _caps.UniformBufferOffsetAlignment)); // >= 48
         var handle = _gl.GenBuffer();
         _gl.BindBuffer(BufferTargetARB.UniformBuffer, handle);
         _gl.BufferData(BufferTargetARB.UniformBuffer, capacity, 0, BufferUsageARB.StaticDraw);
@@ -87,7 +79,7 @@ internal sealed class GlShaderFactory(GlGraphicsContext gfx, DeviceCapabilities 
         _gl.BindBuffer(BufferTargetARB.UniformBuffer, 0);
 
         return new GlUniformBufferHandle(handle);
-        
+
         static nuint AlignUp(nuint v, nuint a) => a == 0 ? v : (v + (a - 1)) & ~(a - 1);
     }
 
@@ -127,22 +119,27 @@ internal sealed class GlShaderFactory(GlGraphicsContext gfx, DeviceCapabilities 
         return (slot, handle);
     }
 
-    private List<(string, int)> GetUniformsFromProgram(uint handle)
+    private void GetUniformsFromProgram(uint handle, out List<(string, int)> uniforms, out int samplers)
     {
         _gl.GetProgram(handle, ProgramPropertyARB.ActiveUniforms, out int uniformsLength);
-        var uniforms = new List<(string, int)>(uniformsLength);
-
+        uniforms = new List<(string, int)>(uniformsLength);
+        samplers = 0;
         for (uint uniformIndex = 0; uniformIndex < uniformsLength; uniformIndex++)
         {
-            string uniformName = _gl.GetActiveUniform(handle, uniformIndex, out _, out _);
+            string uniformName = _gl.GetActiveUniform(handle, uniformIndex, out _, out var type);
             int uniformLocation = _gl.GetUniformLocation(handle, uniformName);
             if (uniformLocation >= 0)
             {
                 uniforms.Add((uniformName, uniformLocation));
             }
-        }
 
-        return uniforms;
+            if (type == UniformType.Sampler2D ||
+                type == UniformType.SamplerCube ||
+                type == UniformType.IntSampler2D)
+            {
+                samplers++;
+            }
+        }
     }
 
 

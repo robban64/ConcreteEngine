@@ -25,7 +25,7 @@ public interface IGraphicsDevice : IDisposable
     UniformBufferId GetUboIdBySlot(ShaderBufferUniform slot);
 
     FrameBufferId CreateFramebuffer(in FrameBufferDesc desc, out FrameBufferMeta meta);
-    ShaderId CreateShader(string vertexSource, string fragmentSource, string[] samplers);
+    ShaderId CreateShader(string vertexSource, string fragmentSource, out ShaderMeta meta);
     TextureId CreateTexture2D(in TextureDesc textureDesc);
     TextureId CreateCubeMap(in CreateCubemapDesc cubemapDesc);
 

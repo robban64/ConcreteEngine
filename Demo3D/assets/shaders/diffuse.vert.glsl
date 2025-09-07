@@ -11,47 +11,10 @@ out vec3 N_world;
 out vec3 T_world;
 out vec3 B_world;
 
-// === UBOs (std140) ===
+#include(Frame)
+#include(Camera)
+#include(DrawObject)
 
-
-// FrameGlobalUniformGpuData
-layout(std140, binding = 0) uniform FrameGlobalUniform {
-    vec4 uAmbient;   // xyz=color, w=intensity
-    vec4 uFogColor;  // xyz=color, w=density
-    vec4 uFogDetail; // x=near, y=far, z=type, w=0
-};
-
-
-// CameraUniformGpuData
-layout(std140, binding = 1) uniform CameraUniform {
-    mat4 uViewMat;
-    mat4 uProjMat;
-    mat4 uProjViewMat;
-    vec4 uCameraPos; // C# has vec3 + float pad; use .xyz
-};
-
-// DirLightUniformGpuData (not used in VS)
-layout(std140, binding = 2) uniform DirLightUniform {
-    vec4 uLightDirection;            // xyz, w unused
-    vec4 uLightDiffuse;              // rgb, w unused
-    vec4 uLightSpecularIntensity;    // xyz=specular, w=intensity
-};
-
-layout(std140, binding = 3) uniform MaterialUniform {
-    vec4 MaterialColor;     // xyz=color, w (unused)
-    float Shininess;
-    float SpecularStrength;
-    vec2 _materialPad0;     
-};
-
-// DrawUniformGpuData
-layout(std140, binding = 4) uniform DrawUniform {
-    mat4 uModel;
-    // normal matrix as vec4 (xyz used)
-    vec4 uNormalCol0;
-    vec4 uNormalCol1;
-    vec4 uNormalCol2;
-};
 
 void main()
 {

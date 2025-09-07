@@ -9,37 +9,10 @@ in vec3 B_world;
 
 out vec4 FragColor;
 
-// UBO - (std140)
-
-// FrameGlobalUniformGpuData
-layout(std140, binding = 0) uniform FrameGlobalUniform {
-    vec4 uAmbient;   // xyz=color, w=intensity
-    vec4 uFogColor;  // xyz=color, w=density
-    vec4 uFogDetail; // x=near, y=far, z=type, w=0
-};
-
-// CameraUniformGpuData
-layout(std140, binding = 1) uniform CameraUniform {
-    mat4 uViewMat;
-    mat4 uProjMat;
-    mat4 uProjViewMat;
-    vec4 uCameraPos; // .xyz used
-};
-
-// DirLightUniformGpuData
-layout(std140, binding = 2) uniform DirLightUniform {
-    vec4 uLightDirection;            // xyz, w unused
-    vec4 uLightDiffuse;              // rgb, w unused
-    vec4 uLightSpecularIntensity;    // xyz=specular, w=intensity
-};
-
-// MaterialUniformGpuData (see padding note below)
-layout(std140, binding = 3) uniform MaterialUniform {
-    vec4 MaterialColor;     // xyz=color, w (unused)
-    float Shininess;
-    float SpecularStrength;
-    vec2 _materialPad0;     
-};
+#include(Frame)
+#include(Camera)
+#include(DirLight)
+#include(Material)
 
 
 layout(binding = 0) uniform sampler2D uTexture;
@@ -79,8 +52,7 @@ void main()
     vec3 V = normalize(uCameraPos.xyz - FragPos);
 
     vec3 baseColor = texture(uTexture, TexCoord).rgb;
-    // Optionally multiply by material tint if you want:
-    // baseColor *= MaterialColor.rgb;
+    baseColor *= MaterialColor.rgb;
 
     vec3 color = CalcDirLight(N, V, baseColor);
     FragColor = vec4(color, 1.0);

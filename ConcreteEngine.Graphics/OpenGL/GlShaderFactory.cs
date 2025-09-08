@@ -1,6 +1,7 @@
 using System.Runtime.CompilerServices;
 using ConcreteEngine.Graphics.Error;
 using ConcreteEngine.Graphics.Resources;
+using ConcreteEngine.Graphics.Utils;
 using Silk.NET.OpenGL;
 
 namespace ConcreteEngine.Graphics.OpenGL;
@@ -16,33 +17,48 @@ internal sealed class GlShaderFactory(GlGraphicsContext gfx, DeviceCapabilities 
     {
         var length = GraphicsEnumCache.ShaderBufferUniformVals.Length;
 
-        Span<(UniformGpuData, GlUniformBufferHandle)> handles =
-            stackalloc (UniformGpuData, GlUniformBufferHandle)[length];
+        Span<(UniformGpuSlot, GlUniformBufferHandle)> handles =
+            stackalloc (UniformGpuSlot, GlUniformBufferHandle)[length];
 
-        handles[0] = CreateAndSaveUniformBuffer<FrameUniformGpuData>(UniformGpuData.Frame, save);
-        handles[1] = CreateAndSaveUniformBuffer<CameraUniformGpuData>(UniformGpuData.Camera, save);
-        handles[2] = CreateAndSaveUniformBuffer<DirLightUniformGpuData>(UniformGpuData.DirLight, save);
-        handles[3] = CreateAndSaveUniformBuffer<MaterialUniformGpuData>(UniformGpuData.Material, save);
-        handles[4] = CreateAndSaveUniformBuffer<DrawObjectUniformGpuData>(UniformGpuData.DrawObject, save);
+        handles[0] = CreateAndSaveUniformBuffer<FrameUniformGpuData>(UniformGpuSlot.Frame, save);
+        handles[1] = CreateAndSaveUniformBuffer<CameraUniformGpuData>(UniformGpuSlot.Camera, save);
+        handles[2] = CreateAndSaveUniformBuffer<DirLightUniformGpuData>(UniformGpuSlot.DirLight, save);
+        handles[3] = CreateAndSaveUniformBuffer<MaterialUniformGpuData>(UniformGpuSlot.Material, save);
+        handles[4] = CreateAndSaveUniformBuffer<DrawObjectUniformGpuData>(UniformGpuSlot.DrawObject, save);
 
         foreach (var (slot, handle) in handles)
         {
             _gl.BindBufferBase(BufferTargetARB.UniformBuffer, (uint)slot, handle.Handle);
         }
     }
-
-/*
-    public void BindShaderUniformBuffers(UniformRegistry registry,
-        Func<UniformBufferId, GlUniformBufferHandle> getHandle)
+    private (UniformGpuSlot, GlUniformBufferHandle) CreateAndSaveUniformBuffer<T>(UniformGpuSlot slot,
+        SaveDelegate save) where T : unmanaged, IUniformGpuData
     {
-        foreach (var slot in Enum.GetValues<ShaderBufferUniform>())
-        {
-            var uboIds = registry.GetUniformBuffersBySlot(slot);
-            foreach (var uboId in uboIds)
-                _gl.BindBufferBase(BufferTargetARB.UniformBuffer, (uint)slot, getHandle(uboId).Handle);
-        }
+        var handle = CreateUniformBuffer<T>(slot, out var meta);
+        save(handle, meta);
+        return (slot, handle);
     }
-*/
+
+    private unsafe GlUniformBufferHandle CreateUniformBuffer<T>(UniformGpuSlot slot, out UniformBufferMeta meta)
+        where T : unmanaged, IUniformGpuData
+    {
+        if (!UniformBufferUtils.IsStd140Aligned<T>())
+            throw GraphicsException.InvalidStd140Layout<T>();
+
+        uint size = (uint)Unsafe.SizeOf<T>();
+        meta = new UniformBufferMeta(slot: slot, blockSize: size);
+
+        nuint capacity = UniformBufferUtils.StrideOf<T>();
+        var handle = _gl.GenBuffer();
+        _gl.BindBuffer(BufferTargetARB.UniformBuffer, handle);
+        _gl.BufferData(BufferTargetARB.UniformBuffer, capacity, (void*)0, BufferUsageARB.StaticDraw);
+        _gl.BindBufferBase(BufferTargetARB.UniformBuffer, meta.BindingIdx, handle);
+        _gl.BindBuffer(BufferTargetARB.UniformBuffer, 0);
+
+        return new GlUniformBufferHandle(handle);
+
+    }
+
     public GlShaderHandle CreateShader(string vertexSource, string fragmentSource,
         out UniformTable uniformTable, out ShaderMeta meta)
     {
@@ -63,25 +79,8 @@ internal sealed class GlShaderFactory(GlGraphicsContext gfx, DeviceCapabilities 
         meta = new ShaderMeta((uint)samplers);
         return new GlShaderHandle(handle);
     }
+    
 
-    private GlUniformBufferHandle CreateUniformBuffer<T>(UniformGpuData slot, out UniformBufferMeta meta)
-        where T : struct, IUniformGpuData
-    {
-        IsStd140rThrow<T>();
-        uint size = (uint)Unsafe.SizeOf<T>();
-        meta = new UniformBufferMeta(slot, size, (uint)_caps.MaxUniformBlockSize);
-
-        nuint capacity = AlignUp(size, (nuint)Math.Max(16, _caps.UniformBufferOffsetAlignment)); // >= 48
-        var handle = _gl.GenBuffer();
-        _gl.BindBuffer(BufferTargetARB.UniformBuffer, handle);
-        _gl.BufferData(BufferTargetARB.UniformBuffer, capacity, 0, BufferUsageARB.StaticDraw);
-        _gl.BindBufferBase(BufferTargetARB.UniformBuffer, (uint)slot, handle);
-        _gl.BindBuffer(BufferTargetARB.UniformBuffer, 0);
-
-        return new GlUniformBufferHandle(handle);
-
-        static nuint AlignUp(nuint v, nuint a) => a == 0 ? v : (v + (a - 1)) & ~(a - 1);
-    }
 
     private uint CreateShaderProgram(uint vertexShader, uint fragmentShader)
     {
@@ -110,15 +109,6 @@ internal sealed class GlShaderFactory(GlGraphicsContext gfx, DeviceCapabilities 
         return shader;
     }
 
-
-    private (UniformGpuData, GlUniformBufferHandle) CreateAndSaveUniformBuffer<T>(UniformGpuData slot,
-        SaveDelegate save) where T : struct, IUniformGpuData
-    {
-        var handle = CreateUniformBuffer<T>(slot, out var meta);
-        save(handle, meta);
-        return (slot, handle);
-    }
-
     private void GetUniformsFromProgram(uint handle, out List<(string, int)> uniforms, out int samplers)
     {
         _gl.GetProgram(handle, ProgramPropertyARB.ActiveUniforms, out int uniformsLength);
@@ -142,36 +132,4 @@ internal sealed class GlShaderFactory(GlGraphicsContext gfx, DeviceCapabilities 
         }
     }
 
-
-    private static void IsStd140rThrow<T>() where T : struct
-    {
-        if (!IsStd140Aligned<T>())
-            throw GraphicsException.InvalidStd140Layout<T>();
-    }
-
-    private static bool IsStd140Aligned<T>() where T : struct
-    {
-        int size = Unsafe.SizeOf<T>();
-        return (size % 16) == 0;
-    }
-
-/*
-    private Dictionary<string, int> GetUniformsFromProgram(uint handle)
-    {
-        var uniforms = new Dictionary<string, int>();
-
-        _gl.GetProgram(handle, ProgramPropertyARB.ActiveUniforms, out int uniformsLength);
-        for (uint uniformIndex = 0; uniformIndex < uniformsLength; uniformIndex++)
-        {
-            string uniformName = _gl.GetActiveUniform(handle, uniformIndex, out _, out _);
-            int uniformLocation = _gl.GetUniformLocation(handle, uniformName);
-            if (uniformLocation >= 0)
-            {
-                uniforms.Add(uniformName, uniformLocation);
-            }
-        }
-
-        return uniforms;
-    }
-*/
 }

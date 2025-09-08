@@ -4,6 +4,7 @@ using ConcreteEngine.Graphics.Descriptors;
 using ConcreteEngine.Graphics.Error;
 using ConcreteEngine.Graphics.Primitives;
 using ConcreteEngine.Graphics.Resources;
+using ConcreteEngine.Graphics.Utils;
 using Silk.NET.Maths;
 using Silk.NET.OpenGL;
 
@@ -74,6 +75,7 @@ public sealed class GlGraphicsDevice : IGraphicsDevice<GlGraphicsContext>
         _previousViewportSize = initialFrameCtx.ViewportSize;
         var capabilities = CreateDeviceCapabilities(gl);
         Configuration = new GraphicsConfiguration();
+        UniformBufferUtils.Init(capabilities.UniformBufferOffsetAlignment);
 
         //_targetRegistry = new RenderTargetRegistry();
         _uniformRegistry = new UniformRegistry();
@@ -104,7 +106,7 @@ public sealed class GlGraphicsDevice : IGraphicsDevice<GlGraphicsContext>
         void SaveUbo(GlUniformBufferHandle handle, UniformBufferMeta meta)
         {
             var uboId = _uboStore.Add(in meta, in handle);
-            _uniformRegistry.AddUboToSlot(meta.Binding, uboId);
+            _uniformRegistry.AddUboToSlot(meta.Slot, uboId);
         }
     }
 
@@ -127,10 +129,10 @@ public sealed class GlGraphicsDevice : IGraphicsDevice<GlGraphicsContext>
         RecreateRenderTargetsIfNeeded();
     }
 
-    public IReadOnlyList<UniformBufferId> GetUniformBuffersBySlot(UniformGpuData slot) =>
+    public IReadOnlyList<UniformBufferId> GetUniformBuffersBySlot(UniformGpuSlot slot) =>
         _uniformRegistry.GetUniformBuffersBySlot(slot);
 
-    public UniformBufferId GetUboIdBySlot(UniformGpuData slot)
+    public UniformBufferId GetUboIdBySlot(UniformGpuSlot slot)
         => _uniformRegistry.GetUboId(slot);
 
     private void RecreateRenderTargetsIfNeeded()
@@ -364,13 +366,13 @@ public sealed class GlGraphicsDevice : IGraphicsDevice<GlGraphicsContext>
             MaxVertexAttribBindings = gl.GetInteger((GLEnum)0x82DA), // GL_MAX_VERTEX_ATTRIB_BINDINGS
             MaxTextureSize = gl.GetInteger(GLEnum.MaxTextureSize),
             MaxArrayTextureLayers = gl.GetInteger(GLEnum.MaxArrayTextureLayers),
-            MaxUniformBlockSize = gl.GetInteger(GLEnum.MaxUniformBlockSize),
             MaxFramebufferWidth = gl.GetInteger((GLEnum)0x9315), // GL_MAX_FRAMEBUFFER_WIDTH
             MaxFramebufferHeight = gl.GetInteger((GLEnum)0x9316), // GL_MAX_FRAMEBUFFER_HEIGHT
             MaxSamples = gl.GetInteger(GLEnum.MaxSamples),
             MaxColorAttachments = gl.GetInteger(GLEnum.MaxColorAttachments),
             MaxAnisotropy = gl.GetFloat(GLEnum.MaxTextureMaxAnisotropy),
-            UniformBufferOffsetAlignment = gl.GetInteger(GLEnum.UniformBufferOffsetAlignment),
+            MaxUniformBlockSize = gl.GetInteger(GLEnum.MaxUniformBlockSize),
+            UniformBufferOffsetAlignment = gl.GetInteger(GetPName.UniformBufferOffsetAlignment),
         };
     }
 

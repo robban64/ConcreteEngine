@@ -12,31 +12,31 @@ internal sealed class UniformRegistry
 
     private readonly List<UniformBufferId>[] _uboSlots;
 
-    private readonly Dictionary<UniformGpuData, Type> _typeRegistry = new(4);
-    private readonly Dictionary<UniformGpuData, UniformBufferId> _uboRegistry = new(4);
+    private readonly Dictionary<UniformGpuSlot, Type> _typeRegistry = new(4);
+    private readonly Dictionary<UniformGpuSlot, UniformBufferId> _uboRegistry = new(4);
 
     public UniformRegistry()
     {
-        RegisterUbo<FrameUniformGpuData>(UniformGpuData.Frame);
-        RegisterUbo<CameraUniformGpuData>(UniformGpuData.Camera);
-        RegisterUbo<DirLightUniformGpuData>(UniformGpuData.DirLight);
-        RegisterUbo<MaterialUniformGpuData>(UniformGpuData.Material);
-        RegisterUbo<DrawObjectUniformGpuData>(UniformGpuData.DrawObject);
+        RegisterUbo<FrameUniformGpuData>(UniformGpuSlot.Frame);
+        RegisterUbo<CameraUniformGpuData>(UniformGpuSlot.Camera);
+        RegisterUbo<DirLightUniformGpuData>(UniformGpuSlot.DirLight);
+        RegisterUbo<MaterialUniformGpuData>(UniformGpuSlot.Material);
+        RegisterUbo<DrawObjectUniformGpuData>(UniformGpuSlot.DrawObject);
 
         _uboSlots = new List<UniformBufferId>[GraphicsEnumCache.ShaderBufferUniformVals.Length];
         for (int i = 0; i < _uboSlots.Length; i++)
             _uboSlots[i] = new List<UniformBufferId>(4);
     }
 
-    public IReadOnlyList<UniformBufferId> GetUniformBuffersBySlot(UniformGpuData slot) => _uboSlots[(int)slot];
+    public IReadOnlyList<UniformBufferId> GetUniformBuffersBySlot(UniformGpuSlot slot) => _uboSlots[(int)slot];
 
 
-    public void RegisterUbo<T>(UniformGpuData uniformGpuData) where T : struct, IUniformGpuData
+    public void RegisterUbo<T>(UniformGpuSlot uniformGpuSlot) where T : struct, IUniformGpuData
     {
-        _typeRegistry.Add(uniformGpuData, typeof(T));
+        _typeRegistry.Add(uniformGpuSlot, typeof(T));
     }
     
-    public void AddUboToSlot(UniformGpuData slot, UniformBufferId uboId)
+    public void AddUboToSlot(UniformGpuSlot slot, UniformBufferId uboId)
     {
         var list = _uboSlots[(int)slot];
         if (list.Contains(uboId))
@@ -52,7 +52,7 @@ internal sealed class UniformRegistry
         _shaderUniforms.Add(shaderId.Id, uniformTable);
     }
 
-    public UniformBufferId GetUboId(UniformGpuData slot) => _uboRegistry[slot];
+    public UniformBufferId GetUboId(UniformGpuSlot slot) => _uboRegistry[slot];
 
     public UniformTable Get(ShaderId shaderId)
     {

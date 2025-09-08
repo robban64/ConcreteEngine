@@ -4,7 +4,7 @@ using ConcreteEngine.Common.Extensions;
 
 namespace ConcreteEngine.Graphics.Resources;
 
-public enum UniformGpuData
+public enum UniformGpuSlot
 {
     Frame = 0,
     Camera = 1,

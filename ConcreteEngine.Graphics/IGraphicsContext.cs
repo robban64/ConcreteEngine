@@ -15,6 +15,7 @@ namespace ConcreteEngine.Graphics;
 public interface IGraphicsContext
 {
     GraphicsConfiguration Configuration { get; }
+    DeviceCapabilities  Capabilities { get; }
 
     Vector2D<int> ViewportSize { get; }
     BlendMode BlendMode { get; }
@@ -30,7 +31,7 @@ public interface IGraphicsContext
     void BlitFramebuffer(FrameBufferId fromId, FrameBufferId toId = default, bool linearFilter = true);
     void SetBlendMode(BlendMode blendMode);
     void SetDepthTest(bool depthTest);
-    
+
     void BindTexture(TextureId resourceId, uint slot);
     void BindMesh(MeshId resourceId);
     void BindVertexBuffer(VertexBufferId resourceId);
@@ -43,7 +44,10 @@ public interface IGraphicsContext
     void UploadVertexBuffer<T>(ReadOnlySpan<T> data, int offsetElements) where T : unmanaged;
     void UploadIndexBuffer<T>(ReadOnlySpan<T> data, int offsetElements) where T : unmanaged;
 
-    void UploadUniformGpuData<T>(UniformGpuData slot, in T data) where T : unmanaged, IUniformGpuData;
+    void SetUniformBufferSize(UniformGpuSlot slot, nuint capacityBytes);
+    void UploadUniformGpuData<T>(UniformGpuSlot slot, in T data) where T : unmanaged, IUniformGpuData;
+    (int , int , nuint ) UploadUniformGpuDataRing<T>(in T data, nuint cursorBytes) where T : unmanaged, IUniformGpuData;
+    void BindUniformBufferRange(UniformGpuSlot slot, int offset, int size);
     
     void DrawMesh(uint drawCount = 0);
 
@@ -56,5 +60,4 @@ public interface IGraphicsContext
     void SetUniform(ShaderUniform uniform, Vector4 value);
     void SetUniform(ShaderUniform uniform, in Matrix4x4 value);
     void SetUniform(ShaderUniform uniform, in Matrix3 value);
-    
 }

@@ -53,10 +53,8 @@ internal sealed class DrawProcessor
     public void DrawMesh(in DrawCommand cmd)
     {
         BindMaterial(cmd.MaterialId);
-
-        TransformHelper.GetNormalMatrix(in cmd.Transform, out var normalMatrix);
         
-        _uniformBinder.ApplyDrawObject(new DrawObjectUniformRecord(in cmd.Transform, in normalMatrix));
+        _uniformBinder.ApplyDrawObject(new DrawObjectUniformRecord(in cmd.Transform));
 
         _gfx.BindMesh(cmd.MeshId);
         _gfx.DrawMesh(cmd.DrawCount);

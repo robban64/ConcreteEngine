@@ -32,7 +32,7 @@ internal class Render2D : IRender
     }
 
 
-    public void PrepareRender(float alpha, in RenderGlobalSnapshot renderGlobals)
+    public void Prepare(float alpha, in RenderGlobalSnapshot renderGlobals)
     {
         var projectionViewMatrix = _camera.ProjectionViewMatrix;
         foreach (var material in _materialStore.Materials)

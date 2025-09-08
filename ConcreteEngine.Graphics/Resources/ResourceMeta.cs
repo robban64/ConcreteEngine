@@ -2,6 +2,7 @@
 
 using System.Numerics;
 using ConcreteEngine.Graphics.Descriptors;
+using ConcreteEngine.Graphics.Utils;
 using Silk.NET.Maths;
 
 #endregion
@@ -121,13 +122,20 @@ public readonly struct RenderBufferMeta(
     public readonly bool Multisample = multisample;
 }
 
-public readonly struct UniformBufferMeta(
-    UniformGpuData binding,
-    uint bindingIndex, // layout(binding = N)
-    uint blockSize
-)
+public readonly struct UniformBufferMeta
 {
-    public readonly UniformGpuData Binding = binding;
-    public readonly uint BlockSize = blockSize;
-    public readonly uint BindingIndex = bindingIndex;
+    public readonly UniformGpuSlot Slot;
+    public readonly uint BindingIdx;
+    public readonly nuint BlockSize;
+    public readonly nuint OffsetAlign;
+    public readonly nuint Stride;
+
+    public UniformBufferMeta(UniformGpuSlot slot, nuint blockSize)
+    {
+        Slot = slot;
+        BindingIdx = (uint)slot;
+        BlockSize = blockSize;
+        OffsetAlign = UniformBufferUtils.GetClampOffsetAlign();
+        Stride = UniformBufferUtils.AlignUp(BlockSize, OffsetAlign);
+    }
 }

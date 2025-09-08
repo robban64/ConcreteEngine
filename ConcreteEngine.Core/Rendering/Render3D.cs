@@ -35,7 +35,7 @@ internal sealed class Render3D : IRender
     }
 
 
-    public void PrepareRender(float alpha, in RenderGlobalSnapshot snapshot)
+    public void Prepare(float alpha, in RenderGlobalSnapshot snapshot)
     {
         var frameUniforms = new FrameUniformRecord(
             ambient: snapshot.Ambient,

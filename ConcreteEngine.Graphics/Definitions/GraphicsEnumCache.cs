@@ -5,6 +5,6 @@ namespace ConcreteEngine.Graphics;
 public static class GraphicsEnumCache
 {
     public static readonly ShaderUniform[] ShaderUniformVals = Enum.GetValues<ShaderUniform>();
-    public static readonly UniformGpuData[] ShaderBufferUniformVals = Enum.GetValues<UniformGpuData>();
+    public static readonly UniformGpuSlot[] ShaderBufferUniformVals = Enum.GetValues<UniformGpuSlot>();
 
 }

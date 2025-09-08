@@ -55,6 +55,9 @@ public sealed class GlGraphicsContext : IGraphicsContext
     private readonly DeviceCapabilities _capabilities;
 
     public GraphicsConfiguration Configuration { get; }
+    
+    public DeviceCapabilities  Capabilities => _capabilities;
+    
     public BlendMode BlendMode => _blendMode;
     public bool DepthTest => _depthTest;
     public Vector2D<int> ViewportSize => _viewport;
@@ -477,36 +480,44 @@ public sealed class GlGraphicsContext : IGraphicsContext
         CheckGlError(); // throws here
     }
 
-    public unsafe void UploadUniformGpuData<T>(UniformGpuData slot, in T data) where T : unmanaged, IUniformGpuData
+    public unsafe void SetUniformBufferSize(UniformGpuSlot slot, nuint capacityBytes)
+    {
+        _gl.BufferData(BufferTargetARB.UniformBuffer, capacityBytes, (void*)0, BufferUsageARB.StaticDraw);
+    }
+
+    public unsafe void UploadUniformGpuData<T>(UniformGpuSlot slot, in T data) where T : unmanaged, IUniformGpuData
     {
         var size = (nuint)Unsafe.SizeOf<T>();
-        ref readonly var meta = ref _store.UboStore.GetMeta(_boundUniformBufferId);
-        var handle = _store.UboStore.GetHandle(_boundUniformBufferId);
-        
+        Debug.Assert(_boundUniformBufferId.Id > 0);
+
         fixed (T* p = &data)
             _gl.BufferSubData(BufferTargetARB.UniformBuffer, 0, size, p);
         
         CheckGlError(); // throws here
     }
-    public unsafe nuint UploadUniformGpuDataSlice<T>(UniformGpuData slot, in T data, nuint cursorBytes)
+    public unsafe (int , int , nuint ) UploadUniformGpuDataRing<T>(in T data, nuint cursorBytes)
         where T : unmanaged, IUniformGpuData
     {
-        var size = (nuint)Unsafe.SizeOf<T>();
-        ref readonly var meta = ref _store.UboStore.GetMeta(_boundUniformBufferId);
-        var handle = _store.UboStore.GetHandle(_boundUniformBufferId);
+        Debug.Assert(_boundUniformBufferId.Id > 0);
 
-        nuint align = (nuint)_capabilities.GetAlignedStride();
-        nuint offset = AlignUp(cursorBytes, align);
+        ref readonly var meta = ref _store.UboStore.GetMeta(_boundUniformBufferId);
+        var size = meta.BlockSize;
+        nuint offset = UniformBufferUtils.AlignUp(cursorBytes, meta.OffsetAlign);
 
         fixed (T* p = &data)
             _gl.BufferSubData(BufferTargetARB.UniformBuffer, (nint)offset, size, p);
 
-        _gl.BindBufferRange(BufferTargetARB.UniformBuffer, (uint)slot, handle.Handle, (nint)offset, size);
         CheckGlError();
 
-        return offset + size;
+        nuint next = offset + size;
+        return ((int)offset, (int)size, next);
+    }
 
-        static nuint AlignUp(nuint v, nuint a) => a == 0 ? v : (v + (a - 1)) & ~(a - 1);
+    public void BindUniformBufferRange(UniformGpuSlot slot, int offset, int size)
+    {
+        Debug.Assert(_boundUniformBufferId.IsValid());
+        var handle = _store.UboStore.GetHandle(_boundUniformBufferId);
+        _gl.BindBufferRange(BufferTargetARB.UniformBuffer, (uint)slot, handle.Handle, (nint)offset, (nuint)size);
     }
 
     public void DrawMesh(uint drawCount = 0)

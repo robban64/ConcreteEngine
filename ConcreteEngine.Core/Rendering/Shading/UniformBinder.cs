@@ -1,3 +1,4 @@
+using System.Runtime.CompilerServices;
 using ConcreteEngine.Graphics;
 using ConcreteEngine.Graphics.Resources;
 
@@ -15,6 +16,9 @@ public sealed class UniformBinder
     private UniformBufferId _uboDraw;
 
 
+    private nuint _nextObjectCursor = 0;
+    private nuint _capacity = 0;
+
     public UniformBinder(IGraphicsDevice graphics)
     {
         _graphics = graphics;
@@ -23,16 +27,25 @@ public sealed class UniformBinder
 
     public void Initialize()
     {
-        _uboFrame = _graphics.GetUboIdBySlot(UniformGpuData.Frame);
-        _uboView = _graphics.GetUboIdBySlot(UniformGpuData.Camera);
-        _uboLight = _graphics.GetUboIdBySlot(UniformGpuData.DirLight);
-        _uboMaterial = _graphics.GetUboIdBySlot(UniformGpuData.Material);
-        _uboDraw = _graphics.GetUboIdBySlot(UniformGpuData.DrawObject);
+        _uboFrame = _graphics.GetUboIdBySlot(UniformGpuSlot.Frame);
+        _uboView = _graphics.GetUboIdBySlot(UniformGpuSlot.Camera);
+        _uboLight = _graphics.GetUboIdBySlot(UniformGpuSlot.DirLight);
+        _uboMaterial = _graphics.GetUboIdBySlot(UniformGpuSlot.Material);
+        _uboDraw = _graphics.GetUboIdBySlot(UniformGpuSlot.DrawObject);
         _uboFrame.IsValidOrThrow();
         _uboView.IsValidOrThrow();
         _uboLight.IsValidOrThrow();
         _uboMaterial.IsValidOrThrow();
         _uboDraw.IsValidOrThrow();
+    }
+
+    public void Prepare(nuint capacity)
+    {
+        _nextObjectCursor = 0;
+        _capacity = capacity;
+        _gfx.BindUniformBuffer(_uboDraw);
+        _gfx.SetUniformBufferSize(UniformGpuSlot.DrawObject, _capacity);
+        _gfx.BindUniformBuffer(default);
     }
 
     public void ApplyFrame(in FrameUniformRecord rec)
@@ -48,7 +61,7 @@ public sealed class UniformBinder
         );
 
         _gfx.BindUniformBuffer(_uboFrame);
-        _gfx.UploadUniformGpuData(UniformGpuData.Frame, in data);
+        _gfx.UploadUniformGpuData(UniformGpuSlot.Frame, in data);
     }
 
     public void ApplyCamera(in CameraUniformRecord rec)
@@ -61,7 +74,7 @@ public sealed class UniformBinder
         );
 
         _gfx.BindUniformBuffer(_uboView);
-        _gfx.UploadUniformGpuData(UniformGpuData.Camera, in data);
+        _gfx.UploadUniformGpuData(UniformGpuSlot.Camera, in data);
     }
 
     public void ApplyDirLight(in DirLightUniformRecord rec)
@@ -74,7 +87,7 @@ public sealed class UniformBinder
         );
 
         _gfx.BindUniformBuffer(_uboLight);
-        _gfx.UploadUniformGpuData(UniformGpuData.DirLight, in data);
+        _gfx.UploadUniformGpuData(UniformGpuSlot.DirLight, in data);
     }
 
     public void ApplyMaterial(in MaterialUniformRecord rec)
@@ -87,17 +100,52 @@ public sealed class UniformBinder
         );
 
         _gfx.BindUniformBuffer(_uboMaterial);
-        _gfx.UploadUniformGpuData(UniformGpuData.Material, in data);
+        _gfx.UploadUniformGpuData(UniformGpuSlot.Material, in data);
     }
 
     public void ApplyDrawObject(in DrawObjectUniformRecord rec)
     {
+        TransformHelper.GetNormalMatrix(in rec.Model, out var normalModel);
+
         var data = new DrawObjectUniformGpuData(
             model: in rec.Model,
-            normal: in rec.NormalModel
+            normal: in normalModel
         );
 
         _gfx.BindUniformBuffer(_uboDraw);
-        _gfx.UploadUniformGpuData(UniformGpuData.DrawObject, in data);
+        var (offset, size, next) = _gfx.UploadUniformGpuDataRing(in data, _nextObjectCursor);
+        _gfx.BindUniformBufferRange(UniformGpuSlot.DrawObject, offset, size);
+        _nextObjectCursor = next;
+        //_gfx.UploadUniformGpuData(UniformGpuData.DrawObject, in data);
+        
+
+
+    }
+
+    private sealed class UboStream
+    {
+        public readonly uint BufferId;
+        public readonly nuint Capacity;
+        public readonly nuint Align; // GL_UNIFORM_BUFFER_OFFSET_ALIGNMENT
+        private nuint _cursor;
+
+        public void BeginFrame()
+        {
+            _cursor = 0;
+        }
+
+        public (nuint offset, nuint size) Allocate(nuint size)
+        {
+            nuint aligned = AlignUp(_cursor, Align);
+            if (aligned + size > Capacity)
+            {
+                aligned = 0;
+                _cursor = 0;
+            }
+            _cursor = aligned + size;
+            return (aligned, size);
+        }
+
+        static nuint AlignUp(nuint v, nuint a) => a == 0 ? v : (v + (a - 1)) & ~(a - 1);
     }
 }

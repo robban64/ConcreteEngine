@@ -20,6 +20,8 @@ public sealed class RenderPipeline
 
     private int _submitIdx = 0;
     private int _iteratorIdx = 0;
+    
+    public int Count => _submitIdx;
 
     internal RenderPipeline(DrawProcessor drawProcessor)
     {

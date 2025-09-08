@@ -1,5 +1,6 @@
 #region
 
+using System.Runtime.CompilerServices;
 using ConcreteEngine.Common.Collections;
 using ConcreteEngine.Common.Extensions;
 using ConcreteEngine.Core.Configuration;
@@ -149,8 +150,7 @@ public sealed class RenderSystem : IRenderSystem
     private void PrepareRenderer(float alpha, in RenderGlobalSnapshot renderGlobals)
     {
         _sceneDrawProducer.SetSceneGlobals(in renderGlobals);
-        
-        _render.PrepareRender(alpha, in renderGlobals);
+        _render.Prepare(alpha, in renderGlobals);
         _drawProcessor.Prepare(in renderGlobals);
         _commandCollector.Collect(alpha, _commandSubmitter);
         _commandSubmitter.Prepare();
@@ -158,6 +158,11 @@ public sealed class RenderSystem : IRenderSystem
 
     private void Execute(float alpha, in RenderGlobalSnapshot renderGlobals)
     {
+        nuint blockSize   = (nuint)Unsafe.SizeOf<DrawObjectUniformGpuData>();
+        nuint uboAlign    = (nuint)_gfx.Capabilities.UniformBufferOffsetAlignment;              
+        nuint stride      = (blockSize + (uboAlign - 1)) & ~(uboAlign - 1);  
+        var capacity = stride * (nuint)(_commandSubmitter.Count + 100);
+        _uniformBinder.Prepare(capacity);
         foreach (var (renderTarget, passes) in _render)
         {
             foreach (var pass in passes)

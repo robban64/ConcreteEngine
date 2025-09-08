@@ -3,7 +3,7 @@ using Silk.NET.Maths;
 
 namespace ConcreteEngine.Core.Rendering;
 
-public readonly struct RenderPassFboEntry(
+public readonly struct RenderPassFboRecord(
     FrameBufferId fboId,
     TextureId colTexId,
     RenderBufferId rboTexId,
@@ -19,6 +19,6 @@ public readonly struct RenderPassFboEntry(
     public bool Msaa => Samples > 0;
     public bool IsValid => FboId.IsValid();
 
-    public static RenderPassFboEntry From(FrameBufferId id, in FrameBufferMeta meta)
+    public static RenderPassFboRecord From(FrameBufferId id, in FrameBufferMeta meta)
         => new(id, meta.ColTexId, meta.RboTexId, meta.Size, meta.Samples);
 }

@@ -97,17 +97,20 @@ public sealed class GlGraphicsDevice : IGraphicsDevice<GlGraphicsContext>
         Console.WriteLine(capabilities.ToString());
     }
 
-    public void InitializeData()
+    public GraphicsResourceBuilder CreateBuilder() => new();
+
+    public void BuildResources(GraphicsResourceBuilder builder)
     {
         _primitives.CreatePrimitives(this);
-        _shaderFactory.InitializeUniformBuffers(SaveUbo);
-        return;
 
-        void SaveUbo(GlUniformBufferHandle handle, UniformBufferMeta meta)
+        foreach (var factory in builder.UboBuilder)
         {
+            var (handle, meta) = factory(_shaderFactory);
             var uboId = _uboStore.Add(in meta, in handle);
             _uniformRegistry.AddUboToSlot(meta.Slot, uboId);
         }
+
+        builder.Clear();
     }
 
 
@@ -128,9 +131,6 @@ public sealed class GlGraphicsDevice : IGraphicsDevice<GlGraphicsContext>
         // TODO use a special tick or timer for disposing and recreating
         RecreateRenderTargetsIfNeeded();
     }
-
-    public IReadOnlyList<UniformBufferId> GetUniformBuffersBySlot(UniformGpuSlot slot) =>
-        _uniformRegistry.GetUniformBuffersBySlot(slot);
 
     public UniformBufferId GetUboIdBySlot(UniformGpuSlot slot)
         => _uniformRegistry.GetUboId(slot);

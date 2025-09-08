@@ -15,12 +15,12 @@ public interface IGraphicsDevice : IDisposable
     GraphicsConfiguration Configuration { get; }
     IPrimitiveMeshes Primitives { get; }
 
-    void InitializeData();
+    GraphicsResourceBuilder CreateBuilder();
+    void BuildResources(GraphicsResourceBuilder builder);
 
     void StartFrame(in FrameMetaInfo frameCtx);
     void EndFrame(out FrameRenderResult result);
 
-    IReadOnlyList<UniformBufferId> GetUniformBuffersBySlot(UniformGpuSlot slot);
     UniformBufferId GetUboIdBySlot(UniformGpuSlot slot);
 
     FrameBufferId CreateFramebuffer(in FrameBufferDesc desc, out FrameBufferMeta meta);

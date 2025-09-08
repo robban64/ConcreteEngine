@@ -11,30 +11,15 @@ internal sealed class UniformRegistry
     private readonly SortedList<int, UniformTable> _shaderUniforms = new(8);
 
     private readonly List<UniformBufferId>[] _uboSlots;
-
-    private readonly Dictionary<UniformGpuSlot, Type> _typeRegistry = new(4);
     private readonly Dictionary<UniformGpuSlot, UniformBufferId> _uboRegistry = new(4);
 
     public UniformRegistry()
     {
-        RegisterUbo<FrameUniformGpuData>(UniformGpuSlot.Frame);
-        RegisterUbo<CameraUniformGpuData>(UniformGpuSlot.Camera);
-        RegisterUbo<DirLightUniformGpuData>(UniformGpuSlot.DirLight);
-        RegisterUbo<MaterialUniformGpuData>(UniformGpuSlot.Material);
-        RegisterUbo<DrawObjectUniformGpuData>(UniformGpuSlot.DrawObject);
-
         _uboSlots = new List<UniformBufferId>[GraphicsEnumCache.ShaderBufferUniformVals.Length];
         for (int i = 0; i < _uboSlots.Length; i++)
             _uboSlots[i] = new List<UniformBufferId>(4);
     }
 
-    public IReadOnlyList<UniformBufferId> GetUniformBuffersBySlot(UniformGpuSlot slot) => _uboSlots[(int)slot];
-
-
-    public void RegisterUbo<T>(UniformGpuSlot uniformGpuSlot) where T : struct, IUniformGpuData
-    {
-        _typeRegistry.Add(uniformGpuSlot, typeof(T));
-    }
     
     public void AddUboToSlot(UniformGpuSlot slot, UniformBufferId uboId)
     {

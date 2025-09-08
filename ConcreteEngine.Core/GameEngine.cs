@@ -11,6 +11,7 @@ using ConcreteEngine.Core.Systems;
 using ConcreteEngine.Core.Time;
 using ConcreteEngine.Graphics;
 using ConcreteEngine.Graphics.Descriptors;
+using ConcreteEngine.Graphics.Resources;
 
 #endregion
 
@@ -74,7 +75,7 @@ public sealed class GameEngine : IDisposable
         _inputSystem = new InputSystem(_input);
 
         // load static graphics data before assets
-        _graphics.InitializeData();
+        RegisterGraphics();
         
         // assets
         _assets = new AssetSystem(_graphics, assetConfig.AssetPath, assetConfig.ManifestFilename);
@@ -91,6 +92,17 @@ public sealed class GameEngine : IDisposable
         _systems.Initialize();
 
         _nextSceneIndex = 0;
+    }
+
+    private void RegisterGraphics()
+    {
+        var builder = _graphics.CreateBuilder();
+        builder.RegisterUbo<FrameUniformGpuData>(UniformGpuSlot.Frame, UboDefaultCapacity.Lower);
+        builder.RegisterUbo<CameraUniformGpuData>(UniformGpuSlot.Camera, UboDefaultCapacity.Lower);
+        builder.RegisterUbo<DirLightUniformGpuData>(UniformGpuSlot.DirLight, UboDefaultCapacity.Lower);
+        builder.RegisterUbo<MaterialUniformGpuData>(UniformGpuSlot.Material, UboDefaultCapacity.Medium);
+        builder.RegisterUbo<DrawObjectUniformGpuData>(UniformGpuSlot.DrawObject, UboDefaultCapacity.Upper);
+        _graphics.BuildResources(builder);
     }
     
 

@@ -16,12 +16,12 @@ internal class RenderPasses
 {
     private readonly IGraphicsDevice _graphics;
 
-    public RenderPassFboEntry MultisampleFbo { get; private set; }
-    public RenderPassFboEntry SceneFbo { get; private set; }
-    public RenderPassFboEntry LightFbo { get; private set; }
-    public RenderPassFboEntry ShadowFbo { get; private set; }
-    public RenderPassFboEntry PostFboA { get; private set; }
-    public RenderPassFboEntry PostFboB { get; private set; }
+    public RenderPassFboRecord MultisampleFbo { get; private set; }
+    public RenderPassFboRecord SceneFbo { get; private set; }
+    public RenderPassFboRecord LightFbo { get; private set; }
+    public RenderPassFboRecord ShadowFbo { get; private set; }
+    public RenderPassFboRecord PostFboA { get; private set; }
+    public RenderPassFboRecord PostFboB { get; private set; }
 
     private readonly List<IRenderPassDescriptor>[] _renderTargets;
 
@@ -74,7 +74,7 @@ internal class RenderPasses
         var desc = new FrameBufferDesc(SizeRatio: Vector2.One, DepthStencilBuffer: true);
         var fboId = _graphics.CreateFramebuffer(in desc, out var meta);
 
-        SceneFbo = RenderPassFboEntry.From(fboId, in meta);
+        SceneFbo = RenderPassFboRecord.From(fboId, in meta);
     }
 
     public void CreateMultisampleBuffer(Vector2 sizeRatio, uint samples)
@@ -91,7 +91,7 @@ internal class RenderPasses
         
         var fboId = _graphics.CreateFramebuffer(in desc, out var meta);
 
-        MultisampleFbo = RenderPassFboEntry.From(fboId, in meta);
+        MultisampleFbo = RenderPassFboRecord.From(fboId, in meta);
     }
     
     public void CreateShadowBuffer(Vector2D<int> absoluteSize)
@@ -108,7 +108,7 @@ internal class RenderPasses
         
         var fboId = _graphics.CreateFramebuffer(in desc , out var meta);
 
-        ShadowFbo =  RenderPassFboEntry.From(fboId, in meta);
+        ShadowFbo =  RenderPassFboRecord.From(fboId, in meta);
     }
 
     public void CreateLightBuffer(Vector2 sizeRatio, TexturePreset preset)
@@ -123,7 +123,7 @@ internal class RenderPasses
         
         var fboId = _graphics.CreateFramebuffer(in desc , out var meta);
 
-        LightFbo = RenderPassFboEntry.From(fboId, in meta);
+        LightFbo = RenderPassFboRecord.From(fboId, in meta);
     }
     
     public void CreatePostProcessBuffer_A(Vector2 sizeRatio)
@@ -142,7 +142,7 @@ internal class RenderPasses
         PostFboB = CreatePostProcessBuffer(sizeRatio);
     }
 
-    private RenderPassFboEntry CreatePostProcessBuffer(Vector2 sizeRatio)
+    private RenderPassFboRecord CreatePostProcessBuffer(Vector2 sizeRatio)
     {
         ValidateSizeRatio(sizeRatio);
 
@@ -152,7 +152,7 @@ internal class RenderPasses
         
         var fboId = _graphics.CreateFramebuffer(in desc , out var meta);
 
-        return RenderPassFboEntry.From(fboId, in meta);
+        return RenderPassFboRecord.From(fboId, in meta);
     }
 
 

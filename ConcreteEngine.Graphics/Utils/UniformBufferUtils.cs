@@ -3,10 +3,15 @@ using ConcreteEngine.Graphics.Resources;
 
 namespace ConcreteEngine.Graphics.Utils;
 
-public sealed class UniformBufferUtils
+
+
+public static class UniformBufferUtils
 {
-    public const nuint DefaultBytes = 2u * 1024u * 1024u; // 2 MiB
-    public const nuint MinBytes            = 16u * 1024u;        // 16 KiB floor
+    public const nuint MinCapacityBytes = 16u * 1024u; // 16 KiB
+    public const nuint DefaultLowerCapacityBytes = 32u * 1024u; // 64 KiB
+    public const nuint DefaultMediumCapacityBytes = 512u * 1024u; // 512 KiB
+    public const nuint DefaultUpperCapacityBytes = 2u * 1024u * 1024u; // 2 MiB
+
 
     private static int _uboOffsetAlign = -1;
     private static nuint _offsetAlign = 16;
@@ -15,28 +20,34 @@ public sealed class UniformBufferUtils
     {
         ArgumentOutOfRangeException.ThrowIfLessThanOrEqual(uniformBufferOffsetAlignment, 0,
             nameof(uniformBufferOffsetAlignment));
-        
+
         _uboOffsetAlign = Math.Max(16, uniformBufferOffsetAlignment);
         _offsetAlign = (nuint)_uboOffsetAlign;
     }
-    
-    public static nuint GetDefaultCapacity(nuint stride)
+
+    public static nuint GetDefaultCapacity(nuint stride, UboDefaultCapacity defaultCapacity)
     {
-        nuint q = DefaultBytes / stride;
+        var size = defaultCapacity switch
+        {
+            UboDefaultCapacity.Lower => DefaultLowerCapacityBytes,
+            UboDefaultCapacity.Medium => DefaultMediumCapacityBytes,
+            UboDefaultCapacity.Upper => DefaultUpperCapacityBytes
+        };
+        nuint q = size / stride;
         return (q == 0 ? stride : q * stride);
     }
-    
-    public static nuint GetRequiredCapacity(nuint stride, int expectedRecords)
-        => stride * (nuint)Math.Max(1, expectedRecords);
-    
+
+    public static nuint GetRequiredCapacity(nuint stride, int expectedRecords) =>
+        stride * (nuint)Math.Max(1, expectedRecords);
+
     public static nuint NextCapacity(nuint currentBytes, nuint requiredBytes)
     {
-        nuint cap = currentBytes < MinBytes ? MinBytes : currentBytes;
+        nuint cap = currentBytes < MinCapacityBytes ? MinCapacityBytes : currentBytes;
         while (cap < requiredBytes) cap *= 2;
         return cap;
     }
 
-    
+
     public static nuint GetClampOffsetAlign() => (nuint)_uboOffsetAlign;
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]

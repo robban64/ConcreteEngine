@@ -23,6 +23,9 @@ internal sealed class ResourceStore<TId, TMeta, THandle>
 
     public int Count => _idx;
 
+    internal ReadOnlySpan<TMeta> AsMetaSpan() => _meta;
+    internal ReadOnlySpan<THandle> AsHandleSpan() => _handle;
+
     public ResourceStore(
         int initialCapacity,
         Func<int, TId> makeId)

@@ -32,5 +32,6 @@ public sealed class Texture2D : IGraphicAssetFile<TextureId>, IResourceTexture
     public AssetFileType AssetType => AssetFileType.Texture2D;
     
     // Todo use handler for IO
-    public byte[]? Data { get; set; }
+    public ReadOnlyMemory<byte>? Data { get; set; }
+    public GpuResourceKind GpuResourceKind => GpuResourceKind.Texture2D;
 }

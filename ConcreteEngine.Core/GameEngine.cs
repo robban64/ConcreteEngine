@@ -32,10 +32,14 @@ public sealed class GameEngine : IDisposable
     private readonly IGraphicsDevice _graphics;
 
     private readonly IEngineInputSource _input;
+    
+    
+    private readonly AssetSystem _assets;
+    private AssetLoader _loader;
+
 
     private readonly EngineSystemManagerManager _systems;
     private readonly InputSystem _inputSystem;
-    private readonly AssetSystem _assets;
     private readonly RenderSystem _renderer;
     private readonly GameMessagePipeline _pipeline;
 
@@ -48,6 +52,9 @@ public sealed class GameEngine : IDisposable
     private FrameRenderResult _frameResult = default;
     
     private UpdateMetaInfo  _updateMeta = default;
+
+    private bool _hasInit = false;
+    private bool _hasStarted = false;
     
     public T GetFeature<T>() where T : IGameFeature => _features.Get<T>();
 
@@ -74,24 +81,26 @@ public sealed class GameEngine : IDisposable
         // input
         _inputSystem = new InputSystem(_input);
 
-        // load static graphics data before assets
-        RegisterGraphics();
-        
         // assets
-        _assets = new AssetSystem(_graphics, assetConfig.AssetPath, assetConfig.ManifestFilename);
-        _assets.Initialize();
+        _assets = new AssetSystem(assetConfig.AssetPath, assetConfig.ManifestFilename);
 
         // messages
         _pipeline = new GameMessagePipeline();
 
         // renderer
-        _renderer = new RenderSystem(_graphics, _assets.MaterialStore);
-        _renderer.Initialize();
+        _renderer = new RenderSystem(_graphics);
 
         _systems = new EngineSystemManagerManager(_renderer, _inputSystem, _assets);
-        _systems.Initialize();
 
         _nextSceneIndex = 0;
+    }
+
+    private void LoadGraphicsResources()
+    {
+        var manifest = _assets.LoadManifest();
+        _loader = _assets.CreateLoader();
+        var payload = _loader.CreateGpuPayloadCollection(manifest);
+        _graphics.LoadResources(payload);
     }
 
     private void RegisterGraphics()
@@ -104,10 +113,27 @@ public sealed class GameEngine : IDisposable
         builder.RegisterUbo<DrawObjectUniformGpuData>(UniformGpuSlot.DrawObject, UboDefaultCapacity.Upper);
         _graphics.BuildResources(builder);
     }
+
+    private void OnLoaded()
+    {
+        _assets.FinishLoading(_loader);
+        _renderer.Initialize(_assets.MaterialStore);
+        _systems.Initialize();
+        
+        _loader.ClearCache();
+        _loader = null!;
+    }
     
 
     internal void Update(double delta)
     {
+
+        if (!_hasStarted || !_hasInit || _loader != null)
+        {
+            return;
+        }
+        
+
         float dt = (float)delta;
         float fps = dt > 0 ? 1.0f / dt : 0.0f;
         _fps = fps;
@@ -122,6 +148,8 @@ public sealed class GameEngine : IDisposable
 
         _updateMeta.DeltaTime = dt;
         _updateMeta.Fps = fps;
+        
+        
 
         _currentScene?.Update(in frameCtx);
         
@@ -130,6 +158,47 @@ public sealed class GameEngine : IDisposable
         
         UpdateSceneTransitionIfNeeded();
     }
+    
+    internal void Render(double delta)
+    {
+        if (!_hasStarted && !_hasInit)
+        {
+            LoadGraphicsResources();
+            _hasStarted = true;
+            return;
+        }
+
+        if (_hasStarted && !_hasInit && !_loader.IsFinished)
+        {
+            _graphics.ProcessResources();
+            return;
+        }
+        
+        if (_hasStarted && !_hasInit && _loader.IsFinished)
+        {
+            RegisterGraphics();
+            _hasInit = true;
+            OnLoaded();
+            return;
+        }
+        
+        float dt = (float)delta;
+        float fps = dt > 0 ? 1.0f / dt : 0.0f;
+
+        var frameCtx = new FrameMetaInfo
+        {
+            DeltaTime = dt,
+            Fps = fps,
+            FramebufferSize = _window.FramebufferSize,
+            ViewportSize = _window.Size
+        };
+        
+        if(_currentScene == null) return;
+
+        var snapshot = _currentScene.RenderGlobals.Snapshot;
+        _renderer.Render(_updateMeta.Alpha, in frameCtx, in snapshot,  out _frameResult);
+    }
+
 
     private void GameTickUpdate(int tick)
     {
@@ -147,22 +216,6 @@ public sealed class GameEngine : IDisposable
             $"Fps: {_fps}; Draw Calls: {_frameResult.DrawCalls}; Triangle Count: {_frameResult.TriangleCount}");
     }
 
-    internal void Render(double delta)
-    {
-        float dt = (float)delta;
-        float fps = dt > 0 ? 1.0f / dt : 0.0f;
-
-        var frameCtx = new FrameMetaInfo
-        {
-            DeltaTime = dt,
-            Fps = fps,
-            FramebufferSize = _window.FramebufferSize,
-            ViewportSize = _window.Size
-        };
-
-        var snapshot = _currentScene.RenderGlobals.Snapshot;
-        _renderer.Render(_updateMeta.Alpha, in frameCtx, in snapshot,  out _frameResult);
-    }
 
 
     internal void Close()

@@ -10,7 +10,7 @@ using ConcreteEngine.Graphics.Resources;
 
 namespace ConcreteEngine.Core.Assets;
 
-internal sealed class AssetManifest
+public sealed class AssetManifest
 {
     public required AssetResourceManifestDesc ResourceManifest { get; init; }
 
@@ -23,24 +23,24 @@ internal sealed class AssetManifest
         string? CubeMaps = null);
 }
 
-internal sealed class AssetResourceManifest<T> where T : IAssetManifestRecord
+public sealed class AssetResourceManifest<T> where T : IAssetManifestRecord
 {
     public string? Folder { get; init; }
     public List<T> Resources { get; init; }
 }
 
-internal interface IAssetManifestRecord
+public interface IAssetManifestRecord
 {
     string Name { get; }
 }
 
-internal sealed record AssetShaderRecord(
+public sealed record ShaderManifestRecord(
     string Name,
     string VertexFilename,
     string FragmentFilename
 ) : IAssetManifestRecord;
 
-internal sealed record AssetTextureRecord(
+public sealed record TextureManifestRecord(
     string Name,
     string Filename,
     TexturePreset Preset,
@@ -50,30 +50,22 @@ internal sealed record AssetTextureRecord(
     float LodBias = -0.25f)
     : IAssetManifestRecord;
 
-internal sealed record AssetMeshRecord(
+public sealed record MeshManifestRecord(
     string Name,
     string Filename)
     : IAssetManifestRecord;
 
-internal sealed record AssetCubeMapRecord(
+public sealed record CubeMapManifestRecord(
     string Name,
     string[] Textures,
     int Width,
     int Height,
     TexturePreset Preset,
     EnginePixelFormat PixelFormat = EnginePixelFormat.Rgba
-)
-    : IAssetManifestRecord;
-
-interface IAssetMaterialValue
-{
-    UniformValueKind Kind { get; }
-
-    IMaterialValue ToMaterialValue();
-}
+): IAssetManifestRecord;
 
 
-internal sealed record AssetMaterialTemplate(
+public sealed record MaterialManifestRecord(
     string Name,
     string Shader,
     string[]? Textures,

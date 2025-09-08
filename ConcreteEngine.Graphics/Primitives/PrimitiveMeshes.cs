@@ -24,15 +24,13 @@ internal sealed class PrimitiveMeshes : IPrimitiveMeshes
 
     private void CreateFsqQuad(IGraphicsDevice graphics)
     {
-        Span<Vertex2D> vertices = stackalloc[]
+        Vertex2D[] vertices =
         {
-            new Vertex2D(-1f, -1f, 0f, 0f),
-            new Vertex2D(1f, -1f, 1f, 0f),
-            new Vertex2D(-1f, 1f, 0f, 1f),
+            new Vertex2D(-1f, -1f, 0f, 0f), new Vertex2D(1f, -1f, 1f, 0f), new Vertex2D(-1f, 1f, 0f, 1f),
             new Vertex2D(1f, 1f, 1f, 1f)
         };
 
-        var metaDesc = new MeshMetaDescriptor
+        var metaDesc = new GpuMeshDescriptor
         {
             VertexPointers =
             [
@@ -43,38 +41,33 @@ internal sealed class PrimitiveMeshes : IPrimitiveMeshes
             DrawKind = MeshDrawKind.Arrays,
             DrawCount = 4
         };
-        
-        var dataDesc = new MeshDataDescriptor<Vertex2D, uint>(vertices);
+
+        var dataDesc = new GpuMeshData<Vertex2D, uint>(vertices);
 
         FsqQuad = graphics.CreateMesh(in dataDesc, in metaDesc, out _);
     }
 
     private void CreateSkyboxCube(IGraphicsDevice graphics)
     {
-        ReadOnlySpan<float> vertices = stackalloc[]
+        float[] vertices =
         {
             // +X
-            1f, 1f, -1f, 1f, -1f, -1f, 1f, -1f, 1f,
-            1f, 1f, -1f, 1f, -1f, 1f, 1f, 1f, 1f,
+            1f, 1f, -1f, 1f, -1f, -1f, 1f, -1f, 1f, 1f, 1f, -1f, 1f, -1f, 1f, 1f, 1f, 1f,
             // -X
-            -1f, 1f, 1f, -1f, -1f, 1f, -1f, -1f, -1f,
-            -1f, 1f, 1f, -1f, -1f, -1f, -1f, 1f, -1f,
+            -1f, 1f, 1f, -1f, -1f, 1f, -1f, -1f, -1f, -1f, 1f, 1f, -1f, -1f, -1f, -1f, 1f, -1f,
             // +Y
-            -1f, 1f, -1f, 1f, 1f, -1f, 1f, 1f, 1f,
-            -1f, 1f, -1f, 1f, 1f, 1f, -1f, 1f, 1f,
+            -1f, 1f, -1f, 1f, 1f, -1f, 1f, 1f, 1f, -1f, 1f, -1f, 1f, 1f, 1f, -1f, 1f, 1f,
             // -Y
-            -1f, -1f, 1f, 1f, -1f, 1f, 1f, -1f, -1f,
-            -1f, -1f, 1f, 1f, -1f, -1f, -1f, -1f, -1f,
+            -1f, -1f, 1f, 1f, -1f, 1f, 1f, -1f, -1f, -1f, -1f, 1f, 1f, -1f, -1f, -1f, -1f, -1f,
             // +Z
-            -1f, 1f, 1f, 1f, 1f, 1f, 1f, -1f, 1f,
-            -1f, 1f, 1f, 1f, -1f, 1f, -1f, -1f, 1f,
+            -1f, 1f, 1f, 1f, 1f, 1f, 1f, -1f, 1f, -1f, 1f, 1f, 1f, -1f, 1f, -1f, -1f, 1f,
             // -Z
-            1f, 1f, -1f, -1f, 1f, -1f, -1f, -1f, -1f,
-            1f, 1f, -1f, -1f, -1f, -1f, 1f, -1f, -1f,
+            1f, 1f, -1f, -1f, 1f, -1f, -1f, -1f, -1f, 1f, 1f, -1f, -1f, -1f, -1f, 1f, -1f, -1f,
         };
-         var dataDesc = new MeshDataDescriptor<float, uint>(vertices);
-        
-        var metaDesc = new MeshMetaDescriptor
+
+        var dataDesc = new GpuMeshData<float, uint>(vertices);
+
+        var metaDesc = new GpuMeshDescriptor
         {
             VertexPointers =
             [

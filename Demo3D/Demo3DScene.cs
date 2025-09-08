@@ -38,7 +38,7 @@ public sealed class Demo3DScene : GameScene
         {
             var entityId = World.Create();
             World.Meshes.Add(entityId,
-                new MeshComponent(rockMesh.ResourceId, rockMat.Id, rockMesh.Meta.DrawCount));
+                new MeshComponent(rockMesh.ResourceId, rockMat.Id, rockMesh.DrawCount));
             World.Transforms.Add(entityId,
                 new Transform(new Vector3(i * 5, -3, i * 5), Vector3.One, Quaternion.Identity));
         }
@@ -54,7 +54,7 @@ public sealed class Demo3DScene : GameScene
             var x = rng.Next(0, 20);
             var y = rng.Next(0, 20);
             World.Meshes.Add(entityId,
-                new MeshComponent(boatMesh.ResourceId, boatMat.Id, boatMesh.Meta.DrawCount));
+                new MeshComponent(boatMesh.ResourceId, boatMat.Id, boatMesh.DrawCount));
             World.Transforms.Add(entityId,
                 new Transform(new Vector3(x, 0, y), Vector3.One, Quaternion.Identity));
         }

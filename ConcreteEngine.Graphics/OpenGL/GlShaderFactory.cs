@@ -31,6 +31,7 @@ internal sealed class GlShaderFactory(GlGraphicsContext gfx, DeviceCapabilities 
 
         return new GlUniformBufferHandle(handle);
     }
+    
 
     public GlShaderHandle CreateShader(string vertexSource, string fragmentSource,
         out UniformTable uniformTable, out ShaderMeta meta)

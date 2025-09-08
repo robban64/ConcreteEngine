@@ -30,8 +30,8 @@ internal sealed class GlResourceFactory(GlGraphicsContext gfx, DeviceCapabilitie
     public GlMeshHandle CreateMesh<TVertex, TIndex>(
         Func<GlVertexBufferHandle, VertexBufferMeta, VertexBufferId> vboHandler,
         Func<GlIndexBufferHandle, IndexBufferMeta, IndexBufferId> iboHandler,
-        in MeshDataDescriptor<TVertex, TIndex> dataDesc,
-        in MeshMetaDescriptor metaDesc,
+        in GpuMeshData<TVertex, TIndex> dataDesc,
+        in GpuMeshDescriptor desc,
         out MeshMeta meta
     ) where TVertex : unmanaged where TIndex : unmanaged
     {
@@ -42,7 +42,7 @@ internal sealed class GlResourceFactory(GlGraphicsContext gfx, DeviceCapabilitie
         _gl.BindBuffer(BufferTargetARB.ArrayBuffer, vbo.Handle);
 
         if (!dataDesc.Vertices.IsEmpty)
-            SetBufferData<TVertex>(BufferTargetARB.ArrayBuffer, metaDesc.VboUsage.ToGlEnum(), dataDesc.Vertices,
+            SetBufferData<TVertex>(BufferTargetARB.ArrayBuffer, desc.VboUsage.ToGlEnum(), dataDesc.Vertices.Span,
                 dataDesc.Vertices.Length);
 
         GlIndexBufferHandle ibo = default;
@@ -54,13 +54,13 @@ internal sealed class GlResourceFactory(GlGraphicsContext gfx, DeviceCapabilitie
             ibo = CreateIndexBuffer();
             _gl.BindBuffer(BufferTargetARB.ElementArrayBuffer, ibo.Handle);
             if (!dataDesc.Indices.IsEmpty)
-                SetBufferData<TIndex>(BufferTargetARB.ElementArrayBuffer, metaDesc.IboUsage.ToGlEnum(),
-                    dataDesc.Indices, dataDesc.Indices.Length);
+                SetBufferData<TIndex>(BufferTargetARB.ElementArrayBuffer, desc.IboUsage.ToGlEnum(),
+                    dataDesc.Indices.Span, dataDesc.Indices.Length);
         }
 
-        for (int i = 0; i < metaDesc.VertexPointers.Length; i++)
+        for (int i = 0; i < desc.VertexPointers.Length; i++)
         {
-            var pointer = metaDesc.VertexPointers[i];
+            var pointer = desc.VertexPointers[i];
             AddAttribPointer((uint)i, (int)pointer.Format, pointer.StrideBytes, pointer.OffsetBytes,
                 pointer.Normalized);
         }
@@ -70,7 +70,7 @@ internal sealed class GlResourceFactory(GlGraphicsContext gfx, DeviceCapabilitie
         _gl.BindBuffer(BufferTargetARB.ElementArrayBuffer, 0);
 
 
-        var vp = metaDesc.VertexPointers;
+        var vp = desc.VertexPointers;
         var pointer1 = vp[0];
         var pointer2 = vp.Length > 1 ? vp[1] : default;
         var pointer3 = vp.Length > 2 ? vp[2] : default;
@@ -95,21 +95,21 @@ internal sealed class GlResourceFactory(GlGraphicsContext gfx, DeviceCapabilitie
                 _ => throw GraphicsException.UnsupportedFeature($"Index Element Size {iboElementSize}")
             };
 
-            drawCount = metaDesc.DrawCount.GetValueOrDefault(iboSize);
-            isStatic = metaDesc.IboUsage == BufferUsage.StaticDraw;
-            var iboMeta = new IndexBufferMeta(metaDesc.IboUsage, iboSize, iboElementSize);
+            drawCount = desc.DrawCount.GetValueOrDefault(iboSize);
+            isStatic = desc.IboUsage == BufferUsage.StaticDraw;
+            var iboMeta = new IndexBufferMeta(desc.IboUsage, iboSize, iboElementSize);
             iboId = iboHandler(ibo, iboMeta);
         }
         else
         {
-            isStatic = metaDesc.VboUsage == BufferUsage.StaticDraw;
-            drawCount = metaDesc.DrawCount.GetValueOrDefault(vboSize);
+            isStatic = desc.VboUsage == BufferUsage.StaticDraw;
+            drawCount = desc.DrawCount.GetValueOrDefault(vboSize);
         }
 
-        var vboId = vboHandler(vbo, new VertexBufferMeta(metaDesc.VboUsage, vboSize, vboElementSize));
+        var vboId = vboHandler(vbo, new VertexBufferMeta(desc.VboUsage, vboSize, vboElementSize));
 
-        var drawKind = metaDesc.DrawKind;
-        var primitive = metaDesc.Primitive ?? DrawPrimitive.Triangles;
+        var drawKind = desc.DrawKind;
+        var primitive = desc.Primitive ?? DrawPrimitive.Triangles;
         if (drawKind == MeshDrawKind.Arrays && iboId.Id > 0)
             GraphicsException.ThrowInvalidState("MeshDraw is arrays but has index buffer");
 
@@ -132,46 +132,51 @@ internal sealed class GlResourceFactory(GlGraphicsContext gfx, DeviceCapabilitie
         return new GlIndexBufferHandle(handle);
     }
 
-    public GlTextureHandle CreateTexture2D(in TextureDesc desc, out TextureMeta meta)
+    public GlTextureHandle CreateTexture2D(GpuTexturePayload payload, out TextureMeta meta)
     {
         var handle = _gl.GenTexture();
         _gl.BindTexture(GLEnum.Texture2D, handle);
-        var (glFormat, glInternalFormat) = desc.Format.ToGlEnums();
+        var (glFormat, glInternalFormat) = payload.Format.ToGlEnums();
 
         unsafe
         {
-            if (desc.NullPtrData)
+            if (payload.NullPtrData)
             {
                 _gl.TexImage2D(GLEnum.Texture2D, 0, (int)glInternalFormat,
-                    (uint)desc.Width, (uint)desc.Height, 0,
+                    (uint)payload.Width, (uint)payload.Height, 0,
                     glFormat, GLEnum.UnsignedByte, (void*)0);
             }
             else
             {
-                fixed (byte* ptr = desc.PixelData)
+                fixed (byte* ptr = payload.PixelData.Span)
                 {
                     _gl.TexImage2D(GLEnum.Texture2D, 0, (int)glInternalFormat,
-                        (uint)desc.Width, (uint)desc.Height, 0,
+                        (uint)payload.Width, (uint)payload.Height, 0,
                         glFormat, GLEnum.UnsignedByte, ptr);
                 }
             }
         }
 
-        SetTextureParameters(desc.Preset, desc.Anisotropy, desc.LodBias);
+        SetTextureParameters(payload.Preset, payload.Anisotropy, payload.LodBias);
 
         _gl.BindTexture(GLEnum.Texture2D, 0);
 
-        meta = new TextureMeta(desc.Width, desc.Height, desc.Format);
+        meta = new TextureMeta(payload.Width, payload.Height, payload.Format);
         return new GlTextureHandle(handle);
     }
 
-    public unsafe GlTextureHandle CreateCubeMap(in CreateCubemapDesc cubemapDesc, out TextureMeta meta)
+    public unsafe GlTextureHandle CreateCubeMap(GpuCubeMapPayload payload, out TextureMeta meta)
     {
-        var loaders = cubemapDesc.Loaders;
-        var (width, height) = (cubemapDesc.Width, cubemapDesc.Height);
+        var (width, height) = (payload.Width, payload.Height);
 
-        ArgumentNullException.ThrowIfNull(loaders);
-        ArgumentOutOfRangeException.ThrowIfLessThan(loaders.Length, 0, nameof(loaders));
+        ArgumentNullException.ThrowIfNull(payload.FaceData);
+        ArgumentOutOfRangeException.ThrowIfLessThan(payload.FaceData.Length, 0, nameof(payload.FaceData));
+
+        if (width != height)
+            throw new InvalidOperationException("Width and Height are not the same size");
+
+        if (width != payload.Width || height != payload.Height)
+            throw new InvalidOperationException("Miss match between cubemap size");
 
         var target = (int)TextureTarget.TextureCubeMapPositiveX;
 
@@ -180,16 +185,10 @@ internal sealed class GlResourceFactory(GlGraphicsContext gfx, DeviceCapabilitie
 
         for (int i = 0; i < 6; i++)
         {
-            var result = loaders[i]();
-            var (format, internalFormat) = result.Format.ToGlEnums();
+            var data = payload.FaceData[i];
+            var (format, internalFormat) = payload.Format.ToGlEnums();
 
-            if (width != height)
-                throw new InvalidOperationException("Width and Height are not the same size");
-
-            if (width != result.Width || height != result.Height)
-                throw new InvalidOperationException("Miss match between cubemap size");
-
-            fixed (byte* ptr = result.PixelData)
+            fixed (byte* ptr = data.Span)
             {
                 _gl.TexImage2D((TextureTarget)(target + i), 0, (int)internalFormat,
                     (uint)width, (uint)height, 0,
@@ -204,7 +203,7 @@ internal sealed class GlResourceFactory(GlGraphicsContext gfx, DeviceCapabilitie
         _gl.TexParameter(TextureTarget.TextureCubeMap, TextureParameterName.TextureMagFilter, (int)GLEnum.Linear);
         _gl.BindTexture(TextureTarget.TextureCubeMap, 0);
 
-        meta = new TextureMeta(width, height, cubemapDesc.Format);
+        meta = new TextureMeta(width, height, payload.Format);
         return new GlTextureHandle(handle);
     }
 
@@ -274,7 +273,7 @@ internal sealed class GlResourceFactory(GlGraphicsContext gfx, DeviceCapabilitie
         }
         else
         {
-            colTexHandle = CreateTexture2D(new TextureDesc([], size.X, size.Y, EnginePixelFormat.Rgba,
+            colTexHandle = CreateTexture2D(new GpuTexturePayload(ReadOnlyMemory<byte>.Empty, size.X, size.Y, EnginePixelFormat.Rgba,
                 desc.TexturePreset, NullPtrData: true), out colTexMeta);
 
             _gl.BindTexture(TextureTarget.Texture2D, colTexHandle.Handle);

@@ -44,16 +44,18 @@ public sealed class TerrainBatcher : RenderBatcher<TerrainBatchResult>
         ArgumentNullException.ThrowIfNull(HeightMap.Data);
         ArgumentOutOfRangeException.ThrowIfLessThan(HeightMap.Width, 32);
         ArgumentOutOfRangeException.ThrowIfNotEqual(HeightMap.Width, HeightMap.Height);
-        ArgumentOutOfRangeException.ThrowIfNotEqual(HeightMap.Data.Length, Size * Size * 4);
+        ArgumentOutOfRangeException.ThrowIfNotEqual(HeightMap.Data.Value.Length, Size * Size * 4);
 
         ArgumentOutOfRangeException.ThrowIfLessThanOrEqual(Step, 0);
         ArgumentOutOfRangeException.ThrowIfGreaterThan(Step, 16);
+
+        var data = HeightMap.Data.Value;
 
 
         int vertexRowCount = ((Size - 1) / Step) + 1;
         VertexCount = vertexRowCount * vertexRowCount;
 
-        var heightmap = (ReadOnlySpan<byte>)HeightMap.Data.AsSpan();
+        var heightmap = data.Span;
 
         GenerateVertex(heightmap, vertexRowCount);
         GenerateIndices(vertexRowCount);
@@ -78,9 +80,9 @@ public sealed class TerrainBatcher : RenderBatcher<TerrainBatchResult>
         ArgumentOutOfRangeException.ThrowIfLessThan(_vertices.Length, 8);
         ArgumentOutOfRangeException.ThrowIfLessThan(_indices.Length, 8);
 
-        var dataDesc = new MeshDataDescriptor<Vertex3D, uint>(_vertices, _indices);
+        var dataDesc = new GpuMeshData<Vertex3D, uint>(_vertices, _indices);
 
-        var metaDesc = new MeshMetaDescriptor
+        var metaDesc = new GpuMeshDescriptor
         {
             VertexPointers =
             [

@@ -52,9 +52,9 @@ internal sealed class TilemapChunkMesh : IDisposable
         CreateVertexBufferData();
         CreateIndexBufferData();
 
-        var dataDesc = new MeshDataDescriptor<Vertex2D, ushort>(Vertices, Indices);
+        var dataDesc = new GpuMeshData<Vertex2D, ushort>(Vertices, Indices);
 
-        var metaDesc = new MeshMetaDescriptor
+        var metaDesc = new GpuMeshDescriptor
         {
             VertexPointers =
             [

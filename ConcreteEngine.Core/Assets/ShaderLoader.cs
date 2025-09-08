@@ -1,41 +1,97 @@
+using System.Security.Cryptography;
+using System.Text;
 using System.Text.RegularExpressions;
 using ConcreteEngine.Core.Resources;
 using ConcreteEngine.Graphics;
+using ConcreteEngine.Graphics.Descriptors;
 using ConcreteEngine.Graphics.Resources;
 
 namespace ConcreteEngine.Core.Assets;
 
-internal sealed class ShaderLoader
+internal sealed class ShaderLoader : IAssetTypeLoader, IGpuShaderPayloadProvider
 {
+    private static readonly UTF8Encoding ShaderEncoding = new (false, true);
+    
+    private readonly IReadOnlyList<ShaderManifestRecord> _records;
     private readonly Dictionary<string, string> _vertexShaderCache = new(StringComparer.Ordinal);
+    
+    private List<Shader> _results;
+    
+    internal IReadOnlyList<Shader> Results => _results;
+    
+    public bool HasStarted { get; private set; }
+    public bool IsFinished { get; private set; }
 
+    public ShaderLoader(IReadOnlyList<ShaderManifestRecord> records)
+    {
+        _records = records;
+    }
+    
+        
     public void CleanCache()
     {
         _vertexShaderCache.Clear();
+        _vertexShaderCache.TrimExcess();
+        _results.Clear();
+        _results.TrimExcess();
     }
 
-    public Shader LoadShader(AssetShaderRecord record, IGraphicsDevice graphics, string vertexPath, string fragmentPath)
+    public IReadOnlyList<GpuShaderPayload> Get()
     {
+        HasStarted = true;
+        var payloads = new List<GpuShaderPayload>();
+        foreach (var record in _records)
+        {
+            payloads.Add(CreatePayload(record));
+        }
+        return payloads;
+    }
+
+
+    public void Callback(ReadOnlySpan<(ShaderId, ShaderMeta)> result)
+    {
+        IsFinished = true;
+        _results = new List<Shader>(result.Length);
+        
+        for (int i = 0; i < result.Length; i++)
+        {
+            var (id, meta) = result[i];
+            var record = _records[i];
+            
+            _results.Add(new Shader
+            {
+                Name = record.Name,
+                FragShaderFilename = record.FragmentFilename,
+                VertShaderFilename = record.VertexFilename,
+                ResourceId = id,
+                Samplers = meta.Samplers
+            });
+        }
+    }
+    
+ 
+
+    private GpuShaderPayload CreatePayload(ShaderManifestRecord record)
+    {
+        var vertPath = Path.Combine(AssetPaths.AssetPath, "shaders", record.VertexFilename);
+        var fragPath = Path.Combine(AssetPaths.AssetPath, "shaders", record.FragmentFilename);
+
         if (!_vertexShaderCache.TryGetValue(record.VertexFilename, out var vertexSource))
         {
-            var rawSource = File.ReadAllText(vertexPath);
+            var rawSource = File.ReadAllText(vertPath, Encoding.UTF8);
             vertexSource = ResolveIncludes(rawSource);
             _vertexShaderCache[record.VertexFilename] = vertexSource;
         }
 
-        var rawFragSource = File.ReadAllText(fragmentPath);
+        var rawFragSource = File.ReadAllText(fragPath, Encoding.UTF8);
         var fragmentSource = ResolveIncludes(rawFragSource);
+        return new GpuShaderPayload(vertexSource, fragmentSource);
+    }
 
-        var resourceId = graphics.CreateShader(vertexSource, fragmentSource, out var meta);
 
-        return new Shader
-        {
-            Name = record.Name,
-            VertShaderFilename = record.VertexFilename,
-            FragShaderFilename = record.FragmentFilename,
-            ResourceId = resourceId,
-            Samplers = meta.Samplers,
-        };
+    private string ToHashSource(string source)
+    {
+        return Convert.ToHexString(SHA256.HashData(Encoding.UTF8.GetBytes(source)));
     }
 
     private static string ResolveIncludes(string source)
@@ -72,5 +128,6 @@ internal sealed class ShaderLoader
 
         return result;
     }
+
 
 }

@@ -1,5 +1,6 @@
 #region
 
+using System.Runtime.InteropServices;
 using ConcreteEngine.Graphics.Descriptors;
 using ConcreteEngine.Graphics.Error;
 using ConcreteEngine.Graphics.Primitives;
@@ -46,7 +47,6 @@ public sealed class GlGraphicsDevice : IGraphicsDevice<GlGraphicsContext>
 
     #endregion
 
-
     private readonly GL _gl;
     private readonly GlGraphicsContext _gfx;
     private readonly GlResourceFactory _resourceFactory;
@@ -55,6 +55,9 @@ public sealed class GlGraphicsDevice : IGraphicsDevice<GlGraphicsContext>
     private readonly ResourceDisposeQueue _disposeQueue;
 
     private readonly PrimitiveMeshes _primitives;
+    
+    private ResourceLoader? _loader;
+
 
     private Vector2D<int> _previousViewportSize;
     private Vector2D<int> _viewportSize;
@@ -91,19 +94,26 @@ public sealed class GlGraphicsDevice : IGraphicsDevice<GlGraphicsContext>
         _shaderFactory = new GlShaderFactory(_gfx, capabilities);
 
         _primitives = new PrimitiveMeshes();
+        
 
         Console.WriteLine($"OpenGL version {capabilities.GlVersion} loaded.");
         Console.WriteLine("--Device Capability--");
         Console.WriteLine(capabilities.ToString());
     }
+    
+    public void LoadResources(GpuResourcePayloadCollection payloadCollection)
+    {
+        _loader = new ResourceLoader(this, payloadCollection);
+    }
+
 
     public GraphicsResourceBuilder CreateBuilder() => new();
-
+    
     public void BuildResources(GraphicsResourceBuilder builder)
     {
         _primitives.CreatePrimitives(this);
 
-        foreach (var factory in builder.UboBuilder)
+        foreach (var (slot, factory) in builder.UboBuilder)
         {
             var (handle, meta) = factory(_shaderFactory);
             var uboId = _uboStore.Add(in meta, in handle);
@@ -113,6 +123,15 @@ public sealed class GlGraphicsDevice : IGraphicsDevice<GlGraphicsContext>
         builder.Clear();
     }
 
+    public bool ProcessResources()
+    {
+        if (_loader!.Process())
+        {
+            _loader = null;
+            return true;
+        }
+        return false;
+    }
 
     public void StartFrame(in FrameMetaInfo frameCtx)
     {
@@ -218,23 +237,23 @@ public sealed class GlGraphicsDevice : IGraphicsDevice<GlGraphicsContext>
         return shaderId;
     }
 
-    public TextureId CreateTexture2D(in TextureDesc textureDesc)
+    public TextureId CreateTexture2D(GpuTexturePayload payload, out TextureMeta meta)
     {
-        var handle = _resourceFactory.CreateTexture2D(in textureDesc, out var meta);
+        var handle = _resourceFactory.CreateTexture2D(payload, out  meta);
         return _textureStore.Add(in meta, handle);
     }
 
-    public TextureId CreateCubeMap(in CreateCubemapDesc cubemapDesc)
+    public TextureId CreateCubeMap(GpuCubeMapPayload payload, out TextureMeta meta)
     {
-        var handle = _resourceFactory.CreateCubeMap(cubemapDesc, out var meta);
+        var handle = _resourceFactory.CreateCubeMap(payload, out  meta);
         return _textureStore.Add(in meta, handle);
     }
 
-    public MeshId CreateMesh<TVertex, TIndex>(in MeshDataDescriptor<TVertex, TIndex> dataDesc,
-        in MeshMetaDescriptor metaDesc, out MeshMeta meta) where TVertex : unmanaged where TIndex : unmanaged
+    public MeshId CreateMesh<TVertex, TIndex>(in GpuMeshData<TVertex, TIndex> dataDesc,
+        in GpuMeshDescriptor desc, out MeshMeta meta) where TVertex : unmanaged where TIndex : unmanaged
     {
         var handle = _resourceFactory.CreateMesh((handle, m) => _vboStore.Add(in m, in handle),
-            (handle, m) => _iboStore.Add(in m, in handle), in dataDesc, in metaDesc, out meta);
+            (handle, m) => _iboStore.Add(in m, in handle), in dataDesc, in desc, out meta);
 
         return _meshStore.Add(in meta, handle);
     }

@@ -16,8 +16,9 @@ public interface IGraphicsDevice : IDisposable
     IPrimitiveMeshes Primitives { get; }
 
     GraphicsResourceBuilder CreateBuilder();
+    void LoadResources(GpuResourcePayloadCollection payloadCollection);
     void BuildResources(GraphicsResourceBuilder builder);
-
+    bool ProcessResources();
     void StartFrame(in FrameMetaInfo frameCtx);
     void EndFrame(out FrameRenderResult result);
 
@@ -25,13 +26,13 @@ public interface IGraphicsDevice : IDisposable
 
     FrameBufferId CreateFramebuffer(in FrameBufferDesc desc, out FrameBufferMeta meta);
     ShaderId CreateShader(string vertexSource, string fragmentSource, out ShaderMeta meta);
-    TextureId CreateTexture2D(in TextureDesc textureDesc);
-    TextureId CreateCubeMap(in CreateCubemapDesc cubemapDesc);
+    TextureId CreateTexture2D(GpuTexturePayload payload, out TextureMeta meta);
+    TextureId CreateCubeMap(GpuCubeMapPayload cubemapDesc, out TextureMeta meta);
 
     VertexBufferId CreateVertexBuffer(BufferUsage bufferUsage);
     IndexBufferId CreateIndexBuffer(BufferUsage usage, IboElementType elementType);
 
-    MeshId CreateMesh<TVertex, TIndex>(in MeshDataDescriptor<TVertex, TIndex> dataDesc, in MeshMetaDescriptor metaDesc,
+    MeshId CreateMesh<TVertex, TIndex>(in GpuMeshData<TVertex, TIndex> dataDesc, in GpuMeshDescriptor desc,
         out MeshMeta meta) where TVertex : unmanaged where TIndex : unmanaged;
 
 

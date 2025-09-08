@@ -18,34 +18,35 @@ public interface IAssetSystem : IGameEngineSystem
     List<T> GetAll<T>() where T : class, IAssetFile;
 }
 
-
 public sealed class AssetSystem : IAssetSystem
 {
     private readonly record struct AssetKey(Type RegistryType, string Name)
     {
-        public static AssetKey For<T>(string name) => new(typeof(T), name);
+        public static AssetKey For<T>(string name) where T : IAssetFile => new(typeof(T), name);
     }
-    
-    private readonly Dictionary<AssetKey, IAssetFile> _store = new(64);
-    private readonly IGraphicsDevice _graphics;
+
+    private static bool _initialized = false;
+
+    private readonly Dictionary<AssetKey, IAssetFile> _store = new(32);
+
     private readonly string _assetPath;
     private readonly string _manifestFilename;
 
     private MaterialStore _materialStore = null!;
-    private static bool _initialized = false;
 
     public MaterialStore MaterialStore => _materialStore;
 
     private readonly JsonSerializerOptions _jsonOptions;
 
-    internal AssetSystem(IGraphicsDevice graphics,
+    private string BasePath => Path.Combine(Directory.GetCurrentDirectory(), _assetPath);
+
+    internal AssetSystem(
         string assetPath = "assets",
         string manifestFilename = "manifest.json")
     {
-        _graphics = graphics;
         _assetPath = assetPath;
         _manifestFilename = manifestFilename;
-
+        
         _jsonOptions = new JsonSerializerOptions
         {
             PropertyNamingPolicy = JsonNamingPolicy.CamelCase,
@@ -60,7 +61,23 @@ public sealed class AssetSystem : IAssetSystem
         };
     }
 
-    private string BasePath => Path.Combine(Directory.GetCurrentDirectory(), _assetPath);
+    internal AssetLoader CreateLoader()
+    {
+        return new AssetLoader(_assetPath);
+    }
+
+    internal void FinishLoading(AssetLoader loader)
+    {
+        var data = loader.GetData();
+        LoadResources(data.Shaders);
+        LoadResources(data.Meshes);
+        LoadResources(data.Textures);
+        LoadResources(data.CubeMaps);
+        
+        var materials = LoadMaterialStore("materials.json");
+        _materialStore = new MaterialStore(materials);
+    }
+
 
     public bool TryGet<T>(string name, out T resource) where T : class, IAssetFile
     {
@@ -96,15 +113,6 @@ public sealed class AssetSystem : IAssetSystem
         return result;
     }
 
-    public void Initialize()
-    {
-        if (_initialized)
-            throw new InvalidOperationException($"{nameof(AssetSystem)} is already initialized");
-
-        LoadFromManifest();
-        _initialized = true;
-    }
-
     public void Shutdown()
     {
         foreach (var asset in _store.Values)
@@ -112,12 +120,14 @@ public sealed class AssetSystem : IAssetSystem
                 disposable.Dispose();
     }
 
-    private void LoadFromManifest()
+    internal AssetRecordResult LoadManifest()
     {
         if (!Directory.Exists(_assetPath))
         {
             throw new DirectoryNotFoundException($"Asset manifest '{_assetPath}' directory not found.");
         }
+
+        AssetPaths.AssetPath = _assetPath;
 
         var manifestPath = Path.Combine(BasePath, _manifestFilename);
         if (!File.Exists(manifestPath))
@@ -129,83 +139,114 @@ public sealed class AssetSystem : IAssetSystem
         var assetManifest = JsonSerializer.Deserialize<AssetManifest>(json, _jsonOptions) ??
                             throw new InvalidDataException("Invalid manifest.");
 
-        var resourceManifest = assetManifest.ResourceManifest;
-        var loader = new AssetLoader(_graphics, _assetPath);
-
-        // Texture2D
-        LoadEntries<AssetTextureRecord, Texture2D>(resourceManifest.Texture, loader.LoadTexture2D);
-
-        // Shader
-        LoadEntries<AssetShaderRecord, Shader>(resourceManifest.Shader, loader.LoadShader);
-        
-        // Mesh
-        LoadEntries<AssetMeshRecord, Mesh>(resourceManifest.Mesh, loader.LoadMesh);
-
-        if (resourceManifest.CubeMaps != null)
+        var m = assetManifest.ResourceManifest;
+        return new AssetRecordResult
         {
-            LoadEntries<AssetCubeMapRecord, CubeMap>(resourceManifest.CubeMaps, loader.LoadCubeMap);
-        }
-
-        // Material
-        LoadMaterialStore(resourceManifest.Material, loader);
-
-        loader.ClearCache();
+            Textures = LoadAllEntries<TextureManifestRecord>(m.Texture, true),
+            Shaders = LoadAllEntries<ShaderManifestRecord>(m.Shader, true),
+            Meshes = LoadAllEntries<MeshManifestRecord>(m.Mesh, false),
+            Cubemaps = LoadAllEntries<CubeMapManifestRecord>(m.CubeMaps ?? "", false)
+        };
     }
 
-    /*
-    public void Remove<T>(T assetFile) where T : class, IAssetFile
+
+    private void LoadResources<T>(IReadOnlyList<T> resources) where T : class, IGraphicAssetFile
     {
-        if (assetFile is IGraphicAssetFile graphicsResource)
+        foreach (var resource in resources)
         {
-            if(!graphicsResource.GraphicsResource.IsDisposed)
-                graphics.DisposeResource(graphicsResource.GraphicsResource);
+            if(!_store.TryAdd(AssetKey.For<T>(resource.Name), resource))
+                throw new InvalidOperationException($"Asset '{resource.Name}' is already exists.");
         }
-
-        _store.Remove(assetFile.Name);
     }
-    */
 
-    private void LoadEntries<TRecord, TResult>(string manifestFilename, Func<TRecord, TResult> loader,
-        Action<TResult>? onAdd = null)
-        where TRecord : IAssetManifestRecord where TResult : class, IAssetFile
+    private IReadOnlyList<T> LoadAllEntries<T>(string manifestFilename, bool required) where T : IAssetManifestRecord
     {
+        ArgumentNullException.ThrowIfNull(manifestFilename, nameof(manifestFilename));
+
         var path = Path.Combine(BasePath, manifestFilename);
-        if (!File.Exists(path))
+        var exists = File.Exists(path);
+        if (!exists && !required) return [];
+        if (!exists && required)
+        {
             throw new FileNotFoundException(
-                $"Resource manifest {typeof(TRecord).Name} with path {path} does not exists.");
+                $"Resource manifest {typeof(T).Name} with path {path} does not exists.");
+        }
+
 
         var json = File.ReadAllText(path);
-        var manifest = JsonSerializer.Deserialize<AssetResourceManifest<TRecord>>(json, _jsonOptions) ??
-                       throw new InvalidDataException($"Invalid resource manifest for {typeof(TRecord).Name}.");
+        var manifest = JsonSerializer.Deserialize<AssetResourceManifest<T>>(json, _jsonOptions) ??
+                       throw new InvalidDataException($"Invalid resource manifest for {typeof(T).Name}.");
 
         if (manifest.Resources == null)
-            throw new InvalidDataException($"{typeof(TRecord).Name} manifest have null resources.");
+            throw new InvalidDataException($"{typeof(T).Name} manifest have null resources.");
 
-        Console.WriteLine($"Loading Assets - ({typeof(TRecord).Name})");
+        Console.WriteLine($"Loading Assets - ({typeof(T).Name})");
 
-        foreach (var entry in manifest.Resources)
+        return manifest.Resources;
+    }
+    
+    /*
+public void Remove<T>(T assetFile) where T : class, IAssetFile
+{
+    if (assetFile is IGraphicAssetFile graphicsResource)
+    {
+        if(!graphicsResource.GraphicsResource.IsDisposed)
+            graphics.DisposeResource(graphicsResource.GraphicsResource);
+    }
+
+    _store.Remove(assetFile.Name);
+}
+*/
+
+   
+    private IReadOnlyList<MaterialTemplate> LoadMaterialStore(string manifestFilename)
+    {
+        var entries = LoadAllEntries<MaterialManifestRecord>(manifestFilename, false);
+        if(entries.Count == 0) return [];
+
+        var result = new List<MaterialTemplate>();
+
+        foreach (var entry in entries)
         {
-            var asset = loader(entry);
-            var key = AssetKey.For<TResult>(asset.Name);
-            if(!_store.TryAdd(key, asset))
-                throw new InvalidOperationException($"Asset '{asset.Name}' is already exists.");
+            var mat = MaterialHandler(entry);
+            if(!_store.TryAdd(AssetKey.For<MaterialTemplate>(mat.Name), mat))
+                throw new InvalidOperationException($"Asset '{mat.Name}' is already exists.");
             
-            onAdd?.Invoke(asset);
+            result.Add(mat);
+        }
+        
+        _materialStore = new MaterialStore(result);
+        return result;
+
+        MaterialTemplate MaterialHandler(MaterialManifestRecord record)
+        {
+            Texture2D[] textures = [];
+            CubeMap? cubeMap = null;
+            if (record.Cubemap != null)
+            {
+                cubeMap = Get<CubeMap>(record.Cubemap);
+            }
+            else if (record.Textures != null)
+            {
+                textures = new Texture2D[record.Textures.Length];
+                for (var i = 0; i < record.Textures.Length; i++)
+                {
+                    textures[i] = Get<Texture2D>(record.Textures[i]);
+                }
+            }
+
+            var shader = Get<Shader>(record.Shader);
+
+            return new MaterialTemplate
+            {
+                Name = record.Name,
+                Shader = shader,
+                Color = record.Color,
+                Textures = textures,
+                CubeMap = cubeMap,
+            };
+
         }
     }
-
-    private void LoadMaterialStore(string manifestFilename, AssetLoader loader)
-    {
-        var result = new List<MaterialTemplate>();
-        LoadEntries<AssetMaterialTemplate, MaterialTemplate>(
-            manifestFilename,
-            MaterialHandler,
-            (mat) => result.Add(mat));
-
-        _materialStore = new MaterialStore(result);
-        return;
-
-        MaterialTemplate MaterialHandler(AssetMaterialTemplate template) =>
-            loader.LoadMaterialTemplate(template, Get<Shader>, Get<Texture2D>, Get<CubeMap>);
-    }
+  
 }

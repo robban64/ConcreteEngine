@@ -36,37 +36,40 @@ public sealed class RenderSystem : IRenderSystem
 {
     private readonly IGraphicsDevice _graphics;
     private readonly IGraphicsContext _gfx;
-    private readonly MaterialStore _materialStore;
     
-    private readonly DrawCommandCollector _commandCollector;
-    private readonly RenderPipeline _commandSubmitter;
-    private readonly DrawProcessor _drawProcessor;
-    private readonly UniformBinder _uniformBinder;
+    private DrawCommandCollector _commandCollector  = null!;
+    private RenderPipeline _commandSubmitter  = null!;
+    private DrawProcessor _drawProcessor  = null!;
+    private UniformBinder _uniformBinder  = null!;
 
     private readonly BatcherRegistry _batches = new();
+
+    private MaterialStore _materialStore = null!;
 
     private IRender _render;
     private SceneDrawProducer _sceneDrawProducer = null!;
     private CommandProducerContext cmdProducerCtx = null!;
 
+    private bool _initialized = false;
+
     public ICamera Camera => _render.Camera;
 
-    internal RenderSystem(IGraphicsDevice graphics, MaterialStore materialStore)
+    internal RenderSystem(IGraphicsDevice graphics)
     {
         _graphics = graphics;
         _gfx = graphics.Gfx;
-        _materialStore = materialStore;
         
-        _uniformBinder = new UniformBinder(_graphics);
-        
-        _drawProcessor = new DrawProcessor(_graphics, _materialStore, _uniformBinder);
-
-        _commandCollector = new DrawCommandCollector();
-        _commandSubmitter = new RenderPipeline(_drawProcessor);
     }
 
-    internal void Initialize()
+    internal void Initialize(MaterialStore materialStore)
     {
+        _materialStore = materialStore;
+        _uniformBinder = new UniformBinder(_graphics);
+        _drawProcessor = new DrawProcessor(_graphics, _materialStore, _uniformBinder);
+        _commandCollector = new DrawCommandCollector();
+        _commandSubmitter = new RenderPipeline(_drawProcessor);
+
+        
         _batches.Register(new TerrainBatcher(_graphics));
         _batches.Register(new SpriteBatcher(_graphics));
         _batches.Register(new TilemapBatcher(_graphics, 64, 32));
@@ -83,30 +86,20 @@ public sealed class RenderSystem : IRenderSystem
         _sceneDrawProducer = new  SceneDrawProducer();
         _commandCollector.RegisterProducer<SceneDrawProducer>(_sceneDrawProducer);
 
-/*
-        _commandCollector.RegisterProducerSink<ITilemapDrawSink>(new TilemapDrawProducer());
-        _commandCollector.RegisterProducerSink<ISpriteDrawSink>(new SpriteDrawProducer());
-        _commandCollector.RegisterProducerSink<ILightDrawSink>(new LightProducer());
-       */ 
 
         _commandCollector.AttachContext(cmdProducerCtx);
-/*
-        _drawRegistry.Register<MeshDrawer, DrawCommandMesh>();
-        _drawRegistry.Register<TerrainDrawer, DrawCommandTerrain>();
-        _drawRegistry.Register<TilemapDrawer, DrawCommandTilemap>();
-        _drawRegistry.Register<SpriteDrawer, DrawCommandSprite>();
-        _drawRegistry.Register<LightDrawer, DrawCommandLight>();
-        _drawRegistry.Register<SkyboxDrawer, DrawCommandSkybox>();
-*/
         _commandSubmitter.Initialize();
-
         _commandCollector.InitializeProducers();
-        
         _uniformBinder.Initialize();
+        
+        _initialized =  true;
     }
 
     internal void RegisterScene(RenderType renderType, RenderTargetDescriptor desc)
     {
+        if(!_initialized)
+            throw new InvalidOperationException("Renderer is not initialized");
+        
         if (renderType == RenderType.Render2D)
             _render = new Render2D(_graphics, _materialStore);
         else
@@ -135,6 +128,13 @@ public sealed class RenderSystem : IRenderSystem
     internal void Render(float alpha, in FrameMetaInfo frameCtx, in RenderGlobalSnapshot renderGlobals,
         out FrameRenderResult result)
     {
+
+        if (!_initialized)
+        {
+            result = default;
+            return;
+        }
+        
         if (frameCtx.ViewportSize != _render.Camera.ViewportSize)
             _render.Camera.ViewportSize = frameCtx.ViewportSize;
         

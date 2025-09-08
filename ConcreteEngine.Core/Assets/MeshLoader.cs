@@ -1,160 +1,83 @@
-using System.Numerics;
-using System.Runtime.InteropServices;
+using ConcreteEngine.Core.Resources;
+using ConcreteEngine.Graphics;
 using ConcreteEngine.Graphics.Descriptors;
 using ConcreteEngine.Graphics.Primitives;
-using Silk.NET.Assimp;
-using AssimpMesh = Silk.NET.Assimp.Mesh;
+using ConcreteEngine.Graphics.Resources;
 
 namespace ConcreteEngine.Core.Assets;
 
-internal sealed class MeshLoader
+public sealed class MeshLoader : IAssetTypeLoader, IGpuLazyMeshPayloadProvider
 {
-    private Assimp? _assimp;
-    private readonly List<Vertex3D> _vertices = new(1024);
-    private readonly List<uint> _indices = new(1024);
+    private readonly IReadOnlyList<MeshManifestRecord> _records;
+    private readonly List<Mesh> _results = new(16);
+    
+    private readonly MeshImporter _meshImporter = new();
+    private int _idx = 0;
 
-    //private Vertex3D[] _verticesBuffer = [];
-    //private uint[] _indicesBuffer = [];
+    public bool HasStarted { get; private set; }
+    public bool IsFinished =>  _idx >= _records.Count;
+    
+    internal IReadOnlyList<Mesh> Results => _results;
 
+    public MeshLoader(IReadOnlyList<MeshManifestRecord> records)
+    {
+        _records = records;
+    }
 
     public void ClearCache()
     {
-        _vertices.Clear();
-        _indices.Clear();
-        _vertices.TrimExcess();
-        _indices.TrimExcess();
-
-        //Array.Resize(ref _verticesBuffer, 0);
-        //Array.Resize(ref _indicesBuffer, 0);
-
-
-        _assimp?.Dispose();
-        _assimp = null;
-    }
-
-    public unsafe MeshDataDescriptor<Vertex3D, uint> LoadModel(string path)
-    {
-        if (_assimp == null)
-            _assimp = Assimp.GetApi();
-
-        var steps =
-            PostProcessSteps.Triangulate |
-            PostProcessSteps.SortByPrimitiveType |
-            PostProcessSteps.GenerateSmoothNormals |
-            PostProcessSteps.CalculateTangentSpace |
-            PostProcessSteps.PreTransformVertices | // bake nodes
-            PostProcessSteps.FlipUVs;
-
-
-        var scene = _assimp.ImportFile(path, (uint)steps);
-
-        if (scene == null || scene->MFlags == Assimp.SceneFlagsIncomplete || scene->MRootNode == null)
-        {
-            var error = _assimp.GetErrorStringS();
-            throw new Exception(error);
-        }
-
-        if (scene->MNumMeshes > 1)
-            throw new NotSupportedException($"{path} have several meshes, only one mesh is supported atm.");
-
-        var mesh = scene->MMeshes[0];
-        return LoadMeshData(mesh);
+        _results.Clear();
+        _results.TrimExcess();
+        _meshImporter.ClearCache();
     }
 
 
-    private unsafe MeshDataDescriptor<Vertex3D, uint> LoadMeshData(AssimpMesh* mesh, float scaleFactor = 1)
+    public bool TryGet(out int queueIndex, out GpuMeshPayload payload)
     {
-        int vertexCount = (int)mesh->MNumVertices;
-        int indexCount = (int)(mesh->MNumFaces * 3);
-
-        _vertices.Clear();
-        _indices.Clear();
-        if (_vertices.Count < vertexCount)
-            _vertices.EnsureCapacity(vertexCount);
-        if (_indices.Count < vertexCount)
-            _indices.EnsureCapacity(indexCount);
-
-        ComputeBBox(mesh, out var bboxMin, out var bboxMax);
-        float scale = DecideScale(bboxMin, bboxMax);
-        var offset = (bboxMin + bboxMax) * 0.5f;
-
-        for (uint i = 0; i < mesh->MNumVertices; i++)
+        HasStarted = true;
+        if (_idx >= _records.Count)
         {
-            var vertex = new Vertex3D();
-            var pos = mesh->MVertices[i];
-            vertex.Position = (pos - offset) * scale;
-
-            // texture coordinates
-            if (mesh->MTextureCoords[0] != null)
-            {
-                var texcoord3 = mesh->MTextureCoords[0][i];
-                vertex.TexCoords = new Vector2(texcoord3.X, texcoord3.Y);
-            }
-
-            // normals
-            if (mesh->MNormals != null)
-                vertex.Normal = mesh->MNormals[i];
-
-            // tangent
-            if (mesh->MTangents != null)
-                vertex.Tangent = mesh->MTangents[i];
-
-            // bitangent (not used)
-            // if (mesh->MBitangents != null)
-            // vertex.Bitangent = mesh->MBitangents[i];
-
-            _vertices.Add(vertex);
+            queueIndex = -1;
+            payload = null;
+            return false;
         }
+        
+        var record = _records[_idx];
+        var path = Path.Combine(AssetPaths.AssetPath, "meshes", record.Filename);
 
-        for (uint i = 0; i < mesh->MNumFaces; i++)
+        var result = _meshImporter.ImportMesh(path);
+        var metaDesc = new GpuMeshDescriptor
         {
-            var face = mesh->MFaces[i];
-            _indices.Add(face.MIndices[0]);
-            _indices.Add(face.MIndices[1]);
-            _indices.Add(face.MIndices[2]);
-        }
+            VertexPointers =
+            [
+                VertexAttributeDescriptor.Make<Vertex3D>(nameof(Vertex3D.Position), VertexElementFormat.Float3),
+                VertexAttributeDescriptor.Make<Vertex3D>(nameof(Vertex3D.TexCoords), VertexElementFormat.Float2),
+                VertexAttributeDescriptor.Make<Vertex3D>(nameof(Vertex3D.Normal), VertexElementFormat.Float3),
+                VertexAttributeDescriptor.Make<Vertex3D>(nameof(Vertex3D.Tangent), VertexElementFormat.Float3),
+            ],
+            DrawKind = MeshDrawKind.Elements,
+            DrawCount = (uint)result.Indices.Length
+        };
 
-        return new MeshDataDescriptor<Vertex3D, uint>(
-            CollectionsMarshal.AsSpan(_vertices),
-            CollectionsMarshal.AsSpan(_indices)
-        );
-
-        /*
-        if(_verticesBuffer.Length < _vertices.Count)
-            Array.Resize(ref _verticesBuffer, Math.Max(_vertices.Count, _verticesBuffer.Length * 2));
-
-        if(_indicesBuffer.Length < _indices.Count)
-            Array.Resize(ref _indicesBuffer, Math.Max(_indices.Count, _indicesBuffer.Length * 2));
-
-        CollectionsMarshal.AsSpan(_vertices).CopyTo(_verticesBuffer.AsSpan(0, _vertices.Count));
-        CollectionsMarshal.AsSpan(_indices).CopyTo(_indicesBuffer.AsSpan(0, _indices.Count));
-
-        return new MeshData
-        {
-            Vertices = _verticesBuffer,
-            Indices = _indicesBuffer,
-        };*/
+        payload = new GpuMeshPayload(result, metaDesc);
+        queueIndex = _idx++;
+        return true;
     }
 
-    private unsafe void ComputeBBox(AssimpMesh* mesh, out Vector3 min, out Vector3 max)
+    public void Callback(int queueIndex, in (MeshId, MeshMeta) result)
     {
-        min = new Vector3(float.PositiveInfinity);
-        max = new Vector3(float.NegativeInfinity);
-        for (uint i = 0; i < mesh->MNumVertices; i++)
+        var record = _records[queueIndex];
+        var (id, meta) = result;
+
+        var mesh = new Mesh
         {
-            var p = mesh->MVertices[i];
-            min = Vector3.Min(min, p);
-            max = Vector3.Max(max, p);
-        }
-    }
+            Name = record.Name,
+            Filename = record.Filename,
+            IsStatic = meta.IsStatic,
+            DrawCount = meta.DrawCount,
+            ResourceId = id
+        };
 
-    private static float DecideScale(in Vector3 bboxMin, in Vector3 bboxMax)
-    {
-        var size = bboxMax - bboxMin;
-        var maxDim = MathF.Max(size.X, MathF.Max(size.Y, size.Z));
-
-        float unitScale = 1f; // cm->0.01f, mm->0.001f, m->1f
-
-        return unitScale * ((maxDim > 100f) ? 0.01f : (maxDim < 0.01f ? 0.001f : 1f));
+        _results.Add(mesh);
     }
 }

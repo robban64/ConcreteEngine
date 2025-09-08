@@ -57,4 +57,6 @@ public static class UniformBufferUtils
         AlignUp((nuint)Unsafe.SizeOf<T>(), _offsetAlign);
 
     public static bool IsStd140Aligned<T>() where T : unmanaged, IUniformGpuData => (Unsafe.SizeOf<T>() % 16) == 0;
+    public static bool IsStd140SizeAligned(int size) => (size % 16) == 0;
+
 }

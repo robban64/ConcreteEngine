@@ -147,7 +147,7 @@ internal class RenderPasses
         ValidateSizeRatio(sizeRatio);
 
         var desc = new FrameBufferDesc(SizeRatio:Vector2.One, 
-            TexturePreset: TexturePreset.LinearMipmapRepeat, 
+            TexturePreset: TexturePreset.LinearClamp, 
             DepthStencilBuffer: false);
         
         var fboId = _graphics.CreateFramebuffer(in desc , out var meta);

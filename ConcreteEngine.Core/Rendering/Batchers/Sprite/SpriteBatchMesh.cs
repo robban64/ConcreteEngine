@@ -47,10 +47,10 @@ internal sealed class SpriteBatchMesh : IDisposable
 
         InitIndexBufferData();
 
-        var indices = Indices.AsSpan(0, _capacity * IndicesPerSprite);
-        var dataDesc = new MeshDataDescriptor<Vertex2D, ushort>(Vertices, indices);
+        var indices = Indices.AsMemory(0, _capacity * IndicesPerSprite);
+        var dataDesc = new GpuMeshData<Vertex2D, ushort>(Vertices, indices);
 
-        var metaDesc = new MeshMetaDescriptor
+        var metaDesc = new GpuMeshDescriptor
         {
             VertexPointers =
             [

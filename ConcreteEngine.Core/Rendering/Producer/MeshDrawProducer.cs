@@ -17,8 +17,8 @@ public struct MeshDrawEntity(MeshId meshId, MaterialId materialId, in Transform 
 
 public interface IMeshDrawSink : IDrawSink
 {
-    void Send(ReadOnlySpan<MeshDrawEntity> payload);
-    void SendSingle(in MeshDrawEntity payload);
+    void Send(ReadOnlySpan<MeshDrawEntity> entities);
+    void SendSingle(in MeshDrawEntity entity);
 }
 
 public sealed class MeshDrawProducer : IDrawCommandProducer, IMeshDrawSink
@@ -30,22 +30,24 @@ public sealed class MeshDrawProducer : IDrawCommandProducer, IMeshDrawSink
     private int _idx = 0;
 
     private MeshDrawEntity[] _entities = new MeshDrawEntity[32];
-
+    
+    private DrawTransformPayload[] _transforms = new DrawTransformPayload[BatchSize];
     private readonly DrawCommand[] _commands = new DrawCommand[BatchSize];
     private readonly DrawCommandMeta[] _meta = new DrawCommandMeta[BatchSize];
 
 
-    public void Send(ReadOnlySpan<MeshDrawEntity> payload)
+    public void Send(ReadOnlySpan<MeshDrawEntity> entities)
     {
-        EnsureCapacity(_idx + payload.Length);
-        payload.CopyTo(_entities.AsSpan(_idx));
-        _idx += payload.Length;
+        EnsureCapacity(_idx + entities.Length);
+        entities.CopyTo(_entities.AsSpan(_idx));
+        _idx += entities.Length;
     }
 
-    public void SendSingle(in MeshDrawEntity payload)
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public void SendSingle(in MeshDrawEntity entity)
     {
         EnsureCapacity(_idx);
-        _entities[_idx++] = payload;
+        _entities[_idx++] = entity;
     }
 
 
@@ -74,9 +76,10 @@ public sealed class MeshDrawProducer : IDrawCommandProducer, IMeshDrawSink
             _commands[counter] = new DrawCommand(
                 meshId: entity.MeshId,
                 drawCount: 0,
-                materialId: entity.MaterialId,
-                transform: entity.Transform.GetTransform()
+                materialId: entity.MaterialId
             );
+            
+            _transforms[counter] = new DrawTransformPayload(entity.Transform.GetTransform());
 
             _meta[counter] = new DrawCommandMeta(
                 DrawCommandId.Mesh,
@@ -88,7 +91,7 @@ public sealed class MeshDrawProducer : IDrawCommandProducer, IMeshDrawSink
             counter++;
             if (counter >= BatchSize)
             {
-                submitter.SubmitDrawBatch(_commands, _meta);
+                submitter.SubmitDrawBatch(_commands, _meta, _transforms);
                 counter = 0;
             }
         }
@@ -97,7 +100,8 @@ public sealed class MeshDrawProducer : IDrawCommandProducer, IMeshDrawSink
         {
             var commands = _commands.AsSpan(0, counter);
             var metas = _meta.AsSpan(0, counter);
-            submitter.SubmitDrawBatch(commands, metas);
+            var transforms = _transforms.AsSpan(0, counter);
+            submitter.SubmitDrawBatch(commands, metas, transforms);
         }
     }
 

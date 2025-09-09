@@ -44,19 +44,25 @@ internal sealed class DrawProcessor
             _gfx.BindTexture(material.SamplerSlots[t], (uint)t);
         }
 
-        _uniformBinder.ApplyMaterial(new MaterialUniformRecord(materialId, material.Color.AsVec3(), material.Shininess,
+        _uniformBinder.UploadMaterial(new MaterialUniformRecord(materialId, material.Color.AsVec3(), material.Shininess,
             material.SpecularStrength, material.UvRepeat));
 
         _previousMaterialId = materialId.Id;
     }
+    
 
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public void DrawMesh(in DrawCommand cmd)
     {
         BindMaterial(cmd.MaterialId);
-        
-        _uniformBinder.ApplyDrawObject(new DrawObjectUniformRecord(in cmd.Transform));
-
+        _uniformBinder.BindDrawObject();
         _gfx.BindMesh(cmd.MeshId);
         _gfx.DrawMesh(cmd.DrawCount);
+    }
+    
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public void UploadTransform(in DrawTransformPayload payload)
+    {
+        _uniformBinder.UploadDrawObject(in payload);
     }
 }

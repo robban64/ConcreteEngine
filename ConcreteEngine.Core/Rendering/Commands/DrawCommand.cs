@@ -5,19 +5,23 @@ using ConcreteEngine.Graphics.Resources;
 
 namespace ConcreteEngine.Core.Rendering;
 
-public readonly struct DrawCommand(MeshId meshId, MaterialId materialId, in Matrix4x4 transform, uint drawCount = 0)
+public readonly struct DrawCommand(MeshId meshId, MaterialId materialId, uint drawCount = 0)
 {
     public readonly MeshId MeshId = meshId;
     public readonly MaterialId MaterialId = materialId;
-    public readonly Matrix4x4 Transform = transform;
     public readonly uint DrawCount = drawCount;
+}
+
+public readonly struct DrawTransformPayload(in Matrix4x4 transform)
+{
+    public readonly Matrix4x4 Transform = transform;
 }
 
 public readonly struct DrawCommandMeta(
     DrawCommandId id,
     RenderTargetId target,
-    DrawCommandQueue queue, 
-    byte order = 0, 
+    DrawCommandQueue queue,
+    byte order = 0,
     ushort depthKey = 0)
 {
     public readonly DrawCommandId Id = id;
@@ -26,8 +30,8 @@ public readonly struct DrawCommandMeta(
     public readonly byte Order = order;
     public readonly ushort DepthKey = depthKey;
 
-    public static DrawCommandMeta Make2D(DrawCommandId id,  RenderTargetId target, byte layer = 0)
-        => new(id,  target, DrawCommandQueue.None, order: layer);
+    public static DrawCommandMeta Make2D(DrawCommandId id, RenderTargetId target, byte layer = 0) =>
+        new(id, target, DrawCommandQueue.None, order: layer);
 }
 
 internal readonly struct DrawCommandMetaIndex(in DrawCommandMeta meta, int idx)

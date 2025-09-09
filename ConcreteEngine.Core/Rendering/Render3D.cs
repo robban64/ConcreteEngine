@@ -61,9 +61,9 @@ internal sealed class Render3D : IRender
             intensity: snapshot.DirLight.Intensity
         );
 
-        _uniformBinder.ApplyFrame(in frameUniforms);
-        _uniformBinder.ApplyCamera(in cameraUniforms);
-        _uniformBinder.ApplyDirLight(in dirLightUniforms);
+        _uniformBinder.UploadFrame(in frameUniforms);
+        _uniformBinder.UploadCamera(in cameraUniforms);
+        _uniformBinder.UploadDirLight(in dirLightUniforms);
 
     }
 

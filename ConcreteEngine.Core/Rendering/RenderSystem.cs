@@ -179,6 +179,8 @@ public sealed class RenderSystem : IRenderSystem
         nuint stride      = (blockSize + (uboAlign - 1)) & ~(uboAlign - 1);  
         var capacity = stride * (nuint)(_commandSubmitter.Count + 100);
         _uniformBinder.Prepare(capacity);
+        
+        _commandSubmitter.DrainTransformQueue();
 
         while (_render.TryGetNextPasses(out var targetId, out var passes))
         {

@@ -70,12 +70,11 @@ public sealed class TerrainDrawProducer : IDrawCommandProducer, ITerrainDrawSink
         var cmd = new DrawCommand(
             meshId: _terrain.MeshId,
             drawCount: _terrain.DrawCount,
-            materialId: data.MaterialId,
-            transform: in transform 
+            materialId: data.MaterialId
         );
 
         var meta = new DrawCommandMeta( DrawCommandId.Terrain, RenderTargetId.Scene, DrawCommandQueue.Terrain);
-        submitter.SubmitDraw(in cmd, in meta);
+        submitter.SubmitDraw(in cmd, in meta, new DrawTransformPayload(in transform));
 
     }
 }

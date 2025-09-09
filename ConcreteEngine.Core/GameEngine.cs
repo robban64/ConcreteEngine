@@ -20,6 +20,17 @@ namespace ConcreteEngine.Core;
 
 public sealed class GameEngine : IDisposable
 {
+    private enum EngineState
+    {
+        NotStarted,
+        LoadingGraphics,
+        LoadingAssets,
+        InitializeSystem,
+        LoadScenes,
+        Running
+    }
+
+    
     private const float GameDt = 1f / 10f; // 30 Hz
 
     private readonly IEngineWindowHost _window;
@@ -50,15 +61,6 @@ public sealed class GameEngine : IDisposable
     private UpdateMetaInfo _updateMeta = default;
 
 
-    private enum EngineState
-    {
-        NotStarted,
-        LoadingGraphics,
-        LoadingAssets,
-        InitializeSystem,
-        LoadScenes,
-        Running
-    }
 
     private LinearStateMachine<EngineState> _stateMachine;
 

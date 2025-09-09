@@ -18,6 +18,9 @@ public sealed class UniformBinder
 
     private nuint _nextObjectCursor = 0;
     private nuint _capacity = 0;
+    
+    private int _drawObjectSize = 0;
+    private int _drawObjectOffset = 0;
 
     public UniformBinder(IGraphicsDevice graphics)
     {
@@ -42,13 +45,15 @@ public sealed class UniformBinder
     public void Prepare(nuint capacity)
     {
         _nextObjectCursor = 0;
+        _drawObjectOffset = 0;
+        _drawObjectSize = 0;
         _capacity = capacity;
         _gfx.BindUniformBuffer(_uboDraw);
         _gfx.SetUniformBufferSize(UniformGpuSlot.DrawObject, _capacity);
         _gfx.BindUniformBuffer(default);
     }
 
-    public void ApplyFrame(in FrameUniformRecord rec)
+    public void UploadFrame(in FrameUniformRecord rec)
     {
         var data = new FrameUniformGpuData(
             ambient: rec.Ambient,
@@ -64,7 +69,7 @@ public sealed class UniformBinder
         _gfx.UploadUniformGpuData(UniformGpuSlot.Frame, in data);
     }
 
-    public void ApplyCamera(in CameraUniformRecord rec)
+    public void UploadCamera(in CameraUniformRecord rec)
     {
         var data = new CameraUniformGpuData(
             viewMat: in rec.ViewMat,
@@ -77,7 +82,7 @@ public sealed class UniformBinder
         _gfx.UploadUniformGpuData(UniformGpuSlot.Camera, in data);
     }
 
-    public void ApplyDirLight(in DirLightUniformRecord rec)
+    public void UploadDirLight(in DirLightUniformRecord rec)
     {
         var data = new DirLightUniformGpuData(
             direction: rec.Direction,
@@ -90,7 +95,8 @@ public sealed class UniformBinder
         _gfx.UploadUniformGpuData(UniformGpuSlot.DirLight, in data);
     }
 
-    public void ApplyMaterial(in MaterialUniformRecord rec)
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public void UploadMaterial(in MaterialUniformRecord rec)
     {
         var data = new MaterialUniformGpuData(
             color: rec.Color,
@@ -103,49 +109,28 @@ public sealed class UniformBinder
         _gfx.UploadUniformGpuData(UniformGpuSlot.Material, in data);
     }
 
-    public void ApplyDrawObject(in DrawObjectUniformRecord rec)
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public void UploadDrawObject(in DrawTransformPayload payload)
     {
-        TransformHelper.GetNormalMatrix(in rec.Model, out var normalModel);
+        TransformHelper.GetNormalMatrix(in payload.Transform, out var normalModel);
 
         var data = new DrawObjectUniformGpuData(
-            model: in rec.Model,
+            model: in payload.Transform,
             normal: in normalModel
         );
 
         _gfx.BindUniformBuffer(_uboDraw);
         var (offset, size, next) = _gfx.UploadUniformGpuDataRing(in data, _nextObjectCursor);
-        _gfx.BindUniformBufferRange(UniformGpuSlot.DrawObject, offset, size);
+        _drawObjectSize = size;
         _nextObjectCursor = next;
-        //_gfx.UploadUniformGpuData(UniformGpuData.DrawObject, in data);
-        
-
-
     }
-
-    private sealed class UboStream
+    
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public void BindDrawObject()
     {
-        public readonly uint BufferId;
-        public readonly nuint Capacity;
-        public readonly nuint Align; // GL_UNIFORM_BUFFER_OFFSET_ALIGNMENT
-        private nuint _cursor;
-
-        public void BeginFrame()
-        {
-            _cursor = 0;
-        }
-
-        public (nuint offset, nuint size) Allocate(nuint size)
-        {
-            nuint aligned = AlignUp(_cursor, Align);
-            if (aligned + size > Capacity)
-            {
-                aligned = 0;
-                _cursor = 0;
-            }
-            _cursor = aligned + size;
-            return (aligned, size);
-        }
-
-        static nuint AlignUp(nuint v, nuint a) => a == 0 ? v : (v + (a - 1)) & ~(a - 1);
+        _gfx.BindUniformBuffer(_uboDraw);
+        _gfx.BindUniformBufferRange(UniformGpuSlot.DrawObject, _drawObjectOffset, _drawObjectSize);
+        _drawObjectOffset += _drawObjectSize;
     }
+
 }

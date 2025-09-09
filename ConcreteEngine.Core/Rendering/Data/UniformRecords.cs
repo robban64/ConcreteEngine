@@ -63,8 +63,3 @@ public readonly struct MaterialUniformRecord(MaterialId Id, Vector3 color, float
     public readonly float UvRepeat = uvRepeat;
 
 }
-
-public readonly struct DrawObjectUniformRecord(in Matrix4x4 model)
-{
-    public readonly Matrix4x4 Model = model;
-}

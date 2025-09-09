@@ -38,13 +38,12 @@ public sealed class SceneDrawProducer : IDrawCommandProducer
         var skybox = _snapshot.Skybox;
         var cmd = new DrawCommand(
             meshId: _context.Graphics.Primitives.SkyboxCube,
-            materialId: _snapshot.Skybox.MaterialId,
-            transform: Matrix4x4.Identity
+            materialId: _snapshot.Skybox.MaterialId
         );
 
 
         var meta = new DrawCommandMeta( DrawCommandId.Skybox, RenderTargetId.Scene, DrawCommandQueue.Skybox);
 
-        submitter.SubmitDraw(in cmd, in meta);
+        submitter.SubmitDraw(in cmd, in meta, new DrawTransformPayload(Matrix4x4.Identity));
     }
 }

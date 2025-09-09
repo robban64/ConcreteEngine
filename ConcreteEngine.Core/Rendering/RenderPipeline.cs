@@ -16,10 +16,12 @@ public sealed class RenderPipeline
     private readonly DrawProcessor _drawProcessor;
 
     private DrawCommand[] _commands;
+    private DrawTransformPayload[] _transforms;
     private DrawCommandMetaIndex[] _indices;
 
     private int _submitIdx = 0;
-    private int _iteratorIdx = 0;
+    private int _drainTransformIdx = 0;
+    private int _drainCmdIdx = 0;
     
     public int Count => _submitIdx;
 
@@ -27,6 +29,7 @@ public sealed class RenderPipeline
     {
         _drawProcessor = drawProcessor;
         _commands = new DrawCommand[DefaultCapacity];
+        _transforms  = new DrawTransformPayload[DefaultCapacity];
         _indices = new DrawCommandMetaIndex[DefaultCapacity];
         _submitIdx = 0;
     }
@@ -34,15 +37,16 @@ public sealed class RenderPipeline
     internal void Initialize() {}
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public void SubmitDraw(in DrawCommand cmd, in DrawCommandMeta meta) 
+    public void SubmitDraw(in DrawCommand cmd, in DrawCommandMeta meta, in DrawTransformPayload transform) 
     {
         EnsureCapacity(1);
         _commands[_submitIdx] = cmd;
+        _transforms[_submitIdx] = transform;
         _indices[_submitIdx] = new DrawCommandMetaIndex(in meta, _submitIdx);
         _submitIdx++;
     }
     
-    public void SubmitDrawBatch(ReadOnlySpan<DrawCommand> cmds, ReadOnlySpan<DrawCommandMeta> metas)
+    public void SubmitDrawBatch(ReadOnlySpan<DrawCommand> cmds, ReadOnlySpan<DrawCommandMeta> metas, ReadOnlySpan<DrawTransformPayload> transforms)
     {
         ArgumentOutOfRangeException.ThrowIfNotEqual(cmds.Length, metas.Length);
         int count = cmds.Length;
@@ -50,6 +54,8 @@ public sealed class RenderPipeline
 
         EnsureCapacity(count);
         cmds.CopyTo(_commands.AsSpan(_submitIdx));
+        transforms.CopyTo(_transforms.AsSpan(_submitIdx));
+
         for (int i = 0; i < count; i++)
         {
             _indices[_submitIdx + i] = new DrawCommandMetaIndex(in metas[i], _submitIdx + i);
@@ -64,15 +70,27 @@ public sealed class RenderPipeline
         _indices.AsSpan(0, _submitIdx).Sort();
     }
 
+    public void DrainTransformQueue()
+    {
+        var transforms = (ReadOnlySpan<DrawTransformPayload>)_transforms;
+        var metaSpan = (ReadOnlySpan<DrawCommandMetaIndex>)_indices;
+
+        for (int i = _drainTransformIdx; i < _submitIdx; i++)
+        {
+            ref readonly var it = ref metaSpan[_drainTransformIdx++];
+            _drawProcessor.UploadTransform(in transforms[it.Idx]);
+        }
+    }
+
 
     public void DrainCommandQueue(RenderTargetId targetId)
     {
-        var cmdSpan = (ReadOnlySpan<DrawCommand>)_commands.AsSpan();
+        var cmdSpan = (ReadOnlySpan<DrawCommand>)_commands;
         var metaSpan = (ReadOnlySpan<DrawCommandMetaIndex>)_indices;
 
-        for (int i = _iteratorIdx; i < _submitIdx; i++)
+        for (int i = _drainCmdIdx; i < _submitIdx; i++)
         {
-            ref readonly var it = ref metaSpan[_iteratorIdx++];
+            ref readonly var it = ref metaSpan[_drainCmdIdx++];
             if (it.Meta.Target < targetId) continue;
             if (it.Meta.Target > targetId) break;
             ref readonly var cmd = ref cmdSpan[it.Idx];
@@ -83,7 +101,8 @@ public sealed class RenderPipeline
     public void Reset()
     {
         _submitIdx = 0;
-        _iteratorIdx = 0;
+        _drainTransformIdx = 0;
+        _drainCmdIdx = 0;
     }
 
     private void EnsureCapacity(int amount)
@@ -97,6 +116,15 @@ public sealed class RenderPipeline
             var newArr = new DrawCommand[newSize];
             _commands.AsSpan(0, int.Min(_submitIdx, _commands.Length)).CopyTo(newArr);
             _commands = newArr;
+        }
+        
+        if (idx >= _transforms.Length)
+        {
+            int newSize = Math.Max(idx + DefaultCapacity, _transforms.Length * 2);
+            if (newSize > MaxCapacity) throw new OutOfMemoryException("Transform Buffer too big");
+            var newArr = new DrawTransformPayload[newSize];
+            _transforms.AsSpan(0, int.Min(_submitIdx, _transforms.Length)).CopyTo(newArr);
+            _transforms = newArr;
         }
 
         if (idx >= _indices.Length)

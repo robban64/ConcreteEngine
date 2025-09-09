@@ -6,25 +6,19 @@ using ConcreteEngine.Graphics.Resources;
 
 namespace ConcreteEngine.Core.Assets;
 
-public sealed class MeshLoader : IAssetTypeLoader, IGpuLazyMeshPayloadProvider
+public readonly ref struct MeshLoaderResult(GpuMeshData<Vertex3D, uint> meshData, GpuMeshDescriptor descriptor)
 {
-    private readonly IReadOnlyList<MeshManifestRecord> _records;
+    public readonly GpuMeshData<Vertex3D, uint> MeshData = meshData;
+    public readonly GpuMeshDescriptor Descriptor = descriptor;
+}
+
+public sealed class MeshLoader(IReadOnlyList<MeshManifestRecord> records) : AssetTypeLoader<MeshManifestRecord, MeshLoaderResult>(records)
+{
     private readonly List<Mesh> _results = new(16);
     
     private readonly MeshImporter _meshImporter = new();
-    private int _idx = 0;
-
-    public bool HasStarted { get; private set; }
-    public bool IsFinished =>  _idx >= _records.Count;
     
-    internal IReadOnlyList<Mesh> Results => _results;
-
-    public MeshLoader(IReadOnlyList<MeshManifestRecord> records)
-    {
-        _records = records;
-    }
-
-    public void ClearCache()
+    protected override void ClearCache()
     {
         _results.Clear();
         _results.TrimExcess();
@@ -32,21 +26,12 @@ public sealed class MeshLoader : IAssetTypeLoader, IGpuLazyMeshPayloadProvider
     }
 
 
-    public bool TryGet(out int queueIndex, out GpuMeshPayload payload)
+    public override MeshLoaderResult Get(MeshManifestRecord record)
     {
-        HasStarted = true;
-        if (_idx >= _records.Count)
-        {
-            queueIndex = -1;
-            payload = null;
-            return false;
-        }
-        
-        var record = _records[_idx];
         var path = Path.Combine(AssetPaths.AssetPath, "meshes", record.Filename);
 
-        var result = _meshImporter.ImportMesh(path);
-        var metaDesc = new GpuMeshDescriptor
+        var meshData = _meshImporter.ImportMesh(path);
+        var desc = new GpuMeshDescriptor
         {
             VertexPointers =
             [
@@ -56,28 +41,14 @@ public sealed class MeshLoader : IAssetTypeLoader, IGpuLazyMeshPayloadProvider
                 VertexAttributeDescriptor.Make<Vertex3D>(nameof(Vertex3D.Tangent), VertexElementFormat.Float3),
             ],
             DrawKind = MeshDrawKind.Elements,
-            DrawCount = (uint)result.Indices.Length
+            DrawCount = (uint)meshData.Indices.Length
         };
 
-        payload = new GpuMeshPayload(result, metaDesc);
-        queueIndex = _idx++;
-        return true;
+        return new MeshLoaderResult(meshData, desc);
     }
 
-    public void Callback(int queueIndex, in (MeshId, MeshMeta) result)
-    {
-        var record = _records[queueIndex];
-        var (id, meta) = result;
 
-        var mesh = new Mesh
-        {
-            Name = record.Name,
-            Filename = record.Filename,
-            IsStatic = meta.IsStatic,
-            DrawCount = meta.DrawCount,
-            ResourceId = id
-        };
 
-        _results.Add(mesh);
-    }
+
+
 }

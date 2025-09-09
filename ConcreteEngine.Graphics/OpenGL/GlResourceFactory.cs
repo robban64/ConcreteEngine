@@ -42,7 +42,7 @@ internal sealed class GlResourceFactory(GlGraphicsContext gfx, DeviceCapabilitie
         _gl.BindBuffer(BufferTargetARB.ArrayBuffer, vbo.Handle);
 
         if (!dataDesc.Vertices.IsEmpty)
-            SetBufferData<TVertex>(BufferTargetARB.ArrayBuffer, desc.VboUsage.ToGlEnum(), dataDesc.Vertices.Span,
+            SetBufferData<TVertex>(BufferTargetARB.ArrayBuffer, desc.VboUsage.ToGlEnum(), dataDesc.Vertices,
                 dataDesc.Vertices.Length);
 
         GlIndexBufferHandle ibo = default;
@@ -55,7 +55,7 @@ internal sealed class GlResourceFactory(GlGraphicsContext gfx, DeviceCapabilitie
             _gl.BindBuffer(BufferTargetARB.ElementArrayBuffer, ibo.Handle);
             if (!dataDesc.Indices.IsEmpty)
                 SetBufferData<TIndex>(BufferTargetARB.ElementArrayBuffer, desc.IboUsage.ToGlEnum(),
-                    dataDesc.Indices.Span, dataDesc.Indices.Length);
+                    dataDesc.Indices, dataDesc.Indices.Length);
         }
 
         for (int i = 0; i < desc.VertexPointers.Length; i++)
@@ -132,69 +132,59 @@ internal sealed class GlResourceFactory(GlGraphicsContext gfx, DeviceCapabilitie
         return new GlIndexBufferHandle(handle);
     }
 
-    public GlTextureHandle CreateTexture2D(GpuTexturePayload payload, out TextureMeta meta)
+    public GlTextureHandle CreateTexture2D(GpuTextureData data, in GpuTextureDescriptor desc, out TextureMeta meta)
     {
         var handle = _gl.GenTexture();
         _gl.BindTexture(GLEnum.Texture2D, handle);
-        var (glFormat, glInternalFormat) = payload.Format.ToGlEnums();
+        var (glFormat, glInternalFormat) = desc.Format.ToGlEnums();
 
         unsafe
         {
-            if (payload.NullPtrData)
+            if (desc.NullPtrData)
             {
                 _gl.TexImage2D(GLEnum.Texture2D, 0, (int)glInternalFormat,
-                    (uint)payload.Width, (uint)payload.Height, 0,
+                    (uint)desc.Width, (uint)desc.Height, 0,
                     glFormat, GLEnum.UnsignedByte, (void*)0);
             }
             else
             {
-                fixed (byte* ptr = payload.PixelData.Span)
-                {
-                    _gl.TexImage2D(GLEnum.Texture2D, 0, (int)glInternalFormat,
-                        (uint)payload.Width, (uint)payload.Height, 0,
-                        glFormat, GLEnum.UnsignedByte, ptr);
-                }
+                _gl.TexImage2D(GLEnum.Texture2D, 0, (int)glInternalFormat,
+                    (uint)desc.Width, (uint)desc.Height, 0,
+                    glFormat, GLEnum.UnsignedByte, data.PixelData);
+
             }
         }
 
-        SetTextureParameters(payload.Preset, payload.Anisotropy, payload.LodBias);
+        SetTextureParameters(desc.Preset, desc.Anisotropy, desc.LodBias);
 
         _gl.BindTexture(GLEnum.Texture2D, 0);
 
-        meta = new TextureMeta(payload.Width, payload.Height, payload.Format);
+        meta = new TextureMeta(desc.Width, desc.Height, desc.Format);
         return new GlTextureHandle(handle);
     }
 
-    public unsafe GlTextureHandle CreateCubeMap(GpuCubeMapPayload payload, out TextureMeta meta)
+    public unsafe GlTextureHandle CreateCubeMap(GpuCubeMapData data, in GpuCubeMapDescriptor desc, out TextureMeta meta)
     {
-        var (width, height) = (payload.Width, payload.Height);
-
-        ArgumentNullException.ThrowIfNull(payload.FaceData);
-        ArgumentOutOfRangeException.ThrowIfLessThan(payload.FaceData.Length, 0, nameof(payload.FaceData));
+        var (width, height) = (desc.Width, desc.Height);
 
         if (width != height)
             throw new InvalidOperationException("Width and Height are not the same size");
 
-        if (width != payload.Width || height != payload.Height)
+        if (width != desc.Width || height != desc.Height)
             throw new InvalidOperationException("Miss match between cubemap size");
 
         var target = (int)TextureTarget.TextureCubeMapPositiveX;
 
         var handle = _gl.GenTexture();
         _gl.BindTexture(GLEnum.TextureCubeMap, handle);
+        var (format, internalFormat) = desc.Format.ToGlEnums();
 
-        for (int i = 0; i < 6; i++)
-        {
-            var data = payload.FaceData[i];
-            var (format, internalFormat) = payload.Format.ToGlEnums();
-
-            fixed (byte* ptr = data.Span)
-            {
-                _gl.TexImage2D((TextureTarget)(target + i), 0, (int)internalFormat,
-                    (uint)width, (uint)height, 0,
-                    format, GLEnum.UnsignedByte, ptr);
-            }
-        }
+        CreateFace(data.FaceData1, 0);
+        CreateFace(data.FaceData2, 1);
+        CreateFace(data.FaceData3, 2);
+        CreateFace(data.FaceData4, 3);
+        CreateFace(data.FaceData5, 4);
+        CreateFace(data.FaceData6, 5);
 
         _gl.TexParameter(TextureTarget.TextureCubeMap, TextureParameterName.TextureWrapS, (int)GLEnum.ClampToEdge);
         _gl.TexParameter(TextureTarget.TextureCubeMap, TextureParameterName.TextureWrapT, (int)GLEnum.ClampToEdge);
@@ -203,8 +193,16 @@ internal sealed class GlResourceFactory(GlGraphicsContext gfx, DeviceCapabilitie
         _gl.TexParameter(TextureTarget.TextureCubeMap, TextureParameterName.TextureMagFilter, (int)GLEnum.Linear);
         _gl.BindTexture(TextureTarget.TextureCubeMap, 0);
 
-        meta = new TextureMeta(width, height, payload.Format);
+        meta = new TextureMeta(width, height, desc.Format);
         return new GlTextureHandle(handle);
+
+        void CreateFace(ReadOnlySpan<byte> faceData, int face)
+        {
+            _gl.TexImage2D((TextureTarget)(target + face), 0, (int)internalFormat,
+                (uint)width, (uint)height, 0,
+                format, GLEnum.UnsignedByte, faceData);
+
+        }
     }
 
     private GlRenderBufferHandle CreateRenderBufferForFbo(RenderBufferKind kind, Vector2D<int> size, bool multisample,
@@ -273,8 +271,9 @@ internal sealed class GlResourceFactory(GlGraphicsContext gfx, DeviceCapabilitie
         }
         else
         {
-            colTexHandle = CreateTexture2D(new GpuTexturePayload(ReadOnlyMemory<byte>.Empty, size.X, size.Y, EnginePixelFormat.Rgba,
-                desc.TexturePreset, NullPtrData: true), out colTexMeta);
+            var texDesc = new GpuTextureDescriptor(size.X, size.Y, EnginePixelFormat.Rgba,
+                desc.TexturePreset, NullPtrData: true);
+            colTexHandle = CreateTexture2D(new GpuTextureData(ReadOnlySpan<byte>.Empty), in texDesc, out colTexMeta);
 
             _gl.BindTexture(TextureTarget.Texture2D, colTexHandle.Handle);
             _gl.FramebufferTexture2D(FramebufferTarget.Framebuffer, FramebufferAttachment.ColorAttachment0,

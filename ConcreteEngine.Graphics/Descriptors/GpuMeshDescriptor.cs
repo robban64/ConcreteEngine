@@ -8,7 +8,7 @@ using ConcreteEngine.Graphics.Error;
 
 namespace ConcreteEngine.Graphics.Descriptors;
 
-public sealed record GpuMeshDescriptor
+public readonly struct GpuMeshDescriptor()
 {
     public required VertexAttributeDescriptor[] VertexPointers { get; init; }
     public required MeshDrawKind DrawKind { get; init; }
@@ -16,22 +16,23 @@ public sealed record GpuMeshDescriptor
     public DrawPrimitive? Primitive { get; init; } = null;
     public BufferUsage VboUsage { get; init; } = BufferUsage.StaticDraw;
     public BufferUsage IboUsage { get; init; } = BufferUsage.StaticDraw;
+    
 }
 
-public sealed record GpuMeshData<T, I> where T : unmanaged where I : unmanaged
+public readonly ref struct GpuMeshData<T, I> where T : unmanaged where I : unmanaged
 {
-    public ReadOnlyMemory<T> Vertices { get; }
-    public ReadOnlyMemory<I> Indices { get; }
+    public readonly ReadOnlySpan<T> Vertices;
+    public readonly ReadOnlySpan<I> Indices;
     public bool Elemental { get; }
 
-    public GpuMeshData(ReadOnlyMemory<T> vertices)
+    public GpuMeshData(ReadOnlySpan<T> vertices)
     {
         Vertices = vertices;
-        Indices = ReadOnlyMemory<I>.Empty;
+        Indices = ReadOnlySpan<I>.Empty;
         Elemental = false;
     }
 
-    public GpuMeshData(ReadOnlyMemory<T> vertices, ReadOnlyMemory<I> indices)
+    public GpuMeshData(ReadOnlySpan<T> vertices, ReadOnlySpan<I> indices)
     {
         Vertices = vertices;
         Indices = indices;

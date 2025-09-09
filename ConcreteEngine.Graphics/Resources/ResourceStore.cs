@@ -12,9 +12,11 @@ internal sealed class ResourceStore<TId, TMeta, THandle>
     private const int MaxBufferSize = 1024;
     private const int BufferSize = 128;
 
+    private static EqualityComparer<TMeta> MetaComparer = EqualityComparer<TMeta>.Default;
+
     private readonly Func<int, TId> _makeId;
 
-    private ushort _idx = 0;
+    private int _idx = 0;
     private TMeta[] _meta;
     private THandle[] _handle;
 
@@ -86,6 +88,15 @@ internal sealed class ResourceStore<TId, TMeta, THandle>
         _handle[idx] = newHandle;
         return id;
     }
+    
+    
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public bool IsAlive(TId id) => !MetaComparer.Equals(_meta[id.Id - 2], default);
+
+   
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    private bool IsAliveAtIndex(int idx) => !MetaComparer.Equals(_meta[idx], default);
+
 
     private int Allocate()
     {
@@ -99,4 +110,49 @@ internal sealed class ResourceStore<TId, TMeta, THandle>
 
         return _idx++;
     }
+    
+    internal IdEnumerable IdEnumerator => new(this);
+
+    internal readonly struct IdEnumerable
+    {
+        private readonly ResourceStore<TId, TMeta, THandle> _store;
+        internal IdEnumerable(ResourceStore<TId, TMeta, THandle> store) => _store = store;
+        public ResourceIdEnumerator GetEnumerator() => new(_store);
+    }
+
+    
+    internal struct ResourceIdEnumerator
+    {
+        private readonly ResourceStore<TId, TMeta, THandle> _store;
+        private int _i;
+
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        internal ResourceIdEnumerator(ResourceStore<TId, TMeta, THandle> store)
+        {
+            _store = store;
+            _i = -1;
+        }
+
+        public TId Current
+        {
+            [MethodImpl(MethodImplOptions.AggressiveInlining)]
+            get => _store._makeId(_i + 1);
+        }
+
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public bool MoveNext()
+        {
+            int i = _i;
+            while (++i < _store._idx)
+            {
+                if (_store.IsAliveAtIndex(i))
+                {
+                    _i = i;
+                    return true;
+                }
+            }
+            return false;
+        }
+    }
+
 }

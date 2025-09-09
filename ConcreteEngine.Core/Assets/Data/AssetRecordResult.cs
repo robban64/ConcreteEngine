@@ -2,9 +2,9 @@ namespace ConcreteEngine.Core.Assets;
 
 internal sealed record AssetRecordResult
 {
-    public IReadOnlyList<TextureManifestRecord> Textures { get; init; }
-    public IReadOnlyList<CubeMapManifestRecord> Cubemaps { get; init; }
-    public IReadOnlyList<ShaderManifestRecord> Shaders { get; init; }
-    public IReadOnlyList<MeshManifestRecord> Meshes { get; init; }
+    public AssetResourceManifest<TextureManifestRecord> Textures { get; init; }
+    public AssetResourceManifest<ShaderManifestRecord> Shaders { get; init; }
+    public AssetResourceManifest<MeshManifestRecord>? Meshes { get; init; }
+    public AssetResourceManifest<CubeMapManifestRecord>? Cubemaps { get; init; }
     
 }

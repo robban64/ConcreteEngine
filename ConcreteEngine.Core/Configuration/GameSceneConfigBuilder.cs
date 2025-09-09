@@ -18,34 +18,30 @@ public interface IGameSceneRenderBuilder
 {
     void RegisterRender2D(RenderTargetDescriptor desc);
     void RegisterRender3D(RenderTargetDescriptor desc);
-
 }
-
 
 public sealed class GameSceneConfigBuilder(FeatureManager features, ModuleManager modules)
     : IGameSceneRenderBuilder, IGameSceneModuleBuilder
 {
-    private readonly SortedList<int, Func<GameModule>> _modules = new();
+    private readonly List<Func<GameModule>> _modules = new();
     private RenderTargetDescriptor _renderTargetsDesc = null!;
+    public RenderType RenderType { get; private set; }
 
-    
+    public RenderTargetDescriptor RenderTargetsDesc => _renderTargetsDesc;
+    public IReadOnlyList<Func<GameModule>> Modules => _modules;
+
+
     internal void Clear()
     {
         _modules.Clear();
     }
-    
-    public RenderType  RenderType { get; private set; }
-
-    public RenderTargetDescriptor RenderTargetsDesc => _renderTargetsDesc;
-    public SortedList<int, Func<GameModule>> Modules => _modules;
-
 
     public void RegisterRender2D(RenderTargetDescriptor desc)
     {
         _renderTargetsDesc = desc;
-        RenderType  = RenderType.Render2D;
+        RenderType = RenderType.Render2D;
     }
-    
+
     public void RegisterRender3D(RenderTargetDescriptor desc)
     {
         _renderTargetsDesc = desc;
@@ -55,6 +51,8 @@ public sealed class GameSceneConfigBuilder(FeatureManager features, ModuleManage
     public void RegisterModule<T>(int order) where T : GameModule, new()
     {
         ArgumentOutOfRangeException.ThrowIfNegative(order, nameof(order));
-        _modules.Add(order, () => new T());
+        _modules.Add(ModuleFactory<T>);
     }
+
+    private static GameModule ModuleFactory<T>() where T : GameModule, new() => new T();
 }

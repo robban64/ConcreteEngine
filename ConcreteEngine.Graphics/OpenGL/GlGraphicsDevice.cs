@@ -55,9 +55,6 @@ public sealed class GlGraphicsDevice : IGraphicsDevice<GlGraphicsContext>
     private readonly ResourceDisposeQueue _disposeQueue;
 
     private readonly PrimitiveMeshes _primitives;
-    
-    private ResourceLoader? _loader;
-
 
     private Vector2D<int> _previousViewportSize;
     private Vector2D<int> _viewportSize;
@@ -87,51 +84,30 @@ public sealed class GlGraphicsDevice : IGraphicsDevice<GlGraphicsContext>
         var contextBindingView = new GlContextBindingView(textureStore: _textureStore, shaderStore: _shaderStore,
             meshStore: _meshStore, vboStore: _vboStore, iboStore: _iboStore, fboStore: _fboStore, rboStore: _rboStore,
             uboStore: _uboStore);
-        
-        _gfx = new GlGraphicsContext(gl, capabilities, Configuration, contextBindingView, _uniformRegistry, in initialFrameCtx);
+
+        _gfx = new GlGraphicsContext(gl, capabilities, Configuration, contextBindingView, _uniformRegistry,
+            in initialFrameCtx);
 
         _resourceFactory = new GlResourceFactory(_gfx, capabilities);
         _shaderFactory = new GlShaderFactory(_gfx, capabilities);
 
         _primitives = new PrimitiveMeshes();
-        
+
 
         Console.WriteLine($"OpenGL version {capabilities.GlVersion} loaded.");
         Console.WriteLine("--Device Capability--");
         Console.WriteLine(capabilities.ToString());
     }
-    
-    public void LoadResources(GpuResourcePayloadCollection payloadCollection)
-    {
-        _loader = new ResourceLoader(this, payloadCollection);
-    }
 
+    public GpuResourceBuilder CreateBuilder() => new();
+    public IGpuUploadSink CreateUploader() => new GpuUploadSink(this);
 
-    public GraphicsResourceBuilder CreateBuilder() => new();
-    
-    public void BuildResources(GraphicsResourceBuilder builder)
+    public void BuildResources(GpuResourceBuilder builder)
     {
         _primitives.CreatePrimitives(this);
-
-        foreach (var (slot, factory) in builder.UboBuilder)
-        {
-            var (handle, meta) = factory(_shaderFactory);
-            var uboId = _uboStore.Add(in meta, in handle);
-            _uniformRegistry.AddUboToSlot(meta.Slot, uboId);
-        }
-
-        builder.Clear();
+        builder.Apply(this);
     }
 
-    public bool ProcessResources()
-    {
-        if (_loader!.Process())
-        {
-            _loader = null;
-            return true;
-        }
-        return false;
-    }
 
     public void StartFrame(in FrameMetaInfo frameCtx)
     {
@@ -151,8 +127,7 @@ public sealed class GlGraphicsDevice : IGraphicsDevice<GlGraphicsContext>
         RecreateRenderTargetsIfNeeded();
     }
 
-    public UniformBufferId GetUboIdBySlot(UniformGpuSlot slot)
-        => _uniformRegistry.GetUboId(slot);
+    public UniformBufferId GetUboIdBySlot(UniformGpuSlot slot) => _uniformRegistry.GetUboId(slot);
 
     private void RecreateRenderTargetsIfNeeded()
     {
@@ -229,7 +204,7 @@ public sealed class GlGraphicsDevice : IGraphicsDevice<GlGraphicsContext>
     public ShaderId CreateShader(string vertexSource, string fragmentSource, out ShaderMeta meta)
     {
         var handle = _shaderFactory.CreateShader(vertexSource, fragmentSource,
-            out var uniformTable, out  meta);
+            out var uniformTable, out meta);
 
         var shaderId = _shaderStore.Add(in meta, in handle);
 
@@ -237,23 +212,23 @@ public sealed class GlGraphicsDevice : IGraphicsDevice<GlGraphicsContext>
         return shaderId;
     }
 
-    public TextureId CreateTexture2D(GpuTexturePayload payload, out TextureMeta meta)
+    public TextureId CreateTexture2D(GpuTextureData data, in GpuTextureDescriptor desc, out TextureMeta meta)
     {
-        var handle = _resourceFactory.CreateTexture2D(payload, out  meta);
+        var handle = _resourceFactory.CreateTexture2D(data, in desc, out meta);
         return _textureStore.Add(in meta, handle);
     }
 
-    public TextureId CreateCubeMap(GpuCubeMapPayload payload, out TextureMeta meta)
+    public TextureId CreateCubeMap(GpuCubeMapData data, in GpuCubeMapDescriptor desc, out TextureMeta meta)
     {
-        var handle = _resourceFactory.CreateCubeMap(payload, out  meta);
+        var handle = _resourceFactory.CreateCubeMap(data, in desc, out meta);
         return _textureStore.Add(in meta, handle);
     }
 
-    public MeshId CreateMesh<TVertex, TIndex>(in GpuMeshData<TVertex, TIndex> dataDesc,
+    public MeshId CreateMesh<TVertex, TIndex>(in GpuMeshData<TVertex, TIndex> data,
         in GpuMeshDescriptor desc, out MeshMeta meta) where TVertex : unmanaged where TIndex : unmanaged
     {
         var handle = _resourceFactory.CreateMesh((handle, m) => _vboStore.Add(in m, in handle),
-            (handle, m) => _iboStore.Add(in m, in handle), in dataDesc, in desc, out meta);
+            (handle, m) => _iboStore.Add(in m, in handle), in data, in desc, out meta);
 
         return _meshStore.Add(in meta, handle);
     }
@@ -268,6 +243,15 @@ public sealed class GlGraphicsDevice : IGraphicsDevice<GlGraphicsContext>
     {
         var handle = _resourceFactory.CreateIndexBuffer();
         return _iboStore.Add(new IndexBufferMeta(usage, 0, 0), handle);
+    }
+
+    public UniformBufferId CreateUniformBuffer<T>(UniformGpuSlot slot, UboDefaultCapacity defaultCapacity,
+        out UniformBufferMeta meta) where T : unmanaged, IUniformGpuData
+    {
+        var result = _shaderFactory.CreateUniformBuffer<T>(slot, defaultCapacity, out meta);
+        var uboId = _uboStore.Add(in meta, result);
+        _uniformRegistry.AddUboToSlot(meta.Slot, uboId);
+        return uboId;
     }
 
 

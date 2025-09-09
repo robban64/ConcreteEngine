@@ -19,6 +19,8 @@ public interface IResourceTexture
 }
 public sealed class Texture2D : IGraphicAssetFile<TextureId>, IResourceTexture
 {
+    internal Texture2D(){}
+
     public required string Name { get; init; }
     public required string Path { get; init; }
     public required TextureId ResourceId { get; init; }
@@ -26,12 +28,12 @@ public sealed class Texture2D : IGraphicAssetFile<TextureId>, IResourceTexture
     public required int Height { get; init; }
     public required EnginePixelFormat PixelFormat { get; init; }
     public TexturePreset Preset { get; init; }
-    
     public TextureAnisotropy Anisotropy  { get; init; }
-
     public AssetFileType AssetType => AssetFileType.Texture2D;
-    
-    // Todo use handler for IO
-    public ReadOnlyMemory<byte>? Data { get; set; }
     public GpuResourceKind GpuResourceKind => GpuResourceKind.Texture2D;
+    
+    private byte[]? _pixelData;
+    public ReadOnlyMemory<byte>? PixelData => _pixelData?.AsMemory();
+    internal void SetPixelData(byte[] pixelData) =>  _pixelData = pixelData;
+
 }

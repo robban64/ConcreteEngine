@@ -5,95 +5,58 @@ using StbImageSharp;
 
 namespace ConcreteEngine.Core.Assets;
 
-public sealed class CubeMapLoader : IAssetTypeLoader, IGpuLazyCubeMapPayloadProvider
+public readonly ref struct CubeMapPayload(GpuCubeMapData data, GpuCubeMapDescriptor descriptor)
 {
-    private readonly IReadOnlyList<CubeMapManifestRecord> _records;
-    private readonly List<CubeMap> _results = new(16);
+    public readonly GpuCubeMapData Data = data;
+    public readonly GpuCubeMapDescriptor Descriptor = descriptor;
+}
 
-    private int _idx = 0;
-    
-    public bool HasStarted { get; private set; }
-    public bool IsFinished =>  _idx >= _records.Count;
-
-
-    internal IReadOnlyList<CubeMap> Results => _results;
-
-    public CubeMapLoader(IReadOnlyList<CubeMapManifestRecord> records)
+public sealed class CubeMapLoader(IReadOnlyList<CubeMapManifestRecord> records)
+    : AssetTypeLoader<CubeMapManifestRecord, CubeMapPayload>(records)
+{
+    public override CubeMapPayload Get(CubeMapManifestRecord record)
     {
-        _records = records;
-    }
-
-    public void ClearCache()
-    {
-        _results.Clear();
-        _results.TrimExcess();
-    }
-
-    public bool TryGet(out int queueIndex, out GpuCubeMapPayload payload)
-    {
-        HasStarted = true;
-        if (_idx >= _records.Count)
-        {
-            queueIndex = -1;
-            payload = null;
-            return false;
-        }
-        var record = _records[_idx];
-        ArgumentOutOfRangeException.ThrowIfNotEqual(record.Textures.Length, 6, nameof(record.Textures));
-
-        var pixelData = new ReadOnlyMemory<byte>[6];
-
         int width = -1, height = -1;
-        for (int i = 0; i < 6; i++)
-        {
-            var image = GetImage(record, i);
-            if (width > 0 && height > 0 && (image.Width != width || image.Height != height))
-            {
-                throw new InvalidOperationException($"Texture size mismatch {width}x{height} {image.Width}x{image.Height}");
-            }
-            width = image.Width;
-            height = image.Height;
-            pixelData[i] = image.Data.AsMemory();
-        }
+        var image1 = GetImageData(record, 0, ref width, ref height);
+        var image2 = GetImageData(record, 1, ref width, ref height);
+        var image3 = GetImageData(record, 2, ref width, ref height);
+        var image4 = GetImageData(record, 3, ref width, ref height);
+        var image5 = GetImageData(record, 4, ref width, ref height);
+        var image6 = GetImageData(record, 5, ref width, ref height);
 
-        payload = new GpuCubeMapPayload(
-            FaceData: pixelData,
+        var data = new GpuCubeMapData(image1.Data.AsSpan(), image2.Data.AsSpan(), image3.Data.AsSpan(),
+            image4.Data.AsSpan(), image5.Data.AsSpan(), image6.Data.AsSpan());
+
+        var desc = new GpuCubeMapDescriptor(
             Width: width,
             Height: height,
             Format: record.PixelFormat
         );
-        queueIndex = _idx++;
-        return true;
 
+        return new CubeMapPayload(data, desc);
     }
-    
-    public void Callback(int queueIndex, in (TextureId, TextureMeta) result)
+
+    protected override void ClearCache()
     {
-        var record = _records[queueIndex];
-        var (id, meta) = result;
-
-        var cubemap = new CubeMap
-        {
-            Name = record.Name,
-            ResourceId = id,
-            Width = meta.Width,
-            Height = meta.Height,
-            PixelFormat = meta.Format,
-            Textures = record.Textures
-        };
-
-        _results.Add(cubemap);
     }
 
-    private ImageResult GetImage(CubeMapManifestRecord record, int faceIndex)
+
+    private ImageResult GetImageData(CubeMapManifestRecord record, int faceIndex, ref int width, ref int height)
     {
         var path = Path.Combine(AssetPaths.AssetPath, "cubemaps", record.Textures[faceIndex]);
         using var stream = File.OpenRead(path);
-        var result = ImageResult.FromStream(stream, ColorComponents.RedGreenBlueAlpha);
-        ValidateImageResult(result);
-        return result;
-    }
+        var image = ImageResult.FromStream(stream, ColorComponents.RedGreenBlueAlpha);
+        if (width > 0 && height > 0 && (image.Width != width || image.Height != height))
+        {
+            throw new InvalidOperationException($"Texture size mismatch {width}x{height} {image.Width}x{image.Height}");
+        }
 
+        width = image.Width;
+        height = image.Height;
+
+        ValidateImageResult(image);
+        return image;
+    }
 
 
     private static void ValidateImageResult(ImageResult result)

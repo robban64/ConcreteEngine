@@ -41,15 +41,15 @@ public sealed class TerrainBatcher : RenderBatcher<TerrainBatchResult>
 
     public override TerrainBatchResult BuildBatch()
     {
-        ArgumentNullException.ThrowIfNull(HeightMap.Data);
+        ArgumentNullException.ThrowIfNull(HeightMap.PixelData);
         ArgumentOutOfRangeException.ThrowIfLessThan(HeightMap.Width, 32);
         ArgumentOutOfRangeException.ThrowIfNotEqual(HeightMap.Width, HeightMap.Height);
-        ArgumentOutOfRangeException.ThrowIfNotEqual(HeightMap.Data.Value.Length, Size * Size * 4);
+        ArgumentOutOfRangeException.ThrowIfNotEqual(HeightMap.PixelData.Value.Length, Size * Size * 4);
 
         ArgumentOutOfRangeException.ThrowIfLessThanOrEqual(Step, 0);
         ArgumentOutOfRangeException.ThrowIfGreaterThan(Step, 16);
 
-        var data = HeightMap.Data.Value;
+        var data = HeightMap.PixelData.Value;
 
 
         int vertexRowCount = ((Size - 1) / Step) + 1;

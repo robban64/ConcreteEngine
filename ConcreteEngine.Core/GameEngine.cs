@@ -35,8 +35,6 @@ public sealed class GameEngine : IDisposable
     
     
     private readonly AssetSystem _assets;
-    private AssetLoader _loader;
-
 
     private readonly EngineSystemManagerManager _systems;
     private readonly InputSystem _inputSystem;
@@ -54,6 +52,7 @@ public sealed class GameEngine : IDisposable
     private UpdateMetaInfo  _updateMeta = default;
 
     private bool _hasInit = false;
+    private bool _hasLoaded = false;
     private bool _hasStarted = false;
     
     public T GetFeature<T>() where T : IGameFeature => _features.Get<T>();
@@ -97,10 +96,8 @@ public sealed class GameEngine : IDisposable
 
     private void LoadGraphicsResources()
     {
-        var manifest = _assets.LoadManifest();
-        _loader = _assets.CreateLoader();
-        var payload = _loader.CreateGpuPayloadCollection(manifest);
-        _graphics.LoadResources(payload);
+        var uploadSink = _graphics.CreateUploader();
+        _assets.StartLoader(uploadSink);
     }
 
     private void RegisterGraphics()
@@ -116,20 +113,16 @@ public sealed class GameEngine : IDisposable
 
     private void OnLoaded()
     {
-        _assets.FinishLoading(_loader);
-        _renderer.Initialize(_assets.MaterialStore);
+        var materialStore = _assets.FinishLoading();
+        _renderer.Initialize(materialStore);
         _systems.Initialize();
-        
-        _loader.ClearCache();
-        _loader = null!;
-        
     }
     
 
     internal void Update(double delta)
     {
 
-        if (!_hasStarted || !_hasInit || _loader != null)
+        if (!_hasStarted || !_hasInit || !_hasLoaded)
         {
             return;
         }
@@ -162,20 +155,22 @@ public sealed class GameEngine : IDisposable
     
     internal void Render(double delta)
     {
-        if (!_hasStarted && !_hasInit)
+        if (!_hasStarted &&  !_hasLoaded && !_hasInit )
         {
             LoadGraphicsResources();
             _hasStarted = true;
             return;
         }
 
-        if (_hasStarted && !_hasInit && !_loader.IsFinished)
+        if (_hasStarted && !_hasLoaded && !_hasInit)
         {
-            _graphics.ProcessResources();
+            if(_assets.ProcessLoader(4))
+                _hasLoaded = true;
+            
             return;
         }
         
-        if (_hasStarted && !_hasInit && _loader.IsFinished)
+        if (_hasStarted && _hasLoaded && !_hasInit)
         {
             RegisterGraphics();
             _hasInit = true;
@@ -212,10 +207,6 @@ public sealed class GameEngine : IDisposable
 
     private void FpsTickUpdate(int tick)
     {
-        //Console.WriteLine(GC.CollectionCount(0) + " " + GC.CollectionCount(1) + " " + GC.CollectionCount(2));
-        //if(tick == 10) GC.Collect();
-
-
         Console.WriteLine($"Tick {tick}");
         Console.WriteLine(
             $"Fps: {_fps}; Draw Calls: {_frameResult.DrawCalls}; Triangle Count: {_frameResult.TriangleCount}");
@@ -261,8 +252,8 @@ public sealed class GameEngine : IDisposable
         _features.Load(new GameFeatureContext(sceneContext));
 
         // Modules
-        foreach (var (order, factory) in builder.Modules)
-            _modules.AddModule(order, factory());
+        foreach (var factory in builder.Modules)
+            _modules.AddModule( factory());
 
         _modules.Load(new GameModuleContext(sceneContext));
 
@@ -271,6 +262,7 @@ public sealed class GameEngine : IDisposable
 
         _currentScene = newScene;
         _nextSceneIndex = null;
+        builder.Clear();
     }
 
 

@@ -2,7 +2,7 @@ using System.Runtime.InteropServices;
 using ConcreteEngine.Graphics.Descriptors;
 
 namespace ConcreteEngine.Graphics.Resources;
-
+/*
 internal sealed class ResourceLoader
 {
     private enum ProcessOrder
@@ -119,4 +119,4 @@ internal sealed class ResourceLoader
         _idx = 0;
         return true;
     }
-}
+}*/

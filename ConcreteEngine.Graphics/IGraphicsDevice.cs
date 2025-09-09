@@ -8,6 +8,7 @@ using ConcreteEngine.Graphics.Resources;
 
 namespace ConcreteEngine.Graphics;
 
+
 public interface IGraphicsDevice : IDisposable
 {
     IGraphicsContext Gfx { get; }
@@ -15,10 +16,10 @@ public interface IGraphicsDevice : IDisposable
     GraphicsConfiguration Configuration { get; }
     IPrimitiveMeshes Primitives { get; }
 
-    GraphicsResourceBuilder CreateBuilder();
-    void LoadResources(GpuResourcePayloadCollection payloadCollection);
-    void BuildResources(GraphicsResourceBuilder builder);
-    bool ProcessResources();
+    GpuResourceBuilder CreateBuilder();
+    IGpuUploadSink CreateUploader();
+    
+    void BuildResources(GpuResourceBuilder builder);
     void StartFrame(in FrameMetaInfo frameCtx);
     void EndFrame(out FrameRenderResult result);
 
@@ -26,15 +27,16 @@ public interface IGraphicsDevice : IDisposable
 
     FrameBufferId CreateFramebuffer(in FrameBufferDesc desc, out FrameBufferMeta meta);
     ShaderId CreateShader(string vertexSource, string fragmentSource, out ShaderMeta meta);
-    TextureId CreateTexture2D(GpuTexturePayload payload, out TextureMeta meta);
-    TextureId CreateCubeMap(GpuCubeMapPayload cubemapDesc, out TextureMeta meta);
+    TextureId CreateTexture2D(GpuTextureData data, in GpuTextureDescriptor desc, out TextureMeta meta);
+    TextureId CreateCubeMap(GpuCubeMapData data, in GpuCubeMapDescriptor desc, out TextureMeta meta);
+    MeshId CreateMesh<TVertex, TIndex>(in GpuMeshData<TVertex, TIndex> data, in GpuMeshDescriptor desc,
+        out MeshMeta meta) where TVertex : unmanaged where TIndex : unmanaged;
 
     VertexBufferId CreateVertexBuffer(BufferUsage bufferUsage);
     IndexBufferId CreateIndexBuffer(BufferUsage usage, IboElementType elementType);
 
-    MeshId CreateMesh<TVertex, TIndex>(in GpuMeshData<TVertex, TIndex> dataDesc, in GpuMeshDescriptor desc,
-        out MeshMeta meta) where TVertex : unmanaged where TIndex : unmanaged;
-
+    UniformBufferId CreateUniformBuffer<T>(UniformGpuSlot slot, UboDefaultCapacity defaultCapacity, out UniformBufferMeta meta)
+        where T :  unmanaged, IUniformGpuData;
 
     void EnqueueRemoveResource<TId>(TId id, bool replace = false) where TId : struct;
 }

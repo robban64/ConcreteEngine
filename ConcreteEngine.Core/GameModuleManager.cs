@@ -11,9 +11,9 @@ public sealed class ModuleManager : IModuleManager
 {
     private readonly List<GameModule> _modules = new(8);
 
-    public void AddModule<T>(int order, T module) where T : GameModule
+    public void AddModule<T>(T module) where T : GameModule
     {
-        module.Order = order;
+        module.Order = _modules.Count;
         _modules.Add(module);
     }
 

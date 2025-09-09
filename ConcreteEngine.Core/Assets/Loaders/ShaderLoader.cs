@@ -1,12 +1,10 @@
 using System.Security.Cryptography;
 using System.Text;
 using System.Text.RegularExpressions;
-using ConcreteEngine.Core.Resources;
 using ConcreteEngine.Graphics;
 using ConcreteEngine.Graphics.Descriptors;
-using ConcreteEngine.Graphics.Resources;
 
-namespace ConcreteEngine.Core.Assets;
+namespace ConcreteEngine.Core.Assets.Loaders;
 
 internal sealed class ShaderLoader(IReadOnlyList<ShaderManifestRecord> records) : AssetTypeLoader<ShaderManifestRecord, GpuShaderData>(records)
 {

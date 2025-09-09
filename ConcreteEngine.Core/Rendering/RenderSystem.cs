@@ -61,8 +61,21 @@ public sealed class RenderSystem : IRenderSystem
         
     }
 
+    internal void InitializeGraphics()
+    {
+        var builder = _graphics.CreateBuilder();
+        builder.RegisterUbo<FrameUniformGpuData>(UniformGpuSlot.Frame, UboDefaultCapacity.Lower);
+        builder.RegisterUbo<CameraUniformGpuData>(UniformGpuSlot.Camera, UboDefaultCapacity.Lower);
+        builder.RegisterUbo<DirLightUniformGpuData>(UniformGpuSlot.DirLight, UboDefaultCapacity.Lower);
+        builder.RegisterUbo<MaterialUniformGpuData>(UniformGpuSlot.Material, UboDefaultCapacity.Medium);
+        builder.RegisterUbo<DrawObjectUniformGpuData>(UniformGpuSlot.DrawObject, UboDefaultCapacity.Upper);
+        _graphics.BuildResources(builder);
+
+    }
+
     internal void Initialize(MaterialStore materialStore)
     {
+
         _materialStore = materialStore;
         _uniformBinder = new UniformBinder(_graphics);
         _drawProcessor = new DrawProcessor(_graphics, _materialStore, _uniformBinder);
@@ -95,6 +108,7 @@ public sealed class RenderSystem : IRenderSystem
         _initialized =  true;
     }
 
+
     internal void RegisterScene(RenderType renderType, RenderTargetDescriptor desc)
     {
         if(!_initialized)
@@ -111,19 +125,21 @@ public sealed class RenderSystem : IRenderSystem
 
     public TSink GetSink<TSink>() where TSink : IDrawSink => _commandCollector.GetSink<TSink>();
 
-
     public Material CreateMaterial(string templateName)
         => _materialStore.CreateMaterialFromTemplate(templateName);
 
     public void MutateRenderPass(RenderTargetId targetId, in RenderPassMutation mutation)
         => _render.MutateRenderPass(targetId, in mutation);
 
-    public void Shutdown()
-    {
-    }
 
     internal void BeginTick(in UpdateMetaInfo updateMeta) => _commandCollector.BeginTick(updateMeta);
     internal void EndTick() => _commandCollector.EndTick();
+
+    internal void RenderBlank(in FrameMetaInfo frameCtx, out FrameRenderResult result)
+    {
+        _graphics.StartFrame(in frameCtx);
+        _graphics.EndFrame(out result);
+    }
 
     internal void Render(float alpha, in FrameMetaInfo frameCtx, in RenderGlobalSnapshot renderGlobals,
         out FrameRenderResult result)
@@ -243,7 +259,8 @@ public sealed class RenderSystem : IRenderSystem
         _gfx.DrawMesh();
     }
 
-    private void DrawSkybox()
+    
+    public void Shutdown()
     {
     }
 }

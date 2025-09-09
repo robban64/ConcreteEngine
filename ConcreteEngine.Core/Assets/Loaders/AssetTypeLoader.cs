@@ -1,8 +1,8 @@
-namespace ConcreteEngine.Core.Assets;
+namespace ConcreteEngine.Core.Assets.Loaders;
 
 
 
-public abstract class AssetTypeLoader<TRecord, TPayload>(IReadOnlyList<TRecord> records)
+internal abstract class AssetTypeLoader<TRecord, TPayload>(IReadOnlyList<TRecord> records)
     where TRecord : class, IAssetManifestRecord
     where TPayload : struct, allows ref struct
 {

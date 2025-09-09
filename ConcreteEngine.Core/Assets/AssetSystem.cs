@@ -40,6 +40,8 @@ public sealed class AssetSystem : IAssetSystem
 
     private readonly JsonSerializerOptions _jsonOptions;
 
+    public bool IsLoading { get; private set; } = false;
+
     private string BasePath => Path.Combine(Directory.GetCurrentDirectory(), _assetPath);
 
     internal AssetSystem(
@@ -66,6 +68,7 @@ public sealed class AssetSystem : IAssetSystem
 
     internal void StartLoader(IGpuUploadSink uploadSink)
     {
+        IsLoading = true;
         var assetRecords = LoadManifest();
         var loader = new AssetLoader(_assetPath, this);
         loader.Start(assetRecords, uploadSink);
@@ -74,6 +77,9 @@ public sealed class AssetSystem : IAssetSystem
 
     internal bool ProcessLoader(int n)
     {
+        if(_loader == null)
+            throw new InvalidOperationException("Asset loader is not initialized");
+        
         for (int i = 0; i < n; i++)
         {
             if (_loader!.Process()) return true;
@@ -89,6 +95,7 @@ public sealed class AssetSystem : IAssetSystem
         
         _loader.Finish();
         _loader = null;
+        IsLoading = true;
         return _materialStore;
     }
 

@@ -1,5 +1,6 @@
 #region
 
+using ConcreteEngine.Common;
 using ConcreteEngine.Core.Assets;
 using ConcreteEngine.Core.Configuration;
 using ConcreteEngine.Core.Features;
@@ -32,31 +33,34 @@ public sealed class GameEngine : IDisposable
     private readonly IGraphicsDevice _graphics;
 
     private readonly IEngineInputSource _input;
-    
-    
-    private readonly AssetSystem _assets;
 
     private readonly EngineSystemManagerManager _systems;
+    private readonly AssetSystem _assets;
     private readonly InputSystem _inputSystem;
     private readonly RenderSystem _renderer;
-    private readonly GameMessagePipeline _pipeline;
+    //private readonly GameMessagePipeline _pipeline;
 
-    private int? _nextSceneIndex = null;
+    private int _nextSceneIndex = -1;
     private GameScene _currentScene = null!;
 
     private bool _isDisposed = false;
 
     private float _fps;
     private FrameRenderResult _frameResult = default;
-    
-    private UpdateMetaInfo  _updateMeta = default;
+    private UpdateMetaInfo _updateMeta = default;
 
-    private bool _hasInit = false;
-    private bool _hasLoaded = false;
-    private bool _hasStarted = false;
-    
-    public T GetFeature<T>() where T : IGameFeature => _features.Get<T>();
 
+    private enum EngineState
+    {
+        NotStarted,
+        LoadingGraphics,
+        LoadingAssets,
+        InitializeSystem,
+        LoadScenes,
+        Running
+    }
+
+    private LinearStateMachine<EngineState> _stateMachine;
 
     internal GameEngine(
         IEngineWindowHost windowHost,
@@ -84,117 +88,97 @@ public sealed class GameEngine : IDisposable
         _assets = new AssetSystem(assetConfig.AssetPath, assetConfig.ManifestFilename);
 
         // messages
-        _pipeline = new GameMessagePipeline();
+        //_pipeline = new GameMessagePipeline();
 
         // renderer
         _renderer = new RenderSystem(_graphics);
 
         _systems = new EngineSystemManagerManager(_renderer, _inputSystem, _assets);
 
-        _nextSceneIndex = 0;
+        _stateMachine = new LinearStateMachine<EngineState>(Enum.GetValues<EngineState>());
     }
 
-    private void LoadGraphicsResources()
+    private void StartAssetLoader()
     {
         var uploadSink = _graphics.CreateUploader();
         _assets.StartLoader(uploadSink);
     }
 
-    private void RegisterGraphics()
-    {
-        var builder = _graphics.CreateBuilder();
-        builder.RegisterUbo<FrameUniformGpuData>(UniformGpuSlot.Frame, UboDefaultCapacity.Lower);
-        builder.RegisterUbo<CameraUniformGpuData>(UniformGpuSlot.Camera, UboDefaultCapacity.Lower);
-        builder.RegisterUbo<DirLightUniformGpuData>(UniformGpuSlot.DirLight, UboDefaultCapacity.Lower);
-        builder.RegisterUbo<MaterialUniformGpuData>(UniformGpuSlot.Material, UboDefaultCapacity.Medium);
-        builder.RegisterUbo<DrawObjectUniformGpuData>(UniformGpuSlot.DrawObject, UboDefaultCapacity.Upper);
-        _graphics.BuildResources(builder);
-    }
-
-    private void OnLoaded()
+    private void InitializeSystems()
     {
         var materialStore = _assets.FinishLoading();
         _renderer.Initialize(materialStore);
         _systems.Initialize();
     }
-    
+
+    internal void Render(double delta)
+    {
+        switch (_stateMachine.Current)
+        {
+            case EngineState.NotStarted:
+                _stateMachine.Next();
+                break;
+            case EngineState.LoadingGraphics:
+                _renderer.InitializeGraphics();
+                StartAssetLoader();
+                _stateMachine.Next();
+                break;
+            case EngineState.LoadingAssets:
+                _stateMachine.Next(_assets.ProcessLoader(4));
+                break;
+            case EngineState.InitializeSystem:
+                InitializeSystems();
+                _stateMachine.Next();
+                break;
+            case EngineState.LoadScenes:
+                _nextSceneIndex = 0;
+                _stateMachine.Next();
+                break;
+        }
+
+        float dt = (float)delta;
+        float fps = dt > 0 ? 1.0f / dt : 0.0f;
+
+        var frameCtx = new FrameMetaInfo
+        {
+            DeltaTime = dt, Fps = fps, FramebufferSize = _window.FramebufferSize, ViewportSize = _window.Size
+        };
+
+        if (_currentScene != null)
+        {
+            var snapshot = _currentScene.RenderGlobals.Snapshot;
+            _renderer.Render(_updateMeta.Alpha, in frameCtx, in snapshot, out _frameResult);
+        }
+        else
+        {
+            _renderer.RenderBlank(in frameCtx, out _frameResult);
+        }
+    }
 
     internal void Update(double delta)
     {
-
-        if (!_hasStarted || !_hasInit || !_hasLoaded)
-        {
-            return;
-        }
-        
-
         float dt = (float)delta;
         float fps = dt > 0 ? 1.0f / dt : 0.0f;
         _fps = fps;
 
         var frameCtx = new FrameMetaInfo
         {
-            DeltaTime = dt,
-            Fps = fps,
-            FramebufferSize = _window.FramebufferSize,
-            ViewportSize = _window.Size
+            DeltaTime = dt, Fps = fps, FramebufferSize = _window.FramebufferSize, ViewportSize = _window.Size
         };
 
         _updateMeta.DeltaTime = dt;
         _updateMeta.Fps = fps;
-        
-        
+
+
+        if (_stateMachine.Current != EngineState.Running) return;
 
         _currentScene?.Update(in frameCtx);
-        
+
         // fixed-step simulation
         _gameTime.Advance(dt);
-        
+
         UpdateSceneTransitionIfNeeded();
     }
-    
-    internal void Render(double delta)
-    {
-        if (!_hasStarted &&  !_hasLoaded && !_hasInit )
-        {
-            LoadGraphicsResources();
-            _hasStarted = true;
-            return;
-        }
-
-        if (_hasStarted && !_hasLoaded && !_hasInit)
-        {
-            if(_assets.ProcessLoader(4))
-                _hasLoaded = true;
-            
-            return;
-        }
-        
-        if (_hasStarted && _hasLoaded && !_hasInit)
-        {
-            RegisterGraphics();
-            _hasInit = true;
-            OnLoaded();
-            return;
-        }
-        
-        float dt = (float)delta;
-        float fps = dt > 0 ? 1.0f / dt : 0.0f;
-
-        var frameCtx = new FrameMetaInfo
-        {
-            DeltaTime = dt,
-            Fps = fps,
-            FramebufferSize = _window.FramebufferSize,
-            ViewportSize = _window.Size
-        };
-        
-        if(_currentScene == null) return;
-
-        var snapshot = _currentScene.RenderGlobals.Snapshot;
-        _renderer.Render(_updateMeta.Alpha, in frameCtx, in snapshot,  out _frameResult);
-    }
-
 
     private void GameTickUpdate(int tick)
     {
@@ -213,7 +197,6 @@ public sealed class GameEngine : IDisposable
     }
 
 
-
     internal void Close()
     {
         Console.WriteLine("Closing GameEngine");
@@ -226,19 +209,15 @@ public sealed class GameEngine : IDisposable
 
     private void UpdateSceneTransitionIfNeeded()
     {
-        if (!_nextSceneIndex.HasValue) return;
-        var index = _nextSceneIndex.Value;
+        if (_nextSceneIndex < 0) return;
+        var index = _nextSceneIndex;
         if (index >= _sceneFactories.Count)
             throw new IndexOutOfRangeException($"Switch scene, index {index} is out of range.");
 
         var previous = _currentScene;
         previous?.Unload();
 
-        var sceneContext = new GameSceneContext(_systems)
-        {
-            Features = _features,
-            Modules = _modules,
-        };
+        var sceneContext = new GameSceneContext(_systems) { Features = _features, Modules = _modules, };
 
 
         var newScene = _sceneFactories[index]();
@@ -246,14 +225,14 @@ public sealed class GameEngine : IDisposable
 
         var builder = new GameSceneConfigBuilder(_features, _modules);
         newScene.Build(builder);
-        
+
         _renderer.RegisterScene(builder.RenderType, builder.RenderTargetsDesc);
 
         _features.Load(new GameFeatureContext(sceneContext));
 
         // Modules
         foreach (var factory in builder.Modules)
-            _modules.AddModule( factory());
+            _modules.AddModule(factory());
 
         _modules.Load(new GameModuleContext(sceneContext));
 
@@ -261,7 +240,7 @@ public sealed class GameEngine : IDisposable
         newScene.InitializeInternal();
 
         _currentScene = newScene;
-        _nextSceneIndex = null;
+        _nextSceneIndex = -1;
         builder.Clear();
     }
 

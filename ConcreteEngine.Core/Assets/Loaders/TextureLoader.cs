@@ -1,18 +1,15 @@
-using ConcreteEngine.Core.Resources;
 using ConcreteEngine.Graphics.Descriptors;
-using ConcreteEngine.Graphics.Primitives;
-using ConcreteEngine.Graphics.Resources;
 using StbImageSharp;
 
-namespace ConcreteEngine.Core.Assets;
+namespace ConcreteEngine.Core.Assets.Loaders;
 
-public readonly ref struct TexturePayload(GpuTextureData data, GpuTextureDescriptor descriptor)
+internal readonly ref struct TexturePayload(GpuTextureData data, GpuTextureDescriptor descriptor)
 {
     public readonly GpuTextureData Data = data;
     public readonly GpuTextureDescriptor Descriptor = descriptor;
 }
 
-public sealed class TextureLoader(IReadOnlyList<TextureManifestRecord> records) : AssetTypeLoader<TextureManifestRecord, TexturePayload>(records)
+internal sealed class TextureLoader(IReadOnlyList<TextureManifestRecord> records) : AssetTypeLoader<TextureManifestRecord, TexturePayload>(records)
 {
     private readonly Dictionary<string, byte[]> _dataCache = new();
     internal IReadOnlyDictionary<string, byte[]> DataCache => _dataCache;

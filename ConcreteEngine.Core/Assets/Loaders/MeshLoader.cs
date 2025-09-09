@@ -1,18 +1,18 @@
+using ConcreteEngine.Core.Assets.IO;
 using ConcreteEngine.Core.Resources;
 using ConcreteEngine.Graphics;
 using ConcreteEngine.Graphics.Descriptors;
 using ConcreteEngine.Graphics.Primitives;
-using ConcreteEngine.Graphics.Resources;
 
-namespace ConcreteEngine.Core.Assets;
+namespace ConcreteEngine.Core.Assets.Loaders;
 
-public readonly ref struct MeshLoaderResult(GpuMeshData<Vertex3D, uint> meshData, GpuMeshDescriptor descriptor)
+internal readonly ref struct MeshLoaderResult(GpuMeshData<Vertex3D, uint> meshData, GpuMeshDescriptor descriptor)
 {
     public readonly GpuMeshData<Vertex3D, uint> MeshData = meshData;
     public readonly GpuMeshDescriptor Descriptor = descriptor;
 }
 
-public sealed class MeshLoader(IReadOnlyList<MeshManifestRecord> records) : AssetTypeLoader<MeshManifestRecord, MeshLoaderResult>(records)
+internal sealed class MeshLoader(IReadOnlyList<MeshManifestRecord> records) : AssetTypeLoader<MeshManifestRecord, MeshLoaderResult>(records)
 {
     private readonly List<Mesh> _results = new(16);
     

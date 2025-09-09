@@ -5,6 +5,7 @@ using System.Text;
 using System.Text.Json;
 using System.Text.Json.Serialization;
 using ConcreteEngine.Core.Assets.IO;
+using ConcreteEngine.Core.Assets.Loaders;
 using ConcreteEngine.Core.Resources;
 using ConcreteEngine.Graphics;
 using ConcreteEngine.Graphics.Descriptors;

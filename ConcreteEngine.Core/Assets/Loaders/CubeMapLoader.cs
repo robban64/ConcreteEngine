@@ -1,17 +1,15 @@
-using ConcreteEngine.Core.Resources;
 using ConcreteEngine.Graphics.Descriptors;
-using ConcreteEngine.Graphics.Resources;
 using StbImageSharp;
 
-namespace ConcreteEngine.Core.Assets;
+namespace ConcreteEngine.Core.Assets.Loaders;
 
-public readonly ref struct CubeMapPayload(GpuCubeMapData data, GpuCubeMapDescriptor descriptor)
+internal readonly ref struct CubeMapPayload(GpuCubeMapData data, GpuCubeMapDescriptor descriptor)
 {
     public readonly GpuCubeMapData Data = data;
     public readonly GpuCubeMapDescriptor Descriptor = descriptor;
 }
 
-public sealed class CubeMapLoader(IReadOnlyList<CubeMapManifestRecord> records)
+internal sealed class CubeMapLoader(IReadOnlyList<CubeMapManifestRecord> records)
     : AssetTypeLoader<CubeMapManifestRecord, CubeMapPayload>(records)
 {
     public override CubeMapPayload Get(CubeMapManifestRecord record)

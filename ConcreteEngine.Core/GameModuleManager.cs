@@ -9,19 +9,17 @@ public interface IModuleManager
 
 public sealed class ModuleManager : IModuleManager
 {
-    private readonly SortedList<int, GameModule> _modules = new(8);
-
-    public ICollection<GameModule> Modules => _modules.Values;
-    
+    private readonly List<GameModule> _modules = new(8);
 
     public void AddModule<T>(int order, T module) where T : GameModule
     {
-        _modules.Add(order, module);
+        module.Order = order;
+        _modules.Add(module);
     }
 
     public T Get<T>() where T : GameModule
     {
-        foreach (var module in _modules.Values)
+        foreach (var module in _modules)
         {
             if (module is T tModule) return tModule;
         }
@@ -33,7 +31,7 @@ public sealed class ModuleManager : IModuleManager
     {
         if (_modules.Count == 0) return;
 
-        foreach (var module in _modules.Values)
+        foreach (var module in _modules)
         {
             module.UpdateTick(tick);
         }
@@ -43,7 +41,7 @@ public sealed class ModuleManager : IModuleManager
     {
         if (_modules.Count == 0) return;
 
-        foreach (var module in _modules.Values)
+        foreach (var module in _modules)
         {
             module.Update(in frameInfo);
         }
@@ -51,21 +49,29 @@ public sealed class ModuleManager : IModuleManager
 
     internal void Load(GameModuleContext context)
     {
-        foreach (var (order, module) in _modules)
+        foreach (var module in _modules)
         {
-            module.AttachContext(context, order);
+            module.AttachContext(context);
         }
 
-        foreach (var module in _modules.Values)
+        foreach (var module in _modules)
         {
             module.Initialize();
+        }
+    }
+
+    internal void OnSceneReady()
+    {
+        foreach (var module in _modules)
+        {
+            module.OnSceneReady();
         }
     }
 
 
     internal void Unload()
     {
-        foreach (var module in _modules.Values)
+        foreach (var module in _modules)
         {
             module.Unload();
         }

@@ -19,8 +19,6 @@ internal class Render2D : IRender
     private readonly Camera2D _camera;
     public ICamera Camera => _camera;
 
-    public RenderTargetEnumerator GetEnumerator() => _registry.GetEnumerator();
-
 
     public Render2D(IGraphicsDevice graphics, MaterialStore  materialStore)
     {
@@ -39,6 +37,10 @@ internal class Render2D : IRender
         {
         }
     }
+    
+    public bool TryGetNextPasses(out RenderTargetId targetId, out List<IRenderPassDescriptor> passes)
+        => _registry.TryGetNextPasses(out targetId, out passes);
+
 
     public void RenderScenePass(IScenePass pass, RenderPipeline submitter)
     {

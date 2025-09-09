@@ -21,9 +21,6 @@ internal sealed class Render3D : IRender
 
     public ICamera Camera => _camera;
 
-    public RenderTargetEnumerator GetEnumerator() => _registry.GetEnumerator();
-
-
     public Render3D(IGraphicsDevice graphics, MaterialStore materialStore, UniformBinder uniformBinder)
     {
         _graphics = graphics;
@@ -70,6 +67,9 @@ internal sealed class Render3D : IRender
 
     }
 
+    public bool TryGetNextPasses(out RenderTargetId targetId, out List<IRenderPassDescriptor> passes)
+        => _registry.TryGetNextPasses(out targetId, out passes);
+
     public void RenderScenePass(IScenePass pass, RenderPipeline submitter)
     {
         submitter.DrainCommandQueue(RenderTargetId.Scene);
@@ -78,6 +78,7 @@ internal sealed class Render3D : IRender
     public void RenderDepthPass(IDepthPass depthPass, RenderPipeline submitter)
     {
     }
+
 
 
     public void MutateRenderPass(RenderTargetId targetId, in RenderPassMutation mutation) =>

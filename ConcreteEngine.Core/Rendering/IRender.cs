@@ -6,7 +6,7 @@ namespace ConcreteEngine.Core.Rendering;
 internal interface IRender
 {
     ICamera Camera { get; }
-    RenderTargetEnumerator GetEnumerator();
+    bool TryGetNextPasses(out RenderTargetId targetId, out List<IRenderPassDescriptor> passes);
     void MutateRenderPass(RenderTargetId targetId, in RenderPassMutation mutation);
     void RegisterRenderTargetsFrom(RenderTargetDescriptor desc);
     void Prepare(float alpha, in RenderGlobalSnapshot renderGlobals);

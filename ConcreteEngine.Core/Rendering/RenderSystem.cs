@@ -163,14 +163,16 @@ public sealed class RenderSystem : IRenderSystem
         nuint stride      = (blockSize + (uboAlign - 1)) & ~(uboAlign - 1);  
         var capacity = stride * (nuint)(_commandSubmitter.Count + 100);
         _uniformBinder.Prepare(capacity);
-        foreach (var (renderTarget, passes) in _render)
+
+        while (_render.TryGetNextPasses(out var targetId, out var passes))
         {
             foreach (var pass in passes)
             {
                 _gfx.SetBlendMode(pass.Blend);
                 _gfx.SetDepthTest(pass.DepthTest);
-                ExecutePass(renderTarget, pass);
+                ExecutePass(targetId, pass);
             }
+
         }
     }
 

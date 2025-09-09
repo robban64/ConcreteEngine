@@ -122,6 +122,7 @@ public sealed class GameEngine : IDisposable
         
         _loader.ClearCache();
         _loader = null!;
+        
     }
     
 
@@ -211,6 +212,10 @@ public sealed class GameEngine : IDisposable
 
     private void FpsTickUpdate(int tick)
     {
+        //Console.WriteLine(GC.CollectionCount(0) + " " + GC.CollectionCount(1) + " " + GC.CollectionCount(2));
+        //if(tick == 10) GC.Collect();
+
+
         Console.WriteLine($"Tick {tick}");
         Console.WriteLine(
             $"Fps: {_fps}; Draw Calls: {_frameResult.DrawCalls}; Triangle Count: {_frameResult.TriangleCount}");

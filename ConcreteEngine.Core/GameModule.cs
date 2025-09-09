@@ -4,7 +4,7 @@ namespace ConcreteEngine.Core;
 
 public abstract class GameModule
 {
-    public int Order { get; private set; }
+    public int Order { get; internal set; }
     protected GameModuleContext Context { get; private set; } = null!;
 
     protected GameModule()
@@ -33,9 +33,8 @@ public abstract class GameModule
     {
     }
 
-    internal void AttachContext(GameModuleContext context, int order)
+    internal void AttachContext(GameModuleContext context)
     {
         Context = context;
-        Order = order;
     }
 }

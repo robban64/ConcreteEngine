@@ -24,8 +24,9 @@ internal class RenderPasses
     public RenderPassFboRecord PostFboB { get; private set; }
 
     private readonly List<IRenderPassDescriptor>[] _renderTargets;
+    
 
-    public RenderTargetEnumerator GetEnumerator() => new(_renderTargets);
+    private int _currentTargetId = 0;
 
     public RenderPasses(IGraphicsDevice graphics)
     {
@@ -36,6 +37,21 @@ internal class RenderPasses
         {
             _renderTargets[i] = new List<IRenderPassDescriptor>(4);
         }
+    }
+
+    public bool TryGetNextPasses(out RenderTargetId targetId, out List<IRenderPassDescriptor> passes)
+    {
+        if (_currentTargetId >=  RenderConsts.RenderTargetCount)
+        {
+            _currentTargetId = 0;
+            targetId = (RenderTargetId)_currentTargetId;
+            passes = _renderTargets[(int)targetId]; 
+            return false;
+        }
+        targetId = (RenderTargetId)_currentTargetId;
+        passes = _renderTargets[_currentTargetId];
+        _currentTargetId++;
+        return true;
     }
 
     public void MutateRenderPass(RenderTargetId targetId, in RenderPassMutation mutation)
@@ -163,12 +179,4 @@ internal class RenderPasses
         ArgumentOutOfRangeException.ThrowIfGreaterThan(sizeRatio.X, 1, nameof(sizeRatio.X));
         ArgumentOutOfRangeException.ThrowIfGreaterThan(sizeRatio.Y, 1, nameof(sizeRatio.Y));
     }
-}
-
-public struct RenderTargetEnumerator(List<IRenderPassDescriptor>[] renderTargets)
-{
-    private int _i = -1;
-    public bool MoveNext() => ++_i < renderTargets.Length;
-    public (RenderTargetId targetId, IReadOnlyList<IRenderPassDescriptor>) Current => ((RenderTargetId)_i, renderTargets[_i]);
-    public RenderTargetEnumerator GetEnumerator => this;
 }

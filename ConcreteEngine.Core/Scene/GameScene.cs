@@ -57,11 +57,6 @@ public abstract class GameScene
     internal void InitializeInternal()
     {
         Initialize();
-        var modules = Context.Modules.Modules;
-        foreach (var module in modules)
-        {
-            module.OnSceneReady();
-        }
     }
 
     protected abstract void ConfigureModules(IGameSceneModuleBuilder builder);

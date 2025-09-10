@@ -18,6 +18,14 @@ internal sealed class MeshLoader(IReadOnlyList<MeshManifestRecord> records) : As
     
     private readonly MeshImporter _meshImporter = new();
     
+    private static readonly VertexAttributeDescriptor[] Defaults3D =
+    [
+        VertexAttributeDescriptor.Make<Vertex3D>(nameof(Vertex3D.Position), VertexElementFormat.Float3),
+        VertexAttributeDescriptor.Make<Vertex3D>(nameof(Vertex3D.TexCoords), VertexElementFormat.Float2),
+        VertexAttributeDescriptor.Make<Vertex3D>(nameof(Vertex3D.Normal), VertexElementFormat.Float3),
+        VertexAttributeDescriptor.Make<Vertex3D>(nameof(Vertex3D.Tangent), VertexElementFormat.Float3),
+    ];
+    
     protected override void ClearCache()
     {
         _results.Clear();
@@ -33,13 +41,7 @@ internal sealed class MeshLoader(IReadOnlyList<MeshManifestRecord> records) : As
         var meshData = _meshImporter.ImportMesh(path);
         var desc = new GpuMeshDescriptor
         {
-            VertexPointers =
-            [
-                VertexAttributeDescriptor.Make<Vertex3D>(nameof(Vertex3D.Position), VertexElementFormat.Float3),
-                VertexAttributeDescriptor.Make<Vertex3D>(nameof(Vertex3D.TexCoords), VertexElementFormat.Float2),
-                VertexAttributeDescriptor.Make<Vertex3D>(nameof(Vertex3D.Normal), VertexElementFormat.Float3),
-                VertexAttributeDescriptor.Make<Vertex3D>(nameof(Vertex3D.Tangent), VertexElementFormat.Float3),
-            ],
+            VertexPointers = Defaults3D,
             DrawKind = MeshDrawKind.Elements,
             DrawCount = (uint)meshData.Indices.Length
         };

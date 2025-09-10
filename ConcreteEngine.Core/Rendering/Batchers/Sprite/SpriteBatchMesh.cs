@@ -50,21 +50,22 @@ internal sealed class SpriteBatchMesh : IDisposable
         var indices = Indices.AsSpan(0, _capacity * IndicesPerSprite);
         var dataDesc = new GpuMeshData<Vertex2D, ushort>(Vertices, indices);
 
+        ReadOnlySpan<VertexAttributeDescriptor> pointers = stackalloc[]
+        {
+            VertexAttributeDescriptor.Make<Vertex2D>(nameof(Vertex2D.Position), VertexElementFormat.Float2),
+            VertexAttributeDescriptor.Make<Vertex2D>(nameof(Vertex2D.TexCoords), VertexElementFormat.Float2)
+        };
         var metaDesc = new GpuMeshDescriptor
         {
-            VertexPointers =
-            [
-                VertexAttributeDescriptor.Make<Vertex2D>(nameof(Vertex2D.Position), VertexElementFormat.Float2),
-                VertexAttributeDescriptor.Make<Vertex2D>(nameof(Vertex2D.TexCoords), VertexElementFormat.Float2)
-            ],
+            VertexPointers = pointers,
             VboUsage = BufferUsage.StreamDraw,
             DrawKind = MeshDrawKind.Elements
         };
 
         
         _meshId = _graphics.CreateMesh(in dataDesc, in metaDesc, out var meta);
-        _vertexBufferId = meta.VertexBufferId;
-        _indexBufferId = meta.IndexBufferId;
+        _vertexBufferId = meta.VboId;
+        _indexBufferId = meta.IboId;
 
     }
 

@@ -311,8 +311,8 @@ public sealed class GlGraphicsDevice : IGraphicsDevice<GlGraphicsContext>
             case MeshId meshId:
                 ref readonly var mesh = ref _meshStore.GetMeta(meshId);
                 var handleMesh = _meshStore.GetHandle(meshId).Handle;
-                if (mesh.VertexBufferId.Id > 0) EnqueueRemoveResource(mesh.VertexBufferId, reserve);
-                if (mesh.IndexBufferId.Id > 0) EnqueueRemoveResource(mesh.IndexBufferId, reserve);
+                if (mesh.VboId.Id > 0) EnqueueRemoveResource(mesh.VboId, reserve);
+                if (mesh.IboId.Id > 0) EnqueueRemoveResource(mesh.IboId, reserve);
                 _disposeQueue.Enqueue(ResourceKind.Mesh, handleMesh);
                 if (!reserve) _meshStore.Remove(meshId, out _);
                 break;

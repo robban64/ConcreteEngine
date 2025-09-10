@@ -33,8 +33,8 @@ public readonly struct ShaderMeta(uint samplers)
 }
 
 public readonly struct MeshMeta(
-    VertexBufferId vertexBufferId,
-    IndexBufferId indexBufferId,
+    VertexBufferId vboId,
+    IndexBufferId iboId,
     DrawPrimitive primitive,
     IboElementType elementType,
     MeshDrawKind drawKind,
@@ -46,8 +46,8 @@ public readonly struct MeshMeta(
     VertexAttributeDescriptor vertexLayout3 = default
 )
 {
-    public readonly VertexBufferId VertexBufferId = vertexBufferId;
-    public readonly IndexBufferId IndexBufferId = indexBufferId;
+    public readonly VertexBufferId VboId = vboId;
+    public readonly IndexBufferId IboId = iboId;
     public readonly DrawPrimitive Primitive = primitive;
     public readonly IboElementType ElementType = elementType;
     public readonly MeshDrawKind DrawKind = drawKind;

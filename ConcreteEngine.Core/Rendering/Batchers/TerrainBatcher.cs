@@ -82,15 +82,16 @@ public sealed class TerrainBatcher : RenderBatcher<TerrainBatchResult>
 
         var dataDesc = new GpuMeshData<Vertex3D, uint>(_vertices, _indices);
 
+        ReadOnlySpan<VertexAttributeDescriptor> pointers = stackalloc[]
+        {
+            VertexAttributeDescriptor.Make<Vertex3D>(nameof(Vertex3D.Position), VertexElementFormat.Float3),
+            VertexAttributeDescriptor.Make<Vertex3D>(nameof(Vertex3D.TexCoords), VertexElementFormat.Float2),
+            VertexAttributeDescriptor.Make<Vertex3D>(nameof(Vertex3D.Normal), VertexElementFormat.Float3),
+            VertexAttributeDescriptor.Make<Vertex3D>(nameof(Vertex3D.Tangent), VertexElementFormat.Float3),
+        };
         var metaDesc = new GpuMeshDescriptor
         {
-            VertexPointers =
-            [
-                VertexAttributeDescriptor.Make<Vertex3D>(nameof(Vertex3D.Position), VertexElementFormat.Float3),
-                VertexAttributeDescriptor.Make<Vertex3D>(nameof(Vertex3D.TexCoords), VertexElementFormat.Float2),
-                VertexAttributeDescriptor.Make<Vertex3D>(nameof(Vertex3D.Normal), VertexElementFormat.Float3),
-                VertexAttributeDescriptor.Make<Vertex3D>(nameof(Vertex3D.Tangent), VertexElementFormat.Float3),
-            ],
+            VertexPointers = pointers,
             DrawKind = MeshDrawKind.Elements
         };
 

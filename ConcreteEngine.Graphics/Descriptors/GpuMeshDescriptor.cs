@@ -3,41 +3,50 @@
 using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
 using ConcreteEngine.Graphics.Error;
+using ConcreteEngine.Graphics.Primitives;
 
 #endregion
 
 namespace ConcreteEngine.Graphics.Descriptors;
 
-public readonly struct GpuMeshDescriptor()
+public readonly ref struct GpuMeshDescriptor()
 {
-    public required VertexAttributeDescriptor[] VertexPointers { get; init; }
+    public required ReadOnlySpan<VertexAttributeDescriptor> VertexPointers { get; init; }
     public required MeshDrawKind DrawKind { get; init; }
     public uint? DrawCount { get; init; } = null;
     public DrawPrimitive? Primitive { get; init; } = null;
     public BufferUsage VboUsage { get; init; } = BufferUsage.StaticDraw;
     public BufferUsage IboUsage { get; init; } = BufferUsage.StaticDraw;
-    
+
 }
 
-public readonly ref struct GpuMeshData<T, I> where T : unmanaged where I : unmanaged
-{
-    public readonly ReadOnlySpan<T> Vertices;
-    public readonly ReadOnlySpan<I> Indices;
-    public bool Elemental { get; }
 
+public interface IGpuMeshData<T, I> where T : unmanaged where I : unmanaged
+{
+    ReadOnlySpan<T> Vertices { get; }
+    ReadOnlySpan<I> Indices { get; }
+    bool Elemental { get; }
+
+}
+
+public readonly ref struct GpuMeshData<T, I>
+{
     public GpuMeshData(ReadOnlySpan<T> vertices)
     {
         Vertices = vertices;
         Indices = ReadOnlySpan<I>.Empty;
-        Elemental = false;
     }
 
     public GpuMeshData(ReadOnlySpan<T> vertices, ReadOnlySpan<I> indices)
     {
         Vertices = vertices;
         Indices = indices;
-        Elemental = true;
     }
+
+    public ReadOnlySpan<T> Vertices { get; }
+    public ReadOnlySpan<I> Indices { get; }
+    public bool Elemental => Indices.Length > 0;
+
 }
 
 public readonly record struct VertexAttributeDescriptor(

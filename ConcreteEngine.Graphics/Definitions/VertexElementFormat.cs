@@ -1,6 +1,6 @@
 namespace ConcreteEngine.Graphics;
 
-public enum VertexElementFormat
+public enum VertexElementFormat : byte
 {
     Float1 = 1,
     Float2 = 2,

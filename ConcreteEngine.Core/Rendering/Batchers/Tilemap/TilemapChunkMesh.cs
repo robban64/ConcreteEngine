@@ -53,7 +53,11 @@ internal sealed class TilemapChunkMesh : IDisposable
         CreateIndexBufferData();
 
         var dataDesc = new GpuMeshData<Vertex2D, ushort>(Vertices, Indices);
-
+        ReadOnlySpan<VertexAttributeDescriptor> pointers = stackalloc[]
+        {
+            VertexAttributeDescriptor.Make<Vertex2D>(nameof(Vertex2D.Position), VertexElementFormat.Float2),
+            VertexAttributeDescriptor.Make<Vertex2D>(nameof(Vertex2D.TexCoords), VertexElementFormat.Float2)
+        };
         var metaDesc = new GpuMeshDescriptor
         {
             VertexPointers =
@@ -68,8 +72,8 @@ internal sealed class TilemapChunkMesh : IDisposable
         };
 
         _meshId = _graphics.CreateMesh(in dataDesc, in metaDesc, out var meta);
-        _vertexBufferId = meta.VertexBufferId;
-        _indexBufferId = meta.IndexBufferId;
+        _vertexBufferId = meta.VboId;
+        _indexBufferId = meta.IboId;
     }
 
     public TileChunkBuildResult BuildTilemapMesh()

@@ -501,7 +501,7 @@ public sealed class GlGraphicsContext : IGraphicsContext
     {
         ref readonly var meta = ref _store.MeshStore.GetMeta(_boundVaoId);
 
-        meta.VertexBufferId.DebugValidate();
+        meta.VboId.DebugValidate();
 
         var count = drawCount > 0 ? drawCount : meta.DrawCount;
 

@@ -13,15 +13,22 @@ public static class UniformBufferUtils
     public const nuint DefaultUpperCapacityBytes = 2u * 1024u * 1024u; // 2 MiB
 
 
-    private static int _uboOffsetAlign = -1;
+    private static nuint _uboOffsetAlign = 0;
     private static nuint _offsetAlign = 16;
+    
+    public static nuint UboOffsetAlign
+    {
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        get => _uboOffsetAlign;
+    }
+
 
     internal static void Init(int uniformBufferOffsetAlignment)
     {
         ArgumentOutOfRangeException.ThrowIfLessThanOrEqual(uniformBufferOffsetAlignment, 0,
             nameof(uniformBufferOffsetAlignment));
 
-        _uboOffsetAlign = Math.Max(16, uniformBufferOffsetAlignment);
+        _uboOffsetAlign = (nuint)Math.Max(16, uniformBufferOffsetAlignment);
         _offsetAlign = (nuint)_uboOffsetAlign;
     }
 
@@ -57,8 +64,6 @@ public static class UniformBufferUtils
     }
 
 
-    [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public static nuint GetClampOffsetAlign() => (nuint)_uboOffsetAlign;
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static nuint AlignUp(nuint v, nuint a) => a == 0 ? v : (v + (a - 1)) & ~(a - 1);

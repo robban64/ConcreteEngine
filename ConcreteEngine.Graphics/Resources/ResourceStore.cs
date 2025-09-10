@@ -7,7 +7,14 @@ using System.Runtime.CompilerServices;
 
 namespace ConcreteEngine.Graphics.Resources;
 
-internal sealed class ResourceStore<TId, TMeta, THandle>
+internal interface IReadResourceStore<in TId, TMeta> where TId : struct, IResourceId where TMeta : struct
+{
+    ref readonly TMeta GetMeta(TId id);
+    bool IsAlive(TId id);
+    
+}
+
+internal sealed class ResourceStore<TId, TMeta, THandle> : IReadResourceStore<TId, TMeta>
     where TId : struct, IResourceId where TMeta : struct where THandle : struct
 {
     private const int HardLimit = 10_000;
@@ -30,7 +37,7 @@ internal sealed class ResourceStore<TId, TMeta, THandle>
     internal ReadOnlySpan<TMeta> AsMetaSpan() => _meta;
     internal ReadOnlySpan<THandle> AsHandleSpan() => _handle;
 
-    public ResourceStore(
+    internal ResourceStore(
         int initialCapacity,
         MakeIdDelegate<TId> makeId)
     {

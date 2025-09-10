@@ -34,7 +34,7 @@ internal sealed class GlShaderFactory(GlGraphicsContext gfx, DeviceCapabilities 
     
 
     public GlShaderHandle CreateShader(string vertexSource, string fragmentSource,
-        out UniformTable uniformTable, out ShaderMeta meta)
+        out ShaderLayout shaderLayout, out ShaderMeta meta)
     {
         uint vertexShader = CreateShader(ShaderType.VertexShader, vertexSource);
         uint fragmentShader = CreateShader(ShaderType.FragmentShader, fragmentSource);
@@ -47,7 +47,7 @@ internal sealed class GlShaderFactory(GlGraphicsContext gfx, DeviceCapabilities 
 
         _gl.UseProgram(handle);
         GetUniformsFromProgram(handle, out var uniformPair, out var samplers);
-        uniformTable = new UniformTable(uniformPair);
+        shaderLayout = new ShaderLayout(uniformPair);
         _gl.UseProgram(0);
 
         meta = new ShaderMeta((uint)samplers);

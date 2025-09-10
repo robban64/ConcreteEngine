@@ -42,7 +42,6 @@ public sealed class RenderSystem : IRenderSystem
     private DrawCommandCollector _commandCollector  = null!;
     private RenderPipeline _commandSubmitter  = null!;
     private DrawProcessor _drawProcessor  = null!;
-    private UniformBinder _uniformBinder  = null!;
 
     private readonly BatcherRegistry _batches = new();
 
@@ -79,8 +78,7 @@ public sealed class RenderSystem : IRenderSystem
     {
 
         _materialStore = materialStore;
-        _uniformBinder = new UniformBinder(_graphics);
-        _drawProcessor = new DrawProcessor(_graphics, _materialStore, _uniformBinder);
+        _drawProcessor = new DrawProcessor(_graphics, _materialStore);
         _commandCollector = new DrawCommandCollector();
         _commandSubmitter = new RenderPipeline(_drawProcessor);
 
@@ -104,7 +102,7 @@ public sealed class RenderSystem : IRenderSystem
         _commandCollector.AttachContext(cmdProducerCtx);
         _commandSubmitter.Initialize();
         _commandCollector.InitializeProducers();
-        _uniformBinder.Initialize();
+        _drawProcessor.Initialize();
         
         _initialized =  true;
     }
@@ -118,10 +116,9 @@ public sealed class RenderSystem : IRenderSystem
         if (renderType == RenderType.Render2D)
             _render = new Render2D(_graphics, _materialStore);
         else
-            _render = new Render3D(_graphics, _materialStore, _uniformBinder);
+            _render = new Render3D(_graphics, _drawProcessor);
         
         _render.RegisterRenderTargetsFrom(desc);
-        _drawProcessor.Initialize(null, (Render3D)_render);
     }
 
     public TSink GetSink<TSink>() where TSink : IDrawSink => _commandCollector.GetSink<TSink>();
@@ -152,7 +149,6 @@ public sealed class RenderSystem : IRenderSystem
     {
         _sceneDrawProducer.SetSceneGlobals(in renderGlobals);
         _render.Prepare(alpha, in renderGlobals);
-        _drawProcessor.Prepare(in renderGlobals);
         _commandCollector.Collect(alpha, in renderGlobals, _commandSubmitter);
         _commandSubmitter.Prepare();
     }
@@ -160,7 +156,7 @@ public sealed class RenderSystem : IRenderSystem
     private void Execute(float alpha, in RenderGlobalSnapshot renderGlobals)
     {
         var capacity = UniformBufferUtils.GetCapacityForEntities<DrawObjectUniformGpuData>(_commandSubmitter.Count + 100);
-        _uniformBinder.Prepare(capacity);
+        _drawProcessor.Prepare(in renderGlobals, capacity);
 
         _commandSubmitter.DrainTransformQueue();
 

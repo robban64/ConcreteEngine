@@ -8,21 +8,15 @@ using ConcreteEngine.Graphics.Error;
 namespace ConcreteEngine.Graphics.Resources;
 
 
-public sealed class UniformTable
+public sealed class ShaderLayout
 {
     private readonly int[] _locs;
-
     private readonly Dictionary<string, int> _rawUniforms;
-    
-    private readonly List<ShaderUniform> _uniforms;
 
-    public IReadOnlyList<ShaderUniform> Uniforms => _uniforms;
-
-    public UniformTable(List<(string, int)> uniformPairs)
+    public ShaderLayout(List<(string, int)> uniformPairs)
     {
         _locs = new int [GraphicsEnumCache.ShaderUniformVals.Length];
         _rawUniforms = new Dictionary<string, int>(uniformPairs.Count);
-        _uniforms = new List<ShaderUniform>(4);
 
 
         foreach (var (uniform, location) in uniformPairs)
@@ -39,7 +33,6 @@ public sealed class UniformTable
             var uniformName = GraphicsEnumCache.ShaderUniformVals[i].ToUniformName();
             if (_rawUniforms.TryGetValue(uniformName, out var uniformLocation))
             {
-                _uniforms.Add((ShaderUniform)uniformLocation);
                 _locs[i] = uniformLocation;
                 continue;
             }

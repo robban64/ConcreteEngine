@@ -16,8 +16,8 @@ public interface IGraphicsContext
 {
     GraphicsConfiguration Configuration { get; }
     DeviceCapabilities  Capabilities { get; }
-
     BlendMode BlendMode { get; }
+    
     bool DepthTest { get; }
 
     void BeginFrame(in FrameInfo frameCtx);
@@ -35,7 +35,7 @@ public interface IGraphicsContext
     void BindMesh(MeshId resourceId);
     void BindVertexBuffer(VertexBufferId resourceId);
     void BindIndexBuffer(IndexBufferId resourceId);
-    void BindUniformBuffer(UniformBufferId resourceId);
+    void BindUniformBuffer(UniformGpuSlot slot);
 
     void SetVertexBuffer<T>(ReadOnlySpan<T> data) where T : unmanaged;
     void SetIndexBuffer<T>(ReadOnlySpan<T> data) where T : unmanaged;
@@ -44,9 +44,8 @@ public interface IGraphicsContext
     void UploadIndexBuffer<T>(ReadOnlySpan<T> data, int offsetElements) where T : unmanaged;
 
     void SetUniformBufferSize(UniformGpuSlot slot, nuint capacityBytes);
-    void UploadUniformGpuData<T>(UniformGpuSlot slot, in T data) where T : unmanaged, IUniformGpuData;
-    (int , int , nuint ) UploadUniformGpuDataRing<T>(in T data, nuint cursorBytes) where T : unmanaged, IUniformGpuData;
-    void BindUniformBufferRange(UniformGpuSlot slot, int offset, int size);
+    void UploadUniformGpuData<T>(UniformGpuSlot slot, in T data, nuint offset = 0) where T : unmanaged, IUniformGpuData;
+    void BindUniformBufferRange(UniformGpuSlot slot, nuint offset, nuint size);
     
     void DrawMesh(uint drawCount = 0);
 

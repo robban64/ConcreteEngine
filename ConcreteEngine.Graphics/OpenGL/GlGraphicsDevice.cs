@@ -53,7 +53,7 @@ public sealed class GlGraphicsDevice : IGraphicsDevice<GlGraphicsContext>
     private readonly GlGraphicsContext _gfx;
     private readonly GlResourceFactory _resourceFactory;
     private readonly GlShaderFactory _shaderFactory;
-    private readonly UniformRegistry _uniformRegistry;
+    private readonly ShaderRegistry _shaderRegistry;
     private readonly ResourceDisposeQueue _disposeQueue;
 
     private readonly PrimitiveMeshes _primitives;
@@ -68,6 +68,8 @@ public sealed class GlGraphicsDevice : IGraphicsDevice<GlGraphicsContext>
     public GraphicsBackend BackendApi => GraphicsBackend.OpenGL;
     IGraphicsContext IGraphicsDevice.Gfx => Gfx;
     public IPrimitiveMeshes Primitives => _primitives;
+    
+    public IShaderRegistry ShaderRegistry => _shaderRegistry;
 
     public GlGraphicsDevice(GL gl, in FrameInfo initialFrameCtx)
     {
@@ -79,14 +81,14 @@ public sealed class GlGraphicsDevice : IGraphicsDevice<GlGraphicsContext>
         UniformBufferUtils.Init(capabilities.UniformBufferOffsetAlignment);
 
         //_targetRegistry = new RenderTargetRegistry();
-        _uniformRegistry = new UniformRegistry();
+        _shaderRegistry = new ShaderRegistry(_uboStore);
         _disposeQueue = new ResourceDisposeQueue();
 
         var contextBindingView = new GlContextBindingView(textureStore: _textureStore, shaderStore: _shaderStore,
             meshStore: _meshStore, vboStore: _vboStore, iboStore: _iboStore, fboStore: _fboStore, rboStore: _rboStore,
             uboStore: _uboStore);
 
-        _gfx = new GlGraphicsContext(gl, capabilities, Configuration, contextBindingView, _uniformRegistry,
+        _gfx = new GlGraphicsContext(gl, capabilities, Configuration, contextBindingView, _shaderRegistry,
             in initialFrameCtx);
 
         _resourceFactory = new GlResourceFactory(_gfx, capabilities);
@@ -118,6 +120,8 @@ public sealed class GlGraphicsDevice : IGraphicsDevice<GlGraphicsContext>
 
     public void EndFrame(out GpuFrameStats result)
     {
+        _disposeQueue.Drain(DisposeResource);
+
         _gfx.EndFrame(out result);
 
         // drain old resource
@@ -132,8 +136,6 @@ public sealed class GlGraphicsDevice : IGraphicsDevice<GlGraphicsContext>
 
         _prevFrameCtx = _frameCtx;
     }
-
-    public UniformBufferId GetUboIdBySlot(UniformGpuSlot slot) => _uniformRegistry.GetUboId(slot);
 
     private void RecreateRenderTargets()
     {
@@ -241,7 +243,7 @@ public sealed class GlGraphicsDevice : IGraphicsDevice<GlGraphicsContext>
 
         var shaderId = _shaderStore.Add(in meta, in handle);
 
-        _uniformRegistry.Add(shaderId, uniformTable);
+        _shaderRegistry.Add(shaderId, uniformTable);
         return shaderId;
     }
 
@@ -285,7 +287,7 @@ public sealed class GlGraphicsDevice : IGraphicsDevice<GlGraphicsContext>
     {
         var result = _shaderFactory.CreateUniformBuffer<T>(slot, defaultCapacity, out meta);
         var uboId = _uboStore.Add(in meta, result);
-        _uniformRegistry.AddUboToSlot(meta.Slot, uboId);
+        _shaderRegistry.AddUboToSlot(meta.Slot, uboId);
         return uboId;
     }
 

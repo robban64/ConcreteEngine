@@ -120,7 +120,6 @@ public readonly struct UniformBufferMeta
     public readonly UniformGpuSlot Slot;
     public readonly uint BindingIdx;
     public readonly nuint BlockSize;
-    public readonly nuint OffsetAlign;
     public readonly nuint Stride;
 
     public UniformBufferMeta(UniformGpuSlot slot, nuint blockSize)
@@ -128,7 +127,6 @@ public readonly struct UniformBufferMeta
         Slot = slot;
         BindingIdx = (uint)slot;
         BlockSize = blockSize;
-        OffsetAlign = UniformBufferUtils.GetClampOffsetAlign();
-        Stride = UniformBufferUtils.AlignUp(BlockSize, OffsetAlign);
+        Stride = UniformBufferUtils.AlignUp(BlockSize, UniformBufferUtils.UboOffsetAlign);
     }
 }

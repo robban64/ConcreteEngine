@@ -74,14 +74,15 @@ public sealed class RenderPipeline
         _indices.AsSpan(0, _submitIdx).Sort();
     }
 
+    //TODO bulk upload
     public void DrainTransformQueue()
     {
         var transforms = (ReadOnlySpan<DrawTransformPayload>)_transforms;
-        var metaSpan = (ReadOnlySpan<DrawCommandMetaIndex>)_indices;
+        var indices = (ReadOnlySpan<DrawCommandMetaIndex>)_indices;
 
         for (int i = _drainTransformIdx; i < _submitIdx; i++)
         {
-            ref readonly var it = ref metaSpan[_drainTransformIdx++];
+            ref readonly var it = ref indices[_drainTransformIdx++];
             _drawProcessor.UploadTransform(in transforms[it.Idx]);
         }
     }

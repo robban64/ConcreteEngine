@@ -3,6 +3,7 @@
 using ConcreteEngine.Graphics.Descriptors;
 using ConcreteEngine.Graphics.Primitives;
 using ConcreteEngine.Graphics.Resources;
+using ConcreteEngine.Graphics.Utils;
 
 #endregion
 
@@ -15,15 +16,13 @@ public interface IGraphicsDevice : IDisposable
     GraphicsBackend BackendApi { get; }
     GraphicsConfiguration Configuration { get; }
     IPrimitiveMeshes Primitives { get; }
-
+    IShaderRegistry ShaderRegistry { get; }
     GpuResourceBuilder CreateBuilder();
     IGpuUploadSink CreateUploader();
     
     void BuildResources(GpuResourceBuilder builder);
     void StartFrame(in FrameInfo frameCtx);
     void EndFrame(out GpuFrameStats result);
-
-    UniformBufferId GetUboIdBySlot(UniformGpuSlot slot);
 
     FrameBufferId CreateFramebuffer(in FrameBufferDesc desc, out FrameBufferMeta meta);
     ShaderId CreateShader(string vertexSource, string fragmentSource, out ShaderMeta meta);

@@ -24,7 +24,7 @@ public sealed class GlGraphicsContext : IGraphicsContext
     private readonly int _glMajor = 0;
 
     private readonly GlContextBindingView _store;
-    private readonly UniformRegistry _uniformRegistry;
+    private readonly ShaderRegistry _shaderRegistry;
 
     private BlendMode _blendMode = BlendMode.Alpha;
     private bool _depthTest = true;
@@ -42,7 +42,7 @@ public sealed class GlGraphicsContext : IGraphicsContext
     private MeshId _boundVaoId = new(0);
     private readonly TextureId[] _boundTextures;
 
-    private UniformTable? _boundUniforms;
+    private ShaderLayout? _boundUniforms;
 
 
     private FrameInfo _frameCtx;
@@ -68,14 +68,14 @@ public sealed class GlGraphicsContext : IGraphicsContext
         DeviceCapabilities  capabilities,
         GraphicsConfiguration configuration,
         GlContextBindingView store,
-        UniformRegistry uniformRegistry,
+        ShaderRegistry shaderRegistry,
         in FrameInfo initialFrameCtx)
     {
         _gl = gl;
         _capabilities = capabilities;
         Configuration = configuration;
         _store = store;
-        _uniformRegistry = uniformRegistry;
+        _shaderRegistry = shaderRegistry;
 
         _boundTextures = new TextureId[configuration.MaxTextureImageUnits];
 
@@ -368,8 +368,9 @@ public sealed class GlGraphicsContext : IGraphicsContext
         _boundIndexBufferId = id;
     }
 
-    public void BindUniformBuffer(UniformBufferId resourceId)
+    public void BindUniformBuffer(UniformGpuSlot slot)
     {
+        var resourceId = _shaderRegistry.GetUboId(slot);
         if (_boundUniformBufferId == resourceId) return;
         if (resourceId == default)
         {
@@ -478,39 +479,22 @@ public sealed class GlGraphicsContext : IGraphicsContext
         _gl.BufferData(BufferTargetARB.UniformBuffer, capacityBytes, (void*)0, BufferUsageARB.StaticDraw);
     }
 
-    public unsafe void UploadUniformGpuData<T>(UniformGpuSlot slot, in T data) where T : unmanaged, IUniformGpuData
+    public unsafe void UploadUniformGpuData<T>(UniformGpuSlot slot, in T data, nuint offset = 0) where T : unmanaged, IUniformGpuData
     {
         var size = (nuint)Unsafe.SizeOf<T>();
         Debug.Assert(_boundUniformBufferId.Id > 0);
 
         fixed (T* p = &data)
-            _gl.BufferSubData(BufferTargetARB.UniformBuffer, 0, size, p);
+            _gl.BufferSubData(BufferTargetARB.UniformBuffer, (nint)offset, size, p);
         
         CheckGlError(); // throws here
     }
-    public unsafe (int , int , nuint ) UploadUniformGpuDataRing<T>(in T data, nuint cursorBytes)
-        where T : unmanaged, IUniformGpuData
-    {
-        Debug.Assert(_boundUniformBufferId.Id > 0);
-
-        ref readonly var meta = ref _store.UboStore.GetMeta(_boundUniformBufferId);
-        var size = meta.BlockSize;
-        nuint offset = UniformBufferUtils.AlignUp(cursorBytes, meta.OffsetAlign);
-
-        fixed (T* p = &data)
-            _gl.BufferSubData(BufferTargetARB.UniformBuffer, (nint)offset, size, p);
-
-        CheckGlError();
-
-        nuint next = offset + size;
-        return ((int)offset, (int)size, next);
-    }
-
-    public void BindUniformBufferRange(UniformGpuSlot slot, int offset, int size)
+    
+    public void BindUniformBufferRange(UniformGpuSlot slot, nuint offset, nuint size)
     {
         Debug.Assert(_boundUniformBufferId.IsValid());
         var handle = _store.UboStore.GetHandle(_boundUniformBufferId);
-        _gl.BindBufferRange(BufferTargetARB.UniformBuffer, (uint)slot, handle.Handle, (nint)offset, (nuint)size);
+        _gl.BindBufferRange(BufferTargetARB.UniformBuffer, (uint)slot, handle.Handle, (nint)offset, size);
     }
 
     public void DrawMesh(uint drawCount = 0)
@@ -565,7 +549,7 @@ public sealed class GlGraphicsContext : IGraphicsContext
         }
 
         var handle = _store.ShaderStore.GetHandle(id);
-        var uniformTable = _uniformRegistry.Get(id);
+        var uniformTable = _shaderRegistry.GetShaderLayout(id);
 
         _gl.UseProgram(handle.Handle);
         _boundShaderId = id;

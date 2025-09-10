@@ -13,20 +13,18 @@ internal sealed class Render3D : IRender
 {
     private readonly IGraphicsDevice _graphics;
     private readonly IGraphicsContext _gfx;
-    private readonly MaterialStore _materialStore;
-    private readonly UniformBinder _uniformBinder;
+    private readonly DrawProcessor _drawProcessor;
 
     private readonly RenderPasses _registry;
     private readonly Camera3D _camera;
 
     public ICamera Camera => _camera;
 
-    public Render3D(IGraphicsDevice graphics, MaterialStore materialStore, UniformBinder uniformBinder)
+    public Render3D(IGraphicsDevice graphics, DrawProcessor drawProcessor)
     {
         _graphics = graphics;
         _gfx = _graphics.Gfx;
-        _materialStore = materialStore;
-        _uniformBinder = uniformBinder;
+        _drawProcessor = drawProcessor;
         _camera = new Camera3D();
         _registry = new RenderPasses(graphics);
     }
@@ -61,9 +59,9 @@ internal sealed class Render3D : IRender
             intensity: snapshot.DirLight.Intensity
         );
 
-        _uniformBinder.UploadFrame(in frameUniforms);
-        _uniformBinder.UploadCamera(in cameraUniforms);
-        _uniformBinder.UploadDirLight(in dirLightUniforms);
+        _drawProcessor.UploadFrame(in frameUniforms);
+        _drawProcessor.UploadCamera(in cameraUniforms);
+        _drawProcessor.UploadDirLight(in dirLightUniforms);
 
     }
 

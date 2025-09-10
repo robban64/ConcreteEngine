@@ -32,22 +32,23 @@ public sealed class GameEngine : IDisposable
     }
 
     private readonly IEngineWindowHost _window;
-
-    private readonly List<Func<GameScene>> _sceneFactories;
-    private readonly ModuleManager _modules;
-    private readonly FeatureManager _features;
-
-    private readonly GameTime _gameTime;
-
     private readonly IGraphicsDevice _graphics;
-
     private readonly IEngineInputSource _input;
+
 
     private readonly EngineSystemManagerManager _systems;
     private readonly AssetSystem _assets;
     private readonly InputSystem _inputSystem;
     private readonly RenderSystem _renderer;
     //private readonly GameMessagePipeline _pipeline;
+    
+    private readonly List<Func<GameScene>> _sceneFactories;
+    private readonly ModuleManager _modules;
+    private readonly FeatureManager _features;
+
+    private readonly GameTime _gameTime;
+    private readonly RenderTime _renderTime;
+
 
     private int _nextSceneIndex = -1;
     private GameScene _currentScene = null!;
@@ -83,6 +84,7 @@ public sealed class GameEngine : IDisposable
 
         // time
         _gameTime = new GameTime(GameTickUpdate, FpsTickUpdate);
+        _renderTime = new RenderTime(OnRenderTickEffect, OnGpuTickUpload, OnGpuTickDispose);
 
         // input
         _inputSystem = new InputSystem(_input);
@@ -101,6 +103,8 @@ public sealed class GameEngine : IDisposable
         _stateMachine = new LinearStateMachine<EngineState>(Enum.GetValues<EngineState>());
     }
 
+
+
     private void StartAssetLoader()
     {
         var uploadSink = _graphics.CreateUploader();
@@ -114,14 +118,10 @@ public sealed class GameEngine : IDisposable
         _systems.Initialize();
     }
 
-
-
     internal void Render(double delta)
     {
-        
-
+        var dt = (float)delta;
         var outputSize = _window.FramebufferSize;
-
         var frameCtx = new FrameInfo(
             frameIndex: _frameIdx,
             vSyncEnabled: false,
@@ -130,18 +130,32 @@ public sealed class GameEngine : IDisposable
             outputSize: outputSize
         );
         
+        _renderTime.Accumulate(dt);
+        _renderTime.Advance();
+        
         _graphics.StartFrame(in frameCtx);
         if (_currentScene != null)
         {
             var snapshot = _currentScene.RenderGlobals.Snapshot;
+            _renderTime.TickOrRenderEffect();
             _renderer.Render(_updateCtx.Alpha, in frameCtx, in snapshot);
         }
-        else
-        {
-            RunSetupStateMachine();
-        }
+        _renderTime.TickOrGpuDispose();
+        _renderTime.TickOrGpuUpload();
         _graphics.EndFrame(out _gpuFrameResult);
         _prevOutputSize = _window.FramebufferSize;
+    }
+    
+    private void OnGpuTickDispose(int tick)
+    {
+    }
+
+    private void OnGpuTickUpload(int tick)
+    {
+    }
+
+    private void OnRenderTickEffect(int tick)
+    {
     }
 
     internal void Update(double delta)
@@ -155,7 +169,11 @@ public sealed class GameEngine : IDisposable
         _updateCtx.Fps = fps;
 
 
-        if (_stateMachine.Current != EngineState.Running) return;
+        if (_stateMachine.Current != EngineState.Running)
+        {
+            RunSetupStateMachine();
+            return;
+        }
 
         _currentScene?.Update(in _updateCtx);
 
@@ -176,7 +194,6 @@ public sealed class GameEngine : IDisposable
 
     private void FpsTickUpdate(int tick)
     {
-        Console.WriteLine($"Tick {tick}");
         Console.WriteLine(
             $"Fps: {_fps}; Draw Calls: {_gpuFrameResult.DrawCalls}; Triangle Count: {_gpuFrameResult.TriangleCount}");
     }
@@ -195,7 +212,7 @@ public sealed class GameEngine : IDisposable
                 _stateMachine.Next();
                 break;
             case EngineState.LoadingAssets:
-                _stateMachine.Next(_assets.ProcessLoader(4));
+                _stateMachine.Next(_assets.ProcessLoader(8));
                 break;
             case EngineState.InitializeSystem:
                 InitializeSystems();

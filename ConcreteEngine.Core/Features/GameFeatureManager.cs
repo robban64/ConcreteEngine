@@ -1,3 +1,4 @@
+using ConcreteEngine.Graphics;
 using ConcreteEngine.Graphics.Descriptors;
 
 namespace ConcreteEngine.Core.Features;
@@ -32,13 +33,13 @@ public sealed class FeatureManager : IGameFeatureManager
     }
 
 
-    internal void Update(in FrameMetaInfo frameInfo)
+    internal void Update(in UpdateInfo frameCtx)
     {
         if (_features.Count == 0) return;
 
         foreach (var feature in _features)
         {
-            feature.Update(frameInfo);
+            feature.Update(frameCtx);
         }
     }
 

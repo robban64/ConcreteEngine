@@ -1,3 +1,4 @@
+using ConcreteEngine.Graphics;
 using ConcreteEngine.Graphics.Descriptors;
 
 namespace ConcreteEngine.Core;
@@ -37,13 +38,13 @@ public sealed class ModuleManager : IModuleManager
         }
     }
 
-    internal void Update(in FrameMetaInfo frameInfo)
+    internal void Update(in UpdateInfo frameCtx)
     {
         if (_modules.Count == 0) return;
 
         foreach (var module in _modules)
         {
-            module.Update(in frameInfo);
+            module.Update(in frameCtx);
         }
     }
 

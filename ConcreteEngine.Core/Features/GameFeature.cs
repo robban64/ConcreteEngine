@@ -1,3 +1,4 @@
+using ConcreteEngine.Graphics;
 using ConcreteEngine.Graphics.Descriptors;
 
 namespace ConcreteEngine.Core.Features;
@@ -6,7 +7,7 @@ public interface IGameFeature
 {
     void Initialize();
     void UpdateTick(int tick);
-    void Update(in FrameMetaInfo frameCtx);
+    void Update(in UpdateInfo frameCtx);
     void AttachContext(GameFeatureContext context);
     void Unload();
 }
@@ -26,7 +27,7 @@ public abstract class GameFeature : IGameFeature
     {
     }
 
-    public virtual void Update(in FrameMetaInfo frameCtx)
+    public virtual void Update(in UpdateInfo frameCtx)
     {
     }
 

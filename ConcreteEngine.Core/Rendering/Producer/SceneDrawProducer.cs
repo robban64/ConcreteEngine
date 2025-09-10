@@ -22,7 +22,7 @@ public sealed class SceneDrawProducer : IDrawCommandProducer
 
     public void SetSceneGlobals(in RenderGlobalSnapshot snapshot) => _snapshot = snapshot;
 
-    public void BeginTick(in UpdateMetaInfo updateMeta)
+    public void BeginTick(in UpdateInfo update)
     {
     }
 
@@ -31,7 +31,7 @@ public sealed class SceneDrawProducer : IDrawCommandProducer
     }
 
 
-    public void EmitFrame(float alpha, RenderPipeline submitter)
+    public void EmitFrame(float alpha, in RenderGlobalSnapshot snapshot, RenderPipeline submitter)
     {
         if (_snapshot.Skybox.MaterialId.Id == 0) return;
 

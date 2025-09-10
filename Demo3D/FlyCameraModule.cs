@@ -3,6 +3,7 @@ using ConcreteEngine.Core;
 using ConcreteEngine.Core.Platform;
 using ConcreteEngine.Core.Rendering;
 using ConcreteEngine.Core.Systems;
+using ConcreteEngine.Graphics;
 using ConcreteEngine.Graphics.Descriptors;
 using Silk.NET.GLFW;
 using Silk.NET.Input;
@@ -26,7 +27,7 @@ public sealed class FlyCameraModule : GameModule
     }
 
 
-    public override void Update(in FrameMetaInfo frameCtx)
+    public override void Update(in UpdateInfo frameCtx)
     {
         var dt = frameCtx.DeltaTime;
 

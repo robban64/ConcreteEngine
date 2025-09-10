@@ -49,7 +49,12 @@ internal sealed class DrawProcessor
 
         _previousMaterialId = materialId.Id;
     }
-    
+
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public void UploadTransform(in DrawTransformPayload payload)
+    {
+        _uniformBinder.UploadDrawObject(in payload);
+    }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public void DrawMesh(in DrawCommand cmd)
@@ -60,9 +65,5 @@ internal sealed class DrawProcessor
         _gfx.DrawMesh(cmd.DrawCount);
     }
     
-    [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public void UploadTransform(in DrawTransformPayload payload)
-    {
-        _uniformBinder.UploadDrawObject(in payload);
-    }
+
 }

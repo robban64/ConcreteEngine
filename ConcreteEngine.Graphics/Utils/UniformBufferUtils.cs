@@ -37,6 +37,15 @@ public static class UniformBufferUtils
         return (q == 0 ? stride : q * stride);
     }
 
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public static nuint GetCapacityForEntities<T>(int entities) where T : unmanaged, IUniformGpuData
+    {
+        nuint blockSize   = (nuint)Unsafe.SizeOf<T>();
+        nuint uboAlign    = (nuint)_uboOffsetAlign;              
+        nuint stride      = (blockSize + (uboAlign - 1)) & ~(uboAlign - 1);  
+        return stride * (nuint)(entities);
+    }
+
     public static nuint GetRequiredCapacity(nuint stride, int expectedRecords) =>
         stride * (nuint)Math.Max(1, expectedRecords);
 
@@ -48,6 +57,7 @@ public static class UniformBufferUtils
     }
 
 
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static nuint GetClampOffsetAlign() => (nuint)_uboOffsetAlign;
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
@@ -56,6 +66,7 @@ public static class UniformBufferUtils
     public static nuint StrideOf<T>() where T : unmanaged, IUniformGpuData =>
         AlignUp((nuint)Unsafe.SizeOf<T>(), _offsetAlign);
 
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static bool IsStd140Aligned<T>() where T : unmanaged, IUniformGpuData => (Unsafe.SizeOf<T>() % 16) == 0;
     public static bool IsStd140SizeAligned(int size) => (size % 16) == 0;
 

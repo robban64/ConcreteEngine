@@ -1,5 +1,6 @@
 using System.Numerics;
 using ConcreteEngine.Core.Resources;
+using ConcreteEngine.Core.Scene;
 using ConcreteEngine.Graphics.Descriptors;
 using ConcreteEngine.Graphics.Resources;
 
@@ -40,7 +41,7 @@ public sealed class TerrainDrawProducer : IDrawCommandProducer, ITerrainDrawSink
         _terrain = _context.DrawBatchers.Get<TerrainBatcher>();
     }
     
-    public void BeginTick(in UpdateMetaInfo updateMeta)
+    public void BeginTick(in UpdateInfo update)
     {
     }
 
@@ -49,7 +50,7 @@ public sealed class TerrainDrawProducer : IDrawCommandProducer, ITerrainDrawSink
     }
     
 
-    public void EmitFrame(float alpha, RenderPipeline submitter)
+    public void EmitFrame(float alpha, in RenderGlobalSnapshot snapshot, RenderPipeline submitter)
     {
         if(_data == null) return;
         

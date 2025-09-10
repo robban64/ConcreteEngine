@@ -1,5 +1,6 @@
 #region
 
+using System.Diagnostics;
 using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
 using ConcreteEngine.Core.Utils;
@@ -48,7 +49,9 @@ public sealed class RenderPipeline
     
     public void SubmitDrawBatch(ReadOnlySpan<DrawCommand> cmds, ReadOnlySpan<DrawCommandMeta> metas, ReadOnlySpan<DrawTransformPayload> transforms)
     {
-        ArgumentOutOfRangeException.ThrowIfNotEqual(cmds.Length, metas.Length);
+        Debug.Assert(cmds.Length == metas.Length);
+        Debug.Assert(cmds.Length == transforms.Length);
+
         int count = cmds.Length;
         if (count == 0) return;
 
@@ -56,9 +59,10 @@ public sealed class RenderPipeline
         cmds.CopyTo(_commands.AsSpan(_submitIdx));
         transforms.CopyTo(_transforms.AsSpan(_submitIdx));
 
+        var indices = _indices.AsSpan(_submitIdx);
         for (int i = 0; i < count; i++)
         {
-            _indices[_submitIdx + i] = new DrawCommandMetaIndex(in metas[i], _submitIdx + i);
+            indices[i] = new DrawCommandMetaIndex(in metas[i], _submitIdx + i);
         }
 
         _submitIdx += count;

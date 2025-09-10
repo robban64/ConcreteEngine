@@ -1,5 +1,6 @@
 #region
 
+using System.Diagnostics;
 using System.Runtime.CompilerServices;
 
 #endregion
@@ -9,12 +10,13 @@ namespace ConcreteEngine.Graphics.Resources;
 internal sealed class ResourceStore<TId, TMeta, THandle>
     where TId : struct, IResourceId where TMeta : struct where THandle : struct
 {
-    private const int MaxBufferSize = 1024;
+    private const int HardLimit = 10_000;
+    private const int MaxDefaultCapacity = 1024;
     private const int BufferSize = 128;
 
     private static EqualityComparer<TMeta> MetaComparer = EqualityComparer<TMeta>.Default;
 
-    private readonly Func<int, TId> _makeId;
+    private readonly MakeIdDelegate<TId> _makeId;
 
     private int _idx = 0;
     private TMeta[] _meta;
@@ -30,10 +32,10 @@ internal sealed class ResourceStore<TId, TMeta, THandle>
 
     public ResourceStore(
         int initialCapacity,
-        Func<int, TId> makeId)
+        MakeIdDelegate<TId> makeId)
     {
         ArgumentOutOfRangeException.ThrowIfLessThan(initialCapacity, 4, nameof(initialCapacity));
-        ArgumentOutOfRangeException.ThrowIfGreaterThan(initialCapacity, MaxBufferSize, nameof(initialCapacity));
+        ArgumentOutOfRangeException.ThrowIfGreaterThan(initialCapacity, MaxDefaultCapacity, nameof(initialCapacity));
         ArgumentNullException.ThrowIfNull(makeId);
 
         _makeId = makeId;
@@ -65,12 +67,10 @@ internal sealed class ResourceStore<TId, TMeta, THandle>
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public ref readonly TMeta GetMeta(TId id)
-        => ref _meta[id.Id - 2];
+    public ref readonly TMeta GetMeta(TId id) => ref _meta[id.Id - 2];
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public THandle GetHandle(TId id)
-        => _handle[id.Id - 2];
+    public THandle GetHandle(TId id) => _handle[id.Id - 2];
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public THandle GetHandleAndMeta(TId id, out TMeta meta)
@@ -82,26 +82,28 @@ internal sealed class ResourceStore<TId, TMeta, THandle>
 
     public TId Replace(TId id, in TMeta newMeta, in THandle newHandle, out THandle oldHandle)
     {
+        Debug.Assert(id.Id > 0);
         int idx = id.Id - 2;
         oldHandle = _handle[idx];
         _meta[idx] = newMeta;
         _handle[idx] = newHandle;
         return id;
     }
-    
-    
+
+
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public bool IsAlive(TId id) => !MetaComparer.Equals(_meta[id.Id - 2], default);
 
-   
+
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     private bool IsAliveAtIndex(int idx) => !MetaComparer.Equals(_meta[idx], default);
-
 
     private int Allocate()
     {
         if (_idx == _meta.Length)
         {
+            Debug.Assert(_idx < HardLimit);
+
             var newCap = _meta.Length * 2;
             Array.Resize(ref _meta, newCap);
             Array.Resize(ref _handle, newCap);
@@ -110,7 +112,7 @@ internal sealed class ResourceStore<TId, TMeta, THandle>
 
         return _idx++;
     }
-    
+
     internal IdEnumerable IdEnumerator => new(this);
 
     internal readonly struct IdEnumerable
@@ -120,7 +122,7 @@ internal sealed class ResourceStore<TId, TMeta, THandle>
         public ResourceIdEnumerator GetEnumerator() => new(_store);
     }
 
-    
+
     internal struct ResourceIdEnumerator
     {
         private readonly ResourceStore<TId, TMeta, THandle> _store;
@@ -151,8 +153,8 @@ internal sealed class ResourceStore<TId, TMeta, THandle>
                     return true;
                 }
             }
+
             return false;
         }
     }
-
 }

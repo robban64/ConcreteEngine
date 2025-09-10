@@ -1,11 +1,19 @@
 using System.Numerics;
+using ConcreteEngine.Graphics.Resources;
 using Silk.NET.Maths;
 
 namespace ConcreteEngine.Graphics.Utils;
 
 
-public static class FrameBufferUtils
+internal static class FrameBufferUtils
 {
+    public static void GetMetaResizeCopy(in FrameBufferMeta m, Vector2D<int> size, out FrameBufferMeta meta)
+    {
+        meta = new FrameBufferMeta(m.ColTexId, m.RboTexId, m.RboDepthId, m.TexturePreset, m.SizeRatio, size,
+            m.DepthStencilBuffer,
+            m.Msaa, m.Samples);
+    }
+    
     public static Vector2D<int> ResolveEffectiveSize(
         Vector2D<int> viewSize, Vector2 downscaleRatio, Vector2D<int>? absoluteSize)
     {

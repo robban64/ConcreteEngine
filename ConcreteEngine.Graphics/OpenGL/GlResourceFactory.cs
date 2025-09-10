@@ -12,10 +12,13 @@ using Silk.NET.OpenGL;
 
 namespace ConcreteEngine.Graphics.OpenGL;
 
+
 internal sealed class GlResourceFactory(GlGraphicsContext gfx, DeviceCapabilities caps)
 {
     private readonly GL _gl = gfx.Gl;
     private readonly DeviceCapabilities _caps = caps;
+
+
 
     private void SetBufferData<TData>(BufferTargetARB target, BufferUsageARB usage, ReadOnlySpan<TData> data,
         int? dataLength = null)
@@ -28,8 +31,8 @@ internal sealed class GlResourceFactory(GlGraphicsContext gfx, DeviceCapabilitie
     }
 
     public GlMeshHandle CreateMesh<TVertex, TIndex>(
-        Func<GlVertexBufferHandle, VertexBufferMeta, VertexBufferId> vboHandler,
-        Func<GlIndexBufferHandle, IndexBufferMeta, IndexBufferId> iboHandler,
+        CreateStoreDel<GlVertexBufferHandle, VertexBufferMeta, VertexBufferId> vboHandler,
+        CreateStoreDel<GlIndexBufferHandle, IndexBufferMeta, IndexBufferId> iboHandler,
         in GpuMeshData<TVertex, TIndex> dataDesc,
         in GpuMeshDescriptor desc,
         out MeshMeta meta
@@ -98,7 +101,7 @@ internal sealed class GlResourceFactory(GlGraphicsContext gfx, DeviceCapabilitie
             drawCount = desc.DrawCount.GetValueOrDefault(iboSize);
             isStatic = desc.IboUsage == BufferUsage.StaticDraw;
             var iboMeta = new IndexBufferMeta(desc.IboUsage, iboSize, iboElementSize);
-            iboId = iboHandler(ibo, iboMeta);
+            iboId = iboHandler(in iboMeta, in ibo);
         }
         else
         {
@@ -106,7 +109,8 @@ internal sealed class GlResourceFactory(GlGraphicsContext gfx, DeviceCapabilitie
             drawCount = desc.DrawCount.GetValueOrDefault(vboSize);
         }
 
-        var vboId = vboHandler(vbo, new VertexBufferMeta(desc.VboUsage, vboSize, vboElementSize));
+        var vboMeta = new VertexBufferMeta(desc.VboUsage, vboSize, vboElementSize);
+        var vboId = vboHandler(in vboMeta, in vbo);
 
         var drawKind = desc.DrawKind;
         var primitive = desc.Primitive ?? DrawPrimitive.Triangles;
@@ -151,7 +155,6 @@ internal sealed class GlResourceFactory(GlGraphicsContext gfx, DeviceCapabilitie
                 _gl.TexImage2D(GLEnum.Texture2D, 0, (int)glInternalFormat,
                     (uint)desc.Width, (uint)desc.Height, 0,
                     glFormat, GLEnum.UnsignedByte, data.PixelData);
-
             }
         }
 
@@ -201,7 +204,6 @@ internal sealed class GlResourceFactory(GlGraphicsContext gfx, DeviceCapabilitie
             _gl.TexImage2D((TextureTarget)(target + face), 0, (int)internalFormat,
                 (uint)width, (uint)height, 0,
                 format, GLEnum.UnsignedByte, faceData);
-
         }
     }
 
@@ -234,10 +236,10 @@ internal sealed class GlResourceFactory(GlGraphicsContext gfx, DeviceCapabilitie
     }
 
     public GlFrameBufferHandle CreateFrameBuffer(
-        Func<GlTextureHandle, TextureMeta, TextureId> textureHandler,
-        Func<GlRenderBufferHandle, RenderBufferMeta, RenderBufferId> rboTexHandler,
-        Func<GlRenderBufferHandle, RenderBufferMeta, RenderBufferId> rboDepthHandler,
+        UploadFboDel<TextureId, TextureMeta, GlTextureHandle> texCallback,
+        UploadFboDel<RenderBufferId, RenderBufferMeta, GlRenderBufferHandle> rboCallback,
         Vector2D<int> viewport,
+        in FrameBufferMeta previousMeta,
         in FrameBufferDesc desc,
         out FrameBufferMeta meta
     )
@@ -298,9 +300,17 @@ internal sealed class GlResourceFactory(GlGraphicsContext gfx, DeviceCapabilitie
 
         _gl.BindFramebuffer(FramebufferTarget.Framebuffer, 0);
 
-        var colTexId = colTexHandle.Handle > 0 ? textureHandler(colTexHandle, colTexMeta) : default;
-        var rboTexId = rboTexHandle.Handle > 0 ? rboTexHandler(rboTexHandle, rboTexMeta) : default;
-        var rboDepthId = rboDepthHandle.Handle > 0 ? rboDepthHandler(rboDepthHandle, rboDepthMeta) : default;
+        var colTexId = colTexHandle.Handle > 0
+            ? texCallback(previousMeta.ColTexId, in colTexMeta, colTexHandle)
+            : default;
+
+        var rboTexId = rboTexHandle.Handle > 0
+            ? rboCallback(previousMeta.RboTexId,in rboTexMeta, rboTexHandle)
+            : default;
+
+        var rboDepthId = rboDepthHandle.Handle > 0
+            ? rboCallback(previousMeta.RboDepthId,in rboDepthMeta, rboDepthHandle)
+            : default;
 
         meta = new FrameBufferMeta(
             colTexId, rboTexId, rboDepthId, desc.TexturePreset,
@@ -311,7 +321,6 @@ internal sealed class GlResourceFactory(GlGraphicsContext gfx, DeviceCapabilitie
         return new GlFrameBufferHandle(fbo);
     }
 
-    
 
     private unsafe void AddAttribPointer(uint index, int size, uint strideBytes, uint offsetBytes,
         bool normalized = false)

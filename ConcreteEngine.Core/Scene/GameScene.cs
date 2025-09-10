@@ -26,10 +26,10 @@ public abstract class GameScene
     {
     }
 
-    internal void Update(in FrameMetaInfo frameInfo)
+    internal void Update(in UpdateInfo frameCtx)
     {
-        Context.Features.Update(in frameInfo);
-        Context.Modules.Update(in frameInfo);
+        Context.Features.Update(in frameCtx);
+        Context.Modules.Update(in frameCtx);
     }
 
     internal void UpdateTick(int tick)

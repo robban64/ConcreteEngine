@@ -17,12 +17,11 @@ public interface IGraphicsContext
     GraphicsConfiguration Configuration { get; }
     DeviceCapabilities  Capabilities { get; }
 
-    Vector2D<int> ViewportSize { get; }
     BlendMode BlendMode { get; }
     bool DepthTest { get; }
 
-    void BeginFrame(in FrameMetaInfo frameCtx);
-    void EndFrame(out FrameRenderResult result);
+    void BeginFrame(in FrameInfo frameCtx);
+    void EndFrame(out GpuFrameStats result);
 
     void Clear(Color4 color, ClearBufferFlag flags);
     void BeginScreenPass(Color4? clear = null, ClearBufferFlag? flags = null);

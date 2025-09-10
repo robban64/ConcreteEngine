@@ -20,8 +20,8 @@ public interface IGraphicsDevice : IDisposable
     IGpuUploadSink CreateUploader();
     
     void BuildResources(GpuResourceBuilder builder);
-    void StartFrame(in FrameMetaInfo frameCtx);
-    void EndFrame(out FrameRenderResult result);
+    void StartFrame(in FrameInfo frameCtx);
+    void EndFrame(out GpuFrameStats result);
 
     UniformBufferId GetUboIdBySlot(UniformGpuSlot slot);
 

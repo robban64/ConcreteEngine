@@ -13,6 +13,7 @@ using ConcreteEngine.Core.Time;
 using ConcreteEngine.Graphics;
 using ConcreteEngine.Graphics.Descriptors;
 using ConcreteEngine.Graphics.Resources;
+using Silk.NET.Maths;
 
 #endregion
 
@@ -29,9 +30,6 @@ public sealed class GameEngine : IDisposable
         LoadScenes,
         Running
     }
-
-    
-    private const float GameDt = 1f / 10f; // 30 Hz
 
     private readonly IEngineWindowHost _window;
 
@@ -57,10 +55,13 @@ public sealed class GameEngine : IDisposable
     private bool _isDisposed = false;
 
     private float _fps;
-    private FrameRenderResult _frameResult = default;
-    private UpdateMetaInfo _updateMeta = default;
+    private long _frameIdx = -1;
 
+    private UpdateInfo _updateCtx;
+    private FrameInfo _frameCtx;
+    private GpuFrameStats _gpuFrameResult;
 
+    private Vector2D<int> _prevOutputSize;
 
     private LinearStateMachine<EngineState> _stateMachine;
 
@@ -113,7 +114,75 @@ public sealed class GameEngine : IDisposable
         _systems.Initialize();
     }
 
+
+
     internal void Render(double delta)
+    {
+        
+
+        var outputSize = _window.FramebufferSize;
+
+        var frameCtx = new FrameInfo(
+            frameIndex: _frameIdx,
+            vSyncEnabled: false,
+            resizePending: _frameIdx > 1 && outputSize != _prevOutputSize,
+            viewport: _window.Size,
+            outputSize: outputSize
+        );
+        
+        _graphics.StartFrame(in frameCtx);
+        if (_currentScene != null)
+        {
+            var snapshot = _currentScene.RenderGlobals.Snapshot;
+            _renderer.Render(_updateCtx.Alpha, in frameCtx, in snapshot);
+        }
+        else
+        {
+            RunSetupStateMachine();
+        }
+        _graphics.EndFrame(out _gpuFrameResult);
+        _prevOutputSize = _window.FramebufferSize;
+    }
+
+    internal void Update(double delta)
+    {
+        float dt = (float)delta;
+        float fps = dt > 0 ? 1.0f / dt : 0.0f;
+        _fps = fps;
+        _frameIdx++;
+
+        _updateCtx.DeltaTime = dt;
+        _updateCtx.Fps = fps;
+
+
+        if (_stateMachine.Current != EngineState.Running) return;
+
+        _currentScene?.Update(in _updateCtx);
+
+        // fixed-step simulation
+        _gameTime.Advance(dt);
+
+        UpdateSceneTransitionIfNeeded();
+    }
+
+    private void GameTickUpdate(int tick)
+    {
+        _updateCtx.GameTick = tick;
+        _renderer.BeginTick(in _updateCtx);
+        _input.Update();
+        _currentScene?.UpdateTick(tick);
+        _renderer.EndTick();
+    }
+
+    private void FpsTickUpdate(int tick)
+    {
+        Console.WriteLine($"Tick {tick}");
+        Console.WriteLine(
+            $"Fps: {_fps}; Draw Calls: {_gpuFrameResult.DrawCalls}; Triangle Count: {_gpuFrameResult.TriangleCount}");
+    }
+
+    
+    private void RunSetupStateMachine()
     {
         switch (_stateMachine.Current)
         {
@@ -137,78 +206,8 @@ public sealed class GameEngine : IDisposable
                 _stateMachine.Next();
                 break;
         }
-
-        float dt = (float)delta;
-        float fps = dt > 0 ? 1.0f / dt : 0.0f;
-
-        var frameCtx = new FrameMetaInfo
-        {
-            DeltaTime = dt, Fps = fps, FramebufferSize = _window.FramebufferSize, ViewportSize = _window.Size
-        };
-
-        if (_currentScene != null)
-        {
-            var snapshot = _currentScene.RenderGlobals.Snapshot;
-            _renderer.Render(_updateMeta.Alpha, in frameCtx, in snapshot, out _frameResult);
-        }
-        else
-        {
-            _renderer.RenderBlank(in frameCtx, out _frameResult);
-        }
     }
-
-    internal void Update(double delta)
-    {
-        float dt = (float)delta;
-        float fps = dt > 0 ? 1.0f / dt : 0.0f;
-        _fps = fps;
-
-        var frameCtx = new FrameMetaInfo
-        {
-            DeltaTime = dt, Fps = fps, FramebufferSize = _window.FramebufferSize, ViewportSize = _window.Size
-        };
-
-        _updateMeta.DeltaTime = dt;
-        _updateMeta.Fps = fps;
-
-
-        if (_stateMachine.Current != EngineState.Running) return;
-
-        _currentScene?.Update(in frameCtx);
-
-        // fixed-step simulation
-        _gameTime.Advance(dt);
-
-        UpdateSceneTransitionIfNeeded();
-    }
-
-    private void GameTickUpdate(int tick)
-    {
-        _updateMeta.GameTick = tick;
-        _renderer.BeginTick(in _updateMeta);
-        _input.Update();
-        _currentScene?.UpdateTick(tick);
-        _renderer.EndTick();
-    }
-
-    private void FpsTickUpdate(int tick)
-    {
-        Console.WriteLine($"Tick {tick}");
-        Console.WriteLine(
-            $"Fps: {_fps}; Draw Calls: {_frameResult.DrawCalls}; Triangle Count: {_frameResult.TriangleCount}");
-    }
-
-
-    internal void Close()
-    {
-        Console.WriteLine("Closing GameEngine");
-        _isDisposed = true;
-        _currentScene?.Unload();
-        _assets?.Shutdown();
-        _graphics?.Dispose();
-    }
-
-
+    
     private void UpdateSceneTransitionIfNeeded()
     {
         if (_nextSceneIndex < 0) return;
@@ -246,6 +245,14 @@ public sealed class GameEngine : IDisposable
         builder.Clear();
     }
 
+    internal void Close()
+    {
+        Console.WriteLine("Closing GameEngine");
+        _isDisposed = true;
+        _currentScene?.Unload();
+        _assets?.Shutdown();
+        _graphics?.Dispose();
+    }
 
     public void Dispose()
     {

@@ -1,3 +1,4 @@
+using ConcreteEngine.Graphics;
 using ConcreteEngine.Graphics.Descriptors;
 
 namespace ConcreteEngine.Core;
@@ -17,7 +18,7 @@ public abstract class GameModule
     {
     }
 
-    public virtual void Update(in FrameMetaInfo frameCtx)
+    public virtual void Update(in UpdateInfo frameCtx)
     {
     }
 

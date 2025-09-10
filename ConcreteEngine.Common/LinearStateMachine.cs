@@ -1,6 +1,6 @@
 namespace ConcreteEngine.Common;
 
-public class LinearStateMachine<T> where T : unmanaged
+public class LinearStateMachine<T> where T : Enum
 {
     private readonly T[] _states;
     private int _currentIndex;

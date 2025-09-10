@@ -9,7 +9,7 @@ using Silk.NET.Maths;
 
 namespace ConcreteEngine.Graphics.Resources;
 
-public enum ResourceKind : ushort
+public enum ResourceKind : byte
 {
     Texture = 0,
     Shader = 1,
@@ -102,13 +102,6 @@ public readonly struct FrameBufferMeta(
     public readonly bool DepthStencilBuffer = depthStencilBuffer;
     public readonly bool Msaa = msaa;
     public readonly byte Samples = samples;
-
-    public static void GetResizeCopy(in FrameBufferMeta m, Vector2D<int> size, out FrameBufferMeta meta)
-    {
-        meta = new FrameBufferMeta(m.ColTexId, m.RboTexId, m.RboDepthId, m.TexturePreset, m.SizeRatio, size,
-            m.DepthStencilBuffer,
-            m.Msaa, m.Samples);
-    }
 }
 
 public readonly struct RenderBufferMeta(

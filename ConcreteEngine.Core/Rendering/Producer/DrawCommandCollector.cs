@@ -2,6 +2,8 @@
 
 #endregion
 
+using ConcreteEngine.Core.Scene;
+
 namespace ConcreteEngine.Core.Rendering;
 
 
@@ -63,10 +65,10 @@ internal sealed class DrawCommandCollector
     }
 
 
-    public void BeginTick(in UpdateMetaInfo updateMeta)
+    public void BeginTick(in UpdateInfo update)
     {
         foreach (var producer in _producerList)
-            producer.BeginTick(in updateMeta);
+            producer.BeginTick(in update);
 
     }
     
@@ -76,10 +78,9 @@ internal sealed class DrawCommandCollector
             producer.EndTick();
     }
 
-
-    public void Collect(float alpha, RenderPipeline submitter)
+    public void Collect(float alpha, in RenderGlobalSnapshot snapshot, RenderPipeline submitter)
     {
         foreach (var producer in _producerList)
-            producer.EmitFrame(alpha, submitter);
+            producer.EmitFrame(alpha,in snapshot, submitter);
     }
 }

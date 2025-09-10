@@ -20,9 +20,9 @@ public interface IDrawCommandProducer
 {
     void AttachContext(CommandProducerContext ctx);
     void Initialize();
-    void BeginTick(in UpdateMetaInfo updateMeta);
+    void BeginTick(in UpdateInfo update);
     void EndTick();
-    void EmitFrame(float alpha, RenderPipeline submitter);
+    void EmitFrame(float alpha, in RenderGlobalSnapshot snapshot, RenderPipeline submitter);
 }
 
 public interface IDrawSink;

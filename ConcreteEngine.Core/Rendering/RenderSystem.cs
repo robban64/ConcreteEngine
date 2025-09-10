@@ -1,5 +1,6 @@
 #region
 
+using System.Diagnostics;
 using System.Runtime.CompilerServices;
 using ConcreteEngine.Common.Collections;
 using ConcreteEngine.Common.Extensions;
@@ -11,6 +12,7 @@ using ConcreteEngine.Core.Systems;
 using ConcreteEngine.Graphics;
 using ConcreteEngine.Graphics.Descriptors;
 using ConcreteEngine.Graphics.Resources;
+using ConcreteEngine.Graphics.Utils;
 using static ConcreteEngine.Core.Rendering.RenderConsts;
 
 #endregion
@@ -82,7 +84,6 @@ public sealed class RenderSystem : IRenderSystem
         _commandCollector = new DrawCommandCollector();
         _commandSubmitter = new RenderPipeline(_drawProcessor);
 
-        
         _batches.Register(new TerrainBatcher(_graphics));
         _batches.Register(new SpriteBatcher(_graphics));
         _batches.Register(new TilemapBatcher(_graphics, 64, 32));
@@ -132,34 +133,18 @@ public sealed class RenderSystem : IRenderSystem
         => _render.MutateRenderPass(targetId, in mutation);
 
 
-    internal void BeginTick(in UpdateMetaInfo updateMeta) => _commandCollector.BeginTick(updateMeta);
+    internal void BeginTick(in UpdateInfo update) => _commandCollector.BeginTick(update);
     internal void EndTick() => _commandCollector.EndTick();
 
-    internal void RenderBlank(in FrameMetaInfo frameCtx, out FrameRenderResult result)
+    internal void Render(float alpha, in FrameInfo frameCtx, in RenderGlobalSnapshot renderGlobals)
     {
-        _graphics.StartFrame(in frameCtx);
-        _graphics.EndFrame(out result);
-    }
-
-    internal void Render(float alpha, in FrameMetaInfo frameCtx, in RenderGlobalSnapshot renderGlobals,
-        out FrameRenderResult result)
-    {
-
-        if (!_initialized)
-        {
-            result = default;
-            return;
-        }
+        Debug.Assert(_initialized);
         
-        if (frameCtx.ViewportSize != _render.Camera.ViewportSize)
-            _render.Camera.ViewportSize = frameCtx.ViewportSize;
+        if (frameCtx.Viewport != _render.Camera.ViewportSize)
+            _render.Camera.ViewportSize = frameCtx.Viewport;
         
-
-        _graphics.StartFrame(in frameCtx);
         PrepareRenderer(alpha, in renderGlobals);
         Execute(alpha, in renderGlobals);
-        _graphics.EndFrame(out result);
-
         _commandSubmitter.Reset();
     }
 
@@ -168,18 +153,15 @@ public sealed class RenderSystem : IRenderSystem
         _sceneDrawProducer.SetSceneGlobals(in renderGlobals);
         _render.Prepare(alpha, in renderGlobals);
         _drawProcessor.Prepare(in renderGlobals);
-        _commandCollector.Collect(alpha, _commandSubmitter);
+        _commandCollector.Collect(alpha, in renderGlobals, _commandSubmitter);
         _commandSubmitter.Prepare();
     }
 
     private void Execute(float alpha, in RenderGlobalSnapshot renderGlobals)
     {
-        nuint blockSize   = (nuint)Unsafe.SizeOf<DrawObjectUniformGpuData>();
-        nuint uboAlign    = (nuint)_gfx.Capabilities.UniformBufferOffsetAlignment;              
-        nuint stride      = (blockSize + (uboAlign - 1)) & ~(uboAlign - 1);  
-        var capacity = stride * (nuint)(_commandSubmitter.Count + 100);
+        var capacity = UniformBufferUtils.GetCapacityForEntities<DrawObjectUniformGpuData>(_commandSubmitter.Count + 100);
         _uniformBinder.Prepare(capacity);
-        
+
         _commandSubmitter.DrainTransformQueue();
 
         while (_render.TryGetNextPasses(out var targetId, out var passes))

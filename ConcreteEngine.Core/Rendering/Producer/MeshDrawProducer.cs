@@ -55,7 +55,7 @@ public sealed class MeshDrawProducer : IDrawCommandProducer, IMeshDrawSink
     {
     }
 
-    public void BeginTick(in UpdateMetaInfo updateMeta)
+    public void BeginTick(in UpdateInfo update)
     {
         _idx = 0;
     }
@@ -64,7 +64,7 @@ public sealed class MeshDrawProducer : IDrawCommandProducer, IMeshDrawSink
     {
     }
 
-    public void EmitFrame(float alpha, RenderPipeline submitter)
+    public void EmitFrame(float alpha, in RenderGlobalSnapshot snapshot, RenderPipeline submitter)
     {
         if (_idx == 0) return;
 

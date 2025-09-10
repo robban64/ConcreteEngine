@@ -1,6 +1,6 @@
 namespace ConcreteEngine.Core;
 
-public struct UpdateMetaInfo
+public struct UpdateInfo
 {
     public int GameTick;
     public float Fps;

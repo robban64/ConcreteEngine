@@ -1,5 +1,7 @@
 #region
 
+using System.Diagnostics;
+using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
 using ConcreteEngine.Graphics.Descriptors;
 using ConcreteEngine.Graphics.Error;
@@ -22,28 +24,28 @@ public sealed class GlGraphicsDevice : IGraphicsDevice<GlGraphicsContext>
     private const int StoreTier3 = 16;
 
     private readonly ResourceStore<TextureId, TextureMeta, GlTextureHandle> _textureStore = new(
-        initialCapacity: StoreTier1, i => new TextureId(i + 1));
+        initialCapacity: StoreTier1, static i => new TextureId(i + 1));
 
     private readonly ResourceStore<ShaderId, ShaderMeta, GlShaderHandle> _shaderStore = new(
-        initialCapacity: StoreTier2, i => new ShaderId(i + 1));
+        initialCapacity: StoreTier2, static i => new ShaderId(i + 1));
 
     private readonly ResourceStore<MeshId, MeshMeta, GlMeshHandle> _meshStore = new(initialCapacity: StoreTier2,
-        i => new MeshId(i + 1));
+        static i => new MeshId(i + 1));
 
     private readonly ResourceStore<VertexBufferId, VertexBufferMeta, GlVertexBufferHandle> _vboStore = new(
-        initialCapacity: StoreTier2, i => new VertexBufferId(i + 1));
+        initialCapacity: StoreTier2, static i => new VertexBufferId(i + 1));
 
     private readonly ResourceStore<IndexBufferId, IndexBufferMeta, GlIndexBufferHandle> _iboStore = new(
-        initialCapacity: StoreTier2, i => new IndexBufferId(i + 1));
+        initialCapacity: StoreTier2, static i => new IndexBufferId(i + 1));
 
     private readonly ResourceStore<FrameBufferId, FrameBufferMeta, GlFrameBufferHandle> _fboStore = new(
-        initialCapacity: StoreTier3, i => new FrameBufferId(i + 1));
+        initialCapacity: StoreTier3, static i => new FrameBufferId(i + 1));
 
     private readonly ResourceStore<RenderBufferId, RenderBufferMeta, GlRenderBufferHandle> _rboStore = new(
-        initialCapacity: StoreTier3, i => new RenderBufferId(i + 1));
+        initialCapacity: StoreTier3, static i => new RenderBufferId(i + 1));
 
     private readonly ResourceStore<UniformBufferId, UniformBufferMeta, GlUniformBufferHandle> _uboStore = new(
-        initialCapacity: StoreTier3, i => new UniformBufferId(i + 1));
+        initialCapacity: StoreTier3, static i => new UniformBufferId(i + 1));
 
     #endregion
 
@@ -56,8 +58,8 @@ public sealed class GlGraphicsDevice : IGraphicsDevice<GlGraphicsContext>
 
     private readonly PrimitiveMeshes _primitives;
 
-    private Vector2D<int> _previousViewportSize;
-    private Vector2D<int> _viewportSize;
+    private FrameInfo _prevFrameCtx;
+    private FrameInfo _frameCtx;
 
     public GraphicsConfiguration Configuration { get; }
 
@@ -65,14 +67,13 @@ public sealed class GlGraphicsDevice : IGraphicsDevice<GlGraphicsContext>
     public GlGraphicsContext Gfx => _gfx;
     public GraphicsBackend BackendApi => GraphicsBackend.OpenGL;
     IGraphicsContext IGraphicsDevice.Gfx => Gfx;
-
     public IPrimitiveMeshes Primitives => _primitives;
 
-    public GlGraphicsDevice(GL gl, in FrameMetaInfo initialFrameCtx)
+    public GlGraphicsDevice(GL gl, in FrameInfo initialFrameCtx)
     {
         _gl = gl;
-        _viewportSize = initialFrameCtx.ViewportSize;
-        _previousViewportSize = initialFrameCtx.ViewportSize;
+        _frameCtx = initialFrameCtx;
+        _prevFrameCtx = initialFrameCtx;
         var capabilities = CreateDeviceCapabilities(gl);
         Configuration = new GraphicsConfiguration();
         UniformBufferUtils.Init(capabilities.UniformBufferOffsetAlignment);
@@ -109,38 +110,42 @@ public sealed class GlGraphicsDevice : IGraphicsDevice<GlGraphicsContext>
     }
 
 
-    public void StartFrame(in FrameMetaInfo frameCtx)
+    public void StartFrame(in FrameInfo frameCtx)
     {
-        _viewportSize = frameCtx.ViewportSize;
+        _frameCtx = frameCtx;
         _gfx.BeginFrame(in frameCtx);
     }
 
-    public void EndFrame(out FrameRenderResult result)
+    public void EndFrame(out GpuFrameStats result)
     {
         _gfx.EndFrame(out result);
 
         // drain old resource
-        _disposeQueue.Drain();
+        _disposeQueue.Drain(DisposeResource);
 
         // After (_disposeQueue.Drain) so it get disposed next frame
         // TODO use a special tick or timer for disposing and recreating
-        RecreateRenderTargetsIfNeeded();
+        if (_frameCtx.ResizePending)
+        {
+            RecreateRenderTargets();
+        }
+
+        _prevFrameCtx = _frameCtx;
     }
 
     public UniformBufferId GetUboIdBySlot(UniformGpuSlot slot) => _uniformRegistry.GetUboId(slot);
 
-    private void RecreateRenderTargetsIfNeeded()
+    private void RecreateRenderTargets()
     {
-        if (_viewportSize == _previousViewportSize) return;
+        if (_prevFrameCtx.OutputSize == _frameCtx.OutputSize) return;
 
         _gl.BindFramebuffer(FramebufferTarget.Framebuffer, 0);
         _gl.BindRenderbuffer(RenderbufferTarget.Renderbuffer, 0);
         _gl.BindTexture(TextureTarget.Texture2D, 0);
 
-        Console.WriteLine($"New viewport {_viewportSize} - old viewport {_previousViewportSize}");
+        var (prev, curr) = (_prevFrameCtx.OutputSize, _frameCtx.OutputSize);
+        Console.WriteLine($"New viewport {curr} - old viewport {prev}");
         Console.WriteLine($"Recreating {_fboStore.Count} FBO");
-
-        _previousViewportSize = _viewportSize;
 
         for (int i = 0; i < _fboStore.Count; i++)
         {
@@ -148,11 +153,15 @@ public sealed class GlGraphicsDevice : IGraphicsDevice<GlGraphicsContext>
         }
     }
 
-    private FrameBufferMeta ReplaceFramebuffer(FrameBufferId fboId)
+    private void ReplaceFramebuffer(FrameBufferId fboId)
     {
         ref readonly var prevMeta = ref _fboStore.GetMeta(fboId);
-        var size = new Vector2D<int>((int)(_viewportSize.X * prevMeta.SizeRatio.X),
-            (int)(_viewportSize.Y * prevMeta.SizeRatio.Y));
+        var outputSize = _frameCtx.OutputSize;
+        var size = new Vector2D<int>((int)(outputSize.X * prevMeta.SizeRatio.X),
+            (int)(outputSize.Y * prevMeta.SizeRatio.Y));
+
+        Debug.Assert(size.X > 0);
+        Debug.Assert(size.Y > 0);
 
         var (colTexId, rboTexId, rboDepthId) = (prevMeta.ColTexId, prevMeta.RboTexId, prevMeta.RboDepthId);
 
@@ -178,27 +187,51 @@ public sealed class GlGraphicsDevice : IGraphicsDevice<GlGraphicsContext>
             rboDepthMeta = new RenderBufferMeta(prevRboMeta.Kind, size, prevRboMeta.Multisample);
         }
 
-        FrameBufferMeta.GetResizeCopy(in prevMeta, _viewportSize, out var fboMeta);
-        var desc = new FrameBufferDesc(prevMeta.SizeRatio, size, prevMeta.DepthStencilBuffer, prevMeta.TexturePreset,
-            prevMeta.Msaa, prevMeta.Samples);
+        FrameBufferUtils.GetMetaResizeCopy(in prevMeta, outputSize, out var fboMeta);
+
+        var desc = new FrameBufferDesc(fboMeta.SizeRatio, size, fboMeta.DepthStencilBuffer, fboMeta.TexturePreset,
+            fboMeta.Msaa, fboMeta.Samples);
 
         var handle = _resourceFactory.CreateFrameBuffer(
-            (handle, m) => _textureStore.Replace(colTexId, in colTexMeta, handle, out _),
-            (handle, m) => _rboStore.Replace(rboTexId, in rboTexMeta, handle, out _),
-            (handle, m) => _rboStore.Replace(rboDepthId, in rboDepthMeta, handle, out _), _viewportSize, in desc,
-            out var meta);
+            ReplaceTexture,
+            ReplaceRbo,
+            outputSize,
+            in prevMeta,
+            in desc,
+            out var meta
+        );
 
         _fboStore.Replace(fboId, in meta, handle, out _);
-        return meta;
+        
+        return;
+        TextureId ReplaceTexture(TextureId id, in TextureMeta newMeta, GlTextureHandle newHandle) 
+            => _textureStore.Replace(id, in newMeta, in newHandle, out _);
+        RenderBufferId ReplaceRbo(RenderBufferId id, in RenderBufferMeta newMeta, GlRenderBufferHandle newHandle) 
+            => _rboStore.Replace(id, in newMeta, in newHandle, out _);
     }
+
+
+
 
     public FrameBufferId CreateFramebuffer(in FrameBufferDesc desc, out FrameBufferMeta meta)
     {
-        var handle = _resourceFactory.CreateFrameBuffer((handle, m) => _textureStore.Add(in m, in handle),
-            (handle, m) => _rboStore.Add(in m, in handle), (handle, m) => _rboStore.Add(in m, in handle), _viewportSize,
-            in desc, out meta);
+        Debug.Assert(_frameCtx.OutputSize != Vector2D<int>.Zero);
+        
+        var handle = _resourceFactory.CreateFrameBuffer(
+            AddStoreTex,
+            AddStoreRbo,
+            _frameCtx.OutputSize,
+            default,
+            in desc,
+            out meta
+        );
 
         return _fboStore.Add(in meta, in handle);
+        TextureId AddStoreTex(TextureId _, in TextureMeta newMeta, GlTextureHandle newHandle) 
+            => _textureStore.Add(in newMeta, in newHandle);
+        RenderBufferId AddStoreRbo(RenderBufferId _, in RenderBufferMeta newMeta, GlRenderBufferHandle newHandle) 
+            => _rboStore.Add(in newMeta, in newHandle);
+
     }
 
     public ShaderId CreateShader(string vertexSource, string fragmentSource, out ShaderMeta meta)
@@ -227,10 +260,12 @@ public sealed class GlGraphicsDevice : IGraphicsDevice<GlGraphicsContext>
     public MeshId CreateMesh<TVertex, TIndex>(in GpuMeshData<TVertex, TIndex> data,
         in GpuMeshDescriptor desc, out MeshMeta meta) where TVertex : unmanaged where TIndex : unmanaged
     {
-        var handle = _resourceFactory.CreateMesh((handle, m) => _vboStore.Add(in m, in handle),
-            (handle, m) => _iboStore.Add(in m, in handle), in data, in desc, out meta);
+        var handle = _resourceFactory.CreateMesh(AddVbo, AddIbo, in data, in desc, out meta);
 
         return _meshStore.Add(in meta, handle);
+
+        VertexBufferId AddVbo(in VertexBufferMeta m, in GlVertexBufferHandle h) => _vboStore.Add(in m, in h);
+        IndexBufferId AddIbo(in IndexBufferMeta m, in GlIndexBufferHandle h) => _iboStore.Add(in m, in h);
     }
 
     public VertexBufferId CreateVertexBuffer(BufferUsage usage)
@@ -262,12 +297,12 @@ public sealed class GlGraphicsDevice : IGraphicsDevice<GlGraphicsContext>
         {
             case TextureId textureId:
                 var handleTex = _textureStore.GetHandle(textureId).Handle;
-                _disposeQueue.Enqueue(ResourceKind.Texture, () => FreeTexture(handleTex));
+                _disposeQueue.Enqueue(ResourceKind.Texture, handleTex);
                 if (!reserve) _textureStore.Remove(textureId, out _);
                 break;
             case ShaderId shaderId:
                 var handleShader = _shaderStore.GetHandle(shaderId).Handle;
-                _disposeQueue.Enqueue(ResourceKind.Shader, () => FreeShader(handleShader));
+                _disposeQueue.Enqueue(ResourceKind.Shader, handleShader);
                 if (!reserve) _shaderStore.Remove(shaderId, out _);
 
                 break;
@@ -276,17 +311,17 @@ public sealed class GlGraphicsDevice : IGraphicsDevice<GlGraphicsContext>
                 var handleMesh = _meshStore.GetHandle(meshId).Handle;
                 if (mesh.VertexBufferId.Id > 0) EnqueueRemoveResource(mesh.VertexBufferId, reserve);
                 if (mesh.IndexBufferId.Id > 0) EnqueueRemoveResource(mesh.IndexBufferId, reserve);
-                _disposeQueue.Enqueue(ResourceKind.Mesh, () => FreeMesh(handleMesh));
+                _disposeQueue.Enqueue(ResourceKind.Mesh, handleMesh);
                 if (!reserve) _meshStore.Remove(meshId, out _);
                 break;
             case VertexBufferId vboId:
                 var handleVbo = _vboStore.GetHandle(vboId).Handle;
-                _disposeQueue.Enqueue(ResourceKind.VertexBuffer, () => FreeVbo(handleVbo));
+                _disposeQueue.Enqueue(ResourceKind.VertexBuffer, handleVbo);
                 if (!reserve) _vboStore.Remove(vboId, out _);
                 break;
             case IndexBufferId iboId:
                 var handleIbo = _iboStore.GetHandle(iboId).Handle;
-                _disposeQueue.Enqueue(ResourceKind.IndexBuffer, () => FreeIbo(handleIbo));
+                _disposeQueue.Enqueue(ResourceKind.IndexBuffer, handleIbo);
                 if (!reserve) _iboStore.Remove(iboId, out _);
                 break;
             case FrameBufferId fboId:
@@ -294,13 +329,14 @@ public sealed class GlGraphicsDevice : IGraphicsDevice<GlGraphicsContext>
                 if (fbo.RboDepthId.Id > 0) EnqueueRemoveResource(fbo.RboDepthId, reserve);
                 if (fbo.RboTexId.Id > 0) EnqueueRemoveResource(fbo.RboTexId, reserve);
                 if (fbo.ColTexId.Id > 0) EnqueueRemoveResource(fbo.ColTexId, reserve);
+
                 var fboHandle = _fboStore.GetHandle(fboId).Handle;
-                _disposeQueue.Enqueue(ResourceKind.FrameBuffer, () => FreeFbo(fboHandle));
+                _disposeQueue.Enqueue(ResourceKind.FrameBuffer, fboHandle);
                 if (!reserve) _fboStore.Remove(fboId, out _);
                 break;
             case RenderBufferId rboId:
                 var rboHandle = _rboStore.GetHandle(rboId).Handle;
-                _disposeQueue.Enqueue(ResourceKind.RenderBuffer, () => FreeRbo(rboHandle));
+                _disposeQueue.Enqueue(ResourceKind.RenderBuffer, rboHandle);
                 if (!reserve) _rboStore.Remove(rboId, out _);
                 break;
             default:
@@ -308,58 +344,29 @@ public sealed class GlGraphicsDevice : IGraphicsDevice<GlGraphicsContext>
         }
     }
 
-
-    private void FreeTexture(uint handle) => _gl.DeleteTexture(handle);
-    private void FreeShader(uint handle) => _gl.DeleteTexture(handle);
-    private void FreeMesh(uint handle) => _gl.DeleteVertexArray(handle);
-    private void FreeVbo(uint handle) => _gl.DeleteBuffer(handle);
-    private void FreeIbo(uint handle) => _gl.DeleteBuffer(handle);
-    private void FreeFbo(uint handle) => _gl.DeleteFramebuffer(handle);
-    private void FreeRbo(uint handle) => _gl.DeleteRenderbuffer(handle);
-
-/*
-    private void FreeTexture(TextureId id)
+    private void DisposeResource(ResourceKind kind, uint handle)
     {
-        var handle = _textureStore.GetHandle(id);
-        _gl.DeleteTexture(handle.Handle);
+        switch (kind)
+        {
+            case ResourceKind.Texture: DisposeTexture(handle); break;
+            case ResourceKind.Shader: DisposeShader(handle); break;
+            case ResourceKind.Mesh: DisposeVao(handle); break;
+            case ResourceKind.VertexBuffer: DisposeVbo(handle); break;
+            case ResourceKind.IndexBuffer: DisposeIbo(handle); break;
+            case ResourceKind.FrameBuffer: DisposeFbo(handle); break;
+            case ResourceKind.RenderBuffer: DisposeRbo(handle); break;
+            default: throw new ArgumentOutOfRangeException(nameof(kind), kind, null);
+        }
     }
 
-    private void FreeShader(ShaderId id)
-    {
-        var handle = _shaderStore.GetHandle(id);
-        _gl.DeleteTexture(handle.Handle);
-    }
+    private void DisposeTexture(uint handle) => _gl.DeleteTexture(handle);
+    private void DisposeShader(uint handle) => _gl.DeleteTexture(handle);
+    private void DisposeVao(uint handle) => _gl.DeleteVertexArray(handle);
+    private void DisposeVbo(uint handle) => _gl.DeleteBuffer(handle);
+    private void DisposeIbo(uint handle) => _gl.DeleteBuffer(handle);
+    private void DisposeFbo(uint handle) => _gl.DeleteFramebuffer(handle);
+    private void DisposeRbo(uint handle) => _gl.DeleteRenderbuffer(handle);
 
-    private void FreeMesh(MeshId id)
-    {
-        var handle = _meshStore.GetHandle(id);
-        _gl.DeleteVertexArray(handle.Handle);
-    }
-
-    private void FreeVbo(VertexBufferId id)
-    {
-        var handle = _vboStore.GetHandle(id);
-        _gl.DeleteBuffer(handle.Handle);
-    }
-
-    private void FreeIbo(IndexBufferId id)
-    {
-        var handle = _iboStore.GetHandle(id);
-        _gl.DeleteBuffer(handle.Handle);
-    }
-
-    private void FreeFbo(FrameBufferId id)
-    {
-        var handle = _fboStore.GetHandle(id);
-        _gl.DeleteFramebuffer(handle.Handle);
-    }
-
-    private void FreeRbo(RenderBufferId id)
-    {
-        var handle = _rboStore.GetHandle(id);
-        _gl.DeleteRenderbuffer(handle.Handle);
-    }
-*/
     private static DeviceCapabilities CreateDeviceCapabilities(GL gl)
     {
         return new DeviceCapabilities

@@ -9,6 +9,8 @@ namespace ConcreteEngine.Graphics.Utils;
 
 public static class GlEnumExtensions
 {
+    
+
     public static PrimitiveType ToGlEnum(this DrawPrimitive value)
     {
         return value switch
@@ -24,13 +26,13 @@ public static class GlEnumExtensions
         };
     }
 
-    public static DrawElementsType ToGlEnum(this IboElementType value)
+    public static DrawElementsType ToGlEnum(this DrawElementType value)
     {
         return value switch
         {
-            IboElementType.UnsignedByte => DrawElementsType.UnsignedByte,
-            IboElementType.UnsignedShort => DrawElementsType.UnsignedShort,
-            IboElementType.UnsignedInt => DrawElementsType.UnsignedInt,
+            DrawElementType.UnsignedByte => DrawElementsType.UnsignedByte,
+            DrawElementType.UnsignedShort => DrawElementsType.UnsignedShort,
+            DrawElementType.UnsignedInt => DrawElementsType.UnsignedInt,
             _ => throw GraphicsException.UnsupportedFeature($"Index Element Type {value}")
         };
     }

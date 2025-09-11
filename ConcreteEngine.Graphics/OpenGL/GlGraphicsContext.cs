@@ -23,7 +23,7 @@ public sealed class GlGraphicsContext : IGraphicsContext
     private readonly int _glMinor = 0;
     private readonly int _glMajor = 0;
 
-    private readonly GlContextBindingView _store;
+    private readonly GlResourceStoreView _store;
     private readonly ShaderRegistry _shaderRegistry;
 
     private BlendMode _blendMode = BlendMode.Alpha;
@@ -50,13 +50,13 @@ public sealed class GlGraphicsContext : IGraphicsContext
 
     private int _drawTriangleCount = 0;
     private int _drawCallCount = 0;
-    
+
     private readonly DeviceCapabilities _capabilities;
 
     public GraphicsConfiguration Configuration { get; }
-    
-    public DeviceCapabilities  Capabilities => _capabilities;
-    
+
+    public DeviceCapabilities Capabilities => _capabilities;
+
     public BlendMode BlendMode => _blendMode;
     public bool DepthTest => _depthTest;
 
@@ -65,9 +65,9 @@ public sealed class GlGraphicsContext : IGraphicsContext
 
     internal GlGraphicsContext(
         GL gl,
-        DeviceCapabilities  capabilities,
+        DeviceCapabilities capabilities,
         GraphicsConfiguration configuration,
-        GlContextBindingView store,
+        GlResourceStoreView store,
         ShaderRegistry shaderRegistry,
         in FrameInfo initialFrameCtx)
     {
@@ -99,9 +99,9 @@ public sealed class GlGraphicsContext : IGraphicsContext
     {
         _blendMode = BlendMode.None;
         _depthTest = true;
-        _frameCtx =  frameCtx;
+        _frameCtx = frameCtx;
         _activeOutputSize = _frameCtx.OutputSize;
-        
+
         _drawCallCount = 0;
         _drawTriangleCount = 0;
 
@@ -137,14 +137,14 @@ public sealed class GlGraphicsContext : IGraphicsContext
     public void BeginScreenPass(Color4? clear, ClearBufferFlag? flags)
     {
         if (_boundFboId != default) GraphicsException.ThrowInvalidState("Cannot begin screen pass while FBO is bound.");
-        
+
         _currentDrawFboHandle = 0;
         _currentReadFboHandle = 0;
 
         _boundFboId = default;
         _boundReadFboId = default;
         _activeOutputSize = _frameCtx.OutputSize;
-        
+
         _gl.BindFramebuffer(FramebufferTarget.Framebuffer, 0);
         _gl.Viewport(_activeOutputSize);
         if (clear.HasValue && flags.HasValue) Clear(clear.Value, flags.Value);
@@ -168,11 +168,11 @@ public sealed class GlGraphicsContext : IGraphicsContext
         _boundFboId = fboId;
         _boundReadFboId = fboId;
         _activeOutputSize = meta.Size;
-        
+
         _gl.Enable(EnableCap.DepthTest);
         _gl.DepthFunc(DepthFunction.Lequal);
         _gl.DepthMask(true);
-        
+
         _gl.Enable(EnableCap.CullFace);
         _gl.CullFace(TriangleFace.Back);
         _gl.FrontFace(FrontFaceDirection.Ccw);
@@ -384,7 +384,46 @@ public sealed class GlGraphicsContext : IGraphicsContext
         _boundUniformBufferId = resourceId;
     }
 
-    public void SetVertexBuffer<T>(ReadOnlySpan<T> data) where T : unmanaged
+    public unsafe void SetVertexAttribute(ReadOnlySpan<VertexAttributeDescriptor> attributes)
+    {
+        _boundVaoId.IsValidOrThrow();
+
+        ref readonly var meshMeta = ref _store.MeshStore.GetMeta(_boundVaoId);
+        var meshLayout = _store.MeshRegistry.GetInternal(_boundVaoId);
+        var vboIds = meshLayout.VertexBufferIds;
+
+        VertexBufferId prevVboId = default;
+
+        for (int i = 0; i < attributes.Length; i++)
+        {
+            ref readonly var attrib = ref attributes[i];
+            if (attrib.VboIndex > vboIds.Length)
+                throw GraphicsException.InvalidState(
+                    $"Attrib vbo index {attrib.VboIndex} is greater than vbo count {vboIds.Length}");
+
+            var vboId = vboIds[attrib.VboIndex];
+            if (prevVboId != vboId)
+                BindVertexBuffer(vboId);
+
+            _gl.EnableVertexAttribArray(attrib.VboIndex);
+            _gl.EnableVertexAttribArray((uint)i);
+            _gl.VertexAttribPointer(
+                (uint)i,
+                (int)attrib.Format,
+                VertexAttribPointerType.Float,
+                attrib.Normalized,
+                attrib.StrideBytes,
+                (void*)attrib.OffsetBytes
+            );
+
+            if (attrib.Divisor != 0)
+                _gl.VertexAttribDivisor(attrib.DivisorIndex, attrib.Divisor);
+
+            prevVboId = vboId;
+        }
+    }
+
+    public void SetVertexBuffer<T>(ReadOnlySpan<T> data, BufferUsage usage = BufferUsage.StaticDraw) where T : unmanaged
     {
         ref readonly var meta = ref _store.VboStore.GetMeta(_boundVertexBufferId);
         var handle = _store.VboStore.GetHandle(_boundVertexBufferId);
@@ -400,11 +439,11 @@ public sealed class GlGraphicsContext : IGraphicsContext
         _gl.BufferData(BufferTargetARB.ArrayBuffer, (nuint)size, data, meta.Usage.ToGlEnum());
         CheckGlError();
 
-        var newMeta = new VertexBufferMeta(meta.Usage, (uint)elementCount, (uint)elementSize);
+        var newMeta = new VertexBufferMeta(meta.Usage, meta.BindingIdx, (uint)elementCount, (uint)elementSize);
         _store.VboStore.Replace(_boundVertexBufferId, in newMeta, handle, out _);
     }
 
-    public void SetIndexBuffer<T>(ReadOnlySpan<T> data) where T : unmanaged
+    public void SetIndexBuffer<T>(ReadOnlySpan<T> data, BufferUsage usage = BufferUsage.StaticDraw) where T : unmanaged
     {
         ref readonly var meta = ref _store.IboStore.GetMeta(_boundIndexBufferId);
         var handle = _store.IboStore.GetHandle(_boundIndexBufferId);
@@ -479,17 +518,18 @@ public sealed class GlGraphicsContext : IGraphicsContext
         _gl.BufferData(BufferTargetARB.UniformBuffer, capacityBytes, (void*)0, BufferUsageARB.StaticDraw);
     }
 
-    public unsafe void UploadUniformGpuData<T>(UniformGpuSlot slot, in T data, nuint offset = 0) where T : unmanaged, IUniformGpuData
+    public unsafe void UploadUniformGpuData<T>(UniformGpuSlot slot, in T data, nuint offset = 0)
+        where T : unmanaged, IUniformGpuData
     {
         var size = (nuint)Unsafe.SizeOf<T>();
         Debug.Assert(_boundUniformBufferId.Id > 0);
 
         fixed (T* p = &data)
             _gl.BufferSubData(BufferTargetARB.UniformBuffer, (nint)offset, size, p);
-        
+
         CheckGlError(); // throws here
     }
-    
+
     public void BindUniformBufferRange(UniformGpuSlot slot, nuint offset, nuint size)
     {
         Debug.Assert(_boundUniformBufferId.IsValid());
@@ -499,9 +539,8 @@ public sealed class GlGraphicsContext : IGraphicsContext
 
     public void DrawMesh(uint drawCount = 0)
     {
+        _boundVaoId.DebugValidate();
         ref readonly var meta = ref _store.MeshStore.GetMeta(_boundVaoId);
-
-        meta.VboId.DebugValidate();
 
         var count = drawCount > 0 ? drawCount : meta.DrawCount;
 
@@ -571,12 +610,12 @@ public sealed class GlGraphicsContext : IGraphicsContext
         _gl.Uniform2(_boundUniforms![uniform], value.X, value.Y);
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public void SetUniform(ShaderUniform uniform, Vector3 value) 
-        =>  _gl.Uniform3(_boundUniforms![uniform], value.X, value.Y, value.Z);
+    public void SetUniform(ShaderUniform uniform, Vector3 value) =>
+        _gl.Uniform3(_boundUniforms![uniform], value.X, value.Y, value.Z);
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public void SetUniform(ShaderUniform uniform, Vector4 value)
-        => _gl.Uniform4(_boundUniforms![uniform], value.X, value.Y, value.Z, value.W);
+    public void SetUniform(ShaderUniform uniform, Vector4 value) =>
+        _gl.Uniform4(_boundUniforms![uniform], value.X, value.Y, value.Z, value.W);
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public unsafe void SetUniform(ShaderUniform uniform, in Matrix4x4 value)
@@ -586,7 +625,7 @@ public sealed class GlGraphicsContext : IGraphicsContext
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public unsafe void SetUniform(ShaderUniform uniform, in Matrix3 value) 
+    public unsafe void SetUniform(ShaderUniform uniform, in Matrix3 value)
     {
         var p = (float*)Unsafe.AsPointer(ref Unsafe.AsRef(in value));
         _gl.UniformMatrix3(_boundUniforms![uniform], 1, false, p);

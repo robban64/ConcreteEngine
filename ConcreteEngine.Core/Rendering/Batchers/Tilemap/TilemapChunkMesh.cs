@@ -52,28 +52,25 @@ internal sealed class TilemapChunkMesh : IDisposable
         CreateVertexBufferData();
         CreateIndexBufferData();
 
-        var dataDesc = new GpuMeshData<Vertex2D, ushort>(Vertices, Indices);
+
         ReadOnlySpan<VertexAttributeDescriptor> pointers = stackalloc[]
         {
             VertexAttributeDescriptor.Make<Vertex2D>(nameof(Vertex2D.Position), VertexElementFormat.Float2),
             VertexAttributeDescriptor.Make<Vertex2D>(nameof(Vertex2D.TexCoords), VertexElementFormat.Float2)
         };
-        var metaDesc = new GpuMeshDescriptor
-        {
-            VertexPointers =
-            [
-                VertexAttributeDescriptor.Make<Vertex2D>(nameof(Vertex2D.Position), VertexElementFormat.Float2),
-                VertexAttributeDescriptor.Make<Vertex2D>(nameof(Vertex2D.TexCoords), VertexElementFormat.Float2)
-            ],
-            VboUsage = BufferUsage.DynamicDraw,
-            IboUsage = BufferUsage.DynamicDraw,
-            DrawKind = MeshDrawKind.Elements,
-            DrawCount = (uint)(_tileCount * IndicesPerTile)
-        };
 
-        _meshId = _graphics.CreateMesh(in dataDesc, in metaDesc, out var meta);
-        _vertexBufferId = meta.VboId;
-        _indexBufferId = meta.IboId;
+        var drawCount = (uint)(_tileCount * IndicesPerTile);
+        
+        var metaDesc = GpuMeshDescriptor
+            .MakeElemental(pointers, DrawElementType.UnsignedShort, DrawPrimitive.Triangles,drawCount);
+
+        var vbo = new GpuVboDescriptor<Vertex2D>(Vertices,BufferUsage.DynamicDraw);
+        var ibo = new GpuIboDescriptor<ushort>(Indices,  BufferUsage.DynamicDraw);
+
+        var builder = _graphics.MeshFactory;
+        var result = builder.CreateElementalMesh(vbo, ibo, metaDesc);
+        _vertexBufferId = result.GetVertexBufferIds()[0];
+        _indexBufferId = result.IndexBufferId;
     }
 
     public TileChunkBuildResult BuildTilemapMesh()

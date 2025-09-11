@@ -1,22 +1,25 @@
 using ConcreteEngine.Graphics.Descriptors;
+using ConcreteEngine.Graphics.OpenGL;
 using ConcreteEngine.Graphics.Resources;
 
 namespace ConcreteEngine.Graphics;
 
 public interface IGpuUploadSink
 {
+    IMeshFactory MeshFactory { get; }
+
     FrameBufferId CreateFramebuffer(in FrameBufferDesc desc, out FrameBufferMeta meta);
     ShaderId CreateShader(string vertexSource, string fragmentSource, out ShaderMeta meta);
     TextureId CreateTexture2D(GpuTextureData data, in GpuTextureDescriptor desc, out TextureMeta meta);
     TextureId CreateCubeMap(GpuCubeMapData data, in GpuCubeMapDescriptor desc, out TextureMeta meta);
-    MeshId CreateMesh<TVertex, TIndex>(in GpuMeshData<TVertex, TIndex> data, in GpuMeshDescriptor desc,
-        out MeshMeta meta) where TVertex : unmanaged where TIndex : unmanaged;
 }
 
 
 internal sealed class GpuUploadSink : IGpuUploadSink
 {
     private readonly IGraphicsDevice _graphics;
+    
+    public IMeshFactory MeshFactory => _graphics.MeshFactory;
 
     public GpuUploadSink(IGraphicsDevice graphics)
     {
@@ -41,10 +44,5 @@ internal sealed class GpuUploadSink : IGpuUploadSink
     public TextureId CreateCubeMap(GpuCubeMapData data, in GpuCubeMapDescriptor desc, out TextureMeta meta)
     {
         return _graphics.CreateCubeMap(data, in desc, out meta);
-    }
-
-    public MeshId CreateMesh<TVertex, TIndex>(in GpuMeshData<TVertex, TIndex> data, in GpuMeshDescriptor desc, out MeshMeta meta) where TVertex : unmanaged where TIndex : unmanaged
-    {
-        return _graphics.CreateMesh<TVertex, TIndex>(in data, in desc, out meta);
     }
 }

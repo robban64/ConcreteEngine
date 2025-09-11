@@ -82,20 +82,29 @@ public sealed class TerrainBatcher : RenderBatcher<TerrainBatchResult>
 
         var dataDesc = new GpuMeshData<Vertex3D, uint>(_vertices, _indices);
 
-        ReadOnlySpan<VertexAttributeDescriptor> pointers = stackalloc[]
+        ReadOnlySpan<VertexAttributeDescriptor> attributes = stackalloc[]
         {
             VertexAttributeDescriptor.Make<Vertex3D>(nameof(Vertex3D.Position), VertexElementFormat.Float3),
             VertexAttributeDescriptor.Make<Vertex3D>(nameof(Vertex3D.TexCoords), VertexElementFormat.Float2),
             VertexAttributeDescriptor.Make<Vertex3D>(nameof(Vertex3D.Normal), VertexElementFormat.Float3),
             VertexAttributeDescriptor.Make<Vertex3D>(nameof(Vertex3D.Tangent), VertexElementFormat.Float3),
         };
-        var metaDesc = new GpuMeshDescriptor
-        {
-            VertexPointers = pointers,
-            DrawKind = MeshDrawKind.Elements
-        };
 
-        MeshId = Graphics.CreateMesh(in dataDesc, in metaDesc, out _);
+       /* builder.StartBuilder(DrawPrimitive.Triangles, MeshDrawKind.Elements, DrawElementType.UnsignedInt);
+        builder.CreateVertexBuffer(new GpuVboDescriptor<Vertex3D>
+        {
+            Data = _vertices, Usage = BufferUsage.DynamicDraw, BindingIndex = 0
+        });
+        builder.CreateIndexBuffer(new GpuIboDescriptor<uint>() { Data = _indices, Usage = BufferUsage.DynamicDraw });
+        var result = builder.BuildMesh(attributes);
+*/
+        var vbo = new GpuVboDescriptor<Vertex3D>(_vertices, BufferUsage.DynamicDraw);
+        var ibo = new GpuIboDescriptor<uint>(_indices,  BufferUsage.DynamicDraw);
+        var desc = GpuMeshDescriptor.MakeElemental(attributes, DrawElementType.UnsignedInt, DrawPrimitive.Triangles,
+            (uint)_indices.Length);
+        var builder = Graphics.MeshFactory;
+        var result = builder.CreateElementalMesh(vbo, ibo,desc);
+        MeshId = result.MeshId;
     }
 
     private void GenerateVertex(ReadOnlySpan<byte> heightmap, int vertexRowCount)
@@ -115,7 +124,9 @@ public sealed class TerrainBatcher : RenderBatcher<TerrainBatchResult>
 
                 int vi = vz * vertexRowCount + vx;
                 _vertices[vi] = new Vertex3D
-                    { Position = pos, TexCoords = uv, Normal = Vector3.UnitY, Tangent = Vector3.UnitX };
+                {
+                    Position = pos, TexCoords = uv, Normal = Vector3.UnitY, Tangent = Vector3.UnitX
+                };
             }
         }
 

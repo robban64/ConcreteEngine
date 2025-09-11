@@ -33,39 +33,29 @@ public readonly struct ShaderMeta(uint samplers)
 }
 
 public readonly struct MeshMeta(
-    VertexBufferId vboId,
-    IndexBufferId iboId,
     DrawPrimitive primitive,
-    IboElementType elementType,
     MeshDrawKind drawKind,
-    bool isStatic,
-    uint drawCount,
-    uint vertexLayoutCount,
-    VertexAttributeDescriptor vertexLayout1,
-    VertexAttributeDescriptor vertexLayout2 = default,
-    VertexAttributeDescriptor vertexLayout3 = default
+    DrawElementType elementType,
+    uint vertexAttribPointers,
+    uint drawCount
 )
 {
-    public readonly VertexBufferId VboId = vboId;
-    public readonly IndexBufferId IboId = iboId;
     public readonly DrawPrimitive Primitive = primitive;
-    public readonly IboElementType ElementType = elementType;
     public readonly MeshDrawKind DrawKind = drawKind;
-    public readonly bool IsStatic = isStatic;
+    public readonly DrawElementType ElementType = elementType;
+    public readonly uint VertexAttribPointers = vertexAttribPointers;
     public readonly uint DrawCount = drawCount;
-    public readonly uint VertexLayoutCount = vertexLayoutCount;
-    public readonly VertexAttributeDescriptor VertexLayout1 = vertexLayout1;
-    public readonly VertexAttributeDescriptor VertexLayout2 = vertexLayout2;
-    public readonly VertexAttributeDescriptor VertexLayout3 = vertexLayout2;
 }
 
 public readonly struct VertexBufferMeta(
     BufferUsage usage,
+    uint bindingIdx,
     uint elementCount,
     uint elementSize
 )
 {
     public readonly BufferUsage Usage = usage;
+    public readonly uint BindingIdx = bindingIdx;
     public readonly uint ElementCount = elementCount;
     public readonly uint ElementSize = elementSize;
 }

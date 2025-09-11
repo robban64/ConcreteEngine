@@ -39,11 +39,14 @@ internal sealed class MeshLoader(IReadOnlyList<MeshManifestRecord> records) : As
         var path = Path.Combine(AssetPaths.AssetPath, "meshes", record.Filename);
 
         var meshData = _meshImporter.ImportMesh(path);
+        
         var desc = new GpuMeshDescriptor
         {
-            VertexPointers = Defaults3D,
+            Attributes = Defaults3D,
             DrawKind = MeshDrawKind.Elements,
-            DrawCount = (uint)meshData.Indices.Length
+            DrawCount = (uint)meshData.Indices.Length,
+            ElementType = DrawElementType.UnsignedInt,
+            Primitive = DrawPrimitive.Triangles
         };
 
         return new MeshLoaderResult(meshData, desc);

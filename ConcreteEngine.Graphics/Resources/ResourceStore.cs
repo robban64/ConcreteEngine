@@ -96,6 +96,14 @@ internal sealed class ResourceStore<TId, TMeta, THandle> : IReadResourceStore<TI
         _handle[idx] = newHandle;
         return id;
     }
+    
+    public void ReplaceMeta(TId id, in TMeta newMeta, out TMeta oldMeta)
+    {
+        Debug.Assert(id.Id > 0);
+        int idx = id.Id - 2;
+        oldMeta = _meta[idx];
+        _meta[idx] = newMeta;
+    }
 
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]

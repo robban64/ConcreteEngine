@@ -1,8 +1,9 @@
 using System.Diagnostics.CodeAnalysis;
 using ConcreteEngine.Graphics.Descriptors;
+using ConcreteEngine.Graphics.Primitives;
 using ConcreteEngine.Graphics.Resources;
 
-namespace ConcreteEngine.Graphics.Primitives;
+namespace ConcreteEngine.Graphics;
 
 public interface IPrimitiveMeshes
 {
@@ -38,18 +39,13 @@ internal sealed class PrimitiveMeshes : IPrimitiveMeshes
             VertexAttributeDescriptor.Make<Vertex2D>(nameof(Vertex2D.Position), VertexElementFormat.Float2),
             VertexAttributeDescriptor.Make<Vertex2D>(nameof(Vertex2D.TexCoords), VertexElementFormat.Float2)
         };
+        var metaDesc = GpuMeshDescriptor.MakeArray(pointers, DrawPrimitive.TriangleStrip, 4);
+        var vbo = new GpuVboDescriptor<Vertex2D>(vertices, BufferUsage.StaticDraw);
 
-        var metaDesc = new GpuMeshDescriptor
-        {
-            VertexPointers = pointers,
-            Primitive = DrawPrimitive.TriangleStrip,
-            DrawKind = MeshDrawKind.Arrays,
-            DrawCount = 4
-        };
+        var builder = graphics.MeshFactory;
+        var result = builder.CreateArrayMesh(vbo, metaDesc);
 
-        var dataDesc = new GpuMeshData<Vertex2D, uint>(vertices);
-
-        FsqQuad = graphics.CreateMesh(in dataDesc, in metaDesc, out _);
+        FsqQuad = result.MeshId;
     }
 
 
@@ -80,19 +76,14 @@ internal sealed class PrimitiveMeshes : IPrimitiveMeshes
         
         ReadOnlySpan<VertexAttributeDescriptor> pointers = stackalloc[]
         {
-            new VertexAttributeDescriptor(sizeof(float) * 3, 0, VertexElementFormat.Float3),
+            new VertexAttributeDescriptor(0,sizeof(float) * 3, 0, VertexElementFormat.Float3),
         };
         
-        var dataDesc = new GpuMeshData<float, uint>(vertices);
+        var dataDesc = new GpuVboDescriptor<float>(vertices, BufferUsage.StaticDraw);
+        var metaDesc = GpuMeshDescriptor.MakeArray(pointers, DrawPrimitive.Triangles, 36);
 
-        var metaDesc = new GpuMeshDescriptor
-        {
-            VertexPointers = pointers,
-            DrawKind = MeshDrawKind.Arrays,
-            Primitive = DrawPrimitive.Triangles,
-            DrawCount = 36
-        };
-
-        SkyboxCube = graphics.CreateMesh(in dataDesc, in metaDesc, out _);
+        var builder = graphics.MeshFactory;
+        var result = builder.CreateArrayMesh(dataDesc, metaDesc);
+        SkyboxCube = result.MeshId;
     }
 }

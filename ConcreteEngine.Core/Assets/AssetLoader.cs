@@ -180,14 +180,20 @@ internal sealed class AssetLoader
     {
         public static Mesh UploadMesh(IGpuUploadSink uploader, MeshManifestRecord record, in MeshLoaderResult payload)
         {
-            var id = uploader.CreateMesh(payload.MeshData, in payload.Descriptor, out var meta);
+            
+            var vbo = new GpuVboDescriptor<Vertex3D>(payload.MeshData.Vertices, BufferUsage.StaticDraw);
+            var ibo = new GpuIboDescriptor<uint>(payload.MeshData.Indices,  BufferUsage.StaticDraw);
+            var desc = GpuMeshDescriptor.MakeElemental(payload.Descriptor.Attributes, payload.Descriptor.ElementType, payload.Descriptor.Primitive,
+                payload.Descriptor.DrawCount);
+            
+            var builder = uploader.MeshFactory;
+            var result = builder.CreateElementalMesh(vbo, ibo,desc);
             return new Mesh
             {
                 Name = record.Name,
                 Filename = record.Filename,
-                IsStatic = meta.IsStatic,
-                DrawCount = meta.DrawCount,
-                ResourceId = id
+                DrawCount = desc.DrawCount,
+                ResourceId = result.MeshId
             };
         }
 

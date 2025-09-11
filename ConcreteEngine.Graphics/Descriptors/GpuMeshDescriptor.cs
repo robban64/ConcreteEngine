@@ -9,27 +9,41 @@ using ConcreteEngine.Graphics.Primitives;
 
 namespace ConcreteEngine.Graphics.Descriptors;
 
-public readonly ref struct GpuMeshDescriptor()
+public readonly ref struct GpuMeshDescriptor
 {
-    public required ReadOnlySpan<VertexAttributeDescriptor> VertexPointers { get; init; }
+    public required ReadOnlySpan<VertexAttributeDescriptor> Attributes { get; init; }
+    public required DrawPrimitive Primitive { get; init; }
     public required MeshDrawKind DrawKind { get; init; }
-    public uint? DrawCount { get; init; } = null;
-    public DrawPrimitive? Primitive { get; init; } = null;
-    public BufferUsage VboUsage { get; init; } = BufferUsage.StaticDraw;
-    public BufferUsage IboUsage { get; init; } = BufferUsage.StaticDraw;
+    public required DrawElementType ElementType { get; init; } 
+    public required uint DrawCount { get; init; }
 
+    public static GpuMeshDescriptor MakeArray(ReadOnlySpan<VertexAttributeDescriptor> atr,
+        DrawPrimitive primitive, uint drawCount)
+    {
+        return new GpuMeshDescriptor
+        {
+            Attributes = atr,
+            Primitive = primitive,
+            DrawCount = drawCount,
+            DrawKind = MeshDrawKind.Arrays,
+            ElementType = DrawElementType.Invalid
+        };
+    }
+    public static GpuMeshDescriptor MakeElemental(ReadOnlySpan<VertexAttributeDescriptor> atr,
+        DrawElementType elementType, DrawPrimitive primitive, uint drawCount)
+    {
+        return new GpuMeshDescriptor
+        {
+            Attributes = atr,
+            Primitive = primitive,
+            DrawCount = drawCount,
+            DrawKind = MeshDrawKind.Elements,
+            ElementType = elementType
+        };
+    }
 }
 
-
-public interface IGpuMeshData<T, I> where T : unmanaged where I : unmanaged
-{
-    ReadOnlySpan<T> Vertices { get; }
-    ReadOnlySpan<I> Indices { get; }
-    bool Elemental { get; }
-
-}
-
-public readonly ref struct GpuMeshData<T, I>
+public readonly ref struct GpuMeshData<T, I> where T : unmanaged where I : unmanaged
 {
     public GpuMeshData(ReadOnlySpan<T> vertices)
     {
@@ -45,20 +59,91 @@ public readonly ref struct GpuMeshData<T, I>
 
     public ReadOnlySpan<T> Vertices { get; }
     public ReadOnlySpan<I> Indices { get; }
+    
+    public BufferUsage VboUsage { get; init; } = BufferUsage.StaticDraw;
+    public BufferUsage IboUsage { get; init; } = BufferUsage.StaticDraw;
+
     public bool Elemental => Indices.Length > 0;
 
 }
+//New structure
+
+internal readonly ref struct GpuAddMeshData<THandle, TMeta, TVboHandle, TVboMeta, IIboHandle, IIboMeta>
+{
+    public readonly THandle Handle;
+    public readonly TMeta Meta;
+    
+    public readonly IIboHandle IboHandle;
+    public readonly IIboMeta IboMeta;
+
+    public readonly ReadOnlySpan<TVboHandle> VboHandles;
+    public readonly ReadOnlySpan<TVboMeta> VboMetas;
+}
+
+public readonly struct GpuNewMeshDescriptor()
+{
+    public required MeshDrawKind DrawKind { get; init; }
+    public required DrawPrimitive Primitive { get; init; }
+    public uint DrawCount { get; init; } = 0;
+}
+
+public readonly ref struct GpuVboDescriptor<V> where V : unmanaged
+{
+    public ReadOnlySpan<V> Data { get; init; }
+    public BufferUsage Usage { get; init; } = BufferUsage.StaticDraw;
+    public uint BindingIndex { get; init; } = 0;
+
+    public GpuVboDescriptor()
+    {
+        
+    }
+    public GpuVboDescriptor(ReadOnlySpan<V> data, BufferUsage usage, uint bindingIndex = 0)
+    {
+        Data = data;
+        Usage = usage;
+        BindingIndex = bindingIndex;
+    }
+    
+    public static GpuVboDescriptor<V> Empty => new()
+    {
+        BindingIndex = 0,
+        Data = ReadOnlySpan<V>.Empty,
+        Usage = default,
+    };
+}
+public readonly ref struct GpuIboDescriptor<I> where I : unmanaged
+{
+    public ReadOnlySpan<I> Data { get; init; }
+    public BufferUsage Usage { get; init; } = BufferUsage.StaticDraw;
+    public GpuIboDescriptor()
+    {
+        
+    }
+    public GpuIboDescriptor(ReadOnlySpan<I> data, BufferUsage usage)
+    {
+        Data = data;
+        Usage = usage;
+    }
+}
+
+
 
 public readonly record struct VertexAttributeDescriptor(
+    uint VboIndex,
     uint StrideBytes, // total size of one vertex in bytes
     uint OffsetBytes, // offset of this attribute in the vertex struct
     VertexElementFormat Format,
+    uint DivisorIndex = 0,
+    uint Divisor = 0,
     bool Normalized = false
 )
 {
     public static VertexAttributeDescriptor Make<TStruct>(
         string fieldName,
         VertexElementFormat format,
+        uint vboIndex = 0,
+        uint divisorIndex = 0,
+        uint divisor = 0,
         bool normalized = false)
         where TStruct : struct
     {
@@ -82,9 +167,12 @@ public readonly record struct VertexAttributeDescriptor(
         ArgumentOutOfRangeException.ThrowIfGreaterThanOrEqual((int)offsetBytes, structSize, nameof(offsetBytes));
 
         return new VertexAttributeDescriptor(
+            VboIndex: vboIndex,
             StrideBytes: (uint)Unsafe.SizeOf<TStruct>(),
             OffsetBytes: (uint)Marshal.OffsetOf<TStruct>(fieldName)!.ToInt32(),
             Format: format,
+            DivisorIndex: divisorIndex,
+            Divisor: divisor,
             Normalized: normalized
         );
     }
@@ -92,6 +180,9 @@ public readonly record struct VertexAttributeDescriptor(
     public static VertexAttributeDescriptor Make<TPrimitive>(
         uint strideCount,
         uint offsetCount,
+        uint vboIndex = 0,
+        uint divisorIndex = 0,
+        uint divisor = 0,
         VertexElementFormat format = VertexElementFormat.Float2,
         bool normalized = false)
         where TPrimitive : unmanaged
@@ -108,9 +199,12 @@ public readonly record struct VertexAttributeDescriptor(
             ArgumentOutOfRangeException.ThrowIfGreaterThanOrEqual(offsetBytes, strideBytes, nameof(offsetBytes));
 
         return new VertexAttributeDescriptor(
+            VboIndex: vboIndex,
             StrideBytes: strideBytes,
             OffsetBytes: offsetBytes,
             Format: format,
+            DivisorIndex: divisorIndex,
+            Divisor: divisor,
             Normalized: normalized
         );
     }

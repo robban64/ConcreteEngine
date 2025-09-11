@@ -12,115 +12,15 @@ using Silk.NET.OpenGL;
 
 namespace ConcreteEngine.Graphics.OpenGL;
 
-
 internal sealed class GlResourceFactory(GlGraphicsContext gfx, DeviceCapabilities caps)
 {
     private readonly GL _gl = gfx.Gl;
     private readonly DeviceCapabilities _caps = caps;
 
 
-
-    private void SetBufferData<TData>(BufferTargetARB target, BufferUsageARB usage, ReadOnlySpan<TData> data,
-        int? dataLength = null)
-        where TData : unmanaged
-    {
-        var elementSize = Unsafe.SizeOf<TData>();
-        var length = dataLength.GetValueOrDefault(data.Length);
-        var size = length * elementSize;
-        _gl.BufferData(target, (nuint)size, data, usage);
-    }
-
-    public GlMeshHandle CreateMesh<TVertex, TIndex>(
-        CreateStoreDel<GlVertexBufferHandle, VertexBufferMeta, VertexBufferId> vboHandler,
-        CreateStoreDel<GlIndexBufferHandle, IndexBufferMeta, IndexBufferId> iboHandler,
-        in GpuMeshData<TVertex, TIndex> dataDesc,
-        in GpuMeshDescriptor desc,
-        out MeshMeta meta
-    ) where TVertex : unmanaged where TIndex : unmanaged
+    public GlMeshHandle CreateVao()
     {
         var handle = _gl.GenVertexArray();
-        _gl.BindVertexArray(handle);
-
-        var vbo = CreateVertexBuffer();
-        _gl.BindBuffer(BufferTargetARB.ArrayBuffer, vbo.Handle);
-
-        if (!dataDesc.Vertices.IsEmpty)
-            SetBufferData<TVertex>(BufferTargetARB.ArrayBuffer, desc.VboUsage.ToGlEnum(), dataDesc.Vertices,
-                dataDesc.Vertices.Length);
-
-        GlIndexBufferHandle ibo = default;
-
-        if (dataDesc.Elemental)
-        {
-            ArgumentOutOfRangeException.ThrowIfEqual(dataDesc.Indices.Length, 0);
-
-            ibo = CreateIndexBuffer();
-            _gl.BindBuffer(BufferTargetARB.ElementArrayBuffer, ibo.Handle);
-            if (!dataDesc.Indices.IsEmpty)
-                SetBufferData<TIndex>(BufferTargetARB.ElementArrayBuffer, desc.IboUsage.ToGlEnum(),
-                    dataDesc.Indices, dataDesc.Indices.Length);
-        }
-
-        for (int i = 0; i < desc.VertexPointers.Length; i++)
-        {
-            var pointer = desc.VertexPointers[i];
-            AddAttribPointer((uint)i, (int)pointer.Format, pointer.StrideBytes, pointer.OffsetBytes,
-                pointer.Normalized);
-        }
-
-        _gl.BindVertexArray(0);
-        _gl.BindBuffer(BufferTargetARB.ArrayBuffer, 0);
-        _gl.BindBuffer(BufferTargetARB.ElementArrayBuffer, 0);
-
-
-        var vp = desc.VertexPointers;
-        var pointer1 = vp[0];
-        var pointer2 = vp.Length > 1 ? vp[1] : default;
-        var pointer3 = vp.Length > 2 ? vp[2] : default;
-
-        uint drawCount = 0;
-        bool isStatic = true;
-
-        var (vboSize, vboElementSize) = ((uint)(dataDesc.Vertices.Length), (uint)Unsafe.SizeOf<TIndex>());
-
-        IndexBufferId iboId = default;
-        IboElementType elementType = IboElementType.Invalid;
-
-        if (ibo.Handle > 0 && dataDesc.Elemental)
-        {
-            var iboSize = (uint)dataDesc.Indices.Length;
-            var iboElementSize = (uint)Unsafe.SizeOf<TIndex>();
-            elementType = iboElementSize switch
-            {
-                1 => IboElementType.UnsignedByte,
-                2 => IboElementType.UnsignedShort,
-                4 => IboElementType.UnsignedInt,
-                _ => throw GraphicsException.UnsupportedFeature($"Index Element Size {iboElementSize}")
-            };
-
-            drawCount = desc.DrawCount.GetValueOrDefault(iboSize);
-            isStatic = desc.IboUsage == BufferUsage.StaticDraw;
-            var iboMeta = new IndexBufferMeta(desc.IboUsage, iboSize, iboElementSize);
-            iboId = iboHandler(in iboMeta, in ibo);
-        }
-        else
-        {
-            isStatic = desc.VboUsage == BufferUsage.StaticDraw;
-            drawCount = desc.DrawCount.GetValueOrDefault(vboSize);
-        }
-
-        var vboMeta = new VertexBufferMeta(desc.VboUsage, vboSize, vboElementSize);
-        var vboId = vboHandler(in vboMeta, in vbo);
-
-        var drawKind = desc.DrawKind;
-        var primitive = desc.Primitive ?? DrawPrimitive.Triangles;
-        if (drawKind == MeshDrawKind.Arrays && iboId.Id > 0)
-            GraphicsException.ThrowInvalidState("MeshDraw is arrays but has index buffer");
-
-        meta = new MeshMeta(vboId, iboId, primitive, elementType, drawKind, isStatic,
-            drawCount, (uint)vp.Length,
-            pointer1, pointer2, pointer3);
-
         return new GlMeshHandle(handle);
     }
 
@@ -305,11 +205,11 @@ internal sealed class GlResourceFactory(GlGraphicsContext gfx, DeviceCapabilitie
             : default;
 
         var rboTexId = rboTexHandle.Handle > 0
-            ? rboCallback(previousMeta.RboTexId,in rboTexMeta, rboTexHandle)
+            ? rboCallback(previousMeta.RboTexId, in rboTexMeta, rboTexHandle)
             : default;
 
         var rboDepthId = rboDepthHandle.Handle > 0
-            ? rboCallback(previousMeta.RboDepthId,in rboDepthMeta, rboDepthHandle)
+            ? rboCallback(previousMeta.RboDepthId, in rboDepthMeta, rboDepthHandle)
             : default;
 
         meta = new FrameBufferMeta(

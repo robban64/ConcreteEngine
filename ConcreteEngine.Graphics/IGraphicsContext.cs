@@ -16,9 +16,6 @@ public interface IGraphicsContext
 {
     GraphicsConfiguration Configuration { get; }
     DeviceCapabilities  Capabilities { get; }
-    BlendMode BlendMode { get; }
-    
-    bool DepthTest { get; }
 
     void BeginFrame(in FrameInfo frameCtx);
     void EndFrame(out GpuFrameStats result);
@@ -37,8 +34,9 @@ public interface IGraphicsContext
     void BindIndexBuffer(IndexBufferId resourceId);
     void BindUniformBuffer(UniformGpuSlot slot);
 
-    void SetVertexBuffer<T>(ReadOnlySpan<T> data) where T : unmanaged;
-    void SetIndexBuffer<T>(ReadOnlySpan<T> data) where T : unmanaged;
+    void SetVertexAttribute(ReadOnlySpan<VertexAttributeDescriptor> attributes);
+    void SetVertexBuffer<T>(ReadOnlySpan<T> data, BufferUsage usage = BufferUsage.StaticDraw) where T : unmanaged;
+    void SetIndexBuffer<T>(ReadOnlySpan<T> data, BufferUsage usage = BufferUsage.StaticDraw) where T : unmanaged;
 
     void UploadVertexBuffer<T>(ReadOnlySpan<T> data, int offsetElements) where T : unmanaged;
     void UploadIndexBuffer<T>(ReadOnlySpan<T> data, int offsetElements) where T : unmanaged;

@@ -10,59 +10,6 @@ using ConcreteEngine.Graphics.Resources;
 
 namespace ConcreteEngine.Core.Assets.IO;
 
-sealed class MaterialValueConverter : JsonConverter<IAssetMaterialValue>
-{
-    public override IAssetMaterialValue Read(ref Utf8JsonReader reader, Type typeToConvert,
-        JsonSerializerOptions options)
-    {
-        using var doc = JsonDocument.ParseValue(ref reader);
-        if (doc.RootElement.ValueKind == JsonValueKind.Number)
-        {
-            if (doc.RootElement.TryGetInt32(out var intValue))
-                return new AssetMaterialValue<int> { Value = intValue, Kind = UniformValueKind.Int };
-            else if (doc.RootElement.TryGetSingle(out var floatValue))
-                return new AssetMaterialValue<float> { Value = floatValue, Kind = UniformValueKind.Float };
-        }
-
-        if (!doc.RootElement.TryGetProperty("kind", out var kindProp)) throw new JsonException("Missing Kind");
-        var kindStr = kindProp.GetString();
-        if (!Enum.TryParse(kindStr, out UniformValueKind kind)) throw new JsonException($"Invalid Kind: {kindStr}");
-
-        var json = doc.RootElement.GetRawText();
-        return kind switch
-        {
-            UniformValueKind.Vec2 => JsonSerializer.Deserialize<AssetMaterialValue<Vector2>>(json, options)!,
-            UniformValueKind.Vec3 => JsonSerializer.Deserialize<AssetMaterialValue<Vector3>>(json, options)!,
-            UniformValueKind.Vec4 => JsonSerializer.Deserialize<AssetMaterialValue<Vector4>>(json, options)!,
-            UniformValueKind.Mat4 => throw new NotSupportedException("Matrix kinds are intentionally not handled."),
-            _ => throw new JsonException($"Unsupported kind: {kind}")
-        };
-    }
-
-    public override void Write(Utf8JsonWriter writer, IAssetMaterialValue value, JsonSerializerOptions options)
-    {
-        switch (value)
-        {
-            case AssetMaterialValue<float> mvf:
-                writer.WriteNumberValue(mvf.Value);
-                return;
-            case AssetMaterialValue<int> mvi:
-                writer.WriteNumberValue(mvi.Value);
-                return;
-            case AssetMaterialValue<Vector2> v2:
-                JsonSerializer.Serialize(writer, v2, options);
-                return;
-            case AssetMaterialValue<Vector3> v3:
-                JsonSerializer.Serialize(writer, v3, options);
-                return;
-            case AssetMaterialValue<Vector4> v4:
-                JsonSerializer.Serialize(writer, v4, options);
-                return;
-            default:
-                throw new NotSupportedException($"Unsupported IAssetMaterialValue type: {value.GetType().FullName}");
-        }
-    }
-}
 
 sealed class Vector2Converter : JsonConverter<Vector2>
 {

@@ -2,23 +2,15 @@
 
 using ConcreteEngine.Core.Rendering;
 using ConcreteEngine.Core.Resources;
-using ConcreteEngine.Core.Transforms;
 using ConcreteEngine.Core.Utils;
 
 #endregion
 
 namespace ConcreteEngine.Core.Features;
 
-public sealed class SpriteFeatureDrawData
-{
-    public int Count { get; set; }
-    public SpriteDrawEntity[] Entities { get; set; } = null!;
-    public List<(MaterialId, int)> Batches { get; set; } = [];
-}
 
-public class SpriteFeature : GameFeature, IDrawableFeature<SpriteFeatureDrawData>
+public class SpriteFeature : GameFeature
 {
-    public override bool IsUpdateable => true;
     public bool IsDrawable { get; set; } = true;
     public int DrawOrder { get; set; } = 0;
 
@@ -27,18 +19,15 @@ public class SpriteFeature : GameFeature, IDrawableFeature<SpriteFeatureDrawData
 
     private int _entityIdx = 0;
 
-    private readonly SpriteFeatureDrawData _drawData = new();
-
-    private IGameCamera _camera;
-
+    //private ISpriteDrawSink _drawSink = null!;
 
     public override void Initialize()
     {
-        _camera = Context.GetSystem<IRenderSystem>().Camera;
+        //_drawSink = Context.GetSystem<IRenderSystem>().GetSink<ISpriteDrawSink>();
     }
 
     public override void UpdateTick(int tick)
-    {
+    {/*
         _entityIdx = 0;
 
         var spriteStore = Context.World.Sprites;
@@ -49,7 +38,8 @@ public class SpriteFeature : GameFeature, IDrawableFeature<SpriteFeatureDrawData
 
         if (_entities.Length < spriteStore.Count)
         {
-            Array.Resize(ref _entities, spriteStore.Count);
+            var newSize = int.Max(_entities.Length * 2, spriteStore.Count);
+            Array.Resize(ref _entities, newSize);
         }
 
         foreach (var entry in spriteStore.View3(transforms, prevTransforms))
@@ -88,20 +78,11 @@ public class SpriteFeature : GameFeature, IDrawableFeature<SpriteFeatureDrawData
         }
 
         _batches.Add((curMaterialId, _entityIdx));
+        
+        _drawSink.Send(entitiesSpan);
+        _drawSink.BuildBatches(_batches);
+        */
+        
     }
 
-    public SpriteFeatureDrawData GetDrawables()
-    {
-        if (_entityIdx == 0)
-        {
-            _drawData.Count = 0;
-            return _drawData;
-        }
-
-        _drawData.Count = _entityIdx;
-        _drawData.Entities = _entities;
-        _drawData.Batches = _batches;
-
-        return _drawData;
-    }
 }

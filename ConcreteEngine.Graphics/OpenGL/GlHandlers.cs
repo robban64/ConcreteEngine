@@ -13,3 +13,5 @@ internal readonly record struct GlIndexBufferHandle(uint Handle);
 internal readonly record struct GlFrameBufferHandle(uint Handle);
 
 internal readonly record struct GlRenderBufferHandle(uint Handle);
+
+internal readonly record struct GlUniformBufferHandle(uint Handle);

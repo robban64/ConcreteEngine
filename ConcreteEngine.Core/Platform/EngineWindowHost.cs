@@ -38,7 +38,6 @@ public sealed class EngineWindowHost : IEngineWindowHost
 
     private GameEngine _engine = null!;
 
-
     public GraphicsBackend Backend => _backend;
 
     public string Title
@@ -62,6 +61,7 @@ public sealed class EngineWindowHost : IEngineWindowHost
 
     public Vector2D<int> FramebufferSize => _window.FramebufferSize;
 
+    private GameEngineBuilder? _builder = null;
 
     public EngineWindowHost(
         WindowOptions options,
@@ -73,20 +73,21 @@ public sealed class EngineWindowHost : IEngineWindowHost
 
     public void Run(GameEngineBuilder builder)
     {
+        _builder = builder;
+        
         _window = Window.Create(_options);
-
-        _window.Load += () => OnLoad(builder);
+        _window.Load += OnLoad;
         _window.Update += OnUpdate;
         _window.Render += OnRender;
         _window.Closing += OnClosing;
 
         _window.Run();
         _window.Dispose();
+        
     }
 
     public void CenterOnCurrentMonitor()
     {
-        // Basic centering using current monitor’s bounds if available
         var monitor = _window.Monitor;
         if (monitor is not null)
         {
@@ -100,26 +101,27 @@ public sealed class EngineWindowHost : IEngineWindowHost
         }
     }
 
-    private void OnLoad(GameEngineBuilder builder)
+    private void OnLoad()
     {
-        // Build graphics from the real GL context
-        var initialFrameContext = new FrameMetaInfo
-        {
-            DeltaTime = 0,
-            FramebufferSize = _window.FramebufferSize,
-            ViewportSize = _window.Size
-        };
+        if(_builder == null) throw new InvalidOperationException("Builder not initialized");
+        
+        var frameCtx = new FrameInfo(
+            frameIndex:  0,
+            vSyncEnabled: false,
+            resizePending: true,
+            viewport: _window.Size,
+            outputSize:  _window.FramebufferSize
+        );
 
         IGraphicsDevice graphics = _backend switch
         {
-            GraphicsBackend.OpenGL => new GlGraphicsDevice(_window.CreateOpenGL(), in initialFrameContext),
+            GraphicsBackend.OpenGL => new GlGraphicsDevice(_window.CreateOpenGL(), in frameCtx),
             _ => throw new GraphicsException("Invalid GraphicsBackend. Only OpenGL supported")
         };
 
-
         _inputSource = new EngineInputSource(_window.CreateInput());
-
-        _engine = builder.Build(this, _inputSource, graphics);
+        _engine = _builder.Build(this, _inputSource, graphics);
+        _builder = null;
     }
 
     private void OnUpdate(double delta) => _engine.Update((float)delta);

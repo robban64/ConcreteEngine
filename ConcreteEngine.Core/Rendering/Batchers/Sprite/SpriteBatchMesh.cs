@@ -8,7 +8,7 @@ using static ConcreteEngine.Core.Rendering.RenderConsts;
 
 #endregion
 
-namespace ConcreteEngine.Core.Rendering.Batchers;
+namespace ConcreteEngine.Core.Rendering;
 
 
 internal sealed class SpriteBatchMesh : IDisposable
@@ -42,34 +42,32 @@ internal sealed class SpriteBatchMesh : IDisposable
         _graphics = graphics;
         _gfx = graphics.Gfx;
         _capacity = capacity;
+        
 
-        var meshData = new MeshDescriptor<Vertex2D, ushort>
-        {
-            VertexBuffer = new MeshDataBufferDescriptor<Vertex2D>(BufferUsage.StreamDraw, null),
-            IndexBuffer = new MeshDataBufferDescriptor<ushort>(BufferUsage.StaticDraw, null),
-            VertexPointers =
-            [
-                VertexAttributeDescriptor.Make<Vertex2D>(nameof(Vertex2D.Position)),
-                VertexAttributeDescriptor.Make<Vertex2D>(nameof(Vertex2D.Texture))
-            ]
-        };
 
-        _meshId = _graphics.CreateMesh(meshData, out var meta);
-        _vertexBufferId = meta.VertexBufferId;
-        _indexBufferId = meta.IndexBufferId;
-
-        _gfx.BindVertexBuffer(_vertexBufferId);
-        InitVertexBufferData();
-        _gfx.BindVertexBuffer(default);
-
-        _gfx.BindIndexBuffer(_indexBufferId);
         InitIndexBufferData();
-        _gfx.BindIndexBuffer(default);
-    }
 
-    private void InitVertexBufferData()
-    {
-        _gfx.SetVertexBuffer<Vertex2D>(Vertices);
+        var indices = Indices.AsSpan(0, _capacity * IndicesPerSprite);
+        var dataDesc = new GpuMeshData<Vertex2D, ushort>(Vertices, indices) { VboUsage = BufferUsage.StreamDraw };
+
+        ReadOnlySpan<VertexAttributeDescriptor> pointers = stackalloc[]
+        {
+            VertexAttributeDescriptor.Make<Vertex2D>(nameof(Vertex2D.Position), VertexElementFormat.Float2),
+            VertexAttributeDescriptor.Make<Vertex2D>(nameof(Vertex2D.TexCoords), VertexElementFormat.Float2)
+        };
+        
+        var metaDesc =  GpuMeshDescriptor
+            .MakeElemental(pointers, DrawElementType.UnsignedShort, DrawPrimitive.Triangles,0);
+
+        var vbo = new GpuVboDescriptor<Vertex2D>(Vertices,BufferUsage.StreamDraw);
+        var ibo = new GpuIboDescriptor<ushort>(indices,  BufferUsage.StaticDraw);
+
+        var builder = _graphics.MeshFactory;
+        var result = builder.CreateElementalMesh(vbo, ibo, metaDesc);
+
+        _vertexBufferId = result.GetVertexBufferIds()[0];
+        _indexBufferId = result.IndexBufferId;
+
     }
 
     private void InitIndexBufferData()
@@ -86,9 +84,6 @@ internal sealed class SpriteBatchMesh : IDisposable
             indices[ii + 4] = (ushort)(vi + 1);
             indices[ii + 5] = (ushort)(vi + 3);
         }
-
-
-        _gfx.SetIndexBuffer<ushort>(indices);
     }
 
     public SpriteBatchBuildResult BuildSpriteBatch(ReadOnlySpan<SpriteBatchDrawItem> commands)

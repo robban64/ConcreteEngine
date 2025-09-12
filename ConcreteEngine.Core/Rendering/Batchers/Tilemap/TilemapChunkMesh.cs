@@ -9,7 +9,7 @@ using Silk.NET.Maths;
 
 #endregion
 
-namespace ConcreteEngine.Core.Rendering.Batchers;
+namespace ConcreteEngine.Core.Rendering;
 
 internal sealed class TilemapChunkMesh : IDisposable
 {
@@ -52,21 +52,25 @@ internal sealed class TilemapChunkMesh : IDisposable
         CreateVertexBufferData();
         CreateIndexBufferData();
 
-        var meshData = new MeshDescriptor<Vertex2D, ushort>
+
+        ReadOnlySpan<VertexAttributeDescriptor> pointers = stackalloc[]
         {
-            VertexBuffer = new MeshDataBufferDescriptor<Vertex2D>(BufferUsage.DynamicDraw, Vertices),
-            IndexBuffer = new MeshDataBufferDescriptor<ushort>(BufferUsage.DynamicDraw, Indices),
-            VertexPointers =
-            [
-                VertexAttributeDescriptor.Make<Vertex2D>(nameof(Vertex2D.Position)),
-                VertexAttributeDescriptor.Make<Vertex2D>(nameof(Vertex2D.Texture))
-            ],
-            DrawCount = (uint)(_tileCount * IndicesPerTile)
+            VertexAttributeDescriptor.Make<Vertex2D>(nameof(Vertex2D.Position), VertexElementFormat.Float2),
+            VertexAttributeDescriptor.Make<Vertex2D>(nameof(Vertex2D.TexCoords), VertexElementFormat.Float2)
         };
 
-        _meshId = _graphics.CreateMesh(meshData, out var meta);
-        _vertexBufferId = meta.VertexBufferId;
-        _indexBufferId = meta.IndexBufferId;
+        var drawCount = (uint)(_tileCount * IndicesPerTile);
+        
+        var metaDesc = GpuMeshDescriptor
+            .MakeElemental(pointers, DrawElementType.UnsignedShort, DrawPrimitive.Triangles,drawCount);
+
+        var vbo = new GpuVboDescriptor<Vertex2D>(Vertices,BufferUsage.DynamicDraw);
+        var ibo = new GpuIboDescriptor<ushort>(Indices,  BufferUsage.DynamicDraw);
+
+        var builder = _graphics.MeshFactory;
+        var result = builder.CreateElementalMesh(vbo, ibo, metaDesc);
+        _vertexBufferId = result.GetVertexBufferIds()[0];
+        _indexBufferId = result.IndexBufferId;
     }
 
     public TileChunkBuildResult BuildTilemapMesh()
@@ -76,17 +80,6 @@ internal sealed class TilemapChunkMesh : IDisposable
 
     private void CreateTileData()
     {
-        /*
-        for (int y = 0; y < _chunkDimension; y++)
-        {
-            int rowStart = y * _chunkDimension;
-            for (int x = 0; x < _chunkDimension; x++)
-            {
-                _tileData[rowStart + x] = new TileDrawItem((ushort)(x % 3), (ushort)(y % 3));
-            }
-        }*/
-        
-        
         for (int y = 0; y < _chunkDimension; y++)
         {
             int rowStart = y * _chunkDimension;

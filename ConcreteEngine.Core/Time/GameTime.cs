@@ -1,29 +1,27 @@
 namespace ConcreteEngine.Core.Time;
 
 //https://gafferongames.com/post/fix_your_timestep/
-public sealed class GameTime
+internal sealed class GameTime
 {
-    public const int GameTicksPerSecond = 30;
-    public const float GameTimeDelta = 1f / GameTicksPerSecond;
-
+    // Update
+    private const int GameTicksPerSecond = 30;
     private const int MaxTicksPerFrame = 6;
 
-    private readonly Action<int> _gameTickAction;
-    private readonly Action<int> _fpsTickAction;
-
-    private FrameTickTimer _gameTicker = new(GameTimeDelta);
-    private FrameTickTimer _fpsTicker = new(1);
-
-    private GameTickTimer _animationClock = new GameTickTimer(5, GameTicksPerSecond);
+    private FrameTickTimer _gameTicker = new(1f / GameTicksPerSecond);
+    private FrameTickTimer _fpsTicker = new(1f);
+    private GameTickTimer _animationClock = new(5, GameTicksPerSecond);
+    
+    private readonly GameTimeTickDelegate _onGameTick;
+    private readonly GameTimeTickDelegate _onUpdateLogTick;
 
 
     private float _alpha;
     private float _speed = 1f;
 
-    public GameTime(Action<int> gameTickAction, Action<int> fpsTickAction)
+    internal GameTime(GameTimeTickDelegate onGameTick, GameTimeTickDelegate onUpdateLogTick)
     {
-        _gameTickAction = gameTickAction;
-        _fpsTickAction = fpsTickAction;
+        _onGameTick = onGameTick;
+        _onUpdateLogTick = onUpdateLogTick;
     }
 
     public float Alpha => _alpha;
@@ -38,12 +36,12 @@ public sealed class GameTime
         int t, tickCounter = 0;
         while (tickCounter < MaxTicksPerFrame && _gameTicker.TryDequeueTick(out t))
         {
-            _gameTickAction(t);
+            _onGameTick(t);
             GameTickUpdate(t);
             tickCounter++;
         }
 
-        while (_fpsTicker.TryDequeueTick(out t)) _fpsTickAction(t);
+        while (_fpsTicker.TryDequeueTick(out t)) _onUpdateLogTick(t);
 
 
         _alpha = _gameTicker.Alpha;

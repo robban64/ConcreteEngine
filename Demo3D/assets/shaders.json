@@ -1,0 +1,46 @@
+{
+  "folder": "./shaders",
+  "resources": [
+    {
+      "name": "Screen",
+      "vertexFilename": "screen.vert.glsl",
+      "fragmentFilename": "screen.frag.glsl"
+    },
+	{
+	  "name": "Composite",
+	  "vertexFilename": "screen.vert.glsl",
+	  "fragmentFilename": "composite.frag.glsl"
+	},
+	{
+	  "name": "Present",
+	  "vertexFilename": "screen.vert.glsl",
+	  "fragmentFilename": "present.frag.glsl"
+	},
+	{
+	  "name": "ColorFilter",
+	  "vertexFilename": "screen.vert.glsl",
+	  "fragmentFilename": "color-filter.frag.glsl"
+	},
+	{
+	  "name": "LightPass",
+	  "vertexFilename": "screen.vert.glsl",
+	  "fragmentFilename": "light-pass.frag.glsl"
+	},
+	{
+	  "name": "Diffuse",
+	  "vertexFilename": "diffuse.vert.glsl",
+	  "fragmentFilename": "diffuse.frag.glsl"
+	},
+	{
+	  "name": "Terrain",
+	  "vertexFilename": "terrain.vert.glsl",
+	  "fragmentFilename": "terrain.frag.glsl"
+	},
+	{
+	  "name": "Skybox",
+	  "vertexFilename": "skybox.vert.glsl",
+	  "fragmentFilename": "skybox.frag.glsl"
+	}
+
+  ]
+}

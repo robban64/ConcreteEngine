@@ -1,6 +1,6 @@
 namespace ConcreteEngine.Graphics;
 
-public enum DrawPrimitive
+public enum DrawPrimitive : byte
 {
     Triangles,
     TriangleStrip,

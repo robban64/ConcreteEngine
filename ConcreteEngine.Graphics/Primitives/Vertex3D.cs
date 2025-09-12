@@ -9,8 +9,32 @@ using Silk.NET.Maths;
 namespace ConcreteEngine.Graphics.Primitives;
 
 [StructLayout(LayoutKind.Sequential)]
-public readonly struct Vertex3D(Vector3 pos, Vector3 tex)
+public struct Vertex3D
 {
-    public readonly Vector3 Position = pos;
-    public readonly Vector3 Texture = tex;
+    public Vector3 Position;
+    public Vector2 TexCoords;
+    public Vector3 Normal;
+    public Vector3 Tangent;
+
+    public Vertex3D()
+    {
+    }
+
+    public Vertex3D(Vector3 position, Vector2 texCoords, Vector3 normal, Vector3 tangent)
+    {
+        Position = position;
+        TexCoords = texCoords;
+        Normal = normal;
+        Tangent = tangent;
+    }
+}
+
+[StructLayout(LayoutKind.Sequential)]
+public struct Vertex3DXl
+{
+    public Vector3 Position;
+    public Vector2 TexCoords;
+    public Vector3 Normal;
+    public Vector3 Tangent;
+    public Vector3 Bitangent;
 }

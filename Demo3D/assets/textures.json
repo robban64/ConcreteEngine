@@ -1,0 +1,49 @@
+{
+  "folder": "./textures",
+  "resources": [
+    {
+      "name": "Boat",
+      "filename": "boat.png",
+	  "preset": "LinearMipmapClamp"
+    },
+	{
+	  "name": "Rock01",
+	  "filename": "rocks_01.jpg",
+	  "preset": "LinearMipmapClamp"
+	},
+	{
+	  "name": "Rock01-Normal",
+	  "filename": "rocks_01_normal.jpg",
+	  "preset": "LinearMipmapRepeat"
+	},
+	{
+	  "name": "Rock01-Specular",
+	  "filename": "rocks_01_specular.jpg",
+	  "preset": "LinearMipmapRepeat"
+	},
+	{
+	  "name": "Grass",
+	  "filename": "grass.jpg",
+	  "preset": "LinearMipmapRepeat",
+	  "lod": -0.25
+	},
+	{
+	  "name": "Mud",
+	  "filename": "mud.jpg"
+	},
+	{
+	  "name": "Rock",
+	  "filename": "rock.jpg"
+	},
+	{
+	  "name": "Stone",
+	  "filename": "stone.jpg"
+	},
+	{
+	  "name": "Heightmap",
+	  "filename": "heightmap.png",
+	  "inMemory": true
+	}
+	
+  ]
+}

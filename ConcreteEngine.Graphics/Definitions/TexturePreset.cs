@@ -10,3 +10,13 @@ public enum TexturePreset : byte
     LinearMipmapRepeat,
     PremultipliedUI
 }
+
+public enum TextureAnisotropy : byte
+{
+    Off,
+    Default,
+    X2,
+    X4,
+    X8,
+    X16
+}

@@ -12,102 +12,15 @@ using Silk.NET.OpenGL;
 
 namespace ConcreteEngine.Graphics.OpenGL;
 
-internal sealed class GlResourceFactory(GlGraphicsContext gfx)
+internal sealed class GlResourceFactory(GlGraphicsContext gfx, DeviceCapabilities caps)
 {
     private readonly GL _gl = gfx.Gl;
+    private readonly DeviceCapabilities _caps = caps;
 
-    private void SetBufferData<TData>(BufferTargetARB target, BufferUsageARB usage, ReadOnlySpan<TData> data)
-        where TData : unmanaged
+
+    public GlMeshHandle CreateVao()
     {
-        var elementSize = Unsafe.SizeOf<TData>();
-        var size = data.Length * elementSize;
-        _gl.BufferData(target, (nuint)size, data, usage);
-    }
-
-    public GlMeshHandle CreateMesh<TVertex, TIndex>(
-        Func<GlVertexBufferHandle, VertexBufferMeta, VertexBufferId> vboHandler,
-        Func<GlIndexBufferHandle, IndexBufferMeta, IndexBufferId> iboHandler,
-        MeshDescriptor<TVertex, TIndex> descriptor,
-        out MeshMeta meta)
-        where TVertex : unmanaged
-        where TIndex : unmanaged
-    {
-        var vboDesc = descriptor.VertexBuffer;
-        var iboDesc = descriptor.IndexBuffer;
-
         var handle = _gl.GenVertexArray();
-        _gl.BindVertexArray(handle);
-
-        var vbo = CreateVertexBuffer();
-        _gl.BindBuffer(BufferTargetARB.ArrayBuffer, vbo.Handle);
-
-        if (vboDesc.Data is not null)
-            SetBufferData<TVertex>(BufferTargetARB.ArrayBuffer, vboDesc.Usage.ToGlEnum(), vboDesc.Data);
-
-        GlIndexBufferHandle ibo = default;
-        if (iboDesc != null)
-        {
-            ibo = CreateIndexBuffer();
-            _gl.BindBuffer(BufferTargetARB.ElementArrayBuffer, ibo.Handle);
-            if (iboDesc.Data is not null)
-                SetBufferData<TIndex>(BufferTargetARB.ElementArrayBuffer, iboDesc.Usage.ToGlEnum(), iboDesc.Data);
-        }
-
-        for (int i = 0; i < descriptor.VertexPointers.Length; i++)
-        {
-            var pointer = descriptor.VertexPointers[i];
-            AddAttribPointer((uint)i, (int)pointer.Format, pointer.StrideBytes, pointer.OffsetBytes,
-                pointer.Normalized);
-        }
-
-        _gl.BindVertexArray(0);
-        _gl.BindBuffer(BufferTargetARB.ArrayBuffer, 0);
-        _gl.BindBuffer(BufferTargetARB.ElementArrayBuffer, 0);
-
-
-        var vp = descriptor.VertexPointers;
-        var pointer1 = vp[0];
-        var pointer2 = vp.Length > 1 ? vp[1] : default;
-        var pointer3 = vp.Length > 2 ? vp[2] : default;
-
-        uint drawCount = 0;
-        bool isStatic = true;
-
-        var (vboSize, vboElementSize) = ((uint)(vboDesc.Data?.Length ?? 0), (uint)Unsafe.SizeOf<TIndex>());
-
-        IndexBufferId iboId = default;
-        IboElementType elementType = IboElementType.Invalid;
-
-        if (ibo.Handle > 0 && iboDesc != null)
-        {
-            var iboSize = (uint)(iboDesc.Data?.Length ?? 0);
-            var iboElementSize = (uint)Unsafe.SizeOf<TIndex>();
-            elementType = iboElementSize switch
-            {
-                1 => IboElementType.UnsignedByte,
-                2 => IboElementType.UnsignedShort,
-                3 => IboElementType.UnsignedInt,
-                _ => throw GraphicsException.UnsupportedFeature($"Index Element Size {iboElementSize}")
-            };
-
-            drawCount = descriptor.DrawCount.GetValueOrDefault(iboSize);
-            isStatic = iboDesc.Usage == BufferUsage.StaticDraw;
-            var iboMeta = new IndexBufferMeta(iboDesc.Usage, iboSize, iboElementSize);
-            iboId = iboHandler(ibo, iboMeta);
-        }
-        else
-        {
-            isStatic = descriptor.VertexBuffer.Usage == BufferUsage.StaticDraw;
-            drawCount = descriptor.DrawCount.GetValueOrDefault(vboSize);
-        }
-
-        var vboId = vboHandler(vbo, new VertexBufferMeta(vboDesc.Usage, vboSize, vboElementSize));
-
-
-        meta = new MeshMeta(vboId, iboId, descriptor.Primitive, elementType, isStatic,
-            drawCount, (uint)vp.Length,
-            pointer1, pointer2, pointer3);
-
         return new GlMeshHandle(handle);
     }
 
@@ -123,7 +36,7 @@ internal sealed class GlResourceFactory(GlGraphicsContext gfx)
         return new GlIndexBufferHandle(handle);
     }
 
-    public GlTextureHandle CreateTexture2D(in TextureDesc desc, out TextureMeta meta)
+    public GlTextureHandle CreateTexture2D(GpuTextureData data, in GpuTextureDescriptor desc, out TextureMeta meta)
     {
         var handle = _gl.GenTexture();
         _gl.BindTexture(GLEnum.Texture2D, handle);
@@ -139,20 +52,59 @@ internal sealed class GlResourceFactory(GlGraphicsContext gfx)
             }
             else
             {
-                fixed (byte* ptr = desc.PixelData)
-                {
-                    _gl.TexImage2D(GLEnum.Texture2D, 0, (int)glInternalFormat,
-                        (uint)desc.Width, (uint)desc.Height, 0,
-                        glFormat, GLEnum.UnsignedByte, ptr);
-                }
+                _gl.TexImage2D(GLEnum.Texture2D, 0, (int)glInternalFormat,
+                    (uint)desc.Width, (uint)desc.Height, 0,
+                    glFormat, GLEnum.UnsignedByte, data.PixelData);
             }
         }
 
-        SetTextureParameters(desc.Preset, desc.LodBias);
+        SetTextureParameters(desc.Preset, desc.Anisotropy, desc.LodBias);
+
         _gl.BindTexture(GLEnum.Texture2D, 0);
 
-        meta = new TextureMeta(new Vector2D<int>(desc.Width, desc.Height), desc.Format);
+        meta = new TextureMeta(desc.Width, desc.Height, desc.Format);
         return new GlTextureHandle(handle);
+    }
+
+    public unsafe GlTextureHandle CreateCubeMap(GpuCubeMapData data, in GpuCubeMapDescriptor desc, out TextureMeta meta)
+    {
+        var (width, height) = (desc.Width, desc.Height);
+
+        if (width != height)
+            throw new InvalidOperationException("Width and Height are not the same size");
+
+        if (width != desc.Width || height != desc.Height)
+            throw new InvalidOperationException("Miss match between cubemap size");
+
+        var target = (int)TextureTarget.TextureCubeMapPositiveX;
+
+        var handle = _gl.GenTexture();
+        _gl.BindTexture(GLEnum.TextureCubeMap, handle);
+        var (format, internalFormat) = desc.Format.ToGlEnums();
+
+        CreateFace(data.FaceData1, 0);
+        CreateFace(data.FaceData2, 1);
+        CreateFace(data.FaceData3, 2);
+        CreateFace(data.FaceData4, 3);
+        CreateFace(data.FaceData5, 4);
+        CreateFace(data.FaceData6, 5);
+
+        _gl.TexParameter(TextureTarget.TextureCubeMap, TextureParameterName.TextureWrapS, (int)GLEnum.ClampToEdge);
+        _gl.TexParameter(TextureTarget.TextureCubeMap, TextureParameterName.TextureWrapT, (int)GLEnum.ClampToEdge);
+        _gl.TexParameter(TextureTarget.TextureCubeMap, TextureParameterName.TextureWrapR, (int)GLEnum.ClampToEdge);
+        _gl.TexParameter(TextureTarget.TextureCubeMap, TextureParameterName.TextureMinFilter, (int)GLEnum.Linear);
+        _gl.TexParameter(TextureTarget.TextureCubeMap, TextureParameterName.TextureMagFilter, (int)GLEnum.Linear);
+        _gl.BindTexture(TextureTarget.TextureCubeMap, 0);
+
+        meta = new TextureMeta(width, height, desc.Format);
+        return new GlTextureHandle(handle);
+
+        void CreateFace(ReadOnlySpan<byte> faceData, int face)
+        {
+            _gl.TexImage2D((TextureTarget)(target + face), 0, (int)internalFormat,
+                (uint)width, (uint)height, 0,
+                format, GLEnum.UnsignedByte, faceData);
+        }
     }
 
     private GlRenderBufferHandle CreateRenderBufferForFbo(RenderBufferKind kind, Vector2D<int> size, bool multisample,
@@ -184,10 +136,10 @@ internal sealed class GlResourceFactory(GlGraphicsContext gfx)
     }
 
     public GlFrameBufferHandle CreateFrameBuffer(
-        Func<GlTextureHandle, TextureMeta, TextureId> textureHandler,
-        Func<GlRenderBufferHandle, RenderBufferMeta, RenderBufferId> rboTexHandler,
-        Func<GlRenderBufferHandle, RenderBufferMeta, RenderBufferId> rboDepthHandler,
+        UploadFboDel<TextureId, TextureMeta, GlTextureHandle> texCallback,
+        UploadFboDel<RenderBufferId, RenderBufferMeta, GlRenderBufferHandle> rboCallback,
         Vector2D<int> viewport,
+        in FrameBufferMeta previousMeta,
         in FrameBufferDesc desc,
         out FrameBufferMeta meta
     )
@@ -221,8 +173,9 @@ internal sealed class GlResourceFactory(GlGraphicsContext gfx)
         }
         else
         {
-            colTexHandle = CreateTexture2D(new TextureDesc([], size.X, size.Y, EnginePixelFormat.Rgba,
-                desc.TexturePreset, NullPtrData: true), out colTexMeta);
+            var texDesc = new GpuTextureDescriptor(size.X, size.Y, EnginePixelFormat.Rgba,
+                desc.TexturePreset, NullPtrData: true);
+            colTexHandle = CreateTexture2D(new GpuTextureData(ReadOnlySpan<byte>.Empty), in texDesc, out colTexMeta);
 
             _gl.BindTexture(TextureTarget.Texture2D, colTexHandle.Handle);
             _gl.FramebufferTexture2D(FramebufferTarget.Framebuffer, FramebufferAttachment.ColorAttachment0,
@@ -247,9 +200,17 @@ internal sealed class GlResourceFactory(GlGraphicsContext gfx)
 
         _gl.BindFramebuffer(FramebufferTarget.Framebuffer, 0);
 
-        var colTexId = colTexHandle.Handle > 0 ? textureHandler(colTexHandle, colTexMeta) : default;
-        var rboTexId = rboTexHandle.Handle > 0 ? rboTexHandler(rboTexHandle, rboTexMeta) : default;
-        var rboDepthId = rboDepthHandle.Handle > 0 ? rboDepthHandler(rboDepthHandle, rboDepthMeta) : default;
+        var colTexId = colTexHandle.Handle > 0
+            ? texCallback(previousMeta.ColTexId, in colTexMeta, colTexHandle)
+            : default;
+
+        var rboTexId = rboTexHandle.Handle > 0
+            ? rboCallback(previousMeta.RboTexId, in rboTexMeta, rboTexHandle)
+            : default;
+
+        var rboDepthId = rboDepthHandle.Handle > 0
+            ? rboCallback(previousMeta.RboDepthId, in rboDepthMeta, rboDepthHandle)
+            : default;
 
         meta = new FrameBufferMeta(
             colTexId, rboTexId, rboDepthId, desc.TexturePreset,
@@ -260,85 +221,6 @@ internal sealed class GlResourceFactory(GlGraphicsContext gfx)
         return new GlFrameBufferHandle(fbo);
     }
 
-
-    public GlShaderHandle CreateShader(
-        string vertexSource,
-        string fragmentSource,
-        string[]? samplers,
-        out UniformTable uniformTable,
-        out ShaderMeta meta
-    )
-    {
-        uint vertexShader = CreateShader(ShaderType.VertexShader, vertexSource);
-        uint fragmentShader = CreateShader(ShaderType.FragmentShader, fragmentSource);
-        uint handle = CreateShaderProgram(vertexShader, fragmentShader);
-
-        var uniformDict = GetUniformsFromProgram(handle);
-        uniformTable = new UniformTable(uniformDict);
-
-
-        if (samplers?.Length > 0)
-        {
-            _gl.UseProgram(handle);
-            for (int i = 0; i < samplers.Length; i++)
-                _gl.Uniform1(uniformDict[samplers[i]], i);
-            _gl.UseProgram(0);
-        }
-
-        _gl.DetachShader(handle, vertexShader);
-        _gl.DetachShader(handle, fragmentShader);
-        _gl.DeleteShader(vertexShader);
-        _gl.DeleteShader(fragmentShader);
-
-        var samplerLength = samplers != null ? (uint)samplers.Length : 0;
-        meta = new ShaderMeta(samplerLength);
-        return new GlShaderHandle(handle);
-    }
-
-    private uint CreateShaderProgram(uint vertexShader, uint fragmentShader)
-    {
-        uint program = _gl.CreateProgram();
-        _gl.AttachShader(program, vertexShader);
-        _gl.AttachShader(program, fragmentShader);
-        _gl.LinkProgram(program);
-
-        _gl.GetProgram(program, ProgramPropertyARB.LinkStatus, out int lStatus);
-        if (lStatus != (int)GLEnum.True)
-            throw GraphicsException.ShaderLinkFailed(program.ToString(), _gl.GetProgramInfoLog(program));
-
-        return program;
-    }
-
-    private uint CreateShader(ShaderType shaderType, string source)
-    {
-        uint shader = _gl.CreateShader(shaderType);
-        _gl.ShaderSource(shader, source);
-        _gl.CompileShader(shader);
-
-        _gl.GetShader(shader, ShaderParameterName.CompileStatus, out int vStatus);
-        if (vStatus != (int)GLEnum.True)
-            throw GraphicsException.ShaderCompileFailed(nameof(shaderType), _gl.GetShaderInfoLog(shader));
-
-        return shader;
-    }
-
-    private Dictionary<string, short> GetUniformsFromProgram(uint handle)
-    {
-        var uniforms = new Dictionary<string, short>();
-
-        _gl.GetProgram(handle, ProgramPropertyARB.ActiveUniforms, out int uniformsLength);
-        for (uint uniformIndex = 0; uniformIndex < uniformsLength; uniformIndex++)
-        {
-            string uniformName = _gl.GetActiveUniform(handle, uniformIndex, out _, out _);
-            int uniformLocation = _gl.GetUniformLocation(handle, uniformName);
-            if (uniformLocation >= 0)
-            {
-                uniforms.Add(uniformName, (short)uniformLocation);
-            }
-        }
-
-        return uniforms;
-    }
 
     private unsafe void AddAttribPointer(uint index, int size, uint strideBytes, uint offsetBytes,
         bool normalized = false)
@@ -354,7 +236,7 @@ internal sealed class GlResourceFactory(GlGraphicsContext gfx)
         );
     }
 
-    private void SetTextureParameters(TexturePreset preset, float lodBias)
+    private void SetTextureParameters(TexturePreset preset, TextureAnisotropy anisotropy, float lodBias)
     {
         switch (preset)
         {
@@ -392,7 +274,6 @@ internal sealed class GlResourceFactory(GlGraphicsContext gfx)
                 _gl.TexParameter(GLEnum.Texture2D, GLEnum.TextureMinFilter, (int)GLEnum.LinearMipmapLinear);
                 _gl.TexParameter(GLEnum.Texture2D, GLEnum.TextureMagFilter, (int)GLEnum.Linear);
                 _gl.GenerateMipmap(TextureTarget.Texture2D);
-                if (lodBias != 0) _gl.TexParameter(GLEnum.Texture2D, GLEnum.TextureLodBias, lodBias);
                 break;
 
             case TexturePreset.LinearMipmapRepeat:
@@ -401,7 +282,6 @@ internal sealed class GlResourceFactory(GlGraphicsContext gfx)
                 _gl.TexParameter(GLEnum.Texture2D, GLEnum.TextureMinFilter, (int)GLEnum.LinearMipmapLinear);
                 _gl.TexParameter(GLEnum.Texture2D, GLEnum.TextureMagFilter, (int)GLEnum.Linear);
                 _gl.GenerateMipmap(TextureTarget.Texture2D);
-                if (lodBias != 0) _gl.TexParameter(GLEnum.Texture2D, GLEnum.TextureLodBias, lodBias);
                 break;
 
             case TexturePreset.PremultipliedUI:
@@ -414,5 +294,32 @@ internal sealed class GlResourceFactory(GlGraphicsContext gfx)
             default:
                 throw new ArgumentOutOfRangeException(nameof(preset), preset, null);
         }
+
+        bool isMipMap = preset == TexturePreset.LinearMipmapClamp || preset == TexturePreset.LinearMipmapRepeat;
+        if (isMipMap)
+        {
+            var anisotropyValue = GetAnisotropy(anisotropy);
+            if (anisotropyValue > 1)
+                _gl.TexParameter(GLEnum.Texture2D, GLEnum.TextureMaxAnisotropy, anisotropyValue);
+
+            if (lodBias != 0)
+                _gl.TexParameter(GLEnum.Texture2D, GLEnum.TextureLodBias, lodBias);
+        }
+    }
+
+    private float GetAnisotropy(TextureAnisotropy anisotropy)
+    {
+        int value = anisotropy switch
+        {
+            TextureAnisotropy.Off => 0,
+            TextureAnisotropy.Default => 4,
+            TextureAnisotropy.X2 => 2,
+            TextureAnisotropy.X4 => 4,
+            TextureAnisotropy.X8 => 8,
+            TextureAnisotropy.X16 => 16,
+            _ => throw new ArgumentOutOfRangeException(nameof(anisotropy), anisotropy, null),
+        };
+
+        return Math.Min(value, caps.MaxAnisotropy);
     }
 }

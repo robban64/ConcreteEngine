@@ -6,12 +6,11 @@ using System.Runtime.CompilerServices;
 
 namespace ConcreteEngine.Core.Time;
 
-internal struct FrameTickTimer(float tickDt)
+internal sealed class FrameTickTimer(float tickDt)
 {
     private int _tickIndex = 0;
     private float _accumulator = 0f;
 
-    // Fraction (0..1) toward next tick for interpolation.
     public float Alpha
     {
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
@@ -21,7 +20,16 @@ internal struct FrameTickTimer(float tickDt)
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public void Accumulate(float dt) => _accumulator += dt;
+    
+    public int DrainAllTicks()
+    {
+        int n = 0;
+        while (TryDequeueTick(out _)) n++;
+        return n;
+    }
 
+
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public bool TryDequeueTick(out int tickIndex)
     {
         if (_accumulator < tickDt)
@@ -35,19 +43,29 @@ internal struct FrameTickTimer(float tickDt)
         return true;
     }
 
-    //Alternative method
-    /*
-    public int Drain(int max, Span<int> outTicks)
-    {
-        int n = 0;
-        while (n < max && Accumulator >= TickDt)
-        {
-            Accumulator -= TickDt;
-            outTicks[n++] = TickIndex++;
-        }
-        return n;
-    }
 
+    //Alternative method
+/*
+     [MethodImpl(MethodImplOptions.AggressiveInlining)]
+   private int DrainTick(int max, Span<int> outTicks)
+   {
+       Span<int> buf = stackalloc int[max];
+       int count = Drain(max, buf);
+       for (int i = 0; i < count; i++) ; //TODO
+   }
+
+
+   [MethodImpl(MethodImplOptions.AggressiveInlining)]
+   private int Drain(int max, Span<int> outTicks)
+   {
+       int n = 0;
+       while (n < max && _accumulator >= tickDt)
+       {
+           _accumulator -= tickDt;
+           outTicks[n++] = _tickIndex++;
+       }
+       return n;
+   }
     Usage:
         Span<int> buf = stackalloc int[max];
         int count = timer.Drain(max, buf);

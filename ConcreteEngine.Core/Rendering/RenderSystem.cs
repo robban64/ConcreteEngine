@@ -1,24 +1,35 @@
 #region
 
+using System.Diagnostics;
+using System.Runtime.CompilerServices;
+using ConcreteEngine.Common.Collections;
 using ConcreteEngine.Common.Extensions;
 using ConcreteEngine.Core.Configuration;
 using ConcreteEngine.Core.Features;
-using ConcreteEngine.Core.Rendering.Batchers;
 using ConcreteEngine.Core.Resources;
+using ConcreteEngine.Core.Scene;
 using ConcreteEngine.Core.Systems;
-using ConcreteEngine.Core.Transforms;
 using ConcreteEngine.Graphics;
 using ConcreteEngine.Graphics.Descriptors;
 using ConcreteEngine.Graphics.Resources;
+using ConcreteEngine.Graphics.Utils;
 using static ConcreteEngine.Core.Rendering.RenderConsts;
 
 #endregion
 
 namespace ConcreteEngine.Core.Rendering;
 
+public enum RenderType
+{
+    Render2D,
+    Render3D
+}
+
 public interface IRenderSystem : IGameEngineSystem
 {
-    IGameCamera Camera { get; }
+    ICamera Camera { get; }
+
+    TSink GetSink<TSink>() where TSink : IDrawSink;
     Material CreateMaterial(string templateName);
     void MutateRenderPass(RenderTargetId targetId, in RenderPassMutation mutation);
 }
@@ -27,184 +38,145 @@ public sealed class RenderSystem : IRenderSystem
 {
     private readonly IGraphicsDevice _graphics;
     private readonly IGraphicsContext _gfx;
-    private readonly GameCamera _camera;
-
-    private readonly MaterialStore _materialStore;
-    private readonly RenderTargetRegistry _renderTargetRegistry;
-
-    private readonly DrawCommandCollector _commandCollector;
-    private readonly DrawCommandSubmitter _commandSubmitter;
-    private readonly CommandProducerContext _commandProducerContext;
-
-
-    private readonly SpriteRenderer _spriteRenderer;
-    private readonly LightRenderer _lightRenderer;
-
-    private readonly SpriteBatcher _spriteBatch;
-    private readonly TilemapBatcher _tilemapBatcher;
-
-    public SpriteBatcher SpriteBatch => _spriteBatch;
-    public TilemapBatcher TilemapBatch => _tilemapBatcher;
     
-    public IGameCamera Camera => _camera;
+    private DrawCommandCollector _commandCollector  = null!;
+    private RenderPipeline _commandSubmitter  = null!;
+    private DrawProcessor _drawProcessor  = null!;
 
+    private readonly BatcherRegistry _batches = new();
 
-    internal RenderSystem(IGraphicsDevice graphics, MaterialStore materialStore)
+    private MaterialStore _materialStore = null!;
+
+    private IRender _render;
+    private SceneDrawProducer _sceneDrawProducer = null!;
+    private CommandProducerContext cmdProducerCtx = null!;
+
+    private bool _initialized = false;
+
+    public ICamera Camera => _render.Camera;
+
+    internal RenderSystem(IGraphicsDevice graphics)
     {
         _graphics = graphics;
         _gfx = graphics.Gfx;
+        
+    }
+
+    internal void InitializeGraphics()
+    {
+        var builder = _graphics.CreateBuilder();
+        builder.RegisterUbo<FrameUniformGpuData>(UniformGpuSlot.Frame, UboDefaultCapacity.Lower);
+        builder.RegisterUbo<CameraUniformGpuData>(UniformGpuSlot.Camera, UboDefaultCapacity.Lower);
+        builder.RegisterUbo<DirLightUniformGpuData>(UniformGpuSlot.DirLight, UboDefaultCapacity.Lower);
+        builder.RegisterUbo<MaterialUniformGpuData>(UniformGpuSlot.Material, UboDefaultCapacity.Medium);
+        builder.RegisterUbo<DrawObjectUniformGpuData>(UniformGpuSlot.DrawObject, UboDefaultCapacity.Upper);
+        _graphics.BuildResources(builder);
+
+    }
+
+    internal void Initialize(MaterialStore materialStore)
+    {
+
         _materialStore = materialStore;
-
-        _camera = new GameCamera();
-
-        _renderTargetRegistry = new RenderTargetRegistry(_graphics);
+        _drawProcessor = new DrawProcessor(_graphics, _materialStore);
 
         _commandCollector = new DrawCommandCollector();
+        _commandSubmitter = new RenderPipeline(_drawProcessor);
 
-        _spriteRenderer = new SpriteRenderer(_graphics, _camera, _materialStore);
-        _lightRenderer = new LightRenderer(_graphics, _camera, _materialStore);
-        _commandSubmitter = new DrawCommandSubmitter([_spriteRenderer, _lightRenderer]);
+        _batches.Register(new TerrainBatcher(_graphics));
+        _batches.Register(new SpriteBatcher(_graphics));
+        _batches.Register(new TilemapBatcher(_graphics, 64, 32));
 
-        _spriteBatch = new SpriteBatcher(graphics);
-        _tilemapBatcher = new TilemapBatcher(graphics, 64, 32);
-
-        _commandProducerContext = new CommandProducerContext
+        cmdProducerCtx = new CommandProducerContext
         {
             Graphics = _graphics,
-            SpriteBatch = _spriteBatch,
-            TilemapBatch = _tilemapBatcher
+            DrawBatchers = _batches,
         };
-    }
 
-    internal void Initialize(GameSceneConfigBuilder builder)
-    {
-        // Command Collector
-        foreach (var (order, producer) in builder.DrawProducers)
-            _commandCollector.AddProducer(order, producer());
+        // Collector
+        _commandCollector.RegisterProducerSink<IMeshDrawSink>(new MeshDrawProducer());
+        _commandCollector.RegisterProducerSink<ITerrainDrawSink>(new TerrainDrawProducer());
+        _sceneDrawProducer = new  SceneDrawProducer();
+        _commandCollector.RegisterProducer<SceneDrawProducer>(_sceneDrawProducer);
 
-        _commandCollector.Initialize(_commandProducerContext);
 
-        // Renderers
-        foreach (var registry in builder.Renderers)
-        {
-            foreach (var cmdId in registry.CommandIds)
-            {
-                registry.Bind(_commandSubmitter, cmdId, registry.CommandTag);
-            }
-        }
+        _commandCollector.AttachContext(cmdProducerCtx);
+        _commandSubmitter.Initialize();
+        _commandCollector.InitializeProducers();
+        _drawProcessor.Initialize();
         
-        // RenderPasses
-        _renderTargetRegistry.RegisterRenderTargetsFrom(builder.RenderTargetsDesc);
+        _initialized =  true;
+    }
+
+
+    internal void RegisterScene(RenderType renderType, RenderTargetDescriptor desc)
+    {
+        if(!_initialized)
+            throw new InvalidOperationException("Renderer is not initialized");
         
+        if (renderType == RenderType.Render2D)
+            _render = new Render2D(_graphics, _materialStore);
+        else
+            _render = new Render3D(_graphics, _drawProcessor);
         
+        _render.RegisterRenderTargetsFrom(desc);
     }
 
-    public void RegisterDrawFeature(int order, IDrawableFeature feature, Type producerType)
-    {
-        var producer = _commandCollector.GetProducer(producerType);
-        producer.RegisterFeature(order, feature);
-    }
-
-    public void RegisterDrawFeature<TProducer, TFeature, TDrawData>(int order, TFeature feature)
-        where TProducer : DrawCommandProducer<TDrawData>
-        where TFeature : class, IGameFeature, IDrawableFeature<TDrawData>
-        where TDrawData : class
-    {
-        var producer = _commandCollector.GetProducer<TProducer, TDrawData>();
-        producer.RegisterFeature<TFeature>(order, feature);
-    }
-
-
-    public void RegisterRenderer<TCommand, TRenderer>(DrawCommandId id, DrawCommandTag tag)
-        where TCommand : struct, IDrawCommand
-        where TRenderer : class, ICommandRenderer<TCommand>
-    {
-        _commandSubmitter.Register<TCommand, TRenderer>(id, tag);
-    }
+    public TSink GetSink<TSink>() where TSink : IDrawSink => _commandCollector.GetSink<TSink>();
 
     public Material CreateMaterial(string templateName)
         => _materialStore.CreateMaterialFromTemplate(templateName);
 
-    public void MutateRenderPass(RenderTargetId targetId, in RenderPassMutation mutation) 
-        => _renderTargetRegistry.MutateRenderPass(targetId, in mutation);
-    
-    public void Shutdown()
-    {
-    }
+    public void MutateRenderPass(RenderTargetId targetId, in RenderPassMutation mutation)
+        => _render.MutateRenderPass(targetId, in mutation);
 
-    internal void Render(float alpha, in FrameMetaInfo frameCtx, out FrameRenderResult result)
-    {
-        _commandProducerContext.Alpha = alpha;
-        
-        _camera.SetViewport(frameCtx.ViewportSize);
-        
-        _graphics.StartFrame(in frameCtx);
-        PrepareRenderer();
-        Execute(alpha);
-        _graphics.EndFrame(out result);
 
+    internal void BeginTick(in UpdateInfo update) => _commandCollector.BeginTick(update);
+    internal void EndTick() => _commandCollector.EndTick();
+
+    internal void Render(float alpha, in FrameInfo frameCtx, in RenderGlobalSnapshot renderGlobals)
+    {
+        Debug.Assert(_initialized);
+        
+        if (frameCtx.Viewport != _render.Camera.ViewportSize)
+            _render.Camera.ViewportSize = frameCtx.Viewport;
+        
+        PrepareRenderer(alpha, in renderGlobals);
+        Execute(alpha, in renderGlobals);
         _commandSubmitter.Reset();
     }
 
-    private void PrepareRenderer()
+    private void PrepareRenderer(float alpha, in RenderGlobalSnapshot renderGlobals)
     {
-        _camera.PrepareRender();
-        _commandCollector.Collect(_commandProducerContext, _commandSubmitter);
+        _sceneDrawProducer.SetSceneGlobals(in renderGlobals);
+        _render.Prepare(alpha, in renderGlobals);
+        _commandCollector.Collect(alpha, in renderGlobals, _commandSubmitter);
         _commandSubmitter.Prepare();
-
-        var projectionViewMatrix = _camera.RenderTransform.ProjectionViewMatrix;
-        foreach (var material in _materialStore.Materials)
-        {
-            if (material.HasViewProjection)
-            {
-                _gfx.UseShader(material.ShaderId);
-                _gfx.SetUniform(ShaderUniform.ProjectionViewMatrix, in projectionViewMatrix);
-            }
-        }
     }
 
-    private void Execute(float alpha)
+    private void Execute(float alpha, in RenderGlobalSnapshot renderGlobals)
     {
-        foreach (var (renderTarget, passes) in _renderTargetRegistry)
+        var capacity = UniformBufferUtils.GetCapacityForEntities<DrawObjectUniformGpuData>(_commandSubmitter.Count + 100);
+        _drawProcessor.Prepare(in renderGlobals, capacity);
+
+        _commandSubmitter.DrainTransformQueue();
+
+        while (_render.TryGetNextPasses(out var targetId, out var passes))
         {
             foreach (var pass in passes)
             {
-                //var (prevBlend, prevDepthTest) = (_gfx.BlendMode, _gfx.DepthTest);
                 _gfx.SetBlendMode(pass.Blend);
                 _gfx.SetDepthTest(pass.DepthTest);
-
-                ExecutePass(renderTarget, pass);
-
-                //_gfx.SetBlendMode(prevBlend);
-                //_gfx.SetDepthTest(prevDepthTest);
+                ExecutePass(targetId, pass);
             }
+
         }
-        
-        /*
-        for (int target = 0; target < RenderTargetCount; target++)
-        {
-            var renderTarget = (RenderTargetId)target;
-            var passList = renderPasses[target];
-
-            foreach (var pass in passList)
-            {
-                //var (prevBlend, prevDepthTest) = (_gfx.BlendMode, _gfx.DepthTest);
-                _gfx.SetBlendMode(pass.Blend);
-                _gfx.SetDepthTest(pass.DepthTest);
-
-                ExecutePass(renderTarget, pass);
-
-                //_gfx.SetBlendMode(prevBlend);
-                //_gfx.SetDepthTest(prevDepthTest);
-            }
-        }*/
     }
 
-    private void ExecutePass(RenderTargetId target, IRenderPass pass)
+    private void ExecutePass(RenderTargetId target, IRenderPassDescriptor pass)
     {
-        if (pass.Op == RenderPassOp.Blit && pass is BlitRenderPass blitPass)
+        if (pass is BlitRenderPass blitPass)
         {
-            // preserves bindings internally
             _gfx.BlitFramebuffer(blitPass.BlitFbo, blitPass.TargetFbo, blitPass.LinearFilter);
             return;
         }
@@ -216,20 +188,28 @@ public sealed class RenderSystem : IRenderSystem
         else
             _gfx.BeginRenderPass(pass.TargetFbo, pass.Clear?.ClearColor, pass.Clear?.ClearMask);
 
+        
+        switch (pass)
+        {
+            case IScenePass scenePass:
+                _render.RenderScenePass(scenePass, _commandSubmitter); // handles Scene/Light via runtime type
+                break;
+            case IFsqPass fsq:
+                DrawFullscreenQuad(fsq);
+                break;
+            case IDepthPass depthPass:
+                _render.RenderDepthPass(depthPass, _commandSubmitter);
+                break;
+        }
+        
         if (pass.Op == RenderPassOp.DrawScene)
         {
-            if (pass is SceneRenderPass scenePass)
-                RenderScenePass(scenePass);
-
-            if (pass is LightRenderPass lightPass)
-                RenderLightPass(lightPass);
 
             _gfx.EndRenderPass();
             return;
         }
 
-
-        if (pass.Op == RenderPassOp.FullscreenQuad && pass is FsqRenderPass fsqPass)
+        if (pass.Op == RenderPassOp.FullscreenQuad && pass is IFsqPass fsqPass)
         {
             DrawFullscreenQuad(fsqPass);
         }
@@ -240,35 +220,28 @@ public sealed class RenderSystem : IRenderSystem
         }
     }
 
-
-    private void RenderScenePass(SceneRenderPass scenePass)
-    {
-        _commandSubmitter.DrainCommandQueue(RenderTargetId.Scene);
-    }
-
-    private void RenderLightPass(LightRenderPass lightPass)
-    {
-        _gfx.UseShader(lightPass.Shader);
-        _commandSubmitter.DrainCommandQueue(RenderTargetId.SceneLight);
-    }
-
-    private void DrawFullscreenQuad(FsqRenderPass pass)
+    private void DrawFullscreenQuad(IFsqPass pass)
     {
         ArgumentNullException.ThrowIfNull(pass);
         ArgumentNullException.ThrowIfNull(pass.SourceTextures);
         ArgumentOutOfRangeException.ThrowIfZero(pass.SourceTextures.Length);
         ArgumentOutOfRangeException.ThrowIfGreaterThan(pass.SourceTextures.Length, 4, nameof(pass.SourceTextures));
 
-        var viewport = _camera.RenderTransform.ViewportSize;
+        var viewport = _render.Camera.ViewportSize;
         _gfx.UseShader(pass.Shader);
-        _gfx.SetUniform(ShaderUniform.TexelSize, viewport.ToSystemVec2() * pass.SizeRatio);
+        _gfx.SetUniform(ShaderUniform.TexelSize, viewport.ConvertToVec2() * pass.SizeRatio);
 
         for (int i = 0; i < pass.SourceTextures.Length; i++)
         {
             _gfx.BindTexture(pass.SourceTextures[i], (uint)i);
         }
 
-        _gfx.BindMesh(_graphics.QuadMeshId);
+        _gfx.BindMesh(_graphics.Primitives.FsqQuad);
         _gfx.DrawMesh();
+    }
+
+    
+    public void Shutdown()
+    {
     }
 }

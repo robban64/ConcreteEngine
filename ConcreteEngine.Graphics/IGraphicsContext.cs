@@ -4,6 +4,7 @@ using System.Drawing;
 using System.Numerics;
 using ConcreteEngine.Common;
 using ConcreteEngine.Graphics.Descriptors;
+using ConcreteEngine.Graphics.Primitives;
 using ConcreteEngine.Graphics.Resources;
 using Silk.NET.Maths;
 
@@ -14,13 +15,10 @@ namespace ConcreteEngine.Graphics;
 public interface IGraphicsContext
 {
     GraphicsConfiguration Configuration { get; }
+    DeviceCapabilities  Capabilities { get; }
 
-    Vector2D<int> ViewportSize { get; }
-    BlendMode BlendMode { get; }
-    bool DepthTest { get; }
-
-    void BeginFrame(in FrameMetaInfo frameCtx);
-    void EndFrame(out FrameRenderResult result);
+    void BeginFrame(in FrameInfo frameCtx);
+    void EndFrame(out GpuFrameStats result);
 
     void Clear(Color4 color, ClearBufferFlag flags);
     void BeginScreenPass(Color4? clear = null, ClearBufferFlag? flags = null);
@@ -29,17 +27,24 @@ public interface IGraphicsContext
     void BlitFramebuffer(FrameBufferId fromId, FrameBufferId toId = default, bool linearFilter = true);
     void SetBlendMode(BlendMode blendMode);
     void SetDepthTest(bool depthTest);
+
     void BindTexture(TextureId resourceId, uint slot);
     void BindMesh(MeshId resourceId);
     void BindVertexBuffer(VertexBufferId resourceId);
     void BindIndexBuffer(IndexBufferId resourceId);
+    void BindUniformBuffer(UniformGpuSlot slot);
 
-    void SetVertexBuffer<T>(ReadOnlySpan<T> data) where T : unmanaged;
-    void SetIndexBuffer<T>(ReadOnlySpan<T> data) where T : unmanaged;
+    void SetVertexAttribute(ReadOnlySpan<VertexAttributeDescriptor> attributes);
+    void SetVertexBuffer<T>(ReadOnlySpan<T> data, BufferUsage usage = BufferUsage.StaticDraw) where T : unmanaged;
+    void SetIndexBuffer<T>(ReadOnlySpan<T> data, BufferUsage usage = BufferUsage.StaticDraw) where T : unmanaged;
 
     void UploadVertexBuffer<T>(ReadOnlySpan<T> data, int offsetElements) where T : unmanaged;
     void UploadIndexBuffer<T>(ReadOnlySpan<T> data, int offsetElements) where T : unmanaged;
 
+    void SetUniformBufferSize(UniformGpuSlot slot, nuint capacityBytes);
+    void UploadUniformGpuData<T>(UniformGpuSlot slot, in T data, nuint offset = 0) where T : unmanaged, IUniformGpuData;
+    void BindUniformBufferRange(UniformGpuSlot slot, nuint offset, nuint size);
+    
     void DrawMesh(uint drawCount = 0);
 
     void UseShader(ShaderId resourceId);
@@ -50,4 +55,5 @@ public interface IGraphicsContext
     void SetUniform(ShaderUniform uniform, Vector3 value);
     void SetUniform(ShaderUniform uniform, Vector4 value);
     void SetUniform(ShaderUniform uniform, in Matrix4x4 value);
+    void SetUniform(ShaderUniform uniform, in Matrix3 value);
 }

@@ -1,0 +1,8 @@
+{
+  "resourceManifest": {
+    "material": "materials.json",
+    "shader": "shaders.json",
+    "texture": "textures.json",
+	"mesh": "meshes.json"
+  }
+}

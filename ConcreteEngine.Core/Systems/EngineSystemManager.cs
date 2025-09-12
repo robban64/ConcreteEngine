@@ -46,7 +46,7 @@ public class EngineSystemManagerManager : IEngineSystemManager
         throw new InvalidOperationException($"System of type {typeof(T)} not found");
     }
 
-    internal void RegisterSystems()
+    internal void Initialize()
     {
         _systems.Register<IInputSystem>(_inputSystem);
         _systems.Register<IAssetSystem>(_assets);

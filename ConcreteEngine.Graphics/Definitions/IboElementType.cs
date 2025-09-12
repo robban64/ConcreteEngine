@@ -1,6 +1,6 @@
 namespace ConcreteEngine.Graphics;
 
-public enum IboElementType
+public enum DrawElementType
 {
     Invalid = 0,
     UnsignedByte = 1,

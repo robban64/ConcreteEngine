@@ -2,13 +2,14 @@
 
 using System.Numerics;
 using ConcreteEngine.Graphics.Descriptors;
+using ConcreteEngine.Graphics.Utils;
 using Silk.NET.Maths;
 
 #endregion
 
 namespace ConcreteEngine.Graphics.Resources;
 
-public enum ResourceKind : ushort
+public enum ResourceKind : byte
 {
     Texture = 0,
     Shader = 1,
@@ -19,9 +20,10 @@ public enum ResourceKind : ushort
     RenderBuffer = 6
 }
 
-public readonly struct TextureMeta(Vector2D<int> size, EnginePixelFormat format)
+public readonly struct TextureMeta(int width, int height, EnginePixelFormat format)
 {
-    public readonly Vector2D<int> Size = size;
+    public readonly int Width = width;
+    public readonly int Height = height;
     public readonly EnginePixelFormat Format = format;
 }
 
@@ -31,37 +33,29 @@ public readonly struct ShaderMeta(uint samplers)
 }
 
 public readonly struct MeshMeta(
-    VertexBufferId vertexBufferId,
-    IndexBufferId indexBufferId,
     DrawPrimitive primitive,
-    IboElementType elementType,
-    bool isStatic,
-    uint drawCount,
-    uint vertexLayoutCount,
-    VertexAttributeDescriptor vertexLayout1,
-    VertexAttributeDescriptor vertexLayout2 = default,
-    VertexAttributeDescriptor vertexLayout3 = default
+    MeshDrawKind drawKind,
+    DrawElementType elementType,
+    uint vertexAttribPointers,
+    uint drawCount
 )
 {
-    public readonly VertexBufferId VertexBufferId = vertexBufferId;
-    public readonly IndexBufferId IndexBufferId = indexBufferId;
     public readonly DrawPrimitive Primitive = primitive;
-    public readonly IboElementType ElementType = elementType;
-    public readonly bool IsStatic = isStatic;
+    public readonly MeshDrawKind DrawKind = drawKind;
+    public readonly DrawElementType ElementType = elementType;
+    public readonly uint VertexAttribPointers = vertexAttribPointers;
     public readonly uint DrawCount = drawCount;
-    public readonly uint VertexLayoutCount = vertexLayoutCount;
-    public readonly VertexAttributeDescriptor VertexLayout1 = vertexLayout1;
-    public readonly VertexAttributeDescriptor VertexLayout2 = vertexLayout2;
-    public readonly VertexAttributeDescriptor VertexLayout3 = vertexLayout2;
 }
 
 public readonly struct VertexBufferMeta(
     BufferUsage usage,
+    uint bindingIdx,
     uint elementCount,
     uint elementSize
 )
 {
     public readonly BufferUsage Usage = usage;
+    public readonly uint BindingIdx = bindingIdx;
     public readonly uint ElementCount = elementCount;
     public readonly uint ElementSize = elementSize;
 }
@@ -98,16 +92,8 @@ public readonly struct FrameBufferMeta(
     public readonly bool DepthStencilBuffer = depthStencilBuffer;
     public readonly bool Msaa = msaa;
     public readonly byte Samples = samples;
-
-    public static void GetResizeCopy(in FrameBufferMeta m, Vector2D<int> size, out FrameBufferMeta meta)
-    {
-        meta = new FrameBufferMeta(m.ColTexId, m.RboTexId, m.RboDepthId, m.TexturePreset, m.SizeRatio, size,
-            m.DepthStencilBuffer,
-            m.Msaa, m.Samples);
-    }
 }
 
-//TODO
 public readonly struct RenderBufferMeta(
     RenderBufferKind kind,
     Vector2D<int> size,
@@ -117,4 +103,20 @@ public readonly struct RenderBufferMeta(
     public readonly RenderBufferKind Kind = kind;
     public readonly Vector2D<int> Size = size;
     public readonly bool Multisample = multisample;
+}
+
+public readonly struct UniformBufferMeta
+{
+    public readonly UniformGpuSlot Slot;
+    public readonly uint BindingIdx;
+    public readonly nuint BlockSize;
+    public readonly nuint Stride;
+
+    public UniformBufferMeta(UniformGpuSlot slot, nuint blockSize)
+    {
+        Slot = slot;
+        BindingIdx = (uint)slot;
+        BlockSize = blockSize;
+        Stride = UniformBufferUtils.AlignUp(BlockSize, UniformBufferUtils.UboOffsetAlign);
+    }
 }

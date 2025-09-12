@@ -2,12 +2,11 @@
 
 using ConcreteEngine.Graphics;
 using ConcreteEngine.Graphics.Error;
+using ConcreteEngine.Graphics.Resources;
 
 #endregion
 
-namespace ConcreteEngine.Core.Rendering.Batchers;
-
-
+namespace ConcreteEngine.Core.Rendering;
 
 
 public sealed class SpriteBatcher : RenderBatcher<SpriteBatchBuildResult>

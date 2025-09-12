@@ -4,17 +4,17 @@ namespace ConcreteEngine.Graphics.Resources;
 
 internal class ResourceDisposeQueue
 {
-    private const int DrainPerFrame = 4;
-    private const int DrainDelayTicks = 16;
 
     private readonly Queue<DeleteCmd> _disposeQueue = new(8);
     private readonly HashSet<DeleteCmd> _disposeSet = new(8);
+    
+    public int PendingCount => _disposeQueue.Count;
 
     private bool _isDisposing = false;
 
     private int _ticks;
 
-    public void Enqueue(in GfxHandle handle, int priority = 0)
+    public void Enqueue(in GfxHandle handle, ushort priority = 0)
     {
         if (_isDisposing)
             throw GraphicsException.InvalidState("Illegal state: Enqueue of removal during active dispose");
@@ -26,15 +26,15 @@ internal class ResourceDisposeQueue
         _disposeQueue.Enqueue(cmd);
     }
 
-    public void Drain(Action<GfxHandle> disposeFunc, bool drainAll = false)
+    public void Drain(Action<GfxHandle> disposeFunc, int count, int delayTicks)
     {
         if (_disposeQueue.Count == 0) return;
-        if (++_ticks < DrainDelayTicks && !drainAll) return;
+        if (++_ticks < delayTicks) return;
 
         _isDisposing = true;
         
         int n = 0;
-        while (_disposeQueue.Count > 0 && (drainAll || n < DrainPerFrame))
+        while (_disposeQueue.Count > 0 && n < count)
         {
             var curr = _disposeQueue.Dequeue();
             disposeFunc(curr.Handle);
@@ -52,6 +52,6 @@ internal class ResourceDisposeQueue
 
     private readonly record struct DeleteCmd(
         in GfxHandle Handle,
-        int Priority = 0
+        ushort Priority = 0
     );
 }

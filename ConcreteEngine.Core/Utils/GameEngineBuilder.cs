@@ -15,7 +15,7 @@ public sealed class GameEngineBuilder
     private readonly List<Func<GameScene>> _sceneFactories = new();
 
 
-    public GameEngine Build(IEngineWindowHost windowHost, IEngineInputSource input, IGraphicsDevice graphics)
+    public GameEngine Build(IEngineWindowHost windowHost, IEngineInputSource input, GraphicsRuntime graphics)
     {
         if (_assetPipelineConfiguration is null) throw new InvalidOperationException("AssetManager not configured");
         if (_sceneFactories.Count < 0) throw new InvalidOperationException("No GameScene registered");

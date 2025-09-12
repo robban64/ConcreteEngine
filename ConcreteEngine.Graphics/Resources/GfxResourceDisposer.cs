@@ -2,45 +2,67 @@ using ConcreteEngine.Graphics.Error;
 
 namespace ConcreteEngine.Graphics.Resources;
 
-internal sealed class ResourceDisposer
-{
-    private readonly IResourceManager _resources;
-    private readonly IResourceRegistry _registry;
-    private readonly ResourceDisposeQueue _disposeQueue;
 
-    internal ResourceDisposer(IResourceManager resources, IResourceRegistry registry)
+public interface IGfxResourceDisposer
+{
+    public int PendingCount { get; }
+    void EnqueueRemoval<TId>(TId id, bool replace = false) where TId : unmanaged, IResourceId;
+    void DrainDisposeQueue();
+
+}
+
+internal sealed class GfxResourceDisposer : IGfxResourceDisposer
+{
+    private const int DrainPerFrame = 4;
+    private const int DrainDelayTicks = 16;
+    
+    private readonly GfxResourceManager _resources;
+    private readonly GfxResourceRegistry _registry;
+    private readonly IDisposableBackend _backend;
+    
+    private readonly ResourceDisposeQueue _disposeQueue;
+    public int PendingCount => _disposeQueue.PendingCount;
+
+    internal GfxResourceDisposer(GfxResourceManager resources, GfxResourceRegistry registry, IDisposableBackend backend)
     {
         _resources = resources;
         _registry = registry;
+        _backend = backend;
         _disposeQueue = new ResourceDisposeQueue();
     }
 
-    void EnqueueRemoveResource<TId>(TId id, bool replace = false) where TId : unmanaged, IResourceId
+    public void DrainDisposeQueue()
     {
+        _disposeQueue.Drain(_backend.DeleteGfxResource, DrainPerFrame, DrainDelayTicks);
+    }
+
+
+    public void EnqueueRemoval<TId>(TId id, bool replace = false) where TId : unmanaged, IResourceId
+    {
+        // Enqueue dependent resources
         switch (id)
         {
             case MeshId meshId:
                 var meshLayout = _registry.MeshRegistry.GetInternal(meshId);
                 if (meshLayout.IndexBufferId.IsValid())
-                    EnqueueRemoveResource(meshLayout.IndexBufferId, replace);
+                    EnqueueRemoval(meshLayout.IndexBufferId, replace);
 
                 var vboIds = meshLayout.GetVertexBufferIds();
                 foreach (var vboId in vboIds)
-                    EnqueueRemoveResource(vboId, replace);
+                    EnqueueRemoval(vboId, replace);
 
                 break;
             case FrameBufferId fboId:
-                ref readonly var fbo = ref _resources.FboStore.GetMeta(fboId);
                 var fboLayout = _registry.FboRegistry.Get(fboId);
-                if (fboLayout.RboDepthId.Id > 0) EnqueueRemoveResource(fboLayout.RboDepthId, replace);
-                if (fboLayout.RboTexId.Id > 0) EnqueueRemoveResource(fboLayout.RboTexId, replace);
-                if (fboLayout.TexColorId.Id > 0) EnqueueRemoveResource(fboLayout.TexColorId, replace);
+                if (fboLayout.RboDepthId.IsValid()) EnqueueRemoval(fboLayout.RboDepthId, replace);
+                if (fboLayout.RboTexId.IsValid()) EnqueueRemoval(fboLayout.RboTexId, replace);
+                if (fboLayout.FboTexId.IsValid()) EnqueueRemoval(fboLayout.FboTexId, replace);
                 break;
             default:
                 throw new GraphicsException($"Unknown resource type {typeof(TId).Name}");
         }
-
-
+        
+        // 
         switch (id)
         {
             case TextureId textureId:

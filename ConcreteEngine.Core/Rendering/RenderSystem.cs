@@ -36,7 +36,7 @@ public interface IRenderSystem : IGameEngineSystem
 
 public sealed class RenderSystem : IRenderSystem
 {
-    private readonly IGraphicsDevice _graphics;
+    private readonly GraphicsRuntime _graphics;
     private readonly IGraphicsContext _gfx;
     
     private DrawCommandCollector _commandCollector  = null!;
@@ -55,23 +55,20 @@ public sealed class RenderSystem : IRenderSystem
 
     public ICamera Camera => _render.Camera;
 
-    internal RenderSystem(IGraphicsDevice graphics)
+    internal RenderSystem(GraphicsRuntime graphics)
     {
         _graphics = graphics;
-        _gfx = graphics.Gfx;
+        _gfx = graphics.Context;
         
     }
 
     internal void InitializeGraphics()
     {
-        var builder = _graphics.CreateBuilder();
-        builder.RegisterUbo<FrameUniformGpuData>(UniformGpuSlot.Frame, UboDefaultCapacity.Lower);
-        builder.RegisterUbo<CameraUniformGpuData>(UniformGpuSlot.Camera, UboDefaultCapacity.Lower);
-        builder.RegisterUbo<DirLightUniformGpuData>(UniformGpuSlot.DirLight, UboDefaultCapacity.Lower);
-        builder.RegisterUbo<MaterialUniformGpuData>(UniformGpuSlot.Material, UboDefaultCapacity.Medium);
-        builder.RegisterUbo<DrawObjectUniformGpuData>(UniformGpuSlot.DrawObject, UboDefaultCapacity.Upper);
-        _graphics.BuildResources(builder);
-
+        _graphics.Allocator.CreateUniformBuffer<FrameUniformGpuData>(UniformGpuSlot.Frame, UboDefaultCapacity.Lower, out _);
+        _graphics.Allocator.CreateUniformBuffer<CameraUniformGpuData>(UniformGpuSlot.Camera, UboDefaultCapacity.Lower, out _);
+        _graphics.Allocator.CreateUniformBuffer<DirLightUniformGpuData>(UniformGpuSlot.DirLight, UboDefaultCapacity.Lower, out _);
+        _graphics.Allocator.CreateUniformBuffer<MaterialUniformGpuData>(UniformGpuSlot.Material, UboDefaultCapacity.Medium, out _);
+        _graphics.Allocator.CreateUniformBuffer<DrawObjectUniformGpuData>(UniformGpuSlot.DrawObject, UboDefaultCapacity.Upper, out _);
     }
 
     internal void Initialize(MaterialStore materialStore)

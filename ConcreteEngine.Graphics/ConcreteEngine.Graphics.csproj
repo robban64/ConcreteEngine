@@ -36,9 +36,7 @@
       <Compile Remove="OpenGL\Old\GlShaderFactory.cs" />
       <Compile Remove="OpenGL\Old\GlTextureFactory.cs" />
       <Compile Remove="IGraphicsContextOld.cs" />
-      <None Include="IGraphicsContextOld.cs" />
       <Compile Remove="IGraphicsDeviceOld.cs" />
-      <None Include="IGraphicsDeviceOld.cs" />
     </ItemGroup>
 
 </Project>

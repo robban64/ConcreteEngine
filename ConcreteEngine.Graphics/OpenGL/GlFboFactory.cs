@@ -6,19 +6,6 @@ using Silk.NET.OpenGL;
 
 namespace ConcreteEngine.Graphics.OpenGL;
 
-internal readonly record struct CreateFboResult(GlFboHandle Fbo, in FrameBufferMeta FboMeta);
-
-internal readonly record struct CreateFboTexResult(GlTextureHandle Tex, in TextureMeta TexMeta) ;
-
-internal readonly record struct CreateRboResult(GlRboHandle Rbo, in RenderBufferMeta RboDepthMeta);
-
-internal readonly record struct FboCreatedResult(
-    in CreateFboResult Fbo,
-    in CreateFboTexResult FboTex,
-    in CreateRboResult RboTex,
-    in CreateRboResult RboDepth);
-
-
 internal sealed class GlFboFactory(GL gl, DeviceCapabilities capabilities, GlTextureFactory textureFactory)
     : GlFactory(gl, capabilities)
 {
@@ -56,7 +43,10 @@ internal sealed class GlFboFactory(GL gl, DeviceCapabilities capabilities, GlTex
     public void CreateFrameBuffer(
         Vector2D<int> viewport,
         in FrameBufferDesc desc,
-        out FboCreatedResult result
+        out GlFboHandleMeta fbo,
+        out GlTexHandleMeta fboTex,
+        out GlRboHandleMeta rboTex,
+        out GlRboHandleMeta rboDepth
     )
     {
         var size = new Vector2D<int>((int)(viewport.X * desc.SizeRatio.X), (int)(viewport.Y * desc.SizeRatio.Y));
@@ -68,8 +58,8 @@ internal sealed class GlFboFactory(GL gl, DeviceCapabilities capabilities, GlTex
         RenderBufferMeta rboTexMeta = default, rboDepthMeta = default;
 
 
-        var fbo = Gl.GenFramebuffer();
-        Gl.BindFramebuffer(FramebufferTarget.Framebuffer, fbo);
+        var handle = Gl.GenFramebuffer();
+        Gl.BindFramebuffer(FramebufferTarget.Framebuffer, handle);
 
         if (desc.Msaa)
         {
@@ -110,16 +100,14 @@ internal sealed class GlFboFactory(GL gl, DeviceCapabilities capabilities, GlTex
 
         Gl.BindFramebuffer(FramebufferTarget.Framebuffer, 0);
 
-        var outFbo = new CreateFboResult(new GlFboHandle(fbo), new FrameBufferMeta(
+        fbo = new GlFboHandleMeta(new GlFboHandle(handle), new FrameBufferMeta(
             desc.TexturePreset,
             desc.SizeRatio, size,
             desc.DepthStencilBuffer, desc.Msaa, (byte)desc.Samples
         ));
 
-        var outTex = colTexHandle.Handle > 0 ? new CreateFboTexResult(colTexHandle, in colTexMeta) : default;
-        var outRboTex = rboTexHandle.Handle > 0 ? new CreateRboResult(rboTexHandle, in rboTexMeta) : default;
-        var outRboDepth = rboDepthHandle.Handle > 0 ? new CreateRboResult(rboDepthHandle, in rboDepthMeta) :default;
-        
-        result = new FboCreatedResult(in outFbo, in outTex, in outRboTex, in outRboDepth);
+        fboTex = colTexHandle.Handle > 0 ? new GlTexHandleMeta(colTexHandle, in colTexMeta) : default;
+        rboTex = rboTexHandle.Handle > 0 ? new GlRboHandleMeta(rboTexHandle, in rboTexMeta) : default;
+        rboDepth = rboDepthHandle.Handle > 0 ? new GlRboHandleMeta(rboDepthHandle, in rboDepthMeta) : default;
     }
 }

@@ -5,7 +5,7 @@ using ConcreteEngine.Graphics.Utils;
 
 namespace ConcreteEngine.Graphics.Resources;
 
-public interface IResourceAllocator
+public interface IGfxResourceAllocator
 {
     MeshId CreateMesh(DrawPrimitive primitive, MeshDrawKind drawKind, DrawElementType drawElement, out MeshMeta meta);
 
@@ -25,19 +25,18 @@ public interface IResourceAllocator
         where T : unmanaged, IUniformGpuData;
 }
 
-internal sealed class ResourceAllocator : IResourceAllocator
+internal sealed class GfxResourceAllocator : IGfxResourceAllocator
 {
-    private readonly IGraphicsContext _context;
-    private readonly IResourceManager _stores;
     private readonly IGraphicsDriver _driver;
-    private readonly IResourceRegistry _registry;
+    private readonly GfxResourceManager _stores;
+    private readonly GfxResourceRegistry _registry;
+    
 
-    public ResourceAllocator(IGraphicsDriver driver,
-        IGraphicsContext context,
-        IResourceManager stores,
-        IResourceRegistry registry)
+    public GfxResourceAllocator(
+        IGraphicsDriver driver,
+        GfxResourceManager stores,
+        GfxResourceRegistry registry)
     {
-        _context = context;
         _stores = stores;
         _driver = driver;
         _registry = registry;
@@ -79,7 +78,22 @@ internal sealed class ResourceAllocator : IResourceAllocator
 
     public FrameBufferId CreateFramebuffer(in FrameBufferDesc desc, out FrameBufferMeta meta)
     {
-        throw new NotImplementedException();
+        _driver.CreateFramebuffer(in desc, out var result);
+        var fboId = _stores.FboStore.Add(result.Fbo.Meta, result.Fbo.Handle);
+        var fboTexId = result.FboTex != default ?  _stores.TextureStore.Add(result.FboTex.Meta, result.FboTex.Handle) : default;
+        var rboDepthId = result.RboDepth != default ? _stores.RboStore.Add(result.RboDepth.Meta, result.RboDepth.Handle) : default;
+        var rboTexId = result.RboTex != default ? _stores.RboStore.Add(result.RboTex.Meta, result.RboTex.Handle) : default;
+        
+        _registry.FboRegistry.Register(new FrameBufferLayout
+        {
+            FboId = fboId,
+            FboTexId = fboTexId,
+            RboTexId = rboTexId,
+            RboDepthId = rboDepthId,
+        });
+        
+        meta = result.Fbo.Meta;
+        return fboId;
     }
 
     public ShaderId CreateShader(string vertexSource, string fragmentSource, out ShaderMeta meta)

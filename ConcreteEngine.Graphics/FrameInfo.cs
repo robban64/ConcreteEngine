@@ -14,10 +14,10 @@ public readonly struct FrameInfo(
     Vector2D<int> outputSize)
 {
     public readonly long FrameIndex = frameIndex;
-    public readonly bool vSyncEnabled = vSyncEnabled;
-    public readonly bool  ResizePending = resizePending;
     public readonly Vector2D<int> Viewport = viewport;
     public readonly Vector2D<int> OutputSize = outputSize;
+    public readonly bool vSyncEnabled = vSyncEnabled;
+    public readonly bool  ResizePending = resizePending;
 }
 
-public readonly record struct GpuFrameStats(int DrawCalls, int TriangleCount);
+public readonly record struct GpuFrameStats(uint DrawCalls, uint TriangleCount);

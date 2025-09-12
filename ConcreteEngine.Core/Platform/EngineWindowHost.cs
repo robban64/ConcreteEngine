@@ -113,9 +113,9 @@ public sealed class EngineWindowHost : IEngineWindowHost
             outputSize:  _window.FramebufferSize
         );
 
-        IGraphicsDevice graphics = _backend switch
+        GraphicsRuntime graphics = _backend switch
         {
-            GraphicsBackend.OpenGL => new GlGraphicsDevice(_window.CreateOpenGL(), in frameCtx),
+            GraphicsBackend.OpenGL => new GraphicsRuntime(_window.CreateOpenGL(), in frameCtx),
             _ => throw new GraphicsException("Invalid GraphicsBackend. Only OpenGL supported")
         };
 

@@ -21,12 +21,12 @@ internal sealed class ShaderRegistry : IShaderRegistry
     private readonly Dictionary<UniformGpuSlot, UboArena> _uboArenas = new();
     private readonly UniformBufferId[] _uboRegistry;
 
-    private readonly IResourceStore<UniformBufferId, UniformBufferMeta> _uboStore;
+    private readonly IGfxResourceManager _resources;
 
-    internal ShaderRegistry(IResourceStore<UniformBufferId, UniformBufferMeta> uboStore)
+    internal ShaderRegistry(IGfxResourceManager resources)
     {
-        ArgumentNullException.ThrowIfNull(uboStore);
-        _uboStore = uboStore;
+        ArgumentNullException.ThrowIfNull(resources);
+        _resources = resources;
         _uboRegistry = new  UniformBufferId[GraphicsEnumCache.ShaderBufferUniformVals.Length];
     }
 
@@ -34,7 +34,7 @@ internal sealed class ShaderRegistry : IShaderRegistry
     {
         if (!_uboArenas.TryGetValue(slot, out var _uboArena))
         {
-            var meta = _uboStore.GetMeta(_uboRegistry[(int)slot]);
+            var meta = _resources.UboStore.GetMeta(_uboRegistry[(int)slot]);
             _uboArenas[slot] = _uboArena = new UboArena(in meta);
         }
 

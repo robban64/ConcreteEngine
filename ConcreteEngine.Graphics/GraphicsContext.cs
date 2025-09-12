@@ -62,15 +62,19 @@ public interface IGraphicsContext
     void SetUniform(ShaderUniform uniform, Vector4 value);
     void SetUniform(ShaderUniform uniform, in Matrix4x4 value);
     void SetUniform(ShaderUniform uniform, in Matrix3 value);
-    
-   }
-internal interface IGpuProgramContext;
-internal interface IGpuBufferContext;
-internal interface IGpuMeshContext;
-internal interface IGpuTextureContext;
-internal interface IGpuFramebufferContext;
-internal interface IGpuStateContext;
+}
 
+internal interface IProgramContext;
+
+internal interface IBufferContext;
+
+internal interface IMeshContext;
+
+internal interface ITextureContext;
+
+internal interface IFramebufferContext;
+
+internal interface IStateContext;
 
 internal sealed class GraphicsContext : IGraphicsContext
 {
@@ -78,10 +82,9 @@ internal sealed class GraphicsContext : IGraphicsContext
     public DeviceCapabilities Capabilities { get; }
 
     private readonly IGraphicsDriver _driver;
-    private readonly ResourceManager _store;
+    private readonly GfxResourceManager _store;
 
-    private readonly ShaderRegistry _shaderRegistry;
-    private readonly MeshRegistry _meshRegistry;
+    private readonly GfxResourceRegistry _registry;
 
 
     //States
@@ -107,15 +110,16 @@ internal sealed class GraphicsContext : IGraphicsContext
     //
     private Vector2D<int> _activeOutputSize;
     private FrameInfo _frameCtx;
-    private int _drawTriangleCount = 0;
-    private int _drawCallCount = 0;
+    private uint _drawTriangleCount = 0;
+    private uint _drawCallCount = 0;
 
-    public GraphicsContext()
+    public GraphicsContext(IGraphicsDriver driver, GfxResourceRegistry registry)
     {
-        _store = new ResourceManager();
-        
-        _boundTextures = new TextureId[Capabilities.MaxTextureImageUnits];
+        _driver = driver;
+        _registry = registry;
+        _store = new GfxResourceManager();
 
+        _boundTextures = new TextureId[Capabilities.MaxTextureImageUnits];
     }
 
     public void BeginFrame(in FrameInfo frameCtx)
@@ -186,13 +190,13 @@ internal sealed class GraphicsContext : IGraphicsContext
     public void EndRenderPass()
     {
         if (_boundFboId == default) GraphicsException.ResourceNotBound<GlFboHandle>(nameof(_boundFboId));
-        
+
         _currDrawFboId = default;
         _currDrawFboId = default;
-        
+
         _boundFboId = default;
         _boundReadFboId = default;
-        
+
         _activeOutputSize = _frameCtx.OutputSize;
 
         _driver.BindFramebuffer(default);
@@ -263,9 +267,9 @@ internal sealed class GraphicsContext : IGraphicsContext
             _driver.UseShader(default);
             return;
         }
-
+        
         var handle = _store.ShaderStore.GetHandle(id);
-        var uniformTable = _shaderRegistry.GetShaderLayout(id);
+        var uniformTable = _registry.ShaderRegistry.GetShaderLayout(id);
 
         _driver.UseShader(handle);
         _boundShaderId = id;
@@ -275,7 +279,7 @@ internal sealed class GraphicsContext : IGraphicsContext
 
     public void BindUniformBuffer(UniformGpuSlot slot)
     {
-        var ubo = _shaderRegistry.GetUboId(slot);
+        var ubo = _registry.ShaderRegistry.GetUboId(slot);
         var handle = _store.UboStore.GetHandle(ubo);
         _driver.BindUniformBuffer(handle);
     }
@@ -354,10 +358,10 @@ internal sealed class GraphicsContext : IGraphicsContext
     {
         _boundVaoId.IsValidOrThrow();
         BindVertexBuffer(default);
-         var vao =  _store.MeshStore.GetHandleAndMeta(_boundVaoId, out var meta);
-        var meshLayout = _meshRegistry.GetInternal(_boundVaoId);
+        var vao = _store.MeshStore.GetHandleAndMeta(_boundVaoId, out var meta);
+        var meshLayout = _registry.MeshRegistry.GetInternal(_boundVaoId);
         var vboIds = meshLayout.VertexBufferIds;
-        
+
         VertexBufferId prevVboId = default;
         for (int i = 0; i < attributes.Length; i++)
         {
@@ -373,16 +377,16 @@ internal sealed class GraphicsContext : IGraphicsContext
             _driver.SetVertexAttribute(vao, (uint)i, attrib);
             prevVboId = vboId;
         }
+
         var newMeta = MeshMeta.CreateCopy(in meta, (uint)attributes.Length, meta.DrawCount);
         _store.MeshStore.ReplaceMeta(_boundVaoId, in newMeta, out _);
-
     }
 
     public void SetVertexBuffer<T>(ReadOnlySpan<T> data, BufferUsage usage = BufferUsage.StaticDraw) where T : unmanaged
     {
         _boundVertexBufferId.IsValidOrThrow();
-        var vbo =  _store.VboStore.GetHandleAndMeta(_boundVertexBufferId, out var meta);
-        
+        var vbo = _store.VboStore.GetHandleAndMeta(_boundVertexBufferId, out var meta);
+
         if (meta.Usage == BufferUsage.StaticDraw && meta.ElementCount * meta.ElementSize > 0)
             GraphicsException.ThrowInvalidBufferData<VertexBufferId>(_boundVertexBufferId.ToString(),
                 "Buffer is static");
@@ -390,7 +394,7 @@ internal sealed class GraphicsContext : IGraphicsContext
         var elementCount = data.Length;
         var elementSize = Unsafe.SizeOf<T>();
         nuint size = (nuint)(elementSize * elementCount);
-        
+
         _driver.SetVertexBuffer(default, vbo, data, size, usage);
 
         var newMeta = new VertexBufferMeta(meta.Usage, meta.BindingIdx, (uint)elementCount, (uint)elementSize);
@@ -400,8 +404,8 @@ internal sealed class GraphicsContext : IGraphicsContext
     public void SetIndexBuffer<T>(ReadOnlySpan<T> data, BufferUsage usage = BufferUsage.StaticDraw) where T : unmanaged
     {
         _boundIndexBufferId.IsValidOrThrow();
-        var vbo =  _store.IboStore.GetHandleAndMeta(_boundIndexBufferId, out var meta);
-        
+        var vbo = _store.IboStore.GetHandleAndMeta(_boundIndexBufferId, out var meta);
+
         if (meta.Usage == BufferUsage.StaticDraw && meta.ElementCount * meta.ElementSize > 0)
             GraphicsException.ThrowInvalidBufferData<IndexBufferId>(_boundIndexBufferId.ToString(),
                 "Buffer is static");
@@ -409,7 +413,7 @@ internal sealed class GraphicsContext : IGraphicsContext
         var elementCount = data.Length;
         var elementSize = Unsafe.SizeOf<T>();
         nuint size = (nuint)(elementSize * elementCount);
-        
+
         _driver.SetVertexBuffer(default, vbo, data, size, usage);
 
         var newMeta = new IndexBufferMeta(meta.Usage, (uint)elementCount, (uint)elementSize);
@@ -430,10 +434,10 @@ internal sealed class GraphicsContext : IGraphicsContext
         _driver.UploadIndexBuffer(handle, data, byteOffset);
     }
 
-    
+
     public void SetUniformBufferSize(UniformGpuSlot slot, nuint capacityBytes)
     {
-        var ubo = _shaderRegistry.GetUboId(slot);
+        var ubo = _registry.ShaderRegistry.GetUboId(slot);
         var handle = _store.UboStore.GetHandle(ubo);
         _driver.SetUniformBufferSize(slot, capacityBytes);
     }
@@ -441,24 +445,24 @@ internal sealed class GraphicsContext : IGraphicsContext
     public void UploadUniformGpuData<T>(UniformGpuSlot slot, in T data, nuint offsetBytes = 0)
         where T : unmanaged, IUniformGpuData
     {
-        var ubo = _shaderRegistry.GetUboId(slot);
+        var ubo = _registry.ShaderRegistry.GetUboId(slot);
         var handle = _store.UboStore.GetHandle(ubo);
         _driver.UploadUbo(handle, data, offsetBytes);
     }
 
     public void BindUniformBufferRange(UniformGpuSlot slot, nuint offset, nuint size)
     {
-        var ubo = _shaderRegistry.GetUboId(slot);
+        var ubo = _registry.ShaderRegistry.GetUboId(slot);
         var handle = _store.UboStore.GetHandle(ubo);
         _driver.BindUniformBufferRange(handle, slot, offset, size);
     }
-    
+
     public void DrawArrays(DrawPrimitive primitive, uint drawCount)
     {
         Debug.Assert(_boundVaoId.IsValid(), "No VAO is bound");
         Debug.Assert(drawCount != 0, "DrawArrays called with drawCount = 0");
         _driver.DrawArrays(primitive, drawCount);
-        _drawTriangleCount += (int)drawCount;
+        _drawTriangleCount += drawCount;
         _drawCallCount++;
     }
 
@@ -467,10 +471,9 @@ internal sealed class GraphicsContext : IGraphicsContext
         Debug.Assert(_boundVaoId.IsValid(), "No VAO is bound");
         Debug.Assert(drawCount != 0, "DrawElements called with drawCount = 0");
         _driver.DrawElements(primitive, drawCount, elementType);
-        _drawTriangleCount += (int)drawCount;
+        _drawTriangleCount += drawCount;
         _drawCallCount++;
     }
-
 
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
@@ -492,12 +495,10 @@ internal sealed class GraphicsContext : IGraphicsContext
     public void SetUniform(ShaderUniform uniform, Vector4 value) => _driver.SetUniform(_boundUniforms![uniform], value);
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public unsafe void SetUniform(ShaderUniform uniform, in Matrix4x4 value) =>
+    public void SetUniform(ShaderUniform uniform, in Matrix4x4 value) =>
         _driver.SetUniform(_boundUniforms![uniform], in value);
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public unsafe void SetUniform(ShaderUniform uniform, in Matrix3 value) =>
+    public void SetUniform(ShaderUniform uniform, in Matrix3 value) =>
         _driver.SetUniform(_boundUniforms![uniform], in value);
-    
-
 }

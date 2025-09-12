@@ -1,6 +1,6 @@
 namespace ConcreteEngine.Graphics.Resources;
 
-internal interface IResourceManager
+internal interface IGfxResourceManager
 {
     public ResourceStore<TextureId, TextureMeta> TextureStore { get; }
 
@@ -19,7 +19,7 @@ internal interface IResourceManager
     public ResourceStore<UniformBufferId, UniformBufferMeta> UboStore { get; }
 
 }
-internal sealed class ResourceManager : IResourceManager
+internal sealed class GfxResourceManager : IGfxResourceManager
 {
     private const int StoreTier1 = 64;
     private const int StoreTier2 = 32;

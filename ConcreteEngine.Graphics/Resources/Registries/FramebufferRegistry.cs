@@ -2,18 +2,18 @@ namespace ConcreteEngine.Graphics.Resources;
 
 public interface IFrameBufferRegistry
 {
-    IMeshLayout Get(MeshId meshId);
+    FrameBufferLayout Get(FrameBufferId fboId);
 }
 
 public sealed class FrameBufferLayout
 {
     public required FrameBufferId FboId { get; init; }
-    public TextureId TexColorId { get; init; }
-    public RenderBufferId RboTexId { get; init; }
+    public TextureId FboTexId { get; init; }
     public RenderBufferId RboDepthId { get; init; }
+    public RenderBufferId RboTexId { get; init; }
 }
 
-public sealed class FrameBufferRegistry
+public sealed class FrameBufferRegistry : IFrameBufferRegistry
 {
     private readonly Dictionary<FrameBufferId, FrameBufferLayout> _registry = new(4);
     

@@ -8,10 +8,10 @@ using Silk.NET.Maths;
 
 namespace ConcreteEngine.Graphics;
 
-internal interface IProgramBackend
+internal interface IGfxShaderBackend
 {
     GfxHandle CreateShader(string vs, string fs, out ShaderLayout layout, out ShaderMeta meta);
-    void UseShader(in GfxHandle prog);
+    void UseShader(in GfxHandle shader);
     void SetUniform(int uniform, int value);
     void SetUniform(int uniform, uint value);
     void SetUniform(int uniform, float value);
@@ -70,7 +70,7 @@ internal interface IFramebufferBackend
 {
     void BindFramebuffer(in GfxHandle fbo);
     void BindFrameBufferReadDraw(in GfxHandle readFbo, in GfxHandle drawFbo);
-    void CreateFramebuffer(in FrameBufferDesc desc, out FboCreatedResult result);
+    void CreateFramebuffer(in FrameBufferDesc desc, out DriverCreateFboResult result);
     void Blit(Vector2D<int> srcSize, Vector2D<int> dstSize, bool linear);
 }
 
@@ -84,7 +84,13 @@ internal interface IStateBackend
     void SetViewport(in Vector2D<int> viewport);
 }
 
-internal interface IGraphicsDriver : IProgramBackend, IBufferBackend, IMeshBackend, ITextureBackend, IFramebufferBackend, IStateBackend
+internal interface IDisposableBackend
+{
+    void DeleteGfxResource(GfxHandle handle);
+}
+
+internal interface IGraphicsDriver : IGfxShaderBackend, IBufferBackend, IMeshBackend, ITextureBackend,
+    IFramebufferBackend, IStateBackend, IDisposableBackend
 {
     GraphicsConfiguration Configuration { get; }
     DeviceCapabilities Capabilities { get; }

@@ -23,9 +23,9 @@ public interface IMeshFactory
 internal sealed class MeshFactory : IMeshFactory
 {
     private readonly IGraphicsContext _gfx;
-    private readonly IResourceManager _resources;
-    private readonly IResourceAllocator _allocator;
-    private readonly IResourceRegistry _registry;
+    private readonly IGfxResourceManager _resources;
+    private readonly IGfxResourceAllocator _allocator;
+    private readonly GfxResourceRegistry _registry;
 
     private DrawPrimitive _primitive;
     private MeshDrawKind _drawKind;
@@ -42,8 +42,8 @@ internal sealed class MeshFactory : IMeshFactory
 
     private bool _isStatic = true;
 
-    internal MeshFactory(IGraphicsContext gfx, IResourceManager resources, IResourceAllocator allocator,
-        IResourceRegistry registry)
+    internal MeshFactory(IGraphicsContext gfx, IGfxResourceManager resources, IGfxResourceAllocator allocator,
+        GfxResourceRegistry registry)
     {
         _gfx = gfx;
         _resources = resources;

@@ -32,7 +32,7 @@ public sealed class GameEngine : IDisposable
     }
 
     private readonly IEngineWindowHost _window;
-    private readonly IGraphicsDevice _graphics;
+    private readonly GraphicsRuntime _graphics;
     private readonly IEngineInputSource _input;
 
 
@@ -68,7 +68,7 @@ public sealed class GameEngine : IDisposable
 
     internal GameEngine(
         IEngineWindowHost windowHost,
-        IGraphicsDevice graphics,
+        GraphicsRuntime graphics,
         IEngineInputSource input,
         AssetManagerConfiguration assetConfig,
         List<Func<GameScene>> sceneFactories
@@ -107,8 +107,7 @@ public sealed class GameEngine : IDisposable
 
     private void StartAssetLoader()
     {
-        var uploadSink = _graphics.CreateUploader();
-        _assets.StartLoader(uploadSink);
+        _assets.StartLoader(_graphics.Allocator, _graphics.FactoryHub);
     }
 
     private void InitializeSystems()
@@ -133,7 +132,7 @@ public sealed class GameEngine : IDisposable
         _renderTime.Accumulate(dt);
         _renderTime.Advance();
         
-        _graphics.StartFrame(in frameCtx);
+        _graphics.Context.BeginFrame(in frameCtx);
         if (_currentScene != null)
         {
             var snapshot = _currentScene.RenderGlobals.Snapshot;
@@ -142,7 +141,7 @@ public sealed class GameEngine : IDisposable
         }
         _renderTime.TickOrGpuDispose();
         _renderTime.TickOrGpuUpload();
-        _graphics.EndFrame(out _gpuFrameResult);
+        _graphics.Context.EndFrame(out _gpuFrameResult);
         _prevOutputSize = _window.FramebufferSize;
     }
     
@@ -268,7 +267,7 @@ public sealed class GameEngine : IDisposable
         _isDisposed = true;
         _currentScene?.Unload();
         _assets?.Shutdown();
-        _graphics?.Dispose();
+       // _graphics?.Dispose();
     }
 
     public void Dispose()
@@ -278,6 +277,6 @@ public sealed class GameEngine : IDisposable
         _isDisposed = true;
 
         _assets?.Shutdown();
-        _graphics?.Dispose();
+        //_graphics?.Dispose();
     }
 }

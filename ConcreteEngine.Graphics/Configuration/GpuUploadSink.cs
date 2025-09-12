@@ -17,9 +17,11 @@ public interface IGpuUploadSink
 
 internal sealed class GpuUploadSink : IGpuUploadSink
 {
-    private readonly IResourceAllocator _allocator;
+    private readonly IGfxResourceAllocator _allocator;
 
-    public GpuUploadSink(IResourceAllocator allocator)
+    public IMeshFactory MeshFactory { get; }
+
+    public GpuUploadSink(IGfxResourceAllocator allocator)
     {
         _allocator = allocator;
     }

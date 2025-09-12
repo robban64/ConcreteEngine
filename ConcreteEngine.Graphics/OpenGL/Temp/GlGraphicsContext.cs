@@ -180,7 +180,7 @@ public sealed class GlGraphicsContext : IGraphicsContext
 
     public void EndRenderPass()
     {
-        if (_boundFboId == default) GraphicsException.ResourceNotBound<GlFrameBufferHandle>(nameof(_boundFboId));
+        if (_boundFboId == default) GraphicsException.ResourceNotBound<GlFboHandle>(nameof(_boundFboId));
         _currentDrawFboHandle = 0;
         _currentReadFboHandle = 0;
 
@@ -428,7 +428,7 @@ public sealed class GlGraphicsContext : IGraphicsContext
         ref readonly var meta = ref _store.VboStore.GetMeta(_boundVertexBufferId);
         var handle = _store.VboStore.GetHandle(_boundVertexBufferId);
         if (meta.Usage == BufferUsage.StaticDraw && meta.ElementCount * meta.ElementSize > 0)
-            GraphicsException.ThrowInvalidBufferData<GlVertexBufferHandle>(_boundVertexBufferId.ToString(),
+            GraphicsException.ThrowInvalidBufferData<GlVboHandle>(_boundVertexBufferId.ToString(),
                 "Buffer is static");
 
         var elementCount = data.Length;
@@ -449,7 +449,7 @@ public sealed class GlGraphicsContext : IGraphicsContext
         var handle = _store.IboStore.GetHandle(_boundIndexBufferId);
 
         if (meta.Usage == BufferUsage.StaticDraw && meta.ElementCount * meta.ElementSize > 0)
-            GraphicsException.ThrowInvalidBufferData<GlIndexBufferHandle>(_boundIndexBufferId.ToString(),
+            GraphicsException.ThrowInvalidBufferData<GlIboHandle>(_boundIndexBufferId.ToString(),
                 "Buffer is static");
 
         var elementCount = data.Length;
@@ -468,17 +468,17 @@ public sealed class GlGraphicsContext : IGraphicsContext
         ref readonly var meta = ref _store.VboStore.GetMeta(_boundVertexBufferId);
         var handle = _store.VboStore.GetHandle(_boundVertexBufferId);
         if (meta.Usage == BufferUsage.StaticDraw && meta.ElementCount * meta.ElementSize > 0)
-            GraphicsException.ThrowInvalidBufferData<GlVertexBufferHandle>(_boundVertexBufferId.ToString(),
+            GraphicsException.ThrowInvalidBufferData<GlVboHandle>(_boundVertexBufferId.ToString(),
                 "Buffer is static");
 
         var elementSize = Unsafe.SizeOf<T>();
 
         if (elementSize != meta.ElementSize)
-            GraphicsException.ThrowInvalidBufferData<GlVertexBufferHandle>(nameof(elementSize), "Invalid element size");
+            GraphicsException.ThrowInvalidBufferData<GlVboHandle>(nameof(elementSize), "Invalid element size");
 
         if (data.Length + offsetElements > meta.ElementCount)
         {
-            GraphicsException.ThrowInvalidBufferData<GlVertexBufferHandle>(null,
+            GraphicsException.ThrowInvalidBufferData<GlVboHandle>(null,
                 $"Upload data {data.Length + offsetElements} cannot be bigger than {meta.ElementCount} elements.");
         }
 
@@ -493,17 +493,17 @@ public sealed class GlGraphicsContext : IGraphicsContext
         ref readonly var meta = ref _store.IboStore.GetMeta(_boundIndexBufferId);
         var handle = _store.IboStore.GetHandle(_boundIndexBufferId);
         if (meta.Usage == BufferUsage.StaticDraw && meta.ElementCount * meta.ElementSize > 0)
-            GraphicsException.ThrowInvalidBufferData<GlVertexBufferHandle>(_boundIndexBufferId.ToString(),
+            GraphicsException.ThrowInvalidBufferData<GlVboHandle>(_boundIndexBufferId.ToString(),
                 "Buffer is static");
 
         var elementSize = Unsafe.SizeOf<T>();
 
         if (elementSize != meta.ElementSize)
-            GraphicsException.ThrowInvalidBufferData<GlVertexBufferHandle>(nameof(elementSize), "Invalid element size");
+            GraphicsException.ThrowInvalidBufferData<GlVboHandle>(nameof(elementSize), "Invalid element size");
 
         if (data.Length + offsetElements > meta.ElementCount)
         {
-            GraphicsException.ThrowInvalidBufferData<GlVertexBufferHandle>(null,
+            GraphicsException.ThrowInvalidBufferData<GlVboHandle>(null,
                 $"Upload data {data.Length + offsetElements} cannot be bigger than {meta.ElementCount} elements.");
         }
 

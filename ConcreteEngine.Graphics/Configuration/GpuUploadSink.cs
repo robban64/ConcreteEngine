@@ -17,32 +17,30 @@ public interface IGpuUploadSink
 
 internal sealed class GpuUploadSink : IGpuUploadSink
 {
-    private readonly IGraphicsDevice _graphics;
-    
-    public IMeshFactory MeshFactory => _graphics.MeshFactory;
+    private readonly IResourceAllocator _allocator;
 
-    public GpuUploadSink(IGraphicsDevice graphics)
+    public GpuUploadSink(IResourceAllocator allocator)
     {
-        _graphics = graphics;
+        _allocator = allocator;
     }
 
     public FrameBufferId CreateFramebuffer(in FrameBufferDesc desc, out FrameBufferMeta meta)
     {
-        return _graphics.CreateFramebuffer(in desc, out meta);
+        return _allocator.CreateFramebuffer(in desc, out meta);
     }
 
     public ShaderId CreateShader(string vertexSource, string fragmentSource, out ShaderMeta meta)
     {
-        return _graphics.CreateShader(vertexSource, fragmentSource, out meta);
+        return _allocator.CreateShader(vertexSource, fragmentSource, out meta);
     }
 
     public TextureId CreateTexture2D(GpuTextureData data, in GpuTextureDescriptor desc, out TextureMeta meta)
     {
-        return _graphics.CreateTexture2D(data, in desc, out meta);
+        return _allocator.CreateTexture2D(data, in desc, out meta);
     }
 
     public TextureId CreateCubeMap(GpuCubeMapData data, in GpuCubeMapDescriptor desc, out TextureMeta meta)
     {
-        return _graphics.CreateCubeMap(data, in desc, out meta);
+        return _allocator.CreateCubeMap(data, in desc, out meta);
     }
 }

@@ -1,4 +1,5 @@
 using System.Runtime.CompilerServices;
+using ConcreteEngine.Graphics.Descriptors;
 using ConcreteEngine.Graphics.Resources;
 
 namespace ConcreteEngine.Graphics.Utils;
@@ -73,6 +74,6 @@ public static class UniformBufferUtils
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static bool IsStd140Aligned<T>() where T : unmanaged, IUniformGpuData => (Unsafe.SizeOf<T>() % 16) == 0;
-    public static bool IsStd140SizeAligned(int size) => (size % 16) == 0;
+    public static bool IsStd140SizeAligned(nuint size) => (size % 16) == 0;
 
 }

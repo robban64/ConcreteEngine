@@ -32,19 +32,19 @@ public sealed class GlGraphicsDevice : IGraphicsDevice<GlGraphicsContext>
     private readonly ResourceStore<MeshId, MeshMeta, GlMeshHandle> _meshStore = new(initialCapacity: StoreTier2,
         static i => new MeshId(i + 1));
 
-    private readonly ResourceStore<VertexBufferId, VertexBufferMeta, GlVertexBufferHandle> _vboStore = new(
+    private readonly ResourceStore<VertexBufferId, VertexBufferMeta, GlVboHandle> _vboStore = new(
         initialCapacity: StoreTier2, static i => new VertexBufferId(i + 1));
 
-    private readonly ResourceStore<IndexBufferId, IndexBufferMeta, GlIndexBufferHandle> _iboStore = new(
+    private readonly ResourceStore<IndexBufferId, IndexBufferMeta, GlIboHandle> _iboStore = new(
         initialCapacity: StoreTier2, static i => new IndexBufferId(i + 1));
 
-    private readonly ResourceStore<FrameBufferId, FrameBufferMeta, GlFrameBufferHandle> _fboStore = new(
+    private readonly ResourceStore<FrameBufferId, FrameBufferMeta, GlFboHandle> _fboStore = new(
         initialCapacity: StoreTier3, static i => new FrameBufferId(i + 1));
 
-    private readonly ResourceStore<RenderBufferId, RenderBufferMeta, GlRenderBufferHandle> _rboStore = new(
+    private readonly ResourceStore<RenderBufferId, RenderBufferMeta, GlRboHandle> _rboStore = new(
         initialCapacity: StoreTier3, static i => new RenderBufferId(i + 1));
 
-    private readonly ResourceStore<UniformBufferId, UniformBufferMeta, GlUniformBufferHandle> _uboStore = new(
+    private readonly ResourceStore<UniformBufferId, UniformBufferMeta, GlUboHandle> _uboStore = new(
         initialCapacity: StoreTier3, static i => new UniformBufferId(i + 1));
 
     #endregion
@@ -218,7 +218,7 @@ public sealed class GlGraphicsDevice : IGraphicsDevice<GlGraphicsContext>
         TextureId ReplaceTexture(TextureId id, in TextureMeta newMeta, GlTextureHandle newHandle) =>
             _textureStore.Replace(id, in newMeta, in newHandle, out _);
 
-        RenderBufferId ReplaceRbo(RenderBufferId id, in RenderBufferMeta newMeta, GlRenderBufferHandle newHandle) =>
+        RenderBufferId ReplaceRbo(RenderBufferId id, in RenderBufferMeta newMeta, GlRboHandle newHandle) =>
             _rboStore.Replace(id, in newMeta, in newHandle, out _);
     }
 
@@ -241,7 +241,7 @@ public sealed class GlGraphicsDevice : IGraphicsDevice<GlGraphicsContext>
         TextureId AddStoreTex(TextureId _, in TextureMeta newMeta, GlTextureHandle newHandle) =>
             _textureStore.Add(in newMeta, in newHandle);
 
-        RenderBufferId AddStoreRbo(RenderBufferId _, in RenderBufferMeta newMeta, GlRenderBufferHandle newHandle) =>
+        RenderBufferId AddStoreRbo(RenderBufferId _, in RenderBufferMeta newMeta, GlRboHandle newHandle) =>
             _rboStore.Add(in newMeta, in newHandle);
     }
 
@@ -301,7 +301,7 @@ public sealed class GlGraphicsDevice : IGraphicsDevice<GlGraphicsContext>
     }
 
 
-    public void EnqueueRemoveResource<TId>(TId id, bool reserve = false) where TId : struct
+    public void EnqueueRemoveResource<TId>(TId id, bool reserve = false) where TId : unmanaged, IResourceId
     {
         Console.WriteLine($"Enqueue removal of {typeof(TId).Name}");
         switch (id)

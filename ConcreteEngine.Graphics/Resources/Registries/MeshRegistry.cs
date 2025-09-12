@@ -1,7 +1,6 @@
 using ConcreteEngine.Graphics.Descriptors;
-using ConcreteEngine.Graphics.Resources;
 
-namespace ConcreteEngine.Graphics;
+namespace ConcreteEngine.Graphics.Resources;
 
 public interface IMeshRegistry
 {
@@ -16,7 +15,6 @@ public interface IMeshLayout
     IndexBufferId IndexBufferId { get;  }
     ReadOnlySpan<VertexBufferId> GetVertexBufferIds();
     ReadOnlySpan<VertexAttributeDescriptor> GetAttributes();
-
 }
 
 internal sealed class MeshRegistry: IMeshRegistry
@@ -28,7 +26,7 @@ internal sealed class MeshRegistry: IMeshRegistry
         return _registry[meshId];
     }
     
-    public void RegisterMesh(MeshLayout record)
+    public void Register(MeshLayout record)
     {
         _registry.Add(record.MeshId, record);
     }

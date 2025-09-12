@@ -3,6 +3,7 @@ using System.Text;
 using System.Text.RegularExpressions;
 using ConcreteEngine.Graphics;
 using ConcreteEngine.Graphics.Descriptors;
+using ConcreteEngine.Graphics.Resources;
 
 namespace ConcreteEngine.Core.Assets.Loaders;
 

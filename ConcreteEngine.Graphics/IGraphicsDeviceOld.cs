@@ -11,7 +11,7 @@ using ConcreteEngine.Graphics.Utils;
 namespace ConcreteEngine.Graphics;
 
 
-public interface IGraphicsDevice : IDisposable
+public interface IGraphicsDeviceOld : IDisposable
 {
     IGraphicsContext Gfx { get; }
     GraphicsBackend BackendApi { get; }
@@ -38,11 +38,11 @@ public interface IGraphicsDevice : IDisposable
     UniformBufferId CreateUniformBuffer<T>(UniformGpuSlot slot, UboDefaultCapacity defaultCapacity, out UniformBufferMeta meta)
         where T :  unmanaged, IUniformGpuData;
 
-    void EnqueueRemoveResource<TId>(TId id, bool replace = false) where TId : struct;
+    void EnqueueRemoveResource<TId>(TId id, bool replace = false) where TId : unmanaged, IResourceId;
 }
 
 //IGraphicsDevice should not be graphics api implemented, remove
-public interface IGraphicsDevice<out TContext> : IGraphicsDevice where TContext : class, IGraphicsContext
+public interface IGraphicsDeviceOld<out TContext> : IGraphicsDevice where TContext : class, IGraphicsContext
 {
     new TContext Gfx { get; }
 }

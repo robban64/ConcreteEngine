@@ -14,22 +14,19 @@ internal class ResourceDisposeQueue
 
     private int _ticks;
 
-    public void Enqueue(
-        ResourceKind kind,
-        uint handle,
-        int priority = 0)
+    public void Enqueue(in GfxHandle handle, int priority = 0)
     {
         if (_isDisposing)
             throw GraphicsException.InvalidState("Illegal state: Enqueue of removal during active dispose");
         
-        var cmd = new DeleteCmd(kind, handle, priority);
+        var cmd = new DeleteCmd(in handle, priority);
         if(!_disposeSet.Add(cmd))
             throw  GraphicsException.DuplicatedResource<ResourceDisposeQueue>("");
         
         _disposeQueue.Enqueue(cmd);
     }
 
-    public void Drain(Action<ResourceKind, uint> disposeFunc, bool drainAll = false)
+    public void Drain(Action<GfxHandle> disposeFunc, bool drainAll = false)
     {
         if (_disposeQueue.Count == 0) return;
         if (++_ticks < DrainDelayTicks && !drainAll) return;
@@ -40,7 +37,7 @@ internal class ResourceDisposeQueue
         while (_disposeQueue.Count > 0 && (drainAll || n < DrainPerFrame))
         {
             var curr = _disposeQueue.Dequeue();
-            disposeFunc(curr.Kind, curr.Handle);
+            disposeFunc(curr.Handle);
             n++;
         }
 
@@ -54,8 +51,7 @@ internal class ResourceDisposeQueue
     }
 
     private readonly record struct DeleteCmd(
-        ResourceKind Kind,
-        uint Handle,
+        in GfxHandle Handle,
         int Priority = 0
     );
 }

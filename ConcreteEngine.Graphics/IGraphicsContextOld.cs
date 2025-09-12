@@ -12,27 +12,34 @@ using Silk.NET.Maths;
 
 namespace ConcreteEngine.Graphics;
 
-public interface IGraphicsContext
+public interface IGraphicsContextOld
 {
     GraphicsConfiguration Configuration { get; }
     DeviceCapabilities  Capabilities { get; }
+    
+    //
 
     void BeginFrame(in FrameInfo frameCtx);
     void EndFrame(out GpuFrameStats result);
-
+    
     void Clear(Color4 color, ClearBufferFlag flags);
+    void SetBlendMode(BlendMode blendMode);
+    void SetDepthMode(DepthMode depthMode);
+    void SetCullMode(CullMode cullMode);
+    void SetViewport(in Vector2D<int> viewport);
+
+
     void BeginScreenPass(Color4? clear = null, ClearBufferFlag? flags = null);
     void BeginRenderPass(FrameBufferId fboId, Color4? clear, ClearBufferFlag? flags);
     void EndRenderPass();
     void BlitFramebuffer(FrameBufferId fromId, FrameBufferId toId = default, bool linearFilter = true);
-    void SetBlendMode(BlendMode blendMode);
-    void SetDepthTest(bool depthTest);
 
     void BindTexture(TextureId resourceId, uint slot);
     void BindMesh(MeshId resourceId);
     void BindVertexBuffer(VertexBufferId resourceId);
     void BindIndexBuffer(IndexBufferId resourceId);
     void BindUniformBuffer(UniformGpuSlot slot);
+    void BindFramebuffer(FrameBufferId id);
 
     void SetVertexAttribute(ReadOnlySpan<VertexAttributeDescriptor> attributes);
     void SetVertexBuffer<T>(ReadOnlySpan<T> data, BufferUsage usage = BufferUsage.StaticDraw) where T : unmanaged;

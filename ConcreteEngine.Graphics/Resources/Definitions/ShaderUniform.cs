@@ -1,10 +1,10 @@
 #region
 
-using static ConcreteEngine.Graphics.ShaderUniform;
+using static ConcreteEngine.Graphics.Resources.ShaderUniform;
 
 #endregion
 
-namespace ConcreteEngine.Graphics;
+namespace ConcreteEngine.Graphics.Resources;
 
 public enum ShaderUniform : byte
 {

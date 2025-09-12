@@ -1,4 +1,5 @@
 using ConcreteEngine.Core.Assets;
+using ConcreteEngine.Graphics.Descriptors;
 using ConcreteEngine.Graphics.Resources;
 
 namespace ConcreteEngine.Core.Resources;

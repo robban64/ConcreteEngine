@@ -116,9 +116,6 @@ internal sealed class GfxResourceAllocator : IGfxResourceAllocator
     public UniformBufferId CreateUniformBuffer<T>(UniformGpuSlot slot, UboDefaultCapacity defaultCapacity,
         out UniformBufferMeta meta) where T : unmanaged, IUniformGpuData
     {
-        if (slot == UniformGpuSlot.None)
-            throw new GraphicsException($"UBO - {nameof(slot)} has value None");
-
         if (!UniformBufferUtils.IsStd140Aligned<T>())
             throw GraphicsException.InvalidStd140Layout<T>();
 

@@ -312,13 +312,6 @@ internal sealed class GraphicsContext : IGraphicsContext
 
     public void BindUniformBuffer(UniformGpuSlot slot)
     {
-        if (slot == UniformGpuSlot.None)
-        {
-            _driver.BindUniformBuffer(default);
-            _boundUniformBufferId = default;
-            return;
-        }
-
         var ubo = _registry.ShaderRegistry.GetUboId(slot);
         if (ubo == _boundUniformBufferId) return;
 
@@ -501,7 +494,7 @@ internal sealed class GraphicsContext : IGraphicsContext
     {
         var ubo = _registry.ShaderRegistry.GetUboId(slot);
         var handle = _store.UboStore.GetHandle(ubo);
-        _driver.UploadUbo(handle, data, offsetBytes, (nuint)Unsafe.SizeOf<T>());
+        _driver.UploadUniformBuffer(handle, data, offsetBytes, (nuint)Unsafe.SizeOf<T>());
     }
 
     public void BindUniformBufferRange(UniformGpuSlot slot, nuint offset, nuint size)

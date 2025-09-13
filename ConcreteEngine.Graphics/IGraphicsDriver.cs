@@ -29,7 +29,7 @@ internal interface IBufferBackend
 
     void BindUniformBuffer(in GfxHandle ubo);
     void SetUniformBufferSize(UniformGpuSlot slot, nuint capacity);
-    void UploadUbo<T>(in GfxHandle ubo, in T data, nuint offset, nuint size) where T : unmanaged, IUniformGpuData;
+    void UploadUniformBuffer<T>(in GfxHandle ubo, in T data, nuint offset, nuint size) where T : unmanaged, IUniformGpuData;
     void BindUniformBufferRange(in GfxHandle ubo, UniformGpuSlot slot, nuint offset, nuint size);
 }
 

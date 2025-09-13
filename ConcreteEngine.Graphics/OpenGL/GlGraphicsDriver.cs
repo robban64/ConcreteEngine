@@ -169,7 +169,7 @@ internal sealed class GlBackendDriver : IGraphicsDriver
         _gl.BufferData(BufferTargetARB.UniformBuffer, capacity, (void*)0, BufferUsageARB.DynamicDraw);
 
 
-    public unsafe void UploadUbo<T>(in GfxHandle ubo, in T data, nuint offset, nuint size)
+    public unsafe void UploadUniformBuffer<T>(in GfxHandle ubo, in T data, nuint offset, nuint size)
         where T : unmanaged, IUniformGpuData
     {
         fixed (T* p = &data)
@@ -179,7 +179,6 @@ internal sealed class GlBackendDriver : IGraphicsDriver
     public void BindUniformBufferRange(in GfxHandle ubo, UniformGpuSlot slot, nuint offset, nuint size)
     {
         var handle = _store.UboStore.Get(ubo).Handle;
-        CheckGlError();
         _gl.BindBufferRange(BufferTargetARB.UniformBuffer, (uint)slot, handle, (nint)offset, size);
     }
 

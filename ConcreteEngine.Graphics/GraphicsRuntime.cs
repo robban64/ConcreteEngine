@@ -1,22 +1,42 @@
+using ConcreteEngine.Graphics.Error;
 using ConcreteEngine.Graphics.OpenGL;
 using ConcreteEngine.Graphics.Resources;
+using ConcreteEngine.Graphics.Utils;
+using Silk.NET.Maths;
 using Silk.NET.OpenGL;
 
 namespace ConcreteEngine.Graphics;
 
-
-public sealed class GraphicsRuntime
+public interface IGraphicsRuntime : IDisposable
 {
-    private readonly IGraphicsDriver _driver;
+    public IGraphicsContext Context { get; }
+    public IGfxResourceAllocator Allocator  { get; }
+    public IGfxResourceDisposer Disposer  { get; }
+    public IGfxResourceRegistry Registry  { get; }
+    public IGfxFactoryHub FactoryHub  { get; }
     
-    private readonly GraphicsContext _context;
+    void Initialize<T>(IGfxStartupConfig<T> config) where T : class; 
+
+    void BeginFrame(in FrameInfo frameInfo);
+    void EndFrame(out GpuFrameStats stats); 
+
+    void OnResize(in Vector2D<int> viewportSize, in Vector2D<int> outputSize);
     
-    private readonly GfxResourceAllocator _allocator;
-    private readonly GfxResourceDisposer _disposer;
-    private readonly GfxResourceManager _resources;
-    private readonly GfxResourceRegistry _registry;
-    
-    private readonly GfxFactoryHub _factoryHub;
+    void Shutdown();
+}
+
+public sealed class GraphicsRuntime : IGraphicsRuntime
+{
+    private IGraphicsDriver _driver = null!;
+
+    private GraphicsContext _context = null!;
+
+    private GfxResourceAllocator _allocator = null!;
+    private GfxResourceDisposer _disposer = null!;
+    private GfxResourceManager _resources = null!;
+    private GfxResourceRegistry _registry = null!;
+
+    private GfxFactoryHub _factoryHub = null!;
 
     public IGraphicsContext Context => _context;
 
@@ -25,21 +45,55 @@ public sealed class GraphicsRuntime
     public IGfxResourceDisposer Disposer => _disposer;
 
     public IGfxResourceRegistry Registry => _registry;
-    
+
     public IGfxFactoryHub FactoryHub => _factoryHub;
 
-    public GraphicsRuntime(GL gl, in FrameInfo initialFrameCtx)
+    public GraphicsRuntime()
     {
-        _driver = new GlBackendDriver(gl);
+    }
+
+    public void Initialize<T>(IGfxStartupConfig<T> config) where T : class
+    {
+        if(config is not GlStartupConfig  glConfig)
+            throw GraphicsException.UnsupportedFeature("Only OpenGL is supported");
+        
+        var driver = new GlBackendDriver();
+        driver.Initialize(glConfig);
+        
+        _driver = driver;
 
         _resources = new GfxResourceManager();
         _registry = new GfxResourceRegistry(_resources);
-        _context = new GraphicsContext(_driver, _registry);
+        _context = new GraphicsContext(_driver, _resources, _registry);
 
         _allocator = new GfxResourceAllocator(_driver, _resources, _registry);
         _disposer = new GfxResourceDisposer(_resources, _registry, _driver);
 
         _factoryHub = new GfxFactoryHub(_context, _resources, _allocator, _registry);
+        
+        UniformBufferUtils.Init(_context.Capabilities.UniformBufferOffsetAlignment);
+    }
 
+    public void Shutdown()
+    {
+    }
+
+    public void BeginFrame(in FrameInfo frameInfo)
+    {
+        _context.BeginFrame(frameInfo);
+    }
+
+    public void EndFrame(out GpuFrameStats stats)
+    {
+        if (_disposer.PendingCount > 0) _disposer.DrainDisposeQueue();
+        _context.EndFrame(out stats);
+    }
+
+    public void OnResize(in Vector2D<int> viewportSize, in Vector2D<int> outputSize)
+    {
+    }
+
+    public void Dispose()
+    {
     }
 }

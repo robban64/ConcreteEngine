@@ -16,12 +16,13 @@ public interface IGraphicsContext
     DeviceCapabilities Capabilities { get; }
 
     //
-    void BeginFrame(in FrameInfo frameCtx);
-    void EndFrame(out GpuFrameStats result);
+    //void BeginFrame(in FrameInfo frameCtx);
+    //void EndFrame(out GpuFrameStats result);
 
     void Clear(Color4 color, ClearBufferFlag flags);
     void SetBlendMode(BlendMode blendMode);
     void SetDepthMode(DepthMode depthMode);
+
     void SetCullMode(CullMode cullMode);
     void SetViewport(in Vector2D<int> viewport);
 
@@ -50,8 +51,9 @@ public interface IGraphicsContext
     void UploadUniformGpuData<T>(UniformGpuSlot slot, in T data, nuint offset = 0) where T : unmanaged, IUniformGpuData;
     void BindUniformBufferRange(UniformGpuSlot slot, nuint offset, nuint size);
 
+    void DrawBoundMesh(uint drawCount = 0);
     void DrawArrays(DrawPrimitive primitive, uint drawCount);
-    void DrawElements(DrawPrimitive primitive, uint drawCount, DrawElementType elementType);
+    void DrawElements(DrawPrimitive primitive, DrawElementType elementType, uint drawCount);
 
     void UseShader(ShaderId id);
     void SetUniform(ShaderUniform uniform, int value);
@@ -78,8 +80,8 @@ internal interface IStateContext;
 
 internal sealed class GraphicsContext : IGraphicsContext
 {
-    public GraphicsConfiguration Configuration { get; }
-    public DeviceCapabilities Capabilities { get; }
+    public GraphicsConfiguration Configuration => _driver.Configuration;
+    public DeviceCapabilities Capabilities => _driver.Capabilities;
 
     private readonly IGraphicsDriver _driver;
     private readonly GfxResourceManager _store;
@@ -94,8 +96,8 @@ internal sealed class GraphicsContext : IGraphicsContext
 
     private FrameBufferId _boundFboId = default;
     private FrameBufferId _boundReadFboId = default;
-    private FrameBufferId _currDrawFboId = default; // 0 = screen
-    private FrameBufferId _currReadFboId = default; // 0 = screen
+    private GfxHandle _currDrawFboHandle = default; // 0 = screen
+    private GfxHandle _currReadFboHandle = default; // 0 = screen
 
 
     private ShaderId _boundShaderId = default;
@@ -113,15 +115,16 @@ internal sealed class GraphicsContext : IGraphicsContext
     private uint _drawTriangleCount = 0;
     private uint _drawCallCount = 0;
 
-    public GraphicsContext(IGraphicsDriver driver, GfxResourceRegistry registry)
+    public GraphicsContext(IGraphicsDriver driver, GfxResourceManager resources, GfxResourceRegistry registry)
     {
         _driver = driver;
         _registry = registry;
-        _store = new GfxResourceManager();
+        _store = resources;
 
-        _boundTextures = new TextureId[Capabilities.MaxTextureImageUnits];
+        _boundTextures = new TextureId[Configuration.MaxTextureImageUnits];
     }
 
+    
     public void BeginFrame(in FrameInfo frameCtx)
     {
         _frameCtx = frameCtx;
@@ -139,31 +142,38 @@ internal sealed class GraphicsContext : IGraphicsContext
     public void EndFrame(out GpuFrameStats result)
     {
         result = new GpuFrameStats(_drawCallCount, _drawTriangleCount);
-
         // unbind context
         BindMesh(default);
         BindVertexBuffer(default);
         BindIndexBuffer(default);
         BindFramebuffer(default);
         BindUniformBuffer(default);
+        
         UseShader(default);
+
         for (uint i = 0; i < _boundTextures.Length; i++)
         {
             BindTexture(default, i);
         }
+        _driver.ValidateEndFrame();
+
     }
-
-    public void Clear(Color4 color, ClearBufferFlag flags) => _driver.Clear(color, flags);
-
-    public void SetViewport(in Vector2D<int> viewport)
-    {
-        _activeOutputSize = viewport;
-        _driver.SetViewport(viewport);
-    }
-
+    
     public void BeginScreenPass(Color4? clear = null, ClearBufferFlag? flags = null)
     {
-        if (clear.HasValue && flags.HasValue) _driver.Clear(clear.Value, flags.Value);
+        if (_boundFboId != default) GraphicsException.ThrowInvalidState("Cannot begin screen pass while FBO is bound.");
+
+        _currDrawFboHandle = default;
+        _currReadFboHandle = default;
+
+        _boundFboId = default;
+        _boundReadFboId = default;
+        _activeOutputSize = _frameCtx.OutputSize;
+        
+        BindFramebuffer(default);
+        SetViewport(_activeOutputSize);
+
+        if (clear.HasValue && flags.HasValue) Clear(clear.Value, flags.Value);
     }
 
     public void BeginRenderPass(in FrameBufferId fboId, Color4? clear, ClearBufferFlag? flags)
@@ -173,32 +183,36 @@ internal sealed class GraphicsContext : IGraphicsContext
 
         ref readonly var meta = ref _store.FboStore.GetMeta(fboId);
         var handle = _store.FboStore.GetHandle(fboId);
-        _driver.BindFramebuffer(handle);
+        BindFramebuffer(fboId);
         SetViewport(meta.Size);
         if (clear.HasValue && flags.HasValue) Clear(clear.Value, flags.Value);
         SetDepthMode(DepthMode.WriteLequal);
         SetCullMode(CullMode.BackCcw);
 
-        _currDrawFboId = fboId;
-        _currReadFboId = fboId;
+        _currDrawFboHandle = handle;
+        _currReadFboHandle = handle;
 
         _boundFboId = fboId;
         _boundReadFboId = fboId;
         _activeOutputSize = meta.Size;
+        Debug.Assert(_currDrawFboHandle != default && _currDrawFboHandle == _currReadFboHandle);
+
     }
 
     public void EndRenderPass()
     {
         if (_boundFboId == default) GraphicsException.ResourceNotBound<GlFboHandle>(nameof(_boundFboId));
 
-        _currDrawFboId = default;
-        _currDrawFboId = default;
+        _currDrawFboHandle = default;
+        _currReadFboHandle = default;
 
         _boundFboId = default;
         _boundReadFboId = default;
 
+
         _activeOutputSize = _frameCtx.OutputSize;
 
+        BindFramebuffer(default);
         _driver.BindFramebuffer(default);
         SetViewport(_activeOutputSize);
     }
@@ -206,6 +220,9 @@ internal sealed class GraphicsContext : IGraphicsContext
 
     public void BlitFramebuffer(in FrameBufferId fromId, in FrameBufferId toId = default, bool linear = true)
     {
+        Debug.Assert(fromId != default);
+        Debug.Assert((_currReadFboHandle == default) == (_boundFboId == default) || true); // relaxed but catches obvious mismatch
+
         ref readonly var fromFbo = ref _store.FboStore.GetMeta(fromId);
         var fromHandle = _store.FboStore.GetHandle(fromId);
 
@@ -223,16 +240,29 @@ internal sealed class GraphicsContext : IGraphicsContext
         Debug.Assert(toHandle != fromHandle, "READ and DRAW FBO must differ for resolve.");
 
         var prevViewport = _activeOutputSize;
-        var prevReadFbo = _store.FboStore.GetHandle(_currReadFboId);
-        var prevDrawFbo = _store.FboStore.GetHandle(_currDrawFboId);
+        var prevReadFbo = _currReadFboHandle;
+        var prevDrawFbo = _currDrawFboHandle;
 
         var filter = !fromFbo.Msaa && linear;
         _driver.BindFrameBufferReadDraw(fromHandle, toHandle);
         _driver.Blit(srcSize, dstSize, filter);
         _driver.BindFrameBufferReadDraw(prevReadFbo, prevDrawFbo);
         SetViewport(prevViewport);
+        
+        _currReadFboHandle = prevReadFbo;
+        _currDrawFboHandle = prevDrawFbo;
+        _activeOutputSize = prevViewport;
     }
 
+   
+    public void Clear(Color4 color, ClearBufferFlag flags) => _driver.Clear(color, flags);
+
+    public void SetViewport(in Vector2D<int> viewport)
+    {
+        _activeOutputSize = viewport;
+        _driver.SetViewport(viewport);
+    }
+    
     public void SetBlendMode(BlendMode blendMode)
     {
         if (_blendMode != BlendMode.Unset && _blendMode == blendMode) return;
@@ -254,7 +284,6 @@ internal sealed class GraphicsContext : IGraphicsContext
         _cullMode = cullMode;
         _driver.SetCullMode(cullMode);
     }
-
 
     public void UseShader(ShaderId id)
     {
@@ -279,13 +308,23 @@ internal sealed class GraphicsContext : IGraphicsContext
 
     public void BindUniformBuffer(UniformGpuSlot slot)
     {
+        if (slot == UniformGpuSlot.None)
+        {
+            _driver.BindUniformBuffer(default);
+            _boundUniformBufferId = default;
+            return;
+        }
+        
         var ubo = _registry.ShaderRegistry.GetUboId(slot);
+        if(ubo == _boundUniformBufferId) return;
+        
         var handle = _store.UboStore.GetHandle(ubo);
         _driver.BindUniformBuffer(handle);
     }
 
     public void BindFramebuffer(FrameBufferId id)
     {
+        
         if (_boundFboId == id) return;
         if (id == default)
         {
@@ -301,6 +340,19 @@ internal sealed class GraphicsContext : IGraphicsContext
 
     public void BindTexture(TextureId texture, uint slot)
     {
+        if (slot >= Configuration.MaxTextureImageUnits)
+            GraphicsException.ThrowCapabilityExceeded<TextureId>("TexCoords slot", (int)slot,
+                Configuration.MaxTextureImageUnits);
+
+        if (_boundTextures[slot] == texture) return;
+        if (texture == default)
+        {
+            _driver.BindTextureUnit(default, 0);
+            _boundTextures[slot] = default;
+            return;
+        }
+
+
         _boundTextures[slot] = texture;
         var handle = _store.TextureStore.GetHandle(texture);
         _driver.BindTextureUnit(handle, slot);
@@ -329,7 +381,6 @@ internal sealed class GraphicsContext : IGraphicsContext
         if (id == default)
         {
             _driver.BindVertexBuffer(default);
-
             _boundVertexBufferId = default;
             return;
         }
@@ -457,6 +508,27 @@ internal sealed class GraphicsContext : IGraphicsContext
         _driver.BindUniformBufferRange(handle, slot, offset, size);
     }
 
+    public void DrawBoundMesh(uint drawCount)
+    {
+        _boundVaoId.DebugValidate();
+        ref readonly var meta = ref _store.MeshStore.GetMeta(_boundVaoId);
+
+        var count = drawCount > 0 ? drawCount : meta.DrawCount;
+
+        switch (meta.DrawKind)
+        {
+            case MeshDrawKind.Arrays:
+                DrawArrays(meta.Primitive, count);
+                break;
+            case MeshDrawKind.Elements:
+                DrawElements(meta.Primitive, meta.ElementType, count);
+                break;
+            default:
+                GraphicsException.ThrowUnsupportedFeature(nameof(meta.DrawKind));
+                break;
+        }
+    }
+
     public void DrawArrays(DrawPrimitive primitive, uint drawCount)
     {
         Debug.Assert(_boundVaoId.IsValid(), "No VAO is bound");
@@ -466,11 +538,14 @@ internal sealed class GraphicsContext : IGraphicsContext
         _drawCallCount++;
     }
 
-    public void DrawElements(DrawPrimitive primitive, uint drawCount, DrawElementType elementType)
+    public void DrawElements(DrawPrimitive primitive, DrawElementType elementType, uint drawCount)
     {
         Debug.Assert(_boundVaoId.IsValid(), "No VAO is bound");
         Debug.Assert(drawCount != 0, "DrawElements called with drawCount = 0");
-        _driver.DrawElements(primitive, drawCount, elementType);
+        Debug.Assert(elementType != DrawElementType.Invalid);
+        
+
+        _driver.DrawElements(primitive, elementType, drawCount);
         _drawTriangleCount += drawCount;
         _drawCallCount++;
     }
@@ -501,4 +576,5 @@ internal sealed class GraphicsContext : IGraphicsContext
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public void SetUniform(ShaderUniform uniform, in Matrix3 value) =>
         _driver.SetUniform(_boundUniforms![uniform], in value);
+    
 }

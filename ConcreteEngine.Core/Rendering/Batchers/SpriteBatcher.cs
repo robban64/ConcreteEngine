@@ -11,7 +11,10 @@ namespace ConcreteEngine.Core.Rendering;
 
 public sealed class SpriteBatcher : RenderBatcher<SpriteBatchBuildResult>
 {
-    private readonly IGraphicsDevice _graphics;
+    private const int MaxSpriteBatchSize = 1024;
+    private const int MaxSpriteBatchInstanceCount = 4;
+    
+    private readonly IGraphicsRuntime _graphics;
     private readonly IGraphicsContext _gfx;
 
     private int _commandSize = 0;
@@ -20,13 +23,13 @@ public sealed class SpriteBatcher : RenderBatcher<SpriteBatchBuildResult>
     private SpriteBatchMesh? _boundSpriteBatch;
     private readonly SortedList<int, SpriteBatchMesh> _spriteBatches;
 
-    internal SpriteBatcher(IGraphicsDevice graphics) : base(graphics)
+    internal SpriteBatcher(IGraphicsRuntime graphics) : base(graphics)
     {
         _graphics = graphics;
-        _gfx = graphics.Gfx;
+        _gfx = graphics.Context;
 
-        _commandBuffer = new SpriteBatchDrawItem[_graphics.Configuration.MaxSpriteBatchSize];
-        _spriteBatches = new(_graphics.Configuration.MaxSpriteBatchInstanceCount);
+        _commandBuffer = new SpriteBatchDrawItem[MaxSpriteBatchSize];
+        _spriteBatches = new(MaxSpriteBatchInstanceCount);
     }
 
     internal void Prepare()
@@ -37,12 +40,12 @@ public sealed class SpriteBatcher : RenderBatcher<SpriteBatchBuildResult>
 
     public void CreateSpriteBatch(int id, int capacity)
     {
-        if (_spriteBatches.Count >= _graphics.Configuration.MaxSpriteBatchInstanceCount - 1)
+        if (_spriteBatches.Count >= MaxSpriteBatchInstanceCount - 1)
         {
             throw GraphicsException.CapabilityExceeded<SpriteBatcher>(
                 "SpriteBatch Count",
                 _spriteBatches.Count,
-                _graphics.Configuration.MaxSpriteBatchInstanceCount
+                MaxSpriteBatchInstanceCount
             );
         }
 

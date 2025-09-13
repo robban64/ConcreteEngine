@@ -11,7 +11,7 @@ namespace ConcreteEngine.Core.Rendering;
 
 internal sealed class Render3D : IRender
 {
-    private readonly IGraphicsDevice _graphics;
+    private readonly IGraphicsRuntime _graphics;
     private readonly IGraphicsContext _gfx;
     private readonly DrawProcessor _drawProcessor;
 
@@ -20,10 +20,10 @@ internal sealed class Render3D : IRender
 
     public ICamera Camera => _camera;
 
-    public Render3D(IGraphicsDevice graphics, DrawProcessor drawProcessor)
+    public Render3D(IGraphicsRuntime graphics, DrawProcessor drawProcessor)
     {
         _graphics = graphics;
-        _gfx = _graphics.Gfx;
+        _gfx = _graphics.Context;
         _drawProcessor = drawProcessor;
         _camera = new Camera3D();
         _registry = new RenderPasses(graphics);
@@ -32,6 +32,8 @@ internal sealed class Render3D : IRender
 
     public void Prepare(float alpha, in RenderGlobalSnapshot snapshot)
     {
+        _registry.SetOutputSize(snapshot.OutputSize);
+
         var frameUniforms = new FrameUniformRecord(
             ambient: snapshot.Ambient,
             ambientIntensity: 1,
@@ -83,15 +85,19 @@ internal sealed class Render3D : IRender
         _registry.MutateRenderPass(targetId, mutation);
 
 
-    public void RegisterRenderTargetsFrom(RenderTargetDescriptor desc)
+    public void RegisterRenderTargetsFrom(in Vector2D<int> outputSize, RenderTargetDescriptor desc)
     {
         ArgumentNullException.ThrowIfNull(desc);
         ArgumentNullException.ThrowIfNull(desc.SceneTarget);
         ArgumentNullException.ThrowIfNull(desc.ScreenTarget);
         ArgumentNullException.ThrowIfNull(desc.LightTarget);
         ArgumentNullException.ThrowIfNull(desc.PostEffectTarget);
+        ArgumentOutOfRangeException.ThrowIfLessThan(outputSize.X, 16);
+        ArgumentOutOfRangeException.ThrowIfLessThan(outputSize.Y, 16);
 
         desc.ScreenTarget.ScreenShaderId.IsValidOrThrow();
+        
+        _registry.SetOutputSize(outputSize);
 
         // Scene Target setup
         var sceneTarget = desc.SceneTarget;

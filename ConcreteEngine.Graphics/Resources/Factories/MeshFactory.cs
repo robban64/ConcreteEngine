@@ -56,6 +56,7 @@ internal sealed class MeshFactory : IMeshFactory
     {
         StartBuilder(desc.Primitive, desc.DrawKind, DrawElementType.Invalid, desc.DrawCount);
         CreateVertexBuffer(vertexData);
+        
         return BuildMesh(desc.Attributes);
     }
 

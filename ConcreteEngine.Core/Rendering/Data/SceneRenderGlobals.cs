@@ -1,5 +1,6 @@
 using System.Numerics;
 using ConcreteEngine.Core.Resources;
+using Silk.NET.Maths;
 
 namespace ConcreteEngine.Core.Rendering;
 
@@ -16,9 +17,17 @@ public sealed class SceneRenderGlobals
     private Skybox _skybox;
     private DirectionalLight _directionalLight;
 
+    private Vector2D<int> _outputSize;
+
     public RenderGlobalSnapshot Snapshot => _snapshot;
 
-    public void SetAmbient(Vector3 ambient)
+    public void SetOutputSize(in Vector2D<int> outputSize)
+    {
+        _outputSize = outputSize;
+        _dirty = true;
+    }
+
+    public void SetAmbient(in Vector3 ambient)
     {
         _ambient = ambient;
         _dirty = true;
@@ -30,9 +39,9 @@ public sealed class SceneRenderGlobals
         _dirty = true;
     }
 
-    public void SetDirLight(Vector3 direction,
-        Vector3 diffuse,
-        Vector3 specular, float intensity = 1f)
+    public void SetDirLight(in Vector3 direction,
+        in Vector3 diffuse,
+        in Vector3 specular, float intensity = 1f)
     {
         _directionalLight = new DirectionalLight(direction, diffuse, specular, intensity);
         _dirty = true;
@@ -49,21 +58,23 @@ public sealed class SceneRenderGlobals
         if (!_dirty) return;
         _snapshot = new RenderGlobalSnapshot(
             Version: _version++,
-            _exposure,
-            _ambient,
+            OutputSize: in _outputSize,
+            Exposure: _exposure,
+            Ambient: _ambient,
             Skybox: in _skybox,
-            in _directionalLight
+            DirLight: in _directionalLight
         );
         _dirty = false;
     }
 }
 
 public readonly record struct RenderGlobalSnapshot(
-    int Version,
-    float Exposure,
-    Vector3 Ambient,
     in Skybox Skybox,
-    in DirectionalLight DirLight
+    in DirectionalLight DirLight,
+    in Vector2D<int> OutputSize,
+    Vector3 Ambient,
+    float Exposure,
+    int Version
 );
 
 public readonly record struct Skybox(

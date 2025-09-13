@@ -10,10 +10,12 @@ using ConcreteEngine.Core.Rendering;
 using ConcreteEngine.Core.Scene;
 using ConcreteEngine.Core.Systems;
 using ConcreteEngine.Core.Time;
+using ConcreteEngine.Core.Utils;
 using ConcreteEngine.Graphics;
 using ConcreteEngine.Graphics.Descriptors;
 using ConcreteEngine.Graphics.Resources;
 using Silk.NET.Maths;
+using Silk.NET.OpenGL;
 
 #endregion
 
@@ -68,16 +70,19 @@ public sealed class GameEngine : IDisposable
 
     internal GameEngine(
         IEngineWindowHost windowHost,
-        GraphicsRuntime graphics,
+        GfxRuntimeBundle<GL> gfxBundle,
         IEngineInputSource input,
         AssetManagerConfiguration assetConfig,
         List<Func<GameScene>> sceneFactories
     )
     {
+        
         _window = windowHost;
-        _graphics = graphics;
+        _graphics = gfxBundle.Graphics;
         _input = input;
         _sceneFactories = sceneFactories;
+        
+        _graphics.Initialize(gfxBundle.Config);
 
         _modules = new ModuleManager();
         _features = new FeatureManager();
@@ -132,7 +137,7 @@ public sealed class GameEngine : IDisposable
         _renderTime.Accumulate(dt);
         _renderTime.Advance();
         
-        _graphics.Context.BeginFrame(in frameCtx);
+        _graphics.BeginFrame(in frameCtx);
         if (_currentScene != null)
         {
             var snapshot = _currentScene.RenderGlobals.Snapshot;
@@ -141,7 +146,7 @@ public sealed class GameEngine : IDisposable
         }
         _renderTime.TickOrGpuDispose();
         _renderTime.TickOrGpuUpload();
-        _graphics.Context.EndFrame(out _gpuFrameResult);
+        _graphics.EndFrame(out _gpuFrameResult);
         _prevOutputSize = _window.FramebufferSize;
     }
     
@@ -243,7 +248,7 @@ public sealed class GameEngine : IDisposable
         var builder = new GameSceneConfigBuilder(_features, _modules);
         newScene.Build(builder);
 
-        _renderer.RegisterScene(builder.RenderType, builder.RenderTargetsDesc);
+        _renderer.RegisterScene(_window.FramebufferSize, builder.RenderType, builder.RenderTargetsDesc);
 
         _features.Load(new GameFeatureContext(sceneContext));
 

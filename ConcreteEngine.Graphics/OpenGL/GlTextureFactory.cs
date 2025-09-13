@@ -5,7 +5,7 @@ using Silk.NET.OpenGL;
 
 namespace ConcreteEngine.Graphics.OpenGL;
 
-internal sealed class GlTextureFactory(GL gl, DeviceCapabilities capabilities) : GlFactory(gl, capabilities)
+internal sealed class GlTextureFactory() : GlFactory()
 {
     public GlTextureHandle CreateTexture2D(GpuTextureData data, in GpuTextureDescriptor desc, out TextureMeta meta)
     {

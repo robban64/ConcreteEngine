@@ -15,7 +15,7 @@ public interface IFrameBufferDescriptor
 
 public readonly record struct FrameBufferDesc(
     Vector2 SizeRatio,
-    Vector2D<int>? AbsoluteSize = null,
+    Vector2D<int> AbsoluteSize,
     bool DepthStencilBuffer = false,
     TexturePreset TexturePreset = TexturePreset.LinearClamp,
     bool Msaa = false,

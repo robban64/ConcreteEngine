@@ -3,7 +3,7 @@ using ConcreteEngine.Graphics.Error;
 
 namespace ConcreteEngine.Graphics.Resources;
 
-internal sealed class DriverResourceStore<THandler> where THandler : unmanaged, IEquatable<THandler>
+internal sealed class DriverResourceStore<THandler> where THandler : unmanaged, IResourceHandle, IEquatable<THandler>
 {
     private const int HardLimit = 10_000;
 
@@ -26,17 +26,18 @@ internal sealed class DriverResourceStore<THandler> where THandler : unmanaged, 
 
     public GfxHandle Add(THandler value)
     {
-        Debug.Assert(value.Equals(default));
+        Debug.Assert(!value.Equals(default));
         
         int idx = _free.Count > 0 ? _free.Pop() : Allocate();
         var prev = _entries[idx];
-        var gen = (ushort)(prev.Gen + 1);
+        var gen =  (ushort)(prev.Gen + 1);
         _entries[idx] = new StoreEntry(value, gen, true);
         return new GfxHandle((uint)idx, gen, _kind);
     }
 
     public THandler Get(GfxHandle handler)
     {
+        Debug.Assert(handler != default);
         ref var e = ref _entries[(int)handler.Slot];
         if (!e.Alive || e.Gen != handler.Gen)
             GraphicsException.ThrowInvalidState("Handler is not a valid state");

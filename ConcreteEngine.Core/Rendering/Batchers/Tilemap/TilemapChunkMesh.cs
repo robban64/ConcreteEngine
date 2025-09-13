@@ -23,7 +23,7 @@ internal sealed class TilemapChunkMesh : IDisposable
     private static readonly ushort[] Indices =
         new ushort[ChunkSize * ChunkSize * IndicesPerTile];
 
-    private readonly IGraphicsDevice _graphics;
+    private readonly IGraphicsRuntime _graphics;
     private readonly IGraphicsContext _gfx;
 
     private readonly int _chunkDimension;
@@ -38,9 +38,9 @@ internal sealed class TilemapChunkMesh : IDisposable
 
     private bool _disposed = false;
 
-    public TilemapChunkMesh(IGraphicsDevice graphics, int chunkDimension, int tileSize)
+    public TilemapChunkMesh(IGraphicsRuntime graphics, int chunkDimension, int tileSize)
     {
-        _gfx = graphics.Gfx;
+        _gfx = graphics.Context;
         _graphics = graphics;
         _chunkDimension = chunkDimension;
         _tileCount = _chunkDimension * _chunkDimension;
@@ -67,7 +67,7 @@ internal sealed class TilemapChunkMesh : IDisposable
         var vbo = new GpuVboDescriptor<Vertex2D>(Vertices,BufferUsage.DynamicDraw);
         var ibo = new GpuIboDescriptor<ushort>(Indices,  BufferUsage.DynamicDraw);
 
-        var builder = _graphics.MeshFactory;
+        var builder = _graphics.FactoryHub.MeshFactory;
         var result = builder.CreateElementalMesh(vbo, ibo, metaDesc);
         _vertexBufferId = result.GetVertexBufferIds()[0];
         _indexBufferId = result.IndexBufferId;
@@ -150,7 +150,7 @@ internal sealed class TilemapChunkMesh : IDisposable
     public void Dispose()
     {
         if (_disposed) return;
-        _graphics.EnqueueRemoveResource(_meshId);
+        _graphics.Disposer.EnqueueRemoval(_meshId);
         _disposed = true;
     }
 }

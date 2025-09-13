@@ -19,7 +19,7 @@ internal sealed class SpriteBatchMesh : IDisposable
     private static readonly Vertex2D[] Vertices = new Vertex2D[MaxSpriteBatchSize * VerticesPerSprite];
     private static readonly ushort[] Indices = new ushort[MaxSpriteBatchSize * IndicesPerSprite];
 
-    private readonly IGraphicsDevice _graphics;
+    private readonly IGraphicsRuntime _graphics;
     private readonly IGraphicsContext _gfx;
 
     private readonly int _capacity;
@@ -31,16 +31,11 @@ internal sealed class SpriteBatchMesh : IDisposable
 
     private bool _disposed = false;
 
-    public SpriteBatchMesh(IGraphicsDevice graphics, int capacity)
+    public SpriteBatchMesh(IGraphicsRuntime graphics, int capacity)
     {
-        var minSpriteBatchSize = graphics.Configuration.MinSpriteBatchSize;
-        var maxSpriteBatchSize = graphics.Configuration.MaxSpriteBatchSize;
-
-        ArgumentOutOfRangeException.ThrowIfLessThan(capacity, minSpriteBatchSize, nameof(capacity));
-        ArgumentOutOfRangeException.ThrowIfGreaterThan(capacity, maxSpriteBatchSize, nameof(capacity));
 
         _graphics = graphics;
-        _gfx = graphics.Gfx;
+        _gfx = graphics.Context;
         _capacity = capacity;
         
 
@@ -62,7 +57,7 @@ internal sealed class SpriteBatchMesh : IDisposable
         var vbo = new GpuVboDescriptor<Vertex2D>(Vertices,BufferUsage.StreamDraw);
         var ibo = new GpuIboDescriptor<ushort>(indices,  BufferUsage.StaticDraw);
 
-        var builder = _graphics.MeshFactory;
+        var builder = _graphics.FactoryHub.MeshFactory;
         var result = builder.CreateElementalMesh(vbo, ibo, metaDesc);
 
         _vertexBufferId = result.GetVertexBufferIds()[0];
@@ -141,7 +136,7 @@ internal sealed class SpriteBatchMesh : IDisposable
         }
 
         _gfx.BindVertexBuffer(_vertexBufferId);
-        _gfx.UploadVertexBuffer<Vertex2D>(vertices, 0);
+        _gfx.UploadVertexBuffer<Vertex2D>(_vertexBufferId, vertices, 0);
         _gfx.BindVertexBuffer(default);
 
 
@@ -153,7 +148,7 @@ internal sealed class SpriteBatchMesh : IDisposable
     public void Dispose()
     {
         if (_disposed) return;
-        _graphics.EnqueueRemoveResource(_meshId);
+        _graphics.Disposer.EnqueueRemoval(_meshId);
         _disposed = true;
     }
 }

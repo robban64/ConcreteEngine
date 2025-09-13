@@ -14,7 +14,10 @@ public struct RenderPassMutation
 
 internal class RenderPasses
 {
-    private readonly IGraphicsDevice _graphics;
+    private readonly IGraphicsRuntime _graphics;
+
+    private IGfxFactoryHub GfxFactory => _graphics.FactoryHub;
+    private IGfxResourceAllocator GfxAllocator => _graphics.Allocator;
 
     public RenderPassFboRecord MultisampleFbo { get; private set; }
     public RenderPassFboRecord SceneFbo { get; private set; }
@@ -24,11 +27,12 @@ internal class RenderPasses
     public RenderPassFboRecord PostFboB { get; private set; }
 
     private readonly List<IRenderPassDescriptor>[] _renderTargets;
-    
 
     private int _currentTargetId = 0;
+    
+    private Vector2D<int> _outputSize;
 
-    public RenderPasses(IGraphicsDevice graphics)
+    public RenderPasses(IGraphicsRuntime graphics)
     {
         _graphics = graphics;
         
@@ -81,16 +85,20 @@ internal class RenderPasses
         _renderTargets[(int)target].Add(pass);
     }
     
+    public void SetOutputSize(in Vector2D<int> size) => _outputSize  = size;
+    
+    
 
     public void CreateSceneBuffer()
     {
         if (SceneFbo.IsValid)
             throw new InvalidOperationException("Scene buffer is already created");
 
-        var desc = new FrameBufferDesc(SizeRatio: Vector2.One, DepthStencilBuffer: true);
-        var fboId = _graphics.CreateFramebuffer(in desc, out var meta);
-
-        SceneFbo = RenderPassFboRecord.From(fboId, in meta);
+        var desc = new FrameBufferDesc(SizeRatio: Vector2.One, AbsoluteSize: _outputSize, DepthStencilBuffer: true);
+        var fboId = GfxAllocator.CreateFramebuffer(in desc, out var meta);
+        
+        var layout = _graphics.Registry.FboRegistry.Get(fboId);
+        SceneFbo = RenderPassFboRecord.From(fboId, in meta, layout);
     }
 
     public void CreateMultisampleBuffer(Vector2 sizeRatio, uint samples)
@@ -103,11 +111,13 @@ internal class RenderPasses
             throw new InvalidOperationException("Multisample buffer is already created");
 
         var desc = new FrameBufferDesc(
+            AbsoluteSize: _outputSize,
             SizeRatio: sizeRatio, DepthStencilBuffer: true, Msaa: samples > 0, Samples: samples);
         
-        var fboId = _graphics.CreateFramebuffer(in desc, out var meta);
+        var fboId = GfxAllocator.CreateFramebuffer(in desc, out var meta);
 
-        MultisampleFbo = RenderPassFboRecord.From(fboId, in meta);
+        var layout = _graphics.Registry.FboRegistry.Get(fboId);
+        MultisampleFbo = RenderPassFboRecord.From(fboId, in meta, layout);
     }
     
     public void CreateShadowBuffer(Vector2D<int> absoluteSize)
@@ -122,9 +132,10 @@ internal class RenderPasses
 
         var desc = new FrameBufferDesc(SizeRatio:Vector2.One, AbsoluteSize: absoluteSize, DepthStencilBuffer: true);
         
-        var fboId = _graphics.CreateFramebuffer(in desc , out var meta);
+        var fboId = GfxAllocator.CreateFramebuffer(in desc , out var meta);
 
-        ShadowFbo =  RenderPassFboRecord.From(fboId, in meta);
+        var layout = _graphics.Registry.FboRegistry.Get(fboId);
+        ShadowFbo =  RenderPassFboRecord.From(fboId, in meta, layout);
     }
 
     public void CreateLightBuffer(Vector2 sizeRatio, TexturePreset preset)
@@ -133,13 +144,14 @@ internal class RenderPasses
         if (LightFbo.IsValid)
             throw new InvalidOperationException("Light buffer is already created");
 
-        var desc = new FrameBufferDesc(SizeRatio: sizeRatio,
+        var desc = new FrameBufferDesc(SizeRatio: sizeRatio,AbsoluteSize: _outputSize,
             TexturePreset: preset,
             DepthStencilBuffer: false);
         
-        var fboId = _graphics.CreateFramebuffer(in desc , out var meta);
+        var fboId = GfxAllocator.CreateFramebuffer(in desc , out var meta);
 
-        LightFbo = RenderPassFboRecord.From(fboId, in meta);
+        var layout = _graphics.Registry.FboRegistry.Get(fboId);
+        LightFbo = RenderPassFboRecord.From(fboId, in meta, layout);
     }
     
     public void CreatePostProcessBuffer_A(Vector2 sizeRatio)
@@ -162,13 +174,15 @@ internal class RenderPasses
     {
         ValidateSizeRatio(sizeRatio);
 
-        var desc = new FrameBufferDesc(SizeRatio:Vector2.One, 
+        var desc = new FrameBufferDesc(
+            AbsoluteSize: _outputSize,
+            SizeRatio:Vector2.One, 
             TexturePreset: TexturePreset.LinearClamp, 
             DepthStencilBuffer: false);
         
-        var fboId = _graphics.CreateFramebuffer(in desc , out var meta);
-
-        return RenderPassFboRecord.From(fboId, in meta);
+        var fboId = _graphics.Allocator.CreateFramebuffer(in desc , out var meta);
+        var layout = _graphics.Registry.FboRegistry.Get(fboId);
+        return RenderPassFboRecord.From(fboId, in meta, layout);
     }
 
 

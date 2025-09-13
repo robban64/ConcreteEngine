@@ -13,6 +13,7 @@ using ConcreteEngine.Graphics;
 using ConcreteEngine.Graphics.Descriptors;
 using ConcreteEngine.Graphics.Resources;
 using ConcreteEngine.Graphics.Utils;
+using Silk.NET.Maths;
 using static ConcreteEngine.Core.Rendering.RenderConsts;
 
 #endregion
@@ -36,7 +37,7 @@ public interface IRenderSystem : IGameEngineSystem
 
 public sealed class RenderSystem : IRenderSystem
 {
-    private readonly GraphicsRuntime _graphics;
+    private readonly IGraphicsRuntime _graphics;
     private readonly IGraphicsContext _gfx;
     
     private DrawCommandCollector _commandCollector  = null!;
@@ -53,9 +54,11 @@ public sealed class RenderSystem : IRenderSystem
 
     private bool _initialized = false;
 
+    private FrameInfo _frameCtx;
+
     public ICamera Camera => _render.Camera;
 
-    internal RenderSystem(GraphicsRuntime graphics)
+    internal RenderSystem(IGraphicsRuntime graphics)
     {
         _graphics = graphics;
         _gfx = graphics.Context;
@@ -75,7 +78,7 @@ public sealed class RenderSystem : IRenderSystem
     {
 
         _materialStore = materialStore;
-        _drawProcessor = new DrawProcessor(_graphics, _materialStore);
+        _drawProcessor = new DrawProcessor(_gfx, _graphics.Registry, _materialStore);
 
         _commandCollector = new DrawCommandCollector();
         _commandSubmitter = new RenderPipeline(_drawProcessor);
@@ -106,7 +109,7 @@ public sealed class RenderSystem : IRenderSystem
     }
 
 
-    internal void RegisterScene(RenderType renderType, RenderTargetDescriptor desc)
+    internal void RegisterScene(in Vector2D<int> outputSize, RenderType renderType, RenderTargetDescriptor desc)
     {
         if(!_initialized)
             throw new InvalidOperationException("Renderer is not initialized");
@@ -116,7 +119,7 @@ public sealed class RenderSystem : IRenderSystem
         else
             _render = new Render3D(_graphics, _drawProcessor);
         
-        _render.RegisterRenderTargetsFrom(desc);
+        _render.RegisterRenderTargetsFrom(in outputSize, desc);
     }
 
     public TSink GetSink<TSink>() where TSink : IDrawSink => _commandCollector.GetSink<TSink>();
@@ -134,7 +137,7 @@ public sealed class RenderSystem : IRenderSystem
     internal void Render(float alpha, in FrameInfo frameCtx, in RenderGlobalSnapshot renderGlobals)
     {
         Debug.Assert(_initialized);
-        
+        _frameCtx = frameCtx;
         if (frameCtx.Viewport != _render.Camera.ViewportSize)
             _render.Camera.ViewportSize = frameCtx.Viewport;
         
@@ -163,7 +166,8 @@ public sealed class RenderSystem : IRenderSystem
             foreach (var pass in passes)
             {
                 _gfx.SetBlendMode(pass.Blend);
-                _gfx.SetDepthTest(pass.DepthTest);
+                //_gfx.SetDepthTest(pass.DepthTest);
+                _gfx.SetDepthMode(pass.DepthTest ? DepthMode.WriteLequal : DepthMode.Disabled);
                 ExecutePass(targetId, pass);
             }
 
@@ -233,8 +237,8 @@ public sealed class RenderSystem : IRenderSystem
             _gfx.BindTexture(pass.SourceTextures[i], (uint)i);
         }
 
-        _gfx.BindMesh(_graphics.Primitives.FsqQuad);
-        _gfx.DrawMesh();
+        _gfx.BindMesh(_graphics.FactoryHub.Primitives.FsqQuad);
+        _gfx.DrawBoundMesh();
     }
 
     

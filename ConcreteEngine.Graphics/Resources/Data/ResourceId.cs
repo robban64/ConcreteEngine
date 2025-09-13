@@ -23,16 +23,16 @@ public readonly record struct UniformBufferId(int Id) : IResourceId;
 public static class ResourceIdExtensions
 {
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public static bool IsValid<T>(this T t) where T : struct, IResourceId
+    public static bool IsValid<T>(this T t) where T : unmanaged, IResourceId
         => t.Id > 0;
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public static void DebugValidate<T>(this T t) where T : struct, IResourceId
+    public static void DebugValidate<T>(this T t) where T : unmanaged, IResourceId
     {
         Debug.Assert(IsValid(t), $"ResourceId {t.Id} is not valid");
     }
     
-    public static void IsValidOrThrow<T>(this T t) where T : struct, IResourceId
+    public static void IsValidOrThrow<T>(this T t) where T : unmanaged, IResourceId
     {
         if (!IsValid(t))
             throw new GraphicsException($"ResourceId {t.Id} is not valid");

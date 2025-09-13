@@ -5,7 +5,7 @@ using Silk.NET.OpenGL;
 
 namespace ConcreteEngine.Graphics.OpenGL;
 
-internal sealed class GlShaderFactory(GL gl, DeviceCapabilities capabilities) : GlFactory(gl, capabilities)
+internal sealed class GlShaderFactory() : GlFactory()
 {
 
     public unsafe GlUboHandle CreateUniformBuffer(UniformGpuSlot slot, UboDefaultCapacity defaultCapacity, uint blockSize,

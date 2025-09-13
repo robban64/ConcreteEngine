@@ -11,7 +11,7 @@ public sealed class ParticleBatcher : RenderBatcher<TerrainBatchResult>
     private VertexBufferId _vertexBufferId;
     private IndexBufferId _indexBufferId;
 
-    internal ParticleBatcher(IGraphicsDevice graphics) : base(graphics)
+    internal ParticleBatcher(IGraphicsRuntime graphics) : base(graphics)
     {
     }
 

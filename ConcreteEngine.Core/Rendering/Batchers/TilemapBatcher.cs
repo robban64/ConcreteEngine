@@ -21,7 +21,7 @@ public class TilemapBatcher : RenderBatcher<TilemapBatchResult>
 
     private TilemapChunkMesh _chunk;
 
-    public TilemapBatcher(IGraphicsDevice graphics, int mapSize, int tileSize) : base(graphics)
+    public TilemapBatcher(IGraphicsRuntime graphics, int mapSize, int tileSize) : base(graphics)
     {
         ArgumentOutOfRangeException.ThrowIfLessThan(mapSize, MinMapSize, nameof(mapSize));
         ArgumentOutOfRangeException.ThrowIfGreaterThan(mapSize, MaxMapSize, nameof(mapSize));

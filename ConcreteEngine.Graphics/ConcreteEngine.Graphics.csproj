@@ -20,23 +20,9 @@
 
     <ItemGroup>
       <Compile Remove="OpenGL\Temp\GlGraphicsContext.cs" />
-      <Compile Include="OpenGL\GlFactory.cs" />
       <None Include="OpenGL\Temp\GlGraphicsContext.cs" />
       <Compile Remove="OpenGL\Temp\GlGraphicsDevice.cs" />
       <None Include="OpenGL\Temp\GlGraphicsDevice.cs" />
-      <Compile Remove="OpenGL\Temp\GlResourceFactory.cs" />
-      <Compile Remove="OpenGL\Temp\GlResourceStoreView.cs" />
-      <Compile Remove="OpenGL\Temp\GlShaderFactory.cs" />
-      <Compile Remove="GenericSolution\GlBackendDriver.cs" />
-      <Compile Remove="GenericSolution\GraphicsContext.cs" />
-      <Compile Remove="GenericSolution\IGraphicsDriver.cs" />
-      <Compile Remove="OpenGL\Old\GlFactory.cs" />
-      <Compile Remove="OpenGL\Old\GlFboFactory.cs" />
-      <Compile Remove="OpenGL\Old\GlResourceStoreView.cs" />
-      <Compile Remove="OpenGL\Old\GlShaderFactory.cs" />
-      <Compile Remove="OpenGL\Old\GlTextureFactory.cs" />
-      <Compile Remove="IGraphicsContextOld.cs" />
-      <Compile Remove="IGraphicsDeviceOld.cs" />
     </ItemGroup>
 
 </Project>

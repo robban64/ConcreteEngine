@@ -56,7 +56,7 @@ internal interface IMeshBackend
     void UploadIndexBuffer<T>(in GfxHandle ibo, ReadOnlySpan<T> data, nuint offsetBytes) where T : unmanaged;
 
     void DrawArrays(DrawPrimitive primitive, uint drawCount);
-    void DrawElements(DrawPrimitive primitive, uint drawCount, DrawElementType elementType);
+    void DrawElements(DrawPrimitive primitive, DrawElementType elementType, uint drawCount);
 }
 
 internal interface ITextureBackend
@@ -70,13 +70,13 @@ internal interface IFramebufferBackend
 {
     void BindFramebuffer(in GfxHandle fbo);
     void BindFrameBufferReadDraw(in GfxHandle readFbo, in GfxHandle drawFbo);
-    void CreateFramebuffer(in FrameBufferDesc desc, out DriverCreateFboResult result);
+    void CreateFramebuffer( in FrameBufferDesc desc, out DriverCreateFboResult result);
     void Blit(Vector2D<int> srcSize, Vector2D<int> dstSize, bool linear);
 }
 
 internal interface IStateBackend
 {
-    void PrepareFrame(in FrameInfo frameCtx);
+    void PrepareFrame();
     void Clear(Color4 color, ClearBufferFlag flags);
     void SetBlendMode(BlendMode blendMode);
     void SetDepthMode(DepthMode depthMode);
@@ -94,4 +94,5 @@ internal interface IGraphicsDriver : IGfxShaderBackend, IBufferBackend, IMeshBac
 {
     GraphicsConfiguration Configuration { get; }
     DeviceCapabilities Capabilities { get; }
+    void ValidateEndFrame();
 }

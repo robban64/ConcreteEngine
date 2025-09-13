@@ -5,14 +5,11 @@ public interface IFrameBufferRegistry
     FrameBufferLayout Get(FrameBufferId fboId);
 }
 
-public sealed class FrameBufferLayout
-{
-    public required FrameBufferId FboId { get; init; }
-    public TextureId FboTexId { get; init; }
-    public RenderBufferId RboDepthId { get; init; }
-    public RenderBufferId RboTexId { get; init; }
-}
-
+public sealed record FrameBufferLayout(
+    FrameBufferId FboId,
+    TextureId FboTexId,
+    RenderBufferId RboDepthId,
+    RenderBufferId RboTexId);
 public sealed class FrameBufferRegistry : IFrameBufferRegistry
 {
     private readonly Dictionary<FrameBufferId, FrameBufferLayout> _registry = new(4);

@@ -19,6 +19,6 @@ public readonly struct RenderPassFboRecord(
     public bool Msaa => Samples > 0;
     public bool IsValid => FboId.IsValid();
 
-    public static RenderPassFboRecord From(FrameBufferId id, in FrameBufferMeta meta)
-        => new(id, meta.ColTexId, meta.RboTexId, meta.Size, meta.Samples);
+    public static RenderPassFboRecord From(FrameBufferId id, in FrameBufferMeta meta, FrameBufferLayout fboLayout)
+        => new(id, fboLayout.FboTexId, fboLayout.RboTexId, meta.Size, meta.Samples);
 }

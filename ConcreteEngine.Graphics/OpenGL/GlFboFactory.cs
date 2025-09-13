@@ -6,10 +6,14 @@ using Silk.NET.OpenGL;
 
 namespace ConcreteEngine.Graphics.OpenGL;
 
-internal sealed class GlFboFactory(GL gl, DeviceCapabilities capabilities, GlTextureFactory textureFactory)
-    : GlFactory(gl, capabilities)
+internal sealed class GlFboFactory : GlFactory
 {
-    private readonly GlTextureFactory _textureFactory = textureFactory;
+    private readonly GlTextureFactory _textureFactory;
+
+    public GlFboFactory(GlTextureFactory textureFactory)
+    {
+        _textureFactory = textureFactory;
+    }
 
     private GlRboHandle CreateRenderBufferForFbo(RenderBufferKind kind, Vector2D<int> size, bool multisample,
         uint samples, out RenderBufferMeta meta)
@@ -41,7 +45,6 @@ internal sealed class GlFboFactory(GL gl, DeviceCapabilities capabilities, GlTex
 
 
     public void CreateFrameBuffer(
-        Vector2D<int> viewport,
         in FrameBufferDesc desc,
         out GlFboHandleMeta fbo,
         out GlTexHandleMeta fboTex,
@@ -49,7 +52,8 @@ internal sealed class GlFboFactory(GL gl, DeviceCapabilities capabilities, GlTex
         out GlRboHandleMeta rboDepth
     )
     {
-        var size = new Vector2D<int>((int)(viewport.X * desc.SizeRatio.X), (int)(viewport.Y * desc.SizeRatio.Y));
+        var outputSize = desc.AbsoluteSize;
+        var size = new Vector2D<int>((int)(outputSize.X * desc.SizeRatio.X), (int)(outputSize.Y * desc.SizeRatio.Y));
 
         GlTextureHandle colTexHandle = default;
         TextureMeta colTexMeta = default;

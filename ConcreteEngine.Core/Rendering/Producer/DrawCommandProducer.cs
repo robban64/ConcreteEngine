@@ -12,7 +12,7 @@ namespace ConcreteEngine.Core.Rendering;
 public sealed class CommandProducerContext
 {
     public IWorld World { get; set; } = null!;
-    public required IGraphicsDevice Graphics { get; init; }
+    public required IGraphicsRuntime Graphics { get; init; }
     public required BatcherRegistry DrawBatchers { get; init; }
 }
 

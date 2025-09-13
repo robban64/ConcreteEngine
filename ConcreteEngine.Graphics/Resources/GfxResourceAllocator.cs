@@ -2,6 +2,7 @@ using System.Runtime.CompilerServices;
 using ConcreteEngine.Graphics.Descriptors;
 using ConcreteEngine.Graphics.Error;
 using ConcreteEngine.Graphics.Utils;
+using Silk.NET.Maths;
 
 namespace ConcreteEngine.Graphics.Resources;
 
@@ -30,7 +31,7 @@ internal sealed class GfxResourceAllocator : IGfxResourceAllocator
     private readonly IGraphicsDriver _driver;
     private readonly GfxResourceManager _stores;
     private readonly GfxResourceRegistry _registry;
-    
+
 
     public GfxResourceAllocator(
         IGraphicsDriver driver,
@@ -45,7 +46,7 @@ internal sealed class GfxResourceAllocator : IGfxResourceAllocator
     public MeshId CreateMesh(DrawPrimitive primitive, MeshDrawKind drawKind, DrawElementType drawElement,
         out MeshMeta meta)
     {
-        var handle = _driver.CreateVertexArray(primitive, drawKind, drawElement, out  meta);
+        var handle = _driver.CreateVertexArray(primitive, drawKind, drawElement, out meta);
         var meshId = _stores.MeshStore.Add(in meta, handle);
         _registry.MeshRegistry.RegisterEmptyMesh(meshId);
         return meshId;
@@ -80,18 +81,23 @@ internal sealed class GfxResourceAllocator : IGfxResourceAllocator
     {
         _driver.CreateFramebuffer(in desc, out var result);
         var fboId = _stores.FboStore.Add(result.Fbo.Meta, result.Fbo.Handle);
-        var fboTexId = result.FboTex != default ?  _stores.TextureStore.Add(result.FboTex.Meta, result.FboTex.Handle) : default;
-        var rboDepthId = result.RboDepth != default ? _stores.RboStore.Add(result.RboDepth.Meta, result.RboDepth.Handle) : default;
-        var rboTexId = result.RboTex != default ? _stores.RboStore.Add(result.RboTex.Meta, result.RboTex.Handle) : default;
-        
-        _registry.FboRegistry.Register(new FrameBufferLayout
-        {
-            FboId = fboId,
-            FboTexId = fboTexId,
-            RboTexId = rboTexId,
-            RboDepthId = rboDepthId,
-        });
-        
+        var fboTexId = result.FboTex.Handle.Slot > 0
+            ? _stores.TextureStore.Add(result.FboTex.Meta, result.FboTex.Handle)
+            : default;
+        var rboDepthId = result.RboDepth.Handle.Slot > 0
+            ? _stores.RboStore.Add(result.RboDepth.Meta, result.RboDepth.Handle)
+            : default;
+        var rboTexId = result.RboTex.Handle.Slot > 0
+            ? _stores.RboStore.Add(result.RboTex.Meta, result.RboTex.Handle)
+            : default;
+
+        _registry.FboRegistry.Register(new FrameBufferLayout(
+            FboId: fboId,
+            FboTexId: fboTexId,
+            RboDepthId: rboDepthId,
+            RboTexId: rboTexId
+        ));
+
         meta = result.Fbo.Meta;
         return fboId;
     }

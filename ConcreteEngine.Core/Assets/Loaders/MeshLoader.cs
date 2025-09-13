@@ -36,7 +36,7 @@ internal sealed class MeshLoader(IReadOnlyList<MeshManifestRecord> records) : As
 
     public override MeshLoaderResult Get(MeshManifestRecord record)
     {
-        var path = Path.Combine(AssetPaths.AssetPath, "meshes", record.Filename);
+        var path = Path.Combine(AssetPaths.GetAbsolutePath(), "meshes", record.Filename);
 
         var meshData = _meshImporter.ImportMesh(path);
         

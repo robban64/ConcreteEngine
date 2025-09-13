@@ -86,14 +86,14 @@ internal sealed class GlBackendDriver : IGraphicsDriver
             _gl.Enable(GLEnum.Multisample);
             _gl.Enable(EnableCap.TextureCubeMapSeamless);
             _gl.PixelStore(GLEnum.UnpackAlignment, 1);
-        
+
             _gl.DepthMask(true);
-        
+
             _gl.Enable(EnableCap.CullFace);
             _gl.CullFace(TriangleFace.Back);
             _gl.FrontFace(FrontFaceDirection.Ccw);
 
-        
+
             EnableGlDebug(_gl);
 
             _textureFactory = new GlTextureFactory();
@@ -139,13 +139,6 @@ internal sealed class GlBackendDriver : IGraphicsDriver
 
     public void SetDepthMode(DepthMode depthMode)
     {
-        if (depthMode == DepthMode.WriteLequal)
-        {
-            _gl.Enable(EnableCap.DepthTest);
-            _gl.DepthFunc(DepthFunction.Lequal);
-        }
-        else _gl.Disable(EnableCap.DepthTest);
-        return;
         var (cap, func, mask) = depthMode.ToGlEnum();
         _gl.Enable(cap);
         _gl.DepthFunc(func);
@@ -173,10 +166,10 @@ internal sealed class GlBackendDriver : IGraphicsDriver
     }
 
     public unsafe void SetUniformBufferSize(UniformGpuSlot slot, nuint capacity) =>
-        _gl.BufferData(BufferTargetARB.UniformBuffer, capacity, (void*)0, BufferUsageARB.StaticDraw);
+        _gl.BufferData(BufferTargetARB.UniformBuffer, capacity, (void*)0, BufferUsageARB.DynamicDraw);
 
 
-    public unsafe void UploadUbo<T>(in GfxHandle ubo, in T data, nuint offset, nuint size = 0)
+    public unsafe void UploadUbo<T>(in GfxHandle ubo, in T data, nuint offset, nuint size)
         where T : unmanaged, IUniformGpuData
     {
         fixed (T* p = &data)
@@ -216,15 +209,21 @@ internal sealed class GlBackendDriver : IGraphicsDriver
 
     public void BindFramebuffer(in GfxHandle fbo)
     {
-        var handle = fbo == default ? 0 : _store.FboStore.Get(fbo).Handle;
+        var handle = !fbo.IsValid ? 0 : _store.FboStore.Get(fbo).Handle;
         _gl.BindFramebuffer(FramebufferTarget.Framebuffer, handle);
+        if (handle != 0)
+        {
+            _gl.DrawBuffer(DrawBufferMode.ColorAttachment0);
+            _gl.ReadBuffer(ReadBufferMode.ColorAttachment0);
+        }
+
     }
 
 
     public void BindFrameBufferReadDraw(in GfxHandle readFbo, in GfxHandle drawFbo)
     {
-        var read = readFbo == default ? 0 : _store.FboStore.Get(readFbo).Handle;
-        var draw = drawFbo == default ? 0 : _store.FboStore.Get(drawFbo).Handle;
+        var read = !readFbo.IsValid ? 0 : _store.FboStore.Get(readFbo).Handle;
+        var draw = !drawFbo.IsValid ? 0 : _store.FboStore.Get(drawFbo).Handle;
 
         _gl.BindFramebuffer(FramebufferTarget.ReadFramebuffer, read);
         _gl.BindFramebuffer(FramebufferTarget.DrawFramebuffer, draw);
@@ -232,8 +231,7 @@ internal sealed class GlBackendDriver : IGraphicsDriver
 
     public void CreateFramebuffer(in FrameBufferDesc desc, out DriverCreateFboResult result)
     {
-        _fboFactory.CreateFrameBuffer(in desc, out var fbo, out var fboTex, out var rboTex,
-            out var rboDepth);
+        _fboFactory.CreateFrameBuffer(in desc, out var fbo, out var fboTex, out var rboDepth, out var rboTex);
 
         var fboHandle = _store.FboStore.Add(fbo.Handle);
         var texHandle = fboTex.Handle != default ? _store.TextureStore.Add(fboTex.Handle) : default;
@@ -266,6 +264,7 @@ internal sealed class GlBackendDriver : IGraphicsDriver
             _gl.BindVertexArray(0);
             return;
         }
+
         _gl.BindVertexArray(_store.MeshStore.Get(vao).Handle);
     }
 
@@ -276,6 +275,7 @@ internal sealed class GlBackendDriver : IGraphicsDriver
             _gl.BindBuffer(BufferTargetARB.ArrayBuffer, 0);
             return;
         }
+
         _gl.BindBuffer(BufferTargetARB.ArrayBuffer, _store.VboStore.Get(vbo).Handle);
     }
 
@@ -286,6 +286,7 @@ internal sealed class GlBackendDriver : IGraphicsDriver
             _gl.BindBuffer(BufferTargetARB.ElementArrayBuffer, 0);
             return;
         }
+
         _gl.BindBuffer(BufferTargetARB.ElementArrayBuffer, _store.IboStore.Get(ibo).Handle);
     }
 
@@ -296,6 +297,7 @@ internal sealed class GlBackendDriver : IGraphicsDriver
             _gl.BindBuffer(BufferTargetARB.UniformBuffer, 0);
             return;
         }
+
         _gl.BindBuffer(BufferTargetARB.UniformBuffer, _store.UboStore.Get(ubo).Handle);
     }
 
@@ -363,8 +365,8 @@ internal sealed class GlBackendDriver : IGraphicsDriver
         {
             _gl.BindTextureUnit(slot, 0);
             return;
-
         }
+
         _gl.BindTextureUnit(slot, _store.TextureStore.Get(tex).Handle);
     }
 
@@ -394,8 +396,8 @@ internal sealed class GlBackendDriver : IGraphicsDriver
         {
             _gl.UseProgram(0);
             return;
-
         }
+
         _gl.UseProgram(_store.ShaderStore.Get(shader).Handle);
     }
 

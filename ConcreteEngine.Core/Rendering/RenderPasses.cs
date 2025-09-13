@@ -15,6 +15,7 @@ public struct RenderPassMutation
 internal class RenderPasses
 {
     private readonly IGraphicsRuntime _graphics;
+    private readonly RenderGlobalSnapshot _snapshot;
 
     private IGfxFactoryHub GfxFactory => _graphics.FactoryHub;
     private IGfxResourceAllocator GfxAllocator => _graphics.Allocator;
@@ -30,12 +31,12 @@ internal class RenderPasses
 
     private int _currentTargetId = 0;
     
-    private Vector2D<int> _outputSize;
 
-    public RenderPasses(IGraphicsRuntime graphics)
+    public RenderPasses(IGraphicsRuntime graphics, in RenderGlobalSnapshot snapshot)
     {
         _graphics = graphics;
-        
+        _snapshot = snapshot;
+
         _renderTargets = new List<IRenderPassDescriptor>[RenderConsts.RenderTargetCount];
         for (int i = 0; i < RenderConsts.RenderTargetCount; i++)
         {
@@ -85,16 +86,12 @@ internal class RenderPasses
         _renderTargets[(int)target].Add(pass);
     }
     
-    public void SetOutputSize(in Vector2D<int> size) => _outputSize  = size;
-    
-    
-
     public void CreateSceneBuffer()
     {
         if (SceneFbo.IsValid)
             throw new InvalidOperationException("Scene buffer is already created");
 
-        var desc = new FrameBufferDesc(SizeRatio: Vector2.One, AbsoluteSize: _outputSize, DepthStencilBuffer: true);
+        var desc = new FrameBufferDesc(SizeRatio: Vector2.One, AbsoluteSize: _snapshot.OutputSize, DepthStencilBuffer: true);
         var fboId = GfxAllocator.CreateFramebuffer(in desc, out var meta);
         
         var layout = _graphics.Registry.FboRegistry.Get(fboId);
@@ -111,7 +108,7 @@ internal class RenderPasses
             throw new InvalidOperationException("Multisample buffer is already created");
 
         var desc = new FrameBufferDesc(
-            AbsoluteSize: _outputSize,
+            AbsoluteSize: _snapshot.OutputSize,
             SizeRatio: sizeRatio, DepthStencilBuffer: true, Msaa: samples > 0, Samples: samples);
         
         var fboId = GfxAllocator.CreateFramebuffer(in desc, out var meta);
@@ -144,7 +141,7 @@ internal class RenderPasses
         if (LightFbo.IsValid)
             throw new InvalidOperationException("Light buffer is already created");
 
-        var desc = new FrameBufferDesc(SizeRatio: sizeRatio,AbsoluteSize: _outputSize,
+        var desc = new FrameBufferDesc(SizeRatio: sizeRatio,AbsoluteSize: _snapshot.OutputSize,
             TexturePreset: preset,
             DepthStencilBuffer: false);
         
@@ -175,7 +172,7 @@ internal class RenderPasses
         ValidateSizeRatio(sizeRatio);
 
         var desc = new FrameBufferDesc(
-            AbsoluteSize: _outputSize,
+            AbsoluteSize: _snapshot.OutputSize,
             SizeRatio:Vector2.One, 
             TexturePreset: TexturePreset.LinearClamp, 
             DepthStencilBuffer: false);

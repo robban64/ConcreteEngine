@@ -20,20 +20,18 @@ internal sealed class Render3D : IRender
 
     public ICamera Camera => _camera;
 
-    public Render3D(IGraphicsRuntime graphics, DrawProcessor drawProcessor)
+    public Render3D(IGraphicsRuntime graphics, DrawProcessor drawProcessor, in RenderGlobalSnapshot snapshot)
     {
         _graphics = graphics;
         _gfx = _graphics.Context;
         _drawProcessor = drawProcessor;
         _camera = new Camera3D();
-        _registry = new RenderPasses(graphics);
+        _registry = new RenderPasses(graphics, in snapshot);
     }
 
 
     public void Prepare(float alpha, in RenderGlobalSnapshot snapshot)
     {
-        _registry.SetOutputSize(snapshot.OutputSize);
-
         var frameUniforms = new FrameUniformRecord(
             ambient: snapshot.Ambient,
             ambientIntensity: 1,
@@ -97,8 +95,6 @@ internal sealed class Render3D : IRender
 
         desc.ScreenTarget.ScreenShaderId.IsValidOrThrow();
         
-        _registry.SetOutputSize(outputSize);
-
         // Scene Target setup
         var sceneTarget = desc.SceneTarget;
         _registry.CreateSceneBuffer();

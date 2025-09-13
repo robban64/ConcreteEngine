@@ -17,7 +17,7 @@ internal sealed class GlShaderFactory() : GlFactory()
         nuint capacity = UniformBufferUtils.GetDefaultCapacity(meta.Stride, defaultCapacity);
         var handle = Gl.GenBuffer();
         Gl.BindBuffer(BufferTargetARB.UniformBuffer, handle);
-        Gl.BufferData(BufferTargetARB.UniformBuffer, capacity, (void*)0, BufferUsageARB.StaticDraw);
+        Gl.BufferData(BufferTargetARB.UniformBuffer, capacity, (void*)0, BufferUsageARB.DynamicDraw);
         Gl.BindBufferBase(BufferTargetARB.UniformBuffer, meta.BindingIdx, handle);
         Gl.BindBuffer(BufferTargetARB.UniformBuffer, 0);
 

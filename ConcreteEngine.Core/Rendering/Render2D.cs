@@ -21,19 +21,18 @@ internal class Render2D : IRender
     public ICamera Camera => _camera;
 
 
-    public Render2D(IGraphicsRuntime graphics, MaterialStore  materialStore)
+    public Render2D(IGraphicsRuntime graphics, MaterialStore  materialStore, in RenderGlobalSnapshot snapshot)
     {
         _graphics = graphics;
         _gfx = graphics.Context;
         _materialStore = materialStore;
         _camera = new Camera2D();
-        _registry = new RenderPasses(graphics);
+        _registry = new RenderPasses(graphics, in snapshot);
     }
 
 
     public void Prepare(float alpha, in RenderGlobalSnapshot snapshot)
     {
-        _registry.SetOutputSize(snapshot.OutputSize);
 
         var projectionViewMatrix = _camera.ProjectionViewMatrix;
         foreach (var material in _materialStore.Materials)
@@ -76,7 +75,6 @@ internal class Render2D : IRender
         desc.ScreenTarget.ScreenShaderId.IsValidOrThrow();
 
         
-        _registry.SetOutputSize(outputSize);
         
         // Scene Target setup
         var sceneTarget = desc.SceneTarget;

@@ -101,7 +101,7 @@ public sealed class GameEngine : IDisposable
         //_pipeline = new GameMessagePipeline();
 
         // renderer
-        _renderer = new RenderSystem(_graphics);
+        _renderer = new RenderSystem(_graphics, _window.FramebufferSize);
 
         _systems = new EngineSystemManagerManager(_renderer, _inputSystem, _assets);
 
@@ -140,9 +140,8 @@ public sealed class GameEngine : IDisposable
         _graphics.BeginFrame(in frameCtx);
         if (_currentScene != null)
         {
-            var snapshot = _currentScene.RenderGlobals.Snapshot;
             _renderTime.TickOrRenderEffect();
-            _renderer.Render(_updateCtx.Alpha, in frameCtx, in snapshot);
+            _renderer.Render(_updateCtx.Alpha, in frameCtx);
         }
         _renderTime.TickOrGpuDispose();
         _renderTime.TickOrGpuUpload();

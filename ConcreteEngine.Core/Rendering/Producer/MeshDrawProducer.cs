@@ -10,9 +10,9 @@ namespace ConcreteEngine.Core.Rendering;
 
 public struct MeshDrawEntity(MeshId meshId, MaterialId materialId, in Transform transform)
 {
+    public Transform Transform = transform;
     public MeshId MeshId = meshId;
     public MaterialId MaterialId = materialId;
-    public Transform Transform = transform;
 }
 
 public interface IMeshDrawSink : IDrawSink

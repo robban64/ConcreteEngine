@@ -11,11 +11,11 @@ namespace ConcreteEngine.Graphics.Descriptors;
 
 public readonly ref struct GpuMeshDescriptor
 {
+    public required uint DrawCount { get; init; }
     public required ReadOnlySpan<VertexAttributeDescriptor> Attributes { get; init; }
     public required DrawPrimitive Primitive { get; init; }
     public required MeshDrawKind DrawKind { get; init; }
     public required DrawElementType ElementType { get; init; } 
-    public required uint DrawCount { get; init; }
 
     public static GpuMeshDescriptor MakeArray(ReadOnlySpan<VertexAttributeDescriptor> atr,
         DrawPrimitive primitive, uint drawCount)

@@ -41,7 +41,7 @@ internal sealed class CubeMapLoader(IReadOnlyList<CubeMapManifestRecord> records
 
     private ImageResult GetImageData(CubeMapManifestRecord record, int faceIndex, ref int width, ref int height)
     {
-        var path = Path.Combine(AssetPaths.AssetPath, "cubemaps", record.Textures[faceIndex]);
+        var path = Path.Combine(AssetPaths.GetAbsolutePath(), "cubemaps", record.Textures[faceIndex]);
         using var stream = File.OpenRead(path);
         var image = ImageResult.FromStream(stream, ColorComponents.RedGreenBlueAlpha);
         if (width > 0 && height > 0 && (image.Width != width || image.Height != height))

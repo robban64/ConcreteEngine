@@ -19,7 +19,6 @@ public abstract class GameScene
 
     protected GameSceneContext Context { get; private set; } = null!;
     
-    public SceneRenderGlobals RenderGlobals { get; } = new();
 
     protected World World => _world;
 
@@ -38,13 +37,13 @@ public abstract class GameScene
         Context.Modules.GameTickUpdate(tick);
         Context.Features.GameTickUpdate(tick);
         World.Cleanup();
-        RenderGlobals.Commit();
     }
 
 
     internal void AttachContext(GameSceneContext context)
     {
-        _world = new World(RenderGlobals);
+        var renderer = context.GetSystem<IRenderSystem>();
+        _world = new World(renderer.RenderGlobals);
         context.World = World;
         Context = context;
     }

@@ -5,6 +5,7 @@ namespace ConcreteEngine.Graphics.Resources;
 
 internal sealed class DriverResourceStore<THandler> where THandler : unmanaged, IResourceHandle, IEquatable<THandler>
 {
+    // sanity check
     private const int HardLimit = 10_000;
 
     private readonly record struct StoreEntry(THandler Value, ushort Gen, bool Alive);
@@ -37,8 +38,8 @@ internal sealed class DriverResourceStore<THandler> where THandler : unmanaged, 
 
     public THandler Get(GfxHandle handler)
     {
-        Debug.Assert(handler != default);
-        ref var e = ref _entries[(int)handler.Slot];
+        Debug.Assert(handler.IsValid);
+        ref readonly var e = ref _entries[(int)handler.Slot];
         if (!e.Alive || e.Gen != handler.Gen)
             GraphicsException.ThrowInvalidState("Handler is not a valid state");
         return e.Value;

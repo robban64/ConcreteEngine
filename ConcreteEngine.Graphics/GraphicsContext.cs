@@ -90,9 +90,9 @@ internal sealed class GraphicsContext : IGraphicsContext
 
 
     //States
-    private BlendMode _blendMode = BlendMode.Alpha;
-    private DepthMode _depthMode = DepthMode.WriteLequal;
-    private CullMode _cullMode = CullMode.BackCcw;
+    private BlendMode _blendMode = BlendMode.Unset;
+    private DepthMode _depthMode = DepthMode.Unset;
+    private CullMode _cullMode = CullMode.Unset;
 
     private FrameBufferId _boundFboId = default;
     private FrameBufferId _boundReadFboId = default;
@@ -124,7 +124,7 @@ internal sealed class GraphicsContext : IGraphicsContext
         _boundTextures = new TextureId[Configuration.MaxTextureImageUnits];
     }
 
-    
+
     public void BeginFrame(in FrameInfo frameCtx)
     {
         _frameCtx = frameCtx;
@@ -148,17 +148,22 @@ internal sealed class GraphicsContext : IGraphicsContext
         BindIndexBuffer(default);
         BindFramebuffer(default);
         BindUniformBuffer(default);
-        
+
         UseShader(default);
+
+        _blendMode = BlendMode.Unset;
+        _depthMode = DepthMode.Unset;
+        _cullMode = CullMode.Unset;
+
 
         for (uint i = 0; i < _boundTextures.Length; i++)
         {
             BindTexture(default, i);
         }
-        _driver.ValidateEndFrame();
 
+        _driver.ValidateEndFrame();
     }
-    
+
     public void BeginScreenPass(Color4? clear = null, ClearBufferFlag? flags = null)
     {
         if (_boundFboId != default) GraphicsException.ThrowInvalidState("Cannot begin screen pass while FBO is bound.");
@@ -166,10 +171,9 @@ internal sealed class GraphicsContext : IGraphicsContext
         _currDrawFboHandle = default;
         _currReadFboHandle = default;
 
-        _boundFboId = default;
         _boundReadFboId = default;
         _activeOutputSize = _frameCtx.OutputSize;
-        
+
         BindFramebuffer(default);
         SetViewport(_activeOutputSize);
 
@@ -183,7 +187,10 @@ internal sealed class GraphicsContext : IGraphicsContext
 
         ref readonly var meta = ref _store.FboStore.GetMeta(fboId);
         var handle = _store.FboStore.GetHandle(fboId);
+
         BindFramebuffer(fboId);
+        _boundReadFboId = fboId;
+
         SetViewport(meta.Size);
         if (clear.HasValue && flags.HasValue) Clear(clear.Value, flags.Value);
         SetDepthMode(DepthMode.WriteLequal);
@@ -192,11 +199,8 @@ internal sealed class GraphicsContext : IGraphicsContext
         _currDrawFboHandle = handle;
         _currReadFboHandle = handle;
 
-        _boundFboId = fboId;
-        _boundReadFboId = fboId;
         _activeOutputSize = meta.Size;
         Debug.Assert(_currDrawFboHandle != default && _currDrawFboHandle == _currReadFboHandle);
-
     }
 
     public void EndRenderPass()
@@ -206,14 +210,12 @@ internal sealed class GraphicsContext : IGraphicsContext
         _currDrawFboHandle = default;
         _currReadFboHandle = default;
 
-        _boundFboId = default;
         _boundReadFboId = default;
 
 
         _activeOutputSize = _frameCtx.OutputSize;
 
         BindFramebuffer(default);
-        _driver.BindFramebuffer(default);
         SetViewport(_activeOutputSize);
     }
 
@@ -221,7 +223,8 @@ internal sealed class GraphicsContext : IGraphicsContext
     public void BlitFramebuffer(in FrameBufferId fromId, in FrameBufferId toId = default, bool linear = true)
     {
         Debug.Assert(fromId != default);
-        Debug.Assert((_currReadFboHandle == default) == (_boundFboId == default) || true); // relaxed but catches obvious mismatch
+        Debug.Assert((_currReadFboHandle == default) == (_boundFboId == default) ||
+                     true); // relaxed but catches obvious mismatch
 
         ref readonly var fromFbo = ref _store.FboStore.GetMeta(fromId);
         var fromHandle = _store.FboStore.GetHandle(fromId);
@@ -248,21 +251,22 @@ internal sealed class GraphicsContext : IGraphicsContext
         _driver.Blit(srcSize, dstSize, filter);
         _driver.BindFrameBufferReadDraw(prevReadFbo, prevDrawFbo);
         SetViewport(prevViewport);
-        
+
         _currReadFboHandle = prevReadFbo;
         _currDrawFboHandle = prevDrawFbo;
         _activeOutputSize = prevViewport;
     }
 
-   
+
     public void Clear(Color4 color, ClearBufferFlag flags) => _driver.Clear(color, flags);
 
     public void SetViewport(in Vector2D<int> viewport)
     {
+        if (viewport == _activeOutputSize) return;
         _activeOutputSize = viewport;
         _driver.SetViewport(viewport);
     }
-    
+
     public void SetBlendMode(BlendMode blendMode)
     {
         if (_blendMode != BlendMode.Unset && _blendMode == blendMode) return;
@@ -296,7 +300,7 @@ internal sealed class GraphicsContext : IGraphicsContext
             _driver.UseShader(default);
             return;
         }
-        
+
         var handle = _store.ShaderStore.GetHandle(id);
         var uniformTable = _registry.ShaderRegistry.GetShaderLayout(id);
 
@@ -314,17 +318,16 @@ internal sealed class GraphicsContext : IGraphicsContext
             _boundUniformBufferId = default;
             return;
         }
-        
+
         var ubo = _registry.ShaderRegistry.GetUboId(slot);
-        if(ubo == _boundUniformBufferId) return;
-        
+        if (ubo == _boundUniformBufferId) return;
+
         var handle = _store.UboStore.GetHandle(ubo);
         _driver.BindUniformBuffer(handle);
     }
 
     public void BindFramebuffer(FrameBufferId id)
     {
-        
         if (_boundFboId == id) return;
         if (id == default)
         {
@@ -455,7 +458,7 @@ internal sealed class GraphicsContext : IGraphicsContext
     public void SetIndexBuffer<T>(ReadOnlySpan<T> data, BufferUsage usage = BufferUsage.StaticDraw) where T : unmanaged
     {
         _boundIndexBufferId.IsValidOrThrow();
-        var vbo = _store.IboStore.GetHandleAndMeta(_boundIndexBufferId, out var meta);
+        var ibo = _store.IboStore.GetHandleAndMeta(_boundIndexBufferId, out var meta);
 
         if (meta.Usage == BufferUsage.StaticDraw && meta.ElementCount * meta.ElementSize > 0)
             GraphicsException.ThrowInvalidBufferData<IndexBufferId>(_boundIndexBufferId.ToString(),
@@ -465,7 +468,7 @@ internal sealed class GraphicsContext : IGraphicsContext
         var elementSize = Unsafe.SizeOf<T>();
         nuint size = (nuint)(elementSize * elementCount);
 
-        _driver.SetVertexBuffer(default, vbo, data, size, usage);
+        _driver.SetIndexBuffer(default, ibo, data, size, usage);
 
         var newMeta = new IndexBufferMeta(meta.Usage, (uint)elementCount, (uint)elementSize);
         _store.IboStore.ReplaceMeta(_boundIndexBufferId, in newMeta, out _);
@@ -498,7 +501,7 @@ internal sealed class GraphicsContext : IGraphicsContext
     {
         var ubo = _registry.ShaderRegistry.GetUboId(slot);
         var handle = _store.UboStore.GetHandle(ubo);
-        _driver.UploadUbo(handle, data, offsetBytes);
+        _driver.UploadUbo(handle, data, offsetBytes, (nuint)Unsafe.SizeOf<T>());
     }
 
     public void BindUniformBufferRange(UniformGpuSlot slot, nuint offset, nuint size)
@@ -543,7 +546,7 @@ internal sealed class GraphicsContext : IGraphicsContext
         Debug.Assert(_boundVaoId.IsValid(), "No VAO is bound");
         Debug.Assert(drawCount != 0, "DrawElements called with drawCount = 0");
         Debug.Assert(elementType != DrawElementType.Invalid);
-        
+
 
         _driver.DrawElements(primitive, elementType, drawCount);
         _drawTriangleCount += drawCount;
@@ -576,5 +579,4 @@ internal sealed class GraphicsContext : IGraphicsContext
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public void SetUniform(ShaderUniform uniform, in Matrix3 value) =>
         _driver.SetUniform(_boundUniforms![uniform], in value);
-    
 }

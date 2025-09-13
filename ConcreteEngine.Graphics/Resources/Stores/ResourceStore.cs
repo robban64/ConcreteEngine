@@ -18,12 +18,9 @@ internal sealed class ResourceStore<TId, TMeta> : IResourceStore<TId, TMeta>
 {
     internal readonly MakeIdDelegate<TId> MakeId;
 
+    // sanity check
     private const int HardLimit = 10_000;
     private const int MaxDefaultCapacity = 1024;
-    private const int BufferSize = 128;
-
-    private static EqualityComparer<TMeta> MetaComparer = EqualityComparer<TMeta>.Default;
-
 
     private int _idx = 0;
     private TMeta[] _meta;
@@ -58,12 +55,12 @@ internal sealed class ResourceStore<TId, TMeta> : IResourceStore<TId, TMeta>
         int idx = _freeCount > 0 ? _free[--_freeCount] : Allocate();
         _meta[idx] = meta;
         _handle[idx] = handle;
-        return MakeId(idx + 1);
+        return MakeId(idx);
     }
 
     public GfxHandle Remove(TId id, out TMeta oldMeta)
     {
-        int idx = id.Id - 2;
+        int idx = id.Id - 1;
         oldMeta = _meta[idx];
         var h = _handle[idx];
         _meta[idx] = default!;
@@ -74,15 +71,15 @@ internal sealed class ResourceStore<TId, TMeta> : IResourceStore<TId, TMeta>
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public ref readonly TMeta GetMeta(TId id) => ref _meta[id.Id - 2];
+    public ref readonly TMeta GetMeta(TId id) => ref _meta[id.Id - 1];
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public GfxHandle GetHandle(TId id) => _handle[id.Id - 2];
+    public GfxHandle GetHandle(TId id) => _handle[id.Id - 1];
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public GfxHandle GetHandleAndMeta(TId id, out TMeta meta)
     {
-        int idx = id.Id - 2;
+        int idx = id.Id - 1;
         meta = _meta[idx];
         return _handle[idx];
     }
@@ -90,7 +87,7 @@ internal sealed class ResourceStore<TId, TMeta> : IResourceStore<TId, TMeta>
     public TId Replace(TId id, in TMeta newMeta, in GfxHandle newHandle, out GfxHandle oldHandle)
     {
         Debug.Assert(id.Id > 0);
-        int idx = id.Id - 2;
+        int idx = id.Id - 1;
         oldHandle = _handle[idx];
         _meta[idx] = newMeta;
         _handle[idx] = newHandle;
@@ -100,15 +97,16 @@ internal sealed class ResourceStore<TId, TMeta> : IResourceStore<TId, TMeta>
     public TMeta ReplaceMeta(TId id, in TMeta newMeta, out TMeta oldMeta)
     {
         Debug.Assert(id.Id > 0);
-        int idx = id.Id - 2;
+        int idx = id.Id - 1;
         oldMeta = _meta[idx];
         _meta[idx] = newMeta;
         return newMeta;
     }
 
+    private static EqualityComparer<TMeta> MetaComparer = EqualityComparer<TMeta>.Default;
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public bool IsAlive(TId id) => !MetaComparer.Equals(_meta[id.Id - 2], default);
+    public bool IsAlive(TId id) => !MetaComparer.Equals(_meta[id.Id - 1], default);
 
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]

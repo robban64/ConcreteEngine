@@ -55,8 +55,7 @@ internal sealed class GfxResourceAllocator : IGfxResourceAllocator
     public VertexBufferId CreateVertexBuffer(BufferUsage usage, uint elementSize, uint index, out VertexBufferMeta meta)
     {
         var handle = _driver.CreateVertexBuffer(usage, elementSize, index, out meta);
-        var vboId = _stores.VboStore.Add(new VertexBufferMeta(usage, index, 0, elementSize), handle);
-        return vboId;
+        return _stores.VboStore.Add(new VertexBufferMeta(usage, index, 0, elementSize), handle);
     }
 
     public IndexBufferId CreateIndexBuffer(BufferUsage usage, uint elementSize, out IndexBufferMeta meta)
@@ -79,6 +78,9 @@ internal sealed class GfxResourceAllocator : IGfxResourceAllocator
 
     public FrameBufferId CreateFramebuffer(in FrameBufferDesc desc, out FrameBufferMeta meta)
     {
+        ArgumentOutOfRangeException.ThrowIfLessThan(desc.AbsoluteSize.X, 16);
+        ArgumentOutOfRangeException.ThrowIfLessThan(desc.AbsoluteSize.Y, 16);
+
         _driver.CreateFramebuffer(in desc, out var result);
         var fboId = _stores.FboStore.Add(result.Fbo.Meta, result.Fbo.Handle);
         var fboTexId = result.FboTex.Handle.Slot > 0

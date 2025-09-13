@@ -48,8 +48,8 @@ internal sealed class GlFboFactory : GlFactory
         in FrameBufferDesc desc,
         out GlFboHandleMeta fbo,
         out GlTexHandleMeta fboTex,
-        out GlRboHandleMeta rboTex,
-        out GlRboHandleMeta rboDepth
+        out GlRboHandleMeta rboDepth,
+        out GlRboHandleMeta rboTex
     )
     {
         var outputSize = desc.AbsoluteSize;

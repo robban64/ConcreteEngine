@@ -111,7 +111,6 @@ internal sealed class MeshFactory : IMeshFactory
         meshRegistry.UpdateAttributes(_meshId, attributes);
         var result = meshRegistry.Get(_meshId);
 
-        // Most come after meshRegistry
         _gfx.SetVertexAttribute(attributes);
         _gfx.BindMesh(default);
         _gfx.BindVertexBuffer(default);

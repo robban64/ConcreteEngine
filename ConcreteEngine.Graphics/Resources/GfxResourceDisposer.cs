@@ -2,24 +2,22 @@ using ConcreteEngine.Graphics.Error;
 
 namespace ConcreteEngine.Graphics.Resources;
 
-
 public interface IGfxResourceDisposer
 {
     public int PendingCount { get; }
     void EnqueueRemoval<TId>(TId id, bool replace = false) where TId : unmanaged, IResourceId;
     void DrainDisposeQueue();
-
 }
 
 internal sealed class GfxResourceDisposer : IGfxResourceDisposer
 {
     private const int DrainPerFrame = 4;
     private const int DrainDelayTicks = 16;
-    
+
     private readonly GfxResourceManager _resources;
     private readonly GfxResourceRegistry _registry;
     private readonly IDisposableBackend _backend;
-    
+
     private readonly ResourceDisposeQueue _disposeQueue;
     public int PendingCount => _disposeQueue.PendingCount;
 
@@ -61,43 +59,42 @@ internal sealed class GfxResourceDisposer : IGfxResourceDisposer
             default:
                 throw new GraphicsException($"Unknown resource type {typeof(TId).Name}");
         }
-        
+
         // 
         switch (id)
         {
             case TextureId textureId:
-                var handleTex = _resources.TextureStore.GetHandle(textureId);
+                ref readonly var handleTex = ref _resources.TextureStore.GetHandle(textureId);
                 _disposeQueue.Enqueue(handleTex);
                 if (!replace) _resources.TextureStore.Remove(textureId, out _);
                 break;
             case ShaderId shaderId:
-                var handleShader = _resources.ShaderStore.GetHandle(shaderId);
+                ref readonly var handleShader = ref _resources.ShaderStore.GetHandle(shaderId);
                 _disposeQueue.Enqueue(handleShader);
                 if (!replace) _resources.ShaderStore.Remove(shaderId, out _);
                 break;
             case MeshId meshId:
-                var handleMesh = _resources.MeshStore.GetHandle(meshId);
+                ref readonly var handleMesh = ref _resources.MeshStore.GetHandle(meshId);
                 _disposeQueue.Enqueue(handleMesh);
                 if (!replace) _resources.MeshStore.Remove(meshId, out _);
                 break;
             case VertexBufferId vboId:
-                var handleVbo = _resources.VboStore.GetHandle(vboId);
+                ref readonly var handleVbo = ref _resources.VboStore.GetHandle(vboId);
                 _disposeQueue.Enqueue(handleVbo);
                 if (!replace) _resources.VboStore.Remove(vboId, out _);
                 break;
             case IndexBufferId iboId:
-                var handleIbo = _resources.IboStore.GetHandle(iboId);
+                ref readonly var handleIbo = ref _resources.IboStore.GetHandle(iboId);
                 _disposeQueue.Enqueue(handleIbo);
                 if (!replace) _resources.IboStore.Remove(iboId, out _);
                 break;
             case FrameBufferId fboId:
-                ref readonly var fbo = ref _resources.FboStore.GetMeta(fboId);
-                var fboHandle = _resources.FboStore.GetHandle(fboId);
+                ref readonly var fboHandle = ref _resources.FboStore.GetHandle(fboId);
                 _disposeQueue.Enqueue(fboHandle);
                 if (!replace) _resources.FboStore.Remove(fboId, out _);
                 break;
             case RenderBufferId rboId:
-                var rboHandle = _resources.RboStore.GetHandle(rboId);
+                ref readonly var rboHandle = ref _resources.RboStore.GetHandle(rboId);
                 _disposeQueue.Enqueue(rboHandle);
                 if (!replace) _resources.RboStore.Remove(rboId, out _);
                 break;

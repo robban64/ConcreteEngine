@@ -91,6 +91,14 @@ public sealed class GraphicsRuntime : IGraphicsRuntime
 
     public void OnResize(in Vector2D<int> viewportSize, in Vector2D<int> outputSize)
     {
+        var fboStore = _resources.FboStore;
+        Console.WriteLine($"Recreating {fboStore.Count} FBO");
+        
+        //TODO
+        for (int i = 0; i < fboStore.Count; i++)
+        {
+        }
+
     }
 
     public void Dispose()

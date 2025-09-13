@@ -186,7 +186,7 @@ internal sealed class GraphicsContext : IGraphicsContext
         if (_boundFboId == fboId) GraphicsException.ThrowInvalidState($"FBO is {fboId} already bound.");
 
         ref readonly var meta = ref _store.FboStore.GetMeta(fboId);
-        var handle = _store.FboStore.GetHandle(fboId);
+        ref readonly var handle = ref _store.FboStore.GetHandle(fboId);
 
         BindFramebuffer(fboId);
         _boundReadFboId = fboId;
@@ -329,7 +329,7 @@ internal sealed class GraphicsContext : IGraphicsContext
             return;
         }
 
-        var handle = _store.FboStore.GetHandle(id);
+        ref readonly var handle = ref _store.FboStore.GetHandle(id);
         _driver.BindFramebuffer(handle);
         _boundFboId = id;
     }
@@ -343,14 +343,14 @@ internal sealed class GraphicsContext : IGraphicsContext
         if (_boundTextures[slot] == texture) return;
         if (texture == default)
         {
-            _driver.BindTextureUnit(default, 0);
+            _driver.BindTextureUnit(default, slot);
             _boundTextures[slot] = default;
             return;
         }
 
 
         _boundTextures[slot] = texture;
-        var handle = _store.TextureStore.GetHandle(texture);
+        ref readonly var handle =ref  _store.TextureStore.GetHandle(texture);
         _driver.BindTextureUnit(handle, slot);
     }
 
@@ -365,7 +365,7 @@ internal sealed class GraphicsContext : IGraphicsContext
             return;
         }
 
-        var handle = _store.MeshStore.GetHandle(id);
+        ref readonly var handle =ref _store.MeshStore.GetHandle(id);
         _driver.BindVertexArray(handle);
         _boundVaoId = id;
     }
@@ -381,7 +381,7 @@ internal sealed class GraphicsContext : IGraphicsContext
             return;
         }
 
-        var handle = _store.VboStore.GetHandle(id);
+        ref readonly var handle = ref _store.VboStore.GetHandle(id);
         _driver.BindVertexBuffer(handle);
         _boundVertexBufferId = id;
     }

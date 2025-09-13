@@ -10,7 +10,6 @@ public interface IResourceStore<in TId, TMeta>
 {
     ref readonly TMeta GetMeta(TId id);
     ReadOnlySpan<TMeta> AsMetaSpan();
-    bool IsAlive(TId id);
 }
 
 internal sealed class ResourceStore<TId, TMeta> : IResourceStore<TId, TMeta>
@@ -26,8 +25,7 @@ internal sealed class ResourceStore<TId, TMeta> : IResourceStore<TId, TMeta>
     private TMeta[] _meta;
     private GfxHandle[] _handle;
 
-    private int[] _free;
-    private int _freeCount;
+    private readonly Stack<int> _free;
 
     public int Count => _idx;
 
@@ -46,13 +44,13 @@ internal sealed class ResourceStore<TId, TMeta> : IResourceStore<TId, TMeta>
 
         _meta = new TMeta[initialCapacity];
         _handle = new GfxHandle[initialCapacity];
-        _free = new int[initialCapacity];
+        _free = new Stack<int>();
     }
 
 
     public TId Add(in TMeta meta, in GfxHandle handle)
     {
-        int idx = _freeCount > 0 ? _free[--_freeCount] : Allocate();
+        int idx = _free.Count > 0 ? _free.Pop() : Allocate();
         _meta[idx] = meta;
         _handle[idx] = handle;
         return MakeId(idx);
@@ -65,8 +63,7 @@ internal sealed class ResourceStore<TId, TMeta> : IResourceStore<TId, TMeta>
         var h = _handle[idx];
         _meta[idx] = default!;
         _handle[idx] = default!;
-        if (_freeCount == _free.Length) Array.Resize(ref _free, _free.Length * 2);
-        _free[_freeCount++] = idx;
+        _free.Push(idx);
         return h;
     }
 
@@ -74,14 +71,14 @@ internal sealed class ResourceStore<TId, TMeta> : IResourceStore<TId, TMeta>
     public ref readonly TMeta GetMeta(TId id) => ref _meta[id.Id - 1];
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public GfxHandle GetHandle(TId id) => _handle[id.Id - 1];
+    public ref readonly GfxHandle GetHandle(TId id) => ref _handle[id.Id - 1];
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public GfxHandle GetHandleAndMeta(TId id, out TMeta meta)
+    public ref readonly GfxHandle GetHandleAndMeta(TId id, out TMeta meta)
     {
         int idx = id.Id - 1;
         meta = _meta[idx];
-        return _handle[idx];
+        return ref _handle[idx];
     }
 
     public TId Replace(TId id, in TMeta newMeta, in GfxHandle newHandle, out GfxHandle oldHandle)
@@ -103,14 +100,9 @@ internal sealed class ResourceStore<TId, TMeta> : IResourceStore<TId, TMeta>
         return newMeta;
     }
 
-    private static EqualityComparer<TMeta> MetaComparer = EqualityComparer<TMeta>.Default;
-
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public bool IsAlive(TId id) => !MetaComparer.Equals(_meta[id.Id - 1], default);
+    public bool IsAlive(TId id) => GetHandle(id).IsValid;
 
-
-    [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    private bool IsAliveAtIndex(int idx) => !MetaComparer.Equals(_meta[idx], default);
 
     private int Allocate()
     {
@@ -121,7 +113,6 @@ internal sealed class ResourceStore<TId, TMeta> : IResourceStore<TId, TMeta>
             var newCap = _meta.Length * 2;
             Array.Resize(ref _meta, newCap);
             Array.Resize(ref _handle, newCap);
-            Array.Resize(ref _free, Math.Max(_free.Length, newCap));
         }
 
         return _idx++;
@@ -161,7 +152,7 @@ internal sealed class ResourceStore<TId, TMeta> : IResourceStore<TId, TMeta>
             int i = _i;
             while (++i < _store._idx)
             {
-                if (_store.IsAliveAtIndex(i))
+                if (_store.GetHandle(Current).IsValid)
                 {
                     _i = i;
                     return true;

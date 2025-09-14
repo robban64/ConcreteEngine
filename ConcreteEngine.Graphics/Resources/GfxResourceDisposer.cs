@@ -16,12 +16,13 @@ internal sealed class GfxResourceDisposer : IGfxResourceDisposer
 
     private readonly GfxResourceManager _resources;
     private readonly GfxResourceRegistry _registry;
-    private readonly IDisposableBackend _backend;
+    private readonly IDeleteResourceBackend _backend;
 
     private readonly ResourceDisposeQueue _disposeQueue;
     public int PendingCount => _disposeQueue.PendingCount;
 
-    internal GfxResourceDisposer(GfxResourceManager resources, GfxResourceRegistry registry, IDisposableBackend backend)
+    internal GfxResourceDisposer(GfxResourceManager resources, GfxResourceRegistry registry,
+        IDeleteResourceBackend backend)
     {
         _resources = resources;
         _registry = registry;

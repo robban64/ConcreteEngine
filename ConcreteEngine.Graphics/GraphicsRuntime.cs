@@ -60,15 +60,18 @@ public sealed class GraphicsRuntime : IGraphicsRuntime
         _resources = new GfxResourceManager();
         _registry = new GfxResourceRegistry(_resources);
 
-        var driver = new GlBackendDriver(_resources.BackendStoreHub);
+        var driver = new GlBackendDriver();
+        _resources.AttachStore(driver);
+        _resources.AttachDispatchers(driver);
         driver.Initialize(glConfig);
-        _driver = driver;
 
-        _context = new GraphicsContext(_driver, _resources, _registry);
+        _context = new GraphicsContext(driver, _resources, _registry);
         
-        _disposer = new GfxResourceDisposer(_resources, _registry, _driver);
-        _allocator = new GfxResourceAllocator(_driver, _resources, _registry, _disposer);
+        _disposer = new GfxResourceDisposer(_resources, _registry, driver);
+        _allocator = new GfxResourceAllocator(driver, _resources, _registry, _disposer);
         _factoryHub = new GfxFactoryHub(_context, _resources, _allocator, _registry);
+
+        _driver = driver;
 
         UniformBufferUtils.Init(_context.Capabilities.UniformBufferOffsetAlignment);
     }
@@ -89,7 +92,7 @@ public sealed class GraphicsRuntime : IGraphicsRuntime
         _context.EndFrame(out stats);
         if (_frameCtx.ResizePending)
         {
-            RecreateFbo(_frameCtx.OutputSize);
+           // RecreateFbo(_frameCtx.OutputSize);
         }
     }
 

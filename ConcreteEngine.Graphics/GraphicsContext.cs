@@ -124,7 +124,6 @@ internal sealed class GraphicsContext : IGraphicsContext
         _boundTextures = new TextureId[Configuration.MaxTextureImageUnits];
     }
 
-
     public void BeginFrame(in FrameInfo frameCtx)
     {
         _frameCtx = frameCtx;

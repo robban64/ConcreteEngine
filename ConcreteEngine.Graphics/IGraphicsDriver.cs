@@ -10,8 +10,6 @@ namespace ConcreteEngine.Graphics;
 
 internal interface IGfxShaderBackend
 {
-    GfxHandle CreateShader(string vs, string fs, out ShaderLayout layout, out ShaderMeta meta);
-    void UseShader(in GfxHandle shader);
     void SetUniform(int uniform, int value);
     void SetUniform(int uniform, uint value);
     void SetUniform(int uniform, float value);
@@ -24,54 +22,40 @@ internal interface IGfxShaderBackend
 
 internal interface IBufferBackend
 {
-    GfxHandle CreateUniformBuffer(UniformGpuSlot slot, UboDefaultCapacity capacity, uint blockSize,
-        out UniformBufferMeta meta);
-
-    void BindUniformBuffer(in GfxHandle ubo);
-    void SetUniformBufferSize(UniformGpuSlot slot, nuint capacity);
-    void UploadUniformBuffer<T>(in GfxHandle ubo, in T data, nuint offset, nuint size) where T : unmanaged, IUniformGpuData;
-    void BindUniformBufferRange(in GfxHandle ubo, UniformGpuSlot slot, nuint offset, nuint size);
-}
-
-internal interface IMeshBackend
-{
-    GfxHandle CreateVertexArray(DrawPrimitive primitive, MeshDrawKind drawKind, DrawElementType drawElement,
-        out MeshMeta meta);
-
-    GfxHandle CreateVertexBuffer(BufferUsage usage, uint elementSize, uint bindingIndex, out VertexBufferMeta meta);
-    GfxHandle CreateIndexBuffer(BufferUsage usage, uint elementSize, out IndexBufferMeta meta);
-
-    void BindVertexArray(in GfxHandle vao);
-    void BindVertexBuffer(in GfxHandle vbo);
-    void BindIndexBuffer(in GfxHandle ibo);
     void SetVertexAttribute(in GfxHandle vao, uint index, in VertexAttributeDescriptor attribute);
-
-    void SetIndexBuffer<T>(in GfxHandle vao, in GfxHandle ibo, ReadOnlySpan<T> data, nuint size,
-        BufferUsage usage = BufferUsage.StaticDraw) where T : unmanaged;
-
+    
     void SetVertexBuffer<T>(in GfxHandle vao, in GfxHandle vbo, ReadOnlySpan<T> data, nuint size,
         BufferUsage usage = BufferUsage.StaticDraw) where T : unmanaged;
 
     void UploadVertexBuffer<T>(in GfxHandle vbo, ReadOnlySpan<T> data, nuint offsetBytes) where T : unmanaged;
+    
+    void SetIndexBuffer<T>(in GfxHandle vao, in GfxHandle ibo, ReadOnlySpan<T> data, nuint size,
+        BufferUsage usage = BufferUsage.StaticDraw) where T : unmanaged;
     void UploadIndexBuffer<T>(in GfxHandle ibo, ReadOnlySpan<T> data, nuint offsetBytes) where T : unmanaged;
 
+    void SetUniformBufferSize(UniformGpuSlot slot, nuint capacity);
+    void UploadUniformBuffer<T>(in GfxHandle ubo, in T data, nuint offset, nuint size) where T : unmanaged, IUniformGpuData;
+    void BindUniformBufferRange(in GfxHandle ubo, UniformGpuSlot slot, nuint offset, nuint size);
+
+}
+
+internal interface IDrawBackend
+{
     void DrawArrays(DrawPrimitive primitive, uint drawCount);
     void DrawElements(DrawPrimitive primitive, DrawElementType elementType, uint drawCount);
+    void Blit(Vector2D<int> srcSize, Vector2D<int> dstSize, bool linear);
 }
 
-internal interface ITextureBackend
-{
-    GfxHandle CreateTexture2D(GpuTextureData data, in GpuTextureDescriptor desc, out TextureMeta meta);
-    GfxHandle CreateCubeMap(GpuCubeMapData data, in GpuCubeMapDescriptor desc, out TextureMeta meta);
-    void BindTextureUnit(in GfxHandle tex, uint slot);
-}
 
-internal interface IFramebufferBackend
+internal interface IBinderBackend
 {
+    void BindVertexArray(in GfxHandle vao);
+    void BindVertexBuffer(in GfxHandle vbo);
+    void BindIndexBuffer(in GfxHandle ibo);
     void BindFramebuffer(in GfxHandle fbo);
     void BindFrameBufferReadDraw(in GfxHandle readFbo, in GfxHandle drawFbo);
-    void CreateFramebuffer( in FrameBufferDesc desc, out DriverCreateFboResult result);
-    void Blit(Vector2D<int> srcSize, Vector2D<int> dstSize, bool linear);
+    void BindUniformBuffer(in GfxHandle ubo);
+    
 }
 
 internal interface IStateBackend
@@ -82,17 +66,40 @@ internal interface IStateBackend
     void SetDepthMode(DepthMode depthMode);
     void SetCullMode(CullMode cullMode);
     void SetViewport(in Vector2D<int> viewport);
+    void BindTextureUnit(in GfxHandle tex, uint slot);
+    void UseShader(in GfxHandle shader);
 }
 
-internal interface IDisposableBackend
+internal interface IDeleteResourceBackend
 {
-    void DeleteGfxResource(GfxHandle handle, bool replace);
+    void DeleteGfxResource(GfxHandle handle);
 }
 
-internal interface IGraphicsDriver : IGfxShaderBackend, IBufferBackend, IMeshBackend, ITextureBackend,
-    IFramebufferBackend, IStateBackend, IDisposableBackend
+internal interface ICreateResourceBackend
+{
+    GfxHandle CreateShader(string vs, string fs, out ShaderLayout layout, out ShaderMeta meta);
+    void CreateFramebuffer(in FrameBufferDesc desc, out DriverCreateFboResult result);
+    GfxHandle CreateTexture2D(GpuTextureData data, in GpuTextureDescriptor desc, out TextureMeta meta);
+    GfxHandle CreateCubeMap(GpuCubeMapData data, in GpuCubeMapDescriptor desc, out TextureMeta meta);
+
+    GfxHandle CreateVertexArray(DrawPrimitive primitive, MeshDrawKind drawKind, DrawElementType drawElement,
+        out MeshMeta meta);
+
+    GfxHandle CreateVertexBuffer(BufferUsage usage, uint elementSize, uint bindingIndex, out VertexBufferMeta meta);
+    GfxHandle CreateIndexBuffer(BufferUsage usage, uint elementSize, out IndexBufferMeta meta);
+
+    GfxHandle CreateUniformBuffer(UniformGpuSlot slot, UboDefaultCapacity capacity, uint blockSize,
+        out UniformBufferMeta meta);
+
+}
+
+internal interface IGraphicsDriver : IGfxShaderBackend, IBufferBackend, IDrawBackend, IBinderBackend,
+     IStateBackend, IDeleteResourceBackend, ICreateResourceBackend
 {
     GraphicsConfiguration Configuration { get; }
     DeviceCapabilities Capabilities { get; }
+
+    void RegisterDispatcher(BackendDriverDispatcher dispatcher);
+    void RegisterStore(BackendStoreHub.OpenGlResourceStores store);
     void ValidateEndFrame();
 }

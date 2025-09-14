@@ -3,11 +3,7 @@ using ConcreteEngine.Graphics.Error;
 
 namespace ConcreteEngine.Graphics.Resources;
 
-interface IDriverResourceStore
-{
-    void Remove(GfxHandle handle);
-    bool IsAlive(GfxHandle handle);
-}
+interface IDriverResourceStore;
 internal sealed class DriverResourceStore<THandle> : IDriverResourceStore where THandle : unmanaged, IResourceHandle, IEquatable<THandle>
 {
     private readonly record struct StoreRecord(THandle Value, ushort Gen, bool Alive)

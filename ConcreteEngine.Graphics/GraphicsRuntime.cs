@@ -61,7 +61,6 @@ public sealed class GraphicsRuntime : IGraphicsRuntime
         driver.Initialize(glConfig);
         
         _driver = driver;
-
         _resources = new GfxResourceManager();
         _registry = new GfxResourceRegistry(_resources);
         _context = new GraphicsContext(_driver, _resources, _registry);
@@ -81,6 +80,7 @@ public sealed class GraphicsRuntime : IGraphicsRuntime
     public void BeginFrame(in FrameInfo frameInfo)
     {
         _context.BeginFrame(frameInfo);
+        
     }
 
     public void EndFrame(out GpuFrameStats stats)
@@ -94,10 +94,16 @@ public sealed class GraphicsRuntime : IGraphicsRuntime
         var fboStore = _resources.FboStore;
         Console.WriteLine($"Recreating {fboStore.Count} FBO");
         
-        //TODO
-        for (int i = 0; i < fboStore.Count; i++)
+        foreach (var fboId in fboStore.IdEnumerator)
         {
+            fboId.IsValidOrThrow();
+            _disposer.EnqueueRemoval(fboId, true);
+            var fboLayout = _registry.FboRegistry.Get(fboId);
+            var newDescriptor = fboLayout.GetResizeDescriptor(outputSize);
+            _allocator.CreateFramebuffer(in newDescriptor, out var newMeta);
         }
+        
+
 
     }
 

@@ -11,6 +11,9 @@ internal class GfxFactoryHub : IGfxFactoryHub
 
     private readonly PrimitiveMeshes _primitives;
     private readonly FboFactory _fboFactory;
+    
+    internal MeshFactory MeshFactoryInternal => _meshFactory;
+    internal PrimitiveMeshes PrimitivesInternal => _primitives;
 
     public IMeshFactory MeshFactory => _meshFactory;
     public IPrimitiveMeshes Primitives => _primitives;

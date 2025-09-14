@@ -52,9 +52,10 @@ internal sealed class GfxResourceDisposer : IGfxResourceDisposer
                 break;
             case FrameBufferId fboId:
                 var fboLayout = _registry.FboRegistry.Get(fboId);
-                if (fboLayout.RboDepthId.IsValid()) EnqueueRemoval(fboLayout.RboDepthId, replace);
-                if (fboLayout.RboTexId.IsValid()) EnqueueRemoval(fboLayout.RboTexId, replace);
-                if (fboLayout.FboTexId.IsValid()) EnqueueRemoval(fboLayout.FboTexId, replace);
+                var fboRes = fboLayout.AttachedFboResources;
+                if (fboRes.RboDepthId.IsValid()) EnqueueRemoval(fboRes.RboDepthId, replace);
+                if (fboRes.RboTexId.IsValid()) EnqueueRemoval(fboRes.RboTexId, replace);
+                if (fboRes.FboTexId.IsValid()) EnqueueRemoval(fboRes.FboTexId, replace);
                 break;
             default:
                 throw new GraphicsException($"Unknown resource type {typeof(TId).Name}");

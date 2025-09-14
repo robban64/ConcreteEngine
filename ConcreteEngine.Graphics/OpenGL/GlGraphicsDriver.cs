@@ -309,7 +309,6 @@ internal sealed class GlBackendDriver : IGraphicsDriver
             attribute.StrideBytes,
             (void*)attribute.OffsetBytes);
         if (attribute.Divisor != 0) _gl.VertexAttribDivisor(index, attribute.Divisor);
-        CheckGlError();
     }
 
     public void SetIndexBuffer<T>(in GfxHandle vao, in GfxHandle ibo, ReadOnlySpan<T> data, nuint size,
@@ -332,7 +331,7 @@ internal sealed class GlBackendDriver : IGraphicsDriver
         _gl.BufferSubData(BufferTargetARB.ArrayBuffer, (nint)offsetByte, data);
         CheckGlError();
     }
-    //_gl.NamedBufferSubData(vbo.Handle, (nint)dstOffsetBytes, (nuint)(data.Length * Unsafe.SizeOf<T>()), data);
+    //_gl.NamedBufferSubData(vbo.Handle, (nint)offsetByte, (nuint)(data.Length * Unsafe.SizeOf<T>()), data);
 
     public void UploadIndexBuffer<T>(in GfxHandle ibo, ReadOnlySpan<T> data, nuint offsetByte)
         where T : unmanaged
@@ -340,7 +339,7 @@ internal sealed class GlBackendDriver : IGraphicsDriver
         _gl.BufferSubData(BufferTargetARB.ElementArrayBuffer, (nint)offsetByte, data);
         CheckGlError();
     }
-    // _gl.NamedBufferSubData(ibo.Handle, (nint)dstOffsetBytes, (nuint)(data.Length * Unsafe.SizeOf<T>()), data);
+    // _gl.NamedBufferSubData(ibo.Handle, (nint)offsetByte, (nuint)(data.Length * Unsafe.SizeOf<T>()), data);
 
 
     // Textures

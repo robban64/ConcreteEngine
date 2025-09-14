@@ -95,9 +95,12 @@ internal sealed class GfxResourceAllocator : IGfxResourceAllocator
 
         _registry.FboRegistry.Register(new FrameBufferLayout(
             FboId: fboId,
-            FboTexId: fboTexId,
-            RboDepthId: rboDepthId,
-            RboTexId: rboTexId
+            AttachedFboResources: new FrameBufferLayout.AttachedFboIds(
+                FboTexId: fboTexId,
+                RboDepthId: rboDepthId,
+                RboTexId: rboTexId
+            ),
+            CreateDescriptor: in desc
         ));
 
         meta = result.Fbo.Meta;

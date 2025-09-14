@@ -142,8 +142,6 @@ public sealed class GameEngine : IDisposable
         {
             _renderTime.TickOrRenderEffect();
             _renderer.Render(_updateCtx.Alpha, in frameCtx);
-            if(frameCtx.ResizePending)
-                _graphics.OnResize(frameCtx.Viewport, frameCtx.OutputSize);
         }
         _renderTime.TickOrGpuDispose();
         _renderTime.TickOrGpuUpload();

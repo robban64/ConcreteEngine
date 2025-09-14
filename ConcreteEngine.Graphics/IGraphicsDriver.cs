@@ -86,7 +86,7 @@ internal interface IStateBackend
 
 internal interface IDisposableBackend
 {
-    void DeleteGfxResource(GfxHandle handle);
+    void DeleteGfxResource(GfxHandle handle, bool replace);
 }
 
 internal interface IGraphicsDriver : IGfxShaderBackend, IBufferBackend, IMeshBackend, ITextureBackend,

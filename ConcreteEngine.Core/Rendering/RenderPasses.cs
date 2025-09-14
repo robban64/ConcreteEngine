@@ -92,7 +92,7 @@ internal class RenderPasses
             throw new InvalidOperationException("Scene buffer is already created");
 
         var desc = new FrameBufferDesc(SizeRatio: Vector2.One, AbsoluteSize: _snapshot.OutputSize, DepthStencilBuffer: true);
-        var fboId = GfxAllocator.CreateFramebuffer(in desc, out var meta);
+        var fboId = GfxAllocator.CreateFrameBuffer(in desc, out var meta);
         
         var layout = _graphics.Registry.FboRegistry.Get(fboId);
         SceneFbo = RenderPassFboRecord.From(fboId, in meta, layout);
@@ -111,7 +111,7 @@ internal class RenderPasses
             AbsoluteSize: _snapshot.OutputSize,
             SizeRatio: sizeRatio, DepthStencilBuffer: true, Msaa: samples > 0, Samples: samples);
         
-        var fboId = GfxAllocator.CreateFramebuffer(in desc, out var meta);
+        var fboId = GfxAllocator.CreateFrameBuffer(in desc, out var meta);
 
         var layout = _graphics.Registry.FboRegistry.Get(fboId);
         MultisampleFbo = RenderPassFboRecord.From(fboId, in meta, layout);
@@ -129,7 +129,7 @@ internal class RenderPasses
 
         var desc = new FrameBufferDesc(SizeRatio:Vector2.One, AbsoluteSize: absoluteSize, DepthStencilBuffer: true);
         
-        var fboId = GfxAllocator.CreateFramebuffer(in desc , out var meta);
+        var fboId = GfxAllocator.CreateFrameBuffer(in desc , out var meta);
 
         var layout = _graphics.Registry.FboRegistry.Get(fboId);
         ShadowFbo =  RenderPassFboRecord.From(fboId, in meta, layout);
@@ -145,7 +145,7 @@ internal class RenderPasses
             TexturePreset: preset,
             DepthStencilBuffer: false);
         
-        var fboId = GfxAllocator.CreateFramebuffer(in desc , out var meta);
+        var fboId = GfxAllocator.CreateFrameBuffer(in desc , out var meta);
 
         var layout = _graphics.Registry.FboRegistry.Get(fboId);
         LightFbo = RenderPassFboRecord.From(fboId, in meta, layout);
@@ -177,7 +177,7 @@ internal class RenderPasses
             TexturePreset: TexturePreset.LinearClamp, 
             DepthStencilBuffer: false);
         
-        var fboId = _graphics.Allocator.CreateFramebuffer(in desc , out var meta);
+        var fboId = _graphics.Allocator.CreateFrameBuffer(in desc , out var meta);
         var layout = _graphics.Registry.FboRegistry.Get(fboId);
         return RenderPassFboRecord.From(fboId, in meta, layout);
     }

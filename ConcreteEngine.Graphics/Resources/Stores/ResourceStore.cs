@@ -5,14 +5,11 @@ using ConcreteEngine.Graphics.Resources;
 namespace ConcreteEngine.Graphics.Resources;
 
 
-public interface IResourceStore<in TId, TMeta> 
-    where TId : unmanaged, IResourceId where TMeta : unmanaged, IResourceMeta
+public interface IResourceStore
 {
-    ref readonly TMeta GetMeta(TId id);
-    ReadOnlySpan<TMeta> AsMetaSpan();
+    ResourceKind GetResourceKind();
 }
-
-internal sealed class ResourceStore<TId, TMeta> : IResourceStore<TId, TMeta>
+internal sealed class ResourceStore<TId, TMeta> : IResourceStore
     where TId : unmanaged, IResourceId where TMeta : unmanaged, IResourceMeta
 {
     internal readonly MakeIdDelegate<TId> MakeId;
@@ -21,6 +18,8 @@ internal sealed class ResourceStore<TId, TMeta> : IResourceStore<TId, TMeta>
     private const int HardLimit = 10_000;
     private const int MaxDefaultCapacity = 1024;
 
+    private readonly ResourceKind _resourceKind;
+    
     private int _idx = 0;
     private TMeta[] _meta;
     private GfxHandle[] _handle;
@@ -33,19 +32,24 @@ internal sealed class ResourceStore<TId, TMeta> : IResourceStore<TId, TMeta>
     internal ReadOnlySpan<GfxHandle> AsHandleSpan() => _handle;
 
     internal ResourceStore(
+        ResourceKind resourceKind,
         int initialCapacity,
         MakeIdDelegate<TId> makeId)
     {
+        ArgumentOutOfRangeException.ThrowIfEqual((int)resourceKind, (int)ResourceKind.Invalid);
         ArgumentOutOfRangeException.ThrowIfLessThan(initialCapacity, 4, nameof(initialCapacity));
         ArgumentOutOfRangeException.ThrowIfGreaterThan(initialCapacity, MaxDefaultCapacity, nameof(initialCapacity));
         ArgumentNullException.ThrowIfNull(makeId);
 
+        _resourceKind = resourceKind;
         MakeId = makeId;
 
         _meta = new TMeta[initialCapacity];
         _handle = new GfxHandle[initialCapacity];
         _free = new Stack<int>();
     }
+
+    public ResourceKind GetResourceKind() => _resourceKind;
 
 
     public TId Add(in TMeta meta, in GfxHandle handle)
@@ -66,7 +70,7 @@ internal sealed class ResourceStore<TId, TMeta> : IResourceStore<TId, TMeta>
         _free.Push(idx);
         return h;
     }
-
+    
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public ref readonly TMeta GetMeta(TId id) => ref _meta[id.Id - 1];
 
@@ -162,4 +166,5 @@ internal sealed class ResourceStore<TId, TMeta> : IResourceStore<TId, TMeta>
             return false;
         }
     }
+    
 }

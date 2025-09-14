@@ -18,7 +18,9 @@ public interface IGfxResourceAllocator
     TextureId CreateTexture2D(GpuTextureData data, in GpuTextureDescriptor desc, out TextureMeta meta);
     TextureId CreateCubeMap(GpuCubeMapData data, in GpuCubeMapDescriptor desc, out TextureMeta meta);
 
-    FrameBufferId CreateFramebuffer(in FrameBufferDesc desc, out FrameBufferMeta meta);
+    FrameBufferId CreateFrameBuffer(in FrameBufferDesc desc, out FrameBufferMeta meta);
+    void RecreateFrameBuffer(FrameBufferId fboId, in Vector2D<int> outputSize, out FrameBufferMeta meta);
+
     ShaderId CreateShader(string vertexSource, string fragmentSource, out ShaderMeta meta);
 
     UniformBufferId CreateUniformBuffer<T>(UniformGpuSlot slot, UboDefaultCapacity defaultCapacity,
@@ -31,16 +33,19 @@ internal sealed class GfxResourceAllocator : IGfxResourceAllocator
     private readonly IGraphicsDriver _driver;
     private readonly GfxResourceManager _stores;
     private readonly GfxResourceRegistry _registry;
+    private readonly GfxResourceDisposer _disposer;
 
 
     public GfxResourceAllocator(
         IGraphicsDriver driver,
         GfxResourceManager stores,
-        GfxResourceRegistry registry)
+        GfxResourceRegistry registry, 
+        GfxResourceDisposer disposer)
     {
         _stores = stores;
         _driver = driver;
         _registry = registry;
+        _disposer = disposer;
     }
 
     public MeshId CreateMesh(DrawPrimitive primitive, MeshDrawKind drawKind, DrawElementType drawElement,
@@ -76,7 +81,7 @@ internal sealed class GfxResourceAllocator : IGfxResourceAllocator
         return _stores.TextureStore.Add(in meta, handle);
     }
 
-    public FrameBufferId CreateFramebuffer(in FrameBufferDesc desc, out FrameBufferMeta meta)
+    public FrameBufferId CreateFrameBuffer(in FrameBufferDesc desc, out FrameBufferMeta meta)
     {
         ArgumentOutOfRangeException.ThrowIfLessThan(desc.AbsoluteSize.X, 16);
         ArgumentOutOfRangeException.ThrowIfLessThan(desc.AbsoluteSize.Y, 16);
@@ -105,6 +110,45 @@ internal sealed class GfxResourceAllocator : IGfxResourceAllocator
 
         meta = result.Fbo.Meta;
         return fboId;
+    }
+
+    public void RecreateFrameBuffer(FrameBufferId fboId, in Vector2D<int> outputSize, out FrameBufferMeta meta)
+    {
+        ref readonly var prevMeta = ref _stores.FboStore.GetMeta(fboId);
+        var layout = _registry.FboRegistry.Get(fboId);
+        var size = new Vector2D<int>((int)(outputSize.X * prevMeta.SizeRatio.X),
+            (int)(outputSize.Y * prevMeta.SizeRatio.Y));
+
+        var attachedIds = layout.AttachedFboResources;
+        var (colTexId, rboTexId, rboDepthId) = (attachedIds.FboTexId, attachedIds.RboTexId, attachedIds.RboDepthId);
+
+        TextureMeta colTexMeta = default;
+        RenderBufferMeta rboTexMeta = default, rboDepthMeta = default;
+
+        if (colTexId.Id > 0)
+        {
+            ref readonly var prevTexMeta = ref _stores.TextureStore.GetMeta(colTexId);
+            colTexMeta = new TextureMeta(size.X, size.Y, prevTexMeta.Format);
+        }
+
+        if (rboTexId.Id > 0)
+        {
+            ref readonly var prevRboMeta = ref _stores.RboStore.GetMeta(rboTexId);
+            rboTexMeta = new RenderBufferMeta(prevRboMeta.Kind, size, prevRboMeta.Multisample);
+        }
+
+        if (rboDepthId.Id > 0)
+        {
+            ref readonly var prevRboMeta = ref _stores.RboStore.GetMeta(rboDepthId);
+            rboDepthMeta = new RenderBufferMeta(prevRboMeta.Kind, size, prevRboMeta.Multisample);
+        }
+
+        var fboMeta = new FrameBufferMeta(prevMeta.TexturePreset, prevMeta.SizeRatio, outputSize,
+            prevMeta.DepthStencilBuffer, prevMeta.Msaa, prevMeta.Samples);
+        _disposer.EnqueueRemoval(fboId, true);
+        
+        meta = fboMeta;
+        _stores.FboStore.Replace(fboId, in meta, )
     }
 
     public ShaderId CreateShader(string vertexSource, string fragmentSource, out ShaderMeta meta)

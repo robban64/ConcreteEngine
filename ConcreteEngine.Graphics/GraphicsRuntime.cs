@@ -10,18 +10,16 @@ namespace ConcreteEngine.Graphics;
 public interface IGraphicsRuntime : IDisposable
 {
     public IGraphicsContext Context { get; }
-    public IGfxResourceAllocator Allocator  { get; }
-    public IGfxResourceDisposer Disposer  { get; }
-    public IGfxResourceRegistry Registry  { get; }
-    public IGfxFactoryHub FactoryHub  { get; }
-    
-    void Initialize<T>(IGfxStartupConfig<T> config) where T : class; 
+    public IGfxResourceAllocator Allocator { get; }
+    public IGfxResourceDisposer Disposer { get; }
+    public IGfxResourceRegistry Registry { get; }
+    public IGfxFactoryHub FactoryHub { get; }
+
+    void Initialize<T>(IGfxStartupConfig<T> config) where T : class;
 
     void BeginFrame(in FrameInfo frameInfo);
-    void EndFrame(out GpuFrameStats stats); 
+    void EndFrame(out GpuFrameStats stats);
 
-    void OnResize(in Vector2D<int> viewportSize, in Vector2D<int> outputSize);
-    
     void Shutdown();
 }
 
@@ -48,28 +46,30 @@ public sealed class GraphicsRuntime : IGraphicsRuntime
 
     public IGfxFactoryHub FactoryHub => _factoryHub;
 
+    private FrameInfo _frameCtx;
+
     public GraphicsRuntime()
     {
     }
 
     public void Initialize<T>(IGfxStartupConfig<T> config) where T : class
     {
-        if(config is not GlStartupConfig  glConfig)
+        if (config is not GlStartupConfig glConfig)
             throw GraphicsException.UnsupportedFeature("Only OpenGL is supported");
-        
-        var driver = new GlBackendDriver();
-        driver.Initialize(glConfig);
-        
-        _driver = driver;
+
         _resources = new GfxResourceManager();
         _registry = new GfxResourceRegistry(_resources);
+
+        var driver = new GlBackendDriver(_resources.BackendStoreHub);
+        driver.Initialize(glConfig);
+        _driver = driver;
+
         _context = new GraphicsContext(_driver, _resources, _registry);
-
-        _allocator = new GfxResourceAllocator(_driver, _resources, _registry);
-        _disposer = new GfxResourceDisposer(_resources, _registry, _driver);
-
-        _factoryHub = new GfxFactoryHub(_context, _resources, _allocator, _registry);
         
+        _disposer = new GfxResourceDisposer(_resources, _registry, _driver);
+        _allocator = new GfxResourceAllocator(_driver, _resources, _registry, _disposer);
+        _factoryHub = new GfxFactoryHub(_context, _resources, _allocator, _registry);
+
         UniformBufferUtils.Init(_context.Capabilities.UniformBufferOffsetAlignment);
     }
 
@@ -79,32 +79,42 @@ public sealed class GraphicsRuntime : IGraphicsRuntime
 
     public void BeginFrame(in FrameInfo frameInfo)
     {
+        _frameCtx = frameInfo;
         _context.BeginFrame(frameInfo);
-        
     }
 
     public void EndFrame(out GpuFrameStats stats)
     {
         if (_disposer.PendingCount > 0) _disposer.DrainDisposeQueue();
         _context.EndFrame(out stats);
+        if (_frameCtx.ResizePending)
+        {
+            RecreateFbo(_frameCtx.OutputSize);
+        }
     }
 
-    public void OnResize(in Vector2D<int> viewportSize, in Vector2D<int> outputSize)
+    private void RecreateFbo(in Vector2D<int> outputSize)
     {
+        ArgumentOutOfRangeException.ThrowIfLessThanOrEqual(outputSize.X, 0);
+        ArgumentOutOfRangeException.ThrowIfLessThanOrEqual(outputSize.Y, 0);
+
         var fboStore = _resources.FboStore;
         Console.WriteLine($"Recreating {fboStore.Count} FBO");
-        
+
         foreach (var fboId in fboStore.IdEnumerator)
         {
             fboId.IsValidOrThrow();
             _disposer.EnqueueRemoval(fboId, true);
             var fboLayout = _registry.FboRegistry.Get(fboId);
             var newDescriptor = fboLayout.GetResizeDescriptor(outputSize);
-            _allocator.CreateFramebuffer(in newDescriptor, out var newMeta);
+            _allocator.CreateFrameBuffer(in newDescriptor, out var newMeta);
         }
+    }
+
+    private void RecreateSingleFbo(FrameBufferId fboId)
+    {
         
-
-
+        
     }
 
     public void Dispose()

@@ -181,8 +181,7 @@ public sealed class RenderSystem : IRenderSystem
         {
             foreach (var pass in passes)
             {
-                //_gfx.SetBlendMode(pass.Blend);
-                //_gfx.SetDepthTest(pass.DepthTest);
+                _gfx.SetBlendMode(pass.Blend);
                 _gfx.SetDepthMode(pass.DepthTest ? DepthMode.WriteLequal : DepthMode.Disabled);
                 ExecutePass(targetId, pass);
             }

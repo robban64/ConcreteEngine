@@ -59,9 +59,9 @@ internal sealed class GlBackendDriver : IGraphicsDriver
     }
 
 
-    internal GlBackendDriver()
+    internal GlBackendDriver(BackendStoreHub storeHub)
     {
-        _store = new OpenGlResourceStores();
+        _store = new OpenGlResourceStores(storeHub);
     }
 
     internal void Initialize(GlStartupConfig config)
@@ -215,7 +215,6 @@ internal sealed class GlBackendDriver : IGraphicsDriver
             _gl.DrawBuffer(DrawBufferMode.ColorAttachment0);
             _gl.ReadBuffer(ReadBufferMode.ColorAttachment0);
         }
-
     }
 
 
@@ -432,17 +431,38 @@ internal sealed class GlBackendDriver : IGraphicsDriver
     }
 
     // Disposer
-    public void DeleteGfxResource(GfxHandle handle)
+    public void DeleteGfxResource(GfxHandle handle, bool replace)
     {
         switch (handle.Kind)
         {
-            case ResourceKind.Texture: DisposeTexture(handle); break;
-            case ResourceKind.Shader: DisposeShader(handle); break;
-            case ResourceKind.Mesh: DisposeVao(handle); break;
-            case ResourceKind.VertexBuffer: DisposeVbo(handle); break;
-            case ResourceKind.IndexBuffer: DisposeIbo(handle); break;
-            case ResourceKind.FrameBuffer: DisposeFbo(handle); break;
-            case ResourceKind.RenderBuffer: DisposeRbo(handle); break;
+            case ResourceKind.Texture:
+                DisposeTexture(handle);
+                if (!replace) _store.TextureStore.Remove(handle);
+                break;
+            case ResourceKind.Shader:
+                DisposeShader(handle);
+                if (!replace) _store.TextureStore.Remove(handle);
+                break;
+            case ResourceKind.Mesh:
+                DisposeVao(handle);
+                if (!replace) _store.TextureStore.Remove(handle);
+                break;
+            case ResourceKind.VertexBuffer:
+                DisposeVbo(handle);
+                if (!replace) _store.TextureStore.Remove(handle);
+                break;
+            case ResourceKind.IndexBuffer:
+                DisposeIbo(handle);
+                if (!replace) _store.TextureStore.Remove(handle);
+                break;
+            case ResourceKind.FrameBuffer:
+                DisposeFbo(handle);
+                if (!replace) _store.TextureStore.Remove(handle);
+                break;
+            case ResourceKind.RenderBuffer:
+                DisposeRbo(handle);
+                if (!replace) _store.TextureStore.Remove(handle);
+                break;
             default: throw new ArgumentOutOfRangeException(nameof(handle), handle, $"Invalid resource {handle.Kind}");
         }
     }

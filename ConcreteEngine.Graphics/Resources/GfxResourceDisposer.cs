@@ -35,7 +35,7 @@ internal sealed class GfxResourceDisposer : IGfxResourceDisposer
     }
 
 
-    public void EnqueueRemoval<TId>(TId id, bool replace = false) where TId : unmanaged, IResourceId
+    public void EnqueueRemoval<TId>(TId id, bool replace) where TId : unmanaged, IResourceId
     {
         // Enqueue dependent resources
         switch (id)

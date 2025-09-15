@@ -6,7 +6,7 @@ internal class ResourceDisposeQueue
 {
 
     private readonly Queue<DeleteCmd> _disposeQueue = new(8);
-    private readonly HashSet<DeleteCmd> _disposeSet = new(8);
+    private readonly HashSet<int> _disposeSet = new(8);
     
     public int PendingCount => _disposeQueue.Count;
 
@@ -14,14 +14,13 @@ internal class ResourceDisposeQueue
 
     private int _ticks;
 
-    public void Enqueue(in GfxHandle handle, ushort priority, bool replace)
+    public void Enqueue(in DeleteCmd cmd)
     {
         if (_isDisposing)
             throw GraphicsException.InvalidState("Illegal state: Enqueue of removal during active dispose");
         
-        var cmd = new DeleteCmd(in handle, priority, replace);
-        if(!_disposeSet.Add(cmd))
-            throw  GraphicsException.DuplicatedResource<ResourceDisposeQueue>("");
+        if(!_disposeSet.Add(cmd.IdValue))
+            throw GraphicsException.DuplicatedResource<ResourceDisposeQueue>("");
         
         _disposeQueue.Enqueue(cmd);
     }
@@ -50,9 +49,4 @@ internal class ResourceDisposeQueue
         _ticks = 0;
     }
 
-    private readonly record struct DeleteCmd(
-        in GfxHandle Handle,
-        ushort Priority,
-        bool Replace
-    );
 }

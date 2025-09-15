@@ -91,6 +91,7 @@ public readonly struct RenderBufferMeta(
     public readonly Vector2D<int> Size = size;
     public readonly RenderBufferKind Kind = kind;
     public readonly bool Multisample = multisample;
+    
 }
 
 public readonly struct UniformBufferMeta : IResourceMeta

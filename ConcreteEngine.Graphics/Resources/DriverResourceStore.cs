@@ -5,34 +5,37 @@ namespace ConcreteEngine.Graphics.Resources;
 
 internal interface IDriverResourceStore
 {
-    ResourceKind  Kind { get; }
-    void Remove(GfxHandle handle);
-
-}
-internal interface IDriverReadResourceStore<out THandle> where THandle : unmanaged, IResourceHandle, IEquatable<THandle>
-{
-    THandle Get(GfxHandle handle);
-    THandle GetForDelete(GfxHandle handle);
-
-    bool IsAlive(GfxHandle handle);
+    ResourceKind Kind { get; }
+    void Remove(in GfxHandle handle);
+    bool IsAlive(in GfxHandle handle);
+    void NotifyReplace(in GfxHandle gfxHandle, BackendStoreRecreated callback);
 }
 
-internal sealed class DriverResourceStore<THandle> : IDriverResourceStore, IDriverReadResourceStore<THandle> where THandle : unmanaged, IResourceHandle, IEquatable<THandle>
+internal interface IDriverReadResourceStore<THandle> where THandle : unmanaged, IResourceHandle, IEquatable<THandle>
 {
-    private readonly record struct StoreRecord(THandle Value, ushort Gen, bool Alive)
+    THandle Get(in GfxHandle handle);
+    THandle GetForDelete(in GfxHandle handle);
+
+    GfxHandle Replace(in GfxHandle handle, THandle value);
+}
+
+internal delegate void BackendStoreRecreated(in GfxHandle handle);
+
+internal sealed class DriverResourceStore<THandle> : IDriverResourceStore, IDriverReadResourceStore<THandle>
+    where THandle : unmanaged, IResourceHandle, IEquatable<THandle>
+{
+    private readonly record struct StoreRecord(THandle Current, ushort Gen, bool Alive)
     {
         public bool IsValidRecord() => Gen > 0 && Alive;
     }
-    
-    private readonly record struct PendingRecord(in THandle oldHandle, in GfxHandle oldGfxHandle, in THandle newHandle, in GfxHandle newGfxHandle);
-
 
     // sanity check
     private const int HardLimit = 10_000;
 
     private StoreRecord[] _entries = new StoreRecord[16];
+
     private readonly Stack<int> _free = new();
-    private readonly List<PendingRecord> _replacePending = new ();
+
     private readonly GraphicsBackend _backend = GraphicsBackend.Unkown;
     private readonly ResourceKind _kind = ResourceKind.Invalid;
 
@@ -48,10 +51,30 @@ internal sealed class DriverResourceStore<THandle> : IDriverResourceStore, IDriv
         _kind = kind;
     }
 
+    public bool IsAlive(in GfxHandle handle) => _entries[(int)handle.Slot].IsValidRecord();
+
+    public THandle Get(in GfxHandle handle)
+    {
+        Debug.Assert(handle.IsValid);
+        ref readonly var e = ref _entries[(int)handle.Slot];
+        if (!e.IsValidRecord() || e.Gen != handle.Gen)
+            GraphicsException.ThrowInvalidState("Handler is not a valid state");
+        return e.Current;
+    }
+
+    public THandle GetForDelete(in GfxHandle handle)
+    {
+        Debug.Assert(handle.IsValid);
+        ref readonly var e = ref _entries[(int)handle.Slot];
+        if (!e.IsValidRecord() || handle.Gen != e.Gen - 1)
+            GraphicsException.ThrowInvalidState("Handler is not a valid state");
+        return e.Current;
+    }
+
+
     public GfxHandle Add(THandle value)
     {
         ArgumentOutOfRangeException.ThrowIfEqual(value, default);
-
         int idx = _free.Count > 0 ? _free.Pop() : Allocate();
         var prev = _entries[idx];
         var gen = (ushort)(prev.Gen + 1);
@@ -59,51 +82,46 @@ internal sealed class DriverResourceStore<THandle> : IDriverResourceStore, IDriv
         return new GfxHandle((uint)idx, gen, _kind);
     }
 
-    public GfxHandle Replace(GfxHandle handle, THandle value)
+    public GfxHandle Replace(in GfxHandle handle, THandle value)
     {
         ArgumentOutOfRangeException.ThrowIfEqual(value, default);
         var oldValue = Get(handle);
-        if (value.Equals(oldValue)) 
+        if (value.Equals(oldValue))
             throw new GraphicsException("Trying to replace handler with same handler");
-        
+
         var newGen = (ushort)(handle.Gen + 1);
         _entries[(int)handle.Slot] = new StoreRecord(value, newGen, true);
         return handle with { Gen = newGen };
     }
 
 
-    public THandle Get(GfxHandle handle)
+    public void NotifyReplace(in GfxHandle gfxHandle, BackendStoreRecreated callback)
     {
-        Debug.Assert(handle.IsValid);
-        ref readonly var e = ref _entries[(int)handle.Slot];
-        if (!e.IsValidRecord() || e.Gen != handle.Gen)
-            GraphicsException.ThrowInvalidState("Handler is not a valid state");
-        return e.Value;
+        var a = Get(gfxHandle);
+
+        var record = _entries[(int)gfxHandle.Slot];
+        _entries[(int)gfxHandle.Slot] = record with { IsPending = true };
+        /* ref readonly var record = ref _entries[(int)gfxHandle.Slot];
+         if (!_pending.TryAdd(gfxHandle.Slot, (record.Current, default)))
+             throw new GraphicsException($"NotifyReplace: {gfxHandle} is already flagged as replaced. Duplication");
+             */
     }
 
-    public THandle GetForDelete(GfxHandle handle)
-    {
-        Debug.Assert(handle.IsValid);
-        ref readonly var e = ref _entries[(int)handle.Slot];
-        if (!e.IsValidRecord() || handle.Gen != e.Gen - 1)
-            GraphicsException.ThrowInvalidState("Handler is not a valid state");
-        return e.Value;
-    }
 
-    public bool IsAlive(GfxHandle handle) => _entries[(int)handle.Slot].IsValidRecord();
-
-    public void Remove(GfxHandle handle)
+    public void Remove(in GfxHandle handle)
     {
         ArgumentOutOfRangeException.ThrowIfEqual((int)handle.Kind, (int)ResourceKind.Invalid);
         ArgumentOutOfRangeException.ThrowIfEqual(handle.Gen, 0);
 
-        ref var entry = ref _entries[(int)handle.Slot];
+        var idx = (int)handle.Slot;
+        var entry = _entries[idx];
         if (!entry.IsValidRecord() || entry.Gen != handle.Gen)
             GraphicsException.ThrowInvalidState("Handler is not a valid state");
 
         _entries[(int)handle.Slot] = default;
         _free.Push((int)handle.Slot);
     }
+
 
     private int Allocate()
     {

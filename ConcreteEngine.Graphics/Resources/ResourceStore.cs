@@ -1,15 +1,27 @@
 using System.Diagnostics;
 using System.Runtime.CompilerServices;
+using ConcreteEngine.Graphics.Error;
 using ConcreteEngine.Graphics.Resources;
 
 namespace ConcreteEngine.Graphics.Resources;
 
-
 public interface IResourceStore
 {
     ResourceKind GetResourceKind();
+    GfxHandle GetHandleByValue(int idValue);
 }
-internal sealed class ResourceStore<TId, TMeta> : IResourceStore
+
+public interface IResourceStore<TId> : IResourceStore where TId : unmanaged, IResourceId
+{
+    TId CreateId(int index);
+
+    ref readonly GfxHandle GetHandle(TId id);
+
+    GfxHandle Remove(TId id);
+
+}
+
+internal sealed class ResourceStore<TId, TMeta> : IResourceStore<TId>
     where TId : unmanaged, IResourceId where TMeta : unmanaged, IResourceMeta
 {
     internal readonly MakeIdDelegate<TId> MakeId;
@@ -21,12 +33,12 @@ internal sealed class ResourceStore<TId, TMeta> : IResourceStore
     private const int MaxDefaultCapacity = 1024;
 
     private readonly ResourceKind _resourceKind;
-    
+
     private int _idx = 0;
     private TMeta[] _meta;
     private GfxHandle[] _handle;
-    
-    private readonly List<PendingRecord> _replacePending = new ();
+
+    private readonly Dictionary<uint, (TId, TMeta)> _pendingSlots = new();
 
     private readonly Stack<int> _free;
 
@@ -55,26 +67,13 @@ internal sealed class ResourceStore<TId, TMeta> : IResourceStore
 
     public ResourceKind GetResourceKind() => _resourceKind;
 
-
-    public TId Add(in TMeta meta, in GfxHandle handle)
+    public GfxHandle GetHandleByValue(int idValue)
     {
-        int idx = _free.Count > 0 ? _free.Pop() : Allocate();
-        _meta[idx] = meta;
-        _handle[idx] = handle;
-        return MakeId(idx);
+        return _handle[idValue - 1];
     }
 
-    public GfxHandle Remove(TId id, out TMeta oldMeta)
-    {
-        int idx = id.Id - 1;
-        oldMeta = _meta[idx];
-        var h = _handle[idx];
-        _meta[idx] = default!;
-        _handle[idx] = default!;
-        _free.Push(idx);
-        return h;
-    }
-    
+    public TId CreateId(int index) => MakeId(index);
+
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public ref readonly TMeta GetMeta(TId id) => ref _meta[id.Id - 1];
 
@@ -89,6 +88,65 @@ internal sealed class ResourceStore<TId, TMeta> : IResourceStore
         return ref _handle[idx];
     }
 
+    public void NotifyReplace(TId id)
+    {
+        var handle = GetHandle(id);
+        if (!handle.IsValid)
+            throw new GraphicsException($"NotifyReplace: Invalid TId {id}");
+        
+        if (!_pendingSlots.TryAdd(handle.Slot, (id, default)))
+            throw new GraphicsException($"BeginReplace: TId {id} is already flagged as replaced. Duplication");
+        
+    }
+
+    public TId Add(in TMeta meta, in GfxHandle handle)
+    {
+        if (_pendingSlots.TryGetValue(handle.Slot, out var pending))
+        {
+            _pendingSlots[handle.Slot] = (pending.Item1, meta);
+            return pending.Item1;
+        }
+        
+        int idx = _free.Count > 0 ? _free.Pop() : Allocate();
+        _meta[idx] = meta;
+        _handle[idx] = handle;
+        return MakeId(idx);
+    }
+    
+    public GfxHandle Remove(TId id)
+    {
+        return Remove(id, out _);
+    }
+
+    public GfxHandle Remove(TId id, out TMeta oldMeta)
+    {
+        int idx = id.Id - 1;
+        var handle = _handle[idx];
+        oldMeta = _meta[idx];
+
+        if (_pendingSlots.TryGetValue(handle.Slot, out var pending))
+        {
+            var existingHandle = _handle[idx];
+            var newHandle = existingHandle with {Gen = (ushort)(existingHandle.Gen + 1)};
+            _meta[idx] = pending.Item2;
+            _handle[idx] = newHandle;
+            _pendingSlots.Remove(handle.Slot);
+            
+            return newHandle;
+        }
+        
+        _meta[idx] = default!;
+        _handle[idx] = default!;
+        _free.Push(idx);
+        return handle;
+    }
+
+    public void OnRecreateBackend(in GfxHandle bumpedHandle)
+    {
+        
+    }
+    
+
     public TId Replace(TId id, in TMeta newMeta, in GfxHandle newHandle, out GfxHandle oldHandle)
     {
         Debug.Assert(id.Id > 0);
@@ -98,7 +156,7 @@ internal sealed class ResourceStore<TId, TMeta> : IResourceStore
         _handle[idx] = newHandle;
         return id;
     }
-    
+
     public TMeta ReplaceMeta(TId id, in TMeta newMeta, out TMeta oldMeta)
     {
         Debug.Assert(id.Id > 0);
@@ -107,7 +165,6 @@ internal sealed class ResourceStore<TId, TMeta> : IResourceStore
         _meta[idx] = newMeta;
         return newMeta;
     }
-
 
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
@@ -127,6 +184,7 @@ internal sealed class ResourceStore<TId, TMeta> : IResourceStore
 
         return _idx++;
     }
+
     public IdEnumerable IdEnumerator => new(this);
 
     internal readonly struct IdEnumerable
@@ -139,8 +197,8 @@ internal sealed class ResourceStore<TId, TMeta> : IResourceStore
     internal struct ResourceIdEnumerator
     {
         private readonly ResourceStore<TId, TMeta> _store;
-        private readonly GfxHandle[] _handles; 
-        private readonly int _count; 
+        private readonly GfxHandle[] _handles;
+        private readonly int _count;
         private int _i;
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
@@ -173,8 +231,8 @@ internal sealed class ResourceStore<TId, TMeta> : IResourceStore
                     return true;
                 }
             }
+
             return false;
         }
     }
-    
 }

@@ -91,7 +91,7 @@ internal sealed class GfxResourceAllocator : IGfxResourceAllocator
         var fboTexId = result.FboTex.Handle.IsValid
             ? _resources.TextureStore.Add(result.FboTex.Meta, result.FboTex.Handle)
             : default;
-        var rboDepthId = result.RboDepth.Handle.IsValid 
+        var rboDepthId = result.RboDepth.Handle.IsValid
             ? _resources.RboStore.Add(result.RboDepth.Meta, result.RboDepth.Handle)
             : default;
         var rboTexId = result.RboTex.Handle.IsValid
@@ -108,11 +108,11 @@ internal sealed class GfxResourceAllocator : IGfxResourceAllocator
     public bool RecreateFrameBuffer(FrameBufferId fboId, in Vector2D<int> outputSize)
     {
         var layout = _registry.FboRepository.Get(fboId);
-        
-        if(!layout.AutoResizeable) return false;
-        
 
-        var (absoluteSize,sizeRatio) = (outputSize, layout.SizeRatio);
+        if (!layout.AutoResizeable) return false;
+
+
+        var (absoluteSize, sizeRatio) = (outputSize, layout.SizeRatio);
 
         var size = new Vector2D<int>((int)(absoluteSize.X * sizeRatio.X), (int)(absoluteSize.Y * sizeRatio.Y));
 
@@ -124,35 +124,59 @@ internal sealed class GfxResourceAllocator : IGfxResourceAllocator
         GfxHandle prevTex = default;
         GfxHandle prevRboDepth = default;
         GfxHandle prevRboTex = default;
-
-        if (colTexId.Id > 0)
-            prevTex =  _resources.TextureStore.GetHandle(colTexId);
-
-        if (rboTexId.Id > 0)
-            prevRboTex =  _resources.RboStore.GetHandle(rboTexId);
-
-        if (rboDepthId.Id > 0)
-            prevRboDepth =  _resources.RboStore.GetHandle(rboDepthId);
         
+        var desc = layout.GetDescriptor() with { AbsoluteSize = absoluteSize };
+        var newMeta = FrameBufferMeta.CreateResizeCopy(in prevMeta, size);
+        
+        _driver.CreateFrameBuffer(in desc, out var result);
         _disposer.EnqueueRemoval(fboId, true);
 
 
+/*
+        _resources.NotifyReplace<FrameBufferId, FrameBufferMeta>(fboId, prevFbo);
+        if (colTexId.Id > 0)
+        {
+            prevTex = _resources.TextureStore.GetHandleAndMeta(colTexId, out var pTexMeta);
+            _resources.NotifyReplace<TextureId, TextureMeta>(colTexId, prevTex);
+            var m = new TextureMeta(size.X, size.Y, pTexMeta.Format);
+        }
 
-        var desc = layout.GetDescriptor() with { AbsoluteSize = absoluteSize };
+        if (rboTexId.Id > 0)
+        {
+            prevRboTex = _resources.RboStore.GetHandleAndMeta(rboTexId, out var rTexMeta);
+            _resources.BackendStoreHub.NotifyReplace(prevRboTex);
+            _resources.NotifyReplace<RenderBufferId, RenderBufferMeta>(rboTexId, prevRboTex);
+            var nRboTexMeta = new RenderBufferMeta(rTexMeta.Kind, size, rTexMeta.Multisample);
 
-        _driver.ReplaceFrameBuffer(in desc, in prevFbo, in prevTex, in prevRboDepth, in prevRboTex, out var result);
+        }
 
-        var newMeta = FrameBufferMeta.CreateResizeCopy(in prevMeta, size);
-        _resources.FboStore.Replace(fboId, result.Fbo.Meta, result.Fbo.Handle, out _);
+        if (rboDepthId.Id > 0)
+        {
+            prevRboDepth = _resources.RboStore.GetHandleAndMeta(rboDepthId, out var rDepMeta);
+            _resources.NotifyReplace<RenderBufferId, RenderBufferMeta>(rboDepthId, prevRboDepth);
+            var nRboDepthMeta = new RenderBufferMeta(rDepMeta.Kind, size, rDepMeta.Multisample);
+        }
+        */
+
+
+
+
+      //  _driver.ReplaceFrameBuffer(in desc, in prevFbo, in prevTex, in prevRboDepth, in prevRboTex, out var result);
+
+       /* _resources.FboStore.Replace(fboId, result.Fbo.Meta, result.Fbo.Handle, out _);
 
         if (result.FboTex.Handle.IsValid)
             _resources.TextureStore.Replace(colTexId, result.FboTex.Meta, result.FboTex.Handle, out _);
 
         if (result.RboDepth.Handle.IsValid)
-            _resources.RboStore.Replace(rboDepthId, result.RboDepth.Meta, result.RboDepth.Handle, out _);;
+            _resources.RboStore.Replace(rboDepthId, result.RboDepth.Meta, result.RboDepth.Handle, out _);
+        ;
 
         if (result.RboTex.Handle.IsValid)
             _resources.RboStore.Replace(rboTexId, result.RboTex.Meta, result.RboTex.Handle, out _);
+*/
+
+
         return true;
         //
     }

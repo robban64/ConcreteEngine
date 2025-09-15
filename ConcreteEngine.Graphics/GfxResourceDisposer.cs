@@ -9,6 +9,14 @@ public interface IGfxResourceDisposer
     void DrainDisposeQueue();
 }
 
+internal readonly record struct DeleteCmd(
+    in GfxHandle Handle,
+    int IdValue,
+    uint NewHandle,
+    ushort Priority,
+    bool Replace
+);
+
 internal sealed class GfxResourceDisposer : IGfxResourceDisposer
 {
     private const int DrainPerFrame = 4;
@@ -20,7 +28,6 @@ internal sealed class GfxResourceDisposer : IGfxResourceDisposer
 
     private readonly ResourceDisposeQueue _disposeQueue;
     public int PendingCount => _disposeQueue.PendingCount;
-    
 
     internal GfxResourceDisposer(GfxResourceManager resources, GfxResourceRegistry registry,
         IDeleteResourceBackend backend)
@@ -36,10 +43,45 @@ internal sealed class GfxResourceDisposer : IGfxResourceDisposer
         _disposeQueue.Drain(_backend.DeleteGfxResource, DrainPerFrame, DrainDelayTicks);
     }
 
+    public static ResourceKind FromId<TId>()
+        where TId : struct, IResourceId =>
+        typeof(TId) switch
+        {
+            var t when t == typeof(TextureId) => ResourceKind.Texture,
+            var t when t == typeof(ShaderId) => ResourceKind.Shader,
+            var t when t == typeof(MeshId) => ResourceKind.Mesh,
+            var t when t == typeof(VertexBufferId) => ResourceKind.VertexBuffer,
+            var t when t == typeof(IndexBufferId) => ResourceKind.IndexBuffer,
+            var t when t == typeof(FrameBufferId) => ResourceKind.FrameBuffer,
+            var t when t == typeof(RenderBufferId) => ResourceKind.RenderBuffer,
+            var t when t == typeof(UniformBufferId) => ResourceKind.UniformBuffer,
+            _ => ResourceKind.Invalid
+        };
+
+
+    public void EnqueueRemoval<TId>(TId id) where TId : unmanaged, IResourceId
+    {
+        ArgumentOutOfRangeException.ThrowIfLessThanOrEqual(id.Id, 0);
+        var resourceKind = FromId<TId>();
+        var fs = _resources.FrontendStoreHub.GetStore<TId>(resourceKind);
+        var handle = fs.GetHandle(id);
+        var cmd = new DeleteCmd(handle, id.Id, 0, 0, false);
+        _disposeQueue.Enqueue(cmd);
+    }
+    
+    public void EnqueueRemovalReplace<TId, TMeta>(TId id, in TMeta meta, uint newHandle)
+        where TId : unmanaged, IResourceId where TMeta : unmanaged, IResourceMeta
+    {
+        ArgumentOutOfRangeException.ThrowIfLessThanOrEqual(id.Id, 0);
+        var resourceKind = FromId<TId>();
+        var fs = _resources.FrontendStoreHub.GetStore<TId, TMeta>(resourceKind);
+        var handle = fs.GetHandle(id);
+        var cmd = new DeleteCmd(handle, id.Id, newHandle, 0, false);
+        _disposeQueue.Enqueue(cmd);
+    }
 
     public void EnqueueRemoval<TId>(TId id, bool replace) where TId : unmanaged, IResourceId
     {
-        // Enqueue dependent resources
         switch (id)
         {
             case MeshId meshId:
@@ -65,38 +107,43 @@ internal sealed class GfxResourceDisposer : IGfxResourceDisposer
         switch (id)
         {
             case TextureId textureId:
-                ref readonly var handleTex = ref _resources.TextureStore.GetHandle(textureId);
-                _disposeQueue.Enqueue(handleTex,0,replace);
+                _disposeQueue.Enqueue(handle, id.Id, replace);
                 if (!replace) _resources.TextureStore.Remove(textureId, out _);
                 break;
+/*
+            case TextureId textureId:
+                ref readonly var handleTex = ref _resources.TextureStore.GetHandle(textureId);
+                _disposeQueue.Enqueue(handleTex, textureId.Id, replace);
+                if (!replace) _resources.TextureStore.Remove(textureId, out _);
+                break;*/
             case ShaderId shaderId:
                 ref readonly var handleShader = ref _resources.ShaderStore.GetHandle(shaderId);
-                _disposeQueue.Enqueue(handleShader,0,replace);
+                _disposeQueue.Enqueue(handleShader, shaderId.Id, replace);
                 if (!replace) _resources.ShaderStore.Remove(shaderId, out _);
                 break;
             case MeshId meshId:
                 ref readonly var handleMesh = ref _resources.MeshStore.GetHandle(meshId);
-                _disposeQueue.Enqueue(handleMesh,0,replace);
+                _disposeQueue.Enqueue(handleMesh, meshId.Id, replace);
                 if (!replace) _resources.MeshStore.Remove(meshId, out _);
                 break;
             case VertexBufferId vboId:
                 ref readonly var handleVbo = ref _resources.VboStore.GetHandle(vboId);
-                _disposeQueue.Enqueue(handleVbo,0,replace);
+                _disposeQueue.Enqueue(handleVbo, vboId.Id, replace);
                 if (!replace) _resources.VboStore.Remove(vboId, out _);
                 break;
             case IndexBufferId iboId:
                 ref readonly var handleIbo = ref _resources.IboStore.GetHandle(iboId);
-                _disposeQueue.Enqueue(handleIbo,0,replace);
+                _disposeQueue.Enqueue(handleIbo, iboId.Id, replace);
                 if (!replace) _resources.IboStore.Remove(iboId, out _);
                 break;
             case FrameBufferId fboId:
                 ref readonly var fboHandle = ref _resources.FboStore.GetHandle(fboId);
-                _disposeQueue.Enqueue(fboHandle,0,replace);
+                _disposeQueue.Enqueue(fboHandle, 0, replace);
                 if (!replace) _resources.FboStore.Remove(fboId, out _);
                 break;
             case RenderBufferId rboId:
                 ref readonly var rboHandle = ref _resources.RboStore.GetHandle(rboId);
-                _disposeQueue.Enqueue(rboHandle,0,replace);
+                _disposeQueue.Enqueue(rboHandle, rboId.Id, replace);
                 if (!replace) _resources.RboStore.Remove(rboId, out _);
                 break;
             default:

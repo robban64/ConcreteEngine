@@ -1,3 +1,7 @@
 namespace ConcreteEngine.Graphics.Resources;
 
-public interface IResourceHandle;
+internal interface IResourceHandle
+{
+    uint Handle { get; }
+    
+}

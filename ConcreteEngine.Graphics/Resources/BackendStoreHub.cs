@@ -1,10 +1,13 @@
 using System.Runtime.CompilerServices;
+using ConcreteEngine.Graphics.Error;
 
 namespace ConcreteEngine.Graphics.Resources;
 
 internal sealed class BackendStoreHub
 {
     private readonly OpenGlStoreCollection _storeCollection;
+    
+
 
     public BackendStoreHub()
     {
@@ -15,8 +18,14 @@ internal sealed class BackendStoreHub
     {
         driver.AttachStore(_storeCollection);
     }
+    
+    public void NotifyReplace(in GfxHandle handle)
+    {
+        GetStore(handle.Kind).NotifyReplace(handle);
+    }
 
-    public GfxHandle Add<THandle>(ResourceKind kind, THandle handle)
+
+    public GfxHandle Create<THandle>(ResourceKind kind, THandle handle)
         where THandle : unmanaged, IResourceHandle, IEquatable<THandle>
     {
         var store = GetStore<THandle>(kind);
@@ -25,11 +34,11 @@ internal sealed class BackendStoreHub
 
     public void Remove(in GfxHandle handle, bool replace)
     {
-        if (replace) return;
         var store = GetStore(handle.Kind);
+        if (replace) return;
         store.Remove(handle);
     }
-
+/*
     public GfxHandle Replace<THandle>(in GfxHandle gfxHandle, THandle handle)
         where THandle : unmanaged, IResourceHandle, IEquatable<THandle>
     {
@@ -37,9 +46,21 @@ internal sealed class BackendStoreHub
         return store.Replace(gfxHandle, handle);
     }
 
+    public void BeginReplace<THandle>(in GfxHandle handle, in THandle newHandle)
+        where THandle : unmanaged, IResourceHandle, IEquatable<THandle>
+    {
+        
+    }
+
+    public GfxHandle CommitReplace(in GfxHandle handle)
+    {
+        
+    }
+*/
+
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    private DriverResourceStore<THandle> GetStore<THandle>(ResourceKind kind)
+    internal DriverResourceStore<THandle> GetStore<THandle>(ResourceKind kind)
         where THandle : unmanaged, IResourceHandle, IEquatable<THandle>
     {
         var store = GetStore(kind);
@@ -48,7 +69,7 @@ internal sealed class BackendStoreHub
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    private IDriverResourceStore GetStore(ResourceKind kind)
+    internal IDriverResourceStore GetStore(ResourceKind kind)
     {
         var set = _storeCollection.Facade;
         switch (kind)

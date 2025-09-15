@@ -13,6 +13,23 @@ internal sealed class ResourceStoreHub
     internal ResourceStoreHub()
     {
     }
+    
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    internal ResourceStore<TId, TMeta> GetStore<TId, TMeta>(ResourceKind kind)
+        where TId : unmanaged, IResourceId where TMeta : unmanaged, IResourceMeta
+    {
+        var store = GetStore(kind);
+        if (store is ResourceStore<TId, TMeta> typed) return typed;
+        throw new ArgumentException($"Frontend Store {kind} is not {typeof(TId).Name} - {typeof(TMeta).Name}");
+    }
+    
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    internal IResourceStore<TId> GetStore<TId>(ResourceKind kind) where TId : unmanaged, IResourceId
+    {
+        var store = GetStore(kind);
+        if (store is IResourceStore<TId> typed) return typed;
+        throw new ArgumentException($"Frontend Store {kind} is not {typeof(TId).Name} ");
+    }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public IResourceStore GetStore(ResourceKind kind)

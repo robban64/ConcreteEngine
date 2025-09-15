@@ -36,10 +36,7 @@ internal sealed class GfxResourceAllocator : IGfxResourceAllocator
     private readonly GfxResourceDisposer _disposer;
 
     private BackendDriverDispatcher Dispatcher => _resources.GetDispatcher();
-
-    private readonly record struct Abc(
-        int a,
-    );
+    
 
     public GfxResourceAllocator(
         IGraphicsDriver driver,
@@ -125,64 +122,59 @@ internal sealed class GfxResourceAllocator : IGfxResourceAllocator
 
         ref readonly var prevFbo = ref _resources.FboStore.GetHandleAndMeta(fboId, out var prevMeta);
 
-        GfxHandle prevTex = default;
-        GfxHandle prevRboDepth = default;
-        GfxHandle prevRboTex = default;
+        var prevTex = colTexId.IsValid() ? _resources.TextureStore.GetHandle(colTexId) : default;
+        var prevRboDepth = rboDepthId.IsValid() ? _resources.RboStore.GetHandle(rboDepthId) : default;
+        var prevRboTex = rboTexId.IsValid() ? _resources.RboStore.GetHandle(rboTexId) : default;
         
         var desc = layout.GetDescriptor() with { AbsoluteSize = absoluteSize };
         var newMeta = FrameBufferMeta.CreateResizeCopy(in prevMeta, size);
         
-        _driver.CreateFrameBuffer(in desc, out var result);
+        
         _disposer.EnqueueRemoval(fboId, true);
 
+        _driver.ReplaceFrameBuffer(in desc, in prevFbo, in prevTex, in prevRboDepth, in prevRboTex, out var result);
 
-/*
-        _resources.NotifyReplace<FrameBufferId, FrameBufferMeta>(fboId, prevFbo);
-        if (colTexId.Id > 0)
-        {
-            prevTex = _resources.TextureStore.GetHandleAndMeta(colTexId, out var pTexMeta);
-            _resources.NotifyReplace<TextureId, TextureMeta>(colTexId, prevTex);
-            var m = new TextureMeta(size.X, size.Y, pTexMeta.Format);
-        }
+         _resources.FboStore.Replace(fboId, result.Fbo.Meta, result.Fbo.Handle, out _);
 
-        if (rboTexId.Id > 0)
-        {
-            prevRboTex = _resources.RboStore.GetHandleAndMeta(rboTexId, out var rTexMeta);
-            _resources.BackendStoreHub.NotifyReplace(prevRboTex);
-            _resources.NotifyReplace<RenderBufferId, RenderBufferMeta>(rboTexId, prevRboTex);
-            var nRboTexMeta = new RenderBufferMeta(rTexMeta.Kind, size, rTexMeta.Multisample);
+         if (result.FboTex.Handle.IsValid)
+             _resources.TextureStore.Replace(colTexId, result.FboTex.Meta, result.FboTex.Handle, out _);
 
-        }
+         if (result.RboDepth.Handle.IsValid)
+             _resources.RboStore.Replace(rboDepthId, result.RboDepth.Meta, result.RboDepth.Handle, out _);
 
-        if (rboDepthId.Id > 0)
-        {
-            prevRboDepth = _resources.RboStore.GetHandleAndMeta(rboDepthId, out var rDepMeta);
-            _resources.NotifyReplace<RenderBufferId, RenderBufferMeta>(rboDepthId, prevRboDepth);
-            var nRboDepthMeta = new RenderBufferMeta(rDepMeta.Kind, size, rDepMeta.Multisample);
-        }
-        */
+         if (result.RboTex.Handle.IsValid)
+             _resources.RboStore.Replace(rboTexId, result.RboTex.Meta, result.RboTex.Handle, out _);
 
 
 
+ /*
+         _resources.NotifyReplace<FrameBufferId, FrameBufferMeta>(fboId, prevFbo);
+         if (colTexId.Id > 0)
+         {
+             prevTex = _resources.TextureStore.GetHandleAndMeta(colTexId, out var pTexMeta);
+             _resources.NotifyReplace<TextureId, TextureMeta>(colTexId, prevTex);
+             var m = new TextureMeta(size.X, size.Y, pTexMeta.Format);
+         }
 
-      //  _driver.ReplaceFrameBuffer(in desc, in prevFbo, in prevTex, in prevRboDepth, in prevRboTex, out var result);
+         if (rboTexId.Id > 0)
+         {
+             prevRboTex = _resources.RboStore.GetHandleAndMeta(rboTexId, out var rTexMeta);
+             _resources.BackendStoreHub.NotifyReplace(prevRboTex);
+             _resources.NotifyReplace<RenderBufferId, RenderBufferMeta>(rboTexId, prevRboTex);
+             var nRboTexMeta = new RenderBufferMeta(rTexMeta.Kind, size, rTexMeta.Multisample);
 
-       /* _resources.FboStore.Replace(fboId, result.Fbo.Meta, result.Fbo.Handle, out _);
+         }
 
-        if (result.FboTex.Handle.IsValid)
-            _resources.TextureStore.Replace(colTexId, result.FboTex.Meta, result.FboTex.Handle, out _);
-
-        if (result.RboDepth.Handle.IsValid)
-            _resources.RboStore.Replace(rboDepthId, result.RboDepth.Meta, result.RboDepth.Handle, out _);
-        ;
-
-        if (result.RboTex.Handle.IsValid)
-            _resources.RboStore.Replace(rboTexId, result.RboTex.Meta, result.RboTex.Handle, out _);
-*/
+         if (rboDepthId.Id > 0)
+         {
+             prevRboDepth = _resources.RboStore.GetHandleAndMeta(rboDepthId, out var rDepMeta);
+             _resources.NotifyReplace<RenderBufferId, RenderBufferMeta>(rboDepthId, prevRboDepth);
+             var nRboDepthMeta = new RenderBufferMeta(rDepMeta.Kind, size, rDepMeta.Multisample);
+         }
+         */
 
 
         return true;
-        //
     }
 
     public ShaderId CreateShader(string vertexSource, string fragmentSource, out ShaderMeta meta)

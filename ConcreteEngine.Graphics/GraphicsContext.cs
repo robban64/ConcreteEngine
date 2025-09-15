@@ -196,7 +196,6 @@ internal sealed class GraphicsContext : IGraphicsContext
 
     public void SetViewport(in Vector2D<int> viewport)
     {
-        if (viewport == _activeOutputSize) return;
         _activeOutputSize = viewport;
         _driver.SetViewport(viewport);
     }

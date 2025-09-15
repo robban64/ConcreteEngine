@@ -9,6 +9,8 @@ public interface IResourceStore
 {
     ResourceKind GetResourceKind();
     GfxHandle GetHandleByValue(int idValue);
+    GfxHandle Remove(int idValue);
+
 }
 
 public interface IResourceStore<TId> : IResourceStore where TId : unmanaged, IResourceId
@@ -25,8 +27,6 @@ internal sealed class ResourceStore<TId, TMeta> : IResourceStore<TId>
     where TId : unmanaged, IResourceId where TMeta : unmanaged, IResourceMeta
 {
     internal readonly MakeIdDelegate<TId> MakeId;
-
-    private readonly record struct PendingRecord(TId id, in TMeta newMeta, in GfxHandle newHandle);
 
     // sanity check
     private const int HardLimit = 10_000;
@@ -88,25 +88,8 @@ internal sealed class ResourceStore<TId, TMeta> : IResourceStore<TId>
         return ref _handle[idx];
     }
 
-    public void NotifyReplace(TId id)
-    {
-        var handle = GetHandle(id);
-        if (!handle.IsValid)
-            throw new GraphicsException($"NotifyReplace: Invalid TId {id}");
-        
-        if (!_pendingSlots.TryAdd(handle.Slot, (id, default)))
-            throw new GraphicsException($"BeginReplace: TId {id} is already flagged as replaced. Duplication");
-        
-    }
-
     public TId Add(in TMeta meta, in GfxHandle handle)
     {
-        if (_pendingSlots.TryGetValue(handle.Slot, out var pending))
-        {
-            _pendingSlots[handle.Slot] = (pending.Item1, meta);
-            return pending.Item1;
-        }
-        
         int idx = _free.Count > 0 ? _free.Pop() : Allocate();
         _meta[idx] = meta;
         _handle[idx] = handle;
@@ -117,6 +100,8 @@ internal sealed class ResourceStore<TId, TMeta> : IResourceStore<TId>
     {
         return Remove(id, out _);
     }
+
+    public GfxHandle Remove(int idValue) => Remove(ResourceTypeConverter.MakeId<TId>(idValue));
 
     public GfxHandle Remove(TId id, out TMeta oldMeta)
     {
@@ -141,12 +126,6 @@ internal sealed class ResourceStore<TId, TMeta> : IResourceStore<TId>
         return handle;
     }
 
-    public void OnRecreateBackend(in GfxHandle bumpedHandle)
-    {
-        
-    }
-    
-
     public TId Replace(TId id, in TMeta newMeta, in GfxHandle newHandle, out GfxHandle oldHandle)
     {
         Debug.Assert(id.Id > 0);
@@ -165,11 +144,6 @@ internal sealed class ResourceStore<TId, TMeta> : IResourceStore<TId>
         _meta[idx] = newMeta;
         return newMeta;
     }
-
-
-    [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public bool IsAlive(TId id) => GetHandle(id).IsValid;
-
 
     private int Allocate()
     {

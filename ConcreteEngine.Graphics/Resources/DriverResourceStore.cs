@@ -8,9 +8,12 @@ internal interface IDriverResourceStore
     ResourceKind Kind { get; }
 
     GfxHandle Replace(in GfxHandle handle, uint rawHandle);
+
+    uint GetRawHandle(in GfxHandle handle);
+
+    
     void Remove(in GfxHandle handle);
     bool IsAlive(in GfxHandle handle);
-    void NotifyReplace(in GfxHandle gfxHandle, BackendStoreRecreated callback);
 }
 
 internal interface IDriverReadResourceStore<THandle> where THandle : unmanaged, IResourceHandle, IEquatable<THandle>
@@ -54,6 +57,9 @@ internal sealed class DriverResourceStore<THandle> : IDriverResourceStore, IDriv
     }
 
     public bool IsAlive(in GfxHandle handle) => _entries[(int)handle.Slot].IsValidRecord();
+
+    public uint GetRawHandle(in GfxHandle handle) => Get(in handle).Handle;
+
 
     public THandle Get(in GfxHandle handle)
     {
@@ -100,19 +106,6 @@ internal sealed class DriverResourceStore<THandle> : IDriverResourceStore, IDriv
     {
         var replacedHandle = ResourceTypeConverter.MakeHandle<THandle>(rawHandle);
         return Replace(handle, replacedHandle);
-    }
-
-
-    public void NotifyReplace(in GfxHandle gfxHandle, BackendStoreRecreated callback)
-    {
-        var a = Get(gfxHandle);
-
-        var record = _entries[(int)gfxHandle.Slot];
-        _entries[(int)gfxHandle.Slot] = record with { IsPending = true };
-        /* ref readonly var record = ref _entries[(int)gfxHandle.Slot];
-         if (!_pending.TryAdd(gfxHandle.Slot, (record.Current, default)))
-             throw new GraphicsException($"NotifyReplace: {gfxHandle} is already flagged as replaced. Duplication");
-             */
     }
 
 

@@ -7,8 +7,6 @@ internal sealed class BackendStoreHub
 {
     private readonly OpenGlStoreCollection _storeCollection;
     
-
-
     public BackendStoreHub()
     {
         _storeCollection = new OpenGlStoreCollection();
@@ -19,12 +17,6 @@ internal sealed class BackendStoreHub
         driver.AttachStore(_storeCollection);
     }
     
-    public void NotifyReplace(in GfxHandle handle)
-    {
-        GetStore(handle.Kind).NotifyReplace(handle);
-    }
-
-
     public GfxHandle Create<THandle>(ResourceKind kind, THandle handle)
         where THandle : unmanaged, IResourceHandle, IEquatable<THandle>
     {
@@ -38,26 +30,6 @@ internal sealed class BackendStoreHub
         if (replace) return;
         store.Remove(handle);
     }
-/*
-    public GfxHandle Replace<THandle>(in GfxHandle gfxHandle, THandle handle)
-        where THandle : unmanaged, IResourceHandle, IEquatable<THandle>
-    {
-        var store = GetStore<THandle>(gfxHandle.Kind);
-        return store.Replace(gfxHandle, handle);
-    }
-
-    public void BeginReplace<THandle>(in GfxHandle handle, in THandle newHandle)
-        where THandle : unmanaged, IResourceHandle, IEquatable<THandle>
-    {
-        
-    }
-
-    public GfxHandle CommitReplace(in GfxHandle handle)
-    {
-        
-    }
-*/
-
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     internal DriverResourceStore<THandle> GetStore<THandle>(ResourceKind kind)

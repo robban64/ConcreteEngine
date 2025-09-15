@@ -73,13 +73,13 @@ internal interface IStateBackend
 
 internal interface IDeleteResourceBackend
 {
-    void DeleteGfxResource(GfxHandle handle, bool replace);
+    void DeleteGfxResource(in DeleteCmd cmd);
 }
 
 internal interface ICreateResourceBackend
 {
     GfxHandle CreateShader(string vs, string fs, out List<(string, int)> uniforms, out ShaderMeta meta);
-    void CreateFrameBuffer(in FrameBufferDesc desc, out DriverCreateFboResult result);
+    void CreateFrameBuffer(in FrameBufferDesc desc, out DriverCreateFboResult result, GfxHandle? replaceHandle = null);
     GfxHandle CreateTexture2D(GpuTextureData data, in GpuTextureDescriptor desc, out TextureMeta meta);
     GfxHandle CreateCubeMap(GpuCubeMapData data, in GpuCubeMapDescriptor desc, out TextureMeta meta);
 

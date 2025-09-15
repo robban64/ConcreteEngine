@@ -1,10 +1,11 @@
 using System.Runtime.CompilerServices;
 using ConcreteEngine.Graphics.Descriptors;
 using ConcreteEngine.Graphics.Error;
+using ConcreteEngine.Graphics.Resources;
 using ConcreteEngine.Graphics.Utils;
 using Silk.NET.Maths;
 
-namespace ConcreteEngine.Graphics.Resources;
+namespace ConcreteEngine.Graphics;
 
 public interface IGfxResourceAllocator
 {
@@ -36,6 +37,9 @@ internal sealed class GfxResourceAllocator : IGfxResourceAllocator
 
     private BackendDriverDispatcher Dispatcher => _resources.GetDispatcher();
 
+    private readonly record struct Abc(
+        int a,
+    );
 
     public GfxResourceAllocator(
         IGraphicsDriver driver,

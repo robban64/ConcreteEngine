@@ -25,7 +25,7 @@ internal class ResourceDisposeQueue
         _disposeQueue.Enqueue(cmd);
     }
 
-    public void Drain(Action<GfxHandle, bool> disposeFunc, int count, int delayTicks)
+    public void Drain(Action<DeleteCmd> disposeFunc, int count, int delayTicks)
     {
         if (_disposeQueue.Count == 0) return;
         if (++_ticks < delayTicks) return;
@@ -36,7 +36,7 @@ internal class ResourceDisposeQueue
         while (_disposeQueue.Count > 0 && n < count)
         {
             var curr = _disposeQueue.Dequeue();
-            disposeFunc(curr.Handle, curr.Replace);
+            disposeFunc(curr);
             n++;
         }
 

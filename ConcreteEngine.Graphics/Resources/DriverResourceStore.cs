@@ -6,6 +6,8 @@ namespace ConcreteEngine.Graphics.Resources;
 internal interface IDriverResourceStore
 {
     ResourceKind Kind { get; }
+
+    GfxHandle Replace(in GfxHandle handle, uint rawHandle);
     void Remove(in GfxHandle handle);
     bool IsAlive(in GfxHandle handle);
     void NotifyReplace(in GfxHandle gfxHandle, BackendStoreRecreated callback);
@@ -15,7 +17,6 @@ internal interface IDriverReadResourceStore<THandle> where THandle : unmanaged, 
 {
     THandle Get(in GfxHandle handle);
     THandle GetForDelete(in GfxHandle handle);
-
     GfxHandle Replace(in GfxHandle handle, THandle value);
 }
 
@@ -35,6 +36,7 @@ internal sealed class DriverResourceStore<THandle> : IDriverResourceStore, IDriv
     private StoreRecord[] _entries = new StoreRecord[16];
 
     private readonly Stack<int> _free = new();
+    private readonly Queue<StoreRecord> _pendingQueue = new();
 
     private readonly GraphicsBackend _backend = GraphicsBackend.Unkown;
     private readonly ResourceKind _kind = ResourceKind.Invalid;
@@ -71,7 +73,6 @@ internal sealed class DriverResourceStore<THandle> : IDriverResourceStore, IDriv
         return e.Current;
     }
 
-
     public GfxHandle Add(THandle value)
     {
         ArgumentOutOfRangeException.ThrowIfEqual(value, default);
@@ -81,7 +82,7 @@ internal sealed class DriverResourceStore<THandle> : IDriverResourceStore, IDriv
         _entries[idx] = new StoreRecord(value, gen, true);
         return new GfxHandle((uint)idx, gen, _kind);
     }
-
+    
     public GfxHandle Replace(in GfxHandle handle, THandle value)
     {
         ArgumentOutOfRangeException.ThrowIfEqual(value, default);
@@ -92,6 +93,13 @@ internal sealed class DriverResourceStore<THandle> : IDriverResourceStore, IDriv
         var newGen = (ushort)(handle.Gen + 1);
         _entries[(int)handle.Slot] = new StoreRecord(value, newGen, true);
         return handle with { Gen = newGen };
+    }
+
+    
+    public GfxHandle Replace(in GfxHandle handle, uint rawHandle)
+    {
+        var replacedHandle = ResourceTypeConverter.MakeHandle<THandle>(rawHandle);
+        return Replace(handle, replacedHandle);
     }
 
 

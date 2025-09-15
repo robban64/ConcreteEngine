@@ -5,7 +5,8 @@ namespace ConcreteEngine.Graphics.Resources;
 public interface IGfxResourceDisposer
 {
     public int PendingCount { get; }
-    void EnqueueRemoval<TId>(TId id, bool replace) where TId : unmanaged, IResourceId;
+    public void EnqueueRemoval<TId>(TId id) where TId : unmanaged, IResourceId;
+    public void EnqueueRemovalReplace<TId>(TId id, uint newHandle) where TId : unmanaged, IResourceId;
     void DrainDisposeQueue();
 }
 
@@ -40,46 +41,41 @@ internal sealed class GfxResourceDisposer : IGfxResourceDisposer
 
     public void DrainDisposeQueue()
     {
-        _disposeQueue.Drain(_backend.DeleteGfxResource, DrainPerFrame, DrainDelayTicks);
+        _disposeQueue.Drain(OnDeleteGfxResource, DrainPerFrame, DrainDelayTicks);
     }
+    
+   private void OnDeleteGfxResource(DeleteCmd cmd)
+    {
+        var store = _resources.BackendStoreHub.GetStore(cmd.Handle.Kind);
 
-    public static ResourceKind FromId<TId>()
-        where TId : struct, IResourceId =>
-        typeof(TId) switch
+        if (cmd.Replace)
         {
-            var t when t == typeof(TextureId) => ResourceKind.Texture,
-            var t when t == typeof(ShaderId) => ResourceKind.Shader,
-            var t when t == typeof(MeshId) => ResourceKind.Mesh,
-            var t when t == typeof(VertexBufferId) => ResourceKind.VertexBuffer,
-            var t when t == typeof(IndexBufferId) => ResourceKind.IndexBuffer,
-            var t when t == typeof(FrameBufferId) => ResourceKind.FrameBuffer,
-            var t when t == typeof(RenderBufferId) => ResourceKind.RenderBuffer,
-            var t when t == typeof(UniformBufferId) => ResourceKind.UniformBuffer,
-            _ => ResourceKind.Invalid
-        };
+            store.Replace(cmd.Handle, cmd.NewHandle);   
+        }
 
+        _backend.DeleteGfxResource(cmd.Handle, false);
+    }
 
     public void EnqueueRemoval<TId>(TId id) where TId : unmanaged, IResourceId
     {
         ArgumentOutOfRangeException.ThrowIfLessThanOrEqual(id.Id, 0);
-        var resourceKind = FromId<TId>();
+        var resourceKind = ResourceTypeConverter.FromId<TId>();
         var fs = _resources.FrontendStoreHub.GetStore<TId>(resourceKind);
         var handle = fs.GetHandle(id);
         var cmd = new DeleteCmd(handle, id.Id, 0, 0, false);
         _disposeQueue.Enqueue(cmd);
     }
     
-    public void EnqueueRemovalReplace<TId, TMeta>(TId id, in TMeta meta, uint newHandle)
-        where TId : unmanaged, IResourceId where TMeta : unmanaged, IResourceMeta
+    public void EnqueueRemovalReplace<TId>(TId id, uint newHandle) where TId : unmanaged, IResourceId
     {
         ArgumentOutOfRangeException.ThrowIfLessThanOrEqual(id.Id, 0);
-        var resourceKind = FromId<TId>();
-        var fs = _resources.FrontendStoreHub.GetStore<TId, TMeta>(resourceKind);
+        var resourceKind = ResourceTypeConverter.FromId<TId>();
+        var fs = _resources.FrontendStoreHub.GetStore<TId>(resourceKind);
         var handle = fs.GetHandle(id);
-        var cmd = new DeleteCmd(handle, id.Id, newHandle, 0, false);
+        var cmd = new DeleteCmd(handle, id.Id, newHandle, 0, true);
         _disposeQueue.Enqueue(cmd);
     }
-
+/*
     public void EnqueueRemoval<TId>(TId id, bool replace) where TId : unmanaged, IResourceId
     {
         switch (id)
@@ -110,12 +106,12 @@ internal sealed class GfxResourceDisposer : IGfxResourceDisposer
                 _disposeQueue.Enqueue(handle, id.Id, replace);
                 if (!replace) _resources.TextureStore.Remove(textureId, out _);
                 break;
-/*
+
             case TextureId textureId:
                 ref readonly var handleTex = ref _resources.TextureStore.GetHandle(textureId);
                 _disposeQueue.Enqueue(handleTex, textureId.Id, replace);
                 if (!replace) _resources.TextureStore.Remove(textureId, out _);
-                break;*/
+                break;
             case ShaderId shaderId:
                 ref readonly var handleShader = ref _resources.ShaderStore.GetHandle(shaderId);
                 _disposeQueue.Enqueue(handleShader, shaderId.Id, replace);
@@ -149,5 +145,5 @@ internal sealed class GfxResourceDisposer : IGfxResourceDisposer
             default:
                 throw new GraphicsException($"Unknown resource type {typeof(TId).Name}");
         }
-    }
+    }*/
 }

@@ -1,6 +1,10 @@
 namespace ConcreteEngine.Graphics.Resources;
 
-
+internal interface IResourceHandle
+{
+    uint Handle { get; }
+    
+}
 internal readonly record struct GlTextureHandle(uint Handle) : IResourceHandle;
 
 internal readonly record struct GlShaderHandle(uint Handle) : IResourceHandle;

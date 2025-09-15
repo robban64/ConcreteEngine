@@ -67,23 +67,19 @@ public readonly struct IndexBufferMeta(
 }
 
 public readonly struct FrameBufferMeta(
-    TexturePreset texturePreset,
-    Vector2 sizeRatio,
     Vector2D<int> size,
     bool depthStencilBuffer,
     bool msaa,
     byte samples
 ) : IResourceMeta
 {
-    public readonly Vector2 SizeRatio = sizeRatio;
     public readonly Vector2D<int> Size = size;
-    public readonly TexturePreset TexturePreset = texturePreset;
     public readonly byte Samples = samples;
     public readonly bool DepthStencilBuffer = depthStencilBuffer;
     public readonly bool Msaa = msaa;
 
-    internal static FrameBufferMeta GetResizeCopy(in FrameBufferMeta meta, Vector2D<int> size) =>
-        new(meta.TexturePreset, meta.SizeRatio, size, meta.DepthStencilBuffer, meta.Msaa, meta.Samples);
+    internal static FrameBufferMeta CreateResizeCopy(in FrameBufferMeta meta, Vector2D<int> size) =>
+        new(size, meta.DepthStencilBuffer, meta.Msaa, meta.Samples);
 }
 
 public readonly struct RenderBufferMeta(

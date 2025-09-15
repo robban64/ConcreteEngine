@@ -4,7 +4,7 @@ public interface IGfxResourceRegistry
 {
     public IShaderRepository ShaderRepository { get; }
     public IMeshRepository MeshRepository { get; }
-    public IFrameBufferRegistry FboRepository { get; }
+    public IFrameBufferRepository FboRepository { get; }
 }
 
 internal sealed class GfxResourceRegistry : IGfxResourceRegistry
@@ -19,7 +19,7 @@ internal sealed class GfxResourceRegistry : IGfxResourceRegistry
 
     IShaderRepository IGfxResourceRegistry.ShaderRepository => _shaderRepository;
     IMeshRepository IGfxResourceRegistry.MeshRepository => _meshRepository;
-    IFrameBufferRegistry IGfxResourceRegistry.FboRepository => _fboRepository;
+    IFrameBufferRepository IGfxResourceRegistry.FboRepository => _fboRepository;
 
     public GfxResourceRegistry(IGfxResourceManager resources)
     {

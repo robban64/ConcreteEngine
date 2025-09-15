@@ -70,7 +70,7 @@ public sealed class TerrainBatcher : RenderBatcher<TerrainBatchResult>
     public override void Dispose()
     {
         if (MeshId.IsValid())
-            GfxDisposer.EnqueueRemoval(MeshId);
+            GfxDisposer.EnqueueRemoval(MeshId, false);
     }
 
     private void GenerateMesh()

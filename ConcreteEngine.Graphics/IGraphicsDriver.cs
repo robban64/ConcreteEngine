@@ -52,7 +52,8 @@ internal interface IBinderBackend
     void BindVertexArray(in GfxHandle vao);
     void BindVertexBuffer(in GfxHandle vbo);
     void BindIndexBuffer(in GfxHandle ibo);
-    void BindFramebuffer(in GfxHandle fbo);
+    void BindFrameBuffer(in GfxHandle fbo);
+    void BindRenderBuffer(in GfxHandle rbo);
     void BindFrameBufferReadDraw(in GfxHandle readFbo, in GfxHandle drawFbo);
     void BindUniformBuffer(in GfxHandle ubo);
     
@@ -72,13 +73,13 @@ internal interface IStateBackend
 
 internal interface IDeleteResourceBackend
 {
-    void DeleteGfxResource(GfxHandle handle);
+    void DeleteGfxResource(GfxHandle handle, bool replace);
 }
 
 internal interface ICreateResourceBackend
 {
     GfxHandle CreateShader(string vs, string fs, out List<(string, int)> uniforms, out ShaderMeta meta);
-    void CreateFramebuffer(in FrameBufferDesc desc, out DriverCreateFboResult result);
+    void CreateFrameBuffer(in FrameBufferDesc desc, out DriverCreateFboResult result);
     GfxHandle CreateTexture2D(GpuTextureData data, in GpuTextureDescriptor desc, out TextureMeta meta);
     GfxHandle CreateCubeMap(GpuCubeMapData data, in GpuCubeMapDescriptor desc, out TextureMeta meta);
 
@@ -90,6 +91,9 @@ internal interface ICreateResourceBackend
 
     GfxHandle CreateUniformBuffer(UniformGpuSlot slot, UboDefaultCapacity capacity, uint blockSize,
         out UniformBufferMeta meta);
+
+    void ReplaceFrameBuffer(in FrameBufferDesc desc, in GfxHandle prevFbo, in GfxHandle prevTex,
+        in GfxHandle prevRboDepth, in GfxHandle prevRboTex, out DriverCreateFboResult result);
 
 }
 

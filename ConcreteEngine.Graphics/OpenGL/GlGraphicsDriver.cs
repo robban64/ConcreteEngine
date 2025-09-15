@@ -195,7 +195,7 @@ internal sealed class GlBackendDriver : IGraphicsDriver
         //return _store.IboStore.Add(new GlIboHandle(handle));
     }
 
-    public void BindFramebuffer(in GfxHandle fbo)
+    public void BindFrameBuffer(in GfxHandle fbo)
     {
         var handle = !fbo.IsValid ? 0 : _store.FboStore.Get(fbo).Handle;
         _gl.BindFramebuffer(FramebufferTarget.Framebuffer, handle);
@@ -204,6 +204,12 @@ internal sealed class GlBackendDriver : IGraphicsDriver
             _gl.DrawBuffer(DrawBufferMode.ColorAttachment0);
             _gl.ReadBuffer(ReadBufferMode.ColorAttachment0);
         }
+    }
+
+    public void BindRenderBuffer(in GfxHandle rbo)
+    {
+        var handle = !rbo.IsValid ? 0 : _store.FboStore.Get(rbo).Handle;
+        _gl.BindRenderbuffer(RenderbufferTarget.Renderbuffer, handle);
     }
 
 
@@ -216,22 +222,45 @@ internal sealed class GlBackendDriver : IGraphicsDriver
         _gl.BindFramebuffer(FramebufferTarget.DrawFramebuffer, draw);
     }
 
-    public void CreateFramebuffer(in FrameBufferDesc desc, out DriverCreateFboResult result)
+    public void CreateFrameBuffer(in FrameBufferDesc desc, out DriverCreateFboResult result)
     {
         _fboFactory.CreateFrameBuffer(in desc, out var fbo, out var fboTex, out var rboDepth, out var rboTex);
 
         var fboHandle = _dispatcher.OnCreate(ResourceKind.FrameBuffer, fbo.Handle);
         var texHandle = fboTex.Handle != default ? _dispatcher.OnCreate(ResourceKind.Texture, fboTex.Handle) : default;
-        var rboDeptHandle = rboDepth.Handle != default ? _dispatcher.OnCreate(ResourceKind.RenderBuffer, rboDepth.Handle) : default;
-        var rboTexHandle = rboTex.Handle != default ? _dispatcher.OnCreate(ResourceKind.RenderBuffer, rboTex.Handle) : default;
-        
-         
+        var rboDepthHandle = rboDepth.Handle != default
+            ? _dispatcher.OnCreate(ResourceKind.RenderBuffer, rboDepth.Handle)
+            : default;
+        var rboTexHandle = rboTex.Handle != default
+            ? _dispatcher.OnCreate(ResourceKind.RenderBuffer, rboTex.Handle)
+            : default;
+
 
         result = new DriverCreateFboResult(new DriverHandleMeta<FrameBufferMeta>(in fboHandle, fbo.Meta),
             new DriverHandleMeta<TextureMeta>(in texHandle, fboTex.Meta),
-            new DriverHandleMeta<RenderBufferMeta>(in rboDeptHandle, rboDepth.Meta),
+            new DriverHandleMeta<RenderBufferMeta>(in rboDepthHandle, rboDepth.Meta),
             new DriverHandleMeta<RenderBufferMeta>(in rboTexHandle, rboTex.Meta)
         );
+    }
+
+    public void ReplaceFrameBuffer(in FrameBufferDesc desc, in GfxHandle prevFbo, in GfxHandle prevTex,
+        in GfxHandle prevRboDepth, in GfxHandle prevRboTex, out DriverCreateFboResult result)
+    {
+        _fboFactory.CreateFrameBuffer(in desc, out var fbo, out var fboTex, out var rboDepth, out var rboTex);
+
+        var fboHandle = _dispatcher.OnReplace(prevFbo, fbo.Handle);
+        var texHandle = fboTex.Handle != default ? _dispatcher.OnReplace(prevTex, fboTex.Handle) : default;
+        var rboDepthHandle = rboDepth.Handle != default
+            ? _dispatcher.OnReplace(prevRboDepth, rboDepth.Handle)
+            : default;
+        var rboTexHandle = rboTex.Handle != default
+            ? _dispatcher.OnReplace(prevRboTex, rboTex.Handle)
+            : default;
+
+        result = new DriverCreateFboResult(new DriverHandleMeta<FrameBufferMeta>(in fboHandle, fbo.Meta),
+            new DriverHandleMeta<TextureMeta>(in texHandle, fboTex.Meta),
+            new DriverHandleMeta<RenderBufferMeta>(in rboDepthHandle, rboDepth.Meta),
+            new DriverHandleMeta<RenderBufferMeta>(in rboTexHandle, rboTex.Meta));
     }
 
     public void Blit(Vector2D<int> srcSize, Vector2D<int> dstSize, bool linear)
@@ -336,7 +365,6 @@ internal sealed class GlBackendDriver : IGraphicsDriver
     {
         var handle = _textureFactory.CreateTexture2D(data, in desc, out meta);
         return _dispatcher.OnCreate(ResourceKind.Texture, handle);
-        //return _store.TextureStore.Add(handle);
     }
 
 
@@ -429,89 +457,82 @@ internal sealed class GlBackendDriver : IGraphicsDriver
     }
 
     // Disposer
-    public void DeleteGfxResource(GfxHandle handle)
+    public void DeleteGfxResource(GfxHandle handle, bool replace)
     {
         switch (handle.Kind)
         {
             case ResourceKind.Texture:
-                DisposeTexture(handle);
-                //if (!replace) _store.TextureStore.Remove(handle);
+                DisposeTexture(handle, replace);
                 break;
             case ResourceKind.Shader:
-                DisposeShader(handle);
-                //if (!replace) _store.TextureStore.Remove(handle);
+                DisposeShader(handle, replace);
                 break;
             case ResourceKind.Mesh:
-                DisposeVao(handle);
-                //if (!replace) _store.TextureStore.Remove(handle);
+                DisposeVao(handle, replace);
                 break;
             case ResourceKind.VertexBuffer:
-                DisposeVbo(handle);
-                //if (!replace) _store.TextureStore.Remove(handle);
+                DisposeVbo(handle, replace);
                 break;
             case ResourceKind.IndexBuffer:
-                DisposeIbo(handle);
-                //if (!replace) _store.TextureStore.Remove(handle);
+                DisposeIbo(handle, replace);
                 break;
             case ResourceKind.FrameBuffer:
-                DisposeFbo(handle);
-                //if (!replace) _store.TextureStore.Remove(handle);
+                DisposeFbo(handle, replace);
                 break;
             case ResourceKind.RenderBuffer:
-                DisposeRbo(handle);
-                //if (!replace) _store.TextureStore.Remove(handle);
+                DisposeRbo(handle, replace);
                 break;
             default: throw new ArgumentOutOfRangeException(nameof(handle), handle, $"Invalid resource {handle.Kind}");
         }
     }
 
-    private void DisposeTexture(in GfxHandle gfxHandle)
+    private void DisposeTexture(in GfxHandle gfxHandle, bool replace)
     {
         var handle = _store.TextureStore.Get(gfxHandle);
         _gl.DeleteTexture(handle.Handle);
-        _dispatcher.OnDelete<GlTextureHandle>(in gfxHandle);
+        _dispatcher.OnDelete<GlTextureHandle>(in gfxHandle, replace);
     }
 
-    private void DisposeShader(in GfxHandle gfxHandle)
+    private void DisposeShader(in GfxHandle gfxHandle, bool replace)
     {
         var handle = _store.ShaderStore.Get(gfxHandle);
         _gl.DeleteProgram(handle.Handle);
-        _dispatcher.OnDelete<GlShaderHandle>(in gfxHandle);
+        _dispatcher.OnDelete<GlShaderHandle>(in gfxHandle, replace);
     }
 
-    private void DisposeVao(in GfxHandle gfxHandle)
+    private void DisposeVao(in GfxHandle gfxHandle, bool replace)
     {
         var handle = _store.MeshStore.Get(gfxHandle);
         _gl.DeleteVertexArray(handle.Handle);
-        _dispatcher.OnDelete<GlMeshHandle>(in gfxHandle);
+        _dispatcher.OnDelete<GlMeshHandle>(in gfxHandle, replace);
     }
 
-    private void DisposeVbo(in GfxHandle gfxHandle)
+    private void DisposeVbo(in GfxHandle gfxHandle, bool replace)
     {
         var handle = _store.VboStore.Get(gfxHandle);
         _gl.DeleteBuffer(handle.Handle);
-        _dispatcher.OnDelete<GlVboHandle>(in gfxHandle);
+        _dispatcher.OnDelete<GlVboHandle>(in gfxHandle, replace);
     }
 
-    private void DisposeIbo(in GfxHandle gfxHandle)
+    private void DisposeIbo(in GfxHandle gfxHandle, bool replace)
     {
         var handle = _store.IboStore.Get(gfxHandle);
         _gl.DeleteBuffer(handle.Handle);
-        _dispatcher.OnDelete<GlIboHandle>(in gfxHandle);
+        _dispatcher.OnDelete<GlIboHandle>(in gfxHandle, replace);
     }
 
-    private void DisposeFbo(in GfxHandle gfxHandle)
+    private void DisposeFbo(in GfxHandle gfxHandle, bool replace)
     {
         var handle = _store.FboStore.Get(gfxHandle);
         _gl.DeleteFramebuffer(handle.Handle);
-        _dispatcher.OnDelete<GlFboHandle>(in gfxHandle);
+        _dispatcher.OnDelete<GlFboHandle>(in gfxHandle, replace);
     }
 
-    private void DisposeRbo(in GfxHandle gfxHandle)
+    private void DisposeRbo(in GfxHandle gfxHandle, bool replace)
     {
         var handle = _store.RboStore.Get(gfxHandle);
         _gl.DeleteRenderbuffer(handle.Handle);
-        _dispatcher.OnDelete<GlRboHandle>(in gfxHandle);
+        _dispatcher.OnDelete<GlRboHandle>(in gfxHandle, replace);
     }
 
     private void CheckGlError()

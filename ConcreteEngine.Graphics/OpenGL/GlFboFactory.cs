@@ -104,11 +104,8 @@ internal sealed class GlFboFactory : GlFactory
 
         Gl.BindFramebuffer(FramebufferTarget.Framebuffer, 0);
 
-        fbo = new GlFboHandleMeta(new GlFboHandle(handle), new FrameBufferMeta(
-            desc.TexturePreset,
-            desc.SizeRatio, size,
-            desc.DepthStencilBuffer, desc.Msaa, (byte)desc.Samples
-        ));
+        var meta = new FrameBufferMeta(size, desc.DepthStencilBuffer, desc.Msaa, (byte)desc.Samples);
+        fbo = new GlFboHandleMeta(new GlFboHandle(handle), in meta);
 
         fboTex = colTexHandle.Handle > 0 ? new GlTexHandleMeta(colTexHandle, in colTexMeta) : default;
         rboTex = rboTexHandle.Handle > 0 ? new GlRboHandleMeta(rboTexHandle, in rboTexMeta) : default;

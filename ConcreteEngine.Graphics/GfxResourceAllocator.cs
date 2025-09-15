@@ -19,7 +19,6 @@ public interface IGfxResourceAllocator
     TextureId CreateCubeMap(GpuCubeMapData data, in GpuCubeMapDescriptor desc, out TextureMeta meta);
 
     FrameBufferId CreateFrameBuffer(in FrameBufferDesc desc, out FrameBufferMeta meta);
-    void RecreateFrameBuffer(FrameBufferId fboId, in Vector2D<int> outputSize, out FrameBufferMeta meta);
 
     ShaderId CreateShader(string vertexSource, string fragmentSource, out ShaderMeta meta);
 
@@ -34,13 +33,14 @@ internal sealed class GfxResourceAllocator : IGfxResourceAllocator
     private readonly GfxResourceManager _resources;
     private readonly GfxResourceRegistry _registry;
     private readonly GfxResourceDisposer _disposer;
-    
+
+    private BackendDriverDispatcher Dispatcher => _resources.GetDispatcher();
 
 
     public GfxResourceAllocator(
         IGraphicsDriver driver,
         GfxResourceManager resources,
-        GfxResourceRegistry registry, 
+        GfxResourceRegistry registry,
         GfxResourceDisposer disposer)
     {
         _resources = resources;
@@ -86,69 +86,75 @@ internal sealed class GfxResourceAllocator : IGfxResourceAllocator
         ArgumentOutOfRangeException.ThrowIfLessThan(desc.AbsoluteSize.X, 16);
         ArgumentOutOfRangeException.ThrowIfLessThan(desc.AbsoluteSize.Y, 16);
 
-        _driver.CreateFramebuffer(in desc, out var result);
+        _driver.CreateFrameBuffer(in desc, out var result);
         var fboId = _resources.FboStore.Add(result.Fbo.Meta, result.Fbo.Handle);
-        var fboTexId = result.FboTex.Handle.Slot > 0
+        var fboTexId = result.FboTex.Handle.IsValid
             ? _resources.TextureStore.Add(result.FboTex.Meta, result.FboTex.Handle)
             : default;
-        var rboDepthId = result.RboDepth.Handle.Slot > 0
+        var rboDepthId = result.RboDepth.Handle.IsValid 
             ? _resources.RboStore.Add(result.RboDepth.Meta, result.RboDepth.Handle)
             : default;
-        var rboTexId = result.RboTex.Handle.Slot > 0
+        var rboTexId = result.RboTex.Handle.IsValid
             ? _resources.RboStore.Add(result.RboTex.Meta, result.RboTex.Handle)
             : default;
 
-        _registry.FboRepository.Register(new FrameBufferLayout(
-            FboId: fboId,
-            AttachedFboResources: new FrameBufferLayout.AttachedFboIds(
-                FboTexId: fboTexId,
-                RboDepthId: rboDepthId,
-                RboTexId: rboTexId
-            ),
-            CreateDescriptor: in desc
-        ));
+        _registry.FboRepository.AddRecord(fboId, new FrameBufferLayout.AttachedFboIds(fboTexId, rboDepthId, rboTexId),
+            in desc);
 
         meta = result.Fbo.Meta;
         return fboId;
     }
 
-    public void RecreateFrameBuffer(FrameBufferId fboId, in Vector2D<int> outputSize, out FrameBufferMeta meta)
+    public bool RecreateFrameBuffer(FrameBufferId fboId, in Vector2D<int> outputSize)
     {
-        ref readonly var prevMeta = ref _resources.FboStore.GetMeta(fboId);
         var layout = _registry.FboRepository.Get(fboId);
-        var size = new Vector2D<int>((int)(outputSize.X * prevMeta.SizeRatio.X),
-            (int)(outputSize.Y * prevMeta.SizeRatio.Y));
+        
+        if(!layout.AutoResizeable) return false;
+        
+
+        var (absoluteSize,sizeRatio) = (outputSize, layout.SizeRatio);
+
+        var size = new Vector2D<int>((int)(absoluteSize.X * sizeRatio.X), (int)(absoluteSize.Y * sizeRatio.Y));
 
         var attachedIds = layout.AttachedFboResources;
-        var (colTexId, rboTexId, rboDepthId) = (attachedIds.FboTexId, attachedIds.RboTexId, attachedIds.RboDepthId);
+        var (colTexId, rboDepthId, rboTexId) = (attachedIds.FboTexId, attachedIds.RboDepthId, attachedIds.RboTexId);
 
-        TextureMeta colTexMeta = default;
-        RenderBufferMeta rboTexMeta = default, rboDepthMeta = default;
+        ref readonly var prevFbo = ref _resources.FboStore.GetHandleAndMeta(fboId, out var prevMeta);
+
+        GfxHandle prevTex = default;
+        GfxHandle prevRboDepth = default;
+        GfxHandle prevRboTex = default;
 
         if (colTexId.Id > 0)
-        {
-            ref readonly var prevTexMeta = ref _resources.TextureStore.GetMeta(colTexId);
-            colTexMeta = new TextureMeta(size.X, size.Y, prevTexMeta.Format);
-        }
+            prevTex =  _resources.TextureStore.GetHandle(colTexId);
 
         if (rboTexId.Id > 0)
-        {
-            ref readonly var prevRboMeta = ref _resources.RboStore.GetMeta(rboTexId);
-            rboTexMeta = new RenderBufferMeta(prevRboMeta.Kind, size, prevRboMeta.Multisample);
-        }
+            prevRboTex =  _resources.RboStore.GetHandle(rboTexId);
 
         if (rboDepthId.Id > 0)
-        {
-            ref readonly var prevRboMeta = ref _resources.RboStore.GetMeta(rboDepthId);
-            rboDepthMeta = new RenderBufferMeta(prevRboMeta.Kind, size, prevRboMeta.Multisample);
-        }
-
-        var fboMeta = new FrameBufferMeta(prevMeta.TexturePreset, prevMeta.SizeRatio, outputSize,
-            prevMeta.DepthStencilBuffer, prevMeta.Msaa, prevMeta.Samples);
-        _disposer.EnqueueRemoval(fboId, true);
+            prevRboDepth =  _resources.RboStore.GetHandle(rboDepthId);
         
-        meta = fboMeta;
-        //_resources.FboStore.Replace(fboId, in meta)
+        _disposer.EnqueueRemoval(fboId, true);
+
+
+
+        var desc = layout.GetDescriptor() with { AbsoluteSize = absoluteSize };
+
+        _driver.ReplaceFrameBuffer(in desc, in prevFbo, in prevTex, in prevRboDepth, in prevRboTex, out var result);
+
+        var newMeta = FrameBufferMeta.CreateResizeCopy(in prevMeta, size);
+        _resources.FboStore.Replace(fboId, result.Fbo.Meta, result.Fbo.Handle, out _);
+
+        if (result.FboTex.Handle.IsValid)
+            _resources.TextureStore.Replace(colTexId, result.FboTex.Meta, result.FboTex.Handle, out _);
+
+        if (result.RboDepth.Handle.IsValid)
+            _resources.RboStore.Replace(rboDepthId, result.RboDepth.Meta, result.RboDepth.Handle, out _);;
+
+        if (result.RboTex.Handle.IsValid)
+            _resources.RboStore.Replace(rboTexId, result.RboTex.Meta, result.RboTex.Handle, out _);
+        return true;
+        //
     }
 
     public ShaderId CreateShader(string vertexSource, string fragmentSource, out ShaderMeta meta)

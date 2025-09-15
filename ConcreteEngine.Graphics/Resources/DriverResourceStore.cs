@@ -12,6 +12,8 @@ internal interface IDriverResourceStore
 internal interface IDriverReadResourceStore<out THandle> where THandle : unmanaged, IResourceHandle, IEquatable<THandle>
 {
     THandle Get(GfxHandle handle);
+    THandle GetForDelete(GfxHandle handle);
+
     bool IsAlive(GfxHandle handle);
 }
 
@@ -21,12 +23,16 @@ internal sealed class DriverResourceStore<THandle> : IDriverResourceStore, IDriv
     {
         public bool IsValidRecord() => Gen > 0 && Alive;
     }
+    
+    private readonly record struct PendingRecord(in THandle oldHandle, in GfxHandle oldGfxHandle, in THandle newHandle, in GfxHandle newGfxHandle);
+
 
     // sanity check
     private const int HardLimit = 10_000;
 
     private StoreRecord[] _entries = new StoreRecord[16];
     private readonly Stack<int> _free = new();
+    private readonly List<PendingRecord> _replacePending = new ();
     private readonly GraphicsBackend _backend = GraphicsBackend.Unkown;
     private readonly ResourceKind _kind = ResourceKind.Invalid;
 
@@ -55,9 +61,11 @@ internal sealed class DriverResourceStore<THandle> : IDriverResourceStore, IDriv
 
     public GfxHandle Replace(GfxHandle handle, THandle value)
     {
+        ArgumentOutOfRangeException.ThrowIfEqual(value, default);
         var oldValue = Get(handle);
         if (value.Equals(oldValue)) 
             throw new GraphicsException("Trying to replace handler with same handler");
+        
         var newGen = (ushort)(handle.Gen + 1);
         _entries[(int)handle.Slot] = new StoreRecord(value, newGen, true);
         return handle with { Gen = newGen };
@@ -69,6 +77,15 @@ internal sealed class DriverResourceStore<THandle> : IDriverResourceStore, IDriv
         Debug.Assert(handle.IsValid);
         ref readonly var e = ref _entries[(int)handle.Slot];
         if (!e.IsValidRecord() || e.Gen != handle.Gen)
+            GraphicsException.ThrowInvalidState("Handler is not a valid state");
+        return e.Value;
+    }
+
+    public THandle GetForDelete(GfxHandle handle)
+    {
+        Debug.Assert(handle.IsValid);
+        ref readonly var e = ref _entries[(int)handle.Slot];
+        if (!e.IsValidRecord() || handle.Gen != e.Gen - 1)
             GraphicsException.ThrowInvalidState("Handler is not a valid state");
         return e.Value;
     }

@@ -50,6 +50,7 @@ public sealed class GraphicsRuntime : IGraphicsRuntime
 
     public GraphicsRuntime()
     {
+
     }
 
     public void Initialize<T>(IGfxStartupConfig<T> config) where T : class
@@ -92,7 +93,7 @@ public sealed class GraphicsRuntime : IGraphicsRuntime
         _context.EndFrame(out stats);
         if (_frameCtx.ResizePending)
         {
-           // RecreateFbo(_frameCtx.OutputSize);
+           RecreateFbo(_frameCtx.OutputSize);
         }
     }
 
@@ -107,10 +108,7 @@ public sealed class GraphicsRuntime : IGraphicsRuntime
         foreach (var fboId in fboStore.IdEnumerator)
         {
             fboId.IsValidOrThrow();
-            _disposer.EnqueueRemoval(fboId, true);
-            var fboLayout = _registry.FboRepository.Get(fboId);
-            var newDescriptor = fboLayout.GetResizeDescriptor(outputSize);
-            _allocator.CreateFrameBuffer(in newDescriptor, out var newMeta);
+            _allocator.RecreateFrameBuffer(fboId, in outputSize);
         }
     }
 

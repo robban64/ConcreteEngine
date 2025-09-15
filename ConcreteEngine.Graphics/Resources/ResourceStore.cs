@@ -14,6 +14,8 @@ internal sealed class ResourceStore<TId, TMeta> : IResourceStore
 {
     internal readonly MakeIdDelegate<TId> MakeId;
 
+    private readonly record struct PendingRecord(TId id, in TMeta newMeta, in GfxHandle newHandle);
+
     // sanity check
     private const int HardLimit = 10_000;
     private const int MaxDefaultCapacity = 1024;
@@ -23,6 +25,8 @@ internal sealed class ResourceStore<TId, TMeta> : IResourceStore
     private int _idx = 0;
     private TMeta[] _meta;
     private GfxHandle[] _handle;
+    
+    private readonly List<PendingRecord> _replacePending = new ();
 
     private readonly Stack<int> _free;
 
@@ -104,6 +108,8 @@ internal sealed class ResourceStore<TId, TMeta> : IResourceStore
         return newMeta;
     }
 
+
+
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public bool IsAlive(TId id) => GetHandle(id).IsValid;
 
@@ -121,7 +127,6 @@ internal sealed class ResourceStore<TId, TMeta> : IResourceStore
 
         return _idx++;
     }
-
     public IdEnumerable IdEnumerator => new(this);
 
     internal readonly struct IdEnumerable
@@ -131,38 +136,43 @@ internal sealed class ResourceStore<TId, TMeta> : IResourceStore
         public ResourceIdEnumerator GetEnumerator() => new(_store);
     }
 
-
     internal struct ResourceIdEnumerator
     {
         private readonly ResourceStore<TId, TMeta> _store;
+        private readonly GfxHandle[] _handles; 
+        private readonly int _count; 
         private int _i;
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         internal ResourceIdEnumerator(ResourceStore<TId, TMeta> store)
         {
             _store = store;
+            _handles = store._handle;
+            _count = store._idx;
             _i = -1;
         }
 
         public TId Current
         {
             [MethodImpl(MethodImplOptions.AggressiveInlining)]
-            get => _store.MakeId(_i + 1);
+            get => _store.MakeId(_i);
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public bool MoveNext()
         {
             int i = _i;
-            while (++i < _store._idx)
+            var handles = _handles;
+            var count = _count;
+
+            while (++i < count)
             {
-                if (_store.GetHandle(Current).IsValid)
+                if (handles[i].IsValid)
                 {
                     _i = i;
                     return true;
                 }
             }
-
             return false;
         }
     }

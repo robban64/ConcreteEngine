@@ -2,10 +2,7 @@ using ConcreteEngine.Graphics.Descriptors;
 
 namespace ConcreteEngine.Graphics.Resources;
 
-public interface IMeshRepository
-{
-    IMeshLayout Get(MeshId meshId);
-}
+
 
 // Todo animation skeleton data
 public interface IMeshLayout
@@ -19,6 +16,11 @@ public interface IMeshLayout
     uint DrawCount { get; }
 }
 
+
+public interface IMeshRepository
+{
+    IMeshLayout Get(MeshId meshId);
+}
 internal sealed class MeshRepository : IMeshRepository
 {
     private readonly Dictionary<MeshId, MeshLayout> _registry = new(16);

@@ -24,7 +24,10 @@ internal interface IGfxResourceManager
 internal delegate GfxHandle BackendCreate<in THandle>(ResourceKind kind, THandle handle)
     where THandle : unmanaged, IResourceHandle, IEquatable<THandle>;
 
-internal delegate void BackendDelete<THandle>(in GfxHandle handle)
+internal delegate void BackendDelete<THandle>(in GfxHandle handle, bool replace)
+    where THandle : unmanaged, IResourceHandle, IEquatable<THandle>;
+
+internal delegate GfxHandle BackendReplace<in THandle>(in GfxHandle gfxHandle, THandle handle)
     where THandle : unmanaged, IResourceHandle, IEquatable<THandle>;
 
 internal interface IResourceBackendDispatcher;
@@ -32,13 +35,16 @@ internal interface IResourceBackendDispatcher;
 internal sealed class ResourceBackendDispatcher<THandle> : IResourceBackendDispatcher
     where THandle : unmanaged, IResourceHandle, IEquatable<THandle>
 {
-    public BackendCreate<THandle> OnCreated { get; set; }
-    public BackendDelete<THandle> OnDelete { get; set; }
+    public BackendCreate<THandle> OnCreated { get; }
+    public BackendDelete<THandle> OnDelete { get; }
+    public BackendReplace<THandle> OnReplace { get; }
 
-    public ResourceBackendDispatcher(BackendCreate<THandle> onCreated, BackendDelete<THandle> onDelete)
+    public ResourceBackendDispatcher(BackendCreate<THandle> onCreated, BackendDelete<THandle> onDelete,
+        BackendReplace<THandle> onReplace)
     {
         OnCreated = onCreated;
         OnDelete = onDelete;
+        OnReplace = onReplace;
     }
 }
 
@@ -59,22 +65,34 @@ internal sealed class BackendDriverDispatcher
         {
             return backendDispatcher.OnCreated(kind, handle);
         }
-        
+
         throw new ArgumentException($"Unknown resource kind: {kind}");
     }
-    
-    public void OnDelete<THandle>(in GfxHandle handle)
+
+    public void OnDelete<THandle>(in GfxHandle gfxHandle, bool replace)
         where THandle : unmanaged, IResourceHandle, IEquatable<THandle>
     {
-        if (_dispatchers.TryGetValue(handle.Kind, out var dispatcher) &&
+        if (_dispatchers.TryGetValue(gfxHandle.Kind, out var dispatcher) &&
             dispatcher is ResourceBackendDispatcher<THandle> backendDispatcher)
         {
-            backendDispatcher.OnDelete(handle);
+            backendDispatcher.OnDelete(gfxHandle, replace);
+            return;
         }
 
-        throw new ArgumentException($"Unknown resource kind: {handle.Kind} ({handle.ToString()})");
+        throw new ArgumentException($"Unknown resource kind: {gfxHandle.Kind} ({gfxHandle.ToString()})");
     }
 
+    public GfxHandle OnReplace<THandle>(in GfxHandle gfxHandle, THandle handle)
+        where THandle : unmanaged, IResourceHandle, IEquatable<THandle>
+    {
+        if (_dispatchers.TryGetValue(gfxHandle.Kind, out var dispatcher) &&
+            dispatcher is ResourceBackendDispatcher<THandle> backendDispatcher)
+        {
+            return backendDispatcher.OnReplace(in gfxHandle, handle);
+        }
+
+        throw new ArgumentException($"Unknown resource kind: {gfxHandle.Kind} ({gfxHandle.ToString()})");
+    }
 }
 
 internal sealed class GfxResourceManager : IGfxResourceManager
@@ -83,8 +101,14 @@ internal sealed class GfxResourceManager : IGfxResourceManager
     private readonly BackendStoreHub _backendHub;
 
     private readonly GfxResourceDisposer _disposer;
-    
+
+    private readonly BackendDriverDispatcher _backendDispatcher;
+
     private readonly Dictionary<ResourceKind, IResourceBackendDispatcher> _dispatchers = new(8);
+
+    internal BackendStoreHub BackendStoreHub => _backendHub;
+    
+    internal BackendDriverDispatcher GetDispatcher() =>  _backendDispatcher;
 
     public GfxResourceManager()
     {
@@ -92,6 +116,7 @@ internal sealed class GfxResourceManager : IGfxResourceManager
         _backendHub = new BackendStoreHub();
 
         RegisterGlDispatcher();
+        _backendDispatcher = new BackendDriverDispatcher(_dispatchers);
     }
 
     internal void AttachStore(IGraphicsDriver driver)
@@ -102,14 +127,15 @@ internal sealed class GfxResourceManager : IGfxResourceManager
     internal void AttachDispatchers(IGraphicsDriver driver)
     {
         ArgumentNullException.ThrowIfNull(driver, nameof(driver));
+        ArgumentNullException.ThrowIfNull(_backendDispatcher, nameof(_backendDispatcher));
         ArgumentOutOfRangeException.ThrowIfEqual(_dispatchers.Count, 0);
 
-        var dispatcher = new BackendDriverDispatcher(_dispatchers); 
-        driver.AttachDispatcher(dispatcher);
+        driver.AttachDispatcher(_backendDispatcher);
     }
 
     private void RegisterGlDispatcher()
     {
+        /*
         RegisterDispatcher<GlTextureHandle>(ResourceKind.Texture, OnCreate, OnDelete<GlTextureHandle>);
         RegisterDispatcher<GlShaderHandle>(ResourceKind.Shader, OnCreate, OnDelete<GlShaderHandle>);
         RegisterDispatcher<GlMeshHandle>(ResourceKind.Mesh, OnCreate, OnDelete<GlMeshHandle>);
@@ -117,39 +143,45 @@ internal sealed class GfxResourceManager : IGfxResourceManager
         RegisterDispatcher<GlIboHandle>(ResourceKind.IndexBuffer, OnCreate, OnDelete<GlIboHandle>);
         RegisterDispatcher<GlFboHandle>(ResourceKind.FrameBuffer, OnCreate, OnDelete<GlFboHandle>);
         RegisterDispatcher<GlRboHandle>(ResourceKind.RenderBuffer, OnCreate, OnDelete<GlRboHandle>);
-        RegisterDispatcher<GlUboHandle>(ResourceKind.UniformBuffer, OnCreate, OnDelete<GlUboHandle>);
+        RegisterDispatcher<GlUboHandle>(ResourceKind.UniformBuffer, OnCreate, _backendHub.Remove);
+*/
+        RegisterDispatcher<GlTextureHandle>(ResourceKind.Texture);
+        RegisterDispatcher<GlShaderHandle>(ResourceKind.Shader);
+        RegisterDispatcher<GlMeshHandle>(ResourceKind.Mesh);
+        RegisterDispatcher<GlVboHandle>(ResourceKind.VertexBuffer);
+        RegisterDispatcher<GlIboHandle>(ResourceKind.IndexBuffer);
+        RegisterDispatcher<GlFboHandle>(ResourceKind.FrameBuffer);
+        RegisterDispatcher<GlRboHandle>(ResourceKind.RenderBuffer);
+        RegisterDispatcher<GlUboHandle>(ResourceKind.UniformBuffer);
+    }
+    
 
 
-        return;
-
-        void OnDelete<THandle>(in GfxHandle handle)
-            where THandle : unmanaged, IResourceHandle, IEquatable<THandle>
-        {
-            _backendHub.Remove(handle);
-        }
-
-        GfxHandle OnCreate<THandle>(ResourceKind kind, THandle handle)
-            where THandle : unmanaged, IResourceHandle, IEquatable<THandle>
-        {
-            return _backendHub.Add(kind, handle);
-        }
-        
-        GfxHandle Replace<THandle>(GfxHandle gfxHandle, THandle handle)
-            where THandle : unmanaged, IResourceHandle, IEquatable<THandle>
-        {
-            return _backendHub.Replace(gfxHandle, handle);
-        }
-        
+    private GfxHandle OnCreate<THandle>(ResourceKind kind, THandle handle)
+        where THandle : unmanaged, IResourceHandle, IEquatable<THandle>
+    {
+        return _backendHub.Add(kind, handle);
+    }
+    
+    private void OnDelete<THandle>(in GfxHandle handle, bool replace)
+        where THandle : unmanaged, IResourceHandle, IEquatable<THandle>
+    {
+        _backendHub.Remove(handle, replace);
+    }
+    
+    private GfxHandle OnReplace<THandle>(in GfxHandle gfxHandle, THandle handle)
+        where THandle : unmanaged, IResourceHandle, IEquatable<THandle>
+    {
+        return _backendHub.Replace(gfxHandle, handle);
     }
 
-    private void RegisterDispatcher<THandle>(ResourceKind kind, BackendCreate<THandle> onCreate,
-        BackendDelete<THandle> onDelete)
+    private void RegisterDispatcher<THandle>(ResourceKind kind)
         where THandle : unmanaged, IResourceHandle, IEquatable<THandle>
     {
         if (_dispatchers.ContainsKey(kind))
             throw new ArgumentException($"Dispatcher '{kind}' is already registered.", nameof(kind));
 
-        var value = new ResourceBackendDispatcher<THandle>(onCreate, onDelete);
+        var value = new ResourceBackendDispatcher<THandle>(_backendHub.Add, _backendHub.Remove, _backendHub.Replace);
         _dispatchers.Add(kind, value);
     }
 

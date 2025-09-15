@@ -1,32 +1,47 @@
+using System.Numerics;
 using ConcreteEngine.Graphics.Descriptors;
 using ConcreteEngine.Graphics.Error;
 using Silk.NET.Maths;
 
 namespace ConcreteEngine.Graphics.Resources;
 
-public interface IFrameBufferRegistry
+public interface IFrameBufferRepository
 {
     FrameBufferLayout Get(FrameBufferId fboId);
 }
 
-public sealed record FrameBufferLayout(
-    FrameBufferId FboId,
-    FrameBufferLayout.AttachedFboIds AttachedFboResources,
-    in FrameBufferDesc CreateDescriptor
-)
+public sealed class FrameBufferLayout
 {
     public record struct AttachedFboIds(TextureId FboTexId, RenderBufferId RboDepthId, RenderBufferId RboTexId);
 
-    public FrameBufferDesc GetResizeDescriptor(Vector2D<int> size)
-    {
-        if (!CreateDescriptor.AutoResizeable)
-            throw new GraphicsException($"Fbo {FboId} is not resizeable");
+    private FrameBufferDesc _desc;
 
-        return CreateDescriptor with { AbsoluteSize = size };
+    internal FrameBufferLayout(FrameBufferId fboId, in AttachedFboIds attachedFboResources, in FrameBufferDesc desc)
+    {
+        FboId = fboId;
+        AttachedFboResources = attachedFboResources;
+        UpdateFromDescriptor(desc);
     }
+
+    internal void UpdateFromDescriptor(in FrameBufferDesc desc)
+    {
+        _desc = desc;
+    }
+
+    internal FrameBufferDesc GetDescriptor() => _desc;
+
+    public FrameBufferId FboId { get; }
+    public AttachedFboIds AttachedFboResources { get; }
+    public Vector2 SizeRatio => _desc.SizeRatio;
+    public Vector2D<int> AbsoluteSize => _desc.AbsoluteSize;
+    public bool DepthStencilBuffer => _desc.DepthStencilBuffer;
+    public TexturePreset TexturePreset => _desc.TexturePreset;
+    public bool Msaa => _desc.Msaa;
+    public uint Samples => _desc.Samples;
+    public bool AutoResizeable => _desc.AutoResizeable;
 }
 
-public sealed class FrameBufferRepository : IFrameBufferRegistry
+internal sealed class FrameBufferRepository : IFrameBufferRepository
 {
     private readonly Dictionary<FrameBufferId, FrameBufferLayout> _registry = new(4);
 
@@ -35,8 +50,11 @@ public sealed class FrameBufferRepository : IFrameBufferRegistry
         return _registry[fboId];
     }
 
-    public void Register(FrameBufferLayout record)
+    public void AddRecord(FrameBufferId fboId, in FrameBufferLayout.AttachedFboIds attachedIds, in FrameBufferDesc desc)
     {
-        _registry.Add(record.FboId, record);
+        fboId.IsValidOrThrow();
+        _registry.Add(fboId, new FrameBufferLayout(fboId, in attachedIds, in desc));
     }
+
+    internal FrameBufferDesc GetDescriptor(FrameBufferId fboId) => _registry[fboId].GetDescriptor();
 }

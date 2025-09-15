@@ -16,20 +16,21 @@ internal sealed class BackendStoreHub
         driver.AttachStore(_storeCollection);
     }
 
-    public GfxHandle Add<THandle>(ResourceKind kind, in THandle handle)
+    public GfxHandle Add<THandle>(ResourceKind kind, THandle handle)
         where THandle : unmanaged, IResourceHandle, IEquatable<THandle>
     {
         var store = GetStore<THandle>(kind);
         return store.Add(handle);
     }
 
-    public void Remove(in GfxHandle handle)
+    public void Remove(in GfxHandle handle, bool replace)
     {
+        if (replace) return;
         var store = GetStore(handle.Kind);
         store.Remove(handle);
     }
 
-    public GfxHandle Replace<THandle>(GfxHandle gfxHandle, THandle handle)
+    public GfxHandle Replace<THandle>(in GfxHandle gfxHandle, THandle handle)
         where THandle : unmanaged, IResourceHandle, IEquatable<THandle>
     {
         var store = GetStore<THandle>(gfxHandle.Kind);

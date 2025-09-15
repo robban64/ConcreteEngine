@@ -77,11 +77,14 @@ internal sealed class GraphicsContext : IGraphicsContext
         BindMesh(default);
         BindVertexBuffer(default);
         BindIndexBuffer(default);
-        BindFramebuffer(default);
         BindUniformBuffer(default);
-
+        BindFramebuffer(default);
+        
         UseShader(default);
 
+        _driver.BindRenderBuffer(default);
+        _driver.BindFrameBufferReadDraw(default, default);
+        
         _blendMode = BlendMode.Unset;
         _depthMode = DepthMode.Unset;
         _cullMode = CullMode.Unset;
@@ -255,13 +258,13 @@ internal sealed class GraphicsContext : IGraphicsContext
         if (_boundFboId == id) return;
         if (id == default)
         {
-            _driver.BindFramebuffer(default);
+            _driver.BindFrameBuffer(default);
             _boundFboId = default;
             return;
         }
 
         ref readonly var handle = ref _store.FboStore.GetHandle(id);
-        _driver.BindFramebuffer(handle);
+        _driver.BindFrameBuffer(handle);
         _boundFboId = id;
     }
 

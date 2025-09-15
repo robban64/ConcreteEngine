@@ -148,7 +148,7 @@ internal sealed class SpriteBatchMesh : IDisposable
     public void Dispose()
     {
         if (_disposed) return;
-        _graphics.Disposer.EnqueueRemoval(_meshId);
+        _graphics.Disposer.EnqueueRemoval(_meshId, false);
         _disposed = true;
     }
 }

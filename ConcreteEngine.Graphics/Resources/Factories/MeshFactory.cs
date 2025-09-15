@@ -102,13 +102,8 @@ internal sealed class MeshFactory : IMeshFactory
             prevMeta.VertexAttribPointers, drawCount);
         _resources.MeshStore.ReplaceMeta(_meshId, in newMeta, out _);
 
-        var meshRegistry = _registry.MeshRegistry;
-        meshRegistry.UpdateVboIds(_meshId, _vboIds);
-
-        if (_iboId.IsValid())
-            meshRegistry.UpdateIboId(_meshId, _iboId);
-
-        meshRegistry.UpdateAttributes(_meshId, attributes);
+        var meshRegistry = _registry.MeshRepository;
+        meshRegistry.AddRecord(_meshId, in newMeta, _iboId, _vboIds, attributes);
         var result = meshRegistry.Get(_meshId);
 
         _gfx.SetVertexAttribute(attributes);

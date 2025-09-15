@@ -108,7 +108,7 @@ public sealed class GraphicsRuntime : IGraphicsRuntime
         {
             fboId.IsValidOrThrow();
             _disposer.EnqueueRemoval(fboId, true);
-            var fboLayout = _registry.FboRegistry.Get(fboId);
+            var fboLayout = _registry.FboRepository.Get(fboId);
             var newDescriptor = fboLayout.GetResizeDescriptor(outputSize);
             _allocator.CreateFrameBuffer(in newDescriptor, out var newMeta);
         }

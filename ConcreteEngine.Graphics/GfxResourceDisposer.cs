@@ -42,7 +42,7 @@ internal sealed class GfxResourceDisposer : IGfxResourceDisposer
         switch (id)
         {
             case MeshId meshId:
-                var meshLayout = _registry.MeshRegistry.GetInternal(meshId);
+                var meshLayout = _registry.MeshRepository.Get(meshId);
                 if (meshLayout.IndexBufferId.IsValid())
                     EnqueueRemoval(meshLayout.IndexBufferId, replace);
 
@@ -52,7 +52,7 @@ internal sealed class GfxResourceDisposer : IGfxResourceDisposer
 
                 break;
             case FrameBufferId fboId:
-                var fboLayout = _registry.FboRegistry.Get(fboId);
+                var fboLayout = _registry.FboRepository.Get(fboId);
                 var fboRes = fboLayout.AttachedFboResources;
                 if (fboRes.RboDepthId.IsValid()) EnqueueRemoval(fboRes.RboDepthId, replace);
                 if (fboRes.RboTexId.IsValid()) EnqueueRemoval(fboRes.RboTexId, replace);

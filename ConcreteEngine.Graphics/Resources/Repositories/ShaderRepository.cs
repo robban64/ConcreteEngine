@@ -9,13 +9,13 @@ using ConcreteEngine.Graphics.Utils;
 
 namespace ConcreteEngine.Graphics.Resources;
 
-public interface IShaderRegistry
+public interface IShaderRepository
 {
     UboArena GetOrCreateUboArena(UniformGpuSlot slot);
     UniformBufferId GetUboId(UniformGpuSlot slot);
     ShaderLayout GetShaderLayout(ShaderId shaderId);
 }
-internal sealed class ShaderRegistry : IShaderRegistry
+internal sealed class ShaderRepository : IShaderRepository
 {
     private readonly Dictionary<ShaderId, ShaderLayout> _shaderLayouts = new(8);
     private readonly Dictionary<UniformGpuSlot, UboArena> _uboArenas = new();
@@ -23,26 +23,40 @@ internal sealed class ShaderRegistry : IShaderRegistry
 
     private readonly IGfxResourceManager _resources;
 
-    internal ShaderRegistry(IGfxResourceManager resources)
+    internal ShaderRepository(IGfxResourceManager resources)
     {
         ArgumentNullException.ThrowIfNull(resources);
         _resources = resources;
         _uboRegistry = new  UniformBufferId[GraphicsEnumCache.ShaderBufferUniformVals.Length];
     }
+    
+    
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public UniformBufferId GetUboId(UniformGpuSlot slot) => _uboRegistry[(int)slot];
+
+    public ShaderLayout GetShaderLayout(ShaderId shaderId)
+    {
+        shaderId.IsValidOrThrow();
+        var hasResource = _shaderLayouts.TryGetValue(shaderId, out var uniformTable);
+        if (!hasResource || uniformTable == null) GraphicsException.ThrowResourceNotFound(shaderId.Id);
+        return uniformTable;
+    }
+
 
     public UboArena GetOrCreateUboArena(UniformGpuSlot slot)
     {
-        if (!_uboArenas.TryGetValue(slot, out var _uboArena))
+        if (!_uboArenas.TryGetValue(slot, out var uboArena))
         {
             var meta = _resources.UboStore.GetMeta(_uboRegistry[(int)slot]);
-            _uboArenas[slot] = _uboArena = new UboArena(in meta);
+            _uboArenas[slot] = uboArena = new UboArena(in meta);
         }
 
-        return _uboArena;
+        return uboArena;
     }
     
-    public void AddUboToSlot(UniformGpuSlot slot, UniformBufferId uboId)
+    internal void AddUboToSlot(UniformGpuSlot slot, UniformBufferId uboId)
     {
+        uboId.IsValidOrThrow();
         var id = _uboRegistry[(int)slot];
         if (id.IsValid())
             throw GraphicsException.ResourceAlreadyExists<UniformBufferId>(uboId);
@@ -50,22 +64,12 @@ internal sealed class ShaderRegistry : IShaderRegistry
         _uboRegistry[(int)slot] = uboId;
     }
 
-    public void Add(ShaderId shaderId, ShaderLayout shaderLayout)
+    internal void Add(ShaderId shaderId, in ShaderMeta meta, List<(string, int)> uniforms)
     {
-        _shaderLayouts.Add(shaderId, shaderLayout);
+        _shaderLayouts.Add(shaderId, new ShaderLayout(uniforms, meta.Samplers));
     }
-
-    [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public UniformBufferId GetUboId(UniformGpuSlot slot) => _uboRegistry[(int)slot];
-
-    public ShaderLayout GetShaderLayout(ShaderId shaderId)
-    {
-        var hasResource = _shaderLayouts.TryGetValue(shaderId, out var uniformTable);
-        if (!hasResource || uniformTable == null) GraphicsException.ThrowResourceNotFound(shaderId.Id);
-        return uniformTable;
-    }
-
-    public bool Remove(ShaderId shaderId)
+    
+    internal bool Remove(ShaderId shaderId)
     {
         return _shaderLayouts.Remove(shaderId);
     }
@@ -77,9 +81,12 @@ public sealed class ShaderLayout
 {
     private readonly int[] _locs;
     private readonly Dictionary<string, int> _rawUniforms;
+    
+    public uint Samplers { get; }
 
-    public ShaderLayout(List<(string, int)> uniformPairs)
+    public ShaderLayout(List<(string, int)> uniformPairs, uint samplers)
     {
+        Samplers = samplers;
         _locs = new int [GraphicsEnumCache.ShaderUniformVals.Length];
         _rawUniforms = new Dictionary<string, int>(uniformPairs.Count);
 

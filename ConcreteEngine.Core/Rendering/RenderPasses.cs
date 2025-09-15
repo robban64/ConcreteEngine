@@ -94,7 +94,7 @@ internal class RenderPasses
         var desc = new FrameBufferDesc(SizeRatio: Vector2.One, AbsoluteSize: _snapshot.OutputSize, DepthStencilBuffer: true);
         var fboId = GfxAllocator.CreateFrameBuffer(in desc, out var meta);
         
-        var layout = _graphics.Registry.FboRegistry.Get(fboId);
+        var layout = _graphics.Registry.FboRepository.Get(fboId);
         SceneFbo = RenderPassFboRecord.From(fboId, in meta, layout);
     }
 
@@ -113,7 +113,7 @@ internal class RenderPasses
         
         var fboId = GfxAllocator.CreateFrameBuffer(in desc, out var meta);
 
-        var layout = _graphics.Registry.FboRegistry.Get(fboId);
+        var layout = _graphics.Registry.FboRepository.Get(fboId);
         MultisampleFbo = RenderPassFboRecord.From(fboId, in meta, layout);
     }
     
@@ -131,7 +131,7 @@ internal class RenderPasses
         
         var fboId = GfxAllocator.CreateFrameBuffer(in desc , out var meta);
 
-        var layout = _graphics.Registry.FboRegistry.Get(fboId);
+        var layout = _graphics.Registry.FboRepository.Get(fboId);
         ShadowFbo =  RenderPassFboRecord.From(fboId, in meta, layout);
     }
 
@@ -147,7 +147,7 @@ internal class RenderPasses
         
         var fboId = GfxAllocator.CreateFrameBuffer(in desc , out var meta);
 
-        var layout = _graphics.Registry.FboRegistry.Get(fboId);
+        var layout = _graphics.Registry.FboRepository.Get(fboId);
         LightFbo = RenderPassFboRecord.From(fboId, in meta, layout);
     }
     
@@ -178,7 +178,7 @@ internal class RenderPasses
             DepthStencilBuffer: false);
         
         var fboId = _graphics.Allocator.CreateFrameBuffer(in desc , out var meta);
-        var layout = _graphics.Registry.FboRegistry.Get(fboId);
+        var layout = _graphics.Registry.FboRepository.Get(fboId);
         return RenderPassFboRecord.From(fboId, in meta, layout);
     }
 

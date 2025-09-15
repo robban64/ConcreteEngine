@@ -26,7 +26,7 @@ public sealed record FrameBufferLayout(
     }
 }
 
-public sealed class FrameBufferRegistry : IFrameBufferRegistry
+public sealed class FrameBufferRepository : IFrameBufferRegistry
 {
     private readonly Dictionary<FrameBufferId, FrameBufferLayout> _registry = new(4);
 

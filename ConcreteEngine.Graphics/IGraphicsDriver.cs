@@ -77,7 +77,7 @@ internal interface IDeleteResourceBackend
 
 internal interface ICreateResourceBackend
 {
-    GfxHandle CreateShader(string vs, string fs, out ShaderLayout layout, out ShaderMeta meta);
+    GfxHandle CreateShader(string vs, string fs, out List<(string, int)> uniforms, out ShaderMeta meta);
     void CreateFramebuffer(in FrameBufferDesc desc, out DriverCreateFboResult result);
     GfxHandle CreateTexture2D(GpuTextureData data, in GpuTextureDescriptor desc, out TextureMeta meta);
     GfxHandle CreateCubeMap(GpuCubeMapData data, in GpuCubeMapDescriptor desc, out TextureMeta meta);

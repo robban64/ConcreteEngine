@@ -10,74 +10,6 @@ using Silk.NET.Maths;
 
 namespace ConcreteEngine.Graphics;
 
-public interface IGraphicsContext
-{
-    GraphicsConfiguration Configuration { get; }
-    DeviceCapabilities Capabilities { get; }
-
-    //
-    //void BeginFrame(in FrameInfo frameCtx);
-    //void EndFrame(out GpuFrameStats result);
-
-    void Clear(Color4 color, ClearBufferFlag flags);
-    void SetBlendMode(BlendMode blendMode);
-    void SetDepthMode(DepthMode depthMode);
-
-    void SetCullMode(CullMode cullMode);
-    void SetViewport(in Vector2D<int> viewport);
-
-
-    void BeginScreenPass(Color4? clear = null, ClearBufferFlag? flags = null);
-    void BeginRenderPass(in FrameBufferId fboId, Color4? clear, ClearBufferFlag? flags);
-    void EndRenderPass();
-    void BlitFramebuffer(in FrameBufferId fromId, in FrameBufferId toId = default, bool linear = true);
-
-    void BindTexture(TextureId resourceId, uint slot);
-    void BindMesh(MeshId id);
-    void BindVertexBuffer(VertexBufferId id);
-    void BindIndexBuffer(IndexBufferId id);
-    void BindUniformBuffer(UniformGpuSlot slot);
-    void BindFramebuffer(FrameBufferId id);
-
-
-    void SetVertexAttribute(ReadOnlySpan<VertexAttributeDescriptor> attributes);
-    void SetVertexBuffer<T>(ReadOnlySpan<T> data, BufferUsage usage = BufferUsage.StaticDraw) where T : unmanaged;
-    void SetIndexBuffer<T>(ReadOnlySpan<T> data, BufferUsage usage = BufferUsage.StaticDraw) where T : unmanaged;
-
-    void UploadVertexBuffer<T>(VertexBufferId vbo, ReadOnlySpan<T> data, int offsetElements) where T : unmanaged;
-    void UploadIndexBuffer<T>(IndexBufferId ibo, ReadOnlySpan<T> data, int offsetElements) where T : unmanaged;
-
-    void SetUniformBufferSize(UniformGpuSlot slot, nuint capacityBytes);
-    void UploadUniformGpuData<T>(UniformGpuSlot slot, in T data, nuint offset = 0) where T : unmanaged, IUniformGpuData;
-    void BindUniformBufferRange(UniformGpuSlot slot, nuint offset, nuint size);
-
-    void DrawBoundMesh(uint drawCount = 0);
-    void DrawArrays(DrawPrimitive primitive, uint drawCount);
-    void DrawElements(DrawPrimitive primitive, DrawElementType elementType, uint drawCount);
-
-    void UseShader(ShaderId id);
-    void SetUniform(ShaderUniform uniform, int value);
-    void SetUniform(ShaderUniform uniform, uint value);
-    void SetUniform(ShaderUniform uniform, float value);
-    void SetUniform(ShaderUniform uniform, Vector2 value);
-    void SetUniform(ShaderUniform uniform, Vector3 value);
-    void SetUniform(ShaderUniform uniform, Vector4 value);
-    void SetUniform(ShaderUniform uniform, in Matrix4x4 value);
-    void SetUniform(ShaderUniform uniform, in Matrix3 value);
-}
-
-internal interface IProgramContext;
-
-internal interface IBufferContext;
-
-internal interface IMeshContext;
-
-internal interface ITextureContext;
-
-internal interface IFramebufferContext;
-
-internal interface IStateContext;
-
 internal sealed class GraphicsContext : IGraphicsContext
 {
     public GraphicsConfiguration Configuration => _driver.Configuration;
@@ -301,7 +233,7 @@ internal sealed class GraphicsContext : IGraphicsContext
         }
 
         var handle = _store.ShaderStore.GetHandle(id);
-        var uniformTable = _registry.ShaderRegistry.GetShaderLayout(id);
+        var uniformTable = _registry.ShaderRepository.GetShaderLayout(id);
 
         _driver.UseShader(handle);
         _boundShaderId = id;
@@ -311,7 +243,7 @@ internal sealed class GraphicsContext : IGraphicsContext
 
     public void BindUniformBuffer(UniformGpuSlot slot)
     {
-        var ubo = _registry.ShaderRegistry.GetUboId(slot);
+        var ubo = _registry.ShaderRepository.GetUboId(slot);
         if (ubo == _boundUniformBufferId) return;
 
         var handle = _store.UboStore.GetHandle(ubo);
@@ -349,7 +281,7 @@ internal sealed class GraphicsContext : IGraphicsContext
 
 
         _boundTextures[slot] = texture;
-        ref readonly var handle =ref  _store.TextureStore.GetHandle(texture);
+        ref readonly var handle = ref _store.TextureStore.GetHandle(texture);
         _driver.BindTextureUnit(handle, slot);
     }
 
@@ -364,7 +296,7 @@ internal sealed class GraphicsContext : IGraphicsContext
             return;
         }
 
-        ref readonly var handle =ref _store.MeshStore.GetHandle(id);
+        ref readonly var handle = ref _store.MeshStore.GetHandle(id);
         _driver.BindVertexArray(handle);
         _boundVaoId = id;
     }
@@ -405,8 +337,8 @@ internal sealed class GraphicsContext : IGraphicsContext
         _boundVaoId.IsValidOrThrow();
         BindVertexBuffer(default);
         var vao = _store.MeshStore.GetHandleAndMeta(_boundVaoId, out var meta);
-        var meshLayout = _registry.MeshRegistry.GetInternal(_boundVaoId);
-        var vboIds = meshLayout.VertexBufferIds;
+        var meshLayout = _registry.MeshRepository.Get(_boundVaoId);
+        var vboIds = meshLayout.GetVertexBufferIds();
 
         VertexBufferId prevVboId = default;
         for (int i = 0; i < attributes.Length; i++)
@@ -416,7 +348,7 @@ internal sealed class GraphicsContext : IGraphicsContext
                 throw GraphicsException.InvalidState(
                     $"Attrib vbo index {attrib.VboIndex} is greater than vbo count {vboIds.Length}");
 
-            var vboId = vboIds[attrib.VboIndex];
+            var vboId = vboIds[(int)attrib.VboIndex];
             if (prevVboId != vboId)
                 BindVertexBuffer(vboId);
 
@@ -483,7 +415,7 @@ internal sealed class GraphicsContext : IGraphicsContext
 
     public void SetUniformBufferSize(UniformGpuSlot slot, nuint capacityBytes)
     {
-        var ubo = _registry.ShaderRegistry.GetUboId(slot);
+        var ubo = _registry.ShaderRepository.GetUboId(slot);
         var handle = _store.UboStore.GetHandle(ubo);
         _driver.SetUniformBufferSize(slot, capacityBytes);
     }
@@ -491,14 +423,14 @@ internal sealed class GraphicsContext : IGraphicsContext
     public void UploadUniformGpuData<T>(UniformGpuSlot slot, in T data, nuint offsetBytes = 0)
         where T : unmanaged, IUniformGpuData
     {
-        var ubo = _registry.ShaderRegistry.GetUboId(slot);
+        var ubo = _registry.ShaderRepository.GetUboId(slot);
         var handle = _store.UboStore.GetHandle(ubo);
         _driver.UploadUniformBuffer(handle, data, offsetBytes, (nuint)Unsafe.SizeOf<T>());
     }
 
     public void BindUniformBufferRange(UniformGpuSlot slot, nuint offset, nuint size)
     {
-        var ubo = _registry.ShaderRegistry.GetUboId(slot);
+        var ubo = _registry.ShaderRepository.GetUboId(slot);
         var handle = _store.UboStore.GetHandle(ubo);
         _driver.BindUniformBufferRange(handle, slot, offset, size);
     }

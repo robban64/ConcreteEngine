@@ -26,7 +26,7 @@ internal sealed class GlShaderFactory() : GlFactory()
     
 
     public GlShaderHandle CreateShader(string vertexSource, string fragmentSource,
-        out ShaderLayout shaderLayout, out ShaderMeta meta)
+        out List<(string, int)> uniforms, out ShaderMeta meta)
     {
         uint vertexShader = CreateShader(ShaderType.VertexShader, vertexSource);
         uint fragmentShader = CreateShader(ShaderType.FragmentShader, fragmentSource);
@@ -38,8 +38,7 @@ internal sealed class GlShaderFactory() : GlFactory()
 
 
         Gl.UseProgram(handle);
-        GetUniformsFromProgram(handle, out var uniformPair, out var samplers);
-        shaderLayout = new ShaderLayout(uniformPair);
+        GetUniformsFromProgram(handle, out uniforms, out var samplers);
         Gl.UseProgram(0);
 
         meta = new ShaderMeta((uint)samplers);

@@ -54,7 +54,6 @@ internal sealed class GfxResourceAllocator : IGfxResourceAllocator
     {
         var handle = _driver.CreateVertexArray(primitive, drawKind, drawElement, out meta);
         var meshId = _resources.MeshStore.Add(in meta, handle);
-        _registry.MeshRegistry.RegisterEmptyMesh(meshId);
         return meshId;
     }
 
@@ -99,7 +98,7 @@ internal sealed class GfxResourceAllocator : IGfxResourceAllocator
             ? _resources.RboStore.Add(result.RboTex.Meta, result.RboTex.Handle)
             : default;
 
-        _registry.FboRegistry.Register(new FrameBufferLayout(
+        _registry.FboRepository.Register(new FrameBufferLayout(
             FboId: fboId,
             AttachedFboResources: new FrameBufferLayout.AttachedFboIds(
                 FboTexId: fboTexId,
@@ -116,7 +115,7 @@ internal sealed class GfxResourceAllocator : IGfxResourceAllocator
     public void RecreateFrameBuffer(FrameBufferId fboId, in Vector2D<int> outputSize, out FrameBufferMeta meta)
     {
         ref readonly var prevMeta = ref _resources.FboStore.GetMeta(fboId);
-        var layout = _registry.FboRegistry.Get(fboId);
+        var layout = _registry.FboRepository.Get(fboId);
         var size = new Vector2D<int>((int)(outputSize.X * prevMeta.SizeRatio.X),
             (int)(outputSize.Y * prevMeta.SizeRatio.Y));
 
@@ -155,9 +154,9 @@ internal sealed class GfxResourceAllocator : IGfxResourceAllocator
     public ShaderId CreateShader(string vertexSource, string fragmentSource, out ShaderMeta meta)
     {
         var handle = _driver.CreateShader(vertexSource, fragmentSource,
-            out var uniformTable, out meta);
+            out var uniforms, out meta);
         var shaderId = _resources.ShaderStore.Add(in meta, in handle);
-        _registry.ShaderRegistry.Add(shaderId, uniformTable);
+        _registry.ShaderRepository.Add(shaderId, in meta, uniforms);
         return shaderId;
     }
 
@@ -173,7 +172,7 @@ internal sealed class GfxResourceAllocator : IGfxResourceAllocator
 
         var result = _driver.CreateUniformBuffer(slot, defaultCapacity, size, out meta);
         var uboId = _resources.UboStore.Add(in meta, result);
-        _registry.ShaderRegistry.AddUboToSlot(meta.Slot, uboId);
+        _registry.ShaderRepository.AddUboToSlot(meta.Slot, uboId);
         return uboId;
     }
 }

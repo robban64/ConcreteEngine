@@ -33,7 +33,7 @@ internal sealed class DrawProcessor
 
     public void Prepare(in RenderGlobalSnapshot renderGlobals, nuint capacity)
     {
-        _drawRing = _registry.ShaderRegistry.GetOrCreateUboArena(UniformGpuSlot.DrawObject);
+        _drawRing = _registry.ShaderRepository.GetOrCreateUboArena(UniformGpuSlot.DrawObject);
         if (_drawRing == null)
         {
             Console.WriteLine("a");

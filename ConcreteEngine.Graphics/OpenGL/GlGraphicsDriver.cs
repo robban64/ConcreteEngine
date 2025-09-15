@@ -373,9 +373,9 @@ internal sealed class GlBackendDriver : IGraphicsDriver
 
 
     // Shader/Program
-    public GfxHandle CreateShader(string vs, string fs, out ShaderLayout layout, out ShaderMeta meta)
+    public GfxHandle CreateShader(string vs, string fs, out List<(string, int)> uniforms, out ShaderMeta meta)
     {
-        var handle = _shaderFactory.CreateShader(vs, fs, out layout, out meta);
+        var handle = _shaderFactory.CreateShader(vs, fs, out uniforms, out meta);
         return _dispatcher.OnCreate(ResourceKind.Shader, handle);
         //return _store.ShaderStore.Add(handle);
     }
@@ -389,6 +389,11 @@ internal sealed class GlBackendDriver : IGraphicsDriver
         }
 
         _gl.UseProgram(_store.ShaderStore.Get(shader).Handle);
+    }
+
+    public Dictionary<string, int> GetUniforms()
+    {
+        throw new NotImplementedException();
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]

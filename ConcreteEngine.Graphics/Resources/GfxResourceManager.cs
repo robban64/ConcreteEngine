@@ -80,7 +80,7 @@ internal sealed class BackendDriverDispatcher
 internal sealed class GfxResourceManager : IGfxResourceManager
 {
     private readonly ResourceStoreHub _resourceStores;
-    private readonly BackendStoreHub _backendStores;
+    private readonly BackendStoreHub _backendHub;
 
     private readonly GfxResourceDisposer _disposer;
     
@@ -89,14 +89,14 @@ internal sealed class GfxResourceManager : IGfxResourceManager
     public GfxResourceManager()
     {
         _resourceStores = new ResourceStoreHub();
-        _backendStores = new BackendStoreHub();
+        _backendHub = new BackendStoreHub();
 
         RegisterGlDispatcher();
     }
 
     internal void AttachStore(IGraphicsDriver driver)
     {
-        _backendStores.AttachToDriver(driver);
+        _backendHub.AttachToDriver(driver);
     }
 
     internal void AttachDispatchers(IGraphicsDriver driver)
@@ -105,7 +105,7 @@ internal sealed class GfxResourceManager : IGfxResourceManager
         ArgumentOutOfRangeException.ThrowIfEqual(_dispatchers.Count, 0);
 
         var dispatcher = new BackendDriverDispatcher(_dispatchers); 
-        driver.RegisterDispatcher(dispatcher);
+        driver.AttachDispatcher(dispatcher);
     }
 
     private void RegisterGlDispatcher()
@@ -125,16 +125,21 @@ internal sealed class GfxResourceManager : IGfxResourceManager
         void OnDelete<THandle>(in GfxHandle handle)
             where THandle : unmanaged, IResourceHandle, IEquatable<THandle>
         {
-            var store = _backendStores.GetStore<THandle>(handle.Kind);
-            store.Remove(handle);
+            _backendHub.Remove(handle);
         }
 
         GfxHandle OnCreate<THandle>(ResourceKind kind, THandle handle)
             where THandle : unmanaged, IResourceHandle, IEquatable<THandle>
         {
-            var store = _backendStores.GetStore<THandle>(kind);
-            return store.Add(handle);
+            return _backendHub.Add(kind, handle);
         }
+        
+        GfxHandle Replace<THandle>(GfxHandle gfxHandle, THandle handle)
+            where THandle : unmanaged, IResourceHandle, IEquatable<THandle>
+        {
+            return _backendHub.Replace(gfxHandle, handle);
+        }
+        
     }
 
     private void RegisterDispatcher<THandle>(ResourceKind kind, BackendCreate<THandle> onCreate,

@@ -3,8 +3,19 @@ using ConcreteEngine.Graphics.Error;
 
 namespace ConcreteEngine.Graphics.Resources;
 
-interface IDriverResourceStore;
-internal sealed class DriverResourceStore<THandle> : IDriverResourceStore where THandle : unmanaged, IResourceHandle, IEquatable<THandle>
+internal interface IDriverResourceStore
+{
+    ResourceKind  Kind { get; }
+    void Remove(GfxHandle handle);
+
+}
+internal interface IDriverReadResourceStore<out THandle> where THandle : unmanaged, IResourceHandle, IEquatable<THandle>
+{
+    THandle Get(GfxHandle handle);
+    bool IsAlive(GfxHandle handle);
+}
+
+internal sealed class DriverResourceStore<THandle> : IDriverResourceStore, IDriverReadResourceStore<THandle> where THandle : unmanaged, IResourceHandle, IEquatable<THandle>
 {
     private readonly record struct StoreRecord(THandle Value, ushort Gen, bool Alive)
     {
@@ -20,6 +31,8 @@ internal sealed class DriverResourceStore<THandle> : IDriverResourceStore where 
     private readonly ResourceKind _kind = ResourceKind.Invalid;
 
     private int _idx = 0;
+
+    public ResourceKind Kind => _kind;
 
     public DriverResourceStore(GraphicsBackend backend, ResourceKind kind)
     {
@@ -49,6 +62,7 @@ internal sealed class DriverResourceStore<THandle> : IDriverResourceStore where 
         _entries[(int)handle.Slot] = new StoreRecord(value, newGen, true);
         return handle with { Gen = newGen };
     }
+
 
     public THandle Get(GfxHandle handle)
     {

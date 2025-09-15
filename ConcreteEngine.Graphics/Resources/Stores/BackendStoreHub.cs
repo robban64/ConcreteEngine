@@ -1,61 +1,135 @@
+using System.Runtime.CompilerServices;
+
 namespace ConcreteEngine.Graphics.Resources;
-
-
-internal interface IDriverResourceStoreCollection;
 
 internal sealed class BackendStoreHub
 {
-    private readonly Dictionary<ResourceKind, IDriverResourceStore> _stores;
-    private readonly OpenGlResourceStores _glStores;
+    private readonly OpenGlStoreCollection _storeCollection;
 
     public BackendStoreHub()
     {
-        _stores =  new Dictionary<ResourceKind, IDriverResourceStore>(8);
-        _glStores = new OpenGlResourceStores(this);
+        _storeCollection = new OpenGlStoreCollection();
     }
 
     public void AttachToDriver(IGraphicsDriver driver)
     {
-        driver.RegisterStore(_glStores);
+        driver.AttachStore(_storeCollection);
     }
 
-    public DriverResourceStore<THandle> GetStore<THandle>(ResourceKind kind)
+    public GfxHandle Add<THandle>(ResourceKind kind, in THandle handle)
         where THandle : unmanaged, IResourceHandle, IEquatable<THandle>
     {
-        if(!_stores.TryGetValue(kind, out var store) || store is not DriverResourceStore<THandle> typedStore)
-            throw new ArgumentException($"Not a driver resource store for {kind}");
-        
-        return typedStore;
+        var store = GetStore<THandle>(kind);
+        return store.Add(handle);
     }
 
-    private void RegisterStore<THandle>(ResourceKind key, DriverResourceStore<THandle> store) where THandle : unmanaged, IResourceHandle, IEquatable<THandle>
+    public void Remove(in GfxHandle handle)
     {
-        _stores.Add(key, store);
+        var store = GetStore(handle.Kind);
+        store.Remove(handle);
     }
-    
-    
-    internal sealed class OpenGlResourceStores : IDriverResourceStoreCollection
-    {
-        private const GraphicsBackend Backend = GraphicsBackend.OpenGL;
-        public readonly DriverResourceStore<GlTextureHandle> TextureStore = new(Backend, ResourceKind.Texture);
-        public readonly DriverResourceStore<GlShaderHandle> ShaderStore = new(Backend, ResourceKind.Shader);
-        public readonly DriverResourceStore<GlMeshHandle> MeshStore = new(Backend, ResourceKind.Mesh);
-        public readonly DriverResourceStore<GlVboHandle> VboStore = new(Backend, ResourceKind.VertexBuffer);
-        public readonly DriverResourceStore<GlIboHandle> IboStore = new(Backend, ResourceKind.IndexBuffer);
-        public readonly DriverResourceStore<GlFboHandle> FboStore = new(Backend, ResourceKind.FrameBuffer);
-        public readonly DriverResourceStore<GlRboHandle> RboStore = new(Backend, ResourceKind.RenderBuffer);
-        public readonly DriverResourceStore<GlUboHandle> UboStore = new(Backend, ResourceKind.UniformBuffer);
 
-        public OpenGlResourceStores(BackendStoreHub storeHub)
+    public GfxHandle Replace<THandle>(GfxHandle gfxHandle, THandle handle)
+        where THandle : unmanaged, IResourceHandle, IEquatable<THandle>
+    {
+        var store = GetStore<THandle>(gfxHandle.Kind);
+        return store.Replace(gfxHandle, handle);
+    }
+
+
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    private DriverResourceStore<THandle> GetStore<THandle>(ResourceKind kind)
+        where THandle : unmanaged, IResourceHandle, IEquatable<THandle>
+    {
+        var store = GetStore(kind);
+        if (store is DriverResourceStore<THandle> typed) return typed;
+        throw new ArgumentException($"Store {kind} is not {typeof(THandle).Name}");
+    }
+
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    private IDriverResourceStore GetStore(ResourceKind kind)
+    {
+        var set = _storeCollection.Facade;
+        switch (kind)
         {
-            storeHub.RegisterStore(ResourceKind.Texture, TextureStore);
-            storeHub.RegisterStore(ResourceKind.Shader, ShaderStore);
-            storeHub.RegisterStore(ResourceKind.Mesh, MeshStore);
-            storeHub.RegisterStore(ResourceKind.VertexBuffer, VboStore);
-            storeHub.RegisterStore(ResourceKind.IndexBuffer, IboStore);
-            storeHub.RegisterStore(ResourceKind.FrameBuffer, FboStore);
-            storeHub.RegisterStore(ResourceKind.RenderBuffer, RboStore);
-            storeHub.RegisterStore(ResourceKind.UniformBuffer, UboStore);
+            case ResourceKind.Texture: return set.TextureStore;
+            case ResourceKind.Shader: return set.ShaderStore;
+            case ResourceKind.Mesh: return set.MeshStore;
+            case ResourceKind.VertexBuffer: return set.VboStore;
+            case ResourceKind.IndexBuffer: return set.IboStore;
+            case ResourceKind.FrameBuffer: return set.FboStore;
+            case ResourceKind.RenderBuffer: return set.RboStore;
+            case ResourceKind.UniformBuffer: return set.UboStore;
+            case ResourceKind.Invalid:
+            default:
+                throw new ArgumentOutOfRangeException(nameof(kind), kind, "Invalid resource kind.");
         }
+    }
+}
+
+internal interface IBackendStoreFacade
+{
+    IDriverResourceStore TextureStore { get; }
+    IDriverResourceStore ShaderStore { get; }
+    IDriverResourceStore MeshStore { get; }
+    IDriverResourceStore VboStore { get; }
+    IDriverResourceStore IboStore { get; }
+    IDriverResourceStore FboStore { get; }
+    IDriverResourceStore RboStore { get; }
+    IDriverResourceStore UboStore { get; }
+}
+
+internal interface IBackendStoreCollection
+{
+    IBackendStoreFacade Facade { get; }
+}
+
+internal sealed class OpenGlStoreCollection : IBackendStoreCollection
+{
+    private const GraphicsBackend Backend = GraphicsBackend.OpenGL;
+    private readonly DriverResourceStore<GlTextureHandle> _textureStore = new(Backend, ResourceKind.Texture);
+    private readonly DriverResourceStore<GlShaderHandle> _shaderStore = new(Backend, ResourceKind.Shader);
+    private readonly DriverResourceStore<GlMeshHandle> _meshStore = new(Backend, ResourceKind.Mesh);
+    private readonly DriverResourceStore<GlVboHandle> _vboStore = new(Backend, ResourceKind.VertexBuffer);
+    private readonly DriverResourceStore<GlIboHandle> _iboStore = new(Backend, ResourceKind.IndexBuffer);
+    private readonly DriverResourceStore<GlFboHandle> _fboStore = new(Backend, ResourceKind.FrameBuffer);
+    private readonly DriverResourceStore<GlRboHandle> _rboStore = new(Backend, ResourceKind.RenderBuffer);
+    private readonly DriverResourceStore<GlUboHandle> _uboStore = new(Backend, ResourceKind.UniformBuffer);
+
+    public IDriverReadResourceStore<GlTextureHandle> TextureStore => _textureStore;
+    public IDriverReadResourceStore<GlShaderHandle> ShaderStore => _shaderStore;
+    public IDriverReadResourceStore<GlMeshHandle> MeshStore => _meshStore;
+    public IDriverReadResourceStore<GlVboHandle> VboStore => _vboStore;
+    public IDriverReadResourceStore<GlIboHandle> IboStore => _iboStore;
+    public IDriverReadResourceStore<GlFboHandle> FboStore => _fboStore;
+    public IDriverReadResourceStore<GlRboHandle> RboStore => _rboStore;
+    public IDriverReadResourceStore<GlUboHandle> UboStore => _uboStore;
+
+    private readonly StoreFacade _facade;
+    public IBackendStoreFacade Facade => _facade;
+
+
+    internal OpenGlStoreCollection()
+    {
+        _facade = new StoreFacade(this);
+    }
+
+    internal sealed class StoreFacade : IBackendStoreFacade
+    {
+        private readonly OpenGlStoreCollection _collection;
+
+        internal StoreFacade(OpenGlStoreCollection collection)
+        {
+            _collection = collection;
+        }
+
+        public IDriverResourceStore TextureStore => _collection._textureStore;
+        public IDriverResourceStore ShaderStore => _collection._shaderStore;
+        public IDriverResourceStore MeshStore => _collection._meshStore;
+        public IDriverResourceStore VboStore => _collection._vboStore;
+        public IDriverResourceStore IboStore => _collection._iboStore;
+        public IDriverResourceStore FboStore => _collection._fboStore;
+        public IDriverResourceStore RboStore => _collection._rboStore;
+        public IDriverResourceStore UboStore => _collection._uboStore;
     }
 }

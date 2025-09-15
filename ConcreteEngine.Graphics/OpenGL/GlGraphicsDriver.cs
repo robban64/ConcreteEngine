@@ -32,7 +32,7 @@ internal sealed class GlBackendDriver : IGraphicsDriver
     private BackendDriverDispatcher _dispatcher = null!;
 
     // Kepp it for now, read only
-    private BackendStoreHub.OpenGlResourceStores _store = null!;
+    private OpenGlStoreCollection _store = null!;
 
     private static DebugProc _cb;
 
@@ -81,12 +81,12 @@ internal sealed class GlBackendDriver : IGraphicsDriver
         _fboFactory.AttachGlContext(_gl, Capabilities);
     }
 
-    public void RegisterDispatcher(BackendDriverDispatcher dispatcher)
+    public void AttachDispatcher(BackendDriverDispatcher dispatcher)
     {
         _dispatcher = dispatcher;
     }
 
-    public void RegisterStore(BackendStoreHub.OpenGlResourceStores store)
+    public void AttachStore(OpenGlStoreCollection store)
     {
         _store = store;
     }

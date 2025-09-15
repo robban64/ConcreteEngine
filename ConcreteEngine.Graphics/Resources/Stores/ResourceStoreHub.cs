@@ -10,7 +10,7 @@ internal sealed class ResourceStoreHub
     private const int StoreTier3 = 16;
 
 
-    public ResourceStoreHub()
+    internal ResourceStoreHub()
     {
     }
 

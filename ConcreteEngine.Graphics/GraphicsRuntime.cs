@@ -12,7 +12,7 @@ public interface IGraphicsRuntime : IDisposable
     public IGraphicsContext Context { get; }
     public IGfxResourceAllocator Allocator { get; }
     public IGfxResourceDisposer Disposer { get; }
-    public IGfxResourceRegistry Registry { get; }
+    public IGfxResourceRepository Repository { get; }
     public IGfxFactoryHub FactoryHub { get; }
 
     void Initialize<T>(IGfxStartupConfig<T> config) where T : class;
@@ -32,7 +32,7 @@ public sealed class GraphicsRuntime : IGraphicsRuntime
     private GfxResourceAllocator _allocator = null!;
     private GfxResourceDisposer _disposer = null!;
     private GfxResourceManager _resources = null!;
-    private GfxResourceRegistry _registry = null!;
+    private GfxResourceRepository _repository = null!;
 
     private GfxFactoryHub _factoryHub = null!;
 
@@ -42,7 +42,7 @@ public sealed class GraphicsRuntime : IGraphicsRuntime
 
     public IGfxResourceDisposer Disposer => _disposer;
 
-    public IGfxResourceRegistry Registry => _registry;
+    public IGfxResourceRepository Repository => _repository;
 
     public IGfxFactoryHub FactoryHub => _factoryHub;
 
@@ -59,20 +59,19 @@ public sealed class GraphicsRuntime : IGraphicsRuntime
             throw GraphicsException.UnsupportedFeature("Only OpenGL is supported");
 
         _resources = new GfxResourceManager();
-        _registry = new GfxResourceRegistry(_resources);
+        _repository = new GfxResourceRepository(_resources);
 
         var driver = new GlBackendDriver();
         _resources.AttachStore(driver);
         _resources.AttachDispatchers(driver);
         driver.Initialize(glConfig);
-
-        _context = new GraphicsContext(driver, _resources, _registry);
-        
-        _disposer = new GfxResourceDisposer(_resources, _registry, driver);
-        _allocator = new GfxResourceAllocator(driver, _resources, _registry, _disposer);
-        _factoryHub = new GfxFactoryHub(_context, _resources, _allocator, _registry);
-
         _driver = driver;
+
+        _context = new GraphicsContext(_driver, _resources, _repository);
+        _disposer = new GfxResourceDisposer(_resources, _repository, _driver);
+        _allocator = new GfxResourceAllocator(_driver, _resources, _repository, _disposer);
+        _factoryHub = new GfxFactoryHub(_context, _resources, _allocator, _repository);
+
 
         UniformBufferUtils.Init(_context.Capabilities.UniformBufferOffsetAlignment);
     }
@@ -97,12 +96,13 @@ public sealed class GraphicsRuntime : IGraphicsRuntime
         }
     }
 
+    // TODO pending queue, right now the switch happens directly and is used the next frame.
     private void RecreateFbo(in Vector2D<int> outputSize)
     {
         ArgumentOutOfRangeException.ThrowIfLessThanOrEqual(outputSize.X, 0);
         ArgumentOutOfRangeException.ThrowIfLessThanOrEqual(outputSize.Y, 0);
 
-        var fboStore = _resources.FboStore;
+        var fboStore = _resources.FrontendStoreHub.FboStore;
         Console.WriteLine($"Recreating {fboStore.Count} FBO");
 
         foreach (var fboId in fboStore.IdEnumerator)
@@ -111,13 +111,7 @@ public sealed class GraphicsRuntime : IGraphicsRuntime
             _allocator.RecreateFrameBuffer(fboId, in outputSize);
         }
     }
-
-    private void RecreateSingleFbo(FrameBufferId fboId)
-    {
-        
-        
-    }
-
+    
     public void Dispose()
     {
     }

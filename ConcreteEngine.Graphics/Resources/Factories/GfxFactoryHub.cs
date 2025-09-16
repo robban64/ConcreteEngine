@@ -19,10 +19,10 @@ internal class GfxFactoryHub : IGfxFactoryHub
     public IPrimitiveMeshes Primitives => _primitives;
     
     
-    public GfxFactoryHub(IGraphicsContext gfx, IGfxResourceManager resources, IGfxResourceAllocator allocator,
-        GfxResourceRegistry registry)
+    public GfxFactoryHub(IGraphicsContext gfx, GfxResourceManager resources, GfxResourceAllocator allocator,
+        GfxResourceRepository repository)
     {
-        _meshFactory = new MeshFactory(gfx, resources, allocator, registry);
+        _meshFactory = new MeshFactory(gfx, resources.FrontendStoreHub, allocator, repository);
         _primitives = new PrimitiveMeshes();
         _primitives.CreatePrimitives(_meshFactory);
     }

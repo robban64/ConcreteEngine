@@ -7,16 +7,12 @@ namespace ConcreteEngine.Graphics.Resources;
 
 public interface IResourceStore
 {
-    ResourceKind GetResourceKind();
-    GfxHandle GetHandleByValue(int idValue);
-    GfxHandle Remove(int idValue);
-
+    ResourceKind ResourceKind { get; }
+    int Count { get; }
 }
 
-public interface IResourceStore<TId> : IResourceStore where TId : unmanaged, IResourceId
+public interface IResourceStore<in TId> : IResourceStore where TId : unmanaged, IResourceId
 {
-    TId CreateId(int index);
-
     ref readonly GfxHandle GetHandle(TId id);
 
     GfxHandle Remove(TId id);
@@ -32,13 +28,11 @@ internal sealed class FrontendResourceStore<TId, TMeta> : IResourceStore<TId>
     private const int HardLimit = 10_000;
     private const int MaxDefaultCapacity = 1024;
 
-    private readonly ResourceKind _resourceKind;
+    public ResourceKind ResourceKind { get; }
 
     private int _idx = 0;
     private TMeta[] _meta;
     private GfxHandle[] _handle;
-
-    private readonly Dictionary<uint, (TId, TMeta)> _pendingSlots = new();
 
     private readonly Stack<int> _free;
 
@@ -57,7 +51,7 @@ internal sealed class FrontendResourceStore<TId, TMeta> : IResourceStore<TId>
         ArgumentOutOfRangeException.ThrowIfGreaterThan(initialCapacity, MaxDefaultCapacity, nameof(initialCapacity));
         ArgumentNullException.ThrowIfNull(makeId);
 
-        _resourceKind = resourceKind;
+        ResourceKind = resourceKind;
         MakeId = makeId;
 
         _meta = new TMeta[initialCapacity];
@@ -65,25 +59,17 @@ internal sealed class FrontendResourceStore<TId, TMeta> : IResourceStore<TId>
         _free = new Stack<int>();
     }
 
-    public ResourceKind GetResourceKind() => _resourceKind;
-
-    public GfxHandle GetHandleByValue(int idValue)
-    {
-        return _handle[idValue - 1];
-    }
-
-    public TId CreateId(int index) => MakeId(index);
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public ref readonly TMeta GetMeta(TId id) => ref _meta[id.Id - 1];
+    public ref readonly TMeta GetMeta(TId id) => ref _meta[id.Value - 1];
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public ref readonly GfxHandle GetHandle(TId id) => ref _handle[id.Id - 1];
+    public ref readonly GfxHandle GetHandle(TId id) => ref _handle[id.Value - 1];
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public ref readonly GfxHandle GetHandleAndMeta(TId id, out TMeta meta)
     {
-        int idx = id.Id - 1;
+        int idx = id.Value - 1;
         meta = _meta[idx];
         return ref _handle[idx];
     }
@@ -101,25 +87,12 @@ internal sealed class FrontendResourceStore<TId, TMeta> : IResourceStore<TId>
         return Remove(id, out _);
     }
 
-    public GfxHandle Remove(int idValue) => Remove(ResourceTypeConverter.MakeId<TId>(idValue));
-
     public GfxHandle Remove(TId id, out TMeta oldMeta)
     {
-        int idx = id.Id - 1;
+        int idx = id.Value - 1;
         var handle = _handle[idx];
         oldMeta = _meta[idx];
 
-        if (_pendingSlots.TryGetValue(handle.Slot, out var pending))
-        {
-            var existingHandle = _handle[idx];
-            var newHandle = existingHandle with {Gen = (ushort)(existingHandle.Gen + 1)};
-            _meta[idx] = pending.Item2;
-            _handle[idx] = newHandle;
-            _pendingSlots.Remove(handle.Slot);
-            
-            return newHandle;
-        }
-        
         _meta[idx] = default!;
         _handle[idx] = default!;
         _free.Push(idx);
@@ -128,8 +101,8 @@ internal sealed class FrontendResourceStore<TId, TMeta> : IResourceStore<TId>
 
     public TId Replace(TId id, in TMeta newMeta, in GfxHandle newHandle, out GfxHandle oldHandle)
     {
-        Debug.Assert(id.Id > 0);
-        int idx = id.Id - 1;
+        Debug.Assert(id.Value > 0);
+        int idx = id.Value - 1;
         oldHandle = _handle[idx];
         _meta[idx] = newMeta;
         _handle[idx] = newHandle;
@@ -138,8 +111,8 @@ internal sealed class FrontendResourceStore<TId, TMeta> : IResourceStore<TId>
 
     public TMeta ReplaceMeta(TId id, in TMeta newMeta, out TMeta oldMeta)
     {
-        Debug.Assert(id.Id > 0);
-        int idx = id.Id - 1;
+        Debug.Assert(id.Value > 0);
+        int idx = id.Value - 1;
         oldMeta = _meta[idx];
         _meta[idx] = newMeta;
         return newMeta;

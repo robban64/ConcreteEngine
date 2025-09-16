@@ -29,12 +29,12 @@ internal sealed class GlBackendDriver : IGraphicsDriver
 
     public DeviceCapabilities Capabilities => _capabilities;
 
-    private BackendDriverDispatcher _dispatcher = null!;
+    private ResourceBackendDispatcher _dispatcher = null!;
 
     // Kepp it for now, read only
     private BackendOpsHub _store = null!;
 
-    private static DebugProc _cb;
+    private static DebugProc _debugProc;
 
 
     internal GlBackendDriver()
@@ -80,7 +80,7 @@ internal sealed class GlBackendDriver : IGraphicsDriver
         _fboFactory.AttachGlContext(_gl, Capabilities);
     }
 
-    public void AttachDispatcher(BackendDriverDispatcher dispatcher)
+    public void AttachDispatcher(ResourceBackendDispatcher dispatcher)
     {
         _dispatcher = dispatcher;
     }
@@ -480,43 +480,43 @@ internal sealed class GlBackendDriver : IGraphicsDriver
     private void DisposeTexture(in DeleteCmd cmd)
     {
         _gl.DeleteTexture(cmd.NativeHandle.Value);
-        _dispatcher.OnDelete<GlTextureHandle>(in cmd);
+        _dispatcher.OnDelete(in cmd);
     }
 
     private void DisposeShader(in DeleteCmd cmd)
     {
         _gl.DeleteProgram(cmd.NativeHandle.Value);
-        _dispatcher.OnDelete<GlShaderHandle>(in cmd);
+        _dispatcher.OnDelete(in cmd);
     }
 
     private void DisposeVao(in DeleteCmd cmd)
     {
         _gl.DeleteVertexArray(cmd.NativeHandle.Value);
-        _dispatcher.OnDelete<GlMeshHandle>(in cmd);
+        _dispatcher.OnDelete(in cmd);
     }
 
     private void DisposeVbo(in DeleteCmd cmd)
     {
         _gl.DeleteBuffer(cmd.NativeHandle.Value);
-        _dispatcher.OnDelete<GlVboHandle>(in cmd);
+        _dispatcher.OnDelete(in cmd);
     }
 
     private void DisposeIbo(in DeleteCmd cmd)
     {
         _gl.DeleteBuffer(cmd.NativeHandle.Value);
-        _dispatcher.OnDelete<GlIboHandle>(in cmd);
+        _dispatcher.OnDelete(in cmd);
     }
 
     private void DisposeFbo(in DeleteCmd cmd)
     {
         _gl.DeleteFramebuffer(cmd.NativeHandle.Value);
-        _dispatcher.OnDelete<GlFboHandle>(in cmd);
+        _dispatcher.OnDelete(in cmd);
     }
 
     private void DisposeRbo(in DeleteCmd cmd)
     {
         _gl.DeleteRenderbuffer(cmd.NativeHandle.Value);
-        _dispatcher.OnDelete<GlRboHandle>(in cmd);
+        _dispatcher.OnDelete(in cmd);
     }
 
     private void CheckGlError()
@@ -528,7 +528,7 @@ internal sealed class GlBackendDriver : IGraphicsDriver
 
     private unsafe void EnableGlDebug(GL gl)
     {
-        _cb = (src, type, id, severity, len, msg, user) =>
+        _debugProc = (src, type, id, severity, len, msg, user) =>
         {
             var text = SilkMarshal.PtrToString((nint)msg);
             Console.WriteLine($"[GL {severity}] {type} {id}: {text}");
@@ -536,14 +536,14 @@ internal sealed class GlBackendDriver : IGraphicsDriver
 
         gl.Enable(EnableCap.DebugOutput);
         gl.Enable(EnableCap.DebugOutputSynchronous);
-        gl.DebugMessageCallback(_cb, null);
+        gl.DebugMessageCallback(_debugProc, null);
         gl.DebugMessageControl(GLEnum.DontCare, GLEnum.DontCare, GLEnum.DebugSeverityNotification,
             0, null, false);
 
 
         gl.Enable(EnableCap.DebugOutput);
         gl.Enable(EnableCap.DebugOutputSynchronous);
-        gl.DebugMessageCallback(_cb, null);
+        gl.DebugMessageCallback(_debugProc, null);
         gl.DebugMessageControl(GLEnum.DontCare, GLEnum.DontCare, GLEnum.DebugSeverityNotification, 0, null, false);
     }
 

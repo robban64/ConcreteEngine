@@ -7,11 +7,7 @@ internal interface IBackendResourceStore
 {
     ResourceKind Kind { get; }
 
-    GfxHandle Replace(in GfxHandle handle, uint rawHandle);
-
     NativeHandle GetNativeHandle(in GfxHandle handle);
-
-    
     void Remove(in GfxHandle handle);
     bool IsAlive(in GfxHandle handle);
 }
@@ -19,7 +15,7 @@ internal interface IBackendResourceStore
 internal interface IBackendReadResourceStore<THandle> where THandle : unmanaged, IResourceHandle, IEquatable<THandle>
 {
     THandle Get(in GfxHandle handle);
-    GfxHandle Replace(in GfxHandle handle, THandle value);
+    //GfxHandle Replace(in GfxHandle handle, THandle value);
 }
 
 internal sealed class BackendResourceStore<THandle> : IBackendResourceStore, IBackendReadResourceStore<THandle>
@@ -33,21 +29,18 @@ internal sealed class BackendResourceStore<THandle> : IBackendResourceStore, IBa
     // sanity check
     private const int HardLimit = 10_000;
 
-    private readonly GraphicsBackend _backend = GraphicsBackend.Unkown;
-    private readonly ResourceKind _kind = ResourceKind.Invalid;
-
+    private int _idx = 0;
     private StoreRecord[] _entries = new StoreRecord[16];
     private readonly Stack<int> _free = new();
 
-    private int _idx = 0;
 
-    public ResourceKind Kind => _kind;
+    public ResourceKind Kind { get; }
+    public GraphicsBackend Backend => GraphicsBackend.OpenGL;
 
     public BackendResourceStore(ResourceKind kind)
     {
         ArgumentOutOfRangeException.ThrowIfEqual((int)kind, (int)ResourceKind.Invalid);
-        _backend = GraphicsBackend.OpenGL;
-        _kind = kind;
+        Kind = kind;
     }
 
     public bool IsAlive(in GfxHandle handle) => _entries[(int)handle.Slot].IsValidRecord();
@@ -70,28 +63,9 @@ internal sealed class BackendResourceStore<THandle> : IBackendResourceStore, IBa
         var prev = _entries[idx];
         var gen = (ushort)(prev.Gen + 1);
         _entries[idx] = new StoreRecord(value, gen, true);
-        return new GfxHandle((uint)idx, gen, _kind);
+        return new GfxHandle((uint)idx, gen, Kind);
     }
     
-    public GfxHandle Replace(in GfxHandle handle, THandle value)
-    {
-        ArgumentOutOfRangeException.ThrowIfEqual(value, default);
-        var oldValue = Get(handle);
-        if (value.Equals(oldValue))
-            throw new GraphicsException("Trying to replace handler with same handler");
-
-        var newGen = (ushort)(handle.Gen + 1);
-        _entries[(int)handle.Slot] = new StoreRecord(value, newGen, true);
-        return handle with { Gen = newGen };
-    }
-
-    
-    public GfxHandle Replace(in GfxHandle handle, uint rawHandle)
-    {
-        var replacedHandle = ResourceTypeConverter.MakeHandle<THandle>(rawHandle);
-        return Replace(handle, replacedHandle);
-    }
-
 
     public void Remove(in GfxHandle handle)
     {
@@ -106,7 +80,19 @@ internal sealed class BackendResourceStore<THandle> : IBackendResourceStore, IBa
         _entries[(int)handle.Slot] = default;
         _free.Push((int)handle.Slot);
     }
+    
+    // Don't think this should be used, leaving it here for now
+    public GfxHandle Replace(in GfxHandle handle, THandle value)
+    {
+        ArgumentOutOfRangeException.ThrowIfEqual(value, default);
+        var oldValue = Get(handle);
+        if (value.Equals(oldValue))
+            throw new GraphicsException("Trying to replace handler with same handler");
 
+        var gen = (ushort)(handle.Gen + 1);
+        _entries[(int)handle.Slot] = new StoreRecord(value, gen, true);
+        return handle with { Gen = gen };
+    }
 
     private int Allocate()
     {

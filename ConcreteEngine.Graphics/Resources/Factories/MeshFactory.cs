@@ -23,9 +23,9 @@ public interface IMeshFactory
 internal sealed class MeshFactory : IMeshFactory
 {
     private readonly IGraphicsContext _gfx;
-    private readonly IGfxResourceManager _resources;
+    private readonly FrontendStoreHub _resources;
     private readonly IGfxResourceAllocator _allocator;
-    private readonly GfxResourceRegistry _registry;
+    private readonly GfxResourceRepository _repository;
 
     private DrawPrimitive _primitive;
     private MeshDrawKind _drawKind;
@@ -42,13 +42,13 @@ internal sealed class MeshFactory : IMeshFactory
 
     private bool _isStatic = true;
 
-    internal MeshFactory(IGraphicsContext gfx, IGfxResourceManager resources, IGfxResourceAllocator allocator,
-        GfxResourceRegistry registry)
+    internal MeshFactory(IGraphicsContext gfx, FrontendStoreHub resources, IGfxResourceAllocator allocator,
+        GfxResourceRepository repository)
     {
         _gfx = gfx;
         _resources = resources;
         _allocator = allocator;
-        _registry = registry;
+        _repository = repository;
     }
 
     public IMeshLayout CreateArrayMesh<TVertex>(GpuVboDescriptor<TVertex> vertexData, in GpuMeshDescriptor desc)
@@ -102,7 +102,7 @@ internal sealed class MeshFactory : IMeshFactory
             prevMeta.VertexAttribPointers, drawCount);
         _resources.MeshStore.ReplaceMeta(_meshId, in newMeta, out _);
 
-        var meshRegistry = _registry.MeshRepository;
+        var meshRegistry = _repository.MeshRepository;
         meshRegistry.AddRecord(_meshId, in newMeta, _iboId, _vboIds, attributes);
         var result = meshRegistry.Get(_meshId);
 

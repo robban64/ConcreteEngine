@@ -16,9 +16,8 @@ internal sealed class GraphicsContext : IGraphicsContext
     public DeviceCapabilities Capabilities => _driver.Capabilities;
 
     private readonly IGraphicsDriver _driver;
-    private readonly GfxResourceManager _store;
-
-    private readonly GfxResourceRegistry _registry;
+    private readonly FrontendStoreHub _store;
+    private readonly GfxResourceRepository _repository;
 
 
     //States
@@ -47,11 +46,11 @@ internal sealed class GraphicsContext : IGraphicsContext
     private uint _drawTriangleCount = 0;
     private uint _drawCallCount = 0;
 
-    public GraphicsContext(IGraphicsDriver driver, GfxResourceManager resources, GfxResourceRegistry registry)
+    public GraphicsContext(IGraphicsDriver driver, GfxResourceManager resources, GfxResourceRepository repository)
     {
         _driver = driver;
-        _registry = registry;
-        _store = resources;
+        _repository = repository;
+        _store = resources.FrontendStoreHub;
 
         _boundTextures = new TextureId[Configuration.MaxTextureImageUnits];
     }
@@ -116,7 +115,7 @@ internal sealed class GraphicsContext : IGraphicsContext
 
     public void BeginRenderPass(in FrameBufferId fboId, Color4? clear, ClearBufferFlag? flags)
     {
-        ArgumentOutOfRangeException.ThrowIfNegativeOrZero(fboId.Id, nameof(fboId));
+        ArgumentOutOfRangeException.ThrowIfNegativeOrZero(fboId.Value, nameof(fboId));
         if (_boundFboId == fboId) GraphicsException.ThrowInvalidState($"FBO is {fboId} already bound.");
 
         ref readonly var meta = ref _store.FboStore.GetMeta(fboId);
@@ -235,7 +234,7 @@ internal sealed class GraphicsContext : IGraphicsContext
         }
 
         var handle = _store.ShaderStore.GetHandle(id);
-        var uniformTable = _registry.ShaderRepository.GetShaderLayout(id);
+        var uniformTable = _repository.ShaderRepository.GetShaderLayout(id);
 
         _driver.UseShader(handle);
         _boundShaderId = id;
@@ -245,7 +244,7 @@ internal sealed class GraphicsContext : IGraphicsContext
 
     public void BindUniformBuffer(UniformGpuSlot slot)
     {
-        var ubo = _registry.ShaderRepository.GetUboId(slot);
+        var ubo = _repository.ShaderRepository.GetUboId(slot);
         if (ubo == _boundUniformBufferId) return;
 
         var handle = _store.UboStore.GetHandle(ubo);
@@ -339,7 +338,7 @@ internal sealed class GraphicsContext : IGraphicsContext
         _boundVaoId.IsValidOrThrow();
         BindVertexBuffer(default);
         var vao = _store.MeshStore.GetHandleAndMeta(_boundVaoId, out var meta);
-        var meshLayout = _registry.MeshRepository.Get(_boundVaoId);
+        var meshLayout = _repository.MeshRepository.Get(_boundVaoId);
         var vboIds = meshLayout.GetVertexBufferIds();
 
         VertexBufferId prevVboId = default;
@@ -417,7 +416,7 @@ internal sealed class GraphicsContext : IGraphicsContext
 
     public void SetUniformBufferSize(UniformGpuSlot slot, nuint capacityBytes)
     {
-        var ubo = _registry.ShaderRepository.GetUboId(slot);
+        var ubo = _repository.ShaderRepository.GetUboId(slot);
         var handle = _store.UboStore.GetHandle(ubo);
         _driver.SetUniformBufferSize(slot, capacityBytes);
     }
@@ -425,14 +424,14 @@ internal sealed class GraphicsContext : IGraphicsContext
     public void UploadUniformGpuData<T>(UniformGpuSlot slot, in T data, nuint offsetBytes = 0)
         where T : unmanaged, IUniformGpuData
     {
-        var ubo = _registry.ShaderRepository.GetUboId(slot);
+        var ubo = _repository.ShaderRepository.GetUboId(slot);
         var handle = _store.UboStore.GetHandle(ubo);
         _driver.UploadUniformBuffer(handle, data, offsetBytes, (nuint)Unsafe.SizeOf<T>());
     }
 
     public void BindUniformBufferRange(UniformGpuSlot slot, nuint offset, nuint size)
     {
-        var ubo = _registry.ShaderRepository.GetUboId(slot);
+        var ubo = _repository.ShaderRepository.GetUboId(slot);
         var handle = _store.UboStore.GetHandle(ubo);
         _driver.BindUniformBufferRange(handle, slot, offset, size);
     }

@@ -11,7 +11,7 @@ namespace ConcreteEngine.Core.Rendering;
 internal sealed class DrawProcessor
 {
     private readonly IGraphicsContext _gfx;
-    private readonly IGfxResourceRegistry _registry;
+    private readonly IGfxResourceRepository _repository;
     
     private readonly MaterialStore _materials;
 
@@ -19,10 +19,10 @@ internal sealed class DrawProcessor
 
     private UboArena? _drawRing = null;
 
-    internal DrawProcessor(IGraphicsContext gfx, IGfxResourceRegistry registry, MaterialStore materials)
+    internal DrawProcessor(IGraphicsContext gfx, IGfxResourceRepository repository, MaterialStore materials)
     {
         _materials = materials;
-        _registry = registry;
+        _repository = repository;
         _gfx = gfx;
     }
 
@@ -33,7 +33,7 @@ internal sealed class DrawProcessor
 
     public void Prepare(in RenderGlobalSnapshot renderGlobals, nuint capacity)
     {
-        _drawRing = _registry.ShaderRepository.GetOrCreateUboArena(UniformGpuSlot.DrawObject);
+        _drawRing = _repository.ShaderRepository.GetOrCreateUboArena(UniformGpuSlot.DrawObject);
         if (_drawRing == null)
         {
             Console.WriteLine("a");

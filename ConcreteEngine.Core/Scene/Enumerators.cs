@@ -1,7 +1,7 @@
 namespace ConcreteEngine.Core.Scene;
 
 public struct EntityEnumerator<T1>(GameComponentStore<T1> r)
-    where T1 : struct
+    where T1 : unmanaged
 {
     private int _i = -1;
 
@@ -19,7 +19,7 @@ public struct EntityEnumerator<T1>(GameComponentStore<T1> r)
 }
 
 public struct EntityEnumerator<T1, T2>(GameComponentStore<T1> r1, GameComponentStore<T2> r2)
-    where T1 : struct where T2 : struct
+    where T1 : unmanaged where T2 : unmanaged
 {
     private int _i = -1;
 
@@ -45,7 +45,7 @@ public struct EntityEnumerator<T1, T2, T3>(
     GameComponentStore<T1> r1,
     GameComponentStore<T2> r2,
     GameComponentStore<T3> r3)
-    where T1 : struct where T2 : struct where T3 : struct
+    where T1 : unmanaged where T2 : unmanaged where T3 : unmanaged
 {
     private int _i = -1;
 

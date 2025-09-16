@@ -138,29 +138,29 @@ public readonly record struct VertexAttributeDescriptor(
     bool Normalized = false
 )
 {
-    public static VertexAttributeDescriptor Make<TStruct>(
+    public static VertexAttributeDescriptor Make<TElement>(
         string fieldName,
         VertexElementFormat format,
         uint vboIndex = 0,
         uint divisorIndex = 0,
         uint divisor = 0,
         bool normalized = false)
-        where TStruct : struct
+        where TElement : unmanaged
     {
-        var structSize = Unsafe.SizeOf<TStruct>();
+        var structSize = Unsafe.SizeOf<TElement>();
 
 
         if (structSize <= 0)
-            throw new GraphicsException($"Size of {typeof(TStruct).Name} returned invalid {structSize}.");
+            throw new GraphicsException($"Size of {typeof(TElement).Name} returned invalid {structSize}.");
 
         IntPtr offsetPtr;
         try
         {
-            offsetPtr = Marshal.OffsetOf<TStruct>(fieldName);
+            offsetPtr = Marshal.OffsetOf<TElement>(fieldName);
         }
         catch (Exception)
         {
-            throw new Exception($"Field '{fieldName}' not found in struct '{typeof(TStruct).Name}'.");
+            throw new Exception($"Field '{fieldName}' not found in struct '{typeof(TElement).Name}'.");
         }
 
         var offsetBytes = (uint)offsetPtr.ToInt32();
@@ -168,8 +168,8 @@ public readonly record struct VertexAttributeDescriptor(
 
         return new VertexAttributeDescriptor(
             VboIndex: vboIndex,
-            StrideBytes: (uint)Unsafe.SizeOf<TStruct>(),
-            OffsetBytes: (uint)Marshal.OffsetOf<TStruct>(fieldName)!.ToInt32(),
+            StrideBytes: (uint)Unsafe.SizeOf<TElement>(),
+            OffsetBytes: (uint)Marshal.OffsetOf<TElement>(fieldName)!.ToInt32(),
             Format: format,
             DivisorIndex: divisorIndex,
             Divisor: divisor,

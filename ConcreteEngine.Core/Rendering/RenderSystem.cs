@@ -88,7 +88,7 @@ public sealed class RenderSystem : IRenderSystem
     {
 
         _materialStore = materialStore;
-        _drawProcessor = new DrawProcessor(_gfx, _graphics.Registry, _materialStore);
+        _drawProcessor = new DrawProcessor(_gfx, _graphics.Repository, _materialStore);
 
         _commandCollector = new DrawCommandCollector();
         _commandSubmitter = new RenderPipeline(_drawProcessor);

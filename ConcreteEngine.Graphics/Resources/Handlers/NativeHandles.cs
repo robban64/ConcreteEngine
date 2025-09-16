@@ -3,8 +3,6 @@ namespace ConcreteEngine.Graphics.Resources;
 
 internal readonly record struct NativeHandle(uint Value)
 {
-    public bool IsValid => Value != 0;
-
     public static NativeHandle From<THandle>(THandle handle)
         where THandle : unmanaged, IResourceHandle, IEquatable<THandle> => new(handle.Handle);
 }

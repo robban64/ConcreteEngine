@@ -21,9 +21,9 @@ internal sealed class ShaderRepository : IShaderRepository
     private readonly Dictionary<UniformGpuSlot, UboArena> _uboArenas = new();
     private readonly UniformBufferId[] _uboRegistry;
 
-    private readonly IGfxResourceManager _resources;
+    private readonly FrontendStoreHub _resources;
 
-    internal ShaderRepository(IGfxResourceManager resources)
+    internal ShaderRepository(FrontendStoreHub resources)
     {
         ArgumentNullException.ThrowIfNull(resources);
         _resources = resources;
@@ -38,7 +38,7 @@ internal sealed class ShaderRepository : IShaderRepository
     {
         shaderId.IsValidOrThrow();
         var hasResource = _shaderLayouts.TryGetValue(shaderId, out var uniformTable);
-        if (!hasResource || uniformTable == null) GraphicsException.ThrowResourceNotFound(shaderId.Id);
+        if (!hasResource || uniformTable == null) GraphicsException.ThrowResourceNotFound(shaderId.Value);
         return uniformTable;
     }
 

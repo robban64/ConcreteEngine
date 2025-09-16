@@ -2,14 +2,14 @@ using ConcreteEngine.Graphics.Resources;
 
 namespace ConcreteEngine.Graphics;
 
-public interface IGfxResourceRegistry
+public interface IGfxResourceRepository
 {
     public IShaderRepository ShaderRepository { get; }
     public IMeshRepository MeshRepository { get; }
     public IFrameBufferRepository FboRepository { get; }
 }
 
-internal sealed class GfxResourceRegistry : IGfxResourceRegistry
+internal sealed class GfxResourceRepository : IGfxResourceRepository
 {
     private readonly ShaderRepository _shaderRepository;
     private readonly MeshRepository _meshRepository;
@@ -19,15 +19,14 @@ internal sealed class GfxResourceRegistry : IGfxResourceRegistry
     public MeshRepository MeshRepository => _meshRepository;
     public FrameBufferRepository FboRepository => _fboRepository;
 
-    IShaderRepository IGfxResourceRegistry.ShaderRepository => _shaderRepository;
-    IMeshRepository IGfxResourceRegistry.MeshRepository => _meshRepository;
-    IFrameBufferRepository IGfxResourceRegistry.FboRepository => _fboRepository;
+    IShaderRepository IGfxResourceRepository.ShaderRepository => _shaderRepository;
+    IMeshRepository IGfxResourceRepository.MeshRepository => _meshRepository;
+    IFrameBufferRepository IGfxResourceRepository.FboRepository => _fboRepository;
 
-    public GfxResourceRegistry(IGfxResourceManager resources)
+    public GfxResourceRepository(GfxResourceManager resources)
     {
-        _shaderRepository = new ShaderRepository(resources);
+        _shaderRepository = new ShaderRepository(resources.FrontendStoreHub);
         _meshRepository = new MeshRepository();
         _fboRepository = new FrameBufferRepository();
     }
-
 }

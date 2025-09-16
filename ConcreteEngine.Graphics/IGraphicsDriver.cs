@@ -100,6 +100,6 @@ internal interface IGraphicsDriver : IGfxShaderBackend, IBufferBackend, IDrawBac
     GraphicsConfiguration Configuration { get; }
     DeviceCapabilities Capabilities { get; }
     void AttachStore(BackendOpsHub storeHub);
-    void AttachDispatcher(BackendDriverDispatcher dispatcher);
+    void AttachDispatcher(ResourceBackendDispatcher dispatcher);
     void ValidateEndFrame();
 }

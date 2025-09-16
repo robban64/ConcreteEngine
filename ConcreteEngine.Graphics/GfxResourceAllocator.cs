@@ -31,22 +31,20 @@ public interface IGfxResourceAllocator
 internal sealed class GfxResourceAllocator : IGfxResourceAllocator
 {
     private readonly IGraphicsDriver _driver;
-    private readonly GfxResourceManager _resources;
-    private readonly GfxResourceRegistry _registry;
+    private readonly FrontendStoreHub _resources;
+    private readonly GfxResourceRepository _repository;
     private readonly GfxResourceDisposer _disposer;
 
-    private BackendDriverDispatcher Dispatcher => _resources.GetDispatcher();
-    
 
     public GfxResourceAllocator(
         IGraphicsDriver driver,
         GfxResourceManager resources,
-        GfxResourceRegistry registry,
+        GfxResourceRepository repository,
         GfxResourceDisposer disposer)
     {
-        _resources = resources;
+        _resources = resources.FrontendStoreHub;
         _driver = driver;
-        _registry = registry;
+        _repository = repository;
         _disposer = disposer;
     }
 
@@ -99,7 +97,7 @@ internal sealed class GfxResourceAllocator : IGfxResourceAllocator
             ? _resources.RboStore.Add(result.RboTex.Meta, result.RboTex.Handle)
             : default;
 
-        _registry.FboRepository.AddRecord(fboId, new FrameBufferLayout.AttachedFboIds(fboTexId, rboDepthId, rboTexId),
+        _repository.FboRepository.AddRecord(fboId, new FrameBufferLayout.AttachedFboIds(fboTexId, rboDepthId, rboTexId),
             in desc);
 
         meta = result.Fbo.Meta;
@@ -108,10 +106,9 @@ internal sealed class GfxResourceAllocator : IGfxResourceAllocator
 
     public bool RecreateFrameBuffer(FrameBufferId fboId, in Vector2D<int> outputSize)
     {
-        var layout = _registry.FboRepository.Get(fboId);
+        var layout = _repository.FboRepository.Get(fboId);
 
         if (!layout.AutoResizeable) return false;
-
 
         var (absoluteSize, sizeRatio) = (outputSize, layout.SizeRatio);
 
@@ -121,18 +118,13 @@ internal sealed class GfxResourceAllocator : IGfxResourceAllocator
         var (colTexId, rboDepthId, rboTexId) = (attachedIds.FboTexId, attachedIds.RboDepthId, attachedIds.RboTexId);
 
         ref readonly var prevFbo = ref _resources.FboStore.GetHandleAndMeta(fboId, out var prevMeta);
-
-        var prevTex = colTexId.IsValid() ? _resources.TextureStore.GetHandle(colTexId) : default;
-        var prevRboDepth = rboDepthId.IsValid() ? _resources.RboStore.GetHandle(rboDepthId) : default;
-        var prevRboTex = rboTexId.IsValid() ? _resources.RboStore.GetHandle(rboTexId) : default;
-        
         var desc = layout.GetDescriptor() with { AbsoluteSize = absoluteSize };
         var newMeta = FrameBufferMeta.CreateResizeCopy(in prevMeta, size);
         
         
         _driver.CreateFrameBuffer(in desc, out var result);
         _disposer.EnqueueRemoval(fboId, true);
-        _resources.FrontendStoreHub.FboStore.Replace(fboId, in newMeta,  result.Fbo.Handle, out var prevHandle);
+        _resources.FboStore.Replace(fboId, in newMeta,  result.Fbo.Handle, out var prevHandle);
         
 
          if (result.FboTex.Handle.IsValid)
@@ -152,7 +144,7 @@ internal sealed class GfxResourceAllocator : IGfxResourceAllocator
         var handle = _driver.CreateShader(vertexSource, fragmentSource,
             out var uniforms, out meta);
         var shaderId = _resources.ShaderStore.Add(in meta,  handle.Handle);
-        _registry.ShaderRepository.Add(shaderId, in meta, uniforms);
+        _repository.ShaderRepository.Add(shaderId, in meta, uniforms);
         return shaderId;
     }
 
@@ -168,7 +160,7 @@ internal sealed class GfxResourceAllocator : IGfxResourceAllocator
 
         var result = _driver.CreateUniformBuffer(slot, defaultCapacity, size, out meta);
         var uboId = _resources.UboStore.Add(in meta, result.Handle);
-        _registry.ShaderRepository.AddUboToSlot(meta.Slot, uboId);
+        _repository.ShaderRepository.AddUboToSlot(meta.Slot, uboId);
         return uboId;
     }
 }

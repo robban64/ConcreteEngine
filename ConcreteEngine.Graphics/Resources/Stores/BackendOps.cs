@@ -5,7 +5,7 @@ namespace ConcreteEngine.Graphics.Resources;
 internal interface IBackendOps
 {
     ResourceKind Kind { get; }
-    void Delete(in GfxHandle h);
+    void Delete(in GfxHandle handle);
 }
 
 internal sealed class BackendOps<TId, THandle, TMeta, TDef> : IBackendOps
@@ -20,7 +20,7 @@ internal sealed class BackendOps<TId, THandle, TMeta, TDef> : IBackendOps
     public BackendOps(BackendStoreHub storeHub) => _store = storeHub.Get<TId, THandle, TMeta, TDef>();
     
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public THandle Get(in GfxHandle h) => _store.Get(in h);
+    public THandle Get(in GfxHandle handle) => _store.Get(in handle);
 
     public ResourceRef<TId> AddExisting(uint rawHandle, in TMeta meta, out TMeta outMeta)
     {
@@ -43,5 +43,5 @@ internal sealed class BackendOps<TId, THandle, TMeta, TDef> : IBackendOps
         return new ResourceRef<TId>(gfx);
     }
 
-    public void Delete(in GfxHandle h) => _store.Remove(in h);
+    public void Delete(in GfxHandle handle) => _store.Remove(in handle);
 }

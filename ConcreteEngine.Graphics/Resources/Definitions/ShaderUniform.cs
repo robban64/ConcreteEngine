@@ -6,6 +6,7 @@ using static ConcreteEngine.Graphics.Resources.ShaderUniform;
 
 namespace ConcreteEngine.Graphics.Resources;
 
+//TODO remove most of these, as most are no longer used
 public enum ShaderUniform : byte
 {
     ModelMatrix,

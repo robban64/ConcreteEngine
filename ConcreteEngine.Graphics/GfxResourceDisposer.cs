@@ -16,17 +16,17 @@ internal sealed class GfxResourceDisposer : IGfxResourceDisposer
     private const int DrainDelayTicks = 16;
 
     private readonly GfxResourceManager _resources;
-    private readonly GfxResourceRegistry _registry;
+    private readonly GfxResourceRepository _repository;
     private readonly IDeleteResourceBackend _backend;
 
     private readonly ResourceDisposeQueue _disposeQueue;
     public int PendingCount => _disposeQueue.PendingCount;
 
-    internal GfxResourceDisposer(GfxResourceManager resources, GfxResourceRegistry registry,
+    internal GfxResourceDisposer(GfxResourceManager resources, GfxResourceRepository repository,
         IDeleteResourceBackend backend)
     {
         _resources = resources;
-        _registry = registry;
+        _repository = repository;
         _backend = backend;
         _disposeQueue = new ResourceDisposeQueue();
     }
@@ -43,7 +43,7 @@ internal sealed class GfxResourceDisposer : IGfxResourceDisposer
 
     public void EnqueueRemoval<TId>(TId id, bool replace) where TId : unmanaged, IResourceId
     {
-        ArgumentOutOfRangeException.ThrowIfLessThanOrEqual(id.Id, 0);
+        ArgumentOutOfRangeException.ThrowIfLessThanOrEqual(id.Value, 0);
         var resourceKind = ResourceTypeConverter.FromId<TId>();
         var fStore = _resources.FrontendStoreHub.GetStore<TId>(resourceKind);
         var gfxHandle = fStore.GetHandle(id);
@@ -51,7 +51,7 @@ internal sealed class GfxResourceDisposer : IGfxResourceDisposer
         var bStore = _resources.BackendStoreHub.Get(resourceKind);
         var native = bStore.GetNative(in gfxHandle);
         
-        var cmd = new DeleteCmd(gfxHandle, native, id.Id, 0, replace);
+        var cmd = new DeleteCmd(gfxHandle, native, id.Value, 0, replace);
         _disposeQueue.Enqueue(cmd);
     }
     

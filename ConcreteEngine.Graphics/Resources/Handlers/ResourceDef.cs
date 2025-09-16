@@ -1,12 +1,6 @@
 namespace ConcreteEngine.Graphics.Resources;
 
 
-public readonly record struct GfxHandle(uint Slot, ushort Gen, ResourceKind Kind)
-{
-    public bool IsValid =>  Gen > 0 && Kind != ResourceKind.Invalid;
-}
-
-
 
 internal interface IResourceDef<out TId, out THandle, TMeta>
     where TId : unmanaged, IResourceId

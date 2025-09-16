@@ -7,35 +7,35 @@ namespace ConcreteEngine.Graphics.Resources;
 
 public interface IResourceId
 {
-    int Id { get; }
+    int Value { get; }
 }
 
-public readonly record struct TextureId(int Id) : IResourceId;
-public readonly record struct ShaderId(int Id) : IResourceId;
-public readonly record struct MeshId(int Id) : IResourceId;
-public readonly record struct VertexBufferId(int Id) : IResourceId;
-public readonly record struct IndexBufferId(int Id) : IResourceId;
-public readonly record struct FrameBufferId(int Id) : IResourceId;
-public readonly record struct RenderBufferId(int Id) : IResourceId;
-public readonly record struct UniformBufferId(int Id) : IResourceId;
+public readonly record struct TextureId(int Value) : IResourceId;
+public readonly record struct ShaderId(int Value) : IResourceId;
+public readonly record struct MeshId(int Value) : IResourceId;
+public readonly record struct VertexBufferId(int Value) : IResourceId;
+public readonly record struct IndexBufferId(int Value) : IResourceId;
+public readonly record struct FrameBufferId(int Value) : IResourceId;
+public readonly record struct RenderBufferId(int Value) : IResourceId;
+public readonly record struct UniformBufferId(int Value) : IResourceId;
 
 
 public static class ResourceIdExtensions
 {
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static bool IsValid<T>(this T t) where T : unmanaged, IResourceId
-        => t.Id > 0;
+        => t.Value > 0;
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static void DebugValidate<T>(this T t) where T : unmanaged, IResourceId
     {
-        Debug.Assert(IsValid(t), $"ResourceId {t.Id} is not valid");
+        Debug.Assert(IsValid(t), $"ResourceId {t.Value} is not valid");
     }
     
     public static void IsValidOrThrow<T>(this T t) where T : unmanaged, IResourceId
     {
         if (!IsValid(t))
-            throw new GraphicsException($"ResourceId {t.Id} is not valid");
+            throw new GraphicsException($"ResourceId {t.Value} is not valid");
     }
 
 }

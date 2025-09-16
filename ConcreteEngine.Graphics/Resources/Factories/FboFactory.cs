@@ -6,14 +6,14 @@ internal sealed class FboFactory
     private readonly IGraphicsContext _gfx;
     private readonly IGfxResourceManager _resources;
     private readonly IGfxResourceAllocator _allocator;
-    private readonly GfxResourceRegistry _registry;
+    private readonly GfxResourceRepository _repository;
 
-    public FboFactory(IGraphicsContext gfx, IGfxResourceManager resources, IGfxResourceAllocator allocator, GfxResourceRegistry registry)
+    public FboFactory(IGraphicsContext gfx, IGfxResourceManager resources, IGfxResourceAllocator allocator, GfxResourceRepository repository)
     {
         _gfx = gfx;
         _resources = resources;
         _allocator = allocator;
-        _registry = registry;
+        _repository = repository;
     }
     
 }

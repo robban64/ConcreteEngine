@@ -4,6 +4,7 @@ using ConcreteEngine.Core.Resources;
 using ConcreteEngine.Core.Scene;
 using ConcreteEngine.Graphics;
 using ConcreteEngine.Graphics.Resources;
+using Silk.NET.Maths;
 
 
 namespace ConcreteEngine.Core.Rendering;
@@ -12,7 +13,7 @@ namespace ConcreteEngine.Core.Rendering;
 
 internal class Render2D : IRender
 {
-    private readonly IGraphicsDevice _graphics;
+    private readonly IGraphicsRuntime _graphics;
     private readonly IGraphicsContext _gfx;
     private readonly RenderPasses _registry;
     private readonly MaterialStore _materialStore;
@@ -20,18 +21,19 @@ internal class Render2D : IRender
     public ICamera Camera => _camera;
 
 
-    public Render2D(IGraphicsDevice graphics, MaterialStore  materialStore)
+    public Render2D(IGraphicsRuntime graphics, MaterialStore  materialStore, in RenderGlobalSnapshot snapshot)
     {
         _graphics = graphics;
-        _gfx = graphics.Gfx;
+        _gfx = graphics.Context;
         _materialStore = materialStore;
         _camera = new Camera2D();
-        _registry = new RenderPasses(graphics);
+        _registry = new RenderPasses(graphics, in snapshot);
     }
 
 
-    public void Prepare(float alpha, in RenderGlobalSnapshot renderGlobals)
+    public void Prepare(float alpha, in RenderGlobalSnapshot snapshot)
     {
+
         var projectionViewMatrix = _camera.ProjectionViewMatrix;
         foreach (var material in _materialStore.Materials)
         {
@@ -63,7 +65,7 @@ internal class Render2D : IRender
     public void MutateRenderPass(RenderTargetId targetId, in RenderPassMutation mutation)
         => _registry.MutateRenderPass(targetId, mutation);
 
-    public void RegisterRenderTargetsFrom(RenderTargetDescriptor desc)
+    public void RegisterRenderTargetsFrom(in Vector2D<int> outputSize, RenderTargetDescriptor desc)
     {
         ArgumentNullException.ThrowIfNull(desc);
         ArgumentNullException.ThrowIfNull(desc.SceneTarget);
@@ -72,6 +74,8 @@ internal class Render2D : IRender
         desc.LightTarget.LightShaderId.IsValidOrThrow();
         desc.ScreenTarget.ScreenShaderId.IsValidOrThrow();
 
+        
+        
         // Scene Target setup
         var sceneTarget = desc.SceneTarget;
         _registry.CreateSceneBuffer();

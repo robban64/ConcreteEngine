@@ -18,13 +18,13 @@ internal sealed class PrimitiveMeshes : IPrimitiveMeshes
     public MeshId SkyboxCube { get; private set; }
     
 
-    internal void CreatePrimitives(IGraphicsDevice graphics)
+    internal void CreatePrimitives(IMeshFactory factory)
     {
-        CreateFsqQuad(graphics);
-        CreateSkyboxCube(graphics);
+        CreateFsqQuad(factory);
+        CreateSkyboxCube(factory);
     }
 
-    private void CreateFsqQuad(IGraphicsDevice graphics)
+    private void CreateFsqQuad(IMeshFactory factory)
     {
         ReadOnlySpan<Vertex2D> vertices = stackalloc[]
         {
@@ -42,14 +42,13 @@ internal sealed class PrimitiveMeshes : IPrimitiveMeshes
         var metaDesc = GpuMeshDescriptor.MakeArray(pointers, DrawPrimitive.TriangleStrip, 4);
         var vbo = new GpuVboDescriptor<Vertex2D>(vertices, BufferUsage.StaticDraw);
 
-        var builder = graphics.MeshFactory;
-        var result = builder.CreateArrayMesh(vbo, metaDesc);
+        var result = factory.CreateArrayMesh(vbo, metaDesc);
 
         FsqQuad = result.MeshId;
     }
 
 
-    private void CreateSkyboxCube(IGraphicsDevice graphics)
+    private void CreateSkyboxCube(IMeshFactory factory)
     {
         ReadOnlySpan<float> vertices = stackalloc[]
         {
@@ -82,8 +81,7 @@ internal sealed class PrimitiveMeshes : IPrimitiveMeshes
         var dataDesc = new GpuVboDescriptor<float>(vertices, BufferUsage.StaticDraw);
         var metaDesc = GpuMeshDescriptor.MakeArray(pointers, DrawPrimitive.Triangles, 36);
 
-        var builder = graphics.MeshFactory;
-        var result = builder.CreateArrayMesh(dataDesc, metaDesc);
+        var result = factory.CreateArrayMesh(dataDesc, metaDesc);
         SkyboxCube = result.MeshId;
     }
 }

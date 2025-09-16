@@ -9,7 +9,45 @@ namespace ConcreteEngine.Graphics.Utils;
 
 public static class GlEnumExtensions
 {
-    
+    public static (bool enabled, BlendEquationModeEXT eq, BlendingFactor src, BlendingFactor dst) ToGlEnum(
+        this BlendMode mode)
+    {
+        return mode switch
+        {
+            BlendMode.Alpha => (true, BlendEquationModeEXT.FuncAdd, BlendingFactor.SrcAlpha,
+                BlendingFactor.OneMinusSrcAlpha),
+            BlendMode.PremultipliedAlpha => (true, BlendEquationModeEXT.FuncAdd, BlendingFactor.One,
+                BlendingFactor.OneMinusSrcAlpha),
+            BlendMode.Additive => (true, BlendEquationModeEXT.FuncAdd, BlendingFactor.One, BlendingFactor.One),
+            _ => (false, BlendEquationModeEXT.FuncAdd, BlendingFactor.One, BlendingFactor.Zero)
+        };
+    }
+
+
+    public static (EnableCap cap, DepthFunction func, bool mask) ToGlEnum(this DepthMode preset)
+    {
+        return preset switch
+        {
+            DepthMode.Disabled => (EnableCap.DepthTest, DepthFunction.Always, false),
+            DepthMode.ReadOnlyLequal => (EnableCap.DepthTest, DepthFunction.Lequal, false),
+            DepthMode.WriteLequal => (EnableCap.DepthTest, DepthFunction.Lequal, true),
+            DepthMode.WriteLess => (EnableCap.DepthTest, DepthFunction.Less, true),
+            _ => (EnableCap.DepthTest, DepthFunction.Always, true)
+        };
+    }
+
+    public static (EnableCap cap, TriangleFace face, FrontFaceDirection front) ToGlEnum(this CullMode preset)
+    {
+        return preset switch
+        {
+            CullMode.None => (EnableCap.CullFace, TriangleFace.FrontAndBack, FrontFaceDirection.Ccw),
+            CullMode.BackCcw => (EnableCap.CullFace, TriangleFace.Back, FrontFaceDirection.Ccw),
+            CullMode.BackCw => (EnableCap.CullFace, TriangleFace.Back, FrontFaceDirection.CW),
+            CullMode.FrontCcw => (EnableCap.CullFace, TriangleFace.Front, FrontFaceDirection.Ccw),
+            CullMode.FrontCw => (EnableCap.CullFace, TriangleFace.Front, FrontFaceDirection.CW),
+            _ => (EnableCap.CullFace, TriangleFace.Back, FrontFaceDirection.Ccw)
+        };
+    }
 
     public static PrimitiveType ToGlEnum(this DrawPrimitive value)
     {
@@ -22,7 +60,6 @@ public static class GlEnumExtensions
             DrawPrimitive.Lines => PrimitiveType.Lines,
             DrawPrimitive.LineLoop => PrimitiveType.LineLoop,
             DrawPrimitive.LineStrip => PrimitiveType.LineStrip,
-            _ => throw GraphicsException.UnsupportedFeature(nameof(value))
         };
     }
 
@@ -33,7 +70,6 @@ public static class GlEnumExtensions
             DrawElementType.UnsignedByte => DrawElementsType.UnsignedByte,
             DrawElementType.UnsignedShort => DrawElementsType.UnsignedShort,
             DrawElementType.UnsignedInt => DrawElementsType.UnsignedInt,
-            _ => throw GraphicsException.UnsupportedFeature($"Index Element Type {value}")
         };
     }
 
@@ -45,7 +81,6 @@ public static class GlEnumExtensions
             ClearBufferFlag.Color => ClearBufferMask.ColorBufferBit,
             ClearBufferFlag.Depth => ClearBufferMask.DepthBufferBit,
             ClearBufferFlag.ColorAndDepth => ClearBufferMask.ColorBufferBit | ClearBufferMask.DepthBufferBit,
-            _ => throw GraphicsException.UnsupportedFeature(nameof(flags))
         };
     }
 
@@ -56,7 +91,6 @@ public static class GlEnumExtensions
             EnginePixelFormat.Red => (PixelFormat.Red, InternalFormat.R8),
             EnginePixelFormat.Rgb => (PixelFormat.Rgb, InternalFormat.Rgb8),
             EnginePixelFormat.Rgba => (PixelFormat.Rgba, InternalFormat.Rgba8),
-            _ => throw GraphicsException.UnsupportedFeature(nameof(format))
         };
     }
 
@@ -67,7 +101,6 @@ public static class GlEnumExtensions
             BufferUsage.StaticDraw => BufferUsageARB.StaticDraw,
             BufferUsage.DynamicDraw => BufferUsageARB.DynamicDraw,
             BufferUsage.StreamDraw => BufferUsageARB.StreamDraw,
-            _ => throw GraphicsException.UnsupportedFeature(nameof(usage))
         };
     }
 
@@ -77,7 +110,6 @@ public static class GlEnumExtensions
         {
             BufferTarget.VertexBuffer => BufferTargetARB.ArrayBuffer,
             BufferTarget.IndexBuffer => BufferTargetARB.ElementArrayBuffer,
-            _ => throw GraphicsException.UnsupportedFeature(nameof(target))
         };
     }
 

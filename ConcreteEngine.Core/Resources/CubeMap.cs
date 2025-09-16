@@ -1,5 +1,6 @@
 using ConcreteEngine.Core.Assets;
 using ConcreteEngine.Graphics;
+using ConcreteEngine.Graphics.Descriptors;
 using ConcreteEngine.Graphics.Resources;
 
 namespace ConcreteEngine.Core.Resources;
@@ -14,5 +15,5 @@ public sealed class CubeMap : IGraphicAssetFile<TextureId>, IResourceTexture
     public required EnginePixelFormat PixelFormat { get; init; }
     
     public AssetFileType AssetType => AssetFileType.Cubemap;
-    public GpuResourceKind GpuResourceKind => GpuResourceKind.Cubemap;
+    public ResourceKind GfxResourceKind => ResourceKind.Texture;
 }

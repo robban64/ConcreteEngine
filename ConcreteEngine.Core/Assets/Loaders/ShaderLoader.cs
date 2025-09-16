@@ -3,6 +3,7 @@ using System.Text;
 using System.Text.RegularExpressions;
 using ConcreteEngine.Graphics;
 using ConcreteEngine.Graphics.Descriptors;
+using ConcreteEngine.Graphics.Resources;
 
 namespace ConcreteEngine.Core.Assets.Loaders;
 
@@ -20,8 +21,8 @@ internal sealed class ShaderLoader(IReadOnlyList<ShaderManifestRecord> records) 
 
     public override GpuShaderData Get(ShaderManifestRecord record)
     {
-        var vertPath = Path.Combine(AssetPaths.AssetPath, "shaders", record.VertexFilename);
-        var fragPath = Path.Combine(AssetPaths.AssetPath, "shaders", record.FragmentFilename);
+        var vertPath = Path.Combine(AssetPaths.GetAbsolutePath(), "shaders", record.VertexFilename);
+        var fragPath = Path.Combine(AssetPaths.GetAbsolutePath(), "shaders", record.FragmentFilename);
 
         if (!_vertexShaderCache.TryGetValue(record.VertexFilename, out var vertexSource))
         {

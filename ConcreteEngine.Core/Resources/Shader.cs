@@ -2,6 +2,7 @@
 
 using ConcreteEngine.Core.Assets;
 using ConcreteEngine.Graphics;
+using ConcreteEngine.Graphics.Descriptors;
 using ConcreteEngine.Graphics.Resources;
 
 #endregion
@@ -17,5 +18,5 @@ public sealed class Shader : IGraphicAssetFile<ShaderId>
     public required uint Samplers { get; init; }
 
     public AssetFileType AssetType => AssetFileType.Shader;
-    public GpuResourceKind GpuResourceKind => GpuResourceKind.Shader;
+    public ResourceKind GfxResourceKind => ResourceKind.Shader;
 }

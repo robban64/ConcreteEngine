@@ -1,4 +1,5 @@
 using ConcreteEngine.Core.Assets;
+using ConcreteEngine.Graphics.Descriptors;
 using ConcreteEngine.Graphics.Resources;
 
 namespace ConcreteEngine.Core.Resources;
@@ -14,6 +15,6 @@ public sealed class Mesh : IGraphicAssetFile<MeshId>
     public uint DrawCount { get; init; }
 
     public AssetFileType AssetType => AssetFileType.Mesh;
-    public GpuResourceKind GpuResourceKind => GpuResourceKind.Mesh;
+    public ResourceKind GfxResourceKind => ResourceKind.Mesh;
     public MeshId ResourceId { get; init; }
 }

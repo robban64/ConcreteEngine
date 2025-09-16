@@ -1,7 +1,7 @@
 using System.Numerics;
 using System.Runtime.InteropServices;
 
-namespace ConcreteEngine.Graphics;
+namespace ConcreteEngine.Graphics.Primitives;
 
 
 [StructLayout(LayoutKind.Sequential, Pack = 4)]

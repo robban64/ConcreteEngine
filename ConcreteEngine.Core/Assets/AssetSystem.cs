@@ -6,6 +6,7 @@ using ConcreteEngine.Core.Assets.IO;
 using ConcreteEngine.Core.Resources;
 using ConcreteEngine.Core.Systems;
 using ConcreteEngine.Graphics;
+using ConcreteEngine.Graphics.Resources;
 
 #endregion
 
@@ -66,12 +67,12 @@ public sealed class AssetSystem : IAssetSystem
     }
 
 
-    internal void StartLoader(IGpuUploadSink uploadSink)
+    internal void StartLoader(IGfxResourceAllocator allocator, IGfxFactoryHub factory)
     {
         IsLoading = true;
         var assetRecords = LoadManifest();
         var loader = new AssetLoader(_assetPath, this);
-        loader.Start(assetRecords, uploadSink);
+        loader.Start(assetRecords, allocator, factory);
         _loader = loader;
     }
 

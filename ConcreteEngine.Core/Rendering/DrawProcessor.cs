@@ -3,25 +3,27 @@ using System.Runtime.CompilerServices;
 using ConcreteEngine.Core.Resources;
 using ConcreteEngine.Core.Scene;
 using ConcreteEngine.Graphics;
+using ConcreteEngine.Graphics.Resources;
 using ConcreteEngine.Graphics.Utils;
 
 namespace ConcreteEngine.Core.Rendering;
 
 internal sealed class DrawProcessor
 {
-    private readonly IGraphicsDevice _graphics;
     private readonly IGraphicsContext _gfx;
+    private readonly IGfxResourceRepository _repository;
+    
     private readonly MaterialStore _materials;
 
     private int _previousMaterialId = -1;
 
     private UboArena? _drawRing = null;
 
-    internal DrawProcessor(IGraphicsDevice graphics, MaterialStore materials)
+    internal DrawProcessor(IGraphicsContext gfx, IGfxResourceRepository repository, MaterialStore materials)
     {
-        _graphics = graphics;
         _materials = materials;
-        _gfx = _graphics.Gfx;
+        _repository = repository;
+        _gfx = gfx;
     }
 
 
@@ -31,7 +33,7 @@ internal sealed class DrawProcessor
 
     public void Prepare(in RenderGlobalSnapshot renderGlobals, nuint capacity)
     {
-        _drawRing = _graphics.ShaderRegistry.GetOrCreateUboArena(UniformGpuSlot.DrawObject);
+        _drawRing = _repository.ShaderRepository.GetOrCreateUboArena(UniformGpuSlot.DrawObject);
         if (_drawRing == null)
         {
             Console.WriteLine("a");
@@ -145,7 +147,7 @@ internal sealed class DrawProcessor
         BindMaterial(cmd.MaterialId);
         BindDrawObject();
         _gfx.BindMesh(cmd.MeshId);
-        _gfx.DrawMesh(cmd.DrawCount);
+        _gfx.DrawBoundMesh(cmd.DrawCount);
     }
     
 

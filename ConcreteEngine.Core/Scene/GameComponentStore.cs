@@ -3,7 +3,7 @@ using System.Diagnostics;
 
 namespace ConcreteEngine.Core.Scene;
 
-public sealed class GameComponentStore<T> where T : struct
+public sealed class GameComponentStore<T> where T : unmanaged
 {
     private readonly Dictionary<GameEntityId, int> _map;
     private T[] _data;
@@ -59,12 +59,12 @@ public sealed class GameComponentStore<T> where T : struct
     
     public EntityEnumerator<T> GetEnumerator() => new(this);
     public EntityEnumerator<T, T2> View2<T2>(GameComponentStore<T2> r2) 
-        where T2 : struct => new(this, r2);
+        where T2 : unmanaged => new(this, r2);
 
     public EntityEnumerator<T, T2, T3> View3<T2, T3>(GameComponentStore<T2> r2,
         GameComponentStore<T3> r3)
-        where T2 : struct
-        where T3 : struct => new(this, r2, r3);
+        where T2 : unmanaged
+        where T3 : unmanaged => new(this, r2, r3);
 
 
     private static int BinarySearchEntity<T2>(ReadOnlySpan<GameEntityId> collection, GameEntityId entity)

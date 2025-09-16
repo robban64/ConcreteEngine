@@ -1,4 +1,4 @@
-namespace ConcreteEngine.Graphics.Configuration;
+namespace ConcreteEngine.Graphics;
 
 public static class GraphicsConsts
 {

@@ -1,3 +1,4 @@
+using ConcreteEngine.Graphics.Descriptors;
 using ConcreteEngine.Graphics.Resources;
 
 namespace ConcreteEngine.Core.Assets;
@@ -19,7 +20,7 @@ public interface IAssetFile
 
 public interface IGraphicAssetFile : IAssetFile
 {
-    GpuResourceKind GpuResourceKind { get; }
+    ResourceKind GfxResourceKind { get; }
 }
 
 public interface IGraphicAssetFile<out THandle> : IGraphicAssetFile where THandle : unmanaged

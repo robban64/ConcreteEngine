@@ -2,6 +2,7 @@
 
 using ConcreteEngine.Core.Assets;
 using ConcreteEngine.Graphics;
+using ConcreteEngine.Graphics.Descriptors;
 using ConcreteEngine.Graphics.Resources;
 
 #endregion
@@ -30,7 +31,7 @@ public sealed class Texture2D : IGraphicAssetFile<TextureId>, IResourceTexture
     public TexturePreset Preset { get; init; }
     public TextureAnisotropy Anisotropy  { get; init; }
     public AssetFileType AssetType => AssetFileType.Texture2D;
-    public GpuResourceKind GpuResourceKind => GpuResourceKind.Texture2D;
+    public ResourceKind GfxResourceKind => ResourceKind.Texture;
     
     private byte[]? _pixelData;
     public ReadOnlyMemory<byte>? PixelData => _pixelData?.AsMemory();

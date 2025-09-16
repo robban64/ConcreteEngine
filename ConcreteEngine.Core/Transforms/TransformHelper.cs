@@ -2,6 +2,7 @@ using System.Numerics;
 using System.Runtime.CompilerServices;
 using ConcreteEngine.Common.Extensions;
 using ConcreteEngine.Graphics;
+using ConcreteEngine.Graphics.Primitives;
 
 namespace ConcreteEngine.Core;
 

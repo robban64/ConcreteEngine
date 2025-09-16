@@ -27,7 +27,7 @@ public sealed class TerrainBatcher : RenderBatcher<TerrainBatchResult>
     private Vertex3D[] _vertices;
     private uint[] _indices;
 
-    internal TerrainBatcher(IGraphicsDevice graphics) : base(graphics)
+    internal TerrainBatcher(IGraphicsRuntime graphics) : base(graphics)
     {
     }
 
@@ -70,7 +70,7 @@ public sealed class TerrainBatcher : RenderBatcher<TerrainBatchResult>
     public override void Dispose()
     {
         if (MeshId.IsValid())
-            Graphics.EnqueueRemoveResource(MeshId);
+            GfxDisposer.EnqueueRemoval(MeshId, false);
     }
 
     private void GenerateMesh()
@@ -102,7 +102,7 @@ public sealed class TerrainBatcher : RenderBatcher<TerrainBatchResult>
         var ibo = new GpuIboDescriptor<uint>(_indices,  BufferUsage.DynamicDraw);
         var desc = GpuMeshDescriptor.MakeElemental(attributes, DrawElementType.UnsignedInt, DrawPrimitive.Triangles,
             (uint)_indices.Length);
-        var builder = Graphics.MeshFactory;
+        var builder = FactoryHub.MeshFactory;
         var result = builder.CreateElementalMesh(vbo, ibo,desc);
         MeshId = result.MeshId;
     }

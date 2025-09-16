@@ -16,7 +16,7 @@ internal sealed class TextureLoader(IReadOnlyList<TextureManifestRecord> records
 
     public override TexturePayload Get(TextureManifestRecord record)
     {
-        var path = Path.Combine(AssetPaths.AssetPath, "textures", record.Filename);
+        var path = Path.Combine(AssetPaths.GetAbsolutePath(), "textures", record.Filename);
         using var stream = File.OpenRead(path);
         var image = ImageResult.FromStream(stream, ColorComponents.RedGreenBlueAlpha);
         ValidateImageResult(image);

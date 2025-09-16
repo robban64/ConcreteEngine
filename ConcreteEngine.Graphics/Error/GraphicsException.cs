@@ -70,8 +70,6 @@ public sealed partial class GraphicsException : InvalidOperationException
     public static GraphicsException InvalidStd140Layout<T>() =>
         new($"{Label<T>()} contains invalid std layout with size: {Unsafe.SizeOf<T>()}");
 
-
-
     private static string Label<T>(string? name = null)
     {
         var s = typeof(T).Name;

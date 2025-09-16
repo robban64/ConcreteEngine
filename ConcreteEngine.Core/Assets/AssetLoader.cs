@@ -30,7 +30,8 @@ internal sealed class AssetLoader
     }
 
     private delegate TResult AssetUploadHandler<in TRecord, TPayload, out TResult>(
-        IGpuUploadSink uploader,
+        IGfxResourceAllocator allocator,
+        IGfxFactoryHub factoryHub,
         TRecord record,
         in TPayload payload)
         where TRecord : class, IAssetManifestRecord
@@ -46,7 +47,8 @@ internal sealed class AssetLoader
     private TextureLoader _textureLoader;
     private CubeMapLoader _cubeMapLoader;
 
-    private IGpuUploadSink _gpuUpload;
+    private IGfxResourceAllocator _gpuAllocator;
+    private IGfxFactoryHub _gpuFactory;
     private AssetSystem _assetSystem;
 
     private ProcessOrder _processOrder = ProcessOrder.NotStarted;
@@ -62,10 +64,11 @@ internal sealed class AssetLoader
         //StbImage.stbi_set_flip_vertically_on_load(1);
     }
 
-    internal void Start(AssetRecordResult assets, IGpuUploadSink uploadSink)
+    internal void Start(AssetRecordResult assets, IGfxResourceAllocator allocator, IGfxFactoryHub gpuFactory)
     {
         _processOrder = (ProcessOrder)1;
-        _gpuUpload = uploadSink;
+        _gpuAllocator = allocator;
+        _gpuFactory = gpuFactory;
         _shaderLoader = new ShaderLoader(assets.Shaders.Resources);
         _meshLoader = new MeshLoader(assets.Meshes.Resources);
         _textureLoader = new TextureLoader(assets.Textures.Resources);
@@ -88,8 +91,9 @@ internal sealed class AssetLoader
         _textureLoader.Finish();
         _cubeMapLoader.Finish();
 
-        _gpuUpload = null;
-        _assetSystem = null;
+        _gpuAllocator = null!;
+        _gpuFactory = null!;
+        _assetSystem = null!;
 
         AssetUploadRegistry<MeshManifestRecord, MeshLoaderResult, Mesh>.Unregister();
         AssetUploadRegistry<TextureManifestRecord, TexturePayload, Texture2D>.Unregister();
@@ -152,7 +156,7 @@ internal sealed class AssetLoader
             throw new NotSupportedException($"No upload handler registered for ({inner}).");
         }
 
-        var asset = handler(_gpuUpload, record, in payload);
+        var asset = handler(_gpuAllocator, _gpuFactory, record!, in payload);
         if (asset is Texture2D texture)
         {
             if (_textureLoader.DataCache.TryGetValue(asset.Name, out var data))
@@ -178,7 +182,7 @@ internal sealed class AssetLoader
 
     private static class GpuUploaders
     {
-        public static Mesh UploadMesh(IGpuUploadSink uploader, MeshManifestRecord record, in MeshLoaderResult payload)
+        public static Mesh UploadMesh(IGfxResourceAllocator allocator, IGfxFactoryHub factoryHub, MeshManifestRecord record, in MeshLoaderResult payload)
         {
             
             var vbo = new GpuVboDescriptor<Vertex3D>(payload.MeshData.Vertices, BufferUsage.StaticDraw);
@@ -186,7 +190,7 @@ internal sealed class AssetLoader
             var desc = GpuMeshDescriptor.MakeElemental(payload.Descriptor.Attributes, payload.Descriptor.ElementType, payload.Descriptor.Primitive,
                 payload.Descriptor.DrawCount);
             
-            var builder = uploader.MeshFactory;
+            var builder = factoryHub.MeshFactory;
             var result = builder.CreateElementalMesh(vbo, ibo,desc);
             return new Mesh
             {
@@ -197,10 +201,10 @@ internal sealed class AssetLoader
             };
         }
 
-        public static Texture2D UploadTexture(IGpuUploadSink uploader, TextureManifestRecord record,
+        public static Texture2D UploadTexture(IGfxResourceAllocator allocator, IGfxFactoryHub factoryHub, TextureManifestRecord record,
             in TexturePayload payload)
         {
-            var id = uploader.CreateTexture2D(payload.Data, in payload.Descriptor, out var meta);
+            var id = allocator.CreateTexture2D(payload.Data, in payload.Descriptor, out var meta);
             
             //var data = record.InMemory ? _dataCache[record.Name] : null;
             return new Texture2D
@@ -216,10 +220,10 @@ internal sealed class AssetLoader
             };
         }
 
-        public static CubeMap UploadCubeMap(IGpuUploadSink uploader, CubeMapManifestRecord record,
+        public static CubeMap UploadCubeMap(IGfxResourceAllocator allocator, IGfxFactoryHub factoryHub, CubeMapManifestRecord record,
             in CubeMapPayload payload)
         {
-            var id = uploader.CreateCubeMap(payload.Data, in payload.Descriptor, out var meta);
+            var id = allocator.CreateCubeMap(payload.Data, in payload.Descriptor, out var meta);
             return new CubeMap
             {
                 Name = record.Name,
@@ -231,10 +235,10 @@ internal sealed class AssetLoader
             };
         }
 
-        public static Shader UploadShader(IGpuUploadSink uploader, ShaderManifestRecord record,
+        public static Shader UploadShader(IGfxResourceAllocator allocator, IGfxFactoryHub factoryHub, ShaderManifestRecord record,
             in GpuShaderData data)
         {
-            var id = uploader.CreateShader(data.VertexSource, data.FragmentSource, out var meta);
+            var id = allocator.CreateShader(data.VertexSource, data.FragmentSource, out var meta);
             return new Shader
             {
                 Name = record.Name,

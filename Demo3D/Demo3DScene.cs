@@ -26,9 +26,10 @@ public sealed class Demo3DScene : GameScene
 
         var skyboxMaterial = renderer.CreateMaterial("SkyboxMat");
 
-        RenderGlobals.SetSkybox(skyboxMaterial.Id, Quaternion.Identity);
-        RenderGlobals.SetDirLight(new Vector3(-0.3f, -1.0f, -0.2f), new Vector3(1.0f, 0.95f, 0.9f), Vector3.One,1);
-        RenderGlobals.SetAmbient(new Vector3(0.8f,0.75f,0.8f));
+        var rb = renderer.RenderGlobals;
+        rb.SetSkybox(skyboxMaterial.Id, Quaternion.Identity);
+        rb.SetDirLight(new Vector3(-0.3f, -1.0f, -0.2f), new Vector3(1.0f, 0.95f, 0.9f), Vector3.One,1);
+        rb.SetAmbient(new Vector3(0.8f,0.75f,0.8f));
 
         var rockMat = renderer.CreateMaterial("Rock01Mat");
         var rockMesh = assets.Get<Mesh>("Rock1");

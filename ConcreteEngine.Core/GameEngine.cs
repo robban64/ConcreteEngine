@@ -10,10 +10,12 @@ using ConcreteEngine.Core.Rendering;
 using ConcreteEngine.Core.Scene;
 using ConcreteEngine.Core.Systems;
 using ConcreteEngine.Core.Time;
+using ConcreteEngine.Core.Utils;
 using ConcreteEngine.Graphics;
 using ConcreteEngine.Graphics.Descriptors;
 using ConcreteEngine.Graphics.Resources;
 using Silk.NET.Maths;
+using Silk.NET.OpenGL;
 
 #endregion
 
@@ -32,7 +34,7 @@ public sealed class GameEngine : IDisposable
     }
 
     private readonly IEngineWindowHost _window;
-    private readonly IGraphicsDevice _graphics;
+    private readonly GraphicsRuntime _graphics;
     private readonly IEngineInputSource _input;
 
 
@@ -68,16 +70,19 @@ public sealed class GameEngine : IDisposable
 
     internal GameEngine(
         IEngineWindowHost windowHost,
-        IGraphicsDevice graphics,
+        GfxRuntimeBundle<GL> gfxBundle,
         IEngineInputSource input,
         AssetManagerConfiguration assetConfig,
         List<Func<GameScene>> sceneFactories
     )
     {
+        
         _window = windowHost;
-        _graphics = graphics;
+        _graphics = gfxBundle.Graphics;
         _input = input;
         _sceneFactories = sceneFactories;
+        
+        _graphics.Initialize(gfxBundle.Config);
 
         _modules = new ModuleManager();
         _features = new FeatureManager();
@@ -96,7 +101,7 @@ public sealed class GameEngine : IDisposable
         //_pipeline = new GameMessagePipeline();
 
         // renderer
-        _renderer = new RenderSystem(_graphics);
+        _renderer = new RenderSystem(_graphics, _window.FramebufferSize);
 
         _systems = new EngineSystemManagerManager(_renderer, _inputSystem, _assets);
 
@@ -107,8 +112,7 @@ public sealed class GameEngine : IDisposable
 
     private void StartAssetLoader()
     {
-        var uploadSink = _graphics.CreateUploader();
-        _assets.StartLoader(uploadSink);
+        _assets.StartLoader(_graphics.Allocator, _graphics.FactoryHub);
     }
 
     private void InitializeSystems()
@@ -133,12 +137,11 @@ public sealed class GameEngine : IDisposable
         _renderTime.Accumulate(dt);
         _renderTime.Advance();
         
-        _graphics.StartFrame(in frameCtx);
+        _graphics.BeginFrame(in frameCtx);
         if (_currentScene != null)
         {
-            var snapshot = _currentScene.RenderGlobals.Snapshot;
             _renderTime.TickOrRenderEffect();
-            _renderer.Render(_updateCtx.Alpha, in frameCtx, in snapshot);
+            _renderer.Render(_updateCtx.Alpha, in frameCtx);
         }
         _renderTime.TickOrGpuDispose();
         _renderTime.TickOrGpuUpload();
@@ -244,7 +247,7 @@ public sealed class GameEngine : IDisposable
         var builder = new GameSceneConfigBuilder(_features, _modules);
         newScene.Build(builder);
 
-        _renderer.RegisterScene(builder.RenderType, builder.RenderTargetsDesc);
+        _renderer.RegisterScene(_window.FramebufferSize, builder.RenderType, builder.RenderTargetsDesc);
 
         _features.Load(new GameFeatureContext(sceneContext));
 
@@ -268,7 +271,7 @@ public sealed class GameEngine : IDisposable
         _isDisposed = true;
         _currentScene?.Unload();
         _assets?.Shutdown();
-        _graphics?.Dispose();
+       // _graphics?.Dispose();
     }
 
     public void Dispose()
@@ -278,6 +281,6 @@ public sealed class GameEngine : IDisposable
         _isDisposed = true;
 
         _assets?.Shutdown();
-        _graphics?.Dispose();
+        //_graphics?.Dispose();
     }
 }

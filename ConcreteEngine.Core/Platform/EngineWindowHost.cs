@@ -5,6 +5,7 @@ using ConcreteEngine.Graphics;
 using ConcreteEngine.Graphics.Descriptors;
 using ConcreteEngine.Graphics.Error;
 using ConcreteEngine.Graphics.OpenGL;
+using Silk.NET.GLFW;
 using Silk.NET.Input;
 using Silk.NET.Maths;
 using Silk.NET.OpenGL;
@@ -69,6 +70,7 @@ public sealed class EngineWindowHost : IEngineWindowHost
     {
         _options = options;
         _backend = backend;
+
     }
 
     public void Run(GameEngineBuilder builder)
@@ -113,9 +115,9 @@ public sealed class EngineWindowHost : IEngineWindowHost
             outputSize:  _window.FramebufferSize
         );
 
-        IGraphicsDevice graphics = _backend switch
+        GfxRuntimeBundle<GL> graphics = _backend switch
         {
-            GraphicsBackend.OpenGL => new GlGraphicsDevice(_window.CreateOpenGL(), in frameCtx),
+            GraphicsBackend.OpenGL =>new GfxRuntimeBundle<GL>(new GraphicsRuntime(), new GlStartupConfig(_window.CreateOpenGL())),
             _ => throw new GraphicsException("Invalid GraphicsBackend. Only OpenGL supported")
         };
 

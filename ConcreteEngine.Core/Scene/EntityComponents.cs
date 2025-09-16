@@ -45,11 +45,11 @@ public struct MeshComponent(MeshId meshId, MaterialId materialId, uint drawCount
 
 public struct SpriteComponent(int spriteId, MaterialId materialId, bool isStatic)
 {
+    public Vector2 UvScale;
     public int SpriteId = spriteId;
     public MaterialId MaterialId = materialId;
-    public bool IsStatic = isStatic;
     public Rectangle<int> SourceRectangle;
-    public Vector2 UvScale;
+    public bool IsStatic = isStatic;
 }
 
 

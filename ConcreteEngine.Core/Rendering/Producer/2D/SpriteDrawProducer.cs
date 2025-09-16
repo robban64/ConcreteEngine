@@ -16,13 +16,13 @@ public readonly record struct SpriteDrawBatch(MaterialId MaterialId, int Start, 
 
 public struct SpriteDrawEntity(): IComparable<SpriteDrawEntity>
 {
-    public int SpriteId;
     public Vector2 Position = Vector2.Zero;
     public Vector2 PreviousPosition = Vector2.Zero;
     public Vector2 Scale = Vector2.One;
     public UvRect Uv = default;
     public MaterialId MaterialId = default;
-    
+    public int SpriteId;
+
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public int CompareTo(SpriteDrawEntity other) => other.MaterialId.Id.CompareTo(MaterialId.Id);
 }

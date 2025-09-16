@@ -3,7 +3,7 @@ using ConcreteEngine.Graphics.Error;
 
 namespace ConcreteEngine.Graphics.Resources;
 
-internal interface IDriverResourceStore
+internal interface IBackendResourceStore
 {
     ResourceKind Kind { get; }
 
@@ -16,7 +16,7 @@ internal interface IDriverResourceStore
     bool IsAlive(in GfxHandle handle);
 }
 
-internal interface IDriverReadResourceStore<THandle> where THandle : unmanaged, IResourceHandle, IEquatable<THandle>
+internal interface IBackendReadResourceStore<THandle> where THandle : unmanaged, IResourceHandle, IEquatable<THandle>
 {
     THandle Get(in GfxHandle handle);
     THandle GetForDelete(in GfxHandle handle);
@@ -25,7 +25,7 @@ internal interface IDriverReadResourceStore<THandle> where THandle : unmanaged, 
 
 internal delegate void BackendStoreRecreated(in GfxHandle handle);
 
-internal sealed class DriverResourceStore<THandle> : IDriverResourceStore, IDriverReadResourceStore<THandle>
+internal sealed class BackendResourceStore<THandle> : IBackendResourceStore, IBackendReadResourceStore<THandle>
     where THandle : unmanaged, IResourceHandle, IEquatable<THandle>
 {
     private readonly record struct StoreRecord(THandle Current, ushort Gen, bool Alive)
@@ -48,7 +48,7 @@ internal sealed class DriverResourceStore<THandle> : IDriverResourceStore, IDriv
 
     public ResourceKind Kind => _kind;
 
-    public DriverResourceStore(GraphicsBackend backend, ResourceKind kind)
+    public BackendResourceStore(GraphicsBackend backend, ResourceKind kind)
     {
         ArgumentOutOfRangeException.ThrowIfEqual((int)backend, (int)GraphicsBackend.Unkown);
         ArgumentOutOfRangeException.ThrowIfEqual((int)kind, (int)ResourceKind.Invalid);
@@ -59,7 +59,6 @@ internal sealed class DriverResourceStore<THandle> : IDriverResourceStore, IDriv
     public bool IsAlive(in GfxHandle handle) => _entries[(int)handle.Slot].IsValidRecord();
 
     public uint GetRawHandle(in GfxHandle handle) => Get(in handle).Handle;
-
 
     public THandle Get(in GfxHandle handle)
     {

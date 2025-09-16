@@ -35,29 +35,23 @@ internal sealed class GfxResourceDisposer : IGfxResourceDisposer
 
     public void DrainDisposeQueue()
     {
-        _disposeQueue.Drain(OnDeleteGfxResource, DrainPerFrame, DrainDelayTicks);
-    }
-    
-   private void OnDeleteGfxResource(DeleteCmd cmd)
-    {
-        /*
-        if (cmd.Replace)
+        int drainCount = 0;
+        while (drainCount < DrainPerFrame && _disposeQueue.TryGetNext(DrainDelayTicks, out var cmd))
         {
-            _resources.DispatchReplace(cmd);
+            _backend.DeleteGfxResource(in cmd);
+            drainCount++;
         }
-*/
-        _backend.DeleteGfxResource(in cmd);
     }
 
     public void EnqueueRemoval<TId>(TId id, bool replace) where TId : unmanaged, IResourceId
     {
         ArgumentOutOfRangeException.ThrowIfLessThanOrEqual(id.Id, 0);
         var resourceKind = ResourceTypeConverter.FromId<TId>();
-        var fs = _resources.FrontendStoreHub.GetStore<TId>(resourceKind);
-        var gfxHandle = fs.GetHandle(id);
+        var fStore = _resources.FrontendStoreHub.GetStore<TId>(resourceKind);
+        var gfxHandle = fStore.GetHandle(id);
 
-        var bs = _resources.BackendStoreHub.GetStore(resourceKind);
-        var rawHandle = bs.GetRawHandle(in gfxHandle);
+        var bStore = _resources.BackendStoreHub.GetStore(resourceKind);
+        var rawHandle = bStore.GetRawHandle(in gfxHandle);
         
         var cmd = new DeleteCmd(gfxHandle, id.Id, rawHandle, 0, replace);
         _disposeQueue.Enqueue(cmd);

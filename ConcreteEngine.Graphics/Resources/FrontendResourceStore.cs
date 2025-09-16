@@ -23,7 +23,7 @@ public interface IResourceStore<TId> : IResourceStore where TId : unmanaged, IRe
 
 }
 
-internal sealed class ResourceStore<TId, TMeta> : IResourceStore<TId>
+internal sealed class FrontendResourceStore<TId, TMeta> : IResourceStore<TId>
     where TId : unmanaged, IResourceId where TMeta : unmanaged, IResourceMeta
 {
     internal readonly MakeIdDelegate<TId> MakeId;
@@ -47,7 +47,7 @@ internal sealed class ResourceStore<TId, TMeta> : IResourceStore<TId>
     public ReadOnlySpan<TMeta> AsMetaSpan() => _meta;
     internal ReadOnlySpan<GfxHandle> AsHandleSpan() => _handle;
 
-    internal ResourceStore(
+    internal FrontendResourceStore(
         ResourceKind resourceKind,
         int initialCapacity,
         MakeIdDelegate<TId> makeId)
@@ -163,20 +163,20 @@ internal sealed class ResourceStore<TId, TMeta> : IResourceStore<TId>
 
     internal readonly struct IdEnumerable
     {
-        private readonly ResourceStore<TId, TMeta> _store;
-        internal IdEnumerable(ResourceStore<TId, TMeta> store) => _store = store;
+        private readonly FrontendResourceStore<TId, TMeta> _store;
+        internal IdEnumerable(FrontendResourceStore<TId, TMeta> store) => _store = store;
         public ResourceIdEnumerator GetEnumerator() => new(_store);
     }
 
     internal struct ResourceIdEnumerator
     {
-        private readonly ResourceStore<TId, TMeta> _store;
+        private readonly FrontendResourceStore<TId, TMeta> _store;
         private readonly GfxHandle[] _handles;
         private readonly int _count;
         private int _i;
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        internal ResourceIdEnumerator(ResourceStore<TId, TMeta> store)
+        internal ResourceIdEnumerator(FrontendResourceStore<TId, TMeta> store)
         {
             _store = store;
             _handles = store._handle;

@@ -25,20 +25,23 @@ internal class ResourceDisposeQueue
         _disposeQueue.Enqueue(cmd);
     }
 
-    public void Drain(Action<DeleteCmd> disposeFunc, int count, int delayTicks)
+    
+    public bool TryGetNext(int delayTicks, out DeleteCmd cmd)
     {
-        if (_disposeQueue.Count == 0) return;
-        if (++_ticks < delayTicks) return;
+        cmd = default;
+
+        if (_disposeQueue.Count == 0)
+        {
+            _ticks = 0;
+            return false;
+        }
+
+        if (++_ticks < delayTicks)
+            return false;
 
         _isDisposing = true;
-        
-        int n = 0;
-        while (_disposeQueue.Count > 0 && n < count)
-        {
-            var curr = _disposeQueue.Dequeue();
-            disposeFunc(curr);
-            n++;
-        }
+
+        cmd = _disposeQueue.Dequeue();
 
         if (_disposeQueue.Count == 0)
         {
@@ -47,6 +50,7 @@ internal class ResourceDisposeQueue
         }
 
         _ticks = 0;
+        return true;
     }
 
 }

@@ -7,6 +7,8 @@ internal sealed class BackendStoreHub
 {
     private readonly OpenGlStoreCollection _storeCollection;
     
+
+    
     public BackendStoreHub()
     {
         _storeCollection = new OpenGlStoreCollection();
@@ -32,16 +34,16 @@ internal sealed class BackendStoreHub
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    internal DriverResourceStore<THandle> GetStore<THandle>(ResourceKind kind)
+    internal BackendResourceStore<THandle> GetStore<THandle>(ResourceKind kind)
         where THandle : unmanaged, IResourceHandle, IEquatable<THandle>
     {
         var store = GetStore(kind);
-        if (store is DriverResourceStore<THandle> typed) return typed;
+        if (store is BackendResourceStore<THandle> typed) return typed;
         throw new ArgumentException($"Store {kind} is not {typeof(THandle).Name}");
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    internal IDriverResourceStore GetStore(ResourceKind kind)
+    internal IBackendResourceStore GetStore(ResourceKind kind)
     {
         var set = _storeCollection.Facade;
         switch (kind)
@@ -63,14 +65,14 @@ internal sealed class BackendStoreHub
 
 internal interface IBackendStoreFacade
 {
-    IDriverResourceStore TextureStore { get; }
-    IDriverResourceStore ShaderStore { get; }
-    IDriverResourceStore MeshStore { get; }
-    IDriverResourceStore VboStore { get; }
-    IDriverResourceStore IboStore { get; }
-    IDriverResourceStore FboStore { get; }
-    IDriverResourceStore RboStore { get; }
-    IDriverResourceStore UboStore { get; }
+    IBackendResourceStore TextureStore { get; }
+    IBackendResourceStore ShaderStore { get; }
+    IBackendResourceStore MeshStore { get; }
+    IBackendResourceStore VboStore { get; }
+    IBackendResourceStore IboStore { get; }
+    IBackendResourceStore FboStore { get; }
+    IBackendResourceStore RboStore { get; }
+    IBackendResourceStore UboStore { get; }
 }
 
 internal interface IBackendStoreCollection
@@ -81,23 +83,23 @@ internal interface IBackendStoreCollection
 internal sealed class OpenGlStoreCollection : IBackendStoreCollection
 {
     private const GraphicsBackend Backend = GraphicsBackend.OpenGL;
-    private readonly DriverResourceStore<GlTextureHandle> _textureStore = new(Backend, ResourceKind.Texture);
-    private readonly DriverResourceStore<GlShaderHandle> _shaderStore = new(Backend, ResourceKind.Shader);
-    private readonly DriverResourceStore<GlMeshHandle> _meshStore = new(Backend, ResourceKind.Mesh);
-    private readonly DriverResourceStore<GlVboHandle> _vboStore = new(Backend, ResourceKind.VertexBuffer);
-    private readonly DriverResourceStore<GlIboHandle> _iboStore = new(Backend, ResourceKind.IndexBuffer);
-    private readonly DriverResourceStore<GlFboHandle> _fboStore = new(Backend, ResourceKind.FrameBuffer);
-    private readonly DriverResourceStore<GlRboHandle> _rboStore = new(Backend, ResourceKind.RenderBuffer);
-    private readonly DriverResourceStore<GlUboHandle> _uboStore = new(Backend, ResourceKind.UniformBuffer);
+    private readonly BackendResourceStore<GlTextureHandle> _textureStore = new(Backend, ResourceKind.Texture);
+    private readonly BackendResourceStore<GlShaderHandle> _shaderStore = new(Backend, ResourceKind.Shader);
+    private readonly BackendResourceStore<GlMeshHandle> _meshStore = new(Backend, ResourceKind.Mesh);
+    private readonly BackendResourceStore<GlVboHandle> _vboStore = new(Backend, ResourceKind.VertexBuffer);
+    private readonly BackendResourceStore<GlIboHandle> _iboStore = new(Backend, ResourceKind.IndexBuffer);
+    private readonly BackendResourceStore<GlFboHandle> _fboStore = new(Backend, ResourceKind.FrameBuffer);
+    private readonly BackendResourceStore<GlRboHandle> _rboStore = new(Backend, ResourceKind.RenderBuffer);
+    private readonly BackendResourceStore<GlUboHandle> _uboStore = new(Backend, ResourceKind.UniformBuffer);
 
-    public IDriverReadResourceStore<GlTextureHandle> TextureStore => _textureStore;
-    public IDriverReadResourceStore<GlShaderHandle> ShaderStore => _shaderStore;
-    public IDriverReadResourceStore<GlMeshHandle> MeshStore => _meshStore;
-    public IDriverReadResourceStore<GlVboHandle> VboStore => _vboStore;
-    public IDriverReadResourceStore<GlIboHandle> IboStore => _iboStore;
-    public IDriverReadResourceStore<GlFboHandle> FboStore => _fboStore;
-    public IDriverReadResourceStore<GlRboHandle> RboStore => _rboStore;
-    public IDriverReadResourceStore<GlUboHandle> UboStore => _uboStore;
+    public IBackendReadResourceStore<GlTextureHandle> TextureStore => _textureStore;
+    public IBackendReadResourceStore<GlShaderHandle> ShaderStore => _shaderStore;
+    public IBackendReadResourceStore<GlMeshHandle> MeshStore => _meshStore;
+    public IBackendReadResourceStore<GlVboHandle> VboStore => _vboStore;
+    public IBackendReadResourceStore<GlIboHandle> IboStore => _iboStore;
+    public IBackendReadResourceStore<GlFboHandle> FboStore => _fboStore;
+    public IBackendReadResourceStore<GlRboHandle> RboStore => _rboStore;
+    public IBackendReadResourceStore<GlUboHandle> UboStore => _uboStore;
 
     private readonly StoreFacade _facade;
     public IBackendStoreFacade Facade => _facade;
@@ -117,13 +119,13 @@ internal sealed class OpenGlStoreCollection : IBackendStoreCollection
             _collection = collection;
         }
 
-        public IDriverResourceStore TextureStore => _collection._textureStore;
-        public IDriverResourceStore ShaderStore => _collection._shaderStore;
-        public IDriverResourceStore MeshStore => _collection._meshStore;
-        public IDriverResourceStore VboStore => _collection._vboStore;
-        public IDriverResourceStore IboStore => _collection._iboStore;
-        public IDriverResourceStore FboStore => _collection._fboStore;
-        public IDriverResourceStore RboStore => _collection._rboStore;
-        public IDriverResourceStore UboStore => _collection._uboStore;
+        public IBackendResourceStore TextureStore => _collection._textureStore;
+        public IBackendResourceStore ShaderStore => _collection._shaderStore;
+        public IBackendResourceStore MeshStore => _collection._meshStore;
+        public IBackendResourceStore VboStore => _collection._vboStore;
+        public IBackendResourceStore IboStore => _collection._iboStore;
+        public IBackendResourceStore FboStore => _collection._fboStore;
+        public IBackendResourceStore RboStore => _collection._rboStore;
+        public IBackendResourceStore UboStore => _collection._uboStore;
     }
 }

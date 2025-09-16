@@ -3,23 +3,23 @@ using Silk.NET.OpenGL;
 
 namespace ConcreteEngine.Graphics.Resources;
 
-internal sealed class ResourceStoreHub
+internal sealed class FrontendStoreHub
 {
     private const int StoreTier1 = 64;
     private const int StoreTier2 = 32;
     private const int StoreTier3 = 16;
 
 
-    internal ResourceStoreHub()
+    internal FrontendStoreHub()
     {
     }
     
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    internal ResourceStore<TId, TMeta> GetStore<TId, TMeta>(ResourceKind kind)
+    internal FrontendResourceStore<TId, TMeta> GetStore<TId, TMeta>(ResourceKind kind)
         where TId : unmanaged, IResourceId where TMeta : unmanaged, IResourceMeta
     {
         var store = GetStore(kind);
-        if (store is ResourceStore<TId, TMeta> typed) return typed;
+        if (store is FrontendResourceStore<TId, TMeta> typed) return typed;
         throw new ArgumentException($"Frontend Store {kind} is not {typeof(TId).Name} - {typeof(TMeta).Name}");
     }
     
@@ -51,27 +51,27 @@ internal sealed class ResourceStoreHub
     }
 
 
-    public ResourceStore<TextureId, TextureMeta> TextureStore { get; } =
+    public FrontendResourceStore<TextureId, TextureMeta> TextureStore { get; } =
         new(ResourceKind.Texture, StoreTier1, static i => new TextureId(i + 1));
 
-    public ResourceStore<ShaderId, ShaderMeta> ShaderStore { get; }
+    public FrontendResourceStore<ShaderId, ShaderMeta> ShaderStore { get; }
         = new(ResourceKind.Texture, StoreTier2, static i => new ShaderId(i + 1));
 
-    public ResourceStore<MeshId, MeshMeta> MeshStore { get; }
+    public FrontendResourceStore<MeshId, MeshMeta> MeshStore { get; }
         = new(ResourceKind.Texture, StoreTier2, static i => new MeshId(i + 1));
 
-    public ResourceStore<VertexBufferId, VertexBufferMeta> VboStore { get; }
+    public FrontendResourceStore<VertexBufferId, VertexBufferMeta> VboStore { get; }
         = new(ResourceKind.Texture, StoreTier2, static i => new VertexBufferId(i + 1));
 
-    public ResourceStore<IndexBufferId, IndexBufferMeta> IboStore { get; }
+    public FrontendResourceStore<IndexBufferId, IndexBufferMeta> IboStore { get; }
         = new(ResourceKind.Texture, StoreTier2, static i => new IndexBufferId(i + 1));
 
-    public ResourceStore<FrameBufferId, FrameBufferMeta> FboStore { get; }
+    public FrontendResourceStore<FrameBufferId, FrameBufferMeta> FboStore { get; }
         = new(ResourceKind.Texture, StoreTier3, static i => new FrameBufferId(i + 1));
 
-    public ResourceStore<RenderBufferId, RenderBufferMeta> RboStore { get; }
+    public FrontendResourceStore<RenderBufferId, RenderBufferMeta> RboStore { get; }
         = new(ResourceKind.Texture, StoreTier3, static i => new RenderBufferId(i + 1));
 
-    public ResourceStore<UniformBufferId, UniformBufferMeta> UboStore { get; }
+    public FrontendResourceStore<UniformBufferId, UniformBufferMeta> UboStore { get; }
         = new(ResourceKind.Texture, StoreTier3, static i => new UniformBufferId(i + 1));
 }

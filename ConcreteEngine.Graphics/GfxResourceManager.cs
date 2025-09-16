@@ -4,21 +4,21 @@ namespace ConcreteEngine.Graphics.Resources;
 
 internal interface IGfxResourceManager
 {
-    public ResourceStore<TextureId, TextureMeta> TextureStore { get; }
+    public FrontendResourceStore<TextureId, TextureMeta> TextureStore { get; }
 
-    public ResourceStore<ShaderId, ShaderMeta> ShaderStore { get; }
+    public FrontendResourceStore<ShaderId, ShaderMeta> ShaderStore { get; }
 
-    public ResourceStore<MeshId, MeshMeta> MeshStore { get; }
+    public FrontendResourceStore<MeshId, MeshMeta> MeshStore { get; }
 
-    public ResourceStore<VertexBufferId, VertexBufferMeta> VboStore { get; }
+    public FrontendResourceStore<VertexBufferId, VertexBufferMeta> VboStore { get; }
 
-    public ResourceStore<IndexBufferId, IndexBufferMeta> IboStore { get; }
+    public FrontendResourceStore<IndexBufferId, IndexBufferMeta> IboStore { get; }
 
-    public ResourceStore<FrameBufferId, FrameBufferMeta> FboStore { get; }
+    public FrontendResourceStore<FrameBufferId, FrameBufferMeta> FboStore { get; }
 
-    public ResourceStore<RenderBufferId, RenderBufferMeta> RboStore { get; }
+    public FrontendResourceStore<RenderBufferId, RenderBufferMeta> RboStore { get; }
 
-    public ResourceStore<UniformBufferId, UniformBufferMeta> UboStore { get; }
+    public FrontendResourceStore<UniformBufferId, UniformBufferMeta> UboStore { get; }
 }
 
 internal delegate GfxHandle BackendCreate<in THandle>(
@@ -83,7 +83,7 @@ internal sealed class BackendDriverDispatcher
 
 internal sealed class GfxResourceManager : IGfxResourceManager
 {
-    private readonly ResourceStoreHub _resourceStores;
+    private readonly FrontendStoreHub _frontendHub;
     private readonly BackendStoreHub _backendHub;
 
     private readonly BackendDriverDispatcher _backendDispatcher;
@@ -91,12 +91,12 @@ internal sealed class GfxResourceManager : IGfxResourceManager
     private readonly Dictionary<ResourceKind, IResourceBackendDispatcher> _dispatchers = new(8);
 
     internal BackendStoreHub BackendStoreHub => _backendHub;
-    internal ResourceStoreHub FrontendStoreHub => _resourceStores;
+    internal FrontendStoreHub FrontendStoreHub => _frontendHub;
     internal BackendDriverDispatcher GetDispatcher() => _backendDispatcher;
 
     public GfxResourceManager()
     {
-        _resourceStores = new ResourceStoreHub();
+        _frontendHub = new FrontendStoreHub();
         _backendHub = new BackendStoreHub();
 
         RegisterGlDispatcher();
@@ -121,7 +121,7 @@ internal sealed class GfxResourceManager : IGfxResourceManager
         }
 
         var newGfxHandler = store.Add(handle);
-        var fs = _resourceStores.GetStore(kind);
+        var fs = _frontendHub.GetStore(kind);
         return newGfxHandler;
     }
 
@@ -129,8 +129,6 @@ internal sealed class GfxResourceManager : IGfxResourceManager
     {
         var gfxHandle = cmd.Handle;
         Console.WriteLine($"Deleted {cmd.Handle.Kind} - Id: {cmd.IdValue}");
-
-        var store = _backendHub.GetStore(gfxHandle.Kind);
     }
 
 
@@ -167,12 +165,12 @@ internal sealed class GfxResourceManager : IGfxResourceManager
     }
 
 
-    public ResourceStore<TextureId, TextureMeta> TextureStore => _resourceStores.TextureStore;
-    public ResourceStore<ShaderId, ShaderMeta> ShaderStore => _resourceStores.ShaderStore;
-    public ResourceStore<MeshId, MeshMeta> MeshStore => _resourceStores.MeshStore;
-    public ResourceStore<VertexBufferId, VertexBufferMeta> VboStore => _resourceStores.VboStore;
-    public ResourceStore<IndexBufferId, IndexBufferMeta> IboStore => _resourceStores.IboStore;
-    public ResourceStore<FrameBufferId, FrameBufferMeta> FboStore => _resourceStores.FboStore;
-    public ResourceStore<RenderBufferId, RenderBufferMeta> RboStore => _resourceStores.RboStore;
-    public ResourceStore<UniformBufferId, UniformBufferMeta> UboStore => _resourceStores.UboStore;
+    public FrontendResourceStore<TextureId, TextureMeta> TextureStore => _frontendHub.TextureStore;
+    public FrontendResourceStore<ShaderId, ShaderMeta> ShaderStore => _frontendHub.ShaderStore;
+    public FrontendResourceStore<MeshId, MeshMeta> MeshStore => _frontendHub.MeshStore;
+    public FrontendResourceStore<VertexBufferId, VertexBufferMeta> VboStore => _frontendHub.VboStore;
+    public FrontendResourceStore<IndexBufferId, IndexBufferMeta> IboStore => _frontendHub.IboStore;
+    public FrontendResourceStore<FrameBufferId, FrameBufferMeta> FboStore => _frontendHub.FboStore;
+    public FrontendResourceStore<RenderBufferId, RenderBufferMeta> RboStore => _frontendHub.RboStore;
+    public FrontendResourceStore<UniformBufferId, UniformBufferMeta> UboStore => _frontendHub.UboStore;
 }

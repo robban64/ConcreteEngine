@@ -180,10 +180,10 @@ internal sealed class GlBackendDriver : IGraphicsDriver
     public GfxHandle CreateVertexBuffer(BufferUsage usage, uint elementSize, uint bindingIndex,
         out VertexBufferMeta meta)
     {
-        var handle = _gl.GenBuffer();
+        var handle = new GlVboHandle(_gl.GenBuffer());
         meta = new VertexBufferMeta(usage, bindingIndex, 0, elementSize);
-        return _dispatcher.OnCreate(ResourceKind.VertexBuffer, new GlVboHandle(handle));
-
+        return _dispatcher.OnCreate(ResourceKind.VertexBuffer, handle);
+        // input THandle return non-generic GfxHandle
         //return _store.VboStore.Add(new GlVboHandle(handle));
     }
 

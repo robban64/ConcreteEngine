@@ -78,18 +78,18 @@ internal interface IDeleteResourceBackend
 
 internal interface ICreateResourceBackend
 {
-    ResourceRef<ShaderId> CreateShader(string vs, string fs, out List<(string, int)> uniforms, out ShaderMeta meta);
+    ResourceRefToken<ShaderId> CreateShader(string vs, string fs, out List<(string, int)> uniforms, out ShaderMeta meta);
     void CreateFrameBuffer(in FrameBufferDesc desc, out DriverCreateFboResult result, GfxHandle? replaceHandle = null);
-    ResourceRef<TextureId> CreateTexture2D(GpuTextureData data, in GpuTextureDescriptor desc, out TextureMeta meta);
-    ResourceRef<TextureId> CreateCubeMap(GpuCubeMapData data, in GpuCubeMapDescriptor desc, out TextureMeta meta);
+    ResourceRefToken<TextureId> CreateTexture2D(GpuTextureData data, in GpuTextureDescriptor desc, out TextureMeta meta);
+    ResourceRefToken<TextureId> CreateCubeMap(GpuCubeMapData data, in GpuCubeMapDescriptor desc, out TextureMeta meta);
 
-    ResourceRef<MeshId> CreateVertexArray(DrawPrimitive primitive, MeshDrawKind drawKind, DrawElementType drawElement,
+    ResourceRefToken<MeshId> CreateVertexArray(DrawPrimitive primitive, MeshDrawKind drawKind, DrawElementType drawElement,
         out MeshMeta meta);
 
-    ResourceRef<VertexBufferId> CreateVertexBuffer(BufferUsage usage, uint elementSize, uint bindingIndex, out VertexBufferMeta meta);
-    ResourceRef<IndexBufferId> CreateIndexBuffer(BufferUsage usage, uint elementSize, out IndexBufferMeta meta);
+    ResourceRefToken<VertexBufferId> CreateVertexBuffer(BufferUsage usage, uint elementSize, uint bindingIndex, out VertexBufferMeta meta);
+    ResourceRefToken<IndexBufferId> CreateIndexBuffer(BufferUsage usage, uint elementSize, out IndexBufferMeta meta);
 
-    ResourceRef<UniformBufferId> CreateUniformBuffer(UniformGpuSlot slot, UboDefaultCapacity capacity, uint blockSize,
+    ResourceRefToken<UniformBufferId> CreateUniformBuffer(UniformGpuSlot slot, UboDefaultCapacity capacity, uint blockSize,
         out UniformBufferMeta meta);
 
 }

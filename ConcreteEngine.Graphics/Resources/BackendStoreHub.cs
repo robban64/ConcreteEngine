@@ -24,7 +24,7 @@ internal sealed class BackendStoreHub
         where TId : unmanaged, IResourceId
         where THandle : unmanaged, IResourceHandle, IEquatable<THandle>
         where TMeta : unmanaged, IResourceMeta
-        where TDef : IResourceDef<TId, THandle, TMeta>
+        where TDef : IResourceRefToken<TId, THandle, TMeta>
     {
         if (!_stores.TryAdd(TDef.Kind, new BackendStoreFacade<THandle>(store)))
             throw new InvalidOperationException("Duplicate backend store.");
@@ -42,7 +42,7 @@ internal sealed class BackendStoreHub
         where TId : unmanaged, IResourceId
         where THandle : unmanaged, IResourceHandle, IEquatable<THandle>
         where TMeta : unmanaged, IResourceMeta
-        where TDef : IResourceDef<TId, THandle, TMeta>
+        where TDef : IResourceRefToken<TId, THandle, TMeta>
     {
         if (!_stores.TryGetValue(TDef.Kind, out var store))
             throw new InvalidOperationException("Missing backend store.");

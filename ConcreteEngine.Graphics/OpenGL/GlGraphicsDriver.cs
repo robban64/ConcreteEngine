@@ -140,7 +140,7 @@ internal sealed class GlBackendDriver : IGraphicsDriver
     public void SetViewport(in Vector2D<int> viewport) => _gl.Viewport(viewport);
 
 
-    public ResourceRef<UniformBufferId> CreateUniformBuffer(UniformGpuSlot slot, UboDefaultCapacity capacity, uint blockSize,
+    public ResourceRefToken<UniformBufferId> CreateUniformBuffer(UniformGpuSlot slot, UboDefaultCapacity capacity, uint blockSize,
         out UniformBufferMeta meta)
     {
         var handle = _shaderFactory.CreateUniformBuffer(slot, capacity, blockSize, out meta);
@@ -165,7 +165,7 @@ internal sealed class GlBackendDriver : IGraphicsDriver
     }
 
 
-    public ResourceRef<MeshId> CreateVertexArray(DrawPrimitive primitive, MeshDrawKind drawKind, DrawElementType drawElement,
+    public ResourceRefToken<MeshId> CreateVertexArray(DrawPrimitive primitive, MeshDrawKind drawKind, DrawElementType drawElement,
         out MeshMeta meta)
     {
         var handle = _gl.GenVertexArray();
@@ -173,7 +173,7 @@ internal sealed class GlBackendDriver : IGraphicsDriver
         return _store.VertexArray.Add(new GlMeshHandle(handle));
     }
 
-    public ResourceRef<VertexBufferId> CreateVertexBuffer(BufferUsage usage, uint elementSize, uint bindingIndex,
+    public ResourceRefToken<VertexBufferId> CreateVertexBuffer(BufferUsage usage, uint elementSize, uint bindingIndex,
         out VertexBufferMeta meta)
     {
         var handle = _gl.GenBuffer();
@@ -181,7 +181,7 @@ internal sealed class GlBackendDriver : IGraphicsDriver
         return _store.VertexBuffer.Add(new GlVboHandle(handle));
     }
 
-    public ResourceRef<IndexBufferId> CreateIndexBuffer(BufferUsage usage, uint elementSize, out IndexBufferMeta meta)
+    public ResourceRefToken<IndexBufferId> CreateIndexBuffer(BufferUsage usage, uint elementSize, out IndexBufferMeta meta)
     {
         var handle = _gl.GenBuffer();
         meta = new IndexBufferMeta(usage, 0, elementSize);
@@ -354,14 +354,14 @@ internal sealed class GlBackendDriver : IGraphicsDriver
     // _gl.NamedBufferSubData(ibo.Handle, (nint)offsetByte, (nuint)(data.Length * Unsafe.SizeOf<T>()), data);
 
     
-    public ResourceRef<TextureId> CreateTexture2D(GpuTextureData data, in GpuTextureDescriptor desc, out TextureMeta meta)
+    public ResourceRefToken<TextureId> CreateTexture2D(GpuTextureData data, in GpuTextureDescriptor desc, out TextureMeta meta)
     {
         var handle = _textureFactory.CreateTexture2D(data, in desc, out meta);
         return _store.Texture.Add(handle);
     }
 
 
-    public ResourceRef<TextureId> CreateCubeMap(GpuCubeMapData data, in GpuCubeMapDescriptor desc, out TextureMeta meta)
+    public ResourceRefToken<TextureId> CreateCubeMap(GpuCubeMapData data, in GpuCubeMapDescriptor desc, out TextureMeta meta)
     {
         var handle = _textureFactory.CreateCubeMap(data, in desc, out meta);
         return _store.Texture.Add(handle);
@@ -393,7 +393,7 @@ internal sealed class GlBackendDriver : IGraphicsDriver
 
 
     // Shader/Program
-    public ResourceRef<ShaderId> CreateShader(string vs, string fs, out List<(string, int)> uniforms, out ShaderMeta meta)
+    public ResourceRefToken<ShaderId> CreateShader(string vs, string fs, out List<(string, int)> uniforms, out ShaderMeta meta)
     {
         var handle = _shaderFactory.CreateShader(vs, fs, out uniforms, out meta);
         return _store.Shader.Add(handle);

@@ -2,7 +2,7 @@ namespace ConcreteEngine.Graphics.Resources;
 
 
 
-internal interface IResourceDef<out TId, out THandle, TMeta>
+internal interface IResourceRefToken<out TId, out THandle, TMeta>
     where TId : unmanaged, IResourceId
     where THandle : unmanaged, IResourceHandle, IEquatable<THandle>
     where TMeta : unmanaged, IResourceMeta
@@ -12,15 +12,15 @@ internal interface IResourceDef<out TId, out THandle, TMeta>
     static abstract THandle MakeHandle(uint raw);
 }
 
-internal readonly struct ResourceRef<TId> : IEquatable<ResourceRef<TId>> where TId : unmanaged, IResourceId
+internal readonly struct ResourceRefToken<TId> : IEquatable<ResourceRefToken<TId>> where TId : unmanaged, IResourceId
 {
     public readonly GfxHandle Handle;
-    public ResourceRef(in GfxHandle handle) => Handle = handle;
-    public bool Equals(ResourceRef<TId> other) =>  Handle == other.Handle;
+    public ResourceRefToken(in GfxHandle handle) => Handle = handle;
+    public bool Equals(ResourceRefToken<TId> other) =>  Handle == other.Handle;
 }
 
 internal readonly struct TextureDef
-    : IResourceDef<TextureId, GlTextureHandle, TextureMeta>
+    : IResourceRefToken<TextureId, GlTextureHandle, TextureMeta>
 {
     public static ResourceKind Kind => ResourceKind.Texture;
     public static TextureId        MakeId(int raw)    => new(raw + 1);
@@ -28,7 +28,7 @@ internal readonly struct TextureDef
 }
 
 internal readonly struct ShaderDef
-    : IResourceDef<ShaderId, GlShaderHandle, ShaderMeta>
+    : IResourceRefToken<ShaderId, GlShaderHandle, ShaderMeta>
 {
     public static ResourceKind Kind => ResourceKind.Shader;
     public static ShaderId       MakeId(int raw)    => new(raw + 1);
@@ -36,7 +36,7 @@ internal readonly struct ShaderDef
 }
 
 internal readonly struct MeshDef
-    : IResourceDef<MeshId, GlMeshHandle, MeshMeta>
+    : IResourceRefToken<MeshId, GlMeshHandle, MeshMeta>
 {
     public static ResourceKind Kind => ResourceKind.Mesh;
     public static MeshId       MakeId(int raw)    => new(raw + 1);
@@ -44,7 +44,7 @@ internal readonly struct MeshDef
 }
 
 internal readonly struct VertexBufferDef
-    : IResourceDef<VertexBufferId, GlVboHandle, VertexBufferMeta>
+    : IResourceRefToken<VertexBufferId, GlVboHandle, VertexBufferMeta>
 {
     public static ResourceKind Kind => ResourceKind.VertexBuffer;
     public static VertexBufferId MakeId(int raw)   => new(raw + 1);
@@ -52,7 +52,7 @@ internal readonly struct VertexBufferDef
 }
 
 internal readonly struct IndexBufferDef
-    : IResourceDef<IndexBufferId, GlIboHandle, IndexBufferMeta>
+    : IResourceRefToken<IndexBufferId, GlIboHandle, IndexBufferMeta>
 {
     public static ResourceKind Kind => ResourceKind.IndexBuffer;
     public static IndexBufferId MakeId(int raw)   => new(raw + 1);
@@ -60,7 +60,7 @@ internal readonly struct IndexBufferDef
 }
 
 internal readonly struct FrameBufferDef
-    : IResourceDef<FrameBufferId, GlFboHandle, FrameBufferMeta>
+    : IResourceRefToken<FrameBufferId, GlFboHandle, FrameBufferMeta>
 {
     public static ResourceKind Kind => ResourceKind.FrameBuffer;
     public static FrameBufferId MakeId(int raw)   => new(raw + 1);
@@ -68,7 +68,7 @@ internal readonly struct FrameBufferDef
 }
 
 internal readonly struct RenderBufferDef
-    : IResourceDef<RenderBufferId, GlRboHandle, RenderBufferMeta>
+    : IResourceRefToken<RenderBufferId, GlRboHandle, RenderBufferMeta>
 {
     public static ResourceKind Kind => ResourceKind.RenderBuffer;
     public static RenderBufferId MakeId(int raw)   => new(raw + 1);
@@ -76,22 +76,9 @@ internal readonly struct RenderBufferDef
 }
 
 internal readonly struct UniformBufferDef
-    : IResourceDef<UniformBufferId, GlUboHandle, UniformBufferMeta>
+    : IResourceRefToken<UniformBufferId, GlUboHandle, UniformBufferMeta>
 {
     public static ResourceKind Kind => ResourceKind.UniformBuffer;
     public static UniformBufferId MakeId(int raw)    => new(raw + 1);
     public static GlUboHandle     MakeHandle(uint h) => new(h);
 }
-
-
-/*
-static THandle GetHandle<TId, THandle, TMeta, TType>(
-    BackendStores stores, in GfxHandle h)
-    where TId     : unmanaged, IResourceId
-    where THandle : unmanaged, IResourceHandle, IEquatable<THandle>
-    where TMeta   : unmanaged, IResourceMeta
-    where TType   : IResourceType<TId, THandle, TMeta>
-{
-    return stores.Get<TId, THandle, TMeta, TType>().Get(in h);
-}
-*/

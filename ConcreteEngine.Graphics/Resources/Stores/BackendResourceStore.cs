@@ -12,7 +12,7 @@ internal interface IBackendResourceStore
     bool IsAlive(in GfxHandle handle);
 }
 
-internal interface IBackendReadResourceStore<THandle> where THandle : unmanaged, IResourceHandle, IEquatable<THandle>
+internal interface IBackendReadResourceStore<out THandle> where THandle : unmanaged, IResourceHandle, IEquatable<THandle>
 {
     THandle Get(in GfxHandle handle);
     //GfxHandle Replace(in GfxHandle handle, THandle value);

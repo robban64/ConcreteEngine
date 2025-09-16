@@ -44,7 +44,7 @@ internal sealed class GfxResourceDisposer : IGfxResourceDisposer
     public void EnqueueRemoval<TId>(TId id, bool replace) where TId : unmanaged, IResourceId
     {
         ArgumentOutOfRangeException.ThrowIfLessThanOrEqual(id.Value, 0);
-        var resourceKind = ResourceTypeConverter.FromId<TId>();
+        var resourceKind = ResourceTypeConverter.Of<TId>();
         var fStore = _resources.FrontendStoreHub.GetStore<TId>(resourceKind);
         var gfxHandle = fStore.GetHandle(id);
 

@@ -78,22 +78,19 @@ internal interface IDeleteResourceBackend
 
 internal interface ICreateResourceBackend
 {
-    GfxHandle CreateShader(string vs, string fs, out List<(string, int)> uniforms, out ShaderMeta meta);
+    ResourceRef<ShaderId> CreateShader(string vs, string fs, out List<(string, int)> uniforms, out ShaderMeta meta);
     void CreateFrameBuffer(in FrameBufferDesc desc, out DriverCreateFboResult result, GfxHandle? replaceHandle = null);
-    GfxHandle CreateTexture2D(GpuTextureData data, in GpuTextureDescriptor desc, out TextureMeta meta);
-    GfxHandle CreateCubeMap(GpuCubeMapData data, in GpuCubeMapDescriptor desc, out TextureMeta meta);
+    ResourceRef<TextureId> CreateTexture2D(GpuTextureData data, in GpuTextureDescriptor desc, out TextureMeta meta);
+    ResourceRef<TextureId> CreateCubeMap(GpuCubeMapData data, in GpuCubeMapDescriptor desc, out TextureMeta meta);
 
-    GfxHandle CreateVertexArray(DrawPrimitive primitive, MeshDrawKind drawKind, DrawElementType drawElement,
+    ResourceRef<MeshId> CreateVertexArray(DrawPrimitive primitive, MeshDrawKind drawKind, DrawElementType drawElement,
         out MeshMeta meta);
 
-    GfxHandle CreateVertexBuffer(BufferUsage usage, uint elementSize, uint bindingIndex, out VertexBufferMeta meta);
-    GfxHandle CreateIndexBuffer(BufferUsage usage, uint elementSize, out IndexBufferMeta meta);
+    ResourceRef<VertexBufferId> CreateVertexBuffer(BufferUsage usage, uint elementSize, uint bindingIndex, out VertexBufferMeta meta);
+    ResourceRef<IndexBufferId> CreateIndexBuffer(BufferUsage usage, uint elementSize, out IndexBufferMeta meta);
 
-    GfxHandle CreateUniformBuffer(UniformGpuSlot slot, UboDefaultCapacity capacity, uint blockSize,
+    ResourceRef<UniformBufferId> CreateUniformBuffer(UniformGpuSlot slot, UboDefaultCapacity capacity, uint blockSize,
         out UniformBufferMeta meta);
-
-    void ReplaceFrameBuffer(in FrameBufferDesc desc, in GfxHandle prevFbo, in GfxHandle prevTex,
-        in GfxHandle prevRboDepth, in GfxHandle prevRboTex, out DriverCreateFboResult result);
 
 }
 
@@ -102,8 +99,7 @@ internal interface IGraphicsDriver : IGfxShaderBackend, IBufferBackend, IDrawBac
 {
     GraphicsConfiguration Configuration { get; }
     DeviceCapabilities Capabilities { get; }
-
+    void AttachStore(BackendOpsHub storeHub);
     void AttachDispatcher(BackendDriverDispatcher dispatcher);
-    void AttachStore(OpenGlStoreCollection store);
     void ValidateEndFrame();
 }

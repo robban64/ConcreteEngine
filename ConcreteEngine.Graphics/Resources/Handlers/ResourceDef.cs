@@ -18,8 +18,12 @@ internal interface IResourceDef<out TId, out THandle, TMeta>
     static abstract THandle MakeHandle(uint raw);
 }
 
-internal readonly record struct ResourceRef<TId>(GfxHandle H)
-    where TId : unmanaged, IResourceId;
+internal readonly struct ResourceRef<TId> : IEquatable<ResourceRef<TId>> where TId : unmanaged, IResourceId
+{
+    public readonly GfxHandle Handle;
+    public ResourceRef(in GfxHandle handle) => Handle = handle;
+    public bool Equals(ResourceRef<TId> other) =>  Handle == other.Handle;
+}
 
 internal readonly struct TextureDef
     : IResourceDef<TextureId, GlTextureHandle, TextureMeta>

@@ -2,8 +2,8 @@ namespace ConcreteEngine.Graphics.Resources;
 
 internal readonly record struct DeleteCmd(
     in GfxHandle Handle,
+    NativeHandle NativeHandle,
     int IdValue,
-    uint RawHandle,
     ushort Priority,
     bool Replace
 );

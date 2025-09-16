@@ -54,32 +54,32 @@ internal sealed class GfxResourceAllocator : IGfxResourceAllocator
         out MeshMeta meta)
     {
         var handle = _driver.CreateVertexArray(primitive, drawKind, drawElement, out meta);
-        var meshId = _resources.MeshStore.Add(in meta, handle);
+        var meshId = _resources.MeshStore.Add(in meta, handle.Handle);
         return meshId;
     }
 
     public VertexBufferId CreateVertexBuffer(BufferUsage usage, uint elementSize, uint index, out VertexBufferMeta meta)
     {
         var handle = _driver.CreateVertexBuffer(usage, elementSize, index, out meta);
-        return _resources.VboStore.Add(new VertexBufferMeta(usage, index, 0, elementSize), handle);
+        return _resources.VboStore.Add(new VertexBufferMeta(usage, index, 0, elementSize), handle.Handle);
     }
 
     public IndexBufferId CreateIndexBuffer(BufferUsage usage, uint elementSize, out IndexBufferMeta meta)
     {
         var handle = _driver.CreateIndexBuffer(usage, elementSize, out meta);
-        return _resources.IboStore.Add(new IndexBufferMeta(usage, 0, elementSize), handle);
+        return _resources.IboStore.Add(new IndexBufferMeta(usage, 0, elementSize), handle.Handle);
     }
 
     public TextureId CreateTexture2D(GpuTextureData data, in GpuTextureDescriptor desc, out TextureMeta meta)
     {
         var handle = _driver.CreateTexture2D(data, in desc, out meta);
-        return _resources.TextureStore.Add(in meta, handle);
+        return _resources.TextureStore.Add(in meta, handle.Handle);
     }
 
     public TextureId CreateCubeMap(GpuCubeMapData data, in GpuCubeMapDescriptor desc, out TextureMeta meta)
     {
         var handle = _driver.CreateCubeMap(data, in desc, out meta);
-        return _resources.TextureStore.Add(in meta, handle);
+        return _resources.TextureStore.Add(in meta, handle.Handle);
     }
 
     public FrameBufferId CreateFrameBuffer(in FrameBufferDesc desc, out FrameBufferMeta meta)
@@ -130,11 +130,10 @@ internal sealed class GfxResourceAllocator : IGfxResourceAllocator
         var newMeta = FrameBufferMeta.CreateResizeCopy(in prevMeta, size);
         
         
+        _driver.CreateFrameBuffer(in desc, out var result);
         _disposer.EnqueueRemoval(fboId, true);
-
-        _driver.ReplaceFrameBuffer(in desc, in prevFbo, in prevTex, in prevRboDepth, in prevRboTex, out var result);
-
-         _resources.FboStore.Replace(fboId, result.Fbo.Meta, result.Fbo.Handle, out _);
+        _resources.FrontendStoreHub.FboStore.Replace(fboId, in newMeta,  result.Fbo.Handle, out var prevHandle);
+        
 
          if (result.FboTex.Handle.IsValid)
              _resources.TextureStore.Replace(colTexId, result.FboTex.Meta, result.FboTex.Handle, out _);
@@ -152,7 +151,7 @@ internal sealed class GfxResourceAllocator : IGfxResourceAllocator
     {
         var handle = _driver.CreateShader(vertexSource, fragmentSource,
             out var uniforms, out meta);
-        var shaderId = _resources.ShaderStore.Add(in meta, in handle);
+        var shaderId = _resources.ShaderStore.Add(in meta,  handle.Handle);
         _registry.ShaderRepository.Add(shaderId, in meta, uniforms);
         return shaderId;
     }
@@ -168,7 +167,7 @@ internal sealed class GfxResourceAllocator : IGfxResourceAllocator
         //nuint capacity = UniformBufferUtils.GetDefaultCapacity(stride, defaultCapacity);
 
         var result = _driver.CreateUniformBuffer(slot, defaultCapacity, size, out meta);
-        var uboId = _resources.UboStore.Add(in meta, result);
+        var uboId = _resources.UboStore.Add(in meta, result.Handle);
         _registry.ShaderRepository.AddUboToSlot(meta.Slot, uboId);
         return uboId;
     }

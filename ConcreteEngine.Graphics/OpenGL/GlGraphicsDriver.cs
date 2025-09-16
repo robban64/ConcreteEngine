@@ -32,7 +32,7 @@ internal sealed class GlBackendDriver : IGraphicsDriver
     private BackendDriverDispatcher _dispatcher = null!;
 
     // Kepp it for now, read only
-    private OpenGlStoreCollection _store = null!;
+    private BackendOpsHub _store = null!;
 
     private static DebugProc _cb;
 
@@ -40,7 +40,6 @@ internal sealed class GlBackendDriver : IGraphicsDriver
     internal GlBackendDriver()
     {
     }
-
 
     internal void Initialize(GlStartupConfig config)
     {
@@ -86,7 +85,7 @@ internal sealed class GlBackendDriver : IGraphicsDriver
         _dispatcher = dispatcher;
     }
 
-    public void AttachStore(OpenGlStoreCollection store)
+    public void AttachStore(BackendOpsHub store)
     {
         _store = store;
     }
@@ -141,12 +140,11 @@ internal sealed class GlBackendDriver : IGraphicsDriver
     public void SetViewport(in Vector2D<int> viewport) => _gl.Viewport(viewport);
 
 
-    public GfxHandle CreateUniformBuffer(UniformGpuSlot slot, UboDefaultCapacity capacity, uint blockSize,
+    public ResourceRef<UniformBufferId> CreateUniformBuffer(UniformGpuSlot slot, UboDefaultCapacity capacity, uint blockSize,
         out UniformBufferMeta meta)
     {
         var handle = _shaderFactory.CreateUniformBuffer(slot, capacity, blockSize, out meta);
-        return _dispatcher.OnCreate(ResourceKind.UniformBuffer, handle);
-        //return _store.UboStore.Add(handle);
+        return _store.UniformBuffer.Add(handle);
     }
 
     public unsafe void SetUniformBufferSize(UniformGpuSlot slot, nuint capacity) =>
@@ -162,42 +160,37 @@ internal sealed class GlBackendDriver : IGraphicsDriver
 
     public void BindUniformBufferRange(in GfxHandle ubo, UniformGpuSlot slot, nuint offset, nuint size)
     {
-        var handle = _store.UboStore.Get(ubo).Handle;
+        var handle = _store.UniformBuffer.Get(ubo).Handle;
         _gl.BindBufferRange(BufferTargetARB.UniformBuffer, (uint)slot, handle, (nint)offset, size);
     }
 
 
-    public GfxHandle CreateVertexArray(DrawPrimitive primitive, MeshDrawKind drawKind, DrawElementType drawElement,
+    public ResourceRef<MeshId> CreateVertexArray(DrawPrimitive primitive, MeshDrawKind drawKind, DrawElementType drawElement,
         out MeshMeta meta)
     {
         var handle = _gl.GenVertexArray();
         meta = new MeshMeta(primitive, drawKind, drawElement, 0, 0);
-        return _dispatcher.OnCreate(ResourceKind.Mesh, new GlMeshHandle(handle));
-
-        //return _store.MeshStore.Add(new GlMeshHandle(handle));
+        return _store.VertexArray.Add(new GlMeshHandle(handle));
     }
 
-    public GfxHandle CreateVertexBuffer(BufferUsage usage, uint elementSize, uint bindingIndex,
+    public ResourceRef<VertexBufferId> CreateVertexBuffer(BufferUsage usage, uint elementSize, uint bindingIndex,
         out VertexBufferMeta meta)
     {
-        var handle = new GlVboHandle(_gl.GenBuffer());
+        var handle = _gl.GenBuffer();
         meta = new VertexBufferMeta(usage, bindingIndex, 0, elementSize);
-        return _dispatcher.OnCreate(ResourceKind.VertexBuffer, handle);
-        // input THandle return non-generic GfxHandle
-        //return _store.VboStore.Add(new GlVboHandle(handle));
+        return _store.VertexBuffer.Add(new GlVboHandle(handle));
     }
 
-    public GfxHandle CreateIndexBuffer(BufferUsage usage, uint elementSize, out IndexBufferMeta meta)
+    public ResourceRef<IndexBufferId> CreateIndexBuffer(BufferUsage usage, uint elementSize, out IndexBufferMeta meta)
     {
         var handle = _gl.GenBuffer();
         meta = new IndexBufferMeta(usage, 0, elementSize);
-        return _dispatcher.OnCreate(ResourceKind.IndexBuffer, new GlIboHandle(handle));
-        //return _store.IboStore.Add(new GlIboHandle(handle));
+        return _store.IndexBuffer.Add(new GlIboHandle(handle));
     }
 
     public void BindFrameBuffer(in GfxHandle fbo)
     {
-        var handle = !fbo.IsValid ? 0 : _store.FboStore.Get(fbo).Handle;
+        var handle = !fbo.IsValid ? 0 : _store.FrameBuffer.Get(fbo).Handle;
         _gl.BindFramebuffer(FramebufferTarget.Framebuffer, handle);
         if (handle != 0)
         {
@@ -208,15 +201,15 @@ internal sealed class GlBackendDriver : IGraphicsDriver
 
     public void BindRenderBuffer(in GfxHandle rbo)
     {
-        var handle = !rbo.IsValid ? 0 : _store.FboStore.Get(rbo).Handle;
+        var handle = !rbo.IsValid ? 0 : _store.FrameBuffer.Get(rbo).Handle;
         _gl.BindRenderbuffer(RenderbufferTarget.Renderbuffer, handle);
     }
 
 
     public void BindFrameBufferReadDraw(in GfxHandle readFbo, in GfxHandle drawFbo)
     {
-        var read = !readFbo.IsValid ? 0 : _store.FboStore.Get(readFbo).Handle;
-        var draw = !drawFbo.IsValid ? 0 : _store.FboStore.Get(drawFbo).Handle;
+        var read = !readFbo.IsValid ? 0 : _store.FrameBuffer.Get(readFbo).Handle;
+        var draw = !drawFbo.IsValid ? 0 : _store.FrameBuffer.Get(drawFbo).Handle;
 
         _gl.BindFramebuffer(FramebufferTarget.ReadFramebuffer, read);
         _gl.BindFramebuffer(FramebufferTarget.DrawFramebuffer, draw);
@@ -226,23 +219,23 @@ internal sealed class GlBackendDriver : IGraphicsDriver
     {
         _fboFactory.CreateFrameBuffer(in desc, out var fbo, out var fboTex, out var rboDepth, out var rboTex);
 
-        var fboHandle = _dispatcher.OnCreate(ResourceKind.FrameBuffer, fbo.Handle);
-        var texHandle = fboTex.Handle != default ? _dispatcher.OnCreate(ResourceKind.Texture, fboTex.Handle) : default;
+        var fboHandle = _store.FrameBuffer.Add(fbo.Handle);
+        var texHandle = fboTex.Handle != default ? _store.Texture.Add( fboTex.Handle) : default;
         var rboDepthHandle = rboDepth.Handle != default
-            ? _dispatcher.OnCreate(ResourceKind.RenderBuffer, rboDepth.Handle)
+            ? _store.RenderBuffer.Add( rboDepth.Handle)
             : default;
         var rboTexHandle = rboTex.Handle != default
-            ? _dispatcher.OnCreate(ResourceKind.RenderBuffer, rboTex.Handle)
+            ? _store.RenderBuffer.Add( rboTex.Handle)
             : default;
 
 
-        result = new DriverCreateFboResult(new DriverHandleMeta<FrameBufferMeta>(in fboHandle, fbo.Meta),
-            new DriverHandleMeta<TextureMeta>(in texHandle, fboTex.Meta),
-            new DriverHandleMeta<RenderBufferMeta>(in rboDepthHandle, rboDepth.Meta),
-            new DriverHandleMeta<RenderBufferMeta>(in rboTexHandle, rboTex.Meta)
+        result = new DriverCreateFboResult(new DriverHandleMeta<FrameBufferMeta>(in fboHandle.Handle, fbo.Meta),
+            new DriverHandleMeta<TextureMeta>(in texHandle.Handle, fboTex.Meta),
+            new DriverHandleMeta<RenderBufferMeta>(in fboHandle.Handle, rboDepth.Meta),
+            new DriverHandleMeta<RenderBufferMeta>(in fboHandle.Handle, rboTex.Meta)
         );
     }
-
+/*
     public void ReplaceFrameBuffer(in FrameBufferDesc desc, in GfxHandle prevFbo, in GfxHandle prevTex,
         in GfxHandle prevRboDepth, in GfxHandle prevRboTex, out DriverCreateFboResult result)
     {
@@ -263,7 +256,7 @@ internal sealed class GlBackendDriver : IGraphicsDriver
             new DriverHandleMeta<RenderBufferMeta>(in rboDepthHandle, rboDepth.Meta),
             new DriverHandleMeta<RenderBufferMeta>(in rboTexHandle, rboTex.Meta));
     }
-
+*/
     public void Blit(Vector2D<int> srcSize, Vector2D<int> dstSize, bool linear)
     {
         _gl.BlitFramebuffer(
@@ -283,7 +276,7 @@ internal sealed class GlBackendDriver : IGraphicsDriver
             return;
         }
 
-        _gl.BindVertexArray(_store.MeshStore.Get(vao).Handle);
+        _gl.BindVertexArray(_store.VertexArray.Get(vao).Handle);
     }
 
     public void BindVertexBuffer(in GfxHandle vbo)
@@ -294,7 +287,7 @@ internal sealed class GlBackendDriver : IGraphicsDriver
             return;
         }
 
-        _gl.BindBuffer(BufferTargetARB.ArrayBuffer, _store.VboStore.Get(vbo).Handle);
+        _gl.BindBuffer(BufferTargetARB.ArrayBuffer, _store.VertexBuffer.Get(vbo).Handle);
     }
 
     public void BindIndexBuffer(in GfxHandle ibo)
@@ -305,7 +298,7 @@ internal sealed class GlBackendDriver : IGraphicsDriver
             return;
         }
 
-        _gl.BindBuffer(BufferTargetARB.ElementArrayBuffer, _store.IboStore.Get(ibo).Handle);
+        _gl.BindBuffer(BufferTargetARB.ElementArrayBuffer, _store.IndexBuffer.Get(ibo).Handle);
     }
 
     public void BindUniformBuffer(in GfxHandle ubo)
@@ -316,13 +309,13 @@ internal sealed class GlBackendDriver : IGraphicsDriver
             return;
         }
 
-        _gl.BindBuffer(BufferTargetARB.UniformBuffer, _store.UboStore.Get(ubo).Handle);
+        _gl.BindBuffer(BufferTargetARB.UniformBuffer, _store.UniformBuffer.Get(ubo).Handle);
     }
 
 
     public unsafe void SetVertexAttribute(in GfxHandle vao, uint index, in VertexAttributeDescriptor attribute)
     {
-        var handle = _store.MeshStore.Get(vao).Handle;
+        var handle = _store.VertexArray.Get(vao).Handle;
         _gl.EnableVertexAttribArray(index);
         _gl.VertexAttribPointer(index, (int)attribute.Format, VertexAttribPointerType.Float, attribute.Normalized,
             attribute.StrideBytes,
@@ -360,21 +353,18 @@ internal sealed class GlBackendDriver : IGraphicsDriver
     }
     // _gl.NamedBufferSubData(ibo.Handle, (nint)offsetByte, (nuint)(data.Length * Unsafe.SizeOf<T>()), data);
 
-
-    // Textures GfxHandle? previous,
     
-    public GfxHandle CreateTexture2D(GpuTextureData data, in GpuTextureDescriptor desc, out TextureMeta meta)
+    public ResourceRef<TextureId> CreateTexture2D(GpuTextureData data, in GpuTextureDescriptor desc, out TextureMeta meta)
     {
         var handle = _textureFactory.CreateTexture2D(data, in desc, out meta);
-        return _dispatcher.OnCreate(ResourceKind.Texture, handle);
+        return _store.Texture.Add(handle);
     }
 
 
-    public GfxHandle CreateCubeMap(GpuCubeMapData data, in GpuCubeMapDescriptor desc, out TextureMeta meta)
+    public ResourceRef<TextureId> CreateCubeMap(GpuCubeMapData data, in GpuCubeMapDescriptor desc, out TextureMeta meta)
     {
         var handle = _textureFactory.CreateCubeMap(data, in desc, out meta);
-        return _dispatcher.OnCreate(ResourceKind.Texture, handle);
-        //return _store.TextureStore.Add(handle);
+        return _store.Texture.Add(handle);
     }
 
 
@@ -386,7 +376,7 @@ internal sealed class GlBackendDriver : IGraphicsDriver
             return;
         }
 
-        _gl.BindTextureUnit(slot, _store.TextureStore.Get(tex).Handle);
+        _gl.BindTextureUnit(slot, _store.Texture.Get(tex).Handle);
     }
 
 
@@ -403,11 +393,10 @@ internal sealed class GlBackendDriver : IGraphicsDriver
 
 
     // Shader/Program
-    public GfxHandle CreateShader(string vs, string fs, out List<(string, int)> uniforms, out ShaderMeta meta)
+    public ResourceRef<ShaderId> CreateShader(string vs, string fs, out List<(string, int)> uniforms, out ShaderMeta meta)
     {
         var handle = _shaderFactory.CreateShader(vs, fs, out uniforms, out meta);
-        return _dispatcher.OnCreate(ResourceKind.Shader, handle);
-        //return _store.ShaderStore.Add(handle);
+        return _store.Shader.Add(handle);
     }
 
     public void UseShader(in GfxHandle shader)
@@ -418,7 +407,7 @@ internal sealed class GlBackendDriver : IGraphicsDriver
             return;
         }
 
-        _gl.UseProgram(_store.ShaderStore.Get(shader).Handle);
+        _gl.UseProgram(_store.Shader.Get(shader).Handle);
     }
 
     public Dictionary<string, int> GetUniforms()
@@ -490,43 +479,43 @@ internal sealed class GlBackendDriver : IGraphicsDriver
 
     private void DisposeTexture(in DeleteCmd cmd)
     {
-        _gl.DeleteTexture(cmd.RawHandle);
+        _gl.DeleteTexture(cmd.NativeHandle.Value);
         _dispatcher.OnDelete<GlTextureHandle>(in cmd);
     }
 
     private void DisposeShader(in DeleteCmd cmd)
     {
-        _gl.DeleteProgram(cmd.RawHandle);
+        _gl.DeleteProgram(cmd.NativeHandle.Value);
         _dispatcher.OnDelete<GlShaderHandle>(in cmd);
     }
 
     private void DisposeVao(in DeleteCmd cmd)
     {
-        _gl.DeleteVertexArray(cmd.RawHandle);
+        _gl.DeleteVertexArray(cmd.NativeHandle.Value);
         _dispatcher.OnDelete<GlMeshHandle>(in cmd);
     }
 
     private void DisposeVbo(in DeleteCmd cmd)
     {
-        _gl.DeleteBuffer(cmd.RawHandle);
+        _gl.DeleteBuffer(cmd.NativeHandle.Value);
         _dispatcher.OnDelete<GlVboHandle>(in cmd);
     }
 
     private void DisposeIbo(in DeleteCmd cmd)
     {
-        _gl.DeleteBuffer(cmd.RawHandle);
+        _gl.DeleteBuffer(cmd.NativeHandle.Value);
         _dispatcher.OnDelete<GlIboHandle>(in cmd);
     }
 
     private void DisposeFbo(in DeleteCmd cmd)
     {
-        _gl.DeleteFramebuffer(cmd.RawHandle);
+        _gl.DeleteFramebuffer(cmd.NativeHandle.Value);
         _dispatcher.OnDelete<GlFboHandle>(in cmd);
     }
 
     private void DisposeRbo(in DeleteCmd cmd)
     {
-        _gl.DeleteRenderbuffer(cmd.RawHandle);
+        _gl.DeleteRenderbuffer(cmd.NativeHandle.Value);
         _dispatcher.OnDelete<GlRboHandle>(in cmd);
     }
 

@@ -4,6 +4,23 @@ namespace ConcreteEngine.Graphics.Resources;
 
 internal class ResourceTypeConverter
 {
+    private static readonly Dictionary<Type, ResourceKind> ResourceIdToKind = new()
+    {
+        [typeof(TextureId)]      = ResourceKind.Texture,
+        [typeof(ShaderId)]       = ResourceKind.Shader,
+        [typeof(MeshId)]         = ResourceKind.Mesh,
+        [typeof(VertexBufferId)] = ResourceKind.VertexBuffer,
+        [typeof(IndexBufferId)]  = ResourceKind.IndexBuffer,
+        [typeof(FrameBufferId)]  = ResourceKind.FrameBuffer,
+        [typeof(RenderBufferId)] = ResourceKind.RenderBuffer,
+        [typeof(UniformBufferId)]= ResourceKind.UniformBuffer,
+    };
+
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public static ResourceKind Of<TId>() where TId : unmanaged, IResourceId
+        => ResourceIdToKind[typeof(TId)];
+
+    
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static TId MakeId<TId>(int rawId) where TId : unmanaged, IResourceId
     {

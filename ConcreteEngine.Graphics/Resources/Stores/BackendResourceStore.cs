@@ -9,7 +9,7 @@ internal interface IBackendResourceStore
 
     GfxHandle Replace(in GfxHandle handle, uint rawHandle);
 
-    uint GetRawHandle(in GfxHandle handle);
+    NativeHandle GetNativeHandle(in GfxHandle handle);
 
     
     void Remove(in GfxHandle handle);
@@ -19,11 +19,8 @@ internal interface IBackendResourceStore
 internal interface IBackendReadResourceStore<THandle> where THandle : unmanaged, IResourceHandle, IEquatable<THandle>
 {
     THandle Get(in GfxHandle handle);
-    THandle GetForDelete(in GfxHandle handle);
     GfxHandle Replace(in GfxHandle handle, THandle value);
 }
-
-internal delegate void BackendStoreRecreated(in GfxHandle handle);
 
 internal sealed class BackendResourceStore<THandle> : IBackendResourceStore, IBackendReadResourceStore<THandle>
     where THandle : unmanaged, IResourceHandle, IEquatable<THandle>
@@ -36,44 +33,32 @@ internal sealed class BackendResourceStore<THandle> : IBackendResourceStore, IBa
     // sanity check
     private const int HardLimit = 10_000;
 
-    private StoreRecord[] _entries = new StoreRecord[16];
-
-    private readonly Stack<int> _free = new();
-    private readonly Queue<StoreRecord> _pendingQueue = new();
-
     private readonly GraphicsBackend _backend = GraphicsBackend.Unkown;
     private readonly ResourceKind _kind = ResourceKind.Invalid;
+
+    private StoreRecord[] _entries = new StoreRecord[16];
+    private readonly Stack<int> _free = new();
 
     private int _idx = 0;
 
     public ResourceKind Kind => _kind;
 
-    public BackendResourceStore(GraphicsBackend backend, ResourceKind kind)
+    public BackendResourceStore(ResourceKind kind)
     {
-        ArgumentOutOfRangeException.ThrowIfEqual((int)backend, (int)GraphicsBackend.Unkown);
         ArgumentOutOfRangeException.ThrowIfEqual((int)kind, (int)ResourceKind.Invalid);
-        _backend = backend;
+        _backend = GraphicsBackend.OpenGL;
         _kind = kind;
     }
 
     public bool IsAlive(in GfxHandle handle) => _entries[(int)handle.Slot].IsValidRecord();
 
-    public uint GetRawHandle(in GfxHandle handle) => Get(in handle).Handle;
+    public NativeHandle GetNativeHandle(in GfxHandle handle) => NativeHandle.From(Get(in handle));
 
     public THandle Get(in GfxHandle handle)
     {
         Debug.Assert(handle.IsValid);
         ref readonly var e = ref _entries[(int)handle.Slot];
         if (!e.IsValidRecord() || e.Gen != handle.Gen)
-            GraphicsException.ThrowInvalidState("Handler is not a valid state");
-        return e.Current;
-    }
-
-    public THandle GetForDelete(in GfxHandle handle)
-    {
-        Debug.Assert(handle.IsValid);
-        ref readonly var e = ref _entries[(int)handle.Slot];
-        if (!e.IsValidRecord() || handle.Gen != e.Gen - 1)
             GraphicsException.ThrowInvalidState("Handler is not a valid state");
         return e.Current;
     }

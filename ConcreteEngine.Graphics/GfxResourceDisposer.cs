@@ -1,13 +1,11 @@
-using ConcreteEngine.Graphics.Error;
+using ConcreteEngine.Graphics.Resources;
 
-namespace ConcreteEngine.Graphics.Resources;
+namespace ConcreteEngine.Graphics;
 
 public interface IGfxResourceDisposer
 {
     public int PendingCount { get; }
     public void EnqueueRemoval<TId>(TId id, bool replace) where TId : unmanaged, IResourceId;
-    public void EnqueueRemovalReplace<TId>(TId id, uint newHandle) where TId : unmanaged, IResourceId;
-    void DrainDisposeQueue();
 }
 
 
@@ -50,22 +48,11 @@ internal sealed class GfxResourceDisposer : IGfxResourceDisposer
         var fStore = _resources.FrontendStoreHub.GetStore<TId>(resourceKind);
         var gfxHandle = fStore.GetHandle(id);
 
-        var bStore = _resources.BackendStoreHub.GetStore(resourceKind);
-        var rawHandle = bStore.GetRawHandle(in gfxHandle);
+        var bStore = _resources.BackendStoreHub.Get(resourceKind);
+        var native = bStore.GetNative(in gfxHandle);
         
-        var cmd = new DeleteCmd(gfxHandle, id.Id, rawHandle, 0, replace);
+        var cmd = new DeleteCmd(gfxHandle, native, id.Id, 0, replace);
         _disposeQueue.Enqueue(cmd);
-
     }
     
-    public void EnqueueRemovalReplace<TId>(TId id, uint newHandle) where TId : unmanaged, IResourceId
-    {
-        ArgumentOutOfRangeException.ThrowIfLessThanOrEqual(id.Id, 0);
-        var resourceKind = ResourceTypeConverter.FromId<TId>();
-        var fs = _resources.FrontendStoreHub.GetStore<TId>(resourceKind);
-        var handle = fs.GetHandle(id);
-        var cmd = new DeleteCmd(handle, id.Id, newHandle, 0, true);
-        _disposeQueue.Enqueue(cmd);
-    }
-
 }

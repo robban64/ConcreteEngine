@@ -52,7 +52,7 @@ internal sealed class SpriteBatchMesh : IDisposable
         };
         
         var metaDesc =  GpuMeshDescriptor
-            .MakeElemental(pointers, DrawElementType.UnsignedShort, DrawPrimitive.Triangles,0);
+            .MakeElemental(pointers, DrawElementSize.UnsignedShort, DrawPrimitive.Triangles,0);
 
         var vbo = new GpuVboDescriptor<Vertex2D>(Vertices,BufferUsage.StreamDraw);
         var ibo = new GpuIboDescriptor<ushort>(indices,  BufferUsage.StaticDraw);

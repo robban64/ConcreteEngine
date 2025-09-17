@@ -345,11 +345,11 @@ internal sealed class GraphicsContext : IGraphicsContext
         for (int i = 0; i < attributes.Length; i++)
         {
             ref readonly var attrib = ref attributes[i];
-            if (attrib.VboIndex > vboIds.Length)
+            if (attrib.VboBinding > vboIds.Length)
                 throw GraphicsException.InvalidState(
-                    $"Attrib vbo index {attrib.VboIndex} is greater than vbo count {vboIds.Length}");
+                    $"Attrib vbo index {attrib.VboBinding} is greater than vbo count {vboIds.Length}");
 
-            var vboId = vboIds[(int)attrib.VboIndex];
+            var vboId = vboIds[(int)attrib.VboBinding];
             if (prevVboId != vboId)
                 BindVertexBuffer(vboId);
 
@@ -449,7 +449,7 @@ internal sealed class GraphicsContext : IGraphicsContext
                 DrawArrays(meta.Primitive, count);
                 break;
             case MeshDrawKind.Elements:
-                DrawElements(meta.Primitive, meta.ElementType, count);
+                DrawElements(meta.Primitive, meta.ElementSize, count);
                 break;
             default:
                 GraphicsException.ThrowUnsupportedFeature(nameof(meta.DrawKind));
@@ -466,14 +466,14 @@ internal sealed class GraphicsContext : IGraphicsContext
         _drawCallCount++;
     }
 
-    public void DrawElements(DrawPrimitive primitive, DrawElementType elementType, uint drawCount)
+    public void DrawElements(DrawPrimitive primitive, DrawElementSize elementSize, uint drawCount)
     {
         Debug.Assert(_boundVaoId.IsValid(), "No VAO is bound");
         Debug.Assert(drawCount != 0, "DrawElements called with drawCount = 0");
-        Debug.Assert(elementType != DrawElementType.Invalid);
+        Debug.Assert(elementSize != DrawElementSize.Invalid);
 
 
-        _driver.DrawElements(primitive, elementType, drawCount);
+        _driver.DrawElements(primitive, elementSize, drawCount);
         _drawTriangleCount += drawCount;
         _drawCallCount++;
     }

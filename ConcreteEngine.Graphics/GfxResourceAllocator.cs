@@ -9,7 +9,7 @@ namespace ConcreteEngine.Graphics;
 
 public interface IGfxResourceAllocator
 {
-    MeshId CreateMesh(DrawPrimitive primitive, MeshDrawKind drawKind, DrawElementType drawElement, out MeshMeta meta);
+    MeshId CreateMesh(DrawPrimitive primitive, MeshDrawKind drawKind, DrawElementSize drawElement, out MeshMeta meta);
 
     VertexBufferId CreateVertexBuffer(BufferUsage usage, uint elementSize, uint index,
         out VertexBufferMeta meta);
@@ -27,6 +27,22 @@ public interface IGfxResourceAllocator
         out UniformBufferMeta meta)
         where T : unmanaged, IUniformGpuData;
 }
+
+public record struct MeshDescriptor(
+    DrawPrimitive Primitive,
+    MeshDrawKind DrawKind,
+    DrawElementSize DrawElement,
+    uint DrawCount);
+
+public record struct GfxTextureDescriptor(
+    uint Width,
+    uint Height,
+    TexturePreset Preset,
+    TextureKind Kind,
+    EnginePixelFormat Format = EnginePixelFormat.Rgba,
+    TextureAnisotropy Anisotropy = TextureAnisotropy.Default,
+    float LodBias = 0
+);
 
 internal sealed class GfxResourceAllocator : IGfxResourceAllocator
 {
@@ -48,50 +64,117 @@ internal sealed class GfxResourceAllocator : IGfxResourceAllocator
         _disposer = disposer;
     }
 
-    public MeshId CreateMesh(DrawPrimitive primitive, MeshDrawKind drawKind, DrawElementType drawElement,
-        out MeshMeta meta)
+    public MeshId CreateVertexMesh<V>(DrawPrimitive primitive, ReadOnlySpan<V> vertices, uint drawCount)
+        where V : unmanaged
     {
-        var handle = _driver.CreateVertexArray(primitive, drawKind, drawElement, out meta);
-        var meshId = _resources.MeshStore.Add(in meta, handle.Handle);
+        var meta = new MeshMeta(primitive, MeshDrawKind.Elements, DrawElementSize.Invalid, 0, drawCount);
+        var vao = _driver.Meshes.CreateVertexArray().Handle;
+        var meshId = _resources.MeshStore.Add(in meta, vao);
+
+        var vboId = CreateVertexBuffer(vertices, BufferUsage.DynamicDraw, 0);
+        var vbo = _resources.VboStore.GetHandle(vboId);
+
+        var vertexSize = (uint)Unsafe.SizeOf<V>();
+        _driver.Meshes.AttachVertexBuffer(in vao, in vbo, 0, 0, vertexSize);
+
+        foreach (ref readonly var attr in attribs)
+            _driver.Meshes.SetVertexAttribute(in vao, in attr);
+
         return meshId;
     }
 
-    public VertexBufferId CreateVertexBuffer(BufferUsage usage, uint elementSize, uint index, out VertexBufferMeta meta)
+    public MeshId CreateElementalMesh<V, I>(ReadOnlySpan<V> vertices, ReadOnlySpan<I> indices,
+        ReadOnlySpan<VertexAttributeDescriptor> attribs, DrawPrimitive primitive,
+        uint drawCount) where V : unmanaged where I : unmanaged
     {
-        var handle = _driver.CreateVertexBuffer(usage, elementSize, index, out meta);
-        return _resources.VboStore.Add(new VertexBufferMeta(usage, index, 0, elementSize), handle.Handle);
+        var meta = new MeshMeta(primitive, MeshDrawKind.Elements, DrawElementSize.Invalid, 0, drawCount);
+        var vao = _driver.Meshes.CreateVertexArray().Handle;
+        var meshId = _resources.MeshStore.Add(in meta, vao);
+
+        var vboId = CreateVertexBuffer(vertices, BufferUsage.DynamicDraw, 0);
+        var iboId = CreateIndexBuffer(indices, BufferUsage.StaticDraw);
+        var vbo = _resources.VboStore.GetHandle(vboId);
+        var ibo = _resources.IboStore.GetHandle(iboId);
+
+        var vertexSize = (uint)Unsafe.SizeOf<V>();
+        _driver.Meshes.AttachVertexBuffer(in vao, in vbo, 0, 0, vertexSize);
+        _driver.Meshes.AttachIndexBuffer(in vao, in ibo);
+
+        foreach (ref readonly var attr in attribs)
+            _driver.Meshes.SetVertexAttribute(in vao, in attr);
+
+        return meshId;
     }
 
-    public IndexBufferId CreateIndexBuffer(BufferUsage usage, uint elementSize, out IndexBufferMeta meta)
+    private VertexBufferId CreateVertexBuffer<V>(ReadOnlySpan<V> vertices, BufferUsage usage, uint index)
+        where V : unmanaged
     {
-        var handle = _driver.CreateIndexBuffer(usage, elementSize, out meta);
-        return _resources.IboStore.Add(new IndexBufferMeta(usage, 0, elementSize), handle.Handle);
+        var elementCount = (uint)vertices.Length;
+        var elementSize = (uint)Unsafe.SizeOf<V>();
+        var size = elementSize * elementCount;
+
+        var meta = new VertexBufferMeta(usage, index, elementCount, elementSize);
+        var handle = _driver.Buffers.CreateVertexBuffer(vertices, size, BufferStorage.Dynamic, BufferAccess.MapWrite);
+        return _resources.VboStore.Add(in meta, in handle.Handle);
     }
 
-    public TextureId CreateTexture2D(GpuTextureData data, in GpuTextureDescriptor desc, out TextureMeta meta)
+    private IndexBufferId CreateIndexBuffer<I>(ReadOnlySpan<I> indices, BufferUsage usage) where I : unmanaged
     {
-        /*
-        var result = anisotropy switch
+        var elementCount = (uint)indices.Length;
+        var elementSize = (uint)Unsafe.SizeOf<I>();
+        var size = elementSize * elementCount;
+
+        if (size != 1 && size != 2 && size != 3)
+            GraphicsException.ThrowInvalidType<I>(typeof(I).Name, "Invalid elemental size");
+
+        var meta = new IndexBufferMeta(usage, (uint)elementCount, elementSize);
+        var handle = _driver.Buffers
+            .CreateIndexBuffer(indices, size, BufferStorage.Static, BufferAccess.None);
+        return _resources.IboStore.Add(meta, handle.Handle);
+    }
+
+    public TextureId CreateTexture(in GfxTextureDescriptor desc)
+    {
+        if (desc.Kind == TextureKind.CubeMap)
+            ArgumentOutOfRangeException.ThrowIfNotEqual(desc.Width, desc.Height, nameof(desc.Width));
+
+        var hasMipLevels = desc.Preset is TexturePreset.LinearMipmapClamp or TexturePreset.LinearMipmapRepeat;
+        var mipLevels = hasMipLevels ? CalcMipLevels(desc.Width, desc.Height) : 0;
+
+        var meta = new TextureMeta(desc.Width, desc.Height, desc.Preset, desc.Kind, desc.Anisotropy, desc.Format,
+            (byte)mipLevels, false);
+
+        var handle = _driver.Textures.CreateTexture2D(desc.Width, desc.Height, mipLevels);
+        return _resources.TextureStore.Add(in meta, handle.Handle);
+    }
+
+    public void UploadTextureData(in TextureId textureId, in GpuTextureData data)
+    {
+        var texture = _resources.TextureStore.GetHandleAndMeta(textureId, out var meta);
+        ArgumentOutOfRangeException.ThrowIfNotEqual(meta.Width, data.Width, nameof(data.Width));
+        ArgumentOutOfRangeException.ThrowIfNotEqual(meta.Height, data.Height, nameof(data.Height));
+
+        _driver.Textures.UploadTextureData(in texture, data);
+        var newMeta = TextureMeta.CreateFromHasData(in meta, true);
+        _resources.TextureStore.ReplaceMeta(textureId, in newMeta, out _);
+    }
+
+    public void UploadCubeMapFace(in TextureId textureId, in GpuTextureData data, int faceIdx)
+    {
+        ArgumentOutOfRangeException.ThrowIfNotEqual(data.Width, data.Height, nameof(data.Width));
+        ArgumentOutOfRangeException.ThrowIfGreaterThan(faceIdx, 5, nameof(faceIdx));
+
+        var texture = _resources.TextureStore.GetHandleAndMeta(textureId, out var meta);
+        
+        ArgumentOutOfRangeException.ThrowIfNotEqual(meta.Width, data.Width, nameof(data.Width));
+        ArgumentOutOfRangeException.ThrowIfNotEqual(meta.Height, data.Height, nameof(data.Height));
+
+        _driver.Textures.UploadCubeMapFaceData(in texture, data, faceIdx);
+        if (faceIdx == 5)
         {
-            TextureAnisotropy.Off => 0,
-            TextureAnisotropy.Default => 4,
-            TextureAnisotropy.X2 => 2,
-            TextureAnisotropy.X4 => 4,
-            TextureAnisotropy.X8 => 8,
-            TextureAnisotropy.X16 => 16,
-            _ => throw new ArgumentOutOfRangeException(nameof(anisotropy), anisotropy, null),
-        };
-
-        var value = Math.Min(result, _capabilities.Caps.MaxAnisotropy);
-*/
-        var handle = _driver.CreateTexture2D(data, in desc, out meta);
-        return _resources.TextureStore.Add(in meta, handle.Handle);
-    }
-
-    public TextureId CreateCubeMap(GpuCubeMapData data, in GpuCubeMapDescriptor desc, out TextureMeta meta)
-    {
-        var handle = _driver.CreateCubeMap(data, in desc, out meta);
-        return _resources.TextureStore.Add(in meta, handle.Handle);
+            var newMeta = TextureMeta.CreateFromHasData(in meta, true);
+            _resources.TextureStore.ReplaceMeta(textureId, in newMeta, out _);
+        }
     }
 
     public FrameBufferId CreateFrameBuffer(in FrameBufferDesc desc, out FrameBufferMeta meta)
@@ -134,21 +217,21 @@ internal sealed class GfxResourceAllocator : IGfxResourceAllocator
         ref readonly var prevFbo = ref _resources.FboStore.GetHandleAndMeta(fboId, out var prevMeta);
         var desc = layout.GetDescriptor() with { AbsoluteSize = absoluteSize };
         var newMeta = FrameBufferMeta.CreateResizeCopy(in prevMeta, size);
-        
-        
+
+
         _driver.CreateFrameBuffer(in desc, out var result);
         _disposer.EnqueueRemoval(fboId, true);
-        _resources.FboStore.Replace(fboId, in newMeta,  result.Fbo.Handle, out var prevHandle);
-        
+        _resources.FboStore.Replace(fboId, in newMeta, result.Fbo.Handle, out var prevHandle);
 
-         if (result.FboTex.Handle.IsValid)
-             _resources.TextureStore.Replace(colTexId, result.FboTex.Meta, result.FboTex.Handle, out _);
 
-         if (result.RboDepth.Handle.IsValid)
-             _resources.RboStore.Replace(rboDepthId, result.RboDepth.Meta, result.RboDepth.Handle, out _);
+        if (result.FboTex.Handle.IsValid)
+            _resources.TextureStore.Replace(colTexId, result.FboTex.Meta, result.FboTex.Handle, out _);
 
-         if (result.RboTex.Handle.IsValid)
-             _resources.RboStore.Replace(rboTexId, result.RboTex.Meta, result.RboTex.Handle, out _);
+        if (result.RboDepth.Handle.IsValid)
+            _resources.RboStore.Replace(rboDepthId, result.RboDepth.Meta, result.RboDepth.Handle, out _);
+
+        if (result.RboTex.Handle.IsValid)
+            _resources.RboStore.Replace(rboTexId, result.RboTex.Meta, result.RboTex.Handle, out _);
 
         return true;
     }
@@ -157,7 +240,7 @@ internal sealed class GfxResourceAllocator : IGfxResourceAllocator
     {
         var handle = _driver.CreateShader(vertexSource, fragmentSource,
             out var uniforms, out meta);
-        var shaderId = _resources.ShaderStore.Add(in meta,  handle.Handle);
+        var shaderId = _resources.ShaderStore.Add(in meta, handle.Handle);
         _repository.ShaderRepository.Add(shaderId, in meta, uniforms);
         return shaderId;
     }
@@ -177,7 +260,7 @@ internal sealed class GfxResourceAllocator : IGfxResourceAllocator
         _repository.ShaderRepository.AddUboToSlot(meta.Slot, uboId);
         return uboId;
     }
-    
+
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     private static uint CalcMipLevels(uint width, uint height)
     {

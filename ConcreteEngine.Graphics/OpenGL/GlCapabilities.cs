@@ -2,7 +2,7 @@ using Silk.NET.OpenGL;
 
 namespace ConcreteEngine.Graphics.OpenGL;
 
-internal sealed class GlCapabilities
+internal sealed class GlCapabilities: IGraphicsDriverModule
 {
     private DeviceCapabilities _capabilities;
 

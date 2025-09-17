@@ -187,7 +187,7 @@ internal sealed class AssetLoader
             
             var vbo = new GpuVboDescriptor<Vertex3D>(payload.MeshData.Vertices, BufferUsage.StaticDraw);
             var ibo = new GpuIboDescriptor<uint>(payload.MeshData.Indices,  BufferUsage.StaticDraw);
-            var desc = GpuMeshDescriptor.MakeElemental(payload.Descriptor.Attributes, payload.Descriptor.ElementType, payload.Descriptor.Primitive,
+            var desc = GpuMeshDescriptor.MakeElemental(payload.Descriptor.Attributes, payload.Descriptor.ElementSize, payload.Descriptor.Primitive,
                 payload.Descriptor.DrawCount);
             
             var builder = factoryHub.MeshFactory;

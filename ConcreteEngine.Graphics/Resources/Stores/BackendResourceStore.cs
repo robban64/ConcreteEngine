@@ -86,7 +86,7 @@ internal sealed class BackendResourceStore<THandle> : IBackendResourceStore, IBa
     {
         ArgumentOutOfRangeException.ThrowIfEqual(value, default);
         var oldValue = Get(handle);
-        if (value.Equals(oldValue))
+        if (value.Handle == oldValue.Handle)
             throw new GraphicsException("Trying to replace handler with same handler");
 
         var gen = (ushort)(handle.Gen + 1);

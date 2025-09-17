@@ -1,6 +1,6 @@
 namespace ConcreteEngine.Graphics;
 
-public enum EnginePixelFormat
+public enum EnginePixelFormat : byte
 {
     Red,
     Rgb,

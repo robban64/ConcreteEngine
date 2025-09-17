@@ -51,7 +51,7 @@ public interface IGraphicsContext
 
     void DrawBoundMesh(uint drawCount = 0);
     void DrawArrays(DrawPrimitive primitive, uint drawCount);
-    void DrawElements(DrawPrimitive primitive, DrawElementType elementType, uint drawCount);
+    void DrawElements(DrawPrimitive primitive, DrawElementSize elementSize, uint drawCount);
 
     void UseShader(ShaderId id);
     void SetUniform(ShaderUniform uniform, int value);

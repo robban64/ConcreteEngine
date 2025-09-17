@@ -6,7 +6,7 @@ using Silk.NET.OpenGL;
 
 namespace ConcreteEngine.Graphics.OpenGL;
 
-internal sealed class GlStates
+internal sealed class GlStates: IGraphicsDriverModule
 {
     private readonly GL _gl;
     private readonly BackendOpsHub _store;

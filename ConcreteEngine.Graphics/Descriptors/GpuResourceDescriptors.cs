@@ -5,8 +5,10 @@ namespace ConcreteEngine.Graphics.Descriptors;
 
 public record struct GpuShaderData(string VertexSource, string FragmentSource);
 
-public readonly ref struct GpuTextureData(ReadOnlySpan<byte> pixelData)
+public readonly ref struct GpuTextureData(ReadOnlySpan<byte> pixelData, uint width, uint height)
 {
+    public readonly uint Width = width;
+    public readonly uint Height = height;
     public readonly ReadOnlySpan<byte> PixelData = pixelData;
 }
 

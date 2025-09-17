@@ -90,7 +90,7 @@ public sealed class TerrainBatcher : RenderBatcher<TerrainBatchResult>
             VertexAttributeDescriptor.Make<Vertex3D>(nameof(Vertex3D.Tangent), VertexElementFormat.Float3),
         };
 
-       /* builder.StartBuilder(DrawPrimitive.Triangles, MeshDrawKind.Elements, DrawElementType.UnsignedInt);
+       /* builder.StartBuilder(DrawPrimitive.Triangles, MeshDrawKind.Elements, DrawElementSize.UnsignedInt);
         builder.CreateVertexBuffer(new GpuVboDescriptor<Vertex3D>
         {
             Data = _vertices, Usage = BufferUsage.DynamicDraw, BindingIndex = 0
@@ -100,7 +100,7 @@ public sealed class TerrainBatcher : RenderBatcher<TerrainBatchResult>
 */
         var vbo = new GpuVboDescriptor<Vertex3D>(_vertices, BufferUsage.DynamicDraw);
         var ibo = new GpuIboDescriptor<uint>(_indices,  BufferUsage.DynamicDraw);
-        var desc = GpuMeshDescriptor.MakeElemental(attributes, DrawElementType.UnsignedInt, DrawPrimitive.Triangles,
+        var desc = GpuMeshDescriptor.MakeElemental(attributes, DrawElementSize.UnsignedInt, DrawPrimitive.Triangles,
             (uint)_indices.Length);
         var builder = FactoryHub.MeshFactory;
         var result = builder.CreateElementalMesh(vbo, ibo,desc);

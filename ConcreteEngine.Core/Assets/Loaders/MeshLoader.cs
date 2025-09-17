@@ -45,7 +45,7 @@ internal sealed class MeshLoader(IReadOnlyList<MeshManifestRecord> records) : As
             Attributes = Defaults3D,
             DrawKind = MeshDrawKind.Elements,
             DrawCount = (uint)meshData.Indices.Length,
-            ElementType = DrawElementType.UnsignedInt,
+            ElementSize = DrawElementSize.UnsignedInt,
             Primitive = DrawPrimitive.Triangles
         };
 

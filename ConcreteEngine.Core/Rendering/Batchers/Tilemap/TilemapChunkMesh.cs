@@ -62,7 +62,7 @@ internal sealed class TilemapChunkMesh : IDisposable
         var drawCount = (uint)(_tileCount * IndicesPerTile);
         
         var metaDesc = GpuMeshDescriptor
-            .MakeElemental(pointers, DrawElementType.UnsignedShort, DrawPrimitive.Triangles,drawCount);
+            .MakeElemental(pointers, DrawElementSize.UnsignedShort, DrawPrimitive.Triangles,drawCount);
 
         var vbo = new GpuVboDescriptor<Vertex2D>(Vertices,BufferUsage.DynamicDraw);
         var ibo = new GpuIboDescriptor<ushort>(Indices,  BufferUsage.DynamicDraw);

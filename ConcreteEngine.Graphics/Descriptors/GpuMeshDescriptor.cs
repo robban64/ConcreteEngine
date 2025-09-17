@@ -15,7 +15,7 @@ public readonly ref struct GpuMeshDescriptor
     public required ReadOnlySpan<VertexAttributeDescriptor> Attributes { get; init; }
     public required DrawPrimitive Primitive { get; init; }
     public required MeshDrawKind DrawKind { get; init; }
-    public required DrawElementType ElementType { get; init; } 
+    public required DrawElementSize ElementSize { get; init; } 
 
     public static GpuMeshDescriptor MakeArray(ReadOnlySpan<VertexAttributeDescriptor> atr,
         DrawPrimitive primitive, uint drawCount)
@@ -26,11 +26,11 @@ public readonly ref struct GpuMeshDescriptor
             Primitive = primitive,
             DrawCount = drawCount,
             DrawKind = MeshDrawKind.Arrays,
-            ElementType = DrawElementType.Invalid
+            ElementSize = DrawElementSize.Invalid
         };
     }
     public static GpuMeshDescriptor MakeElemental(ReadOnlySpan<VertexAttributeDescriptor> atr,
-        DrawElementType elementType, DrawPrimitive primitive, uint drawCount)
+        DrawElementSize elementSize, DrawPrimitive primitive, uint drawCount)
     {
         return new GpuMeshDescriptor
         {
@@ -38,9 +38,39 @@ public readonly ref struct GpuMeshDescriptor
             Primitive = primitive,
             DrawCount = drawCount,
             DrawKind = MeshDrawKind.Elements,
-            ElementType = elementType
+            ElementSize = elementSize
         };
     }
+}
+
+public readonly ref struct GpuMeshVertexPayload<T, I> where T : unmanaged where I : unmanaged
+{
+    public GpuMeshVertexPayload(ReadOnlySpan<T> vertices, ReadOnlySpan<I> indices)
+    {
+        Vertices = vertices;
+        Indices = indices;
+    }
+
+    public ReadOnlySpan<T> Vertices { get; }
+    public ReadOnlySpan<I> Indices { get; }
+    
+    public BufferUsage VboUsage { get; init; } = BufferUsage.StaticDraw;
+    public BufferUsage IboUsage { get; init; } = BufferUsage.StaticDraw;
+}
+
+public readonly ref struct GpuMeshVertexPayload<T, I> where T : unmanaged where I : unmanaged
+{
+    public GpuMeshVertexPayload(ReadOnlySpan<T> vertices, ReadOnlySpan<I> indices)
+    {
+        Vertices = vertices;
+        Indices = indices;
+    }
+
+    public ReadOnlySpan<T> Vertices { get; }
+    public ReadOnlySpan<I> Indices { get; }
+    
+    public BufferUsage VboUsage { get; init; } = BufferUsage.StaticDraw;
+    public BufferUsage IboUsage { get; init; } = BufferUsage.StaticDraw;
 }
 
 public readonly ref struct GpuMeshData<T, I> where T : unmanaged where I : unmanaged
@@ -64,7 +94,6 @@ public readonly ref struct GpuMeshData<T, I> where T : unmanaged where I : unman
     public BufferUsage IboUsage { get; init; } = BufferUsage.StaticDraw;
 
     public bool Elemental => Indices.Length > 0;
-
 }
 //New structure
 
@@ -126,10 +155,8 @@ public readonly ref struct GpuIboDescriptor<I> where I : unmanaged
     }
 }
 
-
-
 public readonly record struct VertexAttributeDescriptor(
-    uint VboIndex,
+    uint VboBinding,
     uint StrideBytes, // total size of one vertex in bytes
     uint OffsetBytes, // offset of this attribute in the vertex struct
     VertexElementFormat Format,
@@ -141,7 +168,7 @@ public readonly record struct VertexAttributeDescriptor(
     public static VertexAttributeDescriptor Make<TElement>(
         string fieldName,
         VertexElementFormat format,
-        uint vboIndex = 0,
+        uint vboBinding = 0,
         uint divisorIndex = 0,
         uint divisor = 0,
         bool normalized = false)
@@ -167,7 +194,7 @@ public readonly record struct VertexAttributeDescriptor(
         ArgumentOutOfRangeException.ThrowIfGreaterThanOrEqual((int)offsetBytes, structSize, nameof(offsetBytes));
 
         return new VertexAttributeDescriptor(
-            VboIndex: vboIndex,
+            VboBinding: vboBinding,
             StrideBytes: (uint)Unsafe.SizeOf<TElement>(),
             OffsetBytes: (uint)Marshal.OffsetOf<TElement>(fieldName)!.ToInt32(),
             Format: format,
@@ -180,7 +207,7 @@ public readonly record struct VertexAttributeDescriptor(
     public static VertexAttributeDescriptor Make<TPrimitive>(
         uint strideCount,
         uint offsetCount,
-        uint vboIndex = 0,
+        uint vboBinding = 0,
         uint divisorIndex = 0,
         uint divisor = 0,
         VertexElementFormat format = VertexElementFormat.Float2,
@@ -199,7 +226,7 @@ public readonly record struct VertexAttributeDescriptor(
             ArgumentOutOfRangeException.ThrowIfGreaterThanOrEqual(offsetBytes, strideBytes, nameof(offsetBytes));
 
         return new VertexAttributeDescriptor(
-            VboIndex: vboIndex,
+            VboBinding: vboBinding,
             StrideBytes: strideBytes,
             OffsetBytes: offsetBytes,
             Format: format,

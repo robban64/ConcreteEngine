@@ -1,8 +1,21 @@
+using System.Runtime.CompilerServices;
+
 namespace ConcreteEngine.Graphics.Resources;
 
 
 internal readonly record struct NativeHandle(uint Value)
 {
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public bool IsEmpty() => Value == 0;
+
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public bool IsActive() => Value != 0;
+
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public bool EqualsHandle<THandle>(THandle handle) where THandle : unmanaged, IResourceHandle, IEquatable<THandle> =>
+        Value == handle.Handle;
+
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static NativeHandle From<THandle>(THandle handle)
         where THandle : unmanaged, IResourceHandle, IEquatable<THandle> => new(handle.Handle);
 }

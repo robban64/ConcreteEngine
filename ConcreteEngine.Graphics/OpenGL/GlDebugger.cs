@@ -4,7 +4,7 @@ using Silk.NET.OpenGL;
 
 namespace ConcreteEngine.Graphics.OpenGL;
 
-internal sealed class GlDebugger
+internal sealed class GlDebugger : IGraphicsDriverModule
 {
     private readonly GL _gl;
     private static DebugProc? _debugProc;

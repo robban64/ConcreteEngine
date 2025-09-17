@@ -1,9 +1,9 @@
 namespace ConcreteEngine.Graphics;
 
-public enum DrawElementType
+public enum DrawElementSize
 {
     Invalid = 0,
     UnsignedByte = 1,
     UnsignedShort = 2,
-    UnsignedInt = 3
+    UnsignedInt = 4
 }

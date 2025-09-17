@@ -6,7 +6,7 @@ using Silk.NET.OpenGL;
 
 namespace ConcreteEngine.Graphics.OpenGL;
 
-internal sealed class GlTextures
+internal sealed class GlTextures: IGraphicsDriverModule
 {
     private readonly GL _gl;
     private readonly BackendOpsHub _store;
@@ -19,32 +19,44 @@ internal sealed class GlTextures
         _capabilities = ctx.Capabilities;
         _store = ctx.Store;
     }
-
+    
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     private GlTextureHandle GetTexHandle(in GfxHandle handle) => _store.Texture.Get(in handle);
-
-    public ResourceRefToken<TextureId> CreateTexture2D()
+    
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public void BindTexture(in GfxHandle handle, uint slot)
     {
+        _gl.BindTextureUnit(GetTexHandle(in handle).Handle, slot);
+    }
+
+
+    public ResourceRefToken<TextureId> CreateTexture2D(uint width, uint height, uint mipLevels)
+    {
+        var levels = Math.Min(1, mipLevels);
         _gl.CreateTextures(TextureTarget.Texture2D, 1, out uint texture);
+        _gl.TextureStorage2D(texture, levels, ColorFormat, width, height);
         return _store.Texture.Add(new GlTextureHandle(texture));
     }
 
-    public ResourceRefToken<TextureId> CreateTextureCubeMap()
+    public ResourceRefToken<TextureId> CreateTextureCubeMap(uint width, uint height, uint mipLevels)
     {
+        var levels = Math.Min(1, mipLevels);
         _gl.CreateTextures(TextureTarget.TextureCubeMap, 1, out uint texture);
+        _gl.TextureStorage2D(texture, levels, ColorFormat, width, height);
         return _store.Texture.Add(new GlTextureHandle(texture));
     }
 
-    public void CreateTextureStore(in GfxHandle texture, GpuTextureData data, uint width, uint height, uint mipLevels)
+    private void CreateTextureStore(in GfxHandle texture, uint width, uint height, uint mipLevels)
     {
         var handle = GetTexHandle(in texture).Handle;
         var levels = Math.Min(1, mipLevels);
         _gl.TextureStorage2D(handle, levels, ColorFormat, width, height);
     }
-    public void UploadTextureData(in GfxHandle texture, GpuTextureData data, uint width, uint height)
+    
+    public void UploadTextureData(in GfxHandle texture, GpuTextureData data)
     {
         var handle = GetTexHandle(in texture).Handle;
-        _gl.TextureSubImage2D(handle, 0, 0, 0, width, height, 
+        _gl.TextureSubImage2D(handle, 0, 0, 0, data.Width, data.Height, 
             PixelFormat.Rgba, PixelType.UnsignedByte, data.PixelData);
     }
 
@@ -54,14 +66,17 @@ internal sealed class GlTextures
         _gl.TextureSubImage2D(handle, 0, 0, 0, 1, 1, 
             PixelFormat.Rgba, PixelType.UnsignedByte, (void*)0);
     }
-    
-    public void SetTextureData(in GfxHandle texture, GpuTextureData data, uint width, uint height, uint mipLevels)
+
+    public void UploadCubeMapFaceData(in GfxHandle texture, GpuTextureData data, int faceIdx)
     {
         var handle = GetTexHandle(in texture).Handle;
-        var levels = Math.Min(1, mipLevels);
-        _gl.TextureStorage2D(handle, levels, ColorFormat, width, height);
-        _gl.TextureSubImage2D(handle, 0, 0, 0, width, height, 
-            PixelFormat.Rgba, PixelType.UnsignedByte, data.PixelData);
+        _gl.TextureSubImage3D(
+            handle, level: 0,
+            xoffset: 0, yoffset: 0, zoffset: faceIdx,
+            width: data.Width, height: data.Height, depth: 1,
+            format: PixelFormat.Rgba, type: PixelType.UnsignedByte,
+            pixels: data.PixelData 
+        );
     }
 
     public void SetTexturePreset(in GfxHandle texture, TexturePreset preset)

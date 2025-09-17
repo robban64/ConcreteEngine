@@ -6,7 +6,7 @@ using Silk.NET.OpenGL;
 
 namespace ConcreteEngine.Graphics.OpenGL;
 
-internal sealed class GlFrameBuffers
+internal sealed class GlFrameBuffers: IGraphicsDriverModule
 {
     private readonly GL _gl;
     private readonly BackendOpsHub _store;
@@ -23,6 +23,34 @@ internal sealed class GlFrameBuffers
     private GlRboHandle GetRboHandle(in GfxHandle handle) => _store.RenderBuffer.Get(in handle);
     private GlTextureHandle GetTextureHandle(in GfxHandle handle) => _store.Texture.Get(in handle);
 
+
+
+    // Fix ClearBufferMask and Filter, depth/stencil use filter = Nearest
+    public void Blit(in GfxHandle readFbo, in GfxHandle drawFbo, Vector2D<int> srcSize, Vector2D<int> dstSize,
+        bool linear)
+    {
+        var filter = linear ? BlitFramebufferFilter.Linear : BlitFramebufferFilter.Nearest;
+        var read = _store.FrameBuffer.Get(readFbo).Handle;
+        var draw = _store.FrameBuffer.Get(drawFbo).Handle;
+
+        _gl.BlitNamedFramebuffer(
+            read, draw,
+            0, 0, srcSize.X, srcSize.Y,
+            0, 0, dstSize.X, dstSize.Y,
+            ClearBufferMask.ColorBufferBit, filter
+        );
+    }
+
+    public void BlitDefault(Vector2D<int> srcSize, Vector2D<int> dstSize, bool linear)
+    {
+        var filter = linear ? BlitFramebufferFilter.Linear : BlitFramebufferFilter.Nearest;
+        _gl.BlitNamedFramebuffer(
+            0, 0,
+            0, 0, srcSize.X, srcSize.Y,
+            0, 0, dstSize.X, dstSize.Y,
+            ClearBufferMask.ColorBufferBit, filter
+        );
+    }
 
     public ResourceRefToken<FrameBufferId> CreateFrameBuffer()
     {
@@ -59,18 +87,32 @@ internal sealed class GlFrameBuffers
         _gl.NamedFramebufferRenderbuffer(fboHandle, glAttachment, RenderbufferTarget.Renderbuffer, rboHandle);
     }
 
-    public void SetDrawBuffers(in GfxHandle fbo,  FboAttachment attachment)
+    public void SetDrawBuffers(in GfxHandle fbo, FboAttachment attachment)
     {
         var fboHandle = GetFboHandle(in fbo).Handle;
-        var  glAttachment = attachment.ToGlEnum();
+        var glAttachment = attachment.ToGlEnum();
         _gl.NamedFramebufferDrawBuffers(fboHandle, 1, glAttachment);
     }
 
     public void ValidateComplete(in GfxHandle fbo)
     {
-        var status = _gl.CheckNamedFramebufferStatus(GetFboHandle(in fbo).Handle, FramebufferTarget.Framebuffer);
+        var handle = GetFboHandle(in fbo).Handle;
+        _gl.NamedFramebufferDrawBuffer(handle, GLEnum.ColorAttachment0);
+        _gl.NamedFramebufferReadBuffer(handle, GLEnum.ColorAttachment0);
+
+        var status = _gl.CheckNamedFramebufferStatus(handle, FramebufferTarget.Framebuffer);
         if (status != GLEnum.FramebufferComplete)
             GraphicsException.ThrowFramebufferIncomplete(nameof(fbo), status.ToString());
-
     }
+    
+    /*
+         public void BindFrameBufferReadDraw(in GfxHandle readFbo, in GfxHandle drawFbo)
+       {
+           var read = !readFbo.IsValid ? 0 : _store.FrameBuffer.Get(readFbo).Handle;
+           var draw = !drawFbo.IsValid ? 0 : _store.FrameBuffer.Get(drawFbo).Handle;
+
+           _gl.BindFramebuffer(FramebufferTarget.ReadFramebuffer, read);
+           _gl.BindFramebuffer(FramebufferTarget.DrawFramebuffer, draw);
+       }
+     */
 }

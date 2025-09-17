@@ -61,7 +61,7 @@ internal sealed class MeshRepository : IMeshRepository
             meshId.IsValidOrThrow();
             MeshId = meshId;
             DrawCount = meta.DrawCount;
-            IsElemental = meta.ElementType != DrawElementType.Invalid && iboId.IsValid();
+            IsElemental = meta.ElementSize != DrawElementSize.Invalid && iboId.IsValid();
             DrawKind = meta.DrawKind;
 
             IndexBufferId = iboId;

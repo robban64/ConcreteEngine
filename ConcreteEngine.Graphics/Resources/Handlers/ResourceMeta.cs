@@ -11,11 +11,27 @@ namespace ConcreteEngine.Graphics.Resources;
 
 public interface IResourceMeta;
 
-public readonly struct TextureMeta(int width, int height, EnginePixelFormat format) : IResourceMeta
+public readonly struct TextureMeta(
+    uint width,
+    uint height,
+    TexturePreset preset,
+    TextureKind kind,
+    TextureAnisotropy anisotropy,
+    EnginePixelFormat format,
+    byte mipLevel,
+    bool hasData) : IResourceMeta
 {
-    public readonly int Width = width;
-    public readonly int Height = height;
-    public readonly EnginePixelFormat Format = format;
+    public readonly uint Width = width;
+    public readonly uint Height = height;
+    public readonly TexturePreset Preset = preset;
+    public readonly TextureKind Kind = kind;
+    public readonly TextureAnisotropy Anisotropy = anisotropy;
+    public readonly EnginePixelFormat PixelFormat = format;
+    public readonly byte MipLevels = mipLevel;
+    public readonly bool HasData = hasData;
+    
+    internal static TextureMeta CreateFromHasData(in TextureMeta m, bool hasData) =>
+        new (m.Width, m.Height, m.Preset,m.Kind,m.Anisotropy,m.PixelFormat,m.MipLevels, hasData);
 }
 
 public readonly struct ShaderMeta(uint samplers) : IResourceMeta
@@ -26,7 +42,7 @@ public readonly struct ShaderMeta(uint samplers) : IResourceMeta
 public readonly struct MeshMeta(
     DrawPrimitive primitive,
     MeshDrawKind drawKind,
-    DrawElementType elementType,
+    DrawElementSize elementSize,
     uint vertexAttribPointers,
     uint drawCount
 ) : IResourceMeta
@@ -35,11 +51,11 @@ public readonly struct MeshMeta(
     public readonly uint DrawCount = drawCount;
     public readonly DrawPrimitive Primitive = primitive;
     public readonly MeshDrawKind DrawKind = drawKind;
-    public readonly DrawElementType ElementType = elementType;
+    public readonly DrawElementSize ElementSize = elementSize;
 
 
     public static MeshMeta CreateCopy(in MeshMeta meta, uint vertexAttribPointers, uint drawCount) =>
-        new (meta.Primitive, meta.DrawKind, meta.ElementType, vertexAttribPointers, drawCount);
+        new(meta.Primitive, meta.DrawKind, meta.ElementSize, vertexAttribPointers, drawCount);
 }
 
 public readonly struct VertexBufferMeta(
@@ -91,7 +107,6 @@ public readonly struct RenderBufferMeta(
     public readonly Vector2D<int> Size = size;
     public readonly RenderBufferKind Kind = kind;
     public readonly bool Multisample = multisample;
-    
 }
 
 public readonly struct UniformBufferMeta : IResourceMeta

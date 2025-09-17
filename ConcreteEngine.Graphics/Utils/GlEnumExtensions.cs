@@ -1,14 +1,54 @@
 #region
 
+using System.Runtime.CompilerServices;
 using ConcreteEngine.Graphics.Error;
+using ConcreteEngine.Graphics.Resources;
 using Silk.NET.OpenGL;
 
 #endregion
 
 namespace ConcreteEngine.Graphics.Utils;
 
-public static class GlEnumExtensions
+internal static class GlEnumUtils
 {
+    public static BufferStorageMask ToBufferFlag(BufferStorage storage, BufferAccess access)
+    {
+        BufferStorageMask flags = 0;
+
+        if (storage == BufferStorage.Dynamic)
+            flags |= BufferStorageMask.DynamicStorageBit;
+        else if (storage == BufferStorage.Stream) 
+            flags |= BufferStorageMask.DynamicStorageBit;
+
+        if (access.HasFlag(BufferAccess.MapRead))
+            flags |= BufferStorageMask.MapReadBit;
+        if (access.HasFlag(BufferAccess.MapWrite))
+            flags |= BufferStorageMask.MapWriteBit;
+        if (access.HasFlag(BufferAccess.Persistent))
+            flags |= BufferStorageMask.MapPersistentBit;
+        if (access.HasFlag(BufferAccess.Coherent))
+            flags |= BufferStorageMask.MapCoherentBit;
+
+        return flags;
+    }
+
+}
+internal static class GlEnumExtensions
+{
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public static GLEnum ToGlEnum(this TextureKind textureKind)
+    {
+        return textureKind switch
+        {
+            TextureKind.Texture1D => GLEnum.Texture1D,
+            TextureKind.Texture2D => GLEnum.Texture2D,
+            TextureKind.Texture3D => GLEnum.Texture3D,
+            TextureKind.CubeMap => GLEnum.TextureCubeMap,
+            _ => throw new ArgumentOutOfRangeException(nameof(textureKind), textureKind, null)
+        };
+    }
+    
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static GLEnum ToGlEnum(this FboAttachment kind)
     {
         return kind switch
@@ -19,7 +59,8 @@ public static class GlEnumExtensions
             _ => throw new ArgumentOutOfRangeException(nameof(kind), kind, null)
         };
     }
-
+    
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static (bool enabled, BlendEquationModeEXT eq, BlendingFactor src, BlendingFactor dst) ToGlEnum(
         this BlendMode mode)
     {
@@ -35,6 +76,7 @@ public static class GlEnumExtensions
     }
 
 
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static (EnableCap cap, DepthFunction func, bool mask) ToGlEnum(this DepthMode preset)
     {
         return preset switch
@@ -47,6 +89,7 @@ public static class GlEnumExtensions
         };
     }
 
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static (EnableCap cap, TriangleFace face, FrontFaceDirection front) ToGlEnum(this CullMode preset)
     {
         return preset switch
@@ -60,6 +103,7 @@ public static class GlEnumExtensions
         };
     }
 
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static PrimitiveType ToGlEnum(this DrawPrimitive value)
     {
         return value switch
@@ -74,16 +118,18 @@ public static class GlEnumExtensions
         };
     }
 
-    public static DrawElementsType ToGlEnum(this DrawElementType value)
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public static DrawElementsType ToGlEnum(this DrawElementSize value)
     {
         return value switch
         {
-            DrawElementType.UnsignedByte => DrawElementsType.UnsignedByte,
-            DrawElementType.UnsignedShort => DrawElementsType.UnsignedShort,
-            DrawElementType.UnsignedInt => DrawElementsType.UnsignedInt,
+            DrawElementSize.UnsignedByte => DrawElementsType.UnsignedByte,
+            DrawElementSize.UnsignedShort => DrawElementsType.UnsignedShort,
+            DrawElementSize.UnsignedInt => DrawElementsType.UnsignedInt,
         };
     }
 
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static ClearBufferMask ToGlEnum(this ClearBufferFlag flags)
     {
         return flags switch
@@ -95,6 +141,7 @@ public static class GlEnumExtensions
         };
     }
 
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static (PixelFormat glFormat, InternalFormat glInternalFormat) ToGlEnums(this EnginePixelFormat format)
     {
         return format switch
@@ -105,6 +152,7 @@ public static class GlEnumExtensions
         };
     }
 
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static BufferUsageARB ToGlEnum(this BufferUsage usage)
     {
         return usage switch
@@ -115,6 +163,7 @@ public static class GlEnumExtensions
         };
     }
 
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static BufferTargetARB ToGlEnum(this BufferTarget target)
     {
         return target switch

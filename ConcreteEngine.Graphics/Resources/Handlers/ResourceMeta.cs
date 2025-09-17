@@ -84,29 +84,29 @@ public readonly struct IndexBufferMeta(
 
 public readonly struct FrameBufferMeta(
     Vector2D<int> size,
-    bool depthStencilBuffer,
-    bool msaa,
-    byte samples
+    bool colorBuffer,
+    bool depthBuffer,
+    bool depthStencilBuffer
 ) : IResourceMeta
 {
     public readonly Vector2D<int> Size = size;
-    public readonly byte Samples = samples;
+    public readonly bool ColorBuffer = colorBuffer;
+    public readonly bool DepthBuffer = depthBuffer;
     public readonly bool DepthStencilBuffer = depthStencilBuffer;
-    public readonly bool Msaa = msaa;
 
     internal static FrameBufferMeta CreateResizeCopy(in FrameBufferMeta meta, Vector2D<int> size) =>
-        new(size, meta.DepthStencilBuffer, meta.Msaa, meta.Samples);
+        new(size, meta.ColorBuffer, meta.DepthBuffer, meta.DepthStencilBuffer);
 }
 
 public readonly struct RenderBufferMeta(
-    RenderBufferKind kind,
     Vector2D<int> size,
-    bool multisample
+    FrameBufferTarget target,
+    RenderBufferMsaa multisample
 ) : IResourceMeta
 {
     public readonly Vector2D<int> Size = size;
-    public readonly RenderBufferKind Kind = kind;
-    public readonly bool Multisample = multisample;
+    public readonly FrameBufferTarget Target = target;
+    public readonly RenderBufferMsaa Multisample = multisample;
 }
 
 public readonly struct UniformBufferMeta : IResourceMeta

@@ -24,7 +24,6 @@ internal sealed class GlBackendDriver : IGraphicsDriver
     private readonly ResourceBackendDispatcher _dispatcher;
     private readonly BackendOpsHub _store;
     
-
     private readonly GlCapabilities _capabilities;
     private readonly GlDebugger _debugger;
     private readonly GlDisposer _disposer;
@@ -36,7 +35,6 @@ internal sealed class GlBackendDriver : IGraphicsDriver
     private readonly GlFrameBuffers _frameBuffers;
 
     public GraphicsConfiguration Configuration => _configuration;
-
     public DeviceCapabilities Capabilities => _capabilities.Caps;
 
 

@@ -20,13 +20,15 @@ internal static class GlEnumUtils
         else if (storage == BufferStorage.Stream) 
             flags |= BufferStorageMask.DynamicStorageBit;
 
-        if (access.HasFlag(BufferAccess.MapRead))
+        
+        //BufferAccess access
+        if (access.Has(BufferAccess.MapRead))
             flags |= BufferStorageMask.MapReadBit;
-        if (access.HasFlag(BufferAccess.MapWrite))
+        if (access.Has(BufferAccess.MapWrite))
             flags |= BufferStorageMask.MapWriteBit;
-        if (access.HasFlag(BufferAccess.Persistent))
+        if (access.Has(BufferAccess.Persistent))
             flags |= BufferStorageMask.MapPersistentBit;
-        if (access.HasFlag(BufferAccess.Coherent))
+        if (access.Has(BufferAccess.Coherent))
             flags |= BufferStorageMask.MapCoherentBit;
 
         return flags;
@@ -49,13 +51,13 @@ internal static class GlEnumExtensions
     }
     
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public static GLEnum ToGlEnum(this FboAttachment kind)
+    public static GLEnum ToGlEnum(this FrameBufferTarget kind)
     {
         return kind switch
         {
-            FboAttachment.Color => GLEnum.ColorAttachment0,
-            FboAttachment.Depth => GLEnum.DepthAttachment,
-            FboAttachment.DepthStencil => GLEnum.DepthStencilAttachment,
+            FrameBufferTarget.Color => GLEnum.ColorAttachment0,
+            FrameBufferTarget.Depth => GLEnum.DepthAttachment,
+            FrameBufferTarget.DepthStencil => GLEnum.DepthStencilAttachment,
             _ => throw new ArgumentOutOfRangeException(nameof(kind), kind, null)
         };
     }

@@ -15,6 +15,8 @@ public interface IShaderRepository
     UniformBufferId GetUboId(UniformGpuSlot slot);
     ShaderLayout GetShaderLayout(ShaderId shaderId);
 }
+
+//TODO refactor UboArena out?
 internal sealed class ShaderRepository : IShaderRepository
 {
     private readonly Dictionary<ShaderId, ShaderLayout> _shaderLayouts = new(8);
@@ -74,8 +76,6 @@ internal sealed class ShaderRepository : IShaderRepository
         return _shaderLayouts.Remove(shaderId);
     }
 }
-
-
 
 public sealed class ShaderLayout
 {

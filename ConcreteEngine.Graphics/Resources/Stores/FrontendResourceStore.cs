@@ -59,6 +59,29 @@ internal sealed class FrontendResourceStore<TId, TMeta> : IResourceStore<TId>
         _free = new Stack<int>();
     }
 
+    public bool TryGetHandle(TId id, out GfxHandle handle)
+    {
+        if (id.Value == 0)
+        {
+            handle = default;
+            return false;
+        }
+
+        handle = GetHandle(id);
+        return true;
+    }
+    public bool TryGet(TId id, out GfxHandle handle, out TMeta meta)
+    {
+        if (id.Value == 0)
+        {
+            handle = default;
+            meta = default;
+            return false;
+        }
+        
+        handle = GetHandleAndMeta(id, out meta);
+        return true;
+    }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public ref readonly TMeta GetMeta(TId id) => ref _meta[id.Value - 1];
@@ -74,11 +97,11 @@ internal sealed class FrontendResourceStore<TId, TMeta> : IResourceStore<TId>
         return ref _handle[idx];
     }
 
-    public TId Add(in TMeta meta, in GfxHandle handle)
+    public TId Add(in TMeta meta, in ResourceRefToken<TId> resourceToken)
     {
         int idx = _free.Count > 0 ? _free.Pop() : Allocate();
         _meta[idx] = meta;
-        _handle[idx] = handle;
+        _handle[idx] = resourceToken.Handle;
         return MakeId(idx);
     }
     

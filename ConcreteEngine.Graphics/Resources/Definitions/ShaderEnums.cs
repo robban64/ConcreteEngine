@@ -12,7 +12,7 @@ public enum UniformGpuSlot : ushort
 
 public enum UboDefaultCapacity
 {
-    Lower,
-    Medium,
-    Upper
+    Lower = 0,
+    Medium = 1,
+    Upper = 2
 }

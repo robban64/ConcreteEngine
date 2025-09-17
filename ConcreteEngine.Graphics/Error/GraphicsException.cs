@@ -59,7 +59,7 @@ public sealed partial class GraphicsException : InvalidOperationException
         new($"Framebuffer '{fbName}' is incomplete: {reason}");
 
     public static GraphicsException UnsupportedFeature(string feature) =>
-        new($"The feature '{feature}' is not supported by this hardware or context.");
+        new($"The feature '{feature}' is not supported (yet).");
 
     public static GraphicsException CapabilityExceeded<T>(string capabilityName, int attempted, int maximum) =>
         new($"{Label<T>()}: {capabilityName} value {attempted} exceeds the maximum supported ({maximum}).");

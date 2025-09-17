@@ -9,6 +9,7 @@ using ConcreteEngine.Graphics.Primitives;
 
 namespace ConcreteEngine.Graphics.Descriptors;
 
+
 public readonly ref struct GpuMeshDescriptor
 {
     public required uint DrawCount { get; init; }

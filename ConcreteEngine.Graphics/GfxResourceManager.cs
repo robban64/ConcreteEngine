@@ -37,6 +37,7 @@ internal sealed class GfxResourceManager : IGfxResourceManager
 
     internal BackendStoreHub BackendStoreHub => _backendHub;
     internal FrontendStoreHub FrontendStoreHub => _frontendHub;
+    internal ResourceBackendDispatcher BackendDispatcher => _dispatchers;
 
     public GfxResourceManager()
     {
@@ -44,17 +45,6 @@ internal sealed class GfxResourceManager : IGfxResourceManager
         _backendHub = new BackendStoreHub();
 
         _dispatchers = new ResourceBackendDispatcher { OnDelete = OnDeleted };
-    }
-
-    internal void AttachStore(IGraphicsDriver driver)
-    {
-        _backendHub.AttachStore(driver);
-    }
-
-    internal void AttachDispatchers(IGraphicsDriver driver)
-    {
-        ArgumentNullException.ThrowIfNull(driver, nameof(driver));
-        driver.AttachDispatcher(_dispatchers);
     }
 
     public void OnDeleted(in DeleteCmd cmd)

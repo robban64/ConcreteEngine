@@ -40,7 +40,7 @@ internal sealed class GlShaders: IGraphicsDriverModule
     }
 
     
-    public ResourceRefToken<MeshId> CreateShader(string vertexSource, string fragmentSource)
+    public ResourceRefToken<ShaderId> CreateShader(string vertexSource, string fragmentSource)
     {
         uint vertexShader = CreateShader(ShaderType.VertexShader, vertexSource);
         uint fragmentShader = CreateShader(ShaderType.FragmentShader, fragmentSource);
@@ -49,7 +49,7 @@ internal sealed class GlShaders: IGraphicsDriverModule
         _gl.DetachShader(handle, fragmentShader);
         _gl.DeleteShader(vertexShader);
         _gl.DeleteShader(fragmentShader);
-        return _store.VertexArray.Add(new GlMeshHandle(handle));
+        return _store.Shader.Add(new GlShaderHandle(handle));
 
     }
     

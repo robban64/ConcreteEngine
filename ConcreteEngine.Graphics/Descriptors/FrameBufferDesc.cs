@@ -13,15 +13,17 @@ public interface IFrameBufferDescriptor
     Vector2D<int> AbsoluteSize { get; }
 }
 
+public readonly record struct FrameBufferAttachmentDesc(
+    bool ColorTexture, bool DepthTexture, bool ColorRenderBuffer, bool DepthStenRenderBuffer
+);
 
 public readonly record struct FrameBufferDesc(
-    Vector2 SizeRatio,
+    Vector2 DownscaleRatio,
     Vector2D<int> AbsoluteSize,
+    FrameBufferAttachmentDesc Attachments,
+    RenderBufferMsaa Multisample = RenderBufferMsaa.None,
     bool AutoResizeable = true,
-    bool DepthStencilBuffer = false,
-    TexturePreset TexturePreset = TexturePreset.LinearClamp,
-    bool Msaa = false,
-    uint Samples = 0
+    TexturePreset TexturePreset = TexturePreset.LinearClamp
 );
 
 public readonly record struct ColorFboDescription(

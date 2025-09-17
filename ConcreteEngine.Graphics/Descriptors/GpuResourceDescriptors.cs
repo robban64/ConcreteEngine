@@ -13,13 +13,13 @@ public readonly ref struct GpuTextureData(ReadOnlySpan<byte> pixelData, uint wid
 }
 
 public record struct GpuTextureDescriptor(
-    int Width,
-    int Height,
-    EnginePixelFormat Format,
+    uint Width,
+    uint Height,
     TexturePreset Preset,
+    TextureKind Kind,
+    EnginePixelFormat Format = EnginePixelFormat.Rgba,
     TextureAnisotropy Anisotropy = TextureAnisotropy.Default,
-    float LodBias = 0,
-    bool NullPtrData = false
+    float LodBias = 0
 );
 
 public readonly ref struct GpuCubeMapData(

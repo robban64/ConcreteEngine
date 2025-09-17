@@ -10,16 +10,19 @@ public interface IFrameBufferRepository
     FrameBufferLayout Get(FrameBufferId fboId);
 }
 
+public readonly record struct FboAttachmentIds(
+    TextureId ColorTextureId, TextureId DepthTextureId, 
+    RenderBufferId ColorRenderBufferId, RenderBufferId DepthRenderBufferId
+);
+
 public sealed class FrameBufferLayout
 {
-    public record struct AttachedFboIds(TextureId FboTexId, RenderBufferId RboDepthId, RenderBufferId RboTexId);
-
     private FrameBufferDesc _desc;
 
-    internal FrameBufferLayout(FrameBufferId fboId, in AttachedFboIds attachedFboResources, in FrameBufferDesc desc)
+    internal FrameBufferLayout(FrameBufferId fboId, in FboAttachmentIds fboAttachmentResources, in FrameBufferDesc desc)
     {
         FboId = fboId;
-        AttachedFboResources = attachedFboResources;
+        FboAttachmentResources = fboAttachmentResources;
         UpdateFromDescriptor(desc);
     }
 
@@ -31,13 +34,11 @@ public sealed class FrameBufferLayout
     internal FrameBufferDesc GetDescriptor() => _desc;
 
     public FrameBufferId FboId { get; }
-    public AttachedFboIds AttachedFboResources { get; }
-    public Vector2 SizeRatio => _desc.SizeRatio;
+    public FboAttachmentIds FboAttachmentResources { get; }
+    public RenderBufferMsaa Msaa => _desc.Multisample;
+    public Vector2 DownscaleRatio => _desc.DownscaleRatio;
     public Vector2D<int> AbsoluteSize => _desc.AbsoluteSize;
-    public bool DepthStencilBuffer => _desc.DepthStencilBuffer;
     public TexturePreset TexturePreset => _desc.TexturePreset;
-    public bool Msaa => _desc.Msaa;
-    public uint Samples => _desc.Samples;
     public bool AutoResizeable => _desc.AutoResizeable;
 }
 
@@ -50,7 +51,7 @@ internal sealed class FrameBufferRepository : IFrameBufferRepository
         return _registry[fboId];
     }
 
-    public void AddRecord(FrameBufferId fboId, in FrameBufferLayout.AttachedFboIds attachedIds, in FrameBufferDesc desc)
+    internal void AddRecord(FrameBufferId fboId, in FboAttachmentIds attachedIds, in FrameBufferDesc desc)
     {
         fboId.IsValidOrThrow();
         _registry.Add(fboId, new FrameBufferLayout(fboId, in attachedIds, in desc));

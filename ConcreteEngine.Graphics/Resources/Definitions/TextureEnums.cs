@@ -1,6 +1,6 @@
 namespace ConcreteEngine.Graphics.Resources;
 
-public enum TextureKind
+public enum TextureKind : byte
 {
     Texture1D,
     Texture2D,

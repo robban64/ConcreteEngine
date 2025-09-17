@@ -8,17 +8,13 @@ internal sealed class BackendStoreHub
     private readonly Dictionary<ResourceKind, IBackendStoreFacade> _stores = new(8);
     private readonly BackendOpsHub _backendOps;
 
+    internal BackendOpsHub  BackendOps => _backendOps;
     public BackendStoreHub()
     {
         RegisterBackendStores();
         _backendOps = new BackendOpsHub(this);
     }
-
-    internal void AttachStore(IGraphicsDriver driver)
-    {
-        ArgumentNullException.ThrowIfNull(driver, nameof(driver));
-        driver.AttachStore(_backendOps);
-    }
+    
     
     public void Register<TId, THandle, TMeta, TDef>(BackendResourceStore<THandle> store)
         where TId : unmanaged, IResourceId
@@ -140,7 +136,7 @@ internal sealed class BackendStoreHub
 
     public void Remove(in GfxHandle handle, bool replace)
     {
-        var store = GetStore(handle.Kind);
+        var store = GetStore(handle.Target);
         if (replace) return;
         store.Remove(handle);
     }

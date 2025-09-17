@@ -41,11 +41,12 @@ internal sealed class GlFrameBuffers: IGraphicsDriverModule
         );
     }
 
-    public void BlitDefault(Vector2D<int> srcSize, Vector2D<int> dstSize, bool linear)
+    public void BlitDefault(in GfxHandle readFbo, Vector2D<int> srcSize, Vector2D<int> dstSize, bool linear)
     {
         var filter = linear ? BlitFramebufferFilter.Linear : BlitFramebufferFilter.Nearest;
+        var read = _store.FrameBuffer.Get(readFbo).Handle;
         _gl.BlitNamedFramebuffer(
-            0, 0,
+            read, 0,
             0, 0, srcSize.X, srcSize.Y,
             0, 0, dstSize.X, dstSize.Y,
             ClearBufferMask.ColorBufferBit, filter
@@ -58,7 +59,7 @@ internal sealed class GlFrameBuffers: IGraphicsDriverModule
         return _store.FrameBuffer.Add(new GlFboHandle(fbo));
     }
 
-    public ResourceRefToken<RenderBufferId> CreateRenderBuffer(FboAttachment attachment, Vector2D<int> size,
+    public ResourceRefToken<RenderBufferId> CreateRenderBuffer(FrameBufferTarget attachment, Vector2D<int> size,
         bool multisample, uint samples)
     {
         var glAttachment = attachment.ToGlEnum();
@@ -73,24 +74,24 @@ internal sealed class GlFrameBuffers: IGraphicsDriverModule
         return _store.RenderBuffer.Add(new GlRboHandle(rbo));
     }
 
-    public void AttachTexture(in GfxHandle fbo, in GfxHandle texture, FboAttachment attachment)
+    public void AttachTexture(in GfxHandle fbo, in GfxHandle texture, FrameBufferTarget target)
     {
         var (fboHandle, texHandle) = (GetFboHandle(in fbo).Handle, GetRboHandle(in texture).Handle);
-        var glAttachment = attachment.ToGlEnum();
+        var glAttachment = target.ToGlEnum();
         _gl.NamedFramebufferTexture(fboHandle, glAttachment, texHandle, 0);
     }
 
-    public void AttachRenderBuffer(in GfxHandle fbo, in GfxHandle rbo, FboAttachment attachment)
+    public void AttachRenderBuffer(in GfxHandle fbo, in GfxHandle rbo, FrameBufferTarget target)
     {
         var (fboHandle, rboHandle) = (GetFboHandle(in fbo).Handle, GetRboHandle(in rbo).Handle);
-        var glAttachment = attachment.ToGlEnum();
+        var glAttachment = target.ToGlEnum();
         _gl.NamedFramebufferRenderbuffer(fboHandle, glAttachment, RenderbufferTarget.Renderbuffer, rboHandle);
     }
 
-    public void SetDrawBuffers(in GfxHandle fbo, FboAttachment attachment)
+    public void SetDrawBuffers(in GfxHandle fbo, FrameBufferTarget target)
     {
         var fboHandle = GetFboHandle(in fbo).Handle;
-        var glAttachment = attachment.ToGlEnum();
+        var glAttachment = target.ToGlEnum();
         _gl.NamedFramebufferDrawBuffers(fboHandle, 1, glAttachment);
     }
 

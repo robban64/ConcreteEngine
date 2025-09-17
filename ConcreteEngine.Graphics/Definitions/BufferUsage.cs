@@ -14,12 +14,3 @@ public enum BufferStorage : byte
     Stream = 2
 }
 
-[Flags]
-public enum BufferAccess : byte
-{
-    None   = 0,
-    MapRead  = 1 << 0,
-    MapWrite = 1 << 1,
-    Persistent = 1 << 2,
-    Coherent   = 1 << 3
-}

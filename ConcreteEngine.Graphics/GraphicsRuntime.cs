@@ -61,10 +61,10 @@ public sealed class GraphicsRuntime : IGraphicsRuntime
         _resources = new GfxResourceManager();
         _repository = new GfxResourceRepository(_resources);
 
-        var driver = new GlBackendDriver();
+        var driver = new GlBackendDriver(glConfig);
         _resources.AttachStore(driver);
         _resources.AttachDispatchers(driver);
-        driver.Initialize(glConfig);
+        driver.Initialize();
         _driver = driver;
 
         _context = new GraphicsContext(_driver, _resources, _repository);

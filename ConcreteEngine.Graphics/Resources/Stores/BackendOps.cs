@@ -12,7 +12,7 @@ internal sealed class BackendOps<TId, THandle, TMeta, TDef> : IBackendOps
     where TId     : unmanaged, IResourceId
     where THandle : unmanaged, IResourceHandle, IEquatable<THandle>
     where TMeta   : unmanaged, IResourceMeta
-    where TDef    : IResourceRefToken<TId, THandle, TMeta>
+    where TDef    : unmanaged, IResourceRefToken<TId, THandle, TMeta>
 {
     private readonly BackendStoreFacade<THandle> _store;
     public ResourceKind Kind => TDef.Kind;

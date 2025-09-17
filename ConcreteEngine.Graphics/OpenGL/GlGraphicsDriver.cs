@@ -14,12 +14,19 @@ namespace ConcreteEngine.Graphics.OpenGL;
 
 internal sealed class GlBackendDriver : IGraphicsDriver
 {
-    private GL _gl = null!;
-    private int _glMinor = 0;
-    private int _glMajor = 0;
+    private readonly GL _gl;
+    private readonly GlCtx _ctx;
+    
+    private readonly ResourceBackendDispatcher _dispatcher;
+    private readonly BackendOpsHub _store;
+    
+    private readonly GlCapabilities _capabilities ;
+    private readonly GlDebugger _debugger ;
+    
+    private readonly GlBuffers _buffers;
+    private readonly GlTextures _textures;
 
-    private DeviceCapabilities _capabilities = null!;
-    private GraphicsConfiguration _configuration = null!;
+    private readonly GraphicsConfiguration _configuration;
 
     private GlTextureFactory _textureFactory = null!;
     private GlShaderFactory _shaderFactory = null!;
@@ -27,35 +34,44 @@ internal sealed class GlBackendDriver : IGraphicsDriver
 
     public GraphicsConfiguration Configuration => _configuration;
 
-    public DeviceCapabilities Capabilities => _capabilities;
+    public DeviceCapabilities Capabilities => _capabilities.Caps;
 
-    private ResourceBackendDispatcher _dispatcher = null!;
-
-    // Kepp it for now, read only
-    private BackendOpsHub _store = null!;
-
-    private static DebugProc _debugProc;
-
-
-    internal GlBackendDriver()
-    {
-    }
-
-    internal void Initialize(GlStartupConfig config)
+    internal GlBackendDriver(GlStartupConfig config, BackendOpsHub store, ResourceBackendDispatcher dispatcher)
     {
         _gl = config.DriverContext;
-        _capabilities = CreateDeviceCapabilities(_gl);
+        _store = store;
+        _dispatcher  = dispatcher;
+        _capabilities = new GlCapabilities();
+        _debugger = new GlDebugger(_gl);
         _configuration = new GraphicsConfiguration();
 
+        _ctx = new GlCtx
+        {
+            Capabilities = _capabilities,
+            Gl = _gl,
+            Store = _store,
+            Dispatcher = _dispatcher
+        };
 
+        _buffers = new GlBuffers(_ctx);
+        _textures = new GlTextures(_ctx);
+
+        _textureFactory = new GlTextureFactory();
+        _shaderFactory = new GlShaderFactory();
+        _fboFactory = new GlFboFactory(_textureFactory);
+
+        _textureFactory.AttachGlContext(_gl, Capabilities);
+        _shaderFactory.AttachGlContext(_gl, Capabilities);
+        _fboFactory.AttachGlContext(_gl, Capabilities);
+        
+        _debugger.EnableGlDebug();
+    }
+
+    internal void Initialize()
+    {
         Console.WriteLine($"OpenGL version {Capabilities.GlVersion} loaded.");
         Console.WriteLine("--Device Capability--");
         Console.WriteLine(Capabilities.ToString());
-
-
-        _gl.GetInteger(GetPName.MajorVersion, out _glMajor);
-        _gl.GetInteger(GetPName.MinorVersion, out _glMinor);
-        int glVersion = _glMajor * 100 + _glMinor * 10;
 
         _gl.Enable(GLEnum.Dither);
         _gl.Enable(GLEnum.Multisample);
@@ -67,28 +83,8 @@ internal sealed class GlBackendDriver : IGraphicsDriver
         _gl.Enable(EnableCap.CullFace);
         _gl.CullFace(TriangleFace.Back);
         _gl.FrontFace(FrontFaceDirection.Ccw);
-
-
-        EnableGlDebug(_gl);
-
-        _textureFactory = new GlTextureFactory();
-        _shaderFactory = new GlShaderFactory();
-        _fboFactory = new GlFboFactory(_textureFactory);
-
-        _textureFactory.AttachGlContext(_gl, Capabilities);
-        _shaderFactory.AttachGlContext(_gl, Capabilities);
-        _fboFactory.AttachGlContext(_gl, Capabilities);
     }
 
-    public void AttachDispatcher(ResourceBackendDispatcher dispatcher)
-    {
-        _dispatcher = dispatcher;
-    }
-
-    public void AttachStore(BackendOpsHub store)
-    {
-        _store = store;
-    }
 
     public void PrepareFrame()
     {
@@ -96,15 +92,14 @@ internal sealed class GlBackendDriver : IGraphicsDriver
 
     public void ValidateEndFrame()
     {
-        CheckGlError();
+        _debugger.CheckGlError();    
     }
 
     public void Clear(Color4 color, ClearBufferFlag flags)
     {
         _gl.ClearColor(color.R, color.G, color.B, 1);
         _gl.Clear(flags.ToGlEnum());
-        CheckGlError();
-    }
+   }
 
     public void SetBlendMode(BlendMode blendMode)
     {
@@ -139,14 +134,6 @@ internal sealed class GlBackendDriver : IGraphicsDriver
 
     public void SetViewport(in Vector2D<int> viewport) => _gl.Viewport(viewport);
 
-
-    public ResourceRefToken<UniformBufferId> CreateUniformBuffer(UniformGpuSlot slot, UboDefaultCapacity capacity, uint blockSize,
-        out UniformBufferMeta meta)
-    {
-        var handle = _shaderFactory.CreateUniformBuffer(slot, capacity, blockSize, out meta);
-        return _store.UniformBuffer.Add(handle);
-    }
-
     public unsafe void SetUniformBufferSize(UniformGpuSlot slot, nuint capacity) =>
         _gl.BufferData(BufferTargetARB.UniformBuffer, capacity, (void*)0, BufferUsageARB.DynamicDraw);
 
@@ -164,29 +151,6 @@ internal sealed class GlBackendDriver : IGraphicsDriver
         _gl.BindBufferRange(BufferTargetARB.UniformBuffer, (uint)slot, handle, (nint)offset, size);
     }
 
-
-    public ResourceRefToken<MeshId> CreateVertexArray(DrawPrimitive primitive, MeshDrawKind drawKind, DrawElementType drawElement,
-        out MeshMeta meta)
-    {
-        var handle = _gl.GenVertexArray();
-        meta = new MeshMeta(primitive, drawKind, drawElement, 0, 0);
-        return _store.VertexArray.Add(new GlMeshHandle(handle));
-    }
-
-    public ResourceRefToken<VertexBufferId> CreateVertexBuffer(BufferUsage usage, uint elementSize, uint bindingIndex,
-        out VertexBufferMeta meta)
-    {
-        var handle = _gl.GenBuffer();
-        meta = new VertexBufferMeta(usage, bindingIndex, 0, elementSize);
-        return _store.VertexBuffer.Add(new GlVboHandle(handle));
-    }
-
-    public ResourceRefToken<IndexBufferId> CreateIndexBuffer(BufferUsage usage, uint elementSize, out IndexBufferMeta meta)
-    {
-        var handle = _gl.GenBuffer();
-        meta = new IndexBufferMeta(usage, 0, elementSize);
-        return _store.IndexBuffer.Add(new GlIboHandle(handle));
-    }
 
     public void BindFrameBuffer(in GfxHandle fbo)
     {
@@ -215,48 +179,6 @@ internal sealed class GlBackendDriver : IGraphicsDriver
         _gl.BindFramebuffer(FramebufferTarget.DrawFramebuffer, draw);
     }
 
-    public void CreateFrameBuffer(in FrameBufferDesc desc, out DriverCreateFboResult result, GfxHandle? replaceHandle = null)
-    {
-        _fboFactory.CreateFrameBuffer(in desc, out var fbo, out var fboTex, out var rboDepth, out var rboTex);
-
-        var fboHandle = _store.FrameBuffer.Add(fbo.Handle);
-        var texHandle = fboTex.Handle != default ? _store.Texture.Add( fboTex.Handle) : default;
-        var rboDepthHandle = rboDepth.Handle != default
-            ? _store.RenderBuffer.Add( rboDepth.Handle)
-            : default;
-        var rboTexHandle = rboTex.Handle != default
-            ? _store.RenderBuffer.Add( rboTex.Handle)
-            : default;
-
-
-        result = new DriverCreateFboResult(new DriverHandleMeta<FrameBufferMeta>(in fboHandle.Handle, fbo.Meta),
-            new DriverHandleMeta<TextureMeta>(in texHandle.Handle, fboTex.Meta),
-            new DriverHandleMeta<RenderBufferMeta>(in fboHandle.Handle, rboDepth.Meta),
-            new DriverHandleMeta<RenderBufferMeta>(in fboHandle.Handle, rboTex.Meta)
-        );
-    }
-/*
-    public void ReplaceFrameBuffer(in FrameBufferDesc desc, in GfxHandle prevFbo, in GfxHandle prevTex,
-        in GfxHandle prevRboDepth, in GfxHandle prevRboTex, out DriverCreateFboResult result)
-    {
-        _fboFactory.CreateFrameBuffer(in desc, out var fbo, out var fboTex, out var rboDepth, out var rboTex);
-
-        var fboHandle = _dispatcher.OnCreate(ResourceKind.FrameBuffer, fbo.Handle, prevFbo);
-        var texHandle = fboTex.Handle != default ? _dispatcher.OnCreate(ResourceKind.Texture, fboTex.Handle, prevTex) : default;
-        var rboDepthHandle = rboDepth.Handle != default
-            ? _dispatcher.OnCreate(ResourceKind.RenderBuffer, rboDepth.Handle,prevRboDepth)
-            : default;
-        var rboTexHandle = rboTex.Handle != default
-            ? _dispatcher.OnCreate(ResourceKind.RenderBuffer, rboTex.Handle, prevRboTex)
-            : default;
-
-
-        result = new DriverCreateFboResult(new DriverHandleMeta<FrameBufferMeta>(in fboHandle, fbo.Meta),
-            new DriverHandleMeta<TextureMeta>(in texHandle, fboTex.Meta),
-            new DriverHandleMeta<RenderBufferMeta>(in rboDepthHandle, rboDepth.Meta),
-            new DriverHandleMeta<RenderBufferMeta>(in rboTexHandle, rboTex.Meta));
-    }
-*/
     public void Blit(Vector2D<int> srcSize, Vector2D<int> dstSize, bool linear)
     {
         _gl.BlitFramebuffer(
@@ -265,7 +187,6 @@ internal sealed class GlBackendDriver : IGraphicsDriver
             ClearBufferMask.ColorBufferBit,
             linear ? BlitFramebufferFilter.Linear : BlitFramebufferFilter.Nearest
         );
-        CheckGlError();
     }
 
     public void BindVertexArray(in GfxHandle vao)
@@ -327,21 +248,18 @@ internal sealed class GlBackendDriver : IGraphicsDriver
         BufferUsage usage = BufferUsage.StaticDraw) where T : unmanaged
     {
         _gl.BufferData(BufferTargetARB.ElementArrayBuffer, size, data, usage.ToGlEnum());
-        CheckGlError();
     }
 
     public void SetVertexBuffer<T>(in GfxHandle vao, in GfxHandle vbo, ReadOnlySpan<T> data, nuint size,
         BufferUsage usage = BufferUsage.StaticDraw) where T : unmanaged
     {
         _gl.BufferData(BufferTargetARB.ArrayBuffer, size, data, usage.ToGlEnum());
-        CheckGlError();
     }
 
     public void UploadVertexBuffer<T>(in GfxHandle vbo, ReadOnlySpan<T> data, nuint offsetByte)
         where T : unmanaged
     {
         _gl.BufferSubData(BufferTargetARB.ArrayBuffer, (nint)offsetByte, data);
-        CheckGlError();
     }
     //_gl.NamedBufferSubData(vbo.Handle, (nint)offsetByte, (nuint)(data.Length * Unsafe.SizeOf<T>()), data);
 
@@ -349,24 +267,8 @@ internal sealed class GlBackendDriver : IGraphicsDriver
         where T : unmanaged
     {
         _gl.BufferSubData(BufferTargetARB.ElementArrayBuffer, (nint)offsetByte, data);
-        CheckGlError();
     }
     // _gl.NamedBufferSubData(ibo.Handle, (nint)offsetByte, (nuint)(data.Length * Unsafe.SizeOf<T>()), data);
-
-    
-    public ResourceRefToken<TextureId> CreateTexture2D(GpuTextureData data, in GpuTextureDescriptor desc, out TextureMeta meta)
-    {
-        var handle = _textureFactory.CreateTexture2D(data, in desc, out meta);
-        return _store.Texture.Add(handle);
-    }
-
-
-    public ResourceRefToken<TextureId> CreateCubeMap(GpuCubeMapData data, in GpuCubeMapDescriptor desc, out TextureMeta meta)
-    {
-        var handle = _textureFactory.CreateCubeMap(data, in desc, out meta);
-        return _store.Texture.Add(handle);
-    }
-
 
     public void BindTextureUnit(in GfxHandle tex, uint slot)
     {
@@ -519,52 +421,7 @@ internal sealed class GlBackendDriver : IGraphicsDriver
         _dispatcher.OnDelete(in cmd);
     }
 
-    private void CheckGlError()
-    {
-        var error = _gl.GetError();
-        if (error != (GLEnum)ErrorCode.NoError)
-            throw new OpenGlException(error);
-    }
-
-    private unsafe void EnableGlDebug(GL gl)
-    {
-        _debugProc = (src, type, id, severity, len, msg, user) =>
-        {
-            var text = SilkMarshal.PtrToString((nint)msg);
-            Console.WriteLine($"[GL {severity}] {type} {id}: {text}");
-        };
-
-        gl.Enable(EnableCap.DebugOutput);
-        gl.Enable(EnableCap.DebugOutputSynchronous);
-        gl.DebugMessageCallback(_debugProc, null);
-        gl.DebugMessageControl(GLEnum.DontCare, GLEnum.DontCare, GLEnum.DebugSeverityNotification,
-            0, null, false);
-
-
-        gl.Enable(EnableCap.DebugOutput);
-        gl.Enable(EnableCap.DebugOutputSynchronous);
-        gl.DebugMessageCallback(_debugProc, null);
-        gl.DebugMessageControl(GLEnum.DontCare, GLEnum.DontCare, GLEnum.DebugSeverityNotification, 0, null, false);
-    }
 
     // Utils
-    private static DeviceCapabilities CreateDeviceCapabilities(GL gl)
-    {
-        var maxTexUnits = gl.GetInteger(GLEnum.MaxCombinedTextureImageUnits);
-        return new DeviceCapabilities
-        {
-            GlVersion = new OpenGlVersion(gl.GetInteger(GetPName.MajorVersion), gl.GetInteger(GetPName.MinorVersion)),
-            MaxTextureImageUnits = gl.GetInteger(GLEnum.MaxCombinedTextureImageUnits),
-            MaxVertexAttribBindings = gl.GetInteger((GLEnum)0x82DA), // GL_MAX_VERTEX_ATTRIB_BINDINGS
-            MaxTextureSize = gl.GetInteger(GLEnum.MaxTextureSize),
-            MaxArrayTextureLayers = gl.GetInteger(GLEnum.MaxArrayTextureLayers),
-            MaxFramebufferWidth = gl.GetInteger((GLEnum)0x9315), // GL_MAX_FRAMEBUFFER_WIDTH
-            MaxFramebufferHeight = gl.GetInteger((GLEnum)0x9316), // GL_MAX_FRAMEBUFFER_HEIGHT
-            MaxSamples = gl.GetInteger(GLEnum.MaxSamples),
-            MaxColorAttachments = gl.GetInteger(GLEnum.MaxColorAttachments),
-            MaxAnisotropy = gl.GetFloat(GLEnum.MaxTextureMaxAnisotropy),
-            MaxUniformBlockSize = gl.GetInteger(GLEnum.MaxUniformBlockSize),
-            UniformBufferOffsetAlignment = gl.GetInteger(GetPName.UniformBufferOffsetAlignment),
-        };
-    }
+   
 }

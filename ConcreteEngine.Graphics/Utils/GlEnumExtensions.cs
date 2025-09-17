@@ -9,6 +9,17 @@ namespace ConcreteEngine.Graphics.Utils;
 
 public static class GlEnumExtensions
 {
+    public static GLEnum ToGlEnum(this FboAttachment kind)
+    {
+        return kind switch
+        {
+            FboAttachment.Color => GLEnum.ColorAttachment0,
+            FboAttachment.Depth => GLEnum.DepthAttachment,
+            FboAttachment.DepthStencil => GLEnum.DepthStencilAttachment,
+            _ => throw new ArgumentOutOfRangeException(nameof(kind), kind, null)
+        };
+    }
+
     public static (bool enabled, BlendEquationModeEXT eq, BlendingFactor src, BlendingFactor dst) ToGlEnum(
         this BlendMode mode)
     {

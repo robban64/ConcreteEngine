@@ -70,6 +70,20 @@ internal sealed class GfxResourceAllocator : IGfxResourceAllocator
 
     public TextureId CreateTexture2D(GpuTextureData data, in GpuTextureDescriptor desc, out TextureMeta meta)
     {
+        /*
+        var result = anisotropy switch
+        {
+            TextureAnisotropy.Off => 0,
+            TextureAnisotropy.Default => 4,
+            TextureAnisotropy.X2 => 2,
+            TextureAnisotropy.X4 => 4,
+            TextureAnisotropy.X8 => 8,
+            TextureAnisotropy.X16 => 16,
+            _ => throw new ArgumentOutOfRangeException(nameof(anisotropy), anisotropy, null),
+        };
+
+        var value = Math.Min(result, _capabilities.Caps.MaxAnisotropy);
+*/
         var handle = _driver.CreateTexture2D(data, in desc, out meta);
         return _resources.TextureStore.Add(in meta, handle.Handle);
     }
@@ -162,5 +176,12 @@ internal sealed class GfxResourceAllocator : IGfxResourceAllocator
         var uboId = _resources.UboStore.Add(in meta, result.Handle);
         _repository.ShaderRepository.AddUboToSlot(meta.Slot, uboId);
         return uboId;
+    }
+    
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    private static uint CalcMipLevels(uint width, uint height)
+    {
+        uint size = Math.Max(width, height);
+        return (uint)Math.Floor(Math.Log2(size)) + 1;
     }
 }

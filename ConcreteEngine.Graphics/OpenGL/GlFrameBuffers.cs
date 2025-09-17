@@ -1,0 +1,76 @@
+using ConcreteEngine.Graphics.Error;
+using ConcreteEngine.Graphics.Resources;
+using ConcreteEngine.Graphics.Utils;
+using Silk.NET.Maths;
+using Silk.NET.OpenGL;
+
+namespace ConcreteEngine.Graphics.OpenGL;
+
+internal sealed class GlFrameBuffers
+{
+    private readonly GL _gl;
+    private readonly BackendOpsHub _store;
+    private readonly GlCapabilities _capabilities;
+
+    internal GlFrameBuffers(GlCtx ctx)
+    {
+        _gl = ctx.Gl;
+        _capabilities = ctx.Capabilities;
+        _store = ctx.Store;
+    }
+
+    private GlFboHandle GetFboHandle(in GfxHandle handle) => _store.FrameBuffer.Get(in handle);
+    private GlRboHandle GetRboHandle(in GfxHandle handle) => _store.RenderBuffer.Get(in handle);
+    private GlTextureHandle GetTextureHandle(in GfxHandle handle) => _store.Texture.Get(in handle);
+
+
+    public ResourceRefToken<FrameBufferId> CreateFrameBuffer()
+    {
+        _gl.CreateFramebuffers(1, out uint fbo);
+        return _store.FrameBuffer.Add(new GlFboHandle(fbo));
+    }
+
+    public ResourceRefToken<RenderBufferId> CreateRenderBuffer(FboAttachment attachment, Vector2D<int> size,
+        bool multisample, uint samples)
+    {
+        var glAttachment = attachment.ToGlEnum();
+        var (width, height) = ((uint)size.X, (uint)size.Y);
+
+        _gl.CreateRenderbuffers(1, out uint rbo);
+        if (multisample)
+            _gl.NamedRenderbufferStorageMultisample(rbo, samples, glAttachment, width, height);
+        else
+            _gl.NamedRenderbufferStorage(rbo, glAttachment, width, height);
+
+        return _store.RenderBuffer.Add(new GlRboHandle(rbo));
+    }
+
+    public void AttachTexture(in GfxHandle fbo, in GfxHandle texture, FboAttachment attachment)
+    {
+        var (fboHandle, texHandle) = (GetFboHandle(in fbo).Handle, GetRboHandle(in texture).Handle);
+        var glAttachment = attachment.ToGlEnum();
+        _gl.NamedFramebufferTexture(fboHandle, glAttachment, texHandle, 0);
+    }
+
+    public void AttachRenderBuffer(in GfxHandle fbo, in GfxHandle rbo, FboAttachment attachment)
+    {
+        var (fboHandle, rboHandle) = (GetFboHandle(in fbo).Handle, GetRboHandle(in rbo).Handle);
+        var glAttachment = attachment.ToGlEnum();
+        _gl.NamedFramebufferRenderbuffer(fboHandle, glAttachment, RenderbufferTarget.Renderbuffer, rboHandle);
+    }
+
+    public void SetDrawBuffers(in GfxHandle fbo,  FboAttachment attachment)
+    {
+        var fboHandle = GetFboHandle(in fbo).Handle;
+        var  glAttachment = attachment.ToGlEnum();
+        _gl.NamedFramebufferDrawBuffers(fboHandle, 1, glAttachment);
+    }
+
+    public void ValidateComplete(in GfxHandle fbo)
+    {
+        var status = _gl.CheckNamedFramebufferStatus(GetFboHandle(in fbo).Handle, FramebufferTarget.Framebuffer);
+        if (status != GLEnum.FramebufferComplete)
+            GraphicsException.ThrowFramebufferIncomplete(nameof(fbo), status.ToString());
+
+    }
+}

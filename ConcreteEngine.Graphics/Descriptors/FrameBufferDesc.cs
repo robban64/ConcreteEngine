@@ -13,6 +13,7 @@ public interface IFrameBufferDescriptor
     Vector2D<int> AbsoluteSize { get; }
 }
 
+
 public readonly record struct FrameBufferDesc(
     Vector2 SizeRatio,
     Vector2D<int> AbsoluteSize,

@@ -19,6 +19,8 @@ internal sealed class BackendOpsHub
     public FrameBufferOps FrameBuffer { get; }
     public RenderBufferOps RenderBuffer { get; }
     public UniformBufferOps UniformBuffer { get; }
+    
+    
 
     internal BackendOpsHub(BackendStoreHub stores)
     {

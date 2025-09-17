@@ -79,7 +79,7 @@ internal interface IDeleteResourceBackend
 internal interface ICreateResourceBackend
 {
     ResourceRefToken<ShaderId> CreateShader(string vs, string fs, out List<(string, int)> uniforms, out ShaderMeta meta);
-    void CreateFrameBuffer(in FrameBufferDesc desc, out DriverCreateFboResult result, GfxHandle? replaceHandle = null);
+    ResourceRefToken<TextureId> CreateEmptyTexture2D(in GpuTextureDescriptor desc, out TextureMeta meta);
     ResourceRefToken<TextureId> CreateTexture2D(GpuTextureData data, in GpuTextureDescriptor desc, out TextureMeta meta);
     ResourceRefToken<TextureId> CreateCubeMap(GpuCubeMapData data, in GpuCubeMapDescriptor desc, out TextureMeta meta);
 
@@ -91,7 +91,11 @@ internal interface ICreateResourceBackend
 
     ResourceRefToken<UniformBufferId> CreateUniformBuffer(UniformGpuSlot slot, UboDefaultCapacity capacity, uint blockSize,
         out UniformBufferMeta meta);
+    
+    ResourceRefToken<FrameBufferId> CreateFrameBuffer(out FrameBufferMeta meta);
 
+    ResourceRefToken<RenderBufferId> CreateRenderBuffer(
+        RenderBufferKind kind, Vector2D<int> size, bool multisample, uint samples, out RenderBufferMeta meta);
 }
 
 internal interface IGraphicsDriver : IGfxShaderBackend, IBufferBackend, IDrawBackend, IBinderBackend,

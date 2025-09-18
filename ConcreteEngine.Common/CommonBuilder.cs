@@ -11,7 +11,7 @@ public interface IBuilds<out TResult>
 
 public sealed class CommonBuilder<TBuilder, TResult, TState>
     where TBuilder : CommonBuilderBase<TResult, TState>
-    where TState : IBuilderState
+    where TState : class, IBuilderState
 {
     private readonly TBuilder _builder;
     private readonly Func<TState> _stateFactory;
@@ -27,61 +27,44 @@ public sealed class CommonBuilder<TBuilder, TResult, TState>
     /// Uniform entry point everywhere.
     public TBuilder CreateBuilder()
     {
-        _builder.BeginSession(_stateFactory());
+        _builder.BeginSession(_stateFactory);
         return _builder;
     }
-    
-    public TProduct Build()
+
+    public TResult Build()
     {
-        if (!_initialized)
-            throw new InvalidOperationException("Use CreateBuilder() on the manager before Build().");
-
-        ValidateCore(State);               // builder-led validation (to be added later)
-        var product = ConstructCore(State);
-        _initialized = false;              // close session, prevent stale reuse
-        return product;
+        return _builder.Build();
     }
-
 }
 
-public abstract class CommonBuilderBase<TResult, TState> : IBuilds<TResult>
-    where TState : IBuilderState
+public abstract class CommonBuilderBase<TResult, TState> : IBuilds<TResult> where TState : class, IBuilderState
 {
     private bool _initialized;
-    protected TState State { get; private set; } = default!;
-
-    public CommonBuilderBase<TResult, TState> With(Action action)
+    protected TState State { get; private set; } = null!;
+    
+    internal void BeginSession(Func<TState> stateFactory)
     {
-        action();
-        return this;
-    }
-
-
-    internal void BeginSession(TState freshState)
-    {
-        ArgumentNullException.ThrowIfNull(freshState, nameof(freshState));
-        State = freshState;
+        ArgumentNullException.ThrowIfNull(stateFactory, nameof(stateFactory));
+        State ??= stateFactory();
         ResetBuilder(State);
         _initialized = true;
     }
 
     public TResult Build()
     {
-        InvalidOpThrower.ThrowIfFalse(_initialized, nameof(_initialized));
+        InvalidOpThrower.ThrowIfNot(_initialized, nameof(_initialized));
+        if (State is null) throw new InvalidOperationException("State is null");
 
         ValidateBuilder(State);
-
         var product = BuildResult(State);
         _initialized = false;
         return product;
     }
 
-
-    protected abstract void ResetBuilder(TState state);
-
-    protected virtual void ValidateBuilder(TState state)
-    {
-    }
+    protected abstract void ValidateBuilder(TState state);
 
     protected abstract TResult BuildResult(TState state);
+    
+    protected abstract void ResetBuilder(TState state);
+
 }

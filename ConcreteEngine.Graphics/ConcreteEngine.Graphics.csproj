@@ -37,8 +37,4 @@
       <None Include="OpenGL\Old\GlTextureFactory.cs" />
     </ItemGroup>
 
-    <ItemGroup>
-      <Folder Include="Contracts\" />
-    </ItemGroup>
-
 </Project>

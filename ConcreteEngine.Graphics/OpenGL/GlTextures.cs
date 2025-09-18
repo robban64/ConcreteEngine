@@ -129,7 +129,7 @@ internal sealed class GlTextures: IGraphicsDriverModule
                 _gl.GenerateTextureMipmap(handle.Handle);
                 break;
 
-            case TexturePreset.PremultipliedUI:
+            case TexturePreset.PremultipliedUi:
                 SetTexParameter(GLEnum.TextureWrapS, GLEnum.ClampToEdge);
                 SetTexParameter(GLEnum.TextureWrapT, GLEnum.ClampToEdge);
                 SetTexParameter(GLEnum.TextureMinFilter, GLEnum.Linear);

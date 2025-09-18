@@ -44,20 +44,6 @@ public readonly ref struct GpuMeshDescriptor
     }
 }
 
-public readonly ref struct GpuMeshVertexPayload<T, I> where T : unmanaged where I : unmanaged
-{
-    public GpuMeshVertexPayload(ReadOnlySpan<T> vertices, ReadOnlySpan<I> indices)
-    {
-        Vertices = vertices;
-        Indices = indices;
-    }
-
-    public ReadOnlySpan<T> Vertices { get; }
-    public ReadOnlySpan<I> Indices { get; }
-    
-    public BufferUsage VboUsage { get; init; } = BufferUsage.StaticDraw;
-    public BufferUsage IboUsage { get; init; } = BufferUsage.StaticDraw;
-}
 
 public readonly ref struct GpuMeshVertexPayload<T, I> where T : unmanaged where I : unmanaged
 {
@@ -158,8 +144,8 @@ public readonly ref struct GpuIboDescriptor<I> where I : unmanaged
 
 public readonly record struct VertexAttributeDescriptor(
     uint VboBinding,
-    uint StrideBytes, // total size of one vertex in bytes
-    uint OffsetBytes, // offset of this attribute in the vertex struct
+    uint Stride, // total size of one vertex in bytes
+    uint Offset, // offset of this attribute in the vertex struct
     VertexElementFormat Format,
     uint DivisorIndex = 0,
     uint Divisor = 0,
@@ -176,8 +162,6 @@ public readonly record struct VertexAttributeDescriptor(
         where TElement : unmanaged
     {
         var structSize = Unsafe.SizeOf<TElement>();
-
-
         if (structSize <= 0)
             throw new GraphicsException($"Size of {typeof(TElement).Name} returned invalid {structSize}.");
 
@@ -196,8 +180,8 @@ public readonly record struct VertexAttributeDescriptor(
 
         return new VertexAttributeDescriptor(
             VboBinding: vboBinding,
-            StrideBytes: (uint)Unsafe.SizeOf<TElement>(),
-            OffsetBytes: (uint)Marshal.OffsetOf<TElement>(fieldName)!.ToInt32(),
+            Stride: (uint)Unsafe.SizeOf<TElement>(),
+            Offset: (uint)Marshal.OffsetOf<TElement>(fieldName)!.ToInt32(),
             Format: format,
             DivisorIndex: divisorIndex,
             Divisor: divisor,
@@ -228,8 +212,8 @@ public readonly record struct VertexAttributeDescriptor(
 
         return new VertexAttributeDescriptor(
             VboBinding: vboBinding,
-            StrideBytes: strideBytes,
-            OffsetBytes: offsetBytes,
+            Stride: strideBytes,
+            Offset: offsetBytes,
             Format: format,
             DivisorIndex: divisorIndex,
             Divisor: divisor,

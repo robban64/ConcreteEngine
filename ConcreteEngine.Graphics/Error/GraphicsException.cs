@@ -24,7 +24,6 @@ public sealed partial class GraphicsException : InvalidOperationException
 
     public static GraphicsException ResourceNotFound(int id) => new($"{id} was not found.");
 
-
     public static GraphicsException ResourceAlreadyExists<T>(object name) =>
         new($"{Label<T>(name.ToString())} already exists.");
 

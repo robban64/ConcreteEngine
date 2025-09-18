@@ -1,6 +1,9 @@
 #region
 
+using System.Diagnostics;
 using System.Diagnostics.CodeAnalysis;
+using System.Runtime.CompilerServices;
+using ConcreteEngine.Graphics.Resources;
 
 #endregion
 
@@ -8,62 +11,85 @@ namespace ConcreteEngine.Graphics.Error;
 
 public sealed partial class GraphicsException
 {
-    [DoesNotReturn]
+    [DoesNotReturn, StackTraceHidden, MethodImpl(MethodImplOptions.NoInlining)]
+    public static void ThrowInvalidAction(string paramName) =>
+        throw new GraphicsException($"Invalid action: {paramName}.");
+
+    [DoesNotReturn, StackTraceHidden, MethodImpl(MethodImplOptions.NoInlining)]
+    public static T ThrowInvalidAction<T>(string paramName) =>
+        throw new GraphicsException($"Invalid action: {paramName} - {typeof(T).Name}.");
+
+    [DoesNotReturn, StackTraceHidden, MethodImpl(MethodImplOptions.NoInlining)]
+    internal static THandle ThrowInvalidHandle<THandle>(string paramName)
+        where THandle : unmanaged, IResourceHandle, IEquatable<THandle> =>
+        throw new GraphicsException($"Invalid handle({paramName}): {typeof(THandle).Name}.");
+
+    [DoesNotReturn, StackTraceHidden, MethodImpl(MethodImplOptions.NoInlining)]
+    internal static void ThrowInvalidGfxHandle(GfxHandle handle, string paramName) =>
+        throw new GraphicsException($"Invalid handle({paramName}): {handle}.");
+
+    [DoesNotReturn, StackTraceHidden, MethodImpl(MethodImplOptions.NoInlining)]
+    internal static TId ThrowInvalidResourceId<TId>(string paramName) where TId : unmanaged, IResourceId =>
+        throw new GraphicsException($"Invalid ResourceId({paramName}): {typeof(TId).Name}.");
+
+
+    [DoesNotReturn, StackTraceHidden, MethodImpl(MethodImplOptions.NoInlining)]
     public static void ThrowResourceIsNull<T>(string? name = null) => throw ResourceIsNull<T>(name);
 
-    [DoesNotReturn]
+    [DoesNotReturn, StackTraceHidden, MethodImpl(MethodImplOptions.NoInlining)]
     public static void ThrowResourceNotBound<T>(string? name = null) => throw ResourceNotBound<T>(name);
 
-    [DoesNotReturn]
+    [DoesNotReturn, StackTraceHidden, MethodImpl(MethodImplOptions.NoInlining)]
     public static void ThrowResourceIsDisposed<T>(string? name = null) => throw ResourceIsDisposed<T>(name);
 
-    [DoesNotReturn]
+    [DoesNotReturn, StackTraceHidden, MethodImpl(MethodImplOptions.NoInlining)]
     public static void ThrowResourceIsDisposed(int id) => throw ResourceIsDisposed(id);
 
-    [DoesNotReturn]
+    [DoesNotReturn, StackTraceHidden, MethodImpl(MethodImplOptions.NoInlining)]
     public static void ThrowResourceNotFound<T>(object name) => throw ResourceNotFound<T>(name);
 
-    [DoesNotReturn]
+    [DoesNotReturn, StackTraceHidden, MethodImpl(MethodImplOptions.NoInlining)]
     public static void ThrowResourceNotFound(int id) => throw ResourceNotFound(id);
 
-    [DoesNotReturn]
+
+    [DoesNotReturn, StackTraceHidden, MethodImpl(MethodImplOptions.NoInlining)]
     public static void ThrowResourceAlreadyExists<T>(object name) => throw ResourceAlreadyExists<T>(name);
 
-    [DoesNotReturn]
+    [DoesNotReturn, StackTraceHidden, MethodImpl(MethodImplOptions.NoInlining)]
     public static void ThrowResourceAlreadyExists(int id) => throw ResourceAlreadyExists(id);
 
-    [DoesNotReturn]
+    [DoesNotReturn, StackTraceHidden, MethodImpl(MethodImplOptions.NoInlining)]
     public static void ThrowMissingHandle<T>(string? name = null) => throw MissingHandle<T>(name);
 
-    [DoesNotReturn]
+    [DoesNotReturn, StackTraceHidden, MethodImpl(MethodImplOptions.NoInlining)]
     public static void ThrowInvalidBufferData<T>(string? name, string reason) =>
         throw InvalidBufferData<T>(name, reason);
 
-    [DoesNotReturn]
+    [DoesNotReturn, StackTraceHidden, MethodImpl(MethodImplOptions.NoInlining)]
     public static void ThrowInvalidState(string description) => throw InvalidState(description);
 
-    [DoesNotReturn]
+    [DoesNotReturn, StackTraceHidden, MethodImpl(MethodImplOptions.NoInlining)]
     public static void ThrowInvalidType<T>(string? name, object other) => throw InvalidType<T>(name, other);
 
-    [DoesNotReturn]
+    [DoesNotReturn, StackTraceHidden, MethodImpl(MethodImplOptions.NoInlining)]
     public static void ThrowShaderLinkFailed(string shaderName, string log) => throw ShaderLinkFailed(shaderName, log);
 
-    [DoesNotReturn]
+    [DoesNotReturn, StackTraceHidden, MethodImpl(MethodImplOptions.NoInlining)]
     public static void ThrowShaderCompileFailed(string shaderName, string log) =>
         throw ShaderCompileFailed(shaderName, log);
 
-    [DoesNotReturn]
+    [DoesNotReturn, StackTraceHidden, MethodImpl(MethodImplOptions.NoInlining)]
     public static void ThrowFramebufferIncomplete(string fbName, string reason) =>
         throw FramebufferIncomplete(fbName, reason);
 
-    [DoesNotReturn]
+    [DoesNotReturn, StackTraceHidden, MethodImpl(MethodImplOptions.NoInlining)]
     public static void ThrowUnsupportedFeature(string feature) => throw UnsupportedFeature(feature);
 
-    [DoesNotReturn]
+    [DoesNotReturn, StackTraceHidden, MethodImpl(MethodImplOptions.NoInlining)]
     public static void ThrowCapabilityExceeded<T>(string capabilityName, int attempted, int maximum) =>
         throw CapabilityExceeded<T>(capabilityName, attempted, maximum);
 
-    [DoesNotReturn]
+    [DoesNotReturn, StackTraceHidden, MethodImpl(MethodImplOptions.NoInlining)]
     public static void ThrowCapabilityTooLow<T>(string capabilityName, int attempted, int minimum) =>
         throw CapabilityTooLow<T>(capabilityName, attempted, minimum);
 }

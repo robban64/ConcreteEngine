@@ -9,12 +9,12 @@ using Silk.NET.Maths;
 namespace ConcreteEngine.Graphics.Primitives;
 
 [StructLayout(LayoutKind.Sequential)]
-public struct Vertex3D
+public readonly struct Vertex3D
 {
-    public Vector3 Position;
-    public Vector2 TexCoords;
-    public Vector3 Normal;
-    public Vector3 Tangent;
+    public readonly Vector3 Position;
+    public readonly Vector2 TexCoords;
+    public readonly Vector3 Normal;
+    public readonly Vector3 Tangent;
 
     public Vertex3D()
     {
@@ -30,11 +30,11 @@ public struct Vertex3D
 }
 
 [StructLayout(LayoutKind.Sequential)]
-public struct Vertex3DXl
+public readonly struct Vertex3DBitangent
 {
-    public Vector3 Position;
-    public Vector2 TexCoords;
-    public Vector3 Normal;
-    public Vector3 Tangent;
-    public Vector3 Bitangent;
+    public readonly Vector3 Position;
+    public readonly Vector2 TexCoords;
+    public readonly Vector3 Normal;
+    public readonly Vector3 Tangent;
+    public readonly Vector3 Bitangent;
 }

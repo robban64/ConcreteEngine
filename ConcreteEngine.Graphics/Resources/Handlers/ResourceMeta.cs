@@ -29,9 +29,9 @@ public readonly struct TextureMeta(
     public readonly EnginePixelFormat PixelFormat = format;
     public readonly byte MipLevels = mipLevel;
     public readonly bool HasData = hasData;
-    
+
     internal static TextureMeta CreateFromHasData(in TextureMeta m, bool hasData) =>
-        new (m.Width, m.Height, m.Preset,m.Kind,m.Anisotropy,m.PixelFormat,m.MipLevels, hasData);
+        new(m.Width, m.Height, m.Preset, m.Kind, m.Anisotropy, m.PixelFormat, m.MipLevels, hasData);
 }
 
 public readonly struct ShaderMeta(uint samplers) : IResourceMeta
@@ -59,27 +59,35 @@ public readonly struct MeshMeta(
 }
 
 public readonly struct VertexBufferMeta(
-    BufferUsage usage,
     uint bindingIdx,
     uint elementCount,
-    uint elementSize
+    uint elementSize,
+    BufferUsage usage,
+    BufferStorage storage,
+    BufferAccess access
 ) : IResourceMeta
 {
     public readonly uint BindingIdx = bindingIdx;
     public readonly uint ElementCount = elementCount;
     public readonly uint ElementSize = elementSize;
     public readonly BufferUsage Usage = usage;
+    public readonly BufferStorage Storage = storage;
+    public readonly BufferAccess Access = access;
 }
 
 public readonly struct IndexBufferMeta(
-    BufferUsage usage,
     uint elementCount,
-    uint elementSize
+    uint elementSize,
+    BufferUsage usage,
+    BufferStorage storage,
+    BufferAccess access
 ) : IResourceMeta
 {
     public readonly uint ElementCount = elementCount;
     public readonly uint ElementSize = elementSize;
     public readonly BufferUsage Usage = usage;
+    public readonly BufferStorage Storage = storage;
+    public readonly BufferAccess Access = access;
 }
 
 public readonly struct FrameBufferMeta(
@@ -115,12 +123,19 @@ public readonly struct UniformBufferMeta : IResourceMeta
     public readonly nuint Stride;
     public readonly uint BindingIdx;
     public readonly UniformGpuSlot Slot;
+    public readonly BufferUsage Usage;
+    public readonly BufferStorage Storage;
+    public readonly BufferAccess Access;
 
-    public UniformBufferMeta(UniformGpuSlot slot, nuint blockSize)
+    public UniformBufferMeta(UniformGpuSlot slot, nuint blockSize, BufferUsage usage, BufferStorage storage,
+        BufferAccess access)
     {
         Slot = slot;
         BindingIdx = (uint)slot;
         BlockSize = blockSize;
+        Usage = usage;
+        Storage = storage;
+        Access = access;
         Stride = UniformBufferUtils.AlignUp(BlockSize, UniformBufferUtils.UboOffsetAlign);
     }
 }

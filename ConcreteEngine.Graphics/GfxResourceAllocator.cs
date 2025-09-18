@@ -49,9 +49,8 @@ internal sealed class GfxResourceAllocator
         _disposer = disposer;
     }
 
-    public MeshId CreateMesh(DrawPrimitive primitive,  uint drawCount)
+    public MeshId CreateMesh(DrawPrimitive primitive, uint drawCount)
     {
-        
     }
 
     public MeshId CreateVertexMesh<V>(DrawPrimitive primitive, ReadOnlySpan<V> vertices, uint drawCount)
@@ -96,7 +95,7 @@ internal sealed class GfxResourceAllocator
         return meshId;
     }
 
-    private VertexBufferId CreateVertexBuffer<V>(ReadOnlySpan<V> vertices, BufferUsage usage, uint index)
+    public VertexBufferId CreateVertexBuffer<V>(ReadOnlySpan<V> vertices, BufferUsage usage, uint index)
         where V : unmanaged
     {
         var elementCount = (uint)vertices.Length;
@@ -108,7 +107,7 @@ internal sealed class GfxResourceAllocator
         return _resources.VboStore.Add(in meta, in vboRef);
     }
 
-    private IndexBufferId CreateIndexBuffer<I>(ReadOnlySpan<I> indices, BufferUsage usage) where I : unmanaged
+    public IndexBufferId CreateIndexBuffer<I>(ReadOnlySpan<I> indices, BufferUsage usage) where I : unmanaged
     {
         var elementCount = (uint)indices.Length;
         var elementSize = (uint)Unsafe.SizeOf<I>();
@@ -135,12 +134,12 @@ internal sealed class GfxResourceAllocator
 
         var result =
             _driver.Buffers.CreateUniformBuffer<T>(slot, capacity, BufferStorage.Dynamic, BufferAccess.MapWrite);
-        
+
         var uboId = _resources.UboStore.Add(in meta, result);
         _repository.ShaderRepository.AddUboToSlot(meta.Slot, uboId);
         return uboId;
     }
-    
+
     public void SetVertexAttribute(MeshId meshId, ReadOnlySpan<VertexAttributeDescriptor> attributes)
     {
         var vao = _resources.MeshStore.GetHandleAndMeta(meshId, out var meta);
@@ -167,7 +166,8 @@ internal sealed class GfxResourceAllocator
         _resources.MeshStore.ReplaceMeta(meshId, in newMeta, out _);
     }
 
-    public void SetVertexBuffer<T>(VertexBufferId vboId, ReadOnlySpan<T> data, BufferUsage usage) where T : unmanaged
+    public void SetVertexBufferData<T>(VertexBufferId vboId, ReadOnlySpan<T> data, BufferUsage usage)
+        where T : unmanaged
     {
         var vbo = _resources.VboStore.GetHandleAndMeta(vboId, out var meta);
 
@@ -178,67 +178,76 @@ internal sealed class GfxResourceAllocator
         var elementSize = Unsafe.SizeOf<T>();
         nuint size = (nuint)(elementSize * elementCount);
 
-        _driver.Buffers.SetVertexBuffer(default, vbo, data, size, usage);
+        _driver.Buffers.SetBufferData(vbo, data, size, usage);
 
         var newMeta = new VertexBufferMeta(meta.Usage, meta.BindingIdx, (uint)elementCount, (uint)elementSize);
         _resources.VboStore.ReplaceMeta(vboId, in newMeta, out _);
     }
 
-    public void SetIndexBuffer<T>(IndexBufferId iboId, ReadOnlySpan<T> data, BufferUsage usage) where T : unmanaged
+    public void SetIndexBufferData<T>(IndexBufferId iboId, ReadOnlySpan<T> data, BufferUsage usage) where T : unmanaged
     {
         var ibo = _resources.IboStore.GetHandleAndMeta(iboId, out var meta);
 
         if (meta.Usage == BufferUsage.StaticDraw && meta.ElementCount * meta.ElementSize > 0)
-            GraphicsException.ThrowInvalidBufferData<IndexBufferId>(nameof(iboId),"Buffer is static");
+            GraphicsException.ThrowInvalidBufferData<IndexBufferId>(nameof(iboId), "Buffer is static");
 
         var elementCount = data.Length;
         var elementSize = Unsafe.SizeOf<T>();
         nuint size = (nuint)(elementSize * elementCount);
 
-        _driver.Buffers.SetIndexBuffer(default, ibo, data, size, usage);
+        _driver.Buffers.SetBufferData(ibo, data, size, usage);
 
         var newMeta = new IndexBufferMeta(meta.Usage, (uint)elementCount, (uint)elementSize);
         _resources.IboStore.ReplaceMeta(iboId, in newMeta, out _);
     }
-    
-    
-    public void SetUniformBufferSize(UniformGpuSlot slot, nuint capacityBytes)
+
+
+    public void SetUniformBufferCapacity<T>(UniformGpuSlot slot, nuint capacity)
     {
+        ArgumentOutOfRangeException.ThrowIfEqual(0, (int)capacity);
         var ubo = _repository.ShaderRepository.GetUboId(slot);
         var handle = _resources.UboStore.GetHandle(ubo);
-        _driver.Buffers.SetUniformBufferSize(slot, capacityBytes);
+        _driver.Buffers.ResizeBuffer(in handle, capacity, BufferUsage.DynamicDraw);
     }
 
-    public void UploadVertexBuffer<T>(VertexBufferId vboId, ReadOnlySpan<T> data, int offsetElements) where T : unmanaged
+    public void UploadVertexBuffer<T>(VertexBufferId vboId, ReadOnlySpan<T> data, int offsetElements)
+        where T : unmanaged
     {
+        ArgumentOutOfRangeException.ThrowIfGreaterThan(offsetElements, data.Length);
         var handle = _resources.VboStore.GetHandle(vboId);
-        var byteOffset = (nuint)(offsetElements * Unsafe.SizeOf<T>());
-        _driver.Buffers.UploadVertexBufferData(handle, data, byteOffset);
+        var offset = (nuint)(offsetElements * Unsafe.SizeOf<T>());
+        var size = (nuint)(data.Length * Unsafe.SizeOf<T>());
+        _driver.Buffers.UploadBufferData(handle, data, offset, size);
     }
 
     public void UploadIndexBuffer<T>(IndexBufferId iboId, ReadOnlySpan<T> data, int offsetElements) where T : unmanaged
     {
+        ArgumentOutOfRangeException.ThrowIfGreaterThan(offsetElements, data.Length);
         var handle = _resources.IboStore.GetHandle(iboId);
-        var byteOffset = (nuint)(offsetElements * Unsafe.SizeOf<T>());
-        _driver.Buffers.UploadIndexBufferData(handle, data, byteOffset);
+        var offset = (nuint)(offsetElements * Unsafe.SizeOf<T>());
+        var size = (nuint)(data.Length * Unsafe.SizeOf<T>());
+        _driver.Buffers.UploadBufferData(handle, data, offset, size);
     }
 
 
-    public void UploadUniformGpuData<T>(UniformGpuSlot slot, in T data, nuint offsetBytes = 0)
+    public void UploadUniformGpuData<T>(UniformGpuSlot slot, in T data, nuint offset)
         where T : unmanaged, IUniformGpuData
     {
+        if (!UniformBufferUtils.IsStd140Aligned<T>())
+            throw GraphicsException.InvalidStd140Layout<T>();
+
         var ubo = _repository.ShaderRepository.GetUboId(slot);
         var handle = _resources.UboStore.GetHandleAndMeta(ubo, out var meta);
-        _driver.Buffers.UploadUniformBufferData<T>(handle, data, meta.Stride, offsetBytes);
+        _driver.Buffers.UploadBufferData<T>(handle, data, meta.Stride, offset);
     }
 
     public void BindUniformBufferRange(UniformGpuSlot slot, nuint offset, nuint size)
     {
         var ubo = _repository.ShaderRepository.GetUboId(slot);
         var handle = _resources.UboStore.GetHandle(ubo);
-        _driver.Buffers.BindUniformBufferRange(handle, (uint)slot, offset, size);
+        _driver.Buffers.BindBufferRange(handle, (uint)slot, offset, size);
     }
-    
+
     // TEXTURE
     public TextureId CreateTexture(in GpuTextureDescriptor desc)
     {
@@ -284,7 +293,7 @@ internal sealed class GfxResourceAllocator
         }
     }
 
-
+    // FrameBuffers
     public FrameBufferId CreateFrameBuffer(in FrameBufferDesc desc)
     {
         if (desc.Attachments.DepthTexture) GraphicsException.ThrowUnsupportedFeature("DepthTexture");

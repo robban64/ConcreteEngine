@@ -46,7 +46,7 @@ internal sealed class GlMeshes: IGraphicsDriverModule
     {
         var handle = VaoHandle(vao);
         _gl.VertexArrayAttribFormat(handle, attr.VboBinding, (int)attr.Format, VertexAttribType.Float, attr.Normalized,
-            attr.OffsetBytes);
+            attr.Offset);
         _gl.VertexArrayAttribBinding(handle, attr.VboBinding, attr.VboBinding);
         _gl.EnableVertexArrayAttrib(handle, attr.VboBinding);
         if (attr.Divisor != 0) _gl.VertexArrayBindingDivisor(handle, attr.VboBinding, attr.Divisor);

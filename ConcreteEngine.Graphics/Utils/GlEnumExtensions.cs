@@ -22,13 +22,13 @@ internal static class GlEnumUtils
 
         
         //BufferAccess access
-        if (access.Has(BufferAccess.MapRead))
+        if (access.HasBufferAccess(BufferAccess.MapRead))
             flags |= BufferStorageMask.MapReadBit;
-        if (access.Has(BufferAccess.MapWrite))
+        if (access.HasBufferAccess(BufferAccess.MapWrite))
             flags |= BufferStorageMask.MapWriteBit;
-        if (access.Has(BufferAccess.Persistent))
+        if (access.HasBufferAccess(BufferAccess.Persistent))
             flags |= BufferStorageMask.MapPersistentBit;
-        if (access.Has(BufferAccess.Coherent))
+        if (access.HasBufferAccess(BufferAccess.Coherent))
             flags |= BufferStorageMask.MapCoherentBit;
 
         return flags;
@@ -46,7 +46,7 @@ internal static class GlEnumExtensions
             TextureKind.Texture2D => GLEnum.Texture2D,
             TextureKind.Texture3D => GLEnum.Texture3D,
             TextureKind.CubeMap => GLEnum.TextureCubeMap,
-            _ => throw new ArgumentOutOfRangeException(nameof(textureKind), textureKind, null)
+            _ => throw new ArgumentOutOfRangeException(nameof(textureKind))
         };
     }
     
@@ -58,7 +58,7 @@ internal static class GlEnumExtensions
             FrameBufferTarget.Color => GLEnum.ColorAttachment0,
             FrameBufferTarget.Depth => GLEnum.DepthAttachment,
             FrameBufferTarget.DepthStencil => GLEnum.DepthStencilAttachment,
-            _ => throw new ArgumentOutOfRangeException(nameof(kind), kind, null)
+            _ => throw new ArgumentOutOfRangeException(nameof(kind))
         };
     }
     
@@ -101,7 +101,7 @@ internal static class GlEnumExtensions
             CullMode.BackCw => (EnableCap.CullFace, TriangleFace.Back, FrontFaceDirection.CW),
             CullMode.FrontCcw => (EnableCap.CullFace, TriangleFace.Front, FrontFaceDirection.Ccw),
             CullMode.FrontCw => (EnableCap.CullFace, TriangleFace.Front, FrontFaceDirection.CW),
-            _ => (EnableCap.CullFace, TriangleFace.Back, FrontFaceDirection.Ccw)
+            _ => (EnableCap.CullFace, TriangleFace.Back, FrontFaceDirection.Ccw),
         };
     }
 
@@ -117,6 +117,7 @@ internal static class GlEnumExtensions
             DrawPrimitive.Lines => PrimitiveType.Lines,
             DrawPrimitive.LineLoop => PrimitiveType.LineLoop,
             DrawPrimitive.LineStrip => PrimitiveType.LineStrip,
+            _ => throw new ArgumentOutOfRangeException(nameof(value))
         };
     }
 
@@ -128,6 +129,7 @@ internal static class GlEnumExtensions
             DrawElementSize.UnsignedByte => DrawElementsType.UnsignedByte,
             DrawElementSize.UnsignedShort => DrawElementsType.UnsignedShort,
             DrawElementSize.UnsignedInt => DrawElementsType.UnsignedInt,
+            _ => throw new ArgumentOutOfRangeException(nameof(value))
         };
     }
 
@@ -140,6 +142,7 @@ internal static class GlEnumExtensions
             ClearBufferFlag.Color => ClearBufferMask.ColorBufferBit,
             ClearBufferFlag.Depth => ClearBufferMask.DepthBufferBit,
             ClearBufferFlag.ColorAndDepth => ClearBufferMask.ColorBufferBit | ClearBufferMask.DepthBufferBit,
+            _ => throw new ArgumentOutOfRangeException(nameof(flags))
         };
     }
 
@@ -151,17 +154,20 @@ internal static class GlEnumExtensions
             EnginePixelFormat.Red => (PixelFormat.Red, InternalFormat.R8),
             EnginePixelFormat.Rgb => (PixelFormat.Rgb, InternalFormat.Rgb8),
             EnginePixelFormat.Rgba => (PixelFormat.Rgba, InternalFormat.Rgba8),
+            _ => throw new ArgumentOutOfRangeException(nameof(format))
         };
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public static BufferUsageARB ToGlEnum(this BufferUsage usage)
+    public static VertexBufferObjectUsage ToGlEnum(this BufferUsage usage)
     {
         return usage switch
         {
-            BufferUsage.StaticDraw => BufferUsageARB.StaticDraw,
-            BufferUsage.DynamicDraw => BufferUsageARB.DynamicDraw,
-            BufferUsage.StreamDraw => BufferUsageARB.StreamDraw,
+            BufferUsage.StaticDraw => VertexBufferObjectUsage.StaticDraw,
+            BufferUsage.DynamicDraw => VertexBufferObjectUsage.DynamicDraw,
+            BufferUsage.StreamDraw => VertexBufferObjectUsage.StreamDraw,
+            _ => throw new ArgumentOutOfRangeException(nameof(usage))
+
         };
     }
 
@@ -172,17 +178,9 @@ internal static class GlEnumExtensions
         {
             BufferTarget.VertexBuffer => BufferTargetARB.ArrayBuffer,
             BufferTarget.IndexBuffer => BufferTargetARB.ElementArrayBuffer,
+            _ => throw new ArgumentOutOfRangeException(nameof(target))
         };
     }
 
-    public static VertexAttribPointerType PrimitiveToVertexAttribPointerType<R>() where R : unmanaged
-    {
-        if (typeof(R) == typeof(int)) return VertexAttribPointerType.Int;
-        if (typeof(R) == typeof(uint)) return VertexAttribPointerType.UnsignedInt;
-        if (typeof(R) == typeof(float)) return VertexAttribPointerType.Float;
-        if (typeof(R) == typeof(double)) return VertexAttribPointerType.Double;
-        if (typeof(R) == typeof(byte)) return VertexAttribPointerType.Byte;
 
-        throw GraphicsException.UnsupportedFeature($"VertexAttribPointerType of type {typeof(R).Name}.");
-    }
 }

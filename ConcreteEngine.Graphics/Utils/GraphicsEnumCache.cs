@@ -1,6 +1,6 @@
 using ConcreteEngine.Graphics.Resources;
 
-namespace ConcreteEngine.Graphics;
+namespace ConcreteEngine.Graphics.Utils;
 
 public static class GraphicsEnumCache
 {

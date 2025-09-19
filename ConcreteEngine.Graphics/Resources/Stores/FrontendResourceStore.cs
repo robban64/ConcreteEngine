@@ -16,7 +16,6 @@ public interface IResourceStore<in TId> : IResourceStore where TId : unmanaged, 
     ref readonly GfxHandle GetHandle(TId id);
 
     GfxHandle Remove(TId id);
-
 }
 
 internal sealed class FrontendResourceStore<TId, TMeta> : IResourceStore<TId>
@@ -70,6 +69,7 @@ internal sealed class FrontendResourceStore<TId, TMeta> : IResourceStore<TId>
         handle = GetHandle(id);
         return true;
     }
+
     public bool TryGet(TId id, out GfxHandle handle, out TMeta meta)
     {
         if (id.Value == 0)
@@ -78,7 +78,7 @@ internal sealed class FrontendResourceStore<TId, TMeta> : IResourceStore<TId>
             meta = default;
             return false;
         }
-        
+
         handle = GetHandleAndMeta(id, out meta);
         return true;
     }
@@ -99,19 +99,22 @@ internal sealed class FrontendResourceStore<TId, TMeta> : IResourceStore<TId>
 
     public TId Add(in TMeta meta, in ResourceRefToken<TId> resourceToken)
     {
+        ArgumentOutOfRangeException.ThrowIfEqual(resourceToken.Handle.IsValid, false, nameof(resourceToken));
         int idx = _free.Count > 0 ? _free.Pop() : Allocate();
         _meta[idx] = meta;
         _handle[idx] = resourceToken.Handle;
         return MakeId(idx);
     }
-    
+
     public GfxHandle Remove(TId id)
     {
+        ArgumentOutOfRangeException.ThrowIfEqual(id.Value, 0, nameof(id));
         return Remove(id, out _);
     }
 
     public GfxHandle Remove(TId id, out TMeta oldMeta)
     {
+        ArgumentOutOfRangeException.ThrowIfEqual(id.Value, 0, nameof(id));
         int idx = id.Value - 1;
         var handle = _handle[idx];
         oldMeta = _meta[idx];
@@ -124,7 +127,7 @@ internal sealed class FrontendResourceStore<TId, TMeta> : IResourceStore<TId>
 
     public TId Replace(TId id, in TMeta newMeta, in GfxHandle newHandle, out GfxHandle oldHandle)
     {
-        Debug.Assert(id.Value > 0);
+        ArgumentOutOfRangeException.ThrowIfEqual(id.Value, 0, nameof(id));
         int idx = id.Value - 1;
         oldHandle = _handle[idx];
         _meta[idx] = newMeta;
@@ -134,7 +137,7 @@ internal sealed class FrontendResourceStore<TId, TMeta> : IResourceStore<TId>
 
     public TMeta ReplaceMeta(TId id, in TMeta newMeta, out TMeta oldMeta)
     {
-        Debug.Assert(id.Value > 0);
+        ArgumentOutOfRangeException.ThrowIfEqual(id.Value, 0, nameof(id));
         int idx = id.Value - 1;
         oldMeta = _meta[idx];
         _meta[idx] = newMeta;

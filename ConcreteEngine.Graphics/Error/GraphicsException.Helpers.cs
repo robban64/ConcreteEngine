@@ -12,8 +12,9 @@ namespace ConcreteEngine.Graphics.Error;
 public sealed partial class GraphicsException
 {
     [DoesNotReturn, StackTraceHidden, MethodImpl(MethodImplOptions.NoInlining)]
-    public static void ThrowInvalidAction(string paramName) =>
-        throw new GraphicsException($"Invalid action: {paramName}.");
+    public static void ThrowInvalidOperation(string param, string? message) =>
+        throw new GraphicsException($"Invalid action: {param}.  {message}");
+    
 
     [DoesNotReturn, StackTraceHidden, MethodImpl(MethodImplOptions.NoInlining)]
     public static T ThrowInvalidAction<T>(string paramName) =>

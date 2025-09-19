@@ -12,15 +12,7 @@ public readonly ref struct GpuTextureData(ReadOnlySpan<byte> pixelData, uint wid
     public readonly ReadOnlySpan<byte> PixelData = pixelData;
 }
 
-public record struct GpuTextureDescriptor(
-    uint Width,
-    uint Height,
-    TexturePreset Preset,
-    TextureKind Kind,
-    EnginePixelFormat Format = EnginePixelFormat.Rgba,
-    TextureAnisotropy Anisotropy = TextureAnisotropy.Default,
-    float LodBias = 0
-);
+
 
 public readonly ref struct GpuCubeMapData(
     ReadOnlySpan<byte> faceData1,

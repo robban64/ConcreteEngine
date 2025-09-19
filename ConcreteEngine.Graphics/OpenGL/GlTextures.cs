@@ -53,11 +53,11 @@ internal sealed class GlTextures: IGraphicsDriverModule
         _gl.TextureStorage2D(handle, levels, ColorFormat, width, height);
     }
     
-    public void UploadTextureData(in GfxHandle texture, GpuTextureData data)
+    public void UploadTextureData(in GfxHandle texture, ReadOnlySpan<byte> data,uint width, uint height)
     {
         var handle = GetTexHandle(in texture).Handle;
-        _gl.TextureSubImage2D(handle, 0, 0, 0, data.Width, data.Height, 
-            PixelFormat.Rgba, PixelType.UnsignedByte, data.PixelData);
+        _gl.TextureSubImage2D(handle, 0, 0, 0, width, height, 
+            PixelFormat.Rgba, PixelType.UnsignedByte, data);
     }
 
     public unsafe void UploadTextureEmptyData(in GfxHandle texture)
@@ -67,15 +67,15 @@ internal sealed class GlTextures: IGraphicsDriverModule
             PixelFormat.Rgba, PixelType.UnsignedByte, (void*)0);
     }
 
-    public void UploadCubeMapFaceData(in GfxHandle texture, GpuTextureData data, int faceIdx)
+    public void UploadCubeMapFaceData(in GfxHandle texture, ReadOnlySpan<byte> data, uint width, uint height, int faceIdx)
     {
         var handle = GetTexHandle(in texture).Handle;
         _gl.TextureSubImage3D(
             handle, level: 0,
             xoffset: 0, yoffset: 0, zoffset: faceIdx,
-            width: data.Width, height: data.Height, depth: 1,
+            width: width, height: height, depth: 1,
             format: PixelFormat.Rgba, type: PixelType.UnsignedByte,
-            pixels: data.PixelData 
+            pixels: data 
         );
     }
 
@@ -148,47 +148,14 @@ internal sealed class GlTextures: IGraphicsDriverModule
 
     public void SetAnisotropy(in GfxHandle texture, int anisotropy)
         => _gl.TextureParameter(GetTexHandle(in texture).Handle, GLEnum.TextureLodBias, anisotropy);
-
-
-    public GlTextureHandle CreateTexture2DASD(GpuTextureData data, in GpuTextureDescriptor desc, out TextureMeta meta)
-    {
-        var handle = _gl.GenTexture();
-        _gl.BindTexture(GLEnum.Texture2D, handle);
-        var (glFormat, glInternalFormat) = desc.Format.ToGlEnums();
-
-        unsafe
-        {
-            if (desc.NullPtrData)
-            {
-                _gl.TexImage2D(GLEnum.Texture2D, 0, (int)glInternalFormat,
-                    (uint)desc.Width, (uint)desc.Height, 0,
-                    glFormat, GLEnum.UnsignedByte, (void*)0);
-            }
-            else
-            {
-                _gl.TexImage2D(GLEnum.Texture2D, 0, (int)glInternalFormat,
-                    (uint)desc.Width, (uint)desc.Height, 0,
-                    glFormat, GLEnum.UnsignedByte, data.PixelData);
-            }
-        }
-
-        SetTextureParameters(desc.Preset, desc.Anisotropy, desc.LodBias);
-
-        _gl.BindTexture(GLEnum.Texture2D, 0);
-
-        meta = new TextureMeta(desc.Width, desc.Height, desc.Format);
-        return new GlTextureHandle(handle);
-    }
-
+/*
     public unsafe GlTextureHandle CreateCubeMap(GpuCubeMapData data, in GpuCubeMapDescriptor desc, out TextureMeta meta)
     {
         var (width, height) = (desc.Width, desc.Height);
 
-        if (width != height)
-            throw new InvalidOperationException("Width and Height are not the same size");
-
-        if (width != desc.Width || height != desc.Height)
-            throw new InvalidOperationException("Miss match between cubemap size");
+        ArgumentOutOfRangeException.ThrowIfNotEqual(width, height, nameof(width));
+        ArgumentOutOfRangeException.ThrowIfNotEqual(width, desc.Width, nameof(width));
+        ArgumentOutOfRangeException.ThrowIfNotEqual(height, desc.Height, nameof(width));
 
         var target = (int)TextureTarget.TextureCubeMapPositiveX;
 
@@ -203,7 +170,7 @@ internal sealed class GlTextures: IGraphicsDriverModule
         CreateFace(data.FaceData5, 4);
         CreateFace(data.FaceData6, 5);
 
-        _gl.TextureParameterI(handle.Handle, pname, (int)param)
+        _gl.TextureParameterI(handle, pname, (int)param)
         _gl.TexParameter(TextureTarget.TextureCubeMap, TextureParameterName.TextureWrapS, (int)GLEnum.ClampToEdge);
         _gl.TexParameter(TextureTarget.TextureCubeMap, TextureParameterName.TextureWrapT, (int)GLEnum.ClampToEdge);
         _gl.TexParameter(TextureTarget.TextureCubeMap, TextureParameterName.TextureWrapR, (int)GLEnum.ClampToEdge);
@@ -220,15 +187,5 @@ internal sealed class GlTextures: IGraphicsDriverModule
                 (uint)width, (uint)height, 0,
                 format, GLEnum.UnsignedByte, faceData);
         }
-    }
-
-
-    private void SetTextureParameters(in GfxHandle texture, TexturePreset preset)
-    {
-    }
-
-    /*
-     public void GenerateMipmap(in GfxHandle texture)
-         => _gl.GenerateTextureMipmap(GetTexHandle(in texture).Handle);
-     */
+    }*/
 }

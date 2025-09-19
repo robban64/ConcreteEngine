@@ -1,14 +1,15 @@
+using System.Diagnostics.CodeAnalysis;
 using System.Runtime.CompilerServices;
 
 namespace ConcreteEngine.Graphics.Error;
 
-public sealed partial class GraphicsException : InvalidOperationException
+public sealed partial class GraphicsException(string message) : InvalidOperationException(message)
 {
-    public GraphicsException(string message) : base(message)
-    {
-    }
-
-
+    
+    [MethodImpl(MethodImplOptions.AggressiveInlining), DoesNotReturn]
+    public static void ThrowInvalidOperation<T>(string param, string? message) => ThrowInvalidOperation(param, message);
+    
+    
     // Exceptions
     public static GraphicsException ResourceIsNull<T>(string? name = null) =>
         new($"{Label<T>(name)} is null.");

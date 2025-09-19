@@ -1,46 +1,25 @@
-using System.Numerics;
 using System.Runtime.CompilerServices;
 using ConcreteEngine.Graphics.Contracts;
 using ConcreteEngine.Graphics.Descriptors;
 using ConcreteEngine.Graphics.Error;
 using ConcreteEngine.Graphics.Gfx.Internal;
-using ConcreteEngine.Graphics.Primitives;
 using ConcreteEngine.Graphics.Resources;
 using ConcreteEngine.Graphics.Utils;
 using Silk.NET.Maths;
 
 namespace ConcreteEngine.Graphics;
 
-public interface IGfxResourceAllocator
-{
-    MeshId CreateMesh(DrawPrimitive primitive, MeshDrawKind drawKind, DrawElementSize drawElement, out MeshMeta meta);
-
-    VertexBufferId CreateVertexBuffer(BufferUsage usage, uint elementSize, uint index,
-        out VertexBufferMeta meta);
-
-    IndexBufferId CreateIndexBuffer(BufferUsage usage, uint elementSize, out IndexBufferMeta meta);
-
-    TextureId CreateTexture2D(GpuTextureData data, in GpuTextureDescriptor desc, out TextureMeta meta);
-    TextureId CreateCubeMap(GpuCubeMapData data, in GpuCubeMapDescriptor desc, out TextureMeta meta);
-
-    FrameBufferId CreateFrameBuffer(in FrameBufferDesc desc, out FrameBufferMeta meta);
-
-    ShaderId CreateShader(string vertexSource, string fragmentSource, out ShaderMeta meta);
-
-    UniformBufferId CreateUniformBuffer<T>(UniformGpuSlot slot, UboDefaultCapacity defaultCapacity,
-        out UniformBufferMeta meta)
-        where T : unmanaged, IUniformGpuData;
-}
-
-internal sealed class GfxResourceAllocator
+internal sealed class GfxAllocatorFacade
 {
     private readonly IGraphicsDriver _driver;
     private readonly FrontendStoreHub _resources;
     private readonly GfxResourceRepository _repository;
     private readonly GfxResourceDisposer _disposer;
+    
+    private readonly GfxAllocator _allocator;
 
 
-    public GfxResourceAllocator(
+    public GfxAllocatorFacade(
         IGraphicsDriver driver,
         GfxResourceManager resources,
         GfxResourceRepository repository,
@@ -50,6 +29,8 @@ internal sealed class GfxResourceAllocator
         _driver = driver;
         _repository = repository;
         _disposer = disposer;
+        
+        _allocator = new GfxAllocator(_driver);
     }
 
     public MeshId CreateMesh(IMeshPayload payload)
@@ -59,7 +40,7 @@ internal sealed class GfxResourceAllocator
         var meta = new MeshMeta(drawProp.Primitive, drawProp.DrawKind,
             drawProp.ElementSize, (uint)payload.Attributes.Count, drawProp.DrawCount);
 
-        var vaoRef = driverMesh.CreateVertexArray();
+        var vaoRef = _allocator.CreateEmptyMesh();
         var meshId = _resources.MeshStore.Add(in meta, vaoRef);
 
         var vboIds = new VertexBufferId[payload.VertexBuffers.Count];
@@ -231,58 +212,7 @@ internal sealed class GfxResourceAllocator
     }
 
     // TEXTURE
-    public TextureId CreateTexture(ReadOnlySpan<byte> data, in GpuTextureDescriptor desc)
-    {
-        if (desc.Kind == TextureKind.CubeMap)
-            ArgumentOutOfRangeException.ThrowIfNotEqual(desc.Width, desc.Height, nameof(desc.Width));
-
-        var hasMipLevels = desc.Preset is TexturePreset.LinearMipmapClamp or TexturePreset.LinearMipmapRepeat;
-        var mipLevels = hasMipLevels ? CalcMipLevels(desc.Width, desc.Height) : 0;
-
-        var meta = new TextureMeta(desc.Width, desc.Height, desc.Preset, desc.Kind, desc.Anisotropy, desc.Format,
-            (byte)mipLevels, false);
-
-        var texRef = _driver.Textures.CreateTexture2D(desc.Width, desc.Height, mipLevels);
-        if (!data.IsEmpty) _driver.Textures.UploadTextureData(texRef.Handle, data, desc.Width, desc.Height);
-        else _driver.Textures.UploadTextureEmptyData(texRef.Handle);
-
-        _driver.Textures.SetTexturePreset(texRef.Handle, desc.Preset);
-        if (desc.Anisotropy != TextureAnisotropy.Off)
-            _driver.Textures.SetAnisotropy(texRef.Handle, desc.Anisotropy.ToAnisotropy());
-        if (desc.LodBias != 0)
-            _driver.Textures.SetLodBias(texRef.Handle, desc.LodBias);
-
-        return _resources.TextureStore.Add(in meta, texRef);
-    }
-
-    public void UploadTextureData(in TextureId textureId, in GpuTextureData data)
-    {
-        var texture = _resources.TextureStore.GetHandleAndMeta(textureId, out var meta);
-        ArgumentOutOfRangeException.ThrowIfNotEqual(meta.Width, data.Width, nameof(data.Width));
-        ArgumentOutOfRangeException.ThrowIfNotEqual(meta.Height, data.Height, nameof(data.Height));
-
-        _driver.Textures.UploadTextureData(in texture, data);
-        var newMeta = TextureMeta.CreateFromHasData(in meta, true);
-        _resources.TextureStore.ReplaceMeta(textureId, in newMeta, out _);
-    }
-
-    public void UploadCubeMapFace(in TextureId textureId, in GpuTextureData data, int faceIdx)
-    {
-        ArgumentOutOfRangeException.ThrowIfNotEqual(data.Width, data.Height, nameof(data.Width));
-        ArgumentOutOfRangeException.ThrowIfGreaterThan(faceIdx, 5, nameof(faceIdx));
-
-        var texture = _resources.TextureStore.GetHandleAndMeta(textureId, out var meta);
-
-        ArgumentOutOfRangeException.ThrowIfNotEqual(meta.Width, data.Width, nameof(data.Width));
-        ArgumentOutOfRangeException.ThrowIfNotEqual(meta.Height, data.Height, nameof(data.Height));
-
-        _driver.Textures.UploadCubeMapFaceData(in texture, data, faceIdx);
-        if (faceIdx == 5)
-        {
-            var newMeta = TextureMeta.CreateFromHasData(in meta, true);
-            _resources.TextureStore.ReplaceMeta(textureId, in newMeta, out _);
-        }
-    }
+  
 
     // FrameBuffers
     public FrameBufferId CreateFrameBuffer(in FrameBufferDesc desc)
@@ -299,7 +229,7 @@ internal sealed class GfxResourceAllocator
 
         var fboMeta = new FrameBufferMeta(size, true, false, true);
 
-        var fboRef = _driver.FrameBuffers.CreateFrameBuffer();
+        var fboRef = _allocator.CreateFrameBuffer(in desc, out var attachments);
         var fboId = _resources.FboStore.Add(in fboMeta, fboRef);
 
         FboAttachmentIds attachmentIds = default;
@@ -357,7 +287,7 @@ internal sealed class GfxResourceAllocator
         {
             var texDesc =
                 new GpuTextureDescriptor((uint)size.X, (uint)size.Y, desc.TexturePreset, TextureKind.Texture2D);
-            var textureId = CreateTexture(ReadOnlySpan<byte>.Empty, in texDesc);
+            var textureId = CreateTexture(texDesc);
             var texHandle = _resources.TextureStore.GetHandle(textureId);
             _driver.FrameBuffers.AttachTexture(in fboRef.Handle, in texHandle, FrameBufferTarget.Color);
         }
@@ -417,13 +347,6 @@ internal sealed class GfxResourceAllocator
         return shaderId;
     }
 
-
-    [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    private static uint CalcMipLevels(uint width, uint height)
-    {
-        uint size = Math.Max(width, height);
-        return (uint)Math.Floor(Math.Log2(size)) + 1;
-    }
 
     /*
     public FrameBufferId CreateFrameBufferMsaa(Vector2D<int> size, RenderBufferMsaa msaa)

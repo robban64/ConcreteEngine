@@ -20,10 +20,10 @@ public enum TexturePreset : byte
 
 public enum TextureAnisotropy : byte
 {
-    Off,
-    Default,
-    X2,
-    X4,
-    X8,
-    X16
+    Off = 0,
+    Default = 1,
+    X2 = 2,
+    X4 = 4,
+    X8 = 8,
+    X16 = 16
 }

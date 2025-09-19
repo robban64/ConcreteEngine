@@ -1,16 +1,27 @@
 #region
 
 using System.Runtime.CompilerServices;
-using ConcreteEngine.Graphics.Error;
+using ConcreteEngine.Graphics.Gfx.Internal;
 using ConcreteEngine.Graphics.Resources;
 using Silk.NET.OpenGL;
 
 #endregion
 
-namespace ConcreteEngine.Graphics.Utils;
+namespace ConcreteEngine.Graphics.OpenGL;
 
 internal static class GlEnumUtils
 {
+    public static VertexAttribType PrimitiveToVertexAttribPointerType<R>() where R : unmanaged
+        => typeof(R) switch
+        {
+            var t when t == typeof(int)    => VertexAttribType.Int,
+            var t when t == typeof(uint)   => VertexAttribType.UnsignedInt,
+            var t when t == typeof(float)  => VertexAttribType.Float,
+            var t when t == typeof(double) => VertexAttribType.Double,
+            var t when t == typeof(byte)   => VertexAttribType.Byte,
+            _ => throw new ArgumentOutOfRangeException(nameof(R))
+        };
+    
     public static BufferStorageMask ToBufferFlag(BufferStorage storage, BufferAccess access)
     {
         BufferStorageMask flags = 0;

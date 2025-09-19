@@ -1,6 +1,7 @@
 using System.Runtime.CompilerServices;
 using ConcreteEngine.Common;
 using ConcreteEngine.Graphics.Contracts;
+using ConcreteEngine.Graphics.Gfx.Internal;
 using ConcreteEngine.Graphics.Resources;
 using ConcreteEngine.Graphics.Utils;
 
@@ -47,6 +48,8 @@ public sealed class MeshGfxBuilder
 
         public Builder SetDrawProperties<V>(in MeshDrawProperties prop) where V : unmanaged
         {
+            State.DrawProperties  = prop;
+            return this;
         }
 
         public Builder AddVertices<V>(ReadOnlySpan<V> vertices, BufferUsage usage, BufferStorage storage,
@@ -61,16 +64,17 @@ public sealed class MeshGfxBuilder
             BufferAccess access) where I : unmanaged
         {
             InvalidOpThrower.ThrowIf(State.IboId.IsValid());
-            var drawElementSize = GfxEnumUtils.ToDrawElementSize<I>();
+            var drawElementSize = GfxUtilsEnum.ToDrawElementSize<I>();
             
             State.IboId = Gfx.CreateIndexBuffer(indices, usage);
             State.DrawProperties = State.DrawProperties with { ElementSize = drawElementSize };
             return this;
         }
 
-        public Builder AddAttribute(in VertexAttributeDesc attr)
+        public Builder WithAttributes(IReadOnlyList<VertexAttributeDesc> attr)
         {
-            State.Attributes.Add(attr);
+            Gfx.SetVertexAttribute(State.MeshId, attr);
+            State.Attributes.AddRange(attr);
             return this;
         }
 

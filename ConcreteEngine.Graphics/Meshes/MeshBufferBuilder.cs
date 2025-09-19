@@ -2,6 +2,7 @@ using System.Runtime.CompilerServices;
 using ConcreteEngine.Common;
 using ConcreteEngine.Graphics.Contracts;
 using ConcreteEngine.Graphics.Descriptors;
+using ConcreteEngine.Graphics.Gfx.Internal;
 using ConcreteEngine.Graphics.Resources;
 using ConcreteEngine.Graphics.Utils;
 
@@ -82,7 +83,7 @@ public sealed class MeshBufferBuilder
             BufferAccess access) where I : unmanaged
         {
             InvalidOpThrower.ThrowIf(State.IndexBufferDesc.HasValue);
-            var drawElementSize = GfxEnumUtils.ToDrawElementSize<I>();
+            var drawElementSize = GfxUtilsEnum.ToDrawElementSize<I>();
             _iboDataBuffer.SetData(indices);
             State.IndexBufferDesc = new IndexBufferDesc
             {

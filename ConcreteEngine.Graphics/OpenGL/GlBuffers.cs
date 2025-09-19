@@ -88,7 +88,7 @@ internal sealed class GlBuffers : IGraphicsDriverModule
 
         _gl.CreateBuffers(1, out uint buffer);
 
-        if (nullData) _gl.NamedBufferStorage(buffer, size, (void*)0, mask);
+        if (nullData || data.IsEmpty) _gl.NamedBufferStorage(buffer, size, (void*)0, mask);
         else _gl.NamedBufferStorage(buffer, size, data, mask);
 
         return new NativeHandle(buffer);

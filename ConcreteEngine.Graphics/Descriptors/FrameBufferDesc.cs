@@ -43,6 +43,6 @@ public readonly record struct DepthFboDescription(
 public readonly record struct MultiSampleFboDescription(
     Vector2 DownscaleRatio = default,
     Vector2D<int> AbsoluteSize = default,
-    uint Samples = 4
+    int Samples = 4
 ) : IFrameBufferDescriptor;
 

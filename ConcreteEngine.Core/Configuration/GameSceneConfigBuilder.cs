@@ -2,8 +2,6 @@
 
 using ConcreteEngine.Core.Features;
 using ConcreteEngine.Core.Rendering;
-using ConcreteEngine.Graphics;
-using ConcreteEngine.Graphics.Resources;
 
 #endregion
 

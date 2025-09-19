@@ -1,8 +1,6 @@
 namespace ConcreteEngine.Graphics.Gfx;
 
-internal interface IGfxInvoker;
-
-internal interface IGfx<out T> : IGfx where T : class, IGfxInvoker
+internal interface IGfx<out T> : IGfx where T : class
 {
     T Invoker { get; }
 }

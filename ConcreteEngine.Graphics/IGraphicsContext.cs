@@ -1,6 +1,6 @@
 using System.Numerics;
 using ConcreteEngine.Common;
-using ConcreteEngine.Graphics.Descriptors;
+using ConcreteEngine.Graphics.Contracts;
 using ConcreteEngine.Graphics.Primitives;
 using ConcreteEngine.Graphics.Resources;
 using Silk.NET.Maths;
@@ -38,16 +38,16 @@ public interface IGraphicsContext
     void BindFramebuffer(FrameBufferId id);
 
 
-    void SetVertexAttribute(ReadOnlySpan<VertexAttributeDescriptor> attributes);
+    void SetVertexAttribute(ReadOnlySpan<VertexAttributeDesc> attributes);
     void SetVertexBuffer<T>(ReadOnlySpan<T> data, BufferUsage usage = BufferUsage.StaticDraw) where T : unmanaged;
     void SetIndexBuffer<T>(ReadOnlySpan<T> data, BufferUsage usage = BufferUsage.StaticDraw) where T : unmanaged;
 
     void UploadVertexBuffer<T>(VertexBufferId vbo, ReadOnlySpan<T> data, int offsetElements) where T : unmanaged;
     void UploadIndexBuffer<T>(IndexBufferId ibo, ReadOnlySpan<T> data, int offsetElements) where T : unmanaged;
 
-    void SetUniformBufferSize(UniformGpuSlot slot, nuint capacityBytes);
-    void UploadUniformGpuData<T>(UniformGpuSlot slot, in T data, nuint offset = 0) where T : unmanaged, IUniformGpuData;
-    void BindUniformBufferRange(UniformGpuSlot slot, nuint offset, nuint size);
+    void SetUniformBufferSize(UniformGpuSlot slot, nint capacityBytes);
+    void UploadUniformGpuData<T>(UniformGpuSlot slot, in T data, nint offset = 0) where T : unmanaged, IUniformGpuData;
+    void BindUniformBufferRange(UniformGpuSlot slot, nint offset, nint size);
 
     void DrawBoundMesh(uint drawCount = 0);
     void DrawArrays(DrawPrimitive primitive, uint drawCount);

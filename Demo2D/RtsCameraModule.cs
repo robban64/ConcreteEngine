@@ -1,13 +1,5 @@
 #region
 
-using System.Numerics;
-using ConcreteEngine.Core;
-using ConcreteEngine.Core.Platform;
-using ConcreteEngine.Core.Rendering;
-using ConcreteEngine.Core.Systems;
-using ConcreteEngine.Graphics.Descriptors;
-using Silk.NET.Input;
-
 #endregion
 
 namespace Demo2D;

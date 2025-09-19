@@ -1,8 +1,5 @@
 using System.Numerics;
 using ConcreteEngine.Core.Resources;
-using ConcreteEngine.Core.Scene;
-using ConcreteEngine.Graphics.Descriptors;
-using ConcreteEngine.Graphics.Resources;
 
 namespace ConcreteEngine.Core.Rendering;
 

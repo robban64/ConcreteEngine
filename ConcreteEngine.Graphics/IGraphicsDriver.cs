@@ -1,8 +1,5 @@
-using System.Numerics;
 using ConcreteEngine.Common;
-using ConcreteEngine.Graphics.Descriptors;
 using ConcreteEngine.Graphics.OpenGL;
-using ConcreteEngine.Graphics.Primitives;
 using ConcreteEngine.Graphics.Resources;
 using Silk.NET.Maths;
 
@@ -12,22 +9,22 @@ internal interface IBufferBackend
 {
     void SetVertexAttribute(in GfxHandle vao, uint index, in VertexAttributeDescriptor attribute);
 
-    void SetVertexBuffer<T>(in GfxHandle vao, in GfxHandle vbo, ReadOnlySpan<T> data, nuint size,
+    void SetVertexBuffer<T>(in GfxHandle vao, in GfxHandle vbo, ReadOnlySpan<T> data, nint size,
         BufferUsage usage = BufferUsage.StaticDraw) where T : unmanaged;
 
-    void UploadVertexBuffer<T>(in GfxHandle vbo, ReadOnlySpan<T> data, nuint offsetBytes) where T : unmanaged;
+    void UploadVertexBuffer<T>(in GfxHandle vbo, ReadOnlySpan<T> data, nint offsetBytes) where T : unmanaged;
 
-    void SetIndexBuffer<T>(in GfxHandle vao, in GfxHandle ibo, ReadOnlySpan<T> data, nuint size,
+    void SetIndexBuffer<T>(in GfxHandle vao, in GfxHandle ibo, ReadOnlySpan<T> data, nint size,
         BufferUsage usage = BufferUsage.StaticDraw) where T : unmanaged;
 
-    void UploadIndexBuffer<T>(in GfxHandle ibo, ReadOnlySpan<T> data, nuint offsetBytes) where T : unmanaged;
+    void UploadIndexBuffer<T>(in GfxHandle ibo, ReadOnlySpan<T> data, nint offsetBytes) where T : unmanaged;
 
-    void SetUniformBufferSize(UniformGpuSlot slot, nuint capacity);
+    void SetUniformBufferSize(UniformGpuSlot slot, nint capacity);
 
-    void UploadUniformBuffer<T>(in GfxHandle ubo, in T data, nuint offset, nuint size)
+    void UploadUniformBuffer<T>(in GfxHandle ubo, in T data, nint offset, nint size)
         where T : unmanaged, IUniformGpuData;
 
-    void BindUniformBufferRange(in GfxHandle ubo, UniformGpuSlot slot, nuint offset, nuint size);
+    void BindUniformBufferRange(in GfxHandle ubo, UniformGpuSlot slot, nint offset, nint size);
 }
 
 internal interface IDrawBackend

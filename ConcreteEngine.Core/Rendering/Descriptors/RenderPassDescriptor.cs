@@ -82,7 +82,7 @@ public sealed class SceneRenderPass : RenderPassDescBase, IScenePass
     public override bool DepthTest { get; init; } = true;
 
     public override RenderPassClearDesc? Clear { get; set; } =
-        new RenderPassClearDesc(Colors.Black, ClearBufferFlag.ColorAndDepth);
+        new RenderPassClearDesc(Color4.Black, ClearBufferFlag.ColorAndDepth);
 }
 
 public sealed class LightRenderPass : RenderPassDescBase, IScenePass
@@ -92,7 +92,7 @@ public sealed class LightRenderPass : RenderPassDescBase, IScenePass
     public override bool DepthTest => false;
 
     public override RenderPassClearDesc? Clear { get; set; } =
-        new RenderPassClearDesc(Colors.Black, ClearBufferFlag.Color);
+        new RenderPassClearDesc(Color4.Black, ClearBufferFlag.Color);
 
     public new required FrameBufferId TargetFbo { get; init; }
     public required ShaderId Shader { get; init; }
@@ -111,7 +111,7 @@ public sealed class ShadowRenderPass : RenderPassDescBase, IDepthPass
     public override bool DepthTest { get; init; } = true;
 
     public override RenderPassClearDesc? Clear { get; set; } =
-        new RenderPassClearDesc(Colors.Black, ClearBufferFlag.Depth);
+        new RenderPassClearDesc(Color4.Black, ClearBufferFlag.Depth);
 
     public required ShaderId Shader { get; init; }
     public Vector2D<int> AtlasOffset { get; init; } = Vector2D<int>.Zero; // viewport origin within atlas

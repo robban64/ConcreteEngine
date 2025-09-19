@@ -1,7 +1,5 @@
 #region
 
-using System.Numerics;
-using ConcreteEngine.Graphics.Descriptors;
 using ConcreteEngine.Graphics.Utils;
 using Silk.NET.Maths;
 
@@ -12,8 +10,8 @@ namespace ConcreteEngine.Graphics.Resources;
 public interface IResourceMeta;
 
 public readonly struct TextureMeta(
-    uint width,
-    uint height,
+    int width,
+    int height,
     TexturePreset preset,
     TextureKind kind,
     TextureAnisotropy anisotropy,
@@ -21,8 +19,8 @@ public readonly struct TextureMeta(
     byte mipLevel,
     bool hasData) : IResourceMeta
 {
-    public readonly uint Width = width;
-    public readonly uint Height = height;
+    public readonly int Width = width;
+    public readonly int Height = height;
     public readonly TexturePreset Preset = preset;
     public readonly TextureKind Kind = kind;
     public readonly TextureAnisotropy Anisotropy = anisotropy;
@@ -34,66 +32,66 @@ public readonly struct TextureMeta(
         new(m.Width, m.Height, m.Preset, m.Kind, m.Anisotropy, m.PixelFormat, m.MipLevels, hasData);
 }
 
-public readonly struct ShaderMeta(uint samplers) : IResourceMeta
+public readonly struct ShaderMeta(int samplers) : IResourceMeta
 {
-    public readonly uint Samplers = samplers;
+    public readonly int Samplers = samplers;
 }
 
 public readonly struct MeshMeta(
     DrawPrimitive primitive,
     MeshDrawKind drawKind,
     DrawElementSize elementSize,
-    uint vertexAttribPointers,
-    uint drawCount
+    int vertexAttribPointers,
+    int drawCount
 ) : IResourceMeta
 {
-    public readonly uint VertexAttribPointers = vertexAttribPointers;
-    public readonly uint DrawCount = drawCount;
+    public readonly int VertexAttribPointers = vertexAttribPointers;
+    public readonly int DrawCount = drawCount;
     public readonly DrawPrimitive Primitive = primitive;
     public readonly MeshDrawKind DrawKind = drawKind;
     public readonly DrawElementSize ElementSize = elementSize;
 
 
-    public static MeshMeta CreateCopy(in MeshMeta meta, uint vertexAttribPointers, uint drawCount) =>
+    public static MeshMeta CreateCopy(in MeshMeta meta, int vertexAttribPointers, int drawCount) =>
         new(meta.Primitive, meta.DrawKind, meta.ElementSize, vertexAttribPointers, drawCount);
 }
 
 public readonly struct VertexBufferMeta(
-    uint bindingIdx,
-    uint elementCount,
-    uint elementSize,
+    int bindingIdx,
+    int elementCount,
+    nint stride,
     BufferUsage usage,
     BufferStorage storage,
     BufferAccess access
 ) : IResourceMeta
 {
-    public readonly uint BindingIdx = bindingIdx;
-    public readonly uint ElementCount = elementCount;
-    public readonly uint ElementSize = elementSize;
+    public readonly int BindingIdx = bindingIdx;
+    public readonly int ElementCount = elementCount;
+    public readonly nint Stride = stride;
     public readonly BufferUsage Usage = usage;
     public readonly BufferStorage Storage = storage;
     public readonly BufferAccess Access = access;
     
-    public static VertexBufferMeta CreateCopy(in VertexBufferMeta meta, uint count, uint size, BufferUsage usage)
-        => new(meta.BindingIdx, count, size, usage, meta.Storage, meta.Access);
+    public static VertexBufferMeta CreateCopy(in VertexBufferMeta meta, int count, nint stride, BufferUsage usage)
+        => new(meta.BindingIdx, count, stride, usage, meta.Storage, meta.Access);
 }
 
 public readonly struct IndexBufferMeta(
-    uint elementCount,
-    uint elementSize,
+    int elementCount,
+    nint stride,
     BufferUsage usage,
     BufferStorage storage,
     BufferAccess access
 ) : IResourceMeta
 {
-    public readonly uint ElementCount = elementCount;
-    public readonly uint ElementSize = elementSize;
+    public readonly int ElementCount = elementCount;
+    public readonly nint Stride = stride;
     public readonly BufferUsage Usage = usage;
     public readonly BufferStorage Storage = storage;
     public readonly BufferAccess Access = access;
 
-    public static IndexBufferMeta CreateCopy(in IndexBufferMeta meta, uint count, uint size, BufferUsage usage)
-        => new(count, size, usage, meta.Storage, meta.Access);
+    public static IndexBufferMeta CreateCopy(in IndexBufferMeta meta, int count, nint stride, BufferUsage usage)
+        => new(count, stride, usage, meta.Storage, meta.Access);
 }
 
 public readonly struct FrameBufferMeta(
@@ -125,23 +123,23 @@ public readonly struct RenderBufferMeta(
 
 public readonly struct UniformBufferMeta : IResourceMeta
 {
-    public readonly nuint BlockSize;
-    public readonly nuint Stride;
-    public readonly uint BindingIdx;
+    public readonly nint BlockSize;
+    public readonly nint Stride;
     public readonly UniformGpuSlot Slot;
     public readonly BufferUsage Usage;
     public readonly BufferStorage Storage;
     public readonly BufferAccess Access;
 
-    public UniformBufferMeta(UniformGpuSlot slot, nuint blockSize, BufferUsage usage, BufferStorage storage,
+    
+    public UniformBufferMeta(UniformGpuSlot slot, nint blockSize, BufferUsage usage, BufferStorage storage,
         BufferAccess access)
     {
         Slot = slot;
-        BindingIdx = (uint)slot;
         BlockSize = blockSize;
         Usage = usage;
         Storage = storage;
         Access = access;
         Stride = UniformBufferUtils.AlignUp(BlockSize, UniformBufferUtils.UboOffsetAlign);
     }
+    
 }

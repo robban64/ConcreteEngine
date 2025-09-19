@@ -1,9 +1,7 @@
 #region
 
 using System.Numerics;
-using ConcreteEngine.Graphics;
 using ConcreteEngine.Graphics.Primitives;
-using ConcreteEngine.Graphics.Resources;
 
 #endregion
 

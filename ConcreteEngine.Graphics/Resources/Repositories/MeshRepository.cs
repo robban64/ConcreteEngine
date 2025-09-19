@@ -1,5 +1,4 @@
 using ConcreteEngine.Graphics.Contracts;
-using ConcreteEngine.Graphics.Descriptors;
 
 namespace ConcreteEngine.Graphics.Resources;
 

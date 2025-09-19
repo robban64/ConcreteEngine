@@ -1,6 +1,5 @@
 using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
-using ConcreteEngine.Graphics.Descriptors;
 using ConcreteEngine.Graphics.Error;
 
 namespace ConcreteEngine.Graphics.Contracts;
@@ -32,7 +31,7 @@ public readonly record struct MeshDrawProperties(
     DrawPrimitive Primitive,
     MeshDrawKind DrawKind,
     DrawElementSize ElementSize,
-    uint DrawCount
+    int DrawCount
 )
 {
     public static MeshDrawProperties MakeDefault() =>
@@ -40,21 +39,21 @@ public readonly record struct MeshDrawProperties(
 }
 
 public readonly record struct VertexAttributeDesc(
-    uint VboBinding,
-    uint Stride, // vertex in bytes
-    uint Offset, // attribute in the vertex struct
+    int VboBinding,
+    int Stride, // vertex in bytes
+    int Offset, // attribute in the vertex struct
     VertexElementFormat Format,
-    uint DivisorIndex = 0,
-    uint Divisor = 0,
+    int DivisorIndex = 0,
+    int Divisor = 0,
     bool Normalized = false
 )
 {
     public static VertexAttributeDesc Make<TElement>(
         string fieldName,
         VertexElementFormat format,
-        uint vboBinding = 0,
-        uint divisorIndex = 0,
-        uint divisor = 0,
+        int vboBinding = 0,
+        int divisorIndex = 0,
+        int divisor = 0,
         bool normalized = false)
         where TElement : unmanaged
     {
@@ -72,13 +71,13 @@ public readonly record struct VertexAttributeDesc(
             throw new Exception($"Field '{fieldName}' not found in struct '{typeof(TElement).Name}'.");
         }
 
-        var offsetBytes = (uint)offsetPtr.ToInt32();
+        var offsetBytes = offsetPtr.ToInt32();
         ArgumentOutOfRangeException.ThrowIfGreaterThanOrEqual((int)offsetBytes, structSize, nameof(offsetBytes));
 
         return new VertexAttributeDesc(
             VboBinding: vboBinding,
-            Stride: (uint)Unsafe.SizeOf<TElement>(),
-            Offset: (uint)Marshal.OffsetOf<TElement>(fieldName)!.ToInt32(),
+            Stride: Unsafe.SizeOf<TElement>(),
+            Offset: Marshal.OffsetOf<TElement>(fieldName)!.ToInt32(),
             Format: format,
             DivisorIndex: divisorIndex,
             Divisor: divisor,
@@ -87,11 +86,11 @@ public readonly record struct VertexAttributeDesc(
     }
 
     public static VertexAttributeDesc Make<TPrimitive>(
-        uint strideCount,
-        uint offsetCount,
-        uint vboBinding = 0,
-        uint divisorIndex = 0,
-        uint divisor = 0,
+        int strideCount,
+        int offsetCount,
+        int vboBinding = 0,
+        int divisorIndex = 0,
+        int divisor = 0,
         VertexElementFormat format = VertexElementFormat.Float2,
         bool normalized = false)
         where TPrimitive : unmanaged
@@ -101,8 +100,8 @@ public readonly record struct VertexAttributeDesc(
         if (size <= 0)
             throw new GraphicsException($"Size of {typeof(TPrimitive).Name} returned invalid {size}.");
 
-        var strideBytes = strideCount * (uint)size;
-        var offsetBytes = offsetCount * (uint)size;
+        var strideBytes = strideCount * size;
+        var offsetBytes = offsetCount * size;
 
         if (offsetBytes >= strideBytes)
             ArgumentOutOfRangeException.ThrowIfGreaterThanOrEqual(offsetBytes, strideBytes, nameof(offsetBytes));

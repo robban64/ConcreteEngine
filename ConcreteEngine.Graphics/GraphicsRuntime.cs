@@ -3,7 +3,6 @@ using ConcreteEngine.Graphics.OpenGL;
 using ConcreteEngine.Graphics.Resources;
 using ConcreteEngine.Graphics.Utils;
 using Silk.NET.Maths;
-using Silk.NET.OpenGL;
 
 namespace ConcreteEngine.Graphics;
 

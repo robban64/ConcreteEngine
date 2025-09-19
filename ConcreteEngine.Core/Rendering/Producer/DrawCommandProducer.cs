@@ -1,9 +1,7 @@
 #region
 
-using ConcreteEngine.Core.Features;
 using ConcreteEngine.Core.Scene;
 using ConcreteEngine.Graphics;
-using ConcreteEngine.Graphics.Descriptors;
 
 #endregion
 

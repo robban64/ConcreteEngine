@@ -2,7 +2,6 @@ using System.Diagnostics;
 using System.Numerics;
 using System.Runtime.CompilerServices;
 using ConcreteEngine.Common;
-using ConcreteEngine.Graphics.Descriptors;
 using ConcreteEngine.Graphics.Error;
 using ConcreteEngine.Graphics.OpenGL;
 using ConcreteEngine.Graphics.Primitives;
@@ -45,8 +44,8 @@ internal sealed class GraphicsContext : IGraphicsContext
     //
     private Vector2D<int> _activeOutputSize;
     private FrameInfo _frameCtx;
-    private uint _drawTriangleCount = 0;
-    private uint _drawCallCount = 0;
+    private int _drawTriangleCount = 0;
+    private int _drawCallCount = 0;
 
     public GraphicsContext(IGraphicsDriver driver, GfxResourceManager resources, GfxResourceRepository repository)
     {
@@ -71,7 +70,7 @@ internal sealed class GraphicsContext : IGraphicsContext
 
         _states.SetBlendMode(BlendMode.None);
         _states.SetDepthMode(DepthMode.WriteLequal);
-        _states.Clear(Colors.CornflowerBlue, ClearBufferFlag.ColorAndDepth);
+        _states.Clear(Color4.CornflowerBlue, ClearBufferFlag.ColorAndDepth);
     }
 
     public void EndFrame(out GpuFrameStats result)
@@ -84,7 +83,7 @@ internal sealed class GraphicsContext : IGraphicsContext
         _depthMode = DepthMode.Unset;
         _cullMode = CullMode.Unset;
 
-        for (uint i = 0; i < _boundTextures.Length; i++)
+        for (int i = 0; i < _boundTextures.Length; i++)
         {
             BindTexture(default, i);
         }
@@ -218,7 +217,7 @@ internal sealed class GraphicsContext : IGraphicsContext
     }
 
 
-    public void BindTexture(TextureId texture, uint slot)
+    public void BindTexture(TextureId texture, int slot)
     {
         if (slot >= Configuration.MaxTextureImageUnits)
             GraphicsException.ThrowCapabilityExceeded<TextureId>("TexCoords slot", (int)slot,
@@ -227,7 +226,7 @@ internal sealed class GraphicsContext : IGraphicsContext
         if (_boundTextures[slot] == texture) return;
         if (texture == default)
         {
-            _textures.BindTexture(default, slot);
+            _textures.BindTexture(default, (uint)slot);
             _boundTextures[slot] = default;
             return;
         }
@@ -235,7 +234,7 @@ internal sealed class GraphicsContext : IGraphicsContext
 
         _boundTextures[slot] = texture;
         ref readonly var handle = ref _store.TextureStore.GetHandle(texture);
-        _textures.BindTexture(handle, slot);
+        _textures.BindTexture(handle, (uint)slot);
     }
 /*
     public void BindMesh(MeshId id)
@@ -255,9 +254,8 @@ internal sealed class GraphicsContext : IGraphicsContext
     }
 */
     
-    public void DrawBoundMesh(uint drawCount)
+    public void DrawBoundMesh(int drawCount)
     {
-        _boundVaoId.DebugValidate();
         ref readonly var meta = ref _store.MeshStore.GetMeta(_boundVaoId);
 
         var count = drawCount > 0 ? drawCount : meta.DrawCount;
@@ -276,20 +274,20 @@ internal sealed class GraphicsContext : IGraphicsContext
         }
     }
 
-    public void DrawArrays(DrawPrimitive primitive, uint drawCount)
+    public void DrawArrays(DrawPrimitive primitive, int drawCount)
     {
         Debug.Assert(drawCount != 0, "DrawArrays called with drawCount = 0");
-        _driver.Meshes.DrawArrays(primitive, drawCount);
+        _driver.Meshes.DrawArrays(primitive, (uint)drawCount);
         _drawTriangleCount += drawCount;
         _drawCallCount++;
     }
 
-    public void DrawElements(DrawPrimitive primitive, DrawElementSize elementSize, uint drawCount)
+    public void DrawElements(DrawPrimitive primitive, DrawElementSize elementSize, int drawCount)
     {
         Debug.Assert(drawCount != 0, "DrawElements called with drawCount = 0");
         Debug.Assert(elementSize != DrawElementSize.Invalid);
 
-        _driver.Meshes.DrawElements(primitive, elementSize, drawCount);
+        _driver.Meshes.DrawElements(primitive, elementSize, (uint)drawCount);
         _drawTriangleCount += drawCount;
         _drawCallCount++;
     }

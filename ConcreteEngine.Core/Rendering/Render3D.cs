@@ -1,9 +1,6 @@
 using System.Numerics;
 using ConcreteEngine.Common;
-using ConcreteEngine.Core.Resources;
-using ConcreteEngine.Core.Scene;
 using ConcreteEngine.Graphics;
-using ConcreteEngine.Graphics.Descriptors;
 using ConcreteEngine.Graphics.Resources;
 using Silk.NET.Maths;
 
@@ -117,7 +114,7 @@ internal sealed class Render3D : IRender
             new SceneRenderPass
             {
                 TargetFbo = _registry.MultisampleFbo.FboId,
-                Clear = new RenderPassClearDesc(Colors.CornflowerBlue, ClearBufferFlag.ColorAndDepth)
+                Clear = new RenderPassClearDesc(Color4.CornflowerBlue, ClearBufferFlag.ColorAndDepth)
             });
 
         // Pass 1: resolve MSAA into single-sample texture FBO

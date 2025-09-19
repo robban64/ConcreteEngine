@@ -141,7 +141,7 @@ internal sealed class GfxAllocatorFacade
     {
         var vbo = _resources.VboStore.GetHandleAndMeta(vboId, out var meta);
 
-        if (meta.Usage == BufferUsage.StaticDraw && meta.ElementCount * meta.ElementSize > 0)
+        if (meta.Usage == BufferUsage.StaticDraw && meta.ElementCount * meta.Stride > 0)
             GraphicsException.ThrowInvalidBufferData<VertexBufferId>(nameof(vboId), "Buffer is static");
 
         var (elementCount, elementSize, size) = ToElementSizeData<T>(data.Length);
@@ -155,7 +155,7 @@ internal sealed class GfxAllocatorFacade
     {
         var ibo = _resources.IboStore.GetHandleAndMeta(iboId, out var meta);
 
-        if (meta.Usage == BufferUsage.StaticDraw && meta.ElementCount * meta.ElementSize > 0)
+        if (meta.Usage == BufferUsage.StaticDraw && meta.ElementCount * meta.Stride > 0)
             GraphicsException.ThrowInvalidBufferData<IndexBufferId>(nameof(iboId), "Buffer is static");
 
         var (elementCount, elementSize, size) = ToElementSizeData<T>(data.Length);

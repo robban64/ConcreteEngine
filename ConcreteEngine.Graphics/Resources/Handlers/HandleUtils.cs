@@ -2,7 +2,7 @@ using System.Runtime.CompilerServices;
 
 namespace ConcreteEngine.Graphics.Resources;
 
-internal class ResourceTypeConverter
+internal class HandleUtils
 {
     private static readonly Dictionary<Type, ResourceKind> ResourceIdToKind = new()
     {
@@ -18,7 +18,7 @@ internal class ResourceTypeConverter
 
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public static ResourceKind Of<TId>() where TId : unmanaged, IResourceId => ResourceIdToKind[typeof(TId)];
+    public static ResourceKind ToResourceKind<TId>() where TId : unmanaged, IResourceId => ResourceIdToKind[typeof(TId)];
     
     /*
      

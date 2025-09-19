@@ -1,10 +1,6 @@
 #region
 
-using System.Runtime.CompilerServices;
-using System.Runtime.InteropServices;
 using ConcreteEngine.Graphics.Contracts;
-using ConcreteEngine.Graphics.Error;
-using ConcreteEngine.Graphics.Primitives;
 
 #endregion
 

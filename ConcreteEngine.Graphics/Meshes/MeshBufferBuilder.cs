@@ -1,10 +1,7 @@
 using System.Runtime.CompilerServices;
 using ConcreteEngine.Common;
 using ConcreteEngine.Graphics.Contracts;
-using ConcreteEngine.Graphics.Descriptors;
 using ConcreteEngine.Graphics.Gfx.Internal;
-using ConcreteEngine.Graphics.Resources;
-using ConcreteEngine.Graphics.Utils;
 
 namespace ConcreteEngine.Graphics;
 

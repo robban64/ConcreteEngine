@@ -2,7 +2,6 @@
 
 using System.Runtime.CompilerServices;
 using ConcreteEngine.Graphics.Error;
-using ConcreteEngine.Graphics.OpenGL;
 using ConcreteEngine.Graphics.Utils;
 
 #endregion

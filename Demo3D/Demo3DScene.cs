@@ -8,7 +8,6 @@ using ConcreteEngine.Core.Rendering;
 using ConcreteEngine.Core.Resources;
 using ConcreteEngine.Core.Scene;
 using ConcreteEngine.Graphics;
-using Silk.NET.Maths;
 using Shader = ConcreteEngine.Core.Resources.Shader;
 
 #endregion
@@ -82,11 +81,11 @@ public sealed class Demo3DScene : GameScene
         {
             SceneTarget = new SceneTargetDesc
             {
-                ClearColor = Colors.CornflowerBlue,
+                ClearColor = Color4.CornflowerBlue,
                 Samples = 4
             },
             LightTarget = new LightTargetDesc
-            {
+            {   
                 LightShaderId = lightShader.ResourceId,
                 Blend = BlendMode.Additive,
                 TexPreset = TexturePreset.LinearMipmapRepeat

@@ -2,8 +2,6 @@
 
 #endregion
 
-using ConcreteEngine.Core.Scene;
-
 namespace ConcreteEngine.Core.Rendering;
 
 

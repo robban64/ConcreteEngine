@@ -1,13 +1,4 @@
-using System.Numerics;
-using System.Runtime.CompilerServices;
-using ConcreteEngine.Common;
-using ConcreteEngine.Graphics.Descriptors;
-using ConcreteEngine.Graphics.Error;
-using ConcreteEngine.Graphics.Primitives;
 using ConcreteEngine.Graphics.Resources;
-using ConcreteEngine.Graphics.Utils;
-using Silk.NET.Core.Native;
-using Silk.NET.Maths;
 using Silk.NET.OpenGL;
 
 namespace ConcreteEngine.Graphics.OpenGL;

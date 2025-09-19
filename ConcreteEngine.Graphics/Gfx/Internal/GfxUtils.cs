@@ -7,10 +7,10 @@ namespace ConcreteEngine.Graphics.Gfx.Internal;
 internal static class GfxUtils
 {
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public static uint CalcMipLevels(uint width, uint height)
+    public static int CalcMipLevels(int width, int height)
     {
-        uint size = Math.Max(width, height);
-        return (uint)Math.Floor(Math.Log2(size)) + 1;
+        var size = Math.Max(width, height);
+        return (int)Math.Floor(Math.Log2(size)) + 1;
     }
 
     public static Vector2D<int> ResolveEffectiveSize(
@@ -32,15 +32,21 @@ internal static class GfxUtils
 
     public static int ResolveSamples(int samples) => samples <= 1 ? 1 : samples;
 
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public static (nint Offset, nint Size) ToSizeAndOffset<T>(int offsetElements, int count) where T : unmanaged
+    {
+        var stride = (nint)Unsafe.SizeOf<T>();
+        return (offsetElements * stride, count * stride);
+    }
+
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public static (uint Count, uint Stride, nuint Size) GetElementInfo<T>(int count)
-        where T : unmanaged
+    public static ( nint Stride, nint Size) ToStrideAndSize<T>(int count) where T : unmanaged
     {
-        uint stride = (uint)Unsafe.SizeOf<T>();
-        return ((uint)count, stride, (nuint)(count * stride));
+        var stride = (nint)Unsafe.SizeOf<T>();
+        return (stride, count * stride);
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public static nuint GetTotalSize<T>(int count) where T : unmanaged => (nuint)(count * (uint)Unsafe.SizeOf<T>());
+    public static nint GetTotalSize<T>(int count) where T : unmanaged => count * Unsafe.SizeOf<T>();
 }

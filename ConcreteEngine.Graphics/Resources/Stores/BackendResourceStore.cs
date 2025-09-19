@@ -1,7 +1,6 @@
 using System.Diagnostics;
 using System.Diagnostics.CodeAnalysis;
 using System.Runtime.CompilerServices;
-using ConcreteEngine.Graphics.Error;
 
 namespace ConcreteEngine.Graphics.Resources;
 

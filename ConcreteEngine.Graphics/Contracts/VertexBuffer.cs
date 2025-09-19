@@ -7,9 +7,9 @@ public readonly struct VertexBufferPayload(in VertexBufferDesc descriptor, ReadO
 }
 
 public readonly record struct VertexBufferDesc(
-    uint BindingIdx,
-    uint VertexSize, // stride
-    uint VertexCount,
+    int BindingIdx,
+    int VertexSize, // stride
+    int VertexCount,
     BufferUsage Usage,
     BufferStorage Storage,
     BufferAccess Access

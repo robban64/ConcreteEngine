@@ -1,8 +1,5 @@
 #region
 
-using ConcreteEngine.Core.Rendering;
-using ConcreteEngine.Core.Scene;
-
 #endregion
 
 namespace ConcreteEngine.Core.Features;

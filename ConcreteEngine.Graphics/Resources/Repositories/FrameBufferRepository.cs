@@ -1,6 +1,5 @@
 using System.Numerics;
 using ConcreteEngine.Graphics.Descriptors;
-using ConcreteEngine.Graphics.Error;
 using Silk.NET.Maths;
 
 namespace ConcreteEngine.Graphics.Resources;

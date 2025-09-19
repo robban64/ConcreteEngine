@@ -1,6 +1,4 @@
 using System.Numerics;
-using ConcreteEngine.Core.Scene;
-using ConcreteEngine.Graphics.Resources;
 
 namespace ConcreteEngine.Core.Rendering;
 

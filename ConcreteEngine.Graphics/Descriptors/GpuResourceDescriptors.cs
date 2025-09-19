@@ -1,6 +1,3 @@
-using ConcreteEngine.Graphics.Primitives;
-using ConcreteEngine.Graphics.Resources;
-
 namespace ConcreteEngine.Graphics.Descriptors;
 
 public record struct GpuShaderData(string VertexSource, string FragmentSource);

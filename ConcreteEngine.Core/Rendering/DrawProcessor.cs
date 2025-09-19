@@ -1,7 +1,5 @@
-using System.Numerics;
 using System.Runtime.CompilerServices;
 using ConcreteEngine.Core.Resources;
-using ConcreteEngine.Core.Scene;
 using ConcreteEngine.Graphics;
 using ConcreteEngine.Graphics.Resources;
 using ConcreteEngine.Graphics.Utils;

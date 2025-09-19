@@ -3,8 +3,8 @@ using ConcreteEngine.Graphics.Resources;
 namespace ConcreteEngine.Graphics.Contracts;
 
 public readonly record struct GpuTextureDescriptor(
-    uint Width,
-    uint Height,
+    int Width,
+    int Height,
     TexturePreset Preset,
     TextureKind Kind,
     EnginePixelFormat Format = EnginePixelFormat.Rgba,

@@ -1,7 +1,7 @@
 namespace ConcreteEngine.Graphics.Resources;
 
 // DONT CHANGE THIS!!!!
-public enum UniformGpuSlot : ushort
+public enum UniformGpuSlot : byte
 {
     Frame     = 0,
     Camera    = 1,

@@ -1,11 +1,47 @@
 using System.Numerics;
-using System.Runtime.Serialization;
-using Silk.NET.Maths;
 
 namespace ConcreteEngine.Common;
 
-public static class Colors
+
+
+public readonly record struct Color4(float R, float G, float B, float A = 1f)
 {
+    public static Color4 FromNormalized(float r, float g, float b, float a = 1f)
+        => new(ClampNorm(r), ClampNorm(g), ClampNorm(b), ClampNorm(a));
+
+    public static Color4 FromRgba(byte r, byte g, byte b, byte a = 255)
+        => new(r / 255f, g / 255f, b / 255f, a / 255f);
+
+    public Vector4 AsVec4() => new(R, G, B, A);
+    public Vector3 AsVec3() => new(R, G, B);
+
+    public Color4 WithAlpha(float a) => new(R, G, B, ClampNorm(a));
+    public Color4 WithAlphaByte(byte a) => new(R, G, B, a / 255f);
+
+    public static Color4 Lerp(Color4 from, Color4 to, float t)
+    {
+        t = ClampNorm(t);
+        return new(
+            from.R + (to.R - from.R) * t,
+            from.G + (to.G - from.G) * t,
+            from.B + (to.B - from.B) * t,
+            from.A + (to.A - from.A) * t
+        );
+    }
+
+    public Color4 Multiply(float scalar)
+        => new(ClampNorm(R * scalar), ClampNorm(G * scalar), ClampNorm(B * scalar), A);
+
+    public (byte R, byte G, byte B, byte A) ToBytes()
+        => ((byte)MathF.Round(R * 255f),
+            (byte)MathF.Round(G * 255f),
+            (byte)MathF.Round(B * 255f),
+            (byte)MathF.Round(A * 255f));
+
+    private static float ClampNorm(float v)
+        => v < 0f ? 0f : (v > 1f ? 1f : v);
+    
+    
     public static readonly Color4 Transparent = Color4.FromRgba(0, 0, 0, 0);
     public static readonly Color4 Black = Color4.FromRgba(0, 0, 0);
     public static readonly Color4 White = Color4.FromRgba(255, 255, 255);
@@ -55,42 +91,4 @@ public static class Colors
         static int ParseHex(ReadOnlySpan<char> span)
             => (HexVal(span[0]) << 4) | HexVal(span[1]);
     }
-}
-
-public readonly record struct Color4(float R, float G, float B, float A = 1f)
-{
-    public static Color4 FromNormalized(float r, float g, float b, float a = 1f)
-        => new(ClampNorm(r), ClampNorm(g), ClampNorm(b), ClampNorm(a));
-
-    public static Color4 FromRgba(byte r, byte g, byte b, byte a = 255)
-        => new(r / 255f, g / 255f, b / 255f, a / 255f);
-
-    public Vector4 AsVec4() => new(R, G, B, A);
-    public Vector3 AsVec3() => new(R, G, B);
-
-    public Color4 WithAlpha(float a) => new(R, G, B, ClampNorm(a));
-    public Color4 WithAlphaByte(byte a) => new(R, G, B, a / 255f);
-
-    public static Color4 Lerp(Color4 from, Color4 to, float t)
-    {
-        t = ClampNorm(t);
-        return new(
-            from.R + (to.R - from.R) * t,
-            from.G + (to.G - from.G) * t,
-            from.B + (to.B - from.B) * t,
-            from.A + (to.A - from.A) * t
-        );
-    }
-
-    public Color4 Multiply(float scalar)
-        => new(ClampNorm(R * scalar), ClampNorm(G * scalar), ClampNorm(B * scalar), A);
-
-    public (byte R, byte G, byte B, byte A) ToBytes()
-        => ((byte)MathF.Round(R * 255f),
-            (byte)MathF.Round(G * 255f),
-            (byte)MathF.Round(B * 255f),
-            (byte)MathF.Round(A * 255f));
-
-    private static float ClampNorm(float v)
-        => v < 0f ? 0f : (v > 1f ? 1f : v);
 }

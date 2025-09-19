@@ -4,7 +4,6 @@ using ConcreteEngine.Common;
 using ConcreteEngine.Core.Assets;
 using ConcreteEngine.Core.Configuration;
 using ConcreteEngine.Core.Features;
-using ConcreteEngine.Core.Messaging;
 using ConcreteEngine.Core.Platform;
 using ConcreteEngine.Core.Rendering;
 using ConcreteEngine.Core.Scene;
@@ -12,8 +11,6 @@ using ConcreteEngine.Core.Systems;
 using ConcreteEngine.Core.Time;
 using ConcreteEngine.Core.Utils;
 using ConcreteEngine.Graphics;
-using ConcreteEngine.Graphics.Descriptors;
-using ConcreteEngine.Graphics.Resources;
 using Silk.NET.Maths;
 using Silk.NET.OpenGL;
 

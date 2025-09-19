@@ -2,8 +2,6 @@
 
 using System.Numerics;
 using ConcreteEngine.Core.Assets;
-using ConcreteEngine.Graphics;
-using ConcreteEngine.Graphics.Resources;
 
 #endregion
 

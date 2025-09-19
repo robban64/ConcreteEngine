@@ -1,7 +1,5 @@
 using System.Runtime.CompilerServices;
-using ConcreteEngine.Graphics.Descriptors;
 using ConcreteEngine.Graphics.Resources;
-using ConcreteEngine.Graphics.Utils;
 using Silk.NET.OpenGL;
 
 namespace ConcreteEngine.Graphics.OpenGL;

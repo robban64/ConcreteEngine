@@ -1,9 +1,5 @@
 #region
 
-using System.Runtime.InteropServices;
-using ConcreteEngine.Core.Features;
-using ConcreteEngine.Core.Scene;
-
 #endregion
 
 namespace ConcreteEngine.Core.Rendering;

@@ -1,7 +1,5 @@
 using System.Diagnostics;
 using System.Runtime.CompilerServices;
-using ConcreteEngine.Graphics.Error;
-using ConcreteEngine.Graphics.Resources;
 
 namespace ConcreteEngine.Graphics.Resources;
 
@@ -96,6 +94,18 @@ internal sealed class FrontendResourceStore<TId, TMeta> : IResourceStore<TId>
         meta = _meta[idx];
         return ref _handle[idx];
     }
+
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public GfxRefToken<TId> GetRef(TId id) => GfxRefToken<TId>.From(in _handle[id.Value - 1]);
+
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public GfxRefToken<TId> GetRefAndMeta(TId id, out TMeta meta)
+    {
+        int idx = id.Value - 1;
+        meta = _meta[idx];
+        return GfxRefToken<TId>.From(in _handle[idx]);
+    }
+
 
     public TId Add(in TMeta meta, in GfxRefToken<TId> refToken)
     {

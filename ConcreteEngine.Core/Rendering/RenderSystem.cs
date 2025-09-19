@@ -1,20 +1,13 @@
 #region
 
 using System.Diagnostics;
-using System.Runtime.CompilerServices;
-using ConcreteEngine.Common.Collections;
 using ConcreteEngine.Common.Extensions;
-using ConcreteEngine.Core.Configuration;
-using ConcreteEngine.Core.Features;
 using ConcreteEngine.Core.Resources;
-using ConcreteEngine.Core.Scene;
 using ConcreteEngine.Core.Systems;
 using ConcreteEngine.Graphics;
-using ConcreteEngine.Graphics.Descriptors;
 using ConcreteEngine.Graphics.Resources;
 using ConcreteEngine.Graphics.Utils;
 using Silk.NET.Maths;
-using static ConcreteEngine.Core.Rendering.RenderConsts;
 
 #endregion
 

@@ -10,12 +10,6 @@ internal interface IResourceRefToken<out TId, out THandle, TMeta>
     static abstract THandle MakeHandle(uint raw);
 }
 
-internal readonly struct GfxRefToken<TId>(in GfxHandle handle)
-    where TId : unmanaged, IResourceId
-{
-    public readonly GfxHandle Handle = handle;
-}
-
 internal readonly struct TextureDef
     : IResourceRefToken<TextureId, GlTextureHandle, TextureMeta>
 {

@@ -1,9 +1,6 @@
 #region
 
-using System.Numerics;
-using System.Runtime.CompilerServices;
 using ConcreteEngine.Common;
-using ConcreteEngine.Graphics;
 using ConcreteEngine.Graphics.Resources;
 
 #endregion
@@ -25,7 +22,7 @@ public sealed class Material
     public TextureId[] SamplerSlots => _samplerSlots;
 
 
-    public Color4 Color { get; set; } = Colors.White;
+    public Color4 Color { get; set; } = Color4.White;
     public float Shininess { get; set; } = 12;
     public float SpecularStrength { get; set; } = 1;
     public float UvRepeat { get; set; } = 1;

@@ -2,7 +2,6 @@
 
 using ConcreteEngine.Graphics;
 using ConcreteEngine.Graphics.Error;
-using ConcreteEngine.Graphics.Resources;
 
 #endregion
 

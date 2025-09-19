@@ -1,8 +1,6 @@
 using System.Runtime.CompilerServices;
 using ConcreteEngine.Graphics.Contracts;
-using ConcreteEngine.Graphics.Descriptors;
 using ConcreteEngine.Graphics.Resources;
-using ConcreteEngine.Graphics.Utils;
 using Silk.NET.OpenGL;
 
 namespace ConcreteEngine.Graphics.OpenGL;
@@ -30,11 +28,11 @@ internal sealed class GlMeshes: IGraphicsDriverModule
     }
 
     //TODO Binding index?
-    public void AttachVertexBuffer(in GfxHandle vao, in GfxHandle vbo, uint bindingIdx, nuint offset, nuint stride)
+    public void AttachVertexBuffer(in GfxHandle vao, in GfxHandle vbo, int bindingIdx, nint offset, nint stride)
     {
         var vboHandle = _store.VertexBuffer.Get(in vbo).Handle;
         var handle = VaoHandle(in vao);
-        _gl.VertexArrayVertexBuffer(handle, bindingIdx, vboHandle, (nint)offset, (uint)stride);
+        _gl.VertexArrayVertexBuffer(handle, (uint)bindingIdx, vboHandle, offset, (uint)stride);
     }
 
     public void AttachIndexBuffer(in GfxHandle vao, in GfxHandle ibo)
@@ -43,14 +41,18 @@ internal sealed class GlMeshes: IGraphicsDriverModule
         _gl.VertexArrayElementBuffer(VaoHandle(in vao), iboHandle);
     }
 
-    public unsafe void SetVertexAttribute(in GfxHandle vao, in VertexAttributeDesc attr)
+    public void SetVertexAttribute(GfxRefToken<MeshId> vao, int attribIndex, in VertexAttributeDesc attr)
     {
-        var handle = VaoHandle(vao);
-        _gl.VertexArrayAttribFormat(handle, attr.VboBinding, (int)attr.Format, VertexAttribType.Float, attr.Normalized,
-            attr.Offset);
-        _gl.VertexArrayAttribBinding(handle, attr.VboBinding, attr.VboBinding);
-        _gl.EnableVertexArrayAttrib(handle, attr.VboBinding);
-        if (attr.Divisor != 0) _gl.VertexArrayBindingDivisor(handle, attr.VboBinding, attr.Divisor);
+        var handle = VaoHandle(vao.Handle);
+        (uint vboIdx, int format, uint divisor) = ((uint)attr.VboBinding,  (int)attr.Format, (uint)attr.Divisor);
+        
+        _gl.VertexArrayAttribFormat(handle, vboIdx, format, 
+            VertexAttribType.Float, attr.Normalized, (uint)attr.Offset);
+        
+        _gl.VertexArrayAttribBinding(handle, (uint)attribIndex,vboIdx);
+        _gl.EnableVertexArrayAttrib(handle, vboIdx);
+        
+        if (attr.Divisor != 0) _gl.VertexArrayBindingDivisor(handle, vboIdx, (uint)attr.Divisor);
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]

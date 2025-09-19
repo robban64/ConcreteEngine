@@ -23,7 +23,7 @@ internal sealed class GlMeshes: IGraphicsDriverModule
         _store = ctx.Store;
     }
 
-    public ResourceRefToken<MeshId> CreateVertexArray()
+    public GfxRefToken<MeshId> CreateVertexArray()
     {
         _gl.CreateVertexArrays(1, out uint vao);
         return _store.VertexArray.Add(new GlMeshHandle(vao));

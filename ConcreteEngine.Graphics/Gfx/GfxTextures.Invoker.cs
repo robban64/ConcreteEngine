@@ -13,7 +13,7 @@ internal sealed class GfxTexturesInvoker
         _driver = context.Driver;
     }
     
-    public ResourceRefToken<TextureId> CreateTexture(ReadOnlySpan<byte> data, in GpuTextureDescriptor desc,
+    public GfxRefToken<TextureId> CreateTexture(ReadOnlySpan<byte> data, in GpuTextureDescriptor desc,
         out uint mipLevels)
     {
         var hasMipLevels = desc.Preset is TexturePreset.LinearMipmapClamp or TexturePreset.LinearMipmapRepeat;

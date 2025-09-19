@@ -53,13 +53,13 @@ internal sealed class GlFrameBuffers: IGraphicsDriverModule
         );
     }
 
-    public ResourceRefToken<FrameBufferId> CreateFrameBuffer()
+    public GfxRefToken<FrameBufferId> CreateFrameBuffer()
     {
         _gl.CreateFramebuffers(1, out uint fbo);
         return _store.FrameBuffer.Add(new GlFboHandle(fbo));
     }
 
-    public ResourceRefToken<RenderBufferId> CreateRenderBuffer(FrameBufferTarget attachment, Vector2D<int> size,
+    public GfxRefToken<RenderBufferId> CreateRenderBuffer(FrameBufferTarget attachment, Vector2D<int> size,
         bool multisample, uint samples)
     {
         var glAttachment = attachment.ToGlEnum();

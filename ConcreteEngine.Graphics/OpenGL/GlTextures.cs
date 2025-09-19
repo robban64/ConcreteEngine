@@ -30,7 +30,7 @@ internal sealed class GlTextures: IGraphicsDriverModule
     }
 
 
-    public ResourceRefToken<TextureId> CreateTexture2D(uint width, uint height, uint mipLevels)
+    public GfxRefToken<TextureId> CreateTexture2D(uint width, uint height, uint mipLevels)
     {
         var levels = Math.Min(1, mipLevels);
         _gl.CreateTextures(TextureTarget.Texture2D, 1, out uint texture);
@@ -38,7 +38,7 @@ internal sealed class GlTextures: IGraphicsDriverModule
         return _store.Texture.Add(new GlTextureHandle(texture));
     }
 
-    public ResourceRefToken<TextureId> CreateTextureCubeMap(uint width, uint height, uint mipLevels)
+    public GfxRefToken<TextureId> CreateTextureCubeMap(uint width, uint height, uint mipLevels)
     {
         var levels = Math.Min(1, mipLevels);
         _gl.CreateTextures(TextureTarget.TextureCubeMap, 1, out uint texture);

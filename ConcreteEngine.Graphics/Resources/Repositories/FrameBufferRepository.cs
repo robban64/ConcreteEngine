@@ -53,8 +53,13 @@ internal sealed class FrameBufferRepository : IFrameBufferRepository
 
     internal void AddRecord(FrameBufferId fboId, in FboAttachmentIds attachedIds, in FrameBufferDesc desc)
     {
-        fboId.IsValidOrThrow();
+        ArgumentOutOfRangeException.ThrowIfZero(fboId.Value, nameof(fboId));
         _registry.Add(fboId, new FrameBufferLayout(fboId, in attachedIds, in desc));
+    }
+
+    internal void UpdateRecord(FrameBufferId fboId, in FrameBufferDesc desc)
+    {
+        _registry[fboId].UpdateFromDescriptor(in desc);
     }
 
     internal FrameBufferDesc GetDescriptor(FrameBufferId fboId) => _registry[fboId].GetDescriptor();

@@ -40,7 +40,7 @@ internal sealed class GlShaders: IGraphicsDriverModule
     }
 
     
-    public ResourceRefToken<ShaderId> CreateShader(string vertexSource, string fragmentSource)
+    public GfxRefToken<ShaderId> CreateShader(string vertexSource, string fragmentSource)
     {
         uint vertexShader = CreateShader(ShaderType.VertexShader, vertexSource);
         uint fragmentShader = CreateShader(ShaderType.FragmentShader, fragmentSource);

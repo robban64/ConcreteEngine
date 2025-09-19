@@ -18,7 +18,7 @@ internal sealed class GlBuffers : IGraphicsDriverModule
         _store = ctx.Store;
     }
 
-    public ResourceRefToken<VertexBufferId> CreateVertexBuffer<T>(ReadOnlySpan<T> data, nuint size,
+    public GfxRefToken<VertexBufferId> CreateVertexBuffer<T>(ReadOnlySpan<T> data, nuint size,
         BufferStorage storage, BufferAccess access, bool nullData = false)
         where T : unmanaged
     {
@@ -26,7 +26,7 @@ internal sealed class GlBuffers : IGraphicsDriverModule
         return _store.VertexBuffer.Add(new GlVboHandle(handle.Value));
     }
 
-    public ResourceRefToken<IndexBufferId> CreateIndexBuffer<T>(ReadOnlySpan<T> data, nuint size, BufferStorage storage,
+    public GfxRefToken<IndexBufferId> CreateIndexBuffer<T>(ReadOnlySpan<T> data, nuint size, BufferStorage storage,
         BufferAccess access, bool nullData = false)
         where T : unmanaged
     {
@@ -34,7 +34,7 @@ internal sealed class GlBuffers : IGraphicsDriverModule
         return _store.IndexBuffer.Add(new GlIboHandle(handle.Value));
     }
 
-    public ResourceRefToken<UniformBufferId> CreateUniformBuffer<T>(UniformGpuSlot slot, nuint size,
+    public GfxRefToken<UniformBufferId> CreateUniformBuffer<T>(UniformGpuSlot slot, nuint size,
         BufferStorage storage, BufferAccess access)
         where T : unmanaged, IUniformGpuData
     {

@@ -10,10 +10,10 @@ using Silk.NET.Maths;
 namespace ConcreteEngine.Graphics;
 
 internal readonly record struct FboAttachmentHandleResult(
-    ResourceRefToken<TextureId> ColorTexture,
-    ResourceRefToken<TextureId> DepthTexture,
-    ResourceRefToken<RenderBufferId> ColorRenderBuffer,
-    ResourceRefToken<RenderBufferId> DepthRenderBuffer
+    GfxRefToken<TextureId> ColorTexture,
+    GfxRefToken<TextureId> DepthTexture,
+    GfxRefToken<RenderBufferId> ColorRenderBuffer,
+    GfxRefToken<RenderBufferId> DepthRenderBuffer
 );
 
 internal sealed class GfxAllocator
@@ -26,19 +26,19 @@ internal sealed class GfxAllocator
     }
     
     // Buffers
-    public ResourceRefToken<MeshId> CreateEmptyMesh()
+    public GfxRefToken<MeshId> CreateEmptyMesh()
     {
         return _driver.Meshes.CreateVertexArray();
     }
 
-    public ResourceRefToken<VertexBufferId> CreateVertexBuffer<V>(ReadOnlySpan<V> vertices, BufferUsage usage,
+    public GfxRefToken<VertexBufferId> CreateVertexBuffer<V>(ReadOnlySpan<V> vertices, BufferUsage usage,
         uint index, nuint size)
         where V : unmanaged
     {
         return _driver.Buffers.CreateVertexBuffer(vertices, size, BufferStorage.Dynamic, BufferAccess.MapWrite);
     }
 
-    public ResourceRefToken<IndexBufferId> CreateIndexBuffer<I>(ReadOnlySpan<I> indices, BufferUsage usage, nuint size)
+    public GfxRefToken<IndexBufferId> CreateIndexBuffer<I>(ReadOnlySpan<I> indices, BufferUsage usage, nuint size)
         where I : unmanaged
     {
         var elementSize = Unsafe.SizeOf<I>();
@@ -48,7 +48,7 @@ internal sealed class GfxAllocator
         return _driver.Buffers.CreateIndexBuffer(indices, size, BufferStorage.Static, BufferAccess.None);
     }
 
-    public ResourceRefToken<UniformBufferId> CreateUniformBuffer<T>(UniformGpuSlot slot,
+    public GfxRefToken<UniformBufferId> CreateUniformBuffer<T>(UniformGpuSlot slot,
         UboDefaultCapacity defaultCapacity)
         where T : unmanaged, IUniformGpuData
     {
@@ -99,7 +99,7 @@ internal sealed class GfxAllocator
 
 
     // FrameBuffers
-    public ResourceRefToken<FrameBufferId> CreateFrameBuffer(in FrameBufferDesc desc,
+    public GfxRefToken<FrameBufferId> CreateFrameBuffer(in FrameBufferDesc desc,
         out FboAttachmentHandleResult attachments)
     {
         if (desc.Attachments.DepthTexture) GraphicsException.ThrowUnsupportedFeature("DepthTexture");
@@ -142,7 +142,7 @@ internal sealed class GfxAllocator
         return fboRef;
     }
 
-    private ResourceRefToken<RenderBufferId> CreateRenderBufferFor(in GfxHandle fbo, Vector2D<int> size,
+    private GfxRefToken<RenderBufferId> CreateRenderBufferFor(in GfxHandle fbo, Vector2D<int> size,
         FrameBufferTarget target, RenderBufferMsaa msaa)
     {
         var samples = msaa.ToSamples();

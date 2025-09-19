@@ -18,7 +18,7 @@ internal sealed class GfxFrameBuffersInvoker
         _driver = context.Driver;
     }
     
-    public ResourceRefToken<FrameBufferId> CreateFrameBuffer(in FrameBufferDesc desc,
+    public GfxRefToken<FrameBufferId> CreateFrameBuffer(in FrameBufferDesc desc,
         out FboAttachmentHandleResult attachments)
     {
         if (desc.Attachments.DepthTexture) GraphicsException.ThrowUnsupportedFeature("DepthTexture");
@@ -31,7 +31,7 @@ internal sealed class GfxFrameBuffersInvoker
         ArgumentOutOfRangeException.ThrowIfLessThan(size.X, 16);
         ArgumentOutOfRangeException.ThrowIfLessThan(size.Y, 16);
 
-        var fboRef = _driver.FrameBuffers.CreateFrameBuffer();
+        var fboRef = 
         var result = new FboAttachmentHandleResult();
 
         if (desc.Attachments.ColorTexture)
@@ -45,14 +45,14 @@ internal sealed class GfxFrameBuffersInvoker
 
         if (desc.Attachments.ColorRenderBuffer)
         {
-            var rboRef = CreateRenderBufferFor(fboRef.Handle, size, FrameBufferTarget.Color, desc.Multisample);
+            var rboRef = CreateRenderBufferFor(fboRef, size, FrameBufferTarget.Color, desc.Multisample);
             _driver.FrameBuffers.AttachRenderBuffer(fboRef.Handle, rboRef.Handle, FrameBufferTarget.Color);
             result = result with { ColorRenderBuffer = rboRef };
         }
 
         if (desc.Attachments.DepthStenRenderBuffer)
         {
-            var rboRef = CreateRenderBufferFor(fboRef.Handle, size, FrameBufferTarget.DepthStencil, desc.Multisample);
+            var rboRef = CreateRenderBufferFor(fboRef, size, FrameBufferTarget.DepthStencil, desc.Multisample);
             _driver.FrameBuffers.AttachRenderBuffer(fboRef.Handle, rboRef.Handle, FrameBufferTarget.DepthStencil);
             result = result with { DepthRenderBuffer = rboRef };
         }
@@ -60,13 +60,13 @@ internal sealed class GfxFrameBuffersInvoker
         attachments = result;
         return fboRef;
     }
-        
-    private ResourceRefToken<RenderBufferId> CreateRenderBufferFor(in GfxHandle fbo, Vector2D<int> size,
+    
+    private GfxRefToken<RenderBufferId> CreateRenderBufferFor(in GfxRefToken<FrameBufferId> fbo, Vector2D<int> size,
         FrameBufferTarget target, RenderBufferMsaa msaa)
     {
         var samples = msaa.ToSamples();
         var rboRef = _driver.FrameBuffers.CreateRenderBuffer(target, size, samples > 0, samples);
-        _driver.FrameBuffers.AttachRenderBuffer(in fbo, in rboRef.Handle, target);
+        _driver.FrameBuffers.AttachRenderBuffer(in fbo.Handle, in rboRef.Handle, target);
         return rboRef;
     }
 }

@@ -97,12 +97,12 @@ internal sealed class FrontendResourceStore<TId, TMeta> : IResourceStore<TId>
         return ref _handle[idx];
     }
 
-    public TId Add(in TMeta meta, in ResourceRefToken<TId> resourceToken)
+    public TId Add(in TMeta meta, in GfxRefToken<TId> refToken)
     {
-        ArgumentOutOfRangeException.ThrowIfEqual(resourceToken.Handle.IsValid, false, nameof(resourceToken));
+        ArgumentOutOfRangeException.ThrowIfEqual(refToken.Handle.IsValid, false, nameof(refToken));
         int idx = _free.Count > 0 ? _free.Pop() : Allocate();
         _meta[idx] = meta;
-        _handle[idx] = resourceToken.Handle;
+        _handle[idx] = refToken.Handle;
         return MakeId(idx);
     }
 
@@ -118,20 +118,19 @@ internal sealed class FrontendResourceStore<TId, TMeta> : IResourceStore<TId>
         int idx = id.Value - 1;
         var handle = _handle[idx];
         oldMeta = _meta[idx];
-
         _meta[idx] = default!;
         _handle[idx] = default!;
         _free.Push(idx);
         return handle;
     }
 
-    public TId Replace(TId id, in TMeta newMeta, in GfxHandle newHandle, out GfxHandle oldHandle)
+    public TId Replace(TId id, in TMeta newMeta, in GfxRefToken<TId> newHandleRef, out GfxRefToken<TId> oldHandle)
     {
         ArgumentOutOfRangeException.ThrowIfEqual(id.Value, 0, nameof(id));
         int idx = id.Value - 1;
-        oldHandle = _handle[idx];
+        oldHandle = new GfxRefToken<TId>(in _handle[idx]);
         _meta[idx] = newMeta;
-        _handle[idx] = newHandle;
+        _handle[idx] = newHandleRef.Handle;
         return id;
     }
 

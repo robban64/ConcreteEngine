@@ -1,4 +1,6 @@
+using System.Numerics;
 using System.Runtime.CompilerServices;
+using ConcreteEngine.Common;
 using ConcreteEngine.Graphics.Contracts;
 using ConcreteEngine.Graphics.Descriptors;
 using ConcreteEngine.Graphics.Error;
@@ -12,135 +14,139 @@ internal sealed class GfxFrameBuffers
 {
     private readonly FrontendStoreHub _resources;
     private readonly GfxResourceRepository _repository;
-    
+
     private readonly GfxFrameBuffersInvoker _invoker;
+
+    private readonly GfxTextures _gfxTextures;
+
+    private readonly IGraphicsDriver _driver;
 
     internal GfxFrameBuffers(GfxContext context, GfxTextures gfxTextures)
     {
-        _invoker = new GfxFrameBuffersInvoker(context, gfxTextures.);
+        _invoker = new GfxFrameBuffersInvoker(context, gfxTextures.Invoker);
+        _driver = context.Driver;
+        _gfxTextures = gfxTextures;
         _resources = context.Stores;
         _repository = context.Repositories;
     }
-    
-     public FrameBufferId CreateFrameBuffer(in FrameBufferDesc desc)
+
+
+
+    public FrameBufferId CreateFrameBuffer(in FrameBufferDesc desc)
     {
-        if (desc.Attachments.DepthTexture) GraphicsException.ThrowUnsupportedFeature("DepthTexture");
-        ArgumentOutOfRangeException.ThrowIfLessThan(desc.AbsoluteSize.X, 16);
-        ArgumentOutOfRangeException.ThrowIfLessThan(desc.AbsoluteSize.Y, 16);
-
-        var (abs, ratio) = (desc.AbsoluteSize, desc.DownscaleRatio);
-        var size = new Vector2D<int>((int)(abs.X * ratio.X), (int)(abs.Y * ratio.Y));
-
-        ArgumentOutOfRangeException.ThrowIfLessThan(size.X, 16);
-        ArgumentOutOfRangeException.ThrowIfLessThan(size.Y, 16);
-
-        var fboMeta = new FrameBufferMeta(size, true, false, true);
-
-        var fboRef = _allocator.CreateFrameBuffer(in desc, out var attachments);
+        EnsureCreateFrameBuffer(in desc);
+        GetMetaAndSizeFromDesc(in desc, out var fboMeta, out var size);
+        
+        var fboRef = CreateFrameBufferBackend();
         var fboId = _resources.FboStore.Add(in fboMeta, fboRef);
 
         FboAttachmentIds attachmentIds = default;
-
         if (desc.Attachments.ColorTexture)
         {
-            var texDesc =
-                new GpuTextureDescriptor((uint)size.X, (uint)size.Y, desc.TexturePreset, TextureKind.Texture2D);
-            var textureId = CreateTexture(texDesc);
-            var texHandle = _resources.TextureStore.GetHandle(textureId);
-            _driver.FrameBuffers.AttachTexture(in fboRef.Handle, in texHandle, FrameBufferTarget.Color);
+            var texDesc = new GpuTextureDescriptor((uint)size.X, (uint)size.Y,
+                desc.TexturePreset, TextureKind.Texture2D);
+
+            var textureId = _gfxTextures.CreateTexture(ReadOnlySpan<byte>.Empty, in texDesc);
+            AttachTextureBackend(in fboRef, textureId);
             attachmentIds = attachmentIds with { ColorTextureId = textureId };
         }
 
         if (desc.Attachments.ColorRenderBuffer)
         {
-            var rboId = CreateRenderBufferFor(in fboRef.Handle, size, FrameBufferTarget.Color, desc.Multisample);
-            var rboHandle = _resources.RboStore.GetHandle(rboId);
-            _driver.FrameBuffers.AttachRenderBuffer(in fboRef.Handle, in rboHandle, FrameBufferTarget.Color);
+            var rbo = CreateAttachRenderBufferBackend(in fboRef, size,
+                FrameBufferTarget.Color, desc.Multisample, out var meta);
+            var rboId = _resources.RboStore.Add(in meta, in rbo);
+            attachmentIds = attachmentIds with { ColorRenderBufferId = rboId };
         }
 
         if (desc.Attachments.DepthStenRenderBuffer)
         {
-            var rboId = CreateRenderBufferFor(in fboRef.Handle, size, FrameBufferTarget.DepthStencil, desc.Multisample);
-            var rboHandle = _resources.RboStore.GetHandle(rboId);
-            _driver.FrameBuffers.AttachRenderBuffer(in fboRef.Handle, in rboHandle, FrameBufferTarget.DepthStencil);
+            var rbo = CreateAttachRenderBufferBackend(in fboRef, size,
+                FrameBufferTarget.DepthStencil, desc.Multisample, out var meta);
+            var rboId = _resources.RboStore.Add(in meta, in rbo);
+            attachmentIds = attachmentIds with { DepthRenderBufferId = rboId };
         }
 
         _repository.FboRepository.AddRecord(fboId, in attachmentIds, in desc);
         return fboId;
     }
 
-    private static (uint elementCount, uint elementSize, nuint size) ToElementSizeData<T>(int length)
-        where T : unmanaged =>
-        ((uint)length, (uint)Unsafe.SizeOf<T>(), (nuint)(length * (uint)Unsafe.SizeOf<T>()));
-
-
-    public bool RecreateFrameBuffer(FrameBufferId fboId, in Vector2D<int> outputSize)
+    public FrameBufferId RecreateFrameBuffer(FrameBufferId fboId, in FrameBufferDesc desc)
     {
+        EnsureCreateFrameBuffer(in desc);
+        GetMetaAndSizeFromDesc(in desc, out var fboMeta, out var size);
         var layout = _repository.FboRepository.Get(fboId);
+        var attachIds = layout.FboAttachmentResources;
 
-        if (!layout.AutoResizeable) return false;
 
-        var (absoluteSize, sizeRatio) = (outputSize, SizeRatio: layout.DownscaleRatio);
-        var size = new Vector2D<int>((int)(absoluteSize.X * sizeRatio.X), (int)(absoluteSize.Y * sizeRatio.Y));
-
-        var attachedIds = layout.FboAttachmentResources;
-        var (texColId, texDepthId, rboDepthId, rboTexId) = attachedIds;
-
-        ref readonly var prevFbo = ref _resources.FboStore.GetHandleAndMeta(fboId, out var prevMeta);
-        var desc = layout.GetDescriptor() with { AbsoluteSize = absoluteSize };
-        var newMeta = FrameBufferMeta.CreateResizeCopy(in prevMeta, size);
+        var fboRef = CreateFrameBufferBackend();
+        _resources.FboStore.Replace(fboId, in fboMeta, fboRef, out _);
 
         if (desc.Attachments.ColorTexture)
         {
-            var texDesc =
-                new GpuTextureDescriptor((uint)size.X, (uint)size.Y, desc.TexturePreset, TextureKind.Texture2D);
-            var textureId = CreateTexture(texDesc);
-            var texHandle = _resources.TextureStore.GetHandle(textureId);
-            _driver.FrameBuffers.AttachTexture(in fboRef.Handle, in texHandle, FrameBufferTarget.Color);
+            var texDesc = new GpuTextureDescriptor((uint)size.X, (uint)size.Y,
+                desc.TexturePreset, TextureKind.Texture2D);
+
+            var texId = _gfxTextures.ReplaceTexture(attachIds.ColorTextureId, ReadOnlySpan<byte>.Empty, in texDesc);
+            AttachTextureBackend(in fboRef, texId);
         }
 
         if (desc.Attachments.ColorRenderBuffer)
         {
-            var rboId = CreateRenderBufferFor(in fboRef.Handle, size, FrameBufferTarget.Color, desc.Multisample);
-            var rboHandle = _resources.RboStore.GetHandle(rboId);
-            _driver.FrameBuffers.AttachRenderBuffer(in fboRef.Handle, in rboHandle, FrameBufferTarget.Color);
+            InvalidOpThrower.ThrowIfNot(attachIds.ColorRenderBufferId.IsValid());
+            var rbo = CreateAttachRenderBufferBackend(in fboRef, size,
+                FrameBufferTarget.Color, desc.Multisample, out var meta);
+            var rboId = _resources.RboStore.Add(in meta, in rbo);
+            _resources.RboStore.Replace(attachIds.ColorRenderBufferId, in meta, in rbo, out _);
         }
 
         if (desc.Attachments.DepthStenRenderBuffer)
         {
-            var rboId = CreateRenderBufferFor(in fboRef.Handle, size, FrameBufferTarget.DepthStencil, desc.Multisample);
-            var rboHandle = _resources.RboStore.GetHandle(rboId);
-            _driver.FrameBuffers.AttachRenderBuffer(in fboRef.Handle, in rboHandle, FrameBufferTarget.DepthStencil);
+            InvalidOpThrower.ThrowIfNot(attachIds.DepthRenderBufferId.IsValid());
+            var rbo = CreateAttachRenderBufferBackend(in fboRef, size,
+                FrameBufferTarget.DepthStencil, desc.Multisample, out var meta);
+            _resources.RboStore.Replace(attachIds.DepthRenderBufferId, in meta, in rbo, out _);
         }
 
-
-        _driver.FrameBuffers.CreateFrameBuffer(in desc, out var result);
-        _disposer.EnqueueRemoval(fboId, true);
-        _resources.FboStore.Replace(fboId, in newMeta, result.Fbo.Handle, out var prevHandle);
-
-
-        if (result.FboTex.Handle.IsValid)
-            _resources.TextureStore.Replace(texColId, result.FboTex.Meta, result.FboTex.Handle, out _);
-
-        if (result.RboDepth.Handle.IsValid)
-            _resources.RboStore.Replace(rboDepthId, result.RboDepth.Meta, result.RboDepth.Handle, out _);
-
-        if (result.RboTex.Handle.IsValid)
-            _resources.RboStore.Replace(rboTexId, result.RboTex.Meta, result.RboTex.Handle, out _);
-
-        return true;
+        _repository.FboRepository.UpdateRecord(fboId, in desc);
+        return fboId;
     }
 
-    private RenderBufferId CreateRenderBufferFor(in GfxHandle fbo, Vector2D<int> size,
-        FrameBufferTarget target, RenderBufferMsaa msaa)
+    private GfxRefToken<FrameBufferId> CreateFrameBufferBackend()
     {
-        var (multisample, samples) = msaa.ToSamples();
-        var meta = new RenderBufferMeta(size, target, msaa);
-
-        var rboRef = _driver.FrameBuffers.CreateRenderBuffer(target, size, true, samples);
-        _driver.FrameBuffers.AttachRenderBuffer(in fbo, in rboRef.Handle, target);
-
-        return _resources.RboStore.Add(in meta, in rboRef);
+        return _driver.FrameBuffers.CreateFrameBuffer();
     }
 
+    private void AttachTextureBackend(in GfxRefToken<FrameBufferId> fbo,
+        TextureId textureId)
+    {
+        var tex = _resources.TextureStore.GetHandle(textureId);
+        _driver.FrameBuffers.AttachTexture(fbo.Handle, tex, FrameBufferTarget.Color);
+    }
+
+    private GfxRefToken<RenderBufferId> CreateAttachRenderBufferBackend(in GfxRefToken<FrameBufferId> fbo,
+        Vector2D<int> size,
+        FrameBufferTarget target, RenderBufferMsaa msaa, out RenderBufferMeta meta)
+    {
+        var samples = msaa.ToSamples();
+        var rboRef = _driver.FrameBuffers.CreateRenderBuffer(target, size, samples > 0, samples);
+        _driver.FrameBuffers.AttachRenderBuffer(in fbo.Handle, in rboRef.Handle, target);
+        meta = new RenderBufferMeta(size, target, msaa);
+        return rboRef;
+    }
+    
+    private static void GetMetaAndSizeFromDesc(in FrameBufferDesc desc, out FrameBufferMeta meta, out Vector2D<int> size)
+    {
+        var (abs, ratio) = (desc.AbsoluteSize, desc.DownscaleRatio);
+        size = new Vector2D<int>((int)(abs.X * ratio.X), (int)(abs.Y * ratio.Y));
+        meta = new FrameBufferMeta(size, true, false, true);
+    }
+    private static void EnsureCreateFrameBuffer(in FrameBufferDesc desc)
+    {
+        InvalidOpThrower.ThrowIf(desc.Attachments.DepthTexture, nameof(desc.Attachments.DepthTexture));
+        ArgumentOutOfRangeException.ThrowIfLessThan(desc.AbsoluteSize.X, 16);
+        ArgumentOutOfRangeException.ThrowIfLessThan(desc.AbsoluteSize.Y, 16);
+        ArgumentOutOfRangeException.ThrowIfZero(desc.DownscaleRatio.X);
+        ArgumentOutOfRangeException.ThrowIfZero(desc.DownscaleRatio.Y);
+    }
 }

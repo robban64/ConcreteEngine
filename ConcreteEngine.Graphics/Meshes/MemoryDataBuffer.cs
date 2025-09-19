@@ -6,13 +6,14 @@ namespace ConcreteEngine.Graphics;
 public sealed class MemoryDataBuffer
 {
     public const int LowCapacity = 1024 * 4;
-    public const int DefaultCapacityVbo = 1024 * 12;
-    public const int DefaultCapacityIbo = 1024 * 4;
 
     public const int MinSize = 1024;
 
     private byte[] _buffer = Array.Empty<byte>();
     private int _idx = 0;
+
+    public int Count => _idx;
+    public int Capacity => _buffer.Length;
 
 
     public MemoryDataBuffer(int capacity)

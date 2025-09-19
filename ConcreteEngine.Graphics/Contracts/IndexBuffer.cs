@@ -1,9 +1,9 @@
 namespace ConcreteEngine.Graphics.Contracts;
 
-public sealed class IndexBufferPayload
+public readonly struct IndexBufferPayload(in IndexBufferDesc descriptor, ReadOnlyMemory<byte> data)
 {
-    public required IndexBufferDesc Descriptor { get; init;}
-    public required ReadOnlyMemory<byte>? Data { get; init; }
+    public readonly IndexBufferDesc Descriptor = descriptor;
+    public readonly ReadOnlyMemory<byte> Data = data;
 }
 
 public readonly record struct IndexBufferDesc(

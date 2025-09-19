@@ -19,18 +19,18 @@ internal sealed class GlBuffers : IGraphicsDriverModule
     }
 
     public ResourceRefToken<VertexBufferId> CreateVertexBuffer<T>(ReadOnlySpan<T> data, nuint size,
-        BufferStorage storage, BufferAccess access)
+        BufferStorage storage, BufferAccess access, bool nullData = false)
         where T : unmanaged
     {
-        var handle = CreateBufferNative(data, size, storage, access);
+        var handle = CreateBufferNative(data, size, storage, access, nullData);
         return _store.VertexBuffer.Add(new GlVboHandle(handle.Value));
     }
 
     public ResourceRefToken<IndexBufferId> CreateIndexBuffer<T>(ReadOnlySpan<T> data, nuint size, BufferStorage storage,
-        BufferAccess access)
+        BufferAccess access, bool nullData = false)
         where T : unmanaged
     {
-        var handle = CreateBufferNative(data, size, storage, access);
+        var handle = CreateBufferNative(data, size, storage, access, nullData);
         return _store.IndexBuffer.Add(new GlIboHandle(handle.Value));
     }
 
@@ -81,7 +81,7 @@ internal sealed class GlBuffers : IGraphicsDriverModule
     }
 
     private unsafe NativeHandle CreateBufferNative<T>(ReadOnlySpan<T> data, nuint size, BufferStorage storage,
-        BufferAccess access, bool nullData = false) where T : unmanaged
+        BufferAccess access, bool nullData) where T : unmanaged
     {
         var flag = GlEnumUtils.ToBufferFlag(storage, access);
         var mask = storage == BufferStorage.Static ? BufferStorageMask.None : flag;

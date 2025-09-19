@@ -1,4 +1,5 @@
 using System.Runtime.CompilerServices;
+using ConcreteEngine.Graphics.Contracts;
 using ConcreteEngine.Graphics.Descriptors;
 using ConcreteEngine.Graphics.Resources;
 using ConcreteEngine.Graphics.Utils;
@@ -42,7 +43,7 @@ internal sealed class GlMeshes: IGraphicsDriverModule
         _gl.VertexArrayElementBuffer(VaoHandle(in vao), iboHandle);
     }
 
-    public unsafe void SetVertexAttribute(in GfxHandle vao, in VertexAttributeDescriptor attr)
+    public unsafe void SetVertexAttribute(in GfxHandle vao, in VertexAttributeDesc attr)
     {
         var handle = VaoHandle(vao);
         _gl.VertexArrayAttribFormat(handle, attr.VboBinding, (int)attr.Format, VertexAttribType.Float, attr.Normalized,

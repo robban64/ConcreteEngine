@@ -73,6 +73,9 @@ public readonly struct VertexBufferMeta(
     public readonly BufferUsage Usage = usage;
     public readonly BufferStorage Storage = storage;
     public readonly BufferAccess Access = access;
+    
+    public static VertexBufferMeta CreateCopy(in VertexBufferMeta meta, uint count, uint size, BufferUsage usage)
+        => new(meta.BindingIdx, count, size, usage, meta.Storage, meta.Access);
 }
 
 public readonly struct IndexBufferMeta(
@@ -88,6 +91,9 @@ public readonly struct IndexBufferMeta(
     public readonly BufferUsage Usage = usage;
     public readonly BufferStorage Storage = storage;
     public readonly BufferAccess Access = access;
+
+    public static IndexBufferMeta CreateCopy(in IndexBufferMeta meta, uint count, uint size, BufferUsage usage)
+        => new(count, size, usage, meta.Storage, meta.Access);
 }
 
 public readonly struct FrameBufferMeta(

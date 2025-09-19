@@ -1,16 +1,16 @@
 namespace ConcreteEngine.Graphics.Contracts;
 
-public sealed class VertexBufferPayload
+public readonly struct VertexBufferPayload(in VertexBufferDesc descriptor, ReadOnlyMemory<byte> data)
 {
-    public required VertexBufferDesc Descriptor { get; init;}
-    public required ReadOnlyMemory<byte>? Data { get; init; }
-    
+    public readonly VertexBufferDesc Descriptor = descriptor;
+    public readonly ReadOnlyMemory<byte> Data = data;
 }
 
 public readonly record struct VertexBufferDesc(
     uint BindingIdx,
-    uint VertexSize,
+    uint VertexSize, // stride
     uint VertexCount,
     BufferUsage Usage,
     BufferStorage Storage,
-    BufferAccess Access);
+    BufferAccess Access
+);

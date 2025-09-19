@@ -1,7 +1,9 @@
 using System.Numerics;
 using System.Runtime.CompilerServices;
+using ConcreteEngine.Graphics.Contracts;
 using ConcreteEngine.Graphics.Descriptors;
 using ConcreteEngine.Graphics.Error;
+using ConcreteEngine.Graphics.Primitives;
 using ConcreteEngine.Graphics.Resources;
 using ConcreteEngine.Graphics.Utils;
 using Silk.NET.Maths;
@@ -49,74 +51,65 @@ internal sealed class GfxResourceAllocator
         _disposer = disposer;
     }
 
-    public MeshId CreateMesh(DrawPrimitive primitive, uint drawCount)
+    public MeshId CreateMesh(IMeshPayload payload)
     {
-    }
+        var driverMesh = _driver.Meshes;
+        var drawProp = payload.DrawProperties;
+        var meta = new MeshMeta(drawProp.Primitive, drawProp.DrawKind,
+            drawProp.ElementSize, (uint)payload.Attributes.Count, drawProp.DrawCount);
 
-    public MeshId CreateVertexMesh<V>(DrawPrimitive primitive, ReadOnlySpan<V> vertices, uint drawCount)
-        where V : unmanaged
-    {
-        var meta = new MeshMeta(primitive, MeshDrawKind.Elements, DrawElementSize.Invalid, 0, drawCount);
-        var vao = _driver.Meshes.CreateVertexArray();
-        var meshId = _resources.MeshStore.Add(in meta, vao);
-
-        var vboId = CreateVertexBuffer(vertices, BufferUsage.DynamicDraw, 0);
-        var vbo = _resources.VboStore.GetHandle(vboId);
-
-        var vertexSize = (uint)Unsafe.SizeOf<V>();
-        _driver.Meshes.AttachVertexBuffer(in vao.Handle, in vbo, 0, 0, vertexSize);
-
-        // foreach (ref readonly var attr in attribs)
-        //    _driver.Meshes.SetVertexAttribute(in vao.Handle, in attr);
-
-        return meshId;
-    }
-
-    public MeshId CreateElementalMesh<V, I>(ReadOnlySpan<V> vertices, ReadOnlySpan<I> indices,
-        ReadOnlySpan<VertexAttributeDescriptor> attribs, DrawPrimitive primitive,
-        uint drawCount) where V : unmanaged where I : unmanaged
-    {
-        var meta = new MeshMeta(primitive, MeshDrawKind.Elements, DrawElementSize.Invalid, 0, drawCount);
-        var vaoRef = _driver.Meshes.CreateVertexArray();
+        var vaoRef = driverMesh.CreateVertexArray();
         var meshId = _resources.MeshStore.Add(in meta, vaoRef);
 
-        var vboId = CreateVertexBuffer(vertices, BufferUsage.DynamicDraw, 0);
-        var iboId = CreateIndexBuffer(indices, BufferUsage.StaticDraw);
-        var vbo = _resources.VboStore.GetHandle(vboId);
-        var ibo = _resources.IboStore.GetHandle(iboId);
+        var vboIds = new VertexBufferId[payload.VertexBuffers.Count];
+        for (int i = 0; i < payload.VertexBuffers.Count; i++)
+        {
+            var vboPayload = payload.VertexBuffers[i];
+            var vboDesc = vboPayload.Descriptor;
+            var vboId = vboIds[i] = CreateVertexBuffer(vboPayload.Data.Span, vboDesc.Usage, (uint)i);
+            var vbo = _resources.VboStore.GetHandle(vboId);
+            driverMesh.AttachVertexBuffer(in vaoRef.Handle, in vbo, 0, 0, vboDesc.VertexSize);
+        }
 
-        var vertexSize = (uint)Unsafe.SizeOf<V>();
-        _driver.Meshes.AttachVertexBuffer(in vaoRef.Handle, in vbo, 0, 0, vertexSize);
-        _driver.Meshes.AttachIndexBuffer(in vaoRef.Handle, in ibo);
+        if (payload is MeshPayloadIndexed payloadIndexed)
+        {
+            var iboPayload = payloadIndexed.IndexBuffer;
+            var iboId = CreateIndexBuffer(iboPayload.Data.Span, iboPayload.Descriptor.Usage);
+            var ibo = _resources.IboStore.GetHandle(iboId);
+            driverMesh.AttachIndexBuffer(in vaoRef.Handle, in ibo);
+        }
 
-        foreach (ref readonly var attr in attribs)
-            _driver.Meshes.SetVertexAttribute(in vaoRef.Handle, in attr);
+        foreach (var attr in payload.Attributes)
+            driverMesh.SetVertexAttribute(in vaoRef.Handle, in attr);
 
         return meshId;
+    }
+
+    public MeshId CreateEmptyMesh()
+    {
+        var vaoRef = _driver.Meshes.CreateVertexArray();
+        return _resources.MeshStore.Add(default, vaoRef);
     }
 
     public VertexBufferId CreateVertexBuffer<V>(ReadOnlySpan<V> vertices, BufferUsage usage, uint index)
         where V : unmanaged
     {
-        var elementCount = (uint)vertices.Length;
-        var elementSize = (uint)Unsafe.SizeOf<V>();
-        var size = elementSize * elementCount;
+        var (elementCount, elementSize, size) = ToElementSizeData<V>(vertices.Length);
 
-        var meta = new VertexBufferMeta(usage, index, elementCount, elementSize);
+        var meta = new VertexBufferMeta(index, elementCount, elementSize, usage, BufferStorage.Dynamic,
+            BufferAccess.MapWrite);
         var vboRef = _driver.Buffers.CreateVertexBuffer(vertices, size, BufferStorage.Dynamic, BufferAccess.MapWrite);
         return _resources.VboStore.Add(in meta, in vboRef);
     }
 
     public IndexBufferId CreateIndexBuffer<I>(ReadOnlySpan<I> indices, BufferUsage usage) where I : unmanaged
     {
-        var elementCount = (uint)indices.Length;
-        var elementSize = (uint)Unsafe.SizeOf<I>();
-        var size = elementSize * elementCount;
+        var (elementCount, elementSize, size) = ToElementSizeData<I>(indices.Length);
 
         if (size != 1 && size != 2 && size != 3)
             GraphicsException.ThrowInvalidType<I>(typeof(I).Name, "Invalid elemental size");
 
-        var meta = new IndexBufferMeta(usage, (uint)elementCount, elementSize);
+        var meta = new IndexBufferMeta(elementCount, elementSize, usage, BufferStorage.Static, BufferAccess.None);
         var iboRef = _driver.Buffers
             .CreateIndexBuffer(indices, size, BufferStorage.Static, BufferAccess.None);
         return _resources.IboStore.Add(meta, iboRef);
@@ -129,7 +122,8 @@ internal sealed class GfxResourceAllocator
             throw GraphicsException.InvalidStd140Layout<T>();
 
         var size = (uint)Unsafe.SizeOf<T>();
-        var meta = new UniformBufferMeta(slot, size);
+        var meta = new UniformBufferMeta(slot, size, BufferUsage.DynamicDraw, BufferStorage.Dynamic,
+            BufferAccess.MapWrite);
         nuint capacity = UniformBufferUtils.GetDefaultCapacity(meta.Stride, defaultCapacity);
 
         var result =
@@ -140,11 +134,12 @@ internal sealed class GfxResourceAllocator
         return uboId;
     }
 
-    public void SetVertexAttribute(MeshId meshId, ReadOnlySpan<VertexAttributeDescriptor> attributes)
+    public void SetVertexAttribute(MeshId meshId, IReadOnlyList<VertexAttributeDesc> attributes)
     {
         var vao = _resources.MeshStore.GetHandleAndMeta(meshId, out var meta);
         var meshLayout = _repository.MeshRepository.Get(meshId);
         var vboIds = meshLayout.GetVertexBufferIds();
+        
 /*
         VertexBufferId prevVboId = default;
         for (int i = 0; i < attributes.Length; i++)
@@ -174,13 +169,10 @@ internal sealed class GfxResourceAllocator
         if (meta.Usage == BufferUsage.StaticDraw && meta.ElementCount * meta.ElementSize > 0)
             GraphicsException.ThrowInvalidBufferData<VertexBufferId>(nameof(vboId), "Buffer is static");
 
-        var elementCount = data.Length;
-        var elementSize = Unsafe.SizeOf<T>();
-        nuint size = (nuint)(elementSize * elementCount);
-
+        var (elementCount, elementSize, size) = ToElementSizeData<T>(data.Length);
         _driver.Buffers.SetBufferData(vbo, data, size, usage);
 
-        var newMeta = new VertexBufferMeta(meta.Usage, meta.BindingIdx, (uint)elementCount, (uint)elementSize);
+        var newMeta = VertexBufferMeta.CreateCopy(in meta, elementCount, elementSize, usage);
         _resources.VboStore.ReplaceMeta(vboId, in newMeta, out _);
     }
 
@@ -190,14 +182,11 @@ internal sealed class GfxResourceAllocator
 
         if (meta.Usage == BufferUsage.StaticDraw && meta.ElementCount * meta.ElementSize > 0)
             GraphicsException.ThrowInvalidBufferData<IndexBufferId>(nameof(iboId), "Buffer is static");
-
-        var elementCount = data.Length;
-        var elementSize = Unsafe.SizeOf<T>();
-        nuint size = (nuint)(elementSize * elementCount);
-
+        
+        var (elementCount, elementSize, size) = ToElementSizeData<T>(data.Length);
         _driver.Buffers.SetBufferData(ibo, data, size, usage);
 
-        var newMeta = new IndexBufferMeta(meta.Usage, (uint)elementCount, (uint)elementSize);
+        var newMeta = IndexBufferMeta.CreateCopy(in meta, elementCount, elementSize, usage);
         _resources.IboStore.ReplaceMeta(iboId, in newMeta, out _);
     }
 
@@ -340,6 +329,10 @@ internal sealed class GfxResourceAllocator
         _repository.FboRepository.AddRecord(fboId, in attachmentIds, in desc);
         return fboId;
     }
+
+    private static (uint elementCount, uint elementSize, nuint size) ToElementSizeData<T>(int length)
+        where T : unmanaged => ((uint)length, (uint)Unsafe.SizeOf<T>(), (nuint)(length * (uint)Unsafe.SizeOf<T>()));
+
 
 /*
     public bool RecreateFrameBuffer(FrameBufferId fboId, in Vector2D<int> outputSize)

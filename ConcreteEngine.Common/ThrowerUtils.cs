@@ -1,3 +1,4 @@
+using System.Collections;
 using System.Diagnostics;
 using System.Diagnostics.CodeAnalysis;
 using System.Runtime.CompilerServices;
@@ -21,10 +22,18 @@ public static class InvalidOpThrower
     }
     
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public static void ThrowIfNullOrEmpty<T>(ICollection<T>? obj, string? param = null, string? message = null) 
+    {
+        if(obj is null) ThrowOperation(param, message);
+    }
+
+    
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static void ThrowIf(bool condition, string? param = null, string? message = null)
     {
         if(condition) ThrowOperation(param, message);
     }
+    
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static void ThrowIfNot(bool condition, string? param = null, string? message = null)

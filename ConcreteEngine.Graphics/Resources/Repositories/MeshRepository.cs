@@ -1,3 +1,4 @@
+using ConcreteEngine.Graphics.Contracts;
 using ConcreteEngine.Graphics.Descriptors;
 
 namespace ConcreteEngine.Graphics.Resources;
@@ -10,7 +11,7 @@ public interface IMeshLayout
     MeshId MeshId { get; }
     IndexBufferId IndexBufferId { get; }
     ReadOnlySpan<VertexBufferId> GetVertexBufferIds();
-    ReadOnlySpan<VertexAttributeDescriptor> GetAttributes();
+    ReadOnlySpan<VertexAttributeDesc> GetAttributes();
     MeshDrawKind DrawKind { get; }
     bool IsElemental { get; }
     uint DrawCount { get; }
@@ -31,8 +32,7 @@ internal sealed class MeshRepository : IMeshRepository
     }
 
 
-    internal void AddRecord(MeshId meshId, in MeshMeta meta, IndexBufferId iboId, IReadOnlyList<VertexBufferId> vboIds,
-        ReadOnlySpan<VertexAttributeDescriptor> attr)
+    internal void AddRecord(MeshId meshId, in MeshMeta meta, IndexBufferId iboId, IReadOnlyList<VertexBufferId> vboIds, IReadOnlyList<VertexAttributeDesc> attr)
     {
         _registry.Add(meshId, new MeshLayout(meshId, in meta, iboId, vboIds, attr));
     }
@@ -45,7 +45,6 @@ internal sealed class MeshRepository : IMeshRepository
     
     internal void UpdateDrawCount(MeshId meshId,uint drawCount) => GetInternal(meshId).DrawCount = drawCount;
 
-    
     private MeshLayout GetInternal(MeshId meshId)
     {
         return _registry[meshId];
@@ -56,9 +55,9 @@ internal sealed class MeshRepository : IMeshRepository
     {
 
         internal MeshLayout(MeshId meshId, in MeshMeta meta, IndexBufferId iboId, IReadOnlyList<VertexBufferId> vboIds,
-            ReadOnlySpan<VertexAttributeDescriptor> attr)
+            IReadOnlyList<VertexAttributeDesc> attr)
         {
-            meshId.IsValidOrThrow();
+            ArgumentOutOfRangeException.ThrowIfEqual(meshId.Value,0);
             MeshId = meshId;
             DrawCount = meta.DrawCount;
             IsElemental = meta.ElementSize != DrawElementSize.Invalid && iboId.IsValid();
@@ -72,13 +71,13 @@ internal sealed class MeshRepository : IMeshRepository
         public MeshId MeshId { get; init; } = default;
         public IndexBufferId IndexBufferId { get; init; } = default;
         public VertexBufferId[] VertexBufferIds { get; init; }
-        public VertexAttributeDescriptor[] Attributes { get; init; }
+        public VertexAttributeDesc[] Attributes { get; init; }
 
         public MeshDrawKind DrawKind { get; init; }
         public bool IsElemental { get; init; }
         public uint DrawCount { get; internal set; }
 
         public ReadOnlySpan<VertexBufferId> GetVertexBufferIds() => VertexBufferIds;
-        public ReadOnlySpan<VertexAttributeDescriptor> GetAttributes() => Attributes;
+        public ReadOnlySpan<VertexAttributeDesc> GetAttributes() => Attributes;
     }
 }

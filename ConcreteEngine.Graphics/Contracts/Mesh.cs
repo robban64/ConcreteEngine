@@ -5,23 +5,41 @@ using ConcreteEngine.Graphics.Error;
 
 namespace ConcreteEngine.Graphics.Contracts;
 
-public sealed class MeshPayload
+public interface IMeshPayload
+{
+    public MeshDrawProperties DrawProperties { get; init; }
+    public IReadOnlyList<VertexAttributeDesc> Attributes { get; init;}
+    public IReadOnlyList<VertexBufferPayload> VertexBuffers { get; init;}
+}
+
+public sealed class MeshPayloadBasic : IMeshPayload
 {
     public required MeshDrawProperties DrawProperties { get; init; }
-    public required VertexAttributeDescriptor[] Attributes { get; init; }
-    public required VertexBufferPayload[] VertexBuffers { get; init;}
-    public required IndexBufferPayload? IndexBuffer { get; init;}
+    public required IReadOnlyList<VertexAttributeDesc> Attributes { get; init; }
+    public required IReadOnlyList<VertexBufferPayload> VertexBuffers { get; init; }
 }
+
+public sealed class MeshPayloadIndexed : IMeshPayload
+{
+    public required MeshDrawProperties DrawProperties { get; init; }
+    public required IReadOnlyList<VertexAttributeDesc> Attributes { get; init; }
+    public required IReadOnlyList<VertexBufferPayload> VertexBuffers { get; init; }
+    public required IndexBufferPayload IndexBuffer { get; init; }
+}
+
 
 public readonly record struct MeshDrawProperties(
     DrawPrimitive Primitive,
     MeshDrawKind DrawKind,
     DrawElementSize ElementSize,
     uint DrawCount
-);
+)
+{
+    public static MeshDrawProperties MakeDefault() =>
+        new(DrawPrimitive.Triangles, MeshDrawKind.Invalid, DrawElementSize.Invalid, 0);
+}
 
-
-public readonly record struct VertexAttributeDescriptor(
+public readonly record struct VertexAttributeDesc(
     uint VboBinding,
     uint Stride, // vertex in bytes
     uint Offset, // attribute in the vertex struct
@@ -31,7 +49,7 @@ public readonly record struct VertexAttributeDescriptor(
     bool Normalized = false
 )
 {
-    public static VertexAttributeDescriptor Make<TElement>(
+    public static VertexAttributeDesc Make<TElement>(
         string fieldName,
         VertexElementFormat format,
         uint vboBinding = 0,
@@ -57,7 +75,7 @@ public readonly record struct VertexAttributeDescriptor(
         var offsetBytes = (uint)offsetPtr.ToInt32();
         ArgumentOutOfRangeException.ThrowIfGreaterThanOrEqual((int)offsetBytes, structSize, nameof(offsetBytes));
 
-        return new VertexAttributeDescriptor(
+        return new VertexAttributeDesc(
             VboBinding: vboBinding,
             Stride: (uint)Unsafe.SizeOf<TElement>(),
             Offset: (uint)Marshal.OffsetOf<TElement>(fieldName)!.ToInt32(),
@@ -68,7 +86,7 @@ public readonly record struct VertexAttributeDescriptor(
         );
     }
 
-    public static VertexAttributeDescriptor Make<TPrimitive>(
+    public static VertexAttributeDesc Make<TPrimitive>(
         uint strideCount,
         uint offsetCount,
         uint vboBinding = 0,
@@ -89,7 +107,7 @@ public readonly record struct VertexAttributeDescriptor(
         if (offsetBytes >= strideBytes)
             ArgumentOutOfRangeException.ThrowIfGreaterThanOrEqual(offsetBytes, strideBytes, nameof(offsetBytes));
 
-        return new VertexAttributeDescriptor(
+        return new VertexAttributeDesc(
             VboBinding: vboBinding,
             Stride: strideBytes,
             Offset: offsetBytes,

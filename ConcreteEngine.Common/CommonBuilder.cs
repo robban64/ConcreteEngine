@@ -1,8 +1,6 @@
 namespace ConcreteEngine.Common;
 
-public interface IBuilderState
-{
-}
+public interface IBuilderState;
 
 public interface IBuilds<out TResult>
 {
@@ -24,7 +22,6 @@ public sealed class CommonBuilder<TBuilder, TResult, TState>
         _stateFactory = stateFactory;
     }
 
-    /// Uniform entry point everywhere.
     public TBuilder CreateBuilder()
     {
         _builder.BeginSession(_stateFactory);
@@ -41,13 +38,15 @@ public abstract class CommonBuilderBase<TResult, TState> : IBuilds<TResult> wher
 {
     private bool _initialized;
     protected TState State { get; private set; } = null!;
-    
+
     internal void BeginSession(Func<TState> stateFactory)
     {
         ArgumentNullException.ThrowIfNull(stateFactory, nameof(stateFactory));
-        State ??= stateFactory();
+        // ReSharper disable once ConditionIsAlwaysTrueOrFalseAccordingToNullableAPIContract
+        if (State is null) State = stateFactory();
         ResetBuilder(State);
         _initialized = true;
+        StartBuilder(State);
     }
 
     public TResult Build()
@@ -60,11 +59,13 @@ public abstract class CommonBuilderBase<TResult, TState> : IBuilds<TResult> wher
         _initialized = false;
         return product;
     }
+    
+    protected abstract void StartBuilder(TState state);
 
     protected abstract void ValidateBuilder(TState state);
 
     protected abstract TResult BuildResult(TState state);
-    
-    protected abstract void ResetBuilder(TState state);
 
+    protected abstract void ResetBuilder(TState state);
+    
 }

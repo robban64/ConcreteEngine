@@ -14,12 +14,12 @@ namespace ConcreteEngine.Graphics.Descriptors;
 public readonly ref struct GpuMeshDescriptor
 {
     public required uint DrawCount { get; init; }
-    public required ReadOnlySpan<VertexAttributeDescriptor> Attributes { get; init; }
+    public required ReadOnlySpan<VertexAttributeDesc> Attributes { get; init; }
     public required DrawPrimitive Primitive { get; init; }
     public required MeshDrawKind DrawKind { get; init; }
     public required DrawElementSize ElementSize { get; init; } 
 
-    public static GpuMeshDescriptor MakeArray(ReadOnlySpan<VertexAttributeDescriptor> atr,
+    public static GpuMeshDescriptor MakeArray(ReadOnlySpan<VertexAttributeDesc> atr,
         DrawPrimitive primitive, uint drawCount)
     {
         return new GpuMeshDescriptor
@@ -31,7 +31,7 @@ public readonly ref struct GpuMeshDescriptor
             ElementSize = DrawElementSize.Invalid
         };
     }
-    public static GpuMeshDescriptor MakeElemental(ReadOnlySpan<VertexAttributeDescriptor> atr,
+    public static GpuMeshDescriptor MakeElemental(ReadOnlySpan<VertexAttributeDesc> atr,
         DrawElementSize elementSize, DrawPrimitive primitive, uint drawCount)
     {
         return new GpuMeshDescriptor

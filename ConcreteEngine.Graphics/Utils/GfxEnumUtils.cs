@@ -30,7 +30,7 @@ internal static class GfxEnumUtils
         _ => throw new ArgumentOutOfRangeException(nameof(t))
     };
 
-    public static DrawElementSize FromType<T>() => typeof(T) switch
+    public static DrawElementSize ToDrawElementSize<T>() => typeof(T) switch
     {
         var t when t == typeof(byte)   => DrawElementSize.UnsignedByte,
         var t when t == typeof(ushort) => DrawElementSize.UnsignedShort,

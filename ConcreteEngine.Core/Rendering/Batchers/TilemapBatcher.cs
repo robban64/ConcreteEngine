@@ -1,6 +1,7 @@
 #region
 
 using ConcreteEngine.Graphics;
+using ConcreteEngine.Graphics.Gfx;
 
 #endregion
 
@@ -21,7 +22,7 @@ public class TilemapBatcher : RenderBatcher<TilemapBatchResult>
 
     private TilemapChunkMesh _chunk;
 
-    public TilemapBatcher(IGraphicsRuntime graphics, int mapSize, int tileSize) : base(graphics)
+    public TilemapBatcher(GfxContext gfx, int mapSize, int tileSize) : base(gfx)
     {
         ArgumentOutOfRangeException.ThrowIfLessThan(mapSize, MinMapSize, nameof(mapSize));
         ArgumentOutOfRangeException.ThrowIfGreaterThan(mapSize, MaxMapSize, nameof(mapSize));
@@ -33,7 +34,7 @@ public class TilemapBatcher : RenderBatcher<TilemapBatchResult>
         MapSize = mapSize;
         TileSize = tileSize;
 
-        _chunk = new TilemapChunkMesh(graphics, 64, tileSize);
+        _chunk = new TilemapChunkMesh(gfx, 64, tileSize);
     }
 
     public override TilemapBatchResult BuildBatch()

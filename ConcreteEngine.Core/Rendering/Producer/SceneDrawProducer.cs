@@ -35,7 +35,7 @@ public sealed class SceneDrawProducer : IDrawCommandProducer
 
         var skybox = _snapshot.Skybox;
         var cmd = new DrawCommand(
-            meshId: _context.Graphics.FactoryHub.Primitives.SkyboxCube,
+            meshId: _context.Gfx.Primitives.SkyboxCube,
             materialId: _snapshot.Skybox.MaterialId
         );
 

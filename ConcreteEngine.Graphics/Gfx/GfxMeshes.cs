@@ -7,7 +7,7 @@ namespace ConcreteEngine.Graphics.Gfx;
 
 public sealed class GfxMeshes
 {
-    private readonly FrontendStoreHub _resources;
+    private readonly GfxStoreHub _resources;
     private readonly GfxResourceRepository _repository;
 
     private readonly IGraphicsDriver _driver;

@@ -5,7 +5,7 @@ namespace ConcreteEngine.Graphics.Gfx;
 
 public sealed class GfxShaders
 {
-    private readonly FrontendStoreHub _resources;
+    private readonly GfxStoreHub _resources;
     private readonly GfxResourceRepository _repository;
     
     private readonly GfxShadersBackend _backend;
@@ -17,10 +17,10 @@ public sealed class GfxShaders
         _repository = context.Repositories;
     }
 
-    public ShaderId CreateShader(string vs, string fs)
+    public ShaderId CreateShader(string vs, string fs, out int samplers)
     {
-        var programRef = _backend.CreateShader(vs, fs, out var samples, out var uniforms);
-        var meta = new ShaderMeta(samples);
+        var programRef = _backend.CreateShader(vs, fs, out samplers, out var uniforms);
+        var meta = new ShaderMeta(samplers);
         var shaderId = _resources.ShaderStore.Add(in meta, programRef);
         _repository.ShaderRepository.Add(shaderId, in meta, uniforms);
         return shaderId;

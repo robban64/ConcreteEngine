@@ -109,7 +109,7 @@ public sealed class GameEngine : IDisposable
 
     private void StartAssetLoader()
     {
-        _assets.StartLoader(_graphics.Allocator, _graphics.FactoryHub);
+        _assets.StartLoader(_graphics.Gfx);
     }
 
     private void InitializeSystems()

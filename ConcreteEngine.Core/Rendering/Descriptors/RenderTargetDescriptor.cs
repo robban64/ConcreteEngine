@@ -23,7 +23,7 @@ public sealed record ShadowTargetDesc
 
 public sealed record SceneTargetDesc
 {
-    public required uint Samples { get; init; }
+    public required int Samples { get; init; }
     public required Color4 ClearColor { get; init; }
 }
 

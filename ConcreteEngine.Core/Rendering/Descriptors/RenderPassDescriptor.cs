@@ -64,7 +64,7 @@ public sealed class BlitRenderPass : RenderPassDescBase
     public bool LinearFilter { get; set; } = true;
     public required FrameBufferId BlitFbo { get; init; }
     public bool Multisample { get; init; } = false;
-    public uint Samples { get; init; } = 0;
+    public int Samples { get; init; } = 0;
 }
 
 public class IfsqPass : RenderPassDescBase, IFsqPass

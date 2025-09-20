@@ -27,12 +27,11 @@ internal sealed class MeshImporter
         //Array.Resize(ref _verticesBuffer, 0);
         //Array.Resize(ref _indicesBuffer, 0);
 
-
         _assimp?.Dispose();
         _assimp = null;
     }
-
-    public unsafe GpuMeshData<Vertex3D, uint> ImportMesh(string path)
+//TODO fix
+    public unsafe (List<Vertex3D> Vertices, List<uint> Indices) ImportMesh(string path)
     {
         if (_assimp == null)
             _assimp = Assimp.GetApi();
@@ -58,11 +57,28 @@ internal sealed class MeshImporter
             throw new NotSupportedException($"{path} have several meshes, only one mesh is supported atm.");
 
         var mesh = scene->MMeshes[0];
-        return LoadMeshData(mesh);
+        LoadMeshData(mesh);
+
+        return (_vertices, _indices);
+
+        /*
+   if(_verticesBuffer.Length < _vertices.Count)
+       Array.Resize(ref _verticesBuffer, Math.Max(_vertices.Count, _verticesBuffer.Length * 2));
+
+   if(_indicesBuffer.Length < _indices.Count)
+       Array.Resize(ref _indicesBuffer, Math.Max(_indices.Count, _indicesBuffer.Length * 2));
+
+
+   CollectionsMarshal.AsSpan(_vertices).CopyTo(_verticesBuffer.AsSpan(0, _vertices.Count));
+   CollectionsMarshal.AsSpan(_indices).CopyTo(_indicesBuffer.AsSpan(0, _indices.Count));
+
+   var verticesRes = _verticesBuffer.AsMemory(0, _vertices.Count);
+   var indicesRes = _indicesBuffer.AsMemory(0, _indices.Count);
+*/
     }
 
 
-    private unsafe GpuMeshData<Vertex3D, uint> LoadMeshData(AssimpMesh* mesh, float scaleFactor = 1)
+    private unsafe void LoadMeshData(AssimpMesh* mesh, float scaleFactor = 1)
     {
         int vertexCount = (int)mesh->MNumVertices;
         int indexCount = (int)(mesh->MNumFaces * 3);
@@ -113,24 +129,6 @@ internal sealed class MeshImporter
             _indices.Add(face.MIndices[1]);
             _indices.Add(face.MIndices[2]);
         }
-
-        /*
-        if(_verticesBuffer.Length < _vertices.Count)
-            Array.Resize(ref _verticesBuffer, Math.Max(_vertices.Count, _verticesBuffer.Length * 2));
-
-        if(_indicesBuffer.Length < _indices.Count)
-            Array.Resize(ref _indicesBuffer, Math.Max(_indices.Count, _indicesBuffer.Length * 2));
-        
-        
-        CollectionsMarshal.AsSpan(_vertices).CopyTo(_verticesBuffer.AsSpan(0, _vertices.Count));
-        CollectionsMarshal.AsSpan(_indices).CopyTo(_indicesBuffer.AsSpan(0, _indices.Count));
-
-        var verticesRes = _verticesBuffer.AsMemory(0, _vertices.Count);
-        var indicesRes = _indicesBuffer.AsMemory(0, _indices.Count);
-*/
-        var vert = CollectionsMarshal.AsSpan(_vertices);
-        var indices = CollectionsMarshal.AsSpan(_indices);
-        return new GpuMeshData<Vertex3D, uint>(vert, indices);
     }
 
     private unsafe void ComputeBBox(AssimpMesh* mesh, out Vector3 min, out Vector3 max)

@@ -5,6 +5,7 @@ using ConcreteEngine.Common.Extensions;
 using ConcreteEngine.Core.Resources;
 using ConcreteEngine.Core.Systems;
 using ConcreteEngine.Graphics;
+using ConcreteEngine.Graphics.Gfx;
 using ConcreteEngine.Graphics.Resources;
 using ConcreteEngine.Graphics.Utils;
 using Silk.NET.Maths;
@@ -33,8 +34,9 @@ public interface IRenderSystem : IGameEngineSystem
 public sealed class RenderSystem : IRenderSystem
 {
     private readonly IGraphicsRuntime _graphics;
-    private readonly IGraphicsContext _gfx;
-    
+    private readonly GfxContext _gfx;
+    private readonly GfxCommands _gfxCmd;
+
     private DrawCommandCollector _commandCollector  = null!;
     private RenderPipeline _commandSubmitter  = null!;
     private DrawProcessor _drawProcessor  = null!;
@@ -60,7 +62,8 @@ public sealed class RenderSystem : IRenderSystem
     internal RenderSystem(IGraphicsRuntime graphics, in Vector2D<int> outputSize)
     {
         _graphics = graphics;
-        _gfx = graphics.Context;
+        _gfx = graphics.Gfx;
+        _gfxCmd = graphics.Gfx.Commands;
         RenderGlobals = new SceneRenderGlobals();
         RenderGlobals.SetOutputSize(in outputSize);
         RenderGlobals.Commit();
@@ -70,29 +73,29 @@ public sealed class RenderSystem : IRenderSystem
 
     internal void InitializeGraphics()
     {
-        _graphics.Allocator.CreateUniformBuffer<FrameUniformGpuData>(UniformGpuSlot.Frame, UboDefaultCapacity.Lower, out _);
-        _graphics.Allocator.CreateUniformBuffer<CameraUniformGpuData>(UniformGpuSlot.Camera, UboDefaultCapacity.Lower, out _);
-        _graphics.Allocator.CreateUniformBuffer<DirLightUniformGpuData>(UniformGpuSlot.DirLight, UboDefaultCapacity.Lower, out _);
-        _graphics.Allocator.CreateUniformBuffer<MaterialUniformGpuData>(UniformGpuSlot.Material, UboDefaultCapacity.Medium, out _);
-        _graphics.Allocator.CreateUniformBuffer<DrawObjectUniformGpuData>(UniformGpuSlot.DrawObject, UboDefaultCapacity.Upper, out _);
+        _gfx.Buffers.CreateUniformBuffer<FrameUniformGpuData>(UniformGpuSlot.Frame, UboDefaultCapacity.Lower);
+        _gfx.Buffers.CreateUniformBuffer<CameraUniformGpuData>(UniformGpuSlot.Camera, UboDefaultCapacity.Lower);
+        _gfx.Buffers.CreateUniformBuffer<DirLightUniformGpuData>(UniformGpuSlot.DirLight, UboDefaultCapacity.Lower);
+        _gfx.Buffers.CreateUniformBuffer<MaterialUniformGpuData>(UniformGpuSlot.Material, UboDefaultCapacity.Medium);
+        _gfx.Buffers.CreateUniformBuffer<DrawObjectUniformGpuData>(UniformGpuSlot.DrawObject, UboDefaultCapacity.Upper);
     }
 
     internal void Initialize(MaterialStore materialStore)
     {
 
         _materialStore = materialStore;
-        _drawProcessor = new DrawProcessor(_gfx, _graphics.Repository, _materialStore);
+        _drawProcessor = new DrawProcessor(_gfx, _materialStore);
 
         _commandCollector = new DrawCommandCollector();
         _commandSubmitter = new RenderPipeline(_drawProcessor);
 
-        _batches.Register(new TerrainBatcher(_graphics));
-        _batches.Register(new SpriteBatcher(_graphics));
-        _batches.Register(new TilemapBatcher(_graphics, 64, 32));
+        _batches.Register(new TerrainBatcher(_gfx));
+        _batches.Register(new SpriteBatcher(_gfx));
+        _batches.Register(new TilemapBatcher(_gfx, 64, 32));
 
         cmdProducerCtx = new CommandProducerContext
         {
-            Graphics = _graphics,
+            Gfx = _gfx,
             DrawBatchers = _batches,
         };
 
@@ -119,9 +122,9 @@ public sealed class RenderSystem : IRenderSystem
         
         RenderGlobals.Commit();
         if (renderType == RenderType.Render2D)
-            _render = new Render2D(_graphics, _materialStore, in _snapshot);
+            _render = new Render2D(_gfx, _materialStore, in _snapshot);
         else
-            _render = new Render3D(_graphics, _drawProcessor, in _snapshot);
+            _render = new Render3D(_gfx, _drawProcessor, in _snapshot);
         
         _render.RegisterRenderTargetsFrom(in outputSize, desc);
     }
@@ -174,8 +177,8 @@ public sealed class RenderSystem : IRenderSystem
         {
             foreach (var pass in passes)
             {
-                _gfx.SetBlendMode(pass.Blend);
-                _gfx.SetDepthMode(pass.DepthTest ? DepthMode.WriteLequal : DepthMode.Disabled);
+                _gfxCmd.SetBlendMode(pass.Blend);
+                _gfxCmd.SetDepthMode(pass.DepthTest ? DepthMode.WriteLequal : DepthMode.Disabled);
                 ExecutePass(targetId, pass);
             }
 
@@ -186,16 +189,16 @@ public sealed class RenderSystem : IRenderSystem
     {
         if (pass is BlitRenderPass blitPass)
         {
-            _gfx.BlitFramebuffer(blitPass.BlitFbo, blitPass.TargetFbo, blitPass.LinearFilter);
+            _gfxCmd.BlitFramebuffer(blitPass.BlitFbo, blitPass.TargetFbo, blitPass.LinearFilter);
             return;
         }
 
         var isScreenPass = pass.TargetFbo == default;
 
         if (pass.TargetFbo == default)
-            _gfx.BeginScreenPass(pass.Clear?.ClearColor, pass.Clear?.ClearMask);
+            _gfxCmd.BeginScreenPass(pass.Clear?.ClearColor, pass.Clear?.ClearMask);
         else
-            _gfx.BeginRenderPass(pass.TargetFbo, pass.Clear?.ClearColor, pass.Clear?.ClearMask);
+            _gfxCmd.BeginRenderPass(pass.TargetFbo, pass.Clear?.ClearColor, pass.Clear?.ClearMask);
 
         
         switch (pass)
@@ -214,7 +217,7 @@ public sealed class RenderSystem : IRenderSystem
         if (pass.Op == RenderPassOp.DrawScene)
         {
 
-            _gfx.EndRenderPass();
+            _gfxCmd.EndRenderPass();
             return;
         }
 
@@ -225,7 +228,7 @@ public sealed class RenderSystem : IRenderSystem
 
         if (!isScreenPass)
         {
-            _gfx.EndRenderPass();
+            _gfxCmd.EndRenderPass();
         }
     }
 
@@ -237,16 +240,16 @@ public sealed class RenderSystem : IRenderSystem
         ArgumentOutOfRangeException.ThrowIfGreaterThan(pass.SourceTextures.Length, 4, nameof(pass.SourceTextures));
 
         var viewport = _render.Camera.ViewportSize;
-        _gfx.UseShader(pass.Shader);
-        _gfx.SetUniform(ShaderUniform.TexelSize, viewport.ConvertToVec2() * pass.SizeRatio);
+        _gfxCmd.UseShader(pass.Shader);
+        _gfxCmd.SetUniform(ShaderUniform.TexelSize, viewport.ConvertToVec2() * pass.SizeRatio);
 
         for (int i = 0; i < pass.SourceTextures.Length; i++)
         {
-            _gfx.BindTexture(pass.SourceTextures[i], (uint)i);
+            _gfxCmd.BindTexture(pass.SourceTextures[i], i);
         }
 
-        _gfx.BindMesh(_graphics.FactoryHub.Primitives.FsqQuad);
-        _gfx.DrawBoundMesh();
+        _gfxCmd.BindMesh(_gfx.Primitives.FsqQuad);
+        _gfxCmd.DrawBoundMesh(_gfx.Primitives.FsqQuad, 0);
     }
 
     

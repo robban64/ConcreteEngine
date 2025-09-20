@@ -1,5 +1,10 @@
 namespace ConcreteEngine.Graphics.Resources;
 
+internal sealed class ResourceBackendDispatcher
+{
+    public required BackendDelete OnDelete { get; init; }
+}
+
 internal sealed class BackendStoreHub
 {
     private readonly Dictionary<ResourceKind, IBackendStoreFacade> _stores = new(8);

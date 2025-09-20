@@ -1,6 +1,7 @@
 using System.Numerics;
 using ConcreteEngine.Common;
 using ConcreteEngine.Graphics;
+using ConcreteEngine.Graphics.Gfx;
 using ConcreteEngine.Graphics.Resources;
 using Silk.NET.Maths;
 
@@ -8,8 +9,7 @@ namespace ConcreteEngine.Core.Rendering;
 
 internal sealed class Render3D : IRender
 {
-    private readonly IGraphicsRuntime _graphics;
-    private readonly IGraphicsContext _gfx;
+    private readonly GfxContext _gfx;
     private readonly DrawProcessor _drawProcessor;
 
     private readonly RenderPasses _registry;
@@ -17,13 +17,12 @@ internal sealed class Render3D : IRender
 
     public ICamera Camera => _camera;
 
-    public Render3D(IGraphicsRuntime graphics, DrawProcessor drawProcessor, in RenderGlobalSnapshot snapshot)
+    public Render3D(GfxContext gfx, DrawProcessor drawProcessor, in RenderGlobalSnapshot snapshot)
     {
-        _graphics = graphics;
-        _gfx = _graphics.Context;
+        _gfx = gfx;
         _drawProcessor = drawProcessor;
         _camera = new Camera3D();
-        _registry = new RenderPasses(graphics, in snapshot);
+        _registry = new RenderPasses(_gfx, in snapshot);
     }
 
 

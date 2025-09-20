@@ -1,6 +1,7 @@
 #region
 
 using ConcreteEngine.Graphics;
+using ConcreteEngine.Graphics.Gfx;
 using ConcreteEngine.Graphics.Resources;
 
 #endregion
@@ -11,15 +12,11 @@ public interface IRenderBatcher : IDisposable;
 
 public abstract class RenderBatcher<TBatchData> : IRenderBatcher where TBatchData : unmanaged
 {
-    private readonly IGraphicsRuntime _graphics;
-    protected IGraphicsContext Gfx => _graphics.Context;
-    protected IGfxResourceAllocator Allocator => _graphics.Allocator;
-    protected IGfxFactoryHub FactoryHub => _graphics.FactoryHub;
-    protected IGfxResourceDisposer GfxDisposer => _graphics.Disposer;
+    protected readonly GfxContext Gfx;
 
-    protected RenderBatcher(IGraphicsRuntime graphics)
+    protected RenderBatcher(GfxContext gfx)
     {
-        _graphics = graphics;
+        Gfx = gfx;
     }
 
     public abstract TBatchData BuildBatch();

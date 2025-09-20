@@ -6,7 +6,7 @@ namespace ConcreteEngine.Graphics.Gfx;
 
 public sealed class GfxTextures
 {
-    private readonly FrontendStoreHub _resources;
+    private readonly GfxStoreHub _resources;
     private readonly GfxResourceRepository _repository;
     private readonly GfxTexturesBackend _backend;
 
@@ -30,6 +30,20 @@ public sealed class GfxTextures
 
         return _resources.TextureStore.Add(in meta, texRef);
     }
+    
+    public TextureId CreateCubeMap(in GpuTextureDescriptor desc)
+    {
+        if (desc.Kind == TextureKind.CubeMap)
+            ArgumentOutOfRangeException.ThrowIfNotEqual(desc.Width, desc.Height, nameof(desc.Width));
+
+        var texRef = _backend.CreateCubeMap(in desc, out var mipLevels);
+
+        var meta = new TextureMeta(desc.Width, desc.Height, desc.Preset, desc.Kind, desc.Anisotropy, desc.Format,
+            (byte)mipLevels, false);
+
+        return _resources.TextureStore.Add(in meta, texRef);
+    }
+
 
     internal TextureId ReplaceTexture(TextureId textureId, ReadOnlySpan<byte> data, 
         in GpuTextureDescriptor desc, out  GfxRefToken<TextureId> newTexRef)
@@ -81,6 +95,22 @@ public sealed class GfxTextures
         internal GfxTexturesBackend(GfxContextInternal context)
         {
             _driver = context.Driver;
+        }
+
+        public GfxRefToken<TextureId> CreateCubeMap(in GpuTextureDescriptor desc, out int mipLevels)
+        {
+            var hasMipLevels = desc.Preset is TexturePreset.LinearMipmapClamp or TexturePreset.LinearMipmapRepeat;
+            mipLevels = hasMipLevels ? GfxUtils.CalcMipLevels(desc.Width, desc.Height) : 0;
+
+            var texRef = _driver.Textures.CreateTextureCubeMap((uint)desc.Width, (uint)desc.Height, (uint)mipLevels);
+            _driver.Textures.SetTexturePreset(texRef.Handle, desc.Preset);
+
+            if (desc.Anisotropy != TextureAnisotropy.Off)
+                _driver.Textures.SetAnisotropy(texRef.Handle, desc.Anisotropy.ToAnisotropy());
+            if (desc.LodBias != 0)
+                _driver.Textures.SetLodBias(texRef.Handle, desc.LodBias);
+
+            return texRef;
         }
 
         public GfxRefToken<TextureId> CreateTexture(ReadOnlySpan<byte> data, in GpuTextureDescriptor desc,

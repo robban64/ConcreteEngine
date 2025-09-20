@@ -45,20 +45,6 @@ internal sealed class GlBackendDriver : IGraphicsDriver
         _shaders = new GlShaders(_ctx);
         _states = new GlStates(_ctx);
         _frameBuffers = new GlFrameBuffers(_ctx);
-        /*
-             private readonly Dictionary<Type, IGraphicsDriverModule> _modules;
-        _modules = new Dictionary<Type, IGraphicsDriverModule>()
-        {
-            [typeof(GlDebugger)] = _debugger,
-            [typeof(GlDisposer)] = _disposer,
-            [typeof(GlBuffers)] = _buffers,
-            [typeof(GlTextures)] = _textures,
-            [typeof(GlMeshes)] = _meshes,
-            [typeof(GlShaders)] = _shaders,
-            [typeof(GlStates)] = _states,
-            [typeof(GlFrameBuffers)] = _frameBuffers,
-
-        };*/
     }
     
     public GlDebugger Debugger => _debugger;
@@ -72,6 +58,7 @@ internal sealed class GlBackendDriver : IGraphicsDriver
 
     internal void Initialize()
     {
+        _capabilities.CreateDeviceCapabilities(_gl);
         Console.WriteLine($"OpenGL version {Capabilities.GlVersion} loaded.");
         Console.WriteLine("--Device Capability--");
         Console.WriteLine(Capabilities.ToString());

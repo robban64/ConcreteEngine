@@ -1,4 +1,6 @@
 using ConcreteEngine.Graphics;
+using ConcreteEngine.Graphics.Contracts;
+using ConcreteEngine.Graphics.Gfx;
 using ConcreteEngine.Graphics.Primitives;
 using ConcreteEngine.Graphics.Resources;
 
@@ -10,7 +12,7 @@ public sealed class ParticleBatcher : RenderBatcher<TerrainBatchResult>
     private VertexBufferId _vertexBufferId;
     private IndexBufferId _indexBufferId;
 
-    internal ParticleBatcher(IGraphicsRuntime graphics) : base(graphics)
+    internal ParticleBatcher(GfxContext gfx) : base(gfx)
     {
     }
 
@@ -23,10 +25,10 @@ public sealed class ParticleBatcher : RenderBatcher<TerrainBatchResult>
             new Vertex2D( 0.5f,  0.5f, 1f, 1f)
         };
 
-        ReadOnlySpan<VertexAttributeDescriptor> pointers = stackalloc[]
+        ReadOnlySpan<VertexAttributeDesc> pointers = stackalloc[]
         {
-            VertexAttributeDescriptor.Make<Vertex2D>(nameof(Vertex2D.Position), VertexElementFormat.Float2),
-            VertexAttributeDescriptor.Make<Vertex2D>(nameof(Vertex2D.TexCoords), VertexElementFormat.Float2)
+            VertexAttributeDesc.Make<Vertex2D>(nameof(Vertex2D.Position), VertexElementFormat.Float2),
+            VertexAttributeDesc.Make<Vertex2D>(nameof(Vertex2D.TexCoords), VertexElementFormat.Float2)
         };
         
 

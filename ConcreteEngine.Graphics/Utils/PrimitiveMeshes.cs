@@ -20,7 +20,7 @@ internal sealed class PrimitiveMeshes : IPrimitiveMeshes
     public MeshId SkyboxCube { get; private set; }
     
 
-    internal void CreatePrimitives(GfxMeshes meshes)
+    public void CreatePrimitives(GfxMeshes meshes)
     {
         CreateFsqQuad(meshes);
         CreateSkyboxCube(meshes);

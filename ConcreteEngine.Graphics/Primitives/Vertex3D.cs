@@ -8,12 +8,12 @@ using System.Runtime.InteropServices;
 namespace ConcreteEngine.Graphics.Primitives;
 
 [StructLayout(LayoutKind.Sequential)]
-public readonly struct Vertex3D
+public struct Vertex3D
 {
-    public readonly Vector3 Position;
-    public readonly Vector2 TexCoords;
-    public readonly Vector3 Normal;
-    public readonly Vector3 Tangent;
+    public Vector3 Position;
+    public Vector2 TexCoords;
+    public Vector3 Normal;
+    public Vector3 Tangent;
 
     public Vertex3D()
     {

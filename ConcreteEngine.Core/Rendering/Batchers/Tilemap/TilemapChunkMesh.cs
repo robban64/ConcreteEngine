@@ -2,7 +2,9 @@
 
 using ConcreteEngine.Core.Utils;
 using ConcreteEngine.Graphics;
+using ConcreteEngine.Graphics.Contracts;
 using ConcreteEngine.Graphics.Descriptors;
+using ConcreteEngine.Graphics.Gfx;
 using ConcreteEngine.Graphics.Primitives;
 using ConcreteEngine.Graphics.Resources;
 using Silk.NET.Maths;
@@ -23,8 +25,7 @@ internal sealed class TilemapChunkMesh : IDisposable
     private static readonly ushort[] Indices =
         new ushort[ChunkSize * ChunkSize * IndicesPerTile];
 
-    private readonly IGraphicsRuntime _graphics;
-    private readonly IGraphicsContext _gfx;
+    private readonly GfxContext _gfx;
 
     private readonly int _chunkDimension;
     private readonly int _tileCount;
@@ -38,10 +39,9 @@ internal sealed class TilemapChunkMesh : IDisposable
 
     private bool _disposed = false;
 
-    public TilemapChunkMesh(IGraphicsRuntime graphics, int chunkDimension, int tileSize)
+    public TilemapChunkMesh(GfxContext gfx, int chunkDimension, int tileSize)
     {
-        _gfx = graphics.Context;
-        _graphics = graphics;
+        _gfx = gfx;
         _chunkDimension = chunkDimension;
         _tileCount = _chunkDimension * _chunkDimension;
         _tileSize = tileSize;
@@ -52,25 +52,24 @@ internal sealed class TilemapChunkMesh : IDisposable
         CreateVertexBufferData();
         CreateIndexBufferData();
 
+        var drawCount = _tileCount * IndicesPerTile;
 
-        ReadOnlySpan<VertexAttributeDescriptor> pointers = stackalloc[]
-        {
-            VertexAttributeDescriptor.Make<Vertex2D>(nameof(Vertex2D.Position), VertexElementFormat.Float2),
-            VertexAttributeDescriptor.Make<Vertex2D>(nameof(Vertex2D.TexCoords), VertexElementFormat.Float2)
-        };
+        var props = MeshDrawProperties.MakeTriElemental(size: DrawElementSize.UnsignedShort, drawCount: drawCount);
+        var builder = gfx.Meshes.StartUploadBuilder(in props);
+        builder.UploadVertices<Vertex2D>(Vertices, BufferUsage.DynamicDraw, BufferStorage.Dynamic,
+            BufferAccess.MapWrite);
 
-        var drawCount = (uint)(_tileCount * IndicesPerTile);
+        builder.UploadIndices<ushort>(Indices, BufferUsage.DynamicDraw, BufferStorage.Dynamic,
+            BufferAccess.MapWrite);
+
+        builder.AddAttribute(VertexAttributeDesc.Make<Vertex2D>(nameof(Vertex2D.Position), VertexElementFormat.Float2));
+        builder.AddAttribute(VertexAttributeDesc.Make<Vertex2D>(nameof(Vertex2D.TexCoords), VertexElementFormat.Float2));
+        var meshId = builder.Finish();
         
-        var metaDesc = GpuMeshDescriptor
-            .MakeElemental(pointers, DrawElementSize.UnsignedShort, DrawPrimitive.Triangles,drawCount);
+        var meshLayout = gfx.ResourceContext.Repository.MeshRepository.Get(meshId);
+        _vertexBufferId = meshLayout.GetVertexBufferIds()[0];
+        _indexBufferId = meshLayout.IndexBufferId;
 
-        var vbo = new GpuVboDescriptor<Vertex2D>(Vertices,BufferUsage.DynamicDraw);
-        var ibo = new GpuIboDescriptor<ushort>(Indices,  BufferUsage.DynamicDraw);
-
-        var builder = _graphics.FactoryHub.MeshFactory;
-        var result = builder.CreateElementalMesh(vbo, ibo, metaDesc);
-        _vertexBufferId = result.GetVertexBufferIds()[0];
-        _indexBufferId = result.IndexBufferId;
     }
 
     public TileChunkBuildResult BuildTilemapMesh()
@@ -94,11 +93,11 @@ internal sealed class TilemapChunkMesh : IDisposable
         for (int y = 0; y < _chunkDimension; y++)
         {
             int rowStart = y * _chunkDimension;
-            _tileData[rowStart + middle-2] = new TileDrawItem(10);
-            _tileData[rowStart + middle-1] = new TileDrawItem(11);
+            _tileData[rowStart + middle - 2] = new TileDrawItem(10);
+            _tileData[rowStart + middle - 1] = new TileDrawItem(11);
             _tileData[rowStart + middle] = new TileDrawItem(11);
-            _tileData[rowStart + middle+1] = new TileDrawItem(11);
-            _tileData[rowStart + middle+2] = new TileDrawItem(12);
+            _tileData[rowStart + middle + 1] = new TileDrawItem(11);
+            _tileData[rowStart + middle + 2] = new TileDrawItem(12);
         }
     }
 
@@ -150,7 +149,7 @@ internal sealed class TilemapChunkMesh : IDisposable
     public void Dispose()
     {
         if (_disposed) return;
-        _graphics.Disposer.EnqueueRemoval(_meshId, false);
+        _gfx.ResourceContext.Disposer.EnqueueRemoval(_meshId, false);
         _disposed = true;
     }
 }

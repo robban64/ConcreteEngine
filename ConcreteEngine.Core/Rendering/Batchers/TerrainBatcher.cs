@@ -1,16 +1,18 @@
 using System.Numerics;
 using ConcreteEngine.Core.Resources;
 using ConcreteEngine.Graphics;
+using ConcreteEngine.Graphics.Contracts;
 using ConcreteEngine.Graphics.Descriptors;
+using ConcreteEngine.Graphics.Gfx;
 using ConcreteEngine.Graphics.Primitives;
 using ConcreteEngine.Graphics.Resources;
 
 namespace ConcreteEngine.Core.Rendering;
 
-public readonly struct TerrainBatchResult(MeshId meshId, uint drawCount)
+public readonly struct TerrainBatchResult(MeshId meshId, int drawCount)
 {
     public readonly MeshId MeshId = meshId;
-    public readonly uint DrawCount = drawCount;
+    public readonly int DrawCount = drawCount;
 }
 
 public sealed class TerrainBatcher : RenderBatcher<TerrainBatchResult>
@@ -22,12 +24,12 @@ public sealed class TerrainBatcher : RenderBatcher<TerrainBatchResult>
     public int Size { get; private set; }
     public int VertexCount { get; private set; }
     public MeshId MeshId { get; private set; }
-    public uint DrawCount { get; private set; }
+    public int DrawCount { get; private set; }
 
     private Vertex3D[] _vertices;
     private uint[] _indices;
 
-    internal TerrainBatcher(IGraphicsRuntime graphics) : base(graphics)
+    internal TerrainBatcher(GfxContext gfx) : base(gfx)
     {
     }
 
@@ -70,7 +72,7 @@ public sealed class TerrainBatcher : RenderBatcher<TerrainBatchResult>
     public override void Dispose()
     {
         if (MeshId.IsValid())
-            GfxDisposer.EnqueueRemoval(MeshId, false);
+            Gfx.ResourceContext.Disposer.EnqueueRemoval(MeshId, false);
     }
 
     private void GenerateMesh()
@@ -80,32 +82,33 @@ public sealed class TerrainBatcher : RenderBatcher<TerrainBatchResult>
         ArgumentOutOfRangeException.ThrowIfLessThan(_vertices.Length, 8);
         ArgumentOutOfRangeException.ThrowIfLessThan(_indices.Length, 8);
 
-        var dataDesc = new GpuMeshData<Vertex3D, uint>(_vertices, _indices);
+        var drawCount = _indices.Length;
+        
+        var props = MeshDrawProperties.MakeTriElemental(size: DrawElementSize.UnsignedShort, drawCount: drawCount);
+        var builder = Gfx.Meshes.StartUploadBuilder(in props);
+        builder.UploadVertices<Vertex3D>(_vertices, BufferUsage.DynamicDraw, BufferStorage.Dynamic,
+            BufferAccess.MapWrite);
 
-        ReadOnlySpan<VertexAttributeDescriptor> attributes = stackalloc[]
-        {
-            VertexAttributeDescriptor.Make<Vertex3D>(nameof(Vertex3D.Position), VertexElementFormat.Float3),
-            VertexAttributeDescriptor.Make<Vertex3D>(nameof(Vertex3D.TexCoords), VertexElementFormat.Float2),
-            VertexAttributeDescriptor.Make<Vertex3D>(nameof(Vertex3D.Normal), VertexElementFormat.Float3),
-            VertexAttributeDescriptor.Make<Vertex3D>(nameof(Vertex3D.Tangent), VertexElementFormat.Float3),
-        };
+        builder.UploadIndices<uint>(_indices, BufferUsage.DynamicDraw, BufferStorage.Dynamic,
+            BufferAccess.MapWrite);
 
-       /* builder.StartBuilder(DrawPrimitive.Triangles, MeshDrawKind.Elements, DrawElementSize.UnsignedInt);
-        builder.CreateVertexBuffer(new GpuVboDescriptor<Vertex3D>
-        {
-            Data = _vertices, Usage = BufferUsage.DynamicDraw, BindingIndex = 0
-        });
-        builder.CreateIndexBuffer(new GpuIboDescriptor<uint>() { Data = _indices, Usage = BufferUsage.DynamicDraw });
-        var result = builder.BuildMesh(attributes);
-*/
-        var vbo = new GpuVboDescriptor<Vertex3D>(_vertices, BufferUsage.DynamicDraw);
-        var ibo = new GpuIboDescriptor<uint>(_indices,  BufferUsage.DynamicDraw);
-        var desc = GpuMeshDescriptor.MakeElemental(attributes, DrawElementSize.UnsignedInt, DrawPrimitive.Triangles,
-            (uint)_indices.Length);
-        var builder = FactoryHub.MeshFactory;
-        var result = builder.CreateElementalMesh(vbo, ibo,desc);
-        MeshId = result.MeshId;
+        builder.AddAttribute(VertexAttributeDesc.Make<Vertex3D>(nameof(Vertex3D.Position), VertexElementFormat.Float3));
+        builder.AddAttribute(VertexAttributeDesc.Make<Vertex3D>(nameof(Vertex3D.TexCoords), VertexElementFormat.Float2));
+        builder.AddAttribute(VertexAttributeDesc.Make<Vertex3D>(nameof(Vertex3D.Normal), VertexElementFormat.Float3));
+        builder.AddAttribute(VertexAttributeDesc.Make<Vertex3D>(nameof(Vertex3D.Tangent), VertexElementFormat.Float3));
+
+        MeshId = builder.Finish();
     }
+    
+    
+    /* builder.StartBuilder(DrawPrimitive.Triangles, MeshDrawKind.Elements, DrawElementSize.UnsignedInt);
+     builder.CreateVertexBuffer(new GpuVboDescriptor<Vertex3D>
+     {
+         Data = _vertices, Usage = BufferUsage.DynamicDraw, BindingIndex = 0
+     });
+     builder.CreateIndexBuffer(new GpuIboDescriptor<uint>() { Data = _indices, Usage = BufferUsage.DynamicDraw });
+     var result = builder.BuildMesh(attributes);
+*/
 
     private void GenerateVertex(ReadOnlySpan<byte> heightmap, int vertexRowCount)
     {
@@ -123,10 +126,7 @@ public sealed class TerrainBatcher : RenderBatcher<TerrainBatchResult>
                 var uv = new Vector2(xPix / (float)(Size - 1), zPix / (float)(Size - 1));
 
                 int vi = vz * vertexRowCount + vx;
-                _vertices[vi] = new Vertex3D
-                {
-                    Position = pos, TexCoords = uv, Normal = Vector3.UnitY, Tangent = Vector3.UnitX
-                };
+                _vertices[vi] = new Vertex3D(pos, uv, Vector3.UnitY, Vector3.UnitX);
             }
         }
 
@@ -189,7 +189,7 @@ public sealed class TerrainBatcher : RenderBatcher<TerrainBatchResult>
             }
         }
 
-        DrawCount = (uint)k;
+        DrawCount = k;
     }
 
     private void RecomputeNormalsFromIndices()

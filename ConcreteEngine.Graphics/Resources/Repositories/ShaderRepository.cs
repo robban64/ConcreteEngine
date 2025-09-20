@@ -22,9 +22,9 @@ internal sealed class ShaderRepository : IShaderRepository
     private readonly Dictionary<UniformGpuSlot, UboArena> _uboArenas = new();
     private readonly UniformBufferId[] _uboRegistry;
 
-    private readonly FrontendStoreHub _resources;
+    private readonly GfxStoreHub _resources;
 
-    internal ShaderRepository(FrontendStoreHub resources)
+    internal ShaderRepository(GfxStoreHub resources)
     {
         ArgumentNullException.ThrowIfNull(resources);
         _resources = resources;

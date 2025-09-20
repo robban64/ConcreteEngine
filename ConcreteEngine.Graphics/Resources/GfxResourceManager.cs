@@ -2,44 +2,24 @@ namespace ConcreteEngine.Graphics.Resources;
 
 public interface IGfxResourceManager
 {
-    /*
- public FrontendResourceStore<TextureId, TextureMeta> TextureStore { get; }
 
- public FrontendResourceStore<ShaderId, ShaderMeta> ShaderStore { get; }
-
- public FrontendResourceStore<MeshId, MeshMeta> MeshStore { get; }
-
- public FrontendResourceStore<VertexBufferId, VertexBufferMeta> VboStore { get; }
-
- public FrontendResourceStore<IndexBufferId, IndexBufferMeta> IboStore { get; }
-
- public FrontendResourceStore<FrameBufferId, FrameBufferMeta> FboStore { get; }
-
- public FrontendResourceStore<RenderBufferId, RenderBufferMeta> RboStore { get; }
-
- public FrontendResourceStore<UniformBufferId, UniformBufferMeta> UboStore { get; }
- */
 }
 
-internal sealed class ResourceBackendDispatcher
-{
-    public required BackendDelete OnDelete { get; init; }
-}
 
 internal sealed class GfxResourceManager : IGfxResourceManager
 {
-    private readonly FrontendStoreHub _frontendHub;
+    private readonly GfxStoreHub _gfxStores;
     private readonly BackendStoreHub _backendHub;
 
     private readonly ResourceBackendDispatcher _dispatchers;
 
     internal BackendStoreHub BackendStoreHub => _backendHub;
-    internal FrontendStoreHub FrontendStoreHub => _frontendHub;
+    internal GfxStoreHub GfxStoreHub => _gfxStores;
     internal ResourceBackendDispatcher BackendDispatcher => _dispatchers;
 
     public GfxResourceManager()
     {
-        _frontendHub = new FrontendStoreHub();
+        _gfxStores = new GfxStoreHub();
         _backendHub = new BackendStoreHub();
 
         _dispatchers = new ResourceBackendDispatcher { OnDelete = OnDeleted };

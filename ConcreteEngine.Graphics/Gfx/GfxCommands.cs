@@ -21,7 +21,7 @@ public sealed class GfxCommands
     private readonly GlShaders _shaders;
     private readonly GlTextures _textures;
 
-    private readonly FrontendStoreHub _store;
+    private readonly GfxStoreHub _store;
     private readonly GfxResourceRepository _repository;
 
     //States
@@ -239,7 +239,7 @@ public sealed class GfxCommands
         _textures.BindTexture(handle, (uint)slot);
     }
 
-    private void BindMesh(MeshId id)
+    public void BindMesh(MeshId id)
     {
         if (_boundMeshId == id) return;
 
@@ -259,6 +259,7 @@ public sealed class GfxCommands
 
     public void DrawBoundMesh(MeshId id, int drawCount)
     {
+        //_boundMeshMeta
         ref readonly var meta = ref _store.MeshStore.GetMeta(_boundMeshId);
         var count = drawCount > 0 ? drawCount : meta.DrawCount;
 

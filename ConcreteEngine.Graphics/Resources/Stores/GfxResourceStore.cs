@@ -3,20 +3,20 @@ using System.Runtime.CompilerServices;
 
 namespace ConcreteEngine.Graphics.Resources;
 
-public interface IResourceStore
+public interface IGfxResourceStore
 {
     ResourceKind ResourceKind { get; }
     int Count { get; }
 }
 
-public interface IResourceStore<in TId> : IResourceStore where TId : unmanaged, IResourceId
+internal interface IGfxResourceStore<in TId> : IGfxResourceStore where TId : unmanaged, IResourceId
 {
     ref readonly GfxHandle GetHandle(TId id);
 
     GfxHandle Remove(TId id);
 }
 
-internal sealed class FrontendResourceStore<TId, TMeta> : IResourceStore<TId>
+internal sealed class GfxResourceStore<TId, TMeta> : IGfxResourceStore<TId>
     where TId : unmanaged, IResourceId where TMeta : unmanaged, IResourceMeta
 {
     internal readonly MakeIdDelegate<TId> MakeId;
@@ -38,7 +38,7 @@ internal sealed class FrontendResourceStore<TId, TMeta> : IResourceStore<TId>
     public ReadOnlySpan<TMeta> AsMetaSpan() => _meta;
     internal ReadOnlySpan<GfxHandle> AsHandleSpan() => _handle;
 
-    internal FrontendResourceStore(
+    internal GfxResourceStore(
         ResourceKind resourceKind,
         int initialCapacity,
         MakeIdDelegate<TId> makeId)
@@ -171,20 +171,20 @@ internal sealed class FrontendResourceStore<TId, TMeta> : IResourceStore<TId>
 
     internal readonly struct IdEnumerable
     {
-        private readonly FrontendResourceStore<TId, TMeta> _store;
-        internal IdEnumerable(FrontendResourceStore<TId, TMeta> store) => _store = store;
+        private readonly GfxResourceStore<TId, TMeta> _store;
+        internal IdEnumerable(GfxResourceStore<TId, TMeta> store) => _store = store;
         public ResourceIdEnumerator GetEnumerator() => new(_store);
     }
 
     internal struct ResourceIdEnumerator
     {
-        private readonly FrontendResourceStore<TId, TMeta> _store;
+        private readonly GfxResourceStore<TId, TMeta> _store;
         private readonly GfxHandle[] _handles;
         private readonly int _count;
         private int _i;
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        internal ResourceIdEnumerator(FrontendResourceStore<TId, TMeta> store)
+        internal ResourceIdEnumerator(GfxResourceStore<TId, TMeta> store)
         {
             _store = store;
             _handles = store._handle;

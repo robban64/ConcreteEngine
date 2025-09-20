@@ -1,4 +1,6 @@
 using ConcreteEngine.Graphics.Gfx.Internal;
+using ConcreteEngine.Graphics.Resources;
+using ConcreteEngine.Graphics.Utils;
 
 namespace ConcreteEngine.Graphics.Gfx;
 
@@ -11,7 +13,11 @@ public sealed class GfxContext
     private readonly GfxFrameBuffers _frameBuffers;
     private readonly GfxCommands _cmd;
 
-    internal GfxContext(GfxContextInternal ctxInternal)
+    private readonly GfxResourceContext _resourceContext;
+    
+    public IPrimitiveMeshes  Primitives { get; }
+
+    internal GfxContext(GfxContextInternal ctxInternal, GfxResourceContext resourceContext)
     {
         _buffers = new GfxBuffers(ctxInternal);
         _shaders = new GfxShaders(ctxInternal);
@@ -19,8 +25,13 @@ public sealed class GfxContext
         _meshes = new GfxMeshes(ctxInternal, _buffers);
         _frameBuffers = new GfxFrameBuffers(ctxInternal, _textures);
         _cmd = new GfxCommands(ctxInternal);
+        _resourceContext = resourceContext;
+
+        var primitiveMeshes = new PrimitiveMeshes();
+        primitiveMeshes.CreatePrimitives(_meshes);
+        Primitives = primitiveMeshes;
     }
-    
+
     public GfxBuffers Buffers => _buffers;
 
     public GfxMeshes Meshes => _meshes;
@@ -30,7 +41,8 @@ public sealed class GfxContext
     public GfxTextures Textures => _textures;
 
     public GfxFrameBuffers FrameBuffers => _frameBuffers;
-    
+
     public GfxCommands Commands => _cmd;
 
+    public IGfxResourceContext ResourceContext => _resourceContext;
 }

@@ -1,37 +1,46 @@
+using System.Diagnostics;
+using System.Diagnostics.CodeAnalysis;
 using System.Runtime.CompilerServices;
 
 namespace ConcreteEngine.Graphics.Resources;
 
-internal sealed class FrontendStoreHub
+internal sealed class GfxStoreHub
 {
     private const int StoreTier1 = 64;
     private const int StoreTier2 = 32;
     private const int StoreTier3 = 16;
 
-
-    internal FrontendStoreHub()
+    internal GfxStoreHub()
     {
     }
     
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    internal FrontendResourceStore<TId, TMeta> GetStore<TId, TMeta>(ResourceKind kind)
+    internal GfxResourceStore<TId, TMeta> GetStore<TId, TMeta>(ResourceKind kind)
         where TId : unmanaged, IResourceId where TMeta : unmanaged, IResourceMeta
     {
         var store = GetStore(kind);
-        if (store is FrontendResourceStore<TId, TMeta> typed) return typed;
-        throw new ArgumentException($"Frontend Store {kind} is not {typeof(TId).Name} - {typeof(TMeta).Name}");
+        if (store is GfxResourceStore<TId, TMeta> typed) return typed;
+        
+        ThrowInvalidStoreType(kind, typeof(TId), typeof(TMeta));
+        return null!;
     }
     
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    internal IResourceStore<TId> GetStore<TId>(ResourceKind kind) where TId : unmanaged, IResourceId
+    internal IGfxResourceStore<TId> GetStore<TId>(ResourceKind kind) where TId : unmanaged, IResourceId
     {
         var store = GetStore(kind);
-        if (store is IResourceStore<TId> typed) return typed;
-        throw new ArgumentException($"Frontend Store {kind} is not {typeof(TId).Name} ");
+        if (store is IGfxResourceStore<TId> typed) return typed;
+        
+        ThrowInvalidStoreType(kind, typeof(TId));
+        return null!;
     }
 
+    [MethodImpl(MethodImplOptions.NoInlining), DoesNotReturn, StackTraceHidden]
+    private static void ThrowInvalidStoreType(ResourceKind kind, Type id, Type? meta = null)
+        => throw new ArgumentException($"Gfx Store {kind} is not: {id.Name}  {meta?.Name}");
+
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public IResourceStore GetStore(ResourceKind kind)
+    public IGfxResourceStore GetStore(ResourceKind kind)
     {
         switch (kind)
         {
@@ -50,27 +59,27 @@ internal sealed class FrontendStoreHub
     }
 
 
-    public FrontendResourceStore<TextureId, TextureMeta> TextureStore { get; } =
+    public GfxResourceStore<TextureId, TextureMeta> TextureStore { get; } =
         new(ResourceKind.Texture, StoreTier1, static i => new TextureId(i + 1));
 
-    public FrontendResourceStore<ShaderId, ShaderMeta> ShaderStore { get; }
+    public GfxResourceStore<ShaderId, ShaderMeta> ShaderStore { get; }
         = new(ResourceKind.Texture, StoreTier2, static i => new ShaderId(i + 1));
 
-    public FrontendResourceStore<MeshId, MeshMeta> MeshStore { get; }
+    public GfxResourceStore<MeshId, MeshMeta> MeshStore { get; }
         = new(ResourceKind.Texture, StoreTier2, static i => new MeshId(i + 1));
 
-    public FrontendResourceStore<VertexBufferId, VertexBufferMeta> VboStore { get; }
+    public GfxResourceStore<VertexBufferId, VertexBufferMeta> VboStore { get; }
         = new(ResourceKind.Texture, StoreTier2, static i => new VertexBufferId(i + 1));
 
-    public FrontendResourceStore<IndexBufferId, IndexBufferMeta> IboStore { get; }
+    public GfxResourceStore<IndexBufferId, IndexBufferMeta> IboStore { get; }
         = new(ResourceKind.Texture, StoreTier2, static i => new IndexBufferId(i + 1));
 
-    public FrontendResourceStore<FrameBufferId, FrameBufferMeta> FboStore { get; }
+    public GfxResourceStore<FrameBufferId, FrameBufferMeta> FboStore { get; }
         = new(ResourceKind.Texture, StoreTier3, static i => new FrameBufferId(i + 1));
 
-    public FrontendResourceStore<RenderBufferId, RenderBufferMeta> RboStore { get; }
+    public GfxResourceStore<RenderBufferId, RenderBufferMeta> RboStore { get; }
         = new(ResourceKind.Texture, StoreTier3, static i => new RenderBufferId(i + 1));
 
-    public FrontendResourceStore<UniformBufferId, UniformBufferMeta> UboStore { get; }
+    public GfxResourceStore<UniformBufferId, UniformBufferMeta> UboStore { get; }
         = new(ResourceKind.Texture, StoreTier3, static i => new UniformBufferId(i + 1));
 }

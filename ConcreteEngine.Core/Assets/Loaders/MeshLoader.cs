@@ -1,15 +1,18 @@
 using ConcreteEngine.Core.Assets.IO;
 using ConcreteEngine.Core.Resources;
 using ConcreteEngine.Graphics;
+using ConcreteEngine.Graphics.Contracts;
 using ConcreteEngine.Graphics.Descriptors;
 using ConcreteEngine.Graphics.Primitives;
 
 namespace ConcreteEngine.Core.Assets.Loaders;
 
-internal readonly ref struct MeshLoaderResult(GpuMeshData<Vertex3D, uint> meshData, GpuMeshDescriptor descriptor)
+internal readonly record struct MeshLoaderResult
 {
-    public readonly GpuMeshData<Vertex3D, uint> MeshData = meshData;
-    public readonly GpuMeshDescriptor Descriptor = descriptor;
+    public required MeshDrawProperties Properties  { get; init; }
+    public required List<uint> Indices { get; init; }
+    public required List<Vertex3D> Vertices { get; init; }
+    public required IReadOnlyList<VertexAttributeDesc> Attributes { get; init; }
 }
 
 internal sealed class MeshLoader(IReadOnlyList<MeshManifestRecord> records) : AssetTypeLoader<MeshManifestRecord, MeshLoaderResult>(records)
@@ -18,12 +21,12 @@ internal sealed class MeshLoader(IReadOnlyList<MeshManifestRecord> records) : As
     
     private readonly MeshImporter _meshImporter = new();
     
-    private static readonly VertexAttributeDescriptor[] Defaults3D =
+    private static readonly VertexAttributeDesc[] Defaults3D =
     [
-        VertexAttributeDescriptor.Make<Vertex3D>(nameof(Vertex3D.Position), VertexElementFormat.Float3),
-        VertexAttributeDescriptor.Make<Vertex3D>(nameof(Vertex3D.TexCoords), VertexElementFormat.Float2),
-        VertexAttributeDescriptor.Make<Vertex3D>(nameof(Vertex3D.Normal), VertexElementFormat.Float3),
-        VertexAttributeDescriptor.Make<Vertex3D>(nameof(Vertex3D.Tangent), VertexElementFormat.Float3),
+        VertexAttributeDesc.Make<Vertex3D>(nameof(Vertex3D.Position), VertexElementFormat.Float3),
+        VertexAttributeDesc.Make<Vertex3D>(nameof(Vertex3D.TexCoords), VertexElementFormat.Float2),
+        VertexAttributeDesc.Make<Vertex3D>(nameof(Vertex3D.Normal), VertexElementFormat.Float3),
+        VertexAttributeDesc.Make<Vertex3D>(nameof(Vertex3D.Tangent), VertexElementFormat.Float3),
     ];
     
     protected override void ClearCache()
@@ -38,18 +41,21 @@ internal sealed class MeshLoader(IReadOnlyList<MeshManifestRecord> records) : As
     {
         var path = Path.Combine(AssetPaths.GetAbsolutePath(), "meshes", record.Filename);
 
-        var meshData = _meshImporter.ImportMesh(path);
+        var (vertices, indices) = _meshImporter.ImportMesh(path);
         
-        var desc = new GpuMeshDescriptor
+        return new MeshLoaderResult
         {
             Attributes = Defaults3D,
-            DrawKind = MeshDrawKind.Elements,
-            DrawCount = (uint)meshData.Indices.Length,
-            ElementSize = DrawElementSize.UnsignedInt,
-            Primitive = DrawPrimitive.Triangles
+            Vertices = vertices,
+            Indices = indices,
+            Properties = new MeshDrawProperties
+            {
+                DrawKind = MeshDrawKind.Elements,
+                DrawCount = indices.Count,
+                ElementSize = DrawElementSize.UnsignedInt,
+                Primitive = DrawPrimitive.Triangles
+            }
         };
-
-        return new MeshLoaderResult(meshData, desc);
     }
 
 

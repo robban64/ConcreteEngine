@@ -10,7 +10,7 @@ namespace ConcreteEngine.Graphics.Gfx;
 
 public sealed class GfxFrameBuffers
 {
-    private readonly FrontendStoreHub _resources;
+    private readonly GfxStoreHub _resources;
     private readonly GfxResourceRepository _repository;
 
     private readonly GfxTextures _gfxTextures;

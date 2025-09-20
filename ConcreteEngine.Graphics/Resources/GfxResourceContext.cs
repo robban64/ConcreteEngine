@@ -1,6 +1,16 @@
 namespace ConcreteEngine.Graphics.Resources;
 
-public sealed class GfxResourceContext
+public interface IGfxResourceContext
+{
+     IGfxResourceManager ResourceManager { get; }
+
+     IGfxResourceRepository Repository { get; }
+
+     IGfxResourceDisposer Disposer { get; }
+}
+
+
+internal sealed class GfxResourceContext : IGfxResourceContext
 {
     private readonly GfxResourceManager _resourceManager;
     private readonly GfxResourceRepository _repository;

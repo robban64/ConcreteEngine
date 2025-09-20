@@ -14,9 +14,11 @@ public interface IFrameBufferDescriptor
 }
 
 public readonly record struct FrameBufferAttachmentDesc(
-    bool ColorTexture, bool DepthTexture, bool ColorBuffer, bool DepthStencilBuffer
+    bool ColorTexture,
+    bool DepthTexture,
+    bool ColorBuffer,
+    bool DepthStencilBuffer
 );
-
 public readonly record struct FrameBufferDesc(
     Vector2 DownscaleRatio,
     Vector2D<int> AbsoluteSize,
@@ -45,4 +47,3 @@ public readonly record struct MultiSampleFboDescription(
     Vector2D<int> AbsoluteSize = default,
     int Samples = 4
 ) : IFrameBufferDescriptor;
-

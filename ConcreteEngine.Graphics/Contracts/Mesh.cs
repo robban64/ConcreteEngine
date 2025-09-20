@@ -42,7 +42,10 @@ public readonly record struct MeshDrawProperties(
 
     public static MeshDrawProperties MakeDefault() =>
         new(DrawPrimitive.Triangles, MeshDrawKind.Invalid, DrawElementSize.Invalid, 0);
-    
+
+    public static MeshDrawProperties MakeTriElemental(MeshDrawKind kind = MeshDrawKind.Elements,
+        DrawElementSize size = DrawElementSize.UnsignedInt, int drawCount = 0)
+    => new (DrawPrimitive.Triangles, kind, size, drawCount);
 }
 
 public readonly record struct VertexAttributeDesc(

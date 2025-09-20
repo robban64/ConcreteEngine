@@ -2,6 +2,7 @@ using System.Numerics;
 using ConcreteEngine.Common;
 using ConcreteEngine.Core.Resources;
 using ConcreteEngine.Graphics;
+using ConcreteEngine.Graphics.Gfx;
 using ConcreteEngine.Graphics.Resources;
 using Silk.NET.Maths;
 
@@ -12,21 +13,19 @@ namespace ConcreteEngine.Core.Rendering;
 
 internal class Render2D : IRender
 {
-    private readonly IGraphicsRuntime _graphics;
-    private readonly IGraphicsContext _gfx;
+    private readonly GfxContext _gfx;
     private readonly RenderPasses _registry;
     private readonly MaterialStore _materialStore;
     private readonly Camera2D _camera;
     public ICamera Camera => _camera;
 
 
-    public Render2D(IGraphicsRuntime graphics, MaterialStore  materialStore, in RenderGlobalSnapshot snapshot)
+    public Render2D(GfxContext gfx, MaterialStore  materialStore, in RenderGlobalSnapshot snapshot)
     {
-        _graphics = graphics;
-        _gfx = graphics.Context;
+        _gfx = gfx;
         _materialStore = materialStore;
         _camera = new Camera2D();
-        _registry = new RenderPasses(graphics, in snapshot);
+        _registry = new RenderPasses(_gfx, in snapshot);
     }
 
 
@@ -51,7 +50,7 @@ internal class Render2D : IRender
         }
         else if (pass is LightRenderPass lightPass)
         {
-            _gfx.UseShader(lightPass.Shader);
+            _gfx.Commands.UseShader(lightPass.Shader);
             submitter.DrainCommandQueue(RenderTargetId.Light);
         }
             

@@ -2,6 +2,7 @@
 
 using ConcreteEngine.Graphics;
 using ConcreteEngine.Graphics.Error;
+using ConcreteEngine.Graphics.Gfx;
 
 #endregion
 
@@ -13,20 +14,14 @@ public sealed class SpriteBatcher : RenderBatcher<SpriteBatchBuildResult>
     private const int MaxSpriteBatchSize = 1024;
     private const int MaxSpriteBatchInstanceCount = 4;
     
-    private readonly IGraphicsRuntime _graphics;
-    private readonly IGraphicsContext _gfx;
-
     private int _commandSize = 0;
     private readonly SpriteBatchDrawItem[] _commandBuffer;
 
     private SpriteBatchMesh? _boundSpriteBatch;
     private readonly SortedList<int, SpriteBatchMesh> _spriteBatches;
 
-    internal SpriteBatcher(IGraphicsRuntime graphics) : base(graphics)
+    internal SpriteBatcher(GfxContext gfx) : base(gfx)
     {
-        _graphics = graphics;
-        _gfx = graphics.Context;
-
         _commandBuffer = new SpriteBatchDrawItem[MaxSpriteBatchSize];
         _spriteBatches = new(MaxSpriteBatchInstanceCount);
     }
@@ -51,7 +46,7 @@ public sealed class SpriteBatcher : RenderBatcher<SpriteBatchBuildResult>
         if (_spriteBatches.ContainsKey(id))
             throw GraphicsException.ResourceAlreadyExists<SpriteBatchMesh>(id);
 
-        _spriteBatches.Add(id, new SpriteBatchMesh(_graphics, capacity));
+        _spriteBatches.Add(id, new SpriteBatchMesh(Gfx, capacity));
     }
 
     public void RemoveSpriteBatch(int id)

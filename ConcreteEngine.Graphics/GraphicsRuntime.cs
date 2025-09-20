@@ -11,8 +11,7 @@ namespace ConcreteEngine.Graphics;
 
 public interface IGraphicsRuntime : IDisposable
 {
-    public IGfxResourceDisposer Disposer { get; }
-    public IGfxResourceRepository Repository { get; }
+    public GfxContext Gfx { get; }
 
     void Initialize<T>(IGfxStartupConfig<T> config) where T : class;
     void BeginFrame(in FrameInfo frameInfo);
@@ -32,7 +31,6 @@ public sealed class GraphicsRuntime : IGraphicsRuntime
     private GfxResourceRepository _repository = null!;
 
     private GfxContext _gfxContext = null!;
-    private GfxResourceContext _gfxResourceContext = null!;
 
     private FrameInfo _frameCtx;
 
@@ -40,8 +38,7 @@ public sealed class GraphicsRuntime : IGraphicsRuntime
     {
     }
 
-    public IGfxResourceDisposer Disposer => _disposer;
-    public IGfxResourceRepository Repository => _repository;
+    public GfxContext Gfx => _gfxContext;
 
     public void Initialize<T>(IGfxStartupConfig<T> config) where T : class
     {
@@ -61,9 +58,9 @@ public sealed class GraphicsRuntime : IGraphicsRuntime
 
         _driver = driver;
 
-        var gfxCtxInternal = new GfxContextInternal(_driver, _repository, _resources.FrontendStoreHub);
-        _gfxResourceContext = new GfxResourceContext(_resources, _repository, _disposer);
-        _gfxContext = new GfxContext(gfxCtxInternal);
+        var gfxCtxInternal = new GfxContextInternal(_driver, _repository, _resources.GfxStoreHub);
+        var gfxResourceContext = new GfxResourceContext(_resources, _repository, _disposer);
+        _gfxContext = new GfxContext(gfxCtxInternal, gfxResourceContext);
 
         _isInitialized = true;
     }
@@ -96,7 +93,7 @@ public sealed class GraphicsRuntime : IGraphicsRuntime
         ArgumentOutOfRangeException.ThrowIfLessThanOrEqual(outputSize.X, 0);
         ArgumentOutOfRangeException.ThrowIfLessThanOrEqual(outputSize.Y, 0);
 
-        var fboStore = _resources.FrontendStoreHub.FboStore;
+        var fboStore = _resources.GfxStoreHub.FboStore;
         Console.WriteLine($"Recreating {fboStore.Count} FBO");
 
         foreach (var fboId in fboStore.IdEnumerator)

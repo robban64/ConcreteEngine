@@ -23,7 +23,7 @@ internal sealed class GfxResourceRepository : IGfxResourceRepository
 
     public GfxResourceRepository(GfxResourceManager resources)
     {
-        _shaderRepository = new ShaderRepository(resources.FrontendStoreHub);
+        _shaderRepository = new ShaderRepository(resources.GfxStoreHub);
         _meshRepository = new MeshRepository();
         _fboRepository = new FrameBufferRepository();
     }

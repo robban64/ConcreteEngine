@@ -36,11 +36,11 @@ public struct Transform(Vector3 position, Vector3 scale, Quaternion rotation)
         => TransformHelper.CreateTransform(Position, Scale, Rotation);
 }
 
-public struct MeshComponent(MeshId meshId, MaterialId materialId, uint drawCount)
+public struct MeshComponent(MeshId meshId, MaterialId materialId, int drawCount)
 {
     public MeshId MeshId = meshId;
     public MaterialId MaterialId = materialId;
-    public uint DrawCount = drawCount;
+    public int DrawCount = drawCount;
 }
 
 public struct SpriteComponent(int spriteId, MaterialId materialId, bool isStatic)

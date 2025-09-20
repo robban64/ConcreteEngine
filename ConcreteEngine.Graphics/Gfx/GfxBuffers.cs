@@ -11,7 +11,7 @@ namespace ConcreteEngine.Graphics.Gfx;
 
 public sealed class GfxBuffers
 {
-    private readonly FrontendStoreHub _resources;
+    private readonly GfxStoreHub _resources;
     private readonly GfxResourceRepository _repository;
     private readonly GfxBuffersBackend _backend;
 
@@ -48,7 +48,7 @@ public sealed class GfxBuffers
 
     //BufferStorage.Dynamic, BufferAccess.MapWrite
     public UniformBufferId CreateUniformBuffer<T>(UniformGpuSlot slot, UboDefaultCapacity defaultCapacity,
-        BufferStorage storage, BufferAccess access)
+        BufferStorage storage = BufferStorage.Dynamic, BufferAccess access = BufferAccess.MapWrite)
         where T : unmanaged, IUniformGpuData
     {
         if (!UniformBufferUtils.IsStd140Aligned<T>())
@@ -95,7 +95,7 @@ public sealed class GfxBuffers
         _resources.IboStore.ReplaceMeta(iboId, in newMeta, out _);
     }
 
-    public void SetUniformBufferCapacity<T>(UniformGpuSlot slot, nint capacity)
+    public void SetUniformBufferCapacity(UniformGpuSlot slot, nint capacity)
     {
         ArgumentOutOfRangeException.ThrowIfEqual(0, (int)capacity);
         var ubo = _repository.ShaderRepository.GetUboId(slot);

@@ -105,6 +105,17 @@ internal sealed class GfxMeshBuilder : IGfxMeshBuilder
         if (_phase < Phase.AttributesSet) _phase = Phase.AttributesSet;
     }
     
+    public void SetAttributeSpan(ReadOnlySpan<VertexAttributeDesc> attributes)
+    {
+        EnsureStarted();
+        InvalidOpThrower.ThrowIfZero(attributes.Length, nameof(attributes));
+        InvalidOpThrower.ThrowIfNot(_state.Attributes.Count == 0, nameof(attributes));
+
+        _state.Attributes.AddRange(attributes);
+
+        if (_phase < Phase.AttributesSet) _phase = Phase.AttributesSet;
+    }
+    
     public void AddAttribute(in VertexAttributeDesc attribute)
     {
         EnsureStarted();

@@ -25,7 +25,7 @@ public sealed class GfxMeshes
         _meshBuilder = new GfxMeshBuilder();
     }
 
-    public GfxMeshBuilder GetUploadBuilder(in MeshDrawProperties props) => _meshBuilder.Init(this, _buffers, props);
+    public IGfxMeshBuilder StartUploadBuilder(in MeshDrawProperties props) => _meshBuilder.Init(this, _buffers, props);
 
 
     internal MeshId FinishUploadCommit(GfxMeshBuilder.State state)
@@ -46,7 +46,7 @@ public sealed class GfxMeshes
             IndexBufferId = state.IboId,
             VertexBufferIds = state.VboIds.ToArray(),
             Attributes = state.Attributes.ToArray(),
-            Properties = props
+            Properties = props,
         };
         _repository.MeshRepository.AddRecord(meshId, record);
         return meshId;

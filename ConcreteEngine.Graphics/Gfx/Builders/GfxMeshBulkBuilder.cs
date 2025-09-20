@@ -5,7 +5,7 @@ using ConcreteEngine.Graphics.Resources;
 
 namespace ConcreteEngine.Graphics.Gfx.Builders;
 
-
+/*
 public sealed class GfxMeshBulkBuilder
 {
     private readonly CommonBuilder<Builder, Result, State> _builder;
@@ -121,4 +121,4 @@ public sealed class GfxMeshBulkBuilder
     {
         public IMeshPayload MeshPayload { get; set; } = null!;
     }
-}
+}*/

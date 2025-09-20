@@ -42,6 +42,7 @@ public readonly record struct MeshDrawProperties(
 
     public static MeshDrawProperties MakeDefault() =>
         new(DrawPrimitive.Triangles, MeshDrawKind.Invalid, DrawElementSize.Invalid, 0);
+    
 }
 
 public readonly record struct VertexAttributeDesc(

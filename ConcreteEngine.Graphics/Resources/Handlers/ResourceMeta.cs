@@ -108,7 +108,7 @@ public readonly struct FrameBufferMeta(
     public readonly bool ColorBuffer = colorBuffer;
     public readonly bool DepthStencilBuffer = depthStencilBuffer;
 
-    internal static FrameBufferMeta CreateResizeCopy(in FrameBufferMeta meta, Vector2D<int> size) =>
+    internal static FrameBufferMeta MakeResizeCopy(in FrameBufferMeta meta, Vector2D<int> size) =>
         new(size, meta.ColorTexture, meta.DepthTexture, meta.ColorBuffer, meta.DepthStencilBuffer);
 }
 

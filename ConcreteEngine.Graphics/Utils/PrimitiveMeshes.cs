@@ -1,5 +1,7 @@
 using System.Diagnostics.CodeAnalysis;
+using ConcreteEngine.Graphics.Contracts;
 using ConcreteEngine.Graphics.Descriptors;
+using ConcreteEngine.Graphics.Gfx;
 using ConcreteEngine.Graphics.Primitives;
 using ConcreteEngine.Graphics.Resources;
 
@@ -18,13 +20,13 @@ internal sealed class PrimitiveMeshes : IPrimitiveMeshes
     public MeshId SkyboxCube { get; private set; }
     
 
-    internal void CreatePrimitives(IMeshFactory factory)
+    internal void CreatePrimitives(GfxMeshes meshes)
     {
-        CreateFsqQuad(factory);
-        CreateSkyboxCube(factory);
+        CreateFsqQuad(meshes);
+        CreateSkyboxCube(meshes);
     }
 
-    private void CreateFsqQuad(IMeshFactory factory)
+    private void CreateFsqQuad(GfxMeshes meshes)
     {
         ReadOnlySpan<Vertex2D> vertices = stackalloc[]
         {
@@ -32,23 +34,20 @@ internal sealed class PrimitiveMeshes : IPrimitiveMeshes
             new Vertex2D(1f, -1f, 1f, 0f),
             new Vertex2D(-1f, 1f, 0f, 1f),
             new Vertex2D(1f, 1f, 1f, 1f)
-        };
+        };  
 
-        ReadOnlySpan<VertexAttributeDescriptor> pointers = stackalloc[]
-        {
-            VertexAttributeDescriptor.Make<Vertex2D>(nameof(Vertex2D.Position), VertexElementFormat.Float2),
-            VertexAttributeDescriptor.Make<Vertex2D>(nameof(Vertex2D.TexCoords), VertexElementFormat.Float2)
-        };
-        var metaDesc = GpuMeshDescriptor.MakeArray(pointers, DrawPrimitive.TriangleStrip, 4);
-        var vbo = new GpuVboDescriptor<Vertex2D>(vertices, BufferUsage.StaticDraw);
+        var props = new MeshDrawProperties(DrawPrimitive.TriangleStrip, MeshDrawKind.Arrays, DrawElementSize.Invalid, 4);
+        
+        var builder = meshes.StartUploadBuilder(in props);
+        builder.UploadVertices(vertices, BufferUsage.StaticDraw, BufferStorage.Static, BufferAccess.None);
+        builder.AddAttribute(VertexAttributeDesc.Make<Vertex2D>(nameof(Vertex2D.Position), VertexElementFormat.Float2));
+        builder.AddAttribute(VertexAttributeDesc.Make<Vertex2D>(nameof(Vertex2D.TexCoords), VertexElementFormat.Float2));
+        FsqQuad = builder.Finish();
 
-        var result = factory.CreateArrayMesh(vbo, metaDesc);
-
-        FsqQuad = result.MeshId;
     }
 
 
-    private void CreateSkyboxCube(IMeshFactory factory)
+    private void CreateSkyboxCube(GfxMeshes meshes)
     {
         ReadOnlySpan<float> vertices = stackalloc[]
         {
@@ -71,17 +70,12 @@ internal sealed class PrimitiveMeshes : IPrimitiveMeshes
             1f, 1f, -1f, -1f, 1f, -1f, -1f, -1f, -1f,
             1f, 1f, -1f, -1f, -1f, -1f, 1f, -1f, -1f,
         };
-
         
-        ReadOnlySpan<VertexAttributeDescriptor> pointers = stackalloc[]
-        {
-            new VertexAttributeDescriptor(0,sizeof(float) * 3, 0, VertexElementFormat.Float3),
-        };
+        var props = new MeshDrawProperties(DrawPrimitive.Triangles, MeshDrawKind.Arrays, DrawElementSize.Invalid, 36);
         
-        var dataDesc = new GpuVboDescriptor<float>(vertices, BufferUsage.StaticDraw);
-        var metaDesc = GpuMeshDescriptor.MakeArray(pointers, DrawPrimitive.Triangles, 36);
-
-        var result = factory.CreateArrayMesh(dataDesc, metaDesc);
-        SkyboxCube = result.MeshId;
+        var builder = meshes.StartUploadBuilder(in props);
+        builder.UploadVertices(vertices, BufferUsage.StaticDraw, BufferStorage.Static, BufferAccess.None);
+        builder.AddAttribute(new VertexAttributeDesc(0,sizeof(float) * 3, 0, VertexElementFormat.Float3));
+        SkyboxCube = builder.Finish();
     }
 }

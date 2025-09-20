@@ -24,7 +24,7 @@ public interface IGraphicsRuntime : IDisposable
 public sealed class GraphicsRuntime : IGraphicsRuntime
 {
     private static bool _isInitialized = false;
-    
+
     private IGraphicsDriver _driver = null!;
 
     private GfxResourceDisposer _disposer = null!;
@@ -33,27 +33,27 @@ public sealed class GraphicsRuntime : IGraphicsRuntime
 
     private GfxContext _gfxContext = null!;
     private GfxResourceContext _gfxResourceContext = null!;
-    
+
     private FrameInfo _frameCtx;
 
     public GraphicsRuntime()
     {
     }
-    
+
     public IGfxResourceDisposer Disposer => _disposer;
     public IGfxResourceRepository Repository => _repository;
 
     public void Initialize<T>(IGfxStartupConfig<T> config) where T : class
     {
         InvalidOpThrower.ThrowIf(_isInitialized, "GFX has already been initialized.");
-        
+
         if (config is not GlStartupConfig glConfig)
             throw GraphicsException.UnsupportedFeature("Only OpenGL is supported");
 
         _resources = new GfxResourceManager();
         _repository = new GfxResourceRepository(_resources);
         _disposer = new GfxResourceDisposer(_resources, _repository);
-        
+
         var backendOps = _resources.BackendStoreHub.BackendOps;
         var driver = new GlBackendDriver(glConfig, backendOps, _resources.BackendDispatcher);
         driver.Initialize();
@@ -81,9 +81,9 @@ public sealed class GraphicsRuntime : IGraphicsRuntime
     public void EndFrame(out GpuFrameStats stats)
     {
         if (_disposer.PendingCount > 0) _disposer.DrainDisposeQueue(_driver);
-        
+
         _gfxContext.Commands.EndFrame(out stats);
-        
+
         if (_frameCtx.ResizePending)
         {
             RecreateFbo(_frameCtx.OutputSize);
@@ -102,7 +102,7 @@ public sealed class GraphicsRuntime : IGraphicsRuntime
         foreach (var fboId in fboStore.IdEnumerator)
         {
             fboId.IsValidOrThrow();
-            _gfxContext.FrameBuffers.RecreateFrameBuffer(fboId, in outputSize);
+            _gfxContext.FrameBuffers.RecreateAutoResizeFrameBuffer(fboId, outputSize);
         }
     }
 

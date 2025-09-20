@@ -3,7 +3,7 @@ using Silk.NET.OpenGL;
 
 namespace ConcreteEngine.Graphics.OpenGL;
 
-internal sealed class GlDisposer: IGraphicsDriverModule, IDisposerBackend
+internal sealed class GlDisposer: IGraphicsDriverModule
 {
     private readonly GL _gl;
     private readonly BackendOpsHub _store;

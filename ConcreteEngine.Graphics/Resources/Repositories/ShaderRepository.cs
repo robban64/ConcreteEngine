@@ -81,9 +81,9 @@ public sealed class ShaderLayout
     private readonly int[] _locs;
     private readonly Dictionary<string, int> _rawUniforms;
     
-    public uint Samplers { get; }
+    public int Samplers { get; }
 
-    public ShaderLayout(List<(string, int)> uniformPairs, uint samplers)
+    public ShaderLayout(List<(string, int)> uniformPairs, int samplers)
     {
         Samplers = samplers;
         _locs = new int [GraphicsEnumCache.ShaderUniformVals.Length];

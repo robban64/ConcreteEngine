@@ -14,32 +14,6 @@ public readonly record struct FboAttachmentIds(
     RenderBufferId ColorRenderBufferId, RenderBufferId DepthRenderBufferId
 );
 
-public sealed class FrameBufferLayout
-{
-    private FrameBufferDesc _desc;
-
-    internal FrameBufferLayout(FrameBufferId fboId, in FboAttachmentIds fboAttachmentResources, in FrameBufferDesc desc)
-    {
-        FboId = fboId;
-        FboAttachmentResources = fboAttachmentResources;
-        UpdateFromDescriptor(desc);
-    }
-
-    internal void UpdateFromDescriptor(in FrameBufferDesc desc)
-    {
-        _desc = desc;
-    }
-
-    internal FrameBufferDesc GetDescriptor() => _desc;
-
-    public FrameBufferId FboId { get; }
-    public FboAttachmentIds FboAttachmentResources { get; }
-    public RenderBufferMsaa Msaa => _desc.Multisample;
-    public Vector2 DownscaleRatio => _desc.DownscaleRatio;
-    public Vector2D<int> AbsoluteSize => _desc.AbsoluteSize;
-    public TexturePreset TexturePreset => _desc.TexturePreset;
-    public bool AutoResizeable => _desc.AutoResizeable;
-}
 
 internal sealed class FrameBufferRepository : IFrameBufferRepository
 {
@@ -56,10 +30,37 @@ internal sealed class FrameBufferRepository : IFrameBufferRepository
         _registry.Add(fboId, new FrameBufferLayout(fboId, in attachedIds, in desc));
     }
 
-    internal void UpdateRecord(FrameBufferId fboId, in FrameBufferDesc desc)
+    internal void UpdateOutputSize(FrameBufferId fboId, Vector2D<int> outputSize)
     {
-        _registry[fboId].UpdateFromDescriptor(in desc);
+        _registry[fboId].OutputSize = outputSize;
     }
 
     internal FrameBufferDesc GetDescriptor(FrameBufferId fboId) => _registry[fboId].GetDescriptor();
+}
+
+
+public sealed class FrameBufferLayout
+{
+    private FrameBufferDesc _desc;
+
+    internal FrameBufferLayout(FrameBufferId fboId, in FboAttachmentIds fboAttachmentResources, in FrameBufferDesc desc)
+    {
+        FboId = fboId;
+        FboAttachmentResources = fboAttachmentResources;
+        UpdateFromDescriptor(desc);
+    }
+    
+
+    internal void UpdateFromDescriptor(in FrameBufferDesc desc) => _desc = desc;
+
+    internal FrameBufferDesc GetDescriptor() => _desc;
+
+    public FrameBufferId FboId { get; }
+    public FboAttachmentIds FboAttachmentResources { get; }
+    public Vector2D<int> OutputSize { get; set; }
+    public RenderBufferMsaa Msaa => _desc.Multisample;
+    public Vector2 DownscaleRatio => _desc.DownscaleRatio;
+    public Vector2D<int> AbsoluteSize => _desc.AbsoluteSize;
+    public TexturePreset TexturePreset => _desc.TexturePreset;
+    public bool AutoResizeable => _desc.AutoResizeable;
 }

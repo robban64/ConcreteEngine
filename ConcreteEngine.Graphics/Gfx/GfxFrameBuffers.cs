@@ -65,25 +65,25 @@ public sealed class GfxFrameBuffers
         return fboId;
     }
 
-    internal FrameBufferId RecreateFrameBuffer(FrameBufferId fboId, Vector2D<int> outputSize)
+    internal FrameBufferId RecreateAutoResizeFrameBuffer(FrameBufferId fboId, Vector2D<int> outputSize)
     {
         ArgumentOutOfRangeException.ThrowIfLessThanOrEqual(fboId.Value, 0, nameof(fboId));
 
         var layout = _repository.FboRepository.Get(fboId);
         var attachIds = layout.FboAttachmentResources;
         var oldTokenRef = _resources.FboStore.GetRefAndMeta(fboId, out var oldMeta);
-        var newSize = CalculateOutputSize(oldMeta)
+        var newOutputSize = layout.AbsoluteSize == Vector2D<int>.Zero ? outputSize : layout.AbsoluteSize;
+        var newSize = CalculateOutputSize(newOutputSize, layout.DownscaleRatio);
 
-        GetMetaAndSizeFromDesc(in desc, out var fboMeta, out var size);
-
+        var newMeta = FrameBufferMeta.MakeResizeCopy(in oldMeta, newSize);
         var fboRef = _backend.CreateFrameBuffer();
-        _resources.FboStore.Replace(fboId, in fboMeta, fboRef, out _);
+        _resources.FboStore.Replace(fboId, in newMeta, fboRef, out _);
 
-        if (desc.Attachments.ColorTexture)
+        if (oldMeta.ColorTexture)
         {
             InvalidOpThrower.ThrowIfNot(attachIds.ColorTextureId.IsValid());
-            var texDesc = new GpuTextureDescriptor(size.X, size.Y,
-                desc.TexturePreset, TextureKind.Texture2D);
+            var texDesc = new GpuTextureDescriptor(newSize.X, newSize.Y,
+                layout.TexturePreset, TextureKind.Texture2D);
 
             _gfxTextures.ReplaceTexture(attachIds.ColorTextureId,
                 ReadOnlySpan<byte>.Empty, in texDesc, out var texRef);
@@ -91,24 +91,24 @@ public sealed class GfxFrameBuffers
             _backend.AttachTexture(in fboRef, in texRef);
         }
 
-        if (desc.Attachments.ColorRenderBuffer)
+        if (oldMeta.ColorBuffer)
         {
             InvalidOpThrower.ThrowIfNot(attachIds.ColorRenderBufferId.IsValid());
-            var rbo = _backend.CreateAttachRenderBuffer(in fboRef, size,
-                FrameBufferTarget.Color, desc.Multisample, out var meta);
+            var rbo = _backend.CreateAttachRenderBuffer(in fboRef, newOutputSize,
+                FrameBufferTarget.Color, layout.Msaa, out var meta);
             _resources.RboStore.Add(in meta, in rbo);
             _resources.RboStore.Replace(attachIds.ColorRenderBufferId, in meta, in rbo, out _);
         }
 
-        if (desc.Attachments.DepthStenRenderBuffer)
+        if (oldMeta.DepthStencilBuffer)
         {
             InvalidOpThrower.ThrowIfNot(attachIds.DepthRenderBufferId.IsValid());
-            var rbo = _backend.CreateAttachRenderBuffer(in fboRef, size,
-                FrameBufferTarget.DepthStencil, desc.Multisample, out var meta);
+            var rbo = _backend.CreateAttachRenderBuffer(in fboRef, newOutputSize,
+                FrameBufferTarget.DepthStencil, layout.Msaa, out var meta);
             _resources.RboStore.Replace(attachIds.DepthRenderBufferId, in meta, in rbo, out _);
         }
 
-        _repository.FboRepository.UpdateRecord(fboId, in desc);
+        _repository.FboRepository.UpdateOutputSize(fboId, newOutputSize);
         return fboId;
     }
 

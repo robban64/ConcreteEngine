@@ -6,7 +6,21 @@ using ConcreteEngine.Graphics.Resources;
 
 namespace ConcreteEngine.Graphics.Gfx;
 
-public sealed class GfxMeshBuilder
+public interface IGfxMeshBuilder
+{
+    MeshId Finish();
+    void UploadVertices<T>(ReadOnlySpan<T> data, BufferUsage usage,
+        BufferStorage storage, BufferAccess access) where T : unmanaged;
+
+    void UploadIndices<T>(ReadOnlySpan<T> data, BufferUsage usage,
+        BufferStorage storage, BufferAccess access) where T : unmanaged;
+
+    void AddAttribute(in VertexAttributeDesc attribute);
+    void SetAttributeRange(IReadOnlyList<VertexAttributeDesc> attributes);
+    
+}
+
+internal sealed class GfxMeshBuilder : IGfxMeshBuilder
 {
     private readonly State _state = new();
 
@@ -29,8 +43,10 @@ public sealed class GfxMeshBuilder
 
     public MeshId Finish()
     {
+        InvalidOpThrower.ThrowIfNot(_state.MeshId.IsValid());
         EnsureStarted();
 
+        _gfxMeshes.SetVertexAttributes(_state.MeshId, _state.Attributes);
         var id = _gfxMeshes.FinishUploadCommit(_state);
 
         _state.ResetState();
@@ -78,54 +94,29 @@ public sealed class GfxMeshBuilder
         _gfxMeshes.AttachIndexBuffer(_state.MeshId, _state.IboId);
     }
 
-
-    public void SetAttributes(IReadOnlyList<VertexAttributeDesc> attributes)
+    public void SetAttributeRange(IReadOnlyList<VertexAttributeDesc> attributes)
     {
         EnsureStarted();
         InvalidOpThrower.ThrowIfNullOrEmptyCollection(attributes, nameof(attributes));
-        InvalidOpThrower.ThrowIfNot(_state.Attributes.Count == 0, "Attributes already set.");
+        InvalidOpThrower.ThrowIfNot(_state.Attributes.Count == 0, nameof(attributes));
 
-        _gfxMeshes.SetVertexAttributes(_state.MeshId, attributes);
         _state.Attributes.AddRange(attributes);
+
+        if (_phase < Phase.AttributesSet) _phase = Phase.AttributesSet;
+    }
+    
+    public void AddAttribute(in VertexAttributeDesc attribute)
+    {
+        EnsureStarted();
+        
+        _state.Attributes.Add(attribute);
 
         if (_phase < Phase.AttributesSet) _phase = Phase.AttributesSet;
     }
 
 
     private void EnsureStarted() => InvalidOpThrower.ThrowIfNot(_phase >= Phase.Started, "Builder not started.");
-
-
-/*
-    public MeshId Finish()
-    {
-        _state.ValidateState();
-
-        var meshId = _state.MeshId;
-        InvalidOpThrower.ThrowIf(_meshRepository.HasRecord(meshId), nameof(meshId));
-
-        for (int i = 0; i < _state.VboIds.Count; i++)
-        {
-            var vboId = _state.VboIds[i];
-            _gfxMeshes.AttachVertexBuffer(meshId, vboId, i);
-        }
-
-        if(_state.IboId.IsValid())
-            _gfxMeshes.AttachIndexBuffer(meshId, _state.IboId);
-
-        _gfxMeshes.SetVertexAttributes(meshId, _state.Attributes);
-        var record = new MeshRepository.MeshLayout(meshId)
-        {
-            IndexBufferId = _state.IboId,
-            VertexBufferIds = _state.VboIds.ToArray(),
-            Attributes = _state.Attributes.ToArray(),
-            Properties = _state.DrawProperties
-        };
-        _meshRepository.AddRecord(meshId, record);
-
-        _state.ResetState();
-        return meshId;
-    }*/
-
+    
     private enum Phase : byte
     {
         Idle = 0,

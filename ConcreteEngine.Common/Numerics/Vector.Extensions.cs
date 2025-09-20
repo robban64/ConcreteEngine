@@ -8,7 +8,7 @@ using Silk.NET.Maths;
 
 namespace ConcreteEngine.Common.Extensions;
 
-public static class VectorConvertExtensions
+public static class VectorExtensions
 {
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static Vector2 ToVec2(this Vector3 v) => new(v.X, v.Y);

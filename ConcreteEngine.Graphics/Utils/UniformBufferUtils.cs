@@ -2,6 +2,7 @@ using System.Diagnostics;
 using System.Diagnostics.CodeAnalysis;
 using System.Runtime.CompilerServices;
 using ConcreteEngine.Graphics.Error;
+using ConcreteEngine.Graphics.Primitives;
 using ConcreteEngine.Graphics.Resources;
 
 namespace ConcreteEngine.Graphics.Utils;

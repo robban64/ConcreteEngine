@@ -4,14 +4,14 @@ using ConcreteEngine.Graphics.Resources;
 
 namespace ConcreteEngine.Graphics.Gfx;
 
-internal sealed class GfxTextures
+public sealed class GfxTextures
 {
     private readonly FrontendStoreHub _resources;
     private readonly GfxResourceRepository _repository;
     private readonly GfxTexturesBackend _backend;
 
 
-    internal GfxTextures(GfxContext context)
+    internal GfxTextures(GfxContextInternal context)
     {
         _backend = new GfxTexturesBackend(context);
         _resources = context.Stores;
@@ -31,7 +31,7 @@ internal sealed class GfxTextures
         return _resources.TextureStore.Add(in meta, texRef);
     }
 
-    public TextureId ReplaceTexture(TextureId textureId, ReadOnlySpan<byte> data, 
+    internal TextureId ReplaceTexture(TextureId textureId, ReadOnlySpan<byte> data, 
         in GpuTextureDescriptor desc, out  GfxRefToken<TextureId> newTexRef)
     {
         if (desc.Kind == TextureKind.CubeMap)
@@ -74,12 +74,11 @@ internal sealed class GfxTextures
         }
     }
 
-
     private sealed class GfxTexturesBackend
     {
         private readonly IGraphicsDriver _driver;
 
-        internal GfxTexturesBackend(GfxContext context)
+        internal GfxTexturesBackend(GfxContextInternal context)
         {
             _driver = context.Driver;
         }

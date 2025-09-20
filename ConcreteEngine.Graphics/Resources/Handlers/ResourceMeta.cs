@@ -41,11 +41,11 @@ public readonly struct MeshMeta(
     DrawPrimitive primitive,
     MeshDrawKind drawKind,
     DrawElementSize elementSize,
-    int vertexAttribPointers,
+    int attributeLength,
     int drawCount
 ) : IResourceMeta
 {
-    public readonly int VertexAttribPointers = vertexAttribPointers;
+    public readonly int AttributeLength = attributeLength;
     public readonly int DrawCount = drawCount;
     public readonly DrawPrimitive Primitive = primitive;
     public readonly MeshDrawKind DrawKind = drawKind;

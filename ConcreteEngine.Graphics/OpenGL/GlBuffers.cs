@@ -1,6 +1,7 @@
 using System.Runtime.CompilerServices;
 using ConcreteEngine.Graphics.Contracts;
 using ConcreteEngine.Graphics.Error;
+using ConcreteEngine.Graphics.Primitives;
 using ConcreteEngine.Graphics.Resources;
 using Silk.NET.OpenGL;
 

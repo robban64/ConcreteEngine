@@ -2,25 +2,21 @@ using ConcreteEngine.Graphics.Contracts;
 
 namespace ConcreteEngine.Graphics.Resources;
 
-
-
 // Todo animation skeleton data
 public interface IMeshLayout
 {
     MeshId MeshId { get; }
     IndexBufferId IndexBufferId { get; }
+    MeshDrawProperties Properties { get;  }
     ReadOnlySpan<VertexBufferId> GetVertexBufferIds();
     ReadOnlySpan<VertexAttributeDesc> GetAttributes();
-    MeshDrawKind DrawKind { get; }
-    bool IsElemental { get; }
-    uint DrawCount { get; }
 }
-
 
 public interface IMeshRepository
 {
     IMeshLayout Get(MeshId meshId);
 }
+
 internal sealed class MeshRepository : IMeshRepository
 {
     private readonly Dictionary<MeshId, MeshLayout> _registry = new(16);
@@ -31,18 +27,29 @@ internal sealed class MeshRepository : IMeshRepository
     }
 
 
-    internal void AddRecord(MeshId meshId, in MeshMeta meta, IndexBufferId iboId, IReadOnlyList<VertexBufferId> vboIds, IReadOnlyList<VertexAttributeDesc> attr)
+    internal void AddRecord(MeshId meshId, in MeshMeta meta, IndexBufferId iboId, IReadOnlyList<VertexBufferId> vboIds,
+        IReadOnlyList<VertexAttributeDesc> attr)
     {
         _registry.Add(meshId, new MeshLayout(meshId, in meta, iboId, vboIds, attr));
     }
-    
+
+    internal void AddRecord(MeshId meshId, MeshLayout layout)
+    {
+        _registry.Add(meshId, layout);
+    }
+
+    internal bool HasRecord(MeshId meshId) => _registry.ContainsKey(meshId);
 
     internal void RemoveRecord(MeshId meshId)
     {
         _registry.Remove(meshId);
     }
-    
-    internal void UpdateDrawCount(MeshId meshId,uint drawCount) => GetInternal(meshId).DrawCount = drawCount;
+
+    internal void UpdateDrawCount(MeshId meshId, int drawCount)
+    {
+        var layout = GetInternal(meshId);
+        layout.Properties = layout.Properties with { DrawCount = drawCount };
+    }
 
     private MeshLayout GetInternal(MeshId meshId)
     {
@@ -52,29 +59,28 @@ internal sealed class MeshRepository : IMeshRepository
 
     internal sealed class MeshLayout : IMeshLayout
     {
+        internal MeshLayout(MeshId meshId)
+        {
+            ArgumentOutOfRangeException.ThrowIfEqual(meshId.Value, 0);
+            MeshId = meshId;
+        }
 
         internal MeshLayout(MeshId meshId, in MeshMeta meta, IndexBufferId iboId, IReadOnlyList<VertexBufferId> vboIds,
             IReadOnlyList<VertexAttributeDesc> attr)
         {
-            ArgumentOutOfRangeException.ThrowIfEqual(meshId.Value,0);
+            ArgumentOutOfRangeException.ThrowIfEqual(meshId.Value, 0);
             MeshId = meshId;
-            DrawCount = meta.DrawCount;
-            IsElemental = meta.ElementSize != DrawElementSize.Invalid && iboId.IsValid();
-            DrawKind = meta.DrawKind;
-
             IndexBufferId = iboId;
             VertexBufferIds = vboIds.ToArray();
             Attributes = attr.ToArray();
+            Properties = MeshDrawProperties.FromMeta(in meta);
         }
 
-        public MeshId MeshId { get; init; } = default;
+        public MeshId MeshId { get; init; }
         public IndexBufferId IndexBufferId { get; init; } = default;
         public VertexBufferId[] VertexBufferIds { get; init; }
         public VertexAttributeDesc[] Attributes { get; init; }
-
-        public MeshDrawKind DrawKind { get; init; }
-        public bool IsElemental { get; init; }
-        public uint DrawCount { get; internal set; }
+        public MeshDrawProperties Properties { get; internal set; }
 
         public ReadOnlySpan<VertexBufferId> GetVertexBufferIds() => VertexBufferIds;
         public ReadOnlySpan<VertexAttributeDesc> GetAttributes() => Attributes;

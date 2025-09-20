@@ -3,14 +3,15 @@ using System.Numerics;
 using System.Runtime.CompilerServices;
 using ConcreteEngine.Common;
 using ConcreteEngine.Graphics.Error;
+using ConcreteEngine.Graphics.Gfx.Internal;
 using ConcreteEngine.Graphics.OpenGL;
 using ConcreteEngine.Graphics.Primitives;
 using ConcreteEngine.Graphics.Resources;
 using Silk.NET.Maths;
 
-namespace ConcreteEngine.Graphics;
+namespace ConcreteEngine.Graphics.Gfx;
 
-internal sealed class GraphicsContext : IGraphicsContext
+public sealed class GfxCommands 
 {
     public GraphicsConfiguration Configuration => _driver.Configuration;
     public DeviceCapabilities Capabilities => _driver.Capabilities;
@@ -23,12 +24,12 @@ internal sealed class GraphicsContext : IGraphicsContext
     private readonly FrontendStoreHub _store;
     private readonly GfxResourceRepository _repository;
 
-
     //States
     private BlendMode _blendMode = BlendMode.Unset;
     private DepthMode _depthMode = DepthMode.Unset;
     private CullMode _cullMode = CullMode.Unset;
 
+    //TODO remove
     private FrameBufferId _boundFboId = default;
     private FrameBufferId _boundReadFboId = default;
     private GfxHandle _currDrawFboHandle = default; // 0 = screen
@@ -40,6 +41,8 @@ internal sealed class GraphicsContext : IGraphicsContext
 
     private ShaderLayout? _boundUniforms;
 
+    private MeshId _boundMeshId = default;
+    private MeshMeta _boundMeshMeta = default;
 
     //
     private Vector2D<int> _activeOutputSize;
@@ -47,14 +50,14 @@ internal sealed class GraphicsContext : IGraphicsContext
     private int _drawTriangleCount = 0;
     private int _drawCallCount = 0;
 
-    public GraphicsContext(IGraphicsDriver driver, GfxResourceManager resources, GfxResourceRepository repository)
+    internal GfxCommands(GfxContextInternal ctx)
     {
-        _driver = driver;
-        _states = driver.States;
-        _shaders = driver.Shaders;
-        _textures = driver.Textures;
-        _repository = repository;
-        _store = resources.FrontendStoreHub;
+        _driver = ctx.Driver;
+        _states = ctx.Driver.States;
+        _shaders = ctx.Driver.Shaders;
+        _textures = ctx.Driver.Textures;
+        _repository = ctx.Repositories;
+        _store = ctx.Stores;
 
         _boundTextures = new TextureId[Configuration.MaxTextureImageUnits];
     }
@@ -159,9 +162,8 @@ internal sealed class GraphicsContext : IGraphicsContext
         }
 
         _driver.FrameBuffers.Blit(in fromHandle, in toHandle, srcSize, toFbo.Size, linear);
-        
-        // Legacy - SetViewport(prevViewport);
 
+        // Legacy - SetViewport(prevViewport);
     }
 
 
@@ -169,8 +171,8 @@ internal sealed class GraphicsContext : IGraphicsContext
 
     public void SetViewport(in Vector2D<int> viewport)
     {
-        if(_activeOutputSize == viewport) return;
-        
+        if (_activeOutputSize == viewport) return;
+
         _activeOutputSize = viewport;
         _states.SetViewport(viewport);
     }
@@ -236,28 +238,28 @@ internal sealed class GraphicsContext : IGraphicsContext
         ref readonly var handle = ref _store.TextureStore.GetHandle(texture);
         _textures.BindTexture(handle, (uint)slot);
     }
-/*
-    public void BindMesh(MeshId id)
+
+    private void BindMesh(MeshId id)
     {
-        if (_boundVaoId == id) return;
+        if (_boundMeshId == id) return;
 
         if (id == default)
         {
-            _driver.BindVertexArray(default);
-            _boundVaoId = default;
+            _driver.States.BindMesh(default);
+            _boundMeshId = default;
+            _boundMeshMeta = default;
             return;
         }
 
-        ref readonly var handle = ref _store.MeshStore.GetHandle(id);
-        _driver.BindVertexArray(handle);
-        _boundVaoId = id;
+        var meshRef = _store.MeshStore.GetRefAndMeta(id, out _boundMeshMeta);
+        _driver.States.BindMesh(meshRef);
+        _boundMeshId = id;
     }
-*/
-    
-    public void DrawBoundMesh(int drawCount)
-    {
-        ref readonly var meta = ref _store.MeshStore.GetMeta(_boundVaoId);
 
+
+    public void DrawBoundMesh(MeshId id, int drawCount)
+    {
+        ref readonly var meta = ref _store.MeshStore.GetMeta(_boundMeshId);
         var count = drawCount > 0 ? drawCount : meta.DrawCount;
 
         switch (meta.DrawKind)
@@ -274,42 +276,49 @@ internal sealed class GraphicsContext : IGraphicsContext
         }
     }
 
-    public void DrawArrays(DrawPrimitive primitive, int drawCount)
+    private void DrawArrays(DrawPrimitive primitive, int drawCount)
     {
         Debug.Assert(drawCount != 0, "DrawArrays called with drawCount = 0");
-        _driver.Meshes.DrawArrays(primitive, (uint)drawCount);
+        _driver.States.DrawArrays(primitive, (uint)drawCount);
         _drawTriangleCount += drawCount;
         _drawCallCount++;
     }
 
-    public void DrawElements(DrawPrimitive primitive, DrawElementSize elementSize, int drawCount)
+    private void DrawElements(DrawPrimitive primitive, DrawElementSize elementSize, int drawCount)
     {
         Debug.Assert(drawCount != 0, "DrawElements called with drawCount = 0");
         Debug.Assert(elementSize != DrawElementSize.Invalid);
 
-        _driver.Meshes.DrawElements(primitive, elementSize, (uint)drawCount);
+        _driver.States.DrawElements(primitive, elementSize, (uint)drawCount);
         _drawTriangleCount += drawCount;
         _drawCallCount++;
     }
+    
 
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public void SetUniform(ShaderUniform uniform, int value) => _shaders.SetUniform(_boundUniforms![uniform], value);
+    public void SetUniform(ShaderUniform uniform, int value) 
+        => _shaders.SetUniform(_boundUniforms![uniform], value);
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public void SetUniform(ShaderUniform uniform, uint value) => _shaders.SetUniform(_boundUniforms![uniform], value);
+    public void SetUniform(ShaderUniform uniform, uint value) 
+        => _shaders.SetUniform(_boundUniforms![uniform], value);
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public void SetUniform(ShaderUniform uniform, float value) => _shaders.SetUniform(_boundUniforms![uniform], value);
+    public void SetUniform(ShaderUniform uniform, float value) 
+        => _shaders.SetUniform(_boundUniforms![uniform], value);
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public void SetUniform(ShaderUniform uniform, Vector2 value) => _shaders.SetUniform(_boundUniforms![uniform], value);
+    public void SetUniform(ShaderUniform uniform, Vector2 value) =>
+        _shaders.SetUniform(_boundUniforms![uniform], value);
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public void SetUniform(ShaderUniform uniform, Vector3 value) => _shaders.SetUniform(_boundUniforms![uniform], value);
+    public void SetUniform(ShaderUniform uniform, Vector3 value) =>
+        _shaders.SetUniform(_boundUniforms![uniform], value);
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public void SetUniform(ShaderUniform uniform, Vector4 value) => _shaders.SetUniform(_boundUniforms![uniform], value);
+    public void SetUniform(ShaderUniform uniform, Vector4 value) =>
+        _shaders.SetUniform(_boundUniforms![uniform], value);
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public void SetUniform(ShaderUniform uniform, in Matrix4x4 value) =>

@@ -1,4 +1,5 @@
 using ConcreteEngine.Graphics.Error;
+using ConcreteEngine.Graphics.Gfx;
 using ConcreteEngine.Graphics.OpenGL;
 using ConcreteEngine.Graphics.Resources;
 using ConcreteEngine.Graphics.Utils;
@@ -26,7 +27,7 @@ public sealed class GraphicsRuntime : IGraphicsRuntime
 {
     private IGraphicsDriver _driver = null!;
 
-    private GraphicsContext _context = null!;
+    private GfxCommands _context = null!;
 
     private GfxResourceAllocator _allocator = null!;
     private GfxResourceDisposer _disposer = null!;
@@ -64,7 +65,7 @@ public sealed class GraphicsRuntime : IGraphicsRuntime
         driver.Initialize();
         _driver = driver;
 
-        _context = new GraphicsContext(_driver, _resources, _repository);
+        _context = new GfxCommands(_driver, _resources, _repository);
         _disposer = new GfxResourceDisposer(_resources, _repository, _driver.Disposer);
         _allocator = new GfxResourceAllocator(_driver, _resources, _repository, _disposer);
         _factoryHub = new GfxFactoryHub(_context, _resources, _allocator, _repository);

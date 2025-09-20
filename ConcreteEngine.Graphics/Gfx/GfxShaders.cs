@@ -3,24 +3,24 @@ using ConcreteEngine.Graphics.Resources;
 
 namespace ConcreteEngine.Graphics.Gfx;
 
-internal sealed class GfxShaders
+public sealed class GfxShaders
 {
     private readonly FrontendStoreHub _resources;
     private readonly GfxResourceRepository _repository;
     
     private readonly GfxShadersBackend _backend;
 
-    internal GfxShaders(GfxContext context)
+    internal GfxShaders(GfxContextInternal context)
     {
         _backend = new GfxShadersBackend(context);
         _resources = context.Stores;
         _repository = context.Repositories;
     }
 
-    public ShaderId CreateShader(string vs, string fs, out ShaderMeta meta, out List<(string, int)> uniforms)
+    public ShaderId CreateShader(string vs, string fs)
     {
-        var programRef = _backend.CreateShader(vs, fs, out var samples, out uniforms);
-        meta = new ShaderMeta((uint)samples);
+        var programRef = _backend.CreateShader(vs, fs, out var samples, out var uniforms);
+        var meta = new ShaderMeta(samples);
         var shaderId = _resources.ShaderStore.Add(in meta, programRef);
         _repository.ShaderRepository.Add(shaderId, in meta, uniforms);
         return shaderId;
@@ -30,7 +30,7 @@ internal sealed class GfxShaders
     {
         private readonly IGraphicsDriver _driver;
 
-        internal GfxShadersBackend(GfxContext context)
+        internal GfxShadersBackend(GfxContextInternal context)
         {
             _driver = context.Driver;
         }

@@ -5,14 +5,11 @@ using Silk.NET.OpenGL;
 
 namespace ConcreteEngine.Graphics.OpenGL;
 
-internal sealed class GlMeshes: IGraphicsDriverModule
+internal sealed class GlMeshes : IGraphicsDriverModule
 {
     private readonly GL _gl;
     private readonly BackendOpsHub _store;
     private readonly GlCapabilities _capabilities;
-
-    [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public uint VaoHandle(in GfxHandle handle) => _store.VertexArray.Get(in handle).Handle;
 
     internal GlMeshes(GlCtx ctx)
     {
@@ -21,6 +18,9 @@ internal sealed class GlMeshes: IGraphicsDriverModule
         _store = ctx.Store;
     }
 
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    private uint VaoHandle(in GfxRefToken<MeshId> vao) => _store.VertexArray.GetRef(in vao).Handle;
+
     public GfxRefToken<MeshId> CreateVertexArray()
     {
         _gl.CreateVertexArrays(1, out uint vao);
@@ -28,43 +28,48 @@ internal sealed class GlMeshes: IGraphicsDriverModule
     }
 
     //TODO Binding index?
-    public void AttachVertexBuffer(in GfxHandle vao, in GfxHandle vbo, int bindingIdx, nint offset, nint stride)
+    public void AttachVertexBuffer(in GfxRefToken<MeshId> vao, in GfxRefToken<VertexBufferId> vbo, int bindingIdx,
+        nint offset, nint stride)
     {
-        var vboHandle = _store.VertexBuffer.Get(in vbo).Handle;
+        var vboHandle = _store.VertexBuffer.GetRef(in vbo).Handle;
         var handle = VaoHandle(in vao);
         _gl.VertexArrayVertexBuffer(handle, (uint)bindingIdx, vboHandle, offset, (uint)stride);
     }
 
-    public void AttachIndexBuffer(in GfxHandle vao, in GfxHandle ibo)
+    public void AttachIndexBuffer(in GfxRefToken<MeshId> vao, in GfxRefToken<IndexBufferId> ibo)
     {
-        var iboHandle = _store.VertexBuffer.Get(in ibo).Handle;
+        var iboHandle = _store.IndexBuffer.GetRef(in ibo).Handle;
         _gl.VertexArrayElementBuffer(VaoHandle(in vao), iboHandle);
     }
 
-    public void SetVertexAttribute(GfxRefToken<MeshId> vao, int attribIndex, in VertexAttributeDesc attr)
+    public void AddVertexAttribute(GfxRefToken<MeshId> vao, int attribIndex, in VertexAttributeDesc attr) =>
+        AddVertexAttributeInternal(VaoHandle(vao), attribIndex, attr);
+
+    public void AddVertexAttributeRange(GfxRefToken<MeshId> vao, IReadOnlyList<VertexAttributeDesc> attribs)
     {
-        var handle = VaoHandle(vao.Handle);
-        (uint vboIdx, int format, uint divisor) = ((uint)attr.VboBinding,  (int)attr.Format, (uint)attr.Divisor);
-        
-        _gl.VertexArrayAttribFormat(handle, vboIdx, format, 
+        var vaoHandle = VaoHandle(vao);
+        for (int i = 0; i < attribs.Count; i++)
+            AddVertexAttributeInternal(vaoHandle, i, attribs[i]);
+    }
+
+    public void AddVertexAttributeRange(GfxRefToken<MeshId> vao, ReadOnlySpan<VertexAttributeDesc> attribs)
+    {
+        var vaoHandle = VaoHandle(vao);
+        for (int i = 0; i < attribs.Length; i++)
+            AddVertexAttributeInternal(vaoHandle, i, attribs[i]);
+    }
+    
+    private void AddVertexAttributeInternal(uint vaoHandle, int attribIndex, in VertexAttributeDesc attr)
+    {
+        (uint vboIdx, int format, uint divisor) = ((uint)attr.VboBinding, (int)attr.Format, (uint)attr.Divisor);
+        _gl.VertexArrayAttribFormat(vaoHandle, vboIdx, format,
             VertexAttribType.Float, attr.Normalized, (uint)attr.Offset);
-        
-        _gl.VertexArrayAttribBinding(handle, (uint)attribIndex,vboIdx);
-        _gl.EnableVertexArrayAttrib(handle, vboIdx);
-        
-        if (attr.Divisor != 0) _gl.VertexArrayBindingDivisor(handle, vboIdx, (uint)attr.Divisor);
+
+        _gl.VertexArrayAttribBinding(vaoHandle, (uint)attribIndex, vboIdx);
+        _gl.EnableVertexArrayAttrib(vaoHandle, vboIdx);
+
+        if (divisor != 0) _gl.VertexArrayBindingDivisor(vaoHandle, vboIdx, divisor);
     }
 
-    [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public void DrawArrays(DrawPrimitive primitive, uint drawCount)
-    {
-        _gl.DrawArrays(primitive.ToGlEnum(), 0, drawCount);
-    }
-
-    [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public unsafe void DrawElements(DrawPrimitive primitive, DrawElementSize elementSize, uint drawCount)
-    {
-        _gl.DrawElements(primitive.ToGlEnum(), drawCount, elementSize.ToGlEnum(), (void*)0);
-    }
 
 }

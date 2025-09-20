@@ -7,7 +7,7 @@ using Silk.NET.Maths;
 
 namespace ConcreteEngine.Graphics.Gfx;
 
-internal sealed class GfxFrameBuffers
+public sealed class GfxFrameBuffers
 {
     private readonly FrontendStoreHub _resources;
     private readonly GfxResourceRepository _repository;
@@ -16,7 +16,7 @@ internal sealed class GfxFrameBuffers
 
     private readonly GfxFrameBuffersBackend _backend;
 
-    internal GfxFrameBuffers(GfxContext context, GfxTextures gfxTextures)
+    internal GfxFrameBuffers(GfxContextInternal context, GfxTextures gfxTextures)
     {
         _backend = new GfxFrameBuffersBackend(context);
         _gfxTextures = gfxTextures;
@@ -64,7 +64,7 @@ internal sealed class GfxFrameBuffers
         return fboId;
     }
 
-    public FrameBufferId RecreateFrameBuffer(FrameBufferId fboId, in FrameBufferDesc desc)
+    internal FrameBufferId RecreateFrameBuffer(FrameBufferId fboId, in FrameBufferDesc desc)
     {
         EnsureCreateFrameBuffer(in desc);
         GetMetaAndSizeFromDesc(in desc, out var fboMeta, out var size);
@@ -112,7 +112,7 @@ internal sealed class GfxFrameBuffers
     {
         private readonly IGraphicsDriver _driver;
 
-        internal GfxFrameBuffersBackend(GfxContext context)
+        internal GfxFrameBuffersBackend(GfxContextInternal context)
         {
             _driver = context.Driver;
         }

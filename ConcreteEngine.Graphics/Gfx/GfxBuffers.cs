@@ -3,12 +3,13 @@ using ConcreteEngine.Graphics.Contracts;
 using ConcreteEngine.Graphics.Error;
 using ConcreteEngine.Graphics.Gfx.Internal;
 using ConcreteEngine.Graphics.OpenGL;
+using ConcreteEngine.Graphics.Primitives;
 using ConcreteEngine.Graphics.Resources;
 using ConcreteEngine.Graphics.Utils;
 
 namespace ConcreteEngine.Graphics.Gfx;
 
-internal sealed class GfxBuffers
+public sealed class GfxBuffers
 {
     private readonly FrontendStoreHub _resources;
     private readonly GfxResourceRepository _repository;
@@ -16,7 +17,7 @@ internal sealed class GfxBuffers
 
     private const BufferUsage DefaultUsage = BufferUsage.StaticDraw;
 
-    internal GfxBuffers(GfxContext context)
+    internal GfxBuffers(GfxContextInternal context)
     {
         _backend = new GfxBuffersBackend(context);
         _resources = context.Stores;
@@ -138,7 +139,7 @@ internal sealed class GfxBuffers
     }
 
 
-    private sealed class GfxBuffersBackend(GfxContext context)
+    private sealed class GfxBuffersBackend(GfxContextInternal context)
     {
         private readonly IGraphicsDriver _driver = context.Driver;
         private readonly GlBuffers _driverBuffer = context.Driver.Buffers;
@@ -146,21 +147,21 @@ internal sealed class GfxBuffers
         public GfxRefToken<VertexBufferId> CreateVertexBuffer<T>(ReadOnlySpan<T> data, in GfxBufferDataDesc desc)
             where T : unmanaged
         {
-            var vboRef = _driver.Buffers.CreateVertexBuffer(data, in desc);
+            var vboRef = _driverBuffer.CreateVertexBuffer(data, in desc);
             return vboRef;
         }
 
         public GfxRefToken<IndexBufferId> CreateIndexBuffer<T>(ReadOnlySpan<T> data, in GfxBufferDataDesc desc)
             where T : unmanaged
         {
-            var vboRef = _driver.Buffers.CreateIndexBuffer(data, in desc);
+            var vboRef = _driverBuffer.CreateIndexBuffer(data, in desc);
             return vboRef;
         }
 
         public GfxRefToken<UniformBufferId> CreateUniformBuffer<T>(UniformGpuSlot slot, in GfxBufferDataDesc desc)
             where T : unmanaged, IUniformGpuData
         {
-            var vboRef = _driver.Buffers.CreateUniformBuffer<T>(slot, in desc);
+            var vboRef = _driverBuffer.CreateUniformBuffer<T>(slot, in desc);
             return vboRef;
         }
 
@@ -168,34 +169,34 @@ internal sealed class GfxBuffers
         public void SetBufferData<TId, T>(GfxRefToken<TId> token, ReadOnlySpan<T> data, nint size, BufferUsage usage)
             where TId : unmanaged, IResourceId where T : unmanaged
         {
-            _driver.Buffers.SetBufferData(token.Handle, data, size, usage);
+            _driverBuffer.SetBufferData(token.Handle, data, size, usage);
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public void ResizeBuffer<TId>(GfxRefToken<TId> token, nint size, BufferUsage usage)
             where TId : unmanaged, IResourceId
         {
-            _driver.Buffers.ResizeBuffer(token.Handle, size, usage);
+            _driverBuffer.ResizeBuffer(token.Handle, size, usage);
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public void UploadBufferData<TId, T>(GfxRefToken<TId> token, ReadOnlySpan<T> data, nint offset, nint size)
             where TId : unmanaged, IResourceId where T : unmanaged
         {
-            _driver.Buffers.UploadBufferData<T>(token.Handle, data, offset, size);
+            _driverBuffer.UploadBufferData<T>(token.Handle, data, offset, size);
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public void UploadBufferDataSingle<TId, T>(GfxRefToken<TId> token, T data, nint offset, nint size)
             where TId : unmanaged, IResourceId where T : unmanaged
         {
-            _driver.Buffers.UploadBufferData<T>(token.Handle, data, offset, size);
+            _driverBuffer.UploadBufferData<T>(token.Handle, data, offset, size);
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public void BindUniformBufferRange(in GfxRefToken<UniformBufferId> uboRef, uint slot, nint offset, nint size)
         {
-            _driver.Buffers.BindBufferRange(uboRef.Handle, slot, offset, size);
+            _driverBuffer.BindBufferRange(uboRef.Handle, slot, offset, size);
         }
     }
 }

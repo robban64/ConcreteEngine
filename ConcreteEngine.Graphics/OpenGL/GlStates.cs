@@ -1,3 +1,4 @@
+using System.Runtime.CompilerServices;
 using ConcreteEngine.Common;
 using ConcreteEngine.Graphics.Resources;
 using Silk.NET.Maths;
@@ -22,6 +23,8 @@ internal sealed class GlStates: IGraphicsDriverModule
         _gl.ClearColor(color.R, color.G, color.B, 1);
         _gl.Clear(flags.ToGlEnum());
     }
+    
+    public void SetViewport(in Vector2D<int> viewport) => _gl.Viewport(viewport);
 
     public void SetBlendMode(BlendMode blendMode)
     {
@@ -54,6 +57,23 @@ internal sealed class GlStates: IGraphicsDriverModule
         _gl.FrontFace(front);
     }
 
-    public void SetViewport(in Vector2D<int> viewport) => _gl.Viewport(viewport);
+
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public void BindMesh(GfxRefToken<MeshId> mesh)
+    {
+        _gl.BindVertexArray(_store.VertexArray.GetRef(mesh).Handle);
+    }
+    
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public void DrawArrays(DrawPrimitive primitive, uint drawCount)
+    {
+        _gl.DrawArrays(primitive.ToGlEnum(), 0, drawCount);
+    }
+
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public unsafe void DrawElements(DrawPrimitive primitive, DrawElementSize elementSize, uint drawCount)
+    {
+        _gl.DrawElements(primitive.ToGlEnum(), drawCount, elementSize.ToGlEnum(), (void*)0);
+    }
 
 }

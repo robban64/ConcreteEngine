@@ -3,7 +3,7 @@ using ConcreteEngine.Graphics.Descriptors;
 using ConcreteEngine.Graphics.Primitives;
 using ConcreteEngine.Graphics.Resources;
 
-namespace ConcreteEngine.Graphics;
+namespace ConcreteEngine.Graphics.Utils;
 
 public interface IPrimitiveMeshes
 {

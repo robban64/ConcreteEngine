@@ -3,14 +3,14 @@ using ConcreteEngine.Graphics.Contracts;
 using ConcreteEngine.Graphics.Gfx.Internal;
 using ConcreteEngine.Graphics.Resources;
 
-namespace ConcreteEngine.Graphics;
+namespace ConcreteEngine.Graphics.Gfx.Builders;
 
 
-public sealed class MeshGfxBuilder
+public sealed class GfxMeshBulkBuilder
 {
     private readonly CommonBuilder<Builder, Result, State> _builder;
 
-    internal MeshGfxBuilder(GfxResourceAllocator allocator)
+    internal GfxMeshBulkBuilder(GfxResourceAllocator allocator)
     {
         var builderObj = new Builder(allocator);
         _builder = new CommonBuilder<Builder, Result, State>(builderObj, static () => new State());
@@ -25,6 +25,8 @@ public sealed class MeshGfxBuilder
     {
         return _builder.Build();
     }
+    
+    
 
     public sealed class Builder : CommonBuilderBase<Result, State>
     {
@@ -80,9 +82,9 @@ public sealed class MeshGfxBuilder
         protected override void ValidateBuilder(State s)
         {
             InvalidOpThrower.ThrowIfNot(s.MeshId.IsValid(), nameof(s.MeshId));
-            InvalidOpThrower.ThrowIfNullOrEmpty(s.VboIds, nameof(s.VboIds));
-            InvalidOpThrower.ThrowIfNullOrEmpty(s.Attributes, nameof(s.Attributes));
-            InvalidOpThrower.ThrowIfNullOrEmpty(s.Attributes, nameof(s.Attributes));
+            InvalidOpThrower.ThrowIfNullOrEmptyCollection(s.VboIds, nameof(s.VboIds));
+            InvalidOpThrower.ThrowIfNullOrEmptyCollection(s.Attributes, nameof(s.Attributes));
+            InvalidOpThrower.ThrowIfNullOrEmptyCollection(s.Attributes, nameof(s.Attributes));
             foreach (var vboId in s.VboIds)
                 InvalidOpThrower.ThrowIfNot(vboId.IsValid(), nameof(vboId));
 

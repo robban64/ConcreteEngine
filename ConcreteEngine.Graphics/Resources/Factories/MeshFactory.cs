@@ -99,7 +99,7 @@ internal sealed class MeshFactory : IMeshFactory
 
         var prevMeta = _resources.MeshStore.GetMeta(_meshId);
         var newMeta = new MeshMeta(prevMeta.Primitive, prevMeta.DrawKind, prevMeta.ElementSize,
-            prevMeta.VertexAttribPointers, drawCount);
+            prevMeta.AttributeLength, drawCount);
         _resources.MeshStore.ReplaceMeta(_meshId, in newMeta, out _);
 
         var meshRegistry = _repository.MeshRepository;

@@ -5,8 +5,6 @@ namespace ConcreteEngine.Graphics.OpenGL;
 
 internal sealed class GlBackendDriver : IGraphicsDriver
 {
-
-
     private readonly GL _gl;
     private readonly GlCtx _ctx;
 

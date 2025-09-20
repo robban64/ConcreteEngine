@@ -2,9 +2,7 @@ using ConcreteEngine.Graphics.Gfx.Internal;
 
 namespace ConcreteEngine.Graphics.Gfx;
 
-public interface IGfx;
-
-public sealed class Gfx
+public sealed class GfxContext
 {
     private readonly GfxBuffers _buffers;
     private readonly GfxMeshes _meshes;
@@ -13,7 +11,7 @@ public sealed class Gfx
     private readonly GfxFrameBuffers _frameBuffers;
     private readonly GfxCommands _cmd;
 
-    internal Gfx(GfxContextInternal ctxInternal)
+    internal GfxContext(GfxContextInternal ctxInternal)
     {
         _buffers = new GfxBuffers(ctxInternal);
         _shaders = new GfxShaders(ctxInternal);

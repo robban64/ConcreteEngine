@@ -1,8 +1,6 @@
-using ConcreteEngine.Graphics.Resources;
+namespace ConcreteEngine.Graphics.Resources;
 
-namespace ConcreteEngine.Graphics;
-
-internal interface IGfxResourceManager
+public interface IGfxResourceManager
 {
     /*
  public FrontendResourceStore<TextureId, TextureMeta> TextureStore { get; }

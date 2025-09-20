@@ -71,9 +71,9 @@ public readonly struct VertexBufferMeta(
     public readonly BufferUsage Usage = usage;
     public readonly BufferStorage Storage = storage;
     public readonly BufferAccess Access = access;
-    
-    public static VertexBufferMeta CreateCopy(in VertexBufferMeta meta, int count, nint stride, BufferUsage usage)
-        => new(meta.BindingIdx, count, stride, usage, meta.Storage, meta.Access);
+
+    public static VertexBufferMeta CreateCopy(in VertexBufferMeta meta, int count, nint stride, BufferUsage usage) =>
+        new(meta.BindingIdx, count, stride, usage, meta.Storage, meta.Access);
 }
 
 public readonly struct IndexBufferMeta(
@@ -90,24 +90,26 @@ public readonly struct IndexBufferMeta(
     public readonly BufferStorage Storage = storage;
     public readonly BufferAccess Access = access;
 
-    public static IndexBufferMeta CreateCopy(in IndexBufferMeta meta, int count, nint stride, BufferUsage usage)
-        => new(count, stride, usage, meta.Storage, meta.Access);
+    public static IndexBufferMeta CreateCopy(in IndexBufferMeta meta, int count, nint stride, BufferUsage usage) =>
+        new(count, stride, usage, meta.Storage, meta.Access);
 }
 
 public readonly struct FrameBufferMeta(
     Vector2D<int> size,
+    bool colorTexture,
+    bool depthTexture,
     bool colorBuffer,
-    bool depthBuffer,
     bool depthStencilBuffer
 ) : IResourceMeta
 {
     public readonly Vector2D<int> Size = size;
+    public readonly bool ColorTexture = colorTexture;
+    public readonly bool DepthTexture = depthTexture;
     public readonly bool ColorBuffer = colorBuffer;
-    public readonly bool DepthBuffer = depthBuffer;
     public readonly bool DepthStencilBuffer = depthStencilBuffer;
 
     internal static FrameBufferMeta CreateResizeCopy(in FrameBufferMeta meta, Vector2D<int> size) =>
-        new(size, meta.ColorBuffer, meta.DepthBuffer, meta.DepthStencilBuffer);
+        new(size, meta.ColorTexture, meta.DepthTexture, meta.ColorBuffer, meta.DepthStencilBuffer);
 }
 
 public readonly struct RenderBufferMeta(
@@ -130,7 +132,7 @@ public readonly struct UniformBufferMeta : IResourceMeta
     public readonly BufferStorage Storage;
     public readonly BufferAccess Access;
 
-    
+
     public UniformBufferMeta(UniformGpuSlot slot, nint blockSize, BufferUsage usage, BufferStorage storage,
         BufferAccess access)
     {
@@ -141,5 +143,4 @@ public readonly struct UniformBufferMeta : IResourceMeta
         Access = access;
         Stride = UniformBufferUtils.AlignUp(BlockSize, UniformBufferUtils.UboOffsetAlign);
     }
-    
 }

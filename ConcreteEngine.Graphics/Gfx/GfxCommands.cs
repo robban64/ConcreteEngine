@@ -62,7 +62,7 @@ public sealed class GfxCommands
         _boundTextures = new TextureId[Configuration.MaxTextureImageUnits];
     }
 
-    public void BeginFrame(in FrameInfo frameCtx)
+    internal void BeginFrame(in FrameInfo frameCtx)
     {
         _frameCtx = frameCtx;
 
@@ -76,7 +76,7 @@ public sealed class GfxCommands
         _states.Clear(Color4.CornflowerBlue, ClearBufferFlag.ColorAndDepth);
     }
 
-    public void EndFrame(out GpuFrameStats result)
+    internal void EndFrame(out GpuFrameStats result)
     {
         result = new GpuFrameStats(_drawCallCount, _drawTriangleCount);
         // unbind context

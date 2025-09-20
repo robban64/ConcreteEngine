@@ -7,5 +7,4 @@ internal sealed class GfxContextInternal(IGraphicsDriver driver, GfxResourceRepo
     public IGraphicsDriver Driver { get; } = driver;
     public GfxResourceRepository Repositories { get; } = repositories;
     public FrontendStoreHub Stores { get; } = stores;
-
 }

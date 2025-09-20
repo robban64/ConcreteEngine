@@ -1,5 +1,7 @@
+using ConcreteEngine.Common;
 using ConcreteEngine.Graphics.Error;
 using ConcreteEngine.Graphics.Gfx;
+using ConcreteEngine.Graphics.Gfx.Internal;
 using ConcreteEngine.Graphics.OpenGL;
 using ConcreteEngine.Graphics.Resources;
 using ConcreteEngine.Graphics.Utils;
@@ -9,14 +11,10 @@ namespace ConcreteEngine.Graphics;
 
 public interface IGraphicsRuntime : IDisposable
 {
-    public IGraphicsContext Context { get; }
-    public IGfxResourceAllocator Allocator { get; }
     public IGfxResourceDisposer Disposer { get; }
     public IGfxResourceRepository Repository { get; }
-    public IGfxFactoryHub FactoryHub { get; }
 
     void Initialize<T>(IGfxStartupConfig<T> config) where T : class;
-
     void BeginFrame(in FrameInfo frameInfo);
     void EndFrame(out GpuFrameStats stats);
 
@@ -25,53 +23,49 @@ public interface IGraphicsRuntime : IDisposable
 
 public sealed class GraphicsRuntime : IGraphicsRuntime
 {
+    private static bool _isInitialized = false;
+    
     private IGraphicsDriver _driver = null!;
 
-    private GfxCommands _context = null!;
-
-    private GfxResourceAllocator _allocator = null!;
     private GfxResourceDisposer _disposer = null!;
     private GfxResourceManager _resources = null!;
     private GfxResourceRepository _repository = null!;
 
-    private GfxFactoryHub _factoryHub = null!;
-
-    public IGraphicsContext Context => _context;
-
-    public IGfxResourceAllocator Allocator => _allocator;
-
-    public IGfxResourceDisposer Disposer => _disposer;
-
-    public IGfxResourceRepository Repository => _repository;
-
-    public IGfxFactoryHub FactoryHub => _factoryHub;
-
+    private GfxContext _gfxContext = null!;
+    private GfxResourceContext _gfxResourceContext = null!;
+    
     private FrameInfo _frameCtx;
 
     public GraphicsRuntime()
     {
     }
+    
+    public IGfxResourceDisposer Disposer => _disposer;
+    public IGfxResourceRepository Repository => _repository;
 
     public void Initialize<T>(IGfxStartupConfig<T> config) where T : class
     {
+        InvalidOpThrower.ThrowIf(_isInitialized, "GFX has already been initialized.");
+        
         if (config is not GlStartupConfig glConfig)
             throw GraphicsException.UnsupportedFeature("Only OpenGL is supported");
 
         _resources = new GfxResourceManager();
         _repository = new GfxResourceRepository(_resources);
-
+        _disposer = new GfxResourceDisposer(_resources, _repository);
+        
         var backendOps = _resources.BackendStoreHub.BackendOps;
         var driver = new GlBackendDriver(glConfig, backendOps, _resources.BackendDispatcher);
         driver.Initialize();
+        UniformBufferUtils.Init(driver.Capabilities.UniformBufferOffsetAlignment);
+
         _driver = driver;
 
-        _context = new GfxCommands(_driver, _resources, _repository);
-        _disposer = new GfxResourceDisposer(_resources, _repository, _driver.Disposer);
-        _allocator = new GfxResourceAllocator(_driver, _resources, _repository, _disposer);
-        _factoryHub = new GfxFactoryHub(_context, _resources, _allocator, _repository);
+        var gfxCtxInternal = new GfxContextInternal(_driver, _repository, _resources.FrontendStoreHub);
+        _gfxResourceContext = new GfxResourceContext(_resources, _repository, _disposer);
+        _gfxContext = new GfxContext(gfxCtxInternal);
 
-
-        UniformBufferUtils.Init(_context.Capabilities.UniformBufferOffsetAlignment);
+        _isInitialized = true;
     }
 
     public void Shutdown()
@@ -81,13 +75,15 @@ public sealed class GraphicsRuntime : IGraphicsRuntime
     public void BeginFrame(in FrameInfo frameInfo)
     {
         _frameCtx = frameInfo;
-        _context.BeginFrame(frameInfo);
+        _gfxContext.Commands.BeginFrame(frameInfo);
     }
 
     public void EndFrame(out GpuFrameStats stats)
     {
-        if (_disposer.PendingCount > 0) _disposer.DrainDisposeQueue();
-        _context.EndFrame(out stats);
+        if (_disposer.PendingCount > 0) _disposer.DrainDisposeQueue(_driver);
+        
+        _gfxContext.Commands.EndFrame(out stats);
+        
         if (_frameCtx.ResizePending)
         {
             RecreateFbo(_frameCtx.OutputSize);
@@ -106,7 +102,7 @@ public sealed class GraphicsRuntime : IGraphicsRuntime
         foreach (var fboId in fboStore.IdEnumerator)
         {
             fboId.IsValidOrThrow();
-            _allocator.RecreateFrameBuffer(fboId, in outputSize);
+            _gfxContext.FrameBuffers.RecreateFrameBuffer(fboId, in outputSize);
         }
     }
 

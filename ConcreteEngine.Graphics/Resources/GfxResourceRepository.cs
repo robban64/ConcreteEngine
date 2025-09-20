@@ -1,6 +1,4 @@
-using ConcreteEngine.Graphics.Resources;
-
-namespace ConcreteEngine.Graphics;
+namespace ConcreteEngine.Graphics.Resources;
 
 public interface IGfxResourceRepository
 {

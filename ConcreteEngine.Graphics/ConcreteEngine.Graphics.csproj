@@ -35,6 +35,18 @@
       <None Include="OpenGL\Old\GlShaderFactory.cs" />
       <Compile Remove="OpenGL\Old\GlTextureFactory.cs" />
       <None Include="OpenGL\Old\GlTextureFactory.cs" />
+      <Compile Remove="Gfx\Old\GfxAllocator.cs" />
+      <None Include="Gfx\Old\GfxAllocator.cs" />
+      <Compile Remove="Gfx\Old\GfxAllocatorFacade.cs" />
+      <None Include="Gfx\Old\GfxAllocatorFacade.cs" />
+      <Compile Remove="Gfx\Old\GfxResourceAllocator.cs" />
+      <None Include="Gfx\Old\GfxResourceAllocator.cs" />
+      <Compile Remove="Resources\Factories\FboFactory.cs" />
+      <None Include="Resources\Factories\FboFactory.cs" />
+      <Compile Remove="Resources\Factories\GfxFactoryHub.cs" />
+      <None Include="Resources\Factories\GfxFactoryHub.cs" />
+      <Compile Remove="Resources\Factories\MeshFactory.cs" />
+      <None Include="Resources\Factories\MeshFactory.cs" />
     </ItemGroup>
 
 </Project>

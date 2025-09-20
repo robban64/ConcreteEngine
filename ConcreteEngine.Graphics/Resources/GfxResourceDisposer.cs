@@ -1,6 +1,4 @@
-using ConcreteEngine.Graphics.Resources;
-
-namespace ConcreteEngine.Graphics;
+namespace ConcreteEngine.Graphics.Resources;
 
 public interface IGfxResourceDisposer
 {
@@ -17,26 +15,23 @@ internal sealed class GfxResourceDisposer : IGfxResourceDisposer
 
     private readonly GfxResourceManager _resources;
     private readonly GfxResourceRepository _repository;
-    private readonly IDisposerBackend _backend;
 
     private readonly ResourceDisposeQueue _disposeQueue;
     public int PendingCount => _disposeQueue.PendingCount;
 
-    internal GfxResourceDisposer(GfxResourceManager resources, GfxResourceRepository repository,
-        IDisposerBackend backend)
+    internal GfxResourceDisposer(GfxResourceManager resources, GfxResourceRepository repository)
     {
         _resources = resources;
         _repository = repository;
-        _backend = backend;
         _disposeQueue = new ResourceDisposeQueue();
     }
 
-    public void DrainDisposeQueue()
+    public void DrainDisposeQueue(IGraphicsDriver driver)
     {
         int drainCount = 0;
         while (drainCount < DrainPerFrame && _disposeQueue.TryGetNext(DrainDelayTicks, out var cmd))
         {
-            _backend.DeleteGfxResource(in cmd);
+            driver.Disposer.DeleteGfxResource(in cmd);
             drainCount++;
         }
     }

@@ -6,8 +6,6 @@ using ConcreteEngine.Graphics.Resources;
 
 namespace ConcreteEngine.Graphics.Gfx;
 
-
-
 public sealed class GfxMeshBuilder
 {
     private readonly State _state = new();
@@ -28,14 +26,14 @@ public sealed class GfxMeshBuilder
         _phase = Phase.Started;
         return this;
     }
-    
+
     public MeshId Finish()
     {
         EnsureStarted();
 
         var id = _gfxMeshes.FinishUploadCommit(_state);
 
-        _state.ResetState(); 
+        _state.ResetState();
         _phase = Phase.Idle;
         _gfxMeshes = null!;
         _gfxBuffers = null!;
@@ -92,12 +90,11 @@ public sealed class GfxMeshBuilder
 
         if (_phase < Phase.AttributesSet) _phase = Phase.AttributesSet;
     }
-    
-    
-    private void EnsureStarted() 
-        => InvalidOpThrower.ThrowIfNot(_phase >= Phase.Started, "Builder not started.");
 
-    
+
+    private void EnsureStarted() => InvalidOpThrower.ThrowIfNot(_phase >= Phase.Started, "Builder not started.");
+
+
 /*
     public MeshId Finish()
     {
@@ -128,7 +125,7 @@ public sealed class GfxMeshBuilder
         _state.ResetState();
         return meshId;
     }*/
-    
+
     private enum Phase : byte
     {
         Idle = 0,
@@ -144,7 +141,7 @@ public sealed class GfxMeshBuilder
         public List<VertexBufferId> VboIds { get; set; } = new();
         public List<VertexAttributeDesc> Attributes { get; set; } = new();
         public MeshDrawProperties DrawProperties { get; set; } = MeshDrawProperties.MakeDefault();
-        
+
         public void ValidateState()
         {
             InvalidOpThrower.ThrowIfNot(MeshId.IsValid(), nameof(MeshId));

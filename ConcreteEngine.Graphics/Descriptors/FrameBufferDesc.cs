@@ -14,7 +14,7 @@ public interface IFrameBufferDescriptor
 }
 
 public readonly record struct FrameBufferAttachmentDesc(
-    bool ColorTexture, bool DepthTexture, bool ColorRenderBuffer, bool DepthStenRenderBuffer
+    bool ColorTexture, bool DepthTexture, bool ColorBuffer, bool DepthStencilBuffer
 );
 
 public readonly record struct FrameBufferDesc(

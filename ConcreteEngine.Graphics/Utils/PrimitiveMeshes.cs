@@ -1,4 +1,5 @@
 using System.Diagnostics.CodeAnalysis;
+using System.Numerics;
 using ConcreteEngine.Graphics.Contracts;
 using ConcreteEngine.Graphics.Descriptors;
 using ConcreteEngine.Graphics.Gfx;
@@ -37,11 +38,11 @@ internal sealed class PrimitiveMeshes : IPrimitiveMeshes
         };  
 
         var props = new MeshDrawProperties(DrawPrimitive.TriangleStrip, MeshDrawKind.Arrays, DrawElementSize.Invalid, 4);
-        
         var builder = meshes.StartUploadBuilder(in props);
         builder.UploadVertices(vertices, BufferUsage.StaticDraw, BufferStorage.Static, BufferAccess.None);
-        builder.AddAttribute(VertexAttributeDesc.Make<Vertex2D>(nameof(Vertex2D.Position), VertexElementFormat.Float2));
-        builder.AddAttribute(VertexAttributeDesc.Make<Vertex2D>(nameof(Vertex2D.TexCoords), VertexElementFormat.Float2));
+        var attribBuilder = new VertexAttributeMaker<Vertex2D>();
+        builder.AddAttribute(attribBuilder.Make<Vector2>());
+        builder.AddAttribute(attribBuilder.Make<Vector2>());
         FsqQuad = builder.Finish();
 
     }
@@ -75,7 +76,7 @@ internal sealed class PrimitiveMeshes : IPrimitiveMeshes
         
         var builder = meshes.StartUploadBuilder(in props);
         builder.UploadVertices(vertices, BufferUsage.StaticDraw, BufferStorage.Static, BufferAccess.None);
-        builder.AddAttribute(new VertexAttributeDesc(0,sizeof(float) * 3, 0, VertexElementFormat.Float3));
+        builder.AddAttribute(new VertexAttributeDesc(0, 3, 0));
         SkyboxCube = builder.Finish();
     }
 }

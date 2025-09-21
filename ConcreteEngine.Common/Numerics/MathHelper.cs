@@ -1,7 +1,7 @@
 using System.Numerics;
 using System.Runtime.CompilerServices;
 
-namespace ConcreteEngine.Common;
+namespace ConcreteEngine.Common.Numerics;
 
 public sealed class MathHelper
 {

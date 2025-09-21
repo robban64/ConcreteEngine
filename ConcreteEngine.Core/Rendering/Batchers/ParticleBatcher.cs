@@ -24,12 +24,7 @@ public sealed class ParticleBatcher : RenderBatcher<TerrainBatchResult>
             new Vertex2D(-0.5f,  0.5f, 0f, 1f),
             new Vertex2D( 0.5f,  0.5f, 1f, 1f)
         };
-
-        ReadOnlySpan<VertexAttributeDesc> pointers = stackalloc[]
-        {
-            VertexAttributeDesc.Make<Vertex2D>(nameof(Vertex2D.Position), VertexElementFormat.Float2),
-            VertexAttributeDesc.Make<Vertex2D>(nameof(Vertex2D.TexCoords), VertexElementFormat.Float2)
-        };
+        
         
 
     }

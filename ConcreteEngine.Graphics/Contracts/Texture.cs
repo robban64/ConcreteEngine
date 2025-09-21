@@ -12,11 +12,11 @@ public readonly record struct GpuTextureDescriptor(
     float LodBias = 0
 )
 {
-    public static GpuTextureDescriptor MakeFboMultisampleTexDesc(int width, int height) =>
+    public static GpuTextureDescriptor MakeFboMsaaDesc(int width, int height) =>
         new(width, height, TexturePreset.None, TextureKind.Multisample2D, EnginePixelFormat.Srgb8Alpha8,
             TextureAnisotropy.Off, 0);
     
-    public static GpuTextureDescriptor MakeFboColorTexDesc(int width, int height) =>
+    public static GpuTextureDescriptor MakeFboColorDesc(int width, int height) =>
         new(width, height, TexturePreset.None, TextureKind.Texture2D, EnginePixelFormat.Srgb8Alpha8,
             TextureAnisotropy.Off, 0);
 

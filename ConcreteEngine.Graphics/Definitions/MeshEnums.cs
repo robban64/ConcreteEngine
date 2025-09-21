@@ -28,10 +28,9 @@ public enum DrawPrimitive : byte
     LineStrip = 6
 }
 
-public enum VertexElementFormat : byte
+public enum VertexFormat : byte
 {
-    Float1 = 1,
-    Float2 = 2,
-    Float3 = 3,
-    Float4 = 4
+    Float = 0,
+    UByte = 1,
+    Short = 2
 }

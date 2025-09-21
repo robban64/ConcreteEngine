@@ -6,7 +6,7 @@ using Silk.NET.Maths;
 
 #endregion
 
-namespace ConcreteEngine.Common.Extensions;
+namespace ConcreteEngine.Common.Numerics;
 
 public static class VectorExtensions
 {

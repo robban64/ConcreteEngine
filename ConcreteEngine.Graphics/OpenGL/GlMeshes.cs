@@ -1,5 +1,6 @@
 using System.Runtime.CompilerServices;
 using ConcreteEngine.Graphics.Contracts;
+using ConcreteEngine.Graphics.Gfx.Internal;
 using ConcreteEngine.Graphics.Resources;
 using Silk.NET.OpenGL;
 
@@ -42,37 +43,32 @@ internal sealed class GlMeshes : IGraphicsDriverModule
         _gl.VertexArrayElementBuffer(VaoHandle(in vao), iboHandle);
     }
 
-    public void AddVertexAttribute(GfxRefToken<MeshId> vao, int attribIndex, in VertexAttributeDesc attr) =>
-        AddVertexAttributeInternal(VaoHandle(vao), attribIndex, attr);
-
     public void AddVertexAttributeRange(GfxRefToken<MeshId> vao, IReadOnlyList<VertexAttributeDesc> attribs)
     {
         var vaoHandle = VaoHandle(vao);
         for (int i = 0; i < attribs.Count; i++)
-            AddVertexAttributeInternal(vaoHandle, i, attribs[i]);
+            AddVertexAttributeInternal(vaoHandle, (uint)i, attribs[i]);
     }
 
     public void AddVertexAttributeFromSpan(GfxRefToken<MeshId> vao, ReadOnlySpan<VertexAttributeDesc> attribs)
     {
         var vaoHandle = VaoHandle(vao);
         for (int i = 0; i < attribs.Length; i++)
-            AddVertexAttributeInternal(vaoHandle, i, attribs[i]);
+            AddVertexAttributeInternal(vaoHandle, (uint)i, attribs[i]);
     }
 
 
-
-    //for (int i = 0; i < attribs.Length; i++)
-    private void AddVertexAttributeInternal(uint vaoHandle, int attribIndex, in VertexAttributeDesc attr)
+    private void AddVertexAttributeInternal(uint vao, uint attribIdx, in VertexAttributeDesc attr)
     {
-        (uint vboIdx, int format, uint divisor) = ((uint)attr.VboBinding, (int)attr.Format, (uint)attr.Divisor);
-        _gl.VertexArrayAttribFormat(vaoHandle, vboIdx, format,
-            VertexAttribType.Float, attr.Normalized, (uint)attr.Offset);
+        var (vboIdx, offset) = ((uint)attr.VboBinding , (uint)attr.Offset);
+        var size = attr.Components;
+        var primitive = VertexAttribType.Float;
 
-        _gl.VertexArrayAttribBinding(vaoHandle, (uint)attribIndex, vboIdx);
-        _gl.EnableVertexArrayAttrib(vaoHandle, vboIdx);
+        _gl.VertexArrayAttribFormat(vao, attribIdx, size, primitive, attr.Norm, offset);
 
-        if (divisor != 0) _gl.VertexArrayBindingDivisor(vaoHandle, vboIdx, divisor);
+        _gl.VertexArrayAttribBinding(vao, attribIdx, vboIdx);
+        _gl.EnableVertexArrayAttrib(vao, attribIdx);
+
+        //if (divisor != 0) _gl.VertexArrayBindingDivisor(vao, vboIdx, divisor);
     }
-
-
 }

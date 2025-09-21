@@ -1,4 +1,4 @@
-namespace ConcreteEngine.Core.Messaging;
+namespace ConcreteEngine.Core.Stuff.Messaging;
 
 internal delegate void CommandInvoker(IGameCommand command, int tick, EventBus bus);
 

@@ -1,5 +1,6 @@
 using System.Numerics;
 using ConcreteEngine.Common;
+using ConcreteEngine.Common.Numerics;
 using Silk.NET.Maths;
 
 namespace ConcreteEngine.Core;

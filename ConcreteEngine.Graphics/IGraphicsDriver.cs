@@ -11,7 +11,7 @@ internal interface IGraphicsDriver
 {
     GraphicsConfiguration Configuration { get; }
     DeviceCapabilities Capabilities { get; }
-    void ValidateEndFrame();
+    void EndFrame();
 
     GlDebugger Debugger { get; }
     GlDisposer Disposer { get; }

@@ -1,9 +1,11 @@
+using System.Numerics;
 using ConcreteEngine.Core.Assets.IO;
 using ConcreteEngine.Core.Resources;
 using ConcreteEngine.Graphics;
 using ConcreteEngine.Graphics.Contracts;
 using ConcreteEngine.Graphics.Descriptors;
 using ConcreteEngine.Graphics.Primitives;
+using ConcreteEngine.Graphics.Utils;
 
 namespace ConcreteEngine.Core.Assets.Loaders;
 
@@ -15,20 +17,26 @@ internal readonly record struct MeshLoaderResult
     public required IReadOnlyList<VertexAttributeDesc> Attributes { get; init; }
 }
 
-internal sealed class MeshLoader(IReadOnlyList<MeshManifestRecord> records) : AssetTypeLoader<MeshManifestRecord, MeshLoaderResult>(records)
+internal sealed class MeshLoader : AssetTypeLoader<MeshManifestRecord, MeshLoaderResult>
 {
+    private static VertexAttributeDesc[] DefaultAttribs { get; set; } = Array.Empty<VertexAttributeDesc>();
+
     private readonly List<Mesh> _results = new(16);
     
     private readonly MeshImporter _meshImporter = new();
-    
-    private static readonly VertexAttributeDesc[] Defaults3D =
-    [
-        VertexAttributeDesc.Make<Vertex3D>(nameof(Vertex3D.Position), VertexElementFormat.Float3),
-        VertexAttributeDesc.Make<Vertex3D>(nameof(Vertex3D.TexCoords), VertexElementFormat.Float2),
-        VertexAttributeDesc.Make<Vertex3D>(nameof(Vertex3D.Normal), VertexElementFormat.Float3),
-        VertexAttributeDesc.Make<Vertex3D>(nameof(Vertex3D.Tangent), VertexElementFormat.Float3),
-    ];
-    
+
+    public MeshLoader(IReadOnlyList<MeshManifestRecord> records) : base(records)
+    {
+        var attribBuilder = new VertexAttributeMaker<Vertex3D>();
+        DefaultAttribs = [
+           attribBuilder.Make<Vector3>(),
+           attribBuilder.Make<Vector2>(),
+           attribBuilder.Make<Vector3>(),
+           attribBuilder.Make<Vector3>(),
+        ];
+    }
+
+
     protected override void ClearCache()
     {
         _results.Clear();
@@ -45,7 +53,7 @@ internal sealed class MeshLoader(IReadOnlyList<MeshManifestRecord> records) : As
         
         return new MeshLoaderResult
         {
-            Attributes = Defaults3D,
+            Attributes = DefaultAttribs,
             Vertices = vertices,
             Indices = indices,
             Properties = new MeshDrawProperties

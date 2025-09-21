@@ -2,6 +2,7 @@
 
 using System.Numerics;
 using ConcreteEngine.Common;
+using ConcreteEngine.Common.Numerics;
 using ConcreteEngine.Graphics;
 using ConcreteEngine.Graphics.Resources;
 using Silk.NET.Maths;

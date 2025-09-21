@@ -2,6 +2,7 @@ using System.Diagnostics;
 using System.Numerics;
 using System.Runtime.CompilerServices;
 using ConcreteEngine.Common;
+using ConcreteEngine.Common.Numerics;
 using ConcreteEngine.Graphics.Error;
 using ConcreteEngine.Graphics.Gfx.Internal;
 using ConcreteEngine.Graphics.OpenGL;
@@ -11,7 +12,7 @@ using Silk.NET.Maths;
 
 namespace ConcreteEngine.Graphics.Gfx;
 
-public sealed class GfxCommands 
+public sealed class GfxCommands
 {
     public GraphicsConfiguration Configuration => _driver.Configuration;
     public DeviceCapabilities Capabilities => _driver.Capabilities;
@@ -87,7 +88,7 @@ public sealed class GfxCommands
         _cullMode = CullMode.Unset;
 
 
-        _driver.ValidateEndFrame();
+        _driver.EndFrame();
     }
 
     public void BeginScreenPass(Color4? clear = null, ClearBufferFlag? flags = null)
@@ -159,7 +160,7 @@ public sealed class GfxCommands
 
         _driver.FrameBuffers.Blit(in fromHandle, in toHandle, srcSize, toFbo.Size, linear);
 
-        // Legacy - SetViewport(prevViewport);
+        SetViewport(_activeOutputSize);
     }
 
 
@@ -168,7 +169,6 @@ public sealed class GfxCommands
     public void SetViewport(in Vector2D<int> viewport)
     {
         if (_activeOutputSize == viewport) return;
-
         _activeOutputSize = viewport;
         _states.SetViewport(viewport);
     }
@@ -227,8 +227,9 @@ public sealed class GfxCommands
             _textures.UnbindTextureSlot(slot);
             return;
         }
-        ref readonly var handle = ref _store.TextureStore.GetHandle(texture);
-        _textures.BindTexture(handle, slot);
+
+        var refHandle = _store.TextureStore.GetRef(texture);
+        _textures.BindTexture(refHandle, slot);
     }
 
     public void BindMesh(MeshId id)
@@ -286,20 +287,16 @@ public sealed class GfxCommands
         _drawTriangleCount += drawCount;
         _drawCallCount++;
     }
-    
 
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public void SetUniform(ShaderUniform uniform, int value) 
-        => _shaders.SetUniform(_boundUniforms![uniform], value);
+    public void SetUniform(ShaderUniform uniform, int value) => _shaders.SetUniform(_boundUniforms![uniform], value);
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public void SetUniform(ShaderUniform uniform, uint value) 
-        => _shaders.SetUniform(_boundUniforms![uniform], value);
+    public void SetUniform(ShaderUniform uniform, uint value) => _shaders.SetUniform(_boundUniforms![uniform], value);
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public void SetUniform(ShaderUniform uniform, float value) 
-        => _shaders.SetUniform(_boundUniforms![uniform], value);
+    public void SetUniform(ShaderUniform uniform, float value) => _shaders.SetUniform(_boundUniforms![uniform], value);
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public void SetUniform(ShaderUniform uniform, Vector2 value) =>

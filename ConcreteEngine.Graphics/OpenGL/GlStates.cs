@@ -1,5 +1,6 @@
 using System.Runtime.CompilerServices;
 using ConcreteEngine.Common;
+using ConcreteEngine.Common.Numerics;
 using ConcreteEngine.Graphics.Resources;
 using Silk.NET.Maths;
 using Silk.NET.OpenGL;

@@ -24,7 +24,7 @@ internal sealed class GlTextures : IGraphicsDriverModule
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public void BindTexture(in GfxRefToken<TextureId> handle, int slot) =>
-        _gl.BindTextureUnit(GetTexHandle(in handle).Handle, (uint)slot);
+        _gl.BindTextureUnit((uint)slot, GetTexHandle(in handle).Handle);
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public void UnbindTextureSlot(int slot) => _gl.BindTextureUnit(0, (uint)slot);

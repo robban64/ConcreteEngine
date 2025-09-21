@@ -1,4 +1,4 @@
-namespace ConcreteEngine.Core;
+namespace ConcreteEngine.Core.Scene;
 
 public abstract class GameModule
 {

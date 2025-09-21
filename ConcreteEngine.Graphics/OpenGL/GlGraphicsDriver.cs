@@ -82,9 +82,8 @@ internal sealed class GlBackendDriver : IGraphicsDriver
     {
     }
 
-    public void ValidateEndFrame()
+    public void EndFrame()
     {
-        _debugger.CheckGlError();
     }
 
 }

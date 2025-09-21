@@ -4,7 +4,7 @@ using ConcreteEngine.Common.Collections;
 
 #endregion
 
-namespace ConcreteEngine.Core.Messaging;
+namespace ConcreteEngine.Core.Stuff.Messaging;
 
 internal sealed class GameMessagePipeline
 {

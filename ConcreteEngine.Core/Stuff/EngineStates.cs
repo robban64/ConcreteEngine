@@ -1,4 +1,4 @@
-namespace ConcreteEngine.Core.Systems;
+namespace ConcreteEngine.Core.Stuff;
 /*
 internal sealed class EngineNoopState : BaseEngineState
 {

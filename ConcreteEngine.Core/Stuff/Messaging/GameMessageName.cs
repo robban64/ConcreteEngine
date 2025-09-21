@@ -1,4 +1,4 @@
-namespace ConcreteEngine.Core.Messaging;
+namespace ConcreteEngine.Core.Stuff.Messaging;
 
 public enum GameMessageName
 {

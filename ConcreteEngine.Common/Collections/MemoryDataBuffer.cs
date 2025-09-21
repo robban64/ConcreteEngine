@@ -1,6 +1,6 @@
 using System.Runtime.InteropServices;
 
-namespace ConcreteEngine.Graphics;
+namespace ConcreteEngine.Common.Collections;
 
 public sealed class MemoryDataBuffer
 {

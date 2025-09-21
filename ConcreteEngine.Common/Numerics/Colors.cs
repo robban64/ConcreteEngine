@@ -1,6 +1,6 @@
 using System.Numerics;
 
-namespace ConcreteEngine.Common;
+namespace ConcreteEngine.Common.Numerics;
 
 public readonly record struct Color4(float R, float G, float B, float A = 1f)
 {

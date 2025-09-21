@@ -1,6 +1,6 @@
 using System.Numerics;
 
-namespace ConcreteEngine.Common;
+namespace ConcreteEngine.Common.Numerics;
 
 public readonly record struct RectF(float Left, float Top, float Width, float Height)
 {

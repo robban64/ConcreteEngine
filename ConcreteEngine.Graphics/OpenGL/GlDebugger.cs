@@ -26,12 +26,11 @@ internal sealed class GlDebugger : IGraphicsDriverModule
         //static DebugProc? _debugProc
         _debugProc = (src, type, id, severity, len, msg, user) =>
         {
-            var text = SilkMarshal.PtrToString((nint)msg);
-            var srcStr = ((GLEnum)src).ToString();
-            var typeStr = ((GLEnum)type).ToString();
-            var sevStr = ((GLEnum)severity).ToString();
+            var text = SilkMarshal.PtrToString(msg);
+            var srcStr = src.ToString();
+            var typeStr = type.ToString();
+            var sevStr = severity.ToString();
 
-            // Optional: break right where it happens (debug builds)
 #if DEBUG
             if (severity == GLEnum.DebugSeverityHigh && System.Diagnostics.Debugger.IsAttached)
                 System.Diagnostics.Debugger.Break();

@@ -6,6 +6,7 @@ using ConcreteEngine.Graphics.Descriptors;
 using ConcreteEngine.Graphics.Gfx;
 using ConcreteEngine.Graphics.Primitives;
 using ConcreteEngine.Graphics.Resources;
+using ConcreteEngine.Graphics.Utils;
 
 namespace ConcreteEngine.Core.Rendering;
 
@@ -83,7 +84,7 @@ public sealed class TerrainBatcher : RenderBatcher<TerrainBatchResult>
         ArgumentOutOfRangeException.ThrowIfLessThan(_indices.Length, 8);
 
         var drawCount = _indices.Length;
-        
+
         var props = MeshDrawProperties.MakeTriElemental(drawCount: drawCount);
         var builder = Gfx.Meshes.StartUploadBuilder(in props);
         builder.UploadVertices<Vertex3D>(_vertices, BufferUsage.DynamicDraw, BufferStorage.Dynamic,
@@ -92,15 +93,16 @@ public sealed class TerrainBatcher : RenderBatcher<TerrainBatchResult>
         builder.UploadIndices<uint>(_indices, BufferUsage.DynamicDraw, BufferStorage.Dynamic,
             BufferAccess.MapWrite);
 
-        builder.AddAttribute(VertexAttributeDesc.Make<Vertex3D>(nameof(Vertex3D.Position), VertexElementFormat.Float3));
-        builder.AddAttribute(VertexAttributeDesc.Make<Vertex3D>(nameof(Vertex3D.TexCoords), VertexElementFormat.Float2));
-        builder.AddAttribute(VertexAttributeDesc.Make<Vertex3D>(nameof(Vertex3D.Normal), VertexElementFormat.Float3));
-        builder.AddAttribute(VertexAttributeDesc.Make<Vertex3D>(nameof(Vertex3D.Tangent), VertexElementFormat.Float3));
+        var attribBuilder = new VertexAttributeMaker<Vertex3D>();
+        builder.AddAttribute(attribBuilder.Make<Vector3>());
+        builder.AddAttribute(attribBuilder.Make<Vector2>());
+        builder.AddAttribute(attribBuilder.Make<Vector3>());
+        builder.AddAttribute(attribBuilder.Make<Vector3>());
 
         MeshId = builder.Finish();
     }
-    
-    
+
+
     /* builder.StartBuilder(DrawPrimitive.Triangles, MeshDrawKind.Elements, DrawElementSize.UnsignedInt);
      builder.CreateVertexBuffer(new GpuVboDescriptor<Vertex3D>
      {

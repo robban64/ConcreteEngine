@@ -1,7 +1,7 @@
 #region
 
 using System.Diagnostics;
-using ConcreteEngine.Common.Extensions;
+using ConcreteEngine.Common.Numerics;
 using ConcreteEngine.Core.Resources;
 using ConcreteEngine.Core.Systems;
 using ConcreteEngine.Graphics;
@@ -47,7 +47,7 @@ public sealed class RenderSystem : IRenderSystem
 
     private IRender _render;
     private SceneDrawProducer _sceneDrawProducer = null!;
-    private CommandProducerContext cmdProducerCtx = null!;
+    private CommandProducerContext _cmdProducerCtx = null!;
 
     private bool _initialized = false;
 
@@ -93,7 +93,7 @@ public sealed class RenderSystem : IRenderSystem
         _batches.Register(new SpriteBatcher(_gfx));
         _batches.Register(new TilemapBatcher(_gfx, 64, 32));
 
-        cmdProducerCtx = new CommandProducerContext
+        _cmdProducerCtx = new CommandProducerContext
         {
             Gfx = _gfx,
             DrawBatchers = _batches,
@@ -106,7 +106,7 @@ public sealed class RenderSystem : IRenderSystem
         _commandCollector.RegisterProducer<SceneDrawProducer>(_sceneDrawProducer);
 
 
-        _commandCollector.AttachContext(cmdProducerCtx);
+        _commandCollector.AttachContext(_cmdProducerCtx);
         _commandSubmitter.Initialize();
         _commandCollector.InitializeProducers();
         _drawProcessor.Initialize();

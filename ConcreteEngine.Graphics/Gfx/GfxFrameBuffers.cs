@@ -32,16 +32,16 @@ public sealed class GfxFrameBuffers
 
         var fboRef = _backend.CreateFrameBuffer();
         var fboId = _resources.FboStore.Add(in fboMeta, fboRef);
-        var samples = (int)desc.Multisample.ToSamples();
+        var samples = desc.Multisample.ToSamples();
 
         FboAttachmentIds attachmentIds = default;
         if (desc.Attachments.ColorTexture)
         {
-            var texDesc = new GpuTextureDescriptor(size.X, size.Y,
-                desc.TexturePreset, TextureKind.Texture2D);
+            var textureId = desc.Multisample != RenderBufferMsaa.None
+                ? _gfxTextures.CreateTextureMsaa(GpuTextureDescriptor.MakeFboMsaaDesc(size.X, size.Y), desc.Multisample)
+                : _gfxTextures.CreateTexture2D(ReadOnlySpan<byte>.Empty,
+                    GpuTextureDescriptor.MakeFboColorDesc(size.X, size.Y));
 
-            var textureId = samples > 0 ? _gfxTextures.CreateTextureMsaa(in texDesc, samples) 
-                : _gfxTextures.CreateTexture2D(ReadOnlySpan<byte>.Empty, in texDesc);
             var texRef = _resources.TextureStore.GetRef(textureId);
             _backend.AttachTexture(in fboRef, in texRef);
             attachmentIds = attachmentIds with { ColorTextureId = textureId };
@@ -138,7 +138,7 @@ public sealed class GfxFrameBuffers
             FrameBufferTarget target, RenderBufferMsaa msaa, out RenderBufferMeta meta)
         {
             var samples = msaa.ToSamples();
-            var rboRef = _driver.FrameBuffers.CreateRenderBuffer(target, size,  samples);
+            var rboRef = _driver.FrameBuffers.CreateRenderBuffer(target, size, samples);
             _driver.FrameBuffers.AttachRenderBuffer(in fbo.Handle, in rboRef.Handle, target);
             meta = new RenderBufferMeta(size, target, msaa);
             return rboRef;
@@ -162,10 +162,10 @@ public sealed class GfxFrameBuffers
         return new Vector2D<int>((int)(abs.X * ratio.X), (int)(abs.Y * ratio.Y));
     }
 
-    
+
     private static void EnsureCreateFrameBuffer(in FrameBufferDesc desc)
     {
-        InvalidOpThrower.ThrowIf(desc.Attachments.DepthTexture, nameof(desc.Attachments.DepthTexture));
+        ArgumentExceptionThrower.ThrowIf(desc.Attachments.DepthTexture, nameof(desc.Attachments.DepthTexture));
         ArgumentOutOfRangeException.ThrowIfLessThan(desc.AbsoluteSize.X, 16);
         ArgumentOutOfRangeException.ThrowIfLessThan(desc.AbsoluteSize.Y, 16);
         ArgumentOutOfRangeException.ThrowIfZero(desc.DownscaleRatio.X);

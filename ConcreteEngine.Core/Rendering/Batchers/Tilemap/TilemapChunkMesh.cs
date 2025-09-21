@@ -1,5 +1,6 @@
 #region
 
+using System.Numerics;
 using ConcreteEngine.Core.Utils;
 using ConcreteEngine.Graphics;
 using ConcreteEngine.Graphics.Contracts;
@@ -7,6 +8,7 @@ using ConcreteEngine.Graphics.Descriptors;
 using ConcreteEngine.Graphics.Gfx;
 using ConcreteEngine.Graphics.Primitives;
 using ConcreteEngine.Graphics.Resources;
+using ConcreteEngine.Graphics.Utils;
 using Silk.NET.Maths;
 
 #endregion
@@ -62,8 +64,10 @@ internal sealed class TilemapChunkMesh : IDisposable
         builder.UploadIndices<ushort>(Indices, BufferUsage.DynamicDraw, BufferStorage.Dynamic,
             BufferAccess.MapWrite);
 
-        builder.AddAttribute(VertexAttributeDesc.Make<Vertex2D>(nameof(Vertex2D.Position), VertexElementFormat.Float2));
-        builder.AddAttribute(VertexAttributeDesc.Make<Vertex2D>(nameof(Vertex2D.TexCoords), VertexElementFormat.Float2));
+        var attribBuilder = new VertexAttributeMaker<Vertex2D>();
+        builder.AddAttribute(attribBuilder.Make<Vector2>());
+        builder.AddAttribute(attribBuilder.Make<Vector2>());
+        
         var meshId = builder.Finish();
         
         var meshLayout = gfx.ResourceContext.Repository.MeshRepository.Get(meshId);

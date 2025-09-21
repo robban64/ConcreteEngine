@@ -247,6 +247,9 @@ public void Remove<T>(T assetFile) where T : class, IAssetFile
             
             result.Add(mat);
         }
+
+        foreach (var mat in result)
+            mat.Initialize();
         
         _materialStore = new MaterialStore(result);
         return result;
@@ -255,9 +258,9 @@ public void Remove<T>(T assetFile) where T : class, IAssetFile
         {
             Texture2D[] textures = [];
             CubeMap? cubeMap = null;
-            if (record.Cubemap != null)
+            if (record.CubeMap != null)
             {
-                cubeMap = Get<CubeMap>(record.Cubemap);
+                cubeMap = Get<CubeMap>(record.CubeMap);
             }
             else if (record.Textures != null)
             {

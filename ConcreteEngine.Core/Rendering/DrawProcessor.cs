@@ -25,7 +25,10 @@ internal sealed class DrawProcessor
     internal DrawProcessor(GfxContext gfx, MaterialStore materials)
     {
         _gfx = gfx;
+        _gfxCmd = gfx.Commands;
         _gfxBuffers = gfx.Buffers;
+        _gfxShaders = gfx.Shaders;
+        
         _repository = gfx.ResourceContext.Repository;
         _materials = materials;
     }

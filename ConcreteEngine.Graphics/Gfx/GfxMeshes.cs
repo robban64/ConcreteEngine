@@ -49,6 +49,10 @@ public sealed class GfxMeshes
             Properties = props,
         };
         _repository.MeshRepository.AddRecord(meshId, record);
+
+        var meta = MeshDrawProperties.ToMeta(in props, record.Attributes.Length);
+        _resources.MeshStore.ReplaceMeta(meshId, in meta, out _);
+
         return meshId;
     }
 
@@ -82,7 +86,7 @@ public sealed class GfxMeshes
     public void SetVertexAttributesFromSpan(MeshId meshId, ReadOnlySpan<VertexAttributeDesc> attributes)
     {
         var meshRef = _resources.MeshStore.GetRef(meshId);
-        _driver.Meshes.AddVertexAttributeRange(meshRef, attributes);
+        _driver.Meshes.AddVertexAttributeFromSpan(meshRef, attributes);
     }
 
     internal sealed class GfxMeshesBackend(IGraphicsDriver _driver)

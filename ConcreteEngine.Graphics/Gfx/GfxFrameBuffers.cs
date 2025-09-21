@@ -32,6 +32,7 @@ public sealed class GfxFrameBuffers
 
         var fboRef = _backend.CreateFrameBuffer();
         var fboId = _resources.FboStore.Add(in fboMeta, fboRef);
+        var samples = (int)desc.Multisample.ToSamples();
 
         FboAttachmentIds attachmentIds = default;
         if (desc.Attachments.ColorTexture)
@@ -39,7 +40,8 @@ public sealed class GfxFrameBuffers
             var texDesc = new GpuTextureDescriptor(size.X, size.Y,
                 desc.TexturePreset, TextureKind.Texture2D);
 
-            var textureId = _gfxTextures.CreateTexture(ReadOnlySpan<byte>.Empty, in texDesc);
+            var textureId = samples > 0 ? _gfxTextures.CreateTextureMsaa(in texDesc, samples) 
+                : _gfxTextures.CreateTexture(ReadOnlySpan<byte>.Empty, in texDesc);
             var texRef = _resources.TextureStore.GetRef(textureId);
             _backend.AttachTexture(in fboRef, in texRef);
             attachmentIds = attachmentIds with { ColorTextureId = textureId };
@@ -136,7 +138,7 @@ public sealed class GfxFrameBuffers
             FrameBufferTarget target, RenderBufferMsaa msaa, out RenderBufferMeta meta)
         {
             var samples = msaa.ToSamples();
-            var rboRef = _driver.FrameBuffers.CreateRenderBuffer(target, size, samples > 0, samples);
+            var rboRef = _driver.FrameBuffers.CreateRenderBuffer(target, size,  samples);
             _driver.FrameBuffers.AttachRenderBuffer(in fbo.Handle, in rboRef.Handle, target);
             meta = new RenderBufferMeta(size, target, msaa);
             return rboRef;

@@ -30,7 +30,7 @@ public sealed class GfxTextures
 
         return _resources.TextureStore.Add(in meta, texRef);
     }
-    
+
     public TextureId CreateCubeMap(in GpuTextureDescriptor desc)
     {
         if (desc.Kind == TextureKind.CubeMap)
@@ -44,9 +44,22 @@ public sealed class GfxTextures
         return _resources.TextureStore.Add(in meta, texRef);
     }
 
+    public TextureId CreateTextureMsaa(in GpuTextureDescriptor desc, int samples)
+    {
+        if (desc.Kind == TextureKind.CubeMap)
+            ArgumentOutOfRangeException.ThrowIfNotEqual(desc.Width, desc.Height, nameof(desc.Width));
 
-    internal TextureId ReplaceTexture(TextureId textureId, ReadOnlySpan<byte> data, 
-        in GpuTextureDescriptor desc, out  GfxRefToken<TextureId> newTexRef)
+        var texRef = _backend.CreateTextureMsaa(in desc, samples);
+
+        var meta = new TextureMeta(desc.Width, desc.Height, desc.Preset, desc.Kind, desc.Anisotropy, desc.Format, 0,
+            false);
+
+        return _resources.TextureStore.Add(in meta, texRef);
+    }
+
+
+    internal TextureId ReplaceTexture(TextureId textureId, ReadOnlySpan<byte> data,
+        in GpuTextureDescriptor desc, out GfxRefToken<TextureId> newTexRef)
     {
         if (desc.Kind == TextureKind.CubeMap)
             ArgumentOutOfRangeException.ThrowIfNotEqual(desc.Width, desc.Height, nameof(desc.Width));
@@ -100,7 +113,7 @@ public sealed class GfxTextures
         public GfxRefToken<TextureId> CreateCubeMap(in GpuTextureDescriptor desc, out int mipLevels)
         {
             var hasMipLevels = desc.Preset is TexturePreset.LinearMipmapClamp or TexturePreset.LinearMipmapRepeat;
-            mipLevels = hasMipLevels ? GfxUtils.CalcMipLevels(desc.Width, desc.Height) : 0;
+            mipLevels = hasMipLevels ? GfxUtils.CalcMipLevels(desc.Width, desc.Height) : 1;
 
             var texRef = _driver.Textures.CreateTextureCubeMap((uint)desc.Width, (uint)desc.Height, (uint)mipLevels);
             _driver.Textures.SetTexturePreset(texRef.Handle, desc.Preset);
@@ -117,13 +130,13 @@ public sealed class GfxTextures
             out int mipLevels)
         {
             var hasMipLevels = desc.Preset is TexturePreset.LinearMipmapClamp or TexturePreset.LinearMipmapRepeat;
-            mipLevels = hasMipLevels ? GfxUtils.CalcMipLevels(desc.Width, desc.Height) : 0;
+            mipLevels = hasMipLevels ? GfxUtils.CalcMipLevels(desc.Width, desc.Height) : 1;
 
             var texRef = _driver.Textures.CreateTexture2D((uint)desc.Width, (uint)desc.Height, (uint)mipLevels);
 
-            if (!data.IsEmpty) 
+            if (!data.IsEmpty)
                 _driver.Textures.UploadTextureData(texRef.Handle, data, (uint)desc.Width, (uint)desc.Height);
-            else 
+            else
                 _driver.Textures.UploadTextureEmptyData(texRef.Handle);
 
             _driver.Textures.SetTexturePreset(texRef.Handle, desc.Preset);
@@ -136,6 +149,11 @@ public sealed class GfxTextures
             return texRef;
         }
 
+        public GfxRefToken<TextureId> CreateTextureMsaa(in GpuTextureDescriptor desc, int samples)
+        {
+            var texRef = _driver.Textures.CreateTextureMultisample((uint)desc.Width, (uint)desc.Height, (uint)samples);
+            return texRef;
+        }
 
         public void UploadTextureData(in GfxHandle texture, ReadOnlySpan<byte> data, int width, int height)
         {

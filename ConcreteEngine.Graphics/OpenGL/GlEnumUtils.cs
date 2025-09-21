@@ -24,25 +24,14 @@ internal static class GlEnumUtils
     
     public static BufferStorageMask ToBufferFlag(BufferStorage storage, BufferAccess access)
     {
-        BufferStorageMask flags = 0;
+        BufferStorageMask f = 0;
+        if (storage != BufferStorage.Static) f |= BufferStorageMask.DynamicStorageBit;
+        if (access.HasBufferAccess(BufferAccess.MapRead))     f |= BufferStorageMask.MapReadBit;
+        if (access.HasBufferAccess(BufferAccess.MapWrite))    f |= BufferStorageMask.MapWriteBit;
+        if (access.HasBufferAccess(BufferAccess.Persistent))  f |= BufferStorageMask.MapPersistentBit;
+        if (access.HasBufferAccess(BufferAccess.Coherent))    f |= BufferStorageMask.MapCoherentBit;
 
-        if (storage == BufferStorage.Dynamic)
-            flags |= BufferStorageMask.DynamicStorageBit;
-        else if (storage == BufferStorage.Stream) 
-            flags |= BufferStorageMask.DynamicStorageBit;
-
-        
-        //BufferAccess access
-        if (access.HasBufferAccess(BufferAccess.MapRead))
-            flags |= BufferStorageMask.MapReadBit;
-        if (access.HasBufferAccess(BufferAccess.MapWrite))
-            flags |= BufferStorageMask.MapWriteBit;
-        if (access.HasBufferAccess(BufferAccess.Persistent))
-            flags |= BufferStorageMask.MapPersistentBit;
-        if (access.HasBufferAccess(BufferAccess.Coherent))
-            flags |= BufferStorageMask.MapCoherentBit;
-
-        return flags;
+       return f;
     }
 
 }
@@ -62,7 +51,7 @@ internal static class GlEnumExtensions
     }
     
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public static GLEnum ToGlEnum(this FrameBufferTarget kind)
+    public static GLEnum ToGlAttachmentEnum(this FrameBufferTarget kind)
     {
         return kind switch
         {
@@ -72,6 +61,19 @@ internal static class GlEnumExtensions
             _ => throw new ArgumentOutOfRangeException(nameof(kind))
         };
     }
+    
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public static InternalFormat ToGlInternalFormatEnum(this FrameBufferTarget kind)
+    {
+        return kind switch
+        {
+            FrameBufferTarget.Color => InternalFormat.Rgb8,
+            FrameBufferTarget.Depth => InternalFormat.DepthComponent24,
+            FrameBufferTarget.DepthStencil => InternalFormat.Depth24Stencil8,
+            _ => throw new ArgumentOutOfRangeException(nameof(kind))
+        };
+    }
+    
     
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static (bool enabled, BlendEquationModeEXT eq, BlendingFactor src, BlendingFactor dst) ToGlEnum(
@@ -166,6 +168,18 @@ internal static class GlEnumExtensions
             EnginePixelFormat.Rgb => (PixelFormat.Rgb, InternalFormat.Rgb8),
             EnginePixelFormat.Rgba => (PixelFormat.Rgba, InternalFormat.Rgba8),
             _ => throw new ArgumentOutOfRangeException(nameof(format))
+        };
+    }
+    
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public static BufferUsage ToBufferUsage(this BufferStorage usage)
+    {
+        return usage switch
+        {
+            BufferStorage.Static => BufferUsage.StaticDraw,
+            BufferStorage.Dynamic => BufferUsage.DynamicDraw,
+            BufferStorage.Stream => BufferUsage.StreamDraw,
+            _ => throw new ArgumentOutOfRangeException(nameof(usage), usage, null)
         };
     }
 

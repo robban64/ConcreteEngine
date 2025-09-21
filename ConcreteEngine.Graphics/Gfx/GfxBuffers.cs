@@ -38,7 +38,7 @@ public sealed class GfxBuffers
     public IndexBufferId CreateIndexBuffer<T>(ReadOnlySpan<T> data, BufferStorage storage, BufferAccess access) where T : unmanaged
     {
         (nint stride, nint size) = GfxUtils.ToStrideAndSize<T>(data.Length);
-        if (size != 1 && size != 2 && size != 3)
+        if (stride != 1 && stride != 2 && stride != 4)
             GraphicsException.ThrowInvalidType<T>(typeof(T).Name, "Invalid elemental size");
 
         var meta = new IndexBufferMeta(data.Length, stride, DefaultUsage, storage, access);

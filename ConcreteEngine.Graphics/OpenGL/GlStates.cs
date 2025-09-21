@@ -59,11 +59,12 @@ internal sealed class GlStates: IGraphicsDriverModule
 
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public void BindMesh(GfxRefToken<MeshId> mesh)
-    {
-        _gl.BindVertexArray(_store.VertexArray.GetRef(mesh).Handle);
-    }
+    public void BindMesh(GfxRefToken<MeshId> mesh) => _gl.BindVertexArray(_store.VertexArray.GetRef(mesh).Handle);
     
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public void UnbindMesh() => _gl.BindVertexArray(0);
+
+
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public void DrawArrays(DrawPrimitive primitive, uint drawCount)
     {

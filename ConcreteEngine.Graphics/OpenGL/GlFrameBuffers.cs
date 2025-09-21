@@ -58,39 +58,38 @@ internal sealed class GlFrameBuffers: IGraphicsDriverModule
         return _store.FrameBuffer.Add(new GlFboHandle(fbo));
     }
 
-    public GfxRefToken<RenderBufferId> CreateRenderBuffer(FrameBufferTarget attachment, Vector2D<int> size,
-        bool multisample, uint samples)
+    public GfxRefToken<RenderBufferId> CreateRenderBuffer(FrameBufferTarget attachment, Vector2D<int> size,uint samples)
     {
-        var glAttachment = attachment.ToGlEnum();
+        var internalFormat = attachment.ToGlInternalFormatEnum();
         var (width, height) = ((uint)size.X, (uint)size.Y);
 
         _gl.CreateRenderbuffers(1, out uint rbo);
-        if (multisample)
-            _gl.NamedRenderbufferStorageMultisample(rbo, samples, glAttachment, width, height);
+        if (samples > 0)
+            _gl.NamedRenderbufferStorageMultisample(rbo, samples, internalFormat, width, height);
         else
-            _gl.NamedRenderbufferStorage(rbo, glAttachment, width, height);
+            _gl.NamedRenderbufferStorage(rbo, internalFormat, width, height);
 
         return _store.RenderBuffer.Add(new GlRboHandle(rbo));
     }
 
     public void AttachTexture(in GfxHandle fbo, in GfxHandle texture, FrameBufferTarget target)
     {
-        var (fboHandle, texHandle) = (GetFboHandle(in fbo).Handle, GetRboHandle(in texture).Handle);
-        var glAttachment = target.ToGlEnum();
+        var (fboHandle, texHandle) = (GetFboHandle(in fbo).Handle, GetTextureHandle(in texture).Handle);
+        var glAttachment = target.ToGlAttachmentEnum();
         _gl.NamedFramebufferTexture(fboHandle, glAttachment, texHandle, 0);
     }
 
     public void AttachRenderBuffer(in GfxHandle fbo, in GfxHandle rbo, FrameBufferTarget target)
     {
         var (fboHandle, rboHandle) = (GetFboHandle(in fbo).Handle, GetRboHandle(in rbo).Handle);
-        var glAttachment = target.ToGlEnum();
+        var glAttachment = target.ToGlAttachmentEnum();
         _gl.NamedFramebufferRenderbuffer(fboHandle, glAttachment, RenderbufferTarget.Renderbuffer, rboHandle);
     }
 
     public void SetDrawBuffers(in GfxHandle fbo, FrameBufferTarget target)
     {
         var fboHandle = GetFboHandle(in fbo).Handle;
-        var glAttachment = target.ToGlEnum();
+        var glAttachment = target.ToGlAttachmentEnum();
         _gl.NamedFramebufferDrawBuffers(fboHandle, 1, glAttachment);
     }
 

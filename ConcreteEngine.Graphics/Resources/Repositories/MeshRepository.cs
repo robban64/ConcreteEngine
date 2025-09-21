@@ -35,6 +35,9 @@ internal sealed class MeshRepository : IMeshRepository
 
     internal void AddRecord(MeshId meshId, MeshLayout layout)
     {
+        ArgumentOutOfRangeException.ThrowIfEqual(meshId.Value, 0);
+        ArgumentOutOfRangeException.ThrowIfEqual((int)layout.Properties.DrawKind, (int)MeshDrawKind.Invalid);
+
         _registry.Add(meshId, layout);
     }
 
@@ -61,14 +64,12 @@ internal sealed class MeshRepository : IMeshRepository
     {
         internal MeshLayout(MeshId meshId)
         {
-            ArgumentOutOfRangeException.ThrowIfEqual(meshId.Value, 0);
             MeshId = meshId;
         }
 
         internal MeshLayout(MeshId meshId, in MeshMeta meta, IndexBufferId iboId, IReadOnlyList<VertexBufferId> vboIds,
             IReadOnlyList<VertexAttributeDesc> attr)
         {
-            ArgumentOutOfRangeException.ThrowIfEqual(meshId.Value, 0);
             MeshId = meshId;
             IndexBufferId = iboId;
             VertexBufferIds = vboIds.ToArray();

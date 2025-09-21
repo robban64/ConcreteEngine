@@ -75,6 +75,7 @@ internal sealed class GlBuffers : IGraphicsDriverModule
         _gl.BindBufferRange(BufferTargetARB.UniformBuffer, slot, nHandle, offset, (nuint)size);
     }
 
+
     private unsafe NativeHandle CreateBufferNative<T>(ReadOnlySpan<T> data, in GfxBufferDataDesc desc, bool nullData) where T : unmanaged
     {
         var flag = GlEnumUtils.ToBufferFlag(desc.Storage, desc.Access);
@@ -82,8 +83,18 @@ internal sealed class GlBuffers : IGraphicsDriverModule
 
         _gl.CreateBuffers(1, out uint buffer);
 
-        if (nullData || data.IsEmpty) _gl.NamedBufferStorage(buffer, (nuint)desc.Size, (void*)0, mask);
-        else _gl.NamedBufferStorage(buffer, (nuint)desc.Size, data, mask);
+        if (desc.Storage == BufferStorage.Static)
+        {
+            if (nullData || data.IsEmpty) _gl.NamedBufferStorage(buffer, (nuint)desc.Size, (void*)0, mask);
+            else _gl.NamedBufferStorage(buffer, (nuint)desc.Size, data, mask);
+        }
+        else
+        {
+            var usage = desc.Storage.ToBufferUsage();
+            if (nullData || data.IsEmpty) _gl.NamedBufferData(buffer, (nuint)desc.Size, (void*)0, usage.ToGlEnum());
+            else _gl.NamedBufferData(buffer, (nuint)desc.Size, data, usage.ToGlEnum());
+        }
+
 
         return new NativeHandle(buffer);
     }

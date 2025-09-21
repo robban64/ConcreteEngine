@@ -9,6 +9,7 @@ internal static class GfxUtils
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static int CalcMipLevels(int width, int height)
     {
+        if (width <= 0 || height <= 0) return 0;
         var size = Math.Max(width, height);
         return (int)Math.Floor(Math.Log2(size)) + 1;
     }

@@ -146,6 +146,19 @@ internal sealed class AssetLoader
             var face = loader.LoadFaceData(record!, i);
             _gfx.Textures.UploadCubeMapFace(textureId, face.Data, face.Descriptor.Width,face.Descriptor.Height,i);
         }
+
+        var cubeMap = new CubeMap
+        {
+            Name = record!.Name,
+            ResourceId = textureId,
+            Textures = record.Textures,
+            Width = record.Width,
+            Height = record.Height,
+            PixelFormat = payload.Descriptor.Format
+        };
+        
+        _assetSystem.AddResource(cubeMap);
+
     }
 
     private void ProcessLoader<TRecord, TPayload, TResult>(AssetTypeLoader<TRecord, TPayload> loader)

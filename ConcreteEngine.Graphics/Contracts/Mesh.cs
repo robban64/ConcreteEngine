@@ -48,6 +48,7 @@ public readonly record struct MeshDrawProperties(
     => new (DrawPrimitive.Triangles, kind, size, drawCount);
 }
 
+
 public readonly record struct VertexAttributeDesc(
     int VboBinding,
     int Stride, // vertex in bytes

@@ -11,7 +11,7 @@ namespace ConcreteEngine.Core.Resources;
 public sealed class Material
 {
     private readonly Dictionary<ShaderUniform, IMaterialValue> _values;
-    private readonly TextureId[] _samplerSlots = [];
+    private readonly TextureId[] _samplerSlots;
 
     public MaterialId Id { get; }
     public string TemplateName { get; }
@@ -35,6 +35,7 @@ public sealed class Material
         ShaderId = template.Shader.ResourceId;
         CubeMap = template.CubeMap;
 
+
         _values = new Dictionary<ShaderUniform, IMaterialValue>(4);
         
         if (template.Shader.Samplers == 0)
@@ -47,13 +48,7 @@ public sealed class Material
         }
         else
         {
-            _samplerSlots = new TextureId[template.Shader.Samplers];
-            if (template.Textures?.Length > 0)
-            {
-                int length = int.Min((int)template.Shader.Samplers, template.Textures.Length);
-                for (int i = 0; i < length; i++)
-                    SamplerSlots[i] = template.Textures[i].ResourceId;
-            }
+            _samplerSlots = template.SamplerSlots;
         }
     }
 }

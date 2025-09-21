@@ -48,7 +48,7 @@ internal sealed class GfxMeshBuilder : IGfxMeshBuilder
 
         _gfxMeshes.SetVertexAttributes(_state.MeshId, _state.Attributes);
         var id = _gfxMeshes.FinishUploadCommit(_state);
-
+        
         _state.ResetState();
         _phase = Phase.Idle;
         _gfxMeshes = null!;
@@ -143,7 +143,7 @@ internal sealed class GfxMeshBuilder : IGfxMeshBuilder
         public List<VertexBufferId> VboIds { get; set; } = new();
         public List<VertexAttributeDesc> Attributes { get; set; } = new();
         public MeshDrawProperties DrawProperties { get; set; } = MeshDrawProperties.MakeDefault();
-
+        
         public void ValidateState()
         {
             InvalidOpThrower.ThrowIfNot(MeshId.IsValid(), nameof(MeshId));

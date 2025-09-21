@@ -68,7 +68,7 @@ public sealed record MaterialManifestRecord(
     string Shader,
     string[]? Textures,
     [property: JsonPropertyName("cubemap")]
-    string? Cubemap
+    string? CubeMap
 ) : IAssetManifestRecord
 {
     public Vector4 Color { get; init; } = Vector4.One;

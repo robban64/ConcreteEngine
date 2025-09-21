@@ -23,10 +23,22 @@ internal sealed class GlDebugger : IGraphicsDriverModule
 
     public unsafe void EnableGlDebug()
     {
+        //static DebugProc? _debugProc
         _debugProc = (src, type, id, severity, len, msg, user) =>
         {
             var text = SilkMarshal.PtrToString((nint)msg);
-            Console.WriteLine($"[GL {severity}] {type} {id}: {text}");
+            var srcStr = ((GLEnum)src).ToString();
+            var typeStr = ((GLEnum)type).ToString();
+            var sevStr = ((GLEnum)severity).ToString();
+
+            // Optional: break right where it happens (debug builds)
+#if DEBUG
+            if (severity == GLEnum.DebugSeverityHigh && System.Diagnostics.Debugger.IsAttached)
+                System.Diagnostics.Debugger.Break();
+#endif
+            Console.WriteLine($"[GL {sevStr}] {typeStr} {id} @ {srcStr}: {text}");
+            
+
         };
 
         _gl.Enable(EnableCap.DebugOutput);

@@ -86,10 +86,6 @@ public sealed class GfxCommands
         _depthMode = DepthMode.Unset;
         _cullMode = CullMode.Unset;
 
-        for (int i = 0; i < _boundTextures.Length; i++)
-        {
-            BindTexture(default, i);
-        }
 
         _driver.ValidateEndFrame();
     }
@@ -206,7 +202,7 @@ public sealed class GfxCommands
         {
             _boundShaderId = default;
             _boundUniforms = null;
-            _shaders.UseShader(default);
+            _shaders.UnbindShader();
             return;
         }
 
@@ -221,20 +217,16 @@ public sealed class GfxCommands
 
     public void BindTexture(TextureId texture, int slot)
     {
-        if (slot >= Configuration.MaxTextureImageUnits)
-            GraphicsException.ThrowCapabilityExceeded<TextureId>("TexCoords slot", (int)slot,
-                Configuration.MaxTextureImageUnits);
+        ArgumentOutOfRangeException.ThrowIfNegative(slot, nameof(slot));
+        ArgumentOutOfRangeException.ThrowIfGreaterThanOrEqual(slot, Configuration.MaxTextureImageUnits, nameof(slot));
 
         if (_boundTextures[slot] == texture) return;
-        if (texture == default)
+        _boundTextures[slot] = texture;
+        if (texture.Value == 0)
         {
-            _textures.BindTexture(default, (uint)slot);
-            _boundTextures[slot] = default;
+            _textures.UnbindTextureSlot((uint)slot);
             return;
         }
-
-
-        _boundTextures[slot] = texture;
         ref readonly var handle = ref _store.TextureStore.GetHandle(texture);
         _textures.BindTexture(handle, (uint)slot);
     }
@@ -245,7 +237,7 @@ public sealed class GfxCommands
 
         if (id == default)
         {
-            _driver.States.BindMesh(default);
+            _driver.States.UnbindMesh();
             _boundMeshId = default;
             _boundMeshMeta = default;
             return;

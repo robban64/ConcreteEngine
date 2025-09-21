@@ -4,9 +4,9 @@ namespace ConcreteEngine.Graphics;
 public enum MeshDrawKind : byte
 {
     Invalid = 0,
-    Arrays = 0,
-    Elements = 1,
-    Instanced = 2
+    Arrays = 1,
+    Elements = 2,
+    Instanced = 3
 }
 
 public enum DrawElementSize : byte

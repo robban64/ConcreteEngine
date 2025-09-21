@@ -52,13 +52,16 @@ internal sealed class GlMeshes : IGraphicsDriverModule
             AddVertexAttributeInternal(vaoHandle, i, attribs[i]);
     }
 
-    public void AddVertexAttributeRange(GfxRefToken<MeshId> vao, ReadOnlySpan<VertexAttributeDesc> attribs)
+    public void AddVertexAttributeFromSpan(GfxRefToken<MeshId> vao, ReadOnlySpan<VertexAttributeDesc> attribs)
     {
         var vaoHandle = VaoHandle(vao);
         for (int i = 0; i < attribs.Length; i++)
             AddVertexAttributeInternal(vaoHandle, i, attribs[i]);
     }
-    
+
+
+
+    //for (int i = 0; i < attribs.Length; i++)
     private void AddVertexAttributeInternal(uint vaoHandle, int attribIndex, in VertexAttributeDesc attr)
     {
         (uint vboIdx, int format, uint divisor) = ((uint)attr.VboBinding, (int)attr.Format, (uint)attr.Divisor);

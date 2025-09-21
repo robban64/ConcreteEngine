@@ -66,15 +66,15 @@ internal sealed class GlStates: IGraphicsDriverModule
 
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public void DrawArrays(DrawPrimitive primitive, uint drawCount)
+    public void DrawArrays(DrawPrimitive primitive, int drawCount)
     {
-        _gl.DrawArrays(primitive.ToGlEnum(), 0, drawCount);
+        _gl.DrawArrays(primitive.ToGlEnum(), 0, (uint)drawCount);
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public unsafe void DrawElements(DrawPrimitive primitive, DrawElementSize elementSize, uint drawCount)
+    public unsafe void DrawElements(DrawPrimitive primitive, DrawElementSize elementSize, int drawCount)
     {
-        _gl.DrawElements(primitive.ToGlEnum(), drawCount, elementSize.ToGlEnum(), (void*)0);
+        _gl.DrawElements(primitive.ToGlEnum(), (uint)drawCount, elementSize.ToGlEnum(), (void*)0);
     }
 
 }

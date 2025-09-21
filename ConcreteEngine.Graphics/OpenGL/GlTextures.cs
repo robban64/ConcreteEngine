@@ -23,46 +23,46 @@ internal sealed class GlTextures : IGraphicsDriverModule
     private GlTextureHandle GetTexHandle(in GfxHandle handle) => _store.Texture.Get(in handle);
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public void BindTexture(in GfxHandle handle, uint slot) =>
-        _gl.BindTextureUnit(GetTexHandle(in handle).Handle, slot);
+    public void BindTexture(in GfxHandle handle, int slot) =>
+        _gl.BindTextureUnit(GetTexHandle(in handle).Handle, (uint)slot);
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public void UnbindTextureSlot(uint slot) => _gl.BindTextureUnit(0, slot);
+    public void UnbindTextureSlot(int slot) => _gl.BindTextureUnit(0, (uint)slot);
 
-    public GfxRefToken<TextureId> CreateTexture2D(uint width, uint height, uint mipLevels)
+    public GfxRefToken<TextureId> CreateTexture2D(int width, int height, int mipLevels)
     {
         var levels = Math.Min(1, mipLevels);
         _gl.CreateTextures(TextureTarget.Texture2D, 1, out uint texture);
-        _gl.TextureStorage2D(texture, levels, ColorFormat, width, height);
+        _gl.TextureStorage2D(texture, (uint)levels, ColorFormat, (uint)width, (uint)height);
         return _store.Texture.Add(new GlTextureHandle(texture));
     }
 
-    public GfxRefToken<TextureId> CreateTextureCubeMap(uint width, uint height, uint mipLevels)
+    public GfxRefToken<TextureId> CreateTextureCubeMap(int width, int height, int mipLevels)
     {
         var levels = Math.Min(1, mipLevels);
         _gl.CreateTextures(TextureTarget.TextureCubeMap, 1, out uint texture);
-        _gl.TextureStorage2D(texture, levels, ColorFormat, width, height);
+        _gl.TextureStorage2D(texture, (uint)levels, ColorFormat, (uint)width, (uint)height);
         return _store.Texture.Add(new GlTextureHandle(texture));
     }
 
-    public GfxRefToken<TextureId> CreateTextureMultisample(uint width, uint height, uint samples)
+    public GfxRefToken<TextureId> CreateTextureMultisample(int width, int height, int samples)
     {
         _gl.CreateTextures(TextureTarget.Texture2DMultisample, 1, out uint texture);
-        _gl.TextureStorage2DMultisample(texture, samples, SizedInternalFormat.Srgb8Alpha8, width, height, true);
+        _gl.TextureStorage2DMultisample(texture, (uint)samples, SizedInternalFormat.Srgb8Alpha8, (uint)width, (uint)height, true);
         return _store.Texture.Add(new GlTextureHandle(texture));
     }
 
-    private void CreateTextureStore(in GfxHandle texture, uint width, uint height, uint mipLevels)
+    private void CreateTextureStore(in GfxHandle texture, int width, int height, int mipLevels)
     {
         var handle = GetTexHandle(in texture).Handle;
         var levels = Math.Min(1, mipLevels);
-        _gl.TextureStorage2D(handle, levels, ColorFormat, width, height);
+        _gl.TextureStorage2D(handle, (uint)levels, ColorFormat, (uint)width, (uint)height);
     }
 
-    public void UploadTextureData(in GfxHandle texture, ReadOnlySpan<byte> data, uint width, uint height)
+    public void UploadTextureData(in GfxHandle texture, ReadOnlySpan<byte> data, int width, int height)
     {
         var handle = GetTexHandle(in texture).Handle;
-        _gl.TextureSubImage2D(handle, 0, 0, 0, width, height,
+        _gl.TextureSubImage2D(handle, 0, 0, 0, (uint)width, (uint)height,
             PixelFormat.Rgba, PixelType.UnsignedByte, data);
     }
 
@@ -73,14 +73,14 @@ internal sealed class GlTextures : IGraphicsDriverModule
             PixelFormat.Rgba, PixelType.UnsignedByte, (void*)0);
     }
 
-    public void UploadCubeMapFaceData(in GfxHandle texture, ReadOnlySpan<byte> data, uint width, uint height,
+    public void UploadCubeMapFaceData(in GfxHandle texture, ReadOnlySpan<byte> data, int width, int height,
         int faceIdx)
     {
         var handle = GetTexHandle(in texture).Handle;
         _gl.TextureSubImage3D(
             handle, level: 0,
             xoffset: 0, yoffset: 0, zoffset: faceIdx,
-            width: width, height: height, depth: 1,
+            width: (uint)width, height: (uint)height, depth: 1,
             format: PixelFormat.Rgba, type: PixelType.UnsignedByte,
             pixels: data
         );

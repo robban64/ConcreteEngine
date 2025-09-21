@@ -12,7 +12,7 @@ using Silk.NET.Maths;
 using Silk.NET.OpenGL;
 
 #endregion
-
+/*
 namespace ConcreteEngine.Graphics.OpenGL;
 
 public sealed class GlGraphicsDevice : IGraphicsDevice<GlGraphicsContext>
@@ -406,7 +406,6 @@ public sealed class GlGraphicsDevice : IGraphicsDevice<GlGraphicsContext>
 
     public void Dispose()
     {
-        /*
         Console.WriteLine(
             $"{nameof(GlGraphicsDevice)} Disposing {nameof(GlGraphicsDevice)} with {_store.Count} resources");
 
@@ -423,6 +422,5 @@ public sealed class GlGraphicsDevice : IGraphicsDevice<GlGraphicsContext>
         Console.WriteLine($"Total of {counter} resources directly");
 
         _gl.Dispose();
-        */
     }
-}
+}*/

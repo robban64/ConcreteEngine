@@ -9,7 +9,7 @@ internal static class GfxUtilsEnum
     public static bool HasBufferAccess(this BufferAccess a, BufferAccess b) => (a & b) != 0;
 
     
-    public static uint ToPrimitiveSize(this DrawElementSize t) => t switch
+    public static int ToPrimitiveSize(this DrawElementSize t) => t switch
     {
         DrawElementSize.UnsignedByte  =>  1,
         DrawElementSize.UnsignedShort => 2,
@@ -41,7 +41,7 @@ internal static class GfxUtilsEnum
     }
     
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public static uint ToSamples(this RenderBufferMsaa msaa)
+    public static int ToSamples(this RenderBufferMsaa msaa)
     {
         return msaa switch
         {

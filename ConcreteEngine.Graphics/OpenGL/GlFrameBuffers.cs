@@ -58,14 +58,14 @@ internal sealed class GlFrameBuffers: IGraphicsDriverModule
         return _store.FrameBuffer.Add(new GlFboHandle(fbo));
     }
 
-    public GfxRefToken<RenderBufferId> CreateRenderBuffer(FrameBufferTarget attachment, Vector2D<int> size,uint samples)
+    public GfxRefToken<RenderBufferId> CreateRenderBuffer(FrameBufferTarget attachment, Vector2D<int> size, int samples)
     {
         var internalFormat = attachment.ToGlInternalFormatEnum();
         var (width, height) = ((uint)size.X, (uint)size.Y);
 
         _gl.CreateRenderbuffers(1, out uint rbo);
         if (samples > 0)
-            _gl.NamedRenderbufferStorageMultisample(rbo, samples, internalFormat, width, height);
+            _gl.NamedRenderbufferStorageMultisample(rbo, (uint)samples, internalFormat, width, height);
         else
             _gl.NamedRenderbufferStorage(rbo, internalFormat, width, height);
 

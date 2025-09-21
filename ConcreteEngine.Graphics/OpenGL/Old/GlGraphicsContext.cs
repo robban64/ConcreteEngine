@@ -14,7 +14,7 @@ using Silk.NET.Maths;
 using Silk.NET.OpenGL;
 
 #endregion
-
+/*
 namespace ConcreteEngine.Graphics.OpenGL;
 
 public sealed class GlGraphicsContext : IGraphicsContext
@@ -640,4 +640,4 @@ public sealed class GlGraphicsContext : IGraphicsContext
     }
 
     private static void ClearColor(GL gl, Color4 c) => gl.ClearColor(c.R, c.G, c.B, 1);
-}
+}*/

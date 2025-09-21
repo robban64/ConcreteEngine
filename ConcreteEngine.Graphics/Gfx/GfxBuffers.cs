@@ -135,7 +135,7 @@ public sealed class GfxBuffers
     {
         var ubo = _repository.ShaderRepository.GetUboId(slot);
         var uboRef = _resources.UboStore.GetRef(ubo);
-        _backend.BindUniformBufferRange(uboRef, (uint)slot, offset, size);
+        _backend.BindUniformBufferRange(uboRef, (int)slot, offset, size);
     }
 
 
@@ -194,7 +194,7 @@ public sealed class GfxBuffers
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public void BindUniformBufferRange(in GfxRefToken<UniformBufferId> uboRef, uint slot, nint offset, nint size)
+        public void BindUniformBufferRange(in GfxRefToken<UniformBufferId> uboRef, int slot, nint offset, nint size)
         {
             _driverBuffer.BindBufferRange(uboRef.Handle, slot, offset, size);
         }

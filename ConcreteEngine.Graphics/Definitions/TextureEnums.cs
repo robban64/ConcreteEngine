@@ -4,18 +4,20 @@ public enum EnginePixelFormat : byte
 {
     Red = 0,
     Rgb = 1,
-    Rgba = 2
+    Rgba = 2,
+    Srgb8Alpha8 = 3
 }
 
 public enum TexturePreset : byte
 {
-    NearestClamp = 0,
-    NearestRepeat = 1, 
-    LinearClamp = 2, 
-    LinearRepeat = 3, 
-    LinearMipmapClamp = 4,
-    LinearMipmapRepeat = 5,
-    PremultipliedUi = 6
+    None = 0,
+    NearestClamp = 1,
+    NearestRepeat = 2,
+    LinearClamp = 3,
+    LinearRepeat = 4,
+    LinearMipmapClamp = 5,
+    LinearMipmapRepeat = 6,
+    PremultipliedUi = 7
 }
 
 public enum TextureAnisotropy : byte

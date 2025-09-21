@@ -69,10 +69,10 @@ internal sealed class GlBuffers : IGraphicsDriverModule
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public void BindBufferRange(in GfxHandle handle, uint slot, nint offset, nint size)
+    public void BindBufferRange(in GfxHandle handle, int slot, nint offset, nint size)
     {
         var nHandle = ToNativeHandle(handle).Value;
-        _gl.BindBufferRange(BufferTargetARB.UniformBuffer, slot, nHandle, offset, (nuint)size);
+        _gl.BindBufferRange(BufferTargetARB.UniformBuffer, (uint)slot, nHandle, offset, (nuint)size);
     }
 
 

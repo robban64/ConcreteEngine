@@ -110,32 +110,24 @@ public sealed class GfxTextures
             _driver = context.Driver;
         }
 
-        public GfxRefToken<TextureId> CreateCubeMap(in GpuTextureDescriptor desc, out int mipLevels)
+
+
+        
+        public GfxRefToken<TextureId> CreateTexture(ReadOnlySpan<byte> data, in GpuTextureDescriptor desc, int mipLevels)
         {
             var hasMipLevels = desc.Preset is TexturePreset.LinearMipmapClamp or TexturePreset.LinearMipmapRepeat;
             mipLevels = hasMipLevels ? GfxUtils.CalcMipLevels(desc.Width, desc.Height) : 1;
 
-            var texRef = _driver.Textures.CreateTextureCubeMap((uint)desc.Width, (uint)desc.Height, (uint)mipLevels);
-            _driver.Textures.SetTexturePreset(texRef.Handle, desc.Preset);
-
-            if (desc.Anisotropy != TextureAnisotropy.Off)
-                _driver.Textures.SetAnisotropy(texRef.Handle, desc.Anisotropy.ToAnisotropy());
-            if (desc.LodBias != 0)
-                _driver.Textures.SetLodBias(texRef.Handle, desc.LodBias);
-
-            return texRef;
-        }
-
-        public GfxRefToken<TextureId> CreateTexture(ReadOnlySpan<byte> data, in GpuTextureDescriptor desc,
-            out int mipLevels)
-        {
-            var hasMipLevels = desc.Preset is TexturePreset.LinearMipmapClamp or TexturePreset.LinearMipmapRepeat;
-            mipLevels = hasMipLevels ? GfxUtils.CalcMipLevels(desc.Width, desc.Height) : 1;
-
-            var texRef = _driver.Textures.CreateTexture2D((uint)desc.Width, (uint)desc.Height, (uint)mipLevels);
+            var texRef = desc.Kind switch
+            {
+                TextureKind.Texture2D => _driver.Textures.CreateTexture2D(desc.Width, desc.Height, mipLevels),
+                TextureKind.CubeMap => _driver.Textures.CreateTexture2D(desc.Width, desc.Height, mipLevels),
+                TextureKind.Multisample2D => _driver.Textures.CreateTexture2D(desc.Width, desc.Height, mipLevels),
+                _ => throw new ArgumentOutOfRangeException()
+            };
 
             if (!data.IsEmpty)
-                _driver.Textures.UploadTextureData(texRef.Handle, data, (uint)desc.Width, (uint)desc.Height);
+                _driver.Textures.UploadTextureData(texRef.Handle, data, desc.Width, desc.Height);
             else
                 _driver.Textures.UploadTextureEmptyData(texRef.Handle);
 
@@ -149,21 +141,37 @@ public sealed class GfxTextures
             return texRef;
         }
 
+        public GfxRefToken<TextureId> CreateCubeMap(in GpuTextureDescriptor desc, out int mipLevels)
+        {
+            var hasMipLevels = desc.Preset is TexturePreset.LinearMipmapClamp or TexturePreset.LinearMipmapRepeat;
+            mipLevels = hasMipLevels ? GfxUtils.CalcMipLevels(desc.Width, desc.Height) : 1;
+
+            var texRef = _driver.Textures.CreateTextureCubeMap(desc.Width, desc.Height, mipLevels);
+            _driver.Textures.SetTexturePreset(texRef.Handle, desc.Preset);
+
+            if (desc.Anisotropy != TextureAnisotropy.Off)
+                _driver.Textures.SetAnisotropy(texRef.Handle, desc.Anisotropy.ToAnisotropy());
+            if (desc.LodBias != 0)
+                _driver.Textures.SetLodBias(texRef.Handle, desc.LodBias);
+
+            return texRef;
+        }
+
         public GfxRefToken<TextureId> CreateTextureMsaa(in GpuTextureDescriptor desc, int samples)
         {
-            var texRef = _driver.Textures.CreateTextureMultisample((uint)desc.Width, (uint)desc.Height, (uint)samples);
+            var texRef = _driver.Textures.CreateTextureMultisample(desc.Width, desc.Height, samples);
             return texRef;
         }
 
         public void UploadTextureData(in GfxHandle texture, ReadOnlySpan<byte> data, int width, int height)
         {
-            _driver.Textures.UploadTextureData(texture, data, (uint)width, (uint)height);
+            _driver.Textures.UploadTextureData(texture, data, width, height);
         }
 
         public void UploadCubeMapFace(in GfxHandle texture, ReadOnlySpan<byte> data, int width, int height,
             int faceIdx)
         {
-            _driver.Textures.UploadCubeMapFaceData(texture, data, (uint)width, (uint)height, faceIdx);
+            _driver.Textures.UploadCubeMapFaceData(texture, data, width, height, faceIdx);
         }
     }
 }

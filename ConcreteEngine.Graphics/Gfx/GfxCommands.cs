@@ -224,11 +224,11 @@ public sealed class GfxCommands
         _boundTextures[slot] = texture;
         if (texture.Value == 0)
         {
-            _textures.UnbindTextureSlot((uint)slot);
+            _textures.UnbindTextureSlot(slot);
             return;
         }
         ref readonly var handle = ref _store.TextureStore.GetHandle(texture);
-        _textures.BindTexture(handle, (uint)slot);
+        _textures.BindTexture(handle, slot);
     }
 
     public void BindMesh(MeshId id)
@@ -272,7 +272,7 @@ public sealed class GfxCommands
     private void DrawArrays(DrawPrimitive primitive, int drawCount)
     {
         Debug.Assert(drawCount != 0, "DrawArrays called with drawCount = 0");
-        _driver.States.DrawArrays(primitive, (uint)drawCount);
+        _driver.States.DrawArrays(primitive, drawCount);
         _drawTriangleCount += drawCount;
         _drawCallCount++;
     }
@@ -282,7 +282,7 @@ public sealed class GfxCommands
         Debug.Assert(drawCount != 0, "DrawElements called with drawCount = 0");
         Debug.Assert(elementSize != DrawElementSize.Invalid);
 
-        _driver.States.DrawElements(primitive, elementSize, (uint)drawCount);
+        _driver.States.DrawElements(primitive, elementSize, drawCount);
         _drawTriangleCount += drawCount;
         _drawCallCount++;
     }

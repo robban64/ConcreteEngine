@@ -41,7 +41,7 @@ public sealed class GfxFrameBuffers
                 desc.TexturePreset, TextureKind.Texture2D);
 
             var textureId = samples > 0 ? _gfxTextures.CreateTextureMsaa(in texDesc, samples) 
-                : _gfxTextures.CreateTexture(ReadOnlySpan<byte>.Empty, in texDesc);
+                : _gfxTextures.CreateTexture2D(ReadOnlySpan<byte>.Empty, in texDesc);
             var texRef = _resources.TextureStore.GetRef(textureId);
             _backend.AttachTexture(in fboRef, in texRef);
             attachmentIds = attachmentIds with { ColorTextureId = textureId };

@@ -20,10 +20,10 @@ internal sealed class GlTextures : IGraphicsDriverModule
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    private GlTextureHandle GetTexHandle(in GfxHandle handle) => _store.Texture.Get(in handle);
+    private GlTextureHandle GetTexHandle(in GfxRefToken<TextureId> handle) => _store.Texture.GetRef(in handle);
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public void BindTexture(in GfxHandle handle, int slot) =>
+    public void BindTexture(in GfxRefToken<TextureId> handle, int slot) =>
         _gl.BindTextureUnit(GetTexHandle(in handle).Handle, (uint)slot);
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
@@ -31,52 +31,51 @@ internal sealed class GlTextures : IGraphicsDriverModule
 
     public GfxRefToken<TextureId> CreateTexture2D(int width, int height, int mipLevels)
     {
-        var levels = Math.Min(1, mipLevels);
         _gl.CreateTextures(TextureTarget.Texture2D, 1, out uint texture);
-        _gl.TextureStorage2D(texture, (uint)levels, ColorFormat, (uint)width, (uint)height);
+        _gl.TextureStorage2D(texture, (uint)mipLevels, ColorFormat, (uint)width, (uint)height);
         return _store.Texture.Add(new GlTextureHandle(texture));
     }
 
     public GfxRefToken<TextureId> CreateTextureCubeMap(int width, int height, int mipLevels)
     {
-        var levels = Math.Min(1, mipLevels);
         _gl.CreateTextures(TextureTarget.TextureCubeMap, 1, out uint texture);
-        _gl.TextureStorage2D(texture, (uint)levels, ColorFormat, (uint)width, (uint)height);
+        _gl.TextureStorage2D(texture, (uint)mipLevels, ColorFormat, (uint)width, (uint)height);
         return _store.Texture.Add(new GlTextureHandle(texture));
     }
 
     public GfxRefToken<TextureId> CreateTextureMultisample(int width, int height, int samples)
     {
         _gl.CreateTextures(TextureTarget.Texture2DMultisample, 1, out uint texture);
-        _gl.TextureStorage2DMultisample(texture, (uint)samples, SizedInternalFormat.Srgb8Alpha8, (uint)width, (uint)height, true);
+        _gl.TextureStorage2DMultisample(texture, (uint)samples, SizedInternalFormat.Srgb8Alpha8, (uint)width,
+            (uint)height, true);
         return _store.Texture.Add(new GlTextureHandle(texture));
     }
 
-    private void CreateTextureStore(in GfxHandle texture, int width, int height, int mipLevels)
+    private void CreateTextureStore(GfxRefToken<TextureId> texRef, int width, int height, int mipLevels)
     {
-        var handle = GetTexHandle(in texture).Handle;
+        var handle = GetTexHandle(in texRef).Handle;
         var levels = Math.Min(1, mipLevels);
         _gl.TextureStorage2D(handle, (uint)levels, ColorFormat, (uint)width, (uint)height);
     }
 
-    public void UploadTextureData(in GfxHandle texture, ReadOnlySpan<byte> data, int width, int height)
+    public void UploadTextureData(GfxRefToken<TextureId> texRef, ReadOnlySpan<byte> data, int width, int height)
     {
-        var handle = GetTexHandle(in texture).Handle;
+        var handle = GetTexHandle(in texRef).Handle;
         _gl.TextureSubImage2D(handle, 0, 0, 0, (uint)width, (uint)height,
             PixelFormat.Rgba, PixelType.UnsignedByte, data);
     }
 
-    public unsafe void UploadTextureEmptyData(in GfxHandle texture)
+    public unsafe void UploadTextureEmptyData(GfxRefToken<TextureId> texRef)
     {
-        var handle = GetTexHandle(in texture).Handle;
+        var handle = GetTexHandle(in texRef).Handle;
         _gl.TextureSubImage2D(handle, 0, 0, 0, 1, 1,
             PixelFormat.Rgba, PixelType.UnsignedByte, (void*)0);
     }
 
-    public void UploadCubeMapFaceData(in GfxHandle texture, ReadOnlySpan<byte> data, int width, int height,
+    public void UploadCubeMapFaceData(GfxRefToken<TextureId> texRef, ReadOnlySpan<byte> data, int width, int height,
         int faceIdx)
     {
-        var handle = GetTexHandle(in texture).Handle;
+        var handle = GetTexHandle(in texRef).Handle;
         _gl.TextureSubImage3D(
             handle, level: 0,
             xoffset: 0, yoffset: 0, zoffset: faceIdx,
@@ -86,9 +85,9 @@ internal sealed class GlTextures : IGraphicsDriverModule
         );
     }
 
-    public void SetTexturePreset(in GfxHandle texture, TexturePreset preset)
+    public void SetTexturePreset(GfxRefToken<TextureId> texRef, TexturePreset preset)
     {
-        var handle = GetTexHandle(in texture);
+        var handle = GetTexHandle(in texRef);
 
         switch (preset)
         {
@@ -125,7 +124,6 @@ internal sealed class GlTextures : IGraphicsDriverModule
                 SetTexParameter(GLEnum.TextureWrapT, GLEnum.ClampToEdge);
                 SetTexParameter(GLEnum.TextureMinFilter, GLEnum.LinearMipmapLinear);
                 SetTexParameter(GLEnum.TextureMagFilter, GLEnum.Linear);
-                _gl.GenerateTextureMipmap(handle.Handle);
                 break;
 
             case TexturePreset.LinearMipmapRepeat:
@@ -133,7 +131,6 @@ internal sealed class GlTextures : IGraphicsDriverModule
                 SetTexParameter(GLEnum.TextureWrapT, GLEnum.Repeat);
                 SetTexParameter(GLEnum.TextureMinFilter, GLEnum.LinearMipmapLinear);
                 SetTexParameter(GLEnum.TextureMagFilter, GLEnum.Linear);
-                _gl.GenerateTextureMipmap(handle.Handle);
                 break;
 
             case TexturePreset.PremultipliedUi:
@@ -150,49 +147,12 @@ internal sealed class GlTextures : IGraphicsDriverModule
         void SetTexParameter(GLEnum pname, GLEnum param) => _gl.TextureParameterI(handle.Handle, pname, (int)param);
     }
 
-    public void SetLodBias(in GfxHandle texture, float lodBias) =>
-        _gl.TextureParameter(GetTexHandle(in texture).Handle, GLEnum.TextureLodBias, lodBias);
+    public void SetLodBias(GfxRefToken<TextureId> texRef, float lodBias) =>
+        _gl.TextureParameter(GetTexHandle(in texRef).Handle, GLEnum.TextureLodBias, lodBias);
 
-    public void SetAnisotropy(in GfxHandle texture, int anisotropy) =>
-        _gl.TextureParameter(GetTexHandle(in texture).Handle, GLEnum.TextureLodBias, anisotropy);
-/*
-    public unsafe GlTextureHandle CreateCubeMap(GpuCubeMapData data, in GpuCubeMapDescriptor desc, out TextureMeta meta)
-    {
-        var (width, height) = (desc.Width, desc.Height);
+    public void SetAnisotropy(GfxRefToken<TextureId> texRef, int anisotropy) =>
+        _gl.TextureParameter(GetTexHandle(in texRef).Handle, GLEnum.TextureLodBias, anisotropy);
 
-        ArgumentOutOfRangeException.ThrowIfNotEqual(width, height, nameof(width));
-        ArgumentOutOfRangeException.ThrowIfNotEqual(width, desc.Width, nameof(width));
-        ArgumentOutOfRangeException.ThrowIfNotEqual(height, desc.Height, nameof(width));
-
-        var target = (int)TextureTarget.TextureCubeMapPositiveX;
-
-        var handle = _gl.GenTexture();
-        _gl.BindTexture(GLEnum.TextureCubeMap, handle);
-        var (format, internalFormat) = desc.Format.ToGlEnums();
-
-        CreateFace(data.FaceData1, 0);
-        CreateFace(data.FaceData2, 1);
-        CreateFace(data.FaceData3, 2);
-        CreateFace(data.FaceData4, 3);
-        CreateFace(data.FaceData5, 4);
-        CreateFace(data.FaceData6, 5);
-
-        _gl.TextureParameterI(handle, pname, (int)param)
-        _gl.TexParameter(TextureTarget.TextureCubeMap, TextureParameterName.TextureWrapS, (int)GLEnum.ClampToEdge);
-        _gl.TexParameter(TextureTarget.TextureCubeMap, TextureParameterName.TextureWrapT, (int)GLEnum.ClampToEdge);
-        _gl.TexParameter(TextureTarget.TextureCubeMap, TextureParameterName.TextureWrapR, (int)GLEnum.ClampToEdge);
-        _gl.TexParameter(TextureTarget.TextureCubeMap, TextureParameterName.TextureMinFilter, (int)GLEnum.Linear);
-        _gl.TexParameter(TextureTarget.TextureCubeMap, TextureParameterName.TextureMagFilter, (int)GLEnum.Linear);
-        _gl.BindTexture(TextureTarget.TextureCubeMap, 0);
-
-        meta = new TextureMeta(width, height, desc.Format);
-        return new GlTextureHandle(handle);
-
-        void CreateFace(ReadOnlySpan<byte> faceData, int face)
-        {
-            _gl.TexImage2D((TextureTarget)(target + face), 0, (int)internalFormat,
-                (uint)width, (uint)height, 0,
-                format, GLEnum.UnsignedByte, faceData);
-        }
-    }*/
+    public void GenerateMipMaps(GfxRefToken<TextureId> texRef) =>
+        _gl.GenerateTextureMipmap(GetTexHandle(in texRef).Handle);
 }

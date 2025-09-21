@@ -26,7 +26,6 @@ public readonly struct TextureMeta(
     public readonly TextureAnisotropy Anisotropy = anisotropy;
     public readonly EnginePixelFormat PixelFormat = format;
     public readonly byte MipLevels = mipLevel;
-    public readonly bool HasData = hasData;
 
     internal static TextureMeta CreateFromHasData(in TextureMeta m, bool hasData) =>
         new(m.Width, m.Height, m.Preset, m.Kind, m.Anisotropy, m.PixelFormat, m.MipLevels, hasData);

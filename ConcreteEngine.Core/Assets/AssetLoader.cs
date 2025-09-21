@@ -248,7 +248,7 @@ internal sealed class AssetLoader
 
         public static Texture2D UploadTexture(GfxContext gfx, TextureManifestRecord record,in TexturePayload payload)
         {
-            var id = gfx.Textures.CreateTexture(payload.Data, in payload.Descriptor);
+            var id = gfx.Textures.CreateTexture2D(payload.Data, in payload.Descriptor);
             
             //var data = record.InMemory ? _dataCache[record.Name] : null;
             return new Texture2D

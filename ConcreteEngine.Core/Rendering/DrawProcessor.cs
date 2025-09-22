@@ -2,6 +2,7 @@ using System.Runtime.CompilerServices;
 using ConcreteEngine.Core.Resources;
 using ConcreteEngine.Graphics;
 using ConcreteEngine.Graphics.Gfx;
+using ConcreteEngine.Graphics.Gfx.Utility;
 using ConcreteEngine.Graphics.Resources;
 using ConcreteEngine.Graphics.Utils;
 

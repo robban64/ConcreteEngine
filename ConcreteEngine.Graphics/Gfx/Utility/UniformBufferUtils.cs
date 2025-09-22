@@ -1,3 +1,5 @@
+#region
+
 using System.Diagnostics;
 using System.Diagnostics.CodeAnalysis;
 using System.Runtime.CompilerServices;
@@ -5,7 +7,9 @@ using ConcreteEngine.Graphics.Error;
 using ConcreteEngine.Graphics.Primitives;
 using ConcreteEngine.Graphics.Resources;
 
-namespace ConcreteEngine.Graphics.Utils;
+#endregion
+
+namespace ConcreteEngine.Graphics.Gfx.Utility;
 
 public static class UniformBufferUtils
 {
@@ -44,7 +48,7 @@ public static class UniformBufferUtils
             _ => throw new ArgumentOutOfRangeException(nameof(defaultCapacity))
         };
         nint q = size / stride;
-        return (q == 0 ? stride : q * stride);
+        return q == 0 ? stride : q * stride;
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
@@ -72,10 +76,12 @@ public static class UniformBufferUtils
     public static nint StrideOf<T>() where T : unmanaged, IUniformGpuData => AlignUp(Unsafe.SizeOf<T>(), _offsetAlign);
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public static bool IsStd140Aligned<T>() where T : unmanaged, IUniformGpuData => (Unsafe.SizeOf<T>() % 16) == 0;
+    public static bool IsStd140Aligned<T>() where T : unmanaged, IUniformGpuData => Unsafe.SizeOf<T>() % 16 == 0;
 
 
-    [MethodImpl(MethodImplOptions.NoInlining), DoesNotReturn, StackTraceHidden]
+    [MethodImpl(MethodImplOptions.NoInlining)]
+    [DoesNotReturn]
+    [StackTraceHidden]
     private static void ThrowStd140NotAligned<T>() where T : unmanaged =>
         throw new GraphicsException($"Invalid struct layout: {Unsafe.SizeOf<T>()} bytes for {typeof(T).Name}");
 

@@ -1,18 +1,21 @@
+#region
+
 using System.Numerics;
 using System.Runtime.CompilerServices;
 using ConcreteEngine.Common.Numerics;
 using ConcreteEngine.Graphics.Error;
-using ConcreteEngine.Graphics.Primitives;
 using ConcreteEngine.Graphics.Resources;
 using Silk.NET.OpenGL;
 
+#endregion
+
 namespace ConcreteEngine.Graphics.OpenGL;
 
-internal sealed class GlShaders: IGraphicsDriverModule
+internal sealed class GlShaders : IGraphicsDriverModule
 {
     private readonly GL _gl;
     private readonly BackendOpsHub _store;
-    
+
     private NativeHandle _activeProg;
 
     internal GlShaders(GlCtx ctx)
@@ -20,12 +23,12 @@ internal sealed class GlShaders: IGraphicsDriverModule
         _gl = ctx.Gl;
         _store = ctx.Store;
     }
-    
+
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public void UseShader(in GfxHandle shader)
+    public void UseShader(GfxRefToken<ShaderId> shaderRef)
     {
-        var handle = _store.Shader.Get(in shader);
-        if(_activeProg.EqualsHandle(handle))
+        var handle = _store.Shader.GetRef(shaderRef);
+        if (_activeProg.EqualsHandle(handle))
             return;
 
         _activeProg = NativeHandle.From(handle);
@@ -35,12 +38,12 @@ internal sealed class GlShaders: IGraphicsDriverModule
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public void UnbindShader()
     {
-        if(_activeProg.IsEmpty()) return;
+        if (_activeProg.IsEmpty()) return;
         _activeProg = new NativeHandle(0);
         _gl.UseProgram(0);
     }
 
-    
+
     public GfxRefToken<ShaderId> CreateShader(string vertexSource, string fragmentSource)
     {
         uint vertexShader = CreateShader(ShaderType.VertexShader, vertexSource);
@@ -51,14 +54,14 @@ internal sealed class GlShaders: IGraphicsDriverModule
         _gl.DeleteShader(vertexShader);
         _gl.DeleteShader(fragmentShader);
         return _store.Shader.Add(new GlShaderHandle(handle));
-
     }
-    
-    public void GetUniformsFromProgram(in GfxHandle shader, out List<(string, int)> uniforms, out int samplers)
-    {
-        var handle = _store.Shader.Get(in shader).Handle;
 
-        UseShader(in shader);
+    public void GetUniformsFromProgram(in GfxRefToken<ShaderId> shaderRef, out List<(string, int)> uniforms,
+        out int samplers)
+    {
+        var handle = _store.Shader.GetRef(shaderRef).Handle;
+
+        UseShader(shaderRef);
         _gl.GetProgram(handle, ProgramPropertyARB.ActiveUniforms, out int uniformsLength);
         uniforms = new List<(string, int)>(uniformsLength);
         samplers = 0;
@@ -111,19 +114,20 @@ internal sealed class GlShaders: IGraphicsDriverModule
     public void SetUniform(int uniform, int value) => _gl.ProgramUniform1(_activeProg.Value, uniform, value);
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public void SetUniform(int uniform, uint value) => _gl.ProgramUniform1(_activeProg.Value,uniform, value);
+    public void SetUniform(int uniform, uint value) => _gl.ProgramUniform1(_activeProg.Value, uniform, value);
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public void SetUniform(int uniform, float value) => _gl.ProgramUniform1(_activeProg.Value,uniform, value);
+    public void SetUniform(int uniform, float value) => _gl.ProgramUniform1(_activeProg.Value, uniform, value);
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public void SetUniform(int uniform, Vector2 value) => _gl.ProgramUniform2(_activeProg.Value,uniform, value.X, value.Y);
+    public void SetUniform(int uniform, Vector2 value) =>
+        _gl.ProgramUniform2(_activeProg.Value, uniform, value.X, value.Y);
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public void SetUniform(int uniform, in Vector3 value) => _gl.ProgramUniform3(_activeProg.Value,uniform, value);
+    public void SetUniform(int uniform, in Vector3 value) => _gl.ProgramUniform3(_activeProg.Value, uniform, value);
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public void SetUniform(int uniform, in Vector4 value) => _gl.ProgramUniform4(_activeProg.Value,uniform, value);
+    public void SetUniform(int uniform, in Vector4 value) => _gl.ProgramUniform4(_activeProg.Value, uniform, value);
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public unsafe void SetUniform(int uniform, in Matrix4x4 value)

@@ -2,9 +2,7 @@ namespace ConcreteEngine.Graphics.Resources;
 
 public interface IGfxResourceManager
 {
-
 }
-
 
 internal sealed class GfxResourceManager : IGfxResourceManager
 {

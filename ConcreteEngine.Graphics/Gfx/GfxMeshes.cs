@@ -1,7 +1,11 @@
+#region
+
 using ConcreteEngine.Common;
 using ConcreteEngine.Graphics.Contracts;
 using ConcreteEngine.Graphics.Gfx.Internal;
 using ConcreteEngine.Graphics.Resources;
+
+#endregion
 
 namespace ConcreteEngine.Graphics.Gfx;
 
@@ -46,7 +50,7 @@ public sealed class GfxMeshes
             IndexBufferId = state.IboId,
             VertexBufferIds = state.VboIds.ToArray(),
             Attributes = state.Attributes.ToArray(),
-            Properties = props,
+            Properties = props
         };
         _repository.MeshRepository.AddRecord(meshId, record);
 
@@ -67,14 +71,14 @@ public sealed class GfxMeshes
     {
         var meshRef = _resources.MeshStore.GetRef(meshId);
         var vboRef = _resources.VboStore.GetRefAndMeta(vboId, out var vboMeta);
-        _driver.Meshes.AttachVertexBuffer(in meshRef, in vboRef, bindingIdx, 0, vboMeta.Stride);
+        _driver.Meshes.AttachVertexBuffer(meshRef, in vboRef, bindingIdx, 0, vboMeta.Stride);
     }
 
     public void AttachIndexBuffer(MeshId meshId, IndexBufferId iboId)
     {
         var meshRef = _resources.MeshStore.GetRef(meshId);
         var iboRef = _resources.IboStore.GetRef(iboId);
-        _driver.Meshes.AttachIndexBuffer(in meshRef, in iboRef);
+        _driver.Meshes.AttachIndexBuffer(meshRef, in iboRef);
     }
 
     public void SetVertexAttributes(MeshId meshId, IReadOnlyList<VertexAttributeDesc> attributes)

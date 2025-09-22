@@ -10,5 +10,5 @@ public enum ResourceKind : byte
     IndexBuffer = 5,
     UniformBuffer = 6,
     FrameBuffer = 7,
-    RenderBuffer = 8,
+    RenderBuffer = 8
 }

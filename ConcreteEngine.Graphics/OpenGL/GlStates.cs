@@ -1,13 +1,17 @@
+#region
+
 using System.Runtime.CompilerServices;
-using ConcreteEngine.Common;
 using ConcreteEngine.Common.Numerics;
+using ConcreteEngine.Graphics.OpenGL.Utilities;
 using ConcreteEngine.Graphics.Resources;
 using Silk.NET.Maths;
 using Silk.NET.OpenGL;
 
+#endregion
+
 namespace ConcreteEngine.Graphics.OpenGL;
 
-internal sealed class GlStates: IGraphicsDriverModule
+internal sealed class GlStates : IGraphicsDriverModule
 {
     private readonly GL _gl;
     private readonly BackendOpsHub _store;
@@ -17,14 +21,14 @@ internal sealed class GlStates: IGraphicsDriverModule
         _gl = ctx.Gl;
         _store = ctx.Store;
     }
-    
-    
+
+
     public void Clear(Color4 color, ClearBufferFlag flags)
     {
         _gl.ClearColor(color.R, color.G, color.B, 1);
         _gl.Clear(flags.ToGlEnum());
     }
-    
+
     public void SetViewport(in Vector2D<int> viewport) => _gl.Viewport(viewport);
 
     public void SetBlendMode(BlendMode blendMode)
@@ -59,8 +63,8 @@ internal sealed class GlStates: IGraphicsDriverModule
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public void BindFrameBuffer(GfxRefToken<FrameBufferId> fboRef) 
-        => _gl.BindFramebuffer(FramebufferTarget.Framebuffer, _store.FrameBuffer.GetRef(fboRef).Handle);
+    public void BindFrameBuffer(GfxRefToken<FrameBufferId> fboRef) =>
+        _gl.BindFramebuffer(FramebufferTarget.Framebuffer, _store.FrameBuffer.GetRef(fboRef).Handle);
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public void UnbindFrameBuffer() => _gl.BindFramebuffer(FramebufferTarget.Framebuffer, 0);
@@ -68,7 +72,7 @@ internal sealed class GlStates: IGraphicsDriverModule
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public void BindMesh(GfxRefToken<MeshId> mesh) => _gl.BindVertexArray(_store.VertexArray.GetRef(mesh).Handle);
-    
+
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public void UnbindMesh() => _gl.BindVertexArray(0);
 
@@ -84,5 +88,4 @@ internal sealed class GlStates: IGraphicsDriverModule
     {
         _gl.DrawElements(primitive.ToGlEnum(), (uint)drawCount, elementSize.ToGlEnum(), (void*)0);
     }
-
 }

@@ -1,4 +1,8 @@
+#region
+
 using System.Runtime.CompilerServices;
+
+#endregion
 
 namespace ConcreteEngine.Graphics.Resources;
 
@@ -6,22 +10,23 @@ internal class HandleUtils
 {
     private static readonly Dictionary<Type, ResourceKind> ResourceIdToKind = new()
     {
-        [typeof(TextureId)]      = ResourceKind.Texture,
-        [typeof(ShaderId)]       = ResourceKind.Shader,
-        [typeof(MeshId)]         = ResourceKind.Mesh,
+        [typeof(TextureId)] = ResourceKind.Texture,
+        [typeof(ShaderId)] = ResourceKind.Shader,
+        [typeof(MeshId)] = ResourceKind.Mesh,
         [typeof(VertexBufferId)] = ResourceKind.VertexBuffer,
-        [typeof(IndexBufferId)]  = ResourceKind.IndexBuffer,
-        [typeof(FrameBufferId)]  = ResourceKind.FrameBuffer,
+        [typeof(IndexBufferId)] = ResourceKind.IndexBuffer,
+        [typeof(FrameBufferId)] = ResourceKind.FrameBuffer,
         [typeof(RenderBufferId)] = ResourceKind.RenderBuffer,
-        [typeof(UniformBufferId)]= ResourceKind.UniformBuffer,
+        [typeof(UniformBufferId)] = ResourceKind.UniformBuffer
     };
 
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public static ResourceKind ToResourceKind<TId>() where TId : unmanaged, IResourceId => ResourceIdToKind[typeof(TId)];
-    
+    public static ResourceKind ToResourceKind<TId>() where TId : unmanaged, IResourceId =>
+        ResourceIdToKind[typeof(TId)];
+
     /*
-     
+
        public static ResourceKind FromId<TId>() where TId : unmanaged, IResourceId
        {
            return typeof(TId) switch

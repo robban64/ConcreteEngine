@@ -1,8 +1,12 @@
+#region
+
 using System.Runtime.CompilerServices;
 using ConcreteEngine.Graphics.Contracts;
 using ConcreteEngine.Graphics.Gfx.Internal;
 
-namespace ConcreteEngine.Graphics.Utils;
+#endregion
+
+namespace ConcreteEngine.Graphics.Gfx.Utility;
 
 public struct VertexAttributeMaker<TElement> where TElement : unmanaged
 {
@@ -20,9 +24,10 @@ public struct VertexAttributeMaker<TElement> where TElement : unmanaged
     {
         int stride = Unsafe.SizeOf<TComponent>();
         var scalar = vertexFormat.SizeInBytes();
+
         ArgumentOutOfRangeException.ThrowIfGreaterThan(stride, ElementSize, nameof(stride));
         ArgumentOutOfRangeException.ThrowIfGreaterThan(Offset + stride, ElementSize, nameof(Offset));
-        if ((stride % scalar) != 0)
+        if (stride % scalar != 0)
             throw new ArgumentException("Component size must be a multiple.", nameof(TComponent));
 
         int remaining = ElementSize - Offset;

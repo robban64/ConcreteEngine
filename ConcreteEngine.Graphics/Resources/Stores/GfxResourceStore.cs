@@ -1,5 +1,9 @@
+#region
+
 using System.Diagnostics;
 using System.Runtime.CompilerServices;
+
+#endregion
 
 namespace ConcreteEngine.Graphics.Resources;
 
@@ -78,6 +82,19 @@ internal sealed class GfxResourceStore<TId, TMeta> : IGfxResourceStore<TId>
         }
 
         handle = GetHandleAndMeta(id, out meta);
+        return true;
+    }
+
+    public bool TryGetRef(TId id, out GfxRefToken<TId> handle, out TMeta meta)
+    {
+        if (id.Value == 0)
+        {
+            handle = default;
+            meta = default;
+            return false;
+        }
+
+        handle = GetRefAndMeta(id, out meta);
         return true;
     }
 

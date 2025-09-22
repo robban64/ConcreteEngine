@@ -1,5 +1,9 @@
+#region
+
 using ConcreteEngine.Graphics.Resources;
 using Silk.NET.OpenGL;
+
+#endregion
 
 namespace ConcreteEngine.Graphics.OpenGL;
 
@@ -12,7 +16,7 @@ internal sealed class GlBackendDriver : IGraphicsDriver
 
     private readonly ResourceBackendDispatcher _dispatcher;
     private readonly BackendOpsHub _store;
-    
+
     private readonly GlCapabilities _capabilities;
     private readonly GlDebugger _debugger;
     private readonly GlDisposer _disposer;
@@ -46,7 +50,7 @@ internal sealed class GlBackendDriver : IGraphicsDriver
         _states = new GlStates(_ctx);
         _frameBuffers = new GlFrameBuffers(_ctx);
     }
-    
+
     public GlDebugger Debugger => _debugger;
     public GlDisposer Disposer => _disposer;
     public GlBuffers Buffers => _buffers;
@@ -62,7 +66,7 @@ internal sealed class GlBackendDriver : IGraphicsDriver
         Console.WriteLine($"OpenGL version {Capabilities.GlVersion} loaded.");
         Console.WriteLine("--Device Capability--");
         Console.WriteLine(Capabilities.ToString());
-        
+
         _debugger.EnableGlDebug();
 
         _gl.Enable(GLEnum.Dither);
@@ -85,5 +89,4 @@ internal sealed class GlBackendDriver : IGraphicsDriver
     public void EndFrame()
     {
     }
-
 }

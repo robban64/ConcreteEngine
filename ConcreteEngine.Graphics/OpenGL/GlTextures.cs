@@ -1,6 +1,10 @@
+#region
+
 using System.Runtime.CompilerServices;
 using ConcreteEngine.Graphics.Resources;
 using Silk.NET.OpenGL;
+
+#endregion
 
 namespace ConcreteEngine.Graphics.OpenGL;
 
@@ -20,7 +24,7 @@ internal sealed class GlTextures : IGraphicsDriverModule
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    private GlTextureHandle GetTexHandle(in GfxRefToken<TextureId> handle) => _store.Texture.GetRef(in handle);
+    private GlTextureHandle GetTexHandle(in GfxRefToken<TextureId> handle) => _store.Texture.GetRef(handle);
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public void BindTexture(in GfxRefToken<TextureId> handle, int slot) =>

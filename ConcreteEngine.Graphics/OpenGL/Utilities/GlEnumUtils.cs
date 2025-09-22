@@ -7,34 +7,34 @@ using Silk.NET.OpenGL;
 
 #endregion
 
-namespace ConcreteEngine.Graphics.OpenGL;
+namespace ConcreteEngine.Graphics.OpenGL.Utilities;
 
 internal static class GlEnumUtils
 {
-    public static VertexAttribType PrimitiveToVertexAttribPointerType<R>() where R : unmanaged
-        => typeof(R) switch
+    public static VertexAttribType PrimitiveToVertexAttribPointerType<R>() where R : unmanaged =>
+        typeof(R) switch
         {
-            var t when t == typeof(int)    => VertexAttribType.Int,
-            var t when t == typeof(uint)   => VertexAttribType.UnsignedInt,
-            var t when t == typeof(float)  => VertexAttribType.Float,
+            var t when t == typeof(int) => VertexAttribType.Int,
+            var t when t == typeof(uint) => VertexAttribType.UnsignedInt,
+            var t when t == typeof(float) => VertexAttribType.Float,
             var t when t == typeof(double) => VertexAttribType.Double,
-            var t when t == typeof(byte)   => VertexAttribType.Byte,
+            var t when t == typeof(byte) => VertexAttribType.Byte,
             _ => throw new ArgumentOutOfRangeException(nameof(R))
         };
-    
+
     public static BufferStorageMask ToBufferFlag(BufferStorage storage, BufferAccess access)
     {
         BufferStorageMask f = 0;
         if (storage != BufferStorage.Static) f |= BufferStorageMask.DynamicStorageBit;
-        if (access.HasBufferAccess(BufferAccess.MapRead))     f |= BufferStorageMask.MapReadBit;
-        if (access.HasBufferAccess(BufferAccess.MapWrite))    f |= BufferStorageMask.MapWriteBit;
-        if (access.HasBufferAccess(BufferAccess.Persistent))  f |= BufferStorageMask.MapPersistentBit;
-        if (access.HasBufferAccess(BufferAccess.Coherent))    f |= BufferStorageMask.MapCoherentBit;
+        if (access.HasBufferAccess(BufferAccess.MapRead)) f |= BufferStorageMask.MapReadBit;
+        if (access.HasBufferAccess(BufferAccess.MapWrite)) f |= BufferStorageMask.MapWriteBit;
+        if (access.HasBufferAccess(BufferAccess.Persistent)) f |= BufferStorageMask.MapPersistentBit;
+        if (access.HasBufferAccess(BufferAccess.Coherent)) f |= BufferStorageMask.MapCoherentBit;
 
-       return f;
+        return f;
     }
-
 }
+
 internal static class GlEnumExtensions
 {
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
@@ -48,7 +48,7 @@ internal static class GlEnumExtensions
             _ => throw new ArgumentOutOfRangeException(nameof(textureKind))
         };
     }
-    
+
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static GLEnum ToGlAttachmentEnum(this FrameBufferTarget kind)
     {
@@ -60,7 +60,7 @@ internal static class GlEnumExtensions
             _ => throw new ArgumentOutOfRangeException(nameof(kind))
         };
     }
-    
+
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static InternalFormat ToGlInternalFormatEnum(this FrameBufferTarget kind)
     {
@@ -72,8 +72,8 @@ internal static class GlEnumExtensions
             _ => throw new ArgumentOutOfRangeException(nameof(kind))
         };
     }
-    
-    
+
+
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static (bool enabled, BlendEquationModeEXT eq, BlendingFactor src, BlendingFactor dst) ToGlEnum(
         this BlendMode mode)
@@ -113,7 +113,7 @@ internal static class GlEnumExtensions
             CullMode.BackCw => (EnableCap.CullFace, TriangleFace.Back, FrontFaceDirection.CW),
             CullMode.FrontCcw => (EnableCap.CullFace, TriangleFace.Front, FrontFaceDirection.Ccw),
             CullMode.FrontCw => (EnableCap.CullFace, TriangleFace.Front, FrontFaceDirection.CW),
-            _ => (EnableCap.CullFace, TriangleFace.Back, FrontFaceDirection.Ccw),
+            _ => (EnableCap.CullFace, TriangleFace.Back, FrontFaceDirection.Ccw)
         };
     }
 
@@ -169,7 +169,7 @@ internal static class GlEnumExtensions
             _ => throw new ArgumentOutOfRangeException(nameof(format))
         };
     }
-    
+
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static BufferUsage ToBufferUsage(this BufferStorage usage)
     {
@@ -191,7 +191,6 @@ internal static class GlEnumExtensions
             BufferUsage.DynamicDraw => VertexBufferObjectUsage.DynamicDraw,
             BufferUsage.StreamDraw => VertexBufferObjectUsage.StreamDraw,
             _ => throw new ArgumentOutOfRangeException(nameof(usage))
-
         };
     }
 
@@ -205,6 +204,4 @@ internal static class GlEnumExtensions
             _ => throw new ArgumentOutOfRangeException(nameof(target))
         };
     }
-
-
 }

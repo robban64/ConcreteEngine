@@ -1,9 +1,13 @@
+#region
+
 using ConcreteEngine.Graphics.Resources;
 using Silk.NET.OpenGL;
 
+#endregion
+
 namespace ConcreteEngine.Graphics.OpenGL;
 
-internal sealed class GlDisposer: IGraphicsDriverModule
+internal sealed class GlDisposer : IGraphicsDriverModule
 {
     private readonly GL _gl;
     private readonly BackendOpsHub _store;
@@ -86,5 +90,4 @@ internal sealed class GlDisposer: IGraphicsDriverModule
         _gl.DeleteRenderbuffer(cmd.NativeHandle.Value);
         _dispatcher.OnDelete(in cmd);
     }
-
 }

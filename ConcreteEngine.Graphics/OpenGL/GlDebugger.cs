@@ -1,6 +1,10 @@
-using ConcreteEngine.Graphics.Error;
+#region
+
+using System.Diagnostics;
 using Silk.NET.Core.Native;
 using Silk.NET.OpenGL;
+
+#endregion
 
 namespace ConcreteEngine.Graphics.OpenGL;
 
@@ -14,13 +18,6 @@ internal sealed class GlDebugger : IGraphicsDriverModule
         _gl = gl;
     }
 
-    public void CheckGlError()
-    {
-        var error = _gl.GetError();
-        if (error != (GLEnum)ErrorCode.NoError)
-            throw new OpenGlException(error);
-    }
-
     public unsafe void EnableGlDebug()
     {
         //static DebugProc? _debugProc
@@ -32,12 +29,10 @@ internal sealed class GlDebugger : IGraphicsDriverModule
             var sevStr = severity.ToString();
 
 #if DEBUG
-            if (severity == GLEnum.DebugSeverityHigh && System.Diagnostics.Debugger.IsAttached)
-                System.Diagnostics.Debugger.Break();
+            if (severity == GLEnum.DebugSeverityHigh && Debugger.IsAttached)
+                Debugger.Break();
 #endif
             Console.WriteLine($"[GL {sevStr}] {typeStr} {id} @ {srcStr}: {text}");
-            
-
         };
 
         _gl.Enable(EnableCap.DebugOutput);

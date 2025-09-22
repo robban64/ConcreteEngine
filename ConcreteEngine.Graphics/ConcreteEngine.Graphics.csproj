@@ -21,20 +21,12 @@
     <ItemGroup>
       <Compile Remove="OpenGL\Temp\GlGraphicsContext.cs" />
       <Compile Remove="OpenGL\Temp\GlGraphicsDevice.cs" />
-      <None Include="OpenGL\Old\GlGraphicsContext.cs" />
       <Compile Remove="OpenGL\Old\Data.cs" />
-      <None Include="OpenGL\Old\Data.cs" />
       <Compile Remove="OpenGL\Old\GlBackendDriver.cs" />
-      <None Include="OpenGL\Old\GlBackendDriver.cs" />
       <Compile Remove="OpenGL\Old\GlFactory.cs" />
-      <None Include="OpenGL\Old\GlFactory.cs" />
       <Compile Remove="OpenGL\Old\GlFboFactory.cs" />
-      <None Include="OpenGL\Old\GlFboFactory.cs" />
       <Compile Remove="OpenGL\Old\GlShaderFactory.cs" />
-      <None Include="OpenGL\Old\GlGraphicsDevice.cs" />
-      <None Include="OpenGL\Old\GlShaderFactory.cs" />
       <Compile Remove="OpenGL\Old\GlTextureFactory.cs" />
-      <None Include="OpenGL\Old\GlTextureFactory.cs" />
       <Compile Remove="Gfx\Old\GfxAllocator.cs" />
       <Compile Remove="Gfx\Old\GfxAllocatorFacade.cs" />
       <Compile Remove="Gfx\Old\GfxResourceAllocator.cs" />

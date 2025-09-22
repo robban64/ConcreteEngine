@@ -1,18 +1,15 @@
-using System.Diagnostics.CodeAnalysis;
+#region
+
 using System.Runtime.CompilerServices;
+
+#endregion
 
 namespace ConcreteEngine.Graphics.Error;
 
 public sealed partial class GraphicsException(string message) : InvalidOperationException(message)
 {
-    
-    [MethodImpl(MethodImplOptions.AggressiveInlining), DoesNotReturn]
-    public static void ThrowInvalidOperation<T>(string param, string? message) => ThrowInvalidOperation(param, message);
-    
-    
     // Exceptions
-    public static GraphicsException ResourceIsNull<T>(string? name = null) =>
-        new($"{Label<T>(name)} is null.");
+    public static GraphicsException ResourceIsNull<T>(string? name = null) => new($"{Label<T>(name)} is null.");
 
     public static GraphicsException ResourceNotBound<T>(string? name = null) =>
         new($"{Label<T>(name)} is not bound to the pipeline.");
@@ -33,7 +30,7 @@ public sealed partial class GraphicsException(string message) : InvalidOperation
     public static GraphicsException DuplicatedResource<T>(object name) =>
         new($"Duplicated  in {Label<T>(name.ToString())}");
 
-    
+
     public static GraphicsException MissingHandle<T>(string? name = null) =>
         new($"{Label<T>(name)} has no valid GPU handle (was it created?).");
 
@@ -41,12 +38,11 @@ public sealed partial class GraphicsException(string message) : InvalidOperation
         new($"{Label<T>(name)} invalid buffer data: {reason}");
 
 
-    public static GraphicsException InvalidState(string description) =>
-        new($"Invalid graphics state: {description}");
+    public static GraphicsException InvalidState(string description) => new($"Invalid graphics state: {description}");
 
     public static GraphicsException InvalidType<T>(string? name, object other) =>
         new($"Expected type: {Label<T>(name)}. Actual type: {other.GetType().Name}");
-    
+
 
     public static GraphicsException ShaderLinkFailed(string shaderName, string log) =>
         new($"Failed to link shader '{shaderName}'. Compiler log:\n{log}");

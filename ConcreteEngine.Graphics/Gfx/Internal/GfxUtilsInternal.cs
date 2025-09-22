@@ -1,10 +1,14 @@
+#region
+
 using System.Numerics;
 using System.Runtime.CompilerServices;
 using Silk.NET.Maths;
 
+#endregion
+
 namespace ConcreteEngine.Graphics.Gfx.Internal;
 
-internal static class GfxUtils
+internal static class GfxUtilsInternal
 {
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static int CalcMipLevels(int width, int height)
@@ -19,10 +23,10 @@ internal static class GfxUtils
     {
         ArgumentOutOfRangeException.ThrowIfEqual(viewSize, default);
 
-        var rX = (downscaleRatio.X <= 0f || downscaleRatio.X > 1f) ? 1f : downscaleRatio.X;
-        var rY = (downscaleRatio.Y <= 0f || downscaleRatio.Y > 1f) ? 1f : downscaleRatio.Y;
+        var rX = downscaleRatio.X <= 0f || downscaleRatio.X > 1f ? 1f : downscaleRatio.X;
+        var rY = downscaleRatio.Y <= 0f || downscaleRatio.Y > 1f ? 1f : downscaleRatio.Y;
 
-        var baseSize = (absoluteSize is null || absoluteSize.Value == default)
+        var baseSize = absoluteSize is null || absoluteSize.Value == default
             ? viewSize
             : absoluteSize.Value;
 

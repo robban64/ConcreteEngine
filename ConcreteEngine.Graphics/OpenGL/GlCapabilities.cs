@@ -1,8 +1,12 @@
+#region
+
 using Silk.NET.OpenGL;
+
+#endregion
 
 namespace ConcreteEngine.Graphics.OpenGL;
 
-internal sealed class GlCapabilities: IGraphicsDriverModule
+internal sealed class GlCapabilities : IGraphicsDriverModule
 {
     private DeviceCapabilities _capabilities;
 
@@ -32,7 +36,7 @@ internal sealed class GlCapabilities: IGraphicsDriverModule
             MaxColorAttachments = gl.GetInteger(GLEnum.MaxColorAttachments),
             MaxAnisotropy = gl.GetFloat(GLEnum.MaxTextureMaxAnisotropy),
             MaxUniformBlockSize = gl.GetInteger(GLEnum.MaxUniformBlockSize),
-            UniformBufferOffsetAlignment = gl.GetInteger(GetPName.UniformBufferOffsetAlignment),
+            UniformBufferOffsetAlignment = gl.GetInteger(GetPName.UniformBufferOffsetAlignment)
         };
     }
 }

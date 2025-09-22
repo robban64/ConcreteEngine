@@ -6,7 +6,7 @@ public enum BlendMode : byte
     None = 1,
     Alpha = 1,
     PremultipliedAlpha = 2,
-    Additive = 3,
+    Additive = 3
 }
 
 public enum ClearBufferFlag : byte

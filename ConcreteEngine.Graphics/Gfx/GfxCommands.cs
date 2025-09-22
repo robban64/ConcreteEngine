@@ -1,14 +1,16 @@
+#region
+
 using System.Diagnostics;
 using System.Numerics;
 using System.Runtime.CompilerServices;
-using ConcreteEngine.Common;
 using ConcreteEngine.Common.Numerics;
 using ConcreteEngine.Graphics.Error;
 using ConcreteEngine.Graphics.Gfx.Internal;
 using ConcreteEngine.Graphics.OpenGL;
-using ConcreteEngine.Graphics.Primitives;
 using ConcreteEngine.Graphics.Resources;
 using Silk.NET.Maths;
+
+#endregion
 
 namespace ConcreteEngine.Graphics.Gfx;
 
@@ -31,12 +33,12 @@ public sealed class GfxCommands
     private CullMode _cullMode = CullMode.Unset;
 
     private readonly TextureId[] _boundTextures;
-    
+
     private FrameBufferId _boundFboId = default;
-    
+
     private MeshId _boundMeshId = default;
     private MeshMeta _boundMeshMeta = default;
-    
+
     private ShaderId _boundShaderId = default;
     private ShaderLayout? _boundUniforms;
 
@@ -79,7 +81,7 @@ public sealed class GfxCommands
         UseShader(default);
         BindMesh(default);
         BindFramebuffer(default);
-        
+
         _blendMode = BlendMode.Unset;
         _depthMode = DepthMode.Unset;
         _cullMode = CullMode.Unset;
@@ -109,7 +111,7 @@ public sealed class GfxCommands
         ref readonly var handle = ref _store.FboStore.GetHandle(fboId);
 
         BindFramebuffer(fboId);
-        
+
         SetViewport(meta.Size);
         if (clear.HasValue && flags.HasValue) Clear(clear.Value, flags.Value);
         SetDepthMode(DepthMode.WriteLequal);
@@ -128,31 +130,30 @@ public sealed class GfxCommands
     }
 
 
-    public void BlitFramebuffer(in FrameBufferId fromId, in FrameBufferId toId = default, bool linear = true)
+    public void BlitFramebuffer(FrameBufferId fromId, FrameBufferId toId = default, bool linear = true)
     {
         Debug.Assert(fromId != default);
         Debug.Assert(fromId != toId, "READ and DRAW FBO must differ for resolve.");
         SetBlendMode(BlendMode.None);
 
         ref readonly var fromFbo = ref _store.FboStore.GetMeta(fromId);
-        var fromHandle = _store.FboStore.GetHandle(fromId);
+        var fromHandle = _store.FboStore.GetRef(fromId);
         var srcSize = fromFbo.Size;
 
-        if (!_store.FboStore.TryGet(toId, out var toHandle, out var toFbo))
+        if (!_store.FboStore.TryGetRef(toId, out var toHandle, out var toFbo))
         {
-            _driver.FrameBuffers.BlitDefault(in fromHandle, srcSize, _activeOutputSize, linear);
+            _driver.FrameBuffers.BlitDefault(fromHandle, srcSize, _activeOutputSize, linear);
             return;
         }
 
-        _driver.FrameBuffers.Blit(in fromHandle, in toHandle, srcSize, toFbo.Size, linear);
-
+        _driver.FrameBuffers.Blit(fromHandle, toHandle, srcSize, toFbo.Size, linear);
         SetViewport(_activeOutputSize);
     }
 
 
     public void Clear(Color4 color, ClearBufferFlag flags) => _states.Clear(color, flags);
 
-    public void SetViewport(in Vector2D<int> viewport)
+    public void SetViewport(Vector2D<int> viewport)
     {
         if (_activeOutputSize == viewport) return;
         _activeOutputSize = viewport;
@@ -181,7 +182,6 @@ public sealed class GfxCommands
     }
 
 
-    
     public void BindFramebuffer(FrameBufferId id)
     {
         if (_boundFboId == id) return;
@@ -191,6 +191,7 @@ public sealed class GfxCommands
             _boundFboId = default;
             return;
         }
+
         _states.BindFrameBuffer(_store.FboStore.GetRef(id));
         _boundFboId = id;
     }
@@ -229,7 +230,6 @@ public sealed class GfxCommands
         _driver.States.BindMesh(meshRef);
         _boundMeshId = id;
     }
-    
 
 
     public void DrawBoundMesh(MeshId id, int drawCount)
@@ -269,7 +269,7 @@ public sealed class GfxCommands
         _drawTriangleCount += drawCount;
         _drawCallCount++;
     }
-    
+
     public void UseShader(ShaderId id)
     {
         if (_boundShaderId == id) return;
@@ -282,14 +282,13 @@ public sealed class GfxCommands
             return;
         }
 
-        var handle = _store.ShaderStore.GetHandle(id);
+        var handle = _store.ShaderStore.GetRef(id);
         var uniformTable = _repository.ShaderRepository.GetShaderLayout(id);
 
         _shaders.UseShader(handle);
         _boundShaderId = id;
         _boundUniforms = uniformTable;
     }
-
 
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]

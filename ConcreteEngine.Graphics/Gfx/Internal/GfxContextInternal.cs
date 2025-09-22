@@ -1,4 +1,8 @@
+#region
+
 using ConcreteEngine.Graphics.Resources;
+
+#endregion
 
 namespace ConcreteEngine.Graphics.Gfx.Internal;
 

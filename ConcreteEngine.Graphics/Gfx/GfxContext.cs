@@ -1,6 +1,10 @@
+#region
+
 using ConcreteEngine.Graphics.Gfx.Internal;
 using ConcreteEngine.Graphics.Resources;
 using ConcreteEngine.Graphics.Utils;
+
+#endregion
 
 namespace ConcreteEngine.Graphics.Gfx;
 
@@ -14,8 +18,8 @@ public sealed class GfxContext
     private readonly GfxCommands _cmd;
 
     private readonly GfxResourceContext _resourceContext;
-    
-    public IPrimitiveMeshes  Primitives { get; }
+
+    public IPrimitiveMeshes Primitives { get; }
 
     internal GfxContext(GfxContextInternal ctxInternal, GfxResourceContext resourceContext)
     {

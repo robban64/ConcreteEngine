@@ -9,12 +9,12 @@ public sealed class FrozenTypeRegistry<TKeyBase, TValue>
     public void Freeze()
     {
         InvalidOpThrower.ThrowIf(_frozen);
-        _frozen = false;
+        _frozen = true;
     }
 
-    public FrozenTypeRegistry()
+    public FrozenTypeRegistry(int initCapacity = 4)
     {
-        _registry = new Dictionary<Type, TValue>();
+        _registry = new Dictionary<Type, TValue>(initCapacity);
     }
 
     public FrozenTypeRegistry<TKeyBase, TValue> Register<TKey>(TValue value) where TKey : TKeyBase

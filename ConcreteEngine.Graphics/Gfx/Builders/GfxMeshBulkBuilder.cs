@@ -1,8 +1,3 @@
-using ConcreteEngine.Common;
-using ConcreteEngine.Graphics.Contracts;
-using ConcreteEngine.Graphics.Gfx.Internal;
-using ConcreteEngine.Graphics.Resources;
-
 namespace ConcreteEngine.Graphics.Gfx.Builders;
 
 /*
@@ -25,13 +20,13 @@ public sealed class GfxMeshBulkBuilder
     {
         return _builder.Build();
     }
-    
-    
+
+
 
     public sealed class Builder : CommonBuilderBase<Result, State>
     {
         private readonly Result _result = new();
-        
+
         internal GfxResourceAllocator Gfx { get; init; }
 
 
@@ -39,8 +34,8 @@ public sealed class GfxMeshBulkBuilder
         {
             Gfx = gfx;
         }
-        
-        
+
+
         protected override void StartBuilder(State state)
         {
             State.MeshId = Gfx.CreateEmptyMesh();
@@ -65,7 +60,7 @@ public sealed class GfxMeshBulkBuilder
         {
             InvalidOpThrower.ThrowIf(State.IboId.IsValid());
             var drawElementSize = GfxUtilsEnum.ToDrawElementSize<I>();
-            
+
             State.IboId = Gfx.CreateIndexBuffer(indices, usage);
             State.DrawProperties = State.DrawProperties with { ElementSize = drawElementSize };
             return this;

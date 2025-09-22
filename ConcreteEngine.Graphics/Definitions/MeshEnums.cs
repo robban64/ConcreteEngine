@@ -1,6 +1,5 @@
 namespace ConcreteEngine.Graphics;
 
-
 public enum MeshDrawKind : byte
 {
     Invalid = 0,

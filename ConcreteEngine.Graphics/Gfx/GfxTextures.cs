@@ -1,7 +1,11 @@
+#region
+
 using ConcreteEngine.Graphics.Contracts;
 using ConcreteEngine.Graphics.Gfx.Internal;
 using ConcreteEngine.Graphics.OpenGL;
 using ConcreteEngine.Graphics.Resources;
+
+#endregion
 
 namespace ConcreteEngine.Graphics.Gfx;
 
@@ -26,11 +30,11 @@ public sealed class GfxTextures
         out TextureMeta meta)
     {
         var hasMip = desc.Preset is TexturePreset.LinearMipmapClamp or TexturePreset.LinearMipmapRepeat;
-        var levels = hasMip ? GfxUtils.CalcMipLevels(desc.Width, desc.Height) : 1;
+        var levels = hasMip ? GfxUtilsInternal.CalcMipLevels(desc.Width, desc.Height) : 1;
 
         var texRef = _backend.CreateTexture(in desc, levels, msaa);
-        
-        if(desc.Kind != TextureKind.Multisample2D && desc.Kind != TextureKind.CubeMap)
+
+        if (desc.Kind != TextureKind.Multisample2D && desc.Kind != TextureKind.CubeMap)
             _backend.UploadTextureData(texRef, data, desc.Width, desc.Height);
 
         if (desc.Kind != TextureKind.Multisample2D)
@@ -138,7 +142,7 @@ public sealed class GfxTextures
         public void ApplyTextureParams(GfxRefToken<TextureId> texRef, TexturePreset preset,
             TextureAnisotropy anisotropy, float lodBias, int levels)
         {
-            if (levels > 1 && (preset != TexturePreset.LinearMipmapClamp && preset != TexturePreset.LinearMipmapRepeat))
+            if (levels > 1 && preset != TexturePreset.LinearMipmapClamp && preset != TexturePreset.LinearMipmapRepeat)
                 throw new ArgumentOutOfRangeException(nameof(preset));
 
             if (preset != TexturePreset.None)
@@ -157,8 +161,7 @@ public sealed class GfxTextures
         public void UploadTextureData(GfxRefToken<TextureId> texRef, ReadOnlySpan<byte> data, int width, int height) =>
             _driver.UploadTextureData(texRef, data, width, height);
 
-        public void UploadTextureEmptyData(GfxRefToken<TextureId> texRef) =>
-            _driver.UploadTextureEmptyData(texRef);
+        public void UploadTextureEmptyData(GfxRefToken<TextureId> texRef) => _driver.UploadTextureEmptyData(texRef);
 
 
         public void UploadCubeMapFace(GfxRefToken<TextureId> texRef, ReadOnlySpan<byte> data, int width, int height,

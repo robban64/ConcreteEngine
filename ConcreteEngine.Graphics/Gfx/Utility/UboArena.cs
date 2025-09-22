@@ -1,8 +1,12 @@
+#region
+
 using System.Diagnostics;
 using System.Runtime.CompilerServices;
 using ConcreteEngine.Graphics.Resources;
 
-namespace ConcreteEngine.Graphics.Utils;
+#endregion
+
+namespace ConcreteEngine.Graphics.Gfx.Utility;
 
 public sealed class UboArena
 {

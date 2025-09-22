@@ -1,32 +1,10 @@
-using System.Runtime.CompilerServices;
-using System.Runtime.InteropServices;
-using ConcreteEngine.Graphics.Error;
-using ConcreteEngine.Graphics.Gfx.Internal;
+#region
+
 using ConcreteEngine.Graphics.Resources;
 
+#endregion
+
 namespace ConcreteEngine.Graphics.Contracts;
-
-public interface IMeshPayload
-{
-    public MeshDrawProperties DrawProperties { get; init; }
-    public IReadOnlyList<VertexAttributeDesc> Attributes { get; init; }
-    public IReadOnlyList<VertexBufferPayload> VertexBuffers { get; init; }
-}
-
-public sealed class MeshPayloadBasic : IMeshPayload
-{
-    public required MeshDrawProperties DrawProperties { get; init; }
-    public required IReadOnlyList<VertexAttributeDesc> Attributes { get; init; }
-    public required IReadOnlyList<VertexBufferPayload> VertexBuffers { get; init; }
-}
-
-public sealed class MeshPayloadIndexed : IMeshPayload
-{
-    public required MeshDrawProperties DrawProperties { get; init; }
-    public required IReadOnlyList<VertexAttributeDesc> Attributes { get; init; }
-    public required IReadOnlyList<VertexBufferPayload> VertexBuffers { get; init; }
-    public required IndexBufferPayload IndexBuffer { get; init; }
-}
 
 public readonly record struct MeshDrawProperties(
     DrawPrimitive Primitive,

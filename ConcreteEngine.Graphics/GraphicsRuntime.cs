@@ -1,11 +1,15 @@
+#region
+
 using ConcreteEngine.Common;
 using ConcreteEngine.Graphics.Error;
 using ConcreteEngine.Graphics.Gfx;
 using ConcreteEngine.Graphics.Gfx.Internal;
+using ConcreteEngine.Graphics.Gfx.Utility;
 using ConcreteEngine.Graphics.OpenGL;
 using ConcreteEngine.Graphics.Resources;
-using ConcreteEngine.Graphics.Utils;
 using Silk.NET.Maths;
+
+#endregion
 
 namespace ConcreteEngine.Graphics;
 

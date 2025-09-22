@@ -2,13 +2,12 @@ namespace ConcreteEngine.Graphics.Resources;
 
 public interface IGfxResourceContext
 {
-     IGfxResourceManager ResourceManager { get; }
+    IGfxResourceManager ResourceManager { get; }
 
-     IGfxResourceRepository Repository { get; }
+    IGfxResourceRepository Repository { get; }
 
-     IGfxResourceDisposer Disposer { get; }
+    IGfxResourceDisposer Disposer { get; }
 }
-
 
 internal sealed class GfxResourceContext : IGfxResourceContext
 {
@@ -16,7 +15,8 @@ internal sealed class GfxResourceContext : IGfxResourceContext
     private readonly GfxResourceRepository _repository;
     private readonly GfxResourceDisposer _disposer;
 
-    internal GfxResourceContext(GfxResourceManager resourceManager, GfxResourceRepository repository, GfxResourceDisposer disposer)
+    internal GfxResourceContext(GfxResourceManager resourceManager, GfxResourceRepository repository,
+        GfxResourceDisposer disposer)
     {
         _resourceManager = resourceManager;
         _repository = repository;

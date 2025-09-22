@@ -4,6 +4,7 @@ using ConcreteEngine.Graphics;
 using ConcreteEngine.Graphics.Contracts;
 using ConcreteEngine.Graphics.Descriptors;
 using ConcreteEngine.Graphics.Gfx;
+using ConcreteEngine.Graphics.Gfx.Utility;
 using ConcreteEngine.Graphics.Primitives;
 using ConcreteEngine.Graphics.Resources;
 using ConcreteEngine.Graphics.Utils;

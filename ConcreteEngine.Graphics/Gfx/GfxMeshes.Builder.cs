@@ -1,14 +1,18 @@
-using System.Diagnostics;
+#region
+
 using ConcreteEngine.Common;
 using ConcreteEngine.Graphics.Contracts;
 using ConcreteEngine.Graphics.Gfx.Internal;
 using ConcreteEngine.Graphics.Resources;
+
+#endregion
 
 namespace ConcreteEngine.Graphics.Gfx;
 
 public interface IGfxMeshBuilder
 {
     MeshId Finish();
+
     void UploadVertices<T>(ReadOnlySpan<T> data, BufferUsage usage,
         BufferStorage storage, BufferAccess access) where T : unmanaged;
 
@@ -17,7 +21,6 @@ public interface IGfxMeshBuilder
 
     void AddAttribute(in VertexAttributeDesc attribute);
     void SetAttributeRange(IReadOnlyList<VertexAttributeDesc> attributes);
-    
 }
 
 internal sealed class GfxMeshBuilder : IGfxMeshBuilder
@@ -48,7 +51,7 @@ internal sealed class GfxMeshBuilder : IGfxMeshBuilder
 
         _gfxMeshes.SetVertexAttributes(_state.MeshId, _state.Attributes);
         var id = _gfxMeshes.FinishUploadCommit(_state);
-        
+
         _state.ResetState();
         _phase = Phase.Idle;
         _gfxMeshes = null!;
@@ -104,7 +107,7 @@ internal sealed class GfxMeshBuilder : IGfxMeshBuilder
 
         if (_phase < Phase.AttributesSet) _phase = Phase.AttributesSet;
     }
-    
+
     public void SetAttributeSpan(ReadOnlySpan<VertexAttributeDesc> attributes)
     {
         EnsureStarted();
@@ -115,11 +118,11 @@ internal sealed class GfxMeshBuilder : IGfxMeshBuilder
 
         if (_phase < Phase.AttributesSet) _phase = Phase.AttributesSet;
     }
-    
+
     public void AddAttribute(in VertexAttributeDesc attribute)
     {
         EnsureStarted();
-        
+
         _state.Attributes.Add(attribute);
 
         if (_phase < Phase.AttributesSet) _phase = Phase.AttributesSet;
@@ -127,7 +130,7 @@ internal sealed class GfxMeshBuilder : IGfxMeshBuilder
 
 
     private void EnsureStarted() => InvalidOpThrower.ThrowIfNot(_phase >= Phase.Started, "Builder not started.");
-    
+
     private enum Phase : byte
     {
         Idle = 0,
@@ -143,7 +146,7 @@ internal sealed class GfxMeshBuilder : IGfxMeshBuilder
         public List<VertexBufferId> VboIds { get; set; } = new();
         public List<VertexAttributeDesc> Attributes { get; set; } = new();
         public MeshDrawProperties DrawProperties { get; set; } = MeshDrawProperties.MakeDefault();
-        
+
         public void ValidateState()
         {
             InvalidOpThrower.ThrowIfNot(MeshId.IsValid(), nameof(MeshId));

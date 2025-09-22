@@ -6,6 +6,7 @@ using ConcreteEngine.Core.Resources;
 using ConcreteEngine.Core.Systems;
 using ConcreteEngine.Graphics;
 using ConcreteEngine.Graphics.Gfx;
+using ConcreteEngine.Graphics.Gfx.Utility;
 using ConcreteEngine.Graphics.Resources;
 using ConcreteEngine.Graphics.Utils;
 using Silk.NET.Maths;

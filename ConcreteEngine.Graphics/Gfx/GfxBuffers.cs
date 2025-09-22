@@ -1,11 +1,15 @@
+#region
+
 using System.Runtime.CompilerServices;
 using ConcreteEngine.Graphics.Contracts;
 using ConcreteEngine.Graphics.Error;
 using ConcreteEngine.Graphics.Gfx.Internal;
+using ConcreteEngine.Graphics.Gfx.Utility;
 using ConcreteEngine.Graphics.OpenGL;
 using ConcreteEngine.Graphics.Primitives;
 using ConcreteEngine.Graphics.Resources;
-using ConcreteEngine.Graphics.Utils;
+
+#endregion
 
 namespace ConcreteEngine.Graphics.Gfx;
 
@@ -25,19 +29,22 @@ public sealed class GfxBuffers
     }
 
     //BufferStorage.Dynamic, BufferAccess.MapWrite
-    public VertexBufferId CreateVertexBuffer<T>(ReadOnlySpan<T> data, int index, BufferStorage storage, BufferAccess access)
+    public VertexBufferId CreateVertexBuffer<T>(ReadOnlySpan<T> data, int index, BufferStorage storage,
+        BufferAccess access)
         where T : unmanaged
     {
-        (nint stride, nint size) = GfxUtils.ToStrideAndSize<T>(data.Length);
+        //float -> stride = 4; Vector3 -> stride = 12
+        (nint stride, nint size) = GfxUtilsInternal.ToStrideAndSize<T>(data.Length);
         var meta = new VertexBufferMeta(index, data.Length, stride, DefaultUsage, storage, access);
         var vboRef = _backend.CreateVertexBuffer(data, new GfxBufferDataDesc(size, storage, access));
-        return _resources.VboStore.Add(in meta, in vboRef);
+        return _resources.VboStore.Add(meta, vboRef);
     }
 
     //BufferStorage.Static, BufferAccess.None
-    public IndexBufferId CreateIndexBuffer<T>(ReadOnlySpan<T> data, BufferStorage storage, BufferAccess access) where T : unmanaged
+    public IndexBufferId CreateIndexBuffer<T>(ReadOnlySpan<T> data, BufferStorage storage, BufferAccess access)
+        where T : unmanaged
     {
-        (nint stride, nint size) = GfxUtils.ToStrideAndSize<T>(data.Length);
+        (nint stride, nint size) = GfxUtilsInternal.ToStrideAndSize<T>(data.Length);
         if (stride != 1 && stride != 2 && stride != 4)
             GraphicsException.ThrowInvalidType<T>(typeof(T).Name, "Invalid elemental size");
 
@@ -60,7 +67,7 @@ public sealed class GfxBuffers
 
         var uboRef = _backend.CreateUniformBuffer<T>(slot, new GfxBufferDataDesc(size, storage, access));
 
-        var uboId = _resources.UboStore.Add(in meta, uboRef);
+        var uboId = _resources.UboStore.Add(meta, uboRef);
         _repository.ShaderRepository.AddUboToSlot(meta.Slot, uboId);
         return uboId;
     }
@@ -74,7 +81,7 @@ public sealed class GfxBuffers
         if (meta.Usage == BufferUsage.StaticDraw && meta.ElementCount * meta.Stride > 0)
             GraphicsException.ThrowInvalidBufferData<VertexBufferId>(nameof(vboId), "Buffer is static");
 
-        (nint stride, nint size) = GfxUtils.ToStrideAndSize<T>(data.Length);
+        (nint stride, nint size) = GfxUtilsInternal.ToStrideAndSize<T>(data.Length);
         _backend.SetBufferData(vboRef, data, size, usage);
 
         var newMeta = VertexBufferMeta.CreateCopy(in meta, data.Length, stride, usage);
@@ -88,7 +95,7 @@ public sealed class GfxBuffers
         if (meta.Usage == BufferUsage.StaticDraw && meta.ElementCount * meta.Stride > 0)
             GraphicsException.ThrowInvalidBufferData<IndexBufferId>(nameof(iboId), "Buffer is static");
 
-        (nint stride, nint size) = GfxUtils.ToStrideAndSize<T>(data.Length);
+        (nint stride, nint size) = GfxUtilsInternal.ToStrideAndSize<T>(data.Length);
         _backend.SetBufferData(iboRef, data, size, usage);
 
         var newMeta = IndexBufferMeta.CreateCopy(in meta, data.Length, stride, usage);
@@ -107,7 +114,7 @@ public sealed class GfxBuffers
         where T : unmanaged
     {
         ArgumentOutOfRangeException.ThrowIfGreaterThan(offsetElements, data.Length);
-        var (offset, size) = GfxUtils.ToSizeAndOffset<T>(offsetElements, data.Length);
+        var (offset, size) = GfxUtilsInternal.ToSizeAndOffset<T>(offsetElements, data.Length);
 
         var vboRef = _resources.VboStore.GetRef(vboId);
         _backend.UploadBufferData(vboRef, data, offset, size);
@@ -117,7 +124,7 @@ public sealed class GfxBuffers
     {
         ArgumentOutOfRangeException.ThrowIfGreaterThan(offsetElements, data.Length);
         var iboRef = _resources.IboStore.GetRef(iboId);
-        var (offset, size) = GfxUtils.ToSizeAndOffset<T>(offsetElements, data.Length);
+        var (offset, size) = GfxUtilsInternal.ToSizeAndOffset<T>(offsetElements, data.Length);
         _backend.UploadBufferData(iboRef, data, offset, size);
     }
 
@@ -166,37 +173,37 @@ public sealed class GfxBuffers
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public void SetBufferData<TId, T>(GfxRefToken<TId> token, ReadOnlySpan<T> data, nint size, BufferUsage usage)
+        public void SetBufferData<TId, T>(GfxRefToken<TId> refToken, ReadOnlySpan<T> data, nint size, BufferUsage usage)
             where TId : unmanaged, IResourceId where T : unmanaged
         {
-            _driverBuffer.SetBufferData(token.Handle, data, size, usage);
+            _driverBuffer.SetBufferData(refToken, data, size, usage);
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public void ResizeBuffer<TId>(GfxRefToken<TId> token, nint size, BufferUsage usage)
+        public void ResizeBuffer<TId>(GfxRefToken<TId> refToken, nint size, BufferUsage usage)
             where TId : unmanaged, IResourceId
         {
-            _driverBuffer.ResizeBuffer(token.Handle, size, usage);
+            _driverBuffer.ResizeBuffer(refToken, size, usage);
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public void UploadBufferData<TId, T>(GfxRefToken<TId> token, ReadOnlySpan<T> data, nint offset, nint size)
+        public void UploadBufferData<TId, T>(GfxRefToken<TId> refToken, ReadOnlySpan<T> data, nint offset, nint size)
             where TId : unmanaged, IResourceId where T : unmanaged
         {
-            _driverBuffer.UploadBufferData<T>(token.Handle, data, offset, size);
+            _driverBuffer.UploadBufferData(refToken, data, offset, size);
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public void UploadBufferDataSingle<TId, T>(GfxRefToken<TId> token, T data, nint offset, nint size)
+        public void UploadBufferDataSingle<TId, T>(GfxRefToken<TId> refToken, T data, nint offset, nint size)
             where TId : unmanaged, IResourceId where T : unmanaged
         {
-            _driverBuffer.UploadBufferData<T>(token.Handle, data, offset, size);
+            _driverBuffer.UploadBufferData(refToken, data, offset, size);
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public void BindUniformBufferRange(in GfxRefToken<UniformBufferId> uboRef, int slot, nint offset, nint size)
         {
-            _driverBuffer.BindBufferRange(uboRef.Handle, slot, offset, size);
+            _driverBuffer.BindBufferRange<UniformBufferId>(uboRef, slot, offset, size);
         }
     }
 }

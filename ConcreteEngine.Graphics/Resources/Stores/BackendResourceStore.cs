@@ -1,6 +1,10 @@
+#region
+
 using System.Diagnostics;
 using System.Diagnostics.CodeAnalysis;
 using System.Runtime.CompilerServices;
+
+#endregion
 
 namespace ConcreteEngine.Graphics.Resources;
 
@@ -13,7 +17,8 @@ internal interface IBackendResourceStore
     bool IsValid(in GfxHandle handle);
 }
 
-internal interface IBackendReadResourceStore<out THandle> where THandle : unmanaged, IResourceHandle, IEquatable<THandle>
+internal interface IBackendReadResourceStore<out THandle>
+    where THandle : unmanaged, IResourceHandle, IEquatable<THandle>
 {
     THandle Get(in GfxHandle handle);
     //GfxHandle Replace(in GfxHandle handle, THandle value);
@@ -59,6 +64,14 @@ internal sealed class BackendResourceStore<THandle> : IBackendResourceStore, IBa
         return record.Current;
     }
 
+    public THandle GetRef<TId>(GfxRefToken<TId> refToken) where TId : unmanaged, IResourceId
+    {
+        var handle = refToken.Handle;
+        ref readonly var record = ref _records[(int)handle.Slot];
+        Debug.Assert(handle.Kind == Kind && record.IsValid && record.Gen == handle.Gen);
+        return record.Current;
+    }
+
     public GfxHandle Add(THandle value)
     {
         Throwers.ThrowOnDefaultHandle(value);
@@ -68,7 +81,7 @@ internal sealed class BackendResourceStore<THandle> : IBackendResourceStore, IBa
         _records[idx] = new StoreRecord(value, gen, true);
         return new GfxHandle((uint)idx, gen, Kind);
     }
-    
+
 
     public void Remove(in GfxHandle handle)
     {
@@ -83,7 +96,7 @@ internal sealed class BackendResourceStore<THandle> : IBackendResourceStore, IBa
         _records[(int)handle.Slot] = default;
         _free.Push((int)handle.Slot);
     }
-    
+
     // Don't think this should be used, leaving it here for now
     public GfxHandle Replace(in GfxHandle handle, THandle value)
     {
@@ -108,12 +121,14 @@ internal sealed class BackendResourceStore<THandle> : IBackendResourceStore, IBa
 
         return _idx++;
     }
-    
+
     private static class Throwers
     {
-        [DoesNotReturn, StackTraceHidden, MethodImpl(MethodImplOptions.NoInlining)]
+        [DoesNotReturn]
+        [StackTraceHidden]
+        [MethodImpl(MethodImplOptions.NoInlining)]
         static void ThrowInvalid(string name) => throw new InvalidOperationException();
-        
+
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static void IsValidGfxHandleOrThrow(GfxHandle handle, ResourceKind kind)
         {
@@ -127,18 +142,17 @@ internal sealed class BackendResourceStore<THandle> : IBackendResourceStore, IBa
             var isValid = e.IsValid && e.Gen == handle.Gen;
             if (!isValid) ThrowInvalid(nameof(e));
         }
-        
+
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static void IsUniqueHandleOrThrow(uint h1, uint h2)
         {
             if (h1 == h2) ThrowInvalid(nameof(h1));
         }
-        
+
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static void ThrowOnDefaultHandle(THandle handle)
         {
             if (handle.Handle == 0) ThrowInvalid(nameof(handle));
         }
-
     }
 }

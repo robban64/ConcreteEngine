@@ -1,6 +1,10 @@
+#region
+
 using System.Numerics;
 using ConcreteEngine.Graphics.Descriptors;
 using Silk.NET.Maths;
+
+#endregion
 
 namespace ConcreteEngine.Graphics.Resources;
 
@@ -10,10 +14,11 @@ public interface IFrameBufferRepository
 }
 
 public readonly record struct FboAttachmentIds(
-    TextureId ColorTextureId, TextureId DepthTextureId, 
-    RenderBufferId ColorRenderBufferId, RenderBufferId DepthRenderBufferId
+    TextureId ColorTextureId,
+    TextureId DepthTextureId,
+    RenderBufferId ColorRenderBufferId,
+    RenderBufferId DepthRenderBufferId
 );
-
 
 internal sealed class FrameBufferRepository : IFrameBufferRepository
 {
@@ -38,7 +43,6 @@ internal sealed class FrameBufferRepository : IFrameBufferRepository
     internal FrameBufferDesc GetDescriptor(FrameBufferId fboId) => _registry[fboId].GetDescriptor();
 }
 
-
 public sealed class FrameBufferLayout
 {
     private FrameBufferDesc _desc;
@@ -49,7 +53,7 @@ public sealed class FrameBufferLayout
         FboAttachmentResources = fboAttachmentResources;
         UpdateFromDescriptor(desc);
     }
-    
+
 
     internal void UpdateFromDescriptor(in FrameBufferDesc desc) => _desc = desc;
 

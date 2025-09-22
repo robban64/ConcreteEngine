@@ -1,4 +1,8 @@
+#region
+
 using ConcreteEngine.Graphics.Contracts;
+
+#endregion
 
 namespace ConcreteEngine.Graphics.Resources;
 
@@ -7,7 +11,7 @@ public interface IMeshLayout
 {
     MeshId MeshId { get; }
     IndexBufferId IndexBufferId { get; }
-    MeshDrawProperties Properties { get;  }
+    MeshDrawProperties Properties { get; }
     ReadOnlySpan<VertexBufferId> GetVertexBufferIds();
     ReadOnlySpan<VertexAttributeDesc> GetAttributes();
 }

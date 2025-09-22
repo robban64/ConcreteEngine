@@ -1,7 +1,8 @@
-using ConcreteEngine.Common;
+#region
+
 using ConcreteEngine.Graphics.OpenGL;
-using ConcreteEngine.Graphics.Resources;
-using Silk.NET.Maths;
+
+#endregion
 
 namespace ConcreteEngine.Graphics;
 

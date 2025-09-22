@@ -1,36 +1,42 @@
+#region
+
 using System.Runtime.CompilerServices;
+
+#endregion
 
 namespace ConcreteEngine.Graphics.Gfx.Internal;
 
 internal static class GfxUtilsEnum
 {
-    
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static bool HasBufferAccess(this BufferAccess a, BufferAccess b) => (a & b) != 0;
 
-    public static int SizeInBytes(this VertexFormat fmt) => fmt switch
-    {
-        VertexFormat.UByte => 1,
-        VertexFormat.Short => 2,
-        VertexFormat.Float => 4,
-        _ => throw new ArgumentOutOfRangeException(nameof(fmt)),
-    };
-    
-    public static int ToPrimitiveSize(this DrawElementSize t) => t switch
-    {
-        DrawElementSize.UnsignedByte  =>  1,
-        DrawElementSize.UnsignedShort => 2,
-        DrawElementSize.UnsignedInt   => 4,
-        _ => throw new ArgumentOutOfRangeException(nameof(t))
-    };
+    public static int SizeInBytes(this VertexFormat fmt) =>
+        fmt switch
+        {
+            VertexFormat.UByte => 1,
+            VertexFormat.Short => 2,
+            VertexFormat.Float => 4,
+            _ => throw new ArgumentOutOfRangeException(nameof(fmt))
+        };
 
-    public static DrawElementSize ToDrawElementSize<T>() => typeof(T) switch
-    {
-        var t when t == typeof(byte)   => DrawElementSize.UnsignedByte,
-        var t when t == typeof(ushort) => DrawElementSize.UnsignedShort,
-        var t when t == typeof(uint)   => DrawElementSize.UnsignedInt,
-        _ => throw new ArgumentOutOfRangeException(typeof(T).Name)
-    };
+    public static int ToPrimitiveSize(this DrawElementSize t) =>
+        t switch
+        {
+            DrawElementSize.UnsignedByte => 1,
+            DrawElementSize.UnsignedShort => 2,
+            DrawElementSize.UnsignedInt => 4,
+            _ => throw new ArgumentOutOfRangeException(nameof(t))
+        };
+
+    public static DrawElementSize ToDrawElementSize<T>() =>
+        typeof(T) switch
+        {
+            var t when t == typeof(byte) => DrawElementSize.UnsignedByte,
+            var t when t == typeof(ushort) => DrawElementSize.UnsignedShort,
+            var t when t == typeof(uint) => DrawElementSize.UnsignedInt,
+            _ => throw new ArgumentOutOfRangeException(typeof(T).Name)
+        };
 
     public static int ToAnisotropy(this TextureAnisotropy msaa)
     {
@@ -45,7 +51,7 @@ internal static class GfxUtilsEnum
             _ => throw new ArgumentOutOfRangeException(nameof(msaa), msaa, null)
         };
     }
-    
+
     public static int ToSamples(this RenderBufferMsaa msaa)
     {
         return msaa switch
@@ -57,5 +63,4 @@ internal static class GfxUtilsEnum
             _ => throw new ArgumentOutOfRangeException(nameof(msaa), msaa, null)
         };
     }
-    
 }

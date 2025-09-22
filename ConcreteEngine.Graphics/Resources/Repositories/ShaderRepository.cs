@@ -2,6 +2,7 @@
 
 using System.Runtime.CompilerServices;
 using ConcreteEngine.Graphics.Error;
+using ConcreteEngine.Graphics.Gfx.Utility;
 using ConcreteEngine.Graphics.Utils;
 
 #endregion
@@ -28,10 +29,10 @@ internal sealed class ShaderRepository : IShaderRepository
     {
         ArgumentNullException.ThrowIfNull(resources);
         _resources = resources;
-        _uboRegistry = new  UniformBufferId[GraphicsEnumCache.ShaderBufferUniformVals.Length];
+        _uboRegistry = new UniformBufferId[GraphicsEnumCache.ShaderBufferUniformVals.Length];
     }
-    
-    
+
+
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public UniformBufferId GetUboId(UniformGpuSlot slot) => _uboRegistry[(int)slot];
 
@@ -54,14 +55,14 @@ internal sealed class ShaderRepository : IShaderRepository
 
         return uboArena;
     }
-    
+
     internal void AddUboToSlot(UniformGpuSlot slot, UniformBufferId uboId)
     {
         uboId.IsValidOrThrow();
         var id = _uboRegistry[(int)slot];
         if (id.IsValid())
             throw GraphicsException.ResourceAlreadyExists<UniformBufferId>(uboId);
-        
+
         _uboRegistry[(int)slot] = uboId;
     }
 
@@ -69,7 +70,7 @@ internal sealed class ShaderRepository : IShaderRepository
     {
         _shaderLayouts.Add(shaderId, new ShaderLayout(uniforms, meta.Samplers));
     }
-    
+
     internal bool Remove(ShaderId shaderId)
     {
         return _shaderLayouts.Remove(shaderId);
@@ -80,7 +81,7 @@ public sealed class ShaderLayout
 {
     private readonly int[] _locs;
     private readonly Dictionary<string, int> _rawUniforms;
-    
+
     public int Samplers { get; }
 
     public ShaderLayout(List<(string, int)> uniformPairs, int samplers)
@@ -95,10 +96,10 @@ public sealed class ShaderLayout
             _rawUniforms.Add(uniform, location);
             var idx = uniform.IndexOf(".", StringComparison.Ordinal);
             if (idx <= 0) continue;
-            
+
             var uniformName = uniform.AsSpan(0, idx);
         }
-            
+
         for (int i = 0; i < _locs.Length; i++)
         {
             var uniformName = GraphicsEnumCache.ShaderUniformVals[i].ToUniformName();
@@ -111,10 +112,10 @@ public sealed class ShaderLayout
             _locs[i] = -1;
         }
     }
-    
+
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public bool ContainsKey(ShaderUniform uniform) => _locs[(int)uniform] >= 0;
-    
+
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public int GetUniformLocation(string key, int defaultValue = -1)

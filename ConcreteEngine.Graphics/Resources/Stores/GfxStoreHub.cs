@@ -1,6 +1,10 @@
+#region
+
 using System.Diagnostics;
 using System.Diagnostics.CodeAnalysis;
 using System.Runtime.CompilerServices;
+
+#endregion
 
 namespace ConcreteEngine.Graphics.Resources;
 
@@ -13,31 +17,33 @@ internal sealed class GfxStoreHub
     internal GfxStoreHub()
     {
     }
-    
+
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     internal GfxResourceStore<TId, TMeta> GetStore<TId, TMeta>(ResourceKind kind)
         where TId : unmanaged, IResourceId where TMeta : unmanaged, IResourceMeta
     {
         var store = GetStore(kind);
         if (store is GfxResourceStore<TId, TMeta> typed) return typed;
-        
+
         ThrowInvalidStoreType(kind, typeof(TId), typeof(TMeta));
         return null!;
     }
-    
+
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     internal IGfxResourceStore<TId> GetStore<TId>(ResourceKind kind) where TId : unmanaged, IResourceId
     {
         var store = GetStore(kind);
         if (store is IGfxResourceStore<TId> typed) return typed;
-        
+
         ThrowInvalidStoreType(kind, typeof(TId));
         return null!;
     }
 
-    [MethodImpl(MethodImplOptions.NoInlining), DoesNotReturn, StackTraceHidden]
-    private static void ThrowInvalidStoreType(ResourceKind kind, Type id, Type? meta = null)
-        => throw new ArgumentException($"Gfx Store {kind} is not: {id.Name}  {meta?.Name}");
+    [MethodImpl(MethodImplOptions.NoInlining)]
+    [DoesNotReturn]
+    [StackTraceHidden]
+    private static void ThrowInvalidStoreType(ResourceKind kind, Type id, Type? meta = null) =>
+        throw new ArgumentException($"Gfx Store {kind} is not: {id.Name}  {meta?.Name}");
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public IGfxResourceStore GetStore(ResourceKind kind)

@@ -1,6 +1,7 @@
 #region
 
 using System.Runtime.CompilerServices;
+using System.Runtime.InteropServices;
 using ConcreteEngine.Graphics.Contracts;
 using ConcreteEngine.Graphics.Error;
 using ConcreteEngine.Graphics.Gfx.Internal;
@@ -15,15 +16,16 @@ namespace ConcreteEngine.Graphics.Gfx;
 
 public sealed class GfxBuffers
 {
+    private readonly GlBuffers _driverBuffer;
+
     private readonly GfxStoreHub _resources;
     private readonly GfxResourceRepository _repository;
-    private readonly GfxBuffersBackend _backend;
 
     private const BufferUsage DefaultUsage = BufferUsage.StaticDraw;
 
     internal GfxBuffers(GfxContextInternal context)
     {
-        _backend = new GfxBuffersBackend(context);
+        _driverBuffer = context.Driver.Buffers;
         _resources = context.Stores;
         _repository = context.Repositories;
     }
@@ -34,9 +36,11 @@ public sealed class GfxBuffers
         where T : unmanaged
     {
         //float -> stride = 4; Vector3 -> stride = 12
-        (nint stride, nint size) = GfxUtilsInternal.ToStrideAndSize<T>(data.Length);
+        (nint stride, nint size) = ToStrideAndSize<T>(data.Length);
         var meta = new VertexBufferMeta(index, data.Length, stride, DefaultUsage, storage, access);
-        var vboRef = _backend.CreateVertexBuffer(data, new GfxBufferDataDesc(size, storage, access));
+        var vboRef = _driverBuffer.CreateVertexBuffer(ToBufferByteData(data),
+            new GfxBufferDataDesc(size, storage, access));
+
         return _resources.VboStore.Add(meta, vboRef);
     }
 
@@ -44,12 +48,13 @@ public sealed class GfxBuffers
     public IndexBufferId CreateIndexBuffer<T>(ReadOnlySpan<T> data, BufferStorage storage, BufferAccess access)
         where T : unmanaged
     {
-        (nint stride, nint size) = GfxUtilsInternal.ToStrideAndSize<T>(data.Length);
+        (nint stride, nint size) = ToStrideAndSize<T>(data.Length);
         if (stride != 1 && stride != 2 && stride != 4)
             GraphicsException.ThrowInvalidType<T>(typeof(T).Name, "Invalid elemental size");
 
         var meta = new IndexBufferMeta(data.Length, stride, DefaultUsage, storage, access);
-        var iboRef = _backend.CreateIndexBuffer(data, new GfxBufferDataDesc(size, storage, access));
+        var iboRef = _driverBuffer.CreateIndexBuffer(ToBufferByteData(data),
+            new GfxBufferDataDesc(size, storage, access));
         return _resources.IboStore.Add(meta, iboRef);
     }
 
@@ -65,7 +70,7 @@ public sealed class GfxBuffers
         var meta = new UniformBufferMeta(slot, size, BufferUsage.DynamicDraw, BufferStorage.Dynamic,
             BufferAccess.MapWrite);
 
-        var uboRef = _backend.CreateUniformBuffer<T>(slot, new GfxBufferDataDesc(size, storage, access));
+        var uboRef = _driverBuffer.CreateUniformBuffer(slot, new GfxBufferDataDesc(size, storage, access));
 
         var uboId = _resources.UboStore.Add(meta, uboRef);
         _repository.ShaderRepository.AddUboToSlot(meta.Slot, uboId);
@@ -81,8 +86,8 @@ public sealed class GfxBuffers
         if (meta.Usage == BufferUsage.StaticDraw && meta.ElementCount * meta.Stride > 0)
             GraphicsException.ThrowInvalidBufferData<VertexBufferId>(nameof(vboId), "Buffer is static");
 
-        (nint stride, nint size) = GfxUtilsInternal.ToStrideAndSize<T>(data.Length);
-        _backend.SetBufferData(vboRef, data, size, usage);
+        (nint stride, nint size) = ToStrideAndSize<T>(data.Length);
+        _driverBuffer.SetVertexBufferData(vboRef, ToBufferByteData(data), size, usage);
 
         var newMeta = VertexBufferMeta.CreateCopy(in meta, data.Length, stride, usage);
         _resources.VboStore.ReplaceMeta(vboId, in newMeta, out _);
@@ -95,8 +100,8 @@ public sealed class GfxBuffers
         if (meta.Usage == BufferUsage.StaticDraw && meta.ElementCount * meta.Stride > 0)
             GraphicsException.ThrowInvalidBufferData<IndexBufferId>(nameof(iboId), "Buffer is static");
 
-        (nint stride, nint size) = GfxUtilsInternal.ToStrideAndSize<T>(data.Length);
-        _backend.SetBufferData(iboRef, data, size, usage);
+        (nint stride, nint size) = ToStrideAndSize<T>(data.Length);
+        _driverBuffer.SetIndexBufferData(iboRef, ToBufferByteData(data), size, usage);
 
         var newMeta = IndexBufferMeta.CreateCopy(in meta, data.Length, stride, usage);
         _resources.IboStore.ReplaceMeta(iboId, in newMeta, out _);
@@ -107,25 +112,25 @@ public sealed class GfxBuffers
         ArgumentOutOfRangeException.ThrowIfEqual(0, (int)capacity);
         var ubo = _repository.ShaderRepository.GetUboId(slot);
         var refToken = _resources.UboStore.GetRef(ubo);
-        _backend.ResizeBuffer(refToken, capacity, BufferUsage.DynamicDraw);
+        _driverBuffer.ResizeUniformBuffer(refToken, capacity, BufferUsage.DynamicDraw);
     }
 
     public void UploadVertexBuffer<T>(VertexBufferId vboId, ReadOnlySpan<T> data, int offsetElements)
         where T : unmanaged
     {
         ArgumentOutOfRangeException.ThrowIfGreaterThan(offsetElements, data.Length);
-        var (offset, size) = GfxUtilsInternal.ToSizeAndOffset<T>(offsetElements, data.Length);
+        var (offset, size) = ToSizeAndOffset<T>(offsetElements, data.Length);
 
         var vboRef = _resources.VboStore.GetRef(vboId);
-        _backend.UploadBufferData(vboRef, data, offset, size);
+        _driverBuffer.UploadVertexBufferData(vboRef, ToBufferByteData(data), offset, size);
     }
 
     public void UploadIndexBuffer<T>(IndexBufferId iboId, ReadOnlySpan<T> data, int offsetElements) where T : unmanaged
     {
         ArgumentOutOfRangeException.ThrowIfGreaterThan(offsetElements, data.Length);
         var iboRef = _resources.IboStore.GetRef(iboId);
-        var (offset, size) = GfxUtilsInternal.ToSizeAndOffset<T>(offsetElements, data.Length);
-        _backend.UploadBufferData(iboRef, data, offset, size);
+        var (offset, size) = ToSizeAndOffset<T>(offsetElements, data.Length);
+        _driverBuffer.UploadIndexBufferData(iboRef, ToBufferByteData(data), offset, size);
     }
 
 
@@ -135,75 +140,34 @@ public sealed class GfxBuffers
         UniformBufferUtils.IsStd140AlignedOrThrow<T>(out nint stride);
         var ubo = _repository.ShaderRepository.GetUboId(slot);
         var uboRef = _resources.UboStore.GetRef(ubo);
-        _backend.UploadBufferDataSingle(uboRef, data, offset, stride);
+
+        var one = MemoryMarshal.CreateReadOnlySpan(ref Unsafe.AsRef(in data), 1);
+        var bytes = MemoryMarshal.AsBytes(one);
+
+        _driverBuffer.UploadUniformBufferData(uboRef, bytes, offset, stride);
     }
 
     public void BindUniformBufferRange(UniformGpuSlot slot, nint offset, nint size)
     {
         var ubo = _repository.ShaderRepository.GetUboId(slot);
         var uboRef = _resources.UboStore.GetRef(ubo);
-        _backend.BindUniformBufferRange(uboRef, (int)slot, offset, size);
+        _driverBuffer.BindUniformBufferRange(uboRef, (int)slot, offset, size);
     }
 
-
-    private sealed class GfxBuffersBackend(GfxContextInternal context)
+    public static (nint Offset, nint Size) ToSizeAndOffset<T>(int offsetElements, int count) where T : unmanaged
     {
-        private readonly IGraphicsDriver _driver = context.Driver;
-        private readonly GlBuffers _driverBuffer = context.Driver.Buffers;
+        var stride = (nint)Unsafe.SizeOf<T>();
+        return (offsetElements * stride, count * stride);
+    }
 
-        public GfxRefToken<VertexBufferId> CreateVertexBuffer<T>(ReadOnlySpan<T> data, in GfxBufferDataDesc desc)
-            where T : unmanaged
-        {
-            var vboRef = _driverBuffer.CreateVertexBuffer(data, in desc);
-            return vboRef;
-        }
+    public static (nint Stride, nint Size) ToStrideAndSize<T>(int count) where T : unmanaged
+    {
+        var stride = (nint)Unsafe.SizeOf<T>();
+        return (stride, count * stride);
+    }
 
-        public GfxRefToken<IndexBufferId> CreateIndexBuffer<T>(ReadOnlySpan<T> data, in GfxBufferDataDesc desc)
-            where T : unmanaged
-        {
-            var vboRef = _driverBuffer.CreateIndexBuffer(data, in desc);
-            return vboRef;
-        }
-
-        public GfxRefToken<UniformBufferId> CreateUniformBuffer<T>(UniformGpuSlot slot, in GfxBufferDataDesc desc)
-            where T : unmanaged, IUniformGpuData
-        {
-            var vboRef = _driverBuffer.CreateUniformBuffer<T>(slot, in desc);
-            return vboRef;
-        }
-
-        [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public void SetBufferData<TId, T>(GfxRefToken<TId> refToken, ReadOnlySpan<T> data, nint size, BufferUsage usage)
-            where TId : unmanaged, IResourceId where T : unmanaged
-        {
-            _driverBuffer.SetBufferData(refToken, data, size, usage);
-        }
-
-        [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public void ResizeBuffer<TId>(GfxRefToken<TId> refToken, nint size, BufferUsage usage)
-            where TId : unmanaged, IResourceId
-        {
-            _driverBuffer.ResizeBuffer(refToken, size, usage);
-        }
-
-        [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public void UploadBufferData<TId, T>(GfxRefToken<TId> refToken, ReadOnlySpan<T> data, nint offset, nint size)
-            where TId : unmanaged, IResourceId where T : unmanaged
-        {
-            _driverBuffer.UploadBufferData(refToken, data, offset, size);
-        }
-
-        [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public void UploadBufferDataSingle<TId, T>(GfxRefToken<TId> refToken, T data, nint offset, nint size)
-            where TId : unmanaged, IResourceId where T : unmanaged
-        {
-            _driverBuffer.UploadBufferData(refToken, data, offset, size);
-        }
-
-        [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public void BindUniformBufferRange(in GfxRefToken<UniformBufferId> uboRef, int slot, nint offset, nint size)
-        {
-            _driverBuffer.BindBufferRange<UniformBufferId>(uboRef, slot, offset, size);
-        }
+    public static ReadOnlySpan<byte> ToBufferByteData<T>(ReadOnlySpan<T> data) where T : unmanaged
+    {
+        return MemoryMarshal.AsBytes(data);
     }
 }

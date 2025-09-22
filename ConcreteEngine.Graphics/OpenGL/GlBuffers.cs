@@ -23,77 +23,99 @@ internal sealed class GlBuffers : IGraphicsDriverModule
         _store = ctx.Store;
     }
 
-    public GfxRefToken<VertexBufferId> CreateVertexBuffer<T>(ReadOnlySpan<T> data, in GfxBufferDataDesc desc,
-        bool nullData = false) where T : unmanaged
+    public GfxRefToken<VertexBufferId> CreateVertexBuffer(ReadOnlySpan<byte> data, in GfxBufferDataDesc desc,
+        bool nullData = false)
     {
         var handle = CreateBufferNative(data, in desc, nullData);
         return _store.VertexBuffer.Add(new GlVboHandle(handle.Value));
     }
 
-    public GfxRefToken<IndexBufferId> CreateIndexBuffer<T>(ReadOnlySpan<T> data, in GfxBufferDataDesc desc,
-        bool nullData = false) where T : unmanaged
+    public GfxRefToken<IndexBufferId> CreateIndexBuffer(ReadOnlySpan<byte> data, in GfxBufferDataDesc desc,
+        bool nullData = false)
     {
         var handle = CreateBufferNative(data, in desc, nullData);
         return _store.IndexBuffer.Add(new GlIboHandle(handle.Value));
     }
 
-    public GfxRefToken<UniformBufferId> CreateUniformBuffer<T>(UniformGpuSlot slot, in GfxBufferDataDesc desc)
-        where T : unmanaged, IUniformGpuData
+    public GfxRefToken<UniformBufferId> CreateUniformBuffer(UniformGpuSlot slot, in GfxBufferDataDesc desc)
     {
-        var handle = CreateBufferNative(ReadOnlySpan<T>.Empty, in desc, nullData: true);
+        var handle = CreateBufferNative(ReadOnlySpan<byte>.Empty, in desc, nullData: true);
         _gl.BindBufferBase(BufferTargetARB.UniformBuffer, (uint)slot, handle.Value);
         return _store.UniformBuffer.Add(new GlUboHandle(handle.Value));
     }
 
+
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public void SetBufferDataRaw<TId>(GfxRefToken<TId> refToken, ReadOnlySpan<byte> data, nint size, BufferUsage usage)
-        where TId : unmanaged, IResourceId
+    public void SetVertexBufferData(GfxRefToken<VertexBufferId> vboRef, ReadOnlySpan<byte> data, nint size,
+        BufferUsage usage)
     {
-        _gl.NamedBufferData(ToNativeHandle(refToken.Handle).Value, (nuint)size, data, usage.ToGlEnum());
+        _gl.NamedBufferData(GetVboHandle(vboRef).Handle, (nuint)size, data, usage.ToGlEnum());
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public void SetBufferData<TId, T>(GfxRefToken<TId> refToken, ReadOnlySpan<T> data, nint size, BufferUsage usage)
-        where TId : unmanaged, IResourceId where T : unmanaged
+    public void SetIndexBufferData(GfxRefToken<IndexBufferId> iboRef, ReadOnlySpan<byte> data, nint size,
+        BufferUsage usage)
     {
-        _gl.NamedBufferData(ToNativeHandle(refToken.Handle).Value, (nuint)size, data, usage.ToGlEnum());
+        _gl.NamedBufferData(GetIboHandle(iboRef).Handle, (nuint)size, data, usage.ToGlEnum());
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public unsafe void ResizeBuffer<TId>(GfxRefToken<TId> refToken, nint size, BufferUsage usage)
-        where TId : unmanaged, IResourceId
-
+    public void SetUniformBufferData(GfxRefToken<UniformBufferId> uboRef, ReadOnlySpan<byte> data, nint size,
+        BufferUsage usage)
     {
-        _gl.NamedBufferData(ToNativeHandle(refToken.Handle).Value, (nuint)size, (void*)0, usage.ToGlEnum());
+        _gl.NamedBufferData(GetUboHandle(uboRef).Handle, (nuint)size, data, usage.ToGlEnum());
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public unsafe void UploadBufferData<T, TId>(GfxRefToken<TId> refToken, T data, nint offset, nint size)
-        where TId : unmanaged, IResourceId where T : unmanaged
+    public unsafe void ResizeVertexBuffer(GfxRefToken<VertexBufferId> vboRef, nint size, BufferUsage usage)
+
     {
-        var nHandle = ToNativeHandle(refToken.Handle).Value;
-        fixed (T* p = &Unsafe.AsRef(in data))
-            _gl.NamedBufferSubData(nHandle, offset, (nuint)size, data);
+        _gl.NamedBufferData(GetVboHandle(vboRef).Handle, (nuint)size, (void*)0, usage.ToGlEnum());
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public void UploadBufferData<T, TId>(GfxRefToken<TId> refToken, ReadOnlySpan<T> data, nint offset, nint size)
-        where TId : unmanaged, IResourceId where T : unmanaged
+    public unsafe void ResizeIndexBuffer(GfxRefToken<IndexBufferId> iboRef, nint size, BufferUsage usage)
+
     {
-        _gl.NamedBufferSubData(ToNativeHandle(refToken.Handle).Value, offset, (nuint)size, data);
+        _gl.NamedBufferData(GetIboHandle(iboRef).Handle, (nuint)size, (void*)0, usage.ToGlEnum());
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public void BindBufferRange<TId>(GfxRefToken<TId> refToken, int slot, nint offset, nint size)
-        where TId : unmanaged, IResourceId
+    public unsafe void ResizeUniformBuffer(GfxRefToken<UniformBufferId> uboRef, nint size, BufferUsage usage)
 
     {
-        var nHandle = ToNativeHandle(refToken.Handle).Value;
+        _gl.NamedBufferData(GetUboHandle(uboRef).Handle, (nuint)size, (void*)0, usage.ToGlEnum());
+    }
+
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public void UploadVertexBufferData(GfxRefToken<VertexBufferId> vboRef, ReadOnlySpan<byte> data, nint offset,
+        nint size)
+    {
+        _gl.NamedBufferSubData(GetVboHandle(vboRef).Handle, offset, (nuint)size, data);
+    }
+
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public void UploadIndexBufferData(GfxRefToken<IndexBufferId> iboRef, ReadOnlySpan<byte> data, nint offset,
+        nint size)
+    {
+        _gl.NamedBufferSubData(GetIboHandle(iboRef).Handle, offset, (nuint)size, data);
+    }
+
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public void UploadUniformBufferData(GfxRefToken<UniformBufferId> uboRef, ReadOnlySpan<byte> data, nint offset,
+        nint size)
+    {
+        _gl.NamedBufferSubData(GetUboHandle(uboRef).Handle, offset, (nuint)size, data);
+    }
+
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public void BindUniformBufferRange(GfxRefToken<UniformBufferId> uboRef, int slot, nint offset, nint size)
+    {
+        var nHandle = GetUboHandle(uboRef).Handle;
         _gl.BindBufferRange(BufferTargetARB.UniformBuffer, (uint)slot, nHandle, offset, (nuint)size);
     }
 
-    private unsafe NativeHandle CreateBufferNative<T>(ReadOnlySpan<T> data, in GfxBufferDataDesc desc, bool nullData)
-        where T : unmanaged
+    private unsafe NativeHandle CreateBufferNative(ReadOnlySpan<byte> data, in GfxBufferDataDesc desc, bool nullData)
     {
         var flag = GlEnumUtils.ToBufferFlag(desc.Storage, desc.Access);
         var mask = desc.Storage == BufferStorage.Static ? BufferStorageMask.None : flag;
@@ -112,7 +134,6 @@ internal sealed class GlBuffers : IGraphicsDriverModule
             else _gl.NamedBufferData(buffer, (nuint)desc.Size, data, usage.ToGlEnum());
         }
 
-
         return new NativeHandle(buffer);
     }
 
@@ -125,15 +146,4 @@ internal sealed class GlBuffers : IGraphicsDriverModule
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     private GlUboHandle GetUboHandle(GfxRefToken<UniformBufferId> uboRef) => _store.UniformBuffer.GetRef(uboRef);
 
-
-    private NativeHandle ToNativeHandle(GfxHandle handle)
-    {
-        return handle.Kind switch
-        {
-            ResourceKind.VertexBuffer => NativeHandle.From(_store.VertexBuffer.Get(handle)),
-            ResourceKind.IndexBuffer => NativeHandle.From(_store.IndexBuffer.Get(handle)),
-            ResourceKind.UniformBuffer => NativeHandle.From(_store.UniformBuffer.Get(handle)),
-            _ => GraphicsException.ThrowInvalidAction<NativeHandle>(nameof(handle.Kind))
-        };
-    }
 }

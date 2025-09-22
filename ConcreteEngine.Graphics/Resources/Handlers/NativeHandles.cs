@@ -12,9 +12,6 @@ internal readonly record struct NativeHandle(uint Value)
     public bool IsEmpty() => Value == 0;
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public bool IsActive() => Value != 0;
-
-    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public bool EqualsHandle<THandle>(THandle handle) where THandle : unmanaged, IResourceHandle, IEquatable<THandle> =>
         Value == handle.Handle;
 

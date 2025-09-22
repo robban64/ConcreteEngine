@@ -6,7 +6,7 @@ using System.Runtime.CompilerServices;
 
 namespace ConcreteEngine.Graphics.Resources;
 
-internal class HandleUtils
+internal static class HandleUtility
 {
     private static readonly Dictionary<Type, ResourceKind> ResourceIdToKind = new()
     {

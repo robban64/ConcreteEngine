@@ -37,20 +37,7 @@ internal static class GfxUtilsInternal
 
     public static int ResolveSamples(int samples) => samples <= 1 ? 1 : samples;
 
-    [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public static (nint Offset, nint Size) ToSizeAndOffset<T>(int offsetElements, int count) where T : unmanaged
-    {
-        var stride = (nint)Unsafe.SizeOf<T>();
-        return (offsetElements * stride, count * stride);
-    }
-
-
-    [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public static ( nint Stride, nint Size) ToStrideAndSize<T>(int count) where T : unmanaged
-    {
-        var stride = (nint)Unsafe.SizeOf<T>();
-        return (stride, count * stride);
-    }
+    
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static nint GetTotalSize<T>(int count) where T : unmanaged => count * Unsafe.SizeOf<T>();

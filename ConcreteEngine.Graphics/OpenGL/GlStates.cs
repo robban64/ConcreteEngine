@@ -58,6 +58,13 @@ internal sealed class GlStates: IGraphicsDriverModule
         _gl.FrontFace(front);
     }
 
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public void BindFrameBuffer(GfxRefToken<FrameBufferId> fboRef) 
+        => _gl.BindFramebuffer(FramebufferTarget.Framebuffer, _store.FrameBuffer.GetRef(fboRef).Handle);
+
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public void UnbindFrameBuffer() => _gl.BindFramebuffer(FramebufferTarget.Framebuffer, 0);
+
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public void BindMesh(GfxRefToken<MeshId> mesh) => _gl.BindVertexArray(_store.VertexArray.GetRef(mesh).Handle);

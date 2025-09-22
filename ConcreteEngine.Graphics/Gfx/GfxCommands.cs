@@ -30,20 +30,15 @@ public sealed class GfxCommands
     private DepthMode _depthMode = DepthMode.Unset;
     private CullMode _cullMode = CullMode.Unset;
 
-    //TODO remove
-    private FrameBufferId _boundFboId = default;
-    private FrameBufferId _boundReadFboId = default;
-    private GfxHandle _currDrawFboHandle = default; // 0 = screen
-    private GfxHandle _currReadFboHandle = default; // 0 = screen
-
-
-    private ShaderId _boundShaderId = default;
     private readonly TextureId[] _boundTextures;
-
-    private ShaderLayout? _boundUniforms;
-
+    
+    private FrameBufferId _boundFboId = default;
+    
     private MeshId _boundMeshId = default;
     private MeshMeta _boundMeshMeta = default;
+    
+    private ShaderId _boundShaderId = default;
+    private ShaderLayout? _boundUniforms;
 
     //
     private Vector2D<int> _activeOutputSize;
@@ -82,31 +77,30 @@ public sealed class GfxCommands
         result = new GpuFrameStats(_drawCallCount, _drawTriangleCount);
         // unbind context
         UseShader(default);
-
+        BindMesh(default);
+        BindFramebuffer(default);
+        
         _blendMode = BlendMode.Unset;
         _depthMode = DepthMode.Unset;
         _cullMode = CullMode.Unset;
-
 
         _driver.EndFrame();
     }
 
     public void BeginScreenPass(Color4? clear = null, ClearBufferFlag? flags = null)
     {
-        if (_boundFboId != default) GraphicsException.ThrowInvalidState("Cannot begin screen pass while FBO is bound.");
+        //if (_boundFboId != default) GraphicsException.ThrowInvalidState("Cannot begin screen pass while FBO is bound.");
 
-        _currDrawFboHandle = default;
-        _currReadFboHandle = default;
-
-        _boundReadFboId = default;
         _activeOutputSize = _frameCtx.OutputSize;
 
+        BindFramebuffer(default);
         SetViewport(_activeOutputSize);
 
+        //Needed?
         if (clear.HasValue && flags.HasValue) Clear(clear.Value, flags.Value);
     }
 
-    public void BeginRenderPass(in FrameBufferId fboId, Color4? clear, ClearBufferFlag? flags)
+    public void BeginRenderPass(FrameBufferId fboId, Color4? clear, ClearBufferFlag? flags)
     {
         ArgumentOutOfRangeException.ThrowIfNegativeOrZero(fboId.Value, nameof(fboId));
         if (_boundFboId == fboId) GraphicsException.ThrowInvalidState($"FBO is {fboId} already bound.");
@@ -114,28 +108,19 @@ public sealed class GfxCommands
         ref readonly var meta = ref _store.FboStore.GetMeta(fboId);
         ref readonly var handle = ref _store.FboStore.GetHandle(fboId);
 
-        _boundReadFboId = fboId;
-
+        BindFramebuffer(fboId);
+        
         SetViewport(meta.Size);
         if (clear.HasValue && flags.HasValue) Clear(clear.Value, flags.Value);
         SetDepthMode(DepthMode.WriteLequal);
         SetCullMode(CullMode.BackCcw);
 
-        _currDrawFboHandle = handle;
-        _currReadFboHandle = handle;
-
         _activeOutputSize = meta.Size;
-        Debug.Assert(_currDrawFboHandle != default && _currDrawFboHandle == _currReadFboHandle);
     }
 
     public void EndRenderPass()
     {
         if (_boundFboId == default) GraphicsException.ResourceNotBound<GlFboHandle>(nameof(_boundFboId));
-
-        _currDrawFboHandle = default;
-        _currReadFboHandle = default;
-
-        _boundReadFboId = default;
 
         _activeOutputSize = _frameCtx.OutputSize;
 
@@ -147,6 +132,7 @@ public sealed class GfxCommands
     {
         Debug.Assert(fromId != default);
         Debug.Assert(fromId != toId, "READ and DRAW FBO must differ for resolve.");
+        SetBlendMode(BlendMode.None);
 
         ref readonly var fromFbo = ref _store.FboStore.GetMeta(fromId);
         var fromHandle = _store.FboStore.GetHandle(fromId);
@@ -194,24 +180,19 @@ public sealed class GfxCommands
         _states.SetCullMode(cullMode);
     }
 
-    public void UseShader(ShaderId id)
-    {
-        if (_boundShaderId == id) return;
 
+    
+    public void BindFramebuffer(FrameBufferId id)
+    {
+        if (_boundFboId == id) return;
         if (id == default)
         {
-            _boundShaderId = default;
-            _boundUniforms = null;
-            _shaders.UnbindShader();
+            _states.UnbindFrameBuffer();
+            _boundFboId = default;
             return;
         }
-
-        var handle = _store.ShaderStore.GetHandle(id);
-        var uniformTable = _repository.ShaderRepository.GetShaderLayout(id);
-
-        _shaders.UseShader(handle);
-        _boundShaderId = id;
-        _boundUniforms = uniformTable;
+        _states.BindFrameBuffer(_store.FboStore.GetRef(id));
+        _boundFboId = id;
     }
 
 
@@ -248,6 +229,7 @@ public sealed class GfxCommands
         _driver.States.BindMesh(meshRef);
         _boundMeshId = id;
     }
+    
 
 
     public void DrawBoundMesh(MeshId id, int drawCount)
@@ -287,6 +269,27 @@ public sealed class GfxCommands
         _drawTriangleCount += drawCount;
         _drawCallCount++;
     }
+    
+    public void UseShader(ShaderId id)
+    {
+        if (_boundShaderId == id) return;
+
+        if (id == default)
+        {
+            _boundShaderId = default;
+            _boundUniforms = null;
+            _shaders.UnbindShader();
+            return;
+        }
+
+        var handle = _store.ShaderStore.GetHandle(id);
+        var uniformTable = _repository.ShaderRepository.GetShaderLayout(id);
+
+        _shaders.UseShader(handle);
+        _boundShaderId = id;
+        _boundUniforms = uniformTable;
+    }
+
 
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]

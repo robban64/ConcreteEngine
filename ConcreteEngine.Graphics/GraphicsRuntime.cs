@@ -72,7 +72,7 @@ public sealed class GraphicsRuntime : IGraphicsRuntime
     public void BeginFrame(in FrameInfo frameInfo)
     {
         _frameCtx = frameInfo;
-        _gfxContext.Commands.BeginFrame(frameInfo);
+        _gfxContext.Commands.BeginFrame(in frameInfo);
     }
 
     public void EndFrame(out GpuFrameStats stats)

@@ -50,33 +50,32 @@ internal sealed class PrimitiveMeshes : IPrimitiveMeshes
 
     private void CreateSkyboxCube(GfxMeshes meshes)
     {
-        ReadOnlySpan<float> vertices = stackalloc[]
+        ReadOnlySpan<Vector3> vertices = stackalloc Vector3[]
         {
             // +X
-            1f, 1f, -1f, 1f, -1f, -1f, 1f, -1f, 1f,
-            1f, 1f, -1f, 1f, -1f, 1f, 1f, 1f, 1f,
+            new(1f, 1f, -1f), new(1f, -1f, -1f), new(1f, -1f,  1f),
+            new(1f, 1f, -1f), new(1f, -1f,  1f), new(1f,  1f,  1f),
             // -X
-            -1f, 1f, 1f, -1f, -1f, 1f, -1f, -1f, -1f,
-            -1f, 1f, 1f, -1f, -1f, -1f, -1f, 1f, -1f,
+            new(-1f, 1f, 1f), new(-1f, -1f, 1f), new(-1f, -1f, -1f),
+            new(-1f, 1f, 1f), new(-1f, -1f, -1f), new(-1f,  1f, -1f),
             // +Y
-            -1f, 1f, -1f, 1f, 1f, -1f, 1f, 1f, 1f,
-            -1f, 1f, -1f, 1f, 1f, 1f, -1f, 1f, 1f,
+            new(-1f, 1f, -1f), new(1f, 1f, -1f), new(1f, 1f,  1f),
+            new(-1f, 1f, -1f), new(1f, 1f,  1f), new(-1f, 1f,  1f),
             // -Y
-            -1f, -1f, 1f, 1f, -1f, 1f, 1f, -1f, -1f,
-            -1f, -1f, 1f, 1f, -1f, -1f, -1f, -1f, -1f,
+            new(-1f, -1f, 1f), new(1f, -1f, 1f), new(1f, -1f, -1f),
+            new(-1f, -1f, 1f), new(1f, -1f, -1f), new(-1f, -1f, -1f),
             // +Z
-            -1f, 1f, 1f, 1f, 1f, 1f, 1f, -1f, 1f,
-            -1f, 1f, 1f, 1f, -1f, 1f, -1f, -1f, 1f,
+            new(-1f, 1f, 1f), new(1f, 1f, 1f), new(1f, -1f,  1f),
+            new(-1f, 1f, 1f), new(1f, -1f,  1f), new(-1f, -1f,  1f),
             // -Z
-            1f, 1f, -1f, -1f, 1f, -1f, -1f, -1f, -1f,
-            1f, 1f, -1f, -1f, -1f, -1f, 1f, -1f, -1f,
+            new(1f, 1f, -1f), new(-1f, 1f, -1f), new(-1f, -1f, -1f),
+            new(1f, 1f, -1f), new(-1f, -1f, -1f), new(1f, -1f, -1f),
         };
-        
         var props = new MeshDrawProperties(DrawPrimitive.Triangles, MeshDrawKind.Arrays, DrawElementSize.Invalid, 36);
         
         var builder = meshes.StartUploadBuilder(in props);
         builder.UploadVertices(vertices, BufferUsage.StaticDraw, BufferStorage.Static, BufferAccess.None);
-        builder.AddAttribute(new VertexAttributeDesc(0, 3, 0));
+        builder.AddAttribute(new VertexAttributeMaker<Vector3>().Make<Vector3>());
         SkyboxCube = builder.Finish();
     }
 }

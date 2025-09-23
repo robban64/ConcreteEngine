@@ -6,6 +6,7 @@ using ConcreteEngine.Core.Assets.IO;
 using ConcreteEngine.Core.Resources;
 using ConcreteEngine.Core.Systems;
 using ConcreteEngine.Graphics;
+using ConcreteEngine.Graphics.Gfx;
 using ConcreteEngine.Graphics.Resources;
 
 #endregion
@@ -67,12 +68,12 @@ public sealed class AssetSystem : IAssetSystem
     }
 
 
-    internal void StartLoader(IGfxResourceAllocator allocator, IGfxFactoryHub factory)
+    internal void StartLoader(GfxContext gfx)
     {
         IsLoading = true;
         var assetRecords = LoadManifest();
         var loader = new AssetLoader(_assetPath, this);
-        loader.Start(assetRecords, allocator, factory);
+        loader.Start(assetRecords, gfx);
         _loader = loader;
     }
 
@@ -246,6 +247,9 @@ public void Remove<T>(T assetFile) where T : class, IAssetFile
             
             result.Add(mat);
         }
+
+        foreach (var mat in result)
+            mat.Initialize();
         
         _materialStore = new MaterialStore(result);
         return result;
@@ -254,9 +258,9 @@ public void Remove<T>(T assetFile) where T : class, IAssetFile
         {
             Texture2D[] textures = [];
             CubeMap? cubeMap = null;
-            if (record.Cubemap != null)
+            if (record.CubeMap != null)
             {
-                cubeMap = Get<CubeMap>(record.Cubemap);
+                cubeMap = Get<CubeMap>(record.CubeMap);
             }
             else if (record.Textures != null)
             {

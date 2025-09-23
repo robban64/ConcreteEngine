@@ -1,9 +1,5 @@
 #region
 
-using System.Numerics;
-using ConcreteEngine.Core.Resources;
-using ConcreteEngine.Graphics.Resources;
-
 #endregion
 
 namespace ConcreteEngine.Core.Rendering;

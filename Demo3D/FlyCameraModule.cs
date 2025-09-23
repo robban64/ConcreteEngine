@@ -2,10 +2,8 @@ using System.Numerics;
 using ConcreteEngine.Core;
 using ConcreteEngine.Core.Platform;
 using ConcreteEngine.Core.Rendering;
+using ConcreteEngine.Core.Scene;
 using ConcreteEngine.Core.Systems;
-using ConcreteEngine.Graphics;
-using ConcreteEngine.Graphics.Descriptors;
-using Silk.NET.GLFW;
 using Silk.NET.Input;
 
 namespace Demo3D;

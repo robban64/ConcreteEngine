@@ -8,7 +8,7 @@ public enum ResourceKind : byte
     Mesh = 3,
     VertexBuffer = 4,
     IndexBuffer = 5,
-    FrameBuffer = 6,
-    RenderBuffer = 7,
-    UniformBuffer = 8,
+    UniformBuffer = 6,
+    FrameBuffer = 7,
+    RenderBuffer = 8
 }

@@ -1,9 +1,9 @@
 namespace ConcreteEngine.Graphics;
 
-public enum GraphicsBackend : byte
+public enum GraphicsBackend
 {
-    Unkown,
-    OpenGL,
-    Vulkan,
-    DirectX
+    Invalid = 0,
+    OpenGL = 1,
+    Vulkan = 2,
+    DirectX = 3
 }

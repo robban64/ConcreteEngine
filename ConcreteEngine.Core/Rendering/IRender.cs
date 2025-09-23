@@ -1,5 +1,3 @@
-
-using ConcreteEngine.Core.Scene;
 using Silk.NET.Maths;
 
 namespace ConcreteEngine.Core.Rendering;

@@ -1,7 +1,6 @@
 using System.Numerics;
 using System.Runtime.InteropServices;
-using ConcreteEngine.Graphics;
-using ConcreteEngine.Graphics.Descriptors;
+using ConcreteEngine.Common.Numerics;
 using ConcreteEngine.Graphics.Primitives;
 using ConcreteEngine.Graphics.Resources;
 

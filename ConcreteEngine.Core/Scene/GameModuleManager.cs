@@ -1,7 +1,4 @@
-using ConcreteEngine.Graphics;
-using ConcreteEngine.Graphics.Descriptors;
-
-namespace ConcreteEngine.Core;
+namespace ConcreteEngine.Core.Scene;
 
 public interface IModuleManager
 {

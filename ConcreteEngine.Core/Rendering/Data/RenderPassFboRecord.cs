@@ -8,18 +8,16 @@ public readonly struct RenderPassFboRecord(
     TextureId colTexId,
     RenderBufferId rboTexId,
     Vector2D<int> size,
-    uint samples)
+    int samples)
 {
     
     public readonly Vector2D<int> Size = size;
-    public readonly uint Samples = samples;
     public readonly FrameBufferId FboId = fboId;
     public readonly TextureId ColTexId = colTexId;
     public readonly RenderBufferId RboTexId = rboTexId;
+    public readonly int Samples = samples;
 
     public bool Msaa => Samples > 0;
     public bool IsValid => FboId.IsValid();
 
-    public static RenderPassFboRecord From(FrameBufferId id, in FrameBufferMeta meta, FrameBufferLayout fboLayout)
-        => new(id, fboLayout.AttachedFboResources.FboTexId, fboLayout.AttachedFboResources.RboTexId, meta.Size, meta.Samples);
 }

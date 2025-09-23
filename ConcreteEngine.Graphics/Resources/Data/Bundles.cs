@@ -6,7 +6,6 @@ internal readonly record struct DriverHandleMeta<TMeta>(in GfxHandle Handle, in 
 internal readonly record struct IdMetaResource<TId, TMeta>
     where TId : unmanaged, IResourceId where TMeta : unmanaged, IResourceMeta;
 
-
 internal readonly struct DriverCreateFboResult(
     in DriverHandleMeta<FrameBufferMeta> fbo,
     in DriverHandleMeta<TextureMeta> fboTex,
@@ -20,13 +19,13 @@ internal readonly struct DriverCreateFboResult(
 }
 
 internal readonly struct GfxCreateFboResult(
-    in IdMetaResource<FrameBufferId,FrameBufferMeta> fbo,
-    in IdMetaResource<TextureId,TextureMeta> fboTex,
-    in IdMetaResource<RenderBufferId,RenderBufferMeta> rboDepth,
-    in IdMetaResource<RenderBufferId,RenderBufferMeta> rboTex)
+    in IdMetaResource<FrameBufferId, FrameBufferMeta> fbo,
+    in IdMetaResource<TextureId, TextureMeta> fboTex,
+    in IdMetaResource<RenderBufferId, RenderBufferMeta> rboDepth,
+    in IdMetaResource<RenderBufferId, RenderBufferMeta> rboTex)
 {
-    public readonly IdMetaResource<FrameBufferId,FrameBufferMeta> Fbo = fbo;
-    public readonly IdMetaResource<TextureId,TextureMeta> FboTex = fboTex;
-    public readonly IdMetaResource<RenderBufferId,RenderBufferMeta> RboDepth = rboDepth;
-    public readonly IdMetaResource<RenderBufferId,RenderBufferMeta> RboTex = rboTex;
+    public readonly IdMetaResource<FrameBufferId, FrameBufferMeta> Fbo = fbo;
+    public readonly IdMetaResource<TextureId, TextureMeta> FboTex = fboTex;
+    public readonly IdMetaResource<RenderBufferId, RenderBufferMeta> RboDepth = rboDepth;
+    public readonly IdMetaResource<RenderBufferId, RenderBufferMeta> RboTex = rboTex;
 }

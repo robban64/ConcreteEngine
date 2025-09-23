@@ -1,11 +1,4 @@
-using ConcreteEngine.Core.Assets;
-using ConcreteEngine.Core.Messaging;
-using ConcreteEngine.Core.Platform;
-using ConcreteEngine.Core.Rendering;
-using ConcreteEngine.Graphics;
-using ConcreteEngine.Graphics.Descriptors;
-
-namespace ConcreteEngine.Core.Systems;
+namespace ConcreteEngine.Core.Stuff;
 /*
 
 internal abstract class BaseEngineState

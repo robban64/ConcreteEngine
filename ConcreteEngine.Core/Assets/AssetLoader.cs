@@ -1,22 +1,19 @@
 #region
 
 using System.Runtime.InteropServices;
-using System.Text;
-using System.Text.Json;
-using System.Text.Json.Serialization;
-using ConcreteEngine.Core.Assets.IO;
 using ConcreteEngine.Core.Assets.Loaders;
 using ConcreteEngine.Core.Resources;
 using ConcreteEngine.Graphics;
 using ConcreteEngine.Graphics.Descriptors;
+using ConcreteEngine.Graphics.Gfx;
 using ConcreteEngine.Graphics.Primitives;
 using ConcreteEngine.Graphics.Resources;
-using StbImageSharp;
 
 #endregion
 
 namespace ConcreteEngine.Core.Assets;
 
+// TODO rework this mess
 internal sealed class AssetLoader
 {
     private enum ProcessOrder
@@ -30,8 +27,7 @@ internal sealed class AssetLoader
     }
 
     private delegate TResult AssetUploadHandler<in TRecord, TPayload, out TResult>(
-        IGfxResourceAllocator allocator,
-        IGfxFactoryHub factoryHub,
+        GfxContext gfx,
         TRecord record,
         in TPayload payload)
         where TRecord : class, IAssetManifestRecord
@@ -47,8 +43,7 @@ internal sealed class AssetLoader
     private TextureLoader _textureLoader;
     private CubeMapLoader _cubeMapLoader;
 
-    private IGfxResourceAllocator _gpuAllocator;
-    private IGfxFactoryHub _gpuFactory;
+    private GfxContext _gfx;
     private AssetSystem _assetSystem;
 
     private ProcessOrder _processOrder = ProcessOrder.NotStarted;
@@ -64,11 +59,10 @@ internal sealed class AssetLoader
         //StbImage.stbi_set_flip_vertically_on_load(1);
     }
 
-    internal void Start(AssetRecordResult assets, IGfxResourceAllocator allocator, IGfxFactoryHub gpuFactory)
+    internal void Start(AssetRecordResult assets, GfxContext gfx)
     {
         _processOrder = (ProcessOrder)1;
-        _gpuAllocator = allocator;
-        _gpuFactory = gpuFactory;
+        _gfx = gfx;
         _shaderLoader = new ShaderLoader(assets.Shaders.Resources);
         _meshLoader = new MeshLoader(assets.Meshes.Resources);
         _textureLoader = new TextureLoader(assets.Textures.Resources);
@@ -78,9 +72,7 @@ internal sealed class AssetLoader
             .Register(GpuUploaders.UploadMesh);
         AssetUploadRegistry<TextureManifestRecord, TexturePayload, Texture2D>
             .Register(GpuUploaders.UploadTexture);
-        AssetUploadRegistry<CubeMapManifestRecord, CubeMapPayload, CubeMap>
-            .Register(GpuUploaders.UploadCubeMap);
-        AssetUploadRegistry<ShaderManifestRecord, GpuShaderData, Shader>
+        AssetUploadRegistry<ShaderManifestRecord, TempShaderPayload, Shader>
             .Register(GpuUploaders.UploadShader);
     }
 
@@ -91,14 +83,12 @@ internal sealed class AssetLoader
         _textureLoader.Finish();
         _cubeMapLoader.Finish();
 
-        _gpuAllocator = null!;
-        _gpuFactory = null!;
+        _gfx = null!;
         _assetSystem = null!;
 
         AssetUploadRegistry<MeshManifestRecord, MeshLoaderResult, Mesh>.Unregister();
         AssetUploadRegistry<TextureManifestRecord, TexturePayload, Texture2D>.Unregister();
-        AssetUploadRegistry<CubeMapManifestRecord, CubeMapPayload, CubeMap>.Unregister();
-        AssetUploadRegistry<ShaderManifestRecord, GpuShaderData, Shader>.Unregister();
+        AssetUploadRegistry<ShaderManifestRecord, TempShaderPayload, Shader>.Unregister();
     }
 
     public bool Process()
@@ -108,13 +98,14 @@ internal sealed class AssetLoader
             case ProcessOrder.NotStarted:
                 throw new InvalidOperationException("Asset loader has not started.");
             case ProcessOrder.Shaders:
-                 ProcessLoader<ShaderManifestRecord, GpuShaderData, Shader>(_shaderLoader);
+                 ProcessLoader<ShaderManifestRecord, TempShaderPayload, Shader>(_shaderLoader);
                 break;
             case ProcessOrder.Textures:
                  ProcessLoader<TextureManifestRecord, TexturePayload, Texture2D>(_textureLoader);
                 break;
             case ProcessOrder.CubeMaps:
-                 ProcessLoader<CubeMapManifestRecord, CubeMapPayload, CubeMap>(_cubeMapLoader);
+                ProcessCubeMapLoader(_cubeMapLoader);
+                 //ProcessLoader<CubeMapManifestRecord, TexturePayload, CubeMap>(_cubeMapLoader);
                 break;
             case ProcessOrder.Meshes:
                  ProcessLoader<MeshManifestRecord, MeshLoaderResult, Mesh>(_meshLoader);
@@ -126,7 +117,51 @@ internal sealed class AssetLoader
         return false;
     }
 
-    public void ProcessLoader<TRecord, TPayload, TResult>(AssetTypeLoader<TRecord, TPayload> loader)
+    // Temp solution
+    private void ProcessCubeMapLoader(CubeMapLoader loader)
+    {
+        if (loader == null)
+        {
+            _processOrder = (ProcessOrder)((int)_processOrder + 1);
+            return;
+        }
+
+        TexturePayload payload = default;
+        if (!loader.ProcessNext(out var record, out payload))
+        {
+            var order = (int)_processOrder + 1;
+            if (order >= ProcessOrderCount)
+                _processOrder = ProcessOrder.Finished;
+            else
+                _processOrder = (ProcessOrder)order;
+
+            return;
+        }
+
+        var desc = payload.Descriptor;
+        var textureId = _gfx.Textures.CreateCubeMap(in desc);
+        _gfx.Textures.UploadCubeMapFace(textureId, payload.Data, desc.Width,desc.Height,0);
+        for (int i = 1; i < 6; i++)
+        {
+            var face = loader.LoadFaceData(record!, i);
+            _gfx.Textures.UploadCubeMapFace(textureId, face.Data, face.Descriptor.Width,face.Descriptor.Height,i);
+        }
+
+        var cubeMap = new CubeMap
+        {
+            Name = record!.Name,
+            ResourceId = textureId,
+            Textures = record.Textures,
+            Width = record.Width,
+            Height = record.Height,
+            PixelFormat = payload.Descriptor.Format
+        };
+        
+        _assetSystem.AddResource(cubeMap);
+
+    }
+
+    private void ProcessLoader<TRecord, TPayload, TResult>(AssetTypeLoader<TRecord, TPayload> loader)
         where TRecord : class, IAssetManifestRecord
         where TPayload : struct, allows ref struct
         where TResult : class, IGraphicAssetFile
@@ -148,7 +183,6 @@ internal sealed class AssetLoader
             return;
         }
 
-
         var handler = AssetUploadRegistry<TRecord, TPayload, TResult>.Handler;
         if (handler == null)
         {
@@ -156,7 +190,8 @@ internal sealed class AssetLoader
             throw new NotSupportedException($"No upload handler registered for ({inner}).");
         }
 
-        var asset = handler(_gpuAllocator, _gpuFactory, record!, in payload);
+        var asset = handler(_gfx, record!, in payload);
+
         if (asset is Texture2D texture)
         {
             if (_textureLoader.DataCache.TryGetValue(asset.Name, out var data))
@@ -182,29 +217,38 @@ internal sealed class AssetLoader
 
     private static class GpuUploaders
     {
-        public static Mesh UploadMesh(IGfxResourceAllocator allocator, IGfxFactoryHub factoryHub, MeshManifestRecord record, in MeshLoaderResult payload)
+        public static Mesh UploadMesh(GfxContext gfx, MeshManifestRecord record, in MeshLoaderResult payload)
         {
-            
+            /*
             var vbo = new GpuVboDescriptor<Vertex3D>(payload.MeshData.Vertices, BufferUsage.StaticDraw);
             var ibo = new GpuIboDescriptor<uint>(payload.MeshData.Indices,  BufferUsage.StaticDraw);
-            var desc = GpuMeshDescriptor.MakeElemental(payload.Descriptor.Attributes, payload.Descriptor.ElementType, payload.Descriptor.Primitive,
-                payload.Descriptor.DrawCount);
+            var desc = GpuMeshDescriptor.MakeElemental(payload.Properties.Attributes, payload.Properties.ElementSize, payload.Properties.Primitive,
+                payload.Properties.DrawCount);
             
             var builder = factoryHub.MeshFactory;
             var result = builder.CreateElementalMesh(vbo, ibo,desc);
+*/
+            ReadOnlySpan<Vertex3D> vSpan = CollectionsMarshal.AsSpan(payload.Vertices);
+            ReadOnlySpan<uint> iSpan = CollectionsMarshal.AsSpan(payload.Indices);
+
+            var builder = gfx.Meshes.StartUploadBuilder(payload.Properties);
+            builder.UploadVertices(vSpan, BufferUsage.StaticDraw, BufferStorage.Static, BufferAccess.None);
+            builder.UploadIndices(iSpan, BufferUsage.StaticDraw, BufferStorage.Static, BufferAccess.None);
+            builder.SetAttributeRange(payload.Attributes);
+            var meshId = builder.Finish();
+            
             return new Mesh
             {
                 Name = record.Name,
                 Filename = record.Filename,
-                DrawCount = desc.DrawCount,
-                ResourceId = result.MeshId
+                DrawCount = payload.Properties.DrawCount,
+                ResourceId = meshId
             };
         }
 
-        public static Texture2D UploadTexture(IGfxResourceAllocator allocator, IGfxFactoryHub factoryHub, TextureManifestRecord record,
-            in TexturePayload payload)
+        public static Texture2D UploadTexture(GfxContext gfx, TextureManifestRecord record,in TexturePayload payload)
         {
-            var id = allocator.CreateTexture2D(payload.Data, in payload.Descriptor, out var meta);
+            var id = gfx.Textures.CreateTexture2D(payload.Data, in payload.Descriptor);
             
             //var data = record.InMemory ? _dataCache[record.Name] : null;
             return new Texture2D
@@ -212,40 +256,25 @@ internal sealed class AssetLoader
                 Name = record.Name,
                 Path = record.Filename,
                 ResourceId = id,
-                Width = meta.Width,
-                Height = meta.Height,
-                PixelFormat = meta.Format,
+                Width = payload.Descriptor.Width,
+                Height = payload.Descriptor.Height,
+                PixelFormat = payload.Descriptor.Format,
                 Preset = record.Preset,
                 Anisotropy = record.Anisotropy
             };
         }
 
-        public static CubeMap UploadCubeMap(IGfxResourceAllocator allocator, IGfxFactoryHub factoryHub, CubeMapManifestRecord record,
-            in CubeMapPayload payload)
+        public static Shader UploadShader(GfxContext gfx, ShaderManifestRecord record,in TempShaderPayload data)
         {
-            var id = allocator.CreateCubeMap(payload.Data, in payload.Descriptor, out var meta);
-            return new CubeMap
-            {
-                Name = record.Name,
-                ResourceId = id,
-                Width = meta.Width,
-                Height = meta.Height,
-                PixelFormat = meta.Format,
-                Textures = record.Textures
-            };
-        }
-
-        public static Shader UploadShader(IGfxResourceAllocator allocator, IGfxFactoryHub factoryHub, ShaderManifestRecord record,
-            in GpuShaderData data)
-        {
-            var id = allocator.CreateShader(data.VertexSource, data.FragmentSource, out var meta);
+            var id = gfx.Shaders.CreateShader(data.Vs, data.Fs , out var samplers);
+            
             return new Shader
             {
                 Name = record.Name,
                 FragShaderFilename = record.FragmentFilename,
                 VertShaderFilename = record.VertexFilename,
                 ResourceId = id,
-                Samplers = meta.Samplers
+                Samplers = samplers
             };
         }
     }

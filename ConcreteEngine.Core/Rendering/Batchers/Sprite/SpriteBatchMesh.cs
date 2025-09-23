@@ -1,9 +1,14 @@
 #region
 
+using System.Numerics;
 using ConcreteEngine.Graphics;
+using ConcreteEngine.Graphics.Contracts;
 using ConcreteEngine.Graphics.Descriptors;
+using ConcreteEngine.Graphics.Gfx;
+using ConcreteEngine.Graphics.Gfx.Utility;
 using ConcreteEngine.Graphics.Primitives;
 using ConcreteEngine.Graphics.Resources;
+using ConcreteEngine.Graphics.Utils;
 using static ConcreteEngine.Core.Rendering.RenderConsts;
 
 #endregion
@@ -19,11 +24,9 @@ internal sealed class SpriteBatchMesh : IDisposable
     private static readonly Vertex2D[] Vertices = new Vertex2D[MaxSpriteBatchSize * VerticesPerSprite];
     private static readonly ushort[] Indices = new ushort[MaxSpriteBatchSize * IndicesPerSprite];
 
-    private readonly IGraphicsRuntime _graphics;
-    private readonly IGraphicsContext _gfx;
+    private readonly GfxContext _gfx;
 
     private readonly int _capacity;
-
 
     private readonly MeshId _meshId;
     private readonly VertexBufferId _vertexBufferId;
@@ -31,37 +34,31 @@ internal sealed class SpriteBatchMesh : IDisposable
 
     private bool _disposed = false;
 
-    public SpriteBatchMesh(IGraphicsRuntime graphics, int capacity)
+    public SpriteBatchMesh(GfxContext gfx, int capacity)
     {
-
-        _graphics = graphics;
-        _gfx = graphics.Context;
-        _capacity = capacity;
-        
-
+        _gfx = gfx;
 
         InitIndexBufferData();
-
-        var indices = Indices.AsSpan(0, _capacity * IndicesPerSprite);
-        var dataDesc = new GpuMeshData<Vertex2D, ushort>(Vertices, indices) { VboUsage = BufferUsage.StreamDraw };
-
-        ReadOnlySpan<VertexAttributeDescriptor> pointers = stackalloc[]
-        {
-            VertexAttributeDescriptor.Make<Vertex2D>(nameof(Vertex2D.Position), VertexElementFormat.Float2),
-            VertexAttributeDescriptor.Make<Vertex2D>(nameof(Vertex2D.TexCoords), VertexElementFormat.Float2)
-        };
         
-        var metaDesc =  GpuMeshDescriptor
-            .MakeElemental(pointers, DrawElementType.UnsignedShort, DrawPrimitive.Triangles,0);
+        var indices = Indices.AsSpan(0, _capacity * IndicesPerSprite);
 
-        var vbo = new GpuVboDescriptor<Vertex2D>(Vertices,BufferUsage.StreamDraw);
-        var ibo = new GpuIboDescriptor<ushort>(indices,  BufferUsage.StaticDraw);
+        
+        var props = MeshDrawProperties.MakeTriElemental(size: DrawElementSize.UnsignedShort);
+        var builder = gfx.Meshes.StartUploadBuilder(in props);
+        builder.UploadVertices<Vertex2D>(Vertices, BufferUsage.StreamDraw, BufferStorage.Dynamic,
+            BufferAccess.MapWrite);
 
-        var builder = _graphics.FactoryHub.MeshFactory;
-        var result = builder.CreateElementalMesh(vbo, ibo, metaDesc);
+        builder.UploadIndices<ushort>(indices, BufferUsage.StreamDraw, BufferStorage.Dynamic,
+            BufferAccess.MapWrite);
 
-        _vertexBufferId = result.GetVertexBufferIds()[0];
-        _indexBufferId = result.IndexBufferId;
+        var attribBuilder = new VertexAttributeMaker<Vertex2D>();
+        builder.AddAttribute(attribBuilder.Make<Vector2>());
+        builder.AddAttribute(attribBuilder.Make<Vector2>());
+        
+        var meshId = builder.Finish();
+        var meshLayout = gfx.ResourceContext.Repository.MeshRepository.Get(meshId);
+        _vertexBufferId = meshLayout.GetVertexBufferIds()[0];
+        _indexBufferId = meshLayout.IndexBufferId;
 
     }
 
@@ -135,10 +132,7 @@ internal sealed class SpriteBatchMesh : IDisposable
             */
         }
 
-        _gfx.BindVertexBuffer(_vertexBufferId);
-        _gfx.UploadVertexBuffer<Vertex2D>(_vertexBufferId, vertices, 0);
-        _gfx.BindVertexBuffer(default);
-
+        _gfx.Buffers.UploadVertexBuffer<Vertex2D>(_vertexBufferId, vertices, 0);
 
         var drawCount = (uint)(spriteCount * IndicesPerSprite);
 
@@ -148,7 +142,7 @@ internal sealed class SpriteBatchMesh : IDisposable
     public void Dispose()
     {
         if (_disposed) return;
-        _graphics.Disposer.EnqueueRemoval(_meshId, false);
+        _gfx.ResourceContext.Disposer.EnqueueRemoval(_meshId, false);
         _disposed = true;
     }
 }

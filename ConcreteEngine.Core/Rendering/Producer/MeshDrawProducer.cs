@@ -1,9 +1,6 @@
-using System.Numerics;
 using System.Runtime.CompilerServices;
 using ConcreteEngine.Core.Resources;
 using ConcreteEngine.Core.Scene;
-using ConcreteEngine.Core.Utils;
-using ConcreteEngine.Graphics.Descriptors;
 using ConcreteEngine.Graphics.Resources;
 
 namespace ConcreteEngine.Core.Rendering;

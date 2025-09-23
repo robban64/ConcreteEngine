@@ -1,6 +1,6 @@
 using System.Numerics;
 using ConcreteEngine.Common;
-using ConcreteEngine.Core.Resources;
+using ConcreteEngine.Common.Numerics;
 using ConcreteEngine.Graphics;
 using ConcreteEngine.Graphics.Resources;
 using Silk.NET.Maths;
@@ -24,14 +24,14 @@ public sealed record ShadowTargetDesc
 
 public sealed record SceneTargetDesc
 {
-    public required uint Samples { get; init; }
+    public required int Samples { get; init; }
     public required Color4 ClearColor { get; init; }
 }
 
 public sealed record LightTargetDesc
 {
     public required ShaderId LightShaderId { get; init; }
-    public Color4 ClearColor { get; init; } = Colors.Black;
+    public Color4 ClearColor { get; init; } = Color4.Black;
     public BlendMode Blend { get; init; } = BlendMode.Additive;
     public TexturePreset TexPreset { get; init; } = TexturePreset.LinearMipmapRepeat;
     public Vector2 SizeRatio { get; init; } = Vector2.One;

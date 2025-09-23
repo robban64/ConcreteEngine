@@ -2,9 +2,7 @@
 
 using System.Numerics;
 using System.Text.Json.Serialization;
-using ConcreteEngine.Core.Resources;
 using ConcreteEngine.Graphics;
-using ConcreteEngine.Graphics.Resources;
 
 #endregion
 
@@ -70,7 +68,7 @@ public sealed record MaterialManifestRecord(
     string Shader,
     string[]? Textures,
     [property: JsonPropertyName("cubemap")]
-    string? Cubemap
+    string? CubeMap
 ) : IAssetManifestRecord
 {
     public Vector4 Color { get; init; } = Vector4.One;

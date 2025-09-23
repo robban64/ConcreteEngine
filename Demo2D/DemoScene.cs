@@ -2,9 +2,9 @@
 
 using System.Numerics;
 using ConcreteEngine.Common;
+using ConcreteEngine.Common.Numerics;
 using ConcreteEngine.Core.Assets;
 using ConcreteEngine.Core.Configuration;
-using ConcreteEngine.Core.Features;
 using ConcreteEngine.Core.Rendering;
 using ConcreteEngine.Core.Scene;
 using ConcreteEngine.Graphics;
@@ -95,7 +95,7 @@ public sealed class DemoScene : GameScene
         {
             SceneTarget = new SceneTargetDesc
             {
-                ClearColor = Colors.CornflowerBlue,
+                ClearColor = Color4.CornflowerBlue,
                 Samples = 4
             },
             LightTarget = new LightTargetDesc

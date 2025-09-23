@@ -14,7 +14,7 @@ public interface IMeshFactory
         GpuIboDescriptor<TIndex> indexData, in GpuMeshDescriptor desc)
         where TVertex : unmanaged where TIndex : unmanaged;
 
-    void StartBuilder(DrawPrimitive primitive, MeshDrawKind drawKind, DrawElementType drawElement, uint drawCount = 0);
+    void StartBuilder(DrawPrimitive primitive, MeshDrawKind drawKind, DrawElementSize drawElement, int drawCount = 0);
     IMeshLayout BuildMesh(ReadOnlySpan<VertexAttributeDescriptor> attributes);
     void CreateVertexBuffer<V>(GpuVboDescriptor<V> desc) where V : unmanaged;
     void CreateIndexBuffer<I>(GpuIboDescriptor<I> desc) where I : unmanaged;
@@ -29,9 +29,9 @@ internal sealed class MeshFactory : IMeshFactory
 
     private DrawPrimitive _primitive;
     private MeshDrawKind _drawKind;
-    private DrawElementType _elementType;
-    private uint _drawCount = 0;
-    private uint _calculatedDrawCount = 0;
+    private DrawElementSize _elementSize;
+    private int _drawCount = 0;
+    private int _calculatedDrawCount = 0;
 
     private MeshId _meshId = default;
     private IndexBufferId _iboId = default;
@@ -54,7 +54,7 @@ internal sealed class MeshFactory : IMeshFactory
     public IMeshLayout CreateArrayMesh<TVertex>(GpuVboDescriptor<TVertex> vertexData, in GpuMeshDescriptor desc)
         where TVertex : unmanaged
     {
-        StartBuilder(desc.Primitive, desc.DrawKind, DrawElementType.Invalid, desc.DrawCount);
+        StartBuilder(desc.Primitive, desc.DrawKind, DrawElementSize.Invalid, desc.DrawCount);
         CreateVertexBuffer(vertexData);
         
         return BuildMesh(desc.Attributes);
@@ -64,21 +64,21 @@ internal sealed class MeshFactory : IMeshFactory
         GpuIboDescriptor<TIndex> indexData, in GpuMeshDescriptor desc)
         where TVertex : unmanaged where TIndex : unmanaged
     {
-        StartBuilder(desc.Primitive, desc.DrawKind, desc.ElementType, desc.DrawCount);
+        StartBuilder(desc.Primitive, desc.DrawKind, desc.ElementSize, desc.DrawCount);
         CreateVertexBuffer(vertexData);
         CreateIndexBuffer(indexData);
         return BuildMesh(desc.Attributes);
     }
 
 
-    public void StartBuilder(DrawPrimitive primitive, MeshDrawKind drawKind, DrawElementType drawElement,
-        uint drawCount = 0)
+    public void StartBuilder(DrawPrimitive primitive, MeshDrawKind drawKind, DrawElementSize drawElement,
+        int drawCount = 0)
     {
         Debug.Assert(!_meshId.IsValid());
 
         _primitive = primitive;
         _drawKind = drawKind;
-        _elementType = drawElement;
+        _elementSize = drawElement;
         _drawCount = drawCount;
 
         _meshId = _allocator.CreateMesh(primitive, drawKind, drawElement, out _);
@@ -98,8 +98,8 @@ internal sealed class MeshFactory : IMeshFactory
         var drawCount = _drawCount > 0 ? _drawCount : _calculatedDrawCount;
 
         var prevMeta = _resources.MeshStore.GetMeta(_meshId);
-        var newMeta = new MeshMeta(prevMeta.Primitive, prevMeta.DrawKind, prevMeta.ElementType,
-            prevMeta.VertexAttribPointers, drawCount);
+        var newMeta = new MeshMeta(prevMeta.Primitive, prevMeta.DrawKind, prevMeta.ElementSize,
+            prevMeta.AttributeLength, drawCount);
         _resources.MeshStore.ReplaceMeta(_meshId, in newMeta, out _);
 
         var meshRegistry = _repository.MeshRepository;
@@ -118,7 +118,7 @@ internal sealed class MeshFactory : IMeshFactory
         _calculatedDrawCount = 0;
         _drawKind = MeshDrawKind.Arrays;
         _primitive = DrawPrimitive.Triangles;
-        _elementType = DrawElementType.Invalid;
+        _elementSize = DrawElementSize.Invalid;
         _vboIds.Clear();
         _attributes.Clear();
         return result;
@@ -128,13 +128,13 @@ internal sealed class MeshFactory : IMeshFactory
     public void CreateVertexBuffer<V>(GpuVboDescriptor<V> desc) where V : unmanaged
     {
         _meshId.IsValidOrThrow();
-        ArgumentOutOfRangeException.ThrowIfNotEqual(desc.BindingIndex, (uint)_vboIds.Count);
+        ArgumentOutOfRangeException.ThrowIfNotEqual(desc.BindingIndex, _vboIds.Count);
 
         if (desc.Usage != BufferUsage.StaticDraw) _isStatic = false;
 
-        if (!_iboId.IsValid() && _vboIds.Count == 0) _calculatedDrawCount = (uint)desc.Data.Length;
+        if (!_iboId.IsValid() && _vboIds.Count == 0) _calculatedDrawCount = desc.Data.Length;
 
-        uint size = (uint)Unsafe.SizeOf<V>();
+        int size = Unsafe.SizeOf<V>();
         var vboId = _allocator.CreateVertexBuffer(desc.Usage, size, desc.BindingIndex, out _);
         _gfx.BindVertexBuffer(vboId);
         _gfx.SetVertexBuffer(desc.Data, desc.Usage);
@@ -150,9 +150,9 @@ internal sealed class MeshFactory : IMeshFactory
 
 
         if (desc.Usage != BufferUsage.StaticDraw) _isStatic = false;
-        _calculatedDrawCount = (uint)desc.Data.Length;
+        _calculatedDrawCount = desc.Data.Length;
 
-        var size = (uint)Unsafe.SizeOf<I>();
+        var size = Unsafe.SizeOf<I>();
         if (size < 1 || size > 4)
             GraphicsException.ThrowInvalidType<I>(typeof(I).Name, "Invalid Size");
 

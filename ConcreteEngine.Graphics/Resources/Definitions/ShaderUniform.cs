@@ -14,7 +14,7 @@ public enum ShaderUniform : byte
     ProjectionMatrix,
     ProjectionViewMatrix,
     NormalMatrix,
-    
+
     TextureOffset,
     TextureScale,
     TexCoordRepeat,
@@ -24,12 +24,12 @@ public enum ShaderUniform : byte
     SamplerScene,
     SamplerLight,
     SamplerBloom,
-    
+
     SampleCubemap,
 
     Color,
     Ambient,
-    
+
     TexelSize,
     LightPos,
     CameraPos,
@@ -53,7 +53,7 @@ public static class ShaderUniforms
 
     public static readonly ShaderUniform[] VectorUniforms =
         [Color, Ambient, TexelSize, LightPos, CameraPos];
-    
+
 
     public static readonly ShaderUniform[] PrimitiveUniforms =
         [Time, Threshold, SoftKnee, Radius, Intensity, Softness, Shape];

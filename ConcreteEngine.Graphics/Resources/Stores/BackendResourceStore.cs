@@ -1,5 +1,10 @@
+#region
+
 using System.Diagnostics;
-using ConcreteEngine.Graphics.Error;
+using System.Diagnostics.CodeAnalysis;
+using System.Runtime.CompilerServices;
+
+#endregion
 
 namespace ConcreteEngine.Graphics.Resources;
 
@@ -9,10 +14,11 @@ internal interface IBackendResourceStore
 
     NativeHandle GetNativeHandle(in GfxHandle handle);
     void Remove(in GfxHandle handle);
-    bool IsAlive(in GfxHandle handle);
+    bool IsValid(in GfxHandle handle);
 }
 
-internal interface IBackendReadResourceStore<out THandle> where THandle : unmanaged, IResourceHandle, IEquatable<THandle>
+internal interface IBackendReadResourceStore<out THandle>
+    where THandle : unmanaged, IResourceHandle, IEquatable<THandle>
 {
     THandle Get(in GfxHandle handle);
     //GfxHandle Replace(in GfxHandle handle, THandle value);
@@ -21,16 +27,19 @@ internal interface IBackendReadResourceStore<out THandle> where THandle : unmana
 internal sealed class BackendResourceStore<THandle> : IBackendResourceStore, IBackendReadResourceStore<THandle>
     where THandle : unmanaged, IResourceHandle, IEquatable<THandle>
 {
-    private readonly record struct StoreRecord(THandle Current, ushort Gen, bool Alive)
+    private readonly struct StoreRecord(THandle current, ushort gen, bool alive)
     {
-        public bool IsValidRecord() => Gen > 0 && Alive;
+        public readonly THandle Current = current;
+        public readonly ushort Gen = gen;
+        public readonly bool Alive = alive;
+        public readonly bool IsValid = current.Handle > 0 && gen > 0 && alive;
     }
 
     // sanity check
     private const int HardLimit = 10_000;
 
     private int _idx = 0;
-    private StoreRecord[] _entries = new StoreRecord[16];
+    private StoreRecord[] _records = new StoreRecord[16];
     private readonly Stack<int> _free = new();
 
 
@@ -43,67 +52,107 @@ internal sealed class BackendResourceStore<THandle> : IBackendResourceStore, IBa
         Kind = kind;
     }
 
-    public bool IsAlive(in GfxHandle handle) => _entries[(int)handle.Slot].IsValidRecord();
+    public bool IsValid(in GfxHandle handle) => _records[(int)handle.Slot].IsValid;
 
     public NativeHandle GetNativeHandle(in GfxHandle handle) => NativeHandle.From(Get(in handle));
 
     public THandle Get(in GfxHandle handle)
     {
-        Debug.Assert(handle.IsValid);
-        ref readonly var e = ref _entries[(int)handle.Slot];
-        if (!e.IsValidRecord() || e.Gen != handle.Gen)
-            GraphicsException.ThrowInvalidState("Handler is not a valid state");
-        return e.Current;
+        Throwers.IsValidGfxHandleOrThrow(handle, Kind);
+        ref readonly var record = ref _records[(int)handle.Slot];
+        Throwers.IsValidRecordOrThrow(record, handle);
+        return record.Current;
+    }
+
+    public THandle GetRef<TId>(GfxRefToken<TId> refToken) where TId : unmanaged, IResourceId
+    {
+        var handle = refToken.Handle;
+        ref readonly var record = ref _records[(int)handle.Slot];
+        Debug.Assert(handle.Kind == Kind && record.IsValid && record.Gen == handle.Gen);
+        return record.Current;
     }
 
     public GfxHandle Add(THandle value)
     {
-        ArgumentOutOfRangeException.ThrowIfEqual(value, default);
+        Throwers.ThrowOnDefaultHandle(value);
         int idx = _free.Count > 0 ? _free.Pop() : Allocate();
-        var prev = _entries[idx];
+        var prev = _records[idx];
         var gen = (ushort)(prev.Gen + 1);
-        _entries[idx] = new StoreRecord(value, gen, true);
+        _records[idx] = new StoreRecord(value, gen, true);
         return new GfxHandle((uint)idx, gen, Kind);
     }
-    
+
 
     public void Remove(in GfxHandle handle)
     {
+        Throwers.IsValidGfxHandleOrThrow(handle, Kind);
         ArgumentOutOfRangeException.ThrowIfEqual((int)handle.Kind, (int)ResourceKind.Invalid);
         ArgumentOutOfRangeException.ThrowIfEqual(handle.Gen, 0);
 
         var idx = (int)handle.Slot;
-        var entry = _entries[idx];
-        if (!entry.IsValidRecord() || entry.Gen != handle.Gen)
-            GraphicsException.ThrowInvalidState("Handler is not a valid state");
+        var record = _records[idx];
+        Throwers.IsValidRecordOrThrow(record, handle);
 
-        _entries[(int)handle.Slot] = default;
+        _records[(int)handle.Slot] = default;
         _free.Push((int)handle.Slot);
     }
-    
+
     // Don't think this should be used, leaving it here for now
     public GfxHandle Replace(in GfxHandle handle, THandle value)
     {
-        ArgumentOutOfRangeException.ThrowIfEqual(value, default);
+        Throwers.ThrowOnDefaultHandle(value);
         var oldValue = Get(handle);
-        if (value.Equals(oldValue))
-            throw new GraphicsException("Trying to replace handler with same handler");
+        Throwers.IsUniqueHandleOrThrow(value.Handle, oldValue.Handle);
 
         var gen = (ushort)(handle.Gen + 1);
-        _entries[(int)handle.Slot] = new StoreRecord(value, gen, true);
+        _records[(int)handle.Slot] = new StoreRecord(value, gen, true);
         return handle with { Gen = gen };
     }
 
     private int Allocate()
     {
-        if (_idx == _entries.Length)
+        if (_idx == _records.Length)
         {
             Debug.Assert(_idx < HardLimit);
 
-            var newCap = _entries.Length * 2;
-            Array.Resize(ref _entries, newCap);
+            var newCap = _records.Length * 2;
+            Array.Resize(ref _records, newCap);
         }
 
         return _idx++;
+    }
+
+    private static class Throwers
+    {
+        [DoesNotReturn]
+        [StackTraceHidden]
+        [MethodImpl(MethodImplOptions.NoInlining)]
+        static void ThrowInvalid(string name) => throw new InvalidOperationException();
+
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public static void IsValidGfxHandleOrThrow(GfxHandle handle, ResourceKind kind)
+        {
+            var isValid = handle.IsValid && handle.Kind == kind;
+            if (!isValid) ThrowInvalid(nameof(handle));
+        }
+
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public static void IsValidRecordOrThrow(StoreRecord e, GfxHandle handle)
+        {
+            var isValid = e.IsValid && e.Gen == handle.Gen;
+            if (!isValid) ThrowInvalid(nameof(e));
+        }
+
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public static void IsUniqueHandleOrThrow(uint h1, uint h2)
+        {
+            if (h1 == h2) ThrowInvalid(nameof(h1));
+        }
+
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public static void ThrowOnDefaultHandle(THandle handle)
+        {
+            if (handle.Handle == 0) ThrowInvalid(nameof(handle));
+        }
     }
 }

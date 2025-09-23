@@ -1,13 +1,13 @@
 using System.Security.Cryptography;
 using System.Text;
 using System.Text.RegularExpressions;
-using ConcreteEngine.Graphics;
 using ConcreteEngine.Graphics.Descriptors;
 using ConcreteEngine.Graphics.Resources;
 
 namespace ConcreteEngine.Core.Assets.Loaders;
 
-internal sealed class ShaderLoader(IReadOnlyList<ShaderManifestRecord> records) : AssetTypeLoader<ShaderManifestRecord, GpuShaderData>(records)
+public readonly record struct TempShaderPayload(string Vs, string Fs);
+internal sealed class ShaderLoader(IReadOnlyList<ShaderManifestRecord> records) : AssetTypeLoader<ShaderManifestRecord, TempShaderPayload>(records)
 {
     private static readonly UTF8Encoding ShaderEncoding = new (false, true);
     
@@ -19,7 +19,7 @@ internal sealed class ShaderLoader(IReadOnlyList<ShaderManifestRecord> records) 
         _vertexShaderCache.TrimExcess();
     }
 
-    public override GpuShaderData Get(ShaderManifestRecord record)
+    public override TempShaderPayload Get(ShaderManifestRecord record)
     {
         var vertPath = Path.Combine(AssetPaths.GetAbsolutePath(), "shaders", record.VertexFilename);
         var fragPath = Path.Combine(AssetPaths.GetAbsolutePath(), "shaders", record.FragmentFilename);
@@ -33,7 +33,7 @@ internal sealed class ShaderLoader(IReadOnlyList<ShaderManifestRecord> records) 
 
         var rawFragSource = File.ReadAllText(fragPath, ShaderEncoding);
         var fragmentSource = ResolveIncludes(rawFragSource);
-        return new GpuShaderData(vertexSource, fragmentSource);
+        return new TempShaderPayload(vertexSource, fragmentSource);
     }
 
     private string ToHashSource(string source)

@@ -20,4 +20,4 @@ public readonly struct FrameInfo(
     public readonly bool ResizePending = resizePending;
 }
 
-public readonly record struct GpuFrameStats(uint DrawCalls, uint TriangleCount);
+public readonly record struct GpuFrameStats(int DrawCalls, int TriangleCount);

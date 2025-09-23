@@ -1,4 +1,8 @@
+#region
+
 using System.Runtime.CompilerServices;
+
+#endregion
 
 namespace ConcreteEngine.Graphics.Resources;
 
@@ -23,6 +27,10 @@ internal sealed class BackendStoreFacade<THandle> : IBackendStoreFacade
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public THandle Get(in GfxHandle h) => _store.Get(in h);
+
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public THandle GetRef<TId>(GfxRefToken<TId> refToken) where TId : unmanaged, IResourceId => _store.GetRef(refToken);
+
 
     public GfxHandle Add(THandle h) => _store.Add(h);
 

@@ -1,18 +1,12 @@
 using System.Numerics;
 using System.Runtime.CompilerServices;
-using ConcreteEngine.Common.Extensions;
-using ConcreteEngine.Graphics;
+using ConcreteEngine.Common.Numerics;
 using ConcreteEngine.Graphics.Primitives;
 
 namespace ConcreteEngine.Core;
 
 public static class TransformHelper
 {
-    public static Matrix4x4 RemoveTranslation(Matrix4x4 m)
-    {
-        m.M41 = m.M42 = m.M43 = 0f;
-        return m;
-    }
     
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static Matrix4x4 CreateTransform2D(Vector2 translation, Vector2 scale,

@@ -1,3 +1,5 @@
+using ConcreteEngine.Graphics.Utils;
+
 namespace ConcreteEngine.Graphics.Resources;
 
 public interface IGfxFactoryHub

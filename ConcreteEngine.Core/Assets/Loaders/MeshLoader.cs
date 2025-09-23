@@ -10,7 +10,7 @@ using ConcreteEngine.Graphics.Utils;
 
 namespace ConcreteEngine.Core.Assets.Loaders;
 
-internal readonly record struct MeshLoaderResult
+internal sealed record MeshLoaderResult
 {
     public required MeshDrawProperties Properties  { get; init; }
     public required List<uint> Indices { get; init; }
@@ -38,20 +38,13 @@ internal sealed class MeshLoader : AssetTypeLoader<MeshManifestRecord, MeshLoade
     }
 
 
-    protected override void ClearCache()
-    {
-        _results.Clear();
-        _results.TrimExcess();
-        _meshImporter.ClearCache();
-    }
-
-
-    public override MeshLoaderResult Get(MeshManifestRecord record)
+    public override MeshLoaderResult ProcessResource(MeshManifestRecord record, out AssetProcessInfo info)
     {
         var path = Path.Combine(AssetPaths.GetAbsolutePath(), "meshes", record.Filename);
 
         var (vertices, indices) = _meshImporter.ImportMesh(path);
         
+        info = AssetProcessInfo.MakeDone<MeshManifestRecord>();
         return new MeshLoaderResult
         {
             Attributes = DefaultAttribs,
@@ -65,10 +58,13 @@ internal sealed class MeshLoader : AssetTypeLoader<MeshManifestRecord, MeshLoade
                 Primitive = DrawPrimitive.Triangles
             }
         };
+        
     }
 
-
-
-
-
+    protected override void ClearCache()
+    {
+        _results.Clear();
+        _results.TrimExcess();
+        _meshImporter.ClearCache();
+    }
 }

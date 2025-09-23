@@ -6,23 +6,22 @@ using StbImageSharp;
 
 namespace ConcreteEngine.Core.Assets.Loaders;
 
-internal sealed class CubeMapLoader(IReadOnlyList<CubeMapManifestRecord> records)
-    : AssetTypeLoader<CubeMapManifestRecord, TexturePayload>(records)
-{
-    public override TexturePayload Get(CubeMapManifestRecord record)
-    {
-        return LoadFaceData(record, 0);
-    }
-    
+internal sealed record CubeMapPayload(ReadOnlyMemory<byte> Data, GpuTextureDescriptor Descriptor, int faceIndex);
 
-    public TexturePayload LoadFaceData(CubeMapManifestRecord record, int faceIndex)
+internal sealed class CubeMapLoader(IReadOnlyList<CubeMapManifestRecord> records)
+    : AssetTypeLoader<CubeMapManifestRecord, CubeMapPayload>(records)
+{
+    private int faceIdx = 0;
+
+    public override CubeMapPayload ProcessResource(CubeMapManifestRecord record, out AssetProcessInfo info)
     {
-        var path = Path.Combine(AssetPaths.GetAbsolutePath(), "cubemaps", record.Textures[faceIndex]);
+        var currentFace = faceIdx;
+        var path = Path.Combine(AssetPaths.GetAbsolutePath(), "cubemaps", record.Textures[currentFace]);
         using var stream = File.OpenRead(path);
         var image = ImageResult.FromStream(stream, ColorComponents.RedGreenBlueAlpha);
         ValidateImageResult(image);
-        
-        ReadOnlySpan<byte> data = image.Data;
+
+        ReadOnlyMemory<byte> data = image.Data;
         var desc = new GpuTextureDescriptor(
             Width: image.Width,
             Height: image.Height,
@@ -32,9 +31,15 @@ internal sealed class CubeMapLoader(IReadOnlyList<CubeMapManifestRecord> records
             Anisotropy: TextureAnisotropy.Off,
             LodBias: 0
         );
-        return new TexturePayload(data, desc);
+        
+        info = currentFace + 1 == 6
+            ? AssetProcessInfo.MakeDone<CubeMapManifestRecord>()
+            : AssetProcessInfo.MakeRepeat<CubeMapManifestRecord>();
+
+        return new CubeMapPayload(data, desc, currentFace);
     }
-    
+
+
     protected override void ClearCache()
     {
     }

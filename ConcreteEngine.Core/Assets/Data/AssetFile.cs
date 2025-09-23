@@ -2,19 +2,20 @@ using ConcreteEngine.Graphics.Resources;
 
 namespace ConcreteEngine.Core.Assets;
 
-public enum AssetFileType
+public enum AssetKind
 {
-    Texture2D,
-    Shader,
-    Mesh,
-    Material,
-    Cubemap
+    Unknown = 0,
+    Shader = 1,
+    Mesh = 2,
+    Texture2D = 3,
+    CubeMap = 4,
+    Material = 5,
 }
 
 public interface IAssetFile
 {
     string Name { get; init; }
-    AssetFileType AssetType { get; }
+    AssetKind AssetType { get; }
 }
 
 public interface IGraphicAssetFile : IAssetFile
@@ -22,7 +23,7 @@ public interface IGraphicAssetFile : IAssetFile
     ResourceKind GfxResourceKind { get; }
 }
 
-public interface IGraphicAssetFile<out THandle> : IGraphicAssetFile where THandle : unmanaged
+public interface IGraphicAssetFile<out TId> : IGraphicAssetFile where TId : unmanaged, IResourceId
 {
-    THandle ResourceId { get; }
+    TId ResourceId { get; }
 }

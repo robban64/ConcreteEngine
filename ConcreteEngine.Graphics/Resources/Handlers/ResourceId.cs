@@ -8,26 +8,58 @@ using ConcreteEngine.Graphics.Error;
 
 namespace ConcreteEngine.Graphics.Resources;
 
+
+public readonly record struct GfxResourceIdRefToken<TId>() where TId : unmanaged, IResourceId;
+
+public readonly record struct GfxResourceId(int Value);
+
+
 public interface IResourceId
 {
     int Value { get; }
+    static abstract ResourceKind Kind { get; }
 }
 
-public readonly record struct TextureId(int Value) : IResourceId;
 
-public readonly record struct ShaderId(int Value) : IResourceId;
+public readonly record struct TextureId(int Value) : IResourceId
+{
+    public static ResourceKind Kind => ResourceKind.Texture;
+}
 
-public readonly record struct MeshId(int Value) : IResourceId;
+public readonly record struct ShaderId(int Value) : IResourceId
+{
+    public static ResourceKind Kind => ResourceKind.Shader;
+}
 
-public readonly record struct VertexBufferId(int Value) : IResourceId;
+public readonly record struct MeshId(int Value) : IResourceId
+{
+    public static ResourceKind Kind => ResourceKind.Mesh;
+}
 
-public readonly record struct IndexBufferId(int Value) : IResourceId;
+public readonly record struct VertexBufferId(int Value) : IResourceId
+{
+    public static ResourceKind Kind => ResourceKind.VertexBuffer;
+}
 
-public readonly record struct FrameBufferId(int Value) : IResourceId;
+public readonly record struct IndexBufferId(int Value) : IResourceId
+{
+    public static ResourceKind Kind => ResourceKind.IndexBuffer;
+}
 
-public readonly record struct RenderBufferId(int Value) : IResourceId;
+public readonly record struct FrameBufferId(int Value) : IResourceId
+{
+    public static ResourceKind Kind =>  ResourceKind.FrameBuffer;
+}
 
-public readonly record struct UniformBufferId(int Value) : IResourceId;
+public readonly record struct RenderBufferId(int Value) : IResourceId
+{
+    public static ResourceKind Kind => ResourceKind.FrameBuffer;
+}
+
+public readonly record struct UniformBufferId(int Value) : IResourceId
+{
+    public static ResourceKind Kind => ResourceKind.UniformBuffer;
+}
 
 public static class ResourceIdExtensions
 {

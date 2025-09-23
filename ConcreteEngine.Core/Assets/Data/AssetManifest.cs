@@ -30,13 +30,18 @@ public sealed class AssetResourceManifest<T> where T : IAssetManifestRecord
 public interface IAssetManifestRecord
 {
     string Name { get; }
+    
+     static abstract AssetKind Kind { get; }
 }
 
 public sealed record ShaderManifestRecord(
     string Name,
     string VertexFilename,
     string FragmentFilename
-) : IAssetManifestRecord;
+) : IAssetManifestRecord
+{
+    public static AssetKind Kind => AssetKind.Shader;
+}
 
 public sealed record TextureManifestRecord(
     string Name,
@@ -46,12 +51,18 @@ public sealed record TextureManifestRecord(
     TextureAnisotropy Anisotropy = TextureAnisotropy.Default,
     bool InMemory = false,
     float LodBias = -0.25f)
-    : IAssetManifestRecord;
+    : IAssetManifestRecord
+{
+    public static AssetKind Kind => AssetKind.Shader;
+}
 
 public sealed record MeshManifestRecord(
     string Name,
     string Filename)
-    : IAssetManifestRecord;
+    : IAssetManifestRecord
+{
+    public static AssetKind Kind => AssetKind.Shader;
+}
 
 public sealed record CubeMapManifestRecord(
     string Name,
@@ -60,8 +71,10 @@ public sealed record CubeMapManifestRecord(
     int Height,
     TexturePreset Preset,
     EnginePixelFormat PixelFormat = EnginePixelFormat.Rgba
-): IAssetManifestRecord;
-
+): IAssetManifestRecord
+{
+    public static AssetKind Kind => AssetKind.Shader;
+}
 
 public sealed record MaterialManifestRecord(
     string Name,
@@ -72,4 +85,5 @@ public sealed record MaterialManifestRecord(
 ) : IAssetManifestRecord
 {
     public Vector4 Color { get; init; } = Vector4.One;
+    public static AssetKind Kind => AssetKind.Shader;
 }

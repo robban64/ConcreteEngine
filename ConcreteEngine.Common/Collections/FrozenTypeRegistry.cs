@@ -37,4 +37,18 @@ public sealed class FrozenTypeRegistry<TKeyBase, TValue>
         if (_registry.TryGetValue(typeof(TKey), out var v)) return v;
         throw new KeyNotFoundException($"No registration for {typeof(TKey).FullName}");
     }
+    
+    public TValue GetUntyped(TKeyBase key)
+    {
+        InvalidOpThrower.ThrowIfNot(_frozen, nameof(_frozen));
+        if (_registry.TryGetValue(key!.GetType(), out var v)) return v;
+        throw new KeyNotFoundException($"No registration for {key.GetType().FullName}");
+    }
+
+    public void Reset()
+    {
+        _frozen = false;
+        _registry.Clear();
+        _registry.TrimExcess();
+    }
 }

@@ -35,6 +35,7 @@ public sealed class AssetSystem : IAssetSystem
     private readonly string _manifestFilename;
     
     private AssetLoader? _loader;
+    private AssetGfxUploader? _uploader;
 
     private MaterialStore _materialStore = null!;
 
@@ -72,7 +73,8 @@ public sealed class AssetSystem : IAssetSystem
     {
         IsLoading = true;
         var assetRecords = LoadManifest();
-        var loader = new AssetLoader(_assetPath, this);
+        _uploader = new AssetGfxUploader(gfx);
+        var loader = new AssetLoader(_assetPath, this, _uploader);
         loader.Start(assetRecords, gfx);
         _loader = loader;
     }

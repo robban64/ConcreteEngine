@@ -1,37 +1,47 @@
+#region
+
+using ConcreteEngine.Core.Assets.Manifest;
+
+#endregion
+
 namespace ConcreteEngine.Core.Assets.Loaders;
 
-
+internal interface IAssetTypeLoader;
 
 internal abstract class AssetTypeLoader<TRecord, TPayload>(IReadOnlyList<TRecord> records)
-    where TRecord : class, IAssetManifestRecord
-    where TPayload : struct, allows ref struct
+    : IAssetTypeLoader where TRecord : class, IAssetManifestRecord
 {
     private IReadOnlyList<TRecord> _records = records;
     private int _idx = 0;
-    
-    public abstract TPayload Get(TRecord record);
+
+    private AssetLoadEntry<TRecord, TPayload> LoadEntry = new();
+
+    public abstract TPayload ProcessResource(TRecord record, out AssetProcessInfo info);
+
+    public bool ProcessNext(out AssetLoadEntry<TRecord, TPayload> data)
+    {
+        if (_idx >= _records.Count)
+        {
+            data = null!;
+            return false;
+        }
+
+        var record = _records[_idx++];
+        var payload = ProcessResource(record, out var status);
+        LoadEntry.Payload = payload;
+        LoadEntry.ProcessInfo = status;
+        LoadEntry.Record = record;
+        data = LoadEntry;
+        return true;
+    }
 
     protected virtual void ClearCache()
     {
     }
-    
-    public bool ProcessNext(out TRecord? record, out TPayload data)
-    {
-        if (_idx >= _records.Count)
-        {
-            data = default;
-            record = null;
-            return false;
-        }
-        
-        record = _records[_idx++];
-        data = Get(record);
-        return true;
-    }
 
     public void Finish()
     {
-        _records = null;
+        _records = null!;
         ClearCache();
     }
 }

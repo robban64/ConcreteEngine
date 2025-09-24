@@ -1,25 +1,25 @@
+#region
+
 using System.Security.Cryptography;
 using System.Text;
 using System.Text.RegularExpressions;
-using ConcreteEngine.Graphics.Descriptors;
+using ConcreteEngine.Core.Assets.Manifest;
 using ConcreteEngine.Graphics.Resources;
+
+#endregion
 
 namespace ConcreteEngine.Core.Assets.Loaders;
 
-public readonly record struct TempShaderPayload(string Vs, string Fs);
-internal sealed class ShaderLoader(IReadOnlyList<ShaderManifestRecord> records) : AssetTypeLoader<ShaderManifestRecord, TempShaderPayload>(records)
-{
-    private static readonly UTF8Encoding ShaderEncoding = new (false, true);
-    
-    private readonly Dictionary<string, string> _vertexShaderCache = new(StringComparer.Ordinal);
-    
-    protected override void ClearCache()
-    {
-        _vertexShaderCache.Clear();
-        _vertexShaderCache.TrimExcess();
-    }
+internal sealed record ShaderPayload(string Vs, string Fs);
 
-    public override TempShaderPayload Get(ShaderManifestRecord record)
+internal sealed class ShaderLoader(IReadOnlyList<ShaderManifestRecord> records)
+    : AssetTypeLoader<ShaderManifestRecord, ShaderPayload>(records)
+{
+    private static readonly UTF8Encoding ShaderEncoding = new(false, true);
+
+    private readonly Dictionary<string, string> _vertexShaderCache = new(StringComparer.Ordinal);
+
+    public override ShaderPayload ProcessResource(ShaderManifestRecord record, out AssetProcessInfo info)
     {
         var vertPath = Path.Combine(AssetPaths.GetAbsolutePath(), "shaders", record.VertexFilename);
         var fragPath = Path.Combine(AssetPaths.GetAbsolutePath(), "shaders", record.FragmentFilename);
@@ -33,7 +33,14 @@ internal sealed class ShaderLoader(IReadOnlyList<ShaderManifestRecord> records) 
 
         var rawFragSource = File.ReadAllText(fragPath, ShaderEncoding);
         var fragmentSource = ResolveIncludes(rawFragSource);
-        return new TempShaderPayload(vertexSource, fragmentSource);
+        info = AssetProcessInfo.MakeDone<ShaderManifestRecord>();
+        return new ShaderPayload(vertexSource, fragmentSource);
+    }
+
+    protected override void ClearCache()
+    {
+        _vertexShaderCache.Clear();
+        _vertexShaderCache.TrimExcess();
     }
 
     private string ToHashSource(string source)
@@ -75,7 +82,4 @@ internal sealed class ShaderLoader(IReadOnlyList<ShaderManifestRecord> records) 
 
         return result;
     }
-
-
-
 }

@@ -1,9 +1,11 @@
+#region
+
 using System.Numerics;
-using System.Runtime.InteropServices;
-using ConcreteEngine.Graphics.Descriptors;
 using ConcreteEngine.Graphics.Primitives;
 using Silk.NET.Assimp;
 using AssimpMesh = Silk.NET.Assimp.Mesh;
+
+#endregion
 
 namespace ConcreteEngine.Core.Assets.IO;
 
@@ -30,6 +32,7 @@ internal sealed class MeshImporter
         _assimp?.Dispose();
         _assimp = null;
     }
+
 //TODO fix
     public unsafe (List<Vertex3D> Vertices, List<uint> Indices) ImportMesh(string path)
     {
@@ -150,6 +153,6 @@ internal sealed class MeshImporter
 
         float unitScale = 1f; // cm->0.01f, mm->0.001f, m->1f
 
-        return unitScale * ((maxDim > 100f) ? 0.01f : (maxDim < 0.01f ? 0.001f : 1f));
+        return unitScale * (maxDim > 100f ? 0.01f : maxDim < 0.01f ? 0.001f : 1f);
     }
 }

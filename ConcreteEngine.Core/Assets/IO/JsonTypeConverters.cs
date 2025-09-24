@@ -8,7 +8,6 @@ using System.Text.Json.Serialization;
 
 namespace ConcreteEngine.Core.Assets.IO;
 
-
 sealed class Vector2Converter : JsonConverter<Vector2>
 {
     public override Vector2 Read(ref Utf8JsonReader r, Type t, JsonSerializerOptions o)

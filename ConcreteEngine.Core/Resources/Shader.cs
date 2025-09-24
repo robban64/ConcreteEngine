@@ -15,6 +15,6 @@ public sealed class Shader : IGraphicAssetFile<ShaderId>
     public required ShaderId ResourceId { get; init; }
     public required int Samplers { get; init; }
 
-    public AssetFileType AssetType => AssetFileType.Shader;
+    public AssetKind AssetType => AssetKind.Shader;
     public ResourceKind GfxResourceKind => ResourceKind.Shader;
 }

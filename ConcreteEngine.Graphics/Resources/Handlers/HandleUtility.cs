@@ -8,6 +8,7 @@ namespace ConcreteEngine.Graphics.Resources;
 
 internal static class HandleUtility
 {
+    /*
     private static readonly Dictionary<Type, ResourceKind> ResourceIdToKind = new()
     {
         [typeof(TextureId)] = ResourceKind.Texture,
@@ -24,7 +25,7 @@ internal static class HandleUtility
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static ResourceKind ToResourceKind<TId>() where TId : unmanaged, IResourceId =>
         ResourceIdToKind[typeof(TId)];
-
+*/
     /*
 
        public static ResourceKind FromId<TId>() where TId : unmanaged, IResourceId

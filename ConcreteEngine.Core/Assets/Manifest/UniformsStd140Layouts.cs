@@ -1,6 +1,10 @@
+#region
+
 using ConcreteEngine.Graphics.Resources;
 
-namespace ConcreteEngine.Core.Assets;
+#endregion
+
+namespace ConcreteEngine.Core.Assets.Manifest;
 
 public static class UniformsStd140Layouts
 {
@@ -11,7 +15,7 @@ public static class UniformsStd140Layouts
             { UniformGpuSlot.Camera, CameraUniform },
             { UniformGpuSlot.DirLight, DirLightUniform },
             { UniformGpuSlot.Material, MaterialUniform },
-            { UniformGpuSlot.DrawObject, DrawUniform },
+            { UniformGpuSlot.DrawObject, DrawUniform }
         };
 
     private const string FrameGlobalUniform =

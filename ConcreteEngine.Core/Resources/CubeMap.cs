@@ -13,6 +13,6 @@ public sealed class CubeMap : IGraphicAssetFile<TextureId>, IResourceTexture
     public required int Height { get; init; }
     public required EnginePixelFormat PixelFormat { get; init; }
     
-    public AssetFileType AssetType => AssetFileType.Cubemap;
+    public AssetKind AssetType => AssetKind.CubeMap;
     public ResourceKind GfxResourceKind => ResourceKind.Texture;
 }

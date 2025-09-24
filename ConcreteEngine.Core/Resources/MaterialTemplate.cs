@@ -18,7 +18,7 @@ public sealed class MaterialTemplate : IAssetFile
     public CubeMap? CubeMap { get; init; } = null;
 
     public Vector4 Color { get; set; } = Vector4.One;
-    public AssetFileType AssetType => AssetFileType.Material;
+    public AssetKind AssetType => AssetKind.Material;
 
     private TextureId[] _samplerSlots = null!;
     internal TextureId[] SamplerSlots =>  _samplerSlots;

@@ -16,8 +16,8 @@ internal sealed class AssetGfxUploader
     {
         _gfx = gfx;
     }
-    
-    public MeshId UploadMesh(MeshManifestRecord record, in MeshLoaderResult payload)
+
+    public MeshId UploadMesh(MeshManifestRecord record, in MeshResultPayload payload, out MeshCreationInfo info)
     {
         ReadOnlySpan<Vertex3D> vSpan = CollectionsMarshal.AsSpan(payload.Vertices);
         ReadOnlySpan<uint> iSpan = CollectionsMarshal.AsSpan(payload.Indices);
@@ -27,68 +27,38 @@ internal sealed class AssetGfxUploader
         builder.UploadIndices(iSpan, BufferUsage.StaticDraw, BufferStorage.Static, BufferAccess.None);
         builder.SetAttributeRange(payload.Attributes);
         var meshId = builder.Finish();
-
-        return new Mesh
-        {
-            Name = record.Name,
-            Filename = record.Filename,
-            DrawCount = payload.Properties.DrawCount,
-            ResourceId = meshId
-        };
+        info = new MeshCreationInfo();
+        return meshId;
     }
 
-    public TextureId UploadTexture(TextureManifestRecord record, in TexturePayload payload)
+    public TextureId UploadTexture(TextureManifestRecord record, in TexturePayload payload, out TextureCreationInfo info)
     {
         var desc = payload.Descriptor;
-        var id = _gfx.Textures.CreateTexture2D(payload.Data.Span, in desc);
-
-        //var data = record.InMemory ? _dataCache[record.Name] : null;
-        return new Texture2D
-        {
-            Name = record.Name,
-            Path = record.Filename,
-            ResourceId = id,
-            Width = payload.Descriptor.Width,
-            Height = payload.Descriptor.Height,
-            PixelFormat = payload.Descriptor.Format,
-            Preset = record.Preset,
-            Anisotropy = record.Anisotropy
-        };
+        var inMemoryData = record.InMemory ? payload.Data : null;
+        info = new TextureCreationInfo(desc.Width, desc.Height, desc.Format, inMemoryData);
+        return _gfx.Textures.CreateTexture2D(payload.Data, in desc);
     }
-    
-    public TextureId UploadCubeMap(CubeMapManifestRecord record, in CubeMapPayload payload)
+
+    public TextureId UploadCubeMap(CubeMapManifestRecord record, in CubeMapPayload payload, out CubeMapCreationInfo info)
     {
         var desc = payload.Descriptor;
         var textureId = _gfx.Textures.CreateCubeMap(in desc);
-        _gfx.Textures.UploadCubeMapFace(textureId, payload.Data.Span, desc.Width, desc.Height, 0);
-        for (int i = 1; i < 6; i++)
-        {
-            var face = loader.LoadFaceData(record!, i);
-            _gfx.Textures.UploadCubeMapFace(textureId, face.Data, face.Descriptor.Width, face.Descriptor.Height, i);
-        }
-
-        return new CubeMap
-        {
-            Name = record!.Name,
-            ResourceId = textureId,
-            Textures = record.Textures,
-            Width = record.Width,
-            Height = record.Height,
-            PixelFormat = payload.Descriptor.Format
-        };
+        for (int i = 0; i < 6; i++)
+            _gfx.Textures.UploadCubeMapFace(
+                textureId,
+                payload.FaceData[i].Span,
+                record.Width,
+                record.Height,
+                i
+            );
+        info = new CubeMapCreationInfo(desc.Width, desc.Height, desc.Format);
+        return textureId;
     }
 
-    public ShaderId UploadShader(ShaderManifestRecord record, in ShaderPayload data)
+    public ShaderId UploadShader(ShaderManifestRecord record, in ShaderPayload data, out ShaderCreationInfo info)
     {
-        var id = _gfx.Shaders.CreateShader(data.Vs, data.Fs, out var samplers);
-
-        return new Shader
-        {
-            Name = record.Name,
-            FragShaderFilename = record.FragmentFilename,
-            VertShaderFilename = record.VertexFilename,
-            ResourceId = id,
-            Samplers = samplers
-        };
+        var shaderId = _gfx.Shaders.CreateShader(data.Vs, data.Fs, out var samplers);
+        info = new ShaderCreationInfo(samplers);
+        return shaderId;
     }
 }

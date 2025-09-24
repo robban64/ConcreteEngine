@@ -34,7 +34,7 @@ public sealed class AssetSystem : IAssetSystem
     private readonly string _assetPath;
     private readonly string _manifestFilename;
     
-    private AssetLoader? _loader;
+    private AssetProcessor? _loader;
     private AssetGfxUploader? _uploader;
 
     private MaterialStore _materialStore = null!;
@@ -74,8 +74,8 @@ public sealed class AssetSystem : IAssetSystem
         IsLoading = true;
         var assetRecords = LoadManifest();
         _uploader = new AssetGfxUploader(gfx);
-        var loader = new AssetLoader(_assetPath, this, _uploader);
-        loader.Start(assetRecords, gfx);
+        var loader = new AssetProcessor(_assetPath, _uploader);
+        loader.Start(assetRecords);
         _loader = loader;
     }
 
@@ -86,10 +86,24 @@ public sealed class AssetSystem : IAssetSystem
         
         for (int i = 0; i < n; i++)
         {
-            if (_loader!.Process()) return true;
+            if (_loader!.Process(out var finalEntry)) return true;
+            AssembleFinalAsset(finalEntry);
         }
 
         return false;
+    }
+
+    private void AssembleFinalAsset(IAssetFinalEntry finalEntry)
+    {
+        if(finalEntry is AssetFinalEntry<MeshManifestRecord, MeshCreationInfo, MeshId> meshEntry)
+            AddResource(AssetFactory.MakeMesh(meshEntry));
+        if(finalEntry is AssetFinalEntry<TextureManifestRecord, TextureCreationInfo, TextureId> texEntry)
+            AddResource(AssetFactory.MakeTexture(texEntry));
+        if(finalEntry is AssetFinalEntry<CubeMapManifestRecord, CubeMapCreationInfo, TextureId> cubeEntry)
+            AddResource(AssetFactory.MakeCubeMap(cubeEntry));
+        if(finalEntry is AssetFinalEntry<ShaderManifestRecord, ShaderCreationInfo, ShaderId> shaderEntry)
+            AddResource(AssetFactory.MakeShader(shaderEntry));
+
     }
 
     internal MaterialStore FinishLoading()

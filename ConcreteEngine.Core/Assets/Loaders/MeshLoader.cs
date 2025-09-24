@@ -1,4 +1,5 @@
 using System.Numerics;
+using System.Runtime.InteropServices;
 using ConcreteEngine.Core.Assets.IO;
 using ConcreteEngine.Core.Resources;
 using ConcreteEngine.Graphics;
@@ -10,7 +11,7 @@ using ConcreteEngine.Graphics.Utils;
 
 namespace ConcreteEngine.Core.Assets.Loaders;
 
-internal sealed record MeshLoaderResult
+internal sealed record MeshResultPayload
 {
     public required MeshDrawProperties Properties  { get; init; }
     public required List<uint> Indices { get; init; }
@@ -18,7 +19,7 @@ internal sealed record MeshLoaderResult
     public required IReadOnlyList<VertexAttributeDesc> Attributes { get; init; }
 }
 
-internal sealed class MeshLoader : AssetTypeLoader<MeshManifestRecord, MeshLoaderResult>
+internal sealed class MeshLoader : AssetTypeLoader<MeshManifestRecord, MeshResultPayload>
 {
     private static VertexAttributeDesc[] DefaultAttribs { get; set; } = Array.Empty<VertexAttributeDesc>();
 
@@ -38,14 +39,14 @@ internal sealed class MeshLoader : AssetTypeLoader<MeshManifestRecord, MeshLoade
     }
 
 
-    public override MeshLoaderResult ProcessResource(MeshManifestRecord record, out AssetProcessInfo info)
+    public override MeshResultPayload ProcessResource(MeshManifestRecord record, out AssetProcessInfo info)
     {
         var path = Path.Combine(AssetPaths.GetAbsolutePath(), "meshes", record.Filename);
 
         var (vertices, indices) = _meshImporter.ImportMesh(path);
         
         info = AssetProcessInfo.MakeDone<MeshManifestRecord>();
-        return new MeshLoaderResult
+        return new MeshResultPayload
         {
             Attributes = DefaultAttribs,
             Vertices = vertices,

@@ -2,6 +2,7 @@
 
 using System.Text.Json;
 using System.Text.Json.Serialization;
+using ConcreteEngine.Core.Assets.Factories;
 using ConcreteEngine.Core.Assets.IO;
 using ConcreteEngine.Core.Resources;
 using ConcreteEngine.Core.Systems;
@@ -30,6 +31,7 @@ public sealed class AssetSystem : IAssetSystem
     private static bool _initialized = false;
 
     private readonly Dictionary<AssetKey, IAssetFile> _store = new(32);
+    private readonly AssetAssemblerRegistry _assemblerRegistry = new();
 
     private readonly string _assetPath;
     private readonly string _manifestFilename;
@@ -87,7 +89,8 @@ public sealed class AssetSystem : IAssetSystem
         for (int i = 0; i < n; i++)
         {
             if (_loader!.Process(out var finalEntry)) return true;
-            AssembleFinalAsset(finalEntry);
+            if(finalEntry != null)
+                AssembleFinalAsset(finalEntry);
         }
 
         return false;
@@ -95,6 +98,8 @@ public sealed class AssetSystem : IAssetSystem
 
     private void AssembleFinalAsset(IAssetFinalEntry finalEntry)
     {
+        _assemblerRegistry.AssembleAsset(finalEntry, this);
+        /*
         if(finalEntry is AssetFinalEntry<MeshManifestRecord, MeshCreationInfo, MeshId> meshEntry)
             AddResource(AssetFactory.MakeMesh(meshEntry));
         if(finalEntry is AssetFinalEntry<TextureManifestRecord, TextureCreationInfo, TextureId> texEntry)
@@ -103,6 +108,7 @@ public sealed class AssetSystem : IAssetSystem
             AddResource(AssetFactory.MakeCubeMap(cubeEntry));
         if(finalEntry is AssetFinalEntry<ShaderManifestRecord, ShaderCreationInfo, ShaderId> shaderEntry)
             AddResource(AssetFactory.MakeShader(shaderEntry));
+            */
 
     }
 

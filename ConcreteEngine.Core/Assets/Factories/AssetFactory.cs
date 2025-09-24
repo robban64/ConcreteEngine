@@ -2,7 +2,7 @@ using ConcreteEngine.Core.Resources;
 using ConcreteEngine.Graphics.Resources;
 
 namespace ConcreteEngine.Core.Assets;
-
+/*
 internal static class AssetFactory
 {
 
@@ -62,4 +62,4 @@ internal static class AssetFactory
             Samplers = entry.Descriptor.Samplers
         };
     }
-}
+}*/

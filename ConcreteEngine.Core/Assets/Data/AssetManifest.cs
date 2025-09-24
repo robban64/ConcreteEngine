@@ -53,7 +53,7 @@ public sealed record TextureManifestRecord(
     float LodBias = -0.25f)
     : IAssetManifestRecord
 {
-    public static AssetKind Kind => AssetKind.Shader;
+    public static AssetKind Kind => AssetKind.Texture2D;
 }
 
 public sealed record MeshManifestRecord(
@@ -61,7 +61,7 @@ public sealed record MeshManifestRecord(
     string Filename)
     : IAssetManifestRecord
 {
-    public static AssetKind Kind => AssetKind.Shader;
+    public static AssetKind Kind => AssetKind.Mesh;
 }
 
 public sealed record CubeMapManifestRecord(
@@ -73,7 +73,7 @@ public sealed record CubeMapManifestRecord(
     EnginePixelFormat PixelFormat = EnginePixelFormat.Rgba
 ): IAssetManifestRecord
 {
-    public static AssetKind Kind => AssetKind.Shader;
+    public static AssetKind Kind => AssetKind.CubeMap;
 }
 
 public sealed record MaterialManifestRecord(
@@ -85,5 +85,5 @@ public sealed record MaterialManifestRecord(
 ) : IAssetManifestRecord
 {
     public Vector4 Color { get; init; } = Vector4.One;
-    public static AssetKind Kind => AssetKind.Shader;
+    public static AssetKind Kind => AssetKind.Material;
 }

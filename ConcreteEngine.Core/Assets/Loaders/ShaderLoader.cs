@@ -1,8 +1,12 @@
+#region
+
 using System.Security.Cryptography;
 using System.Text;
 using System.Text.RegularExpressions;
-using ConcreteEngine.Graphics.Descriptors;
+using ConcreteEngine.Core.Assets.Manifest;
 using ConcreteEngine.Graphics.Resources;
+
+#endregion
 
 namespace ConcreteEngine.Core.Assets.Loaders;
 
@@ -31,7 +35,6 @@ internal sealed class ShaderLoader(IReadOnlyList<ShaderManifestRecord> records)
         var fragmentSource = ResolveIncludes(rawFragSource);
         info = AssetProcessInfo.MakeDone<ShaderManifestRecord>();
         return new ShaderPayload(vertexSource, fragmentSource);
-        
     }
 
     protected override void ClearCache()

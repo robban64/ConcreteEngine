@@ -1,10 +1,14 @@
+#region
+
 using System.Runtime.InteropServices;
 using ConcreteEngine.Core.Assets.Loaders;
-using ConcreteEngine.Core.Resources;
+using ConcreteEngine.Core.Assets.Manifest;
 using ConcreteEngine.Graphics;
 using ConcreteEngine.Graphics.Gfx;
 using ConcreteEngine.Graphics.Primitives;
 using ConcreteEngine.Graphics.Resources;
+
+#endregion
 
 namespace ConcreteEngine.Core.Assets;
 
@@ -31,7 +35,8 @@ internal sealed class AssetGfxUploader
         return meshId;
     }
 
-    public TextureId UploadTexture(TextureManifestRecord record, in TexturePayload payload, out TextureCreationInfo info)
+    public TextureId UploadTexture(TextureManifestRecord record, in TexturePayload payload,
+        out TextureCreationInfo info)
     {
         var desc = payload.Descriptor;
         var inMemoryData = record.InMemory ? payload.Data : null;
@@ -39,7 +44,8 @@ internal sealed class AssetGfxUploader
         return _gfx.Textures.CreateTexture2D(payload.Data, in desc);
     }
 
-    public TextureId UploadCubeMap(CubeMapManifestRecord record, in CubeMapPayload payload, out CubeMapCreationInfo info)
+    public TextureId UploadCubeMap(CubeMapManifestRecord record, in CubeMapPayload payload,
+        out CubeMapCreationInfo info)
     {
         var desc = payload.Descriptor;
         var textureId = _gfx.Textures.CreateCubeMap(in desc);

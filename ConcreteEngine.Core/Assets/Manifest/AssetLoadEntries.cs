@@ -1,6 +1,8 @@
-using ConcreteEngine.Graphics.Resources;
+#region
 
-namespace ConcreteEngine.Core.Assets;
+#endregion
+
+namespace ConcreteEngine.Core.Assets.Manifest;
 
 public enum AssetProcessStatus
 {

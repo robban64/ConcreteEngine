@@ -1,5 +1,10 @@
+#region
+
+using ConcreteEngine.Core.Assets.Manifest;
 using ConcreteEngine.Core.Resources;
 using ConcreteEngine.Graphics.Resources;
+
+#endregion
 
 namespace ConcreteEngine.Core.Assets.Factories;
 
@@ -44,7 +49,6 @@ internal sealed class ShaderAssembler
     }
 }
 
-
 internal sealed class TextureAssembler
     : AssetAssembler<TextureManifestRecord, TextureCreationInfo, TextureId, Texture2D>
 {
@@ -59,7 +63,7 @@ internal sealed class TextureAssembler
             Height = info.Height,
             PixelFormat = info.PixelFormat,
             Preset = record.Preset,
-            Anisotropy = record.Anisotropy,
+            Anisotropy = record.Anisotropy
         };
         if (info.Data is { } tData)
         {
@@ -88,19 +92,11 @@ internal sealed class CubeMapAssembler
     }
 }
 
-
 internal sealed class MeshAssembler
     : AssetAssembler<MeshManifestRecord, MeshCreationInfo, MeshId, Mesh>
 {
     protected override Mesh Build(MeshManifestRecord record, in MeshCreationInfo info, MeshId id)
     {
-        return new Mesh
-        {
-            Name = record.Name,
-            Filename = record.Filename,
-            DrawCount = info.DrawCount,
-            ResourceId = id
-        };
+        return new Mesh { Name = record.Name, Filename = record.Filename, DrawCount = info.DrawCount, ResourceId = id };
     }
 }
-

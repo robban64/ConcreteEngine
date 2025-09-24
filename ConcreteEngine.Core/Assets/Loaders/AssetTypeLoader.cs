@@ -1,19 +1,24 @@
-using ConcreteEngine.Graphics.Resources;
+#region
+
+using ConcreteEngine.Core.Assets.Manifest;
+
+#endregion
 
 namespace ConcreteEngine.Core.Assets.Loaders;
 
 internal interface IAssetTypeLoader;
-internal abstract class AssetTypeLoader<TRecord, TPayload>(IReadOnlyList<TRecord> records) 
+
+internal abstract class AssetTypeLoader<TRecord, TPayload>(IReadOnlyList<TRecord> records)
     : IAssetTypeLoader where TRecord : class, IAssetManifestRecord
 {
     private IReadOnlyList<TRecord> _records = records;
     private int _idx = 0;
 
     private AssetLoadEntry<TRecord, TPayload> LoadEntry = new();
-    
+
     public abstract TPayload ProcessResource(TRecord record, out AssetProcessInfo info);
 
-    public bool ProcessNext(out AssetLoadEntry<TRecord,TPayload> data)
+    public bool ProcessNext(out AssetLoadEntry<TRecord, TPayload> data)
     {
         if (_idx >= _records.Count)
         {
@@ -29,7 +34,7 @@ internal abstract class AssetTypeLoader<TRecord, TPayload>(IReadOnlyList<TRecord
         data = LoadEntry;
         return true;
     }
-    
+
     protected virtual void ClearCache()
     {
     }

@@ -4,11 +4,10 @@ using System.Text.Json;
 using System.Text.Json.Serialization;
 using ConcreteEngine.Core.Assets.Factories;
 using ConcreteEngine.Core.Assets.IO;
+using ConcreteEngine.Core.Assets.Manifest;
 using ConcreteEngine.Core.Resources;
 using ConcreteEngine.Core.Systems;
-using ConcreteEngine.Graphics;
 using ConcreteEngine.Graphics.Gfx;
-using ConcreteEngine.Graphics.Resources;
 
 #endregion
 
@@ -35,7 +34,7 @@ public sealed class AssetSystem : IAssetSystem
 
     private readonly string _assetPath;
     private readonly string _manifestFilename;
-    
+
     private AssetProcessor? _loader;
     private AssetGfxUploader? _uploader;
 
@@ -44,6 +43,7 @@ public sealed class AssetSystem : IAssetSystem
     public MaterialStore MaterialStore => _materialStore;
 
     private readonly JsonSerializerOptions _jsonOptions;
+    private readonly JsonSerializerOptions _jsonManifestOptions;
 
     public bool IsLoading { get; private set; } = false;
 
@@ -55,7 +55,7 @@ public sealed class AssetSystem : IAssetSystem
     {
         _assetPath = assetPath;
         _manifestFilename = manifestFilename;
-        
+
         _jsonOptions = new JsonSerializerOptions
         {
             PropertyNamingPolicy = JsonNamingPolicy.CamelCase,
@@ -67,6 +67,11 @@ public sealed class AssetSystem : IAssetSystem
                 new Vector3Converter(),
                 new Vector4Converter()
             }
+        };
+
+        _jsonManifestOptions = new JsonSerializerOptions(_jsonOptions)
+        {
+            TypeInfoResolverChain = { ManifestJsonContext.Default }
         };
     }
 
@@ -83,13 +88,13 @@ public sealed class AssetSystem : IAssetSystem
 
     internal bool ProcessLoader(int n)
     {
-        if(_loader == null)
+        if (_loader == null)
             throw new InvalidOperationException("Asset loader is not initialized");
-        
+
         for (int i = 0; i < n; i++)
         {
             if (_loader!.Process(out var finalEntry)) return true;
-            if(finalEntry != null)
+            if (finalEntry != null)
                 AssembleFinalAsset(finalEntry);
         }
 
@@ -99,24 +104,13 @@ public sealed class AssetSystem : IAssetSystem
     private void AssembleFinalAsset(IAssetFinalEntry finalEntry)
     {
         _assemblerRegistry.AssembleAsset(finalEntry, this);
-        /*
-        if(finalEntry is AssetFinalEntry<MeshManifestRecord, MeshCreationInfo, MeshId> meshEntry)
-            AddResource(AssetFactory.MakeMesh(meshEntry));
-        if(finalEntry is AssetFinalEntry<TextureManifestRecord, TextureCreationInfo, TextureId> texEntry)
-            AddResource(AssetFactory.MakeTexture(texEntry));
-        if(finalEntry is AssetFinalEntry<CubeMapManifestRecord, CubeMapCreationInfo, TextureId> cubeEntry)
-            AddResource(AssetFactory.MakeCubeMap(cubeEntry));
-        if(finalEntry is AssetFinalEntry<ShaderManifestRecord, ShaderCreationInfo, ShaderId> shaderEntry)
-            AddResource(AssetFactory.MakeShader(shaderEntry));
-            */
-
     }
 
     internal MaterialStore FinishLoading()
     {
         var materials = LoadMaterialStore("materials.json");
         _materialStore = new MaterialStore(materials);
-        
+
         _loader.Finish();
         _loader = null;
         IsLoading = true;
@@ -165,7 +159,7 @@ public sealed class AssetSystem : IAssetSystem
                 disposable.Dispose();
     }
 
-    private AssetRecordResult LoadManifest()
+    private AssetManifestBundle LoadManifest()
     {
         if (!Directory.Exists(_assetPath))
         {
@@ -180,12 +174,15 @@ public sealed class AssetSystem : IAssetSystem
 
         Console.WriteLine("Loading Asset Manifest...");
 
-        var json = File.ReadAllText(manifestPath);
-        var assetManifest = JsonSerializer.Deserialize<AssetManifest>(json, _jsonOptions) ??
+        using var fs = new FileStream(
+            manifestPath, FileMode.Open, FileAccess.Read, FileShare.Read, 64 * 1024,
+            FileOptions.SequentialScan);
+
+        var assetManifest = JsonSerializer.Deserialize<AssetManifest>(fs, _jsonOptions) ??
                             throw new InvalidDataException("Invalid manifest.");
 
         var m = assetManifest.ResourceManifest;
-        return new AssetRecordResult
+        return new AssetManifestBundle
         {
             Textures = LoadAllEntries<TextureManifestRecord>(m.Texture, true)!,
             Shaders = LoadAllEntries<ShaderManifestRecord>(m.Shader, true)!,
@@ -196,20 +193,22 @@ public sealed class AssetSystem : IAssetSystem
 
     internal void AddResource<T>(T resource) where T : class, IGraphicAssetFile
     {
-        if(!_store.TryAdd(AssetKey.For<T>(resource.Name), resource))
+        if (!_store.TryAdd(AssetKey.For<T>(resource.Name), resource))
             throw new InvalidOperationException($"Asset '{resource.Name}' is already exists.");
     }
-    
+
     private void LoadResources<T>(IReadOnlyList<T> resources) where T : class, IGraphicAssetFile
     {
         foreach (var resource in resources)
         {
-            if(!_store.TryAdd(AssetKey.For<T>(resource.Name), resource))
+            if (!_store.TryAdd(AssetKey.For<T>(resource.Name), resource))
                 throw new InvalidOperationException($"Asset '{resource.Name}' is already exists.");
         }
     }
 
-    private AssetResourceManifest<T>? LoadAllEntries<T>(string manifestFilename, bool required) where T : IAssetManifestRecord
+
+    private AssetResourceManifest<T>? LoadAllEntries<T>(string manifestFilename, bool required)
+        where T : IAssetManifestRecord
     {
         ArgumentNullException.ThrowIfNull(manifestFilename, nameof(manifestFilename));
 
@@ -223,9 +222,12 @@ public sealed class AssetSystem : IAssetSystem
         }
 
 
-        var json = File.ReadAllText(path);
-        var manifest = JsonSerializer.Deserialize<AssetResourceManifest<T>>(json, _jsonOptions) ??
-                       throw new InvalidDataException($"Invalid resource manifest for {typeof(T).Name}.");
+        using var fs = new FileStream(
+            path, FileMode.Open, FileAccess.Read, FileShare.Read, 64 * 1024,
+            FileOptions.SequentialScan);
+
+        var manifest = JsonSerializer.Deserialize<AssetResourceManifest<T>>(fs, _jsonManifestOptions)
+                       ?? throw new InvalidDataException($"Invalid resource manifest for {typeof(T).Name}.");
 
         if (manifest.Resources == null)
             throw new InvalidDataException($"{typeof(T).Name} manifest have null resources.");
@@ -234,7 +236,7 @@ public sealed class AssetSystem : IAssetSystem
 
         return manifest;
     }
-    
+
     /*
 public void Remove<T>(T assetFile) where T : class, IAssetFile
 {
@@ -248,15 +250,15 @@ public void Remove<T>(T assetFile) where T : class, IAssetFile
 }
 */
 
-   
+
     private IReadOnlyList<MaterialTemplate>? LoadMaterialStore(string manifestFilename)
     {
-        var entries = 
+        var entries =
             LoadAllEntries<MaterialManifestRecord>(manifestFilename, true);
-        
+
         ArgumentNullException.ThrowIfNull(entries, nameof(entries));
-        
-        if(entries.Resources.Count == 0) return null;
+
+        if (entries.Resources.Length == 0) return null;
 
         var result = new List<MaterialTemplate>();
 
@@ -264,15 +266,15 @@ public void Remove<T>(T assetFile) where T : class, IAssetFile
         foreach (var entry in resources)
         {
             var mat = MaterialHandler(entry);
-            if(!_store.TryAdd(AssetKey.For<MaterialTemplate>(mat.Name), mat))
+            if (!_store.TryAdd(AssetKey.For<MaterialTemplate>(mat.Name), mat))
                 throw new InvalidOperationException($"Asset '{mat.Name}' is already exists.");
-            
+
             result.Add(mat);
         }
 
         foreach (var mat in result)
             mat.Initialize();
-        
+
         _materialStore = new MaterialStore(result);
         return result;
 
@@ -301,10 +303,8 @@ public void Remove<T>(T assetFile) where T : class, IAssetFile
                 Shader = shader,
                 Color = record.Color,
                 Textures = textures,
-                CubeMap = cubeMap,
+                CubeMap = cubeMap
             };
-
         }
     }
-  
 }

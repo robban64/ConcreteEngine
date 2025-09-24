@@ -1,9 +1,13 @@
+#region
+
 using ConcreteEngine.Graphics;
 using ConcreteEngine.Graphics.Resources;
 
-namespace ConcreteEngine.Core.Assets;
+#endregion
 
-interface IAssetFinalEntry
+namespace ConcreteEngine.Core.Assets.Manifest;
+
+internal interface IAssetFinalEntry
 {
     AssetProcessInfo ProcessInfo { get; }
 }
@@ -17,7 +21,6 @@ internal sealed record AssetFinalEntry<TRecord, TDescriptor, TGfxId>(
     where TRecord : class, IAssetManifestRecord
     where TDescriptor : struct
     where TGfxId : unmanaged, IResourceId;
-
 
 internal record struct MeshCreationInfo(int DrawCount);
 

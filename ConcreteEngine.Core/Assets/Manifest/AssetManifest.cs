@@ -6,7 +6,7 @@ using ConcreteEngine.Graphics;
 
 #endregion
 
-namespace ConcreteEngine.Core.Assets;
+namespace ConcreteEngine.Core.Assets.Manifest;
 
 public sealed class AssetManifest
 {
@@ -24,14 +24,14 @@ public sealed class AssetManifest
 public sealed class AssetResourceManifest<T> where T : IAssetManifestRecord
 {
     public string? Folder { get; init; }
-    public List<T> Resources { get; init; }
+    public T[] Resources { get; init; } = Array.Empty<T>();
 }
 
 public interface IAssetManifestRecord
 {
     string Name { get; }
-    
-     static abstract AssetKind Kind { get; }
+
+    static abstract AssetKind Kind { get; }
 }
 
 public sealed record ShaderManifestRecord(
@@ -71,7 +71,7 @@ public sealed record CubeMapManifestRecord(
     int Height,
     TexturePreset Preset,
     EnginePixelFormat PixelFormat = EnginePixelFormat.Rgba
-): IAssetManifestRecord
+) : IAssetManifestRecord
 {
     public static AssetKind Kind => AssetKind.CubeMap;
 }

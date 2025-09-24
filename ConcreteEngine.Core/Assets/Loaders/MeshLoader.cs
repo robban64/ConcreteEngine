@@ -1,19 +1,21 @@
+#region
+
 using System.Numerics;
-using System.Runtime.InteropServices;
 using ConcreteEngine.Core.Assets.IO;
+using ConcreteEngine.Core.Assets.Manifest;
 using ConcreteEngine.Core.Resources;
 using ConcreteEngine.Graphics;
 using ConcreteEngine.Graphics.Contracts;
-using ConcreteEngine.Graphics.Descriptors;
 using ConcreteEngine.Graphics.Gfx.Utility;
 using ConcreteEngine.Graphics.Primitives;
-using ConcreteEngine.Graphics.Utils;
+
+#endregion
 
 namespace ConcreteEngine.Core.Assets.Loaders;
 
 internal sealed record MeshResultPayload
 {
-    public required MeshDrawProperties Properties  { get; init; }
+    public required MeshDrawProperties Properties { get; init; }
     public required List<uint> Indices { get; init; }
     public required List<Vertex3D> Vertices { get; init; }
     public required IReadOnlyList<VertexAttributeDesc> Attributes { get; init; }
@@ -24,17 +26,18 @@ internal sealed class MeshLoader : AssetTypeLoader<MeshManifestRecord, MeshResul
     private static VertexAttributeDesc[] DefaultAttribs { get; set; } = Array.Empty<VertexAttributeDesc>();
 
     private readonly List<Mesh> _results = new(16);
-    
+
     private readonly MeshImporter _meshImporter = new();
 
     public MeshLoader(IReadOnlyList<MeshManifestRecord> records) : base(records)
     {
         var attribBuilder = new VertexAttributeMaker<Vertex3D>();
-        DefaultAttribs = [
-           attribBuilder.Make<Vector3>(),
-           attribBuilder.Make<Vector2>(),
-           attribBuilder.Make<Vector3>(),
-           attribBuilder.Make<Vector3>(),
+        DefaultAttribs =
+        [
+            attribBuilder.Make<Vector3>(),
+            attribBuilder.Make<Vector2>(),
+            attribBuilder.Make<Vector3>(),
+            attribBuilder.Make<Vector3>()
         ];
     }
 
@@ -44,7 +47,7 @@ internal sealed class MeshLoader : AssetTypeLoader<MeshManifestRecord, MeshResul
         var path = Path.Combine(AssetPaths.GetAbsolutePath(), "meshes", record.Filename);
 
         var (vertices, indices) = _meshImporter.ImportMesh(path);
-        
+
         info = AssetProcessInfo.MakeDone<MeshManifestRecord>();
         return new MeshResultPayload
         {
@@ -59,7 +62,6 @@ internal sealed class MeshLoader : AssetTypeLoader<MeshManifestRecord, MeshResul
                 Primitive = DrawPrimitive.Triangles
             }
         };
-        
     }
 
     protected override void ClearCache()

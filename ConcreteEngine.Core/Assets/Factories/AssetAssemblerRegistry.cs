@@ -1,3 +1,5 @@
+using ConcreteEngine.Core.Assets.Manifest;
+
 namespace ConcreteEngine.Core.Assets.Factories;
 
 internal sealed class AssetAssemblerRegistry
@@ -21,13 +23,11 @@ internal sealed class AssetAssemblerRegistry
             throw new NotSupportedException($"No assembler for {finalEntry.ProcessInfo.AssetType}");
 
         asm.Assemble(finalEntry, assetSystem);
-
     }
-    
+
     private void RegisterAssembler(IAssetAssembler assembler)
     {
-        if(!_assemblers.TryAdd(assembler.Kind, assembler))
+        if (!_assemblers.TryAdd(assembler.Kind, assembler))
             throw new InvalidOperationException($"Duplicate assembler with kind {assembler.Kind}");
     }
-
 }

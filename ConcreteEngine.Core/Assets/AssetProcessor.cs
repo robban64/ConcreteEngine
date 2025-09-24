@@ -1,13 +1,7 @@
 #region
 
-using System.Runtime.InteropServices;
-using ConcreteEngine.Common.Collections;
 using ConcreteEngine.Core.Assets.Loaders;
-using ConcreteEngine.Core.Resources;
-using ConcreteEngine.Graphics;
-using ConcreteEngine.Graphics.Descriptors;
-using ConcreteEngine.Graphics.Gfx;
-using ConcreteEngine.Graphics.Primitives;
+using ConcreteEngine.Core.Assets.Manifest;
 using ConcreteEngine.Graphics.Resources;
 
 #endregion
@@ -45,7 +39,7 @@ internal sealed class AssetProcessor
         _uploader = uploader;
     }
 
-    internal void Start(AssetRecordResult assets)
+    internal void Start(AssetManifestBundle assets)
     {
         _processOrder = (ProcessOrder)1;
         _shaderLoader = new ShaderLoader(assets.Shaders.Resources);
@@ -62,7 +56,6 @@ internal sealed class AssetProcessor
         _cubeMapLoader.Finish();
 
         _uploader = null!;
-
     }
 
     public bool Process(out IAssetFinalEntry finalEntry)
@@ -75,14 +68,14 @@ internal sealed class AssetProcessor
                 throw new InvalidOperationException("Asset loader has not started.");
             case ProcessOrder.Shaders:
                 var shaderEntry = ProcessLoader(_shaderLoader);
-                if(shaderEntry == null) return false;
+                if (shaderEntry == null) return false;
                 var shaderId = _uploader.UploadShader(shaderEntry.Record, shaderEntry.Payload, out var shaderInfo);
                 finalEntry = new AssetFinalEntry<ShaderManifestRecord, ShaderCreationInfo, ShaderId>
                     (shaderEntry.Record, in shaderInfo, shaderId, shaderEntry.ProcessInfo);
                 break;
             case ProcessOrder.Textures:
                 var texEntry = ProcessLoader(_textureLoader);
-                if(texEntry == null) return false;
+                if (texEntry == null) return false;
                 var texId = _uploader.UploadTexture(texEntry.Record, texEntry.Payload, out var texInfo);
                 finalEntry = new AssetFinalEntry<TextureManifestRecord, TextureCreationInfo, TextureId>
                     (texEntry.Record, in texInfo, texId, texEntry.ProcessInfo);
@@ -90,7 +83,7 @@ internal sealed class AssetProcessor
                 break;
             case ProcessOrder.CubeMaps:
                 var cubeMapEntry = ProcessLoader(_cubeMapLoader);
-                if(cubeMapEntry == null) return false;
+                if (cubeMapEntry == null) return false;
                 var cubeMapId = _uploader.UploadCubeMap(cubeMapEntry.Record, cubeMapEntry.Payload, out var cubeMapInfo);
                 finalEntry = new AssetFinalEntry<CubeMapManifestRecord, CubeMapCreationInfo, TextureId>
                     (cubeMapEntry.Record, in cubeMapInfo, cubeMapId, cubeMapEntry.ProcessInfo);
@@ -98,7 +91,7 @@ internal sealed class AssetProcessor
                 break;
             case ProcessOrder.Meshes:
                 var meshEntry = ProcessLoader(_meshLoader);
-                if(meshEntry == null) return false;
+                if (meshEntry == null) return false;
                 var meshId = _uploader.UploadMesh(meshEntry.Record, meshEntry.Payload, out var meshInfo);
                 finalEntry = new AssetFinalEntry<MeshManifestRecord, MeshCreationInfo, MeshId>
                     (meshEntry.Record, in meshInfo, meshId, meshEntry.ProcessInfo);
@@ -127,7 +120,7 @@ internal sealed class AssetProcessor
         }
 
         if (loadEntry.Payload == null) throw new NullReferenceException(nameof(loadEntry.Payload));
-        
+
         return loadEntry;
     }
 

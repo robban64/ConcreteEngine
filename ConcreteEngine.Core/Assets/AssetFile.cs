@@ -1,4 +1,8 @@
+#region
+
 using ConcreteEngine.Graphics.Resources;
+
+#endregion
 
 namespace ConcreteEngine.Core.Assets;
 
@@ -9,7 +13,7 @@ public enum AssetKind
     Mesh = 2,
     Texture2D = 3,
     CubeMap = 4,
-    Material = 5,
+    Material = 5
 }
 
 public interface IAssetFile

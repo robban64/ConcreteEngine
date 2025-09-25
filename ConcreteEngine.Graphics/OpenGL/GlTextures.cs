@@ -1,6 +1,7 @@
 #region
 
 using System.Runtime.CompilerServices;
+using ConcreteEngine.Graphics.OpenGL.Utilities;
 using ConcreteEngine.Graphics.Resources;
 using Silk.NET.OpenGL;
 
@@ -33,10 +34,11 @@ internal sealed class GlTextures : IGraphicsDriverModule
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public void UnbindTextureSlot(int slot) => _gl.BindTextureUnit(0, (uint)slot);
 
-    public GfxRefToken<TextureId> CreateTexture2D(int width, int height, int mipLevels)
+    public GfxRefToken<TextureId> CreateTexture2D(int width, int height, int mipLevels, EnginePixelFormat format)
     {
+        var glFormat = format.ToGlEnums();
         _gl.CreateTextures(TextureTarget.Texture2D, 1, out uint texture);
-        _gl.TextureStorage2D(texture, (uint)mipLevels, ColorFormat, (uint)width, (uint)height);
+        _gl.TextureStorage2D(texture, (uint)mipLevels, glFormat, (uint)width, (uint)height);
         return _store.Texture.Add(new GlTextureHandle(texture));
     }
 

@@ -59,6 +59,11 @@ internal sealed class Render3D : IRender
         _drawProcessor.UploadFrame(in frameUniforms);
         _drawProcessor.UploadCamera(in cameraUniforms);
         _drawProcessor.UploadDirLight(in dirLightUniforms);
+        
+        _drawProcessor.UploadFramePostProcess(new FramePostProcessUniform(
+            new Vector4(0,1,1,2.2f),
+            new Vector4(0,0,0,0),
+            new Vector4(0.0f, 1.0f, 0, 0.0f)));
 
     }
 
@@ -85,7 +90,7 @@ internal sealed class Render3D : IRender
         ArgumentNullException.ThrowIfNull(desc);
         ArgumentNullException.ThrowIfNull(desc.SceneTarget);
         ArgumentNullException.ThrowIfNull(desc.ScreenTarget);
-        ArgumentNullException.ThrowIfNull(desc.LightTarget);
+        //ArgumentNullException.ThrowIfNull(desc.LightTarget);
         ArgumentNullException.ThrowIfNull(desc.PostEffectTarget);
         ArgumentOutOfRangeException.ThrowIfLessThan(outputSize.X, 16);
         ArgumentOutOfRangeException.ThrowIfLessThan(outputSize.Y, 16);
@@ -130,6 +135,7 @@ internal sealed class Render3D : IRender
 
         // Light Passes
         // Pass 0: Draw light into FBO
+        /*
         _registry.RegisterRenderPass(RenderTargetId.Light, new LightRenderPass
         {
             TargetFbo = _registry.LightFbo.FboId,
@@ -137,14 +143,16 @@ internal sealed class Render3D : IRender
             Clear = new RenderPassClearDesc(desc.LightTarget.ClearColor, ClearBufferFlag.Color),
             Blend = desc.LightTarget.Blend,
         });
-
+        */
         // Post Processing Passes
         // Pass 0: Compose Scene + Light
+        //                SourceTextures = [_registry.SceneFbo.ColTexId, _registry.LightFbo.ColTexId],
+
         _registry.RegisterRenderPass(RenderTargetId.PostProcessing,
-            new IfsqPass
+            new PostEffectPass
             {
                 TargetFbo = _registry.PostFboA.FboId,
-                SourceTextures = [_registry.SceneFbo.ColTexId, _registry.LightFbo.ColTexId],
+                SourceTextures = [_registry.SceneFbo.ColTexId],
                 Shader = desc.PostEffectTarget.CompositeShaderId
             });
 
@@ -161,7 +169,7 @@ internal sealed class Render3D : IRender
         // Screen Passes
         // Pass 0: Combine scene and light fbo texture into final scene
         _registry.RegisterRenderPass(RenderTargetId.Screen,
-            new IfsqPass
+            new FsqPass
             {
                 TargetFbo = default,
                 SourceTextures = [_registry.PostFboB.ColTexId],

@@ -130,7 +130,7 @@ public sealed class GfxTextures
             var (width, height) = (desc.Width, desc.Height);
             var texRef = desc.Kind switch
             {
-                TextureKind.Texture2D => _driver.CreateTexture2D(width, height, mipLevels),
+                TextureKind.Texture2D => _driver.CreateTexture2D(width, height, mipLevels, desc.Format),
                 TextureKind.CubeMap => _driver.CreateTextureCubeMap(width, height, mipLevels),
                 TextureKind.Multisample2D => _driver.CreateTextureMultisample(width, height, samples),
                 _ => throw new ArgumentOutOfRangeException()

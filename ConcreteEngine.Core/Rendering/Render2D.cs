@@ -117,7 +117,7 @@ internal class Render2D : IRender
 
         // Screen Passes
         // Pass 0: Combine scene and light fbo texture into final scene
-        _registry.RegisterRenderPass(RenderTargetId.Screen, new IfsqPass
+        _registry.RegisterRenderPass(RenderTargetId.Screen, new FsqPass
         {
             TargetFbo = default,
             SourceTextures = [_registry.SceneFbo.ColTexId, _registry.LightFbo.ColTexId],

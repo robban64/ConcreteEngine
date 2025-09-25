@@ -63,6 +63,11 @@ internal sealed class DrawProcessor
 
         _gfxBuffers.UploadUniformGpuData(UniformGpuSlot.Frame, in data, 0);
     }
+    
+    public void UploadFramePostProcess(in FramePostProcessUniform data)
+    {
+        _gfxBuffers.UploadUniformGpuData(UniformGpuSlot.PostProcess, in data, 0);
+    }
 
     public void UploadCamera(in CameraUniformRecord rec)
     {

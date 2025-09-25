@@ -69,12 +69,12 @@ internal class RenderPasses
         {
             case RenderTargetId.Scene:
                 var scenePass = (IScenePass)(_renderTargets[(int)RenderTargetId.Scene][0]);
-                var sceneClear = scenePass.Clear!.Value;
+                var sceneClear = scenePass.Clear;
                 scenePass.Clear = sceneClear with { ClearColor = mutation.ClearColor!.Value };
                 break;
             case RenderTargetId.Light:
                 var lightPass = (LightRenderPass)(_renderTargets[(int)RenderTargetId.Light][0]);
-                var lightClear = lightPass.Clear!.Value;
+                var lightClear = lightPass.Clear;
                 lightPass.Clear = lightClear with { ClearColor = mutation.ClearColor!.Value };
                 break;
             case RenderTargetId.Screen:

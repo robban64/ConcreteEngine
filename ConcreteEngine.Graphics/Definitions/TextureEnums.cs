@@ -2,10 +2,9 @@ namespace ConcreteEngine.Graphics;
 
 public enum EnginePixelFormat : byte
 {
-    Red = 0,
-    Rgb = 1,
-    Rgba = 2,
-    Srgb8Alpha8 = 3
+    Rgb = 0,
+    Rgba = 1,
+    SrgbAlpha = 2
 }
 
 public enum TexturePreset : byte
@@ -20,6 +19,7 @@ public enum TexturePreset : byte
     PremultipliedUi = 7
 }
 
+// note not using the enum values, due to risk of changing stuff
 public enum TextureAnisotropy : byte
 {
     Off = 0,

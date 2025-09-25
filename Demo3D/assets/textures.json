@@ -14,12 +14,14 @@
 	{
 	  "name": "Rock01-Normal",
 	  "filename": "rocks_01_normal.jpg",
-	  "preset": "LinearMipmapRepeat"
+      "pixelFormat": "Rgba",
+      "preset": "LinearMipmapRepeat"
 	},
 	{
 	  "name": "Rock01-Specular",
 	  "filename": "rocks_01_specular.jpg",
-	  "preset": "LinearMipmapRepeat"
+      "pixelFormat": "Rgba",
+      "preset": "LinearMipmapRepeat"
 	},
 	{
 	  "name": "Grass",
@@ -42,7 +44,8 @@
 	{
 	  "name": "Heightmap",
 	  "filename": "heightmap.png",
-	  "inMemory": true
+      "pixelFormat": "Rgba",
+      "inMemory": true
 	}
 	
   ]

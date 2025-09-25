@@ -39,7 +39,7 @@ public sealed class GfxFrameBuffers
         var samples = desc.Multisample.ToSamples();
 
         FboAttachmentIds attachmentIds = default;
-        if (desc.Attachments.ColorTexture)
+        if (desc.Attachments.ColorTexture) //boolean
         {
             var textureId = desc.Multisample != RenderBufferMsaa.None
                 ? _gfxTextures.CreateTextureMsaa(GpuTextureDescriptor.MakeFboMsaaDesc(size.X, size.Y), desc.Multisample)

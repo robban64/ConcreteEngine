@@ -6,7 +6,6 @@ using ConcreteEngine.Graphics.Resources;
 
 namespace ConcreteEngine.Core.Rendering;
 
-
 [StructLayout(LayoutKind.Sequential)]
 public readonly struct FrameUniformGpuData(
     Vector3 ambient,
@@ -82,4 +81,16 @@ public readonly struct DrawObjectUniformGpuData(
 
     public readonly Vector4 NormalCol2 = new(
         normal.M13, normal.M23, normal.M33, 0f);
+}
+
+[StructLayout(LayoutKind.Sequential)]
+public readonly struct FramePostProcessUniform(
+    Vector4 colorAdjust,
+    Vector4 whiteBalance,
+    Vector4 flags
+) : IUniformGpuData
+{
+    public readonly Vector4 ColorAdjust = colorAdjust;
+    public readonly Vector4 WhiteBalance = whiteBalance;
+    public readonly Vector4 Flags = flags;
 }

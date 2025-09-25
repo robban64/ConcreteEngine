@@ -47,7 +47,7 @@ public sealed record TextureManifestRecord(
     string Name,
     string Filename,
     TexturePreset Preset,
-    EnginePixelFormat PixelFormat = EnginePixelFormat.Rgba,
+    EnginePixelFormat PixelFormat = EnginePixelFormat.SrgbAlpha,
     TextureAnisotropy Anisotropy = TextureAnisotropy.Default,
     bool InMemory = false,
     float LodBias = -0.25f)

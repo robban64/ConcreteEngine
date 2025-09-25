@@ -85,12 +85,12 @@ public sealed class Demo3DScene : GameScene
                 ClearColor = Color4.CornflowerBlue,
                 Samples = 4
             },
-            LightTarget = new LightTargetDesc
+            /*LightTarget = new LightTargetDesc
             {   
                 LightShaderId = lightShader.ResourceId,
                 Blend = BlendMode.Additive,
                 TexPreset = TexturePreset.LinearMipmapRepeat
-            },
+            },*/
             PostEffectTarget = new PostEffectTargetDesc
             {
                 EffectShaderId = colorFilterShader.ResourceId,

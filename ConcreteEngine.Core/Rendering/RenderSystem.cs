@@ -28,7 +28,7 @@ public interface IRenderSystem : IGameEngineSystem
     TSink GetSink<TSink>() where TSink : IDrawSink;
     Material CreateMaterial(string templateName);
     void MutateRenderPass(RenderTargetId targetId, in RenderPassMutation mutation);
-    
+
     public SceneRenderProperties SceneRenderProps { get; }
 }
 
@@ -38,9 +38,9 @@ public sealed class RenderSystem : IRenderSystem
     private readonly GfxContext _gfx;
     private readonly GfxCommands _gfxCmd;
 
-    private DrawCommandCollector _commandCollector  = null!;
-    private RenderPipeline _commandSubmitter  = null!;
-    private DrawProcessor _drawProcessor  = null!;
+    private DrawCommandCollector _commandCollector = null!;
+    private RenderPipeline _commandSubmitter = null!;
+    private DrawProcessor _drawProcessor = null!;
 
     private readonly BatcherRegistry _batches = new();
 
@@ -53,9 +53,9 @@ public sealed class RenderSystem : IRenderSystem
     private bool _initialized = false;
 
     private FrameInfo _frameCtx;
-    
+
     private RenderGlobalSnapshot _snapshot;
-    
+
     public SceneRenderProperties SceneRenderProps { get; }
 
     public ICamera Camera => _render.Camera;
@@ -69,7 +69,6 @@ public sealed class RenderSystem : IRenderSystem
         SceneRenderProps.SetOutputSize(in outputSize);
         SceneRenderProps.Commit();
         _snapshot = SceneRenderProps.CurrentSnapshot;
-
     }
 
     internal void InitializeGraphics()
@@ -79,11 +78,11 @@ public sealed class RenderSystem : IRenderSystem
         _gfx.Buffers.CreateUniformBuffer<DirLightUniformGpuData>(UniformGpuSlot.DirLight, UboDefaultCapacity.Lower);
         _gfx.Buffers.CreateUniformBuffer<MaterialUniformGpuData>(UniformGpuSlot.Material, UboDefaultCapacity.Medium);
         _gfx.Buffers.CreateUniformBuffer<DrawObjectUniformGpuData>(UniformGpuSlot.DrawObject, UboDefaultCapacity.Upper);
+        _gfx.Buffers.CreateUniformBuffer<FramePostProcessUniform>(UniformGpuSlot.PostProcess, UboDefaultCapacity.Lower);
     }
 
     internal void Initialize(MaterialStore materialStore)
     {
-
         _materialStore = materialStore;
         _drawProcessor = new DrawProcessor(_gfx, _materialStore);
 
@@ -94,16 +93,12 @@ public sealed class RenderSystem : IRenderSystem
         _batches.Register(new SpriteBatcher(_gfx));
         _batches.Register(new TilemapBatcher(_gfx, 64, 32));
 
-        _cmdProducerCtx = new CommandProducerContext
-        {
-            Gfx = _gfx,
-            DrawBatchers = _batches,
-        };
+        _cmdProducerCtx = new CommandProducerContext { Gfx = _gfx, DrawBatchers = _batches, };
 
         // Collector
         _commandCollector.RegisterProducerSink<IMeshDrawSink>(new MeshDrawProducer());
         _commandCollector.RegisterProducerSink<ITerrainDrawSink>(new TerrainDrawProducer());
-        _sceneDrawProducer = new  SceneDrawProducer();
+        _sceneDrawProducer = new SceneDrawProducer();
         _commandCollector.RegisterProducer<SceneDrawProducer>(_sceneDrawProducer);
 
 
@@ -111,32 +106,31 @@ public sealed class RenderSystem : IRenderSystem
         _commandSubmitter.Initialize();
         _commandCollector.InitializeProducers();
         _drawProcessor.Initialize();
-        
-        _initialized =  true;
+
+        _initialized = true;
     }
 
 
     internal void RegisterScene(in Vector2D<int> outputSize, RenderType renderType, RenderTargetDescriptor desc)
     {
-        if(!_initialized)
+        if (!_initialized)
             throw new InvalidOperationException("Renderer is not initialized");
-        
+
         SceneRenderProps.Commit();
         if (renderType == RenderType.Render2D)
             _render = new Render2D(_gfx, _materialStore, in _snapshot);
         else
             _render = new Render3D(_gfx, _drawProcessor, in _snapshot);
-        
+
         _render.RegisterRenderTargetsFrom(in outputSize, desc);
     }
 
     public TSink GetSink<TSink>() where TSink : IDrawSink => _commandCollector.GetSink<TSink>();
 
-    public Material CreateMaterial(string templateName)
-        => _materialStore.CreateMaterialFromTemplate(templateName);
+    public Material CreateMaterial(string templateName) => _materialStore.CreateMaterialFromTemplate(templateName);
 
-    public void MutateRenderPass(RenderTargetId targetId, in RenderPassMutation mutation)
-        => _render.MutateRenderPass(targetId, in mutation);
+    public void MutateRenderPass(RenderTargetId targetId, in RenderPassMutation mutation) =>
+        _render.MutateRenderPass(targetId, in mutation);
 
 
     internal void BeginTick(in UpdateInfo update) => _commandCollector.BeginTick(update);
@@ -148,12 +142,12 @@ public sealed class RenderSystem : IRenderSystem
         _frameCtx = frameCtx;
         if (frameCtx.Viewport != _render.Camera.ViewportSize)
             _render.Camera.ViewportSize = frameCtx.Viewport;
-        
+
         SceneRenderProps.SetOutputSize(frameCtx.OutputSize);
         SceneRenderProps.Commit();
         _snapshot = SceneRenderProps.CurrentSnapshot;
 
-        
+
         PrepareRenderer(alpha);
         Execute(alpha);
         _commandSubmitter.Reset();
@@ -169,7 +163,8 @@ public sealed class RenderSystem : IRenderSystem
 
     private void Execute(float alpha)
     {
-        var capacity = UniformBufferUtils.GetCapacityForEntities<DrawObjectUniformGpuData>(_commandSubmitter.Count + 100);
+        var capacity =
+            UniformBufferUtils.GetCapacityForEntities<DrawObjectUniformGpuData>(_commandSubmitter.Count + 100);
         _drawProcessor.Prepare(in _snapshot, capacity);
 
         _commandSubmitter.DrainTransformQueue();
@@ -178,59 +173,60 @@ public sealed class RenderSystem : IRenderSystem
         {
             foreach (var pass in passes)
             {
-                _gfxCmd.SetBlendMode(pass.Blend);
-                _gfxCmd.SetDepthMode(pass.DepthTest ? DepthMode.WriteLequal : DepthMode.Disabled);
                 ExecutePass(targetId, pass);
             }
-
         }
     }
 
     private void ExecutePass(RenderTargetId target, IRenderPassDescriptor pass)
     {
+        
         if (pass is BlitRenderPass blitPass)
         {
+            _gfxCmd.ToggleBlendState(false);
             _gfxCmd.BlitFramebuffer(blitPass.BlitFbo, blitPass.TargetFbo, blitPass.LinearFilter);
             return;
         }
 
         var isScreenPass = pass.TargetFbo == default;
-
-        if (pass.TargetFbo == default)
-            _gfxCmd.BeginScreenPass(pass.Clear?.ClearColor, pass.Clear?.ClearMask);
-        else
-            _gfxCmd.BeginRenderPass(pass.TargetFbo, pass.Clear?.ClearColor, pass.Clear?.ClearMask);
-
         
+        //_gfxCmd.SetBlendMode(pass.Blend);
+        //_gfxCmd.SetDepthMode(pass.DepthTest ? DepthMode.WriteLequal : DepthMode.Disabled);
+        if(pass.DepthTest) _gfxCmd.SetDepthMode(DepthMode.Lequal);
+
+        var isScenePass = pass is IScenePass;
+
+         if (pass.TargetFbo == default)
+            _gfxCmd.BeginScreenPass(pass.Clear.ClearColor, pass.Clear.ClearMask);
+        else
+            _gfxCmd.BeginRenderPass(pass.TargetFbo, pass.Clear.ClearColor, pass.Clear.ClearMask, isScenePass);
+
+      
         switch (pass)
         {
             case IScenePass scenePass:
-                _render.RenderScenePass(scenePass, _commandSubmitter); // handles Scene/Light via runtime type
+                _render.RenderScenePass(scenePass, _commandSubmitter);
                 break;
-            case IFsqPass fsq:
+            case IFsqPass fsq: // include PostProcess
                 DrawFullscreenQuad(fsq);
                 break;
             case IDepthPass depthPass:
                 _render.RenderDepthPass(depthPass, _commandSubmitter);
                 break;
+
         }
-        
+
         if (pass.Op == RenderPassOp.DrawScene)
         {
-
             _gfxCmd.EndRenderPass();
             return;
         }
-
-        if (pass.Op == RenderPassOp.FullscreenQuad && pass is IFsqPass fsqPass)
-        {
-            DrawFullscreenQuad(fsqPass);
-        }
-
+        
         if (!isScreenPass)
         {
             _gfxCmd.EndRenderPass();
         }
+
     }
 
     private void DrawFullscreenQuad(IFsqPass pass)
@@ -253,7 +249,7 @@ public sealed class RenderSystem : IRenderSystem
         _gfxCmd.DrawBoundMesh(_gfx.Primitives.FsqQuad, 0);
     }
 
-    
+
     public void Shutdown()
     {
     }

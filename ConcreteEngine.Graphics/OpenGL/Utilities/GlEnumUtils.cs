@@ -75,45 +75,45 @@ internal static class GlEnumExtensions
 
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public static (bool enabled, BlendEquationModeEXT eq, BlendingFactor src, BlendingFactor dst) ToGlEnum(
+    public static (BlendEquationModeEXT eq, BlendingFactor src, BlendingFactor dst) ToGlEnum(
         this BlendMode mode)
     {
         return mode switch
         {
-            BlendMode.Alpha => (true, BlendEquationModeEXT.FuncAdd, BlendingFactor.SrcAlpha,
+            BlendMode.Alpha => ( BlendEquationModeEXT.FuncAdd, BlendingFactor.SrcAlpha,
                 BlendingFactor.OneMinusSrcAlpha),
-            BlendMode.PremultipliedAlpha => (true, BlendEquationModeEXT.FuncAdd, BlendingFactor.One,
+            BlendMode.PremultipliedAlpha => (BlendEquationModeEXT.FuncAdd, BlendingFactor.One,
                 BlendingFactor.OneMinusSrcAlpha),
-            BlendMode.Additive => (true, BlendEquationModeEXT.FuncAdd, BlendingFactor.One, BlendingFactor.One),
-            _ => (false, BlendEquationModeEXT.FuncAdd, BlendingFactor.One, BlendingFactor.Zero)
+            BlendMode.Additive => (BlendEquationModeEXT.FuncAdd, BlendingFactor.One, BlendingFactor.One),
+            _ => throw new ArgumentOutOfRangeException(nameof(mode), mode, null)
         };
     }
 
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public static (EnableCap cap, DepthFunction func, bool mask) ToGlEnum(this DepthMode preset)
+    public static DepthFunction ToGlEnum(this DepthMode preset)
     {
         return preset switch
         {
-            DepthMode.Disabled => (EnableCap.DepthTest, DepthFunction.Always, false),
-            DepthMode.ReadOnlyLequal => (EnableCap.DepthTest, DepthFunction.Lequal, false),
-            DepthMode.WriteLequal => (EnableCap.DepthTest, DepthFunction.Lequal, true),
-            DepthMode.WriteLess => (EnableCap.DepthTest, DepthFunction.Less, true),
-            _ => (EnableCap.DepthTest, DepthFunction.Always, true)
+            DepthMode.None => DepthFunction.Always,
+            DepthMode.Lequal => DepthFunction.Lequal,
+            DepthMode.Less => DepthFunction.Less,
+            DepthMode.Equal => DepthFunction.Equal,
+            _ => throw new ArgumentOutOfRangeException(nameof(preset), preset, null)
         };
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public static (EnableCap cap, TriangleFace face, FrontFaceDirection front) ToGlEnum(this CullMode preset)
+    public static (TriangleFace face, FrontFaceDirection front) ToGlEnum(this CullMode preset)
     {
         return preset switch
         {
-            CullMode.None => (EnableCap.CullFace, TriangleFace.FrontAndBack, FrontFaceDirection.Ccw),
-            CullMode.BackCcw => (EnableCap.CullFace, TriangleFace.Back, FrontFaceDirection.Ccw),
-            CullMode.BackCw => (EnableCap.CullFace, TriangleFace.Back, FrontFaceDirection.CW),
-            CullMode.FrontCcw => (EnableCap.CullFace, TriangleFace.Front, FrontFaceDirection.Ccw),
-            CullMode.FrontCw => (EnableCap.CullFace, TriangleFace.Front, FrontFaceDirection.CW),
-            _ => (EnableCap.CullFace, TriangleFace.Back, FrontFaceDirection.Ccw)
+            CullMode.None => ( TriangleFace.FrontAndBack, FrontFaceDirection.Ccw),
+            CullMode.BackCcw => ( TriangleFace.Back, FrontFaceDirection.Ccw),
+            CullMode.BackCw => ( TriangleFace.Back, FrontFaceDirection.CW),
+            CullMode.FrontCcw => ( TriangleFace.Front, FrontFaceDirection.Ccw),
+            CullMode.FrontCw => ( TriangleFace.Front, FrontFaceDirection.CW),
+            _ => throw new ArgumentOutOfRangeException(nameof(preset), preset, null)
         };
     }
 
@@ -159,13 +159,14 @@ internal static class GlEnumExtensions
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public static (PixelFormat glFormat, InternalFormat glInternalFormat) ToGlEnums(this EnginePixelFormat format)
+    public static SizedInternalFormat ToGlEnums(this EnginePixelFormat format)
     {
+        
         return format switch
         {
-            EnginePixelFormat.Red => (PixelFormat.Red, InternalFormat.R8),
-            EnginePixelFormat.Rgb => (PixelFormat.Rgb, InternalFormat.Rgb8),
-            EnginePixelFormat.Rgba => (PixelFormat.Rgba, InternalFormat.Rgba8),
+            EnginePixelFormat.Rgb => SizedInternalFormat.Rgb8,
+            EnginePixelFormat.Rgba => SizedInternalFormat.Rgba8,
+            EnginePixelFormat.SrgbAlpha => SizedInternalFormat.Srgb8Alpha8,
             _ => throw new ArgumentOutOfRangeException(nameof(format))
         };
     }

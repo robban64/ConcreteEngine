@@ -6,8 +6,8 @@ out vec4 FragColor;
 uniform mat4 uViewProj;
 uniform vec2 uLightPos;
 uniform float uRadius;
-uniform vec3 uColor;      // 0..1
-uniform float uIntensity; // scalar
+uniform vec3 uColor;     
+uniform float uIntensity;
 uniform float uSoftness;  
 uniform int uShape;       // 0=circle, 1=diamond, 2=square-soft
 

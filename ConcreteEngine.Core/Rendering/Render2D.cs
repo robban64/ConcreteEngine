@@ -93,7 +93,7 @@ internal class Render2D : IRender
         _registry.RegisterRenderPass(RenderTargetId.Scene, new SceneRenderPass
         {
             TargetFbo = _registry.MultisampleFbo.FboId,
-            Clear = new RenderPassClearDesc(Color4.CornflowerBlue, ClearBufferFlag.ColorAndDepth)
+            Clear = new GfxPassClear(Color4.CornflowerBlue, ClearBufferFlag.ColorAndDepth)
         });
 
         // Pass 1: resolve MSAA into single-sample texture FBO
@@ -111,7 +111,7 @@ internal class Render2D : IRender
         {
             TargetFbo = _registry.LightFbo.FboId,
             Shader = lightTarget.LightShaderId,
-            Clear = new RenderPassClearDesc(lightTarget.ClearColor, ClearBufferFlag.Color),
+            Clear = new GfxPassClear(lightTarget.ClearColor, ClearBufferFlag.Color),
             Blend = lightTarget.Blend,
         });
 

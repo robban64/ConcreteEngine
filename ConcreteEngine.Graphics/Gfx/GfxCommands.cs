@@ -32,17 +32,14 @@ public sealed class GfxCommands
     private DepthMode _depthMode = DepthMode.Unset;
     private CullMode _cullMode = CullMode.Unset;
 
-    private bool _blendActive = false;
-    private bool _depthActive = false;
-    private bool _cullActive = false;
-    private bool _depthMaskActive = false;
-    private bool _fboSrgbActive = false;
+    private GfxPassState _activeState;
+    private GfxPassStateFlags _activeFlags;
+    private GfxPassClear _activeClear;
 
     private readonly TextureId[] _boundTextures;
 
     private FrameBufferId _boundFboId = default;
-    private bool _defaultFbIsSrgb = true;
-    
+
     private MeshId _boundMeshId = default;
     private MeshMeta _boundMeshMeta = default;
 
@@ -55,6 +52,7 @@ public sealed class GfxCommands
     private int _drawTriangleCount = 0;
     private int _drawCallCount = 0;
 
+
     internal GfxCommands(GfxContextInternal ctx)
     {
         _driver = ctx.Driver;
@@ -65,12 +63,12 @@ public sealed class GfxCommands
         _store = ctx.Stores;
 
         _boundTextures = new TextureId[Configuration.MaxTextureImageUnits];
-        
+
         SetBlendMode(BlendMode.Alpha);
         SetDepthMode(DepthMode.Lequal);
         SetCullMode(CullMode.BackCcw);
     }
-    
+
 
     internal void BeginFrame(in FrameInfo frameCtx)
     {
@@ -81,41 +79,40 @@ public sealed class GfxCommands
 
         _activeOutputSize = _frameCtx.OutputSize;
 
-        
-        _states.ClearColorBuffer(Color4.CornflowerBlue, ClearBufferFlag.ColorAndDepth);
+        //Clear(Color4.CornflowerBlue, ClearBufferFlag.ColorAndDepth);
+        SetDepthMode(DepthMode.Lequal);
     }
 
     internal void EndFrame(out GpuFrameStats result)
     {
-        
         result = new GpuFrameStats(_drawCallCount, _drawTriangleCount);
-        // unbind context
         UseShader(default);
         BindMesh(default);
         BindFramebuffer(default);
-        
+
         _blendMode = BlendMode.Unset;
         _depthMode = DepthMode.Unset;
         _cullMode = CullMode.Unset;
-        _defaultFbIsSrgb = false;
-        
+
         _driver.EndFrame();
     }
 
-    public void BeginScreenPass(Color4? clear = null, ClearBufferFlag? flags = null)
+    public void BeginScreenPass(in GfxPassClear passClear)
     {
         BindFramebuffer(default);
-        ToggleFrameBufferSrgb(true);
         SetViewport(_activeOutputSize);
-        
-        _states.ColorMask(true);
-        Clear(null, flags);
-        
-        _activeOutputSize = _frameCtx.OutputSize;
 
+        ApplyState(new GfxPassState(
+            FramebufferSrgb:true,
+            ColorMask: true
+        ));
+        
+        Clear(in passClear);
+
+        _activeOutputSize = _frameCtx.OutputSize;
     }
 
-    public void BeginRenderPass(FrameBufferId fboId, Color4? clear, ClearBufferFlag? flags, bool scenePass)
+    public void BeginRenderPass(FrameBufferId fboId, in GfxPassClear passClear, bool scenePass)
     {
         ArgumentOutOfRangeException.ThrowIfNegativeOrZero(fboId.Value, nameof(fboId));
         if (_boundFboId == fboId) GraphicsException.ThrowInvalidState($"FBO is {fboId} already bound.");
@@ -124,30 +121,20 @@ public sealed class GfxCommands
         ref readonly var handle = ref _store.FboStore.GetHandle(fboId);
 
         BindFramebuffer(fboId);
-        ToggleFrameBufferSrgb(true);
         SetViewport(meta.Size);
-        // Temp solution
-        if (scenePass)
-        {
-            ToggleScissorTest(false);
-            ToggleCullFace(true);
-            ToggleDepthTest(true);
-            ToggleDepthMask(true);
-            ToggleBlendState(false);
-            SetDepthMode(DepthMode.Lequal);
-        }
-        else
-        {
-            ToggleScissorTest(false);
-            ToggleCullFace(false);
-            ToggleDepthTest(false);
-            ToggleBlendState(false);
-            ToggleDepthMask(false);
-
-        }
+        
+        ApplyState(new GfxPassState(
+            DepthTest: scenePass,
+            DepthWrite: scenePass,
+            Cull: scenePass,
+            Blend: false,
+            Scissor: false,
+            FramebufferSrgb:true
+        ));
         
         _states.ColorMask(true);
-        Clear(null, flags);
+        Clear(in passClear);
+        
         _activeOutputSize = meta.Size;
     }
 
@@ -165,11 +152,10 @@ public sealed class GfxCommands
     {
         Debug.Assert(fromId != default);
         Debug.Assert(fromId != toId, "READ and DRAW FBO must differ for resolve.");
-        
+
         ref readonly var fromFbo = ref _store.FboStore.GetMeta(fromId);
         var fromHandle = _store.FboStore.GetRef(fromId);
         var srcSize = fromFbo.Size;
-
 
         if (!_store.FboStore.TryGetRef(toId, out var toHandle, out var toFbo))
         {
@@ -178,14 +164,33 @@ public sealed class GfxCommands
         }
 
         _driver.FrameBuffers.Blit(fromHandle, toHandle, srcSize, toFbo.Size, linear);
-
     }
 
 
-    public void Clear(Color4? color, ClearBufferFlag? flags)
+    public void Clear(in GfxPassClear passClear)
     {
-        if(color is { } c) _states.ClearColor(c);
-        if(flags is {} f) _states.ClearBuffer(f);
+        if (passClear.ClearColor is { } clearColor) _states.ClearColor(clearColor);
+        if (passClear.ClearBuffer is { } clearBuff) _states.ClearBuffer(clearBuff);
+    }
+
+    private void ApplyState(GfxPassState cmdState)
+    {
+        _activeState = cmdState;
+        if (cmdState.Scissor is { } scissor) _states.ToggleScissorTest(scissor);
+        if (cmdState.Cull is { } cull) _states.ToggleCullFace(cull);
+        if (cmdState.DepthTest is { } depthTest) _states.ToggleDepthTest(depthTest);
+        if (cmdState.DepthWrite is { } depthWrite) _states.ToggleDepthMask(depthWrite);
+        if (cmdState.Blend is { } blend) _states.ToggleBlendState(blend);
+        if (cmdState.FramebufferSrgb is { } srgb) _states.ToggleFrameBufferSrgb(srgb);
+        if (cmdState.ColorMask is { } colorMask) _states.ColorMask(colorMask);
+    }
+
+    private void ApplyStateFlags(GfxPassStateFlags flags)
+    {
+        _activeFlags = flags;
+        if (flags.Blend != BlendMode.Unset) _states.SetBlendMode(flags.Blend);
+        if (flags.Depth != DepthMode.Unset) _states.SetDepthMode(flags.Depth);
+        if (flags.Cull != CullMode.Unset) _states.SetCullMode(flags.Cull);
     }
 
     public void SetViewport(Vector2D<int> viewport)
@@ -195,10 +200,6 @@ public sealed class GfxCommands
         _states.SetViewport(viewport);
     }
     
-    public void ToggleFrameBufferSrgb(bool enabled)
-    {
-        _states.ToggleFrameBufferSrgb(enabled);    
-    }
 
     public void SetBlendMode(BlendMode blendMode)
     {
@@ -220,23 +221,24 @@ public sealed class GfxCommands
         _cullMode = cullMode;
         _states.SetCullMode(cullMode);
     }
-    
+/*
+    public void ToggleFrameBufferSrgb(bool enabled)
+    {
+        _states.ToggleFrameBufferSrgb(enabled);
+    }
     public void ToggleBlendState(bool enabled)
     {
         _states.ToggleBlendState(enabled);
     }
-    
+
     public void ToggleDepthTest(bool enabled)
     {
         _states.ToggleDepthTest(enabled);
     }
 
-    private bool? _cullFaceActive;
     public void ToggleCullFace(bool enabled)
     {
-        if(_cullFaceActive == enabled) return;
         _states.ToggleCullFace(enabled);
-        _cullFaceActive = enabled;
     }
 
     public void ToggleDepthMask(bool enabled)
@@ -248,7 +250,7 @@ public sealed class GfxCommands
     {
         _states.ToggleScissorTest(enabled);
     }
-
+*/
 
     public void BindFramebuffer(FrameBufferId id)
     {

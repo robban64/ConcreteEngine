@@ -2,6 +2,7 @@
 
 using System.Runtime.CompilerServices;
 using ConcreteEngine.Common.Numerics;
+using ConcreteEngine.Graphics.Gfx.Internal;
 using ConcreteEngine.Graphics.OpenGL.Utilities;
 using ConcreteEngine.Graphics.Resources;
 using Silk.NET.Maths;
@@ -21,7 +22,7 @@ internal sealed class GlStates : IGraphicsDriverModule
         _gl = ctx.Gl;
         _store = ctx.Store;
     }
-
+    
 
     public void ClearColorBuffer(Color4 color, ClearBufferFlag flags)
     {

@@ -119,7 +119,6 @@ internal sealed class Render3D : IRender
             new SceneRenderPass
             {
                 TargetFbo = _registry.MultisampleFbo.FboId,
-                Clear = new RenderPassClearDesc(Color4.CornflowerBlue, ClearBufferFlag.ColorAndDepth)
             });
 
         // Pass 1: resolve MSAA into single-sample texture FBO

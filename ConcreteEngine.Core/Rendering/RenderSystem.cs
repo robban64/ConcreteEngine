@@ -183,23 +183,20 @@ public sealed class RenderSystem : IRenderSystem
         
         if (pass is BlitRenderPass blitPass)
         {
-            _gfxCmd.ToggleBlendState(false);
             _gfxCmd.BlitFramebuffer(blitPass.BlitFbo, blitPass.TargetFbo, blitPass.LinearFilter);
             return;
         }
 
         var isScreenPass = pass.TargetFbo == default;
         
-        //_gfxCmd.SetBlendMode(pass.Blend);
-        //_gfxCmd.SetDepthMode(pass.DepthTest ? DepthMode.WriteLequal : DepthMode.Disabled);
-        if(pass.DepthTest) _gfxCmd.SetDepthMode(DepthMode.Lequal);
+        //if(pass.DepthTest) _gfxCmd.SetDepthMode(DepthMode.Lequal);
 
         var isScenePass = pass is IScenePass;
 
          if (pass.TargetFbo == default)
-            _gfxCmd.BeginScreenPass(pass.Clear.ClearColor, pass.Clear.ClearMask);
+            _gfxCmd.BeginScreenPass(pass.Clear);
         else
-            _gfxCmd.BeginRenderPass(pass.TargetFbo, pass.Clear.ClearColor, pass.Clear.ClearMask, isScenePass);
+            _gfxCmd.BeginRenderPass(pass.TargetFbo, pass.Clear, isScenePass);
 
       
         switch (pass)

@@ -1,4 +1,5 @@
 using System.Runtime.CompilerServices;
+using ConcreteEngine.Common.Numerics;
 using ConcreteEngine.Core.Resources;
 using ConcreteEngine.Graphics;
 using ConcreteEngine.Graphics.Gfx;
@@ -121,7 +122,7 @@ internal sealed class DrawProcessor
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public void UploadTransform(in DrawTransformPayload payload)
     {
-        TransformHelper.GetNormalMatrix(in payload.Transform, out var normalModel);
+        TransformUtils.CreateNormalMatrix(in payload.Transform, out var normalModel);
 
         var data = new DrawObjectUniformGpuData(
             model: in payload.Transform,

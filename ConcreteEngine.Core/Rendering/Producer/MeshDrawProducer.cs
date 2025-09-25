@@ -1,4 +1,5 @@
 using System.Runtime.CompilerServices;
+using ConcreteEngine.Common.Numerics;
 using ConcreteEngine.Core.Resources;
 using ConcreteEngine.Core.Scene;
 using ConcreteEngine.Graphics.Resources;
@@ -27,7 +28,7 @@ public sealed class MeshDrawProducer : IDrawCommandProducer, IMeshDrawSink
     private int _idx = 0;
 
     private MeshDrawEntity[] _entities = new MeshDrawEntity[32];
-    
+
     private DrawTransformPayload[] _transforms = new DrawTransformPayload[BatchSize];
     private readonly DrawCommand[] _commands = new DrawCommand[BatchSize];
     private readonly DrawCommandMeta[] _meta = new DrawCommandMeta[BatchSize];
@@ -69,14 +70,21 @@ public sealed class MeshDrawProducer : IDrawCommandProducer, IMeshDrawSink
         for (int i = 0; i < _idx; i++)
         {
             ref var entity = ref _entities[i];
+            ref var transform = ref entity.Transform;
 
             _commands[counter] = new DrawCommand(
                 meshId: entity.MeshId,
                 drawCount: 0,
                 materialId: entity.MaterialId
             );
-            
-            _transforms[counter] = new DrawTransformPayload(entity.Transform.GetTransform());
+
+            TransformUtils.CreateModelMatrix(
+                in transform.Position, 
+                in transform.Scale, 
+                in transform.Rotation,
+                out var modelMat
+            );
+            _transforms[counter] = new DrawTransformPayload(in modelMat);
 
             _meta[counter] = new DrawCommandMeta(
                 DrawCommandId.Mesh,

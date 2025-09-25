@@ -156,8 +156,8 @@ public sealed class Camera3D : ICamera
     private void Ensure()
     {
         _rotation = Quaternion.CreateFromYawPitchRoll(_yaw, _pitch, 0);
-        var model = TransformHelper.CreateTransform(_translation, _scale, _rotation);
-        Matrix4x4.Invert(model, out _viewMatrix);
+        TransformUtils.CreateModelMatrix(_translation, _scale, _rotation, out var viewModel);
+        Matrix4x4.Invert(viewModel, out _viewMatrix);
 
         var fov = MathHelper.ToRadians(_fov / 2f);
         _projectionMatrix = Matrix4x4.CreatePerspectiveFieldOfView(fov, _aspectRatio, _nearPlane, _farPlane);

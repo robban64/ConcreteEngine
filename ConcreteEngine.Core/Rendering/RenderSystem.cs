@@ -29,7 +29,7 @@ public interface IRenderSystem : IGameEngineSystem
     Material CreateMaterial(string templateName);
     void MutateRenderPass(RenderTargetId targetId, in RenderPassMutation mutation);
     
-    public SceneRenderGlobals RenderGlobals { get; }
+    public SceneRenderProperties SceneRenderProps { get; }
 }
 
 public sealed class RenderSystem : IRenderSystem
@@ -56,7 +56,7 @@ public sealed class RenderSystem : IRenderSystem
     
     private RenderGlobalSnapshot _snapshot;
     
-    public SceneRenderGlobals RenderGlobals { get; }
+    public SceneRenderProperties SceneRenderProps { get; }
 
     public ICamera Camera => _render.Camera;
 
@@ -65,10 +65,10 @@ public sealed class RenderSystem : IRenderSystem
         _graphics = graphics;
         _gfx = graphics.Gfx;
         _gfxCmd = graphics.Gfx.Commands;
-        RenderGlobals = new SceneRenderGlobals();
-        RenderGlobals.SetOutputSize(in outputSize);
-        RenderGlobals.Commit();
-        _snapshot = RenderGlobals.Snapshot;
+        SceneRenderProps = new SceneRenderProperties();
+        SceneRenderProps.SetOutputSize(in outputSize);
+        SceneRenderProps.Commit();
+        _snapshot = SceneRenderProps.CurrentSnapshot;
 
     }
 
@@ -121,7 +121,7 @@ public sealed class RenderSystem : IRenderSystem
         if(!_initialized)
             throw new InvalidOperationException("Renderer is not initialized");
         
-        RenderGlobals.Commit();
+        SceneRenderProps.Commit();
         if (renderType == RenderType.Render2D)
             _render = new Render2D(_gfx, _materialStore, in _snapshot);
         else
@@ -149,9 +149,9 @@ public sealed class RenderSystem : IRenderSystem
         if (frameCtx.Viewport != _render.Camera.ViewportSize)
             _render.Camera.ViewportSize = frameCtx.Viewport;
         
-        RenderGlobals.SetOutputSize(frameCtx.OutputSize);
-        RenderGlobals.Commit();
-        _snapshot = RenderGlobals.Snapshot;
+        SceneRenderProps.SetOutputSize(frameCtx.OutputSize);
+        SceneRenderProps.Commit();
+        _snapshot = SceneRenderProps.CurrentSnapshot;
 
         
         PrepareRenderer(alpha);

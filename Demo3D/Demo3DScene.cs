@@ -26,7 +26,7 @@ public sealed class Demo3DScene : GameScene
 
         var skyboxMaterial = renderer.CreateMaterial("SkyboxMat");
 
-        var rb = renderer.RenderGlobals;
+        var rb = renderer.SceneRenderProps;
         rb.SetSkybox(skyboxMaterial.Id, Quaternion.Identity);
         rb.SetDirLight(new Vector3(-0.3f, -1.0f, -0.2f), new Vector3(1.0f, 0.95f, 0.9f), Vector3.One,1);
         rb.SetAmbient(new Vector3(0.8f,0.75f,0.8f));

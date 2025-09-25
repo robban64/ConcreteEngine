@@ -1,5 +1,6 @@
 using System.Numerics;
 using System.Runtime.CompilerServices;
+using ConcreteEngine.Common.Numerics;
 using ConcreteEngine.Core.Resources;
 using ConcreteEngine.Graphics.Resources;
 using Silk.NET.Maths;
@@ -30,10 +31,6 @@ public struct Transform(Vector3 position, Vector3 scale, Quaternion rotation)
     public Vector3 Position = position;
     public Vector3 Scale = scale;
     public Quaternion Rotation = rotation;
-
-    [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public Matrix4x4 GetTransform()
-        => TransformHelper.CreateTransform(Position, Scale, Rotation);
 }
 
 public struct MeshComponent(MeshId meshId, MaterialId materialId, int drawCount)

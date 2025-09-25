@@ -1,18 +1,20 @@
+using System.Diagnostics.CodeAnalysis;
 using System.Numerics;
+using System.Runtime.CompilerServices;
 
 namespace ConcreteEngine.Common.Patterns;
 
 public enum ActionMoveKind
 {
-    Advance,
-    Stay,
-    Halt
+    Advance = 0,
+    Stay = 1,
+    Halt = 2
 }
 
 public enum ExecutionStatus
 {
-    Completed,
-    Halted
+    Completed = 0,
+    Halted = 1
 }
 
 public readonly record struct ExecutionResult(ExecutionStatus Status, int StepsExecuted, int FinalCursor);
@@ -26,45 +28,38 @@ public readonly record struct ActionMove(ActionMoveKind Kind, int AdvanceBy = 1)
 
 public readonly record struct ActionId(int Value);
 
-public sealed class ActionSequenceMachine
+public sealed class ActionSequenceMachine<TCtx>
 {
-    public delegate ActionMove ActionPlain();
+    public delegate ActionMove ActionBinding(TCtx context);
 
-    public delegate ActionMove ActionBinding<TCtx>(in TCtx context);
+    public delegate bool ConditionBinding(TCtx context);
 
-    public delegate bool ConditionBinding<TCtx>(in TCtx context);
+    private readonly Dictionary<ConditionId, ConditionBinding> _conditions = new(4);
 
-    private List<Delegate> _actions = new(4);
-    private Dictionary<ConditionId, Delegate> _conditions = new(4);
+    private List<ActionBinding> _registerActions = new(4);
+    private ActionBinding[] _actionBindings = Array.Empty<ActionBinding>();
 
-    public void Run()
+    public void Build()
     {
-        var idx = 0;
+        _actionBindings = _registerActions.ToArray();
+        _registerActions = null!;
     }
 
-    public ActionId RegisterAction(ActionPlain binding)
+    public ActionId RegisterAction(ActionBinding binding)
     {
         ArgumentNullException.ThrowIfNull(binding, nameof(binding));
-        var actionId = new ActionId(_actions.Count);
-        _actions.Add(binding);
+        var actionId = new ActionId(_registerActions.Count);
+        _registerActions.Add(binding);
         return actionId;
     }
 
-    public ActionId RegisterAction<TCtx>(ActionBinding<TCtx> binding)
-    {
-        ArgumentNullException.ThrowIfNull(binding, nameof(binding));
-        var actionId = new ActionId(_actions.Count);
-        _actions.Add(binding);
-        return actionId;
-    }
-
-    public void RegisterCondition<TCtx>(int fromId, int toId, ConditionBinding<TCtx> binding)
+    public void RegisterCondition(int fromId, int toId, ConditionBinding binding)
     {
         ArgumentNullException.ThrowIfNull(binding, nameof(binding));
 
-        if (fromId < 0 || fromId >= _actions.Count)
+        if (fromId < 0 || fromId >= _registerActions.Count)
             throw new ArgumentOutOfRangeException(nameof(fromId));
-        if (toId < 0 || toId >= _actions.Count)
+        if (toId < 0 || toId >= _registerActions.Count)
             throw new ArgumentOutOfRangeException(nameof(fromId));
 
 
@@ -73,41 +68,47 @@ public sealed class ActionSequenceMachine
     }
 
 
-    public ExecutionResult Run<TCtx>(in TCtx context)
+    public ExecutionResult Run(TCtx context)
     {
-        int idx = 0, executed = 0;
+        ArgumentNullException.ThrowIfNull(context, nameof(context));
+        ArgumentNullException.ThrowIfNull(_actionBindings, nameof(_actionBindings));
+        ArgumentOutOfRangeException.ThrowIfLessThan(_actionBindings.Length, 2);
+        
+        int idx = 0, executed = 0, actionExecuted = 0;
+        int length = _actionBindings.Length;
 
-        while (idx < _actions.Count)
+        while (idx < length)
         {
-            var action = _actions[idx];
-
-            ActionMove move = default;
-
-            if (action is ActionBinding<TCtx> actionBinding)
-                move = actionBinding(in context);
-            else if (action is ActionPlain actionPlain)
-                move = actionPlain();
-            else
-                throw new InvalidOperationException($"No binding for ActionId {action} with ctx {typeof(TCtx).Name}");
-
+            var move = _actionBindings[idx](context);
             executed++;
+            actionExecuted++;
 
-            if (move.Kind == ActionMoveKind.Stay) continue;
-            if (move.Kind == ActionMoveKind.Halt) return new ExecutionResult(ExecutionStatus.Halted, executed, idx);
-
-            if (move.AdvanceBy < 1)
-                throw new InvalidOperationException($"Illegal move: AdvanceBy {move.AdvanceBy} at step {idx}.");
-
-            var next = idx + move.AdvanceBy;
-            var conditionId = ConditionId.Make(idx, next);
-
-            if (_conditions.TryGetValue(conditionId, out var d) && d is ConditionBinding<TCtx> condition)
+            switch (move.Kind)
             {
-                if (!condition(in context)) throw new InvalidOperationException($"Illegal condition {conditionId}.");
+                case ActionMoveKind.Advance:
+                {
+                    if (move.AdvanceBy < 1)
+                        ThrowIllegalAdvance(move.AdvanceBy, idx);
+                    var next = idx + move.AdvanceBy;
+                    var conditionId = ConditionId.Make(idx, next);
+
+
+                    if (_conditions.TryGetValue(conditionId, out var cond))
+                    {
+                        if (!cond(context)) ThrowIllegalConditionPacked(idx, next);
+                    }
+
+                    idx = next;
+                    break;
+                }
+                case ActionMoveKind.Stay:
+                    if (actionExecuted > 1000) ThrowIllegalStayAmount(actionExecuted);
+                    continue;
+                case ActionMoveKind.Halt: return new ExecutionResult(ExecutionStatus.Halted, executed, idx);
+                default: ThrowUnknownMove(move.Kind); break;
             }
 
-
-            idx = next;
+            actionExecuted = 0;
         }
 
         return new ExecutionResult(ExecutionStatus.Completed, executed, idx);
@@ -116,7 +117,26 @@ public sealed class ActionSequenceMachine
 
     internal readonly record struct ConditionId(ActionId ForActionId, ActionId ToActionId)
     {
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static ConditionId Make(int forActionId, int toActionId) =>
             new(new ActionId(forActionId), new ActionId(toActionId));
     }
+
+    [MethodImpl(MethodImplOptions.NoInlining), DoesNotReturn]
+    static void ThrowIllegalStayAmount(int stayAmount) =>
+        throw new InvalidOperationException($"Illegal stay: Stayed for max {stayAmount}.");
+
+    
+    [MethodImpl(MethodImplOptions.NoInlining), DoesNotReturn]
+    static void ThrowIllegalAdvance(int advanceBy, int idx) =>
+        throw new InvalidOperationException($"Illegal move: AdvanceBy {advanceBy} at step {idx}.");
+
+    [MethodImpl(MethodImplOptions.NoInlining), DoesNotReturn]
+    static void ThrowIllegalConditionPacked(int from, int to) =>
+        throw new InvalidOperationException($"Illegal condition ({from}->{to}).");
+
+    [MethodImpl(MethodImplOptions.NoInlining), DoesNotReturn]
+    static void ThrowUnknownMove(ActionMoveKind kind) =>
+        throw new InvalidOperationException($"Unknown move kind: {kind}.");
+
 }

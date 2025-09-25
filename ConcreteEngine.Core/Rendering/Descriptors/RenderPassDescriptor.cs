@@ -112,8 +112,11 @@ public sealed class PostEffectPass : RenderPassDescBase, IFsqPass
 {
     public override RenderPassOp Op => RenderPassOp.FullscreenQuad;
     public required TextureId[] SourceTextures { get; init; }
+    public required TextureId OutputTexture { get; init; }
+    public TextureId LutTexture { get; init; }
     public required ShaderId Shader { get; init; }
     public override GfxPassClear Clear => GfxPassClear.MakeColorClear(Color4.Black);
     public override BlendMode Blend => BlendMode.Unset;
     public override bool DepthTest => false;
+    public bool GenerateMipMapAfter { get; set; } = false;
 }

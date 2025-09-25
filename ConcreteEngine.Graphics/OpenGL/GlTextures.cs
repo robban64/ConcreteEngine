@@ -41,6 +41,15 @@ internal sealed class GlTextures : IGraphicsDriverModule
         _gl.TextureStorage2D(texture, (uint)mipLevels, glFormat, (uint)width, (uint)height);
         return _store.Texture.Add(new GlTextureHandle(texture));
     }
+    
+    public GfxRefToken<TextureId> CreateTexture3D(int width, int height, int depth, int mipLevels, EnginePixelFormat format)
+    {
+        var glFormat = format.ToGlEnums();
+        _gl.CreateTextures(TextureTarget.Texture3D, 1, out uint texture);
+        _gl.TextureStorage3D(texture, (uint)mipLevels, glFormat, (uint)width, (uint)height, (uint)depth);
+        return _store.Texture.Add(new GlTextureHandle(texture));
+    }   
+
 
     public GfxRefToken<TextureId> CreateTextureCubeMap(int width, int height, int mipLevels)
     {
@@ -90,60 +99,84 @@ internal sealed class GlTextures : IGraphicsDriverModule
             pixels: data
         );
     }
+    
+    public void UploadTexture3D_Data(GfxRefToken<TextureId> texRef, ReadOnlySpan<byte> data, int width, int height,
+        int depth)
+    {
+        var handle = GetTexHandle(in texRef).Handle;
+        _gl.TextureSubImage3D(
+            handle, level: 0,
+            xoffset: 0, yoffset: 0, zoffset: 0,
+            width: (uint)width, height: (uint)height, depth: (uint)depth,
+            format: PixelFormat.Rgb, type: PixelType.UnsignedByte,
+            pixels: data
+        );
+    }
 
-    public void SetTexturePreset(GfxRefToken<TextureId> texRef, TexturePreset preset)
+
+    public void SetTexturePreset(GfxRefToken<TextureId> texRef, TexturePreset preset, TextureKind  kind)
     {
         var handle = GetTexHandle(in texRef);
+
+        var is3D = kind == TextureKind.Texture3D || kind == TextureKind.CubeMap;
 
         switch (preset)
         {
             case TexturePreset.NearestClamp:
-                SetTexParameter(GLEnum.TextureWrapS, GLEnum.ClampToEdge);
-                SetTexParameter(GLEnum.TextureWrapT, GLEnum.ClampToEdge);
                 SetTexParameter(GLEnum.TextureMinFilter, GLEnum.Nearest);
                 SetTexParameter(GLEnum.TextureMagFilter, GLEnum.Nearest);
+                SetTexParameter(GLEnum.TextureWrapS, GLEnum.ClampToEdge);
+                SetTexParameter(GLEnum.TextureWrapT, GLEnum.ClampToEdge);
+                if(is3D) SetTexParameter(GLEnum.TextureWrapR, GLEnum.ClampToEdge);
                 break;
 
             case TexturePreset.NearestRepeat:
-                SetTexParameter(GLEnum.TextureWrapS, GLEnum.Repeat);
-                SetTexParameter(GLEnum.TextureWrapT, GLEnum.Repeat);
                 SetTexParameter(GLEnum.TextureMinFilter, GLEnum.Nearest);
                 SetTexParameter(GLEnum.TextureMagFilter, GLEnum.Nearest);
+                SetTexParameter(GLEnum.TextureWrapS, GLEnum.Repeat);
+                SetTexParameter(GLEnum.TextureWrapT, GLEnum.Repeat);
+                if(is3D) SetTexParameter(GLEnum.TextureWrapR, GLEnum.Repeat);
                 break;
 
             case TexturePreset.LinearClamp:
-                SetTexParameter(GLEnum.TextureWrapS, GLEnum.ClampToEdge);
-                SetTexParameter(GLEnum.TextureWrapT, GLEnum.ClampToEdge);
                 SetTexParameter(GLEnum.TextureMinFilter, GLEnum.Linear);
                 SetTexParameter(GLEnum.TextureMagFilter, GLEnum.Linear);
+                SetTexParameter(GLEnum.TextureWrapS, GLEnum.ClampToEdge);
+                SetTexParameter(GLEnum.TextureWrapT, GLEnum.ClampToEdge);
+                if(is3D) SetTexParameter(GLEnum.TextureWrapR, GLEnum.ClampToEdge);
                 break;
 
             case TexturePreset.LinearRepeat:
-                SetTexParameter(GLEnum.TextureWrapS, GLEnum.Repeat);
-                SetTexParameter(GLEnum.TextureWrapT, GLEnum.Repeat);
                 SetTexParameter(GLEnum.TextureMinFilter, GLEnum.Linear);
                 SetTexParameter(GLEnum.TextureMagFilter, GLEnum.Linear);
+                SetTexParameter(GLEnum.TextureWrapS, GLEnum.Repeat);
+                SetTexParameter(GLEnum.TextureWrapT, GLEnum.Repeat);
+                if(is3D) SetTexParameter(GLEnum.TextureWrapR, GLEnum.Repeat);
                 break;
 
             case TexturePreset.LinearMipmapClamp:
-                SetTexParameter(GLEnum.TextureWrapS, GLEnum.ClampToEdge);
-                SetTexParameter(GLEnum.TextureWrapT, GLEnum.ClampToEdge);
                 SetTexParameter(GLEnum.TextureMinFilter, GLEnum.LinearMipmapLinear);
                 SetTexParameter(GLEnum.TextureMagFilter, GLEnum.Linear);
+                SetTexParameter(GLEnum.TextureWrapS, GLEnum.ClampToEdge);
+                SetTexParameter(GLEnum.TextureWrapT, GLEnum.ClampToEdge);
+                if(is3D) SetTexParameter(GLEnum.TextureWrapR, GLEnum.ClampToEdge);
                 break;
 
             case TexturePreset.LinearMipmapRepeat:
-                SetTexParameter(GLEnum.TextureWrapS, GLEnum.Repeat);
-                SetTexParameter(GLEnum.TextureWrapT, GLEnum.Repeat);
                 SetTexParameter(GLEnum.TextureMinFilter, GLEnum.LinearMipmapLinear);
                 SetTexParameter(GLEnum.TextureMagFilter, GLEnum.Linear);
+                SetTexParameter(GLEnum.TextureWrapS, GLEnum.Repeat);
+                SetTexParameter(GLEnum.TextureWrapT, GLEnum.Repeat);
+                if(is3D) SetTexParameter(GLEnum.TextureWrapR, GLEnum.Repeat);
+
                 break;
 
             case TexturePreset.PremultipliedUi:
-                SetTexParameter(GLEnum.TextureWrapS, GLEnum.ClampToEdge);
-                SetTexParameter(GLEnum.TextureWrapT, GLEnum.ClampToEdge);
                 SetTexParameter(GLEnum.TextureMinFilter, GLEnum.Linear);
                 SetTexParameter(GLEnum.TextureMagFilter, GLEnum.Linear);
+                SetTexParameter(GLEnum.TextureWrapS, GLEnum.ClampToEdge);
+                SetTexParameter(GLEnum.TextureWrapT, GLEnum.ClampToEdge);
+                if(is3D) SetTexParameter(GLEnum.TextureWrapR, GLEnum.ClampToEdge);
                 break;
             default:
                 throw new ArgumentOutOfRangeException(nameof(preset), preset, null);

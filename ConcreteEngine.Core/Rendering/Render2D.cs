@@ -30,7 +30,7 @@ internal class Render2D : IRender
     }
 
 
-    public void Prepare(float alpha, in RenderGlobalSnapshot snapshot)
+    public void Prepare(float alpha, in FrameInfo frameCtx, in RenderGlobalSnapshot snapshot)
     {
 
         var projectionViewMatrix = _camera.ProjectionViewMatrix;

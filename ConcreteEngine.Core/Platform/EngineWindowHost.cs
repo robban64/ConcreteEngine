@@ -106,6 +106,7 @@ public sealed class EngineWindowHost : IEngineWindowHost
         
         var frameCtx = new FrameInfo(
             frameIndex:  0,
+            deltaTime: 0,
             vSyncEnabled: false,
             resizePending: true,
             viewport: _window.Size,

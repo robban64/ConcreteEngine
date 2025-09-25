@@ -148,15 +148,15 @@ public sealed class RenderSystem : IRenderSystem
         _snapshot = SceneRenderProps.CurrentSnapshot;
 
 
-        PrepareRenderer(alpha);
+        PrepareRenderer(alpha, in frameCtx);
         Execute(alpha);
         _commandSubmitter.Reset();
     }
 
-    private void PrepareRenderer(float alpha)
+    private void PrepareRenderer(float alpha, in FrameInfo frameCtx)
     {
         _sceneDrawProducer.SetSceneGlobals(in _snapshot);
-        _render.Prepare(alpha, in _snapshot);
+        _render.Prepare(alpha, in frameCtx, in _snapshot);
         _commandCollector.Collect(alpha, in _snapshot, _commandSubmitter);
         _commandSubmitter.Prepare();
     }
@@ -220,12 +220,15 @@ public sealed class RenderSystem : IRenderSystem
         }
         
         if (!isScreenPass)
-        {
             _gfxCmd.EndRenderPass();
-        }
 
+        if (pass is PostEffectPass postEffectPass && postEffectPass.GenerateMipMapAfter)
+        {
+            _gfx.Textures.GenerateMipMaps(postEffectPass.OutputTexture);
+        }
     }
 
+    //TODO split, use debug checks and move into DrawProcessor
     private void DrawFullscreenQuad(IFsqPass pass)
     {
         ArgumentNullException.ThrowIfNull(pass);
@@ -240,6 +243,11 @@ public sealed class RenderSystem : IRenderSystem
         for (int i = 0; i < pass.SourceTextures.Length; i++)
         {
             _gfxCmd.BindTexture(pass.SourceTextures[i], i);
+        }
+        
+        if (pass is PostEffectPass postEffectPass && postEffectPass.LutTexture != default)
+        {
+            _gfxCmd.BindTexture(postEffectPass.LutTexture, pass.SourceTextures.Length);
         }
 
         _gfxCmd.BindMesh(_gfx.Primitives.FsqQuad);

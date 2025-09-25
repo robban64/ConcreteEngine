@@ -125,6 +125,7 @@ public sealed class GameEngine : IDisposable
         var outputSize = _window.FramebufferSize;
         var frameCtx = new FrameInfo(
             frameIndex: _frameIdx,
+            deltaTime:dt,
             vSyncEnabled: false,
             resizePending: _frameIdx > 1 && outputSize != _prevOutputSize,
             viewport: _window.Size,

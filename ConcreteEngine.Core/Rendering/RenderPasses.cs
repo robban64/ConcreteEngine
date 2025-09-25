@@ -2,6 +2,7 @@ using System.Numerics;
 using ConcreteEngine.Common;
 using ConcreteEngine.Common.Numerics;
 using ConcreteEngine.Graphics;
+using ConcreteEngine.Graphics.Contracts;
 using ConcreteEngine.Graphics.Descriptors;
 using ConcreteEngine.Graphics.Gfx;
 using ConcreteEngine.Graphics.Resources;
@@ -22,6 +23,7 @@ internal class RenderPasses
     public RenderPassFboRecord ShadowFbo { get; private set; }
     public RenderPassFboRecord PostFboA { get; private set; }
     public RenderPassFboRecord PostFboB { get; private set; }
+    
 
 
     private readonly GfxContext _gfx;
@@ -172,7 +174,8 @@ internal class RenderPasses
         if (PostFboA.IsValid)
             throw new InvalidOperationException("Post Process buffer is already created");
 
-        PostFboA = CreatePostProcessBuffer(sizeRatio);
+        PostFboA = CreatePostProcessBuffer(sizeRatio,true);
+
     }
 
     public void CreatePostProcessBuffer_B(Vector2 sizeRatio)
@@ -180,17 +183,17 @@ internal class RenderPasses
         if (PostFboB.IsValid)
             throw new InvalidOperationException("Post Process buffer is already created");
 
-        PostFboB = CreatePostProcessBuffer(sizeRatio);
+        PostFboB = CreatePostProcessBuffer(sizeRatio, false);
     }
 
-    private RenderPassFboRecord CreatePostProcessBuffer(Vector2 sizeRatio)
+    private RenderPassFboRecord CreatePostProcessBuffer(Vector2 sizeRatio, bool mipmap)
     {
         ValidateSizeRatio(sizeRatio);
 
         var desc = new FrameBufferDesc(
             DownscaleRatio: Vector2.One,
             AbsoluteSize: _snapshot.OutputSize,
-            TexturePreset: TexturePreset.LinearClamp,
+            TexturePreset: mipmap ? TexturePreset.LinearMipmapClamp : TexturePreset.LinearClamp,
             Attachments: new FrameBufferAttachmentDesc(true, false, false, false)
         );
 

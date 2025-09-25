@@ -13,14 +13,15 @@ public readonly record struct GpuTextureDescriptor(
     TextureKind Kind,
     EnginePixelFormat Format = EnginePixelFormat.Rgba,
     TextureAnisotropy Anisotropy = TextureAnisotropy.Default,
-    float LodBias = 0
+    float LodBias = 0,
+    int Depth = 0
 )
 {
     public static GpuTextureDescriptor MakeFboMsaaDesc(int width, int height) =>
         new(width, height, TexturePreset.None, TextureKind.Multisample2D, EnginePixelFormat.SrgbAlpha,
             TextureAnisotropy.Off, 0);
 
-    public static GpuTextureDescriptor MakeFboColorDesc(int width, int height) =>
-        new(width, height, TexturePreset.None, TextureKind.Texture2D, EnginePixelFormat.SrgbAlpha,
+    public static GpuTextureDescriptor MakeFboColorDesc(int width, int height, TexturePreset preset) =>
+        new(width, height, preset, TextureKind.Texture2D, EnginePixelFormat.SrgbAlpha,
             TextureAnisotropy.Off, 0);
 }

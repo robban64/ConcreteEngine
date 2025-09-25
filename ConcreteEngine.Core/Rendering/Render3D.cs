@@ -2,6 +2,7 @@ using System.Numerics;
 using ConcreteEngine.Common;
 using ConcreteEngine.Common.Numerics;
 using ConcreteEngine.Graphics;
+using ConcreteEngine.Graphics.Contracts;
 using ConcreteEngine.Graphics.Gfx;
 using ConcreteEngine.Graphics.Resources;
 using Silk.NET.Maths;
@@ -16,7 +17,13 @@ internal sealed class Render3D : IRender
     private readonly RenderPasses _registry;
     private readonly Camera3D _camera;
 
+    private float _deltaTicker = 0;
+
     public ICamera Camera => _camera;
+    
+    
+    private TextureId LutTextureId = default;
+
 
     public Render3D(GfxContext gfx, DrawProcessor drawProcessor, in RenderGlobalSnapshot snapshot)
     {
@@ -24,11 +31,27 @@ internal sealed class Render3D : IRender
         _drawProcessor = drawProcessor;
         _camera = new Camera3D();
         _registry = new RenderPasses(_gfx, in snapshot);
+        
+        var texDesc = new GpuTextureDescriptor
+        {
+            Width = 32,
+            Height = 32,
+            Depth = 32,
+            Format = EnginePixelFormat.Rgb,
+            Kind = TextureKind.Texture3D,
+            Preset = TexturePreset.LinearClamp,
+            LodBias = 0,
+            Anisotropy = TextureAnisotropy.Off
+        };
+        LutTextureId = _gfx.Textures.CreateTexture3D(ReadOnlySpan<byte>.Empty, in texDesc);
+
     }
 
 
-    public void Prepare(float alpha, in RenderGlobalSnapshot snapshot)
+    public void Prepare(float alpha,in FrameInfo frameCtx, in RenderGlobalSnapshot snapshot)
     {
+        _deltaTicker += frameCtx.DeltaTime;
+        
         var frameUniforms = new FrameUniformRecord(
             ambient: snapshot.Ambient,
             ambientIntensity: 1,
@@ -59,12 +82,19 @@ internal sealed class Render3D : IRender
         _drawProcessor.UploadFrame(in frameUniforms);
         _drawProcessor.UploadCamera(in cameraUniforms);
         _drawProcessor.UploadDirLight(in dirLightUniforms);
-        
-        _drawProcessor.UploadFramePostProcess(new FramePostProcessUniform(
-            new Vector4(0,1,1,2.2f),
-            new Vector4(0,0,0,0),
-            new Vector4(0.0f, 1.0f, 0, 0.0f)));
 
+        var postProcessUniforms = new FramePostProcessUniform(
+            new Vector4(0.5f, 1.1f, 1.05f, 2.2f),
+            new Vector4(0.25f, -0.05f, 0.0f, 0.0f),
+            new Vector4(0.0f, 1.0f, 0.5f, 0.0f),
+            new Vector4(1.0f, 0.5f, 0.6f, 0.0f),
+            new Vector4(0.8f, 0.6f, 0.35f, 0.2f),
+            new Vector4(0.65f, 1.0f / 32.0f, 0.0f, 0.0f),
+            new Vector4(0.35f, 0.85f, 0.20f, 0.0f),
+            new Vector4(0.0075f, _deltaTicker, 0.0f, 0.0f),
+            new Vector4(0.0000f, 0.0f, 0.0f, 0.0f));
+        
+        _drawProcessor.UploadFramePostProcess(in postProcessUniforms);
     }
 
     public bool TryGetNextPasses(out RenderTargetId targetId, out List<IRenderPassDescriptor> passes)
@@ -78,7 +108,6 @@ internal sealed class Render3D : IRender
     public void RenderDepthPass(IDepthPass depthPass, RenderPipeline submitter)
     {
     }
-
 
 
     public void MutateRenderPass(RenderTargetId targetId, in RenderPassMutation mutation) =>
@@ -96,13 +125,13 @@ internal sealed class Render3D : IRender
         ArgumentOutOfRangeException.ThrowIfLessThan(outputSize.Y, 16);
 
         desc.ScreenTarget.ScreenShaderId.IsValidOrThrow();
-        
+
         // Scene Target setup
         var sceneTarget = desc.SceneTarget;
         _registry.CreateSceneBuffer();
         _registry.CreateMultisampleBuffer(Vector2.One, sceneTarget.Samples);
-        _registry.CreateLightBuffer(Vector2.One, TexturePreset.LinearMipmapRepeat);
-        _registry.CreateShadowBuffer(new Vector2D<int>(2048, 2048));
+        //_registry.CreateLightBuffer(Vector2.One, TexturePreset.LinearMipmapRepeat);
+        //_registry.CreateShadowBuffer(new Vector2D<int>(2048, 2048));
         _registry.CreatePostProcessBuffer_A(Vector2.One);
         _registry.CreatePostProcessBuffer_B(Vector2.One);
 
@@ -119,6 +148,7 @@ internal sealed class Render3D : IRender
             new SceneRenderPass
             {
                 TargetFbo = _registry.MultisampleFbo.FboId,
+                Clear = GfxPassClear.MakeColorDepthClear(desc.SceneTarget.ClearColor)
             });
 
         // Pass 1: resolve MSAA into single-sample texture FBO
@@ -152,7 +182,9 @@ internal sealed class Render3D : IRender
             {
                 TargetFbo = _registry.PostFboA.FboId,
                 SourceTextures = [_registry.SceneFbo.ColTexId],
-                Shader = desc.PostEffectTarget.CompositeShaderId
+                OutputTexture = _registry.PostFboA.ColTexId,
+                Shader = desc.PostEffectTarget.CompositeShaderId,
+                GenerateMipMapAfter = true,
             });
 
         // Pass 1..N: post stack ping-pong (PostA <-> PostB)
@@ -161,7 +193,9 @@ internal sealed class Render3D : IRender
             {
                 TargetFbo = _registry.PostFboB.FboId,
                 SourceTextures = [_registry.PostFboA.ColTexId],
-                Shader = desc.PostEffectTarget.EffectShaderId
+                LutTexture = LutTextureId,
+                OutputTexture = _registry.PostFboB.ColTexId,
+                Shader = desc.PostEffectTarget.EffectShaderId,
             });
 
 

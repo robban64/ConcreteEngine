@@ -44,7 +44,7 @@ public sealed class GfxFrameBuffers
             var textureId = desc.Multisample != RenderBufferMsaa.None
                 ? _gfxTextures.CreateTextureMsaa(GpuTextureDescriptor.MakeFboMsaaDesc(size.X, size.Y), desc.Multisample)
                 : _gfxTextures.CreateTexture2D(ReadOnlySpan<byte>.Empty,
-                    GpuTextureDescriptor.MakeFboColorDesc(size.X, size.Y));
+                    GpuTextureDescriptor.MakeFboColorDesc(size.X, size.Y, desc.TexturePreset));
 
             var texRef = _resources.TextureStore.GetRef(textureId);
             _backend.AttachTexture(fboRef, texRef);

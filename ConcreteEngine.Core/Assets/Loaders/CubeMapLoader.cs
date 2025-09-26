@@ -12,7 +12,7 @@ namespace ConcreteEngine.Core.Assets.Loaders;
 
 internal sealed record CubeMapPayload(
     ReadOnlyMemory<byte>[] FaceData,
-    GpuTextureDescriptor Descriptor
+    GfxTextureDescriptor Descriptor
 );
 
 internal sealed class CubeMapLoader(IReadOnlyList<CubeMapManifestRecord> records)
@@ -33,7 +33,7 @@ internal sealed class CubeMapLoader(IReadOnlyList<CubeMapManifestRecord> records
             faceData[i] = image.Data;
         }
 
-        var desc = new GpuTextureDescriptor(
+        var desc = new GfxTextureDescriptor(
             Width: record.Width,
             Height: record.Height,
             Format: record.PixelFormat,

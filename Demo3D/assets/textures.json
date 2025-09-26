@@ -31,16 +31,19 @@
 	},
 	{
 	  "name": "Mud",
-	  "filename": "mud.jpg"
-	},
+	  "filename": "mud.jpg",
+      "preset": "LinearMipmapClamp"
+    },
 	{
 	  "name": "Rock",
-	  "filename": "rock.jpg"
-	},
+	  "filename": "rock.jpg",
+      "preset": "LinearMipmapRepeat"
+    },
 	{
 	  "name": "Stone",
-	  "filename": "stone.jpg"
-	},
+	  "filename": "stone.jpg",
+      "preset": "LinearMipmapRepeat"
+    },
 	{
 	  "name": "Heightmap",
 	  "filename": "heightmap.png",

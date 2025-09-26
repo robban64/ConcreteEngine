@@ -32,7 +32,7 @@ internal sealed class Render3D : IRender
         _camera = new Camera3D();
         _registry = new RenderPasses(_gfx, in snapshot);
         
-        var texDesc = new GpuTextureDescriptor
+        var texDesc = new GfxTextureDescriptor
         {
             Width = 32,
             Height = 32,

@@ -16,8 +16,11 @@ public readonly struct TextureMeta(
     TextureKind kind,
     TextureAnisotropy anisotropy,
     EnginePixelFormat format,
-    byte mipLevel,
-    bool hasData) : IResourceMeta
+    int depth,
+    short levels,
+    short samples,
+    nint sizeInBytes
+) : IResourceMeta
 {
     public readonly int Width = width;
     public readonly int Height = height;
@@ -25,10 +28,16 @@ public readonly struct TextureMeta(
     public readonly TextureKind Kind = kind;
     public readonly TextureAnisotropy Anisotropy = anisotropy;
     public readonly EnginePixelFormat PixelFormat = format;
-    public readonly byte MipLevels = mipLevel;
+    public readonly int Depth = height;
+    public readonly short Levels = levels;
+    public readonly short Samples = samples;
+    public readonly nint SizeInBytes = sizeInBytes;
 
-    internal static TextureMeta CreateFromHasData(in TextureMeta m, bool hasData) =>
-        new(m.Width, m.Height, m.Preset, m.Kind, m.Anisotropy, m.PixelFormat, m.MipLevels, hasData);
+    internal static TextureMeta CopyWithNewSize(in TextureMeta m, nint sizeInBytes) =>
+        new(m.Width, m.Height,
+            m.Preset, m.Kind, m.Anisotropy, m.PixelFormat,
+            m.Depth, m.Levels, m.Samples, sizeInBytes
+        );
 }
 
 public readonly struct ShaderMeta(int samplers) : IResourceMeta

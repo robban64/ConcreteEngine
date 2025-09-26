@@ -42,9 +42,9 @@ public sealed class GfxFrameBuffers
         if (desc.Attachments.ColorTexture) //boolean
         {
             var textureId = desc.Multisample != RenderBufferMsaa.None
-                ? _gfxTextures.CreateTextureMsaa(GpuTextureDescriptor.MakeFboMsaaDesc(size.X, size.Y), desc.Multisample)
+                ? _gfxTextures.CreateTextureMsaa(GfxTextureDescriptor.MakeFboMsaaDesc(size.X, size.Y), desc.Multisample)
                 : _gfxTextures.CreateTexture2D(ReadOnlySpan<byte>.Empty,
-                    GpuTextureDescriptor.MakeFboColorDesc(size.X, size.Y, desc.TexturePreset));
+                    GfxTextureDescriptor.MakeFboColorDesc(size.X, size.Y, desc.TexturePreset));
 
             var texRef = _resources.TextureStore.GetRef(textureId);
             _backend.AttachTexture(fboRef, texRef);
@@ -88,7 +88,7 @@ public sealed class GfxFrameBuffers
         if (oldMeta.ColorTexture)
         {
             InvalidOpThrower.ThrowIfNot(attachIds.ColorTextureId.IsValid());
-            var texDesc = new GpuTextureDescriptor(newSize.X, newSize.Y,
+            var texDesc = new GfxTextureDescriptor(newSize.X, newSize.Y,
                 layout.TexturePreset, TextureKind.Texture2D);
 
             _gfxTextures.ReplaceTexture(attachIds.ColorTextureId,

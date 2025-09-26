@@ -46,7 +46,7 @@ public sealed record ShaderManifestRecord(
 public sealed record TextureManifestRecord(
     string Name,
     string Filename,
-    TexturePreset Preset,
+    TexturePreset Preset = TexturePreset.LinearClamp,
     EnginePixelFormat PixelFormat = EnginePixelFormat.SrgbAlpha,
     TextureAnisotropy Anisotropy = TextureAnisotropy.Default,
     bool InMemory = false,

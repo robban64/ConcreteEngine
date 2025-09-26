@@ -9,7 +9,7 @@ using StbImageSharp;
 
 namespace ConcreteEngine.Core.Assets.Loaders;
 
-internal sealed record TexturePayload(byte[] Data, GpuTextureDescriptor Descriptor);
+internal sealed record TexturePayload(byte[] Data, GfxTextureDescriptor Descriptor);
 
 internal sealed class TextureLoader(IReadOnlyList<TextureManifestRecord> records)
     : AssetTypeLoader<TextureManifestRecord, TexturePayload>(records)
@@ -23,7 +23,7 @@ internal sealed class TextureLoader(IReadOnlyList<TextureManifestRecord> records
         var image = ImageResult.FromStream(stream, ColorComponents.RedGreenBlueAlpha);
         ValidateImageResult(image);
 
-        var desc = new GpuTextureDescriptor(
+        var desc = new GfxTextureDescriptor(
             Width: image.Width,
             Height: image.Height,
             Format: record.PixelFormat,

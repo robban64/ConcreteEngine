@@ -158,10 +158,8 @@ internal static class GlEnumExtensions
         };
     }
 
-    [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public static SizedInternalFormat ToGlEnums(this EnginePixelFormat format)
+    public static SizedInternalFormat ToStorageFormat(this EnginePixelFormat format)
     {
-        
         return format switch
         {
             EnginePixelFormat.Rgb => SizedInternalFormat.Rgb8,
@@ -170,6 +168,19 @@ internal static class GlEnumExtensions
             _ => throw new ArgumentOutOfRangeException(nameof(format))
         };
     }
+    
+    public static (PixelFormat fmt, PixelType type) ToUploadFormatType(this EnginePixelFormat f)
+    {
+        return f switch
+        {
+            EnginePixelFormat.Rgb => (PixelFormat.Rgb, PixelType.UnsignedByte),
+            EnginePixelFormat.Rgba => (PixelFormat.Rgba, PixelType.UnsignedByte),
+            // sRGB only for internal format
+            EnginePixelFormat.SrgbAlpha => (PixelFormat.Rgba, PixelType.UnsignedByte),
+            _ => throw new ArgumentOutOfRangeException(nameof(f))
+        };
+    }
+
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static BufferUsage ToBufferUsage(this BufferStorage usage)

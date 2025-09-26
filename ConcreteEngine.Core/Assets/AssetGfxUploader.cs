@@ -38,17 +38,20 @@ internal sealed class AssetGfxUploader
     public TextureId UploadTexture(TextureManifestRecord record, in TexturePayload payload,
         out TextureCreationInfo info)
     {
-        var desc = payload.Descriptor;
+        var desc = payload.TextureDesc;
         var inMemoryData = record.InMemory ? payload.Data : null;
         info = new TextureCreationInfo(desc.Width, desc.Height, desc.Format, inMemoryData);
-        return _gfx.Textures.CreateTexture2D(payload.Data, in desc);
+        var textureId = _gfx.Textures.CreateTexture( in desc, payload.TextureProps);
+        _gfx.Textures.UploadTexture2D(textureId, payload.Data, desc.Width, desc.Height);
+        _gfx.Textures.ApplyProperties(textureId);
+        return textureId;
     }
 
     public TextureId UploadCubeMap(CubeMapManifestRecord record, in CubeMapPayload payload,
         out CubeMapCreationInfo info)
     {
-        var desc = payload.Descriptor;
-        var textureId = _gfx.Textures.CreateCubeMap(in desc);
+        var desc = payload.TextureDesc;
+        var textureId = _gfx.Textures.CreateTexture(in desc, payload.TextureProps);
         for (int i = 0; i < 6; i++)
             _gfx.Textures.UploadCubeMapFace(
                 textureId,
@@ -57,6 +60,7 @@ internal sealed class AssetGfxUploader
                 record.Height,
                 i
             );
+        _gfx.Textures.ApplyProperties(textureId);
         info = new CubeMapCreationInfo(desc.Width, desc.Height, desc.Format);
         return textureId;
     }

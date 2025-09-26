@@ -104,6 +104,14 @@ internal sealed class GlStates : IGraphicsDriverModule
         _gl.CullFace(face);
         _gl.FrontFace(front);
     }
+    
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public void BindTexture(in GfxRefToken<TextureId> texRef, int slot) =>
+        _gl.BindTextureUnit((uint)slot, _store.Texture.GetRef(texRef).Handle);
+
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public void UnbindTextureSlot(int slot) => _gl.BindTextureUnit(0, (uint)slot);
+
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public void BindFrameBuffer(GfxRefToken<FrameBufferId> fboRef) =>

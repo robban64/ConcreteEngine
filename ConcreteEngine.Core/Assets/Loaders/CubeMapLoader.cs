@@ -12,7 +12,8 @@ namespace ConcreteEngine.Core.Assets.Loaders;
 
 internal sealed record CubeMapPayload(
     ReadOnlyMemory<byte>[] FaceData,
-    GfxTextureDescriptor Descriptor
+    GfxTextureDescriptor TextureDesc,
+    GfxTextureProperties TextureProps
 );
 
 internal sealed class CubeMapLoader(IReadOnlyList<CubeMapManifestRecord> records)
@@ -36,15 +37,18 @@ internal sealed class CubeMapLoader(IReadOnlyList<CubeMapManifestRecord> records
         var desc = new GfxTextureDescriptor(
             Width: record.Width,
             Height: record.Height,
-            Format: record.PixelFormat,
             Kind: TextureKind.CubeMap,
+            Format: record.PixelFormat
+        );
+
+        var props = new GfxTextureProperties(
             Preset: record.Preset,
             Anisotropy: TextureAnisotropy.Off,
             LodBias: 0
         );
 
         info = AssetProcessInfo.MakeDone<CubeMapManifestRecord>();
-        return new CubeMapPayload(faceData, desc);
+        return new CubeMapPayload(faceData, desc, props);
     }
 
 

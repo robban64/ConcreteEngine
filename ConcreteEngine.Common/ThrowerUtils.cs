@@ -65,28 +65,5 @@ public static class InvalidOpThrower
         if (capacity > array.Length) 
             ThrowOperation(nameof(capacity), $"Capacity exceed {capacity} > {array.Length}");
     }
-    
-    [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public static void ThrowIfGreaterThan<T>(T a, T b, string? paramName = null) where T : IComparable<T>
-    {
-        if (a.CompareTo(b) <= 0) ThrowOperation(paramName ?? "a");
-    }
 
-    [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public static void ThrowIfLessThan<T>(T a, T b, string? paramName = null) where T : IComparable<T>
-    {
-        if (a.CompareTo(b) >= 0) ThrowOperation(paramName);
-    }
-
-    [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public static void ThrowIfZero(int value, string? paramName = null, string? message = null)
-    {
-        if (value == 0) ThrowOperation(paramName, "Value cannot be zero");
-    }
-    
-    [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public static void ThrowIfNotZero(int value, string? paramName = null, string? message = null)
-    {
-        if (value == 0) ThrowOperation(paramName, "Value must be zero");
-    }
 }

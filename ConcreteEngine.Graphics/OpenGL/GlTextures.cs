@@ -27,48 +27,7 @@ internal sealed class GlTextures : IGraphicsDriverModule
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     private GlTextureHandle GetTexHandle(GfxRefToken<TextureId> handle) => _store.Texture.GetRef(handle);
-
-    [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public void BindTexture(in GfxRefToken<TextureId> handle, int slot) =>
-        _gl.BindTextureUnit((uint)slot, GetTexHandle(handle).Handle);
-
-    [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public void UnbindTextureSlot(int slot) => _gl.BindTextureUnit(0, (uint)slot);
-
-/*
-    public GfxRefToken<TextureId> CreateTexture2D(int width, int height, int mipLevels, EnginePixelFormat format)
-    {
-        var glFormat = format.ToStorageFormat();
-        _gl.CreateTextures(TextureTarget.Texture2D, 1, out uint texture);
-        _gl.TextureStorage2D(texture, (uint)mipLevels, glFormat, (uint)width, (uint)height);
-        return _store.Texture.Add(new GlTextureHandle(texture));
-    }
-
-    public GfxRefToken<TextureId> CreateTexture3D(int width, int height, int depth, int mipLevels,
-        EnginePixelFormat format)
-    {
-        var glFormat = format.ToStorageFormat();
-        _gl.CreateTextures(TextureTarget.Texture3D, 1, out uint texture);
-        _gl.TextureStorage3D(texture, (uint)mipLevels, glFormat, (uint)width, (uint)height, (uint)depth);
-        return _store.Texture.Add(new GlTextureHandle(texture));
-    }
-
-
-    public GfxRefToken<TextureId> CreateTextureCubeMap(int width, int height, int mipLevels)
-    {
-        _gl.CreateTextures(TextureTarget.TextureCubeMap, 1, out uint texture);
-        _gl.TextureStorage2D(texture, (uint)mipLevels, ColorFormat, (uint)width, (uint)height);
-        return _store.Texture.Add(new GlTextureHandle(texture));
-    }
-
-    public GfxRefToken<TextureId> CreateTextureMultisample(int width, int height, int samples)
-    {
-        _gl.CreateTextures(TextureTarget.Texture2DMultisample, 1, out uint texture);
-        _gl.TextureStorage2DMultisample(texture, (uint)samples, SizedInternalFormat.Srgb8Alpha8, (uint)width,
-            (uint)height, true);
-        return _store.Texture.Add(new GlTextureHandle(texture));
-    }
-*/
+    
     public GfxRefToken<TextureId> CreateTexture(TextureKind kind)
     {
         _gl.CreateTextures(kind.ToGlEnum(), 1, out uint texture);
@@ -119,27 +78,10 @@ internal sealed class GlTextures : IGraphicsDriverModule
             pixels: data
         );
     }
-/*
-    public void UploadCubeMapFaceData(GfxRefToken<TextureId> texRef, ReadOnlySpan<byte> data, Size3D size,
-        int faceIdx)
-    {
-        var handle = GetTexHandle(texRef).Handle;
-        (uint width, uint height, uint depth) = size.ToUnsigned();
-
-        _gl.TextureSubImage3D(
-            handle, level: 0,
-            xoffset: 0, yoffset: 0, zoffset: faceIdx,
-            width: width, height: height, depth: 1,
-            format: PixelFormat.Rgba, type: PixelType.UnsignedByte,
-            pixels: data
-        );
-    }
-*/
 
     public void SetTexturePreset(GfxRefToken<TextureId> texRef, TexturePreset preset, bool wrapR)
     {
         var handle = GetTexHandle(texRef);
-
 
         switch (preset)
         {
@@ -211,7 +153,7 @@ internal sealed class GlTextures : IGraphicsDriverModule
         _gl.TextureParameter(GetTexHandle(texRef).Handle, GLEnum.TextureLodBias, lodBias);
 
     public void SetAnisotropy(GfxRefToken<TextureId> texRef, int anisotropy) =>
-        _gl.TextureParameter(GetTexHandle(texRef).Handle, GLEnum.TextureLodBias, anisotropy);
+        _gl.TextureParameter(GetTexHandle(texRef).Handle, GLEnum.TextureMaxAnisotropy, anisotropy);
 
     public void GenerateMipMaps(GfxRefToken<TextureId> texRef) =>
         _gl.GenerateTextureMipmap(GetTexHandle(texRef).Handle);

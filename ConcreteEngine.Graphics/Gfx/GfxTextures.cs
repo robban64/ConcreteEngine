@@ -1,6 +1,7 @@
 #region
 
 using System.Diagnostics;
+using System.Runtime.CompilerServices;
 using ConcreteEngine.Common;
 using ConcreteEngine.Common.Numerics;
 using ConcreteEngine.Graphics.Contracts;
@@ -16,7 +17,6 @@ public sealed class GfxTextures
 {
     private readonly GfxStoreHub _resources;
     private readonly GfxResourceRepository _repository;
-    private readonly GfxTexturesBackend _backend;
 
     private readonly GlTextures _driver;
 
@@ -25,78 +25,86 @@ public sealed class GfxTextures
         _resources = context.Stores;
         _repository = context.Repositories;
         _driver = context.Driver.Textures;
-        _backend = new GfxTexturesBackend(_driver);
     }
 
-    private GfxRefToken<TextureId> CreateTextureInternal(GfxTextureDescriptor desc, GfxTextureProperties props,
+    private GfxRefToken<TextureId> CreateTextureInternal(in GfxTextureDescriptor desc, in GfxTextureProperties props,
         out TextureMeta meta)
     {
         ValidateTextureDescriptor(in desc, in props);
         var size = new Size2D(desc.Width, desc.Height);
         (bool mipPreset, int levels) = GetMipValues(desc.Width, desc.Height, props.Preset, desc.Depth);
-        var wrapR = SupportsWrapR(desc.Kind);
-        var samples = desc.Msaa.ToSamples();
+        if(levels < 1) throw new InvalidOperationException(nameof(levels));
+        var samples = desc.Samples.ToSamples();
 
         var texRef = _driver.CreateTexture(desc.Kind);
 
         switch (desc.Kind)
         {
             case TextureKind.Texture2D:
-                _driver.TextureStorage2D(texRef, size, BkTextureStoreDesc.Make(desc.Format, levels));
+                _driver.TextureStorage2D(texRef, size, BkTextureStoreDesc.Make(desc.Format, levels, 0));
                 break;
             case TextureKind.CubeMap:
-                _driver.TextureStorage2D(texRef, size, BkTextureStoreDesc.Make(desc.Format, levels));
+                _driver.TextureStorage2D(texRef, size, BkTextureStoreDesc.Make(desc.Format, levels, 0));
                 break;
             case TextureKind.Multisample2D:
-                var msaaStoreProps = BkTextureStoreDesc.MakeMultiSample(desc.Format, desc.Msaa);
+                var msaaStoreProps = BkTextureStoreDesc.Make(desc.Format, levels, desc.Samples.ToSamples());
                 _driver.TextureStorage2D_MultiSample(texRef, size, msaaStoreProps);
                 break;
             case TextureKind.Texture3D:
-                var tex3dStoreProps = BkTextureStoreDesc.MakeMultiSample(desc.Format, desc.Msaa);
+                var tex3dStoreProps = BkTextureStoreDesc.Make(desc.Format, levels, 0);
                 _driver.TextureStorage3D(texRef, Size3D.From(size, desc.Depth), tex3dStoreProps);
                 break;
             default: throw new ArgumentOutOfRangeException(nameof(desc));
         }
 
-        var applyProps = new TextureProperties(props.Preset, props.Anisotropy, levels, props.LodBias, wrapR);
-        ApplyTextureProperties(texRef, applyProps);
-
         meta = new TextureMeta(
-            desc.Width, desc.Height,
-            props.Preset, desc.Kind, props.Anisotropy, desc.Format,
-            desc.Depth, (short)levels, (short)samples, 0
+            desc.Width, desc.Height, props.Preset, desc.Kind, props.Anisotropy, desc.Format,
+            props.LodBias, desc.Depth, (short)levels, (short)samples, 0
         );
 
         return texRef;
     }
 
-    public TextureId CreateTexture(GfxTextureDescriptor desc, GfxTextureProperties props)
+    public TextureId CreateTexture(in GfxTextureDescriptor desc, in GfxTextureProperties props)
     {
-        var textRef = CreateTextureInternal(desc, props, out var meta);
-        return _resources.TextureStore.Add(in meta, in textRef);
+        var textRef = CreateTextureInternal(in desc, in props, out var meta);
+        var textureId = _resources.TextureStore.Add(in meta, in textRef);
+        return textureId;
     }
 
-    internal GfxRefToken<TextureId> ReplaceTexture(TextureId textureId, ReadOnlySpan<byte> data,
-        in GfxReplaceTexture newProps)
+    public void ApplyProperties(TextureId textureId)
     {
         var texRef = _resources.TextureStore.GetRefAndMeta(textureId, out var meta);
-        ValidateRecreateTexture(newProps, in meta)
+        if(meta.IsMsaa) return;
+        var wrapR = SupportsWrapR(meta.Kind);
+        var applyProps = new TextureProperties(meta.Preset, meta.Anisotropy, meta.Levels, meta.Lod, wrapR);
+        ApplyTextureProperties(texRef, applyProps);
 
-        if (desc.Kind == TextureKind.CubeMap && desc.Width != desc.Height)
-            throw new ArgumentOutOfRangeException(nameof(desc.Width));
+        if(meta.IsMipMapped)
+            GenerateMipMaps(textureId);
+    }
 
+    internal GfxRefToken<TextureId> ReplaceTexture(TextureId textureId, in GfxReplaceTexture newProps)
+    {
+        var texRef = _resources.TextureStore.GetRefAndMeta(textureId, out var meta);
+        ValidateRecreateTexture(newProps, in meta);
 
-        var newTexRef = CreateTextureInternal(desc, props, out var newMeta);
-        var newTextureId = _resources.TextureStore.Replace(textureId, in newMeta, in newTexRef, out _);
-        InvalidOpThrower.ThrowIfNot(textureId == newTextureId, nameof(textureId));
+        var samples = GfxUtilsEnum.ToRenderBufferMsaa(newProps.Samples);
+        
+        var desc = new GfxTextureDescriptor(newProps.Width, newProps.Height, 
+            meta.Kind,meta.PixelFormat,meta.Depth, samples);
+        var props = new GfxTextureProperties(meta.Preset, meta.Anisotropy, meta.Lod);
+        var newTexRef = CreateTextureInternal(in desc, in props, out var newMeta);
+        _resources.TextureStore.Replace(textureId, in newMeta, in newTexRef, out _);
+        return newTexRef;
     }
 
 
     public void UploadTexture2D(TextureId textureId, ReadOnlySpan<byte> data, int width, int height)
     {
-        _resources.TextureStore.ReplaceMeta(textureId, in newMeta, out _);
-
         var texRef = _resources.TextureStore.GetRefAndMeta(textureId, out var meta);
+        if(meta.Kind  == TextureKind.Unknown) throw new InvalidOperationException(nameof(meta.Kind));
+
         var (size, metaSize) = (new Size2D(width, height), new Size2D(meta.Width, meta.Height));
         ValidateUploadSize(size, metaSize);
 
@@ -112,6 +120,8 @@ public sealed class GfxTextures
     public void UploadTexture3D(TextureId textureId, ReadOnlySpan<byte> data, int width, int height, int depth)
     {
         var texRef = _resources.TextureStore.GetRefAndMeta(textureId, out var meta);
+        if(meta.Kind  != TextureKind.Texture3D) throw new InvalidOperationException(nameof(meta.Kind));
+        
         var (size, metaSize) = (new Size3D(width, height, depth), new Size3D(meta.Width, meta.Height, meta.Depth));
         ValidateUploadSize3D(size, metaSize);
 
@@ -129,9 +139,10 @@ public sealed class GfxTextures
         ArgumentOutOfRangeException.ThrowIfGreaterThan(faceIdx, 5, nameof(faceIdx));
 
         var texRef = _resources.TextureStore.GetRefAndMeta(textureId, out var meta);
+        if(meta.Kind  != TextureKind.CubeMap) throw new InvalidOperationException(nameof(meta.Kind));
+
         var (size, metaSize) = (new Size2D(width, height), new Size2D(meta.Width, meta.Height));
         ValidateUploadSize(size, metaSize);
-
 
         _driver.UploadTexture3D_Data(texRef, data, meta.PixelFormat, new Size3D(width, height, 1), faceIdx);
 
@@ -171,9 +182,18 @@ public sealed class GfxTextures
 
         if (meta.Kind == TextureKind.CubeMap && newValue.Width != newValue.Height)
             throw new ArgumentException("CubeMap must be square.");
-
-        if (meta.Kind != TextureKind.Texture3D && newValue.Depth != 1)
-            throw new ArgumentException("Depth must be 1 for non-3D.");
+        
+        var depth = newValue.Depth ?? meta.Depth;
+        if (meta.Kind == TextureKind.Texture3D)
+        {
+            if (depth <= 0)
+                throw new ArgumentOutOfRangeException(nameof(depth));
+        }
+        else
+        {
+            if (depth != 1)
+                throw new ArgumentException("Depth must be 1 for non-3D textures");
+        }
 
 
         if (meta.Kind == TextureKind.Multisample2D)
@@ -208,10 +228,10 @@ public sealed class GfxTextures
 
         // MSAA
         bool isMsaa = desc.Kind == TextureKind.Multisample2D;
-        if (isMsaa && desc.Msaa == RenderBufferMsaa.None)
-            throw new ArgumentException("Multisample2D must have MSAA != None", nameof(desc.Msaa));
-        if (!isMsaa && desc.Msaa != RenderBufferMsaa.None)
-            throw new ArgumentException("Non-multisample textures must have MSAA=None", nameof(desc.Msaa));
+        if (isMsaa && desc.Samples == RenderBufferMsaa.None)
+            throw new ArgumentException("Multisample2D must have MSAA != None", nameof(desc.Samples));
+        if (!isMsaa && desc.Samples != RenderBufferMsaa.None)
+            throw new ArgumentException("Non-multisample textures must have MSAA=None", nameof(desc.Samples));
 
         // CubeMap
         if (desc.Kind == TextureKind.CubeMap && desc.Width != desc.Height)

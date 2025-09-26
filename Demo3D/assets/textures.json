@@ -4,45 +4,58 @@
     {
       "name": "Boat",
       "filename": "boat.png",
-	  "preset": "LinearMipmapClamp"
+	  "preset": "LinearMipmapClamp",
+      "anisotropy": "Default"
     },
 	{
 	  "name": "Rock01",
 	  "filename": "rocks_01.jpg",
-	  "preset": "LinearMipmapClamp"
-	},
+	  "preset": "LinearMipmapClamp",
+      "anisotropy": "Default"
+
+    },
 	{
 	  "name": "Rock01-Normal",
 	  "filename": "rocks_01_normal.jpg",
       "pixelFormat": "Rgba",
-      "preset": "LinearMipmapRepeat"
-	},
+      "preset": "LinearMipmapRepeat",
+      "anisotropy": "Default"
+
+    },
 	{
 	  "name": "Rock01-Specular",
 	  "filename": "rocks_01_specular.jpg",
       "pixelFormat": "Rgba",
-      "preset": "LinearMipmapRepeat"
-	},
+      "preset": "LinearMipmapRepeat",
+      "anisotropy": "Default"
+    },
 	{
 	  "name": "Grass",
 	  "filename": "grass.jpg",
 	  "preset": "LinearMipmapRepeat",
-	  "lod": -0.25
-	},
+	  "lod": -0.25,
+      "anisotropy": "Default"
+
+    },
 	{
 	  "name": "Mud",
 	  "filename": "mud.jpg",
-      "preset": "LinearMipmapClamp"
+      "preset": "LinearMipmapClamp",
+      "anisotropy": "Default"
+
     },
 	{
 	  "name": "Rock",
 	  "filename": "rock.jpg",
-      "preset": "LinearMipmapRepeat"
+      "preset": "LinearMipmapRepeat",
+      "anisotropy": "Default"
+
     },
 	{
 	  "name": "Stone",
 	  "filename": "stone.jpg",
-      "preset": "LinearMipmapRepeat"
+      "preset": "LinearMipmapRepeat",
+      "anisotropy": "Default"
     },
 	{
 	  "name": "Heightmap",

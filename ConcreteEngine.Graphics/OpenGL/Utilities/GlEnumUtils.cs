@@ -43,6 +43,7 @@ internal static class GlEnumExtensions
         return textureKind switch
         {
             TextureKind.Texture2D => GLEnum.Texture2D,
+            TextureKind.Texture3D => GLEnum.Texture3D,
             TextureKind.CubeMap => GLEnum.TextureCubeMap,
             TextureKind.Multisample2D => GLEnum.Texture2DMultisample,
             _ => throw new ArgumentOutOfRangeException(nameof(textureKind))

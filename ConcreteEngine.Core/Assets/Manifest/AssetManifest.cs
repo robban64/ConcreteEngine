@@ -48,9 +48,9 @@ public sealed record TextureManifestRecord(
     string Filename,
     TexturePreset Preset = TexturePreset.LinearClamp,
     EnginePixelFormat PixelFormat = EnginePixelFormat.SrgbAlpha,
-    TextureAnisotropy Anisotropy = TextureAnisotropy.Default,
+    TextureAnisotropy Anisotropy = TextureAnisotropy.Off,
     bool InMemory = false,
-    float LodBias = -0.25f)
+    float LodBias = 0)
     : IAssetManifestRecord
 {
     public static AssetKind Kind => AssetKind.Texture2D;

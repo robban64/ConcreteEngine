@@ -221,36 +221,7 @@ public sealed class GfxCommands
         _cullMode = cullMode;
         _states.SetCullMode(cullMode);
     }
-/*
-    public void ToggleFrameBufferSrgb(bool enabled)
-    {
-        _states.ToggleFrameBufferSrgb(enabled);
-    }
-    public void ToggleBlendState(bool enabled)
-    {
-        _states.ToggleBlendState(enabled);
-    }
 
-    public void ToggleDepthTest(bool enabled)
-    {
-        _states.ToggleDepthTest(enabled);
-    }
-
-    public void ToggleCullFace(bool enabled)
-    {
-        _states.ToggleCullFace(enabled);
-    }
-
-    public void ToggleDepthMask(bool enabled)
-    {
-        _states.ToggleDepthMask(enabled);
-    }
-
-    public void ToggleScissorTest(bool enabled)
-    {
-        _states.ToggleScissorTest(enabled);
-    }
-*/
 
     public void BindFramebuffer(FrameBufferId id)
     {
@@ -269,19 +240,18 @@ public sealed class GfxCommands
 
     public void BindTexture(TextureId texture, int slot)
     {
-        ArgumentOutOfRangeException.ThrowIfNegative(slot, nameof(slot));
-        ArgumentOutOfRangeException.ThrowIfGreaterThanOrEqual(slot, Configuration.MaxTextureImageUnits, nameof(slot));
+        Debug.Assert(slot >= 0 && slot <= Configuration.MaxTextureImageUnits);
 
         if (_boundTextures[slot] == texture) return;
         _boundTextures[slot] = texture;
         if (texture.Value == 0)
         {
-            _textures.UnbindTextureSlot(slot);
+            _states.UnbindTextureSlot(slot);
             return;
         }
 
         var refHandle = _store.TextureStore.GetRef(texture);
-        _textures.BindTexture(refHandle, slot);
+        _states.BindTexture(refHandle, slot);
     }
 
     public void BindMesh(MeshId id)
@@ -324,7 +294,7 @@ public sealed class GfxCommands
 
     private void DrawArrays(DrawPrimitive primitive, int drawCount)
     {
-        Debug.Assert(drawCount != 0, "DrawArrays called with drawCount = 0");
+        Debug.Assert(drawCount != 0);
         _driver.States.DrawArrays(primitive, drawCount);
         _drawTriangleCount += drawCount;
         _drawCallCount++;
@@ -332,7 +302,7 @@ public sealed class GfxCommands
 
     private void DrawElements(DrawPrimitive primitive, DrawElementSize elementSize, int drawCount)
     {
-        Debug.Assert(drawCount != 0, "DrawElements called with drawCount = 0");
+        Debug.Assert(drawCount != 0);
         Debug.Assert(elementSize != DrawElementSize.Invalid);
 
         _driver.States.DrawElements(primitive, elementSize, drawCount);

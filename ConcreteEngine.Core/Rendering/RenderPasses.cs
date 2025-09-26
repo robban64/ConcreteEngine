@@ -120,7 +120,8 @@ internal class RenderPasses
             DownscaleRatio: sizeRatio,
             AbsoluteSize: _snapshot.OutputSize,
             Multisample: (RenderBufferMsaa)samples,
-            Attachments: new FrameBufferAttachmentDesc(true, false, false, true)
+            Attachments: new FrameBufferAttachmentDesc(true, false, false, true),
+        TexturePreset: TexturePreset.None
         );
 
         var fboId = _gfxFbo.CreateFrameBuffer(in desc);

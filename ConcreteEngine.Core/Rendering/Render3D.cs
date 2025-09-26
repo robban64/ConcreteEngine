@@ -31,19 +31,14 @@ internal sealed class Render3D : IRender
         _drawProcessor = drawProcessor;
         _camera = new Camera3D();
         _registry = new RenderPasses(_gfx, in snapshot);
-        
-        var texDesc = new GfxTextureDescriptor
-        {
-            Width = 32,
-            Height = 32,
-            Depth = 32,
-            Format = EnginePixelFormat.Rgb,
-            Kind = TextureKind.Texture3D,
-            Preset = TexturePreset.LinearClamp,
-            LodBias = 0,
-            Anisotropy = TextureAnisotropy.Off
-        };
-        LutTextureId = _gfx.Textures.CreateTexture3D(ReadOnlySpan<byte>.Empty, in texDesc);
+
+        var texDesc = new GfxTextureDescriptor(32, 32, TextureKind.Texture3D, 
+            EnginePixelFormat.Rgb, 32);
+
+        var texProps = new GfxTextureProperties(TexturePreset.LinearClamp, TextureAnisotropy.Off, 0);
+        LutTextureId = _gfx.Textures.CreateTexture(in texDesc, in texProps);
+        _gfx.Textures.ApplyProperties(LutTextureId);
+
 
     }
 

@@ -1,6 +1,7 @@
 using System.Diagnostics.CodeAnalysis;
 using System.Numerics;
 using System.Runtime.CompilerServices;
+using System.Runtime.InteropServices;
 
 namespace ConcreteEngine.Common.Patterns;
 
@@ -31,23 +32,19 @@ public readonly record struct ActionId(int Value);
 public sealed class ActionSequenceMachine<TCtx>
 {
     public delegate ActionMove ActionBinding(TCtx context);
-
     public delegate bool ConditionBinding(TCtx context);
 
     private readonly Dictionary<ConditionId, ConditionBinding> _conditions = new(4);
 
-    private List<ActionBinding> _registerActions = new(4);
-    private ActionBinding[] _actionBindings = Array.Empty<ActionBinding>();
+    private readonly List<ActionBinding> _registerActions = new(4);
 
-    public void Build()
-    {
-        _actionBindings = _registerActions.ToArray();
-        _registerActions = null!;
-    }
-
+    private bool _froozen = false;
+    
     public ActionId RegisterAction(ActionBinding binding)
     {
         ArgumentNullException.ThrowIfNull(binding, nameof(binding));
+        if (_froozen) throw new InvalidOperationException(nameof(_froozen));
+
         var actionId = new ActionId(_registerActions.Count);
         _registerActions.Add(binding);
         return actionId;
@@ -56,6 +53,7 @@ public sealed class ActionSequenceMachine<TCtx>
     public void RegisterCondition(int fromId, int toId, ConditionBinding binding)
     {
         ArgumentNullException.ThrowIfNull(binding, nameof(binding));
+        if (_froozen) throw new InvalidOperationException(nameof(_froozen));
 
         if (fromId < 0 || fromId >= _registerActions.Count)
             throw new ArgumentOutOfRangeException(nameof(fromId));
@@ -71,15 +69,16 @@ public sealed class ActionSequenceMachine<TCtx>
     public ExecutionResult Run(TCtx context)
     {
         ArgumentNullException.ThrowIfNull(context, nameof(context));
-        ArgumentNullException.ThrowIfNull(_actionBindings, nameof(_actionBindings));
-        ArgumentOutOfRangeException.ThrowIfLessThan(_actionBindings.Length, 2);
+        ArgumentOutOfRangeException.ThrowIfLessThan(_registerActions.Count, 2);
         
+        _froozen = true;
         int idx = 0, executed = 0, actionExecuted = 0;
-        int length = _actionBindings.Length;
+        var span = CollectionsMarshal.AsSpan(_registerActions);
+        int length = span.Length;
 
         while (idx < length)
         {
-            var move = _actionBindings[idx](context);
+            var move = span[idx](context);
             executed++;
             actionExecuted++;
 

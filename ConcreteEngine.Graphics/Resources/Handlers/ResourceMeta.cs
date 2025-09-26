@@ -16,27 +16,31 @@ public readonly struct TextureMeta(
     TextureKind kind,
     TextureAnisotropy anisotropy,
     EnginePixelFormat format,
+    float lod,
     int depth,
     short levels,
     short samples,
     nint sizeInBytes
 ) : IResourceMeta
 {
+    public readonly nint SizeInBytes = sizeInBytes;
     public readonly int Width = width;
     public readonly int Height = height;
+    public readonly int Depth = height;
+    public readonly float Lod = lod;
+    public readonly short Levels = levels;
+    public readonly short Samples = samples;
     public readonly TexturePreset Preset = preset;
     public readonly TextureKind Kind = kind;
     public readonly TextureAnisotropy Anisotropy = anisotropy;
     public readonly EnginePixelFormat PixelFormat = format;
-    public readonly int Depth = height;
-    public readonly short Levels = levels;
-    public readonly short Samples = samples;
-    public readonly nint SizeInBytes = sizeInBytes;
+
+    public bool IsMipMapped => Levels > 1;
+    public bool IsMsaa => Kind == TextureKind.Multisample2D && Samples > 0;
 
     internal static TextureMeta CopyWithNewSize(in TextureMeta m, nint sizeInBytes) =>
-        new(m.Width, m.Height,
-            m.Preset, m.Kind, m.Anisotropy, m.PixelFormat,
-            m.Depth, m.Levels, m.Samples, sizeInBytes
+        new(m.Width, m.Height, m.Preset, m.Kind, m.Anisotropy, m.PixelFormat,
+            m.Lod, m.Depth, m.Levels, m.Samples, sizeInBytes
         );
 }
 
@@ -73,9 +77,9 @@ public readonly struct VertexBufferMeta(
     BufferAccess access
 ) : IResourceMeta
 {
+    public readonly nint Stride = stride;
     public readonly int BindingIdx = bindingIdx;
     public readonly int ElementCount = elementCount;
-    public readonly nint Stride = stride;
     public readonly BufferUsage Usage = usage;
     public readonly BufferStorage Storage = storage;
     public readonly BufferAccess Access = access;
@@ -92,8 +96,8 @@ public readonly struct IndexBufferMeta(
     BufferAccess access
 ) : IResourceMeta
 {
-    public readonly int ElementCount = elementCount;
     public readonly nint Stride = stride;
+    public readonly int ElementCount = elementCount;
     public readonly BufferUsage Usage = usage;
     public readonly BufferStorage Storage = storage;
     public readonly BufferAccess Access = access;

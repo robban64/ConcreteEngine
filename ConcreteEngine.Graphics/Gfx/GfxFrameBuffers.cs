@@ -29,6 +29,8 @@ public sealed class GfxFrameBuffers
         _repository = context.Repositories;
     }
 
+
+
     public FrameBufferId CreateFrameBuffer(in FrameBufferDesc desc)
     {
         EnsureCreateFrameBuffer(in desc);
@@ -41,10 +43,15 @@ public sealed class GfxFrameBuffers
         FboAttachmentIds attachmentIds = default;
         if (desc.Attachments.ColorTexture) //boolean
         {
-            var textureId = desc.Multisample != RenderBufferMsaa.None
-                ? _gfxTextures.CreateTextureMsaa(GfxTextureDescriptor.MakeFboMsaaDesc(size.X, size.Y), desc.Multisample)
-                : _gfxTextures.CreateTexture2D(ReadOnlySpan<byte>.Empty,
-                    GfxTextureDescriptor.MakeFboColorDesc(size.X, size.Y, desc.TexturePreset));
+            var texKind = desc.Multisample == RenderBufferMsaa.None ? TextureKind.Texture2D : TextureKind.Multisample2D;
+            var texDesc = new GfxTextureDescriptor(size.X, size.Y, 
+                texKind, EnginePixelFormat.SrgbAlpha,
+                1, desc.Multisample);
+
+            var texProps = new GfxTextureProperties(desc.TexturePreset, 0, 0);
+
+            var textureId = _gfxTextures.CreateTexture(texDesc, texProps);
+            _gfxTextures.ApplyProperties(textureId);
 
             var texRef = _resources.TextureStore.GetRef(textureId);
             _backend.AttachTexture(fboRef, texRef);
@@ -88,12 +95,9 @@ public sealed class GfxFrameBuffers
         if (oldMeta.ColorTexture)
         {
             InvalidOpThrower.ThrowIfNot(attachIds.ColorTextureId.IsValid());
-            var texDesc = new GfxTextureDescriptor(newSize.X, newSize.Y,
-                layout.TexturePreset, TextureKind.Texture2D);
-
-            _gfxTextures.ReplaceTexture(attachIds.ColorTextureId,
-                ReadOnlySpan<byte>.Empty, in texDesc, out var texRef);
-
+            var texDes = new GfxReplaceTexture(newSize.X, newSize.Y);
+            var texRef = _gfxTextures.ReplaceTexture(attachIds.ColorTextureId, in texDes);
+            _gfxTextures.ApplyProperties(attachIds.ColorTextureId);
             _backend.AttachTexture(fboRef, texRef);
         }
 
@@ -174,5 +178,8 @@ public sealed class GfxFrameBuffers
         ArgumentOutOfRangeException.ThrowIfLessThan(desc.AbsoluteSize.Y, 16);
         ArgumentOutOfRangeException.ThrowIfZero(desc.DownscaleRatio.X);
         ArgumentOutOfRangeException.ThrowIfZero(desc.DownscaleRatio.Y);
+        
+        if(desc.Multisample != RenderBufferMsaa.None && desc.TexturePreset != TexturePreset.None)
+            throw new InvalidOperationException($"Multisample require None for {nameof(TexturePreset)}");
     }
 }

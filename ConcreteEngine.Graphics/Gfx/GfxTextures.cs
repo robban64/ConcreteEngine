@@ -78,13 +78,15 @@ public sealed class GfxTextures
 
     internal GfxRefToken<TextureId> ReplaceTexture(TextureId textureId, in GfxReplaceTexture newProps)
     {
-        var texRef = _resources.TextureStore.GetRefAndMeta(textureId, out var meta);
+        var meta = _resources.TextureStore.GetMeta(textureId);
+        var samples = meta.Kind == TextureKind.Multisample2D ? newProps.Samples ?? meta.Samples : newProps.Samples;
+        var msaa = GfxUtilsEnum.ToRenderBufferMsaa(samples);
+
         ValidateRecreateTexture(newProps, in meta);
 
-        var samples = GfxUtilsEnum.ToRenderBufferMsaa(newProps.Samples);
 
         var desc = new GfxTextureDescriptor(newProps.Width, newProps.Height,
-            meta.Kind, meta.PixelFormat, meta.Depth, samples);
+            meta.Kind, meta.PixelFormat, meta.Depth, msaa);
         var props = new GfxTextureProperties(meta.Preset, meta.Anisotropy, meta.Lod);
         var newTexRef = CreateTextureInternal(in desc, in props, out var newMeta);
         _resources.TextureStore.Replace(textureId, in newMeta, in newTexRef, out _);
@@ -226,13 +228,7 @@ public sealed class GfxTextures
                 throw new ArgumentException("Depth must be 1 for non-3D textures");
         }
 
-
-        if (meta.Kind == TextureKind.Multisample2D)
-        {
-            if (newValue.Samples is null)
-                newValue = newValue with { Samples = meta.Samples };
-        }
-        else if (newValue.Samples is not null)
+        if (meta.Kind != TextureKind.Multisample2D && newValue.Samples is not null)
             throw new ArgumentException("Samples can only be set for Multisample2D.");
     }
 

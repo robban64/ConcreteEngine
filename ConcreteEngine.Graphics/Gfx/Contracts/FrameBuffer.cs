@@ -1,6 +1,7 @@
 #region
 
 using System.Numerics;
+using ConcreteEngine.Common.Numerics;
 using Silk.NET.Maths;
 
 #endregion
@@ -19,6 +20,13 @@ public readonly record struct FrameBufferAttachmentDesc(
     bool ColorBuffer,
     bool DepthStencilBuffer
 );
+
+public readonly record struct GfxFrameBufferSize(
+    Vector2 DownscaleRatio, 
+    Size2D AbsoluteSize, 
+    bool AutoResizeable
+);
+
 
 public readonly record struct FrameBufferDesc(
     Vector2 DownscaleRatio,

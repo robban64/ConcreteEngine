@@ -26,7 +26,7 @@ public readonly struct TextureMeta(
     public readonly nint SizeInBytes = sizeInBytes;
     public readonly int Width = width;
     public readonly int Height = height;
-    public readonly int Depth = height;
+    public readonly int Depth = depth;
     public readonly float Lod = lod;
     public readonly short Levels = levels;
     public readonly short Samples = samples;
@@ -39,8 +39,8 @@ public readonly struct TextureMeta(
     public bool IsMsaa => Kind == TextureKind.Multisample2D && Samples > 0;
 
     internal static TextureMeta CopyWithNewSize(in TextureMeta m, nint sizeInBytes) =>
-        new(m.Width, m.Height, m.Preset, m.Kind, m.Anisotropy, m.PixelFormat,
-            m.Lod, m.Depth, m.Levels, m.Samples, sizeInBytes
+        new(width: m.Width, height: m.Height, preset: m.Preset, kind: m.Kind, anisotropy: m.Anisotropy, format: m.PixelFormat,
+            lod: m.Lod, depth: m.Depth, levels: m.Levels, samples: m.Samples, sizeInBytes: sizeInBytes
         );
 }
 

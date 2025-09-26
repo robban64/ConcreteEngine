@@ -41,7 +41,7 @@ public sealed class GfxFrameBuffers
         var samples = desc.Multisample.ToSamples();
 
         FboAttachmentIds attachmentIds = default;
-        if (desc.Attachments.ColorTexture) //boolean
+        if (desc.Attachments.ColorTexture)
         {
             var texKind = desc.Multisample == RenderBufferMsaa.None ? TextureKind.Texture2D : TextureKind.Multisample2D;
             var texDesc = new GfxTextureDescriptor(size.X, size.Y, 
@@ -50,8 +50,7 @@ public sealed class GfxFrameBuffers
 
             var texProps = new GfxTextureProperties(desc.TexturePreset, 0, 0);
 
-            var textureId = _gfxTextures.CreateTexture(texDesc, texProps);
-            _gfxTextures.ApplyProperties(textureId);
+            var textureId = _gfxTextures.BuildEmptyTexture(texDesc, texProps);
 
             var texRef = _resources.TextureStore.GetRef(textureId);
             _backend.AttachTexture(fboRef, texRef);

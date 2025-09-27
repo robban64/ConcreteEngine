@@ -127,8 +127,8 @@ internal sealed class Render3D : IRender
         _registry.CreateMultisampleBuffer(Vector2.One, sceneTarget.Samples);
         //_registry.CreateLightBuffer(Vector2.One, TexturePreset.LinearMipmapRepeat);
         //_registry.CreateShadowBuffer(new Vector2D<int>(2048, 2048));
-        _registry.CreatePostProcessBuffer_A(Vector2.One);
-        _registry.CreatePostProcessBuffer_B(Vector2.One);
+        _registry.CreatePostProcessBuffer_A();
+        _registry.CreatePostProcessBuffer_B();
 
 
         // Screen Target setup
@@ -176,8 +176,8 @@ internal sealed class Render3D : IRender
             new PostEffectPass
             {
                 TargetFbo = _registry.PostFboA.FboId,
-                SourceTextures = [_registry.SceneFbo.ColTexId],
-                OutputTexture = _registry.PostFboA.ColTexId,
+                SourceTextures = [_registry.SceneFbo.Attachments.ColorTextureId],
+                OutputTexture = _registry.PostFboA.Attachments.ColorTextureId,
                 Shader = desc.PostEffectTarget.CompositeShaderId,
                 GenerateMipMapAfter = true,
             });
@@ -187,9 +187,9 @@ internal sealed class Render3D : IRender
             new PostEffectPass
             {
                 TargetFbo = _registry.PostFboB.FboId,
-                SourceTextures = [_registry.PostFboA.ColTexId],
+                SourceTextures = [_registry.PostFboA.Attachments.ColorTextureId],
                 LutTexture = LutTextureId,
-                OutputTexture = _registry.PostFboB.ColTexId,
+                OutputTexture = _registry.PostFboB.Attachments.ColorTextureId,
                 Shader = desc.PostEffectTarget.EffectShaderId,
             });
 
@@ -200,7 +200,7 @@ internal sealed class Render3D : IRender
             new FsqPass
             {
                 TargetFbo = default,
-                SourceTextures = [_registry.PostFboB.ColTexId],
+                SourceTextures = [_registry.PostFboB.Attachments.ColorTextureId],
                 Shader = screenTarget.ScreenShaderId
             });
     }

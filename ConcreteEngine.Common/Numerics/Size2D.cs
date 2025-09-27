@@ -1,4 +1,6 @@
+using System.Numerics;
 using System.Runtime.Serialization;
+using Silk.NET.Maths;
 
 namespace ConcreteEngine.Common.Numerics;
 
@@ -12,9 +14,16 @@ public readonly record struct Size2D(
 
     public Size2D ScaleUniform(float factor) => new((int)(Width * factor), (int)(Height * factor));
     public Size2D Scale(float fx, float fy) => new((int)(Width * fx), (int)(Height * fy));
+    public Size2D Scale(Vector2 v) => new((int)(Width * v.X), (int)(Height * v.Y));
+
     public (uint Width, uint Height) ToUnsigned() => ((uint)Width, (uint)Height);
+    
+    public Vector2D<int> ToVec2D() => new (Width, Height);
     
     public bool IsNegative() =>  Width < 0 || Height < 0;
     public bool IsZero() =>  Width == 0 && Height == 0;
+    
+    public static Size2D Zero =>  new (0, 0);
+    public static Size2D One =>  new (1, 1);
     
 }

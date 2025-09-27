@@ -238,7 +238,8 @@ public sealed class RenderSystem : IRenderSystem
 
         var viewport = _render.Camera.ViewportSize;
         _gfxCmd.UseShader(pass.Shader);
-        _gfxCmd.SetUniform(ShaderUniform.TexelSize, viewport.ConvertToVec2() * pass.SizeRatio);
+        //_gfxCmd.SetUniform(ShaderUniform.TexelSize, viewport.ConvertToVec2() * pass.SizeRatio);
+        _gfxCmd.SetUniform(ShaderUniform.TexelSize, viewport.ConvertToVec2());
 
         for (int i = 0; i < pass.SourceTextures.Length; i++)
         {

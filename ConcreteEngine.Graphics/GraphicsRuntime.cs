@@ -1,6 +1,7 @@
 #region
 
 using ConcreteEngine.Common;
+using ConcreteEngine.Common.Numerics;
 using ConcreteEngine.Graphics.Error;
 using ConcreteEngine.Graphics.Gfx;
 using ConcreteEngine.Graphics.Gfx.Internal;
@@ -87,24 +88,21 @@ public sealed class GraphicsRuntime : IGraphicsRuntime
 
         if (_frameCtx.ResizePending)
         {
-            RecreateFbo(_frameCtx.OutputSize);
+            var newSize = new Size2D(_frameCtx.OutputSize.X, _frameCtx.OutputSize.Y);
+            RecreateFbo(newSize);
         }
     }
 
     // TODO pending queue, right now the switch happens directly and is used the next frame.
-    private void RecreateFbo(in Vector2D<int> outputSize)
+    private void RecreateFbo(Size2D size)
     {
-        ArgumentOutOfRangeException.ThrowIfLessThanOrEqual(outputSize.X, 0);
-        ArgumentOutOfRangeException.ThrowIfLessThanOrEqual(outputSize.Y, 0);
+        ArgumentOutOfRangeException.ThrowIfLessThanOrEqual(size.Width, 0);
+        ArgumentOutOfRangeException.ThrowIfLessThanOrEqual(size.Height, 0);
 
         var fboStore = _resources.GfxStoreHub.FboStore;
         Console.WriteLine($"Recreating {fboStore.Count} FBO");
 
-        foreach (var fboId in fboStore.IdEnumerator)
-        {
-            fboId.IsValidOrThrow();
-            _gfxContext.FrameBuffers.RecreateAutoResizeFrameBuffer(fboId, outputSize);
-        }
+        _gfxContext.FrameBufferRegistry.RecreateFrameBuffers(size);
     }
 
     public void Dispose()

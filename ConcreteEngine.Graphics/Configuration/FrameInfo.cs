@@ -1,5 +1,6 @@
 #region
 
+using ConcreteEngine.Common.Numerics;
 using Silk.NET.Maths;
 
 #endregion
@@ -21,5 +22,7 @@ public readonly struct FrameInfo(
     public readonly bool vSyncEnabled = vSyncEnabled;
     public readonly bool ResizePending = resizePending;
 }
+
+
 
 public readonly record struct GpuFrameStats(int DrawCalls, int TriangleCount);

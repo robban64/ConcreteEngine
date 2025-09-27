@@ -121,7 +121,7 @@ public sealed class GfxCommands
         ref readonly var handle = ref _store.FboStore.GetHandle(fboId);
 
         BindFramebuffer(fboId);
-        SetViewport(meta.Size);
+        SetViewport(meta.Size.ToVec2D());
         
         ApplyState(new GfxPassState(
             DepthTest: scenePass,
@@ -135,7 +135,7 @@ public sealed class GfxCommands
         _states.ColorMask(true);
         Clear(in passClear);
         
-        _activeOutputSize = meta.Size;
+        _activeOutputSize = meta.Size.ToVec2D();
     }
 
     public void EndRenderPass()
@@ -159,11 +159,11 @@ public sealed class GfxCommands
 
         if (!_store.FboStore.TryGetRef(toId, out var toHandle, out var toFbo))
         {
-            _driver.FrameBuffers.BlitDefault(fromHandle, srcSize, _activeOutputSize, false);
+            _driver.FrameBuffers.BlitDefault(fromHandle, srcSize.ToVec2D(), _activeOutputSize, false);
             return;
         }
 
-        _driver.FrameBuffers.Blit(fromHandle, toHandle, srcSize, toFbo.Size, linear);
+        _driver.FrameBuffers.Blit(fromHandle, toHandle, srcSize.ToVec2D(), toFbo.Size.ToVec2D(), linear);
     }
 
 

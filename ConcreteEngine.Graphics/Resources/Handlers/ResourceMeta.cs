@@ -1,5 +1,6 @@
 #region
 
+using ConcreteEngine.Common.Numerics;
 using ConcreteEngine.Graphics.Gfx.Utility;
 using Silk.NET.Maths;
 
@@ -39,7 +40,8 @@ public readonly struct TextureMeta(
     public bool IsMsaa => Kind == TextureKind.Multisample2D && Samples > 0;
 
     internal static TextureMeta CopyWithNewSize(in TextureMeta m, nint sizeInBytes) =>
-        new(width: m.Width, height: m.Height, preset: m.Preset, kind: m.Kind, anisotropy: m.Anisotropy, format: m.PixelFormat,
+        new(width: m.Width, height: m.Height, preset: m.Preset, kind: m.Kind, anisotropy: m.Anisotropy,
+            format: m.PixelFormat,
             lod: m.Lod, depth: m.Depth, levels: m.Levels, samples: m.Samples, sizeInBytes: sizeInBytes
         );
 }
@@ -107,30 +109,26 @@ public readonly struct IndexBufferMeta(
 }
 
 public readonly struct FrameBufferMeta(
-    Vector2D<int> size,
-    bool colorTexture,
-    bool depthTexture,
-    bool colorBuffer,
-    bool depthStencilBuffer
+    Size2D size,
+    FboAttachmentIds attachments,
+    RenderBufferMsaa multiSample
 ) : IResourceMeta
 {
-    public readonly Vector2D<int> Size = size;
-    public readonly bool ColorTexture = colorTexture;
-    public readonly bool DepthTexture = depthTexture;
-    public readonly bool ColorBuffer = colorBuffer;
-    public readonly bool DepthStencilBuffer = depthStencilBuffer;
-
-    internal static FrameBufferMeta MakeResizeCopy(in FrameBufferMeta meta, Vector2D<int> size) =>
-        new(size, meta.ColorTexture, meta.DepthTexture, meta.ColorBuffer, meta.DepthStencilBuffer);
+    public readonly Size2D Size = size;
+    public readonly FboAttachmentIds Attachments = attachments;
+    public readonly RenderBufferMsaa MultiSample = multiSample;
+    
+    internal static FrameBufferMeta MakeResizeCopy(in FrameBufferMeta meta, Size2D size) =>
+        new(size, meta.Attachments, meta.MultiSample);
 }
 
 public readonly struct RenderBufferMeta(
-    Vector2D<int> size,
+    Size2D size,
     FrameBufferTarget target,
     RenderBufferMsaa multisample
 ) : IResourceMeta
 {
-    public readonly Vector2D<int> Size = size;
+    public readonly Size2D Size = size;
     public readonly FrameBufferTarget Target = target;
     public readonly RenderBufferMsaa Multisample = multisample;
 }

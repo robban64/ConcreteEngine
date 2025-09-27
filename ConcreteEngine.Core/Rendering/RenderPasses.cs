@@ -17,29 +17,28 @@ public struct RenderPassMutation
 
 internal class RenderPasses
 {
-    public RenderPassFboRecord MultisampleFbo { get; private set; }
-    public RenderPassFboRecord SceneFbo { get; private set; }
-    public RenderPassFboRecord LightFbo { get; private set; }
-    public RenderPassFboRecord ShadowFbo { get; private set; }
-    public RenderPassFboRecord PostFboA { get; private set; }
-    public RenderPassFboRecord PostFboB { get; private set; }
-    
+    public FrameBufferLayout MultisampleFbo { get; private set; }
+    public FrameBufferLayout SceneFbo { get; private set; }
+    public FrameBufferLayout LightFbo { get; private set; }
+    public FrameBufferLayout ShadowFbo { get; private set; }
+    public FrameBufferLayout PostFboA { get; private set; }
+    public FrameBufferLayout PostFboB { get; private set; }
 
 
     private readonly GfxContext _gfx;
-    private readonly GfxFrameBuffers _gfxFbo;
+    private readonly GfxFrameBufferRegistry _gfxFbo;
     private readonly RenderGlobalSnapshot _snapshot;
 
     private readonly List<IRenderPassDescriptor>[] _renderTargets;
 
     private int _currentTargetId = 0;
 
-    private IFrameBufferRepository FboRegistry => _gfx.ResourceContext.Repository.FboRepository;
+    private Size2D SnapShotOutput => new(_snapshot.OutputSize.X, _snapshot.OutputSize.Y);
 
     public RenderPasses(GfxContext gfx, in RenderGlobalSnapshot snapshot)
     {
         _gfx = gfx;
-        _gfxFbo = gfx.FrameBuffers;
+        _gfxFbo = gfx.FrameBufferRegistry;
         _snapshot = snapshot;
 
         _renderTargets = new List<IRenderPassDescriptor>[RenderConsts.RenderTargetCount];
@@ -84,6 +83,7 @@ internal class RenderPasses
         }
     }
 
+
     public void RegisterRenderPass(RenderTargetId target, IRenderPassDescriptor pass)
     {
         if (pass.Op == RenderPassOp.Blit && pass is not BlitRenderPass)
@@ -94,17 +94,14 @@ internal class RenderPasses
 
     public void CreateSceneBuffer()
     {
-        if (SceneFbo.IsValid)
+        if (SceneFbo.FboId.IsValid())
             throw new InvalidOperationException("Scene buffer is already created");
 
-        var desc = new FrameBufferDesc(
-            DownscaleRatio: Vector2.One,
-            AbsoluteSize: _snapshot.OutputSize,
-            Attachments: new FrameBufferAttachmentDesc(true, false, false, true)
+        var desc = new GfxFrameBufferDescriptor(
+            Size: SnapShotOutput,
+            Attachments: new GfxFrameBufferDescriptor.AttachmentsDef(true, false, false, true)
         );
-        var fboId = _gfxFbo.CreateFrameBuffer(in desc);
-        var layout = FboRegistry.Get(fboId);
-        SceneFbo = ToRecord(fboId, layout);
+        SceneFbo = _gfxFbo.RegisterFrameBufferScreen(desc);
     }
 
     public void CreateMultisampleBuffer(Vector2 sizeRatio, int samples)
@@ -113,94 +110,73 @@ internal class RenderPasses
         if (samples is not (0 or 2 or 4 or 8))
             throw new ArgumentOutOfRangeException(nameof(samples), "Valid samples are 0,2,4,8");
 
-        if (MultisampleFbo.IsValid)
+        if (MultisampleFbo.FboId.IsValid())
             throw new InvalidOperationException("Multisample buffer is already created");
 
-        var desc = new FrameBufferDesc(
-            DownscaleRatio: sizeRatio,
-            AbsoluteSize: _snapshot.OutputSize,
+        var desc = new GfxFrameBufferDescriptor(
+            Size: SnapShotOutput,
             Multisample: (RenderBufferMsaa)samples,
-            Attachments: new FrameBufferAttachmentDesc(true, false, false, true),
-        TexturePreset: TexturePreset.None
+            Attachments: new GfxFrameBufferDescriptor.AttachmentsDef(true, false, false, true),
+            TexturePreset: TexturePreset.None
         );
 
-        var fboId = _gfxFbo.CreateFrameBuffer(in desc);
-
-        var layout = _gfx.ResourceContext.Repository.FboRepository.Get(fboId);
-        MultisampleFbo = ToRecord(fboId, layout);
+        MultisampleFbo = _gfxFbo.RegisterFrameBufferScreen(desc);
     }
 
-    public void CreateShadowBuffer(Vector2D<int> absoluteSize)
+    public void CreateShadowBuffer(Size2D size)
     {
-        ArgumentOutOfRangeException.ThrowIfLessThan(absoluteSize.X, 64);
-        ArgumentOutOfRangeException.ThrowIfLessThan(absoluteSize.Y, 64);
-        ArgumentOutOfRangeException.ThrowIfGreaterThan(absoluteSize.X, 4096);
-        ArgumentOutOfRangeException.ThrowIfGreaterThan(absoluteSize.Y, 4096);
-
-        if (ShadowFbo.IsValid)
+        if (ShadowFbo.FboId.IsValid())
             throw new InvalidOperationException("Shadow buffer is already created");
 
-        var desc = new FrameBufferDesc(
-            DownscaleRatio: Vector2.One,
-            AbsoluteSize: absoluteSize,
-            Attachments: new FrameBufferAttachmentDesc(true, false, false, true)
+        var desc = new GfxFrameBufferDescriptor(
+            Size: size,
+            Attachments: new GfxFrameBufferDescriptor.AttachmentsDef(true, false, false, true)
         );
 
-        var fboId = _gfxFbo.CreateFrameBuffer(in desc);
-
-        var layout = FboRegistry.Get(fboId);
-        ShadowFbo = ToRecord(fboId, layout);
+        ShadowFbo = _gfxFbo.RegisterFrameBufferFixed(desc, size);
     }
 
     public void CreateLightBuffer(Vector2 sizeRatio, TexturePreset preset)
     {
         ValidateSizeRatio(sizeRatio);
-        if (LightFbo.IsValid)
+        if (LightFbo.FboId.IsValid())
             throw new InvalidOperationException("Light buffer is already created");
 
-        var desc = new FrameBufferDesc(
-            DownscaleRatio: sizeRatio,
-            AbsoluteSize: _snapshot.OutputSize,
-            Attachments: new FrameBufferAttachmentDesc(true, false, false, false)
+        var desc = new GfxFrameBufferDescriptor(
+            Size: SnapShotOutput.Scale(sizeRatio),
+            Attachments: new GfxFrameBufferDescriptor.AttachmentsDef(true, false, false, false)
         );
 
-        var fboId = _gfxFbo.CreateFrameBuffer(in desc);
 
-        var layout = FboRegistry.Get(fboId);
-        LightFbo = ToRecord(fboId, layout);
+        LightFbo = _gfxFbo.RegisterFrameBufferCalc(desc, sizeRatio,
+            (outputSize, ratio) => outputSize.Scale(ratio)
+        );
     }
 
-    public void CreatePostProcessBuffer_A(Vector2 sizeRatio)
+    public void CreatePostProcessBuffer_A()
     {
-        if (PostFboA.IsValid)
+        if (PostFboA.FboId.IsValid())
             throw new InvalidOperationException("Post Process buffer is already created");
 
-        PostFboA = CreatePostProcessBuffer(sizeRatio,true);
-
+        PostFboA = CreatePostProcessBuffer(true);
     }
 
-    public void CreatePostProcessBuffer_B(Vector2 sizeRatio)
+    public void CreatePostProcessBuffer_B()
     {
-        if (PostFboB.IsValid)
+        if (PostFboB.FboId.IsValid())
             throw new InvalidOperationException("Post Process buffer is already created");
 
-        PostFboB = CreatePostProcessBuffer(sizeRatio, false);
+        PostFboB = CreatePostProcessBuffer(false);
     }
 
-    private RenderPassFboRecord CreatePostProcessBuffer(Vector2 sizeRatio, bool mipmap)
+    private FrameBufferLayout CreatePostProcessBuffer(bool mipmap)
     {
-        ValidateSizeRatio(sizeRatio);
-
-        var desc = new FrameBufferDesc(
-            DownscaleRatio: Vector2.One,
-            AbsoluteSize: _snapshot.OutputSize,
+        var desc = new GfxFrameBufferDescriptor(
+            Size: SnapShotOutput,
             TexturePreset: mipmap ? TexturePreset.LinearMipmapClamp : TexturePreset.LinearClamp,
-            Attachments: new FrameBufferAttachmentDesc(true, false, false, false)
+            Attachments: new GfxFrameBufferDescriptor.AttachmentsDef(true, false, false, false)
         );
-
-        var fboId = _gfxFbo.CreateFrameBuffer(in desc);
-        var layout = FboRegistry.Get(fboId);
-        return ToRecord(fboId, layout);
+        return _gfxFbo.RegisterFrameBufferScreen(desc);
     }
 
 
@@ -212,9 +188,4 @@ internal class RenderPasses
         ArgumentOutOfRangeException.ThrowIfGreaterThan(sizeRatio.Y, 1, nameof(sizeRatio.Y));
     }
 
-    private static RenderPassFboRecord ToRecord(FrameBufferId id, FrameBufferLayout fboLayout)
-    {
-        var attach = fboLayout.FboAttachmentResources;
-        return new(id, attach.ColorTextureId, attach.ColorRenderBufferId, fboLayout.OutputSize, (int)fboLayout.Msaa);
-    }
 }

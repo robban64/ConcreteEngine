@@ -120,7 +120,7 @@ internal class Render2D : IRender
         _registry.RegisterRenderPass(RenderTargetId.Screen, new FsqPass
         {
             TargetFbo = default,
-            SourceTextures = [_registry.SceneFbo.ColTexId, _registry.LightFbo.ColTexId],
+            SourceTextures = [_registry.SceneFbo.Attachments.ColorTextureId, _registry.LightFbo.Attachments.ColorTextureId],
             Shader = screenTarget.ScreenShaderId
         });
     }

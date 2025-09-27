@@ -1,5 +1,6 @@
 #region
 
+using ConcreteEngine.Common.Numerics;
 using ConcreteEngine.Graphics.Error;
 using ConcreteEngine.Graphics.OpenGL.Utilities;
 using ConcreteEngine.Graphics.Resources;
@@ -70,10 +71,10 @@ internal sealed class GlFrameBuffers : IGraphicsDriverModule
         return _store.FrameBuffer.Add(new GlFboHandle(fbo));
     }
 
-    public GfxRefToken<RenderBufferId> CreateRenderBuffer(FrameBufferTarget attachment, Vector2D<int> size, int samples)
+    public GfxRefToken<RenderBufferId> CreateRenderBuffer(FrameBufferTarget attachment, Size2D size, int samples)
     {
         var internalFormat = attachment.ToGlInternalFormatEnum();
-        var (width, height) = ((uint)size.X, (uint)size.Y);
+        var (width, height) = size.ToUnsigned();
 
         _gl.CreateRenderbuffers(1, out uint rbo);
         if (samples > 0)

@@ -59,8 +59,28 @@ public sealed class GfxBuffers
     }
 
     //BufferStorage.Dynamic, BufferAccess.MapWrite
+    /*
     public UniformBufferId CreateUniformBuffer<T>(
         UniformGpuSlot slot,
+        BufferStorage storage = BufferStorage.Dynamic,
+        BufferAccess access = BufferAccess.MapWrite) where T : unmanaged, IUniformGpuData
+    {
+        if (!UniformBufferUtils.IsStd140Aligned<T>())
+            throw GraphicsException.InvalidStd140Layout<T>();
+
+        var size = (nint)Unsafe.SizeOf<T>();
+        var meta = new UniformBufferMeta(slot, size, BufferUsage.DynamicDraw, BufferStorage.Dynamic,
+            BufferAccess.MapWrite);
+
+        var uboRef = _driverBuffer.CreateUniformBuffer(slot, new GfxBufferDataDesc(size, storage, access));
+
+        var uboId = _resources.UboStore.Add(meta, uboRef);
+        _repository.ShaderRepository.AddUboToSlot(meta.Slot, uboId);
+        return uboId;
+    }*/
+    
+    public UniformBufferId CreateUniformBuffer<T>(
+        int slot,
         BufferStorage storage = BufferStorage.Dynamic,
         BufferAccess access = BufferAccess.MapWrite) where T : unmanaged, IUniformGpuData
     {

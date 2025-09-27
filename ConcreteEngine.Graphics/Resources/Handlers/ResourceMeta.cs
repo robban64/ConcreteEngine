@@ -137,13 +137,13 @@ public readonly struct UniformBufferMeta : IResourceMeta
 {
     public readonly nint BlockSize;
     public readonly nint Stride;
-    public readonly UniformGpuSlot Slot;
+    public readonly int Slot;
     public readonly BufferUsage Usage;
     public readonly BufferStorage Storage;
     public readonly BufferAccess Access;
 
 
-    public UniformBufferMeta(UniformGpuSlot slot, nint blockSize, BufferUsage usage, BufferStorage storage,
+    public UniformBufferMeta(int slot, nint blockSize, BufferUsage usage, BufferStorage storage,
         BufferAccess access)
     {
         Slot = slot;

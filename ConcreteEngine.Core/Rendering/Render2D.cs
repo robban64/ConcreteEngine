@@ -59,6 +59,17 @@ internal class Render2D : IRender
 
     public void RenderDepthPass(IDepthPass depthPass, RenderPipeline submitter)
     {
+        throw new NotImplementedException();
+    }
+
+    public void RenderPostEffectPass(PostEffectPass pass)
+    {
+        throw new NotImplementedException();
+    }
+
+    public void RenderScreenPass(ScreenPass pass)
+    {
+        throw new NotImplementedException();
     }
 
     public void MutateRenderPass(RenderTargetId targetId, in RenderPassMutation mutation)
@@ -117,7 +128,7 @@ internal class Render2D : IRender
 
         // Screen Passes
         // Pass 0: Combine scene and light fbo texture into final scene
-        _registry.RegisterRenderPass(RenderTargetId.Screen, new FsqPass
+        _registry.RegisterRenderPass(RenderTargetId.Screen, new ScreenPass
         {
             TargetFbo = default,
             SourceTextures = [_registry.SceneFbo.Attachments.ColorTextureId, _registry.LightFbo.Attachments.ColorTextureId],

@@ -99,6 +99,7 @@ internal class RenderPasses
 
         var desc = new GfxFrameBufferDescriptor(
             Size: SnapShotOutput,
+            PixelFormat: EnginePixelFormat.Rgba,
             Attachments: new GfxFrameBufferDescriptor.AttachmentsDef(true, false, false, true)
         );
         SceneFbo = _gfxFbo.RegisterFrameBufferScreen(desc);

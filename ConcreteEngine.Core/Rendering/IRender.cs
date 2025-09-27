@@ -12,4 +12,8 @@ internal interface IRender
     void Prepare(float alpha, in FrameInfo frameCtx, in RenderGlobalSnapshot renderGlobals);
     void RenderScenePass(IScenePass pass, RenderPipeline submitter);
     void RenderDepthPass(IDepthPass depthPass, RenderPipeline submitter);
+    void RenderPostEffectPass(PostEffectPass pass);
+
+    void RenderScreenPass(ScreenPass pass);
+
 }

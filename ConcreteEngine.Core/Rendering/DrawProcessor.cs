@@ -153,4 +153,22 @@ internal sealed class DrawProcessor
     }
     
 
+    public void DrawFullscreenQuad(IFsqPass pass)
+    {
+        _gfxCmd.UseShader(pass.Shader);
+        //_gfxCmd.SetUniform(ShaderUniform.TexelSize, viewport.ConvertToVec2() * pass.SizeRatio);
+
+        for (int i = 0; i < pass.SourceTextures.Length; i++)
+        {
+            _gfxCmd.BindTexture(pass.SourceTextures[i], i);
+        }
+        
+        if (pass is PostEffectPass postEffectPass && postEffectPass.LutTexture != default)
+        {
+            //_gfxCmd.BindTexture(postEffectPass.LutTexture, pass.SourceTextures.Length);
+        }
+
+        _gfxCmd.BindMesh(_gfx.Primitives.FsqQuad);
+        _gfxCmd.DrawBoundMesh(_gfx.Primitives.FsqQuad, 0);
+    }
 }

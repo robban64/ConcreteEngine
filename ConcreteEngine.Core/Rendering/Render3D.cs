@@ -20,9 +20,9 @@ internal sealed class Render3D : IRender
     private float _deltaTicker = 0;
 
     public ICamera Camera => _camera;
-    
-    
-    private TextureId LutTextureId = default;
+
+
+    //private TextureId LutTextureId = default;
 
 
     public Render3D(GfxContext gfx, DrawProcessor drawProcessor, in RenderGlobalSnapshot snapshot)
@@ -31,22 +31,21 @@ internal sealed class Render3D : IRender
         _drawProcessor = drawProcessor;
         _camera = new Camera3D();
         _registry = new RenderPasses(_gfx, in snapshot);
-
-        var texDesc = new GfxTextureDescriptor(32, 32, TextureKind.Texture3D, 
+/*
+        var texDesc = new GfxTextureDescriptor(32, 32, TextureKind.Texture3D,
             EnginePixelFormat.Rgb, 32);
 
         var texProps = new GfxTextureProperties(TexturePreset.LinearClamp, TextureAnisotropy.Off, 0);
         LutTextureId = _gfx.Textures.CreateTexture(in texDesc, in texProps);
         _gfx.Textures.ApplyProperties(LutTextureId);
-
-
+        */
     }
 
 
-    public void Prepare(float alpha,in FrameInfo frameCtx, in RenderGlobalSnapshot snapshot)
+    public void Prepare(float alpha, in FrameInfo frameCtx, in RenderGlobalSnapshot snapshot)
     {
         _deltaTicker += frameCtx.DeltaTime;
-        
+
         var frameUniforms = new FrameUniformRecord(
             ambient: snapshot.Ambient,
             ambientIntensity: 1,
@@ -74,26 +73,27 @@ internal sealed class Render3D : IRender
             intensity: snapshot.DirLight.Intensity
         );
 
-        _drawProcessor.UploadFrame(in frameUniforms);
-        _drawProcessor.UploadCamera(in cameraUniforms);
-        _drawProcessor.UploadDirLight(in dirLightUniforms);
+        _drawProcessor.UploadFrame(rec: in frameUniforms);
+        _drawProcessor.UploadCamera(rec: in cameraUniforms);
+        _drawProcessor.UploadDirLight(rec: in dirLightUniforms);
 
         var postProcessUniforms = new FramePostProcessUniform(
-            new Vector4(0.5f, 1.1f, 1.05f, 2.2f),
-            new Vector4(0.25f, -0.05f, 0.0f, 0.0f),
-            new Vector4(0.0f, 1.0f, 0.5f, 0.0f),
-            new Vector4(1.0f, 0.5f, 0.6f, 0.0f),
-            new Vector4(0.8f, 0.6f, 0.35f, 0.2f),
-            new Vector4(0.65f, 1.0f / 32.0f, 0.0f, 0.0f),
-            new Vector4(0.35f, 0.85f, 0.20f, 0.0f),
-            new Vector4(0.0075f, _deltaTicker, 0.0f, 0.0f),
-            new Vector4(0.0000f, 0.0f, 0.0f, 0.0f));
-        
-        _drawProcessor.UploadFramePostProcess(in postProcessUniforms);
+            colorAdjust:   new Vector4(0.0f,  1.05f, 1.05f, 2.2f),
+            whiteBalance:  new Vector4(0.05f, 0.02f, 0.15f, 0.1f),
+            flags:         new Vector4(1.0f,  0.001f, 0.6f,  0.6f),
+            bloomParams:   new Vector4(0.7f,  0.6f,  0.0f,  0.0f),
+            bloomLods:     new Vector4(0.9f,  0.6f,  0.35f, 0.2f),
+            lutParams:     new Vector4(0.0f,  0.0f,  0.0f,  0.0f),
+            vignetteParams: new Vector4(x: 0.35f, y: 0.85f, z: 0.20f, w: 0.0f),
+            grainParams: new Vector4(0.0075f, _deltaTicker, 0.0f, 0.0f),
+            chromAbParams: new Vector4(0.0000f, 0.0f, 0.0f, 0.0f)
+        );
+
+        _drawProcessor.UploadFramePostProcess(data: in postProcessUniforms);
     }
 
-    public bool TryGetNextPasses(out RenderTargetId targetId, out List<IRenderPassDescriptor> passes)
-        => _registry.TryGetNextPasses(out targetId, out passes);
+    public bool TryGetNextPasses(out RenderTargetId targetId, out List<IRenderPassDescriptor> passes) =>
+        _registry.TryGetNextPasses(out targetId, out passes);
 
     public void RenderScenePass(IScenePass pass, RenderPipeline submitter)
     {
@@ -102,6 +102,17 @@ internal sealed class Render3D : IRender
 
     public void RenderDepthPass(IDepthPass depthPass, RenderPipeline submitter)
     {
+    }
+
+    public void RenderPostEffectPass(PostEffectPass pass)
+    {
+        _drawProcessor.DrawFullscreenQuad(pass);
+    }
+
+    public void RenderScreenPass(ScreenPass pass)
+    {
+        _gfx.Commands.ApplyState(_gfx.Commands.ActiveState with { FramebufferSrgb = false });
+        _drawProcessor.DrawFullscreenQuad(pass);
     }
 
 
@@ -188,7 +199,7 @@ internal sealed class Render3D : IRender
             {
                 TargetFbo = _registry.PostFboB.FboId,
                 SourceTextures = [_registry.PostFboA.Attachments.ColorTextureId],
-                LutTexture = LutTextureId,
+                //LutTexture = LutTextureId,
                 OutputTexture = _registry.PostFboB.Attachments.ColorTextureId,
                 Shader = desc.PostEffectTarget.EffectShaderId,
             });
@@ -197,7 +208,7 @@ internal sealed class Render3D : IRender
         // Screen Passes
         // Pass 0: Combine scene and light fbo texture into final scene
         _registry.RegisterRenderPass(RenderTargetId.Screen,
-            new FsqPass
+            new ScreenPass
             {
                 TargetFbo = default,
                 SourceTextures = [_registry.PostFboB.Attachments.ColorTextureId],

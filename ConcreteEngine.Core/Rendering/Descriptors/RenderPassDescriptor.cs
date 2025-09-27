@@ -98,7 +98,7 @@ public sealed class BlitRenderPass : RenderPassDescBase
     public int Samples { get; init; } = 0;
 }
 
-public class FsqPass : RenderPassDescBase, IFsqPass
+public class ScreenPass : RenderPassDescBase, IFsqPass
 {
     public override RenderPassOp Op => RenderPassOp.FullscreenQuad;
     public required TextureId[] SourceTextures { get; init; }

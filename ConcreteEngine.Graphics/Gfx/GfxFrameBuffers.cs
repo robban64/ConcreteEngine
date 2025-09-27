@@ -42,7 +42,7 @@ public sealed class GfxFrameBuffers
         {
             var texKind = !isMultisample ? TextureKind.Texture2D : TextureKind.Multisample2D;
             var texDesc = new GfxTextureDescriptor(size.Width, size.Height, 
-                texKind, EnginePixelFormat.SrgbAlpha,
+                texKind, desc.PixelFormat,
                 1, desc.Multisample);
 
             var texProps = new GfxTextureProperties(desc.TexturePreset, 0, 0);

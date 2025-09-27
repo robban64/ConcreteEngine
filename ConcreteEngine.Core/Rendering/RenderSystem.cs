@@ -180,7 +180,8 @@ public sealed class RenderSystem : IRenderSystem
 
     private void ExecutePass(RenderTargetId target, IRenderPassDescriptor pass)
     {
-        
+        ArgumentNullException.ThrowIfNull(pass);
+
         if (pass is BlitRenderPass blitPass)
         {
             _gfxCmd.BlitFramebuffer(blitPass.BlitFbo, blitPass.TargetFbo, blitPass.LinearFilter);
@@ -201,14 +202,17 @@ public sealed class RenderSystem : IRenderSystem
       
         switch (pass)
         {
-            case IScenePass scenePass:
-                _render.RenderScenePass(scenePass, _commandSubmitter);
+            case IScenePass scePass:
+                _render.RenderScenePass(scePass, _commandSubmitter);
                 break;
-            case IFsqPass fsq: // include PostProcess
-                DrawFullscreenQuad(fsq);
+            case PostEffectPass pPass:
+                _render.RenderPostEffectPass(pPass);
                 break;
-            case IDepthPass depthPass:
-                _render.RenderDepthPass(depthPass, _commandSubmitter);
+            case ScreenPass scrPass: 
+                _render.RenderScreenPass(scrPass);
+                break;
+            case IDepthPass dPass:
+                _render.RenderDepthPass(dPass, _commandSubmitter);
                 break;
 
         }
@@ -227,34 +231,6 @@ public sealed class RenderSystem : IRenderSystem
             _gfx.Textures.GenerateMipMaps(postEffectPass.OutputTexture);
         }
     }
-
-    //TODO split, use debug checks and move into DrawProcessor
-    private void DrawFullscreenQuad(IFsqPass pass)
-    {
-        ArgumentNullException.ThrowIfNull(pass);
-        ArgumentNullException.ThrowIfNull(pass.SourceTextures);
-        ArgumentOutOfRangeException.ThrowIfZero(pass.SourceTextures.Length);
-        ArgumentOutOfRangeException.ThrowIfGreaterThan(pass.SourceTextures.Length, 4, nameof(pass.SourceTextures));
-
-        var viewport = _render.Camera.Viewport;
-        _gfxCmd.UseShader(pass.Shader);
-        //_gfxCmd.SetUniform(ShaderUniform.TexelSize, viewport.ConvertToVec2() * pass.SizeRatio);
-        _gfxCmd.SetUniform(ShaderUniform.TexelSize, viewport.ToVector2());
-
-        for (int i = 0; i < pass.SourceTextures.Length; i++)
-        {
-            _gfxCmd.BindTexture(pass.SourceTextures[i], i);
-        }
-        
-        if (pass is PostEffectPass postEffectPass && postEffectPass.LutTexture != default)
-        {
-            _gfxCmd.BindTexture(postEffectPass.LutTexture, pass.SourceTextures.Length);
-        }
-
-        _gfxCmd.BindMesh(_gfx.Primitives.FsqQuad);
-        _gfxCmd.DrawBoundMesh(_gfx.Primitives.FsqQuad, 0);
-    }
-
 
     public void Shutdown()
     {

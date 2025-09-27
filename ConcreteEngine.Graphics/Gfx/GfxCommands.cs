@@ -33,7 +33,6 @@ public sealed class GfxCommands
     private CullMode _cullMode = CullMode.Unset;
 
     private GfxPassState _activeState;
-    private GfxPassStateFlags _activeFlags;
     private GfxPassClear _activeClear;
 
     private readonly TextureId[] _boundTextures;
@@ -51,6 +50,8 @@ public sealed class GfxCommands
     private FrameInfo _frameCtx;
     private int _drawTriangleCount = 0;
     private int _drawCallCount = 0;
+
+    public GfxPassState ActiveState => _activeState;
 
 
     internal GfxCommands(GfxContextInternal ctx)
@@ -156,6 +157,8 @@ public sealed class GfxCommands
         ref readonly var fromFbo = ref _store.FboStore.GetMeta(fromId);
         var fromHandle = _store.FboStore.GetRef(fromId);
         var srcSize = fromFbo.Size;
+        
+        ApplyState(_activeState with{ FramebufferSrgb = false });
 
         if (!_store.FboStore.TryGetRef(toId, out var toHandle, out var toFbo))
         {
@@ -173,7 +176,7 @@ public sealed class GfxCommands
         if (passClear.ClearBuffer is { } clearBuff) _states.ClearBuffer(clearBuff);
     }
 
-    private void ApplyState(GfxPassState cmdState)
+    public void ApplyState(GfxPassState cmdState)
     {
         _activeState = cmdState;
         if (cmdState.Scissor is { } scissor) _states.ToggleScissorTest(scissor);
@@ -184,14 +187,7 @@ public sealed class GfxCommands
         if (cmdState.FramebufferSrgb is { } srgb) _states.ToggleFrameBufferSrgb(srgb);
         if (cmdState.ColorMask is { } colorMask) _states.ColorMask(colorMask);
     }
-
-    private void ApplyStateFlags(GfxPassStateFlags flags)
-    {
-        _activeFlags = flags;
-        if (flags.Blend != BlendMode.Unset) _states.SetBlendMode(flags.Blend);
-        if (flags.Depth != DepthMode.Unset) _states.SetDepthMode(flags.Depth);
-        if (flags.Cull != CullMode.Unset) _states.SetCullMode(flags.Cull);
-    }
+    
 
     public void SetViewport(Size2D viewportSize)
     {

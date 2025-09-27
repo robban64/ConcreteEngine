@@ -11,6 +11,7 @@ namespace ConcreteEngine.Graphics.Descriptors;
 public readonly record struct GfxFrameBufferDescriptor(
     Size2D Size,
     GfxFrameBufferDescriptor.AttachmentsDef Attachments,
+    EnginePixelFormat PixelFormat = EnginePixelFormat.Rgba,
     RenderBufferMsaa Multisample = RenderBufferMsaa.None,
     TexturePreset TexturePreset = TexturePreset.LinearClamp
 )

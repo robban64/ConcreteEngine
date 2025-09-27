@@ -12,11 +12,6 @@ public readonly record struct GfxPassState(
     bool? ColorMask = null
 );
 
-public readonly record struct GfxPassStateFlags(
-    BlendMode Blend = BlendMode.Unset,
-    DepthMode Depth = DepthMode.Unset,
-    CullMode Cull = CullMode.Unset
-);
 
 public readonly record struct GfxPassClear(Color4? ClearColor, ClearBufferFlag ClearBuffer)
 {

@@ -1,5 +1,6 @@
 #region
 
+using ConcreteEngine.Common.Numerics;
 using ConcreteEngine.Graphics.Gfx.Utility;
 using Silk.NET.Maths;
 
@@ -16,19 +17,33 @@ public readonly struct TextureMeta(
     TextureKind kind,
     TextureAnisotropy anisotropy,
     EnginePixelFormat format,
-    byte mipLevel,
-    bool hasData) : IResourceMeta
+    float lod,
+    int depth,
+    short levels,
+    short samples,
+    nint sizeInBytes
+) : IResourceMeta
 {
+    public readonly nint SizeInBytes = sizeInBytes;
     public readonly int Width = width;
     public readonly int Height = height;
+    public readonly int Depth = depth;
+    public readonly float Lod = lod;
+    public readonly short Levels = levels;
+    public readonly short Samples = samples;
     public readonly TexturePreset Preset = preset;
     public readonly TextureKind Kind = kind;
     public readonly TextureAnisotropy Anisotropy = anisotropy;
     public readonly EnginePixelFormat PixelFormat = format;
-    public readonly byte MipLevels = mipLevel;
 
-    internal static TextureMeta CreateFromHasData(in TextureMeta m, bool hasData) =>
-        new(m.Width, m.Height, m.Preset, m.Kind, m.Anisotropy, m.PixelFormat, m.MipLevels, hasData);
+    public bool IsMipMapped => Levels > 1;
+    public bool IsMsaa => Kind == TextureKind.Multisample2D && Samples > 0;
+
+    internal static TextureMeta CopyWithNewSize(in TextureMeta m, nint sizeInBytes) =>
+        new(width: m.Width, height: m.Height, preset: m.Preset, kind: m.Kind, anisotropy: m.Anisotropy,
+            format: m.PixelFormat,
+            lod: m.Lod, depth: m.Depth, levels: m.Levels, samples: m.Samples, sizeInBytes: sizeInBytes
+        );
 }
 
 public readonly struct ShaderMeta(int samplers) : IResourceMeta
@@ -64,9 +79,9 @@ public readonly struct VertexBufferMeta(
     BufferAccess access
 ) : IResourceMeta
 {
+    public readonly nint Stride = stride;
     public readonly int BindingIdx = bindingIdx;
     public readonly int ElementCount = elementCount;
-    public readonly nint Stride = stride;
     public readonly BufferUsage Usage = usage;
     public readonly BufferStorage Storage = storage;
     public readonly BufferAccess Access = access;
@@ -83,8 +98,8 @@ public readonly struct IndexBufferMeta(
     BufferAccess access
 ) : IResourceMeta
 {
-    public readonly int ElementCount = elementCount;
     public readonly nint Stride = stride;
+    public readonly int ElementCount = elementCount;
     public readonly BufferUsage Usage = usage;
     public readonly BufferStorage Storage = storage;
     public readonly BufferAccess Access = access;
@@ -94,30 +109,26 @@ public readonly struct IndexBufferMeta(
 }
 
 public readonly struct FrameBufferMeta(
-    Vector2D<int> size,
-    bool colorTexture,
-    bool depthTexture,
-    bool colorBuffer,
-    bool depthStencilBuffer
+    Size2D size,
+    FboAttachmentIds attachments,
+    RenderBufferMsaa multiSample
 ) : IResourceMeta
 {
-    public readonly Vector2D<int> Size = size;
-    public readonly bool ColorTexture = colorTexture;
-    public readonly bool DepthTexture = depthTexture;
-    public readonly bool ColorBuffer = colorBuffer;
-    public readonly bool DepthStencilBuffer = depthStencilBuffer;
-
-    internal static FrameBufferMeta MakeResizeCopy(in FrameBufferMeta meta, Vector2D<int> size) =>
-        new(size, meta.ColorTexture, meta.DepthTexture, meta.ColorBuffer, meta.DepthStencilBuffer);
+    public readonly Size2D Size = size;
+    public readonly FboAttachmentIds Attachments = attachments;
+    public readonly RenderBufferMsaa MultiSample = multiSample;
+    
+    internal static FrameBufferMeta MakeResizeCopy(in FrameBufferMeta meta, Size2D size) =>
+        new(size, meta.Attachments, meta.MultiSample);
 }
 
 public readonly struct RenderBufferMeta(
-    Vector2D<int> size,
+    Size2D size,
     FrameBufferTarget target,
     RenderBufferMsaa multisample
 ) : IResourceMeta
 {
-    public readonly Vector2D<int> Size = size;
+    public readonly Size2D Size = size;
     public readonly FrameBufferTarget Target = target;
     public readonly RenderBufferMsaa Multisample = multisample;
 }

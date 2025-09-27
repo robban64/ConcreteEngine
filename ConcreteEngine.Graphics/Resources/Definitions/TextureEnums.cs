@@ -2,7 +2,9 @@ namespace ConcreteEngine.Graphics.Resources;
 
 public enum TextureKind : byte
 {
-    Texture2D,
-    CubeMap,
-    Multisample2D
+    Unknown = 0,
+    Texture2D = 1,
+    Texture3D = 2,
+    CubeMap = 3,
+    Multisample2D = 4
 }

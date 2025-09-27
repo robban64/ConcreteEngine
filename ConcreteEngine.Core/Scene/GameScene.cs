@@ -41,7 +41,7 @@ public abstract class GameScene
     internal void AttachContext(GameSceneContext context)
     {
         var renderer = context.GetSystem<IRenderSystem>();
-        _world = new World(renderer.RenderGlobals);
+        _world = new World(renderer.SceneRenderProps);
         context.World = World;
         Context = context;
     }

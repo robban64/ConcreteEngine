@@ -32,6 +32,9 @@ public sealed class GfxCommands
     private DepthMode _depthMode = DepthMode.Unset;
     private CullMode _cullMode = CullMode.Unset;
 
+    private GfxPassState _activeState;
+    private GfxPassClear _activeClear;
+
     private readonly TextureId[] _boundTextures;
 
     private FrameBufferId _boundFboId = default;
@@ -43,10 +46,13 @@ public sealed class GfxCommands
     private ShaderLayout? _boundUniforms;
 
     //
-    private Vector2D<int> _activeOutputSize;
+    private Bounds2D _activeOutputSize;
     private FrameInfo _frameCtx;
     private int _drawTriangleCount = 0;
     private int _drawCallCount = 0;
+
+    public GfxPassState ActiveState => _activeState;
+
 
     internal GfxCommands(GfxContextInternal ctx)
     {
@@ -58,7 +64,12 @@ public sealed class GfxCommands
         _store = ctx.Stores;
 
         _boundTextures = new TextureId[Configuration.MaxTextureImageUnits];
+
+        SetBlendMode(BlendMode.Alpha);
+        SetDepthMode(DepthMode.Lequal);
+        SetCullMode(CullMode.BackCcw);
     }
+
 
     internal void BeginFrame(in FrameInfo frameCtx)
     {
@@ -69,15 +80,13 @@ public sealed class GfxCommands
 
         _activeOutputSize = _frameCtx.OutputSize;
 
-        _states.SetBlendMode(BlendMode.None);
-        _states.SetDepthMode(DepthMode.WriteLequal);
-        _states.Clear(Color4.CornflowerBlue, ClearBufferFlag.ColorAndDepth);
+        //Clear(Color4.CornflowerBlue, ClearBufferFlag.ColorAndDepth);
+        SetDepthMode(DepthMode.Lequal);
     }
 
     internal void EndFrame(out GpuFrameStats result)
     {
         result = new GpuFrameStats(_drawCallCount, _drawTriangleCount);
-        // unbind context
         UseShader(default);
         BindMesh(default);
         BindFramebuffer(default);
@@ -89,20 +98,22 @@ public sealed class GfxCommands
         _driver.EndFrame();
     }
 
-    public void BeginScreenPass(Color4? clear = null, ClearBufferFlag? flags = null)
+    public void BeginScreenPass(in GfxPassClear passClear)
     {
-        //if (_boundFboId != default) GraphicsException.ThrowInvalidState("Cannot begin screen pass while FBO is bound.");
-
-        _activeOutputSize = _frameCtx.OutputSize;
-
         BindFramebuffer(default);
         SetViewport(_activeOutputSize);
 
-        //Needed?
-        if (clear.HasValue && flags.HasValue) Clear(clear.Value, flags.Value);
+        ApplyState(new GfxPassState(
+            FramebufferSrgb:true,
+            ColorMask: true
+        ));
+        
+        Clear(in passClear);
+
+        _activeOutputSize = _frameCtx.OutputSize;
     }
 
-    public void BeginRenderPass(FrameBufferId fboId, Color4? clear, ClearBufferFlag? flags)
+    public void BeginRenderPass(FrameBufferId fboId, in GfxPassClear passClear, bool scenePass)
     {
         ArgumentOutOfRangeException.ThrowIfNegativeOrZero(fboId.Value, nameof(fboId));
         if (_boundFboId == fboId) GraphicsException.ThrowInvalidState($"FBO is {fboId} already bound.");
@@ -111,13 +122,21 @@ public sealed class GfxCommands
         ref readonly var handle = ref _store.FboStore.GetHandle(fboId);
 
         BindFramebuffer(fboId);
-
         SetViewport(meta.Size);
-        if (clear.HasValue && flags.HasValue) Clear(clear.Value, flags.Value);
-        SetDepthMode(DepthMode.WriteLequal);
-        SetCullMode(CullMode.BackCcw);
-
-        _activeOutputSize = meta.Size;
+        
+        ApplyState(new GfxPassState(
+            DepthTest: scenePass,
+            DepthWrite: scenePass,
+            Cull: scenePass,
+            Blend: false,
+            Scissor: false,
+            FramebufferSrgb:true
+        ));
+        
+        _states.ColorMask(true);
+        Clear(in passClear);
+        
+        _activeOutputSize = Bounds2D.FromSize(meta.Size);
     }
 
     public void EndRenderPass()
@@ -134,31 +153,54 @@ public sealed class GfxCommands
     {
         Debug.Assert(fromId != default);
         Debug.Assert(fromId != toId, "READ and DRAW FBO must differ for resolve.");
-        SetBlendMode(BlendMode.None);
 
         ref readonly var fromFbo = ref _store.FboStore.GetMeta(fromId);
         var fromHandle = _store.FboStore.GetRef(fromId);
         var srcSize = fromFbo.Size;
+        
+        ApplyState(_activeState with{ FramebufferSrgb = false });
 
         if (!_store.FboStore.TryGetRef(toId, out var toHandle, out var toFbo))
         {
-            _driver.FrameBuffers.BlitDefault(fromHandle, srcSize, _activeOutputSize, linear);
+            _driver.FrameBuffers.BlitDefault(fromHandle, srcSize, _activeOutputSize.ToSize2D(), false);
             return;
         }
 
         _driver.FrameBuffers.Blit(fromHandle, toHandle, srcSize, toFbo.Size, linear);
-        SetViewport(_activeOutputSize);
     }
 
 
-    public void Clear(Color4 color, ClearBufferFlag flags) => _states.Clear(color, flags);
-
-    public void SetViewport(Vector2D<int> viewport)
+    public void Clear(in GfxPassClear passClear)
     {
-        if (_activeOutputSize == viewport) return;
+        if (passClear.ClearColor is { } clearColor) _states.ClearColor(clearColor);
+        if (passClear.ClearBuffer is { } clearBuff) _states.ClearBuffer(clearBuff);
+    }
+
+    public void ApplyState(GfxPassState cmdState)
+    {
+        _activeState = cmdState;
+        if (cmdState.Scissor is { } scissor) _states.ToggleScissorTest(scissor);
+        if (cmdState.Cull is { } cull) _states.ToggleCullFace(cull);
+        if (cmdState.DepthTest is { } depthTest) _states.ToggleDepthTest(depthTest);
+        if (cmdState.DepthWrite is { } depthWrite) _states.ToggleDepthMask(depthWrite);
+        if (cmdState.Blend is { } blend) _states.ToggleBlendState(blend);
+        if (cmdState.FramebufferSrgb is { } srgb) _states.ToggleFrameBufferSrgb(srgb);
+        if (cmdState.ColorMask is { } colorMask) _states.ColorMask(colorMask);
+    }
+    
+
+    public void SetViewport(Size2D viewportSize)
+    {
+        _activeOutputSize = Bounds2D.FromSize(viewportSize);
+        _states.SetViewport(_activeOutputSize);
+    }
+    
+    public void SetViewport(Bounds2D viewport)
+    {
         _activeOutputSize = viewport;
         _states.SetViewport(viewport);
     }
+    
 
     public void SetBlendMode(BlendMode blendMode)
     {
@@ -169,14 +211,14 @@ public sealed class GfxCommands
 
     public void SetDepthMode(DepthMode depthMode)
     {
-        if (_depthMode != DepthMode.Disabled && _depthMode == depthMode) return;
+        if (_depthMode != DepthMode.Unset && _depthMode == depthMode) return;
         _depthMode = depthMode;
         _states.SetDepthMode(depthMode);
     }
 
     public void SetCullMode(CullMode cullMode)
     {
-        if (_cullMode != CullMode.None && _cullMode == cullMode) return;
+        if (_cullMode != CullMode.Unset && _cullMode == cullMode) return;
         _cullMode = cullMode;
         _states.SetCullMode(cullMode);
     }
@@ -199,19 +241,18 @@ public sealed class GfxCommands
 
     public void BindTexture(TextureId texture, int slot)
     {
-        ArgumentOutOfRangeException.ThrowIfNegative(slot, nameof(slot));
-        ArgumentOutOfRangeException.ThrowIfGreaterThanOrEqual(slot, Configuration.MaxTextureImageUnits, nameof(slot));
+        Debug.Assert(slot >= 0 && slot <= Configuration.MaxTextureImageUnits);
 
         if (_boundTextures[slot] == texture) return;
         _boundTextures[slot] = texture;
         if (texture.Value == 0)
         {
-            _textures.UnbindTextureSlot(slot);
+            _states.UnbindTextureSlot(slot);
             return;
         }
 
         var refHandle = _store.TextureStore.GetRef(texture);
-        _textures.BindTexture(refHandle, slot);
+        _states.BindTexture(refHandle, slot);
     }
 
     public void BindMesh(MeshId id)
@@ -254,7 +295,7 @@ public sealed class GfxCommands
 
     private void DrawArrays(DrawPrimitive primitive, int drawCount)
     {
-        Debug.Assert(drawCount != 0, "DrawArrays called with drawCount = 0");
+        Debug.Assert(drawCount != 0);
         _driver.States.DrawArrays(primitive, drawCount);
         _drawTriangleCount += drawCount;
         _drawCallCount++;
@@ -262,7 +303,7 @@ public sealed class GfxCommands
 
     private void DrawElements(DrawPrimitive primitive, DrawElementSize elementSize, int drawCount)
     {
-        Debug.Assert(drawCount != 0, "DrawElements called with drawCount = 0");
+        Debug.Assert(drawCount != 0);
         Debug.Assert(elementSize != DrawElementSize.Invalid);
 
         _driver.States.DrawElements(primitive, elementSize, drawCount);

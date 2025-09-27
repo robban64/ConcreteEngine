@@ -111,7 +111,7 @@ internal sealed class GfxMeshBuilder : IGfxMeshBuilder
     public void SetAttributeSpan(ReadOnlySpan<VertexAttributeDesc> attributes)
     {
         EnsureStarted();
-        InvalidOpThrower.ThrowIfZero(attributes.Length, nameof(attributes));
+        InvalidOpThrower.ThrowIf(attributes.Length == 0, nameof(attributes));
         InvalidOpThrower.ThrowIfNot(_state.Attributes.Count == 0, nameof(attributes));
 
         _state.Attributes.AddRange(attributes);

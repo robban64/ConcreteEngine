@@ -1,5 +1,6 @@
 #region
 
+using ConcreteEngine.Common.Numerics;
 using ConcreteEngine.Graphics.Error;
 using ConcreteEngine.Graphics.OpenGL.Utilities;
 using ConcreteEngine.Graphics.Resources;
@@ -31,30 +32,33 @@ internal sealed class GlFrameBuffers : IGraphicsDriverModule
 
     // Fix ClearBufferMask and Filter, depth/stencil use filter = Nearest
     public void Blit(GfxRefToken<FrameBufferId> readFbo, GfxRefToken<FrameBufferId> drawFbo,
-        Vector2D<int> srcSize, Vector2D<int> dstSize,
-        bool linear)
+        Size2D srcSize, Size2D dstSize, bool linear)
     {
         var filter = linear ? BlitFramebufferFilter.Linear : BlitFramebufferFilter.Nearest;
         var read = GetFboHandle(readFbo).Handle;
         var draw = GetFboHandle(drawFbo).Handle;
+        _gl.ReadBuffer(ReadBufferMode.ColorAttachment0);
+        _gl.DrawBuffer(DrawBufferMode.ColorAttachment0);
 
         _gl.BlitNamedFramebuffer(
             read, draw,
-            0, 0, srcSize.X, srcSize.Y,
-            0, 0, dstSize.X, dstSize.Y,
+            0, 0, srcSize.Width, srcSize.Height,
+            0, 0, dstSize.Width, dstSize.Height,
             ClearBufferMask.ColorBufferBit, filter
         );
     }
 
-    public void BlitDefault(GfxRefToken<FrameBufferId> readFbo, Vector2D<int> srcSize, Vector2D<int> dstSize,
-        bool linear)
+    public void BlitDefault(GfxRefToken<FrameBufferId> readFbo, Size2D srcSize, Size2D dstSize, bool linear)
     {
         var filter = linear ? BlitFramebufferFilter.Linear : BlitFramebufferFilter.Nearest;
         var read = GetFboHandle(readFbo).Handle;
+        _gl.ReadBuffer(ReadBufferMode.ColorAttachment0);
+        _gl.DrawBuffer(DrawBufferMode.ColorAttachment0);
+
         _gl.BlitNamedFramebuffer(
             read, 0,
-            0, 0, srcSize.X, srcSize.Y,
-            0, 0, dstSize.X, dstSize.Y,
+            0, 0, srcSize.Width, srcSize.Height,
+            0, 0, dstSize.Width, dstSize.Height,
             ClearBufferMask.ColorBufferBit, filter
         );
     }
@@ -65,10 +69,10 @@ internal sealed class GlFrameBuffers : IGraphicsDriverModule
         return _store.FrameBuffer.Add(new GlFboHandle(fbo));
     }
 
-    public GfxRefToken<RenderBufferId> CreateRenderBuffer(FrameBufferTarget attachment, Vector2D<int> size, int samples)
+    public GfxRefToken<RenderBufferId> CreateRenderBuffer(FrameBufferTarget attachment, Size2D size, int samples)
     {
         var internalFormat = attachment.ToGlInternalFormatEnum();
-        var (width, height) = ((uint)size.X, (uint)size.Y);
+        var (width, height) = size.ToUnsigned();
 
         _gl.CreateRenderbuffers(1, out uint rbo);
         if (samples > 0)

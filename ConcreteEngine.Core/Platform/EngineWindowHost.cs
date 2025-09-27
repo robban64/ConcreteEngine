@@ -1,5 +1,6 @@
 #region
 
+using ConcreteEngine.Common.Numerics;
 using ConcreteEngine.Core.Utils;
 using ConcreteEngine.Graphics;
 using ConcreteEngine.Graphics.Error;
@@ -106,10 +107,11 @@ public sealed class EngineWindowHost : IEngineWindowHost
         
         var frameCtx = new FrameInfo(
             frameIndex:  0,
+            deltaTime: 0,
             vSyncEnabled: false,
             resizePending: true,
-            viewport: _window.Size,
-            outputSize:  _window.FramebufferSize
+            viewport: Bounds2D.FromVector2D(_window.Size), 
+            outputSize:  Bounds2D.FromVector2D(_window.FramebufferSize)
         );
 
         GfxRuntimeBundle<GL> graphics = _backend switch

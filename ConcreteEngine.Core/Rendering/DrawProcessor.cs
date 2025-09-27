@@ -1,4 +1,5 @@
 using System.Runtime.CompilerServices;
+using ConcreteEngine.Common.Numerics;
 using ConcreteEngine.Core.Resources;
 using ConcreteEngine.Graphics;
 using ConcreteEngine.Graphics.Gfx;
@@ -62,6 +63,11 @@ internal sealed class DrawProcessor
 
         _gfxBuffers.UploadUniformGpuData(UniformGpuSlot.Frame, in data, 0);
     }
+    
+    public void UploadFramePostProcess(in FramePostProcessUniform data)
+    {
+        _gfxBuffers.UploadUniformGpuData(UniformGpuSlot.PostProcess, in data, 0);
+    }
 
     public void UploadCamera(in CameraUniformRecord rec)
     {
@@ -121,7 +127,7 @@ internal sealed class DrawProcessor
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public void UploadTransform(in DrawTransformPayload payload)
     {
-        TransformHelper.GetNormalMatrix(in payload.Transform, out var normalModel);
+        TransformUtils.CreateNormalMatrix(in payload.Transform, out var normalModel);
 
         var data = new DrawObjectUniformGpuData(
             model: in payload.Transform,
@@ -147,4 +153,22 @@ internal sealed class DrawProcessor
     }
     
 
+    public void DrawFullscreenQuad(IFsqPass pass)
+    {
+        _gfxCmd.UseShader(pass.Shader);
+        //_gfxCmd.SetUniform(ShaderUniform.TexelSize, viewport.ConvertToVec2() * pass.SizeRatio);
+
+        for (int i = 0; i < pass.SourceTextures.Length; i++)
+        {
+            _gfxCmd.BindTexture(pass.SourceTextures[i], i);
+        }
+        
+        if (pass is PostEffectPass postEffectPass && postEffectPass.LutTexture != default)
+        {
+            //_gfxCmd.BindTexture(postEffectPass.LutTexture, pass.SourceTextures.Length);
+        }
+
+        _gfxCmd.BindMesh(_gfx.Primitives.FsqQuad);
+        _gfxCmd.DrawBoundMesh(_gfx.Primitives.FsqQuad, 0);
+    }
 }

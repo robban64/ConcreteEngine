@@ -46,11 +46,11 @@ public sealed record ShaderManifestRecord(
 public sealed record TextureManifestRecord(
     string Name,
     string Filename,
-    TexturePreset Preset,
-    EnginePixelFormat PixelFormat = EnginePixelFormat.Rgba,
-    TextureAnisotropy Anisotropy = TextureAnisotropy.Default,
+    TexturePreset Preset = TexturePreset.LinearClamp,
+    EnginePixelFormat PixelFormat = EnginePixelFormat.SrgbAlpha,
+    TextureAnisotropy Anisotropy = TextureAnisotropy.Off,
     bool InMemory = false,
-    float LodBias = -0.25f)
+    float LodBias = 0)
     : IAssetManifestRecord
 {
     public static AssetKind Kind => AssetKind.Texture2D;

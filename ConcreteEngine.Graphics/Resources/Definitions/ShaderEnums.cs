@@ -7,7 +7,9 @@ public enum UniformGpuSlot : byte
     Camera = 1,
     DirLight = 2,
     Material = 3,
-    DrawObject = 4
+    DrawObject = 4,
+    PostProcess = 5,
+    
 }
 
 public enum UboDefaultCapacity

@@ -63,4 +63,17 @@ internal static class GfxUtilsEnum
             _ => throw new ArgumentOutOfRangeException(nameof(msaa), msaa, null)
         };
     }
+
+    public static RenderBufferMsaa ToRenderBufferMsaa(int? samples)
+    {
+        return samples switch
+        {
+            null => RenderBufferMsaa.None,
+            0 => RenderBufferMsaa.None,
+            2 => RenderBufferMsaa.X2,
+            4 => RenderBufferMsaa.X4,
+            8 => RenderBufferMsaa.X8,
+            _ => throw new ArgumentOutOfRangeException(nameof(samples), samples, null)
+        };
+    }
 }

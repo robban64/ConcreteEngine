@@ -12,7 +12,7 @@ public sealed class Camera2D : ICamera
     private Vector2 _position = Vector2.Zero;
     private float _rotation = 0f;
     private float _zoom = 1f;
-    private Vector2D<int> _viewportSize;
+    private Bounds2D _viewportSize;
 
     private Matrix4x4 _viewMatrix = Matrix4x4.Identity;
     private Matrix4x4 _projectionMatrix = Matrix4x4.Identity;
@@ -50,7 +50,7 @@ public sealed class Camera2D : ICamera
         }
     } // >1: zoom in, <1: zoom out
 
-    public Vector2D<int> ViewportSize
+    public Bounds2D Viewport
     {
         get => _viewportSize;
         set
@@ -107,8 +107,8 @@ public sealed class Camera2D : ICamera
         var rotate = _rotation != 0f ? Matrix4x4.CreateRotationZ(-_rotation) : Matrix4x4.Identity;
         _viewMatrix = rotate * translate;
 
-        float w = MathF.Max(_viewportSize.X, 1);
-        float h = MathF.Max(_viewportSize.Y, 1);
+        float w = MathF.Max(_viewportSize.Width, 1);
+        float h = MathF.Max(_viewportSize.Height, 1);
         float invZ = 1f / _zoom;
 
         _projectionMatrix = Matrix4x4.CreateOrthographicOffCenter(
@@ -136,8 +136,8 @@ public sealed class Camera2D : ICamera
         var v = Vector4.Transform(new Vector4(worldCenter, 0f, 1f), _viewMatrix);
         var viewCenter = new Vector2(v.X, v.Y);
 
-        var wv = _viewportSize.X * (1f / _zoom); // camera width in view space
-        var hv = _viewportSize.Y * (1f / _zoom); // camera height in view space
+        var wv = _viewportSize.Width * (1f / _zoom); // camera width in view space
+        var hv = _viewportSize.Height * (1f / _zoom); // camera height in view space
 
         return !( (viewCenter.X + halfExtents.X) < 0f   ||
                   (viewCenter.X - halfExtents.X) > wv   ||
@@ -158,7 +158,7 @@ public sealed class Camera2D : ICamera
         _position = from.Position;
         _rotation = from.Rotation;
         _zoom = from.Zoom;
-        _viewportSize = from.ViewportSize;
+        _viewportSize = from.Viewport;
         _dirty = true;
         Ensure();
     }

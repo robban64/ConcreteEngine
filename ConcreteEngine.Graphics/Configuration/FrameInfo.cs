@@ -1,5 +1,6 @@
 #region
 
+using ConcreteEngine.Common.Numerics;
 using Silk.NET.Maths;
 
 #endregion
@@ -8,16 +9,20 @@ namespace ConcreteEngine.Graphics;
 
 public readonly struct FrameInfo(
     long frameIndex,
+    float deltaTime,
     bool vSyncEnabled,
     bool resizePending,
-    Vector2D<int> viewport,
-    Vector2D<int> outputSize)
+    Bounds2D viewport,
+    Bounds2D outputSize)
 {
     public readonly long FrameIndex = frameIndex;
-    public readonly Vector2D<int> Viewport = viewport;
-    public readonly Vector2D<int> OutputSize = outputSize;
+    public readonly float DeltaTime = deltaTime;
+    public readonly Bounds2D Viewport = viewport;
+    public readonly Bounds2D OutputSize = outputSize;
     public readonly bool vSyncEnabled = vSyncEnabled;
     public readonly bool ResizePending = resizePending;
 }
+
+
 
 public readonly record struct GpuFrameStats(int DrawCalls, int TriangleCount);

@@ -1,6 +1,7 @@
 #region
 
 using ConcreteEngine.Core.Assets.Manifest;
+using ConcreteEngine.Graphics;
 using ConcreteEngine.Graphics.Contracts;
 using ConcreteEngine.Graphics.Resources;
 using StbImageSharp;
@@ -9,7 +10,11 @@ using StbImageSharp;
 
 namespace ConcreteEngine.Core.Assets.Loaders;
 
-internal sealed record TexturePayload(byte[] Data, GpuTextureDescriptor Descriptor);
+internal sealed record TexturePayload(
+    byte[] Data,
+    GfxTextureDescriptor TextureDesc,
+    GfxTextureProperties TextureProps
+);
 
 internal sealed class TextureLoader(IReadOnlyList<TextureManifestRecord> records)
     : AssetTypeLoader<TextureManifestRecord, TexturePayload>(records)
@@ -23,18 +28,22 @@ internal sealed class TextureLoader(IReadOnlyList<TextureManifestRecord> records
         var image = ImageResult.FromStream(stream, ColorComponents.RedGreenBlueAlpha);
         ValidateImageResult(image);
 
-        var desc = new GpuTextureDescriptor(
+
+        var desc = new GfxTextureDescriptor(
             Width: image.Width,
             Height: image.Height,
-            Format: record.PixelFormat,
             Kind: TextureKind.Texture2D,
+            Format: record.PixelFormat
+        );
+
+        var props = new GfxTextureProperties(
             Preset: record.Preset,
             Anisotropy: record.Anisotropy,
             LodBias: record.LodBias
         );
 
         info = AssetProcessInfo.MakeDone<TextureManifestRecord>();
-        return new TexturePayload(image.Data, desc);
+        return new TexturePayload(image.Data, desc, props);
     }
 
 

@@ -38,13 +38,6 @@ internal sealed class BackendOps<TId, THandle, TMeta, TDef> : IBackendOps
         return new GfxRefToken<TId>(gfx);
     }
 
-    public GfxRefToken<TId> Add(THandle handle, in TMeta meta, out TMeta outMeta)
-    {
-        var gfx = _facade.Add(handle);
-        outMeta = meta;
-        return new GfxRefToken<TId>(gfx);
-    }
-
     public GfxRefToken<TId> Add(THandle handle)
     {
         var gfx = _facade.Add(handle);

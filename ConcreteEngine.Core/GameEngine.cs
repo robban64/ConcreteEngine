@@ -1,6 +1,7 @@
 #region
 
 using ConcreteEngine.Common;
+using ConcreteEngine.Common.Numerics;
 using ConcreteEngine.Core.Assets;
 using ConcreteEngine.Core.Configuration;
 using ConcreteEngine.Core.Features;
@@ -125,10 +126,11 @@ public sealed class GameEngine : IDisposable
         var outputSize = _window.FramebufferSize;
         var frameCtx = new FrameInfo(
             frameIndex: _frameIdx,
+            deltaTime:dt,
             vSyncEnabled: false,
             resizePending: _frameIdx > 1 && outputSize != _prevOutputSize,
-            viewport: _window.Size,
-            outputSize: outputSize
+            viewport: Bounds2D.FromVector2D(_window.Size), 
+            outputSize: Bounds2D.FromVector2D(outputSize)
         );
         
         _renderTime.Accumulate(dt);

@@ -38,25 +38,18 @@ internal sealed class AssetGfxUploader
     public TextureId UploadTexture(TextureManifestRecord record, in TexturePayload payload,
         out TextureCreationInfo info)
     {
-        var desc = payload.Descriptor;
+        var desc = payload.TextureDesc;
         var inMemoryData = record.InMemory ? payload.Data : null;
         info = new TextureCreationInfo(desc.Width, desc.Height, desc.Format, inMemoryData);
-        return _gfx.Textures.CreateTexture2D(payload.Data, in desc);
+        var textureId = _gfx.Textures.BuildTexture(in desc, payload.TextureProps,payload.Data) ;
+        return textureId;
     }
 
     public TextureId UploadCubeMap(CubeMapManifestRecord record, in CubeMapPayload payload,
         out CubeMapCreationInfo info)
     {
-        var desc = payload.Descriptor;
-        var textureId = _gfx.Textures.CreateCubeMap(in desc);
-        for (int i = 0; i < 6; i++)
-            _gfx.Textures.UploadCubeMapFace(
-                textureId,
-                payload.FaceData[i].Span,
-                record.Width,
-                record.Height,
-                i
-            );
+        var desc = payload.TextureDesc;
+        var textureId = _gfx.Textures.BuildCubeMap(in desc, payload.TextureProps,payload.FaceData) ;
         info = new CubeMapCreationInfo(desc.Width, desc.Height, desc.Format);
         return textureId;
     }

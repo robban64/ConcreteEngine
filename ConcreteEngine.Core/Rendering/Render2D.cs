@@ -30,7 +30,7 @@ internal class Render2D : IRender
     }
 
 
-    public void Prepare(float alpha, in RenderGlobalSnapshot snapshot)
+    public void Prepare(float alpha, in FrameInfo frameCtx, in RenderGlobalSnapshot snapshot)
     {
 
         var projectionViewMatrix = _camera.ProjectionViewMatrix;
@@ -59,6 +59,17 @@ internal class Render2D : IRender
 
     public void RenderDepthPass(IDepthPass depthPass, RenderPipeline submitter)
     {
+        throw new NotImplementedException();
+    }
+
+    public void RenderPostEffectPass(PostEffectPass pass)
+    {
+        throw new NotImplementedException();
+    }
+
+    public void RenderScreenPass(ScreenPass pass)
+    {
+        throw new NotImplementedException();
     }
 
     public void MutateRenderPass(RenderTargetId targetId, in RenderPassMutation mutation)
@@ -93,7 +104,7 @@ internal class Render2D : IRender
         _registry.RegisterRenderPass(RenderTargetId.Scene, new SceneRenderPass
         {
             TargetFbo = _registry.MultisampleFbo.FboId,
-            Clear = new RenderPassClearDesc(Color4.CornflowerBlue, ClearBufferFlag.ColorAndDepth)
+            Clear = new GfxPassClear(Color4.CornflowerBlue, ClearBufferFlag.ColorAndDepth)
         });
 
         // Pass 1: resolve MSAA into single-sample texture FBO
@@ -111,16 +122,16 @@ internal class Render2D : IRender
         {
             TargetFbo = _registry.LightFbo.FboId,
             Shader = lightTarget.LightShaderId,
-            Clear = new RenderPassClearDesc(lightTarget.ClearColor, ClearBufferFlag.Color),
+            Clear = new GfxPassClear(lightTarget.ClearColor, ClearBufferFlag.Color),
             Blend = lightTarget.Blend,
         });
 
         // Screen Passes
         // Pass 0: Combine scene and light fbo texture into final scene
-        _registry.RegisterRenderPass(RenderTargetId.Screen, new IfsqPass
+        _registry.RegisterRenderPass(RenderTargetId.Screen, new ScreenPass
         {
             TargetFbo = default,
-            SourceTextures = [_registry.SceneFbo.ColTexId, _registry.LightFbo.ColTexId],
+            SourceTextures = [_registry.SceneFbo.Attachments.ColorTextureId, _registry.LightFbo.Attachments.ColorTextureId],
             Shader = screenTarget.ScreenShaderId
         });
     }

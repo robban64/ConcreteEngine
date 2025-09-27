@@ -19,7 +19,7 @@ public sealed class Camera3D : ICamera
     private Matrix4x4 _projectionMatrix = Matrix4x4.Identity;
     private Matrix4x4 _projectionViewMatrix = Matrix4x4.Identity;
 
-    private Vector2D<int> _viewportSize;
+    private Bounds2D _viewportSize;
 
     private float _fov = 70;
     private float _farPlane = 2000;
@@ -73,13 +73,13 @@ public sealed class Camera3D : ICamera
         }
     }
 
-    public Vector2D<int> ViewportSize
+    public Bounds2D Viewport
     {
         get => _viewportSize;
         set
         {
             _viewportSize = value;
-            _aspectRatio = _viewportSize.X / (float)_viewportSize.Y;
+            _aspectRatio = value.AspectRatio;
             _dirty = true;
         }
     }
@@ -156,8 +156,8 @@ public sealed class Camera3D : ICamera
     private void Ensure()
     {
         _rotation = Quaternion.CreateFromYawPitchRoll(_yaw, _pitch, 0);
-        var model = TransformHelper.CreateTransform(_translation, _scale, _rotation);
-        Matrix4x4.Invert(model, out _viewMatrix);
+        TransformUtils.CreateModelMatrix(_translation, _scale, _rotation, out var viewModel);
+        Matrix4x4.Invert(viewModel, out _viewMatrix);
 
         var fov = MathHelper.ToRadians(_fov / 2f);
         _projectionMatrix = Matrix4x4.CreatePerspectiveFieldOfView(fov, _aspectRatio, _nearPlane, _farPlane);

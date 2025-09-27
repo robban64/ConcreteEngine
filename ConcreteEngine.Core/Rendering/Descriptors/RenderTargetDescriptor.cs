@@ -12,7 +12,6 @@ public sealed record RenderTargetDescriptor
     public required SceneTargetDesc SceneTarget { get; init; }
     public LightTargetDesc LightTarget { get; init; }
     public PostEffectTargetDesc  PostEffectTarget { get; init; }
-    
     public required ScreenTargetDesc ScreenTarget { get; init; }
 }
 

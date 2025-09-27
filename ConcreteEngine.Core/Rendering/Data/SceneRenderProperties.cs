@@ -4,12 +4,12 @@ using Silk.NET.Maths;
 
 namespace ConcreteEngine.Core.Rendering;
 
-public sealed class SceneRenderGlobals
+public sealed class SceneRenderProperties
 {
     private bool _dirty = false;
     private int _version = 0;
 
-    private RenderGlobalSnapshot _snapshot;
+    private readonly RenderGlobalSnapshot _currentSnapshot = new();
 
     private Vector3 _ambient = new Vector3(0.3f, 0.3f, 0.3f);
     private float _exposure = 2.0f;
@@ -19,9 +19,9 @@ public sealed class SceneRenderGlobals
 
     private Vector2D<int> _outputSize;
 
-    public RenderGlobalSnapshot Snapshot => _snapshot;
+    public RenderGlobalSnapshot CurrentSnapshot => _currentSnapshot;
 
-    public void SetOutputSize(in Vector2D<int> outputSize)
+    public void SetOutputSize( Vector2D<int> outputSize)
     {
         _outputSize = outputSize;
         _dirty = true;
@@ -56,33 +56,39 @@ public sealed class SceneRenderGlobals
     internal void Commit()
     {
         if (!_dirty) return;
-        _snapshot = new RenderGlobalSnapshot(
-            version: _version++,
+        _currentSnapshot.Update(version: _version++,
             outputSize: in _outputSize,
             exposure: _exposure,
             ambient: in _ambient,
             skybox: in _skybox,
-            dirLight: in _directionalLight
-        );
+            dirLight: in _directionalLight);
         _dirty = false;
     }
 }
 
-public readonly struct RenderGlobalSnapshot(
-    in Skybox skybox,
-    in DirectionalLight dirLight,
-    in Vector2D<int> outputSize,
-    in Vector3 ambient,
-    float exposure,
-    int version
-)
+public sealed class RenderGlobalSnapshot
 {
-    public readonly DirectionalLight DirLight = dirLight;
-    public readonly Vector3 Ambient = ambient;
-    public readonly float Exposure = exposure;
-    public readonly Skybox Skybox = skybox;
-    public readonly Vector2D<int> OutputSize = outputSize;
-    public readonly int Version = version;
+    public DirectionalLight DirLight { get; private set; }
+    public Vector3 Ambient { get; private set; }
+    public float Exposure { get; private set; }
+    public Skybox Skybox { get; private set; }
+    public Vector2D<int> OutputSize { get; private set; }
+    public int Version { get; private set; }
+
+    internal void Update(in Skybox skybox,
+        in DirectionalLight dirLight,
+        in Vector2D<int> outputSize,
+        in Vector3 ambient,
+        float exposure,
+        int version)
+    {
+        Skybox = skybox;
+        DirLight = dirLight;
+        OutputSize = outputSize;
+        Ambient = ambient;
+        Exposure = exposure;
+        Version = version;
+    }
 }
 
 public readonly struct Skybox(

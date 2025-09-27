@@ -70,7 +70,8 @@ internal sealed class GlStates : IGraphicsDriverModule
 
     }
 
-    public void SetViewport(in Vector2D<int> viewport) => _gl.Viewport(viewport);
+    public void SetViewport(Bounds2D viewport) 
+        => _gl.Viewport(viewport.X, viewport.Y, (uint)viewport.Width, (uint)viewport.Height);
 
     public void SetBlendMode(BlendMode blendMode)
     {

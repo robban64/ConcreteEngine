@@ -66,7 +66,7 @@ public sealed class RenderSystem : IRenderSystem
         _gfx = graphics.Gfx;
         _gfxCmd = graphics.Gfx.Commands;
         SceneRenderProps = new SceneRenderProperties();
-        SceneRenderProps.SetOutputSize(in outputSize);
+        SceneRenderProps.SetOutputSize(outputSize);
         SceneRenderProps.Commit();
         _snapshot = SceneRenderProps.CurrentSnapshot;
     }
@@ -140,10 +140,10 @@ public sealed class RenderSystem : IRenderSystem
     {
         Debug.Assert(_initialized);
         _frameCtx = frameCtx;
-        if (frameCtx.Viewport != _render.Camera.ViewportSize)
-            _render.Camera.ViewportSize = frameCtx.Viewport;
+        if (frameCtx.Viewport != _render.Camera.Viewport)
+            _render.Camera.Viewport = frameCtx.Viewport;
 
-        SceneRenderProps.SetOutputSize(frameCtx.OutputSize);
+        SceneRenderProps.SetOutputSize(frameCtx.OutputSize.ToVector2D());
         SceneRenderProps.Commit();
         _snapshot = SceneRenderProps.CurrentSnapshot;
 
@@ -236,10 +236,10 @@ public sealed class RenderSystem : IRenderSystem
         ArgumentOutOfRangeException.ThrowIfZero(pass.SourceTextures.Length);
         ArgumentOutOfRangeException.ThrowIfGreaterThan(pass.SourceTextures.Length, 4, nameof(pass.SourceTextures));
 
-        var viewport = _render.Camera.ViewportSize;
+        var viewport = _render.Camera.Viewport;
         _gfxCmd.UseShader(pass.Shader);
         //_gfxCmd.SetUniform(ShaderUniform.TexelSize, viewport.ConvertToVec2() * pass.SizeRatio);
-        _gfxCmd.SetUniform(ShaderUniform.TexelSize, viewport.ConvertToVec2());
+        _gfxCmd.SetUniform(ShaderUniform.TexelSize, viewport.ToVector2());
 
         for (int i = 0; i < pass.SourceTextures.Length; i++)
         {

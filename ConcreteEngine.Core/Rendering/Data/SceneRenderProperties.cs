@@ -21,7 +21,7 @@ public sealed class SceneRenderProperties
 
     public RenderGlobalSnapshot CurrentSnapshot => _currentSnapshot;
 
-    public void SetOutputSize(in Vector2D<int> outputSize)
+    public void SetOutputSize( Vector2D<int> outputSize)
     {
         _outputSize = outputSize;
         _dirty = true;

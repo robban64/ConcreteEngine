@@ -12,13 +12,13 @@ public readonly struct FrameInfo(
     float deltaTime,
     bool vSyncEnabled,
     bool resizePending,
-    Vector2D<int> viewport,
-    Vector2D<int> outputSize)
+    Bounds2D viewport,
+    Bounds2D outputSize)
 {
     public readonly long FrameIndex = frameIndex;
     public readonly float DeltaTime = deltaTime;
-    public readonly Vector2D<int> Viewport = viewport;
-    public readonly Vector2D<int> OutputSize = outputSize;
+    public readonly Bounds2D Viewport = viewport;
+    public readonly Bounds2D OutputSize = outputSize;
     public readonly bool vSyncEnabled = vSyncEnabled;
     public readonly bool ResizePending = resizePending;
 }

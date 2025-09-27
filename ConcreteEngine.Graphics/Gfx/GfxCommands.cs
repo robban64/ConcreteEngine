@@ -47,7 +47,7 @@ public sealed class GfxCommands
     private ShaderLayout? _boundUniforms;
 
     //
-    private Vector2D<int> _activeOutputSize;
+    private Bounds2D _activeOutputSize;
     private FrameInfo _frameCtx;
     private int _drawTriangleCount = 0;
     private int _drawCallCount = 0;
@@ -121,7 +121,7 @@ public sealed class GfxCommands
         ref readonly var handle = ref _store.FboStore.GetHandle(fboId);
 
         BindFramebuffer(fboId);
-        SetViewport(meta.Size.ToVec2D());
+        SetViewport(meta.Size);
         
         ApplyState(new GfxPassState(
             DepthTest: scenePass,
@@ -135,7 +135,7 @@ public sealed class GfxCommands
         _states.ColorMask(true);
         Clear(in passClear);
         
-        _activeOutputSize = meta.Size.ToVec2D();
+        _activeOutputSize = Bounds2D.FromSize(meta.Size);
     }
 
     public void EndRenderPass()
@@ -159,11 +159,11 @@ public sealed class GfxCommands
 
         if (!_store.FboStore.TryGetRef(toId, out var toHandle, out var toFbo))
         {
-            _driver.FrameBuffers.BlitDefault(fromHandle, srcSize.ToVec2D(), _activeOutputSize, false);
+            _driver.FrameBuffers.BlitDefault(fromHandle, srcSize, _activeOutputSize.ToSize2D(), false);
             return;
         }
 
-        _driver.FrameBuffers.Blit(fromHandle, toHandle, srcSize.ToVec2D(), toFbo.Size.ToVec2D(), linear);
+        _driver.FrameBuffers.Blit(fromHandle, toHandle, srcSize, toFbo.Size, linear);
     }
 
 
@@ -193,9 +193,14 @@ public sealed class GfxCommands
         if (flags.Cull != CullMode.Unset) _states.SetCullMode(flags.Cull);
     }
 
-    public void SetViewport(Vector2D<int> viewport)
+    public void SetViewport(Size2D viewportSize)
     {
-        if (_activeOutputSize == viewport) return;
+        _activeOutputSize = Bounds2D.FromSize(viewportSize);
+        _states.SetViewport(_activeOutputSize);
+    }
+    
+    public void SetViewport(Bounds2D viewport)
+    {
         _activeOutputSize = viewport;
         _states.SetViewport(viewport);
     }

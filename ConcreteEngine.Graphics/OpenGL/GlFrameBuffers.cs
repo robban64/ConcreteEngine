@@ -32,8 +32,7 @@ internal sealed class GlFrameBuffers : IGraphicsDriverModule
 
     // Fix ClearBufferMask and Filter, depth/stencil use filter = Nearest
     public void Blit(GfxRefToken<FrameBufferId> readFbo, GfxRefToken<FrameBufferId> drawFbo,
-        Vector2D<int> srcSize, Vector2D<int> dstSize,
-        bool linear)
+        Size2D srcSize, Size2D dstSize, bool linear)
     {
         var filter = linear ? BlitFramebufferFilter.Linear : BlitFramebufferFilter.Nearest;
         var read = GetFboHandle(readFbo).Handle;
@@ -43,14 +42,13 @@ internal sealed class GlFrameBuffers : IGraphicsDriverModule
 
         _gl.BlitNamedFramebuffer(
             read, draw,
-            0, 0, srcSize.X, srcSize.Y,
-            0, 0, dstSize.X, dstSize.Y,
+            0, 0, srcSize.Width, srcSize.Height,
+            0, 0, dstSize.Width, dstSize.Height,
             ClearBufferMask.ColorBufferBit, filter
         );
     }
 
-    public void BlitDefault(GfxRefToken<FrameBufferId> readFbo, Vector2D<int> srcSize, Vector2D<int> dstSize,
-        bool linear)
+    public void BlitDefault(GfxRefToken<FrameBufferId> readFbo, Size2D srcSize, Size2D dstSize, bool linear)
     {
         var filter = linear ? BlitFramebufferFilter.Linear : BlitFramebufferFilter.Nearest;
         var read = GetFboHandle(readFbo).Handle;
@@ -59,8 +57,8 @@ internal sealed class GlFrameBuffers : IGraphicsDriverModule
 
         _gl.BlitNamedFramebuffer(
             read, 0,
-            0, 0, srcSize.X, srcSize.Y,
-            0, 0, dstSize.X, dstSize.Y,
+            0, 0, srcSize.Width, srcSize.Height,
+            0, 0, dstSize.Width, dstSize.Height,
             ClearBufferMask.ColorBufferBit, filter
         );
     }

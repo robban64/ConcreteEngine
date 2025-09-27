@@ -78,15 +78,19 @@ internal sealed class Render3D : IRender
         _drawProcessor.UploadDirLight(rec: in dirLightUniforms);
 
         var postProcessUniforms = new FramePostProcessUniform(
-            colorAdjust:   new Vector4(0.0f,  1.05f, 1.05f, 2.2f),
-            whiteBalance:  new Vector4(0.05f, 0.02f, 0.15f, 0.1f),
-            flags:         new Vector4(1.0f,  0.001f, 0.6f,  0.6f),
-            bloomParams:   new Vector4(0.7f,  0.6f,  0.0f,  0.0f),
-            bloomLods:     new Vector4(0.9f,  0.6f,  0.35f, 0.2f),
-            lutParams:     new Vector4(0.0f,  0.0f,  0.0f,  0.0f),
-            vignetteParams: new Vector4(x: 0.35f, y: 0.85f, z: 0.20f, w: 0.0f),
-            grainParams: new Vector4(0.0075f, _deltaTicker, 0.0f, 0.0f),
-            chromAbParams: new Vector4(0.0000f, 0.0f, 0.0f, 0.0f)
+            colorAdjust:    new Vector4(0.25f, 1.15f, 1.10f, 2.2f),  
+            whiteBalance:   new Vector4(0.15f, 0.02f, 0.10f, 0.0f),  
+            flags:          new Vector4(1.0f, 0.0000f, 0.6f, 0.6f),  
+            bloomParams:    new Vector4(0.70f, 0.65f, 0.0f, 0.0f),   
+            bloomLods:      new Vector4(0.8f, 0.55f, 0.30f, 0.15f),  
+            lutParams:      new Vector4(0.0f, 0.0f, 0.0f, 0.0f),     
+            vignetteParams: new Vector4(0.32f, 0.88f, 0.25f, 0.0f),  
+            grainParams:    new Vector4(0.008f, _deltaTicker, 0.0f, 0.0f),
+            chromAbParams:  new Vector4(0.0000f, 0.0f, 0.0f, 0.0f),   
+            toneShadows:    new Vector4(210.0f, 0.05f, -0.01f, 0.4f), 
+            toneHighlights: new Vector4(40.0f,  0.05f,  0.01f, 0.4f), 
+            sharpenParams:  new Vector4(0.10f,  1.5f,   0.05f, 0.0f)
+
         );
 
         _drawProcessor.UploadFramePostProcess(data: in postProcessUniforms);

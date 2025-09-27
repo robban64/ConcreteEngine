@@ -73,12 +73,12 @@ public sealed class RenderSystem : IRenderSystem
 
     internal void InitializeGraphics()
     {
-        _gfx.Buffers.CreateUniformBuffer<FrameUniformGpuData>(UniformGpuSlot.Frame, UboDefaultCapacity.Lower);
-        _gfx.Buffers.CreateUniformBuffer<CameraUniformGpuData>(UniformGpuSlot.Camera, UboDefaultCapacity.Lower);
-        _gfx.Buffers.CreateUniformBuffer<DirLightUniformGpuData>(UniformGpuSlot.DirLight, UboDefaultCapacity.Lower);
-        _gfx.Buffers.CreateUniformBuffer<MaterialUniformGpuData>(UniformGpuSlot.Material, UboDefaultCapacity.Medium);
-        _gfx.Buffers.CreateUniformBuffer<DrawObjectUniformGpuData>(UniformGpuSlot.DrawObject, UboDefaultCapacity.Upper);
-        _gfx.Buffers.CreateUniformBuffer<FramePostProcessUniform>(UniformGpuSlot.PostProcess, UboDefaultCapacity.Lower);
+        _gfx.Buffers.CreateUniformBuffer<FrameUniformGpuData>(UniformGpuSlot.Frame);
+        _gfx.Buffers.CreateUniformBuffer<CameraUniformGpuData>(UniformGpuSlot.Camera);
+        _gfx.Buffers.CreateUniformBuffer<DirLightUniformGpuData>(UniformGpuSlot.DirLight);
+        _gfx.Buffers.CreateUniformBuffer<MaterialUniformGpuData>(UniformGpuSlot.Material);
+        _gfx.Buffers.CreateUniformBuffer<DrawObjectUniformGpuData>(UniformGpuSlot.DrawObject);
+        _gfx.Buffers.CreateUniformBuffer<FramePostProcessUniform>(UniformGpuSlot.PostProcess);
     }
 
     internal void Initialize(MaterialStore materialStore)

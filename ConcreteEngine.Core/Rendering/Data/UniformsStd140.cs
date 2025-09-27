@@ -93,7 +93,10 @@ public readonly struct FramePostProcessUniform(
     Vector4 lutParams,
     Vector4 vignetteParams,
     Vector4 grainParams,
-    Vector4 chromAbParams
+    Vector4 chromAbParams,
+    Vector4 toneShadows,
+    Vector4 toneHighlights,
+    Vector4 sharpenParams
 ) : IUniformGpuData
 {
     public readonly Vector4 ColorAdjust = colorAdjust;
@@ -105,4 +108,7 @@ public readonly struct FramePostProcessUniform(
     public readonly Vector4 VignetteParams = vignetteParams;
     public readonly Vector4 GrainParams = grainParams;
     public readonly Vector4 ChromAbParams = chromAbParams;
+    public readonly Vector4 ToneShadows = toneShadows;
+    public readonly Vector4 ToneHighlights = toneHighlights;
+    public readonly Vector4 SharpenParams = sharpenParams;
 }

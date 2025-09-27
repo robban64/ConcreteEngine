@@ -88,8 +88,7 @@ public sealed class GraphicsRuntime : IGraphicsRuntime
 
         if (_frameCtx.ResizePending)
         {
-            var newSize = new Size2D(_frameCtx.OutputSize.X, _frameCtx.OutputSize.Y);
-            RecreateFbo(newSize);
+            RecreateFbo(_frameCtx.OutputSize.ToSize2D());
         }
     }
 

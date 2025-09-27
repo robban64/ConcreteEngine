@@ -14,9 +14,14 @@ layout(std140, binding = 5) uniform FramePostProcessUniform
     vec4 BloomParams;
     vec4 BloomLods;
     vec4 LutParams;
+    //
     vec4 VignetteParams;
     vec4 GrainParams;
     vec4 ChromAbParams;
+    //
+    vec4 ToneShadows;
+    vec4 ToneHighlights;
+    vec4 SharpenParams;
 };
 
 float luma709(vec3 c) {
@@ -89,7 +94,7 @@ vec3 applyWhiteBalance(vec3 c, float temperature, float tint)
     return Minv * lms;
 }
 
-// Highlight rolloff: compresses bright values smoothly
+// Highlight rolloff
 vec3 rollOff(vec3 c, float strength)
 {
     strength = max(strength, 0.0);
@@ -131,51 +136,130 @@ vec3 bloomSample(vec2 uv)
     return sum * intensity;
 }
 
-// Screen-space chromatic aberratio
-vec3 chromaticAberration(vec2 uv, vec3 c, float amount)
+vec3 chromaticAberration(vec2 uv, vec3 c)
 {
+    float amount = ChromAbParams.x;
     if (amount <= 0.0) return c;
     vec2 dir = (uv - 0.5) * 2.0;
     vec2 off = dir * amount;
-
     float r = texture(uScene, uv + off).r;
     float b = texture(uScene, uv - off).b;
     return vec3(r, c.g, b);
 }
 
-// Vignette (WhiteBalance.w = amount 0..1)
-vec3 vignette(vec2 uv, vec3 c, float amount)
+vec3 vignette(vec2 uv, vec3 c)
 {
-    if (amount <= 0.0) return c;
-    float d = distance(uv, vec2(0.5));
+    float inner = clamp(VignetteParams.x, 0.0, 1.0);
+    float outer = max(VignetteParams.y, inner + 1e-3);
+    float amt = clamp(VignetteParams.z, 0.0, 1.0);
 
-    // Smooth falloff; 0.75 for LDR
-    float v = smoothstep(0.75, 0.95, d);
-    return c * mix(1.0, 1.0 - v, amount);
+    float d = distance(uv, vec2(0.5));
+    float v = smoothstep(inner, outer, d);
+    return c * mix(1.0, 1.0 - v, amt);
 }
 
-// ---- Main ------------------------------------------------------------------
+float hash(vec2 p) {
+    return fract(sin(dot(p, vec2(12.9898, 78.233))) * 43758.5453);
+}
+
+vec3 addGrain(vec2 uv, vec3 c)
+{
+    float inten = clamp(GrainParams.x, 0.0, 0.1);
+    if (inten <= 0.0) return c;
+
+    // Tie noise to pixel grid to avoid shimmer; modulate by time
+    vec2 res = vec2(textureSize(uScene, 0));
+    vec2 ip = floor(uv * res);
+    float n = hash(ip + GrainParams.yy);
+
+    // Grain in luma space, re-injected to RGB
+    float l = dot(c, vec3(0.2126, 0.7152, 0.0722));
+    float g = (n - 0.5) * 2.0 * inten;
+    float nl = clamp(l + g, 0.0, 1.0);
+    return c + (nl - l);
+}
+
+vec3 hueToRgb(float deg)
+{
+    float h = fract(deg / 360.0);
+    vec3 k = vec3(1.0, 2.0 / 3.0, 1.0 / 3.0);
+    return clamp(abs(mod(h + k, 1.0) * 6.0 - 3.0) - 1.0, 0.0, 1.0);
+}
+
+vec3 applySplitToning(vec3 c)
+{
+    float l = dot(c, vec3(0.2126, 0.7152, 0.0722));
+    // Shadow tint
+    vec3 sc = hueToRgb(ToneShadows.x) * ToneShadows.y;
+    sc = mix(vec3(0.0), sc, ToneShadows.w);
+    sc += vec3(ToneShadows.z); // luminance bias
+
+    // Highlight tint
+    vec3 hc = hueToRgb(ToneHighlights.x) * ToneHighlights.y;
+    hc = mix(vec3(0.0), hc, ToneHighlights.w);
+    hc += vec3(ToneHighlights.z);
+
+    float sh = 1.0 - smoothstep(0.25, 0.5, l);
+    float hi = smoothstep(0.5, 0.75, l);
+    vec3 tint = sc * sh + hc * hi;
+    return clamp(c + tint, 0.0, 1.0);
+}
+
+vec3 unsharp(vec2 uv, vec3 c)
+{
+    float amount = clamp(SharpenParams.x, 0.0, 0.6);
+    if (amount <= 0.0) return c;
+
+    float rad = clamp(SharpenParams.y, 1.0, 3.0);
+    float thr = clamp(SharpenParams.z, 0.0, 0.25);
+
+    vec2 texel = 1.0 / vec2(textureSize(uScene, 0));
+    vec2 r = texel * rad;
+
+    // 9-tap Gaussian-ish blur
+    vec3 b = vec3(0.0);
+    b += texture(uScene, uv + vec2(-r.x, -r.y)).rgb;
+    b += texture(uScene, uv + vec2(0.0, -r.y)).rgb * 2.0;
+    b += texture(uScene, uv + vec2(r.x, -r.y)).rgb;
+
+    b += texture(uScene, uv + vec2(-r.x, 0.0)).rgb * 2.0;
+    b += texture(uScene, uv).rgb * 4.0;
+    b += texture(uScene, uv + vec2(r.x, 0.0)).rgb * 2.0;
+
+    b += texture(uScene, uv + vec2(-r.x, r.y)).rgb;
+    b += texture(uScene, uv + vec2(0.0, r.y)).rgb * 2.0;
+    b += texture(uScene, uv + vec2(r.x, r.y)).rgb;
+
+    b *= 1.0 / 16.0;
+
+    vec3 diff = c - b;
+    // Threshold in luma to avoid noise amplification
+    float dl = abs(dot(diff, vec3(0.2126, 0.7152, 0.0722)));
+    float m = smoothstep(thr, thr + 0.1, dl);
+    return clamp(c + diff * (amount * m), 0.0, 1.0);
+}
 
 void main()
 {
     vec3 color = texture(uScene, TexCoord).rgb;
 
-    // grading order
+    // grading
     color = applyExposure(color, ColorAdjust.x);
     color = applyWhiteBalance(color, WhiteBalance.x, WhiteBalance.y);
     color = applyVibrance(color, WhiteBalance.z);
     color = applySaturation(color, ColorAdjust.z);
     color = applyContrast(color, ColorAdjust.y);
 
+    // tweaks
+    color = applySplitToning(color);
     color += bloomSample(TexCoord);
+    color = vignette(TexCoord, color);
+    color = unsharp(TexCoord, color);
+    color = addGrain(TexCoord, color);
+    color = chromaticAberration(TexCoord, color);
 
-    color = chromaticAberration(TexCoord, color, Flags.y);
-
-    color = vignette(TexCoord, color, WhiteBalance.w);
-
+    // final
     color = rollOff(color, Flags.z);
-
-    // output gamma (sRGB display).
     if (Flags.x > 0.5)
         color = pow(safe_saturate(color), vec3(1.0 / max(ColorAdjust.w, 1e-6)));
 

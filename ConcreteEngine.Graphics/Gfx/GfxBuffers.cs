@@ -59,9 +59,10 @@ public sealed class GfxBuffers
     }
 
     //BufferStorage.Dynamic, BufferAccess.MapWrite
-    public UniformBufferId CreateUniformBuffer<T>(UniformGpuSlot slot, UboDefaultCapacity defaultCapacity,
-        BufferStorage storage = BufferStorage.Dynamic, BufferAccess access = BufferAccess.MapWrite)
-        where T : unmanaged, IUniformGpuData
+    public UniformBufferId CreateUniformBuffer<T>(
+        UniformGpuSlot slot,
+        BufferStorage storage = BufferStorage.Dynamic,
+        BufferAccess access = BufferAccess.MapWrite) where T : unmanaged, IUniformGpuData
     {
         if (!UniformBufferUtils.IsStd140Aligned<T>())
             throw GraphicsException.InvalidStd140Layout<T>();

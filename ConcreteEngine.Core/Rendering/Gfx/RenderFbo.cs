@@ -77,15 +77,14 @@ public enum FboTagOp
     DrawScene,
     Multisample,
     Depth,
-    Blit,
-    FullscreenQuad
+    Light,
+    PostEffect,
+    Screen
 
 }
 
-public interface IFboTag
-{
-    abstract static FboTagOp Op { get; }
-}
+public interface IFboTag;
+
 public readonly struct FboSceneTag : IFboTag;
 public readonly struct FboMsaaTag : IFboTag;
 public readonly struct FboLightTag : IFboTag;

@@ -187,7 +187,7 @@ internal sealed class Render3D : IRender
         // Pass 0: Compose Scene + Light
         //                SourceTextures = [_registry.SceneFbo.ColTexId, _registry.LightFbo.ColTexId],
 
-        _registry.RegisterRenderPass(RenderTargetId.PostProcessing,
+        _registry.RegisterRenderPass(RenderTargetId.PostEffect,
             new PostEffectPass
             {
                 TargetFbo = _registry.PostFboA.FboId,
@@ -198,7 +198,7 @@ internal sealed class Render3D : IRender
             });
 
         // Pass 1..N: post stack ping-pong (PostA <-> PostB)
-        _registry.RegisterRenderPass(RenderTargetId.PostProcessing,
+        _registry.RegisterRenderPass(RenderTargetId.PostEffect,
             new PostEffectPass
             {
                 TargetFbo = _registry.PostFboB.FboId,

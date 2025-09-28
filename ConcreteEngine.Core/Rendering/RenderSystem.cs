@@ -41,6 +41,7 @@ public sealed class RenderSystem : IRenderSystem
     private readonly GfxCommands _gfxCmd;
     
     private readonly RenderRegistry _renderRegistry;
+    private readonly RenderPassRegistry _renderPassRegistry;
 
     private DrawCommandCollector _commandCollector = null!;
     private RenderPipeline _commandSubmitter = null!;
@@ -87,8 +88,11 @@ public sealed class RenderSystem : IRenderSystem
         _renderRegistry.RegisterUniformBuffer<MaterialUniformGpuData>();
         _renderRegistry.RegisterUniformBuffer<DrawObjectUniformGpuData>();
         _renderRegistry.RegisterUniformBuffer<FramePostProcessUniform>();
-        
-        
+
+        _renderPassRegistry.Register(RenderTargetId.Scene, EmptyState.Instance)
+            .AddAfterOp((in op) => op.Ops.SetBlend(BlendMode.Additive));
+
+
     }
 
     internal void Initialize(MaterialStore materialStore)

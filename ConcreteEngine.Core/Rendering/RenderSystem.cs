@@ -92,34 +92,50 @@ public sealed class RenderSystem : IRenderSystem
 
         _renderPassRegistry = new RenderPassRegistry(new RenderCommandOps(_gfx, _drawProcessor));
         
+        //NOTE! just an example showcase, this would not work.
         _renderPassRegistry.Register(RenderTargetId.Scene, new ScenePassState(default))
             .AddBeforeOp((in RenderPassCtx ctx, in ScenePassState state) =>
             {
-                ctx.CmdOps.BeginRenderPass(ctx.Target.FboId, state.ClearColor, true);
+                ctx.CmdOps.BeginRenderPass(ctx.FboId, state.ClearColor, true);
             });
 
         _renderPassRegistry.Register(RenderTargetId.Scene, new ResolvePassState())
             .AddBeforeOp((in RenderPassCtx ctx, in ResolvePassState state) =>
             {
-                ctx.CmdOps.Blit(ctx.Target.FboId, state.BlitFbo, true);
-                //ctx.CmdOps.UpdateStates(state.PassState);
-                //ctx.CmdOps.ClearColor(state.ClearColor);
+                //ApplyState(_activeState with{ FramebufferSrgb = false });
+                ctx.CmdOps.Blit(ctx.FboId, state.BlitFbo, true);
+                
+                // Something like this
+                // ctx.ResolveTo(RenderTargetId.PostEffect, 0, ColorTexture)
+                // return ResolveTo(RenderTargetId.PostEffect, 0, ColorTexture)
             });
 
         _renderPassRegistry.Register(RenderTargetId.PostEffect, new PostPassState())
             .AddBeforeOp((in RenderPassCtx ctx, in PostPassState state) =>
             {
-                ctx.CmdOps.BeginRenderPass(ctx.Target.FboId, state.ClearColor, false);
+                ctx.CmdOps.BeginRenderPass(ctx.FboId, state.ClearColor, false);
+                //ctx.CmdOps.UpdateStates(state.PassState);
+                //ctx.CmdOps.ClearColor(state.ClearColor);
                 
             }).AddAfterOp((in RenderPassCtx ctx, in PostPassState state) =>
             {
                 if (ctx.Pass == 0) ctx.CmdOps.GenerateMips(state.OutputTextureId);
             });
 
-        _renderPassRegistry.Register(RenderTargetId.PostEffect, new PostPassState(default, default, default))
+        _renderPassRegistry.Register(RenderTargetId.PostEffect, new PostPassState())
             .AddBeforeOp((in RenderPassCtx ctx, in PostPassState state) =>
             {
-                ctx.CmdOps.BeginScenePass(ctx.Target.FboId, state.ClearColor, false);
+                ctx.CmdOps.BeginRenderPass(ctx.FboId, state.ClearColor, false);
+                //ctx.CmdOps.UpdateStates(state.PassState);
+                //ctx.CmdOps.ClearColor(state.ClearColor);
+
+            });
+
+        _renderPassRegistry.Register(RenderTargetId.Screen, new PostPassState(default, default, default))
+            .AddBeforeOp((in RenderPassCtx ctx, in PostPassState state) =>
+            {
+                ctx.CmdOps.BeginScreenPass(state.ClearColor);
+                //...
             });
     }
 

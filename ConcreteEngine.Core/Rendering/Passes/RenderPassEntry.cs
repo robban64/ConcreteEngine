@@ -17,12 +17,7 @@ public sealed class RenderPassEntry<TState> : IRenderPassEntry where TState : IR
     public RenderPassOp<TState>? Before { get; private set; }
     public RenderPassOp<TState>? After { get; private set; }
 
-    private RenderPassMutate<TState>? _pendingMutate;
-
     private readonly TState _state;
-
-    public void UpdateState(RenderPassMutate<TState> mutate) => _pendingMutate = mutate;
-
 
     internal RenderPassEntry(RenderTargetId targetId, int index, TState initial)
     {
@@ -43,24 +38,22 @@ public sealed class RenderPassEntry<TState> : IRenderPassEntry where TState : IR
         return this;
     }
 
-    public void MutateState(RenderPassMutate<TState> mutateAction)
-    {
-        mutateAction(in _state);
-    }
+    public void ExecuteBefore(in RenderPassCtx ctx) => Before?.Invoke(in ctx, in _state);
 
-    public void ExecuteBefore(in RenderPassCtx ctx)
-    {
-        if (_pendingMutate is { } mut)
-        {
-            mut(_state);
-            _pendingMutate = null;
-        }
-
-        Before?.Invoke(in ctx, in _state);
-    }
-
-    public void ExecuteAfter(in RenderPassCtx ctx)
-    {
-        After?.Invoke(in ctx, in _state);
-    }
+    public void ExecuteAfter(in RenderPassCtx ctx) => After?.Invoke(in ctx, in _state);
 }
+/*
+ 
+     public void MutateState(RenderPassMutate<TState> mutateAction)
+   {
+       mutateAction(in _state);
+   }
+if (_pendingMutate is { } mut)
+{
+    mut(_state);
+    _pendingMutate = null;
+}
+private RenderPassMutate<TState>? _pendingMutate;
+
+public void UpdateState(RenderPassMutate<TState> mutate) => _pendingMutate = mutate;
+*/

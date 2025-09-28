@@ -5,19 +5,29 @@ using ConcreteEngine.Graphics.Resources;
 
 namespace ConcreteEngine.Core.Rendering;
 
-public delegate void RenderPassOp<TState>(in RenderPassCtx ctx, in TState state) where TState : IRenderPassState;
 
 public delegate void RenderPassMutate<TState>(in TState state) where TState : IRenderPassState;
+
+
+public delegate void RenderPassOp<TState>(in RenderPassCtx ctx, in TState state) where TState : IRenderPassState;
 
 public sealed class RenderPassCtx
 {
     public RenderCommandOps CmdOps { get; }
-    public RenderTarget Target {get; internal set;}
+    
+    public RenderTargetId TargetId { get; private set; }
+    public FrameBufferId FboId { get; private set; }
     public int Pass { get; internal set; } = 0;
     
     internal RenderPassCtx(RenderCommandOps cmdOps)
     {
         CmdOps = cmdOps;
+    }
+
+    internal void FromRenderTarget(RenderTarget target)
+    {
+        TargetId = target.TargetId;
+        FboId = target.FboId;
     }
 }
 
@@ -59,7 +69,7 @@ public sealed class RenderPassRegistry
             var list = _registry[_currentTargetId++];
             if (list.Count > 0)
             {
-                Ctx.Target = target;
+                Ctx.FromRenderTarget(target);
                 Ctx.Pass = list.Count - 1;
                 
                 passes = list;

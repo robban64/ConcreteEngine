@@ -19,8 +19,8 @@ public sealed class RenderCommandOps
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public void BeginScenePass(FrameBufferId fboId, in GfxPassClear passClear, bool scenePass)
-        => _gfxCmd.BeginRenderPass(fboId, in passClear, scenePass);
+    public void BeginScreenPass( in GfxPassClear passClear)
+        => _gfxCmd.BeginScreenPass( in passClear);
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public void BeginRenderPass(FrameBufferId fboId, in GfxPassClear passClear, bool scenePass)

@@ -1,7 +1,9 @@
 #region
 
 using System.Diagnostics;
+using ConcreteEngine.Common;
 using ConcreteEngine.Common.Numerics;
+using ConcreteEngine.Core.Rendering.Gfx;
 using ConcreteEngine.Core.Resources;
 using ConcreteEngine.Core.Systems;
 using ConcreteEngine.Graphics;
@@ -37,6 +39,8 @@ public sealed class RenderSystem : IRenderSystem
     private readonly IGraphicsRuntime _graphics;
     private readonly GfxContext _gfx;
     private readonly GfxCommands _gfxCmd;
+    
+    private readonly RenderRegistry _renderRegistry;
 
     private DrawCommandCollector _commandCollector = null!;
     private RenderPipeline _commandSubmitter = null!;
@@ -60,7 +64,7 @@ public sealed class RenderSystem : IRenderSystem
 
     public ICamera Camera => _render.Camera;
 
-    internal RenderSystem(IGraphicsRuntime graphics, in Vector2D<int> outputSize)
+    internal RenderSystem(IGraphicsRuntime graphics, Size2D outputSize)
     {
         _graphics = graphics;
         _gfx = graphics.Gfx;
@@ -73,12 +77,18 @@ public sealed class RenderSystem : IRenderSystem
 
     internal void InitializeGraphics()
     {
-        _gfx.Buffers.CreateUniformBuffer<FrameUniformGpuData>(UniformGpuSlot.Frame);
-        _gfx.Buffers.CreateUniformBuffer<CameraUniformGpuData>(UniformGpuSlot.Camera);
-        _gfx.Buffers.CreateUniformBuffer<DirLightUniformGpuData>(UniformGpuSlot.DirLight);
-        _gfx.Buffers.CreateUniformBuffer<MaterialUniformGpuData>(UniformGpuSlot.Material);
-        _gfx.Buffers.CreateUniformBuffer<DrawObjectUniformGpuData>(UniformGpuSlot.DrawObject);
-        _gfx.Buffers.CreateUniformBuffer<FramePostProcessUniform>(UniformGpuSlot.PostProcess);
+        InvalidOpThrower.ThrowIf(_snapshot.OutputSize.Width <= 1);
+        InvalidOpThrower.ThrowIf(_snapshot.OutputSize.Height <= 1);
+
+        _renderRegistry.BeginRegistration(_snapshot.OutputSize);
+        _renderRegistry.RegisterUniformBuffer<FrameUniformGpuData>();
+        _renderRegistry.RegisterUniformBuffer<CameraUniformGpuData>();
+        _renderRegistry.RegisterUniformBuffer<DirLightUniformGpuData>();
+        _renderRegistry.RegisterUniformBuffer<MaterialUniformGpuData>();
+        _renderRegistry.RegisterUniformBuffer<DrawObjectUniformGpuData>();
+        _renderRegistry.RegisterUniformBuffer<FramePostProcessUniform>();
+        
+        
     }
 
     internal void Initialize(MaterialStore materialStore)
@@ -143,7 +153,7 @@ public sealed class RenderSystem : IRenderSystem
         if (frameCtx.Viewport != _render.Camera.Viewport)
             _render.Camera.Viewport = frameCtx.Viewport;
 
-        SceneRenderProps.SetOutputSize(frameCtx.OutputSize.ToVector2D());
+        SceneRenderProps.SetOutputSize(frameCtx.OutputSize.ToSize2D());
         SceneRenderProps.Commit();
         _snapshot = SceneRenderProps.CurrentSnapshot;
 

@@ -3,9 +3,6 @@ namespace ConcreteEngine.Graphics.Resources;
 public interface IGfxResourceManager
 {
     GfxResourceApi GetGfxApi();
-    GetMetaDel<TId,TMeta> BindMetaDelegate<TId, TMeta>()
-        where TId : unmanaged, IResourceId 
-        where TMeta : unmanaged, IResourceMeta;
 }
 
 
@@ -39,10 +36,4 @@ internal sealed class GfxResourceManager : IGfxResourceManager
 
     public GfxResourceApi GetGfxApi() => _resourceApi;
 
-    public GetMetaDel<TId,TMeta> BindMetaDelegate<TId, TMeta>()
-        where TId : unmanaged, IResourceId where  TMeta : unmanaged, IResourceMeta
-    {
-        var store = GfxStoreHub.GetStore<TId, TMeta>();
-        return store.GetMeta;
-    }
 }

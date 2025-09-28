@@ -6,55 +6,58 @@ using ConcreteEngine.Graphics.Descriptors;
 
 namespace ConcreteEngine.Core.Rendering.Gfx;
 
-public sealed record RegisterFboEntry(
-    EnginePixelFormat PixelFormat = EnginePixelFormat.Rgba,
-    RenderBufferMsaa Multisample = RenderBufferMsaa.None,
-    TexturePreset TexturePreset = TexturePreset.LinearClamp
-)
+public sealed class RegisterFboEntry
 {
-    public static RegisterFboEntry MakeMsaa(RenderBufferMsaa multisample) => new(Multisample: multisample);
+    public EnginePixelFormat PixelFormat { get; }
+    public RenderBufferMsaa Multisample { get; }
+    public TexturePreset Preset { get; }
+    public FboSizePolicy SizePolicy { get; }
+    public GfxFrameBufferDescriptor.AttachmentsDef Attachments { get; }
+
+
+    public RegisterFboEntry(
+        EnginePixelFormat pixelFormat = EnginePixelFormat.Rgba,
+        RenderBufferMsaa multisample = RenderBufferMsaa.None,
+        TexturePreset texturePreset = TexturePreset.LinearClamp)
+    {
+        PixelFormat = pixelFormat;
+        Multisample = multisample;
+        Preset = texturePreset;
+    }
+
+    private RegisterFboEntry(
+        EnginePixelFormat pixelFormat,
+        RenderBufferMsaa multisample,
+        TexturePreset texturePreset,
+        in GfxFrameBufferDescriptor.AttachmentsDef attachments,
+        FboSizePolicy sizePolicy)
+    {
+        PixelFormat = pixelFormat;
+        Multisample = multisample;
+        Preset = texturePreset;
+        Attachments = attachments;
+        SizePolicy = sizePolicy;
+    }
+
+    public static RegisterFboEntry MakeMsaa(RenderBufferMsaa multisample) =>
+        new(pixelFormat: EnginePixelFormat.Rgba, multisample: multisample);
 
     public static RegisterFboEntry MakePost(bool hasMips) =>
-        new(TexturePreset: hasMips ? TexturePreset.LinearMipmapClamp : TexturePreset.LinearClamp);
+        new(texturePreset: hasMips ? TexturePreset.LinearMipmapClamp : TexturePreset.LinearClamp);
 
+    public RegisterFboEntry AttachColorTexture() =>
+        new(PixelFormat, Multisample, Preset, Attachments with { ColorTexture = true }, SizePolicy);
 
-    public Size2D? FixedSize { get; private set; } = null;
-    public Vector2? CalculateRatio { get; private set; } = null;
-    public RenderFbo.CalcFboSizeDel? CalculateSizeDel { get; private set; } = null;
-    public GfxFrameBufferDescriptor.AttachmentsDef Attachments { get; private set; }
+    public RegisterFboEntry AttachDepthStencilBuffer() =>
+        new(PixelFormat, Multisample, Preset, Attachments with { DepthStencilBuffer = true }, SizePolicy);
 
-    public RegisterFboEntry AttachColorTexture()
-    {
-        Attachments = Attachments with { ColorTexture = true };
-        return this;
-    }
+    public RegisterFboEntry UseCalculatedSize(CalcFboSizeDel calc, Vector2 ratio) =>
+        new(PixelFormat, Multisample, Preset, Attachments, FboSizePolicy.Calculated(calc, ratio));
 
-    public RegisterFboEntry AttachDepthStencilBuffer()
-    {
-        Attachments = Attachments with { DepthStencilBuffer = true };
-        return this;
-    }
+    public RegisterFboEntry UseFixedSize(Size2D fixedSize) =>
+        new(PixelFormat, Multisample, Preset, Attachments, FboSizePolicy.Fixed(fixedSize));
 
-    public void UseCalculatedSize(RenderFbo.CalcFboSizeDel calculateSizeDel, Vector2 calculateRatio)
-    {
-        if (CalculateSizeDel is not null || FixedSize is not null)
-            throw new InvalidOperationException();
-
-        CalculateSizeDel = calculateSizeDel;
-        CalculateRatio = calculateRatio;
-        FixedSize = null;
-    }
-
-    public void UseFixedSize(Size2D fixedSize)
-    {
-        if (CalculateSizeDel is not null || FixedSize is not null)
-            throw new InvalidOperationException();
-
-        FixedSize = fixedSize;
-        CalculateSizeDel = null;
-        CalculateRatio = null;
-    }
 
     internal GfxFrameBufferDescriptor ToGfxDescriptor(Size2D outputSize) =>
-        new(outputSize, Attachments, PixelFormat, Multisample, TexturePreset);
+        new(outputSize, Attachments, PixelFormat, Multisample, Preset);
 }

@@ -15,11 +15,12 @@ using Silk.NET.Maths;
 
 namespace ConcreteEngine.Graphics.Gfx;
 
+
+
 public sealed class GfxFrameBuffers
 {
     private readonly GfxStoreHub _resources;
     private readonly GfxTextures _gfxTextures;
-
     private readonly GlFrameBuffers _driver;
 
     internal GfxFrameBuffers(GfxContextInternal context, GfxTextures gfxTextures)

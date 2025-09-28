@@ -17,7 +17,9 @@ internal sealed class ShaderLoader(IReadOnlyList<ShaderManifestRecord> records)
 {
     private static readonly UTF8Encoding ShaderEncoding = new(false, true);
 
-    private readonly Dictionary<string, string> _vertexShaderCache = new(StringComparer.Ordinal);
+    private Dictionary<string, string> _vertexShaderCache = new(4,StringComparer.Ordinal);
+    
+    private UniformsStd140Layouts _layouts = new();
 
     public override ShaderPayload ProcessResource(ShaderManifestRecord record, out AssetProcessInfo info)
     {
@@ -27,12 +29,12 @@ internal sealed class ShaderLoader(IReadOnlyList<ShaderManifestRecord> records)
         if (!_vertexShaderCache.TryGetValue(record.VertexFilename, out var vertexSource))
         {
             var rawSource = File.ReadAllText(vertPath, ShaderEncoding);
-            vertexSource = ResolveIncludes(rawSource);
+            vertexSource = ResolveIncludes(rawSource, _layouts);
             _vertexShaderCache[record.VertexFilename] = vertexSource;
         }
 
         var rawFragSource = File.ReadAllText(fragPath, ShaderEncoding);
-        var fragmentSource = ResolveIncludes(rawFragSource);
+        var fragmentSource = ResolveIncludes(rawFragSource, _layouts);
         info = AssetProcessInfo.MakeDone<ShaderManifestRecord>();
         return new ShaderPayload(vertexSource, fragmentSource);
     }
@@ -41,6 +43,9 @@ internal sealed class ShaderLoader(IReadOnlyList<ShaderManifestRecord> records)
     {
         _vertexShaderCache.Clear();
         _vertexShaderCache.TrimExcess();
+
+        _vertexShaderCache = null!;
+        _layouts = null!;
     }
 
     private string ToHashSource(string source)
@@ -48,7 +53,7 @@ internal sealed class ShaderLoader(IReadOnlyList<ShaderManifestRecord> records)
         return Convert.ToHexString(SHA256.HashData(Encoding.UTF8.GetBytes(source)));
     }
 
-    private static string ResolveIncludes(string source)
+    private static string ResolveIncludes(string source, UniformsStd140Layouts layouts)
     {
         if (string.IsNullOrWhiteSpace(source)) return source;
 
@@ -68,11 +73,8 @@ internal sealed class ShaderLoader(IReadOnlyList<ShaderManifestRecord> records)
                 any = true;
                 var name = m.Groups["name"].Value;
 
-                if (!Enum.TryParse<UniformGpuSlot>(name, ignoreCase: true, out var key))
-                    throw new InvalidOperationException($"Unknown ShaderBufferUniform '{name}' in include.");
-
-                if (!UniformsStd140Layouts.Map.TryGetValue(key, out var layout))
-                    throw new InvalidOperationException($"No layout mapped for ShaderBufferUniform '{key}'.");
+                if (!layouts.Map.TryGetValue(name, out var layout))
+                    throw new InvalidOperationException($"No layout mapped for ShaderBufferUniform '{name}'.");
 
                 return layout;
             });

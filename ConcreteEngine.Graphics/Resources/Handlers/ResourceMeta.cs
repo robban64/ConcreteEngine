@@ -1,6 +1,7 @@
 #region
 
 using ConcreteEngine.Common.Numerics;
+using ConcreteEngine.Graphics.Gfx;
 using ConcreteEngine.Graphics.Gfx.Utility;
 using Silk.NET.Maths;
 
@@ -117,7 +118,7 @@ public readonly struct FrameBufferMeta(
     public readonly Size2D Size = size;
     public readonly FboAttachmentIds Attachments = attachments;
     public readonly RenderBufferMsaa MultiSample = multiSample;
-    
+
     internal static FrameBufferMeta MakeResizeCopy(in FrameBufferMeta meta, Size2D size) =>
         new(size, meta.Attachments, meta.MultiSample);
 }
@@ -137,13 +138,13 @@ public readonly struct UniformBufferMeta : IResourceMeta
 {
     public readonly nint BlockSize;
     public readonly nint Stride;
-    public readonly int Slot;
+    public readonly UboSlot Slot;
     public readonly BufferUsage Usage;
     public readonly BufferStorage Storage;
     public readonly BufferAccess Access;
 
 
-    public UniformBufferMeta(int slot, nint blockSize, BufferUsage usage, BufferStorage storage,
+    public UniformBufferMeta(UboSlot slot, nint blockSize, BufferUsage usage, BufferStorage storage,
         BufferAccess access)
     {
         Slot = slot;

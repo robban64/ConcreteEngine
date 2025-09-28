@@ -183,14 +183,14 @@ internal sealed class GfxResourceStore<TId, TMeta> : IGfxResourceStore<TId>
 
     public IdEnumerable IdEnumerator => new(this);
 
-    internal readonly struct IdEnumerable
+    public readonly struct IdEnumerable
     {
         private readonly GfxResourceStore<TId, TMeta> _store;
         internal IdEnumerable(GfxResourceStore<TId, TMeta> store) => _store = store;
         public ResourceIdEnumerator GetEnumerator() => new(_store);
     }
 
-    internal struct ResourceIdEnumerator
+    public struct ResourceIdEnumerator
     {
         private readonly GfxResourceStore<TId, TMeta> _store;
         private readonly GfxHandle[] _handles;

@@ -43,7 +43,7 @@ public sealed class GfxCommands
     private MeshMeta _boundMeshMeta = default;
 
     private ShaderId _boundShaderId = default;
-    private ShaderLayout? _boundUniforms;
+    private int[]? _boundUniforms = Array.Empty<int>();
 
     //
     private Bounds2D _activeOutputSize;
@@ -87,7 +87,7 @@ public sealed class GfxCommands
     internal void EndFrame(out GpuFrameStats result)
     {
         result = new GpuFrameStats(_drawCallCount, _drawTriangleCount);
-        UseShader(default);
+        UseShader(default, Array.Empty<int>());
         BindMesh(default);
         BindFramebuffer(default);
 
@@ -310,7 +310,7 @@ public sealed class GfxCommands
         _drawCallCount++;
     }
 
-    public void UseShader(ShaderId id)
+    public void UseShader(ShaderId id, int[] uniformLocations)
     {
         if (_boundShaderId == id) return;
 
@@ -321,42 +321,43 @@ public sealed class GfxCommands
             _shaders.UnbindShader();
             return;
         }
-
         var handle = _store.ShaderStore.GetRef(id);
-        var uniformTable = _repository.ShaderRepository.GetShaderLayout(id);
-
         _shaders.UseShader(handle);
         _boundShaderId = id;
-        _boundUniforms = uniformTable;
+        _boundUniforms = uniformLocations;
     }
+    
 
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public void SetUniform(ShaderUniform uniform, int value) => _shaders.SetUniform(_boundUniforms![uniform], value);
+    public void SetUniform(ShaderUniform uniform, int value) 
+        => _shaders.SetUniform(_boundUniforms![(int)uniform], value);
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public void SetUniform(ShaderUniform uniform, uint value) => _shaders.SetUniform(_boundUniforms![uniform], value);
+    public void SetUniform(ShaderUniform uniform, uint value) 
+        => _shaders.SetUniform(_boundUniforms![(int)uniform], value);
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public void SetUniform(ShaderUniform uniform, float value) => _shaders.SetUniform(_boundUniforms![uniform], value);
+    public void SetUniform(ShaderUniform uniform, float value) 
+        => _shaders.SetUniform(_boundUniforms![(int)uniform], value);
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public void SetUniform(ShaderUniform uniform, Vector2 value) =>
-        _shaders.SetUniform(_boundUniforms![uniform], value);
+        _shaders.SetUniform(_boundUniforms![(int)uniform], value);
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public void SetUniform(ShaderUniform uniform, Vector3 value) =>
-        _shaders.SetUniform(_boundUniforms![uniform], value);
+        _shaders.SetUniform(_boundUniforms![(int)uniform], value);
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public void SetUniform(ShaderUniform uniform, Vector4 value) =>
-        _shaders.SetUniform(_boundUniforms![uniform], value);
+        _shaders.SetUniform(_boundUniforms![(int)uniform], value);
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public void SetUniform(ShaderUniform uniform, in Matrix4x4 value) =>
-        _shaders.SetUniform(_boundUniforms![uniform], in value);
+        _shaders.SetUniform(_boundUniforms![(int)uniform], in value);
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public void SetUniform(ShaderUniform uniform, in Matrix3 value) =>
-        _shaders.SetUniform(_boundUniforms![uniform], in value);
+        _shaders.SetUniform(_boundUniforms![(int)uniform], in value);
 }

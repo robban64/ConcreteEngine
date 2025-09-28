@@ -6,19 +6,29 @@ using ConcreteEngine.Graphics.Resources;
 
 namespace ConcreteEngine.Core.Assets.Manifest;
 
-public static class UniformsStd140Layouts
+internal sealed class UniformsStd140Layouts
 {
-    public static readonly IReadOnlyDictionary<UniformGpuSlot, string> Map =
-        new Dictionary<UniformGpuSlot, string>
-        {
-            { UniformGpuSlot.Frame, FrameGlobalUniform },
-            { UniformGpuSlot.Camera, CameraUniform },
-            { UniformGpuSlot.DirLight, DirLightUniform },
-            { UniformGpuSlot.Material, MaterialUniform },
-            { UniformGpuSlot.DrawObject, DrawUniform }
-        };
+    public IReadOnlyDictionary<string, string> Map => _map;
 
-    private const string FrameGlobalUniform =
+    private readonly Dictionary<string, string> _map;
+    public UniformsStd140Layouts()
+    {
+        _map = new Dictionary<string, string>
+        {
+            { "Frame", _frameGlobalUniform },
+            { "Camera", _cameraUniform },
+            { "DirLight", _dirLightUniform },
+            { "Material", _materialUniform },
+            { "DrawObject", _drawUniform }
+        };
+    }
+
+    public void Cleanup()
+    {
+        _map.Clear();
+    }
+
+    private string _frameGlobalUniform =
         """
         layout(std140, binding = 0) uniform FrameGlobalUniform {
             vec4 uAmbient;   // xyz=color, w=intensity
@@ -27,7 +37,7 @@ public static class UniformsStd140Layouts
         };
         """;
 
-    private const string CameraUniform =
+    private string _cameraUniform =
         """
         layout(std140, binding = 1) uniform CameraUniform {
             mat4 uViewMat;
@@ -37,7 +47,7 @@ public static class UniformsStd140Layouts
         };
         """;
 
-    private const string DirLightUniform =
+    private string _dirLightUniform =
         """
         layout(std140, binding = 2) uniform DirLightUniform {
             vec4 uLightDirection;            // xyz, w unused
@@ -46,7 +56,7 @@ public static class UniformsStd140Layouts
         };
         """;
 
-    private const string MaterialUniform =
+    private string _materialUniform =
         """
         layout(std140, binding = 3) uniform MaterialUniform {
             vec3 MaterialColor;
@@ -57,7 +67,7 @@ public static class UniformsStd140Layouts
         };
         """;
 
-    private const string DrawUniform =
+    private string _drawUniform =
         """
         layout(std140, binding = 4) uniform DrawUniform {
             mat4 uModel;

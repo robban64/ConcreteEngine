@@ -37,10 +37,10 @@ internal sealed class GlBuffers : IGraphicsDriverModule
         return _store.IndexBuffer.Add(new GlIboHandle(handle.Value));
     }
 
-    public GfxRefToken<UniformBufferId> CreateUniformBuffer(UniformGpuSlot slot, in GfxBufferDataDesc desc)
+    public GfxRefToken<UniformBufferId> CreateUniformBuffer(UboSlot slot, in GfxBufferDataDesc desc)
     {
         var handle = CreateBufferNative(ReadOnlySpan<byte>.Empty, in desc, nullData: true);
-        _gl.BindBufferBase(BufferTargetARB.UniformBuffer, (uint)slot, handle.Value);
+        _gl.BindBufferBase(BufferTargetARB.UniformBuffer, slot, handle.Value);
         return _store.UniformBuffer.Add(new GlUboHandle(handle.Value));
     }
 

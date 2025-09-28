@@ -1,5 +1,6 @@
 using System.Runtime.CompilerServices;
 using ConcreteEngine.Common.Numerics;
+using ConcreteEngine.Core.Rendering.Gfx;
 using ConcreteEngine.Core.Rendering.Utility;
 using ConcreteEngine.Core.Resources;
 using ConcreteEngine.Graphics;
@@ -17,13 +18,21 @@ internal sealed class DrawProcessor
     private readonly GfxBuffers _gfxBuffers;
     private readonly GfxShaders _gfxShaders;
 
-    private readonly IGfxResourceRepository _repository;
-    
+    private readonly RenderRegistry _registry;
+
     private readonly MaterialStore _materials;
 
     private int _previousMaterialId = -1;
 
     private UboArena? _drawRing = null;
+    private RenderUbo _drawUbo = null!;
+    
+    private RenderUbo FrameUbo => _registry.GetRenderUbo<FrameUniformGpuData>();
+    private RenderUbo CameraUbo => _registry.GetRenderUbo<CameraUniformGpuData>();
+    private RenderUbo DirLightUbo => _registry.GetRenderUbo<DirLightUniformGpuData>();
+    private RenderUbo MaterialUbo => _registry.GetRenderUbo<MaterialUniformGpuData>();
+
+    private RenderUbo PostUbo => _registry.GetRenderUbo<FramePostProcessUniform>();
 
     internal DrawProcessor(GfxContext gfx, MaterialStore materials)
     {
@@ -32,7 +41,6 @@ internal sealed class DrawProcessor
         _gfxBuffers = gfx.Buffers;
         _gfxShaders = gfx.Shaders;
         
-        _repository = gfx.ResourceContext.Repository;
         _materials = materials;
     }
 
@@ -43,11 +51,12 @@ internal sealed class DrawProcessor
 
     public void Prepare(in RenderGlobalSnapshot renderGlobals, nint capacity)
     {
-        _drawRing = _repository.ShaderRepository.GetOrCreateUboArena(UniformGpuSlot.DrawObject);
+        _drawUbo = _registry.GetRenderUbo<DrawObjectUniformGpuData>();
+        _drawRing = _drawUbo.UboArena();
         _drawRing.Prepare(capacity);
         
         _previousMaterialId = -1;
-        _gfxBuffers.SetUniformBufferCapacity(UniformGpuSlot.DrawObject, capacity);
+        _gfxBuffers.SetUniformBufferCapacity(_drawUbo.Id, capacity);
     }
     
     public void UploadFrame(in FrameUniformRecord rec)
@@ -62,12 +71,13 @@ internal sealed class DrawProcessor
             fogType: rec.FogType
         );
 
-        _gfxBuffers.UploadUniformGpuData(UniformGpuSlot.Frame, in data, 0);
+        
+        _gfxBuffers.UploadUniformGpuData(FrameUbo.Id, in data, 0);
     }
     
     public void UploadFramePostProcess(in FramePostProcessUniform data)
     {
-        _gfxBuffers.UploadUniformGpuData(UniformGpuSlot.PostProcess, in data, 0);
+        _gfxBuffers.UploadUniformGpuData(PostUbo.Id, in data, 0);
     }
 
     public void UploadCamera(in CameraUniformRecord rec)
@@ -79,7 +89,7 @@ internal sealed class DrawProcessor
             cameraPos: rec.CameraPos
         );
 
-        _gfxBuffers.UploadUniformGpuData(UniformGpuSlot.Camera, in data, 0);
+        _gfxBuffers.UploadUniformGpuData(CameraUbo.Id, in data, 0);
     }
 
     public void UploadDirLight(in DirLightUniformRecord rec)
@@ -91,7 +101,7 @@ internal sealed class DrawProcessor
             intensity: rec.Intensity
         );
 
-        _gfxBuffers.UploadUniformGpuData(UniformGpuSlot.DirLight, in data, 0);
+        _gfxBuffers.UploadUniformGpuData(DirLightUbo.Id, in data, 0);
 
     }
 
@@ -105,14 +115,21 @@ internal sealed class DrawProcessor
             uvRepeat: rec.UvRepeat
         );
 
-        _gfxBuffers.UploadUniformGpuData(UniformGpuSlot.Material, in data, 0);
+        _gfxBuffers.UploadUniformGpuData(MaterialUbo.Id, in data, 0);
+    }
+
+    private void UseShader(ShaderId shaderId)
+    {
+        var renderShader = _registry.GetRenderShader(shaderId);
+        _gfxCmd.UseShader(shaderId, renderShader.Locations);
+
     }
 
     private void BindMaterial(MaterialId materialId)
     {
         if (_previousMaterialId == materialId.Id) return;
         var material = _materials.GetMaterial(materialId);
-        _gfxCmd.UseShader(material.ShaderId);
+        UseShader(material.ShaderId);
         for (int i = 0; i < material.SamplerSlots.Length; i++)
         {
             _gfxCmd.BindTexture(material.SamplerSlots[i], i);
@@ -135,13 +152,13 @@ internal sealed class DrawProcessor
             normal: in normalModel
         );
 
-        _gfxBuffers.UploadUniformGpuData(UniformGpuSlot.DrawObject, in data, _drawRing!.NextUploadCursor());
+        _gfxBuffers.UploadUniformGpuData(_drawUbo.Id, in data, _drawRing!.NextUploadCursor());
     }
     
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     private void BindDrawObject()
     {
-        _gfxBuffers.BindUniformBufferRange(UniformGpuSlot.DrawObject, _drawRing!.NextDrawCursor(), _drawRing.BlockSize);
+        _gfxBuffers.BindUniformBufferRange(_drawUbo.Id, _drawRing!.NextDrawCursor(), _drawRing.BlockSize);
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
@@ -156,7 +173,7 @@ internal sealed class DrawProcessor
 
     public void DrawFullscreenQuad(IFsqPass pass)
     {
-        _gfxCmd.UseShader(pass.Shader);
+        UseShader(pass.Shader);
         //_gfxCmd.SetUniform(ShaderUniform.TexelSize, viewport.ConvertToVec2() * pass.SizeRatio);
 
         for (int i = 0; i < pass.SourceTextures.Length; i++)

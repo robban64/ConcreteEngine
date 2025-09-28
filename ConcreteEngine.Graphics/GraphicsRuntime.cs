@@ -101,7 +101,8 @@ public sealed class GraphicsRuntime : IGraphicsRuntime
         var fboStore = _resources.GfxStoreHub.FboStore;
         Console.WriteLine($"Recreating {fboStore.Count} FBO");
 
-        _gfxContext.FrameBufferRegistry.RecreateFrameBuffers(size);
+        foreach (var fboId in fboStore.IdEnumerator)
+            _gfxContext.FrameBuffers.RecreateFrameBuffer(fboId, size);
     }
 
     public void Dispose()

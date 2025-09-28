@@ -1,4 +1,5 @@
 using System.Numerics;
+using ConcreteEngine.Common.Numerics;
 using ConcreteEngine.Core.Resources;
 using Silk.NET.Maths;
 
@@ -17,17 +18,17 @@ public sealed class SceneRenderProperties
     private Skybox _skybox;
     private DirectionalLight _directionalLight;
 
-    private Vector2D<int> _outputSize;
+    private Size2D _outputSize;
 
     public RenderGlobalSnapshot CurrentSnapshot => _currentSnapshot;
 
-    public void SetOutputSize( Vector2D<int> outputSize)
+    public void SetOutputSize(Size2D outputSize)
     {
         _outputSize = outputSize;
         _dirty = true;
     }
 
-    public void SetAmbient(in Vector3 ambient)
+    public void SetAmbient( Vector3 ambient)
     {
         _ambient = ambient;
         _dirty = true;
@@ -39,7 +40,7 @@ public sealed class SceneRenderProperties
         _dirty = true;
     }
 
-    public void SetDirLight(in Vector3 direction,
+    public void SetDirLight( Vector3 direction,
         in Vector3 diffuse,
         in Vector3 specular, float intensity = 1f)
     {
@@ -57,9 +58,9 @@ public sealed class SceneRenderProperties
     {
         if (!_dirty) return;
         _currentSnapshot.Update(version: _version++,
-            outputSize: in _outputSize,
+            outputSize:  _outputSize,
             exposure: _exposure,
-            ambient: in _ambient,
+            ambient:  _ambient,
             skybox: in _skybox,
             dirLight: in _directionalLight);
         _dirty = false;
@@ -72,13 +73,13 @@ public sealed class RenderGlobalSnapshot
     public Vector3 Ambient { get; private set; }
     public float Exposure { get; private set; }
     public Skybox Skybox { get; private set; }
-    public Vector2D<int> OutputSize { get; private set; }
+    public Size2D OutputSize { get; private set; }
     public int Version { get; private set; }
 
     internal void Update(in Skybox skybox,
         in DirectionalLight dirLight,
-        in Vector2D<int> outputSize,
-        in Vector3 ambient,
+         Size2D outputSize,
+         Vector3 ambient,
         float exposure,
         int version)
     {

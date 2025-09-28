@@ -4,8 +4,10 @@ namespace ConcreteEngine.Graphics.Resources;
 
 public sealed class GfxResourceApi
 {
+    private readonly GfxStoreHub _storeHub;
     internal GfxResourceApi(GfxStoreHub store)
     {
+        _storeHub = store;
         ApiRegistry<TextureId, TextureMeta>.GetMeta = store.TextureStore.GetMeta;
         ApiRegistry<ShaderId, ShaderMeta>.GetMeta = store.ShaderStore.GetMeta;
         ApiRegistry<MeshId, MeshMeta>.GetMeta = store.MeshStore.GetMeta;
@@ -15,7 +17,13 @@ public sealed class GfxResourceApi
         ApiRegistry<RenderBufferId, RenderBufferMeta>.GetMeta = store.RboStore.GetMeta;
         ApiRegistry<UniformBufferId, UniformBufferMeta>.GetMeta = store.UboStore.GetMeta;
     }
-
+    
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public  GfxResourceStore<TId, TMeta>.IdEnumerable GetEnumerator<TId, TMeta>(TId id)
+        where TId : unmanaged, IResourceId where TMeta : unmanaged, IResourceMeta
+    {
+        return _storeHub.GetStore<TId,TMeta>().IdEnumerator
+    }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public ref readonly TMeta GetMeta<TId, TMeta>(TId id)

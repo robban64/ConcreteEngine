@@ -30,12 +30,16 @@ public static class InvalidOpThrower
     private static void ThrowOperation(string? param = null, string? message = null) =>
         throw new InvalidOperationException($"Invalid operation: {param}. {message}");
 
-    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static void ThrowIfNull(object? obj, string? param = null, string? message = null)
     {
         if (obj is null) ThrowOperation(param);
     }
     
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public static void ThrowIfNotNull(object? obj, string? param = null, string? message = null)
+    {
+        if (obj is null) ThrowOperation(param);
+    }
         
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static void ThrowIf(bool condition, string? param = null, string? message = null)

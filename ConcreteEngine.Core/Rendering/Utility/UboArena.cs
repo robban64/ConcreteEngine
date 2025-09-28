@@ -2,15 +2,15 @@
 
 using System.Diagnostics;
 using System.Runtime.CompilerServices;
+using ConcreteEngine.Graphics.Gfx.Utility;
 using ConcreteEngine.Graphics.Resources;
 
 #endregion
 
-namespace ConcreteEngine.Graphics.Gfx.Utility;
+namespace ConcreteEngine.Core.Rendering.Utility;
 
 public sealed class UboArena
 {
-    private readonly UniformGpuSlot _slot;
     private readonly nint _blockSize;
     private readonly nint _stride;
 
@@ -19,14 +19,12 @@ public sealed class UboArena
     private nint _uploadCursor;
     private nint _drawCursor;
 
-    public UniformGpuSlot Slot => _slot;
     public nint Capacity => _capacity;
     public nint Stride => _stride;
     public nint BlockSize => _blockSize;
 
-    internal UboArena(in UniformBufferMeta meta)
+    public UboArena(in UniformBufferMeta meta)
     {
-        _slot = meta.Slot;
         _stride = meta.Stride;
         _blockSize = meta.BlockSize;
 

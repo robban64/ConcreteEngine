@@ -2,6 +2,7 @@
 
 using System.Diagnostics;
 using System.Runtime.CompilerServices;
+using ConcreteEngine.Common;
 
 #endregion
 
@@ -15,8 +16,7 @@ public interface IGfxResourceStore
 
 internal interface IGfxResourceStore<in TId> : IGfxResourceStore where TId : unmanaged, IResourceId
 {
-    ref readonly GfxHandle GetHandle(TId id);
-
+    GfxHandle GetHandle(TId id);
     GfxHandle Remove(TId id);
 }
 
@@ -29,7 +29,7 @@ internal sealed class GfxResourceStore<TId, TMeta> : IGfxResourceStore<TId>
     private const int HardLimit = 10_000;
     private const int MaxDefaultCapacity = 1024;
 
-    public ResourceKind ResourceKind { get; }
+    public ResourceKind ResourceKind => TId.Kind;
 
     private int _idx = 0;
     private TMeta[] _meta;
@@ -39,20 +39,17 @@ internal sealed class GfxResourceStore<TId, TMeta> : IGfxResourceStore<TId>
 
     public int Count => _idx;
 
-    public ReadOnlySpan<TMeta> AsMetaSpan() => _meta;
+    internal ReadOnlySpan<TMeta> AsMetaSpan() => _meta;
     internal ReadOnlySpan<GfxHandle> AsHandleSpan() => _handle;
 
-    internal GfxResourceStore(
-        ResourceKind resourceKind,
-        int initialCapacity,
-        MakeIdDelegate<TId> makeId)
+    internal GfxResourceStore(int initialCapacity, MakeIdDelegate<TId> makeId)
     {
-        ArgumentOutOfRangeException.ThrowIfEqual((int)resourceKind, (int)ResourceKind.Invalid);
         ArgumentOutOfRangeException.ThrowIfLessThan(initialCapacity, 4, nameof(initialCapacity));
         ArgumentOutOfRangeException.ThrowIfGreaterThan(initialCapacity, MaxDefaultCapacity, nameof(initialCapacity));
         ArgumentNullException.ThrowIfNull(makeId);
 
-        ResourceKind = resourceKind;
+        InvalidOpThrower.ThrowIf(ResourceKind == ResourceKind.Invalid);
+
         MakeId = makeId;
 
         _meta = new TMeta[initialCapacity];
@@ -102,7 +99,7 @@ internal sealed class GfxResourceStore<TId, TMeta> : IGfxResourceStore<TId>
     public ref readonly TMeta GetMeta(TId id) => ref _meta[id.Value - 1];
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public ref readonly GfxHandle GetHandle(TId id) => ref _handle[id.Value - 1];
+    public GfxHandle GetHandle(TId id) => _handle[id.Value - 1];
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public ref readonly GfxHandle GetHandleAndMeta(TId id, out TMeta meta)

@@ -1,6 +1,7 @@
 using System.Numerics;
 using ConcreteEngine.Common;
 using ConcreteEngine.Common.Numerics;
+using ConcreteEngine.Core.Rendering.Gfx;
 using ConcreteEngine.Graphics;
 using ConcreteEngine.Graphics.Contracts;
 using ConcreteEngine.Graphics.Descriptors;
@@ -26,7 +27,8 @@ internal class RenderPasses
 
 
     private readonly GfxContext _gfx;
-    private readonly GfxFrameBufferRegistry _gfxFbo;
+    private readonly RenderRegistry _renderRegistry;
+
     private readonly RenderGlobalSnapshot _snapshot;
 
     private readonly List<IRenderPassDescriptor>[] _renderTargets;
@@ -38,7 +40,6 @@ internal class RenderPasses
     public RenderPasses(GfxContext gfx, in RenderGlobalSnapshot snapshot)
     {
         _gfx = gfx;
-        _gfxFbo = gfx.FrameBufferRegistry;
         _snapshot = snapshot;
 
         _renderTargets = new List<IRenderPassDescriptor>[RenderConsts.RenderTargetCount];
@@ -97,6 +98,10 @@ internal class RenderPasses
         if (SceneFbo.FboId.IsValid())
             throw new InvalidOperationException("Scene buffer is already created");
 
+
+        var entry = new RegisterFboEntry().AttachColorTexture().AttachDepthStencilBuffer();
+        _renderRegistry.RegisterFrameBuffer<FboSceneTag>(entry);
+
         var desc = new GfxFrameBufferDescriptor(
             Size: SnapShotOutput,
             PixelFormat: EnginePixelFormat.Rgba,
@@ -113,6 +118,10 @@ internal class RenderPasses
 
         if (MultisampleFbo.FboId.IsValid())
             throw new InvalidOperationException("Multisample buffer is already created");
+
+        var entry = RegisterFboEntry.MakeMsaa((RenderBufferMsaa)samples)
+            .AttachColorTexture().AttachDepthStencilBuffer();
+        _renderRegistry.RegisterFrameBuffer<FboMsaaTag>(entry);
 
         var desc = new GfxFrameBufferDescriptor(
             Size: SnapShotOutput,
@@ -134,7 +143,7 @@ internal class RenderPasses
             Attachments: new GfxFrameBufferDescriptor.AttachmentsDef(true, false, false, true)
         );
 
-        ShadowFbo = _gfxFbo.RegisterFrameBufferFixed(desc, size);
+        //ShadowFbo = _gfxFbo.RegisterFrameBufferFixed(desc, size);
     }
 
     public void CreateLightBuffer(Vector2 sizeRatio, TexturePreset preset)
@@ -149,15 +158,16 @@ internal class RenderPasses
         );
 
 
-        LightFbo = _gfxFbo.RegisterFrameBufferCalc(desc, sizeRatio,
+       /* LightFbo = _gfxFbo.RegisterFrameBufferCalc(desc, sizeRatio,
             (outputSize, ratio) => outputSize.Scale(ratio)
-        );
+        );*/
     }
 
     public void CreatePostProcessBuffer_A()
     {
         if (PostFboA.FboId.IsValid())
             throw new InvalidOperationException("Post Process buffer is already created");
+
 
         PostFboA = CreatePostProcessBuffer(true);
     }
@@ -172,6 +182,9 @@ internal class RenderPasses
 
     private FrameBufferLayout CreatePostProcessBuffer(bool mipmap)
     {
+        var entry = RegisterFboEntry.MakePost(mipmap).AttachColorTexture();
+        _renderRegistry.RegisterFrameBuffer<FboPostProcessTag>(entry);
+
         var desc = new GfxFrameBufferDescriptor(
             Size: SnapShotOutput,
             TexturePreset: mipmap ? TexturePreset.LinearMipmapClamp : TexturePreset.LinearClamp,
@@ -188,5 +201,4 @@ internal class RenderPasses
         ArgumentOutOfRangeException.ThrowIfGreaterThan(sizeRatio.X, 1, nameof(sizeRatio.X));
         ArgumentOutOfRangeException.ThrowIfGreaterThan(sizeRatio.Y, 1, nameof(sizeRatio.Y));
     }
-
 }

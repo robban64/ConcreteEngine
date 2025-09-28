@@ -59,7 +59,6 @@ public sealed class GfxBuffers
     }
 
     //BufferStorage.Dynamic, BufferAccess.MapWrite
-    /*
     public UniformBufferId CreateUniformBuffer<T>(
         UniformGpuSlot slot,
         BufferStorage storage = BufferStorage.Dynamic,
@@ -69,15 +68,15 @@ public sealed class GfxBuffers
             throw GraphicsException.InvalidStd140Layout<T>();
 
         var size = (nint)Unsafe.SizeOf<T>();
-        var meta = new UniformBufferMeta(slot, size, BufferUsage.DynamicDraw, BufferStorage.Dynamic,
+        var meta = new UniformBufferMeta((int)slot, size, BufferUsage.DynamicDraw, BufferStorage.Dynamic,
             BufferAccess.MapWrite);
 
         var uboRef = _driverBuffer.CreateUniformBuffer(slot, new GfxBufferDataDesc(size, storage, access));
 
         var uboId = _resources.UboStore.Add(meta, uboRef);
-        _repository.ShaderRepository.AddUboToSlot(meta.Slot, uboId);
+        _repository.ShaderRepository.AddUboToSlot(slot, uboId);
         return uboId;
-    }*/
+    }
     
     public UniformBufferId CreateUniformBuffer<T>(
         int slot,
@@ -91,10 +90,10 @@ public sealed class GfxBuffers
         var meta = new UniformBufferMeta(slot, size, BufferUsage.DynamicDraw, BufferStorage.Dynamic,
             BufferAccess.MapWrite);
 
-        var uboRef = _driverBuffer.CreateUniformBuffer(slot, new GfxBufferDataDesc(size, storage, access));
+        var uboRef = _driverBuffer.CreateUniformBuffer((UniformGpuSlot)slot, new GfxBufferDataDesc(size, storage, access));
 
         var uboId = _resources.UboStore.Add(meta, uboRef);
-        _repository.ShaderRepository.AddUboToSlot(meta.Slot, uboId);
+        _repository.ShaderRepository.AddUboToSlot((UniformGpuSlot)meta.Slot, uboId);
         return uboId;
     }
 

@@ -1,6 +1,7 @@
 #region
 
 using ConcreteEngine.Graphics.Gfx.Internal;
+using ConcreteEngine.Graphics.OpenGL;
 using ConcreteEngine.Graphics.Resources;
 
 #endregion
@@ -13,12 +14,14 @@ public sealed class GfxShaders
     private readonly GfxResourceRepository _repository;
 
     private readonly GfxShadersBackend _backend;
+    private readonly GlShaders _driver;
 
     internal GfxShaders(GfxContextInternal context)
     {
         _backend = new GfxShadersBackend(context);
         _resources = context.Stores;
         _repository = context.Repositories;
+        _driver = context.Driver.Shaders;
     }
 
     public ShaderId CreateShader(string vs, string fs, out int samplers)
@@ -28,6 +31,12 @@ public sealed class GfxShaders
         var shaderId = _resources.ShaderStore.Add(in meta, programRef);
         _repository.ShaderRepository.Add(shaderId, in meta, uniforms);
         return shaderId;
+    }
+    
+    public void GetUniformList(ShaderId shaderId, out int samples, out List<(string, int)> uniforms)
+    {
+        var programRef = _resources.ShaderStore.GetRef(shaderId);
+        _driver.GetUniformsFromProgram(in programRef, out  uniforms, out samples);
     }
 
     private sealed class GfxShadersBackend
@@ -46,5 +55,6 @@ public sealed class GfxShaders
             _driver.Shaders.GetUniformsFromProgram(in programRef, out uniforms, out samples);
             return programRef;
         }
+        
     }
 }

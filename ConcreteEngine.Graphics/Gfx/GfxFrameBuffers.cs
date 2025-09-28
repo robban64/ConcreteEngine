@@ -29,7 +29,7 @@ public sealed class GfxFrameBuffers
         _resources = context.Stores;
     }
 
-    internal FrameBufferId CreateFrameBuffer(in GfxFrameBufferDescriptor desc)
+    public FrameBufferId CreateFrameBuffer(in GfxFrameBufferDescriptor desc)
     {
         EnsureCreateFrameBuffer(in desc);
         var size = desc.Size;

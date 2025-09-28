@@ -1,6 +1,9 @@
 using System.Numerics;
 using System.Runtime.CompilerServices;
+using ConcreteEngine.Common;
 using ConcreteEngine.Common.Numerics;
+using ConcreteEngine.Core.Rendering.Utility;
+using ConcreteEngine.Graphics;
 using ConcreteEngine.Graphics.Contracts;
 using ConcreteEngine.Graphics.Gfx.Utility;
 using ConcreteEngine.Graphics.Primitives;
@@ -9,33 +12,6 @@ using ConcreteEngine.Graphics.Utils;
 
 namespace ConcreteEngine.Core.Rendering.Gfx;
 
-public readonly struct FboRenderData(Size2D size, FboAttachmentIds attachments, int samples)
-{
-    public readonly Size2D Size = size;
-    public readonly FboAttachmentIds Attachments = attachments;
-    public readonly int Samples = samples;
-}
-public delegate FboRenderData FboRenderDataDel(FrameBufferId fboId); 
-
-public sealed class RenderFbo
-{
-    public FrameBufferId FboId { get;  }
-
-    private readonly FboRenderDataDel _dataCallback;
-    public RenderFbo(FrameBufferId fboId, FboRenderDataDel dataCallback)
-    {
-        FboId = fboId;
-        _dataCallback  = dataCallback;
-    }
-
-    public FboRenderData RenderData => _dataCallback(FboId);
-    
-    public required Size2D OutputSize { get; set; }
-    public Vector2 CalculateRatio { get; set; } = Vector2.One;
-
-    public Size2D? FixedSize { get; set; }
-    public CalcFboSizeDel? CalculateSize { get; set; }
-}
 
 public readonly record struct UboSlot(int Value);
 
@@ -44,32 +20,52 @@ public readonly record struct UboSlotRef<T>(UboSlot Slot) where T : unmanaged, I
     internal static UboSlotRef<T> Make(int value) => new(new UboSlot(value));
 }
 
-
-public sealed class RenderUbo
+public sealed class RenderUbo where TUbo : unmanaged, IUniformGpuData
 {
-    public required UniformBufferId Id { get; init; }
-    public required UniformGpuSlot Slot { get; init; }
-    
-    public 
-    
-    public UboArena? UboBufferArena { get; set; }
-    
+    public UniformBufferId Id { get; }
+    public UboSlot Slot { get; }
 
+
+    private UboArena? _uboBufferArena;
+    private readonly GetMetaDel<UniformBufferId, UniformBufferMeta> _getMetaDel;
+
+    public RenderUbo(UniformBufferId id, UboSlot slot, GetMetaDel<UniformBufferId, UniformBufferMeta> getMetaDel)
+    {
+        Id = id;
+        Slot = slot;
+        _getMetaDel = getMetaDel;
+    }
+
+    
+    public ref readonly UniformBufferMeta RenderData()
+    {
+        return ref _getMetaDel(Id);
+    }
+
+    public UboArena UboArena()
+    {
+        if (_uboBufferArena != null) return _uboBufferArena;
+        ref readonly var uboMeta  = ref _getMetaDel(Id);
+        _uboBufferArena = new UboArena(in uboMeta);
+
+        return _uboBufferArena;
+    }
 }
 
 public sealed class RenderShader
 {
-    public required FrameBufferId Id { get; init; }
+    public ShaderId Id { get;  }
     private readonly int[] _locations;
     private readonly Dictionary<string, int> _uniforms;
-    
+
     public IReadOnlyDictionary<string, int> Uniforms => _uniforms;
 
-    public RenderShader(List<(string, int)> uniformPairs)
+    public RenderShader(ShaderId id, List<(string, int)> uniformPairs)
     {
+        Id = id;
         _locations = new int [GraphicsEnumCache.ShaderUniformVals.Length];
         _uniforms = new Dictionary<string, int>(uniformPairs.Count);
-        
+
         foreach (var (uniform, location) in uniformPairs)
         {
             _uniforms.Add(uniform, location);

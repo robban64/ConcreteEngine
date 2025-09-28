@@ -10,25 +10,9 @@ namespace ConcreteEngine.Graphics.Resources;
 
 
 
-public delegate Size2D CalcFboSizeDel(Size2D outputSize, Vector2 ratio);
 
 public sealed class GfxFrameBufferRegistry
 {
-    private readonly Dictionary<FrameBufferId, FrameBufferRecord> _frameBuffers = new(4);
-    private readonly GfxFrameBuffers _gfx;
-    private readonly GfxStoreHub _resources;
-
-    internal GfxFrameBufferRegistry(GfxContextInternal context, GfxFrameBuffers gfx)
-    {
-        _gfx = gfx;
-        _resources = context.Stores;
-    }
-
-    public FrameBufferLayout Get(FrameBufferId fboId)
-    {
-        return _frameBuffers[fboId].ToLayout();
-    }
-    
     public FrameBufferLayout RegisterFrameBufferScreen(GfxFrameBufferDescriptor desc)
     {
         var record = RegisterInternal(desc);

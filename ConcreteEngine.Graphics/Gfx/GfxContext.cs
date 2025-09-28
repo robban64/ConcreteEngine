@@ -17,8 +17,6 @@ public sealed class GfxContext
     private readonly GfxFrameBuffers _frameBuffers;
     private readonly GfxCommands _cmd;
 
-    private readonly GfxFrameBufferRegistry _frameBufferRegistry;
-
     private readonly GfxResourceContext _resourceContext;
 
     public IPrimitiveMeshes Primitives { get; }
@@ -32,8 +30,6 @@ public sealed class GfxContext
         _frameBuffers = new GfxFrameBuffers(ctxInternal, _textures);
         _cmd = new GfxCommands(ctxInternal);
 
-        _frameBufferRegistry = new GfxFrameBufferRegistry(ctxInternal, _frameBuffers);
-        
         _resourceContext = resourceContext;
 
         var primitiveMeshes = new PrimitiveMeshes();
@@ -49,9 +45,7 @@ public sealed class GfxContext
 
     public GfxTextures Textures => _textures;
 
-    internal GfxFrameBuffers FrameBuffers => _frameBuffers;
-
-    public GfxFrameBufferRegistry FrameBufferRegistry => _frameBufferRegistry;
+    public GfxFrameBuffers FrameBuffers => _frameBuffers;
 
     public GfxCommands Commands => _cmd;
 

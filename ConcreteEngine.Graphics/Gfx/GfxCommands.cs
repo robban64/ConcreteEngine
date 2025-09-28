@@ -119,7 +119,6 @@ public sealed class GfxCommands
         if (_boundFboId == fboId) GraphicsException.ThrowInvalidState($"FBO is {fboId} already bound.");
 
         ref readonly var meta = ref _store.FboStore.GetMeta(fboId);
-        ref readonly var handle = ref _store.FboStore.GetHandle(fboId);
 
         BindFramebuffer(fboId);
         SetViewport(meta.Size);

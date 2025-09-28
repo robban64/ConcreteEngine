@@ -36,6 +36,8 @@ internal sealed class RenderRegistry
         _gfxFbo = gfx.FrameBuffers;
         _gfxBuffers = gfx.Buffers;
         _gfxShaders = gfx.Shaders;
+        
+        _gfxApi.BindMetaChanged<FrameBufferId,FrameBufferMeta>(OnFboChange);
     }
 
     public RenderFbo GetRenderFbo<TTag>(int index) where TTag : unmanaged, IFboTag
@@ -92,7 +94,8 @@ internal sealed class RenderRegistry
         InvalidOpThrower.ThrowIfNot(_registrationData.Enabled);
         var gfxDescriptor = entry.ToGfxDescriptor(_registrationData.OutputSize);
         var fboId = _gfxFbo.CreateFrameBuffer(gfxDescriptor);
-        var renderFbo = new RenderFbo(fboId, _gfxApi.GetMeta<FrameBufferId, FrameBufferMeta>);
+        var meta = _gfxApi.GetMeta<FrameBufferId, FrameBufferMeta>(fboId);
+        var renderFbo = new RenderFbo(fboId, in meta);
 
         if (!_fboRegistry.TryGet<IFboTag>(out var list))
             _fboRegistry.Register<TTag>(list = new List<RenderFbo>());
@@ -116,6 +119,10 @@ internal sealed class RenderRegistry
         UniformBufferTagRegistry<T>.Slot = slot;
 
         _nextSlot = new UboSlot(slot.Value + 1);
+    }
+
+    private void OnFboChange(FrameBufferId id, in GfxMetaChanged<FrameBufferMeta> message)
+    {
     }
 
     

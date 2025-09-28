@@ -1,36 +1,30 @@
 namespace ConcreteEngine.Core.Rendering;
 
 
-public interface IRenderPassState;
-
-public sealed class EmptyState : IRenderPassState
-{
-    private static EmptyState? _instance;
-    public static EmptyState Instance => _instance ??= new EmptyState();
-    private EmptyState(){}
-}
-
-
 public interface IRenderPassEntry
 {
+    public RenderTargetId TargetId { get; }
+    public int Index { get; }
+
     void ExecuteAfter(in RenderPassCtx ctx);
     void ExecuteBefore(in RenderPassCtx ctx);
 }
 
-
-
-public readonly record struct RenderPassRef<TState> where TState : class, IRenderPassState;
-
-public sealed class RenderPassEntry<TState> : IRenderPassEntry where TState : class, IRenderPassState
+public sealed class RenderPassEntry<TState> : IRenderPassEntry where TState : IRenderPassState
 {
     public RenderTargetId TargetId { get; }
     public int Index { get; }
     public RenderPassOp<TState>? Before { get; private set; }
-    public RenderPassOp<TState>? After  { get; private set; }
-    
+    public RenderPassOp<TState>? After { get; private set; }
+
+    private RenderPassMutate<TState>? _pendingMutate;
+
     private readonly TState _state;
 
-    internal RenderPassEntry( RenderTargetId targetId, int index, TState initial)
+    public void UpdateState(RenderPassMutate<TState> mutate) => _pendingMutate = mutate;
+
+
+    internal RenderPassEntry(RenderTargetId targetId, int index, TState initial)
     {
         TargetId = targetId;
         Index = index;
@@ -56,12 +50,17 @@ public sealed class RenderPassEntry<TState> : IRenderPassEntry where TState : cl
 
     public void ExecuteBefore(in RenderPassCtx ctx)
     {
-        if (Before is { } before) before(in ctx, in _state);
-    }
-    
-    public void ExecuteAfter(in RenderPassCtx ctx)
-    {
-        if (After is { } after) after(in ctx, in _state);
+        if (_pendingMutate is { } mut)
+        {
+            mut(_state);
+            _pendingMutate = null;
+        }
+
+        Before?.Invoke(in ctx, in _state);
     }
 
+    public void ExecuteAfter(in RenderPassCtx ctx)
+    {
+        After?.Invoke(in ctx, in _state);
+    }
 }

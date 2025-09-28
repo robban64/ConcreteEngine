@@ -10,8 +10,15 @@ public readonly record struct GfxPassState(
     bool? Scissor = null,
     bool? FramebufferSrgb = null,
     bool? ColorMask = null
-);
-
+)
+{
+    public static GfxPassState MakeScene() => new(true, true, true, false, false, true);
+    public static GfxPassState MakeScreen() => new(false, false, false, false, false, true);
+    public static GfxPassState MakeShadow() => new(true, true, true, false, false, false, false);
+    public static GfxPassState MakeLighting() => new(true, true, true, true, false, true);
+    public static GfxPassState MakePostProcess() => new(false, false, false, true, false, true);
+    public static GfxPassState MakeOff() => new(false, false, false, false, false, false, false);
+}
 
 public readonly record struct GfxPassClear(Color4? ClearColor, ClearBufferFlag ClearBuffer)
 {

@@ -17,7 +17,7 @@ public sealed class RenderUbo //where TUbo : unmanaged, IUniformGpuData
     public UniformBufferId Id { get; }
     public UboSlot Slot { get; }
 
-
+    private UniformBufferMeta _metaCache;
     private UboArena? _uboBufferArena;
 
     public RenderUbo(UniformBufferId id, UboSlot slot)
@@ -25,19 +25,15 @@ public sealed class RenderUbo //where TUbo : unmanaged, IUniformGpuData
         Id = id;
         Slot = slot;
     }
-
     
-    public ref readonly UniformBufferMeta RenderData()
-    {
-        return ref _getMetaDel(Id);
-    }
+    internal void UpdateMeta(in UniformBufferMeta meta) => _metaCache = meta;
+
+    public ref readonly UniformBufferMeta RenderData() => ref _metaCache;
 
     public UboArena UboArena()
     {
         if (_uboBufferArena != null) return _uboBufferArena;
-        ref readonly var uboMeta  = ref _getMetaDel(Id);
-        _uboBufferArena = new UboArena(in uboMeta);
-
+        _uboBufferArena = new UboArena(in _metaCache);
         return _uboBufferArena;
     }
 }

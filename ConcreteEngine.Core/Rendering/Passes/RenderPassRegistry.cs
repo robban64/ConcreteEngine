@@ -1,41 +1,39 @@
 using ConcreteEngine.Common.Numerics;
 using ConcreteEngine.Graphics;
+using ConcreteEngine.Graphics.Gfx;
 using ConcreteEngine.Graphics.Resources;
 
 namespace ConcreteEngine.Core.Rendering;
 
-public delegate void RenderPassOp<TState>(in RenderPassCtx ctx, in TState state) where TState : class, IRenderPassState;
+public delegate void RenderPassOp<TState>(in RenderPassCtx ctx, in TState state) where TState : IRenderPassState;
 
-public delegate void RenderPassMutate<TState>(in TState state) where TState : class, IRenderPassState;
-
-public interface IRenderOpsSink
-{
-    void ClearColor(in Color4 c);
-    void SetBlend(BlendMode mode);
-    void GenerateMips(TextureId tex);
-}
+public delegate void RenderPassMutate<TState>(in TState state) where TState : IRenderPassState;
 
 public sealed class RenderPassCtx
 {
-    public readonly IRenderOpsSink Ops;
+    public RenderCommandOps CmdOps { get; }
+    public RenderTarget Target {get; internal set;}
     public int Pass { get; internal set; } = 0;
-
-    public RenderPassCtx(IRenderOpsSink ops)
+    
+    internal RenderPassCtx(RenderCommandOps cmdOps)
     {
-        Ops = ops;
+        CmdOps = cmdOps;
     }
 }
 
 public sealed class RenderPassRegistry
 {
+    private readonly RenderTarget[] _renderTargets;
     private readonly List<IRenderPassEntry>[] _registry;
-    private readonly RenderPassCtx _ctx;
     private int _currentTargetId = 0;
 
+    public readonly RenderPassCtx Ctx;
 
-    internal RenderPassRegistry(IRenderOpsSink opsSink)
+
+    internal RenderPassRegistry(RenderCommandOps cmdOps)
     {
-        _ctx = new RenderPassCtx(opsSink);
+        Ctx = new RenderPassCtx(cmdOps);
+        _renderTargets = new RenderTarget[RenderConsts.RenderTargetCount];
         _registry = new List<IRenderPassEntry>[RenderConsts.RenderTargetCount];
         for (int i = 0; i < RenderConsts.RenderTargetCount; i++)
         {
@@ -43,27 +41,35 @@ public sealed class RenderPassRegistry
         }
     }
 
-    public RenderPassEntry<TState> Register<TState>(RenderTargetId targetId, TState initial) where TState : class, IRenderPassState
+    public RenderPassEntry<TState> Register<TState>(RenderTargetId targetId, TState initial)
+        where TState : IRenderPassState
     {
         var passes = _registry[(int)targetId];
-        var entry = new RenderPassEntry<TState>( targetId, passes.Count, initial);
+        var entry = new RenderPassEntry<TState>(targetId, passes.Count, initial);
         passes.Add(entry);
         return entry;
     }
-    
-    internal bool TryGetNextPasses(out RenderTargetId targetId, out IReadOnlyList<IRenderPassEntry> passes)
+
+    internal bool TryGetNextPasses(out RenderTarget target, out IReadOnlyList<IRenderPassEntry> passes)
     {
-        if (_currentTargetId >= RenderConsts.RenderTargetCount)
+        while (_currentTargetId < _registry.Length)
         {
-            _currentTargetId = 0;
-            targetId = (RenderTargetId)_currentTargetId;
-            passes = _registry[(int)targetId];
-            return false;
+            var targetId = (RenderTargetId)_currentTargetId;
+            target = _renderTargets[_currentTargetId];
+            var list = _registry[_currentTargetId++];
+            if (list.Count > 0)
+            {
+                Ctx.Target = target;
+                Ctx.Pass = list.Count - 1;
+                
+                passes = list;
+                return true;
+            }
         }
 
-        targetId = (RenderTargetId)_currentTargetId;
-        passes = _registry[_currentTargetId];
-        _currentTargetId++;
-        return true;
+        target = null!;
+        passes = Array.Empty<IRenderPassEntry>();
+        _currentTargetId = 0;
+        return false;
     }
 }

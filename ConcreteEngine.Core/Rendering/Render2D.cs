@@ -15,7 +15,6 @@ namespace ConcreteEngine.Core.Rendering;
 internal class Render2D : IRender
 {
     private readonly GfxContext _gfx;
-    private readonly RenderPasses _registry;
     private readonly MaterialStore _materialStore;
     private readonly Camera2D _camera;
     public ICamera Camera => _camera;
@@ -26,7 +25,6 @@ internal class Render2D : IRender
         _gfx = gfx;
         _materialStore = materialStore;
         _camera = new Camera2D();
-        _registry = new RenderPasses(_gfx, in snapshot);
     }
 
 

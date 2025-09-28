@@ -23,7 +23,8 @@ internal interface IGfxResourceStore<in TId> : IGfxResourceStore where TId : unm
 internal sealed class GfxResourceStore<TId, TMeta> : IGfxResourceStore<TId>
     where TId : unmanaged, IResourceId where TMeta : unmanaged, IResourceMeta
 {
-    internal readonly MakeIdDelegate<TId> MakeId;
+    private readonly MakeIdDelegate<TId> _makeId;
+    internal GfxMetaChangedDel<TId, TMeta>? _changeCallback;
 
     // sanity check
     private const int HardLimit = 10_000;
@@ -50,11 +51,18 @@ internal sealed class GfxResourceStore<TId, TMeta> : IGfxResourceStore<TId>
 
         InvalidOpThrower.ThrowIf(ResourceKind == ResourceKind.Invalid);
 
-        MakeId = makeId;
+        _makeId = makeId;
 
         _meta = new TMeta[initialCapacity];
         _handle = new GfxHandle[initialCapacity];
         _free = new Stack<int>();
+    }
+
+    internal void BindOnChangeCallback(GfxMetaChangedDel<TId, TMeta> callback)
+    {
+        ArgumentNullException.ThrowIfNull(callback);
+        InvalidOpThrower.ThrowIf(_changeCallback != null);
+        _changeCallback = callback;
     }
 
     public bool TryGetHandle(TId id, out GfxHandle handle)
@@ -127,7 +135,7 @@ internal sealed class GfxResourceStore<TId, TMeta> : IGfxResourceStore<TId>
         int idx = _free.Count > 0 ? _free.Pop() : Allocate();
         _meta[idx] = meta;
         _handle[idx] = refToken.Handle;
-        return MakeId(idx);
+        return _makeId(idx);
     }
 
     public GfxHandle Remove(TId id)
@@ -153,18 +161,27 @@ internal sealed class GfxResourceStore<TId, TMeta> : IGfxResourceStore<TId>
         ArgumentOutOfRangeException.ThrowIfEqual(id.Value, 0, nameof(id));
         int idx = id.Value - 1;
         oldHandle = new GfxRefToken<TId>(in _handle[idx]);
+        var oldMeta = _meta[idx];
         _meta[idx] = newMeta;
         _handle[idx] = newHandleRef.Handle;
+        
+        var message = new GfxMetaChanged<TMeta>(in newMeta, in oldMeta, newHandleRef.Handle.Gen, true, ResourceKind);
+        _changeCallback?.Invoke(id, in message);
+        
         return id;
     }
 
-    public TMeta ReplaceMeta(TId id, in TMeta newMeta, out TMeta oldMeta)
+    public ref readonly TMeta ReplaceMeta(TId id, in TMeta newMeta, out TMeta oldMeta)
     {
         ArgumentOutOfRangeException.ThrowIfEqual(id.Value, 0, nameof(id));
         int idx = id.Value - 1;
         oldMeta = _meta[idx];
         _meta[idx] = newMeta;
-        return newMeta;
+        
+        var message = new GfxMetaChanged<TMeta>(in newMeta, in oldMeta, _handle[idx].Gen, true, ResourceKind);
+        _changeCallback?.Invoke(id, in message);
+
+        return ref newMeta;
     }
 
     private int Allocate()
@@ -209,7 +226,7 @@ internal sealed class GfxResourceStore<TId, TMeta> : IGfxResourceStore<TId>
         public TId Current
         {
             [MethodImpl(MethodImplOptions.AggressiveInlining)]
-            get => _store.MakeId(_i);
+            get => _store._makeId(_i);
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]

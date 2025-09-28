@@ -92,8 +92,8 @@ public sealed class ShadowRenderPass : RenderPassDescBase, IDepthPass
 public sealed class BlitRenderPass : RenderPassDescBase
 {
     public override RenderPassOp Op => RenderPassOp.Blit;
+    public FrameBufferId BlitFbo { get; }
     public bool LinearFilter { get; set; } = true;
-    public required FrameBufferId BlitFbo { get; init; }
     public bool Multisample { get; init; } = false;
     public int Samples { get; init; } = 0;
 }

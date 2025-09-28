@@ -197,13 +197,11 @@ internal sealed class Render3D : IRender
                 GenerateMipMapAfter = true,
             });
 
-        // Pass 1..N: post stack ping-pong (PostA <-> PostB)
         _registry.RegisterRenderPass(RenderTargetId.PostEffect,
             new PostEffectPass
             {
                 TargetFbo = _registry.PostFboB.FboId,
                 SourceTextures = [_registry.PostFboA.Attachments.ColorTextureId],
-                //LutTexture = LutTextureId,
                 OutputTexture = _registry.PostFboB.Attachments.ColorTextureId,
                 Shader = desc.PostEffectTarget.EffectShaderId,
             });

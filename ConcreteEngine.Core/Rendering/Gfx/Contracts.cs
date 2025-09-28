@@ -11,8 +11,7 @@ public sealed class RegisterFboEntry
     public EnginePixelFormat PixelFormat { get; }
     public RenderBufferMsaa Multisample { get; }
     public TexturePreset Preset { get; }
-    public FboSizePolicy SizePolicy { get; }
-    public GfxFrameBufferDescriptor.AttachmentsDef Attachments { get; }
+    public GfxFrameBufferDescriptor.AttachmentsDef Attachments { get; private set; }
 
 
     public RegisterFboEntry(
@@ -29,15 +28,30 @@ public sealed class RegisterFboEntry
         EnginePixelFormat pixelFormat,
         RenderBufferMsaa multisample,
         TexturePreset texturePreset,
-        in GfxFrameBufferDescriptor.AttachmentsDef attachments,
-        FboSizePolicy sizePolicy)
+        in GfxFrameBufferDescriptor.AttachmentsDef attachments
+    )
     {
         PixelFormat = pixelFormat;
         Multisample = multisample;
         Preset = texturePreset;
         Attachments = attachments;
-        SizePolicy = sizePolicy;
     }
+    
+    public RegisterFboEntry AttachColorTexture()
+    {
+        Attachments = Attachments with { ColorTexture = true };
+        return this;
+    }
+
+    public RegisterFboEntry AttachDepthStencilBuffer()
+    {
+        Attachments = Attachments with { DepthStencilBuffer = true };
+        return this;
+    }
+
+    internal GfxFrameBufferDescriptor ToGfxDescriptor(Size2D outputSize) =>
+        new(outputSize, Attachments, PixelFormat, Multisample, Preset);
+
 
     public static RegisterFboEntry MakeMsaa(RenderBufferMsaa multisample) =>
         new(pixelFormat: EnginePixelFormat.Rgba, multisample: multisample);
@@ -45,19 +59,6 @@ public sealed class RegisterFboEntry
     public static RegisterFboEntry MakePost(bool hasMips) =>
         new(texturePreset: hasMips ? TexturePreset.LinearMipmapClamp : TexturePreset.LinearClamp);
 
-    public RegisterFboEntry AttachColorTexture() =>
-        new(PixelFormat, Multisample, Preset, Attachments with { ColorTexture = true }, SizePolicy);
+    
 
-    public RegisterFboEntry AttachDepthStencilBuffer() =>
-        new(PixelFormat, Multisample, Preset, Attachments with { DepthStencilBuffer = true }, SizePolicy);
-
-    public RegisterFboEntry UseCalculatedSize(CalcFboSizeDel calc, Vector2 ratio) =>
-        new(PixelFormat, Multisample, Preset, Attachments, FboSizePolicy.Calculated(calc, ratio));
-
-    public RegisterFboEntry UseFixedSize(Size2D fixedSize) =>
-        new(PixelFormat, Multisample, Preset, Attachments, FboSizePolicy.Fixed(fixedSize));
-
-
-    internal GfxFrameBufferDescriptor ToGfxDescriptor(Size2D outputSize) =>
-        new(outputSize, Attachments, PixelFormat, Multisample, Preset);
 }

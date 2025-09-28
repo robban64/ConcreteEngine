@@ -41,7 +41,7 @@ public sealed class GameEngine : IDisposable
     private readonly InputSystem _inputSystem;
     private readonly RenderSystem _renderer;
     //private readonly GameMessagePipeline _pipeline;
-    
+
     private readonly List<Func<GameScene>> _sceneFactories;
     private readonly ModuleManager _modules;
     private readonly FeatureManager _features;
@@ -74,12 +74,11 @@ public sealed class GameEngine : IDisposable
         List<Func<GameScene>> sceneFactories
     )
     {
-        
         _window = windowHost;
         _graphics = gfxBundle.Graphics;
         _input = input;
         _sceneFactories = sceneFactories;
-        
+
         _graphics.Initialize(gfxBundle.Config);
 
         _modules = new ModuleManager();
@@ -99,13 +98,12 @@ public sealed class GameEngine : IDisposable
         //_pipeline = new GameMessagePipeline();
 
         // renderer
-        _renderer = new RenderSystem(_graphics, _window.FramebufferSize);
+        _renderer = new RenderSystem(_graphics, new Size2D(_window.FramebufferSize.X, _window.FramebufferSize.Y));
 
         _systems = new EngineSystemManagerManager(_renderer, _inputSystem, _assets);
 
         _stateMachine = new LinearStateMachine<EngineState>(Enum.GetValues<EngineState>());
     }
-
 
 
     private void StartAssetLoader()
@@ -126,28 +124,29 @@ public sealed class GameEngine : IDisposable
         var outputSize = _window.FramebufferSize;
         var frameCtx = new FrameInfo(
             frameIndex: _frameIdx,
-            deltaTime:dt,
+            deltaTime: dt,
             vSyncEnabled: false,
             resizePending: _frameIdx > 1 && outputSize != _prevOutputSize,
-            viewport: Bounds2D.FromVector2D(_window.Size), 
+            viewport: Bounds2D.FromVector2D(_window.Size),
             outputSize: Bounds2D.FromVector2D(outputSize)
         );
-        
+
         _renderTime.Accumulate(dt);
         _renderTime.Advance();
-        
+
         _graphics.BeginFrame(in frameCtx);
         if (_currentScene != null)
         {
             _renderTime.TickOrRenderEffect();
             _renderer.Render(_updateCtx.Alpha, in frameCtx);
         }
+
         _renderTime.TickOrGpuDispose();
         _renderTime.TickOrGpuUpload();
         _graphics.EndFrame(out _gpuFrameResult);
         _prevOutputSize = _window.FramebufferSize;
     }
-    
+
     private void OnGpuTickDispose(int tick)
     {
     }
@@ -200,7 +199,7 @@ public sealed class GameEngine : IDisposable
             $"Fps: {_fps}; Draw Calls: {_gpuFrameResult.DrawCalls}; Triangle Count: {_gpuFrameResult.TriangleCount}");
     }
 
-    
+
     private void RunSetupStateMachine()
     {
         switch (_stateMachine.Current)
@@ -226,7 +225,7 @@ public sealed class GameEngine : IDisposable
                 break;
         }
     }
-    
+
     private void UpdateSceneTransitionIfNeeded()
     {
         if (_nextSceneIndex < 0) return;
@@ -270,7 +269,7 @@ public sealed class GameEngine : IDisposable
         _isDisposed = true;
         _currentScene?.Unload();
         _assets?.Shutdown();
-       // _graphics?.Dispose();
+        // _graphics?.Dispose();
     }
 
     public void Dispose()

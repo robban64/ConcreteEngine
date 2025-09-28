@@ -10,7 +10,7 @@ using ConcreteEngine.Graphics.Resources;
 using Silk.NET.Maths;
 
 namespace ConcreteEngine.Core.Rendering;
-
+/*
 public struct RenderPassMutation
 {
     public Color4? ClearColor;
@@ -158,9 +158,8 @@ internal class RenderPasses
         );
 
 
-       /* LightFbo = _gfxFbo.RegisterFrameBufferCalc(desc, sizeRatio,
+        LightFbo = _gfxFbo.RegisterFrameBufferCalc(desc, sizeRatio,
             (outputSize, ratio) => outputSize.Scale(ratio)
-        );*/
     }
 
     public void CreatePostProcessBuffer_A()
@@ -201,4 +200,4 @@ internal class RenderPasses
         ArgumentOutOfRangeException.ThrowIfGreaterThan(sizeRatio.X, 1, nameof(sizeRatio.X));
         ArgumentOutOfRangeException.ThrowIfGreaterThan(sizeRatio.Y, 1, nameof(sizeRatio.Y));
     }
-}
+}*/

@@ -144,7 +144,7 @@ public sealed class AssetSystem : IAssetSystem
     public List<T> GetAll<T>() where T : class, IAssetFile
     {
         var result = new List<T>(8);
-        foreach (var (name, asset) in _store)
+        foreach (var (_, asset) in _store)
         {
             if (asset is T typedAsset) result.Add(typedAsset);
         }

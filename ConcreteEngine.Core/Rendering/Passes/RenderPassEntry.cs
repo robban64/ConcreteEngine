@@ -1,29 +1,36 @@
 namespace ConcreteEngine.Core.Rendering;
 
-
 public interface IRenderPassEntry
 {
-    public RenderTargetId TargetId { get; }
-    public int Index { get; }
-
-    void ExecuteAfter(in RenderPassCtx ctx);
-    void ExecuteBefore(in RenderPassCtx ctx);
+    RenderTargetId TargetId { get; }
+    int Index { get; }
+    int FboSlot { get;  }
+    PassReturn ExecuteAfter(in RenderPassCtx ctx);
+    PassReturn ExecuteBefore(in RenderPassCtx ctx);
 }
 
 public sealed class RenderPassEntry<TState> : IRenderPassEntry where TState : IRenderPassState
 {
     public RenderTargetId TargetId { get; }
     public int Index { get; }
+    public int FboSlot { get; private set; } = 0; //0 = screen
     public RenderPassOp<TState>? Before { get; private set; }
     public RenderPassOp<TState>? After { get; private set; }
 
     private readonly TState _state;
+
 
     internal RenderPassEntry(RenderTargetId targetId, int index, TState initial)
     {
         TargetId = targetId;
         Index = index;
         _state = initial;
+    }
+    
+    public RenderPassEntry<TState> WithFbo(int fboSlot)
+    {
+        FboSlot = fboSlot;
+        return this;
     }
 
     public RenderPassEntry<TState> AddBeforeOp(RenderPassOp<TState> op)
@@ -34,16 +41,17 @@ public sealed class RenderPassEntry<TState> : IRenderPassEntry where TState : IR
 
     public RenderPassEntry<TState> AddAfterOp(RenderPassOp<TState> op)
     {
-        Before = op;
+        After = op;
         return this;
     }
 
-    public void ExecuteBefore(in RenderPassCtx ctx) => Before?.Invoke(in ctx, in _state);
+    public PassReturn ExecuteBefore(in RenderPassCtx ctx) =>
+        Before is null ? PassReturn.None : Before(in ctx, in _state);
 
-    public void ExecuteAfter(in RenderPassCtx ctx) => After?.Invoke(in ctx, in _state);
+    public PassReturn ExecuteAfter(in RenderPassCtx ctx) => After is null ? PassReturn.None : After(in ctx, in _state);
 }
 /*
- 
+
      public void MutateState(RenderPassMutate<TState> mutateAction)
    {
        mutateAction(in _state);

@@ -31,10 +31,9 @@ internal sealed class DrawProcessor
     private RenderUbo CameraUbo => _registry.GetRenderUbo<CameraUniformGpuData>();
     private RenderUbo DirLightUbo => _registry.GetRenderUbo<DirLightUniformGpuData>();
     private RenderUbo MaterialUbo => _registry.GetRenderUbo<MaterialUniformGpuData>();
-
     private RenderUbo PostUbo => _registry.GetRenderUbo<FramePostProcessUniform>();
 
-    internal DrawProcessor(GfxContext gfx, MaterialStore materials)
+    internal DrawProcessor(GfxContext gfx, MaterialStore materials, RenderRegistry registry)
     {
         _gfx = gfx;
         _gfxCmd = gfx.Commands;
@@ -42,6 +41,7 @@ internal sealed class DrawProcessor
         _gfxShaders = gfx.Shaders;
         
         _materials = materials;
+        _registry = registry;
     }
 
 
@@ -161,7 +161,6 @@ internal sealed class DrawProcessor
         _gfxBuffers.BindUniformBufferRange(_drawUbo.Id, _drawRing!.NextDrawCursor(), _drawRing.BlockSize);
     }
 
-    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public void DrawMesh(in DrawCommand cmd)
     {
         BindMaterial(cmd.MaterialId);
@@ -171,21 +170,22 @@ internal sealed class DrawProcessor
     }
     
 
-    public void DrawFullscreenQuad(IFsqPass pass)
+    public void DrawFullscreenQuad(ShaderId shaderId, IReadOnlyList<TextureId> sources)
     {
-        UseShader(pass.Shader);
-        //_gfxCmd.SetUniform(ShaderUniform.TexelSize, viewport.ConvertToVec2() * pass.SizeRatio);
+        UseShader(shaderId);
 
-        for (int i = 0; i < pass.SourceTextures.Length; i++)
+        for (int i = 0; i < sources.Count; i++)
         {
-            _gfxCmd.BindTexture(pass.SourceTextures[i], i);
+            _gfxCmd.BindTexture(sources[i], i);
         }
         
+        //_gfxCmd.SetUniform(ShaderUniform.TexelSize, viewport.ConvertToVec2() * pass.SizeRatio);
+        /*
         if (pass is PostEffectPass postEffectPass && postEffectPass.LutTexture != default)
         {
             //_gfxCmd.BindTexture(postEffectPass.LutTexture, pass.SourceTextures.Length);
         }
-
+*/
         _gfxCmd.BindMesh(_gfx.Primitives.FsqQuad);
         _gfxCmd.DrawBoundMesh(_gfx.Primitives.FsqQuad, 0);
     }

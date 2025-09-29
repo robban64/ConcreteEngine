@@ -10,12 +10,6 @@ public interface IRenderPassState
     GfxPassState PassState { get; }
 }
 
-public readonly record struct PassTextureBundle(
-    TextureId T1,
-    TextureId T2 = default,
-    TextureId T3 = default,
-    TextureId T4 = default);
-
 public readonly record struct EmptyState(GfxPassClear ClearColor = default, GfxPassState PassState = default)
     : IRenderPassState;
 
@@ -33,7 +27,6 @@ public readonly record struct PostPassState(
     ShaderId CompositeShaderId,
     TextureId OutputTextureId) : IRenderPassState
 {
-    //public PassTextureBundle  TextureBundle { get; init; }
     public GfxPassClear ClearColor { get; init; } = GfxPassClear.MakeColorClear(Color4.Black);
 
     public GfxPassState PassState { get; init; }

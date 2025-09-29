@@ -14,6 +14,7 @@ using ConcreteEngine.Core.Utils;
 using ConcreteEngine.Graphics;
 using Silk.NET.Maths;
 using Silk.NET.OpenGL;
+using Shader = ConcreteEngine.Core.Resources.Shader;
 
 #endregion
 
@@ -208,7 +209,6 @@ public sealed class GameEngine : IDisposable
                 _stateMachine.Next();
                 break;
             case EngineState.LoadingGraphics:
-                _renderer.InitializeGraphics();
                 StartAssetLoader();
                 _stateMachine.Next();
                 break;
@@ -216,6 +216,8 @@ public sealed class GameEngine : IDisposable
                 _stateMachine.Next(_assets.ProcessLoader(8));
                 break;
             case EngineState.InitializeSystem:
+                var shaders = _assets.GetAll<Shader>();
+                _renderer.InitializeGraphics(shaders);
                 InitializeSystems();
                 _stateMachine.Next();
                 break;

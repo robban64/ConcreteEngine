@@ -13,6 +13,7 @@ public sealed class RegisterFboEntry
     public TexturePreset Preset { get; }
     public GfxFrameBufferDescriptor.AttachmentsDef Attachments { get; private set; }
 
+    public RenderFbo.SizePolicy FboSizePolicy { get; }
 
     public RegisterFboEntry(
         EnginePixelFormat pixelFormat = EnginePixelFormat.Rgba,
@@ -28,13 +29,15 @@ public sealed class RegisterFboEntry
         EnginePixelFormat pixelFormat,
         RenderBufferMsaa multisample,
         TexturePreset texturePreset,
-        in GfxFrameBufferDescriptor.AttachmentsDef attachments
+        in GfxFrameBufferDescriptor.AttachmentsDef attachments,
+        RenderFbo.SizePolicy sizePolicy
     )
     {
         PixelFormat = pixelFormat;
         Multisample = multisample;
         Preset = texturePreset;
         Attachments = attachments;
+        FboSizePolicy = sizePolicy;
     }
     
     public RegisterFboEntry AttachColorTexture()
@@ -48,13 +51,21 @@ public sealed class RegisterFboEntry
         Attachments = Attachments with { DepthStencilBuffer = true };
         return this;
     }
+    
+    public RegisterFboEntry UseCalculatedSize(CalcFboOutputDel calcDel, Vector2 ratio) =>
+        new(PixelFormat, Multisample, Preset, Attachments, RenderFbo.SizePolicy.Calculated(calcDel, ratio));
+
+    public RegisterFboEntry UseFixedSize(Size2D fixedSize) =>
+        new(PixelFormat, Multisample, Preset, Attachments, RenderFbo.SizePolicy.Fixed(fixedSize));
+
 
     internal GfxFrameBufferDescriptor ToGfxDescriptor(Size2D outputSize) =>
         new(outputSize, Attachments, PixelFormat, Multisample, Preset);
 
+    public static RegisterFboEntry MakeDefault() => new();
 
     public static RegisterFboEntry MakeMsaa(RenderBufferMsaa multisample) =>
-        new(pixelFormat: EnginePixelFormat.Rgba, multisample: multisample);
+        new(pixelFormat: EnginePixelFormat.Rgba, texturePreset: TexturePreset.None, multisample: multisample);
 
     public static RegisterFboEntry MakePost(bool hasMips) =>
         new(texturePreset: hasMips ? TexturePreset.LinearMipmapClamp : TexturePreset.LinearClamp);

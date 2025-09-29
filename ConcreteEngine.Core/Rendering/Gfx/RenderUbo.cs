@@ -20,10 +20,11 @@ public sealed class RenderUbo //where TUbo : unmanaged, IUniformGpuData
     private UniformBufferMeta _metaCache;
     private UboArena? _uboBufferArena;
 
-    public RenderUbo(UniformBufferId id, UboSlot slot)
+    public RenderUbo(UniformBufferId id, UboSlot slot, in UniformBufferMeta meta)
     {
         Id = id;
         Slot = slot;
+        _metaCache = meta;
     }
     
     internal void UpdateMeta(in UniformBufferMeta meta) => _metaCache = meta;

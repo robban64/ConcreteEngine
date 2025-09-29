@@ -27,13 +27,11 @@ public sealed class DictionaryRegistry<TKey, TValue> where TKey : notnull
 
     public bool TryGet(TKey key, out TValue value)
     {
-        InvalidOpThrower.ThrowIfNot(IsFrozen, nameof(IsFrozen));
         return _registry.TryGetValue(key, out value!);
     }
 
     public TValue GetRequired(TKey key)
     {
-        InvalidOpThrower.ThrowIfNot(IsFrozen, nameof(IsFrozen));
         if (_registry.TryGetValue(key, out var v)) return v;
         throw new KeyNotFoundException($"No registration for {key}");
     }

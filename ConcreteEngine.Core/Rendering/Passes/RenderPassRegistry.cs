@@ -15,14 +15,16 @@ public delegate PassReturn RenderPassOp<TState>(in RenderPassCtx ctx, in TState 
 public sealed class RenderPassRegistry
 {
     private readonly List<IRenderPassEntry> _registry;
-    private int _currentTargetId = 0;
-
-    public readonly RenderPassCtx Ctx;
-
-    private readonly List<NextAction> _frameIntents = new(8);
-    public IReadOnlyList<NextAction> FrameIntents => _frameIntents;
     
+    private readonly List<PassReturn> _passReturns = new(8);
+    private readonly Dictionary<(RenderTargetId, int), List<TextureId>> _fsqBindings = new(4);
+    
+    public readonly RenderPassCtx Ctx;
+    
+    public IReadOnlyDictionary<(RenderTargetId, int), List<TextureId>> FsqBindings => _fsqBindings;
+    public IReadOnlyList<PassReturn> PassReturns => _passReturns;
     public IReadOnlyList<IRenderPassEntry> RenderPasses => _registry;
+
 
     internal RenderPassRegistry(RenderCommandOps cmdOps)
     {
@@ -40,7 +42,9 @@ public sealed class RenderPassRegistry
 
     public void ResetFrame()
     {
-        _frameIntents.Clear();
+        _passReturns.Clear();
+        foreach (var kv in _fsqBindings)
+            kv.Value.Clear();
     }
 
 
@@ -48,22 +52,36 @@ public sealed class RenderPassRegistry
     internal PassReturn Collect(in PassReturn before, in PassReturn after)
     {
         // AFTER -> BEFORE -> else none
-        if (after is { HasValue: true, Action.IsNone: false })
+        PassReturn value = default;
+        if (!before.IsNone) value = before;
+        if (!after.IsNone) value = after;
+
+        if (value.Kind == NextActionKind.SampleInPass)
         {
-            _frameIntents.Add(after.Action);
-            return after.Action;
+            var key = (value.TargetId, value.PassIndex);
+            if (!_fsqBindings.TryGetValue(key, out var list))
+                _fsqBindings[key] = list = new List<TextureId>(4);
+            
+            while (list.Count <= value.Slot) list.Add(default);
+            list[value.Slot] = value.SourceTexture;
+
         }
 
-        if (before is { HasValue: true, Action.IsNone: false })
+        if (!after.IsNone)
         {
-            _frameIntents.Add(before.Action);
-            return before.Action;
+            _passReturns.Add(after);
+            return after;
+        }
+
+        if (!before.IsNone)
+        {
+            _passReturns.Add(before);
+            return before;
         }
 
         return default;
     }
-    
-        
+
 
     /*
     internal bool TryGetNextPasses(out IReadOnlyList<IRenderPassEntry> passes)

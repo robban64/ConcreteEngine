@@ -1,20 +1,46 @@
 using System.Numerics;
+using System.Runtime.CompilerServices;
+using ConcreteEngine.Core.Rendering.Gfx;
 using ConcreteEngine.Graphics;
+using ConcreteEngine.Graphics.Gfx;
 
 namespace ConcreteEngine.Core.Rendering;
 
 internal sealed class DrawUniforms
 {
     private readonly Camera3D _camera;
-    private readonly DrawProcessor _drawProcessor;
+    private readonly GfxBuffers _gfxBuffers;
 
+    private readonly RenderUbo _frameUbo;
+    private readonly RenderUbo _cameraUbo;
+    private readonly RenderUbo _dirLightUbo;
+    private readonly RenderUbo _postUbo;
+
+    public DrawUniforms(Camera3D camera, GfxBuffers gfxBuffers, RenderRegistry registry)
+    {
+        _camera = camera;
+        _gfxBuffers = gfxBuffers;
+
+        _frameUbo = registry.GetRenderUbo<FrameUniformRecord>();
+        _cameraUbo = registry.GetRenderUbo<CameraUniformRecord>();
+        _dirLightUbo = registry.GetRenderUbo<DirLightUniformRecord>();
+        _postUbo = registry.GetRenderUbo<FramePostProcessUniform>();
+    }
+    
     private float _deltaTicker = 0;
 
-    public void UploadFrameUniforms(float alpha, in FrameInfo frameCtx, in RenderGlobalSnapshot snapshot)
+    public void UploadGlobalUniforms(float alpha, in FrameInfo frameCtx, in RenderGlobalSnapshot snapshot)
     {
         _deltaTicker += frameCtx.DeltaTime;
+        UploadFrameUniformRecord(in snapshot);
+        UploadDirLight(in snapshot);
+        UploadCamera();
+        UploadPost();
+    }
 
-        var frameUniforms = new FrameUniformRecord(
+    private void UploadFrameUniformRecord(in RenderGlobalSnapshot snapshot)
+    {
+        var data = new FrameUniformRecord(
             ambient: snapshot.Ambient,
             ambientIntensity: 1,
             fogColor: Vector3.One,
@@ -23,29 +49,37 @@ internal sealed class DrawUniforms
             fogFar: 1,
             fogType: 1
         );
+        _gfxBuffers.UploadUniformGpuData(_frameUbo.Id, in data, 0);
 
-        var cameraUniforms = new CameraUniformRecord(
-            viewId: default,
-            viewMat: _camera.ViewMatrix,
-            projMat: _camera.ProjectionMatrix,
-            projViewMat: _camera.ProjectionViewMatrix,
-            cameraPos: _camera.Translation
-        );
+    }
 
-
-        var dirLightUniforms = new DirLightUniformRecord(
-            viewId: default,
+    private void UploadDirLight(in RenderGlobalSnapshot snapshot)
+    {
+        var data = new DirLightUniformRecord(
             direction: snapshot.DirLight.Direction,
             diffuse: snapshot.DirLight.Diffuse,
             specular: snapshot.DirLight.Specular,
             intensity: snapshot.DirLight.Intensity
         );
+        
+        _gfxBuffers.UploadUniformGpuData(_dirLightUbo.Id, in data, 0);
+    }
+    
+    private void UploadCamera()
+    {
+        var data = new CameraUniformRecord(
+            viewMat: _camera.ViewMatrix,
+            projMat: _camera.ProjectionMatrix,
+            projViewMat: _camera.ProjectionViewMatrix,
+            cameraPos: _camera.Translation
+        );
+        
+        _gfxBuffers.UploadUniformGpuData(_cameraUbo.Id, in data, 0);
+    }
 
-        _drawProcessor.UploadFrame(rec: in frameUniforms);
-        _drawProcessor.UploadCamera(rec: in cameraUniforms);
-        _drawProcessor.UploadDirLight(rec: in dirLightUniforms);
-
-        var postProcessUniforms = new FramePostProcessUniform(
+    private void UploadPost()
+    {
+        var data = new FramePostProcessUniform(
             colorAdjust: new Vector4(0.25f, 1.15f, 1.10f, 2.2f),
             whiteBalance: new Vector4(0.15f, 0.02f, 0.10f, 0.0f),
             flags: new Vector4(1.0f, 0.0000f, 0.6f, 0.6f),
@@ -59,7 +93,9 @@ internal sealed class DrawUniforms
             toneHighlights: new Vector4(40.0f, 0.05f, 0.01f, 0.4f),
             sharpenParams: new Vector4(0.10f, 1.5f, 0.05f, 0.0f)
         );
-
-        _drawProcessor.UploadFramePostProcess(data: in postProcessUniforms);
+        
+        _gfxBuffers.UploadUniformGpuData(_postUbo.Id, in data, 0);
     }
+    
+
 }

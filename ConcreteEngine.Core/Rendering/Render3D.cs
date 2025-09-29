@@ -167,7 +167,6 @@ internal sealed class Render3D : IRender
             {
                 TargetFbo = _registry.SceneFbo.FboId,
                 BlitFbo = _registry.MultisampleFbo.FboId,
-                // Ignore these two, they are later down fetched from the fbo instead of hardcoded
                 //Multisample = true,
                 //Samples = desc.SceneTarget.Samples
             });

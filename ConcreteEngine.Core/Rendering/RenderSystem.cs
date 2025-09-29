@@ -46,6 +46,7 @@ public sealed class RenderSystem : IRenderSystem
     private DrawCommandCollector _commandCollector = null!;
     private RenderPipeline _pipeline = null!;
     private DrawProcessor _drawProcessor = null!;
+    private DrawUniforms _drawUniforms = null!;
 
     private readonly BatcherRegistry _batches = new();
 
@@ -83,11 +84,11 @@ public sealed class RenderSystem : IRenderSystem
 
         _renderRegistry = new RenderRegistry(_gfx);
         _renderRegistry.BeginRegistration(_snapshot.OutputSize);
-        _renderRegistry.RegisterUniformBuffer<FrameUniformGpuData>();
-        _renderRegistry.RegisterUniformBuffer<CameraUniformGpuData>();
-        _renderRegistry.RegisterUniformBuffer<DirLightUniformGpuData>();
-        _renderRegistry.RegisterUniformBuffer<MaterialUniformGpuData>();
-        _renderRegistry.RegisterUniformBuffer<DrawObjectUniformGpuData>();
+        _renderRegistry.RegisterUniformBuffer<FrameUniformRecord>();
+        _renderRegistry.RegisterUniformBuffer<CameraUniformRecord>();
+        _renderRegistry.RegisterUniformBuffer<DirLightUniformRecord>();
+        _renderRegistry.RegisterUniformBuffer<MaterialUniformRecord>();
+        _renderRegistry.RegisterUniformBuffer<DrawObjectUniform>();
         _renderRegistry.RegisterUniformBuffer<FramePostProcessUniform>();
 
         _renderRegistry.RegisterFrameBuffer(RenderTargetId.Scene,
@@ -108,10 +109,10 @@ public sealed class RenderSystem : IRenderSystem
         {
             _renderRegistry.RegisterShader(shader.ResourceId);
         }
-        
+
         _renderRegistry.FinishRegistration();
 
-        
+
         _renderPassRegistry = new RenderPassRegistry(new RenderCommandOps(_gfx, _drawProcessor));
 
         // Scene Target
@@ -121,15 +122,17 @@ public sealed class RenderSystem : IRenderSystem
             .AddBeforeOp((in RenderPassCtx ctx, in ScenePassState state) =>
             {
                 ctx.CmdOps.BeginRenderPass(ctx.FboId, state.ClearColor, true);
-                return PassReturn.ResolveTo(RenderTargetId.Scene, 0, AttachmentKind.Color0);
+                return PassReturn.ResolveTo(RenderTargetId.Scene, 1, 0, ctx.FboId);
             });
 
         _renderPassRegistry.Register(RenderTargetId.Scene, new ResolvePassState())
             .WithFbo(1)
             .AddBeforeOp((in RenderPassCtx ctx, in ResolvePassState state) =>
             {
+                var texId = ctx.Meta.Attachments.ColorTextureId;
+                // TODO
                 ctx.CmdOps.Blit(ctx.FboId, state.BlitFbo, true);
-                return PassReturn.SampleIn(RenderTargetId.PostEffect, 0, AttachmentKind.Color0);
+                return PassReturn.SampleIn(RenderTargetId.PostEffect, 0, 0, texId);
             });
         //ApplyState(_activeState with{ FramebufferSrgb = false });
 
@@ -140,19 +143,22 @@ public sealed class RenderSystem : IRenderSystem
                 ctx.CmdOps.BeginRenderPass(ctx.FboId, state.ClearColor, false);
                 //ctx.CmdOps.UpdateStates(state.PassState);
                 //ctx.CmdOps.ClearColor(state.ClearColor);
+
                 return PassReturn.None;
             }).AddAfterOp((in RenderPassCtx ctx, in PostPassState state) =>
             {
-                if (ctx.Pass == 0) ctx.CmdOps.GenerateMips(ctx.Meta.Attachments.ColorTextureId);
-                return PassReturn.ResolveTo(RenderTargetId.PostEffect, 1, AttachmentKind.Color0);
+                var texId = ctx.Meta.Attachments.ColorTextureId;
+                if (ctx.Pass == 0) ctx.CmdOps.GenerateMips(texId);
+                return PassReturn.SampleIn(RenderTargetId.PostEffect, 1, 0, texId);
             });
 
         _renderPassRegistry.Register(RenderTargetId.PostEffect, new PostPassState())
             .WithFbo(1)
             .AddBeforeOp((in RenderPassCtx ctx, in PostPassState state) =>
             {
+                var texId = ctx.Meta.Attachments.ColorTextureId;
                 ctx.CmdOps.BeginRenderPass(ctx.FboId, state.ClearColor, false);
-                return PassReturn.ResolveTo(RenderTargetId.Screen, 0, AttachmentKind.Color0);
+                return PassReturn.SampleIn(RenderTargetId.Screen, 0, 0, texId);
 
                 //ctx.CmdOps.UpdateStates(state.PassState);
                 //ctx.CmdOps.ClearColor(state.ClearColor);
@@ -165,14 +171,13 @@ public sealed class RenderSystem : IRenderSystem
                 return PassReturn.None;
                 //...
             });
-        
     }
 
     internal void Initialize(MaterialStore materialStore)
     {
         _materialStore = materialStore;
         _drawProcessor = new DrawProcessor(_gfx, _materialStore, _renderRegistry);
-
+        _drawUniforms = new DrawUniforms((Camera3D)Camera, _gfx.Buffers, _renderRegistry);
         _commandCollector = new DrawCommandCollector();
         _pipeline = new RenderPipeline(_drawProcessor);
 
@@ -225,34 +230,36 @@ public sealed class RenderSystem : IRenderSystem
     {
         Debug.Assert(_initialized);
         _frameCtx = frameCtx;
-        // if (frameCtx.Viewport != _render.Camera.Viewport)
-        //_render.Camera.Viewport = frameCtx.Viewport;
+        if (frameCtx.Viewport != Camera.Viewport)
+            Camera.Viewport = frameCtx.Viewport;
 
         SceneRenderProps.SetOutputSize(frameCtx.OutputSize.ToSize2D());
         SceneRenderProps.Commit();
-        
+
         _snapshot = SceneRenderProps.CurrentSnapshot;
 
-
-        PrepareRenderer(alpha, in frameCtx);
-        Execute(alpha);
+        PrepareRenderer(alpha);
+        Execute(alpha, in frameCtx);
         _pipeline.Reset();
     }
 
-    private void PrepareRenderer(float alpha, in FrameInfo frameCtx)
+    private void PrepareRenderer(float alpha)
     {
+        //_render.Prepare(alpha, in frameCtx, in _snapshot);
+
         _renderPassRegistry.ResetFrame();
         _sceneDrawProducer.SetSceneGlobals(in _snapshot);
-        //_render.Prepare(alpha, in frameCtx, in _snapshot);
         _commandCollector.Collect(alpha, in _snapshot, _pipeline);
         _pipeline.Prepare();
     }
 
-    private void Execute(float alpha)
+    private void Execute(float alpha, in FrameInfo frameCtx)
     {
         var capacity =
-            UniformBufferUtils.GetCapacityForEntities<DrawObjectUniformGpuData>(_pipeline.Count + 100);
+            UniformBufferUtils.GetCapacityForEntities<DrawObjectUniform>(_pipeline.Count + 100);
+
         _drawProcessor.Prepare(in _snapshot, capacity);
+        _drawUniforms.UploadGlobalUniforms(alpha, in frameCtx, in _snapshot);
 
         _pipeline.DrainTransformQueue();
 
@@ -266,13 +273,13 @@ public sealed class RenderSystem : IRenderSystem
     private void ExecutePass(in IRenderPassEntry pass)
     {
         Debug.Assert(pass != null);
-        if(!_renderRegistry.TryGetRenderFbo(pass.TargetId, pass.FboSlot, out var fbo))
+        if (!_renderRegistry.TryGetRenderFbo(pass.TargetId, pass.FboSlot, out var fbo))
             return;
 
         var passCtx = _renderPassRegistry.Ctx;
         passCtx.Pass = pass.Index;
         passCtx.FromBinding(fbo);
-        
+
         var beforeResult = pass.ExecuteBefore(in passCtx);
 
         if (pass.TargetId == RenderTargetId.Scene && pass.Index == 0)
@@ -281,7 +288,15 @@ public sealed class RenderSystem : IRenderSystem
         var afterResult = pass.ExecuteAfter(in passCtx);
         var result = _renderPassRegistry.Collect(in beforeResult, in afterResult);
         // DrawFullscreenQuad
-        _gfxCmd.EndRenderPass(); // reset viewport if needed and such.
+
+        var key = (pass.TargetId, pass.Index);
+        if (_renderPassRegistry.FsqBindings.TryGetValue(key, out var sources) && sources.Count > 0)
+        {
+            _drawProcessor.DrawFullscreenQuad(passCtx.ScreenShader, sources);
+        }
+
+        _gfxCmd.EndRenderPass();
+
 /*
         if (pass is BlitRenderPass blitPass)
         {

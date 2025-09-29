@@ -1,3 +1,5 @@
+using ConcreteEngine.Graphics.Resources;
+
 namespace ConcreteEngine.Core.Rendering;
 
 public enum NextActionKind : byte
@@ -14,32 +16,43 @@ public enum AttachmentKind : byte
     Depth
 }
 
-public readonly struct NextAction
+public readonly struct PassReturn
 {
-    public static readonly NextAction None = default;
+    public static readonly PassReturn None = default;
 
+    public readonly FrameBufferId ResolveFboId;
+    public readonly TextureId SourceTexture;
+    public readonly RenderBufferId SourceBuffer;
+    public readonly int PassIndex;
+    public readonly byte Slot;
     public readonly NextActionKind Kind;
     public readonly RenderTargetId TargetId;
-    public readonly int PassIndex;
     public readonly AttachmentKind Attachment;
-
     public bool IsNone => Kind == NextActionKind.None;
 
-    private NextAction(NextActionKind kind, RenderTargetId targetId, int passIndex, AttachmentKind attachment)
+    private PassReturn(NextActionKind kind, RenderTargetId targetId, int passIndex, byte slot,
+        FrameBufferId resolveFboId,
+        TextureId sourceTexture,
+        RenderBufferId sourceBuffer, AttachmentKind attachment = AttachmentKind.Color0)
     {
         Kind = kind;
         TargetId = targetId;
         PassIndex = passIndex;
         Attachment = attachment;
+        SourceTexture = sourceTexture;
+        SourceBuffer = sourceBuffer;
+        ResolveFboId = resolveFboId;
+        Slot = slot;
     }
 
-    public static NextAction ResolveTo(RenderTargetId id, int passIndex, AttachmentKind att) =>
-        new(NextActionKind.ResolveTo, id, passIndex, att);
+    public static PassReturn ResolveTo(RenderTargetId id, int passIndex, byte slot, FrameBufferId resolveFboId) =>
+        new(NextActionKind.ResolveTo, id, passIndex, slot, resolveFboId, default, default);
 
-    public static NextAction SampleIn(RenderTargetId id, int passIndex, AttachmentKind att) =>
-        new(NextActionKind.SampleInPass, id, passIndex, att);
+    public static PassReturn SampleIn(RenderTargetId id, int passIndex, byte slot,
+        TextureId colTex, RenderBufferId depthBuff = default) =>
+        new(NextActionKind.SampleInPass, id, passIndex, slot, default, colTex, depthBuff);
 }
-
+/*
 public readonly struct PassReturn
 {
     public static readonly PassReturn None = default;
@@ -61,4 +74,4 @@ public readonly struct PassReturn
 
     public static PassReturn SampleIn(RenderTargetId id, int passIndex, AttachmentKind att) =>
         NextAction.SampleIn(id, passIndex, att);
-}
+}*/

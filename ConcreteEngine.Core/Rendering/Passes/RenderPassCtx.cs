@@ -10,16 +10,19 @@ public sealed class RenderPassCtx
     public FrameBufferId FboId { get; private set; }
     public FrameBufferMeta Meta { get; private set; }
     public int Pass { get; internal set; } = 0;
+    public ShaderId ScreenShader { get; private set; }
     
-    private readonly List<NextAction> _pushed = new(4);
+    private readonly List<PassReturn> _pushed = new(4);
     
     internal RenderPassCtx(RenderCommandOps cmdOps)
     {
         CmdOps = cmdOps;
     }
 
-    public void PushNext(NextAction action) => _pushed.Add(action);
-    public IReadOnlyList<NextAction> Pushed => _pushed;
+    public void BindScreenShader(ShaderId shader) => ScreenShader = shader;
+
+    public void PushNext(PassReturn action) => _pushed.Add(action);
+    public IReadOnlyList<PassReturn> Pushed => _pushed;
 
     internal void FromBinding(RenderFbo fbo)
     {

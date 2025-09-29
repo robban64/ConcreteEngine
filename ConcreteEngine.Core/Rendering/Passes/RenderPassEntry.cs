@@ -17,7 +17,7 @@ public sealed class RenderPassEntry<TState> : IRenderPassEntry where TState : IR
     public RenderPassOp<TState>? Before { get; private set; }
     public RenderPassOp<TState>? After { get; private set; }
 
-    private readonly TState _state;
+    private TState _state;
 
 
     internal RenderPassEntry(RenderTargetId targetId, int index, TState initial)

@@ -27,11 +27,7 @@ internal sealed class DrawProcessor
     private UboArena? _drawRing = null;
     private RenderUbo _drawUbo = null!;
     
-    private RenderUbo FrameUbo => _registry.GetRenderUbo<FrameUniformGpuData>();
-    private RenderUbo CameraUbo => _registry.GetRenderUbo<CameraUniformGpuData>();
-    private RenderUbo DirLightUbo => _registry.GetRenderUbo<DirLightUniformGpuData>();
-    private RenderUbo MaterialUbo => _registry.GetRenderUbo<MaterialUniformGpuData>();
-    private RenderUbo PostUbo => _registry.GetRenderUbo<FramePostProcessUniform>();
+    private RenderUbo MaterialUbo => _registry.GetRenderUbo<MaterialUniformRecord>();
 
     internal DrawProcessor(GfxContext gfx, MaterialStore materials, RenderRegistry registry)
     {
@@ -51,71 +47,12 @@ internal sealed class DrawProcessor
 
     public void Prepare(in RenderGlobalSnapshot renderGlobals, nint capacity)
     {
-        _drawUbo = _registry.GetRenderUbo<DrawObjectUniformGpuData>();
+        _drawUbo = _registry.GetRenderUbo<DrawObjectUniform>();
         _drawRing = _drawUbo.UboArena();
         _drawRing.Prepare(capacity);
         
         _previousMaterialId = -1;
         _gfxBuffers.SetUniformBufferCapacity(_drawUbo.Id, capacity);
-    }
-    
-    public void UploadFrame(in FrameUniformRecord rec)
-    {
-        var data = new FrameUniformGpuData(
-            ambient: rec.Ambient,
-            ambientIntensity: rec.AmbientIntensity,
-            fogColor: rec.FogColor,
-            fogDensity: rec.FogDensity,
-            fogNear: rec.FogNear,
-            fogFar: rec.FogFar,
-            fogType: rec.FogType
-        );
-
-        
-        _gfxBuffers.UploadUniformGpuData(FrameUbo.Id, in data, 0);
-    }
-    
-    public void UploadFramePostProcess(in FramePostProcessUniform data)
-    {
-        _gfxBuffers.UploadUniformGpuData(PostUbo.Id, in data, 0);
-    }
-
-    public void UploadCamera(in CameraUniformRecord rec)
-    {
-        var data = new CameraUniformGpuData(
-            viewMat: in rec.ViewMat,
-            projMat: in rec.ProjMat,
-            projViewMat: in rec.ProjViewMat,
-            cameraPos: rec.CameraPos
-        );
-
-        _gfxBuffers.UploadUniformGpuData(CameraUbo.Id, in data, 0);
-    }
-
-    public void UploadDirLight(in DirLightUniformRecord rec)
-    {
-        var data = new DirLightUniformGpuData(
-            direction: rec.Direction,
-            diffuse: rec.Diffuse,
-            specular: rec.Specular,
-            intensity: rec.Intensity
-        );
-
-        _gfxBuffers.UploadUniformGpuData(DirLightUbo.Id, in data, 0);
-
-    }
-
-    [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public void UploadMaterial(in MaterialUniformRecord rec)
-    {
-        var data = new MaterialUniformGpuData(
-            color: rec.Color,
-            shininess: rec.Shininess,
-            specularStrength: rec.SpecularStrength,
-            uvRepeat: rec.UvRepeat
-        );
-
-        _gfxBuffers.UploadUniformGpuData(MaterialUbo.Id, in data, 0);
     }
 
     private void UseShader(ShaderId shaderId)
@@ -135,19 +72,30 @@ internal sealed class DrawProcessor
             _gfxCmd.BindTexture(material.SamplerSlots[i], i);
         }
 
-        UploadMaterial(new MaterialUniformRecord(materialId, material.Color.AsVec3(), material.Shininess,
+        UploadMaterial(new MaterialUniformRecord(material.Color.AsVec3(), material.Shininess,
             material.SpecularStrength, material.UvRepeat));
 
         _previousMaterialId = materialId.Id;
     }
+    
+    public void UploadMaterial(in MaterialUniformRecord rec)
+    {
+        var data = new MaterialUniformRecord(
+            color: rec.Color,
+            shininess: rec.Shininess,
+            specularStrength: rec.SpecularStrength,
+            uvRepeat: rec.UvRepeat
+        );
+
+        _gfxBuffers.UploadUniformGpuData(MaterialUbo.Id, in data, 0);
+    }
 
     //TODO bulk upload
-    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public void UploadTransform(in DrawTransformPayload payload)
     {
         TransformUtils.CreateNormalMatrix(in payload.Transform, out var normalModel);
 
-        var data = new DrawObjectUniformGpuData(
+        var data = new DrawObjectUniform(
             model: in payload.Transform,
             normal: in normalModel
         );
@@ -179,6 +127,9 @@ internal sealed class DrawProcessor
             _gfxCmd.BindTexture(sources[i], i);
         }
         
+        _gfxCmd.BindMesh(_gfx.Primitives.FsqQuad);
+        _gfxCmd.DrawBoundMesh(_gfx.Primitives.FsqQuad, 0);
+
         //_gfxCmd.SetUniform(ShaderUniform.TexelSize, viewport.ConvertToVec2() * pass.SizeRatio);
         /*
         if (pass is PostEffectPass postEffectPass && postEffectPass.LutTexture != default)
@@ -186,7 +137,5 @@ internal sealed class DrawProcessor
             //_gfxCmd.BindTexture(postEffectPass.LutTexture, pass.SourceTextures.Length);
         }
 */
-        _gfxCmd.BindMesh(_gfx.Primitives.FsqQuad);
-        _gfxCmd.DrawBoundMesh(_gfx.Primitives.FsqQuad, 0);
     }
 }

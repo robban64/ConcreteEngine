@@ -139,8 +139,8 @@ public sealed class GfxBuffers
         UniformBufferUtils.IsStd140AlignedOrThrow<T>(out nint stride);
         var uboRef = _resources.UboStore.GetRef(uboId);
 
-        var one = MemoryMarshal.CreateReadOnlySpan(ref Unsafe.AsRef(in data), 1);
-        var bytes = MemoryMarshal.AsBytes(one);
+        var tSpan = MemoryMarshal.CreateReadOnlySpan(ref Unsafe.AsRef(in data), 1);
+        var bytes = MemoryMarshal.AsBytes(tSpan);
 
         _driverBuffer.UploadUniformBufferData(uboRef, bytes, offset, stride);
     }

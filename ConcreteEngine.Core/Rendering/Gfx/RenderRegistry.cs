@@ -61,6 +61,7 @@ internal sealed class RenderRegistry
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public RenderShader GetRenderShader(ShaderId shaderId) => _shaderRegistry.GetRequired(shaderId);
 
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public RenderUbo GetRenderUbo<TUbo>() where TUbo : unmanaged, IUniformGpuData
     {
         var slot = UniformBufferTagRegistry<TUbo>.Slot.Value;

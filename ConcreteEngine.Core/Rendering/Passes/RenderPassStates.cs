@@ -10,6 +10,7 @@ public interface IRenderPassState
     GfxPassState PassState { get; }
 }
 
+
 public readonly record struct EmptyState(GfxPassClear ClearColor = default, GfxPassState PassState = default)
     : IRenderPassState;
 
@@ -29,19 +30,17 @@ public readonly record struct PostPassState(
 {
     public GfxPassClear ClearColor { get; init; } = GfxPassClear.MakeColorClear(Color4.Black);
 
-    public GfxPassState PassState { get; init; }
-        = new(DepthTest: false, DepthWrite: false, Cull: false, Blend: false, Scissor: false, FramebufferSrgb: true);
+    public GfxPassState PassState { get; init; }= GfxPassState.MakePostProcess();
 }
 
 public readonly record struct ScreenPassState(ShaderId PresentShaderId) : IRenderPassState
 {
     public GfxPassClear ClearColor { get; init; } = GfxPassClear.MakeColorClear(Color4.Black);
 
-    public GfxPassState PassState { get; init; }
-        = new(DepthTest: false, DepthWrite: false, Cull: false, Blend: false, Scissor: false, FramebufferSrgb: true);
+    public GfxPassState PassState { get; init; } = GfxPassState.MakePostProcess();
 }
 
-public readonly record struct ResolvePassState(FrameBufferId BlitFbo) : IRenderPassState
+public readonly record struct ResolvePassState() : IRenderPassState
 {
     public GfxPassClear ClearColor { get; init; } = GfxPassClear.MakeColorClear(Color4.Black);
     public GfxPassState PassState { get; init; } = GfxPassState.MakeOff();

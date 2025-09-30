@@ -16,7 +16,7 @@ public sealed class RegisterFboEntry
     public RenderFbo.SizePolicy FboSizePolicy { get; }
 
     public RegisterFboEntry(
-        EnginePixelFormat pixelFormat = EnginePixelFormat.Rgba,
+        EnginePixelFormat pixelFormat = EnginePixelFormat.SrgbAlpha,
         RenderBufferMsaa multisample = RenderBufferMsaa.None,
         TexturePreset texturePreset = TexturePreset.LinearClamp)
     {
@@ -62,14 +62,20 @@ public sealed class RegisterFboEntry
     internal GfxFrameBufferDescriptor ToGfxDescriptor(Size2D outputSize) =>
         new(outputSize, Attachments, PixelFormat, Multisample, Preset);
 
-    public static RegisterFboEntry MakeDefault() => new();
+    public static RegisterFboEntry MakeDefault(bool hasMips) => 
+        new(pixelFormat: EnginePixelFormat.SrgbAlpha, texturePreset: hasMips ? TexturePreset.LinearMipmapClamp : TexturePreset.LinearClamp);
 
     public static RegisterFboEntry MakeMsaa(RenderBufferMsaa multisample) =>
-        new(pixelFormat: EnginePixelFormat.Rgba, texturePreset: TexturePreset.None, multisample: multisample);
+        new(pixelFormat: EnginePixelFormat.SrgbAlpha, texturePreset: TexturePreset.None, multisample: multisample);
 
     public static RegisterFboEntry MakePost(bool hasMips) =>
-        new(texturePreset: hasMips ? TexturePreset.LinearMipmapClamp : TexturePreset.LinearClamp);
+        new(pixelFormat: EnginePixelFormat.SrgbAlpha, texturePreset: hasMips ? TexturePreset.LinearMipmapClamp : TexturePreset.LinearClamp);
 
-    
+    public static RegisterFboEntry MakePostB(bool hasMips) =>
+        new(pixelFormat: EnginePixelFormat.Rgba, texturePreset: hasMips ? TexturePreset.LinearMipmapClamp : TexturePreset.LinearClamp);
+
+    public static RegisterFboEntry MakeScreen() =>
+        new(pixelFormat: EnginePixelFormat.SrgbAlpha, texturePreset: TexturePreset.LinearClamp);
+
 
 }

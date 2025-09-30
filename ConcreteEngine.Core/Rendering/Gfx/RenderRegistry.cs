@@ -17,6 +17,7 @@ internal sealed class RenderRegistry
     private readonly record struct RegistrationData(bool Enabled, Size2D OutputSize);
 
     private readonly DictionaryRegistry<FboTagKey, RenderFbo> _fboRegistry = new();
+    private List<RenderFbo> _renderFbos;
 
     // private readonly DictionaryTypeRegistry<IUniformGpuData, RenderUbo> _uboRegistry = new();
     private readonly DictionaryRegistry<ShaderId, RenderShader> _shaderRegistry = new();
@@ -43,11 +44,11 @@ internal sealed class RenderRegistry
         _gfxApi.BindMetaChanged<FrameBufferId, FrameBufferMeta>(OnFboChange);
     }
 
-    public RenderFbo GetRenderFbo<TTag, TSlot>(int version) 
+    public RenderFbo GetRenderFbo<TTag, TSlot>(int version)
         where TTag : unmanaged, IRenderPassTag where TSlot : unmanaged, IRenderPassTagSlot
         => _fboRegistry.GetRequired(FboTagKey.Make<TTag, TSlot>(version));
 
-    
+
     public bool TryGetRenderFbo<TTag, TSlot>(int version, out RenderFbo fbo)
         where TTag : unmanaged, IRenderPassTag where TSlot : unmanaged, IRenderPassTagSlot
     {
@@ -57,7 +58,7 @@ internal sealed class RenderRegistry
         fbo = null!;
         return false;
     }
-    
+
     public bool TryGetRenderFbo(FboTagKey key, out RenderFbo fbo)
     {
         if (_fboRegistry.TryGet(key, out fbo))
@@ -85,21 +86,20 @@ internal sealed class RenderRegistry
         ArgumentOutOfRangeException.ThrowIfLessThanOrEqual(outputSize.Height, 1, nameof(outputSize));
 
         _registrationData = new RegistrationData(true, outputSize);
-        
+
         RTypeRegistry.RenderPassTag<ScenePassTag>.Register();
         RTypeRegistry.RenderPassTag<ShadowPassTag>.Register();
         RTypeRegistry.RenderPassTag<LightPassTag>.Register();
         RTypeRegistry.RenderPassTag<PostPassTag>.Register();
         RTypeRegistry.RenderPassTag<ScreenPassTag>.Register();
-        
+
         RTypeRegistry.RenderPassSlot<ScenePassDrawSlot>.Register();
         RTypeRegistry.RenderPassSlot<ScenePassResolveSlot>.Register();
-        
+
         RTypeRegistry.RenderPassSlot<PostPassASlot>.Register();
         RTypeRegistry.RenderPassSlot<PostPassBSlot>.Register();
-        
-        RTypeRegistry.RenderPassSlot<ScreenPassPresentSlot>.Register();
 
+        RTypeRegistry.RenderPassSlot<ScreenPassPresentSlot>.Register();
     }
 
     public void RegisterShader(ShaderId shaderId)
@@ -143,8 +143,8 @@ internal sealed class RenderRegistry
 
         _nextSlot = new UboSlot(slot.Value + 1);
     }
-    
-    
+
+
     public void FinishRegistration()
     {
         _ubos = _uboRegistry.ToArray();
@@ -153,10 +153,36 @@ internal sealed class RenderRegistry
 
         _fboRegistry.Freeze();
         _shaderRegistry.Freeze();
+
+        _renderFbos = new List<RenderFbo>(_fboRegistry.Count);
+        _fboRegistry.CopyValuesTo(_renderFbos);
+        _renderFbos.Sort();
     }
 
 
     private void OnFboChange(FrameBufferId id, in GfxMetaChanged<FrameBufferMeta> message)
     {
+        ArgumentOutOfRangeException.ThrowIfLessThan(id.Value, 0, nameof(id));
+        ArgumentOutOfRangeException.ThrowIfLessThan(message.Generation, 1, nameof(message.Generation));
+
+        RenderFbo? renderFbo = null;
+
+        var idx = id.Value - 1;
+        if (idx < _renderFbos.Count)
+        {
+            var it = _renderFbos[idx];
+            if (it.FboId == id)
+                renderFbo = it;
+        }
+        else
+        {
+            var comp = new RenderFbo.FrameBufferIdComparer(id);
+            var index = _renderFbos.BinarySearch(0, _renderFbos.Count, null!, comp);
+            if(index >= 0) renderFbo = _renderFbos[index];
+        }
+
+        if (renderFbo == null) throw new InvalidOperationException($"Sync error missing fbo : {id}");
+        
+        renderFbo.UpdateFromMeta(in message.NewMeta);
     }
 }

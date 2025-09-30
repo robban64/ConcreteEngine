@@ -123,27 +123,21 @@ public sealed class GfxCommands
         
         _activeOutputSize = Bounds2D.FromSize(meta.Size);
         /*
-ApplyState(new GfxPassState(
-    DepthTest: scenePass,
-    DepthWrite: scenePass,
-    Cull: scenePass,
-    Blend: false,
-    Scissor: false,
-    FramebufferSrgb:true
-));*/
+*/
     }
 
     public void EndRenderPass()
     {
         if (_boundFboId == default) GraphicsException.ResourceNotBound<GlFboHandle>(nameof(_boundFboId));
 
+        BindFramebuffer(default);
         _activeOutputSize = _frameCtx.OutputSize;
 
         SetViewport(_activeOutputSize);
     }
 
 
-    public void BlitFramebuffer(FrameBufferId fromId, FrameBufferId toId = default, bool linear = true)
+    public void BlitFramebuffer(FrameBufferId fromId, FrameBufferId toId, bool linear)
     {
         Debug.Assert(fromId != default);
         Debug.Assert(fromId != toId, "READ and DRAW FBO must differ for resolve.");
@@ -152,8 +146,6 @@ ApplyState(new GfxPassState(
         var fromHandle = _store.FboStore.GetRef(fromId);
         var srcSize = fromFbo.Size;
         
-        ApplyState(_activeState with{ FramebufferSrgb = false });
-
         if (!_store.FboStore.TryGetRef(toId, out var toHandle, out var toFbo))
         {
             _driver.FrameBuffers.BlitDefault(fromHandle, srcSize, _activeOutputSize.ToSize2D(), false);

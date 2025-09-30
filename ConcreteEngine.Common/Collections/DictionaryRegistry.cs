@@ -7,7 +7,9 @@ public sealed class DictionaryRegistry<TKey, TValue> where TKey : notnull
     public bool IsFrozen { get; private set; }
 
     public DictionaryRegistry(int initCapacity = 4)
-        => _registry = new Dictionary<TKey, TValue>(initCapacity);
+    {
+        _registry = new Dictionary<TKey, TValue>(initCapacity);
+    }
 
     // Optional post-freeze callback to finalize/transform data in-place.
     public void Freeze(Action<Dictionary<TKey, TValue>>? onFreeze = null)
@@ -25,17 +27,14 @@ public sealed class DictionaryRegistry<TKey, TValue> where TKey : notnull
         return this;
     }
 
-    public bool TryGet(TKey key, out TValue value)
-    {
-        return _registry.TryGetValue(key, out value!);
-    }
-
+    public bool TryGet(TKey key, out TValue value) => _registry.TryGetValue(key, out value!);
+    
     public TValue GetRequired(TKey key)
     {
         if (_registry.TryGetValue(key, out var v)) return v;
         throw new KeyNotFoundException($"No registration for {key}");
     }
-    
+
     public void CopyValuesTo(List<TValue> destination)
     {
         InvalidOpThrower.ThrowIfNot(IsFrozen, nameof(IsFrozen));

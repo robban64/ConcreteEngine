@@ -161,7 +161,7 @@ internal sealed class Render3D : IRender
                 Clear = GfxPassClear.MakeColorDepthClear(desc.SceneTarget.ClearColor)
             });
 
-        // Pass 1: resolve MSAA into single-sample texture FBO
+        // Pass 1: resolve MSAA
         _registry.RegisterRenderPass(RenderTargetId.Scene,
             new BlitRenderPass
             {
@@ -171,22 +171,7 @@ internal sealed class Render3D : IRender
                 //Samples = desc.SceneTarget.Samples
             });
 
-
-        // Light Passes
-        // Pass 0: Draw light into FBO
-        /*
-        _registry.RegisterRenderPass(RenderTargetId.Light, new LightRenderPass
-        {
-            TargetFbo = _registry.LightFbo.FboId,
-            Shader = desc.LightTarget.LightShaderId,
-            Clear = new RenderPassClearDesc(desc.LightTarget.ClearColor, ClearBufferFlag.Color),
-            Blend = desc.LightTarget.Blend,
-        });
-        */
-        // Post Processing Passes
-        // Pass 0: Compose Scene + Light
-        //                SourceTextures = [_registry.SceneFbo.ColTexId, _registry.LightFbo.ColTexId],
-
+        // Post
         _registry.RegisterRenderPass(RenderTargetId.PostEffect,
             new PostEffectPass
             {
@@ -208,7 +193,6 @@ internal sealed class Render3D : IRender
 
 
         // Screen Passes
-        // Pass 0: Combine scene and light fbo texture into final scene
         _registry.RegisterRenderPass(RenderTargetId.Screen,
             new ScreenPass
             {

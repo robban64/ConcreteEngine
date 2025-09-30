@@ -21,10 +21,10 @@ public enum PassOpKind : byte
 
 public readonly record struct ApplyPassReturn(PassOpKind OpKind)
 {
-    public static ApplyPassReturn BeginNormalPass() => new(PassOpKind.Normal);
-    public static ApplyPassReturn ResolveTarget() => new(PassOpKind.Resolve);
-    public static ApplyPassReturn BeginFsqPass() => new(PassOpKind.Fsq);
-    public static ApplyPassReturn BeginScreenPass() => new(PassOpKind.Screen);
+    public static ApplyPassReturn NormalPassResult() => new(PassOpKind.Normal);
+    public static ApplyPassReturn ResolveTargetResult() => new(PassOpKind.Resolve);
+    public static ApplyPassReturn FsqPassResult() => new(PassOpKind.Fsq);
+    public static ApplyPassReturn ScreenPassResult() => new(PassOpKind.Screen);
 
 }
 

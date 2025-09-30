@@ -8,7 +8,7 @@ namespace ConcreteEngine.Core.Rendering.Gfx;
 
 public delegate Size2D CalcFboOutputDel(Size2D outputSize, Vector2 ratio);
 
-public sealed class RenderFbo : IComparable<RenderFbo>
+public sealed class RenderFbo : IComparable<RenderFbo>, IComparable<FrameBufferId>
 {
     public FrameBufferId FboId { get; }
     
@@ -30,8 +30,17 @@ public sealed class RenderFbo : IComparable<RenderFbo>
 
     public Size2D CalculateNewSize(Size2D outputSize) => _sizePolicy.Calculate(outputSize);
 
-    public int CompareTo(RenderFbo? other) => other!.FboId.Value.CompareTo(FboId.Value);
+    public int CompareTo(RenderFbo? other) => FboId.Value.CompareTo(other!.FboId.Value);
     
+    public int CompareTo(FrameBufferId other) => FboId.Value.CompareTo(other!.Value);
+    
+    internal readonly struct FrameBufferIdComparer : IComparer<RenderFbo>
+    {
+        private readonly FrameBufferId _id;
+        public FrameBufferIdComparer(FrameBufferId id) => _id = id;
+
+        public int Compare(RenderFbo? x, RenderFbo? _) => x!.CompareTo(_id);
+    }
     
     public sealed class SizePolicy
     {
@@ -72,5 +81,7 @@ public sealed class RenderFbo : IComparable<RenderFbo>
             };
         }
     }
+
+
 }
 

@@ -69,14 +69,34 @@ public interface IRenderPassState<out TState> : IRenderPassState where TState : 
 }
 
 public readonly record struct PassMutationState(
-    GfxPassClear? ClearColor= null,
+    GfxPassClear? ClearColor = null,
     GfxPassState? PassState = null,
-    FrameBufferId? TargetFboId= null,
-    ShaderId? ShaderId= null,
-    bool? LinearFilter= null
+    FrameBufferId? TargetFboId = null,
+    ShaderId? ShaderId = null,
+    int? Samples = null,
+    bool? LinearFilter = null
 )
 {
     public static PassMutationState MakeTargetMut(FrameBufferId fboId) => new(TargetFboId: fboId);
+}
+
+public readonly record struct RenderPassState(
+    GfxPassClear ClearColor,
+    GfxPassState PassState,
+    ShaderId ShaderId = default,
+    FrameBufferId TargetFboId = default,
+    int Samples = 0,
+    bool LinearFilter = false
+)
+{
+    public RenderPassState FromMutation(in PassMutationState m) =>
+        new(ClearColor: m.ClearColor ?? ClearColor,
+            PassState: m.PassState ?? PassState,
+            TargetFboId: m.TargetFboId ?? TargetFboId,
+            ShaderId: m.ShaderId ?? ShaderId,
+            Samples: m.Samples ?? Samples,
+            LinearFilter: m.LinearFilter ?? LinearFilter
+        );
 }
 
 public readonly record struct EmptyState(GfxPassClear ClearColor = default, GfxPassState PassState = default)
@@ -121,7 +141,7 @@ public readonly record struct ScreenPassState(ShaderId PresentShaderId) : IRende
 {
     public GfxPassClear ClearColor { get; init; } = GfxPassClear.MakeColorClear(Color4.Black);
     public GfxPassState PassState { get; init; } = GfxPassState.MakeScreen();
-    
+
     public ScreenPassState FromMutation(in PassMutationState m) =>
         this with
         {
@@ -129,7 +149,6 @@ public readonly record struct ScreenPassState(ShaderId PresentShaderId) : IRende
             PassState = m.PassState ?? PassState,
             PresentShaderId = m.ShaderId ?? PresentShaderId
         };
-
 }
 
 public readonly record struct ResolvePassState() : IRenderPassState<ResolvePassState>
@@ -148,5 +167,4 @@ public readonly record struct ResolvePassState() : IRenderPassState<ResolvePassS
             TargetFboId = m.TargetFboId ?? TargetFboId,
             LinearFilter = m.LinearFilter ?? LinearFilter
         };
-
 }

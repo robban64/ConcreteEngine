@@ -11,52 +11,55 @@ public sealed class RenderPassCtx
     public FrameBufferId FboId { get; private set; }
     public FrameBufferMeta Meta { get; private set; }
     public int Pass { get; private set; } = 0;
+    public PassTagKey TagKey { get; private set; }
 
-    private readonly IReadOnlyDictionary<(Type, int), IRenderPassEntry> _registry;
-    private readonly Dictionary<(Type, int), List<TextureId>> _textureSlot = new(4);
+    private readonly IReadOnlyDictionary<PassTagKey, RenderPassEntry> _registry;
+    private readonly Dictionary<PassTagKey, List<TextureId>> _textureSlot = new(4);
 
-    internal RenderPassCtx(RenderCommandOps cmdOps, IReadOnlyDictionary<(Type, int), IRenderPassEntry> registry)
+    internal RenderPassCtx(RenderCommandOps cmdOps, IReadOnlyDictionary<PassTagKey, RenderPassEntry> registry)
     {
         CmdOps = cmdOps;
         _registry = registry;
     }
 
-    public IReadOnlyList<TextureId> GetPassSources<TState>()
+    public IReadOnlyList<TextureId> GetPassSources()
     {
-        if (!_textureSlot.TryGetValue((typeof(TState), Pass), out var list))
-            throw new KeyNotFoundException($"No passes were found for {typeof(TState).Name} at Pass: {Pass}");
+        if (!_textureSlot.TryGetValue(TagKey, out var list))
+            throw new KeyNotFoundException($"No passes were found for {TagKey} at Pass: {Pass}");
 
         return list;
     }
 
-    public void SampleTo<TState>(int pass, TextureId textureId, int slot)
+    public void SampleTo<TTag, TSlot>(PassOpKind passOp, int slot, TextureId textureId)
+        where TTag : unmanaged, IRenderPassTag where TSlot : unmanaged, IRenderPassTagSlot
     {
         Debug.Assert(slot >= 0 && slot < 16);
-        if (!_textureSlot.TryGetValue((typeof(TState), pass), out var list))
-            _textureSlot[(typeof(TState), pass)] = list = new List<TextureId>(4);
+        var key = PassTagKey.Make<TTag, TSlot>(passOp);
+        if (!_textureSlot.TryGetValue(key, out var list))
+            _textureSlot[key] = list = new List<TextureId>(4);
 
         while (list.Count <= slot) list.Add(default);
 
         list[slot] = textureId;
     }
 
-    public void MutateStatePass<TState>(int pass, in PassMutationState newState)
-        where TState : unmanaged, IRenderPassState<TState>
+    public void MutateStatePass<TTag, TSlot>(PassOpKind passOp, in PassMutationState newState)
+        where TTag : unmanaged, IRenderPassTag where TSlot : unmanaged, IRenderPassTagSlot
     {
-        if (_registry.TryGetValue((typeof(TState), pass), out IRenderPassEntry entry) &&
-            entry is RenderPassEntry<TState> state)
+        var key = PassTagKey.Make<TTag, TSlot>(passOp);
+        if (_registry.TryGetValue(key, out RenderPassEntry entry))
         {
-            state.UpdateState(in newState);
+            entry.UpdateState(in newState);
         }
     }
 
-    public void MutateStatePass<TState>(int pass, RenderPassMutate<TState> mutate)
-        where TState : unmanaged, IRenderPassState<TState>
+    public void MutateStatePass<TTag, TSlot>(PassOpKind passOp, RenderPassMutate mutate)
+        where TTag : unmanaged, IRenderPassTag where TSlot : unmanaged, IRenderPassTagSlot
     {
-        if (_registry.TryGetValue((typeof(TState), pass), out IRenderPassEntry entry) &&
-            entry is RenderPassEntry<TState> tEntry)
+        var key = PassTagKey.Make<TTag, TSlot>(passOp);
+        if (_registry.TryGetValue(key, out RenderPassEntry entry))
         {
-            tEntry.UpdateState(mutate);
+            entry.UpdateState(mutate);
         }
     }
 
@@ -67,17 +70,19 @@ public sealed class RenderPassCtx
         Pass = 0;
     }
 
-    internal void AttachScreenPass(Size2D outputSize, int pass)
+    internal void AttachScreenPass(Size2D outputSize, int pass, PassTagKey tagKey)
     {
         FboId = default;
         Meta = new FrameBufferMeta(outputSize, default, default);
         Pass = pass;
+        TagKey = tagKey;
     }
-    
-    internal void AttachPass(RenderFbo fbo, int pass)
+
+    internal void AttachPass(RenderFbo fbo, int pass, PassTagKey tagKey)
     {
         FboId = fbo.FboId;
         Meta = fbo.GetMeta();
         Pass = pass;
+        TagKey = tagKey;
     }
 }

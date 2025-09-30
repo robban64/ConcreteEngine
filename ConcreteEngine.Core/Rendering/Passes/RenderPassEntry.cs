@@ -4,84 +4,54 @@ using ConcreteEngine.Graphics.Resources;
 
 namespace ConcreteEngine.Core.Rendering;
 
-public interface IRenderTargetState
-{
-    public ShaderId? TargetShader { get; }
-}
+public delegate PassMutationState RenderPassMutate(in RenderPassState currentState);
+public delegate ApplyPassReturn RenderPassOp(in RenderPassCtx ctx, in RenderPassState state);
+public delegate void RenderAfterPassOp(in RenderPassCtx ctx, in RenderPassState state);
 
-public class RenderTargetFsqState
-{
-    public List<TextureId> SourceTextureIds { get; }
-    public RenderBufferId DepthBufferId { get; }
-}
-
-public class RenderTargetResolveState
-{
-    public FrameBufferId ResolveToId { get; }
-    public bool LinearFilter { get; }
-}
-
-public delegate PassMutationState RenderPassMutate<TState>(in TState currentState)
-    where TState : unmanaged, IRenderPassState<TState>;
-
-public delegate ApplyPassReturn RenderPassOp<TState>(in RenderPassCtx ctx, in TState state)
-    where TState : unmanaged, IRenderPassState<TState>;
-
-public delegate void RenderAfterPassOp<TState>(in RenderPassCtx ctx, in TState state)
-    where TState : unmanaged, IRenderPassState<TState>;
-
-public interface IRenderPassEntry
-{
-    RenderTargetId TargetId { get; }
-    int Index { get; }
-    int FboSlot { get; }
-    ApplyPassReturn ApplyPass(in RenderPassCtx ctx);
-    void ApplyAfterPass(in RenderPassCtx ctx);
-}
-
-public sealed class RenderPassEntry<TState> : IRenderPassEntry where TState : unmanaged, IRenderPassState<TState>
+public sealed class RenderPassEntry
 {
     public RenderTargetId TargetId { get; }
-    public int Index { get; }
-    public int FboSlot { get; private set; } = 0; //0 = screen
+    public int PassIndex { get; }
+    public PassTagKey TagKey { get; private set; }
     
-    private RenderPassOp<TState>? _applyPassDel;
-    private RenderAfterPassOp<TState>? _applyAfterPassDel;
-    private RenderPassMutate<TState>? _applyPassMutateDel;
+    private RenderPassOp? _applyPassDel;
+    private RenderAfterPassOp? _applyAfterPassDel;
+    private RenderPassMutate? _applyPassMutateDel;
 
-    private readonly TState _defaultState;
-    private TState _state;
+    private readonly RenderPassState _defaultState;
+    private RenderPassState _state;
 
     private PassMutationState? _pendingState = null;
 
 
-    internal RenderPassEntry(RenderTargetId targetId, int index, TState initial)
+    internal RenderPassEntry(RenderTargetId targetId, PassTagKey tagKey, int passIndex, RenderPassState initial)
     {
         TargetId = targetId;
-        Index = index;
+        TagKey = tagKey;
+        PassIndex = passIndex;
         _defaultState = initial;
         _state = initial;
     }
 
-    public RenderPassEntry<TState> WithFbo(int fboSlot)
+    public RenderPassEntry WithFbo(int fboSlot)
     {
-        FboSlot = fboSlot;
+        //FboSlot = fboSlot;
         return this;
     }
 
-    public RenderPassEntry<TState> OnPassBegin(RenderPassOp<TState> op)
+    public RenderPassEntry OnPassBegin(RenderPassOp op)
     {
         _applyPassDel = op;
         return this;
     }
 
-    public RenderPassEntry<TState> OnPassEnd(RenderAfterPassOp<TState> op)
+    public RenderPassEntry OnPassEnd(RenderAfterPassOp op)
     {
         _applyAfterPassDel = op;
         return this;
     }
 
-    public void UpdateState(RenderPassMutate<TState> mutate) => _applyPassMutateDel = mutate;
+    public void UpdateState(in RenderPassMutate mutate) => _applyPassMutateDel = mutate;
 
     public void UpdateState(in PassMutationState replace) => _pendingState = replace;
 

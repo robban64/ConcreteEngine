@@ -73,11 +73,4 @@ public sealed class RenderFbo : IComparable<RenderFbo>
         }
     }
 }
-public enum RenderFboTag
-{
-    DrawScene,
-    Multisample,
-    Depth,
-    Light,
-    PostEffect
-}
+

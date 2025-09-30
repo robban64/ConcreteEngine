@@ -10,34 +10,44 @@ namespace ConcreteEngine.Core.Rendering;
 
 public sealed class RenderPassRegistry
 {
-    private readonly List<IRenderPassEntry> _entries;
-    private readonly Dictionary<(Type, int), IRenderPassEntry> _registry;
+    private int _passIdx = 0;
+    private readonly List<RenderPassEntry> _entries;
+    private readonly Dictionary<PassTagKey, RenderPassEntry> _registry;
 
     public readonly RenderPassCtx Ctx;
     
-    public IReadOnlyList<IRenderPassEntry> RenderPasses => _entries;
+    public IReadOnlyList<RenderPassEntry> RenderPasses => _entries;
 
 
     internal RenderPassRegistry(RenderCommandOps cmdOps)
     {
-        _entries = new List<IRenderPassEntry>(8);
-        _registry = new Dictionary<(Type, int), IRenderPassEntry>(8);
+        _entries = new List<RenderPassEntry>(8);
+        _registry = new Dictionary<PassTagKey, RenderPassEntry>(8);
         Ctx = new RenderPassCtx(cmdOps, _registry);
     }
 
-    public RenderPassEntry<TState> Register<TState>(RenderTargetId targetId, int pass, TState initial)
-        where TState : unmanaged, IRenderPassState<TState>
+    public RenderPassEntry Register<TTag,TSlot>(RenderTargetId targetId, PassOpKind opKind, int pass, RenderPassState initial)
+        where TTag : unmanaged, IRenderPassTag where TSlot : unmanaged, IRenderPassTagSlot
     {
-        var entry = new RenderPassEntry<TState>(targetId, pass, initial);
-        _registry.Add((typeof(TState), pass), entry);
+        var key = PassTagKey.Make<TTag,TSlot>(opKind);
+        
+        var entry = new RenderPassEntry(targetId, key, pass, initial);
+        _registry.Add(key, entry);
         _entries.Add(entry);
         return entry;
     }
 
-    public void ResetFrame()
+    public void Prepare()
     {
+        _passIdx = 0;
         Ctx.Prepare();
     }
+
+    internal void TryGetNextPasses()
+    {
+        
+    }
+    
 
 
 

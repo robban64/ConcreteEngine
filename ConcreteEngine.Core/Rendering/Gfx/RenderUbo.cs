@@ -4,15 +4,7 @@ using ConcreteEngine.Graphics.Resources;
 
 namespace ConcreteEngine.Core.Rendering.Gfx;
 
-
-
-
-public readonly record struct UboSlotKey<T>(UniformBufferId UboId, UboSlot Slot) where T : unmanaged, IUniformGpuData
-{
-    internal static UboSlotKey<T> Make(UniformBufferId uboId, int value) => new(uboId, new UboSlot(value));
-}
-
-public sealed class RenderUbo //where TUbo : unmanaged, IUniformGpuData
+public sealed class RenderUbo
 {
     public UniformBufferId Id { get; }
     public UboSlot Slot { get; }

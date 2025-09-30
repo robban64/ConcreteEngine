@@ -6,81 +6,39 @@ using ConcreteEngine.Graphics.Resources;
 
 namespace ConcreteEngine.Core.Rendering;
 
-public delegate void RenderPassMutate<TState>(in TState state)
-    where TState : IRenderPassState;
 
-public delegate PassReturn RenderPassOp<TState>(in RenderPassCtx ctx, in TState state)
-    where TState : IRenderPassState;
 
 public sealed class RenderPassRegistry
 {
-    private readonly List<IRenderPassEntry> _registry;
-    
-    private readonly List<PassReturn> _passReturns = new(8);
-    private readonly Dictionary<(RenderTargetId, int), List<TextureId>> _fsqBindings = new(4);
-    
+    private readonly List<IRenderPassEntry> _entries;
+    private readonly Dictionary<(Type, int), IRenderPassEntry> _registry;
+
     public readonly RenderPassCtx Ctx;
     
-    public IReadOnlyDictionary<(RenderTargetId, int), List<TextureId>> FsqBindings => _fsqBindings;
-    public IReadOnlyList<PassReturn> PassReturns => _passReturns;
-    public IReadOnlyList<IRenderPassEntry> RenderPasses => _registry;
+    public IReadOnlyList<IRenderPassEntry> RenderPasses => _entries;
 
 
     internal RenderPassRegistry(RenderCommandOps cmdOps)
     {
-        Ctx = new RenderPassCtx(cmdOps);
-        _registry = new List<IRenderPassEntry>(8);
+        _entries = new List<IRenderPassEntry>(8);
+        _registry = new Dictionary<(Type, int), IRenderPassEntry>(8);
+        Ctx = new RenderPassCtx(cmdOps, _registry);
     }
 
-    public RenderPassEntry<TState> Register<TState>(RenderTargetId targetId, TState initial)
-        where TState : IRenderPassState
+    public RenderPassEntry<TState> Register<TState>(RenderTargetId targetId, int pass, TState initial)
+        where TState : unmanaged, IRenderPassState<TState>
     {
-        var entry = new RenderPassEntry<TState>(targetId, _registry.Count, initial);
-        _registry.Add(entry);
+        var entry = new RenderPassEntry<TState>(targetId, pass, initial);
+        _registry.Add((typeof(TState), pass), entry);
+        _entries.Add(entry);
         return entry;
     }
 
     public void ResetFrame()
     {
-        _passReturns.Clear();
-        foreach (var kv in _fsqBindings)
-            kv.Value.Clear();
+        Ctx.Prepare();
     }
 
-
-    [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    internal PassReturn Collect(in PassReturn before, in PassReturn after)
-    {
-        // AFTER -> BEFORE -> else none
-        PassReturn value = default;
-        if (!before.IsNone) value = before;
-        if (!after.IsNone) value = after;
-
-        if (value.Kind == NextActionKind.SampleInPass)
-        {
-            var key = (value.TargetId, value.PassIndex);
-            if (!_fsqBindings.TryGetValue(key, out var list))
-                _fsqBindings[key] = list = new List<TextureId>(4);
-            
-            while (list.Count <= value.Slot) list.Add(default);
-            list[value.Slot] = value.SourceTexture;
-
-        }
-
-        if (!after.IsNone)
-        {
-            _passReturns.Add(after);
-            return after;
-        }
-
-        if (!before.IsNone)
-        {
-            _passReturns.Add(before);
-            return before;
-        }
-
-        return default;
-    }
 
 
     /*

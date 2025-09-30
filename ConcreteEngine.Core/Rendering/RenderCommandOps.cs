@@ -18,21 +18,23 @@ public sealed class RenderCommandOps
         _gfxTextures = ctx.Textures;
     }
 
-    [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public void BeginScreenPass( in GfxPassClear passClear)
-        => _gfxCmd.BeginScreenPass( in passClear);
+    public void BeginScreenPass(in GfxPassClear passClear, in GfxPassState states) => _gfxCmd.BeginScreenPass(in passClear, in states);
 
-    [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public void BeginRenderPass(FrameBufferId fboId, in GfxPassClear passClear, bool scenePass)
-         => _gfxCmd.BeginRenderPass(fboId, in passClear, scenePass);
-    
+    public void BeginRenderPass(FrameBufferId fboId, in GfxPassClear passClear, in GfxPassState states) =>
+        _gfxCmd.BeginRenderPass(fboId, in passClear, in states);
 
-    public void Blit(FrameBufferId from, FrameBufferId target, bool linear) => _gfxCmd.BlitFramebuffer(from, target, linear);
+    public void DrawFullscreenQuad(ShaderId shaderId, ReadOnlySpan<TextureId> sources) =>
+        _drawProcessor.DrawFullscreenQuad(shaderId, sources);
 
-    
+    public void DrawFullscreenQuad(ShaderId shaderId, IReadOnlyList<TextureId> sources) =>
+        _drawProcessor.DrawFullscreenQuad(shaderId, sources);
+
+    public void Blit(FrameBufferId from, FrameBufferId target, bool linear) =>
+        _gfxCmd.BlitFramebuffer(from, target, linear);
+
     public void ClearColor(in GfxPassClear clear) => _gfxCmd.Clear(clear);
 
-    public void UpdateStates(GfxPassState states) => _gfxCmd.ApplyState(states);
+    public void ToggleStates(in GfxPassState states) => _gfxCmd.ApplyState(states);
 
     public void GenerateMips(TextureId textureId) => _gfxTextures.GenerateMipMaps(textureId);
 }

@@ -2,9 +2,10 @@ using ConcreteEngine.Graphics.Resources;
 
 namespace ConcreteEngine.Core.Rendering;
 
-public enum NextActionKind : byte
+public enum PassTargetKind : byte
 {
     None,
+    Draw,
     ResolveTo,
     SampleInPass
 }
@@ -16,6 +17,13 @@ public enum AttachmentKind : byte
     Depth
 }
 
+public readonly record struct ApplyPassReturn(PassTargetKind Target)
+{
+    public static ApplyPassReturn BeginDrawPass() => new(PassTargetKind.Draw);
+    public static ApplyPassReturn BeginSamplePass() => new(PassTargetKind.SampleInPass);
+    public static ApplyPassReturn ResolveTarget() => new(PassTargetKind.ResolveTo);
+}
+
 public readonly struct PassReturn
 {
     public static readonly PassReturn None = default;
@@ -25,12 +33,12 @@ public readonly struct PassReturn
     public readonly RenderBufferId SourceBuffer;
     public readonly int PassIndex;
     public readonly byte Slot;
-    public readonly NextActionKind Kind;
+    public readonly PassTargetKind Kind;
     public readonly RenderTargetId TargetId;
     public readonly AttachmentKind Attachment;
-    public bool IsNone => Kind == NextActionKind.None;
+    public bool IsNone => Kind == PassTargetKind.None;
 
-    private PassReturn(NextActionKind kind, RenderTargetId targetId, int passIndex, byte slot,
+    private PassReturn(PassTargetKind kind, RenderTargetId targetId, int passIndex, byte slot,
         FrameBufferId resolveFboId,
         TextureId sourceTexture,
         RenderBufferId sourceBuffer, AttachmentKind attachment = AttachmentKind.Color0)
@@ -46,11 +54,11 @@ public readonly struct PassReturn
     }
 
     public static PassReturn ResolveTo(RenderTargetId id, int passIndex, byte slot, FrameBufferId resolveFboId) =>
-        new(NextActionKind.ResolveTo, id, passIndex, slot, resolveFboId, default, default);
+        new(PassTargetKind.ResolveTo, id, passIndex, slot, resolveFboId, default, default);
 
     public static PassReturn SampleIn(RenderTargetId id, int passIndex, byte slot,
         TextureId colTex, RenderBufferId depthBuff = default) =>
-        new(NextActionKind.SampleInPass, id, passIndex, slot, default, colTex, depthBuff);
+        new(PassTargetKind.SampleInPass, id, passIndex, slot, default, colTex, depthBuff);
 }
 /*
 public readonly struct PassReturn

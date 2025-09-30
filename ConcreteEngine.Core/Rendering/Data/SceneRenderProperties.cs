@@ -54,9 +54,10 @@ public sealed class SceneRenderProperties
         _dirty = true;
     }
 
-    internal void Commit()
+    internal RenderGlobalSnapshot Commit()
     {
-        if (!_dirty) return;
+        if (!_dirty) return _currentSnapshot;
+        
         _currentSnapshot.Update(version: _version++,
             outputSize:  _outputSize,
             exposure: _exposure,
@@ -64,6 +65,8 @@ public sealed class SceneRenderProperties
             skybox: in _skybox,
             dirLight: in _directionalLight);
         _dirty = false;
+
+        return _currentSnapshot;
     }
 }
 

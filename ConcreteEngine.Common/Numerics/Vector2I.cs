@@ -27,15 +27,12 @@ public readonly struct Vector2I(int x, int y)
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static Vector2I From((int x, int y) t) => new(t.x, t.y);
 
-    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public (int x, int y) ToTuple() => (X, Y);
-
 
     public static implicit operator Vector2I((int x, int y) t) => new(t.x, t.y);
     public static implicit operator (int x, int y)(Vector2I v) => (v.X, v.Y);
     public static explicit operator Vector2I((uint x, uint y) t) => new((int)t.x, (int)t.y);
 
-    // ---- Arithmetic
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static Vector2I operator +(Vector2I a, Vector2I b) => new(a.X + b.X, a.Y + b.Y);
 

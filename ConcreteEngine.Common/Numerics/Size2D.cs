@@ -18,7 +18,11 @@ public readonly record struct Size2D(
 
     public (uint Width, uint Height) ToUnsigned() => ((uint)Width, (uint)Height);
     
+    public Size3D ToSize3D(int depth = 1) => new(Width, Height, depth);
+    public Bounds2D ToBounds2D() => new (0, 0, Width, Height);
+    public Vector2I ToVector2I() => new (Width, Height);
     public Vector2D<int> ToVec2D() => new (Width, Height);
+
     
     public bool IsNegative() =>  Width < 0 || Height < 0;
     public bool IsZero() =>  Width == 0 && Height == 0;

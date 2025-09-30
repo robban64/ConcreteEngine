@@ -98,22 +98,18 @@ public sealed class GfxCommands
         _driver.EndFrame();
     }
 
-    public void BeginScreenPass(in GfxPassClear passClear)
+    public void BeginScreenPass(in GfxPassClear passClear, in GfxPassState states)
     {
         BindFramebuffer(default);
         SetViewport(_activeOutputSize);
 
-        ApplyState(new GfxPassState(
-            FramebufferSrgb:true,
-            ColorMask: true
-        ));
-        
+        ApplyState(in states);
         Clear(in passClear);
 
         _activeOutputSize = _frameCtx.OutputSize;
     }
 
-    public void BeginRenderPass(FrameBufferId fboId, in GfxPassClear passClear, bool scenePass)
+    public void BeginRenderPass(FrameBufferId fboId, in GfxPassClear passClear, in GfxPassState states)
     {
         ArgumentOutOfRangeException.ThrowIfNegativeOrZero(fboId.Value, nameof(fboId));
         if (_boundFboId == fboId) GraphicsException.ThrowInvalidState($"FBO is {fboId} already bound.");
@@ -122,20 +118,19 @@ public sealed class GfxCommands
 
         BindFramebuffer(fboId);
         SetViewport(meta.Size);
-        
-        ApplyState(new GfxPassState(
-            DepthTest: scenePass,
-            DepthWrite: scenePass,
-            Cull: scenePass,
-            Blend: false,
-            Scissor: false,
-            FramebufferSrgb:true
-        ));
-        
-        _states.ColorMask(true);
+        ApplyState(in states);
         Clear(in passClear);
         
         _activeOutputSize = Bounds2D.FromSize(meta.Size);
+        /*
+ApplyState(new GfxPassState(
+    DepthTest: scenePass,
+    DepthWrite: scenePass,
+    Cull: scenePass,
+    Blend: false,
+    Scissor: false,
+    FramebufferSrgb:true
+));*/
     }
 
     public void EndRenderPass()
@@ -175,7 +170,7 @@ public sealed class GfxCommands
         if (passClear.ClearBuffer is { } clearBuff) _states.ClearBuffer(clearBuff);
     }
 
-    public void ApplyState(GfxPassState cmdState)
+    public void ApplyState(in GfxPassState cmdState)
     {
         _activeState = cmdState;
         if (cmdState.Scissor is { } scissor) _states.ToggleScissorTest(scissor);

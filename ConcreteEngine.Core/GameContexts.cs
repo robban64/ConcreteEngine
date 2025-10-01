@@ -16,7 +16,7 @@ public sealed class GameSceneContext
 {
     private readonly IEngineSystemManager _systems;
     public required FeatureManager Features { get; init; }
-    public required ModuleManager Modules { get; init; }
+    public ModuleManager Modules { get; internal set; }
     public IWorld World { get; internal set; } = null!;
     public T GetSystem<T>() where T : IGameEngineSystem => _systems.GetSystem<T>();
 

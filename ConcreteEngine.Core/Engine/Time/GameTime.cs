@@ -3,7 +3,6 @@ namespace ConcreteEngine.Core.Time;
 //https://gafferongames.com/post/fix_your_timestep/
 internal sealed class GameTime
 {
-    // Update
     private const int GameTicksPerSecond = 30;
     private const int MaxTicksPerFrame = 6;
 

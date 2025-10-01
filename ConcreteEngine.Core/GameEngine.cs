@@ -5,6 +5,7 @@ using ConcreteEngine.Common.Numerics;
 using ConcreteEngine.Common.Patterns;
 using ConcreteEngine.Core.Assets;
 using ConcreteEngine.Core.Configuration;
+using ConcreteEngine.Core.Engine;
 using ConcreteEngine.Core.Features;
 using ConcreteEngine.Core.Platform;
 using ConcreteEngine.Core.Rendering;
@@ -42,29 +43,19 @@ public sealed class GameEngine : IDisposable
     private readonly AssetSystem _assets;
     private readonly InputSystem _inputSystem;
     private readonly RenderSystem _renderer;
-    //private readonly GameMessagePipeline _pipeline;
 
-    private readonly List<Func<GameScene>> _sceneFactories;
     private readonly ModuleManager _modules;
     private readonly FeatureManager _features;
+    private readonly SceneManager _sceneManager;
 
     private readonly GameTime _gameTime;
     private readonly RenderTime _renderTime;
 
-
-    private int _nextSceneIndex = -1;
-    private GameScene _currentScene = null!;
+    private readonly EngineFrameInfo _frameInfo = new();
 
     private bool _isDisposed = false;
 
-    private float _fps;
-    private long _frameIdx = -1;
-
-    private UpdateInfo _updateCtx;
-    private FrameInfo _frameCtx;
-    private GpuFrameStats _gpuFrameResult;
-
-    private Size2D _prevOutputSize;
+ 
 
     private LinearStateMachine<EngineState> _stateMachine;
 
@@ -81,9 +72,10 @@ public sealed class GameEngine : IDisposable
         _window = windowHost;
         _graphics = gfxBundle.Graphics;
         _input = input;
-        _sceneFactories = sceneFactories;
 
         _graphics.Initialize(gfxBundle.Config);
+
+        _sceneManager = new SceneManager(sceneFactories);
 
         _modules = new ModuleManager();
         _features = new FeatureManager();
@@ -124,16 +116,9 @@ public sealed class GameEngine : IDisposable
 
     internal void Render(double delta)
     {
-        var dt = (float)delta;
-        var outputSize = _window.FramebufferSize;
-        var frameCtx = new FrameInfo(
-            frameIndex: _frameIdx,
-            deltaTime: dt,
-            vSyncEnabled: false,
-            viewport: _window.Size,
-            outputSize: outputSize
-        );
-
+        float dt = (float)delta;
+        float fps = dt > 0 ? 1.0f / dt : 0.0f;
+        _frameInfo.BeginFrame(fps, dt, _window.Size, _window.FramebufferSize);
         _renderTime.Accumulate(dt);
         _renderTime.Advance();
 
@@ -157,7 +142,7 @@ public sealed class GameEngine : IDisposable
         }
 
         _graphics.BeginFrame(in frameCtx);
-        if (_currentScene != null)
+        if (_sceneManager.Current != null)
         {
             _renderTime.TickOrRenderEffect();
             _renderer.Render(_updateCtx.Alpha, in frameCtx);
@@ -198,7 +183,7 @@ public sealed class GameEngine : IDisposable
             return;
         }
 
-        _currentScene?.Update(in _updateCtx);
+        _sceneManager.Current?.Update(in _updateCtx);
 
         // fixed-step simulation
         _gameTime.Advance(dt);
@@ -211,7 +196,7 @@ public sealed class GameEngine : IDisposable
         _updateCtx.GameTick = tick;
         _renderer.BeginTick(in _updateCtx);
         _input.Update();
-        _currentScene?.UpdateTick(tick);
+        _sceneManager.Current?.UpdateTick(tick);
         _renderer.EndTick();
     }
 
@@ -243,7 +228,7 @@ public sealed class GameEngine : IDisposable
                 _stateMachine.Next();
                 break;
             case EngineState.LoadScenes:
-                _nextSceneIndex = 0;
+                _sceneManager.QueueSwitch(0);
                 _stateMachine.Next();
                 break;
         }
@@ -251,46 +236,30 @@ public sealed class GameEngine : IDisposable
 
     private void UpdateSceneTransitionIfNeeded()
     {
-        if (_nextSceneIndex < 0) return;
-        var index = _nextSceneIndex;
-        if (index >= _sceneFactories.Count)
-            throw new IndexOutOfRangeException($"Switch scene, index {index} is out of range.");
-
-        var previous = _currentScene;
-        previous?.Unload();
-
-        var sceneContext = new GameSceneContext(_systems) { Features = _features, Modules = _modules };
-
-
-        var newScene = _sceneFactories[index]();
-        newScene.AttachContext(sceneContext);
-
+        if(!_sceneManager.HasPendingSwitch)
+            return;
+        
+        var sceneContext = new GameSceneContext(_systems) { Features = _features, Modules = _modules};
         var builder = new GameSceneConfigBuilder(_features, _modules);
-        newScene.Build(builder);
 
-        _renderer.RegisterScene(builder.RenderType, builder.RenderTargetsDesc);
-
+        _sceneManager.ApplyPendingSwitch(sceneContext, builder, AfterBuild);
+        
         _features.Load(new GameFeatureContext(sceneContext));
-
-        // Modules
-        foreach (var factory in builder.Modules)
-            _modules.AddModule(factory());
-
         _modules.Load(new GameModuleContext(sceneContext));
+        return;
 
-        // Prepare scene
-        newScene.InitializeInternal();
-
-        _currentScene = newScene;
-        _nextSceneIndex = -1;
-        builder.Clear();
+        void AfterBuild(SceneManager.SceneBuildResult result)
+        {
+            _renderer.RegisterScene(builder.RenderType, builder.RenderTargetsDesc);
+            foreach (var module in result.Modules) result.Context.Modules.AddModule(module());
+        }
     }
 
     internal void Close()
     {
         Console.WriteLine("Closing GameEngine");
         _isDisposed = true;
-        _currentScene?.Unload();
+        _sceneManager.Current?.Unload();
         _assets?.Shutdown();
         // _graphics?.Dispose();
     }

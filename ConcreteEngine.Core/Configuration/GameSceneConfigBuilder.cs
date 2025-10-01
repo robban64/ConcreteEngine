@@ -30,10 +30,7 @@ public sealed class GameSceneConfigBuilder(FeatureManager features, ModuleManage
     public IReadOnlyList<Func<GameModule>> Modules => _modules;
 
 
-    internal void Clear()
-    {
-        _modules.Clear();
-    }
+    internal void Clear() => _modules.Clear();
 
     public void RegisterRender2D(RenderTargetDescriptor desc)
     {

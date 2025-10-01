@@ -1,6 +1,6 @@
 namespace ConcreteEngine.Core.Time;
 
-public sealed class RenderTime
+internal sealed class RenderTime
 {
     public const int ParticleLodTicksPerSecond = 15; // 15 Hz
     public const int GpuUploadTicksPerSecond = 20; // 20 Hz
@@ -17,7 +17,7 @@ public sealed class RenderTime
     private readonly GameTimeTickDelegate _onGpuUpload;
     private readonly GameTimeTickDelegate _onGpuDispose;
 
-    private int a, b, c;
+    private int _a, _b, _c;
 
     internal RenderTime(GameTimeTickDelegate onRenderEffect, GameTimeTickDelegate onGpuUpload,
         GameTimeTickDelegate onGpuDispose)
@@ -36,9 +36,9 @@ public sealed class RenderTime
 
     public void Advance()
     {
-        a = _gpuUploadTicker.DrainAllTicks();
-        b = _gpuDisposeTicker.DrainAllTicks();
-        c = _renderEffectTicker.DrainAllTicks();
+        _a = _gpuUploadTicker.DrainAllTicks();
+        _b = _gpuDisposeTicker.DrainAllTicks();
+        _c = _renderEffectTicker.DrainAllTicks();
 
         //if (a > 0) _onGpuUpload(a); 
         //if (b > 0) _onGpuDispose(b);
@@ -47,16 +47,16 @@ public sealed class RenderTime
 
     public void TickOrGpuUpload()
     {
-        if (a > 0) _onGpuUpload(a);
+        if (_a > 0) _onGpuUpload(_a);
     }
 
     public void TickOrGpuDispose()
     {
-        if (b > 0) _onGpuDispose(b);
+        if (_b > 0) _onGpuDispose(_b);
     }
 
     public void TickOrRenderEffect()
     {
-        if (c > 0) _onRenderEffect(c);
+        if (_c > 0) _onRenderEffect(_c);
     }
 }

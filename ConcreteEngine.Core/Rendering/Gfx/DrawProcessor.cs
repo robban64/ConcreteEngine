@@ -3,13 +3,14 @@
 using System.Runtime.CompilerServices;
 using ConcreteEngine.Common.Numerics;
 using ConcreteEngine.Core.Assets.Resources;
-using ConcreteEngine.Core.Rendering.Gfx;
+using ConcreteEngine.Core.Rendering.Commands;
+using ConcreteEngine.Core.Rendering.Data;
 using ConcreteEngine.Graphics.Gfx;
 using ConcreteEngine.Graphics.Resources;
 
 #endregion
 
-namespace ConcreteEngine.Core.Rendering;
+namespace ConcreteEngine.Core.Rendering.Gfx;
 
 internal sealed class DrawProcessor
 {

@@ -1,11 +1,12 @@
 #region
 
 using System.Numerics;
+using ConcreteEngine.Core.Rendering.Data;
 using ConcreteEngine.Core.Rendering.Passes;
 
 #endregion
 
-namespace ConcreteEngine.Core.Rendering;
+namespace ConcreteEngine.Core.Rendering.Commands;
 
 public sealed class SceneDrawProducer : IDrawCommandProducer
 {
@@ -34,7 +35,7 @@ public sealed class SceneDrawProducer : IDrawCommandProducer
     }
 
 
-    public void EmitFrame(float alpha, in RenderGlobalSnapshot snapshot, RenderPipeline submitter)
+    public void EmitFrame(float alpha, in RenderGlobalSnapshot snapshot, DrawCommandPipeline submitter)
     {
         if (_snapshot.Skybox.MaterialId.Id == 0) return;
 

@@ -6,7 +6,7 @@ using ConcreteEngine.Core.Rendering.Passes;
 
 #endregion
 
-namespace ConcreteEngine.Core.Rendering;
+namespace ConcreteEngine.Core.Rendering.Commands;
 
 public readonly struct DrawCommandMeta(
     DrawCommandId id,

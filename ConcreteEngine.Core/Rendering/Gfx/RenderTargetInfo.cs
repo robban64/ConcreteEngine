@@ -1,0 +1,12 @@
+using ConcreteEngine.Common.Numerics;
+using ConcreteEngine.Graphics;
+using ConcreteEngine.Graphics.Resources;
+
+namespace ConcreteEngine.Core.Rendering.Gfx;
+
+public readonly record struct RenderTargetInfo(
+    FrameBufferId FboId,
+    Size2D Size,
+    FboAttachmentIds Attachments,
+    RenderBufferMsaa MultiSample
+);

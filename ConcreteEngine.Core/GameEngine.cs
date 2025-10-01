@@ -208,7 +208,7 @@ public sealed class GameEngine : IDisposable
         var sceneContext = new GameSceneContext(_coreSystems) { Features = _features, Modules = _modules };
         var builder = new GameSceneConfigBuilder(_features, _modules);
 
-        _sceneManager.ApplyPendingSwitch(sceneContext, builder, AfterBuild);
+        _sceneManager.ApplyPendingScene(sceneContext, builder, AfterBuild);
 
         _features.Load(new GameFeatureContext(sceneContext));
         _modules.Load(new GameModuleContext(sceneContext));

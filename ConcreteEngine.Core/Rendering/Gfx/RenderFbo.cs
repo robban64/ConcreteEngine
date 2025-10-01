@@ -3,6 +3,7 @@
 using System.Numerics;
 using System.Runtime.CompilerServices;
 using ConcreteEngine.Common.Numerics;
+using ConcreteEngine.Graphics;
 using ConcreteEngine.Graphics.Resources;
 
 #endregion
@@ -15,7 +16,10 @@ public sealed class RenderFbo : IComparable<RenderFbo>, IComparable<FrameBufferI
 {
     public FrameBufferId FboId { get; }
 
-    private FrameBufferMeta _meta;
+    public Size2D Size { get; private set; }
+    public FboAttachmentIds Attachments { get; private set; }
+    public RenderBufferMsaa MultiSample { get; private set; }
+    
 
     private readonly SizePolicy _sizePolicy;
 
@@ -26,10 +30,12 @@ public sealed class RenderFbo : IComparable<RenderFbo>, IComparable<FrameBufferI
     }
 
 
-    [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public ref readonly FrameBufferMeta GetMeta() => ref _meta;
-
-    internal void UpdateFromMeta(in FrameBufferMeta meta) => _meta = meta;
+    internal void UpdateFromMeta(in FrameBufferMeta meta)
+    {
+        Size = meta.Size;
+        Attachments = meta.Attachments;
+        MultiSample = meta.MultiSample;
+    }
 
     public Size2D CalculateNewSize(Size2D outputSize) => _sizePolicy.Calculate(outputSize);
 

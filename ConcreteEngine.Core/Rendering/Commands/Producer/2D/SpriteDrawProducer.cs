@@ -7,7 +7,7 @@ using ConcreteEngine.Core.Utils;
 
 #endregion
 
-namespace ConcreteEngine.Core.Rendering;
+namespace ConcreteEngine.Core.Rendering.Commands;
 
 public readonly record struct SpriteDrawBatch(MaterialId MaterialId, int Start, int End, byte Layer = 0);
 

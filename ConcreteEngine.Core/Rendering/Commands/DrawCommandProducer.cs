@@ -1,12 +1,13 @@
 #region
 
 using ConcreteEngine.Core.Rendering.Batching;
+using ConcreteEngine.Core.Rendering.Data;
 using ConcreteEngine.Core.Scene;
 using ConcreteEngine.Graphics.Gfx;
 
 #endregion
 
-namespace ConcreteEngine.Core.Rendering;
+namespace ConcreteEngine.Core.Rendering.Commands;
 
 public sealed class CommandProducerContext
 {
@@ -21,7 +22,7 @@ public interface IDrawCommandProducer
     void Initialize();
     void BeginTick(in UpdateInfo update);
     void EndTick();
-    void EmitFrame(float alpha, in RenderGlobalSnapshot snapshot, RenderPipeline submitter);
+    void EmitFrame(float alpha, in RenderGlobalSnapshot snapshot, DrawCommandPipeline submitter);
 }
 
 public interface IDrawSink;

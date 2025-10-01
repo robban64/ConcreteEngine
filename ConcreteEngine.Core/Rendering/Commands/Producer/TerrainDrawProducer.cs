@@ -4,11 +4,12 @@ using System.Numerics;
 using ConcreteEngine.Common.Numerics;
 using ConcreteEngine.Core.Assets.Resources;
 using ConcreteEngine.Core.Rendering.Batching;
+using ConcreteEngine.Core.Rendering.Data;
 using ConcreteEngine.Core.Rendering.Passes;
 
 #endregion
 
-namespace ConcreteEngine.Core.Rendering;
+namespace ConcreteEngine.Core.Rendering.Commands;
 
 public struct TerrainDrawData
 {
@@ -55,7 +56,7 @@ public sealed class TerrainDrawProducer : IDrawCommandProducer, ITerrainDrawSink
     }
 
 
-    public void EmitFrame(float alpha, in RenderGlobalSnapshot snapshot, RenderPipeline submitter)
+    public void EmitFrame(float alpha, in RenderGlobalSnapshot snapshot, DrawCommandPipeline submitter)
     {
         if (_data == null) return;
 

@@ -3,14 +3,14 @@
 using System.Runtime.CompilerServices;
 using ConcreteEngine.Common.Numerics;
 using ConcreteEngine.Core.Assets.Resources;
+using ConcreteEngine.Core.Rendering.Data;
 using ConcreteEngine.Core.Rendering.Passes;
-using ConcreteEngine.Core.Scene;
 using ConcreteEngine.Core.Scene.Entities;
 using ConcreteEngine.Graphics.Resources;
 
 #endregion
 
-namespace ConcreteEngine.Core.Rendering;
+namespace ConcreteEngine.Core.Rendering.Commands;
 
 public struct MeshDrawEntity(MeshId meshId, MaterialId materialId, ref Transform transform)
 {
@@ -22,7 +22,7 @@ public struct MeshDrawEntity(MeshId meshId, MaterialId materialId, ref Transform
 public interface IMeshDrawSink : IDrawSink
 {
     void Send(ReadOnlySpan<MeshDrawEntity> entities);
-    void SendSingle(ref MeshDrawEntity entity);
+    void SendSingle(MeshDrawEntity entity);
 }
 
 public sealed class MeshDrawProducer : IDrawCommandProducer, IMeshDrawSink
@@ -48,7 +48,7 @@ public sealed class MeshDrawProducer : IDrawCommandProducer, IMeshDrawSink
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public void SendSingle(ref MeshDrawEntity entity)
+    public void SendSingle(MeshDrawEntity entity)
     {
         EnsureCapacity(_idx);
         _entities[_idx++] = entity;
@@ -68,7 +68,7 @@ public sealed class MeshDrawProducer : IDrawCommandProducer, IMeshDrawSink
     {
     }
 
-    public void EmitFrame(float alpha, in RenderGlobalSnapshot snapshot, RenderPipeline submitter)
+    public void EmitFrame(float alpha, in RenderGlobalSnapshot snapshot, DrawCommandPipeline submitter)
     {
         if (_idx == 0) return;
 
@@ -85,9 +85,9 @@ public sealed class MeshDrawProducer : IDrawCommandProducer, IMeshDrawSink
             );
 
             TransformUtils.CreateModelMatrix(
-                in transform.Position,
-                in transform.Scale,
-                in transform.Rotation,
+                transform.Position,
+                transform.Scale,
+                transform.Rotation,
                 out var modelMat
             );
             _transforms[counter] = new DrawTransformPayload(in modelMat);

@@ -3,6 +3,8 @@
 using ConcreteEngine.Common;
 using ConcreteEngine.Common.Collections;
 using ConcreteEngine.Common.Numerics;
+using ConcreteEngine.Core.Rendering.Data;
+using ConcreteEngine.Core.Rendering.Descriptors;
 using ConcreteEngine.Core.Rendering.Passes;
 using ConcreteEngine.Graphics.Gfx;
 using ConcreteEngine.Graphics.Gfx.Utility;
@@ -98,13 +100,13 @@ internal sealed class RenderRegistry
         RTypeRegistry.RenderPassTag<PostPassTag>.Register();
         RTypeRegistry.RenderPassTag<ScreenPassTag>.Register();
 
-        RTypeRegistry.RenderPassSlot<ScenePassDrawSlot>.Register();
-        RTypeRegistry.RenderPassSlot<ScenePassResolveSlot>.Register();
+        RTypeRegistry.RenderPassSlot<PassDrawSlot>.Register();
+        RTypeRegistry.RenderPassSlot<PassResolveSlot>.Register();
 
-        RTypeRegistry.RenderPassSlot<PostPassASlot>.Register();
-        RTypeRegistry.RenderPassSlot<PostPassBSlot>.Register();
+        RTypeRegistry.RenderPassSlot<PassPostASlot>.Register();
+        RTypeRegistry.RenderPassSlot<PassPostBSlot>.Register();
 
-        RTypeRegistry.RenderPassSlot<ScreenPassPresentSlot>.Register();
+        RTypeRegistry.RenderPassSlot<PassFinalSlot>.Register();
     }
 
     public void RegisterShader(ShaderId shaderId)

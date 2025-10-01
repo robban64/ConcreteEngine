@@ -1,11 +1,10 @@
 #region
 
 using System.Diagnostics;
-using ConcreteEngine.Core.Scene.Entities;
 
 #endregion
 
-namespace ConcreteEngine.Core.Scene;
+namespace ConcreteEngine.Core.Scene.Entities;
 
 public sealed class EntityStore<T> where T : unmanaged
 {

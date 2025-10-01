@@ -3,6 +3,7 @@
 using ConcreteEngine.Core.Features;
 using ConcreteEngine.Core.Modules;
 using ConcreteEngine.Core.Rendering;
+using ConcreteEngine.Core.Rendering.Descriptors;
 using ConcreteEngine.Core.Scene;
 
 #endregion

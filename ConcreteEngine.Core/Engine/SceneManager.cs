@@ -21,7 +21,7 @@ internal sealed class SceneManager
     
     public void QueueSwitch(int sceneIndex) => _pendingIndex = sceneIndex;
 
-    public void ApplyPendingSwitch(
+    public void ApplyPendingScene(
         GameSceneContext context,
         GameSceneConfigBuilder builder,
         Action<SceneBuildResult>? afterBuild)
@@ -52,21 +52,14 @@ internal sealed class SceneManager
         builder.Clear();
     }
 
-    internal sealed class SceneBuildResult
+    internal sealed class SceneBuildResult(
+        RenderType renderType,
+        IReadOnlyList<Func<GameModule>> modules,
+        GameSceneContext context)
     {
-        public SceneBuildResult(
-            RenderType renderType,
-            IReadOnlyList<Func<GameModule>> modules,
-            GameSceneContext context)
-        {
-            RenderType = renderType;
-            Modules = modules;
-            Context = context;
-        }
-
-        public RenderType RenderType { get; }
-        public IReadOnlyList<Func<GameModule>> Modules { get; }
-        public GameSceneContext Context { get; }
+        public RenderType RenderType { get; } = renderType;
+        public IReadOnlyList<Func<GameModule>> Modules { get; } = modules;
+        public GameSceneContext Context { get; } = context;
     }
 
 }

@@ -2,6 +2,7 @@
 
 using System.Diagnostics;
 using ConcreteEngine.Common.Numerics;
+using ConcreteEngine.Core.Rendering.Data;
 using ConcreteEngine.Core.Rendering.Gfx;
 using ConcreteEngine.Graphics.Resources;
 
@@ -12,16 +13,17 @@ namespace ConcreteEngine.Core.Rendering.Passes;
 public sealed class RenderPassCtx
 {
     public RenderCommandOps CmdOps { get; }
-    public FrameBufferId FboId { get; private set; }
-    public FrameBufferMeta Meta { get; private set; }
+    public RenderTargetInfo Target { get; private set; }
     public int Pass { get; private set; } = 0;
     public PassTagKey TagKey { get; private set; }
 
     private readonly IReadOnlyDictionary<PassTagKey, RenderPassEntry> _registry;
     //private readonly Dictionary<PassTagKey, List<TextureId>> _textureSlot = new(4);
 
-    private readonly PriorityQueue<TextureId, PassTextureSlotKey> _queue = new(new PassTagKeyNativeComparer());
-    private readonly List<TextureId> _output = new();
+    private readonly PriorityQueue<TextureId, PassTextureSlotKey> _textureSlotQueue =
+        new(new PassTagKeyNativeComparer());
+
+    private readonly List<TextureId> _output = new(4);
 
     internal RenderPassCtx(RenderCommandOps cmdOps, IReadOnlyDictionary<PassTagKey, RenderPassEntry> registry)
     {
@@ -33,9 +35,9 @@ public sealed class RenderPassCtx
     {
         var tagIndex = RTypeRegistry.GetPassTagValue(TagKey.TagType);
         _output.Clear();
-        while (_queue.TryPeek(out _, out var k) && k.TagIndex == tagIndex)
+        while (_textureSlotQueue.TryPeek(out _, out var k) && k.TagIndex == tagIndex)
         {
-            _queue.TryDequeue(out var id, out k);
+            _textureSlotQueue.TryDequeue(out var id, out k);
             _output.Add(id);
             //Console.WriteLine($"{id} - {k}");
         }
@@ -47,7 +49,7 @@ public sealed class RenderPassCtx
         where TTag : unmanaged, IRenderPassTag where TSlot : unmanaged, IRenderPassTagSlot
     {
         Debug.Assert(slot >= 0 && slot < 16);
-        _queue.Enqueue(textureId, PassTextureSlotKey.Make<TTag, TSlot>(passOp, (byte)slot));
+        _textureSlotQueue.Enqueue(textureId, PassTextureSlotKey.Make<TTag, TSlot>(passOp, (byte)slot));
     }
 
     public void MutateStatePass<TTag, TSlot>(PassOpKind passOp, in PassMutationState newState)
@@ -72,25 +74,22 @@ public sealed class RenderPassCtx
 
     internal void Prepare()
     {
-        FboId = default;
-        Meta = default;
+        Target = default;
         Pass = 0;
-        _queue.Clear();
+        _textureSlotQueue.Clear();
         _output.Clear();
     }
 
     internal void AttachScreenPass(Size2D outputSize, int pass, PassTagKey tagKey)
     {
-        FboId = default;
-        Meta = new FrameBufferMeta(outputSize, default, default);
+        Target = new RenderTargetInfo(default, outputSize, default, default);
         Pass = pass;
         TagKey = tagKey;
     }
 
     internal void AttachPass(RenderFbo fbo, int pass, PassTagKey tagKey)
     {
-        FboId = fbo.FboId;
-        Meta = fbo.GetMeta();
+        Target = new RenderTargetInfo(fbo.FboId, fbo.Size, fbo.Attachments, fbo.MultiSample);
         Pass = pass;
         TagKey = tagKey;
     }

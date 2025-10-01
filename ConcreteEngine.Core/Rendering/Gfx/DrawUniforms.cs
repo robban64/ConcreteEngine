@@ -1,14 +1,14 @@
 #region
 
 using System.Numerics;
-using ConcreteEngine.Core.Rendering.Gfx;
+using ConcreteEngine.Core.Rendering.Data;
 using ConcreteEngine.Core.Scene;
 using ConcreteEngine.Graphics;
 using ConcreteEngine.Graphics.Gfx;
 
 #endregion
 
-namespace ConcreteEngine.Core.Rendering;
+namespace ConcreteEngine.Core.Rendering.Gfx;
 
 internal sealed class DrawUniforms
 {

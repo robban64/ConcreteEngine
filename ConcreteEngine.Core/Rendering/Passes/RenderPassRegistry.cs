@@ -1,3 +1,6 @@
+using ConcreteEngine.Core.Rendering.Data;
+using ConcreteEngine.Core.Rendering.Gfx;
+
 namespace ConcreteEngine.Core.Rendering.Passes;
 
 public sealed class RenderPassRegistry

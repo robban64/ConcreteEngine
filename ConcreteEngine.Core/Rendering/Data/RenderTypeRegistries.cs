@@ -6,7 +6,7 @@ using ConcreteEngine.Graphics.Resources;
 
 #endregion
 
-namespace ConcreteEngine.Core.Rendering;
+namespace ConcreteEngine.Core.Rendering.Data;
 
 internal static class RTypeRegistry
 {

@@ -2,13 +2,14 @@
 
 using System.Diagnostics;
 using System.Runtime.CompilerServices;
+using ConcreteEngine.Core.Rendering.Gfx;
 using ConcreteEngine.Core.Rendering.Passes;
 
 #endregion
 
-namespace ConcreteEngine.Core.Rendering;
+namespace ConcreteEngine.Core.Rendering.Commands;
 
-public sealed class RenderPipeline
+public sealed class DrawCommandPipeline
 {
     private const int DefaultCapacity = 64;
     private const int MaxCapacity = 10_000;
@@ -25,7 +26,7 @@ public sealed class RenderPipeline
 
     public int Count => _submitIdx;
 
-    internal RenderPipeline(DrawProcessor drawProcessor)
+    internal DrawCommandPipeline(DrawProcessor drawProcessor)
     {
         _drawProcessor = drawProcessor;
         _commands = new DrawCommand[DefaultCapacity];

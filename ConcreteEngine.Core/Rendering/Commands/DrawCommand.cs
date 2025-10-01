@@ -6,7 +6,7 @@ using ConcreteEngine.Graphics.Resources;
 
 #endregion
 
-namespace ConcreteEngine.Core.Rendering;
+namespace ConcreteEngine.Core.Rendering.Commands;
 
 public readonly struct DrawCommand(MeshId meshId, MaterialId materialId, int drawCount = 0)
 {

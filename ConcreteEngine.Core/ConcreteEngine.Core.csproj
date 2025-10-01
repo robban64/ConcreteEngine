@@ -30,8 +30,4 @@
       <Compile Remove="Rendering\Render3D.cs" />
     </ItemGroup>
 
-    <ItemGroup>
-      <Folder Include="Rendering\Utility\" />
-    </ItemGroup>
-
 </Project>

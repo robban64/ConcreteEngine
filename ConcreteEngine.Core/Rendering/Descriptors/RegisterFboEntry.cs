@@ -1,32 +1,24 @@
-#region
-
 using System.Numerics;
 using ConcreteEngine.Common.Numerics;
+using ConcreteEngine.Core.Rendering.Gfx;
 using ConcreteEngine.Graphics;
 using ConcreteEngine.Graphics.Gfx.Contracts;
 
-#endregion
+namespace ConcreteEngine.Core.Rendering.Descriptors;
 
-namespace ConcreteEngine.Core.Rendering.Gfx;
 
-public sealed class RegisterFboEntry
+public sealed class RegisterFboEntry(
+    EnginePixelFormat pixelFormat = EnginePixelFormat.SrgbAlpha,
+    RenderBufferMsaa multisample = RenderBufferMsaa.None,
+    TexturePreset texturePreset = TexturePreset.LinearClamp
+)
 {
-    public EnginePixelFormat PixelFormat { get; }
-    public RenderBufferMsaa Multisample { get; }
-    public TexturePreset Preset { get; }
+    public EnginePixelFormat PixelFormat { get; } = pixelFormat;
+    public RenderBufferMsaa Multisample { get; } = multisample;
+    public TexturePreset Preset { get; } = texturePreset;
     public GfxFrameBufferDescriptor.AttachmentsDef Attachments { get; private set; }
 
     public RenderFbo.SizePolicy? FboSizePolicy { get; private set; }
-
-    public RegisterFboEntry(
-        EnginePixelFormat pixelFormat = EnginePixelFormat.SrgbAlpha,
-        RenderBufferMsaa multisample = RenderBufferMsaa.None,
-        TexturePreset texturePreset = TexturePreset.LinearClamp)
-    {
-        PixelFormat = pixelFormat;
-        Multisample = multisample;
-        Preset = texturePreset;
-    }
 
     public RegisterFboEntry AttachColorTexture()
     {

@@ -2,7 +2,9 @@
 
 #endregion
 
-namespace ConcreteEngine.Core.Rendering;
+using ConcreteEngine.Core.Rendering.Data;
+
+namespace ConcreteEngine.Core.Rendering.Commands;
 
 internal sealed class DrawCommandCollector
 {
@@ -73,7 +75,7 @@ internal sealed class DrawCommandCollector
             producer.EndTick();
     }
 
-    public void Collect(float alpha, in RenderGlobalSnapshot snapshot, RenderPipeline submitter)
+    public void Collect(float alpha, in RenderGlobalSnapshot snapshot, DrawCommandPipeline submitter)
     {
         foreach (var producer in _producerList)
             producer.EmitFrame(alpha, in snapshot, submitter);

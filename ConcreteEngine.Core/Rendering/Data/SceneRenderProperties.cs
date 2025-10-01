@@ -6,7 +6,7 @@ using ConcreteEngine.Core.Assets.Resources;
 
 #endregion
 
-namespace ConcreteEngine.Core.Rendering;
+namespace ConcreteEngine.Core.Rendering.Data;
 
 public sealed class SceneRenderProperties
 {

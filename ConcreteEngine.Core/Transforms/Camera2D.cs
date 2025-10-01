@@ -12,7 +12,7 @@ public sealed class Camera2D : ICamera
     private Vector2 _position = Vector2.Zero;
     private float _rotation = 0f;
     private float _zoom = 1f;
-    private Bounds2D _viewportSize;
+    private Size2D _viewportSize;
 
     private Matrix4x4 _viewMatrix = Matrix4x4.Identity;
     private Matrix4x4 _projectionMatrix = Matrix4x4.Identity;
@@ -50,7 +50,7 @@ public sealed class Camera2D : ICamera
         }
     } // >1: zoom in, <1: zoom out
 
-    public Bounds2D Viewport
+    public Size2D Viewport
     {
         get => _viewportSize;
         set
@@ -148,8 +148,8 @@ public sealed class Camera2D : ICamera
     public RectF GetSimpleViewRect()
     {
         float invZoom = 1f / _zoom;
-        float viewWidth = _viewportSize.X * invZoom;
-        float viewHeight = _viewportSize.Y * invZoom;
+        float viewWidth = _viewportSize.Width * invZoom;
+        float viewHeight = _viewportSize.Height * invZoom;
         return new RectF(_position.X, _position.Y, viewWidth, viewHeight);
     }
 

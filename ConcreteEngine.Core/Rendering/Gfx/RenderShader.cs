@@ -2,7 +2,6 @@ using System.Numerics;
 using System.Runtime.CompilerServices;
 using ConcreteEngine.Common;
 using ConcreteEngine.Common.Numerics;
-using ConcreteEngine.Core.Rendering.Utility;
 using ConcreteEngine.Graphics;
 using ConcreteEngine.Graphics.Contracts;
 using ConcreteEngine.Graphics.Gfx.Utility;

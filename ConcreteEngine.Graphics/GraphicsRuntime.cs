@@ -69,12 +69,7 @@ public sealed class GraphicsRuntime : IGraphicsRuntime
 
         _isInitialized = true;
     }
-
-    public void Shutdown()
-    {
-    }
     
-
     public void BeginFrame(in FrameInfo frameInfo)
     {
         _frameCtx = frameInfo;
@@ -86,13 +81,25 @@ public sealed class GraphicsRuntime : IGraphicsRuntime
         if (_disposer.PendingCount > 0) _disposer.DrainDisposeQueue(_driver);
 
         _gfxContext.Commands.EndFrame(out stats);
-
-        if (false)
-        {
-            RecreateFbo(_frameCtx.OutputSize.ToSize2D());
-        }
     }
 
+    public void RecreateFbo(ReadOnlySpan<(FrameBufferId Id, Size2D Size)> newSizes)
+    {
+        Console.WriteLine($"Recreating {newSizes.Length} FBO");
+        foreach (var (fboId, size) in newSizes)
+            _gfxContext.FrameBuffers.RecreateFrameBuffer(fboId, size);
+
+    }
+    
+    public void Shutdown()
+    {
+    }
+
+    public void Dispose()
+    {
+    }
+    
+    /*
     private void RecreateFbo(Size2D size)
     {
         ArgumentOutOfRangeException.ThrowIfLessThanOrEqual(size.Width, 0);
@@ -104,20 +111,5 @@ public sealed class GraphicsRuntime : IGraphicsRuntime
         foreach (var fboId in fboStore.IdEnumerator)
             _gfxContext.FrameBuffers.RecreateFrameBuffer(fboId, size);
     }
-
-    public void RecreateFbo(ReadOnlySpan<(FrameBufferId Id, Size2D Size)> newSizes)
-    {
-        Console.WriteLine($"Recreating {newSizes.Length} FBO");
-        foreach (var (fboId, size) in newSizes)
-        {
-            Console.WriteLine(size);
-            _gfxContext.FrameBuffers.RecreateFrameBuffer(fboId, size);
-        }
-
-    }
-
-
-    public void Dispose()
-    {
-    }
+*/
 }

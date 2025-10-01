@@ -16,7 +16,7 @@ public interface IGfxResourceStore
 
 internal interface IGfxResourceStore<in TId> : IGfxResourceStore where TId : unmanaged, IResourceId
 {
-    GfxHandle GetHandle(TId id);
+    GfxHandle GetHandleUntyped(TId id);
     GfxHandle Remove(TId id);
 }
 
@@ -65,31 +65,6 @@ internal sealed class GfxResourceStore<TId, TMeta> : IGfxResourceStore<TId>
         _changeCallback = callback;
     }
 
-    public bool TryGetHandle(TId id, out GfxHandle handle)
-    {
-        if (id.Value == 0)
-        {
-            handle = default;
-            return false;
-        }
-
-        handle = GetHandle(id);
-        return true;
-    }
-
-    public bool TryGet(TId id, out GfxHandle handle, out TMeta meta)
-    {
-        if (id.Value == 0)
-        {
-            handle = default;
-            meta = default;
-            return false;
-        }
-
-        handle = GetHandleAndMeta(id, out meta);
-        return true;
-    }
-
     public bool TryGetRef(TId id, out GfxRefToken<TId> handle, out TMeta meta)
     {
         if (id.Value == 0)
@@ -107,18 +82,7 @@ internal sealed class GfxResourceStore<TId, TMeta> : IGfxResourceStore<TId>
     public ref readonly TMeta GetMeta(TId id) => ref _meta[id.Value - 1];
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public GfxHandle GetHandle(TId id) => _handle[id.Value - 1];
-
-    [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public ref readonly GfxHandle GetHandleAndMeta(TId id, out TMeta meta)
-    {
-        int idx = id.Value - 1;
-        meta = _meta[idx];
-        return ref _handle[idx];
-    }
-
-    [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public GfxRefToken<TId> GetRef(TId id) => GfxRefToken<TId>.From(in _handle[id.Value - 1]);
+    public GfxRefToken<TId> GetRefHandle(TId id) => GfxRefToken<TId>.From(in _handle[id.Value - 1]);
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public GfxRefToken<TId> GetRefAndMeta(TId id, out TMeta meta)
@@ -128,6 +92,7 @@ internal sealed class GfxResourceStore<TId, TMeta> : IGfxResourceStore<TId>
         return GfxRefToken<TId>.From(in _handle[idx]);
     }
 
+    public GfxHandle GetHandleUntyped(TId id) => _handle[id.Value - 1];
 
     public TId Add(in TMeta meta, in GfxRefToken<TId> refToken)
     {
@@ -164,25 +129,24 @@ internal sealed class GfxResourceStore<TId, TMeta> : IGfxResourceStore<TId>
         var oldMeta = _meta[idx];
         _meta[idx] = newMeta;
         _handle[idx] = newHandleRef.Handle;
-        
+
         var message = new GfxMetaChanged<TMeta>(in newMeta, in oldMeta, newHandleRef.Handle.Gen, true, ResourceKind);
         _changeCallback?.Invoke(id, in message);
-        
+
         return id;
     }
 
-    public ref readonly TMeta ReplaceMeta(TId id, in TMeta newMeta, out TMeta oldMeta)
+    public void ReplaceMeta(TId id, in TMeta newMeta, out TMeta oldMeta)
     {
         ArgumentOutOfRangeException.ThrowIfEqual(id.Value, 0, nameof(id));
         int idx = id.Value - 1;
         oldMeta = _meta[idx];
         _meta[idx] = newMeta;
-        
+
         var message = new GfxMetaChanged<TMeta>(in newMeta, in oldMeta, _handle[idx].Gen, true, ResourceKind);
         _changeCallback?.Invoke(id, in message);
-
-        return ref newMeta;
     }
+
 
     private int Allocate()
     {

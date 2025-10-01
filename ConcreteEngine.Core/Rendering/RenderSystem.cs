@@ -250,7 +250,7 @@ public sealed class RenderSystem : IRenderSystem
     }
 
 
-    internal void RegisterScene(in Vector2D<int> outputSize, RenderType renderType, RenderTargetDescriptor desc)
+    internal void RegisterScene( RenderType renderType, RenderTargetDescriptor desc)
     {
         if (!_initialized)
             throw new InvalidOperationException("Renderer is not initialized");
@@ -279,7 +279,7 @@ public sealed class RenderSystem : IRenderSystem
         if (frameCtx.Viewport != Camera.Viewport)
             Camera.Viewport = frameCtx.Viewport;
 
-        SceneRenderProps.SetOutputSize(frameCtx.OutputSize.ToSize2D());
+        SceneRenderProps.SetOutputSize(frameCtx.OutputSize);
         _snapshot = SceneRenderProps.Commit();
 
         PrepareRenderer(alpha);

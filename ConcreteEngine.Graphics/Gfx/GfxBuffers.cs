@@ -67,11 +67,12 @@ public sealed class GfxBuffers
         if (!UniformBufferUtils.IsStd140Aligned<T>())
             throw GraphicsException.InvalidStd140Layout<T>();
 
-        var size = (nint)Unsafe.SizeOf<T>();
-        var meta = new UniformBufferMeta(slot, size, BufferUsage.DynamicDraw, BufferStorage.Dynamic,
+        var blockSize = (nint)Unsafe.SizeOf<T>();
+        var stride = UniformBufferUtils.AlignUp(blockSize, UniformBufferUtils.UboOffsetAlign);
+        var meta = new UniformBufferMeta(slot, stride, stride, BufferUsage.DynamicDraw, BufferStorage.Dynamic,
             BufferAccess.MapWrite);
 
-        var uboRef = _driverBuffer.CreateUniformBuffer(slot, new GfxBufferDataDesc(size, storage, access));
+        var uboRef = _driverBuffer.CreateUniformBuffer(slot, new GfxBufferDataDesc(stride, storage, access));
 
         var uboId = _resources.UboStore.Add(meta, uboRef);
         return uboId;
@@ -110,7 +111,11 @@ public sealed class GfxBuffers
     public void SetUniformBufferCapacity(UniformBufferId uboId, nint capacity)
     {
         ArgumentOutOfRangeException.ThrowIfEqual(0, (int)capacity);
-        var refToken = _resources.UboStore.GetRef(uboId);
+        var refToken = _resources.UboStore.GetRefAndMeta(uboId, out var meta);
+        if(meta.Capacity == capacity) return;
+        var newMeta = UniformBufferMeta.MakeResizeCopy(in meta, capacity);
+        _resources.UboStore.ReplaceMeta(uboId, in newMeta, out _);
+
         _driverBuffer.ResizeUniformBuffer(refToken, capacity, BufferUsage.DynamicDraw);
     }
 
@@ -120,14 +125,14 @@ public sealed class GfxBuffers
         ArgumentOutOfRangeException.ThrowIfGreaterThan(offsetElements, data.Length);
         var (offset, size) = ToSizeAndOffset<T>(offsetElements, data.Length);
 
-        var vboRef = _resources.VboStore.GetRef(vboId);
+        var vboRef = _resources.VboStore.GetRefHandle(vboId);
         _driverBuffer.UploadVertexBufferData(vboRef, ToBufferByteData(data), offset, size);
     }
 
     public void UploadIndexBuffer<T>(IndexBufferId iboId, ReadOnlySpan<T> data, int offsetElements) where T : unmanaged
     {
         ArgumentOutOfRangeException.ThrowIfGreaterThan(offsetElements, data.Length);
-        var iboRef = _resources.IboStore.GetRef(iboId);
+        var iboRef = _resources.IboStore.GetRefHandle(iboId);
         var (offset, size) = ToSizeAndOffset<T>(offsetElements, data.Length);
         _driverBuffer.UploadIndexBufferData(iboRef, ToBufferByteData(data), offset, size);
     }
@@ -137,7 +142,7 @@ public sealed class GfxBuffers
         where T : unmanaged, IUniformGpuData
     {
         UniformBufferUtils.IsStd140AlignedOrThrow<T>(out nint stride);
-        var uboRef = _resources.UboStore.GetRef(uboId);
+        var uboRef = _resources.UboStore.GetRefHandle(uboId);
 
         var tSpan = MemoryMarshal.CreateReadOnlySpan(ref Unsafe.AsRef(in data), 1);
         var bytes = MemoryMarshal.AsBytes(tSpan);

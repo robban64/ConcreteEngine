@@ -28,8 +28,10 @@
     <ItemGroup>
       <Compile Remove="Rendering\Render2D.cs" />
       <Compile Remove="Rendering\Render3D.cs" />
-      <None Include="Rendering\Legacy\Render2D.cs" />
-      <None Include="Rendering\Legacy\Render3D.cs" />
+    </ItemGroup>
+
+    <ItemGroup>
+      <Folder Include="Rendering\Utility\" />
     </ItemGroup>
 
 </Project>

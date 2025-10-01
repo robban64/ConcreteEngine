@@ -19,7 +19,7 @@ public sealed class Camera3D : ICamera
     private Matrix4x4 _projectionMatrix = Matrix4x4.Identity;
     private Matrix4x4 _projectionViewMatrix = Matrix4x4.Identity;
 
-    private Bounds2D _viewportSize;
+    private Size2D _viewportSize;
 
     private float _fov = 70;
     private float _farPlane = 2000;
@@ -73,7 +73,7 @@ public sealed class Camera3D : ICamera
         }
     }
 
-    public Bounds2D Viewport
+    public Size2D Viewport
     {
         get => _viewportSize;
         set

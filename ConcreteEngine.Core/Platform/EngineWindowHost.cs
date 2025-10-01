@@ -16,9 +16,9 @@ namespace ConcreteEngine.Core.Platform;
 public interface IEngineWindowHost : IDisposable
 {
     string Title { get; set; }
-    Vector2D<int> FramebufferSize { get; }
-    Vector2D<int> Size { get; set; }
-    Vector2D<int> Position { get; set; }
+    Size2D FramebufferSize { get; }
+    Size2D Size { get; set; }
+    Vector2I Position { get; set; }
 
     GraphicsBackend Backend { get; }
 
@@ -46,19 +46,19 @@ public sealed class EngineWindowHost : IEngineWindowHost
     }
 
     // Placement / size
-    public Vector2D<int> Position
+    public Vector2I Position
     {
-        get => _window.Position;
-        set => _window.Position = value;
+        get => _window.Position.ToVector2I();
+        set => _window.Position = new Vector2D<int>(value.X, value.Y);
     }
 
-    public Vector2D<int> Size
+    public Size2D Size
     {
-        get => _window.Size;
-        set => _window.Size = value;
+        get => _window.Size.ToSize2D();
+        set => _window.Size = new Vector2D<int>(value.Width, value.Height);
     }
 
-    public Vector2D<int> FramebufferSize => _window.FramebufferSize;
+    public Size2D FramebufferSize => _window.FramebufferSize.ToSize2D();
 
     private GameEngineBuilder? _builder = null;
 

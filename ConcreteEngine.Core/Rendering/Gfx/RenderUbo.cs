@@ -1,5 +1,7 @@
-using ConcreteEngine.Core.Rendering.Utility;
-using ConcreteEngine.Graphics.Primitives;
+using System.Diagnostics;
+using System.Runtime.CompilerServices;
+using ConcreteEngine.Common;
+using ConcreteEngine.Graphics.Gfx.Utility;
 using ConcreteEngine.Graphics.Resources;
 
 namespace ConcreteEngine.Core.Rendering.Gfx;
@@ -8,25 +10,63 @@ public sealed class RenderUbo
 {
     public UniformBufferId Id { get; }
     public UboSlot Slot { get; }
+    public nint Stride { get; }
+    public nint Capacity { get; private set; }
+    
+    private nint _uploadCursor;
+    private nint _drawCursor;
 
-    private UniformBufferMeta _metaCache;
-    private UboArena? _uboBufferArena;
 
     public RenderUbo(UniformBufferId id, UboSlot slot, in UniformBufferMeta meta)
     {
         Id = id;
         Slot = slot;
-        _metaCache = meta;
+        Stride = meta.Stride;
+        Capacity =  meta.Capacity;
+        
+        _uploadCursor = 0;
+        _drawCursor = 0;
+    }
+
+    public void ResetCursor()
+    {
+        _uploadCursor = 0;
+        _drawCursor = 0;
+    }
+
+    public void SetCapacity(nint capacity)
+    {
+        ArgumentOutOfRangeException.ThrowIfLessThan(capacity, Stride, nameof(capacity));
+        InvalidOpThrower.ThrowIf(_uploadCursor > 0 || _drawCursor > 0);
+        Capacity = capacity;
     }
     
-    internal void UpdateMeta(in UniformBufferMeta meta) => _metaCache = meta;
-
-    public ref readonly UniformBufferMeta RenderData() => ref _metaCache;
-
-    public UboArena UboArena()
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public nint NextUploadCursor()
     {
-        if (_uboBufferArena != null) return _uboBufferArena;
-        _uboBufferArena = new UboArena(in _metaCache);
-        return _uboBufferArena;
+        bool overflow = _uploadCursor + Stride > Capacity;
+        Debug.Assert(!overflow, "UboRing overflow. Increase capacity.");
+
+        var offset = _uploadCursor;
+        _uploadCursor += Stride;
+        return offset;
+    }
+
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public nint NextDrawCursor()
+    {
+        bool overflow = _drawCursor + Stride > Capacity;
+        Debug.Assert(!overflow, "UboRing overflow. Increase capacity.");
+
+        var offset = _drawCursor;
+        _drawCursor += Stride;
+        return offset;
+    }
+    
+    public nint GetCapacityFor(int expectedRecords)
+    {
+        nint required = Stride * Math.Max(1, expectedRecords);
+        if (required <= Capacity) return 0;
+        return UniformBufferUtils.NextCapacity(Capacity, required);
     }
 }

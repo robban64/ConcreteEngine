@@ -1,7 +1,6 @@
 using System.Runtime.CompilerServices;
 using ConcreteEngine.Common.Numerics;
 using ConcreteEngine.Core.Rendering.Gfx;
-using ConcreteEngine.Core.Rendering.Utility;
 using ConcreteEngine.Core.Resources;
 using ConcreteEngine.Graphics;
 using ConcreteEngine.Graphics.Gfx;
@@ -24,10 +23,9 @@ internal sealed class DrawProcessor
 
     private int _previousMaterialId = -1;
 
-    private UboArena? _drawRing = null;
     private RenderUbo _drawUbo = null!;
-    
-    private RenderUbo MaterialUbo => _registry.GetRenderUbo<MaterialUniformRecord>();
+
+    private RenderUbo _materialUbo = null!;
 
     internal DrawProcessor(GfxContext gfx, MaterialStore materials, RenderRegistry registry)
     {
@@ -43,13 +41,15 @@ internal sealed class DrawProcessor
 
     public void Initialize()
     {
+        _drawUbo = _registry.GetRenderUbo<DrawObjectUniform>();
+        _materialUbo = _registry.GetRenderUbo<MaterialUniformRecord>();
     }
 
     public void Prepare(in RenderGlobalSnapshot renderGlobals, nint capacity)
     {
-        _drawUbo = _registry.GetRenderUbo<DrawObjectUniform>();
-        _drawRing = _drawUbo.UboArena();
-        _drawRing.Prepare(capacity);
+        _drawUbo.ResetCursor();
+        if(capacity != _drawUbo.Capacity)
+            _drawUbo.SetCapacity(capacity);
         
         _previousMaterialId = -1;
         _gfxBuffers.SetUniformBufferCapacity(_drawUbo.Id, capacity);
@@ -87,7 +87,7 @@ internal sealed class DrawProcessor
             uvRepeat: rec.UvRepeat
         );
 
-        _gfxBuffers.UploadUniformGpuData(MaterialUbo.Id, in data, 0);
+        _gfxBuffers.UploadUniformGpuData(_materialUbo.Id, in data, 0);
     }
 
     //TODO bulk upload
@@ -100,13 +100,13 @@ internal sealed class DrawProcessor
             normal: in normalModel
         );
 
-        _gfxBuffers.UploadUniformGpuData(_drawUbo.Id, in data, _drawRing!.NextUploadCursor());
+        _gfxBuffers.UploadUniformGpuData(_drawUbo.Id, in data, _drawUbo.NextUploadCursor());
     }
     
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     private void BindDrawObject()
     {
-        _gfxBuffers.BindUniformBufferRange(_drawUbo.Id, _drawRing!.NextDrawCursor(), _drawRing.BlockSize);
+        _gfxBuffers.BindUniformBufferRange(_drawUbo.Id, _drawUbo.NextDrawCursor(), _drawUbo.Stride);
     }
 
     public void DrawMesh(in DrawCommand cmd)

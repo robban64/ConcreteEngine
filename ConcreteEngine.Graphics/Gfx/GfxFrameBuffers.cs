@@ -50,7 +50,7 @@ public sealed class GfxFrameBuffers
 
             var textureId = _gfxTextures.BuildEmptyTexture(texDesc, texProps);
 
-            var texRef = _resources.TextureStore.GetRef(textureId);
+            var texRef = _resources.TextureStore.GetRefHandle(textureId);
             AttachTexture(fboRef, texRef);
             attachments = attachments with { ColorTextureId = textureId };
         }

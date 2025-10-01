@@ -64,7 +64,7 @@ public sealed class GameEngine : IDisposable
     private FrameInfo _frameCtx;
     private GpuFrameStats _gpuFrameResult;
 
-    private Vector2D<int> _prevOutputSize;
+    private Size2D _prevOutputSize;
 
     private LinearStateMachine<EngineState> _stateMachine;
 
@@ -102,7 +102,7 @@ public sealed class GameEngine : IDisposable
         //_pipeline = new GameMessagePipeline();
 
         // renderer
-        _renderer = new RenderSystem(_graphics, new Size2D(_window.FramebufferSize.X, _window.FramebufferSize.Y));
+        _renderer = new RenderSystem(_graphics, _window.FramebufferSize);
 
         _systems = new EngineSystemManagerManager(_renderer, _inputSystem, _assets);
 
@@ -130,10 +130,13 @@ public sealed class GameEngine : IDisposable
             frameIndex: _frameIdx,
             deltaTime: dt,
             vSyncEnabled: false,
-            viewport: Bounds2D.FromVector2D(_window.Size),
-            outputSize: Bounds2D.FromVector2D(outputSize)
+            viewport: _window.Size,
+            outputSize: outputSize
         );
         
+        _renderTime.Accumulate(dt);
+        _renderTime.Advance();
+
         
         if (_frameIdx > 1 && outputSize != _prevOutputSize)
         {
@@ -144,18 +147,14 @@ public sealed class GameEngine : IDisposable
         if (_debounceTicker?.Tick() ?? false)
         {
             _debounceTicker = null;
-            var output = new Size2D(outputSize.X, outputSize.Y);
-            var a = _renderer.RenderRegistry.RenderFbos;
-            Span<(FrameBufferId, Size2D)> newSizes = stackalloc (FrameBufferId, Size2D)[a.Count];
-            for (int i = 0; i < a.Count; i++)
-                newSizes[i] = (a[i].FboId, a[i].CalculateNewSize(output));
+            var fbos = _renderer.RenderRegistry.RenderFbos;
+            Span<(FrameBufferId, Size2D)> newSizes = stackalloc (FrameBufferId, Size2D)[fbos.Count];
+            for (int i = 0; i < fbos.Count; i++)
+                newSizes[i] = (fbos[i].FboId, fbos[i].CalculateNewSize(outputSize));
             
             _graphics.RecreateFbo(newSizes);
+            return;
         }
-
-
-        _renderTime.Accumulate(dt);
-        _renderTime.Advance();
 
         _graphics.BeginFrame(in frameCtx);
         if (_currentScene != null)
@@ -269,7 +268,7 @@ public sealed class GameEngine : IDisposable
         var builder = new GameSceneConfigBuilder(_features, _modules);
         newScene.Build(builder);
 
-        _renderer.RegisterScene(_window.FramebufferSize, builder.RenderType, builder.RenderTargetsDesc);
+        _renderer.RegisterScene( builder.RenderType, builder.RenderTargetsDesc);
 
         _features.Load(new GameFeatureContext(sceneContext));
 

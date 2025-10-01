@@ -10,5 +10,5 @@ public interface ICamera
     Matrix4x4 ViewMatrix { get; }
     Matrix4x4 ProjectionMatrix { get; }
     Matrix4x4 ProjectionViewMatrix { get; }
-    Bounds2D Viewport { get; set; }
+    Size2D Viewport { get; set; }
 }

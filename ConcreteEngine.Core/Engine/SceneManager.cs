@@ -1,4 +1,5 @@
-using ConcreteEngine.Core.Configuration;
+using ConcreteEngine.Core.Engine.Configuration;
+using ConcreteEngine.Core.Modules;
 using ConcreteEngine.Core.Rendering;
 using ConcreteEngine.Core.Scene;
 

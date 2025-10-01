@@ -2,9 +2,9 @@
 
 using System.Numerics;
 using ConcreteEngine.Common.Numerics;
+using ConcreteEngine.Core.Assets.Resources;
 using ConcreteEngine.Core.Rendering.Batching;
 using ConcreteEngine.Core.Rendering.Passes;
-using ConcreteEngine.Core.Resources;
 
 #endregion
 

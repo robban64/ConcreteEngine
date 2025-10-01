@@ -4,20 +4,20 @@ using ConcreteEngine.Common;
 using ConcreteEngine.Common.Numerics;
 using ConcreteEngine.Common.Patterns;
 using ConcreteEngine.Core.Assets;
-using ConcreteEngine.Core.Configuration;
 using ConcreteEngine.Core.Engine;
+using ConcreteEngine.Core.Engine.Configuration;
 using ConcreteEngine.Core.Engine.Data;
+using ConcreteEngine.Core.Engine.Platform;
 using ConcreteEngine.Core.Engine.Time;
 using ConcreteEngine.Core.Features;
-using ConcreteEngine.Core.Platform;
+using ConcreteEngine.Core.Modules;
 using ConcreteEngine.Core.Rendering;
 using ConcreteEngine.Core.Scene;
-using ConcreteEngine.Core.Systems;
 using ConcreteEngine.Core.Utils;
 using ConcreteEngine.Graphics;
 using ConcreteEngine.Graphics.Resources;
 using Silk.NET.OpenGL;
-using Shader = ConcreteEngine.Core.Resources.Shader;
+using Shader = ConcreteEngine.Core.Assets.Resources.Shader;
 
 #endregion
 
@@ -36,7 +36,6 @@ public sealed class GameEngine : IDisposable
     private readonly ModuleManager _modules;
     private readonly FeatureManager _features;
     private readonly SceneManager _sceneManager;
-
 
     private readonly UpdateFrameInfo _updateInfo = new();
     private readonly RenderFrameInfo _renderInfo = new();

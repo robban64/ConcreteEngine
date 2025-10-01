@@ -1,8 +1,8 @@
 #region
 
 using System.Runtime.CompilerServices;
+using ConcreteEngine.Core.Assets.Resources;
 using ConcreteEngine.Core.Rendering.Passes;
-using ConcreteEngine.Core.Resources;
 
 #endregion
 

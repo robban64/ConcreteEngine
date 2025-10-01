@@ -1,9 +1,9 @@
 ﻿
 #region
 
-using ConcreteEngine.Core.Configuration;
 using ConcreteEngine.Core.Engine;
-using ConcreteEngine.Core.Platform;
+using ConcreteEngine.Core.Engine.Configuration;
+using ConcreteEngine.Core.Engine.Platform;
 using ConcreteEngine.Core.Utils;
 using ConcreteEngine.Graphics;
 using Demo2D;

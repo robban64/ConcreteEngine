@@ -1,7 +1,7 @@
 #region
 
-using ConcreteEngine.Core.Configuration;
-using ConcreteEngine.Core.Platform;
+using ConcreteEngine.Core.Engine.Configuration;
+using ConcreteEngine.Core.Engine.Platform;
 using ConcreteEngine.Core.Scene;
 using ConcreteEngine.Graphics;
 using Silk.NET.OpenGL;

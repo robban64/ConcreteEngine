@@ -14,7 +14,7 @@ internal abstract class AssetTypeLoader<TRecord, TPayload>(IReadOnlyList<TRecord
     private IReadOnlyList<TRecord> _records = records;
     private int _idx = 0;
 
-    private AssetLoadEntry<TRecord, TPayload> LoadEntry = new();
+    private readonly AssetLoadEntry<TRecord, TPayload> _loadEntry = new();
 
     public abstract TPayload ProcessResource(TRecord record, out AssetProcessInfo info);
 
@@ -28,10 +28,10 @@ internal abstract class AssetTypeLoader<TRecord, TPayload>(IReadOnlyList<TRecord
 
         var record = _records[_idx++];
         var payload = ProcessResource(record, out var status);
-        LoadEntry.Payload = payload;
-        LoadEntry.ProcessInfo = status;
-        LoadEntry.Record = record;
-        data = LoadEntry;
+        _loadEntry.Payload = payload;
+        _loadEntry.ProcessInfo = status;
+        _loadEntry.Record = record;
+        data = _loadEntry;
         return true;
     }
 

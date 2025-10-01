@@ -2,8 +2,8 @@
 
 using System.Runtime.CompilerServices;
 using ConcreteEngine.Common.Numerics;
+using ConcreteEngine.Core.Assets.Resources;
 using ConcreteEngine.Core.Rendering.Gfx;
-using ConcreteEngine.Core.Resources;
 using ConcreteEngine.Graphics.Gfx;
 using ConcreteEngine.Graphics.Resources;
 

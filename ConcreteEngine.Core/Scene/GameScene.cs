@@ -1,6 +1,6 @@
 #region
 
-using ConcreteEngine.Core.Configuration;
+using ConcreteEngine.Core.Engine.Configuration;
 using ConcreteEngine.Core.Rendering;
 
 #endregion

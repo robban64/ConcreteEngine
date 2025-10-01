@@ -2,16 +2,17 @@
 
 using System.Runtime.CompilerServices;
 using ConcreteEngine.Common.Numerics;
+using ConcreteEngine.Core.Assets.Resources;
 using ConcreteEngine.Core.Rendering.Passes;
-using ConcreteEngine.Core.Resources;
 using ConcreteEngine.Core.Scene;
+using ConcreteEngine.Core.Scene.Entities;
 using ConcreteEngine.Graphics.Resources;
 
 #endregion
 
 namespace ConcreteEngine.Core.Rendering;
 
-public struct MeshDrawEntity(MeshId meshId, MaterialId materialId, in Transform transform)
+public struct MeshDrawEntity(MeshId meshId, MaterialId materialId, ref Transform transform)
 {
     public Transform Transform = transform;
     public MeshId MeshId = meshId;
@@ -21,7 +22,7 @@ public struct MeshDrawEntity(MeshId meshId, MaterialId materialId, in Transform 
 public interface IMeshDrawSink : IDrawSink
 {
     void Send(ReadOnlySpan<MeshDrawEntity> entities);
-    void SendSingle(in MeshDrawEntity entity);
+    void SendSingle(ref MeshDrawEntity entity);
 }
 
 public sealed class MeshDrawProducer : IDrawCommandProducer, IMeshDrawSink
@@ -47,7 +48,7 @@ public sealed class MeshDrawProducer : IDrawCommandProducer, IMeshDrawSink
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public void SendSingle(in MeshDrawEntity entity)
+    public void SendSingle(ref MeshDrawEntity entity)
     {
         EnsureCapacity(_idx);
         _entities[_idx++] = entity;

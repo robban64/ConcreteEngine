@@ -3,7 +3,7 @@
 using System.Numerics;
 using ConcreteEngine.Core.Assets.IO;
 using ConcreteEngine.Core.Assets.Manifest;
-using ConcreteEngine.Core.Resources;
+using ConcreteEngine.Core.Assets.Resources;
 using ConcreteEngine.Graphics;
 using ConcreteEngine.Graphics.Gfx.Contracts;
 using ConcreteEngine.Graphics.Gfx.Utility;

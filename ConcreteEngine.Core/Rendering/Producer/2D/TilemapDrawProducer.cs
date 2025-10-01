@@ -1,6 +1,6 @@
 #region
 
-using ConcreteEngine.Core.Resources;
+using ConcreteEngine.Core.Assets.Resources;
 
 #endregion
 

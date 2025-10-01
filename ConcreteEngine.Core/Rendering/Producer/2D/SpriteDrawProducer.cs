@@ -2,7 +2,7 @@
 
 using System.Numerics;
 using System.Runtime.CompilerServices;
-using ConcreteEngine.Core.Resources;
+using ConcreteEngine.Core.Assets.Resources;
 using ConcreteEngine.Core.Utils;
 
 #endregion

@@ -11,7 +11,6 @@ public struct GameTickTimer(int fps, int ticksPerSec)
     public int TickIndex = 0;
     public int Accumulator = 0;
 
-    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public void AccumulateGameTime() => Accumulator += fps;
 
     public bool TryDequeueTick(out int tickIndex)

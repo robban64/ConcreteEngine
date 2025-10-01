@@ -17,7 +17,6 @@ public abstract class GameScene
 
     protected GameSceneContext Context { get; private set; } = null!;
 
-
     protected World World => _world;
 
     protected GameScene()

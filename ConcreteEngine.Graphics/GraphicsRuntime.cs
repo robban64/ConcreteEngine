@@ -18,8 +18,8 @@ public interface IGraphicsRuntime : IDisposable
     public GfxContext Gfx { get; }
 
     void Initialize<T>(IGfxStartupConfig<T> config) where T : class;
-    void BeginFrame(in FrameInfo frameInfo);
-    void EndFrame(out GpuFrameStats stats);
+    void BeginFrame(in GfxFrameInfo frameCtx);
+    void EndFrame(out GfxFrameResult result);
 
     void Shutdown();
 }
@@ -36,7 +36,7 @@ public sealed class GraphicsRuntime : IGraphicsRuntime
 
     private GfxContext _gfxContext = null!;
 
-    private FrameInfo _frameCtx;
+    private GfxFrameInfo _frameCtx;
 
     public GraphicsRuntime()
     {
@@ -69,17 +69,17 @@ public sealed class GraphicsRuntime : IGraphicsRuntime
         _isInitialized = true;
     }
 
-    public void BeginFrame(in FrameInfo frameInfo)
+    public void BeginFrame(in GfxFrameInfo frameCtx)
     {
-        _frameCtx = frameInfo;
-        _gfxContext.Commands.BeginFrame(in frameInfo);
+        _frameCtx = frameCtx;
+        _gfxContext.Commands.BeginFrame(in frameCtx);
     }
 
-    public void EndFrame(out GpuFrameStats stats)
+    public void EndFrame(out GfxFrameResult result)
     {
         if (_disposer.PendingCount > 0) _disposer.DrainDisposeQueue(_driver);
 
-        _gfxContext.Commands.EndFrame(out stats);
+        _gfxContext.Commands.EndFrame(out result);
     }
 
     public void RecreateFbo(ReadOnlySpan<(FrameBufferId Id, Size2D Size)> newSizes)

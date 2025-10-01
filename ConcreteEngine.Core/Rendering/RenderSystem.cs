@@ -57,7 +57,7 @@ public sealed class RenderSystem : IRenderSystem
 
     private bool _initialized = false;
 
-    private FrameInfo _frameCtx;
+    private GfxFrameInfo _frameCtx;
 
     private RenderGlobalSnapshot _snapshot;
 
@@ -269,7 +269,7 @@ public sealed class RenderSystem : IRenderSystem
     internal void BeginTick(in UpdateInfo update) => _commandCollector.BeginTick(update);
     internal void EndTick() => _commandCollector.EndTick();
 
-    internal void Render(float alpha, in FrameInfo frameCtx)
+    internal void Render(float alpha, in GfxFrameInfo frameCtx)
     {
         Debug.Assert(_initialized);
         _frameCtx = frameCtx;
@@ -294,7 +294,7 @@ public sealed class RenderSystem : IRenderSystem
         _pipeline.Prepare();
     }
 
-    private void Execute(float alpha, in FrameInfo frameCtx)
+    private void Execute(float alpha, in GfxFrameInfo frameCtx)
     {
         var capacity =
             UniformBufferUtils.GetCapacityForEntities<DrawObjectUniform>(_pipeline.Count + 100);

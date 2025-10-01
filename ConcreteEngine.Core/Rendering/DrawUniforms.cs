@@ -32,7 +32,7 @@ internal sealed class DrawUniforms
 
     private float _deltaTicker = 0;
 
-    public void UploadGlobalUniforms(float alpha, in FrameInfo frameCtx, in RenderGlobalSnapshot snapshot)
+    public void UploadGlobalUniforms(float alpha, in GfxFrameInfo frameCtx, in RenderGlobalSnapshot snapshot)
     {
         _deltaTicker += frameCtx.DeltaTime;
         UploadFrameUniformRecord(in snapshot);

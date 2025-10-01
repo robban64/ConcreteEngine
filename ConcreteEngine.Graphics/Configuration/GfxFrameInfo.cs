@@ -6,18 +6,18 @@ using ConcreteEngine.Common.Numerics;
 
 namespace ConcreteEngine.Graphics;
 
-public readonly struct FrameInfo(
+public readonly struct GfxFrameInfo(
     long frameIndex,
     float deltaTime,
-    bool vSyncEnabled,
+    float fps,
     Size2D viewport,
     Size2D outputSize)
 {
     public readonly long FrameIndex = frameIndex;
     public readonly float DeltaTime = deltaTime;
+    public readonly float Fps = fps;
     public readonly Size2D Viewport = viewport;
     public readonly Size2D OutputSize = outputSize;
-    public readonly bool vSyncEnabled = vSyncEnabled;
 }
 
-public readonly record struct GpuFrameStats(int DrawCalls, int TriangleCount);
+public readonly record struct GfxFrameResult(int DrawCalls, int TriangleCount);

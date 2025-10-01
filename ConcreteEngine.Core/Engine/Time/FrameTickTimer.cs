@@ -13,12 +13,10 @@ internal sealed class FrameTickTimer(float tickDt)
 
     public float Alpha
     {
-        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         get => tickDt > 0f ? _accumulator / tickDt : 0f;
     }
 
 
-    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public void Accumulate(float dt) => _accumulator += dt;
 
     public int DrainAllTicks()
@@ -28,8 +26,6 @@ internal sealed class FrameTickTimer(float tickDt)
         return n;
     }
 
-
-    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public bool TryDequeueTick(out int tickIndex)
     {
         if (_accumulator < tickDt)

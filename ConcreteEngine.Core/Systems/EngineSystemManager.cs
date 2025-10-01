@@ -10,7 +10,7 @@ namespace ConcreteEngine.Core.Systems;
 
 public interface IGameEngineSystem
 {
-    void Shutdown();
+    void Shutdown();    // Not used
 }
 
 public interface IEngineSystemManager
@@ -18,25 +18,27 @@ public interface IEngineSystemManager
     public T GetSystem<T>() where T : IGameEngineSystem;
 }
 
-public class EngineSystemManagerManager : IEngineSystemManager
+//Old code.
+//precisely renamed from EngineSystemManager to EngineCoreSystem, Or Kernel (but use core in this code base).
+public class EngineCoreSystem : IEngineSystemManager
 {
-    private readonly TypeRegistryCollection<IGameEngineSystem> _systems = new(4);
+    private readonly DictionaryTypeRegistry<IGameEngineSystem, IGameEngineSystem> _systems = new(4);
 
     private readonly RenderSystem _renderer;
     private readonly InputSystem _inputSystem;
     private readonly AssetSystem _assets;
 
-    internal EngineSystemManagerManager(RenderSystem renderer, InputSystem inputSystem, AssetSystem assets)
+    internal EngineCoreSystem(RenderSystem renderer, InputSystem inputSystem, AssetSystem assets)
     {
         _renderer = renderer;
         _inputSystem = inputSystem;
         _assets = assets;
     }
 
-
+    // Old code.... don't judge
     public T GetSystem<T>() where T : IGameEngineSystem
     {
-        var system = _systems.Get<T>();
+        var system = _systems.GetRequired<T>();
 
         if (typeof(T).IsClass)
             throw new ArgumentException($"GetSystem only allow interfaces for T");

@@ -46,7 +46,7 @@ public sealed class GfxCommands
 
     //
     private Size2D _activeOutputSize;
-    private FrameInfo _frameCtx;
+    private GfxFrameInfo _frameCtx;
     private int _drawTriangleCount = 0;
     private int _drawCallCount = 0;
 
@@ -70,7 +70,7 @@ public sealed class GfxCommands
     }
 
 
-    internal void BeginFrame(in FrameInfo frameCtx)
+    internal void BeginFrame(in GfxFrameInfo frameCtx)
     {
         _frameCtx = frameCtx;
 
@@ -83,9 +83,9 @@ public sealed class GfxCommands
         SetDepthMode(DepthMode.Lequal);
     }
 
-    internal void EndFrame(out GpuFrameStats result)
+    internal void EndFrame(out GfxFrameResult result)
     {
-        result = new GpuFrameStats(_drawCallCount, _drawTriangleCount);
+        result = new GfxFrameResult(_drawCallCount, _drawTriangleCount);
         UseShader(default, Array.Empty<int>());
         BindMesh(default);
         BindFramebuffer(default);

@@ -1,3 +1,5 @@
+using ConcreteEngine.Core.Engine.Data;
+
 namespace ConcreteEngine.Core.Time;
 
 internal sealed class RenderTime
@@ -12,15 +14,15 @@ internal sealed class RenderTime
     private readonly FrameTickTimer _gpuUploadTicker = new(1f / GpuUploadTicksPerSecond);
     private readonly FrameTickTimer _gpuDisposeTicker = new(1f / GpuDisposeTicksPerSecond);
 
-    private readonly GameTimeTickDelegate _onRenderEffect;
+    private readonly RenderTickDelegate _onRenderEffect;
 
-    private readonly GameTimeTickDelegate _onGpuUpload;
-    private readonly GameTimeTickDelegate _onGpuDispose;
+    private readonly RenderTickDelegate _onGpuUpload;
+    private readonly RenderTickDelegate _onGpuDispose;
 
     private int _a, _b, _c;
 
-    internal RenderTime(GameTimeTickDelegate onRenderEffect, GameTimeTickDelegate onGpuUpload,
-        GameTimeTickDelegate onGpuDispose)
+    internal RenderTime(RenderTickDelegate onRenderEffect, RenderTickDelegate onGpuUpload,
+        RenderTickDelegate onGpuDispose)
     {
         _onRenderEffect = onRenderEffect;
         _onGpuUpload = onGpuUpload;

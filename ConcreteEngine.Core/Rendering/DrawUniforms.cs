@@ -87,7 +87,7 @@ internal sealed class DrawUniforms
             bloomLods: new Vector4(0.8f, 0.55f, 0.30f, 0.15f),
             lutParams: new Vector4(0.0f, 0.0f, 0.0f, 0.0f),
             vignetteParams: new Vector4(0.32f, 0.88f, 0.25f, 0.0f),
-            grainParams: new Vector4(0.008f, _deltaTicker, 0.0f, 0.0f),
+            grainParams: new Vector4(0, _deltaTicker, 0.0f, 0.0f),
             chromAbParams: new Vector4(0.0000f, 0.0f, 0.0f, 0.0f),
             toneShadows: new Vector4(210.0f, 0.05f, -0.01f, 0.4f),
             toneHighlights: new Vector4(40.0f, 0.05f, 0.01f, 0.4f),

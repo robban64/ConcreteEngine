@@ -116,7 +116,6 @@ public sealed class ActionSequenceMachine<TCtx>
 
     internal readonly record struct ConditionId(ActionId ForActionId, ActionId ToActionId)
     {
-        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static ConditionId Make(int forActionId, int toActionId) =>
             new(new ActionId(forActionId), new ActionId(toActionId));
     }

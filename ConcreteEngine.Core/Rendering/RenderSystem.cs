@@ -101,7 +101,7 @@ public sealed class RenderSystem : IRenderSystem
             RegisterFboEntry.MakeDefault(true).AttachColorTexture().AttachDepthStencilBuffer()
         );
         _renderRegistry.RegisterFrameBuffer<PostPassTag, PostPassASlot>(0,
-            RegisterFboEntry.MakePost(true).AttachColorTexture()
+            RegisterFboEntry.MakePost(false).AttachColorTexture()
         );
         _renderRegistry.RegisterFrameBuffer<PostPassTag, PostPassBSlot>(0,
             RegisterFboEntry.MakePost(false).AttachColorTexture()
@@ -181,6 +181,11 @@ public sealed class RenderSystem : IRenderSystem
                 var texId = ctx.Meta.Attachments.ColorTextureId;
                 ctx.SampleTo<PostPassTag, PostPassASlot>(PassOpKind.Fsq, 0, texId);
                 return ApplyPassReturn.ResolveTargetResult();
+            }).OnPassEnd((in RenderPassCtx ctx, in RenderPassState state) =>
+            {
+                var texId = ctx.Meta.Attachments.ColorTextureId;
+                ctx.CmdOps.GenerateMips(texId);
+
             });
 
         // Post A
@@ -201,7 +206,6 @@ public sealed class RenderSystem : IRenderSystem
             {
                 _gfxCmd.EndRenderPass();
                 var texId = ctx.Meta.Attachments.ColorTextureId;
-                ctx.CmdOps.GenerateMips(texId);
                 ctx.SampleTo<PostPassTag, PostPassBSlot>(PassOpKind.Fsq, 0, texId);
             });
 
@@ -325,7 +329,11 @@ public sealed class RenderSystem : IRenderSystem
 
         var passResult = pass.ApplyPass(in passCtx);
         if (passResult.OpKind == PassOpKind.Resolve)
+        {
+            _gfxCmd.EndRenderPass();
+            pass.ApplyAfterPass(in passCtx);
             return;
+        }
 
         if (pass.TargetId == RenderTargetId.Scene && pass.PassIndex == 0)
             _pipeline.DrainCommandQueue(RenderTargetId.Scene);

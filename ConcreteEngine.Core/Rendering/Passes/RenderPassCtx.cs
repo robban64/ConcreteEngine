@@ -1,9 +1,12 @@
 using System.Diagnostics;
+using System.Runtime.CompilerServices;
 using ConcreteEngine.Common.Numerics;
 using ConcreteEngine.Core.Rendering.Gfx;
 using ConcreteEngine.Graphics.Resources;
 
 namespace ConcreteEngine.Core.Rendering;
+
+
 
 public sealed class RenderPassCtx
 {
@@ -14,8 +17,10 @@ public sealed class RenderPassCtx
     public PassTagKey TagKey { get; private set; }
 
     private readonly IReadOnlyDictionary<PassTagKey, RenderPassEntry> _registry;
-    private readonly Dictionary<PassTagKey, List<TextureId>> _textureSlot = new(4);
+    //private readonly Dictionary<PassTagKey, List<TextureId>> _textureSlot = new(4);
 
+    private readonly PriorityQueue<TextureId, PassTextureSlotKey> _queue = new(new PassTagKeyNativeComparer());
+    private readonly List<TextureId> _output = new();
     internal RenderPassCtx(RenderCommandOps cmdOps, IReadOnlyDictionary<PassTagKey, RenderPassEntry> registry)
     {
         CmdOps = cmdOps;
@@ -24,23 +29,23 @@ public sealed class RenderPassCtx
 
     public IReadOnlyList<TextureId> GetPassSources()
     {
-        if (!_textureSlot.TryGetValue(TagKey, out var list))
-            throw new KeyNotFoundException($"No passes were found for {TagKey} at Pass: {Pass}");
+        var tagIndex = RTypeRegistry.GetPassTagValue(TagKey.TagType);
+        _output.Clear();
+        while (_queue.TryPeek(out _, out var k) && k.TagIndex == tagIndex)
+        {
+            _queue.TryDequeue(out var id, out k);
+            _output.Add(id);
+            //Console.WriteLine($"{id} - {k}");
+        }
 
-        return list;
+        return _output;
     }
 
     public void SampleTo<TTag, TSlot>(PassOpKind passOp, int slot, TextureId textureId)
         where TTag : unmanaged, IRenderPassTag where TSlot : unmanaged, IRenderPassTagSlot
     {
         Debug.Assert(slot >= 0 && slot < 16);
-        var key = PassTagKey.Make<TTag, TSlot>(passOp);
-        if (!_textureSlot.TryGetValue(key, out var list))
-            _textureSlot[key] = list = new List<TextureId>(4);
-
-        while (list.Count <= slot) list.Add(default);
-
-        list[slot] = textureId;
+        _queue.Enqueue(textureId, PassTextureSlotKey.Make<TTag, TSlot>(passOp, (byte)slot));
     }
 
     public void MutateStatePass<TTag, TSlot>(PassOpKind passOp, in PassMutationState newState)
@@ -68,6 +73,8 @@ public sealed class RenderPassCtx
         FboId = default;
         Meta = default;
         Pass = 0;
+        _queue.Clear();
+        _output.Clear();
     }
 
     internal void AttachScreenPass(Size2D outputSize, int pass, PassTagKey tagKey)

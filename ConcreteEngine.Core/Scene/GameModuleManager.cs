@@ -73,6 +73,7 @@ public sealed class ModuleManager : IModuleManager
         {
             module.Unload();
         }
+
         _modules.Clear();
     }
 }

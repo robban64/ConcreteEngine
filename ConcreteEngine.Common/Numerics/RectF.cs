@@ -1,4 +1,8 @@
+#region
+
 using System.Numerics;
+
+#endregion
 
 namespace ConcreteEngine.Common.Numerics;
 
@@ -10,14 +14,12 @@ public readonly record struct RectF(float Left, float Top, float Width, float He
     public readonly float Height = Height;
 
     public float Right => Left + Width;
-    
+
     public float Bottom => Top + Height;
 
     public RectF(Vector4 vec) : this(vec.X, vec.Y, vec.Z, vec.W)
     {
-        
     }
 
-    public bool Contains(Vector2 point) =>
-        point.X >= Left && point.X <= Right && point.Y >= Top && point.Y <= Bottom;
+    public bool Contains(Vector2 point) => point.X >= Left && point.X <= Right && point.Y >= Top && point.Y <= Bottom;
 }

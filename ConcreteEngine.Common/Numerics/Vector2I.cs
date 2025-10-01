@@ -1,10 +1,13 @@
+#region
+
 using System.Numerics;
 using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
 using System.Runtime.Serialization;
 
-namespace ConcreteEngine.Common.Numerics;
+#endregion
 
+namespace ConcreteEngine.Common.Numerics;
 
 [StructLayout(LayoutKind.Sequential)]
 [DataContract]
@@ -47,7 +50,7 @@ public readonly struct Vector2I(int x, int y)
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static Vector2I operator *(int k, Vector2I v) => new(v.X * k, v.Y * k);
-    
+
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static Vector2I operator /(Vector2I v, int k)
@@ -129,14 +132,16 @@ public readonly struct Vector2I(int x, int y)
     public bool TryCopyTo(Span<int> dst)
     {
         if (dst.Length < 2) return false;
-        dst[0] = X; dst[1] = Y;
+        dst[0] = X;
+        dst[1] = Y;
         return true;
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public void CopyTo(Span<int> dst)
     {
-        dst[0] = X; dst[1] = Y;
+        dst[0] = X;
+        dst[1] = Y;
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
@@ -146,7 +151,10 @@ public readonly struct Vector2I(int x, int y)
 
     public override int GetHashCode()
     {
-        unchecked { return (X * 397) ^ Y; }
+        unchecked
+        {
+            return (X * 397) ^ Y;
+        }
     }
 
     public static bool operator ==(Vector2I a, Vector2I b) => a.Equals(b);
@@ -161,6 +169,7 @@ public readonly struct Vector2I(int x, int y)
 
     public void Deconstruct(out int xOut, out int yOut)
     {
-        xOut = X; yOut = Y;
+        xOut = X;
+        yOut = Y;
     }
 }

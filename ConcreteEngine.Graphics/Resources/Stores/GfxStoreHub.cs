@@ -64,26 +64,26 @@ internal sealed class GfxStoreHub
 
 
     public GfxResourceStore<TextureId, TextureMeta> TextureStore { get; } =
-        new( LargeCapacity, static i => new TextureId(i + 1));
+        new(LargeCapacity, static i => new TextureId(i + 1));
 
     public GfxResourceStore<ShaderId, ShaderMeta> ShaderStore { get; }
-        = new( MediumCapacity, static i => new ShaderId(i + 1));
+        = new(MediumCapacity, static i => new ShaderId(i + 1));
 
     public GfxResourceStore<MeshId, MeshMeta> MeshStore { get; }
-        = new( MediumCapacity, static i => new MeshId(i + 1));
+        = new(MediumCapacity, static i => new MeshId(i + 1));
 
     public GfxResourceStore<VertexBufferId, VertexBufferMeta> VboStore { get; }
-        = new( MediumCapacity, static i => new VertexBufferId(i + 1));
+        = new(MediumCapacity, static i => new VertexBufferId(i + 1));
 
     public GfxResourceStore<IndexBufferId, IndexBufferMeta> IboStore { get; }
-        = new( MediumCapacity, static i => new IndexBufferId(i + 1));
+        = new(MediumCapacity, static i => new IndexBufferId(i + 1));
 
     public GfxResourceStore<FrameBufferId, FrameBufferMeta> FboStore { get; }
-        = new( LowCapacity, static i => new FrameBufferId(i + 1));
+        = new(LowCapacity, static i => new FrameBufferId(i + 1));
 
     public GfxResourceStore<RenderBufferId, RenderBufferMeta> RboStore { get; }
-        = new( LowCapacity, static i => new RenderBufferId(i + 1));
+        = new(LowCapacity, static i => new RenderBufferId(i + 1));
 
     public GfxResourceStore<UniformBufferId, UniformBufferMeta> UboStore { get; }
-        = new( LowCapacity, static i => new UniformBufferId(i + 1));
+        = new(LowCapacity, static i => new UniformBufferId(i + 1));
 }

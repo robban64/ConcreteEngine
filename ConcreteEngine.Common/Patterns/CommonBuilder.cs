@@ -1,4 +1,4 @@
-namespace ConcreteEngine.Common;
+namespace ConcreteEngine.Common.Patterns;
 
 public interface IBuilderState;
 
@@ -59,7 +59,7 @@ public abstract class CommonBuilderBase<TResult, TState> : IBuilds<TResult> wher
         _initialized = false;
         return product;
     }
-    
+
     protected abstract void StartBuilder(TState state);
 
     protected abstract void ValidateBuilder(TState state);
@@ -67,5 +67,4 @@ public abstract class CommonBuilderBase<TResult, TState> : IBuilds<TResult> wher
     protected abstract TResult BuildResult(TState state);
 
     protected abstract void ResetBuilder(TState state);
-    
 }

@@ -1,7 +1,9 @@
+#region
+
 using System.Numerics;
-using ConcreteEngine.Common;
 using ConcreteEngine.Common.Numerics;
-using Silk.NET.Maths;
+
+#endregion
 
 namespace ConcreteEngine.Core;
 
@@ -116,7 +118,7 @@ public sealed class Camera3D : ICamera
 
     public float AspectRatio => _aspectRatio;
 
-    
+
     public Quaternion Rotation
     {
         get

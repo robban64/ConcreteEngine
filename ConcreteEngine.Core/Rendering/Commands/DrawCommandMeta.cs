@@ -1,8 +1,12 @@
+#region
+
 using System.Runtime.CompilerServices;
+using ConcreteEngine.Core.Rendering.Passes;
 using ConcreteEngine.Core.Resources;
 
-namespace ConcreteEngine.Core.Rendering;
+#endregion
 
+namespace ConcreteEngine.Core.Rendering;
 
 public readonly struct DrawCommandMeta(
     DrawCommandId id,

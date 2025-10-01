@@ -1,4 +1,8 @@
+#region
+
 using ConcreteEngine.Core.Platform;
+
+#endregion
 
 namespace ConcreteEngine.Core.Systems;
 

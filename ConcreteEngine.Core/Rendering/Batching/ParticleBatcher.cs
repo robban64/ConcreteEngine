@@ -1,10 +1,12 @@
-using ConcreteEngine.Graphics;
-using ConcreteEngine.Graphics.Contracts;
+#region
+
 using ConcreteEngine.Graphics.Gfx;
 using ConcreteEngine.Graphics.Primitives;
 using ConcreteEngine.Graphics.Resources;
 
-namespace ConcreteEngine.Core.Rendering;
+#endregion
+
+namespace ConcreteEngine.Core.Rendering.Batching;
 
 public sealed class ParticleBatcher : RenderBatcher<TerrainBatchResult>
 {
@@ -18,15 +20,11 @@ public sealed class ParticleBatcher : RenderBatcher<TerrainBatchResult>
 
     private void GenerateMesh()
     {
-        ReadOnlySpan<Vertex2D> vertices = stackalloc []{
-            new Vertex2D(-0.5f, -0.5f, 0f, 0f),
-            new Vertex2D( 0.5f, -0.5f, 1f, 0f),
-            new Vertex2D(-0.5f,  0.5f, 0f, 1f),
-            new Vertex2D( 0.5f,  0.5f, 1f, 1f)
+        ReadOnlySpan<Vertex2D> vertices = stackalloc[]
+        {
+            new Vertex2D(-0.5f, -0.5f, 0f, 0f), new Vertex2D(0.5f, -0.5f, 1f, 0f),
+            new Vertex2D(-0.5f, 0.5f, 0f, 1f), new Vertex2D(0.5f, 0.5f, 1f, 1f)
         };
-        
-        
-
     }
 
     public override TerrainBatchResult BuildBatch()

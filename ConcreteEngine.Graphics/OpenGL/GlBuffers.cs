@@ -1,10 +1,8 @@
 #region
 
 using System.Runtime.CompilerServices;
-using ConcreteEngine.Graphics.Contracts;
-using ConcreteEngine.Graphics.Error;
+using ConcreteEngine.Graphics.Gfx.Contracts;
 using ConcreteEngine.Graphics.OpenGL.Utilities;
-using ConcreteEngine.Graphics.Primitives;
 using ConcreteEngine.Graphics.Resources;
 using Silk.NET.OpenGL;
 
@@ -145,5 +143,4 @@ internal sealed class GlBuffers : IGraphicsDriverModule
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     private GlUboHandle GetUboHandle(GfxRefToken<UniformBufferId> uboRef) => _store.UniformBuffer.GetRef(uboRef);
-
 }

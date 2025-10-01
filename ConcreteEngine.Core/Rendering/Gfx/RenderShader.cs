@@ -1,19 +1,16 @@
-using System.Numerics;
+#region
+
 using System.Runtime.CompilerServices;
-using ConcreteEngine.Common;
-using ConcreteEngine.Common.Numerics;
-using ConcreteEngine.Graphics;
-using ConcreteEngine.Graphics.Contracts;
-using ConcreteEngine.Graphics.Gfx.Utility;
-using ConcreteEngine.Graphics.Primitives;
 using ConcreteEngine.Graphics.Resources;
 using ConcreteEngine.Graphics.Utils;
+
+#endregion
 
 namespace ConcreteEngine.Core.Rendering.Gfx;
 
 public sealed class RenderShader
 {
-    public ShaderId Id { get;  }
+    public ShaderId Id { get; }
     private readonly int[] _locations;
     private readonly Dictionary<string, int> _uniforms;
 

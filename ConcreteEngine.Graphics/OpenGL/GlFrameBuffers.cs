@@ -4,7 +4,6 @@ using ConcreteEngine.Common.Numerics;
 using ConcreteEngine.Graphics.Error;
 using ConcreteEngine.Graphics.OpenGL.Utilities;
 using ConcreteEngine.Graphics.Resources;
-using Silk.NET.Maths;
 using Silk.NET.OpenGL;
 
 #endregion

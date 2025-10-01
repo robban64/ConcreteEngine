@@ -1,12 +1,13 @@
+#region
+
 using System.Runtime.CompilerServices;
 using ConcreteEngine.Common.Numerics;
 using ConcreteEngine.Core.Rendering.Gfx;
 using ConcreteEngine.Core.Resources;
-using ConcreteEngine.Graphics;
 using ConcreteEngine.Graphics.Gfx;
-using ConcreteEngine.Graphics.Gfx.Utility;
 using ConcreteEngine.Graphics.Resources;
-using ConcreteEngine.Graphics.Utils;
+
+#endregion
 
 namespace ConcreteEngine.Core.Rendering;
 
@@ -33,7 +34,7 @@ internal sealed class DrawProcessor
         _gfxCmd = gfx.Commands;
         _gfxBuffers = gfx.Buffers;
         _gfxShaders = gfx.Shaders;
-        
+
         _materials = materials;
         _registry = registry;
     }
@@ -48,9 +49,9 @@ internal sealed class DrawProcessor
     public void Prepare(in RenderGlobalSnapshot renderGlobals, nint capacity)
     {
         _drawUbo.ResetCursor();
-        if(capacity != _drawUbo.Capacity)
+        if (capacity != _drawUbo.Capacity)
             _drawUbo.SetCapacity(capacity);
-        
+
         _previousMaterialId = -1;
         _gfxBuffers.SetUniformBufferCapacity(_drawUbo.Id, capacity);
     }
@@ -59,7 +60,6 @@ internal sealed class DrawProcessor
     {
         var renderShader = _registry.GetRenderShader(shaderId);
         _gfxCmd.UseShader(shaderId, renderShader.Locations);
-
     }
 
     private void BindMaterial(MaterialId materialId)
@@ -77,7 +77,7 @@ internal sealed class DrawProcessor
 
         _previousMaterialId = materialId.Id;
     }
-    
+
     public void UploadMaterial(in MaterialUniformRecord rec)
     {
         var data = new MaterialUniformRecord(
@@ -102,7 +102,7 @@ internal sealed class DrawProcessor
 
         _gfxBuffers.UploadUniformGpuData(_drawUbo.Id, in data, _drawUbo.NextUploadCursor());
     }
-    
+
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     private void BindDrawObject()
     {
@@ -116,7 +116,7 @@ internal sealed class DrawProcessor
         _gfxCmd.BindMesh(cmd.MeshId);
         _gfxCmd.DrawBoundMesh(cmd.MeshId, cmd.DrawCount);
     }
-    
+
 
     public void DrawFullscreenQuad(ShaderId shaderId, IReadOnlyList<TextureId> sources)
     {
@@ -126,11 +126,11 @@ internal sealed class DrawProcessor
         {
             _gfxCmd.BindTexture(sources[i], i);
         }
-        
+
         _gfxCmd.BindMesh(_gfx.Primitives.FsqQuad);
         _gfxCmd.DrawBoundMesh(_gfx.Primitives.FsqQuad, 0);
     }
-    
+
     public void DrawFullscreenQuad(ShaderId shaderId, ReadOnlySpan<TextureId> sources)
     {
         UseShader(shaderId);
@@ -139,7 +139,7 @@ internal sealed class DrawProcessor
         {
             _gfxCmd.BindTexture(sources[i], i);
         }
-        
+
         _gfxCmd.BindMesh(_gfx.Primitives.FsqQuad);
         _gfxCmd.DrawBoundMesh(_gfx.Primitives.FsqQuad, 0);
     }

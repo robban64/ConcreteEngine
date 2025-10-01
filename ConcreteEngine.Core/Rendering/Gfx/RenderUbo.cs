@@ -1,8 +1,12 @@
+#region
+
 using System.Diagnostics;
 using System.Runtime.CompilerServices;
 using ConcreteEngine.Common;
 using ConcreteEngine.Graphics.Gfx.Utility;
 using ConcreteEngine.Graphics.Resources;
+
+#endregion
 
 namespace ConcreteEngine.Core.Rendering.Gfx;
 
@@ -12,7 +16,7 @@ public sealed class RenderUbo
     public UboSlot Slot { get; }
     public nint Stride { get; }
     public nint Capacity { get; private set; }
-    
+
     private nint _uploadCursor;
     private nint _drawCursor;
 
@@ -22,8 +26,8 @@ public sealed class RenderUbo
         Id = id;
         Slot = slot;
         Stride = meta.Stride;
-        Capacity =  meta.Capacity;
-        
+        Capacity = meta.Capacity;
+
         _uploadCursor = 0;
         _drawCursor = 0;
     }
@@ -40,7 +44,7 @@ public sealed class RenderUbo
         InvalidOpThrower.ThrowIf(_uploadCursor > 0 || _drawCursor > 0);
         Capacity = capacity;
     }
-    
+
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public nint NextUploadCursor()
     {
@@ -62,7 +66,7 @@ public sealed class RenderUbo
         _drawCursor += Stride;
         return offset;
     }
-    
+
     public nint GetCapacityFor(int expectedRecords)
     {
         nint required = Stride * Math.Max(1, expectedRecords);

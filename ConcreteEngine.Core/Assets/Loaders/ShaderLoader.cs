@@ -4,7 +4,6 @@ using System.Security.Cryptography;
 using System.Text;
 using System.Text.RegularExpressions;
 using ConcreteEngine.Core.Assets.Manifest;
-using ConcreteEngine.Graphics.Resources;
 
 #endregion
 
@@ -17,8 +16,8 @@ internal sealed class ShaderLoader(IReadOnlyList<ShaderManifestRecord> records)
 {
     private static readonly UTF8Encoding ShaderEncoding = new(false, true);
 
-    private Dictionary<string, string> _vertexShaderCache = new(4,StringComparer.Ordinal);
-    
+    private Dictionary<string, string> _vertexShaderCache = new(4, StringComparer.Ordinal);
+
     private UniformsStd140Layouts _layouts = new();
 
     public override ShaderPayload ProcessResource(ShaderManifestRecord record, out AssetProcessInfo info)

@@ -1,10 +1,8 @@
 #region
 
 using System.Diagnostics;
-using System.Runtime.CompilerServices;
-using ConcreteEngine.Common;
 using ConcreteEngine.Common.Numerics;
-using ConcreteEngine.Graphics.Contracts;
+using ConcreteEngine.Graphics.Gfx.Contracts;
 using ConcreteEngine.Graphics.Gfx.Internal;
 using ConcreteEngine.Graphics.OpenGL;
 using ConcreteEngine.Graphics.Resources;
@@ -45,10 +43,11 @@ public sealed class GfxTextures
         {
             UploadCubeMapFace(textureId, faces[i].Span, desc.Width, desc.Height, i);
         }
+
         ApplyProperties(textureId);
         return textureId;
     }
-    
+
     public TextureId BuildEmptyTexture(in GfxTextureDescriptor desc, in GfxTextureProperties props)
     {
         var textureId = CreateTexture(in desc, in props);

@@ -1,12 +1,10 @@
 #region
 
-using ConcreteEngine.Graphics;
 using ConcreteEngine.Graphics.Gfx;
-using ConcreteEngine.Graphics.Resources;
 
 #endregion
 
-namespace ConcreteEngine.Core.Rendering;
+namespace ConcreteEngine.Core.Rendering.Batching;
 
 public interface IRenderBatcher : IDisposable;
 

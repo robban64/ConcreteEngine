@@ -1,12 +1,10 @@
 #region
 
-using System.Numerics;
 using ConcreteEngine.Common.Numerics;
-using Silk.NET.Maths;
 
 #endregion
 
-namespace ConcreteEngine.Graphics.Descriptors;
+namespace ConcreteEngine.Graphics.Gfx.Contracts;
 
 public readonly record struct GfxFrameBufferDescriptor(
     Size2D Size,
@@ -22,6 +20,4 @@ public readonly record struct GfxFrameBufferDescriptor(
         bool ColorBuffer,
         bool DepthStencilBuffer
     );
-    
 }
-

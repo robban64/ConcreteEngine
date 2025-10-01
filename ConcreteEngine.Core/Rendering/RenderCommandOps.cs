@@ -1,7 +1,9 @@
-using System.Runtime.CompilerServices;
-using ConcreteEngine.Common.Numerics;
+#region
+
 using ConcreteEngine.Graphics.Gfx;
 using ConcreteEngine.Graphics.Resources;
+
+#endregion
 
 namespace ConcreteEngine.Core.Rendering;
 
@@ -18,7 +20,8 @@ public sealed class RenderCommandOps
         _gfxTextures = ctx.Textures;
     }
 
-    public void BeginScreenPass(in GfxPassClear passClear, in GfxPassState states) => _gfxCmd.BeginScreenPass(in passClear, in states);
+    public void BeginScreenPass(in GfxPassClear passClear, in GfxPassState states) =>
+        _gfxCmd.BeginScreenPass(in passClear, in states);
 
     public void BeginRenderPass(FrameBufferId fboId, in GfxPassClear passClear, in GfxPassState states) =>
         _gfxCmd.BeginRenderPass(fboId, in passClear, in states);

@@ -1,9 +1,12 @@
+#region
+
 using System.Numerics;
-using ConcreteEngine.Common;
 using ConcreteEngine.Common.Numerics;
 using ConcreteEngine.Graphics;
 using ConcreteEngine.Graphics.Resources;
 using Silk.NET.Maths;
+
+#endregion
 
 namespace ConcreteEngine.Core.Rendering;
 
@@ -11,7 +14,7 @@ public sealed record RenderTargetDescriptor
 {
     public required SceneTargetDesc SceneTarget { get; init; }
     public LightTargetDesc LightTarget { get; init; }
-    public PostEffectTargetDesc  PostEffectTarget { get; init; }
+    public PostEffectTargetDesc PostEffectTarget { get; init; }
     public required ScreenTargetDesc ScreenTarget { get; init; }
 }
 

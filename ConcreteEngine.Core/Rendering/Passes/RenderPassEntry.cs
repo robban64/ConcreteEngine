@@ -1,11 +1,15 @@
-using System.Diagnostics;
-using System.Runtime.CompilerServices;
-using ConcreteEngine.Graphics.Resources;
+#region
 
-namespace ConcreteEngine.Core.Rendering;
+using System.Runtime.CompilerServices;
+
+#endregion
+
+namespace ConcreteEngine.Core.Rendering.Passes;
 
 public delegate PassMutationState RenderPassMutate(in RenderPassState currentState);
+
 public delegate ApplyPassReturn RenderPassOp(in RenderPassCtx ctx, in RenderPassState state);
+
 public delegate void RenderAfterPassOp(in RenderPassCtx ctx, in RenderPassState state);
 
 public sealed class RenderPassEntry
@@ -13,7 +17,7 @@ public sealed class RenderPassEntry
     public RenderTargetId TargetId { get; }
     public int PassIndex { get; }
     public PassTagKey TagKey { get; private set; }
-    
+
     private RenderPassOp? _applyPassDel;
     private RenderAfterPassOp? _applyAfterPassDel;
     private RenderPassMutate? _applyPassMutateDel;
@@ -79,7 +83,7 @@ public sealed class RenderPassEntry
     public ApplyPassReturn ApplyPass(in RenderPassCtx ctx)
     {
         ApplyPending();
-        
+
         if (_applyPassDel is { } applyPassDel)
             return applyPassDel(in ctx, in _state);
 
@@ -92,5 +96,4 @@ public sealed class RenderPassEntry
         if (_applyAfterPassDel is { } afterPassDel)
             afterPassDel(in ctx, in _state);
     }
-
 }

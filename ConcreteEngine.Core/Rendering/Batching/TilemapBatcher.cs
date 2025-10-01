@@ -1,11 +1,10 @@
 #region
 
-using ConcreteEngine.Graphics;
 using ConcreteEngine.Graphics.Gfx;
 
 #endregion
 
-namespace ConcreteEngine.Core.Rendering;
+namespace ConcreteEngine.Core.Rendering.Batching;
 
 public class TilemapBatcher : RenderBatcher<TilemapBatchResult>
 {

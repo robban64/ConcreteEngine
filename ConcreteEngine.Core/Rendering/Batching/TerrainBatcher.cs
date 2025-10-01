@@ -1,15 +1,17 @@
+#region
+
 using System.Numerics;
 using ConcreteEngine.Core.Resources;
 using ConcreteEngine.Graphics;
-using ConcreteEngine.Graphics.Contracts;
-using ConcreteEngine.Graphics.Descriptors;
 using ConcreteEngine.Graphics.Gfx;
+using ConcreteEngine.Graphics.Gfx.Contracts;
 using ConcreteEngine.Graphics.Gfx.Utility;
 using ConcreteEngine.Graphics.Primitives;
 using ConcreteEngine.Graphics.Resources;
-using ConcreteEngine.Graphics.Utils;
 
-namespace ConcreteEngine.Core.Rendering;
+#endregion
+
+namespace ConcreteEngine.Core.Rendering.Batching;
 
 public readonly struct TerrainBatchResult(MeshId meshId, int drawCount)
 {
@@ -56,7 +58,7 @@ public sealed class TerrainBatcher : RenderBatcher<TerrainBatchResult>
         var data = HeightMap.PixelData.Value;
 
 
-        int vertexRowCount = ((Size - 1) / Step) + 1;
+        int vertexRowCount = (Size - 1) / Step + 1;
         VertexCount = vertexRowCount * vertexRowCount;
 
         var heightmap = data.Span;
@@ -241,7 +243,7 @@ public sealed class TerrainBatcher : RenderBatcher<TerrainBatchResult>
             return 0f;
 
         byte r = heightmap[idx];
-        return (r / 255f) * MaxHeight;
+        return r / 255f * MaxHeight;
     }
 
     private Vector3 GetTangent(ReadOnlySpan<byte> heightmap, int vx, int vz, Vector3 n)

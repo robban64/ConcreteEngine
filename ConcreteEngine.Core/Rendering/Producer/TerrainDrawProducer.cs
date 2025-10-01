@@ -1,6 +1,12 @@
+#region
+
 using System.Numerics;
 using ConcreteEngine.Common.Numerics;
+using ConcreteEngine.Core.Rendering.Batching;
+using ConcreteEngine.Core.Rendering.Passes;
 using ConcreteEngine.Core.Resources;
+
+#endregion
 
 namespace ConcreteEngine.Core.Rendering;
 

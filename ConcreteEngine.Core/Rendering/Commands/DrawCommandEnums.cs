@@ -12,9 +12,8 @@ public enum DrawCommandId : byte
     Light,
     Mesh,
     Terrain,
-    Skybox,
+    Skybox
 }
-
 
 public enum DrawCommandQueue : byte
 {
@@ -38,6 +37,5 @@ public enum DrawCommandFlags : byte
     CastShadows = 1 << 2,
     ReceiveShadows = 1 << 3,
 
-    Shadows = CastShadows | ReceiveShadows,
+    Shadows = CastShadows | ReceiveShadows
 }
-

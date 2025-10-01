@@ -1,10 +1,12 @@
-using System.Runtime.CompilerServices;
-using System.Runtime.InteropServices;
+#region
+
 using ConcreteEngine.Common.Numerics;
 using ConcreteEngine.Graphics.Gfx;
 using ConcreteEngine.Graphics.Resources;
 
-namespace ConcreteEngine.Core.Rendering;
+#endregion
+
+namespace ConcreteEngine.Core.Rendering.Passes;
 /*
 public readonly record struct PassCommandState()
 {

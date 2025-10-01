@@ -1,4 +1,8 @@
+#region
+
 using System.Diagnostics;
+
+#endregion
 
 namespace ConcreteEngine.Core.Scene;
 
@@ -9,7 +13,7 @@ public sealed class GameComponentStore<T> where T : unmanaged
     private GameEntityId[] _entities;
 
     private int _idx = 0;
-    
+
     public bool IsDirty { get; set; }
 
     public GameComponentStore(int initialCapacity = 16)
@@ -55,15 +59,18 @@ public sealed class GameComponentStore<T> where T : unmanaged
 
     public Span<GameEntityId> AsEntitySpan() => _entities.AsSpan(0, _idx);
     public Span<T> AsSpan() => _data.AsSpan(0, _idx);
-    
+
     public EntityEnumerator<T> GetEnumerator() => new(this);
-    public EntityEnumerator<T, T2> View2<T2>(GameComponentStore<T2> r2) 
-        where T2 : unmanaged => new(this, r2);
+
+    public EntityEnumerator<T, T2> View2<T2>(GameComponentStore<T2> r2)
+        where T2 : unmanaged =>
+        new(this, r2);
 
     public EntityEnumerator<T, T2, T3> View3<T2, T3>(GameComponentStore<T2> r2,
         GameComponentStore<T3> r3)
         where T2 : unmanaged
-        where T3 : unmanaged => new(this, r2, r3);
+        where T3 : unmanaged =>
+        new(this, r2, r3);
 
 
     private static int BinarySearchEntity<T2>(ReadOnlySpan<GameEntityId> collection, GameEntityId entity)
@@ -73,7 +80,7 @@ public sealed class GameComponentStore<T> where T : unmanaged
         int lo = 0, hi = collection.Length - 1;
         while (lo <= hi)
         {
-            int mid = lo + ((hi - lo) / 2);
+            int mid = lo + (hi - lo) / 2;
             int midKey = collection[mid].Id;
             if (midKey == id) return mid;
             if (midKey < id) lo = mid + 1;

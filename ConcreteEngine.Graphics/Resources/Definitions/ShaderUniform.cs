@@ -18,7 +18,7 @@ public enum ShaderUniform : byte
     TextureScale = 6,
     TexCoordRepeat = 7,
     TexelSize = 8,
-    Time = 9,
+    Time = 9
 }
 
 public static class ShaderUniforms

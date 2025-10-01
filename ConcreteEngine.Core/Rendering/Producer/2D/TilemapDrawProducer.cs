@@ -6,13 +6,12 @@ using ConcreteEngine.Core.Resources;
 
 namespace ConcreteEngine.Core.Rendering;
 
-
 public struct TilemapDrawData()
 {
     public MaterialId MaterialId;
     public int MapDimension = 64;
-    public int TileSize  = 32;
-    public int Count  = 0;
+    public int TileSize = 32;
+    public int Count = 0;
 }
 /*
 public interface ITilemapDrawSink : IDrawSink
@@ -21,11 +20,11 @@ public interface ITilemapDrawSink : IDrawSink
 }
 public sealed class TilemapDrawProducer : IDrawCommandProducer, ITilemapDrawSink
 {
-    private static readonly Matrix4x4  TilemapTransform = 
+    private static readonly Matrix4x4  TilemapTransform =
         TransformHelper.CreateTransform2D(Vector2.Zero, new Vector2(1, 1), 0);
-    
+
     private TilemapBatcher _tilemapBatcher = null!;
-    
+
     private CommandProducerContext _context = null!;
 
     private TilemapDrawData? _data = null;
@@ -39,12 +38,12 @@ public sealed class TilemapDrawProducer : IDrawCommandProducer, ITilemapDrawSink
     {
         _context = ctx;
     }
-    
+
     public void Initialize()
     {
         _tilemapBatcher = _context.DrawBatchers.Get<TilemapBatcher>();
     }
-    
+
     public void BeginTick(in UpdateMetaInfo updateMeta)
     {
     }
@@ -57,9 +56,9 @@ public sealed class TilemapDrawProducer : IDrawCommandProducer, ITilemapDrawSink
     {
         if(_data == null) return;
         var data = _data.Value;
-        
+
         var result = _tilemapBatcher.BuildBatch();
-        
+
         var cmd = new DrawCommandSprite(
             meshId: result.GroundLayer.MeshId,
             drawCount: result.GroundLayer.DrawCount,

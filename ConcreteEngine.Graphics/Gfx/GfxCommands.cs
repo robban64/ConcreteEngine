@@ -8,7 +8,6 @@ using ConcreteEngine.Graphics.Error;
 using ConcreteEngine.Graphics.Gfx.Internal;
 using ConcreteEngine.Graphics.OpenGL;
 using ConcreteEngine.Graphics.Resources;
-using Silk.NET.Maths;
 
 #endregion
 

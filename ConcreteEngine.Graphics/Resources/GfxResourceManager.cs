@@ -5,14 +5,13 @@ public interface IGfxResourceManager
     GfxResourceApi GetGfxApi();
 }
 
-
 internal sealed class GfxResourceManager : IGfxResourceManager
 {
     private readonly GfxStoreHub _gfxStores;
     private readonly BackendStoreHub _backendHub;
 
     private readonly ResourceBackendDispatcher _dispatchers;
-    
+
     private readonly GfxResourceApi _resourceApi;
 
     internal BackendStoreHub BackendStoreHub => _backendHub;
@@ -35,5 +34,4 @@ internal sealed class GfxResourceManager : IGfxResourceManager
 
 
     public GfxResourceApi GetGfxApi() => _resourceApi;
-
 }

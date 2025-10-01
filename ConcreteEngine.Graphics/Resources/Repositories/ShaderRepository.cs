@@ -1,10 +1,5 @@
 #region
 
-using System.Runtime.CompilerServices;
-using ConcreteEngine.Graphics.Error;
-using ConcreteEngine.Graphics.Gfx.Utility;
-using ConcreteEngine.Graphics.Utils;
-
 #endregion
 
 namespace ConcreteEngine.Graphics.Resources;

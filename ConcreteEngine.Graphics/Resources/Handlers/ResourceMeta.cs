@@ -1,9 +1,6 @@
 #region
 
 using ConcreteEngine.Common.Numerics;
-using ConcreteEngine.Graphics.Gfx;
-using ConcreteEngine.Graphics.Gfx.Utility;
-using Silk.NET.Maths;
 
 #endregion
 

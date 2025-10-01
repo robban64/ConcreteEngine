@@ -1,11 +1,13 @@
+#region
+
 using System.Numerics;
 using System.Runtime.InteropServices;
 using ConcreteEngine.Common.Numerics;
-using ConcreteEngine.Core.Resources;
 using ConcreteEngine.Graphics.Primitives;
 
-namespace ConcreteEngine.Core.Rendering;
+#endregion
 
+namespace ConcreteEngine.Core.Rendering;
 
 [StructLayout(LayoutKind.Sequential)]
 public readonly struct FrameUniformRecord(
@@ -15,7 +17,7 @@ public readonly struct FrameUniformRecord(
     float fogDensity,
     float fogNear,
     float fogFar,
-    float fogType): IUniformGpuData
+    float fogType) : IUniformGpuData
 {
     public readonly Vector4 Ambient = new(ambient, ambientIntensity);
     public readonly Vector4 FogColor = new(fogColor, fogDensity);
@@ -49,7 +51,6 @@ public readonly struct DirLightUniformRecord(
     public Vector3 Specular => SpecularIntensity.AsVector3();
     public float Intensity => SpecularIntensity.W;
 }
-
 
 [StructLayout(LayoutKind.Sequential)]
 public readonly struct MaterialUniformRecord(

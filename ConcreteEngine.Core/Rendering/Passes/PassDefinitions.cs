@@ -1,6 +1,4 @@
-using ConcreteEngine.Graphics.Resources;
-
-namespace ConcreteEngine.Core.Rendering;
+namespace ConcreteEngine.Core.Rendering.Passes;
 
 public enum RenderTargetId : byte
 {
@@ -25,6 +23,4 @@ public readonly record struct ApplyPassReturn(PassOpKind OpKind)
     public static ApplyPassReturn ResolveTargetResult() => new(PassOpKind.Resolve);
     public static ApplyPassReturn FsqPassResult() => new(PassOpKind.Fsq);
     public static ApplyPassReturn ScreenPassResult() => new(PassOpKind.Screen);
-
 }
-

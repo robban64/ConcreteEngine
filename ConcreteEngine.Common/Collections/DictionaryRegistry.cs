@@ -28,7 +28,7 @@ public sealed class DictionaryRegistry<TKey, TValue> where TKey : notnull
     }
 
     public bool TryGet(TKey key, out TValue value) => _registry.TryGetValue(key, out value!);
-    
+
     public TValue GetRequired(TKey key)
     {
         if (_registry.TryGetValue(key, out var v)) return v;

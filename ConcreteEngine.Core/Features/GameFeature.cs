@@ -17,7 +17,7 @@ public abstract class GameFeature : IGameFeature
     {
         Context = context;
     }
-    
+
     public abstract void Initialize();
 
     public virtual void UpdateTick(int tick)

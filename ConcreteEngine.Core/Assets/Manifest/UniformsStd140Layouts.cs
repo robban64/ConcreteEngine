@@ -1,7 +1,5 @@
 #region
 
-using ConcreteEngine.Graphics.Resources;
-
 #endregion
 
 namespace ConcreteEngine.Core.Assets.Manifest;
@@ -11,6 +9,7 @@ internal sealed class UniformsStd140Layouts
     public IReadOnlyDictionary<string, string> Map => _map;
 
     private readonly Dictionary<string, string> _map;
+
     public UniformsStd140Layouts()
     {
         _map = new Dictionary<string, string>

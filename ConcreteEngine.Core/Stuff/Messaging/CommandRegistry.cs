@@ -15,6 +15,6 @@ internal sealed class CommandRegistry
         _registry[typeof(TCommand)] = (cmd, tick, bus) => handler.Handle((TCommand)cmd, tick, bus);
     }
 
-    public bool TryGetInvoker(Type commandType, out CommandInvoker invoker)
-        => _registry.TryGetValue(commandType, out invoker!);
+    public bool TryGetInvoker(Type commandType, out CommandInvoker invoker) =>
+        _registry.TryGetValue(commandType, out invoker!);
 }

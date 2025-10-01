@@ -1,4 +1,4 @@
-namespace ConcreteEngine.Graphics.Contracts;
+namespace ConcreteEngine.Graphics.Gfx.Contracts;
 
 public readonly record struct GfxBufferDataDesc(nint Size, BufferStorage Storage, BufferAccess Access);
 

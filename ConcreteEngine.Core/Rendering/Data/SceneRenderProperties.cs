@@ -1,7 +1,10 @@
+#region
+
 using System.Numerics;
 using ConcreteEngine.Common.Numerics;
 using ConcreteEngine.Core.Resources;
-using Silk.NET.Maths;
+
+#endregion
 
 namespace ConcreteEngine.Core.Rendering;
 
@@ -28,7 +31,7 @@ public sealed class SceneRenderProperties
         _dirty = true;
     }
 
-    public void SetAmbient( Vector3 ambient)
+    public void SetAmbient(Vector3 ambient)
     {
         _ambient = ambient;
         _dirty = true;
@@ -40,7 +43,7 @@ public sealed class SceneRenderProperties
         _dirty = true;
     }
 
-    public void SetDirLight( Vector3 direction,
+    public void SetDirLight(Vector3 direction,
         in Vector3 diffuse,
         in Vector3 specular, float intensity = 1f)
     {
@@ -57,11 +60,11 @@ public sealed class SceneRenderProperties
     internal RenderGlobalSnapshot Commit()
     {
         if (!_dirty) return _currentSnapshot;
-        
+
         _currentSnapshot.Update(version: _version++,
-            outputSize:  _outputSize,
+            outputSize: _outputSize,
             exposure: _exposure,
-            ambient:  _ambient,
+            ambient: _ambient,
             skybox: in _skybox,
             dirLight: in _directionalLight);
         _dirty = false;
@@ -81,8 +84,8 @@ public sealed class RenderGlobalSnapshot
 
     internal void Update(in Skybox skybox,
         in DirectionalLight dirLight,
-         Size2D outputSize,
-         Vector3 ambient,
+        Size2D outputSize,
+        Vector3 ambient,
         float exposure,
         int version)
     {

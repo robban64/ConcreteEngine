@@ -1,6 +1,8 @@
-using System.Numerics;
-using System.Runtime.CompilerServices;
+#region
+
 using Silk.NET.Maths;
+
+#endregion
 
 namespace ConcreteEngine.Common.Numerics;
 

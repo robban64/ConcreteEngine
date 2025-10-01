@@ -1,19 +1,17 @@
 #region
 
 using System.Diagnostics;
-using System.Numerics;
 using ConcreteEngine.Common;
 using ConcreteEngine.Common.Numerics;
 using ConcreteEngine.Core.Assets;
+using ConcreteEngine.Core.Rendering.Batching;
 using ConcreteEngine.Core.Rendering.Gfx;
+using ConcreteEngine.Core.Rendering.Passes;
 using ConcreteEngine.Core.Resources;
 using ConcreteEngine.Core.Systems;
 using ConcreteEngine.Graphics;
 using ConcreteEngine.Graphics.Gfx;
 using ConcreteEngine.Graphics.Gfx.Utility;
-using ConcreteEngine.Graphics.Resources;
-using ConcreteEngine.Graphics.Utils;
-using Silk.NET.Maths;
 
 #endregion
 
@@ -135,7 +133,7 @@ public sealed class RenderSystem : IRenderSystem
         _commandCollector.RegisterProducer<SceneDrawProducer>(_sceneDrawProducer);
 
 
-        _cmdProducerCtx = new CommandProducerContext { Gfx = _gfx, DrawBatchers = _batches, };
+        _cmdProducerCtx = new CommandProducerContext { Gfx = _gfx, DrawBatchers = _batches };
         _commandCollector.AttachContext(_cmdProducerCtx);
         _pipeline.Initialize();
         _commandCollector.InitializeProducers();
@@ -185,7 +183,6 @@ public sealed class RenderSystem : IRenderSystem
             {
                 var texId = ctx.Meta.Attachments.ColorTextureId;
                 ctx.CmdOps.GenerateMips(texId);
-
             });
 
         // Post A
@@ -250,7 +247,7 @@ public sealed class RenderSystem : IRenderSystem
     }
 
 
-    internal void RegisterScene( RenderType renderType, RenderTargetDescriptor desc)
+    internal void RegisterScene(RenderType renderType, RenderTargetDescriptor desc)
     {
         if (!_initialized)
             throw new InvalidOperationException("Renderer is not initialized");

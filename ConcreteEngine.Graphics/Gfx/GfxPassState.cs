@@ -1,4 +1,8 @@
+#region
+
 using ConcreteEngine.Common.Numerics;
+
+#endregion
 
 namespace ConcreteEngine.Graphics.Gfx;
 
@@ -15,10 +19,12 @@ public readonly record struct GfxPassState(
     public static GfxPassState MakeScene() => new(true, true, true, false, false, true, true);
     public static GfxPassState MakeShadow() => new(true, true, true, false, false, false, false);
     public static GfxPassState MakeLighting() => new(true, true, true, true, false, true);
-    public static GfxPassState MakePostProcess(bool blend = false) => new(false, false, false, blend, false, true, true);
+
+    public static GfxPassState MakePostProcess(bool blend = false) =>
+        new(false, false, false, blend, false, true, true);
+
     public static GfxPassState MakeScreen() => new(false, false, false, false, false, false, true);
     public static GfxPassState MakeOff() => new(false, false, false, false, false, false, true);
-    
 }
 
 public readonly record struct GfxPassClear(Color4? ClearColor, ClearBufferFlag ClearBuffer)

@@ -1,4 +1,4 @@
-namespace ConcreteEngine.Core.Assets;
+namespace ConcreteEngine.Core.Assets.Factories;
 /*
 internal static class AssetFactory
 {

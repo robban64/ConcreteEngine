@@ -5,7 +5,7 @@ internal abstract class BaseEngineState
 {
     public Type? Next { get; private set; }
     public bool Entered { get; private set; }
-    
+
     protected EngineCoreContext Context { get; private set; }
 
     public void AttachState(Type next, EngineCoreContext  context)

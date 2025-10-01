@@ -1,7 +1,6 @@
 #region
 
 using System.Text.Json.Serialization;
-using System.Text.Json.Serialization.Metadata;
 using ConcreteEngine.Core.Assets.Manifest;
 
 #endregion

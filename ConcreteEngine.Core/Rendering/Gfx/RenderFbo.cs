@@ -1,8 +1,11 @@
+#region
+
 using System.Numerics;
 using System.Runtime.CompilerServices;
 using ConcreteEngine.Common.Numerics;
-using ConcreteEngine.Graphics;
 using ConcreteEngine.Graphics.Resources;
+
+#endregion
 
 namespace ConcreteEngine.Core.Rendering.Gfx;
 
@@ -11,7 +14,7 @@ public delegate Size2D CalcFboOutputDel(Size2D outputSize, Vector2 ratio);
 public sealed class RenderFbo : IComparable<RenderFbo>, IComparable<FrameBufferId>
 {
     public FrameBufferId FboId { get; }
-    
+
     private FrameBufferMeta _meta;
 
     private readonly SizePolicy _sizePolicy;
@@ -21,19 +24,19 @@ public sealed class RenderFbo : IComparable<RenderFbo>, IComparable<FrameBufferI
         FboId = fboId;
         _sizePolicy = sizePolicy;
     }
-    
-        
+
+
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public ref readonly FrameBufferMeta GetMeta() => ref _meta;
-    
+
     internal void UpdateFromMeta(in FrameBufferMeta meta) => _meta = meta;
 
     public Size2D CalculateNewSize(Size2D outputSize) => _sizePolicy.Calculate(outputSize);
 
     public int CompareTo(RenderFbo? other) => FboId.Value.CompareTo(other!.FboId.Value);
-    
+
     public int CompareTo(FrameBufferId other) => FboId.Value.CompareTo(other!.Value);
-    
+
     internal readonly struct FrameBufferIdComparer : IComparer<RenderFbo>
     {
         private readonly FrameBufferId _id;
@@ -41,7 +44,7 @@ public sealed class RenderFbo : IComparable<RenderFbo>, IComparable<FrameBufferI
 
         public int Compare(RenderFbo? x, RenderFbo? _) => x!.CompareTo(_id);
     }
-    
+
     public sealed class SizePolicy
     {
         private enum Mode : byte
@@ -81,7 +84,4 @@ public sealed class RenderFbo : IComparable<RenderFbo>, IComparable<FrameBufferI
             };
         }
     }
-
-
 }
-

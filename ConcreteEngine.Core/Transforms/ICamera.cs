@@ -1,6 +1,9 @@
+#region
+
 using System.Numerics;
 using ConcreteEngine.Common.Numerics;
-using Silk.NET.Maths;
+
+#endregion
 
 namespace ConcreteEngine.Core;
 

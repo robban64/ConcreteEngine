@@ -19,7 +19,8 @@ public sealed class RenderTime
 
     private int a, b, c;
 
-    internal RenderTime(GameTimeTickDelegate onRenderEffect, GameTimeTickDelegate onGpuUpload, GameTimeTickDelegate onGpuDispose)
+    internal RenderTime(GameTimeTickDelegate onRenderEffect, GameTimeTickDelegate onGpuUpload,
+        GameTimeTickDelegate onGpuDispose)
     {
         _onRenderEffect = onRenderEffect;
         _onGpuUpload = onGpuUpload;
@@ -31,7 +32,6 @@ public sealed class RenderTime
         _gpuUploadTicker.Accumulate(dt);
         _gpuDisposeTicker.Accumulate(dt);
         _renderEffectTicker.Accumulate(dt);
-
     }
 
     public void Advance()
@@ -47,17 +47,16 @@ public sealed class RenderTime
 
     public void TickOrGpuUpload()
     {
-        if (a > 0) _onGpuUpload(a); 
+        if (a > 0) _onGpuUpload(a);
     }
-    
+
     public void TickOrGpuDispose()
     {
         if (b > 0) _onGpuDispose(b);
     }
-    
+
     public void TickOrRenderEffect()
     {
         if (c > 0) _onRenderEffect(c);
     }
-
 }

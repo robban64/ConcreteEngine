@@ -1,8 +1,11 @@
+#region
+
 using System.Numerics;
-using System.Runtime.CompilerServices;
 using ConcreteEngine.Core.Rendering.Gfx;
 using ConcreteEngine.Graphics;
 using ConcreteEngine.Graphics.Gfx;
+
+#endregion
 
 namespace ConcreteEngine.Core.Rendering;
 
@@ -26,7 +29,7 @@ internal sealed class DrawUniforms
         _dirLightUbo = registry.GetRenderUbo<DirLightUniformRecord>();
         _postUbo = registry.GetRenderUbo<FramePostProcessUniform>();
     }
-    
+
     private float _deltaTicker = 0;
 
     public void UploadGlobalUniforms(float alpha, in FrameInfo frameCtx, in RenderGlobalSnapshot snapshot)
@@ -50,7 +53,6 @@ internal sealed class DrawUniforms
             fogType: 1
         );
         _gfxBuffers.UploadUniformGpuData(_frameUbo.Id, in data, 0);
-
     }
 
     private void UploadDirLight(in RenderGlobalSnapshot snapshot)
@@ -61,10 +63,10 @@ internal sealed class DrawUniforms
             specular: snapshot.DirLight.Specular,
             intensity: snapshot.DirLight.Intensity
         );
-        
+
         _gfxBuffers.UploadUniformGpuData(_dirLightUbo.Id, in data, 0);
     }
-    
+
     private void UploadCamera()
     {
         var data = new CameraUniformRecord(
@@ -73,7 +75,7 @@ internal sealed class DrawUniforms
             projViewMat: _camera.ProjectionViewMatrix,
             cameraPos: _camera.Translation
         );
-        
+
         _gfxBuffers.UploadUniformGpuData(_cameraUbo.Id, in data, 0);
     }
 
@@ -93,9 +95,7 @@ internal sealed class DrawUniforms
             toneHighlights: new Vector4(40.0f, 0.05f, 0.01f, 0.4f),
             sharpenParams: new Vector4(0.10f, 1.5f, 0.05f, 0.0f)
         );
-        
+
         _gfxBuffers.UploadUniformGpuData(_postUbo.Id, in data, 0);
     }
-    
-
 }

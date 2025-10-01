@@ -1,8 +1,13 @@
+#region
+
 using System.Runtime.CompilerServices;
 using ConcreteEngine.Common.Numerics;
+using ConcreteEngine.Core.Rendering.Passes;
 using ConcreteEngine.Core.Resources;
 using ConcreteEngine.Core.Scene;
 using ConcreteEngine.Graphics.Resources;
+
+#endregion
 
 namespace ConcreteEngine.Core.Rendering;
 
@@ -79,8 +84,8 @@ public sealed class MeshDrawProducer : IDrawCommandProducer, IMeshDrawSink
             );
 
             TransformUtils.CreateModelMatrix(
-                in transform.Position, 
-                in transform.Scale, 
+                in transform.Position,
+                in transform.Scale,
                 in transform.Rotation,
                 out var modelMat
             );

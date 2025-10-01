@@ -2,19 +2,16 @@
 
 using System.Numerics;
 using ConcreteEngine.Graphics;
-using ConcreteEngine.Graphics.Contracts;
-using ConcreteEngine.Graphics.Descriptors;
 using ConcreteEngine.Graphics.Gfx;
+using ConcreteEngine.Graphics.Gfx.Contracts;
 using ConcreteEngine.Graphics.Gfx.Utility;
 using ConcreteEngine.Graphics.Primitives;
 using ConcreteEngine.Graphics.Resources;
-using ConcreteEngine.Graphics.Utils;
 using static ConcreteEngine.Core.Rendering.RenderConsts;
 
 #endregion
 
-namespace ConcreteEngine.Core.Rendering;
-
+namespace ConcreteEngine.Core.Rendering.Batching;
 
 internal sealed class SpriteBatchMesh : IDisposable
 {
@@ -39,10 +36,10 @@ internal sealed class SpriteBatchMesh : IDisposable
         _gfx = gfx;
 
         InitIndexBufferData();
-        
+
         var indices = Indices.AsSpan(0, _capacity * IndicesPerSprite);
 
-        
+
         var props = MeshDrawProperties.MakeTriElemental(size: DrawElementSize.UnsignedShort);
         var builder = gfx.Meshes.StartUploadBuilder(in props);
         builder.UploadVertices<Vertex2D>(Vertices, BufferUsage.StreamDraw, BufferStorage.Dynamic,
@@ -54,12 +51,11 @@ internal sealed class SpriteBatchMesh : IDisposable
         var attribBuilder = new VertexAttributeMaker<Vertex2D>();
         builder.AddAttribute(attribBuilder.Make<Vector2>());
         builder.AddAttribute(attribBuilder.Make<Vector2>());
-        
+
         var meshId = builder.Finish();
         var meshLayout = gfx.ResourceContext.Repository.MeshRepository.Get(meshId);
         _vertexBufferId = meshLayout.GetVertexBufferIds()[0];
         _indexBufferId = meshLayout.IndexBufferId;
-
     }
 
     private void InitIndexBufferData()

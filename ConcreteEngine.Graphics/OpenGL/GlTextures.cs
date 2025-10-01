@@ -2,7 +2,7 @@
 
 using System.Runtime.CompilerServices;
 using ConcreteEngine.Common.Numerics;
-using ConcreteEngine.Graphics.Contracts;
+using ConcreteEngine.Graphics.Gfx.Contracts;
 using ConcreteEngine.Graphics.OpenGL.Utilities;
 using ConcreteEngine.Graphics.Resources;
 using Silk.NET.OpenGL;
@@ -27,7 +27,7 @@ internal sealed class GlTextures : IGraphicsDriverModule
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     private GlTextureHandle GetTexHandle(GfxRefToken<TextureId> handle) => _store.Texture.GetRef(handle);
-    
+
     public GfxRefToken<TextureId> CreateTexture(TextureKind kind)
     {
         _gl.CreateTextures(kind.ToGlEnum(), 1, out uint texture);

@@ -4,7 +4,6 @@
 
 namespace ConcreteEngine.Core.Features;
 
-
 public class TilemapFeature : GameFeature
 {
     public bool IsDrawable { get; set; } = true;
@@ -33,5 +32,4 @@ public class TilemapFeature : GameFeature
         }
         */
     }
-
 }

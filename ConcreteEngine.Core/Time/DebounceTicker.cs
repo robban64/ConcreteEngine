@@ -9,6 +9,6 @@ internal sealed class DebounceTicker(int ticks)
         if (_ticksLeft > 0) _ticksLeft--;
         return _ticksLeft == 0;
     }
-    
-    public void Debounce(int ticks) =>  _ticksLeft = int.Max(ticks, _ticksLeft);
+
+    public void Debounce(int ticks) => _ticksLeft = int.Max(ticks, _ticksLeft);
 }

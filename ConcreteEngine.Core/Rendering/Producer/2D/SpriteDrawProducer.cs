@@ -11,7 +11,7 @@ namespace ConcreteEngine.Core.Rendering;
 
 public readonly record struct SpriteDrawBatch(MaterialId MaterialId, int Start, int End, byte Layer = 0);
 
-public struct SpriteDrawEntity(): IComparable<SpriteDrawEntity>
+public struct SpriteDrawEntity() : IComparable<SpriteDrawEntity>
 {
     public Vector2 Position = Vector2.Zero;
     public Vector2 PreviousPosition = Vector2.Zero;
@@ -45,7 +45,7 @@ public sealed class SpriteDrawProducer : IDrawCommandProducer, ISpriteDrawSink
 
     private int _idx = 0;
     private SpriteDrawEntity[] _entities = new SpriteDrawEntity[32];
-    
+
 
     private UpdateMetaInfo _updateMeta;
 
@@ -60,7 +60,7 @@ public sealed class SpriteDrawProducer : IDrawCommandProducer, ISpriteDrawSink
         _spriteBatch.CreateSpriteBatch(0,1024);
 
     }
-    
+
     public void Send(ReadOnlySpan<SpriteDrawEntity> payload)
     {
         EnsureCapacity(payload.Length);
@@ -91,7 +91,7 @@ public sealed class SpriteDrawProducer : IDrawCommandProducer, ISpriteDrawSink
         if (_idx == 0) return;
 
         var entities = _entities.AsSpan();
-        
+
         var batchIdx = 0;
         foreach (var (materialId, batchEnd) in _batches)
         {
@@ -120,9 +120,9 @@ public sealed class SpriteDrawProducer : IDrawCommandProducer, ISpriteDrawSink
             var item = new SpriteBatchDrawItem(pos, entity.Scale, entity.Uv);
             _spriteBatch.SubmitSprite(item);
         }
-            
+
         var result = _spriteBatch.BuildBatch();
-        
+
         var meta = DrawCommandMeta.Make2D(DrawCommandId.Sprite,  RenderTargetId.Scene, 1);
 
         var cmd = new DrawCommandSprite(
@@ -131,11 +131,11 @@ public sealed class SpriteDrawProducer : IDrawCommandProducer, ISpriteDrawSink
             drawCount: result.DrawCount,
             transform: in DefaultTransform
         );
-        
+
         _spriteBatches.Add(new SpriteBatchCache(materialId, length, in cmd, in meta));
 
     }
-    
+
     private void EnsureCapacity(int size)
     {
         if (_entities.Length < size + 1)
@@ -145,7 +145,7 @@ public sealed class SpriteDrawProducer : IDrawCommandProducer, ISpriteDrawSink
             Array.Resize(ref _entities, newSize);
         }
     }
-    
+
     private readonly struct SpriteBatchCache(
         MaterialId materialId,
         int length,

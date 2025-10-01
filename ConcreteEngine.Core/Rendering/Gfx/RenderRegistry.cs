@@ -1,13 +1,15 @@
-using System.Diagnostics;
-using System.Runtime.CompilerServices;
+#region
+
 using ConcreteEngine.Common;
 using ConcreteEngine.Common.Collections;
 using ConcreteEngine.Common.Numerics;
-using ConcreteEngine.Graphics.Descriptors;
+using ConcreteEngine.Core.Rendering.Passes;
 using ConcreteEngine.Graphics.Gfx;
 using ConcreteEngine.Graphics.Gfx.Utility;
 using ConcreteEngine.Graphics.Primitives;
 using ConcreteEngine.Graphics.Resources;
+
+#endregion
 
 namespace ConcreteEngine.Core.Rendering.Gfx;
 
@@ -34,9 +36,9 @@ internal sealed class RenderRegistry
 
 
     private RegistrationData _registrationData;
-    
-    internal IReadOnlyList<RenderFbo>  RenderFbos => _renderFbos;
- 
+
+    internal IReadOnlyList<RenderFbo> RenderFbos => _renderFbos;
+
     public RenderRegistry(GfxContext gfx)
     {
         _gfxApi = gfx.ResourceContext.ResourceManager.GetGfxApi();
@@ -46,13 +48,12 @@ internal sealed class RenderRegistry
 
         _gfxApi.BindMetaChanged<FrameBufferId, FrameBufferMeta>(OnFboChange);
         _gfxApi.BindMetaChanged<UniformBufferId, UniformBufferMeta>(OnUboChange);
-
     }
-    
+
     public RenderFbo GetRenderFbo<TTag, TSlot>(int version)
-        where TTag : unmanaged, IRenderPassTag where TSlot : unmanaged, IRenderPassTagSlot
-        => _fboRegistry.GetRequired(FboTagKey.Make<TTag, TSlot>(version));
-    
+        where TTag : unmanaged, IRenderPassTag where TSlot : unmanaged, IRenderPassTagSlot =>
+        _fboRegistry.GetRequired(FboTagKey.Make<TTag, TSlot>(version));
+
     public bool TryGetRenderFbo<TTag, TSlot>(int version, out RenderFbo fbo)
         where TTag : unmanaged, IRenderPassTag where TSlot : unmanaged, IRenderPassTagSlot
     {
@@ -177,14 +178,14 @@ internal sealed class RenderRegistry
         {
             var comp = new RenderFbo.FrameBufferIdComparer(id);
             var index = _renderFbos.BinarySearch(0, _renderFbos.Count, null!, comp);
-            if(index >= 0) renderFbo = _renderFbos[index];
+            if (index >= 0) renderFbo = _renderFbos[index];
         }
 
         if (renderFbo == null) throw new InvalidOperationException($"Sync error missing fbo : {id}");
-        
+
         renderFbo.UpdateFromMeta(in message.NewMeta);
     }
-    
+
     private void OnUboChange(UniformBufferId id, in GfxMetaChanged<UniformBufferMeta> message)
     {
         var meta = message.NewMeta;

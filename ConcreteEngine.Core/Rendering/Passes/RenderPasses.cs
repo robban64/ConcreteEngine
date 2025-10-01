@@ -1,15 +1,4 @@
-using System.Numerics;
-using ConcreteEngine.Common;
-using ConcreteEngine.Common.Numerics;
-using ConcreteEngine.Core.Rendering.Gfx;
-using ConcreteEngine.Graphics;
-using ConcreteEngine.Graphics.Contracts;
-using ConcreteEngine.Graphics.Descriptors;
-using ConcreteEngine.Graphics.Gfx;
-using ConcreteEngine.Graphics.Resources;
-using Silk.NET.Maths;
-
-namespace ConcreteEngine.Core.Rendering;
+namespace ConcreteEngine.Core.Rendering.Passes;
 /*
 public struct RenderPassMutation
 {

@@ -2,7 +2,11 @@
 
 #endregion
 
+#region
+
 using ConcreteEngine.Core.Utils;
+
+#endregion
 
 namespace ConcreteEngine.Core.Rendering;
 

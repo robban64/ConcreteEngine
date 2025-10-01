@@ -1,19 +1,20 @@
+#region
+
 using System.Numerics;
 using System.Runtime.CompilerServices;
-using ConcreteEngine.Common.Numerics;
 using ConcreteEngine.Core.Resources;
 using ConcreteEngine.Graphics.Resources;
 using Silk.NET.Maths;
 
-namespace ConcreteEngine.Core.Scene;
+#endregion
 
+namespace ConcreteEngine.Core.Scene;
 
 public readonly record struct GameEntityId(int Id) : IComparable<GameEntityId>
 {
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public int CompareTo(GameEntityId other) => Id.CompareTo(other.Id);
 }
-
 
 public struct Transform2D(Vector2 position, Vector2 scale, float rotation)
 {
@@ -22,8 +23,7 @@ public struct Transform2D(Vector2 position, Vector2 scale, float rotation)
     public float Rotation = rotation;
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public Matrix4x4 GetTransform()
-        => TransformHelper.CreateTransform2D(Position, Scale, Rotation);
+    public Matrix4x4 GetTransform() => TransformHelper.CreateTransform2D(Position, Scale, Rotation);
 }
 
 public struct Transform(Vector3 position, Vector3 scale, Quaternion rotation)
@@ -48,7 +48,6 @@ public struct SpriteComponent(int spriteId, MaterialId materialId, bool isStatic
     public Rectangle<int> SourceRectangle;
     public bool IsStatic = isStatic;
 }
-
 
 public struct TilemapComponent(MaterialId materialId, int mapSize, int tileSize)
 {

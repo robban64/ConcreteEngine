@@ -1,19 +1,17 @@
 #region
 
-using ConcreteEngine.Graphics;
 using ConcreteEngine.Graphics.Error;
 using ConcreteEngine.Graphics.Gfx;
 
 #endregion
 
-namespace ConcreteEngine.Core.Rendering;
-
+namespace ConcreteEngine.Core.Rendering.Batching;
 
 public sealed class SpriteBatcher : RenderBatcher<SpriteBatchBuildResult>
 {
     private const int MaxSpriteBatchSize = 1024;
     private const int MaxSpriteBatchInstanceCount = 4;
-    
+
     private int _commandSize = 0;
     private readonly SpriteBatchDrawItem[] _commandBuffer;
 

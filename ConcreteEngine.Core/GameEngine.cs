@@ -2,6 +2,7 @@
 
 using ConcreteEngine.Common;
 using ConcreteEngine.Common.Numerics;
+using ConcreteEngine.Common.Patterns;
 using ConcreteEngine.Core.Assets;
 using ConcreteEngine.Core.Configuration;
 using ConcreteEngine.Core.Features;
@@ -13,7 +14,6 @@ using ConcreteEngine.Core.Time;
 using ConcreteEngine.Core.Utils;
 using ConcreteEngine.Graphics;
 using ConcreteEngine.Graphics.Resources;
-using Silk.NET.Maths;
 using Silk.NET.OpenGL;
 using Shader = ConcreteEngine.Core.Resources.Shader;
 
@@ -69,7 +69,7 @@ public sealed class GameEngine : IDisposable
     private LinearStateMachine<EngineState> _stateMachine;
 
     private DebounceTicker? _debounceTicker = null;
-    
+
     internal GameEngine(
         IEngineWindowHost windowHost,
         GfxRuntimeBundle<GL> gfxBundle,
@@ -133,16 +133,16 @@ public sealed class GameEngine : IDisposable
             viewport: _window.Size,
             outputSize: outputSize
         );
-        
+
         _renderTime.Accumulate(dt);
         _renderTime.Advance();
 
-        
+
         if (_frameIdx > 1 && outputSize != _prevOutputSize)
         {
             _debounceTicker ??= new DebounceTicker(30);
         }
-            
+
 
         if (_debounceTicker?.Tick() ?? false)
         {
@@ -151,7 +151,7 @@ public sealed class GameEngine : IDisposable
             Span<(FrameBufferId, Size2D)> newSizes = stackalloc (FrameBufferId, Size2D)[fbos.Count];
             for (int i = 0; i < fbos.Count; i++)
                 newSizes[i] = (fbos[i].FboId, fbos[i].CalculateNewSize(outputSize));
-            
+
             _graphics.RecreateFbo(newSizes);
             return;
         }
@@ -259,7 +259,7 @@ public sealed class GameEngine : IDisposable
         var previous = _currentScene;
         previous?.Unload();
 
-        var sceneContext = new GameSceneContext(_systems) { Features = _features, Modules = _modules, };
+        var sceneContext = new GameSceneContext(_systems) { Features = _features, Modules = _modules };
 
 
         var newScene = _sceneFactories[index]();
@@ -268,7 +268,7 @@ public sealed class GameEngine : IDisposable
         var builder = new GameSceneConfigBuilder(_features, _modules);
         newScene.Build(builder);
 
-        _renderer.RegisterScene( builder.RenderType, builder.RenderTargetsDesc);
+        _renderer.RegisterScene(builder.RenderType, builder.RenderTargetsDesc);
 
         _features.Load(new GameFeatureContext(sceneContext));
 

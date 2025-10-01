@@ -27,12 +27,10 @@ public sealed class GfxShaders
         var shaderId = _resources.ShaderStore.Add(in meta, programRef);
         return shaderId;
     }
-    
-    public List<(string, int)> GetUniformList(ShaderId shaderId )
+
+    public List<(string, int)> GetUniformList(ShaderId shaderId)
     {
         var programRef = _resources.ShaderStore.GetRefHandle(shaderId);
-        return _driver.GetUniformsFromProgram( programRef);
+        return _driver.GetUniformsFromProgram(programRef);
     }
-    
-
 }

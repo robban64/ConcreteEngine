@@ -5,7 +5,7 @@ using ConcreteEngine.Core.Assets.IO;
 using ConcreteEngine.Core.Assets.Manifest;
 using ConcreteEngine.Core.Resources;
 using ConcreteEngine.Graphics;
-using ConcreteEngine.Graphics.Contracts;
+using ConcreteEngine.Graphics.Gfx.Contracts;
 using ConcreteEngine.Graphics.Gfx.Utility;
 using ConcreteEngine.Graphics.Primitives;
 

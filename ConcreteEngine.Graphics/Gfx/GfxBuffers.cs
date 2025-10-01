@@ -2,8 +2,8 @@
 
 using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
-using ConcreteEngine.Graphics.Contracts;
 using ConcreteEngine.Graphics.Error;
+using ConcreteEngine.Graphics.Gfx.Contracts;
 using ConcreteEngine.Graphics.Gfx.Internal;
 using ConcreteEngine.Graphics.Gfx.Utility;
 using ConcreteEngine.Graphics.OpenGL;
@@ -112,7 +112,7 @@ public sealed class GfxBuffers
     {
         ArgumentOutOfRangeException.ThrowIfEqual(0, (int)capacity);
         var refToken = _resources.UboStore.GetRefAndMeta(uboId, out var meta);
-        if(meta.Capacity == capacity) return;
+        if (meta.Capacity == capacity) return;
         var newMeta = UniformBufferMeta.MakeResizeCopy(in meta, capacity);
         _resources.UboStore.ReplaceMeta(uboId, in newMeta, out _);
 

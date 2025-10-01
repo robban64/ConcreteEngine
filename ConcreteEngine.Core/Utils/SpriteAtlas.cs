@@ -54,7 +54,7 @@ public sealed class SpriteAtlas
     {
         return UvRect.GetInsetUv(At(col, row), InvTexSizePx);
     }
-    
+
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public Rectangle<int> At(int index)
     {

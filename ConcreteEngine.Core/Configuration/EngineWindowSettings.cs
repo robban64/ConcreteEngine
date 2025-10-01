@@ -1,7 +1,6 @@
 #region
 
 using ConcreteEngine.Common.Numerics;
-using Silk.NET.Maths;
 
 #endregion
 
@@ -9,7 +8,7 @@ namespace ConcreteEngine.Core.Configuration;
 
 public record EngineWindowSettings
 {
-    Bounds2D Bounds { get; set; } = new(0, 0,1280, 720);
+    Bounds2D Bounds { get; set; } = new(0, 0, 1280, 720);
     public Size2D Size => Bounds.ToSize2D();
 
     public string Title { get; init; }

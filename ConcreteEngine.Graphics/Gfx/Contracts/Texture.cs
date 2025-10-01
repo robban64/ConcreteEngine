@@ -1,12 +1,10 @@
 #region
 
-using ConcreteEngine.Common.Numerics;
-using ConcreteEngine.Graphics.Gfx.Internal;
 using ConcreteEngine.Graphics.Resources;
 
 #endregion
 
-namespace ConcreteEngine.Graphics.Contracts;
+namespace ConcreteEngine.Graphics.Gfx.Contracts;
 
 public readonly record struct GfxTextureDescriptor(
     int Width,
@@ -25,12 +23,10 @@ public readonly record struct GfxTextureProperties(
 
 internal readonly record struct GfxReplaceTexture(int Width, int Height, int? Depth = null, int? Samples = null);
 
-
 internal readonly record struct BkTextureStoreDesc(EnginePixelFormat Format, uint Levels, uint Samples)
 {
-    public static BkTextureStoreDesc Make(EnginePixelFormat format, int levels, int samples) 
-        => new(format, (uint)levels, (uint) samples);
-
+    public static BkTextureStoreDesc Make(EnginePixelFormat format, int levels, int samples) =>
+        new(format, (uint)levels, (uint)samples);
 }
 
 internal readonly record struct BkTextureUploadDesc(EnginePixelFormat Format, uint Levels, uint Samples);

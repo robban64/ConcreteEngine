@@ -1,12 +1,4 @@
-using System.Runtime.CompilerServices;
-using ConcreteEngine.Common.Numerics;
-using ConcreteEngine.Graphics;
-using ConcreteEngine.Graphics.Gfx;
-using ConcreteEngine.Graphics.Resources;
-
-namespace ConcreteEngine.Core.Rendering;
-
-
+namespace ConcreteEngine.Core.Rendering.Passes;
 
 public sealed class RenderPassRegistry
 {
@@ -15,7 +7,7 @@ public sealed class RenderPassRegistry
     private readonly Dictionary<PassTagKey, RenderPassEntry> _registry;
 
     public readonly RenderPassCtx Ctx;
-    
+
     public IReadOnlyList<RenderPassEntry> RenderPasses => _entries;
 
 
@@ -26,11 +18,12 @@ public sealed class RenderPassRegistry
         Ctx = new RenderPassCtx(cmdOps, _registry);
     }
 
-    public RenderPassEntry Register<TTag,TSlot>(RenderTargetId targetId, PassOpKind opKind, int pass, RenderPassState initial)
+    public RenderPassEntry Register<TTag, TSlot>(RenderTargetId targetId, PassOpKind opKind, int pass,
+        RenderPassState initial)
         where TTag : unmanaged, IRenderPassTag where TSlot : unmanaged, IRenderPassTagSlot
     {
-        var key = PassTagKey.Make<TTag,TSlot>(opKind);
-        
+        var key = PassTagKey.Make<TTag, TSlot>(opKind);
+
         var entry = new RenderPassEntry(targetId, key, pass, initial);
         _registry.Add(key, entry);
         _entries.Add(entry);
@@ -45,10 +38,7 @@ public sealed class RenderPassRegistry
 
     internal void TryGetNextPasses()
     {
-        
     }
-    
-
 
 
     /*

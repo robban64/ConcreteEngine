@@ -70,7 +70,7 @@ public sealed class FeatureManager : IGameFeatureManager
             feature.Unload();
         }
     }
-    
+
     private void AddFeature<T>() where T : class, IGameFeature, new()
     {
         var newFeature = new T();

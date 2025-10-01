@@ -1,12 +1,13 @@
+#region
+
 using System.Diagnostics;
-using System.Runtime.CompilerServices;
 using ConcreteEngine.Common.Numerics;
 using ConcreteEngine.Core.Rendering.Gfx;
 using ConcreteEngine.Graphics.Resources;
 
-namespace ConcreteEngine.Core.Rendering;
+#endregion
 
-
+namespace ConcreteEngine.Core.Rendering.Passes;
 
 public sealed class RenderPassCtx
 {
@@ -21,6 +22,7 @@ public sealed class RenderPassCtx
 
     private readonly PriorityQueue<TextureId, PassTextureSlotKey> _queue = new(new PassTagKeyNativeComparer());
     private readonly List<TextureId> _output = new();
+
     internal RenderPassCtx(RenderCommandOps cmdOps, IReadOnlyDictionary<PassTagKey, RenderPassEntry> registry)
     {
         CmdOps = cmdOps;

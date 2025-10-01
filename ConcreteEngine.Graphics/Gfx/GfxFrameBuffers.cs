@@ -1,21 +1,15 @@
 #region
 
-using System.Diagnostics;
-using System.Numerics;
 using ConcreteEngine.Common;
 using ConcreteEngine.Common.Numerics;
-using ConcreteEngine.Graphics.Contracts;
-using ConcreteEngine.Graphics.Descriptors;
+using ConcreteEngine.Graphics.Gfx.Contracts;
 using ConcreteEngine.Graphics.Gfx.Internal;
 using ConcreteEngine.Graphics.OpenGL;
 using ConcreteEngine.Graphics.Resources;
-using Silk.NET.Maths;
 
 #endregion
 
 namespace ConcreteEngine.Graphics.Gfx;
-
-
 
 public sealed class GfxFrameBuffers
 {
@@ -42,7 +36,7 @@ public sealed class GfxFrameBuffers
         if (desc.Attachments.ColorTexture)
         {
             var texKind = !isMultisample ? TextureKind.Texture2D : TextureKind.Multisample2D;
-            var texDesc = new GfxTextureDescriptor(size.Width, size.Height, 
+            var texDesc = new GfxTextureDescriptor(size.Width, size.Height,
                 texKind, desc.PixelFormat,
                 1, desc.Multisample);
 
@@ -111,7 +105,7 @@ public sealed class GfxFrameBuffers
             _resources.RboStore.Replace(attachments.DepthRenderBufferId, in meta, rbo, out _);
         }
     }
-    
+
     private GfxRefToken<RenderBufferId> CreateAttachRenderBuffer(GfxRefToken<FrameBufferId> fbo, Size2D size,
         FrameBufferTarget target, RenderBufferMsaa msaa, out RenderBufferMeta meta)
     {
@@ -121,17 +115,17 @@ public sealed class GfxFrameBuffers
         meta = new RenderBufferMeta(size, target, msaa);
         return rboRef;
     }
-    
+
     private void AttachTexture(GfxRefToken<FrameBufferId> fbo, GfxRefToken<TextureId> tex)
     {
         _driver.AttachTexture(fbo, tex, FrameBufferTarget.Color);
     }
-    
+
 
     private static void EnsureCreateFrameBuffer(in GfxFrameBufferDescriptor desc)
     {
         ArgumentExceptionThrower.ThrowIf(desc.Attachments.DepthTexture, nameof(desc.Attachments.DepthTexture));
-        if(desc.Multisample != RenderBufferMsaa.None && desc.TexturePreset != TexturePreset.None)
+        if (desc.Multisample != RenderBufferMsaa.None && desc.TexturePreset != TexturePreset.None)
             throw new InvalidOperationException($"Multisample require None for {nameof(TexturePreset)}");
     }
 }

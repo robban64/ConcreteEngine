@@ -8,7 +8,6 @@ using ConcreteEngine.Graphics.Gfx.Internal;
 using ConcreteEngine.Graphics.Gfx.Utility;
 using ConcreteEngine.Graphics.OpenGL;
 using ConcreteEngine.Graphics.Resources;
-using Silk.NET.Maths;
 
 #endregion
 
@@ -69,7 +68,7 @@ public sealed class GraphicsRuntime : IGraphicsRuntime
 
         _isInitialized = true;
     }
-    
+
     public void BeginFrame(in FrameInfo frameInfo)
     {
         _frameCtx = frameInfo;
@@ -88,9 +87,8 @@ public sealed class GraphicsRuntime : IGraphicsRuntime
         Console.WriteLine($"Recreating {newSizes.Length} FBO");
         foreach (var (fboId, size) in newSizes)
             _gfxContext.FrameBuffers.RecreateFrameBuffer(fboId, size);
-
     }
-    
+
     public void Shutdown()
     {
     }
@@ -98,7 +96,7 @@ public sealed class GraphicsRuntime : IGraphicsRuntime
     public void Dispose()
     {
     }
-    
+
     /*
     private void RecreateFbo(Size2D size)
     {

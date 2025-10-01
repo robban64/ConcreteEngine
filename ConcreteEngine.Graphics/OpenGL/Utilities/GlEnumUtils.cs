@@ -81,7 +81,7 @@ internal static class GlEnumExtensions
     {
         return mode switch
         {
-            BlendMode.Alpha => ( BlendEquationModeEXT.FuncAdd, BlendingFactor.SrcAlpha,
+            BlendMode.Alpha => (BlendEquationModeEXT.FuncAdd, BlendingFactor.SrcAlpha,
                 BlendingFactor.OneMinusSrcAlpha),
             BlendMode.PremultipliedAlpha => (BlendEquationModeEXT.FuncAdd, BlendingFactor.One,
                 BlendingFactor.OneMinusSrcAlpha),
@@ -109,11 +109,11 @@ internal static class GlEnumExtensions
     {
         return preset switch
         {
-            CullMode.None => ( TriangleFace.FrontAndBack, FrontFaceDirection.Ccw),
-            CullMode.BackCcw => ( TriangleFace.Back, FrontFaceDirection.Ccw),
-            CullMode.BackCw => ( TriangleFace.Back, FrontFaceDirection.CW),
-            CullMode.FrontCcw => ( TriangleFace.Front, FrontFaceDirection.Ccw),
-            CullMode.FrontCw => ( TriangleFace.Front, FrontFaceDirection.CW),
+            CullMode.None => (TriangleFace.FrontAndBack, FrontFaceDirection.Ccw),
+            CullMode.BackCcw => (TriangleFace.Back, FrontFaceDirection.Ccw),
+            CullMode.BackCw => (TriangleFace.Back, FrontFaceDirection.CW),
+            CullMode.FrontCcw => (TriangleFace.Front, FrontFaceDirection.Ccw),
+            CullMode.FrontCw => (TriangleFace.Front, FrontFaceDirection.CW),
             _ => throw new ArgumentOutOfRangeException(nameof(preset), preset, null)
         };
     }
@@ -169,7 +169,7 @@ internal static class GlEnumExtensions
             _ => throw new ArgumentOutOfRangeException(nameof(format))
         };
     }
-    
+
     public static (PixelFormat fmt, PixelType type) ToUploadFormatType(this EnginePixelFormat f)
     {
         return f switch

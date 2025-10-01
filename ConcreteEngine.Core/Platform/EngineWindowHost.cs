@@ -68,13 +68,12 @@ public sealed class EngineWindowHost : IEngineWindowHost
     {
         _options = options;
         _backend = backend;
-
     }
 
     public void Run(GameEngineBuilder builder)
     {
         _builder = builder;
-        
+
         _window = Window.Create(_options);
         _window.Load += OnLoad;
         _window.Update += OnUpdate;
@@ -83,7 +82,6 @@ public sealed class EngineWindowHost : IEngineWindowHost
 
         _window.Run();
         _window.Dispose();
-        
     }
 
     public void CenterOnCurrentMonitor()
@@ -103,11 +101,12 @@ public sealed class EngineWindowHost : IEngineWindowHost
 
     private void OnLoad()
     {
-        if(_builder == null) throw new InvalidOperationException("Builder not initialized");
+        if (_builder == null) throw new InvalidOperationException("Builder not initialized");
 
         var graphics = _backend switch
         {
-            GraphicsBackend.OpenGL =>new GfxRuntimeBundle<GL>(new GraphicsRuntime(), new GlStartupConfig(_window.CreateOpenGL())),
+            GraphicsBackend.OpenGL => new GfxRuntimeBundle<GL>(new GraphicsRuntime(),
+                new GlStartupConfig(_window.CreateOpenGL())),
             _ => throw new GraphicsException("Invalid GraphicsBackend. Only OpenGL supported")
         };
 

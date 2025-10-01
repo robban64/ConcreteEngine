@@ -14,7 +14,7 @@ public interface ILightDrawSink : IDrawSink
 public sealed class LightProducer : IDrawCommandProducer, ILightDrawSink
 {
     private CommandProducerContext _context = null!;
-    
+
     private List<LightComponent> _lights = new();
 
     public void Send(ReadOnlySpan<LightComponent> payload)
@@ -31,11 +31,11 @@ public sealed class LightProducer : IDrawCommandProducer, ILightDrawSink
     {
         _context = ctx;
     }
-    
+
     public void Initialize()
     {
     }
-    
+
     public void BeginTick(in UpdateMetaInfo updateMeta)
     {
         _lights.Clear();
@@ -44,7 +44,7 @@ public sealed class LightProducer : IDrawCommandProducer, ILightDrawSink
     public void EndTick()
     {
     }
-    
+
     public void EmitFrame(float alpha, RenderPipeline submitter)
     {
         var lights = CollectionsMarshal.AsSpan(_lights);

@@ -1,7 +1,6 @@
 #region
 
 using ConcreteEngine.Common.Numerics;
-using Silk.NET.Maths;
 
 #endregion
 
@@ -20,7 +19,5 @@ public readonly struct FrameInfo(
     public readonly Size2D OutputSize = outputSize;
     public readonly bool vSyncEnabled = vSyncEnabled;
 }
-
-
 
 public readonly record struct GpuFrameStats(int DrawCalls, int TriangleCount);

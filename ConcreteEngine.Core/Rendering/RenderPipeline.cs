@@ -2,6 +2,7 @@
 
 using System.Diagnostics;
 using System.Runtime.CompilerServices;
+using ConcreteEngine.Core.Rendering.Passes;
 
 #endregion
 
@@ -21,22 +22,24 @@ public sealed class RenderPipeline
     private int _submitIdx = 0;
     private int _drainTransformIdx = 0;
     private int _drainCmdIdx = 0;
-    
+
     public int Count => _submitIdx;
 
     internal RenderPipeline(DrawProcessor drawProcessor)
     {
         _drawProcessor = drawProcessor;
         _commands = new DrawCommand[DefaultCapacity];
-        _transforms  = new DrawTransformPayload[DefaultCapacity];
+        _transforms = new DrawTransformPayload[DefaultCapacity];
         _indices = new DrawCommandMetaIndex[DefaultCapacity];
         _submitIdx = 0;
     }
 
-    internal void Initialize() {}
+    internal void Initialize()
+    {
+    }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public void SubmitDraw(in DrawCommand cmd, in DrawCommandMeta meta, in DrawTransformPayload transform) 
+    public void SubmitDraw(in DrawCommand cmd, in DrawCommandMeta meta, in DrawTransformPayload transform)
     {
         EnsureCapacity(1);
         _commands[_submitIdx] = cmd;
@@ -44,8 +47,9 @@ public sealed class RenderPipeline
         _indices[_submitIdx] = new DrawCommandMetaIndex(in meta, _submitIdx);
         _submitIdx++;
     }
-    
-    public void SubmitDrawBatch(ReadOnlySpan<DrawCommand> cmds, ReadOnlySpan<DrawCommandMeta> metas, ReadOnlySpan<DrawTransformPayload> transforms)
+
+    public void SubmitDrawBatch(ReadOnlySpan<DrawCommand> cmds, ReadOnlySpan<DrawCommandMeta> metas,
+        ReadOnlySpan<DrawTransformPayload> transforms)
     {
         Debug.Assert(cmds.Length == metas.Length);
         Debug.Assert(cmds.Length == transforms.Length);
@@ -120,7 +124,7 @@ public sealed class RenderPipeline
             _commands.AsSpan(0, int.Min(_submitIdx, _commands.Length)).CopyTo(newArr);
             _commands = newArr;
         }
-        
+
         if (idx >= _transforms.Length)
         {
             int newSize = Math.Max(idx + DefaultCapacity, _transforms.Length * 2);
@@ -139,5 +143,4 @@ public sealed class RenderPipeline
             _indices = newArr;
         }
     }
-
 }

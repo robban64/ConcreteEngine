@@ -1,7 +1,10 @@
+#region
+
 using System.Numerics;
-using System.Runtime.CompilerServices;
 using ConcreteEngine.Core.Resources;
 using ConcreteEngine.Graphics.Resources;
+
+#endregion
 
 namespace ConcreteEngine.Core.Rendering;
 
@@ -16,4 +19,3 @@ public readonly struct DrawTransformPayload(in Matrix4x4 transform)
 {
     public readonly Matrix4x4 Transform = transform;
 }
-

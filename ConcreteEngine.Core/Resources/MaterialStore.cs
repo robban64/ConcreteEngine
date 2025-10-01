@@ -20,7 +20,7 @@ public sealed class MaterialStore
     private int[] _emptySlots;
 
     public IReadOnlyList<Material> Materials => _materials;
-    
+
 
     internal MaterialStore(IReadOnlyList<MaterialTemplate> templates)
     {
@@ -53,8 +53,8 @@ public sealed class MaterialStore
     public MaterialTemplate GetTemplate(string templateName) => _templates[templateName];
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public bool TryGetTemplate(string templateName, out MaterialTemplate template)
-        => _templates.TryGetValue(templateName, out template);
+    public bool TryGetTemplate(string templateName, out MaterialTemplate template) =>
+        _templates.TryGetValue(templateName, out template);
 
 
     public Material this[MaterialId id]

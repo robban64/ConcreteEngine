@@ -8,8 +8,6 @@ using ConcreteEngine.Graphics.Resources;
 
 namespace ConcreteEngine.Core.Resources;
 
-
-
 public sealed class MaterialTemplate : IAssetFile
 {
     public required string Name { get; init; }
@@ -21,7 +19,7 @@ public sealed class MaterialTemplate : IAssetFile
     public AssetKind AssetType => AssetKind.Material;
 
     private TextureId[] _samplerSlots = null!;
-    internal TextureId[] SamplerSlots =>  _samplerSlots;
+    internal TextureId[] SamplerSlots => _samplerSlots;
 
     internal MaterialTemplate()
     {
@@ -32,7 +30,5 @@ public sealed class MaterialTemplate : IAssetFile
         _samplerSlots = new TextureId[Shader.Samplers];
         for (int i = 0; i < Shader.Samplers; i++)
             _samplerSlots[i] = i < Textures.Length ? Textures[i].ResourceId : default;
-
     }
-
 }

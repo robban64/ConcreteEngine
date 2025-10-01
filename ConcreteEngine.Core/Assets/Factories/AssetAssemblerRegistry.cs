@@ -1,4 +1,8 @@
+#region
+
 using ConcreteEngine.Core.Assets.Manifest;
+
+#endregion
 
 namespace ConcreteEngine.Core.Assets.Factories;
 

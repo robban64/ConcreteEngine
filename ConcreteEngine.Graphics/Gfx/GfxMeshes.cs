@@ -1,7 +1,7 @@
 #region
 
 using ConcreteEngine.Common;
-using ConcreteEngine.Graphics.Contracts;
+using ConcreteEngine.Graphics.Gfx.Contracts;
 using ConcreteEngine.Graphics.Gfx.Internal;
 using ConcreteEngine.Graphics.Resources;
 
@@ -69,27 +69,27 @@ public sealed class GfxMeshes
 
     public void AttachVertexBuffer(MeshId meshId, VertexBufferId vboId, int bindingIdx)
     {
-        var meshRef = _resources.MeshStore.GetRef(meshId);
+        var meshRef = _resources.MeshStore.GetRefHandle(meshId);
         var vboRef = _resources.VboStore.GetRefAndMeta(vboId, out var vboMeta);
         _driver.Meshes.AttachVertexBuffer(meshRef, in vboRef, bindingIdx, 0, vboMeta.Stride);
     }
 
     public void AttachIndexBuffer(MeshId meshId, IndexBufferId iboId)
     {
-        var meshRef = _resources.MeshStore.GetRef(meshId);
-        var iboRef = _resources.IboStore.GetRef(iboId);
+        var meshRef = _resources.MeshStore.GetRefHandle(meshId);
+        var iboRef = _resources.IboStore.GetRefHandle(iboId);
         _driver.Meshes.AttachIndexBuffer(meshRef, in iboRef);
     }
 
     public void SetVertexAttributes(MeshId meshId, IReadOnlyList<VertexAttributeDesc> attributes)
     {
-        var meshRef = _resources.MeshStore.GetRef(meshId);
+        var meshRef = _resources.MeshStore.GetRefHandle(meshId);
         _driver.Meshes.AddVertexAttributeRange(meshRef, attributes);
     }
 
     public void SetVertexAttributesFromSpan(MeshId meshId, ReadOnlySpan<VertexAttributeDesc> attributes)
     {
-        var meshRef = _resources.MeshStore.GetRef(meshId);
+        var meshRef = _resources.MeshStore.GetRefHandle(meshId);
         _driver.Meshes.AddVertexAttributeFromSpan(meshRef, attributes);
     }
 

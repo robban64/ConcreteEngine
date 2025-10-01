@@ -32,5 +32,5 @@ public enum DepthMode : byte
     None = 1,
     Lequal = 2,
     Less = 3,
-    Equal = 4,
+    Equal = 4
 }

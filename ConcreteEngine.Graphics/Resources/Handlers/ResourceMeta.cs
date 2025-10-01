@@ -1,8 +1,6 @@
 #region
 
 using ConcreteEngine.Common.Numerics;
-using ConcreteEngine.Graphics.Gfx.Utility;
-using Silk.NET.Maths;
 
 #endregion
 
@@ -117,7 +115,7 @@ public readonly struct FrameBufferMeta(
     public readonly Size2D Size = size;
     public readonly FboAttachmentIds Attachments = attachments;
     public readonly RenderBufferMsaa MultiSample = multiSample;
-    
+
     internal static FrameBufferMeta MakeResizeCopy(in FrameBufferMeta meta, Size2D size) =>
         new(size, meta.Attachments, meta.MultiSample);
 }
@@ -133,24 +131,22 @@ public readonly struct RenderBufferMeta(
     public readonly RenderBufferMsaa Multisample = multisample;
 }
 
-public readonly struct UniformBufferMeta : IResourceMeta
+public readonly struct UniformBufferMeta(
+    UboSlot slot,
+    nint stride,
+    nint capacity,
+    BufferUsage usage,
+    BufferStorage storage,
+    BufferAccess access)
+    : IResourceMeta
 {
-    public readonly nint BlockSize;
-    public readonly nint Stride;
-    public readonly UniformGpuSlot Slot;
-    public readonly BufferUsage Usage;
-    public readonly BufferStorage Storage;
-    public readonly BufferAccess Access;
+    public readonly nint Capacity = capacity;
+    public readonly nint Stride = stride;
+    public readonly UboSlot Slot = slot;
+    public readonly BufferUsage Usage = usage;
+    public readonly BufferStorage Storage = storage;
+    public readonly BufferAccess Access = access;
 
-
-    public UniformBufferMeta(UniformGpuSlot slot, nint blockSize, BufferUsage usage, BufferStorage storage,
-        BufferAccess access)
-    {
-        Slot = slot;
-        BlockSize = blockSize;
-        Usage = usage;
-        Storage = storage;
-        Access = access;
-        Stride = UniformBufferUtils.AlignUp(BlockSize, UniformBufferUtils.UboOffsetAlign);
-    }
+    public static UniformBufferMeta MakeResizeCopy(in UniformBufferMeta meta, nint capacity) =>
+        new(meta.Slot, meta.Stride, capacity, meta.Usage, meta.Storage, meta.Access);
 }

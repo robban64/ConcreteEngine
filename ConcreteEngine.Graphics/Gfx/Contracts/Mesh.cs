@@ -4,7 +4,7 @@ using ConcreteEngine.Graphics.Resources;
 
 #endregion
 
-namespace ConcreteEngine.Graphics.Contracts;
+namespace ConcreteEngine.Graphics.Gfx.Contracts;
 
 public readonly record struct MeshDrawProperties(
     DrawPrimitive Primitive,

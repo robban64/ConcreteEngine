@@ -2,6 +2,7 @@
 
 using ConcreteEngine.Common;
 using ConcreteEngine.Common.Numerics;
+using ConcreteEngine.Common.Patterns;
 using ConcreteEngine.Core.Assets;
 using ConcreteEngine.Core.Configuration;
 using ConcreteEngine.Core.Features;
@@ -12,8 +13,9 @@ using ConcreteEngine.Core.Systems;
 using ConcreteEngine.Core.Time;
 using ConcreteEngine.Core.Utils;
 using ConcreteEngine.Graphics;
-using Silk.NET.Maths;
+using ConcreteEngine.Graphics.Resources;
 using Silk.NET.OpenGL;
+using Shader = ConcreteEngine.Core.Resources.Shader;
 
 #endregion
 
@@ -41,7 +43,7 @@ public sealed class GameEngine : IDisposable
     private readonly InputSystem _inputSystem;
     private readonly RenderSystem _renderer;
     //private readonly GameMessagePipeline _pipeline;
-    
+
     private readonly List<Func<GameScene>> _sceneFactories;
     private readonly ModuleManager _modules;
     private readonly FeatureManager _features;
@@ -62,9 +64,11 @@ public sealed class GameEngine : IDisposable
     private FrameInfo _frameCtx;
     private GpuFrameStats _gpuFrameResult;
 
-    private Vector2D<int> _prevOutputSize;
+    private Size2D _prevOutputSize;
 
     private LinearStateMachine<EngineState> _stateMachine;
+
+    private DebounceTicker? _debounceTicker = null;
 
     internal GameEngine(
         IEngineWindowHost windowHost,
@@ -74,12 +78,11 @@ public sealed class GameEngine : IDisposable
         List<Func<GameScene>> sceneFactories
     )
     {
-        
         _window = windowHost;
         _graphics = gfxBundle.Graphics;
         _input = input;
         _sceneFactories = sceneFactories;
-        
+
         _graphics.Initialize(gfxBundle.Config);
 
         _modules = new ModuleManager();
@@ -107,7 +110,6 @@ public sealed class GameEngine : IDisposable
     }
 
 
-
     private void StartAssetLoader()
     {
         _assets.StartLoader(_graphics.Gfx);
@@ -116,7 +118,7 @@ public sealed class GameEngine : IDisposable
     private void InitializeSystems()
     {
         var materialStore = _assets.FinishLoading();
-        _renderer.Initialize(materialStore);
+        _renderer.Initialize(materialStore, _assets);
         _systems.Initialize();
     }
 
@@ -126,28 +128,47 @@ public sealed class GameEngine : IDisposable
         var outputSize = _window.FramebufferSize;
         var frameCtx = new FrameInfo(
             frameIndex: _frameIdx,
-            deltaTime:dt,
+            deltaTime: dt,
             vSyncEnabled: false,
-            resizePending: _frameIdx > 1 && outputSize != _prevOutputSize,
-            viewport: Bounds2D.FromVector2D(_window.Size), 
-            outputSize: Bounds2D.FromVector2D(outputSize)
+            viewport: _window.Size,
+            outputSize: outputSize
         );
-        
+
         _renderTime.Accumulate(dt);
         _renderTime.Advance();
-        
+
+
+        if (_frameIdx > 1 && outputSize != _prevOutputSize)
+        {
+            _debounceTicker ??= new DebounceTicker(30);
+        }
+
+
+        if (_debounceTicker?.Tick() ?? false)
+        {
+            _debounceTicker = null;
+            var fbos = _renderer.RenderRegistry.RenderFbos;
+            Span<(FrameBufferId, Size2D)> newSizes = stackalloc (FrameBufferId, Size2D)[fbos.Count];
+            for (int i = 0; i < fbos.Count; i++)
+                newSizes[i] = (fbos[i].FboId, fbos[i].CalculateNewSize(outputSize));
+
+            _graphics.RecreateFbo(newSizes);
+            return;
+        }
+
         _graphics.BeginFrame(in frameCtx);
         if (_currentScene != null)
         {
             _renderTime.TickOrRenderEffect();
             _renderer.Render(_updateCtx.Alpha, in frameCtx);
         }
+
         _renderTime.TickOrGpuDispose();
         _renderTime.TickOrGpuUpload();
         _graphics.EndFrame(out _gpuFrameResult);
         _prevOutputSize = _window.FramebufferSize;
     }
-    
+
     private void OnGpuTickDispose(int tick)
     {
     }
@@ -200,7 +221,7 @@ public sealed class GameEngine : IDisposable
             $"Fps: {_fps}; Draw Calls: {_gpuFrameResult.DrawCalls}; Triangle Count: {_gpuFrameResult.TriangleCount}");
     }
 
-    
+
     private void RunSetupStateMachine()
     {
         switch (_stateMachine.Current)
@@ -209,7 +230,6 @@ public sealed class GameEngine : IDisposable
                 _stateMachine.Next();
                 break;
             case EngineState.LoadingGraphics:
-                _renderer.InitializeGraphics();
                 StartAssetLoader();
                 _stateMachine.Next();
                 break;
@@ -217,6 +237,8 @@ public sealed class GameEngine : IDisposable
                 _stateMachine.Next(_assets.ProcessLoader(8));
                 break;
             case EngineState.InitializeSystem:
+                var shaders = _assets.GetAll<Shader>();
+                _renderer.InitializeGraphics(shaders);
                 InitializeSystems();
                 _stateMachine.Next();
                 break;
@@ -226,7 +248,7 @@ public sealed class GameEngine : IDisposable
                 break;
         }
     }
-    
+
     private void UpdateSceneTransitionIfNeeded()
     {
         if (_nextSceneIndex < 0) return;
@@ -237,7 +259,7 @@ public sealed class GameEngine : IDisposable
         var previous = _currentScene;
         previous?.Unload();
 
-        var sceneContext = new GameSceneContext(_systems) { Features = _features, Modules = _modules, };
+        var sceneContext = new GameSceneContext(_systems) { Features = _features, Modules = _modules };
 
 
         var newScene = _sceneFactories[index]();
@@ -246,7 +268,7 @@ public sealed class GameEngine : IDisposable
         var builder = new GameSceneConfigBuilder(_features, _modules);
         newScene.Build(builder);
 
-        _renderer.RegisterScene(_window.FramebufferSize, builder.RenderType, builder.RenderTargetsDesc);
+        _renderer.RegisterScene(builder.RenderType, builder.RenderTargetsDesc);
 
         _features.Load(new GameFeatureContext(sceneContext));
 
@@ -270,7 +292,7 @@ public sealed class GameEngine : IDisposable
         _isDisposed = true;
         _currentScene?.Unload();
         _assets?.Shutdown();
-       // _graphics?.Dispose();
+        // _graphics?.Dispose();
     }
 
     public void Dispose()

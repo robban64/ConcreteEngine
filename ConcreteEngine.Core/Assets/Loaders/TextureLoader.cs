@@ -1,8 +1,7 @@
 #region
 
 using ConcreteEngine.Core.Assets.Manifest;
-using ConcreteEngine.Graphics;
-using ConcreteEngine.Graphics.Contracts;
+using ConcreteEngine.Graphics.Gfx.Contracts;
 using ConcreteEngine.Graphics.Resources;
 using StbImageSharp;
 

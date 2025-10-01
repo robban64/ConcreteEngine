@@ -1,4 +1,8 @@
+#region
+
 using ConcreteEngine.Core.Rendering;
+
+#endregion
 
 namespace ConcreteEngine.Core.Features;
 
@@ -19,9 +23,9 @@ public sealed class MeshEntityFeature : GameFeature
     public override void UpdateTick(int tick)
     {
         _idx = 0;
-        
+
         var world = Context.World;
-        
+
         foreach (var view in world.Meshes.View2(world.Transforms))
         {
             ref var mesh = ref view.Value1;
@@ -29,6 +33,4 @@ public sealed class MeshEntityFeature : GameFeature
             _drawSink.SendSingle(new MeshDrawEntity(mesh.MeshId, mesh.MaterialId, in transform));
         }
     }
-
-
 }

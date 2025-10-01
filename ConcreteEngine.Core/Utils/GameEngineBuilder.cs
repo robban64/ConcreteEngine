@@ -10,7 +10,8 @@ using Silk.NET.OpenGL;
 
 namespace ConcreteEngine.Core.Utils;
 
-internal record GfxRuntimeBundle<T>(GraphicsRuntime Graphics,IGfxStartupConfig<T> Config) where T : class;
+internal record GfxRuntimeBundle<T>(GraphicsRuntime Graphics, IGfxStartupConfig<T> Config) where T : class;
+
 public sealed class GameEngineBuilder
 {
     private AssetManagerConfiguration? _assetPipelineConfiguration = null;

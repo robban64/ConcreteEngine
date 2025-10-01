@@ -2,6 +2,7 @@
 
 using System.Diagnostics;
 using System.Runtime.CompilerServices;
+using ConcreteEngine.Common;
 
 #endregion
 
@@ -15,21 +16,21 @@ public interface IGfxResourceStore
 
 internal interface IGfxResourceStore<in TId> : IGfxResourceStore where TId : unmanaged, IResourceId
 {
-    ref readonly GfxHandle GetHandle(TId id);
-
+    GfxHandle GetHandleUntyped(TId id);
     GfxHandle Remove(TId id);
 }
 
 internal sealed class GfxResourceStore<TId, TMeta> : IGfxResourceStore<TId>
     where TId : unmanaged, IResourceId where TMeta : unmanaged, IResourceMeta
 {
-    internal readonly MakeIdDelegate<TId> MakeId;
+    private readonly MakeIdDelegate<TId> _makeId;
+    internal GfxMetaChangedDel<TId, TMeta>? _changeCallback;
 
     // sanity check
     private const int HardLimit = 10_000;
     private const int MaxDefaultCapacity = 1024;
 
-    public ResourceKind ResourceKind { get; }
+    public ResourceKind ResourceKind => TId.Kind;
 
     private int _idx = 0;
     private TMeta[] _meta;
@@ -39,50 +40,29 @@ internal sealed class GfxResourceStore<TId, TMeta> : IGfxResourceStore<TId>
 
     public int Count => _idx;
 
-    public ReadOnlySpan<TMeta> AsMetaSpan() => _meta;
+    internal ReadOnlySpan<TMeta> AsMetaSpan() => _meta;
     internal ReadOnlySpan<GfxHandle> AsHandleSpan() => _handle;
 
-    internal GfxResourceStore(
-        ResourceKind resourceKind,
-        int initialCapacity,
-        MakeIdDelegate<TId> makeId)
+    internal GfxResourceStore(int initialCapacity, MakeIdDelegate<TId> makeId)
     {
-        ArgumentOutOfRangeException.ThrowIfEqual((int)resourceKind, (int)ResourceKind.Invalid);
         ArgumentOutOfRangeException.ThrowIfLessThan(initialCapacity, 4, nameof(initialCapacity));
         ArgumentOutOfRangeException.ThrowIfGreaterThan(initialCapacity, MaxDefaultCapacity, nameof(initialCapacity));
         ArgumentNullException.ThrowIfNull(makeId);
 
-        ResourceKind = resourceKind;
-        MakeId = makeId;
+        InvalidOpThrower.ThrowIf(ResourceKind == ResourceKind.Invalid);
+
+        _makeId = makeId;
 
         _meta = new TMeta[initialCapacity];
         _handle = new GfxHandle[initialCapacity];
         _free = new Stack<int>();
     }
 
-    public bool TryGetHandle(TId id, out GfxHandle handle)
+    internal void BindOnChangeCallback(GfxMetaChangedDel<TId, TMeta> callback)
     {
-        if (id.Value == 0)
-        {
-            handle = default;
-            return false;
-        }
-
-        handle = GetHandle(id);
-        return true;
-    }
-
-    public bool TryGet(TId id, out GfxHandle handle, out TMeta meta)
-    {
-        if (id.Value == 0)
-        {
-            handle = default;
-            meta = default;
-            return false;
-        }
-
-        handle = GetHandleAndMeta(id, out meta);
-        return true;
+        ArgumentNullException.ThrowIfNull(callback);
+        InvalidOpThrower.ThrowIf(_changeCallback != null);
+        _changeCallback = callback;
     }
 
     public bool TryGetRef(TId id, out GfxRefToken<TId> handle, out TMeta meta)
@@ -102,18 +82,7 @@ internal sealed class GfxResourceStore<TId, TMeta> : IGfxResourceStore<TId>
     public ref readonly TMeta GetMeta(TId id) => ref _meta[id.Value - 1];
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public ref readonly GfxHandle GetHandle(TId id) => ref _handle[id.Value - 1];
-
-    [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public ref readonly GfxHandle GetHandleAndMeta(TId id, out TMeta meta)
-    {
-        int idx = id.Value - 1;
-        meta = _meta[idx];
-        return ref _handle[idx];
-    }
-
-    [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public GfxRefToken<TId> GetRef(TId id) => GfxRefToken<TId>.From(in _handle[id.Value - 1]);
+    public GfxRefToken<TId> GetRefHandle(TId id) => GfxRefToken<TId>.From(in _handle[id.Value - 1]);
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public GfxRefToken<TId> GetRefAndMeta(TId id, out TMeta meta)
@@ -123,6 +92,7 @@ internal sealed class GfxResourceStore<TId, TMeta> : IGfxResourceStore<TId>
         return GfxRefToken<TId>.From(in _handle[idx]);
     }
 
+    public GfxHandle GetHandleUntyped(TId id) => _handle[id.Value - 1];
 
     public TId Add(in TMeta meta, in GfxRefToken<TId> refToken)
     {
@@ -130,7 +100,7 @@ internal sealed class GfxResourceStore<TId, TMeta> : IGfxResourceStore<TId>
         int idx = _free.Count > 0 ? _free.Pop() : Allocate();
         _meta[idx] = meta;
         _handle[idx] = refToken.Handle;
-        return MakeId(idx);
+        return _makeId(idx);
     }
 
     public GfxHandle Remove(TId id)
@@ -156,19 +126,27 @@ internal sealed class GfxResourceStore<TId, TMeta> : IGfxResourceStore<TId>
         ArgumentOutOfRangeException.ThrowIfEqual(id.Value, 0, nameof(id));
         int idx = id.Value - 1;
         oldHandle = new GfxRefToken<TId>(in _handle[idx]);
+        var oldMeta = _meta[idx];
         _meta[idx] = newMeta;
         _handle[idx] = newHandleRef.Handle;
+
+        var message = new GfxMetaChanged<TMeta>(in newMeta, in oldMeta, newHandleRef.Handle.Gen, true, ResourceKind);
+        _changeCallback?.Invoke(id, in message);
+
         return id;
     }
 
-    public TMeta ReplaceMeta(TId id, in TMeta newMeta, out TMeta oldMeta)
+    public void ReplaceMeta(TId id, in TMeta newMeta, out TMeta oldMeta)
     {
         ArgumentOutOfRangeException.ThrowIfEqual(id.Value, 0, nameof(id));
         int idx = id.Value - 1;
         oldMeta = _meta[idx];
         _meta[idx] = newMeta;
-        return newMeta;
+
+        var message = new GfxMetaChanged<TMeta>(in newMeta, in oldMeta, _handle[idx].Gen, true, ResourceKind);
+        _changeCallback?.Invoke(id, in message);
     }
+
 
     private int Allocate()
     {
@@ -186,14 +164,14 @@ internal sealed class GfxResourceStore<TId, TMeta> : IGfxResourceStore<TId>
 
     public IdEnumerable IdEnumerator => new(this);
 
-    internal readonly struct IdEnumerable
+    public readonly struct IdEnumerable
     {
         private readonly GfxResourceStore<TId, TMeta> _store;
         internal IdEnumerable(GfxResourceStore<TId, TMeta> store) => _store = store;
         public ResourceIdEnumerator GetEnumerator() => new(_store);
     }
 
-    internal struct ResourceIdEnumerator
+    public struct ResourceIdEnumerator
     {
         private readonly GfxResourceStore<TId, TMeta> _store;
         private readonly GfxHandle[] _handles;
@@ -212,7 +190,7 @@ internal sealed class GfxResourceStore<TId, TMeta> : IGfxResourceStore<TId>
         public TId Current
         {
             [MethodImpl(MethodImplOptions.AggressiveInlining)]
-            get => _store.MakeId(_i);
+            get => _store._makeId(_i);
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]

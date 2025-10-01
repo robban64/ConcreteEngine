@@ -7,7 +7,6 @@ using ConcreteEngine.Core.Resources;
 
 namespace ConcreteEngine.Core.Features;
 
-
 public class SpriteFeature : GameFeature
 {
     public bool IsDrawable { get; set; } = true;
@@ -26,62 +25,61 @@ public class SpriteFeature : GameFeature
     }
 
     public override void UpdateTick(int tick)
-    {/*
-        _entityIdx = 0;
+    {
+        /*
+            _entityIdx = 0;
 
-        var spriteStore = Context.World.Sprites;
-        if (spriteStore.Count == 0) return;
+            var spriteStore = Context.World.Sprites;
+            if (spriteStore.Count == 0) return;
 
-        var transforms = Context.World.Transforms2D;
-        var prevTransforms = Context.World.PrevTransforms2D;
+            var transforms = Context.World.Transforms2D;
+            var prevTransforms = Context.World.PrevTransforms2D;
 
-        if (_entities.Length < spriteStore.Count)
-        {
-            var newSize = int.Max(_entities.Length * 2, spriteStore.Count);
-            Array.Resize(ref _entities, newSize);
-        }
-
-        foreach (var entry in spriteStore.View3(transforms, prevTransforms))
-        {
-            ref var sprite = ref entry.Value1;
-            ref var transform = ref entry.Value2;
-            ref var prevTransform = ref entry.Value3;
-
-            _entities[_entityIdx++] = new SpriteDrawEntity
+            if (_entities.Length < spriteStore.Count)
             {
-                SpriteId = sprite.SpriteId,
-                Position = transform.Position,
-                PreviousPosition = prevTransform.Position,
-                Scale = transform.Scale,
-                Uv = UvRect.GetInsetUv(sprite.SourceRectangle, sprite.UvScale),
-                MaterialId = sprite.MaterialId
-            };
-        }
-
-        var entitiesSpan = _entities.AsSpan(0, _entityIdx);
-        entitiesSpan.Sort();
-
-        _batches.Clear();
-        var prevMaterialId = entitiesSpan[0].MaterialId;
-        var curMaterialId = entitiesSpan[0].MaterialId;
-        for (int i = 0; i < _entityIdx; i++)
-        {
-            ref var entity = ref entitiesSpan[i];
-            curMaterialId = entity.MaterialId;
-            if (curMaterialId != prevMaterialId)
-            {
-                _batches.Add((prevMaterialId, i));
+                var newSize = int.Max(_entities.Length * 2, spriteStore.Count);
+                Array.Resize(ref _entities, newSize);
             }
 
-            prevMaterialId = curMaterialId;
-        }
+            foreach (var entry in spriteStore.View3(transforms, prevTransforms))
+            {
+                ref var sprite = ref entry.Value1;
+                ref var transform = ref entry.Value2;
+                ref var prevTransform = ref entry.Value3;
 
-        _batches.Add((curMaterialId, _entityIdx));
-        
-        _drawSink.Send(entitiesSpan);
-        _drawSink.BuildBatches(_batches);
-        */
-        
+                _entities[_entityIdx++] = new SpriteDrawEntity
+                {
+                    SpriteId = sprite.SpriteId,
+                    Position = transform.Position,
+                    PreviousPosition = prevTransform.Position,
+                    Scale = transform.Scale,
+                    Uv = UvRect.GetInsetUv(sprite.SourceRectangle, sprite.UvScale),
+                    MaterialId = sprite.MaterialId
+                };
+            }
+
+            var entitiesSpan = _entities.AsSpan(0, _entityIdx);
+            entitiesSpan.Sort();
+
+            _batches.Clear();
+            var prevMaterialId = entitiesSpan[0].MaterialId;
+            var curMaterialId = entitiesSpan[0].MaterialId;
+            for (int i = 0; i < _entityIdx; i++)
+            {
+                ref var entity = ref entitiesSpan[i];
+                curMaterialId = entity.MaterialId;
+                if (curMaterialId != prevMaterialId)
+                {
+                    _batches.Add((prevMaterialId, i));
+                }
+
+                prevMaterialId = curMaterialId;
+            }
+
+            _batches.Add((curMaterialId, _entityIdx));
+
+            _drawSink.Send(entitiesSpan);
+            _drawSink.BuildBatches(_batches);
+            */
     }
-
 }

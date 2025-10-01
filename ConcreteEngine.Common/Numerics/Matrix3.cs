@@ -1,6 +1,10 @@
+#region
+
 using System.Numerics;
 using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
+
+#endregion
 
 namespace ConcreteEngine.Common.Numerics;
 
@@ -10,8 +14,8 @@ public readonly struct Matrix3
     public readonly float M11, M12, M13;
     public readonly float M21, M22, M23;
     public readonly float M31, M32, M33;
-    
-    public static Matrix3 Identity => new(1,0,0, 0,1,0, 0,0,1);
+
+    public static Matrix3 Identity => new(1, 0, 0, 0, 1, 0, 0, 0, 1);
 
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]

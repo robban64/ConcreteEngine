@@ -1,14 +1,9 @@
 #region
 
-using System.Runtime.CompilerServices;
-using ConcreteEngine.Graphics.Error;
-using ConcreteEngine.Graphics.Gfx.Utility;
-using ConcreteEngine.Graphics.Utils;
-
 #endregion
 
 namespace ConcreteEngine.Graphics.Resources;
-
+/*
 public interface IShaderRepository
 {
     UboArena GetOrCreateUboArena(UniformGpuSlot slot);
@@ -128,4 +123,4 @@ public sealed class ShaderLayout
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         get => _locs[(int)uniform];
     }
-}
+}*/

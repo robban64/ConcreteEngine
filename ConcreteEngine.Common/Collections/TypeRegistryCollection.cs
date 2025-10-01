@@ -27,15 +27,14 @@ public sealed class TypeRegistryCollection<TValue>(int capacity = 16) : IEnumera
     }
 
 
-    
-    public T Get<T>()  where T : notnull, TValue
+    public T Get<T>() where T : notnull, TValue
     {
         if (!_registry.TryGetValue(typeof(T), out var value))
             throw new KeyNotFoundException($"TypeRegistryCollection: {typeof(T).Name} not registered");
-        
+
         if (value is not T tValue)
             throw new InvalidOperationException($"Invalid type expected: {typeof(T).Name}, actual  {value!.GetType()}");
-        
+
         return tValue;
     }
 

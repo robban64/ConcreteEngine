@@ -56,15 +56,13 @@ internal sealed class GlShaders : IGraphicsDriverModule
         return _store.Shader.Add(new GlShaderHandle(handle));
     }
 
-    public void GetUniformsFromProgram(in GfxRefToken<ShaderId> shaderRef, out List<(string, int)> uniforms,
-        out int samplers)
+    public List<(string, int)> GetUniformsFromProgram(GfxRefToken<ShaderId> shaderRef)
     {
         var handle = _store.Shader.GetRef(shaderRef).Handle;
 
         UseShader(shaderRef);
         _gl.GetProgram(handle, ProgramPropertyARB.ActiveUniforms, out int uniformsLength);
-        uniforms = new List<(string, int)>(uniformsLength);
-        samplers = 0;
+        var uniforms = new List<(string, int)>(uniformsLength);
         for (uint uniformIndex = 0; uniformIndex < uniformsLength; uniformIndex++)
         {
             string uniformName = _gl.GetActiveUniform(handle, uniformIndex, out _, out var type);
@@ -73,7 +71,22 @@ internal sealed class GlShaders : IGraphicsDriverModule
             {
                 uniforms.Add((uniformName, uniformLocation));
             }
+        }
 
+        return uniforms;
+    }
+
+    public int GetSamplersFromProgram(GfxRefToken<ShaderId> shaderRef)
+    {
+        var handle = _store.Shader.GetRef(shaderRef).Handle;
+
+        UseShader(shaderRef);
+        _gl.GetProgram(handle, ProgramPropertyARB.ActiveUniforms, out int uniformsLength);
+        int samplers = 0;
+        for (uint idx = 0; idx < uniformsLength; idx++)
+        {
+            string uniformName = _gl.GetActiveUniform(handle, idx, out _, out var type);
+            int uniformLocation = _gl.GetUniformLocation(handle, uniformName);
             if (type == UniformType.Sampler2D ||
                 type == UniformType.SamplerCube ||
                 type == UniformType.IntSampler2D)
@@ -81,6 +94,8 @@ internal sealed class GlShaders : IGraphicsDriverModule
                 samplers++;
             }
         }
+
+        return samplers;
     }
 
     private uint CreateShaderProgram(uint vertexShader, uint fragmentShader)

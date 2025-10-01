@@ -20,7 +20,7 @@ internal sealed class FrameTickTimer(float tickDt)
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public void Accumulate(float dt) => _accumulator += dt;
-    
+
     public int DrainAllTicks()
     {
         int n = 0;

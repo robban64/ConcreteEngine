@@ -16,7 +16,7 @@ public abstract class GameScene
     private World _world = null!;
 
     protected GameSceneContext Context { get; private set; } = null!;
-    
+
 
     protected World World => _world;
 
@@ -59,7 +59,7 @@ public abstract class GameScene
 
     protected abstract void ConfigureModules(IGameSceneModuleBuilder builder);
     protected abstract void ConfigureRenderer(IGameSceneRenderBuilder builder);
-    
+
 
     public abstract void Initialize();
     public abstract void Unload();

@@ -1,10 +1,8 @@
 #region
 
 using System.Runtime.CompilerServices;
-using ConcreteEngine.Graphics.Contracts;
-using ConcreteEngine.Graphics.Error;
+using ConcreteEngine.Graphics.Gfx.Contracts;
 using ConcreteEngine.Graphics.OpenGL.Utilities;
-using ConcreteEngine.Graphics.Primitives;
 using ConcreteEngine.Graphics.Resources;
 using Silk.NET.OpenGL;
 
@@ -37,10 +35,10 @@ internal sealed class GlBuffers : IGraphicsDriverModule
         return _store.IndexBuffer.Add(new GlIboHandle(handle.Value));
     }
 
-    public GfxRefToken<UniformBufferId> CreateUniformBuffer(UniformGpuSlot slot, in GfxBufferDataDesc desc)
+    public GfxRefToken<UniformBufferId> CreateUniformBuffer(UboSlot slot, in GfxBufferDataDesc desc)
     {
         var handle = CreateBufferNative(ReadOnlySpan<byte>.Empty, in desc, nullData: true);
-        _gl.BindBufferBase(BufferTargetARB.UniformBuffer, (uint)slot, handle.Value);
+        _gl.BindBufferBase(BufferTargetARB.UniformBuffer, slot, handle.Value);
         return _store.UniformBuffer.Add(new GlUboHandle(handle.Value));
     }
 
@@ -145,5 +143,4 @@ internal sealed class GlBuffers : IGraphicsDriverModule
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     private GlUboHandle GetUboHandle(GfxRefToken<UniformBufferId> uboRef) => _store.UniformBuffer.GetRef(uboRef);
-
 }

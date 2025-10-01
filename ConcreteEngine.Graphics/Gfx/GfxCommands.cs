@@ -8,7 +8,6 @@ using ConcreteEngine.Graphics.Error;
 using ConcreteEngine.Graphics.Gfx.Internal;
 using ConcreteEngine.Graphics.OpenGL;
 using ConcreteEngine.Graphics.Resources;
-using Silk.NET.Maths;
 
 #endregion
 
@@ -43,10 +42,10 @@ public sealed class GfxCommands
     private MeshMeta _boundMeshMeta = default;
 
     private ShaderId _boundShaderId = default;
-    private ShaderLayout? _boundUniforms;
+    private int[]? _boundUniforms = Array.Empty<int>();
 
     //
-    private Bounds2D _activeOutputSize;
+    private Size2D _activeOutputSize;
     private FrameInfo _frameCtx;
     private int _drawTriangleCount = 0;
     private int _drawCallCount = 0;
@@ -87,7 +86,7 @@ public sealed class GfxCommands
     internal void EndFrame(out GpuFrameStats result)
     {
         result = new GpuFrameStats(_drawCallCount, _drawTriangleCount);
-        UseShader(default);
+        UseShader(default, Array.Empty<int>());
         BindMesh(default);
         BindFramebuffer(default);
 
@@ -98,71 +97,57 @@ public sealed class GfxCommands
         _driver.EndFrame();
     }
 
-    public void BeginScreenPass(in GfxPassClear passClear)
+    public void BeginScreenPass(in GfxPassClear passClear, in GfxPassState states)
     {
         BindFramebuffer(default);
         SetViewport(_activeOutputSize);
 
-        ApplyState(new GfxPassState(
-            FramebufferSrgb:true,
-            ColorMask: true
-        ));
-        
+        ApplyState(in states);
         Clear(in passClear);
 
         _activeOutputSize = _frameCtx.OutputSize;
     }
 
-    public void BeginRenderPass(FrameBufferId fboId, in GfxPassClear passClear, bool scenePass)
+    public void BeginRenderPass(FrameBufferId fboId, in GfxPassClear passClear, in GfxPassState states)
     {
         ArgumentOutOfRangeException.ThrowIfNegativeOrZero(fboId.Value, nameof(fboId));
         if (_boundFboId == fboId) GraphicsException.ThrowInvalidState($"FBO is {fboId} already bound.");
 
         ref readonly var meta = ref _store.FboStore.GetMeta(fboId);
-        ref readonly var handle = ref _store.FboStore.GetHandle(fboId);
 
         BindFramebuffer(fboId);
         SetViewport(meta.Size);
-        
-        ApplyState(new GfxPassState(
-            DepthTest: scenePass,
-            DepthWrite: scenePass,
-            Cull: scenePass,
-            Blend: false,
-            Scissor: false,
-            FramebufferSrgb:true
-        ));
-        
-        _states.ColorMask(true);
+        ApplyState(in states);
         Clear(in passClear);
-        
-        _activeOutputSize = Bounds2D.FromSize(meta.Size);
+
+        _activeOutputSize = meta.Size;
+        /*
+*/
     }
 
     public void EndRenderPass()
     {
         if (_boundFboId == default) GraphicsException.ResourceNotBound<GlFboHandle>(nameof(_boundFboId));
 
+        BindFramebuffer(default);
         _activeOutputSize = _frameCtx.OutputSize;
 
         SetViewport(_activeOutputSize);
     }
 
 
-    public void BlitFramebuffer(FrameBufferId fromId, FrameBufferId toId = default, bool linear = true)
+    public void BlitFramebuffer(FrameBufferId fromId, FrameBufferId toId, bool linear)
     {
         Debug.Assert(fromId != default);
         Debug.Assert(fromId != toId, "READ and DRAW FBO must differ for resolve.");
 
         ref readonly var fromFbo = ref _store.FboStore.GetMeta(fromId);
-        var fromHandle = _store.FboStore.GetRef(fromId);
+        var fromHandle = _store.FboStore.GetRefHandle(fromId);
         var srcSize = fromFbo.Size;
-        
-        ApplyState(_activeState with{ FramebufferSrgb = false });
 
         if (!_store.FboStore.TryGetRef(toId, out var toHandle, out var toFbo))
         {
-            _driver.FrameBuffers.BlitDefault(fromHandle, srcSize, _activeOutputSize.ToSize2D(), false);
+            _driver.FrameBuffers.BlitDefault(fromHandle, srcSize, _activeOutputSize, false);
             return;
         }
 
@@ -176,7 +161,7 @@ public sealed class GfxCommands
         if (passClear.ClearBuffer is { } clearBuff) _states.ClearBuffer(clearBuff);
     }
 
-    public void ApplyState(GfxPassState cmdState)
+    public void ApplyState(in GfxPassState cmdState)
     {
         _activeState = cmdState;
         if (cmdState.Scissor is { } scissor) _states.ToggleScissorTest(scissor);
@@ -187,20 +172,13 @@ public sealed class GfxCommands
         if (cmdState.FramebufferSrgb is { } srgb) _states.ToggleFrameBufferSrgb(srgb);
         if (cmdState.ColorMask is { } colorMask) _states.ColorMask(colorMask);
     }
-    
+
 
     public void SetViewport(Size2D viewportSize)
     {
-        _activeOutputSize = Bounds2D.FromSize(viewportSize);
-        _states.SetViewport(_activeOutputSize);
+        _activeOutputSize = viewportSize;
+        _states.SetViewport(_activeOutputSize.ToBounds2D());
     }
-    
-    public void SetViewport(Bounds2D viewport)
-    {
-        _activeOutputSize = viewport;
-        _states.SetViewport(viewport);
-    }
-    
 
     public void SetBlendMode(BlendMode blendMode)
     {
@@ -234,7 +212,7 @@ public sealed class GfxCommands
             return;
         }
 
-        _states.BindFrameBuffer(_store.FboStore.GetRef(id));
+        _states.BindFrameBuffer(_store.FboStore.GetRefHandle(id));
         _boundFboId = id;
     }
 
@@ -251,7 +229,7 @@ public sealed class GfxCommands
             return;
         }
 
-        var refHandle = _store.TextureStore.GetRef(texture);
+        var refHandle = _store.TextureStore.GetRefHandle(texture);
         _states.BindTexture(refHandle, slot);
     }
 
@@ -311,7 +289,7 @@ public sealed class GfxCommands
         _drawCallCount++;
     }
 
-    public void UseShader(ShaderId id)
+    public void UseShader(ShaderId id, int[] uniformLocations)
     {
         if (_boundShaderId == id) return;
 
@@ -323,41 +301,42 @@ public sealed class GfxCommands
             return;
         }
 
-        var handle = _store.ShaderStore.GetRef(id);
-        var uniformTable = _repository.ShaderRepository.GetShaderLayout(id);
-
+        var handle = _store.ShaderStore.GetRefHandle(id);
         _shaders.UseShader(handle);
         _boundShaderId = id;
-        _boundUniforms = uniformTable;
+        _boundUniforms = uniformLocations;
     }
 
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public void SetUniform(ShaderUniform uniform, int value) => _shaders.SetUniform(_boundUniforms![uniform], value);
+    public void SetUniform(ShaderUniform uniform, int value) =>
+        _shaders.SetUniform(_boundUniforms![(int)uniform], value);
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public void SetUniform(ShaderUniform uniform, uint value) => _shaders.SetUniform(_boundUniforms![uniform], value);
+    public void SetUniform(ShaderUniform uniform, uint value) =>
+        _shaders.SetUniform(_boundUniforms![(int)uniform], value);
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public void SetUniform(ShaderUniform uniform, float value) => _shaders.SetUniform(_boundUniforms![uniform], value);
+    public void SetUniform(ShaderUniform uniform, float value) =>
+        _shaders.SetUniform(_boundUniforms![(int)uniform], value);
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public void SetUniform(ShaderUniform uniform, Vector2 value) =>
-        _shaders.SetUniform(_boundUniforms![uniform], value);
+        _shaders.SetUniform(_boundUniforms![(int)uniform], value);
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public void SetUniform(ShaderUniform uniform, Vector3 value) =>
-        _shaders.SetUniform(_boundUniforms![uniform], value);
+        _shaders.SetUniform(_boundUniforms![(int)uniform], value);
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public void SetUniform(ShaderUniform uniform, Vector4 value) =>
-        _shaders.SetUniform(_boundUniforms![uniform], value);
+        _shaders.SetUniform(_boundUniforms![(int)uniform], value);
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public void SetUniform(ShaderUniform uniform, in Matrix4x4 value) =>
-        _shaders.SetUniform(_boundUniforms![uniform], in value);
+        _shaders.SetUniform(_boundUniforms![(int)uniform], in value);
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public void SetUniform(ShaderUniform uniform, in Matrix3 value) =>
-        _shaders.SetUniform(_boundUniforms![uniform], in value);
+        _shaders.SetUniform(_boundUniforms![(int)uniform], in value);
 }

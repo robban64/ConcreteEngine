@@ -10,7 +10,7 @@ internal sealed class GameTime
     private FrameTickTimer _gameTicker = new(1f / GameTicksPerSecond);
     private FrameTickTimer _fpsTicker = new(1f);
     private GameTickTimer _animationClock = new(5, GameTicksPerSecond);
-    
+
     private readonly GameTimeTickDelegate _onGameTick;
     private readonly GameTimeTickDelegate _onUpdateLogTick;
 

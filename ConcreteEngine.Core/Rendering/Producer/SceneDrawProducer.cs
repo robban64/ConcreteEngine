@@ -1,4 +1,9 @@
+#region
+
 using System.Numerics;
+using ConcreteEngine.Core.Rendering.Passes;
+
+#endregion
 
 namespace ConcreteEngine.Core.Rendering;
 
@@ -40,7 +45,7 @@ public sealed class SceneDrawProducer : IDrawCommandProducer
         );
 
 
-        var meta = new DrawCommandMeta( DrawCommandId.Skybox, RenderTargetId.Scene, DrawCommandQueue.Skybox);
+        var meta = new DrawCommandMeta(DrawCommandId.Skybox, RenderTargetId.Scene, DrawCommandQueue.Skybox);
 
         submitter.SubmitDraw(in cmd, in meta, new DrawTransformPayload(Matrix4x4.Identity));
     }

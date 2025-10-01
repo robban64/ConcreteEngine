@@ -1,35 +1,39 @@
+#region
+
 using ConcreteEngine.Core.Rendering;
+
+#endregion
 
 namespace ConcreteEngine.Core.Scene;
 
 public interface IWorld
 {
     SceneRenderProperties SceneRenderProps { get; }
-    
+
     GameEntityId Create();
     GameComponentStore<Transform> Transforms { get; }
     GameComponentStore<MeshComponent> Meshes { get; }
     GameComponentStore<Transform2D> Transforms2D { get; }
     GameComponentStore<Transform2D> PrevTransforms2D { get; }
     GameComponentStore<SpriteComponent> Sprites { get; }
-    GameComponentStore<TilemapComponent> Tilemaps { get; } 
+    GameComponentStore<TilemapComponent> Tilemaps { get; }
     GameComponentStore<LightComponent> Lights { get; }
 }
 
 public sealed class World : IWorld
 {
     private int _idIdx = 1;
-    
+
     public SceneRenderProperties SceneRenderProps { get; }
 
-    internal World(SceneRenderProperties  sceneRenderProps)
+    internal World(SceneRenderProperties sceneRenderProps)
     {
-        SceneRenderProps =  sceneRenderProps;
+        SceneRenderProps = sceneRenderProps;
     }
 
-    
-    public GameEntityId Create() => new (_idIdx++);
-    
+
+    public GameEntityId Create() => new(_idIdx++);
+
     public GameComponentStore<Transform> Transforms { get; } = new();
     public GameComponentStore<MeshComponent> Meshes { get; } = new();
     public GameComponentStore<Transform2D> Transforms2D { get; } = new();
@@ -58,7 +62,5 @@ public sealed class World : IWorld
                 prev.Position = curr.Position;
             }
         }
-
     }
-    
 }

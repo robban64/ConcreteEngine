@@ -14,7 +14,7 @@ internal enum EngineCoreEvent
     SceneTransitioned,
 }
 
-internal enum EngineCoreCommand 
+internal enum EngineCoreCommand
 {
     LoadAssets,
     LoadFirstScene,
@@ -28,7 +28,7 @@ internal enum EngineCoreUpdateMode
 
 internal enum EngineCoreRenderMOde
 {
-    
+
 }
 
 internal sealed class EngineCoreContext
@@ -43,7 +43,7 @@ internal sealed class EngineCoreContext
 
     public void Notify(EngineCoreEvent evt) => _engine.OnNotify(evt);
     public void ExecuteCmd(EngineCoreCommand cmd) => _engine.OnExecuteCmd(cmd);
-    
+
     public bool ProcessAssets(int n) => _engine.ProcessAssets(n);
 
 }
@@ -81,18 +81,18 @@ internal class EngineLoaderState : BaseEngineState
                 _state = 3;
                 break;
         }
-        
+
     }
 
     protected override void OnExit() {}
 
     public override bool ShouldAdvance() => _state >= StateMax;
-    
+
 }
 
 internal class EngineSceneState : BaseEngineState
 {
-    
+
     protected override void OnEnter()
     {
     }
@@ -102,5 +102,5 @@ internal class EngineSceneState : BaseEngineState
     }
 
     public override bool ShouldAdvance() => _done;
-    
+
 }*/

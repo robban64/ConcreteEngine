@@ -1,28 +1,30 @@
+#region
+
 using ConcreteEngine.Core.Assets;
 using ConcreteEngine.Core.Rendering;
 using ConcreteEngine.Core.Resources;
 
+#endregion
+
 namespace ConcreteEngine.Core.Features;
 
-
-public sealed class TerrainFeature: GameFeature
+public sealed class TerrainFeature : GameFeature
 {
-    
     private ITerrainDrawSink _drawSink = null!;
 
     private MaterialId _materialId;
     private Texture2D _heightmap = null!;
-    
+
     public override void Initialize()
     {
         var assets = Context.GetSystem<IAssetSystem>();
         var renderer = Context.GetSystem<IRenderSystem>();
         var material = renderer.CreateMaterial("TerrainMat");
         var heightmap = assets.Get<Texture2D>("Heightmap");
-        
+
         material.UvRepeat = 20;
 
-        
+
         _drawSink = renderer.GetSink<ITerrainDrawSink>();
 
         _materialId = material.Id;
@@ -33,10 +35,7 @@ public sealed class TerrainFeature: GameFeature
     {
         _drawSink.Send(new TerrainDrawData
         {
-            Heightmap = _heightmap,
-            MaterialId = _materialId,
-            MaxHeight = 12,
-            Step = 1
+            Heightmap = _heightmap, MaterialId = _materialId, MaxHeight = 12, Step = 1
         });
     }
 }

@@ -2,8 +2,8 @@
 
 using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
-using ConcreteEngine.Graphics.Contracts;
 using ConcreteEngine.Graphics.Error;
+using ConcreteEngine.Graphics.Gfx.Contracts;
 using ConcreteEngine.Graphics.Gfx.Internal;
 using ConcreteEngine.Graphics.Gfx.Utility;
 using ConcreteEngine.Graphics.OpenGL;
@@ -60,21 +60,21 @@ public sealed class GfxBuffers
 
     //BufferStorage.Dynamic, BufferAccess.MapWrite
     public UniformBufferId CreateUniformBuffer<T>(
-        UniformGpuSlot slot,
+        UboSlot slot,
         BufferStorage storage = BufferStorage.Dynamic,
         BufferAccess access = BufferAccess.MapWrite) where T : unmanaged, IUniformGpuData
     {
         if (!UniformBufferUtils.IsStd140Aligned<T>())
             throw GraphicsException.InvalidStd140Layout<T>();
 
-        var size = (nint)Unsafe.SizeOf<T>();
-        var meta = new UniformBufferMeta(slot, size, BufferUsage.DynamicDraw, BufferStorage.Dynamic,
+        var blockSize = (nint)Unsafe.SizeOf<T>();
+        var stride = UniformBufferUtils.AlignUp(blockSize, UniformBufferUtils.UboOffsetAlign);
+        var meta = new UniformBufferMeta(slot, stride, stride, BufferUsage.DynamicDraw, BufferStorage.Dynamic,
             BufferAccess.MapWrite);
 
-        var uboRef = _driverBuffer.CreateUniformBuffer(slot, new GfxBufferDataDesc(size, storage, access));
+        var uboRef = _driverBuffer.CreateUniformBuffer(slot, new GfxBufferDataDesc(stride, storage, access));
 
         var uboId = _resources.UboStore.Add(meta, uboRef);
-        _repository.ShaderRepository.AddUboToSlot(meta.Slot, uboId);
         return uboId;
     }
 
@@ -108,11 +108,14 @@ public sealed class GfxBuffers
         _resources.IboStore.ReplaceMeta(iboId, in newMeta, out _);
     }
 
-    public void SetUniformBufferCapacity(UniformGpuSlot slot, nint capacity)
+    public void SetUniformBufferCapacity(UniformBufferId uboId, nint capacity)
     {
         ArgumentOutOfRangeException.ThrowIfEqual(0, (int)capacity);
-        var ubo = _repository.ShaderRepository.GetUboId(slot);
-        var refToken = _resources.UboStore.GetRef(ubo);
+        var refToken = _resources.UboStore.GetRefAndMeta(uboId, out var meta);
+        if (meta.Capacity == capacity) return;
+        var newMeta = UniformBufferMeta.MakeResizeCopy(in meta, capacity);
+        _resources.UboStore.ReplaceMeta(uboId, in newMeta, out _);
+
         _driverBuffer.ResizeUniformBuffer(refToken, capacity, BufferUsage.DynamicDraw);
     }
 
@@ -122,37 +125,35 @@ public sealed class GfxBuffers
         ArgumentOutOfRangeException.ThrowIfGreaterThan(offsetElements, data.Length);
         var (offset, size) = ToSizeAndOffset<T>(offsetElements, data.Length);
 
-        var vboRef = _resources.VboStore.GetRef(vboId);
+        var vboRef = _resources.VboStore.GetRefHandle(vboId);
         _driverBuffer.UploadVertexBufferData(vboRef, ToBufferByteData(data), offset, size);
     }
 
     public void UploadIndexBuffer<T>(IndexBufferId iboId, ReadOnlySpan<T> data, int offsetElements) where T : unmanaged
     {
         ArgumentOutOfRangeException.ThrowIfGreaterThan(offsetElements, data.Length);
-        var iboRef = _resources.IboStore.GetRef(iboId);
+        var iboRef = _resources.IboStore.GetRefHandle(iboId);
         var (offset, size) = ToSizeAndOffset<T>(offsetElements, data.Length);
         _driverBuffer.UploadIndexBufferData(iboRef, ToBufferByteData(data), offset, size);
     }
 
 
-    public void UploadUniformGpuData<T>(UniformGpuSlot slot, in T data, nint offset)
+    public void UploadUniformGpuData<T>(UniformBufferId uboId, in T data, nint offset)
         where T : unmanaged, IUniformGpuData
     {
         UniformBufferUtils.IsStd140AlignedOrThrow<T>(out nint stride);
-        var ubo = _repository.ShaderRepository.GetUboId(slot);
-        var uboRef = _resources.UboStore.GetRef(ubo);
+        var uboRef = _resources.UboStore.GetRefHandle(uboId);
 
-        var one = MemoryMarshal.CreateReadOnlySpan(ref Unsafe.AsRef(in data), 1);
-        var bytes = MemoryMarshal.AsBytes(one);
+        var tSpan = MemoryMarshal.CreateReadOnlySpan(ref Unsafe.AsRef(in data), 1);
+        var bytes = MemoryMarshal.AsBytes(tSpan);
 
         _driverBuffer.UploadUniformBufferData(uboRef, bytes, offset, stride);
     }
 
-    public void BindUniformBufferRange(UniformGpuSlot slot, nint offset, nint size)
+    public void BindUniformBufferRange(UniformBufferId uboId, nint offset, nint size)
     {
-        var ubo = _repository.ShaderRepository.GetUboId(slot);
-        var uboRef = _resources.UboStore.GetRef(ubo);
-        _driverBuffer.BindUniformBufferRange(uboRef, (int)slot, offset, size);
+        var uboRef = _resources.UboStore.GetRefAndMeta(uboId, out var meta);
+        _driverBuffer.BindUniformBufferRange(uboRef, meta.Slot, offset, size);
     }
 
     public static (nint Offset, nint Size) ToSizeAndOffset<T>(int offsetElements, int count) where T : unmanaged

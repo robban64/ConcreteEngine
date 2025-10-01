@@ -45,7 +45,7 @@ public class DayNightModule : GameModule
             _targetColor = _towardsDay ? _dayColor : _nightColor;
         }
 
-        _renderer.MutateRenderPass(RenderTargetId.Light, new RenderPassMutation { ClearColor = _ambientColor });
+        //_renderer.MutateRenderPass(RenderTargetId.Light, new RenderPassMutation { ClearColor = _ambientColor });
 
 
         // Just a demo

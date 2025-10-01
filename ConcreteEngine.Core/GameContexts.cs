@@ -2,14 +2,15 @@
 
 #endregion
 
+#region
+
 using ConcreteEngine.Core.Features;
 using ConcreteEngine.Core.Scene;
 using ConcreteEngine.Core.Systems;
 
+#endregion
+
 namespace ConcreteEngine.Core;
-
-
-
 
 public sealed class GameSceneContext
 {
@@ -32,7 +33,7 @@ public sealed class GameFeatureContext
     public FeatureManager Features => _scene.Features;
     public ModuleManager Modules => _scene.Modules;
     public IWorld World => _scene.World;
-    
+
     public T GetSystem<T>() where T : IGameEngineSystem => _scene.GetSystem<T>();
 
     internal GameFeatureContext(GameSceneContext scene)

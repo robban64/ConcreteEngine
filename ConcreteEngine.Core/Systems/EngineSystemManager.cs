@@ -1,6 +1,10 @@
+#region
+
 using ConcreteEngine.Common.Collections;
 using ConcreteEngine.Core.Assets;
 using ConcreteEngine.Core.Rendering;
+
+#endregion
 
 namespace ConcreteEngine.Core.Systems;
 

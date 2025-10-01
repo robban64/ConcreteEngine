@@ -1,7 +1,7 @@
 #region
 
+using ConcreteEngine.Core.Rendering.Batching;
 using ConcreteEngine.Core.Scene;
-using ConcreteEngine.Graphics;
 using ConcreteEngine.Graphics.Gfx;
 
 #endregion
@@ -25,4 +25,3 @@ public interface IDrawCommandProducer
 }
 
 public interface IDrawSink;
-

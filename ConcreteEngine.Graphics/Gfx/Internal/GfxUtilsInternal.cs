@@ -1,8 +1,6 @@
 #region
 
-using System.Numerics;
 using System.Runtime.CompilerServices;
-using Silk.NET.Maths;
 
 #endregion
 

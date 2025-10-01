@@ -1,13 +1,11 @@
 #region
 
-using ConcreteEngine.Common;
 using ConcreteEngine.Common.Numerics;
 using ConcreteEngine.Graphics.Resources;
 
 #endregion
 
 namespace ConcreteEngine.Core.Resources;
-
 
 public sealed class Material
 {
@@ -17,8 +15,8 @@ public sealed class Material
     public MaterialId Id { get; }
     public string TemplateName { get; }
     public ShaderId ShaderId { get; set; }
-    
-    public CubeMap? CubeMap { get;  }
+
+    public CubeMap? CubeMap { get; }
 
     public TextureId[] SamplerSlots => _samplerSlots;
 
@@ -38,7 +36,7 @@ public sealed class Material
 
 
         _values = new Dictionary<ShaderUniform, IMaterialValue>(4);
-        
+
         if (template.Shader.Samplers == 0)
             return;
 

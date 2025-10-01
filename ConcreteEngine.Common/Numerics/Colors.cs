@@ -1,4 +1,8 @@
+#region
+
 using System.Numerics;
+
+#endregion
 
 namespace ConcreteEngine.Common.Numerics;
 
@@ -34,29 +38,29 @@ public readonly record struct Color4(float R, float G, float B, float A = 1f)
             (byte)MathF.Round(B * 255f),
             (byte)MathF.Round(A * 255f));
 
-    private static float ClampNorm(float v) => v < 0f ? 0f : (v > 1f ? 1f : v);
+    private static float ClampNorm(float v) => v < 0f ? 0f : v > 1f ? 1f : v;
 
 
-    public static readonly Color4 Transparent = Color4.FromRgba(0, 0, 0, 0);
-    public static readonly Color4 Black = Color4.FromRgba(0, 0, 0);
-    public static readonly Color4 White = Color4.FromRgba(255, 255, 255);
-    public static readonly Color4 Gray = Color4.FromRgba(128, 128, 128);
-    public static readonly Color4 LightGray = Color4.FromRgba(192, 192, 192);
-    public static readonly Color4 DarkGray = Color4.FromRgba(64, 64, 64);
+    public static readonly Color4 Transparent = FromRgba(0, 0, 0, 0);
+    public static readonly Color4 Black = FromRgba(0, 0, 0);
+    public static readonly Color4 White = FromRgba(255, 255, 255);
+    public static readonly Color4 Gray = FromRgba(128, 128, 128);
+    public static readonly Color4 LightGray = FromRgba(192, 192, 192);
+    public static readonly Color4 DarkGray = FromRgba(64, 64, 64);
 
-    public static readonly Color4 Red = Color4.FromRgba(255, 0, 0);
-    public static readonly Color4 Green = Color4.FromRgba(0, 255, 0);
-    public static readonly Color4 Blue = Color4.FromRgba(0, 0, 255);
-    public static readonly Color4 Yellow = Color4.FromRgba(255, 255, 0);
-    public static readonly Color4 Magenta = Color4.FromRgba(255, 0, 255);
-    public static readonly Color4 Cyan = Color4.FromRgba(0, 255, 255);
+    public static readonly Color4 Red = FromRgba(255, 0, 0);
+    public static readonly Color4 Green = FromRgba(0, 255, 0);
+    public static readonly Color4 Blue = FromRgba(0, 0, 255);
+    public static readonly Color4 Yellow = FromRgba(255, 255, 0);
+    public static readonly Color4 Magenta = FromRgba(255, 0, 255);
+    public static readonly Color4 Cyan = FromRgba(0, 255, 255);
 
-    public static readonly Color4 Orange = Color4.FromRgba(255, 165, 0);
-    public static readonly Color4 Purple = Color4.FromRgba(128, 0, 128);
-    public static readonly Color4 Pink = Color4.FromRgba(255, 105, 180);
-    public static readonly Color4 Brown = Color4.FromRgba(139, 69, 19);
+    public static readonly Color4 Orange = FromRgba(255, 165, 0);
+    public static readonly Color4 Purple = FromRgba(128, 0, 128);
+    public static readonly Color4 Pink = FromRgba(255, 105, 180);
+    public static readonly Color4 Brown = FromRgba(139, 69, 19);
 
-    public static readonly Color4 CornflowerBlue = Color4.FromRgba(100, 149, 237);
+    public static readonly Color4 CornflowerBlue = FromRgba(100, 149, 237);
 
     public static Color4 FromHex(ReadOnlySpan<char> hex)
     {
@@ -73,7 +77,7 @@ public readonly record struct Color4(float R, float G, float B, float A = 1f)
         var b = ParseHex(hex.Slice(4, 2));
         var a = hex.Length == 8 ? ParseHex(hex.Slice(6, 2)) : 255;
 
-        return Color4.FromRgba((byte)r, (byte)g, (byte)b, (byte)a);
+        return FromRgba((byte)r, (byte)g, (byte)b, (byte)a);
 
         static int HexVal(char c) =>
             c switch

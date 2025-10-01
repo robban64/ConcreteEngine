@@ -1,7 +1,10 @@
+#region
+
 using System.Diagnostics.CodeAnalysis;
-using System.Numerics;
 using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
+
+#endregion
 
 namespace ConcreteEngine.Common.Patterns;
 
@@ -32,6 +35,7 @@ public readonly record struct ActionId(int Value);
 public sealed class ActionSequenceMachine<TCtx>
 {
     public delegate ActionMove ActionBinding(TCtx context);
+
     public delegate bool ConditionBinding(TCtx context);
 
     private readonly Dictionary<ConditionId, ConditionBinding> _conditions = new(4);
@@ -39,7 +43,7 @@ public sealed class ActionSequenceMachine<TCtx>
     private readonly List<ActionBinding> _registerActions = new(4);
 
     private bool _froozen = false;
-    
+
     public ActionId RegisterAction(ActionBinding binding)
     {
         ArgumentNullException.ThrowIfNull(binding, nameof(binding));
@@ -70,7 +74,7 @@ public sealed class ActionSequenceMachine<TCtx>
     {
         ArgumentNullException.ThrowIfNull(context, nameof(context));
         ArgumentOutOfRangeException.ThrowIfLessThan(_registerActions.Count, 2);
-        
+
         _froozen = true;
         int idx = 0, executed = 0, actionExecuted = 0;
         var span = CollectionsMarshal.AsSpan(_registerActions);
@@ -116,26 +120,28 @@ public sealed class ActionSequenceMachine<TCtx>
 
     internal readonly record struct ConditionId(ActionId ForActionId, ActionId ToActionId)
     {
-        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static ConditionId Make(int forActionId, int toActionId) =>
             new(new ActionId(forActionId), new ActionId(toActionId));
     }
 
-    [MethodImpl(MethodImplOptions.NoInlining), DoesNotReturn]
+    [MethodImpl(MethodImplOptions.NoInlining)]
+    [DoesNotReturn]
     static void ThrowIllegalStayAmount(int stayAmount) =>
         throw new InvalidOperationException($"Illegal stay: Stayed for max {stayAmount}.");
 
-    
-    [MethodImpl(MethodImplOptions.NoInlining), DoesNotReturn]
+
+    [MethodImpl(MethodImplOptions.NoInlining)]
+    [DoesNotReturn]
     static void ThrowIllegalAdvance(int advanceBy, int idx) =>
         throw new InvalidOperationException($"Illegal move: AdvanceBy {advanceBy} at step {idx}.");
 
-    [MethodImpl(MethodImplOptions.NoInlining), DoesNotReturn]
+    [MethodImpl(MethodImplOptions.NoInlining)]
+    [DoesNotReturn]
     static void ThrowIllegalConditionPacked(int from, int to) =>
         throw new InvalidOperationException($"Illegal condition ({from}->{to}).");
 
-    [MethodImpl(MethodImplOptions.NoInlining), DoesNotReturn]
+    [MethodImpl(MethodImplOptions.NoInlining)]
+    [DoesNotReturn]
     static void ThrowUnknownMove(ActionMoveKind kind) =>
         throw new InvalidOperationException($"Unknown move kind: {kind}.");
-
 }

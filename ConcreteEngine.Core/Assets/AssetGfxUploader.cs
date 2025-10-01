@@ -41,7 +41,7 @@ internal sealed class AssetGfxUploader
         var desc = payload.TextureDesc;
         var inMemoryData = record.InMemory ? payload.Data : null;
         info = new TextureCreationInfo(desc.Width, desc.Height, desc.Format, inMemoryData);
-        var textureId = _gfx.Textures.BuildTexture(in desc, payload.TextureProps,payload.Data) ;
+        var textureId = _gfx.Textures.BuildTexture(in desc, payload.TextureProps, payload.Data);
         return textureId;
     }
 
@@ -49,7 +49,7 @@ internal sealed class AssetGfxUploader
         out CubeMapCreationInfo info)
     {
         var desc = payload.TextureDesc;
-        var textureId = _gfx.Textures.BuildCubeMap(in desc, payload.TextureProps,payload.FaceData) ;
+        var textureId = _gfx.Textures.BuildCubeMap(in desc, payload.TextureProps, payload.FaceData);
         info = new CubeMapCreationInfo(desc.Width, desc.Height, desc.Format);
         return textureId;
     }

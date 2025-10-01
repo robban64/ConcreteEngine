@@ -44,8 +44,8 @@ internal sealed class GfxResourceDisposer : IGfxResourceDisposer
     {
         ArgumentOutOfRangeException.ThrowIfLessThanOrEqual(id.Value, 0);
         var resourceKind = TId.Kind;
-        var fStore = _resources.GfxStoreHub.GetStore<TId>(resourceKind);
-        var gfxHandle = fStore.GetHandle(id);
+        var fStore = _resources.GfxStoreHub.GetStore<TId>();
+        var gfxHandle = fStore.GetHandleUntyped(id);
 
         var bStore = _resources.BackendStoreHub.Get(resourceKind);
         var native = bStore.GetNative(in gfxHandle);

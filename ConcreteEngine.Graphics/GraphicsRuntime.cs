@@ -8,7 +8,6 @@ using ConcreteEngine.Graphics.Gfx.Internal;
 using ConcreteEngine.Graphics.Gfx.Utility;
 using ConcreteEngine.Graphics.OpenGL;
 using ConcreteEngine.Graphics.Resources;
-using Silk.NET.Maths;
 
 #endregion
 
@@ -70,10 +69,6 @@ public sealed class GraphicsRuntime : IGraphicsRuntime
         _isInitialized = true;
     }
 
-    public void Shutdown()
-    {
-    }
-
     public void BeginFrame(in FrameInfo frameInfo)
     {
         _frameCtx = frameInfo;
@@ -85,14 +80,24 @@ public sealed class GraphicsRuntime : IGraphicsRuntime
         if (_disposer.PendingCount > 0) _disposer.DrainDisposeQueue(_driver);
 
         _gfxContext.Commands.EndFrame(out stats);
-
-        if (_frameCtx.ResizePending)
-        {
-            RecreateFbo(_frameCtx.OutputSize.ToSize2D());
-        }
     }
 
-    // TODO pending queue, right now the switch happens directly and is used the next frame.
+    public void RecreateFbo(ReadOnlySpan<(FrameBufferId Id, Size2D Size)> newSizes)
+    {
+        Console.WriteLine($"Recreating {newSizes.Length} FBO");
+        foreach (var (fboId, size) in newSizes)
+            _gfxContext.FrameBuffers.RecreateFrameBuffer(fboId, size);
+    }
+
+    public void Shutdown()
+    {
+    }
+
+    public void Dispose()
+    {
+    }
+
+    /*
     private void RecreateFbo(Size2D size)
     {
         ArgumentOutOfRangeException.ThrowIfLessThanOrEqual(size.Width, 0);
@@ -101,10 +106,8 @@ public sealed class GraphicsRuntime : IGraphicsRuntime
         var fboStore = _resources.GfxStoreHub.FboStore;
         Console.WriteLine($"Recreating {fboStore.Count} FBO");
 
-        _gfxContext.FrameBufferRegistry.RecreateFrameBuffers(size);
+        foreach (var fboId in fboStore.IdEnumerator)
+            _gfxContext.FrameBuffers.RecreateFrameBuffer(fboId, size);
     }
-
-    public void Dispose()
-    {
-    }
+*/
 }

@@ -8,7 +8,7 @@ using Silk.NET.OpenGL;
 
 #endregion
 
-namespace ConcreteEngine.Core.Utils;
+namespace ConcreteEngine.Core.Engine;
 
 internal record GfxRuntimeBundle<T>(GraphicsRuntime Graphics, IGfxStartupConfig<T> Config) where T : class;
 

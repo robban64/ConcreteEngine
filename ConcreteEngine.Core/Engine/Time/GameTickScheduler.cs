@@ -1,9 +1,9 @@
 using ConcreteEngine.Core.Engine.Data;
 
-namespace ConcreteEngine.Core.Time;
+namespace ConcreteEngine.Core.Engine.Time;
 
 //https://gafferongames.com/post/fix_your_timestep/
-internal sealed class GameTime
+internal sealed class GameTickScheduler
 {
     private const int GameTicksPerSecond = 30;
     private const int MaxTicksPerFrame = 6;
@@ -11,7 +11,7 @@ internal sealed class GameTime
     private FrameTickTimer _gameTicker = new(1f / GameTicksPerSecond);
     private FrameTickTimer _fpsTicker = new(1f);
     
-    private GameTickTimer _animationClock = new(5, GameTicksPerSecond);
+    private SimpleTicker _animationClock = new(5, GameTicksPerSecond);
 
     private readonly UpdateTickDelegate _onGameTick;
     private readonly UpdateTickDelegate _onUpdateLogTick;
@@ -20,7 +20,7 @@ internal sealed class GameTime
     private float _alpha;
     private float _speed = 1f;
 
-    internal GameTime(UpdateTickDelegate onGameTick, UpdateTickDelegate onUpdateLogTick)
+    internal GameTickScheduler(UpdateTickDelegate onGameTick, UpdateTickDelegate onUpdateLogTick)
     {
         _onGameTick = onGameTick;
         _onUpdateLogTick = onUpdateLogTick;

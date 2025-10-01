@@ -1,22 +1,16 @@
 #region
 
-using System.Runtime.CompilerServices;
-
 #endregion
 
-namespace ConcreteEngine.Core.Time;
+namespace ConcreteEngine.Core.Engine.Time;
 
 internal sealed class FrameTickTimer(float tickDt)
 {
     private int _tickIndex = 0;
     private float _accumulator = 0f;
 
-    public float Alpha
-    {
-        get => tickDt > 0f ? _accumulator / tickDt : 0f;
-    }
-
-
+    public float Alpha => tickDt > 0f ? _accumulator / tickDt : 0f;
+    
     public void Accumulate(float dt) => _accumulator += dt;
 
     public int DrainAllTicks()

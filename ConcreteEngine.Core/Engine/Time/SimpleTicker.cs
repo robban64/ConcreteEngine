@@ -1,12 +1,10 @@
 #region
 
-using System.Runtime.CompilerServices;
-
 #endregion
 
-namespace ConcreteEngine.Core.Time;
+namespace ConcreteEngine.Core.Engine.Time;
 
-public struct GameTickTimer(int fps, int ticksPerSec)
+public struct SimpleTicker(int fps, int ticksPerSec)
 {
     public int TickIndex = 0;
     public int Accumulator = 0;

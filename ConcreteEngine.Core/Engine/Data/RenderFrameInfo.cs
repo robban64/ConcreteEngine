@@ -1,7 +1,7 @@
 using ConcreteEngine.Common.Numerics;
 using ConcreteEngine.Graphics;
 
-namespace ConcreteEngine.Core.Engine;
+namespace ConcreteEngine.Core.Engine.Data;
 
 public sealed class RenderFrameInfo
 {

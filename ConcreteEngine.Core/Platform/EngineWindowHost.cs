@@ -104,17 +104,8 @@ public sealed class EngineWindowHost : IEngineWindowHost
     private void OnLoad()
     {
         if(_builder == null) throw new InvalidOperationException("Builder not initialized");
-        
-        var frameCtx = new FrameInfo(
-            frameIndex:  0,
-            deltaTime: 0,
-            vSyncEnabled: false,
-            resizePending: true,
-            viewport: Bounds2D.FromVector2D(_window.Size), 
-            outputSize:  Bounds2D.FromVector2D(_window.FramebufferSize)
-        );
 
-        GfxRuntimeBundle<GL> graphics = _backend switch
+        var graphics = _backend switch
         {
             GraphicsBackend.OpenGL =>new GfxRuntimeBundle<GL>(new GraphicsRuntime(), new GlStartupConfig(_window.CreateOpenGL())),
             _ => throw new GraphicsException("Invalid GraphicsBackend. Only OpenGL supported")

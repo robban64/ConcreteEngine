@@ -33,7 +33,9 @@ internal sealed class RenderRegistry
 
 
     private RegistrationData _registrationData;
-
+    
+    internal IReadOnlyList<RenderFbo>  RenderFbos => _renderFbos;
+ 
     public RenderRegistry(GfxContext gfx)
     {
         _gfxApi = gfx.ResourceContext.ResourceManager.GetGfxApi();
@@ -117,7 +119,7 @@ internal sealed class RenderRegistry
         var fboId = _gfxFbo.CreateFrameBuffer(gfxDescriptor);
         var meta = _gfxApi.GetMeta<FrameBufferId, FrameBufferMeta>(fboId);
 
-        var renderFbo = new RenderFbo(fboId, entry.FboSizePolicy);
+        var renderFbo = new RenderFbo(fboId, entry.FboSizePolicy ?? RenderFbo.SizePolicy.Default());
         renderFbo.UpdateFromMeta(in meta);
 
         var key = FboTagKey.Make<TTag, TSlot>(version);
@@ -158,7 +160,6 @@ internal sealed class RenderRegistry
         _fboRegistry.CopyValuesTo(_renderFbos);
         _renderFbos.Sort();
     }
-
 
     private void OnFboChange(FrameBufferId id, in GfxMetaChanged<FrameBufferMeta> message)
     {

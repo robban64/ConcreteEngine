@@ -13,7 +13,7 @@ public sealed class RegisterFboEntry
     public TexturePreset Preset { get; }
     public GfxFrameBufferDescriptor.AttachmentsDef Attachments { get; private set; }
 
-    public RenderFbo.SizePolicy FboSizePolicy { get; }
+    public RenderFbo.SizePolicy? FboSizePolicy { get; private set; }
 
     public RegisterFboEntry(
         EnginePixelFormat pixelFormat = EnginePixelFormat.SrgbAlpha,
@@ -25,21 +25,6 @@ public sealed class RegisterFboEntry
         Preset = texturePreset;
     }
 
-    private RegisterFboEntry(
-        EnginePixelFormat pixelFormat,
-        RenderBufferMsaa multisample,
-        TexturePreset texturePreset,
-        in GfxFrameBufferDescriptor.AttachmentsDef attachments,
-        RenderFbo.SizePolicy sizePolicy
-    )
-    {
-        PixelFormat = pixelFormat;
-        Multisample = multisample;
-        Preset = texturePreset;
-        Attachments = attachments;
-        FboSizePolicy = sizePolicy;
-    }
-    
     public RegisterFboEntry AttachColorTexture()
     {
         Attachments = Attachments with { ColorTexture = true };
@@ -52,11 +37,17 @@ public sealed class RegisterFboEntry
         return this;
     }
     
-    public RegisterFboEntry UseCalculatedSize(CalcFboOutputDel calcDel, Vector2 ratio) =>
-        new(PixelFormat, Multisample, Preset, Attachments, RenderFbo.SizePolicy.Calculated(calcDel, ratio));
+    public RegisterFboEntry UseCalculatedSize(CalcFboOutputDel calcDel, Vector2 ratio)
+    {
+        FboSizePolicy = RenderFbo.SizePolicy.Calculated(calcDel, ratio);
+        return this;
+    }
 
-    public RegisterFboEntry UseFixedSize(Size2D fixedSize) =>
-        new(PixelFormat, Multisample, Preset, Attachments, RenderFbo.SizePolicy.Fixed(fixedSize));
+    public RegisterFboEntry UseFixedSize(Size2D fixedSize)
+    {
+        FboSizePolicy = RenderFbo.SizePolicy.Fixed(fixedSize);
+        return this;
+    }
 
 
     internal GfxFrameBufferDescriptor ToGfxDescriptor(Size2D outputSize) =>

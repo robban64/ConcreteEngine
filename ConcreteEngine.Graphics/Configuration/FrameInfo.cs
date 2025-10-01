@@ -11,7 +11,6 @@ public readonly struct FrameInfo(
     long frameIndex,
     float deltaTime,
     bool vSyncEnabled,
-    bool resizePending,
     Bounds2D viewport,
     Bounds2D outputSize)
 {
@@ -20,7 +19,6 @@ public readonly struct FrameInfo(
     public readonly Bounds2D Viewport = viewport;
     public readonly Bounds2D OutputSize = outputSize;
     public readonly bool vSyncEnabled = vSyncEnabled;
-    public readonly bool ResizePending = resizePending;
 }
 
 

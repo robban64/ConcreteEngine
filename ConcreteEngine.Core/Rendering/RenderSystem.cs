@@ -1,6 +1,7 @@
 #region
 
 using System.Diagnostics;
+using System.Numerics;
 using ConcreteEngine.Common;
 using ConcreteEngine.Common.Numerics;
 using ConcreteEngine.Core.Assets;
@@ -66,6 +67,7 @@ public sealed class RenderSystem : IRenderSystem
 
     public ICamera Camera { get; } = new Camera3D();
 
+    internal RenderRegistry RenderRegistry => _renderRegistry;
 
     internal RenderSystem(IGraphicsRuntime graphics, Size2D outputSize)
     {
@@ -173,7 +175,7 @@ public sealed class RenderSystem : IRenderSystem
                 new RenderPassState { PassState = GfxPassState.MakeOff(), LinearFilter = false })
             .OnPassBegin((in RenderPassCtx ctx, in RenderPassState state) =>
             {
-                ctx.CmdOps.ToggleStates(new GfxPassState {FramebufferSrgb = false});
+                ctx.CmdOps.ToggleStates(new GfxPassState { FramebufferSrgb = false });
                 ctx.CmdOps.Blit(state.TargetFboId, ctx.FboId, false);
 
                 var texId = ctx.Meta.Attachments.ColorTextureId;
@@ -240,9 +242,7 @@ public sealed class RenderSystem : IRenderSystem
                 ctx.CmdOps.BeginScreenPass(state.ClearColor, state.PassState);
                 ctx.CmdOps.DrawFullscreenQuad(state.ShaderId, sources);
                 return ApplyPassReturn.ScreenPassResult();
-            }).OnPassEnd((in RenderPassCtx ctx, in RenderPassState state) =>
-            {
-            });
+            }).OnPassEnd((in RenderPassCtx ctx, in RenderPassState state) => { });
     }
 
 
@@ -329,7 +329,7 @@ public sealed class RenderSystem : IRenderSystem
 
         if (pass.TargetId == RenderTargetId.Scene && pass.PassIndex == 0)
             _pipeline.DrainCommandQueue(RenderTargetId.Scene);
-        
+
         pass.ApplyAfterPass(in passCtx);
 
 /*

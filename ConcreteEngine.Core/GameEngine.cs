@@ -12,6 +12,7 @@ using ConcreteEngine.Core.Systems;
 using ConcreteEngine.Core.Time;
 using ConcreteEngine.Core.Utils;
 using ConcreteEngine.Graphics;
+using ConcreteEngine.Graphics.Resources;
 using Silk.NET.Maths;
 using Silk.NET.OpenGL;
 using Shader = ConcreteEngine.Core.Resources.Shader;
@@ -67,6 +68,8 @@ public sealed class GameEngine : IDisposable
 
     private LinearStateMachine<EngineState> _stateMachine;
 
+    private DebounceTicker? _debounceTicker = null;
+    
     internal GameEngine(
         IEngineWindowHost windowHost,
         GfxRuntimeBundle<GL> gfxBundle,
@@ -127,10 +130,29 @@ public sealed class GameEngine : IDisposable
             frameIndex: _frameIdx,
             deltaTime: dt,
             vSyncEnabled: false,
-            resizePending: _frameIdx > 1 && outputSize != _prevOutputSize,
             viewport: Bounds2D.FromVector2D(_window.Size),
             outputSize: Bounds2D.FromVector2D(outputSize)
         );
+        
+        
+        if (_frameIdx > 1 && outputSize != _prevOutputSize)
+        {
+            _debounceTicker ??= new DebounceTicker(30);
+        }
+            
+
+        if (_debounceTicker?.Tick() ?? false)
+        {
+            _debounceTicker = null;
+            var output = new Size2D(outputSize.X, outputSize.Y);
+            var a = _renderer.RenderRegistry.RenderFbos;
+            Span<(FrameBufferId, Size2D)> newSizes = stackalloc (FrameBufferId, Size2D)[a.Count];
+            for (int i = 0; i < a.Count; i++)
+                newSizes[i] = (a[i].FboId, a[i].CalculateNewSize(output));
+            
+            _graphics.RecreateFbo(newSizes);
+        }
+
 
         _renderTime.Accumulate(dt);
         _renderTime.Advance();

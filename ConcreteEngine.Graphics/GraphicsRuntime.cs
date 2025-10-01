@@ -73,6 +73,7 @@ public sealed class GraphicsRuntime : IGraphicsRuntime
     public void Shutdown()
     {
     }
+    
 
     public void BeginFrame(in FrameInfo frameInfo)
     {
@@ -86,13 +87,12 @@ public sealed class GraphicsRuntime : IGraphicsRuntime
 
         _gfxContext.Commands.EndFrame(out stats);
 
-        if (_frameCtx.ResizePending)
+        if (false)
         {
             RecreateFbo(_frameCtx.OutputSize.ToSize2D());
         }
     }
 
-    // TODO pending queue, right now the switch happens directly and is used the next frame.
     private void RecreateFbo(Size2D size)
     {
         ArgumentOutOfRangeException.ThrowIfLessThanOrEqual(size.Width, 0);
@@ -104,6 +104,18 @@ public sealed class GraphicsRuntime : IGraphicsRuntime
         foreach (var fboId in fboStore.IdEnumerator)
             _gfxContext.FrameBuffers.RecreateFrameBuffer(fboId, size);
     }
+
+    public void RecreateFbo(ReadOnlySpan<(FrameBufferId Id, Size2D Size)> newSizes)
+    {
+        Console.WriteLine($"Recreating {newSizes.Length} FBO");
+        foreach (var (fboId, size) in newSizes)
+        {
+            Console.WriteLine(size);
+            _gfxContext.FrameBuffers.RecreateFrameBuffer(fboId, size);
+        }
+
+    }
+
 
     public void Dispose()
     {

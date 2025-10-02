@@ -94,19 +94,9 @@ internal sealed class RenderRegistry
 
         _registrationData = new RegistrationData(true, outputSize);
 
-        RTypeRegistry.RenderPassTag<ScenePassTag>.Register();
-        RTypeRegistry.RenderPassTag<ShadowPassTag>.Register();
-        RTypeRegistry.RenderPassTag<LightPassTag>.Register();
-        RTypeRegistry.RenderPassTag<PostPassTag>.Register();
-        RTypeRegistry.RenderPassTag<ScreenPassTag>.Register();
+        RenderStaticSetup.RegisterPassSlotTypes();
+        RenderStaticSetup.RegisterPassTagTypes();
 
-        RTypeRegistry.RenderPassSlot<PassDrawSlot>.Register();
-        RTypeRegistry.RenderPassSlot<PassResolveSlot>.Register();
-
-        RTypeRegistry.RenderPassSlot<PassPostASlot>.Register();
-        RTypeRegistry.RenderPassSlot<PassPostBSlot>.Register();
-
-        RTypeRegistry.RenderPassSlot<PassFinalSlot>.Register();
     }
 
     public void RegisterShader(ShaderId shaderId)

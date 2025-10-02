@@ -58,11 +58,4 @@ public sealed class RegisterFboEntry(
     public static RegisterFboEntry MakePost(bool hasMips) =>
         new(pixelFormat: EnginePixelFormat.SrgbAlpha,
             texturePreset: hasMips ? TexturePreset.LinearMipmapClamp : TexturePreset.LinearClamp);
-
-    public static RegisterFboEntry MakePostB(bool hasMips) =>
-        new(pixelFormat: EnginePixelFormat.Rgba,
-            texturePreset: hasMips ? TexturePreset.LinearMipmapClamp : TexturePreset.LinearClamp);
-
-    public static RegisterFboEntry MakeScreen() =>
-        new(pixelFormat: EnginePixelFormat.SrgbAlpha, texturePreset: TexturePreset.LinearClamp);
 }

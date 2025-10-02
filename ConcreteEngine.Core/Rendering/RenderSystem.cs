@@ -153,7 +153,7 @@ public sealed class RenderSystem : IRenderSystem
                 })
             .OnPassBegin((in RenderPassCtx ctx, in RenderPassState state) =>
             {
-                ctx.CmdOps.BeginRenderPass(ctx.Target.FboId, state.ClearColor, state.PassState);
+                ctx.Ops.BeginRenderPass(ctx.Target.FboId, state.ClearColor, state.PassState);
                 ctx.MutateStatePass<ScenePassTag, PassResolveSlot>(PassOpKind.Resolve,
                     PassMutationState.MakeTargetMut(ctx.Target.FboId));
                 return ApplyPassReturn.NormalPassResult();
@@ -164,8 +164,8 @@ public sealed class RenderSystem : IRenderSystem
                 new RenderPassState { PassState = GfxPassState.MakeOff(), LinearFilter = false })
             .OnPassBegin((in RenderPassCtx ctx, in RenderPassState state) =>
             {
-                ctx.CmdOps.ToggleStates(new GfxPassState { FramebufferSrgb = false });
-                ctx.CmdOps.Blit(state.TargetFboId, ctx.Target.FboId, false);
+                ctx.Ops.ToggleStates(new GfxPassState { FramebufferSrgb = false });
+                ctx.Ops.Blit(state.TargetFboId, ctx.Target.FboId, false);
 
                 var texId = ctx.Target.Attachments.ColorTextureId;
                 ctx.SampleTo<PostPassTag, PassPostASlot>(PassOpKind.Fsq, 0, texId);
@@ -173,8 +173,8 @@ public sealed class RenderSystem : IRenderSystem
             }).OnPassEnd((in RenderPassCtx ctx, in RenderPassState state) =>
             {
                 var texId = ctx.Target.Attachments.ColorTextureId;
-                ctx.CmdOps.EndRenderPass();
-                ctx.CmdOps.GenerateMips(texId);
+                ctx.Ops.EndRenderPass();
+                ctx.Ops.GenerateMips(texId);
             });
 
         // Post A
@@ -188,8 +188,8 @@ public sealed class RenderSystem : IRenderSystem
             .OnPassBegin((in RenderPassCtx ctx, in RenderPassState state) =>
             {
                 var sources = ctx.GetPassSources();
-                ctx.CmdOps.BeginRenderPass(ctx.Target.FboId, state.ClearColor, state.PassState);
-                ctx.CmdOps.DrawFullscreenQuad(state.ShaderId, sources);
+                ctx.Ops.BeginRenderPass(ctx.Target.FboId, state.ClearColor, state.PassState);
+                ctx.Ops.DrawFullscreenQuad(state.ShaderId, sources);
                 return ApplyPassReturn.FsqPassResult();
             }).OnPassEnd((in RenderPassCtx ctx, in RenderPassState state) =>
             {
@@ -206,12 +206,11 @@ public sealed class RenderSystem : IRenderSystem
                     PassState = GfxPassState.MakePostProcess(),
                     ShaderId = colorFilterShader
                 })
-            .WithFbo(1)
             .OnPassBegin((in RenderPassCtx ctx, in RenderPassState state) =>
             {
                 var sources = ctx.GetPassSources();
-                ctx.CmdOps.BeginRenderPass(ctx.Target.FboId, state.ClearColor, state.PassState);
-                ctx.CmdOps.DrawFullscreenQuad(state.ShaderId, sources);
+                ctx.Ops.BeginRenderPass(ctx.Target.FboId, state.ClearColor, state.PassState);
+                ctx.Ops.DrawFullscreenQuad(state.ShaderId, sources);
                 return ApplyPassReturn.FsqPassResult();
             }).OnPassEnd((in RenderPassCtx ctx, in RenderPassState state) =>
             {
@@ -232,8 +231,8 @@ public sealed class RenderSystem : IRenderSystem
             {
                 var sources = ctx.GetPassSources();
 
-                ctx.CmdOps.BeginScreenPass(state.ClearColor, state.PassState);
-                ctx.CmdOps.DrawFullscreenQuad(state.ShaderId, sources);
+                ctx.Ops.BeginScreenPass(state.ClearColor, state.PassState);
+                ctx.Ops.DrawFullscreenQuad(state.ShaderId, sources);
                 return ApplyPassReturn.ScreenPassResult();
             }).OnPassEnd((in RenderPassCtx ctx, in RenderPassState state) => { });
     }

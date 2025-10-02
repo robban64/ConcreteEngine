@@ -49,11 +49,5 @@ internal static class RTypeRegistry
             Slot = _renderPassSlotCounter++;
         }
     }
-/*
-    internal static class RenderPassTag<TTag, TSlot> where TTag : unmanaged, IRenderPassTag where TSlot : unmanaged, IRenderPassTagSlot
-    {
-        public static int TagIndex {get; set;} = -1;
-        public static int Slot {get; set;} = -1;
-    }
-    */
+
 }

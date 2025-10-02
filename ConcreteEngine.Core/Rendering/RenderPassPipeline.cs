@@ -56,7 +56,7 @@ public sealed class RenderPassPipeline
         Debug.Assert(_ctx is null);
         _passIter = 0;
         _cmdQueue.Prepare();
-        _ctx = new RenderPassCtx(_cmdOps, _cmdQueue, _registry, outputSize);
+        _ctx = new RenderPassCtx(_cmdOps, _cmdQueue, outputSize);
     }
 
     internal bool NextPass(out NextPassResult result)
@@ -67,6 +67,7 @@ public sealed class RenderPassPipeline
             _ctx = null;
             return false;
         }
+        
 
         var pass = _entries[_passIter++];
         Debug.Assert(pass != null);
@@ -75,12 +76,16 @@ public sealed class RenderPassPipeline
 
         bool skipPass = false;
         if (_renderRegistry.TryGetRenderFbo(pass.TagKey.ToFboTagKey(0), out var fbo))
-            _ctx!.AttachPass(fbo, pass.PassIndex, pass.TagKey);
+            _ctx!.AttachPass(fbo, pass.PassIndex, pass.TagKey, pass.TagValueKey);
         else if (pass.TagKey.PassOp == PassOpKind.Screen)
-            _ctx!.AttachScreenPass(pass.PassIndex, pass.TagKey);
+            _ctx!.AttachScreenPass(pass.PassIndex, pass.TagKey, pass.TagValueKey);
         else
             skipPass = true;
-
+        
+        _cmdQueue.DequeueMutationTo(in _currentEntry);
+        _cmdQueue.DequeuePassSources(in _currentEntry);
+        //start
+        
         result = new NextPassResult(pass.PassIndex, pass.TargetId, skipPass);
         return true;
     }

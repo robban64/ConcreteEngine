@@ -17,6 +17,10 @@ public readonly record struct FboTagKey(Type TagType, Type SlotType, int Version
 public readonly record struct PassTagKey(Type TagType, Type SlotType, PassOpKind PassOp)
 {
     public FboTagKey ToFboTagKey(int version) => new(TagType, SlotType, version);
+    
+    public PassTagValueKey ToValueKey() => 
+        new(RTypeRegistry.GetPassTagValue(TagType), RTypeRegistry.GetPassSlotValue(SlotType), PassOp);
+    
     public static PassTagKey Make<TTag, TSlot>(PassOpKind passOp)
         where TTag : unmanaged, IRenderPassTag where TSlot : unmanaged, IRenderPassTagSlot =>
         new(typeof(TTag), typeof(TSlot), passOp);

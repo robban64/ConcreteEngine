@@ -18,6 +18,8 @@ public sealed class RenderPassEntry
     public RenderTargetId TargetId { get; }
     public int PassIndex { get; }
     public PassTagKey TagKey { get; private set; }
+    public PassTagValueKey TagValueKey { get; private set; }
+    
 
     private RenderPassOp? _applyPassDel;
     private RenderAfterPassOp? _applyAfterPassDel;
@@ -33,15 +35,10 @@ public sealed class RenderPassEntry
     {
         TargetId = targetId;
         TagKey = tagKey;
+        TagValueKey = tagKey.ToValueKey();
         PassIndex = passIndex;
         _defaultState = initial;
         _state = initial;
-    }
-
-    public RenderPassEntry WithFbo(int fboSlot)
-    {
-        //FboSlot = fboSlot;
-        return this;
     }
 
     public RenderPassEntry OnPassBegin(RenderPassOp op)

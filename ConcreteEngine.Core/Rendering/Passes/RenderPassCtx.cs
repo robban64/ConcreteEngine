@@ -12,66 +12,61 @@ namespace ConcreteEngine.Core.Rendering.Passes;
 
 public sealed class RenderPassCtx
 {
-    private PassCommandQueue _cmdQueue;
-    private IReadOnlyDictionary<PassTagKey, RenderPassEntry> _registry;
-    private Size2D _outputSize;
+    private readonly PassCommandQueue _cmdQueue;
+    private readonly Size2D _outputSize;
 
-    public PipelineStateOps CmdOps { get; private set; }
+    public PipelineStateOps Ops { get; private set; }
     public RenderTargetInfo Target { get; private set; }
     public int Pass { get; private set; }
     public PassTagKey TagKey { get; private set; }
+    public PassTagValueKey TagValueKey { get; private set; }
 
 
     internal RenderPassCtx(
-        PipelineStateOps cmdOps, 
+        PipelineStateOps cmdOps,
         PassCommandQueue cmdQueue,
-        IReadOnlyDictionary<PassTagKey, RenderPassEntry> registry, Size2D outputSize)
+        Size2D outputSize)
     {
-        CmdOps = cmdOps;
-        _registry = registry;
+        Ops = cmdOps;
         _outputSize = outputSize;
         _cmdQueue = cmdQueue;
-        
     }
 
-    internal void AttachScreenPass(int pass, PassTagKey tagKey)
+    internal void AttachScreenPass(int pass, PassTagKey tagKey, PassTagValueKey tagValueKey)
     {
         Target = new RenderTargetInfo(default, _outputSize, default, default);
         Pass = pass;
         TagKey = tagKey;
+        TagValueKey = tagValueKey;
     }
 
-    internal void AttachPass(RenderFbo fbo, int pass, PassTagKey tagKey)
+    internal void AttachPass(RenderFbo fbo, int pass, PassTagKey tagKey, PassTagValueKey tagValueKey)
     {
         Target = new RenderTargetInfo(fbo.FboId, fbo.Size, fbo.Attachments, fbo.MultiSample);
         Pass = pass;
         TagKey = tagKey;
+        TagValueKey = tagValueKey;
     }
+    
 
-    public IReadOnlyList<TextureId> GetPassSources()
-    {
-        return _cmdQueue.DequeuePassSources(TagKey);
-    }
+    public ReadOnlySpan<TextureId> GetPassSources() => _cmdQueue.GetPassSources();
 
-    public void SampleTo<TTag, TSlot>(PassOpKind passOp, int slot, TextureId textureId)
+    public void SampleTo<TTag, TSlot>(PassOpKind passOp, int texSlot, TextureId textureId)
         where TTag : unmanaged, IRenderPassTag where TSlot : unmanaged, IRenderPassTagSlot
     {
-        Debug.Assert(slot >= 0 && slot < 16);
+        Debug.Assert(texSlot >= 0 && texSlot < 16);
 
-        var key = PassTextureSlotKey.Make<TTag, TSlot>(passOp, (byte)slot);
+        var key = PassTextureSlotKey.Make<TTag, TSlot>(passOp, (byte)texSlot);
         _cmdQueue.SampleTo(key, textureId);
     }
 
     public void MutateStatePass<TTag, TSlot>(PassOpKind passOp, in PassMutationState newState)
         where TTag : unmanaged, IRenderPassTag where TSlot : unmanaged, IRenderPassTagSlot
     {
-        var key = PassTagKey.Make<TTag, TSlot>(passOp);
-        if (_registry.TryGetValue(key, out RenderPassEntry entry))
-        {
-            entry.UpdateState(in newState);
-        }
+        var key = PassTagValueKey.Make<TTag, TSlot>(passOp);
+        _cmdQueue.EnqueueMutation(key, in newState);
     }
-
+/*
     public void MutateStatePass<TTag, TSlot>(PassOpKind passOp, RenderPassMutate mutate)
         where TTag : unmanaged, IRenderPassTag where TSlot : unmanaged, IRenderPassTagSlot
     {
@@ -81,4 +76,5 @@ public sealed class RenderPassCtx
             entry.UpdateState(mutate);
         }
     }
+    */
 }

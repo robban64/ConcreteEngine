@@ -8,14 +8,14 @@ namespace ConcreteEngine.Core.Rendering.Passes;
 internal sealed class PassCommandQueue
 {
     private readonly PriorityQueue<TextureId, PassTextureSlotKey> _sourceQueue;
-    private readonly PriorityQueue<PassMutationState, PassTagValueKey> _mutationQueue;
+    private readonly PriorityQueue<PassMutationState, PassTagKey> _mutationQueue;
 
     private readonly List<TextureId> _textureSlots = new(4);
 
     internal PassCommandQueue()
     {
         _sourceQueue = new PriorityQueue<TextureId, PassTextureSlotKey>(new PassTextureSlotKeyComp());
-        _mutationQueue = new PriorityQueue<PassMutationState, PassTagValueKey>(new PassTagValueKeyComp());
+        _mutationQueue = new PriorityQueue<PassMutationState, PassTagKey>(new PassTagKeyComp());
     }
 
     public void SampleTo(PassTextureSlotKey texKey, TextureId textureId)
@@ -23,23 +23,23 @@ internal sealed class PassCommandQueue
         _sourceQueue.Enqueue(textureId, texKey);
     }
 
-    public void EnqueueMutation(PassTagValueKey passKey, in PassMutationState newState)
+    public void EnqueueMutation(PassTagKey passKey, in PassMutationState newState)
     {
         _mutationQueue.Enqueue(newState, passKey);
     }
 
-    public void DequeueMutationTo(in RenderPassEntry entry)
+    public void DequeueMutationTo(RenderPassEntry entry)
     {
-        while (_mutationQueue.TryPeek(out _, out var k) && k.TagIndex == entry.TagValueKey.TagIndex)
+        while (_mutationQueue.TryPeek(out _, out var k) && k.TagIndex == entry.TagKey.TagIndex)
         {
             _mutationQueue.TryDequeue(out var state, out k);
             entry.UpdateState(in state);
         }
     }
 
-    public void DequeuePassSources(in RenderPassEntry entry)
+    public void DequeuePassSources(RenderPassEntry entry)
     {
-        var tagIndex = entry.TagValueKey.TagIndex;
+        var tagIndex = entry.TagKey.TagIndex;
         _textureSlots.Clear();
         while (_sourceQueue.TryPeek(out _, out var k) && k.TagIndex == tagIndex)
         {
@@ -47,8 +47,13 @@ internal sealed class PassCommandQueue
             _textureSlots.Add(id);
         }
     }
+    
+    public IReadOnlyList<TextureId> GetPassSources()
+    {
+        return _textureSlots;
+    }
 
-    public ReadOnlySpan<TextureId> GetPassSources()
+    public ReadOnlySpan<TextureId> GetPassSourcesSpan()
     {
         return CollectionsMarshal.AsSpan(_textureSlots);
     }

@@ -13,43 +13,35 @@ namespace ConcreteEngine.Core.Rendering.Passes;
 public sealed class RenderPassCtx
 {
     private readonly PassCommandQueue _cmdQueue;
-    private readonly Size2D _outputSize;
 
     public PipelineStateOps Ops { get; private set; }
     public RenderTargetInfo Target { get; private set; }
     public int Pass { get; private set; }
     public PassTagKey TagKey { get; private set; }
-    public PassTagValueKey TagValueKey { get; private set; }
 
 
-    internal RenderPassCtx(
-        PipelineStateOps cmdOps,
-        PassCommandQueue cmdQueue,
-        Size2D outputSize)
+    internal RenderPassCtx(PipelineStateOps cmdOps, PassCommandQueue cmdQueue)
     {
         Ops = cmdOps;
-        _outputSize = outputSize;
         _cmdQueue = cmdQueue;
     }
 
-    internal void AttachScreenPass(int pass, PassTagKey tagKey, PassTagValueKey tagValueKey)
+    internal void AttachScreenPass(int pass, PassTagKey tagKey, Size2D outputSize)
     {
-        Target = new RenderTargetInfo(default, _outputSize, default, default);
+        Target = new RenderTargetInfo(default, outputSize, default, default);
         Pass = pass;
         TagKey = tagKey;
-        TagValueKey = tagValueKey;
     }
 
-    internal void AttachPass(RenderFbo fbo, int pass, PassTagKey tagKey, PassTagValueKey tagValueKey)
+    internal void AttachPass(RenderFbo fbo, int pass, PassTagKey tagKey)
     {
         Target = new RenderTargetInfo(fbo.FboId, fbo.Size, fbo.Attachments, fbo.MultiSample);
         Pass = pass;
         TagKey = tagKey;
-        TagValueKey = tagValueKey;
     }
     
 
-    public ReadOnlySpan<TextureId> GetPassSources() => _cmdQueue.GetPassSources();
+    public IReadOnlyList<TextureId> GetPassSources() => _cmdQueue.GetPassSources();
 
     public void SampleTo<TTag, TSlot>(PassOpKind passOp, int texSlot, TextureId textureId)
         where TTag : unmanaged, IRenderPassTag where TSlot : unmanaged, IRenderPassTagSlot
@@ -63,7 +55,7 @@ public sealed class RenderPassCtx
     public void MutateStatePass<TTag, TSlot>(PassOpKind passOp, in PassMutationState newState)
         where TTag : unmanaged, IRenderPassTag where TSlot : unmanaged, IRenderPassTagSlot
     {
-        var key = PassTagValueKey.Make<TTag, TSlot>(passOp);
+        var key = PassTagKey.Make<TTag, TSlot>(passOp);
         _cmdQueue.EnqueueMutation(key, in newState);
     }
 /*

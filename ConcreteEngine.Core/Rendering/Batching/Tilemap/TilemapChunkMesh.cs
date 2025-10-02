@@ -20,10 +20,12 @@ internal sealed class TilemapChunkMesh : IDisposable
     private const int IndicesPerTile = 6;
     private const int ChunkSize = 64;
 
-    private static readonly Vertex2D[] Vertices =
+    //Static before
+    private readonly Vertex2D[] Vertices =
         new Vertex2D[ChunkSize * ChunkSize * VerticesPerTile];
 
-    private static readonly ushort[] Indices =
+    //Static before
+    private readonly ushort[] Indices =
         new ushort[ChunkSize * ChunkSize * IndicesPerTile];
 
     private readonly GfxContext _gfx;

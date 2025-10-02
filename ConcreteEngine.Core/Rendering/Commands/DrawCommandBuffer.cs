@@ -73,7 +73,7 @@ public sealed class DrawCommandBuffer
 
     public void ReadyDrawCommands()
     {
-        if (_submitIdx <= 2) return;
+        if (_submitIdx <= 1) return;
         _indices.AsSpan(0, _submitIdx).Sort();
     }
 

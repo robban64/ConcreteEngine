@@ -18,8 +18,9 @@ internal sealed class SpriteBatchMesh : IDisposable
     private const int VerticesPerSprite = 4;
     private const int IndicesPerSprite = 6;
 
-    private static readonly Vertex2D[] Vertices = new Vertex2D[MaxSpriteBatchSize * VerticesPerSprite];
-    private static readonly ushort[] Indices = new ushort[MaxSpriteBatchSize * IndicesPerSprite];
+    //Static before
+    private readonly Vertex2D[] Vertices = new Vertex2D[MaxSpriteBatchSize * VerticesPerSprite];
+    private readonly ushort[] Indices = new ushort[MaxSpriteBatchSize * IndicesPerSprite];
 
     private readonly GfxContext _gfx;
 

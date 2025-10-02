@@ -2,9 +2,9 @@ using System.Diagnostics;
 using ConcreteEngine.Common.Numerics;
 using ConcreteEngine.Core.Rendering.Data;
 using ConcreteEngine.Core.Rendering.Gfx;
-using ConcreteEngine.Graphics.Resources;
+using ConcreteEngine.Core.Rendering.Passes;
 
-namespace ConcreteEngine.Core.Rendering.Passes;
+namespace ConcreteEngine.Core.Rendering;
 
 internal enum PreparePassResult
 {
@@ -17,11 +17,11 @@ internal readonly record struct NextPassResult(int PassIndex, RenderTargetId Tar
 
 public sealed class RenderPassPipeline
 {
-    private RenderPassCtx? _ctx = null!;
+    private readonly RenderPassCtx _ctx;
 
     private readonly RenderRegistry _renderRegistry;
     private readonly PipelineStateOps _cmdOps;
-    
+
     private readonly List<RenderPassEntry> _entries;
     private readonly Dictionary<PassTagKey, RenderPassEntry> _registry;
 
@@ -29,6 +29,8 @@ public sealed class RenderPassPipeline
 
     private int _passIter = 0;
     private RenderPassEntry? _currentEntry = null;
+    
+    private Size2D _outputSize;
 
     internal RenderPassPipeline(PipelineStateOps cmdOps, RenderRegistry renderRegistry)
     {
@@ -37,6 +39,8 @@ public sealed class RenderPassPipeline
         _entries = new List<RenderPassEntry>(8);
         _registry = new Dictionary<PassTagKey, RenderPassEntry>(8);
         _cmdQueue = new PassCommandQueue();
+        _ctx = new RenderPassCtx(_cmdOps, _cmdQueue);
+
     }
 
     public RenderPassEntry Register<TTag, TSlot>(RenderTargetId targetId, PassOpKind opKind, int pass,
@@ -53,10 +57,9 @@ public sealed class RenderPassPipeline
 
     internal void Prepare(Size2D outputSize)
     {
-        Debug.Assert(_ctx is null);
+        _outputSize = outputSize;
         _passIter = 0;
         _cmdQueue.Prepare();
-        _ctx = new RenderPassCtx(_cmdOps, _cmdQueue, outputSize);
     }
 
     internal bool NextPass(out NextPassResult result)
@@ -64,10 +67,9 @@ public sealed class RenderPassPipeline
         if (_passIter >= _entries.Count)
         {
             result = default;
-            _ctx = null;
             return false;
         }
-        
+
 
         var pass = _entries[_passIter++];
         Debug.Assert(pass != null);
@@ -75,17 +77,17 @@ public sealed class RenderPassPipeline
         _currentEntry = pass;
 
         bool skipPass = false;
-        if (_renderRegistry.TryGetRenderFbo(pass.TagKey.ToFboTagKey(0), out var fbo))
-            _ctx!.AttachPass(fbo, pass.PassIndex, pass.TagKey, pass.TagValueKey);
+        if (_renderRegistry.TryGetRenderFbo(pass.TagKey, out var fbo))
+            _ctx!.AttachPass(fbo, pass.PassIndex, pass.TagKey);
         else if (pass.TagKey.PassOp == PassOpKind.Screen)
-            _ctx!.AttachScreenPass(pass.PassIndex, pass.TagKey, pass.TagValueKey);
+            _ctx!.AttachScreenPass(pass.PassIndex, pass.TagKey, _outputSize);
         else
             skipPass = true;
-        
-        _cmdQueue.DequeueMutationTo(in _currentEntry);
-        _cmdQueue.DequeuePassSources(in _currentEntry);
+
+        _cmdQueue.DequeueMutationTo(_currentEntry);
+        _cmdQueue.DequeuePassSources(_currentEntry);
         //start
-        
+
         result = new NextPassResult(pass.PassIndex, pass.TargetId, skipPass);
         return true;
     }
@@ -93,12 +95,11 @@ public sealed class RenderPassPipeline
     internal ApplyPassReturn ApplyPass()
     {
         Debug.Assert(_currentEntry != null);
-        return _currentEntry.ApplyPass(in _ctx);
+        return _currentEntry.ApplyPass(_ctx!);
     }
 
     internal void ApplyAfterPass()
     {
-        _currentEntry!.ApplyAfterPass(in _ctx);
+        _currentEntry!.ApplyAfterPass(_ctx!);
     }
-
 }

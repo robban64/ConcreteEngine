@@ -2,52 +2,56 @@
 
 using System.Runtime.CompilerServices;
 using ConcreteEngine.Core.Rendering.Passes;
+using ConcreteEngine.Graphics.Resources;
 
 #endregion
 
 namespace ConcreteEngine.Core.Rendering.Data;
 
-public readonly record struct FboTagKey(Type TagType, Type SlotType, int Version)
+public readonly record struct FboTagKey(int TagIndex, int SlotIndex) : IComparable<FboTagKey>
 {
-    public static FboTagKey Make<TTag, TSlot>(int version)
+    
+    public static FboTagKey Make<TTag, TSlot>()
         where TTag : unmanaged, IRenderPassTag where TSlot : unmanaged, IRenderPassTagSlot =>
-        new(typeof(TTag), typeof(TSlot), version);
+        RTypeRegistry.MakeFboTagKey<TTag, TSlot>();
+
+    public int CompareTo(FboTagKey other)
+    {
+        var c = TagIndex.CompareTo(other.TagIndex);
+        return c != 0 ? c : SlotIndex.CompareTo(other.SlotIndex);
+    }
 }
 
-public readonly record struct PassTagKey(Type TagType, Type SlotType, PassOpKind PassOp)
+public readonly record struct PassTagKey(FboTagKey FboTagKey, PassOpKind PassOp)
 {
-    public FboTagKey ToFboTagKey(int version) => new(TagType, SlotType, version);
-    
-    public PassTagValueKey ToValueKey() => 
-        new(RTypeRegistry.GetPassTagValue(TagType), RTypeRegistry.GetPassSlotValue(SlotType), PassOp);
-    
     public static PassTagKey Make<TTag, TSlot>(PassOpKind passOp)
         where TTag : unmanaged, IRenderPassTag where TSlot : unmanaged, IRenderPassTagSlot =>
-        new(typeof(TTag), typeof(TSlot), passOp);
+        new(FboTagKey.Make<TTag, TSlot>(), passOp);
+    
+    public static implicit operator FboTagKey(PassTagKey passTagKey) => passTagKey.FboTagKey;
+
+    public int TagIndex => FboTagKey.TagIndex;
+    public int SlotIndex => FboTagKey.SlotIndex;
 }
 
-public readonly record struct PassTagValueKey(int TagIndex, int Slot, PassOpKind PassOp)
+public readonly record struct PassTextureSlotKey(PassTagKey PassTagKey, byte TextureSlot)
 {
-    public static PassTagValueKey Make<TTag, TSlot>(PassOpKind passOp)
+    public static PassTextureSlotKey Make<TTag, TSlot>(PassOpKind passOp, byte TextureSlot)
         where TTag : unmanaged, IRenderPassTag where TSlot : unmanaged, IRenderPassTagSlot =>
-        new(RTypeRegistry.RenderPassTag<TTag>.TagIndex, RTypeRegistry.RenderPassSlot<TSlot>.Slot, passOp);
+        new(PassTagKey.Make<TTag, TSlot>(passOp), TextureSlot);
 
+    public int TagIndex => PassTagKey.TagIndex;
+    public int SlotIndex => PassTagKey.SlotIndex;
+    public PassOpKind PassOp => PassTagKey.PassOp;
 }
 
-public readonly record struct PassTextureSlotKey(int TagIndex, int Slot, PassOpKind PassOp, byte TextureSlot)
-{
-    public static PassTextureSlotKey Make<TTag, TSlot>(PassOpKind passOp, byte textureSlot)
-        where TTag : unmanaged, IRenderPassTag where TSlot : unmanaged, IRenderPassTagSlot =>
-        new(RTypeRegistry.RenderPassTag<TTag>.TagIndex, RTypeRegistry.RenderPassSlot<TSlot>.Slot, passOp, textureSlot);
-}
-
-public sealed class PassTagValueKeyComp : IComparer<PassTagValueKey>
+public sealed class PassTagKeyComp : IComparer<PassTagKey>
 {
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public int Compare(PassTagValueKey a, PassTagValueKey b)
+    public int Compare(PassTagKey a, PassTagKey b)
     {
         if (a.TagIndex != b.TagIndex) return a.TagIndex < b.TagIndex ? -1 : 1;
-        if (a.Slot != b.Slot) return a.Slot < b.Slot ? -1 : 1;
+        if (a.SlotIndex != b.SlotIndex) return a.SlotIndex < b.SlotIndex ? -1 : 1;
         if (a.PassOp != b.PassOp) return a.PassOp < b.PassOp ? -1 : 1;
         return 0;
     }
@@ -59,7 +63,7 @@ public sealed class PassTextureSlotKeyComp : IComparer<PassTextureSlotKey>
     public int Compare(PassTextureSlotKey a, PassTextureSlotKey b)
     {
         if (a.TagIndex != b.TagIndex) return a.TagIndex < b.TagIndex ? -1 : 1;
-        if (a.Slot != b.Slot) return a.Slot < b.Slot ? -1 : 1;
+        if (a.SlotIndex != b.SlotIndex) return a.SlotIndex < b.SlotIndex ? -1 : 1;
         if (a.PassOp != b.PassOp) return a.PassOp < b.PassOp ? -1 : 1;
         if (a.TextureSlot != b.TextureSlot) return a.TextureSlot < b.TextureSlot ? -1 : 1;
         return 0;

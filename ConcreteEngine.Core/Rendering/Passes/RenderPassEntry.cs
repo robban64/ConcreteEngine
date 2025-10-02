@@ -7,19 +7,18 @@ using ConcreteEngine.Core.Rendering.Data;
 
 namespace ConcreteEngine.Core.Rendering.Passes;
 
-public delegate PassMutationState RenderPassMutate(in RenderPassState currentState);
+public delegate PassMutationState RenderPassMutate(RenderPassState currentState);
 
-public delegate ApplyPassReturn RenderPassOp(in RenderPassCtx ctx, in RenderPassState state);
+public delegate ApplyPassReturn RenderPassOp(RenderPassCtx ctx, in RenderPassState state);
 
-public delegate void RenderAfterPassOp(in RenderPassCtx ctx, in RenderPassState state);
+public delegate void RenderAfterPassOp(RenderPassCtx ctx, in RenderPassState state);
 
 public sealed class RenderPassEntry
 {
     public RenderTargetId TargetId { get; }
     public int PassIndex { get; }
     public PassTagKey TagKey { get; private set; }
-    public PassTagValueKey TagValueKey { get; private set; }
-    
+
 
     private RenderPassOp? _applyPassDel;
     private RenderAfterPassOp? _applyAfterPassDel;
@@ -35,7 +34,6 @@ public sealed class RenderPassEntry
     {
         TargetId = targetId;
         TagKey = tagKey;
-        TagValueKey = tagKey.ToValueKey();
         PassIndex = passIndex;
         _defaultState = initial;
         _state = initial;
@@ -58,6 +56,22 @@ public sealed class RenderPassEntry
     public void UpdateState(in PassMutationState replace) => _pendingState = replace;
 
 
+    public ApplyPassReturn ApplyPass(RenderPassCtx ctx)
+    {
+        ApplyPending();
+
+        if (_applyPassDel is { } applyPassDel)
+            return applyPassDel(ctx, in _state);
+
+        return default;
+    }
+
+    public void ApplyAfterPass(RenderPassCtx ctx)
+    {
+        if (_applyAfterPassDel is { } afterPassDel)
+            afterPassDel(ctx, in _state);
+    }
+
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     private void ApplyPending()
     {
@@ -75,23 +89,5 @@ public sealed class RenderPassEntry
             _state = _state.FromMutation(in mutationState);
             _applyPassMutateDel = null;
         }
-    }
-
-    [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public ApplyPassReturn ApplyPass(in RenderPassCtx ctx)
-    {
-        ApplyPending();
-
-        if (_applyPassDel is { } applyPassDel)
-            return applyPassDel(in ctx, in _state);
-
-        return default;
-    }
-
-    [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public void ApplyAfterPass(in RenderPassCtx ctx)
-    {
-        if (_applyAfterPassDel is { } afterPassDel)
-            afterPassDel(in ctx, in _state);
     }
 }

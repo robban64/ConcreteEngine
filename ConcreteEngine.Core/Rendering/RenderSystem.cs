@@ -40,24 +40,18 @@ public interface IRenderSystem : IGameEngineSystem
 
 public sealed class RenderSystem : IRenderSystem
 {
-    private readonly IGraphicsRuntime _graphics;
     private readonly GfxContext _gfx;
     private readonly GfxCommands _gfxCmd;
 
     private RenderRegistry _renderRegistry;
-    private RenderPassRegistry _renderPassRegistry;
+    private RenderPassPipeline _passPipeline;
 
-    private DrawCommandCollector _commandCollector = null!;
-    private DrawCommandPipeline _pipeline = null!;
     private DrawProcessor _drawProcessor = null!;
     private DrawUniforms _drawUniforms = null!;
 
     private readonly BatcherRegistry _batches = new();
 
     private MaterialStore _materialStore = null!;
-
-    private SceneDrawProducer _sceneDrawProducer = null!;
-    private CommandProducerContext _cmdProducerCtx = null!;
 
     private bool _initialized = false;
 
@@ -73,13 +67,12 @@ public sealed class RenderSystem : IRenderSystem
 
     internal RenderSystem(IGraphicsRuntime graphics, Size2D outputSize)
     {
-        _graphics = graphics;
         _gfx = graphics.Gfx;
         _gfxCmd = graphics.Gfx.Commands;
         SceneRenderProps = new SceneRenderProperties();
         SceneRenderProps.SetOutputSize(outputSize);
         SceneRenderProps.Commit();
-        _snapshot = SceneRenderProps.CurrentSnapshot;
+        _snapshot = SceneRenderProps.Snapshot;
     }
 
     internal void InitializeGraphics(IReadOnlyList<Shader> shaders)
@@ -123,7 +116,7 @@ public sealed class RenderSystem : IRenderSystem
         _drawProcessor = new DrawProcessor(_gfx, _materialStore, _renderRegistry);
         _drawUniforms = new DrawUniforms((Camera3D)Camera, _gfx.Buffers, _renderRegistry);
         _commandCollector = new DrawCommandCollector();
-        _pipeline = new DrawCommandPipeline(_drawProcessor);
+        _pipeline = new DrawCommandBuffer(_drawProcessor);
 
         _batches.Register(new TerrainBatcher(_gfx));
         _batches.Register(new SpriteBatcher(_gfx));
@@ -149,7 +142,7 @@ public sealed class RenderSystem : IRenderSystem
 
     private void RegisterPasses(AssetSystem assets)
     {
-        _renderPassRegistry = new RenderPassRegistry(new RenderCommandOps(_gfx, _drawProcessor));
+        _passPipeline = new RenderPassPipeline(new RenderCommandOps(_gfx, _drawProcessor));
 
         var compositeShader = assets.Get<Shader>("Composite").ResourceId;
         var presentShader = assets.Get<Shader>("Present").ResourceId;
@@ -157,7 +150,7 @@ public sealed class RenderSystem : IRenderSystem
 
         // Scene Target
         // Pass 0: draw scene into MSAA FBO
-        _renderPassRegistry.Register<ScenePassTag, PassDrawSlot>(RenderTargetId.Scene, PassOpKind.Normal, 0,
+        _passPipeline.Register<ScenePassTag, PassDrawSlot>(RenderTargetId.Scene, PassOpKind.Normal, 0,
                 new RenderPassState
                 {
                     ClearColor = GfxPassClear.MakeColorDepthClear(Color4.CornflowerBlue),
@@ -172,7 +165,7 @@ public sealed class RenderSystem : IRenderSystem
                 return ApplyPassReturn.NormalPassResult();
             });
 
-        _renderPassRegistry
+        _passPipeline
             .Register<ScenePassTag, PassResolveSlot>(RenderTargetId.Scene, PassOpKind.Resolve, 1,
                 new RenderPassState { PassState = GfxPassState.MakeOff(), LinearFilter = false })
             .OnPassBegin((in RenderPassCtx ctx, in RenderPassState state) =>
@@ -190,7 +183,7 @@ public sealed class RenderSystem : IRenderSystem
             });
 
         // Post A
-        _renderPassRegistry.Register<PostPassTag, PassPostASlot>(RenderTargetId.PostEffect, PassOpKind.Fsq, 0,
+        _passPipeline.Register<PostPassTag, PassPostASlot>(RenderTargetId.PostEffect, PassOpKind.Fsq, 0,
                 new RenderPassState
                 {
                     ClearColor = GfxPassClear.MakeColorClear(Color4.Black),
@@ -211,7 +204,7 @@ public sealed class RenderSystem : IRenderSystem
             });
 
         // Post B
-        _renderPassRegistry.Register<PostPassTag, PassPostBSlot>(RenderTargetId.PostEffect, PassOpKind.Fsq, 1,
+        _passPipeline.Register<PostPassTag, PassPostBSlot>(RenderTargetId.PostEffect, PassOpKind.Fsq, 1,
                 new RenderPassState
                 {
                     ClearColor = GfxPassClear.MakeColorClear(Color4.Black),
@@ -233,7 +226,7 @@ public sealed class RenderSystem : IRenderSystem
             });
 
         // Screen
-        _renderPassRegistry.Register<ScreenPassTag, PassFinalSlot>(RenderTargetId.Screen, PassOpKind.Screen, 0,
+        _passPipeline.Register<ScreenPassTag, PassFinalSlot>(RenderTargetId.Screen, PassOpKind.Screen, 0,
                 new RenderPassState
                 {
                     ClearColor = GfxPassClear.MakeColorClear(Color4.Black),
@@ -292,7 +285,7 @@ public sealed class RenderSystem : IRenderSystem
     {
         //_render.Prepare(alpha, in frameCtx, in _snapshot);
 
-        _renderPassRegistry.Prepare();
+        _passPipeline.Prepare();
         _sceneDrawProducer.SetSceneGlobals(in _snapshot);
         _commandCollector.Collect(alpha, in _snapshot, _pipeline);
         _pipeline.Prepare();
@@ -308,7 +301,7 @@ public sealed class RenderSystem : IRenderSystem
 
         _pipeline.DrainTransformQueue();
 
-        var renderPasses = _renderPassRegistry.RenderPasses;
+        var renderPasses = _passPipeline.RenderPasses;
         foreach (var pass in renderPasses)
         {
             ExecutePass(in pass);
@@ -318,7 +311,7 @@ public sealed class RenderSystem : IRenderSystem
     private void ExecutePass(in RenderPassEntry pass)
     {
         Debug.Assert(pass != null);
-        var passCtx = _renderPassRegistry.Ctx;
+        var passCtx = _passPipeline.Ctx;
 
         if (_renderRegistry.TryGetRenderFbo(pass.TagKey.ToFboTagKey(0), out var fbo))
             passCtx.AttachPass(fbo, pass.PassIndex, pass.TagKey);

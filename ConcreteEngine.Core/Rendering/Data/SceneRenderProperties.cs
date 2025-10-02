@@ -13,7 +13,7 @@ public sealed class SceneRenderProperties
     private bool _dirty = false;
     private int _version = 0;
 
-    private readonly RenderGlobalSnapshot _currentSnapshot = new();
+    private readonly RenderGlobalSnapshot _snapshot = new();
 
     private Vector3 _ambient = new Vector3(0.3f, 0.3f, 0.3f);
     private float _exposure = 2.0f;
@@ -23,7 +23,7 @@ public sealed class SceneRenderProperties
 
     private Size2D _outputSize;
 
-    public RenderGlobalSnapshot CurrentSnapshot => _currentSnapshot;
+    public RenderGlobalSnapshot Snapshot => _snapshot;
 
     public void SetOutputSize(Size2D outputSize)
     {
@@ -59,9 +59,9 @@ public sealed class SceneRenderProperties
 
     internal RenderGlobalSnapshot Commit()
     {
-        if (!_dirty) return _currentSnapshot;
+        if (!_dirty) return _snapshot;
 
-        _currentSnapshot.Update(version: _version++,
+        _snapshot.Update(version: _version++,
             outputSize: _outputSize,
             exposure: _exposure,
             ambient: _ambient,
@@ -69,7 +69,7 @@ public sealed class SceneRenderProperties
             dirLight: in _directionalLight);
         _dirty = false;
 
-        return _currentSnapshot;
+        return _snapshot;
     }
 }
 

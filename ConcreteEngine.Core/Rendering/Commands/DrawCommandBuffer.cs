@@ -9,7 +9,7 @@ using ConcreteEngine.Core.Rendering.Passes;
 
 namespace ConcreteEngine.Core.Rendering.Commands;
 
-public sealed class DrawCommandPipeline
+public sealed class DrawCommandBuffer
 {
     private const int DefaultCapacity = 64;
     private const int MaxCapacity = 10_000;
@@ -26,7 +26,7 @@ public sealed class DrawCommandPipeline
 
     public int Count => _submitIdx;
 
-    internal DrawCommandPipeline(DrawProcessor drawProcessor)
+    internal DrawCommandBuffer(DrawProcessor drawProcessor)
     {
         _drawProcessor = drawProcessor;
         _commands = new DrawCommand[DefaultCapacity];
@@ -71,7 +71,7 @@ public sealed class DrawCommandPipeline
         _submitIdx += count;
     }
 
-    public void Prepare()
+    public void ReadyDrawCommands()
     {
         if (_submitIdx <= 2) return;
         _indices.AsSpan(0, _submitIdx).Sort();

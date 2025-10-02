@@ -35,7 +35,7 @@ public sealed class SceneDrawProducer : IDrawCommandProducer
     }
 
 
-    public void EmitFrame(float alpha, in RenderGlobalSnapshot snapshot, DrawCommandPipeline submitter)
+    public void EmitFrame(float alpha, in RenderGlobalSnapshot snapshot, DrawCommandBuffer submitter)
     {
         if (_snapshot.Skybox.MaterialId.Id == 0) return;
 

@@ -3,7 +3,7 @@ using ConcreteEngine.Core.Rendering.Gfx;
 
 namespace ConcreteEngine.Core.Rendering.Passes;
 
-public sealed class RenderPassRegistry
+public sealed class RenderPassPipeline
 {
     private int _passIdx = 0;
     private readonly List<RenderPassEntry> _entries;
@@ -14,7 +14,7 @@ public sealed class RenderPassRegistry
     public IReadOnlyList<RenderPassEntry> RenderPasses => _entries;
 
 
-    internal RenderPassRegistry(RenderCommandOps cmdOps)
+    internal RenderPassPipeline(RenderCommandOps cmdOps)
     {
         _entries = new List<RenderPassEntry>(8);
         _registry = new Dictionary<PassTagKey, RenderPassEntry>(8);

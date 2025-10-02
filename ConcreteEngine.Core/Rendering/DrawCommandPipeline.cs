@@ -2,6 +2,7 @@ using ConcreteEngine.Core.Rendering.Batching;
 using ConcreteEngine.Core.Rendering.Commands;
 using ConcreteEngine.Core.Rendering.Data;
 using ConcreteEngine.Core.Rendering.Gfx;
+using ConcreteEngine.Core.Rendering.Passes;
 using ConcreteEngine.Graphics.Gfx;
 using ConcreteEngine.Graphics.Gfx.Utility;
 
@@ -40,7 +41,7 @@ internal sealed class DrawCommandPipeline
     public TSink GetSink<TSink>() where TSink : IDrawSink => _commandCollector.GetSink<TSink>();
 
 
-    internal void Run(float alpha, in RenderGlobalSnapshot snapshot)
+    internal nint Prepare(float alpha, in RenderGlobalSnapshot snapshot)
     {
         _cmdBuffer.Reset();
 
@@ -50,15 +51,12 @@ internal sealed class DrawCommandPipeline
         _commandCollector.CollectTo(alpha, in snapshot, _cmdBuffer);
 
         _cmdBuffer.ReadyDrawCommands();
-        
+
         //
-        var capacity = UniformBufferUtils
-            .GetCapacityForEntities<DrawObjectUniform>(_cmdBuffer.Count + 100);
-        
+        return UniformBufferUtils.GetCapacityForEntities<DrawObjectUniform>(_cmdBuffer.Count + 32);
     }
 
-    internal void Drain()
-    {
-        
-    }
+    internal void ExecuteTransforms() => _cmdBuffer.DrainTransformQueue();
+
+    internal void ExecuteDrawPass(RenderTargetId targetId) => _cmdBuffer.DrainCommandQueue(targetId);
 }

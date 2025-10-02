@@ -1,24 +1,42 @@
+using System.Diagnostics;
+using ConcreteEngine.Common.Numerics;
 using ConcreteEngine.Core.Rendering.Data;
 using ConcreteEngine.Core.Rendering.Gfx;
+using ConcreteEngine.Graphics.Resources;
 
 namespace ConcreteEngine.Core.Rendering.Passes;
 
+internal enum PreparePassResult
+{
+    Done,
+    Run,
+    Skip
+}
+
+internal readonly record struct NextPassResult(int PassIndex, RenderTargetId TargetId, bool SkipPass);
+
 public sealed class RenderPassPipeline
 {
-    private int _passIdx = 0;
+    private RenderPassCtx? _ctx = null!;
+
+    private readonly RenderRegistry _renderRegistry;
+    private readonly PipelineStateOps _cmdOps;
+    
     private readonly List<RenderPassEntry> _entries;
     private readonly Dictionary<PassTagKey, RenderPassEntry> _registry;
 
-    public readonly RenderPassCtx Ctx;
+    private readonly PassCommandQueue _cmdQueue;
 
-    public IReadOnlyList<RenderPassEntry> RenderPasses => _entries;
+    private int _passIter = 0;
+    private RenderPassEntry? _currentEntry = null;
 
-
-    internal RenderPassPipeline(RenderCommandOps cmdOps)
+    internal RenderPassPipeline(PipelineStateOps cmdOps, RenderRegistry renderRegistry)
     {
+        _cmdOps = cmdOps;
+        _renderRegistry = renderRegistry;
         _entries = new List<RenderPassEntry>(8);
         _registry = new Dictionary<PassTagKey, RenderPassEntry>(8);
-        Ctx = new RenderPassCtx(cmdOps, _registry);
+        _cmdQueue = new PassCommandQueue();
     }
 
     public RenderPassEntry Register<TTag, TSlot>(RenderTargetId targetId, PassOpKind opKind, int pass,
@@ -33,38 +51,49 @@ public sealed class RenderPassPipeline
         return entry;
     }
 
-    public void Prepare()
+    internal void Prepare(Size2D outputSize)
     {
-        _passIdx = 0;
-        Ctx.Prepare();
+        Debug.Assert(_ctx is null);
+        _passIter = 0;
+        _cmdQueue.Prepare();
+        _ctx = new RenderPassCtx(_cmdOps, _cmdQueue, _registry, outputSize);
     }
 
-    internal void TryGetNextPasses()
+    internal bool NextPass(out NextPassResult result)
     {
-    }
-
-
-    /*
-    internal bool TryGetNextPasses(out IReadOnlyList<IRenderPassEntry> passes)
-    {
-        while (_currentTargetId < _registry.Length)
+        if (_passIter >= _entries.Count)
         {
-            var targetId = (RenderTargetId)_currentTargetId;
-            target = _renderTargets[_currentTargetId];
-            var list = _registry[_currentTargetId++];
-            if (list.Count > 0)
-            {
-                Ctx.FromRenderTarget(target);
-                Ctx.Pass = list.Count - 1;
-
-                passes = list;
-                return true;
-            }
+            result = default;
+            _ctx = null;
+            return false;
         }
 
-        target = null!;
-        passes = Array.Empty<IRenderPassEntry>();
-        _currentTargetId = 0;
-        return false;
-    }*/
+        var pass = _entries[_passIter++];
+        Debug.Assert(pass != null);
+
+        _currentEntry = pass;
+
+        bool skipPass = false;
+        if (_renderRegistry.TryGetRenderFbo(pass.TagKey.ToFboTagKey(0), out var fbo))
+            _ctx!.AttachPass(fbo, pass.PassIndex, pass.TagKey);
+        else if (pass.TagKey.PassOp == PassOpKind.Screen)
+            _ctx!.AttachScreenPass(pass.PassIndex, pass.TagKey);
+        else
+            skipPass = true;
+
+        result = new NextPassResult(pass.PassIndex, pass.TargetId, skipPass);
+        return true;
+    }
+
+    internal ApplyPassReturn ApplyPass()
+    {
+        Debug.Assert(_currentEntry != null);
+        return _currentEntry.ApplyPass(in _ctx);
+    }
+
+    internal void ApplyAfterPass()
+    {
+        _currentEntry!.ApplyAfterPass(in _ctx);
+    }
+
 }

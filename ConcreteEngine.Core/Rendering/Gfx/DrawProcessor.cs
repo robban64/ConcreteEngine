@@ -124,12 +124,9 @@ internal sealed class DrawProcessor
         UseShader(shaderId);
 
         for (int i = 0; i < sources.Count; i++)
-        {
             _gfxCmd.BindTexture(sources[i], i);
-        }
 
-        _gfxCmd.BindMesh(_gfx.Primitives.FsqQuad);
-        _gfxCmd.DrawBoundMesh(_gfx.Primitives.FsqQuad, 0);
+        DrawFsq();
     }
 
     public void DrawFullscreenQuad(ShaderId shaderId, ReadOnlySpan<TextureId> sources)
@@ -137,10 +134,13 @@ internal sealed class DrawProcessor
         UseShader(shaderId);
 
         for (int i = 0; i < sources.Length; i++)
-        {
             _gfxCmd.BindTexture(sources[i], i);
-        }
 
+        DrawFsq();
+    }
+
+    private void DrawFsq()
+    {
         _gfxCmd.BindMesh(_gfx.Primitives.FsqQuad);
         _gfxCmd.DrawBoundMesh(_gfx.Primitives.FsqQuad, 0);
     }

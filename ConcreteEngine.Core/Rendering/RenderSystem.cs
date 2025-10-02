@@ -44,8 +44,12 @@ public sealed class RenderSystem : IRenderSystem
     private readonly GfxCommands _gfxCmd;
 
     private RenderRegistry _renderRegistry;
-    private RenderPassPipeline _passPipeline;
+    
+    private DrawCommandPipeline _drawPipeline;
 
+    private RenderPassPipeline _passPipeline;
+    
+    private PipelineStateOps _pipelineStateOps = null!;
     private DrawProcessor _drawProcessor = null!;
     private DrawUniforms _drawUniforms = null!;
 
@@ -54,11 +58,10 @@ public sealed class RenderSystem : IRenderSystem
     private MaterialStore _materialStore = null!;
 
     private bool _initialized = false;
-
     private GfxFrameInfo _frameCtx;
 
     private RenderGlobalSnapshot _snapshot;
-
+    
     public SceneRenderProperties SceneRenderProps { get; }
 
     public ICamera Camera { get; } = new Camera3D();
@@ -115,25 +118,16 @@ public sealed class RenderSystem : IRenderSystem
         _materialStore = materialStore;
         _drawProcessor = new DrawProcessor(_gfx, _materialStore, _renderRegistry);
         _drawUniforms = new DrawUniforms((Camera3D)Camera, _gfx.Buffers, _renderRegistry);
-        _commandCollector = new DrawCommandCollector();
-        _pipeline = new DrawCommandBuffer(_drawProcessor);
+        _pipelineStateOps = new PipelineStateOps(_gfx, _drawProcessor, _renderRegistry);
 
         _batches.Register(new TerrainBatcher(_gfx));
         _batches.Register(new SpriteBatcher(_gfx));
         _batches.Register(new TilemapBatcher(_gfx, 64, 32));
 
 
-        // Collector
-        _commandCollector.RegisterProducerSink<IMeshDrawSink>(new MeshDrawProducer());
-        _commandCollector.RegisterProducerSink<ITerrainDrawSink>(new TerrainDrawProducer());
-        _sceneDrawProducer = new SceneDrawProducer();
-        _commandCollector.RegisterProducer<SceneDrawProducer>(_sceneDrawProducer);
+        _drawPipeline = new DrawCommandPipeline();
+        _drawPipeline.Initialize(_gfx, _batches, _drawProcessor);
 
-
-        _cmdProducerCtx = new CommandProducerContext { Gfx = _gfx, DrawBatchers = _batches };
-        _commandCollector.AttachContext(_cmdProducerCtx);
-        _pipeline.Initialize();
-        _commandCollector.InitializeProducers();
         _drawProcessor.Initialize();
 
         RegisterPasses(assets);
@@ -142,7 +136,7 @@ public sealed class RenderSystem : IRenderSystem
 
     private void RegisterPasses(AssetSystem assets)
     {
-        _passPipeline = new RenderPassPipeline(new RenderCommandOps(_gfx, _drawProcessor));
+        _passPipeline = new RenderPassPipeline(_pipelineStateOps, _renderRegistry);
 
         var compositeShader = assets.Get<Shader>("Composite").ResourceId;
         var presentShader = assets.Get<Shader>("Present").ResourceId;
@@ -179,6 +173,7 @@ public sealed class RenderSystem : IRenderSystem
             }).OnPassEnd((in RenderPassCtx ctx, in RenderPassState state) =>
             {
                 var texId = ctx.Target.Attachments.ColorTextureId;
+                ctx.CmdOps.EndRenderPass();
                 ctx.CmdOps.GenerateMips(texId);
             });
 
@@ -252,7 +247,7 @@ public sealed class RenderSystem : IRenderSystem
         SceneRenderProps.Commit();
     }
 
-    public TSink GetSink<TSink>() where TSink : IDrawSink => _commandCollector.GetSink<TSink>();
+    public TSink GetSink<TSink>() where TSink : IDrawSink => _drawPipeline.GetSink<TSink>();
 
     public Material CreateMaterial(string templateName) => _materialStore.CreateMaterialFromTemplate(templateName);
 
@@ -263,8 +258,8 @@ public sealed class RenderSystem : IRenderSystem
     //_render.MutateRenderPass(targetId);
 
 
-    internal void BeginTick(in UpdateInfo update) => _commandCollector.BeginTick(update);
-    internal void EndTick() => _commandCollector.EndTick();
+    internal void BeginTick(in UpdateInfo update) => _drawPipeline.BeginTick(update);
+    internal void EndTick() => _drawPipeline.EndTick();
 
     internal void Render(float alpha, in GfxFrameInfo frameCtx)
     {
@@ -276,63 +271,41 @@ public sealed class RenderSystem : IRenderSystem
         SceneRenderProps.SetOutputSize(frameCtx.OutputSize);
         _snapshot = SceneRenderProps.Commit();
 
-        PrepareRenderer(alpha);
         Execute(alpha, in frameCtx);
-        _pipeline.Reset();
     }
 
-    private void PrepareRenderer(float alpha)
-    {
-        //_render.Prepare(alpha, in frameCtx, in _snapshot);
-
-        _passPipeline.Prepare();
-        _sceneDrawProducer.SetSceneGlobals(in _snapshot);
-        _commandCollector.Collect(alpha, in _snapshot, _pipeline);
-        _pipeline.Prepare();
-    }
 
     private void Execute(float alpha, in GfxFrameInfo frameCtx)
     {
-        var capacity =
-            UniformBufferUtils.GetCapacityForEntities<DrawObjectUniform>(_pipeline.Count + 100);
+        _passPipeline.Prepare(_snapshot.OutputSize);
 
+        nint capacity = _drawPipeline.Prepare(alpha, _snapshot);
+        
         _drawProcessor.Prepare(in _snapshot, capacity);
         _drawUniforms.UploadGlobalUniforms(alpha, in frameCtx, in _snapshot);
 
-        _pipeline.DrainTransformQueue();
+        _drawPipeline.ExecuteTransforms();
 
-        var renderPasses = _passPipeline.RenderPasses;
-        foreach (var pass in renderPasses)
+        while (_passPipeline.NextPass(out var nextPassRes))
         {
-            ExecutePass(in pass);
+            if(nextPassRes.SkipPass) continue;
+            ExecutePass(nextPassRes.PassIndex, nextPassRes.TargetId);
         }
     }
 
-    private void ExecutePass(in RenderPassEntry pass)
+    private void ExecutePass(int passIndex, RenderTargetId targetId)
     {
-        Debug.Assert(pass != null);
-        var passCtx = _passPipeline.Ctx;
-
-        if (_renderRegistry.TryGetRenderFbo(pass.TagKey.ToFboTagKey(0), out var fbo))
-            passCtx.AttachPass(fbo, pass.PassIndex, pass.TagKey);
-        else if (pass.TagKey.PassOp == PassOpKind.Screen)
-            passCtx.AttachScreenPass(_snapshot.OutputSize, pass.PassIndex, pass.TagKey);
-        else
-            return;
-
-
-        var passResult = pass.ApplyPass(in passCtx);
+        var passResult = _passPipeline.ApplyPass();
         if (passResult.OpKind == PassOpKind.Resolve)
         {
-            _gfxCmd.EndRenderPass();
-            pass.ApplyAfterPass(in passCtx);
+            _passPipeline.ApplyAfterPass();
             return;
         }
 
-        if (pass.TargetId == RenderTargetId.Scene && pass.PassIndex == 0)
-            _pipeline.DrainCommandQueue(RenderTargetId.Scene);
+        if (targetId == RenderTargetId.Scene && passIndex == 0)
+            _drawPipeline.ExecuteDrawPass(RenderTargetId.Scene);
 
-        pass.ApplyAfterPass(in passCtx);
+        _passPipeline.ApplyAfterPass();
 
 /*
         var key = (pass.TargetId, pass.Index);

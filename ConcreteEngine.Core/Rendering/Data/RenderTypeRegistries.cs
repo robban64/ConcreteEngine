@@ -13,11 +13,15 @@ internal static class RTypeRegistry
     private static int _renderPassTagCounter = 0;
     private static int _renderPassSlotCounter = 0;
 
-    private static Dictionary<Type, int> _renderPassTagValues = new();
-    private static Dictionary<Type, int> _renderPassTagSlots = new();
+    private static readonly Dictionary<Type, int> RenderPassTagValues = new();
+    private static readonly Dictionary<Type, int> RenderPassTagSlots = new();
 
-    internal static int GetPassTagValue(Type type) => _renderPassTagValues[type];
-    internal static int GetPassSlotValue(Type type) => _renderPassTagSlots[type];
+    internal static int GetPassTagValue(Type type) => RenderPassTagValues[type];
+    internal static int GetPassSlotValue(Type type) => RenderPassTagSlots[type];
+
+    internal static (int, int) GetPassTagSlotTuple(Type tag, Type slot) =>
+        (RenderPassTagValues[tag], RenderPassTagSlots[slot]);
+
 
     internal static class UniformBufferTag<IUbo> where IUbo : unmanaged, IUniformGpuData
     {
@@ -30,7 +34,7 @@ internal static class RTypeRegistry
 
         public static void Register()
         {
-            _renderPassTagValues.Add(typeof(TTag), _renderPassTagCounter);
+            RenderPassTagValues.Add(typeof(TTag), _renderPassTagCounter);
             TagIndex = _renderPassTagCounter++;
         }
     }
@@ -41,7 +45,7 @@ internal static class RTypeRegistry
 
         public static void Register()
         {
-            _renderPassTagSlots.Add(typeof(TSlot), _renderPassSlotCounter);
+            RenderPassTagSlots.Add(typeof(TSlot), _renderPassSlotCounter);
             Slot = _renderPassSlotCounter++;
         }
     }

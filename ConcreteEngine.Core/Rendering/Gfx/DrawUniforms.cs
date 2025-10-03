@@ -36,27 +36,38 @@ internal sealed class DrawUniforms
     public void UploadGlobalUniforms(float alpha, in GfxFrameInfo frameCtx, in RenderGlobalSnapshot snapshot)
     {
         _deltaTicker += frameCtx.DeltaTime;
-        UploadFrameUniformRecord(in snapshot);
-        UploadDirLight(in snapshot);
+        UploadFrameUniformRecord(snapshot);
+        UploadDirLight(snapshot);
         UploadCamera();
         UploadPost();
     }
 
-    private void UploadFrameUniformRecord(in RenderGlobalSnapshot snapshot)
+    private void UploadShadowUniformRecord(RenderGlobalSnapshot snapshot)
+    {
+        var data = new ShadowUniformRecord(
+            lightViewProj: Matrix4x4.Identity, 
+            shadowParams0: new Vector4(1.0f/1024.0f, 1.0f/1024.0f, 0.001f, 0.005f),
+            shadowParams1: new Vector4(1.0f, 1.0f, 0.0f, 0.0f)
+        );
+
+        _gfxBuffers.UploadUniformGpuData(_frameUbo.Id, in data, 0);
+
+    }
+
+    private void UploadFrameUniformRecord(RenderGlobalSnapshot snapshot)
     {
         var data = new FrameUniformRecord(
-            ambient: snapshot.Ambient,
-            ambientIntensity: 1,
-            fogColor: Vector3.One,
-            fogDensity: 1,
-            fogNear: 1,
-            fogFar: 1,
-            fogType: 1
+            ambient: new Vector4(snapshot.Ambient, 1),
+            ambientGround: new Vector4(snapshot.Ambient, 1),
+            fogColor: new Vector4(0.6f, 0.7f, 0.8f, 0.5f),
+            fogParams0: new Vector4(0.00015f, 0.002f, 0.0f, 1.0f),
+            fogParams1: new Vector4(1.0f, 1.0f, 200.0f, 0.0f)
         );
+
         _gfxBuffers.UploadUniformGpuData(_frameUbo.Id, in data, 0);
     }
 
-    private void UploadDirLight(in RenderGlobalSnapshot snapshot)
+    private void UploadDirLight(RenderGlobalSnapshot snapshot)
     {
         var data = new DirLightUniformRecord(
             direction: snapshot.DirLight.Direction,

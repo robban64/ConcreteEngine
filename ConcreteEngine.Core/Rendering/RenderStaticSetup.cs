@@ -31,6 +31,8 @@ internal static class RenderStaticSetup
         renderRegistry.RegisterUniformBuffer<FrameUniformRecord>();
         renderRegistry.RegisterUniformBuffer<CameraUniformRecord>();
         renderRegistry.RegisterUniformBuffer<DirLightUniformRecord>();
+        renderRegistry.RegisterUniformBuffer<LightUniformRecord>();
+        renderRegistry.RegisterUniformBuffer<ShadowUniformRecord>();
         renderRegistry.RegisterUniformBuffer<MaterialUniformRecord>();
         renderRegistry.RegisterUniformBuffer<DrawObjectUniform>();
         renderRegistry.RegisterUniformBuffer<FramePostProcessUniform>();

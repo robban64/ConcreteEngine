@@ -17,8 +17,11 @@ internal sealed class UniformsStd140Layouts
             { "Frame", _frameGlobalUniform },
             { "Camera", _cameraUniform },
             { "DirLight", _dirLightUniform },
+            { "Light", _lightUniform },
+            { "Shadow", _shadowUniform },
             { "Material", _materialUniform },
-            { "DrawObject", _drawUniform }
+            { "DrawObject", _drawUniform },
+            { "PostProcess", _drawUniform },
         };
     }
 
@@ -31,8 +34,10 @@ internal sealed class UniformsStd140Layouts
         """
         layout(std140, binding = 0) uniform FrameGlobalUniform {
             vec4 uAmbient;  
+            vec4 uAmbientGround;
             vec4 uFogColor; 
-            vec4 uFogDetail;
+            vec4 uFogParams0;   // x=exp2_k, y=height_k, z=height0, w=globalStrength
+            vec4 uFogParams1;   // x=expWeight, y=heightWeight, z=maxDist, w reserved
         };
         """;
 
@@ -55,9 +60,26 @@ internal sealed class UniformsStd140Layouts
         };
         """;
 
+    private string _lightUniform =
+        """
+        layout(std140, binding = 3) uniform LightUniform {
+            ivec4 uLightCounts;         // x = lightCount (0..MAX_LIGHTS), yzw reserved
+            LightData uLights[MAX_LIGHTS];
+        };
+        """;
+
+    private string _shadowUniform =
+        """
+        layout(std140, binding = 4) uniform ShadowUniform {
+            mat4 uLightViewProj;
+            vec4 uShadowParams0;   // x=1/texW, y=1/texH, z=constBias, w=slopeBias
+            vec4 uShadowParams1;   // x=strength, y=pcfRadius, z,w reserved
+        };
+        """;
+
     private string _materialUniform =
         """
-        layout(std140, binding = 3) uniform MaterialUniform {
+        layout(std140, binding = 5) uniform MaterialUniform {
             vec3 MaterialColor;
             float Shininess;
             float SpecularStrength;
@@ -68,12 +90,32 @@ internal sealed class UniformsStd140Layouts
 
     private string _drawUniform =
         """
-        layout(std140, binding = 4) uniform DrawUniform {
+        layout(std140, binding = 6) uniform DrawUniform {
             mat4 uModel;
             // normal matrix as vec4 (xyz used)
             vec4 uNormalCol0;
             vec4 uNormalCol1;
             vec4 uNormalCol2;
+        };
+        """;
+
+    private string _postProcessUniform =
+        """
+        layout(std140, binding = 7) uniform PostProcessUniform {
+            vec4 ColorAdjust;
+            vec4 WhiteBalance;
+            vec4 Flags;
+            vec4 BloomParams;
+            vec4 BloomLods;
+            vec4 LutParams;
+            //
+            vec4 VignetteParams;
+            vec4 GrainParams;
+            vec4 ChromAbParams;
+            //
+            vec4 ToneShadows;
+            vec4 ToneHighlights;
+            vec4 SharpenParams;
         };
         """;
 }

@@ -35,7 +35,7 @@ internal static class RTypeRegistry
         public static void Register() => Index = _renderPassSlotCounter++;
     }
 
-    internal static class UniformBufferTag<IUbo> where IUbo : unmanaged, IUniformGpuData
+    internal static class UniformBufferTag<IUbo> where IUbo : unmanaged, IStd140Uniform
     {
         public static UboSlot Slot { get; private set; } = new(-1);
 

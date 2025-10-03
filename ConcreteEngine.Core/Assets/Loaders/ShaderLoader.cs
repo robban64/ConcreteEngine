@@ -44,6 +44,7 @@ internal sealed class ShaderLoader(IReadOnlyList<ShaderManifestRecord> records)
         _vertexShaderCache.TrimExcess();
 
         _vertexShaderCache = null!;
+        _layouts.Cleanup();
         _layouts = null!;
     }
 

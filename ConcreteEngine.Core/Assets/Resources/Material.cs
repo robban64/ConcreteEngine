@@ -22,7 +22,7 @@ public sealed class Material
 
 
     public Color4 Color { get; set; } = Color4.White;
-    public float Shininess { get; set; } = 12;
+    public float Shininess { get; set; } = 6;
     public float SpecularStrength { get; set; } = 1;
     public float UvRepeat { get; set; } = 1;
 

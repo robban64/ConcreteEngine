@@ -2,6 +2,7 @@
 
 using System.Diagnostics;
 using ConcreteEngine.Common.Numerics;
+using ConcreteEngine.Core.Rendering.Data;
 using ConcreteEngine.Core.Rendering.Gfx;
 using ConcreteEngine.Graphics.Resources;
 
@@ -11,55 +12,53 @@ namespace ConcreteEngine.Core.Rendering.Passes;
 
 public sealed class RenderPassCtx
 {
-    public RenderCommandOps CmdOps { get; }
-    public FrameBufferId FboId { get; private set; }
-    public FrameBufferMeta Meta { get; private set; }
-    public int Pass { get; private set; } = 0;
+    private readonly PassCommandQueue _cmdQueue;
+
+    public PipelineStateOps Ops { get; private set; }
+    public RenderTargetInfo Target { get; private set; }
+    public int Pass { get; private set; }
     public PassTagKey TagKey { get; private set; }
 
-    private readonly IReadOnlyDictionary<PassTagKey, RenderPassEntry> _registry;
-    //private readonly Dictionary<PassTagKey, List<TextureId>> _textureSlot = new(4);
 
-    private readonly PriorityQueue<TextureId, PassTextureSlotKey> _queue = new(new PassTagKeyNativeComparer());
-    private readonly List<TextureId> _output = new();
-
-    internal RenderPassCtx(RenderCommandOps cmdOps, IReadOnlyDictionary<PassTagKey, RenderPassEntry> registry)
+    internal RenderPassCtx(PipelineStateOps cmdOps, PassCommandQueue cmdQueue)
     {
-        CmdOps = cmdOps;
-        _registry = registry;
+        Ops = cmdOps;
+        _cmdQueue = cmdQueue;
     }
 
-    public IReadOnlyList<TextureId> GetPassSources()
+    internal void AttachScreenPass(int pass, PassTagKey tagKey, Size2D outputSize)
     {
-        var tagIndex = RTypeRegistry.GetPassTagValue(TagKey.TagType);
-        _output.Clear();
-        while (_queue.TryPeek(out _, out var k) && k.TagIndex == tagIndex)
-        {
-            _queue.TryDequeue(out var id, out k);
-            _output.Add(id);
-            //Console.WriteLine($"{id} - {k}");
-        }
-
-        return _output;
+        Target = new RenderTargetInfo(default, outputSize, default, default);
+        Pass = pass;
+        TagKey = tagKey;
     }
 
-    public void SampleTo<TTag, TSlot>(PassOpKind passOp, int slot, TextureId textureId)
+    internal void AttachPass(RenderFbo fbo, int pass, PassTagKey tagKey)
+    {
+        Target = new RenderTargetInfo(fbo.FboId, fbo.Size, fbo.Attachments, fbo.MultiSample);
+        Pass = pass;
+        TagKey = tagKey;
+    }
+    
+
+    public IReadOnlyList<TextureId> GetPassSources() => _cmdQueue.GetPassSources();
+
+    public void SampleTo<TTag, TSlot>(PassOpKind passOp, int texSlot, TextureId textureId)
         where TTag : unmanaged, IRenderPassTag where TSlot : unmanaged, IRenderPassTagSlot
     {
-        Debug.Assert(slot >= 0 && slot < 16);
-        _queue.Enqueue(textureId, PassTextureSlotKey.Make<TTag, TSlot>(passOp, (byte)slot));
+        Debug.Assert(texSlot >= 0 && texSlot < 16);
+
+        var key = PassTextureSlotKey.Make<TTag, TSlot>(passOp, (byte)texSlot);
+        _cmdQueue.SampleTo(key, textureId);
     }
 
     public void MutateStatePass<TTag, TSlot>(PassOpKind passOp, in PassMutationState newState)
         where TTag : unmanaged, IRenderPassTag where TSlot : unmanaged, IRenderPassTagSlot
     {
         var key = PassTagKey.Make<TTag, TSlot>(passOp);
-        if (_registry.TryGetValue(key, out RenderPassEntry entry))
-        {
-            entry.UpdateState(in newState);
-        }
+        _cmdQueue.EnqueueMutation(key, in newState);
     }
-
+/*
     public void MutateStatePass<TTag, TSlot>(PassOpKind passOp, RenderPassMutate mutate)
         where TTag : unmanaged, IRenderPassTag where TSlot : unmanaged, IRenderPassTagSlot
     {
@@ -69,29 +68,5 @@ public sealed class RenderPassCtx
             entry.UpdateState(mutate);
         }
     }
-
-    internal void Prepare()
-    {
-        FboId = default;
-        Meta = default;
-        Pass = 0;
-        _queue.Clear();
-        _output.Clear();
-    }
-
-    internal void AttachScreenPass(Size2D outputSize, int pass, PassTagKey tagKey)
-    {
-        FboId = default;
-        Meta = new FrameBufferMeta(outputSize, default, default);
-        Pass = pass;
-        TagKey = tagKey;
-    }
-
-    internal void AttachPass(RenderFbo fbo, int pass, PassTagKey tagKey)
-    {
-        FboId = fbo.FboId;
-        Meta = fbo.GetMeta();
-        Pass = pass;
-        TagKey = tagKey;
-    }
+    */
 }

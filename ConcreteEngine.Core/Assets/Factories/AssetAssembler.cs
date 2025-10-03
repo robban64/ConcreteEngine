@@ -1,7 +1,7 @@
 #region
 
 using ConcreteEngine.Core.Assets.Manifest;
-using ConcreteEngine.Core.Resources;
+using ConcreteEngine.Core.Assets.Resources;
 using ConcreteEngine.Graphics.Resources;
 
 #endregion

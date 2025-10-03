@@ -1,6 +1,6 @@
 #region
 
-using ConcreteEngine.Core.Configuration;
+using ConcreteEngine.Core.Engine.Configuration;
 using ConcreteEngine.Core.Rendering;
 
 #endregion
@@ -16,7 +16,6 @@ public abstract class GameScene
     private World _world = null!;
 
     protected GameSceneContext Context { get; private set; } = null!;
-
 
     protected World World => _world;
 

@@ -3,6 +3,8 @@
 using System.Numerics;
 using System.Runtime.CompilerServices;
 using ConcreteEngine.Common.Numerics;
+using ConcreteEngine.Core.Rendering.Data;
+using ConcreteEngine.Graphics;
 using ConcreteEngine.Graphics.Resources;
 
 #endregion
@@ -11,25 +13,34 @@ namespace ConcreteEngine.Core.Rendering.Gfx;
 
 public delegate Size2D CalcFboOutputDel(Size2D outputSize, Vector2 ratio);
 
-public sealed class RenderFbo : IComparable<RenderFbo>, IComparable<FrameBufferId>
+public sealed class RenderFbo : IComparable<RenderFbo>, IComparable<FrameBufferId>, IComparable<FboTagKey>
 {
     public FrameBufferId FboId { get; }
+    public FboTagKey TagKey { get; }
+    public int Version {get; private set;}
 
-    private FrameBufferMeta _meta;
+    public Size2D Size { get; private set; }
+    public FboAttachmentIds Attachments { get; private set; }
+    public RenderBufferMsaa MultiSample { get; private set; }
+    
 
     private readonly SizePolicy _sizePolicy;
 
-    internal RenderFbo(FrameBufferId fboId, SizePolicy sizePolicy)
+    internal RenderFbo(FrameBufferId fboId, FboTagKey tagKey, int version, SizePolicy sizePolicy)
     {
         FboId = fboId;
+        TagKey = tagKey;
         _sizePolicy = sizePolicy;
+        Version = version;
     }
 
 
-    [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public ref readonly FrameBufferMeta GetMeta() => ref _meta;
-
-    internal void UpdateFromMeta(in FrameBufferMeta meta) => _meta = meta;
+    internal void UpdateFromMeta(in FrameBufferMeta meta)
+    {
+        Size = meta.Size;
+        Attachments = meta.Attachments;
+        MultiSample = meta.MultiSample;
+    }
 
     public Size2D CalculateNewSize(Size2D outputSize) => _sizePolicy.Calculate(outputSize);
 
@@ -37,12 +48,11 @@ public sealed class RenderFbo : IComparable<RenderFbo>, IComparable<FrameBufferI
 
     public int CompareTo(FrameBufferId other) => FboId.Value.CompareTo(other!.Value);
 
-    internal readonly struct FrameBufferIdComparer : IComparer<RenderFbo>
-    {
-        private readonly FrameBufferId _id;
-        public FrameBufferIdComparer(FrameBufferId id) => _id = id;
+    public int CompareTo(FboTagKey other) => TagKey.CompareTo(other);
 
-        public int Compare(RenderFbo? x, RenderFbo? _) => x!.CompareTo(_id);
+    internal readonly struct FrameBufferIdComparer(FrameBufferId id) : IComparer<RenderFbo>
+    {
+        public int Compare(RenderFbo? x, RenderFbo? _) => x!.CompareTo(id);
     }
 
     public sealed class SizePolicy
@@ -84,4 +94,6 @@ public sealed class RenderFbo : IComparable<RenderFbo>, IComparable<FrameBufferI
             };
         }
     }
+
+
 }

@@ -3,6 +3,7 @@
 using ConcreteEngine.Common;
 using ConcreteEngine.Common.Numerics;
 using ConcreteEngine.Core;
+using ConcreteEngine.Core.Modules;
 using ConcreteEngine.Core.Rendering;
 using ConcreteEngine.Core.Scene;
 

@@ -1,0 +1,53 @@
+#region
+
+using System.Numerics;
+using ConcreteEngine.Core.Rendering.Data;
+using ConcreteEngine.Core.Rendering.Passes;
+
+#endregion
+
+namespace ConcreteEngine.Core.Rendering.Commands;
+
+public sealed class SceneDrawProducer : IDrawCommandProducer
+{
+    private CommandProducerContext _context = null!;
+
+    private RenderGlobalSnapshot _snapshot;
+
+
+    public void AttachContext(CommandProducerContext ctx)
+    {
+        _context = ctx;
+    }
+
+    public void Initialize()
+    {
+    }
+
+    public void SetSceneGlobals(in RenderGlobalSnapshot snapshot) => _snapshot = snapshot;
+
+    public void BeginTick(in UpdateInfo update)
+    {
+    }
+
+    public void EndTick()
+    {
+    }
+
+
+    public void EmitFrame(float alpha, in RenderGlobalSnapshot snapshot, DrawCommandBuffer submitter)
+    {
+        if (_snapshot.Skybox.MaterialId.Id == 0) return;
+
+        var skybox = _snapshot.Skybox;
+        var cmd = new DrawCommand(
+            meshId: _context.Gfx.Primitives.SkyboxCube,
+            materialId: _snapshot.Skybox.MaterialId
+        );
+
+
+        var meta = new DrawCommandMeta(DrawCommandId.Skybox, RenderTargetId.Scene, DrawCommandQueue.Skybox);
+
+        submitter.SubmitDraw(in cmd, in meta, new DrawTransformPayload(Matrix4x4.Identity));
+    }
+}

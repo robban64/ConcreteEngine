@@ -1,12 +1,12 @@
 #region
 
 using System.Numerics;
-using ConcreteEngine.Core.Resources;
+using ConcreteEngine.Core.Assets.Resources;
 using ConcreteEngine.Graphics.Resources;
 
 #endregion
 
-namespace ConcreteEngine.Core.Rendering;
+namespace ConcreteEngine.Core.Rendering.Commands;
 
 public readonly struct DrawCommand(MeshId meshId, MaterialId materialId, int drawCount = 0)
 {

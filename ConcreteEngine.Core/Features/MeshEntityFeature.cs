@@ -1,6 +1,7 @@
 #region
 
 using ConcreteEngine.Core.Rendering;
+using ConcreteEngine.Core.Rendering.Commands;
 
 #endregion
 
@@ -30,7 +31,7 @@ public sealed class MeshEntityFeature : GameFeature
         {
             ref var mesh = ref view.Value1;
             ref var transform = ref view.Value2;
-            _drawSink.SendSingle(new MeshDrawEntity(mesh.MeshId, mesh.MaterialId, in transform));
+            _drawSink.SendSingle(new MeshDrawEntity(mesh.MeshId, mesh.MaterialId, ref transform));
         }
     }
 }

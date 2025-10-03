@@ -4,12 +4,14 @@ using System.Numerics;
 using ConcreteEngine.Common;
 using ConcreteEngine.Common.Numerics;
 using ConcreteEngine.Core.Assets;
-using ConcreteEngine.Core.Configuration;
+using ConcreteEngine.Core.Assets.Resources;
+using ConcreteEngine.Core.Engine.Configuration;
 using ConcreteEngine.Core.Rendering;
-using ConcreteEngine.Core.Resources;
+using ConcreteEngine.Core.Rendering.Descriptors;
 using ConcreteEngine.Core.Scene;
+using ConcreteEngine.Core.Scene.Entities;
 using ConcreteEngine.Graphics;
-using Shader = ConcreteEngine.Core.Resources.Shader;
+using Shader = ConcreteEngine.Core.Assets.Resources.Shader;
 
 #endregion
 

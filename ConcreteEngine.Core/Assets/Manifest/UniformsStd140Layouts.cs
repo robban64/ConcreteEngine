@@ -30,9 +30,9 @@ internal sealed class UniformsStd140Layouts
     private string _frameGlobalUniform =
         """
         layout(std140, binding = 0) uniform FrameGlobalUniform {
-            vec4 uAmbient;   // xyz=color, w=intensity
-            vec4 uFogColor;  // xyz=color, w=density
-            vec4 uFogDetail; // x=near, y=far, z=type, w=0
+            vec4 uAmbient;  
+            vec4 uFogColor; 
+            vec4 uFogDetail;
         };
         """;
 
@@ -42,16 +42,16 @@ internal sealed class UniformsStd140Layouts
             mat4 uViewMat;
             mat4 uProjMat;
             mat4 uProjViewMat;
-            vec4 uCameraPos; // C# has vec3 + float pad; use .xyz
+            vec4 uCameraPos;
         };
         """;
 
     private string _dirLightUniform =
         """
         layout(std140, binding = 2) uniform DirLightUniform {
-            vec4 uLightDirection;            // xyz, w unused
-            vec4 uLightDiffuse;              // rgb, w unused
-            vec4 uLightSpecularIntensity;    // xyz=specular, w=intensity
+            vec4 uLightDirection;           
+            vec4 uLightDiffuse;             
+            vec4 uLightSpecularIntensity;   
         };
         """;
 

@@ -18,8 +18,7 @@ public sealed class GfxResourceApi
     }
 
     public void BindMetaChanged<TId, TMeta>(GfxMetaChangedDel<TId, TMeta> receiver)
-        where TId : unmanaged, IResourceId
-        where TMeta : unmanaged, IResourceMeta
+        where TId : unmanaged, IResourceId where TMeta : unmanaged, IResourceMeta
     {
         RegisterCallback(receiver);
         var store = _storeHub.GetStore<TId, TMeta>();
@@ -27,8 +26,7 @@ public sealed class GfxResourceApi
     }
 
     private void OnStoreChanged<TId, TMeta>(TId id, in GfxMetaChanged<TMeta> change)
-        where TId : unmanaged, IResourceId
-        where TMeta : unmanaged, IResourceMeta
+        where TId : unmanaged, IResourceId where TMeta : unmanaged, IResourceMeta
     {
         if (TryGetCallback<TId, TMeta>(out var callback))
             ((GfxMetaChangedDel<TId, TMeta>)callback).Invoke(id, in change);

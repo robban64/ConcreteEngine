@@ -1,6 +1,8 @@
 #region
 
 using ConcreteEngine.Core.Rendering;
+using ConcreteEngine.Core.Rendering.Data;
+using ConcreteEngine.Core.Scene.Entities;
 
 #endregion
 
@@ -10,14 +12,14 @@ public interface IWorld
 {
     SceneRenderProperties SceneRenderProps { get; }
 
-    GameEntityId Create();
-    GameComponentStore<Transform> Transforms { get; }
-    GameComponentStore<MeshComponent> Meshes { get; }
-    GameComponentStore<Transform2D> Transforms2D { get; }
-    GameComponentStore<Transform2D> PrevTransforms2D { get; }
-    GameComponentStore<SpriteComponent> Sprites { get; }
-    GameComponentStore<TilemapComponent> Tilemaps { get; }
-    GameComponentStore<LightComponent> Lights { get; }
+    EntityId Create();
+    EntityStore<Transform> Transforms { get; }
+    EntityStore<MeshComponent> Meshes { get; }
+    EntityStore<Transform2D> Transforms2D { get; }
+    EntityStore<Transform2D> PrevTransforms2D { get; }
+    EntityStore<SpriteComponent> Sprites { get; }
+    EntityStore<TilemapComponent> Tilemaps { get; }
+    EntityStore<LightComponent> Lights { get; }
 }
 
 public sealed class World : IWorld
@@ -32,15 +34,15 @@ public sealed class World : IWorld
     }
 
 
-    public GameEntityId Create() => new(_idIdx++);
+    public EntityId Create() => new(_idIdx++);
 
-    public GameComponentStore<Transform> Transforms { get; } = new();
-    public GameComponentStore<MeshComponent> Meshes { get; } = new();
-    public GameComponentStore<Transform2D> Transforms2D { get; } = new();
-    public GameComponentStore<Transform2D> PrevTransforms2D { get; } = new();
-    public GameComponentStore<SpriteComponent> Sprites { get; } = new();
-    public GameComponentStore<TilemapComponent> Tilemaps { get; } = new(4);
-    public GameComponentStore<LightComponent> Lights { get; } = new();
+    public EntityStore<Transform> Transforms { get; } = new();
+    public EntityStore<MeshComponent> Meshes { get; } = new();
+    public EntityStore<Transform2D> Transforms2D { get; } = new();
+    public EntityStore<Transform2D> PrevTransforms2D { get; } = new();
+    public EntityStore<SpriteComponent> Sprites { get; } = new();
+    public EntityStore<TilemapComponent> Tilemaps { get; } = new(4);
+    public EntityStore<LightComponent> Lights { get; } = new();
 
 
     public void Cleanup()

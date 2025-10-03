@@ -7,7 +7,7 @@ using ConcreteEngine.Graphics.Primitives;
 
 #endregion
 
-namespace ConcreteEngine.Core.Rendering;
+namespace ConcreteEngine.Core.Rendering.Data;
 
 [StructLayout(LayoutKind.Sequential)]
 public readonly struct FrameUniformRecord(

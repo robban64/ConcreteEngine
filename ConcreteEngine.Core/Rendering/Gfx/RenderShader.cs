@@ -8,7 +8,7 @@ using ConcreteEngine.Graphics.Utils;
 
 namespace ConcreteEngine.Core.Rendering.Gfx;
 
-public sealed class RenderShader
+public sealed class RenderShader : IComparable<ShaderId>
 {
     public ShaderId Id { get; }
     private readonly int[] _locations;
@@ -47,4 +47,7 @@ public sealed class RenderShader
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         get => _locations[(int)uniform];
     }
+
+    public int CompareTo(ShaderId other) => Id.Value.CompareTo(other.Value);
+
 }

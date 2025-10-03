@@ -1,12 +1,12 @@
 #region
 
 using System.Runtime.CompilerServices;
+using ConcreteEngine.Core.Assets.Resources;
 using ConcreteEngine.Core.Rendering.Passes;
-using ConcreteEngine.Core.Resources;
 
 #endregion
 
-namespace ConcreteEngine.Core.Rendering;
+namespace ConcreteEngine.Core.Rendering.Commands;
 
 public readonly struct DrawCommandMeta(
     DrawCommandId id,
@@ -20,9 +20,6 @@ public readonly struct DrawCommandMeta(
     public readonly RenderTargetId Target = target;
     public readonly DrawCommandQueue Queue = queue;
     public readonly byte Order = order;
-
-    public static DrawCommandMeta Make2D(DrawCommandId id, RenderTargetId target, byte layer = 0) =>
-        new(id, target, DrawCommandQueue.None, order: layer);
 }
 
 internal readonly struct DrawCommandMetaIndex(in DrawCommandMeta meta, int idx)

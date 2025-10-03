@@ -2,7 +2,7 @@
 
 #endregion
 
-namespace ConcreteEngine.Core.Rendering;
+namespace ConcreteEngine.Core.Rendering.Commands;
 
 public enum DrawCommandId : byte
 {

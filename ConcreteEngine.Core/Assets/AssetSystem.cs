@@ -5,8 +5,8 @@ using System.Text.Json.Serialization;
 using ConcreteEngine.Core.Assets.Factories;
 using ConcreteEngine.Core.Assets.IO;
 using ConcreteEngine.Core.Assets.Manifest;
-using ConcreteEngine.Core.Resources;
-using ConcreteEngine.Core.Systems;
+using ConcreteEngine.Core.Assets.Resources;
+using ConcreteEngine.Core.Engine;
 using ConcreteEngine.Graphics.Gfx;
 
 #endregion

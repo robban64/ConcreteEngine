@@ -75,4 +75,5 @@ public static class InvalidOpThrower
         if (capacity > array.Length)
             ThrowOperation(nameof(capacity), $"Capacity exceed {capacity} > {array.Length}");
     }
+
 }

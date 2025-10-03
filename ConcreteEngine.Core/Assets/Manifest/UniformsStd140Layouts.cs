@@ -36,8 +36,8 @@ internal sealed class UniformsStd140Layouts
             vec4 uAmbient;  
             vec4 uAmbientGround;
             vec4 uFogColor; 
-            vec4 uFogParams0;   // x=exp2_k, y=height_k, z=height0, w=globalStrength
-            vec4 uFogParams1;   // x=expWeight, y=heightWeight, z=maxDist, w reserved
+            vec4 uFogParams0;
+            vec4 uFogParams1;
         };
         """;
 
@@ -80,11 +80,9 @@ internal sealed class UniformsStd140Layouts
     private string _materialUniform =
         """
         layout(std140, binding = 5) uniform MaterialUniform {
-            vec3 MaterialColor;
-            float Shininess;
-            float SpecularStrength;
-            float uvRepeat;                
-            vec2 _materialPad0;
+            vec4 uMatColor;
+            vec4 uMatParams0;
+            vec4 uMatParams1;
         };
         """;
 

@@ -80,17 +80,13 @@ public readonly struct CameraUniformRecord(
 
 [StructLayout(LayoutKind.Sequential)]
 public readonly struct DirLightUniformRecord(
-    Vector3 direction,
-    Vector3 diffuse,
-    Vector3 specular,
-    float intensity) : IStd140Uniform
+    Vector4 direction,
+    Vector4 diffuse,
+    Vector4 specular) : IStd140Uniform
 {
-    public readonly Vector4 Direction = direction.AsVector4();
-    public readonly Vector4 Diffuse = diffuse.AsVector4();
-    public readonly Vector4 SpecularIntensity = new(specular, intensity);
-
-    public Vector3 Specular => SpecularIntensity.AsVector3();
-    public float Intensity => SpecularIntensity.W;
+    public readonly Vector4 Direction = direction;
+    public readonly Vector4 Diffuse = diffuse;
+    public readonly Vector4 SpecularIntensity = specular;
 }
 
 [StructLayout(LayoutKind.Sequential)]
@@ -106,17 +102,14 @@ public readonly struct ShadowUniformRecord(
 
 [StructLayout(LayoutKind.Sequential)]
 public readonly struct MaterialUniformRecord(
-    Vector3 color,
-    float shininess,
-    float specularStrength,
-    float uvRepeat
+    Vector4 matColor,
+    Vector4 matParams0,
+    Vector4 matParams1
 ) : IStd140Uniform
 {
-    public readonly Vector3 Color = color;
-    public readonly float Shininess = shininess;
-    public readonly float SpecularStrength = specularStrength;
-    public readonly float UvRepeat = uvRepeat;
-    private readonly Vector2 _pad0 = default;
+    public readonly Vector4 MatColor = matColor;
+    public readonly Vector4 MatParams0 = matParams0;
+    public readonly Vector4 MatParams1 = matParams1;
 }
 
 [StructLayout(LayoutKind.Sequential)]

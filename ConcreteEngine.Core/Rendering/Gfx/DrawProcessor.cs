@@ -1,5 +1,6 @@
 #region
 
+using System.Numerics;
 using System.Runtime.CompilerServices;
 using ConcreteEngine.Common.Numerics;
 using ConcreteEngine.Core.Assets.Resources;
@@ -70,22 +71,21 @@ internal sealed class DrawProcessor
         UseShader(material.ShaderId);
         for (int i = 0; i < material.SamplerSlots.Length; i++)
         {
+            
             _gfxCmd.BindTexture(material.SamplerSlots[i], i);
         }
 
-        UploadMaterial(new MaterialUniformRecord(material.Color.AsVec3(), material.Shininess,
-            material.SpecularStrength, material.UvRepeat));
+        UploadMaterial(material);
 
         _previousMaterialId = materialId.Id;
     }
 
-    public void UploadMaterial(in MaterialUniformRecord rec)
+    public void UploadMaterial(Material mat)
     {
         var data = new MaterialUniformRecord(
-            color: rec.Color,
-            shininess: rec.Shininess,
-            specularStrength: rec.SpecularStrength,
-            uvRepeat: rec.UvRepeat
+            matColor: new Vector4(mat.Color.AsVec3(), 1),
+            matParams0: new Vector4(mat.SpecularStrength, mat.UvRepeat, 0.0f, 0.0f),
+            matParams1: new Vector4(mat.Shininess, 0.0f, 0.0f, 0.0f)
         );
 
         _gfxBuffers.UploadUniformGpuData(_materialUbo.Id, in data, 0);
@@ -118,30 +118,4 @@ internal sealed class DrawProcessor
         _gfxCmd.DrawBoundMesh(cmd.MeshId, cmd.DrawCount);
     }
 
-
-    public void DrawFullscreenQuad(ShaderId shaderId, IReadOnlyList<TextureId> sources)
-    {
-        UseShader(shaderId);
-
-        for (int i = 0; i < sources.Count; i++)
-            _gfxCmd.BindTexture(sources[i], i);
-
-        DrawFsq();
-    }
-
-    public void DrawFullscreenQuad(ShaderId shaderId, ReadOnlySpan<TextureId> sources)
-    {
-        UseShader(shaderId);
-
-        for (int i = 0; i < sources.Length; i++)
-            _gfxCmd.BindTexture(sources[i], i);
-
-        DrawFsq();
-    }
-
-    private void DrawFsq()
-    {
-        _gfxCmd.BindMesh(_gfx.Primitives.FsqQuad);
-        _gfxCmd.DrawBoundMesh(_gfx.Primitives.FsqQuad, 0);
-    }
 }

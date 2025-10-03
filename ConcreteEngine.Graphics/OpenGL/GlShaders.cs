@@ -116,6 +116,7 @@ internal sealed class GlShaders : IGraphicsDriverModule
     {
         uint shader = _gl.CreateShader(shaderType);
         _gl.ShaderSource(shader, source);
+        
         _gl.CompileShader(shader);
 
         _gl.GetShader(shader, ShaderParameterName.CompileStatus, out int vStatus);

@@ -17,23 +17,26 @@ out VS_OUT {
 #include(Camera)
 #include(DrawObject)
 
+mat3 getNormalMatrix() {
+    return mat3(uNormalCol0.xyz, uNormalCol1.xyz, uNormalCol2.xyz);
+}
+
 void main()
 {
-    vec4 worldPosition = uModel * vec4(aPos, 1.0);
-    vs_out.FragPos = worldPosition.xyz;
+    mat3 NMat = getNormalMatrix();
+
+    vec4 worldPos = uModel * vec4(aPos, 1.0);
+    vs_out.FragPos = worldPos.xyz;
     vs_out.TexCoord = aTexCoord;
 
-    // Reconstruct mat3 from column
-    mat3 normalMat = mat3(uNormalCol0.xyz, uNormalCol1.xyz, uNormalCol2.xyz);
-
-    vec3 N = normalize(normalMat * aNormal);
-    vec3 T = normalize(normalMat * aTangent);
-    T = normalize(T - N * dot(T, N));
+    vec3 N = normalize(NMat * aNormal);
+    vec3 T = normalize(NMat * aTangent.xyz);
+    T = normalize(T - N * dot(T, N)); // Gram-Schmidt
     vec3 B = normalize(cross(N, T));
 
     vs_out.N_world = N;
     vs_out.T_world = T;
     vs_out.B_world = B;
 
-    gl_Position = uProjViewMat * worldPosition;
+    gl_Position = uProjViewMat * worldPos;
 }

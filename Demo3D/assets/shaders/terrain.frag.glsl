@@ -13,7 +13,6 @@ out vec4 FragColor;
 
 layout(binding = 0) uniform sampler2D uTexture;
 
-
 vec3 CalcDirLight(vec3 normal, vec3 texColor)
 {
     vec3 L = normalize(-uLightDirection.xyz);
@@ -28,6 +27,8 @@ vec3 CalcDirLight(vec3 normal, vec3 texColor)
 
 void main()
 {
+    float uvRepeat = uMatParams0.y;
+
     vec3 n = normalize(Normal);
     vec2 tiled = TexCoord * uvRepeat;
     vec3 texColor = texture(uTexture, tiled).rgb;

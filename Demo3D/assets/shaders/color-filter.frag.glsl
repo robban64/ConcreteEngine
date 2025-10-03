@@ -8,24 +8,6 @@ layout(binding = 1) uniform sampler3D uLUT;
 
 #include(PostProcess)
 
-layout(std140, binding = 5) uniform FramePostProcessUniform
-{
-    vec4 ColorAdjust;
-    vec4 WhiteBalance;
-    vec4 Flags;
-    vec4 BloomParams;
-    vec4 BloomLods;
-    vec4 LutParams;
-    //
-    vec4 VignetteParams;
-    vec4 GrainParams;
-    vec4 ChromAbParams;
-    //
-    vec4 ToneShadows;
-    vec4 ToneHighlights;
-    vec4 SharpenParams;
-};
-
 float luma709(vec3 c) {
     return dot(c, vec3(0.2126, 0.7152, 0.0722));
 }

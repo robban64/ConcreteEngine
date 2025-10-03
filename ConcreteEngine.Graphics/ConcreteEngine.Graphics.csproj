@@ -6,36 +6,15 @@
         <Nullable>enable</Nullable>
         <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
     </PropertyGroup>
-
+    
     <ItemGroup>
-        <PackageReference Include="Silk.NET.Core" Version="2.22.0"/>
         <PackageReference Include="Silk.NET.Maths" Version="2.22.0"/>
         <PackageReference Include="Silk.NET.OpenGL" Version="2.22.0"/>
         <PackageReference Include="Silk.NET.Windowing" Version="2.22.0"/>
     </ItemGroup>
 
     <ItemGroup>
-        <ProjectReference Include="..\ConcreteEngine.Common\ConcreteEngine.Common.csproj" />
-    </ItemGroup>
-
-    <ItemGroup>
-      <Compile Remove="OpenGL\Temp\GlGraphicsContext.cs" />
-      <Compile Remove="OpenGL\Temp\GlGraphicsDevice.cs" />
-      <Compile Remove="OpenGL\Old\Data.cs" />
-      <Compile Remove="OpenGL\Old\GlBackendDriver.cs" />
-      <Compile Remove="OpenGL\Old\GlFactory.cs" />
-      <Compile Remove="OpenGL\Old\GlFboFactory.cs" />
-      <Compile Remove="OpenGL\Old\GlShaderFactory.cs" />
-      <Compile Remove="OpenGL\Old\GlTextureFactory.cs" />
-      <Compile Remove="Gfx\Old\GfxAllocator.cs" />
-      <Compile Remove="Gfx\Old\GfxAllocatorFacade.cs" />
-      <Compile Remove="Gfx\Old\GfxResourceAllocator.cs" />
-      <Compile Remove="Resources\Factories\FboFactory.cs" />
-      <None Include="Resources\Factories\FboFactory.cs" />
-      <Compile Remove="Resources\Factories\GfxFactoryHub.cs" />
-      <None Include="Resources\Factories\GfxFactoryHub.cs" />
-      <Compile Remove="Resources\Factories\MeshFactory.cs" />
-      <None Include="Resources\Factories\MeshFactory.cs" />
+        <ProjectReference Include="..\ConcreteEngine.Common\ConcreteEngine.Common.csproj"/>
     </ItemGroup>
 
 </Project>

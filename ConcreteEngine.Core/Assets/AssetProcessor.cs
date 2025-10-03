@@ -68,14 +68,14 @@ internal sealed class AssetProcessor
                 throw new InvalidOperationException("Asset loader has not started.");
             case ProcessOrder.Shaders:
                 var shaderEntry = ProcessLoader(_shaderLoader);
-                if (shaderEntry == null) return false;
+                if (shaderEntry == null!) return false;
                 var shaderId = _uploader.UploadShader(shaderEntry.Record, shaderEntry.Payload, out var shaderInfo);
                 finalEntry = new AssetFinalEntry<ShaderManifestRecord, ShaderCreationInfo, ShaderId>
                     (shaderEntry.Record, in shaderInfo, shaderId, shaderEntry.ProcessInfo);
                 break;
             case ProcessOrder.Textures:
                 var texEntry = ProcessLoader(_textureLoader);
-                if (texEntry == null) return false;
+                if (texEntry == null!) return false;
                 var texId = _uploader.UploadTexture(texEntry.Record, texEntry.Payload, out var texInfo);
                 finalEntry = new AssetFinalEntry<TextureManifestRecord, TextureCreationInfo, TextureId>
                     (texEntry.Record, in texInfo, texId, texEntry.ProcessInfo);
@@ -83,7 +83,7 @@ internal sealed class AssetProcessor
                 break;
             case ProcessOrder.CubeMaps:
                 var cubeMapEntry = ProcessLoader(_cubeMapLoader);
-                if (cubeMapEntry == null) return false;
+                if (cubeMapEntry == null!) return false;
                 var cubeMapId = _uploader.UploadCubeMap(cubeMapEntry.Record, cubeMapEntry.Payload, out var cubeMapInfo);
                 finalEntry = new AssetFinalEntry<CubeMapManifestRecord, CubeMapCreationInfo, TextureId>
                     (cubeMapEntry.Record, in cubeMapInfo, cubeMapId, cubeMapEntry.ProcessInfo);
@@ -91,7 +91,7 @@ internal sealed class AssetProcessor
                 break;
             case ProcessOrder.Meshes:
                 var meshEntry = ProcessLoader(_meshLoader);
-                if (meshEntry == null) return false;
+                if (meshEntry == null!) return false;
                 var meshId = _uploader.UploadMesh(meshEntry.Record, meshEntry.Payload, out var meshInfo);
                 finalEntry = new AssetFinalEntry<MeshManifestRecord, MeshCreationInfo, MeshId>
                     (meshEntry.Record, in meshInfo, meshId, meshEntry.ProcessInfo);

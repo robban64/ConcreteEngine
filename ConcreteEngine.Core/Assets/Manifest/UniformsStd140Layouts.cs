@@ -21,7 +21,7 @@ internal sealed class UniformsStd140Layouts
             { "Shadow", _shadowUniform },
             { "Material", _materialUniform },
             { "DrawObject", _drawUniform },
-            { "PostProcess", _drawUniform },
+            { "PostProcess", _postProcessUniform },
         };
     }
 

@@ -1,24 +1,24 @@
 {
   "resources": [
-	{
-	  "name": "SkyboxMat",
-	  "shader": "Skybox",
-	  "cubemap": "Skybox"
-	},
-	{
-	  "name": "BoatMat",
-	  "shader": "Diffuse",
-	  "textures": ["Boat"]
-	},
-	{
-	  "name": "Rock01Mat",
-	  "shader": "Diffuse",
-	  "textures": ["Rock01", "Rock01-Normal"]
-	},
-	{
-	  "name": "TerrainMat",
-	  "shader": "Terrain",
-	  "textures": ["Grass"]
-	}
+    {
+      "name": "SkyboxMat",
+      "shader": "Skybox",
+      "cubemap": "Skybox"
+    },
+    {
+      "name": "BoatMat",
+      "shader": "ModelBasic",
+      "textures": ["Boat"]
+    },
+    {
+      "name": "Rock01Mat",
+      "shader": "ModelNormal",
+      "textures": ["Rock01", "Rock01-Normal"]
+    },
+    {
+      "name": "TerrainMat",
+      "shader": "Terrain",
+      "textures": ["Grass"]
+    }
   ]
 }

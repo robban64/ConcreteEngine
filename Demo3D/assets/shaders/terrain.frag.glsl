@@ -12,15 +12,16 @@ out vec4 FragColor;
 #include(Material)
 
 layout(binding = 0) uniform sampler2D uTexture;
+layout(binding = 1) uniform sampler2D uNormal;
 
 vec3 CalcDirLight(vec3 normal, vec3 texColor)
 {
     vec3 L = normalize(-uLightDirection.xyz);
     float NdotL = max(dot(normal, L), 0.0);
-    float intensity = uLightSpecularIntensity.w;
+    //float intensity = uLightSpecularIntensity.x;
 
     vec3 ambient_res = (uAmbient.xyz * uAmbient.w) * texColor;
-    vec3 diffuse_res = (uLightDiffuse.rgb * intensity) * NdotL * texColor;
+    vec3 diffuse_res = (uLightDiffuse.rgb * uLightDiffuse.a) * NdotL * texColor;
 
     return ambient_res + diffuse_res;
 }

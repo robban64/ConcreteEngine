@@ -35,9 +35,5 @@
         </Content>
     </ItemGroup>
 
-    <ItemGroup>
-      <Folder Include="Assets\Processor\" />
-    </ItemGroup>
-
 
 </Project>

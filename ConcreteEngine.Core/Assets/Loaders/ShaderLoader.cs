@@ -22,7 +22,7 @@ internal sealed class ShaderLoader(IReadOnlyList<ShaderManifestRecord> records)
 
     public override void Prepare()
     {
-        _shaderImporter.LoadDefinitions();
+        _shaderImporter.ImportAllDefinitions();
         //_vertexShaderCache ??= new Dictionary<string, string?>( StringComparer.Ordinal);
         //_vertexShaderCache.Clear();
     }
@@ -32,8 +32,8 @@ internal sealed class ShaderLoader(IReadOnlyList<ShaderManifestRecord> records)
         var vertPath = Path.Combine(AssetPaths.GetAssetPath(), "shaders", record.VertexFilename);
         var fragPath = Path.Combine(AssetPaths.GetAssetPath(), "shaders", record.FragmentFilename);
 
-        var vertFinal = _shaderImporter.ParseShader(vertPath);
-        var fragFinal = _shaderImporter.ParseShader(fragPath);
+        var vertFinal = _shaderImporter.ImportShader(vertPath);
+        var fragFinal = _shaderImporter.ImportShader(fragPath);
 
         info = AssetProcessInfo.MakeDone<ShaderManifestRecord>();
         return new ShaderPayload(vertFinal, fragFinal);
@@ -44,7 +44,7 @@ internal sealed class ShaderLoader(IReadOnlyList<ShaderManifestRecord> records)
         //_vertexShaderCache.Clear();
         //_vertexShaderCache = null!;
         
-        _shaderImporter.CleanCache();
+        _shaderImporter.ClearCache();
     }
 
     private string ToHashSource(string source)

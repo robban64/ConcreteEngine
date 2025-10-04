@@ -6,133 +6,135 @@ internal sealed class ShaderImporter
 {
     private const string Identifier = "@import ";
 
-    private readonly ShaderDefProvider _defProvider;
+    private StringBuilder? _sb;
 
-    private StringBuilder? _sb = null;
+    private readonly Dictionary<string, (int, string)> _uboDict = new(8);
+    private readonly Dictionary<string, string> _structsDict = new(4);
+
+    private int _uboSlot = 0;
 
     internal ShaderImporter()
     {
-        _defProvider = new ShaderDefProvider();
     }
 
     private static string GetShadersPath() => Path.Combine(AssetPaths.GetAssetCorePath(), "shaders");
 
-    public void CleanCache()
-    {
-        _sb = null;
-    }
-
-    public void LoadDefinitions()
+    public void ImportAllDefinitions()
     {
         _sb ??= new StringBuilder(8192);
         _sb.Clear();
 
         var basePath = GetShadersPath();
-        _defProvider.LoadUboDefs(Path.Combine(basePath, "ubo.glsl"), _sb);
-        _sb.Clear();
-        _defProvider.LoadStructDefs(Path.Combine(basePath, "structs.glsl"), _sb);
+        ImportUboDefs(Path.Combine(basePath, "ubo.glsl"));
+        ImportStructDefs(Path.Combine(basePath, "structs.glsl"));
         _sb.Clear();
     }
 
-    public string ParseShader(string path, string? cacheName = null)
+    public void ImportUboDefs(string path)
+    {
+        using var fs = File.OpenRead(path);
+        using var sr = new StreamReader(fs, Encoding.UTF8);
+        ParserMethods.ParseShaderDef(sr, "uniform", _sb, UboCallback);
+        _sb!.Clear();
+        return;
+        void UboCallback(string name, string content) => _uboDict.Add(name, (_uboSlot++, content));
+    }
+
+    public void ImportStructDefs(string path)
+    {
+        using var fs = File.OpenRead(path);
+        using var sr = new StreamReader(fs, Encoding.UTF8);
+        ParserMethods.ParseShaderDef(sr, "struct", _sb, StructCallback);
+        return;
+        void StructCallback(string name, string content) => _structsDict.Add(name, content);
+    }
+
+    public string ImportShader(string path, string? cacheName = null)
     {
         _sb ??= new StringBuilder(8192);
         _sb.Clear();
 
         using var fs = File.OpenRead(path);
         using var sr = new StreamReader(fs, Encoding.UTF8);
-        while (sr.ReadLine() is { } line)
-        {
-            var span = line.AsSpan();
-            ProcessLine(span);
-        }
 
-        var result = _sb.ToString();
+        var result = ParserMethods.ParseShader(sr, _sb, AppendUbo, AppendStruct);
         _sb.Clear();
         return result;
     }
 
-    private void ProcessLine(ReadOnlySpan<char> span)
+    private void AppendUbo(string name)
     {
-        if (span.IsEmpty || span.StartsWith("//"))
-        {
-            _sb!.Append('\n');
-            return;
-        }
-
-        if (span.StartsWith(Identifier))
-        {
-            span = span.Slice(Identifier.Length);
-            var s = span.Split(':');
-            var type = s.MoveNext() ? span[s.Current] : throw new InvalidOperationException();
-            var name = s.MoveNext() ? span[s.Current].ToString() : throw new InvalidOperationException();
-
-            switch (type)
-            {
-                case "ubo": _defProvider.AppendUbo(name, _sb!); break;
-                case "struct": _defProvider.AppendStruct(name, _sb!); break;
-                default: throw new InvalidOperationException(nameof(type));
-            }
-
-            return;
-        }
-
-        var commentIdx = span.IndexOf("//", StringComparison.Ordinal);
-        if (commentIdx > 0)
-        {
-            _sb!.Append(span.Slice(0, commentIdx));
-            _sb.Append('\n');
-            return;
-        }
-
-        _sb!.Append(span);
+        var (slot, content) = _uboDict[name];
+        _sb!.Append($"layout(std140, binding = {slot}) ");
+        _sb.Append(content);
         _sb.Append('\n');
     }
 
-
-    private sealed class ShaderDefProvider
+    private void AppendStruct(string name)
     {
-        private readonly Dictionary<string, (int, string)> _uboDict = new(8);
-        private readonly Dictionary<string, string> _structsDict = new(4);
-        private int _uboSlot = 0;
+        _sb!.Append(_structsDict[name]);
+        _sb.Append('\n');
+    }
 
-        public void AppendUbo(string name, StringBuilder sb)
+    public void ClearCache()
+    {
+        _sb = null;
+        _uboDict.Clear();
+        _structsDict.Clear();
+        _uboSlot = 0;
+    }
+
+    private static class ParserMethods
+    {
+        public static string ParseShader(StreamReader sr, StringBuilder sb, Action<string> appendUbo,
+            Action<string> appendStruct)
         {
-            var (slot, content) = _uboDict[name];
-            sb.Append($"layout(std140, binding = {slot}) ");
-            sb.Append(content);
-            sb.Append('\n');
+            while (sr.ReadLine() is { } line)
+            {
+                var span = line.AsSpan();
+                if (span.IsEmpty || span.StartsWith("//"))
+                {
+                    sb.Append('\n');
+                    continue;
+                }
+
+                if (span.StartsWith(Identifier))
+                {
+                    span = span.Slice(Identifier.Length);
+                    var s = span.Split(':');
+                    var type = s.MoveNext() ? span[s.Current] : throw new InvalidOperationException();
+                    var name = s.MoveNext() ? span[s.Current].ToString() : throw new InvalidOperationException();
+
+                    switch (type)
+                    {
+                        case "ubo": appendUbo(name); break;
+                        case "struct": appendStruct(name); break;
+                        default: throw new InvalidOperationException(nameof(type));
+                    }
+
+                    continue;
+                }
+
+                var commentIdx = span.IndexOf("//", StringComparison.Ordinal);
+                if (commentIdx > 0)
+                {
+                    sb.Append(span.Slice(0, commentIdx));
+                    sb.Append('\n');
+                    continue;
+                }
+
+                sb.Append(span);
+                sb.Append('\n');
+            }
+
+            return sb.ToString();
         }
 
-        public void AppendStruct(string name, StringBuilder sb)
-        {
-            sb.Append(_structsDict[name]);
-            sb.Append('\n');
-        }
-
-        public void LoadUboDefs(string path, StringBuilder sb)
-        {
-            using var fs = File.OpenRead(path);
-            using var sr = new StreamReader(fs, Encoding.UTF8);
-            ParseDef(sr, "uniform", sb, UboCallback);
-            return;
-            void UboCallback(string name, string content) => _uboDict.Add(name, (_uboSlot++, content));
-        }
-
-        public void LoadStructDefs(string path, StringBuilder sb)
-        {
-            using var fs = File.OpenRead(path);
-            using var sr = new StreamReader(fs, Encoding.UTF8);
-            ParseDef(sr, "struct", sb, StructCallback);
-            return;
-            void StructCallback(string name, string content) => _structsDict.Add(name, content);
-        }
-
-        private static void ParseDef(
-            StreamReader sr, 
-            string identifier, 
+        public static void ParseShaderDef(
+            StreamReader sr,
+            string identifier,
             StringBuilder sb,
-            Action<string,string> onAdd)
+            Action<string, string> onAdd)
         {
             string? activeName = null;
             while (sr.ReadLine() is { } line)
@@ -168,8 +170,6 @@ internal sealed class ShaderImporter
 
         private static string ExtractName(ReadOnlySpan<char> line)
         {
-            int idx = 0;
-
             var s = line.SplitAny(ReadOnlySpan<char>.Empty);
             var type = s.MoveNext() ? line[s.Current] : ReadOnlySpan<char>.Empty;
             var name = s.MoveNext() ? line[s.Current] : ReadOnlySpan<char>.Empty;

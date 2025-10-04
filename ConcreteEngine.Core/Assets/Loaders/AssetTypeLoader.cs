@@ -35,6 +35,11 @@ internal abstract class AssetTypeLoader<TRecord, TPayload>(IReadOnlyList<TRecord
         return true;
     }
 
+    public virtual void Prepare()
+    {
+        
+    }
+
     protected virtual void ClearCache()
     {
     }

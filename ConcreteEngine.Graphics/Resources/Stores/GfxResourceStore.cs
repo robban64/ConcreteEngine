@@ -121,16 +121,16 @@ internal sealed class GfxResourceStore<TId, TMeta> : IGfxResourceStore<TId>
         return handle;
     }
 
-    public TId Replace(TId id, in TMeta newMeta, in GfxRefToken<TId> newHandleRef, out GfxRefToken<TId> oldHandle)
+    public TId Replace(TId id, in TMeta newMeta, in GfxRefToken<TId> newHandle, out GfxRefToken<TId> oldHandle)
     {
         ArgumentOutOfRangeException.ThrowIfEqual(id.Value, 0, nameof(id));
         int idx = id.Value - 1;
         oldHandle = new GfxRefToken<TId>(in _handle[idx]);
         var oldMeta = _meta[idx];
         _meta[idx] = newMeta;
-        _handle[idx] = newHandleRef.Handle;
+        _handle[idx] = newHandle.Handle;
 
-        var message = new GfxMetaChanged<TMeta>(in newMeta, in oldMeta, newHandleRef.Handle.Gen, true, ResourceKind);
+        var message = new GfxMetaChanged<TMeta>(in newMeta, in oldMeta, newHandle.Handle.Gen, true, ResourceKind);
         _changeCallback?.Invoke(id, in message);
 
         return id;

@@ -1,5 +1,7 @@
 #version 420 core
 
+#define MAX_LIGHTS 8
+
 in VS_OUT {
     vec3 FragPos;
     vec2 TexCoord;
@@ -7,22 +9,17 @@ in VS_OUT {
     vec3 N_world;
 } fs_in;
 
-#define MAX_LIGHTS 8
-struct LightData {
-    vec4 color_intensity; // rgb=color, a=intensity
-    vec4 pos_range; // xyz=position, w=range (0=inf)
-    vec4 dir_type; // xyz=dir (spot), w=type (1=point, 2=spot)
-    vec4 spot_angles; // x=cosInner, y=cosOuter, zw=reserved
-};
-
 out vec4 FragColor;
 
-#include(Frame)
-#include(Camera)
-#include(DirLight)
-#include(Light)
-#include(Shadow)
-#include(Material)
+@import struct:LightData
+
+@import ubo:FrameUniform
+@import ubo:CameraUniform
+@import ubo:DirLightUniform
+@import ubo:LightUniform
+@import ubo:ShadowUniform
+@import ubo:MaterialUniform
+@import ubo:DrawUniform
 
 layout(binding = 0) uniform sampler2D uTexture;
 layout(binding = 1) uniform sampler2D uAlbedoR;

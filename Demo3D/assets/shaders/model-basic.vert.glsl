@@ -10,8 +10,9 @@ out VS_OUT {
     vec3 N_world;
 } vs_out;
 
-#include(Camera)
-#include(DrawObject)
+
+@import ubo:CameraUniform
+@import ubo:DrawUniform
 
 mat3 getNormalMatrix() {
     return mat3(uNormalCol0.xyz, uNormalCol1.xyz, uNormalCol2.xyz);

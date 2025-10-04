@@ -6,16 +6,19 @@ using System.Runtime.CompilerServices;
 
 namespace ConcreteEngine.Graphics.Resources;
 
-internal readonly record struct GfxHandle(uint Slot, ushort Gen, ResourceKind Kind)
-{
-    public readonly bool IsValid = Gen > 0 && Kind != ResourceKind.Invalid;
-}
-
-internal readonly struct GfxRefToken<TId>(in GfxHandle handle)
+internal readonly record struct GfxRefToken<TId>(in GfxHandle Handle)
     where TId : unmanaged, IResourceId
 {
-    public readonly GfxHandle Handle = handle;
-
-    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static GfxRefToken<TId> From(in GfxHandle handle) => new(in handle);
+}
+
+internal readonly record struct GfxHandle(uint Slot, ushort Gen, ResourceKind Kind)
+{
+    public bool IsValid { get; } = Gen > 0 && Kind != ResourceKind.Invalid;
+}
+
+internal readonly record struct BkHandle<THandle>(THandle Handle, ushort Gen, bool Alive)
+    where THandle : unmanaged, IResourceHandle, IEquatable<THandle>
+{
+    public bool IsValid { get; } = Handle.Value > 0 && Gen > 0 && Alive;
 }

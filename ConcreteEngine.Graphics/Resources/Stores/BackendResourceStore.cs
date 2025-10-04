@@ -24,22 +24,17 @@ internal interface IBackendReadResourceStore<out THandle>
     //GfxHandle Replace(in GfxHandle handle, THandle value);
 }
 
+
 internal sealed class BackendResourceStore<THandle> : IBackendResourceStore, IBackendReadResourceStore<THandle>
     where THandle : unmanaged, IResourceHandle, IEquatable<THandle>
 {
-    private readonly struct StoreRecord(THandle current, ushort gen, bool alive)
-    {
-        public readonly THandle Current = current;
-        public readonly ushort Gen = gen;
-        public readonly bool Alive = alive;
-        public readonly bool IsValid = current.Handle > 0 && gen > 0 && alive;
-    }
+
 
     // sanity check
     private const int HardLimit = 10_000;
 
     private int _idx = 0;
-    private StoreRecord[] _records = new StoreRecord[16];
+    private BkHandle<THandle>[] _records = new BkHandle<THandle>[16];
     private readonly Stack<int> _free = new();
 
 
@@ -61,7 +56,7 @@ internal sealed class BackendResourceStore<THandle> : IBackendResourceStore, IBa
         Throwers.IsValidGfxHandleOrThrow(handle, Kind);
         ref readonly var record = ref _records[(int)handle.Slot];
         Throwers.IsValidRecordOrThrow(record, handle);
-        return record.Current;
+        return record.Handle;
     }
 
     public THandle GetRef<TId>(GfxRefToken<TId> refToken) where TId : unmanaged, IResourceId
@@ -69,7 +64,7 @@ internal sealed class BackendResourceStore<THandle> : IBackendResourceStore, IBa
         var handle = refToken.Handle;
         ref readonly var record = ref _records[(int)handle.Slot];
         Debug.Assert(handle.Kind == Kind && record.IsValid && record.Gen == handle.Gen);
-        return record.Current;
+        return record.Handle;
     }
 
     public GfxHandle Add(THandle value)
@@ -78,7 +73,7 @@ internal sealed class BackendResourceStore<THandle> : IBackendResourceStore, IBa
         int idx = _free.Count > 0 ? _free.Pop() : Allocate();
         var prev = _records[idx];
         var gen = (ushort)(prev.Gen + 1);
-        _records[idx] = new StoreRecord(value, gen, true);
+        _records[idx] = new BkHandle<THandle>(value, gen, true);
         return new GfxHandle((uint)idx, gen, Kind);
     }
 
@@ -102,10 +97,10 @@ internal sealed class BackendResourceStore<THandle> : IBackendResourceStore, IBa
     {
         Throwers.ThrowOnDefaultHandle(value);
         var oldValue = Get(handle);
-        Throwers.IsUniqueHandleOrThrow(value.Handle, oldValue.Handle);
+        Throwers.IsUniqueHandleOrThrow(value.Value, oldValue.Value);
 
         var gen = (ushort)(handle.Gen + 1);
-        _records[(int)handle.Slot] = new StoreRecord(value, gen, true);
+        _records[(int)handle.Slot] = new BkHandle<THandle>(value, gen, true);
         return handle with { Gen = gen };
     }
 
@@ -137,7 +132,7 @@ internal sealed class BackendResourceStore<THandle> : IBackendResourceStore, IBa
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public static void IsValidRecordOrThrow(StoreRecord e, GfxHandle handle)
+        public static void IsValidRecordOrThrow(BkHandle<THandle> e, GfxHandle handle)
         {
             var isValid = e.IsValid && e.Gen == handle.Gen;
             if (!isValid) ThrowInvalid(nameof(e));
@@ -152,7 +147,7 @@ internal sealed class BackendResourceStore<THandle> : IBackendResourceStore, IBa
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static void ThrowOnDefaultHandle(THandle handle)
         {
-            if (handle.Handle == 0) ThrowInvalid(nameof(handle));
+            if (handle.Value == 0) ThrowInvalid(nameof(handle));
         }
     }
 }

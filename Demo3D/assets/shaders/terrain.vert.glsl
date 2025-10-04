@@ -15,9 +15,9 @@ out vec3 FragPos;
 out vec2 TexCoord;
 out vec3 Normal;
 
-#include(Frame)
-#include(Camera)
-#include(DrawObject)
+@import ubo:FrameUniform
+@import ubo:CameraUniform
+@import ubo:DrawUniform
 
 mat3 getNormalMatrix() {
     return mat3(uNormalCol0.xyz, uNormalCol1.xyz, uNormalCol2.xyz);

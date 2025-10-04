@@ -1,5 +1,7 @@
 #version 420 core
 
+#define MAX_LIGHTS 8
+
 in VS_OUT {
     vec3 FragPos;
     vec2 TexCoord;
@@ -8,20 +10,14 @@ in VS_OUT {
 
 out vec4 FragColor;
 
-#define MAX_LIGHTS 8
-struct LightData {
-    vec4 color_intensity;
-    vec4 pos_range;
-    vec4 dir_type;
-    vec4 spot_angles;
-};
+@import struct:LightData
 
-#include(Frame)
-#include(Camera)
-#include(DirLight)
-#include(Light)
-#include(Shadow)
-#include(Material)
+@import ubo:FrameUniform
+@import ubo:CameraUniform
+@import ubo:DirLightUniform
+@import ubo:LightUniform
+@import ubo:ShadowUniform
+@import ubo:MaterialUniform
 
 uniform sampler2D uTexture;
 uniform sampler2D uShadowMap;

@@ -7,7 +7,7 @@ using AssimpMesh = Silk.NET.Assimp.Mesh;
 
 #endregion
 
-namespace ConcreteEngine.Core.Assets.IO;
+namespace ConcreteEngine.Core.Assets.Importers;
 
 internal sealed class MeshImporter
 {

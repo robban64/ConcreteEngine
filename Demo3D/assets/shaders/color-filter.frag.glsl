@@ -6,7 +6,8 @@ out vec4 FragColor;
 layout(binding = 0) uniform sampler2D uScene;
 //layout(binding = 1) uniform sampler3D uLUT;
 
-#include(PostProcess)
+@import ubo:PostUniform
+
 
 float luma709(vec3 c) {
     return dot(c, vec3(0.2126, 0.7152, 0.0722));

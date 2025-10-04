@@ -1,5 +1,7 @@
 ﻿#version 420 core
 
+#define MAX_LIGHTS 8
+
 in VS_OUT {
     vec3 FragPos;
     vec2 TexCoord;
@@ -10,26 +12,20 @@ in VS_OUT {
 
 out vec4 FragColor;
 
-// Lights
-#define MAX_LIGHTS 8
+@import struct:LightData
 
-struct LightData {
-    vec4 color_intensity; // rgb=color, a=intensity
-    vec4 pos_range; // xyz=position, w=range
-    vec4 dir_type; // xyz=direction, w=type (0=dir,1=point,2=spot)
-    vec4 spot_angles; // x=cosInner, y=cosOuter
-};
+@import ubo:FrameUniform
+@import ubo:CameraUniform
+@import ubo:DirLightUniform
+@import ubo:LightUniform
+@import ubo:ShadowUniform
+@import ubo:MaterialUniform
+
 
 layout(binding = 0) uniform sampler2D uTexture;
 layout(binding = 1) uniform sampler2D uNormalTex;
 layout(binding = 2) uniform sampler2D uShadowMap;
 
-#include(Frame)
-#include(Camera)
-#include(DirLight)
-#include(Light)
-#include(Shadow)
-#include(Material)
 
 float saturate(float x) {
     return clamp(x, 0.0, 1.0);

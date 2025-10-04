@@ -46,6 +46,11 @@ internal sealed class AssetProcessor
         _meshLoader = new MeshLoader(assets.Meshes.Resources);
         _textureLoader = new TextureLoader(assets.Textures.Resources);
         _cubeMapLoader = new CubeMapLoader(assets.Cubemaps.Resources);
+        
+        _shaderLoader.Prepare();
+        _meshLoader.Prepare();
+        _textureLoader.Prepare();
+        _cubeMapLoader.Prepare();
     }
 
     internal void Finish()
@@ -58,7 +63,7 @@ internal sealed class AssetProcessor
         _uploader = null!;
     }
 
-    public bool Process(out IAssetFinalEntry finalEntry)
+    public bool Process(out IAssetFinalEntry? finalEntry)
     {
         finalEntry = null!;
 

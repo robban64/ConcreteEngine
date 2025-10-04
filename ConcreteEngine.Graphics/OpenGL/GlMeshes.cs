@@ -23,7 +23,7 @@ internal sealed class GlMeshes : IGraphicsDriverModule
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    private uint VaoHandle(in GfxRefToken<MeshId> vao) => _store.VertexArray.GetRef(vao).Handle;
+    private uint VaoHandle(in GfxRefToken<MeshId> vao) => _store.VertexArray.GetRef(vao).Value;
 
     public GfxRefToken<MeshId> CreateVertexArray()
     {
@@ -35,14 +35,14 @@ internal sealed class GlMeshes : IGraphicsDriverModule
     public void AttachVertexBuffer(in GfxRefToken<MeshId> vao, in GfxRefToken<VertexBufferId> vbo, int bindingIdx,
         nint offset, nint stride)
     {
-        var vboHandle = _store.VertexBuffer.GetRef(vbo).Handle;
+        var vboHandle = _store.VertexBuffer.GetRef(vbo).Value;
         var handle = VaoHandle(in vao);
         _gl.VertexArrayVertexBuffer(handle, (uint)bindingIdx, vboHandle, offset, (uint)stride);
     }
 
     public void AttachIndexBuffer(in GfxRefToken<MeshId> vao, in GfxRefToken<IndexBufferId> ibo)
     {
-        var iboHandle = _store.IndexBuffer.GetRef(ibo).Handle;
+        var iboHandle = _store.IndexBuffer.GetRef(ibo).Value;
         _gl.VertexArrayElementBuffer(VaoHandle(in vao), iboHandle);
     }
 

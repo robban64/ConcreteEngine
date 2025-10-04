@@ -140,22 +140,7 @@ internal sealed class DrawUniforms
             toneHighlights:  new Vector4( 45.0f, 0.02f,  0.004f, 0.12f),
             sharpenParams:   new Vector4(0.06f, 1.5f, 0.02f, 0.00f)
         );
-      /*
-        var data = new FramePostProcessUniform(
-            colorAdjust: new Vector4(0.25f, 1.15f, 1.10f, 2.2f),
-            whiteBalance: new Vector4(0.15f, 0.02f, 0.10f, 0.0f),
-            flags: new Vector4(1.0f, 0.0000f, 0.6f, 0.6f),
-            bloomParams: new Vector4(0.70f, 0.65f, 0.0f, 0.0f),
-            bloomLods: new Vector4(0.8f, 0.55f, 0.30f, 0.15f),
-            lutParams: new Vector4(0.0f, 0.0f, 0.0f, 0.0f),
-            vignetteParams: new Vector4(0.32f, 0.88f, 0.25f, 0.0f),
-            grainParams: new Vector4(0, _deltaTicker, 0.0f, 0.0f),
-            chromAbParams: new Vector4(0.0000f, 0.0f, 0.0f, 0.0f),
-            toneShadows: new Vector4(210.0f, 0.05f, -0.01f, 0.4f),
-            toneHighlights: new Vector4(40.0f, 0.05f, 0.01f, 0.4f),
-            sharpenParams: new Vector4(0.10f, 1.5f, 0.05f, 0.0f)
-        );
-        */
+     
 /*
       var data = new FramePostProcessUniform(
           flags: new Vector4(0, 0, 0, 0),

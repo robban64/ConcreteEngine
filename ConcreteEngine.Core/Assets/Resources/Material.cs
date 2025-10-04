@@ -26,7 +26,7 @@ public sealed class Material
     public float UvRepeat { get; set; } = 1;
 
 
-    public bool HasNormalMap => false;
+    public bool HasNormalMap => SamplerSlots.Length == 2;
 
     internal Material(MaterialId id, MaterialTemplate template)
     {

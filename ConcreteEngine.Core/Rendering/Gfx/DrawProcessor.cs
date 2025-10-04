@@ -69,6 +69,7 @@ internal sealed class DrawProcessor
         if (_previousMaterialId == materialId.Id) return;
         var material = _materials.GetMaterial(materialId);
         UseShader(material.ShaderId);
+
         for (int i = 0; i < material.SamplerSlots.Length; i++)
         {
             var value = material.SamplerSlots[i];

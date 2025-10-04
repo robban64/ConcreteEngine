@@ -3,6 +3,7 @@
 in VS_OUT {
     vec3 FragPos;
     vec2 TexCoord;
+    vec2 TexCoordWeight;
     vec3 N_world;
 } fs_in;
 
@@ -23,10 +24,10 @@ out vec4 FragColor;
 #include(Shadow)
 #include(Material)
 
-layout(binding = 0) uniform sampler2D uAlbedo0;
-layout(binding = 1) uniform sampler2D uAlbedo1;
-layout(binding = 2) uniform sampler2D uAlbedo2;
-layout(binding = 3) uniform sampler2D uAlbedo3;
+layout(binding = 0) uniform sampler2D uTexture;
+layout(binding = 1) uniform sampler2D uAlbedoR;
+layout(binding = 2) uniform sampler2D uAlbedoG;
+layout(binding = 3) uniform sampler2D uAlbedoB;
 layout(binding = 4) uniform sampler2D uWeightMap;
 
 // depth
@@ -122,27 +123,25 @@ float sampleShadowMap(vec4 lightSpacePos, vec3 N, vec3 L) {
     return sum / samples;
 }
 
-vec3 terrainAlbedo(vec2 uv) {
-    return texture(uAlbedo0, uv).rgb;
-    /*
-                vec4 w = texture(uWeightMap, uv); // RGBA weights
-                float sumW = max(w.r + w.g + w.b + w.a, 1e-4); // renormalize
-                w /= sumW;
+vec3 terrainAlbedo(vec2 texCoords, float uvRepeat) {
+    vec2 uv = texCoords * uvRepeat;
 
-                vec3 c0 = texture(uAlbedo0, uv).rgb;
-                vec3 c1 = texture(uAlbedo1, uv).rgb;
-                vec3 c2 = texture(uAlbedo2, uv).rgb;
-                vec3 c3 = texture(uAlbedo3, uv).rgb;
+    vec3 wrgb = texture(uWeightMap, texCoords).rgb;
+    float w3 = max(1.0 - (wrgb.r + wrgb.g + wrgb.b), 0.0);
 
-                return c0 * w.r + c1 * w.g + c2 * w.b + c3 * w.a;
-                */
+    vec3 c0 = texture(uTexture, uv).rgb;
+    vec3 c1 = texture(uAlbedoR, uv).rgb;
+    vec3 c2 = texture(uAlbedoG, uv).rgb;
+    vec3 c3 = texture(uAlbedoB, uv).rgb;
+
+    vec3 totalColor = c0 * w3 + c1 * wrgb.r + c2 * wrgb.g + c3 * wrgb.b;
+    return totalColor;
 }
 
 void main() {
     float uvRepeat = uMatParams0.y;
-    vec2 uv = fs_in.TexCoord * uvRepeat;
 
-    vec3 baseTex = terrainAlbedo(uv);
+    vec3 baseTex = terrainAlbedo(fs_in.TexCoord, uvRepeat);
     vec3 baseColor = baseTex * uMatColor.rgb;
 
     vec3 P = fs_in.FragPos;

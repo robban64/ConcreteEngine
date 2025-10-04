@@ -18,7 +18,7 @@
     {
       "name": "TerrainMat",
       "shader": "Terrain",
-      "textures": ["Grass"]
+      "textures": ["Grass", "Mud", "Stone", "Rock", "BlendMap"]
     }
   ]
 }

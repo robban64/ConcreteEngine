@@ -4,7 +4,7 @@ in vec2 TexCoord;
 out vec4 FragColor;
 
 layout(binding = 0) uniform sampler2D uScene;
-layout(binding = 1) uniform sampler3D uLUT;
+//layout(binding = 1) uniform sampler3D uLUT;
 
 #include(PostProcess)
 

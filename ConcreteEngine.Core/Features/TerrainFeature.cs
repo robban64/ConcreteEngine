@@ -24,7 +24,8 @@ public sealed class TerrainFeature : GameFeature
         var heightmap = assets.Get<Texture2D>("Heightmap");
 
         material.UvRepeat = 20;
-
+        material.Shininess = 10;
+        material.SpecularStrength = 0.04f;
 
         _drawSink = renderer.GetSink<ITerrainDrawSink>();
 

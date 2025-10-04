@@ -116,7 +116,7 @@ void main() {
     float uvRepeat = uMatParams0.y;
     vec2 uv = fs_in.TexCoord * uvRepeat;
 
-    vec3 baseTex = texture(uTexture, uv).rgb; // sRGB decode by hardware
+    vec3 baseTex = texture(uTexture, uv).rgb;
     vec3 baseColor = baseTex * uMatColor.rgb;
 
     vec3 P = fs_in.FragPos;
@@ -152,7 +152,7 @@ void main() {
         float specP = blinnPhongSpec(N, V, Lp, shininess);
         vec3 specularP = vec3(specularStrength) * specP * uLightSpecularIntensity.x;
 
-        direct += (diffuseP + specularP) * LiP * atten; // (no shadows for puntcuals here)
+        direct += (diffuseP + specularP) * LiP * atten;
     }
 
     // Ambient + exposure

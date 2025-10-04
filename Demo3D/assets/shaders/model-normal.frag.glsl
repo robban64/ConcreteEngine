@@ -128,7 +128,7 @@ void main()
     float uvRepeat = uMatParams0.y;
     vec2 uv = fs_in.TexCoord * uvRepeat;
 
-    vec3 baseTex = texture(uTexture, uv).rgb; // sRGB decode by hardware
+    vec3 baseTex = texture(uTexture, uv).rgb;
     vec3 baseColor = baseTex * uMatColor.rgb;
 
     // Normal map (RGB or RGBA8)

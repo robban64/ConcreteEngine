@@ -63,11 +63,11 @@ internal sealed class DrawUniforms
         );
 */
         var data = new FrameUniformRecord(
-            ambient: new Vector4(0.030f, 0.030f, 0.032f, 0.0f),
-            ambientGround: new Vector4(0.012f, 0.012f, 0.011f, 0.0f),
-            fogColor: new Vector4(0.70f, 0.74f, 0.78f, 0.08f),
-            fogParams0: new Vector4(0.000006f, 0.00012f, 0.0f, 0.20f),
-            fogParams1: new Vector4(1.0f, 0.25f, 6000.0f, 0.0f)
+            ambient:      new Vector4(0.032f, 0.032f, 0.034f, 0.0f),
+            ambientGround:new Vector4(0.015f, 0.015f, 0.013f, 0.0f),
+            fogColor:     new Vector4(0.76f, 0.81f, 0.86f, 0.055f),
+            fogParams0:   new Vector4(0.0000035f, 0.000090f, 0.0f, 0.15f),
+            fogParams1:   new Vector4(1.0f, 0.25f, 8000.0f, 0.0f)
         );
 
         _gfxBuffers.UploadUniformGpuData(_frameUbo, in data, 0);
@@ -125,7 +125,22 @@ internal sealed class DrawUniforms
 
     private void UploadPost()
     {
-      
+        
+        var data = new FramePostProcessUniform(
+            colorAdjust:     new Vector4(0.10f, 1.05f, 1.03f, 2.20f),
+            whiteBalance:    new Vector4(0.05f, 0.00f, 0.04f, 0.00f),
+            flags:           new Vector4(1.0f, 0.0f, 0.18f, 0.00f)  ,
+            bloomParams:     new Vector4(1.20f, 0.60f, 0.00f, 0.00f),
+            bloomLods:       new Vector4(0.70f, 0.40f, 0.20f, 0.10f),
+            lutParams:       new Vector4(0.00f, 0.00f, 0.00f, 0.00f),
+            vignetteParams:  new Vector4(0.78f, 0.96f, 0.08f, 0.00f),
+            grainParams:     new Vector4(0.00f, _deltaTicker, 0.00f, 0.00f),
+            chromAbParams:   new Vector4(0.0f, 0.0f, 0.0f, 0.0f),
+            toneShadows:     new Vector4(208.0f, 0.02f, -0.005f, 0.12f),
+            toneHighlights:  new Vector4( 45.0f, 0.02f,  0.004f, 0.12f),
+            sharpenParams:   new Vector4(0.06f, 1.5f, 0.02f, 0.00f)
+        );
+      /*
         var data = new FramePostProcessUniform(
             colorAdjust: new Vector4(0.25f, 1.15f, 1.10f, 2.2f),
             whiteBalance: new Vector4(0.15f, 0.02f, 0.10f, 0.0f),
@@ -140,6 +155,7 @@ internal sealed class DrawUniforms
             toneHighlights: new Vector4(40.0f, 0.05f, 0.01f, 0.4f),
             sharpenParams: new Vector4(0.10f, 1.5f, 0.05f, 0.0f)
         );
+        */
 /*
       var data = new FramePostProcessUniform(
           flags: new Vector4(0, 0, 0, 0),

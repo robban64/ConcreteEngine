@@ -9,7 +9,6 @@ namespace ConcreteEngine.Core.Assets.Resources;
 
 public sealed class Material
 {
-    private readonly Dictionary<ShaderUniform, IMaterialValue> _values;
     private readonly TextureId[] _samplerSlots;
 
     public MaterialId Id { get; }
@@ -27,7 +26,7 @@ public sealed class Material
     public float UvRepeat { get; set; } = 1;
 
 
-    public bool HasNormalMap => SamplerSlots.Length >= 2;
+    public bool HasNormalMap => false;
 
     internal Material(MaterialId id, MaterialTemplate template)
     {
@@ -35,9 +34,6 @@ public sealed class Material
         TemplateName = template.Name;
         ShaderId = template.Shader.ResourceId;
         CubeMap = template.CubeMap;
-
-
-        _values = new Dictionary<ShaderUniform, IMaterialValue>(4);
 
         if (template.Shader.Samplers == 0)
             return;

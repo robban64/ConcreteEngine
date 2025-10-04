@@ -119,6 +119,7 @@ public sealed class RenderSystem : IRenderSystem
         var compositeShader = assets.Get<Shader>("Composite").ResourceId;
         var presentShader = assets.Get<Shader>("Present").ResourceId;
         var colorFilterShader = assets.Get<Shader>("ColorFilter").ResourceId;
+        
 
         // Scene Target
         // Pass 0: draw scene into MSAA FBO

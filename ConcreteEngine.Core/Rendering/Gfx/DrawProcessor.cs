@@ -71,8 +71,9 @@ internal sealed class DrawProcessor
         UseShader(material.ShaderId);
         for (int i = 0; i < material.SamplerSlots.Length; i++)
         {
-            
-            _gfxCmd.BindTexture(material.SamplerSlots[i], i);
+            var value = material.SamplerSlots[i];
+            if(value == 0) continue;
+            _gfxCmd.BindTexture(value, i);
         }
 
         UploadMaterial(material);

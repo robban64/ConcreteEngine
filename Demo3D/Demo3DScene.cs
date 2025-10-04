@@ -30,8 +30,11 @@ public sealed class Demo3DScene : GameScene
 
         var rb = renderer.SceneRenderProps;
         rb.SetSkybox(skyboxMaterial.Id, Quaternion.Identity);
-        rb.SetDirLight(new Vector3(0.35f, -1.0f, 0.2f), new Vector4(1.00f, 0.96f, 0.90f, 1.8f), 0.6f);
-        rb.SetAmbient(new Vector3(0.8f, 0.75f, 0.8f));
+        rb.SetDirLight(
+            new Vector3(-0.4f, -1.0f, 0.35f),    // sun slightly from left, angled down
+            new Vector4(1.00f, 0.95f, 0.88f, 1.15f),  // warm daylight, soft yellow tone
+            0.35f                                // moderate global specular
+        );        rb.SetAmbient(new Vector3(0.8f, 0.75f, 0.8f));
         
         var boatMat = renderer.CreateMaterial("BoatMat");
         var boatMesh = assets.Get<Mesh>("Boat");

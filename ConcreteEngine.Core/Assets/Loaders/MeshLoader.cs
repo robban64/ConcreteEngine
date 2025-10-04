@@ -1,6 +1,7 @@
 #region
 
 using System.Numerics;
+using ConcreteEngine.Core.Assets.Importers;
 using ConcreteEngine.Core.Assets.IO;
 using ConcreteEngine.Core.Assets.Manifest;
 using ConcreteEngine.Core.Assets.Resources;
@@ -31,20 +32,23 @@ internal sealed class MeshLoader : AssetTypeLoader<MeshManifestRecord, MeshResul
 
     public MeshLoader(IReadOnlyList<MeshManifestRecord> records) : base(records)
     {
-        var attribBuilder = new VertexAttributeMaker<Vertex3D>();
-        DefaultAttribs =
-        [
-            attribBuilder.Make<Vector3>(),
-            attribBuilder.Make<Vector2>(),
-            attribBuilder.Make<Vector3>(),
-            attribBuilder.Make<Vector3>()
-        ];
+        if (DefaultAttribs.Length == 0)
+        {
+            var attribBuilder = new VertexAttributeMaker<Vertex3D>();
+            DefaultAttribs =
+            [
+                attribBuilder.Make<Vector3>(),
+                attribBuilder.Make<Vector2>(),
+                attribBuilder.Make<Vector3>(),
+                attribBuilder.Make<Vector3>()
+            ];
+        }
     }
 
 
     public override MeshResultPayload ProcessResource(MeshManifestRecord record, out AssetProcessInfo info)
     {
-        var path = Path.Combine(AssetPaths.GetAbsolutePath(), "meshes", record.Filename);
+        var path = Path.Combine(AssetPaths.GetAssetPath(), "meshes", record.Filename);
 
         var (vertices, indices) = _meshImporter.ImportMesh(path);
 

@@ -10,25 +10,66 @@ using ConcreteEngine.Graphics.Primitives;
 namespace ConcreteEngine.Core.Rendering.Data;
 
 [StructLayout(LayoutKind.Sequential)]
-public readonly struct FrameUniformRecord(
-    Vector3 ambient,
-    float ambientIntensity,
-    Vector3 fogColor,
-    float fogDensity,
-    float fogNear,
-    float fogFar,
-    float fogType) : IUniformGpuData
+public readonly struct LightDataStruct(
+    Vector4 colorIntensity,
+    Vector4 posRange,
+    Vector4 dirType, 
+    Vector4 spotAngles
+)
 {
-    public readonly Vector4 Ambient = new(ambient, ambientIntensity);
-    public readonly Vector4 FogColor = new(fogColor, fogDensity);
-    public readonly Vector4 FogDetail = new(fogNear, fogFar, fogType, 0);
+    public readonly Vector4 ColorIntensity = colorIntensity;
+    public readonly Vector4 PosRange = posRange;
+    public readonly Vector4 DirType = dirType;
+    public readonly Vector4 SpotAngles = spotAngles;
+}
+
+
+[StructLayout(LayoutKind.Sequential)]
+public readonly struct LightUniformRecord(
+    int lightCounts,
+    LightDataStruct l0,
+    LightDataStruct l1= default,
+    LightDataStruct l2= default,
+    LightDataStruct l3= default,
+    LightDataStruct l4= default,
+    LightDataStruct l5= default,
+    LightDataStruct l6= default,
+    LightDataStruct l7 = default) : IStd140Uniform
+{
+    // yzw unused/padding
+    public readonly IVec4Std140 LightCounts = new (lightCounts);
+
+    public readonly LightDataStruct L0 = l0;
+    public readonly LightDataStruct L1 = l1;
+    public readonly LightDataStruct L2 = l2;
+    public readonly LightDataStruct L3 = l3;
+    public readonly LightDataStruct L4 = l4;
+    public readonly LightDataStruct L5 = l5;
+    public readonly LightDataStruct L6 = l6;
+    public readonly LightDataStruct L7 = l7;
+}
+
+
+[StructLayout(LayoutKind.Sequential)]
+public readonly struct FrameUniformRecord(
+    Vector4 ambient,
+    Vector4 ambientGround,
+    Vector4 fogColor,
+    Vector4 fogParams0,
+    Vector4 fogParams1) : IStd140Uniform
+{
+    public readonly Vector4 Ambient = ambient;
+    public readonly Vector4 AmbientGround = ambientGround;
+    public readonly Vector4 FogColor = fogColor;
+    public readonly Vector4 FogParams0 = fogParams0;
+    public readonly Vector4 FogParams1 = fogParams1;
 }
 
 public readonly struct CameraUniformRecord(
     in Matrix4x4 viewMat,
     in Matrix4x4 projMat,
     in Matrix4x4 projViewMat,
-    Vector3 cameraPos) : IUniformGpuData
+    Vector3 cameraPos) : IStd140Uniform
 {
     public readonly Matrix4x4 ViewMat = viewMat;
     public readonly Matrix4x4 ProjMat = projMat;
@@ -39,39 +80,43 @@ public readonly struct CameraUniformRecord(
 
 [StructLayout(LayoutKind.Sequential)]
 public readonly struct DirLightUniformRecord(
-    Vector3 direction,
-    Vector3 diffuse,
-    Vector3 specular,
-    float intensity) : IUniformGpuData
+    Vector4 direction,
+    Vector4 diffuse,
+    Vector4 specular) : IStd140Uniform
 {
-    public readonly Vector4 Direction = direction.AsVector4();
-    public readonly Vector4 Diffuse = diffuse.AsVector4();
-    public readonly Vector4 SpecularIntensity = new(specular, intensity);
+    public readonly Vector4 Direction = direction;
+    public readonly Vector4 Diffuse = diffuse;
+    public readonly Vector4 SpecularIntensity = specular;
+}
 
-    public Vector3 Specular => SpecularIntensity.AsVector3();
-    public float Intensity => SpecularIntensity.W;
+[StructLayout(LayoutKind.Sequential)]
+public readonly struct ShadowUniformRecord(
+    in Matrix4x4 lightViewProj,
+    Vector4 shadowParams0,
+    Vector4 shadowParams1) : IStd140Uniform
+{
+    public readonly Matrix4x4 LightViewProj = lightViewProj;
+    public readonly Vector4 ShadowParams0 = shadowParams0;
+    public readonly Vector4 ShadowParams1 = shadowParams1;
 }
 
 [StructLayout(LayoutKind.Sequential)]
 public readonly struct MaterialUniformRecord(
-    Vector3 color,
-    float shininess,
-    float specularStrength,
-    float uvRepeat
-) : IUniformGpuData
+    Vector4 matColor,
+    Vector4 matParams0,
+    Vector4 matParams1
+) : IStd140Uniform
 {
-    public readonly Vector3 Color = color;
-    public readonly float Shininess = shininess;
-    public readonly float SpecularStrength = specularStrength;
-    public readonly float UvRepeat = uvRepeat;
-    private readonly Vector2 _pad0 = default;
+    public readonly Vector4 MatColor = matColor;
+    public readonly Vector4 MatParams0 = matParams0;
+    public readonly Vector4 MatParams1 = matParams1;
 }
 
 [StructLayout(LayoutKind.Sequential)]
 public readonly struct DrawObjectUniform(
     in Matrix4x4 model,
     in Matrix3 normal
-) : IUniformGpuData
+) : IStd140Uniform
 {
     public readonly Matrix4x4 Model = model;
 
@@ -99,7 +144,7 @@ public readonly struct FramePostProcessUniform(
     Vector4 toneShadows,
     Vector4 toneHighlights,
     Vector4 sharpenParams
-) : IUniformGpuData
+) : IStd140Uniform
 {
     public readonly Vector4 ColorAdjust = colorAdjust;
     public readonly Vector4 WhiteBalance = whiteBalance;

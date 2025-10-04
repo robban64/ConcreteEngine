@@ -36,21 +36,21 @@ internal sealed class GlTextures : IGraphicsDriverModule
 
     public void TextureStorage2D(GfxRefToken<TextureId> texRef, Size2D size, BkTextureStoreDesc desc)
     {
-        var handle = GetTexHandle(texRef).Handle;
+        var handle = GetTexHandle(texRef).Value;
         (uint width, uint height) = size.ToUnsigned();
         _gl.TextureStorage2D(handle, desc.Levels, desc.Format.ToStorageFormat(), width, height);
     }
 
     public void TextureStorage2D_MultiSample(GfxRefToken<TextureId> texRef, Size2D size, BkTextureStoreDesc desc)
     {
-        var handle = GetTexHandle(texRef).Handle;
+        var handle = GetTexHandle(texRef).Value;
         (uint width, uint height) = size.ToUnsigned();
         _gl.TextureStorage2DMultisample(handle, desc.Samples, desc.Format.ToStorageFormat(), width, height, true);
     }
 
     public void TextureStorage3D(GfxRefToken<TextureId> texRef, Size3D size, BkTextureStoreDesc desc)
     {
-        var handle = GetTexHandle(texRef).Handle;
+        var handle = GetTexHandle(texRef).Value;
         (uint width, uint height, uint depth) = size.ToUnsigned();
         _gl.TextureStorage3D(handle, desc.Levels, desc.Format.ToStorageFormat(), width, height, depth);
     }
@@ -58,7 +58,7 @@ internal sealed class GlTextures : IGraphicsDriverModule
     public void UploadTexture2D_Data(GfxRefToken<TextureId> texRef, ReadOnlySpan<byte> data, EnginePixelFormat format,
         Size2D size)
     {
-        var handle = GetTexHandle(texRef).Handle;
+        var handle = GetTexHandle(texRef).Value;
         (uint width, uint height) = size.ToUnsigned();
         var (fmt, type) = format.ToUploadFormatType();
         _gl.TextureSubImage2D(handle, 0, 0, 0, width, height, fmt, type, data);
@@ -67,7 +67,7 @@ internal sealed class GlTextures : IGraphicsDriverModule
     public void UploadTexture3D_Data(GfxRefToken<TextureId> texRef, ReadOnlySpan<byte> data, EnginePixelFormat format,
         Size3D size, int zOffset)
     {
-        var handle = GetTexHandle(texRef).Handle;
+        var handle = GetTexHandle(texRef).Value;
         (uint width, uint height, uint depth) = size.ToUnsigned();
         var (fmt, type) = format.ToUploadFormatType();
         _gl.TextureSubImage3D(
@@ -146,15 +146,15 @@ internal sealed class GlTextures : IGraphicsDriverModule
         }
 
         return;
-        void SetTexParameter(GLEnum pname, GLEnum param) => _gl.TextureParameterI(handle.Handle, pname, (int)param);
+        void SetTexParameter(GLEnum pname, GLEnum param) => _gl.TextureParameterI(handle.Value, pname, (int)param);
     }
 
     public void SetLodBias(GfxRefToken<TextureId> texRef, float lodBias) =>
-        _gl.TextureParameter(GetTexHandle(texRef).Handle, GLEnum.TextureLodBias, lodBias);
+        _gl.TextureParameter(GetTexHandle(texRef).Value, GLEnum.TextureLodBias, lodBias);
 
     public void SetAnisotropy(GfxRefToken<TextureId> texRef, int anisotropy) =>
-        _gl.TextureParameter(GetTexHandle(texRef).Handle, GLEnum.TextureMaxAnisotropy, anisotropy);
+        _gl.TextureParameter(GetTexHandle(texRef).Value, GLEnum.TextureMaxAnisotropy, anisotropy);
 
     public void GenerateMipMaps(GfxRefToken<TextureId> texRef) =>
-        _gl.GenerateTextureMipmap(GetTexHandle(texRef).Handle);
+        _gl.GenerateTextureMipmap(GetTexHandle(texRef).Value);
 }

@@ -30,8 +30,18 @@ public sealed class Demo3DScene : GameScene
 
         var rb = renderer.SceneRenderProps;
         rb.SetSkybox(skyboxMaterial.Id, Quaternion.Identity);
-        rb.SetDirLight(new Vector3(-0.3f, -1.0f, -0.2f), new Vector3(1.0f, 0.95f, 0.9f), Vector3.One,1);
-        rb.SetAmbient(new Vector3(0.8f,0.75f,0.8f));
+        rb.SetDirLight(
+            new Vector3(-0.4f, -1.0f, 0.35f),
+            new Vector4(1.00f, 0.95f, 0.88f, 1.15f),
+            0.35f
+        );
+        rb.SetAmbient(new Vector3(0.8f, 0.75f, 0.8f));
+
+        var boatMat = renderer.CreateMaterial("BoatMat");
+        var boatMesh = assets.Get<Mesh>("Boat");
+        boatMat.SpecularStrength = 0;
+        boatMat.Shininess = 1;
+
 
         var rockMat = renderer.CreateMaterial("Rock01Mat");
         var rockMesh = assets.Get<Mesh>("Rock1");
@@ -46,10 +56,6 @@ public sealed class Demo3DScene : GameScene
                 new Transform(new Vector3(i * 5, -3, i * 5), Vector3.One, Quaternion.Identity));
         }
 
-        
-        
-        var boatMat = renderer.CreateMaterial("BoatMat");
-        var boatMesh = assets.Get<Mesh>("Boat");
 
         for (int i = 0; i < 12; i++)
         {
@@ -79,7 +85,7 @@ public sealed class Demo3DScene : GameScene
         var lightShader = assets.Get<Shader>("LightPass");
         var colorFilterShader = assets.Get<Shader>("ColorFilter");
 
-        
+
         builder.RegisterRender3D(new RenderTargetDescriptor
         {
             SceneTarget = new SceneTargetDesc
@@ -88,7 +94,7 @@ public sealed class Demo3DScene : GameScene
                 Samples = 4
             },
             /*LightTarget = new LightTargetDesc
-            {   
+            {
                 LightShaderId = lightShader.ResourceId,
                 Blend = BlendMode.Additive,
                 TexPreset = TexturePreset.LinearMipmapRepeat

@@ -32,7 +32,7 @@ internal sealed class GlShaders : IGraphicsDriverModule
             return;
 
         _activeProg = NativeHandle.From(handle);
-        _gl.UseProgram(handle.Handle);
+        _gl.UseProgram(handle.Value);
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
@@ -58,7 +58,7 @@ internal sealed class GlShaders : IGraphicsDriverModule
 
     public List<(string, int)> GetUniformsFromProgram(GfxRefToken<ShaderId> shaderRef)
     {
-        var handle = _store.Shader.GetRef(shaderRef).Handle;
+        var handle = _store.Shader.GetRef(shaderRef).Value;
 
         UseShader(shaderRef);
         _gl.GetProgram(handle, ProgramPropertyARB.ActiveUniforms, out int uniformsLength);
@@ -78,7 +78,7 @@ internal sealed class GlShaders : IGraphicsDriverModule
 
     public int GetSamplersFromProgram(GfxRefToken<ShaderId> shaderRef)
     {
-        var handle = _store.Shader.GetRef(shaderRef).Handle;
+        var handle = _store.Shader.GetRef(shaderRef).Value;
 
         UseShader(shaderRef);
         _gl.GetProgram(handle, ProgramPropertyARB.ActiveUniforms, out int uniformsLength);
@@ -116,6 +116,7 @@ internal sealed class GlShaders : IGraphicsDriverModule
     {
         uint shader = _gl.CreateShader(shaderType);
         _gl.ShaderSource(shader, source);
+        
         _gl.CompileShader(shader);
 
         _gl.GetShader(shader, ShaderParameterName.CompileStatus, out int vStatus);

@@ -43,11 +43,9 @@ public sealed class SceneRenderProperties
         _dirty = true;
     }
 
-    public void SetDirLight(Vector3 direction,
-        in Vector3 diffuse,
-        in Vector3 specular, float intensity = 1f)
+    public void SetDirLight(Vector3 direction, Vector4 diffuse, float specularIntensity)
     {
-        _directionalLight = new DirectionalLight(direction, diffuse, specular, intensity);
+        _directionalLight = new DirectionalLight(direction, diffuse, specularIntensity);
         _dirty = true;
     }
 
@@ -110,13 +108,11 @@ public readonly struct Skybox(
 
 public readonly struct DirectionalLight(
     Vector3 direction,
-    Vector3 diffuse,
-    Vector3 specular,
-    float intensity
+    Vector4 diffuse,
+    float specularIntensity
 )
 {
     public readonly Vector3 Direction = direction;
-    public readonly Vector3 Diffuse = diffuse;
-    public readonly Vector3 Specular = specular;
-    public readonly float Intensity = intensity;
+    public readonly Vector4 Diffuse = diffuse;
+    public readonly float SpecularIntensity = specularIntensity;
 }

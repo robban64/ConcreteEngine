@@ -94,7 +94,7 @@ internal sealed class RenderRegistry
         _fboRegistry.Add(renderFbo);
     }
 
-    public void RegisterUniformBuffer<T>() where T : unmanaged, IUniformGpuData
+    public void RegisterUniformBuffer<T>() where T : unmanaged, IStd140Uniform
     {
         InvalidOpThrower.ThrowIfCapacityExceed(_uboRegistry, MaxUboSlots);
         if (!UniformBufferUtils.IsStd140Aligned<T>())
@@ -134,7 +134,7 @@ internal sealed class RenderRegistry
 
     public RenderShader GetRenderShader(ShaderId shaderId) => _shaderRegistry[shaderId - 1];
 
-    public RenderUbo GetRenderUbo<TUbo>() where TUbo : unmanaged, IUniformGpuData
+    public RenderUbo GetRenderUbo<TUbo>() where TUbo : unmanaged, IStd140Uniform
     {
         var slot = RTypeRegistry.UniformBufferTag<TUbo>.Slot.Value;
         return _uboRegistry[slot];

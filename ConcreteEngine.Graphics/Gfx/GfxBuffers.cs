@@ -62,7 +62,7 @@ public sealed class GfxBuffers
     public UniformBufferId CreateUniformBuffer<T>(
         UboSlot slot,
         BufferStorage storage = BufferStorage.Dynamic,
-        BufferAccess access = BufferAccess.MapWrite) where T : unmanaged, IUniformGpuData
+        BufferAccess access = BufferAccess.MapWrite) where T : unmanaged, IStd140Uniform
     {
         if (!UniformBufferUtils.IsStd140Aligned<T>())
             throw GraphicsException.InvalidStd140Layout<T>();
@@ -139,7 +139,7 @@ public sealed class GfxBuffers
 
 
     public void UploadUniformGpuData<T>(UniformBufferId uboId, in T data, nint offset)
-        where T : unmanaged, IUniformGpuData
+        where T : unmanaged, IStd140Uniform
     {
         UniformBufferUtils.IsStd140AlignedOrThrow<T>(out nint stride);
         var uboRef = _resources.UboStore.GetRefHandle(uboId);

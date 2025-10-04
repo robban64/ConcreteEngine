@@ -119,28 +119,28 @@ public sealed class TerrainBatcher : RenderBatcher<TerrainBatchResult>
     {
         _vertices = new Vertex3D[VertexCount];
 
-        for (int vz = 0; vz < vertexRowCount; vz++)
+        for (var vz = 0; vz < vertexRowCount; vz++)
         {
-            int zPix = Math.Min(vz * Step, Size - 1);
-            for (int vx = 0; vx < vertexRowCount; vx++)
+            var zPix = Math.Min(vz * Step, Size - 1);
+            for (var vx = 0; vx < vertexRowCount; vx++)
             {
-                int xPix = Math.Min(vx * Step, Size - 1);
+                var xPix = Math.Min(vx * Step, Size - 1);
 
-                float y = SampleH(heightmap, xPix, zPix);
+                var y = SampleH(heightmap, xPix, zPix);
                 var pos = new Vector3(xPix, y, zPix);
                 var uv = new Vector2(xPix / (float)(Size - 1), zPix / (float)(Size - 1));
 
-                int vi = vz * vertexRowCount + vx;
+                var vi = vz * vertexRowCount + vx;
                 _vertices[vi] = new Vertex3D(pos, uv, Vector3.UnitY, Vector3.UnitX);
             }
         }
 
         // Gram-Schmidt
-        for (int vz = 0; vz < vertexRowCount; vz++)
+        for (var vz = 0; vz < vertexRowCount; vz++)
         {
-            for (int vx = 0; vx < vertexRowCount; vx++)
+            for (var vx = 0; vx < vertexRowCount; vx++)
             {
-                int vi = vz * vertexRowCount + vx;
+                var vi = vz * vertexRowCount + vx;
                 var n = GetNormal(heightmap, vx, vz);
                 var t = GetTangent(heightmap, vx, vz, n);
                 _vertices[vi].Normal = n;
@@ -166,12 +166,12 @@ public sealed class TerrainBatcher : RenderBatcher<TerrainBatchResult>
                 uint i2 = (uint)((z + 1) * vertexRowCount + x);
                 uint i3 = i2 + 1;
 
-                float h0 = _vertices[i0].Position.Y;
-                float h1 = _vertices[i1].Position.Y;
-                float h2 = _vertices[i2].Position.Y;
-                float h3 = _vertices[i3].Position.Y;
+                var h0 = _vertices[i0].Position.Y;
+                var h1 = _vertices[i1].Position.Y;
+                var h2 = _vertices[i2].Position.Y;
+                var h3 = _vertices[i3].Position.Y;
 
-                bool diag = MathF.Abs(h0 - h3) <= MathF.Abs(h1 - h2);
+                var diag = MathF.Abs(h0 - h3) <= MathF.Abs(h1 - h2);
 
                 if (diag)
                 {
@@ -236,9 +236,9 @@ public sealed class TerrainBatcher : RenderBatcher<TerrainBatchResult>
 
         const int channels = 4;
 
-        int rowStrideBytes = heightmap.Length / Size;
+        var rowStrideBytes = heightmap.Length / Size;
 
-        int idx = z * rowStrideBytes + x * channels;
+        var idx = z * rowStrideBytes + x * channels;
         if ((uint)(idx + channels - 1) >= (uint)heightmap.Length)
             return 0f;
 
@@ -248,10 +248,10 @@ public sealed class TerrainBatcher : RenderBatcher<TerrainBatchResult>
 
     private Vector3 GetTangent(ReadOnlySpan<byte> heightmap, int vx, int vz, Vector3 n)
     {
-        int xPix = Math.Min(vx * Step, Size - 1);
-        int zPix = Math.Min(vz * Step, Size - 1);
-        float hL = SampleH(heightmap, xPix - Step, zPix);
-        float hR = SampleH(heightmap, xPix + Step, zPix);
+        var xPix = Math.Min(vx * Step, Size - 1);
+        var zPix = Math.Min(vz * Step, Size - 1);
+        var hL = SampleH(heightmap, xPix - Step, zPix);
+        var hR = SampleH(heightmap, xPix + Step, zPix);
 
         var rawT = new Vector3(2 * Step, hR - hL, 0f);
         var t = rawT - n * Vector3.Dot(rawT, n);
@@ -261,13 +261,13 @@ public sealed class TerrainBatcher : RenderBatcher<TerrainBatchResult>
 
     private Vector3 GetNormal(ReadOnlySpan<byte> heightmap, int vx, int vz)
     {
-        int xPix = Math.Min(vx * Step, Size - 1);
-        int zPix = Math.Min(vz * Step, Size - 1);
+        var xPix = Math.Min(vx * Step, Size - 1);
+        var zPix = Math.Min(vz * Step, Size - 1);
 
-        float hL = SampleH(heightmap, xPix - Step, zPix);
-        float hR = SampleH(heightmap, xPix + Step, zPix);
-        float hD = SampleH(heightmap, xPix, zPix - Step);
-        float hU = SampleH(heightmap, xPix, zPix + Step);
+        var hL = SampleH(heightmap, xPix - Step, zPix);
+        var hR = SampleH(heightmap, xPix + Step, zPix);
+        var hD = SampleH(heightmap, xPix, zPix - Step);
+        var hU = SampleH(heightmap, xPix, zPix + Step);
 
         var dx = new Vector3(2 * Step, hR - hL, 0f);
         var dz = new Vector3(0f, hU - hD, 2 * Step);
@@ -277,7 +277,7 @@ public sealed class TerrainBatcher : RenderBatcher<TerrainBatchResult>
 
     static Vector3 NormalizeSafe(in Vector3 v)
     {
-        float len2 = v.LengthSquared();
+        var len2 = v.LengthSquared();
         return len2 > 1e-12f ? v / MathF.Sqrt(len2) : Vector3.UnitY;
     }
 }

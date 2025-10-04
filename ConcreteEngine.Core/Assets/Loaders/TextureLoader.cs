@@ -22,7 +22,7 @@ internal sealed class TextureLoader(IReadOnlyList<TextureManifestRecord> records
     {
         //StbImage.stbi_set_flip_vertically_on_load(1);
 
-        var path = Path.Combine(AssetPaths.GetAbsolutePath(), "textures", record.Filename);
+        var path = Path.Combine(AssetPaths.GetAssetPath(), "textures", record.Filename);
         using var stream = File.OpenRead(path);
         var image = ImageResult.FromStream(stream, ColorComponents.RedGreenBlueAlpha);
         ValidateImageResult(image);

@@ -27,7 +27,7 @@ internal sealed class CubeMapLoader(IReadOnlyList<CubeMapManifestRecord> records
 
         for (int i = 0; i < 6; i++)
         {
-            var path = Path.Combine(AssetPaths.GetAbsolutePath(), "cubemaps", record.Textures[i]);
+            var path = Path.Combine(AssetPaths.GetAssetPath(), "cubemaps", record.Textures[i]);
             using var stream = File.OpenRead(path); // StbImageSharp
             var image = ImageResult.FromStream(stream, ColorComponents.RedGreenBlueAlpha);
             ValidateImageResult(image, record);

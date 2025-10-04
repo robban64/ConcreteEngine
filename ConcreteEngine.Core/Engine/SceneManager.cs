@@ -9,7 +9,7 @@ internal sealed class SceneManager
 {
     private readonly List<Func<GameScene>> _sceneFactories;
     private int _pendingIndex = -1;
-    
+
     public GameScene? Current { get; private set; }
 
     public bool HasPendingSwitch => _pendingIndex >= 0;
@@ -18,13 +18,14 @@ internal sealed class SceneManager
     {
         _sceneFactories = sceneFactories ?? throw new ArgumentNullException(nameof(sceneFactories));
     }
-    
+
     public void QueueSwitch(int sceneIndex) => _pendingIndex = sceneIndex;
 
     public void ApplyPendingScene(
         GameSceneContext context,
         GameSceneConfigBuilder builder,
-        Action<SceneBuildResult>? afterBuild)
+        RenderSystem renderer,
+        Action<SceneBuildResult, RenderSystem>? afterBuild)
     {
         if (_pendingIndex < 0) return;
 
@@ -37,13 +38,13 @@ internal sealed class SceneManager
         var newScene = _sceneFactories[index]();
         newScene.AttachContext(context);
 
-        builder.Clear(); 
+        builder.Clear();
         newScene.Build(builder);
 
         afterBuild?.Invoke(new SceneBuildResult(
             builder.RenderType,
             builder.Modules,
-            context));
+            context), renderer);
 
         newScene.InitializeInternal();
 
@@ -61,5 +62,4 @@ internal sealed class SceneManager
         public IReadOnlyList<Func<GameModule>> Modules { get; } = modules;
         public GameSceneContext Context { get; } = context;
     }
-
 }

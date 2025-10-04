@@ -3,6 +3,7 @@
 using System.Text.Json;
 using System.Text.Json.Serialization;
 using ConcreteEngine.Core.Assets.Factories;
+using ConcreteEngine.Core.Assets.Importers;
 using ConcreteEngine.Core.Assets.IO;
 using ConcreteEngine.Core.Assets.Manifest;
 using ConcreteEngine.Core.Assets.Resources;
@@ -93,8 +94,8 @@ public sealed class AssetSystem : IAssetSystem
 
         for (int i = 0; i < n; i++)
         {
-            if (_loader!.Process(out var finalEntry)) return true;
-            if (finalEntry != null)
+            if (_loader.Process(out var finalEntry)) return true;
+            if (finalEntry is not null)
                 AssembleFinalAsset(finalEntry);
         }
 
@@ -109,9 +110,9 @@ public sealed class AssetSystem : IAssetSystem
     internal MaterialStore FinishLoading()
     {
         var materials = LoadMaterialStore("materials.json");
-        _materialStore = new MaterialStore(materials);
+        _materialStore = new MaterialStore(materials!);
 
-        _loader.Finish();
+        _loader?.Finish();
         _loader = null;
         IsLoading = true;
         return _materialStore;
@@ -166,7 +167,7 @@ public sealed class AssetSystem : IAssetSystem
             throw new DirectoryNotFoundException($"Asset manifest '{_assetPath}' directory not found.");
         }
 
-        AssetPaths.AssetPath = _assetPath;
+        AssetPaths.AssetFolder = _assetPath;
 
         var manifestPath = Path.Combine(BasePath, _manifestFilename);
         if (!File.Exists(manifestPath))

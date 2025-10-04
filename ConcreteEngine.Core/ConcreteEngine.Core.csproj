@@ -8,8 +8,7 @@
     </PropertyGroup>
 
     <ItemGroup>
-        <PackageReference Include="Silk.NET.Assimp" Version="2.22.0" />
-        <PackageReference Include="Silk.NET.Core" Version="2.22.0"/>
+        <PackageReference Include="Silk.NET.Assimp" Version="2.22.0"/>
         <PackageReference Include="Silk.NET.Input" Version="2.22.0"/>
         <PackageReference Include="Silk.NET.Maths" Version="2.22.0"/>
         <PackageReference Include="Silk.NET.Windowing" Version="2.22.0"/>
@@ -17,17 +16,24 @@
     </ItemGroup>
 
     <ItemGroup>
-        <ProjectReference Include="..\ConcreteEngine.Common\ConcreteEngine.Common.csproj" />
-        <ProjectReference Include="..\ConcreteEngine.Graphics\ConcreteEngine.Graphics.csproj" />
+        <ProjectReference Include="..\ConcreteEngine.Common\ConcreteEngine.Common.csproj"/>
+        <ProjectReference Include="..\ConcreteEngine.Graphics\ConcreteEngine.Graphics.csproj"/>
     </ItemGroup>
 
     <ItemGroup>
-      <Compile Remove="Rendering\DrawCommandSubmitterTemp.cs" />
+        <Compile Remove="Rendering\DrawCommandSubmitterTemp.cs"/>
     </ItemGroup>
 
     <ItemGroup>
-      <Compile Remove="Rendering\Render2D.cs" />
-      <Compile Remove="Rendering\Render3D.cs" />
+        <Compile Remove="Rendering\Render2D.cs"/>
+        <Compile Remove="Rendering\Render3D.cs"/>
     </ItemGroup>
+
+    <ItemGroup>
+        <Content Include="_AssetsCore\**\*">
+            <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+        </Content>
+    </ItemGroup>
+
 
 </Project>

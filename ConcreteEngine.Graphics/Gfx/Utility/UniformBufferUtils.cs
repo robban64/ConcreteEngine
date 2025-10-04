@@ -52,7 +52,7 @@ public static class UniformBufferUtils
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public static nint GetCapacityForEntities<T>(int entities) where T : unmanaged, IUniformGpuData
+    public static nint GetCapacityForEntities<T>(int entities) where T : unmanaged, IStd140Uniform
     {
         nint blockSize = Unsafe.SizeOf<T>();
         nint uboAlign = _uboOffsetAlign;
@@ -73,10 +73,10 @@ public static class UniformBufferUtils
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static nint AlignUp(nint v, nint a) => a == 0 ? v : (v + (a - 1)) & ~(a - 1);
 
-    public static nint StrideOf<T>() where T : unmanaged, IUniformGpuData => AlignUp(Unsafe.SizeOf<T>(), _offsetAlign);
+    public static nint StrideOf<T>() where T : unmanaged, IStd140Uniform => AlignUp(Unsafe.SizeOf<T>(), _offsetAlign);
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public static bool IsStd140Aligned<T>() where T : unmanaged, IUniformGpuData => Unsafe.SizeOf<T>() % 16 == 0;
+    public static bool IsStd140Aligned<T>() where T : unmanaged, IStd140Uniform => Unsafe.SizeOf<T>() % 16 == 0;
 
 
     [MethodImpl(MethodImplOptions.NoInlining)]
@@ -86,7 +86,7 @@ public static class UniformBufferUtils
         throw new GraphicsException($"Invalid struct layout: {Unsafe.SizeOf<T>()} bytes for {typeof(T).Name}");
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public static void IsStd140AlignedOrThrow<T>(out nint stride) where T : unmanaged, IUniformGpuData
+    public static void IsStd140AlignedOrThrow<T>(out nint stride) where T : unmanaged, IStd140Uniform
     {
         stride = (nint)Unsafe.SizeOf<T>();
         if (stride % 16 != 0) ThrowStd140NotAligned<T>();

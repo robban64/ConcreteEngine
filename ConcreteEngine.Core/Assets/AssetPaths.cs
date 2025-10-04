@@ -1,9 +1,11 @@
 namespace ConcreteEngine.Core.Assets;
 
-public static class AssetPaths
+internal static class AssetPaths
 {
-    public static readonly string RootPath = Directory.GetCurrentDirectory();
-    public static string AssetPath { get; internal set; } = null!;
+    public static string AssetFolder { get; internal set; } = null!;
+    public static string AssetCoreFolder => "_AssetsCore";
 
-    public static string GetAbsolutePath() => Path.Combine(RootPath, AssetPath);
+    public static string GetAssetPath() => Path.Combine(Directory.GetCurrentDirectory(), AssetFolder);
+    public static string GetAssetCorePath() => Path.Combine(Directory.GetCurrentDirectory(), AssetCoreFolder);
+
 }

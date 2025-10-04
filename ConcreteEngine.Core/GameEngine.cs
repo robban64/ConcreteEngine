@@ -208,15 +208,15 @@ public sealed class GameEngine : IDisposable
         var sceneContext = new GameSceneContext(_coreSystems) { Features = _features, Modules = _modules };
         var builder = new GameSceneConfigBuilder(_features, _modules);
 
-        _sceneManager.ApplyPendingScene(sceneContext, builder, AfterBuild);
+        _sceneManager.ApplyPendingScene(sceneContext, builder, _renderer, AfterBuild);
 
         _features.Load(new GameFeatureContext(sceneContext));
         _modules.Load(new GameModuleContext(sceneContext));
         return;
 
-        void AfterBuild(SceneManager.SceneBuildResult result)
+        void AfterBuild(SceneManager.SceneBuildResult result, RenderSystem renderer)
         {
-            _renderer.RegisterScene(builder.RenderType, builder.RenderTargetsDesc);
+            renderer.RegisterScene(builder.RenderType, builder.RenderTargetsDesc);
             foreach (var module in result.Modules) result.Context.Modules.AddModule(module());
         }
     }

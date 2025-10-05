@@ -1,12 +1,12 @@
 #region
 
 using System.Numerics;
+using ConcreteEngine.Core.Rendering.Commands;
 using ConcreteEngine.Core.Rendering.Data;
-using ConcreteEngine.Core.Rendering.Passes;
 
 #endregion
 
-namespace ConcreteEngine.Core.Rendering.Commands;
+namespace ConcreteEngine.Core.Rendering.Producers;
 
 public sealed class SceneDrawProducer : IDrawCommandProducer
 {

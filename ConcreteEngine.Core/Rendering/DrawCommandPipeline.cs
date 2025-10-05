@@ -3,6 +3,7 @@ using ConcreteEngine.Core.Rendering.Commands;
 using ConcreteEngine.Core.Rendering.Data;
 using ConcreteEngine.Core.Rendering.Gfx;
 using ConcreteEngine.Core.Rendering.Passes;
+using ConcreteEngine.Core.Rendering.Producers;
 using ConcreteEngine.Graphics.Gfx;
 using ConcreteEngine.Graphics.Gfx.Utility;
 

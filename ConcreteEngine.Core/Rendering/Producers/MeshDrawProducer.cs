@@ -3,14 +3,14 @@
 using System.Runtime.CompilerServices;
 using ConcreteEngine.Common.Numerics;
 using ConcreteEngine.Core.Assets.Resources;
+using ConcreteEngine.Core.Rendering.Commands;
 using ConcreteEngine.Core.Rendering.Data;
-using ConcreteEngine.Core.Rendering.Passes;
 using ConcreteEngine.Core.Scene.Entities;
 using ConcreteEngine.Graphics.Resources;
 
 #endregion
 
-namespace ConcreteEngine.Core.Rendering.Commands;
+namespace ConcreteEngine.Core.Rendering.Producers;
 
 public struct MeshDrawEntity(MeshId meshId, MaterialId materialId, ref Transform transform)
 {

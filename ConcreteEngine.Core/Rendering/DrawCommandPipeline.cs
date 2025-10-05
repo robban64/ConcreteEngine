@@ -58,5 +58,5 @@ internal sealed class DrawCommandPipeline
 
     internal void ExecuteTransforms() => _cmdBuffer.DrainTransformQueue();
 
-    internal void ExecuteDrawPass(RenderTargetId targetId) => _cmdBuffer.DrainCommandQueue(targetId);
+    internal void ExecuteDrawPass(PassId passId) => _cmdBuffer.DispatchDrawPass(passId);
 }

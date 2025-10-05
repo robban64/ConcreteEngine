@@ -94,9 +94,9 @@ public sealed class MeshDrawProducer : IDrawCommandProducer, IMeshDrawSink
 
             _meta[counter] = new DrawCommandMeta(
                 DrawCommandId.Mesh,
-                RenderTargetId.Scene,
                 DrawCommandQueue.Opaque,
-                order: MetaOrders.OpaqueOrder(entity.MaterialId)
+                PassMask.Default
+                //MetaOrders.OpaqueOrder(entity.MaterialId)
             );
 
             counter++;

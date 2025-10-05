@@ -80,7 +80,7 @@ public sealed class TerrainDrawProducer : IDrawCommandProducer, ITerrainDrawSink
             materialId: data.MaterialId
         );
 
-        var meta = new DrawCommandMeta(DrawCommandId.Terrain, RenderTargetId.Scene, DrawCommandQueue.Terrain);
-        submitter.SubmitDraw(in cmd, in meta, new DrawTransformPayload(in transform));
+        var meta = new DrawCommandMeta(DrawCommandId.Terrain, DrawCommandQueue.Terrain);
+        submitter.SubmitDraw(cmd, meta, new DrawTransformPayload(in transform));
     }
 }

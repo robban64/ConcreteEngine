@@ -19,3 +19,15 @@ public readonly struct DrawTransformPayload(in Matrix4x4 transform)
 {
     public readonly Matrix4x4 Transform = transform;
 }
+
+public readonly struct DrawCommandMeta(
+    DrawCommandId id,
+    DrawCommandQueue queue,
+    PassMask passMask = PassMask.Default,
+    ushort depthKey = 0)
+{
+    public readonly PassMask PassMask = passMask;
+    public readonly ushort DepthKey = depthKey;
+    public readonly DrawCommandId Id = id;
+    public readonly DrawCommandQueue Queue = queue;
+}

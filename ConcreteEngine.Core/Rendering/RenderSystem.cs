@@ -34,7 +34,6 @@ public interface IRenderSystem : IGameEngineSystem
 
     TSink GetSink<TSink>() where TSink : IDrawSink;
     Material CreateMaterial(string templateName);
-    void MutateRenderPass(RenderTargetId targetId);
 
     public SceneRenderProperties SceneRenderProps { get; }
 }
@@ -123,7 +122,7 @@ public sealed class RenderSystem : IRenderSystem
 
         // Scene Target
         // Pass 0: draw scene into MSAA FBO
-        _passPipeline.Register<ScenePassTag, PassDrawSlot>(RenderTargetId.Scene, PassOpKind.Normal, 0,
+        _passPipeline.Register<ScenePassTag, PassDrawSlot>(PassOpKind.Normal, 0,
                 RenderPassState.MakeSceneMsaa(4))
             .OnPassBegin(static (RenderPassCtx ctx, in RenderPassState state) =>
             {
@@ -133,7 +132,7 @@ public sealed class RenderSystem : IRenderSystem
                 return ApplyPassReturn.NormalPassResult();
             });
 
-        _passPipeline.Register<ScenePassTag, PassResolveSlot>(RenderTargetId.Scene, PassOpKind.Resolve, 1,
+        _passPipeline.Register<ScenePassTag, PassResolveSlot>(PassOpKind.Resolve, 1,
                 RenderPassState.MakeResolve())
             .OnPassBegin(static (RenderPassCtx ctx, in RenderPassState state) =>
             {
@@ -151,7 +150,7 @@ public sealed class RenderSystem : IRenderSystem
             });
 
         // Post A
-        _passPipeline.Register<PostPassTag, PassPostASlot>(RenderTargetId.PostEffect, PassOpKind.Fsq, 0,
+        _passPipeline.Register<PostPassTag, PassPostASlot>(PassOpKind.Fsq, 0,
                 RenderPassState.MakePostProcess(compositeShader))
             .OnPassBegin(static (RenderPassCtx ctx, in RenderPassState state) =>
             {
@@ -167,7 +166,7 @@ public sealed class RenderSystem : IRenderSystem
             });
 
         // Post B
-        _passPipeline.Register<PostPassTag, PassPostBSlot>(RenderTargetId.PostEffect, PassOpKind.Fsq, 1,
+        _passPipeline.Register<PostPassTag, PassPostBSlot>(PassOpKind.Fsq, 1,
                 RenderPassState.MakePostProcess(colorFilterShader))
             .OnPassBegin(static (RenderPassCtx ctx, in RenderPassState state) =>
             {
@@ -184,7 +183,7 @@ public sealed class RenderSystem : IRenderSystem
             });
 
         // Screen
-        _passPipeline.Register<ScreenPassTag, PassFinalSlot>(RenderTargetId.Screen, PassOpKind.Screen, 0,
+        _passPipeline.Register<ScreenPassTag, PassFinalSlot>(PassOpKind.Screen, 0,
                 RenderPassState.MakeScreen(presentShader))
             .OnPassBegin(static (RenderPassCtx ctx, in RenderPassState state) =>
             {
@@ -208,12 +207,6 @@ public sealed class RenderSystem : IRenderSystem
     public TSink GetSink<TSink>() where TSink : IDrawSink => _drawPipeline.GetSink<TSink>();
 
     public Material CreateMaterial(string templateName) => _materialStore.CreateMaterialFromTemplate(templateName);
-
-    public void MutateRenderPass(RenderTargetId targetId)
-    {
-        return;
-    }
-    //_render.MutateRenderPass(targetId);
 
 
     internal void BeginTick(in UpdateInfo update) => _drawPipeline.BeginTick(update);
@@ -247,11 +240,11 @@ public sealed class RenderSystem : IRenderSystem
         while (_passPipeline.NextPass(out var nextPassRes))
         {
             if (nextPassRes.SkipPass) continue;
-            ExecutePass(nextPassRes.PassIndex, nextPassRes.TargetId);
+            ExecutePass(nextPassRes.PassId);
         }
     }
 
-    private void ExecutePass(int passIndex, RenderTargetId targetId)
+    private void ExecutePass(PassId passId)
     {
         var passResult = _passPipeline.ApplyPass();
         if (passResult.OpKind == PassOpKind.Resolve)
@@ -261,8 +254,8 @@ public sealed class RenderSystem : IRenderSystem
         }
 
         // Fix soon
-        if (targetId == RenderTargetId.Scene && passIndex == 0)
-            _drawPipeline.ExecuteDrawPass(RenderTargetId.Scene);
+        if (passResult == ApplyPassReturn.NormalPassResult())
+            _drawPipeline.ExecuteDrawPass(passId);
 
         _passPipeline.ApplyAfterPass();
     }

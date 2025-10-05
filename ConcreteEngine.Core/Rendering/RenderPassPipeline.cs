@@ -13,7 +13,7 @@ internal enum PreparePassResult
     Skip
 }
 
-internal readonly record struct NextPassResult(int PassIndex, RenderTargetId TargetId, bool SkipPass);
+internal readonly record struct NextPassResult(PassId PassId, int PassTagIdx, bool SkipPass);
 
 public sealed class RenderPassPipeline
 {
@@ -23,13 +23,12 @@ public sealed class RenderPassPipeline
     private readonly PipelineStateOps _cmdOps;
 
     private readonly List<RenderPassEntry> _entries;
-    private readonly Dictionary<PassTagKey, RenderPassEntry> _registry;
 
     private readonly PassCommandQueue _cmdQueue;
 
     private int _passIter = 0;
     private RenderPassEntry? _currentEntry = null;
-    
+
     private Size2D _outputSize;
 
     internal RenderPassPipeline(PipelineStateOps cmdOps, RenderRegistry renderRegistry)
@@ -37,20 +36,21 @@ public sealed class RenderPassPipeline
         _cmdOps = cmdOps;
         _renderRegistry = renderRegistry;
         _entries = new List<RenderPassEntry>(8);
-        _registry = new Dictionary<PassTagKey, RenderPassEntry>(8);
         _cmdQueue = new PassCommandQueue();
         _ctx = new RenderPassCtx(_cmdOps, _cmdQueue);
-
     }
 
-    public RenderPassEntry Register<TTag, TSlot>(RenderTargetId targetId, PassOpKind opKind, int pass,
-        RenderPassState initial)
+    public RenderPassEntry Register<TTag, TSlot>(PassOpKind opKind, int passTagIdx, RenderPassState initial)
         where TTag : unmanaged, IRenderPassTag where TSlot : unmanaged, IRenderPassTagSlot
     {
         var key = PassTagKey.Make<TTag, TSlot>(opKind);
+        foreach (var e in _entries)
+        {
+            if (e.TagKey == key && e.PassTagIdx == passTagIdx)
+                throw new InvalidOperationException("Duplicated passes");
+        }
 
-        var entry = new RenderPassEntry(targetId, key, pass, initial);
-        _registry.Add(key, entry);
+        var entry = new RenderPassEntry(new PassId(_entries.Count), key, passTagIdx, initial);
         _entries.Add(entry);
         return entry;
     }
@@ -78,9 +78,9 @@ public sealed class RenderPassPipeline
 
         bool skipPass = false;
         if (_renderRegistry.TryGetRenderFbo(pass.TagKey, out var fbo))
-            _ctx!.AttachPass(fbo, pass.PassIndex, pass.TagKey);
+            _ctx.AttachPass(fbo, pass.PassTagIdx, pass.TagKey);
         else if (pass.TagKey.PassOp == PassOpKind.Screen)
-            _ctx!.AttachScreenPass(pass.PassIndex, pass.TagKey, _outputSize);
+            _ctx.AttachScreenPass(pass.PassTagIdx, pass.TagKey, _outputSize);
         else
             skipPass = true;
 
@@ -88,18 +88,18 @@ public sealed class RenderPassPipeline
         _cmdQueue.DequeuePassSources(_currentEntry);
         //start
 
-        result = new NextPassResult(pass.PassIndex, pass.TargetId, skipPass);
+        result = new NextPassResult(pass.PassId, pass.PassTagIdx, skipPass);
         return true;
     }
 
     internal ApplyPassReturn ApplyPass()
     {
         Debug.Assert(_currentEntry != null);
-        return _currentEntry.ApplyPass(_ctx!);
+        return _currentEntry.ApplyPass(_ctx);
     }
 
     internal void ApplyAfterPass()
     {
-        _currentEntry!.ApplyAfterPass(_ctx!);
+        _currentEntry!.ApplyAfterPass(_ctx);
     }
 }

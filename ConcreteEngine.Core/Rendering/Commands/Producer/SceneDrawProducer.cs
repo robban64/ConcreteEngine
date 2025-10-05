@@ -46,8 +46,8 @@ public sealed class SceneDrawProducer : IDrawCommandProducer
         );
 
 
-        var meta = new DrawCommandMeta(DrawCommandId.Skybox, RenderTargetId.Scene, DrawCommandQueue.Skybox);
+        var meta = new DrawCommandMeta(DrawCommandId.Skybox,  DrawCommandQueue.Skybox);
 
-        submitter.SubmitDraw(in cmd, in meta, new DrawTransformPayload(Matrix4x4.Identity));
+        submitter.SubmitDraw( cmd,  meta, new DrawTransformPayload(Matrix4x4.Identity));
     }
 }

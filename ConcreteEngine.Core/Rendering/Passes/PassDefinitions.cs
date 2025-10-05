@@ -1,12 +1,11 @@
 namespace ConcreteEngine.Core.Rendering.Passes;
 
-public enum RenderTargetId : byte
+
+public readonly record struct PassId(int Value)
 {
-    Scene,
-    Shadow,
-    Light,
-    PostEffect,
-    Screen
+    public static implicit operator int(PassId id) => id.Value;
+    public static implicit operator byte(PassId id) => (byte)id.Value;
+
 }
 
 public enum PassOpKind : byte

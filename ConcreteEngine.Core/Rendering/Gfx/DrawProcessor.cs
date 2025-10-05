@@ -112,7 +112,7 @@ internal sealed class DrawProcessor
         _gfxBuffers.BindUniformBufferRange(_drawUbo.Id, _drawUbo.NextDrawCursor(), _drawUbo.Stride);
     }
 
-    public void DrawMesh(in DrawCommand cmd)
+    public void DrawMesh(DrawCommand cmd)
     {
         BindDrawMaterial(cmd.MaterialId);
         BindDrawObject();

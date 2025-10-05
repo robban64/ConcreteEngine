@@ -29,13 +29,29 @@ public enum DrawCommandQueue : byte
 }
 
 [Flags]
+public enum PassMask : uint
+{
+    None = 0,
+    Main = 1 << 0,
+    DepthPre = 1 << 1,
+    ShadowDir = 1 << 2,
+    ShadowSpot = 1 << 3,
+    ShadowPoint = 1 << 4,
+    Ui = 1 << 5,
+    Post = 1 << 6,
+    
+    Default = Main | DepthPre | ShadowDir | ShadowSpot | ShadowPoint
+
+}
+
+[Flags]
 public enum DrawCommandFlags : byte
 {
     None = 0,
     Visible = 1 << 0,
-    DoubleSided = 1 << 1,
     CastShadows = 1 << 2,
     ReceiveShadows = 1 << 3,
+    Static = 1 << 4,
 
     Shadows = CastShadows | ReceiveShadows
 }

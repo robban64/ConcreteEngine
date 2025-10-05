@@ -81,7 +81,7 @@ internal sealed class RenderRegistry
     {
         InvalidOpThrower.ThrowIfNot(_registrationData.Enabled);
 
-        var gfxDescriptor = entry.ToGfxDescriptor(_registrationData.OutputSize);
+        var gfxDescriptor = entry.Build(_registrationData.OutputSize);
         var fboId = _gfxFbo.CreateFrameBuffer(gfxDescriptor);
         var meta = _gfxApi.GetMeta<FrameBufferId, FrameBufferMeta>(fboId);
 

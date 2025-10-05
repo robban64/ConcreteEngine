@@ -166,6 +166,7 @@ internal static class GlEnumExtensions
             EnginePixelFormat.Rgb => SizedInternalFormat.Rgb8,
             EnginePixelFormat.Rgba => SizedInternalFormat.Rgba8,
             EnginePixelFormat.SrgbAlpha => SizedInternalFormat.Srgb8Alpha8,
+            EnginePixelFormat.Depth => SizedInternalFormat.DepthComponent24,
             _ => throw new ArgumentOutOfRangeException(nameof(format))
         };
     }

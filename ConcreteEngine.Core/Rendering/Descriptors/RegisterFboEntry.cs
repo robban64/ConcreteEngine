@@ -1,11 +1,11 @@
 using System.Numerics;
+using ConcreteEngine.Common;
 using ConcreteEngine.Common.Numerics;
 using ConcreteEngine.Core.Rendering.Gfx;
 using ConcreteEngine.Graphics;
 using ConcreteEngine.Graphics.Gfx.Contracts;
 
 namespace ConcreteEngine.Core.Rendering.Descriptors;
-
 
 public sealed class RegisterFboEntry(
     EnginePixelFormat pixelFormat = EnginePixelFormat.SrgbAlpha,
@@ -23,6 +23,12 @@ public sealed class RegisterFboEntry(
     public RegisterFboEntry AttachColorTexture()
     {
         Attachments = Attachments with { ColorTexture = true };
+        return this;
+    }
+
+    public RegisterFboEntry AttachDepthTexture()
+    {
+        Attachments = Attachments with { DepthTexture = true };
         return this;
     }
 
@@ -45,8 +51,21 @@ public sealed class RegisterFboEntry(
     }
 
 
-    internal GfxFrameBufferDescriptor ToGfxDescriptor(Size2D outputSize) =>
-        new(outputSize, Attachments, PixelFormat, Multisample, Preset);
+    internal GfxFrameBufferDescriptor Build(Size2D outputSize)
+    {
+        FboSizePolicy ??= RenderFbo.SizePolicy.Default();
+        var size = FboSizePolicy.Calculate(outputSize);
+        
+        InvalidOpThrower.ThrowIf(size.Width < 1 || size.Height < 1, nameof(size));
+        
+        return new GfxFrameBufferDescriptor(
+            Size: size,
+            Attachments: Attachments,
+            PixelFormat: PixelFormat,
+            Multisample: Multisample,
+            TexturePreset: Preset
+        );
+    }
 
     public static RegisterFboEntry MakeDefault(bool hasMips) =>
         new(pixelFormat: EnginePixelFormat.SrgbAlpha,

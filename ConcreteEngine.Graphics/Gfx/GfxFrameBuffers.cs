@@ -43,10 +43,20 @@ public sealed class GfxFrameBuffers
             var texProps = new GfxTextureProperties(desc.TexturePreset, 0, 0);
 
             var textureId = _gfxTextures.BuildEmptyTexture(texDesc, texProps);
-
             var texRef = _resources.TextureStore.GetRefHandle(textureId);
-            AttachTexture(fboRef, texRef);
+            AttachTexture(fboRef, texRef, FrameBufferTarget.Color);
             attachments = attachments with { ColorTextureId = textureId };
+        }
+
+        if (desc.Attachments.DepthTexture)
+        {
+            var texDesc = new GfxTextureDescriptor(size.Width, size.Height, TextureKind.Texture2D,
+                EnginePixelFormat.Depth, 1);
+            var texProps = new GfxTextureProperties(TexturePreset.LinearClamp, 0, 0);
+            var textureId = _gfxTextures.BuildEmptyTexture(texDesc, texProps);
+            var texRef = _resources.TextureStore.GetRefHandle(textureId);
+            AttachTexture(fboRef, texRef, FrameBufferTarget.Depth);
+            attachments = attachments with { DepthTextureId = textureId };
         }
 
         if (desc.Attachments.ColorBuffer)
@@ -64,6 +74,8 @@ public sealed class GfxFrameBuffers
             var rboId = _resources.RboStore.Add(in meta, rboRef);
             attachments = attachments with { DepthRenderBufferId = rboId };
         }
+        
+        _driver.ValidateComplete(fboRef, desc.Attachments.ColorTexture);
 
         var fboMeta = new FrameBufferMeta(size, attachments, desc.Multisample);
         var fboId = _resources.FboStore.Add(in fboMeta, fboRef);
@@ -85,7 +97,7 @@ public sealed class GfxFrameBuffers
             var texDes = new GfxReplaceTexture(newSize.Width, newSize.Height);
             var texRef = _gfxTextures.ReplaceTexture(attachments.ColorTextureId, in texDes);
             _gfxTextures.ApplyProperties(attachments.ColorTextureId);
-            AttachTexture(fboRef, texRef);
+            AttachTexture(fboRef, texRef, FrameBufferTarget.Color);
         }
 
         if (attachments.ColorRenderBufferId.IsValid())
@@ -104,6 +116,9 @@ public sealed class GfxFrameBuffers
                 FrameBufferTarget.DepthStencil, newMeta.MultiSample, out var meta);
             _resources.RboStore.Replace(attachments.DepthRenderBufferId, in meta, rbo, out _);
         }
+        
+        _driver.ValidateComplete(fboRef, attachments.ColorTextureId.IsValid());
+
     }
 
     private GfxRefToken<RenderBufferId> CreateAttachRenderBuffer(GfxRefToken<FrameBufferId> fbo, Size2D size,
@@ -116,15 +131,14 @@ public sealed class GfxFrameBuffers
         return rboRef;
     }
 
-    private void AttachTexture(GfxRefToken<FrameBufferId> fbo, GfxRefToken<TextureId> tex)
+    private void AttachTexture(GfxRefToken<FrameBufferId> fbo, GfxRefToken<TextureId> tex, FrameBufferTarget target)
     {
-        _driver.AttachTexture(fbo, tex, FrameBufferTarget.Color);
+        _driver.AttachTexture(fbo, tex, target);
     }
 
 
     private static void EnsureCreateFrameBuffer(in GfxFrameBufferDescriptor desc)
     {
-        ArgumentExceptionThrower.ThrowIf(desc.Attachments.DepthTexture, nameof(desc.Attachments.DepthTexture));
         if (desc.Multisample != RenderBufferMsaa.None && desc.TexturePreset != TexturePreset.None)
             throw new InvalidOperationException($"Multisample require None for {nameof(TexturePreset)}");
     }

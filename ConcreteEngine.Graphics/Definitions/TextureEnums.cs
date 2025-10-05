@@ -5,7 +5,8 @@ public enum EnginePixelFormat : byte
     Unknown = 0,
     Rgb = 1,
     Rgba = 2,
-    SrgbAlpha = 3
+    SrgbAlpha = 3,
+    Depth = 4
 }
 
 public enum TexturePreset : byte

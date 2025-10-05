@@ -84,13 +84,13 @@ public sealed class RenderFbo : IComparable<RenderFbo>, IComparable<FrameBufferI
             new(Mode.Calculated, calcFboOutput, ratio, default);
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public Size2D Calculate(Size2D output)
+        public Size2D Calculate(Size2D outputSize)
         {
             return _mode switch
             {
                 Mode.Fixed => _fixed,
-                Mode.Calculated => _calc!(output, _ratio),
-                _ => output
+                Mode.Calculated => _calc!(outputSize, _ratio),
+                _ => outputSize
             };
         }
     }

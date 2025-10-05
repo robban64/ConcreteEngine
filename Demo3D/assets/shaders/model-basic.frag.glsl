@@ -19,8 +19,8 @@ out vec4 FragColor;
 @import ubo:ShadowUniform
 @import ubo:MaterialUniform
 
-uniform sampler2D uTexture;
-uniform sampler2D uShadowMap;
+layout(binding = 0) uniform sampler2D uTexture;
+layout(binding = 1) uniform sampler2D uShadowMap;
 
 float saturate(float x) {
     return clamp(x, 0.0, 1.0);

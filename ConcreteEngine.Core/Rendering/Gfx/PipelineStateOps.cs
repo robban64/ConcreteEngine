@@ -13,12 +13,10 @@ public sealed class PipelineStateOps
     private readonly IPrimitiveMeshes _primitiveMeshes;
     private readonly GfxCommands _gfxCmd;
     private readonly GfxTextures _gfxTextures;
-    private readonly DrawProcessor _drawProcessor;
     private readonly RenderRegistry _renderRegistry;
 
-    internal PipelineStateOps(GfxContext ctx, DrawProcessor drawProcessor, RenderRegistry renderRegistry)
+    internal PipelineStateOps(GfxContext ctx,  RenderRegistry renderRegistry)
     {
-        _drawProcessor = drawProcessor;
         _renderRegistry = renderRegistry;
         _gfxCmd = ctx.Commands;
         _gfxTextures = ctx.Textures;

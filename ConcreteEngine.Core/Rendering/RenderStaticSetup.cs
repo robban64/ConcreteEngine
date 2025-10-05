@@ -45,8 +45,8 @@ internal static class RenderStaticSetup
 
     internal static void RegisterPassTagTypes()
     {
-        RTypeRegistry.RenderPassTag<ScenePassTag>.Register();
         RTypeRegistry.RenderPassTag<ShadowPassTag>.Register();
+        RTypeRegistry.RenderPassTag<ScenePassTag>.Register();
         RTypeRegistry.RenderPassTag<LightPassTag>.Register();
         RTypeRegistry.RenderPassTag<PostPassTag>.Register();
         RTypeRegistry.RenderPassTag<ScreenPassTag>.Register();

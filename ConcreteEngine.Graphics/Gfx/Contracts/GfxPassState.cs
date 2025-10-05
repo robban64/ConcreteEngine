@@ -17,7 +17,7 @@ public readonly record struct GfxPassState(
 )
 {
     public static GfxPassState MakeScene() => new(true, true, true, false, false, true, true);
-    public static GfxPassState MakeShadow() => new(true, true, true, false, false, false, false);
+    public static GfxPassState MakeShadow() => new(true, true, false, false, false, false, false);
     public static GfxPassState MakeLighting() => new(true, true, true, true, false, true);
 
     public static GfxPassState MakePostProcess(bool blend = false) =>

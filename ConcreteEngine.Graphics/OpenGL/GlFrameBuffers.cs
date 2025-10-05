@@ -100,11 +100,12 @@ internal sealed class GlFrameBuffers : IGraphicsDriverModule
         _gl.NamedFramebufferRenderbuffer(fboHandle, glAttachment, RenderbufferTarget.Renderbuffer, rboHandle);
     }
 
-    public void SetDrawBuffers(GfxRefToken<FrameBufferId> fboRef, FrameBufferTarget target)
+    public void SetDrawReadBuffer(GfxRefToken<FrameBufferId> fboRef, bool colorAttachment)
     {
-        var fboHandle = GetFboHandle(fboRef).Value;
-        var glAttachment = target.ToGlAttachmentEnum();
-        _gl.NamedFramebufferDrawBuffers(fboHandle, 1, glAttachment);
+        var handle = GetFboHandle(fboRef).Value;
+        var glEnum = colorAttachment ? GLEnum.ColorAttachment0 : GLEnum.None;
+        _gl.NamedFramebufferDrawBuffer(handle, glEnum);
+        _gl.NamedFramebufferReadBuffer(handle, glEnum);
     }
 
     public void ValidateComplete(GfxRefToken<FrameBufferId> fboRef, bool colorAttachment)

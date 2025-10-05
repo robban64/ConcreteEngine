@@ -99,6 +99,7 @@ public sealed class RenderGlobalSnapshot
 public readonly struct Skybox(
     MaterialId materialId,
     Quaternion rotation,
+    
     float intensity = 1)
 {
     public readonly Quaternion Rotation = rotation;

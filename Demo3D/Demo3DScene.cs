@@ -81,8 +81,6 @@ public sealed class Demo3DScene : GameScene
         var screenShader = assets.Get<Shader>("Screen");
         var compositeShader = assets.Get<Shader>("Composite");
         var presentShader = assets.Get<Shader>("Present");
-
-        var lightShader = assets.Get<Shader>("LightPass");
         var colorFilterShader = assets.Get<Shader>("ColorFilter");
 
 

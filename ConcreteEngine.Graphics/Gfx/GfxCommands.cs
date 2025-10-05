@@ -120,9 +120,12 @@ public sealed class GfxCommands
         ApplyState(in states);
         Clear(in passClear);
 
+        if (meta.Attachments.DepthTextureId != default)
+        {
+            _driver.FrameBuffers.SetDrawReadBuffer(_store.FboStore.GetRefHandle(fboId), false);
+        }
+
         _activeOutputSize = meta.Size;
-        /*
-*/
     }
 
     public void EndRenderPass()

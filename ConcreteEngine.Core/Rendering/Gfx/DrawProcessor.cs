@@ -6,6 +6,7 @@ using ConcreteEngine.Common.Numerics;
 using ConcreteEngine.Core.Assets.Resources;
 using ConcreteEngine.Core.Rendering.Commands;
 using ConcreteEngine.Core.Rendering.Data;
+using ConcreteEngine.Core.Rendering.Passes;
 using ConcreteEngine.Graphics.Gfx;
 using ConcreteEngine.Graphics.Resources;
 
@@ -30,6 +31,10 @@ internal sealed class DrawProcessor
 
     private UniformBufferId _materialUboId;
 
+    private TextureId _depthTexture;
+    
+    private ShaderId _passShader = default;
+
     internal DrawProcessor(GfxContext gfx, MaterialStore materials, RenderRegistry registry)
     {
         _gfx = gfx;
@@ -46,16 +51,30 @@ internal sealed class DrawProcessor
     {
         _drawUbo = _registry.GetRenderUbo<DrawObjectUniform>();
         _materialUboId = _registry.GetRenderUbo<MaterialUniformRecord>().Id;
+
+        if (!_registry.TryGetRenderFbo<ShadowPassTag, PassDrawSlot>(out var fbo))
+            throw new InvalidOperationException();
+        
+        _depthTexture = fbo!.Attachments.DepthTextureId;
     }
 
-    public void Prepare(in RenderGlobalSnapshot renderGlobals, nint capacity)
+    public void PrepareFrame(in RenderGlobalSnapshot renderGlobals, nint capacity)
     {
         _drawUbo.ResetCursor();
         if (capacity != _drawUbo.Capacity)
             _drawUbo.SetCapacity(capacity);
 
         _previousMaterialId = -1;
+        _passShader = default;
         _gfxBuffers.SetUniformBufferCapacity(_drawUbo.Id, capacity);
+    }
+    
+    public void PrepareDrawPass(ShaderId shaderId = default)
+    {
+        _passShader = shaderId;
+        if(shaderId > 0) UseShader(shaderId);
+        _drawUbo.ResetCursor();
+        _previousMaterialId = -1;
     }
 
     private void UseShader(ShaderId shaderId)
@@ -76,6 +95,8 @@ internal sealed class DrawProcessor
             if(value == 0) continue;
             _gfxCmd.BindTexture(value, i);
         }
+        if(material.Shadows)
+            _gfxCmd.BindTexture(_depthTexture, material.SamplerSlots.Length - 1);
 
         UploadMaterial(material);
 
@@ -114,7 +135,9 @@ internal sealed class DrawProcessor
 
     public void DrawMesh(DrawCommand cmd)
     {
-        BindDrawMaterial(cmd.MaterialId);
+        if(_passShader == default)
+            BindDrawMaterial(cmd.MaterialId);
+        
         BindDrawObject();
         _gfxCmd.BindMesh(cmd.MeshId);
         _gfxCmd.DrawBoundMesh(cmd.MeshId, cmd.DrawCount);

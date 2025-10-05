@@ -102,7 +102,7 @@ public sealed class MeshDrawProducer : IDrawCommandProducer, IMeshDrawSink
             counter++;
             if (counter >= BatchSize)
             {
-                submitter.SubmitDrawBatch(_commands, _meta, _transforms);
+                submitter.SubmitDrawBatch(new DrawCommandData(_commands, _meta, _transforms));
                 counter = 0;
             }
         }
@@ -112,7 +112,7 @@ public sealed class MeshDrawProducer : IDrawCommandProducer, IMeshDrawSink
             var commands = _commands.AsSpan(0, counter);
             var metas = _meta.AsSpan(0, counter);
             var transforms = _transforms.AsSpan(0, counter);
-            submitter.SubmitDrawBatch(commands, metas, transforms);
+            submitter.SubmitDrawBatch(new DrawCommandData(commands, metas, transforms));
         }
     }
 

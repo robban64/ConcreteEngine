@@ -99,25 +99,37 @@ vec3 computeFogColor(vec3 sunColor, float shadowTerm) {
 }
 
 // Regular shadow map with manual compare + square PCF radius from uShadowParams1.y
-float sampleShadowMap(vec4 lightSpacePos, vec3 N, vec3 L) {
-    if (uShadowParams1.x <= 0.0) return 1.0; // off
+float sampleShadowMap(vec4 lightSpacePos, vec3 N, vec3 L)
+{
+    // Transform to light projection space
+    vec3 projCoords = lightSpacePos.xyz / lightSpacePos.w;
+    projCoords = projCoords * 0.5 + 0.5; // map from [-1,1] to [0,1]
 
-    vec3 proj = lightSpacePos.xyz / lightSpacePos.w;
-    if (proj.x < 0.0 || proj.x > 1.0 || proj.y < 0.0 || proj.y > 1.0) return 1.0;
+    // Early out if outside light frustum
+    if (projCoords.x < 0.0 || projCoords.x > 1.0 ||
+        projCoords.y < 0.0 || projCoords.y > 1.0)
+        return 1.0;
 
-    float current = proj.z;
-    float bias = uShadowParams0.z + uShadowParams0.w * (1.0 - dot(N, L));
-    int radius = int(uShadowParams1.y + 0.5);
-    vec2 texel = uShadowParams0.xy;
+    // Bias depending on normal vs light direction
+    float cosTheta = clamp(dot(N, L), 0.0, 1.0);
+    float normalBias = (1.0 - cosTheta) * 0.01;     // reduces acne on grazing angles
+    float bias = uShadowParams0.w + normalBias;
 
-    float sum = 0.0;
-    for (int x = -radius; x <= radius; ++x)
-        for (int y = -radius; y <= radius; ++y) {
-            float closest = texture(uShadowMap, proj.xy + vec2(x, y) * texel).r;
-            sum += (current - bias <= closest) ? 1.0 : 0.0;
-        }
-    float samples = float((2 * radius + 1) * (2 * radius + 1));
-    return sum / samples;
+    // Shadow map texel size (for PCF)
+    vec2 texelSize = uShadowParams0.xy * uShadowParams0.z;
+    float shadow = 0.0;
+
+    // 3×3 PCF
+    for (int x = -1; x <= 1; ++x)
+    for (int y = -1; y <= 1; ++y)
+    {
+        vec2 offset = vec2(x, y) * texelSize;
+        float depth = texture(uShadowMap, projCoords.xy + offset).r;
+        shadow += step(projCoords.z - bias, depth);
+    }
+
+    shadow /= 9.0;
+    return shadow;
 }
 
 vec3 terrainAlbedo(vec2 texCoords, float uvRepeat) {

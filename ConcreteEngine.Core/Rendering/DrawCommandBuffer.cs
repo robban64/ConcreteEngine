@@ -21,31 +21,28 @@ public sealed class DrawCommandBuffer
 
     private readonly DrawProcessor _drawProcessor;
 
-    private DrawCommand[] _commands;
-    private DrawTransformPayload[] _transforms;
-    private DrawCommandMeta[] _metas;
-
-    private DrawCommandMetaIndex[] _indices;
-
-    private DrawTicket[] _tickets;
-    private readonly PassRange[] _passRanges;
+    private DrawCommand[] _commandBuffer;
+    private DrawTransformPayload[] _transformBuffer;
+    private DrawCommandMeta[] _metaBuffer;
+    private DrawCommandRef[] _indexBuffer;
+    private DrawCommandTicket[] _drawTickets;
+    private DrawPassRange[] _passRanges;
 
     private int _submitIdx = 0;
     private int _drainTransformIdx = 0;
-    private int _drainCmdIdx = 0;
 
     public int Count => _submitIdx;
 
     internal DrawCommandBuffer(DrawProcessor drawProcessor)
     {
-        _commands = new DrawCommand[DefaultCapacity];
-        _transforms = new DrawTransformPayload[DefaultCapacity];
-        _metas = new DrawCommandMeta[DefaultCapacity];
-        _indices = new DrawCommandMetaIndex[DefaultCapacity];
+        _commandBuffer = new DrawCommand[DefaultCapacity];
+        _transformBuffer = new DrawTransformPayload[DefaultCapacity];
+        _metaBuffer = new DrawCommandMeta[DefaultCapacity];
+        _indexBuffer = new DrawCommandRef[DefaultCapacity];
 
-        _tickets = new DrawTicket[DefaultCapacity];
+        _drawTickets = new DrawCommandTicket[DefaultCapacity];
 
-        _passRanges = new PassRange[RangesCount];
+        _passRanges = new DrawPassRange[RangesCount];
 
         _drawProcessor = drawProcessor;
 
@@ -60,31 +57,34 @@ public sealed class DrawCommandBuffer
     public void SubmitDraw(DrawCommand cmd, DrawCommandMeta meta, in DrawTransformPayload transform)
     {
         EnsureCapacity(1);
-        _commands[_submitIdx] = cmd;
-        _transforms[_submitIdx] = transform;
-        _metas[_submitIdx] = meta;
-        _indices[_submitIdx] = new DrawCommandMetaIndex(meta, _submitIdx);
+        _commandBuffer[_submitIdx] = cmd;
+        _transformBuffer[_submitIdx] = transform;
+        _metaBuffer[_submitIdx] = meta;
+        _indexBuffer[_submitIdx] = new DrawCommandRef(meta, _submitIdx);
         _submitIdx++;
     }
 
-    public void SubmitDrawBatch(ReadOnlySpan<DrawCommand> cmds, ReadOnlySpan<DrawCommandMeta> metas,
-        ReadOnlySpan<DrawTransformPayload> transforms)
+    public void SubmitDrawBatch(in DrawCommandData data)
     {
-        Debug.Assert(cmds.Length == metas.Length);
-        Debug.Assert(cmds.Length == transforms.Length);
+        Debug.Assert(data.Draw.Length == data.Meta.Length);
+        Debug.Assert(data.Draw.Length == data.Transform.Length);
 
-        var count = cmds.Length;
+        var drawCommands = data.Draw;
+        var drawTransforms = data.Transform;
+        var drawMeta = data.Meta;
+        
+        var count = drawCommands.Length;
         if (count == 0) return;
 
         EnsureCapacity(count);
-        cmds.CopyTo(_commands.AsSpan(_submitIdx));
-        transforms.CopyTo(_transforms.AsSpan(_submitIdx));
-        metas.CopyTo(_metas.AsSpan(_submitIdx));
+        drawCommands.CopyTo(_commandBuffer.AsSpan(_submitIdx));
+        drawTransforms.CopyTo(_transformBuffer.AsSpan(_submitIdx));
+        drawMeta.CopyTo(_metaBuffer.AsSpan(_submitIdx));
 
-        var indices = _indices.AsSpan(_submitIdx);
+        var indices = _indexBuffer.AsSpan(_submitIdx);
         for (var i = 0; i < count; i++)
         {
-            indices[i] = new DrawCommandMetaIndex(metas[i], _submitIdx + i);
+            indices[i] = new DrawCommandRef(drawMeta[i], _submitIdx + i);
         }
 
         _submitIdx += count;
@@ -94,14 +94,14 @@ public sealed class DrawCommandBuffer
     public void ReadyDrawCommands()
     {
         if (_submitIdx <= 1) return;
-        var indices = _indices.AsSpan(0, _submitIdx);
+        var indices = _indexBuffer.AsSpan(0, _submitIdx);
         indices.Sort();
 
-        Array.Fill(_passRanges, new PassRange(0, 0));
+        Array.Fill(_passRanges, new DrawPassRange(0, 0));
 
         // Count pass tickets
         Span<int> counts = stackalloc int[32];
-        var metas = _metas.AsSpan(0, _submitIdx);
+        var metas = _metaBuffer.AsSpan(0, _submitIdx);
         for (var i = 0; i < _submitIdx; i++)
         {
             ref readonly var index = ref indices[i];
@@ -119,13 +119,13 @@ public sealed class DrawCommandBuffer
         for (var p = 0; p < 32; p++)
         {
             var c = counts[p];
-            _passRanges[p] = new PassRange(total, c);
+            _passRanges[p] = new DrawPassRange(total, c);
             total += c;
         }
 
         // Create draw tickets
-        if (_tickets.Length < total)
-            _tickets = new DrawTicket[ArrayUtility.CapacityGrowthPow2(total)];
+        if (_drawTickets.Length < total)
+            _drawTickets = new DrawCommandTicket[ArrayUtility.CapacityGrowthPow2(total)];
 
         Span<int> heads = stackalloc int[32];
         for (var p = 0; p < 32; p++)
@@ -140,7 +140,7 @@ public sealed class DrawCommandBuffer
             {
                 var p = BitOperations.TrailingZeroCount(mask);
                 var w = heads[p]++;
-                _tickets[w] = new DrawTicket(mi.Idx, (byte)p);
+                _drawTickets[w] = new DrawCommandTicket(mi.Idx, (byte)p);
                 mask &= mask - 1;
             }
         }
@@ -150,8 +150,8 @@ public sealed class DrawCommandBuffer
     //TODO bulk upload
     public void DrainTransformQueue()
     {
-        var transforms = (ReadOnlySpan<DrawTransformPayload>)_transforms;
-        var indices = (ReadOnlySpan<DrawCommandMetaIndex>)_indices;
+        var transforms = (ReadOnlySpan<DrawTransformPayload>)_transformBuffer;
+        var indices = (ReadOnlySpan<DrawCommandRef>)_indexBuffer;
 
         for (var i = _drainTransformIdx; i < _submitIdx; i++)
         {
@@ -164,18 +164,18 @@ public sealed class DrawCommandBuffer
     {
         var pass = _passRanges[passId];
         var end = pass.Start + pass.Count;
-        ReadOnlySpan<DrawCommand> commands = _commands.AsSpan();
+        ReadOnlySpan<DrawCommand> commands = _commandBuffer.AsSpan();
         for (var i = pass.Start; i < end; i++)
         {
-            var idx = _tickets[i].SubmitIdx;
+            var idx = _drawTickets[i].SubmitIdx;
             _drawProcessor.DrawMesh(commands[idx]);
         }
     }
 /*
     public void DrainCommandQueue(RenderTargetId targetId)
     {
-        var cmdSpan = (ReadOnlySpan<DrawCommand>)_commands;
-        var metaSpan = (ReadOnlySpan<DrawCommandMetaIndex>)_indices;
+        var cmdSpan = (ReadOnlySpan<DrawCommand>)_commandBuffer;
+        var metaSpan = (ReadOnlySpan<DrawCommandRef>)_indexBuffer;
 
         for (int i = _drainCmdIdx; i < _submitIdx; i++)
         {
@@ -192,22 +192,21 @@ public sealed class DrawCommandBuffer
     {
         _submitIdx = 0;
         _drainTransformIdx = 0;
-        _drainCmdIdx = 0;
     }
 
     private void EnsureCapacity(int amount)
     {
         var idx = _submitIdx + amount;
-        if (_commands.Length >= idx) return;
+        if (_commandBuffer.Length >= idx) return;
         var newCap = ArrayUtility.CapacityGrowthPow2(Math.Max(idx, 4));
 
         if (newCap > MaxCapacity)
             ThrowMaxCapacityExceeded();
 
-        Array.Resize(ref _commands, newCap);
-        Array.Resize(ref _transforms, newCap);
-        Array.Resize(ref _metas, newCap);
-        Array.Resize(ref _indices, newCap);
+        Array.Resize(ref _commandBuffer, newCap);
+        Array.Resize(ref _transformBuffer, newCap);
+        Array.Resize(ref _metaBuffer, newCap);
+        Array.Resize(ref _indexBuffer, newCap);
     }
 
     [MethodImpl(MethodImplOptions.NoInlining), DoesNotReturn, StackTraceHidden]

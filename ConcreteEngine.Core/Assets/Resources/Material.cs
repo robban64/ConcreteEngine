@@ -19,12 +19,12 @@ public sealed class Material
 
     public TextureId[] SamplerSlots => _samplerSlots;
 
-
     public Color4 Color { get; set; } = Color4.White;
     public float Shininess { get; set; } = 24f;
     public float SpecularStrength { get; set; } = 0.25f;
     public float UvRepeat { get; set; } = 1;
-
+    
+    public bool Shadows { get; set; } = true;
 
     public bool HasNormalMap => SamplerSlots.Length == 2;
 

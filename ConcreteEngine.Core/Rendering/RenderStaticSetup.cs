@@ -12,16 +12,15 @@ internal static class RenderStaticSetup
 {
     internal static void RegisterFrameBuffers(RenderRegistry renderRegistry)
     {
+        renderRegistry.RegisterFrameBuffer<ShadowPassTag, PassDrawSlot>(
+            RegisterFboEntry.MakeDefault(true).AttachDepthTexture().UseFixedSize(new Size2D(2048, 2048))
+        );
         renderRegistry.RegisterFrameBuffer<ScenePassTag, PassDrawSlot>(
             RegisterFboEntry.MakeMsaa(RenderBufferMsaa.X4).AttachColorTexture().AttachDepthStencilBuffer()
         );
         renderRegistry.RegisterFrameBuffer<ScenePassTag, PassResolveSlot>(
             RegisterFboEntry.MakeDefault(true).AttachColorTexture().AttachDepthStencilBuffer()
         );
-        renderRegistry.RegisterFrameBuffer<ShadowPassTag, PassDrawSlot>(
-            RegisterFboEntry.MakeDefault(true).AttachDepthTexture().UseFixedSize(new Size2D(1024, 1024))
-        );
-
         renderRegistry.RegisterFrameBuffer<PostPassTag, PassPostASlot>(
             RegisterFboEntry.MakePost(false).AttachColorTexture()
         );

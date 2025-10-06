@@ -13,7 +13,7 @@ namespace ConcreteEngine.Core.Rendering.Data;
 public readonly struct LightDataStruct(
     Vector4 colorIntensity,
     Vector4 posRange,
-    Vector4 dirType, 
+    Vector4 dirType,
     Vector4 spotAngles
 )
 {
@@ -23,21 +23,20 @@ public readonly struct LightDataStruct(
     public readonly Vector4 SpotAngles = spotAngles;
 }
 
-
 [StructLayout(LayoutKind.Sequential)]
 public readonly struct LightUniformRecord(
     int lightCounts,
     LightDataStruct l0,
-    LightDataStruct l1= default,
-    LightDataStruct l2= default,
-    LightDataStruct l3= default,
-    LightDataStruct l4= default,
-    LightDataStruct l5= default,
-    LightDataStruct l6= default,
+    LightDataStruct l1 = default,
+    LightDataStruct l2 = default,
+    LightDataStruct l3 = default,
+    LightDataStruct l4 = default,
+    LightDataStruct l5 = default,
+    LightDataStruct l6 = default,
     LightDataStruct l7 = default) : IStd140Uniform
 {
     // yzw unused/padding
-    public readonly IVec4Std140 LightCounts = new (lightCounts);
+    public readonly IVec4Std140 LightCounts = new(lightCounts);
 
     public readonly LightDataStruct L0 = l0;
     public readonly LightDataStruct L1 = l1;
@@ -49,20 +48,20 @@ public readonly struct LightUniformRecord(
     public readonly LightDataStruct L7 = l7;
 }
 
-
 [StructLayout(LayoutKind.Sequential)]
 public readonly struct FrameUniformRecord(
     Vector4 ambient,
     Vector4 ambientGround,
     Vector4 fogColor,
     Vector4 fogParams0,
-    Vector4 fogParams1) : IStd140Uniform
+    Vector4 fogParams1
+) : IStd140Uniform
 {
-    public readonly Vector4 Ambient = ambient;
-    public readonly Vector4 AmbientGround = ambientGround;
-    public readonly Vector4 FogColor = fogColor;
-    public readonly Vector4 FogParams0 = fogParams0;
-    public readonly Vector4 FogParams1 = fogParams1;
+    public readonly Vector4 Ambient = ambient; // xyz = sky ambient, w = exposure
+    public readonly Vector4 AmbientGround = ambientGround; // xyz = ground ambient
+    public readonly Vector4 FogColor = fogColor; // rgb = base fog color, a = in-scattering mix
+    public readonly Vector4 FogParams0 = fogParams0; // x=exp2_k, y=height_k, z=height0, w=globalStrength
+    public readonly Vector4 FogParams1 = fogParams1; // x=expWeight, y=heightWeight, z=maxDistance, w=reserved
 }
 
 public readonly struct CameraUniformRecord(
@@ -84,10 +83,12 @@ public readonly struct DirLightUniformRecord(
     Vector4 diffuse,
     Vector4 specular) : IStd140Uniform
 {
-    public readonly Vector4 Direction = direction;
-    public readonly Vector4 Diffuse = diffuse;
-    public readonly Vector4 SpecularIntensity = specular;
+    public readonly Vector4 Direction = direction;// WS direction (points FROM light toward scene)
+    public readonly Vector4 Diffuse = diffuse;// rgb=color, a=intensity
+    public readonly Vector4 SpecularIntensity = specular;// x = specular multiplier
 }
+
+
 
 [StructLayout(LayoutKind.Sequential)]
 public readonly struct ShadowUniformRecord(
@@ -95,9 +96,9 @@ public readonly struct ShadowUniformRecord(
     Vector4 shadowParams0,
     Vector4 shadowParams1) : IStd140Uniform
 {
-    public readonly Matrix4x4 LightViewProj = lightViewProj;
-    public readonly Vector4 ShadowParams0 = shadowParams0;
-    public readonly Vector4 ShadowParams1 = shadowParams1;
+    public readonly Matrix4x4 LightViewProj = lightViewProj; // std140: 4x vec4 columns (64 bytes)
+    public readonly Vector4 ShadowParams0 = shadowParams0; // x=1/texW, y=1/texH, z=constBias, w=slopeBias
+    public readonly Vector4 ShadowParams1 = shadowParams1; // x=strength, y=pcfRadius, z,w reserved
 }
 
 [StructLayout(LayoutKind.Sequential)]
@@ -107,10 +108,11 @@ public readonly struct MaterialUniformRecord(
     Vector4 matParams1
 ) : IStd140Uniform
 {
-    public readonly Vector4 MatColor = matColor;
-    public readonly Vector4 MatParams0 = matParams0;
-    public readonly Vector4 MatParams1 = matParams1;
+    public readonly Vector4 MatColor = matColor; // rgb = tint
+    public readonly Vector4 MatParams0 = matParams0; // x = SpecularStrength, y = uvRepeat, z,w reserved
+    public readonly Vector4 MatParams1 = matParams1; // x = Shininess,        yzw reserved
 }
+
 
 [StructLayout(LayoutKind.Sequential)]
 public readonly struct DrawObjectUniform(
@@ -158,4 +160,5 @@ public readonly struct FramePostProcessUniform(
     public readonly Vector4 ToneShadows = toneShadows;
     public readonly Vector4 ToneHighlights = toneHighlights;
     public readonly Vector4 SharpenParams = sharpenParams;
+    
 }

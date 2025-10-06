@@ -5,7 +5,6 @@
 in VS_OUT {
     vec3 FragPos;
     vec2 TexCoord;
-    vec2 TexCoordWeight;
     vec3 N_world;
 } fs_in;
 
@@ -28,7 +27,7 @@ layout(binding = 3) uniform sampler2D uAlbedoB;
 layout(binding = 4) uniform sampler2D uWeightMap;
 
 // depth
-layout(binding = 5) uniform sampler2D uShadowMap;
+layout(binding = 5) uniform sampler2DShadow uShadowMap;
 
 float saturate(float x) {
     return clamp(x, 0.0, 1.0);
@@ -37,11 +36,6 @@ float saturate(float x) {
 float blinnPhongSpec(vec3 N, vec3 V, vec3 L, float shininess) {
     vec3 H = normalize(V + L);
     return pow(max(dot(N, H), 0.0), shininess);
-}
-
-vec3 hemiAmbient(vec3 N) {
-    float up = 0.5 + 0.5 * N.y;
-    return mix(uAmbientGround.rgb, uAmbient.rgb, up);
 }
 
 float rangeFalloff(float dist, float range) {
@@ -98,38 +92,35 @@ vec3 computeFogColor(vec3 sunColor, float shadowTerm) {
     return mix(cFog, litFog, uFogColor.a);
 }
 
-// Regular shadow map with manual compare + square PCF radius from uShadowParams1.y
+
 float sampleShadowMap(vec4 lightSpacePos, vec3 N, vec3 L)
 {
-    // Transform to light projection space
-    vec3 projCoords = lightSpacePos.xyz / lightSpacePos.w;
-    projCoords = projCoords * 0.5 + 0.5; // map from [-1,1] to [0,1]
+    if (uShadowParams1.x <= 0.0) return 1.0;
 
-    // Early out if outside light frustum
-    if (projCoords.x < 0.0 || projCoords.x > 1.0 ||
-        projCoords.y < 0.0 || projCoords.y > 1.0)
-        return 1.0;
+    // NDC
+    vec3 proj = lightSpacePos.xyz / lightSpacePos.w;
+    proj.xy = proj.xy * 0.5 + 0.5;
+    proj.z  = proj.z  * 0.5 + 0.5;
 
-    // Bias depending on normal vs light direction
-    float cosTheta = clamp(dot(N, L), 0.0, 1.0);
-    float normalBias = (1.0 - cosTheta) * 0.01;     // reduces acne on grazing angles
-    float bias = uShadowParams0.w + normalBias;
+    // outside light frustum
+    if (proj.x < 0.0 || proj.x > 1.0 || proj.y < 0.0 || proj.y > 1.0) return 1.0;
+    if (proj.z > 1.0) return 1.0;
 
-    // Shadow map texel size (for PCF)
-    vec2 texelSize = uShadowParams0.xy * uShadowParams0.z;
-    float shadow = 0.0;
+    float bias = uShadowParams0.z + uShadowParams0.w * (1.0 - dot(N, L));
+    float ref  = proj.z - bias;
 
-    // 3×3 PCF
-    for (int x = -1; x <= 1; ++x)
-    for (int y = -1; y <= 1; ++y)
-    {
-        vec2 offset = vec2(x, y) * texelSize;
-        float depth = texture(uShadowMap, projCoords.xy + offset).r;
-        shadow += step(projCoords.z - bias, depth);
+    // PCF
+    int  radius = int(uShadowParams1.y + 0.5);
+    vec2 texel  = uShadowParams0.xy;
+    float sum   = 0.0;
+
+    for (int x = -radius; x <= radius; ++x)
+    for (int y = -radius; y <= radius; ++y) {
+        vec2 uv = proj.xy + vec2(x, y) * texel;
+        sum += texture(uShadowMap, vec3(uv, ref));
     }
-
-    shadow /= 9.0;
-    return shadow;
+    float samples = float((2*radius + 1) * (2*radius + 1));
+    return sum / samples;
 }
 
 vec3 terrainAlbedo(vec2 texCoords, float uvRepeat) {
@@ -173,7 +164,9 @@ void main() {
     float dirShadow = sampleShadowMap(uLightViewProj * vec4(P, 1.0), N, Ld);
     dirShadow = mix(1.0, dirShadow, uShadowParams1.x);
 
-    vec3 direct = (diffuse + specular) * LiD * dirShadow;
+    float dirShadowSpec = max(dirShadow, 0.25);
+
+    vec3 direct = diffuse * LiD * dirShadow + specular * LiD * dirShadowSpec;
 
     // Point/spot lights
     int lightCount = clamp(uLightCounts.x, 0, MAX_LIGHTS);
@@ -192,10 +185,14 @@ void main() {
         direct += (diffP + specPCol) * LiP * atten;
     }
 
-    // Ambient + exposure (hemi-ambient)
-    vec3 ambient = hemiAmbient(N) * baseColor;
+    // Ambient
+    float up = clamp(N.y * 0.5 + 0.5, 0.0, 1.0);
+    vec3 ambient = mix(uAmbientGround.rgb, uAmbient.rgb, up) * baseColor;
+
+    // Exposure (ambient.w as exposure-1)
     float exposure = max(uAmbient.w, 0.0) + 1.0;
     vec3 litColor = (ambient + direct) * exposure;
+
 
     // Fog
     float viewDist = length(uCameraPos.xyz - P);

@@ -15,6 +15,7 @@ using ConcreteEngine.Core.Rendering.Passes;
 using ConcreteEngine.Core.Scene;
 using ConcreteEngine.Graphics;
 using ConcreteEngine.Graphics.Gfx;
+using ConcreteEngine.Graphics.Gfx.Contracts;
 using ConcreteEngine.Graphics.Gfx.Utility;
 using ConcreteEngine.Graphics.Resources;
 
@@ -55,16 +56,16 @@ public sealed class RenderSystem : IRenderSystem
     private MaterialStore _materialStore = null!;
 
     private readonly BatcherRegistry _batches = new();
-    
+
     public SceneRenderProperties SceneRenderProps { get; }
     private RenderGlobalSnapshot _snapshot;
-    
+
     public ICamera Camera { get; } = new Camera3D();
     private readonly RenderView _renderView = new();
 
     private bool _initialized = false;
     private GfxFrameInfo _frameCtx;
-    
+
 
     internal RenderRegistry RenderRegistry => _renderRegistry;
 
@@ -96,7 +97,7 @@ public sealed class RenderSystem : IRenderSystem
         _materialStore = materialStore;
         _drawProcessor = new DrawProcessor(_gfx, _materialStore, _renderRegistry);
         _drawUniforms = new DrawUniforms(_gfx.Buffers, _renderRegistry);
-        _pipelineStateOps = new PipelineStateOps(_gfx, _renderRegistry);
+        _pipelineStateOps = new PipelineStateOps(_gfx, _renderRegistry, _renderView, _snapshot, _drawUniforms);
 
         _batches.Register(new TerrainBatcher(_gfx));
         //_batches.Register(new SpriteBatcher(_gfx));
@@ -113,6 +114,7 @@ public sealed class RenderSystem : IRenderSystem
     }
 
     private ShaderId depthShader;
+
     private void RegisterPasses(AssetSystem assets)
     {
         _passPipeline = new RenderPassPipeline(_pipelineStateOps, _renderRegistry);
@@ -126,8 +128,15 @@ public sealed class RenderSystem : IRenderSystem
         _passPipeline.Register<ShadowPassTag, PassDrawSlot>(PassOpKind.Draw, 0, RenderPassState.MakeShadow())
             .OnPassBegin(static (RenderPassCtx ctx, in RenderPassState state) =>
             {
+                ctx.Ops.UseRenderLightView(); // Note!
+                
                 ctx.Ops.BeginRenderPass(ctx.Target.FboId, state.ClearColor, state.PassState);
+                ctx.Ops.ApplyStateFunctions(new GfxPassStateFunc(Cull: CullMode.FrontCcw));
                 return ApplyPassReturn.DrawPassResult();
+            }).OnPassEnd(static (RenderPassCtx ctx, in RenderPassState state) =>
+            {
+                ctx.Ops.EndRenderPass();
+                ctx.Ops.RestoreView();
             });
 
         // Scene 
@@ -137,6 +146,8 @@ public sealed class RenderSystem : IRenderSystem
             .OnPassBegin(static (RenderPassCtx ctx, in RenderPassState state) =>
             {
                 ctx.Ops.BeginRenderPass(ctx.Target.FboId, state.ClearColor, state.PassState);
+                ctx.Ops.ApplyStateFunctions(new GfxPassStateFunc(Cull: CullMode.BackCcw));
+
                 ctx.MutateStatePass<ScenePassTag, PassResolveSlot>(
                     PassOpKind.Resolve,
                     PassMutationState.MutateTarget(ctx.Target.FboId)
@@ -234,8 +245,8 @@ public sealed class RenderSystem : IRenderSystem
 
         SceneRenderProps.SetOutputSize(frameCtx.OutputSize);
         _snapshot = SceneRenderProps.Commit();
-        
-        _renderView.ApplyCameraView((Camera3D)Camera);
+
+        _renderView.PrepareFrame((Camera3D)Camera);
 
         _drawUniforms.UploadGlobalUniforms(alpha, in frameCtx, _snapshot);
         _drawUniforms.UploadCameraView(_renderView);
@@ -264,23 +275,11 @@ public sealed class RenderSystem : IRenderSystem
     private void ExecutePass(PassId passId)
     {
         var passResult = _passPipeline.ApplyPass();
-        
+
         if (passResult.OpKind == PassOpKind.Resolve)
         {
             _passPipeline.ApplyAfterPass();
             return;
-        }
-
-        if (passId == 0)
-        {
-            _renderView.ApplyLightView(_snapshot.DirLight.Direction,(Camera3D)Camera);
-            _drawUniforms.UploadShadow(in _renderView.ProjectionViewMatrix);
-            _drawUniforms.UploadCameraView(_renderView);
-        }
-        else
-        {
-            _renderView.ApplyCameraView((Camera3D)Camera);
-            _drawUniforms.UploadCameraView(_renderView);
         }
 
         if (passResult == ApplyPassReturn.DrawPassResult())
@@ -288,8 +287,9 @@ public sealed class RenderSystem : IRenderSystem
             _drawProcessor.PrepareDrawPass(passId == 0 ? depthShader : default);
             _drawPipeline.ExecuteDrawPass(passId);
         }
-        
+
         _passPipeline.ApplyAfterPass();
+        
     }
 
     public void Shutdown()

@@ -68,7 +68,7 @@ internal sealed class GlFrameBuffers : IGraphicsDriverModule
         return _store.FrameBuffer.Add(new GlFboHandle(fbo));
     }
 
-    public GfxRefToken<RenderBufferId> CreateRenderBuffer(FrameBufferTarget attachment, Size2D size, int samples)
+    public GfxRefToken<RenderBufferId> CreateRenderBuffer(FrameBufferAttachmentKind attachment, Size2D size, int samples)
     {
         var internalFormat = attachment.ToGlInternalFormatEnum();
         var (width, height) = size.ToUnsigned();
@@ -83,20 +83,20 @@ internal sealed class GlFrameBuffers : IGraphicsDriverModule
     }
 
     public void AttachTexture(GfxRefToken<FrameBufferId> fboRef, GfxRefToken<TextureId> texture,
-        FrameBufferTarget target)
+        FrameBufferAttachmentKind attachmentKind)
     {
         var fboH = GetFboHandle(fboRef).Value;
         var texH = GetTextureHandle(texture).Value;
-        var glAttachment = target.ToGlAttachmentEnum();
+        var glAttachment = attachmentKind.ToGlAttachmentEnum();
         _gl.NamedFramebufferTexture(fboH, glAttachment, texH, 0);
     }
 
     public void AttachRenderBuffer(GfxRefToken<FrameBufferId> fboRef, GfxRefToken<RenderBufferId> rboRef,
-        FrameBufferTarget target)
+        FrameBufferAttachmentKind attachmentKind)
     {
         var fboHandle = GetFboHandle(fboRef).Value;
         var rboHandle = GetRboHandle(rboRef).Value;
-        var glAttachment = target.ToGlAttachmentEnum();
+        var glAttachment = attachmentKind.ToGlAttachmentEnum();
         _gl.NamedFramebufferRenderbuffer(fboHandle, glAttachment, RenderbufferTarget.Renderbuffer, rboHandle);
     }
 

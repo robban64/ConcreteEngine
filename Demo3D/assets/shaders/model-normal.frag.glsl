@@ -24,7 +24,7 @@ out vec4 FragColor;
 
 layout(binding = 0) uniform sampler2D uTexture;
 layout(binding = 1) uniform sampler2D uNormalTex;
-layout(binding = 2) uniform sampler2D uShadowMap;
+layout(binding = 2) uniform sampler2DShadow uShadowMap;
 
 
 float saturate(float x) {
@@ -73,10 +73,7 @@ float blinnPhongSpec(vec3 N, vec3 V, vec3 L, float shininess) {
     vec3 H = normalize(V + L);
     return pow(max(dot(N, H), 0.0), shininess);
 }
-vec3 hemiAmbient(vec3 N) {
-    float up = 0.5 + 0.5 * N.y;
-    return mix(uAmbientGround.rgb, uAmbient.rgb, up);
-}
+
 
 float computeFogFactor(vec3 P, float viewDist) {
     float fExp2 = 1.0 - exp(-uFogParams0.x * viewDist * viewDist);
@@ -94,29 +91,41 @@ vec3 computeFogColor(vec3 sunColor, float shadowTerm) {
     return mix(cFog, litFog, uFogColor.a);
 }
 
-float sampleShadowMap(vec4 lightSpacePos, vec3 N, vec3 L) {
-    if (uShadowParams1.x <= 0.0) return 1.0; // off
+float sampleShadowMap(vec4 lightSpacePos, vec3 N, vec3 L)
+{
+    if (uShadowParams1.x <= 0.0) return 1.0;
+
+    // NDC
     vec3 proj = lightSpacePos.xyz / lightSpacePos.w;
+    proj.xy = proj.xy * 0.5 + 0.5;
+    proj.z  = proj.z  * 0.5 + 0.5;
+
+    // outside light frustum
     if (proj.x < 0.0 || proj.x > 1.0 || proj.y < 0.0 || proj.y > 1.0) return 1.0;
-    float current = proj.z;
+    if (proj.z > 1.0) return 1.0;
+
     float bias = uShadowParams0.z + uShadowParams0.w * (1.0 - dot(N, L));
-    int radius = int(uShadowParams1.y + 0.5);
-    vec2 texel = uShadowParams0.xy;
-    float sum = 0.0;
+    float ref  = proj.z - bias;
+
+    // PCF
+    int  radius = int(uShadowParams1.y + 0.5);
+    vec2 texel  = uShadowParams0.xy;
+    float sum   = 0.0;
+
     for (int x = -radius; x <= radius; ++x)
-        for (int y = -radius; y <= radius; ++y) {
-            float closest = texture(uShadowMap, proj.xy + vec2(x, y) * texel).r;
-            sum += (current - bias <= closest) ? 1.0 : 0.0;
-        }
-    float samples = float((2 * radius + 1) * (2 * radius + 1));
+    for (int y = -radius; y <= radius; ++y) {
+        vec2 uv = proj.xy + vec2(x, y) * texel;
+        sum += texture(uShadowMap, vec3(uv, ref));
+    }
+    float samples = float((2*radius + 1) * (2*radius + 1));
     return sum / samples;
 }
 
-mat3 makeTBN(vec3 T, vec3 B, vec3 N) {
-    vec3 t = normalize(T - N * dot(T, N));
-    vec3 b = normalize(cross(N, t));
-    vec3 n = normalize(N);
-    return mat3(t, b, n);
+
+float halfLambert(float ndl) {
+    float x = ndl * 0.5 + 0.5;
+    x = max(x, 0.0);
+    return x * x;
 }
 
 void main()
@@ -124,15 +133,22 @@ void main()
     float uvRepeat = uMatParams0.y;
     vec2 uv = fs_in.TexCoord * uvRepeat;
 
-    vec3 baseTex = texture(uTexture, uv).rgb;
+    // Albedo (linear after sampler's sRGB decode)
+    vec3 baseTex   = texture(uTexture, uv).rgb;
     vec3 baseColor = baseTex * uMatColor.rgb;
 
-    // Normal map (RGB or RGBA8)
-    mat3 TBN = makeTBN(fs_in.T_world, fs_in.B_world, fs_in.N_world);
+    // TBN (world space)
+    vec3 Nw = normalize(fs_in.N_world);
+    vec3 Tw = normalize(fs_in.T_world);
+    Tw = normalize(Tw - Nw * dot(Nw, Tw));
+    vec3 Bw = normalize(cross(Nw, Tw));
+    mat3 TBN = mat3(Tw, Bw, Nw);
+
+    // Normal map (linear)
     vec3 nTex = texture(uNormalTex, uv).rgb * 2.0 - 1.0;
-    nTex = normalize(nTex);
     vec3 N = normalize(TBN * nTex);
 
+    // Positions & vectors
     vec3 P = fs_in.FragPos;
     vec3 V = normalize(uCameraPos.xyz - P);
 
@@ -140,36 +156,48 @@ void main()
     vec3 Ld = normalize(-uLightDirection.xyz);
     vec3 LiD = uLightDiffuse.rgb * uLightDiffuse.a;
 
-    float NdotLd = max(dot(N, Ld), 0.0);
-    vec3 diffuse = baseColor * NdotLd;
+    // Diffuse (Half-Lambert)
+    float ndl = dot(N, Ld);
+    float diffTerm = halfLambert(ndl);
+    vec3 diffuse = baseColor * diffTerm;
 
+    // Specular (Blinn-Phong)
     float shininess = uMatParams1.x;
     float specularStrength = uMatParams0.x;
     float specD = blinnPhongSpec(N, V, Ld, shininess);
     vec3 specular = vec3(specularStrength) * specD * uLightSpecularIntensity.x;
 
+    // Shadow
     float dirShadow = sampleShadowMap(uLightViewProj * vec4(P, 1.0), N, Ld);
     dirShadow = mix(1.0, dirShadow, uShadowParams1.x);
-    vec3 direct = (diffuse + specular) * LiD * dirShadow;
 
-    // Point/spot lights
+    float dirShadowSpec = max(dirShadow, 0.25);
+
+    // Compose direct (dir light)
+    vec3 direct = diffuse * LiD * dirShadow + specular * LiD * dirShadowSpec;
+
+    // Point/spot lights (no shadows here)
     int lightCount = clamp(uLightCounts.x, 0, MAX_LIGHTS);
     for (int i = 0; i < lightCount; ++i) {
-        vec3 Lp, LiP;
-        float atten;
+        vec3 Lp, LiP; float atten;
         evalPunctual(uLights[i], P, Lp, atten, LiP);
-        float NdotLp = max(dot(N, Lp), 0.0);
-        if (NdotLp <= 0.0) continue;
 
-        vec3 diffuseP = baseColor * NdotLp;
+        float ndlp = dot(N, Lp);
+        float diffP = halfLambert(ndlp);
+        if (diffP <= 0.0) continue;
+
+        vec3 diffuseP = baseColor * diffP;
         float specP = blinnPhongSpec(N, V, Lp, shininess);
         vec3 specularP = vec3(specularStrength) * specP * uLightSpecularIntensity.x;
 
-        direct += (diffuseP + specularP) * LiP * atten; // no punctual shadows here
+        direct += (diffuseP + specularP) * LiP * atten;
     }
 
-    // Ambient + exposure
-    vec3 ambient = hemiAmbient(N) * baseColor;
+    // Ambient
+    float up = clamp(N.y * 0.5 + 0.5, 0.0, 1.0);
+    vec3 ambient = mix(uAmbientGround.rgb, uAmbient.rgb, up) * baseColor;
+
+    // Exposure (ambient.w as exposure-1)
     float exposure = max(uAmbient.w, 0.0) + 1.0;
     vec3 litColor = (ambient + direct) * exposure;
 
@@ -177,6 +205,7 @@ void main()
     float viewDist = length(uCameraPos.xyz - P);
     float fogF = computeFogFactor(P, viewDist);
     vec3 fogColor = computeFogColor(LiD, 1.0);
+
     vec3 finalColor = mix(litColor, fogColor, fogF);
 
     FragColor = vec4(finalColor, 1.0);

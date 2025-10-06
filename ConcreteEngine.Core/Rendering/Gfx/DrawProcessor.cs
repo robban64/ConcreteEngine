@@ -95,8 +95,9 @@ internal sealed class DrawProcessor
             if(value == 0) continue;
             _gfxCmd.BindTexture(value, i);
         }
+        
         if(material.Shadows)
-            _gfxCmd.BindTexture(_depthTexture, material.SamplerSlots.Length - 1);
+            _gfxCmd.BindTexture(_depthTexture, material.SamplerSlots.Length);
 
         UploadMaterial(material);
 

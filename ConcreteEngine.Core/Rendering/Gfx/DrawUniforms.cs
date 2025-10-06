@@ -52,7 +52,7 @@ internal sealed class DrawUniforms
             viewMat: in view.ViewMatrix,
             projMat: in  view.ProjectionMatrix,
             projViewMat: in  view.ProjectionViewMatrix,
-            cameraPos: view.ViewPosition
+            cameraPos: view.Position
         );
 
         _gfxBuffers.UploadUniformGpuData(_cameraUbo, in data, 0);
@@ -110,9 +110,11 @@ internal sealed class DrawUniforms
 
     public void UploadShadow(in Matrix4x4 lightViewProjection)
     {
+        //shadowParams0: new Vector4(1.0f / 1024.0f, 1.0f / 1024.0f, 0.001f, 0.005f),
+
         var data = new ShadowUniformRecord(
             lightViewProj: lightViewProjection,
-            shadowParams0: new Vector4(1.0f / 1024.0f, 1.0f / 1024.0f, 0.001f, 0.005f),
+            shadowParams0: new Vector4(1.0f / 1024.0f, 1.0f / 1024.0f, 0.00025f, 0.0025f),
             shadowParams1: new Vector4(1.0f, 1.0f, 0.0f, 0.0f)
         );
 
@@ -122,20 +124,19 @@ internal sealed class DrawUniforms
     private void UploadPost()
     {
         var data = new FramePostProcessUniform(
-            colorAdjust: new Vector4(0.10f, 1.05f, 1.03f, 2.20f),
-            whiteBalance: new Vector4(0.05f, 0.00f, 0.04f, 0.00f),
-            flags: new Vector4(1.0f, 0.0f, 0.18f, 0.00f),
-            bloomParams: new Vector4(1.20f, 0.60f, 0.00f, 0.00f),
-            bloomLods: new Vector4(0.70f, 0.40f, 0.20f, 0.10f),
+            colorAdjust: new Vector4(0.02f, 1.06f, 1.07f, 2.20f),
+            whiteBalance: new Vector4(0.015f, -0.005f, 0.30f, 0.00f),
+            flags: new Vector4(0.00f, 0.00f, 0.08f, 0.00f),
+            bloomParams: new Vector4(0.85f, 0.70f, 0.00f, 0.00f),
+            bloomLods: new Vector4(0.70f, 0.40f, 0.22f, 0.12f),
             lutParams: new Vector4(0.00f, 0.00f, 0.00f, 0.00f),
-            vignetteParams: new Vector4(0.78f, 0.96f, 0.08f, 0.00f),
-            grainParams: new Vector4(0.00f, _deltaTicker, 0.00f, 0.00f),
-            chromAbParams: new Vector4(0.0f, 0.0f, 0.0f, 0.0f),
-            toneShadows: new Vector4(208.0f, 0.02f, -0.005f, 0.12f),
-            toneHighlights: new Vector4(45.0f, 0.02f, 0.004f, 0.12f),
-            sharpenParams: new Vector4(0.06f, 1.5f, 0.02f, 0.00f)
+            vignetteParams: new Vector4(0.90f, 0.98f, 0.06f, 0.00f),
+            grainParams: new Vector4(0.0025f, _deltaTicker, 0.00f, 0.00f),
+            chromAbParams: new Vector4(0.00f, 0.00f, 0.00f, 0.00f),
+            toneShadows: new Vector4(210.0f, 0.010f, -0.002f, 0.035f),
+            toneHighlights: new Vector4(45.0f, 0.012f, 0.003f, 0.040f),
+            sharpenParams: new Vector4(0.07f, 1.20f, 0.015f, 0.00f)
         );
-
 /*
       var data = new FramePostProcessUniform(
           flags: new Vector4(0, 0, 0, 0),

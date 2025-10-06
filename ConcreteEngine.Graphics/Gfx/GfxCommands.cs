@@ -5,6 +5,7 @@ using System.Numerics;
 using System.Runtime.CompilerServices;
 using ConcreteEngine.Common.Numerics;
 using ConcreteEngine.Graphics.Error;
+using ConcreteEngine.Graphics.Gfx.Contracts;
 using ConcreteEngine.Graphics.Gfx.Internal;
 using ConcreteEngine.Graphics.OpenGL;
 using ConcreteEngine.Graphics.Resources;
@@ -27,11 +28,8 @@ public sealed class GfxCommands
     private readonly GfxResourceRepository _repository;
 
     //States
-    private BlendMode _blendMode = BlendMode.Unset;
-    private DepthMode _depthMode = DepthMode.Unset;
-    private CullMode _cullMode = CullMode.Unset;
-
     private GfxPassState _activeState;
+    private GfxPassStateFunc _stateFunc;
     private GfxPassClear _activeClear;
 
     private readonly TextureId[] _boundTextures;
@@ -79,8 +77,6 @@ public sealed class GfxCommands
 
         _activeOutputSize = _frameCtx.OutputSize;
 
-        //Clear(Color4.CornflowerBlue, ClearBufferFlag.ColorAndDepth);
-        SetDepthMode(DepthMode.Lequal);
     }
 
     internal void EndFrame(out GfxFrameResult result)
@@ -90,9 +86,7 @@ public sealed class GfxCommands
         BindMesh(default);
         BindFramebuffer(default);
 
-        _blendMode = BlendMode.Unset;
-        _depthMode = DepthMode.Unset;
-        _cullMode = CullMode.Unset;
+        //_stateFunc = new GfxPassStateFunc(BlendMode.Unset, CullMode.Unset, DepthMode.Unset);
 
         _driver.EndFrame();
     }
@@ -175,6 +169,14 @@ public sealed class GfxCommands
         if (cmdState.FramebufferSrgb is { } srgb) _states.ToggleFrameBufferSrgb(srgb);
         if (cmdState.ColorMask is { } colorMask) _states.ColorMask(colorMask);
     }
+    
+    public void ApplyStateFunctions(GfxPassStateFunc cmdFunc)
+    {
+        _stateFunc = cmdFunc;
+        SetBlendMode(cmdFunc.Blend);
+        SetCullMode(cmdFunc.Cull);
+        SetDepthMode(cmdFunc.Depth);
+    }
 
 
     public void SetViewport(Size2D viewportSize)
@@ -185,22 +187,22 @@ public sealed class GfxCommands
 
     public void SetBlendMode(BlendMode blendMode)
     {
-        if (_blendMode != BlendMode.Unset && _blendMode == blendMode) return;
-        _blendMode = blendMode;
+        if (_stateFunc.Blend != BlendMode.Unset && _stateFunc.Blend == blendMode) return;
+        _stateFunc = _stateFunc with { Blend = blendMode };
         _states.SetBlendMode(blendMode);
     }
 
     public void SetDepthMode(DepthMode depthMode)
     {
-        if (_depthMode != DepthMode.Unset && _depthMode == depthMode) return;
-        _depthMode = depthMode;
+        if (_stateFunc.Depth != DepthMode.Unset && _stateFunc.Depth == depthMode) return;
+        _stateFunc = _stateFunc with { Depth = depthMode };
         _states.SetDepthMode(depthMode);
     }
 
     public void SetCullMode(CullMode cullMode)
     {
-        if (_cullMode != CullMode.Unset && _cullMode == cullMode) return;
-        _cullMode = cullMode;
+        if (_stateFunc.Cull != CullMode.Unset && _stateFunc.Cull == cullMode) return;
+        _stateFunc = _stateFunc with { Cull = cullMode };
         _states.SetCullMode(cullMode);
     }
 
@@ -256,7 +258,6 @@ public sealed class GfxCommands
 
     public void DrawBoundMesh(MeshId id, int drawCount)
     {
-        //_boundMeshMeta
         ref readonly var meta = ref _store.MeshStore.GetMeta(_boundMeshId);
         var count = drawCount > 0 ? drawCount : meta.DrawCount;
 

@@ -35,5 +35,9 @@
         </Content>
     </ItemGroup>
 
+    <ItemGroup>
+      <Folder Include="Rendering\Utilities\" />
+    </ItemGroup>
+
 
 </Project>

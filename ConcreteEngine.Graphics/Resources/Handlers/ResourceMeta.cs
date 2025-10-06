@@ -122,12 +122,12 @@ public readonly struct FrameBufferMeta(
 
 public readonly struct RenderBufferMeta(
     Size2D size,
-    FrameBufferTarget target,
+    FrameBufferAttachmentKind attachmentKind,
     RenderBufferMsaa multisample
 ) : IResourceMeta
 {
     public readonly Size2D Size = size;
-    public readonly FrameBufferTarget Target = target;
+    public readonly FrameBufferAttachmentKind AttachmentKind = attachmentKind;
     public readonly RenderBufferMsaa Multisample = multisample;
 }
 

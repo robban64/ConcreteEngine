@@ -1,6 +1,9 @@
 #region
 
+using ConcreteEngine.Core.Rendering.Data;
+using ConcreteEngine.Graphics;
 using ConcreteEngine.Graphics.Gfx;
+using ConcreteEngine.Graphics.Gfx.Contracts;
 using ConcreteEngine.Graphics.Resources;
 using ConcreteEngine.Graphics.Utils;
 
@@ -14,14 +17,39 @@ public sealed class PipelineStateOps
     private readonly GfxCommands _gfxCmd;
     private readonly GfxTextures _gfxTextures;
     private readonly RenderRegistry _renderRegistry;
+    private readonly RenderView _renderView;
+    private readonly RenderGlobalSnapshot _globalSnapshot;
+    private readonly DrawUniforms _drawUniforms;
 
-    internal PipelineStateOps(GfxContext ctx,  RenderRegistry renderRegistry)
+    internal PipelineStateOps(GfxContext ctx, RenderRegistry renderRegistry, RenderView renderView,
+        RenderGlobalSnapshot globalSnapshot, DrawUniforms drawUniforms)
     {
         _renderRegistry = renderRegistry;
+        _renderView = renderView;
+        _globalSnapshot = globalSnapshot;
+        _drawUniforms = drawUniforms;
         _gfxCmd = ctx.Commands;
         _gfxTextures = ctx.Textures;
         _primitiveMeshes = ctx.Primitives;
     }
+
+    public void UseRenderLightView()
+    {
+        _renderView.ApplyLightView(_globalSnapshot.DirLight.Direction);
+        _drawUniforms.UploadShadow(in _renderView.ProjectionViewMatrix);
+        _drawUniforms.UploadCameraView(_renderView);
+
+    }
+
+    public void RestoreView()
+    {
+        _renderView.Restore();
+        _drawUniforms.UploadCameraView(_renderView);
+    }
+
+    
+    public void ApplyStateFunctions(GfxPassStateFunc passFunc)
+        => _gfxCmd.ApplyStateFunctions(passFunc);
 
     public void BeginScreenPass(in GfxPassClear passClear, in GfxPassState states) =>
         _gfxCmd.BeginScreenPass(in passClear, in states);
@@ -39,7 +67,7 @@ public sealed class PipelineStateOps
     public void ToggleStates(in GfxPassState states) => _gfxCmd.ApplyState(states);
 
     public void GenerateMips(TextureId textureId) => _gfxTextures.GenerateMipMaps(textureId);
-    
+
     public void DrawFullscreenQuad(ShaderId shaderId, IReadOnlyList<TextureId> sources)
     {
         UseShader(shaderId);
@@ -65,7 +93,7 @@ public sealed class PipelineStateOps
         _gfxCmd.BindMesh(_primitiveMeshes.FsqQuad);
         _gfxCmd.DrawBoundMesh(_primitiveMeshes.FsqQuad, 0);
     }
-    
+
     private void UseShader(ShaderId shaderId)
     {
         var renderShader = _renderRegistry.GetRenderShader(shaderId);

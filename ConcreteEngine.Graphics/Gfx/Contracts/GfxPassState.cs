@@ -4,7 +4,7 @@ using ConcreteEngine.Common.Numerics;
 
 #endregion
 
-namespace ConcreteEngine.Graphics.Gfx;
+namespace ConcreteEngine.Graphics.Gfx.Contracts;
 
 public readonly record struct GfxPassState(
     bool? DepthTest = null,
@@ -17,7 +17,7 @@ public readonly record struct GfxPassState(
 )
 {
     public static GfxPassState MakeScene() => new(true, true, true, false, false, true, true);
-    public static GfxPassState MakeShadow() => new(true, true, false, false, false, false, false);
+    public static GfxPassState MakeShadow() => new(true, true, true, false, false, true, false);
     public static GfxPassState MakeLighting() => new(true, true, true, true, false, true);
 
     public static GfxPassState MakePostProcess(bool blend = false) =>
@@ -25,6 +25,15 @@ public readonly record struct GfxPassState(
 
     public static GfxPassState MakeScreen() => new(false, false, false, false, false, false, true);
     public static GfxPassState MakeOff() => new(false, false, false, false, false, false, true);
+}
+
+public readonly record struct GfxPassStateFunc(
+    BlendMode Blend = BlendMode.Unset,
+    CullMode Cull = CullMode.Unset,
+    DepthMode Depth = DepthMode.Unset)
+{
+    public static GfxPassStateFunc MakeDefault() => new(BlendMode.Alpha, CullMode.BackCcw, DepthMode.Lequal);
+    public static GfxPassStateFunc MakeDepth() => new(BlendMode.Unset, CullMode.FrontCcw, DepthMode.Less);
 }
 
 public readonly record struct GfxPassClear(Color4? ClearColor, ClearBufferFlag ClearBuffer)

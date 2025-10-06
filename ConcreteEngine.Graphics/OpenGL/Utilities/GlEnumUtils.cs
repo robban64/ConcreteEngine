@@ -50,26 +50,59 @@ internal static class GlEnumExtensions
         };
     }
 
+    public static (GLEnum Min, GLEnum Mag) ToGlEnum(this TextureFilter filter, bool hasMipmaps)
+    {
+        return filter switch
+        {
+            TextureFilter.Nearest => (hasMipmaps ? GLEnum.NearestMipmapNearest : GLEnum.Nearest, GLEnum.Nearest),
+            TextureFilter.Linear => (hasMipmaps ? GLEnum.LinearMipmapLinear : GLEnum.Linear, GLEnum.Linear),
+            _ => throw new ArgumentOutOfRangeException(nameof(filter))
+        };
+    }
+
+    public static GLEnum ToGlEnum(this TextureWrap wrap)
+    {
+        return wrap switch
+        {
+            TextureWrap.Repeat => GLEnum.Repeat,
+            TextureWrap.ClampToEdge => GLEnum.ClampToEdge,
+            TextureWrap.ClampToBorder => GLEnum.ClampToBorder,
+            _ => throw new ArgumentOutOfRangeException(nameof(wrap))
+        };
+    }
+
+    public static (GLEnum Mode, GLEnum Func) ToGlEnum(this TextureCompare cmp)
+    {
+        return cmp switch
+        {
+            TextureCompare.None => (GLEnum.None, GLEnum.Lequal),
+            TextureCompare.LessOrEqual => (GLEnum.CompareRefToTexture, GLEnum.Lequal),
+            TextureCompare.GreaterOrEqual => (GLEnum.CompareRefToTexture, GLEnum.Gequal),
+            _ => throw new ArgumentOutOfRangeException(nameof(cmp))
+        };
+    }
+
+
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public static GLEnum ToGlAttachmentEnum(this FrameBufferTarget kind)
+    public static GLEnum ToGlAttachmentEnum(this FrameBufferAttachmentKind kind)
     {
         return kind switch
         {
-            FrameBufferTarget.Color => GLEnum.ColorAttachment0,
-            FrameBufferTarget.Depth => GLEnum.DepthAttachment,
-            FrameBufferTarget.DepthStencil => GLEnum.DepthStencilAttachment,
+            FrameBufferAttachmentKind.Color => GLEnum.ColorAttachment0,
+            FrameBufferAttachmentKind.Depth => GLEnum.DepthAttachment,
+            FrameBufferAttachmentKind.DepthStencil => GLEnum.DepthStencilAttachment,
             _ => throw new ArgumentOutOfRangeException(nameof(kind))
         };
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public static InternalFormat ToGlInternalFormatEnum(this FrameBufferTarget kind)
+    public static InternalFormat ToGlInternalFormatEnum(this FrameBufferAttachmentKind kind)
     {
         return kind switch
         {
-            FrameBufferTarget.Color => InternalFormat.Rgb8,
-            FrameBufferTarget.Depth => InternalFormat.DepthComponent24,
-            FrameBufferTarget.DepthStencil => InternalFormat.Depth24Stencil8,
+            FrameBufferAttachmentKind.Color => InternalFormat.Rgb8,
+            FrameBufferAttachmentKind.Depth => InternalFormat.DepthComponent24,
+            FrameBufferAttachmentKind.DepthStencil => InternalFormat.Depth24Stencil8,
             _ => throw new ArgumentOutOfRangeException(nameof(kind))
         };
     }

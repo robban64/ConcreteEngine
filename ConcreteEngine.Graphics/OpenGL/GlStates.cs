@@ -72,11 +72,7 @@ internal sealed class GlStates : IGraphicsDriverModule
 
     public void SetBlendMode(BlendMode blendMode)
     {
-        if (blendMode == BlendMode.Unset)
-        {
-            return;
-        }
-
+        if (blendMode == BlendMode.Unset) return;
         var (eq, src, dst) = blendMode.ToGlEnum();
         _gl.BlendEquation(eq);
         _gl.BlendFunc(src, dst);
@@ -84,22 +80,14 @@ internal sealed class GlStates : IGraphicsDriverModule
 
     public void SetDepthMode(DepthMode depthMode)
     {
-        if (depthMode == DepthMode.None)
-        {
-            return;
-        }
-
+        if (depthMode == DepthMode.Unset) return;
         var func = depthMode.ToGlEnum();
         _gl.DepthFunc(func);
     }
 
     public void SetCullMode(CullMode cullMode)
     {
-        if (cullMode == CullMode.Unset)
-        {
-            return;
-        }
-
+        if (cullMode == CullMode.Unset) return;
         var (face, front) = cullMode.ToGlEnum();
         _gl.CullFace(face);
         _gl.FrontFace(front);

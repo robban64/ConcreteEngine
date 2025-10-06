@@ -79,6 +79,26 @@ internal sealed class GlTextures : IGraphicsDriverModule
         );
     }
 
+
+    public void SetLodBias(GfxRefToken<TextureId> texRef, float lodBias) =>
+        _gl.TextureParameter(GetTexHandle(texRef).Value, GLEnum.TextureLodBias, lodBias);
+
+    public void SetAnisotropy(GfxRefToken<TextureId> texRef, int anisotropy) =>
+        _gl.TextureParameter(GetTexHandle(texRef).Value, GLEnum.TextureMaxAnisotropy, anisotropy);
+
+    public void GenerateMipMaps(GfxRefToken<TextureId> texRef) =>
+        _gl.GenerateTextureMipmap(GetTexHandle(texRef).Value);
+
+    public void ApplyCompareAndBorder(GfxRefToken<TextureId> texRef)
+    {
+        var handle = GetTexHandle(texRef);
+
+        Span<int> border = stackalloc int[] { 1, 1, 1, 1 };
+        _gl.TextureParameterI(handle.Value, GLEnum.TextureCompareMode, (int)GLEnum.CompareRefToTexture);
+        _gl.TextureParameterI(handle.Value, GLEnum.TextureCompareFunc, (int)GLEnum.Lequal);
+        _gl.TextureParameterI(handle.Value, GLEnum.TextureBorderColor, border);
+    }
+
     public void SetTexturePreset(GfxRefToken<TextureId> texRef, TexturePreset preset, bool wrapR)
     {
         var handle = GetTexHandle(texRef);
@@ -102,11 +122,13 @@ internal sealed class GlTextures : IGraphicsDriverModule
                 break;
 
             case TexturePreset.LinearClamp:
+            case TexturePreset.LinearClampBorder:
                 SetTexParameter(GLEnum.TextureMinFilter, GLEnum.Linear);
                 SetTexParameter(GLEnum.TextureMagFilter, GLEnum.Linear);
-                SetTexParameter(GLEnum.TextureWrapS, GLEnum.ClampToEdge);
-                SetTexParameter(GLEnum.TextureWrapT, GLEnum.ClampToEdge);
-                if (wrapR) SetTexParameter(GLEnum.TextureWrapR, GLEnum.ClampToEdge);
+                var param = preset == TexturePreset.LinearClamp ? GLEnum.ClampToEdge : GLEnum.ClampToBorder;
+                SetTexParameter(GLEnum.TextureWrapS, param);
+                SetTexParameter(GLEnum.TextureWrapT, param);
+                if (wrapR) SetTexParameter(GLEnum.TextureWrapR, param);
                 break;
 
             case TexturePreset.LinearRepeat:
@@ -148,13 +170,4 @@ internal sealed class GlTextures : IGraphicsDriverModule
         return;
         void SetTexParameter(GLEnum pname, GLEnum param) => _gl.TextureParameterI(handle.Value, pname, (int)param);
     }
-
-    public void SetLodBias(GfxRefToken<TextureId> texRef, float lodBias) =>
-        _gl.TextureParameter(GetTexHandle(texRef).Value, GLEnum.TextureLodBias, lodBias);
-
-    public void SetAnisotropy(GfxRefToken<TextureId> texRef, int anisotropy) =>
-        _gl.TextureParameter(GetTexHandle(texRef).Value, GLEnum.TextureMaxAnisotropy, anisotropy);
-
-    public void GenerateMipMaps(GfxRefToken<TextureId> texRef) =>
-        _gl.GenerateTextureMipmap(GetTexHandle(texRef).Value);
 }

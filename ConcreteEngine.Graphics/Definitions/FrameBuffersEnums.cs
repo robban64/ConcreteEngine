@@ -1,6 +1,6 @@
 namespace ConcreteEngine.Graphics;
 
-public enum FrameBufferTarget : byte
+public enum FrameBufferAttachmentKind : byte
 {
     None = 0,
     Color = 1,

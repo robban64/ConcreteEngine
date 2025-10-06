@@ -20,6 +20,7 @@ public sealed class SceneRenderProperties
 
     private Skybox _skybox;
     private DirectionalLight _directionalLight;
+    
 
     private Size2D _outputSize;
 

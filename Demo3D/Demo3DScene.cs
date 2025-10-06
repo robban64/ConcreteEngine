@@ -56,6 +56,15 @@ public sealed class Demo3DScene : GameScene
                 new Transform(new Vector3(i * 5, -3, i * 5), Vector3.One, Quaternion.Identity));
         }
 
+        for (int i = 0; i < 40; i++)
+        {
+            var entityId = World.Create();
+            World.Meshes.Add(entityId,
+                new MeshComponent(rockMesh.ResourceId, rockMat.Id, rockMesh.DrawCount));
+            World.Transforms.Add(entityId,
+                new Transform(new Vector3((i * 8) % 12, 3, (i * 8) % 12), Vector3.One , Quaternion.Identity));
+        }
+
 
         for (int i = 0; i < 12; i++)
         {

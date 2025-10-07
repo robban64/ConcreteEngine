@@ -16,14 +16,13 @@ namespace ConcreteEngine.Core.Rendering.Gfx;
 
 internal sealed class DrawProcessor
 {
-    private readonly GfxContext _gfx;
     private readonly GfxCommands _gfxCmd;
     private readonly GfxBuffers _gfxBuffers;
-    private readonly GfxShaders _gfxShaders;
-
     private readonly RenderRegistry _registry;
 
     private readonly MaterialStore _materials;
+    
+    private readonly DrawStateContext _ctx;
 
     private int _previousMaterialId = -1;
 
@@ -31,19 +30,13 @@ internal sealed class DrawProcessor
 
     private UniformBufferId _materialUboId;
 
-    private TextureId _depthTexture;
-    
-    private ShaderId _passShader = default;
-
-    internal DrawProcessor(GfxContext gfx, MaterialStore materials, RenderRegistry registry)
+    internal DrawProcessor(DrawStateContext ctx, DrawStateContextPayload ctxPayload, MaterialStore materials)
     {
-        _gfx = gfx;
-        _gfxCmd = gfx.Commands;
-        _gfxBuffers = gfx.Buffers;
-        _gfxShaders = gfx.Shaders;
-
+        _ctx = ctx;
+        _gfxCmd = ctxPayload.Gfx.Commands;
+        _gfxBuffers = ctxPayload.Gfx.Buffers;
+        _registry = ctxPayload.Registry;
         _materials = materials;
-        _registry = registry;
     }
 
 
@@ -52,10 +45,6 @@ internal sealed class DrawProcessor
         _drawUbo = _registry.GetRenderUbo<DrawObjectUniform>();
         _materialUboId = _registry.GetRenderUbo<MaterialUniformRecord>().Id;
 
-        if (!_registry.TryGetRenderFbo<ShadowPassTag, PassDrawSlot>(out var fbo))
-            throw new InvalidOperationException();
-        
-        _depthTexture = fbo!.Attachments.DepthTextureId;
     }
 
     public void PrepareFrame(in RenderGlobalSnapshot renderGlobals, nint capacity)
@@ -65,16 +54,15 @@ internal sealed class DrawProcessor
             _drawUbo.SetCapacity(capacity);
 
         _previousMaterialId = -1;
-        _passShader = default;
         _gfxBuffers.SetUniformBufferCapacity(_drawUbo.Id, capacity);
     }
-    
-    public void PrepareDrawPass(ShaderId shaderId = default)
+
+    public void PrepareDrawPass()
     {
-        _passShader = shaderId;
-        if(shaderId > 0) UseShader(shaderId);
         _drawUbo.ResetCursor();
         _previousMaterialId = -1;
+        if(_ctx.OverrideDrawShader > 0)
+            UseShader(_ctx.OverrideDrawShader);
     }
 
     private void UseShader(ShaderId shaderId)
@@ -92,12 +80,12 @@ internal sealed class DrawProcessor
         for (int i = 0; i < material.SamplerSlots.Length; i++)
         {
             var value = material.SamplerSlots[i];
-            if(value == 0) continue;
+            if (value == 0) continue;
             _gfxCmd.BindTexture(value, i);
         }
-        
-        if(material.Shadows)
-            _gfxCmd.BindTexture(_depthTexture, material.SamplerSlots.Length);
+
+        if (material.Shadows)
+            _gfxCmd.BindTexture(_ctx.DepthTexture, material.SamplerSlots.Length);
 
         UploadMaterial(material);
 
@@ -109,7 +97,7 @@ internal sealed class DrawProcessor
         var data = new MaterialUniformRecord(
             matColor: new Vector4(mat.Color.AsVec3(), 1),
             matParams0: new Vector4(mat.SpecularStrength, mat.UvRepeat, 0.0f, 0.0f),
-            matParams1: new Vector4(mat.Shininess, mat.HasNormalMap?1.0f:0.0f, 0.0f, 0.0f)
+            matParams1: new Vector4(mat.Shininess, mat.HasNormalMap ? 1.0f : 0.0f, 0.0f, 0.0f)
         );
 
         _gfxBuffers.UploadUniformGpuData(_materialUboId, in data, 0);
@@ -136,12 +124,11 @@ internal sealed class DrawProcessor
 
     public void DrawMesh(DrawCommand cmd)
     {
-        if(_passShader == default)
+        if (_ctx.OverrideDrawShader == default)
             BindDrawMaterial(cmd.MaterialId);
-        
+
         BindDrawObject();
         _gfxCmd.BindMesh(cmd.MeshId);
         _gfxCmd.DrawBoundMesh(cmd.MeshId, cmd.DrawCount);
     }
-
 }

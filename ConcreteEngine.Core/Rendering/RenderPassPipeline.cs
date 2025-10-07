@@ -20,7 +20,7 @@ public sealed class RenderPassPipeline
     private readonly RenderPassCtx _ctx;
 
     private readonly RenderRegistry _renderRegistry;
-    private readonly PipelineStateOps _cmdOps;
+    private readonly DrawStateOps _cmdOps;
 
     private readonly List<RenderPassEntry> _entries;
 
@@ -31,7 +31,7 @@ public sealed class RenderPassPipeline
 
     private Size2D _outputSize;
 
-    internal RenderPassPipeline(PipelineStateOps cmdOps, RenderRegistry renderRegistry)
+    internal RenderPassPipeline(DrawStateOps cmdOps, RenderRegistry renderRegistry)
     {
         _cmdOps = cmdOps;
         _renderRegistry = renderRegistry;

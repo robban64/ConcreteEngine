@@ -24,28 +24,19 @@ public readonly struct LightDataStruct(
 }
 
 [StructLayout(LayoutKind.Sequential)]
-public readonly struct LightUniformRecord(
-    int lightCounts,
-    LightDataStruct l0,
-    LightDataStruct l1 = default,
-    LightDataStruct l2 = default,
-    LightDataStruct l3 = default,
-    LightDataStruct l4 = default,
-    LightDataStruct l5 = default,
-    LightDataStruct l6 = default,
-    LightDataStruct l7 = default) : IStd140Uniform
+public readonly struct EngineUniformRecord(
+    float time,
+    float deltaTime,
+    float random,
+    Vector2 invResolution,
+    Vector2 mouse
+) : IStd140Uniform
 {
-    // yzw unused/padding
-    public readonly IVec4Std140 LightCounts = new(lightCounts);
+    // x = seconds since start, y = frame time step, z = per-frame random, w = pad
+    public readonly Vector4 EngineParams0 = new(time, deltaTime, random, 0);
 
-    public readonly LightDataStruct L0 = l0;
-    public readonly LightDataStruct L1 = l1;
-    public readonly LightDataStruct L2 = l2;
-    public readonly LightDataStruct L3 = l3;
-    public readonly LightDataStruct L4 = l4;
-    public readonly LightDataStruct L5 = l5;
-    public readonly LightDataStruct L6 = l6;
-    public readonly LightDataStruct L7 = l7;
+    // xy = 1.0 / screen resolution, zw = mouse
+    public readonly Vector4 EngineParams1 = new(invResolution.X, invResolution.Y, mouse.X, mouse.Y);
 }
 
 [StructLayout(LayoutKind.Sequential)]
@@ -83,12 +74,35 @@ public readonly struct DirLightUniformRecord(
     Vector4 diffuse,
     Vector4 specular) : IStd140Uniform
 {
-    public readonly Vector4 Direction = direction;// WS direction (points FROM light toward scene)
-    public readonly Vector4 Diffuse = diffuse;// rgb=color, a=intensity
-    public readonly Vector4 SpecularIntensity = specular;// x = specular multiplier
+    public readonly Vector4 Direction = direction; // WS direction (points FROM light toward scene)
+    public readonly Vector4 Diffuse = diffuse; // rgb=color, a=intensity
+    public readonly Vector4 SpecularIntensity = specular; // x = specular multiplier
 }
 
+[StructLayout(LayoutKind.Sequential)]
+public readonly struct LightUniformRecord(
+    int lightCounts,
+    LightDataStruct l0,
+    LightDataStruct l1 = default,
+    LightDataStruct l2 = default,
+    LightDataStruct l3 = default,
+    LightDataStruct l4 = default,
+    LightDataStruct l5 = default,
+    LightDataStruct l6 = default,
+    LightDataStruct l7 = default) : IStd140Uniform
+{
+    // yzw unused/padding
+    public readonly IVec4Std140 LightCounts = new(lightCounts);
 
+    public readonly LightDataStruct L0 = l0;
+    public readonly LightDataStruct L1 = l1;
+    public readonly LightDataStruct L2 = l2;
+    public readonly LightDataStruct L3 = l3;
+    public readonly LightDataStruct L4 = l4;
+    public readonly LightDataStruct L5 = l5;
+    public readonly LightDataStruct L6 = l6;
+    public readonly LightDataStruct L7 = l7;
+}
 
 [StructLayout(LayoutKind.Sequential)]
 public readonly struct ShadowUniformRecord(
@@ -113,7 +127,6 @@ public readonly struct MaterialUniformRecord(
     public readonly Vector4 MatParams1 = matParams1; // x = Shininess,        yzw reserved
 }
 
-
 [StructLayout(LayoutKind.Sequential)]
 public readonly struct DrawObjectUniform(
     in Matrix4x4 model,
@@ -133,32 +146,27 @@ public readonly struct DrawObjectUniform(
 }
 
 [StructLayout(LayoutKind.Sequential)]
-public readonly struct FramePostProcessUniform(
-    Vector4 colorAdjust,
+public readonly struct PostProcessUniform(
+    Vector4 grade,
     Vector4 whiteBalance,
-    Vector4 flags,
-    Vector4 bloomParams,
-    Vector4 bloomLods,
-    Vector4 lutParams,
-    Vector4 vignetteParams,
-    Vector4 grainParams,
-    Vector4 chromAbParams,
-    Vector4 toneShadows,
-    Vector4 toneHighlights,
-    Vector4 sharpenParams
+    Vector4 bloom,
+    Vector4 fx
 ) : IStd140Uniform
 {
-    public readonly Vector4 ColorAdjust = colorAdjust;
+    /*
+     * grade: x = exposureOffset  (-0.10..+0.10),
+     *        y = saturation      (0.8..1.2),
+     *        z = contrast        (0.9..1.1),
+     *        w = warmth          (-0.05..+0.05)
+     */
+    public readonly Vector4 Grade = grade;
+
+    //x = tint (-0.05..+0.05), y = strength (0..1), z,w = 0
     public readonly Vector4 WhiteBalance = whiteBalance;
-    public readonly Vector4 Flags = flags;
-    public readonly Vector4 BloomParams = bloomParams;
-    public readonly Vector4 BloomLods = bloomLods;
-    public readonly Vector4 LutParams = lutParams;
-    public readonly Vector4 VignetteParams = vignetteParams;
-    public readonly Vector4 GrainParams = grainParams;
-    public readonly Vector4 ChromAbParams = chromAbParams;
-    public readonly Vector4 ToneShadows = toneShadows;
-    public readonly Vector4 ToneHighlights = toneHighlights;
-    public readonly Vector4 SharpenParams = sharpenParams;
-    
+
+    //x = intensity (0..1.5), y = threshold (0.6..0.9), z = radius (px), w = 0
+    public readonly Vector4 Bloom = bloom;
+
+    // x = vignetteStrength (0..0.15), y = grainAmount (0..0.01), z = sharpenAmount (0..0.15), w = rolloff (0..0.12)
+    public readonly Vector4 Fx = fx;
 }

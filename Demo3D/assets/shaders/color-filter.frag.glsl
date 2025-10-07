@@ -3,250 +3,154 @@
 in vec2 TexCoord;
 out vec4 FragColor;
 
-layout(binding = 0) uniform sampler2D uScene;
-//layout(binding = 1) uniform sampler3D uLUT;
+layout(binding = 0) uniform sampler2D uSceneTex;
 
+@import ubo:EngineUniform
 @import ubo:PostUniform
 
+float saturate(float x){ return clamp(x,0.0,1.0); }
+vec3  saturate(vec3 v){ return clamp(v,0.0,1.0); }
 
-float luma709(vec3 c) {
-    return dot(c, vec3(0.2126, 0.7152, 0.0722));
-}
-vec3 safe_saturate(vec3 c) {
-    return clamp(c, 0.0, 1.0);
-}
+vec3 linear_to_srgb(vec3 x){ return pow(max(x,0.0), vec3(1.0/2.2)); }
+vec3 srgb_to_linear(vec3 x){ return pow(max(x,0.0), vec3(2.2)); }
 
-// Exposure in EV (stops)
-vec3 applyExposure(vec3 c, float ev) {
-    return c * exp2(ev);
-}
+float luma(vec3 c){ return dot(c, vec3(0.2126,0.7152,0.0722)); }
 
-// Contrast around pivot 0.5 (LDR)
-vec3 applyContrast(vec3 c, float contrast)
-{
-    return (c - 0.5) * contrast + 0.5;
+vec3 apply_saturation(vec3 c, float sat){
+    float Y = luma(c);
+    return mix(vec3(Y), c, sat);
 }
-
-// Saturation with luminance pivot
-vec3 applySaturation(vec3 c, float sat)
-{
-    float l = luma709(c);
-    return mix(vec3(l), c, sat);
+vec3 apply_contrast(vec3 c, float k){
+    // pivot in sRGB at 0.5 to avoid crushing lows
+    const float pivot = 0.5;
+    return (c - pivot) * k + pivot;
 }
 
-// Vibrance: boosts low-sat regions more than high-sat
-vec3 applyVibrance(vec3 c, float vib)
-{
-    float l = luma709(c);
-    float sat = clamp(length(c - vec3(l)), 0.0, 1.0);
-    float k = vib * (1.0 - sat);
-    return mix(vec3(l), c, 1.0 + k);
+vec3 apply_white_balance(vec3 c, float warmth, float tint, float strength){
+    // tiny RGB gains from warmth (+R, -B) and tint (+G, -M)
+    vec3 g = vec3(1.0);
+    g.r +=  0.60 * warmth;  g.b -= 0.60 * warmth;
+    g.g +=  0.50 * tint;    g.r -= 0.25 * tint; g.b -= 0.25 * tint;
+    g = mix(vec3(1.0), g, saturate(strength));
+    return c * g;
 }
 
-vec3 applyWhiteBalanceSimple(vec3 c, float temperature, float tint)
-{
-    float t = clamp(temperature, -1.0, 1.0);
-    float g = clamp(tint, -1.0, 1.0);
-    vec3 gains = vec3(1.0 + 0.10 * t, 1.0 + 0.06 * g, 1.0 - 0.10 * t);
-    c *= gains;
-    // preserve luminance a bit
-    float l = luma709(c);
-    return mix(vec3(l), c, 0.85);
+// soft highlight shoulder; symmetric and gentle
+vec3 rolloff(vec3 c, float k){
+    // k in [0..~0.12]
+    float a = max(k, 1e-6);
+    return c / (1.0 + a*c);  // Reinhard-like, mild for small a
 }
 
-vec3 applyWhiteBalance(vec3 c, float temperature, float tint)
-{
-    // RGB -> LMS
-    const mat3 M = mat3(
-            0.3811, 0.5783, 0.0406,
-            0.1967, 0.7244, 0.0787,
-            0.0241, 0.1288, 0.8444
-        );
-    const mat3 Minv = mat3(
-            4.4679, -3.5873, 0.1193,
-            -1.2186, 2.3809, -0.1624,
-            0.0497, -0.2439, 1.2045
-        );
-
-    vec3 lms = M * c;
-
-    float t = clamp(temperature, -1.0, 1.0);
-    float g = clamp(tint, -1.0, 1.0);
-
-    vec3 scale = vec3(1.0 + 0.15 * t, 1.0 + 0.10 * g, 1.0 - 0.15 * t);
-    lms *= scale;
-
-    return Minv * lms;
-}
-
-// Highlight rolloff
-vec3 rollOff(vec3 c, float strength)
-{
-    strength = max(strength, 0.0);
-    // Rational curve: c' = c / (1 + strength * c)
-    return c / (1.0 + strength * c);
-}
-
-// Bloom from scene mip chain
-vec3 bloomSample(vec2 uv)
-{
-    float threshold = BloomParams.x;
-    float softKnee = clamp(BloomParams.y, 0.0, 1.0);
-    float extra = max(BloomParams.z, 0.0);
-    float lodBias = BloomParams.w;
-
-    // prefilter curve (soft knee)
-    float knee = threshold * softKnee + 1e-6;
-    float invK4 = 0.25 / knee;
-    float curve0 = threshold - knee;
-    float curve1 = 2.0 * knee;
-
+// cheap additive bloom using LOD blur
+vec3 sample_bloom(in vec2 uv, float lodBase){
+    // 9 taps across a few LODs for soft look
+    vec2 px = uInvResolution;
     vec3 sum = vec3(0.0);
-    for (int i = 0; i < 4; ++i)
-    {
-        float lod = float(i + 1) + lodBias;
-        vec3 s = textureLod(uScene, uv, lod).rgb;
-        float br = max(max(s.r, s.g), s.b);
 
-        // soft knee weighting
-        float wk = max(br - curve0, 0.0);
-        wk = wk * wk * invK4;
-        wk = min(wk, br - threshold);
-        wk = max(wk, 0.0);
+    sum += textureLod(uSceneTex, uv, lodBase+0.0).rgb * 0.25;
+    sum += textureLod(uSceneTex, uv + vec2(+2,0)*px, lodBase+0.5).rgb * 0.125;
+    sum += textureLod(uSceneTex, uv + vec2(-2,0)*px, lodBase+0.5).rgb * 0.125;
+    sum += textureLod(uSceneTex, uv + vec2(0,+2)*px, lodBase+0.5).rgb * 0.125;
+    sum += textureLod(uSceneTex, uv + vec2(0,-2)*px, lodBase+0.5).rgb * 0.125;
+    sum += textureLod(uSceneTex, uv + vec2(+4,+4)*px, lodBase+1.0).rgb * 0.0625;
+    sum += textureLod(uSceneTex, uv + vec2(-4,+4)*px, lodBase+1.0).rgb * 0.0625;
+    sum += textureLod(uSceneTex, uv + vec2(+4,-4)*px, lodBase+1.0).rgb * 0.0625;
+    sum += textureLod(uSceneTex, uv + vec2(-4,-4)*px, lodBase+1.0).rgb * 0.0625;
 
-        sum += s * wk * BloomLods[i];
-    }
-
-    float intensity = max(Flags.w, 0.0) * (1.0 + extra);
-    return sum * intensity;
+    return sum;
 }
 
-vec3 chromaticAberration(vec2 uv, vec3 c)
-{
-    float amount = ChromAbParams.x;
-    if (amount <= 0.0) return c;
-    vec2 dir = (uv - 0.5) * 2.0;
-    vec2 off = dir * amount;
-    float r = texture(uScene, uv + off).r;
-    float b = texture(uScene, uv - off).b;
-    return vec3(r, c.g, b);
+// vignette (luma-preserving)
+float vignette(vec2 uv, float strength){
+    vec2 d = uv*2.0 - 1.0;
+    float r = dot(d,d); // 0 center -> ~2 corner
+    float v = 1.0 - strength * smoothstep(0.6, 1.4, r);
+    return v;
 }
 
-vec3 vignette(vec2 uv, vec3 c)
-{
-    float inner = clamp(VignetteParams.x, 0.0, 1.0);
-    float outer = max(VignetteParams.y, inner + 1e-3);
-    float amt = clamp(VignetteParams.z, 0.0, 1.0);
-
-    float d = distance(uv, vec2(0.5));
-    float v = smoothstep(inner, outer, d);
-    return c * mix(1.0, 1.0 - v, amt);
+// simple monochrome grain
+float hash(vec2 p){
+    // low-cost, stable per-frame noise
+    p += uTime * 0.5;
+    return fract(sin(dot(p, vec2(127.1,311.7))) * 43758.5453);
 }
 
-float hash(vec2 p) {
-    return fract(sin(dot(p, vec2(12.9898, 78.233))) * 43758.5453);
+float hash_px(ivec2 p){
+    uint x = uint(p.x), y = uint(p.y);
+    uint n = x * 1664525u + y * 1013904223u + 12345u;
+    n ^= (n << 13); n ^= (n >> 17); n ^= (n << 5);
+    return float(n) * (1.0/4294967296.0); // [0,1)
 }
 
-vec3 addGrain(vec2 uv, vec3 c)
-{
-    float inten = clamp(GrainParams.x, 0.0, 0.1);
-    if (inten <= 0.0) return c;
-
-    // Tie noise to pixel grid to avoid shimmer; modulate by time
-    vec2 res = vec2(textureSize(uScene, 0));
-    vec2 ip = floor(uv * res);
-    float n = hash(ip + GrainParams.yy);
-
-    // Grain in luma space, re-injected to RGB
-    float l = dot(c, vec3(0.2126, 0.7152, 0.0722));
-    float g = (n - 0.5) * 2.0 * inten;
-    float nl = clamp(l + g, 0.0, 1.0);
-    return c + (nl - l);
+float grain(vec2 uv){
+    // lock to pixels
+    ivec2 px = ivec2(floor(uv / uInvResolution));
+    // tiny frame jitter
+    px += ivec2(int(fract(uTime*24.0)*7.0));
+    return hash_px(px) * 2.0 - 1.0;
 }
 
-vec3 hueToRgb(float deg)
-{
-    float h = fract(deg / 360.0);
-    vec3 k = vec3(1.0, 2.0 / 3.0, 1.0 / 3.0);
-    return clamp(abs(mod(h + k, 1.0) * 6.0 - 3.0) - 1.0, 0.0, 1.0);
+// unsharp mask
+vec3 sharpen(vec2 uv, vec3 c, float amount, float clampVal){
+    vec2 px = uInvResolution;
+    vec3 blur =
+          texture(uSceneTex, uv + vec2(+1,0)*px).rgb
+        + texture(uSceneTex, uv + vec2(-1,0)*px).rgb
+        + texture(uSceneTex, uv + vec2(0,+1)*px).rgb
+        + texture(uSceneTex, uv + vec2(0,-1)*px).rgb;
+    blur = (blur * 0.25);
+    vec3 detail = c - blur;
+    detail = clamp(detail, -clampVal, clampVal);
+    return c + amount * detail;
 }
 
-vec3 applySplitToning(vec3 c)
-{
-    float l = dot(c, vec3(0.2126, 0.7152, 0.0722));
-    // Shadow tint
-    vec3 sc = hueToRgb(ToneShadows.x) * ToneShadows.y;
-    sc = mix(vec3(0.0), sc, ToneShadows.w);
-    sc += vec3(ToneShadows.z); // luminance bias
+// ---- main ----
+void main(){
+    vec2 uv = TexCoord;
 
-    // Highlight tint
-    vec3 hc = hueToRgb(ToneHighlights.x) * ToneHighlights.y;
-    hc = mix(vec3(0.0), hc, ToneHighlights.w);
-    hc += vec3(ToneHighlights.z);
+    // 1) fetch scene (already linear)
+    vec3 color = texture(uSceneTex, uv).rgb;
 
-    float sh = 1.0 - smoothstep(0.25, 0.5, l);
-    float hi = smoothstep(0.5, 0.75, l);
-    vec3 tint = sc * sh + hc * hi;
-    return clamp(c + tint, 0.0, 1.0);
-}
+    // 2) exposure (linear)
+    float exposure = 1.0 + clamp(uGrade.x, -0.10, 0.10);
+    color *= exposure;
 
-vec3 unsharp(vec2 uv, vec3 c)
-{
-    float amount = clamp(SharpenParams.x, 0.0, 0.6);
-    if (amount <= 0.0) return c;
+    // 3) hop to sRGB for perceptual grading
+    vec3 cs = linear_to_srgb(color);
 
-    float rad = clamp(SharpenParams.y, 1.0, 3.0);
-    float thr = clamp(SharpenParams.z, 0.0, 0.25);
+    //   saturation & contrast
+    cs = apply_saturation(cs, clamp(uGrade.y, 0.5, 1.5));
+    cs = apply_contrast(cs, clamp(uGrade.z, 0.7, 1.3));
 
-    vec2 texel = 1.0 / vec2(textureSize(uScene, 0));
-    vec2 r = texel * rad;
+    //   warmth & tint
+    float warmth = clamp(uGrade.w,        -0.10, 0.10);
+    float tint   = clamp(uWhiteBalance.x, -0.10, 0.10);
+    float wbStr  = saturate(uWhiteBalance.y);
+    cs = apply_white_balance(cs, warmth, tint, wbStr);
 
-    // 9-tap Gaussian-ish blur
-    vec3 b = vec3(0.0);
-    b += texture(uScene, uv + vec2(-r.x, -r.y)).rgb;
-    b += texture(uScene, uv + vec2(0.0, -r.y)).rgb * 2.0;
-    b += texture(uScene, uv + vec2(r.x, -r.y)).rgb;
+    // 4) back to linear
+    color = srgb_to_linear(saturate(cs));
 
-    b += texture(uScene, uv + vec2(-r.x, 0.0)).rgb * 2.0;
-    b += texture(uScene, uv).rgb * 4.0;
-    b += texture(uScene, uv + vec2(r.x, 0.0)).rgb * 2.0;
+    // 5) gentle rolloff (keeps highlights pleasant, doesn’t crush lows)
+    color = rolloff(color, clamp(uFX.w, 0.0, 0.12));
 
-    b += texture(uScene, uv + vec2(-r.x, r.y)).rgb;
-    b += texture(uScene, uv + vec2(0.0, r.y)).rgb * 2.0;
-    b += texture(uScene, uv + vec2(r.x, r.y)).rgb;
+    // 6) bloom (threshold in linear, additive)
+    float thr = clamp(uBloom.y, 0.4, 0.95);
+    float wBright = saturate(max(max(color.r, color.g), color.b) - thr) / max(1.0 - thr, 1e-6);
+    vec3 bloom = sample_bloom(uv, max(uBloom.z, 0.0)) * (wBright * clamp(uBloom.x, 0.0, 2.0));
+    color += bloom;
 
-    b *= 1.0 / 16.0;
+    // 7) vignette (applied in linear, mild)
+    float vig = vignette(uv, clamp(uFX.x, 0.0, 0.2));
+    color *= vig;
 
-    vec3 diff = c - b;
-    // Threshold in luma to avoid noise amplification
-    float dl = abs(dot(diff, vec3(0.2126, 0.7152, 0.0722)));
-    float m = smoothstep(thr, thr + 0.1, dl);
-    return clamp(c + diff * (amount * m), 0.0, 1.0);
-}
+    // 8) grain (tiny)
+    color += grain(uv) * uFX.y;
 
-void main()
-{
-    vec3 color = texture(uScene, TexCoord).rgb;
+    // 9) sharpen (small, clamped)
+    color = sharpen(uv, color, clamp(uFX.z, 0.0, 0.12), 0.015);
 
-    // grading
-    color = applyExposure(color, ColorAdjust.x);
-    color = applyWhiteBalance(color, WhiteBalance.x, WhiteBalance.y);
-    color = applyVibrance(color, WhiteBalance.z);
-    color = applySaturation(color, ColorAdjust.z);
-    color = applyContrast(color, ColorAdjust.y);
-
-    // tweaks
-    color = applySplitToning(color);
-    color += bloomSample(TexCoord);
-    color = vignette(TexCoord, color);
-    color = unsharp(TexCoord, color);
-    color = addGrain(TexCoord, color);
-    color = chromaticAberration(TexCoord, color);
-
-    // final
-    color = rollOff(color, Flags.z);
-    if (Flags.x > 0.5)
-        color = pow(safe_saturate(color), vec3(1.0 / max(ColorAdjust.w, 1e-6)));
-
-    FragColor = vec4(safe_saturate(color), 1.0);
+    // 10) final clamp. Output remains LINEAR (sRGB FBO will encode later).
+    FragColor = vec4(saturate(color), 1.0);
 }

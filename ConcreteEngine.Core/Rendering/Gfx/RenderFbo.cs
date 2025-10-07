@@ -42,6 +42,8 @@ public sealed class RenderFbo : IComparable<RenderFbo>, IComparable<FrameBufferI
         MultiSample = meta.MultiSample;
     }
 
+    public bool IsFixedSize => _sizePolicy.Mode == SizePolicy.ResizeMode.Fixed;
+    
     public Size2D CalculateNewSize(Size2D outputSize) => _sizePolicy.Calculate(outputSize);
 
     public int CompareTo(RenderFbo? other) => FboId.Value.CompareTo(other!.FboId.Value);
@@ -57,39 +59,39 @@ public sealed class RenderFbo : IComparable<RenderFbo>, IComparable<FrameBufferI
 
     public sealed class SizePolicy
     {
-        private enum Mode : byte
+        public enum ResizeMode : byte
         {
             Default,
             Fixed,
             Calculated
         }
 
-        private readonly Mode _mode;
+        public ResizeMode Mode { get; }
         private readonly CalcFboOutputDel? _calc;
         private readonly Vector2 _ratio;
         private readonly Size2D _fixed;
 
-        private SizePolicy(Mode mode, CalcFboOutputDel? calc, Vector2 ratio, Size2D fixedSize)
+        private SizePolicy(ResizeMode mode, CalcFboOutputDel? calc, Vector2 ratio, Size2D fixedSize)
         {
-            _mode = mode;
+            Mode = mode;
             _calc = calc;
             _ratio = ratio;
             _fixed = fixedSize;
         }
 
-        public static SizePolicy Default() => new(Mode.Default, null, Vector2.One, default);
-        public static SizePolicy Fixed(Size2D size) => new(Mode.Fixed, null, Vector2.One, size);
+        public static SizePolicy Default() => new(ResizeMode.Default, null, Vector2.One, default);
+        public static SizePolicy Fixed(Size2D size) => new(ResizeMode.Fixed, null, Vector2.One, size);
 
         public static SizePolicy Calculated(CalcFboOutputDel calcFboOutput, Vector2 ratio) =>
-            new(Mode.Calculated, calcFboOutput, ratio, default);
+            new(ResizeMode.Calculated, calcFboOutput, ratio, default);
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public Size2D Calculate(Size2D outputSize)
         {
-            return _mode switch
+            return Mode switch
             {
-                Mode.Fixed => _fixed,
-                Mode.Calculated => _calc!(outputSize, _ratio),
+                ResizeMode.Fixed => _fixed,
+                ResizeMode.Calculated => _calc!(outputSize, _ratio),
                 _ => outputSize
             };
         }

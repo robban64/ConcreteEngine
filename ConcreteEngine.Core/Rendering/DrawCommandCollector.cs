@@ -2,6 +2,7 @@
 
 #endregion
 
+using ConcreteEngine.Core.Engine.Data;
 using ConcreteEngine.Core.Rendering.Commands;
 using ConcreteEngine.Core.Rendering.Data;
 
@@ -64,10 +65,10 @@ internal sealed class DrawCommandCollector
     }
 
 
-    public void BeginTick(in UpdateInfo update)
+    public void BeginTick(in UpdateTickInfo tick)
     {
         foreach (var producer in _producerList)
-            producer.BeginTick(in update);
+            producer.BeginTick(in tick);
     }
 
     public void EndTick()

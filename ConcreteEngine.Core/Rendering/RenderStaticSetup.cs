@@ -13,7 +13,7 @@ internal static class RenderStaticSetup
     internal static void RegisterFrameBuffers(RenderRegistry renderRegistry)
     {
         renderRegistry.RegisterFrameBuffer<ShadowPassTag, PassDrawSlot>(
-            RegisterFboEntry.MakeDefault(true).AttachDepthTexture().UseFixedSize(new Size2D(2048, 2048))
+            RegisterFboEntry.MakeDefault(false).AttachDepthTexture().UseFixedSize(new Size2D(2048, 2048))
         );
         renderRegistry.RegisterFrameBuffer<ScenePassTag, PassDrawSlot>(
             RegisterFboEntry.MakeMsaa(RenderBufferMsaa.X4).AttachColorTexture().AttachDepthStencilBuffer()
@@ -32,6 +32,7 @@ internal static class RenderStaticSetup
 
     internal static void RegisterUniformBufferTypes(RenderRegistry renderRegistry)
     {
+        renderRegistry.RegisterUniformBuffer<EngineUniformRecord>();
         renderRegistry.RegisterUniformBuffer<FrameUniformRecord>();
         renderRegistry.RegisterUniformBuffer<CameraUniformRecord>();
         renderRegistry.RegisterUniformBuffer<DirLightUniformRecord>();
@@ -39,7 +40,7 @@ internal static class RenderStaticSetup
         renderRegistry.RegisterUniformBuffer<ShadowUniformRecord>();
         renderRegistry.RegisterUniformBuffer<MaterialUniformRecord>();
         renderRegistry.RegisterUniformBuffer<DrawObjectUniform>();
-        renderRegistry.RegisterUniformBuffer<FramePostProcessUniform>();
+        renderRegistry.RegisterUniformBuffer<PostProcessUniform>();
     }
 
     internal static void RegisterPassTagTypes()

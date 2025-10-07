@@ -3,6 +3,7 @@
 using System.Numerics;
 using ConcreteEngine.Common.Numerics;
 using ConcreteEngine.Core.Assets.Resources;
+using ConcreteEngine.Core.Engine.Data;
 using ConcreteEngine.Core.Rendering.Batching;
 using ConcreteEngine.Core.Rendering.Commands;
 using ConcreteEngine.Core.Rendering.Data;
@@ -47,7 +48,7 @@ public sealed class TerrainDrawProducer : IDrawCommandProducer, ITerrainDrawSink
         _terrain = _context.DrawBatchers.Get<TerrainBatcher>();
     }
 
-    public void BeginTick(in UpdateInfo update)
+    public void BeginTick(in UpdateTickInfo tick)
     {
     }
 

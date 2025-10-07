@@ -11,7 +11,7 @@ using ConcreteEngine.Graphics.Utils;
 
 namespace ConcreteEngine.Core.Rendering.Gfx;
 
-public sealed class PipelineStateOps
+public sealed class DrawStateOps
 {
     private readonly IPrimitiveMeshes _primitiveMeshes;
     private readonly GfxCommands _gfxCmd;
@@ -21,33 +21,39 @@ public sealed class PipelineStateOps
     private readonly RenderGlobalSnapshot _globalSnapshot;
     private readonly DrawUniforms _drawUniforms;
 
-    internal PipelineStateOps(GfxContext ctx, RenderRegistry renderRegistry, RenderView renderView,
-        RenderGlobalSnapshot globalSnapshot, DrawUniforms drawUniforms)
+    private readonly DrawStateContext _ctx;
+    
+    internal DrawStateOps(DrawStateContext ctx, DrawStateContextPayload ctxPayload, DrawUniforms drawUniforms)
     {
-        _renderRegistry = renderRegistry;
-        _renderView = renderView;
-        _globalSnapshot = globalSnapshot;
+        _renderRegistry = ctxPayload.Registry;
+        _renderView = ctxPayload.RenderView;
+        _globalSnapshot = ctxPayload.Snapshot;
         _drawUniforms = drawUniforms;
-        _gfxCmd = ctx.Commands;
-        _gfxTextures = ctx.Textures;
-        _primitiveMeshes = ctx.Primitives;
+        _gfxCmd = ctxPayload.Gfx.Commands;
+        _gfxTextures = ctxPayload.Gfx.Textures;
+        _primitiveMeshes = ctxPayload.Gfx.Primitives;
+
+        _ctx = ctx;
     }
 
-    public void UseRenderLightView()
+    public void ActivateDepthMode()
     {
+        _ctx.SetDepthMode();
+        
         _renderView.ApplyLightView(_globalSnapshot.DirLight.Direction);
         _drawUniforms.UploadShadow(in _renderView.ProjectionViewMatrix);
         _drawUniforms.UploadCameraView(_renderView);
-
     }
 
-    public void RestoreView()
+    public void RestoreMode()
     {
+        _ctx.RestoreStateMode();
+        
         _renderView.Restore();
         _drawUniforms.UploadCameraView(_renderView);
     }
 
-    
+
     public void ApplyStateFunctions(GfxPassStateFunc passFunc)
         => _gfxCmd.ApplyStateFunctions(passFunc);
 

@@ -1,3 +1,4 @@
+using ConcreteEngine.Core.Engine.Data;
 using ConcreteEngine.Core.Rendering.Batching;
 using ConcreteEngine.Core.Rendering.Commands;
 using ConcreteEngine.Core.Rendering.Data;
@@ -37,7 +38,7 @@ internal sealed class DrawCommandPipeline
         _commandCollector.InitializeProducers();
     }
 
-    internal void BeginTick(in UpdateInfo update) => _commandCollector.BeginTick(update);
+    internal void BeginTick(in UpdateTickInfo tick) => _commandCollector.BeginTick(tick);
     internal void EndTick() => _commandCollector.EndTick();
     public TSink GetSink<TSink>() where TSink : IDrawSink => _commandCollector.GetSink<TSink>();
 

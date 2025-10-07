@@ -1,5 +1,6 @@
 #region
 
+using ConcreteEngine.Core.Engine.Data;
 using ConcreteEngine.Core.Rendering.Batching;
 using ConcreteEngine.Core.Rendering.Data;
 using ConcreteEngine.Core.Scene;
@@ -20,7 +21,7 @@ public interface IDrawCommandProducer
 {
     void AttachContext(CommandProducerContext ctx);
     void Initialize();
-    void BeginTick(in UpdateInfo update);
+    void BeginTick(in UpdateTickInfo tick);
     void EndTick();
     void EmitFrame(float alpha, in RenderGlobalSnapshot snapshot, DrawCommandBuffer submitter);
 }

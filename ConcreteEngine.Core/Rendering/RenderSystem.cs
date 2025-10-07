@@ -6,6 +6,7 @@ using ConcreteEngine.Common.Numerics;
 using ConcreteEngine.Core.Assets;
 using ConcreteEngine.Core.Assets.Resources;
 using ConcreteEngine.Core.Engine;
+using ConcreteEngine.Core.Engine.Data;
 using ConcreteEngine.Core.Rendering.Batching;
 using ConcreteEngine.Core.Rendering.Commands;
 using ConcreteEngine.Core.Rendering.Data;
@@ -49,7 +50,7 @@ public sealed class RenderSystem : IRenderSystem
     private DrawCommandPipeline _drawPipeline;
     private RenderPassPipeline _passPipeline;
 
-    private PipelineStateOps _pipelineStateOps = null!;
+    private DrawStateOps _drawStateOps = null!;
     private DrawProcessor _drawProcessor = null!;
     private DrawUniforms _drawUniforms = null!;
 
@@ -64,7 +65,6 @@ public sealed class RenderSystem : IRenderSystem
     private readonly RenderView _renderView = new();
 
     private bool _initialized = false;
-    private GfxFrameInfo _frameCtx;
 
 
     internal RenderRegistry RenderRegistry => _renderRegistry;
@@ -94,10 +94,20 @@ public sealed class RenderSystem : IRenderSystem
 
     internal void Initialize(MaterialStore materialStore, AssetSystem assets)
     {
+        var depthShader = assets.Get<Shader>("Depth").ResourceId;
+        _renderRegistry.TryGetRenderFbo<ShadowPassTag, PassDrawSlot>(out var shadowFbo);
+        InvalidOpThrower.ThrowIfNull(shadowFbo, nameof(shadowFbo));
+        InvalidOpThrower.ThrowIfNot(shadowFbo.Attachments.DepthTextureId.IsValid());
+
         _materialStore = materialStore;
-        _drawProcessor = new DrawProcessor(_gfx, _materialStore, _renderRegistry);
-        _drawUniforms = new DrawUniforms(_gfx.Buffers, _renderRegistry);
-        _pipelineStateOps = new PipelineStateOps(_gfx, _renderRegistry, _renderView, _snapshot, _drawUniforms);
+
+        var drawCtx = new DrawStateContext(depthShader, shadowFbo!.Attachments.DepthTextureId);
+        var drawCtxPayload = new DrawStateContextPayload
+            { Gfx = _gfx, Registry = _renderRegistry, RenderView = _renderView, Snapshot = _snapshot };
+
+        _drawUniforms = new DrawUniforms(_gfx.Buffers, _renderRegistry, _snapshot);
+        _drawProcessor = new DrawProcessor(drawCtx, drawCtxPayload, _materialStore);
+        _drawStateOps = new DrawStateOps(drawCtx, drawCtxPayload, _drawUniforms);
 
         _batches.Register(new TerrainBatcher(_gfx));
         //_batches.Register(new SpriteBatcher(_gfx));
@@ -113,30 +123,28 @@ public sealed class RenderSystem : IRenderSystem
         _initialized = true;
     }
 
-    private ShaderId depthShader;
 
     private void RegisterPasses(AssetSystem assets)
     {
-        _passPipeline = new RenderPassPipeline(_pipelineStateOps, _renderRegistry);
+        _passPipeline = new RenderPassPipeline(_drawStateOps, _renderRegistry);
 
         var compositeShader = assets.Get<Shader>("Composite").ResourceId;
         var presentShader = assets.Get<Shader>("Present").ResourceId;
         var colorFilterShader = assets.Get<Shader>("ColorFilter").ResourceId;
-        depthShader = assets.Get<Shader>("Depth").ResourceId;
 
         // Shadow
         _passPipeline.Register<ShadowPassTag, PassDrawSlot>(PassOpKind.Draw, 0, RenderPassState.MakeShadow())
             .OnPassBegin(static (RenderPassCtx ctx, in RenderPassState state) =>
             {
-                ctx.Ops.UseRenderLightView(); // Note!
-                
+                ctx.Ops.ActivateDepthMode(); // Note!
+
                 ctx.Ops.BeginRenderPass(ctx.Target.FboId, state.ClearColor, state.PassState);
                 ctx.Ops.ApplyStateFunctions(new GfxPassStateFunc(Cull: CullMode.FrontCcw));
                 return ApplyPassReturn.DrawPassResult();
             }).OnPassEnd(static (RenderPassCtx ctx, in RenderPassState state) =>
             {
                 ctx.Ops.EndRenderPass();
-                ctx.Ops.RestoreView();
+                ctx.Ops.RestoreMode();
             });
 
         // Scene 
@@ -233,33 +241,33 @@ public sealed class RenderSystem : IRenderSystem
     public Material CreateMaterial(string templateName) => _materialStore.CreateMaterialFromTemplate(templateName);
 
 
-    internal void BeginTick(in UpdateInfo update) => _drawPipeline.BeginTick(update);
+    internal void BeginTick(in UpdateTickInfo tick) => _drawPipeline.BeginTick(tick);
     internal void EndTick() => _drawPipeline.EndTick();
 
-    internal void Render(float alpha, in GfxFrameInfo frameCtx)
+    internal void Render(in RenderTickInfo tickInfo, in RenderTickParams tickParams)
     {
         Debug.Assert(_initialized);
-        _frameCtx = frameCtx;
-        if (frameCtx.Viewport != Camera.Viewport)
-            Camera.Viewport = frameCtx.Viewport;
+        
+        if (tickInfo.OutputSize != Camera.Viewport)
+            Camera.Viewport = tickInfo.OutputSize;
 
-        SceneRenderProps.SetOutputSize(frameCtx.OutputSize);
+        SceneRenderProps.SetOutputSize(tickInfo.OutputSize);
         _snapshot = SceneRenderProps.Commit();
 
         _renderView.PrepareFrame((Camera3D)Camera);
 
-        _drawUniforms.UploadGlobalUniforms(alpha, in frameCtx, _snapshot);
+        _drawUniforms.UploadGlobalUniforms(in tickInfo, in tickParams);
         _drawUniforms.UploadCameraView(_renderView);
 
-        Execute(alpha, in frameCtx);
+        Execute(in tickInfo);
     }
 
 
-    private void Execute(float alpha, in GfxFrameInfo frameCtx)
+    private void Execute(in RenderTickInfo tickInfo)
     {
-        _passPipeline.Prepare(frameCtx.OutputSize);
+        _passPipeline.Prepare(tickInfo.OutputSize);
 
-        nint capacity = _drawPipeline.Prepare(alpha, _snapshot);
+        nint capacity = _drawPipeline.Prepare(tickInfo.Alpha, _snapshot);
 
         _drawProcessor.PrepareFrame(in _snapshot, capacity);
 
@@ -284,12 +292,11 @@ public sealed class RenderSystem : IRenderSystem
 
         if (passResult == ApplyPassReturn.DrawPassResult())
         {
-            _drawProcessor.PrepareDrawPass(passId == 0 ? depthShader : default);
+            _drawProcessor.PrepareDrawPass();
             _drawPipeline.ExecuteDrawPass(passId);
         }
 
         _passPipeline.ApplyAfterPass();
-        
     }
 
     public void Shutdown()

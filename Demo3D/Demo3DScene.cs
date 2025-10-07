@@ -44,6 +44,7 @@ public sealed class Demo3DScene : GameScene
 
 
         var rockMat = renderer.CreateMaterial("Rock01Mat");
+        rockMat.SpecularStrength = 0.3f;
         var rockMesh = assets.Get<Mesh>("Rock1");
         var rock2Mesh = assets.Get<Mesh>("Rock2");
 

@@ -1,10 +1,12 @@
+using ConcreteEngine.Core.Engine.Data;
+
 namespace ConcreteEngine.Core.Features;
 
 public interface IGameFeature
 {
     void Initialize();
     void UpdateTick(int tick);
-    void Update(in UpdateInfo frameCtx);
+    void Update(in UpdateTickInfo frameCtx);
     void AttachContext(GameFeatureContext context);
     void Unload();
 }
@@ -24,7 +26,7 @@ public abstract class GameFeature : IGameFeature
     {
     }
 
-    public virtual void Update(in UpdateInfo frameCtx)
+    public virtual void Update(in UpdateTickInfo frameCtx)
     {
     }
 

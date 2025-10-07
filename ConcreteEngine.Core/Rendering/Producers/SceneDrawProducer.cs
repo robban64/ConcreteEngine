@@ -1,6 +1,7 @@
 #region
 
 using System.Numerics;
+using ConcreteEngine.Core.Engine.Data;
 using ConcreteEngine.Core.Rendering.Commands;
 using ConcreteEngine.Core.Rendering.Data;
 
@@ -26,7 +27,7 @@ public sealed class SceneDrawProducer : IDrawCommandProducer
 
     public void SetSceneGlobals(in RenderGlobalSnapshot snapshot) => _snapshot = snapshot;
 
-    public void BeginTick(in UpdateInfo update)
+    public void BeginTick(in UpdateTickInfo tick)
     {
     }
 

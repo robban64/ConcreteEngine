@@ -15,6 +15,7 @@ internal sealed class DrawUniforms
 {
     private readonly GfxBuffers _gfxBuffers;
 
+    private readonly UniformBufferId _engineUbo;
     private readonly UniformBufferId _frameUbo;
     private readonly UniformBufferId _cameraUbo;
     private readonly UniformBufferId _lightUbo;
@@ -22,27 +23,29 @@ internal sealed class DrawUniforms
     private readonly UniformBufferId _dirLightUbo;
     private readonly UniformBufferId _postUbo;
 
-    private float _deltaTicker = 0;
+    private readonly RenderGlobalSnapshot _snapshot;
 
-    public DrawUniforms(GfxBuffers gfxBuffers, RenderRegistry registry)
+    internal DrawUniforms(GfxBuffers gfxBuffers, RenderRegistry registry, RenderGlobalSnapshot snapshot)
     {
         _gfxBuffers = gfxBuffers;
+        _snapshot = snapshot;
 
+        _engineUbo = registry.GetRenderUbo<EngineUniformRecord>().Id;
         _frameUbo = registry.GetRenderUbo<FrameUniformRecord>().Id;
         _cameraUbo = registry.GetRenderUbo<CameraUniformRecord>().Id;
         _dirLightUbo = registry.GetRenderUbo<DirLightUniformRecord>().Id;
         _lightUbo = registry.GetRenderUbo<LightUniformRecord>().Id;
         _shadowUbo = registry.GetRenderUbo<ShadowUniformRecord>().Id;
-        _postUbo = registry.GetRenderUbo<FramePostProcessUniform>().Id;
+        _postUbo = registry.GetRenderUbo<PostProcessUniform>().Id;
     }
 
 
-    public void UploadGlobalUniforms(float alpha, in GfxFrameInfo frameCtx, RenderGlobalSnapshot snapshot)
+    public void UploadGlobalUniforms(in RenderTickInfo tickInfo, in RenderTickParams tickParams)
     {
-        _deltaTicker += frameCtx.DeltaTime;
-        UploadFrameUniformRecord(snapshot);
-        UploadDirLight(snapshot);
-        UploadLight(snapshot);
+        UploadEngineUniformRecord(in tickInfo, in tickParams);
+        UploadFrameUniformRecord();
+        UploadDirLight();
+        UploadLight();
         UploadPost();
     }
 
@@ -50,16 +53,29 @@ internal sealed class DrawUniforms
     {
         var data = new CameraUniformRecord(
             viewMat: in view.ViewMatrix,
-            projMat: in  view.ProjectionMatrix,
-            projViewMat: in  view.ProjectionViewMatrix,
+            projMat: in view.ProjectionMatrix,
+            projViewMat: in view.ProjectionViewMatrix,
             cameraPos: view.Position
         );
 
         _gfxBuffers.UploadUniformGpuData(_cameraUbo, in data, 0);
     }
 
+    private void UploadEngineUniformRecord(in RenderTickInfo tickInfo, in RenderTickParams tickParams)
+    {
+        var outputSize = tickInfo.OutputSize;
+        var data = new EngineUniformRecord(
+            deltaTime: tickInfo.DeltaTime,
+            invResolution: new Vector2(1.0f / outputSize.Width, 1.0f / outputSize.Height),
+            time: tickParams.Time,
+            mouse: tickParams.MousePos,
+            random: tickParams.RndSeed
+        );
+        
+        _gfxBuffers.UploadUniformGpuData(_engineUbo, in data, 0);
+    }
 
-    private void UploadFrameUniformRecord(RenderGlobalSnapshot snapshot)
+    private void UploadFrameUniformRecord()
     {
         /*
         var data = new FrameUniformRecord(
@@ -72,7 +88,7 @@ internal sealed class DrawUniforms
 */
         var data = new FrameUniformRecord(
             ambient: new Vector4(0.032f, 0.032f, 0.034f, 0.0f),
-            ambientGround: new Vector4(0.015f, 0.015f, 0.013f, 0.0f),
+            ambientGround: new Vector4(0.015f, 0.019f, 0.013f, 0.0f),
             fogColor: new Vector4(0.76f, 0.81f, 0.86f, 0.055f),
             fogParams0: new Vector4(0.0000035f, 0.000090f, 0.0f, 0.15f),
             fogParams1: new Vector4(1.0f, 0.25f, 8000.0f, 0.0f)
@@ -81,12 +97,12 @@ internal sealed class DrawUniforms
         _gfxBuffers.UploadUniformGpuData(_frameUbo, in data, 0);
     }
 
-    private void UploadDirLight(RenderGlobalSnapshot snapshot)
+    private void UploadDirLight()
     {
         var data = new DirLightUniformRecord(
-            direction: snapshot.DirLight.Direction.AsVector4(),
-            diffuse: snapshot.DirLight.Diffuse,
-            specular: new Vector4(snapshot.DirLight.SpecularIntensity, 0, 0, 0)
+            direction: _snapshot.DirLight.Direction.AsVector4(),
+            diffuse: new Vector4(1.00f, 0.96f, 0.90f, 1.8f),
+            specular: new Vector4(0.6f, 0.0f, 0.0f, 0.0f)
         );
 
 /*
@@ -101,7 +117,7 @@ internal sealed class DrawUniforms
         _gfxBuffers.UploadUniformGpuData(_dirLightUbo, in data, 0);
     }
 
-    private void UploadLight(RenderGlobalSnapshot snapshot)
+    private void UploadLight()
     {
         var data = new LightUniformRecord(0, default);
 
@@ -111,10 +127,9 @@ internal sealed class DrawUniforms
     public void UploadShadow(in Matrix4x4 lightViewProjection)
     {
         //shadowParams0: new Vector4(1.0f / 1024.0f, 1.0f / 1024.0f, 0.001f, 0.005f),
-
         var data = new ShadowUniformRecord(
             lightViewProj: lightViewProjection,
-            shadowParams0: new Vector4(1.0f / 1024.0f, 1.0f / 1024.0f, 0.00025f, 0.0025f),
+            shadowParams0: new Vector4(1.0f / 2048.0f, 1.0f / 2048.0f, 0.00025f, 0.0025f),
             shadowParams1: new Vector4(1.0f, 1.0f, 0.0f, 0.0f)
         );
 
@@ -123,36 +138,13 @@ internal sealed class DrawUniforms
 
     private void UploadPost()
     {
-        var data = new FramePostProcessUniform(
-            colorAdjust: new Vector4(0.02f, 1.06f, 1.07f, 2.20f),
-            whiteBalance: new Vector4(0.015f, -0.005f, 0.30f, 0.00f),
-            flags: new Vector4(0.00f, 0.00f, 0.08f, 0.00f),
-            bloomParams: new Vector4(0.85f, 0.70f, 0.00f, 0.00f),
-            bloomLods: new Vector4(0.70f, 0.40f, 0.22f, 0.12f),
-            lutParams: new Vector4(0.00f, 0.00f, 0.00f, 0.00f),
-            vignetteParams: new Vector4(0.90f, 0.98f, 0.06f, 0.00f),
-            grainParams: new Vector4(0.0025f, _deltaTicker, 0.00f, 0.00f),
-            chromAbParams: new Vector4(0.00f, 0.00f, 0.00f, 0.00f),
-            toneShadows: new Vector4(210.0f, 0.010f, -0.002f, 0.035f),
-            toneHighlights: new Vector4(45.0f, 0.012f, 0.003f, 0.040f),
-            sharpenParams: new Vector4(0.07f, 1.20f, 0.015f, 0.00f)
+        var data = new PostProcessUniform(
+            grade: new Vector4(-0.015f, 1.10f, 0.96f, 0.018f),
+            whiteBalance: new Vector4(-0.003f, 0.25f, 0.0f, 0.0f),
+            bloom: new Vector4(0.55f, 0.78f, 1.10f, 0.0f),
+            fx: new Vector4(0.04f, 0.0025f, 0.065f, 0.095f)
         );
-/*
-      var data = new FramePostProcessUniform(
-          flags: new Vector4(0, 0, 0, 0),
-          colorAdjust: new Vector4(0, 1, 1, 1),
-          whiteBalance: new Vector4(0, 0, 0, 0),
-          bloomParams: new Vector4(0, 0, 0, 0),
-          bloomLods: new Vector4(0, 0, 0, 0),
-          toneShadows: new Vector4(0, 0, 0, 0),
-          toneHighlights: new Vector4(0, 0, 0, 0),
-          vignetteParams: new Vector4(0, 0, 0, 0),
-          grainParams: new Vector4(0, 0, 0, 0),
-          chromAbParams: new Vector4(0, 0, 0, 0),
-          sharpenParams: new Vector4(0, 0, 0, 0),
-          lutParams: new Vector4(0, 0, 0, 0)
-      );
-*/
+
         _gfxBuffers.UploadUniformGpuData(_postUbo, in data, 0);
     }
 }

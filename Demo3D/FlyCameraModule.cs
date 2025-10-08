@@ -59,7 +59,9 @@ public sealed class FlyCameraModule : GameModule
         _camera.Translation = Vector3.Lerp(_camera.Translation, newPos, dt);
         _camera.Yaw = float.Lerp(_camera.Yaw, yaw, dt);
         _camera.Pitch = float.Lerp(_camera.Pitch, pitch, dt);
+
     }
+
 
     public override void UpdateTick(int tick)
     {

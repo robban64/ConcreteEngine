@@ -10,7 +10,7 @@ namespace ConcreteEngine.Core.Scene;
 
 public interface IWorld
 {
-    SceneRenderProperties SceneRenderProps { get; }
+    RenderGlobalProps RenderProps { get; }
 
     EntityId Create();
     EntityStore<Transform> Transforms { get; }
@@ -26,11 +26,11 @@ public sealed class World : IWorld
 {
     private int _idIdx = 1;
 
-    public SceneRenderProperties SceneRenderProps { get; }
+    public RenderGlobalProps RenderProps { get; }
 
-    internal World(SceneRenderProperties sceneRenderProps)
+    internal World(RenderGlobalProps renderProps)
     {
-        SceneRenderProps = sceneRenderProps;
+        RenderProps = renderProps;
     }
 
 

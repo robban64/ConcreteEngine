@@ -129,8 +129,8 @@ internal sealed class DrawUniforms
         //shadowParams0: new Vector4(1.0f / 1024.0f, 1.0f / 1024.0f, 0.001f, 0.005f),
         var data = new ShadowUniformRecord(
             lightViewProj: lightViewProjection,
-            shadowParams0: new Vector4(1.0f / 2048.0f, 1.0f / 2048.0f, 0.00025f, 0.0025f),
-            shadowParams1: new Vector4(1.0f, 1.0f, 0.0f, 0.0f)
+            shadowParams0: new Vector4(1.0f / 2048.0f, 1.0f / 2048.0f, 0.0004f, 0.0025f),
+            shadowParams1: new Vector4(1.0f, 1.0f, 0.03f, 0.0f)
         );
 
         _gfxBuffers.UploadUniformGpuData(_shadowUbo, in data, 0);

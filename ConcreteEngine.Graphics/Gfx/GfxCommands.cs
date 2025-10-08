@@ -168,6 +168,8 @@ public sealed class GfxCommands
         if (cmdState.Blend is { } blend) _states.ToggleBlendState(blend);
         if (cmdState.FramebufferSrgb is { } srgb) _states.ToggleFrameBufferSrgb(srgb);
         if (cmdState.ColorMask is { } colorMask) _states.ColorMask(colorMask);
+        if (cmdState.PolygonOffset is { } polygonOffset) _states.TogglePolygonOffset(polygonOffset);
+
     }
     
     public void ApplyStateFunctions(GfxPassStateFunc cmdFunc)
@@ -176,6 +178,7 @@ public sealed class GfxCommands
         SetBlendMode(cmdFunc.Blend);
         SetCullMode(cmdFunc.Cull);
         SetDepthMode(cmdFunc.Depth);
+        if (cmdFunc.PolygonOffset is { } polygonOffset) SetPolygonOffset(polygonOffset);
     }
 
 
@@ -185,6 +188,13 @@ public sealed class GfxCommands
         _states.SetViewport(_activeOutputSize.ToBounds2D());
     }
 
+    public void SetPolygonOffset((float factor, float units) value)
+    {
+        Debug.Assert(value.factor > 0 &&  value.units > 0);
+        _stateFunc = _stateFunc with { PolygonOffset = value };
+        _states.SetPolygonOffset(value.factor, value.units);
+    }
+    
     public void SetBlendMode(BlendMode blendMode)
     {
         if (_stateFunc.Blend != BlendMode.Unset && _stateFunc.Blend == blendMode) return;

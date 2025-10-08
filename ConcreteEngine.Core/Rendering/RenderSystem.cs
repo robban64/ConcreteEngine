@@ -37,13 +37,12 @@ public interface IRenderSystem : IGameEngineSystem
     TSink GetSink<TSink>() where TSink : IDrawSink;
     Material CreateMaterial(string templateName);
 
-    public SceneRenderProperties SceneRenderProps { get; }
+    public RenderGlobalProps RenderProps { get; }
 }
 
 public sealed class RenderSystem : IRenderSystem
 {
     private readonly GfxContext _gfx;
-    private readonly GfxCommands _gfxCmd;
 
     private RenderRegistry _renderRegistry;
 
@@ -58,7 +57,7 @@ public sealed class RenderSystem : IRenderSystem
 
     private readonly BatcherRegistry _batches = new();
 
-    public SceneRenderProperties SceneRenderProps { get; }
+    public RenderGlobalProps RenderProps { get; }
     private RenderGlobalSnapshot _snapshot;
 
     public ICamera Camera { get; } = new Camera3D();
@@ -72,11 +71,10 @@ public sealed class RenderSystem : IRenderSystem
     internal RenderSystem(IGraphicsRuntime graphics, Size2D outputSize)
     {
         _gfx = graphics.Gfx;
-        _gfxCmd = graphics.Gfx.Commands;
-        SceneRenderProps = new SceneRenderProperties();
-        SceneRenderProps.SetOutputSize(outputSize);
-        SceneRenderProps.Commit();
-        _snapshot = SceneRenderProps.Snapshot;
+        RenderProps = new RenderGlobalProps();
+        RenderProps.SetOutputSize(outputSize);
+        RenderProps.Commit();
+        _snapshot = RenderProps.Snapshot;
     }
 
     internal void InitializeGraphics(IReadOnlyList<Shader> shaders)
@@ -139,7 +137,7 @@ public sealed class RenderSystem : IRenderSystem
                 ctx.Ops.ActivateDepthMode(); // Note!
 
                 ctx.Ops.BeginRenderPass(ctx.Target.FboId, state.ClearColor, state.PassState);
-                ctx.Ops.ApplyStateFunctions(new GfxPassStateFunc(Cull: CullMode.FrontCcw));
+                ctx.Ops.ApplyStateFunctions(GfxPassStateFunc.MakeDepth());
                 return ApplyPassReturn.DrawPassResult();
             }).OnPassEnd(static (RenderPassCtx ctx, in RenderPassState state) =>
             {
@@ -154,7 +152,7 @@ public sealed class RenderSystem : IRenderSystem
             .OnPassBegin(static (RenderPassCtx ctx, in RenderPassState state) =>
             {
                 ctx.Ops.BeginRenderPass(ctx.Target.FboId, state.ClearColor, state.PassState);
-                ctx.Ops.ApplyStateFunctions(new GfxPassStateFunc(Cull: CullMode.BackCcw));
+                ctx.Ops.ApplyStateFunctions(GfxPassStateFunc.MakeDefault());
 
                 ctx.MutateStatePass<ScenePassTag, PassResolveSlot>(
                     PassOpKind.Resolve,
@@ -233,7 +231,7 @@ public sealed class RenderSystem : IRenderSystem
         if (!_initialized)
             throw new InvalidOperationException("Renderer is not initialized");
 
-        SceneRenderProps.Commit();
+        RenderProps.Commit();
     }
 
     public TSink GetSink<TSink>() where TSink : IDrawSink => _drawPipeline.GetSink<TSink>();
@@ -251,8 +249,8 @@ public sealed class RenderSystem : IRenderSystem
         if (tickInfo.OutputSize != Camera.Viewport)
             Camera.Viewport = tickInfo.OutputSize;
 
-        SceneRenderProps.SetOutputSize(tickInfo.OutputSize);
-        _snapshot = SceneRenderProps.Commit();
+        RenderProps.SetOutputSize(tickInfo.OutputSize);
+        _snapshot = RenderProps.Commit();
 
         _renderView.PrepareFrame((Camera3D)Camera);
 

@@ -8,7 +8,7 @@ using ConcreteEngine.Core.Assets.Resources;
 
 namespace ConcreteEngine.Core.Rendering.Data;
 
-public sealed class SceneRenderProperties
+public sealed class RenderGlobalProps
 {
     private bool _dirty = false;
     private int _version = 0;
@@ -20,7 +20,6 @@ public sealed class SceneRenderProperties
 
     private Skybox _skybox;
     private DirectionalLight _directionalLight;
-    
 
     private Size2D _outputSize;
 

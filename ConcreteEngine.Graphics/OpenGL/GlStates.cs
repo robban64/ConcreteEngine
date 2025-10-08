@@ -32,6 +32,12 @@ internal sealed class GlStates : IGraphicsDriverModule
     public void ClearBuffer(ClearBufferFlag flags) => _gl.Clear(flags.ToGlEnum());
     public void ColorMask(bool v) => _gl.ColorMask(v, v, v, v);
 
+    public void TogglePolygonOffset(bool enabled)
+    {
+        if (enabled) _gl.Enable(GLEnum.PolygonOffsetFill);
+        else _gl.Disable(GLEnum.PolygonOffsetFill);
+    }
+
     public void ToggleFrameBufferSrgb(bool enabled)
     {
         if (enabled) _gl.Enable(GLEnum.FramebufferSrgb);
@@ -69,6 +75,8 @@ internal sealed class GlStates : IGraphicsDriverModule
 
     public void SetViewport(Bounds2D viewport) =>
         _gl.Viewport(viewport.X, viewport.Y, (uint)viewport.Width, (uint)viewport.Height);
+
+    public void SetPolygonOffset(float factor, float units) => _gl.PolygonOffset(factor, units);
 
     public void SetBlendMode(BlendMode blendMode)
     {

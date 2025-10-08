@@ -106,11 +106,13 @@ internal sealed class GlTextures : IGraphicsDriverModule
         switch (preset)
         {
             case TexturePreset.NearestClamp:
+            case TexturePreset.NearestClampBorder:
                 SetTexParameter(GLEnum.TextureMinFilter, GLEnum.Nearest);
                 SetTexParameter(GLEnum.TextureMagFilter, GLEnum.Nearest);
-                SetTexParameter(GLEnum.TextureWrapS, GLEnum.ClampToEdge);
-                SetTexParameter(GLEnum.TextureWrapT, GLEnum.ClampToEdge);
-                if (wrapR) SetTexParameter(GLEnum.TextureWrapR, GLEnum.ClampToEdge);
+                var nparam = preset == TexturePreset.NearestClamp ? GLEnum.ClampToEdge : GLEnum.ClampToBorder;
+                SetTexParameter(GLEnum.TextureWrapS, nparam);
+                SetTexParameter(GLEnum.TextureWrapT, nparam);
+                if (wrapR) SetTexParameter(GLEnum.TextureWrapR, nparam);
                 break;
 
             case TexturePreset.NearestRepeat:

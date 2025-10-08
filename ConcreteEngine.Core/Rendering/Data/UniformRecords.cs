@@ -110,7 +110,7 @@ public readonly struct ShadowUniformRecord(
     Vector4 shadowParams0,
     Vector4 shadowParams1) : IStd140Uniform
 {
-    public readonly Matrix4x4 LightViewProj = lightViewProj; // std140: 4x vec4 columns (64 bytes)
+    public readonly Matrix4x4 LightViewProj = lightViewProj;
     public readonly Vector4 ShadowParams0 = shadowParams0; // x=1/texW, y=1/texH, z=constBias, w=slopeBias
     public readonly Vector4 ShadowParams1 = shadowParams1; // x=strength, y=pcfRadius, z,w reserved
 }

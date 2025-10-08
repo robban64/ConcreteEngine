@@ -11,21 +11,22 @@ public enum EnginePixelFormat : byte
 
 public enum TexturePreset : byte
 {
-    None ,
-    NearestClamp ,
-    NearestRepeat ,
-    LinearClamp ,
-    LinearClampBorder ,
-    LinearRepeat ,
-    LinearMipmapClamp ,
-    LinearMipmapRepeat ,
-    PremultipliedUi 
+    None,
+    NearestClamp,
+    NearestClampBorder,
+    NearestRepeat,
+    LinearClamp,
+    LinearClampBorder,
+    LinearRepeat,
+    LinearMipmapClamp,
+    LinearMipmapRepeat,
+    PremultipliedUi
 }
 
 public enum TextureFilter : byte
 {
     Nearest = 0,
-    Linear  = 1
+    Linear = 1
 }
 
 public enum TextureWrap : byte

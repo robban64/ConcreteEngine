@@ -86,34 +86,24 @@ vec3 computeFogColor(vec3 sunColor, float shadowTerm) {
     return mix(cFog, litFog, uFogColor.a);
 }
 
+// hardware 2x2 PCF
 float sampleShadowMap(vec4 lightSpacePos, vec3 N, vec3 L)
 {
     if (uShadowParams1.x <= 0.0) return 1.0;
 
-    // NDC
-    vec3 proj = lightSpacePos.xyz / lightSpacePos.w;
-    proj.xy = proj.xy * 0.5 + 0.5;
-    proj.z  = proj.z  * 0.5 + 0.5;
+    vec3 p = lightSpacePos.xyz / lightSpacePos.w;
+    p = p * 0.5 + 0.5;
 
-    // outside light frustum
-    if (proj.x < 0.0 || proj.x > 1.0 || proj.y < 0.0 || proj.y > 1.0) return 1.0;
-    if (proj.z > 1.0) return 1.0;
+    if (p.x <= 0.0 || p.x >= 1.0 || p.y <= 0.0 || p.y >= 1.0) return 1.0;
+    if (p.z >= 1.0) return 1.0;
 
-    float bias = uShadowParams0.z + uShadowParams0.w * (1.0 - dot(N, L));
-    float ref  = proj.z - bias;
+    float ndl  = max(dot(N, L), 0.0);
+    float bias = max(uShadowParams0.z, uShadowParams0.w * (1.0 - ndl)); // or  uShadowParams0.z
+    float ref  = clamp(p.z - bias, 0.0, 1.0);
 
-    // PCF
-    int  radius = int(uShadowParams1.y + 0.5);
-    vec2 texel  = uShadowParams0.xy;
-    float sum   = 0.0;
-
-    for (int x = -radius; x <= radius; ++x)
-    for (int y = -radius; y <= radius; ++y) {
-        vec2 uv = proj.xy + vec2(x, y) * texel;
-        sum += texture(uShadowMap, vec3(uv, ref));
-    }
-    float samples = float((2*radius + 1) * (2*radius + 1));
-    return sum / samples;
+    float vis    = texture(uShadowMap, vec3(p.xy, ref));
+    float shadow = mix(1.0, max(vis, 0.2), 0.9);
+    return shadow; 
 }
 
 float halfLambert(float ndl) {
@@ -149,7 +139,7 @@ void main() {
     vec3 specular = vec3(specularStrength) * specD * uLightSpecularIntensity.x;
 
     // Shadow
-    float dirShadow = sampleShadowMap(uLightViewProj * vec4(P, 1.0), N, Ld);
+    float dirShadow = sampleShadowMap(uLightViewProj * vec4(P, 1.0), normalize(fs_in.N_world), Ld);
     dirShadow = mix(1.0, dirShadow, uShadowParams1.x);
 
     float dirShadowSpec = max(dirShadow, 0.25);

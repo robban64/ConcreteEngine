@@ -66,7 +66,7 @@ public sealed class RegisterFboEntry(
             TexturePreset: Preset
         );
     }
-
+    
     public static RegisterFboEntry MakeDefault(bool hasMips) =>
         new(pixelFormat: EnginePixelFormat.SrgbAlpha,
             texturePreset: hasMips ? TexturePreset.LinearMipmapClamp : TexturePreset.LinearClamp);

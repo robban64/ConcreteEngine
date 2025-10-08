@@ -13,27 +13,29 @@ public readonly record struct GfxPassState(
     bool? Blend = null,
     bool? Scissor = null,
     bool? FramebufferSrgb = null,
-    bool? ColorMask = null
+    bool? ColorMask = null,
+    bool? PolygonOffset = null
 )
 {
-    public static GfxPassState MakeScene() => new(true, true, true, false, false, true, true);
-    public static GfxPassState MakeShadow() => new(true, true, true, false, false, true, false);
-    public static GfxPassState MakeLighting() => new(true, true, true, true, false, true);
+    public static GfxPassState MakeScene() => new(true, true, true, false, false, true, true, false);
+    public static GfxPassState MakeShadow() => new(true, true, true, false, false, true, false, true);
+    public static GfxPassState MakeLighting() => new(true, true, true, true, false, true, false, true);
 
     public static GfxPassState MakePostProcess(bool blend = false) =>
-        new(false, false, false, blend, false, true, true);
+        new(false, false, false, blend, false, true, true, false);
 
-    public static GfxPassState MakeScreen() => new(false, false, false, false, false, false, true);
-    public static GfxPassState MakeOff() => new(false, false, false, false, false, false, true);
+    public static GfxPassState MakeScreen() => new(false, false, false, false, false, false, true, false);
+    public static GfxPassState MakeOff() => new(false, false, false, false, false, false, true, false);
 }
 
 public readonly record struct GfxPassStateFunc(
     BlendMode Blend = BlendMode.Unset,
     CullMode Cull = CullMode.Unset,
-    DepthMode Depth = DepthMode.Unset)
+    DepthMode Depth = DepthMode.Unset,
+    (float factor, float units)? PolygonOffset = null)
 {
     public static GfxPassStateFunc MakeDefault() => new(BlendMode.Alpha, CullMode.BackCcw, DepthMode.Lequal);
-    public static GfxPassStateFunc MakeDepth() => new(BlendMode.Unset, CullMode.FrontCcw, DepthMode.Less);
+    public static GfxPassStateFunc MakeDepth() => new(BlendMode.Unset, CullMode.FrontCcw, DepthMode.Lequal, (4.0f, 2.0f));
 }
 
 public readonly record struct GfxPassClear(Color4? ClearColor, ClearBufferFlag ClearBuffer)

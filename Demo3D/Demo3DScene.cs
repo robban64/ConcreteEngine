@@ -28,7 +28,7 @@ public sealed class Demo3DScene : GameScene
 
         var skyboxMaterial = renderer.CreateMaterial("SkyboxMat");
 
-        var rb = renderer.SceneRenderProps;
+        var rb = renderer.RenderProps;
         rb.SetSkybox(skyboxMaterial.Id, Quaternion.Identity);
         rb.SetDirLight(
             new Vector3(-0.4f, -1.0f, 0.35f),
@@ -57,13 +57,14 @@ public sealed class Demo3DScene : GameScene
                 new Transform(new Vector3(i * 5, -3, i * 5), Vector3.One, Quaternion.Identity));
         }
 
+        var rnd = new Random(9999);
         for (int i = 0; i < 40; i++)
         {
             var entityId = World.Create();
             World.Meshes.Add(entityId,
                 new MeshComponent(rockMesh.ResourceId, rockMat.Id, rockMesh.DrawCount));
             World.Transforms.Add(entityId,
-                new Transform(new Vector3((i * 8) % 12, 3, (i * 8) % 12), Vector3.One , Quaternion.Identity));
+                new Transform(new Vector3(rnd.Next(0,48),rnd.Next(0,3), rnd.Next(0,48)), new Vector3(rnd.Next(1,2)) , Quaternion.Identity));
         }
 
 

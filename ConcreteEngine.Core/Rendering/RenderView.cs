@@ -63,22 +63,9 @@ public sealed class RenderView
     {
         _snapshot.Commit(this);
 
-        CreateDirLightMatrices(direction, this, out _viewMatrix, out _projectionMatrix);
+        CreateDirLightView(direction, this, 0.1f, 60f, out _viewMatrix, out _projectionMatrix, shadowMapSize: 2048,
+            padding: 1);
         _projectionViewMatrix = _viewMatrix * _projectionMatrix;
-
-        /*
-        var dir = Vector3.Normalize(direction);
-        var center = Position + Forward * (distance * 0.5f);
-        var eye = center - dir * distance;
-
-        var worldUp = Math.Abs(Vector3.Dot(dir, Vector3.UnitY)) > 0.99f ? Vector3.UnitX : Vector3.UnitY;
-        _viewMatrix = Matrix4x4.CreateLookAt(eye, center, worldUp);
-        _projectionMatrix = Matrix4x4.CreateOrthographicOffCenter(
-            -orthoHalfSize, +orthoHalfSize,
-            -orthoHalfSize, +orthoHalfSize,
-            zNear, zFar);
-        _projectionViewMatrix = _viewMatrix * _projectionMatrix;
-        */
     }
 
     private sealed class Snapshot
@@ -99,12 +86,111 @@ public sealed class RenderView
         }
     }
 
+    
+
+    public static void CreateDirLightView(
+        Vector3 lightDirection,
+        RenderView camera,
+        float cameraNear,
+        float cameraFar,
+        out Matrix4x4 lightView,
+        out Matrix4x4 lightProj,
+        float padding = 0.5f,
+        int shadowMapSize = 0)
+    {
+        var dir = Vector3.Normalize(lightDirection);
+
+        var worldUp = MathF.Abs(Vector3.Dot(dir, Vector3.UnitY)) > 0.99f ? Vector3.UnitX : Vector3.UnitY;
+
+        // Camera frustum corners
+        Span<Vector3> corners = stackalloc Vector3[8];
+        GetFrustumCorners(camera, cameraNear, cameraFar, corners);
+
+        var center = GetFrustumCenter(corners);
+
+        //  Position light camera 
+        var sliceDepth = cameraFar - cameraNear;
+        var eye = center - dir * (sliceDepth + padding * 2f);
+
+        lightView = Matrix4x4.CreateLookAt(eye, center, worldUp);
+
+        //Light-space AABB of frustum.
+        Vector3 minLS = new(float.PositiveInfinity), maxLS = new(float.NegativeInfinity);
+        for (int i = 0; i < 8; i++)
+        {
+            var p = Vector3.Transform(corners[i], lightView);
+            minLS = Vector3.Min(minLS, p);
+            maxLS = Vector3.Max(maxLS, p);
+        }
+
+        // Guard band in XY; keep Z conservative to avoid clipping.
+        minLS.X -= padding;
+        minLS.Y -= padding;
+        maxLS.X += padding;
+        maxLS.Y += padding;
+
+        // Optional texel snapping (independent of screen resolution).
+        if (shadowMapSize > 0)
+        {
+            var size = maxLS - minLS;
+            var texelX = size.X / shadowMapSize;
+            var texelY = size.Y / shadowMapSize;
+
+            minLS.X = MathF.Floor(minLS.X / texelX) * texelX;
+            minLS.Y = MathF.Floor(minLS.Y / texelY) * texelY;
+            maxLS.X = minLS.X + MathF.Ceiling(size.X / texelX) * texelX;
+            maxLS.Y = minLS.Y + MathF.Ceiling(size.Y / texelY) * texelY;
+        }
+
+        // Right-handed orthographic
+        float zNear = MathF.Max(0f, -maxLS.Z);
+        float zFar = MathF.Max(zNear + 0.001f, -minLS.Z);
+
+        lightProj = Matrix4x4.CreateOrthographicOffCenter(minLS.X, maxLS.X, minLS.Y, maxLS.Y, zNear, zFar);
+    }
+
+    private static Vector3 GetFrustumCenter(Span<Vector3> corners)
+    {
+        var s = Vector3.Zero;
+        for (var i = 0; i < corners.Length; i++) s += corners[i];
+        return s / corners.Length;
+    }
+
+    private static void GetFrustumCorners(RenderView c, float near, float far, Span<Vector3> corners)
+    {
+        //float fovY = MathHelper.ToRadians(c.ProjectionInfo.Fov / 2f);
+        //float tanY2 = MathF.Tan(0.5f * fovY);
+
+        float tanY = 1f / c.ProjectionMatrix.M22;
+        float tanX = 1f / c.ProjectionMatrix.M11;
+
+        // extents at near/far
+        float nx = near * tanX, ny = near * tanY;
+        float fx = far * tanX, fy = far * tanY;
+
+        var nc = c.Position + c.Forward * near;
+        var fc = c.Position + c.Forward * far;
+
+        // NearPlane plane
+        corners[0] = nc + c.Up * ny - c.Right * nx; // NT-L
+        corners[1] = nc + c.Up * ny + c.Right * nx; // NT-R
+        corners[2] = nc - c.Up * ny - c.Right * nx; // NB-L
+        corners[3] = nc - c.Up * ny + c.Right * nx; // NB-R
+
+        // FarPlane plane
+        corners[4] = fc + c.Up * fy - c.Right * fx; // FT-L
+        corners[5] = fc + c.Up * fy + c.Right * fx; // FT-R
+        corners[6] = fc - c.Up * fy - c.Right * fx; // FB-L
+        corners[7] = fc - c.Up * fy + c.Right * fx; // FB-R
+    }
+
+
+    /*
     private static void CreateDirLightMatrices(Vector3 lightDir, RenderView camera,
         out Matrix4x4 viewMat, out Matrix4x4 projMat)
     {
         const float padding = 2;
         const int shadowMapSize = 2048;
-
         var near = 0.1f;
         var far = 60f;
 
@@ -156,37 +242,5 @@ public sealed class RenderView
 
         projMat = Matrix4x4.CreateOrthographicOffCenter(minLs.X, maxLs.X, minLs.Y, maxLs.Y, nearDist, farDist);
     }
-
-    private static Vector3 GetFrustumCenter(Span<Vector3> corners)
-    {
-        var s = Vector3.Zero;
-        for (var i = 0; i < corners.Length; i++) s += corners[i];
-        return s / corners.Length;
-    }
-
-    private static void GetFrustumCorners(RenderView c, float near, float far, Span<Vector3> corners)
-    {
-        float fovY = MathHelper.ToRadians(c.ProjectionInfo.Fov);
-        float tanY = MathF.Tan(0.5f * fovY);
-        float tanX = tanY * c.ProjectionInfo.AspectRatio;
-
-        // extents at near/far
-        float nx = near * tanX, ny = near * tanY;
-        float fx = far * tanX, fy = far * tanY;
-
-        var nc = c.Position + c.Forward * near;
-        var fc = c.Position + c.Forward * far;
-
-        // NearPlane plane
-        corners[0] = nc + c.Up * ny - c.Right * nx; // NT-L
-        corners[1] = nc + c.Up * ny + c.Right * nx; // NT-R
-        corners[2] = nc - c.Up * ny - c.Right * nx; // NB-L
-        corners[3] = nc - c.Up * ny + c.Right * nx; // NB-R
-
-        // FarPlane plane (4..7)
-        corners[4] = fc + c.Up * fy - c.Right * fx; // FT-L
-        corners[5] = fc + c.Up * fy + c.Right * fx; // FT-R
-        corners[6] = fc - c.Up * fy - c.Right * fx; // FB-L
-        corners[7] = fc - c.Up * fy + c.Right * fx; // FB-R
-    }
+ */
 }

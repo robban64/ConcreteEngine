@@ -158,7 +158,7 @@ void main()
     vec3 specular = vec3(specularStrength) * specD * uLightSpecularIntensity.x;
 
     // Shadow
-    float dirShadow = sampleShadowMap(uLightViewProj * vec4(P, 1.0), normalize(fs_in.N_world), Ld);
+    float dirShadow = sampleShadowMap(uLightViewProj * vec4(P + normalize(fs_in.N_world) * uShadowParams1.z, 1.0), normalize(fs_in.N_world), Ld);
     dirShadow = mix(1.0, dirShadow, uShadowParams1.x);
 
     float dirShadowSpec = max(dirShadow, 0.25);

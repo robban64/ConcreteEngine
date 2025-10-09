@@ -98,7 +98,7 @@ float sampleShadowMap(vec4 lightSpacePos, vec3 N, vec3 L)
     if (p.z >= 1.0) return 1.0;
 
     float ndl  = max(dot(N, L), 0.0);
-    float bias = max(uShadowParams0.z, uShadowParams0.w * (1.0 - ndl)); // or  uShadowParams0.z
+    float bias = max(uShadowParams0.z, uShadowParams0.w * (1.0 - ndl));
     float ref  = clamp(p.z - bias, 0.0, 1.0);
 
     float vis    = texture(uShadowMap, vec3(p.xy, ref));
@@ -139,7 +139,7 @@ void main() {
     vec3 specular = vec3(specularStrength) * specD * uLightSpecularIntensity.x;
 
     // Shadow
-    float dirShadow = sampleShadowMap(uLightViewProj * vec4(P, 1.0), normalize(fs_in.N_world), Ld);
+    float dirShadow = sampleShadowMap(uLightViewProj * vec4(P + normalize(fs_in.N_world) * uShadowParams1.z, 1.0), normalize(fs_in.N_world), Ld);
     dirShadow = mix(1.0, dirShadow, uShadowParams1.x);
 
     float dirShadowSpec = max(dirShadow, 0.25);

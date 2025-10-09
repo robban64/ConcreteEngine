@@ -92,8 +92,8 @@ public sealed class RenderView
         RenderView camera,
         out Matrix4x4 lightView,
         out Matrix4x4 lightProj,
-        float zPad = 0.5f,
-        float shadowDistance = 80f,
+        float zPad = 1f,
+        float shadowDistance = 60f,
         int shadowMapSize = 0)
     {
         var dir = Vector3.Normalize(lightDirection);
@@ -172,64 +172,4 @@ public sealed class RenderView
         corners[6] = fc - c.Up * fy - c.Right * fx; // FB-L
         corners[7] = fc - c.Up * fy + c.Right * fx; // FB-R
     }
-
-
-    /*
-    private static void CreateDirLightMatrices(Vector3 lightDir, RenderView camera,
-        out Matrix4x4 viewMat, out Matrix4x4 projMat)
-    {
-        const float padding = 2;
-        const int shadowMapSize = 2048;
-        var near = 0.1f;
-        var far = 60f;
-
-        var dir = Vector3.Normalize(lightDir);
-
-        var worldUp = Math.Abs(Vector3.Dot(dir, Vector3.UnitY)) > 0.99f ? Vector3.UnitX : Vector3.UnitY;
-
-        Span<Vector3> corners = stackalloc Vector3[8];
-        GetFrustumCorners(camera, near, far, corners);
-        var center = GetFrustumCenter(corners);
-
-        var eye = center - dir * (far * 0.5f + padding);
-
-        viewMat = Matrix4x4.CreateLookAt(eye, center, worldUp);
-
-        Vector3 minLs = new(float.PositiveInfinity), maxLs = new(float.NegativeInfinity);
-        for (var i = 0; i < 8; i++)
-        {
-            var ls = Vector3.Transform(corners[i], viewMat);
-            minLs = Vector3.Min(minLs, ls);
-            maxLs = Vector3.Max(maxLs, ls);
-        }
-
-        //  guard band
-        minLs -= new Vector3(padding, padding, 0);
-        maxLs += new Vector3(padding, padding, 0);
-
-        // Texel snapping
-        if (shadowMapSize > 0)
-        {
-            var sizeLs = maxLs - minLs;
-            var texelSizeX = sizeLs.X / shadowMapSize;
-            var texelSizeY = sizeLs.Y / shadowMapSize;
-
-            minLs.X = MathF.Floor(minLs.X / texelSizeX) * texelSizeX;
-            minLs.Y = MathF.Floor(minLs.Y / texelSizeY) * texelSizeY;
-            maxLs.X = minLs.X + MathF.Ceiling(sizeLs.X / texelSizeX) * texelSizeX;
-            maxLs.Y = minLs.Y + MathF.Ceiling(sizeLs.Y / texelSizeY) * texelSizeY;
-        }
-
-        var zMin = minLs.Z;
-        var zMax = maxLs.Z;
-
-        var nearDist = (zMax > 0f) ? 0f : -zMax; // clamp to 0 if corner
-        var farDist = -zMin;
-
-        nearDist = MathF.Max(nearDist, 0.0f);
-        farDist = MathF.Max(farDist, nearDist + 0.001f);
-
-        projMat = Matrix4x4.CreateOrthographicOffCenter(minLs.X, maxLs.X, minLs.Y, maxLs.Y, nearDist, farDist);
-    }
- */
 }

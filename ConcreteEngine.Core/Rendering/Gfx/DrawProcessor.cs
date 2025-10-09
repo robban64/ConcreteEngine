@@ -104,7 +104,7 @@ internal sealed class DrawProcessor
     }
 
     //TODO bulk upload
-    public void UploadTransform(in DrawTransformPayload payload)
+    public void UploadTransform(in DrawTransformPayload payload, int submitIndex)
     {
         TransformUtils.CreateNormalMatrix(in payload.Transform, out var normalModel);
 
@@ -113,21 +113,21 @@ internal sealed class DrawProcessor
             normal: in normalModel
         );
 
-        _gfxBuffers.UploadUniformGpuData(_drawUbo.Id, in data, _drawUbo.NextUploadCursor());
+        _gfxBuffers.UploadUniformGpuData(_drawUbo.Id, in data, _drawUbo.SetUploadCursor(submitIndex));
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    private void BindDrawObject()
+    private void BindDrawObject(int submitIndex)
     {
-        _gfxBuffers.BindUniformBufferRange(_drawUbo.Id, _drawUbo.NextDrawCursor(), _drawUbo.Stride);
+        _gfxBuffers.BindUniformBufferRange(_drawUbo.Id, _drawUbo.SetDrawCursor(submitIndex), _drawUbo.Stride);
     }
 
-    public void DrawMesh(DrawCommand cmd)
+    public void DrawMesh(DrawCommand cmd, int submitIndex)
     {
         if (_ctx.OverrideDrawShader == default)
             BindDrawMaterial(cmd.MaterialId);
 
-        BindDrawObject();
+        BindDrawObject(submitIndex);
         _gfxCmd.BindMesh(cmd.MeshId);
         _gfxCmd.DrawBoundMesh(cmd.MeshId, cmd.DrawCount);
     }

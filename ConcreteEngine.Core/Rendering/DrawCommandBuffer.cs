@@ -156,7 +156,7 @@ public sealed class DrawCommandBuffer
         for (var i = _drainTransformIdx; i < _submitIdx; i++)
         {
             ref readonly var it = ref indices[_drainTransformIdx++];
-            _drawProcessor.UploadTransform(in transforms[it.Idx]);
+            _drawProcessor.UploadTransform(in transforms[it.Idx], it.Idx);
         }
     }
 
@@ -168,7 +168,7 @@ public sealed class DrawCommandBuffer
         for (var i = pass.Start; i < end; i++)
         {
             var idx = _drawTickets[i].SubmitIdx;
-            _drawProcessor.DrawMesh(commands[idx]);
+            _drawProcessor.DrawMesh(commands[idx], idx);
         }
     }
 /*

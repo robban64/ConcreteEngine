@@ -173,7 +173,7 @@ public sealed class RenderSystem : IRenderSystem
             }).OnPassEnd(static (RenderPassCtx ctx, in RenderPassState state) =>
             {
                 var texId = ctx.Target.Attachments.ColorTextureId;
-                ctx.SampleTo<ScreenPassTag, PassFinalSlot>(PassOpKind.Screen, 0, texId);
+                ctx.SampleTo<PostPassTag, PassPostASlot>(PassOpKind.Fsq, 0, texId);
 
                 ctx.Ops.EndRenderPass();
                 ctx.Ops.GenerateMips(texId);

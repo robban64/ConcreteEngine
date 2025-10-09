@@ -3,13 +3,14 @@
 using System.Numerics;
 using ConcreteEngine.Common.Numerics;
 using ConcreteEngine.Core.Assets.Resources;
+using ConcreteEngine.Core.Engine.Data;
 using ConcreteEngine.Core.Rendering.Batching;
+using ConcreteEngine.Core.Rendering.Commands;
 using ConcreteEngine.Core.Rendering.Data;
-using ConcreteEngine.Core.Rendering.Passes;
 
 #endregion
 
-namespace ConcreteEngine.Core.Rendering.Commands;
+namespace ConcreteEngine.Core.Rendering.Producers;
 
 public struct TerrainDrawData
 {
@@ -47,7 +48,7 @@ public sealed class TerrainDrawProducer : IDrawCommandProducer, ITerrainDrawSink
         _terrain = _context.DrawBatchers.Get<TerrainBatcher>();
     }
 
-    public void BeginTick(in UpdateInfo update)
+    public void BeginTick(in UpdateTickInfo tick)
     {
     }
 
@@ -56,7 +57,7 @@ public sealed class TerrainDrawProducer : IDrawCommandProducer, ITerrainDrawSink
     }
 
 
-    public void EmitFrame(float alpha, in RenderGlobalSnapshot snapshot, DrawCommandBuffer submitter)
+    public void EmitFrame(float alpha, in RenderSceneState snapshot, DrawCommandBuffer submitter)
     {
         if (_data == null) return;
 
@@ -80,7 +81,7 @@ public sealed class TerrainDrawProducer : IDrawCommandProducer, ITerrainDrawSink
             materialId: data.MaterialId
         );
 
-        var meta = new DrawCommandMeta(DrawCommandId.Terrain, RenderTargetId.Scene, DrawCommandQueue.Terrain);
-        submitter.SubmitDraw(in cmd, in meta, new DrawTransformPayload(in transform));
+        var meta = new DrawCommandMeta(DrawCommandId.Terrain, DrawCommandQueue.Terrain);
+        submitter.SubmitDraw(cmd, meta, new DrawTransformPayload(in transform));
     }
 }

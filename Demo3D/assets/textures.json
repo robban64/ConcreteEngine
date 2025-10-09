@@ -18,7 +18,7 @@
       "filename": "rocks_01_normal.jpg",
       "pixelFormat": "Rgba",
       "preset": "LinearMipmapRepeat",
-      "anisotropy": "Default"
+      "anisotropy": "Off"
     },
     {
       "name": "Rock01-Specular",

@@ -1,6 +1,9 @@
 #region
 
+using ConcreteEngine.Core.Rendering.Data;
+using ConcreteEngine.Graphics;
 using ConcreteEngine.Graphics.Gfx;
+using ConcreteEngine.Graphics.Gfx.Contracts;
 using ConcreteEngine.Graphics.Resources;
 using ConcreteEngine.Graphics.Utils;
 
@@ -8,22 +11,51 @@ using ConcreteEngine.Graphics.Utils;
 
 namespace ConcreteEngine.Core.Rendering.Gfx;
 
-public sealed class PipelineStateOps
+public sealed class DrawStateOps
 {
     private readonly IPrimitiveMeshes _primitiveMeshes;
     private readonly GfxCommands _gfxCmd;
     private readonly GfxTextures _gfxTextures;
-    private readonly DrawProcessor _drawProcessor;
     private readonly RenderRegistry _renderRegistry;
+    private readonly RenderView _renderView;
+    private readonly RenderSceneState _sceneState;
+    private readonly DrawUniforms _drawUniforms;
 
-    internal PipelineStateOps(GfxContext ctx, DrawProcessor drawProcessor, RenderRegistry renderRegistry)
+    private readonly DrawStateContext _ctx;
+    
+    internal DrawStateOps(DrawStateContext ctx, DrawStateContextPayload ctxPayload, DrawUniforms drawUniforms)
     {
-        _drawProcessor = drawProcessor;
-        _renderRegistry = renderRegistry;
-        _gfxCmd = ctx.Commands;
-        _gfxTextures = ctx.Textures;
-        _primitiveMeshes = ctx.Primitives;
+        _renderRegistry = ctxPayload.Registry;
+        _renderView = ctxPayload.RenderView;
+        _sceneState = ctxPayload.Snapshot;
+        _drawUniforms = drawUniforms;
+        _gfxCmd = ctxPayload.Gfx.Commands;
+        _gfxTextures = ctxPayload.Gfx.Textures;
+        _primitiveMeshes = ctxPayload.Gfx.Primitives;
+
+        _ctx = ctx;
     }
+
+    public void ActivateDepthMode()
+    {
+        _ctx.SetDepthMode();
+        
+        _renderView.ApplyLightView(_sceneState.DirLight.Direction);
+        _drawUniforms.UploadShadow(in _renderView.ProjectionViewMatrix);
+        _drawUniforms.UploadCameraView(_renderView);
+    }
+
+    public void RestoreMode()
+    {
+        _ctx.RestoreStateMode();
+        
+        _renderView.Restore();
+        _drawUniforms.UploadCameraView(_renderView);
+    }
+
+
+    public void ApplyStateFunctions(GfxPassStateFunc passFunc)
+        => _gfxCmd.ApplyStateFunctions(passFunc);
 
     public void BeginScreenPass(in GfxPassClear passClear, in GfxPassState states) =>
         _gfxCmd.BeginScreenPass(in passClear, in states);
@@ -41,7 +73,7 @@ public sealed class PipelineStateOps
     public void ToggleStates(in GfxPassState states) => _gfxCmd.ApplyState(states);
 
     public void GenerateMips(TextureId textureId) => _gfxTextures.GenerateMipMaps(textureId);
-    
+
     public void DrawFullscreenQuad(ShaderId shaderId, IReadOnlyList<TextureId> sources)
     {
         UseShader(shaderId);
@@ -67,7 +99,7 @@ public sealed class PipelineStateOps
         _gfxCmd.BindMesh(_primitiveMeshes.FsqQuad);
         _gfxCmd.DrawBoundMesh(_primitiveMeshes.FsqQuad, 0);
     }
-    
+
     private void UseShader(ShaderId shaderId)
     {
         var renderShader = _renderRegistry.GetRenderShader(shaderId);

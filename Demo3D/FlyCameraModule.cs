@@ -1,6 +1,7 @@
 using System.Numerics;
 using ConcreteEngine.Core;
 using ConcreteEngine.Core.Engine;
+using ConcreteEngine.Core.Engine.Data;
 using ConcreteEngine.Core.Engine.Platform;
 using ConcreteEngine.Core.Modules;
 using ConcreteEngine.Core.Rendering;
@@ -26,7 +27,7 @@ public sealed class FlyCameraModule : GameModule
     }
 
 
-    public override void Update(in UpdateInfo frameCtx)
+    public override void Update(in UpdateTickInfo frameCtx)
     {
         var dt = frameCtx.DeltaTime;
 
@@ -58,7 +59,9 @@ public sealed class FlyCameraModule : GameModule
         _camera.Translation = Vector3.Lerp(_camera.Translation, newPos, dt);
         _camera.Yaw = float.Lerp(_camera.Yaw, yaw, dt);
         _camera.Pitch = float.Lerp(_camera.Pitch, pitch, dt);
+
     }
+
 
     public override void UpdateTick(int tick)
     {

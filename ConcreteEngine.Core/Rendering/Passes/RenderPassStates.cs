@@ -3,6 +3,7 @@
 using ConcreteEngine.Common.Numerics;
 using ConcreteEngine.Graphics;
 using ConcreteEngine.Graphics.Gfx;
+using ConcreteEngine.Graphics.Gfx.Contracts;
 using ConcreteEngine.Graphics.Resources;
 
 #endregion
@@ -18,7 +19,7 @@ public readonly record struct PassMutationState(
     bool? LinearFilter = null
 )
 {
-    public static PassMutationState MakeTargetMut(FrameBufferId fboId) => new(TargetFboId: fboId);
+    public static PassMutationState MutateTarget(FrameBufferId fboId) => new(TargetFboId: fboId);
 }
 
 public readonly record struct RenderPassState(
@@ -58,11 +59,16 @@ public readonly record struct RenderPassState(
         ShaderId = shaderId
     };
 
-
     public static RenderPassState MakeScreen(ShaderId shaderId) => new()
     {
         ClearColor = GfxPassClear.MakeColorClear(Color4.Black),
         PassState = GfxPassState.MakeScreen(),
         ShaderId = shaderId
+    };
+    
+    public static RenderPassState MakeShadow() => new()
+    {
+        ClearColor = GfxPassClear.MakeDepthClear(),
+        PassState = GfxPassState.MakeShadow(),
     };
 }

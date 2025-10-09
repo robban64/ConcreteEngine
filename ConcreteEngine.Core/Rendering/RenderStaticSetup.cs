@@ -1,3 +1,4 @@
+using ConcreteEngine.Common.Numerics;
 using ConcreteEngine.Core.Rendering.Data;
 using ConcreteEngine.Core.Rendering.Descriptors;
 using ConcreteEngine.Core.Rendering.Gfx;
@@ -11,6 +12,13 @@ internal static class RenderStaticSetup
 {
     internal static void RegisterFrameBuffers(RenderRegistry renderRegistry)
     {
+        renderRegistry.RegisterFrameBuffer<ShadowPassTag, PassDrawSlot>(
+            RegisterFboEntry.MakeDefault(false).AttachDepthTexture().UseFixedSize(new Size2D(2048, 2048))
+        );
+        renderRegistry.RegisterFrameBuffer<ScenePassTag, PassDrawSlot>(
+            RegisterFboEntry.MakeMsaa(RenderBufferMsaa.X4).AttachColorTexture().AttachDepthStencilBuffer()
+        );
+
         renderRegistry.RegisterFrameBuffer<ScenePassTag, PassDrawSlot>(
             RegisterFboEntry.MakeMsaa(RenderBufferMsaa.X4).AttachColorTexture().AttachDepthStencilBuffer()
         );
@@ -24,10 +32,11 @@ internal static class RenderStaticSetup
             RegisterFboEntry.MakePost(false).AttachColorTexture()
         );
     }
-    
-     
+
+
     internal static void RegisterUniformBufferTypes(RenderRegistry renderRegistry)
     {
+        renderRegistry.RegisterUniformBuffer<EngineUniformRecord>();
         renderRegistry.RegisterUniformBuffer<FrameUniformRecord>();
         renderRegistry.RegisterUniformBuffer<CameraUniformRecord>();
         renderRegistry.RegisterUniformBuffer<DirLightUniformRecord>();
@@ -35,18 +44,18 @@ internal static class RenderStaticSetup
         renderRegistry.RegisterUniformBuffer<ShadowUniformRecord>();
         renderRegistry.RegisterUniformBuffer<MaterialUniformRecord>();
         renderRegistry.RegisterUniformBuffer<DrawObjectUniform>();
-        renderRegistry.RegisterUniformBuffer<FramePostProcessUniform>();
+        renderRegistry.RegisterUniformBuffer<PostProcessUniform>();
     }
-    
+
     internal static void RegisterPassTagTypes()
     {
-        RTypeRegistry.RenderPassTag<ScenePassTag>.Register();
         RTypeRegistry.RenderPassTag<ShadowPassTag>.Register();
+        RTypeRegistry.RenderPassTag<ScenePassTag>.Register();
         RTypeRegistry.RenderPassTag<LightPassTag>.Register();
         RTypeRegistry.RenderPassTag<PostPassTag>.Register();
         RTypeRegistry.RenderPassTag<ScreenPassTag>.Register();
     }
-    
+
     internal static void RegisterPassSlotTypes()
     {
         RTypeRegistry.RenderPassSlot<PassDrawSlot>.Register();
@@ -55,6 +64,4 @@ internal static class RenderStaticSetup
         RTypeRegistry.RenderPassSlot<PassPostBSlot>.Register();
         RTypeRegistry.RenderPassSlot<PassFinalSlot>.Register();
     }
-
-   
 }

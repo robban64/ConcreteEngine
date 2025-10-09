@@ -3,14 +3,15 @@
 using System.Runtime.CompilerServices;
 using ConcreteEngine.Common.Numerics;
 using ConcreteEngine.Core.Assets.Resources;
+using ConcreteEngine.Core.Engine.Data;
+using ConcreteEngine.Core.Rendering.Commands;
 using ConcreteEngine.Core.Rendering.Data;
-using ConcreteEngine.Core.Rendering.Passes;
 using ConcreteEngine.Core.Scene.Entities;
 using ConcreteEngine.Graphics.Resources;
 
 #endregion
 
-namespace ConcreteEngine.Core.Rendering.Commands;
+namespace ConcreteEngine.Core.Rendering.Producers;
 
 public struct MeshDrawEntity(MeshId meshId, MaterialId materialId, ref Transform transform)
 {
@@ -59,7 +60,7 @@ public sealed class MeshDrawProducer : IDrawCommandProducer, IMeshDrawSink
     {
     }
 
-    public void BeginTick(in UpdateInfo update)
+    public void BeginTick(in UpdateTickInfo tick)
     {
         _idx = 0;
     }
@@ -68,7 +69,7 @@ public sealed class MeshDrawProducer : IDrawCommandProducer, IMeshDrawSink
     {
     }
 
-    public void EmitFrame(float alpha, in RenderGlobalSnapshot snapshot, DrawCommandBuffer submitter)
+    public void EmitFrame(float alpha, in RenderSceneState snapshot, DrawCommandBuffer submitter)
     {
         if (_idx == 0) return;
 
@@ -94,15 +95,15 @@ public sealed class MeshDrawProducer : IDrawCommandProducer, IMeshDrawSink
 
             _meta[counter] = new DrawCommandMeta(
                 DrawCommandId.Mesh,
-                RenderTargetId.Scene,
                 DrawCommandQueue.Opaque,
-                order: MetaOrders.OpaqueOrder(entity.MaterialId)
+                PassMask.Default
+                //MetaOrders.OpaqueOrder(entity.MaterialId)
             );
 
             counter++;
             if (counter >= BatchSize)
             {
-                submitter.SubmitDrawBatch(_commands, _meta, _transforms);
+                submitter.SubmitDrawBatch(new DrawCommandData(_commands, _meta, _transforms));
                 counter = 0;
             }
         }
@@ -112,7 +113,7 @@ public sealed class MeshDrawProducer : IDrawCommandProducer, IMeshDrawSink
             var commands = _commands.AsSpan(0, counter);
             var metas = _meta.AsSpan(0, counter);
             var transforms = _transforms.AsSpan(0, counter);
-            submitter.SubmitDrawBatch(commands, metas, transforms);
+            submitter.SubmitDrawBatch(new DrawCommandData(commands, metas, transforms));
         }
     }
 

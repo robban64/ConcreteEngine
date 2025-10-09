@@ -1,3 +1,5 @@
+using ConcreteEngine.Core.Engine.Data;
+
 namespace ConcreteEngine.Core.Modules;
 
 public interface IModuleManager
@@ -35,7 +37,7 @@ public sealed class ModuleManager : IModuleManager
         }
     }
 
-    internal void Update(in UpdateInfo frameCtx)
+    internal void Update(in UpdateTickInfo frameCtx)
     {
         if (_modules.Count == 0) return;
 

@@ -1,3 +1,12 @@
+uniform EngineUniform {
+    float uTime;         
+    float uDeltaTime;    
+    float uRandom;       
+    float _pad;          
+    vec2  uInvResolution;
+    vec2  uMouse;       
+};
+
 uniform FrameUniform {
     vec4 uAmbient;
     vec4 uAmbientGround;
@@ -45,18 +54,8 @@ uniform DrawUniform {
 };
 
 uniform PostUniform {
-    vec4 ColorAdjust;
-    vec4 WhiteBalance;
-    vec4 Flags;
-    vec4 BloomParams;
-    vec4 BloomLods;
-    vec4 LutParams;
-
-    vec4 VignetteParams;
-    vec4 GrainParams;
-    vec4 ChromAbParams;
-
-    vec4 ToneShadows;
-    vec4 ToneHighlights;
-    vec4 SharpenParams;
+    vec4 uGrade;
+    vec4 uWhiteBalance;
+    vec4 uBloom;
+    vec4 uFX;
 };

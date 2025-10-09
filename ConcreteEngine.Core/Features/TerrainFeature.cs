@@ -4,6 +4,7 @@ using ConcreteEngine.Core.Assets;
 using ConcreteEngine.Core.Assets.Resources;
 using ConcreteEngine.Core.Rendering;
 using ConcreteEngine.Core.Rendering.Commands;
+using ConcreteEngine.Core.Rendering.Producers;
 
 #endregion
 
@@ -23,7 +24,7 @@ public sealed class TerrainFeature : GameFeature
         var material = renderer.CreateMaterial("TerrainMat");
         var heightmap = assets.Get<Texture2D>("Heightmap");
 
-        material.UvRepeat = 20;
+        material.UvRepeat = 28;
         material.Shininess = 10;
         material.SpecularStrength = 0.04f;
 

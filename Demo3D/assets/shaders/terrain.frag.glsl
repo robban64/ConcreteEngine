@@ -5,7 +5,6 @@
 in VS_OUT {
     vec3 FragPos;
     vec2 TexCoord;
-    vec2 TexCoordWeight;
     vec3 N_world;
 } fs_in;
 
@@ -28,7 +27,7 @@ layout(binding = 3) uniform sampler2D uAlbedoB;
 layout(binding = 4) uniform sampler2D uWeightMap;
 
 // depth
-layout(binding = 5) uniform sampler2D uShadowMap;
+layout(binding = 5) uniform sampler2DShadow uShadowMap;
 
 float saturate(float x) {
     return clamp(x, 0.0, 1.0);
@@ -37,11 +36,6 @@ float saturate(float x) {
 float blinnPhongSpec(vec3 N, vec3 V, vec3 L, float shininess) {
     vec3 H = normalize(V + L);
     return pow(max(dot(N, H), 0.0), shininess);
-}
-
-vec3 hemiAmbient(vec3 N) {
-    float up = 0.5 + 0.5 * N.y;
-    return mix(uAmbientGround.rgb, uAmbient.rgb, up);
 }
 
 float rangeFalloff(float dist, float range) {
@@ -98,26 +92,25 @@ vec3 computeFogColor(vec3 sunColor, float shadowTerm) {
     return mix(cFog, litFog, uFogColor.a);
 }
 
-// Regular shadow map with manual compare + square PCF radius from uShadowParams1.y
-float sampleShadowMap(vec4 lightSpacePos, vec3 N, vec3 L) {
-    if (uShadowParams1.x <= 0.0) return 1.0; // off
 
-    vec3 proj = lightSpacePos.xyz / lightSpacePos.w;
-    if (proj.x < 0.0 || proj.x > 1.0 || proj.y < 0.0 || proj.y > 1.0) return 1.0;
+// hardware 2x2 PCF
+float sampleShadowMap(vec4 lightSpacePos, vec3 N, vec3 L)
+{
+    if (uShadowParams1.x <= 0.0) return 1.0;
 
-    float current = proj.z;
-    float bias = uShadowParams0.z + uShadowParams0.w * (1.0 - dot(N, L));
-    int radius = int(uShadowParams1.y + 0.5);
-    vec2 texel = uShadowParams0.xy;
+    vec3 p = lightSpacePos.xyz / lightSpacePos.w;
+    p = p * 0.5 + 0.5;
 
-    float sum = 0.0;
-    for (int x = -radius; x <= radius; ++x)
-        for (int y = -radius; y <= radius; ++y) {
-            float closest = texture(uShadowMap, proj.xy + vec2(x, y) * texel).r;
-            sum += (current - bias <= closest) ? 1.0 : 0.0;
-        }
-    float samples = float((2 * radius + 1) * (2 * radius + 1));
-    return sum / samples;
+    if (p.x <= 0.0 || p.x >= 1.0 || p.y <= 0.0 || p.y >= 1.0) return 1.0;
+    if (p.z >= 1.0) return 1.0;
+
+    float ndl  = max(dot(N, L), 0.0);
+    float bias = max(uShadowParams0.z, uShadowParams0.w * (1.0 - ndl));
+    float ref  = clamp(p.z - bias, 0.0, 1.0);
+
+    float vis    = texture(uShadowMap, vec3(p.xy, ref));
+    float shadow = mix(1.0, max(vis, 0.2), 0.9);
+    return shadow; 
 }
 
 vec3 terrainAlbedo(vec2 texCoords, float uvRepeat) {
@@ -158,10 +151,12 @@ void main() {
     vec3 specular = vec3(specularStrength) * specD * uLightSpecularIntensity.x;
 
     // Shadow
-    float dirShadow = sampleShadowMap(uLightViewProj * vec4(P, 1.0), N, Ld);
+    float dirShadow = sampleShadowMap(uLightViewProj * vec4(P + normalize(fs_in.N_world) * uShadowParams1.z, 1.0), normalize(fs_in.N_world), Ld);
     dirShadow = mix(1.0, dirShadow, uShadowParams1.x);
 
-    vec3 direct = (diffuse + specular) * LiD * dirShadow;
+    float dirShadowSpec = max(dirShadow, 0.25);
+
+    vec3 direct = diffuse * LiD * dirShadow + specular * LiD * dirShadowSpec;
 
     // Point/spot lights
     int lightCount = clamp(uLightCounts.x, 0, MAX_LIGHTS);
@@ -180,8 +175,11 @@ void main() {
         direct += (diffP + specPCol) * LiP * atten;
     }
 
-    // Ambient + exposure (hemi-ambient)
-    vec3 ambient = hemiAmbient(N) * baseColor;
+    // Ambient
+    float up = clamp(N.y * 0.5 + 0.5, 0.0, 1.0);
+    vec3 ambient = mix(uAmbientGround.rgb, uAmbient.rgb, up) * baseColor;
+
+    // Exposure (ambient.w as exposure-1)
     float exposure = max(uAmbient.w, 0.0) + 1.0;
     vec3 litColor = (ambient + direct) * exposure;
 

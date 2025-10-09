@@ -14,13 +14,13 @@ public sealed class RenderPassCtx
 {
     private readonly PassCommandQueue _cmdQueue;
 
-    public PipelineStateOps Ops { get; private set; }
+    public DrawStateOps Ops { get; private set; }
     public RenderTargetInfo Target { get; private set; }
     public int Pass { get; private set; }
     public PassTagKey TagKey { get; private set; }
 
 
-    internal RenderPassCtx(PipelineStateOps cmdOps, PassCommandQueue cmdQueue)
+    internal RenderPassCtx(DrawStateOps cmdOps, PassCommandQueue cmdQueue)
     {
         Ops = cmdOps;
         _cmdQueue = cmdQueue;

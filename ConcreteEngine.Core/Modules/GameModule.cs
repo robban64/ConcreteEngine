@@ -1,3 +1,5 @@
+using ConcreteEngine.Core.Engine.Data;
+
 namespace ConcreteEngine.Core.Modules;
 
 public abstract class GameModule
@@ -15,7 +17,7 @@ public abstract class GameModule
     {
     }
 
-    public virtual void Update(in UpdateInfo frameCtx)
+    public virtual void Update(in UpdateTickInfo frameCtx)
     {
     }
 

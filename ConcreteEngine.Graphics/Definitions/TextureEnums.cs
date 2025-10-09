@@ -5,22 +5,44 @@ public enum EnginePixelFormat : byte
     Unknown = 0,
     Rgb = 1,
     Rgba = 2,
-    SrgbAlpha = 3
+    SrgbAlpha = 3,
+    Depth = 4
 }
 
 public enum TexturePreset : byte
 {
-    None = 0,
-    NearestClamp = 1,
-    NearestRepeat = 2,
-    LinearClamp = 3,
-    LinearRepeat = 4,
-    LinearMipmapClamp = 5,
-    LinearMipmapRepeat = 6,
-    PremultipliedUi = 7
+    None,
+    NearestClamp,
+    NearestClampBorder,
+    NearestRepeat,
+    LinearClamp,
+    LinearClampBorder,
+    LinearRepeat,
+    LinearMipmapClamp,
+    LinearMipmapRepeat,
+    PremultipliedUi
 }
 
-// note not using the enum values, due to risk of changing stuff
+public enum TextureFilter : byte
+{
+    Nearest = 0,
+    Linear = 1
+}
+
+public enum TextureWrap : byte
+{
+    Repeat = 0,
+    ClampToEdge = 1,
+    ClampToBorder = 2
+}
+
+public enum TextureCompare : byte
+{
+    None = 0,
+    LessOrEqual = 1,
+    GreaterOrEqual = 2
+}
+
 public enum TextureAnisotropy : byte
 {
     Off = 0,

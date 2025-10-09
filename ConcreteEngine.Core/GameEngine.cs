@@ -12,6 +12,7 @@ using ConcreteEngine.Core.Engine.Time;
 using ConcreteEngine.Core.Features;
 using ConcreteEngine.Core.Modules;
 using ConcreteEngine.Core.Rendering;
+using ConcreteEngine.Core.Rendering.Data;
 using ConcreteEngine.Core.Scene;
 using ConcreteEngine.Core.Utils;
 using ConcreteEngine.Graphics;
@@ -91,12 +92,14 @@ public sealed class GameEngine : IDisposable
 
     internal void Render(float dt)
     {
-        var fps = dt > 0 ? 1.0f / dt : 0.0f;
-        _renderInfo.BeginFrame(fps, dt, _timeHub.Alpha, _window.Size, _window.FramebufferSize);
+        var alpha = _timeHub.Alpha;
+
+        var frameStatus = _renderInfo.BeginRenderFrame(dt, alpha, _window, _inputSystem.InputSource,
+            out var tickInfo, out var tickParams);
+
         _timeHub.RenderFrame(dt);
 
-
-        if (_renderInfo.FrameIndex > 1 && _renderInfo.PrevOutputSize != _renderInfo.OutputSize)
+        if (_renderInfo.FrameIndex > 1 && frameStatus == RenderFrameInfo.BeginFrameStatus.Resize)
         {
             _timeHub.DebounceTicker ??= new DebounceTicker(30);
         }
@@ -107,26 +110,30 @@ public sealed class GameEngine : IDisposable
             _timeHub.DebounceTicker = null;
             var fbos = _renderer.RenderRegistry.RenderFbos;
             Span<(FrameBufferId, Size2D)> newSizes = stackalloc (FrameBufferId, Size2D)[fbos.Count];
-            for (int i = 0; i < fbos.Count; i++)
-                newSizes[i] = (fbos[i].FboId, fbos[i].CalculateNewSize(_renderInfo.OutputSize));
+            int idx = 0;
+            for (var i = 0; i < fbos.Count; i++)
+            {
+                var fbo = fbos[i];
+                if(fbo.IsFixedSize) continue;
+                newSizes[idx++] = (fbo.FboId, fbo.CalculateNewSize(_renderInfo.OutputSize));
+            }
 
-            _graphics.RecreateFbo(newSizes);
+            _graphics.RecreateFbo(newSizes.Slice(0,idx));
             return;
         }
 
-        var frameInfo = _renderInfo.Frame;
-        _graphics.BeginFrame(in frameInfo);
+        _graphics.BeginFrame(tickInfo.ToGfxFrameInfo());
         if (_sceneManager.Current != null)
         {
             // _renderTime.TickOrRenderEffect();
-            _renderer.Render(_renderInfo.Alpha, in frameInfo);
+            _renderer.Render(in tickInfo, in tickParams);
         }
 
         //_renderTime.TickOrGpuDispose();
         //_renderTime.TickOrGpuUpload();
         _graphics.EndFrame(out var gfxFrameResult);
 
-        _renderInfo.EndFrame(gfxFrameResult);
+        _renderInfo.EndRenderFrame(gfxFrameResult);
     }
 
     private void OnGpuTickDispose(int tick)
@@ -139,16 +146,17 @@ public sealed class GameEngine : IDisposable
 
     internal void Update(float dt)
     {
-        _updateInfo.BeginFrame(dt, _window.Size, _window.FramebufferSize);
+        _updateInfo.BeginUpdateFrame(dt, _window.Size, _window.FramebufferSize);
 
         if (_stateMachine.Current != EngineStateLevel.Running)
         {
             RunSetupStateMachine();
             return;
         }
+
         _timeHub.UpdateFrame(dt);
 
-        var updateInfo = _updateInfo.UpdateInfo;
+        var updateInfo = _updateInfo.UpdateTickInfo;
         _sceneManager.Current?.Update(in updateInfo);
 
         UpdateSceneTransitionIfNeeded();
@@ -156,8 +164,8 @@ public sealed class GameEngine : IDisposable
 
     private void GameTickUpdate(int tick)
     {
-        _updateInfo.GameTick = tick;
-        _renderer.BeginTick(_updateInfo.UpdateInfo);
+        _updateInfo.UpdateTick(tick);
+        _renderer.BeginTick(_updateInfo.UpdateTickInfo);
         _inputSystem.Update();
         _sceneManager.Current?.UpdateTick(tick);
         _renderer.EndTick();
@@ -165,7 +173,7 @@ public sealed class GameEngine : IDisposable
 
     private void FpsTickUpdate(int tick)
     {
-        var updateInfo = _updateInfo.UpdateInfo;
+        var updateInfo = _updateInfo.UpdateTickInfo;
         var gfxResult = _renderInfo.GfxResult;
 
         Console.WriteLine(

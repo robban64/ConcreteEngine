@@ -2,9 +2,11 @@
 
 #endregion
 
+using ConcreteEngine.Core.Engine.Data;
+using ConcreteEngine.Core.Rendering.Commands;
 using ConcreteEngine.Core.Rendering.Data;
 
-namespace ConcreteEngine.Core.Rendering.Commands;
+namespace ConcreteEngine.Core.Rendering;
 
 internal sealed class DrawCommandCollector
 {
@@ -63,10 +65,10 @@ internal sealed class DrawCommandCollector
     }
 
 
-    public void BeginTick(in UpdateInfo update)
+    public void BeginTick(in UpdateTickInfo tick)
     {
         foreach (var producer in _producerList)
-            producer.BeginTick(in update);
+            producer.BeginTick(in tick);
     }
 
     public void EndTick()
@@ -75,7 +77,7 @@ internal sealed class DrawCommandCollector
             producer.EndTick();
     }
 
-    public void CollectTo(float alpha, in RenderGlobalSnapshot snapshot, DrawCommandBuffer submitter)
+    public void CollectTo(float alpha, in RenderSceneState snapshot, DrawCommandBuffer submitter)
     {
         foreach (var producer in _producerList)
             producer.EmitFrame(alpha, in snapshot, submitter);

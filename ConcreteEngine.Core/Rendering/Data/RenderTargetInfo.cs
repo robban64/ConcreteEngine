@@ -2,7 +2,7 @@ using ConcreteEngine.Common.Numerics;
 using ConcreteEngine.Graphics;
 using ConcreteEngine.Graphics.Resources;
 
-namespace ConcreteEngine.Core.Rendering.Gfx;
+namespace ConcreteEngine.Core.Rendering.Data;
 
 public readonly record struct RenderTargetInfo(
     FrameBufferId FboId,

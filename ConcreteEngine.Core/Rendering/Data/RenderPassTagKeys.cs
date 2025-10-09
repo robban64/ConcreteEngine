@@ -10,7 +10,6 @@ namespace ConcreteEngine.Core.Rendering.Data;
 
 public readonly record struct FboTagKey(int TagIndex, int SlotIndex) : IComparable<FboTagKey>
 {
-    
     public static FboTagKey Make<TTag, TSlot>()
         where TTag : unmanaged, IRenderPassTag where TSlot : unmanaged, IRenderPassTagSlot =>
         RTypeRegistry.MakeFboTagKey<TTag, TSlot>();

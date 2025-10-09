@@ -7,10 +7,12 @@ using ConcreteEngine.Core.Assets;
 using ConcreteEngine.Core.Assets.Resources;
 using ConcreteEngine.Core.Engine.Configuration;
 using ConcreteEngine.Core.Rendering;
+using ConcreteEngine.Core.Rendering.Data;
 using ConcreteEngine.Core.Rendering.Descriptors;
 using ConcreteEngine.Core.Scene;
 using ConcreteEngine.Core.Scene.Entities;
 using ConcreteEngine.Graphics;
+using ConcreteEngine.Graphics.Primitives;
 using Shader = ConcreteEngine.Core.Assets.Resources.Shader;
 
 #endregion
@@ -28,14 +30,12 @@ public sealed class Demo3DScene : GameScene
 
         var skyboxMaterial = renderer.CreateMaterial("SkyboxMat");
 
-        var rb = renderer.SceneRenderProps;
+        var rb = renderer.RenderProps;
         rb.SetSkybox(skyboxMaterial.Id, Quaternion.Identity);
-        rb.SetDirLight(
-            new Vector3(-0.4f, -1.0f, 0.35f),
-            new Vector4(1.00f, 0.95f, 0.88f, 1.15f),
-            0.35f
-        );
-        rb.SetAmbient(new Vector3(0.8f, 0.75f, 0.8f));
+ 
+
+
+        rb.SetShadowDefault(2048);
 
         var boatMat = renderer.CreateMaterial("BoatMat");
         var boatMesh = assets.Get<Mesh>("Boat");
@@ -44,6 +44,7 @@ public sealed class Demo3DScene : GameScene
 
 
         var rockMat = renderer.CreateMaterial("Rock01Mat");
+        rockMat.SpecularStrength = 0.3f;
         var rockMesh = assets.Get<Mesh>("Rock1");
         var rock2Mesh = assets.Get<Mesh>("Rock2");
 
@@ -54,6 +55,17 @@ public sealed class Demo3DScene : GameScene
                 new MeshComponent(rockMesh.ResourceId, rockMat.Id, rockMesh.DrawCount));
             World.Transforms.Add(entityId,
                 new Transform(new Vector3(i * 5, -3, i * 5), Vector3.One, Quaternion.Identity));
+        }
+
+        var rnd = new Random(9999);
+        for (int i = 0; i < 40; i++)
+        {
+            var entityId = World.Create();
+            World.Meshes.Add(entityId,
+                new MeshComponent(rockMesh.ResourceId, rockMat.Id, rockMesh.DrawCount));
+            World.Transforms.Add(entityId,
+                new Transform(new Vector3(rnd.Next(0, 48), rnd.Next(0, 3), rnd.Next(0, 48)),
+                    new Vector3(rnd.Next(1, 2)), Quaternion.Identity));
         }
 
 
@@ -72,6 +84,7 @@ public sealed class Demo3DScene : GameScene
     protected override void ConfigureModules(IGameSceneModuleBuilder builder)
     {
         builder.RegisterModule<FlyCameraModule>(0);
+        builder.RegisterModule<EffectAdjustModule>(1);
     }
 
     protected override void ConfigureRenderer(IGameSceneRenderBuilder builder)
@@ -81,18 +94,12 @@ public sealed class Demo3DScene : GameScene
         var screenShader = assets.Get<Shader>("Screen");
         var compositeShader = assets.Get<Shader>("Composite");
         var presentShader = assets.Get<Shader>("Present");
-
-        var lightShader = assets.Get<Shader>("LightPass");
         var colorFilterShader = assets.Get<Shader>("ColorFilter");
 
 
         builder.RegisterRender3D(new RenderTargetDescriptor
         {
-            SceneTarget = new SceneTargetDesc
-            {
-                ClearColor = Color4.CornflowerBlue,
-                Samples = 4
-            },
+            SceneTarget = new SceneTargetDesc { ClearColor = Color4.CornflowerBlue, Samples = 4 },
             /*LightTarget = new LightTargetDesc
             {
                 LightShaderId = lightShader.ResourceId,
@@ -101,13 +108,9 @@ public sealed class Demo3DScene : GameScene
             },*/
             PostEffectTarget = new PostEffectTargetDesc
             {
-                EffectShaderId = colorFilterShader.ResourceId,
-                CompositeShaderId = compositeShader.ResourceId,
+                EffectShaderId = colorFilterShader.ResourceId, CompositeShaderId = compositeShader.ResourceId,
             },
-            ScreenTarget = new ScreenTargetDesc
-            {
-                ScreenShaderId = presentShader.ResourceId
-            },
+            ScreenTarget = new ScreenTargetDesc { ScreenShaderId = presentShader.ResourceId },
         });
     }
 

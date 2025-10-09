@@ -152,6 +152,12 @@ public sealed class GfxTextures
         Debug.Assert(meta.Levels > 1);
         _driver.GenerateMipMaps(texRef);
     }
+    
+    public void ApplyCompareAndBorder(TextureId textureId)
+    {
+        var texRef = _resources.TextureStore.GetRefHandle(textureId);
+        _driver.ApplyCompareAndBorder(texRef);
+    }
 
 
     private GfxRefToken<TextureId> CreateTextureInternal(in GfxTextureDescriptor desc, in GfxTextureProperties props,
@@ -159,7 +165,7 @@ public sealed class GfxTextures
     {
         ValidateTextureDescriptor(in desc, in props);
         var size = new Size2D(desc.Width, desc.Height);
-        (bool mipPreset, int levels) = GetMipValues(desc.Width, desc.Height, props.Preset, desc.Depth);
+        var (mipPreset, levels) = GetMipValues(desc.Width, desc.Height, props.Preset, desc.Depth);
         if (levels < 1) throw new InvalidOperationException(nameof(levels));
         var samples = desc.Samples.ToSamples();
 

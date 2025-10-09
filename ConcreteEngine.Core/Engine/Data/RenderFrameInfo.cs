@@ -1,4 +1,7 @@
+using System.Numerics;
 using ConcreteEngine.Common.Numerics;
+using ConcreteEngine.Core.Engine.Platform;
+using ConcreteEngine.Core.Rendering.Data;
 using ConcreteEngine.Graphics;
 
 namespace ConcreteEngine.Core.Engine.Data;
@@ -6,39 +9,43 @@ namespace ConcreteEngine.Core.Engine.Data;
 public sealed class RenderFrameInfo
 {
     public long FrameIndex { get; private set; } = -1;
-    public float Fps { get; private set; }
-    public float DeltaTime { get; private set; }
+    public float Alpha { get; private set; } = 0;
+    public float Time { get; private set; } = 0;
 
-    public float Alpha { get; set; } = 0;
-    
-    public Size2D Viewport { get; private set; }
     public Size2D OutputSize { get; private set; }
     public Size2D PrevOutputSize { get; private set; }
-    
+
     public GfxFrameResult GfxResult { get; private set; }
 
-    public GfxFrameInfo Frame => new(FrameIndex, DeltaTime, Fps, Viewport, OutputSize);
-
-    internal BeginRenderFrameStatus BeginFrame(float fps, float deltaTime, float alpha, Size2D viewport, Size2D outputSize)
+    internal BeginFrameStatus BeginRenderFrame(
+        float dt, float alpha,
+        IEngineWindowHost window,
+        IEngineInputSource input,
+        out RenderTickInfo tickInfo,
+        out RenderTickParams tickParams)
     {
         FrameIndex++;
-        Fps = fps;
-        DeltaTime = deltaTime;
+        Time += dt;
         Alpha = alpha;
-        OutputSize = outputSize;
-        Viewport =  viewport;
-        var status = BeginRenderFrameStatus.None;
-        if (PrevOutputSize != outputSize) status = BeginRenderFrameStatus.Resize;
+        OutputSize = window.FramebufferSize;
+
+        tickInfo = new RenderTickInfo(FrameIndex, dt, Alpha, OutputSize);
+        tickParams = new RenderTickParams(window.Size, input.MousePosition, Time, 9999);
+
+        var status = BeginFrameStatus.None;
+        if (PrevOutputSize != OutputSize) status = BeginFrameStatus.Resize;
         return status;
     }
-    
-    internal void EndFrame(GfxFrameResult gfxFrameResult)
+
+
+    internal void EndRenderFrame(GfxFrameResult gfxFrameResult)
     {
-        PrevOutputSize = Frame.OutputSize;
+        PrevOutputSize = OutputSize;
         GfxResult = gfxFrameResult;
     }
 
-    internal enum BeginRenderFrameStatus
+
+    internal enum BeginFrameStatus
     {
         None,
         Resize

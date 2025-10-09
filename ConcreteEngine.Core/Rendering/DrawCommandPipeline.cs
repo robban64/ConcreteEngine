@@ -1,8 +1,10 @@
+using ConcreteEngine.Core.Engine.Data;
 using ConcreteEngine.Core.Rendering.Batching;
 using ConcreteEngine.Core.Rendering.Commands;
 using ConcreteEngine.Core.Rendering.Data;
 using ConcreteEngine.Core.Rendering.Gfx;
 using ConcreteEngine.Core.Rendering.Passes;
+using ConcreteEngine.Core.Rendering.Producers;
 using ConcreteEngine.Graphics.Gfx;
 using ConcreteEngine.Graphics.Gfx.Utility;
 
@@ -36,12 +38,12 @@ internal sealed class DrawCommandPipeline
         _commandCollector.InitializeProducers();
     }
 
-    internal void BeginTick(in UpdateInfo update) => _commandCollector.BeginTick(update);
+    internal void BeginTick(in UpdateTickInfo tick) => _commandCollector.BeginTick(tick);
     internal void EndTick() => _commandCollector.EndTick();
     public TSink GetSink<TSink>() where TSink : IDrawSink => _commandCollector.GetSink<TSink>();
 
 
-    internal nint Prepare(float alpha, in RenderGlobalSnapshot snapshot)
+    internal nint Prepare(float alpha, in RenderSceneState snapshot)
     {
         _cmdBuffer.Reset();
 
@@ -58,5 +60,5 @@ internal sealed class DrawCommandPipeline
 
     internal void ExecuteTransforms() => _cmdBuffer.DrainTransformQueue();
 
-    internal void ExecuteDrawPass(RenderTargetId targetId) => _cmdBuffer.DrainCommandQueue(targetId);
+    internal void ExecuteDrawPass(PassId passId) => _cmdBuffer.DispatchDrawPass(passId);
 }

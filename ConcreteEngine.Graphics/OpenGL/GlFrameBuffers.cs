@@ -68,7 +68,7 @@ internal sealed class GlFrameBuffers : IGraphicsDriverModule
         return _store.FrameBuffer.Add(new GlFboHandle(fbo));
     }
 
-    public GfxRefToken<RenderBufferId> CreateRenderBuffer(FrameBufferTarget attachment, Size2D size, int samples)
+    public GfxRefToken<RenderBufferId> CreateRenderBuffer(FrameBufferAttachmentKind attachment, Size2D size, int samples)
     {
         var internalFormat = attachment.ToGlInternalFormatEnum();
         var (width, height) = size.ToUnsigned();
@@ -83,37 +83,39 @@ internal sealed class GlFrameBuffers : IGraphicsDriverModule
     }
 
     public void AttachTexture(GfxRefToken<FrameBufferId> fboRef, GfxRefToken<TextureId> texture,
-        FrameBufferTarget target)
+        FrameBufferAttachmentKind attachmentKind)
     {
         var fboH = GetFboHandle(fboRef).Value;
         var texH = GetTextureHandle(texture).Value;
-        var glAttachment = target.ToGlAttachmentEnum();
+        var glAttachment = attachmentKind.ToGlAttachmentEnum();
         _gl.NamedFramebufferTexture(fboH, glAttachment, texH, 0);
     }
 
     public void AttachRenderBuffer(GfxRefToken<FrameBufferId> fboRef, GfxRefToken<RenderBufferId> rboRef,
-        FrameBufferTarget target)
+        FrameBufferAttachmentKind attachmentKind)
     {
         var fboHandle = GetFboHandle(fboRef).Value;
         var rboHandle = GetRboHandle(rboRef).Value;
-        var glAttachment = target.ToGlAttachmentEnum();
+        var glAttachment = attachmentKind.ToGlAttachmentEnum();
         _gl.NamedFramebufferRenderbuffer(fboHandle, glAttachment, RenderbufferTarget.Renderbuffer, rboHandle);
     }
 
-    public void SetDrawBuffers(GfxRefToken<FrameBufferId> fboRef, FrameBufferTarget target)
-    {
-        var fboHandle = GetFboHandle(fboRef).Value;
-        var glAttachment = target.ToGlAttachmentEnum();
-        _gl.NamedFramebufferDrawBuffers(fboHandle, 1, glAttachment);
-    }
-
-    public void ValidateComplete(GfxRefToken<FrameBufferId> fboRef)
+    public void SetDrawReadBuffer(GfxRefToken<FrameBufferId> fboRef, bool colorAttachment)
     {
         var handle = GetFboHandle(fboRef).Value;
-        _gl.NamedFramebufferDrawBuffer(handle, GLEnum.ColorAttachment0);
-        _gl.NamedFramebufferReadBuffer(handle, GLEnum.ColorAttachment0);
+        var glEnum = colorAttachment ? GLEnum.ColorAttachment0 : GLEnum.None;
+        _gl.NamedFramebufferDrawBuffer(handle, glEnum);
+        _gl.NamedFramebufferReadBuffer(handle, glEnum);
+    }
 
-        var status = _gl.CheckNamedFramebufferStatus(handle, FramebufferTarget.Framebuffer);
+    public void ValidateComplete(GfxRefToken<FrameBufferId> fboRef, bool colorAttachment)
+    {
+        var handle = GetFboHandle(fboRef).Value;
+        var glEnum = colorAttachment ? GLEnum.ColorAttachment0 : GLEnum.None;
+        _gl.NamedFramebufferDrawBuffer(handle, glEnum);
+        _gl.NamedFramebufferReadBuffer(handle, glEnum);
+
+        var status = _gl.CheckNamedFramebufferStatus(handle, GLEnum.Framebuffer);
         if (status != GLEnum.FramebufferComplete)
             GraphicsException.ThrowFramebufferIncomplete(nameof(fboRef), status.ToString());
     }

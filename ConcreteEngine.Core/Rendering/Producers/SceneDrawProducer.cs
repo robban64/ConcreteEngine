@@ -1,18 +1,19 @@
 #region
 
 using System.Numerics;
+using ConcreteEngine.Core.Engine.Data;
+using ConcreteEngine.Core.Rendering.Commands;
 using ConcreteEngine.Core.Rendering.Data;
-using ConcreteEngine.Core.Rendering.Passes;
 
 #endregion
 
-namespace ConcreteEngine.Core.Rendering.Commands;
+namespace ConcreteEngine.Core.Rendering.Producers;
 
 public sealed class SceneDrawProducer : IDrawCommandProducer
 {
     private CommandProducerContext _context = null!;
 
-    private RenderGlobalSnapshot _snapshot;
+    private RenderSceneState _snapshot;
 
 
     public void AttachContext(CommandProducerContext ctx)
@@ -24,9 +25,9 @@ public sealed class SceneDrawProducer : IDrawCommandProducer
     {
     }
 
-    public void SetSceneGlobals(in RenderGlobalSnapshot snapshot) => _snapshot = snapshot;
+    public void SetSceneGlobals(in RenderSceneState snapshot) => _snapshot = snapshot;
 
-    public void BeginTick(in UpdateInfo update)
+    public void BeginTick(in UpdateTickInfo tick)
     {
     }
 
@@ -35,7 +36,7 @@ public sealed class SceneDrawProducer : IDrawCommandProducer
     }
 
 
-    public void EmitFrame(float alpha, in RenderGlobalSnapshot snapshot, DrawCommandBuffer submitter)
+    public void EmitFrame(float alpha, in RenderSceneState snapshot, DrawCommandBuffer submitter)
     {
         if (_snapshot.Skybox.MaterialId.Id == 0) return;
 
@@ -46,8 +47,8 @@ public sealed class SceneDrawProducer : IDrawCommandProducer
         );
 
 
-        var meta = new DrawCommandMeta(DrawCommandId.Skybox, RenderTargetId.Scene, DrawCommandQueue.Skybox);
+        var meta = new DrawCommandMeta(DrawCommandId.Skybox, DrawCommandQueue.Skybox, PassMask.Main);
 
-        submitter.SubmitDraw(in cmd, in meta, new DrawTransformPayload(Matrix4x4.Identity));
+        submitter.SubmitDraw(cmd, meta, new DrawTransformPayload(Matrix4x4.Identity));
     }
 }

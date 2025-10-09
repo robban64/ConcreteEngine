@@ -55,6 +55,16 @@ public sealed class RenderUbo
         _uploadCursor += Stride;
         return offset;
     }
+    
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public nint SetUploadCursor(int idx)
+    {
+        _uploadCursor = idx * Stride;
+        
+        bool overflow = _uploadCursor > Capacity;
+        Debug.Assert(!overflow, "UboRing overflow. Increase capacity.");
+        return _uploadCursor;
+    }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public nint NextDrawCursor()
@@ -65,6 +75,16 @@ public sealed class RenderUbo
         var offset = _drawCursor;
         _drawCursor += Stride;
         return offset;
+    }
+    
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public nint SetDrawCursor(int idx)
+    {
+        _drawCursor = idx * Stride;
+        
+        bool overflow = _drawCursor > Capacity;
+        Debug.Assert(!overflow, "UboRing overflow. Increase capacity.");
+        return _drawCursor;
     }
 
     public nint GetCapacityFor(int expectedRecords)

@@ -2,25 +2,9 @@
   "folder": "./shaders",
   "resources": [
     {
-      "name": "ModelNormal",
-      "vertexFilename": "model-normal.vert.glsl",
-      "fragmentFilename": "model-normal.frag.glsl"
-    },
-    {
-      "name": "ModelBasic",
-      "vertexFilename": "model-basic.vert.glsl",
-      "fragmentFilename": "model-basic.frag.glsl"
-    },
-
-    {
-      "name": "Terrain",
-      "vertexFilename": "terrain.vert.glsl",
-      "fragmentFilename": "terrain.frag.glsl"
-    },
-    {
-      "name": "Skybox",
-      "vertexFilename": "skybox.vert.glsl",
-      "fragmentFilename": "skybox.frag.glsl"
+      "name": "Depth",
+      "vertexFilename": "depth.vert.glsl",
+      "fragmentFilename": "depth.frag.glsl"
     },
     {
       "name": "Screen",
@@ -43,9 +27,25 @@
       "fragmentFilename": "color-filter.frag.glsl"
     },
     {
-      "name": "LightPass",
-      "vertexFilename": "screen.vert.glsl",
-      "fragmentFilename": "light-pass.frag.glsl"
+      "name": "ModelNormal",
+      "vertexFilename": "model-normal.vert.glsl",
+      "fragmentFilename": "model-normal.frag.glsl"
+    },
+    {
+      "name": "ModelBasic",
+      "vertexFilename": "model-basic.vert.glsl",
+      "fragmentFilename": "model-basic.frag.glsl"
+    },
+
+    {
+      "name": "Terrain",
+      "vertexFilename": "terrain.vert.glsl",
+      "fragmentFilename": "terrain.frag.glsl"
+    },
+    {
+      "name": "Skybox",
+      "vertexFilename": "skybox.vert.glsl",
+      "fragmentFilename": "skybox.frag.glsl"
     }
   ]
 }

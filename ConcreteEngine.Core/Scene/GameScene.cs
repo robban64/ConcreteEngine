@@ -1,6 +1,7 @@
 #region
 
 using ConcreteEngine.Core.Engine.Configuration;
+using ConcreteEngine.Core.Engine.Data;
 using ConcreteEngine.Core.Rendering;
 
 #endregion
@@ -23,7 +24,7 @@ public abstract class GameScene
     {
     }
 
-    internal void Update(in UpdateInfo frameCtx)
+    internal void Update(in UpdateTickInfo frameCtx)
     {
         Context.Features.Update(in frameCtx);
         Context.Modules.Update(in frameCtx);
@@ -40,7 +41,7 @@ public abstract class GameScene
     internal void AttachContext(GameSceneContext context)
     {
         var renderer = context.GetSystem<IRenderSystem>();
-        _world = new World(renderer.SceneRenderProps);
+        _world = new World(renderer.RenderProps);
         context.World = World;
         Context = context;
     }

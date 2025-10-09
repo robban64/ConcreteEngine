@@ -18,7 +18,7 @@ public sealed class DrawStateOps
     private readonly GfxTextures _gfxTextures;
     private readonly RenderRegistry _renderRegistry;
     private readonly RenderView _renderView;
-    private readonly RenderGlobalSnapshot _globalSnapshot;
+    private readonly RenderSceneState _sceneState;
     private readonly DrawUniforms _drawUniforms;
 
     private readonly DrawStateContext _ctx;
@@ -27,7 +27,7 @@ public sealed class DrawStateOps
     {
         _renderRegistry = ctxPayload.Registry;
         _renderView = ctxPayload.RenderView;
-        _globalSnapshot = ctxPayload.Snapshot;
+        _sceneState = ctxPayload.Snapshot;
         _drawUniforms = drawUniforms;
         _gfxCmd = ctxPayload.Gfx.Commands;
         _gfxTextures = ctxPayload.Gfx.Textures;
@@ -40,7 +40,7 @@ public sealed class DrawStateOps
     {
         _ctx.SetDepthMode();
         
-        _renderView.ApplyLightView(_globalSnapshot.DirLight.Direction);
+        _renderView.ApplyLightView(_sceneState.DirLight.Direction);
         _drawUniforms.UploadShadow(in _renderView.ProjectionViewMatrix);
         _drawUniforms.UploadCameraView(_renderView);
     }

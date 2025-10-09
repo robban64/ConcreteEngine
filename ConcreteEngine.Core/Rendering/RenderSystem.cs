@@ -37,7 +37,7 @@ public interface IRenderSystem : IGameEngineSystem
     TSink GetSink<TSink>() where TSink : IDrawSink;
     Material CreateMaterial(string templateName);
 
-    public RenderGlobalProps RenderProps { get; }
+    public RenderSceneProps RenderProps { get; }
 }
 
 public sealed class RenderSystem : IRenderSystem
@@ -57,33 +57,34 @@ public sealed class RenderSystem : IRenderSystem
 
     private readonly BatcherRegistry _batches = new();
 
-    public RenderGlobalProps RenderProps { get; }
-    private RenderGlobalSnapshot _snapshot;
+    public RenderSceneProps RenderProps { get; }
+    private RenderSceneState _snapshot;
 
     public ICamera Camera { get; } = new Camera3D();
     private readonly RenderView _renderView = new();
 
     private bool _initialized = false;
 
-
     internal RenderRegistry RenderRegistry => _renderRegistry;
 
+    private Size2D _initialSize;
+    
     internal RenderSystem(IGraphicsRuntime graphics, Size2D outputSize)
     {
         _gfx = graphics.Gfx;
-        RenderProps = new RenderGlobalProps();
-        RenderProps.SetOutputSize(outputSize);
+        RenderProps = new RenderSceneProps();
         RenderProps.Commit();
         _snapshot = RenderProps.Snapshot;
+        _initialSize = outputSize;
     }
 
     internal void InitializeGraphics(IReadOnlyList<Shader> shaders)
     {
-        InvalidOpThrower.ThrowIf(_snapshot.OutputSize.Width <= 1);
-        InvalidOpThrower.ThrowIf(_snapshot.OutputSize.Height <= 1);
+        InvalidOpThrower.ThrowIf(_initialSize.Width <= 1);
+        InvalidOpThrower.ThrowIf(_initialSize.Height <= 1);
 
         _renderRegistry = new RenderRegistry(_gfx);
-        _renderRegistry.BeginRegistration(_snapshot.OutputSize);
+        _renderRegistry.BeginRegistration(_initialSize);
         RenderStaticSetup.RegisterUniformBufferTypes(_renderRegistry);
         RenderStaticSetup.RegisterFrameBuffers(_renderRegistry);
         _renderRegistry.RegisterShaderCollection(shaders);
@@ -172,7 +173,7 @@ public sealed class RenderSystem : IRenderSystem
             }).OnPassEnd(static (RenderPassCtx ctx, in RenderPassState state) =>
             {
                 var texId = ctx.Target.Attachments.ColorTextureId;
-                ctx.SampleTo<PostPassTag, PassPostASlot>(PassOpKind.Fsq, 0, texId);
+                ctx.SampleTo<ScreenPassTag, PassFinalSlot>(PassOpKind.Screen, 0, texId);
 
                 ctx.Ops.EndRenderPass();
                 ctx.Ops.GenerateMips(texId);
@@ -249,7 +250,6 @@ public sealed class RenderSystem : IRenderSystem
         if (tickInfo.OutputSize != Camera.Viewport)
             Camera.Viewport = tickInfo.OutputSize;
 
-        RenderProps.SetOutputSize(tickInfo.OutputSize);
         _snapshot = RenderProps.Commit();
 
         _renderView.PrepareFrame((Camera3D)Camera);

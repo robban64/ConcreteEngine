@@ -63,8 +63,7 @@ public sealed class RenderView
     {
         _snapshot.Commit(this);
 
-        CreateDirLightView(direction, this, 0.1f, 60f, out _viewMatrix, out _projectionMatrix, shadowMapSize: 2048,
-            padding: 1);
+        CreateDirLightView(direction, this,  out _viewMatrix, out _projectionMatrix, shadowMapSize: 2048);
         _projectionViewMatrix = _viewMatrix * _projectionMatrix;
     }
 
@@ -91,26 +90,24 @@ public sealed class RenderView
     public static void CreateDirLightView(
         Vector3 lightDirection,
         RenderView camera,
-        float cameraNear,
-        float cameraFar,
         out Matrix4x4 lightView,
         out Matrix4x4 lightProj,
-        float padding = 0.5f,
+        float zPad = 0.5f,
+        float shadowDistance = 80f,
         int shadowMapSize = 0)
     {
         var dir = Vector3.Normalize(lightDirection);
-
         var worldUp = MathF.Abs(Vector3.Dot(dir, Vector3.UnitY)) > 0.99f ? Vector3.UnitX : Vector3.UnitY;
+
+        float near = camera.ProjectionInfo.Near;
+        float far  = MathF.Min(camera.ProjectionInfo.Far, near + shadowDistance);
 
         // Camera frustum corners
         Span<Vector3> corners = stackalloc Vector3[8];
-        GetFrustumCorners(camera, cameraNear, cameraFar, corners);
+        GetFrustumCorners(camera, near, far, corners);
 
         var center = GetFrustumCenter(corners);
-
-        //  Position light camera 
-        var sliceDepth = cameraFar - cameraNear;
-        var eye = center - dir * (sliceDepth + padding * 2f);
+        var eye = center - dir * (shadowDistance * 0.5f);
 
         lightView = Matrix4x4.CreateLookAt(eye, center, worldUp);
 
@@ -123,30 +120,22 @@ public sealed class RenderView
             maxLS = Vector3.Max(maxLS, p);
         }
 
-        // Guard band in XY; keep Z conservative to avoid clipping.
-        minLS.X -= padding;
-        minLS.Y -= padding;
-        maxLS.X += padding;
-        maxLS.Y += padding;
-
-        // Optional texel snapping (independent of screen resolution).
+        // Texel snapping
         if (shadowMapSize > 0)
         {
             var size = maxLS - minLS;
-            var texelX = size.X / shadowMapSize;
-            var texelY = size.Y / shadowMapSize;
-
-            minLS.X = MathF.Floor(minLS.X / texelX) * texelX;
-            minLS.Y = MathF.Floor(minLS.Y / texelY) * texelY;
-            maxLS.X = minLS.X + MathF.Ceiling(size.X / texelX) * texelX;
-            maxLS.Y = minLS.Y + MathF.Ceiling(size.Y / texelY) * texelY;
+            var texel = new Vector2(size.X / shadowMapSize, size.Y / shadowMapSize);
+            minLS.X = MathF.Floor(minLS.X / texel.X) * texel.X;
+            minLS.Y = MathF.Floor(minLS.Y / texel.Y) * texel.Y;
+            maxLS.X = minLS.X + MathF.Ceiling(size.X / texel.X) * texel.X;
+            maxLS.Y = minLS.Y + MathF.Ceiling(size.Y / texel.Y) * texel.Y;
         }
 
-        // Right-handed orthographic
-        float zNear = MathF.Max(0f, -maxLS.Z);
-        float zFar = MathF.Max(zNear + 0.001f, -minLS.Z);
+        // Near/Far with zPad
+        float nearLS = MathF.Max(0f, -maxLS.Z);
+        float farLS  = MathF.Max(nearLS + 0.001f, -minLS.Z) + zPad;
 
-        lightProj = Matrix4x4.CreateOrthographicOffCenter(minLS.X, maxLS.X, minLS.Y, maxLS.Y, zNear, zFar);
+        lightProj = Matrix4x4.CreateOrthographicOffCenter(minLS.X, maxLS.X, minLS.Y, maxLS.Y, nearLS, farLS);
     }
 
     private static Vector3 GetFrustumCenter(Span<Vector3> corners)

@@ -18,6 +18,10 @@ internal static class RenderStaticSetup
         renderRegistry.RegisterFrameBuffer<ScenePassTag, PassDrawSlot>(
             RegisterFboEntry.MakeMsaa(RenderBufferMsaa.X4).AttachColorTexture().AttachDepthStencilBuffer()
         );
+
+        renderRegistry.RegisterFrameBuffer<ScenePassTag, PassDrawSlot>(
+            RegisterFboEntry.MakeMsaa(RenderBufferMsaa.X4).AttachColorTexture().AttachDepthStencilBuffer()
+        );
         renderRegistry.RegisterFrameBuffer<ScenePassTag, PassResolveSlot>(
             RegisterFboEntry.MakeDefault(true).AttachColorTexture().AttachDepthStencilBuffer()
         );

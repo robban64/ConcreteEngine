@@ -23,7 +23,7 @@ public interface IDrawCommandProducer
     void Initialize();
     void BeginTick(in UpdateTickInfo tick);
     void EndTick();
-    void EmitFrame(float alpha, in RenderGlobalSnapshot snapshot, DrawCommandBuffer submitter);
+    void EmitFrame(float alpha, in RenderSceneState snapshot, DrawCommandBuffer submitter);
 }
 
 public interface IDrawSink;

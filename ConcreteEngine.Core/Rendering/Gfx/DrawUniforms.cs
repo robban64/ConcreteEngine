@@ -23,12 +23,12 @@ internal sealed class DrawUniforms
     private readonly UniformBufferId _dirLightUbo;
     private readonly UniformBufferId _postUbo;
 
-    private readonly RenderGlobalSnapshot _snapshot;
+    private readonly RenderSceneState _sceneState;
 
-    internal DrawUniforms(GfxBuffers gfxBuffers, RenderRegistry registry, RenderGlobalSnapshot snapshot)
+    internal DrawUniforms(GfxBuffers gfxBuffers, RenderRegistry registry, RenderSceneState sceneState)
     {
         _gfxBuffers = gfxBuffers;
-        _snapshot = snapshot;
+        _sceneState = sceneState;
 
         _engineUbo = registry.GetRenderUbo<EngineUniformRecord>().Id;
         _frameUbo = registry.GetRenderUbo<FrameUniformRecord>().Id;
@@ -71,7 +71,7 @@ internal sealed class DrawUniforms
             mouse: tickParams.MousePos,
             random: tickParams.RndSeed
         );
-        
+
         _gfxBuffers.UploadUniformGpuData(_engineUbo, in data, 0);
     }
 
@@ -84,14 +84,27 @@ internal sealed class DrawUniforms
             fogColor: new Vector4(0.6f, 0.7f, 0.8f, 0.5f),
             fogParams0: new Vector4(0.00015f, 0.002f, 0.0f, 1.0f),
             fogParams1: new Vector4(1.0f, 1.0f, 200.0f, 0.0f)
+
+            ambient: new Vector4(0.032f, 0.032f, 0.034f, 0.0f),
+           ambientGround: new Vector4(0.015f, 0.019f, 0.013f, 0.0f),
+           fogColor: new Vector4(0.76f, 0.81f, 0.86f, 0.055f),
+           fogParams0: new Vector4(0.0000035f, 0.000090f, 0.0f, 0.15f),
+           fogParams1: new Vector4(1.0f, 0.25f, 8000.0f, 0.0f)
+
         );
 */
+        var fog = _sceneState.Fog;
+        var ambient = _sceneState.Ambient;
+
+        float kExp2 = 1f / (fog.Density * fog.Density);
+        float kHeight = 1f / MathF.Max(fog.HeightFalloff, 1e-6f);
+
         var data = new FrameUniformRecord(
-            ambient: new Vector4(0.032f, 0.032f, 0.034f, 0.0f),
-            ambientGround: new Vector4(0.015f, 0.019f, 0.013f, 0.0f),
-            fogColor: new Vector4(0.76f, 0.81f, 0.86f, 0.055f),
-            fogParams0: new Vector4(0.0000035f, 0.000090f, 0.0f, 0.15f),
-            fogParams1: new Vector4(1.0f, 0.25f, 8000.0f, 0.0f)
+            ambient: new Vector4(ambient.Ambient, ambient.Exposure),// xyz = sky ambient, w = exposure
+            ambientGround: new Vector4(ambient.AmbientGround, 0.0f),// xyz = ground ambient
+            fogColor: new Vector4(fog.Color, fog.Scattering),// rgb = base fog color, a = in-scattering mix
+            fogParams0: new Vector4(kExp2, kHeight, fog.BaseHeight, fog.Strength),// x=exp2_k, y=height_k, z=height0, w=globalStrength
+            fogParams1: new Vector4(1f, fog.HeightInfluence, fog.MaxDistance, 0.0f)// x=expWeight, y=heightWeight, z=maxDistance, w=reserved
         );
 
         _gfxBuffers.UploadUniformGpuData(_frameUbo, in data, 0);
@@ -99,21 +112,12 @@ internal sealed class DrawUniforms
 
     private void UploadDirLight()
     {
+        var dirLight = _sceneState.DirLight;
         var data = new DirLightUniformRecord(
-            direction: _snapshot.DirLight.Direction.AsVector4(),
-            diffuse: new Vector4(1.00f, 0.96f, 0.90f, 1.8f),
-            specular: new Vector4(0.6f, 0.0f, 0.0f, 0.0f)
+            direction: dirLight.Direction.AsVector4(),
+            diffuse: new Vector4(dirLight.Diffuse, dirLight.Intensity),
+            specular: new Vector4(dirLight.Specular, 0.0f, 0.0f, 0.0f)
         );
-
-/*
-        Vector3 sunDir = Vector3.Normalize(new Vector3(0.35f, -1.0f, 0.2f));
-        //var direction = new Vector4(Vector3.Normalize(snapshot.DirLight.Direction), 0.0f);
-        var data = new DirLightUniformRecord(
-            direction: sunDir.AsVector4(),
-            diffuse: new Vector4(1.00f, 0.96f, 0.90f, 1.8f),
-            specular: new Vector4(0.6f, 0.0f, 0.0f, 0.0f)
-        );
-*/
         _gfxBuffers.UploadUniformGpuData(_dirLightUbo, in data, 0);
     }
 
@@ -126,11 +130,15 @@ internal sealed class DrawUniforms
 
     public void UploadShadow(in Matrix4x4 lightViewProjection)
     {
-        //shadowParams0: new Vector4(1.0f / 1024.0f, 1.0f / 1024.0f, 0.001f, 0.005f),
+        //0.001f, 0.005f
+        // 0.0004f, 0.0025f
+
+        var shadow = _sceneState.Shadows;
+        var size = 1.0f / shadow.ShadowMapSize;
         var data = new ShadowUniformRecord(
             lightViewProj: lightViewProjection,
-            shadowParams0: new Vector4(1.0f / 2048.0f, 1.0f / 2048.0f, 0.0004f, 0.0025f),
-            shadowParams1: new Vector4(1.0f, 1.0f, 0.03f, 0.0f)
+            shadowParams0: new Vector4(size, size, shadow.ConstBias, shadow.SlopeBias),
+            shadowParams1: new Vector4(shadow.Strength, shadow.PcfRadius, 0.03f, 0.0f)
         );
 
         _gfxBuffers.UploadUniformGpuData(_shadowUbo, in data, 0);
@@ -138,13 +146,23 @@ internal sealed class DrawUniforms
 
     private void UploadPost()
     {
+        
+        /*
         var data = new PostProcessUniform(
             grade: new Vector4(-0.015f, 1.10f, 0.96f, 0.018f),
             whiteBalance: new Vector4(-0.003f, 0.25f, 0.0f, 0.0f),
             bloom: new Vector4(0.55f, 0.78f, 1.10f, 0.0f),
             fx: new Vector4(0.04f, 0.0025f, 0.065f, 0.095f)
         );
-
+*/
+        var effect = _sceneState.PostEffects;
+        var (g, wb, b, fx) = (effect.Grade, effect.WhiteBalance, effect.Bloom, Fx: effect.ImageFx);
+        var data = new PostProcessUniform(
+            grade: new Vector4(g.Exposure * 0.10f, 0.8f + g.Saturation * 0.4f, 0.9f + g.Contrast * 0.2f, g.Warmth * 0.05f),
+            whiteBalance: new Vector4(wb.Tint * 0.05f, wb.Strength, 0f, 0f),
+            bloom: new Vector4(b.Intensity * 1.5f, 0.6f + b.Threshold * 0.3f, b.Radius, 0f),
+            fx: new Vector4(fx.Vignette * 0.15f, fx.Grain * 0.01f, fx.Sharpen * 0.15f, fx.Rolloff * 0.12f)
+        );
         _gfxBuffers.UploadUniformGpuData(_postUbo, in data, 0);
     }
 }

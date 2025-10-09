@@ -47,7 +47,7 @@ internal sealed class DrawProcessor
 
     }
 
-    public void PrepareFrame(in RenderGlobalSnapshot renderGlobals, nint capacity)
+    public void PrepareFrame(in RenderSceneState renderGlobals, nint capacity)
     {
         _drawUbo.ResetCursor();
         if (capacity != _drawUbo.Capacity)

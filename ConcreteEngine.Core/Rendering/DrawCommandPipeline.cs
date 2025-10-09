@@ -43,7 +43,7 @@ internal sealed class DrawCommandPipeline
     public TSink GetSink<TSink>() where TSink : IDrawSink => _commandCollector.GetSink<TSink>();
 
 
-    internal nint Prepare(float alpha, in RenderGlobalSnapshot snapshot)
+    internal nint Prepare(float alpha, in RenderSceneState snapshot)
     {
         _cmdBuffer.Reset();
 

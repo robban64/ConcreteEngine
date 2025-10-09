@@ -48,11 +48,11 @@ public readonly struct FrameUniformRecord(
     Vector4 fogParams1
 ) : IStd140Uniform
 {
-    public readonly Vector4 Ambient = ambient; // xyz = sky ambient, w = exposure
-    public readonly Vector4 AmbientGround = ambientGround; // xyz = ground ambient
-    public readonly Vector4 FogColor = fogColor; // rgb = base fog color, a = in-scattering mix
-    public readonly Vector4 FogParams0 = fogParams0; // x=exp2_k, y=height_k, z=height0, w=globalStrength
-    public readonly Vector4 FogParams1 = fogParams1; // x=expWeight, y=heightWeight, z=maxDistance, w=reserved
+    public readonly Vector4 Ambient = ambient;              // xyz = sky ambient, w = exposure
+    public readonly Vector4 AmbientGround = ambientGround;  // xyz = ground ambient
+    public readonly Vector4 FogColor = fogColor;            // rgb = base fog color, a = in-scattering mix
+    public readonly Vector4 FogParams0 = fogParams0;        // x=exp2_k, y=height_k, z=height0, w=globalStrength
+    public readonly Vector4 FogParams1 = fogParams1;        // x=expWeight, y=heightWeight, z=maxDistance, w=reserved
 }
 
 public readonly struct CameraUniformRecord(
@@ -74,7 +74,7 @@ public readonly struct DirLightUniformRecord(
     Vector4 diffuse,
     Vector4 specular) : IStd140Uniform
 {
-    public readonly Vector4 Direction = direction; // WS direction (points FROM light toward scene)
+    public readonly Vector4 Direction = direction; // direction, light toward scene
     public readonly Vector4 Diffuse = diffuse; // rgb=color, a=intensity
     public readonly Vector4 SpecularIntensity = specular; // x = specular multiplier
 }
@@ -112,7 +112,7 @@ public readonly struct ShadowUniformRecord(
 {
     public readonly Matrix4x4 LightViewProj = lightViewProj;
     public readonly Vector4 ShadowParams0 = shadowParams0; // x=1/texW, y=1/texH, z=constBias, w=slopeBias
-    public readonly Vector4 ShadowParams1 = shadowParams1; // x=strength, y=pcfRadius, z,w reserved
+    public readonly Vector4 ShadowParams1 = shadowParams1; // x=strength, y=pcfRadius, z=NormalBias,w reserved
 }
 
 [StructLayout(LayoutKind.Sequential)]
@@ -124,7 +124,7 @@ public readonly struct MaterialUniformRecord(
 {
     public readonly Vector4 MatColor = matColor; // rgb = tint
     public readonly Vector4 MatParams0 = matParams0; // x = SpecularStrength, y = uvRepeat, z,w reserved
-    public readonly Vector4 MatParams1 = matParams1; // x = Shininess,        yzw reserved
+    public readonly Vector4 MatParams1 = matParams1; // x = Shininess, yzw reserved
 }
 
 [StructLayout(LayoutKind.Sequential)]
@@ -153,12 +153,8 @@ public readonly struct PostProcessUniform(
     Vector4 fx
 ) : IStd140Uniform
 {
-    /*
-     * grade: x = exposureOffset  (-0.10..+0.10),
-     *        y = saturation      (0.8..1.2),
-     *        z = contrast        (0.9..1.1),
-     *        w = warmth          (-0.05..+0.05)
-     */
+    // x = exposureOffset (-0.10..+0.10), y = saturation (0.8..1.2)
+    // z = contrast (0.9..1.1),w = warmth (-0.05..+0.05)
     public readonly Vector4 Grade = grade;
 
     //x = tint (-0.05..+0.05), y = strength (0..1), z,w = 0

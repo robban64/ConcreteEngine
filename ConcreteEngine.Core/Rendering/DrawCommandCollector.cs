@@ -77,7 +77,7 @@ internal sealed class DrawCommandCollector
             producer.EndTick();
     }
 
-    public void CollectTo(float alpha, in RenderGlobalSnapshot snapshot, DrawCommandBuffer submitter)
+    public void CollectTo(float alpha, in RenderSceneState snapshot, DrawCommandBuffer submitter)
     {
         foreach (var producer in _producerList)
             producer.EmitFrame(alpha, in snapshot, submitter);

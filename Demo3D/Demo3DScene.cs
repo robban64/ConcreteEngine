@@ -7,10 +7,12 @@ using ConcreteEngine.Core.Assets;
 using ConcreteEngine.Core.Assets.Resources;
 using ConcreteEngine.Core.Engine.Configuration;
 using ConcreteEngine.Core.Rendering;
+using ConcreteEngine.Core.Rendering.Data;
 using ConcreteEngine.Core.Rendering.Descriptors;
 using ConcreteEngine.Core.Scene;
 using ConcreteEngine.Core.Scene.Entities;
 using ConcreteEngine.Graphics;
+using ConcreteEngine.Graphics.Primitives;
 using Shader = ConcreteEngine.Core.Assets.Resources.Shader;
 
 #endregion
@@ -30,12 +32,10 @@ public sealed class Demo3DScene : GameScene
 
         var rb = renderer.RenderProps;
         rb.SetSkybox(skyboxMaterial.Id, Quaternion.Identity);
-        rb.SetDirLight(
-            new Vector3(-0.4f, -1.0f, 0.35f),
-            new Vector4(1.00f, 0.95f, 0.88f, 1.15f),
-            0.35f
-        );
-        rb.SetAmbient(new Vector3(0.8f, 0.75f, 0.8f));
+ 
+
+
+        rb.SetShadowDefault(2048);
 
         var boatMat = renderer.CreateMaterial("BoatMat");
         var boatMesh = assets.Get<Mesh>("Boat");
@@ -64,7 +64,8 @@ public sealed class Demo3DScene : GameScene
             World.Meshes.Add(entityId,
                 new MeshComponent(rockMesh.ResourceId, rockMat.Id, rockMesh.DrawCount));
             World.Transforms.Add(entityId,
-                new Transform(new Vector3(rnd.Next(0,48),rnd.Next(0,3), rnd.Next(0,48)), new Vector3(rnd.Next(1,2)) , Quaternion.Identity));
+                new Transform(new Vector3(rnd.Next(0, 48), rnd.Next(0, 3), rnd.Next(0, 48)),
+                    new Vector3(rnd.Next(1, 2)), Quaternion.Identity));
         }
 
 
@@ -83,6 +84,7 @@ public sealed class Demo3DScene : GameScene
     protected override void ConfigureModules(IGameSceneModuleBuilder builder)
     {
         builder.RegisterModule<FlyCameraModule>(0);
+        builder.RegisterModule<EffectAdjustModule>(1);
     }
 
     protected override void ConfigureRenderer(IGameSceneRenderBuilder builder)
@@ -97,11 +99,7 @@ public sealed class Demo3DScene : GameScene
 
         builder.RegisterRender3D(new RenderTargetDescriptor
         {
-            SceneTarget = new SceneTargetDesc
-            {
-                ClearColor = Color4.CornflowerBlue,
-                Samples = 4
-            },
+            SceneTarget = new SceneTargetDesc { ClearColor = Color4.CornflowerBlue, Samples = 4 },
             /*LightTarget = new LightTargetDesc
             {
                 LightShaderId = lightShader.ResourceId,
@@ -110,13 +108,9 @@ public sealed class Demo3DScene : GameScene
             },*/
             PostEffectTarget = new PostEffectTargetDesc
             {
-                EffectShaderId = colorFilterShader.ResourceId,
-                CompositeShaderId = compositeShader.ResourceId,
+                EffectShaderId = colorFilterShader.ResourceId, CompositeShaderId = compositeShader.ResourceId,
             },
-            ScreenTarget = new ScreenTargetDesc
-            {
-                ScreenShaderId = presentShader.ResourceId
-            },
+            ScreenTarget = new ScreenTargetDesc { ScreenShaderId = presentShader.ResourceId },
         });
     }
 

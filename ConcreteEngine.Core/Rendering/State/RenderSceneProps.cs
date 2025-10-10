@@ -3,6 +3,7 @@
 using System.Numerics;
 using ConcreteEngine.Common.Numerics;
 using ConcreteEngine.Core.Assets.Resources;
+using ConcreteEngine.Core.Rendering.Data;
 
 #endregion
 
@@ -59,9 +60,11 @@ public sealed class RenderSceneProps
         _dirty = true;
     }
 
-    public void SetShadowDefault(int shadowMapSize)
+    public void SetShadowDefault(int size)
     {
-        var size = Math.Clamp(shadowMapSize, 512, 8192);
+        ArgumentOutOfRangeException.ThrowIfLessThan(size, RenderLimits.MinShadowMapSize);
+        ArgumentOutOfRangeException.ThrowIfGreaterThan(size, RenderLimits.MaxShadowMapSize);
+        
         var constBias = 0.8f / size;
         var slopeBias = constBias * 6f;
         _shadow = new ShadowParams(

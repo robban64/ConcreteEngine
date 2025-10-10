@@ -8,6 +8,7 @@ using ConcreteEngine.Common.Collections;
 using ConcreteEngine.Core.Rendering.Commands;
 using ConcreteEngine.Core.Rendering.Gfx;
 using ConcreteEngine.Core.Rendering.Passes;
+using static ConcreteEngine.Core.Rendering.Data.RenderLimits;
 
 #endregion
 
@@ -15,10 +16,6 @@ namespace ConcreteEngine.Core.Rendering;
 
 public sealed class DrawCommandBuffer
 {
-    private const int RangesCount = 32;
-    private const int DefaultCapacity = 64;
-    private const int MaxCapacity = 10_000;
-
     private readonly DrawProcessor _drawProcessor;
 
     private DrawCommand[] _commandBuffer;
@@ -35,14 +32,14 @@ public sealed class DrawCommandBuffer
 
     internal DrawCommandBuffer(DrawProcessor drawProcessor)
     {
-        _commandBuffer = new DrawCommand[DefaultCapacity];
-        _transformBuffer = new DrawTransformPayload[DefaultCapacity];
-        _metaBuffer = new DrawCommandMeta[DefaultCapacity];
-        _indexBuffer = new DrawCommandRef[DefaultCapacity];
+        _commandBuffer = new DrawCommand[DefaultCommandBuffCapacity];
+        _transformBuffer = new DrawTransformPayload[DefaultCommandBuffCapacity];
+        _metaBuffer = new DrawCommandMeta[DefaultCommandBuffCapacity];
+        _indexBuffer = new DrawCommandRef[DefaultCommandBuffCapacity];
 
-        _drawTickets = new DrawCommandTicket[DefaultCapacity];
+        _drawTickets = new DrawCommandTicket[DefaultCommandBuffCapacity];
 
-        _passRanges = new DrawPassRange[RangesCount];
+        _passRanges = new DrawPassRange[PassSlots];
 
         _drawProcessor = drawProcessor;
 
@@ -90,6 +87,7 @@ public sealed class DrawCommandBuffer
         _submitIdx += count;
     }
 
+    private HashSet<int> asd = new HashSet<int>(1000);
     [MethodImpl(MethodImplOptions.AggressiveOptimization)]
     public void ReadyDrawCommands()
     {
@@ -100,7 +98,7 @@ public sealed class DrawCommandBuffer
         Array.Fill(_passRanges, new DrawPassRange(0, 0));
 
         // Count pass tickets
-        Span<int> counts = stackalloc int[32];
+        Span<int> counts = stackalloc int[PassSlots];
         var metas = _metaBuffer.AsSpan(0, _submitIdx);
         for (var i = 0; i < _submitIdx; i++)
         {
@@ -116,7 +114,7 @@ public sealed class DrawCommandBuffer
 
         // Count pass ranges
         var total = 0;
-        for (var p = 0; p < 32; p++)
+        for (var p = 0; p < PassSlots; p++)
         {
             var c = counts[p];
             _passRanges[p] = new DrawPassRange(total, c);
@@ -125,10 +123,12 @@ public sealed class DrawCommandBuffer
 
         // Create draw tickets
         if (_drawTickets.Length < total)
+        {
             _drawTickets = new DrawCommandTicket[ArrayUtility.CapacityGrowthPow2(total)];
+        }
 
-        Span<int> heads = stackalloc int[32];
-        for (var p = 0; p < 32; p++)
+        Span<int> heads = stackalloc int[PassSlots];
+        for (var p = 0; p < PassSlots; p++)
             heads[p] = _passRanges[p].Start;
 
         // fill tickets in sorted order
@@ -140,6 +140,7 @@ public sealed class DrawCommandBuffer
             {
                 var p = BitOperations.TrailingZeroCount(mask);
                 var w = heads[p]++;
+                asd.Add(w);
                 _drawTickets[w] = new DrawCommandTicket(mi.Idx, (byte)p);
                 mask &= mask - 1;
             }
@@ -200,7 +201,7 @@ public sealed class DrawCommandBuffer
         if (_commandBuffer.Length >= idx) return;
         var newCap = ArrayUtility.CapacityGrowthPow2(Math.Max(idx, 4));
 
-        if (newCap > MaxCapacity)
+        if (newCap > MaxCommandBuffCapacity)
             ThrowMaxCapacityExceeded();
 
         Array.Resize(ref _commandBuffer, newCap);

@@ -19,12 +19,11 @@ namespace ConcreteEngine.Core.Rendering;
 
 internal sealed class RenderRegistry
 {
-    public const int MaxUboSlots = 16;
 
     private readonly record struct RegistrationData(bool Enabled, Size2D OutputSize);
 
     private readonly List<RenderFbo> _fboRegistry = new(8);
-    private readonly RenderUbo[] _uboRegistry = new RenderUbo[MaxUboSlots];
+    private readonly RenderUbo[] _uboRegistry = new RenderUbo[RenderLimits.UboSlots];
     private RenderShader[] _shaderRegistry = Array.Empty<RenderShader>();
 
     private readonly GfxResourceApi _gfxApi;
@@ -93,7 +92,7 @@ internal sealed class RenderRegistry
 
     public void RegisterUniformBuffer<TUbo>() where TUbo : unmanaged, IStd140Uniform
     {
-        InvalidOpThrower.ThrowIfCapacityExceed(_uboRegistry, MaxUboSlots);
+        InvalidOpThrower.ThrowIfCapacityExceed(_uboRegistry, RenderLimits.UboSlots);
         if (!UniformBufferUtils.IsStd140Aligned<TUbo>())
             throw new InvalidOperationException($"{typeof(TUbo).Name} is not std140-aligned.");
 

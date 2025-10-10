@@ -7,7 +7,7 @@ using ConcreteEngine.Graphics.Gfx.Contracts;
 using ConcreteEngine.Graphics.Gfx.Utility;
 using ConcreteEngine.Graphics.Primitives;
 using ConcreteEngine.Graphics.Resources;
-using static ConcreteEngine.Core.Rendering.Data.RenderConsts;
+using static ConcreteEngine.Core.Rendering.Data.RenderLimits;
 
 #endregion
 

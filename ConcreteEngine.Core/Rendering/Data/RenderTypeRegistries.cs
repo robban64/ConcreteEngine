@@ -4,6 +4,7 @@ using System.Runtime.CompilerServices;
 using ConcreteEngine.Core.Rendering.Passes;
 using ConcreteEngine.Graphics.Primitives;
 using ConcreteEngine.Graphics.Resources;
+using static ConcreteEngine.Core.Rendering.Data.RenderLimits;
 
 #endregion
 
@@ -48,8 +49,6 @@ internal static class TagRegistry
 
     private static class RenderPassTag<TTag> where TTag : unmanaged, IRenderPassTag
     {
-        private const int MaxVariants = 4;
-
         internal static int TagIndex { get; private set; } = -1;
 
         private static PassId[] _passIds = new PassId[MaxVariants];
@@ -70,6 +69,8 @@ internal static class TagRegistry
 
         public static void RegisterTag()
         {
+            ArgumentOutOfRangeException.ThrowIfGreaterThanOrEqual(_renderPassTagCounter, FboSlots);
+
             if (TagIndex >= 0)
                 throw new InvalidOperationException($"PassTag already registered. {typeof(TTag).Name}");
 
@@ -83,6 +84,8 @@ internal static class TagRegistry
 
         public static UboSlot RegisterSlot()
         {
+            ArgumentOutOfRangeException.ThrowIfGreaterThanOrEqual(_uboSlotCounter, UboSlots);
+
             if (Slot >= 0)
                 throw new InvalidOperationException($"UboTag already registered. {typeof(TUbo).Name}");
 

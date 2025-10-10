@@ -23,7 +23,7 @@ public sealed class DrawCommandBuffer
     private DrawCommandMeta[] _metaBuffer;
     private DrawCommandRef[] _indexBuffer;
     private DrawCommandTicket[] _drawTickets;
-    private DrawPassRange[] _passRanges;
+    private readonly DrawPassRange[] _passRanges;
 
     private int _submitIdx = 0;
     private int _drainTransformIdx = 0;
@@ -69,7 +69,7 @@ public sealed class DrawCommandBuffer
         var drawCommands = data.Draw;
         var drawTransforms = data.Transform;
         var drawMeta = data.Meta;
-        
+
         var count = drawCommands.Length;
         if (count == 0) return;
 
@@ -87,15 +87,17 @@ public sealed class DrawCommandBuffer
         _submitIdx += count;
     }
 
-    private HashSet<int> asd = new HashSet<int>(1000);
     [MethodImpl(MethodImplOptions.AggressiveOptimization)]
     public void ReadyDrawCommands()
     {
-        if (_submitIdx <= 1) return;
+        if (_submitIdx <= 1)
+        {
+            Array.Fill(_passRanges, new DrawPassRange(0, 0));
+            return;
+        }
+
         var indices = _indexBuffer.AsSpan(0, _submitIdx);
         indices.Sort();
-
-        Array.Fill(_passRanges, new DrawPassRange(0, 0));
 
         // Count pass tickets
         Span<int> counts = stackalloc int[PassSlots];
@@ -112,6 +114,8 @@ public sealed class DrawCommandBuffer
             }
         }
 
+        Array.Fill(_passRanges, new DrawPassRange(0, 0));
+
         // Count pass ranges
         var total = 0;
         for (var p = 0; p < PassSlots; p++)
@@ -122,10 +126,7 @@ public sealed class DrawCommandBuffer
         }
 
         // Create draw tickets
-        if (_drawTickets.Length < total)
-        {
-            _drawTickets = new DrawCommandTicket[ArrayUtility.CapacityGrowthPow2(total)];
-        }
+        EnsureTicketsCapacity(total);
 
         Span<int> heads = stackalloc int[PassSlots];
         for (var p = 0; p < PassSlots; p++)
@@ -140,13 +141,11 @@ public sealed class DrawCommandBuffer
             {
                 var p = BitOperations.TrailingZeroCount(mask);
                 var w = heads[p]++;
-                asd.Add(w);
-                _drawTickets[w] = new DrawCommandTicket(mi.Idx, (byte)p);
+                _drawTickets[w] = new DrawCommandTicket(mi.Idx /*, (byte)p*/);
                 mask &= mask - 1;
             }
         }
     }
-
 
     //TODO bulk upload
     public void DrainTransformQueue()
@@ -172,22 +171,6 @@ public sealed class DrawCommandBuffer
             _drawProcessor.DrawMesh(commands[idx], idx);
         }
     }
-/*
-    public void DrainCommandQueue(RenderTargetId targetId)
-    {
-        var cmdSpan = (ReadOnlySpan<DrawCommand>)_commandBuffer;
-        var metaSpan = (ReadOnlySpan<DrawCommandRef>)_indexBuffer;
-
-        for (int i = _drainCmdIdx; i < _submitIdx; i++)
-        {
-            ref readonly var it = ref metaSpan[_drainCmdIdx++];
-            if (it.Meta.Target < targetId) continue;
-            if (it.Meta.Target > targetId) break;
-            ref readonly var cmd = ref cmdSpan[it.Idx];
-            _drawProcessor.DrawMesh(in cmd);
-        }
-    }
-*/
 
     public void Reset()
     {
@@ -195,6 +178,7 @@ public sealed class DrawCommandBuffer
         _drainTransformIdx = 0;
     }
 
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     private void EnsureCapacity(int amount)
     {
         var idx = _submitIdx + amount;
@@ -209,8 +193,16 @@ public sealed class DrawCommandBuffer
         Array.Resize(ref _metaBuffer, newCap);
         Array.Resize(ref _indexBuffer, newCap);
     }
+    
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    private void EnsureTicketsCapacity(int total)
+    {
+        if (_drawTickets.Length >= total) return;
+        var newSize = ArrayUtility.CapacityGrowthLinear(_drawTickets.Length, total, step: PassSlots);
+        _drawTickets = new DrawCommandTicket[newSize];
+    }
+
 
     [MethodImpl(MethodImplOptions.NoInlining), DoesNotReturn, StackTraceHidden]
-    private static void ThrowMaxCapacityExceeded()
-        => throw new OutOfMemoryException("Command Buffer too big");
+    private static void ThrowMaxCapacityExceeded() => throw new OutOfMemoryException("Command Buffer too big");
 }

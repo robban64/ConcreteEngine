@@ -25,7 +25,7 @@ public sealed class RenderPassCtx
         _cmdQueue = cmdQueue;
     }
 
-    internal void AttachScreenPass( PassTagKey tagKey, Size2D outputSize)
+    internal void AttachScreenPass(PassTagKey tagKey, Size2D outputSize)
     {
         Target = new RenderTargetInfo(default, outputSize, default, default);
         CurrentPassKey = tagKey;
@@ -40,9 +40,9 @@ public sealed class RenderPassCtx
     public IReadOnlyList<TextureId> GetPassSources() => _cmdQueue.GetPassSources();
 
     public void SampleTo<TTag>(FboVariant variant, int texSlot, TextureId textureId)
-        where TTag : unmanaged, IRenderPassTag 
+        where TTag : unmanaged, IRenderPassTag
     {
-        Debug.Assert(texSlot >= 0 && texSlot < 16);
+        Debug.Assert(texSlot >= 0 && texSlot < RenderLimits.TextureSlots);
 
         var passKey = TagRegistry.PassKey<TTag>(variant);
         var key = new PassTextureSlotKey(passKey.TagIndex, passKey.Variant, passKey.Pass, (byte)texSlot);
@@ -50,10 +50,9 @@ public sealed class RenderPassCtx
     }
 
     public void MutateStatePass<TTag>(FboVariant variant, in PassMutationState newState)
-        where TTag : unmanaged, IRenderPassTag 
+        where TTag : unmanaged, IRenderPassTag
     {
         var key = TagRegistry.PassKey<TTag>(variant);
         _cmdQueue.EnqueueMutation(key, in newState);
     }
-
 }

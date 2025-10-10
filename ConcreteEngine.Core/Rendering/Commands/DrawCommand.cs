@@ -51,6 +51,6 @@ internal readonly struct DrawCommandRef : IComparable<DrawCommandRef>
     public int CompareTo(DrawCommandRef other) => _sortKey.CompareTo(other._sortKey);
 }
 
-internal readonly record struct DrawCommandTicket(int SubmitIdx, byte PassId);
+internal readonly record struct DrawCommandTicket(int SubmitIdx/*, byte PassId*/);
 
 internal readonly record struct DrawPassRange(int Start, int Count);

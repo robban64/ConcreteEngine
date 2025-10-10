@@ -1,7 +1,7 @@
 using System.Numerics;
 using ConcreteEngine.Core.Assets.Resources;
 
-namespace ConcreteEngine.Core.Rendering.Data;
+namespace ConcreteEngine.Core.Rendering.State;
 
 public readonly record struct SkyboxParams(MaterialId MaterialId, Quaternion Rotation, float Intensity);
 

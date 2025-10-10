@@ -6,7 +6,7 @@ using ConcreteEngine.Core.Assets.Resources;
 
 #endregion
 
-namespace ConcreteEngine.Core.Rendering.Data;
+namespace ConcreteEngine.Core.Rendering.State;
 
 public sealed class RenderSceneProps
 {
@@ -15,11 +15,11 @@ public sealed class RenderSceneProps
     private readonly RenderSceneState _snapshot = new();
 
     private AmbientParams _ambient = MakeDefaultAmbient();
-    private FogParams _fog  = MakeDefaultFog();
+    private FogParams _fog = MakeDefaultFog();
     private SkyboxParams _skybox;
-    private DirLightParams _dirLight  = MakeDefaultDirLight();
+    private DirLightParams _dirLight = MakeDefaultDirLight();
     private ShadowParams _shadow;
-    private PostEffectParams _postEffect =  MakeDefaultPostEffect();
+    private PostEffectParams _postEffect = MakeDefaultPostEffect();
 
     public long Version { get; private set; } = 0;
 
@@ -99,7 +99,7 @@ public sealed class RenderSceneProps
         _dirty = false;
         return _snapshot;
     }
-    
+
     private static DirLightParams MakeDefaultDirLight() =>
         new(
             Direction: new Vector3(-0.4f, -1.0f, 0.35f),
@@ -107,11 +107,11 @@ public sealed class RenderSceneProps
             Intensity: 1.2f,
             Specular: 0.7f
         );
-    
+
     private static AmbientParams MakeDefaultAmbient() =>
         new(
-            Ambient: new (0.28f, 0.32f, 0.38f),
-            AmbientGround: new (0.18f, 0.16f, 0.14f),
+            Ambient: new(0.28f, 0.32f, 0.38f),
+            AmbientGround: new(0.18f, 0.16f, 0.14f),
             Exposure: 0.2f
         );
 
@@ -125,9 +125,8 @@ public sealed class RenderSceneProps
             HeightInfluence: 0.8f,
             Scattering: 0.085f,
             MaxDistance: 9000f
-
         );
-    
+
 
     private static PostEffectParams MakeDefaultPostEffect() =>
         new(

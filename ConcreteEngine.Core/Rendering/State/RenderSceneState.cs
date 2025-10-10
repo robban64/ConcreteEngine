@@ -1,7 +1,4 @@
-using System.Numerics;
-using ConcreteEngine.Common.Numerics;
-
-namespace ConcreteEngine.Core.Rendering.Data;
+namespace ConcreteEngine.Core.Rendering.State;
 
 public sealed class RenderSceneState
 {

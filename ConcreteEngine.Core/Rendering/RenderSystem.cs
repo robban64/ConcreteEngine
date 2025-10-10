@@ -38,7 +38,7 @@ public interface IRenderSystem : IGameEngineSystem
 
 public sealed class RenderSystem : IRenderSystem
 {
-    private readonly IGraphicsRuntime _graphics;
+    private readonly GraphicsRuntime _graphics;
     private readonly GfxContext _gfx;
 
     private RenderRegistry _renderRegistry;
@@ -65,7 +65,7 @@ public sealed class RenderSystem : IRenderSystem
 
     private Size2D _initialSize;
 
-    internal RenderSystem(IGraphicsRuntime graphics, Size2D outputSize)
+    internal RenderSystem(GraphicsRuntime graphics, Size2D outputSize)
     {
         _graphics = graphics;
         _gfx = graphics.Gfx;
@@ -241,34 +241,55 @@ public sealed class RenderSystem : IRenderSystem
     internal void BeginTick(in UpdateTickInfo tick) => _drawPipeline.BeginTick(tick);
     internal void EndTick() => _drawPipeline.EndTick();
 
-    //
+    private void RecreateFbo(Size2D outputSize)
+    {
+        ArgumentOutOfRangeException.ThrowIfLessThan(outputSize.Width, 1, nameof(outputSize));
+        ArgumentOutOfRangeException.ThrowIfLessThan(outputSize.Height, 1, nameof(outputSize));
 
+        var fbos = RenderRegistry.RenderFbos;
+        Span<(FrameBufferId, Size2D)> newSizes = stackalloc (FrameBufferId, Size2D)[fbos.Count];
+        var idx = 0;
+        foreach (var fbo in fbos)
+        {
+            if (fbo.IsFixedSize) continue;
+            newSizes[idx++] = (fbo.FboId, fbo.CalculateNewSize(outputSize));
+        }
+
+        _graphics.RecreateFbo(newSizes.Slice(0, idx));
+    }
+
+    //
     internal void RenderEmptyFrame(in RenderTickInfo tickInfo)
     {
         _graphics.BeginFrame(tickInfo.ToGfxFrameInfo());
-        _graphics.EndFrame(out var gfxFrameResult);
-
+        _graphics.EndFrame(out _);
     }
-    
+
     internal void BeginRenderFrame(
+        BeginFrameStatus status,
         in RenderTickInfo tickInfo,
         in RenderTickParams tickParams,
-        in RenderTickViewInfo viewInfo
+        in RenderViewSnapshot viewSnapshot
     )
     {
         Debug.Assert(_initialized);
 
+        if (status == BeginFrameStatus.Resize)
+        {
+            RecreateFbo(tickInfo.OutputSize);
+        }
+
         _graphics.BeginFrame(tickInfo.ToGfxFrameInfo());
 
         _snapshot = RenderProps.Commit();
-        _renderView.PrepareFrame(in viewInfo);
+        _renderView.PrepareFrame(in viewSnapshot);
         _drawUniforms.UploadGlobalUniforms(in tickInfo, in tickParams);
         _drawUniforms.UploadCameraView(_renderView);
     }
 
     internal void EndRenderFrame(out GfxFrameResult frameResult)
     {
-        _graphics.EndFrame(out  frameResult);
+        _graphics.EndFrame(out frameResult);
     }
 
     internal void Render(in RenderTickInfo tickInfo)

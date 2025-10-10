@@ -100,37 +100,26 @@ public sealed class GameEngine : IDisposable
 
         _timeHub.RenderFrame(dt);
 
-        if (_renderInfo.FrameIndex > 1 && frameStatus == RenderFrameInfo.BeginFrameStatus.Resize)
-        {
-            _timeHub.DebounceTicker ??= new DebounceTicker(30);
-        }
-
-
-        if (_timeHub.DebounceTicker?.Tick() ?? false)
-        {
-            _timeHub.DebounceTicker = null;
-            var fbos = _renderer.RenderRegistry.RenderFbos;
-            Span<(FrameBufferId, Size2D)> newSizes = stackalloc (FrameBufferId, Size2D)[fbos.Count];
-            int idx = 0;
-            for (var i = 0; i < fbos.Count; i++)
-            {
-                var fbo = fbos[i];
-                if(fbo.IsFixedSize) continue;
-                newSizes[idx++] = (fbo.FboId, fbo.CalculateNewSize(_renderInfo.OutputSize));
-            }
-
-            _graphics.RecreateFbo(newSizes.Slice(0,idx));
-            return;
-        }
-
         if (_sceneManager.Current is not { } scene)
         {
             _renderer.RenderEmptyFrame(in tickInfo);
             return;
         }
+        
+        if (_renderInfo.FrameIndex > 1 && frameStatus == RenderFrameInfo.BeginFrameStatus.Resize)
+        {
+            _timeHub.DebounceTicker ??= new DebounceTicker(30);
+        }
+
+        var beginStatus = BeginFrameStatus.None;
+        if (_timeHub.DebounceTicker?.Tick() ?? false)
+        {
+            _timeHub.DebounceTicker = null;
+            beginStatus = BeginFrameStatus.Resize;
+        }
 
         scene.BeforeRender(out var viewInfo);
-        _renderer.BeginRenderFrame(in tickInfo, in tickParams, in viewInfo);
+        _renderer.BeginRenderFrame(beginStatus, in tickInfo, in tickParams, in viewInfo);
         
         // _renderTime.TickOrRenderEffect();
         _renderer.Render(in tickInfo);

@@ -170,11 +170,11 @@ public sealed class Camera3D : ICamera
         _projectionViewMatrix = _viewMatrix * _projectionMatrix;
     }
 
-    internal void MakeRenderViewInfo(out RenderTickViewInfo viewInfo)
+    internal void MakeRenderViewInfo(out RenderViewSnapshot viewSnapshot)
     {
         Ensure();
         var projInfo = new ProjectionInfo(_aspectRatio, _fov, _nearPlane, _farPlane);
-        viewInfo = new RenderTickViewInfo(
+        viewSnapshot = new RenderViewSnapshot(
             viewMatrix: in _viewMatrix,
             projectionMatrix: in _projectionMatrix,
             projectionInfo: in projInfo,

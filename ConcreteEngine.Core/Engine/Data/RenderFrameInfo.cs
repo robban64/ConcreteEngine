@@ -17,6 +17,8 @@ public sealed class RenderFrameInfo
 
     public GfxFrameResult GfxResult { get; private set; }
 
+    private int RandomSeed => (int)FrameIndex + 666;
+
     internal BeginFrameStatus BeginRenderFrame(
         float dt, float alpha,
         IEngineWindowHost window,

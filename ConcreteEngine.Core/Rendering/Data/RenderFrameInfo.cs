@@ -4,6 +4,11 @@ using ConcreteEngine.Graphics;
 
 namespace ConcreteEngine.Core.Rendering.Data;
 
+public enum BeginFrameStatus
+{
+    None,
+    Resize
+}
 
 public readonly record struct RenderTickInfo(long FrameIndex, float DeltaTime, float Alpha, Size2D OutputSize)
 {
@@ -16,7 +21,7 @@ public readonly record struct RenderTickParams(Size2D ScreenSize, Vector2 MouseP
 
 public readonly record struct ProjectionInfo(float AspectRatio, float Fov, float Near, float Far);
 
-public readonly struct RenderTickViewInfo(
+public readonly struct RenderViewSnapshot(
     in Matrix4x4 viewMatrix,
     in Matrix4x4 projectionMatrix,
     in ProjectionInfo projectionInfo,

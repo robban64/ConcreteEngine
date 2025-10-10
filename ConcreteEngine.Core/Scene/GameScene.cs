@@ -40,9 +40,9 @@ public abstract class GameScene
         World.Cleanup();
     }
 
-    internal void BeforeRender(out RenderTickViewInfo viewInfo)
+    internal void BeforeRender(out RenderViewSnapshot viewSnapshot)
     {
-        _camera.MakeRenderViewInfo(out viewInfo);
+        _camera.MakeRenderViewInfo(out viewSnapshot);
     }
 
 

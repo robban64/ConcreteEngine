@@ -22,13 +22,14 @@ public sealed class FlyCameraModule : GameModule
     
     public override void Initialize()
     {
-        _camera = (Camera3D)Context.GetSystem<IRenderSystem>().Camera;
         _input = Context.GetSystem<IInputSystem>().InputSource;
     }
 
 
     public override void Update(in UpdateTickInfo frameCtx)
     {
+        _camera = Context.Camera;
+
         var dt = frameCtx.DeltaTime;
 
         float speed = BaseSpeed;

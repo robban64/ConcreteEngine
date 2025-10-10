@@ -19,9 +19,9 @@ public sealed class RenderView
     public Vector3 Forward { get; private set; }
     public Vector3 Right { get; private set; }
     public Vector3 Up { get; private set; }
-
     public ProjectionInfo ProjectionInfo { get; private set; }
 
+    
     private readonly Snapshot _snapshot = new();
 
     public RenderView()
@@ -40,16 +40,16 @@ public sealed class RenderView
         Position = position;
     }
 
-    internal void PrepareFrame(Camera3D camera)
+    internal void PrepareFrame(in RenderTickViewInfo viewInfo)
     {
-        _viewMatrix = camera.ViewMatrix;
-        _projectionMatrix = camera.ProjectionMatrix;
-        _projectionViewMatrix = camera.ProjectionViewMatrix;
-        Position = camera.Translation;
-        Up = camera.Up;
-        Right = camera.Right;
-        Forward = camera.Forward;
-        ProjectionInfo = new ProjectionInfo(camera.AspectRatio, camera.Fov, camera.NearPlane, camera.FarPlane);
+        _viewMatrix = viewInfo.ViewMatrix;
+        _projectionMatrix = viewInfo.ProjectionMatrix;
+        _projectionViewMatrix = _viewMatrix * _projectionMatrix;
+        Position = viewInfo.Position;
+        Up = viewInfo.Up;
+        Right = viewInfo.Right;
+        Forward = viewInfo.Forward;
+        ProjectionInfo = viewInfo.ProjectionInfo;
     }
 
     internal void Restore()

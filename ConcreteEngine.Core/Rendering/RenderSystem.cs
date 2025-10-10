@@ -13,11 +13,9 @@ using ConcreteEngine.Core.Rendering.Data;
 using ConcreteEngine.Core.Rendering.Descriptors;
 using ConcreteEngine.Core.Rendering.Gfx;
 using ConcreteEngine.Core.Rendering.Passes;
-using ConcreteEngine.Core.Scene;
 using ConcreteEngine.Graphics;
 using ConcreteEngine.Graphics.Gfx;
 using ConcreteEngine.Graphics.Gfx.Contracts;
-using ConcreteEngine.Graphics.Gfx.Utility;
 using ConcreteEngine.Graphics.Resources;
 
 #endregion
@@ -32,16 +30,15 @@ public enum RenderType
 
 public interface IRenderSystem : IGameEngineSystem
 {
-    ICamera Camera { get; }
-
     TSink GetSink<TSink>() where TSink : IDrawSink;
     Material CreateMaterial(string templateName);
 
-    public RenderSceneProps RenderProps { get; }
+    RenderSceneProps RenderProps { get; }
 }
 
 public sealed class RenderSystem : IRenderSystem
 {
+    private readonly IGraphicsRuntime _graphics;
     private readonly GfxContext _gfx;
 
     private RenderRegistry _renderRegistry;
@@ -60,7 +57,6 @@ public sealed class RenderSystem : IRenderSystem
     public RenderSceneProps RenderProps { get; }
     private RenderSceneState _snapshot;
 
-    public ICamera Camera { get; } = new Camera3D();
     private readonly RenderView _renderView = new();
 
     private bool _initialized = false;
@@ -68,9 +64,10 @@ public sealed class RenderSystem : IRenderSystem
     internal RenderRegistry RenderRegistry => _renderRegistry;
 
     private Size2D _initialSize;
-    
+
     internal RenderSystem(IGraphicsRuntime graphics, Size2D outputSize)
     {
+        _graphics = graphics;
         _gfx = graphics.Gfx;
         RenderProps = new RenderSceneProps();
         RenderProps.Commit();
@@ -102,7 +99,9 @@ public sealed class RenderSystem : IRenderSystem
 
         var drawCtx = new DrawStateContext(depthShader, shadowFbo!.Attachments.DepthTextureId);
         var drawCtxPayload = new DrawStateContextPayload
-            { Gfx = _gfx, Registry = _renderRegistry, RenderView = _renderView, Snapshot = _snapshot };
+        {
+            Gfx = _gfx, Registry = _renderRegistry, RenderView = _renderView, Snapshot = _snapshot
+        };
 
         _drawUniforms = new DrawUniforms(_gfx.Buffers, _renderRegistry, _snapshot);
         _drawProcessor = new DrawProcessor(drawCtx, drawCtxPayload, _materialStore);
@@ -239,30 +238,43 @@ public sealed class RenderSystem : IRenderSystem
 
     public Material CreateMaterial(string templateName) => _materialStore.CreateMaterialFromTemplate(templateName);
 
-
     internal void BeginTick(in UpdateTickInfo tick) => _drawPipeline.BeginTick(tick);
     internal void EndTick() => _drawPipeline.EndTick();
 
-    internal void Render(in RenderTickInfo tickInfo, in RenderTickParams tickParams)
+    //
+
+    internal void RenderEmptyFrame(in RenderTickInfo tickInfo)
+    {
+        _graphics.BeginFrame(tickInfo.ToGfxFrameInfo());
+        _graphics.EndFrame(out var gfxFrameResult);
+
+    }
+    
+    internal void BeginRenderFrame(
+        in RenderTickInfo tickInfo,
+        in RenderTickParams tickParams,
+        in RenderTickViewInfo viewInfo
+    )
     {
         Debug.Assert(_initialized);
-        
-        if (tickInfo.OutputSize != Camera.Viewport)
-            Camera.Viewport = tickInfo.OutputSize;
+
+        _graphics.BeginFrame(tickInfo.ToGfxFrameInfo());
 
         _snapshot = RenderProps.Commit();
-
-        _renderView.PrepareFrame((Camera3D)Camera);
-
+        _renderView.PrepareFrame(in viewInfo);
         _drawUniforms.UploadGlobalUniforms(in tickInfo, in tickParams);
         _drawUniforms.UploadCameraView(_renderView);
-
-        Execute(in tickInfo);
     }
 
-
-    private void Execute(in RenderTickInfo tickInfo)
+    internal void EndRenderFrame(out GfxFrameResult frameResult)
     {
+        _graphics.EndFrame(out  frameResult);
+    }
+
+    internal void Render(in RenderTickInfo tickInfo)
+    {
+        Debug.Assert(_initialized);
+
         _passPipeline.Prepare(tickInfo.OutputSize);
 
         nint capacity = _drawPipeline.Prepare(tickInfo.Alpha, _snapshot);

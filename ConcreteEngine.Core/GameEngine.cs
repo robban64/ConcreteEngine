@@ -42,6 +42,7 @@ public sealed class GameEngine : IDisposable
     private readonly RenderFrameInfo _renderInfo = new();
 
     private readonly EngineTimeHub _timeHub;
+    
 
     private bool _isDisposed = false;
 
@@ -122,17 +123,22 @@ public sealed class GameEngine : IDisposable
             return;
         }
 
-        _graphics.BeginFrame(tickInfo.ToGfxFrameInfo());
-        if (_sceneManager.Current != null)
+        if (_sceneManager.Current is not { } scene)
         {
-            // _renderTime.TickOrRenderEffect();
-            _renderer.Render(in tickInfo, in tickParams);
+            _renderer.RenderEmptyFrame(in tickInfo);
+            return;
         }
+
+        scene.BeforeRender(out var viewInfo);
+        _renderer.BeginRenderFrame(in tickInfo, in tickParams, in viewInfo);
+        
+        // _renderTime.TickOrRenderEffect();
+        _renderer.Render(in tickInfo);
 
         //_renderTime.TickOrGpuDispose();
         //_renderTime.TickOrGpuUpload();
-        _graphics.EndFrame(out var gfxFrameResult);
 
+        _renderer.EndRenderFrame(out var gfxFrameResult);
         _renderInfo.EndRenderFrame(gfxFrameResult);
     }
 
@@ -157,7 +163,7 @@ public sealed class GameEngine : IDisposable
         _timeHub.UpdateFrame(dt);
 
         var updateInfo = _updateInfo.UpdateTickInfo;
-        _sceneManager.Current?.Update(in updateInfo);
+        _sceneManager.Current?.Update(in updateInfo, _window.FramebufferSize);
 
         UpdateSceneTransitionIfNeeded();
     }

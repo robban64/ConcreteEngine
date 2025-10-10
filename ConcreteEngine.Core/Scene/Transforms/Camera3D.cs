@@ -2,6 +2,7 @@
 
 using System.Numerics;
 using ConcreteEngine.Common.Numerics;
+using ConcreteEngine.Core.Rendering.Data;
 
 #endregion
 
@@ -167,5 +168,20 @@ public sealed class Camera3D : ICamera
         var fov = MathHelper.ToRadians(_fov / 2f);
         _projectionMatrix = Matrix4x4.CreatePerspectiveFieldOfView(fov, _aspectRatio, _nearPlane, _farPlane);
         _projectionViewMatrix = _viewMatrix * _projectionMatrix;
+    }
+
+    internal void MakeRenderViewInfo(out RenderTickViewInfo viewInfo)
+    {
+        Ensure();
+        var projInfo = new ProjectionInfo(_aspectRatio, _fov, _nearPlane, _farPlane);
+        viewInfo = new RenderTickViewInfo(
+            viewMatrix: in _viewMatrix,
+            projectionMatrix: in _projectionMatrix,
+            projectionInfo: in projInfo,
+            position: _translation,
+            forward: Forward,
+            right: Right,
+            up: Up
+        );
     }
 }

@@ -19,7 +19,7 @@ public readonly record struct ProjectionInfo(float AspectRatio, float Fov, float
 public readonly struct RenderTickViewInfo(
     in Matrix4x4 viewMatrix,
     in Matrix4x4 projectionMatrix,
-    ProjectionInfo projectionInfo,
+    in ProjectionInfo projectionInfo,
     Vector3 position,
     Vector3 forward,
     Vector3 right,

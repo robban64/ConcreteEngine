@@ -1,0 +1,17 @@
+namespace ConcreteEngine.Core.Rendering.Passes;
+
+public enum PassOpKind : byte
+{
+    Draw = 0,
+    Resolve = 1,
+    Fsq = 2,
+    Screen = 3
+}
+
+public readonly record struct PassAction(PassOpKind OpKind)
+{
+    public static PassAction DrawPassResult() => new(PassOpKind.Draw);
+    public static PassAction ResolveTargetResult() => new(PassOpKind.Resolve);
+    public static PassAction FsqPassResult() => new(PassOpKind.Fsq);
+    public static PassAction ScreenPassResult() => new(PassOpKind.Screen);
+}

@@ -92,7 +92,7 @@ public sealed class DrawCommandBuffer
     {
         if (_submitIdx <= 1)
         {
-            Array.Fill(_passRanges, new DrawPassRange(0, 0));
+            _passRanges.AsSpan().Clear();
             return;
         }
 
@@ -114,7 +114,7 @@ public sealed class DrawCommandBuffer
             }
         }
 
-        Array.Fill(_passRanges, new DrawPassRange(0, 0));
+        _passRanges.AsSpan().Clear();
 
         // Count pass ranges
         var total = 0;

@@ -94,7 +94,7 @@ public sealed class RenderPassPipeline
         return true;
     }
 
-    internal ApplyPassReturn ApplyPass()
+    internal PassAction ApplyPass()
     {
         Debug.Assert(_currentEntry != null);
         return _currentEntry.ApplyPass(_ctx);

@@ -9,7 +9,7 @@ namespace ConcreteEngine.Core.Rendering.Passes;
 
 public delegate PassMutationState RenderPassMutate(RenderPassState currentState);
 
-public delegate ApplyPassReturn RenderPassOp(RenderPassCtx ctx, in RenderPassState state);
+public delegate PassAction RenderPassOp(RenderPassCtx ctx, in RenderPassState state);
 
 public delegate void RenderAfterPassOp(RenderPassCtx ctx, in RenderPassState state);
 
@@ -54,7 +54,7 @@ public sealed class RenderPassEntry
     public void UpdateState(in PassMutationState replace) => _pendingState = replace;
 
 
-    public ApplyPassReturn ApplyPass(RenderPassCtx ctx)
+    public PassAction ApplyPass(RenderPassCtx ctx)
     {
         ApplyPending();
 

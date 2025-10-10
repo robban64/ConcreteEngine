@@ -37,16 +37,16 @@ public sealed class RenderPassCtx
         CurrentPassKey = tagKey;
     }
 
-    public IReadOnlyList<TextureId> GetPassSources() => _cmdQueue.GetPassSources();
+    public ReadOnlySpan<TextureId> GetPassSources() => _cmdQueue.GetPassSources();
 
-    public void SampleTo<TTag>(FboVariant variant, int texSlot, TextureId textureId)
+    public void SampleTo<TTag>(FboVariant variant, TextureSlot texSlot)
         where TTag : unmanaged, IRenderPassTag
     {
-        Debug.Assert(texSlot >= 0 && texSlot < RenderLimits.TextureSlots);
+        Debug.Assert(texSlot.Slot >= 0 && texSlot.Slot < RenderLimits.TextureSlots);
 
         var passKey = TagRegistry.PassKey<TTag>(variant);
-        var key = new PassTextureSlotKey(passKey.TagIndex, passKey.Variant, passKey.Pass, (byte)texSlot);
-        _cmdQueue.SampleTo(key, textureId);
+        var key = new PassTextureSlotKey(passKey.TagIndex, passKey.Variant, passKey.Pass, (byte)texSlot.Slot);
+        _cmdQueue.SampleTo(key, texSlot.Id);
     }
 
     public void MutateStatePass<TTag>(FboVariant variant, in PassMutationState newState)

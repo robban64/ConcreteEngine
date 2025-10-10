@@ -96,6 +96,4 @@ public sealed class RenderFbo : IComparable<RenderFbo>, IComparable<FrameBufferI
             };
         }
     }
-
-
 }

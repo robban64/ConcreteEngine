@@ -91,19 +91,14 @@ internal sealed class RenderRegistry
         _fboRegistry.Add(renderFbo);
     }
 
-    public void RegisterUniformBuffer<T>() where T : unmanaged, IStd140Uniform
+    public void RegisterUniformBuffer<TUbo>() where TUbo : unmanaged, IStd140Uniform
     {
         InvalidOpThrower.ThrowIfCapacityExceed(_uboRegistry, MaxUboSlots);
-        if (!UniformBufferUtils.IsStd140Aligned<T>())
-            throw new InvalidOperationException($"{typeof(T).Name} is not std140-aligned.");
+        if (!UniformBufferUtils.IsStd140Aligned<TUbo>())
+            throw new InvalidOperationException($"{typeof(TUbo).Name} is not std140-aligned.");
 
-        var slot = TagRegistry.UniformBufferTag<T>.Slot;
-        if (slot >= 0)
-            throw new InvalidOperationException(
-                $"{typeof(T).Name} UBO already registered at slot {slot}.");
-
-        var newSlot = TagRegistry.UniformBufferTag<T>.RegisterSlot();
-        var uboId = _gfxBuffers.CreateUniformBuffer<T>(newSlot);
+        var newSlot = TagRegistry.RegisterUniformBufferSlot<TUbo>();
+        var uboId = _gfxBuffers.CreateUniformBuffer<TUbo>(newSlot);
         var meta = _gfxApi.GetMeta<UniformBufferId, UniformBufferMeta>(uboId);
 
         _uboRegistry[newSlot] = new RenderUbo(uboId, newSlot, in meta);
@@ -133,7 +128,7 @@ internal sealed class RenderRegistry
 
     public RenderUbo GetRenderUbo<TUbo>() where TUbo : unmanaged, IStd140Uniform
     {
-        var slot = TagRegistry.UniformBufferTag<TUbo>.Slot.Value;
+        var slot = TagRegistry.UniformBufferSlot<TUbo>();
         return _uboRegistry[slot];
     }
 

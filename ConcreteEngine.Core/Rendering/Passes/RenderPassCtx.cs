@@ -36,7 +36,6 @@ public sealed class RenderPassCtx
         Target = new RenderTargetInfo(fbo.FboId, fbo.Size, fbo.Attachments, fbo.MultiSample);
         CurrentPassKey = tagKey;
     }
-    
 
     public IReadOnlyList<TextureId> GetPassSources() => _cmdQueue.GetPassSources();
 
@@ -56,15 +55,5 @@ public sealed class RenderPassCtx
         var key = TagRegistry.PassKey<TTag>(variant);
         _cmdQueue.EnqueueMutation(key, in newState);
     }
-/*
-    public void MutateStatePass<TTag, TSlot>(PassOpKind passOp, RenderPassMutate mutate)
-        where TTag : unmanaged, IRenderPassTag where TSlot : unmanaged, IRenderPassTagSlot
-    {
-        var key = PassTagKey.Make<TTag, TSlot>(passOp);
-        if (_registry.TryGetValue(key, out RenderPassEntry entry))
-        {
-            entry.UpdateState(mutate);
-        }
-    }
-    */
+
 }

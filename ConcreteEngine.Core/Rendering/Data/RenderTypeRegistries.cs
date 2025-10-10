@@ -14,6 +14,8 @@ internal static class TagRegistry
     private static int _renderPassTagCounter = 0;
     private static int _uboSlotCounter = 0;
 
+    //Pass Tag
+
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static int TagIndexOf<TTag>() where TTag : unmanaged, IRenderPassTag => RenderPassTag<TTag>.TagIndex;
 
@@ -30,14 +32,25 @@ internal static class TagRegistry
         return PassKey<TTag>(variant);
     }
 
-    public static void RegisterTag<TTag>() where TTag : unmanaged, IRenderPassTag 
-        => RenderPassTag<TTag>.RegisterTag();
+    public static void RegisterTag<TTag>() where TTag : unmanaged, IRenderPassTag => RenderPassTag<TTag>.RegisterTag();
+
+    //Ubo
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public static UboSlot UniformBufferSlot<TUbo>() where TUbo : unmanaged, IStd140Uniform =>
+        UniformBufferTag<TUbo>.Slot;
+    
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public static UboSlot RegisterUniformBufferSlot<TUbo>() where TUbo : unmanaged, IStd140Uniform =>
+        UniformBufferTag<TUbo>.RegisterSlot();
+
+
+    //
 
     private static class RenderPassTag<TTag> where TTag : unmanaged, IRenderPassTag
     {
         private const int MaxVariants = 4;
 
-        public static int TagIndex { get; private set; } = -1;
+        internal static int TagIndex { get; private set; } = -1;
 
         private static PassId[] _passIds = new PassId[MaxVariants];
 
@@ -57,21 +70,21 @@ internal static class TagRegistry
 
         public static void RegisterTag()
         {
-            if (TagIndex >= 0) 
+            if (TagIndex >= 0)
                 throw new InvalidOperationException($"PassTag already registered. {typeof(TTag).Name}");
-            
+
             TagIndex = _renderPassTagCounter++;
         }
     }
 
-    internal static class UniformBufferTag<IUbo> where IUbo : unmanaged, IStd140Uniform
+    private static class UniformBufferTag<TUbo> where TUbo : unmanaged, IStd140Uniform
     {
-        public static UboSlot Slot { get; private set; } = new(-1);
+        internal static UboSlot Slot { get; private set; } = new(-1);
 
         public static UboSlot RegisterSlot()
         {
-            if(Slot >= 0)
-                throw new InvalidOperationException($"UboTag already registered. {typeof(IUbo).Name}");
+            if (Slot >= 0)
+                throw new InvalidOperationException($"UboTag already registered. {typeof(TUbo).Name}");
 
             return Slot = new UboSlot(_uboSlotCounter++);
         }

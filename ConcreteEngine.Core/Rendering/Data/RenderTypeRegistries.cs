@@ -16,9 +16,8 @@ internal static class RTypeRegistry
     private static int _uboSlotCounter = 0;
 
 
-    internal static FboTagKey MakeFboTagKey<TTag, TSlot>()
-        where TTag : unmanaged, IRenderPassTag where TSlot : unmanaged, IRenderPassTagSlot
-        => new(RenderPassTag<TTag>.Index, RenderPassSlot<TSlot>.Index);
+    internal static FboTagKey MakeFboTagKey<TTag>(byte variant) where TTag : unmanaged, IRenderPassTag 
+        => new(RenderPassTag<TTag>.Index, variant);
 
 
     internal static class RenderPassTag<TTag> where TTag : unmanaged, IRenderPassTag
@@ -26,13 +25,6 @@ internal static class RTypeRegistry
         public static int Index { get; private set; } = -1;
 
         public static void Register() => Index = _renderPassTagCounter++;
-    }
-
-    internal static class RenderPassSlot<TSlot> where TSlot : unmanaged, IRenderPassTagSlot
-    {
-        public static int Index { get; private set; } = -1;
-
-        public static void Register() => Index = _renderPassSlotCounter++;
     }
 
     internal static class UniformBufferTag<IUbo> where IUbo : unmanaged, IStd140Uniform

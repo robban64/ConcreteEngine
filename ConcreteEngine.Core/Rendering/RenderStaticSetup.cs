@@ -12,23 +12,19 @@ internal static class RenderStaticSetup
 {
     internal static void RegisterFrameBuffers(RenderRegistry renderRegistry)
     {
-        renderRegistry.RegisterFrameBuffer<ShadowPassTag, PassDrawSlot>(
+        renderRegistry.RegisterFrameBuffer<ShadowPassTag>(FboVariant.Primary, 
             RegisterFboEntry.MakeDefault(false).AttachDepthTexture().UseFixedSize(new Size2D(2048, 2048))
         );
-        renderRegistry.RegisterFrameBuffer<ScenePassTag, PassDrawSlot>(
+        renderRegistry.RegisterFrameBuffer<ScenePassTag>(FboVariant.Primary,
             RegisterFboEntry.MakeMsaa(RenderBufferMsaa.X4).AttachColorTexture().AttachDepthStencilBuffer()
         );
-
-        renderRegistry.RegisterFrameBuffer<ScenePassTag, PassDrawSlot>(
-            RegisterFboEntry.MakeMsaa(RenderBufferMsaa.X4).AttachColorTexture().AttachDepthStencilBuffer()
-        );
-        renderRegistry.RegisterFrameBuffer<ScenePassTag, PassResolveSlot>(
+        renderRegistry.RegisterFrameBuffer<ScenePassTag>(FboVariant.Secondary,
             RegisterFboEntry.MakeDefault(true).AttachColorTexture().AttachDepthStencilBuffer()
         );
-        renderRegistry.RegisterFrameBuffer<PostPassTag, PassPostASlot>(
+        renderRegistry.RegisterFrameBuffer<PostPassTag>(FboVariant.Primary,
             RegisterFboEntry.MakePost(false).AttachColorTexture()
         );
-        renderRegistry.RegisterFrameBuffer<PostPassTag, PassPostBSlot>(
+        renderRegistry.RegisterFrameBuffer<PostPassTag>(FboVariant.Secondary,
             RegisterFboEntry.MakePost(false).AttachColorTexture()
         );
     }
@@ -56,12 +52,5 @@ internal static class RenderStaticSetup
         RTypeRegistry.RenderPassTag<ScreenPassTag>.Register();
     }
 
-    internal static void RegisterPassSlotTypes()
-    {
-        RTypeRegistry.RenderPassSlot<PassDrawSlot>.Register();
-        RTypeRegistry.RenderPassSlot<PassResolveSlot>.Register();
-        RTypeRegistry.RenderPassSlot<PassPostASlot>.Register();
-        RTypeRegistry.RenderPassSlot<PassPostBSlot>.Register();
-        RTypeRegistry.RenderPassSlot<PassFinalSlot>.Register();
-    }
+
 }

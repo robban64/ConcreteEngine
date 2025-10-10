@@ -1,11 +1,10 @@
 namespace ConcreteEngine.Core.Rendering.Passes;
 
 
-public readonly record struct PassId(int Value)
+public readonly record struct PassId(byte Value) : IComparable<PassId>
 {
     public static implicit operator int(PassId id) => id.Value;
-    public static implicit operator byte(PassId id) => (byte)id.Value;
-
+    public int CompareTo(PassId other) => Value.CompareTo(other.Value);
 }
 
 public enum PassOpKind : byte

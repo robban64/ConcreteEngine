@@ -15,9 +15,8 @@ public delegate void RenderAfterPassOp(RenderPassCtx ctx, in RenderPassState sta
 
 public sealed class RenderPassEntry
 {
-    public PassId PassId { get; }
-    public int PassTagIdx { get; }
-    public PassTagKey TagKey { get; private set; }
+    public PassTagKey PassKey { get; private set; }
+    public PassOpKind PassOp { get; private set; }
 
 
     private RenderPassOp? _applyPassDel;
@@ -30,12 +29,11 @@ public sealed class RenderPassEntry
     private PassMutationState? _pendingState = null;
 
 
-    internal RenderPassEntry(PassId passId, PassTagKey tagKey, int passTagIdx, RenderPassState initial)
+    internal RenderPassEntry(PassTagKey passKey, PassOpKind passOp, RenderPassState initial)
     {
-        TagKey = tagKey;
-        PassTagIdx = passTagIdx;
+        PassKey = passKey;
         _defaultState = initial;
-        PassId = passId;
+        PassOp = passOp;
         _state = initial;
     }
 

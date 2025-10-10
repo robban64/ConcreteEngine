@@ -149,7 +149,7 @@ public sealed class RenderSystem : IRenderSystem
 
         // Scene 
         // Pass 0: draw scene into MSAA FBO
-        _passPipeline.Register<ScenePassTag, PassDrawSlot>(PassOpKind.Draw, 0,
+        _passPipeline.Register<ScenePassTag>(PassOpKind.Draw, 0,
                 RenderPassState.MakeSceneMsaa(4))
             .OnPassBegin(static (RenderPassCtx ctx, in RenderPassState state) =>
             {

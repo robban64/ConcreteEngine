@@ -55,7 +55,6 @@ internal sealed class RenderRegistry
 
         _registrationData = new RegistrationData(true, outputSize);
 
-        RenderStaticSetup.RegisterPassSlotTypes();
         RenderStaticSetup.RegisterPassTagTypes();
     }
     
@@ -76,8 +75,7 @@ internal sealed class RenderRegistry
         }
     }
 
-    public void RegisterFrameBuffer<TTag, TSlot>(RegisterFboEntry entry)
-        where TTag : unmanaged, IRenderPassTag where TSlot : unmanaged, IRenderPassTagSlot
+    public void RegisterFrameBuffer<TTag>(FboVariant variant, RegisterFboEntry entry) where TTag : unmanaged, IRenderPassTag 
     {
         InvalidOpThrower.ThrowIfNot(_registrationData.Enabled);
 
@@ -85,7 +83,7 @@ internal sealed class RenderRegistry
         var fboId = _gfxFbo.CreateFrameBuffer(gfxDescriptor);
         var meta = _gfxApi.GetMeta<FrameBufferId, FrameBufferMeta>(fboId);
 
-        var key = FboTagKey.Make<TTag, TSlot>();
+        var key = FboTagKey.Make<TTag>(variant);
         var sizePolicy = entry.FboSizePolicy ?? RenderFbo.SizePolicy.Default();
 
         var renderFbo = new RenderFbo(fboId, key, 0, sizePolicy);
@@ -112,10 +110,10 @@ internal sealed class RenderRegistry
         _uboRegistry[newSlot] = new RenderUbo(uboId, newSlot, in meta);
     }
     
-    public bool TryGetRenderFbo<TTag, TSlot>(out RenderFbo fbo)
-        where TTag : unmanaged, IRenderPassTag where TSlot : unmanaged, IRenderPassTagSlot
+    public bool TryGetRenderFbo<TTag>(FboVariant fboVariant, out RenderFbo fbo)
+        where TTag : unmanaged, IRenderPassTag 
     {
-        var key = FboTagKey.Make<TTag, TSlot>();
+        var key = FboTagKey.Make<TTag>(fboVariant);
         return TryGetRenderFbo(key, out fbo);
     }
 

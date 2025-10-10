@@ -16,8 +16,7 @@ public sealed class RenderPassCtx
 
     public DrawStateOps Ops { get; private set; }
     public RenderTargetInfo Target { get; private set; }
-    public int Pass { get; private set; }
-    public PassTagKey TagKey { get; private set; }
+    public PassTagKey CurrentPassKey { get; private set; }
 
 
     internal RenderPassCtx(DrawStateOps cmdOps, PassCommandQueue cmdQueue)
@@ -26,36 +25,34 @@ public sealed class RenderPassCtx
         _cmdQueue = cmdQueue;
     }
 
-    internal void AttachScreenPass(int pass, PassTagKey tagKey, Size2D outputSize)
+    internal void AttachScreenPass( PassTagKey tagKey, Size2D outputSize)
     {
         Target = new RenderTargetInfo(default, outputSize, default, default);
-        Pass = pass;
-        TagKey = tagKey;
+        CurrentPassKey = tagKey;
     }
 
-    internal void AttachPass(RenderFbo fbo, int pass, PassTagKey tagKey)
+    internal void AttachPass(RenderFbo fbo, PassTagKey tagKey)
     {
         Target = new RenderTargetInfo(fbo.FboId, fbo.Size, fbo.Attachments, fbo.MultiSample);
-        Pass = pass;
-        TagKey = tagKey;
+        CurrentPassKey = tagKey;
     }
     
 
     public IReadOnlyList<TextureId> GetPassSources() => _cmdQueue.GetPassSources();
 
-    public void SampleTo<TTag, TSlot>(PassOpKind passOp, int texSlot, TextureId textureId)
-        where TTag : unmanaged, IRenderPassTag where TSlot : unmanaged, IRenderPassTagSlot
+    public void SampleTo<TTag>(FboVariant variant, int texSlot, TextureId textureId)
+        where TTag : unmanaged, IRenderPassTag 
     {
         Debug.Assert(texSlot >= 0 && texSlot < 16);
 
-        var key = PassTextureSlotKey.Make<TTag, TSlot>(passOp, (byte)texSlot);
+        var key = PassTextureSlotKey.Make<TTag>(variant, (byte)texSlot);
         _cmdQueue.SampleTo(key, textureId);
     }
 
-    public void MutateStatePass<TTag, TSlot>(PassOpKind passOp, in PassMutationState newState)
-        where TTag : unmanaged, IRenderPassTag where TSlot : unmanaged, IRenderPassTagSlot
+    public void MutateStatePass<TTag>(FboVariant variant, in PassMutationState newState)
+        where TTag : unmanaged, IRenderPassTag 
     {
-        var key = PassTagKey.Make<TTag, TSlot>(passOp);
+        var key = PassTagKey.Make<TTag>(variant);
         _cmdQueue.EnqueueMutation(key, in newState);
     }
 /*

@@ -30,7 +30,7 @@ internal sealed class PassCommandQueue
 
     public void DequeueMutationTo(RenderPassEntry entry)
     {
-        while (_mutationQueue.TryPeek(out _, out var k) && k.TagIndex == entry.TagKey.TagIndex)
+        while (_mutationQueue.TryPeek(out _, out var k) && k.TagIndex == entry.PassKey.TagIndex)
         {
             _mutationQueue.TryDequeue(out var state, out k);
             entry.UpdateState(in state);
@@ -39,7 +39,7 @@ internal sealed class PassCommandQueue
 
     public void DequeuePassSources(RenderPassEntry entry)
     {
-        var tagIndex = entry.TagKey.TagIndex;
+        var tagIndex = entry.PassKey.TagIndex;
         _textureSlots.Clear();
         while (_sourceQueue.TryPeek(out _, out var k) && k.TagIndex == tagIndex)
         {

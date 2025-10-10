@@ -1,18 +1,21 @@
+#region
+
 using ConcreteEngine.Common.Numerics;
 using ConcreteEngine.Core.Rendering.Data;
 using ConcreteEngine.Core.Rendering.Descriptors;
-using ConcreteEngine.Core.Rendering.Gfx;
 using ConcreteEngine.Core.Rendering.Passes;
 using ConcreteEngine.Graphics;
 
-namespace ConcreteEngine.Core.Rendering;
+#endregion
+
+namespace ConcreteEngine.Core.Rendering.Registry;
 
 // Placeholder
 internal static class RenderStaticSetup
 {
     internal static void RegisterFrameBuffers(RenderRegistry renderRegistry)
     {
-        renderRegistry.RegisterFrameBuffer<ShadowPassTag>(FboVariant.Default, 
+        renderRegistry.RegisterFrameBuffer<ShadowPassTag>(FboVariant.Default,
             RegisterFboEntry.MakeDefault(false).AttachDepthTexture().UseFixedSize(new Size2D(2048, 2048))
         );
         renderRegistry.RegisterFrameBuffer<ScenePassTag>(FboVariant.Default,
@@ -51,6 +54,4 @@ internal static class RenderStaticSetup
         TagRegistry.RegisterTag<PostPassTag>();
         TagRegistry.RegisterTag<ScreenPassTag>();
     }
-
-
 }

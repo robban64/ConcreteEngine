@@ -1,6 +1,10 @@
+#region
+
 using System.Numerics;
 using ConcreteEngine.Core.Rendering.Data;
 using ConcreteEngine.Core.Rendering.Utility;
+
+#endregion
 
 namespace ConcreteEngine.Core.Rendering.State;
 
@@ -56,7 +60,8 @@ public sealed class RenderView
 
     internal void ApplyLightViewOverride(Vector3 direction)
     {
-        RenderTransform.CreateDirLightView(direction, in _snapshot, out var viewMat, out var projMat, shadowMapSize: 2048);
+        RenderTransform.CreateDirLightView(direction, in _snapshot, out var viewMat, out var projMat,
+            shadowMapSize: 2048);
         var projViewMat = viewMat * projMat;
         _override = new ViewProjectionData(in viewMat, in projMat, in projViewMat);
         _useOverride = true;

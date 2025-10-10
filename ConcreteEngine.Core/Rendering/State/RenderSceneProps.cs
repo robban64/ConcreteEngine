@@ -64,7 +64,7 @@ public sealed class RenderSceneProps
     {
         ArgumentOutOfRangeException.ThrowIfLessThan(size, RenderLimits.MinShadowMapSize);
         ArgumentOutOfRangeException.ThrowIfGreaterThan(size, RenderLimits.MaxShadowMapSize);
-        
+
         var constBias = 0.8f / size;
         var slopeBias = constBias * 6f;
         _shadow = new ShadowParams(

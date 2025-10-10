@@ -1,12 +1,10 @@
 #region
 
 using System.Runtime.CompilerServices;
-using ConcreteEngine.Core.Rendering.Passes;
-using ConcreteEngine.Graphics.Resources;
 
 #endregion
 
-namespace ConcreteEngine.Core.Rendering.Data;
+namespace ConcreteEngine.Core.Rendering.Passes;
 
 public readonly record struct FboVariant(byte Value) : IComparable<FboVariant>
 {

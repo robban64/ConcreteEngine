@@ -14,7 +14,7 @@ public readonly struct TextureMeta(
     TexturePreset preset,
     TextureKind kind,
     TextureAnisotropy anisotropy,
-    EnginePixelFormat format,
+    GfxPixelFormat format,
     float lod,
     int depth,
     short levels,
@@ -32,7 +32,7 @@ public readonly struct TextureMeta(
     public readonly TexturePreset Preset = preset;
     public readonly TextureKind Kind = kind;
     public readonly TextureAnisotropy Anisotropy = anisotropy;
-    public readonly EnginePixelFormat PixelFormat = format;
+    public readonly GfxPixelFormat PixelFormat = format;
 
     public bool IsMipMapped => Levels > 1;
     public bool IsMsaa => Kind == TextureKind.Multisample2D && Samples > 0;

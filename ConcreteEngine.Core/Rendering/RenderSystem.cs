@@ -11,8 +11,9 @@ using ConcreteEngine.Core.Rendering.Batching;
 using ConcreteEngine.Core.Rendering.Commands;
 using ConcreteEngine.Core.Rendering.Data;
 using ConcreteEngine.Core.Rendering.Descriptors;
-using ConcreteEngine.Core.Rendering.Gfx;
+using ConcreteEngine.Core.Rendering.Draw;
 using ConcreteEngine.Core.Rendering.Passes;
+using ConcreteEngine.Core.Rendering.Registry;
 using ConcreteEngine.Core.Rendering.State;
 using ConcreteEngine.Graphics;
 using ConcreteEngine.Graphics.Gfx;
@@ -175,7 +176,7 @@ public sealed class RenderSystem : IRenderSystem
             }).OnPassEnd(static (RenderPassCtx ctx, in RenderPassState state) =>
             {
                 var texId = ctx.Target.Attachments.ColorTextureId;
-                ctx.SampleTo<PostPassTag>(FboVariant.Default,TextureSlot.Slot0(texId));
+                ctx.SampleTo<PostPassTag>(FboVariant.Default, TextureSlot.Slot0(texId));
 
                 ctx.Ops.EndRenderPass();
                 ctx.Ops.GenerateMips(texId);

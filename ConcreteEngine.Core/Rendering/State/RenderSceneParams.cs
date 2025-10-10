@@ -1,5 +1,9 @@
+#region
+
 using System.Numerics;
 using ConcreteEngine.Core.Assets.Resources;
+
+#endregion
 
 namespace ConcreteEngine.Core.Rendering.State;
 
@@ -21,7 +25,7 @@ public readonly record struct FogParams(
 );
 
 public readonly record struct ShadowParams(
-    int   ShadowMapSize,
+    int ShadowMapSize,
     float ZPad,
     float ConstBias,
     float SlopeBias,

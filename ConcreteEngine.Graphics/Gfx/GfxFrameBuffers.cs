@@ -51,7 +51,7 @@ public sealed class GfxFrameBuffers
         if (desc.Attachments.DepthTexture)
         {
             var texDesc = new GfxTextureDescriptor(size.Width, size.Height, TextureKind.Texture2D,
-                EnginePixelFormat.Depth, 1);
+                GfxPixelFormat.Depth, 1);
             var texProps = new GfxTextureProperties(TexturePreset.LinearClampBorder, 0, 0);
             var textureId = _gfxTextures.BuildEmptyTexture(texDesc, texProps);
             _gfxTextures.ApplyCompareAndBorder(textureId);

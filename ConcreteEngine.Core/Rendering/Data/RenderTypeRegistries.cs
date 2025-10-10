@@ -39,7 +39,7 @@ internal static class TagRegistry
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static UboSlot UniformBufferSlot<TUbo>() where TUbo : unmanaged, IStd140Uniform =>
         UniformBufferTag<TUbo>.Slot;
-    
+
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static UboSlot RegisterUniformBufferSlot<TUbo>() where TUbo : unmanaged, IStd140Uniform =>
         UniformBufferTag<TUbo>.RegisterSlot();

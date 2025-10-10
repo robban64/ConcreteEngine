@@ -6,7 +6,6 @@ using ConcreteEngine.Common.Numerics;
 using ConcreteEngine.Core.Assets.Resources;
 using ConcreteEngine.Core.Rendering.Data;
 using ConcreteEngine.Core.Rendering.Descriptors;
-using ConcreteEngine.Core.Rendering.Gfx;
 using ConcreteEngine.Core.Rendering.Passes;
 using ConcreteEngine.Graphics.Gfx;
 using ConcreteEngine.Graphics.Gfx.Utility;
@@ -15,11 +14,10 @@ using ConcreteEngine.Graphics.Resources;
 
 #endregion
 
-namespace ConcreteEngine.Core.Rendering;
+namespace ConcreteEngine.Core.Rendering.Registry;
 
 internal sealed class RenderRegistry
 {
-
     private readonly record struct RegistrationData(bool Enabled, Size2D OutputSize);
 
     private readonly List<RenderFbo> _fboRegistry = new(8);
@@ -30,7 +28,7 @@ internal sealed class RenderRegistry
     private readonly GfxFrameBuffers _gfxFbo;
     private readonly GfxBuffers _gfxBuffers;
     private readonly GfxShaders _gfxShaders;
-    
+
     private RegistrationData _registrationData;
 
     internal IReadOnlyList<RenderFbo> RenderFbos => _fboRegistry;
@@ -56,12 +54,13 @@ internal sealed class RenderRegistry
 
         RenderStaticSetup.RegisterPassTagTypes();
     }
-    
+
     public void FinishRegistration()
     {
         _fboRegistry.Sort();
         _registrationData = new RegistrationData(false, Size2D.Zero);
     }
+
     public void RegisterShaderCollection(IReadOnlyList<Shader> shaders)
     {
         _shaderRegistry = new RenderShader[shaders.Count];
@@ -74,7 +73,8 @@ internal sealed class RenderRegistry
         }
     }
 
-    public void RegisterFrameBuffer<TTag>(FboVariant variant, RegisterFboEntry entry) where TTag : unmanaged, IRenderPassTag 
+    public void RegisterFrameBuffer<TTag>(FboVariant variant, RegisterFboEntry entry)
+        where TTag : unmanaged, IRenderPassTag
     {
         InvalidOpThrower.ThrowIfNot(_registrationData.Enabled);
 
@@ -102,9 +102,9 @@ internal sealed class RenderRegistry
 
         _uboRegistry[newSlot] = new RenderUbo(uboId, newSlot, in meta);
     }
-    
+
     public bool TryGetRenderFbo<TTag>(FboVariant fboVariant, out RenderFbo fbo)
-        where TTag : unmanaged, IRenderPassTag 
+        where TTag : unmanaged, IRenderPassTag
     {
         var key = TagRegistry.FboKey<TTag>(fboVariant);
         return TryGetRenderFbo(key, out fbo);

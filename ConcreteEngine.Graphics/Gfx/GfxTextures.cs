@@ -215,7 +215,7 @@ public sealed class GfxTextures
 
     private void ValidateRecreateTexture(GfxReplaceTexture newValue, in TextureMeta meta)
     {
-        if (meta.Kind == TextureKind.Unknown || meta.PixelFormat == EnginePixelFormat.Unknown)
+        if (meta.Kind == TextureKind.Unknown || meta.PixelFormat == GfxPixelFormat.Unknown)
             throw new InvalidOperationException("Invalid meta texture meta.");
 
         if (meta.Kind == TextureKind.CubeMap && newValue.Width != newValue.Height)
@@ -256,7 +256,7 @@ public sealed class GfxTextures
 
         // Type
         if (desc.Kind == TextureKind.Unknown) throw new ArgumentOutOfRangeException(nameof(desc.Kind));
-        if (desc.Format == EnginePixelFormat.Unknown) throw new ArgumentOutOfRangeException(nameof(desc.Format));
+        if (desc.Format == GfxPixelFormat.Unknown) throw new ArgumentOutOfRangeException(nameof(desc.Format));
 
         // MSAA
         bool isMsaa = desc.Kind == TextureKind.Multisample2D;

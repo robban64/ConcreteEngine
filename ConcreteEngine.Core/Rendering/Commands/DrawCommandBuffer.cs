@@ -5,14 +5,13 @@ using System.Diagnostics.CodeAnalysis;
 using System.Numerics;
 using System.Runtime.CompilerServices;
 using ConcreteEngine.Common.Collections;
-using ConcreteEngine.Core.Rendering.Commands;
-using ConcreteEngine.Core.Rendering.Gfx;
+using ConcreteEngine.Core.Rendering.Draw;
 using ConcreteEngine.Core.Rendering.Passes;
 using static ConcreteEngine.Core.Rendering.Data.RenderLimits;
 
 #endregion
 
-namespace ConcreteEngine.Core.Rendering;
+namespace ConcreteEngine.Core.Rendering.Commands;
 
 public sealed class DrawCommandBuffer
 {
@@ -193,7 +192,7 @@ public sealed class DrawCommandBuffer
         Array.Resize(ref _metaBuffer, newCap);
         Array.Resize(ref _indexBuffer, newCap);
     }
-    
+
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     private void EnsureTicketsCapacity(int total)
     {

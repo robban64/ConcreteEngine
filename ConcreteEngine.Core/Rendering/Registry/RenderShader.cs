@@ -6,7 +6,7 @@ using ConcreteEngine.Graphics.Utils;
 
 #endregion
 
-namespace ConcreteEngine.Core.Rendering.Gfx;
+namespace ConcreteEngine.Core.Rendering.Registry;
 
 public sealed class RenderShader : IComparable<ShaderId>
 {
@@ -49,5 +49,4 @@ public sealed class RenderShader : IComparable<ShaderId>
     }
 
     public int CompareTo(ShaderId other) => Id.Value.CompareTo(other.Value);
-
 }

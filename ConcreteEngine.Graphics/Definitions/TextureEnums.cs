@@ -1,6 +1,6 @@
 namespace ConcreteEngine.Graphics;
 
-public enum EnginePixelFormat : byte
+public enum GfxPixelFormat : byte
 {
     Unknown = 0,
     Rgb = 1,

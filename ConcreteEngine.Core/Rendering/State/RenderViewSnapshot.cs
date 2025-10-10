@@ -1,5 +1,9 @@
+#region
+
 using System.Numerics;
 using ConcreteEngine.Core.Rendering.Data;
+
+#endregion
 
 namespace ConcreteEngine.Core.Rendering.State;
 

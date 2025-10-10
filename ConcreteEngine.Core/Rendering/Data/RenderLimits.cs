@@ -6,7 +6,7 @@ public static class RenderLimits
     public const int PassSlots = 16;
     public const int UboSlots = 16;
     public const int FboSlots = 16;
-    
+
     public const int MaxVariants = 4;
 
 
@@ -17,5 +17,4 @@ public static class RenderLimits
     public const int MaxShadowMapSize = 8192;
 
     public const int MaxSpriteBatchSize = 1024;
-
 }

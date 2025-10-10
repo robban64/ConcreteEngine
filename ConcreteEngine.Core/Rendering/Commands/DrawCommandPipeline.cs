@@ -1,15 +1,18 @@
+#region
+
 using ConcreteEngine.Core.Engine.Data;
 using ConcreteEngine.Core.Rendering.Batching;
-using ConcreteEngine.Core.Rendering.Commands;
 using ConcreteEngine.Core.Rendering.Data;
-using ConcreteEngine.Core.Rendering.Gfx;
+using ConcreteEngine.Core.Rendering.Draw;
 using ConcreteEngine.Core.Rendering.Passes;
 using ConcreteEngine.Core.Rendering.Producers;
 using ConcreteEngine.Core.Rendering.State;
 using ConcreteEngine.Graphics.Gfx;
 using ConcreteEngine.Graphics.Gfx.Utility;
 
-namespace ConcreteEngine.Core.Rendering;
+#endregion
+
+namespace ConcreteEngine.Core.Rendering.Commands;
 
 internal sealed class DrawCommandPipeline
 {

@@ -47,7 +47,7 @@ public sealed record TextureManifestRecord(
     string Name,
     string Filename,
     TexturePreset Preset = TexturePreset.LinearClamp,
-    EnginePixelFormat PixelFormat = EnginePixelFormat.SrgbAlpha,
+    GfxPixelFormat PixelFormat = GfxPixelFormat.SrgbAlpha,
     TextureAnisotropy Anisotropy = TextureAnisotropy.Off,
     bool InMemory = false,
     float LodBias = 0)
@@ -70,7 +70,7 @@ public sealed record CubeMapManifestRecord(
     int Width,
     int Height,
     TexturePreset Preset,
-    EnginePixelFormat PixelFormat = EnginePixelFormat.Rgba
+    GfxPixelFormat PixelFormat = GfxPixelFormat.Rgba
 ) : IAssetManifestRecord
 {
     public static AssetKind Kind => AssetKind.CubeMap;

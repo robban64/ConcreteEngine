@@ -1,19 +1,23 @@
+#region
+
 using System.Numerics;
 using ConcreteEngine.Common;
 using ConcreteEngine.Common.Numerics;
-using ConcreteEngine.Core.Rendering.Gfx;
+using ConcreteEngine.Core.Rendering.Registry;
 using ConcreteEngine.Graphics;
 using ConcreteEngine.Graphics.Gfx.Contracts;
+
+#endregion
 
 namespace ConcreteEngine.Core.Rendering.Descriptors;
 
 public sealed class RegisterFboEntry(
-    EnginePixelFormat pixelFormat = EnginePixelFormat.SrgbAlpha,
+    GfxPixelFormat pixelFormat = GfxPixelFormat.SrgbAlpha,
     RenderBufferMsaa multisample = RenderBufferMsaa.None,
     TexturePreset texturePreset = TexturePreset.LinearClamp
 )
 {
-    public EnginePixelFormat PixelFormat { get; } = pixelFormat;
+    public GfxPixelFormat PixelFormat { get; } = pixelFormat;
     public RenderBufferMsaa Multisample { get; } = multisample;
     public TexturePreset Preset { get; } = texturePreset;
     public GfxFrameBufferDescriptor.AttachmentsDef Attachments { get; private set; }
@@ -55,9 +59,9 @@ public sealed class RegisterFboEntry(
     {
         FboSizePolicy ??= RenderFbo.SizePolicy.Default();
         var size = FboSizePolicy.Calculate(outputSize);
-        
+
         InvalidOpThrower.ThrowIf(size.Width < 1 || size.Height < 1, nameof(size));
-        
+
         return new GfxFrameBufferDescriptor(
             Size: size,
             Attachments: Attachments,
@@ -66,15 +70,15 @@ public sealed class RegisterFboEntry(
             TexturePreset: Preset
         );
     }
-    
+
     public static RegisterFboEntry MakeDefault(bool hasMips) =>
-        new(pixelFormat: EnginePixelFormat.SrgbAlpha,
+        new(pixelFormat: GfxPixelFormat.SrgbAlpha,
             texturePreset: hasMips ? TexturePreset.LinearMipmapClamp : TexturePreset.LinearClamp);
 
     public static RegisterFboEntry MakeMsaa(RenderBufferMsaa multisample) =>
-        new(pixelFormat: EnginePixelFormat.SrgbAlpha, texturePreset: TexturePreset.None, multisample: multisample);
+        new(pixelFormat: GfxPixelFormat.SrgbAlpha, texturePreset: TexturePreset.None, multisample: multisample);
 
     public static RegisterFboEntry MakePost(bool hasMips) =>
-        new(pixelFormat: EnginePixelFormat.SrgbAlpha,
+        new(pixelFormat: GfxPixelFormat.SrgbAlpha,
             texturePreset: hasMips ? TexturePreset.LinearMipmapClamp : TexturePreset.LinearClamp);
 }

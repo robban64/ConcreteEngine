@@ -26,8 +26,6 @@ public enum DrawCommandQueue : byte
     Overlay = 100
 }
 
-
-
 [Flags]
 public enum DrawCommandFlags : byte
 {

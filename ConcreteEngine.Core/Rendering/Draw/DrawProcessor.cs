@@ -6,14 +6,14 @@ using ConcreteEngine.Common.Numerics;
 using ConcreteEngine.Core.Assets.Resources;
 using ConcreteEngine.Core.Rendering.Commands;
 using ConcreteEngine.Core.Rendering.Data;
-using ConcreteEngine.Core.Rendering.Passes;
+using ConcreteEngine.Core.Rendering.Registry;
 using ConcreteEngine.Core.Rendering.State;
 using ConcreteEngine.Graphics.Gfx;
 using ConcreteEngine.Graphics.Resources;
 
 #endregion
 
-namespace ConcreteEngine.Core.Rendering.Gfx;
+namespace ConcreteEngine.Core.Rendering.Draw;
 
 internal sealed class DrawProcessor
 {
@@ -22,7 +22,7 @@ internal sealed class DrawProcessor
     private readonly RenderRegistry _registry;
 
     private readonly MaterialStore _materials;
-    
+
     private readonly DrawStateContext _ctx;
 
     private int _previousMaterialId = -1;
@@ -45,7 +45,6 @@ internal sealed class DrawProcessor
     {
         _drawUbo = _registry.GetRenderUbo<DrawObjectUniform>();
         _materialUboId = _registry.GetRenderUbo<MaterialUniformRecord>().Id;
-
     }
 
     public void PrepareFrame(in RenderSceneState renderGlobals, nint capacity)
@@ -62,7 +61,7 @@ internal sealed class DrawProcessor
     {
         _drawUbo.ResetCursor();
         _previousMaterialId = -1;
-        if(_ctx.OverrideDrawShader > 0)
+        if (_ctx.OverrideDrawShader > 0)
             UseShader(_ctx.OverrideDrawShader);
     }
 

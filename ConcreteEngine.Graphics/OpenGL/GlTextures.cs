@@ -55,7 +55,7 @@ internal sealed class GlTextures : IGraphicsDriverModule
         _gl.TextureStorage3D(handle, desc.Levels, desc.Format.ToStorageFormat(), width, height, depth);
     }
 
-    public void UploadTexture2D_Data(GfxRefToken<TextureId> texRef, ReadOnlySpan<byte> data, EnginePixelFormat format,
+    public void UploadTexture2D_Data(GfxRefToken<TextureId> texRef, ReadOnlySpan<byte> data, GfxPixelFormat format,
         Size2D size)
     {
         var handle = GetTexHandle(texRef).Value;
@@ -64,7 +64,7 @@ internal sealed class GlTextures : IGraphicsDriverModule
         _gl.TextureSubImage2D(handle, 0, 0, 0, width, height, fmt, type, data);
     }
 
-    public void UploadTexture3D_Data(GfxRefToken<TextureId> texRef, ReadOnlySpan<byte> data, EnginePixelFormat format,
+    public void UploadTexture3D_Data(GfxRefToken<TextureId> texRef, ReadOnlySpan<byte> data, GfxPixelFormat format,
         Size3D size, int zOffset)
     {
         var handle = GetTexHandle(texRef).Value;

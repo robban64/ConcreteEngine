@@ -8,7 +8,7 @@ using ConcreteEngine.Graphics.Resources;
 
 #endregion
 
-namespace ConcreteEngine.Core.Rendering.Gfx;
+namespace ConcreteEngine.Core.Rendering.Registry;
 
 public sealed class RenderUbo
 {
@@ -55,12 +55,12 @@ public sealed class RenderUbo
         _uploadCursor += Stride;
         return offset;
     }
-    
+
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public nint SetUploadCursor(int idx)
     {
         _uploadCursor = idx * Stride;
-        
+
         bool overflow = _uploadCursor > Capacity;
         Debug.Assert(!overflow, "UboRing overflow. Increase capacity.");
         return _uploadCursor;
@@ -76,12 +76,12 @@ public sealed class RenderUbo
         _drawCursor += Stride;
         return offset;
     }
-    
+
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public nint SetDrawCursor(int idx)
     {
         _drawCursor = idx * Stride;
-        
+
         bool overflow = _drawCursor > Capacity;
         Debug.Assert(!overflow, "UboRing overflow. Increase capacity.");
         return _drawCursor;

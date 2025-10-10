@@ -3,13 +3,13 @@
 using System.Numerics;
 using System.Runtime.CompilerServices;
 using ConcreteEngine.Common.Numerics;
-using ConcreteEngine.Core.Rendering.Data;
+using ConcreteEngine.Core.Rendering.Passes;
 using ConcreteEngine.Graphics;
 using ConcreteEngine.Graphics.Resources;
 
 #endregion
 
-namespace ConcreteEngine.Core.Rendering.Gfx;
+namespace ConcreteEngine.Core.Rendering.Registry;
 
 public delegate Size2D CalcFboOutputDel(Size2D outputSize, Vector2 ratio);
 
@@ -17,12 +17,12 @@ public sealed class RenderFbo : IComparable<RenderFbo>, IComparable<FrameBufferI
 {
     public FrameBufferId FboId { get; }
     public FboTagKey TagKey { get; }
-    public int Version {get; private set;}
+    public int Version { get; private set; }
 
     public Size2D Size { get; private set; }
     public FboAttachmentIds Attachments { get; private set; }
     public RenderBufferMsaa MultiSample { get; private set; }
-    
+
 
     private readonly SizePolicy _sizePolicy;
 
@@ -43,7 +43,7 @@ public sealed class RenderFbo : IComparable<RenderFbo>, IComparable<FrameBufferI
     }
 
     public bool IsFixedSize => _sizePolicy.Mode == SizePolicy.ResizeMode.Fixed;
-    
+
     public Size2D CalculateNewSize(Size2D outputSize) => _sizePolicy.Calculate(outputSize);
 
     public int CompareTo(RenderFbo? other) => FboId.Value.CompareTo(other!.FboId.Value);

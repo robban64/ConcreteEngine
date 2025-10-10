@@ -1,7 +1,9 @@
-using System.Diagnostics;
-using System.Runtime.InteropServices;
+#region
+
 using ConcreteEngine.Core.Rendering.Data;
 using ConcreteEngine.Graphics.Resources;
+
+#endregion
 
 namespace ConcreteEngine.Core.Rendering.Passes;
 
@@ -48,9 +50,10 @@ internal sealed class PassCommandQueue
         {
             _sourceQueue.TryDequeue(out var id, out k);
             _textureSlots[k.TextureSlot] = id;
-            _maxTexSlot = int.Max(_maxTexSlot,  k.TextureSlot);
+            _maxTexSlot = int.Max(_maxTexSlot, k.TextureSlot);
         }
     }
+
 /*
     public IReadOnlyList<TextureId> GetPassSources()
     {

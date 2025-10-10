@@ -3,7 +3,8 @@
 using System.Diagnostics;
 using ConcreteEngine.Common.Numerics;
 using ConcreteEngine.Core.Rendering.Data;
-using ConcreteEngine.Core.Rendering.Gfx;
+using ConcreteEngine.Core.Rendering.Draw;
+using ConcreteEngine.Core.Rendering.Registry;
 using ConcreteEngine.Graphics.Resources;
 
 #endregion

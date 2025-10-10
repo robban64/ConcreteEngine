@@ -192,26 +192,26 @@ internal static class GlEnumExtensions
         };
     }
 
-    public static SizedInternalFormat ToStorageFormat(this EnginePixelFormat format)
+    public static SizedInternalFormat ToStorageFormat(this GfxPixelFormat format)
     {
         return format switch
         {
-            EnginePixelFormat.Rgb => SizedInternalFormat.Rgb8,
-            EnginePixelFormat.Rgba => SizedInternalFormat.Rgba8,
-            EnginePixelFormat.SrgbAlpha => SizedInternalFormat.Srgb8Alpha8,
-            EnginePixelFormat.Depth => SizedInternalFormat.DepthComponent24,
+            GfxPixelFormat.Rgb => SizedInternalFormat.Rgb8,
+            GfxPixelFormat.Rgba => SizedInternalFormat.Rgba8,
+            GfxPixelFormat.SrgbAlpha => SizedInternalFormat.Srgb8Alpha8,
+            GfxPixelFormat.Depth => SizedInternalFormat.DepthComponent24,
             _ => throw new ArgumentOutOfRangeException(nameof(format))
         };
     }
 
-    public static (PixelFormat fmt, PixelType type) ToUploadFormatType(this EnginePixelFormat f)
+    public static (PixelFormat fmt, PixelType type) ToUploadFormatType(this GfxPixelFormat f)
     {
         return f switch
         {
-            EnginePixelFormat.Rgb => (PixelFormat.Rgb, PixelType.UnsignedByte),
-            EnginePixelFormat.Rgba => (PixelFormat.Rgba, PixelType.UnsignedByte),
+            GfxPixelFormat.Rgb => (PixelFormat.Rgb, PixelType.UnsignedByte),
+            GfxPixelFormat.Rgba => (PixelFormat.Rgba, PixelType.UnsignedByte),
             // sRGB only for internal format
-            EnginePixelFormat.SrgbAlpha => (PixelFormat.Rgba, PixelType.UnsignedByte),
+            GfxPixelFormat.SrgbAlpha => (PixelFormat.Rgba, PixelType.UnsignedByte),
             _ => throw new ArgumentOutOfRangeException(nameof(f))
         };
     }

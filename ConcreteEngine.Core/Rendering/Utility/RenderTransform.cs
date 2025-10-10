@@ -1,6 +1,10 @@
+#region
+
 using System.Numerics;
 using System.Runtime.CompilerServices;
 using ConcreteEngine.Core.Rendering.State;
+
+#endregion
 
 namespace ConcreteEngine.Core.Rendering.Utility;
 
@@ -19,7 +23,7 @@ internal static class RenderTransform
         var worldUp = MathF.Abs(Vector3.Dot(dir, Vector3.UnitY)) > 0.99f ? Vector3.UnitX : Vector3.UnitY;
 
         float near = view.ProjectionInfo.Near;
-        float far  = MathF.Min(view.ProjectionInfo.Far, near + shadowDistance);
+        float far = MathF.Min(view.ProjectionInfo.Far, near + shadowDistance);
 
         // Camera frustum corners
         Span<Vector3> corners = stackalloc Vector3[8];
@@ -52,7 +56,7 @@ internal static class RenderTransform
 
         // Near/Far with zPad
         float nearLS = MathF.Max(0f, -maxLS.Z);
-        float farLS  = MathF.Max(nearLS + 0.001f, -minLS.Z) + zPad;
+        float farLS = MathF.Max(nearLS + 0.001f, -minLS.Z) + zPad;
 
         lightProj = Matrix4x4.CreateOrthographicOffCenter(minLS.X, maxLS.X, minLS.Y, maxLS.Y, nearLS, farLS);
     }

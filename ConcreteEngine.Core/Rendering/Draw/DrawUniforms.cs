@@ -2,15 +2,14 @@
 
 using System.Numerics;
 using ConcreteEngine.Core.Rendering.Data;
+using ConcreteEngine.Core.Rendering.Registry;
 using ConcreteEngine.Core.Rendering.State;
-using ConcreteEngine.Core.Scene;
-using ConcreteEngine.Graphics;
 using ConcreteEngine.Graphics.Gfx;
 using ConcreteEngine.Graphics.Resources;
 
 #endregion
 
-namespace ConcreteEngine.Core.Rendering.Gfx;
+namespace ConcreteEngine.Core.Rendering.Draw;
 
 internal sealed class DrawUniforms
 {
@@ -52,7 +51,7 @@ internal sealed class DrawUniforms
 
     public void UploadCameraView(RenderView view)
     {
-        view.GetCurrentData(out  var viewMat, out var projMat, out var projViewMat);
+        view.GetCurrentData(out var viewMat, out var projMat, out var projViewMat);
         var data = new CameraUniformRecord(
             viewMat: in viewMat,
             projMat: in projMat,
@@ -102,11 +101,13 @@ internal sealed class DrawUniforms
         float kHeight = 1f / MathF.Max(fog.HeightFalloff, 1e-6f);
 
         var data = new FrameUniformRecord(
-            ambient: new Vector4(ambient.Ambient, ambient.Exposure),// xyz = sky ambient, w = exposure
-            ambientGround: new Vector4(ambient.AmbientGround, 0.0f),// xyz = ground ambient
-            fogColor: new Vector4(fog.Color, fog.Scattering),// rgb = base fog color, a = in-scattering mix
-            fogParams0: new Vector4(kExp2, kHeight, fog.BaseHeight, fog.Strength),// x=exp2_k, y=height_k, z=height0, w=globalStrength
-            fogParams1: new Vector4(1f, fog.HeightInfluence, fog.MaxDistance, 0.0f)// x=expWeight, y=heightWeight, z=maxDistance, w=reserved
+            ambient: new Vector4(ambient.Ambient, ambient.Exposure), // xyz = sky ambient, w = exposure
+            ambientGround: new Vector4(ambient.AmbientGround, 0.0f), // xyz = ground ambient
+            fogColor: new Vector4(fog.Color, fog.Scattering), // rgb = base fog color, a = in-scattering mix
+            fogParams0: new Vector4(kExp2, kHeight, fog.BaseHeight,
+                fog.Strength), // x=exp2_k, y=height_k, z=height0, w=globalStrength
+            fogParams1: new Vector4(1f, fog.HeightInfluence, fog.MaxDistance,
+                0.0f) // x=expWeight, y=heightWeight, z=maxDistance, w=reserved
         );
 
         _gfxBuffers.UploadUniformGpuData(_frameUbo, in data, 0);
@@ -148,7 +149,6 @@ internal sealed class DrawUniforms
 
     private void UploadPost()
     {
-        
         /*
         var data = new PostProcessUniform(
             grade: new Vector4(-0.015f, 1.10f, 0.96f, 0.018f),
@@ -160,7 +160,8 @@ internal sealed class DrawUniforms
         var effect = _sceneState.PostEffects;
         var (g, wb, b, fx) = (effect.Grade, effect.WhiteBalance, effect.Bloom, Fx: effect.ImageFx);
         var data = new PostProcessUniform(
-            grade: new Vector4(g.Exposure * 0.10f, 0.8f + g.Saturation * 0.4f, 0.9f + g.Contrast * 0.2f, g.Warmth * 0.05f),
+            grade: new Vector4(g.Exposure * 0.10f, 0.8f + g.Saturation * 0.4f, 0.9f + g.Contrast * 0.2f,
+                g.Warmth * 0.05f),
             whiteBalance: new Vector4(wb.Tint * 0.05f, wb.Strength, 0f, 0f),
             bloom: new Vector4(b.Intensity * 1.5f, 0.6f + b.Threshold * 0.3f, b.Radius, 0f),
             fx: new Vector4(fx.Vignette * 0.15f, fx.Grain * 0.01f, fx.Sharpen * 0.15f, fx.Rolloff * 0.12f)

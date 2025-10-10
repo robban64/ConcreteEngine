@@ -1,10 +1,14 @@
+#region
+
 using System.Diagnostics;
 using ConcreteEngine.Common.Numerics;
 using ConcreteEngine.Core.Rendering.Data;
-using ConcreteEngine.Core.Rendering.Gfx;
-using ConcreteEngine.Core.Rendering.Passes;
+using ConcreteEngine.Core.Rendering.Draw;
+using ConcreteEngine.Core.Rendering.Registry;
 
-namespace ConcreteEngine.Core.Rendering;
+#endregion
+
+namespace ConcreteEngine.Core.Rendering.Passes;
 
 internal enum PreparePassActionKind
 {
@@ -19,7 +23,6 @@ public sealed class RenderPassPipeline
     private readonly RenderPassCtx _ctx;
 
     private readonly RenderRegistry _renderRegistry;
-    private readonly DrawStateOps _cmdOps;
 
     private readonly List<RenderPassEntry> _entries;
 
@@ -32,21 +35,20 @@ public sealed class RenderPassPipeline
 
     internal RenderPassPipeline(DrawStateOps cmdOps, RenderRegistry renderRegistry)
     {
-        _cmdOps = cmdOps;
         _renderRegistry = renderRegistry;
         _entries = new List<RenderPassEntry>(8);
         _cmdQueue = new PassCommandQueue();
-        _ctx = new RenderPassCtx(_cmdOps, _cmdQueue);
+        _ctx = new RenderPassCtx(cmdOps, _cmdQueue);
     }
 
     public RenderPassEntry Register<TTag>(FboVariant variant, PassId passId, PassOpKind opKind, RenderPassState initial)
-        where TTag : unmanaged, IRenderPassTag 
+        where TTag : unmanaged, IRenderPassTag
     {
         var key = TagRegistry.BindFboPassId<TTag>(variant, passId);
 
         foreach (var e in _entries)
         {
-            if(e.PassKey.Pass == passId || e.PassKey == key) 
+            if (e.PassKey.Pass == passId || e.PassKey == key)
                 throw new InvalidOperationException("Duplicated passes");
         }
 
@@ -77,7 +79,7 @@ public sealed class RenderPassPipeline
         _currentEntry = pass;
 
         var skipPass = false;
-        
+
         var key = new FboTagKey(pass.PassKey.TagIndex, pass.PassKey.Variant);
         if (_renderRegistry.TryGetRenderFbo(key, out var fbo))
             _ctx.AttachPass(fbo, pass.PassKey);

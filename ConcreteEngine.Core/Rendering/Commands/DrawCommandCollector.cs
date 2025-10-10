@@ -2,12 +2,14 @@
 
 #endregion
 
+#region
+
 using ConcreteEngine.Core.Engine.Data;
-using ConcreteEngine.Core.Rendering.Commands;
-using ConcreteEngine.Core.Rendering.Data;
 using ConcreteEngine.Core.Rendering.State;
 
-namespace ConcreteEngine.Core.Rendering;
+#endregion
+
+namespace ConcreteEngine.Core.Rendering.Commands;
 
 internal sealed class DrawCommandCollector
 {

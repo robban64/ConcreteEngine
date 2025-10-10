@@ -2,6 +2,7 @@
 
 using System.Numerics;
 using ConcreteEngine.Core.Rendering.Data;
+using ConcreteEngine.Core.Rendering.State;
 using ConcreteEngine.Core.Scene;
 using ConcreteEngine.Graphics;
 using ConcreteEngine.Graphics.Gfx;
@@ -40,9 +41,9 @@ internal sealed class DrawUniforms
     }
 
 
-    public void UploadGlobalUniforms(in RenderTickInfo tickInfo, in RenderTickParams tickParams)
+    public void UploadGlobalUniforms(in RenderFrameInfo frameInfo, in RenderRuntimeParams runtimeParams)
     {
-        UploadEngineUniformRecord(in tickInfo, in tickParams);
+        UploadEngineUniformRecord(in frameInfo, in runtimeParams);
         UploadFrameUniformRecord();
         UploadDirLight();
         UploadLight();
@@ -51,25 +52,26 @@ internal sealed class DrawUniforms
 
     public void UploadCameraView(RenderView view)
     {
+        view.GetCurrentData(out  var viewMat, out var projMat, out var projViewMat);
         var data = new CameraUniformRecord(
-            viewMat: in view.ViewMatrix,
-            projMat: in view.ProjectionMatrix,
-            projViewMat: in view.ProjectionViewMatrix,
+            viewMat: in viewMat,
+            projMat: in projMat,
+            projViewMat: in projViewMat,
             cameraPos: view.Position
         );
 
         _gfxBuffers.UploadUniformGpuData(_cameraUbo, in data, 0);
     }
 
-    private void UploadEngineUniformRecord(in RenderTickInfo tickInfo, in RenderTickParams tickParams)
+    private void UploadEngineUniformRecord(in RenderFrameInfo frameInfo, in RenderRuntimeParams runtimeParams)
     {
-        var outputSize = tickInfo.OutputSize;
+        var outputSize = frameInfo.OutputSize;
         var data = new EngineUniformRecord(
-            deltaTime: tickInfo.DeltaTime,
+            deltaTime: frameInfo.DeltaTime,
             invResolution: new Vector2(1.0f / outputSize.Width, 1.0f / outputSize.Height),
-            time: tickParams.Time,
-            mouse: tickParams.MousePos,
-            random: tickParams.RndSeed
+            time: runtimeParams.Time,
+            mouse: runtimeParams.MousePos,
+            random: runtimeParams.RndSeed
         );
 
         _gfxBuffers.UploadUniformGpuData(_engineUbo, in data, 0);

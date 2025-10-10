@@ -3,6 +3,7 @@
 using System.Numerics;
 using ConcreteEngine.Common.Numerics;
 using ConcreteEngine.Core.Rendering.Data;
+using ConcreteEngine.Core.Rendering.State;
 
 #endregion
 
@@ -177,6 +178,7 @@ public sealed class Camera3D : ICamera
         viewSnapshot = new RenderViewSnapshot(
             viewMatrix: in _viewMatrix,
             projectionMatrix: in _projectionMatrix,
+            projectionViewMatrix: in _projectionViewMatrix,
             projectionInfo: in projInfo,
             position: _translation,
             forward: Forward,

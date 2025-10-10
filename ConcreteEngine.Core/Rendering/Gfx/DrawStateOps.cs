@@ -1,6 +1,7 @@
 #region
 
 using ConcreteEngine.Core.Rendering.Data;
+using ConcreteEngine.Core.Rendering.State;
 using ConcreteEngine.Graphics;
 using ConcreteEngine.Graphics.Gfx;
 using ConcreteEngine.Graphics.Gfx.Contracts;
@@ -40,7 +41,7 @@ public sealed class DrawStateOps
     {
         _ctx.SetDepthMode();
         
-        _renderView.ApplyLightView(_sceneState.DirLight.Direction);
+        _renderView.ApplyLightViewOverride(_sceneState.DirLight.Direction);
         _drawUniforms.UploadShadow(in _renderView.ProjectionViewMatrix);
         _drawUniforms.UploadCameraView(_renderView);
     }
@@ -48,8 +49,7 @@ public sealed class DrawStateOps
     public void RestoreMode()
     {
         _ctx.RestoreStateMode();
-        
-        _renderView.Restore();
+        _renderView.ClearOverride();
         _drawUniforms.UploadCameraView(_renderView);
     }
 

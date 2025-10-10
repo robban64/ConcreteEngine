@@ -1,4 +1,6 @@
 using System.Numerics;
+using System.Runtime.CompilerServices;
+using ConcreteEngine.Core.Rendering.State;
 
 namespace ConcreteEngine.Core.Rendering.Utility;
 
@@ -6,7 +8,7 @@ internal static class RenderTransform
 {
     public static void CreateDirLightView(
         Vector3 lightDirection,
-        RenderView camera,
+        in RenderViewSnapshot view,
         out Matrix4x4 lightView,
         out Matrix4x4 lightProj,
         float zPad = 1f,
@@ -16,12 +18,12 @@ internal static class RenderTransform
         var dir = Vector3.Normalize(lightDirection);
         var worldUp = MathF.Abs(Vector3.Dot(dir, Vector3.UnitY)) > 0.99f ? Vector3.UnitX : Vector3.UnitY;
 
-        float near = camera.ProjectionInfo.Near;
-        float far  = MathF.Min(camera.ProjectionInfo.Far, near + shadowDistance);
+        float near = view.ProjectionInfo.Near;
+        float far  = MathF.Min(view.ProjectionInfo.Far, near + shadowDistance);
 
         // Camera frustum corners
         Span<Vector3> corners = stackalloc Vector3[8];
-        GetFrustumCorners(camera, near, far, corners);
+        GetFrustumCorners(in view, near, far, corners);
 
         var center = GetFrustumCenter(corners);
         var eye = center - dir * (shadowDistance * 0.5f);
@@ -55,38 +57,37 @@ internal static class RenderTransform
         lightProj = Matrix4x4.CreateOrthographicOffCenter(minLS.X, maxLS.X, minLS.Y, maxLS.Y, nearLS, farLS);
     }
 
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     private static Vector3 GetFrustumCenter(Span<Vector3> corners)
     {
         var s = Vector3.Zero;
-        for (var i = 0; i < corners.Length; i++) s += corners[i];
+        foreach (var c in corners) s += c;
         return s / corners.Length;
     }
 
-    private static void GetFrustumCorners(RenderView c, float near, float far, Span<Vector3> corners)
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    private static void GetFrustumCorners(in RenderViewSnapshot view, float near, float far, Span<Vector3> corners)
     {
-        //float fovY = MathHelper.ToRadians(c.ProjectionInfo.Fov / 2f);
-        //float tanY2 = MathF.Tan(0.5f * fovY);
-
-        float tanY = 1f / c.ProjectionMatrix.M22;
-        float tanX = 1f / c.ProjectionMatrix.M11;
+        var tanY = 1f / view.ProjectionMatrix.M22;
+        var tanX = 1f / view.ProjectionMatrix.M11;
 
         // extents at near/far
         float nx = near * tanX, ny = near * tanY;
         float fx = far * tanX, fy = far * tanY;
 
-        var nc = c.Position + c.Forward * near;
-        var fc = c.Position + c.Forward * far;
+        var nc = view.Position + view.Forward * near;
+        var fc = view.Position + view.Forward * far;
 
         // NearPlane plane
-        corners[0] = nc + c.Up * ny - c.Right * nx; // NT-L
-        corners[1] = nc + c.Up * ny + c.Right * nx; // NT-R
-        corners[2] = nc - c.Up * ny - c.Right * nx; // NB-L
-        corners[3] = nc - c.Up * ny + c.Right * nx; // NB-R
+        corners[0] = nc + view.Up * ny - view.Right * nx; // NT-L
+        corners[1] = nc + view.Up * ny + view.Right * nx; // NT-R
+        corners[2] = nc - view.Up * ny - view.Right * nx; // NB-L
+        corners[3] = nc - view.Up * ny + view.Right * nx; // NB-R
 
         // FarPlane plane
-        corners[4] = fc + c.Up * fy - c.Right * fx; // FT-L
-        corners[5] = fc + c.Up * fy + c.Right * fx; // FT-R
-        corners[6] = fc - c.Up * fy - c.Right * fx; // FB-L
-        corners[7] = fc - c.Up * fy + c.Right * fx; // FB-R
+        corners[4] = fc + view.Up * fy - view.Right * fx; // FT-L
+        corners[5] = fc + view.Up * fy + view.Right * fx; // FT-R
+        corners[6] = fc - view.Up * fy - view.Right * fx; // FB-L
+        corners[7] = fc - view.Up * fy + view.Right * fx; // FB-R
     }
 }

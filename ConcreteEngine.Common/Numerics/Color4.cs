@@ -11,8 +11,8 @@ public readonly record struct Color4(float R, float G, float B, float A = 1f)
     public Vector4 AsVec4() => new(R, G, B, A);
     public Vector3 AsVec3() => new(R, G, B);
 
-    public Color4 WithAlpha(float a) => new(R, G, B, ClampNorm(a));
-    public Color4 WithAlphaByte(byte a) => new(R, G, B, a / 255f);
+    public Color4 WithAlpha(float a) => this with { A = ClampNorm(a) };
+    public Color4 WithAlphaByte(byte a) => this with { A = a / 255f };
     public Color4 Multiply(float scalar) => new(ClampNorm(R * scalar), ClampNorm(G * scalar), ClampNorm(B * scalar), A);
 
     public (byte R, byte G, byte B, byte A) ToBytes() =>
@@ -25,12 +25,13 @@ public readonly record struct Color4(float R, float G, float B, float A = 1f)
     public static Color4 FromNormalized(float r, float g, float b, float a = 1f) =>
         new(ClampNorm(r), ClampNorm(g), ClampNorm(b), ClampNorm(a));
 
-    public static Color4 FromRgba(byte r, byte g, byte b, byte a = 255) => new(r / 255f, g / 255f, b / 255f, a / 255f);
+    public static Color4 FromRgba(byte r, byte g, byte b, byte a = 255) => 
+        new(r / 255f, g / 255f, b / 255f, a / 255f);
 
     public static Color4 Lerp(Color4 from, Color4 to, float t)
     {
         t = ClampNorm(t);
-        return new(
+        return new Color4(
             from.R + (to.R - from.R) * t,
             from.G + (to.G - from.G) * t,
             from.B + (to.B - from.B) * t,

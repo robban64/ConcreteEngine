@@ -13,10 +13,12 @@ using ConcreteEngine.Core.Rendering.Data;
 using ConcreteEngine.Core.Rendering.Descriptors;
 using ConcreteEngine.Core.Rendering.Gfx;
 using ConcreteEngine.Core.Rendering.Passes;
+using ConcreteEngine.Core.Rendering.State;
 using ConcreteEngine.Graphics;
 using ConcreteEngine.Graphics.Gfx;
 using ConcreteEngine.Graphics.Gfx.Contracts;
 using ConcreteEngine.Graphics.Resources;
+using RenderFrameInfo = ConcreteEngine.Core.Rendering.State.RenderFrameInfo;
 
 #endregion
 
@@ -259,16 +261,16 @@ public sealed class RenderSystem : IRenderSystem
     }
 
     //
-    internal void RenderEmptyFrame(in RenderTickInfo tickInfo)
+    internal void RenderEmptyFrame(in RenderFrameInfo frameInfo)
     {
-        _graphics.BeginFrame(tickInfo.ToGfxFrameInfo());
+        _graphics.BeginFrame(frameInfo.ToGfxFrameInfo());
         _graphics.EndFrame(out _);
     }
 
     internal void BeginRenderFrame(
         BeginFrameStatus status,
-        in RenderTickInfo tickInfo,
-        in RenderTickParams tickParams,
+        in RenderFrameInfo frameInfo,
+        in RenderRuntimeParams runtimeParams,
         in RenderViewSnapshot viewSnapshot
     )
     {
@@ -276,14 +278,14 @@ public sealed class RenderSystem : IRenderSystem
 
         if (status == BeginFrameStatus.Resize)
         {
-            RecreateFbo(tickInfo.OutputSize);
+            RecreateFbo(frameInfo.OutputSize);
         }
 
-        _graphics.BeginFrame(tickInfo.ToGfxFrameInfo());
+        _graphics.BeginFrame(frameInfo.ToGfxFrameInfo());
 
         _snapshot = RenderProps.Commit();
         _renderView.PrepareFrame(in viewSnapshot);
-        _drawUniforms.UploadGlobalUniforms(in tickInfo, in tickParams);
+        _drawUniforms.UploadGlobalUniforms(in frameInfo, in runtimeParams);
         _drawUniforms.UploadCameraView(_renderView);
     }
 
@@ -292,13 +294,13 @@ public sealed class RenderSystem : IRenderSystem
         _graphics.EndFrame(out frameResult);
     }
 
-    internal void Render(in RenderTickInfo tickInfo)
+    internal void Render(in RenderFrameInfo frameInfo)
     {
         Debug.Assert(_initialized);
 
-        _passPipeline.Prepare(tickInfo.OutputSize);
+        _passPipeline.Prepare(frameInfo.OutputSize);
 
-        nint capacity = _drawPipeline.Prepare(tickInfo.Alpha, _snapshot);
+        nint capacity = _drawPipeline.Prepare(frameInfo.Alpha, _snapshot);
 
         _drawProcessor.PrepareFrame(in _snapshot, capacity);
 

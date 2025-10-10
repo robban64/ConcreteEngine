@@ -93,7 +93,7 @@ public sealed class RenderSystem : IRenderSystem
     internal void Initialize(MaterialStore materialStore, AssetSystem assets)
     {
         var depthShader = assets.Get<Shader>("Depth").ResourceId;
-        _renderRegistry.TryGetRenderFbo<ShadowPassTag, PassDrawSlot>(out var shadowFbo);
+        _renderRegistry.TryGetRenderFbo<ShadowPassTag>(FboVariant.Default, out var shadowFbo);
         InvalidOpThrower.ThrowIfNull(shadowFbo, nameof(shadowFbo));
         InvalidOpThrower.ThrowIfNot(shadowFbo.Attachments.DepthTextureId.IsValid());
 
@@ -133,7 +133,8 @@ public sealed class RenderSystem : IRenderSystem
         var colorFilterShader = assets.Get<Shader>("ColorFilter").ResourceId;
 
         // Shadow
-        _passPipeline.Register<ShadowPassTag, PassDrawSlot>(PassOpKind.Draw, 0, RenderPassState.MakeShadow())
+        _passPipeline.Register<ShadowPassTag>(FboVariant.Default, new PassId(0), PassOpKind.Draw,
+                RenderPassState.MakeShadow())
             .OnPassBegin(static (RenderPassCtx ctx, in RenderPassState state) =>
             {
                 ctx.Ops.ActivateDepthMode(); // Note!
@@ -149,22 +150,22 @@ public sealed class RenderSystem : IRenderSystem
 
         // Scene 
         // Pass 0: draw scene into MSAA FBO
-        _passPipeline.Register<ScenePassTag>(PassOpKind.Draw, 0,
+        _passPipeline.Register<ScenePassTag>(FboVariant.Default, new PassId(1), PassOpKind.Draw,
                 RenderPassState.MakeSceneMsaa(4))
             .OnPassBegin(static (RenderPassCtx ctx, in RenderPassState state) =>
             {
                 ctx.Ops.BeginRenderPass(ctx.Target.FboId, state.ClearColor, state.PassState);
                 ctx.Ops.ApplyStateFunctions(GfxPassStateFunc.MakeDefault());
 
-                ctx.MutateStatePass<ScenePassTag, PassResolveSlot>(
-                    PassOpKind.Resolve,
+                ctx.MutateStatePass<ScenePassTag>(
+                    FboVariant.Secondary,
                     PassMutationState.MutateTarget(ctx.Target.FboId)
                 );
                 return ApplyPassReturn.DrawPassResult();
             });
 
         // Pass 1: resolve to scene FBO
-        _passPipeline.Register<ScenePassTag, PassResolveSlot>(PassOpKind.Resolve, 1,
+        _passPipeline.Register<ScenePassTag>(FboVariant.Secondary, new PassId(2), PassOpKind.Resolve,
                 RenderPassState.MakeResolve())
             .OnPassBegin(static (RenderPassCtx ctx, in RenderPassState state) =>
             {
@@ -174,14 +175,14 @@ public sealed class RenderSystem : IRenderSystem
             }).OnPassEnd(static (RenderPassCtx ctx, in RenderPassState state) =>
             {
                 var texId = ctx.Target.Attachments.ColorTextureId;
-                ctx.SampleTo<PostPassTag, PassPostASlot>(PassOpKind.Fsq, 0, texId);
+                ctx.SampleTo<PostPassTag>(FboVariant.Default,0, texId);
 
                 ctx.Ops.EndRenderPass();
                 ctx.Ops.GenerateMips(texId);
             });
 
         // Post A
-        _passPipeline.Register<PostPassTag, PassPostASlot>(PassOpKind.Fsq, 0,
+        _passPipeline.Register<PostPassTag>(FboVariant.Default, new PassId(3), PassOpKind.Fsq,
                 RenderPassState.MakePostProcess(compositeShader))
             .OnPassBegin(static (RenderPassCtx ctx, in RenderPassState state) =>
             {
@@ -192,13 +193,13 @@ public sealed class RenderSystem : IRenderSystem
             }).OnPassEnd(static (RenderPassCtx ctx, in RenderPassState state) =>
             {
                 var texId = ctx.Target.Attachments.ColorTextureId;
-                ctx.SampleTo<PostPassTag, PassPostBSlot>(PassOpKind.Fsq, 0, texId);
+                ctx.SampleTo<PostPassTag>(FboVariant.Secondary, 0, texId);
 
                 ctx.Ops.EndRenderPass();
             });
 
         // Post B
-        _passPipeline.Register<PostPassTag, PassPostBSlot>(PassOpKind.Fsq, 1,
+        _passPipeline.Register<PostPassTag>(FboVariant.Secondary, new PassId(4), PassOpKind.Fsq,
                 RenderPassState.MakePostProcess(colorFilterShader))
             .OnPassBegin(static (RenderPassCtx ctx, in RenderPassState state) =>
             {
@@ -209,13 +210,13 @@ public sealed class RenderSystem : IRenderSystem
             }).OnPassEnd(static (RenderPassCtx ctx, in RenderPassState state) =>
             {
                 var texId = ctx.Target.Attachments.ColorTextureId;
-                ctx.SampleTo<ScreenPassTag, PassFinalSlot>(PassOpKind.Screen, 0, texId);
+                ctx.SampleTo<ScreenPassTag>(FboVariant.Default, 0, texId);
 
                 ctx.Ops.EndRenderPass();
             });
 
         // Screen
-        _passPipeline.Register<ScreenPassTag, PassFinalSlot>(PassOpKind.Screen, 0,
+        _passPipeline.Register<ScreenPassTag>(FboVariant.Default, new PassId(5), PassOpKind.Screen,
                 RenderPassState.MakeScreen(presentShader))
             .OnPassBegin(static (RenderPassCtx ctx, in RenderPassState state) =>
             {
@@ -308,7 +309,7 @@ public sealed class RenderSystem : IRenderSystem
 
         while (_passPipeline.NextPass(out var nextPassRes))
         {
-            if (nextPassRes.SkipPass) continue;
+            if (nextPassRes.ActionKind == PreparePassActionKind.Skip) continue;
             ExecutePass(nextPassRes.PassId);
         }
     }

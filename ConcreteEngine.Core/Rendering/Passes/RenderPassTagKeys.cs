@@ -10,7 +10,7 @@ namespace ConcreteEngine.Core.Rendering.Data;
 
 public readonly record struct FboVariant(byte Value) : IComparable<FboVariant>
 {
-    public static readonly FboVariant Primary = new(0);
+    public static readonly FboVariant Default = new(0);
     public static readonly FboVariant Secondary = new(1);
     public static implicit operator byte(FboVariant slot) => slot.Value;
 
@@ -19,9 +19,6 @@ public readonly record struct FboVariant(byte Value) : IComparable<FboVariant>
 
 public readonly record struct FboTagKey(int TagIndex, FboVariant Variant) : IComparable<FboTagKey>
 {
-    public static FboTagKey Make<TTag>(FboVariant variant) where TTag : unmanaged, IRenderPassTag =>
-        RTypeRegistry.MakeFboTagKey<TTag>(variant);
-
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public int CompareTo(FboTagKey other)
     {
@@ -30,24 +27,9 @@ public readonly record struct FboTagKey(int TagIndex, FboVariant Variant) : ICom
     }
 }
 
-public readonly record struct PassTagKey(int TagIndex, FboVariant Variant, PassId Pass)
-{
-    public static PassTagKey Make<TTag>(FboVariant variant, PassId pass) where TTag : unmanaged, IRenderPassTag
-    {
-        var fboKey = FboTagKey.Make<TTag>(variant);
-        return new PassTagKey(fboKey.TagIndex, fboKey.Variant, pass);
-    }
-}
+public readonly record struct PassTagKey(int TagIndex, FboVariant Variant, PassId Pass);
 
-public readonly record struct PassTextureSlotKey(int TagIndex, FboVariant Variant, PassId Pass, byte TextureSlot)
-{
-    public static PassTextureSlotKey Make<TTag>(FboVariant variant, PassId pass, byte textureSlot)
-        where TTag : unmanaged, IRenderPassTag
-    {
-        var fboKey = FboTagKey.Make<TTag>(variant);
-        return new PassTextureSlotKey(fboKey.TagIndex, fboKey.Variant, pass, textureSlot);
-    }
-}
+public readonly record struct PassTextureSlotKey(int TagIndex, FboVariant Variant, PassId Pass, byte TextureSlot);
 
 public sealed class PassTagKeyComp : IComparer<PassTagKey>
 {

@@ -12,16 +12,16 @@ internal static class RenderStaticSetup
 {
     internal static void RegisterFrameBuffers(RenderRegistry renderRegistry)
     {
-        renderRegistry.RegisterFrameBuffer<ShadowPassTag>(FboVariant.Primary, 
+        renderRegistry.RegisterFrameBuffer<ShadowPassTag>(FboVariant.Default, 
             RegisterFboEntry.MakeDefault(false).AttachDepthTexture().UseFixedSize(new Size2D(2048, 2048))
         );
-        renderRegistry.RegisterFrameBuffer<ScenePassTag>(FboVariant.Primary,
+        renderRegistry.RegisterFrameBuffer<ScenePassTag>(FboVariant.Default,
             RegisterFboEntry.MakeMsaa(RenderBufferMsaa.X4).AttachColorTexture().AttachDepthStencilBuffer()
         );
         renderRegistry.RegisterFrameBuffer<ScenePassTag>(FboVariant.Secondary,
             RegisterFboEntry.MakeDefault(true).AttachColorTexture().AttachDepthStencilBuffer()
         );
-        renderRegistry.RegisterFrameBuffer<PostPassTag>(FboVariant.Primary,
+        renderRegistry.RegisterFrameBuffer<PostPassTag>(FboVariant.Default,
             RegisterFboEntry.MakePost(false).AttachColorTexture()
         );
         renderRegistry.RegisterFrameBuffer<PostPassTag>(FboVariant.Secondary,
@@ -45,11 +45,11 @@ internal static class RenderStaticSetup
 
     internal static void RegisterPassTagTypes()
     {
-        RTypeRegistry.RenderPassTag<ShadowPassTag>.Register();
-        RTypeRegistry.RenderPassTag<ScenePassTag>.Register();
-        RTypeRegistry.RenderPassTag<LightPassTag>.Register();
-        RTypeRegistry.RenderPassTag<PostPassTag>.Register();
-        RTypeRegistry.RenderPassTag<ScreenPassTag>.Register();
+        TagRegistry.RegisterTag<ShadowPassTag>();
+        TagRegistry.RegisterTag<ScenePassTag>();
+        TagRegistry.RegisterTag<LightPassTag>();
+        TagRegistry.RegisterTag<PostPassTag>();
+        TagRegistry.RegisterTag<ScreenPassTag>();
     }
 
 

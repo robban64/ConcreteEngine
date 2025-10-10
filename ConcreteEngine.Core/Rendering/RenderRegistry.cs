@@ -83,12 +83,11 @@ internal sealed class RenderRegistry
         var fboId = _gfxFbo.CreateFrameBuffer(gfxDescriptor);
         var meta = _gfxApi.GetMeta<FrameBufferId, FrameBufferMeta>(fboId);
 
-        var key = FboTagKey.Make<TTag>(variant);
+        var key = TagRegistry.FboKey<TTag>(variant);
         var sizePolicy = entry.FboSizePolicy ?? RenderFbo.SizePolicy.Default();
 
         var renderFbo = new RenderFbo(fboId, key, 0, sizePolicy);
         renderFbo.UpdateFromMeta(in meta);
-
         _fboRegistry.Add(renderFbo);
     }
 
@@ -98,12 +97,12 @@ internal sealed class RenderRegistry
         if (!UniformBufferUtils.IsStd140Aligned<T>())
             throw new InvalidOperationException($"{typeof(T).Name} is not std140-aligned.");
 
-        var slot = RTypeRegistry.UniformBufferTag<T>.Slot;
+        var slot = TagRegistry.UniformBufferTag<T>.Slot;
         if (slot >= 0)
             throw new InvalidOperationException(
                 $"{typeof(T).Name} UBO already registered at slot {slot}.");
 
-        var newSlot = RTypeRegistry.UniformBufferTag<T>.RegisterSlot();
+        var newSlot = TagRegistry.UniformBufferTag<T>.RegisterSlot();
         var uboId = _gfxBuffers.CreateUniformBuffer<T>(newSlot);
         var meta = _gfxApi.GetMeta<UniformBufferId, UniformBufferMeta>(uboId);
 
@@ -113,7 +112,7 @@ internal sealed class RenderRegistry
     public bool TryGetRenderFbo<TTag>(FboVariant fboVariant, out RenderFbo fbo)
         where TTag : unmanaged, IRenderPassTag 
     {
-        var key = FboTagKey.Make<TTag>(fboVariant);
+        var key = TagRegistry.FboKey<TTag>(fboVariant);
         return TryGetRenderFbo(key, out fbo);
     }
 
@@ -134,7 +133,7 @@ internal sealed class RenderRegistry
 
     public RenderUbo GetRenderUbo<TUbo>() where TUbo : unmanaged, IStd140Uniform
     {
-        var slot = RTypeRegistry.UniformBufferTag<TUbo>.Slot.Value;
+        var slot = TagRegistry.UniformBufferTag<TUbo>.Slot.Value;
         return _uboRegistry[slot];
     }
 

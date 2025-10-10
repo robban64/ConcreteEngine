@@ -6,14 +6,13 @@ using ConcreteEngine.Core.Rendering.Passes;
 
 namespace ConcreteEngine.Core.Rendering;
 
-internal enum PreparePassResult
+internal enum PreparePassActionKind
 {
-    Done,
     Run,
     Skip
 }
 
-internal readonly record struct NextPassResult(PassId PassId, int PassTagIdx, bool SkipPass);
+internal readonly record struct PreparePassResult(int TagIndex, PassId PassId, PreparePassActionKind ActionKind);
 
 public sealed class RenderPassPipeline
 {
@@ -43,7 +42,8 @@ public sealed class RenderPassPipeline
     public RenderPassEntry Register<TTag>(FboVariant variant, PassId passId, PassOpKind opKind, RenderPassState initial)
         where TTag : unmanaged, IRenderPassTag 
     {
-        var key = PassTagKey.Make<TTag>(variant, passId);
+        var key = TagRegistry.BindFboPassId<TTag>(variant, passId);
+
         foreach (var e in _entries)
         {
             if(e.PassKey.Pass == passId || e.PassKey == key) 
@@ -62,7 +62,7 @@ public sealed class RenderPassPipeline
         _cmdQueue.Prepare();
     }
 
-    internal bool NextPass(out NextPassResult result)
+    internal bool NextPass(out PreparePassResult result)
     {
         if (_passIter >= _entries.Count)
         {
@@ -82,15 +82,15 @@ public sealed class RenderPassPipeline
         if (_renderRegistry.TryGetRenderFbo(key, out var fbo))
             _ctx.AttachPass(fbo, pass.PassKey);
         else if (pass.PassOp == PassOpKind.Screen)
-            _ctx.AttachScreenPass(pass.PassTagIdx, pass.PassKey, _outputSize);
+            _ctx.AttachScreenPass(pass.PassKey, _outputSize);
         else
             skipPass = true;
 
         _cmdQueue.DequeueMutationTo(_currentEntry);
         _cmdQueue.DequeuePassSources(_currentEntry);
-        //start
 
-        result = new NextPassResult(pass.PassId, pass.PassTagIdx, skipPass);
+        var kind = skipPass ? PreparePassActionKind.Skip : PreparePassActionKind.Run;
+        result = new PreparePassResult(pass.PassKey.TagIndex, pass.PassKey.Pass, kind);
         return true;
     }
 

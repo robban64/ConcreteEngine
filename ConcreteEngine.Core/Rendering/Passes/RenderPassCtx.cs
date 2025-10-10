@@ -45,14 +45,15 @@ public sealed class RenderPassCtx
     {
         Debug.Assert(texSlot >= 0 && texSlot < 16);
 
-        var key = PassTextureSlotKey.Make<TTag>(variant, (byte)texSlot);
+        var passKey = TagRegistry.PassKey<TTag>(variant);
+        var key = new PassTextureSlotKey(passKey.TagIndex, passKey.Variant, passKey.Pass, (byte)texSlot);
         _cmdQueue.SampleTo(key, textureId);
     }
 
     public void MutateStatePass<TTag>(FboVariant variant, in PassMutationState newState)
         where TTag : unmanaged, IRenderPassTag 
     {
-        var key = PassTagKey.Make<TTag>(variant);
+        var key = TagRegistry.PassKey<TTag>(variant);
         _cmdQueue.EnqueueMutation(key, in newState);
     }
 /*

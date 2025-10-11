@@ -1,4 +1,4 @@
-namespace ConcreteEngine.Graphics.Resources;
+namespace ConcreteEngine.Graphics;
 
 public enum ResourceKind : byte
 {

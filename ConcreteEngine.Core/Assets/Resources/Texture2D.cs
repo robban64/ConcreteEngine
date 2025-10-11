@@ -13,7 +13,7 @@ public interface ITextureResource
     public TextureId ResourceId { get; }
     public int Width { get; }
     public int Height { get; }
-    public GfxPixelFormat PixelFormat { get; }
+    public TexturePixelFormat PixelFormat { get; }
 }
 
 public sealed class Texture2D : IGraphicAssetFile<TextureId>, ITextureResource
@@ -27,7 +27,7 @@ public sealed class Texture2D : IGraphicAssetFile<TextureId>, ITextureResource
     public required TextureId ResourceId { get; init; }
     public required int Width { get; init; }
     public required int Height { get; init; }
-    public required GfxPixelFormat PixelFormat { get; init; }
+    public required TexturePixelFormat PixelFormat { get; init; }
     public TexturePreset Preset { get; init; }
     public TextureAnisotropy Anisotropy { get; init; }
     public AssetKind AssetType => AssetKind.Texture2D;

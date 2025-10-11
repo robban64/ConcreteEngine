@@ -104,7 +104,7 @@ public sealed class EngineWindowHost : IEngineWindowHost
 
         var graphics = _backend switch
         {
-            GraphicsBackend.OpenGL => new GfxRuntimeBundle<GL>(new GraphicsRuntime(),
+            GraphicsBackend.OpenGl => new GfxRuntimeBundle<GL>(new GraphicsRuntime(),
                 new GlStartupConfig(_window.CreateOpenGL())),
             _ => throw new GraphicsException("Invalid GraphicsBackend. Only OpenGL supported")
         };

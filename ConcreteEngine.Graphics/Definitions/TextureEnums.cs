@@ -1,12 +1,21 @@
 namespace ConcreteEngine.Graphics;
 
-public enum GfxPixelFormat : byte
+public enum TexturePixelFormat : byte
 {
     Unknown = 0,
     Rgb = 1,
     Rgba = 2,
     SrgbAlpha = 3,
     Depth = 4
+}
+
+public enum TextureKind : byte
+{
+    Unknown = 0,
+    Texture2D = 1,
+    Texture3D = 2,
+    CubeMap = 3,
+    Multisample2D = 4
 }
 
 public enum TexturePreset : byte

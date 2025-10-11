@@ -32,7 +32,7 @@ internal sealed class BackendResourceStore<THandle> : IBackendResourceStore, IBa
     private readonly Stack<int> _free = new();
 
     public ResourceKind Kind { get; }
-    public GraphicsBackend Backend => GraphicsBackend.OpenGL;
+    public GraphicsBackend Backend => GraphicsBackend.OpenGl;
 
     public BackendResourceStore(ResourceKind kind)
     {

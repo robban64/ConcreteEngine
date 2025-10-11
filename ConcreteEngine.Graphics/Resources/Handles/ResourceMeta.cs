@@ -21,7 +21,7 @@ public readonly struct TextureMeta(
     TexturePreset preset,
     TextureKind kind,
     TextureAnisotropy anisotropy,
-    GfxPixelFormat pixelFormat,
+    TexturePixelFormat pixelFormat,
     DepthMode compareTextureFunc,
     GfxTextureBorder borderColor) : IResourceMeta
 {
@@ -34,7 +34,7 @@ public readonly struct TextureMeta(
     public readonly TexturePreset Preset = preset;
     public readonly TextureKind Kind = kind;
     public readonly TextureAnisotropy Anisotropy = anisotropy;
-    public readonly GfxPixelFormat PixelFormat = pixelFormat;
+    public readonly TexturePixelFormat PixelFormat = pixelFormat;
     public readonly DepthMode CompareTextureFunc = compareTextureFunc;
     public readonly GfxTextureBorder BorderColor = borderColor;
 
@@ -59,7 +59,7 @@ public readonly struct ShaderMeta(int samplers) : IResourceMeta
 [StructLayout(LayoutKind.Sequential)]
 public readonly struct MeshMeta(
     DrawPrimitive primitive,
-    MeshDrawKind drawKind,
+    DrawMeshKind kind,
     DrawElementSize elementSize,
     int attributeLength,
     int drawCount
@@ -68,12 +68,12 @@ public readonly struct MeshMeta(
     public readonly int AttributeLength = attributeLength;
     public readonly int DrawCount = drawCount;
     public readonly DrawPrimitive Primitive = primitive;
-    public readonly MeshDrawKind DrawKind = drawKind;
+    public readonly DrawMeshKind Kind = kind;
     public readonly DrawElementSize ElementSize = elementSize;
 
 
     public static MeshMeta CreateCopy(in MeshMeta meta, int vertexAttribPointers, int drawCount) =>
-        new(meta.Primitive, meta.DrawKind, meta.ElementSize, vertexAttribPointers, drawCount);
+        new(meta.Primitive, meta.Kind, meta.ElementSize, vertexAttribPointers, drawCount);
 }
 
 [StructLayout(LayoutKind.Sequential)]
@@ -134,12 +134,12 @@ public readonly struct FrameBufferMeta(
 [StructLayout(LayoutKind.Sequential)]
 public readonly struct RenderBufferMeta(
     Size2D size,
-    FrameBufferAttachmentKind attachmentKind,
+    FrameBufferAttachmentSlot attachmentSlot,
     RenderBufferMsaa multisample
 ) : IResourceMeta
 {
     public readonly Size2D Size = size;
-    public readonly FrameBufferAttachmentKind AttachmentKind = attachmentKind;
+    public readonly FrameBufferAttachmentSlot AttachmentSlot = attachmentSlot;
     public readonly RenderBufferMsaa Multisample = multisample;
 }
 

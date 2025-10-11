@@ -16,28 +16,28 @@ public readonly record struct GfxFrameBufferDescriptor(
 );
 
 public readonly record struct GfxFboColorTextureDesc(
-    GfxPixelFormat PixelFormat,
+    TexturePixelFormat PixelFormat,
     TexturePreset TexturePreset,
     GfxTextureBorder ColorBorder
 )
 {
     public static GfxFboColorTextureDesc Off() =>
-        new(GfxPixelFormat.SrgbAlpha, TexturePreset.None, GfxTextureBorder.Off);
+        new(TexturePixelFormat.SrgbAlpha, TexturePreset.None, GfxTextureBorder.Off);
 
     public static GfxFboColorTextureDesc Default() =>
-        new(GfxPixelFormat.SrgbAlpha, TexturePreset.LinearClamp, GfxTextureBorder.Off);
+        new(TexturePixelFormat.SrgbAlpha, TexturePreset.LinearClamp, GfxTextureBorder.Off);
 
     public static GfxFboColorTextureDesc DefaultMip() =>
-        new(GfxPixelFormat.SrgbAlpha, TexturePreset.LinearMipmapClamp, GfxTextureBorder.Off);
+        new(TexturePixelFormat.SrgbAlpha, TexturePreset.LinearMipmapClamp, GfxTextureBorder.Off);
 }
 
 public readonly record struct GfxFboDepthTextureDesc(
-    GfxPixelFormat PixelFormat,
+    TexturePixelFormat PixelFormat,
     TexturePreset TexturePreset,
     DepthMode CompareTextureFunc,
     GfxTextureBorder BorderColor
 )
 {
     public static GfxFboDepthTextureDesc Default() =>
-        new(GfxPixelFormat.Depth, TexturePreset.LinearClampBorder, DepthMode.Lequal, GfxTextureBorder.On);
+        new(TexturePixelFormat.Depth, TexturePreset.LinearClampBorder, DepthMode.Lequal, GfxTextureBorder.On);
 }

@@ -27,7 +27,7 @@ internal sealed class GfxResourceManager : IGfxResourceManager
         _resourceApi = new GfxResourceApi(_gfxStores);
     }
 
-    internal void OnDeleted(in DeleteCmd cmd)
+    internal void OnDeleted(in DeleteResourceCommand cmd)
     {
         Console.WriteLine($"Deleted {cmd.Handle.Kind} - Id: {cmd.IdValue}");
     }

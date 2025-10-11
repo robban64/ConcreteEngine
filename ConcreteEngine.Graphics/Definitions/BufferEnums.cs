@@ -31,3 +31,11 @@ public enum BufferTarget : byte
     IndexBuffer = 2,
     UniformBuffer = 3
 }
+
+// Utility
+public enum UboDefaultCapacity
+{
+    Lower = 0,
+    Medium = 1,
+    Upper = 2
+}

@@ -42,7 +42,7 @@ public sealed class GfxMeshes
         var props = state.DrawProperties;
         if (!state.IboId.IsValid())
         {
-            props = props with { DrawKind = MeshDrawKind.Arrays, ElementSize = DrawElementSize.Invalid };
+            props = props with { Kind = DrawMeshKind.Arrays, ElementSize = DrawElementSize.Invalid };
         }
 
         var record = new MeshRepository.MeshLayout(meshId)

@@ -84,13 +84,13 @@ internal sealed class GfxMeshBuilder : IGfxMeshBuilder
         {
             _state.DrawProperties = _state.DrawProperties with
             {
-                ElementSize = elementSize, DrawKind = MeshDrawKind.Elements
+                ElementSize = elementSize, Kind = DrawMeshKind.Elements
             };
         }
         else
         {
             InvalidOpThrower.ThrowIfNot(_state.DrawProperties.ElementSize == elementSize, nameof(elementSize));
-            InvalidOpThrower.ThrowIfNot(_state.DrawProperties.DrawKind == MeshDrawKind.Elements);
+            InvalidOpThrower.ThrowIfNot(_state.DrawProperties.Kind == DrawMeshKind.Elements);
         }
 
         _state.IboId = _gfxBuffers.CreateIndexBuffer(data, storage, access);
@@ -159,7 +159,7 @@ internal sealed class GfxMeshBuilder : IGfxMeshBuilder
             if (IboId.IsValid())
             {
                 InvalidOpThrower.ThrowIf(DrawProperties.ElementSize == DrawElementSize.Invalid);
-                InvalidOpThrower.ThrowIf(DrawProperties.DrawKind != MeshDrawKind.Elements);
+                InvalidOpThrower.ThrowIf(DrawProperties.Kind != DrawMeshKind.Elements);
             }
         }
 

@@ -1,6 +1,6 @@
 namespace ConcreteEngine.Graphics;
 
-public enum MeshDrawKind : byte
+public enum DrawMeshKind : byte
 {
     Invalid = 0,
     Arrays = 1,

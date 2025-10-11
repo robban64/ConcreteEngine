@@ -97,26 +97,26 @@ internal static class GlEnumExtensions
 
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public static GLEnum ToGlAttachmentEnum(this FrameBufferAttachmentKind kind)
+    public static GLEnum ToGlAttachmentEnum(this FrameBufferAttachmentSlot slot)
     {
-        return kind switch
+        return slot switch
         {
-            FrameBufferAttachmentKind.Color => GLEnum.ColorAttachment0,
-            FrameBufferAttachmentKind.Depth => GLEnum.DepthAttachment,
-            FrameBufferAttachmentKind.DepthStencil => GLEnum.DepthStencilAttachment,
-            _ => throw new ArgumentOutOfRangeException(nameof(kind))
+            FrameBufferAttachmentSlot.Color => GLEnum.ColorAttachment0,
+            FrameBufferAttachmentSlot.Depth => GLEnum.DepthAttachment,
+            FrameBufferAttachmentSlot.DepthStencil => GLEnum.DepthStencilAttachment,
+            _ => throw new ArgumentOutOfRangeException(nameof(slot))
         };
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public static InternalFormat ToGlInternalFormatEnum(this FrameBufferAttachmentKind kind)
+    public static InternalFormat ToGlInternalFormatEnum(this FrameBufferAttachmentSlot slot)
     {
-        return kind switch
+        return slot switch
         {
-            FrameBufferAttachmentKind.Color => InternalFormat.Rgb8,
-            FrameBufferAttachmentKind.Depth => InternalFormat.DepthComponent24,
-            FrameBufferAttachmentKind.DepthStencil => InternalFormat.Depth24Stencil8,
-            _ => throw new ArgumentOutOfRangeException(nameof(kind))
+            FrameBufferAttachmentSlot.Color => InternalFormat.Rgb8,
+            FrameBufferAttachmentSlot.Depth => InternalFormat.DepthComponent24,
+            FrameBufferAttachmentSlot.DepthStencil => InternalFormat.Depth24Stencil8,
+            _ => throw new ArgumentOutOfRangeException(nameof(slot))
         };
     }
 
@@ -205,26 +205,26 @@ internal static class GlEnumExtensions
         };
     }
 
-    public static SizedInternalFormat ToStorageFormat(this GfxPixelFormat format)
+    public static SizedInternalFormat ToStorageFormat(this TexturePixelFormat format)
     {
         return format switch
         {
-            GfxPixelFormat.Rgb => SizedInternalFormat.Rgb8,
-            GfxPixelFormat.Rgba => SizedInternalFormat.Rgba8,
-            GfxPixelFormat.SrgbAlpha => SizedInternalFormat.Srgb8Alpha8,
-            GfxPixelFormat.Depth => SizedInternalFormat.DepthComponent24,
+            TexturePixelFormat.Rgb => SizedInternalFormat.Rgb8,
+            TexturePixelFormat.Rgba => SizedInternalFormat.Rgba8,
+            TexturePixelFormat.SrgbAlpha => SizedInternalFormat.Srgb8Alpha8,
+            TexturePixelFormat.Depth => SizedInternalFormat.DepthComponent24,
             _ => throw new ArgumentOutOfRangeException(nameof(format))
         };
     }
 
-    public static (PixelFormat fmt, PixelType type) ToUploadFormatType(this GfxPixelFormat f)
+    public static (PixelFormat fmt, PixelType type) ToUploadFormatType(this TexturePixelFormat f)
     {
         return f switch
         {
-            GfxPixelFormat.Rgb => (PixelFormat.Rgb, PixelType.UnsignedByte),
-            GfxPixelFormat.Rgba => (PixelFormat.Rgba, PixelType.UnsignedByte),
+            TexturePixelFormat.Rgb => (PixelFormat.Rgb, PixelType.UnsignedByte),
+            TexturePixelFormat.Rgba => (PixelFormat.Rgba, PixelType.UnsignedByte),
             // sRGB only for internal format
-            GfxPixelFormat.SrgbAlpha => (PixelFormat.Rgba, PixelType.UnsignedByte),
+            TexturePixelFormat.SrgbAlpha => (PixelFormat.Rgba, PixelType.UnsignedByte),
             _ => throw new ArgumentOutOfRangeException(nameof(f))
         };
     }

@@ -304,17 +304,17 @@ public sealed class GfxCommands
         var meta = _boundMeshMeta;
         var count = drawCount > 0 ? drawCount : meta.DrawCount;
 
-        switch (meta.DrawKind)
+        switch (meta.Kind)
         {
-            case MeshDrawKind.Arrays:
+            case DrawMeshKind.Arrays:
                 _states.DrawArrays(meta.Primitive, count);
                 break;
-            case MeshDrawKind.Elements:
+            case DrawMeshKind.Elements:
                 Debug.Assert(meta.ElementSize != DrawElementSize.Invalid);
                 _states.DrawElements(meta.Primitive, meta.ElementSize, count);
                 break;
             default:
-                GraphicsException.ThrowUnsupportedFeature(nameof(meta.DrawKind));
+                GraphicsException.ThrowUnsupportedFeature(nameof(meta.Kind));
                 return;
         }
 

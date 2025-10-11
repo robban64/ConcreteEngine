@@ -61,10 +61,10 @@ public sealed class RegisterFboEntry
 
         InvalidOpThrower.ThrowIf(size.Width < 1 || size.Height < 1, nameof(size));
 
-        if (ColorTexture is { PixelFormat: GfxPixelFormat.Unknown or GfxPixelFormat.Depth } ct)
+        if (ColorTexture is { PixelFormat: TexturePixelFormat.Unknown or TexturePixelFormat.Depth } ct)
             throw new InvalidOperationException($"Invalid PixelFormat for ColorTexture {ct.PixelFormat}");
 
-        if (DepthTexture is { PixelFormat: not GfxPixelFormat.Depth } dt)
+        if (DepthTexture is { PixelFormat: not TexturePixelFormat.Depth } dt)
             throw new InvalidOperationException($"Invalid PixelFormat for ColorTexture {dt.PixelFormat}");
 
 

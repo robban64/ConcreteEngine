@@ -40,7 +40,7 @@ internal sealed class PrimitiveMeshes : IPrimitiveMeshes
             new Vertex2D(1f, 1f, 1f, 1f)
         };
 
-        var props = new MeshDrawProperties(DrawPrimitive.TriangleStrip, MeshDrawKind.Arrays, DrawElementSize.Invalid,
+        var props = new MeshDrawProperties(DrawPrimitive.TriangleStrip, DrawMeshKind.Arrays, DrawElementSize.Invalid,
             4);
         var builder = meshes.StartUploadBuilder(in props);
         builder.UploadVertices(vertices, BufferUsage.StaticDraw, BufferStorage.Static, BufferAccess.None);
@@ -71,7 +71,7 @@ internal sealed class PrimitiveMeshes : IPrimitiveMeshes
             new(1f, 1f, -1f), new(-1f, 1f, -1f), new(-1f, -1f, -1f), new(1f, 1f, -1f), new(-1f, -1f, -1f),
             new(1f, -1f, -1f)
         };
-        var props = new MeshDrawProperties(DrawPrimitive.Triangles, MeshDrawKind.Arrays, DrawElementSize.Invalid, 36);
+        var props = new MeshDrawProperties(DrawPrimitive.Triangles, DrawMeshKind.Arrays, DrawElementSize.Invalid, 36);
 
         var builder = meshes.StartUploadBuilder(in props);
         builder.UploadVertices(vertices, BufferUsage.StaticDraw, BufferStorage.Static, BufferAccess.None);

@@ -46,7 +46,6 @@ internal static class TagRegistry
 
 
     //
-
     private static class RenderPassTag<TTag> where TTag : unmanaged, IRenderPassTag
     {
         internal static int TagIndex { get; private set; } = -1;

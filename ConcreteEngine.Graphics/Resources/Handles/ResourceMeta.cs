@@ -49,6 +49,7 @@ public readonly struct TextureMeta(
             compareTextureFunc: m.CompareTextureFunc, borderColor: m.BorderColor
         );
 }
+
 [StructLayout(LayoutKind.Sequential)]
 public readonly struct ShaderMeta(int samplers) : IResourceMeta
 {

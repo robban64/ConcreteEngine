@@ -1,6 +1,5 @@
 #region
 
-using System.Diagnostics;
 using System.Runtime.CompilerServices;
 using ConcreteEngine.Common;
 
@@ -148,7 +147,7 @@ internal sealed class GfxResourceStore<TId, TMeta> : IGfxResourceStore<TId>
     {
         if (_idx == _meta.Length)
         {
-            if (_idx > GfxLimits.StoreLimit) 
+            if (_idx > GfxLimits.StoreLimit)
                 throw new InvalidOperationException("Store limit exceeded");
 
             var newCap = _meta.Length * 2;

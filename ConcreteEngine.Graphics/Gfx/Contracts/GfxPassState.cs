@@ -34,10 +34,12 @@ public readonly record struct GfxPassStateFunc(
     DepthMode Depth = DepthMode.Unset,
     PolygonOffsetLevel PolygonOffset = PolygonOffsetLevel.Unset)
 {
-    public static GfxPassStateFunc MakeDefault() => new(BlendMode.Alpha, CullMode.BackCcw, DepthMode.Lequal, PolygonOffsetLevel.None);
-    public static GfxPassStateFunc MakeDepth() => new(BlendMode.Unset, CullMode.FrontCcw, DepthMode.Lequal, PolygonOffsetLevel.Medium);
-}
+    public static GfxPassStateFunc MakeDefault() =>
+        new(BlendMode.Alpha, CullMode.BackCcw, DepthMode.Lequal, PolygonOffsetLevel.None);
 
+    public static GfxPassStateFunc MakeDepth() =>
+        new(BlendMode.Unset, CullMode.FrontCcw, DepthMode.Lequal, PolygonOffsetLevel.Medium);
+}
 
 public readonly record struct GfxPassClear(Color4 ClearColor, ClearBufferFlag ClearBuffer)
 {

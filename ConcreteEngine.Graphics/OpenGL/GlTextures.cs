@@ -1,6 +1,5 @@
 #region
 
-using System.Runtime.CompilerServices;
 using ConcreteEngine.Common.Numerics;
 using ConcreteEngine.Graphics.Gfx.Contracts;
 using ConcreteEngine.Graphics.OpenGL.Utilities;
@@ -90,17 +89,17 @@ internal sealed class GlTextures : IGraphicsDriverModule
     public void GenerateMipMaps(GfxRefToken<TextureId> texRef) =>
         _gl.GenerateTextureMipmap(_textureStore.GetHandle(texRef));
 
-    public void SetBorder(GfxRefToken<TextureId> texRef,  GfxTextureBorder b)
+    public void SetBorder(GfxRefToken<TextureId> texRef, GfxTextureBorder b)
     {
         var handle = _textureStore.GetHandle(texRef);
         Span<int> border = stackalloc int[] { b.R, b.G, b.B, b.A };
         _gl.TextureParameterI(handle.Value, GLEnum.TextureBorderColor, border);
     }
-    
-    public void SetCompareTextureFunc(GfxRefToken<TextureId> texRef,  DepthMode depthMode)
+
+    public void SetCompareTextureFunc(GfxRefToken<TextureId> texRef, DepthMode depthMode)
     {
-        if(depthMode == DepthMode.Unset) return;
-        
+        if (depthMode == DepthMode.Unset) return;
+
         var handle = _textureStore.GetHandle(texRef);
         var depthFunc = depthMode.ToGlEnum();
         _gl.TextureParameterI(handle.Value, GLEnum.TextureCompareMode, (int)GLEnum.CompareRefToTexture);

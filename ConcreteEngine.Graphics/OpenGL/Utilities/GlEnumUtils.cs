@@ -37,20 +37,19 @@ internal static class GlEnumUtils
 
 internal static class GlEnumExtensions
 {
-    
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static (float factor, float units) ToFactorUnits(this PolygonOffsetLevel level)
     {
         return level switch
         {
-            PolygonOffsetLevel.None   => (0.0f, 0.0f),
+            PolygonOffsetLevel.None => (0.0f, 0.0f),
             PolygonOffsetLevel.Slight => (1.0f, 1.0f),
             PolygonOffsetLevel.Medium => (4.0f, 2.0f),
             PolygonOffsetLevel.Strong => (4.0f, 4.0f),
             _ => (0.0f, 0.0f)
         };
     }
-    
+
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static GLEnum ToGlEnum(this TextureKind textureKind)
     {

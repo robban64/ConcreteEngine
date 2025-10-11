@@ -29,7 +29,8 @@ internal sealed class BackendStoreFacade<THandle> : IBackendStoreFacade
     public THandle GetUntyped(in GfxHandle h) => _store.GetUntyped(in h);
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public THandle GetHandle<TId>(GfxRefToken<TId> refToken) where TId : unmanaged, IResourceId => _store.GetHandle(refToken);
+    public THandle GetHandle<TId>(GfxRefToken<TId> refToken) where TId : unmanaged, IResourceId =>
+        _store.GetHandle(refToken);
 
 
     public GfxHandle Add(THandle h) => _store.Add(h);

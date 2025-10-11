@@ -1,6 +1,5 @@
 #region
 
-using System.Runtime.CompilerServices;
 using ConcreteEngine.Graphics.Gfx.Contracts;
 using ConcreteEngine.Graphics.Resources;
 using Silk.NET.OpenGL;

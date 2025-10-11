@@ -13,7 +13,7 @@ namespace ConcreteEngine.Graphics.OpenGL;
 internal sealed class GlStates : IGraphicsDriverModule
 {
     private readonly GL _gl;
-    
+
     private readonly BackendOps<MeshId, GlMeshHandle, MeshMeta, MeshDef> _meshStore;
     private readonly BackendOps<TextureId, GlTextureHandle, TextureMeta, TextureDef> _textureStore;
     private readonly BackendOps<FrameBufferId, GlFboHandle, FrameBufferMeta, FrameBufferDef> _fboStore;
@@ -25,15 +25,14 @@ internal sealed class GlStates : IGraphicsDriverModule
         _meshStore = ctx.Store.VertexArray;
         _textureStore = ctx.Store.Texture;
         _fboStore = ctx.Store.FrameBuffer;
-
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public void ClearColor(Color4 color) => _gl.ClearColor(color.R, color.G, color.B, 1);
-    
+
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public void ClearBuffer(ClearBufferFlag flags) => _gl.Clear(flags.ToGlEnum());
-    
+
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public void ColorMask(bool v) => _gl.ColorMask(v, v, v, v);
 
@@ -50,7 +49,7 @@ internal sealed class GlStates : IGraphicsDriverModule
         if (enabled) _gl.Enable(GLEnum.FramebufferSrgb);
         else _gl.Disable(GLEnum.FramebufferSrgb);
     }
-    
+
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public void ToggleBlendState(bool enabled)
     {
@@ -88,7 +87,7 @@ internal sealed class GlStates : IGraphicsDriverModule
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public void SetViewport(Bounds2D viewport) =>
         _gl.Viewport(viewport.X, viewport.Y, (uint)viewport.Width, (uint)viewport.Height);
-    
+
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public void SetPolygonOffset(float factor, float units) => _gl.PolygonOffset(factor, units);
@@ -117,7 +116,7 @@ internal sealed class GlStates : IGraphicsDriverModule
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public void BindTexture( GfxRefToken<TextureId> texRef, int slot) =>
+    public void BindTexture(GfxRefToken<TextureId> texRef, int slot) =>
         _gl.BindTextureUnit((uint)slot, _textureStore.GetHandle(texRef));
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]

@@ -14,7 +14,7 @@ internal sealed class GlBuffers : IGraphicsDriverModule
 {
     private readonly GL _gl;
     private readonly BackendOps<VertexBufferId, GlVboHandle, VertexBufferMeta, VertexBufferDef> _vboStore;
-    private readonly BackendOps<IndexBufferId, GlIboHandle, IndexBufferMeta, IndexBufferDef>  _iboStore;
+    private readonly BackendOps<IndexBufferId, GlIboHandle, IndexBufferMeta, IndexBufferDef> _iboStore;
     private readonly BackendOps<UniformBufferId, GlUboHandle, UniformBufferMeta, UniformBufferDef> _uboStore;
 
     internal GlBuffers(GlCtx ctx)

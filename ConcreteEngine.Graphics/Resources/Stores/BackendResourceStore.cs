@@ -52,7 +52,7 @@ internal sealed class BackendResourceStore<THandle> : IBackendResourceStore, IBa
         Throwers.IsValidRecordOrThrow(record, handle);
         return record.Handle;
     }
-    
+
     public bool IsValid(in GfxHandle handle) => _records[handle.Slot].IsValid;
 
 
@@ -97,7 +97,7 @@ internal sealed class BackendResourceStore<THandle> : IBackendResourceStore, IBa
     {
         if (_idx == _records.Length)
         {
-            if (_idx > GfxLimits.StoreLimit) 
+            if (_idx > GfxLimits.StoreLimit)
                 throw new InvalidOperationException("Store limit exceeded");
 
             var newCap = _records.Length * 2;
@@ -139,6 +139,5 @@ internal sealed class BackendResourceStore<THandle> : IBackendResourceStore, IBa
         {
             if (handle.Value == 0) ThrowInvalid(nameof(handle));
         }
-        
     }
 }

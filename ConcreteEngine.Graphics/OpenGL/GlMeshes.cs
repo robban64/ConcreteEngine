@@ -7,6 +7,7 @@ using Silk.NET.OpenGL;
 
 #endregion
 
+
 namespace ConcreteEngine.Graphics.OpenGL;
 
 internal sealed class GlMeshes : IGraphicsDriverModule
@@ -14,16 +15,15 @@ internal sealed class GlMeshes : IGraphicsDriverModule
     private readonly GL _gl;
     private readonly BackendOpsHub _store;
     private readonly GlCapabilities _capabilities;
+    private readonly BackendOps<MeshId, GlMeshHandle, MeshMeta, MeshDef> _meshStore;
 
     internal GlMeshes(GlCtx ctx)
     {
         _gl = ctx.Gl;
         _capabilities = ctx.Capabilities;
         _store = ctx.Store;
+        _meshStore = _store.VertexArray;
     }
-
-    [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    private uint VaoHandle(in GfxRefToken<MeshId> vao) => _store.VertexArray.GetRef(vao).Value;
 
     public GfxRefToken<MeshId> CreateVertexArray()
     {
@@ -35,27 +35,27 @@ internal sealed class GlMeshes : IGraphicsDriverModule
     public void AttachVertexBuffer(in GfxRefToken<MeshId> vao, in GfxRefToken<VertexBufferId> vbo, int bindingIdx,
         nint offset, nint stride)
     {
-        var vboHandle = _store.VertexBuffer.GetRef(vbo).Value;
-        var handle = VaoHandle(in vao);
+        var vboHandle = _store.VertexBuffer.GetHandle(vbo);
+        var handle = _meshStore.GetHandle(vao);
         _gl.VertexArrayVertexBuffer(handle, (uint)bindingIdx, vboHandle, offset, (uint)stride);
     }
 
     public void AttachIndexBuffer(in GfxRefToken<MeshId> vao, in GfxRefToken<IndexBufferId> ibo)
     {
-        var iboHandle = _store.IndexBuffer.GetRef(ibo).Value;
-        _gl.VertexArrayElementBuffer(VaoHandle(in vao), iboHandle);
+        var iboHandle = _store.IndexBuffer.GetHandle(ibo).Value;
+        _gl.VertexArrayElementBuffer(_meshStore.GetHandle(vao), iboHandle);
     }
 
     public void AddVertexAttributeRange(GfxRefToken<MeshId> vao, IReadOnlyList<VertexAttributeDesc> attribs)
     {
-        var vaoHandle = VaoHandle(vao);
+        var vaoHandle = _meshStore.GetHandle(vao);
         for (int i = 0; i < attribs.Count; i++)
             AddVertexAttributeInternal(vaoHandle, (uint)i, attribs[i]);
     }
 
     public void AddVertexAttributeFromSpan(GfxRefToken<MeshId> vao, ReadOnlySpan<VertexAttributeDesc> attribs)
     {
-        var vaoHandle = VaoHandle(vao);
+        var vaoHandle = _meshStore.GetHandle(vao);
         for (int i = 0; i < attribs.Length; i++)
             AddVertexAttributeInternal(vaoHandle, (uint)i, attribs[i]);
     }

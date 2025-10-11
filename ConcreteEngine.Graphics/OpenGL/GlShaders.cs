@@ -14,20 +14,20 @@ namespace ConcreteEngine.Graphics.OpenGL;
 internal sealed class GlShaders : IGraphicsDriverModule
 {
     private readonly GL _gl;
-    private readonly BackendOpsHub _store;
+    private readonly BackendOps<ShaderId, GlShaderHandle, ShaderMeta, ShaderDef> _shaderStore;
 
     private NativeHandle _activeProg;
 
     internal GlShaders(GlCtx ctx)
     {
         _gl = ctx.Gl;
-        _store = ctx.Store;
+        _shaderStore = ctx.Store.Shader;
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public void UseShader(GfxRefToken<ShaderId> shaderRef)
     {
-        var handle = _store.Shader.GetRef(shaderRef);
+        var handle = _shaderStore.GetHandle(shaderRef);
         if (_activeProg.EqualsHandle(handle))
             return;
 
@@ -53,12 +53,12 @@ internal sealed class GlShaders : IGraphicsDriverModule
         _gl.DetachShader(handle, fragmentShader);
         _gl.DeleteShader(vertexShader);
         _gl.DeleteShader(fragmentShader);
-        return _store.Shader.Add(new GlShaderHandle(handle));
+        return _shaderStore.Add(new GlShaderHandle(handle));
     }
 
     public List<(string, int)> GetUniformsFromProgram(GfxRefToken<ShaderId> shaderRef)
     {
-        var handle = _store.Shader.GetRef(shaderRef).Value;
+        var handle = _shaderStore.GetHandle(shaderRef).Value;
 
         UseShader(shaderRef);
         _gl.GetProgram(handle, ProgramPropertyARB.ActiveUniforms, out int uniformsLength);
@@ -78,7 +78,7 @@ internal sealed class GlShaders : IGraphicsDriverModule
 
     public int GetSamplersFromProgram(GfxRefToken<ShaderId> shaderRef)
     {
-        var handle = _store.Shader.GetRef(shaderRef).Value;
+        var handle = _shaderStore.GetHandle(shaderRef).Value;
 
         UseShader(shaderRef);
         _gl.GetProgram(handle, ProgramPropertyARB.ActiveUniforms, out int uniformsLength);

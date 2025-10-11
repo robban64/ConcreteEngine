@@ -20,23 +20,16 @@ internal interface IBackendResourceStore
 internal interface IBackendReadResourceStore<out THandle>
     where THandle : unmanaged, IResourceHandle, IEquatable<THandle>
 {
-    THandle Get(in GfxHandle handle);
+    THandle GetUntyped(in GfxHandle handle);
     //GfxHandle Replace(in GfxHandle handle, THandle value);
 }
-
 
 internal sealed class BackendResourceStore<THandle> : IBackendResourceStore, IBackendReadResourceStore<THandle>
     where THandle : unmanaged, IResourceHandle, IEquatable<THandle>
 {
-
-
-    // sanity check
-    private const int HardLimit = 10_000;
-
     private int _idx = 0;
     private BkHandle<THandle>[] _records = new BkHandle<THandle>[16];
     private readonly Stack<int> _free = new();
-
 
     public ResourceKind Kind { get; }
     public GraphicsBackend Backend => GraphicsBackend.OpenGL;
@@ -47,25 +40,21 @@ internal sealed class BackendResourceStore<THandle> : IBackendResourceStore, IBa
         Kind = kind;
     }
 
-    public bool IsValid(in GfxHandle handle) => _records[(int)handle.Slot].IsValid;
+    public THandle GetHandle<TId>(GfxRefToken<TId> refToken) where TId : unmanaged, IResourceId =>
+        _records[refToken.Handle.Slot].Handle;
 
-    public NativeHandle GetNativeHandle(in GfxHandle handle) => NativeHandle.From(Get(in handle));
+    public NativeHandle GetNativeHandle(in GfxHandle handle) => NativeHandle.From(GetUntyped(in handle));
 
-    public THandle Get(in GfxHandle handle)
+    public THandle GetUntyped(in GfxHandle handle)
     {
         Throwers.IsValidGfxHandleOrThrow(handle, Kind);
-        ref readonly var record = ref _records[(int)handle.Slot];
+        ref readonly var record = ref _records[handle.Slot];
         Throwers.IsValidRecordOrThrow(record, handle);
         return record.Handle;
     }
+    
+    public bool IsValid(in GfxHandle handle) => _records[handle.Slot].IsValid;
 
-    public THandle GetRef<TId>(GfxRefToken<TId> refToken) where TId : unmanaged, IResourceId
-    {
-        var handle = refToken.Handle;
-        ref readonly var record = ref _records[(int)handle.Slot];
-        Debug.Assert(handle.Kind == Kind && record.IsValid && record.Gen == handle.Gen);
-        return record.Handle;
-    }
 
     public GfxHandle Add(THandle value)
     {
@@ -74,7 +63,7 @@ internal sealed class BackendResourceStore<THandle> : IBackendResourceStore, IBa
         var prev = _records[idx];
         var gen = (ushort)(prev.Gen + 1);
         _records[idx] = new BkHandle<THandle>(value, gen, true);
-        return new GfxHandle((uint)idx, gen, Kind);
+        return new GfxHandle(idx, gen, Kind);
     }
 
 
@@ -84,23 +73,23 @@ internal sealed class BackendResourceStore<THandle> : IBackendResourceStore, IBa
         ArgumentOutOfRangeException.ThrowIfEqual((int)handle.Kind, (int)ResourceKind.Invalid);
         ArgumentOutOfRangeException.ThrowIfEqual(handle.Gen, 0);
 
-        var idx = (int)handle.Slot;
+        var idx = handle.Slot;
         var record = _records[idx];
         Throwers.IsValidRecordOrThrow(record, handle);
 
-        _records[(int)handle.Slot] = default;
-        _free.Push((int)handle.Slot);
+        _records[handle.Slot] = default;
+        _free.Push(handle.Slot);
     }
 
     // Don't think this should be used, leaving it here for now
     public GfxHandle Replace(in GfxHandle handle, THandle value)
     {
         Throwers.ThrowOnDefaultHandle(value);
-        var oldValue = Get(handle);
+        var oldValue = GetUntyped(handle);
         Throwers.IsUniqueHandleOrThrow(value.Value, oldValue.Value);
 
         var gen = (ushort)(handle.Gen + 1);
-        _records[(int)handle.Slot] = new BkHandle<THandle>(value, gen, true);
+        _records[handle.Slot] = new BkHandle<THandle>(value, gen, true);
         return handle with { Gen = gen };
     }
 
@@ -108,7 +97,8 @@ internal sealed class BackendResourceStore<THandle> : IBackendResourceStore, IBa
     {
         if (_idx == _records.Length)
         {
-            Debug.Assert(_idx < HardLimit);
+            if (_idx > GfxLimits.StoreLimit) 
+                throw new InvalidOperationException("Store limit exceeded");
 
             var newCap = _records.Length * 2;
             Array.Resize(ref _records, newCap);
@@ -122,7 +112,7 @@ internal sealed class BackendResourceStore<THandle> : IBackendResourceStore, IBa
         [DoesNotReturn]
         [StackTraceHidden]
         [MethodImpl(MethodImplOptions.NoInlining)]
-        static void ThrowInvalid(string name) => throw new InvalidOperationException();
+        public static void ThrowInvalid(string name) => throw new InvalidOperationException(nameof(name));
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static void IsValidGfxHandleOrThrow(GfxHandle handle, ResourceKind kind)
@@ -149,5 +139,6 @@ internal sealed class BackendResourceStore<THandle> : IBackendResourceStore, IBa
         {
             if (handle.Value == 0) ThrowInvalid(nameof(handle));
         }
+        
     }
 }

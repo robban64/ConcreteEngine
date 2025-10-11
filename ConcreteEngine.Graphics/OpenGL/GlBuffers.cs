@@ -13,33 +13,37 @@ namespace ConcreteEngine.Graphics.OpenGL;
 internal sealed class GlBuffers : IGraphicsDriverModule
 {
     private readonly GL _gl;
-    private readonly BackendOpsHub _store;
+    private readonly BackendOps<VertexBufferId, GlVboHandle, VertexBufferMeta, VertexBufferDef> _vboStore;
+    private readonly BackendOps<IndexBufferId, GlIboHandle, IndexBufferMeta, IndexBufferDef>  _iboStore;
+    private readonly BackendOps<UniformBufferId, GlUboHandle, UniformBufferMeta, UniformBufferDef> _uboStore;
 
     internal GlBuffers(GlCtx ctx)
     {
         _gl = ctx.Gl;
-        _store = ctx.Store;
+        _vboStore = ctx.Store.VertexBuffer;
+        _iboStore = ctx.Store.IndexBuffer;
+        _uboStore = ctx.Store.UniformBuffer;
     }
 
     public GfxRefToken<VertexBufferId> CreateVertexBuffer(ReadOnlySpan<byte> data, in GfxBufferDataDesc desc,
         bool nullData = false)
     {
         var handle = CreateBufferNative(data, in desc, nullData);
-        return _store.VertexBuffer.Add(new GlVboHandle(handle.Value));
+        return _vboStore.Add(new GlVboHandle(handle.Value));
     }
 
     public GfxRefToken<IndexBufferId> CreateIndexBuffer(ReadOnlySpan<byte> data, in GfxBufferDataDesc desc,
         bool nullData = false)
     {
         var handle = CreateBufferNative(data, in desc, nullData);
-        return _store.IndexBuffer.Add(new GlIboHandle(handle.Value));
+        return _iboStore.Add(new GlIboHandle(handle.Value));
     }
 
     public GfxRefToken<UniformBufferId> CreateUniformBuffer(UboSlot slot, in GfxBufferDataDesc desc)
     {
         var handle = CreateBufferNative(ReadOnlySpan<byte>.Empty, in desc, nullData: true);
         _gl.BindBufferBase(BufferTargetARB.UniformBuffer, slot, handle.Value);
-        return _store.UniformBuffer.Add(new GlUboHandle(handle.Value));
+        return _uboStore.Add(new GlUboHandle(handle.Value));
     }
 
 
@@ -136,11 +140,11 @@ internal sealed class GlBuffers : IGraphicsDriverModule
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    private GlVboHandle GetVboHandle(GfxRefToken<VertexBufferId> vboRef) => _store.VertexBuffer.GetRef(vboRef);
+    private GlVboHandle GetVboHandle(GfxRefToken<VertexBufferId> vboRef) => _vboStore.GetHandle(vboRef);
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    private GlIboHandle GetIboHandle(GfxRefToken<IndexBufferId> iboRef) => _store.IndexBuffer.GetRef(iboRef);
+    private GlIboHandle GetIboHandle(GfxRefToken<IndexBufferId> iboRef) => _iboStore.GetHandle(iboRef);
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    private GlUboHandle GetUboHandle(GfxRefToken<UniformBufferId> uboRef) => _store.UniformBuffer.GetRef(uboRef);
+    private GlUboHandle GetUboHandle(GfxRefToken<UniformBufferId> uboRef) => _uboStore.GetHandle(uboRef);
 }

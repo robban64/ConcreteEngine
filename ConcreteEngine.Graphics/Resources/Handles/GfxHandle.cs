@@ -12,7 +12,7 @@ internal readonly record struct GfxRefToken<TId>(in GfxHandle Handle)
     public static GfxRefToken<TId> From(in GfxHandle handle) => new(in handle);
 }
 
-internal readonly record struct GfxHandle(uint Slot, ushort Gen, ResourceKind Kind)
+internal readonly record struct GfxHandle(int Slot, ushort Gen, ResourceKind Kind)
 {
     public bool IsValid { get; } = Gen > 0 && Kind != ResourceKind.Invalid;
 }

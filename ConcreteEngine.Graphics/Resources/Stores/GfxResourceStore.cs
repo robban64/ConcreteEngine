@@ -26,10 +26,6 @@ internal sealed class GfxResourceStore<TId, TMeta> : IGfxResourceStore<TId>
     private readonly MakeIdDelegate<TId> _makeId;
     internal GfxMetaChangedDel<TId, TMeta>? _changeCallback;
 
-    // sanity check
-    private const int HardLimit = 10_000;
-    private const int MaxDefaultCapacity = 1024;
-
     public ResourceKind ResourceKind => TId.Kind;
 
     private int _idx = 0;
@@ -46,7 +42,7 @@ internal sealed class GfxResourceStore<TId, TMeta> : IGfxResourceStore<TId>
     internal GfxResourceStore(int initialCapacity, MakeIdDelegate<TId> makeId)
     {
         ArgumentOutOfRangeException.ThrowIfLessThan(initialCapacity, 4, nameof(initialCapacity));
-        ArgumentOutOfRangeException.ThrowIfGreaterThan(initialCapacity, MaxDefaultCapacity, nameof(initialCapacity));
+        ArgumentOutOfRangeException.ThrowIfGreaterThan(initialCapacity, GfxLimits.StoreLimit, nameof(initialCapacity));
         ArgumentNullException.ThrowIfNull(makeId);
 
         InvalidOpThrower.ThrowIf(ResourceKind == ResourceKind.Invalid);
@@ -152,7 +148,8 @@ internal sealed class GfxResourceStore<TId, TMeta> : IGfxResourceStore<TId>
     {
         if (_idx == _meta.Length)
         {
-            Debug.Assert(_idx < HardLimit);
+            if (_idx > GfxLimits.StoreLimit) 
+                throw new InvalidOperationException("Store limit exceeded");
 
             var newCap = _meta.Length * 2;
             Array.Resize(ref _meta, newCap);

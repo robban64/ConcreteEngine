@@ -21,16 +21,17 @@ public sealed class RegisterFboEntry
 
     public RenderFbo.SizePolicy? FboSizePolicy { get; private set; }
 
-    public RegisterFboEntry AttachColorTexture(RenderBufferMsaa multisample = RenderBufferMsaa.None)
+    public RegisterFboEntry AttachColorTexture(GfxFboColorTextureDesc desc,
+        RenderBufferMsaa multisample = RenderBufferMsaa.None)
     {
         Multisample = multisample;
-        ColorTexture = new GfxFboColorTextureDesc();
+        ColorTexture = desc;
         return this;
     }
 
-    public RegisterFboEntry AttachDepthTexture()
+    public RegisterFboEntry AttachDepthTexture(GfxFboDepthTextureDesc desc)
     {
-        DepthTexture = new GfxFboDepthTextureDesc();
+        DepthTexture = desc;
         return this;
     }
 
@@ -60,6 +61,13 @@ public sealed class RegisterFboEntry
 
         InvalidOpThrower.ThrowIf(size.Width < 1 || size.Height < 1, nameof(size));
 
+        if (ColorTexture is { PixelFormat: GfxPixelFormat.Unknown or GfxPixelFormat.Depth } ct)
+            throw new InvalidOperationException($"Invalid PixelFormat for ColorTexture {ct.PixelFormat}");
+
+        if (DepthTexture is { PixelFormat: not GfxPixelFormat.Depth } dt)
+            throw new InvalidOperationException($"Invalid PixelFormat for ColorTexture {dt.PixelFormat}");
+
+
         return new GfxFrameBufferDescriptor(
             Size: size,
             ColorTexture: ColorTexture,
@@ -69,15 +77,4 @@ public sealed class RegisterFboEntry
             Multisample: Multisample
         );
     }
-
-    public static RegisterFboEntry MakeDefault(bool hasMips) =>
-        new(pixelFormat: GfxPixelFormat.SrgbAlpha,
-            texturePreset: hasMips ? TexturePreset.LinearMipmapClamp : TexturePreset.LinearClamp);
-
-    public static RegisterFboEntry MakeMsaa(RenderBufferMsaa multisample) =>
-        new(pixelFormat: GfxPixelFormat.SrgbAlpha, texturePreset: TexturePreset.None, multisample: multisample);
-
-    public static RegisterFboEntry MakePost(bool hasMips) =>
-        new(pixelFormat: GfxPixelFormat.SrgbAlpha,
-            texturePreset: hasMips ? TexturePreset.LinearMipmapClamp : TexturePreset.LinearClamp);
 }

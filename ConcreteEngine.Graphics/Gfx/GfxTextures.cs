@@ -85,9 +85,9 @@ public sealed class GfxTextures
 
         var desc = new GfxTextureDescriptor(newProps.Width, newProps.Height,
             meta.Kind, meta.PixelFormat, meta.Depth, msaa);
-        
-        var props = new GfxTextureProperties(meta.Lod, meta.Preset, meta.Anisotropy, meta.CompareTextureFunc)
-            { BorderColor = meta.BorderColor };
+
+        var props = new GfxTextureProperties(meta.Lod, meta.Preset, meta.Anisotropy, meta.CompareTextureFunc,
+            meta.BorderColor);
         
         var newTexRef = CreateTextureInternal(in desc, in props, out var newMeta);
         _resources.TextureStore.Replace(textureId, in newMeta, in newTexRef, out _);

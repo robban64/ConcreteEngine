@@ -5,6 +5,7 @@ using ConcreteEngine.Core.Rendering.Data;
 using ConcreteEngine.Core.Rendering.Descriptors;
 using ConcreteEngine.Core.Rendering.Passes;
 using ConcreteEngine.Graphics;
+using ConcreteEngine.Graphics.Gfx.Contracts;
 
 #endregion
 
@@ -16,20 +17,23 @@ internal static class RenderStaticSetup
     internal static void RegisterFrameBuffers(RenderRegistry renderRegistry)
     {
         renderRegistry.RegisterFrameBuffer<ShadowPassTag>(FboVariant.Default,
-            RegisterFboEntry.MakeDefault(false).AttachDepthTexture().UseFixedSize(new Size2D(2048, 2048))
+            new RegisterFboEntry().AttachDepthTexture(GfxFboDepthTextureDesc.Default()).UseFixedSize(new Size2D(2048, 2048))
+            //RegisterFboEntry.MakeDefault(false).AttachDepthTexture().UseFixedSize(new Size2D(2048, 2048))
         );
         renderRegistry.RegisterFrameBuffer<ScenePassTag>(FboVariant.Default,
-            RegisterFboEntry.MakeMsaa(RenderBufferMsaa.X4).AttachColorTexture().AttachDepthStencilBuffer()
+            new RegisterFboEntry().AttachColorTexture(GfxFboColorTextureDesc.Off(),RenderBufferMsaa.X4).AttachDepthStencilBuffer()
+            //RegisterFboEntry.MakeMsaa(RenderBufferMsaa.X4).AttachColorTexture().AttachDepthStencilBuffer()
         );
         renderRegistry.RegisterFrameBuffer<ScenePassTag>(FboVariant.Secondary,
-            RegisterFboEntry.MakeDefault(true).AttachColorTexture().AttachDepthStencilBuffer()
-        );
+            new RegisterFboEntry()
+                .AttachColorTexture(GfxFboColorTextureDesc.DefaultMip())
+                .AttachDepthStencilBuffer());
+
         renderRegistry.RegisterFrameBuffer<PostPassTag>(FboVariant.Default,
-            RegisterFboEntry.MakePost(false).AttachColorTexture()
-        );
+            new RegisterFboEntry().AttachColorTexture(GfxFboColorTextureDesc.Default()));
+
         renderRegistry.RegisterFrameBuffer<PostPassTag>(FboVariant.Secondary,
-            RegisterFboEntry.MakePost(false).AttachColorTexture()
-        );
+            new RegisterFboEntry().AttachColorTexture(GfxFboColorTextureDesc.Default()));
     }
 
 

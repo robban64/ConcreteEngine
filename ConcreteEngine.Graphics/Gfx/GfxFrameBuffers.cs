@@ -17,16 +17,20 @@ public sealed class GfxFrameBuffers
     private readonly GfxTextures _gfxTextures;
     private readonly GlFrameBuffers _driver;
 
+    private GraphicsConfiguration Configuration { get; }
+
     internal GfxFrameBuffers(GfxContextInternal context, GfxTextures gfxTextures)
     {
         _driver = context.Driver.FrameBuffers;
         _gfxTextures = gfxTextures;
         _resources = context.Stores;
+
+        Configuration = context.Driver.Configuration;
     }
 
     public FrameBufferId CreateFrameBuffer(in GfxFrameBufferDescriptor desc)
     {
-        EnsureCreateFrameBuffer(in desc);
+        EnsureCreateFrameBuffer(Configuration, in desc);
         var size = desc.Size;
         var fboRef = _driver.CreateFrameBuffer();
 
@@ -35,14 +39,15 @@ public sealed class GfxFrameBuffers
         FboAttachmentIds attachments = default;
         if (desc.ColorTexture is { } colTex)
         {
-            InvalidOpThrower.ThrowIf(colTex.PixelFormat != desc.PixelFormat);
             var texKind = !isMultisample ? TextureKind.Texture2D : TextureKind.Multisample2D;
             var texDesc = new GfxTextureDescriptor(size.Width, size.Height,
-                texKind, desc.PixelFormat,
+                texKind, colTex.PixelFormat,
                 1, desc.Multisample);
 
-            var texProps = new GfxTextureProperties(0f, desc.TexturePreset, 0)
-                { BorderColor = colTex.BorderColor };
+            var texProps = new GfxTextureProperties(
+                0f, colTex.TexturePreset, TextureAnisotropy.Off,
+                DepthMode.Unset, colTex.ColorBorder
+            );
 
             var textureId = _gfxTextures.BuildEmptyTexture(texDesc, texProps);
             var texRef = _resources.TextureStore.GetRefHandle(textureId);
@@ -54,9 +59,9 @@ public sealed class GfxFrameBuffers
         {
             var texDesc = new GfxTextureDescriptor(size.Width, size.Height, TextureKind.Texture2D,
                 GfxPixelFormat.Depth, 1);
-            var texProps = new GfxTextureProperties(0f, depTex.TexturePreset, 0, depTex.CompareTextureFunc)
-                { BorderColor = depTex.BorderColor };
-            
+            var texProps = new GfxTextureProperties(0f, depTex.TexturePreset, TextureAnisotropy.Off,
+                depTex.CompareTextureFunc, depTex.BorderColor);
+
             var textureId = _gfxTextures.BuildEmptyTexture(texDesc, texProps);
             var texRef = _resources.TextureStore.GetRefHandle(textureId);
             AttachTexture(fboRef, texRef, FrameBufferAttachmentKind.Depth);
@@ -90,7 +95,7 @@ public sealed class GfxFrameBuffers
     {
         ArgumentOutOfRangeException.ThrowIfLessThanOrEqual(fboId.Value, 0, nameof(fboId));
 
-        var oldTokenRef = _resources.FboStore.GetRefAndMeta(fboId, out var oldMeta);
+        _resources.FboStore.GetRefAndMeta(fboId, out var oldMeta);
         var newMeta = FrameBufferMeta.MakeResizeCopy(in oldMeta, newSize);
         var fboRef = _driver.CreateFrameBuffer();
         _resources.FboStore.Replace(fboId, in newMeta, fboRef, out _);
@@ -149,9 +154,33 @@ public sealed class GfxFrameBuffers
     }
 
 
-    private static void EnsureCreateFrameBuffer(in GfxFrameBufferDescriptor desc)
+    private static void EnsureCreateFrameBuffer(GraphicsConfiguration config, in GfxFrameBufferDescriptor desc)
     {
-        if (desc.Multisample != RenderBufferMsaa.None && desc.TexturePreset != TexturePreset.None)
-            throw new InvalidOperationException($"Multisample require None for {nameof(TexturePreset)}");
+        ArgumentOutOfRangeException.ThrowIfLessThan(desc.Size.Width, 1, nameof(desc.Size.Width));
+        ArgumentOutOfRangeException.ThrowIfLessThan(desc.Size.Height, 1, nameof(desc.Size.Height));
+
+
+        if (desc.ColorTexture is { } colorTexture)
+        {
+            if (desc.Size.Width > config.MaxTextureSize || desc.Size.Height > config.MaxTextureSize)
+                throw new ArgumentOutOfRangeException(nameof(desc.Size),
+                    $"Texture Size exceeds {config.MaxTextureSize}");
+
+            if (colorTexture.PixelFormat is GfxPixelFormat.Depth or GfxPixelFormat.Unknown)
+                throw new InvalidOperationException($"Invalid value for ColorTexture {nameof(desc)}");
+
+            if (desc.Multisample != RenderBufferMsaa.None && colorTexture.TexturePreset != TexturePreset.None)
+                throw new InvalidOperationException($"Multisample require None for {nameof(TexturePreset)}");
+        }
+
+        if (desc.DepthTexture is { } depthTexture)
+        {
+            if (desc.Size.Width > config.MaxDepthTextureSize || desc.Size.Height > config.MaxDepthTextureSize)
+                throw new ArgumentOutOfRangeException(nameof(desc.Size),
+                    $"DepthTexture Size exceeds {config.MaxDepthTextureSize}");
+
+            if (depthTexture.PixelFormat is not GfxPixelFormat.Depth)
+                throw new InvalidOperationException($"Invalid value for DepthTexture {nameof(desc)}");
+        }
     }
 }

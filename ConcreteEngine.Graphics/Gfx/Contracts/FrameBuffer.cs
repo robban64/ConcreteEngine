@@ -13,30 +13,31 @@ public readonly record struct GfxFrameBufferDescriptor(
     bool ColorBuffer,
     bool DepthStencilBuffer,
     RenderBufferMsaa Multisample = RenderBufferMsaa.None
-)
-{
-    public GfxPixelFormat PixelFormat =>
-        ColorTexture?.PixelFormat ?? DepthTexture?.PixelFormat ?? GfxPixelFormat.Unknown;
-
-    public TexturePreset TexturePreset =>
-        ColorTexture?.TexturePreset ?? DepthTexture?.TexturePreset ?? TexturePreset.None;
-
-    public DepthMode CompareTextureFunc => DepthTexture?.CompareTextureFunc ?? DepthMode.Unset;
-}
+);
 
 public readonly record struct GfxFboColorTextureDesc(
-    GfxPixelFormat PixelFormat = GfxPixelFormat.SrgbAlpha,
-    TexturePreset TexturePreset = TexturePreset.LinearClamp
+    GfxPixelFormat PixelFormat,
+    TexturePreset TexturePreset,
+    GfxTextureBorder ColorBorder
 )
 {
-    public GfxTextureBorder BorderColor { get; init; } = GfxTextureBorder.Off;
+    public static GfxFboColorTextureDesc Off() =>
+        new(GfxPixelFormat.SrgbAlpha, TexturePreset.None, GfxTextureBorder.Off);
+
+    public static GfxFboColorTextureDesc Default() =>
+        new(GfxPixelFormat.SrgbAlpha, TexturePreset.LinearClamp, GfxTextureBorder.Off);
+
+    public static GfxFboColorTextureDesc DefaultMip() =>
+        new(GfxPixelFormat.SrgbAlpha, TexturePreset.LinearMipmapClamp, GfxTextureBorder.Off);
 }
 
 public readonly record struct GfxFboDepthTextureDesc(
-    GfxPixelFormat PixelFormat = GfxPixelFormat.Depth,
-    TexturePreset TexturePreset = TexturePreset.LinearClampBorder,
-    DepthMode CompareTextureFunc = DepthMode.Lequal
+    GfxPixelFormat PixelFormat,
+    TexturePreset TexturePreset,
+    DepthMode CompareTextureFunc,
+    GfxTextureBorder BorderColor
 )
 {
-    public GfxTextureBorder BorderColor { get; init; } = GfxTextureBorder.On;
+    public static GfxFboDepthTextureDesc Default() =>
+        new(GfxPixelFormat.Depth, TexturePreset.LinearClampBorder, DepthMode.Lequal, GfxTextureBorder.On);
 }

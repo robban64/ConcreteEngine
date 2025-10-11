@@ -60,7 +60,7 @@ public sealed class GfxCommands
         _repository = ctx.Repositories;
         _store = ctx.Stores;
 
-        _boundTextures = new TextureId[Configuration.MaxTextureImageUnits];
+        _boundTextures = new TextureId[Configuration.TextureSlots];
 
         SetBlendMode(BlendMode.Alpha);
         SetDepthMode(DepthMode.Lequal);
@@ -234,7 +234,7 @@ public sealed class GfxCommands
 
     public void BindTexture(TextureId texture, int slot)
     {
-        Debug.Assert(slot >= 0 && slot <= Configuration.MaxTextureImageUnits);
+        Debug.Assert(slot >= 0 && slot <= Configuration.TextureSlots);
 
         if (_boundTextures[slot] == texture) return;
         _boundTextures[slot] = texture;

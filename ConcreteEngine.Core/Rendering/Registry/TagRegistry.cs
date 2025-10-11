@@ -8,7 +8,7 @@ using static ConcreteEngine.Core.Rendering.Data.RenderLimits;
 
 #endregion
 
-namespace ConcreteEngine.Core.Rendering.Data;
+namespace ConcreteEngine.Core.Rendering.Registry;
 
 internal static class TagRegistry
 {

@@ -193,8 +193,7 @@ public sealed class GameEngine : IDisposable
                 _stateMachine.Next(_assets.ProcessLoader(8));
                 break;
             case EngineStateLevel.InitializeSystem:
-                var shaders = _assets.GetAll<Shader>();
-                _renderer.InitializeGraphics(shaders);
+                InitializeGraphics();
                 InitializeSystems();
                 _stateMachine.Next();
                 break;
@@ -203,6 +202,15 @@ public sealed class GameEngine : IDisposable
                 _stateMachine.Next();
                 break;
         }
+    }
+
+    private void InitializeGraphics()
+    {
+        var shaders = _assets.GetAll<Shader>();
+        Span<ShaderId> shaderIds = stackalloc ShaderId[shaders.Count];
+        for (int i = 0; i < shaders.Count; i++) shaderIds[i] = shaders[i].ResourceId;
+        _renderer.InitializeGraphics(shaderIds);
+
     }
 
     private void UpdateSceneTransitionIfNeeded()

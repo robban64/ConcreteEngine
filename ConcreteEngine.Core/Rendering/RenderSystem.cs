@@ -78,23 +78,23 @@ public sealed class RenderSystem : IRenderSystem
         _initialSize = outputSize;
     }
 
-    internal void InitializeGraphics(IReadOnlyList<Shader> shaders)
+    internal void InitializeGraphics(ReadOnlySpan<ShaderId> shaderIds)
     {
         InvalidOpThrower.ThrowIf(_initialSize.Width <= 1);
         InvalidOpThrower.ThrowIf(_initialSize.Height <= 1);
 
         _renderRegistry = new RenderRegistry(_gfx);
         _renderRegistry.BeginRegistration(_initialSize);
-        RenderStaticSetup.RegisterUniformBufferTypes(_renderRegistry);
-        RenderStaticSetup.RegisterFrameBuffers(_renderRegistry);
-        _renderRegistry.RegisterShaderCollection(shaders);
+        _renderRegistry.ShaderRegistry.RegisterCollection(shaderIds);
         _renderRegistry.FinishRegistration();
     }
 
     internal void Initialize(MaterialStore materialStore, AssetSystem assets)
     {
         var depthShader = assets.Get<Shader>("Depth").ResourceId;
-        _renderRegistry.TryGetRenderFbo<ShadowPassTag>(FboVariant.Default, out var shadowFbo);
+        var depthKey = TagRegistry.FboKey<ShadowPassTag>(FboVariant.Default);
+        _renderRegistry.TryGetRenderFbo(depthKey, out var shadowFbo);
+        
         InvalidOpThrower.ThrowIfNull(shadowFbo, nameof(shadowFbo));
         InvalidOpThrower.ThrowIfNot(shadowFbo.Attachments.DepthTextureId.IsValid());
 
@@ -250,8 +250,8 @@ public sealed class RenderSystem : IRenderSystem
         ArgumentOutOfRangeException.ThrowIfLessThan(outputSize.Width, 1, nameof(outputSize));
         ArgumentOutOfRangeException.ThrowIfLessThan(outputSize.Height, 1, nameof(outputSize));
 
-        var fbos = RenderRegistry.RenderFbos;
-        Span<(FrameBufferId, Size2D)> newSizes = stackalloc (FrameBufferId, Size2D)[fbos.Count];
+        var fbos = RenderRegistry.FboRegistry.FrameBuffers;
+        Span<(FrameBufferId, Size2D)> newSizes = stackalloc (FrameBufferId, Size2D)[fbos.Length];
         var idx = 0;
         foreach (var fbo in fbos)
         {

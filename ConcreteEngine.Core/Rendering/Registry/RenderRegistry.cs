@@ -1,6 +1,7 @@
 #region
 
 using System.Diagnostics;
+using System.Runtime.CompilerServices;
 using ConcreteEngine.Common;
 using ConcreteEngine.Common.Numerics;
 using ConcreteEngine.Core.Assets.Resources;
@@ -18,30 +19,23 @@ namespace ConcreteEngine.Core.Rendering.Registry;
 
 internal sealed class RenderRegistry
 {
-    private readonly record struct RegistrationData(bool Enabled, Size2D OutputSize);
-
-    private readonly List<RenderFbo> _fboRegistry = new(8);
-    private readonly RenderUbo[] _uboRegistry = new RenderUbo[RenderLimits.UboSlots];
-    private RenderShader[] _shaderRegistry = Array.Empty<RenderShader>();
-
-    private readonly GfxResourceApi _gfxApi;
-    private readonly GfxFrameBuffers _gfxFbo;
-    private readonly GfxBuffers _gfxBuffers;
-    private readonly GfxShaders _gfxShaders;
+    internal readonly record struct RegistrationData(bool Enabled, Size2D OutputSize);
 
     private RegistrationData _registrationData;
 
-    internal IReadOnlyList<RenderFbo> RenderFbos => _fboRegistry;
+
+    public RenderShaderRegistry ShaderRegistry { get; }
+
+    public RenderUboRegistry UboRegistry { get; }
+
+    public RenderFboRegistry FboRegistry { get; }
+
 
     public RenderRegistry(GfxContext gfx)
     {
-        _gfxApi = gfx.ResourceContext.ResourceManager.GetGfxApi();
-        _gfxFbo = gfx.FrameBuffers;
-        _gfxBuffers = gfx.Buffers;
-        _gfxShaders = gfx.Shaders;
-
-        _gfxApi.BindMetaChanged<FrameBufferId, FrameBufferMeta>(OnFboChange);
-        _gfxApi.BindMetaChanged<UniformBufferId, UniformBufferMeta>(OnUboChange);
+        ShaderRegistry = new RenderShaderRegistry(gfx);
+        UboRegistry = new RenderUboRegistry(gfx);
+        FboRegistry = new RenderFboRegistry(gfx);
     }
 
     public void BeginRegistration(Size2D outputSize)
@@ -50,101 +44,37 @@ internal sealed class RenderRegistry
         ArgumentOutOfRangeException.ThrowIfLessThanOrEqual(outputSize.Width, 1, nameof(outputSize));
         ArgumentOutOfRangeException.ThrowIfLessThanOrEqual(outputSize.Height, 1, nameof(outputSize));
 
+        TagRegistry.RegisterTag<ShadowPassTag>();
+        TagRegistry.RegisterTag<ScenePassTag>();
+        TagRegistry.RegisterTag<LightPassTag>();
+        TagRegistry.RegisterTag<PostPassTag>();
+        TagRegistry.RegisterTag<ScreenPassTag>();
+
         _registrationData = new RegistrationData(true, outputSize);
 
-        RenderStaticSetup.RegisterPassTagTypes();
+        UboRegistry.BeginRegistration(_registrationData);
+        FboRegistry.BeginRegistration(_registrationData);
+        
+        FboRegistry.RegisterTemp();
     }
 
     public void FinishRegistration()
     {
-        _fboRegistry.Sort();
+        UboRegistry.FinishRegistration();
+        FboRegistry.FinishRegistration();
+
         _registrationData = new RegistrationData(false, Size2D.Zero);
     }
 
-    public void RegisterShaderCollection(IReadOnlyList<Shader> shaders)
-    {
-        _shaderRegistry = new RenderShader[shaders.Count];
-        foreach (var shader in shaders)
-        {
-            var shaderId = shader.ResourceId;
-            var uniforms = _gfxShaders.GetUniformList(shaderId);
-            if (_shaderRegistry[shaderId - 1] != null) throw new InvalidOperationException(nameof(_shaderRegistry));
-            _shaderRegistry[shaderId - 1] = new RenderShader(shaderId, uniforms);
-        }
-    }
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public RenderShader GetRenderShader(ShaderId shaderId) => ShaderRegistry.GetRenderShader(shaderId);
 
-    public void RegisterFrameBuffer<TTag>(FboVariant variant, RegisterFboEntry entry)
-        where TTag : unmanaged, IRenderPassTag
-    {
-        InvalidOpThrower.ThrowIfNot(_registrationData.Enabled);
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public RenderUbo GetRenderUbo<TUbo>() where TUbo : unmanaged, IStd140Uniform => UboRegistry.GetRenderUbo<TUbo>();
 
-        var gfxDescriptor = entry.Build(_registrationData.OutputSize);
-        var fboId = _gfxFbo.CreateFrameBuffer(gfxDescriptor);
-        var meta = _gfxApi.GetMeta<FrameBufferId, FrameBufferMeta>(fboId);
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public RenderFbo GetRenderFbo(FboTagKey key) => FboRegistry.GetRenderFbo(key)!;
 
-        var key = TagRegistry.FboKey<TTag>(variant);
-        var sizePolicy = entry.FboSizePolicy ?? RenderFbo.SizePolicy.Default();
-
-        var renderFbo = new RenderFbo(fboId, key, 0, sizePolicy);
-        renderFbo.UpdateFromMeta(in meta);
-        _fboRegistry.Add(renderFbo);
-    }
-
-    public void RegisterUniformBuffer<TUbo>() where TUbo : unmanaged, IStd140Uniform
-    {
-        InvalidOpThrower.ThrowIfCapacityExceed(_uboRegistry, RenderLimits.UboSlots);
-        if (!UniformBufferUtils.IsStd140Aligned<TUbo>())
-            throw new InvalidOperationException($"{typeof(TUbo).Name} is not std140-aligned.");
-
-        var newSlot = TagRegistry.RegisterUniformBufferSlot<TUbo>();
-        var uboId = _gfxBuffers.CreateUniformBuffer<TUbo>(newSlot);
-        var meta = _gfxApi.GetMeta<UniformBufferId, UniformBufferMeta>(uboId);
-
-        _uboRegistry[newSlot] = new RenderUbo(uboId, newSlot, in meta);
-    }
-
-    public bool TryGetRenderFbo<TTag>(FboVariant fboVariant, out RenderFbo fbo)
-        where TTag : unmanaged, IRenderPassTag
-    {
-        var key = TagRegistry.FboKey<TTag>(fboVariant);
-        return TryGetRenderFbo(key, out fbo);
-    }
-
-    public bool TryGetRenderFbo(FboTagKey key, out RenderFbo fbo)
-    {
-        foreach (var fb in _fboRegistry)
-        {
-            if (fb.TagKey != key) continue;
-            fbo = fb;
-            return true;
-        }
-
-        fbo = null!;
-        return false;
-    }
-
-    public RenderShader GetRenderShader(ShaderId shaderId) => _shaderRegistry[shaderId - 1];
-
-    public RenderUbo GetRenderUbo<TUbo>() where TUbo : unmanaged, IStd140Uniform
-    {
-        var slot = TagRegistry.UniformBufferSlot<TUbo>();
-        return _uboRegistry[slot];
-    }
-
-    private void OnFboChange(FrameBufferId id, in GfxMetaChanged<FrameBufferMeta> message)
-    {
-        var idx = id - 1;
-        InvalidOpThrower.ThrowIf(idx >= _fboRegistry.Count, nameof(id));
-
-        var renderFbo = _fboRegistry[idx];
-        Debug.Assert(renderFbo != null, $"Sync error missing fbo : {id}");
-        renderFbo.UpdateFromMeta(in message.NewMeta);
-    }
-
-    private void OnUboChange(UniformBufferId id, in GfxMetaChanged<UniformBufferMeta> message)
-    {
-        var meta = message.NewMeta;
-        var renderUbo = _uboRegistry[meta.Slot];
-        renderUbo.SetCapacity(meta.Capacity);
-    }
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public bool TryGetRenderFbo(FboTagKey key, out RenderFbo fbo) => FboRegistry.TryGetRenderFbo(key, out fbo);
 }

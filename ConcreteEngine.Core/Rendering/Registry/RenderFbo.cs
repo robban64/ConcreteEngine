@@ -13,7 +13,7 @@ namespace ConcreteEngine.Core.Rendering.Registry;
 
 public delegate Size2D CalcFboOutputDel(Size2D outputSize, Vector2 ratio);
 
-public sealed class RenderFbo : IComparable<RenderFbo>, IComparable<FrameBufferId>, IComparable<FboTagKey>
+public sealed class RenderFbo : IComparable<RenderFbo>
 {
     public FrameBufferId FboId { get; }
     public FboTagKey TagKey { get; }
@@ -46,15 +46,26 @@ public sealed class RenderFbo : IComparable<RenderFbo>, IComparable<FrameBufferI
 
     public Size2D CalculateNewSize(Size2D outputSize) => _sizePolicy.Calculate(outputSize);
 
-    public int CompareTo(RenderFbo? other) => FboId.Value.CompareTo(other!.FboId.Value);
+    public int CompareTo(RenderFbo? other) => TagKey.CompareTo(other!.TagKey);
 
-    public int CompareTo(FrameBufferId other) => FboId.Value.CompareTo(other!.Value);
-
-    public int CompareTo(FboTagKey other) => TagKey.CompareTo(other);
-
-    internal readonly struct FrameBufferIdComparer(FrameBufferId id) : IComparer<RenderFbo>
+    internal readonly struct RenderFboKeyComparer(FboTagKey key) : IComparer<RenderFbo>, IComparable<RenderFbo>
     {
-        public int Compare(RenderFbo? x, RenderFbo? _) => x!.CompareTo(id);
+        public int Compare(RenderFbo x, RenderFbo _) => x.TagKey.CompareTo(key);
+        public int CompareTo(RenderFbo? other) => key.CompareTo(other!.TagKey);
+    }
+    
+    
+    internal sealed class FboKeyComparer : IComparer<RenderFbo>
+    {
+        public static readonly FboKeyComparer Instance = new();
+
+        public int Compare(RenderFbo? x, RenderFbo? y)
+        {
+            if (ReferenceEquals(x, y)) return 0;
+            if (x is null) return -1;
+            if (y is null) return 1;
+            return x.TagKey.CompareTo(y.TagKey);
+        }
     }
 
     public sealed class SizePolicy

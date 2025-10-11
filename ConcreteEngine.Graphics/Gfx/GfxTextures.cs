@@ -86,9 +86,9 @@ public sealed class GfxTextures
         var desc = new GfxTextureDescriptor(newProps.Width, newProps.Height,
             meta.Kind, meta.PixelFormat, meta.Depth, msaa);
 
-        var props = new GfxTextureProperties(meta.Lod, meta.Preset, meta.Anisotropy, meta.CompareTextureFunc,
+        var props = new GfxTextureProperties((float)meta.Lod, meta.Preset, meta.Anisotropy, meta.CompareTextureFunc,
             meta.BorderColor);
-        
+
         var newTexRef = CreateTextureInternal(in desc, in props, out var newMeta);
         _resources.TextureStore.Replace(textureId, in newMeta, in newTexRef, out _);
         return newTexRef;
@@ -105,11 +105,9 @@ public sealed class GfxTextures
 
         _driver.UploadTexture2D_Data(texRef, data, meta.PixelFormat, size);
 
-        if (data.Length != meta.SizeInBytes)
-        {
-            var newMeta = TextureMeta.CopyWithNewSize(in meta, data.Length);
-            _resources.TextureStore.ReplaceMeta(textureId, in newMeta, out _);
-        }
+        //if (data.Length != meta.SizeInBytes)
+        var newMeta = TextureMeta.CopyWithNewSize(in meta);
+        _resources.TextureStore.ReplaceMeta(textureId, in newMeta, out _);
     }
 
     public void UploadTexture3D(TextureId textureId, ReadOnlySpan<byte> data, int width, int height, int depth)
@@ -122,11 +120,9 @@ public sealed class GfxTextures
 
         _driver.UploadTexture3D_Data(texRef, data, meta.PixelFormat, size, zOffset: 0); //add zOffset later if needed
 
-        if (data.Length != meta.SizeInBytes)
-        {
-            var newMeta = TextureMeta.CopyWithNewSize(in meta, data.Length);
-            _resources.TextureStore.ReplaceMeta(textureId, in newMeta, out _);
-        }
+        //if (data.Length != meta.SizeInBytes)
+        var newMeta = TextureMeta.CopyWithNewSize(in meta);
+        _resources.TextureStore.ReplaceMeta(textureId, in newMeta, out _);
     }
 
     public void UploadCubeMapFace(TextureId textureId, ReadOnlySpan<byte> data, int width, int height, int faceIdx)
@@ -143,7 +139,7 @@ public sealed class GfxTextures
 
         if (faceIdx == 5)
         {
-            var newMeta = TextureMeta.CopyWithNewSize(in meta, data.Length);
+            var newMeta = TextureMeta.CopyWithNewSize(in meta);
             _resources.TextureStore.ReplaceMeta(textureId, in newMeta, out _);
         }
     }
@@ -187,31 +183,33 @@ public sealed class GfxTextures
         }
 
         meta = new TextureMeta(
-            desc.Width, desc.Height, props.Preset, desc.Kind, props.Anisotropy, desc.Format,
-            props.LodBias, desc.Depth, (short)levels, (short)samples, props.BorderColor, props.CompareTextureFunc, 0
+            (Half)props.LodBias, (ushort)desc.Width, (ushort)desc.Height, (ushort)desc.Depth,
+            (byte)levels, (byte)samples, props.Preset, desc.Kind, props.Anisotropy, desc.Format,
+            props.CompareTextureFunc, props.BorderColor
         );
+
 
         return texRef;
     }
 
-    private void ApplyTextureProperties(GfxRefToken<TextureId> texRef, in TextureMeta props, bool wrapR)
+    private void ApplyTextureProperties(GfxRefToken<TextureId> texRef, in TextureMeta meta, bool wrapR)
     {
-        if (props.Preset != TexturePreset.None)
-            _driver.SetTexturePreset(texRef, props.Preset, wrapR);
+        if (meta.Preset != TexturePreset.None)
+            _driver.SetTexturePreset(texRef, meta.Preset, wrapR);
 
-        if(props.CompareTextureFunc is not (DepthMode.Unset or DepthMode.None))
-            _driver.SetCompareTextureFunc(texRef, props.CompareTextureFunc);
-        
-        if(props.BorderColor.Enabled)
-            _driver.SetBorder(texRef, props.BorderColor);
+        if (meta.CompareTextureFunc is not (DepthMode.Unset or DepthMode.None))
+            _driver.SetCompareTextureFunc(texRef, meta.CompareTextureFunc);
 
-        if (props.Anisotropy != TextureAnisotropy.Off)
-            _driver.SetAnisotropy(texRef, props.Anisotropy.ToAnisotropy());
+        if (meta.BorderColor.Enabled)
+            _driver.SetBorder(texRef, meta.BorderColor);
 
-        if (props.Lod != 0)
-            _driver.SetLodBias(texRef, props.Lod);
+        if (meta.Anisotropy != TextureAnisotropy.Off)
+            _driver.SetAnisotropy(texRef, meta.Anisotropy.ToAnisotropy());
 
-        if (props.Levels > 1)
+        if (meta.Lod != Half.Zero)
+            _driver.SetLodBias(texRef, (float)meta.Lod);
+
+        if (meta.Levels > 1)
             _driver.GenerateMipMaps(texRef);
     }
 

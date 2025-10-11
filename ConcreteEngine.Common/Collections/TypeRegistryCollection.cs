@@ -6,7 +6,7 @@ using System.Collections;
 
 namespace ConcreteEngine.Common.Collections;
 
-public sealed class TypeRegistryCollection<TValue>(int capacity = 16) : IEnumerable<KeyValuePair<Type, TValue>>
+public sealed class TypeRegistryCollection<TValue>(int capacity = 16)
 {
     private readonly Dictionary<Type, TValue> _registry = new(capacity);
 
@@ -48,16 +48,7 @@ public sealed class TypeRegistryCollection<TValue>(int capacity = 16) : IEnumera
 
     public void Clear() => _registry.Clear();
 
-    public Dictionary<Type, TValue>.ValueCollection Values => _registry.Values;
+    internal IReadOnlyDictionary<Type, TValue> Dictionary => _registry;
 
 
-    public IEnumerator<KeyValuePair<Type, TValue>> GetEnumerator()
-    {
-        return _registry.GetEnumerator();
-    }
-
-    IEnumerator IEnumerable.GetEnumerator()
-    {
-        return ((IEnumerable)_registry).GetEnumerator();
-    }
 }

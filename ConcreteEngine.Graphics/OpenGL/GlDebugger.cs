@@ -3,6 +3,7 @@
 using System.Diagnostics;
 using Silk.NET.Core.Native;
 using Silk.NET.OpenGL;
+// ReSharper disable HeapView.BoxingAllocation
 
 #endregion
 

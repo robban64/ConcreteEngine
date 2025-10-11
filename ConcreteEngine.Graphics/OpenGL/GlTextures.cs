@@ -89,14 +89,21 @@ internal sealed class GlTextures : IGraphicsDriverModule
     public void GenerateMipMaps(GfxRefToken<TextureId> texRef) =>
         _gl.GenerateTextureMipmap(GetTexHandle(texRef).Value);
 
-    public void ApplyCompareAndBorder(GfxRefToken<TextureId> texRef)
+    public void SetBorder(GfxRefToken<TextureId> texRef,  GfxTextureBorder b)
     {
         var handle = GetTexHandle(texRef);
-
-        Span<int> border = stackalloc int[] { 1, 1, 1, 1 };
-        _gl.TextureParameterI(handle.Value, GLEnum.TextureCompareMode, (int)GLEnum.CompareRefToTexture);
-        _gl.TextureParameterI(handle.Value, GLEnum.TextureCompareFunc, (int)GLEnum.Lequal);
+        Span<int> border = stackalloc int[] { b.R, b.G, b.B, b.A };
         _gl.TextureParameterI(handle.Value, GLEnum.TextureBorderColor, border);
+    }
+    
+    public void SetCompareTextureFunc(GfxRefToken<TextureId> texRef,  DepthMode depthMode)
+    {
+        if(depthMode == DepthMode.Unset) return;
+        
+        var handle = GetTexHandle(texRef);
+        var depthFunc = depthMode.ToGlEnum();
+        _gl.TextureParameterI(handle.Value, GLEnum.TextureCompareMode, (int)GLEnum.CompareRefToTexture);
+        _gl.TextureParameterI(handle.Value, GLEnum.TextureCompareFunc, (int)depthFunc);
     }
 
     public void SetTexturePreset(GfxRefToken<TextureId> texRef, TexturePreset preset, bool wrapR)

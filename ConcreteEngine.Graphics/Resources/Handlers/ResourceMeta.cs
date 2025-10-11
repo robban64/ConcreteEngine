@@ -1,6 +1,7 @@
 #region
 
 using ConcreteEngine.Common.Numerics;
+using ConcreteEngine.Graphics.Gfx.Contracts;
 
 #endregion
 
@@ -8,6 +9,7 @@ namespace ConcreteEngine.Graphics.Resources;
 
 public interface IResourceMeta;
 
+//Todo shrink some
 public readonly struct TextureMeta(
     int width,
     int height,
@@ -19,7 +21,10 @@ public readonly struct TextureMeta(
     int depth,
     short levels,
     short samples,
+    GfxTextureBorder borderColor,
+    DepthMode compareTextureFunc,
     nint sizeInBytes
+    
 ) : IResourceMeta
 {
     public readonly nint SizeInBytes = sizeInBytes;
@@ -33,14 +38,17 @@ public readonly struct TextureMeta(
     public readonly TextureKind Kind = kind;
     public readonly TextureAnisotropy Anisotropy = anisotropy;
     public readonly GfxPixelFormat PixelFormat = format;
+    public readonly DepthMode CompareTextureFunc  = compareTextureFunc;
+    public readonly GfxTextureBorder BorderColor = borderColor;
 
     public bool IsMipMapped => Levels > 1;
     public bool IsMsaa => Kind == TextureKind.Multisample2D && Samples > 0;
 
     internal static TextureMeta CopyWithNewSize(in TextureMeta m, nint sizeInBytes) =>
         new(width: m.Width, height: m.Height, preset: m.Preset, kind: m.Kind, anisotropy: m.Anisotropy,
-            format: m.PixelFormat,
-            lod: m.Lod, depth: m.Depth, levels: m.Levels, samples: m.Samples, sizeInBytes: sizeInBytes
+            format: m.PixelFormat, lod: m.Lod, depth: m.Depth, levels: m.Levels, 
+            samples: m.Samples, sizeInBytes: sizeInBytes, 
+            compareTextureFunc:m.CompareTextureFunc, borderColor: m.BorderColor
         );
 }
 

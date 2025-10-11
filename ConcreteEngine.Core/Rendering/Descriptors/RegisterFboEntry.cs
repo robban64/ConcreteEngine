@@ -11,34 +11,32 @@ using ConcreteEngine.Graphics.Gfx.Contracts;
 
 namespace ConcreteEngine.Core.Rendering.Descriptors;
 
-public sealed class RegisterFboEntry(
-    GfxPixelFormat pixelFormat = GfxPixelFormat.SrgbAlpha,
-    RenderBufferMsaa multisample = RenderBufferMsaa.None,
-    TexturePreset texturePreset = TexturePreset.LinearClamp
-)
+public sealed class RegisterFboEntry
 {
-    public GfxPixelFormat PixelFormat { get; } = pixelFormat;
-    public RenderBufferMsaa Multisample { get; } = multisample;
-    public TexturePreset Preset { get; } = texturePreset;
-    public GfxFrameBufferDescriptor.AttachmentsDef Attachments { get; private set; }
+    public GfxFboColorTextureDesc? ColorTexture { get; private set; }
+    public GfxFboDepthTextureDesc? DepthTexture { get; private set; }
+    public bool ColorBuffer { get; private set; } = false;
+    public bool DepthStencilBuffer { get; private set; }
+    public RenderBufferMsaa Multisample { get; private set; } = RenderBufferMsaa.None;
 
     public RenderFbo.SizePolicy? FboSizePolicy { get; private set; }
 
-    public RegisterFboEntry AttachColorTexture()
+    public RegisterFboEntry AttachColorTexture(RenderBufferMsaa multisample = RenderBufferMsaa.None)
     {
-        Attachments = Attachments with { ColorTexture = true };
+        Multisample = multisample;
+        ColorTexture = new GfxFboColorTextureDesc();
         return this;
     }
 
     public RegisterFboEntry AttachDepthTexture()
     {
-        Attachments = Attachments with { DepthTexture = true };
+        DepthTexture = new GfxFboDepthTextureDesc();
         return this;
     }
 
     public RegisterFboEntry AttachDepthStencilBuffer()
     {
-        Attachments = Attachments with { DepthStencilBuffer = true };
+        DepthStencilBuffer = true;
         return this;
     }
 
@@ -64,10 +62,11 @@ public sealed class RegisterFboEntry(
 
         return new GfxFrameBufferDescriptor(
             Size: size,
-            Attachments: Attachments,
-            PixelFormat: PixelFormat,
-            Multisample: Multisample,
-            TexturePreset: Preset
+            ColorTexture: ColorTexture,
+            DepthTexture: DepthTexture,
+            ColorBuffer: ColorBuffer,
+            DepthStencilBuffer: DepthStencilBuffer,
+            Multisample: Multisample
         );
     }
 

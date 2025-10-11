@@ -16,10 +16,21 @@ public readonly record struct GfxTextureDescriptor(
 );
 
 public readonly record struct GfxTextureProperties(
+    float LodBias,
     TexturePreset Preset,
     TextureAnisotropy Anisotropy,
-    float LodBias
-);
+    DepthMode CompareTextureFunc = DepthMode.Unset
+)
+{
+    public GfxTextureBorder BorderColor { get; init; } = GfxTextureBorder.Off;
+}
+
+public readonly record struct GfxTextureBorder(byte R, byte G, byte B, byte A, bool Enabled)
+{
+    public static GfxTextureBorder Off => new (0,0,0, 0,false);
+    public static GfxTextureBorder On => new (1,1,1, 1,true);
+
+}
 
 internal readonly record struct GfxReplaceTexture(int Width, int Height, int? Depth = null, int? Samples = null);
 

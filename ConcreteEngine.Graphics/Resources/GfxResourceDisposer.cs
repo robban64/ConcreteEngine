@@ -50,14 +50,14 @@ internal sealed class GfxResourceDisposer : IGfxResourceDisposer
         var bStore = _resources.BackendStoreHub.Get(resourceKind);
         var native = bStore.GetNative(in gfxHandle);
 
-        var cmd = new DeleteCmd(gfxHandle, native, id.Value, 0, replace);
+        var cmd = new DeleteResourceCommand(gfxHandle, native, id.Value, 0, replace);
         _disposeQueue.Enqueue(cmd);
     }
 
 
     private sealed class ResourceDisposeQueue
     {
-        private readonly Queue<DeleteCmd> _disposeQueue = new(8);
+        private readonly Queue<DeleteResourceCommand> _disposeQueue = new(8);
         private readonly HashSet<int> _disposeSet = new(8);
 
         public int PendingCount => _disposeQueue.Count;
@@ -66,7 +66,7 @@ internal sealed class GfxResourceDisposer : IGfxResourceDisposer
 
         private int _ticks;
 
-        public void Enqueue(in DeleteCmd cmd)
+        public void Enqueue(in DeleteResourceCommand cmd)
         {
             // Kept for now to catch bugs
             InvalidOpThrower.ThrowIf(_isDisposing);
@@ -76,7 +76,7 @@ internal sealed class GfxResourceDisposer : IGfxResourceDisposer
         }
 
 
-        public bool TryGetNext(int delayTicks, out DeleteCmd cmd)
+        public bool TryGetNext(int delayTicks, out DeleteResourceCommand cmd)
         {
             cmd = default;
 

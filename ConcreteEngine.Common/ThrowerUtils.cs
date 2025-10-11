@@ -23,7 +23,7 @@ public static class InvalidOpThrower
 
     public static void ThrowIfNotNull(object? obj, string? param = null, string? message = null)
     {
-        if (obj is null) ThrowOperation(param, message);
+        if (obj is not null) ThrowOperation(param, message);
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]

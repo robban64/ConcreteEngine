@@ -1,7 +1,7 @@
 #region
 
 using System.Runtime.CompilerServices;
-using ConcreteEngine.Core.Rendering.Data;
+using ConcreteEngine.Core.Rendering.Definitions;
 
 #endregion
 
@@ -9,15 +9,14 @@ namespace ConcreteEngine.Core.Rendering.Passes;
 
 public delegate PassMutationState RenderPassMutate(RenderPassState currentState);
 
-public delegate ApplyPassReturn RenderPassOp(RenderPassCtx ctx, in RenderPassState state);
+public delegate PassAction RenderPassOp(RenderPassCtx ctx, in RenderPassState state);
 
 public delegate void RenderAfterPassOp(RenderPassCtx ctx, in RenderPassState state);
 
 public sealed class RenderPassEntry
 {
-    public PassId PassId { get; }
-    public int PassTagIdx { get; }
-    public PassTagKey TagKey { get; private set; }
+    public PassTagKey PassKey { get; private set; }
+    public PassOpKind PassOp { get; private set; }
 
 
     private RenderPassOp? _applyPassDel;
@@ -30,12 +29,11 @@ public sealed class RenderPassEntry
     private PassMutationState? _pendingState = null;
 
 
-    internal RenderPassEntry(PassId passId, PassTagKey tagKey, int passTagIdx, RenderPassState initial)
+    internal RenderPassEntry(PassTagKey passKey, PassOpKind passOp, RenderPassState initial)
     {
-        TagKey = tagKey;
-        PassTagIdx = passTagIdx;
+        PassKey = passKey;
         _defaultState = initial;
-        PassId = passId;
+        PassOp = passOp;
         _state = initial;
     }
 
@@ -56,7 +54,7 @@ public sealed class RenderPassEntry
     public void UpdateState(in PassMutationState replace) => _pendingState = replace;
 
 
-    public ApplyPassReturn ApplyPass(RenderPassCtx ctx)
+    public PassAction ApplyPass(RenderPassCtx ctx)
     {
         ApplyPending();
 

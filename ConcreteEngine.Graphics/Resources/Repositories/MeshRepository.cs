@@ -20,7 +20,7 @@ public interface IMeshRepository
 {
     IMeshLayout Get(MeshId meshId);
 }
-
+// TODO Delete
 internal sealed class MeshRepository : IMeshRepository
 {
     private readonly Dictionary<MeshId, MeshLayout> _registry = new(16);
@@ -40,7 +40,7 @@ internal sealed class MeshRepository : IMeshRepository
     internal void AddRecord(MeshId meshId, MeshLayout layout)
     {
         ArgumentOutOfRangeException.ThrowIfEqual(meshId.Value, 0);
-        ArgumentOutOfRangeException.ThrowIfEqual((int)layout.Properties.DrawKind, (int)MeshDrawKind.Invalid);
+        ArgumentOutOfRangeException.ThrowIfEqual((int)layout.Properties.Kind, (int)DrawMeshKind.Invalid);
 
         _registry.Add(meshId, layout);
     }

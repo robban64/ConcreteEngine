@@ -10,23 +10,31 @@ public readonly record struct GfxTextureDescriptor(
     int Width,
     int Height,
     TextureKind Kind,
-    EnginePixelFormat Format,
+    TexturePixelFormat Format,
     int Depth = 1,
     RenderBufferMsaa Samples = RenderBufferMsaa.None
 );
 
 public readonly record struct GfxTextureProperties(
+    float LodBias,
     TexturePreset Preset,
     TextureAnisotropy Anisotropy,
-    float LodBias
+    DepthMode CompareTextureFunc = DepthMode.Unset,
+    GfxTextureBorder BorderColor = default
 );
+
+public readonly record struct GfxTextureBorder(byte R, byte G, byte B, byte A, bool Enabled)
+{
+    public static GfxTextureBorder Off => new(0, 0, 0, 0, false);
+    public static GfxTextureBorder On => new(1, 1, 1, 1, true);
+}
 
 internal readonly record struct GfxReplaceTexture(int Width, int Height, int? Depth = null, int? Samples = null);
 
-internal readonly record struct BkTextureStoreDesc(EnginePixelFormat Format, uint Levels, uint Samples)
+internal readonly record struct BkTextureStoreDesc(TexturePixelFormat Format, uint Levels, uint Samples)
 {
-    public static BkTextureStoreDesc Make(EnginePixelFormat format, int levels, int samples) =>
+    public static BkTextureStoreDesc Make(TexturePixelFormat format, int levels, int samples) =>
         new(format, (uint)levels, (uint)samples);
 }
 
-internal readonly record struct BkTextureUploadDesc(EnginePixelFormat Format, uint Levels, uint Samples);
+internal readonly record struct BkTextureUploadDesc(TexturePixelFormat Format, uint Levels, uint Samples);

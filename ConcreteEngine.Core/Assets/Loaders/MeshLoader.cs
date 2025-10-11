@@ -60,7 +60,7 @@ internal sealed class MeshLoader : AssetTypeLoader<MeshManifestRecord, MeshResul
             Indices = indices,
             Properties = new MeshDrawProperties
             {
-                DrawKind = MeshDrawKind.Elements,
+                Kind = DrawMeshKind.Elements,
                 DrawCount = indices.Count,
                 ElementSize = DrawElementSize.UnsignedInt,
                 Primitive = DrawPrimitive.Triangles

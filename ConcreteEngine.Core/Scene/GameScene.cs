@@ -1,31 +1,35 @@
 #region
 
+using ConcreteEngine.Common.Numerics;
 using ConcreteEngine.Core.Engine.Configuration;
 using ConcreteEngine.Core.Engine.Data;
 using ConcreteEngine.Core.Rendering;
+using ConcreteEngine.Core.Rendering.Data;
+using ConcreteEngine.Core.Rendering.State;
 
 #endregion
 
 namespace ConcreteEngine.Core.Scene;
 
-public interface IEntityRegistry
-{
-}
 
 public abstract class GameScene
 {
     private World _world = null!;
+    private readonly Camera3D _camera;
 
     protected GameSceneContext Context { get; private set; } = null!;
 
     protected World World => _world;
+    protected Camera3D Camera => _camera;
 
     protected GameScene()
     {
+        _camera = new Camera3D();
     }
 
-    internal void Update(in UpdateTickInfo frameCtx)
+    internal void Update(in UpdateTickInfo frameCtx,  Size2D output)
     {
+        _camera.Viewport = output;
         Context.Features.Update(in frameCtx);
         Context.Modules.Update(in frameCtx);
     }
@@ -37,12 +41,18 @@ public abstract class GameScene
         World.Cleanup();
     }
 
+    internal void BeforeRender(out RenderViewSnapshot viewSnapshot)
+    {
+        _camera.MakeRenderViewInfo(out viewSnapshot);
+    }
+
 
     internal void AttachContext(GameSceneContext context)
     {
         var renderer = context.GetSystem<IRenderSystem>();
         _world = new World(renderer.RenderProps);
         context.World = World;
+        context.Camera = _camera;
         Context = context;
     }
 

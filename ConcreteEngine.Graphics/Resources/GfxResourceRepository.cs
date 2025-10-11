@@ -4,7 +4,7 @@ public interface IGfxResourceRepository
 {
     public IMeshRepository MeshRepository { get; }
 }
-
+//TODO Delete
 internal sealed class GfxResourceRepository : IGfxResourceRepository
 {
     private readonly MeshRepository _meshRepository;

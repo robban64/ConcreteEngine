@@ -47,7 +47,9 @@ public sealed class TerrainBatcher : RenderBatcher<TerrainBatchResult>
 
     public override TerrainBatchResult BuildBatch()
     {
-        ArgumentNullException.ThrowIfNull(HeightMap.PixelData);
+        if(HeightMap.PixelData is null)
+            throw new ArgumentNullException(nameof(HeightMap.PixelData));
+        
         ArgumentOutOfRangeException.ThrowIfLessThan(HeightMap.Width, 32);
         ArgumentOutOfRangeException.ThrowIfNotEqual(HeightMap.Width, HeightMap.Height);
         ArgumentOutOfRangeException.ThrowIfNotEqual(HeightMap.PixelData.Value.Length, Size * Size * 4);

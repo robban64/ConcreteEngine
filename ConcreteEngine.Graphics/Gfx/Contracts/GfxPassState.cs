@@ -32,16 +32,19 @@ public readonly record struct GfxPassStateFunc(
     BlendMode Blend = BlendMode.Unset,
     CullMode Cull = CullMode.Unset,
     DepthMode Depth = DepthMode.Unset,
-    (float factor, float units)? PolygonOffset = null)
+    PolygonOffsetLevel PolygonOffset = PolygonOffsetLevel.Unset)
 {
-    public static GfxPassStateFunc MakeDefault() => new(BlendMode.Alpha, CullMode.BackCcw, DepthMode.Lequal);
-    public static GfxPassStateFunc MakeDepth() => new(BlendMode.Unset, CullMode.FrontCcw, DepthMode.Lequal, (4.0f, 2.0f));
+    public static GfxPassStateFunc MakeDefault() =>
+        new(BlendMode.Alpha, CullMode.BackCcw, DepthMode.Lequal, PolygonOffsetLevel.None);
+
+    public static GfxPassStateFunc MakeDepth() =>
+        new(BlendMode.Unset, CullMode.FrontCcw, DepthMode.Lequal, PolygonOffsetLevel.Medium);
 }
 
-public readonly record struct GfxPassClear(Color4? ClearColor, ClearBufferFlag ClearBuffer)
+public readonly record struct GfxPassClear(Color4 ClearColor, ClearBufferFlag ClearBuffer)
 {
     public static GfxPassClear MakeColorClear(Color4 clearColor) => new(clearColor, ClearBufferFlag.Color);
     public static GfxPassClear MakeColorDepthClear(Color4 clearColor) => new(clearColor, ClearBufferFlag.ColorAndDepth);
-    public static GfxPassClear MakeDepthClear() => new(null, ClearBufferFlag.Depth);
-    public static GfxPassClear MakeNoClear() => new(null, ClearBufferFlag.None);
+    public static GfxPassClear MakeDepthClear() => new(Color4.Black, ClearBufferFlag.Depth);
+    public static GfxPassClear MakeNoClear() => new(Color4.Black, ClearBufferFlag.None);
 }

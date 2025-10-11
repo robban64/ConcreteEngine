@@ -19,6 +19,8 @@ public sealed class GameSceneContext
     public required FeatureManager Features { get; init; }
     public ModuleManager Modules { get; internal set; }
     public IWorld World { get; internal set; } = null!;
+    public Camera3D Camera { get; internal set; } = null!;
+
     public T GetSystem<T>() where T : IGameEngineSystem => _systems.GetSystem<T>();
 
     internal GameSceneContext(IEngineSystemManager systems)
@@ -34,6 +36,7 @@ public sealed class GameFeatureContext
     public FeatureManager Features => _scene.Features;
     public ModuleManager Modules => _scene.Modules;
     public IWorld World => _scene.World;
+    public Camera3D Camera => _scene.Camera;
 
     public T GetSystem<T>() where T : IGameEngineSystem => _scene.GetSystem<T>();
 
@@ -49,6 +52,7 @@ public sealed class GameModuleContext
 
     public FeatureManager Features => _scene.Features;
     public ModuleManager Modules => _scene.Modules;
+    public Camera3D Camera => _scene.Camera;
 
     public IWorld World => _scene.World;
 

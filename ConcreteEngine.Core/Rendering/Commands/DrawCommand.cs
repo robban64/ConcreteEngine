@@ -3,6 +3,8 @@
 using System.Numerics;
 using System.Runtime.CompilerServices;
 using ConcreteEngine.Core.Assets.Resources;
+using ConcreteEngine.Core.Rendering.Definitions;
+using ConcreteEngine.Core.Rendering.Passes;
 using ConcreteEngine.Graphics.Resources;
 
 #endregion
@@ -51,6 +53,6 @@ internal readonly struct DrawCommandRef : IComparable<DrawCommandRef>
     public int CompareTo(DrawCommandRef other) => _sortKey.CompareTo(other._sortKey);
 }
 
-internal readonly record struct DrawCommandTicket(int SubmitIdx, byte PassId);
+internal readonly record struct DrawCommandTicket(int SubmitIdx /*, byte PassId*/);
 
 internal readonly record struct DrawPassRange(int Start, int Count);

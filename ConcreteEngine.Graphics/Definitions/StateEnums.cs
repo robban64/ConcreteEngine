@@ -34,3 +34,12 @@ public enum DepthMode : byte
     Less = 3,
     Equal = 4
 }
+
+public enum PolygonOffsetLevel : byte
+{
+    Unset = 0,
+    None = 1,
+    Slight = 2,
+    Medium = 3,
+    Strong = 4
+}

@@ -13,11 +13,13 @@ using ConcreteEngine.Core.Features;
 using ConcreteEngine.Core.Modules;
 using ConcreteEngine.Core.Rendering;
 using ConcreteEngine.Core.Rendering.Data;
+using ConcreteEngine.Core.Rendering.State;
 using ConcreteEngine.Core.Scene;
 using ConcreteEngine.Core.Utils;
 using ConcreteEngine.Graphics;
 using ConcreteEngine.Graphics.Resources;
 using Silk.NET.OpenGL;
+using RenderFrameInfo = ConcreteEngine.Core.Engine.Data.RenderFrameInfo;
 using Shader = ConcreteEngine.Core.Assets.Resources.Shader;
 
 #endregion
@@ -42,6 +44,7 @@ public sealed class GameEngine : IDisposable
     private readonly RenderFrameInfo _renderInfo = new();
 
     private readonly EngineTimeHub _timeHub;
+    
 
     private bool _isDisposed = false;
 
@@ -99,40 +102,34 @@ public sealed class GameEngine : IDisposable
 
         _timeHub.RenderFrame(dt);
 
+        if (_sceneManager.Current is not { } scene)
+        {
+            _renderer.RenderEmptyFrame(in tickInfo);
+            return;
+        }
+        
         if (_renderInfo.FrameIndex > 1 && frameStatus == RenderFrameInfo.BeginFrameStatus.Resize)
         {
             _timeHub.DebounceTicker ??= new DebounceTicker(30);
         }
 
-
+        var beginStatus = BeginFrameStatus.None;
         if (_timeHub.DebounceTicker?.Tick() ?? false)
         {
             _timeHub.DebounceTicker = null;
-            var fbos = _renderer.RenderRegistry.RenderFbos;
-            Span<(FrameBufferId, Size2D)> newSizes = stackalloc (FrameBufferId, Size2D)[fbos.Count];
-            int idx = 0;
-            for (var i = 0; i < fbos.Count; i++)
-            {
-                var fbo = fbos[i];
-                if(fbo.IsFixedSize) continue;
-                newSizes[idx++] = (fbo.FboId, fbo.CalculateNewSize(_renderInfo.OutputSize));
-            }
-
-            _graphics.RecreateFbo(newSizes.Slice(0,idx));
-            return;
+            beginStatus = BeginFrameStatus.Resize;
         }
 
-        _graphics.BeginFrame(tickInfo.ToGfxFrameInfo());
-        if (_sceneManager.Current != null)
-        {
-            // _renderTime.TickOrRenderEffect();
-            _renderer.Render(in tickInfo, in tickParams);
-        }
+        scene.BeforeRender(out var viewInfo);
+        _renderer.BeginRenderFrame(beginStatus, in tickInfo, in tickParams, in viewInfo);
+        
+        // _renderTime.TickOrRenderEffect();
+        _renderer.Render(in tickInfo);
 
         //_renderTime.TickOrGpuDispose();
         //_renderTime.TickOrGpuUpload();
-        _graphics.EndFrame(out var gfxFrameResult);
 
+        _renderer.EndRenderFrame(out var gfxFrameResult);
         _renderInfo.EndRenderFrame(gfxFrameResult);
     }
 
@@ -157,7 +154,7 @@ public sealed class GameEngine : IDisposable
         _timeHub.UpdateFrame(dt);
 
         var updateInfo = _updateInfo.UpdateTickInfo;
-        _sceneManager.Current?.Update(in updateInfo);
+        _sceneManager.Current?.Update(in updateInfo, _window.FramebufferSize);
 
         UpdateSceneTransitionIfNeeded();
     }
@@ -196,8 +193,7 @@ public sealed class GameEngine : IDisposable
                 _stateMachine.Next(_assets.ProcessLoader(8));
                 break;
             case EngineStateLevel.InitializeSystem:
-                var shaders = _assets.GetAll<Shader>();
-                _renderer.InitializeGraphics(shaders);
+                InitializeGraphics();
                 InitializeSystems();
                 _stateMachine.Next();
                 break;
@@ -206,6 +202,15 @@ public sealed class GameEngine : IDisposable
                 _stateMachine.Next();
                 break;
         }
+    }
+
+    private void InitializeGraphics()
+    {
+        var shaders = _assets.GetAll<Shader>();
+        Span<ShaderId> shaderIds = stackalloc ShaderId[shaders.Count];
+        for (int i = 0; i < shaders.Count; i++) shaderIds[i] = shaders[i].ResourceId;
+        _renderer.InitializeGraphics(shaderIds);
+
     }
 
     private void UpdateSceneTransitionIfNeeded()

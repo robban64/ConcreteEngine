@@ -1,9 +1,5 @@
 #region
 
-using System.Runtime.CompilerServices;
-using ConcreteEngine.Core.Assets.Resources;
-using ConcreteEngine.Core.Rendering.Passes;
-
 #endregion
 
 namespace ConcreteEngine.Core.Rendering.Commands;

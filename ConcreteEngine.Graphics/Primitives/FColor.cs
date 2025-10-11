@@ -1,9 +1,11 @@
-using System.Numerics;
+#region
+
 using System.Runtime.InteropServices;
 using ConcreteEngine.Common.Numerics;
 
-namespace ConcreteEngine.Graphics.Primitives;
+#endregion
 
+namespace ConcreteEngine.Graphics.Primitives;
 
 [StructLayout(LayoutKind.Sequential)]
 public readonly struct FColor3
@@ -14,19 +16,21 @@ public readonly struct FColor3
 
     public FColor3(float r, float g, float b)
     {
-        R = r; G = g; B = b;
+        R = r;
+        G = g;
+        B = b;
     }
-    
+
     public FColor3(Color4 v)
     {
-        R = v.R; G = v.G; B = v.B;
+        R = v.R;
+        G = v.G;
+        B = v.B;
     }
 
-    public static FColor3 ToSrgb(Color4 c) =>
-        new(ToSrgb(c.R), ToSrgb(c.G), ToSrgb(c.B));
+    public static FColor3 ToSrgb(Color4 c) => new(ToSrgb(c.R), ToSrgb(c.G), ToSrgb(c.B));
 
-    public static FColor3 FromSrgb(Color4 c) =>
-        new(FromSrgb(c.R), FromSrgb(c.G), FromSrgb(c.B));
+    public static FColor3 FromSrgb(Color4 c) => new(FromSrgb(c.R), FromSrgb(c.G), FromSrgb(c.B));
 
     public Color4 ToColor4(float a = 1f) => new(R, G, B, a);
 
@@ -47,14 +51,15 @@ public readonly struct FColor4
 
     public FColor4(float r, float g, float b, float a = 1f)
     {
-        R = r; G = g; B = b; A = a;
+        R = r;
+        G = g;
+        B = b;
+        A = a;
     }
 
-    public static FColor4 ToSrgb(Color4 c) =>
-        new(ToSrgb(c.R), ToSrgb(c.G), ToSrgb(c.B), c.A);
+    public static FColor4 ToSrgb(Color4 c) => new(ToSrgb(c.R), ToSrgb(c.G), ToSrgb(c.B), c.A);
 
-    public static FColor4 FromSrgb(Color4 c) =>
-        new(FromSrgb(c.R), FromSrgb(c.G), FromSrgb(c.B), c.A);
+    public static FColor4 FromSrgb(Color4 c) => new(FromSrgb(c.R), FromSrgb(c.G), FromSrgb(c.B), c.A);
 
     public Color4 ToColor4() => new(R, G, B, A);
 

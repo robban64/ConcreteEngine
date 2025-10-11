@@ -1,40 +1,43 @@
+#region
+
 using System.Numerics;
 using ConcreteEngine.Common;
 using ConcreteEngine.Common.Numerics;
-using ConcreteEngine.Core.Rendering.Gfx;
+using ConcreteEngine.Core.Rendering.Registry;
 using ConcreteEngine.Graphics;
 using ConcreteEngine.Graphics.Gfx.Contracts;
 
+#endregion
+
 namespace ConcreteEngine.Core.Rendering.Descriptors;
 
-public sealed class RegisterFboEntry(
-    EnginePixelFormat pixelFormat = EnginePixelFormat.SrgbAlpha,
-    RenderBufferMsaa multisample = RenderBufferMsaa.None,
-    TexturePreset texturePreset = TexturePreset.LinearClamp
-)
+public sealed class RegisterFboEntry
 {
-    public EnginePixelFormat PixelFormat { get; } = pixelFormat;
-    public RenderBufferMsaa Multisample { get; } = multisample;
-    public TexturePreset Preset { get; } = texturePreset;
-    public GfxFrameBufferDescriptor.AttachmentsDef Attachments { get; private set; }
+    public GfxFboColorTextureDesc? ColorTexture { get; private set; }
+    public GfxFboDepthTextureDesc? DepthTexture { get; private set; }
+    public bool ColorBuffer { get; private set; } = false;
+    public bool DepthStencilBuffer { get; private set; }
+    public RenderBufferMsaa Multisample { get; private set; } = RenderBufferMsaa.None;
 
     public RenderFbo.SizePolicy? FboSizePolicy { get; private set; }
 
-    public RegisterFboEntry AttachColorTexture()
+    public RegisterFboEntry AttachColorTexture(GfxFboColorTextureDesc desc,
+        RenderBufferMsaa multisample = RenderBufferMsaa.None)
     {
-        Attachments = Attachments with { ColorTexture = true };
+        Multisample = multisample;
+        ColorTexture = desc;
         return this;
     }
 
-    public RegisterFboEntry AttachDepthTexture()
+    public RegisterFboEntry AttachDepthTexture(GfxFboDepthTextureDesc desc)
     {
-        Attachments = Attachments with { DepthTexture = true };
+        DepthTexture = desc;
         return this;
     }
 
     public RegisterFboEntry AttachDepthStencilBuffer()
     {
-        Attachments = Attachments with { DepthStencilBuffer = true };
+        DepthStencilBuffer = true;
         return this;
     }
 
@@ -55,26 +58,23 @@ public sealed class RegisterFboEntry(
     {
         FboSizePolicy ??= RenderFbo.SizePolicy.Default();
         var size = FboSizePolicy.Calculate(outputSize);
-        
+
         InvalidOpThrower.ThrowIf(size.Width < 1 || size.Height < 1, nameof(size));
-        
+
+        if (ColorTexture is { PixelFormat: TexturePixelFormat.Unknown or TexturePixelFormat.Depth } ct)
+            throw new InvalidOperationException($"Invalid PixelFormat for ColorTexture {ct.PixelFormat}");
+
+        if (DepthTexture is { PixelFormat: not TexturePixelFormat.Depth } dt)
+            throw new InvalidOperationException($"Invalid PixelFormat for ColorTexture {dt.PixelFormat}");
+
+
         return new GfxFrameBufferDescriptor(
             Size: size,
-            Attachments: Attachments,
-            PixelFormat: PixelFormat,
-            Multisample: Multisample,
-            TexturePreset: Preset
+            ColorTexture: ColorTexture,
+            DepthTexture: DepthTexture,
+            ColorBuffer: ColorBuffer,
+            DepthStencilBuffer: DepthStencilBuffer,
+            Multisample: Multisample
         );
     }
-    
-    public static RegisterFboEntry MakeDefault(bool hasMips) =>
-        new(pixelFormat: EnginePixelFormat.SrgbAlpha,
-            texturePreset: hasMips ? TexturePreset.LinearMipmapClamp : TexturePreset.LinearClamp);
-
-    public static RegisterFboEntry MakeMsaa(RenderBufferMsaa multisample) =>
-        new(pixelFormat: EnginePixelFormat.SrgbAlpha, texturePreset: TexturePreset.None, multisample: multisample);
-
-    public static RegisterFboEntry MakePost(bool hasMips) =>
-        new(pixelFormat: EnginePixelFormat.SrgbAlpha,
-            texturePreset: hasMips ? TexturePreset.LinearMipmapClamp : TexturePreset.LinearClamp);
 }

@@ -24,10 +24,10 @@ internal sealed class BackendOps<TId, THandle, TMeta, TDef> : IBackendOps
     public BackendOps(BackendStoreHub storeHub) => _facade = storeHub.Get<TId, THandle, TMeta, TDef>();
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public THandle Get(in GfxHandle handle) => _facade.Get(in handle);
+    public THandle GetUntyped(in GfxHandle handle) => _facade.GetUntyped(in handle);
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public THandle GetRef(GfxRefToken<TId> refToken) => _facade.GetRef(refToken);
+    public THandle GetHandle(GfxRefToken<TId> refToken) => _facade.GetHandle(refToken);
 
 
     public GfxRefToken<TId> AddExisting(uint rawHandle, in TMeta meta, out TMeta outMeta)

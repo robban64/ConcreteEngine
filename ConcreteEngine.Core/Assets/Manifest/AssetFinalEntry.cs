@@ -27,9 +27,9 @@ internal record struct MeshCreationInfo(int DrawCount);
 internal record struct TextureCreationInfo(
     int Width,
     int Height,
-    EnginePixelFormat PixelFormat,
+    TexturePixelFormat PixelFormat,
     byte[]? Data = null);
 
-internal record struct CubeMapCreationInfo(int Width, int Height, EnginePixelFormat PixelFormat);
+internal record struct CubeMapCreationInfo(int Width, int Height, TexturePixelFormat PixelFormat);
 
 internal record struct ShaderCreationInfo(int Samplers);

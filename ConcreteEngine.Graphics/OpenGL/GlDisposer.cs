@@ -20,7 +20,7 @@ internal sealed class GlDisposer : IGraphicsDriverModule
         _dispatcher = ctx.Dispatcher;
     }
 
-    public void DeleteGfxResource(in DeleteCmd cmd)
+    public void DeleteGfxResource(in DeleteResourceCommand cmd)
     {
         switch (cmd.Handle.Kind)
         {
@@ -49,43 +49,43 @@ internal sealed class GlDisposer : IGraphicsDriverModule
         }
     }
 
-    private void DisposeTexture(in DeleteCmd cmd)
+    private void DisposeTexture(in DeleteResourceCommand cmd)
     {
         _gl.DeleteTexture(cmd.NativeHandle.Value);
         _dispatcher.OnDelete(in cmd);
     }
 
-    private void DisposeShader(in DeleteCmd cmd)
+    private void DisposeShader(in DeleteResourceCommand cmd)
     {
         _gl.DeleteProgram(cmd.NativeHandle.Value);
         _dispatcher.OnDelete(in cmd);
     }
 
-    private void DisposeVao(in DeleteCmd cmd)
+    private void DisposeVao(in DeleteResourceCommand cmd)
     {
         _gl.DeleteVertexArray(cmd.NativeHandle.Value);
         _dispatcher.OnDelete(in cmd);
     }
 
-    private void DisposeVbo(in DeleteCmd cmd)
+    private void DisposeVbo(in DeleteResourceCommand cmd)
     {
         _gl.DeleteBuffer(cmd.NativeHandle.Value);
         _dispatcher.OnDelete(in cmd);
     }
 
-    private void DisposeIbo(in DeleteCmd cmd)
+    private void DisposeIbo(in DeleteResourceCommand cmd)
     {
         _gl.DeleteBuffer(cmd.NativeHandle.Value);
         _dispatcher.OnDelete(in cmd);
     }
 
-    private void DisposeFbo(in DeleteCmd cmd)
+    private void DisposeFbo(in DeleteResourceCommand cmd)
     {
         _gl.DeleteFramebuffer(cmd.NativeHandle.Value);
         _dispatcher.OnDelete(in cmd);
     }
 
-    private void DisposeRbo(in DeleteCmd cmd)
+    private void DisposeRbo(in DeleteResourceCommand cmd)
     {
         _gl.DeleteRenderbuffer(cmd.NativeHandle.Value);
         _dispatcher.OnDelete(in cmd);

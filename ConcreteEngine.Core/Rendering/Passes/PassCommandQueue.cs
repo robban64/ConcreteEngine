@@ -1,7 +1,9 @@
-using System.Diagnostics;
-using System.Runtime.InteropServices;
+#region
+
 using ConcreteEngine.Core.Rendering.Data;
 using ConcreteEngine.Graphics.Resources;
+
+#endregion
 
 namespace ConcreteEngine.Core.Rendering.Passes;
 
@@ -10,7 +12,8 @@ internal sealed class PassCommandQueue
     private readonly PriorityQueue<TextureId, PassTextureSlotKey> _sourceQueue;
     private readonly PriorityQueue<PassMutationState, PassTagKey> _mutationQueue;
 
-    private readonly List<TextureId> _textureSlots = new(4);
+    private readonly TextureId[] _textureSlots = new TextureId[RenderLimits.TextureSlots];
+    private int _maxTexSlot = 0;
 
     internal PassCommandQueue()
     {
@@ -30,7 +33,7 @@ internal sealed class PassCommandQueue
 
     public void DequeueMutationTo(RenderPassEntry entry)
     {
-        while (_mutationQueue.TryPeek(out _, out var k) && k.TagIndex == entry.TagKey.TagIndex)
+        while (_mutationQueue.TryPeek(out _, out var k) && k.TagIndex == entry.PassKey.TagIndex)
         {
             _mutationQueue.TryDequeue(out var state, out k);
             entry.UpdateState(in state);
@@ -39,29 +42,34 @@ internal sealed class PassCommandQueue
 
     public void DequeuePassSources(RenderPassEntry entry)
     {
-        var tagIndex = entry.TagKey.TagIndex;
-        _textureSlots.Clear();
+        var tagIndex = entry.PassKey.TagIndex;
+        _textureSlots.AsSpan().Clear();
+        _maxTexSlot = 0;
+
         while (_sourceQueue.TryPeek(out _, out var k) && k.TagIndex == tagIndex)
         {
             _sourceQueue.TryDequeue(out var id, out k);
-            _textureSlots.Add(id);
+            _textureSlots[k.TextureSlot] = id;
+            _maxTexSlot = int.Max(_maxTexSlot, k.TextureSlot);
         }
     }
-    
+
+/*
     public IReadOnlyList<TextureId> GetPassSources()
     {
         return _textureSlots;
     }
-
-    public ReadOnlySpan<TextureId> GetPassSourcesSpan()
+*/
+    public ReadOnlySpan<TextureId> GetPassSources()
     {
-        return CollectionsMarshal.AsSpan(_textureSlots);
+        return _textureSlots.AsSpan(0, int.Max(_maxTexSlot, 1));
     }
 
     internal void Prepare()
     {
         _sourceQueue.Clear();
         _mutationQueue.Clear();
-        _textureSlots.Clear();
+        _textureSlots.AsSpan().Clear();
+        _maxTexSlot = 0;
     }
 }

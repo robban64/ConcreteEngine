@@ -1,8 +1,6 @@
 #region
 
 using ConcreteEngine.Common.Numerics;
-using ConcreteEngine.Graphics;
-using ConcreteEngine.Graphics.Gfx;
 using ConcreteEngine.Graphics.Gfx.Contracts;
 using ConcreteEngine.Graphics.Resources;
 
@@ -65,7 +63,7 @@ public readonly record struct RenderPassState(
         PassState = GfxPassState.MakeScreen(),
         ShaderId = shaderId
     };
-    
+
     public static RenderPassState MakeShadow() => new()
     {
         ClearColor = GfxPassClear.MakeDepthClear(),

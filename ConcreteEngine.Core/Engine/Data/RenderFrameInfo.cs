@@ -2,6 +2,7 @@ using System.Numerics;
 using ConcreteEngine.Common.Numerics;
 using ConcreteEngine.Core.Engine.Platform;
 using ConcreteEngine.Core.Rendering.Data;
+using ConcreteEngine.Core.Rendering.State;
 using ConcreteEngine.Graphics;
 
 namespace ConcreteEngine.Core.Engine.Data;
@@ -17,20 +18,22 @@ public sealed class RenderFrameInfo
 
     public GfxFrameResult GfxResult { get; private set; }
 
+    private int RandomSeed => (int)FrameIndex + 666;
+
     internal BeginFrameStatus BeginRenderFrame(
         float dt, float alpha,
         IEngineWindowHost window,
         IEngineInputSource input,
-        out RenderTickInfo tickInfo,
-        out RenderTickParams tickParams)
+        out Rendering.State.RenderFrameInfo frameInfo,
+        out RenderRuntimeParams runtimeParams)
     {
         FrameIndex++;
         Time += dt;
         Alpha = alpha;
         OutputSize = window.FramebufferSize;
 
-        tickInfo = new RenderTickInfo(FrameIndex, dt, Alpha, OutputSize);
-        tickParams = new RenderTickParams(window.Size, input.MousePosition, Time, 9999);
+        frameInfo = new Rendering.State.RenderFrameInfo(FrameIndex, dt, Alpha, OutputSize);
+        runtimeParams = new RenderRuntimeParams(window.Size, input.MousePosition, Time, 9999);
 
         var status = BeginFrameStatus.None;
         if (PrevOutputSize != OutputSize) status = BeginFrameStatus.Resize;

@@ -48,11 +48,11 @@ public readonly struct FrameUniformRecord(
     Vector4 fogParams1
 ) : IStd140Uniform
 {
-    public readonly Vector4 Ambient = ambient;              // xyz = sky ambient, w = exposure
-    public readonly Vector4 AmbientGround = ambientGround;  // xyz = ground ambient
-    public readonly Vector4 FogColor = fogColor;            // rgb = base fog color, a = in-scattering mix
-    public readonly Vector4 FogParams0 = fogParams0;        // x=exp2_k, y=height_k, z=height0, w=globalStrength
-    public readonly Vector4 FogParams1 = fogParams1;        // x=expWeight, y=heightWeight, z=maxDistance, w=reserved
+    public readonly Vector4 Ambient = ambient; // xyz = sky ambient, w = exposure
+    public readonly Vector4 AmbientGround = ambientGround; // xyz = ground ambient
+    public readonly Vector4 FogColor = fogColor; // rgb = base fog color, a = in-scattering mix
+    public readonly Vector4 FogParams0 = fogParams0; // x=exp2_k, y=height_k, z=height0, w=globalStrength
+    public readonly Vector4 FogParams1 = fogParams1; // x=expWeight, y=heightWeight, z=maxDistance, w=reserved
 }
 
 public readonly struct CameraUniformRecord(

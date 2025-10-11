@@ -16,7 +16,7 @@ var options = WindowOptions.Default with { Title = "Demo 3D Game Engine" };
 
 var host = new EngineWindowHost(
     options: options,
-    backend: GraphicsBackend.OpenGL
+    backend: GraphicsBackend.OpenGl
 );
 
 host.Run(builder);

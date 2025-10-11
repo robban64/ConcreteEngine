@@ -23,13 +23,14 @@ internal sealed class BackendStoreFacade<THandle> : IBackendStoreFacade
 
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public NativeHandle GetNative(in GfxHandle h) => NativeHandle.From(_store.Get(in h));
+    public NativeHandle GetNative(in GfxHandle h) => NativeHandle.From(_store.GetUntyped(in h));
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public THandle Get(in GfxHandle h) => _store.Get(in h);
+    public THandle GetUntyped(in GfxHandle h) => _store.GetUntyped(in h);
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public THandle GetRef<TId>(GfxRefToken<TId> refToken) where TId : unmanaged, IResourceId => _store.GetRef(refToken);
+    public THandle GetHandle<TId>(GfxRefToken<TId> refToken) where TId : unmanaged, IResourceId =>
+        _store.GetHandle(refToken);
 
 
     public GfxHandle Add(THandle h) => _store.Add(h);

@@ -101,7 +101,7 @@ public sealed class DrawStateOps
 
     private void UseShader(ShaderId shaderId)
     {
-        var renderShader = _renderRegistry.GetRenderShader(shaderId);
-        _gfxCmd.UseShader(shaderId, renderShader.Locations);
+        //var renderShader = _renderRegistry.GetRenderShader(shaderId);
+        _gfxCmd.UseShader(shaderId);
     }
 }

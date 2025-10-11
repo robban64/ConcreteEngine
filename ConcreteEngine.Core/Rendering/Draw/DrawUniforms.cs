@@ -78,39 +78,21 @@ internal sealed class DrawUniforms
 
     private void UploadFrameUniformRecord()
     {
-        /*
-        var data = new FrameUniformRecord(
-            ambient: new Vector4(snapshot.Ambient, 1),
-            ambientGround: new Vector4(snapshot.Ambient, 1),
-            fogColor: new Vector4(0.6f, 0.7f, 0.8f, 0.5f),
-            fogParams0: new Vector4(0.00015f, 0.002f, 0.0f, 1.0f),
-            fogParams1: new Vector4(1.0f, 1.0f, 200.0f, 0.0f)
-
-            ambient: new Vector4(0.032f, 0.032f, 0.034f, 0.0f),
-           ambientGround: new Vector4(0.015f, 0.019f, 0.013f, 0.0f),
-           fogColor: new Vector4(0.76f, 0.81f, 0.86f, 0.055f),
-           fogParams0: new Vector4(0.0000035f, 0.000090f, 0.0f, 0.15f),
-           fogParams1: new Vector4(1.0f, 0.25f, 8000.0f, 0.0f)
-
-        );
-*/
         var fog = _sceneState.Fog;
         var ambient = _sceneState.Ambient;
 
         float kExp2 = 1f / (fog.Density * fog.Density);
-        float kHeight = 1f / MathF.Max(fog.HeightFalloff, 1e-6f);
+        float kHeight = 1f / MathF.Max(x: fog.HeightFalloff, y: 1e-6f);
 
         var data = new FrameUniformRecord(
-            ambient: new Vector4(ambient.Ambient, ambient.Exposure), // xyz = sky ambient, w = exposure
-            ambientGround: new Vector4(ambient.AmbientGround, 0.0f), // xyz = ground ambient
-            fogColor: new Vector4(fog.Color, fog.Scattering), // rgb = base fog color, a = in-scattering mix
-            fogParams0: new Vector4(kExp2, kHeight, fog.BaseHeight,
-                fog.Strength), // x=exp2_k, y=height_k, z=height0, w=globalStrength
-            fogParams1: new Vector4(1f, fog.HeightInfluence, fog.MaxDistance,
-                0.0f) // x=expWeight, y=heightWeight, z=maxDistance, w=reserved
+            ambient: new Vector4(value: ambient.Ambient, w: ambient.Exposure), 
+            ambientGround: new Vector4(value: ambient.AmbientGround, w: 0.0f),
+            fogColor: new Vector4(value: fog.Color, w: fog.Scattering),
+            fogParams0: new Vector4(x: kExp2, y: kHeight, z: fog.BaseHeight, w: fog.Strength), 
+            fogParams1: new Vector4(x: 1f, y: fog.HeightInfluence, z: fog.MaxDistance, w: 0.0f)
         );
 
-        _gfxBuffers.UploadUniformGpuData(_frameUbo, in data, 0);
+        _gfxBuffers.UploadUniformGpuData(uboId: _frameUbo, data: in data, offset: 0);
     }
 
     private void UploadDirLight()

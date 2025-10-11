@@ -1,4 +1,4 @@
-namespace ConcreteEngine.Core.Rendering.Passes;
+namespace ConcreteEngine.Core.Rendering.Definitions;
 
 [Flags]
 public enum PassMask : ushort
@@ -13,4 +13,18 @@ public enum PassMask : ushort
     Post = 1 << 6,*/
 
     Default = DepthPre | Main //| ShadowDir | ShadowSpot | ShadowPoint
+}
+
+public enum PassOpKind : byte
+{
+    Draw = 0,
+    Resolve = 1,
+    Fsq = 2,
+    Screen = 3
+}
+
+internal enum PreparePassActionKind: byte
+{
+    Run,
+    Skip
 }

@@ -51,9 +51,9 @@ public readonly struct TextureMeta(
 }
 
 [StructLayout(LayoutKind.Sequential)]
-public readonly struct ShaderMeta(int samplers) : IResourceMeta
+public readonly struct ShaderMeta(int samplerSlots) : IResourceMeta
 {
-    public readonly int Samplers = samplers;
+    public readonly int SamplerSlots = samplerSlots;
 }
 
 [StructLayout(LayoutKind.Sequential)]

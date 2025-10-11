@@ -1,12 +1,8 @@
+using ConcreteEngine.Core.Rendering.Definitions;
+
 namespace ConcreteEngine.Core.Rendering.Passes;
 
-public enum PassOpKind : byte
-{
-    Draw = 0,
-    Resolve = 1,
-    Fsq = 2,
-    Screen = 3
-}
+
 
 public readonly record struct PassAction(PassOpKind OpKind)
 {

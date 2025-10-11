@@ -2,6 +2,7 @@
 
 using System.Runtime.CompilerServices;
 using ConcreteEngine.Graphics;
+using ConcreteEngine.Graphics.Gfx;
 using ConcreteEngine.Graphics.Resources;
 using ConcreteEngine.Graphics.Utils;
 
@@ -12,42 +13,25 @@ namespace ConcreteEngine.Core.Rendering.Registry;
 public sealed class RenderShader : IComparable<ShaderId>
 {
     public ShaderId Id { get; }
-    private readonly int[] _locations;
-    private readonly Dictionary<string, int> _uniforms;
+    public int SamplerSlots { get; }
 
-    public IReadOnlyDictionary<string, int> Uniforms => _uniforms;
-    public int[] Locations => _locations;
-
-    public RenderShader(ShaderId id, List<(string, int)> uniformPairs)
+    internal RenderShader(ShaderId id, ShaderMeta meta)
     {
         Id = id;
-        _locations = new int [GraphicsEnumCache.ShaderUniformVals.Length];
-        _uniforms = new Dictionary<string, int>(uniformPairs.Count);
+        SamplerSlots = meta.SamplerSlots;
+    }
 
+    public Dictionary<string, int> CreateNewUniformDict(GfxShaders gfx)
+    {
+        var uniformPairs = gfx.GetUniformList(Id);
+        var uniforms = new Dictionary<string, int>(uniformPairs.Count);
+        
         foreach (var (uniform, location) in uniformPairs)
         {
-            _uniforms.Add(uniform, location);
-            var idx = uniform.IndexOf(".", StringComparison.Ordinal);
+            uniforms.Add(uniform, location);
         }
-
-        for (int i = 0; i < _locations.Length; i++)
-        {
-            var uniformName = GraphicsEnumCache.ShaderUniformVals[i].ToUniformName();
-            if (_uniforms.TryGetValue(uniformName, out var uniformLocation))
-            {
-                _locations[i] = uniformLocation;
-                continue;
-            }
-
-            _locations[i] = -1;
-        }
+        return uniforms;
     }
-
-    public int this[ShaderUniform uniform]
-    {
-        [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        get => _locations[(int)uniform];
-    }
-
+    
     public int CompareTo(ShaderId other) => Id.Value.CompareTo(other.Value);
 }

@@ -67,8 +67,8 @@ internal sealed class DrawProcessor
 
     private void UseShader(ShaderId shaderId)
     {
-        var renderShader = _registry.GetRenderShader(shaderId);
-        _gfxCmd.UseShader(shaderId, renderShader.Locations);
+        //var renderShader = _registry.GetRenderShader(shaderId);
+        _gfxCmd.UseShader(shaderId);
     }
 
     private void BindDrawMaterial(MaterialId materialId)
@@ -77,10 +77,9 @@ internal sealed class DrawProcessor
         var material = _materials.GetMaterial(materialId);
         UseShader(material.ShaderId);
 
-        for (int i = 0; i < material.SamplerSlots.Length; i++)
+        for (var i = 0; i < material.SamplerSlots.Length; i++)
         {
             var value = material.SamplerSlots[i];
-            if (value == 0) continue;
             _gfxCmd.BindTexture(value, i);
         }
 

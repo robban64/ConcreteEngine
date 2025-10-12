@@ -31,7 +31,7 @@ public sealed class Texture2D : IGraphicAssetFile<TextureId>, ITextureResource
     public required TexturePixelFormat PixelFormat { get; init; }
     public TexturePreset Preset { get; init; }
     public TextureAnisotropy Anisotropy { get; init; }
-    public AssetKind AssetType => AssetKind.Texture2D;
+    public AssetKind Kind => AssetKind.Texture2D;
     public ResourceKind GfxResourceKind => ResourceKind.Texture;
 
     private byte[]? _pixelData;

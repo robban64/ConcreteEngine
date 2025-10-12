@@ -18,7 +18,7 @@ public sealed class Mesh : IGraphicAssetFile<MeshId>
 
     public int DrawCount { get; init; }
 
-    public AssetKind AssetType => AssetKind.Mesh;
+    public AssetKind Kind => AssetKind.Mesh;
     public ResourceKind GfxResourceKind => ResourceKind.Mesh;
     public MeshId ResourceId { get; init; }
 }

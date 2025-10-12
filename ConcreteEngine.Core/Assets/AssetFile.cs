@@ -8,20 +8,12 @@ using ConcreteEngine.Graphics.Gfx.Resources;
 
 namespace ConcreteEngine.Core.Assets;
 
-public enum AssetKind
-{
-    Unknown = 0,
-    Shader = 1,
-    Mesh = 2,
-    Texture2D = 3,
-    CubeMap = 4,
-    Material = 5
-}
+
 
 public interface IAssetFile
 {
     string Name { get; init; }
-    AssetKind AssetType { get; }
+    AssetKind Kind { get; }
 }
 
 public interface IGraphicAssetFile : IAssetFile

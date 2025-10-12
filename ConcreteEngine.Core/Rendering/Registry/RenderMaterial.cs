@@ -1,7 +1,7 @@
 using System.Runtime.CompilerServices;
 using ConcreteEngine.Common.Numerics;
 using ConcreteEngine.Core.Assets.Resources;
-using ConcreteEngine.Graphics.Resources;
+using ConcreteEngine.Graphics.Gfx.Resources;
 
 namespace ConcreteEngine.Core.Rendering.Registry;
 

@@ -2,8 +2,9 @@
 
 using ConcreteEngine.Common.Numerics;
 using ConcreteEngine.Graphics.Error;
+using ConcreteEngine.Graphics.Gfx.Definitions;
+using ConcreteEngine.Graphics.Gfx.Resources;
 using ConcreteEngine.Graphics.OpenGL.Utilities;
-using ConcreteEngine.Graphics.Resources;
 using Silk.NET.OpenGL;
 
 #endregion

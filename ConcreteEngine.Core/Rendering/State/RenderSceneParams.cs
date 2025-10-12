@@ -7,51 +7,64 @@ using ConcreteEngine.Core.Assets.Resources;
 
 namespace ConcreteEngine.Core.Rendering.State;
 
-public readonly record struct SkyboxParams(MaterialId MaterialId, Quaternion Rotation, float Intensity);
+public readonly struct SkyboxParams(MaterialId materialId, Quaternion rotation, float intensity)
+{
+    public MaterialId MaterialId { get; init; } = materialId;
+    public Quaternion Rotation { get; init; } = rotation;
+    public float Intensity { get; init; } = intensity;
+}
 
-public readonly record struct DirLightParams(Vector3 Direction, Vector3 Diffuse, float Intensity, float Specular);
+public readonly struct DirLightParams(Vector3 direction, Vector3 diffuse, float intensity, float specular)
+{
+    public Vector3 Direction { get; init; } = direction;
+    public Vector3 Diffuse { get; init; } = diffuse;
+    public float Intensity { get; init; } = intensity;
+    public float Specular { get; init; } = specular;
+}
 
-public readonly record struct AmbientParams(Vector3 Ambient, Vector3 AmbientGround, float Exposure);
+public readonly struct AmbientParams(Vector3 ambient, Vector3 ambientGround, float exposure)
+{
+    public Vector3 Ambient { get; init; } = ambient;
+    public Vector3 AmbientGround { get; init; } = ambientGround;
+    public float Exposure { get; init; } = exposure;
+}
 
-public readonly record struct FogParams(
-    Vector3 Color,
-    float Density,
-    float HeightFalloff,
-    float BaseHeight,
-    float Scattering,
-    float MaxDistance,
-    float HeightInfluence,
-    float Strength
-);
-
-public readonly record struct ShadowParams(
-    int ShadowMapSize,
-    float ZPad,
-    float ConstBias,
-    float SlopeBias,
-    float Strength,
-    float PcfRadius
-);
-
-public readonly record struct PostEffectParams(
-    PostEffectParams.GradeInfo Grade,
-    PostEffectParams.WhiteBalanceInfo WhiteBalance,
-    PostEffectParams.BloomInfo Bloom,
-    PostEffectParams.ImageFxInfo ImageFx
+public readonly struct FogParams(
+    Vector3 color,
+    float density,
+    float heightFalloff,
+    float baseHeight,
+    float scattering,
+    float maxDistance,
+    float heightInfluence,
+    float strength
 )
 {
-    // -1..+1 > -0.10..+0.10
-    // 0..1 > 0.8–1.2
-    // 0..1 > 0.9–1.1
-    // -1..+1 > -0.05..+0.05
-    public readonly record struct GradeInfo(float Exposure, float Saturation, float Contrast, float Warmth);
-
-    // -1..+1 > -0.05..+0.05 // 0..1
-    public readonly record struct WhiteBalanceInfo(float Tint, float Strength);
-
-    // 0..1 // 0..1 > 0.6–0.9 // px
-    public readonly record struct BloomInfo(float Intensity, float Threshold, float Radius);
-
-    // 0..1 > 0..0.15 // 0..1 > 0..0.01 // 0..1 > 0..0.15 // 0..1 > 0..0.12
-    public readonly record struct ImageFxInfo(float Vignette, float Grain, float Sharpen, float Rolloff);
+    public Vector3 Color { get; init; } = color;
+    public float Density { get; init; } = density;
+    public float HeightFalloff { get; init; } = heightFalloff;
+    public float BaseHeight { get; init; } = baseHeight;
+    public float Scattering { get; init; } = scattering;
+    public float MaxDistance { get; init; } = maxDistance;
+    public float HeightInfluence { get; init; } = heightInfluence;
+    public float Strength { get; init; } = strength;
 }
+
+public readonly struct ShadowParams(
+    int shadowMapSize,
+    float zPad,
+    float constBias,
+    float slopeBias,
+    float strength,
+    float pcfRadius
+)
+{
+    public int ShadowMapSize { get; init; } = shadowMapSize;
+    public float ZPad { get; init; } = zPad;
+    public float ConstBias { get; init; } = constBias;
+    public float SlopeBias { get; init; } = slopeBias;
+    public float Strength { get; init; } = strength;
+    public float PcfRadius { get; init; } = pcfRadius;
+
+}
+

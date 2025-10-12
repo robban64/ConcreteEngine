@@ -3,7 +3,7 @@
 using ConcreteEngine.Core.Rendering.Registry;
 using ConcreteEngine.Core.Rendering.State;
 using ConcreteEngine.Graphics.Gfx;
-using ConcreteEngine.Graphics.Resources;
+using ConcreteEngine.Graphics.Gfx.Resources;
 
 #endregion
 

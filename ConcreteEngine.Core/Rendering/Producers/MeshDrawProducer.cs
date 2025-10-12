@@ -9,7 +9,7 @@ using ConcreteEngine.Core.Rendering.Definitions;
 using ConcreteEngine.Core.Rendering.Passes;
 using ConcreteEngine.Core.Rendering.State;
 using ConcreteEngine.Core.Scene.Entities;
-using ConcreteEngine.Graphics.Resources;
+using ConcreteEngine.Graphics.Gfx.Resources;
 
 #endregion
 

@@ -3,7 +3,7 @@
 using ConcreteEngine.Core.Assets.Manifest;
 using ConcreteEngine.Graphics;
 using ConcreteEngine.Graphics.Gfx.Contracts;
-using ConcreteEngine.Graphics.Resources;
+using ConcreteEngine.Graphics.Gfx.Definitions;
 using StbImageSharp;
 
 #endregion
@@ -30,16 +30,16 @@ internal sealed class TextureLoader(IReadOnlyList<TextureManifestRecord> records
 
 
         var desc = new GfxTextureDescriptor(
-            Width: image.Width,
-            Height: image.Height,
-            Kind: TextureKind.Texture2D,
-            Format: record.PixelFormat
+            width: image.Width,
+            height: image.Height,
+            kind: TextureKind.Texture2D,
+            format: record.PixelFormat
         );
 
         var props = new GfxTextureProperties(
-            Preset: record.Preset,
-            Anisotropy: record.Anisotropy,
-            LodBias: record.LodBias
+            preset: record.Preset,
+            anisotropy: record.Anisotropy,
+            lodBias: record.LodBias
         );
 
         info = AssetProcessInfo.MakeDone<TextureManifestRecord>();

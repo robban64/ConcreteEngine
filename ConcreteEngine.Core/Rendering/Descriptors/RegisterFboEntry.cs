@@ -6,6 +6,7 @@ using ConcreteEngine.Common.Numerics;
 using ConcreteEngine.Core.Rendering.Registry;
 using ConcreteEngine.Graphics;
 using ConcreteEngine.Graphics.Gfx.Contracts;
+using ConcreteEngine.Graphics.Gfx.Definitions;
 
 #endregion
 
@@ -69,12 +70,12 @@ public sealed class RegisterFboEntry
 
 
         return new GfxFrameBufferDescriptor(
-            Size: size,
-            ColorTexture: ColorTexture,
-            DepthTexture: DepthTexture,
-            ColorBuffer: ColorBuffer,
-            DepthStencilBuffer: DepthStencilBuffer,
-            Multisample: Multisample
+            size: size,
+            colorTexture: ColorTexture,
+            depthTexture: DepthTexture,
+            colorBuffer: ColorBuffer,
+            depthStencilBuffer: DepthStencilBuffer,
+            multisample: Multisample
         );
     }
 }

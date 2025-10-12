@@ -7,6 +7,7 @@ using ConcreteEngine.Core.Assets.Manifest;
 using ConcreteEngine.Core.Assets.Resources;
 using ConcreteEngine.Graphics;
 using ConcreteEngine.Graphics.Gfx.Contracts;
+using ConcreteEngine.Graphics.Gfx.Definitions;
 using ConcreteEngine.Graphics.Gfx.Utility;
 using ConcreteEngine.Graphics.Primitives;
 

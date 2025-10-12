@@ -10,6 +10,7 @@ using ConcreteEngine.Core.Rendering.Descriptors;
 using ConcreteEngine.Core.Scene;
 using ConcreteEngine.Core.Scene.Entities;
 using ConcreteEngine.Graphics;
+using ConcreteEngine.Graphics.Gfx.Definitions;
 using Silk.NET.Maths;
 using Shader = ConcreteEngine.Core.Assets.Resources.Shader;
 

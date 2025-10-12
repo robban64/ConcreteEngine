@@ -17,4 +17,10 @@ public readonly struct ViewProjectionData(
     public readonly Matrix4x4 ProjectionViewMatrix = projectionViewMatrix;
 }
 
-public readonly record struct ProjectionInfo(float AspectRatio, float Fov, float Near, float Far);
+public readonly struct ProjectionInfo(float aspectRatio, float fov, float near, float far)
+{
+    public float AspectRatio { get; init; } = aspectRatio;
+    public float Fov { get; init; } = fov;
+    public float Near { get; init; } = near;
+    public float Far { get; init; } = far;
+}

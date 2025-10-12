@@ -2,8 +2,8 @@
 
 using System.Runtime.CompilerServices;
 using ConcreteEngine.Core.Rendering.Passes;
+using ConcreteEngine.Graphics.Gfx.Resources;
 using ConcreteEngine.Graphics.Primitives;
-using ConcreteEngine.Graphics.Resources;
 using static ConcreteEngine.Core.Rendering.Data.RenderLimits;
 
 #endregion

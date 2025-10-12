@@ -3,6 +3,7 @@ using ConcreteEngine.Core.Engine.Configuration;
 using ConcreteEngine.Core.Engine.Platform;
 using ConcreteEngine.Core.Utils;
 using ConcreteEngine.Graphics;
+using ConcreteEngine.Graphics.Gfx.Definitions;
 using Demo3D;
 using Silk.NET.Windowing;
 

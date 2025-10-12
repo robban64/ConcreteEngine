@@ -2,7 +2,7 @@
 
 using ConcreteEngine.Core.Assets.Manifest;
 using ConcreteEngine.Core.Assets.Resources;
-using ConcreteEngine.Graphics.Resources;
+using ConcreteEngine.Graphics.Gfx.Resources;
 
 #endregion
 

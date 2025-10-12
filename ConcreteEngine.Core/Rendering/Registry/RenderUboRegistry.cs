@@ -1,9 +1,9 @@
 using ConcreteEngine.Common;
 using ConcreteEngine.Core.Rendering.Data;
 using ConcreteEngine.Graphics.Gfx;
+using ConcreteEngine.Graphics.Gfx.Resources;
 using ConcreteEngine.Graphics.Gfx.Utility;
 using ConcreteEngine.Graphics.Primitives;
-using ConcreteEngine.Graphics.Resources;
 
 namespace ConcreteEngine.Core.Rendering.Registry;
 

@@ -3,6 +3,7 @@
 using System.Numerics;
 using System.Text.Json.Serialization;
 using ConcreteEngine.Graphics;
+using ConcreteEngine.Graphics.Gfx.Definitions;
 
 #endregion
 

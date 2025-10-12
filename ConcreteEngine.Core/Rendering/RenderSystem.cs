@@ -19,7 +19,7 @@ using ConcreteEngine.Core.Rendering.State;
 using ConcreteEngine.Graphics;
 using ConcreteEngine.Graphics.Gfx;
 using ConcreteEngine.Graphics.Gfx.Contracts;
-using ConcreteEngine.Graphics.Resources;
+using ConcreteEngine.Graphics.Gfx.Resources;
 using RenderFrameInfo = ConcreteEngine.Core.Rendering.State.RenderFrameInfo;
 
 #endregion

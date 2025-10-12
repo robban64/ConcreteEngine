@@ -3,6 +3,7 @@
 using ConcreteEngine.Common.Numerics;
 using ConcreteEngine.Graphics;
 using ConcreteEngine.Graphics.Error;
+using ConcreteEngine.Graphics.Gfx.Definitions;
 using Silk.NET.Input;
 using Silk.NET.Maths;
 using Silk.NET.OpenGL;

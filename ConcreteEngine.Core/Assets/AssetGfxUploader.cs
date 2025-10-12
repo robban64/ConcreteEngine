@@ -5,8 +5,9 @@ using ConcreteEngine.Core.Assets.Loaders;
 using ConcreteEngine.Core.Assets.Manifest;
 using ConcreteEngine.Graphics;
 using ConcreteEngine.Graphics.Gfx;
+using ConcreteEngine.Graphics.Gfx.Definitions;
+using ConcreteEngine.Graphics.Gfx.Resources;
 using ConcreteEngine.Graphics.Primitives;
-using ConcreteEngine.Graphics.Resources;
 
 #endregion
 

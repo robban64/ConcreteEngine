@@ -48,14 +48,14 @@ public sealed class RenderSceneProps
         float maxDistance, float heightInfluence = 1f, float strength = 1f)
     {
         _fog = new FogParams(
-            Color: color.AsVec3(),
-            Density: density,
-            HeightFalloff: heightFalloff,
-            BaseHeight: baseHeight,
-            Scattering: scattering,
-            MaxDistance: maxDistance,
-            HeightInfluence: heightInfluence,
-            Strength: strength);
+            color: color.AsVec3(),
+            density: density,
+            heightFalloff: heightFalloff,
+            baseHeight: baseHeight,
+            scattering: scattering,
+            maxDistance: maxDistance,
+            heightInfluence: heightInfluence,
+            strength: strength);
 
         _dirty = true;
     }
@@ -68,12 +68,12 @@ public sealed class RenderSceneProps
         var constBias = 0.8f / size;
         var slopeBias = constBias * 6f;
         _shadow = new ShadowParams(
-            ShadowMapSize: size,
-            ZPad: 0.5f,
-            ConstBias: constBias,
-            SlopeBias: slopeBias,
-            Strength: 1f,
-            PcfRadius: 1f);
+            shadowMapSize: size,
+            zPad: 0.5f,
+            constBias: constBias,
+            slopeBias: slopeBias,
+            strength: 1f,
+            pcfRadius: 1f);
 
         _dirty = true;
     }
@@ -105,29 +105,29 @@ public sealed class RenderSceneProps
 
     private static DirLightParams MakeDefaultDirLight() =>
         new(
-            Direction: new Vector3(-0.4f, -1.0f, 0.35f),
-            Diffuse: new Vector3(1.00f, 0.96f, 0.90f),
-            Intensity: 1.2f,
-            Specular: 0.7f
+            direction: new Vector3(-0.4f, -1.0f, 0.35f),
+            diffuse: new Vector3(1.00f, 0.96f, 0.90f),
+            intensity: 1.2f,
+            specular: 0.7f
         );
 
     private static AmbientParams MakeDefaultAmbient() =>
         new(
-            Ambient: new(0.28f, 0.32f, 0.38f),
-            AmbientGround: new(0.18f, 0.16f, 0.14f),
-            Exposure: 0.2f
+            ambient: new(0.28f, 0.32f, 0.38f),
+            ambientGround: new(0.18f, 0.16f, 0.14f),
+            exposure: 0.2f
         );
 
     private static FogParams MakeDefaultFog() =>
         new(
-            Color: new(0.78f, 0.84f, 0.90f),
-            Density: 650f,
-            HeightFalloff: 6000f,
-            BaseHeight: 0f,
-            Strength: 1.0f,
-            HeightInfluence: 0.8f,
-            Scattering: 0.085f,
-            MaxDistance: 9000f
+            color: new(0.78f, 0.84f, 0.90f),
+            density: 650f,
+            heightFalloff: 6000f,
+            baseHeight: 0f,
+            strength: 1.0f,
+            heightInfluence: 0.8f,
+            scattering: 0.085f,
+            maxDistance: 9000f
         );
 
 

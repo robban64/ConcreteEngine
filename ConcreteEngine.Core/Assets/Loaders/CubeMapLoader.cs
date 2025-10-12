@@ -3,7 +3,7 @@
 using ConcreteEngine.Core.Assets.Manifest;
 using ConcreteEngine.Graphics;
 using ConcreteEngine.Graphics.Gfx.Contracts;
-using ConcreteEngine.Graphics.Resources;
+using ConcreteEngine.Graphics.Gfx.Definitions;
 using StbImageSharp;
 
 #endregion
@@ -35,16 +35,16 @@ internal sealed class CubeMapLoader(IReadOnlyList<CubeMapManifestRecord> records
         }
 
         var desc = new GfxTextureDescriptor(
-            Width: record.Width,
-            Height: record.Height,
-            Kind: TextureKind.CubeMap,
-            Format: record.PixelFormat
+            width: record.Width,
+            height: record.Height,
+            kind: TextureKind.CubeMap,
+            format: record.PixelFormat
         );
 
         var props = new GfxTextureProperties(
-            Preset: record.Preset,
-            Anisotropy: TextureAnisotropy.Off,
-            LodBias: 0
+            preset: record.Preset,
+            anisotropy: TextureAnisotropy.Off,
+            lodBias: 0
         );
 
         info = AssetProcessInfo.MakeDone<CubeMapManifestRecord>();

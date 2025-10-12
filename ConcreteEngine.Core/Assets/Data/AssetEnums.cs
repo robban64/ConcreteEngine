@@ -1,4 +1,4 @@
-namespace ConcreteEngine.Core.Assets;
+namespace ConcreteEngine.Core.Assets.Data;
 
 public enum AssetKind
 {
@@ -6,7 +6,7 @@ public enum AssetKind
     Shader = 1,
     Mesh = 2,
     Texture2D = 3,
-    CubeMap = 4,
+    TextureCubeMap = 4,
     Material = 5
 }
 
@@ -25,4 +25,10 @@ public enum AssetStorageKind
     FileSystem = 1,
     Package = 2,
     Embedded = 3
+}
+
+public enum AssetProcessStatus
+{
+    Done,
+    Failed
 }

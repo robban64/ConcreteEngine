@@ -5,7 +5,7 @@ using ConcreteEngine.Common.Numerics;
 
 #endregion
 
-namespace ConcreteEngine.Core.Assets.Resources;
+namespace ConcreteEngine.Core.Assets.Materials;
 
 public interface IMaterialValue;
 

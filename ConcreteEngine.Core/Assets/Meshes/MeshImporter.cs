@@ -7,7 +7,7 @@ using AssimpMesh = Silk.NET.Assimp.Mesh;
 
 #endregion
 
-namespace ConcreteEngine.Core.Assets.Importers;
+namespace ConcreteEngine.Core.Assets.Meshes;
 
 internal sealed class MeshImporter
 {
@@ -33,7 +33,6 @@ internal sealed class MeshImporter
         _assimp = null;
     }
 
-//TODO fix
     public unsafe (List<Vertex3D> Vertices, List<uint> Indices) ImportMesh(string path)
     {
         if (_assimp == null)

@@ -20,7 +20,7 @@ using ConcreteEngine.Graphics;
 using ConcreteEngine.Graphics.Gfx.Resources;
 using Silk.NET.OpenGL;
 using RenderFrameInfo = ConcreteEngine.Core.Engine.Data.RenderFrameInfo;
-using Shader = ConcreteEngine.Core.Assets.Resources.Shader;
+using Shader = ConcreteEngine.Core.Assets.Shaders.Shader;
 
 #endregion
 

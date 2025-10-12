@@ -4,7 +4,7 @@ using System.Runtime.CompilerServices;
 
 #endregion
 
-namespace ConcreteEngine.Core.Assets.Resources;
+namespace ConcreteEngine.Core.Assets.Materials;
 
 public readonly record struct MaterialId(int Id)
 {

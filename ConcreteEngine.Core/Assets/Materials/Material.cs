@@ -1,11 +1,12 @@
 #region
 
 using ConcreteEngine.Common.Numerics;
+using ConcreteEngine.Core.Assets.Textures;
 using ConcreteEngine.Graphics.Gfx.Resources;
 
 #endregion
 
-namespace ConcreteEngine.Core.Assets.Resources;
+namespace ConcreteEngine.Core.Assets.Materials;
 
 public sealed class Material
 {

@@ -1,5 +1,5 @@
 using System.Runtime.CompilerServices;
-using ConcreteEngine.Core.Assets.Resources;
+using ConcreteEngine.Core.Assets.Materials;
 
 namespace ConcreteEngine.Core.Rendering.Registry;
 /*

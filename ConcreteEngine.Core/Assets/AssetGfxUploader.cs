@@ -1,9 +1,9 @@
 #region
 
 using System.Runtime.InteropServices;
-using ConcreteEngine.Core.Assets.Loaders;
-using ConcreteEngine.Core.Assets.Manifest;
-using ConcreteEngine.Graphics;
+using ConcreteEngine.Core.Assets.Meshes;
+using ConcreteEngine.Core.Assets.Shaders;
+using ConcreteEngine.Core.Assets.Textures;
 using ConcreteEngine.Graphics.Gfx;
 using ConcreteEngine.Graphics.Gfx.Definitions;
 using ConcreteEngine.Graphics.Gfx.Resources;
@@ -22,7 +22,7 @@ internal sealed class AssetGfxUploader
         _gfx = gfx;
     }
 
-    public MeshId UploadMesh(MeshManifestRecord record, in MeshResultPayload payload, out MeshCreationInfo info)
+    public void UploadMesh(in MeshResultPayload payload, out MeshCreationInfo info)
     {
         ReadOnlySpan<Vertex3D> vSpan = CollectionsMarshal.AsSpan(payload.Vertices);
         ReadOnlySpan<uint> iSpan = CollectionsMarshal.AsSpan(payload.Indices);
@@ -32,33 +32,26 @@ internal sealed class AssetGfxUploader
         builder.UploadIndices(iSpan, BufferUsage.StaticDraw, BufferStorage.Static, BufferAccess.None);
         builder.SetAttributeRange(payload.Attributes);
         var meshId = builder.Finish();
-        info = new MeshCreationInfo();
-        return meshId;
+        info = new MeshCreationInfo(meshId, 0);
     }
 
-    public TextureId UploadTexture(TextureManifestRecord record, in TexturePayload payload,
-        out TextureCreationInfo info)
+    public void UploadTexture(in TexturePayload payload, out TextureCreationInfo info)
     {
         var desc = payload.TextureDesc;
-        var inMemoryData = record.InMemory ? payload.Data : null;
-        info = new TextureCreationInfo(desc.Width, desc.Height, desc.Format, inMemoryData);
         var textureId = _gfx.Textures.BuildTexture(in desc, payload.TextureProps, payload.Data);
-        return textureId;
+        info = new TextureCreationInfo(textureId, desc.Width, desc.Height, desc.Format);
     }
 
-    public TextureId UploadCubeMap(CubeMapManifestRecord record, in CubeMapPayload payload,
-        out CubeMapCreationInfo info)
+    public void UploadCubeMap(in CubeMapPayload payload, out CubeMapCreationInfo info)
     {
         var desc = payload.TextureDesc;
         var textureId = _gfx.Textures.BuildCubeMap(in desc, payload.TextureProps, payload.FaceData);
-        info = new CubeMapCreationInfo(desc.Width, desc.Height, desc.Format);
-        return textureId;
+        info = new CubeMapCreationInfo(textureId, desc.Width, desc.Format);
     }
 
-    public ShaderId UploadShader(ShaderManifestRecord record, in ShaderPayload data, out ShaderCreationInfo info)
+    public void UploadShader(in ShaderPayload data, out ShaderCreationInfo info)
     {
         var shaderId = _gfx.Shaders.CreateShader(data.Vs, data.Fs, out var samplers);
-        info = new ShaderCreationInfo(samplers);
-        return shaderId;
+        info = new ShaderCreationInfo(shaderId, samplers);
     }
 }

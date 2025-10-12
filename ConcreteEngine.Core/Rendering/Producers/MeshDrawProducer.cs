@@ -2,7 +2,7 @@
 
 using System.Runtime.CompilerServices;
 using ConcreteEngine.Common.Numerics;
-using ConcreteEngine.Core.Assets.Resources;
+using ConcreteEngine.Core.Assets.Materials;
 using ConcreteEngine.Core.Engine.Data;
 using ConcreteEngine.Core.Rendering.Commands;
 using ConcreteEngine.Core.Rendering.Definitions;

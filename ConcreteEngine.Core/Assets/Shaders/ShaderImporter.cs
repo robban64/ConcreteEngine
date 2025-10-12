@@ -1,6 +1,6 @@
 using System.Text;
 
-namespace ConcreteEngine.Core.Assets.Importers;
+namespace ConcreteEngine.Core.Assets.Shaders;
 
 internal sealed class ShaderImporter
 {

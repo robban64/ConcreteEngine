@@ -113,6 +113,7 @@ public sealed class DrawCommandBuffer
             }
         }
 
+        // memset/vectorized clear
         _passRanges.AsSpan().Clear();
 
         // Count pass ranges

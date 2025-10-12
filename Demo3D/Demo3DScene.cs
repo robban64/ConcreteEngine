@@ -4,7 +4,7 @@ using System.Numerics;
 using ConcreteEngine.Common;
 using ConcreteEngine.Common.Numerics;
 using ConcreteEngine.Core.Assets;
-using ConcreteEngine.Core.Assets.Resources;
+using ConcreteEngine.Core.Assets.Meshes;
 using ConcreteEngine.Core.Engine.Configuration;
 using ConcreteEngine.Core.Rendering;
 using ConcreteEngine.Core.Rendering.Data;
@@ -13,7 +13,7 @@ using ConcreteEngine.Core.Scene;
 using ConcreteEngine.Core.Scene.Entities;
 using ConcreteEngine.Graphics;
 using ConcreteEngine.Graphics.Primitives;
-using Shader = ConcreteEngine.Core.Assets.Resources.Shader;
+using Shader = ConcreteEngine.Core.Assets.Shaders.Shader;
 
 #endregion
 

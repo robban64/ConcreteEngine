@@ -1,6 +1,6 @@
 #region
 
-using ConcreteEngine.Core.Assets.Resources;
+using ConcreteEngine.Core.Assets.Materials;
 using ConcreteEngine.Core.Rendering;
 using ConcreteEngine.Core.Rendering.Commands;
 using ConcreteEngine.Core.Rendering.Producers;

@@ -1,5 +1,4 @@
 using ConcreteEngine.Common.Collections;
-using ConcreteEngine.Core.Assets.Resources;
 using ConcreteEngine.Graphics.Gfx;
 using ConcreteEngine.Graphics.Gfx.Resources;
 

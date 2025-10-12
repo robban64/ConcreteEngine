@@ -3,7 +3,7 @@
 using System.Numerics;
 using ConcreteEngine.Core;
 using ConcreteEngine.Core.Assets;
-using ConcreteEngine.Core.Assets.Resources;
+using ConcreteEngine.Core.Assets.Textures;
 using ConcreteEngine.Core.Modules;
 using ConcreteEngine.Core.Scene;
 using ConcreteEngine.Core.Utils;

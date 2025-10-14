@@ -1,15 +1,19 @@
+#region
+
 using System.Diagnostics;
 using ConcreteEngine.Core.Assets.Config;
 using ConcreteEngine.Core.Assets.Data;
 using ConcreteEngine.Core.Assets.Shaders;
 using ConcreteEngine.Core.Assets.Textures;
 
+#endregion
+
 namespace ConcreteEngine.Core.Assets.Materials;
 
 internal sealed class MaterialLoader
 {
-    
-    public List<MaterialTemplate>? LoadMaterials(AssetStore store, AssetResourceLayout layout, AssetConfigLoader configLoader)
+    public List<MaterialTemplate>? LoadMaterials(AssetStore store, AssetResourceLayout layout,
+        AssetConfigLoader configLoader)
     {
         var manifest = configLoader.LoadManifest<MaterialManifest>(layout.Material);
         ArgumentNullException.ThrowIfNull(manifest.Records);
@@ -26,7 +30,7 @@ internal sealed class MaterialLoader
         AssetAssembleDel<MaterialTemplate, MaterialManifestRecord> factory = CreateMaterial;
         foreach (var record in records)
         {
-            var template = store.Register(record,factory);
+            var template = store.Register(record, factory);
             result.Add(template);
         }
 
@@ -34,15 +38,13 @@ internal sealed class MaterialLoader
             mat.Initialize(store);
 
         return result;
-
-       
     }
-    
+
     private MaterialTemplate CreateMaterial(AssetId assetId, MaterialManifestRecord record, IAssetStore store)
     {
         var textures = Array.Empty<AssetRef<Texture2D>>();
         AssetRef<CubeMap>? cubeMap = null;
-        
+
         if (record.CubeMap != null)
         {
             cubeMap = store.Get<CubeMap>(record.CubeMap).RefId;

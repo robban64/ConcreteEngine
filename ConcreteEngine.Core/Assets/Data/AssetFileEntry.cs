@@ -1,4 +1,3 @@
-
 namespace ConcreteEngine.Core.Assets.Data;
 
 public sealed record AssetFileEntry
@@ -38,5 +37,4 @@ internal readonly struct AssetFileSpec(
     public string? ContentHash { get; } = contentHash;
     public string? Source { get; } = source;
     public AssetStorageKind Storage { get; } = storage;
-
 }

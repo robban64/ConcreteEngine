@@ -1,4 +1,8 @@
+#region
+
 using System.Text;
+
+#endregion
 
 namespace ConcreteEngine.Core.Assets.Shaders;
 

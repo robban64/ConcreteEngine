@@ -11,7 +11,6 @@ using ConcreteEngine.Graphics.Primitives;
 
 namespace ConcreteEngine.Core.Assets.Meshes;
 
-
 internal sealed class MeshLoader
 {
     private static VertexAttributeDesc[] DefaultAttribs { get; set; } = Array.Empty<VertexAttributeDesc>();

@@ -8,7 +8,6 @@ using ConcreteEngine.Core.Assets.Data;
 
 namespace ConcreteEngine.Core.Assets.Shaders;
 
-
 internal sealed class ShaderLoader
 {
     private readonly ShaderImporter _shaderImporter = new();

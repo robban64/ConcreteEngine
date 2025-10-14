@@ -1,4 +1,8 @@
+#region
+
 using ConcreteEngine.Core.Assets.Data;
+
+#endregion
 
 namespace ConcreteEngine.Core.Assets.Meshes;
 
@@ -28,5 +32,4 @@ internal sealed class MeshLoaderModule(AssetGfxUploader uploader)
         _loader.ClearCache();
         _loader = null!;
     }
-
 }

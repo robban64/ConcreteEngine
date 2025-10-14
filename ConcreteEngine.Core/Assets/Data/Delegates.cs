@@ -1,6 +1,5 @@
 namespace ConcreteEngine.Core.Assets.Data;
 
-
 internal delegate TAsset AssetAssembleDel<out TAsset, in TManifest>(AssetId id, TManifest manifest, IAssetStore store)
     where TAsset : AssetObject where TManifest : class, IAssetManifestRecord;
 

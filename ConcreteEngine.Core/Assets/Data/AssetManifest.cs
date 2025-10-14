@@ -1,6 +1,10 @@
+#region
+
 using System.Numerics;
 using System.Text.Json.Serialization;
 using ConcreteEngine.Graphics.Gfx.Definitions;
+
+#endregion
 
 namespace ConcreteEngine.Core.Assets.Data;
 
@@ -11,7 +15,7 @@ public interface IAssetManifestRecord
 }
 
 public sealed record AssetManifest(
-    AssetResourceLayout ResourceLayout, 
+    AssetResourceLayout ResourceLayout,
     string? Version);
 
 public sealed record AssetResourceLayout(

@@ -1,7 +1,4 @@
-using ConcreteEngine.Core.Assets.Data;
-using ConcreteEngine.Graphics.Gfx.Definitions;
-
-namespace ConcreteEngine.Core.Assets;
+namespace ConcreteEngine.Core.Assets.Data;
 
 public abstract class AssetObject
 {
@@ -9,8 +6,7 @@ public abstract class AssetObject
     public required string Name { get; init; }
     public required bool IsCoreAsset { get; init; }
     public required int Generation { get; init; }
-    
+
     public abstract AssetKind Kind { get; }
     public abstract AssetCategory Category { get; }
-
 }

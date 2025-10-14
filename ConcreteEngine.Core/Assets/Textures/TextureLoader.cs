@@ -9,7 +9,6 @@ using StbImageSharp;
 
 namespace ConcreteEngine.Core.Assets.Textures;
 
-
 internal sealed class TextureLoader
 {
     public TexturePayload LoadTexture(TextureManifestRecord record)
@@ -17,14 +16,14 @@ internal sealed class TextureLoader
         //StbImage.stbi_set_flip_vertically_on_load(1);
 
         var path = Path.Combine(AssetPaths.GetAssetPath(), "textures", record.Filename);
-        
+
         var fi = new FileInfo(path);
         if (!fi.Exists) throw new FileNotFoundException("File not found.", path);
 
         using var stream = File.OpenRead(path);
         var image = ImageResult.FromStream(stream, ColorComponents.RedGreenBlueAlpha);
         ValidateImageResult(image);
-        
+
         var desc = new GfxTextureDescriptor(
             width: image.Width,
             height: image.Height,
@@ -37,7 +36,7 @@ internal sealed class TextureLoader
             anisotropy: record.Anisotropy,
             lodBias: record.LodBias
         );
-        
+
         var fileSpec = new AssetFileSpec(
             storage: AssetStorageKind.FileSystem,
             logicalName: record.Name,
@@ -61,12 +60,12 @@ internal sealed class TextureLoader
             var fi = new FileInfo(path);
             if (!fi.Exists) throw new FileNotFoundException("File not found.", path);
 
-            using var stream = File.OpenRead(path); 
+            using var stream = File.OpenRead(path);
             var image = ImageResult.FromStream(stream, ColorComponents.RedGreenBlueAlpha);
             ValidateImageResult(image, record);
-            
+
             faceData[i] = image.Data;
-            
+
             faceFiles[i] = new AssetFileSpec(
                 storage: AssetStorageKind.FileSystem,
                 logicalName: record.Name,
@@ -94,12 +93,11 @@ internal sealed class TextureLoader
         ArgumentOutOfRangeException.ThrowIfLessThanOrEqual(result.Width, 0, nameof(result.Width));
         ArgumentOutOfRangeException.ThrowIfLessThanOrEqual(result.Height, 0, nameof(result.Height));
     }
-    
+
     private static void ValidateImageResult(ImageResult result, CubeMapManifestRecord record)
     {
         ValidateImageResult(result);
         ArgumentOutOfRangeException.ThrowIfNotEqual(result.Width, record.Width, nameof(result.Width));
         ArgumentOutOfRangeException.ThrowIfNotEqual(result.Height, record.Height, nameof(result.Height));
     }
-
 }

@@ -1,7 +1,11 @@
+#region
+
 using ConcreteEngine.Core.Assets.Data;
 using ConcreteEngine.Core.Assets.Meshes;
 using ConcreteEngine.Core.Assets.Shaders;
 using ConcreteEngine.Core.Assets.Textures;
+
+#endregion
 
 namespace ConcreteEngine.Core.Assets;
 
@@ -42,7 +46,7 @@ internal sealed class AssetLoader
         _loadShaderDel = _shaderLoader.LoadShader;
         _loadTextureDel = _textureLoader.LoadTexture2D;
         _loadCubeMapDel = _textureLoader.LoadCubeMap;
-        _loadMeshDel =  _meshLoader.LoadMesh;
+        _loadMeshDel = _meshLoader.LoadMesh;
 
         _shaderLoader.Prepare();
     }
@@ -53,7 +57,7 @@ internal sealed class AssetLoader
         _loadShaderDel = null!;
         _loadTextureDel = null!;
         _loadCubeMapDel = null!;
-        _loadMeshDel =  null!;
+        _loadMeshDel = null!;
 
         _meshLoader.Unload();
         _textureLoader.Unload();

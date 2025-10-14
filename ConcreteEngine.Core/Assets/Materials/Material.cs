@@ -1,14 +1,13 @@
 #region
 
 using ConcreteEngine.Common.Numerics;
-using ConcreteEngine.Core.Assets.Textures;
 using ConcreteEngine.Graphics.Gfx.Resources;
 
 #endregion
 
 namespace ConcreteEngine.Core.Assets.Materials;
 
-public sealed class Material 
+public sealed class Material
 {
     private readonly TextureId[] _samplerSlots;
 
@@ -31,6 +30,5 @@ public sealed class Material
         ShaderId = template.GfxShaderId;
 
         _samplerSlots = template.GfxSamplerSlots;
-
     }
 }

@@ -1,5 +1,8 @@
+#region
+
 using System.Security.Cryptography;
-using ConcreteEngine.Core.Assets.Data;
+
+#endregion
 
 namespace ConcreteEngine.Core.Assets.IO;
 

@@ -5,10 +5,9 @@ internal readonly record struct AssetProcessInfo(
     AssetKind AssetType = AssetKind.Unknown
 )
 {
-    public static AssetProcessInfo MakeDone()  =>
+    public static AssetProcessInfo MakeDone() =>
         new(AssetProcessStatus.Done);
 
-    public static AssetProcessInfo MakeFailed()   =>
+    public static AssetProcessInfo MakeFailed() =>
         new(AssetProcessStatus.Failed);
-    
 }

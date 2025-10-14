@@ -1,9 +1,11 @@
+#region
+
 using System.Text.Json;
 using System.Text.Json.Serialization;
 using ConcreteEngine.Core.Assets.Data;
 using ConcreteEngine.Core.Assets.IO;
-using ConcreteEngine.Core.Assets.Materials;
-using ConcreteEngine.Core.Assets.Textures;
+
+#endregion
 
 namespace ConcreteEngine.Core.Assets.Config;
 
@@ -32,7 +34,7 @@ internal sealed class AssetConfigLoader
             }
         };
     }
-    
+
     public AssetManifest LoadAssetManifest()
     {
         if (!Directory.Exists(_assetPath))
@@ -45,7 +47,7 @@ internal sealed class AssetConfigLoader
 
         Console.WriteLine("Loading Asset Manifest...");
 
-        using var fs = new FileStream(path, FileMode.Open, FileAccess.Read, FileShare.Read, 
+        using var fs = new FileStream(path, FileMode.Open, FileAccess.Read, FileShare.Read,
             64 * 1024, FileOptions.SequentialScan);
 
         var assetManifest = JsonSerializer.Deserialize<AssetManifest>(fs, _jsonOptions) ??
@@ -59,12 +61,12 @@ internal sealed class AssetConfigLoader
         ArgumentNullException.ThrowIfNull(manifestFilename, nameof(manifestFilename));
 
         var path = Path.Combine(AssetPaths.GetAssetPath(), manifestFilename);
-        
+
         if (!File.Exists(path))
             throw new FileNotFoundException($"Resource manifest {typeof(T).Name} with path {path} does not exists.");
 
 
-        using var fs = new FileStream(path, FileMode.Open, FileAccess.Read, FileShare.Read, 
+        using var fs = new FileStream(path, FileMode.Open, FileAccess.Read, FileShare.Read,
             64 * 1024, FileOptions.SequentialScan);
 
         var manifest = JsonSerializer.Deserialize<T>(fs, _jsonOptions)
@@ -74,5 +76,4 @@ internal sealed class AssetConfigLoader
 
         return manifest;
     }
-
 }

@@ -11,7 +11,7 @@ namespace ConcreteEngine.Core.Assets.Meshes;
 public sealed class Mesh : AssetObject
 {
     public AssetRef<Mesh> RefId => new(RawId);
-    
+
     public MeshId ResourceId { get; init; }
 
     public int DrawCount { get; init; }

@@ -1,5 +1,8 @@
-using ConcreteEngine.Common;
+#region
+
 using ConcreteEngine.Core.Assets.Data;
+
+#endregion
 
 namespace ConcreteEngine.Core.Assets;
 
@@ -38,7 +41,7 @@ internal sealed class AssetStore : IAssetStore
     public T Get<T>(AssetId id) where T : AssetObject
     {
         var asset = _assets[id];
-        if(asset is not T assetObject) throw new InvalidOperationException();
+        if (asset is not T assetObject) throw new InvalidOperationException();
         return assetObject;
     }
 

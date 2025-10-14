@@ -1,5 +1,9 @@
+#region
+
 using ConcreteEngine.Core.Assets.Data;
 using ConcreteEngine.Graphics.Gfx.Resources;
+
+#endregion
 
 namespace ConcreteEngine.Core.Assets.Shaders;
 

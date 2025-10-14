@@ -11,7 +11,7 @@ namespace ConcreteEngine.Core.Assets.Textures;
 public sealed class CubeMap : AssetObject
 {
     public AssetRef<CubeMap> RefId => new(RawId);
-    
+
     public required TextureId ResourceId { get; init; }
     public required int Size { get; init; }
     public override AssetKind Kind => AssetKind.TextureCubeMap;

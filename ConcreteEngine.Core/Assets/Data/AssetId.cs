@@ -1,6 +1,7 @@
 namespace ConcreteEngine.Core.Assets.Data;
 
 public readonly record struct AssetId(int Value);
+
 public readonly record struct AssetFileId(int Value);
 
 public readonly record struct AssetRef<TAsset>(AssetId Value) where TAsset : AssetObject

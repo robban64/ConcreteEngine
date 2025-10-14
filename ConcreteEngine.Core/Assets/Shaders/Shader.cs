@@ -15,6 +15,6 @@ public sealed class Shader : AssetObject
     public required int Samplers { get; init; }
 
     public override AssetKind Kind => AssetKind.Shader;
-    public override AssetCategory Category  =>  AssetCategory.Graphic;
+    public override AssetCategory Category => AssetCategory.Graphic;
     public ResourceKind GfxResourceKind => ResourceKind.Shader;
 }

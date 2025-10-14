@@ -1,7 +1,11 @@
+#region
+
 using ConcreteEngine.Core.Assets.Data;
 using ConcreteEngine.Graphics.Gfx.Contracts;
 using ConcreteEngine.Graphics.Gfx.Definitions;
 using ConcreteEngine.Graphics.Gfx.Resources;
+
+#endregion
 
 namespace ConcreteEngine.Core.Assets.Textures;
 

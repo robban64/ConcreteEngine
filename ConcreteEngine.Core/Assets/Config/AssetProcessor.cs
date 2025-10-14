@@ -1,17 +1,11 @@
 #region
 
+using ConcreteEngine.Common;
+using ConcreteEngine.Core.Assets.Data;
+
 #endregion
 
-
-using ConcreteEngine.Common;
-using ConcreteEngine.Core.Assets.Config;
-using ConcreteEngine.Core.Assets.Data;
-using ConcreteEngine.Core.Assets.Meshes;
-using ConcreteEngine.Core.Assets.Shaders;
-using ConcreteEngine.Core.Assets.Textures;
-using ConcreteEngine.Graphics.Gfx.Resources;
-
-namespace ConcreteEngine.Core.Assets;
+namespace ConcreteEngine.Core.Assets.Config;
 
 internal sealed class AssetProcessor
 {
@@ -58,9 +52,8 @@ internal sealed class AssetProcessor
         InvalidOpThrower.ThrowIf(_processOrder != ProcessOrder.NotStarted);
         _processOrder = (ProcessOrder)1;
         _loader.ActivateLoader(store, uploader);
-        
-        _shaderManifest = _configLoader.LoadManifest<ShaderManifest>(Layout.Shader);
 
+        _shaderManifest = _configLoader.LoadManifest<ShaderManifest>(Layout.Shader);
     }
 
     internal void Finish()

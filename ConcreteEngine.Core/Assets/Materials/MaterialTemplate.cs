@@ -42,7 +42,7 @@ public sealed class MaterialTemplate : AssetObject
             _gfxSamplerSlots[0] = store.Get<CubeMap>(cubeMapAssetId).ResourceId;
             return;
         }
-        
+
         for (int i = 0; i < shader.Samplers; i++)
         {
             if (i < TextureAssetIds.Length)

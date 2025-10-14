@@ -1,4 +1,8 @@
+#region
+
 using ConcreteEngine.Core.Assets.Data;
+
+#endregion
 
 namespace ConcreteEngine.Core.Assets.Textures;
 

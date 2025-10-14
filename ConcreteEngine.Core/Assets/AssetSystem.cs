@@ -38,9 +38,9 @@ public sealed class AssetSystem : IAssetSystem
     private AssetProcessor? _processor;
     private AssetGfxUploader? _uploader;
     private AssetLoader? _loader;
-    
+
     internal AssetStore AssetStore => _assetStore;
-    
+
     public IAssetStore Store => _assetStore;
 
 
@@ -70,14 +70,14 @@ public sealed class AssetSystem : IAssetSystem
     {
         ArgumentNullException.ThrowIfNull(gfx, nameof(gfx));
         ArgumentNullException.ThrowIfNull(_configLoader, nameof(_configLoader));
-        
+
         InvalidOpThrower.ThrowIf(IsLoading, nameof(IsLoading));
 
         IsLoading = true;
 
         _uploader = new AssetGfxUploader(gfx);
         _loader = new AssetLoader();
-        _processor = new  AssetProcessor(_loader, _configLoader, _manifest);
+        _processor = new AssetProcessor(_loader, _configLoader, _manifest);
         _processor.Start(_assetStore, _uploader);
     }
 

@@ -8,7 +8,7 @@ namespace ConcreteEngine.Core.Assets;
 
 public interface IAssetStore
 {
-    T Get<T>(AssetId id) where T : AssetObject;
+    T Get<T>(AssetRef<T> id) where T : AssetObject;
     T Get<T>(string name) where T : AssetObject;
     bool TryGet<T>(string name, out T? asset) where T : AssetObject;
 
@@ -22,11 +22,9 @@ internal sealed class AssetStore : IAssetStore
 {
     private int _assetId = 0;
     private int _assetFileId = 0;
+    private AssetId MakeAssetId() => new(++_assetId);
+    private AssetFileId MakeAssetFileId() => new(++_assetFileId);
 
-    private readonly record struct AssetKey(Type RegistryType, string Name)
-    {
-        public static AssetKey For<T>(string name) where T : AssetObject => new(typeof(T), name);
-    }
 
     // AssetObject abstract class
     private readonly Dictionary<AssetId, AssetObject> _assets = new(32);
@@ -34,11 +32,13 @@ internal sealed class AssetStore : IAssetStore
     private readonly Dictionary<AssetId, AssetFileId[]> _bindings = new(32);
     private readonly Dictionary<AssetKey, AssetId> _names = new(32);
 
+    private readonly Dictionary<Type, AssetTypeMeta> _typeMeta = new(8);
+
     internal AssetStore()
     {
     }
 
-    public T Get<T>(AssetId id) where T : AssetObject
+    public T Get<T>(AssetRef<T> id) where T : AssetObject
     {
         var asset = _assets[id];
         if (asset is not T assetObject) throw new InvalidOperationException();
@@ -93,17 +93,18 @@ internal sealed class AssetStore : IAssetStore
     internal TAsset Register<TAsset, TManifest>(TManifest manifest, AssetAssembleDel<TAsset, TManifest> factory)
         where TAsset : AssetObject where TManifest : class, IAssetManifestRecord
     {
-        var id = new AssetId(++_assetId);
+        var id = MakeAssetId();
         var asset = factory(id, manifest, this);
         RegisterInternal(id, asset, ReadOnlySpan<AssetFileSpec>.Empty);
         return asset;
     }
 
-    internal TAsset RegisterWithFiles<TAsset, TManifest>(TManifest manifest,
+    internal TAsset RegisterWithFiles<TAsset, TManifest>(
+        TManifest manifest,
         AssetFileAssembleDel<TAsset, TManifest> factory)
         where TAsset : AssetObject where TManifest : class, IAssetManifestRecord
     {
-        var id = new AssetId(++_assetId);
+        var id = MakeAssetId();
         var asset = factory(id, manifest, out var fileSpecs);
         ArgumentNullException.ThrowIfNull(fileSpecs, nameof(fileSpecs));
         RegisterInternal(id, asset, fileSpecs);
@@ -117,10 +118,13 @@ internal sealed class AssetStore : IAssetStore
         ArgumentOutOfRangeException.ThrowIfLessThanOrEqual(id.Value, 0);
         ArgumentOutOfRangeException.ThrowIfNotEqual(asset.RawId.Value, id.Value);
 
-        if (!_names.TryAdd(new AssetKey(typeof(TAsset), asset.Name), id))
-            throw new InvalidOperationException($"Asset '{asset.Name}' is already exists.");
+        if (!_assets.TryAdd(id, asset))
+            throw new InvalidOperationException($"Asset '{asset.Name}' is already registered by id.");
 
-        _assets.Add(id, asset);
+        if (!_names.TryAdd(new AssetKey(typeof(TAsset), asset.Name), id))
+            throw new InvalidOperationException($"Asset '{asset.Name}' is already registered by type/name.");
+
+        IncrementTypeCount<TAsset>(fileSpecs.Length);
 
         if (fileSpecs.Length > 0)
             RegisterBindingsInternal(id, fileSpecs);
@@ -139,5 +143,18 @@ internal sealed class AssetStore : IAssetStore
         }
 
         _bindings.Add(assetId, fileIds);
+    }
+
+    private void IncrementTypeCount<TAsset>(int files) where TAsset : AssetObject
+    {
+        if (!_typeMeta.TryGetValue(typeof(TAsset), out var meta))
+            _typeMeta[typeof(TAsset)] = meta = new AssetTypeMeta(typeof(TAsset));
+
+        meta.Increment(files);
+    }
+
+    private readonly record struct AssetKey(Type RegistryType, string Name)
+    {
+        public static AssetKey For<T>(string name) where T : AssetObject => new(typeof(T), name);
     }
 }

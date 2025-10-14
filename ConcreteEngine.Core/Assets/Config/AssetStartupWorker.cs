@@ -7,8 +7,61 @@ using ConcreteEngine.Core.Assets.Data;
 
 namespace ConcreteEngine.Core.Assets.Config;
 
-internal sealed class AssetProcessor
+/*
+         _tasks[ProcessOrder.Shaders] =
+             new AssetProcessTask<Shader, ShaderManifestRecord>(_loader.LoadShader, null);
+         _tasks[ProcessOrder.Textures] =
+             new AssetProcessTask<Texture2D, TextureManifestRecord>(_loader.LoadTexture2D, null);
+         _tasks[ProcessOrder.CubeMaps] =
+             new AssetProcessTask<CubeMap, CubeMapManifestRecord>(_loader.LoadCubeMap, null);
+         _tasks[ProcessOrder.Meshes] =
+             new AssetProcessTask<Mesh, MeshManifestRecord>(_loader.LoadMesh, null);
+
+
+     public bool Process()
+     {
+         if (_processOrder == ProcessOrder.NotStarted) throw new InvalidOperationException("Asset loader has not started.");
+         if (_processOrder == ProcessOrder.Finished) return true;
+
+         var worker = _tasks[_processOrder];
+         var done = worker.Step();
+         if (!done) return false;
+
+         _tasks.Remove(_processOrder);
+         _processOrder = (ProcessOrder)((int)_processOrder + 1);
+         _tasks[_processOrder];
+         return _processOrder == ProcessOrder.Finished;
+     }
+     private interface IAssetProcessTask
+     {
+         bool Step();
+     }
+
+     private sealed class AssetProcessTask<TAsset, TRecord>(Func<TRecord, TAsset> onProcess, Action? onDone)
+         : IAssetProcessTask where TAsset : AssetObject where TRecord : class, IAssetManifestRecord
+     {
+         private int _idx = 0;
+         private TRecord[] _records = null!;
+
+         public void Start(TRecord[] records)
+         {
+             _idx = 0;
+             _records = records;
+         }
+
+         public bool Step()
+         {
+             onProcess(_records[_idx]);
+             _idx++;
+             if (_idx < _records.Length) return false;
+             onDone?.Invoke();
+             return true;
+         }
+     }
+   */
+internal sealed class AssetStartupWorker
 {
+  
     internal enum ProcessOrder
     {
         NotStarted,
@@ -39,7 +92,7 @@ internal sealed class AssetProcessor
 
     private AssetResourceLayout Layout => _manifest.ResourceLayout;
 
-    public AssetProcessor(AssetLoader loader, AssetConfigLoader configLoader, AssetManifest manifest)
+    public AssetStartupWorker(AssetLoader loader, AssetConfigLoader configLoader, AssetManifest manifest)
     {
         ArgumentNullException.ThrowIfNull(loader);
         _loader = loader;

@@ -29,13 +29,11 @@ public sealed class AssetSystem : IAssetSystem
 
     public bool IsLoading { get; private set; } = false;
 
-    private string BasePath => Path.Combine(Directory.GetCurrentDirectory(), _assetPath);
-
 
     private readonly AssetStore _assetStore = new();
 
     private AssetConfigLoader? _configLoader;
-    private AssetProcessor? _processor;
+    private AssetStartupWorker? _processor;
     private AssetGfxUploader? _uploader;
     private AssetLoader? _loader;
 
@@ -77,7 +75,7 @@ public sealed class AssetSystem : IAssetSystem
 
         _uploader = new AssetGfxUploader(gfx);
         _loader = new AssetLoader();
-        _processor = new AssetProcessor(_loader, _configLoader, _manifest);
+        _processor = new AssetStartupWorker(_loader, _configLoader, _manifest);
         _processor.Start(_assetStore, _uploader);
     }
 

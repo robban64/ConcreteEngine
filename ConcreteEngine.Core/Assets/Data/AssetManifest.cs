@@ -14,6 +14,11 @@ public interface IAssetManifestRecord
     AssetKind Kind { get; }
 }
 
+public interface IAssetManifestEntry
+{
+    int Count { get; }
+}
+
 public sealed record AssetManifest(
     AssetResourceLayout ResourceLayout,
     string? Version);
@@ -26,9 +31,10 @@ public sealed record AssetResourceLayout(
     [property: JsonPropertyName("cubemaps")]
     string? CubeMaps = null);
 
-public sealed class ShaderManifest
+public sealed class ShaderManifest : IAssetManifestEntry
 {
     public required ShaderManifestRecord[] Records { get; init; }
+    public int Count =>  Records.Length;
 }
 
 public sealed record ShaderManifestRecord(
@@ -40,9 +46,11 @@ public sealed record ShaderManifestRecord(
     public AssetKind Kind => AssetKind.Shader;
 }
 
-public sealed class TextureManifest
+public sealed class TextureManifest: IAssetManifestEntry
 {
     public required TextureManifestRecord[] Records { get; init; }
+    public int Count =>  Records.Length;
+
 }
 
 public sealed record TextureManifestRecord(
@@ -58,9 +66,11 @@ public sealed record TextureManifestRecord(
     public AssetKind Kind => AssetKind.Texture2D;
 }
 
-public sealed class CubeMapManifest
+public sealed class CubeMapManifest: IAssetManifestEntry
 {
     public required CubeMapManifestRecord[] Records { get; init; }
+    public int Count =>  Records.Length;
+
 }
 
 public sealed record CubeMapManifestRecord(
@@ -75,9 +85,11 @@ public sealed record CubeMapManifestRecord(
     public AssetKind Kind => AssetKind.TextureCubeMap;
 }
 
-public sealed class MeshManifest
+public sealed class MeshManifest: IAssetManifestEntry
 {
     public required MeshManifestRecord[] Records { get; init; }
+    public int Count =>  Records.Length;
+
 }
 
 public sealed record MeshManifestRecord(
@@ -88,9 +100,11 @@ public sealed record MeshManifestRecord(
     public AssetKind Kind => AssetKind.Mesh;
 }
 
-public sealed class MaterialManifest
+public sealed class MaterialManifest: IAssetManifestEntry
 {
     public required MaterialManifestRecord[] Records { get; init; }
+    public int Count =>  Records.Length;
+
 }
 
 public sealed record MaterialManifestRecord(

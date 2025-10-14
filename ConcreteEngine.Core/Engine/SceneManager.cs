@@ -3,6 +3,7 @@
 using ConcreteEngine.Core.Engine.Configuration;
 using ConcreteEngine.Core.Modules;
 using ConcreteEngine.Core.Rendering;
+using ConcreteEngine.Core.Rendering.Descriptors;
 using ConcreteEngine.Core.Scene;
 
 #endregion
@@ -47,6 +48,7 @@ internal sealed class SceneManager
 
         afterBuild?.Invoke(new SceneBuildResult(
             builder.RenderType,
+            builder.RenderTargetsDesc,
             builder.Modules,
             context), renderer);
 
@@ -59,10 +61,12 @@ internal sealed class SceneManager
 
     internal sealed class SceneBuildResult(
         RenderType renderType,
+        RenderTargetDescriptor renderTargetsDesc,
         IReadOnlyList<Func<GameModule>> modules,
         GameSceneContext context)
     {
         public RenderType RenderType { get; } = renderType;
+        public RenderTargetDescriptor RenderTargetsDesc { get; } = renderTargetsDesc;
         public IReadOnlyList<Func<GameModule>> Modules { get; } = modules;
         public GameSceneContext Context { get; } = context;
     }

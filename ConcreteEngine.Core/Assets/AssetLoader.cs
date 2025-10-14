@@ -1,6 +1,7 @@
 #region
 
 using ConcreteEngine.Core.Assets.Data;
+using ConcreteEngine.Core.Assets.Materials;
 using ConcreteEngine.Core.Assets.Meshes;
 using ConcreteEngine.Core.Assets.Shaders;
 using ConcreteEngine.Core.Assets.Textures;
@@ -16,6 +17,7 @@ internal sealed class AssetLoader
     private TextureLoaderModule _textureLoader = null!;
     private MeshLoaderModule _meshLoader = null!;
     private ShaderLoaderModule _shaderLoader = null!;
+    private MaterialLoader _materialLoader = null!;
 
     private AssetFileAssembleDel<Shader, ShaderDescriptor> _loadShaderDel = null!;
     private AssetFileAssembleDel<Texture2D, TextureDescriptor> _loadTextureDel = null!;
@@ -34,6 +36,9 @@ internal sealed class AssetLoader
     public Mesh LoadMesh(MeshDescriptor manifest)
         => _store.RegisterWithFiles(manifest, _loadMeshDel);
 
+    public List<MaterialTemplate> LoadAllMaterials(MaterialManifest manifest)
+        => _materialLoader.LoadMaterials(_store, manifest.Records)!;
+
 
     public void ActivateLoader(AssetStore store, AssetGfxUploader gfx)
     {
@@ -42,6 +47,7 @@ internal sealed class AssetLoader
         _textureLoader = new TextureLoaderModule(gfx);
         _meshLoader = new MeshLoaderModule(gfx);
         _shaderLoader = new ShaderLoaderModule(gfx);
+        _materialLoader = new MaterialLoader();
 
         _loadShaderDel = _shaderLoader.LoadShader;
         _loadTextureDel = _textureLoader.LoadTexture2D;

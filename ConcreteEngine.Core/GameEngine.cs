@@ -224,7 +224,7 @@ public sealed class GameEngine : IDisposable
 
         void AfterBuild(SceneManager.SceneBuildResult result, RenderSystem renderer)
         {
-            renderer.RegisterScene(builder.RenderType, builder.RenderTargetsDesc);
+            renderer.RegisterScene(result.RenderType, result.RenderTargetsDesc);
             foreach (var module in result.Modules) result.Context.Modules.AddModule(module());
         }
     }

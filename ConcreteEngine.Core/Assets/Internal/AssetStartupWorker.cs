@@ -2,98 +2,46 @@
 
 using ConcreteEngine.Common;
 using ConcreteEngine.Core.Assets.Data;
+using ConcreteEngine.Core.Assets.Materials;
+using ConcreteEngine.Core.Assets.Textures;
 
 #endregion
 
 namespace ConcreteEngine.Core.Assets.Internal;
 
-/*
-         _tasks[ProcessOrder.Shaders] =
-             new AssetProcessTask<Shader, ShaderManifestRecord>(_loader.LoadShader, null);
-         _tasks[ProcessOrder.Textures] =
-             new AssetProcessTask<Texture2D, TextureManifestRecord>(_loader.LoadTexture2D, null);
-         _tasks[ProcessOrder.CubeMaps] =
-             new AssetProcessTask<CubeMap, CubeMapManifestRecord>(_loader.LoadCubeMap, null);
-         _tasks[ProcessOrder.Meshes] =
-             new AssetProcessTask<Mesh, MeshManifestRecord>(_loader.LoadMesh, null);
-
-
-     public bool Process()
-     {
-         if (_processOrder == ProcessOrder.NotStarted) throw new InvalidOperationException("Asset loader has not started.");
-         if (_processOrder == ProcessOrder.Finished) return true;
-
-         var worker = _tasks[_processOrder];
-         var done = worker.Step();
-         if (!done) return false;
-
-         _tasks.Remove(_processOrder);
-         _processOrder = (ProcessOrder)((int)_processOrder + 1);
-         _tasks[_processOrder];
-         return _processOrder == ProcessOrder.Finished;
-     }
-     private interface IAssetProcessTask
-     {
-         bool Step();
-     }
-
-     private sealed class AssetProcessTask<TAsset, TRecord>(Func<TRecord, TAsset> onProcess, Action? onDone)
-         : IAssetProcessTask where TAsset : AssetObject where TRecord : class, IAssetManifestRecord
-     {
-         private int _idx = 0;
-         private TRecord[] _records = null!;
-
-         public void Start(TRecord[] records)
-         {
-             _idx = 0;
-             _records = records;
-         }
-
-         public bool Step()
-         {
-             onProcess(_records[_idx]);
-             _idx++;
-             if (_idx < _records.Length) return false;
-             onDone?.Invoke();
-             return true;
-         }
-     }
-   */
 internal sealed class AssetStartupWorker
 {
-    internal enum ProcessOrder
+    internal enum ProcessStepOrder
     {
         NotStarted,
         Shaders,
         Textures,
         CubeMaps,
         Meshes,
-
-        //Materials,
         Finished
     }
 
     private const int ProcessOrderCount = 6;
 
-    private ProcessOrder _processOrder = ProcessOrder.NotStarted;
+    private ProcessStepOrder _processOrder = ProcessStepOrder.NotStarted;
 
     private readonly AssetLoader _loader;
     private readonly AssetConfigLoader _configLoader;
     private readonly AssetManifest _manifest;
 
-    private ShaderManifest? _shaderManifest;
-    private TextureManifest? _textureManifest;
-    private CubeMapManifest? _cubeMapManifest;
-    private MeshManifest? _meshManifest;
-
+    private IAssetCatalog? _currentManifest;
 
     private int _idx = 0;
 
     private AssetResourceLayout Layout => _manifest.ResourceLayout;
+    private Func<IAssetCatalog> _onStartStep = null!;
 
     public AssetStartupWorker(AssetLoader loader, AssetConfigLoader configLoader, AssetManifest manifest)
     {
-        ArgumentNullException.ThrowIfNull(loader);
+        ArgumentNullException.ThrowIfNull(loader, nameof(loader));
+        ArgumentNullException.ThrowIfNull(configLoader, nameof(configLoader));
+        ArgumentNullException.ThrowIfNull(manifest, nameof(manifest));
+
         _loader = loader;
         _configLoader = configLoader;
         _manifest = manifest;
@@ -101,59 +49,49 @@ internal sealed class AssetStartupWorker
 
     internal void Start(AssetStore store, AssetGfxUploader uploader)
     {
-        InvalidOpThrower.ThrowIf(_processOrder != ProcessOrder.NotStarted);
-        _processOrder = (ProcessOrder)1;
+        InvalidOpThrower.ThrowIf(_processOrder != ProcessStepOrder.NotStarted);
+        _processOrder = (ProcessStepOrder)1;
+        _onStartStep = NextStep;
         _loader.ActivateLoader(store, uploader);
-
-        _shaderManifest = _configLoader.LoadAssetCatalog<ShaderManifest>(Layout.Shader);
     }
 
     internal void Finish()
     {
         _loader.DeactivateLoader();
+        _currentManifest = null;
+        _onStartStep = null!;
     }
 
-    public bool Process()
+    public MaterialStore ProcessMaterials()
+    {
+        var materialManifest = _configLoader.LoadAssetCatalog<MaterialManifest>(Layout.Material);
+        var materials = _loader.LoadAllMaterials(materialManifest);
+        return new MaterialStore(materials!);
+    }
+
+    public bool ProcessGfxAssets()
     {
         switch (_processOrder)
         {
-            case ProcessOrder.NotStarted:
+            case ProcessStepOrder.NotStarted:
                 throw new InvalidOperationException("Asset loader has not started.");
-            case ProcessOrder.Shaders:
-                _loader.LoadShader(_shaderManifest!.Records[_idx]);
-                if (ProcessStep(_shaderManifest.Records.Length))
-                {
-                    _textureManifest = _configLoader.LoadAssetCatalog<TextureManifest>(Layout.Texture);
-                    _shaderManifest = null;
-                }
-
+            case ProcessStepOrder.Shaders:
+                ProcessGfxStep(_onStartStep);
+                _loader.LoadShader(CurrentManifest<ShaderManifest>().Records[_idx]);
                 break;
-            case ProcessOrder.Textures:
-                _loader.LoadTexture2D(_textureManifest!.Records[_idx]);
-                if (ProcessStep(_textureManifest.Records.Length))
-                {
-                    if (Layout.CubeMaps is null) _processOrder++;
-                    else _cubeMapManifest = _configLoader.LoadAssetCatalog<CubeMapManifest>(Layout.CubeMaps);
-
-                    _textureManifest = null;
-                }
-
+            case ProcessStepOrder.Textures:
+                ProcessGfxStep(_onStartStep);
+                _loader.LoadTexture2D(CurrentManifest<TextureManifest>().Records[_idx]);
                 break;
-            case ProcessOrder.CubeMaps:
-                _loader.LoadCubeMap(_cubeMapManifest!.Records[_idx]);
-                if (ProcessStep(_cubeMapManifest.Records.Length))
-                {
-                    _meshManifest = _configLoader.LoadAssetCatalog<MeshManifest>(Layout.Mesh);
-                    _cubeMapManifest = null;
-                }
-
+            case ProcessStepOrder.CubeMaps:
+                ProcessGfxStep(_onStartStep);
+                _loader.LoadCubeMap(CurrentManifest<CubeMapManifest>().Records[_idx]);
                 break;
-            case ProcessOrder.Meshes:
-                _loader.LoadMesh(_meshManifest!.Records[_idx]);
-                if (ProcessStep(_meshManifest.Records.Length))
-                    _meshManifest = null;
+            case ProcessStepOrder.Meshes:
+                ProcessGfxStep(_onStartStep);
+                _loader.LoadMesh(CurrentManifest<MeshManifest>().Records[_idx]);
                 break;
-            case ProcessOrder.Finished:
+            case ProcessStepOrder.Finished:
                 return true;
             default:
                 throw new ArgumentOutOfRangeException();
@@ -162,19 +100,39 @@ internal sealed class AssetStartupWorker
         return false;
     }
 
-    private bool ProcessStep(int length, Action? step = null)
+    private IAssetCatalog NextStep()
     {
-        _idx++;
-        if (_idx < length) return false;
+        return _processOrder switch
+        {
+            ProcessStepOrder.Shaders => _configLoader.LoadAssetCatalog<ShaderManifest>(Layout.Shader),
+            ProcessStepOrder.Textures => _configLoader.LoadAssetCatalog<TextureManifest>(Layout.Texture),
+            ProcessStepOrder.CubeMaps => _configLoader.LoadAssetCatalog<CubeMapManifest>(Layout.CubeMaps),
+            ProcessStepOrder.Meshes => _configLoader.LoadAssetCatalog<MeshManifest>(Layout.Mesh),
+            ProcessStepOrder.Finished => _currentManifest,
+            _ => throw new ArgumentOutOfRangeException()
+        };
+    }
+
+    private T CurrentManifest<T>() where T : class, IAssetCatalog
+        => _currentManifest as T ?? throw new InvalidOperationException();
+
+
+    private bool ProcessGfxStep(Func<IAssetCatalog> onStartStep)
+    {
+        if (_idx++ == 0) _currentManifest = onStartStep.Invoke();
+
+        if (_idx < _currentManifest!.Count) return false;
+
         _idx = 0;
+
         var order = (int)_processOrder + 1;
         if (order >= ProcessOrderCount)
         {
-            _processOrder = ProcessOrder.Finished;
+            _processOrder = ProcessStepOrder.Finished;
             return false;
         }
 
-        _processOrder = (ProcessOrder)order;
-        return true;
+        _processOrder = (ProcessStepOrder)order;
+        return false;
     }
 }

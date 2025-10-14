@@ -56,6 +56,7 @@ public sealed class AssetSystem : IAssetSystem
 
     internal void StartLoader(GfxContext gfx)
     {
+        InvalidOpThrower.ThrowIfNot(Initialized, nameof(Initialized));
         ArgumentNullException.ThrowIfNull(gfx, nameof(gfx));
         ArgumentNullException.ThrowIfNull(_configLoader, nameof(_configLoader));
 
@@ -76,7 +77,7 @@ public sealed class AssetSystem : IAssetSystem
 
         for (var i = 0; i < n; i++)
         {
-            if (_processor!.Process()) return true;
+            if (_processor!.ProcessGfxAssets()) return true;
         }
 
         return false;
@@ -84,13 +85,11 @@ public sealed class AssetSystem : IAssetSystem
 
     internal MaterialStore FinishLoading()
     {
-        var materialLoader = new MaterialLoader();
-        var materials = materialLoader.LoadMaterials(_assetStore, _manifest.ResourceLayout, _configLoader!);
-        _materialStore = new MaterialStore(materials!);
-
-        _processor?.Finish();
+        _materialStore = _processor!.ProcessMaterials();
+        _processor.Finish();
         _processor = null;
-        IsLoading = true;
+        
+        IsLoading = false;
         return _materialStore;
     }
 

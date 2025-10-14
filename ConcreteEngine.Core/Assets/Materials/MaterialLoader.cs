@@ -12,15 +12,11 @@ namespace ConcreteEngine.Core.Assets.Materials;
 
 internal sealed class MaterialLoader
 {
-    public List<MaterialTemplate>? LoadMaterials(AssetStore store, AssetResourceLayout layout,
-        AssetConfigLoader configLoader)
+    public List<MaterialTemplate>? LoadMaterials(AssetStore store, MaterialDescriptor[] descriptors)
     {
-        var manifest = configLoader.LoadAssetCatalog<MaterialManifest>(layout.Material);
-        ArgumentNullException.ThrowIfNull(manifest.Records);
-
-        var records = manifest.Records;
-
-        if (records.Length == 0)
+        ArgumentNullException.ThrowIfNull(descriptors);
+        
+        if (descriptors.Length == 0)
         {
             Debug.Assert(false);
             return null;
@@ -28,7 +24,7 @@ internal sealed class MaterialLoader
 
         var result = new List<MaterialTemplate>();
         AssetAssembleDel<MaterialTemplate, MaterialDescriptor> factory = CreateMaterial;
-        foreach (var record in records)
+        foreach (var record in descriptors)
         {
             var template = store.Register(record, factory);
             result.Add(template);

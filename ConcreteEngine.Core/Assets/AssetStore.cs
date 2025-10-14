@@ -112,7 +112,7 @@ internal sealed class AssetStore : IAssetStore
     {
         ArgumentNullException.ThrowIfNull(asset);
         ArgumentOutOfRangeException.ThrowIfLessThanOrEqual(id.Value, 0);
-        ArgumentOutOfRangeException.ThrowIfNotEqual(asset.Id.Value, id.Value);
+        ArgumentOutOfRangeException.ThrowIfNotEqual(asset.RawId.Value, id.Value);
 
         if (!_names.TryAdd(new AssetKey(typeof(TAsset), asset.Name), id))
             throw new InvalidOperationException($"Asset '{asset.Name}' is already exists.");

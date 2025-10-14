@@ -10,10 +10,8 @@ namespace ConcreteEngine.Core.Assets.Textures;
 
 public sealed class Texture2D : AssetObject
 {
-    internal Texture2D()
-    {
-    }
-
+    public AssetRef<Texture2D> RefId => new(RawId);
+    
     public required TextureId ResourceId { get; init; }
 
     public required int Width { get; init; }

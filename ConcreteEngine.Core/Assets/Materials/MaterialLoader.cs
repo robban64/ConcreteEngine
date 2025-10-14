@@ -40,27 +40,27 @@ internal sealed class MaterialLoader
     
     private MaterialTemplate CreateMaterial(AssetId assetId, MaterialManifestRecord record, IAssetStore store)
     {
-        var textures = Array.Empty<AssetId>();
-        AssetId? cubeMap = null;
+        var textures = Array.Empty<AssetRef<Texture2D>>();
+        AssetRef<CubeMap>? cubeMap = null;
         
         if (record.CubeMap != null)
         {
-            cubeMap = store.Get<CubeMap>(record.CubeMap).Id;
+            cubeMap = store.Get<CubeMap>(record.CubeMap).RefId;
         }
         else if (record.Textures != null)
         {
-            textures = new AssetId[record.Textures.Length];
+            textures = new AssetRef<Texture2D>[record.Textures.Length];
             for (var i = 0; i < record.Textures.Length; i++)
             {
-                textures[i] = store.Get<Texture2D>(record.Textures[i]).Id;
+                textures[i] = store.Get<Texture2D>(record.Textures[i]).RefId;
             }
         }
 
-        var shader = store.Get<Shader>(record.Shader).Id;
+        var shader = store.Get<Shader>(record.Shader).RefId;
 
         return new MaterialTemplate
         {
-            Id = assetId,
+            RawId = assetId,
             Name = record.Name,
             ShaderAssetId = shader,
             Color = record.Color,

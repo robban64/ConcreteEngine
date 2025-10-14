@@ -12,9 +12,9 @@ namespace ConcreteEngine.Core.Assets.Materials;
 
 public sealed class MaterialTemplate : AssetObject
 {
-    public required AssetId ShaderAssetId { get; init; }
-    public AssetId[] TextureAssetIds { get; init; } = Array.Empty<AssetId>();
-    public AssetId? CubeMapAssetId { get; init; } = null;
+    public required AssetRef<Shader> ShaderAssetId { get; init; }
+    public AssetRef<Texture2D>[] TextureAssetIds { get; init; } = Array.Empty<AssetRef<Texture2D>>();
+    public AssetRef<CubeMap>? CubeMapAssetId { get; init; } = null;
 
     public Vector4 Color { get; set; } = Vector4.One;
 

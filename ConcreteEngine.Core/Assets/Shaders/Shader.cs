@@ -10,6 +10,7 @@ namespace ConcreteEngine.Core.Assets.Shaders;
 
 public sealed class Shader : AssetObject
 {
+    public AssetRef<Shader> RefId => new(RawId);
     public required ShaderId ResourceId { get; init; }
     public required int Samplers { get; init; }
 

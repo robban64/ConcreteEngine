@@ -22,7 +22,7 @@ internal sealed class AssetProcessor
         Textures,
         CubeMaps,
         Meshes,
-        
+
         //Materials,
         Finished
     }
@@ -58,6 +58,9 @@ internal sealed class AssetProcessor
         InvalidOpThrower.ThrowIf(_processOrder != ProcessOrder.NotStarted);
         _processOrder = (ProcessOrder)1;
         _loader.ActivateLoader(store, uploader);
+        
+        _shaderManifest = _configLoader.LoadManifest<ShaderManifest>(Layout.Shader);
+
     }
 
     internal void Finish()
@@ -75,9 +78,10 @@ internal sealed class AssetProcessor
                 _loader.LoadShader(_shaderManifest!.Records[_idx]);
                 if (ProcessStep(_shaderManifest.Records.Length))
                 {
-                    _configLoader.LoadManifest<ShaderManifest>(Layout.Shader);
+                    _textureManifest = _configLoader.LoadManifest<TextureManifest>(Layout.Texture);
                     _shaderManifest = null;
                 }
+
                 break;
             case ProcessOrder.Textures:
                 _loader.LoadTexture2D(_textureManifest!.Records[_idx]);
@@ -88,14 +92,16 @@ internal sealed class AssetProcessor
 
                     _textureManifest = null;
                 }
+
                 break;
             case ProcessOrder.CubeMaps:
                 _loader.LoadCubeMap(_cubeMapManifest!.Records[_idx]);
                 if (ProcessStep(_cubeMapManifest.Records.Length))
                 {
-                    _configLoader.LoadManifest<MeshManifest>(Layout.Mesh);
+                    _meshManifest = _configLoader.LoadManifest<MeshManifest>(Layout.Mesh);
                     _cubeMapManifest = null;
                 }
+
                 break;
             case ProcessOrder.Meshes:
                 _loader.LoadMesh(_meshManifest!.Records[_idx]);

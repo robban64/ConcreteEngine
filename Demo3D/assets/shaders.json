@@ -1,6 +1,5 @@
 {
-  "folder": "./shaders",
-  "resources": [
+  "records": [
     {
       "name": "Depth",
       "vertexFilename": "depth.vert.glsl",

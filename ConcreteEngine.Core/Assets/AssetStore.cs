@@ -90,7 +90,7 @@ internal sealed class AssetStore : IAssetStore
     internal TAsset Register<TAsset, TManifest>(TManifest manifest, AssetAssembleDel<TAsset, TManifest> factory)
         where TAsset : AssetObject where TManifest : class, IAssetManifestRecord
     {
-        var id = new AssetId(_assetId++);
+        var id = new AssetId(++_assetId);
         var asset = factory(id, manifest, this);
         RegisterInternal(id, asset, ReadOnlySpan<AssetFileSpec>.Empty);
         return asset;
@@ -100,7 +100,7 @@ internal sealed class AssetStore : IAssetStore
         AssetFileAssembleDel<TAsset, TManifest> factory)
         where TAsset : AssetObject where TManifest : class, IAssetManifestRecord
     {
-        var id = new AssetId(_assetId++);
+        var id = new AssetId(++_assetId);
         var asset = factory(id, manifest, out var fileSpecs);
         ArgumentNullException.ThrowIfNull(fileSpecs, nameof(fileSpecs));
         RegisterInternal(id, asset, fileSpecs);
@@ -111,7 +111,8 @@ internal sealed class AssetStore : IAssetStore
         where TAsset : AssetObject
     {
         ArgumentNullException.ThrowIfNull(asset);
-        ArgumentOutOfRangeException.ThrowIfEqual(asset.Id.Value, id.Value);
+        ArgumentOutOfRangeException.ThrowIfLessThanOrEqual(id.Value, 0);
+        ArgumentOutOfRangeException.ThrowIfNotEqual(asset.Id.Value, id.Value);
 
         if (!_names.TryAdd(new AssetKey(typeof(TAsset), asset.Name), id))
             throw new InvalidOperationException($"Asset '{asset.Name}' is already exists.");

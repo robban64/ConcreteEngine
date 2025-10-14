@@ -1,5 +1,5 @@
 {
-  "resources": [
+  "records": [
     {
       "name": "SkyboxMat",
       "shader": "Skybox",

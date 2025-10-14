@@ -30,10 +30,10 @@ public sealed class RenderFrameInfo
         FrameIndex++;
         Time += dt;
         Alpha = alpha;
-        OutputSize = window.FramebufferSize;
+        OutputSize = window.OutputSize;
 
         frameInfo = new Rendering.State.RenderFrameInfo(FrameIndex, dt, Alpha, OutputSize);
-        runtimeParams = new RenderRuntimeParams(window.Size, input.MousePosition, Time, 9999);
+        runtimeParams = new RenderRuntimeParams(window.WindowSize, input.MousePosition, Time, 9999);
 
         var status = BeginFrameStatus.None;
         if (PrevOutputSize != OutputSize) status = BeginFrameStatus.Resize;

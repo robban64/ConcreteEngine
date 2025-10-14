@@ -89,7 +89,7 @@ public sealed class DemoScene : GameScene
 
     protected override void ConfigureRenderer(IGameSceneRenderBuilder builder)
     {
-        var assets = Context.GetSystem<IAssetSystem>();
+        var assets = Context.GetSystem<IAssetSystem>().Store;
 
         var lightPassShader = assets.Get<Shader>("LightPassShader");
         var lightComposite = assets.Get<Shader>("LightComposite");

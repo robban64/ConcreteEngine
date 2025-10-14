@@ -1,6 +1,7 @@
 using System.Diagnostics;
 using ConcreteEngine.Core.Assets.Config;
 using ConcreteEngine.Core.Assets.Data;
+using ConcreteEngine.Core.Assets.Shaders;
 using ConcreteEngine.Core.Assets.Textures;
 
 namespace ConcreteEngine.Core.Assets.Materials;
@@ -13,58 +14,60 @@ internal sealed class MaterialLoader
         var manifest = configLoader.LoadManifest<MaterialManifest>(layout.Material);
         ArgumentNullException.ThrowIfNull(manifest.Records);
 
-        var entries = manifest.Records;
+        var records = manifest.Records;
 
-        if (entries.Length == 0)
+        if (records.Length == 0)
         {
             Debug.Assert(false);
             return null;
         }
 
         var result = new List<MaterialTemplate>();
-
-        foreach (var entry in entries)
+        AssetAssembleDel<MaterialTemplate, MaterialManifestRecord> factory = CreateMaterial;
+        foreach (var record in records)
         {
-            var mat = CreateMaterial(entry);
-            store.Register((id) => CreateMaterial(entry));
-
-            result.Add(mat);
+            var template = store.Register(record,factory);
+            result.Add(template);
         }
 
         foreach (var mat in result)
-            mat.Initialize();
+            mat.Initialize(store);
 
         return result;
 
        
     }
     
-    private MaterialTemplate CreateMaterial(MaterialManifestRecord record)
+    private MaterialTemplate CreateMaterial(AssetId assetId, MaterialManifestRecord record, IAssetStore store)
     {
-        Texture2D[] textures = [];
-        CubeMap? cubeMap = null;
+        var textures = Array.Empty<AssetId>();
+        AssetId? cubeMap = null;
+        
         if (record.CubeMap != null)
         {
-            cubeMap = Get<CubeMap>(record.CubeMap);
+            cubeMap = store.Get<CubeMap>(record.CubeMap).Id;
         }
         else if (record.Textures != null)
         {
-            textures = new Texture2D[record.Textures.Length];
+            textures = new AssetId[record.Textures.Length];
             for (var i = 0; i < record.Textures.Length; i++)
             {
-                textures[i] = Get<Texture2D>(record.Textures[i]);
+                textures[i] = store.Get<Texture2D>(record.Textures[i]).Id;
             }
         }
 
-        var shader = Get<Shader>(record.Shader);
+        var shader = store.Get<Shader>(record.Shader).Id;
 
         return new MaterialTemplate
         {
+            Id = assetId,
             Name = record.Name,
-            Shader = shader,
+            ShaderAssetId = shader,
             Color = record.Color,
-            Textures = textures,
-            CubeMap = cubeMap
+            TextureAssetIds = textures,
+            CubeMapAssetId = cubeMap,
+            IsCoreAsset = false,
+            Generation = 0
         };
     }
 }

@@ -23,7 +23,7 @@ internal sealed class AssetProcessor
         CubeMaps,
         Meshes,
         
-        Materials,
+        //Materials,
         Finished
     }
 
@@ -53,11 +53,11 @@ internal sealed class AssetProcessor
         _manifest = manifest;
     }
 
-    internal void Start(AssetFactory factory, AssetGfxUploader uploader)
+    internal void Start(AssetStore store, AssetGfxUploader uploader)
     {
         InvalidOpThrower.ThrowIf(_processOrder != ProcessOrder.NotStarted);
         _processOrder = (ProcessOrder)1;
-        _loader.ActivateLoader(factory, uploader);
+        _loader.ActivateLoader(store, uploader);
     }
 
     internal void Finish()

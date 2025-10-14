@@ -20,7 +20,7 @@ public sealed class TerrainFeature : GameFeature
 
     public override void Initialize()
     {
-        var assets = Context.GetSystem<IAssetSystem>();
+        var assets = Context.GetSystem<IAssetSystem>().Store;
         var renderer = Context.GetSystem<IRenderSystem>();
         var material = renderer.CreateMaterial("TerrainMat");
         var heightmap = assets.Get<Texture2D>("Heightmap");

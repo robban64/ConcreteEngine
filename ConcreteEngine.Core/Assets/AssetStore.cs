@@ -3,7 +3,19 @@ using ConcreteEngine.Core.Assets.Data;
 
 namespace ConcreteEngine.Core.Assets;
 
-public sealed class AssetStore
+public interface IAssetStore
+{
+    T Get<T>(AssetId id) where T : AssetObject;
+    T Get<T>(string name) where T : AssetObject;
+    bool TryGet<T>(string name, out T? asset) where T : AssetObject;
+
+    List<TAsset> ExtractAllObjects<TAsset>() where TAsset : AssetObject;
+
+    List<TData> ExtractData<TAsset, TData>(Func<TAsset, TData> transform)
+        where TAsset : AssetObject where TData : unmanaged;
+}
+
+internal sealed class AssetStore : IAssetStore
 {
     private int _assetId = 0;
     private int _assetFileId = 0;
@@ -23,89 +35,11 @@ public sealed class AssetStore
     {
     }
 
-
-    // public Func<int> IdProvider() => () => new AssetBuildRecord();
-/*
-    internal AssetId RegisterAsset(AssetObject asset, AssetFileSet fileSet)
+    public T Get<T>(AssetId id) where T : AssetObject
     {
-        var id = new AssetId(_assetId++);
-        _assets[id] = asset;
-        _bindings[id] = fileSet;
-
-        if (!_names.TryAdd(new AssetKey(asset.GetType(),asset.Name), id))
-            throw new InvalidOperationException($"Asset '{asset.Name}' is already exists.");
-
-        return id;
-    }
-
-    internal AssetFileId RegisterFile(AssetFileEntry entry)
-    {
-        var id = new AssetFileId(_assetFileId);
-        _files[id] = entry;
-        _assetFileId++;
-        return id;
-    }
-*/
-    internal TAsset Register<TAsset>(AssetAssembleDel<TAsset> factory) where TAsset : AssetObject
-    {
-        var id = new AssetId(_assetId++);
-        var asset = factory(id);
-        
-        InvalidOpThrower.ThrowIfNull(asset);
-        InvalidOpThrower.ThrowIfNot(asset.Id == id);
-
-        if (!_names.TryAdd(new AssetKey(typeof(TAsset), asset.Name), id))
-            throw new InvalidOperationException($"Asset '{asset.Name}' is already exists.");
-
-        _assets.Add(id, asset);
-        return asset;
-    }
-
-    internal TAsset Register<TAsset>(AssetFileAssembleDel<TAsset> factory) where TAsset : AssetObject
-    {
-        var id = new AssetId(_assetId++);
-        var asset = factory(id, (assetId, specs) =>
-        {
-            var fileIds = new AssetFileId[specs.Length];
-
-            for (int i = 0; i < specs.Length; i++)
-            {
-                ref readonly var spec = ref specs[i];
-                var fileId = new AssetFileId(_assetFileId++);
-                fileIds[i] = fileId;
-                _files.Add(fileId, new AssetFileEntry(fileId, in spec));
-            }
-
-            _bindings.Add(assetId, fileIds);
-            return fileIds;
-        });
-        
-        InvalidOpThrower.ThrowIfNull(asset);
-        InvalidOpThrower.ThrowIfNot(asset.Id == id);
-
-        if (!_names.TryAdd(new AssetKey(typeof(TAsset), asset.Name), id))
-            throw new InvalidOperationException($"Asset '{asset.Name}' is already exists.");
-
-        _assets.Add(id, asset);
-        return asset;
-    }
-
-    private AssetFileId[] RegisterFiles<TManifest>(AssetId assetId, TManifest manifest,
-        ReadOnlySpan<AssetFileSpec> specs)
-        where TManifest : class, IAssetManifestRecord
-    {
-        var fileIds = new AssetFileId[specs.Length];
-
-        for (int i = 0; i < specs.Length; i++)
-        {
-            ref readonly var spec = ref specs[i];
-            var fileId = new AssetFileId(_assetFileId++);
-            fileIds[i] = fileId;
-            _files.Add(fileId, new AssetFileEntry(fileId, in spec));
-        }
-
-        _bindings.Add(assetId, fileIds);
-        return fileIds;
+        var asset = _assets[id];
+        if(asset is not T assetObject) throw new InvalidOperationException();
+        return assetObject;
     }
 
     public T Get<T>(string name) where T : AssetObject
@@ -127,5 +61,79 @@ public sealed class AssetStore
         }
 
         return false;
+    }
+
+    public List<TAsset> ExtractAllObjects<TAsset>() where TAsset : AssetObject
+    {
+        var result = new List<TAsset>(8);
+        foreach (var asset in _assets.Values)
+        {
+            if (asset is TAsset typedAsset) result.Add(typedAsset);
+        }
+
+        return result;
+    }
+
+    public List<TData> ExtractData<TAsset, TData>(Func<TAsset, TData> transform)
+        where TAsset : AssetObject where TData : unmanaged
+    {
+        var result = new List<TData>(8);
+        foreach (var asset in _assets.Values)
+        {
+            if (asset is TAsset typedAsset)
+                result.Add(transform(typedAsset));
+        }
+
+        return result;
+    }
+
+    internal TAsset Register<TAsset, TManifest>(TManifest manifest, AssetAssembleDel<TAsset, TManifest> factory)
+        where TAsset : AssetObject where TManifest : class, IAssetManifestRecord
+    {
+        var id = new AssetId(_assetId++);
+        var asset = factory(id, manifest, this);
+        RegisterInternal(id, asset, ReadOnlySpan<AssetFileSpec>.Empty);
+        return asset;
+    }
+
+    internal TAsset RegisterWithFiles<TAsset, TManifest>(TManifest manifest,
+        AssetFileAssembleDel<TAsset, TManifest> factory)
+        where TAsset : AssetObject where TManifest : class, IAssetManifestRecord
+    {
+        var id = new AssetId(_assetId++);
+        var asset = factory(id, manifest, out var fileSpecs);
+        ArgumentNullException.ThrowIfNull(fileSpecs, nameof(fileSpecs));
+        RegisterInternal(id, asset, fileSpecs);
+        return asset;
+    }
+
+    private void RegisterInternal<TAsset>(AssetId id, TAsset asset, ReadOnlySpan<AssetFileSpec> fileSpecs)
+        where TAsset : AssetObject
+    {
+        ArgumentNullException.ThrowIfNull(asset);
+        ArgumentOutOfRangeException.ThrowIfEqual(asset.Id.Value, id.Value);
+
+        if (!_names.TryAdd(new AssetKey(typeof(TAsset), asset.Name), id))
+            throw new InvalidOperationException($"Asset '{asset.Name}' is already exists.");
+
+        _assets.Add(id, asset);
+
+        if (fileSpecs.Length > 0)
+            RegisterBindingsInternal(id, fileSpecs);
+    }
+
+    private void RegisterBindingsInternal(AssetId assetId, ReadOnlySpan<AssetFileSpec> fileSpecs)
+    {
+        var fileIds = new AssetFileId[fileSpecs.Length];
+
+        for (int i = 0; i < fileSpecs.Length; i++)
+        {
+            ref readonly var spec = ref fileSpecs[i];
+            var fileId = new AssetFileId(_assetFileId++);
+            fileIds[i] = fileId;
+            _files.Add(fileId, new AssetFileEntry(fileId, in spec));
+        }
+
+        _bindings.Add(assetId, fileIds);
     }
 }

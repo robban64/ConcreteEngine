@@ -1,5 +1,6 @@
 #region
 
+using ConcreteEngine.Common;
 using ConcreteEngine.Core.Assets.Config;
 using ConcreteEngine.Core.Assets.Data;
 using ConcreteEngine.Core.Assets.Materials;
@@ -12,6 +13,7 @@ namespace ConcreteEngine.Core.Assets;
 
 public interface IAssetSystem : IGameEngineSystem
 {
+    IAssetStore Store { get; }
 }
 
 public sealed class AssetSystem : IAssetSystem
@@ -21,7 +23,6 @@ public sealed class AssetSystem : IAssetSystem
     private readonly string _assetPath;
     private readonly string _manifestFilename;
     private AssetManifest _manifest = null!;
-
 
     private MaterialStore _materialStore = null!;
     public MaterialStore MaterialStore => _materialStore;
@@ -34,11 +35,13 @@ public sealed class AssetSystem : IAssetSystem
     private readonly AssetStore _assetStore = new();
 
     private AssetConfigLoader? _configLoader;
-
     private AssetProcessor? _processor;
     private AssetGfxUploader? _uploader;
-    private AssetFactory? _factory;
     private AssetLoader? _loader;
+    
+    internal AssetStore AssetStore => _assetStore;
+    
+    public IAssetStore Store => _assetStore;
 
 
     internal AssetSystem(
@@ -65,16 +68,17 @@ public sealed class AssetSystem : IAssetSystem
 
     internal void StartLoader(GfxContext gfx)
     {
-        if (IsLoading)
-            throw new InvalidOperationException(nameof(IsLoading));
+        ArgumentNullException.ThrowIfNull(gfx, nameof(gfx));
+        ArgumentNullException.ThrowIfNull(_configLoader, nameof(_configLoader));
+        
+        InvalidOpThrower.ThrowIf(IsLoading, nameof(IsLoading));
 
         IsLoading = true;
 
         _uploader = new AssetGfxUploader(gfx);
-        _factory = new AssetFactory(_assetStore);
         _loader = new AssetLoader();
-
-        _loader.ActivateLoader(_factory, _uploader);
+        _processor = new  AssetProcessor(_loader, _configLoader, _manifest);
+        _processor.Start(_assetStore, _uploader);
     }
 
     internal bool ProcessLoader(int n)

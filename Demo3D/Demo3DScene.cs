@@ -26,7 +26,7 @@ public sealed class Demo3DScene : GameScene
         var rng = Random.Shared;
 
         var renderer = Context.GetSystem<IRenderSystem>();
-        var assets = Context.GetSystem<IAssetSystem>();
+        var assetStore = Context.GetSystem<IAssetSystem>().Store;
 
         var skyboxMaterial = renderer.CreateMaterial("SkyboxMat");
 
@@ -38,15 +38,15 @@ public sealed class Demo3DScene : GameScene
         rb.SetShadowDefault(2048);
 
         var boatMat = renderer.CreateMaterial("BoatMat");
-        var boatMesh = assets.Get<Mesh>("Boat");
+        var boatMesh = assetStore.Get<Mesh>("Boat");
         boatMat.SpecularStrength = 0;
         boatMat.Shininess = 1;
 
 
         var rockMat = renderer.CreateMaterial("Rock01Mat");
         rockMat.SpecularStrength = 0.3f;
-        var rockMesh = assets.Get<Mesh>("Rock1");
-        var rock2Mesh = assets.Get<Mesh>("Rock2");
+        var rockMesh = assetStore.Get<Mesh>("Rock1");
+        var rock2Mesh = assetStore.Get<Mesh>("Rock2");
 
         for (int i = 0; i < 40; i++)
         {
@@ -89,12 +89,12 @@ public sealed class Demo3DScene : GameScene
 
     protected override void ConfigureRenderer(IGameSceneRenderBuilder builder)
     {
-        var assets = Context.GetSystem<IAssetSystem>();
+        var assetStore = Context.GetSystem<IAssetSystem>().Store;
 
-        var screenShader = assets.Get<Shader>("Screen");
-        var compositeShader = assets.Get<Shader>("Composite");
-        var presentShader = assets.Get<Shader>("Present");
-        var colorFilterShader = assets.Get<Shader>("ColorFilter");
+        var screenShader = assetStore.Get<Shader>("Screen");
+        var compositeShader = assetStore.Get<Shader>("Composite");
+        var presentShader = assetStore.Get<Shader>("Present");
+        var colorFilterShader = assetStore.Get<Shader>("ColorFilter");
 
 
         builder.RegisterRender3D(new RenderTargetDescriptor

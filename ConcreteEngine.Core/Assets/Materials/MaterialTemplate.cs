@@ -12,9 +12,9 @@ namespace ConcreteEngine.Core.Assets.Materials;
 
 public sealed class MaterialTemplate : AssetObject
 {
-    public required Shader Shader { get; init; }
-    public Texture2D[] Textures { get; init; } = Array.Empty<Texture2D>();
-    public CubeMap? CubeMap { get; init; } = null;
+    public required AssetId ShaderAssetId { get; init; }
+    public AssetId[] TextureAssetIds { get; init; } = Array.Empty<AssetId>();
+    public AssetId? CubeMapAssetId { get; init; } = null;
 
     public Vector4 Color { get; set; } = Vector4.One;
 
@@ -22,17 +22,33 @@ public sealed class MaterialTemplate : AssetObject
     public override AssetCategory Category => AssetCategory.Graphic;
 
 
-    private TextureId[] _samplerSlots = null!;
-    internal TextureId[] SamplerSlots => _samplerSlots;
+    private TextureId[] _gfxSamplerSlots = null!;
+    internal TextureId[] GfxSamplerSlots => _gfxSamplerSlots;
+
+    public ShaderId GfxShaderId { get; private set; }
 
     internal MaterialTemplate()
     {
     }
 
-    internal void Initialize()
+    internal void Initialize(IAssetStore store)
     {
-        _samplerSlots = new TextureId[Shader.Samplers];
-        for (int i = 0; i < Shader.Samplers; i++)
-            _samplerSlots[i] = i < Textures.Length ? Textures[i].ResourceId : default;
+        var shader = store.Get<Shader>(ShaderAssetId);
+        GfxShaderId = shader.ResourceId;
+
+        _gfxSamplerSlots = new TextureId[shader.Samplers];
+        if (CubeMapAssetId is { } cubeMapAssetId)
+        {
+            _gfxSamplerSlots[0] = store.Get<CubeMap>(cubeMapAssetId).ResourceId;
+            return;
+        }
+        
+        for (int i = 0; i < shader.Samplers; i++)
+        {
+            if (i < TextureAssetIds.Length)
+                _gfxSamplerSlots[i] = store.Get<Texture2D>(TextureAssetIds[i]).ResourceId;
+            else
+                _gfxSamplerSlots[i] = default;
+        }
     }
 }

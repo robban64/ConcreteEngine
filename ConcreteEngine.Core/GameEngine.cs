@@ -44,7 +44,7 @@ public sealed class GameEngine : IDisposable
     private readonly RenderFrameInfo _renderInfo = new();
 
     private readonly EngineTimeHub _timeHub;
-    
+
 
     private bool _isDisposed = false;
 
@@ -74,7 +74,7 @@ public sealed class GameEngine : IDisposable
         // input
         _inputSystem = new InputSystem(input);
         _assets = new AssetSystem(assetConfig.AssetPath, assetConfig.ManifestFilename);
-        _renderer = new RenderSystem(_graphics, _window.FramebufferSize);
+        _renderer = new RenderSystem(_graphics, _window.OutputSize);
         _coreSystems = new EngineCoreSystem(_renderer, _inputSystem, _assets);
 
         _stateMachine = new LinearStateMachine<EngineStateLevel>(Enum.GetValues<EngineStateLevel>());
@@ -107,7 +107,7 @@ public sealed class GameEngine : IDisposable
             _renderer.RenderEmptyFrame(in tickInfo);
             return;
         }
-        
+
         if (_renderInfo.FrameIndex > 1 && frameStatus == RenderFrameInfo.BeginFrameStatus.Resize)
         {
             _timeHub.DebounceTicker ??= new DebounceTicker(30);
@@ -122,7 +122,7 @@ public sealed class GameEngine : IDisposable
 
         scene.BeforeRender(out var viewInfo);
         _renderer.BeginRenderFrame(beginStatus, in tickInfo, in tickParams, in viewInfo);
-        
+
         // _renderTime.TickOrRenderEffect();
         _renderer.Render(in tickInfo);
 
@@ -143,7 +143,7 @@ public sealed class GameEngine : IDisposable
 
     internal void Update(float dt)
     {
-        _updateInfo.BeginUpdateFrame(dt, _window.Size, _window.FramebufferSize);
+        _updateInfo.BeginUpdateFrame(dt, _window.WindowSize, _window.OutputSize);
 
         if (_stateMachine.Current != EngineStateLevel.Running)
         {
@@ -154,7 +154,7 @@ public sealed class GameEngine : IDisposable
         _timeHub.UpdateFrame(dt);
 
         var updateInfo = _updateInfo.UpdateTickInfo;
-        _sceneManager.Current?.Update(in updateInfo, _window.FramebufferSize);
+        _sceneManager.Current?.Update(in updateInfo, _window.OutputSize);
 
         UpdateSceneTransitionIfNeeded();
     }
@@ -206,11 +206,8 @@ public sealed class GameEngine : IDisposable
 
     private void InitializeGraphics()
     {
-        var shaders = _assets.GetAll<Shader>();
-        Span<ShaderId> shaderIds = stackalloc ShaderId[shaders.Count];
-        for (int i = 0; i < shaders.Count; i++) shaderIds[i] = shaders[i].ResourceId;
+        var shaderIds = _assets.Store.ExtractData<Shader, ShaderId>(static shader => shader.ResourceId);
         _renderer.InitializeGraphics(shaderIds);
-
     }
 
     private void UpdateSceneTransitionIfNeeded()

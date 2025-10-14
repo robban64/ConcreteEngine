@@ -7,128 +7,171 @@ namespace ConcreteEngine.Core.Assets;
 
 internal sealed class AssetLoader
 {
-    private AssetFactory _factory = null!;
+    private AssetStore _store = null!;
 
     private TextureLoaderModule _textureLoader = null!;
     private MeshLoaderModule _meshLoader = null!;
     private ShaderLoaderModule _shaderLoader = null!;
 
-    public Shader LoadShader(ShaderManifestRecord manifest)
-        => _shaderLoader.LoadShader(_factory, manifest);
+    private AssetFileAssembleDel<Shader, ShaderManifestRecord> _loadShaderDel = null!;
+    private AssetFileAssembleDel<Texture2D, TextureManifestRecord> _loadTextureDel = null!;
+    private AssetFileAssembleDel<CubeMap, CubeMapManifestRecord> _loadCubeMapDel = null!;
+    private AssetFileAssembleDel<Mesh, MeshManifestRecord> _loadMeshDel = null!;
 
-    public Texture2D LoadTexture2D(TextureManifestRecord manifest)
-        => _textureLoader.LoadTexture2D(_factory, manifest);
+    public Shader LoadShader(ShaderManifestRecord manifest)
+        => _store.RegisterWithFiles(manifest, _loadShaderDel);
+
+    public Texture2D LoadTexture2D(TextureManifestRecord manifest) =>
+        _store.RegisterWithFiles(manifest, _loadTextureDel);
 
     public CubeMap LoadCubeMap(CubeMapManifestRecord manifest)
-        => _textureLoader.LoadCubeMap(_factory, manifest);
+        => _store.RegisterWithFiles(manifest, _loadCubeMapDel);
 
     public Mesh LoadMesh(MeshManifestRecord manifest)
-        => _meshLoader.LoadMesh(_factory, manifest);
+        => _store.RegisterWithFiles(manifest, _loadMeshDel);
 
 
-    public void ActivateLoader(AssetFactory factory, AssetGfxUploader gfx)
+    public void ActivateLoader(AssetStore store, AssetGfxUploader gfx)
     {
-        _textureLoader = new TextureLoaderModule(gfx.UploadTexture, gfx.UploadCubeMap);
-        _meshLoader = new MeshLoaderModule(gfx.UploadMesh);
-        _shaderLoader = new ShaderLoaderModule(gfx.UploadShader);
-        
+        _store = store;
+
+        _textureLoader = new TextureLoaderModule(gfx);
+        _meshLoader = new MeshLoaderModule(gfx);
+        _shaderLoader = new ShaderLoaderModule(gfx);
+
+        _loadShaderDel = _shaderLoader.LoadShader;
+        _loadTextureDel = _textureLoader.LoadTexture2D;
+        _loadCubeMapDel = _textureLoader.LoadCubeMap;
+        _loadMeshDel =  _meshLoader.LoadMesh;
+
         _shaderLoader.Prepare();
     }
 
-    
+
     public void DeactivateLoader()
     {
+        _loadShaderDel = null!;
+        _loadTextureDel = null!;
+        _loadCubeMapDel = null!;
+        _loadMeshDel =  null!;
+
         _meshLoader.Unload();
         _textureLoader.Unload();
         _shaderLoader.Unload();
-        
+
         _meshLoader = null!;
         _textureLoader = null!;
         _shaderLoader = null!;
-        _factory = null!;
     }
 
 
-    private sealed class TextureLoaderModule(
-        AssetUploaderDel<TexturePayload, TextureCreationInfo> uploadTexture,
-        AssetUploaderDel<CubeMapPayload, CubeMapCreationInfo> uploadCubeMap)
+    private sealed class TextureLoaderModule(AssetGfxUploader uploader)
     {
         private TextureLoader _loader = new();
-        private AssetUploaderDel<TexturePayload, TextureCreationInfo> _uploadTexture = uploadTexture;
-        private AssetUploaderDel<CubeMapPayload, CubeMapCreationInfo> _uploadCubeMap = uploadCubeMap;
 
-        public Texture2D LoadTexture2D(AssetFactory factory, TextureManifestRecord manifest)
-            => factory.BuildTexture(manifest, _loader.LoadTexture, _uploadTexture);
+        public Texture2D LoadTexture2D(AssetId id, TextureManifestRecord manifest, out AssetFileSpec[] fileSpecs)
+        {
+            var payload = _loader.LoadTexture(manifest);
+            uploader.UploadTexture(payload, out var info);
+            fileSpecs = [payload.FileSpec];
 
-        public CubeMap LoadCubeMap(AssetFactory factory, CubeMapManifestRecord manifest)
-            => factory.BuildCubeMap(manifest, _loader.LoadCubeMap, _uploadCubeMap);
+            var texture = new Texture2D
+            {
+                Id = id,
+                Name = manifest.Name,
+                ResourceId = info.TextureId,
+                Width = info.Width,
+                Height = info.Height,
+                IsCoreAsset = false,
+                Generation = 0
+            };
 
- 
+            if (payload.Data is { } tData)
+                texture.SetPixelData(tData);
+
+            return texture;
+        }
+
+        public CubeMap LoadCubeMap(AssetId id, CubeMapManifestRecord manifest, out AssetFileSpec[] fileSpecs)
+        {
+            var payload = _loader.LoadCubeMap(manifest);
+            uploader.UploadCubeMap(payload, out var info);
+            fileSpecs = payload.FaceFiles;
+
+            return new CubeMap
+            {
+                Id = id,
+                Name = manifest.Name,
+                ResourceId = info.TextureId,
+                Size = info.Size,
+                IsCoreAsset = false,
+                Generation = 0
+            };
+        }
+
+
         public void Unload()
         {
             _loader = null!;
-            _uploadTexture = null!;
-            _uploadCubeMap = null!;
         }
     }
 
 
-    private sealed class MeshLoaderModule(AssetUploaderDel<MeshResultPayload, MeshCreationInfo> uploader)
+    private sealed class MeshLoaderModule(AssetGfxUploader uploader)
     {
         private MeshLoader _loader = new();
-        private AssetUploaderDel<MeshResultPayload, MeshCreationInfo> _uploader = uploader;
 
-        public Mesh LoadMesh(AssetFactory factory, MeshManifestRecord manifest)
-            => factory.BuildMesh(manifest, _loader.LoadMesh, _uploader);
+        public Mesh LoadMesh(AssetId assetId, MeshManifestRecord manifest, out AssetFileSpec[] fileSpecs)
+        {
+            var payload = _loader.LoadMesh(manifest);
+            uploader.UploadMesh(payload, out var info);
+            fileSpecs = [payload.FileSpec];
+
+            return new Mesh
+            {
+                Id = assetId,
+                ResourceId = info.MeshId,
+                Name = manifest.Name,
+                DrawCount = info.DrawCount,
+                IsCoreAsset = false,
+                Generation = 0
+            };
+        }
 
         public void Unload()
         {
             _loader.ClearCache();
             _loader = null!;
-            _uploader = null!;
         }
     }
 
-    private sealed class ShaderLoaderModule(AssetUploaderDel<ShaderPayload, ShaderCreationInfo> uploader)
+    private sealed class ShaderLoaderModule(AssetGfxUploader uploader)
     {
         private ShaderLoader _loader = new();
-        private AssetUploaderDel<ShaderPayload, ShaderCreationInfo> _uploader = uploader;
 
-        public Shader LoadShader(AssetFactory factory, ShaderManifestRecord manifest)
-            => factory.BuildShader(manifest, _loader.LoadShader, _uploader);
-        
+        public Shader LoadShader(AssetId assetId, ShaderManifestRecord manifest,
+            out AssetFileSpec[] fileSpecs)
+        {
+            var payload = _loader.LoadShader(manifest);
+            uploader.UploadShader(payload, out var info);
+            fileSpecs = [payload.VertexFileSpec, payload.FragmentFileSpec];
+            return new Shader
+            {
+                Id = assetId,
+                ResourceId = info.ShaderId,
+                Name = manifest.Name,
+                Samplers = info.Samplers,
+                IsCoreAsset = false,
+                Generation = 0
+            };
+        }
+
         public void Prepare() => _loader.Prepare();
-        
+
         public void Unload()
         {
             _loader.ClearCache();
             _loader = null!;
-            _uploader = null!;
         }
     }
 }
-
-/*
-internal void Start(GfxContext gfx,  AssetManifestBundle assetRecords)
-{
-    IsLoading = true;
-    _factory = new AssetFactory();
-    _uploader = new AssetGfxUploader(gfx);
-    _loader = new AssetProcessor(AssetPaths.AssetFolder, _uploader);
-    _loader.Start(assetRecords);
-}
-
-internal bool ProcessLoader(int n, AssetSystem assetSystem)
-{
-    ArgumentNullException.ThrowIfNull(assetSystem);
-    InvalidOpThrower.ThrowIfNot(IsLoading);
-
-    for (var i = 0; i < n; i++)
-    {
-        if (_loader!.Process(out var finalEntry)) return true;
-        if (finalEntry is not null)
-            _assemblerRegistry!.AssembleAsset(finalEntry, assetSystem);
-    }
-
-    return false;
-}*/

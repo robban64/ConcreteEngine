@@ -80,7 +80,7 @@ public sealed class RenderSystem : IRenderSystem
         _initialSize = outputSize;
     }
 
-    internal void InitializeGraphics(ReadOnlySpan<ShaderId> shaderIds)
+    internal void InitializeGraphics(IReadOnlyList<ShaderId> shaderIds)
     {
         InvalidOpThrower.ThrowIf(_initialSize.Width <= 1);
         InvalidOpThrower.ThrowIf(_initialSize.Height <= 1);
@@ -93,7 +93,7 @@ public sealed class RenderSystem : IRenderSystem
 
     internal void Initialize(MaterialStore materialStore, AssetSystem assets)
     {
-        var depthShader = assets.Get<Shader>("Depth").ResourceId;
+        var depthShader = assets.Store.Get<Shader>("Depth").ResourceId;
         var depthKey = TagRegistry.FboKey<ShadowPassTag>(FboVariant.Default);
         _renderRegistry.TryGetRenderFbo(depthKey, out var shadowFbo);
         
@@ -122,12 +122,12 @@ public sealed class RenderSystem : IRenderSystem
 
         _drawProcessor.Initialize();
 
-        RegisterPasses(assets);
+        RegisterPasses(assets.Store);
         _initialized = true;
     }
 
 
-    private void RegisterPasses(AssetSystem assets)
+    private void RegisterPasses(IAssetStore assets)
     {
         _passPipeline = new RenderPassPipeline(_drawStateOps, _renderRegistry);
 

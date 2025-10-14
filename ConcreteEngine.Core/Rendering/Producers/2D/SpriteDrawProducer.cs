@@ -56,7 +56,7 @@ public sealed class SpriteDrawProducer : IDrawCommandProducer, ISpriteDrawSink
 
     public void Initialize( )
     {
-        _spriteBatch = _context.DrawBatchers.Get<SpriteBatcher>();
+        _spriteBatch = _context.DrawBatchers.GetByRef<SpriteBatcher>();
         _spriteBatch.CreateSpriteBatch(0,1024);
 
     }

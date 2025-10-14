@@ -1,6 +1,7 @@
 #region
 
 using System.Text;
+using ConcreteEngine.Core.Assets.IO;
 
 #endregion
 
@@ -9,6 +10,9 @@ namespace ConcreteEngine.Core.Assets.Shaders;
 internal sealed class ShaderImporter
 {
     private const string Identifier = "@import ";
+
+    private static string UboPath => AssetPaths.CoreShaderPath("ubo.glsl");
+    private static string StructPath => AssetPaths.CoreShaderPath("structs.glsl");
 
     private StringBuilder? _sb;
 
@@ -21,16 +25,14 @@ internal sealed class ShaderImporter
     {
     }
 
-    private static string GetShadersPath() => Path.Combine(AssetPaths.GetAssetCorePath(), "shaders");
 
     public void ImportAllDefinitions()
     {
         _sb ??= new StringBuilder(8192);
         _sb.Clear();
 
-        var basePath = GetShadersPath();
-        ImportUboDefs(Path.Combine(basePath, "ubo.glsl"));
-        ImportStructDefs(Path.Combine(basePath, "structs.glsl"));
+        ImportUboDefs(UboPath);
+        ImportStructDefs(StructPath);
         _sb.Clear();
     }
 

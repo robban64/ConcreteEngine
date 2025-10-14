@@ -4,10 +4,11 @@ public readonly record struct AssetId(int Value);
 
 public readonly record struct AssetFileId(int Value);
 
-public readonly record struct AssetRef<TAsset>(AssetId Value) where TAsset : AssetObject
+public readonly record struct AssetRef<TAsset>(AssetId Id) where TAsset : AssetObject
 {
+    public int Value => Id.Value;
     public static explicit operator AssetRef<TAsset>(AssetId id) => new(id);
-    public static implicit operator AssetId(AssetRef<TAsset> typed) => typed.Value;
+    public static implicit operator AssetId(AssetRef<TAsset> typed) => typed.Id;
 }
 
 // Needed?

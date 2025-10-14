@@ -5,7 +5,7 @@ using ConcreteEngine.Core.Assets.Data;
 
 #endregion
 
-namespace ConcreteEngine.Core.Assets.Config;
+namespace ConcreteEngine.Core.Assets.Internal;
 
 /*
          _tasks[ProcessOrder.Shaders] =
@@ -106,7 +106,7 @@ internal sealed class AssetStartupWorker
         _processOrder = (ProcessOrder)1;
         _loader.ActivateLoader(store, uploader);
 
-        _shaderManifest = _configLoader.LoadManifest<ShaderManifest>(Layout.Shader);
+        _shaderManifest = _configLoader.LoadAssetCatalog<ShaderManifest>(Layout.Shader);
     }
 
     internal void Finish()
@@ -124,7 +124,7 @@ internal sealed class AssetStartupWorker
                 _loader.LoadShader(_shaderManifest!.Records[_idx]);
                 if (ProcessStep(_shaderManifest.Records.Length))
                 {
-                    _textureManifest = _configLoader.LoadManifest<TextureManifest>(Layout.Texture);
+                    _textureManifest = _configLoader.LoadAssetCatalog<TextureManifest>(Layout.Texture);
                     _shaderManifest = null;
                 }
 
@@ -134,7 +134,7 @@ internal sealed class AssetStartupWorker
                 if (ProcessStep(_textureManifest.Records.Length))
                 {
                     if (Layout.CubeMaps is null) _processOrder++;
-                    else _cubeMapManifest = _configLoader.LoadManifest<CubeMapManifest>(Layout.CubeMaps);
+                    else _cubeMapManifest = _configLoader.LoadAssetCatalog<CubeMapManifest>(Layout.CubeMaps);
 
                     _textureManifest = null;
                 }
@@ -144,7 +144,7 @@ internal sealed class AssetStartupWorker
                 _loader.LoadCubeMap(_cubeMapManifest!.Records[_idx]);
                 if (ProcessStep(_cubeMapManifest.Records.Length))
                 {
-                    _meshManifest = _configLoader.LoadManifest<MeshManifest>(Layout.Mesh);
+                    _meshManifest = _configLoader.LoadAssetCatalog<MeshManifest>(Layout.Mesh);
                     _cubeMapManifest = null;
                 }
 

@@ -8,7 +8,6 @@ using Demo3D;
 using Silk.NET.Windowing;
 
 var builder = new GameEngineBuilder()
-    .ConfigureAssetManager(new AssetManagerConfiguration())
     .RegisterScene<Demo3DScene>();
 
 

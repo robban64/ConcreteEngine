@@ -1,8 +1,8 @@
 #region
 
 using System.Diagnostics;
-using ConcreteEngine.Core.Assets.Config;
 using ConcreteEngine.Core.Assets.Data;
+using ConcreteEngine.Core.Assets.Internal;
 using ConcreteEngine.Core.Assets.Shaders;
 using ConcreteEngine.Core.Assets.Textures;
 
@@ -15,7 +15,7 @@ internal sealed class MaterialLoader
     public List<MaterialTemplate>? LoadMaterials(AssetStore store, AssetResourceLayout layout,
         AssetConfigLoader configLoader)
     {
-        var manifest = configLoader.LoadManifest<MaterialManifest>(layout.Material);
+        var manifest = configLoader.LoadAssetCatalog<MaterialManifest>(layout.Material);
         ArgumentNullException.ThrowIfNull(manifest.Records);
 
         var records = manifest.Records;
@@ -27,7 +27,7 @@ internal sealed class MaterialLoader
         }
 
         var result = new List<MaterialTemplate>();
-        AssetAssembleDel<MaterialTemplate, MaterialManifestRecord> factory = CreateMaterial;
+        AssetAssembleDel<MaterialTemplate, MaterialDescriptor> factory = CreateMaterial;
         foreach (var record in records)
         {
             var template = store.Register(record, factory);
@@ -40,25 +40,25 @@ internal sealed class MaterialLoader
         return result;
     }
 
-    private MaterialTemplate CreateMaterial(AssetId assetId, MaterialManifestRecord record, IAssetStore store)
+    private MaterialTemplate CreateMaterial(AssetId assetId, MaterialDescriptor record, IAssetStore store)
     {
         var textures = Array.Empty<AssetRef<Texture2D>>();
         AssetRef<CubeMap>? cubeMap = null;
 
         if (record.CubeMap != null)
         {
-            cubeMap = store.Get<CubeMap>(record.CubeMap).RefId;
+            cubeMap = store.GetByName<CubeMap>(record.CubeMap).RefId;
         }
         else if (record.Textures != null)
         {
             textures = new AssetRef<Texture2D>[record.Textures.Length];
             for (var i = 0; i < record.Textures.Length; i++)
             {
-                textures[i] = store.Get<Texture2D>(record.Textures[i]).RefId;
+                textures[i] = store.GetByName<Texture2D>(record.Textures[i]).RefId;
             }
         }
 
-        var shader = store.Get<Shader>(record.Shader).RefId;
+        var shader = store.GetByName<Shader>(record.Shader).RefId;
 
         return new MaterialTemplate
         {

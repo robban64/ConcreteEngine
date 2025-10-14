@@ -13,7 +13,6 @@ using Silk.NET.Windowing;
 #endregion
 
 var builder = new GameEngineBuilder()
-    .ConfigureAssetManager(new AssetManagerConfiguration())
     .RegisterScene<DemoScene>();
 
 

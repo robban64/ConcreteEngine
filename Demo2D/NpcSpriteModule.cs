@@ -38,7 +38,7 @@ public class NpcSpriteModule : GameModule
     public override void OnSceneReady()
     {
         var store = Context.GetSystem<IAssetSystem>().Store;
-        var spriteTexture = store.Get<Texture2D>("SpriteTexture");
+        var spriteTexture = store.GetByName<Texture2D>("SpriteTexture");
         _spriteAtlas.Set(new Vector2D<int>(64, 64), new Vector2D<int>(spriteTexture.Width, spriteTexture.Height));
 
         var spriteSpan = Context.World.Sprites.AsSpan();

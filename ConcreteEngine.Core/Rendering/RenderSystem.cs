@@ -80,7 +80,7 @@ public sealed class RenderSystem : IRenderSystem
         _initialSize = outputSize;
     }
 
-    internal void InitializeGraphics(IReadOnlyList<ShaderId> shaderIds)
+    internal void InitializeGraphics(ReadOnlySpan<ShaderId> shaderIds)
     {
         InvalidOpThrower.ThrowIf(_initialSize.Width <= 1);
         InvalidOpThrower.ThrowIf(_initialSize.Height <= 1);
@@ -93,7 +93,7 @@ public sealed class RenderSystem : IRenderSystem
 
     internal void Initialize(MaterialStore materialStore, AssetSystem assets)
     {
-        var depthShader = assets.Store.Get<Shader>("Depth").ResourceId;
+        var depthShader = assets.Store.GetByName<Shader>("Depth").ResourceId;
         var depthKey = TagRegistry.FboKey<ShadowPassTag>(FboVariant.Default);
         _renderRegistry.TryGetRenderFbo(depthKey, out var shadowFbo);
         
@@ -131,9 +131,9 @@ public sealed class RenderSystem : IRenderSystem
     {
         _passPipeline = new RenderPassPipeline(_drawStateOps, _renderRegistry);
 
-        var compositeShader = assets.Get<Shader>("Composite").ResourceId;
-        var presentShader = assets.Get<Shader>("Present").ResourceId;
-        var colorFilterShader = assets.Get<Shader>("ColorFilter").ResourceId;
+        var compositeShader = assets.GetByName<Shader>("Composite").ResourceId;
+        var presentShader = assets.GetByName<Shader>("Present").ResourceId;
+        var colorFilterShader = assets.GetByName<Shader>("ColorFilter").ResourceId;
 
         // Shadow
         _passPipeline.Register<ShadowPassTag>(FboVariant.Default, new PassId(0), PassOpKind.Draw,

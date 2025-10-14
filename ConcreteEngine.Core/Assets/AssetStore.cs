@@ -8,13 +8,16 @@ namespace ConcreteEngine.Core.Assets;
 
 public interface IAssetStore
 {
-    T Get<T>(AssetRef<T> id) where T : AssetObject;
-    T Get<T>(string name) where T : AssetObject;
-    bool TryGet<T>(string name, out T? asset) where T : AssetObject;
+    T GetByRef<T>(AssetRef<T> id) where T : AssetObject;
+    T GetByName<T>(string name) where T : AssetObject;
+    bool TryGetByName<T>(string name, out T? asset) where T : AssetObject;
 
-    List<TAsset> ExtractAllObjects<TAsset>() where TAsset : AssetObject;
+    AssetTypeMetaSnapshot GetMetaSnapshot<TAsset>() where TAsset : AssetObject;
 
-    List<TData> ExtractData<TAsset, TData>(Func<TAsset, TData> transform)
+    void ExtractList<TAsset, TData>(List<TData> list, Func<TAsset, TData> transform)
+        where TAsset : AssetObject;
+
+    void ExtractSpan<TAsset, TData>(Span<TData> span, Func<TAsset, TData> transform)
         where TAsset : AssetObject where TData : unmanaged;
 }
 
@@ -38,21 +41,33 @@ internal sealed class AssetStore : IAssetStore
     {
     }
 
-    public T Get<T>(AssetRef<T> id) where T : AssetObject
+    public T GetByRef<T>(AssetRef<T> assetRef) where T : AssetObject
     {
-        var asset = _assets[id];
-        if (asset is not T assetObject) throw new InvalidOperationException();
-        return assetObject;
+        if (TryGetByRef(assetRef, out var value)) return value!;
+
+        throw new InvalidCastException($"Asset '{assetRef.Value}' not found or incorrect type.");
     }
 
-    public T Get<T>(string name) where T : AssetObject
+    public T GetByName<T>(string name) where T : AssetObject
     {
-        if (TryGet<T>(name, out var value)) return value!;
+        if (TryGetByName<T>(name, out var value)) return value!;
 
         throw new InvalidCastException($"Asset '{name}' not found or incorrect type.");
     }
 
-    public bool TryGet<T>(string name, out T? asset) where T : AssetObject
+    public bool TryGetByRef<T>(AssetRef<T> assetRef, out T? asset) where T : AssetObject
+    {
+        if (_assets.TryGetValue(assetRef, out var obj) && obj is T t)
+        {
+            asset = t;
+            return true;
+        }
+
+        asset = null;
+        return false;
+    }
+
+    public bool TryGetByName<T>(string name, out T? asset) where T : AssetObject
     {
         asset = null;
         if (!_names.TryGetValue(AssetKey.For<T>(name), out var id)) return false;
@@ -65,47 +80,56 @@ internal sealed class AssetStore : IAssetStore
 
         return false;
     }
-
-    public List<TAsset> ExtractAllObjects<TAsset>() where TAsset : AssetObject
+    
+    private ReadOnlySpan<AssetFileId> GetFileIds(AssetId id)
     {
-        var result = new List<TAsset>(8);
-        foreach (var asset in _assets.Values)
-        {
-            if (asset is TAsset typedAsset) result.Add(typedAsset);
-        }
-
-        return result;
+        if (_bindings.TryGetValue(id, out var arr)) return arr!;
+        throw new InvalidCastException($"Asset '{id}' not found or incorrect type.");
     }
 
-    public List<TData> ExtractData<TAsset, TData>(Func<TAsset, TData> transform)
+
+    public AssetTypeMetaSnapshot GetMetaSnapshot<TAsset>() where TAsset : AssetObject =>
+        _typeMeta[typeof(TAsset)].ToSnapshot();
+    
+
+
+    public void ExtractList<TAsset, TData>(List<TData> list, Func<TAsset, TData> transform)
+        where TAsset : AssetObject
+    {
+        foreach (var asset in _assets.Values)
+        {
+            if (asset is TAsset typedAsset) list.Add(transform(typedAsset));
+        }
+    }
+
+    public void ExtractSpan<TAsset, TData>(Span<TData> span, Func<TAsset, TData> transform)
         where TAsset : AssetObject where TData : unmanaged
     {
-        var result = new List<TData>(8);
+        var idx = 0;
         foreach (var asset in _assets.Values)
         {
-            if (asset is TAsset typedAsset)
-                result.Add(transform(typedAsset));
+            if (asset is TAsset typedAsset) span[idx++] = transform(typedAsset);
+            if (idx >= span.Length) break;
         }
-
-        return result;
     }
 
-    internal TAsset Register<TAsset, TManifest>(TManifest manifest, AssetAssembleDel<TAsset, TManifest> factory)
-        where TAsset : AssetObject where TManifest : class, IAssetManifestRecord
+
+    internal TAsset Register<TAsset, TDesc>(TDesc descriptor, AssetAssembleDel<TAsset, TDesc> factory)
+        where TAsset : AssetObject where TDesc : class, IAssetDescriptor
     {
         var id = MakeAssetId();
-        var asset = factory(id, manifest, this);
+        var asset = factory(id, descriptor, this);
         RegisterInternal(id, asset, ReadOnlySpan<AssetFileSpec>.Empty);
         return asset;
     }
 
-    internal TAsset RegisterWithFiles<TAsset, TManifest>(
-        TManifest manifest,
-        AssetFileAssembleDel<TAsset, TManifest> factory)
-        where TAsset : AssetObject where TManifest : class, IAssetManifestRecord
+    internal TAsset RegisterWithFiles<TAsset, TDesc>(
+        TDesc descriptor,
+        AssetFileAssembleDel<TAsset, TDesc> factory)
+        where TAsset : AssetObject where TDesc : class, IAssetDescriptor
     {
         var id = MakeAssetId();
-        var asset = factory(id, manifest, out var fileSpecs);
+        var asset = factory(id, descriptor, out var fileSpecs);
         ArgumentNullException.ThrowIfNull(fileSpecs, nameof(fileSpecs));
         RegisterInternal(id, asset, fileSpecs);
         return asset;

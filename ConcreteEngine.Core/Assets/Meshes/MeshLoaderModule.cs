@@ -10,7 +10,7 @@ internal sealed class MeshLoaderModule(AssetGfxUploader uploader)
 {
     private MeshLoader _loader = new();
 
-    public Mesh LoadMesh(AssetId assetId, MeshManifestRecord manifest, out AssetFileSpec[] fileSpecs)
+    public Mesh LoadMesh(AssetId assetId, MeshDescriptor manifest, out AssetFileSpec[] fileSpecs)
     {
         var payload = _loader.LoadMesh(manifest);
         uploader.UploadMesh(payload, out var info);

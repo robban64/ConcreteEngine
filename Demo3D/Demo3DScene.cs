@@ -38,15 +38,15 @@ public sealed class Demo3DScene : GameScene
         rb.SetShadowDefault(2048);
 
         var boatMat = renderer.CreateMaterial("BoatMat");
-        var boatMesh = assetStore.Get<Mesh>("Boat");
+        var boatMesh = assetStore.GetByName<Mesh>("Boat");
         boatMat.SpecularStrength = 0;
         boatMat.Shininess = 1;
 
 
         var rockMat = renderer.CreateMaterial("Rock01Mat");
         rockMat.SpecularStrength = 0.3f;
-        var rockMesh = assetStore.Get<Mesh>("Rock1");
-        var rock2Mesh = assetStore.Get<Mesh>("Rock2");
+        var rockMesh = assetStore.GetByName<Mesh>("Rock1");
+        var rock2Mesh = assetStore.GetByName<Mesh>("Rock2");
 
         for (int i = 0; i < 40; i++)
         {
@@ -91,10 +91,10 @@ public sealed class Demo3DScene : GameScene
     {
         var assetStore = Context.GetSystem<IAssetSystem>().Store;
 
-        var screenShader = assetStore.Get<Shader>("Screen");
-        var compositeShader = assetStore.Get<Shader>("Composite");
-        var presentShader = assetStore.Get<Shader>("Present");
-        var colorFilterShader = assetStore.Get<Shader>("ColorFilter");
+        var screenShader = assetStore.GetByName<Shader>("Screen");
+        var compositeShader = assetStore.GetByName<Shader>("Composite");
+        var presentShader = assetStore.GetByName<Shader>("Present");
+        var colorFilterShader = assetStore.GetByName<Shader>("ColorFilter");
 
 
         builder.RegisterRender3D(new RenderTargetDescriptor

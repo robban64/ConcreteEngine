@@ -33,20 +33,20 @@ public sealed class MaterialTemplate : AssetObject
 
     internal void Initialize(IAssetStore store)
     {
-        var shader = store.Get<Shader>(ShaderAssetId);
+        var shader = store.GetByRef<Shader>(ShaderAssetId);
         GfxShaderId = shader.ResourceId;
 
         _gfxSamplerSlots = new TextureId[shader.Samplers];
         if (CubeMapAssetId is { } cubeMapAssetId)
         {
-            _gfxSamplerSlots[0] = store.Get<CubeMap>(cubeMapAssetId).ResourceId;
+            _gfxSamplerSlots[0] = store.GetByRef<CubeMap>(cubeMapAssetId).ResourceId;
             return;
         }
 
         for (int i = 0; i < shader.Samplers; i++)
         {
             if (i < TextureAssetIds.Length)
-                _gfxSamplerSlots[i] = store.Get<Texture2D>(TextureAssetIds[i]).ResourceId;
+                _gfxSamplerSlots[i] = store.GetByRef<Texture2D>(TextureAssetIds[i]).ResourceId;
             else
                 _gfxSamplerSlots[i] = default;
         }

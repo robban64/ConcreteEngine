@@ -23,7 +23,7 @@ public sealed class TerrainFeature : GameFeature
         var assets = Context.GetSystem<IAssetSystem>().Store;
         var renderer = Context.GetSystem<IRenderSystem>();
         var material = renderer.CreateMaterial("TerrainMat");
-        var heightmap = assets.Get<Texture2D>("Heightmap");
+        var heightmap = assets.GetByName<Texture2D>("Heightmap");
 
         material.UvRepeat = 28;
         material.Shininess = 10;

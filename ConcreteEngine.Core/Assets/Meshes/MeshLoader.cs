@@ -2,6 +2,7 @@
 
 using System.Numerics;
 using ConcreteEngine.Core.Assets.Data;
+using ConcreteEngine.Core.Assets.IO;
 using ConcreteEngine.Graphics.Gfx.Contracts;
 using ConcreteEngine.Graphics.Gfx.Definitions;
 using ConcreteEngine.Graphics.Gfx.Utility;
@@ -33,9 +34,9 @@ internal sealed class MeshLoader
     }
 
 
-    public MeshResultPayload LoadMesh(MeshManifestRecord record)
+    public MeshResultPayload LoadMesh(MeshDescriptor record)
     {
-        var path = Path.Combine(AssetPaths.GetAssetPath(), "meshes", record.Filename);
+        var path = AssetPaths.GetMeshPath(record.Filename);
 
         var fi = new FileInfo(path);
         if (!fi.Exists) throw new FileNotFoundException("File not found.", path);

@@ -10,7 +10,7 @@ internal sealed class ShaderLoaderModule(AssetGfxUploader uploader)
 {
     private ShaderLoader _loader = new();
 
-    public Shader LoadShader(AssetId assetId, ShaderManifestRecord manifest,
+    public Shader LoadShader(AssetId assetId, ShaderDescriptor manifest,
         out AssetFileSpec[] fileSpecs)
     {
         var payload = _loader.LoadShader(manifest);

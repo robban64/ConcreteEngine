@@ -19,10 +19,10 @@ internal sealed class RenderShaderRegistry
     }
     
 
-    public void RegisterCollection(IReadOnlyList<ShaderId> shaders)
+    public void RegisterCollection(ReadOnlySpan<ShaderId> shaders)
     {
-        _shaderRegistry = new RenderShader[shaders.Count];
-        _shaderCount = shaders.Count;
+        _shaderRegistry = new RenderShader[shaders.Length];
+        _shaderCount = shaders.Length;
         //var uniforms = _gfxShaders.GetUniformList(shaderId);
 
         foreach (var shaderId in shaders)

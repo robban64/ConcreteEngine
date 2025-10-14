@@ -91,8 +91,8 @@ public sealed class DemoScene : GameScene
     {
         var assets = Context.GetSystem<IAssetSystem>().Store;
 
-        var lightPassShader = assets.Get<Shader>("LightPassShader");
-        var lightComposite = assets.Get<Shader>("LightComposite");
+        var lightPassShader = assets.GetByName<Shader>("LightPassShader");
+        var lightComposite = assets.GetByName<Shader>("LightComposite");
 
         builder.RegisterRender2D(new RenderTargetDescriptor
         {

@@ -7,20 +7,14 @@ using ConcreteEngine.Core.Assets.IO;
 
 #endregion
 
-namespace ConcreteEngine.Core.Assets.Config;
+namespace ConcreteEngine.Core.Assets.Internal;
 
 internal sealed class AssetConfigLoader
 {
     private readonly JsonSerializerOptions _jsonOptions;
 
-    private readonly string _assetPath;
-    private readonly string _manifestFilename;
-
-    public AssetConfigLoader(string assetPath, string manifestFilename)
+    internal AssetConfigLoader()
     {
-        _assetPath = assetPath;
-        _manifestFilename = manifestFilename;
-
         _jsonOptions = new JsonSerializerOptions
         {
             PropertyNamingPolicy = JsonNamingPolicy.CamelCase,
@@ -37,10 +31,10 @@ internal sealed class AssetConfigLoader
 
     public AssetManifest LoadAssetManifest()
     {
-        if (!Directory.Exists(_assetPath))
-            throw new DirectoryNotFoundException($"Asset manifest '{_assetPath}' directory not found.");
+        if (!Directory.Exists(AssetPaths.AssetFolder))
+            throw new DirectoryNotFoundException($"Asset '{AssetPaths.AssetFolder}' directory not found.");
 
-        var path = Path.Combine(AssetPaths.GetAssetPath(), _manifestFilename);
+        var path = AssetPaths.GetManifestPath();
 
         if (!File.Exists(path))
             throw new FileNotFoundException($"Manifest '{path}' not found.");
@@ -56,11 +50,11 @@ internal sealed class AssetConfigLoader
         return assetManifest;
     }
 
-    public T LoadManifest<T>(string manifestFilename) where T : class
+    public T LoadAssetCatalog<T>(string filename) where T : class, IAssetCatalog
     {
-        ArgumentNullException.ThrowIfNull(manifestFilename, nameof(manifestFilename));
+        ArgumentNullException.ThrowIfNull(filename, nameof(filename));
 
-        var path = Path.Combine(AssetPaths.GetAssetPath(), manifestFilename);
+        var path = AssetPaths.GetAssetSubPath(filename);
 
         if (!File.Exists(path))
             throw new FileNotFoundException($"Resource manifest {typeof(T).Name} with path {path} does not exists.");

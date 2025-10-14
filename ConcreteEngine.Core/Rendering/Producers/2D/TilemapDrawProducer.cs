@@ -41,7 +41,7 @@ public sealed class TilemapDrawProducer : IDrawCommandProducer, ITilemapDrawSink
 
     public void Initialize()
     {
-        _tilemapBatcher = _context.DrawBatchers.Get<TilemapBatcher>();
+        _tilemapBatcher = _context.DrawBatchers.GetByRef<TilemapBatcher>();
     }
 
     public void BeginTick(in UpdateMetaInfo updateMeta)

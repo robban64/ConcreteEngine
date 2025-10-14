@@ -1,8 +1,9 @@
 #region
 
 using ConcreteEngine.Common;
-using ConcreteEngine.Core.Assets.Config;
 using ConcreteEngine.Core.Assets.Data;
+using ConcreteEngine.Core.Assets.Internal;
+using ConcreteEngine.Core.Assets.IO;
 using ConcreteEngine.Core.Assets.Materials;
 using ConcreteEngine.Core.Engine;
 using ConcreteEngine.Graphics.Gfx;
@@ -18,17 +19,8 @@ public interface IAssetSystem : IGameEngineSystem
 
 public sealed class AssetSystem : IAssetSystem
 {
-    private static bool _initialized = false;
-
-    private readonly string _assetPath;
-    private readonly string _manifestFilename;
-    private AssetManifest _manifest = null!;
-
-    private MaterialStore _materialStore = null!;
-    public MaterialStore MaterialStore => _materialStore;
-
-    public bool IsLoading { get; private set; } = false;
-
+    public static bool Initialized { get; private set; } = false;
+    public static bool IsLoading { get; private set; } = false;
 
     private readonly AssetStore _assetStore = new();
 
@@ -37,30 +29,29 @@ public sealed class AssetSystem : IAssetSystem
     private AssetGfxUploader? _uploader;
     private AssetLoader? _loader;
 
+    private AssetManifest _manifest = null!;
+    private MaterialStore _materialStore = null!;
+
     internal AssetStore AssetStore => _assetStore;
 
     public IAssetStore Store => _assetStore;
+    
+    public MaterialStore MaterialStore => _materialStore;
 
 
-    internal AssetSystem(
-        string assetPath = "assets",
-        string manifestFilename = "manifest.json")
+    internal AssetSystem()
     {
-        _assetPath = assetPath;
-        _manifestFilename = manifestFilename;
-
-        AssetPaths.AssetFolder = _assetPath;
     }
 
     internal void Initialize()
     {
-        if (_initialized)
+        if (Initialized)
             throw new InvalidOperationException("AssetSystem already initialized");
 
-        _configLoader = new AssetConfigLoader(_assetPath, _manifestFilename);
+        _configLoader = new AssetConfigLoader();
         _manifest = _configLoader.LoadAssetManifest();
 
-        _initialized = true;
+        Initialized = true;
     }
 
 

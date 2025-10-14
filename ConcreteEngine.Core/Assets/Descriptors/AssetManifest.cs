@@ -8,17 +8,6 @@ using ConcreteEngine.Graphics.Gfx.Definitions;
 
 namespace ConcreteEngine.Core.Assets.Data;
 
-public interface IAssetManifestRecord
-{
-    string Name { get; }
-    AssetKind Kind { get; }
-}
-
-public interface IAssetManifestEntry
-{
-    int Count { get; }
-}
-
 public sealed record AssetManifest(
     AssetResourceLayout ResourceLayout,
     string? Version);
@@ -31,29 +20,29 @@ public sealed record AssetResourceLayout(
     [property: JsonPropertyName("cubemaps")]
     string? CubeMaps = null);
 
-public sealed class ShaderManifest : IAssetManifestEntry
+public sealed class ShaderManifest : IAssetCatalog
 {
-    public required ShaderManifestRecord[] Records { get; init; }
+    public required ShaderDescriptor[] Records { get; init; }
     public int Count =>  Records.Length;
 }
 
-public sealed record ShaderManifestRecord(
+public sealed record ShaderDescriptor(
     string Name,
     string VertexFilename,
     string FragmentFilename
-) : IAssetManifestRecord
+) : IAssetDescriptor
 {
     public AssetKind Kind => AssetKind.Shader;
 }
 
-public sealed class TextureManifest: IAssetManifestEntry
+public sealed class TextureManifest: IAssetCatalog
 {
-    public required TextureManifestRecord[] Records { get; init; }
+    public required TextureDescriptor[] Records { get; init; }
     public int Count =>  Records.Length;
 
 }
 
-public sealed record TextureManifestRecord(
+public sealed record TextureDescriptor(
     string Name,
     string Filename,
     TexturePreset Preset = TexturePreset.LinearClamp,
@@ -61,59 +50,59 @@ public sealed record TextureManifestRecord(
     TextureAnisotropy Anisotropy = TextureAnisotropy.Off,
     bool InMemory = false,
     float LodBias = 0)
-    : IAssetManifestRecord
+    : IAssetDescriptor
 {
     public AssetKind Kind => AssetKind.Texture2D;
 }
 
-public sealed class CubeMapManifest: IAssetManifestEntry
+public sealed class CubeMapManifest: IAssetCatalog
 {
-    public required CubeMapManifestRecord[] Records { get; init; }
+    public required CubeMapDescriptor[] Records { get; init; }
     public int Count =>  Records.Length;
 
 }
 
-public sealed record CubeMapManifestRecord(
+public sealed record CubeMapDescriptor(
     string Name,
     string[] Textures,
     int Width,
     int Height,
     TexturePreset Preset,
     TexturePixelFormat PixelFormat = TexturePixelFormat.Rgba
-) : IAssetManifestRecord
+) : IAssetDescriptor
 {
     public AssetKind Kind => AssetKind.TextureCubeMap;
 }
 
-public sealed class MeshManifest: IAssetManifestEntry
+public sealed class MeshManifest: IAssetCatalog
 {
-    public required MeshManifestRecord[] Records { get; init; }
+    public required MeshDescriptor[] Records { get; init; }
     public int Count =>  Records.Length;
 
 }
 
-public sealed record MeshManifestRecord(
+public sealed record MeshDescriptor(
     string Name,
     string Filename)
-    : IAssetManifestRecord
+    : IAssetDescriptor
 {
     public AssetKind Kind => AssetKind.Mesh;
 }
 
-public sealed class MaterialManifest: IAssetManifestEntry
+public sealed class MaterialManifest: IAssetCatalog
 {
-    public required MaterialManifestRecord[] Records { get; init; }
+    public required MaterialDescriptor[] Records { get; init; }
     public int Count =>  Records.Length;
 
 }
 
-public sealed record MaterialManifestRecord(
+public sealed record MaterialDescriptor(
     string Name,
     string Shader,
     string[]? Textures,
     [property: JsonPropertyName("cubemap")]
     string? CubeMap
-) : IAssetManifestRecord
+) : IAssetDescriptor
 {
     public Vector4 Color { get; init; } = Vector4.One;
     public AssetKind Kind => AssetKind.Material;

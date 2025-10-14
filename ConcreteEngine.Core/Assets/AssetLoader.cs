@@ -17,21 +17,21 @@ internal sealed class AssetLoader
     private MeshLoaderModule _meshLoader = null!;
     private ShaderLoaderModule _shaderLoader = null!;
 
-    private AssetFileAssembleDel<Shader, ShaderManifestRecord> _loadShaderDel = null!;
-    private AssetFileAssembleDel<Texture2D, TextureManifestRecord> _loadTextureDel = null!;
-    private AssetFileAssembleDel<CubeMap, CubeMapManifestRecord> _loadCubeMapDel = null!;
-    private AssetFileAssembleDel<Mesh, MeshManifestRecord> _loadMeshDel = null!;
+    private AssetFileAssembleDel<Shader, ShaderDescriptor> _loadShaderDel = null!;
+    private AssetFileAssembleDel<Texture2D, TextureDescriptor> _loadTextureDel = null!;
+    private AssetFileAssembleDel<CubeMap, CubeMapDescriptor> _loadCubeMapDel = null!;
+    private AssetFileAssembleDel<Mesh, MeshDescriptor> _loadMeshDel = null!;
 
-    public Shader LoadShader(ShaderManifestRecord manifest)
+    public Shader LoadShader(ShaderDescriptor manifest)
         => _store.RegisterWithFiles(manifest, _loadShaderDel);
 
-    public Texture2D LoadTexture2D(TextureManifestRecord manifest) =>
+    public Texture2D LoadTexture2D(TextureDescriptor manifest) =>
         _store.RegisterWithFiles(manifest, _loadTextureDel);
 
-    public CubeMap LoadCubeMap(CubeMapManifestRecord manifest)
+    public CubeMap LoadCubeMap(CubeMapDescriptor manifest)
         => _store.RegisterWithFiles(manifest, _loadCubeMapDel);
 
-    public Mesh LoadMesh(MeshManifestRecord manifest)
+    public Mesh LoadMesh(MeshDescriptor manifest)
         => _store.RegisterWithFiles(manifest, _loadMeshDel);
 
 

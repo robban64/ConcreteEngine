@@ -1,5 +1,6 @@
 #region
 
+using System.Diagnostics;
 using ConcreteEngine.Common;
 using ConcreteEngine.Common.Numerics;
 using ConcreteEngine.Common.Patterns;
@@ -54,7 +55,6 @@ public sealed class GameEngine : IDisposable
         IEngineWindowHost windowHost,
         GfxRuntimeBundle<GL> gfxBundle,
         IEngineInputSource input,
-        AssetManagerConfiguration assetConfig,
         List<Func<GameScene>> sceneFactories
     )
     {
@@ -73,7 +73,7 @@ public sealed class GameEngine : IDisposable
 
         // input
         _inputSystem = new InputSystem(input);
-        _assets = new AssetSystem(assetConfig.AssetPath, assetConfig.ManifestFilename);
+        _assets = new AssetSystem();
         _renderer = new RenderSystem(_graphics, _window.OutputSize);
         _coreSystems = new EngineCoreSystem(_renderer, _inputSystem, _assets);
 
@@ -207,7 +207,9 @@ public sealed class GameEngine : IDisposable
 
     private void InitializeGraphics()
     {
-        var shaderIds = _assets.Store.ExtractData<Shader, ShaderId>(static shader => shader.ResourceId);
+        var shaderCount = _assets.Store.GetMetaSnapshot<Shader>().Count;
+        Span<ShaderId> shaderIds = stackalloc ShaderId[shaderCount];
+         _assets.Store.ExtractSpan<Shader, ShaderId>(shaderIds, static shader => shader.ResourceId);
         _renderer.InitializeGraphics(shaderIds);
     }
 

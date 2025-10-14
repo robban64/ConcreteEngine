@@ -10,7 +10,7 @@ internal sealed class TextureLoaderModule(AssetGfxUploader uploader)
 {
     private TextureLoader _loader = new();
 
-    public Texture2D LoadTexture2D(AssetId id, TextureManifestRecord manifest, out AssetFileSpec[] fileSpecs)
+    public Texture2D LoadTexture2D(AssetId id, TextureDescriptor manifest, out AssetFileSpec[] fileSpecs)
     {
         var payload = _loader.LoadTexture(manifest);
         uploader.UploadTexture(payload, out var info);
@@ -33,7 +33,7 @@ internal sealed class TextureLoaderModule(AssetGfxUploader uploader)
         return texture;
     }
 
-    public CubeMap LoadCubeMap(AssetId id, CubeMapManifestRecord manifest, out AssetFileSpec[] fileSpecs)
+    public CubeMap LoadCubeMap(AssetId id, CubeMapDescriptor manifest, out AssetFileSpec[] fileSpecs)
     {
         var payload = _loader.LoadCubeMap(manifest);
         uploader.UploadCubeMap(payload, out var info);

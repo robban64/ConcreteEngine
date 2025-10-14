@@ -3,6 +3,7 @@
 using System.Security.Cryptography;
 using System.Text;
 using ConcreteEngine.Core.Assets.Data;
+using ConcreteEngine.Core.Assets.IO;
 
 #endregion
 
@@ -15,14 +16,12 @@ internal sealed class ShaderLoader
     public void Prepare()
     {
         _shaderImporter.ImportAllDefinitions();
-        //_vertexShaderCache ??= new Dictionary<string, string?>( StringComparer.Ordinal);
-        //_vertexShaderCache.Clear();
     }
 
-    public ShaderPayload LoadShader(ShaderManifestRecord record)
+    public ShaderPayload LoadShader(ShaderDescriptor record)
     {
-        var vertPath = Path.Combine(AssetPaths.GetAssetPath(), "shaders", record.VertexFilename);
-        var fragPath = Path.Combine(AssetPaths.GetAssetPath(), "shaders", record.FragmentFilename);
+        var vertPath = AssetPaths.GetShaderPath( record.VertexFilename);
+        var fragPath = AssetPaths.GetShaderPath(record.FragmentFilename);
 
         var vertInfo = new FileInfo(vertPath);
         if (!vertInfo.Exists) throw new FileNotFoundException("File not found.", vertPath);

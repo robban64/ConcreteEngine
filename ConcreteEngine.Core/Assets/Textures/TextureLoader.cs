@@ -1,6 +1,7 @@
 #region
 
 using ConcreteEngine.Core.Assets.Data;
+using ConcreteEngine.Core.Assets.IO;
 using ConcreteEngine.Graphics.Gfx.Contracts;
 using ConcreteEngine.Graphics.Gfx.Definitions;
 using StbImageSharp;
@@ -11,11 +12,11 @@ namespace ConcreteEngine.Core.Assets.Textures;
 
 internal sealed class TextureLoader
 {
-    public TexturePayload LoadTexture(TextureManifestRecord record)
+    public TexturePayload LoadTexture(TextureDescriptor record)
     {
         //StbImage.stbi_set_flip_vertically_on_load(1);
 
-        var path = Path.Combine(AssetPaths.GetAssetPath(), "textures", record.Filename);
+        var path = AssetPaths.GetTexturePath(record.Filename);
 
         var fi = new FileInfo(path);
         if (!fi.Exists) throw new FileNotFoundException("File not found.", path);
@@ -47,7 +48,7 @@ internal sealed class TextureLoader
         return new TexturePayload(image.Data, desc, props, in fileSpec);
     }
 
-    public CubeMapPayload LoadCubeMap(CubeMapManifestRecord record)
+    public CubeMapPayload LoadCubeMap(CubeMapDescriptor record)
     {
         ArgumentOutOfRangeException.ThrowIfNotEqual(record.Textures.Length, 6);
 
@@ -56,7 +57,7 @@ internal sealed class TextureLoader
 
         for (int i = 0; i < 6; i++)
         {
-            var path = Path.Combine(AssetPaths.GetAssetPath(), "cubemaps", record.Textures[i]);
+            var path = AssetPaths.GetCubeMapPath(record.Textures[i]);
             var fi = new FileInfo(path);
             if (!fi.Exists) throw new FileNotFoundException("File not found.", path);
 
@@ -94,7 +95,7 @@ internal sealed class TextureLoader
         ArgumentOutOfRangeException.ThrowIfLessThanOrEqual(result.Height, 0, nameof(result.Height));
     }
 
-    private static void ValidateImageResult(ImageResult result, CubeMapManifestRecord record)
+    private static void ValidateImageResult(ImageResult result, CubeMapDescriptor record)
     {
         ValidateImageResult(result);
         ArgumentOutOfRangeException.ThrowIfNotEqual(result.Width, record.Width, nameof(result.Width));

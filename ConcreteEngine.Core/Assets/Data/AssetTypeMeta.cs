@@ -14,8 +14,6 @@ internal sealed class AssetTypeMeta(Type type)
         FileCount += fileCount;
         return Count;
     }
-    
-    public AssetTypeMetaSnapshot ToSnapshot() => new (Count, FileCount);
-    
-}
 
+    public AssetTypeMetaSnapshot ToSnapshot() => new(Count, FileCount);
+}

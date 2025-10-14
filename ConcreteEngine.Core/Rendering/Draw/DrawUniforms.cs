@@ -85,10 +85,10 @@ internal sealed class DrawUniforms
         float kHeight = 1f / MathF.Max(x: fog.HeightFalloff, y: 1e-6f);
 
         var data = new FrameUniformRecord(
-            ambient: new Vector4(value: ambient.Ambient, w: ambient.Exposure), 
+            ambient: new Vector4(value: ambient.Ambient, w: ambient.Exposure),
             ambientGround: new Vector4(value: ambient.AmbientGround, w: 0.0f),
             fogColor: new Vector4(value: fog.Color, w: fog.Scattering),
-            fogParams0: new Vector4(x: kExp2, y: kHeight, z: fog.BaseHeight, w: fog.Strength), 
+            fogParams0: new Vector4(x: kExp2, y: kHeight, z: fog.BaseHeight, w: fog.Strength),
             fogParams1: new Vector4(x: 1f, y: fog.HeightInfluence, z: fog.MaxDistance, w: 0.0f)
         );
 

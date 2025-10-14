@@ -1,11 +1,15 @@
+#region
+
 using ConcreteEngine.Core.Engine.Data;
+
+#endregion
 
 namespace ConcreteEngine.Core.Engine.Time;
 
 internal sealed class RenderTickScheduler
 {
     public const int ParticleLodTicksPerSecond = 15;
-    public const int GpuUploadTicksPerSecond = 20; 
+    public const int GpuUploadTicksPerSecond = 20;
     public const int GpuDisposeTicksPerSecond = 1; // 1 Hz
 
     private readonly FrameTickTimer _renderEffectTicker = new(1f / ParticleLodTicksPerSecond);
@@ -42,5 +46,4 @@ internal sealed class RenderTickScheduler
         //if (b > 0) _onGpuDispose(b);
         //if (c > 0) _onRenderEffect(c);
     }
-
 }

@@ -1,8 +1,5 @@
 #region
 
-using System.Diagnostics;
-using ConcreteEngine.Common;
-using ConcreteEngine.Common.Numerics;
 using ConcreteEngine.Common.Patterns;
 using ConcreteEngine.Core.Assets;
 using ConcreteEngine.Core.Engine;
@@ -13,10 +10,8 @@ using ConcreteEngine.Core.Engine.Time;
 using ConcreteEngine.Core.Features;
 using ConcreteEngine.Core.Modules;
 using ConcreteEngine.Core.Rendering;
-using ConcreteEngine.Core.Rendering.Data;
 using ConcreteEngine.Core.Rendering.State;
 using ConcreteEngine.Core.Scene;
-using ConcreteEngine.Core.Utils;
 using ConcreteEngine.Graphics;
 using ConcreteEngine.Graphics.Gfx.Resources;
 using Silk.NET.OpenGL;
@@ -209,7 +204,7 @@ public sealed class GameEngine : IDisposable
     {
         var shaderCount = _assets.Store.GetMetaSnapshot<Shader>().Count;
         Span<ShaderId> shaderIds = stackalloc ShaderId[shaderCount];
-         _assets.Store.ExtractSpan<Shader, ShaderId>(shaderIds, static shader => shader.ResourceId);
+        _assets.Store.ExtractSpan<Shader, ShaderId>(shaderIds, static shader => shader.ResourceId);
         _renderer.InitializeGraphics(shaderIds);
     }
 

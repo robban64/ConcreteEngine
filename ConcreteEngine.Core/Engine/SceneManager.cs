@@ -1,7 +1,11 @@
+#region
+
 using ConcreteEngine.Core.Engine.Configuration;
 using ConcreteEngine.Core.Modules;
 using ConcreteEngine.Core.Rendering;
 using ConcreteEngine.Core.Scene;
+
+#endregion
 
 namespace ConcreteEngine.Core.Engine;
 

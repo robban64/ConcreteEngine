@@ -20,7 +20,7 @@ internal sealed class ShaderLoader
 
     public ShaderPayload LoadShader(ShaderDescriptor record)
     {
-        var vertPath = AssetPaths.GetShaderPath( record.VertexFilename);
+        var vertPath = AssetPaths.GetShaderPath(record.VertexFilename);
         var fragPath = AssetPaths.GetShaderPath(record.FragmentFilename);
 
         var vertInfo = new FileInfo(vertPath);

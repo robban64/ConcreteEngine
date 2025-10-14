@@ -23,7 +23,7 @@ public enum PassOpKind : byte
     Screen = 3
 }
 
-internal enum PreparePassActionKind: byte
+internal enum PreparePassActionKind : byte
 {
     Run,
     Skip

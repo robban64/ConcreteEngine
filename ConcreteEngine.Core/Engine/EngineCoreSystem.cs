@@ -10,7 +10,7 @@ namespace ConcreteEngine.Core.Engine;
 
 public interface IGameEngineSystem
 {
-    void Shutdown();    // Not used
+    void Shutdown(); // Not used
 }
 
 public interface IEngineSystemManager
@@ -33,16 +33,16 @@ public class EngineCoreSystem : IEngineSystemManager
         _inputSystem = inputSystem;
         _assets = assets;
     }
-    
+
     internal void Initialize()
     {
         _systems.Register<IInputSystem>(_inputSystem);
         _systems.Register<IAssetSystem>(_assets);
         _systems.Register<IRenderSystem>(_renderer);
-        _systems.Freeze();  
+        _systems.Freeze();
     }
-    
-    
+
+
     public T GetSystem<T>() where T : IGameEngineSystem
     {
         var system = _systems.GetRequired<T>();

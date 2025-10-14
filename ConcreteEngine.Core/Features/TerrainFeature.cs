@@ -4,7 +4,6 @@ using ConcreteEngine.Core.Assets;
 using ConcreteEngine.Core.Assets.Materials;
 using ConcreteEngine.Core.Assets.Textures;
 using ConcreteEngine.Core.Rendering;
-using ConcreteEngine.Core.Rendering.Commands;
 using ConcreteEngine.Core.Rendering.Producers;
 
 #endregion

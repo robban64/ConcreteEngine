@@ -80,7 +80,7 @@ internal sealed class AssetStore : IAssetStore
 
         return false;
     }
-    
+
     private ReadOnlySpan<AssetFileId> GetFileIds(AssetId id)
     {
         if (_bindings.TryGetValue(id, out var arr)) return arr!;
@@ -90,7 +90,6 @@ internal sealed class AssetStore : IAssetStore
 
     public AssetTypeMetaSnapshot GetMetaSnapshot<TAsset>() where TAsset : AssetObject =>
         _typeMeta[typeof(TAsset)].ToSnapshot();
-    
 
 
     public void ExtractList<TAsset, TData>(List<TData> list, Func<TAsset, TData> transform)

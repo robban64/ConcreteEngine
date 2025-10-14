@@ -1,9 +1,11 @@
-using System.Numerics;
+#region
+
 using ConcreteEngine.Common.Numerics;
 using ConcreteEngine.Core.Engine.Platform;
-using ConcreteEngine.Core.Rendering.Data;
 using ConcreteEngine.Core.Rendering.State;
 using ConcreteEngine.Graphics;
+
+#endregion
 
 namespace ConcreteEngine.Core.Engine.Data;
 

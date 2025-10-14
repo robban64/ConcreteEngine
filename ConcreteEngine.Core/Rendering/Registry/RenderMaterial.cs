@@ -1,7 +1,11 @@
+#region
+
 using System.Runtime.CompilerServices;
 using ConcreteEngine.Common.Numerics;
 using ConcreteEngine.Core.Assets.Materials;
 using ConcreteEngine.Graphics.Gfx.Resources;
+
+#endregion
 
 namespace ConcreteEngine.Core.Rendering.Registry;
 
@@ -25,7 +29,7 @@ public sealed class RenderMaterial
         ShaderId = shaderId;
         _samplerSlots = new TextureId[samplerSlots];
     }
-    
+
     public void SetParams(in MaterialParams param) => _materialParams = param;
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]

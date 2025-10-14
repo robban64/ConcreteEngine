@@ -96,7 +96,7 @@ public sealed class RenderSystem : IRenderSystem
         var depthShader = assets.Store.GetByName<Shader>("Depth").ResourceId;
         var depthKey = TagRegistry.FboKey<ShadowPassTag>(FboVariant.Default);
         _renderRegistry.TryGetRenderFbo(depthKey, out var shadowFbo);
-        
+
         InvalidOpThrower.ThrowIfNull(shadowFbo, nameof(shadowFbo));
         InvalidOpThrower.ThrowIfNot(shadowFbo.Attachments.DepthTextureId.IsValid());
 

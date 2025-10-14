@@ -65,6 +65,4 @@ public readonly struct ShadowParams(
     public float SlopeBias { get; init; } = slopeBias;
     public float Strength { get; init; } = strength;
     public float PcfRadius { get; init; } = pcfRadius;
-
 }
-

@@ -1,6 +1,6 @@
 namespace ConcreteEngine.Core.Engine.Data;
 
-internal enum EngineStateLevel :  byte
+internal enum EngineStateLevel : byte
 {
     NotStarted = 0,
     LoadingGraphics = 1,

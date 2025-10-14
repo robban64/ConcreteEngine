@@ -23,7 +23,7 @@ public sealed record AssetResourceLayout(
 public sealed class ShaderManifest : IAssetCatalog
 {
     public required ShaderDescriptor[] Records { get; init; }
-    public int Count =>  Records.Length;
+    public int Count => Records.Length;
 }
 
 public sealed record ShaderDescriptor(
@@ -35,11 +35,10 @@ public sealed record ShaderDescriptor(
     public AssetKind Kind => AssetKind.Shader;
 }
 
-public sealed class TextureManifest: IAssetCatalog
+public sealed class TextureManifest : IAssetCatalog
 {
     public required TextureDescriptor[] Records { get; init; }
-    public int Count =>  Records.Length;
-
+    public int Count => Records.Length;
 }
 
 public sealed record TextureDescriptor(
@@ -55,11 +54,10 @@ public sealed record TextureDescriptor(
     public AssetKind Kind => AssetKind.Texture2D;
 }
 
-public sealed class CubeMapManifest: IAssetCatalog
+public sealed class CubeMapManifest : IAssetCatalog
 {
     public required CubeMapDescriptor[] Records { get; init; }
-    public int Count =>  Records.Length;
-
+    public int Count => Records.Length;
 }
 
 public sealed record CubeMapDescriptor(
@@ -74,11 +72,10 @@ public sealed record CubeMapDescriptor(
     public AssetKind Kind => AssetKind.TextureCubeMap;
 }
 
-public sealed class MeshManifest: IAssetCatalog
+public sealed class MeshManifest : IAssetCatalog
 {
     public required MeshDescriptor[] Records { get; init; }
-    public int Count =>  Records.Length;
-
+    public int Count => Records.Length;
 }
 
 public sealed record MeshDescriptor(
@@ -89,11 +86,10 @@ public sealed record MeshDescriptor(
     public AssetKind Kind => AssetKind.Mesh;
 }
 
-public sealed class MaterialManifest: IAssetCatalog
+public sealed class MaterialManifest : IAssetCatalog
 {
     public required MaterialDescriptor[] Records { get; init; }
-    public int Count =>  Records.Length;
-
+    public int Count => Records.Length;
 }
 
 public sealed record MaterialDescriptor(

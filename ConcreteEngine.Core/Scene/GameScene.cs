@@ -4,13 +4,11 @@ using ConcreteEngine.Common.Numerics;
 using ConcreteEngine.Core.Engine.Configuration;
 using ConcreteEngine.Core.Engine.Data;
 using ConcreteEngine.Core.Rendering;
-using ConcreteEngine.Core.Rendering.Data;
 using ConcreteEngine.Core.Rendering.State;
 
 #endregion
 
 namespace ConcreteEngine.Core.Scene;
-
 
 public abstract class GameScene
 {
@@ -27,7 +25,7 @@ public abstract class GameScene
         _camera = new Camera3D();
     }
 
-    internal void Update(in UpdateTickInfo frameCtx,  Size2D output)
+    internal void Update(in UpdateTickInfo frameCtx, Size2D output)
     {
         _camera.Viewport = output;
         Context.Features.Update(in frameCtx);

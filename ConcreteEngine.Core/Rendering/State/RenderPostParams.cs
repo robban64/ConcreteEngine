@@ -13,7 +13,6 @@ public readonly struct PostImageFxParams(float vignette, float grain, float shar
     public float Grain { get; init; } = grain; // 0..1 > 0.8–1.2
     public float Sharpen { get; init; } = sharpen; // -1..+1 > -0.05..+0.05
     public float Rolloff { get; init; } = rolloff; // 0..1
-
 }
 
 public readonly struct PostBloomParams(float intensity, float threshold, float radius)
@@ -21,7 +20,7 @@ public readonly struct PostBloomParams(float intensity, float threshold, float r
     // 0..1 
     public float Intensity { get; init; } = intensity; // 0..1 > 0.6–0.9
     public float Threshold { get; init; } = threshold;
-    public float Radius { get; init; } = radius;  // px
+    public float Radius { get; init; } = radius; // px
 }
 
 // 0..1 > 0.9–1.1 // -1..+1 > -0.05..+0.05
@@ -30,7 +29,6 @@ public readonly struct PostWhiteBalanceParams(float tint, float strength)
     public float Tint { get; init; } = tint;
     public float Strength { get; init; } = strength;
 }
-
 
 // 0..1 > 0..0.15 // 0..1 > 0..0.01 // 0..1 > 0..0.15 // 0..1 > 0..0.12
 public readonly struct PostGradeParams(float exposure, float saturation, float contrast, float warmth)

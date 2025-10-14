@@ -1,8 +1,10 @@
+#region
+
 using ConcreteEngine.Core.Rendering.Definitions;
 
+#endregion
+
 namespace ConcreteEngine.Core.Rendering.Passes;
-
-
 
 public readonly record struct PassAction(PassOpKind OpKind)
 {

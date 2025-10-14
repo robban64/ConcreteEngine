@@ -2,7 +2,6 @@
 
 using System.Numerics;
 using ConcreteEngine.Core.Assets.Textures;
-using ConcreteEngine.Graphics;
 using ConcreteEngine.Graphics.Gfx;
 using ConcreteEngine.Graphics.Gfx.Contracts;
 using ConcreteEngine.Graphics.Gfx.Definitions;
@@ -48,9 +47,9 @@ public sealed class TerrainBatcher : RenderBatcher<TerrainBatchResult>
 
     public override TerrainBatchResult BuildBatch()
     {
-        if(HeightMap.PixelData is null)
+        if (HeightMap.PixelData is null)
             throw new ArgumentNullException(nameof(HeightMap.PixelData));
-        
+
         ArgumentOutOfRangeException.ThrowIfLessThan(HeightMap.Width, 32);
         ArgumentOutOfRangeException.ThrowIfNotEqual(HeightMap.Width, HeightMap.Height);
         ArgumentOutOfRangeException.ThrowIfNotEqual(HeightMap.PixelData.Value.Length, Size * Size * 4);

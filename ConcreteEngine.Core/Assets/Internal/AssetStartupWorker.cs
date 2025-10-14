@@ -61,7 +61,6 @@ namespace ConcreteEngine.Core.Assets.Internal;
    */
 internal sealed class AssetStartupWorker
 {
-  
     internal enum ProcessOrder
     {
         NotStarted,

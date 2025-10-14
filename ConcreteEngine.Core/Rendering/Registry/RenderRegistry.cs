@@ -1,15 +1,11 @@
 #region
 
-using System.Diagnostics;
 using System.Runtime.CompilerServices;
 using ConcreteEngine.Common;
 using ConcreteEngine.Common.Numerics;
-using ConcreteEngine.Core.Rendering.Data;
-using ConcreteEngine.Core.Rendering.Descriptors;
 using ConcreteEngine.Core.Rendering.Passes;
 using ConcreteEngine.Graphics.Gfx;
 using ConcreteEngine.Graphics.Gfx.Resources;
-using ConcreteEngine.Graphics.Gfx.Utility;
 using ConcreteEngine.Graphics.Primitives;
 
 #endregion
@@ -53,7 +49,7 @@ internal sealed class RenderRegistry
 
         UboRegistry.BeginRegistration(_registrationData);
         FboRegistry.BeginRegistration(_registrationData);
-        
+
         FboRegistry.RegisterTemp();
     }
 

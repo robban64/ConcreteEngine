@@ -1,4 +1,8 @@
+#region
+
 using ConcreteEngine.Core.Engine.Data;
+
+#endregion
 
 namespace ConcreteEngine.Core.Engine.Time;
 
@@ -10,7 +14,7 @@ internal sealed class GameTickScheduler
 
     private FrameTickTimer _gameTicker = new(1f / GameTicksPerSecond);
     private FrameTickTimer _fpsTicker = new(1f);
-    
+
     private SimpleTicker _animationClock = new(5, GameTicksPerSecond);
 
     private readonly UpdateTickDelegate _onGameTick;

@@ -1,8 +1,11 @@
+#region
+
 using ConcreteEngine.Common;
-using ConcreteEngine.Common.Numerics;
 using ConcreteEngine.Core.Rendering.Descriptors;
 using ConcreteEngine.Core.Rendering.Passes;
 using ConcreteEngine.Graphics.Primitives;
+
+#endregion
 
 namespace ConcreteEngine.Core.Rendering.Registry;
 
@@ -12,12 +15,12 @@ public sealed class RenderRegistryBuilder
     private UboRegistryBuilder? _uboBuilder;
     private FboRegistryBuilder? _fboBuilder;
     private ShaderRegistryBuilder? _shaderBuilder;
-    
+
     private readonly RenderUboRegistry _uboRegistry;
     private readonly RenderFboRegistry _fboRegistry;
     private readonly RenderShaderRegistry _shaderRegistry;
 
-    internal RenderRegistryBuilder( RenderUboRegistry uboRegistry, RenderFboRegistry fboRegistry,
+    internal RenderRegistryBuilder(RenderUboRegistry uboRegistry, RenderFboRegistry fboRegistry,
         RenderShaderRegistry shaderRegistry)
     {
         _uboRegistry = uboRegistry;
@@ -36,13 +39,13 @@ public sealed class RenderRegistryBuilder
         InvalidOpThrower.ThrowIfNotNull(_fboBuilder, nameof(_fboBuilder));
         return _fboBuilder = builder(new FboRegistryBuilder(_fboRegistry));
     }
-    
+
     public ShaderRegistryBuilder BuildShaders(Func<ShaderRegistryBuilder, ShaderRegistryBuilder> builder)
     {
         InvalidOpThrower.ThrowIfNotNull(_shaderBuilder, nameof(_shaderBuilder));
         return _shaderBuilder = builder(new ShaderRegistryBuilder(_shaderRegistry));
     }
-    
+
 
     public sealed class UboRegistryBuilder
     {
@@ -60,10 +63,9 @@ public sealed class RenderRegistryBuilder
         public void Register<TTag>(FboVariant variant, RegisterFboEntry entry) where TTag : unmanaged, IRenderPassTag =>
             _fboRegistry.Register<TTag>(variant, entry);
     }
-    
+
     public sealed class ShaderRegistryBuilder
     {
-        
         private readonly RenderShaderRegistry _shaderRegistry;
 
         internal ShaderRegistryBuilder(RenderShaderRegistry shaderRegistry) => _shaderRegistry = shaderRegistry;

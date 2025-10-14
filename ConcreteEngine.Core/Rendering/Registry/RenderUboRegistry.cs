@@ -1,3 +1,5 @@
+#region
+
 using ConcreteEngine.Common;
 using ConcreteEngine.Core.Rendering.Data;
 using ConcreteEngine.Graphics.Gfx;
@@ -5,11 +7,12 @@ using ConcreteEngine.Graphics.Gfx.Resources;
 using ConcreteEngine.Graphics.Gfx.Utility;
 using ConcreteEngine.Graphics.Primitives;
 
+#endregion
+
 namespace ConcreteEngine.Core.Rendering.Registry;
 
 internal sealed class RenderUboRegistry
 {
-
     private readonly RenderUbo[] _uboRegistry = new RenderUbo[RenderLimits.UboSlots];
     private int _uboCount = 0;
 
@@ -22,7 +25,6 @@ internal sealed class RenderUboRegistry
         _gfxBuffers = gfx.Buffers;
 
         _gfxApi.BindMetaChanged<UniformBufferId, UniformBufferMeta>(OnUboChange);
-
     }
 
     public void BeginRegistration(RenderRegistry.RegistrationData registrationData)
@@ -36,17 +38,18 @@ internal sealed class RenderUboRegistry
         Register<MaterialUniformRecord>();
         Register<DrawObjectUniform>();
         Register<PostProcessUniform>();
-
     }
-    
-    public void FinishRegistration(){}
-    
+
+    public void FinishRegistration()
+    {
+    }
+
     public void Register<TUbo>() where TUbo : unmanaged, IStd140Uniform
     {
         InvalidOpThrower.ThrowIfCapacityExceed(_uboRegistry, RenderLimits.UboSlots);
         if (!UniformBufferUtils.IsStd140Aligned<TUbo>())
             throw new InvalidOperationException($"{typeof(TUbo).Name} is not std140-aligned.");
-        
+
         var newSlot = TagRegistry.RegisterUniformBufferSlot<TUbo>();
         InvalidOpThrower.ThrowIfNotNull(_uboRegistry[newSlot]);
 
@@ -56,7 +59,7 @@ internal sealed class RenderUboRegistry
         _uboRegistry[newSlot] = new RenderUbo(uboId, newSlot, in meta);
         _uboCount++;
     }
-    
+
     public RenderUbo GetRenderUbo<TUbo>() where TUbo : unmanaged, IStd140Uniform
     {
         var slot = TagRegistry.UniformBufferSlot<TUbo>();

@@ -1,6 +1,5 @@
 #region
 
-using ConcreteEngine.Core.Engine.Configuration;
 using ConcreteEngine.Core.Engine.Platform;
 using ConcreteEngine.Core.Scene;
 using ConcreteEngine.Graphics;
@@ -34,5 +33,4 @@ public sealed class GameEngineBuilder
         _sceneFactories.Add(static () => new T());
         return this;
     }
-
 }

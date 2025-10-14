@@ -3,7 +3,6 @@
 using ConcreteEngine.Common;
 using ConcreteEngine.Core.Assets.Data;
 using ConcreteEngine.Core.Assets.Internal;
-using ConcreteEngine.Core.Assets.IO;
 using ConcreteEngine.Core.Assets.Materials;
 using ConcreteEngine.Core.Engine;
 using ConcreteEngine.Graphics.Gfx;
@@ -35,7 +34,7 @@ public sealed class AssetSystem : IAssetSystem
     internal AssetStore AssetStore => _assetStore;
 
     public IAssetStore Store => _assetStore;
-    
+
     public MaterialStore MaterialStore => _materialStore;
 
 

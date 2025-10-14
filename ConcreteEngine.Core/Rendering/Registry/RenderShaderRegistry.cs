@@ -1,6 +1,9 @@
-using ConcreteEngine.Common.Collections;
+#region
+
 using ConcreteEngine.Graphics.Gfx;
 using ConcreteEngine.Graphics.Gfx.Resources;
+
+#endregion
 
 namespace ConcreteEngine.Core.Rendering.Registry;
 
@@ -17,7 +20,7 @@ internal sealed class RenderShaderRegistry
         _gfxApi = gfx.ResourceContext.ResourceManager.GetGfxApi();
         _gfxShaders = gfx.Shaders;
     }
-    
+
 
     public void RegisterCollection(ReadOnlySpan<ShaderId> shaders)
     {
@@ -27,9 +30,9 @@ internal sealed class RenderShaderRegistry
 
         foreach (var shaderId in shaders)
         {
-            if (_shaderRegistry[shaderId - 1] != null) 
+            if (_shaderRegistry[shaderId - 1] != null)
                 throw new InvalidOperationException(nameof(_shaderRegistry));
-            
+
             var meta = _gfxApi.GetMeta<ShaderId, ShaderMeta>(shaderId);
             _shaderRegistry[shaderId - 1] = new RenderShader(shaderId, meta);
         }

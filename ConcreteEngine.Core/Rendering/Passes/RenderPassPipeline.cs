@@ -2,7 +2,6 @@
 
 using System.Diagnostics;
 using ConcreteEngine.Common.Numerics;
-using ConcreteEngine.Core.Rendering.Data;
 using ConcreteEngine.Core.Rendering.Definitions;
 using ConcreteEngine.Core.Rendering.Draw;
 using ConcreteEngine.Core.Rendering.Registry;
@@ -10,8 +9,6 @@ using ConcreteEngine.Core.Rendering.Registry;
 #endregion
 
 namespace ConcreteEngine.Core.Rendering.Passes;
-
-
 
 internal readonly record struct PreparePassResult(int TagIndex, PassId PassId, PreparePassActionKind ActionKind);
 

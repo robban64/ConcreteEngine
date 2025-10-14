@@ -1,5 +1,9 @@
+#region
+
 using ConcreteEngine.Core.Engine.Data;
 using ConcreteEngine.Core.Engine.Time;
+
+#endregion
 
 namespace ConcreteEngine.Core.Engine;
 
@@ -8,7 +12,7 @@ internal sealed class EngineTimeHub
     private readonly GameTickScheduler _gameTickScheduler;
     private readonly RenderTickScheduler _renderTickScheduler;
     public DebounceTicker? DebounceTicker { get; set; } = null;
-    
+
     public float Alpha => _gameTickScheduler.Alpha;
 
     //TODO
@@ -46,5 +50,4 @@ internal sealed class EngineTimeHub
     private void OnGfxTickUpload(int tick)
     {
     }
-
 }

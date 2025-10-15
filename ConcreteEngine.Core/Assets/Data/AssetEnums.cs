@@ -14,9 +14,10 @@ public enum AssetCategory
 {
     Unknown = 0,
     Graphic = 1,
-    Data = 2,
-    Audio = 3,
-    Script = 4,
+    Renderer = 2,
+    Data = 3,
+    Audio = 4,
+    Script = 5,
 }
 
 public enum AssetStorageKind

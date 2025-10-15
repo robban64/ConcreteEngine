@@ -1,6 +1,7 @@
 #region
 
 using System.Diagnostics;
+using ConcreteEngine.Common.Numerics;
 using ConcreteEngine.Core.Assets.Data;
 using ConcreteEngine.Core.Assets.Descriptors;
 using ConcreteEngine.Core.Assets.Internal;
@@ -16,7 +17,7 @@ internal sealed class MaterialLoader
     public List<MaterialTemplate>? LoadMaterials(AssetStore store, MaterialDescriptor[] descriptors)
     {
         ArgumentNullException.ThrowIfNull(descriptors);
-        
+
         if (descriptors.Length == 0)
         {
             Debug.Assert(false);
@@ -57,12 +58,13 @@ internal sealed class MaterialLoader
 
         var shader = store.GetByName<Shader>(record.Shader).RefId;
 
+        var matParams = new MaterialTemplateParams { Color = Color4.FromVector4(record.Color) };
         return new MaterialTemplate
         {
             RawId = assetId,
             Name = record.Name,
             ShaderAssetId = shader,
-            Color = record.Color,
+            Params = matParams,
             TextureAssetIds = textures,
             CubeMapAssetId = cubeMap,
             IsCoreAsset = false,

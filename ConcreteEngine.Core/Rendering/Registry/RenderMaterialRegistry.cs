@@ -2,6 +2,7 @@
 
 using System.Runtime.CompilerServices;
 using ConcreteEngine.Core.Assets.Materials;
+using ConcreteEngine.Core.Rendering.Data;
 
 #endregion
 

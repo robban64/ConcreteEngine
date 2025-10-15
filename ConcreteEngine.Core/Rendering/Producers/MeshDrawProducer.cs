@@ -5,6 +5,7 @@ using ConcreteEngine.Common.Numerics;
 using ConcreteEngine.Core.Assets.Materials;
 using ConcreteEngine.Core.Engine.Data;
 using ConcreteEngine.Core.Rendering.Commands;
+using ConcreteEngine.Core.Rendering.Data;
 using ConcreteEngine.Core.Rendering.Definitions;
 using ConcreteEngine.Core.Rendering.State;
 using ConcreteEngine.Core.Scene.Entities;

@@ -3,6 +3,7 @@
 using System.Numerics;
 using System.Runtime.CompilerServices;
 using ConcreteEngine.Core.Assets.Materials;
+using ConcreteEngine.Core.Rendering.Data;
 using ConcreteEngine.Core.Utils;
 
 #endregion

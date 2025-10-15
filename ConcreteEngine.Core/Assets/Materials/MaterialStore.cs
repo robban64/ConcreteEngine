@@ -1,16 +1,13 @@
 #region
 
 using System.Runtime.CompilerServices;
+using ConcreteEngine.Core.Rendering.Data;
 
 #endregion
 
 namespace ConcreteEngine.Core.Assets.Materials;
 
-public readonly record struct MaterialId(int Id)
-{
-    public static implicit operator int(MaterialId id) => id.Id;
-    public static explicit operator MaterialId(int value) => new(value);
-}
+
 
 public sealed class MaterialStore
 {

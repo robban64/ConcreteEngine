@@ -3,6 +3,7 @@
 using System.Runtime.CompilerServices;
 using ConcreteEngine.Common.Numerics;
 using ConcreteEngine.Core.Assets.Materials;
+using ConcreteEngine.Core.Rendering.Data;
 using ConcreteEngine.Graphics.Gfx.Resources;
 
 #endregion
@@ -11,7 +12,6 @@ namespace ConcreteEngine.Core.Rendering.Registry;
 
 //internal delegate void MaterialApplyDel(in MaterialParams param);
 
-public readonly record struct MaterialParams(Color4 Color, float Specular, float Shininess, float UvRepeat, float Normal = 1f);
 
 // wip
 public sealed class RenderMaterial
@@ -22,7 +22,7 @@ public sealed class RenderMaterial
     private readonly TextureId[] _samplerSlots;
 
     private MaterialParams _materialParams;
-
+    
     internal RenderMaterial(MaterialId id, ShaderId shaderId, int samplerSlots)
     {
         Id = id;
@@ -30,12 +30,9 @@ public sealed class RenderMaterial
         _samplerSlots = new TextureId[samplerSlots];
     }
 
-    public void SetParams(in MaterialParams param) => _materialParams = param;
+    public ReadOnlySpan<TextureId>  SamplerSlots => _samplerSlots;
+    public ref readonly  MaterialParams MaterialParams => ref _materialParams;
 
-    [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    internal ReadOnlySpan<TextureId> GetData(out MaterialParams materialParams)
-    {
-        materialParams = _materialParams;
-        return _samplerSlots;
-    }
+    public void SetMaterialParams(in MaterialParams param) => _materialParams = param;
+
 }

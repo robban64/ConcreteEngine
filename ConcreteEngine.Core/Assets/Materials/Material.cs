@@ -1,6 +1,7 @@
 #region
 
 using ConcreteEngine.Common.Numerics;
+using ConcreteEngine.Core.Rendering.Data;
 using ConcreteEngine.Graphics.Gfx.Resources;
 
 #endregion
@@ -27,8 +28,8 @@ public sealed class Material
     {
         Id = id;
         TemplateName = template.Name;
-        ShaderId = template.GfxShaderId;
+        ShaderId = template.BoundShaderId;
 
-        _samplerSlots = template.GfxSamplerSlots;
+        _samplerSlots = template.SamplerSlots.ToArray();
     }
 }

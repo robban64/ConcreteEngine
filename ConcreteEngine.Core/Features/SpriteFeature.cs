@@ -1,6 +1,7 @@
 #region
 
 using ConcreteEngine.Core.Assets.Materials;
+using ConcreteEngine.Core.Rendering.Data;
 using ConcreteEngine.Core.Rendering.Producers;
 
 #endregion

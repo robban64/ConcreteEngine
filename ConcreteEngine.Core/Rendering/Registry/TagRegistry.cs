@@ -49,13 +49,13 @@ internal static class TagRegistry
     {
         internal static int TagIndex { get; private set; } = -1;
 
-        private static PassId[] _passIds = new PassId[MaxVariants];
+        private static PassId[] _passIds = new PassId[MaxFboVariants];
 
         public static PassId GetPassId(FboVariant variant) => _passIds[variant];
 
         public static void BindFboPassId(FboVariant variant, PassId passId)
         {
-            ArgumentOutOfRangeException.ThrowIfGreaterThanOrEqual(variant.Value, MaxVariants);
+            ArgumentOutOfRangeException.ThrowIfGreaterThanOrEqual(variant.Value, MaxFboVariants);
 
             if (TagIndex < 0)
                 throw new InvalidOperationException($"PassTag not registered. {typeof(TTag).Name}");

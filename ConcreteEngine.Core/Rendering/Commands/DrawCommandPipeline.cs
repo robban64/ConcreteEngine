@@ -21,6 +21,7 @@ internal sealed class DrawCommandPipeline
     private SceneDrawProducer _sceneDrawProducer = null!;
 
     private DrawCommandBuffer _cmdBuffer = null!;
+    private DrawMaterialBuffer? _materialBuffer;
 
     public DrawCommandPipeline()
     {

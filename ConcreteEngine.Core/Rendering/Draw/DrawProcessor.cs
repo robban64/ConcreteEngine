@@ -25,11 +25,10 @@ internal sealed class DrawProcessor
 
     private readonly DrawStateContext _ctx;
 
-    private int _previousMaterialId = -1;
+    private MaterialId _previousMaterialId;
 
     private RenderUbo _drawUbo = null!;
-
-    private UniformBufferId _materialUboId;
+    private RenderUbo _materialUbo = null!;
 
     internal DrawProcessor(DrawStateContext ctx, DrawStateContextPayload ctxPayload, MaterialStore materials)
     {
@@ -44,23 +43,33 @@ internal sealed class DrawProcessor
     public void Initialize()
     {
         _drawUbo = _registry.GetRenderUbo<DrawObjectUniform>();
-        _materialUboId = _registry.GetRenderUbo<MaterialUniformRecord>().Id;
+        _materialUbo = _registry.GetRenderUbo<MaterialUniformRecord>();
     }
 
-    public void PrepareFrame(in RenderSceneState renderGlobals, nint capacity)
+    public void PrepareFrame(nint drawCapacity, nint materialCapacity)
     {
-        _drawUbo.ResetCursor();
-        if (capacity != _drawUbo.Capacity)
-            _drawUbo.SetCapacity(capacity);
+        _previousMaterialId = default;
 
-        _previousMaterialId = -1;
-        _gfxBuffers.SetUniformBufferCapacity(_drawUbo.Id, capacity);
+        _drawUbo.ResetCursor();
+        _materialUbo.ResetCursor();
+
+        if (drawCapacity > _drawUbo.Capacity)
+        {
+            _drawUbo.SetCapacity(drawCapacity);
+            _gfxBuffers.SetUniformBufferCapacity(_drawUbo.Id, drawCapacity);
+        }
+
+        if (materialCapacity > _materialUbo.Capacity)
+        {
+            _materialUbo.SetCapacity(materialCapacity);
+            _gfxBuffers.SetUniformBufferCapacity(_materialUbo.Id, drawCapacity);
+        }
     }
 
     public void PrepareDrawPass()
     {
         _drawUbo.ResetCursor();
-        _previousMaterialId = -1;
+        _previousMaterialId = default;
         if (_ctx.OverrideDrawShader > 0)
             UseShader(_ctx.OverrideDrawShader);
     }
@@ -73,7 +82,7 @@ internal sealed class DrawProcessor
 
     private void BindDrawMaterial(MaterialId materialId)
     {
-        if (_previousMaterialId == materialId.Id) return;
+        if (_previousMaterialId == materialId) return;
         var material = _materials.GetMaterial(materialId);
         UseShader(material.ShaderId);
 
@@ -86,9 +95,10 @@ internal sealed class DrawProcessor
         if (material.Shadows)
             _gfxCmd.BindTexture(_ctx.DepthTexture, material.SamplerSlots.Length);
 
+        //BindMaterialObject(materialId);
         UploadMaterial(material);
 
-        _previousMaterialId = materialId.Id;
+        _previousMaterialId = materialId;
     }
 
     public void UploadMaterial(Material mat)
@@ -99,7 +109,18 @@ internal sealed class DrawProcessor
             matParams1: new Vector4(mat.Shininess, mat.HasNormalMap ? 1.0f : 0.0f, 0.0f, 0.0f)
         );
 
-        _gfxBuffers.UploadUniformGpuData(_materialUboId, in data, 0);
+        _gfxBuffers.UploadUniformGpuData(_materialUbo.Id, in data, 0);
+    }
+
+    public void UploadMaterialRecord(MaterialId materialId, MaterialUniformRecord data)
+    {
+        _gfxBuffers.UploadUniformGpuData(_materialUbo.Id, in data, _materialUbo.SetUploadCursor(materialId.Id));
+    }
+
+    public void UploadMaterialSpan(ReadOnlySpan<MaterialId> materialIds, ReadOnlySpan<MaterialUniformRecord> data)
+    {
+        var last = materialIds[materialIds.Length - 1].Id - 1;
+        _gfxBuffers.UploadUniformGpuSpan(_materialUbo.Id, data, _materialUbo.SetUploadCursor(last));
     }
 
     //TODO bulk upload
@@ -111,14 +132,34 @@ internal sealed class DrawProcessor
             model: in payload.Transform,
             normal: in normalModel
         );
-
         _gfxBuffers.UploadUniformGpuData(_drawUbo.Id, in data, _drawUbo.SetUploadCursor(submitIndex));
+    }
+
+    public void UploadTransformSpan(ReadOnlySpan<DrawTransformPayload> payload, int endIdx)
+    {
+        Span<DrawObjectUniform> data = stackalloc DrawObjectUniform[payload.Length];
+        for (int i = 0; i < payload.Length; i++)
+        {
+            ref readonly var payloadData = ref payload[i];
+            TransformUtils.CreateNormalMatrix(in payloadData.Transform, out var normalModel);
+            data[i] = new DrawObjectUniform(in payloadData.Transform, in normalModel);
+        }
+
+        _gfxBuffers.UploadUniformGpuSpan<DrawObjectUniform>(_drawUbo.Id, data, _drawUbo.SetUploadCursor(endIdx));
+    }
+
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    private void BindMaterialObject(MaterialId matId)
+    {
+        var cursor = _materialUbo.SetDrawCursor(matId.Id - 1);
+        _gfxBuffers.BindUniformBufferRange(_materialUbo.Id, cursor, _materialUbo.Stride);
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     private void BindDrawObject(int submitIndex)
     {
-        _gfxBuffers.BindUniformBufferRange(_drawUbo.Id, _drawUbo.SetDrawCursor(submitIndex), _drawUbo.Stride);
+        var cursor = _drawUbo.SetDrawCursor(submitIndex);
+        _gfxBuffers.BindUniformBufferRange(_drawUbo.Id, cursor, _drawUbo.Stride);
     }
 
     public void DrawMesh(DrawCommand cmd, int submitIndex)

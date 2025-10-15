@@ -1,6 +1,7 @@
 #region
 
 using System.Numerics;
+using System.Runtime.CompilerServices;
 
 #endregion
 
@@ -9,6 +10,8 @@ namespace ConcreteEngine.Common.Numerics;
 public readonly record struct Color4(float R, float G, float B, float A = 1f)
 {
     public Vector4 AsVec4() => new(R, G, B, A);
+    
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public Vector3 AsVec3() => new(R, G, B);
 
     public Color4 WithAlpha(float a) => this with { A = ClampNorm(a) };

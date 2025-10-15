@@ -159,6 +159,7 @@ public sealed class DrawCommandBuffer
             _drawProcessor.UploadTransform(in transforms[it.Idx], it.Idx);
         }
     }
+    
 
     public void DispatchDrawPass(PassId passId)
     {
@@ -204,5 +205,5 @@ public sealed class DrawCommandBuffer
 
 
     [MethodImpl(MethodImplOptions.NoInlining), DoesNotReturn, StackTraceHidden]
-    private static void ThrowMaxCapacityExceeded() => throw new OutOfMemoryException("Command Buffer too big");
+    private static void ThrowMaxCapacityExceeded() => throw new OutOfMemoryException("Command Buffer exceeded max limit");
 }

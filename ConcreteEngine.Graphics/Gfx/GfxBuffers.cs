@@ -39,7 +39,7 @@ public sealed class GfxBuffers
         //float -> stride = 4; Vector3 -> stride = 12
         (nint stride, nint size) = ToStrideAndSize<T>(data.Length);
         var meta = new VertexBufferMeta(index, data.Length, stride, DefaultUsage, storage, access);
-        var vboRef = _driverBuffer.CreateVertexBuffer(ToBufferByteData(data),
+        var vboRef = _driverBuffer.CreateVertexBuffer(ToByteBuffer(data),
             new GfxBufferDataDesc(size, storage, access));
 
         return _resources.VboStore.Add(meta, vboRef);
@@ -54,7 +54,7 @@ public sealed class GfxBuffers
             GraphicsException.ThrowInvalidType<T>(typeof(T).Name, "Invalid elemental size");
 
         var meta = new IndexBufferMeta(data.Length, stride, DefaultUsage, storage, access);
-        var iboRef = _driverBuffer.CreateIndexBuffer(ToBufferByteData(data),
+        var iboRef = _driverBuffer.CreateIndexBuffer(ToByteBuffer(data),
             new GfxBufferDataDesc(size, storage, access));
         return _resources.IboStore.Add(meta, iboRef);
     }
@@ -89,7 +89,7 @@ public sealed class GfxBuffers
             GraphicsException.ThrowInvalidBufferData<VertexBufferId>(nameof(vboId), "Buffer is static");
 
         (nint stride, nint size) = ToStrideAndSize<T>(data.Length);
-        _driverBuffer.SetVertexBufferData(vboRef, ToBufferByteData(data), size, usage);
+        _driverBuffer.SetVertexBufferData(vboRef, ToByteBuffer(data), size, usage);
 
         var newMeta = VertexBufferMeta.CreateCopy(in meta, data.Length, stride, usage);
         _resources.VboStore.ReplaceMeta(vboId, in newMeta, out _);
@@ -103,7 +103,7 @@ public sealed class GfxBuffers
             GraphicsException.ThrowInvalidBufferData<IndexBufferId>(nameof(iboId), "Buffer is static");
 
         (nint stride, nint size) = ToStrideAndSize<T>(data.Length);
-        _driverBuffer.SetIndexBufferData(iboRef, ToBufferByteData(data), size, usage);
+        _driverBuffer.SetIndexBufferData(iboRef, ToByteBuffer(data), size, usage);
 
         var newMeta = IndexBufferMeta.CreateCopy(in meta, data.Length, stride, usage);
         _resources.IboStore.ReplaceMeta(iboId, in newMeta, out _);
@@ -127,7 +127,7 @@ public sealed class GfxBuffers
         var (offset, size) = ToSizeAndOffset<T>(offsetElements, data.Length);
 
         var vboRef = _resources.VboStore.GetRefHandle(vboId);
-        _driverBuffer.UploadVertexBufferData(vboRef, ToBufferByteData(data), offset, size);
+        _driverBuffer.UploadVertexBufferData(vboRef, ToByteBuffer(data), offset, size);
     }
 
     public void UploadIndexBuffer<T>(IndexBufferId iboId, ReadOnlySpan<T> data, int offsetElements) where T : unmanaged
@@ -135,7 +135,7 @@ public sealed class GfxBuffers
         ArgumentOutOfRangeException.ThrowIfGreaterThan(offsetElements, data.Length);
         var iboRef = _resources.IboStore.GetRefHandle(iboId);
         var (offset, size) = ToSizeAndOffset<T>(offsetElements, data.Length);
-        _driverBuffer.UploadIndexBufferData(iboRef, ToBufferByteData(data), offset, size);
+        _driverBuffer.UploadIndexBufferData(iboRef, ToByteBuffer(data), offset, size);
     }
 
 
@@ -149,6 +149,14 @@ public sealed class GfxBuffers
         var bytes = MemoryMarshal.AsBytes(tSpan);
 
         _driverBuffer.UploadUniformBufferData(uboRef, bytes, offset, stride);
+    }
+
+    public void UploadUniformGpuSpan<T>(UniformBufferId uboId, ReadOnlySpan<T> data, nint offset)
+        where T : unmanaged, IStd140Uniform
+    {
+        UniformBufferUtils.IsStd140AlignedOrThrow<T>(out nint stride);
+        var uboRef = _resources.UboStore.GetRefHandle(uboId);
+        _driverBuffer.UploadUniformBufferData(uboRef, ToByteBuffer(data), offset, stride);
     }
 
     public void BindUniformBufferRange(UniformBufferId uboId, nint offset, nint size)
@@ -169,8 +177,6 @@ public sealed class GfxBuffers
         return (stride, count * stride);
     }
 
-    public static ReadOnlySpan<byte> ToBufferByteData<T>(ReadOnlySpan<T> data) where T : unmanaged
-    {
-        return MemoryMarshal.AsBytes(data);
-    }
+    public static ReadOnlySpan<byte> ToByteBuffer<T>(ReadOnlySpan<T> data) where T : unmanaged
+        => MemoryMarshal.AsBytes(data);
 }

@@ -14,12 +14,15 @@ public readonly record struct MaterialId(int Id)
 
 public sealed class MaterialStore
 {
+    private int _matIdx = 0;
+    private MaterialId MakeMaterialId() => new(++_matIdx);
+    
     private readonly Dictionary<string, MaterialTemplate> _templates;
 
     private List<Material> _materials;
 
     public IReadOnlyList<Material> Materials => _materials;
-
+    public int LastMaterialId => _matIdx;
 
     internal MaterialStore(IReadOnlyList<MaterialTemplate> templates)
     {
@@ -38,8 +41,7 @@ public sealed class MaterialStore
         if (!_templates.TryGetValue(templateName, out var template))
             throw new KeyNotFoundException($"Material Template with name {templateName} was not found");
 
-        var id = new MaterialId(_materials.Count + 1);
-        var mat = new Material(id, template);
+        var mat = new Material(MakeMaterialId(), template);
         _materials.Add(mat);
         return mat;
     }

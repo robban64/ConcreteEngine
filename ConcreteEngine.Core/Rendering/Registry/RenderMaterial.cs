@@ -11,7 +11,7 @@ namespace ConcreteEngine.Core.Rendering.Registry;
 
 //internal delegate void MaterialApplyDel(in MaterialParams param);
 
-public readonly record struct MaterialParams(Color4 Color, float Specular, float Shininess, float UvRepeat);
+public readonly record struct MaterialParams(Color4 Color, float Specular, float Shininess, float UvRepeat, float Normal = 1f);
 
 // wip
 public sealed class RenderMaterial

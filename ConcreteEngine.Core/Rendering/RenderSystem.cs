@@ -304,9 +304,9 @@ public sealed class RenderSystem : IRenderSystem
 
         _passPipeline.Prepare(frameInfo.OutputSize);
 
-        nint capacity = _drawPipeline.Prepare(frameInfo.Alpha, _snapshot);
-
-        _drawProcessor.PrepareFrame(in _snapshot, capacity);
+        nint drawCapacity = _drawPipeline.Prepare(frameInfo.Alpha, _snapshot);
+        nint matCapacity = _materialStore.LastMaterialId + 4; // extra space
+        _drawProcessor.PrepareFrame(drawCapacity, matCapacity);
 
         _drawPipeline.ExecuteTransforms();
 

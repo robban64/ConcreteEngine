@@ -96,11 +96,24 @@ internal sealed class DrawProcessor
             _gfxCmd.BindTexture(_ctx.DepthTexture, material.SamplerSlots.Length);
 
         //BindMaterialObject(materialId);
-        UploadMaterial(material);
+        BindMaterialObject(materialId);
 
         _previousMaterialId = materialId;
     }
 
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    private void BindMaterialObject(MaterialId matId)
+    {
+        var cursor = _materialUbo.SetDrawCursor(matId.Id - 1);
+        _gfxBuffers.BindUniformBufferRange(_materialUbo.Id, cursor, _materialUbo.Stride);
+    }
+
+    public void UploadMaterialRecord(MaterialId materialId, in MaterialUniformRecord data)
+        => _gfxBuffers.UploadUniformGpuData(_materialUbo.Id, in data, 0);
+
+    public void UploadMaterial(ReadOnlySpan<DrawMaterialCommand> commands, ReadOnlySpan<MaterialUniformRecord> data)
+        => _gfxBuffers.UploadUniformGpuSpan(_materialUbo.Id, data, _materialUbo.SetUploadCursor(0));
+/*
     public void UploadMaterial(Material mat)
     {
         var data = new MaterialUniformRecord(
@@ -111,29 +124,14 @@ internal sealed class DrawProcessor
 
         _gfxBuffers.UploadUniformGpuData(_materialUbo.Id, in data, 0);
     }
+*/
 
-    public void UploadMaterialRecord(MaterialId materialId, MaterialUniformRecord data)
-    {
-        _gfxBuffers.UploadUniformGpuData(_materialUbo.Id, in data, _materialUbo.SetUploadCursor(materialId.Id));
-    }
 
-    public void UploadMaterialSpan(ReadOnlySpan<MaterialId> materialIds, ReadOnlySpan<MaterialUniformRecord> data)
-    {
-        var last = materialIds[materialIds.Length - 1].Id - 1;
-        _gfxBuffers.UploadUniformGpuSpan(_materialUbo.Id, data, _materialUbo.SetUploadCursor(last));
-    }
-    
     public void UploadDrawObjects(ReadOnlySpan<DrawObjectUniform> payload)
     {
         _gfxBuffers.UploadUniformGpuSpan(_drawUbo.Id, payload, _drawUbo.SetUploadCursor(0));
     }
 
-    [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    private void BindMaterialObject(MaterialId matId)
-    {
-        var cursor = _materialUbo.SetDrawCursor(matId.Id - 1);
-        _gfxBuffers.BindUniformBufferRange(_materialUbo.Id, cursor, _materialUbo.Stride);
-    }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     private void BindDrawObject(int submitIndex)

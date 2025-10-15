@@ -25,7 +25,7 @@ public sealed class DrawCommandBuffer
     private DrawCommandRef[] _indexBuffer;
     private DrawCommandTicket[] _drawTickets;
     private readonly DrawPassRange[] _passRanges;
-
+    
     private int _submitIdx = 0;
 
     public int Count => _submitIdx;
@@ -36,7 +36,6 @@ public sealed class DrawCommandBuffer
         _transformBuffer = new DrawObjectUniform[DefaultCommandBuffCapacity];
         _metaBuffer = new DrawCommandMeta[DefaultCommandBuffCapacity];
         _indexBuffer = new DrawCommandRef[DefaultCommandBuffCapacity];
-
         _drawTickets = new DrawCommandTicket[DefaultCommandBuffCapacity];
 
         _passRanges = new DrawPassRange[PassSlots];
@@ -53,7 +52,6 @@ public sealed class DrawCommandBuffer
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public void SubmitDraw(DrawCommand cmd, DrawCommandMeta meta, in DrawTransformPayload transform)
     {
-        
         EnsureCapacity(1);
         _commandBuffer[_submitIdx] = cmd;
         _metaBuffer[_submitIdx] = meta;
@@ -85,14 +83,13 @@ public sealed class DrawCommandBuffer
         drawMeta.CopyTo(_metaBuffer.AsSpan(_submitIdx));
 
         var indices = _indexBuffer.AsSpan(_submitIdx);
-        for (var i = 0; i < count; i++)
-        {
-            indices[i] = new DrawCommandRef(drawMeta[i], _submitIdx + i);
-        }
-
         var transformBuffer = _transformBuffer.AsSpan(_submitIdx);
-        for (var i = 0; i < count; i++)
+
+        var idx = _submitIdx;
+        for (var i = 0; i < count; i++, idx++)
         {
+            indices[i] = new DrawCommandRef(drawMeta[i], idx);
+            
             ref readonly var transform = ref drawTransforms[i].Transform;
             TransformUtils.CreateNormalMatrix(in transform, out var normalModel);
             transformBuffer[i] = new DrawObjectUniform(
@@ -100,7 +97,7 @@ public sealed class DrawCommandBuffer
                 normal: in normalModel
             );
         }
-
+        
         _submitIdx += count;
     }
 

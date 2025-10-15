@@ -136,7 +136,7 @@ public readonly struct MaterialUniformRecord : IStd140Uniform
     {
         MatColor = new Vector4(mat.Color.AsVec3(), 1);
         MatParams0 = new Vector4(mat.Specular, mat.UvRepeat, 0.0f, 0.0f);
-        MatParams0 = new Vector4(mat.Shininess, mat.Normal, 0.0f, 0.0f);
+        MatParams1 = new Vector4(mat.Shininess, mat.Normal, 0.0f, 0.0f);
     }
 }
 

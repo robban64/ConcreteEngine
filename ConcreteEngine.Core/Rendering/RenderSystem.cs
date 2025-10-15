@@ -118,7 +118,7 @@ public sealed class RenderSystem : IRenderSystem
 
 
         _drawPipeline = new DrawCommandPipeline();
-        _drawPipeline.Initialize(_gfx, _batches, _drawProcessor);
+        _drawPipeline.Initialize(_gfx, _batches, _drawProcessor, _materialStore);
 
         _drawProcessor.Initialize();
 
@@ -303,11 +303,10 @@ public sealed class RenderSystem : IRenderSystem
         Debug.Assert(_initialized);
 
         _passPipeline.Prepare(frameInfo.OutputSize);
-
-        nint drawCapacity = _drawPipeline.Prepare(frameInfo.Alpha, _snapshot);
-        nint matCapacity = _materialStore.LastMaterialId + 4; // extra space
+        var (drawCapacity, matCapacity) = _drawPipeline.Prepare(frameInfo.Alpha, _snapshot);
         _drawProcessor.PrepareFrame(drawCapacity, matCapacity);
 
+        _drawPipeline.ExecuteMaterials();
         _drawPipeline.ExecuteTransforms();
 
         while (_passPipeline.NextPass(out var nextPassRes))

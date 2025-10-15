@@ -25,6 +25,7 @@ public readonly struct DrawTransformPayload(in Matrix4x4 transform)
     public readonly Matrix4x4 Transform = transform;
 }
 
+
 [StructLayout(LayoutKind.Sequential)]
 public readonly struct DrawCommandMeta(
     DrawCommandId id,

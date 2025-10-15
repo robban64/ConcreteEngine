@@ -122,30 +122,10 @@ internal sealed class DrawProcessor
         var last = materialIds[materialIds.Length - 1].Id - 1;
         _gfxBuffers.UploadUniformGpuSpan(_materialUbo.Id, data, _materialUbo.SetUploadCursor(last));
     }
-
-    //TODO bulk upload
-    public void UploadTransform(in DrawTransformPayload payload, int submitIndex)
+    
+    public void UploadDrawObjects(ReadOnlySpan<DrawObjectUniform> payload)
     {
-        TransformUtils.CreateNormalMatrix(in payload.Transform, out var normalModel);
-
-        var data = new DrawObjectUniform(
-            model: in payload.Transform,
-            normal: in normalModel
-        );
-        _gfxBuffers.UploadUniformGpuData(_drawUbo.Id, in data, _drawUbo.SetUploadCursor(submitIndex));
-    }
-
-    public void UploadTransformSpan(ReadOnlySpan<DrawTransformPayload> payload, int endIdx)
-    {
-        Span<DrawObjectUniform> data = stackalloc DrawObjectUniform[payload.Length];
-        for (int i = 0; i < payload.Length; i++)
-        {
-            ref readonly var payloadData = ref payload[i];
-            TransformUtils.CreateNormalMatrix(in payloadData.Transform, out var normalModel);
-            data[i] = new DrawObjectUniform(in payloadData.Transform, in normalModel);
-        }
-
-        _gfxBuffers.UploadUniformGpuSpan<DrawObjectUniform>(_drawUbo.Id, data, _drawUbo.SetUploadCursor(endIdx));
+        _gfxBuffers.UploadUniformGpuSpan(_drawUbo.Id, payload, _drawUbo.SetUploadCursor(0));
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]

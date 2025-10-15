@@ -10,7 +10,7 @@ using ConcreteEngine.Graphics.Primitives;
 
 #endregion
 
-namespace ConcreteEngine.Core.Assets;
+namespace ConcreteEngine.Core.Assets.Internal;
 
 internal sealed class AssetGfxUploader
 {

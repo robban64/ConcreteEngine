@@ -3,6 +3,7 @@
 using System.Text.Json;
 using System.Text.Json.Serialization;
 using ConcreteEngine.Core.Assets.Data;
+using ConcreteEngine.Core.Assets.Descriptors;
 using ConcreteEngine.Core.Assets.IO;
 
 #endregion

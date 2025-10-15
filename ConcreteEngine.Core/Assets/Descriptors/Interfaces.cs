@@ -1,4 +1,7 @@
-namespace ConcreteEngine.Core.Assets.Data;
+using System.Text.Json.Serialization;
+using ConcreteEngine.Core.Assets.Data;
+
+namespace ConcreteEngine.Core.Assets.Descriptors;
 
 public interface IAssetDescriptor
 {
@@ -8,5 +11,9 @@ public interface IAssetDescriptor
 
 public interface IAssetCatalog
 {
+    [JsonIgnore]
     int Count { get; }
+    
+    [JsonIgnore]
+    IReadOnlyList<IAssetDescriptor> Records { get; }
 }

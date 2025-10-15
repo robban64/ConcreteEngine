@@ -2,6 +2,7 @@
 
 using System.Numerics;
 using ConcreteEngine.Core.Assets.Data;
+using ConcreteEngine.Core.Assets.Descriptors;
 using ConcreteEngine.Core.Assets.IO;
 using ConcreteEngine.Graphics.Gfx.Contracts;
 using ConcreteEngine.Graphics.Gfx.Definitions;

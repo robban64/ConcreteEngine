@@ -2,6 +2,7 @@
 
 using System.Diagnostics;
 using ConcreteEngine.Core.Assets.Data;
+using ConcreteEngine.Core.Assets.Descriptors;
 using ConcreteEngine.Core.Assets.Internal;
 using ConcreteEngine.Core.Assets.Shaders;
 using ConcreteEngine.Core.Assets.Textures;

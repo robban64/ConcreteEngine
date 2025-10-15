@@ -1,6 +1,8 @@
 #region
 
 using ConcreteEngine.Core.Assets.Data;
+using ConcreteEngine.Core.Assets.Descriptors;
+using ConcreteEngine.Core.Assets.Internal;
 using ConcreteEngine.Core.Assets.Materials;
 using ConcreteEngine.Core.Assets.Meshes;
 using ConcreteEngine.Core.Assets.Shaders;

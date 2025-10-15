@@ -1,9 +1,9 @@
 #region
 
+using System.Diagnostics.CodeAnalysis;
 using ConcreteEngine.Common;
-using ConcreteEngine.Core.Assets.Data;
+using ConcreteEngine.Core.Assets.Descriptors;
 using ConcreteEngine.Core.Assets.Materials;
-using ConcreteEngine.Core.Assets.Textures;
 
 #endregion
 
@@ -34,7 +34,10 @@ internal sealed class AssetStartupWorker
     private int _idx = 0;
 
     private AssetResourceLayout Layout => _manifest.ResourceLayout;
-    private Func<IAssetCatalog> _onStartStep = null!;
+    private Action<ShaderDescriptor> _loadShaderFunc = null!;
+    private Action<TextureDescriptor> _loadTextureFunc = null!;
+    private Action<CubeMapDescriptor> _loadCubeMapFunc = null!;
+    private Action<MeshDescriptor> _loadMeshFunc = null!;
 
     public AssetStartupWorker(AssetLoader loader, AssetConfigLoader configLoader, AssetManifest manifest)
     {
@@ -47,11 +50,17 @@ internal sealed class AssetStartupWorker
         _manifest = manifest;
     }
 
+    [SuppressMessage("ReSharper", "HeapView.DelegateAllocation")]
     internal void Start(AssetStore store, AssetGfxUploader uploader)
     {
         InvalidOpThrower.ThrowIf(_processOrder != ProcessStepOrder.NotStarted);
         _processOrder = (ProcessStepOrder)1;
-        _onStartStep = NextStep;
+
+        _loadShaderFunc = (desc) => _loader.LoadShader(desc);
+        _loadTextureFunc = (desc) => _loader.LoadTexture2D(desc);
+        _loadCubeMapFunc = (desc) => _loader.LoadCubeMap(desc);
+        _loadMeshFunc = (desc) => _loader.LoadMesh(desc);
+
         _loader.ActivateLoader(store, uploader);
     }
 
@@ -59,7 +68,10 @@ internal sealed class AssetStartupWorker
     {
         _loader.DeactivateLoader();
         _currentManifest = null;
-        _onStartStep = null!;
+        _loadShaderFunc = null!;
+        _loadTextureFunc = null!;
+        _loadCubeMapFunc = null!;
+        _loadMeshFunc = null!;
     }
 
     public MaterialStore ProcessMaterials()
@@ -76,20 +88,16 @@ internal sealed class AssetStartupWorker
             case ProcessStepOrder.NotStarted:
                 throw new InvalidOperationException("Asset loader has not started.");
             case ProcessStepOrder.Shaders:
-                ProcessGfxStep(_onStartStep);
-                _loader.LoadShader(CurrentManifest<ShaderManifest>().Records[_idx]);
+                ProcessManifestStep<ShaderManifest, ShaderDescriptor>(_loadShaderFunc);
                 break;
             case ProcessStepOrder.Textures:
-                ProcessGfxStep(_onStartStep);
-                _loader.LoadTexture2D(CurrentManifest<TextureManifest>().Records[_idx]);
+                ProcessManifestStep<TextureManifest, TextureDescriptor>(_loadTextureFunc);
                 break;
             case ProcessStepOrder.CubeMaps:
-                ProcessGfxStep(_onStartStep);
-                _loader.LoadCubeMap(CurrentManifest<CubeMapManifest>().Records[_idx]);
+                ProcessManifestStep<CubeMapManifest, CubeMapDescriptor>(_loadCubeMapFunc);
                 break;
             case ProcessStepOrder.Meshes:
-                ProcessGfxStep(_onStartStep);
-                _loader.LoadMesh(CurrentManifest<MeshManifest>().Records[_idx]);
+                ProcessManifestStep<MeshManifest, MeshDescriptor>(_loadMeshFunc);
                 break;
             case ProcessStepOrder.Finished:
                 return true;
@@ -116,10 +124,16 @@ internal sealed class AssetStartupWorker
     private T CurrentManifest<T>() where T : class, IAssetCatalog
         => _currentManifest as T ?? throw new InvalidOperationException();
 
+    private IReadOnlyList<TDesc> CurrentRecords<TCatalog, TDesc>()
+        where TCatalog : class, IAssetCatalog where TDesc : class, IAssetDescriptor
+        => CurrentManifest<TCatalog>().Records as IReadOnlyList<TDesc> ?? throw new InvalidOperationException();
 
-    private bool ProcessGfxStep(Func<IAssetCatalog> onStartStep)
+
+    private bool ProcessManifestStep<TCatalog, TDesc>(Action<TDesc> onStartStep)
+        where TCatalog : class, IAssetCatalog where TDesc : class, IAssetDescriptor
     {
-        if (_idx++ == 0) _currentManifest = onStartStep.Invoke();
+        if (_idx == 0) _currentManifest = NextStep();
+        onStartStep(CurrentRecords<TCatalog, TDesc>()[_idx++]);
 
         if (_idx < _currentManifest!.Count) return false;
 

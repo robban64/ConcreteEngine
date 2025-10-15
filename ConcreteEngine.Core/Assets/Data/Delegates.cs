@@ -1,3 +1,5 @@
+using ConcreteEngine.Core.Assets.Descriptors;
+
 namespace ConcreteEngine.Core.Assets.Data;
 
 internal delegate TAsset AssetAssembleDel<out TAsset, in TDesc>(AssetId id, TDesc manifest, IAssetStore store)

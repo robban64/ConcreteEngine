@@ -2,11 +2,12 @@
 
 using System.Numerics;
 using System.Text.Json.Serialization;
+using ConcreteEngine.Core.Assets.Data;
 using ConcreteEngine.Graphics.Gfx.Definitions;
 
 #endregion
 
-namespace ConcreteEngine.Core.Assets.Data;
+namespace ConcreteEngine.Core.Assets.Descriptors;
 
 public sealed record AssetManifest(
     AssetResourceLayout ResourceLayout,
@@ -24,6 +25,8 @@ public sealed class ShaderManifest : IAssetCatalog
 {
     public required ShaderDescriptor[] Records { get; init; }
     public int Count => Records.Length;
+    
+    IReadOnlyList<IAssetDescriptor> IAssetCatalog.Records => Records;
 }
 
 public sealed record ShaderDescriptor(
@@ -39,6 +42,8 @@ public sealed class TextureManifest : IAssetCatalog
 {
     public required TextureDescriptor[] Records { get; init; }
     public int Count => Records.Length;
+    
+    IReadOnlyList<IAssetDescriptor> IAssetCatalog.Records => Records;
 }
 
 public sealed record TextureDescriptor(
@@ -58,6 +63,8 @@ public sealed class CubeMapManifest : IAssetCatalog
 {
     public required CubeMapDescriptor[] Records { get; init; }
     public int Count => Records.Length;
+    IReadOnlyList<IAssetDescriptor> IAssetCatalog.Records => Records;
+
 }
 
 public sealed record CubeMapDescriptor(
@@ -76,6 +83,8 @@ public sealed class MeshManifest : IAssetCatalog
 {
     public required MeshDescriptor[] Records { get; init; }
     public int Count => Records.Length;
+    IReadOnlyList<IAssetDescriptor> IAssetCatalog.Records => Records;
+
 }
 
 public sealed record MeshDescriptor(
@@ -90,6 +99,8 @@ public sealed class MaterialManifest : IAssetCatalog
 {
     public required MaterialDescriptor[] Records { get; init; }
     public int Count => Records.Length;
+    IReadOnlyList<IAssetDescriptor> IAssetCatalog.Records => Records;
+
 }
 
 public sealed record MaterialDescriptor(

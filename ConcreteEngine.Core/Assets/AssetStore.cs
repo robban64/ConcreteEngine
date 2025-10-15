@@ -1,6 +1,7 @@
 #region
 
 using ConcreteEngine.Core.Assets.Data;
+using ConcreteEngine.Core.Assets.Descriptors;
 
 #endregion
 

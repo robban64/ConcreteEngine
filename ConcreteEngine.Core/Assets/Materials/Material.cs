@@ -7,7 +7,7 @@ using ConcreteEngine.Graphics.Gfx.Resources;
 #endregion
 
 namespace ConcreteEngine.Core.Assets.Materials;
-
+/*
 public sealed class Material
 {
     private readonly TextureId[] _samplerSlots;
@@ -33,3 +33,4 @@ public sealed class Material
         _samplerSlots = template.SamplerSlots.ToArray();
     }
 }
+*/

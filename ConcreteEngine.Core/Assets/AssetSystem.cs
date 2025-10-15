@@ -19,52 +19,55 @@ public interface IAssetSystem : IGameEngineSystem
 
 public sealed class AssetSystem : IAssetSystem
 {
-    public static bool Initialized { get; private set; } = false;
-    public static bool IsLoading { get; private set; } = false;
-
-    private readonly AssetStore _assetStore = new();
-
+    public enum Status
+    {
+        None = 0,
+        ManifestLoaded = 1,
+        Booting = 2,
+        Ready = 3,  
+        Loading = 4, 
+        Unloaded = 5
+    }
+    
     private AssetConfigLoader? _configLoader;
     private AssetStartupWorker? _processor;
     private AssetGfxUploader? _uploader;
     private AssetLoader? _loader;
-
+    
     private AssetManifest _manifest = null!;
-    private MaterialStore _materialStore = null!;
 
-    internal AssetStore AssetStore => _assetStore;
+    private readonly AssetStore _assetStore = new();
 
-    public IAssetStore Store => _assetStore;
-
-    public MaterialStore MaterialStore => _materialStore;
-
+    public Status CurrentStatus { get; private set; } = Status.None;
 
     internal AssetSystem()
     {
     }
+    
+    internal AssetStore AssetStore => _assetStore;
+    public IAssetStore Store => _assetStore;
+
 
     internal void Initialize()
     {
-        if (Initialized)
+        if (CurrentStatus != Status.None)
             throw new InvalidOperationException("AssetSystem already initialized");
 
         _configLoader = new AssetConfigLoader();
         _manifest = _configLoader.LoadAssetManifest();
 
-        Initialized = true;
+        CurrentStatus = Status.ManifestLoaded;
     }
 
 
     internal void StartLoader(GfxContext gfx)
     {
-        InvalidOpThrower.ThrowIfNot(Initialized, nameof(Initialized));
+        InvalidOpThrower.ThrowIfNot(CurrentStatus == Status.ManifestLoaded, nameof(CurrentStatus));
         ArgumentNullException.ThrowIfNull(gfx, nameof(gfx));
         ArgumentNullException.ThrowIfNull(_configLoader, nameof(_configLoader));
 
-        InvalidOpThrower.ThrowIf(IsLoading, nameof(IsLoading));
-
-        IsLoading = true;
-
+        CurrentStatus = Status.Booting;
+        
         _uploader = new AssetGfxUploader(gfx);
         _loader = new AssetLoader();
         _processor = new AssetStartupWorker(_loader, _configLoader, _manifest);
@@ -73,33 +76,28 @@ public sealed class AssetSystem : IAssetSystem
 
     internal bool ProcessLoader(int n)
     {
-        if (_loader == null)
-            throw new InvalidOperationException("Asset loader is not initialized");
+        if (_loader is null || _processor is null)
+            throw new InvalidOperationException("Asset loaders are not fully initialized");
 
-        for (var i = 0; i < n; i++)
-        {
-            if (_processor!.ProcessGfxAssets()) return true;
-        }
-
-        return false;
+        return _processor.ProcessAssets(n);
     }
 
-    internal MaterialStore FinishLoading()
+    internal void FinishLoading()
     {
-        _materialStore = _processor!.ProcessMaterials();
-        _processor.Finish();
+        _processor?.Finish();
         _processor = null;
+
+        _loader?.DeactivateLoader();
+        _loader = null;
         
-        IsLoading = false;
-        return _materialStore;
+        _uploader = null;
+        _configLoader = null;
+
+        CurrentStatus = Status.Ready;
     }
 
     public void Shutdown()
     {
-        /*
-        foreach (var asset in _store.Values)
-            if (asset is IDisposable disposable)
-                disposable.Dispose();
-                */
+        CurrentStatus = Status.Unloaded;
     }
 }

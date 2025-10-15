@@ -84,8 +84,9 @@ public sealed class GameEngine : IDisposable
 
     private void InitializeSystems()
     {
-        var materialStore = _assets.FinishLoading();
-        _renderer.Initialize(materialStore, _assets);
+        _assets.FinishLoading();
+        _assets.AssetStore.ExtractSpan();
+        _renderer.Initialize(_assets);
         _coreSystems.Initialize();
     }
 

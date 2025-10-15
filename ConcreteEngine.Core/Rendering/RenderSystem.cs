@@ -4,6 +4,7 @@ using System.Diagnostics;
 using ConcreteEngine.Common;
 using ConcreteEngine.Common.Numerics;
 using ConcreteEngine.Core.Assets;
+using ConcreteEngine.Core.Assets.Data;
 using ConcreteEngine.Core.Assets.Materials;
 using ConcreteEngine.Core.Assets.Shaders;
 using ConcreteEngine.Core.Engine;
@@ -21,6 +22,7 @@ using ConcreteEngine.Graphics;
 using ConcreteEngine.Graphics.Gfx;
 using ConcreteEngine.Graphics.Gfx.Contracts;
 using ConcreteEngine.Graphics.Gfx.Resources;
+using MaterialStore = ConcreteEngine.Core.Assets.Materials.MaterialStore;
 using RenderFrameInfo = ConcreteEngine.Core.Rendering.State.RenderFrameInfo;
 
 #endregion
@@ -35,10 +37,9 @@ public enum RenderType
 
 public interface IRenderSystem : IGameEngineSystem
 {
-    TSink GetSink<TSink>() where TSink : IDrawSink;
-    Material CreateMaterial(string templateName);
-
     RenderSceneProps RenderProps { get; }
+    TSink GetSink<TSink>() where TSink : IDrawSink;
+    RenderMaterial CreateMaterial(ShaderId shader, ReadOnlySpan<TextureId> slots, in MaterialParams param);
 }
 
 public sealed class RenderSystem : IRenderSystem
@@ -91,7 +92,7 @@ public sealed class RenderSystem : IRenderSystem
         _renderRegistry.FinishRegistration();
     }
 
-    internal void Initialize(MaterialStore materialStore, AssetSystem assets)
+    internal void Initialize(AssetSystem assets)
     {
         var depthShader = assets.Store.GetByName<Shader>("Depth").ResourceId;
         var depthKey = TagRegistry.FboKey<ShadowPassTag>(FboVariant.Default);
@@ -99,8 +100,6 @@ public sealed class RenderSystem : IRenderSystem
 
         InvalidOpThrower.ThrowIfNull(shadowFbo, nameof(shadowFbo));
         InvalidOpThrower.ThrowIfNot(shadowFbo.Attachments.DepthTextureId.IsValid());
-
-        _materialStore = materialStore;
 
         var drawCtx = new DrawStateContext(depthShader, shadowFbo!.Attachments.DepthTextureId);
         var drawCtxPayload = new DrawStateContextPayload
@@ -241,8 +240,10 @@ public sealed class RenderSystem : IRenderSystem
     }
 
     public TSink GetSink<TSink>() where TSink : IDrawSink => _drawPipeline.GetSink<TSink>();
-
-    public Material CreateMaterial(string templateName) => _materialStore.CreateMaterialFromTemplate(templateName);
+    public void CreateMaterial(ShaderId shader, ReadOnlySpan<TextureId> slots, in MaterialParams param)
+    {
+        throw new NotImplementedException();
+    }
 
     internal void BeginTick(in UpdateTickInfo tick) => _drawPipeline.BeginTick(tick);
     internal void EndTick() => _drawPipeline.EndTick();

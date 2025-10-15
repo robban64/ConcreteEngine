@@ -10,6 +10,7 @@ using ConcreteEngine.Core.Rendering.Registry;
 using ConcreteEngine.Core.Rendering.State;
 using ConcreteEngine.Graphics.Gfx;
 using ConcreteEngine.Graphics.Gfx.Resources;
+using MaterialStore = ConcreteEngine.Core.Assets.Materials.MaterialStore;
 
 #endregion
 

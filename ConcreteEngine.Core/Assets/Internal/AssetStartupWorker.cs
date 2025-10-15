@@ -18,26 +18,24 @@ internal sealed class AssetStartupWorker
         Textures,
         CubeMaps,
         Meshes,
+        Materials,
         Finished
     }
 
-    private const int ProcessOrderCount = 6;
-
-    private ProcessStepOrder _processOrder = ProcessStepOrder.NotStarted;
+    private Action<ShaderDescriptor> _loadShaderFunc = null!;
+    private Action<TextureDescriptor> _loadTextureFunc = null!;
+    private Action<CubeMapDescriptor> _loadCubeMapFunc = null!;
+    private Action<MeshDescriptor> _loadMeshFunc = null!;
+    private Action<MaterialManifest> _loadMaterialFunc = null!;
 
     private readonly AssetLoader _loader;
     private readonly AssetConfigLoader _configLoader;
     private readonly AssetManifest _manifest;
 
-    private IAssetCatalog? _currentManifest;
-
     private int _idx = 0;
+    private IAssetCatalog? _currentManifest;
+    private ProcessStepOrder _processOrder = ProcessStepOrder.NotStarted;
 
-    private AssetResourceLayout Layout => _manifest.ResourceLayout;
-    private Action<ShaderDescriptor> _loadShaderFunc = null!;
-    private Action<TextureDescriptor> _loadTextureFunc = null!;
-    private Action<CubeMapDescriptor> _loadCubeMapFunc = null!;
-    private Action<MeshDescriptor> _loadMeshFunc = null!;
 
     public AssetStartupWorker(AssetLoader loader, AssetConfigLoader configLoader, AssetManifest manifest)
     {
@@ -50,6 +48,9 @@ internal sealed class AssetStartupWorker
         _manifest = manifest;
     }
 
+    private AssetResourceLayout Layout => _manifest.ResourceLayout;
+
+
     [SuppressMessage("ReSharper", "HeapView.DelegateAllocation")]
     internal void Start(AssetStore store, AssetGfxUploader uploader)
     {
@@ -60,33 +61,46 @@ internal sealed class AssetStartupWorker
         _loadTextureFunc = (desc) => _loader.LoadTexture2D(desc);
         _loadCubeMapFunc = (desc) => _loader.LoadCubeMap(desc);
         _loadMeshFunc = (desc) => _loader.LoadMesh(desc);
+        _loadMaterialFunc = (desc) => _loader.LoadAllMaterials(desc);
 
         _loader.ActivateLoader(store, uploader);
     }
 
     internal void Finish()
     {
-        _loader.DeactivateLoader();
         _currentManifest = null;
         _loadShaderFunc = null!;
         _loadTextureFunc = null!;
         _loadCubeMapFunc = null!;
         _loadMeshFunc = null!;
+        _loadMaterialFunc = null!;
     }
 
-    public MaterialStore ProcessMaterials()
+    public bool ProcessAssets(int n)
     {
-        var materialManifest = _configLoader.LoadAssetCatalog<MaterialManifest>(Layout.Material);
-        var materials = _loader.LoadAllMaterials(materialManifest);
-        return new MaterialStore(materials!);
+        if (_processOrder != ProcessStepOrder.NotStarted)
+            throw new InvalidOperationException("Asset loader has not started.");
+
+        var order = (int)_processOrder;
+
+        var processSingle = _processOrder is
+            ProcessStepOrder.Shaders or
+            ProcessStepOrder.Textures or
+            ProcessStepOrder.CubeMaps or
+            ProcessStepOrder.Meshes;
+
+
+        var length = processSingle ? n : 1;
+        for (var i = 0; i < length; i++) Execute();
+
+        return _processOrder == ProcessStepOrder.Finished;
     }
 
-    public bool ProcessGfxAssets()
+    public bool Execute()
     {
         switch (_processOrder)
         {
             case ProcessStepOrder.NotStarted:
-                throw new InvalidOperationException("Asset loader has not started.");
             case ProcessStepOrder.Shaders:
                 ProcessManifestStep<ShaderManifest, ShaderDescriptor>(_loadShaderFunc);
                 break;
@@ -99,6 +113,9 @@ internal sealed class AssetStartupWorker
             case ProcessStepOrder.Meshes:
                 ProcessManifestStep<MeshManifest, MeshDescriptor>(_loadMeshFunc);
                 break;
+            case ProcessStepOrder.Materials:
+                ProcessEntireManifest(_loadMaterialFunc);
+                break;
             case ProcessStepOrder.Finished:
                 return true;
             default:
@@ -108,7 +125,33 @@ internal sealed class AssetStartupWorker
         return false;
     }
 
-    private IAssetCatalog NextStep()
+
+    private T CurrentManifest<T>() where T : class, IAssetCatalog
+        => _currentManifest as T ?? throw new InvalidOperationException();
+
+    private IReadOnlyList<TDesc> CurrentRecords<TCatalog, TDesc>()
+        where TCatalog : class, IAssetCatalog where TDesc : class, IAssetDescriptor
+        => CurrentManifest<TCatalog>().Records as IReadOnlyList<TDesc> ?? throw new InvalidOperationException();
+
+
+    private void ProcessManifestStep<TCatalog, TDesc>(Action<TDesc> onStartStep)
+        where TCatalog : class, IAssetCatalog where TDesc : class, IAssetDescriptor
+    {
+        if (_idx == 0) _currentManifest = NextManifest();
+        onStartStep(CurrentRecords<TCatalog, TDesc>()[_idx++]);
+
+        if (_idx < _currentManifest!.Count) return;
+        NextStepOrder();
+    }
+
+    private void ProcessEntireManifest<TCatalog>(Action<TCatalog> onStart) where TCatalog : class, IAssetCatalog
+    {
+        _currentManifest = NextManifest();
+        onStart(CurrentManifest<TCatalog>());
+        NextStepOrder();
+    }
+
+    private IAssetCatalog NextManifest()
     {
         return _processOrder switch
         {
@@ -121,32 +164,10 @@ internal sealed class AssetStartupWorker
         };
     }
 
-    private T CurrentManifest<T>() where T : class, IAssetCatalog
-        => _currentManifest as T ?? throw new InvalidOperationException();
-
-    private IReadOnlyList<TDesc> CurrentRecords<TCatalog, TDesc>()
-        where TCatalog : class, IAssetCatalog where TDesc : class, IAssetDescriptor
-        => CurrentManifest<TCatalog>().Records as IReadOnlyList<TDesc> ?? throw new InvalidOperationException();
-
-
-    private bool ProcessManifestStep<TCatalog, TDesc>(Action<TDesc> onStartStep)
-        where TCatalog : class, IAssetCatalog where TDesc : class, IAssetDescriptor
+    private void NextStepOrder()
     {
-        if (_idx == 0) _currentManifest = NextStep();
-        onStartStep(CurrentRecords<TCatalog, TDesc>()[_idx++]);
-
-        if (_idx < _currentManifest!.Count) return false;
-
         _idx = 0;
-
         var order = (int)_processOrder + 1;
-        if (order >= ProcessOrderCount)
-        {
-            _processOrder = ProcessStepOrder.Finished;
-            return false;
-        }
-
-        _processOrder = (ProcessStepOrder)order;
-        return false;
+        _processOrder = order >= (int)ProcessStepOrder.Finished ? ProcessStepOrder.Finished : (ProcessStepOrder)order;
     }
 }

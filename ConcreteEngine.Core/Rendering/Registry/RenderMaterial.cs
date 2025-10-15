@@ -12,27 +12,25 @@ namespace ConcreteEngine.Core.Rendering.Registry;
 
 //internal delegate void MaterialApplyDel(in MaterialParams param);
 
-
-// wip
 public sealed class RenderMaterial
 {
     public MaterialId Id { get; }
-    public ShaderId ShaderId { get; set; }
+    public ShaderId ShaderId { get; private set; }
 
     private readonly TextureId[] _samplerSlots;
 
-    private MaterialParams _materialParams;
-    
-    internal RenderMaterial(MaterialId id, ShaderId shaderId, int samplerSlots)
+    private MaterialParams _matParams;
+
+    internal RenderMaterial(MaterialId id, ShaderId shader, ReadOnlySpan<TextureId> slots, in MaterialParams param)
     {
         Id = id;
-        ShaderId = shaderId;
-        _samplerSlots = new TextureId[samplerSlots];
+        ShaderId = shader;
+        _samplerSlots = slots.ToArray();
+        _matParams = param;
     }
 
-    public ReadOnlySpan<TextureId>  SamplerSlots => _samplerSlots;
-    public ref readonly  MaterialParams MaterialParams => ref _materialParams;
+    public ReadOnlySpan<TextureId> SamplerSlots => _samplerSlots;
+    public ref readonly MaterialParams MaterialParams => ref _matParams;
 
-    public void SetMaterialParams(in MaterialParams param) => _materialParams = param;
-
+    public void SetMaterialParams(in MaterialParams param) => _matParams = param;
 }

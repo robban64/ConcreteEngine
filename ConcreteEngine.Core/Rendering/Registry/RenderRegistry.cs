@@ -18,12 +18,14 @@ internal sealed class RenderRegistry
 
     private RegistrationData _registrationData;
 
+    public RenderMaterialStore MaterialStore { get; }
 
     public RenderShaderRegistry ShaderRegistry { get; }
 
     public RenderUboRegistry UboRegistry { get; }
 
     public RenderFboRegistry FboRegistry { get; }
+    
 
 
     public RenderRegistry(GfxContext gfx)

@@ -66,14 +66,14 @@ public sealed class DrawCommandBuffer
         _submitIdx++;
     }
 
-    public void SubmitDrawBatch(in DrawCommandData data)
+    public void SubmitDrawBatch(in DrawCommandPackage package)
     {
-        Debug.Assert(data.Draw.Length == data.Meta.Length);
-        Debug.Assert(data.Draw.Length == data.Transform.Length);
+        Debug.Assert(package.Draw.Length == package.Meta.Length);
+        Debug.Assert(package.Draw.Length == package.Transform.Length);
 
-        var drawCommands = data.Draw;
-        var drawTransforms = data.Transform;
-        var drawMeta = data.Meta;
+        var drawCommands = package.Draw;
+        var drawTransforms = package.Transform;
+        var drawMeta = package.Meta;
 
         var count = drawCommands.Length;
         if (count == 0) return;

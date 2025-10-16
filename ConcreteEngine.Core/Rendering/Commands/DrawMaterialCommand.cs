@@ -8,8 +8,9 @@ using ConcreteEngine.Graphics.Gfx.Resources;
 
 namespace ConcreteEngine.Core.Rendering.Commands;
 
+
 [StructLayout(LayoutKind.Sequential)]
-public readonly struct DrawMaterialCommand(MaterialId materialId, ShaderId shaderId)
+internal readonly struct DrawMaterialCommand(MaterialId materialId, ShaderId shaderId)
 {
     public readonly MaterialId MaterialId = materialId;
     public readonly ShaderId ShaderId = shaderId;
@@ -18,7 +19,7 @@ public readonly struct DrawMaterialCommand(MaterialId materialId, ShaderId shade
 }
 
 [StructLayout(LayoutKind.Sequential)]
-public readonly struct DrawMaterialCommandRef : IComparable<DrawMaterialCommandRef>
+internal readonly struct DrawMaterialCommandRef : IComparable<DrawMaterialCommandRef>
 {
     public readonly int SubmitIdx;
     public readonly MaterialId MaterialId;

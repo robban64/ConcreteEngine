@@ -20,7 +20,7 @@ public sealed class MaterialTemplate : AssetObject
     
     public required AssetRef<Shader> ShaderRef { get; init; } 
 
-    public required MaterialTemplateParams Params { get; init; }
+    public required MaterialState Params { get; init; }
 
     public MaterialTextureSlots TextureSlots { get; }
     

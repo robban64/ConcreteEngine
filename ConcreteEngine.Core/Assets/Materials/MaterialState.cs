@@ -4,16 +4,16 @@ using ConcreteEngine.Core.Rendering.Data;
 
 namespace ConcreteEngine.Core.Assets.Materials;
 
-public sealed class MaterialTemplateParams
+public sealed class MaterialState
 {
     public Color4 Color { get; set; } = Color4.White;
     public float Shininess { get; set; } = 24f;
     public float Specular { get; set; } = 0.25f;
     public float UvRepeat { get; set; } = 1;
 
-    internal MaterialTemplateParams(MaterialTemplateParams param) => Set(param.GetDataParams());
+    internal MaterialState(MaterialState param) => Set(param.Snapshot());
 
-    internal MaterialTemplateParams(MaterialDescriptor.MaterialParamsDesc desc)
+    internal MaterialState(MaterialDescriptor.MaterialParamsDesc desc)
     {
         Color = desc.Color ?? Color;
         Shininess = desc.Shininess ?? Shininess;
@@ -29,7 +29,7 @@ public sealed class MaterialTemplateParams
         UvRepeat = param.UvRepeat;
     }
 
-    public MaterialParams GetDataParams() => new(
+    public MaterialParams Snapshot() => new(
         Color: Color,
         Specular: Specular,
         Shininess: Shininess,

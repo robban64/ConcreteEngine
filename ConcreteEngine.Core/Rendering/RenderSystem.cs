@@ -39,7 +39,6 @@ public interface IRenderSystem : IGameEngineSystem
 {
     RenderSceneProps RenderProps { get; }
     TSink GetSink<TSink>() where TSink : IDrawSink;
-    MaterialId CreateMaterial(ShaderId shader, in MaterialParams param, ReadOnlySpan<TextureSlotInfo> slots);
 }
 
 public sealed class RenderSystem : IRenderSystem
@@ -108,7 +107,7 @@ public sealed class RenderSystem : IRenderSystem
         };
 
         _drawUniforms = new DrawUniforms(_gfx.Buffers, _renderRegistry, _snapshot);
-        _drawProcessor = new DrawProcessor(drawCtx, drawCtxPayload, _renderRegistry.MaterialRegistry);
+        _drawProcessor = new DrawProcessor(drawCtx, drawCtxPayload, assets.Materials);
         _drawStateOps = new DrawStateOps(drawCtx, drawCtxPayload, _drawUniforms);
 
         _batches.Register(new TerrainBatcher(_gfx));
@@ -117,7 +116,7 @@ public sealed class RenderSystem : IRenderSystem
 
 
         _drawPipeline = new DrawCommandPipeline();
-        _drawPipeline.Initialize(_gfx, _batches, _drawProcessor, _renderRegistry.MaterialRegistry);
+        _drawPipeline.Initialize(_gfx, _batches, _drawProcessor);
 
         _drawProcessor.Initialize();
 
@@ -137,39 +136,12 @@ public sealed class RenderSystem : IRenderSystem
         TempPassSetup.RegisterPassPipeline(_passPipeline, compositeShader, presentShader, colorFilterShader);
     }
 
-
-    internal void RegisterScene(RenderType renderType, RenderTargetDescriptor desc)
-    {
-        if (!_initialized)
-            throw new InvalidOperationException("Renderer is not initialized");
-
-        RenderProps.Commit();
-    }
-
     public TSink GetSink<TSink>() where TSink : IDrawSink => _drawPipeline.GetSink<TSink>();
-
-    public MaterialId CreateMaterial(ShaderId shader, in MaterialParams param, ReadOnlySpan<TextureSlotInfo> slots)
-        => _renderRegistry.MaterialRegistry.Register(shader, param, slots);
 
     internal void BeginTick(in UpdateTickInfo tick) => _drawPipeline.BeginTick(tick);
     internal void EndTick() => _drawPipeline.EndTick();
 
-    private void RecreateFbo(Size2D outputSize)
-    {
-        ArgumentOutOfRangeException.ThrowIfLessThan(outputSize.Width, 1, nameof(outputSize));
-        ArgumentOutOfRangeException.ThrowIfLessThan(outputSize.Height, 1, nameof(outputSize));
 
-        var fbos = RenderRegistry.FboRegistry.FrameBuffers;
-        Span<(FrameBufferId, Size2D)> newSizes = stackalloc (FrameBufferId, Size2D)[fbos.Length];
-        var idx = 0;
-        foreach (var fbo in fbos)
-        {
-            if (fbo.IsFixedSize) continue;
-            newSizes[idx++] = (fbo.FboId, fbo.CalculateNewSize(outputSize));
-        }
-
-        _graphics.RecreateFbo(newSizes.Slice(0, idx));
-    }
 
     //
     internal void RenderEmptyFrame(in RenderFrameInfo frameInfo)
@@ -189,7 +161,7 @@ public sealed class RenderSystem : IRenderSystem
 
         if (status == BeginFrameStatus.Resize)
         {
-            RecreateFbo(frameInfo.OutputSize);
+            _renderRegistry.FboRegistry.RecreateSizedFrameBuffer(frameInfo.OutputSize);
         }
 
         _graphics.BeginFrame(frameInfo.ToGfxFrameInfo());
@@ -205,12 +177,12 @@ public sealed class RenderSystem : IRenderSystem
         _graphics.EndFrame(out frameResult);
     }
 
-    internal void Render(in RenderFrameInfo frameInfo)
+    internal void Render(in RenderFrameInfo frameInfo, MaterialStore materialStore)
     {
         Debug.Assert(_initialized);
 
         _passPipeline.Prepare(frameInfo.OutputSize);
-        var (drawCapacity, matCapacity) = _drawPipeline.Prepare(frameInfo.Alpha, _snapshot);
+        var (drawCapacity, matCapacity) = _drawPipeline.Prepare(frameInfo.Alpha, _snapshot, materialStore);
         _drawProcessor.PrepareFrame(drawCapacity, matCapacity);
 
         _drawPipeline.ExecuteMaterials();

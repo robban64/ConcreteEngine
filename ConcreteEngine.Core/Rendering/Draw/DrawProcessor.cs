@@ -22,25 +22,25 @@ internal sealed class DrawProcessor
     private readonly GfxBuffers _gfxBuffers;
     private readonly RenderRegistry _registry;
 
-    private readonly RenderMaterialRegistry _materialRegistry;
+    private readonly MaterialStore _materialStore;
 
     private readonly DrawStateContext _ctx;
-
-    private MaterialId _previousMaterialId = new (-1);
-
+    
     private RenderUbo _drawUbo = null!;
     private RenderUbo _materialUbo = null!;
 
+    private MaterialId _prevMaterialId = new (-1);
+    
     internal DrawProcessor(
         DrawStateContext ctx,
         DrawStateContextPayload ctxPayload,
-        RenderMaterialRegistry materialRegistry)
+        MaterialStore materialStore)
     {
         _ctx = ctx;
         _gfxCmd = ctxPayload.Gfx.Commands;
         _gfxBuffers = ctxPayload.Gfx.Buffers;
         _registry = ctxPayload.Registry;
-        _materialRegistry = materialRegistry;
+        _materialStore = materialStore;
     }
 
 
@@ -52,7 +52,7 @@ internal sealed class DrawProcessor
 
     public void PrepareFrame(nint drawCapacity, nint materialCapacity)
     {
-        _previousMaterialId = default;
+        _prevMaterialId = default;
 
         _drawUbo.ResetCursor();
         _materialUbo.ResetCursor();
@@ -70,29 +70,30 @@ internal sealed class DrawProcessor
         }
     }
 
+    private void UseShader(ShaderId shaderId) => _gfxCmd.UseShader(shaderId);
+
     public void PrepareDrawPass()
     {
         _drawUbo.ResetCursor();
-        _previousMaterialId = default;
-        if (_ctx.OverrideDrawShader > 0)
-            UseShader(_ctx.OverrideDrawShader);
+        _prevMaterialId = default;
+        if (_ctx.IsDepth)
+            UseShader(_ctx.DepthShader);
     }
 
-    private void UseShader(ShaderId shaderId)
-    {
-        //var renderShader = _registry.GetRenderShader(shaderId);
-        _gfxCmd.UseShader(shaderId);
-    }
 
     private void BindDrawMaterial(MaterialId materialId)
     {
-        if (_previousMaterialId == materialId) return;
-        var material = _materialRegistry.GetMaterial(materialId);
-        UseShader(material.ShaderId);
+        if (_prevMaterialId == materialId) return;
+        var material = _materialStore.Get(materialId);
+        UseShader(_materialStore.ResolveShader(material));
 
-        for (var i = 0; i < material.SamplerSlots.Length; i++)
+        Span<TextureSlotInfo> slots = stackalloc TextureSlotInfo[RenderLimits.TextureSlots];
+        var matSlotLength = _materialStore.DrainMaterialTextureSlots(material, slots);
+
+        var slotSpan = slots.Slice(0, matSlotLength);
+        for (var i = 0; i < slotSpan.Length; i++)
         {
-            var value = material.SamplerSlots[i];
+            var value = slotSpan[i];
             
             if(value.SlotKind == TextureSlotKind.Shadowmap)
                 _gfxCmd.BindTexture(_ctx.DepthTexture, i);
@@ -103,7 +104,7 @@ internal sealed class DrawProcessor
 
         BindMaterialObject(materialId);
 
-        _previousMaterialId = materialId;
+        _prevMaterialId = materialId;
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
@@ -118,19 +119,6 @@ internal sealed class DrawProcessor
 
     public void UploadMaterial(ReadOnlySpan<DrawMaterialCommand> commands, ReadOnlySpan<MaterialUniformRecord> data)
         => _gfxBuffers.UploadUniformGpuSpan(_materialUbo.Id, data, _materialUbo.SetUploadCursor(0));
-/*
-    public void UploadMaterial(Material mat)
-    {
-        var data = new MaterialUniformRecord(
-            matColor: new Vector4(mat.Color.AsVec3(), 1),
-            matParams0: new Vector4(mat.SpecularStrength, mat.UvRepeat, 0.0f, 0.0f),
-            matParams1: new Vector4(mat.Shininess, mat.HasNormalMap ? 1.0f : 0.0f, 0.0f, 0.0f)
-        );
-
-        _gfxBuffers.UploadUniformGpuData(_materialUbo.Id, in data, 0);
-    }
-*/
-
 
     public void UploadDrawObjects(ReadOnlySpan<DrawObjectUniform> payload)
     {
@@ -147,9 +135,7 @@ internal sealed class DrawProcessor
 
     public void DrawMesh(DrawCommand cmd, int submitIndex)
     {
-        if (_ctx.OverrideDrawShader == default)
-            BindDrawMaterial(cmd.MaterialId);
-
+        BindDrawMaterial(cmd.MaterialId);
         BindDrawObject(submitIndex);
         _gfxCmd.BindMesh(cmd.MeshId);
         _gfxCmd.DrawBoundMesh(cmd.MeshId, cmd.DrawCount);

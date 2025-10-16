@@ -92,6 +92,14 @@ public sealed class GfxFrameBuffers
         return fboId;
     }
 
+    
+    public void RecreateSizedFrameBuffer(ReadOnlySpan<(FrameBufferId Id, Size2D Size)> newSizes)
+    {
+        Console.WriteLine($"Recreating {newSizes.Length} FBO");
+        foreach (var (fboId, size) in newSizes)
+            RecreateFrameBuffer(fboId, size);
+    }
+    
     internal void RecreateFrameBuffer(FrameBufferId fboId, Size2D newSize)
     {
         ArgumentOutOfRangeException.ThrowIfLessThanOrEqual(fboId.Value, 0, nameof(fboId));

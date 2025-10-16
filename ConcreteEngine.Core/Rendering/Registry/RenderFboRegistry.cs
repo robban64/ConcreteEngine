@@ -46,12 +46,10 @@ internal sealed class RenderFboRegistry
     {
         Register<ShadowPassTag>(FboVariant.Default,
             new RegisterFboEntry().AttachDepthTexture(GfxFboDepthTextureDesc.Default())
-                .UseFixedSize(new Size2D(2048, 2048))
-        );
+                .UseFixedSize(new Size2D(2048, 2048)));
         Register<ScenePassTag>(FboVariant.Default,
             new RegisterFboEntry().AttachColorTexture(GfxFboColorTextureDesc.Off(), RenderBufferMsaa.X4)
-                .AttachDepthStencilBuffer()
-        );
+                .AttachDepthStencilBuffer());
         Register<ScenePassTag>(FboVariant.Secondary,
             new RegisterFboEntry()
                 .AttachColorTexture(GfxFboColorTextureDesc.DefaultMip())
@@ -82,6 +80,23 @@ internal sealed class RenderFboRegistry
         renderFbo.UpdateFromMeta(in meta);
 
         _fboRegistry[_fboCount++] = renderFbo;
+    }
+    
+    internal void RecreateSizedFrameBuffer(Size2D outputSize)
+    {
+        ArgumentOutOfRangeException.ThrowIfLessThan(outputSize.Width, 1, nameof(outputSize));
+        ArgumentOutOfRangeException.ThrowIfLessThan(outputSize.Height, 1, nameof(outputSize));
+
+        var fbos = FrameBuffers;
+        Span<(FrameBufferId, Size2D)> newSizes = stackalloc (FrameBufferId, Size2D)[fbos.Length];
+        var idx = 0;
+        foreach (var fbo in fbos)
+        {
+            if (fbo.IsFixedSize) continue;
+            newSizes[idx++] = (fbo.FboId, fbo.CalculateNewSize(outputSize));
+        }
+
+        _gfxFbo.RecreateSizedFrameBuffer(newSizes.Slice(0, idx));
     }
 
 

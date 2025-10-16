@@ -10,7 +10,7 @@ using ConcreteEngine.Graphics.Gfx.Resources;
 #endregion
 
 namespace ConcreteEngine.Core.Rendering.Registry;
-
+/*
 internal sealed class RenderMaterialRegistry
 {
     private static int _idx = 0;
@@ -94,3 +94,4 @@ internal sealed class RenderMaterialRegistry
         return NextId();
     }
 }
+*/

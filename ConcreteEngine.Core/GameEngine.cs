@@ -85,10 +85,6 @@ public sealed class GameEngine : IDisposable
     private void InitializeSystems()
     {
         _assets.FinishLoading();
-        
-        _assets.Materials.MaterialUpdate = _renderer.RenderRegistry.MaterialRegistry.UpdateMaterial;
-        _assets.Materials.MaterialInvoke = _renderer.CreateMaterial;
-        _assets.Materials.ProcessStore();
 
         _renderer.Initialize(_assets);
         _coreSystems.Initialize();
@@ -121,13 +117,12 @@ public sealed class GameEngine : IDisposable
             beginStatus = BeginFrameStatus.Resize;
         }
 
-        _assets.Materials.InvokeUpdateRenderMaterials();
 
         scene.BeforeRender(out var viewInfo);
         _renderer.BeginRenderFrame(beginStatus, in tickInfo, in tickParams, in viewInfo);
 
         // _renderTime.TickOrRenderEffect();
-        _renderer.Render(in tickInfo);
+        _renderer.Render(in tickInfo, _assets.Materials);
 
         //_renderTime.TickOrGpuDispose();
         //_renderTime.TickOrGpuUpload();
@@ -231,7 +226,6 @@ public sealed class GameEngine : IDisposable
 
         void AfterBuild(SceneManager.SceneBuildResult result, RenderSystem renderer)
         {
-            renderer.RegisterScene(result.RenderType, result.RenderTargetsDesc);
             foreach (var module in result.Modules) result.Context.Modules.AddModule(module());
         }
     }

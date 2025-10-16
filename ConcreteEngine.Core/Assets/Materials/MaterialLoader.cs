@@ -67,7 +67,7 @@ internal sealed class MaterialLoader
 
         var shader = store.GetByName<Shader>(record.Shader).RefId;
 
-        var matParams = new MaterialTemplateParams(record.Parameters);
+        var matParams = new MaterialState(record.Parameters);
         return new MaterialTemplate(slotInfo)
         {
             RawId = assetId,

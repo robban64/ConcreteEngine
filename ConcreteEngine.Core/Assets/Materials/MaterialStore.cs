@@ -1,11 +1,14 @@
 #region
 
 using System.Runtime.CompilerServices;
+using ConcreteEngine.Common;
+using ConcreteEngine.Common.Collections;
 using ConcreteEngine.Core.Assets.Data;
 using ConcreteEngine.Core.Assets.Shaders;
 using ConcreteEngine.Core.Assets.Textures;
 using ConcreteEngine.Core.Rendering.Data;
 using ConcreteEngine.Core.Rendering.Definitions;
+using ConcreteEngine.Core.Rendering.Registry;
 using ConcreteEngine.Graphics.Gfx.Definitions;
 using ConcreteEngine.Graphics.Gfx.Resources;
 
@@ -13,112 +16,117 @@ using ConcreteEngine.Graphics.Gfx.Resources;
 
 namespace ConcreteEngine.Core.Assets.Materials;
 
-public delegate MaterialId MaterialProcessDel(
-    ShaderId shaderId,
-    in MaterialParams param,
-    ReadOnlySpan<TextureSlotInfo> slots);
-
-public delegate void MaterialUpdateDel(MaterialId materialId, in MaterialParams param);
-
 public interface IMaterialStore
 {
+    Material Get(MaterialId materialId);
+    Material Get(string name);
+
     Material CreateMaterial(string templateName, string name);
-    MaterialProcessDel MaterialInvoke { get; set; }
 }
 
 public sealed class MaterialStore : IMaterialStore
 {
-    private readonly Dictionary<string, Material> _materials = new(8);
+    private static int _idx = 0;
+    private static MaterialId NextId() => new(++_idx);
 
     private readonly AssetStore _assetStore;
-    public IReadOnlyDictionary<string, Material> Materials => _materials;
 
-    //TODO delete
-    public MaterialProcessDel MaterialInvoke { get; set; } = null!;
-    public MaterialUpdateDel MaterialUpdate { get; set; } = null!;
+    private Material?[] _materials = new Material[16];
+
+    private readonly Stack<MaterialId> _free = new();
+
+    private readonly Dictionary<string, MaterialId> _materialDict = new(8);
+
+    public int Count => _idx;
+    public int FreeSlots => _free.Count;
 
     internal MaterialStore(AssetStore assetStore)
     {
         _assetStore = assetStore;
     }
 
+    public ReadOnlySpan<Material?> MaterialSpan => _materials.AsSpan(0, _idx);
+
+    public Material Get(MaterialId materialId) => _materials[materialId - 1]!;
+    public Material Get(string name) => _materials[_materialDict[name] - 1]!;
+
 
     internal void InitializeStore()
     {
         _assetStore.Process<MaterialTemplate>(Action);
         return;
-        void Action(MaterialTemplate it) => CreateMaterialInternal(it, it.Name, false);
+        void Action(MaterialTemplate it) => RegisterMaterial(it, it.Name);
     }
 
-    private Shader ResolveShader(Material material) => _assetStore.GetByRef(material.ShaderRef);
 
     public Material CreateMaterial(string templateName, string name)
     {
+        ArgumentNullException.ThrowIfNull(templateName, nameof(templateName));
+
         var template = _assetStore.GetByName<MaterialTemplate>(templateName);
-        return CreateMaterialInternal(template, name, true);
+        return RegisterMaterial(template, name);
     }
 
-    private Material CreateMaterialInternal(MaterialTemplate template, string name, bool upload)
+    private Material RegisterMaterial(MaterialTemplate template, string name)
     {
-        var mat = new Material(template, name);
-        _materials.Add(name, mat);
-        if (upload) ProcessMaterial(mat);
-        return mat;
+        ArgumentNullException.ThrowIfNull(template, nameof(template));
+        ArgumentNullException.ThrowIfNull(name, nameof(name));
+
+        var id = _free.Count > 0 ? _free.Pop() : NextIdAndEnsureCapacity();
+        InvalidOpThrower.ThrowIf(id == default);
+
+        var material = new Material(id, template, name);
+        _materials[id - 1] = material;
+        _materialDict.Add(name, id);
+        return material;
     }
 
-
-    //public void RemoveMaterial(Material material) => _materials.Remove(material);
-
-    public Material Get(string name) => _materials[name];
-
-    private void ProcessMaterial(Material material)
+    public bool TryRemove(MaterialId materialId)
     {
-        Span<TextureSlotInfo> textureSlots = stackalloc TextureSlotInfo[RenderLimits.TextureSlots];
-        var count = CreateTextureSlotInfo(material, textureSlots);
-        var shaderId = ResolveShader(material).ResourceId;
-        var slots = textureSlots.Slice(0, count);
-        var materialId = MaterialInvoke(shaderId, material.Parameters.GetDataParams(), slots);
-        material.Attach(materialId);
+        ArgumentOutOfRangeException.ThrowIfLessThanOrEqual(materialId.Id, 0, nameof(materialId));
+        ArgumentOutOfRangeException.ThrowIfGreaterThanOrEqual(materialId.Id, _idx);
+
+        var idx = materialId - 1;
+        var material = _materials[idx];
+        if (material is null) return false;
+        _free.Push(materialId);
+        _materialDict.Remove(material.Name);
+        _materials[idx] = null;
+        return true;
     }
 
+    public void GetMaterialUploadData(Material material, out DrawMaterialPayload data)
+        => data = new DrawMaterialPayload(material.Id, ResolveShader(material), material.State.Snapshot());
 
-    public void ProcessStore()
-    {
-        Span<TextureSlotInfo> textureSlots = stackalloc TextureSlotInfo[RenderLimits.TextureSlots];
-        foreach (var material in _materials.Values)
-        {
-            var count = CreateTextureSlotInfo(material, textureSlots);
-            var shaderId = ResolveShader(material).ResourceId;
-            var slots = textureSlots.Slice(0, count);
-            var materialId = MaterialInvoke(shaderId, material.Parameters.GetDataParams(), slots);
-            material.Attach(materialId);
-        }
-    }
-
-    public void InvokeUpdateRenderMaterials()
-    {
-        foreach (var material in _materials.Values)
-        {
-            if (material.Id > 0) MaterialUpdate(material.Id, material.Parameters.GetDataParams());
-        }
-    }
-
-    private int CreateTextureSlotInfo(Material material, Span<TextureSlotInfo> span)
+    public int DrainMaterialTextureSlots(Material material, Span<TextureSlotInfo> span)
     {
         for (var i = 0; i < material.TextureSlots.Slots.Length; i++)
         {
             var slot = material.TextureSlots.Slots[i];
-            var textureId = GetTextureId(slot);
+            var textureId = ResolveTextureId(slot);
             span[i] = new TextureSlotInfo(textureId, slot.SlotKind, slot.TextureKind);
         }
 
         return material.TextureSlots.Slots.Length;
     }
 
-    private TextureId GetTextureId(AssetTextureSlot assetSlot)
+    public void DrainMaterialParams(Material material, Span<MaterialParams> span)
     {
+        for (var i = 0; i < material.TextureSlots.Slots.Length; i++)
+        {
+            var slot = material.TextureSlots.Slots[i];
+            var textureId = ResolveTextureId(slot);
+            span[i] = material.State.Snapshot();
+        }
+    }
+
+    public ShaderId ResolveShader(Material material) => _assetStore.GetByRef(material.ShaderRef).ResourceId;
+
+    private TextureId ResolveTextureId(AssetTextureSlot assetSlot)
+    {
+        //TODO use some better structure than hardcoded checks everywhere
         if (assetSlot.SlotKind == TextureSlotKind.Shadowmap) return default;
-        
+
         if (assetSlot.TextureKind == TextureKind.Texture2D)
             return _assetStore.GetByRef(new AssetRef<Texture2D>(assetSlot.Asset)).ResourceId;
 
@@ -127,4 +135,56 @@ public sealed class MaterialStore : IMaterialStore
 
         throw new InvalidOperationException(nameof(assetSlot));
     }
+
+    private MaterialId NextIdAndEnsureCapacity()
+    {
+        var len = _materials.Length;
+        if (_idx >= len)
+        {
+            var newCap = ArrayUtility.CapacityGrowthLinear(len, len * 2, step: 32);
+
+            if (newCap > RenderLimits.MaxMaterialCount)
+                throw new InvalidOperationException("Material limit exceeded");
+
+            Array.Resize(ref _materials, newCap);
+        }
+
+        return NextId();
+    }
+
+
+    /*
+     *
+       private void ProcessMaterial(Material material)
+       {
+           Span<TextureSlotInfo> textureSlots = stackalloc TextureSlotInfo[RenderLimits.TextureSlots];
+           var count = CreateTextureSlotInfo(material, textureSlots);
+           var shaderId = ResolveShader(material).ResourceId;
+           var slots = textureSlots.Slice(0, count);
+           var materialId = MaterialInvoke(shaderId, material.Parameters.GetDataParams(), slots);
+           material.Attach(materialId);
+       }
+
+
+       public void ProcessStore()
+       {
+           Span<TextureSlotInfo> textureSlots = stackalloc TextureSlotInfo[RenderLimits.TextureSlots];
+           foreach (var material in _materialDict.Values)
+           {
+               var count = CreateTextureSlotInfo(material, textureSlots);
+               var shaderId = ResolveShader(material).ResourceId;
+               var slots = textureSlots.Slice(0, count);
+               var materialId = MaterialInvoke(shaderId, material.Parameters.GetDataParams(), slots);
+               material.Attach(materialId);
+           }
+       }
+
+       public void InvokeUpdateRenderMaterials()
+       {
+           foreach (var material in _materialDict.Values)
+           {
+               if (material.Id > 0) MaterialUpdate(material.Id, material.Parameters.GetDataParams());
+           }
+       }
+     */
 }

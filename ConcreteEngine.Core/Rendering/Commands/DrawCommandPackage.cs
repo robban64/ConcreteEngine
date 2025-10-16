@@ -1,10 +1,6 @@
-#region
-
-#endregion
-
 namespace ConcreteEngine.Core.Rendering.Commands;
 
-public readonly ref struct DrawCommandData(
+public readonly ref struct DrawCommandPackage(
     ReadOnlySpan<DrawCommand> draw,
     ReadOnlySpan<DrawCommandMeta> meta,
     ReadOnlySpan<DrawTransformPayload> transform)

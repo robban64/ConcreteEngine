@@ -11,7 +11,6 @@ using ConcreteEngine.Core.Rendering.Registry;
 using ConcreteEngine.Core.Rendering.State;
 using ConcreteEngine.Graphics.Gfx;
 using ConcreteEngine.Graphics.Gfx.Utility;
-using MaterialStore = ConcreteEngine.Core.Assets.Materials.MaterialStore;
 
 #endregion
 
@@ -25,17 +24,13 @@ internal sealed class DrawCommandPipeline
 
     private DrawCommandBuffer _cmdBuffer = null!;
     private DrawMaterialBuffer _materialBuffer;
-    private RenderMaterialRegistry _materialRegistry;
 
-    public DrawCommandPipeline()
+    internal DrawCommandPipeline()
     {
     }
 
-    public void Initialize(GfxContext gfx, BatcherRegistry batches, DrawProcessor drawProcessor,
-        RenderMaterialRegistry materialRegistry)
+    public void Initialize(GfxContext gfx, BatcherRegistry batches, DrawProcessor drawProcessor)
     {
-        _materialRegistry = materialRegistry;
-
         _commandCollector = new DrawCommandCollector();
         _cmdBuffer = new DrawCommandBuffer(drawProcessor);
         _materialBuffer = new DrawMaterialBuffer(drawProcessor);
@@ -56,30 +51,48 @@ internal sealed class DrawCommandPipeline
     public TSink GetSink<TSink>() where TSink : IDrawSink => _commandCollector.GetSink<TSink>();
 
 
-    private void PrepareMaterials()
+    // TODO fix (dont put store here)
+    public void PrepareMaterials(MaterialStore materials)
     {
-        Span<MaterialParams> dataBuffer = stackalloc MaterialParams[_materialRegistry.Count];
-        Span<DrawMaterialCommand> cmdBuffer = stackalloc DrawMaterialCommand[_materialRegistry.Count];
+        var count = materials.MaterialSpan.Length;
+        var span = materials.MaterialSpan;
 
-        _materialRegistry.DrainDrawData(cmdBuffer, dataBuffer);
+        Span<MaterialParams> dataBuffer = stackalloc MaterialParams[count];
+        Span<DrawMaterialCommand> cmdBuffer = stackalloc DrawMaterialCommand[count];
+
+        for (var i = 0; i < count; i++)
+        {
+            var material = span[i];
+            if (material is null)
+            {
+                dataBuffer[i] = default;
+                cmdBuffer[i] = default;
+                continue;
+            }
+
+            materials.GetMaterialUploadData(material!, out var data);
+            dataBuffer[i] = data.MatParams;
+            cmdBuffer[i] = new DrawMaterialCommand(data.MaterialId, data.ShaderId);
+        }
+
         _materialBuffer.SubmitMaterials(cmdBuffer, dataBuffer);
     }
 
-    internal (nint, nint) Prepare(float alpha, in RenderSceneState snapshot)
+    internal (nint, nint) Prepare(float alpha, RenderSceneState snapshot, MaterialStore materials)
     {
         _cmdBuffer.Reset();
         _materialBuffer.Reset();
 
-        _sceneDrawProducer.SetSceneGlobals(in snapshot);
+        _sceneDrawProducer.SetSceneGlobals( snapshot);
 
         // Fill command buffer
-        _commandCollector.CollectTo(alpha, in snapshot, _cmdBuffer);
+        _commandCollector.CollectTo(alpha,  snapshot, _cmdBuffer);
 
         // Sort command buffer and prepare passes
         _cmdBuffer.ReadyDrawCommands();
 
         // Fill materials
-        PrepareMaterials();
+        PrepareMaterials(materials);
 
         var drawCap = UniformBufferUtils.GetCapacityForEntities<DrawObjectUniform>(_cmdBuffer.Count + 32);
         var matCap = UniformBufferUtils.GetCapacityForEntities<MaterialUniformRecord>(_materialBuffer.Count + 4);

@@ -1,5 +1,6 @@
 #region
 
+using ConcreteEngine.Core.Rendering.Definitions;
 using ConcreteEngine.Core.Rendering.Registry;
 using ConcreteEngine.Core.Rendering.State;
 using ConcreteEngine.Graphics.Gfx;
@@ -19,35 +20,29 @@ internal sealed class DrawStateContextPayload
 
 internal sealed class DrawStateContext
 {
-    public enum StateModeKind
-    {
-        Main,
-        Depth,
-        Post
-    }
-
-    private readonly ShaderId _depthShader;
-
-    public ShaderId OverrideDrawShader { get; private set; }
+    public ShaderId DepthShader { get; }
     public TextureId DepthTexture { get; private set; }
     public StateModeKind StateMode { get; set; }
 
-
     internal DrawStateContext(ShaderId depthShader, TextureId depthTexture)
     {
-        _depthShader = depthShader;
+        DepthShader = depthShader;
         DepthTexture = depthTexture;
     }
+    
+    public bool IsMain => StateMode == StateModeKind.Main;
+    public bool IsDepth => StateMode == StateModeKind.Depth;
+    
+    public void RestoreStateMode() => StateMode = StateModeKind.Main;
+    public void SetDepthMode() => StateMode = StateModeKind.Depth;
 
-    public void SetDepthMode()
+    public ShaderId ResolveShaderPolicy(ShaderId cmdShader) => StateMode switch
     {
-        OverrideDrawShader = _depthShader;
-        StateMode = StateModeKind.Depth;
-    }
+        StateModeKind.Main => cmdShader,
+        StateModeKind.Post => cmdShader,
+        StateModeKind.Depth => DepthShader,
+        _ => throw new ArgumentOutOfRangeException()
+    };
+    
 
-    public void RestoreStateMode()
-    {
-        OverrideDrawShader = default;
-        StateMode = StateModeKind.Main;
-    }
 }

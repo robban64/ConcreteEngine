@@ -26,7 +26,7 @@ public sealed class SceneDrawProducer : IDrawCommandProducer
     {
     }
 
-    public void SetSceneGlobals(in RenderSceneState snapshot) => _snapshot = snapshot;
+    public void SetSceneGlobals(RenderSceneState snapshot) => _snapshot = snapshot;
 
     public void BeginTick(in UpdateTickInfo tick)
     {

@@ -3,12 +3,7 @@ using ConcreteEngine.Graphics.Gfx.Definitions;
 
 namespace ConcreteEngine.Core.Assets.Materials;
 
-public readonly record struct MaterialPassState(
-    DepthMode DepthTest,
-    CullMode CullMode,
-    BlendMode BlendMode,
-    bool DepthWrite
-);
+
 
 public sealed class MaterialTemplateSpec
 {

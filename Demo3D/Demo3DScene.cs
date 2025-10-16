@@ -40,12 +40,12 @@ public sealed class Demo3DScene : GameScene
 
         var boatMat = materialStore.CreateMaterial("BoatMat", "BoatMat1");
         var boatMesh = store.GetByName<Mesh>("Boat");
-        boatMat.Parameters.Specular = 0;
-        boatMat.Parameters.Shininess = 1;
+        boatMat.State.Specular = 0;
+        boatMat.State.Shininess = 1;
 
 
         var rockMat = materialStore.CreateMaterial("Rock01Mat", "Rock01Mat1");
-        rockMat.Parameters.Specular = 0.3f;
+        rockMat.State.Specular = 0.3f;
         var rockMesh = store.GetByName<Mesh>("Rock1");
         var rock2Mesh = store.GetByName<Mesh>("Rock2");
 

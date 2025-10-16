@@ -11,7 +11,7 @@ using ConcreteEngine.Graphics.Gfx.Resources;
 namespace ConcreteEngine.Core.Rendering.Registry;
 
 //internal delegate void MaterialApplyDel(in MaterialParams param);
-
+/*
 public sealed class RenderMaterial
 {
     public MaterialId Id { get; }
@@ -35,3 +35,4 @@ public sealed class RenderMaterial
 
     public void SetMaterialParams(in MaterialParams param) => _matParams = param;
 }
+*/

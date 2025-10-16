@@ -14,27 +14,22 @@ public sealed class Material
 {
     public string TemplateName { get; }
     public string Name { get; }
-    public AssetRef<Shader> ShaderRef { get;  } 
-    public MaterialId Id { get; private set; }
-    public MaterialTemplateParams Parameters { get; }
+    public AssetRef<Shader> ShaderRef { get; }
+    public MaterialId Id { get; }
+    public MaterialState State { get; }
     public MaterialTextureSlots TextureSlots { get; }
 
     public bool Attached => Id > 0;
 
-    internal Material(MaterialTemplate template, string name)
+    internal Material(MaterialId id, MaterialTemplate template, string name)
     {
+        Id = id;
         TemplateName = template.Name;
         Name = name;
 
         ShaderRef = template.ShaderRef;
 
-        Parameters = new MaterialTemplateParams(template.Params);
+        State = new MaterialState(template.Params);
         TextureSlots = new MaterialTextureSlots(template.TextureSlots.Slots);
-    }
-
-    internal void Attach(MaterialId id)
-    {
-        if(Attached) throw new InvalidOperationException("Material already attached");
-        Id = id;
     }
 }

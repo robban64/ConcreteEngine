@@ -14,36 +14,23 @@ namespace ConcreteEngine.Core.Rendering.Commands;
 
 internal sealed class DrawMaterialBuffer
 {
-    private const int DispatchStackSize = 16;
     
+    private readonly DrawProcessor _drawProcessor;
+
+    private int _submitIdx = 0;
+
     private DrawMaterialCommand[] _commands = new DrawMaterialCommand[DefaultMaterialBufferCapacity];
     private MaterialUniformRecord[] _buffer = new MaterialUniformRecord[DefaultMaterialBufferCapacity];
     
-    private int _submitIdx = 0;
-
-    private DrawProcessor _drawProcessor;
-
     public int Count => _submitIdx;
 
     internal DrawMaterialBuffer(DrawProcessor drawProcessor)
     {
         _drawProcessor = drawProcessor;
     }
-    /*
-    public void SubmitMaterials(ReadOnlySpan<DrawMaterialCommand> cmdSpan, ReadOnlySpan<MaterialParams> dataSpan)
-    {
-        Debug.Assert(cmdSpan.Length == dataSpan.Length);
-        EnsureCapacity(cmdSpan.Length);
-        
-        dataSpan.CopyTo(_buffer.AsSpan(_submitIdx));
 
-        for (var i = 0; i < cmdSpan.Length; i++)
-        {
-            var idx = _submitIdx + i;
-            _commands[idx] = new DrawMaterialCommandRef(cmdSpan[i], idx);
-        }
-    }*/
-
+    internal void Reset() => _submitIdx = 0;
+    
     public void SubmitMaterials(ReadOnlySpan<DrawMaterialCommand> cmdSpan, ReadOnlySpan<MaterialParams> dataSpan)
     {
         Debug.Assert(cmdSpan.Length == dataSpan.Length);
@@ -58,7 +45,7 @@ internal sealed class DrawMaterialBuffer
         
     }
 
-    public void DispatchMaterials()
+    internal void DispatchMaterials()
     {
         Debug.Assert(_commands.Length == _buffer.Length);
         if(_submitIdx == 0) return;
@@ -73,11 +60,7 @@ internal sealed class DrawMaterialBuffer
         _drawProcessor.UploadMaterial(commands, payloads);
     }
 
-    public void Reset()
-    {
-        _submitIdx = 0;
-    }
-    
+
     private void EnsureCapacity(int amount)
     {
         var idx = _submitIdx + amount;

@@ -117,7 +117,7 @@ internal sealed class DrawProcessor
     public void UploadMaterialRecord(MaterialId materialId, in MaterialUniformRecord data)
         => _gfxBuffers.UploadUniformGpuData(_materialUbo.Id, in data, 0);
 
-    public void UploadMaterial(ReadOnlySpan<DrawMaterialCommand> commands, ReadOnlySpan<MaterialUniformRecord> data)
+    public void UploadMaterial(ReadOnlySpan<DrawMaterialMeta> commands, ReadOnlySpan<MaterialUniformRecord> data)
         => _gfxBuffers.UploadUniformGpuSpan(_materialUbo.Id, data, _materialUbo.SetUploadCursor(0));
 
     public void UploadDrawObjects(ReadOnlySpan<DrawObjectUniform> payload)

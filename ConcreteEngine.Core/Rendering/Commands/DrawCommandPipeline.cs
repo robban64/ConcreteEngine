@@ -57,25 +57,22 @@ internal sealed class DrawCommandPipeline
         var count = materials.MaterialSpan.Length;
         var span = materials.MaterialSpan;
 
-        Span<MaterialParams> dataBuffer = stackalloc MaterialParams[count];
-        Span<DrawMaterialCommand> cmdBuffer = stackalloc DrawMaterialCommand[count];
+        Span<DrawMaterialPayload> buffer = stackalloc DrawMaterialPayload[count];
 
         for (var i = 0; i < count; i++)
         {
             var material = span[i];
             if (material is null)
             {
-                dataBuffer[i] = default;
-                cmdBuffer[i] = default;
+                buffer[i] = default;
                 continue;
             }
 
             materials.GetMaterialUploadData(material!, out var data);
-            dataBuffer[i] = data.MatParams;
-            cmdBuffer[i] = new DrawMaterialCommand(data.MaterialId, data.ShaderId);
+            buffer[i] = data;
         }
 
-        _materialBuffer.SubmitMaterials(cmdBuffer, dataBuffer);
+        _materialBuffer.SubmitMaterials(buffer);
     }
 
     internal (nint, nint) Prepare(float alpha, RenderSceneState snapshot, MaterialStore materials)

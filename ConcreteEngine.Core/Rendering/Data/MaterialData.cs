@@ -13,6 +13,9 @@ public readonly record struct MaterialParams(
     float Normal = 1f);
 
 
+public readonly record struct DrawMaterialMeta(MaterialId MaterialId, ShaderId ShaderId);
+
+
 [StructLayout(LayoutKind.Sequential)]
 public readonly struct DrawMaterialPayload(MaterialId materialId, ShaderId shaderId, in MaterialParams param)
 {

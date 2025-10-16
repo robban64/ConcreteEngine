@@ -19,7 +19,7 @@ internal sealed class DrawMaterialBuffer
 
     private int _submitIdx = 0;
 
-    private DrawMaterialCommand[] _commands = new DrawMaterialCommand[DefaultMaterialBufferCapacity];
+    private DrawMaterialMeta[] _commands = new DrawMaterialMeta[DefaultMaterialBufferCapacity];
     private MaterialUniformRecord[] _buffer = new MaterialUniformRecord[DefaultMaterialBufferCapacity];
     
     public int Count => _submitIdx;
@@ -31,17 +31,18 @@ internal sealed class DrawMaterialBuffer
 
     internal void Reset() => _submitIdx = 0;
     
-    public void SubmitMaterials(ReadOnlySpan<DrawMaterialCommand> cmdSpan, ReadOnlySpan<MaterialParams> dataSpan)
+    public void SubmitMaterials(ReadOnlySpan<DrawMaterialPayload> payloadSpan)
     {
-        Debug.Assert(cmdSpan.Length == dataSpan.Length);
-        EnsureCapacity(cmdSpan.Length);
+        EnsureCapacity(payloadSpan.Length);
         
-        cmdSpan.CopyTo(_commands.AsSpan(_submitIdx));
-
-        for (var i = 0; i < cmdSpan.Length; i++)
-            _buffer[_submitIdx + i] = new MaterialUniformRecord(dataSpan[i]);
+        for (var i = 0; i < payloadSpan.Length; i++)
+        {
+            ref readonly var payload = ref payloadSpan[i];
+            _buffer[_submitIdx + i] = new MaterialUniformRecord(in payload.MatParams);
+            _commands[_submitIdx + i] = new DrawMaterialMeta(payload.MaterialId, payload.ShaderId);
+        }
         
-        _submitIdx += cmdSpan.Length;
+        _submitIdx += payloadSpan.Length;
         
     }
 

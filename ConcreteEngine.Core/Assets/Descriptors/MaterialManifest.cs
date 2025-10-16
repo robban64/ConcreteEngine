@@ -22,7 +22,9 @@ public sealed record MaterialDescriptor( string Name, string Shader) : IAssetDes
     
     public sealed record TextureSlot(
         string Name,
+        [property: JsonPropertyName("slotKind")]
         TextureSlotKind SlotKind,
+        [property: JsonPropertyName("textureKind")]
         TextureKind TextureKind = TextureKind.Texture2D,
         bool Internal = true,
         bool Srgb = true);

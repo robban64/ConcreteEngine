@@ -11,7 +11,6 @@ using ConcreteEngine.Core.Rendering.Registry;
 using ConcreteEngine.Core.Rendering.State;
 using ConcreteEngine.Graphics.Gfx;
 using ConcreteEngine.Graphics.Gfx.Resources;
-using MaterialStore = ConcreteEngine.Core.Assets.Materials.MaterialStore;
 
 #endregion
 
@@ -27,7 +26,7 @@ internal sealed class DrawProcessor
 
     private readonly DrawStateContext _ctx;
 
-    private MaterialId _previousMaterialId;
+    private MaterialId _previousMaterialId = new (-1);
 
     private RenderUbo _drawUbo = null!;
     private RenderUbo _materialUbo = null!;

@@ -50,8 +50,6 @@ internal sealed class RenderMaterialRegistry
         }
     }
 
-    
-
     public MaterialId Register(ShaderId shader, in MaterialParams param, ReadOnlySpan<TextureSlotInfo> slots)
     {
         var id = _free.Count > 0 ? _free.Pop() : NextIdAndEnsureCapacity();
@@ -60,6 +58,11 @@ internal sealed class RenderMaterialRegistry
         return id;
     }
 
+    public void UpdateMaterial(MaterialId materialId, in MaterialParams param)
+    {
+        _materials[materialId - 1]?.SetMaterialParams(in param);
+    }
+    
     public bool TryRemove(MaterialId materialId)
     {
         ArgumentOutOfRangeException.ThrowIfLessThanOrEqual(materialId.Id, 0, nameof(materialId));

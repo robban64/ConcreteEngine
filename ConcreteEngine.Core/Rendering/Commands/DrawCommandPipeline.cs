@@ -61,18 +61,7 @@ internal sealed class DrawCommandPipeline
         Span<MaterialParams> dataBuffer = stackalloc MaterialParams[_materialRegistry.Count];
         Span<DrawMaterialCommand> cmdBuffer = stackalloc DrawMaterialCommand[_materialRegistry.Count];
 
-         _materialRegistry.DrainDrawData(cmdBuffer,dataBuffer);
-/*
-        for (int i = 0; i < dataBuffer.Length; i++)
-        {
-            ref readonly MaterialParams param = ref dataBuffer[i];
-            ref readonly DrawMaterialCommand cmd = ref cmdBuffer[i];
-
-            cmdBuffer[i] = new DrawMaterialCommand(m.Id);
-            dataBuffer[i] = new MaterialParams(m.Color, m.SpecularStrength, m.Shininess, 
-                m.UvRepeat, m.HasNormalMap ? 1f : 0f);
-        }
-    */
+        _materialRegistry.DrainDrawData(cmdBuffer, dataBuffer);
         _materialBuffer.SubmitMaterials(cmdBuffer, dataBuffer);
     }
 
@@ -82,7 +71,7 @@ internal sealed class DrawCommandPipeline
         _materialBuffer.Reset();
 
         _sceneDrawProducer.SetSceneGlobals(in snapshot);
-        
+
         // Fill command buffer
         _commandCollector.CollectTo(alpha, in snapshot, _cmdBuffer);
 
@@ -98,7 +87,7 @@ internal sealed class DrawCommandPipeline
     }
 
     internal void ExecuteMaterials() => _materialBuffer.DispatchMaterials();
-    
+
     internal void ExecuteTransforms() => _cmdBuffer.DrainTransformQueue();
 
     internal void ExecuteDrawPass(PassId passId) => _cmdBuffer.DispatchDrawPass(passId);

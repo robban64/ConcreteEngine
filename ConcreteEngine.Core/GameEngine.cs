@@ -84,10 +84,12 @@ public sealed class GameEngine : IDisposable
 
     private void InitializeSystems()
     {
-        _assets.MaterialStore.MaterialIdHandler = _renderer.CreateMaterial;
-        _assets.Materials.ProcessStore(_renderer.CreateMaterial);
-
         _assets.FinishLoading();
+        
+        _assets.Materials.MaterialUpdate = _renderer.RenderRegistry.MaterialRegistry.UpdateMaterial;
+        _assets.Materials.MaterialInvoke = _renderer.CreateMaterial;
+        _assets.Materials.ProcessStore();
+
         _renderer.Initialize(_assets);
         _coreSystems.Initialize();
     }
@@ -118,6 +120,8 @@ public sealed class GameEngine : IDisposable
             _timeHub.DebounceTicker = null;
             beginStatus = BeginFrameStatus.Resize;
         }
+
+        _assets.Materials.InvokeUpdateRenderMaterials();
 
         scene.BeforeRender(out var viewInfo);
         _renderer.BeginRenderFrame(beginStatus, in tickInfo, in tickParams, in viewInfo);

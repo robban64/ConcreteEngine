@@ -46,8 +46,12 @@ internal sealed class MaterialLoader
         {
             var slot = record.TextureSlots[i];
             AssetId? slotAsset = null;
-            
-            if(slot.SlotKind == TextureSlotKind.Shadowmap) continue;
+
+            if (slot.SlotKind == TextureSlotKind.Shadowmap)
+            {
+                slotInfo[i] = new AssetTextureSlot(default, slot.SlotKind, slot.TextureKind);
+                continue;
+            }
 
             if (slot.TextureKind == TextureKind.Texture2D && store.TryGetByName<Texture2D>(slot.Name, out var tex))
                 slotAsset = tex!.RawId;

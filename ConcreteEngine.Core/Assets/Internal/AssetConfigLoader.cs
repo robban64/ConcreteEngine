@@ -22,7 +22,7 @@ internal sealed class AssetConfigLoader
             WriteIndented = true,
             Converters =
             {
-                new JsonStringEnumConverter(JsonNamingPolicy.CamelCase),
+                new JsonStringEnumConverter(),
                 new Vector2Converter(),
                 new Vector3Converter(),
                 new Vector4Converter()

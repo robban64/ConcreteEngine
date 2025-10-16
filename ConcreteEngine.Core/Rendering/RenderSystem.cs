@@ -100,7 +100,6 @@ public sealed class RenderSystem : IRenderSystem
         InvalidOpThrower.ThrowIfNull(shadowFbo, nameof(shadowFbo));
         InvalidOpThrower.ThrowIfNot(shadowFbo.Attachments.DepthTextureId.IsValid());
 
-        assets.Materials.ProcessStore(CreateMaterial);
 
         var drawCtx = new DrawStateContext(depthShader, shadowFbo!.Attachments.DepthTextureId);
         var drawCtxPayload = new DrawStateContextPayload

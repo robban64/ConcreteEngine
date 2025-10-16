@@ -20,9 +20,7 @@ public delegate MaterialId MaterialProcessDel(
 public interface IMaterialStore
 {
     Material CreateMaterial(string templateName, string name);
-
-
-    Material CreateMaterial(MaterialTemplate template, string name);
+    MaterialProcessDel MaterialIdHandler { get; set; }
 }
 
 public sealed class MaterialStore : IMaterialStore
@@ -30,34 +28,37 @@ public sealed class MaterialStore : IMaterialStore
     private readonly Dictionary<string, Material> _materials = new(8);
 
     private readonly AssetStore _assetStore;
+    public IReadOnlyDictionary<string, Material> Materials => _materials;
 
-    private Shader ResolveShader(Material material) => _assetStore.GetByRef(material.ShaderRef);
-
+    //TODO delete
+    public MaterialProcessDel MaterialIdHandler { get; set; } = null!;
 
     internal MaterialStore(AssetStore assetStore)
     {
         _assetStore = assetStore;
     }
 
-    public IReadOnlyDictionary<string, Material> Materials => _materials;
 
     internal void InitializeStore()
     {
         _assetStore.Process<MaterialTemplate>(Action);
         return;
-        void Action(MaterialTemplate it) => CreateMaterial(it, it.Name);
+        void Action(MaterialTemplate it) => CreateMaterialInternal(it, it.Name, false);
     }
+
+    private Shader ResolveShader(Material material) => _assetStore.GetByRef(material.ShaderRef);
 
     public Material CreateMaterial(string templateName, string name)
     {
         var template = _assetStore.GetByName<MaterialTemplate>(templateName);
-        return CreateMaterial(template, name);
+        return CreateMaterialInternal(template, name, true);
     }
 
-    public Material CreateMaterial(MaterialTemplate template, string name)
+    private Material CreateMaterialInternal(MaterialTemplate template, string name, bool upload)
     {
         var mat = new Material(template, name);
         _materials.Add(name, mat);
+        if (upload) ProcessMaterial(mat);
         return mat;
     }
 
@@ -66,14 +67,24 @@ public sealed class MaterialStore : IMaterialStore
 
     public Material Get(string name) => _materials[name];
 
+    private void ProcessMaterial(Material material)
+    {
+        Span<TextureSlotInfo> textureSlots = stackalloc TextureSlotInfo[RenderLimits.TextureSlots];
+        var count = CreateTextureSlotInfo(material, textureSlots);
+        var shaderId = ResolveShader(material).ResourceId;
+        var slots = textureSlots.Slice(0, count);
+        var materialId = MaterialIdHandler(shaderId, material.Parameters.GetDataParams(), slots);
+        material.Attach(materialId);
+    }
+
     public void ProcessStore(MaterialProcessDel action)
     {
-        var textureSlots = new TextureSlot[RenderLimits.TextureSlots];
+        Span<TextureSlotInfo> textureSlots = stackalloc TextureSlotInfo[RenderLimits.TextureSlots];
         foreach (var material in _materials.Values)
         {
             var count = CreateTextureSlotInfo(material, textureSlots);
             var shaderId = ResolveShader(material).ResourceId;
-            var slots = textureSlots.AsSpan(0,count);
+            var slots = textureSlots.Slice(0, count);
             var materialId = action(shaderId, material.Parameters.GetDataParams(), slots);
             material.Attach(materialId);
         }

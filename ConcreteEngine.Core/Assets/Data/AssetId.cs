@@ -9,6 +9,8 @@ public readonly record struct AssetRef<TAsset>(AssetId Id) where TAsset : AssetO
     public int Value => Id.Value;
     public static explicit operator AssetRef<TAsset>(AssetId id) => new(id);
     public static implicit operator AssetId(AssetRef<TAsset> typed) => typed.Id;
+    
+    public static AssetRef<TAsset> Make(AssetId id) => new(id);
 }
 
 // Needed?

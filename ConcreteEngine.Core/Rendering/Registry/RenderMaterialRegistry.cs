@@ -16,7 +16,7 @@ internal sealed class RenderMaterialRegistry
     private static int _idx = 0;
     private static MaterialId NextId() => new(++_idx);
 
-    private RenderMaterial?[] _materials = Array.Empty<RenderMaterial>();
+    private RenderMaterial?[] _materials = new  RenderMaterial[16];
 
     private readonly Stack<MaterialId> _free = new();
 
@@ -78,7 +78,7 @@ internal sealed class RenderMaterialRegistry
     private MaterialId NextIdAndEnsureCapacity()
     {
         var len = _materials.Length;
-        if (_idx == len)
+        if (_idx >= len)
         {
             var newCap = ArrayUtility.CapacityGrowthLinear(len, len * 2, step: 32);
 

@@ -23,12 +23,13 @@ public sealed class DemoScene : GameScene
     public override void Initialize()
     {
         var renderer = Context.GetSystem<IRenderSystem>();
+        var assets = Context.GetSystem<IAssetSystem>();
+        var (store, materialStore) = (assets.Store, assets.MaterialStore);
+        var spriteMaterial = materialStore.CreateMaterial("SpriteMaterial","SpriteMaterial1");
+        var spriteMaterial2 = materialStore.CreateMaterial("SpriteMaterial","SpriteMaterial2");
 
-        var spriteMaterial = renderer.CreateMaterial("SpriteMaterial");
-        var spriteMaterial2 = renderer.CreateMaterial("SpriteMaterial");
-
-        var tilemapMaterial = renderer.CreateMaterial("TilemapMaterial");
-        renderer.CreateMaterial("LightMaterial");
+        var tilemapMaterial = materialStore.CreateMaterial("TilemapMaterial","TilemapMaterial1");
+        materialStore.CreateMaterial("LightMaterial", "LightMaterial1");
 
         int currSpriteId = 1;
         for (int x = 0; x < 4; x++)

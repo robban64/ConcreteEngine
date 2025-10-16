@@ -3,22 +3,71 @@
     {
       "name": "SkyboxMat",
       "shader": "Skybox",
-      "cubemap": "Skybox"
+      "textureSlots": [
+        {
+          "name": "Skybox",
+          "slotKind": "Albedo",
+          "textureKind": "CubeMap"
+        }
+      ]
     },
     {
       "name": "BoatMat",
       "shader": "ModelBasic",
-      "textures": ["Boat"]
+      "textureSlots": [
+        {
+          "name": "Boat",
+          "slotKind": "Albedo",
+          "textureKind": "Texture2D"
+        }
+      ]
     },
     {
       "name": "Rock01Mat",
       "shader": "ModelNormal",
-      "textures": ["Rock01", "Rock01-Normal"]
+      "textureSlots": [
+        {
+          "name": "Rock01",
+          "slotKind": "Albedo",
+          "textureKind": "Texture2D"
+        },
+        {
+          "name": "Rock01-Normal",
+          "slotKind": "Normal",
+          "textureKind": "Texture2D"
+        }
+      ]
     },
     {
       "name": "TerrainMat",
       "shader": "Terrain",
-      "textures": ["Grass", "Mud", "Stone", "Rock", "BlendMap"]
+      "textureSlots": [
+        {
+          "name": "Grass",
+          "slotKind": "Environment",
+          "textureKind": "Texture2D"
+        },
+        {
+          "name": "Mud",
+          "slotKind": "Environment",
+          "textureKind": "Texture2D"
+        },
+        {
+          "name": "Stone",
+          "slotKind": "Environment",
+          "textureKind": "Texture2D"
+        },
+        {
+          "name": "Rock",
+          "slotKind": "Environment",
+          "textureKind": "Texture2D"
+        },
+        {
+          "name": "BlendMap",
+          "slotKind": "Splatmap",
+          "textureKind": "Texture2D"
+        }
+      ]
     }
   ]
 }

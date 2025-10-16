@@ -13,30 +13,28 @@ namespace ConcreteEngine.Core.Assets.Materials;
 public sealed class Material
 {
     public string TemplateName { get; }
-
-    public MaterialId Id { get; private set; }
+    public string Name { get; }
     public AssetRef<Shader> ShaderRef { get;  } 
+    public MaterialId Id { get; private set; }
     public MaterialTemplateParams Parameters { get; }
     public MaterialTextureSlots TextureSlots { get; }
-    
-    public ShaderId ShaderId { get; set; }
 
+    public bool Attached => Id > 0;
 
-    internal Material(MaterialTemplate template)
+    internal Material(MaterialTemplate template, string name)
     {
         TemplateName = template.Name;
+        Name = name;
 
         ShaderRef = template.ShaderRef;
 
-        Parameters = new MaterialTemplateParams();
-        Parameters.Set(template.Params.GetDataParams());
-
+        Parameters = new MaterialTemplateParams(template.Params);
         TextureSlots = new MaterialTextureSlots(template.TextureSlots.Slots);
     }
 
     internal void Attach(MaterialId id)
     {
+        if(Attached) throw new InvalidOperationException("Material already attached");
         Id = id;
-        ShaderId = template.BoundShaderId;
     }
 }

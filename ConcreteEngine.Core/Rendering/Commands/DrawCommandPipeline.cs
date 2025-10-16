@@ -32,10 +32,9 @@ internal sealed class DrawCommandPipeline
     }
 
     public void Initialize(GfxContext gfx, BatcherRegistry batches, DrawProcessor drawProcessor,
-        RenderMaterialRegistry
-            materialStore)
+        RenderMaterialRegistry materialRegistry)
     {
-        _materialRegistry = materialStore;
+        _materialRegistry = materialRegistry;
 
         _commandCollector = new DrawCommandCollector();
         _cmdBuffer = new DrawCommandBuffer(drawProcessor);

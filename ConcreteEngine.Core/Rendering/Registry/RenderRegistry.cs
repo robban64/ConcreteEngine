@@ -33,6 +33,7 @@ internal sealed class RenderRegistry
         ShaderRegistry = new RenderShaderRegistry(gfx);
         UboRegistry = new RenderUboRegistry(gfx);
         FboRegistry = new RenderFboRegistry(gfx);
+        MaterialRegistry = new RenderMaterialRegistry();
     }
 
     public void BeginRegistration(Size2D outputSize)

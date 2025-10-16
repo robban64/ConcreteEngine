@@ -91,6 +91,8 @@ public sealed class AssetSystem : IAssetSystem
 
     internal void FinishLoading()
     {
+        _materialStore.InitializeStore();
+        
         _processor?.Finish();
         _processor = null;
 

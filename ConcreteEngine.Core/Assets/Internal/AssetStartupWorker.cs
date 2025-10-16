@@ -78,7 +78,7 @@ internal sealed class AssetStartupWorker
 
     public bool ProcessAssets(int n)
     {
-        if (_processOrder != ProcessStepOrder.NotStarted)
+        if (_processOrder == ProcessStepOrder.NotStarted)
             throw new InvalidOperationException("Asset loader has not started.");
 
         var order = (int)_processOrder;
@@ -159,6 +159,7 @@ internal sealed class AssetStartupWorker
             ProcessStepOrder.Textures => _configLoader.LoadAssetCatalog<TextureManifest>(Layout.Texture),
             ProcessStepOrder.CubeMaps => _configLoader.LoadAssetCatalog<CubeMapManifest>(Layout.CubeMaps),
             ProcessStepOrder.Meshes => _configLoader.LoadAssetCatalog<MeshManifest>(Layout.Mesh),
+            ProcessStepOrder.Materials => _configLoader.LoadAssetCatalog<MaterialManifest>(Layout.Material),
             ProcessStepOrder.Finished => _currentManifest,
             _ => throw new ArgumentOutOfRangeException()
         };

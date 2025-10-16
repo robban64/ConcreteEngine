@@ -14,25 +14,22 @@ public sealed class MaterialManifest : IAssetCatalog
     IReadOnlyList<IAssetDescriptor> IAssetCatalog.Records => Records;
 }
 
-public sealed record MaterialDescriptor(
-    string Name,
-    string Shader,
-    MaterialDescriptor.TextureSlot[] TextureSlots,
-    MaterialDescriptor.MaterialParamsDesc Parameters
-) : IAssetDescriptor
+public sealed record MaterialDescriptor( string Name, string Shader) : IAssetDescriptor
 {
     public AssetKind Kind => AssetKind.Material;
-
+    public MaterialParamsDesc Parameters { get; init; } = new();
+    public TextureSlot[] TextureSlots { get; init; } = Array.Empty<TextureSlot>();
+    
     public sealed record TextureSlot(
         string Name,
         TextureSlotKind SlotKind,
-        TextureKind TextureKind,
+        TextureKind TextureKind = TextureKind.Texture2D,
         bool Internal = true,
         bool Srgb = true);
 
     public sealed record MaterialParamsDesc(
-        Color4? Color,
-        float? Shininess,
-        float? Specular,
-        float? UvRepeat);
+        Color4? Color =null,
+        float? Shininess=null,
+        float? Specular=null,
+        float? UvRepeat=null);
 }

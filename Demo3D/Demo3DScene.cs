@@ -26,9 +26,10 @@ public sealed class Demo3DScene : GameScene
         var rng = Random.Shared;
 
         var renderer = Context.GetSystem<IRenderSystem>();
-        var assetStore = Context.GetSystem<IAssetSystem>().Store;
+        var assets = Context.GetSystem<IAssetSystem>();
+        var (store, materialStore) = (assets.Store, assets.MaterialStore);
 
-        var skyboxMaterial = renderer.CreateMaterial("SkyboxMat");
+        var skyboxMaterial = materialStore.CreateMaterial("SkyboxMat","SkyboxMat1");
 
         var rb = renderer.RenderProps;
         rb.SetSkybox(skyboxMaterial.Id, Quaternion.Identity);
@@ -37,16 +38,16 @@ public sealed class Demo3DScene : GameScene
 
         rb.SetShadowDefault(2048);
 
-        var boatMat = renderer.CreateMaterial("BoatMat");
-        var boatMesh = assetStore.GetByName<Mesh>("Boat");
-        boatMat.SpecularStrength = 0;
-        boatMat.Shininess = 1;
+        var boatMat = materialStore.CreateMaterial("BoatMat", "BoatMat1");
+        var boatMesh = store.GetByName<Mesh>("Boat");
+        boatMat.Parameters.Specular = 0;
+        boatMat.Parameters.Shininess = 1;
 
 
-        var rockMat = renderer.CreateMaterial("Rock01Mat");
-        rockMat.SpecularStrength = 0.3f;
-        var rockMesh = assetStore.GetByName<Mesh>("Rock1");
-        var rock2Mesh = assetStore.GetByName<Mesh>("Rock2");
+        var rockMat = materialStore.CreateMaterial("Rock01Mat", "Rock01Mat1");
+        rockMat.Parameters.Specular = 0.3f;
+        var rockMesh = store.GetByName<Mesh>("Rock1");
+        var rock2Mesh = store.GetByName<Mesh>("Rock2");
 
         for (int i = 0; i < 40; i++)
         {

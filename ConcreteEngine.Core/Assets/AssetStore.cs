@@ -11,8 +11,10 @@ public interface IAssetStore
 {
     T GetByRef<T>(AssetRef<T> id) where T : AssetObject;
     T GetByName<T>(string name) where T : AssetObject;
+   
+    bool TryGetByRef<T>(AssetRef<T> assetRef, out T? asset) where T : AssetObject;
     bool TryGetByName<T>(string name, out T? asset) where T : AssetObject;
-
+   
     AssetTypeMetaSnapshot GetMetaSnapshot<TAsset>() where TAsset : AssetObject;
 
     void ExtractList<TAsset, TData>(List<TData> list, Func<TAsset, TData> transform)
@@ -20,6 +22,8 @@ public interface IAssetStore
 
     void ExtractSpan<TAsset, TData>(Span<TData> span, Func<TAsset, TData> transform)
         where TAsset : AssetObject where TData : unmanaged;
+
+    void Process<TAsset>(Action<TAsset> action) where TAsset : AssetObject;
 }
 
 internal sealed class AssetStore : IAssetStore
@@ -110,6 +114,14 @@ internal sealed class AssetStore : IAssetStore
         {
             if (asset is TAsset typedAsset) span[idx++] = transform(typedAsset);
             if (idx >= span.Length) break;
+        }
+    }
+
+    public void Process<TAsset>(Action<TAsset> action) where TAsset : AssetObject
+    {
+        foreach (var asset in _assets.Values)
+        {
+            if (asset is TAsset typedAsset) action(typedAsset);
         }
     }
 

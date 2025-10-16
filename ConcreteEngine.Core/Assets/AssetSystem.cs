@@ -15,6 +15,7 @@ namespace ConcreteEngine.Core.Assets;
 public interface IAssetSystem : IGameEngineSystem
 {
     IAssetStore Store { get; }
+    IMaterialStore MaterialStore { get; }
 }
 
 public sealed class AssetSystem : IAssetSystem
@@ -33,20 +34,26 @@ public sealed class AssetSystem : IAssetSystem
     private AssetStartupWorker? _processor;
     private AssetGfxUploader? _uploader;
     private AssetLoader? _loader;
-    
+
     private AssetManifest _manifest = null!;
 
-    private readonly AssetStore _assetStore = new();
+    private readonly MaterialStore _materialStore ;
+
+    private readonly AssetStore _assetStore;
 
     public Status CurrentStatus { get; private set; } = Status.None;
 
     internal AssetSystem()
     {
+        _assetStore = new AssetStore();
+        _materialStore = new MaterialStore(_assetStore);
     }
     
-    internal AssetStore AssetStore => _assetStore;
+    internal AssetStore InternalStore => _assetStore;
     public IAssetStore Store => _assetStore;
+    public IMaterialStore MaterialStore  =>  _materialStore;
 
+    internal MaterialStore Materials => _materialStore;
 
     internal void Initialize()
     {

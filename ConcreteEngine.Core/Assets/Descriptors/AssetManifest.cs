@@ -94,23 +94,3 @@ public sealed record MeshDescriptor(
 {
     public AssetKind Kind => AssetKind.Mesh;
 }
-
-public sealed class MaterialManifest : IAssetCatalog
-{
-    public required MaterialDescriptor[] Records { get; init; }
-    public int Count => Records.Length;
-    IReadOnlyList<IAssetDescriptor> IAssetCatalog.Records => Records;
-
-}
-
-public sealed record MaterialDescriptor(
-    string Name,
-    string Shader,
-    string[]? Textures,
-    [property: JsonPropertyName("cubemap")]
-    string? CubeMap
-) : IAssetDescriptor
-{
-    public Vector4 Color { get; init; } = Vector4.One;
-    public AssetKind Kind => AssetKind.Material;
-}

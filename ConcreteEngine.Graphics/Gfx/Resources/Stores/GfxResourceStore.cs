@@ -2,6 +2,7 @@
 
 using System.Runtime.CompilerServices;
 using ConcreteEngine.Common;
+using ConcreteEngine.Common.Collections;
 using ConcreteEngine.Graphics.Gfx.Definitions;
 
 #endregion
@@ -24,7 +25,7 @@ internal sealed class GfxResourceStore<TId, TMeta> : IGfxResourceStore<TId>
     where TId : unmanaged, IResourceId where TMeta : unmanaged, IResourceMeta
 {
     private readonly MakeIdDelegate<TId> _makeId;
-    internal GfxMetaChangedDel<TId, TMeta>? _changeCallback;
+    internal GfxMetaChangedDel<TId, TMeta>? ChangeCallback;
 
     public ResourceKind ResourceKind => TId.Kind;
 
@@ -57,8 +58,8 @@ internal sealed class GfxResourceStore<TId, TMeta> : IGfxResourceStore<TId>
     internal void BindOnChangeCallback(GfxMetaChangedDel<TId, TMeta> callback)
     {
         ArgumentNullException.ThrowIfNull(callback);
-        InvalidOpThrower.ThrowIf(_changeCallback != null);
-        _changeCallback = callback;
+        InvalidOpThrower.ThrowIf(ChangeCallback != null);
+        ChangeCallback = callback;
     }
 
     public bool TryGetRef(TId id, out GfxRefToken<TId> handle, out TMeta meta)
@@ -127,7 +128,7 @@ internal sealed class GfxResourceStore<TId, TMeta> : IGfxResourceStore<TId>
         _handle[idx] = newHandle.Handle;
 
         var message = new GfxMetaChanged<TMeta>(in newMeta, in oldMeta, newHandle.Handle.Gen, true, ResourceKind);
-        _changeCallback?.Invoke(id, in message);
+        ChangeCallback?.Invoke(id, in message);
 
         return id;
     }
@@ -140,18 +141,19 @@ internal sealed class GfxResourceStore<TId, TMeta> : IGfxResourceStore<TId>
         _meta[idx] = newMeta;
 
         var message = new GfxMetaChanged<TMeta>(in newMeta, in oldMeta, _handle[idx].Gen, true, ResourceKind);
-        _changeCallback?.Invoke(id, in message);
+        ChangeCallback?.Invoke(id, in message);
     }
 
 
     private int Allocate()
     {
-        if (_idx == _meta.Length)
+        var len = _meta.Length;
+        if (_idx == len)
         {
-            if (_idx > GfxLimits.StoreLimit)
+            var newCap = ArrayUtility.CapacityGrowthLinear(len, len * 2, step: 32);
+            if (newCap > GfxLimits.StoreLimit)
                 throw new InvalidOperationException("Store limit exceeded");
 
-            var newCap = _meta.Length * 2;
             Array.Resize(ref _meta, newCap);
             Array.Resize(ref _handle, newCap);
         }

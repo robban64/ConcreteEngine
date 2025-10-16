@@ -20,14 +20,14 @@ public sealed class TerrainFeature : GameFeature
 
     public override void Initialize()
     {
-        var assets = Context.GetSystem<IAssetSystem>().Store;
+        var assets = Context.GetSystem<IAssetSystem>();
         var renderer = Context.GetSystem<IRenderSystem>();
-        var material = renderer.CreateMaterial("TerrainMat");
-        var heightmap = assets.GetByName<Texture2D>("Heightmap");
+        var material = assets.MaterialStore.CreateMaterial("", "TerrainMat");
+        var heightmap = assets.Store.GetByName<Texture2D>("Heightmap");
 
-        material.UvRepeat = 28;
-        material.Shininess = 10;
-        material.SpecularStrength = 0.04f;
+        material.Parameters.UvRepeat = 28;
+        material.Parameters.Shininess = 10;
+        material.Parameters.Specular = 0.04f;
 
         _drawSink = renderer.GetSink<ITerrainDrawSink>();
 

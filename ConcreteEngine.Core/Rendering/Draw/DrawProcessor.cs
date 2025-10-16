@@ -6,6 +6,7 @@ using ConcreteEngine.Common.Numerics;
 using ConcreteEngine.Core.Assets.Materials;
 using ConcreteEngine.Core.Rendering.Commands;
 using ConcreteEngine.Core.Rendering.Data;
+using ConcreteEngine.Core.Rendering.Definitions;
 using ConcreteEngine.Core.Rendering.Registry;
 using ConcreteEngine.Core.Rendering.State;
 using ConcreteEngine.Graphics.Gfx;
@@ -22,7 +23,7 @@ internal sealed class DrawProcessor
     private readonly GfxBuffers _gfxBuffers;
     private readonly RenderRegistry _registry;
 
-    private readonly MaterialStore _materials;
+    private readonly RenderMaterialRegistry _materialRegistry;
 
     private readonly DrawStateContext _ctx;
 
@@ -31,13 +32,16 @@ internal sealed class DrawProcessor
     private RenderUbo _drawUbo = null!;
     private RenderUbo _materialUbo = null!;
 
-    internal DrawProcessor(DrawStateContext ctx, DrawStateContextPayload ctxPayload, MaterialStore materials)
+    internal DrawProcessor(
+        DrawStateContext ctx,
+        DrawStateContextPayload ctxPayload,
+        RenderMaterialRegistry materialRegistry)
     {
         _ctx = ctx;
         _gfxCmd = ctxPayload.Gfx.Commands;
         _gfxBuffers = ctxPayload.Gfx.Buffers;
         _registry = ctxPayload.Registry;
-        _materials = materials;
+        _materialRegistry = materialRegistry;
     }
 
 
@@ -84,19 +88,20 @@ internal sealed class DrawProcessor
     private void BindDrawMaterial(MaterialId materialId)
     {
         if (_previousMaterialId == materialId) return;
-        var material = _materials.GetMaterial(materialId);
+        var material = _materialRegistry.GetMaterial(materialId);
         UseShader(material.ShaderId);
 
         for (var i = 0; i < material.SamplerSlots.Length; i++)
         {
             var value = material.SamplerSlots[i];
-            _gfxCmd.BindTexture(value, i);
+            
+            if(value.SlotKind == TextureSlotKind.Shadowmap)
+                _gfxCmd.BindTexture(_ctx.DepthTexture, i);
+            else
+                _gfxCmd.BindTexture(value.Texture, i);
+
         }
 
-        if (material.Shadows)
-            _gfxCmd.BindTexture(_ctx.DepthTexture, material.SamplerSlots.Length);
-
-        //BindMaterialObject(materialId);
         BindMaterialObject(materialId);
 
         _previousMaterialId = materialId;

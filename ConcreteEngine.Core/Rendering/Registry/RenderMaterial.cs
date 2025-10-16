@@ -16,12 +16,13 @@ public sealed class RenderMaterial
 {
     public MaterialId Id { get; }
     public ShaderId ShaderId { get; private set; }
-
-    private readonly TextureId[] _samplerSlots;
+    public bool Alive { get; internal set; } = true;
 
     private MaterialParams _matParams;
 
-    internal RenderMaterial(MaterialId id, ShaderId shader, ReadOnlySpan<TextureId> slots, in MaterialParams param)
+    private readonly TextureSlotInfo[] _samplerSlots;
+
+    internal RenderMaterial(MaterialId id, ShaderId shader, in MaterialParams param, ReadOnlySpan<TextureSlotInfo> slots)
     {
         Id = id;
         ShaderId = shader;
@@ -29,7 +30,7 @@ public sealed class RenderMaterial
         _matParams = param;
     }
 
-    public ReadOnlySpan<TextureId> SamplerSlots => _samplerSlots;
+    public ReadOnlySpan<TextureSlotInfo> SamplerSlots => _samplerSlots;
     public ref readonly MaterialParams MaterialParams => ref _matParams;
 
     public void SetMaterialParams(in MaterialParams param) => _matParams = param;

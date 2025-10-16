@@ -18,7 +18,7 @@ internal sealed class RenderRegistry
 
     private RegistrationData _registrationData;
 
-    public RenderMaterialStore MaterialStore { get; }
+    public RenderMaterialRegistry MaterialRegistry { get; }
 
     public RenderShaderRegistry ShaderRegistry { get; }
 

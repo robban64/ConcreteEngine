@@ -3,6 +3,7 @@
 using System.Diagnostics;
 using System.Diagnostics.CodeAnalysis;
 using System.Runtime.CompilerServices;
+using ConcreteEngine.Common.Collections;
 using ConcreteEngine.Graphics.Gfx.Definitions;
 
 #endregion
@@ -96,12 +97,13 @@ internal sealed class BackendResourceStore<THandle> : IBackendResourceStore, IBa
 
     private int Allocate()
     {
-        if (_idx == _records.Length)
+        var len = _records.Length;
+        if (_idx == len)
         {
-            if (_idx > GfxLimits.StoreLimit)
+            var newCap = ArrayUtility.CapacityGrowthLinear(len, len * 2, step: 32);
+            if (newCap > GfxLimits.StoreLimit)
                 throw new InvalidOperationException("Store limit exceeded");
 
-            var newCap = _records.Length * 2;
             Array.Resize(ref _records, newCap);
         }
 

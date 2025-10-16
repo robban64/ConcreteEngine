@@ -1,63 +1,102 @@
 #region
 
 using System.Runtime.CompilerServices;
+using ConcreteEngine.Core.Assets.Data;
+using ConcreteEngine.Core.Assets.Textures;
 using ConcreteEngine.Core.Rendering.Data;
+using ConcreteEngine.Graphics.Gfx.Definitions;
+using ConcreteEngine.Graphics.Gfx.Resources;
 
 #endregion
 
 namespace ConcreteEngine.Core.Assets.Materials;
 
+public delegate MaterialId MaterialProcessDel(
+    ShaderId shaderId,
+    in MaterialParams param,
+    ReadOnlySpan<TextureSlotInfo> slots);
 
 
-public sealed class MaterialStore
+public interface IMaterialStore
 {
-    private int _matIdx = 0;
-    private MaterialId MakeMaterialId() => new(++_matIdx);
-    
-    private readonly Dictionary<string, MaterialTemplate> _templates;
+    Material CreateMaterial(string name, string templateName);
 
-    private List<Material> _materials;
 
-    public IReadOnlyList<Material> Materials => _materials;
-    public int LastMaterialId => _matIdx;
+    Material CreateMaterial(string name, MaterialTemplate template);
+}
 
-    internal MaterialStore(IReadOnlyList<MaterialTemplate> templates)
+public sealed class MaterialStore : IMaterialStore
+{
+    private readonly Dictionary<string, Material> _materials = new(8);
+
+    private readonly AssetStore _assetStore;
+
+    internal MaterialStore(AssetStore assetStore)
     {
-        _materials = new List<Material>(templates.Count);
-        _templates = new Dictionary<string, MaterialTemplate>(templates.Count);
-
-        foreach (var template in templates)
-            _templates.Add(template.Name, template);
-
-        foreach (var template in templates)
-            CreateMaterialFromTemplate(template.Name);
+        _assetStore = assetStore;
     }
 
-    public Material CreateMaterialFromTemplate(string templateName)
-    {
-        if (!_templates.TryGetValue(templateName, out var template))
-            throw new KeyNotFoundException($"Material Template with name {templateName} was not found");
+    public IReadOnlyDictionary<string, Material> Materials => _materials;
 
-        var mat = new Material(MakeMaterialId(), template);
-        _materials.Add(mat);
+    internal void InitializeStore()
+    {
+        _assetStore.Process<MaterialTemplate>(Action);
+        return;
+        void Action(MaterialTemplate it) => CreateMaterial(it.Name, it);
+    }
+
+    public Material CreateMaterial(string name, string templateName)
+    {
+        var template = _assetStore.GetByName<MaterialTemplate>(templateName);
+        return CreateMaterial(name, template);
+    }
+    
+    public Material CreateMaterial(string name, MaterialTemplate template)
+    {
+        var mat = new Material(template);
+        _materials.Add(template.Name, mat);
         return mat;
     }
-
-    public void RemoveMaterial(Material material) => _materials.Remove(material);
-
-
-    public MaterialTemplate GetTemplate(string templateName) => _templates[templateName];
-
-    public bool TryGetTemplate(string templateName, out MaterialTemplate template) =>
-        _templates.TryGetValue(templateName, out template);
+    
 
 
-    public Material this[MaterialId id]
+    //public void RemoveMaterial(Material material) => _materials.Remove(material);
+
+    public Material Get(string name) => _materials[name];
+
+    public void ProcessStore(MaterialProcessDel action)
     {
-        [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        get => _materials[id.Id - 1];
+        Span<TextureSlotInfo> textureSlots = stackalloc TextureSlotInfo[RenderLimits.TextureSlots];
+        
+        foreach (var material in _materials.Values)
+        {
+            var count = CreateTextureSlotInfo(material, textureSlots);
+            action(material.ShaderId, material.Parameters.GetDataParams(), textureSlots.Slice(0,count));
+        }
     }
 
-    [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public Material GetMaterial(MaterialId id) => _materials[id.Id - 1];
+    private int CreateTextureSlotInfo(Material material, Span<TextureSlotInfo> span)
+    {
+        for (var i = 0; i < material.TextureSlots.Slots.Length; i++)
+        {
+            var slot = material.TextureSlots.Slots[i];
+            var textureId = GetTextureId(slot);
+            span[i] = new TextureSlotInfo(textureId, slot.SlotKind, slot.TextureKind);
+        }
+
+        return material.TextureSlots.Slots.Length;
+    }
+
+    private TextureId GetTextureId(AssetTextureSlot assetSlot)
+    {
+
+        if (assetSlot.TextureKind == TextureKind.Texture2D)
+            return _assetStore.GetByRef(new AssetRef<Texture2D>(assetSlot.Asset)).ResourceId;
+
+        if (assetSlot.TextureKind == TextureKind.CubeMap)
+            return _assetStore.GetByRef(new AssetRef<CubeMap>(assetSlot.Asset)).ResourceId;
+
+        throw new InvalidOperationException(nameof(assetSlot));
+
+    }
 }

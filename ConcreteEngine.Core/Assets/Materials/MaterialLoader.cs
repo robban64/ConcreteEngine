@@ -7,6 +7,8 @@ using ConcreteEngine.Core.Assets.Descriptors;
 using ConcreteEngine.Core.Assets.Internal;
 using ConcreteEngine.Core.Assets.Shaders;
 using ConcreteEngine.Core.Assets.Textures;
+using ConcreteEngine.Core.Rendering.Definitions;
+using ConcreteEngine.Graphics.Gfx.Definitions;
 
 #endregion
 
@@ -23,50 +25,51 @@ internal sealed class MaterialLoader
             Debug.Assert(false);
             return null;
         }
+        
+        AssetAssembleDel<MaterialTemplate, MaterialDescriptor> factory = CreateTemplate;
+
 
         var result = new List<MaterialTemplate>();
-        AssetAssembleDel<MaterialTemplate, MaterialDescriptor> factory = CreateMaterial;
         foreach (var record in descriptors)
         {
             var template = store.Register(record, factory);
             result.Add(template);
         }
 
-        foreach (var mat in result)
-            mat.Initialize(store);
-
         return result;
     }
 
-    private MaterialTemplate CreateMaterial(AssetId assetId, MaterialDescriptor record, IAssetStore store)
+    private MaterialTemplate CreateTemplate(AssetId assetId, MaterialDescriptor record, IAssetStore store)
     {
-        var textures = Array.Empty<AssetRef<Texture2D>>();
-        AssetRef<CubeMap>? cubeMap = null;
+        var slotInfo = new AssetTextureSlot[record.TextureSlots.Length];
+        for (int i = 0; i < slotInfo.Length; i++)
+        {
+            var slot = record.TextureSlots[i];
+            AssetId? slotAsset = null;
+            
+            if(slot.SlotKind == TextureSlotKind.Shadowmap) continue;
 
-        if (record.CubeMap != null)
-        {
-            cubeMap = store.GetByName<CubeMap>(record.CubeMap).RefId;
-        }
-        else if (record.Textures != null)
-        {
-            textures = new AssetRef<Texture2D>[record.Textures.Length];
-            for (var i = 0; i < record.Textures.Length; i++)
-            {
-                textures[i] = store.GetByName<Texture2D>(record.Textures[i]).RefId;
-            }
+            if (slot.TextureKind == TextureKind.Texture2D && store.TryGetByName<Texture2D>(slot.Name, out var tex))
+                slotAsset = tex!.RawId;
+
+            if (slot.TextureKind == TextureKind.CubeMap && store.TryGetByName<CubeMap>(slot.Name, out var cub))
+                slotAsset = cub!.RawId;
+
+            if (slotAsset is not { } slotAssetId)
+                throw new InvalidOperationException($"Slot asset doesn't exist {slot}");
+            
+            slotInfo[i] = new AssetTextureSlot(slotAssetId, slot.SlotKind, slot.TextureKind);
         }
 
         var shader = store.GetByName<Shader>(record.Shader).RefId;
 
-        var matParams = new MaterialTemplateParams { Color = Color4.FromVector4(record.Color) };
-        return new MaterialTemplate
+        var matParams = new MaterialTemplateParams(record.Parameters);
+        return new MaterialTemplate(slotInfo)
         {
             RawId = assetId,
             Name = record.Name,
-            ShaderAssetId = shader,
+            ShaderRef = shader,
             Params = matParams,
-            TextureAssetIds = textures,
-            CubeMapAssetId = cubeMap,
             IsCoreAsset = false,
             Generation = 0
         };

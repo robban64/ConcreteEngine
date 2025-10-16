@@ -28,6 +28,7 @@ public enum TextureSlotKind : byte
     Specular,
     Emissive,
     Environment,
+    Shadowmap,
     Lightmap,
     Custom0,
     Custom1

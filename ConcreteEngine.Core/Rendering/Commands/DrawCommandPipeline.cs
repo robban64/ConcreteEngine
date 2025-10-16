@@ -25,16 +25,17 @@ internal sealed class DrawCommandPipeline
 
     private DrawCommandBuffer _cmdBuffer = null!;
     private DrawMaterialBuffer _materialBuffer;
-    private MaterialStore _materialStore;
+    private RenderMaterialRegistry _materialRegistry;
 
     public DrawCommandPipeline()
     {
     }
 
     public void Initialize(GfxContext gfx, BatcherRegistry batches, DrawProcessor drawProcessor,
-        MaterialStore materialStore)
+        RenderMaterialRegistry
+            materialStore)
     {
-        _materialStore = materialStore;
+        _materialRegistry = materialStore;
 
         _commandCollector = new DrawCommandCollector();
         _cmdBuffer = new DrawCommandBuffer(drawProcessor);
@@ -58,18 +59,21 @@ internal sealed class DrawCommandPipeline
 
     private void PrepareMaterials()
     {
-        var materials = _materialStore.Materials;
-        Span<DrawMaterialCommand> cmdBuffer = stackalloc DrawMaterialCommand[materials.Count];
-        Span<MaterialParams> dataBuffer = stackalloc MaterialParams[materials.Count];
+        Span<MaterialParams> dataBuffer = stackalloc MaterialParams[_materialRegistry.Count];
+        Span<DrawMaterialCommand> cmdBuffer = stackalloc DrawMaterialCommand[_materialRegistry.Count];
 
-        for (int i = 0; i < materials.Count; i++)
+         _materialRegistry.DrainDrawData(cmdBuffer,dataBuffer);
+/*
+        for (int i = 0; i < dataBuffer.Length; i++)
         {
-            var m = materials[i];
+            ref readonly MaterialParams param = ref dataBuffer[i];
+            ref readonly DrawMaterialCommand cmd = ref cmdBuffer[i];
+
             cmdBuffer[i] = new DrawMaterialCommand(m.Id);
             dataBuffer[i] = new MaterialParams(m.Color, m.SpecularStrength, m.Shininess, 
                 m.UvRepeat, m.HasNormalMap ? 1f : 0f);
         }
-        
+    */
         _materialBuffer.SubmitMaterials(cmdBuffer, dataBuffer);
     }
 

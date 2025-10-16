@@ -1,36 +1,42 @@
 #region
 
 using ConcreteEngine.Common.Numerics;
+using ConcreteEngine.Core.Assets.Data;
+using ConcreteEngine.Core.Assets.Shaders;
 using ConcreteEngine.Core.Rendering.Data;
 using ConcreteEngine.Graphics.Gfx.Resources;
 
 #endregion
 
 namespace ConcreteEngine.Core.Assets.Materials;
-/*
+
 public sealed class Material
 {
-    private readonly TextureId[] _samplerSlots;
-
-    public MaterialId Id { get; }
     public string TemplateName { get; }
+
+    public MaterialId Id { get; private set; }
+    public AssetRef<Shader> ShaderRef { get;  } 
+    public MaterialTemplateParams Parameters { get; }
+    public MaterialTextureSlots TextureSlots { get; }
+    
     public ShaderId ShaderId { get; set; }
-    public Color4 Color { get; set; } = Color4.White;
-    public float Shininess { get; set; } = 24f;
-    public float SpecularStrength { get; set; } = 0.25f;
-    public float UvRepeat { get; set; } = 1;
-    public bool Shadows { get; set; } = true;
 
-    public ReadOnlySpan<TextureId> SamplerSlots => _samplerSlots;
-    public bool HasNormalMap => SamplerSlots.Length == 2;
 
-    internal Material(MaterialId id, MaterialTemplate template)
+    internal Material(MaterialTemplate template)
+    {
+        TemplateName = template.Name;
+
+        ShaderRef = template.ShaderRef;
+
+        Parameters = new MaterialTemplateParams();
+        Parameters.Set(template.Params.GetDataParams());
+
+        TextureSlots = new MaterialTextureSlots(template.TextureSlots.Slots);
+    }
+
+    internal void Attach(MaterialId id)
     {
         Id = id;
-        TemplateName = template.Name;
         ShaderId = template.BoundShaderId;
-
-        _samplerSlots = template.SamplerSlots.ToArray();
     }
 }
-*/

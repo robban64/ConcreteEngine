@@ -3,26 +3,19 @@
 using System.Diagnostics;
 using ConcreteEngine.Common;
 using ConcreteEngine.Common.Numerics;
-using ConcreteEngine.Core.Assets;
-using ConcreteEngine.Core.Assets.Data;
-using ConcreteEngine.Core.Assets.Materials;
-using ConcreteEngine.Core.Assets.Shaders;
 using ConcreteEngine.Core.Engine;
 using ConcreteEngine.Core.Engine.Data;
 using ConcreteEngine.Core.Rendering.Batching;
 using ConcreteEngine.Core.Rendering.Commands;
 using ConcreteEngine.Core.Rendering.Data;
 using ConcreteEngine.Core.Rendering.Definitions;
-using ConcreteEngine.Core.Rendering.Descriptors;
 using ConcreteEngine.Core.Rendering.Draw;
 using ConcreteEngine.Core.Rendering.Passes;
 using ConcreteEngine.Core.Rendering.Registry;
 using ConcreteEngine.Core.Rendering.State;
 using ConcreteEngine.Graphics;
 using ConcreteEngine.Graphics.Gfx;
-using ConcreteEngine.Graphics.Gfx.Contracts;
 using ConcreteEngine.Graphics.Gfx.Resources;
-using MaterialStore = ConcreteEngine.Core.Assets.Materials.MaterialStore;
 using RenderFrameInfo = ConcreteEngine.Core.Rendering.State.RenderFrameInfo;
 
 #endregion
@@ -78,29 +71,20 @@ public sealed class RenderSystem : IRenderSystem
         _initialSize = outputSize;
     }
 
-    internal void InitializeGraphics(ReadOnlySpan<ShaderId> shaderIds)
+    internal void InitializeRegistry(ReadOnlySpan<ShaderId> shaderIds, in RenderCoreShaders coreShaders)
     {
         InvalidOpThrower.ThrowIf(_initialSize.Width <= 1);
         InvalidOpThrower.ThrowIf(_initialSize.Height <= 1);
 
         _renderRegistry = new RenderRegistry(_gfx);
         _renderRegistry.BeginRegistration(_initialSize);
-        _renderRegistry.ShaderRegistry.RegisterCollection(shaderIds);
+        _renderRegistry.ShaderRegistry.RegisterCollection(shaderIds).RegisterCoreShader(in coreShaders);
         _renderRegistry.FinishRegistration();
     }
 
-    internal void Initialize(AssetSystem assets)
+    internal void InitializeDraw()
     {
-        var depthShader = assets.Store.GetByName<Shader>("Depth").ResourceId;
-        var depthKey = TagRegistry.FboKey<ShadowPassTag>(FboVariant.Default);
-
-        _renderRegistry.TryGetRenderFbo(depthKey, out var shadowFbo);
-
-        InvalidOpThrower.ThrowIfNull(shadowFbo, nameof(shadowFbo));
-        InvalidOpThrower.ThrowIfNot(shadowFbo.Attachments.DepthTextureId.IsValid());
-
-
-        var drawCtx = new DrawStateContext(depthShader, shadowFbo!.Attachments.DepthTextureId);
+        var drawCtx = new DrawStateContext(_renderRegistry);
         var drawCtxPayload = new DrawStateContextPayload
         {
             Gfx = _gfx, Registry = _renderRegistry, RenderView = _renderView, Snapshot = _snapshot
@@ -121,28 +105,20 @@ public sealed class RenderSystem : IRenderSystem
         _cmdDraw.Initialize();
         _drawBuffers.AttachMaterialBuffer(_drawPipeline.MaterialBuffer);
 
-        RegisterPasses(assets.Store);
+        RegisterPasses();
         _initialized = true;
     }
 
-
-    private void RegisterPasses(IAssetStore assets)
+    private void RegisterPasses()
     {
         _passPipeline = new RenderPassPipeline(_drawStateOps, _renderRegistry);
-
-        var compositeShader = assets.GetByName<Shader>("Composite").ResourceId;
-        var presentShader = assets.GetByName<Shader>("Present").ResourceId;
-        var colorFilterShader = assets.GetByName<Shader>("ColorFilter").ResourceId;
-
-        TempPassSetup.RegisterPassPipeline(_passPipeline, compositeShader, presentShader, colorFilterShader);
+        TempPassSetup.RegisterPassPipeline(_passPipeline, in _renderRegistry.ShaderRegistry.CoreShaders);
     }
 
     public TSink GetSink<TSink>() where TSink : IDrawSink => _drawPipeline.GetSink<TSink>();
 
     internal void BeginTick(in UpdateTickInfo tick) => _drawPipeline.BeginTick(tick);
     internal void EndTick() => _drawPipeline.EndTick();
-
-
 
     //
     internal void RenderEmptyFrame(in RenderFrameInfo frameInfo)
@@ -180,6 +156,7 @@ public sealed class RenderSystem : IRenderSystem
     public void SubmitMaterialDrawData(in DrawMaterialPayload payload, ReadOnlySpan<TextureSlotInfo> slots) =>
         _drawPipeline.SubmitMaterialDrawData(in payload, slots);
 
+    //TODO remove the temp delegate
     internal void Render(in RenderFrameInfo frameInfo, Action uploadMaterialDel)
     {
         Debug.Assert(_initialized);

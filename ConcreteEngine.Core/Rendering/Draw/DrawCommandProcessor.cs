@@ -77,7 +77,7 @@ internal sealed class DrawCommandProcessor
         _drawUbo.ResetCursor();
         _ctx.ResetMaterialState();
         if (_ctx.IsDepth)
-            UseShader(_ctx.DepthShader);
+            UseShader(_ctx.CoreShaders.DepthShader);
     }
 
     public void DrawMesh(DrawCommand cmd, int submitIndex)

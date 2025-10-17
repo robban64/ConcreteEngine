@@ -8,8 +8,7 @@ namespace ConcreteEngine.Core.Rendering;
 
 internal static class TempPassSetup
 {
-    public static void RegisterPassPipeline(RenderPassPipeline passPipeline, ShaderId compositeShader,
-        ShaderId presentShader, ShaderId colorFilterShader)
+    public static void RegisterPassPipeline(RenderPassPipeline passPipeline, in RenderCoreShaders defaults)
     {
         // Shadow
         passPipeline.Register<ShadowPassTag>(FboVariant.Default, new PassId(0), PassOpKind.Draw,
@@ -62,7 +61,7 @@ internal static class TempPassSetup
 
         // Post A
         passPipeline.Register<PostPassTag>(FboVariant.Default, new PassId(3), PassOpKind.Fsq,
-                RenderPassState.MakePostProcess(compositeShader))
+                RenderPassState.MakePostProcess(defaults.CompositeShader))
             .OnPassBegin(static (RenderPassCtx ctx, in RenderPassState state) =>
             {
                 var sources = ctx.GetPassSources();
@@ -79,7 +78,7 @@ internal static class TempPassSetup
 
         // Post B
         passPipeline.Register<PostPassTag>(FboVariant.Secondary, new PassId(4), PassOpKind.Fsq,
-                RenderPassState.MakePostProcess(colorFilterShader))
+                RenderPassState.MakePostProcess(defaults.ColorFilterShader))
             .OnPassBegin(static (RenderPassCtx ctx, in RenderPassState state) =>
             {
                 var sources = ctx.GetPassSources();
@@ -96,7 +95,7 @@ internal static class TempPassSetup
 
         // Screen
         passPipeline.Register<ScreenPassTag>(FboVariant.Default, new PassId(5), PassOpKind.Screen,
-                RenderPassState.MakeScreen(presentShader))
+                RenderPassState.MakeScreen(defaults.PresentShader))
             .OnPassBegin(static (RenderPassCtx ctx, in RenderPassState state) =>
             {
                 var sources = ctx.GetPassSources();

@@ -22,6 +22,7 @@ internal sealed class RenderFboRegistry
     private readonly GfxResourceApi _gfxApi;
 
     private int _fboCount = 0;
+    
     private readonly RenderFbo[] _fboRegistry = new RenderFbo[RenderLimits.FboSlots];
     public ReadOnlySpan<RenderFbo> FrameBuffers => _fboRegistry.AsSpan(0, _fboCount);
 

@@ -1,5 +1,7 @@
 #region
 
+using ConcreteEngine.Core.Rendering.Data;
+using ConcreteEngine.Core.Rendering.Definitions;
 using ConcreteEngine.Graphics.Gfx;
 using ConcreteEngine.Graphics.Gfx.Resources;
 
@@ -14,15 +16,18 @@ internal sealed class RenderShaderRegistry
 
     private RenderShader[] _shaderRegistry = Array.Empty<RenderShader>();
     private int _shaderCount = 0;
+    
+    private RenderCoreShaders  _coreShaders;
 
     internal RenderShaderRegistry(GfxContext gfx)
     {
         _gfxApi = gfx.ResourceContext.ResourceManager.GetGfxApi();
         _gfxShaders = gfx.Shaders;
     }
+    
+    public ref readonly RenderCoreShaders CoreShaders => ref _coreShaders;
 
-
-    public void RegisterCollection(ReadOnlySpan<ShaderId> shaders)
+    public RenderShaderRegistry RegisterCollection(ReadOnlySpan<ShaderId> shaders)
     {
         _shaderRegistry = new RenderShader[shaders.Length];
         _shaderCount = shaders.Length;
@@ -36,7 +41,11 @@ internal sealed class RenderShaderRegistry
             var meta = _gfxApi.GetMeta<ShaderId, ShaderMeta>(shaderId);
             _shaderRegistry[shaderId - 1] = new RenderShader(shaderId, meta);
         }
+
+        return this;
     }
+    
+    public void RegisterCoreShader(in RenderCoreShaders shaders) => _coreShaders = shaders;
 
     public RenderShader GetRenderShader(ShaderId shaderId) => _shaderRegistry[shaderId - 1];
 }

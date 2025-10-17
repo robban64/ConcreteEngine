@@ -42,7 +42,6 @@ public sealed class GameEngine : IDisposable
 
     private readonly EngineTimeHub _timeHub;
 
-
     private bool _isDisposed = false;
 
     private LinearStateMachine<EngineStateLevel> _stateMachine;
@@ -87,7 +86,7 @@ public sealed class GameEngine : IDisposable
     {
         _assets.FinishLoading();
 
-        _renderer.Initialize(_assets);
+        _renderer.InitializeDraw();
         _coreSystems.Initialize();
     }
 
@@ -102,6 +101,9 @@ public sealed class GameEngine : IDisposable
         }
     }
 
+
+
+    private Action? _uploadMaterialDel;
     internal void Render(float dt)
     {
         var alpha = _timeHub.Alpha;
@@ -134,14 +136,9 @@ public sealed class GameEngine : IDisposable
         _renderer.BeginRenderFrame(beginStatus, in tickInfo, in tickParams, in viewInfo);
 
         // _renderTime.TickOrRenderEffect();
-        Span<TextureSlotInfo> slots = stackalloc TextureSlotInfo[RenderLimits.TextureSlots];
-        foreach (var material in _assets.Materials.MaterialSpan)
-        {
-            var length = _assets.Materials.FillTextureInfo(material!, slots);
-            _assets.Materials.GetMaterialUploadData(material!, out var payload);
-            _renderer.SubmitMaterialDrawData(in payload, slots.Slice(0, length));
-        }
-        _renderer.Render(in tickInfo, UploadMaterialData);
+
+        _uploadMaterialDel ??= UploadMaterialData;
+        _renderer.Render(in tickInfo, _uploadMaterialDel);
 
         //_renderTime.TickOrGpuDispose();
         //_renderTime.TickOrGpuUpload();
@@ -223,10 +220,20 @@ public sealed class GameEngine : IDisposable
 
     private void InitializeGraphics()
     {
-        var shaderCount = _assets.Store.GetMetaSnapshot<Shader>().Count;
+        var store = _assets.Store;
+
+        var shaderCount = store.GetMetaSnapshot<Shader>().Count;
         Span<ShaderId> shaderIds = stackalloc ShaderId[shaderCount];
-        _assets.Store.ExtractSpan<Shader, ShaderId>(shaderIds, static shader => shader.ResourceId);
-        _renderer.InitializeGraphics(shaderIds);
+        store.ExtractSpan<Shader, ShaderId>(shaderIds, static shader => shader.ResourceId);
+        
+        _renderer.InitializeRegistry(shaderIds, new RenderCoreShaders
+        {
+            DepthShader = store.GetByName<Shader>("Depth").ResourceId,
+            ColorFilterShader = store.GetByName<Shader>("ColorFilter").ResourceId,
+            CompositeShader = store.GetByName<Shader>("Composite").ResourceId,
+            PresentShader = store.GetByName<Shader>("Present").ResourceId
+
+        });
     }
 
     private void UpdateSceneTransitionIfNeeded()

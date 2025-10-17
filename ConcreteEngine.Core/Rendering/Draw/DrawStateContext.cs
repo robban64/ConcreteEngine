@@ -2,6 +2,7 @@
 
 using ConcreteEngine.Core.Rendering.Data;
 using ConcreteEngine.Core.Rendering.Definitions;
+using ConcreteEngine.Core.Rendering.Passes;
 using ConcreteEngine.Core.Rendering.Registry;
 using ConcreteEngine.Core.Rendering.State;
 using ConcreteEngine.Graphics.Gfx;
@@ -21,16 +22,17 @@ internal sealed class DrawStateContextPayload
 
 internal sealed class DrawStateContext
 {
-    public ShaderId DepthShader { get; }
     public TextureId DepthTexture { get; private set; }
     public PassStateMode PassState { get; private set; }
-
     public MaterialId PrevMaterial { get; private set; } = new (-1);
 
-    internal DrawStateContext(ShaderId depthShader, TextureId depthTexture)
+    public readonly RenderCoreShaders CoreShaders;
+
+    internal DrawStateContext(RenderRegistry registry)
     {
-        DepthShader = depthShader;
-        DepthTexture = depthTexture;
+        var depthFbo = registry.GetRenderFbo(TagRegistry.FboKey<ShadowPassTag>(FboVariant.Default));
+        DepthTexture = depthFbo.Attachments.DepthTextureId;
+        CoreShaders = registry.ShaderRegistry.CoreShaders;
     }
     
     public bool IsMain => PassState == PassStateMode.Main;
@@ -57,7 +59,7 @@ internal sealed class DrawStateContext
     {
         PassStateMode.Main => cmdShader,
         PassStateMode.Post => cmdShader,
-        PassStateMode.Depth => DepthShader,
+        PassStateMode.Depth => CoreShaders.DepthShader,
         _ => throw new ArgumentOutOfRangeException()
     };
     

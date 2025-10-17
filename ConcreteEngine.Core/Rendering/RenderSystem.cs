@@ -52,8 +52,8 @@ public sealed class RenderSystem : IRenderSystem
     private RenderPassPipeline _passPipeline;
 
     private DrawStateOps _drawStateOps = null!;
-    private DrawProcessor _drawProcessor = null!;
-    private DrawUniforms _drawUniforms = null!;
+    private DrawCommandProcessor _cmdDraw = null!;
+    private DrawBuffers _drawBuffers = null!;
 
     private readonly BatcherRegistry _batches = new();
 
@@ -106,9 +106,9 @@ public sealed class RenderSystem : IRenderSystem
             Gfx = _gfx, Registry = _renderRegistry, RenderView = _renderView, Snapshot = _snapshot
         };
 
-        _drawUniforms = new DrawUniforms(_gfx.Buffers, _renderRegistry, _snapshot);
-        _drawProcessor = new DrawProcessor(drawCtx, drawCtxPayload, assets.Materials);
-        _drawStateOps = new DrawStateOps(drawCtx, drawCtxPayload, _drawUniforms);
+        _drawBuffers = new DrawBuffers(drawCtx, drawCtxPayload);
+        _cmdDraw = new DrawCommandProcessor(drawCtx, drawCtxPayload, _drawBuffers);
+        _drawStateOps = new DrawStateOps(drawCtx, drawCtxPayload, _drawBuffers);
 
         _batches.Register(new TerrainBatcher(_gfx));
         //_batches.Register(new SpriteBatcher(_gfx));
@@ -116,9 +116,10 @@ public sealed class RenderSystem : IRenderSystem
 
 
         _drawPipeline = new DrawCommandPipeline();
-        _drawPipeline.Initialize(_gfx, _batches, _drawProcessor);
+        _drawPipeline.Initialize(_gfx, _batches, _cmdDraw, _drawBuffers);
 
-        _drawProcessor.Initialize();
+        _cmdDraw.Initialize();
+        _drawBuffers.AttachMaterialBuffer(_drawPipeline.MaterialBuffer);
 
         RegisterPasses(assets.Store);
         _initialized = true;
@@ -168,22 +169,26 @@ public sealed class RenderSystem : IRenderSystem
 
         _snapshot = RenderProps.Commit();
         _renderView.PrepareFrame(in viewSnapshot);
-        _drawUniforms.UploadGlobalUniforms(in frameInfo, in runtimeParams);
-        _drawUniforms.UploadCameraView(_renderView);
+        _drawBuffers.UploadGlobalUniforms(in frameInfo, in runtimeParams);
+        _drawBuffers.UploadCameraView(_renderView);
     }
 
     internal void EndRenderFrame(out GfxFrameResult frameResult)
     {
         _graphics.EndFrame(out frameResult);
     }
+    public void SubmitMaterialDrawData(in DrawMaterialPayload payload, ReadOnlySpan<TextureSlotInfo> slots) =>
+        _drawPipeline.SubmitMaterialDrawData(in payload, slots);
 
-    internal void Render(in RenderFrameInfo frameInfo, MaterialStore materialStore)
+    internal void Render(in RenderFrameInfo frameInfo, Action uploadMaterialDel)
     {
         Debug.Assert(_initialized);
 
         _passPipeline.Prepare(frameInfo.OutputSize);
-        var (drawCapacity, matCapacity) = _drawPipeline.Prepare(frameInfo.Alpha, _snapshot, materialStore);
-        _drawProcessor.PrepareFrame(drawCapacity, matCapacity);
+        var (drawCapacity, matCapacity) = _drawPipeline.Prepare(frameInfo.Alpha, _snapshot);
+        uploadMaterialDel();
+        
+        _cmdDraw.PrepareFrame(drawCapacity, matCapacity);
 
         _drawPipeline.ExecuteMaterials();
         _drawPipeline.ExecuteTransforms();
@@ -207,7 +212,7 @@ public sealed class RenderSystem : IRenderSystem
 
         if (passResult == PassAction.DrawPassResult())
         {
-            _drawProcessor.PrepareDrawPass();
+            _cmdDraw.PrepareDrawPass();
             _drawPipeline.ExecuteDrawPass(passId);
         }
 

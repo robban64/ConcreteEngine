@@ -17,9 +17,8 @@ public readonly record struct DrawMaterialMeta(MaterialId MaterialId, ShaderId S
 
 
 [StructLayout(LayoutKind.Sequential)]
-public readonly struct DrawMaterialPayload(MaterialId materialId, ShaderId shaderId, in MaterialParams param)
+public readonly struct DrawMaterialPayload(in DrawMaterialMeta meta, in MaterialParams param)
 {
-    public readonly MaterialId MaterialId = materialId;
-    public readonly ShaderId ShaderId = shaderId;
+    public readonly DrawMaterialMeta Meta =  meta;
     public readonly MaterialParams MatParams = param;
 }

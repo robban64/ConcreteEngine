@@ -10,6 +10,7 @@ using ConcreteEngine.Core.Engine.Time;
 using ConcreteEngine.Core.Features;
 using ConcreteEngine.Core.Modules;
 using ConcreteEngine.Core.Rendering;
+using ConcreteEngine.Core.Rendering.Data;
 using ConcreteEngine.Core.Rendering.State;
 using ConcreteEngine.Core.Scene;
 using ConcreteEngine.Graphics;
@@ -90,6 +91,17 @@ public sealed class GameEngine : IDisposable
         _coreSystems.Initialize();
     }
 
+    private void UploadMaterialData()
+    {
+        Span<TextureSlotInfo> slots = stackalloc TextureSlotInfo[RenderLimits.TextureSlots];
+        foreach (var material in _assets.Materials.MaterialSpan)
+        {
+            var length = _assets.Materials.FillTextureInfo(material!, slots);
+            _assets.Materials.GetMaterialUploadData(material!, out var payload);
+            _renderer.SubmitMaterialDrawData(in payload, slots.Slice(0, length));
+        }
+    }
+
     internal void Render(float dt)
     {
         var alpha = _timeHub.Alpha;
@@ -122,7 +134,14 @@ public sealed class GameEngine : IDisposable
         _renderer.BeginRenderFrame(beginStatus, in tickInfo, in tickParams, in viewInfo);
 
         // _renderTime.TickOrRenderEffect();
-        _renderer.Render(in tickInfo, _assets.Materials);
+        Span<TextureSlotInfo> slots = stackalloc TextureSlotInfo[RenderLimits.TextureSlots];
+        foreach (var material in _assets.Materials.MaterialSpan)
+        {
+            var length = _assets.Materials.FillTextureInfo(material!, slots);
+            _assets.Materials.GetMaterialUploadData(material!, out var payload);
+            _renderer.SubmitMaterialDrawData(in payload, slots.Slice(0, length));
+        }
+        _renderer.Render(in tickInfo, UploadMaterialData);
 
         //_renderTime.TickOrGpuDispose();
         //_renderTime.TickOrGpuUpload();

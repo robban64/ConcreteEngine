@@ -12,7 +12,6 @@ public readonly record struct TextureSlotInfo(
     TextureId Texture,
     TextureSlotKind SlotKind,
     TextureKind TextureKind
-    //bool Srgb
 );
 
 public readonly record struct TextureSlot(TextureId Texture, int Slot)

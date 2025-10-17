@@ -17,7 +17,8 @@ namespace ConcreteEngine.Core.Rendering.Commands;
 
 public sealed class DrawCommandBuffer
 {
-    private readonly DrawProcessor _drawProcessor;
+    private readonly DrawBuffers _drawBuffers;
+    private readonly DrawCommandProcessor _cmdDraw;
 
     private DrawCommand[] _commandBuffer;
     private DrawObjectUniform[] _transformBuffer;
@@ -30,7 +31,7 @@ public sealed class DrawCommandBuffer
 
     public int Count => _submitIdx;
 
-    internal DrawCommandBuffer(DrawProcessor drawProcessor)
+    internal DrawCommandBuffer(DrawCommandProcessor cmdDraw, DrawBuffers drawBuffers)
     {
         _commandBuffer = new DrawCommand[DefaultCommandBuffCapacity];
         _transformBuffer = new DrawObjectUniform[DefaultCommandBuffCapacity];
@@ -40,7 +41,8 @@ public sealed class DrawCommandBuffer
 
         _passRanges = new DrawPassRange[PassSlots];
 
-        _drawProcessor = drawProcessor;
+        _cmdDraw = cmdDraw;
+        _drawBuffers = drawBuffers;
 
         _submitIdx = 0;
     }
@@ -165,7 +167,7 @@ public sealed class DrawCommandBuffer
     public void DrainTransformQueue()
     {
         if(_transformBuffer.Length == 0) return;
-        _drawProcessor.UploadDrawObjects(_transformBuffer.AsSpan(0, _submitIdx));
+        _drawBuffers.UploadDrawObjects(_transformBuffer.AsSpan(0, _submitIdx));
     }
     
 
@@ -177,7 +179,7 @@ public sealed class DrawCommandBuffer
         for (var i = pass.Start; i < end; i++)
         {
             var idx = _drawTickets[i].SubmitIdx;
-            _drawProcessor.DrawMesh(commands[idx], idx);
+            _cmdDraw.DrawMesh(commands[idx], idx);
         }
     }
 

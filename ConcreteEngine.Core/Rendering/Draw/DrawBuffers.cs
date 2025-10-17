@@ -1,7 +1,9 @@
 #region
 
 using System.Numerics;
+using System.Runtime.CompilerServices;
 using ConcreteEngine.Core.Rendering.Data;
+using ConcreteEngine.Core.Rendering.Definitions;
 using ConcreteEngine.Core.Rendering.Registry;
 using ConcreteEngine.Core.Rendering.State;
 using ConcreteEngine.Graphics.Gfx;
@@ -11,8 +13,9 @@ using ConcreteEngine.Graphics.Gfx.Resources;
 
 namespace ConcreteEngine.Core.Rendering.Draw;
 
-internal sealed class DrawUniforms
+internal sealed class DrawBuffers
 {
+    private readonly GfxCommands _gfxCmd;
     private readonly GfxBuffers _gfxBuffers;
 
     private readonly UniformBufferId _engineUbo;
@@ -23,12 +26,25 @@ internal sealed class DrawUniforms
     private readonly UniformBufferId _dirLightUbo;
     private readonly UniformBufferId _postUbo;
 
+    private readonly RenderUbo _drawUbo;
+    private readonly RenderUbo _materialUbo;
+
+    private MaterialDrawBuffer _materialBuffer = null!;
+    private readonly DrawStateContext _ctx;
+
     private readonly RenderSceneState _sceneState;
 
-    internal DrawUniforms(GfxBuffers gfxBuffers, RenderRegistry registry, RenderSceneState sceneState)
+    internal DrawBuffers(DrawStateContext ctx, DrawStateContextPayload ctxPayload)
     {
-        _gfxBuffers = gfxBuffers;
-        _sceneState = sceneState;
+        _gfxBuffers = ctxPayload.Gfx.Buffers;
+        _gfxCmd = ctxPayload.Gfx.Commands;
+        
+        _sceneState = ctxPayload.Snapshot;
+        _ctx = ctx;
+
+        var registry = ctxPayload.Registry;
+        _drawUbo = registry.GetRenderUbo<DrawObjectUniform>();
+        _materialUbo = registry.GetRenderUbo<MaterialUniformRecord>();
 
         _engineUbo = registry.GetRenderUbo<EngineUniformRecord>().Id;
         _frameUbo = registry.GetRenderUbo<FrameUniformRecord>().Id;
@@ -38,8 +54,54 @@ internal sealed class DrawUniforms
         _shadowUbo = registry.GetRenderUbo<ShadowUniformRecord>().Id;
         _postUbo = registry.GetRenderUbo<PostProcessUniform>().Id;
     }
+    
+    public void AttachMaterialBuffer(MaterialDrawBuffer materialBuffer) => _materialBuffer = materialBuffer;
 
 
+    public void ApplyDrawMaterial(MaterialId materialId, Action<ShaderId> applyShader)
+    {
+        if (!_ctx.ResolveMaterialBind(materialId)) return;
+        var slots = _materialBuffer.GetMetaAndSlots(materialId, out var meta);
+        applyShader(meta.ShaderId);
+        for (var i = 0; i < slots.Length; i++)
+        {
+            var value = slots[i];
+
+            if (value.SlotKind == TextureSlotKind.Shadowmap)
+                _gfxCmd.BindTexture(_ctx.DepthTexture, i);
+            else
+                _gfxCmd.BindTexture(value.Texture, i);
+        }
+
+        BindMaterialObject(materialId);
+    }
+
+        
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public void BindMaterialObject(MaterialId matId)
+    {
+        var cursor = _materialUbo.SetDrawCursor(matId.Id - 1);
+        _gfxBuffers.BindUniformBufferRange(_materialUbo.Id, cursor, _materialUbo.Stride);
+    }
+    
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public void BindDrawObject(int submitIndex)
+    {
+        var cursor = _drawUbo.SetDrawCursor(submitIndex);
+        _gfxBuffers.BindUniformBufferRange(_drawUbo.Id, cursor, _drawUbo.Stride);
+    }
+
+    public void UploadMaterialRecord(MaterialId materialId, in MaterialUniformRecord data)
+        => _gfxBuffers.UploadUniformGpuData(_materialUbo.Id, in data, 0);
+
+    public void UploadMaterial(ReadOnlySpan<MaterialUniformRecord> data)
+        => _gfxBuffers.UploadUniformGpuSpan(_materialUbo.Id, data, _materialUbo.SetUploadCursor(0));
+
+    public void UploadDrawObjects(ReadOnlySpan<DrawObjectUniform> data) =>
+        _gfxBuffers.UploadUniformGpuSpan(_drawUbo.Id, data, _drawUbo.SetUploadCursor(0));
+
+
+    // Globals //
     public void UploadGlobalUniforms(in RenderFrameInfo frameInfo, in RenderRuntimeParams runtimeParams)
     {
         UploadEngineUniformRecord(in frameInfo, in runtimeParams);

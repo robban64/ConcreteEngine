@@ -19,16 +19,16 @@ public sealed class DrawStateOps
     private readonly RenderRegistry _renderRegistry;
     private readonly RenderView _renderView;
     private readonly RenderSceneState _sceneState;
-    private readonly DrawUniforms _drawUniforms;
+    private readonly DrawBuffers _drawBuffers;
 
     private readonly DrawStateContext _ctx;
 
-    internal DrawStateOps(DrawStateContext ctx, DrawStateContextPayload ctxPayload, DrawUniforms drawUniforms)
+    internal DrawStateOps(DrawStateContext ctx, DrawStateContextPayload ctxPayload, DrawBuffers drawBuffers)
     {
         _renderRegistry = ctxPayload.Registry;
         _renderView = ctxPayload.RenderView;
         _sceneState = ctxPayload.Snapshot;
-        _drawUniforms = drawUniforms;
+        _drawBuffers = drawBuffers;
         _gfxCmd = ctxPayload.Gfx.Commands;
         _gfxTextures = ctxPayload.Gfx.Textures;
         _primitiveMeshes = ctxPayload.Gfx.Primitives;
@@ -41,15 +41,15 @@ public sealed class DrawStateOps
         _ctx.SetDepthMode();
 
         _renderView.ApplyLightViewOverride(_sceneState.DirLight.Direction);
-        _drawUniforms.UploadShadow(in _renderView.ProjectionViewMatrix);
-        _drawUniforms.UploadCameraView(_renderView);
+        _drawBuffers.UploadShadow(in _renderView.ProjectionViewMatrix);
+        _drawBuffers.UploadCameraView(_renderView);
     }
 
     public void RestoreMode()
     {
-        _ctx.RestoreStateMode();
+        _ctx.ResetPassMode();
         _renderView.ClearOverride();
-        _drawUniforms.UploadCameraView(_renderView);
+        _drawBuffers.UploadCameraView(_renderView);
     }
 
 

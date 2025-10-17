@@ -1,6 +1,6 @@
 namespace ConcreteEngine.Core.Rendering.Definitions;
 
-public enum StateModeKind
+public enum PassStateMode
 {
     Main,
     Depth,

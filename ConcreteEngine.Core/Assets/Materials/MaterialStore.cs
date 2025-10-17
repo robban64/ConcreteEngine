@@ -96,28 +96,22 @@ public sealed class MaterialStore : IMaterialStore
     }
 
     public void GetMaterialUploadData(Material material, out DrawMaterialPayload data)
-        => data = new DrawMaterialPayload(material.Id, ResolveShader(material), material.State.Snapshot());
-
-    public int DrainMaterialTextureSlots(Material material, Span<TextureSlotInfo> span)
     {
-        for (var i = 0; i < material.TextureSlots.Slots.Length; i++)
+        var meta = new DrawMaterialMeta(material.Id, ResolveShader(material));
+        var snapshot = material.State.Snapshot();
+        data = new DrawMaterialPayload(in meta, in snapshot);
+    }
+    
+    public int FillTextureInfo(Material material, Span<TextureSlotInfo> span)
+    {
+        var textureSlots = material.TextureSlots.Slots;
+        for (var i = 0; i < textureSlots.Length; i++)
         {
-            var slot = material.TextureSlots.Slots[i];
+            var slot = textureSlots[i];
             var textureId = ResolveTextureId(slot);
             span[i] = new TextureSlotInfo(textureId, slot.SlotKind, slot.TextureKind);
         }
-
-        return material.TextureSlots.Slots.Length;
-    }
-
-    public void DrainMaterialParams(Material material, Span<MaterialParams> span)
-    {
-        for (var i = 0; i < material.TextureSlots.Slots.Length; i++)
-        {
-            var slot = material.TextureSlots.Slots[i];
-            var textureId = ResolveTextureId(slot);
-            span[i] = material.State.Snapshot();
-        }
+        return textureSlots.Length;
     }
 
     public ShaderId ResolveShader(Material material) => _assetStore.GetByRef(material.ShaderRef).ResourceId;

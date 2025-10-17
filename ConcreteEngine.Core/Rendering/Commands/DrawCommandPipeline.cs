@@ -1,5 +1,6 @@
 #region
 
+using ConcreteEngine.Common;
 using ConcreteEngine.Core.Assets.Materials;
 using ConcreteEngine.Core.Engine.Data;
 using ConcreteEngine.Core.Rendering.Batching;
@@ -19,21 +20,32 @@ namespace ConcreteEngine.Core.Rendering.Commands;
 internal sealed class DrawCommandPipeline
 {
     private DrawCommandCollector _commandCollector = null!;
-
     private SceneDrawProducer _sceneDrawProducer = null!;
 
     private DrawCommandBuffer _cmdBuffer = null!;
-    private DrawMaterialBuffer _materialBuffer;
+    private MaterialDrawBuffer _materialBuffer;
+
+    private DrawCommandProcessor _cmdDraw = null!;
+    private DrawBuffers _drawBuffers = null!;
+
+    internal MaterialDrawBuffer MaterialBuffer => _materialBuffer;
 
     internal DrawCommandPipeline()
     {
     }
 
-    public void Initialize(GfxContext gfx, BatcherRegistry batches, DrawProcessor drawProcessor)
+    internal void BeginTick(in UpdateTickInfo tick) => _commandCollector.BeginTick(tick);
+    internal void EndTick() => _commandCollector.EndTick();
+    public TSink GetSink<TSink>() where TSink : IDrawSink => _commandCollector.GetSink<TSink>();
+    
+    public void Initialize(GfxContext gfx, BatcherRegistry batches, DrawCommandProcessor cmdDraw, DrawBuffers drawBuffers)
     {
+        _cmdDraw = cmdDraw;
+        _drawBuffers = drawBuffers;
+        
         _commandCollector = new DrawCommandCollector();
-        _cmdBuffer = new DrawCommandBuffer(drawProcessor);
-        _materialBuffer = new DrawMaterialBuffer(drawProcessor);
+        _cmdBuffer = new DrawCommandBuffer(cmdDraw, drawBuffers);
+        _materialBuffer = new MaterialDrawBuffer();
 
         _commandCollector.RegisterProducerSink<IMeshDrawSink>(new MeshDrawProducer());
         _commandCollector.RegisterProducerSink<ITerrainDrawSink>(new TerrainDrawProducer());
@@ -46,57 +58,31 @@ internal sealed class DrawCommandPipeline
         _commandCollector.InitializeProducers();
     }
 
-    internal void BeginTick(in UpdateTickInfo tick) => _commandCollector.BeginTick(tick);
-    internal void EndTick() => _commandCollector.EndTick();
-    public TSink GetSink<TSink>() where TSink : IDrawSink => _commandCollector.GetSink<TSink>();
+    internal void SubmitMaterialDrawData(in DrawMaterialPayload payload, ReadOnlySpan<TextureSlotInfo> slots) =>
+        _materialBuffer.SubmitDrawData(in payload, slots);
 
-
-    // TODO fix (dont put store here)
-    public void PrepareMaterials(MaterialStore materials)
-    {
-        var count = materials.MaterialSpan.Length;
-        var span = materials.MaterialSpan;
-
-        Span<DrawMaterialPayload> buffer = stackalloc DrawMaterialPayload[count];
-
-        for (var i = 0; i < count; i++)
-        {
-            var material = span[i];
-            if (material is null)
-            {
-                buffer[i] = default;
-                continue;
-            }
-
-            materials.GetMaterialUploadData(material!, out var data);
-            buffer[i] = data;
-        }
-
-        _materialBuffer.SubmitMaterials(buffer);
-    }
-
-    internal (nint, nint) Prepare(float alpha, RenderSceneState snapshot, MaterialStore materials)
+    internal (nint, nint) Prepare(float alpha, RenderSceneState snapshot)
     {
         _cmdBuffer.Reset();
         _materialBuffer.Reset();
 
-        _sceneDrawProducer.SetSceneGlobals( snapshot);
+        _sceneDrawProducer.SetSceneGlobals(snapshot);
 
         // Fill command buffer
-        _commandCollector.CollectTo(alpha,  snapshot, _cmdBuffer);
+        _commandCollector.CollectTo(alpha, snapshot, _cmdBuffer);
 
         // Sort command buffer and prepare passes
         _cmdBuffer.ReadyDrawCommands();
-
-        // Fill materials
-        PrepareMaterials(materials);
 
         var drawCap = UniformBufferUtils.GetCapacityForEntities<DrawObjectUniform>(_cmdBuffer.Count + 32);
         var matCap = UniformBufferUtils.GetCapacityForEntities<MaterialUniformRecord>(_materialBuffer.Count + 4);
         return (drawCap, matCap);
     }
 
-    internal void ExecuteMaterials() => _materialBuffer.DispatchMaterials();
+    internal void ExecuteMaterials()
+    {
+        _drawBuffers.UploadMaterial(_materialBuffer.DrainDrawMaterialData());
+    }
 
     internal void ExecuteTransforms() => _cmdBuffer.DrainTransformQueue();
 

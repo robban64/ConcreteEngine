@@ -1,5 +1,6 @@
 #region
 
+using ConcreteEngine.Core.Rendering.Data;
 using ConcreteEngine.Core.Rendering.Definitions;
 using ConcreteEngine.Core.Rendering.Registry;
 using ConcreteEngine.Core.Rendering.State;
@@ -22,7 +23,9 @@ internal sealed class DrawStateContext
 {
     public ShaderId DepthShader { get; }
     public TextureId DepthTexture { get; private set; }
-    public StateModeKind StateMode { get; set; }
+    public PassStateMode PassState { get; private set; }
+
+    public MaterialId PrevMaterial { get; private set; } = new (-1);
 
     internal DrawStateContext(ShaderId depthShader, TextureId depthTexture)
     {
@@ -30,17 +33,31 @@ internal sealed class DrawStateContext
         DepthTexture = depthTexture;
     }
     
-    public bool IsMain => StateMode == StateModeKind.Main;
-    public bool IsDepth => StateMode == StateModeKind.Depth;
+    public bool IsMain => PassState == PassStateMode.Main;
+    public bool IsDepth => PassState == PassStateMode.Depth;
     
-    public void RestoreStateMode() => StateMode = StateModeKind.Main;
-    public void SetDepthMode() => StateMode = StateModeKind.Depth;
+    public void SetDepthMode() => PassState = PassStateMode.Depth;
 
-    public ShaderId ResolveShaderPolicy(ShaderId cmdShader) => StateMode switch
+    public void ResetPassMode() => PassState = PassStateMode.Main;
+    public void ResetMaterialState() => PrevMaterial = default;
+
+    public void ResetState()
     {
-        StateModeKind.Main => cmdShader,
-        StateModeKind.Post => cmdShader,
-        StateModeKind.Depth => DepthShader,
+        PrevMaterial = default;
+        PassState = PassStateMode.Main;
+    }
+
+    public bool ResolveMaterialBind(MaterialId material)
+    {
+        if (material == PrevMaterial) return false;
+        PrevMaterial = material;
+        return true;
+    } 
+    public ShaderId ResolveShaderPolicy(ShaderId cmdShader) => PassState switch
+    {
+        PassStateMode.Main => cmdShader,
+        PassStateMode.Post => cmdShader,
+        PassStateMode.Depth => DepthShader,
         _ => throw new ArgumentOutOfRangeException()
     };
     

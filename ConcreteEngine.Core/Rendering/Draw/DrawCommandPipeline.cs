@@ -6,6 +6,7 @@ using ConcreteEngine.Core.Rendering.Commands;
 using ConcreteEngine.Core.Rendering.Data;
 using ConcreteEngine.Core.Rendering.Passes;
 using ConcreteEngine.Core.Rendering.Producers;
+using ConcreteEngine.Core.Rendering.Registry;
 using ConcreteEngine.Core.Rendering.State;
 using ConcreteEngine.Graphics.Gfx;
 using ConcreteEngine.Graphics.Gfx.Utility;
@@ -16,43 +17,60 @@ namespace ConcreteEngine.Core.Rendering.Draw;
 
 internal sealed class DrawCommandPipeline
 {
-    private DrawCommandCollector _commandCollector = null!;
+    private readonly DrawCommandCollector _commandCollector;
     private SceneDrawProducer _sceneDrawProducer = null!;
 
-    private DrawCommandBuffer _cmdBuffer = null!;
-    private MaterialDrawBuffer _materialBuffer;
+    private readonly DrawCommandBuffer _cmdBuffer;
+    private readonly MaterialDrawBuffer _materialBuffer;
 
-    private DrawCommandProcessor _cmdDraw = null!;
-    private DrawBuffers _drawBuffers = null!;
+    private readonly DrawCommandProcessor _cmdDraw;
+    private readonly DrawBuffers _drawBuffers;
+    private readonly DrawStateOps _drawStateOps;
 
-    internal MaterialDrawBuffer MaterialBuffer => _materialBuffer;
 
-    internal DrawCommandPipeline()
+    public DrawCommandProcessor DrawCmdProcessor => _cmdDraw;
+    public DrawBuffers Buffers => _drawBuffers;
+    public DrawStateOps DrawStateOps => _drawStateOps;
+    internal DrawCommandCollector Collector => _commandCollector;
+    
+    internal DrawCommandPipeline(GfxContext gfx, BatcherRegistry batches, RenderRegistry renderRegistry, RenderView view, RenderSceneState snapshot)
     {
+        var drawCtx = new DrawStateContext(renderRegistry);
+        var drawCtxPayload = new DrawStateContextPayload
+        {
+            Gfx = gfx, Registry = renderRegistry, RenderView = view, Snapshot = snapshot
+        };
+
+        // Draw / Invokers
+        _drawBuffers = new DrawBuffers(drawCtx, drawCtxPayload);
+        _cmdDraw = new DrawCommandProcessor(drawCtx, drawCtxPayload, _drawBuffers);
+        _drawStateOps = new DrawStateOps(drawCtx, drawCtxPayload, _drawBuffers);
+
+        _cmdBuffer = new DrawCommandBuffer(_cmdDraw, _drawBuffers);
+        _materialBuffer = new MaterialDrawBuffer();
+
+        _commandCollector = new DrawCommandCollector();
+        var cmdProducerCtx = new CommandProducerContext { Gfx = gfx, DrawBatchers = batches };
+
+        _commandCollector.RegisterProducerSink<IMeshDrawSink>(new MeshDrawProducer());
+        _commandCollector.RegisterProducerSink<ITerrainDrawSink>(new TerrainDrawProducer());
+        _commandCollector.RegisterProducer<SceneDrawProducer>(new SceneDrawProducer());
+        _sceneDrawProducer = _commandCollector.GetProducer<SceneDrawProducer>();
+
+        _commandCollector.AttachContext(cmdProducerCtx);
+        _commandCollector.InitializeProducers();
     }
 
     internal void BeginTick(in UpdateTickInfo tick) => _commandCollector.BeginTick(tick);
     internal void EndTick() => _commandCollector.EndTick();
     public TSink GetSink<TSink>() where TSink : IDrawSink => _commandCollector.GetSink<TSink>();
     
-    public void Initialize(GfxContext gfx, BatcherRegistry batches, DrawCommandProcessor cmdDraw, DrawBuffers drawBuffers)
+    public void Initialize()
     {
-        _cmdDraw = cmdDraw;
-        _drawBuffers = drawBuffers;
-        
-        _commandCollector = new DrawCommandCollector();
-        _cmdBuffer = new DrawCommandBuffer(cmdDraw, drawBuffers);
-        _materialBuffer = new MaterialDrawBuffer();
-
-        _commandCollector.RegisterProducerSink<IMeshDrawSink>(new MeshDrawProducer());
-        _commandCollector.RegisterProducerSink<ITerrainDrawSink>(new TerrainDrawProducer());
-        _sceneDrawProducer = new SceneDrawProducer();
-        _commandCollector.RegisterProducer<SceneDrawProducer>(_sceneDrawProducer);
-
-        var cmdProducerCtx = new CommandProducerContext { Gfx = gfx, DrawBatchers = batches };
-        _commandCollector.AttachContext(cmdProducerCtx);
         _cmdBuffer.Initialize();
-        _commandCollector.InitializeProducers();
+        _cmdDraw.Initialize();
+        _drawBuffers.AttachMaterialBuffer(_materialBuffer);
+
     }
 
     internal void SubmitMaterialDrawData(in DrawMaterialPayload payload, ReadOnlySpan<TextureSlotInfo> slots) =>

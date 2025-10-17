@@ -46,10 +46,6 @@ public sealed class RenderSystem : IRenderSystem
     private DrawCommandPipeline _drawPipeline;
     private RenderPassPipeline _passPipeline;
 
-    private DrawStateOps _drawStateOps = null!;
-    private DrawCommandProcessor _cmdDraw = null!;
-    private DrawBuffers _drawBuffers = null!;
-
     private readonly BatcherRegistry _batches = new();
 
     public RenderSceneProps RenderProps { get; }
@@ -58,8 +54,6 @@ public sealed class RenderSystem : IRenderSystem
     private readonly RenderView _renderView = new();
 
     private bool _initialized = false;
-
-    internal RenderRegistry RenderRegistry => _renderRegistry;
 
     private Size2D _initialSize;
 
@@ -75,37 +69,21 @@ public sealed class RenderSystem : IRenderSystem
 
     internal void InitializeRegistry(ReadOnlySpan<ShaderId> shaderIds, in RenderCoreShaders coreShaders)
     {
-        InvalidOpThrower.ThrowIf(_initialSize.Width <= 1);
-        InvalidOpThrower.ThrowIf(_initialSize.Height <= 1);
-
         _renderRegistry = new RenderRegistry(_gfx);
         _renderRegistry.BeginRegistration(_initialSize);
-        _renderRegistry.ShaderRegistry.RegisterCollection(shaderIds).RegisterCoreShader(in coreShaders);
+        _renderRegistry.ShaderRegistry.RegisterCollection(shaderIds);
+        _renderRegistry.ShaderRegistry .RegisterCoreShader(in coreShaders);
         _renderRegistry.FinishRegistration();
     }
 
     internal void InitializeDraw()
     {
-        var drawCtx = new DrawStateContext(_renderRegistry);
-        var drawCtxPayload = new DrawStateContextPayload
-        {
-            Gfx = _gfx, Registry = _renderRegistry, RenderView = _renderView, Snapshot = _snapshot
-        };
-
-        _drawBuffers = new DrawBuffers(drawCtx, drawCtxPayload);
-        _cmdDraw = new DrawCommandProcessor(drawCtx, drawCtxPayload, _drawBuffers);
-        _drawStateOps = new DrawStateOps(drawCtx, drawCtxPayload, _drawBuffers);
-
         _batches.Register(new TerrainBatcher(_gfx));
         //_batches.Register(new SpriteBatcher(_gfx));
         //_batches.Register(new TilemapBatcher(_gfx, 64, 32));
 
-
-        _drawPipeline = new DrawCommandPipeline();
-        _drawPipeline.Initialize(_gfx, _batches, _cmdDraw, _drawBuffers);
-
-        _cmdDraw.Initialize();
-        _drawBuffers.AttachMaterialBuffer(_drawPipeline.MaterialBuffer);
+        _drawPipeline = new DrawCommandPipeline(_gfx, _batches, _renderRegistry, _renderView, _snapshot);
+        _drawPipeline.Initialize();
 
         RegisterPasses();
         _initialized = true;
@@ -113,8 +91,8 @@ public sealed class RenderSystem : IRenderSystem
 
     private void RegisterPasses()
     {
-        _passPipeline = new RenderPassPipeline(_drawStateOps, _renderRegistry);
-        TempPassSetup.RegisterPassPipeline(_passPipeline, in _renderRegistry.ShaderRegistry.CoreShaders);
+        _passPipeline = new RenderPassPipeline(_drawPipeline.DrawStateOps, _renderRegistry);
+        PassPipeline3D.RegisterPassPipeline(_passPipeline, in _renderRegistry.ShaderRegistry.CoreShaders);
     }
 
     public TSink GetSink<TSink>() where TSink : IDrawSink => _drawPipeline.GetSink<TSink>();
@@ -147,8 +125,8 @@ public sealed class RenderSystem : IRenderSystem
 
         _snapshot = RenderProps.Commit();
         _renderView.PrepareFrame(in viewSnapshot);
-        _drawBuffers.UploadGlobalUniforms(in frameInfo, in runtimeParams);
-        _drawBuffers.UploadCameraView(_renderView);
+        _drawPipeline.Buffers.UploadGlobalUniforms(in frameInfo, in runtimeParams);
+        _drawPipeline.Buffers.UploadCameraView(_renderView);
     }
 
     internal void EndRenderFrame(out GfxFrameResult frameResult)
@@ -167,7 +145,7 @@ public sealed class RenderSystem : IRenderSystem
         var (drawCapacity, matCapacity) = _drawPipeline.Prepare(frameInfo.Alpha, _snapshot);
         uploadMaterialDel();
         
-        _cmdDraw.PrepareFrame(drawCapacity, matCapacity);
+        _drawPipeline.DrawCmdProcessor.PrepareFrame(drawCapacity, matCapacity);
 
         _drawPipeline.ExecuteMaterials();
         _drawPipeline.ExecuteTransforms();
@@ -191,7 +169,7 @@ public sealed class RenderSystem : IRenderSystem
 
         if (passResult == PassAction.DrawPassResult())
         {
-            _cmdDraw.PrepareDrawPass();
+            _drawPipeline.DrawCmdProcessor.PrepareDrawPass();
             _drawPipeline.ExecuteDrawPass(passId);
         }
 

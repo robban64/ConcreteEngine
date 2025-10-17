@@ -10,7 +10,7 @@ public sealed class BatcherRegistry
 {
     private TypeRegistryCollection<IRenderBatcher> _batches = new();
 
-    internal T Register<T>(T t) where T : IRenderBatcher
+    public T Register<T>(T t) where T : IRenderBatcher
     {
         _batches.Register<T>(t);
         return t;

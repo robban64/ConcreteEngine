@@ -23,7 +23,6 @@ internal sealed class RenderRegistry
     public RenderUboRegistry UboRegistry { get; }
 
     public RenderFboRegistry FboRegistry { get; }
-    
 
 
     public RenderRegistry(GfxContext gfx)
@@ -39,18 +38,13 @@ internal sealed class RenderRegistry
         ArgumentOutOfRangeException.ThrowIfLessThanOrEqual(outputSize.Width, 1, nameof(outputSize));
         ArgumentOutOfRangeException.ThrowIfLessThanOrEqual(outputSize.Height, 1, nameof(outputSize));
 
-        TagRegistry.RegisterTag<ShadowPassTag>();
-        TagRegistry.RegisterTag<ScenePassTag>();
-        TagRegistry.RegisterTag<LightPassTag>();
-        TagRegistry.RegisterTag<PostPassTag>();
-        TagRegistry.RegisterTag<ScreenPassTag>();
 
         _registrationData = new RegistrationData(true, outputSize);
 
         UboRegistry.BeginRegistration(_registrationData);
         FboRegistry.BeginRegistration(_registrationData);
-
         FboRegistry.RegisterTemp();
+
     }
 
     public void FinishRegistration()

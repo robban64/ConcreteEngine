@@ -1,5 +1,6 @@
 #region
 
+using ConcreteEngine.Common.Numerics;
 using ConcreteEngine.Common.Patterns;
 using ConcreteEngine.Core.Assets;
 using ConcreteEngine.Core.Engine;
@@ -10,10 +11,16 @@ using ConcreteEngine.Core.Engine.Time;
 using ConcreteEngine.Core.Features;
 using ConcreteEngine.Core.Modules;
 using ConcreteEngine.Core.Rendering;
+using ConcreteEngine.Core.Rendering.Batching;
 using ConcreteEngine.Core.Rendering.Data;
+using ConcreteEngine.Core.Rendering.Descriptors;
+using ConcreteEngine.Core.Rendering.Passes;
+using ConcreteEngine.Core.Rendering.Producers;
 using ConcreteEngine.Core.Rendering.State;
 using ConcreteEngine.Core.Scene;
 using ConcreteEngine.Graphics;
+using ConcreteEngine.Graphics.Gfx.Contracts;
+using ConcreteEngine.Graphics.Gfx.Definitions;
 using ConcreteEngine.Graphics.Gfx.Resources;
 using Silk.NET.OpenGL;
 using RenderFrameInfo = ConcreteEngine.Core.Engine.Data.RenderFrameInfo;
@@ -90,6 +97,89 @@ public sealed class GameEngine : IDisposable
         _coreSystems.Initialize();
     }
 
+    private void InitializeGraphics()
+    {
+        var store = _assets.Store;
+
+        var shaderCount = store.GetMetaSnapshot<Shader>().Count;
+        Span<ShaderId> shaderIds = stackalloc ShaderId[shaderCount];
+        store.ExtractSpan<Shader, ShaderId>(shaderIds, static shader => shader.ResourceId);
+
+        _renderer.InitializeRegistry(shaderIds, new RenderCoreShaders
+        {
+            DepthShader = store.GetByName<Shader>("Depth").ResourceId,
+            ColorFilterShader = store.GetByName<Shader>("ColorFilter").ResourceId,
+            CompositeShader = store.GetByName<Shader>("Composite").ResourceId,
+            PresentShader = store.GetByName<Shader>("Present").ResourceId
+        });
+    }
+
+
+    public void RegisterRenderer()
+    {
+        var builder = new RenderSetupBuilder(_graphics.Gfx, _window.OutputSize);
+        builder.SetupRegistry((registry) =>
+        {
+            var shaderCount = _assets.Store.GetMetaSnapshot<Shader>().Count;
+
+            registry.RegisterShader(shaderCount, GetShaders).RegisterCoreShaders(GetCoreShaders);
+            registry.RegisterFbo(inner =>
+            {
+                inner.Register<ShadowPassTag>(FboVariant.Default,
+                    new RegisterFboEntry().AttachDepthTexture(GfxFboDepthTextureDesc.Default())
+                        .UseFixedSize(new Size2D(2048, 2048)));
+
+                inner.Register<ScenePassTag>(FboVariant.Default,
+                    new RegisterFboEntry().AttachColorTexture(GfxFboColorTextureDesc.Off(), RenderBufferMsaa.X4)
+                        .AttachDepthStencilBuffer());
+
+                inner.Register<ScenePassTag>(FboVariant.Secondary,
+                    new RegisterFboEntry()
+                        .AttachColorTexture(GfxFboColorTextureDesc.DefaultMip())
+                        .AttachDepthStencilBuffer());
+
+                inner.Register<PostPassTag>(FboVariant.Default,
+                    new RegisterFboEntry().AttachColorTexture(GfxFboColorTextureDesc.Default()));
+
+                inner.Register<PostPassTag>(FboVariant.Secondary,
+                    new RegisterFboEntry().AttachColorTexture(GfxFboColorTextureDesc.Default()));
+
+            });
+        });
+        
+                    
+        builder.SetupBatchers((gfx, batchers) =>
+        {
+            batchers.Register(new TerrainBatcher(gfx));
+            //_batches.Register(new SpriteBatcher(_gfx));
+            //_batches.Register(new TilemapBatcher(_gfx, 64, 32));
+        });
+            
+        builder.SetupDrawPipeline(collector =>
+        {
+            collector.RegisterProducerSink<IMeshDrawSink>(new MeshDrawProducer());
+            collector.RegisterProducerSink<ITerrainDrawSink>(new TerrainDrawProducer());
+            collector.RegisterProducer<SceneDrawProducer>(new SceneDrawProducer());
+        });
+        return;
+
+
+        RenderCoreShaders GetCoreShaders() => new RenderCoreShaders
+        {
+            DepthShader = _assets.Store.GetByName<Shader>("Depth").ResourceId,
+            ColorFilterShader = _assets.Store.GetByName<Shader>("ColorFilter").ResourceId,
+            CompositeShader = _assets.Store.GetByName<Shader>("Composite").ResourceId,
+            PresentShader = _assets.Store.GetByName<Shader>("Present").ResourceId
+        };
+        
+        void GetShaders(Span<ShaderId> shaders)
+        {
+            var shaderCount = _assets.Store.GetMetaSnapshot<Shader>().Count;
+            Span<ShaderId> shaderIds = stackalloc ShaderId[shaderCount];
+            _assets.Store.ExtractSpan<Shader, ShaderId>(shaderIds, static shader => shader.ResourceId);
+        }
+    }
+
     private void UploadMaterialData()
     {
         Span<TextureSlotInfo> slots = stackalloc TextureSlotInfo[RenderLimits.TextureSlots];
@@ -102,8 +192,8 @@ public sealed class GameEngine : IDisposable
     }
 
 
-
     private Action? _uploadMaterialDel;
+
     internal void Render(float dt)
     {
         var alpha = _timeHub.Alpha;
@@ -218,23 +308,6 @@ public sealed class GameEngine : IDisposable
         }
     }
 
-    private void InitializeGraphics()
-    {
-        var store = _assets.Store;
-
-        var shaderCount = store.GetMetaSnapshot<Shader>().Count;
-        Span<ShaderId> shaderIds = stackalloc ShaderId[shaderCount];
-        store.ExtractSpan<Shader, ShaderId>(shaderIds, static shader => shader.ResourceId);
-        
-        _renderer.InitializeRegistry(shaderIds, new RenderCoreShaders
-        {
-            DepthShader = store.GetByName<Shader>("Depth").ResourceId,
-            ColorFilterShader = store.GetByName<Shader>("ColorFilter").ResourceId,
-            CompositeShader = store.GetByName<Shader>("Composite").ResourceId,
-            PresentShader = store.GetByName<Shader>("Present").ResourceId
-
-        });
-    }
 
     private void UpdateSceneTransitionIfNeeded()
     {

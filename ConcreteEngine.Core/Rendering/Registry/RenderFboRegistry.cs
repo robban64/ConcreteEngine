@@ -14,7 +14,12 @@ using ConcreteEngine.Graphics.Gfx.Resources;
 
 namespace ConcreteEngine.Core.Rendering.Registry;
 
-internal sealed class RenderFboRegistry
+public interface IRenderFboRegistry
+{
+    void RegisterTag<TTag>() where TTag : unmanaged, IRenderPassTag;
+    void Register<TTag>(FboVariant variant, RegisterFboEntry entry) where TTag : unmanaged, IRenderPassTag;
+}
+internal sealed class RenderFboRegistry : IRenderFboRegistry
 {
     private RenderRegistry.RegistrationData _registrationData;
 
@@ -35,11 +40,17 @@ internal sealed class RenderFboRegistry
         _gfxApi.BindMetaChanged<FrameBufferId, FrameBufferMeta>(OnFboChange);
     }
 
-    public void BeginRegistration(RenderRegistry.RegistrationData registrationData) =>
+    public void BeginRegistration(RenderRegistry.RegistrationData registrationData)
+    {
         _registrationData = registrationData;
+        RegisterTag<ShadowPassTag>();
+        RegisterTag<ScenePassTag>();
+        RegisterTag<LightPassTag>();
+        RegisterTag<PostPassTag>();
+        RegisterTag<ScreenPassTag>();
 
-    public void RegisterTag<TTag>() where TTag : unmanaged, IRenderPassTag
-        => TagRegistry.RegisterTag<TTag>();
+    }
+
 
     public void FinishRegistration()
     {
@@ -51,9 +62,11 @@ internal sealed class RenderFboRegistry
         Register<ShadowPassTag>(FboVariant.Default,
             new RegisterFboEntry().AttachDepthTexture(GfxFboDepthTextureDesc.Default())
                 .UseFixedSize(new Size2D(2048, 2048)));
+        
         Register<ScenePassTag>(FboVariant.Default,
             new RegisterFboEntry().AttachColorTexture(GfxFboColorTextureDesc.Off(), RenderBufferMsaa.X4)
                 .AttachDepthStencilBuffer());
+        
         Register<ScenePassTag>(FboVariant.Secondary,
             new RegisterFboEntry()
                 .AttachColorTexture(GfxFboColorTextureDesc.DefaultMip())
@@ -66,6 +79,9 @@ internal sealed class RenderFboRegistry
             new RegisterFboEntry().AttachColorTexture(GfxFboColorTextureDesc.Default()));
     }
     
+    public void RegisterTag<TTag>() where TTag : unmanaged, IRenderPassTag
+        => TagRegistry.RegisterTag<TTag>();
+
     public void Register<TTag>(FboVariant variant, RegisterFboEntry entry) where TTag : unmanaged, IRenderPassTag
     {
         InvalidOpThrower.ThrowIfNot(_registrationData.Enabled);

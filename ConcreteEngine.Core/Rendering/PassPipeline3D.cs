@@ -6,7 +6,7 @@ using ConcreteEngine.Graphics.Gfx.Resources;
 
 namespace ConcreteEngine.Core.Rendering;
 
-internal static class TempPassSetup
+internal static class PassPipeline3D
 {
     public static void RegisterPassPipeline(RenderPassPipeline passPipeline, in RenderCoreShaders defaults)
     {

@@ -9,13 +9,14 @@ using ConcreteEngine.Core.Rendering.Registry;
 using ConcreteEngine.Core.Rendering.State;
 using ConcreteEngine.Graphics.Gfx;
 using ConcreteEngine.Graphics.Gfx.Resources;
+using ConcreteEngine.Graphics.Primitives;
 
 namespace ConcreteEngine.Core.Rendering;
 
 public abstract class RenderBuilderStage
 {
     protected readonly RenderBuilderContext Ctx;
-    
+
     protected RenderBuilderStage(RenderBuilderContext ctx) => Ctx = ctx;
 
     protected void ThrowIfBuilt()
@@ -30,7 +31,7 @@ public abstract class RenderBuilderStage
 public sealed class RenderSetupBuilder
 {
     private RenderBuilderContext Ctx { get; }
-    
+
     private RenderRegistry _renderRegistry;
 
     private DrawCommandPipeline _drawPipeline;
@@ -43,59 +44,66 @@ public sealed class RenderSetupBuilder
     public RenderSceneProps RenderProps { get; }
     private RenderSceneState _snapshot;
 
-    
+
     private readonly BatcherRegistry _batches = new();
     private readonly RenderView _renderView = new();
 
     public RenderSetupBuilder(GfxContext gfx, Size2D outputSize)
     {
         ArgumentOutOfRangeException.ThrowIfLessThanOrEqual(outputSize.Width, 4);
-        ArgumentOutOfRangeException.ThrowIfLessThanOrEqual(outputSize.Height,4);
+        ArgumentOutOfRangeException.ThrowIfLessThanOrEqual(outputSize.Height, 4);
 
         Ctx = new RenderBuilderContext(gfx, outputSize);
     }
-/*
 
-    internal void SetupRegistry(ReadOnlySpan<ShaderId> shaderIds, in RenderCoreShaders coreShaders)
+    public void SetupRegistry(Action<RenderRegistryBuilder> builder)
     {
-        _renderRegistry = new RenderRegistry(_gfx);
-        _renderRegistry.BeginRegistration(_initialSize);
-        _renderRegistry.ShaderRegistry.RegisterCollection(shaderIds).RegisterCoreShader(in coreShaders);
+        _renderRegistry = new RenderRegistry(Ctx.Gfx);
+        _renderRegistry.BeginRegistration(Ctx.OutputSize);
+        builder(new RenderRegistryBuilder(_renderRegistry));
         _renderRegistry.FinishRegistration();
-
     }
-    
-    internal void InitializeDraw()
+
+    public void SetupBatchers(Action<GfxContext, BatcherRegistry> builder)
+        => builder(Ctx.Gfx, _batches);
+
+    public void SetupDrawPipeline(Action<IDrawCommandCollector> builder)
     {
-        var drawCtx = new DrawStateContext(_renderRegistry);
-        var drawCtxPayload = new DrawStateContextPayload
-        {
-            Gfx = _gfx, Registry = _renderRegistry, RenderView = _renderView, Snapshot = _snapshot
-        };
-
-        _drawBuffers = new DrawBuffers(drawCtx, drawCtxPayload);
-        _cmdDraw = new DrawCommandProcessor(drawCtx, drawCtxPayload, _drawBuffers);
-        _drawStateOps = new DrawStateOps(drawCtx, drawCtxPayload, _drawBuffers);
-
-        _batches.Register(new TerrainBatcher(_gfx));
-        //_batches.Register(new SpriteBatcher(_gfx));
-        //_batches.Register(new TilemapBatcher(_gfx, 64, 32));
-
-
-        _drawPipeline = new DrawCommandPipeline();
-        _drawPipeline.Initialize(_gfx, _batches, _cmdDraw, _drawBuffers);
-
-        _cmdDraw.Initialize();
-        _drawBuffers.AttachMaterialBuffer(_drawPipeline.MaterialBuffer);
-
-        RegisterPasses();
-        _initialized = true;
+        _drawPipeline = new DrawCommandPipeline(Ctx.Gfx, _batches, _renderRegistry, _renderView, _snapshot);
+        builder(_drawPipeline.Collector);
+        _drawPipeline.Initialize();
     }
 
-    private void RegisterPasses()
+    private void SetupPassPipeline()
     {
         _passPipeline = new RenderPassPipeline(_drawStateOps, _renderRegistry);
-        TempPassSetup.RegisterPassPipeline(_passPipeline, in _renderRegistry.ShaderRegistry.CoreShaders);
+        PassPipeline3D.RegisterPassPipeline(_passPipeline, in _renderRegistry.ShaderRegistry.CoreShaders);
     }
-    */
+}
+
+public sealed class RenderRegistryBuilder
+{
+    private readonly RenderRegistry _renderRegistry;
+
+    internal RenderRegistryBuilder(RenderRegistry renderRegistry) => _renderRegistry = renderRegistry;
+
+    public RenderRegistryBuilder RegisterFbo(Action<IRenderFboRegistry> builder)
+    {
+        builder(_renderRegistry.FboRegistry);
+        return this;
+    }
+
+    public RenderRegistryBuilder RegisterShader(int shaderCount, Action<Span<ShaderId>> builder)
+    {
+        Span<ShaderId> shaders = stackalloc ShaderId[shaderCount];
+        builder(shaders);
+        _renderRegistry.ShaderRegistry.RegisterCollection(shaders);
+        return this;
+    }
+
+    public RenderRegistryBuilder RegisterCoreShaders(Func<RenderCoreShaders> builder)
+    {
+        _renderRegistry.ShaderRegistry.RegisterCoreShader(builder());
+        return this;
+    }
 }

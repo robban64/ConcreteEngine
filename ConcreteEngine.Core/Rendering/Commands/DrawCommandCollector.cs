@@ -12,7 +12,13 @@ using ConcreteEngine.Core.Rendering.State;
 
 namespace ConcreteEngine.Core.Rendering.Commands;
 
-internal sealed class DrawCommandCollector
+public interface IDrawCommandCollector
+{
+    void RegisterProducerSink<TSink>(TSink producer) where TSink : IDrawSink;
+    void RegisterProducer<TProducer>(TProducer producer) where TProducer : IDrawCommandProducer;
+
+}
+internal sealed class DrawCommandCollector : IDrawCommandCollector
 {
     private readonly Dictionary<Type, IDrawCommandProducer> _producers = new(8);
 
@@ -33,6 +39,14 @@ internal sealed class DrawCommandCollector
             return (TSink)producer;
 
         throw new InvalidOperationException($"{typeof(TSink).Name} is not registered");
+    }
+    
+    public TProducer GetProducer<TProducer>() where TProducer : IDrawCommandProducer
+    {
+        if (_producers.TryGetValue(typeof(TProducer), out var producer))
+            return (TProducer)producer;
+
+        throw new InvalidOperationException($"{typeof(TProducer).Name} is not registered");
     }
 
     public void RegisterProducerSink<TSink>(TSink producer) where TSink : IDrawSink

@@ -11,7 +11,11 @@ using ConcreteEngine.Graphics.Primitives;
 
 namespace ConcreteEngine.Core.Rendering.Registry;
 
-internal sealed class RenderUboRegistry
+public interface IRenderUboRegistry
+{
+    void Register<TUbo>() where TUbo : unmanaged, IStd140Uniform;
+}
+internal sealed class RenderUboRegistry : IRenderUboRegistry
 {
     private readonly RenderUbo[] _uboRegistry = new RenderUbo[RenderLimits.UboSlots];
     private int _uboCount = 0;

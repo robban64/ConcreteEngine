@@ -7,13 +7,12 @@ using System.Runtime.CompilerServices;
 using ConcreteEngine.Common.Collections;
 using ConcreteEngine.Common.Numerics;
 using ConcreteEngine.Core.Rendering.Data;
-using ConcreteEngine.Core.Rendering.Draw;
 using ConcreteEngine.Core.Rendering.Passes;
 using static ConcreteEngine.Core.Rendering.Data.RenderLimits;
 
 #endregion
 
-namespace ConcreteEngine.Core.Rendering.Commands;
+namespace ConcreteEngine.Core.Rendering.Draw;
 
 public sealed class DrawCommandBuffer
 {

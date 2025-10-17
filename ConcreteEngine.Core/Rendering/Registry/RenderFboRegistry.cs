@@ -38,6 +38,9 @@ internal sealed class RenderFboRegistry
     public void BeginRegistration(RenderRegistry.RegistrationData registrationData) =>
         _registrationData = registrationData;
 
+    public void RegisterTag<TTag>() where TTag : unmanaged, IRenderPassTag
+        => TagRegistry.RegisterTag<TTag>();
+
     public void FinishRegistration()
     {
         _fboRegistry.AsSpan(0, _fboCount).Sort(RenderFbo.FboKeyComparer.Instance);
@@ -62,9 +65,8 @@ internal sealed class RenderFboRegistry
         Register<PostPassTag>(FboVariant.Secondary,
             new RegisterFboEntry().AttachColorTexture(GfxFboColorTextureDesc.Default()));
     }
-
-    public void Register<TTag>(FboVariant variant, RegisterFboEntry entry)
-        where TTag : unmanaged, IRenderPassTag
+    
+    public void Register<TTag>(FboVariant variant, RegisterFboEntry entry) where TTag : unmanaged, IRenderPassTag
     {
         InvalidOpThrower.ThrowIfNot(_registrationData.Enabled);
         InvalidOpThrower.ThrowIf(_fboCount >= RenderLimits.FboSlots);

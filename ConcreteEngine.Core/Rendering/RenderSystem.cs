@@ -36,6 +36,8 @@ public interface IRenderSystem : IGameEngineSystem
 
 public sealed class RenderSystem : IRenderSystem
 {
+    //public static RenderSetupBuilder StartBuilder() => new RenderSetupBuilder();
+
     private readonly GraphicsRuntime _graphics;
     private readonly GfxContext _gfx;
 

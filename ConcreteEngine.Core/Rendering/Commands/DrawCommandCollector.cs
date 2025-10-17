@@ -5,6 +5,7 @@
 #region
 
 using ConcreteEngine.Core.Engine.Data;
+using ConcreteEngine.Core.Rendering.Draw;
 using ConcreteEngine.Core.Rendering.State;
 
 #endregion

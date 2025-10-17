@@ -1,4 +1,4 @@
-namespace ConcreteEngine.Core.Rendering.Commands;
+namespace ConcreteEngine.Core.Rendering.Data;
 
 public readonly ref struct DrawCommandPackage(
     ReadOnlySpan<DrawCommand> draw,

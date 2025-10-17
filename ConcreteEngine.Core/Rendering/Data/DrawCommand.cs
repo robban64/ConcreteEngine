@@ -3,14 +3,12 @@
 using System.Numerics;
 using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
-using ConcreteEngine.Core.Assets.Materials;
-using ConcreteEngine.Core.Rendering.Data;
 using ConcreteEngine.Core.Rendering.Definitions;
 using ConcreteEngine.Graphics.Gfx.Resources;
 
 #endregion
 
-namespace ConcreteEngine.Core.Rendering.Commands;
+namespace ConcreteEngine.Core.Rendering.Data;
 
 [StructLayout(LayoutKind.Sequential)]
 public readonly struct DrawCommand(MeshId meshId, MaterialId materialId, int drawCount = 0)

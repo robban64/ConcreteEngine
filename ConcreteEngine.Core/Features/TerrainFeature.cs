@@ -1,9 +1,10 @@
 #region
 
 using ConcreteEngine.Core.Assets;
-using ConcreteEngine.Core.Assets.Resources;
+using ConcreteEngine.Core.Assets.Materials;
+using ConcreteEngine.Core.Assets.Textures;
 using ConcreteEngine.Core.Rendering;
-using ConcreteEngine.Core.Rendering.Commands;
+using ConcreteEngine.Core.Rendering.Data;
 using ConcreteEngine.Core.Rendering.Producers;
 
 #endregion
@@ -21,12 +22,12 @@ public sealed class TerrainFeature : GameFeature
     {
         var assets = Context.GetSystem<IAssetSystem>();
         var renderer = Context.GetSystem<IRenderSystem>();
-        var material = renderer.CreateMaterial("TerrainMat");
-        var heightmap = assets.Get<Texture2D>("Heightmap");
+        var material = assets.MaterialStore.CreateMaterial("TerrainMat", "TerrainMat1");
+        var heightmap = assets.Store.GetByName<Texture2D>("Heightmap");
 
-        material.UvRepeat = 28;
-        material.Shininess = 10;
-        material.SpecularStrength = 0.04f;
+        material.State.UvRepeat = 28;
+        material.State.Shininess = 10;
+        material.State.Specular = 0.04f;
 
         _drawSink = renderer.GetSink<ITerrainDrawSink>();
 

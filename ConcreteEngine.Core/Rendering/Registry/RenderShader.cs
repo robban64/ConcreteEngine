@@ -1,10 +1,7 @@
 #region
 
-using System.Runtime.CompilerServices;
-using ConcreteEngine.Graphics;
 using ConcreteEngine.Graphics.Gfx;
-using ConcreteEngine.Graphics.Resources;
-using ConcreteEngine.Graphics.Utils;
+using ConcreteEngine.Graphics.Gfx.Resources;
 
 #endregion
 
@@ -25,13 +22,14 @@ public sealed class RenderShader : IComparable<ShaderId>
     {
         var uniformPairs = gfx.GetUniformList(Id);
         var uniforms = new Dictionary<string, int>(uniformPairs.Count);
-        
+
         foreach (var (uniform, location) in uniformPairs)
         {
             uniforms.Add(uniform, location);
         }
+
         return uniforms;
     }
-    
+
     public int CompareTo(ShaderId other) => Id.Value.CompareTo(other.Value);
 }

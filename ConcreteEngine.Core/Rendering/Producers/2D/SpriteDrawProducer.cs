@@ -2,7 +2,8 @@
 
 using System.Numerics;
 using System.Runtime.CompilerServices;
-using ConcreteEngine.Core.Assets.Resources;
+using ConcreteEngine.Core.Assets.Materials;
+using ConcreteEngine.Core.Rendering.Data;
 using ConcreteEngine.Core.Utils;
 
 #endregion
@@ -56,7 +57,7 @@ public sealed class SpriteDrawProducer : IDrawCommandProducer, ISpriteDrawSink
 
     public void Initialize( )
     {
-        _spriteBatch = _context.DrawBatchers.Get<SpriteBatcher>();
+        _spriteBatch = _context.DrawBatchers.GetByRef<SpriteBatcher>();
         _spriteBatch.CreateSpriteBatch(0,1024);
 
     }

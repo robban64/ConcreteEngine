@@ -5,6 +5,8 @@ using System.Diagnostics.CodeAnalysis;
 using System.Numerics;
 using System.Runtime.CompilerServices;
 using ConcreteEngine.Common.Collections;
+using ConcreteEngine.Common.Numerics;
+using ConcreteEngine.Core.Rendering.Data;
 using ConcreteEngine.Core.Rendering.Draw;
 using ConcreteEngine.Core.Rendering.Passes;
 using static ConcreteEngine.Core.Rendering.Data.RenderLimits;
@@ -15,32 +17,32 @@ namespace ConcreteEngine.Core.Rendering.Commands;
 
 public sealed class DrawCommandBuffer
 {
-    private readonly DrawProcessor _drawProcessor;
+    private readonly DrawBuffers _drawBuffers;
+    private readonly DrawCommandProcessor _cmdDraw;
 
     private DrawCommand[] _commandBuffer;
-    private DrawTransformPayload[] _transformBuffer;
+    private DrawObjectUniform[] _transformBuffer;
     private DrawCommandMeta[] _metaBuffer;
     private DrawCommandRef[] _indexBuffer;
     private DrawCommandTicket[] _drawTickets;
     private readonly DrawPassRange[] _passRanges;
-
+    
     private int _submitIdx = 0;
-    private int _drainTransformIdx = 0;
 
     public int Count => _submitIdx;
 
-    internal DrawCommandBuffer(DrawProcessor drawProcessor)
+    internal DrawCommandBuffer(DrawCommandProcessor cmdDraw, DrawBuffers drawBuffers)
     {
         _commandBuffer = new DrawCommand[DefaultCommandBuffCapacity];
-        _transformBuffer = new DrawTransformPayload[DefaultCommandBuffCapacity];
+        _transformBuffer = new DrawObjectUniform[DefaultCommandBuffCapacity];
         _metaBuffer = new DrawCommandMeta[DefaultCommandBuffCapacity];
         _indexBuffer = new DrawCommandRef[DefaultCommandBuffCapacity];
-
         _drawTickets = new DrawCommandTicket[DefaultCommandBuffCapacity];
 
         _passRanges = new DrawPassRange[PassSlots];
 
-        _drawProcessor = drawProcessor;
+        _cmdDraw = cmdDraw;
+        _drawBuffers = drawBuffers;
 
         _submitIdx = 0;
     }
@@ -54,35 +56,50 @@ public sealed class DrawCommandBuffer
     {
         EnsureCapacity(1);
         _commandBuffer[_submitIdx] = cmd;
-        _transformBuffer[_submitIdx] = transform;
         _metaBuffer[_submitIdx] = meta;
         _indexBuffer[_submitIdx] = new DrawCommandRef(meta, _submitIdx);
+        
+        TransformUtils.CreateNormalMatrix(in transform.Transform, out var normalModel);
+        _transformBuffer[_submitIdx] = new DrawObjectUniform(
+            model: in transform.Transform,
+            normal: in normalModel
+        );
+
         _submitIdx++;
     }
 
-    public void SubmitDrawBatch(in DrawCommandData data)
+    public void SubmitDrawBatch(in DrawCommandPackage package)
     {
-        Debug.Assert(data.Draw.Length == data.Meta.Length);
-        Debug.Assert(data.Draw.Length == data.Transform.Length);
+        Debug.Assert(package.Draw.Length == package.Meta.Length);
+        Debug.Assert(package.Draw.Length == package.Transform.Length);
 
-        var drawCommands = data.Draw;
-        var drawTransforms = data.Transform;
-        var drawMeta = data.Meta;
+        var drawCommands = package.Draw;
+        var drawTransforms = package.Transform;
+        var drawMeta = package.Meta;
 
         var count = drawCommands.Length;
         if (count == 0) return;
 
         EnsureCapacity(count);
         drawCommands.CopyTo(_commandBuffer.AsSpan(_submitIdx));
-        drawTransforms.CopyTo(_transformBuffer.AsSpan(_submitIdx));
         drawMeta.CopyTo(_metaBuffer.AsSpan(_submitIdx));
 
         var indices = _indexBuffer.AsSpan(_submitIdx);
-        for (var i = 0; i < count; i++)
-        {
-            indices[i] = new DrawCommandRef(drawMeta[i], _submitIdx + i);
-        }
+        var transformBuffer = _transformBuffer.AsSpan(_submitIdx);
 
+        var idx = _submitIdx;
+        for (var i = 0; i < count; i++, idx++)
+        {
+            indices[i] = new DrawCommandRef(drawMeta[i], idx);
+            
+            ref readonly var transform = ref drawTransforms[i].Transform;
+            TransformUtils.CreateNormalMatrix(in transform, out var normalModel);
+            transformBuffer[i] = new DrawObjectUniform(
+                model: in transform,
+                normal: in normalModel
+            );
+        }
+        
         _submitIdx += count;
     }
 
@@ -113,6 +130,7 @@ public sealed class DrawCommandBuffer
             }
         }
 
+        // memset/vectorized clear
         _passRanges.AsSpan().Clear();
 
         // Count pass ranges
@@ -146,18 +164,12 @@ public sealed class DrawCommandBuffer
         }
     }
 
-    //TODO bulk upload
     public void DrainTransformQueue()
     {
-        var transforms = (ReadOnlySpan<DrawTransformPayload>)_transformBuffer;
-        var indices = (ReadOnlySpan<DrawCommandRef>)_indexBuffer;
-
-        for (var i = _drainTransformIdx; i < _submitIdx; i++)
-        {
-            ref readonly var it = ref indices[_drainTransformIdx++];
-            _drawProcessor.UploadTransform(in transforms[it.Idx], it.Idx);
-        }
+        if(_transformBuffer.Length == 0) return;
+        _drawBuffers.UploadDrawObjects(_transformBuffer.AsSpan(0, _submitIdx));
     }
+    
 
     public void DispatchDrawPass(PassId passId)
     {
@@ -167,14 +179,13 @@ public sealed class DrawCommandBuffer
         for (var i = pass.Start; i < end; i++)
         {
             var idx = _drawTickets[i].SubmitIdx;
-            _drawProcessor.DrawMesh(commands[idx], idx);
+            _cmdDraw.DrawMesh(commands[idx], idx);
         }
     }
 
     public void Reset()
     {
         _submitIdx = 0;
-        _drainTransformIdx = 0;
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
@@ -203,5 +214,5 @@ public sealed class DrawCommandBuffer
 
 
     [MethodImpl(MethodImplOptions.NoInlining), DoesNotReturn, StackTraceHidden]
-    private static void ThrowMaxCapacityExceeded() => throw new OutOfMemoryException("Command Buffer too big");
+    private static void ThrowMaxCapacityExceeded() => throw new OutOfMemoryException("Command Buffer exceeded max limit");
 }

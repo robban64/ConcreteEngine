@@ -64,7 +64,7 @@ internal sealed class EngineStateMachine
 
     public void Start<T>(EngineCoreContext context) where T : BaseEngineState, new()
     {
-        var (nextStateType, state) = Get(typeof(T));
+        var (nextStateType, state) = GetByRef(typeof(T));
         _currentState = state;
         _currentState.AttachState(nextStateType, _context);
     }
@@ -94,7 +94,7 @@ internal sealed class EngineStateMachine
         var newStateType = _currentState!.DetachState();
         if (newStateType != null)
         {
-            var (nextStateType, currentState) = Get(newStateType);
+            var (nextStateType, currentState) = GetByRef(newStateType);
             _currentState = currentState;
             _currentState.AttachState(nextStateType, _context);
         }
@@ -102,7 +102,7 @@ internal sealed class EngineStateMachine
         _version++;
     }
 
-    private (Type, BaseEngineState) Get(Type t)
+    private (Type, BaseEngineState) GetByRef(Type t)
     {
         if (!_registry.TryGetValue(t, out var factory))
             throw new InvalidOperationException($"Unknown state type '{t.Name}'.");

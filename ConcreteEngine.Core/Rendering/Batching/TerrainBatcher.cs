@@ -1,13 +1,13 @@
 #region
 
 using System.Numerics;
-using ConcreteEngine.Core.Assets.Resources;
-using ConcreteEngine.Graphics;
+using ConcreteEngine.Core.Assets.Textures;
 using ConcreteEngine.Graphics.Gfx;
 using ConcreteEngine.Graphics.Gfx.Contracts;
+using ConcreteEngine.Graphics.Gfx.Definitions;
+using ConcreteEngine.Graphics.Gfx.Resources;
 using ConcreteEngine.Graphics.Gfx.Utility;
 using ConcreteEngine.Graphics.Primitives;
-using ConcreteEngine.Graphics.Resources;
 
 #endregion
 
@@ -47,9 +47,9 @@ public sealed class TerrainBatcher : RenderBatcher<TerrainBatchResult>
 
     public override TerrainBatchResult BuildBatch()
     {
-        if(HeightMap.PixelData is null)
+        if (HeightMap.PixelData is null)
             throw new ArgumentNullException(nameof(HeightMap.PixelData));
-        
+
         ArgumentOutOfRangeException.ThrowIfLessThan(HeightMap.Width, 32);
         ArgumentOutOfRangeException.ThrowIfNotEqual(HeightMap.Width, HeightMap.Height);
         ArgumentOutOfRangeException.ThrowIfNotEqual(HeightMap.PixelData.Value.Length, Size * Size * 4);

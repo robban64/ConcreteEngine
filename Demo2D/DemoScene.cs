@@ -10,8 +10,9 @@ using ConcreteEngine.Core.Rendering.Descriptors;
 using ConcreteEngine.Core.Scene;
 using ConcreteEngine.Core.Scene.Entities;
 using ConcreteEngine.Graphics;
+using ConcreteEngine.Graphics.Gfx.Definitions;
 using Silk.NET.Maths;
-using Shader = ConcreteEngine.Core.Assets.Resources.Shader;
+using Shader = ConcreteEngine.Core.Assets.Shaders.Shader;
 
 #endregion
 
@@ -22,12 +23,13 @@ public sealed class DemoScene : GameScene
     public override void Initialize()
     {
         var renderer = Context.GetSystem<IRenderSystem>();
+        var assets = Context.GetSystem<IAssetSystem>();
+        var (store, materialStore) = (assets.Store, assets.MaterialStore);
+        var spriteMaterial = materialStore.CreateMaterial("SpriteMaterial","SpriteMaterial1");
+        var spriteMaterial2 = materialStore.CreateMaterial("SpriteMaterial","SpriteMaterial2");
 
-        var spriteMaterial = renderer.CreateMaterial("SpriteMaterial");
-        var spriteMaterial2 = renderer.CreateMaterial("SpriteMaterial");
-
-        var tilemapMaterial = renderer.CreateMaterial("TilemapMaterial");
-        renderer.CreateMaterial("LightMaterial");
+        var tilemapMaterial = materialStore.CreateMaterial("TilemapMaterial","TilemapMaterial1");
+        materialStore.CreateMaterial("LightMaterial", "LightMaterial1");
 
         int currSpriteId = 1;
         for (int x = 0; x < 4; x++)
@@ -88,10 +90,10 @@ public sealed class DemoScene : GameScene
 
     protected override void ConfigureRenderer(IGameSceneRenderBuilder builder)
     {
-        var assets = Context.GetSystem<IAssetSystem>();
+        var assets = Context.GetSystem<IAssetSystem>().Store;
 
-        var lightPassShader = assets.Get<Shader>("LightPassShader");
-        var lightComposite = assets.Get<Shader>("LightComposite");
+        var lightPassShader = assets.GetByName<Shader>("LightPassShader");
+        var lightComposite = assets.GetByName<Shader>("LightComposite");
 
         builder.RegisterRender2D(new RenderTargetDescriptor
         {

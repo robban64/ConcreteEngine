@@ -1,6 +1,7 @@
 #region
 
 using System.Runtime.CompilerServices;
+using ConcreteEngine.Graphics.Gfx.Definitions;
 
 #endregion
 

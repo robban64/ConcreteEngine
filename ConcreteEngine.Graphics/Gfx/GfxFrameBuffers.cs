@@ -3,9 +3,10 @@
 using ConcreteEngine.Common;
 using ConcreteEngine.Common.Numerics;
 using ConcreteEngine.Graphics.Gfx.Contracts;
+using ConcreteEngine.Graphics.Gfx.Definitions;
 using ConcreteEngine.Graphics.Gfx.Internal;
+using ConcreteEngine.Graphics.Gfx.Resources;
 using ConcreteEngine.Graphics.OpenGL;
-using ConcreteEngine.Graphics.Resources;
 
 #endregion
 
@@ -91,6 +92,14 @@ public sealed class GfxFrameBuffers
         return fboId;
     }
 
+    
+    public void RecreateSizedFrameBuffer(ReadOnlySpan<(FrameBufferId Id, Size2D Size)> newSizes)
+    {
+        Console.WriteLine($"Recreating {newSizes.Length} FBO");
+        foreach (var (fboId, size) in newSizes)
+            RecreateFrameBuffer(fboId, size);
+    }
+    
     internal void RecreateFrameBuffer(FrameBufferId fboId, Size2D newSize)
     {
         ArgumentOutOfRangeException.ThrowIfLessThanOrEqual(fboId.Value, 0, nameof(fboId));

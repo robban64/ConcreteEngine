@@ -3,7 +3,7 @@
 using System.Numerics;
 using ConcreteEngine.Core;
 using ConcreteEngine.Core.Assets;
-using ConcreteEngine.Core.Assets.Resources;
+using ConcreteEngine.Core.Assets.Textures;
 using ConcreteEngine.Core.Modules;
 using ConcreteEngine.Core.Scene;
 using ConcreteEngine.Core.Utils;
@@ -37,7 +37,8 @@ public class NpcSpriteModule : GameModule
 
     public override void OnSceneReady()
     {
-        var spriteTexture = Context.GetSystem<IAssetSystem>().Get<Texture2D>("SpriteTexture");
+        var store = Context.GetSystem<IAssetSystem>().Store;
+        var spriteTexture = store.GetByName<Texture2D>("SpriteTexture");
         _spriteAtlas.Set(new Vector2D<int>(64, 64), new Vector2D<int>(spriteTexture.Width, spriteTexture.Height));
 
         var spriteSpan = Context.World.Sprites.AsSpan();

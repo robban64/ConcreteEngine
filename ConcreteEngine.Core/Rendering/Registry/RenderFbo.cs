@@ -4,8 +4,8 @@ using System.Numerics;
 using System.Runtime.CompilerServices;
 using ConcreteEngine.Common.Numerics;
 using ConcreteEngine.Core.Rendering.Passes;
-using ConcreteEngine.Graphics;
-using ConcreteEngine.Graphics.Resources;
+using ConcreteEngine.Graphics.Gfx.Definitions;
+using ConcreteEngine.Graphics.Gfx.Resources;
 
 #endregion
 
@@ -53,8 +53,8 @@ public sealed class RenderFbo : IComparable<RenderFbo>
         public int Compare(RenderFbo x, RenderFbo _) => x.TagKey.CompareTo(key);
         public int CompareTo(RenderFbo? other) => key.CompareTo(other!.TagKey);
     }
-    
-    
+
+
     internal sealed class FboKeyComparer : IComparer<RenderFbo>
     {
         public static readonly FboKeyComparer Instance = new();

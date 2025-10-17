@@ -6,13 +6,13 @@ using ConcreteEngine.Core.Engine.Configuration;
 using ConcreteEngine.Core.Engine.Platform;
 using ConcreteEngine.Core.Utils;
 using ConcreteEngine.Graphics;
+using ConcreteEngine.Graphics.Gfx.Definitions;
 using Demo2D;
 using Silk.NET.Windowing;
 
 #endregion
 
 var builder = new GameEngineBuilder()
-    .ConfigureAssetManager(new AssetManagerConfiguration())
     .RegisterScene<DemoScene>();
 
 

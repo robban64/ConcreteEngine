@@ -3,23 +3,19 @@
 using System.Diagnostics;
 using ConcreteEngine.Common;
 using ConcreteEngine.Common.Numerics;
-using ConcreteEngine.Core.Assets;
-using ConcreteEngine.Core.Assets.Resources;
 using ConcreteEngine.Core.Engine;
 using ConcreteEngine.Core.Engine.Data;
 using ConcreteEngine.Core.Rendering.Batching;
 using ConcreteEngine.Core.Rendering.Commands;
 using ConcreteEngine.Core.Rendering.Data;
 using ConcreteEngine.Core.Rendering.Definitions;
-using ConcreteEngine.Core.Rendering.Descriptors;
 using ConcreteEngine.Core.Rendering.Draw;
 using ConcreteEngine.Core.Rendering.Passes;
 using ConcreteEngine.Core.Rendering.Registry;
 using ConcreteEngine.Core.Rendering.State;
 using ConcreteEngine.Graphics;
 using ConcreteEngine.Graphics.Gfx;
-using ConcreteEngine.Graphics.Gfx.Contracts;
-using ConcreteEngine.Graphics.Resources;
+using ConcreteEngine.Graphics.Gfx.Resources;
 using RenderFrameInfo = ConcreteEngine.Core.Rendering.State.RenderFrameInfo;
 
 #endregion
@@ -34,10 +30,8 @@ public enum RenderType
 
 public interface IRenderSystem : IGameEngineSystem
 {
-    TSink GetSink<TSink>() where TSink : IDrawSink;
-    Material CreateMaterial(string templateName);
-
     RenderSceneProps RenderProps { get; }
+    TSink GetSink<TSink>() where TSink : IDrawSink;
 }
 
 public sealed class RenderSystem : IRenderSystem
@@ -51,10 +45,8 @@ public sealed class RenderSystem : IRenderSystem
     private RenderPassPipeline _passPipeline;
 
     private DrawStateOps _drawStateOps = null!;
-    private DrawProcessor _drawProcessor = null!;
-    private DrawUniforms _drawUniforms = null!;
-
-    private MaterialStore _materialStore = null!;
+    private DrawCommandProcessor _cmdDraw = null!;
+    private DrawBuffers _drawBuffers = null!;
 
     private readonly BatcherRegistry _batches = new();
 
@@ -79,37 +71,28 @@ public sealed class RenderSystem : IRenderSystem
         _initialSize = outputSize;
     }
 
-    internal void InitializeGraphics(ReadOnlySpan<ShaderId> shaderIds)
+    internal void InitializeRegistry(ReadOnlySpan<ShaderId> shaderIds, in RenderCoreShaders coreShaders)
     {
         InvalidOpThrower.ThrowIf(_initialSize.Width <= 1);
         InvalidOpThrower.ThrowIf(_initialSize.Height <= 1);
 
         _renderRegistry = new RenderRegistry(_gfx);
         _renderRegistry.BeginRegistration(_initialSize);
-        _renderRegistry.ShaderRegistry.RegisterCollection(shaderIds);
+        _renderRegistry.ShaderRegistry.RegisterCollection(shaderIds).RegisterCoreShader(in coreShaders);
         _renderRegistry.FinishRegistration();
     }
 
-    internal void Initialize(MaterialStore materialStore, AssetSystem assets)
+    internal void InitializeDraw()
     {
-        var depthShader = assets.Get<Shader>("Depth").ResourceId;
-        var depthKey = TagRegistry.FboKey<ShadowPassTag>(FboVariant.Default);
-        _renderRegistry.TryGetRenderFbo(depthKey, out var shadowFbo);
-        
-        InvalidOpThrower.ThrowIfNull(shadowFbo, nameof(shadowFbo));
-        InvalidOpThrower.ThrowIfNot(shadowFbo.Attachments.DepthTextureId.IsValid());
-
-        _materialStore = materialStore;
-
-        var drawCtx = new DrawStateContext(depthShader, shadowFbo!.Attachments.DepthTextureId);
+        var drawCtx = new DrawStateContext(_renderRegistry);
         var drawCtxPayload = new DrawStateContextPayload
         {
             Gfx = _gfx, Registry = _renderRegistry, RenderView = _renderView, Snapshot = _snapshot
         };
 
-        _drawUniforms = new DrawUniforms(_gfx.Buffers, _renderRegistry, _snapshot);
-        _drawProcessor = new DrawProcessor(drawCtx, drawCtxPayload, _materialStore);
-        _drawStateOps = new DrawStateOps(drawCtx, drawCtxPayload, _drawUniforms);
+        _drawBuffers = new DrawBuffers(drawCtx, drawCtxPayload);
+        _cmdDraw = new DrawCommandProcessor(drawCtx, drawCtxPayload, _drawBuffers);
+        _drawStateOps = new DrawStateOps(drawCtx, drawCtxPayload, _drawBuffers);
 
         _batches.Register(new TerrainBatcher(_gfx));
         //_batches.Register(new SpriteBatcher(_gfx));
@@ -117,151 +100,25 @@ public sealed class RenderSystem : IRenderSystem
 
 
         _drawPipeline = new DrawCommandPipeline();
-        _drawPipeline.Initialize(_gfx, _batches, _drawProcessor);
+        _drawPipeline.Initialize(_gfx, _batches, _cmdDraw, _drawBuffers);
 
-        _drawProcessor.Initialize();
+        _cmdDraw.Initialize();
+        _drawBuffers.AttachMaterialBuffer(_drawPipeline.MaterialBuffer);
 
-        RegisterPasses(assets);
+        RegisterPasses();
         _initialized = true;
     }
 
-
-    private void RegisterPasses(AssetSystem assets)
+    private void RegisterPasses()
     {
         _passPipeline = new RenderPassPipeline(_drawStateOps, _renderRegistry);
-
-        var compositeShader = assets.Get<Shader>("Composite").ResourceId;
-        var presentShader = assets.Get<Shader>("Present").ResourceId;
-        var colorFilterShader = assets.Get<Shader>("ColorFilter").ResourceId;
-
-        // Shadow
-        _passPipeline.Register<ShadowPassTag>(FboVariant.Default, new PassId(0), PassOpKind.Draw,
-                RenderPassState.MakeShadow())
-            .OnPassBegin(static (RenderPassCtx ctx, in RenderPassState state) =>
-            {
-                ctx.Ops.ActivateDepthMode(); // Note!
-
-                ctx.Ops.BeginRenderPass(ctx.Target.FboId, state.ClearColor, state.PassState);
-                ctx.Ops.ApplyStateFunctions(GfxPassStateFunc.MakeDepth());
-                return PassAction.DrawPassResult();
-            }).OnPassEnd(static (RenderPassCtx ctx, in RenderPassState state) =>
-            {
-                ctx.Ops.EndRenderPass();
-                ctx.Ops.RestoreMode();
-            });
-
-        // Scene 
-        // Pass 0: draw scene into MSAA FBO
-        _passPipeline.Register<ScenePassTag>(FboVariant.Default, new PassId(1), PassOpKind.Draw,
-                RenderPassState.MakeSceneMsaa(4))
-            .OnPassBegin(static (RenderPassCtx ctx, in RenderPassState state) =>
-            {
-                ctx.Ops.BeginRenderPass(ctx.Target.FboId, state.ClearColor, state.PassState);
-                ctx.Ops.ApplyStateFunctions(GfxPassStateFunc.MakeDefault());
-
-                ctx.MutateStatePass<ScenePassTag>(
-                    FboVariant.Secondary,
-                    PassMutationState.MutateTarget(ctx.Target.FboId)
-                );
-                return PassAction.DrawPassResult();
-            });
-
-        // Pass 1: resolve to scene FBO
-        _passPipeline.Register<ScenePassTag>(FboVariant.Secondary, new PassId(2), PassOpKind.Resolve,
-                RenderPassState.MakeResolve())
-            .OnPassBegin(static (RenderPassCtx ctx, in RenderPassState state) =>
-            {
-                ctx.Ops.ToggleStates(new GfxPassState { FramebufferSrgb = false });
-                ctx.Ops.Blit(state.TargetFboId, ctx.Target.FboId, state.LinearFilter);
-                return PassAction.ResolveTargetResult();
-            }).OnPassEnd(static (RenderPassCtx ctx, in RenderPassState state) =>
-            {
-                var texId = ctx.Target.Attachments.ColorTextureId;
-                ctx.SampleTo<PostPassTag>(FboVariant.Default, TextureSlot.Slot0(texId));
-
-                ctx.Ops.EndRenderPass();
-                ctx.Ops.GenerateMips(texId);
-            });
-
-        // Post A
-        _passPipeline.Register<PostPassTag>(FboVariant.Default, new PassId(3), PassOpKind.Fsq,
-                RenderPassState.MakePostProcess(compositeShader))
-            .OnPassBegin(static (RenderPassCtx ctx, in RenderPassState state) =>
-            {
-                var sources = ctx.GetPassSources();
-                ctx.Ops.BeginRenderPass(ctx.Target.FboId, state.ClearColor, state.PassState);
-                ctx.Ops.DrawFullscreenQuad(state.ShaderId, sources);
-                return PassAction.FsqPassResult();
-            }).OnPassEnd(static (RenderPassCtx ctx, in RenderPassState state) =>
-            {
-                var texId = ctx.Target.Attachments.ColorTextureId;
-                ctx.SampleTo<PostPassTag>(FboVariant.Secondary, TextureSlot.Slot0(texId));
-
-                ctx.Ops.EndRenderPass();
-            });
-
-        // Post B
-        _passPipeline.Register<PostPassTag>(FboVariant.Secondary, new PassId(4), PassOpKind.Fsq,
-                RenderPassState.MakePostProcess(colorFilterShader))
-            .OnPassBegin(static (RenderPassCtx ctx, in RenderPassState state) =>
-            {
-                var sources = ctx.GetPassSources();
-                ctx.Ops.BeginRenderPass(ctx.Target.FboId, state.ClearColor, state.PassState);
-                ctx.Ops.DrawFullscreenQuad(state.ShaderId, sources);
-                return PassAction.FsqPassResult();
-            }).OnPassEnd(static (RenderPassCtx ctx, in RenderPassState state) =>
-            {
-                var texId = ctx.Target.Attachments.ColorTextureId;
-                ctx.SampleTo<ScreenPassTag>(FboVariant.Default, TextureSlot.Slot0(texId));
-
-                ctx.Ops.EndRenderPass();
-            });
-
-        // Screen
-        _passPipeline.Register<ScreenPassTag>(FboVariant.Default, new PassId(5), PassOpKind.Screen,
-                RenderPassState.MakeScreen(presentShader))
-            .OnPassBegin(static (RenderPassCtx ctx, in RenderPassState state) =>
-            {
-                var sources = ctx.GetPassSources();
-
-                ctx.Ops.BeginScreenPass(state.ClearColor, state.PassState);
-                ctx.Ops.DrawFullscreenQuad(state.ShaderId, sources);
-                return PassAction.ScreenPassResult();
-            });
-    }
-
-
-    internal void RegisterScene(RenderType renderType, RenderTargetDescriptor desc)
-    {
-        if (!_initialized)
-            throw new InvalidOperationException("Renderer is not initialized");
-
-        RenderProps.Commit();
+        TempPassSetup.RegisterPassPipeline(_passPipeline, in _renderRegistry.ShaderRegistry.CoreShaders);
     }
 
     public TSink GetSink<TSink>() where TSink : IDrawSink => _drawPipeline.GetSink<TSink>();
 
-    public Material CreateMaterial(string templateName) => _materialStore.CreateMaterialFromTemplate(templateName);
-
     internal void BeginTick(in UpdateTickInfo tick) => _drawPipeline.BeginTick(tick);
     internal void EndTick() => _drawPipeline.EndTick();
-
-    private void RecreateFbo(Size2D outputSize)
-    {
-        ArgumentOutOfRangeException.ThrowIfLessThan(outputSize.Width, 1, nameof(outputSize));
-        ArgumentOutOfRangeException.ThrowIfLessThan(outputSize.Height, 1, nameof(outputSize));
-
-        var fbos = RenderRegistry.FboRegistry.FrameBuffers;
-        Span<(FrameBufferId, Size2D)> newSizes = stackalloc (FrameBufferId, Size2D)[fbos.Length];
-        var idx = 0;
-        foreach (var fbo in fbos)
-        {
-            if (fbo.IsFixedSize) continue;
-            newSizes[idx++] = (fbo.FboId, fbo.CalculateNewSize(outputSize));
-        }
-
-        _graphics.RecreateFbo(newSizes.Slice(0, idx));
-    }
 
     //
     internal void RenderEmptyFrame(in RenderFrameInfo frameInfo)
@@ -281,32 +138,36 @@ public sealed class RenderSystem : IRenderSystem
 
         if (status == BeginFrameStatus.Resize)
         {
-            RecreateFbo(frameInfo.OutputSize);
+            _renderRegistry.FboRegistry.RecreateSizedFrameBuffer(frameInfo.OutputSize);
         }
 
         _graphics.BeginFrame(frameInfo.ToGfxFrameInfo());
 
         _snapshot = RenderProps.Commit();
         _renderView.PrepareFrame(in viewSnapshot);
-        _drawUniforms.UploadGlobalUniforms(in frameInfo, in runtimeParams);
-        _drawUniforms.UploadCameraView(_renderView);
+        _drawBuffers.UploadGlobalUniforms(in frameInfo, in runtimeParams);
+        _drawBuffers.UploadCameraView(_renderView);
     }
 
     internal void EndRenderFrame(out GfxFrameResult frameResult)
     {
         _graphics.EndFrame(out frameResult);
     }
+    public void SubmitMaterialDrawData(in DrawMaterialPayload payload, ReadOnlySpan<TextureSlotInfo> slots) =>
+        _drawPipeline.SubmitMaterialDrawData(in payload, slots);
 
-    internal void Render(in RenderFrameInfo frameInfo)
+    //TODO remove the temp delegate
+    internal void Render(in RenderFrameInfo frameInfo, Action uploadMaterialDel)
     {
         Debug.Assert(_initialized);
 
         _passPipeline.Prepare(frameInfo.OutputSize);
+        var (drawCapacity, matCapacity) = _drawPipeline.Prepare(frameInfo.Alpha, _snapshot);
+        uploadMaterialDel();
+        
+        _cmdDraw.PrepareFrame(drawCapacity, matCapacity);
 
-        nint capacity = _drawPipeline.Prepare(frameInfo.Alpha, _snapshot);
-
-        _drawProcessor.PrepareFrame(in _snapshot, capacity);
-
+        _drawPipeline.ExecuteMaterials();
         _drawPipeline.ExecuteTransforms();
 
         while (_passPipeline.NextPass(out var nextPassRes))
@@ -328,7 +189,7 @@ public sealed class RenderSystem : IRenderSystem
 
         if (passResult == PassAction.DrawPassResult())
         {
-            _drawProcessor.PrepareDrawPass();
+            _cmdDraw.PrepareDrawPass();
             _drawPipeline.ExecuteDrawPass(passId);
         }
 

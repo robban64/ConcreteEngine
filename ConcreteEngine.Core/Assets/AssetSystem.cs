@@ -1,12 +1,10 @@
 #region
 
-using System.Text.Json;
-using System.Text.Json.Serialization;
-using ConcreteEngine.Core.Assets.Factories;
-using ConcreteEngine.Core.Assets.Importers;
-using ConcreteEngine.Core.Assets.IO;
-using ConcreteEngine.Core.Assets.Manifest;
-using ConcreteEngine.Core.Assets.Resources;
+using ConcreteEngine.Common;
+using ConcreteEngine.Core.Assets.Data;
+using ConcreteEngine.Core.Assets.Descriptors;
+using ConcreteEngine.Core.Assets.Internal;
+using ConcreteEngine.Core.Assets.Materials;
 using ConcreteEngine.Core.Engine;
 using ConcreteEngine.Graphics.Gfx;
 
@@ -16,296 +14,99 @@ namespace ConcreteEngine.Core.Assets;
 
 public interface IAssetSystem : IGameEngineSystem
 {
-    bool TryGet<T>(string name, out T resource) where T : class, IAssetFile;
-    T Get<T>(string name) where T : class, IAssetFile;
-    List<T> GetAll<T>() where T : class, IAssetFile;
+    IAssetStore Store { get; }
+    IMaterialStore MaterialStore { get; }
 }
 
 public sealed class AssetSystem : IAssetSystem
 {
-    private readonly record struct AssetKey(Type RegistryType, string Name)
+    public enum Status
     {
-        public static AssetKey For<T>(string name) where T : IAssetFile => new(typeof(T), name);
+        None = 0,
+        ManifestLoaded = 1,
+        Booting = 2,
+        Ready = 3,  
+        Loading = 4, 
+        Unloaded = 5
     }
-
-    private static bool _initialized = false;
-
-    private readonly Dictionary<AssetKey, IAssetFile> _store = new(32);
-    private readonly AssetAssemblerRegistry _assemblerRegistry = new();
-
-    private readonly string _assetPath;
-    private readonly string _manifestFilename;
-
-    private AssetProcessor? _loader;
+    
+    private AssetConfigLoader? _configLoader;
+    private AssetStartupWorker? _processor;
     private AssetGfxUploader? _uploader;
+    private AssetLoader? _loader;
 
-    private MaterialStore _materialStore = null!;
+    private AssetManifest _manifest = null!;
 
-    public MaterialStore MaterialStore => _materialStore;
+    private readonly MaterialStore _materialStore ;
 
-    private readonly JsonSerializerOptions _jsonOptions;
-    private readonly JsonSerializerOptions _jsonManifestOptions;
+    private readonly AssetStore _assetStore;
 
-    public bool IsLoading { get; private set; } = false;
+    public Status CurrentStatus { get; private set; } = Status.None;
 
-    private string BasePath => Path.Combine(Directory.GetCurrentDirectory(), _assetPath);
-
-    internal AssetSystem(
-        string assetPath = "assets",
-        string manifestFilename = "manifest.json")
+    internal AssetSystem()
     {
-        _assetPath = assetPath;
-        _manifestFilename = manifestFilename;
+        _assetStore = new AssetStore();
+        _materialStore = new MaterialStore(_assetStore);
+    }
+    
+    internal AssetStore InternalStore => _assetStore;
+    public IAssetStore Store => _assetStore;
+    public IMaterialStore MaterialStore  =>  _materialStore;
 
-        _jsonOptions = new JsonSerializerOptions
-        {
-            PropertyNamingPolicy = JsonNamingPolicy.CamelCase,
-            WriteIndented = true,
-            Converters =
-            {
-                new JsonStringEnumConverter(JsonNamingPolicy.CamelCase),
-                new Vector2Converter(),
-                new Vector3Converter(),
-                new Vector4Converter()
-            }
-        };
+    internal MaterialStore Materials => _materialStore;
 
-        _jsonManifestOptions = new JsonSerializerOptions(_jsonOptions)
-        {
-            TypeInfoResolverChain = { ManifestJsonContext.Default }
-        };
+    internal void Initialize()
+    {
+        if (CurrentStatus != Status.None)
+            throw new InvalidOperationException("AssetSystem already initialized");
+
+        _configLoader = new AssetConfigLoader();
+        _manifest = _configLoader.LoadAssetManifest();
+
+        CurrentStatus = Status.ManifestLoaded;
     }
 
 
     internal void StartLoader(GfxContext gfx)
     {
-        IsLoading = true;
-        var assetRecords = LoadManifest();
+        InvalidOpThrower.ThrowIfNot(CurrentStatus == Status.ManifestLoaded, nameof(CurrentStatus));
+        ArgumentNullException.ThrowIfNull(gfx, nameof(gfx));
+        ArgumentNullException.ThrowIfNull(_configLoader, nameof(_configLoader));
+
+        CurrentStatus = Status.Booting;
+        
         _uploader = new AssetGfxUploader(gfx);
-        var loader = new AssetProcessor(_assetPath, _uploader);
-        loader.Start(assetRecords);
-        _loader = loader;
+        _loader = new AssetLoader();
+        _processor = new AssetStartupWorker(_loader, _configLoader, _manifest);
+        _processor.Start(_assetStore, _uploader);
     }
 
     internal bool ProcessLoader(int n)
     {
-        if (_loader == null)
-            throw new InvalidOperationException("Asset loader is not initialized");
+        if (_loader is null || _processor is null)
+            throw new InvalidOperationException("Asset loaders are not fully initialized");
 
-        for (int i = 0; i < n; i++)
-        {
-            if (_loader.Process(out var finalEntry)) return true;
-            if (finalEntry is not null)
-                AssembleFinalAsset(finalEntry);
-        }
-
-        return false;
+        return _processor.ProcessAssets(n);
     }
 
-    private void AssembleFinalAsset(IAssetFinalEntry finalEntry)
+    internal void FinishLoading()
     {
-        _assemblerRegistry.AssembleAsset(finalEntry, this);
-    }
+        _materialStore.InitializeStore();
+        
+        _processor?.Finish();
+        _processor = null;
 
-    internal MaterialStore FinishLoading()
-    {
-        var materials = LoadMaterialStore("materials.json");
-        _materialStore = new MaterialStore(materials!);
-
-        _loader?.Finish();
+        _loader?.DeactivateLoader();
         _loader = null;
-        IsLoading = true;
-        return _materialStore;
-    }
+        
+        _uploader = null;
+        _configLoader = null;
 
-
-    public bool TryGet<T>(string name, out T resource) where T : class, IAssetFile
-    {
-        var key = AssetKey.For<T>(name);
-        if (_store.TryGetValue(key, out var asset) && asset is T typed)
-        {
-            resource = typed;
-            return true;
-        }
-
-        resource = null!;
-        return false;
-    }
-
-    public T Get<T>(string name) where T : class, IAssetFile
-    {
-        var key = AssetKey.For<T>(name);
-
-        if (_store.TryGetValue(key, out var asset) && asset is T typed)
-            return typed;
-
-        throw new InvalidCastException($"Asset '{name}' not found or incorrect type.");
-    }
-
-    public List<T> GetAll<T>() where T : class, IAssetFile
-    {
-        var result = new List<T>(8);
-        foreach (var (_, asset) in _store)
-        {
-            if (asset is T typedAsset) result.Add(typedAsset);
-        }
-
-        return result;
+        CurrentStatus = Status.Ready;
     }
 
     public void Shutdown()
     {
-        foreach (var asset in _store.Values)
-            if (asset is IDisposable disposable)
-                disposable.Dispose();
-    }
-
-    private AssetManifestBundle LoadManifest()
-    {
-        if (!Directory.Exists(_assetPath))
-        {
-            throw new DirectoryNotFoundException($"Asset manifest '{_assetPath}' directory not found.");
-        }
-
-        AssetPaths.AssetFolder = _assetPath;
-
-        var manifestPath = Path.Combine(BasePath, _manifestFilename);
-        if (!File.Exists(manifestPath))
-            throw new FileNotFoundException($"Manifest '{manifestPath}' not found.");
-
-        Console.WriteLine("Loading Asset Manifest...");
-
-        using var fs = new FileStream(
-            manifestPath, FileMode.Open, FileAccess.Read, FileShare.Read, 64 * 1024,
-            FileOptions.SequentialScan);
-
-        var assetManifest = JsonSerializer.Deserialize<AssetManifest>(fs, _jsonOptions) ??
-                            throw new InvalidDataException("Invalid manifest.");
-
-        var m = assetManifest.ResourceManifest;
-        return new AssetManifestBundle
-        {
-            Textures = LoadAllEntries<TextureManifestRecord>(m.Texture, true)!,
-            Shaders = LoadAllEntries<ShaderManifestRecord>(m.Shader, true)!,
-            Meshes = LoadAllEntries<MeshManifestRecord>(m.Mesh, false),
-            Cubemaps = LoadAllEntries<CubeMapManifestRecord>(m.CubeMaps ?? "", false)
-        };
-    }
-
-    internal void AddResource<T>(T resource) where T : class, IGraphicAssetFile
-    {
-        if (!_store.TryAdd(AssetKey.For<T>(resource.Name), resource))
-            throw new InvalidOperationException($"Asset '{resource.Name}' is already exists.");
-    }
-
-    private void LoadResources<T>(IReadOnlyList<T> resources) where T : class, IGraphicAssetFile
-    {
-        foreach (var resource in resources)
-        {
-            if (!_store.TryAdd(AssetKey.For<T>(resource.Name), resource))
-                throw new InvalidOperationException($"Asset '{resource.Name}' is already exists.");
-        }
-    }
-
-
-    private AssetResourceManifest<T>? LoadAllEntries<T>(string manifestFilename, bool required)
-        where T : IAssetManifestRecord
-    {
-        ArgumentNullException.ThrowIfNull(manifestFilename, nameof(manifestFilename));
-
-        var path = Path.Combine(BasePath, manifestFilename);
-        var exists = File.Exists(path);
-        if (!exists && !required) return null;
-        if (!exists && required)
-        {
-            throw new FileNotFoundException(
-                $"Resource manifest {typeof(T).Name} with path {path} does not exists.");
-        }
-
-
-        using var fs = new FileStream(
-            path, FileMode.Open, FileAccess.Read, FileShare.Read, 64 * 1024,
-            FileOptions.SequentialScan);
-
-        var manifest = JsonSerializer.Deserialize<AssetResourceManifest<T>>(fs, _jsonManifestOptions)
-                       ?? throw new InvalidDataException($"Invalid resource manifest for {typeof(T).Name}.");
-
-        if (manifest.Resources == null)
-            throw new InvalidDataException($"{typeof(T).Name} manifest have null resources.");
-
-        Console.WriteLine($"Loading Assets - ({typeof(T).Name})");
-
-        return manifest;
-    }
-
-    /*
-public void Remove<T>(T assetFile) where T : class, IAssetFile
-{
-    if (assetFile is IGraphicAssetFile graphicsResource)
-    {
-        if(!graphicsResource.GraphicsResource.IsDisposed)
-            graphics.DisposeResource(graphicsResource.GraphicsResource);
-    }
-
-    _store.Remove(assetFile.Name);
-}
-*/
-
-
-    private IReadOnlyList<MaterialTemplate>? LoadMaterialStore(string manifestFilename)
-    {
-        var entries =
-            LoadAllEntries<MaterialManifestRecord>(manifestFilename, true);
-
-        ArgumentNullException.ThrowIfNull(entries, nameof(entries));
-
-        if (entries.Resources.Length == 0) return null;
-
-        var result = new List<MaterialTemplate>();
-
-        var resources = entries.Resources;
-        foreach (var entry in resources)
-        {
-            var mat = MaterialHandler(entry);
-            if (!_store.TryAdd(AssetKey.For<MaterialTemplate>(mat.Name), mat))
-                throw new InvalidOperationException($"Asset '{mat.Name}' is already exists.");
-
-            result.Add(mat);
-        }
-
-        foreach (var mat in result)
-            mat.Initialize();
-
-        _materialStore = new MaterialStore(result);
-        return result;
-
-        MaterialTemplate MaterialHandler(MaterialManifestRecord record)
-        {
-            Texture2D[] textures = [];
-            CubeMap? cubeMap = null;
-            if (record.CubeMap != null)
-            {
-                cubeMap = Get<CubeMap>(record.CubeMap);
-            }
-            else if (record.Textures != null)
-            {
-                textures = new Texture2D[record.Textures.Length];
-                for (var i = 0; i < record.Textures.Length; i++)
-                {
-                    textures[i] = Get<Texture2D>(record.Textures[i]);
-                }
-            }
-
-            var shader = Get<Shader>(record.Shader);
-
-            return new MaterialTemplate
-            {
-                Name = record.Name,
-                Shader = shader,
-                Color = record.Color,
-                Textures = textures,
-                CubeMap = cubeMap
-            };
-        }
+        CurrentStatus = Status.Unloaded;
     }
 }

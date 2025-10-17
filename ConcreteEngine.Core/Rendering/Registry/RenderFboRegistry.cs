@@ -1,12 +1,16 @@
+#region
+
 using ConcreteEngine.Common;
 using ConcreteEngine.Common.Numerics;
 using ConcreteEngine.Core.Rendering.Data;
 using ConcreteEngine.Core.Rendering.Descriptors;
 using ConcreteEngine.Core.Rendering.Passes;
-using ConcreteEngine.Graphics;
 using ConcreteEngine.Graphics.Gfx;
 using ConcreteEngine.Graphics.Gfx.Contracts;
-using ConcreteEngine.Graphics.Resources;
+using ConcreteEngine.Graphics.Gfx.Definitions;
+using ConcreteEngine.Graphics.Gfx.Resources;
+
+#endregion
 
 namespace ConcreteEngine.Core.Rendering.Registry;
 
@@ -18,6 +22,7 @@ internal sealed class RenderFboRegistry
     private readonly GfxResourceApi _gfxApi;
 
     private int _fboCount = 0;
+    
     private readonly RenderFbo[] _fboRegistry = new RenderFbo[RenderLimits.FboSlots];
     public ReadOnlySpan<RenderFbo> FrameBuffers => _fboRegistry.AsSpan(0, _fboCount);
 
@@ -40,15 +45,12 @@ internal sealed class RenderFboRegistry
 
     public void RegisterTemp()
     {
-
         Register<ShadowPassTag>(FboVariant.Default,
             new RegisterFboEntry().AttachDepthTexture(GfxFboDepthTextureDesc.Default())
-                .UseFixedSize(new Size2D(2048, 2048))
-        );
+                .UseFixedSize(new Size2D(2048, 2048)));
         Register<ScenePassTag>(FboVariant.Default,
             new RegisterFboEntry().AttachColorTexture(GfxFboColorTextureDesc.Off(), RenderBufferMsaa.X4)
-                .AttachDepthStencilBuffer()
-        );
+                .AttachDepthStencilBuffer());
         Register<ScenePassTag>(FboVariant.Secondary,
             new RegisterFboEntry()
                 .AttachColorTexture(GfxFboColorTextureDesc.DefaultMip())
@@ -79,6 +81,23 @@ internal sealed class RenderFboRegistry
         renderFbo.UpdateFromMeta(in meta);
 
         _fboRegistry[_fboCount++] = renderFbo;
+    }
+    
+    internal void RecreateSizedFrameBuffer(Size2D outputSize)
+    {
+        ArgumentOutOfRangeException.ThrowIfLessThan(outputSize.Width, 1, nameof(outputSize));
+        ArgumentOutOfRangeException.ThrowIfLessThan(outputSize.Height, 1, nameof(outputSize));
+
+        var fbos = FrameBuffers;
+        Span<(FrameBufferId, Size2D)> newSizes = stackalloc (FrameBufferId, Size2D)[fbos.Length];
+        var idx = 0;
+        foreach (var fbo in fbos)
+        {
+            if (fbo.IsFixedSize) continue;
+            newSizes[idx++] = (fbo.FboId, fbo.CalculateNewSize(outputSize));
+        }
+
+        _gfxFbo.RecreateSizedFrameBuffer(newSizes.Slice(0, idx));
     }
 
 

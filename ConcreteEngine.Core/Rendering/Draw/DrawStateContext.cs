@@ -1,9 +1,12 @@
 #region
 
+using ConcreteEngine.Core.Rendering.Data;
+using ConcreteEngine.Core.Rendering.Definitions;
+using ConcreteEngine.Core.Rendering.Passes;
 using ConcreteEngine.Core.Rendering.Registry;
 using ConcreteEngine.Core.Rendering.State;
 using ConcreteEngine.Graphics.Gfx;
-using ConcreteEngine.Graphics.Resources;
+using ConcreteEngine.Graphics.Gfx.Resources;
 
 #endregion
 
@@ -19,35 +22,46 @@ internal sealed class DrawStateContextPayload
 
 internal sealed class DrawStateContext
 {
-    public enum StateModeKind
-    {
-        Main,
-        Depth,
-        Post
-    }
-
-    private readonly ShaderId _depthShader;
-
-    public ShaderId OverrideDrawShader { get; private set; }
     public TextureId DepthTexture { get; private set; }
-    public StateModeKind StateMode { get; set; }
+    public PassStateMode PassState { get; private set; }
+    public MaterialId PrevMaterial { get; private set; } = new (-1);
 
+    public readonly RenderCoreShaders CoreShaders;
 
-    internal DrawStateContext(ShaderId depthShader, TextureId depthTexture)
+    internal DrawStateContext(RenderRegistry registry)
     {
-        _depthShader = depthShader;
-        DepthTexture = depthTexture;
+        var depthFbo = registry.GetRenderFbo(TagRegistry.FboKey<ShadowPassTag>(FboVariant.Default));
+        DepthTexture = depthFbo.Attachments.DepthTextureId;
+        CoreShaders = registry.ShaderRegistry.CoreShaders;
+    }
+    
+    public bool IsMain => PassState == PassStateMode.Main;
+    public bool IsDepth => PassState == PassStateMode.Depth;
+    
+    public void SetDepthMode() => PassState = PassStateMode.Depth;
+
+    public void ResetPassMode() => PassState = PassStateMode.Main;
+    public void ResetMaterialState() => PrevMaterial = default;
+
+    public void ResetState()
+    {
+        PrevMaterial = default;
+        PassState = PassStateMode.Main;
     }
 
-    public void SetDepthMode()
+    public bool ResolveMaterialBind(MaterialId material)
     {
-        OverrideDrawShader = _depthShader;
-        StateMode = StateModeKind.Depth;
-    }
+        if (material == PrevMaterial) return false;
+        PrevMaterial = material;
+        return true;
+    } 
+    public ShaderId ResolveShaderPolicy(ShaderId cmdShader) => PassState switch
+    {
+        PassStateMode.Main => cmdShader,
+        PassStateMode.Post => cmdShader,
+        PassStateMode.Depth => CoreShaders.DepthShader,
+        _ => throw new ArgumentOutOfRangeException()
+    };
+    
 
-    public void RestoreStateMode()
-    {
-        OverrideDrawShader = default;
-        StateMode = StateModeKind.Main;
-    }
 }

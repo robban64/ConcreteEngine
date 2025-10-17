@@ -1,6 +1,7 @@
 #region
 
-using ConcreteEngine.Core.Assets.Resources;
+using ConcreteEngine.Core.Assets.Materials;
+using ConcreteEngine.Core.Rendering.Data;
 
 #endregion
 
@@ -41,7 +42,7 @@ public sealed class TilemapDrawProducer : IDrawCommandProducer, ITilemapDrawSink
 
     public void Initialize()
     {
-        _tilemapBatcher = _context.DrawBatchers.Get<TilemapBatcher>();
+        _tilemapBatcher = _context.DrawBatchers.GetByRef<TilemapBatcher>();
     }
 
     public void BeginTick(in UpdateMetaInfo updateMeta)

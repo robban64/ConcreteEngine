@@ -4,7 +4,7 @@ using System.Numerics;
 using ConcreteEngine.Common;
 using ConcreteEngine.Common.Numerics;
 using ConcreteEngine.Core.Assets;
-using ConcreteEngine.Core.Assets.Resources;
+using ConcreteEngine.Core.Assets.Meshes;
 using ConcreteEngine.Core.Engine.Configuration;
 using ConcreteEngine.Core.Rendering;
 using ConcreteEngine.Core.Rendering.Data;
@@ -13,7 +13,7 @@ using ConcreteEngine.Core.Scene;
 using ConcreteEngine.Core.Scene.Entities;
 using ConcreteEngine.Graphics;
 using ConcreteEngine.Graphics.Primitives;
-using Shader = ConcreteEngine.Core.Assets.Resources.Shader;
+using Shader = ConcreteEngine.Core.Assets.Shaders.Shader;
 
 #endregion
 
@@ -27,8 +27,9 @@ public sealed class Demo3DScene : GameScene
 
         var renderer = Context.GetSystem<IRenderSystem>();
         var assets = Context.GetSystem<IAssetSystem>();
+        var (store, materialStore) = (assets.Store, assets.MaterialStore);
 
-        var skyboxMaterial = renderer.CreateMaterial("SkyboxMat");
+        var skyboxMaterial = materialStore.CreateMaterial("SkyboxMat","SkyboxMat1");
 
         var rb = renderer.RenderProps;
         rb.SetSkybox(skyboxMaterial.Id, Quaternion.Identity);
@@ -37,16 +38,16 @@ public sealed class Demo3DScene : GameScene
 
         rb.SetShadowDefault(2048);
 
-        var boatMat = renderer.CreateMaterial("BoatMat");
-        var boatMesh = assets.Get<Mesh>("Boat");
-        boatMat.SpecularStrength = 0;
-        boatMat.Shininess = 1;
+        var boatMat = materialStore.CreateMaterial("BoatMat", "BoatMat1");
+        var boatMesh = store.GetByName<Mesh>("Boat");
+        boatMat.State.Specular = 0;
+        boatMat.State.Shininess = 1;
 
 
-        var rockMat = renderer.CreateMaterial("Rock01Mat");
-        rockMat.SpecularStrength = 0.3f;
-        var rockMesh = assets.Get<Mesh>("Rock1");
-        var rock2Mesh = assets.Get<Mesh>("Rock2");
+        var rockMat = materialStore.CreateMaterial("Rock01Mat", "Rock01Mat1");
+        rockMat.State.Specular = 0.3f;
+        var rockMesh = store.GetByName<Mesh>("Rock1");
+        var rock2Mesh = store.GetByName<Mesh>("Rock2");
 
         for (int i = 0; i < 40; i++)
         {
@@ -89,12 +90,12 @@ public sealed class Demo3DScene : GameScene
 
     protected override void ConfigureRenderer(IGameSceneRenderBuilder builder)
     {
-        var assets = Context.GetSystem<IAssetSystem>();
+        var assetStore = Context.GetSystem<IAssetSystem>().Store;
 
-        var screenShader = assets.Get<Shader>("Screen");
-        var compositeShader = assets.Get<Shader>("Composite");
-        var presentShader = assets.Get<Shader>("Present");
-        var colorFilterShader = assets.Get<Shader>("ColorFilter");
+        var screenShader = assetStore.GetByName<Shader>("Screen");
+        var compositeShader = assetStore.GetByName<Shader>("Composite");
+        var presentShader = assetStore.GetByName<Shader>("Present");
+        var colorFilterShader = assetStore.GetByName<Shader>("ColorFilter");
 
 
         builder.RegisterRender3D(new RenderTargetDescriptor

@@ -1,6 +1,5 @@
 {
-  "folder": "./textures",
-  "resources": [
+  "records": [
     {
       "name": "Boat",
       "filename": "boat.png",

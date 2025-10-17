@@ -2,15 +2,17 @@
 
 using System.Numerics;
 using System.Runtime.CompilerServices;
-using ConcreteEngine.Core.Assets.Resources;
+using System.Runtime.InteropServices;
+using ConcreteEngine.Core.Assets.Materials;
+using ConcreteEngine.Core.Rendering.Data;
 using ConcreteEngine.Core.Rendering.Definitions;
-using ConcreteEngine.Core.Rendering.Passes;
-using ConcreteEngine.Graphics.Resources;
+using ConcreteEngine.Graphics.Gfx.Resources;
 
 #endregion
 
 namespace ConcreteEngine.Core.Rendering.Commands;
 
+[StructLayout(LayoutKind.Sequential)]
 public readonly struct DrawCommand(MeshId meshId, MaterialId materialId, int drawCount = 0)
 {
     public readonly MeshId MeshId = meshId;
@@ -18,11 +20,14 @@ public readonly struct DrawCommand(MeshId meshId, MaterialId materialId, int dra
     public readonly int DrawCount = drawCount;
 }
 
+[StructLayout(LayoutKind.Sequential)]
 public readonly struct DrawTransformPayload(in Matrix4x4 transform)
 {
     public readonly Matrix4x4 Transform = transform;
 }
 
+
+[StructLayout(LayoutKind.Sequential)]
 public readonly struct DrawCommandMeta(
     DrawCommandId id,
     DrawCommandQueue queue,
@@ -35,6 +40,7 @@ public readonly struct DrawCommandMeta(
     public readonly DrawCommandQueue Queue = queue;
 }
 
+[StructLayout(LayoutKind.Sequential)]
 internal readonly struct DrawCommandRef : IComparable<DrawCommandRef>
 {
     private readonly ulong _sortKey;
@@ -55,4 +61,8 @@ internal readonly struct DrawCommandRef : IComparable<DrawCommandRef>
 
 internal readonly record struct DrawCommandTicket(int SubmitIdx /*, byte PassId*/);
 
-internal readonly record struct DrawPassRange(int Start, int Count);
+internal readonly struct DrawPassRange(int start, int count)
+{
+    public readonly int Start = start;
+    public readonly int Count = count;
+}

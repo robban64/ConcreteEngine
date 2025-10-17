@@ -1,21 +1,20 @@
 {
-  "folder": "./meshes",
-  "resources": [
-	{
-	  "name": "Boat",
-	  "filename": "boat.obj"
-	},
-	{
-	  "name": "PalmTree",
-	  "filename": "palmtree.obj"
-	},
-	{
-	  "name": "Rock1",
-	  "filename": "rocks_01.obj"
-	},
-	{
-	  "name": "Rock2",
-	  "filename": "rocks_03.obj"
-	}
+  "records": [
+    {
+      "name": "Boat",
+      "filename": "boat.obj"
+    },
+    {
+      "name": "PalmTree",
+      "filename": "palmtree.obj"
+    },
+    {
+      "name": "Rock1",
+      "filename": "rocks_01.obj"
+    },
+    {
+      "name": "Rock2",
+      "filename": "rocks_03.obj"
+    }
   ]
 }

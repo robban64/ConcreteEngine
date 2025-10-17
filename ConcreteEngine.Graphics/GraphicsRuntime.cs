@@ -5,9 +5,9 @@ using ConcreteEngine.Common.Numerics;
 using ConcreteEngine.Graphics.Error;
 using ConcreteEngine.Graphics.Gfx;
 using ConcreteEngine.Graphics.Gfx.Internal;
+using ConcreteEngine.Graphics.Gfx.Resources;
 using ConcreteEngine.Graphics.Gfx.Utility;
 using ConcreteEngine.Graphics.OpenGL;
-using ConcreteEngine.Graphics.Resources;
 
 #endregion
 
@@ -82,12 +82,7 @@ public sealed class GraphicsRuntime : IGraphicsRuntime
         _gfxContext.Commands.EndFrame(out result);
     }
 
-    public void RecreateFbo(ReadOnlySpan<(FrameBufferId Id, Size2D Size)> newSizes)
-    {
-        Console.WriteLine($"Recreating {newSizes.Length} FBO");
-        foreach (var (fboId, size) in newSizes)
-            _gfxContext.FrameBuffers.RecreateFrameBuffer(fboId, size);
-    }
+
 
     public void Shutdown()
     {

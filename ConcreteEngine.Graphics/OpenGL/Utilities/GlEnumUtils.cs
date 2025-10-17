@@ -1,8 +1,8 @@
 #region
 
 using System.Runtime.CompilerServices;
+using ConcreteEngine.Graphics.Gfx.Definitions;
 using ConcreteEngine.Graphics.Gfx.Internal;
-using ConcreteEngine.Graphics.Resources;
 using Silk.NET.OpenGL;
 
 #endregion

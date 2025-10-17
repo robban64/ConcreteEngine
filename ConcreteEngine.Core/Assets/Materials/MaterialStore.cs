@@ -1,0 +1,184 @@
+#region
+
+using System.Runtime.CompilerServices;
+using ConcreteEngine.Common;
+using ConcreteEngine.Common.Collections;
+using ConcreteEngine.Core.Assets.Data;
+using ConcreteEngine.Core.Assets.Shaders;
+using ConcreteEngine.Core.Assets.Textures;
+using ConcreteEngine.Core.Rendering.Data;
+using ConcreteEngine.Core.Rendering.Definitions;
+using ConcreteEngine.Core.Rendering.Registry;
+using ConcreteEngine.Graphics.Gfx.Definitions;
+using ConcreteEngine.Graphics.Gfx.Resources;
+
+#endregion
+
+namespace ConcreteEngine.Core.Assets.Materials;
+
+public interface IMaterialStore
+{
+    Material Get(MaterialId materialId);
+    Material Get(string name);
+
+    Material CreateMaterial(string templateName, string name);
+}
+
+public sealed class MaterialStore : IMaterialStore
+{
+    private static int _idx = 0;
+    private static MaterialId NextId() => new(++_idx);
+
+    private readonly AssetStore _assetStore;
+
+    private Material?[] _materials = new Material[16];
+
+    private readonly Stack<MaterialId> _free = new();
+
+    private readonly Dictionary<string, MaterialId> _materialDict = new(8);
+
+    public int Count => _idx;
+    public int FreeSlots => _free.Count;
+
+    internal MaterialStore(AssetStore assetStore)
+    {
+        _assetStore = assetStore;
+    }
+
+    public ReadOnlySpan<Material?> MaterialSpan => _materials.AsSpan(0, _idx);
+
+    public Material Get(MaterialId materialId) => _materials[materialId - 1]!;
+    public Material Get(string name) => _materials[_materialDict[name] - 1]!;
+
+
+    internal void InitializeStore()
+    {
+        _assetStore.Process<MaterialTemplate>(Action);
+        return;
+        void Action(MaterialTemplate it) => RegisterMaterial(it, it.Name);
+    }
+
+
+    public Material CreateMaterial(string templateName, string name)
+    {
+        ArgumentNullException.ThrowIfNull(templateName, nameof(templateName));
+
+        var template = _assetStore.GetByName<MaterialTemplate>(templateName);
+        return RegisterMaterial(template, name);
+    }
+
+    private Material RegisterMaterial(MaterialTemplate template, string name)
+    {
+        ArgumentNullException.ThrowIfNull(template, nameof(template));
+        ArgumentNullException.ThrowIfNull(name, nameof(name));
+
+        var id = _free.Count > 0 ? _free.Pop() : NextIdAndEnsureCapacity();
+        InvalidOpThrower.ThrowIf(id == default);
+
+        var material = new Material(id, template, name);
+        _materials[id - 1] = material;
+        _materialDict.Add(name, id);
+        return material;
+    }
+
+    public bool TryRemove(MaterialId materialId)
+    {
+        ArgumentOutOfRangeException.ThrowIfLessThanOrEqual(materialId.Id, 0, nameof(materialId));
+        ArgumentOutOfRangeException.ThrowIfGreaterThanOrEqual(materialId.Id, _idx);
+
+        var idx = materialId - 1;
+        var material = _materials[idx];
+        if (material is null) return false;
+        _free.Push(materialId);
+        _materialDict.Remove(material.Name);
+        _materials[idx] = null;
+        return true;
+    }
+
+    public void GetMaterialUploadData(Material material, out DrawMaterialPayload data)
+    {
+        var meta = new DrawMaterialMeta(material.Id, ResolveShader(material));
+        var snapshot = material.State.Snapshot();
+        data = new DrawMaterialPayload(in meta, in snapshot);
+    }
+    
+    public int FillTextureInfo(Material material, Span<TextureSlotInfo> span)
+    {
+        var textureSlots = material.TextureSlots.Slots;
+        for (var i = 0; i < textureSlots.Length; i++)
+        {
+            var slot = textureSlots[i];
+            var textureId = ResolveTextureId(slot);
+            span[i] = new TextureSlotInfo(textureId, slot.SlotKind, slot.TextureKind);
+        }
+        return textureSlots.Length;
+    }
+
+    public ShaderId ResolveShader(Material material) => _assetStore.GetByRef(material.ShaderRef).ResourceId;
+
+    private TextureId ResolveTextureId(AssetTextureSlot assetSlot)
+    {
+        //TODO use some better structure than hardcoded checks everywhere
+        if (assetSlot.SlotKind == TextureSlotKind.Shadowmap) return default;
+
+        if (assetSlot.TextureKind == TextureKind.Texture2D)
+            return _assetStore.GetByRef(new AssetRef<Texture2D>(assetSlot.Asset)).ResourceId;
+
+        if (assetSlot.TextureKind == TextureKind.CubeMap)
+            return _assetStore.GetByRef(new AssetRef<CubeMap>(assetSlot.Asset)).ResourceId;
+
+        throw new InvalidOperationException(nameof(assetSlot));
+    }
+
+    private MaterialId NextIdAndEnsureCapacity()
+    {
+        var len = _materials.Length;
+        if (_idx >= len)
+        {
+            var newCap = ArrayUtility.CapacityGrowthLinear(len, len * 2, step: 32);
+
+            if (newCap > RenderLimits.MaxMaterialCount)
+                throw new InvalidOperationException("Material limit exceeded");
+
+            Array.Resize(ref _materials, newCap);
+        }
+
+        return NextId();
+    }
+
+
+    /*
+     *
+       private void ProcessMaterial(Material material)
+       {
+           Span<TextureSlotInfo> textureSlots = stackalloc TextureSlotInfo[RenderLimits.TextureSlots];
+           var count = CreateTextureSlotInfo(material, textureSlots);
+           var shaderId = ResolveShader(material).ResourceId;
+           var slots = textureSlots.Slice(0, count);
+           var materialId = MaterialInvoke(shaderId, material.Parameters.GetDataParams(), slots);
+           material.Attach(materialId);
+       }
+
+
+       public void ProcessStore()
+       {
+           Span<TextureSlotInfo> textureSlots = stackalloc TextureSlotInfo[RenderLimits.TextureSlots];
+           foreach (var material in _materialDict.Values)
+           {
+               var count = CreateTextureSlotInfo(material, textureSlots);
+               var shaderId = ResolveShader(material).ResourceId;
+               var slots = textureSlots.Slice(0, count);
+               var materialId = MaterialInvoke(shaderId, material.Parameters.GetDataParams(), slots);
+               material.Attach(materialId);
+           }
+       }
+
+       public void InvokeUpdateRenderMaterials()
+       {
+           foreach (var material in _materialDict.Values)
+           {
+               if (material.Id > 0) MaterialUpdate(material.Id, material.Parameters.GetDataParams());
+           }
+       }
+     */
+}

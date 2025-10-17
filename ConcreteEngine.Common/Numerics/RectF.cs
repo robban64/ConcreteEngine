@@ -6,12 +6,12 @@ using System.Numerics;
 
 namespace ConcreteEngine.Common.Numerics;
 
-public readonly record struct RectF(float Left, float Top, float Width, float Height)
+public readonly struct RectF(float left, float top, float width, float height)
 {
-    public readonly float Left = Left;
-    public readonly float Top = Top;
-    public readonly float Width = Width;
-    public readonly float Height = Height;
+    public readonly float Left = left;
+    public readonly float Top = top;
+    public readonly float Width = width;
+    public readonly float Height = height;
 
     public float Right => Left + Width;
 
@@ -22,4 +22,5 @@ public readonly record struct RectF(float Left, float Top, float Width, float He
     }
 
     public bool Contains(Vector2 point) => point.X >= Left && point.X <= Right && point.Y >= Top && point.Y <= Bottom;
+
 }

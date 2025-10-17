@@ -1,12 +1,20 @@
 #region
 
-using ConcreteEngine.Graphics.Resources;
+using ConcreteEngine.Core.Rendering.Definitions;
+using ConcreteEngine.Graphics.Gfx.Definitions;
+using ConcreteEngine.Graphics.Gfx.Resources;
 
 #endregion
 
 namespace ConcreteEngine.Core.Rendering.Data;
 
-public readonly record struct TextureSlot(TextureId Id, int Slot)
+public readonly record struct TextureSlotInfo(
+    TextureId Texture,
+    TextureSlotKind SlotKind,
+    TextureKind TextureKind
+);
+
+public readonly record struct TextureSlot(TextureId Texture, int Slot)
 {
     public static TextureSlot Slot0(TextureId id) => new(id, 0);
     public static TextureSlot Slot1(TextureId id) => new(id, 1);

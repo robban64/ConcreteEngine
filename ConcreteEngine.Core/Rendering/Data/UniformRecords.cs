@@ -3,6 +3,7 @@
 using System.Numerics;
 using System.Runtime.InteropServices;
 using ConcreteEngine.Common.Numerics;
+using ConcreteEngine.Core.Rendering.Registry;
 using ConcreteEngine.Graphics.Primitives;
 
 #endregion
@@ -116,15 +117,27 @@ public readonly struct ShadowUniformRecord(
 }
 
 [StructLayout(LayoutKind.Sequential)]
-public readonly struct MaterialUniformRecord(
-    Vector4 matColor,
-    Vector4 matParams0,
-    Vector4 matParams1
-) : IStd140Uniform
+public readonly struct MaterialUniformRecord : IStd140Uniform
 {
-    public readonly Vector4 MatColor = matColor; // rgb = tint
-    public readonly Vector4 MatParams0 = matParams0; // x = SpecularStrength, y = uvRepeat, z,w reserved
-    public readonly Vector4 MatParams1 = matParams1; // x = Shininess, yzw reserved
+    public readonly Vector4 MatColor; // rgb = tint
+    public readonly Vector4 MatParams0; // x = SpecularStrength, y = uvRepeat, z,w reserved
+    public readonly Vector4 MatParams1; // x = Shininess, yzw reserved
+
+    public MaterialUniformRecord(Vector4 matColor,
+        Vector4 matParams0,
+        Vector4 matParams1)
+    {
+        MatColor = matColor;
+        MatParams0 = matParams0;
+        MatParams1 = matParams1;
+    }
+
+    public MaterialUniformRecord(in MaterialParams mat)
+    {
+        MatColor = new Vector4(mat.Color.AsVec3(), 1);
+        MatParams0 = new Vector4(mat.Specular, mat.UvRepeat, 0.0f, 0.0f);
+        MatParams1 = new Vector4(mat.Shininess, mat.Normal, 0.0f, 0.0f);
+    }
 }
 
 [StructLayout(LayoutKind.Sequential)]

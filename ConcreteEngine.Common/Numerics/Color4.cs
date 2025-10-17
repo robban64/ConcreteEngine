@@ -1,6 +1,7 @@
 #region
 
 using System.Numerics;
+using System.Runtime.CompilerServices;
 
 #endregion
 
@@ -8,13 +9,21 @@ namespace ConcreteEngine.Common.Numerics;
 
 public readonly record struct Color4(float R, float G, float B, float A = 1f)
 {
+    public static Color4 operator *(Color4 c, float s) => c.Multiply(s);
+    public static Color4 operator *(float s, Color4 c) => c.Multiply(s);
+
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public Vector4 AsVec4() => new(R, G, B, A);
+    
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public Vector3 AsVec3() => new(R, G, B);
+    
+    public Color4 Multiply(float scalar) => new(ClampNorm(R * scalar), ClampNorm(G * scalar), ClampNorm(B * scalar), A);
 
     public Color4 WithAlpha(float a) => this with { A = ClampNorm(a) };
     public Color4 WithAlphaByte(byte a) => this with { A = a / 255f };
-    public Color4 Multiply(float scalar) => new(ClampNorm(R * scalar), ClampNorm(G * scalar), ClampNorm(B * scalar), A);
 
+    
     public (byte R, byte G, byte B, byte A) ToBytes() =>
         ((byte)MathF.Round(R * 255f),
             (byte)MathF.Round(G * 255f),
@@ -24,6 +33,9 @@ public readonly record struct Color4(float R, float G, float B, float A = 1f)
 
     public static Color4 FromNormalized(float r, float g, float b, float a = 1f) =>
         new(ClampNorm(r), ClampNorm(g), ClampNorm(b), ClampNorm(a));
+
+    public static Color4 FromVector4(Vector4 v) => FromNormalized(v.X, v.Y, v.Z, v.W);
+    public static Color4 FromVector3(Vector3 v, float a = 1f) => FromNormalized(v.X, v.Y, v.Z, a);
 
     public static Color4 FromRgba(byte r, byte g, byte b, byte a = 255) => 
         new(r / 255f, g / 255f, b / 255f, a / 255f);
@@ -39,6 +51,7 @@ public readonly record struct Color4(float R, float G, float B, float A = 1f)
         );
     }
 
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     private static float ClampNorm(float v) => v < 0f ? 0f : v > 1f ? 1f : v;
 
 

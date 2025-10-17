@@ -1,7 +1,7 @@
 #region
 
 using ConcreteEngine.Graphics.Gfx.Internal;
-using ConcreteEngine.Graphics.Resources;
+using ConcreteEngine.Graphics.Gfx.Resources;
 using ConcreteEngine.Graphics.Utils;
 
 #endregion

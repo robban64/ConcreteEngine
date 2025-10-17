@@ -5,7 +5,7 @@ using ConcreteEngine.Common.Numerics;
 using ConcreteEngine.Core.Rendering.Data;
 using ConcreteEngine.Core.Rendering.Draw;
 using ConcreteEngine.Core.Rendering.Registry;
-using ConcreteEngine.Graphics.Resources;
+using ConcreteEngine.Graphics.Gfx.Resources;
 
 #endregion
 
@@ -47,7 +47,7 @@ public sealed class RenderPassCtx
 
         var passKey = TagRegistry.PassKey<TTag>(variant);
         var key = new PassTextureSlotKey(passKey.TagIndex, passKey.Variant, passKey.Pass, (byte)texSlot.Slot);
-        _cmdQueue.SampleTo(key, texSlot.Id);
+        _cmdQueue.SampleTo(key, texSlot.Texture);
     }
 
     public void MutateStatePass<TTag>(FboVariant variant, in PassMutationState newState)

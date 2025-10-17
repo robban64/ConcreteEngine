@@ -2,14 +2,14 @@
 
 using System.Runtime.CompilerServices;
 using ConcreteEngine.Common.Numerics;
-using ConcreteEngine.Core.Assets.Resources;
+using ConcreteEngine.Core.Assets.Materials;
 using ConcreteEngine.Core.Engine.Data;
 using ConcreteEngine.Core.Rendering.Commands;
+using ConcreteEngine.Core.Rendering.Data;
 using ConcreteEngine.Core.Rendering.Definitions;
-using ConcreteEngine.Core.Rendering.Passes;
 using ConcreteEngine.Core.Rendering.State;
 using ConcreteEngine.Core.Scene.Entities;
-using ConcreteEngine.Graphics.Resources;
+using ConcreteEngine.Graphics.Gfx.Resources;
 
 #endregion
 
@@ -105,7 +105,7 @@ public sealed class MeshDrawProducer : IDrawCommandProducer, IMeshDrawSink
             counter++;
             if (counter >= BatchSize)
             {
-                submitter.SubmitDrawBatch(new DrawCommandData(_commands, _meta, _transforms));
+                submitter.SubmitDrawBatch(new DrawCommandPackage(_commands, _meta, _transforms));
                 counter = 0;
             }
         }
@@ -115,7 +115,7 @@ public sealed class MeshDrawProducer : IDrawCommandProducer, IMeshDrawSink
             var commands = _commands.AsSpan(0, counter);
             var metas = _meta.AsSpan(0, counter);
             var transforms = _transforms.AsSpan(0, counter);
-            submitter.SubmitDrawBatch(new DrawCommandData(commands, metas, transforms));
+            submitter.SubmitDrawBatch(new DrawCommandPackage(commands, metas, transforms));
         }
     }
 

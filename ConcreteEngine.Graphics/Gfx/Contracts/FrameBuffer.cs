@@ -1,19 +1,29 @@
 #region
 
 using ConcreteEngine.Common.Numerics;
+using ConcreteEngine.Graphics.Gfx.Definitions;
 
 #endregion
 
 namespace ConcreteEngine.Graphics.Gfx.Contracts;
 
-public readonly record struct GfxFrameBufferDescriptor(
-    Size2D Size,
-    GfxFboColorTextureDesc? ColorTexture,
-    GfxFboDepthTextureDesc? DepthTexture,
-    bool ColorBuffer,
-    bool DepthStencilBuffer,
-    RenderBufferMsaa Multisample = RenderBufferMsaa.None
-);
+public readonly struct GfxFrameBufferDescriptor(
+    Size2D size,
+    GfxFboColorTextureDesc? colorTexture,
+    GfxFboDepthTextureDesc? depthTexture,
+    bool colorBuffer,
+    bool depthStencilBuffer,
+    RenderBufferMsaa multisample = RenderBufferMsaa.None
+)
+{
+    public Size2D Size { get; init; } = size;
+    public GfxFboColorTextureDesc? ColorTexture { get; init; } = colorTexture;
+    public GfxFboDepthTextureDesc? DepthTexture { get; init; } = depthTexture;
+    public bool ColorBuffer { get; init; } = colorBuffer;
+    public bool DepthStencilBuffer { get; init; } = depthStencilBuffer;
+    public RenderBufferMsaa Multisample { get; init; } = multisample;
+
+}
 
 public readonly record struct GfxFboColorTextureDesc(
     TexturePixelFormat PixelFormat,

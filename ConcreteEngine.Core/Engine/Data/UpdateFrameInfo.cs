@@ -1,4 +1,8 @@
+#region
+
 using ConcreteEngine.Common.Numerics;
+
+#endregion
 
 namespace ConcreteEngine.Core.Engine.Data;
 
@@ -13,7 +17,7 @@ public readonly record struct UpdateTickInfo(
 public sealed class UpdateFrameInfo
 {
     private UpdateTickInfo _updateTickInfo;
-    
+
     public ref readonly UpdateTickInfo UpdateTickInfo => ref _updateTickInfo;
 
     internal void BeginUpdateFrame(float deltaTime, Size2D viewport, Size2D outputSize)
@@ -23,7 +27,6 @@ public sealed class UpdateFrameInfo
             FrameIndex = _updateTickInfo.FrameIndex + 1,
             DeltaTime = deltaTime,
         };
-
     }
 
     internal void UpdateTick(int tick)

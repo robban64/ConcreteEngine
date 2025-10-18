@@ -54,9 +54,7 @@ public sealed class RenderSystem : IRenderSystem
 
     private bool _initialized = false;
 
-    private Size2D _initialSize;
-
-    internal RenderSystem(GraphicsRuntime graphics, Size2D outputSize)
+    internal RenderSystem(GraphicsRuntime graphics)
     {
         _graphics = graphics;
         _gfx = graphics.Gfx;
@@ -66,7 +64,6 @@ public sealed class RenderSystem : IRenderSystem
         RenderProps = new RenderSceneProps();
         RenderProps.Commit();
         _snapshot = RenderProps.Snapshot;
-        _initialSize = outputSize;
 
         _renderRegistry = new RenderRegistry(_gfx);
         _drawPipeline = new DrawCommandPipeline();
@@ -84,7 +81,7 @@ public sealed class RenderSystem : IRenderSystem
         };
     }
 
-    public RenderSetupBuilder StartBuilder() => new (SystemContext, _initialSize);
+    public RenderSetupBuilder StartBuilder(Size2D outputSize) => new (SystemContext, outputSize);
 
     public void ApplyBuilder(RenderSetupBuilder builder)
     {
@@ -92,33 +89,29 @@ public sealed class RenderSystem : IRenderSystem
 
         var plan = builder.Build();
         
-        _renderRegistry.BeginRegistration(_initialSize);
-        plan.FboSetup(_renderRegistry.FboRegistry);
+        // Registry setup
+        _renderRegistry.BeginRegistration(plan.OutputSize);
         
-        var shaderIds = plan.ShaderProvider();
+        // register FBO
+        foreach (var (variant, entry, registerFbo) in plan.FboSetup)
+            registerFbo(variant, entry);
+            
+        // Register Shaders
+        Span<ShaderId> shaderIds = stackalloc ShaderId[plan.ShaderCount];
+        plan.ShaderProvider(shaderIds);
         var coreShaders = plan.CoreShaderSetup();
         _renderRegistry.ShaderRegistry.RegisterCollection(shaderIds);
         _renderRegistry.ShaderRegistry.RegisterCoreShader(in coreShaders);
         _renderRegistry.FinishRegistration();
 
+        // Batcher 
         plan.BatcherSetup(_gfx, _batches);
         
-        var ctx = new RenderSystemContext
-        {
-            Batchers = _batches,
-            CommandPipeline = _drawPipeline,
-            Gfx = _gfx,
-            Registry = _renderRegistry,
-            PassPipeline = _passPipeline,
-            Snapshot = _snapshot,
-            View = _renderView
-        };
-        _drawPipeline.Initialize(ctx, plan.CollectorSetup);
-        _passPipeline.Initialize(ctx);
+        _drawPipeline.Initialize(SystemContext, plan.CollectorSetup);
+        _passPipeline.Initialize(SystemContext);
 
         PassPipeline3D.RegisterPassPipeline(_passPipeline, in _renderRegistry.ShaderRegistry.CoreShaders);
         _initialized = true;
-
     }
 
     public TSink GetSink<TSink>() where TSink : IDrawSink => _drawPipeline.GetSink<TSink>();

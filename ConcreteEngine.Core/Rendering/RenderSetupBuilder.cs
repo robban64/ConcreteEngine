@@ -4,6 +4,7 @@ using ConcreteEngine.Core.Rendering.Batching;
 using ConcreteEngine.Core.Rendering.Commands;
 using ConcreteEngine.Core.Rendering.Data;
 using ConcreteEngine.Core.Rendering.Definitions;
+using ConcreteEngine.Core.Rendering.Descriptors;
 using ConcreteEngine.Core.Rendering.Draw;
 using ConcreteEngine.Core.Rendering.Passes;
 using ConcreteEngine.Core.Rendering.Registry;
@@ -14,30 +15,12 @@ using ConcreteEngine.Graphics.Primitives;
 
 namespace ConcreteEngine.Core.Rendering;
 
-public abstract class RenderBuilderStage
-{
-    protected readonly RenderBuilderContext Ctx;
-
-    protected RenderBuilderStage(RenderBuilderContext ctx) => Ctx = ctx;
-
-    protected void ThrowIfBuilt()
-    {
-        if (Ctx.Done) throw new InvalidOperationException("Already built.");
-    }
-
-    protected TStage Next<TStage>(Func<RenderBuilderContext, TStage> f) where TStage : RenderBuilderStage
-        => f(Ctx);
-}
-
 public sealed class RenderSetupBuilder
 {
     private RenderSystemContext SystemCtx { get; }
     private RenderBuilderContext Ctx { get; }
 
     public bool IsDone => Ctx.Done;
-    
-        
-    private void EnsureNotDone() => InvalidOpThrower.ThrowIf(IsDone, nameof(IsDone));
 
     internal RenderSetupBuilder(RenderSystemContext systemCtx, Size2D outputSize)
     {
@@ -49,16 +32,18 @@ public sealed class RenderSetupBuilder
         Ctx = new RenderBuilderContext(systemCtx.Gfx, outputSize);
     }
 
-    internal RenderBuilderContext Build()
+    private void EnsureNotDone() => InvalidOpThrower.ThrowIf(IsDone, nameof(IsDone));
+
+    internal RenderSetupPlan Build()
     {
         EnsureNotDone();
         InvalidOpThrower.ThrowIf(Ctx.Version == RenderPipelineVersion.None, nameof(Ctx.Version));
         InvalidOpThrower.ThrowIfAnyNull(Ctx.BatcherSetup, Ctx.CollectorSetup);
         InvalidOpThrower.ThrowIfAnyNull(Ctx.FboSetup, Ctx.ShaderProvider, Ctx.CoreShaderSetup);
 
-
         Ctx.Done = true;
-        return Ctx;
+
+        return Ctx.Compile();
     }
 
     public void SetupRegistry(Action<RenderRegistryBuilder> registryBuilder)
@@ -101,19 +86,27 @@ public sealed class RenderRegistryBuilder
         RenderRegistry = renderRegistry;
     }
 
-    public RenderRegistryBuilder RegisterFbo(Action<IRenderFboRegistry> builder)
+    public RenderRegistryBuilder RegisterFbo<TTag>(FboVariant variant, RegisterFboEntry entry)
+        where TTag : unmanaged, IRenderPassTag
     {
-        ArgumentNullException.ThrowIfNull(builder, nameof(builder));
-        Ctx.FboSetup = builder;
+        ArgumentOutOfRangeException.ThrowIfLessThan(variant.Value, 0, nameof(variant));
+        ArgumentNullException.ThrowIfNull(entry, nameof(entry));
+
+        Ctx.FboSetup.Add((variant, entry, Action));
         return this;
+
+        void Action(FboVariant v, RegisterFboEntry e) 
+            => RenderRegistry.FboRegistry.Register<TTag>(v, e, Ctx.OutputSize);
     }
 
-    public RenderRegistryBuilder RegisterShader(Func<List<ShaderId>> provider)
+    public RenderRegistryBuilder RegisterShader(int shaderCount, Action<Span<ShaderId>> provider)
     {
         ArgumentNullException.ThrowIfNull(provider, nameof(provider));
+        Ctx.ShaderCount = shaderCount;
         Ctx.ShaderProvider = provider;
         return this;
     }
+
     public RenderRegistryBuilder RegisterCoreShaders(Func<RenderCoreShaders> provider)
     {
         ArgumentNullException.ThrowIfNull(provider, nameof(provider));

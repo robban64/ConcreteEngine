@@ -11,11 +11,7 @@ using ConcreteEngine.Graphics.Primitives;
 
 namespace ConcreteEngine.Core.Rendering.Registry;
 
-public interface IRenderUboRegistry
-{
-    void Register<TUbo>() where TUbo : unmanaged, IStd140Uniform;
-}
-internal sealed class RenderUboRegistry : IRenderUboRegistry
+internal sealed class RenderUboRegistry 
 {
     private readonly RenderUbo[] _uboRegistry = new RenderUbo[RenderLimits.UboSlots];
     private int _uboCount = 0;
@@ -31,7 +27,7 @@ internal sealed class RenderUboRegistry : IRenderUboRegistry
         _gfxApi.BindMetaChanged<UniformBufferId, UniformBufferMeta>(OnUboChange);
     }
 
-    public void BeginRegistration(RenderRegistry.RegistrationData registrationData)
+    public void BeginRegistration()
     {
         Register<EngineUniformRecord>();
         Register<FrameUniformRecord>();

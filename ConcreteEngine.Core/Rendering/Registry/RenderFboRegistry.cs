@@ -14,15 +14,8 @@ using ConcreteEngine.Graphics.Gfx.Resources;
 
 namespace ConcreteEngine.Core.Rendering.Registry;
 
-public interface IRenderFboRegistry
+internal sealed class RenderFboRegistry 
 {
-    void RegisterTag<TTag>() where TTag : unmanaged, IRenderPassTag;
-    void Register<TTag>(FboVariant variant, RegisterFboEntry entry) where TTag : unmanaged, IRenderPassTag;
-}
-internal sealed class RenderFboRegistry : IRenderFboRegistry
-{
-    private RenderRegistry.RegistrationData _registrationData;
-
     private readonly GfxFrameBuffers _gfxFbo;
     private readonly GfxResourceApi _gfxApi;
 
@@ -40,55 +33,29 @@ internal sealed class RenderFboRegistry : IRenderFboRegistry
         _gfxApi.BindMetaChanged<FrameBufferId, FrameBufferMeta>(OnFboChange);
     }
 
-    public void BeginRegistration(RenderRegistry.RegistrationData registrationData)
+    public void BeginRegistration()
     {
-        _registrationData = registrationData;
         RegisterTag<ShadowPassTag>();
         RegisterTag<ScenePassTag>();
         RegisterTag<LightPassTag>();
         RegisterTag<PostPassTag>();
         RegisterTag<ScreenPassTag>();
-
     }
-
 
     public void FinishRegistration()
     {
         _fboRegistry.AsSpan(0, _fboCount).Sort(RenderFbo.FboKeyComparer.Instance);
     }
 
-    public void RegisterTemp()
-    {
-        Register<ShadowPassTag>(FboVariant.Default,
-            new RegisterFboEntry().AttachDepthTexture(GfxFboDepthTextureDesc.Default())
-                .UseFixedSize(new Size2D(2048, 2048)));
-        
-        Register<ScenePassTag>(FboVariant.Default,
-            new RegisterFboEntry().AttachColorTexture(GfxFboColorTextureDesc.Off(), RenderBufferMsaa.X4)
-                .AttachDepthStencilBuffer());
-        
-        Register<ScenePassTag>(FboVariant.Secondary,
-            new RegisterFboEntry()
-                .AttachColorTexture(GfxFboColorTextureDesc.DefaultMip())
-                .AttachDepthStencilBuffer());
-
-        Register<PostPassTag>(FboVariant.Default,
-            new RegisterFboEntry().AttachColorTexture(GfxFboColorTextureDesc.Default()));
-
-        Register<PostPassTag>(FboVariant.Secondary,
-            new RegisterFboEntry().AttachColorTexture(GfxFboColorTextureDesc.Default()));
-    }
-    
     public void RegisterTag<TTag>() where TTag : unmanaged, IRenderPassTag
         => TagRegistry.RegisterTag<TTag>();
 
-    public void Register<TTag>(FboVariant variant, RegisterFboEntry entry) where TTag : unmanaged, IRenderPassTag
+    public void Register<TTag>(FboVariant variant, RegisterFboEntry entry, Size2D outputSize) where TTag : unmanaged, IRenderPassTag
     {
-        InvalidOpThrower.ThrowIfNot(_registrationData.Enabled);
         InvalidOpThrower.ThrowIf(_fboCount >= RenderLimits.FboSlots);
         InvalidOpThrower.ThrowIfNotNull(_fboRegistry[_fboCount]);
 
-        var gfxDescriptor = entry.Build(_registrationData.OutputSize);
+        var gfxDescriptor = entry.Build(outputSize);
         var fboId = _gfxFbo.CreateFrameBuffer(gfxDescriptor);
         var meta = _gfxApi.GetMeta<FrameBufferId, FrameBufferMeta>(fboId);
 

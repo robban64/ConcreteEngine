@@ -38,12 +38,9 @@ internal sealed class RenderRegistry
         ArgumentOutOfRangeException.ThrowIfLessThanOrEqual(outputSize.Width, 1, nameof(outputSize));
         ArgumentOutOfRangeException.ThrowIfLessThanOrEqual(outputSize.Height, 1, nameof(outputSize));
 
-
-        _registrationData = new RegistrationData(true, outputSize);
-
-        UboRegistry.BeginRegistration(_registrationData);
-        FboRegistry.BeginRegistration(_registrationData);
-        FboRegistry.RegisterTemp();
+        UboRegistry.BeginRegistration();
+        FboRegistry.BeginRegistration();
+        //FboRegistry.RegisterTemp();
 
     }
 
@@ -51,8 +48,6 @@ internal sealed class RenderRegistry
     {
         UboRegistry.FinishRegistration();
         FboRegistry.FinishRegistration();
-
-        _registrationData = new RegistrationData(false, Size2D.Zero);
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]

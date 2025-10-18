@@ -3,6 +3,7 @@ using ConcreteEngine.Common.Numerics;
 using ConcreteEngine.Core.Rendering.Batching;
 using ConcreteEngine.Core.Rendering.Commands;
 using ConcreteEngine.Core.Rendering.Data;
+using ConcreteEngine.Core.Rendering.Definitions;
 using ConcreteEngine.Core.Rendering.Draw;
 using ConcreteEngine.Core.Rendering.Passes;
 using ConcreteEngine.Core.Rendering.Registry;
@@ -30,80 +31,93 @@ public abstract class RenderBuilderStage
 
 public sealed class RenderSetupBuilder
 {
+    private RenderSystemContext SystemCtx { get; }
     private RenderBuilderContext Ctx { get; }
 
-    private RenderRegistry _renderRegistry;
+    public bool IsDone => Ctx.Done;
+    
+        
+    private void EnsureNotDone() => InvalidOpThrower.ThrowIf(IsDone, nameof(IsDone));
 
-    private DrawCommandPipeline _drawPipeline;
-    private RenderPassPipeline _passPipeline;
-
-    private DrawStateOps _drawStateOps = null!;
-    private DrawCommandProcessor _cmdDraw = null!;
-    private DrawBuffers _drawBuffers = null!;
-
-    public RenderSceneProps RenderProps { get; }
-    private RenderSceneState _snapshot;
-
-
-    private readonly BatcherRegistry _batches = new();
-    private readonly RenderView _renderView = new();
-
-    public RenderSetupBuilder(GfxContext gfx, Size2D outputSize)
+    internal RenderSetupBuilder(RenderSystemContext systemCtx, Size2D outputSize)
     {
+        ArgumentNullException.ThrowIfNull(systemCtx);
         ArgumentOutOfRangeException.ThrowIfLessThanOrEqual(outputSize.Width, 4);
         ArgumentOutOfRangeException.ThrowIfLessThanOrEqual(outputSize.Height, 4);
 
-        Ctx = new RenderBuilderContext(gfx, outputSize);
+        SystemCtx = systemCtx;
+        Ctx = new RenderBuilderContext(systemCtx.Gfx, outputSize);
     }
 
-    public void SetupRegistry(Action<RenderRegistryBuilder> builder)
+    internal RenderBuilderContext Build()
     {
-        _renderRegistry = new RenderRegistry(Ctx.Gfx);
-        _renderRegistry.BeginRegistration(Ctx.OutputSize);
-        builder(new RenderRegistryBuilder(_renderRegistry));
-        _renderRegistry.FinishRegistration();
+        EnsureNotDone();
+        InvalidOpThrower.ThrowIf(Ctx.Version == RenderPipelineVersion.None, nameof(Ctx.Version));
+        InvalidOpThrower.ThrowIfAnyNull(Ctx.BatcherSetup, Ctx.CollectorSetup);
+        InvalidOpThrower.ThrowIfAnyNull(Ctx.FboSetup, Ctx.ShaderProvider, Ctx.CoreShaderSetup);
+
+
+        Ctx.Done = true;
+        return Ctx;
+    }
+
+    public void SetupRegistry(Action<RenderRegistryBuilder> registryBuilder)
+    {
+        EnsureNotDone();
+        ArgumentNullException.ThrowIfNull(registryBuilder, nameof(registryBuilder));
+        registryBuilder(new RenderRegistryBuilder(SystemCtx.Registry, Ctx));
     }
 
     public void SetupBatchers(Action<GfxContext, BatcherRegistry> builder)
-        => builder(Ctx.Gfx, _batches);
+    {
+        EnsureNotDone();
+        ArgumentNullException.ThrowIfNull(builder, nameof(builder));
+        Ctx.BatcherSetup = builder;
+    }
 
     public void SetupDrawPipeline(Action<IDrawCommandCollector> builder)
     {
-        _drawPipeline = new DrawCommandPipeline(Ctx.Gfx, _batches, _renderRegistry, _renderView, _snapshot);
-        builder(_drawPipeline.Collector);
-        _drawPipeline.Initialize();
+        EnsureNotDone();
+        ArgumentNullException.ThrowIfNull(builder, nameof(builder));
+        Ctx.CollectorSetup = builder;
     }
 
-    private void SetupPassPipeline()
+    public void SetupPassPipeline(RenderPipelineVersion version)
     {
-        _passPipeline = new RenderPassPipeline(_drawStateOps, _renderRegistry);
-        PassPipeline3D.RegisterPassPipeline(_passPipeline, in _renderRegistry.ShaderRegistry.CoreShaders);
+        EnsureNotDone();
+        ArgumentOutOfRangeException.ThrowIfEqual((int)version, (int)RenderPipelineVersion.None);
+        Ctx.Version = version;
     }
 }
 
 public sealed class RenderRegistryBuilder
 {
-    private readonly RenderRegistry _renderRegistry;
+    private RenderBuilderContext Ctx { get; }
+    private RenderRegistry RenderRegistry { get; }
 
-    internal RenderRegistryBuilder(RenderRegistry renderRegistry) => _renderRegistry = renderRegistry;
+    internal RenderRegistryBuilder(RenderRegistry renderRegistry, RenderBuilderContext ctx)
+    {
+        Ctx = ctx;
+        RenderRegistry = renderRegistry;
+    }
 
     public RenderRegistryBuilder RegisterFbo(Action<IRenderFboRegistry> builder)
     {
-        builder(_renderRegistry.FboRegistry);
+        ArgumentNullException.ThrowIfNull(builder, nameof(builder));
+        Ctx.FboSetup = builder;
         return this;
     }
 
-    public RenderRegistryBuilder RegisterShader(int shaderCount, Action<Span<ShaderId>> builder)
+    public RenderRegistryBuilder RegisterShader(Func<List<ShaderId>> provider)
     {
-        Span<ShaderId> shaders = stackalloc ShaderId[shaderCount];
-        builder(shaders);
-        _renderRegistry.ShaderRegistry.RegisterCollection(shaders);
+        ArgumentNullException.ThrowIfNull(provider, nameof(provider));
+        Ctx.ShaderProvider = provider;
         return this;
     }
-
-    public RenderRegistryBuilder RegisterCoreShaders(Func<RenderCoreShaders> builder)
+    public RenderRegistryBuilder RegisterCoreShaders(Func<RenderCoreShaders> provider)
     {
-        _renderRegistry.ShaderRegistry.RegisterCoreShader(builder());
+        ArgumentNullException.ThrowIfNull(provider, nameof(provider));
+        Ctx.CoreShaderSetup = provider;
         return this;
     }
 }

@@ -14,25 +14,27 @@ internal readonly record struct PreparePassResult(int TagIndex, PassId PassId, P
 
 public sealed class RenderPassPipeline
 {
-    private readonly RenderPassCtx _ctx;
+    private RenderPassCtx _ctx = null!;
+    private RenderRegistry _renderRegistry = null!;
 
-    private readonly RenderRegistry _renderRegistry;
+    private PassCommandQueue _cmdQueue = null!;
 
-    private readonly List<RenderPassEntry> _entries;
-
-    private readonly PassCommandQueue _cmdQueue;
+    private readonly List<RenderPassEntry> _entries = new(8);
 
     private int _passIter = 0;
     private RenderPassEntry? _currentEntry = null;
 
     private Size2D _outputSize;
 
-    internal RenderPassPipeline(DrawStateOps cmdOps, RenderRegistry renderRegistry)
+    internal RenderPassPipeline()
     {
-        _renderRegistry = renderRegistry;
-        _entries = new List<RenderPassEntry>(8);
+    }
+
+    internal void Initialize(RenderSystemContext ctx)
+    {
+        _renderRegistry = ctx.Registry;
         _cmdQueue = new PassCommandQueue();
-        _ctx = new RenderPassCtx(cmdOps, _cmdQueue);
+        _ctx = new RenderPassCtx(ctx.CommandPipeline.DrawStateOps, _cmdQueue);
     }
 
     public RenderPassEntry Register<TTag>(FboVariant variant, PassId passId, PassOpKind opKind, RenderPassState initial)

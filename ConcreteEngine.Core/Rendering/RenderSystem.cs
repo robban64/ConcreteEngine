@@ -36,22 +36,21 @@ public interface IRenderSystem : IGameEngineSystem
 
 public sealed class RenderSystem : IRenderSystem
 {
-    //public static RenderSetupBuilder StartBuilder() => new RenderSetupBuilder();
-
     private readonly GraphicsRuntime _graphics;
     private readonly GfxContext _gfx;
 
-    private RenderRegistry _renderRegistry;
-
-    private DrawCommandPipeline _drawPipeline;
-    private RenderPassPipeline _passPipeline;
+    private readonly RenderRegistry _renderRegistry;
+    private readonly DrawCommandPipeline _drawPipeline;
+    private readonly RenderPassPipeline _passPipeline;
 
     private readonly BatcherRegistry _batches = new();
 
     public RenderSceneProps RenderProps { get; }
     private RenderSceneState _snapshot;
 
-    private readonly RenderView _renderView = new();
+    private readonly RenderView _renderView;
+    
+    private RenderSystemContext SystemContext { get; }
 
     private bool _initialized = false;
 
@@ -61,38 +60,65 @@ public sealed class RenderSystem : IRenderSystem
     {
         _graphics = graphics;
         _gfx = graphics.Gfx;
+
+        _renderView = new RenderView();
+
         RenderProps = new RenderSceneProps();
         RenderProps.Commit();
         _snapshot = RenderProps.Snapshot;
         _initialSize = outputSize;
-    }
 
-    internal void InitializeRegistry(ReadOnlySpan<ShaderId> shaderIds, in RenderCoreShaders coreShaders)
-    {
         _renderRegistry = new RenderRegistry(_gfx);
+        _drawPipeline = new DrawCommandPipeline();
+        _passPipeline = new RenderPassPipeline();
+
+        SystemContext = new RenderSystemContext
+        {
+            Batchers = _batches,
+            CommandPipeline = _drawPipeline,
+            Gfx = _gfx,
+            Registry = _renderRegistry,
+            PassPipeline = _passPipeline,
+            Snapshot = _snapshot,
+            View = _renderView
+        };
+    }
+
+    public RenderSetupBuilder StartBuilder() => new (SystemContext, _initialSize);
+
+    public void ApplyBuilder(RenderSetupBuilder builder)
+    {
+        InvalidOpThrower.ThrowIf(builder.IsDone, nameof(builder.IsDone));
+
+        var plan = builder.Build();
+        
         _renderRegistry.BeginRegistration(_initialSize);
+        plan.FboSetup(_renderRegistry.FboRegistry);
+        
+        var shaderIds = plan.ShaderProvider();
+        var coreShaders = plan.CoreShaderSetup();
         _renderRegistry.ShaderRegistry.RegisterCollection(shaderIds);
-        _renderRegistry.ShaderRegistry .RegisterCoreShader(in coreShaders);
+        _renderRegistry.ShaderRegistry.RegisterCoreShader(in coreShaders);
         _renderRegistry.FinishRegistration();
-    }
 
-    internal void InitializeDraw()
-    {
-        _batches.Register(new TerrainBatcher(_gfx));
-        //_batches.Register(new SpriteBatcher(_gfx));
-        //_batches.Register(new TilemapBatcher(_gfx, 64, 32));
+        plan.BatcherSetup(_gfx, _batches);
+        
+        var ctx = new RenderSystemContext
+        {
+            Batchers = _batches,
+            CommandPipeline = _drawPipeline,
+            Gfx = _gfx,
+            Registry = _renderRegistry,
+            PassPipeline = _passPipeline,
+            Snapshot = _snapshot,
+            View = _renderView
+        };
+        _drawPipeline.Initialize(ctx, plan.CollectorSetup);
+        _passPipeline.Initialize(ctx);
 
-        _drawPipeline = new DrawCommandPipeline(_gfx, _batches, _renderRegistry, _renderView, _snapshot);
-        _drawPipeline.Initialize();
-
-        RegisterPasses();
-        _initialized = true;
-    }
-
-    private void RegisterPasses()
-    {
-        _passPipeline = new RenderPassPipeline(_drawPipeline.DrawStateOps, _renderRegistry);
         PassPipeline3D.RegisterPassPipeline(_passPipeline, in _renderRegistry.ShaderRegistry.CoreShaders);
+        _initialized = true;
+
     }
 
     public TSink GetSink<TSink>() where TSink : IDrawSink => _drawPipeline.GetSink<TSink>();
@@ -125,14 +151,15 @@ public sealed class RenderSystem : IRenderSystem
 
         _snapshot = RenderProps.Commit();
         _renderView.PrepareFrame(in viewSnapshot);
-        _drawPipeline.Buffers.UploadGlobalUniforms(in frameInfo, in runtimeParams);
-        _drawPipeline.Buffers.UploadCameraView(_renderView);
+        _drawPipeline.DrawBuffer.UploadGlobalUniforms(in frameInfo, in runtimeParams);
+        _drawPipeline.DrawBuffer.UploadCameraView(_renderView);
     }
 
     internal void EndRenderFrame(out GfxFrameResult frameResult)
     {
         _graphics.EndFrame(out frameResult);
     }
+
     public void SubmitMaterialDrawData(in DrawMaterialPayload payload, ReadOnlySpan<TextureSlotInfo> slots) =>
         _drawPipeline.SubmitMaterialDrawData(in payload, slots);
 
@@ -144,7 +171,7 @@ public sealed class RenderSystem : IRenderSystem
         _passPipeline.Prepare(frameInfo.OutputSize);
         var (drawCapacity, matCapacity) = _drawPipeline.Prepare(frameInfo.Alpha, _snapshot);
         uploadMaterialDel();
-        
+
         _drawPipeline.DrawCmdProcessor.PrepareFrame(drawCapacity, matCapacity);
 
         _drawPipeline.ExecuteMaterials();

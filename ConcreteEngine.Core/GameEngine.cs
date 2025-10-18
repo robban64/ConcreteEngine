@@ -13,6 +13,7 @@ using ConcreteEngine.Core.Modules;
 using ConcreteEngine.Core.Rendering;
 using ConcreteEngine.Core.Rendering.Batching;
 using ConcreteEngine.Core.Rendering.Data;
+using ConcreteEngine.Core.Rendering.Definitions;
 using ConcreteEngine.Core.Rendering.Descriptors;
 using ConcreteEngine.Core.Rendering.Passes;
 using ConcreteEngine.Core.Rendering.Producers;
@@ -92,15 +93,14 @@ public sealed class GameEngine : IDisposable
     private void InitializeSystems()
     {
         _assets.FinishLoading();
-
-        _renderer.InitializeDraw();
         _coreSystems.Initialize();
+        RegisterRenderer();
     }
 
     private void InitializeGraphics()
     {
         var store = _assets.Store;
-
+/*
         var shaderCount = store.GetMetaSnapshot<Shader>().Count;
         Span<ShaderId> shaderIds = stackalloc ShaderId[shaderCount];
         store.ExtractSpan<Shader, ShaderId>(shaderIds, static shader => shader.ResourceId);
@@ -112,17 +112,17 @@ public sealed class GameEngine : IDisposable
             CompositeShader = store.GetByName<Shader>("Composite").ResourceId,
             PresentShader = store.GetByName<Shader>("Present").ResourceId
         });
+*/
     }
 
 
     public void RegisterRenderer()
     {
-        var builder = new RenderSetupBuilder(_graphics.Gfx, _window.OutputSize);
+        var builder = _renderer.StartBuilder();
         builder.SetupRegistry((registry) =>
         {
-            var shaderCount = _assets.Store.GetMetaSnapshot<Shader>().Count;
+            registry.RegisterShader(GetShaders2).RegisterCoreShaders(GetCoreShaders);
 
-            registry.RegisterShader(shaderCount, GetShaders).RegisterCoreShaders(GetCoreShaders);
             registry.RegisterFbo(inner =>
             {
                 inner.Register<ShadowPassTag>(FboVariant.Default,
@@ -143,35 +143,47 @@ public sealed class GameEngine : IDisposable
 
                 inner.Register<PostPassTag>(FboVariant.Secondary,
                     new RegisterFboEntry().AttachColorTexture(GfxFboColorTextureDesc.Default()));
-
             });
         });
-        
-                    
+
         builder.SetupBatchers((gfx, batchers) =>
         {
             batchers.Register(new TerrainBatcher(gfx));
             //_batches.Register(new SpriteBatcher(_gfx));
             //_batches.Register(new TilemapBatcher(_gfx, 64, 32));
         });
-            
+
         builder.SetupDrawPipeline(collector =>
         {
             collector.RegisterProducerSink<IMeshDrawSink>(new MeshDrawProducer());
             collector.RegisterProducerSink<ITerrainDrawSink>(new TerrainDrawProducer());
             collector.RegisterProducer<SceneDrawProducer>(new SceneDrawProducer());
         });
+        builder.SetupPassPipeline(RenderPipelineVersion.Default3D);
+        _renderer.ApplyBuilder(builder);
+
         return;
 
 
-        RenderCoreShaders GetCoreShaders() => new RenderCoreShaders
+        RenderCoreShaders GetCoreShaders() => new()
         {
             DepthShader = _assets.Store.GetByName<Shader>("Depth").ResourceId,
             ColorFilterShader = _assets.Store.GetByName<Shader>("ColorFilter").ResourceId,
             CompositeShader = _assets.Store.GetByName<Shader>("Composite").ResourceId,
             PresentShader = _assets.Store.GetByName<Shader>("Present").ResourceId
         };
-        
+
+        List<ShaderId> GetShaders2()
+        {
+            //Span<ShaderId> shaderIds = stackalloc ShaderId[shaderCount];
+            //_assets.Store.ExtractSpan<Shader, ShaderId>(shaderIds, static shader => shader.ResourceId);
+
+            var shaderCount = _assets.Store.GetMetaSnapshot<Shader>().Count;
+            var list = new List<ShaderId>(shaderCount);
+            _assets.Store.ExtractList<Shader, ShaderId>(list, static shader => shader.ResourceId);
+            return list;
+        }
+
         void GetShaders(Span<ShaderId> shaders)
         {
             var shaderCount = _assets.Store.GetMetaSnapshot<Shader>().Count;
@@ -297,7 +309,6 @@ public sealed class GameEngine : IDisposable
                 _stateMachine.Next(_assets.ProcessLoader(8));
                 break;
             case EngineStateLevel.InitializeSystem:
-                InitializeGraphics();
                 InitializeSystems();
                 _stateMachine.Next();
                 break;

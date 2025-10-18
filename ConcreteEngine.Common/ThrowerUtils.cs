@@ -21,6 +21,23 @@ public static class InvalidOpThrower
         if (obj is null) ThrowOperation(param, message);
     }
 
+    public static void ThrowIfAnyNull(object? o1, object? o2, string? param = null, string? message = null)
+    {
+        if (o1 is null || o2 is null) ThrowOperation(param, message);
+    }
+
+    public static void ThrowIfAnyNull(object? o1, object? o2, object? o3, string? param = null, string? message = null)
+    {
+        if (o1 is null || o2 is null || o3 is null) ThrowOperation(param, message);
+    }
+
+    public static void ThrowIfAnyNull(object? o1, object? o2, object? o3, object? o4, string? param = null,
+        string? message = null)
+    {
+        if (o1 is null || o2 is null || o3 is null || o4 is null) ThrowOperation(param, message);
+    }
+
+
     public static void ThrowIfNotNull(object? obj, string? param = null, string? message = null)
     {
         if (obj is not null) ThrowOperation(param, message);
@@ -50,5 +67,4 @@ public static class InvalidOpThrower
         if (capacity > array.Length)
             ThrowOperation(nameof(capacity), $"Capacity exceed {capacity} > {array.Length}");
     }
-
 }

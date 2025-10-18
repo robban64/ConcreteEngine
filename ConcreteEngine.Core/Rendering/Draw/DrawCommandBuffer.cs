@@ -7,6 +7,7 @@ using System.Runtime.CompilerServices;
 using ConcreteEngine.Common.Collections;
 using ConcreteEngine.Common.Numerics;
 using ConcreteEngine.Core.Rendering.Data;
+using ConcreteEngine.Core.Rendering.Definitions;
 using ConcreteEngine.Core.Rendering.Passes;
 using static ConcreteEngine.Core.Rendering.Data.RenderLimits;
 
@@ -14,11 +15,10 @@ using static ConcreteEngine.Core.Rendering.Data.RenderLimits;
 
 namespace ConcreteEngine.Core.Rendering.Draw;
 
+//internal delegate void DrawCommandDispatchDel(DrawCommand cmd, int idx);
+
 public sealed class DrawCommandBuffer
 {
-    private readonly DrawBuffers _drawBuffers;
-    private readonly DrawCommandProcessor _cmdDraw;
-
     private DrawCommand[] _commandBuffer;
     private DrawObjectUniform[] _transformBuffer;
     private DrawCommandMeta[] _metaBuffer;
@@ -39,9 +39,6 @@ public sealed class DrawCommandBuffer
         _drawTickets = new DrawCommandTicket[DefaultCommandBuffCapacity];
 
         _passRanges = new DrawPassRange[PassSlots];
-
-        _cmdDraw = cmdDraw;
-        _drawBuffers = drawBuffers;
 
         _submitIdx = 0;
     }
@@ -163,14 +160,14 @@ public sealed class DrawCommandBuffer
         }
     }
 
-    public void DrainTransformQueue()
+    public ReadOnlySpan< DrawObjectUniform> DrainTransformQueue()
     {
-        if(_transformBuffer.Length == 0) return;
-        _drawBuffers.UploadDrawObjects(_transformBuffer.AsSpan(0, _submitIdx));
+        if(_transformBuffer.Length == 0) return ReadOnlySpan<DrawObjectUniform>.Empty;
+        return _transformBuffer.AsSpan(0, _submitIdx);
     }
     
 
-    public void DispatchDrawPass(PassId passId)
+    internal void DispatchDrawPass(PassId passId, DrawCommandProcessor cmd)
     {
         var pass = _passRanges[passId];
         var end = pass.Start + pass.Count;
@@ -178,7 +175,7 @@ public sealed class DrawCommandBuffer
         for (var i = pass.Start; i < end; i++)
         {
             var idx = _drawTickets[i].SubmitIdx;
-            _cmdDraw.DrawMesh(commands[idx], idx);
+            cmd.DrawMesh(commands[idx], idx);
         }
     }
 

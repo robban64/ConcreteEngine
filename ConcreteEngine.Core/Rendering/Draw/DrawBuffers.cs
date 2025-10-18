@@ -38,7 +38,7 @@ internal sealed class DrawBuffers
     {
         _gfxBuffers = ctxPayload.Gfx.Buffers;
         _gfxCmd = ctxPayload.Gfx.Commands;
-        
+
         _sceneState = ctxPayload.Snapshot;
         _ctx = ctx;
 
@@ -54,9 +54,28 @@ internal sealed class DrawBuffers
         _shadowUbo = registry.GetRenderUbo<ShadowUniformRecord>().Id;
         _postUbo = registry.GetRenderUbo<PostProcessUniform>().Id;
     }
-    
+
     public void AttachMaterialBuffer(MaterialDrawBuffer materialBuffer) => _materialBuffer = materialBuffer;
 
+    public void ResetCursor()
+    {
+        _drawUbo.ResetCursor();
+        _materialUbo.ResetCursor();
+    }
+    public void EnsureDrawBuffers(nint drawCapacity, nint materialCapacity)
+    {
+        if (drawCapacity > _drawUbo.Capacity)
+        {
+            _drawUbo.SetCapacity(drawCapacity);
+            _gfxBuffers.SetUniformBufferCapacity(_drawUbo.Id, drawCapacity);
+        }
+
+        if (materialCapacity > _materialUbo.Capacity)
+        {
+            _materialUbo.SetCapacity(materialCapacity);
+            _gfxBuffers.SetUniformBufferCapacity(_materialUbo.Id, drawCapacity);
+        }
+    }
 
     public void ApplyDrawMaterial(MaterialId materialId, Action<ShaderId> applyShader)
     {
@@ -76,14 +95,14 @@ internal sealed class DrawBuffers
         BindMaterialObject(materialId);
     }
 
-        
+
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public void BindMaterialObject(MaterialId matId)
     {
         var cursor = _materialUbo.SetDrawCursor(matId.Id - 1);
         _gfxBuffers.BindUniformBufferRange(_materialUbo.Id, cursor, _materialUbo.Stride);
     }
-    
+
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public void BindDrawObject(int submitIndex)
     {

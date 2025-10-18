@@ -17,5 +17,17 @@ internal sealed class RenderSystemContext
     public required RenderSceneState Snapshot { get; init;}
     public required RenderView View { get; init; }
     public required BatcherRegistry Batchers { get; init; }
+    
+    private RenderFrameInfo _frameInfo;
+    private RenderRuntimeParams _frameParams;
+    
+    public ref readonly RenderFrameInfo CurrentFrameInfo => ref _frameInfo;
+    public ref readonly RenderRuntimeParams CurrentRuntimeParams => ref _frameParams;
+    
+    public void SetCurrentFrameInfo(in RenderFrameInfo frameInfo, in RenderRuntimeParams frameParams)
+    {
+        _frameInfo = frameInfo;
+        _frameParams = frameParams;
+    }
 
 }

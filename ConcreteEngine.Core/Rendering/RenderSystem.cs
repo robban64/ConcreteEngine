@@ -39,31 +39,31 @@ public sealed class RenderSystem : IRenderSystem
     private readonly GraphicsRuntime _graphics;
     private readonly GfxContext _gfx;
 
+
     private readonly RenderRegistry _renderRegistry;
     private readonly DrawCommandPipeline _drawPipeline;
     private readonly RenderPassPipeline _passPipeline;
 
-    private readonly BatcherRegistry _batches = new();
-
-    public RenderSceneProps RenderProps { get; }
-    private RenderSceneState _snapshot;
+    private readonly BatcherRegistry _batches;
 
     private readonly RenderView _renderView;
-    
+
+    public RenderSceneProps RenderProps { get; }
     private RenderSystemContext SystemContext { get; }
 
-    private bool _initialized = false;
+    public bool Initialized { get; private set; } = false;
 
     internal RenderSystem(GraphicsRuntime graphics)
     {
         _graphics = graphics;
         _gfx = graphics.Gfx;
 
+        _batches = new BatcherRegistry();
+
         _renderView = new RenderView();
 
         RenderProps = new RenderSceneProps();
         RenderProps.Commit();
-        _snapshot = RenderProps.Snapshot;
 
         _renderRegistry = new RenderRegistry(_gfx);
         _drawPipeline = new DrawCommandPipeline();
@@ -76,26 +76,26 @@ public sealed class RenderSystem : IRenderSystem
             Gfx = _gfx,
             Registry = _renderRegistry,
             PassPipeline = _passPipeline,
-            Snapshot = _snapshot,
+            Snapshot = RenderProps.Snapshot,
             View = _renderView
         };
     }
 
-    public RenderSetupBuilder StartBuilder(Size2D outputSize) => new (SystemContext, outputSize);
+    public RenderSetupBuilder StartBuilder(Size2D outputSize) => new(SystemContext, outputSize);
 
     public void ApplyBuilder(RenderSetupBuilder builder)
     {
         InvalidOpThrower.ThrowIf(builder.IsDone, nameof(builder.IsDone));
 
         var plan = builder.Build();
-        
+
         // Registry setup
         _renderRegistry.BeginRegistration(plan.OutputSize);
-        
+
         // register FBO
         foreach (var (variant, entry, registerFbo) in plan.FboSetup)
             registerFbo(variant, entry);
-            
+
         // Register Shaders
         Span<ShaderId> shaderIds = stackalloc ShaderId[plan.ShaderCount];
         plan.ShaderProvider(shaderIds);
@@ -106,16 +106,15 @@ public sealed class RenderSystem : IRenderSystem
 
         // Batcher 
         plan.BatcherSetup(_gfx, _batches);
-        
+
         _drawPipeline.Initialize(SystemContext, plan.CollectorSetup);
         _passPipeline.Initialize(SystemContext);
 
         PassPipeline3D.RegisterPassPipeline(_passPipeline, in _renderRegistry.ShaderRegistry.CoreShaders);
-        _initialized = true;
+        Initialized = true;
     }
 
     public TSink GetSink<TSink>() where TSink : IDrawSink => _drawPipeline.GetSink<TSink>();
-
     internal void BeginTick(in UpdateTickInfo tick) => _drawPipeline.BeginTick(tick);
     internal void EndTick() => _drawPipeline.EndTick();
 
@@ -126,50 +125,48 @@ public sealed class RenderSystem : IRenderSystem
         _graphics.EndFrame(out _);
     }
 
-    internal void BeginRenderFrame(
-        BeginFrameStatus status,
-        in RenderFrameInfo frameInfo,
-        in RenderRuntimeParams runtimeParams,
-        in RenderViewSnapshot viewSnapshot
-    )
-    {
-        Debug.Assert(_initialized);
-
-        if (status == BeginFrameStatus.Resize)
-        {
-            _renderRegistry.FboRegistry.RecreateSizedFrameBuffer(frameInfo.OutputSize);
-        }
-
-        _graphics.BeginFrame(frameInfo.ToGfxFrameInfo());
-
-        _snapshot = RenderProps.Commit();
-        _renderView.PrepareFrame(in viewSnapshot);
-        _drawPipeline.DrawBuffer.UploadGlobalUniforms(in frameInfo, in runtimeParams);
-        _drawPipeline.DrawBuffer.UploadCameraView(_renderView);
-    }
-
-    internal void EndRenderFrame(out GfxFrameResult frameResult)
-    {
-        _graphics.EndFrame(out frameResult);
-    }
-
     public void SubmitMaterialDrawData(in DrawMaterialPayload payload, ReadOnlySpan<TextureSlotInfo> slots) =>
         _drawPipeline.SubmitMaterialDrawData(in payload, slots);
 
-    //TODO remove the temp delegate
-    internal void Render(in RenderFrameInfo frameInfo, Action uploadMaterialDel)
+
+    internal void PrepareFrame(
+        in RenderFrameInfo frameInfo,
+        in RenderRuntimeParams runtimeParams,
+        in RenderViewSnapshot viewSnapshot)
     {
-        Debug.Assert(_initialized);
+        Debug.Assert(Initialized);
+
+        SystemContext.SetCurrentFrameInfo(in frameInfo, in runtimeParams);
+
+        var snapshot = RenderProps.Commit();
+        _renderView.PrepareFrame(in viewSnapshot);
 
         _passPipeline.Prepare(frameInfo.OutputSize);
-        var (drawCapacity, matCapacity) = _drawPipeline.Prepare(frameInfo.Alpha, _snapshot);
-        uploadMaterialDel();
+        _drawPipeline.Prepare(snapshot);
+    }
 
-        _drawPipeline.DrawCmdProcessor.PrepareFrame(drawCapacity, matCapacity);
+    public void FillDrawBuffers()
+    {
+        _drawPipeline.PrepareDrawBuffers();
+    }
 
-        _drawPipeline.ExecuteMaterials();
-        _drawPipeline.ExecuteTransforms();
+    internal void StartFrame(BeginFrameStatus status)
+    {
+        ref readonly var frameInfo = ref SystemContext.CurrentFrameInfo;
+        _graphics.BeginFrame(frameInfo.ToGfxFrameInfo());
 
+        if (status == BeginFrameStatus.Resize)
+            _renderRegistry.FboRegistry.RecreateSizedFrameBuffer(frameInfo.OutputSize);
+    }
+
+    public void UploadFrameData()
+    {
+        _drawPipeline.UploadUniformGlobals();
+        _drawPipeline.UploadDrawUniformData();
+    }
+
+    internal void Render()
+    {
         while (_passPipeline.NextPass(out var nextPassRes))
         {
             if (nextPassRes.ActionKind == PreparePassActionKind.Skip) continue;
@@ -189,11 +186,15 @@ public sealed class RenderSystem : IRenderSystem
 
         if (passResult == PassAction.DrawPassResult())
         {
-            _drawPipeline.DrawCmdProcessor.PrepareDrawPass();
             _drawPipeline.ExecuteDrawPass(passId);
         }
 
         _passPipeline.ApplyAfterPass();
+    }
+
+    internal void EndRenderFrame(out GfxFrameResult frameResult)
+    {
+        _graphics.EndFrame(out frameResult);
     }
 
     public void Shutdown()

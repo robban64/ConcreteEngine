@@ -97,25 +97,6 @@ public sealed class GameEngine : IDisposable
         RegisterRenderer();
     }
 
-    private void InitializeGraphics()
-    {
-        var store = _assets.Store;
-/*
-        var shaderCount = store.GetMetaSnapshot<Shader>().Count;
-        Span<ShaderId> shaderIds = stackalloc ShaderId[shaderCount];
-        store.ExtractSpan<Shader, ShaderId>(shaderIds, static shader => shader.ResourceId);
-
-        _renderer.InitializeRegistry(shaderIds, new RenderCoreShaders
-        {
-            DepthShader = store.GetByName<Shader>("Depth").ResourceId,
-            ColorFilterShader = store.GetByName<Shader>("ColorFilter").ResourceId,
-            CompositeShader = store.GetByName<Shader>("Composite").ResourceId,
-            PresentShader = store.GetByName<Shader>("Present").ResourceId
-        });
-*/
-    }
-
-
     public void RegisterRenderer()
     {
         var builder = _renderer.StartBuilder(_window.OutputSize);
@@ -170,7 +151,7 @@ public sealed class GameEngine : IDisposable
         _renderer.ApplyBuilder(builder);
     }
 
-    //TODO temp solution
+    //TODO move out
     private void UploadMaterialData()
     {
         Span<TextureSlotInfo> slots = stackalloc TextureSlotInfo[RenderLimits.TextureSlots];
@@ -181,9 +162,6 @@ public sealed class GameEngine : IDisposable
             _renderer.SubmitMaterialDrawData(in payload, slots.Slice(0, length));
         }
     }
-
-
-    private Action? _uploadMaterialDel;
 
     internal void Render(float dt)
     {
@@ -212,20 +190,22 @@ public sealed class GameEngine : IDisposable
             beginStatus = BeginFrameStatus.Resize;
         }
 
-
         scene.BeforeRender(out var viewInfo);
-        _renderer.BeginRenderFrame(beginStatus, in tickInfo, in tickParams, in viewInfo);
 
-        // _renderTime.TickOrRenderEffect();
 
-        _uploadMaterialDel ??= UploadMaterialData;
-        _renderer.Render(in tickInfo, _uploadMaterialDel);
+        _renderer.PrepareFrame(in tickInfo, in tickParams, in viewInfo);
+        UploadMaterialData();
+        _renderer.FillDrawBuffers();
+        _renderer.StartFrame(beginStatus);
+        _renderer.UploadFrameData();
 
-        //_renderTime.TickOrGpuDispose();
-        //_renderTime.TickOrGpuUpload();
-
+        _renderer.Render();
         _renderer.EndRenderFrame(out var gfxFrameResult);
         _renderInfo.EndRenderFrame(gfxFrameResult);
+
+        // _renderTime.TickOrRenderEffect();
+        //_renderTime.TickOrGpuDispose();
+        //_renderTime.TickOrGpuUpload();
     }
 
     private void OnGpuTickDispose(int tick)

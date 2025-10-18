@@ -71,10 +71,6 @@ internal sealed class MaterialDrawBuffer
 
         _hasDrained = true;
         return _buffer.AsSpan(0, _idx);
-
-        var commands = _metas.AsSpan(0, _idx);
-        var payloads = _buffer.AsSpan(0, _idx);
-        //_drawUniforms.UploadMaterial(commands, payloads);
     }
 
     internal void Reset()

@@ -1,9 +1,9 @@
 #region
 
 using System.Numerics;
+using ConcreteEngine.Core.RenderingSystem.Primitives;
 using ConcreteEngine.Core.Scene.Entities;
 using ConcreteEngine.Graphics.Gfx.Resources;
-using ConcreteEngine.Graphics.Utils;
 using ConcreteEngine.Renderer.Data;
 
 #endregion
@@ -21,7 +21,7 @@ public sealed class WorldSkybox
 
     internal WorldSkybox()
     {
-        _meshId = PrimitiveMeshes.SkyboxCubeMesh;
+        _meshId = PrimitiveMeshes.SkyboxCube;
     }
 
     public void SetMesh(MeshId meshId) => _meshId = meshId;
@@ -30,6 +30,6 @@ public sealed class WorldSkybox
     internal void GetDrawEntity(out DrawEntity drawEntity)
     {
         var mesh = new MeshComponent(_meshId, _materialId, 0);
-        EntityUtility.MakeDrawTerrain(in mesh, in _transform, out drawEntity);
+        EntityUtility.MakeSkybox(in mesh, in _transform, out drawEntity);
     }
 }

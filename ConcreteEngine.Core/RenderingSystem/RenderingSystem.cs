@@ -1,10 +1,12 @@
 #region
 
+using ConcreteEngine.Common;
 using ConcreteEngine.Common.Numerics;
 using ConcreteEngine.Core.Assets;
 using ConcreteEngine.Core.Assets.Shaders;
 using ConcreteEngine.Core.Platform;
 using ConcreteEngine.Core.RenderingSystem.Batching;
+using ConcreteEngine.Core.RenderingSystem.Primitives;
 using ConcreteEngine.Core.Scene;
 using ConcreteEngine.Graphics;
 using ConcreteEngine.Graphics.Gfx;
@@ -50,8 +52,12 @@ public sealed class RenderingSystem : IRenderingSystem
         _graphics = graphics;
         SceneProperties = new RenderSceneProps();
         Batchers = new BatcherRegistry();
-
-        _renderer = new RenderEngine(graphics, SceneProperties.Snapshot);
+        
+        
+        PrimitiveMeshes.CreatePrimitives(graphics.Gfx.Meshes);
+        InvalidOpThrower.ThrowIf(PrimitiveMeshes.FsqQuad == 0 || PrimitiveMeshes.SkyboxCube == 0);
+        
+        _renderer = new RenderEngine(graphics, SceneProperties.Snapshot, PrimitiveMeshes.FsqQuad);
         _renderEntityBus = new RenderEntityBus();
     }
 

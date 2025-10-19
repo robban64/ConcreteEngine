@@ -25,11 +25,14 @@ internal sealed class DrawStateContext
     public TextureId DepthTexture { get; private set; }
     public PassStateMode PassState { get; private set; }
     public MaterialId PrevMaterial { get; private set; } = new(-1);
+    
+    public MeshId FsqMesh { get;  }
 
     public readonly RenderCoreShaders CoreShaders;
 
-    internal DrawStateContext(RenderRegistry registry)
+    internal DrawStateContext(RenderRegistry registry, MeshId fsqMesh)
     {
+        FsqMesh = fsqMesh;
         var depthFbo = registry.GetRenderFbo(TagRegistry.FboKey<ShadowPassTag>(FboVariant.Default));
         DepthTexture = depthFbo.Attachments.DepthTextureId;
         CoreShaders = registry.ShaderRegistry.CoreShaders;

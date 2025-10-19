@@ -3,7 +3,6 @@
 using ConcreteEngine.Graphics.Gfx;
 using ConcreteEngine.Graphics.Gfx.Contracts;
 using ConcreteEngine.Graphics.Gfx.Resources;
-using ConcreteEngine.Graphics.Utils;
 using ConcreteEngine.Renderer.Registry;
 using ConcreteEngine.Renderer.State;
 
@@ -13,7 +12,6 @@ namespace ConcreteEngine.Renderer.Draw;
 
 public sealed class DrawStateOps
 {
-    private readonly IPrimitiveMeshes _primitiveMeshes;
     private readonly GfxCommands _gfxCmd;
     private readonly GfxTextures _gfxTextures;
     private readonly RenderRegistry _renderRegistry;
@@ -31,7 +29,6 @@ public sealed class DrawStateOps
         _drawBuffers = drawBuffers;
         _gfxCmd = ctxPayload.Gfx.Commands;
         _gfxTextures = ctxPayload.Gfx.Textures;
-        _primitiveMeshes = ctxPayload.Gfx.Primitives;
 
         _ctx = ctx;
     }
@@ -95,8 +92,8 @@ public sealed class DrawStateOps
 
     private void DrawFsq()
     {
-        _gfxCmd.BindMesh(_primitiveMeshes.FsqQuad);
-        _gfxCmd.DrawBoundMesh(_primitiveMeshes.FsqQuad, 0);
+        _gfxCmd.BindMesh(_ctx.FsqMesh);
+        _gfxCmd.DrawBoundMesh(_ctx.FsqMesh, 0);
     }
 
     private void UseShader(ShaderId shaderId)

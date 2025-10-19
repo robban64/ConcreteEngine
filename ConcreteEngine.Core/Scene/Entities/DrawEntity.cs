@@ -26,4 +26,6 @@ public struct DrawEntity(
     public ushort DepthKey = depthKey;
     public DrawCommandId CommandId = commandId;
     public DrawCommandQueue Queue = queue;
+
+    private int Pad;
 }

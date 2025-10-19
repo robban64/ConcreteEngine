@@ -40,7 +40,7 @@ public sealed class RenderEngine
 
     public DrawCommandBuffer CommandBuffer => _drawPipeline.CommandBuffer;
 
-    public RenderEngine(GraphicsRuntime graphics, RenderSceneSnapshot sceneSnapshot)
+    public RenderEngine(GraphicsRuntime graphics, RenderSceneSnapshot sceneSnapshot, MeshId fsqMesh)
     {
         _graphics = graphics;
 
@@ -50,7 +50,7 @@ public sealed class RenderEngine
         _drawPipeline = new DrawCommandPipeline();
         _passPipeline = new RenderPassPipeline();
 
-        _stateContext = new RenderStateContext { View = _renderView, Snapshot = sceneSnapshot };
+        _stateContext = new RenderStateContext { View = _renderView, Snapshot = sceneSnapshot, FsqMesh = fsqMesh };
 
         EngineContext = new RenderEngineContext
         {

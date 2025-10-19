@@ -2,6 +2,7 @@
 
 using System.Diagnostics.CodeAnalysis;
 using System.Numerics;
+using ConcreteEngine.Common;
 using ConcreteEngine.Graphics.Gfx;
 using ConcreteEngine.Graphics.Gfx.Contracts;
 using ConcreteEngine.Graphics.Gfx.Definitions;
@@ -11,30 +12,22 @@ using ConcreteEngine.Graphics.Primitives;
 
 #endregion
 
-namespace ConcreteEngine.Graphics.Utils;
+namespace ConcreteEngine.Core.RenderingSystem.Primitives;
 
-public interface IPrimitiveMeshes
-{
-    MeshId FsqQuad { get; }
-    MeshId SkyboxCube { get; }
-}
-
-//TODO Move to core.
 [SuppressMessage("ReSharper", "UseCollectionExpression")]
-public sealed class PrimitiveMeshes : IPrimitiveMeshes
+public static class PrimitiveMeshes
 {
-    public MeshId FsqQuad { get; private set; }
-    public MeshId SkyboxCube { get; private set; }
+    public static MeshId FsqQuad { get; private set; }
+    public static MeshId SkyboxCube { get; private set; }
 
-    public static MeshId SkyboxCubeMesh { get; private set; }
-
-    public void CreatePrimitives(GfxMeshes meshes)
+    internal static void CreatePrimitives(GfxMeshes meshes)
     {
+        InvalidOpThrower.ThrowIf(FsqQuad > 0 || SkyboxCube > 0);
         CreateFsqQuad(meshes);
         CreateSkyboxCube(meshes);
     }
 
-    private void CreateFsqQuad(GfxMeshes meshes)
+    private static void CreateFsqQuad(GfxMeshes meshes)
     {
         ReadOnlySpan<Vertex2D> vertices = stackalloc[]
         {
@@ -53,7 +46,7 @@ public sealed class PrimitiveMeshes : IPrimitiveMeshes
     }
 
 
-    private void CreateSkyboxCube(GfxMeshes meshes)
+    private static void CreateSkyboxCube(GfxMeshes meshes)
     {
         ReadOnlySpan<Vector3> vertices = stackalloc Vector3[]
         {
@@ -79,7 +72,5 @@ public sealed class PrimitiveMeshes : IPrimitiveMeshes
         builder.UploadVertices(vertices, BufferUsage.StaticDraw, BufferStorage.Static, BufferAccess.None);
         builder.AddAttribute(new VertexAttributeMaker<Vector3>().Make<Vector3>());
         SkyboxCube = builder.Finish();
-
-        SkyboxCubeMesh = SkyboxCube;
     }
 }

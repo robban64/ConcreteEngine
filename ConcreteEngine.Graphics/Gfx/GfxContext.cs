@@ -2,7 +2,6 @@
 
 using ConcreteEngine.Graphics.Gfx.Internal;
 using ConcreteEngine.Graphics.Gfx.Resources;
-using ConcreteEngine.Graphics.Utils;
 
 #endregion
 
@@ -19,8 +18,6 @@ public sealed class GfxContext
 
     private readonly GfxResourceContext _resourceContext;
 
-    public IPrimitiveMeshes Primitives { get; }
-
     internal GfxContext(GfxContextInternal ctxInternal, GfxResourceContext resourceContext)
     {
         _buffers = new GfxBuffers(ctxInternal);
@@ -31,10 +28,6 @@ public sealed class GfxContext
         _cmd = new GfxCommands(ctxInternal);
 
         _resourceContext = resourceContext;
-
-        var primitiveMeshes = new PrimitiveMeshes();
-        primitiveMeshes.CreatePrimitives(_meshes);
-        Primitives = primitiveMeshes;
     }
 
     public GfxBuffers Buffers => _buffers;

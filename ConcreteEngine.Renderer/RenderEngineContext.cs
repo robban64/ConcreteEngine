@@ -1,6 +1,7 @@
 #region
 
 using ConcreteEngine.Graphics.Gfx;
+using ConcreteEngine.Graphics.Gfx.Resources;
 using ConcreteEngine.Renderer.Draw;
 using ConcreteEngine.Renderer.Passes;
 using ConcreteEngine.Renderer.Registry;
@@ -17,8 +18,9 @@ internal sealed class RenderStateContext
     public ref readonly RenderFrameInfo CurrentFrameInfo => ref _frameInfo;
     public ref readonly RenderRuntimeParams CurrentRuntimeParams => ref _frameParams;
 
+    public MeshId FsqMesh { get; init; }
+    
     public required RenderSceneSnapshot Snapshot { get; init; }
-
     public required RenderView View { get; init; }
 
     public void SetCurrentFrameInfo(in RenderFrameInfo frameInfo, in RenderRuntimeParams frameParams)

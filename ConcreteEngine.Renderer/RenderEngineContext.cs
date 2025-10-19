@@ -1,6 +1,5 @@
 #region
 
-using ConcreteEngine.Core.Engine.RenderingSystem.Batching;
 using ConcreteEngine.Core.Rendering.Draw;
 using ConcreteEngine.Core.Rendering.Passes;
 using ConcreteEngine.Core.Rendering.Registry;
@@ -35,5 +34,4 @@ internal sealed class RenderEngineContext
     public required RenderRegistry Registry { get; init; }
     public required DrawCommandPipeline CommandPipeline { get; init; }
     public required RenderPassPipeline PassPipeline { get; init; }
-    public required BatcherRegistry Batchers { get; init; }
 }

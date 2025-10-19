@@ -51,7 +51,7 @@ public sealed class RenderingSystem : IRenderingSystem
         SceneProperties = new RenderSceneProps();
         Batchers = new BatcherRegistry();
 
-        _renderer = new RenderEngine(graphics, Batchers, SceneProperties.Snapshot);
+        _renderer = new RenderEngine(graphics, SceneProperties.Snapshot);
         _renderEntityBus = new RenderEntityBus();
     }
 

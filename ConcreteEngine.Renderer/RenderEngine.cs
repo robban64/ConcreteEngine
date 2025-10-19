@@ -4,7 +4,6 @@ using System.Diagnostics;
 using System.Runtime.CompilerServices;
 using ConcreteEngine.Common;
 using ConcreteEngine.Common.Numerics;
-using ConcreteEngine.Core.Engine.RenderingSystem.Batching;
 using ConcreteEngine.Core.Rendering.Data;
 using ConcreteEngine.Core.Rendering.Definitions;
 using ConcreteEngine.Core.Rendering.Draw;
@@ -13,7 +12,6 @@ using ConcreteEngine.Core.Rendering.Registry;
 using ConcreteEngine.Core.Rendering.State;
 using ConcreteEngine.Graphics;
 using ConcreteEngine.Graphics.Gfx.Resources;
-using RenderFrameInfo = ConcreteEngine.Core.Rendering.State.RenderFrameInfo;
 
 #endregion
 
@@ -42,7 +40,7 @@ public sealed class RenderEngine
 
     public DrawCommandBuffer CommandBuffer => _drawPipeline.CommandBuffer;
 
-    internal RenderEngine(GraphicsRuntime graphics, BatcherRegistry batches, RenderSceneSnapshot sceneSnapshot)
+    public RenderEngine(GraphicsRuntime graphics, RenderSceneSnapshot sceneSnapshot)
     {
         _graphics = graphics;
 
@@ -56,7 +54,6 @@ public sealed class RenderEngine
 
         EngineContext = new RenderEngineContext
         {
-            Batchers = batches,
             CommandPipeline = _drawPipeline,
             Gfx = graphics.Gfx,
             Registry = _renderRegistry,
@@ -95,7 +92,7 @@ public sealed class RenderEngine
     }
 
     //
-    internal void RenderEmptyFrame(in RenderFrameInfo frameInfo)
+    public void RenderEmptyFrame(in RenderFrameInfo frameInfo)
     {
         _graphics.BeginFrame(frameInfo.ToGfxFrameInfo());
         _graphics.EndFrame(out _);
@@ -105,7 +102,7 @@ public sealed class RenderEngine
         _drawPipeline.SubmitMaterialDrawData(in payload, slots);
 
 
-    internal void PrepareFrame(
+    public void PrepareFrame(
         in RenderFrameInfo frameInfo,
         in RenderRuntimeParams runtimeParams,
         in RenderViewSnapshot viewSnapshot)
@@ -123,7 +120,7 @@ public sealed class RenderEngine
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public void FillDrawBuffers() => _drawPipeline.PrepareDrawBuffers();
 
-    internal void StartFrame(BeginFrameStatus status)
+    public void StartFrame(BeginFrameStatus status)
     {
         ref readonly var frameInfo = ref _stateContext.CurrentFrameInfo;
         _graphics.BeginFrame(frameInfo.ToGfxFrameInfo());
@@ -138,7 +135,7 @@ public sealed class RenderEngine
         _drawPipeline.UploadDrawUniformData();
     }
 
-    internal void Render()
+    public void Render()
     {
         while (_passPipeline.NextPass(out var nextPassRes))
         {
@@ -165,7 +162,7 @@ public sealed class RenderEngine
         _passPipeline.ApplyAfterPass();
     }
 
-    internal void EndRenderFrame(out GfxFrameResult frameResult)
+    public void EndRenderFrame(out GfxFrameResult frameResult)
     {
         _graphics.EndFrame(out frameResult);
     }

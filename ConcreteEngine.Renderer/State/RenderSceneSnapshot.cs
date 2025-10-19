@@ -16,7 +16,7 @@ public sealed class RenderSceneSnapshot
     public ref readonly ShadowParams Shadows => ref _shadows;
     public ref readonly PostEffectParams PostEffects => ref _postEffect;
 
-    internal void Update(
+    public void Update(
         long version,
         in AmbientParams ambient,
         in FogParams fog,

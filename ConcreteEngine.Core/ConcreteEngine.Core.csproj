@@ -18,6 +18,7 @@
     <ItemGroup>
         <ProjectReference Include="..\ConcreteEngine.Common\ConcreteEngine.Common.csproj"/>
         <ProjectReference Include="..\ConcreteEngine.Graphics\ConcreteEngine.Graphics.csproj"/>
+        <ProjectReference Include="..\ConcreteEngine.Renderer\ConcreteEngine.Renderer.csproj" />
     </ItemGroup>
 
     <ItemGroup>
@@ -33,6 +34,10 @@
         <Content Include="_AssetsCore\**\*">
             <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
         </Content>
+    </ItemGroup>
+
+    <ItemGroup>
+      <Folder Include="Rendering\" />
     </ItemGroup>
 
 

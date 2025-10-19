@@ -16,7 +16,7 @@ internal sealed class GlShaders : IGraphicsDriverModule
     private readonly GL _gl;
     private readonly BackendOps<ShaderId, GlShaderHandle, ShaderMeta, ShaderDef> _shaderStore;
 
-    private NativeHandle _activeProg;
+    private GlShaderHandle _activeProg;
 
     internal GlShaders(GlCtx ctx)
     {
@@ -28,18 +28,17 @@ internal sealed class GlShaders : IGraphicsDriverModule
     public void UseShader(GfxRefToken<ShaderId> shaderRef)
     {
         var handle = _shaderStore.GetHandle(shaderRef);
-        if (_activeProg.EqualsHandle(handle))
-            return;
+        if (_activeProg == handle) return;
 
-        _activeProg = NativeHandle.From(handle);
+        _activeProg = handle;
         _gl.UseProgram(handle.Value);
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public void UnbindShader()
     {
-        if (_activeProg.IsEmpty()) return;
-        _activeProg = new NativeHandle(0);
+        if (_activeProg == default) return;
+        _activeProg = default;
         _gl.UseProgram(0);
     }
 
@@ -126,33 +125,22 @@ internal sealed class GlShaders : IGraphicsDriverModule
         return shader;
     }
 
-    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+
     public void SetUniform(int uniform, int value) => _gl.ProgramUniform1(_activeProg.Value, uniform, value);
-
-    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public void SetUniform(int uniform, uint value) => _gl.ProgramUniform1(_activeProg.Value, uniform, value);
-
-    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public void SetUniform(int uniform, float value) => _gl.ProgramUniform1(_activeProg.Value, uniform, value);
-
-    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public void SetUniform(int uniform, Vector2 value) =>
         _gl.ProgramUniform2(_activeProg.Value, uniform, value.X, value.Y);
 
-    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public void SetUniform(int uniform, in Vector3 value) => _gl.ProgramUniform3(_activeProg.Value, uniform, value);
-
-    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public void SetUniform(int uniform, in Vector4 value) => _gl.ProgramUniform4(_activeProg.Value, uniform, value);
 
-    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public unsafe void SetUniform(int uniform, in Matrix4x4 value)
     {
         var p = (float*)Unsafe.AsPointer(ref Unsafe.AsRef(in value));
         _gl.UniformMatrix4(uniform, 1, false, p);
     }
 
-    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public unsafe void SetUniform(int uniform, in Matrix3 value)
     {
         var p = (float*)Unsafe.AsPointer(ref Unsafe.AsRef(in value));

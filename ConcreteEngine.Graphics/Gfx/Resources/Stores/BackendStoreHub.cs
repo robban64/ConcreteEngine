@@ -10,14 +10,13 @@ internal sealed class ResourceBackendDispatcher
 internal sealed class BackendStoreHub
 {
     private readonly Dictionary<ResourceKind, IBackendStoreFacade> _stores = new(8);
-    private readonly BackendOpsHub _backendOps;
 
-    internal BackendOpsHub BackendOps => _backendOps;
+    internal BackendOpsHub BackendOps { get; }
 
     public BackendStoreHub()
     {
         RegisterBackendStores();
-        _backendOps = new BackendOpsHub(this);
+        BackendOps = new BackendOpsHub(this);
     }
 
 

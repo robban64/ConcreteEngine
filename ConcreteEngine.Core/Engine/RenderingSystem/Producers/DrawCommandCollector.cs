@@ -95,7 +95,7 @@ public sealed class DrawCommandCollector : IDrawCommandCollector
             producer.EndTick();
     }
 
-    public void CollectTo(float alpha, RenderSceneState snapshot, DrawCommandBuffer submitter)
+    public void CollectTo(float alpha, RenderSceneSnapshot snapshot, DrawCommandBuffer submitter)
     {
         foreach (var producer in _producerList)
             producer.EmitFrame(alpha, in snapshot, submitter);

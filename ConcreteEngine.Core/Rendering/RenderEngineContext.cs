@@ -15,7 +15,7 @@ internal sealed class RenderStateContext
     public ref readonly RenderFrameInfo CurrentFrameInfo => ref _frameInfo;
     public ref readonly RenderRuntimeParams CurrentRuntimeParams => ref _frameParams;
 
-    public required RenderSceneState Snapshot { get; init;}
+    public required RenderSceneSnapshot Snapshot { get; init;}
     
     public required RenderView View { get; init; }
 
@@ -25,7 +25,7 @@ internal sealed class RenderStateContext
         _frameParams = frameParams;
     }
 }
-internal sealed class RenderSystemContext
+internal sealed class RenderEngineContext
 {
     public required GfxContext Gfx { get; init;}
     public required RenderRegistry Registry { get; init;}
@@ -34,8 +34,4 @@ internal sealed class RenderSystemContext
     public required BatcherRegistry Batchers { get; init; }
     public required DrawCommandCollector Collector { get; init; }
     
-    
-    
-
-
 }

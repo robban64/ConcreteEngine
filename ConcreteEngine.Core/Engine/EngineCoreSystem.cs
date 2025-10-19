@@ -2,6 +2,7 @@
 
 using ConcreteEngine.Common.Collections;
 using ConcreteEngine.Core.Assets;
+using ConcreteEngine.Core.Engine.RenderingSystem;
 using ConcreteEngine.Core.Rendering;
 
 #endregion
@@ -18,16 +19,15 @@ public interface IEngineSystemManager
     public T GetSystem<T>() where T : IGameEngineSystem;
 }
 
-// role ?
 public class EngineCoreSystem : IEngineSystemManager
 {
     private readonly DictionaryTypeRegistry<IGameEngineSystem, IGameEngineSystem> _systems = new(4);
 
-    private readonly RenderSystem _renderer;
+    private readonly RenderingSystem.RenderingSystem _renderer;
     private readonly InputSystem _inputSystem;
     private readonly AssetSystem _assets;
 
-    internal EngineCoreSystem(RenderSystem renderer, InputSystem inputSystem, AssetSystem assets)
+    internal EngineCoreSystem(RenderingSystem.RenderingSystem renderer, InputSystem inputSystem, AssetSystem assets)
     {
         _renderer = renderer;
         _inputSystem = inputSystem;
@@ -38,10 +38,9 @@ public class EngineCoreSystem : IEngineSystemManager
     {
         _systems.Register<IInputSystem>(_inputSystem);
         _systems.Register<IAssetSystem>(_assets);
-        _systems.Register<IRenderSystem>(_renderer);
+        _systems.Register<IRenderingSystem>(_renderer);
         _systems.Freeze();
     }
-
 
     public T GetSystem<T>() where T : IGameEngineSystem
     {

@@ -1,6 +1,6 @@
 namespace ConcreteEngine.Core.Rendering.State;
 
-public sealed class RenderSceneState
+public sealed class RenderSceneSnapshot
 {
     public long Version { get; private set; }
 

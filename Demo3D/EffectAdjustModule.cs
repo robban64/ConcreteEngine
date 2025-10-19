@@ -2,6 +2,7 @@ using ConcreteEngine.Common.Numerics;
 using ConcreteEngine.Core.Engine;
 using ConcreteEngine.Core.Engine.Data;
 using ConcreteEngine.Core.Engine.Platform;
+using ConcreteEngine.Core.Engine.RenderingSystem;
 using ConcreteEngine.Core.Modules;
 using ConcreteEngine.Core.Rendering;
 using ConcreteEngine.Core.Rendering.Data;
@@ -20,8 +21,8 @@ internal sealed class EffectAdjustModule : GameModule
     public override void Initialize()
     {
         _input = Context.GetSystem<IInputSystem>().InputSource;
-        var renderer = Context.GetSystem<IRenderSystem>();
-        _renderProps = renderer.RenderProps;
+        var renderer = Context.GetSystem<IRenderingSystem>();
+        _renderProps = renderer.SceneProperties;
     }
 
     public override void Update(in UpdateTickInfo frameCtx)

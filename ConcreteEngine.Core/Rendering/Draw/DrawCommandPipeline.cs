@@ -16,9 +16,6 @@ namespace ConcreteEngine.Core.Rendering.Draw;
 
 internal sealed class DrawCommandPipeline
 {
-    private DrawCommandCollector _commandCollector = null!;
-    private SceneDrawProducer _sceneDrawProducer = null!;
-
     private DrawCommandBuffer _commandBuffer = null!;
     private MaterialDrawBuffer _materialBuffer = null!;
 
@@ -31,17 +28,15 @@ internal sealed class DrawCommandPipeline
     internal DrawStateOps DrawStateOps => _drawStateOps;
     internal DrawBuffers DrawBuffer => _drawBuffers;
     internal DrawCommandProcessor DrawCmdProcessor => _drawCmdProc;
+    internal DrawCommandBuffer CommandBuffer => _commandBuffer;
 
     internal DrawCommandPipeline()
     {
     }
 
-    public void Initialize(RenderSystemContext ctx, RenderStateContext stateContext)
+    public void Initialize(RenderEngineContext ctx, RenderStateContext stateContext)
     {
         _stateContext = stateContext;
-
-        _commandCollector = ctx.Collector;
-        _sceneDrawProducer = _commandCollector.GetProducer<SceneDrawProducer>();
 
         var drawCtx = new DrawStateContext(ctx.Registry);
         var drawCtxPayload = new DrawStateContextPayload
@@ -64,19 +59,12 @@ internal sealed class DrawCommandPipeline
         _drawBuffers.AttachMaterialBuffer(_materialBuffer);
     }
 
-
-    internal void BeginTick(in UpdateTickInfo tick) => _commandCollector.BeginTick(tick);
-    internal void EndTick() => _commandCollector.EndTick();
-    public TSink GetSink<TSink>() where TSink : IDrawSink => _commandCollector.GetSink<TSink>();
-
     internal void SubmitMaterialDrawData(in DrawMaterialPayload payload, ReadOnlySpan<TextureSlotInfo> slots) =>
         _materialBuffer.SubmitDrawData(in payload, slots);
 
 
-    internal void Prepare(RenderSceneState snapshot)
+    internal void Prepare()
     {
-        _sceneDrawProducer.SetSceneGlobals(snapshot);
-
         _commandBuffer.Reset();
         _materialBuffer.Reset();
 
@@ -86,9 +74,6 @@ internal sealed class DrawCommandPipeline
 
     internal void PrepareDrawBuffers()
     {
-        // Fill command buffer
-        _commandCollector.CollectTo(_stateContext.CurrentFrameInfo.Alpha, _stateContext.Snapshot, _commandBuffer);
-
         // Sort command buffer and prepare passes
         _commandBuffer.ReadyDrawCommands();
 

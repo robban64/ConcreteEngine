@@ -13,7 +13,7 @@ public sealed class RenderSceneProps
 {
     private bool _dirty = true;
 
-    private readonly RenderSceneState _snapshot = new();
+    private readonly RenderSceneSnapshot _snapshot = new();
 
     private AmbientParams _ambient = MakeDefaultAmbient();
     private FogParams _fog = MakeDefaultFog();
@@ -24,7 +24,7 @@ public sealed class RenderSceneProps
 
     public long Version { get; private set; } = 0;
 
-    internal RenderSceneState Snapshot => _snapshot;
+    internal RenderSceneSnapshot Snapshot => _snapshot;
 
     public void SetSkybox(MaterialId materialId, Quaternion rotation, float intensity = 1f)
     {
@@ -84,7 +84,7 @@ public sealed class RenderSceneProps
         _dirty = true;
     }
 
-    internal RenderSceneState Commit()
+    internal RenderSceneSnapshot Commit()
     {
         if (!_dirty) return _snapshot;
 

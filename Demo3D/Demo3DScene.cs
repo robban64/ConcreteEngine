@@ -6,6 +6,7 @@ using ConcreteEngine.Common.Numerics;
 using ConcreteEngine.Core.Assets;
 using ConcreteEngine.Core.Assets.Meshes;
 using ConcreteEngine.Core.Engine.Configuration;
+using ConcreteEngine.Core.Engine.RenderingSystem;
 using ConcreteEngine.Core.Rendering;
 using ConcreteEngine.Core.Rendering.Data;
 using ConcreteEngine.Core.Rendering.Descriptors;
@@ -25,13 +26,13 @@ public sealed class Demo3DScene : GameScene
     {
         var rng = Random.Shared;
 
-        var renderer = Context.GetSystem<IRenderSystem>();
+        var renderer = Context.GetSystem<IRenderingSystem>();
         var assets = Context.GetSystem<IAssetSystem>();
         var (store, materialStore) = (assets.Store, assets.MaterialStore);
 
         var skyboxMaterial = materialStore.CreateMaterial("SkyboxMat","SkyboxMat1");
 
-        var rb = renderer.RenderProps;
+        var rb = renderer.SceneProperties;
         rb.SetSkybox(skyboxMaterial.Id, Quaternion.Identity);
  
 

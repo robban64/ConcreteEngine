@@ -3,6 +3,7 @@
 using ConcreteEngine.Core.Assets;
 using ConcreteEngine.Core.Assets.Materials;
 using ConcreteEngine.Core.Assets.Textures;
+using ConcreteEngine.Core.Engine.RenderingSystem;
 using ConcreteEngine.Core.Engine.RenderingSystem.Producers;
 using ConcreteEngine.Core.Rendering;
 using ConcreteEngine.Core.Rendering.Data;
@@ -21,7 +22,7 @@ public sealed class TerrainFeature : GameFeature
     public override void Initialize()
     {
         var assets = Context.GetSystem<IAssetSystem>();
-        var renderer = Context.GetSystem<IRenderSystem>();
+        var renderer = Context.GetSystem<IRenderingSystem>();
         var material = assets.MaterialStore.CreateMaterial("TerrainMat", "TerrainMat1");
         var heightmap = assets.Store.GetByName<Texture2D>("Heightmap");
 

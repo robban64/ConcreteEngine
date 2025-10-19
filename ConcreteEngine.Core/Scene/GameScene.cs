@@ -3,6 +3,7 @@
 using ConcreteEngine.Common.Numerics;
 using ConcreteEngine.Core.Engine.Configuration;
 using ConcreteEngine.Core.Engine.Data;
+using ConcreteEngine.Core.Engine.RenderingSystem;
 using ConcreteEngine.Core.Rendering;
 using ConcreteEngine.Core.Rendering.State;
 
@@ -47,8 +48,8 @@ public abstract class GameScene
 
     internal void AttachContext(GameSceneContext context)
     {
-        var renderer = context.GetSystem<IRenderSystem>();
-        _world = new World(renderer.RenderProps);
+        var renderer = context.GetSystem<IRenderingSystem>();
+        _world = new World(renderer.SceneProperties);
         context.World = World;
         context.Camera = _camera;
         Context = context;

@@ -30,7 +30,7 @@ public sealed class RenderPassPipeline
     {
     }
 
-    internal void Initialize(RenderSystemContext ctx)
+    internal void Initialize(RenderEngineContext ctx)
     {
         _renderRegistry = ctx.Registry;
         _cmdQueue = new PassCommandQueue();

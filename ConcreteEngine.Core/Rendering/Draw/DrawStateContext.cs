@@ -16,7 +16,7 @@ internal sealed class DrawStateContextPayload
 {
     public required RenderRegistry Registry { get; init; }
     public required RenderView RenderView { get; init; }
-    public required RenderSceneState Snapshot { get; init; }
+    public required RenderSceneSnapshot Snapshot { get; init; }
     public required GfxContext Gfx { get; init; }
 }
 

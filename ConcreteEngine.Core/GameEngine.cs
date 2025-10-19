@@ -13,20 +13,11 @@ using ConcreteEngine.Core.Engine.RenderingSystem.Producers;
 using ConcreteEngine.Core.Engine.Time;
 using ConcreteEngine.Core.Features;
 using ConcreteEngine.Core.Modules;
-using ConcreteEngine.Core.Rendering;
-using ConcreteEngine.Core.Rendering.Data;
-using ConcreteEngine.Core.Rendering.Definitions;
-using ConcreteEngine.Core.Rendering.Descriptors;
-using ConcreteEngine.Core.Rendering.Passes;
 using ConcreteEngine.Core.Rendering.State;
 using ConcreteEngine.Core.Scene;
 using ConcreteEngine.Graphics;
-using ConcreteEngine.Graphics.Gfx.Contracts;
-using ConcreteEngine.Graphics.Gfx.Definitions;
-using ConcreteEngine.Graphics.Gfx.Resources;
 using Silk.NET.OpenGL;
 using RenderFrameInfo = ConcreteEngine.Core.Engine.Data.RenderFrameInfo;
-using Shader = ConcreteEngine.Core.Assets.Shaders.Shader;
 
 #endregion
 
@@ -36,13 +27,11 @@ public sealed class GameEngine : IDisposable
 {
     private readonly IEngineWindowHost _window;
     private readonly GraphicsRuntime _graphics;
-    
 
     private readonly EngineCoreSystem _coreSystems;
     private readonly AssetSystem _assets;
     private readonly InputSystem _inputSystem;
-    private readonly RenderSystem _renderer;
-    private readonly EngineRenderingController _renderingController;
+    private readonly RenderingSystem _renderingSystem;
 
 
     private readonly ModuleManager _modules;
@@ -79,12 +68,11 @@ public sealed class GameEngine : IDisposable
         _timeHub = new EngineTimeHub(GameTickUpdate, FpsTickUpdate, OnGpuTickUpload, OnGpuTickDispose);
 
         // systems
-        _renderingController = new EngineRenderingController(_graphics.Gfx);
 
         _inputSystem = new InputSystem(input);
         _assets = new AssetSystem();
-        _renderer = new RenderSystem(_graphics, _renderingController.Batchers, _renderingController.CommandCollector);
-        _coreSystems = new EngineCoreSystem(_renderer, _inputSystem, _assets);
+        _renderingSystem = new RenderingSystem(_window, _graphics, _assets);
+        _coreSystems = new EngineCoreSystem(_renderingSystem, _inputSystem, _assets);
 
 
         _stateMachine = new LinearStateMachine<EngineStateLevel>(Enum.GetValues<EngineStateLevel>());
@@ -104,13 +92,11 @@ public sealed class GameEngine : IDisposable
         RegisterRenderer();
     }
 
-    public void RegisterRenderer()
+    private void RegisterRenderer()
     {
-        _renderingController.Initialize((gfx, batchers) =>
+        var builder = _renderingSystem.Initialize((gfx, batchers) =>
         {
             batchers.Register(new TerrainBatcher(gfx));
-            //_batches.Register(new SpriteBatcher(_gfx));
-            //_batches.Register(new TilemapBatcher(_gfx, 64, 32));
         }, collector =>
         {
             collector.RegisterProducerSink<IMeshDrawSink>(new MeshDrawProducer());
@@ -118,70 +104,22 @@ public sealed class GameEngine : IDisposable
             collector.RegisterProducer<SceneDrawProducer>(new SceneDrawProducer());
         });
         
-        var builder = _renderer.StartBuilder(_window.OutputSize);
-        builder.SetupRegistry((registry) =>
-        {
-            int shaderCount = _assets.Store.GetMetaSnapshot<Shader>().Count;
-
-            registry.RegisterShader(shaderCount,
-                    (span) => _assets.Store.ExtractSpan<Shader, ShaderId>(span, static shader => shader.ResourceId))
-                .RegisterCoreShaders(() => new RenderCoreShaders
-                {
-                    DepthShader = _assets.Store.GetByName<Shader>("Depth").ResourceId,
-                    ColorFilterShader = _assets.Store.GetByName<Shader>("ColorFilter").ResourceId,
-                    CompositeShader = _assets.Store.GetByName<Shader>("Composite").ResourceId,
-                    PresentShader = _assets.Store.GetByName<Shader>("Present").ResourceId
-                });
-
-            registry.RegisterFbo<ShadowPassTag>(FboVariant.Default,
-                new RegisterFboEntry().AttachDepthTexture(GfxFboDepthTextureDesc.Default())
-                    .UseFixedSize(new Size2D(2048, 2048)));
-
-            registry.RegisterFbo<ScenePassTag>(FboVariant.Default,
-                new RegisterFboEntry().AttachColorTexture(GfxFboColorTextureDesc.Off(), RenderBufferMsaa.X4)
-                    .AttachDepthStencilBuffer());
-
-            registry.RegisterFbo<ScenePassTag>(FboVariant.Secondary,
-                new RegisterFboEntry()
-                    .AttachColorTexture(GfxFboColorTextureDesc.DefaultMip())
-                    .AttachDepthStencilBuffer());
-
-            registry.RegisterFbo<PostPassTag>(FboVariant.Default,
-                new RegisterFboEntry().AttachColorTexture(GfxFboColorTextureDesc.Default()));
-
-            registry.RegisterFbo<PostPassTag>(FboVariant.Secondary,
-                new RegisterFboEntry().AttachColorTexture(GfxFboColorTextureDesc.Default()));
-        });
-
-
-        builder.SetupPassPipeline(RenderPipelineVersion.Default3D);
-        _renderer.ApplyBuilder(builder);
+        _renderingSystem.SetupRenderer(builder);
     }
 
-    //TODO move out
-    private void UploadMaterialData()
-    {
-        Span<TextureSlotInfo> slots = stackalloc TextureSlotInfo[RenderLimits.TextureSlots];
-        foreach (var material in _assets.Materials.MaterialSpan)
-        {
-            var length = _assets.Materials.FillTextureInfo(material!, slots);
-            _assets.Materials.GetMaterialUploadData(material!, out var payload);
-            _renderer.SubmitMaterialDrawData(in payload, slots.Slice(0, length));
-        }
-    }
 
     internal void Render(float dt)
     {
         var alpha = _timeHub.Alpha;
 
         var frameStatus = _renderInfo.BeginRenderFrame(dt, alpha, _window, _inputSystem.InputSource,
-            out var tickInfo, out var tickParams);
+            out var frameInfo, out var runtimeParams);
 
         _timeHub.RenderFrame(dt);
 
         if (_sceneManager.Current is not { } scene)
         {
-            _renderer.RenderEmptyFrame(in tickInfo);
+            _renderingSystem.RenderEmptyFrame(in frameInfo);
             return;
         }
 
@@ -197,17 +135,11 @@ public sealed class GameEngine : IDisposable
             beginStatus = BeginFrameStatus.Resize;
         }
 
-        scene.BeforeRender(out var viewInfo);
-
-
-        _renderer.PrepareFrame(in tickInfo, in tickParams, in viewInfo);
-        UploadMaterialData();
-        _renderer.FillDrawBuffers();
-        _renderer.StartFrame(beginStatus);
-        _renderer.UploadFrameData();
-
-        _renderer.Render();
-        _renderer.EndRenderFrame(out var gfxFrameResult);
+        scene.BeforeRender(out var viewSnapshot);
+        
+        _renderingSystem.PreRender(in frameInfo, in runtimeParams, in viewSnapshot);
+        _renderingSystem.FillDrawBuffers(frameInfo.Alpha);
+        _renderingSystem.ExecuteFrame(beginStatus, out var gfxFrameResult);
         _renderInfo.EndRenderFrame(gfxFrameResult);
 
         // _renderTime.TickOrRenderEffect();
@@ -244,10 +176,10 @@ public sealed class GameEngine : IDisposable
     private void GameTickUpdate(int tick)
     {
         _updateInfo.UpdateTick(tick);
-        _renderer.BeginTick(_updateInfo.UpdateTickInfo);
+        _renderingSystem.BeginTick(_updateInfo.UpdateTickInfo);
         _inputSystem.Update();
         _sceneManager.Current?.UpdateTick(tick);
-        _renderer.EndTick();
+        _renderingSystem.EndTick();
     }
 
     private void FpsTickUpdate(int tick)
@@ -294,13 +226,13 @@ public sealed class GameEngine : IDisposable
         var sceneContext = new GameSceneContext(_coreSystems) { Features = _features, Modules = _modules };
         var builder = new GameSceneConfigBuilder(_features, _modules);
 
-        _sceneManager.ApplyPendingScene(sceneContext, builder, _renderer, AfterBuild);
+        _sceneManager.ApplyPendingScene(sceneContext, builder, _renderingSystem, AfterBuild);
 
         _features.Load(new GameFeatureContext(sceneContext));
         _modules.Load(new GameModuleContext(sceneContext));
         return;
 
-        void AfterBuild(SceneManager.SceneBuildResult result, RenderSystem renderer)
+        void AfterBuild(SceneManager.SceneBuildResult result, RenderingSystem renderer)
         {
             foreach (var module in result.Modules) result.Context.Modules.AddModule(module());
         }

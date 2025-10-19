@@ -15,19 +15,19 @@ namespace ConcreteEngine.Core.Rendering;
 
 public sealed class RenderSetupBuilder
 {
-    private RenderSystemContext SystemCtx { get; }
+    private RenderEngineContext EngineCtx { get; }
     private RenderBuilderContext Ctx { get; }
 
     public bool IsDone => Ctx.Done;
 
-    internal RenderSetupBuilder(RenderSystemContext systemCtx, Size2D outputSize)
+    internal RenderSetupBuilder(RenderEngineContext engineCtx, Size2D outputSize)
     {
-        ArgumentNullException.ThrowIfNull(systemCtx);
+        ArgumentNullException.ThrowIfNull(engineCtx);
         ArgumentOutOfRangeException.ThrowIfLessThanOrEqual(outputSize.Width, 4);
         ArgumentOutOfRangeException.ThrowIfLessThanOrEqual(outputSize.Height, 4);
 
-        SystemCtx = systemCtx;
-        Ctx = new RenderBuilderContext(systemCtx.Gfx, outputSize);
+        EngineCtx = engineCtx;
+        Ctx = new RenderBuilderContext(engineCtx.Gfx, outputSize);
     }
 
     private void EnsureNotDone() => InvalidOpThrower.ThrowIf(IsDone, nameof(IsDone));
@@ -47,7 +47,7 @@ public sealed class RenderSetupBuilder
     {
         EnsureNotDone();
         ArgumentNullException.ThrowIfNull(registryBuilder, nameof(registryBuilder));
-        registryBuilder(new RenderRegistryBuilder(SystemCtx.Registry, Ctx));
+        registryBuilder(new RenderRegistryBuilder(EngineCtx.Registry, Ctx));
     }
 
     public void SetupPassPipeline(RenderPipelineVersion version)

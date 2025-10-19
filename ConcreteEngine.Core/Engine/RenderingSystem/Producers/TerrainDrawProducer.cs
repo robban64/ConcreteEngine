@@ -59,7 +59,7 @@ public sealed class TerrainDrawProducer : IDrawCommandProducer, ITerrainDrawSink
     }
 
 
-    public void EmitFrame(float alpha, in RenderSceneState snapshot, DrawCommandBuffer submitter)
+    public void EmitFrame(float alpha, in RenderSceneSnapshot snapshot, DrawCommandBuffer submitter)
     {
         if (_data == null) return;
 

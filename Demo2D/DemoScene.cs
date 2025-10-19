@@ -5,6 +5,7 @@ using ConcreteEngine.Common;
 using ConcreteEngine.Common.Numerics;
 using ConcreteEngine.Core.Assets;
 using ConcreteEngine.Core.Engine.Configuration;
+using ConcreteEngine.Core.Engine.RenderingSystem;
 using ConcreteEngine.Core.Rendering;
 using ConcreteEngine.Core.Rendering.Descriptors;
 using ConcreteEngine.Core.Scene;
@@ -22,7 +23,7 @@ public sealed class DemoScene : GameScene
 {
     public override void Initialize()
     {
-        var renderer = Context.GetSystem<IRenderSystem>();
+        var renderer = Context.GetSystem<IRenderingSystem>();
         var assets = Context.GetSystem<IAssetSystem>();
         var (store, materialStore) = (assets.Store, assets.MaterialStore);
         var spriteMaterial = materialStore.CreateMaterial("SpriteMaterial","SpriteMaterial1");

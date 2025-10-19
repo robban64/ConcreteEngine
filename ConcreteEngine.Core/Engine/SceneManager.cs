@@ -1,6 +1,7 @@
 #region
 
 using ConcreteEngine.Core.Engine.Configuration;
+using ConcreteEngine.Core.Engine.RenderingSystem;
 using ConcreteEngine.Core.Modules;
 using ConcreteEngine.Core.Rendering;
 using ConcreteEngine.Core.Rendering.Descriptors;
@@ -29,8 +30,8 @@ internal sealed class SceneManager
     public void ApplyPendingScene(
         GameSceneContext context,
         GameSceneConfigBuilder builder,
-        RenderSystem renderer,
-        Action<SceneBuildResult, RenderSystem>? afterBuild)
+        RenderingSystem.RenderingSystem renderer,
+        Action<SceneBuildResult, RenderingSystem.RenderingSystem>? afterBuild)
     {
         if (_pendingIndex < 0) return;
 

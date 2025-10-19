@@ -70,7 +70,7 @@ public sealed class MeshDrawProducer : IDrawCommandProducer, IMeshDrawSink
     {
     }
 
-    public void EmitFrame(float alpha, in RenderSceneState snapshot, DrawCommandBuffer submitter)
+    public void EmitFrame(float alpha, in RenderSceneSnapshot snapshot, DrawCommandBuffer submitter)
     {
         if (_idx == 0) return;
 

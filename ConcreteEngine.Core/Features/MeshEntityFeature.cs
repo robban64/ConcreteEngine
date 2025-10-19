@@ -1,5 +1,6 @@
 #region
 
+using ConcreteEngine.Core.Engine.RenderingSystem;
 using ConcreteEngine.Core.Engine.RenderingSystem.Producers;
 using ConcreteEngine.Core.Rendering;
 
@@ -18,7 +19,7 @@ public sealed class MeshEntityFeature : GameFeature
 
     public override void Initialize()
     {
-        _drawSink = Context.GetSystem<IRenderSystem>().GetSink<IMeshDrawSink>();
+        _drawSink = Context.GetSystem<IRenderingSystem>().GetSink<IMeshDrawSink>();
     }
 
     public override void UpdateTick(int tick)

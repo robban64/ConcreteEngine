@@ -1,10 +1,9 @@
 #region
 
 using System.Diagnostics;
+using System.Runtime.CompilerServices;
 using ConcreteEngine.Common;
 using ConcreteEngine.Common.Numerics;
-using ConcreteEngine.Core.Engine;
-using ConcreteEngine.Core.Engine.Data;
 using ConcreteEngine.Core.Engine.RenderingSystem.Batching;
 using ConcreteEngine.Core.Engine.RenderingSystem.Producers;
 using ConcreteEngine.Core.Rendering.Data;
@@ -14,7 +13,6 @@ using ConcreteEngine.Core.Rendering.Passes;
 using ConcreteEngine.Core.Rendering.Registry;
 using ConcreteEngine.Core.Rendering.State;
 using ConcreteEngine.Graphics;
-using ConcreteEngine.Graphics.Gfx;
 using ConcreteEngine.Graphics.Gfx.Resources;
 using RenderFrameInfo = ConcreteEngine.Core.Rendering.State.RenderFrameInfo;
 
@@ -28,59 +26,47 @@ public enum RenderType
     Render3D
 }
 
-public interface IRenderSystem : IGameEngineSystem
-{
-    RenderSceneProps RenderProps { get; }
-    TSink GetSink<TSink>() where TSink : IDrawSink;
-}
-
-public sealed class RenderSystem : IRenderSystem
+public sealed class RenderEngine
 {
     private readonly GraphicsRuntime _graphics;
-    private readonly GfxContext _gfx;
 
     private readonly RenderRegistry _renderRegistry;
     private readonly DrawCommandPipeline _drawPipeline;
     private readonly RenderPassPipeline _passPipeline;
 
-
     private readonly RenderView _renderView;
 
-    public RenderSceneProps RenderProps { get; }
-    private RenderSystemContext SystemContext { get; }
+    private RenderEngineContext EngineContext { get; }
     private readonly RenderStateContext _stateContext;
 
     public bool Initialized { get; private set; } = false;
 
-    internal RenderSystem(GraphicsRuntime graphics, BatcherRegistry batches, DrawCommandCollector collector)
+    public DrawCommandBuffer CommandBuffer => _drawPipeline.CommandBuffer;
+
+    internal RenderEngine(GraphicsRuntime graphics, BatcherRegistry batches, DrawCommandCollector collector, RenderSceneSnapshot sceneSnapshot)
     {
         _graphics = graphics;
-        _gfx = graphics.Gfx;
-
-
+        
         _renderView = new RenderView();
 
-        RenderProps = new RenderSceneProps();
-        var snapshot = RenderProps.Commit();
-
-        _renderRegistry = new RenderRegistry(_gfx);
+        _renderRegistry = new RenderRegistry(graphics.Gfx);
         _drawPipeline = new DrawCommandPipeline();
         _passPipeline = new RenderPassPipeline();
 
-        _stateContext = new RenderStateContext { View = _renderView, Snapshot = snapshot };
+        _stateContext = new RenderStateContext { View = _renderView, Snapshot = sceneSnapshot };
 
-        SystemContext = new RenderSystemContext
+        EngineContext = new RenderEngineContext
         {
             Collector = collector,
             Batchers = batches,
             CommandPipeline = _drawPipeline,
-            Gfx = _gfx,
+            Gfx = graphics.Gfx,
             Registry = _renderRegistry,
             PassPipeline = _passPipeline,
         };
     }
 
-    public RenderSetupBuilder StartBuilder(Size2D outputSize) => new(SystemContext, outputSize);
+    public RenderSetupBuilder StartBuilder(Size2D outputSize) => new(EngineContext, outputSize);
 
     public void ApplyBuilder(RenderSetupBuilder builder)
     {
@@ -103,16 +89,12 @@ public sealed class RenderSystem : IRenderSystem
         _renderRegistry.ShaderRegistry.RegisterCoreShader(in coreShaders);
         _renderRegistry.FinishRegistration();
 
-        _drawPipeline.Initialize(SystemContext, _stateContext);
-        _passPipeline.Initialize(SystemContext);
+        _drawPipeline.Initialize(EngineContext, _stateContext);
+        _passPipeline.Initialize(EngineContext);
 
         PassPipeline3D.RegisterPassPipeline(_passPipeline, in _renderRegistry.ShaderRegistry.CoreShaders);
         Initialized = true;
     }
-
-    public TSink GetSink<TSink>() where TSink : IDrawSink => _drawPipeline.GetSink<TSink>();
-    internal void BeginTick(in UpdateTickInfo tick) => _drawPipeline.BeginTick(tick);
-    internal void EndTick() => _drawPipeline.EndTick();
 
     //
     internal void RenderEmptyFrame(in RenderFrameInfo frameInfo)
@@ -134,17 +116,14 @@ public sealed class RenderSystem : IRenderSystem
 
         _stateContext.SetCurrentFrameInfo(in frameInfo, in runtimeParams);
 
-        var snapshot = RenderProps.Commit();
         _renderView.PrepareFrame(in viewSnapshot);
 
         _passPipeline.Prepare(frameInfo.OutputSize);
-        _drawPipeline.Prepare(snapshot);
+        _drawPipeline.Prepare();
     }
 
-    public void FillDrawBuffers()
-    {
-        _drawPipeline.PrepareDrawBuffers();
-    }
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public void FillDrawBuffers() => _drawPipeline.PrepareDrawBuffers();
 
     internal void StartFrame(BeginFrameStatus status)
     {

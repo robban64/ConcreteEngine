@@ -3,6 +3,7 @@
 using ConcreteEngine.Common;
 using ConcreteEngine.Common.Numerics;
 using ConcreteEngine.Core;
+using ConcreteEngine.Core.Engine.RenderingSystem;
 using ConcreteEngine.Core.Modules;
 using ConcreteEngine.Core.Rendering;
 using ConcreteEngine.Core.Scene;
@@ -13,7 +14,7 @@ namespace Demo2D;
 
 public class DayNightModule : GameModule
 {
-    private IRenderSystem _renderer = null!;
+    private IRenderingSystem _renderer = null!;
 
     private readonly Color4 _dayColor = Color4.FromRgba(200, 200, 255);
     private readonly Color4 _nightColor = Color4.FromRgba(50, 50, 100);
@@ -33,7 +34,7 @@ public class DayNightModule : GameModule
 
     public override void OnSceneReady()
     {
-        _renderer = Context.GetSystem<IRenderSystem>();
+        _renderer = Context.GetSystem<IRenderingSystem>();
     }
 
     public override void UpdateTick(int tick)

@@ -79,54 +79,6 @@ internal sealed class MaterialDrawBuffer
         _idx = 0;
         _hasDrained = false;
     }
-/*
-    public void UploadTextureSlotData(ReadOnlySpan<TextureSlotInfo> payload)
-    {
-        var count = payload.Length;
-        if (count == 0) return;
-
-        var slotIdx = _slotIdx;
-        for (var i = 0; i < count; i++, slotIdx++)
-        {
-            _textureSlots[_slotIdx] = payload[i];
-        }
-
-        _slotIdx = slotIdx;
-    }
-
-    public void SubmitDrawData(ReadOnlySpan<DrawMaterialPayload> payload)
-    {
-        var count = payload.Length;
-        if (count == 0) return;
-
-        EnsureCapacity(payload.Length);
-
-        for (var i = 0; i < count; i++)
-        {
-            ref readonly var data = ref payload[i];
-            _buffer[i] = new MaterialUniformRecord(in data.MatParams);
-            _metas[i] = data.Meta;
-        }
-
-        _idx = count;
-    }
-
-    internal void DispatchMaterials()
-    {
-        Debug.Assert(_metas.Length == _buffer.Length);
-        if (_idx == 0) return;
-        if (_idx == 1)
-        {
-            _drawUniforms.UploadMaterialRecord(_metas[0].MaterialId, in _buffer[0]);
-            return;
-        }
-
-        var commands = _metas.AsSpan(0, _idx);
-        var payloads = _buffer.AsSpan(0, _idx);
-        _drawUniforms.UploadMaterial(commands, payloads);
-    }
-*/
-
     private void EnsureCapacity(int amount)
     {
         if (_metas.Length >= amount) return;

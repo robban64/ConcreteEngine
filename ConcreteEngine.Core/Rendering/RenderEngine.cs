@@ -43,7 +43,7 @@ public sealed class RenderEngine
 
     public DrawCommandBuffer CommandBuffer => _drawPipeline.CommandBuffer;
 
-    internal RenderEngine(GraphicsRuntime graphics, BatcherRegistry batches, DrawCommandCollector collector, RenderSceneSnapshot sceneSnapshot)
+    internal RenderEngine(GraphicsRuntime graphics, BatcherRegistry batches,  RenderSceneSnapshot sceneSnapshot)
     {
         _graphics = graphics;
         
@@ -57,7 +57,6 @@ public sealed class RenderEngine
 
         EngineContext = new RenderEngineContext
         {
-            Collector = collector,
             Batchers = batches,
             CommandPipeline = _drawPipeline,
             Gfx = graphics.Gfx,

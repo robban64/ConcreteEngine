@@ -42,34 +42,9 @@ public sealed class RenderSetupBuilder
 
         return Ctx.Compile();
     }
-
-    public void SetupRegistry(Action<RenderRegistryBuilder> registryBuilder)
-    {
-        EnsureNotDone();
-        ArgumentNullException.ThrowIfNull(registryBuilder, nameof(registryBuilder));
-        registryBuilder(new RenderRegistryBuilder(EngineCtx.Registry, Ctx));
-    }
-
-    public void SetupPassPipeline(RenderPipelineVersion version)
-    {
-        EnsureNotDone();
-        ArgumentOutOfRangeException.ThrowIfEqual((int)version, (int)RenderPipelineVersion.None);
-        Ctx.Version = version;
-    }
-}
-
-public sealed class RenderRegistryBuilder
-{
-    private RenderBuilderContext Ctx { get; }
-    private RenderRegistry RenderRegistry { get; }
-
-    internal RenderRegistryBuilder(RenderRegistry renderRegistry, RenderBuilderContext ctx)
-    {
-        Ctx = ctx;
-        RenderRegistry = renderRegistry;
-    }
-
-    public RenderRegistryBuilder RegisterFbo<TTag>(FboVariant variant, RegisterFboEntry entry)
+    
+    
+    public RenderSetupBuilder RegisterFbo<TTag>(FboVariant variant, RegisterFboEntry entry)
         where TTag : unmanaged, IRenderPassTag
     {
         ArgumentOutOfRangeException.ThrowIfLessThan(variant.Value, 0, nameof(variant));
@@ -79,10 +54,10 @@ public sealed class RenderRegistryBuilder
         return this;
 
         void Action(FboVariant v, RegisterFboEntry e) 
-            => RenderRegistry.FboRegistry.Register<TTag>(v, e, Ctx.OutputSize);
+            => EngineCtx.Registry.FboRegistry.Register<TTag>(v, e, Ctx.OutputSize);
     }
 
-    public RenderRegistryBuilder RegisterShader(int shaderCount, Action<Span<ShaderId>> provider)
+    public RenderSetupBuilder RegisterShader(int shaderCount, Action<Span<ShaderId>> provider)
     {
         ArgumentNullException.ThrowIfNull(provider, nameof(provider));
         Ctx.ShaderCount = shaderCount;
@@ -90,10 +65,17 @@ public sealed class RenderRegistryBuilder
         return this;
     }
 
-    public RenderRegistryBuilder RegisterCoreShaders(Func<RenderCoreShaders> provider)
+    public RenderSetupBuilder RegisterCoreShaders(Func<RenderCoreShaders> provider)
     {
         ArgumentNullException.ThrowIfNull(provider, nameof(provider));
         Ctx.CoreShaderSetup = provider;
         return this;
+    }
+
+    public void SetupPassPipeline(RenderPipelineVersion version)
+    {
+        EnsureNotDone();
+        ArgumentOutOfRangeException.ThrowIfEqual((int)version, (int)RenderPipelineVersion.None);
+        Ctx.Version = version;
     }
 }

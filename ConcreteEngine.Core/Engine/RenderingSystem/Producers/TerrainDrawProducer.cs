@@ -21,7 +21,7 @@ public struct TerrainDrawData
     public int MaxHeight;
     public int Step;
 }
-
+/*
 public interface ITerrainDrawSink : IDrawSink
 {
     void Send(TerrainDrawData payload);
@@ -86,4 +86,4 @@ public sealed class TerrainDrawProducer : IDrawCommandProducer, ITerrainDrawSink
         var meta = new DrawCommandMeta(DrawCommandId.Terrain, DrawCommandQueue.Terrain);
         submitter.SubmitDraw(cmd, meta, new DrawTransformPayload(in transform));
     }
-}
+}*/

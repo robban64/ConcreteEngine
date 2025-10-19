@@ -21,11 +21,12 @@ public interface IPrimitiveMeshes
 
 //TODO Move to core.
 [SuppressMessage("ReSharper", "UseCollectionExpression")]
-internal sealed class PrimitiveMeshes : IPrimitiveMeshes
+public sealed class PrimitiveMeshes : IPrimitiveMeshes
 {
     public MeshId FsqQuad { get; private set; }
     public MeshId SkyboxCube { get; private set; }
 
+    public static MeshId SkyboxCubeMesh { get; private set; }
 
     public void CreatePrimitives(GfxMeshes meshes)
     {
@@ -78,5 +79,7 @@ internal sealed class PrimitiveMeshes : IPrimitiveMeshes
         builder.UploadVertices(vertices, BufferUsage.StaticDraw, BufferStorage.Static, BufferAccess.None);
         builder.AddAttribute(new VertexAttributeMaker<Vector3>().Make<Vector3>());
         SkyboxCube = builder.Finish();
+
+        SkyboxCubeMesh = SkyboxCube;
     }
 }

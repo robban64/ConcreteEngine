@@ -10,7 +10,7 @@ using ConcreteEngine.Core.Rendering.State;
 #endregion
 
 namespace ConcreteEngine.Core.Engine.RenderingSystem.Producers;
-
+/*
 public sealed class SceneDrawProducer : IDrawCommandProducer
 {
     private CommandProducerContext _context = null!;
@@ -53,4 +53,4 @@ public sealed class SceneDrawProducer : IDrawCommandProducer
 
         submitter.SubmitDraw(cmd, meta, new DrawTransformPayload(Matrix4x4.Identity));
     }
-}
+}*/

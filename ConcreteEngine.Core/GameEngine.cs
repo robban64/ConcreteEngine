@@ -97,11 +97,6 @@ public sealed class GameEngine : IDisposable
         var builder = _renderingSystem.Initialize((gfx, batchers) =>
         {
             batchers.Register(new TerrainBatcher(gfx));
-        }, collector =>
-        {
-            collector.RegisterProducerSink<IMeshDrawSink>(new MeshDrawProducer());
-            collector.RegisterProducerSink<ITerrainDrawSink>(new TerrainDrawProducer());
-            collector.RegisterProducer<SceneDrawProducer>(new SceneDrawProducer());
         });
         
         _renderingSystem.SetupRenderer(builder);
@@ -176,10 +171,8 @@ public sealed class GameEngine : IDisposable
     private void GameTickUpdate(int tick)
     {
         _updateInfo.UpdateTick(tick);
-        _renderingSystem.BeginTick(_updateInfo.UpdateTickInfo);
         _inputSystem.Update();
         _sceneManager.Current?.UpdateTick(tick);
-        _renderingSystem.EndTick();
     }
 
     private void FpsTickUpdate(int tick)
@@ -234,6 +227,7 @@ public sealed class GameEngine : IDisposable
 
         void AfterBuild(SceneManager.SceneBuildResult result, RenderingSystem renderer)
         {
+            renderer.AttachWorld((World)result.Context.World);
             foreach (var module in result.Modules) result.Context.Modules.AddModule(module());
         }
     }

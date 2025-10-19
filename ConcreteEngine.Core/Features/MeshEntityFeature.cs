@@ -15,15 +15,14 @@ public sealed class MeshEntityFeature : GameFeature
 
     private int _idx = 0;
 
-    private IMeshDrawSink _drawSink = null!;
 
     public override void Initialize()
     {
-        _drawSink = Context.GetSystem<IRenderingSystem>().GetSink<IMeshDrawSink>();
     }
 
     public override void UpdateTick(int tick)
     {
+        return;
         _idx = 0;
 
         var world = Context.World;
@@ -32,7 +31,7 @@ public sealed class MeshEntityFeature : GameFeature
         {
             ref var mesh = ref view.Value1;
             ref var transform = ref view.Value2;
-            _drawSink.SendSingle(new MeshDrawEntity(mesh.MeshId, mesh.MaterialId, ref transform));
+            //_drawSink.SendSingle(new MeshDrawEntity(mesh.MeshId, mesh.MaterialId, ref transform));
         }
     }
 }

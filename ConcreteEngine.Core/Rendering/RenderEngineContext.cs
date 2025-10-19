@@ -32,6 +32,5 @@ internal sealed class RenderEngineContext
     public required DrawCommandPipeline CommandPipeline { get; init;}
     public required RenderPassPipeline PassPipeline { get; init;}
     public required BatcherRegistry Batchers { get; init; }
-    public required DrawCommandCollector Collector { get; init; }
     
 }

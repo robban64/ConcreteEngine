@@ -14,13 +14,14 @@ namespace ConcreteEngine.Core.Features;
 
 public sealed class TerrainFeature : GameFeature
 {
-    private ITerrainDrawSink _drawSink = null!;
+    //private ITerrainDrawSink _drawSink = null!;
 
     private MaterialId _materialId;
     private Texture2D _heightmap = null!;
 
     public override void Initialize()
     {
+        /*
         var assets = Context.GetSystem<IAssetSystem>();
         var renderer = Context.GetSystem<IRenderingSystem>();
         var material = assets.MaterialStore.CreateMaterial("TerrainMat", "TerrainMat1");
@@ -30,17 +31,20 @@ public sealed class TerrainFeature : GameFeature
         material.State.Shininess = 10;
         material.State.Specular = 0.04f;
 
-        _drawSink = renderer.GetSink<ITerrainDrawSink>();
+        //_drawSink = renderer.GetSink<ITerrainDrawSink>();
 
         _materialId = material.Id;
         _heightmap = heightmap;
+        */
     }
 
     public override void UpdateTick(int tick)
     {
+        /*
         _drawSink.Send(new TerrainDrawData
         {
             Heightmap = _heightmap, MaterialId = _materialId, MaxHeight = 12, Step = 1
         });
+        */
     }
 }

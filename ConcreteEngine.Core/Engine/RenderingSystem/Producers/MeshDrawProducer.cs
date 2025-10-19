@@ -20,7 +20,7 @@ public struct MeshDrawEntity(MeshId meshId, MaterialId materialId, ref Transform
     public MeshId MeshId = meshId;
     public MaterialId MaterialId = materialId;
 }
-
+/*
 public interface IMeshDrawSink : IDrawSink
 {
     void Send(ReadOnlySpan<MeshDrawEntity> entities);
@@ -130,4 +130,4 @@ public sealed class MeshDrawProducer : IDrawCommandProducer, IMeshDrawSink
             Array.Resize(ref _entities, newSize);
         }
     }
-}
+}*/

@@ -5,6 +5,7 @@ using ConcreteEngine.Common;
 using ConcreteEngine.Common.Numerics;
 using ConcreteEngine.Core.Assets;
 using ConcreteEngine.Core.Assets.Meshes;
+using ConcreteEngine.Core.Assets.Textures;
 using ConcreteEngine.Core.Engine.Configuration;
 using ConcreteEngine.Core.Engine.RenderingSystem;
 using ConcreteEngine.Core.Rendering;
@@ -30,14 +31,23 @@ public sealed class Demo3DScene : GameScene
         var assets = Context.GetSystem<IAssetSystem>();
         var (store, materialStore) = (assets.Store, assets.MaterialStore);
 
-        var skyboxMaterial = materialStore.CreateMaterial("SkyboxMat","SkyboxMat1");
-
+        // Scene globals
         var rb = renderer.SceneProperties;
-        rb.SetSkybox(skyboxMaterial.Id, Quaternion.Identity);
- 
-
-
         rb.SetShadowDefault(2048);
+
+        // Skybox
+        var skyboxMaterial = materialStore.CreateMaterial("SkyboxMat","SkyboxMat1");
+        rb.SetSkybox(skyboxMaterial.Id, Quaternion.Identity);
+        Context.World.Sky.SetSkyMaterial(skyboxMaterial.Id);
+        
+        // Terrain
+        var terrainMat = assets.MaterialStore.CreateMaterial("TerrainMat", "TerrainMat1");
+        var heightmap = assets.Store.GetByName<Texture2D>("Heightmap");
+        terrainMat.State.UvRepeat = 28;
+        terrainMat.State.Shininess = 10;
+        terrainMat.State.Specular = 0.04f;
+        Context.World.Terrain.CreateTerrainMesh(heightmap);
+        Context.World.Terrain.SetMaterial(terrainMat.Id);
 
         var boatMat = materialStore.CreateMaterial("BoatMat", "BoatMat1");
         var boatMesh = store.GetByName<Mesh>("Boat");

@@ -27,5 +27,6 @@ public struct DrawEntity(
     public DrawCommandId CommandId = commandId;
     public DrawCommandQueue Queue = queue;
 
+    // ensure 64-byte
     private int Pad;
 }

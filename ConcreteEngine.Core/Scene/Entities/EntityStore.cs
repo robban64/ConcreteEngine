@@ -1,6 +1,7 @@
 #region
 
 using System.Diagnostics;
+using ConcreteEngine.Common.Collections;
 
 #endregion
 
@@ -8,7 +9,7 @@ namespace ConcreteEngine.Core.Scene.Entities;
 
 public sealed class EntityStore<T> where T : unmanaged
 {
-    private readonly Dictionary<EntityId, int> _map;
+    private int[] _sparse;
     private T[] _data;
     private EntityId[] _entities;
 
@@ -16,37 +17,42 @@ public sealed class EntityStore<T> where T : unmanaged
 
     public bool IsDirty { get; set; }
 
-    public EntityStore(int initialCapacity = 16)
+    public EntityStore(int initialCapacity = 128)
     {
-        _map = new Dictionary<EntityId, int>(initialCapacity);
+        _sparse = new int[initialCapacity];
         _data = new T[initialCapacity];
         _entities = new EntityId[initialCapacity];
     }
 
     public int Count => _idx;
 
-    public bool Has(EntityId e) => _map.ContainsKey(e);
+    public bool Has(EntityId e)
+    {
+        var index = _sparse[e.Id - 1];
+        return (uint)index < (uint)_idx && _entities[index] == e;
+    }
 
-    public ref T Get(EntityId e) => ref _data[_map[e]];
+    public ref T GetById(EntityId e) => ref _data[_sparse[e]];
 
-    public ref T ByIndex(int i) => ref _data[i];
+    public ref T GetByIndex(int i) => ref _data[i];
 
-    public EntityId EntityByIndex(int i) => _entities[i];
+    public EntityId GetEntityId(int i) => _entities[i];
 
 
     public ref T Add(EntityId e, T value)
     {
-        if (_idx == _data.Length)
+        if (_idx >= _data.Length)
         {
             Debug.Assert(_data.Length == _entities.Length);
-            var newSize = Math.Max(_data.Length * 2, 8);
+            var newSize = ArrayUtility.CapacityGrowthPow2(Math.Max(_idx, 8));
             Array.Resize(ref _data, newSize);
             Array.Resize(ref _entities, newSize);
+            Array.Resize(ref _sparse,  newSize);
         }
 
         IsDirty = true;
 
-        _map[e] = _idx;
+        _sparse[e] = _idx;
         _entities[_idx] = e;
         _data[_idx] = value;
         return ref _data[_idx++];
@@ -62,11 +68,11 @@ public sealed class EntityStore<T> where T : unmanaged
 
     public EntityEnumerator<T> GetEnumerator() => new(this);
 
-    public EntityEnumerator<T, T2> View2<T2>(EntityStore<T2> r2)
+    public EntityEnumerator<T, T2> Query<T2>(EntityStore<T2> r2)
         where T2 : unmanaged =>
         new(this, r2);
 
-    public EntityEnumerator<T, T2, T3> View3<T2, T3>(EntityStore<T2> r2,
+    public EntityEnumerator<T, T2, T3> Query<T2, T3>(EntityStore<T2> r2,
         EntityStore<T3> r3)
         where T2 : unmanaged
         where T3 : unmanaged =>

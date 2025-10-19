@@ -45,12 +45,13 @@ internal sealed class RenderEntityBus
             _entities[_idx++] = terrainEntity;
         }
 
-        foreach (var view in _world.Meshes.View2(_world.Transforms))
+        foreach (var query in _world.Query<MeshComponent, Transform>())
         {
-            ref var mesh = ref view.Value1;
-            ref var transform = ref view.Value2;
+            ref var mesh = ref query.Value1;
+            ref var transform = ref query.Value2;
             EntityUtility.MakeDrawMesh(in mesh, in transform, out var drawEntity);
             _entities[_idx++] = drawEntity;
+
         }
     }
 

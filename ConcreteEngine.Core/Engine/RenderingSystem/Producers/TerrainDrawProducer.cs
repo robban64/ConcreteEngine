@@ -2,7 +2,6 @@
 
 using System.Numerics;
 using ConcreteEngine.Common.Numerics;
-using ConcreteEngine.Core.Assets.Materials;
 using ConcreteEngine.Core.Assets.Textures;
 using ConcreteEngine.Core.Engine.Data;
 using ConcreteEngine.Core.Engine.RenderingSystem.Batching;
@@ -13,7 +12,7 @@ using ConcreteEngine.Core.Rendering.State;
 
 #endregion
 
-namespace ConcreteEngine.Core.Rendering.Producers;
+namespace ConcreteEngine.Core.Engine.RenderingSystem.Producers;
 
 public struct TerrainDrawData
 {

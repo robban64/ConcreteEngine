@@ -5,7 +5,6 @@ using ConcreteEngine.Core.Rendering.Definitions;
 using ConcreteEngine.Core.Rendering.Descriptors;
 using ConcreteEngine.Core.Rendering.Draw;
 using ConcreteEngine.Core.Rendering.Passes;
-using ConcreteEngine.Core.Rendering.Producers;
 using ConcreteEngine.Core.Rendering.Registry;
 using ConcreteEngine.Core.Rendering.State;
 using ConcreteEngine.Graphics.Gfx;

@@ -2,13 +2,12 @@
 
 using System.Numerics;
 using System.Runtime.CompilerServices;
-using ConcreteEngine.Core.Assets.Materials;
 using ConcreteEngine.Core.Rendering.Data;
 using ConcreteEngine.Core.Utils;
 
 #endregion
 
-namespace ConcreteEngine.Core.Rendering.Producers;
+namespace ConcreteEngine.Core.Engine.RenderingSystem.Producers;
 
 public readonly record struct SpriteDrawBatch(MaterialId MaterialId, int Start, int End, byte Layer = 0);
 

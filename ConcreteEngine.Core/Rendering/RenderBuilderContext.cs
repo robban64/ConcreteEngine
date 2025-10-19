@@ -4,7 +4,6 @@ using ConcreteEngine.Core.Rendering.Data;
 using ConcreteEngine.Core.Rendering.Definitions;
 using ConcreteEngine.Core.Rendering.Descriptors;
 using ConcreteEngine.Core.Rendering.Passes;
-using ConcreteEngine.Core.Rendering.Producers;
 using ConcreteEngine.Core.Rendering.Registry;
 using ConcreteEngine.Graphics.Gfx;
 using ConcreteEngine.Graphics.Gfx.Resources;

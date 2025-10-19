@@ -2,7 +2,6 @@
 
 using System.Runtime.CompilerServices;
 using ConcreteEngine.Common.Numerics;
-using ConcreteEngine.Core.Assets.Materials;
 using ConcreteEngine.Core.Engine.Data;
 using ConcreteEngine.Core.Rendering.Data;
 using ConcreteEngine.Core.Rendering.Definitions;
@@ -13,7 +12,7 @@ using ConcreteEngine.Graphics.Gfx.Resources;
 
 #endregion
 
-namespace ConcreteEngine.Core.Rendering.Producers;
+namespace ConcreteEngine.Core.Engine.RenderingSystem.Producers;
 
 public struct MeshDrawEntity(MeshId meshId, MaterialId materialId, ref Transform transform)
 {

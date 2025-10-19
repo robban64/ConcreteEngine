@@ -9,7 +9,7 @@ using ConcreteEngine.Core.Rendering.State;
 
 #endregion
 
-namespace ConcreteEngine.Core.Rendering.Producers;
+namespace ConcreteEngine.Core.Engine.RenderingSystem.Producers;
 
 public sealed class SceneDrawProducer : IDrawCommandProducer
 {

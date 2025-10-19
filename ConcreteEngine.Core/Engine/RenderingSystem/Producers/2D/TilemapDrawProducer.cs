@@ -1,11 +1,10 @@
 #region
 
-using ConcreteEngine.Core.Assets.Materials;
 using ConcreteEngine.Core.Rendering.Data;
 
 #endregion
 
-namespace ConcreteEngine.Core.Rendering.Producers;
+namespace ConcreteEngine.Core.Engine.RenderingSystem.Producers;
 
 public struct TilemapDrawData()
 {

@@ -1,12 +1,12 @@
 #region
 
 using System.Numerics;
-using ConcreteEngine.Core.Rendering.Data;
-using ConcreteEngine.Core.Rendering.Utility;
+using ConcreteEngine.Renderer.Data;
+using ConcreteEngine.Renderer.Utility;
 
 #endregion
 
-namespace ConcreteEngine.Core.Rendering.State;
+namespace ConcreteEngine.Renderer.State;
 
 public sealed class RenderView
 {

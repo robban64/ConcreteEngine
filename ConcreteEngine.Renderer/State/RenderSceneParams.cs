@@ -4,7 +4,7 @@ using System.Numerics;
 
 #endregion
 
-namespace ConcreteEngine.Core.Rendering.State;
+namespace ConcreteEngine.Renderer.State;
 
 public readonly struct DirLightParams(Vector3 direction, Vector3 diffuse, float intensity, float specular)
 {

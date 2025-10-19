@@ -4,7 +4,7 @@ using System.Numerics;
 
 #endregion
 
-namespace ConcreteEngine.Core.Rendering.Data;
+namespace ConcreteEngine.Renderer.Data;
 
 public readonly struct ViewProjectionData(
     in Matrix4x4 viewMatrix,

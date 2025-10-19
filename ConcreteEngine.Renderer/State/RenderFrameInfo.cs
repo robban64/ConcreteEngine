@@ -6,7 +6,7 @@ using ConcreteEngine.Graphics;
 
 #endregion
 
-namespace ConcreteEngine.Core.Rendering.State;
+namespace ConcreteEngine.Renderer.State;
 
 public enum BeginFrameStatus
 {

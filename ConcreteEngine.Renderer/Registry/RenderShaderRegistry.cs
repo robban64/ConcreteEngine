@@ -1,13 +1,13 @@
 #region
 
 using ConcreteEngine.Common;
-using ConcreteEngine.Core.Rendering.Data;
 using ConcreteEngine.Graphics.Gfx;
 using ConcreteEngine.Graphics.Gfx.Resources;
+using ConcreteEngine.Renderer.Data;
 
 #endregion
 
-namespace ConcreteEngine.Core.Rendering.Registry;
+namespace ConcreteEngine.Renderer.Registry;
 
 public interface IRenderShaderRegistry
 {

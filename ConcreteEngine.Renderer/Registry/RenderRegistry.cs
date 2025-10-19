@@ -3,14 +3,14 @@
 using System.Runtime.CompilerServices;
 using ConcreteEngine.Common;
 using ConcreteEngine.Common.Numerics;
-using ConcreteEngine.Core.Rendering.Passes;
 using ConcreteEngine.Graphics.Gfx;
 using ConcreteEngine.Graphics.Gfx.Resources;
 using ConcreteEngine.Graphics.Primitives;
+using ConcreteEngine.Renderer.Passes;
 
 #endregion
 
-namespace ConcreteEngine.Core.Rendering.Registry;
+namespace ConcreteEngine.Renderer.Registry;
 
 internal sealed class RenderRegistry
 {

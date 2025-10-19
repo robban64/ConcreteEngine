@@ -6,12 +6,12 @@ using System.Runtime.CompilerServices;
 using ConcreteEngine.Common;
 using ConcreteEngine.Common.Collections;
 using ConcreteEngine.Common.Numerics;
-using ConcreteEngine.Core.Rendering.Data;
-using static ConcreteEngine.Core.Rendering.Data.RenderLimits;
+using ConcreteEngine.Renderer.Data;
+using static ConcreteEngine.Renderer.Data.RenderLimits;
 
 #endregion
 
-namespace ConcreteEngine.Core.Rendering.Draw;
+namespace ConcreteEngine.Renderer.Draw;
 
 internal sealed class MaterialDrawBuffer
 {

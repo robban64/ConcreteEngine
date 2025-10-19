@@ -2,7 +2,7 @@
 
 using ConcreteEngine.Common.Numerics;
 using ConcreteEngine.Core.Assets.Descriptors;
-using ConcreteEngine.Core.Rendering.Data;
+using ConcreteEngine.Renderer.Data;
 
 #endregion
 

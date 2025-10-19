@@ -4,7 +4,6 @@ using ConcreteEngine.Common;
 using ConcreteEngine.Core.Assets.Descriptors;
 using ConcreteEngine.Core.Assets.Internal;
 using ConcreteEngine.Core.Assets.Materials;
-using ConcreteEngine.Core.Engine;
 using ConcreteEngine.Graphics.Gfx;
 
 #endregion

@@ -1,10 +1,10 @@
 #region
 
 using System.Numerics;
-using ConcreteEngine.Core.Rendering.Data;
 using ConcreteEngine.Core.Scene.Entities;
 using ConcreteEngine.Graphics.Gfx.Resources;
 using ConcreteEngine.Graphics.Utils;
+using ConcreteEngine.Renderer.Data;
 
 #endregion
 

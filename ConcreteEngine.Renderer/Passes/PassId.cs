@@ -1,4 +1,4 @@
-namespace ConcreteEngine.Core.Rendering.Passes;
+namespace ConcreteEngine.Renderer.Passes;
 
 public readonly record struct PassId(byte Value) : IComparable<PassId>
 {

@@ -1,14 +1,14 @@
 #region
 
-using ConcreteEngine.Core.Rendering.Draw;
-using ConcreteEngine.Core.Rendering.Passes;
-using ConcreteEngine.Core.Rendering.Registry;
-using ConcreteEngine.Core.Rendering.State;
 using ConcreteEngine.Graphics.Gfx;
+using ConcreteEngine.Renderer.Draw;
+using ConcreteEngine.Renderer.Passes;
+using ConcreteEngine.Renderer.Registry;
+using ConcreteEngine.Renderer.State;
 
 #endregion
 
-namespace ConcreteEngine.Core.Rendering;
+namespace ConcreteEngine.Renderer;
 
 internal sealed class RenderStateContext
 {

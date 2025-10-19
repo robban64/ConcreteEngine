@@ -3,13 +3,13 @@
 using System.Numerics;
 using System.Runtime.CompilerServices;
 using ConcreteEngine.Common.Numerics;
-using ConcreteEngine.Core.Rendering.Passes;
 using ConcreteEngine.Graphics.Gfx.Definitions;
 using ConcreteEngine.Graphics.Gfx.Resources;
+using ConcreteEngine.Renderer.Passes;
 
 #endregion
 
-namespace ConcreteEngine.Core.Rendering.Registry;
+namespace ConcreteEngine.Renderer.Registry;
 
 public delegate Size2D CalcFboOutputDel(Size2D outputSize, Vector2 ratio);
 

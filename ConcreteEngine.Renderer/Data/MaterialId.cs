@@ -1,4 +1,4 @@
-namespace ConcreteEngine.Core.Rendering.Data;
+namespace ConcreteEngine.Renderer.Data;
 
 public readonly record struct MaterialId(int Id) : IComparable<MaterialId>
 {

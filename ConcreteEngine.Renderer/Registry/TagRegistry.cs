@@ -1,14 +1,14 @@
 #region
 
 using System.Runtime.CompilerServices;
-using ConcreteEngine.Core.Rendering.Passes;
 using ConcreteEngine.Graphics.Gfx.Resources;
 using ConcreteEngine.Graphics.Primitives;
-using static ConcreteEngine.Core.Rendering.Data.RenderLimits;
+using ConcreteEngine.Renderer.Passes;
+using static ConcreteEngine.Renderer.Data.RenderLimits;
 
 #endregion
 
-namespace ConcreteEngine.Core.Rendering.Registry;
+namespace ConcreteEngine.Renderer.Registry;
 
 internal static class TagRegistry
 {

@@ -2,19 +2,17 @@
 
 using ConcreteEngine.Common.Patterns;
 using ConcreteEngine.Core.Assets;
-using ConcreteEngine.Core.Engine;
-using ConcreteEngine.Core.Engine.Configuration;
-using ConcreteEngine.Core.Engine.Data;
-using ConcreteEngine.Core.Engine.Platform;
-using ConcreteEngine.Core.Engine.RenderingSystem;
-using ConcreteEngine.Core.Engine.RenderingSystem.Batching;
-using ConcreteEngine.Core.Engine.Time;
-using ConcreteEngine.Core.Modules;
-using ConcreteEngine.Core.Rendering.State;
+using ConcreteEngine.Core.Configuration;
+using ConcreteEngine.Core.Data;
+using ConcreteEngine.Core.Platform;
+using ConcreteEngine.Core.RenderingSystem.Batching;
 using ConcreteEngine.Core.Scene;
+using ConcreteEngine.Core.Scene.Modules;
+using ConcreteEngine.Core.Time;
 using ConcreteEngine.Graphics;
+using ConcreteEngine.Renderer.State;
 using Silk.NET.OpenGL;
-using RenderFrameInfo = ConcreteEngine.Core.Engine.Data.RenderFrameInfo;
+using RenderFrameInfo = ConcreteEngine.Core.Data.RenderFrameInfo;
 
 #endregion
 
@@ -28,7 +26,7 @@ public sealed class GameEngine : IDisposable
     private readonly EngineCoreSystem _coreSystems;
     private readonly AssetSystem _assets;
     private readonly InputSystem _inputSystem;
-    private readonly RenderingSystem _renderingSystem;
+    private readonly RenderingSystem.RenderingSystem _renderingSystem;
 
 
     private readonly ModuleManager _modules;
@@ -66,7 +64,7 @@ public sealed class GameEngine : IDisposable
 
         _inputSystem = new InputSystem(input);
         _assets = new AssetSystem();
-        _renderingSystem = new RenderingSystem(_window, _graphics, _assets);
+        _renderingSystem = new RenderingSystem.RenderingSystem(_window, _graphics, _assets);
         _coreSystems = new EngineCoreSystem(_renderingSystem, _inputSystem, _assets);
 
 
@@ -216,7 +214,7 @@ public sealed class GameEngine : IDisposable
         _modules.Load(new GameModuleContext(sceneContext));
         return;
 
-        void AfterBuild(SceneManager.SceneBuildResult result, RenderingSystem renderer)
+        void AfterBuild(SceneManager.SceneBuildResult result, RenderingSystem.RenderingSystem renderer)
         {
             renderer.AttachWorld((World)result.Context.World);
             foreach (var module in result.Modules) result.Context.Modules.AddModule(module());

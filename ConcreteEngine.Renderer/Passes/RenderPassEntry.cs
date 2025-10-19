@@ -1,11 +1,11 @@
 #region
 
 using System.Runtime.CompilerServices;
-using ConcreteEngine.Core.Rendering.Definitions;
+using ConcreteEngine.Renderer.Definitions;
 
 #endregion
 
-namespace ConcreteEngine.Core.Rendering.Passes;
+namespace ConcreteEngine.Renderer.Passes;
 
 public delegate PassMutationState RenderPassMutate(RenderPassState currentState);
 

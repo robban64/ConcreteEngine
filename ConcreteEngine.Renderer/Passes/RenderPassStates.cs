@@ -6,7 +6,7 @@ using ConcreteEngine.Graphics.Gfx.Resources;
 
 #endregion
 
-namespace ConcreteEngine.Core.Rendering.Passes;
+namespace ConcreteEngine.Renderer.Passes;
 
 public readonly record struct PassMutationState(
     GfxPassClear? ClearColor = null,

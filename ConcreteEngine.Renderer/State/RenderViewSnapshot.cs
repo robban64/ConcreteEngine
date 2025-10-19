@@ -1,11 +1,11 @@
 #region
 
 using System.Numerics;
-using ConcreteEngine.Core.Rendering.Data;
+using ConcreteEngine.Renderer.Data;
 
 #endregion
 
-namespace ConcreteEngine.Core.Rendering.State;
+namespace ConcreteEngine.Renderer.State;
 
 public readonly struct RenderViewSnapshot(
     in Matrix4x4 viewMatrix,

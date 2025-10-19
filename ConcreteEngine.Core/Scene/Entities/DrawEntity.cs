@@ -1,9 +1,9 @@
 #region
 
 using System.Runtime.InteropServices;
-using ConcreteEngine.Core.Rendering.Data;
-using ConcreteEngine.Core.Rendering.Definitions;
 using ConcreteEngine.Graphics.Gfx.Resources;
+using ConcreteEngine.Renderer.Data;
+using ConcreteEngine.Renderer.Definitions;
 
 #endregion
 

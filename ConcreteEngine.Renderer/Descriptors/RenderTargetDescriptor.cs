@@ -8,7 +8,7 @@ using Silk.NET.Maths;
 
 #endregion
 
-namespace ConcreteEngine.Core.Rendering.Descriptors;
+namespace ConcreteEngine.Renderer.Descriptors;
 
 public sealed record RenderTargetDescriptor
 {

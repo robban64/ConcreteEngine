@@ -2,11 +2,11 @@
 
 using System.Numerics;
 using System.Runtime.CompilerServices;
-using ConcreteEngine.Core.Rendering.State;
+using ConcreteEngine.Renderer.State;
 
 #endregion
 
-namespace ConcreteEngine.Core.Rendering.Utility;
+namespace ConcreteEngine.Renderer.Utility;
 
 internal static class RenderTransform
 {

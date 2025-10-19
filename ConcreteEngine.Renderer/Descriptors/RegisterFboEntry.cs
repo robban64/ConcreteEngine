@@ -3,13 +3,13 @@
 using System.Numerics;
 using ConcreteEngine.Common;
 using ConcreteEngine.Common.Numerics;
-using ConcreteEngine.Core.Rendering.Registry;
 using ConcreteEngine.Graphics.Gfx.Contracts;
 using ConcreteEngine.Graphics.Gfx.Definitions;
+using ConcreteEngine.Renderer.Registry;
 
 #endregion
 
-namespace ConcreteEngine.Core.Rendering.Descriptors;
+namespace ConcreteEngine.Renderer.Descriptors;
 
 public sealed class RegisterFboEntry
 {

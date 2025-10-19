@@ -1,10 +1,10 @@
 #region
 
-using ConcreteEngine.Core.Rendering.Definitions;
+using ConcreteEngine.Renderer.Definitions;
 
 #endregion
 
-namespace ConcreteEngine.Core.Rendering.Utility;
+namespace ConcreteEngine.Renderer.Utility;
 
 internal sealed class RenderEnumUtils
 {

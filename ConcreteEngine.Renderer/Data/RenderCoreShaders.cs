@@ -4,7 +4,7 @@ using ConcreteEngine.Graphics.Gfx.Resources;
 
 #endregion
 
-namespace ConcreteEngine.Core.Rendering.Data;
+namespace ConcreteEngine.Renderer.Data;
 
 public readonly record struct RenderCoreShaders
 {

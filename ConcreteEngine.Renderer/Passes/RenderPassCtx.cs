@@ -2,14 +2,14 @@
 
 using System.Diagnostics;
 using ConcreteEngine.Common.Numerics;
-using ConcreteEngine.Core.Rendering.Data;
-using ConcreteEngine.Core.Rendering.Draw;
-using ConcreteEngine.Core.Rendering.Registry;
 using ConcreteEngine.Graphics.Gfx.Resources;
+using ConcreteEngine.Renderer.Data;
+using ConcreteEngine.Renderer.Draw;
+using ConcreteEngine.Renderer.Registry;
 
 #endregion
 
-namespace ConcreteEngine.Core.Rendering.Passes;
+namespace ConcreteEngine.Renderer.Passes;
 
 public sealed class RenderPassCtx
 {

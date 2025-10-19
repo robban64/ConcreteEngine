@@ -4,18 +4,18 @@ using System.Diagnostics;
 using System.Runtime.CompilerServices;
 using ConcreteEngine.Common;
 using ConcreteEngine.Common.Numerics;
-using ConcreteEngine.Core.Rendering.Data;
-using ConcreteEngine.Core.Rendering.Definitions;
-using ConcreteEngine.Core.Rendering.Draw;
-using ConcreteEngine.Core.Rendering.Passes;
-using ConcreteEngine.Core.Rendering.Registry;
-using ConcreteEngine.Core.Rendering.State;
 using ConcreteEngine.Graphics;
 using ConcreteEngine.Graphics.Gfx.Resources;
+using ConcreteEngine.Renderer.Data;
+using ConcreteEngine.Renderer.Definitions;
+using ConcreteEngine.Renderer.Draw;
+using ConcreteEngine.Renderer.Passes;
+using ConcreteEngine.Renderer.Registry;
+using ConcreteEngine.Renderer.State;
 
 #endregion
 
-namespace ConcreteEngine.Core.Rendering;
+namespace ConcreteEngine.Renderer;
 
 public enum RenderType
 {

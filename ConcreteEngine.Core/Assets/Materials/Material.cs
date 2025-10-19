@@ -2,7 +2,7 @@
 
 using ConcreteEngine.Core.Assets.Data;
 using ConcreteEngine.Core.Assets.Shaders;
-using ConcreteEngine.Core.Rendering.Data;
+using ConcreteEngine.Renderer.Data;
 
 #endregion
 

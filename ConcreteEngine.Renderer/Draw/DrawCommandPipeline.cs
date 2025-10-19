@@ -1,12 +1,12 @@
 #region
 
-using ConcreteEngine.Core.Rendering.Data;
-using ConcreteEngine.Core.Rendering.Passes;
 using ConcreteEngine.Graphics.Gfx.Utility;
+using ConcreteEngine.Renderer.Data;
+using ConcreteEngine.Renderer.Passes;
 
 #endregion
 
-namespace ConcreteEngine.Core.Rendering.Draw;
+namespace ConcreteEngine.Renderer.Draw;
 
 internal sealed class DrawCommandPipeline
 {

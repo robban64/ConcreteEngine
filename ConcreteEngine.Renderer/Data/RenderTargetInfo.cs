@@ -6,7 +6,7 @@ using ConcreteEngine.Graphics.Gfx.Resources;
 
 #endregion
 
-namespace ConcreteEngine.Core.Rendering.Data;
+namespace ConcreteEngine.Renderer.Data;
 
 public readonly struct RenderTargetInfo(
     FrameBufferId fboId,

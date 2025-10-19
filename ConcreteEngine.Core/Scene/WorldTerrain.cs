@@ -3,9 +3,9 @@
 using System.Numerics;
 using ConcreteEngine.Core.Assets.Data;
 using ConcreteEngine.Core.Assets.Textures;
-using ConcreteEngine.Core.Engine.RenderingSystem.Batching;
-using ConcreteEngine.Core.Rendering.Data;
+using ConcreteEngine.Core.RenderingSystem.Batching;
 using ConcreteEngine.Core.Scene.Entities;
+using ConcreteEngine.Renderer.Data;
 
 #endregion
 

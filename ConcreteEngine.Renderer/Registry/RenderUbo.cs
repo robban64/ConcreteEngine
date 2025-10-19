@@ -8,7 +8,7 @@ using ConcreteEngine.Graphics.Gfx.Utility;
 
 #endregion
 
-namespace ConcreteEngine.Core.Rendering.Registry;
+namespace ConcreteEngine.Renderer.Registry;
 
 public sealed class RenderUbo
 {

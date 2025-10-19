@@ -1,4 +1,4 @@
-namespace ConcreteEngine.Core.Rendering.Passes;
+namespace ConcreteEngine.Renderer.Passes;
 
 public interface IRenderPassTag;
 

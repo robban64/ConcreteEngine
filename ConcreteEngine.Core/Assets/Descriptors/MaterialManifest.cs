@@ -3,8 +3,8 @@
 using System.Text.Json.Serialization;
 using ConcreteEngine.Common.Numerics;
 using ConcreteEngine.Core.Assets.Data;
-using ConcreteEngine.Core.Rendering.Definitions;
 using ConcreteEngine.Graphics.Gfx.Definitions;
+using ConcreteEngine.Renderer.Definitions;
 
 #endregion
 

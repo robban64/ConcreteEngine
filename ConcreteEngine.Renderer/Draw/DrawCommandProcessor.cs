@@ -1,13 +1,13 @@
 #region
 
-using ConcreteEngine.Core.Rendering.Data;
-using ConcreteEngine.Core.Rendering.Registry;
 using ConcreteEngine.Graphics.Gfx;
 using ConcreteEngine.Graphics.Gfx.Resources;
+using ConcreteEngine.Renderer.Data;
+using ConcreteEngine.Renderer.Registry;
 
 #endregion
 
-namespace ConcreteEngine.Core.Rendering.Draw;
+namespace ConcreteEngine.Renderer.Draw;
 
 internal sealed class DrawCommandProcessor
 {

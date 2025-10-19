@@ -1,7 +1,7 @@
 #region
 
-using ConcreteEngine.Core.Engine.RenderingSystem.Batching;
-using ConcreteEngine.Core.Rendering.State;
+using ConcreteEngine.Core.RenderingSystem;
+using ConcreteEngine.Core.RenderingSystem.Batching;
 using ConcreteEngine.Core.Scene.Entities;
 
 #endregion

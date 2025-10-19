@@ -6,13 +6,13 @@ using System.Numerics;
 using System.Runtime.CompilerServices;
 using ConcreteEngine.Common.Collections;
 using ConcreteEngine.Common.Numerics;
-using ConcreteEngine.Core.Rendering.Data;
-using ConcreteEngine.Core.Rendering.Passes;
-using static ConcreteEngine.Core.Rendering.Data.RenderLimits;
+using ConcreteEngine.Renderer.Data;
+using ConcreteEngine.Renderer.Passes;
+using static ConcreteEngine.Renderer.Data.RenderLimits;
 
 #endregion
 
-namespace ConcreteEngine.Core.Rendering.Draw;
+namespace ConcreteEngine.Renderer.Draw;
 
 //internal delegate void DrawCommandDispatchDel(DrawCommand cmd, int idx);
 

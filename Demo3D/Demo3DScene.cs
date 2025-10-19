@@ -6,15 +6,13 @@ using ConcreteEngine.Common.Numerics;
 using ConcreteEngine.Core.Assets;
 using ConcreteEngine.Core.Assets.Meshes;
 using ConcreteEngine.Core.Assets.Textures;
-using ConcreteEngine.Core.Engine.Configuration;
-using ConcreteEngine.Core.Engine.RenderingSystem;
-using ConcreteEngine.Core.Rendering;
-using ConcreteEngine.Core.Rendering.Data;
-using ConcreteEngine.Core.Rendering.Descriptors;
+using ConcreteEngine.Core.Configuration;
+using ConcreteEngine.Core.RenderingSystem;
 using ConcreteEngine.Core.Scene;
 using ConcreteEngine.Core.Scene.Entities;
 using ConcreteEngine.Graphics;
 using ConcreteEngine.Graphics.Primitives;
+using ConcreteEngine.Renderer.Descriptors;
 using Shader = ConcreteEngine.Core.Assets.Shaders.Shader;
 
 #endregion

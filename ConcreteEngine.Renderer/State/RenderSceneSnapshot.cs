@@ -1,4 +1,4 @@
-namespace ConcreteEngine.Core.Rendering.State;
+namespace ConcreteEngine.Renderer.State;
 
 public sealed class RenderSceneSnapshot
 {

@@ -1,4 +1,4 @@
-namespace ConcreteEngine.Core.Rendering.Definitions;
+namespace ConcreteEngine.Renderer.Definitions;
 
 [Flags]
 public enum PassMask : ushort

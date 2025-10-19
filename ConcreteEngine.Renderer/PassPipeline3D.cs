@@ -1,13 +1,13 @@
 #region
 
-using ConcreteEngine.Core.Rendering.Data;
-using ConcreteEngine.Core.Rendering.Definitions;
-using ConcreteEngine.Core.Rendering.Passes;
 using ConcreteEngine.Graphics.Gfx.Contracts;
+using ConcreteEngine.Renderer.Data;
+using ConcreteEngine.Renderer.Definitions;
+using ConcreteEngine.Renderer.Passes;
 
 #endregion
 
-namespace ConcreteEngine.Core.Rendering;
+namespace ConcreteEngine.Renderer;
 
 internal static class PassPipeline3D
 {

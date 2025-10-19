@@ -2,16 +2,16 @@
 
 using System.Numerics;
 using System.Runtime.CompilerServices;
-using ConcreteEngine.Core.Rendering.Data;
-using ConcreteEngine.Core.Rendering.Definitions;
-using ConcreteEngine.Core.Rendering.Registry;
-using ConcreteEngine.Core.Rendering.State;
 using ConcreteEngine.Graphics.Gfx;
 using ConcreteEngine.Graphics.Gfx.Resources;
+using ConcreteEngine.Renderer.Data;
+using ConcreteEngine.Renderer.Definitions;
+using ConcreteEngine.Renderer.Registry;
+using ConcreteEngine.Renderer.State;
 
 #endregion
 
-namespace ConcreteEngine.Core.Rendering.Draw;
+namespace ConcreteEngine.Renderer.Draw;
 
 internal sealed class DrawBuffers
 {

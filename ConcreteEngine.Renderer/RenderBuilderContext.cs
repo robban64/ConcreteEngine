@@ -1,16 +1,16 @@
 #region
 
 using ConcreteEngine.Common.Numerics;
-using ConcreteEngine.Core.Rendering.Data;
-using ConcreteEngine.Core.Rendering.Definitions;
-using ConcreteEngine.Core.Rendering.Descriptors;
-using ConcreteEngine.Core.Rendering.Passes;
 using ConcreteEngine.Graphics.Gfx;
 using ConcreteEngine.Graphics.Gfx.Resources;
+using ConcreteEngine.Renderer.Data;
+using ConcreteEngine.Renderer.Definitions;
+using ConcreteEngine.Renderer.Descriptors;
+using ConcreteEngine.Renderer.Passes;
 
 #endregion
 
-namespace ConcreteEngine.Core.Rendering;
+namespace ConcreteEngine.Renderer;
 
 internal sealed record RenderSetupPlan(
     Size2D OutputSize,

@@ -1,15 +1,15 @@
 #region
 
-using ConcreteEngine.Core.Rendering.Registry;
-using ConcreteEngine.Core.Rendering.State;
 using ConcreteEngine.Graphics.Gfx;
 using ConcreteEngine.Graphics.Gfx.Contracts;
 using ConcreteEngine.Graphics.Gfx.Resources;
 using ConcreteEngine.Graphics.Utils;
+using ConcreteEngine.Renderer.Registry;
+using ConcreteEngine.Renderer.State;
 
 #endregion
 
-namespace ConcreteEngine.Core.Rendering.Draw;
+namespace ConcreteEngine.Renderer.Draw;
 
 public sealed class DrawStateOps
 {

@@ -4,7 +4,7 @@ using System.Runtime.CompilerServices;
 
 #endregion
 
-namespace ConcreteEngine.Core.Rendering.Passes;
+namespace ConcreteEngine.Renderer.Passes;
 
 public readonly record struct FboVariant(byte Value) : IComparable<FboVariant>
 {

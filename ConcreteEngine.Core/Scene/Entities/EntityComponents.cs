@@ -1,8 +1,8 @@
 #region
 
 using System.Numerics;
-using ConcreteEngine.Core.Rendering.Data;
 using ConcreteEngine.Graphics.Gfx.Resources;
+using ConcreteEngine.Renderer.Data;
 using Silk.NET.Maths;
 
 #endregion

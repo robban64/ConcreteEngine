@@ -1,11 +1,11 @@
 #region
 
-using ConcreteEngine.Core.Rendering.Data;
 using ConcreteEngine.Graphics.Gfx.Resources;
+using ConcreteEngine.Renderer.Data;
 
 #endregion
 
-namespace ConcreteEngine.Core.Rendering.Passes;
+namespace ConcreteEngine.Renderer.Passes;
 
 internal sealed class PassCommandQueue
 {

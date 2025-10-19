@@ -4,9 +4,8 @@
 
 #region
 
-using ConcreteEngine.Core.Engine;
-using ConcreteEngine.Core.Modules;
 using ConcreteEngine.Core.Scene;
+using ConcreteEngine.Core.Scene.Modules;
 
 #endregion
 

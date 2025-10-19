@@ -10,7 +10,7 @@ namespace ConcreteEngine.Core.Scene;
 
 public interface IWorld
 {
-    public int Count { get; }
+    public int EntityCount { get; }
 
     RenderSceneProps RenderProps { get; }
     WorldSkybox Sky { get; }
@@ -29,10 +29,6 @@ public interface IWorld
 
 public sealed class World : IWorld
 {
-    public EntityId Create() => new(_idIdx++);
-
-    private int _idIdx = 1;
-
     public RenderSceneProps RenderProps { get; }
 
     public WorldSkybox Sky { get; }
@@ -43,6 +39,11 @@ public sealed class World : IWorld
     public EntityStore<Transform2D> Transforms2D { get; }
     public EntityStore<SpriteComponent> Sprites { get; }
 
+    
+    public EntityId Create() => new(_idIdx++);
+    public int EntityCount => _idIdx;
+
+    private int _idIdx = 1;
 
     internal World(RenderSceneProps renderProps, BatcherRegistry batchers)
     {
@@ -55,8 +56,6 @@ public sealed class World : IWorld
         Meshes = GenericStores<MeshComponent>.CreateStore();
         Sprites = GenericStores<SpriteComponent>.CreateStore();
     }
-
-    public int Count => _idIdx + (Terrain.IsActive ? 1 : 0) + (Sky.IsActive ? 1 : 0);
 
     public void Cleanup()
     {

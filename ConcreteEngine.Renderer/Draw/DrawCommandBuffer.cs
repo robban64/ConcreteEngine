@@ -47,19 +47,15 @@ public sealed class DrawCommandBuffer
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public void SubmitDraw(DrawCommand cmd, DrawCommandMeta meta, in DrawTransformPayload transform)
+    public void SubmitDraw(DrawCommand cmd, DrawCommandMeta meta, in Matrix4x4 model, in Matrix3 normal)
     {
         EnsureCapacity(1);
         _commandBuffer[_submitIdx] = cmd;
         _metaBuffer[_submitIdx] = meta;
         _indexBuffer[_submitIdx] = new DrawCommandRef(meta, _submitIdx);
 
-        TransformUtils.CreateNormalMatrix(in transform.Transform, out var normalModel);
-        _transformBuffer[_submitIdx] = new DrawObjectUniform(
-            model: in transform.Transform,
-            normal: in normalModel
-        );
-
+        //_transformBuffer[_submitIdx] = new DrawObjectUniform(model: in model, normal: in normal);
+        DrawObjectUniform.Fill(in model,in normal, out _transformBuffer[_submitIdx]);
         _submitIdx++;
     }
 
@@ -89,10 +85,8 @@ public sealed class DrawCommandBuffer
 
             ref readonly var transform = ref drawTransforms[i].Transform;
             TransformUtils.CreateNormalMatrix(in transform, out var normalModel);
-            transformBuffer[i] = new DrawObjectUniform(
-                model: in transform,
-                normal: in normalModel
-            );
+            DrawObjectUniform.Fill(in transform, in normalModel, out transformBuffer[i]);
+
         }
 
         _submitIdx += count;

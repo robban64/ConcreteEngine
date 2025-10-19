@@ -52,9 +52,8 @@ internal sealed class MaterialDrawBuffer
         EnsureCapacity(1);
         EnsureTextureSlotCapacity(slots.Length);
 
-        ref readonly var data = ref payload;
-        _buffer[_idx] = new MaterialUniformRecord(in data.MatParams);
-        _metas[_idx] = data.Meta;
+        _buffer[_idx] = new MaterialUniformRecord(in payload.MatParams);
+        _metas[_idx] = payload.Meta;
 
         var slotIdx = _slotIdx;
         for (var i = 0; i < slots.Length; i++, slotIdx++)

@@ -18,10 +18,18 @@ public readonly struct DrawCommand(MeshId meshId, MaterialId materialId, int dra
     public readonly int DrawCount = drawCount;
 }
 
+//TODO Remove if not used in the future
 [StructLayout(LayoutKind.Sequential)]
-public readonly struct DrawTransformPayload(in Matrix4x4 transform)
+public readonly struct DrawTransformPayload
 {
-    public readonly Matrix4x4 Transform = transform;
+    public readonly Matrix4x4 Transform;
+
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public DrawTransformPayload(in Matrix4x4 transform) => Transform = transform;
+    
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public static void Fill(in Matrix4x4 model, out DrawTransformPayload dst)
+        => dst = new DrawTransformPayload(in model);
 }
 
 [StructLayout(LayoutKind.Sequential)]

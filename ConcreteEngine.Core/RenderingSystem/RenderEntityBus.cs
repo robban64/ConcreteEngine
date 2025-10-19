@@ -23,6 +23,10 @@ internal sealed class RenderEntityBus
 
     private int _idx = 0;
     private DrawEntity[] _entities = new DrawEntity[DefaultCapacity];
+    
+    private int ActiveSkyCount => _world?.Sky.IsActive ?? false ? 1 : 0;
+    private int ActiveTerrainCount => _world?.Terrain.IsActive ?? false ? 1 : 0;
+    public int DrawCount => (_world?.EntityCount ?? 0) + ActiveSkyCount + ActiveTerrainCount;
 
     internal void AttachWorld(World world) => _world = world;
     internal bool IsAttached => _world is not null;
@@ -31,15 +35,15 @@ internal sealed class RenderEntityBus
     {
         if (_world is null) return;
 
-        EnsureCapacity(_world.Count);
+        EnsureCapacity(DrawCount);
 
-        if (_world.Sky.IsActive)
+        if (ActiveSkyCount > 0)
         {
             _world.Sky.GetDrawEntity(out var skyEntity);
             _entities[_idx++] = skyEntity;
         }
 
-        if (_world.Terrain.IsActive)
+        if (ActiveTerrainCount > 0)
         {
             _world.Terrain.GetDrawEntity(out var terrainEntity);
             _entities[_idx++] = terrainEntity;
@@ -51,7 +55,6 @@ internal sealed class RenderEntityBus
             ref var transform = ref query.Value2;
             EntityUtility.MakeDrawMesh(in mesh, in transform, out var drawEntity);
             _entities[_idx++] = drawEntity;
-
         }
     }
 
@@ -60,6 +63,7 @@ internal sealed class RenderEntityBus
         if (_world is null) return;
 
         var entitySpan = _entities.AsSpan(0, _idx);
+
         foreach (ref var entity in entitySpan)
         {
             var cmd = new DrawCommand(entity.MeshId, entity.MaterialId, entity.DrawCount);
@@ -69,10 +73,11 @@ internal sealed class RenderEntityBus
                 entity.Transform.Position,
                 entity.Transform.Scale,
                 entity.Transform.Rotation,
-                out var modelMat
+                out var model
             );
-            var payload = new DrawTransformPayload(in modelMat);
-            buffer.SubmitDraw(cmd, meta, in payload);
+            TransformUtils.CreateNormalMatrix(in model, out var normal);
+            buffer.SubmitDraw(cmd, meta, in model, in normal);
+
         }
     }
 

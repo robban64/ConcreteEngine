@@ -1,6 +1,7 @@
 #region
 
 using System.Numerics;
+using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
 using ConcreteEngine.Common.Numerics;
 using ConcreteEngine.Graphics.Primitives;
@@ -140,21 +141,25 @@ public readonly struct MaterialUniformRecord : IStd140Uniform
 }
 
 [StructLayout(LayoutKind.Sequential)]
-public readonly struct DrawObjectUniform(
-    in Matrix4x4 model,
-    in Matrix3 normal
-) : IStd140Uniform
+public readonly struct DrawObjectUniform : IStd140Uniform
 {
-    public readonly Matrix4x4 Model = model;
+    public readonly Matrix4x4 Model;
+    public readonly Vector4 NormalCol0;
+    public readonly Vector4 NormalCol1;
+    public readonly Vector4 NormalCol2;
 
-    public readonly Vector4 NormalCol0 = new(
-        normal.M11, normal.M21, normal.M31, 0f);
-
-    public readonly Vector4 NormalCol1 = new(
-        normal.M12, normal.M22, normal.M32, 0f);
-
-    public readonly Vector4 NormalCol2 = new(
-        normal.M13, normal.M23, normal.M33, 0f);
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public DrawObjectUniform(in Matrix4x4 model, in Matrix3 normal)
+    {
+        Model = model;
+        NormalCol0 = new Vector4(normal.M11, normal.M21, normal.M31, 0f);
+        NormalCol1 = new Vector4(normal.M12, normal.M22, normal.M32, 0f);
+        NormalCol2 = new Vector4(normal.M13, normal.M23, normal.M33, 0f);
+    }
+    
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public static void Fill(in Matrix4x4 model, in Matrix3 normal, out DrawObjectUniform dst)
+        => dst = new DrawObjectUniform(in model, in normal);
 }
 
 [StructLayout(LayoutKind.Sequential)]

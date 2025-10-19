@@ -1,6 +1,5 @@
 #region
 
-using System.Numerics;
 using System.Text.Json.Serialization;
 using ConcreteEngine.Core.Assets.Data;
 using ConcreteEngine.Graphics.Gfx.Definitions;
@@ -25,7 +24,7 @@ public sealed class ShaderManifest : IAssetCatalog
 {
     public required ShaderDescriptor[] Records { get; init; }
     public int Count => Records.Length;
-    
+
     IReadOnlyList<IAssetDescriptor> IAssetCatalog.Records => Records;
 }
 
@@ -42,7 +41,7 @@ public sealed class TextureManifest : IAssetCatalog
 {
     public required TextureDescriptor[] Records { get; init; }
     public int Count => Records.Length;
-    
+
     IReadOnlyList<IAssetDescriptor> IAssetCatalog.Records => Records;
 }
 
@@ -64,7 +63,6 @@ public sealed class CubeMapManifest : IAssetCatalog
     public required CubeMapDescriptor[] Records { get; init; }
     public int Count => Records.Length;
     IReadOnlyList<IAssetDescriptor> IAssetCatalog.Records => Records;
-
 }
 
 public sealed record CubeMapDescriptor(
@@ -84,7 +82,6 @@ public sealed class MeshManifest : IAssetCatalog
     public required MeshDescriptor[] Records { get; init; }
     public int Count => Records.Length;
     IReadOnlyList<IAssetDescriptor> IAssetCatalog.Records => Records;
-
 }
 
 public sealed record MeshDescriptor(

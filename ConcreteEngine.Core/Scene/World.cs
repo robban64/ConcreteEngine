@@ -31,7 +31,7 @@ public sealed class World : IWorld
     private int _idIdx = 1;
 
     public RenderSceneProps RenderProps { get; }
-    
+
     public WorldSkybox Sky { get; }
     public WorldTerrain Terrain { get; }
 

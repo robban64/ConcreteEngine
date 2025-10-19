@@ -6,21 +6,19 @@ using ConcreteEngine.Core.Rendering.Data;
 using ConcreteEngine.Core.Rendering.Descriptors;
 using ConcreteEngine.Core.Rendering.Passes;
 using ConcreteEngine.Graphics.Gfx;
-using ConcreteEngine.Graphics.Gfx.Contracts;
-using ConcreteEngine.Graphics.Gfx.Definitions;
 using ConcreteEngine.Graphics.Gfx.Resources;
 
 #endregion
 
 namespace ConcreteEngine.Core.Rendering.Registry;
 
-internal sealed class RenderFboRegistry 
+internal sealed class RenderFboRegistry
 {
     private readonly GfxFrameBuffers _gfxFbo;
     private readonly GfxResourceApi _gfxApi;
 
     private int _fboCount = 0;
-    
+
     private readonly RenderFbo[] _fboRegistry = new RenderFbo[RenderLimits.FboSlots];
     public ReadOnlySpan<RenderFbo> FrameBuffers => _fboRegistry.AsSpan(0, _fboCount);
 
@@ -50,7 +48,8 @@ internal sealed class RenderFboRegistry
     public void RegisterTag<TTag>() where TTag : unmanaged, IRenderPassTag
         => TagRegistry.RegisterTag<TTag>();
 
-    public void Register<TTag>(FboVariant variant, RegisterFboEntry entry, Size2D outputSize) where TTag : unmanaged, IRenderPassTag
+    public void Register<TTag>(FboVariant variant, RegisterFboEntry entry, Size2D outputSize)
+        where TTag : unmanaged, IRenderPassTag
     {
         InvalidOpThrower.ThrowIf(_fboCount >= RenderLimits.FboSlots);
         InvalidOpThrower.ThrowIfNotNull(_fboRegistry[_fboCount]);
@@ -67,7 +66,7 @@ internal sealed class RenderFboRegistry
 
         _fboRegistry[_fboCount++] = renderFbo;
     }
-    
+
     internal void RecreateSizedFrameBuffer(Size2D outputSize)
     {
         ArgumentOutOfRangeException.ThrowIfLessThan(outputSize.Width, 1, nameof(outputSize));

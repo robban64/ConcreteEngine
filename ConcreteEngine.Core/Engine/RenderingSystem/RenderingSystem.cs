@@ -1,11 +1,10 @@
-using System.Runtime.CompilerServices;
+#region
+
 using ConcreteEngine.Common.Numerics;
 using ConcreteEngine.Core.Assets;
 using ConcreteEngine.Core.Assets.Shaders;
-using ConcreteEngine.Core.Engine.Data;
 using ConcreteEngine.Core.Engine.Platform;
 using ConcreteEngine.Core.Engine.RenderingSystem.Batching;
-using ConcreteEngine.Core.Engine.RenderingSystem.Producers;
 using ConcreteEngine.Core.Rendering;
 using ConcreteEngine.Core.Rendering.Data;
 using ConcreteEngine.Core.Rendering.Definitions;
@@ -19,6 +18,8 @@ using ConcreteEngine.Graphics.Gfx.Contracts;
 using ConcreteEngine.Graphics.Gfx.Definitions;
 using ConcreteEngine.Graphics.Gfx.Resources;
 using RenderFrameInfo = ConcreteEngine.Core.Rendering.State.RenderFrameInfo;
+
+#endregion
 
 namespace ConcreteEngine.Core.Engine.RenderingSystem;
 
@@ -38,7 +39,7 @@ public sealed class RenderingSystem : IRenderingSystem
     private readonly GraphicsRuntime _graphics;
     private readonly RenderEngine _renderer;
     private readonly AssetSystem _assets;
-    
+
     private readonly RenderEntityBus _renderEntityBus;
 
     internal RenderingSystem(IEngineWindowHost window, GraphicsRuntime graphics, AssetSystem assets)
@@ -81,7 +82,6 @@ public sealed class RenderingSystem : IRenderingSystem
         _renderEntityBus.FlushEntities(_renderer.CommandBuffer);
         SubmitMaterialData();
         _renderer.FillDrawBuffers();
-        
     }
 
     internal void ExecuteFrame(BeginFrameStatus status, out GfxFrameResult frameResult)
@@ -108,8 +108,8 @@ public sealed class RenderingSystem : IRenderingSystem
     public void Shutdown()
     {
     }
-    
-    
+
+
     internal RenderSetupBuilder Initialize(Action<GfxContext, BatcherRegistry> batcherSetup)
     {
         batcherSetup(_graphics.Gfx, Batchers);
@@ -119,7 +119,7 @@ public sealed class RenderingSystem : IRenderingSystem
     internal void SetupRenderer(RenderSetupBuilder builder)
     {
         var shaderCount = _assets.Store.GetMetaSnapshot<Shader>().Count;
-        
+
         builder.RegisterShader(shaderCount, ExtractShaderIds).RegisterCoreShaders(GetCoreShaders);
 
         builder.RegisterShader(shaderCount,
@@ -151,7 +151,6 @@ public sealed class RenderingSystem : IRenderingSystem
 
         builder.RegisterFbo<PostPassTag>(FboVariant.Secondary,
             new RegisterFboEntry().AttachColorTexture(GfxFboColorTextureDesc.Default()));
-
 
 
         builder.SetupPassPipeline(RenderPipelineVersion.Default3D);

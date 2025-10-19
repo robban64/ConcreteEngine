@@ -1,5 +1,9 @@
+#region
+
 using ConcreteEngine.Core.Rendering.Definitions;
 using ConcreteEngine.Graphics.Gfx.Definitions;
+
+#endregion
 
 namespace ConcreteEngine.Core.Assets.Data;
 
@@ -24,13 +28,13 @@ public sealed class MaterialTextureSlots
         _slots = slots.ToArray();
         Refresh();
     }
-    
+
     public ReadOnlySpan<AssetTextureSlot> Slots => _slots;
 
     private void Refresh()
     {
         IsCubeMap = false;
-        HasNormalMap  = false;
+        HasNormalMap = false;
         HasShadowMap = false;
 
         foreach (var slot in _slots)

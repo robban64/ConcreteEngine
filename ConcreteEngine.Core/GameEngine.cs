@@ -1,6 +1,5 @@
 #region
 
-using ConcreteEngine.Common.Numerics;
 using ConcreteEngine.Common.Patterns;
 using ConcreteEngine.Core.Assets;
 using ConcreteEngine.Core.Engine;
@@ -9,9 +8,7 @@ using ConcreteEngine.Core.Engine.Data;
 using ConcreteEngine.Core.Engine.Platform;
 using ConcreteEngine.Core.Engine.RenderingSystem;
 using ConcreteEngine.Core.Engine.RenderingSystem.Batching;
-using ConcreteEngine.Core.Engine.RenderingSystem.Producers;
 using ConcreteEngine.Core.Engine.Time;
-using ConcreteEngine.Core.Features;
 using ConcreteEngine.Core.Modules;
 using ConcreteEngine.Core.Rendering.State;
 using ConcreteEngine.Core.Scene;
@@ -35,7 +32,6 @@ public sealed class GameEngine : IDisposable
 
 
     private readonly ModuleManager _modules;
-    private readonly FeatureManager _features;
     private readonly SceneManager _sceneManager;
 
     private readonly UpdateFrameInfo _updateInfo = new();
@@ -62,7 +58,6 @@ public sealed class GameEngine : IDisposable
         _sceneManager = new SceneManager(sceneFactories);
 
         _modules = new ModuleManager();
-        _features = new FeatureManager();
 
         // time
         _timeHub = new EngineTimeHub(GameTickUpdate, FpsTickUpdate, OnGpuTickUpload, OnGpuTickDispose);
@@ -94,11 +89,8 @@ public sealed class GameEngine : IDisposable
 
     private void RegisterRenderer()
     {
-        var builder = _renderingSystem.Initialize((gfx, batchers) =>
-        {
-            batchers.Register(new TerrainBatcher(gfx));
-        });
-        
+        var builder = _renderingSystem.Initialize((gfx, batchers) => { batchers.Register(new TerrainBatcher(gfx)); });
+
         _renderingSystem.SetupRenderer(builder);
     }
 
@@ -131,7 +123,7 @@ public sealed class GameEngine : IDisposable
         }
 
         scene.BeforeRender(out var viewSnapshot);
-        
+
         _renderingSystem.PreRender(in frameInfo, in runtimeParams, in viewSnapshot);
         _renderingSystem.FillDrawBuffers(frameInfo.Alpha);
         _renderingSystem.ExecuteFrame(beginStatus, out var gfxFrameResult);
@@ -216,12 +208,11 @@ public sealed class GameEngine : IDisposable
         if (!_sceneManager.HasPendingSwitch)
             return;
 
-        var sceneContext = new GameSceneContext(_coreSystems) { Features = _features, Modules = _modules };
-        var builder = new GameSceneConfigBuilder(_features, _modules);
+        var sceneContext = new GameSceneContext(_coreSystems) { Modules = _modules };
+        var builder = new GameSceneConfigBuilder(_modules);
 
         _sceneManager.ApplyPendingScene(sceneContext, builder, _renderingSystem, AfterBuild);
 
-        _features.Load(new GameFeatureContext(sceneContext));
         _modules.Load(new GameModuleContext(sceneContext));
         return;
 

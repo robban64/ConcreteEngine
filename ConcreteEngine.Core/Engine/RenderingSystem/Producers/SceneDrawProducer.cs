@@ -1,12 +1,5 @@
 #region
 
-using System.Numerics;
-using ConcreteEngine.Core.Engine.Data;
-using ConcreteEngine.Core.Rendering.Data;
-using ConcreteEngine.Core.Rendering.Definitions;
-using ConcreteEngine.Core.Rendering.Draw;
-using ConcreteEngine.Core.Rendering.State;
-
 #endregion
 
 namespace ConcreteEngine.Core.Engine.RenderingSystem.Producers;

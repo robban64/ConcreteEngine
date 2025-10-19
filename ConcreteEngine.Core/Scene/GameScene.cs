@@ -4,7 +4,6 @@ using ConcreteEngine.Common.Numerics;
 using ConcreteEngine.Core.Engine.Configuration;
 using ConcreteEngine.Core.Engine.Data;
 using ConcreteEngine.Core.Engine.RenderingSystem;
-using ConcreteEngine.Core.Rendering;
 using ConcreteEngine.Core.Rendering.State;
 
 #endregion
@@ -29,14 +28,12 @@ public abstract class GameScene
     internal void Update(in UpdateTickInfo frameCtx, Size2D output)
     {
         _camera.Viewport = output;
-        Context.Features.Update(in frameCtx);
         Context.Modules.Update(in frameCtx);
     }
 
     internal void UpdateTick(int tick)
     {
         Context.Modules.GameTickUpdate(tick);
-        Context.Features.GameTickUpdate(tick);
         World.Cleanup();
     }
 

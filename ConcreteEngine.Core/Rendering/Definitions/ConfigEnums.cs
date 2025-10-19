@@ -1,6 +1,5 @@
 namespace ConcreteEngine.Core.Rendering.Definitions;
 
-
 public enum RenderPipelineVersion
 {
     None,

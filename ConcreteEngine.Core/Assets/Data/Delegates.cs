@@ -1,4 +1,8 @@
+#region
+
 using ConcreteEngine.Core.Assets.Descriptors;
+
+#endregion
 
 namespace ConcreteEngine.Core.Assets.Data;
 

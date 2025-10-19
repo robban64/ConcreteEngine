@@ -1,3 +1,5 @@
+#region
+
 using System.Diagnostics;
 using System.Diagnostics.CodeAnalysis;
 using System.Runtime.CompilerServices;
@@ -6,6 +8,8 @@ using ConcreteEngine.Common.Collections;
 using ConcreteEngine.Common.Numerics;
 using ConcreteEngine.Core.Rendering.Data;
 using static ConcreteEngine.Core.Rendering.Data.RenderLimits;
+
+#endregion
 
 namespace ConcreteEngine.Core.Rendering.Draw;
 
@@ -79,6 +83,7 @@ internal sealed class MaterialDrawBuffer
         _idx = 0;
         _hasDrained = false;
     }
+
     private void EnsureCapacity(int amount)
     {
         if (_metas.Length >= amount) return;

@@ -5,7 +5,6 @@ using System.Runtime.CompilerServices;
 using ConcreteEngine.Common;
 using ConcreteEngine.Common.Numerics;
 using ConcreteEngine.Core.Engine.RenderingSystem.Batching;
-using ConcreteEngine.Core.Engine.RenderingSystem.Producers;
 using ConcreteEngine.Core.Rendering.Data;
 using ConcreteEngine.Core.Rendering.Definitions;
 using ConcreteEngine.Core.Rendering.Draw;
@@ -43,10 +42,10 @@ public sealed class RenderEngine
 
     public DrawCommandBuffer CommandBuffer => _drawPipeline.CommandBuffer;
 
-    internal RenderEngine(GraphicsRuntime graphics, BatcherRegistry batches,  RenderSceneSnapshot sceneSnapshot)
+    internal RenderEngine(GraphicsRuntime graphics, BatcherRegistry batches, RenderSceneSnapshot sceneSnapshot)
     {
         _graphics = graphics;
-        
+
         _renderView = new RenderView();
 
         _renderRegistry = new RenderRegistry(graphics.Gfx);

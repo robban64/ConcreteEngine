@@ -37,18 +37,19 @@ public sealed class Demo3DScene : GameScene
 
         // Skybox
         var skyboxMaterial = materialStore.CreateMaterial("SkyboxMat","SkyboxMat1");
-        rb.SetSkybox(skyboxMaterial.Id, Quaternion.Identity);
         Context.World.Sky.SetSkyMaterial(skyboxMaterial.Id);
         
         // Terrain
-        var terrainMat = assets.MaterialStore.CreateMaterial("TerrainMat", "TerrainMat1");
         var heightmap = assets.Store.GetByName<Texture2D>("Heightmap");
+        var terrainMat = assets.MaterialStore.CreateMaterial("TerrainMat", "TerrainMat1");
         terrainMat.State.UvRepeat = 28;
         terrainMat.State.Shininess = 10;
         terrainMat.State.Specular = 0.04f;
+        
         Context.World.Terrain.CreateTerrainMesh(heightmap);
         Context.World.Terrain.SetMaterial(terrainMat.Id);
 
+        // Entities
         var boatMat = materialStore.CreateMaterial("BoatMat", "BoatMat1");
         var boatMesh = store.GetByName<Mesh>("Boat");
         boatMat.State.Specular = 0;

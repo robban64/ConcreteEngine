@@ -1,10 +1,8 @@
 #region
 
 using System.Diagnostics;
-using ConcreteEngine.Common.Numerics;
 using ConcreteEngine.Core.Assets.Data;
 using ConcreteEngine.Core.Assets.Descriptors;
-using ConcreteEngine.Core.Assets.Internal;
 using ConcreteEngine.Core.Assets.Shaders;
 using ConcreteEngine.Core.Assets.Textures;
 using ConcreteEngine.Core.Rendering.Definitions;
@@ -25,7 +23,7 @@ internal sealed class MaterialLoader
             Debug.Assert(false);
             return null;
         }
-        
+
         AssetAssembleDel<MaterialTemplate, MaterialDescriptor> factory = CreateTemplate;
 
 
@@ -61,7 +59,7 @@ internal sealed class MaterialLoader
 
             if (slotAsset is not { } slotAssetId)
                 throw new InvalidOperationException($"Slot asset doesn't exist {slot}");
-            
+
             slotInfo[i] = new AssetTextureSlot(slotAssetId, slot.SlotKind, slot.TextureKind);
         }
 

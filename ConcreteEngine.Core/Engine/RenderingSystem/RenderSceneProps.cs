@@ -2,7 +2,6 @@
 
 using System.Numerics;
 using ConcreteEngine.Common.Numerics;
-using ConcreteEngine.Core.Assets.Materials;
 using ConcreteEngine.Core.Rendering.Data;
 
 #endregion
@@ -17,7 +16,6 @@ public sealed class RenderSceneProps
 
     private AmbientParams _ambient = MakeDefaultAmbient();
     private FogParams _fog = MakeDefaultFog();
-    private SkyboxParams _skybox;
     private DirLightParams _dirLight = MakeDefaultDirLight();
     private ShadowParams _shadow;
     private PostEffectParams _postEffect = MakeDefaultPostEffect();
@@ -25,12 +23,6 @@ public sealed class RenderSceneProps
     public long Version { get; private set; } = 0;
 
     internal RenderSceneSnapshot Snapshot => _snapshot;
-
-    public void SetSkybox(MaterialId materialId, Quaternion rotation, float intensity = 1f)
-    {
-        _skybox = new SkyboxParams(materialId, rotation, intensity);
-        _dirty = true;
-    }
 
     public void SetDirectionalLight(Vector3 direction, Color4 diffuse, float intensity, float specular)
     {
@@ -94,7 +86,6 @@ public sealed class RenderSceneProps
             version: Version,
             ambient: in _ambient,
             fog: in _fog,
-            skybox: in _skybox,
             dirLight: in _dirLight,
             shadows: in _shadow,
             postEffect: in _postEffect);

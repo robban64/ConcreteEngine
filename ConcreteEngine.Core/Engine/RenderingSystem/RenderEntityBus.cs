@@ -1,18 +1,18 @@
+#region
+
 using System.Diagnostics;
 using System.Diagnostics.CodeAnalysis;
 using System.Runtime.CompilerServices;
-using System.Runtime.InteropServices;
 using ConcreteEngine.Common.Collections;
 using ConcreteEngine.Common.Numerics;
 using ConcreteEngine.Core.Rendering.Data;
-using ConcreteEngine.Core.Rendering.Definitions;
 using ConcreteEngine.Core.Rendering.Draw;
 using ConcreteEngine.Core.Scene;
 using ConcreteEngine.Core.Scene.Entities;
-using ConcreteEngine.Graphics.Gfx.Resources;
+
+#endregion
 
 namespace ConcreteEngine.Core.Engine.RenderingSystem;
-
 
 internal sealed class RenderEntityBus
 {
@@ -23,14 +23,14 @@ internal sealed class RenderEntityBus
 
     private int _idx = 0;
     private DrawEntity[] _entities = new DrawEntity[DefaultCapacity];
-    
+
     internal void AttachWorld(World world) => _world = world;
     internal bool IsAttached => _world is not null;
-    
+
     public void CollectEntities()
     {
-        if(_world is null) return;
-        
+        if (_world is null) return;
+
         EnsureCapacity(_world.Count);
 
         if (_world.Sky.IsActive)
@@ -38,7 +38,7 @@ internal sealed class RenderEntityBus
             _world.Sky.GetDrawEntity(out var skyEntity);
             _entities[_idx++] = skyEntity;
         }
-        
+
         if (_world.Terrain.IsActive)
         {
             _world.Terrain.GetDrawEntity(out var terrainEntity);
@@ -56,14 +56,14 @@ internal sealed class RenderEntityBus
 
     public void FlushEntities(DrawCommandBuffer buffer)
     {
-        if(_world is null) return;
+        if (_world is null) return;
 
         var entitySpan = _entities.AsSpan(0, _idx);
         foreach (ref var entity in entitySpan)
         {
             var cmd = new DrawCommand(entity.MeshId, entity.MaterialId, entity.DrawCount);
             var meta = new DrawCommandMeta(entity.CommandId, entity.Queue, entity.PassPassMask, entity.DepthKey);
-            
+
             TransformUtils.CreateModelMatrix(
                 entity.Transform.Position,
                 entity.Transform.Scale,

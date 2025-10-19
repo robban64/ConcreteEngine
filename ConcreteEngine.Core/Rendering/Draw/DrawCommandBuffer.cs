@@ -7,7 +7,6 @@ using System.Runtime.CompilerServices;
 using ConcreteEngine.Common.Collections;
 using ConcreteEngine.Common.Numerics;
 using ConcreteEngine.Core.Rendering.Data;
-using ConcreteEngine.Core.Rendering.Definitions;
 using ConcreteEngine.Core.Rendering.Passes;
 using static ConcreteEngine.Core.Rendering.Data.RenderLimits;
 
@@ -25,7 +24,7 @@ public sealed class DrawCommandBuffer
     private DrawCommandRef[] _indexBuffer;
     private DrawCommandTicket[] _drawTickets;
     private readonly DrawPassRange[] _passRanges;
-    
+
     private int _submitIdx = 0;
 
     public int Count => _submitIdx;
@@ -54,7 +53,7 @@ public sealed class DrawCommandBuffer
         _commandBuffer[_submitIdx] = cmd;
         _metaBuffer[_submitIdx] = meta;
         _indexBuffer[_submitIdx] = new DrawCommandRef(meta, _submitIdx);
-        
+
         TransformUtils.CreateNormalMatrix(in transform.Transform, out var normalModel);
         _transformBuffer[_submitIdx] = new DrawObjectUniform(
             model: in transform.Transform,
@@ -87,7 +86,7 @@ public sealed class DrawCommandBuffer
         for (var i = 0; i < count; i++, idx++)
         {
             indices[i] = new DrawCommandRef(drawMeta[i], idx);
-            
+
             ref readonly var transform = ref drawTransforms[i].Transform;
             TransformUtils.CreateNormalMatrix(in transform, out var normalModel);
             transformBuffer[i] = new DrawObjectUniform(
@@ -95,7 +94,7 @@ public sealed class DrawCommandBuffer
                 normal: in normalModel
             );
         }
-        
+
         _submitIdx += count;
     }
 
@@ -160,12 +159,12 @@ public sealed class DrawCommandBuffer
         }
     }
 
-    public ReadOnlySpan< DrawObjectUniform> DrainTransformQueue()
+    public ReadOnlySpan<DrawObjectUniform> DrainTransformQueue()
     {
-        if(_transformBuffer.Length == 0) return ReadOnlySpan<DrawObjectUniform>.Empty;
+        if (_transformBuffer.Length == 0) return ReadOnlySpan<DrawObjectUniform>.Empty;
         return _transformBuffer.AsSpan(0, _submitIdx);
     }
-    
+
 
     internal void DispatchDrawPass(PassId passId, DrawCommandProcessor cmd)
     {
@@ -210,5 +209,6 @@ public sealed class DrawCommandBuffer
 
 
     [MethodImpl(MethodImplOptions.NoInlining), DoesNotReturn, StackTraceHidden]
-    private static void ThrowMaxCapacityExceeded() => throw new OutOfMemoryException("Command Buffer exceeded max limit");
+    private static void ThrowMaxCapacityExceeded() =>
+        throw new OutOfMemoryException("Command Buffer exceeded max limit");
 }

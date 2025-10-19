@@ -3,7 +3,6 @@
 using System.Diagnostics;
 using ConcreteEngine.Common.Numerics;
 using ConcreteEngine.Core.Rendering.Definitions;
-using ConcreteEngine.Core.Rendering.Draw;
 using ConcreteEngine.Core.Rendering.Registry;
 
 #endregion

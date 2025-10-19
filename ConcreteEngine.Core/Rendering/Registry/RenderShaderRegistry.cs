@@ -2,7 +2,6 @@
 
 using ConcreteEngine.Common;
 using ConcreteEngine.Core.Rendering.Data;
-using ConcreteEngine.Core.Rendering.Definitions;
 using ConcreteEngine.Graphics.Gfx;
 using ConcreteEngine.Graphics.Gfx.Resources;
 
@@ -53,7 +52,7 @@ internal sealed class RenderShaderRegistry : IRenderShaderRegistry
             _shaderRegistry[shaderId - 1] = new RenderShader(shaderId, meta);
         }
     }
-    
+
     public void RegisterCollection(IReadOnlyList<ShaderId> shaders)
     {
         InvalidOpThrower.ThrowIf(_shaderCount > 0, nameof(_shaderCount));

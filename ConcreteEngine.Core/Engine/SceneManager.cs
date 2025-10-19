@@ -1,7 +1,6 @@
 #region
 
 using ConcreteEngine.Core.Engine.Configuration;
-using ConcreteEngine.Core.Engine.RenderingSystem;
 using ConcreteEngine.Core.Modules;
 using ConcreteEngine.Core.Rendering;
 using ConcreteEngine.Core.Rendering.Descriptors;

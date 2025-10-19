@@ -3,7 +3,6 @@
 using ConcreteEngine.Common.Collections;
 using ConcreteEngine.Core.Assets;
 using ConcreteEngine.Core.Engine.RenderingSystem;
-using ConcreteEngine.Core.Rendering;
 
 #endregion
 

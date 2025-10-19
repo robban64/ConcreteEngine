@@ -1,10 +1,12 @@
+#region
+
 using System.Numerics;
-using ConcreteEngine.Core.Assets.Data;
-using ConcreteEngine.Core.Assets.Textures;
 using ConcreteEngine.Core.Rendering.Data;
 using ConcreteEngine.Core.Scene.Entities;
 using ConcreteEngine.Graphics.Gfx.Resources;
 using ConcreteEngine.Graphics.Utils;
+
+#endregion
 
 namespace ConcreteEngine.Core.Scene;
 
@@ -22,9 +24,9 @@ public sealed class WorldSkybox
         _meshId = PrimitiveMeshes.SkyboxCubeMesh;
     }
 
-    public void SetMesh(MeshId meshId) =>  _meshId = meshId;
+    public void SetMesh(MeshId meshId) => _meshId = meshId;
     public void SetSkyMaterial(MaterialId materialId) => _materialId = materialId;
-    
+
     internal void GetDrawEntity(out DrawEntity drawEntity)
     {
         var mesh = new MeshComponent(_meshId, _materialId, 0);

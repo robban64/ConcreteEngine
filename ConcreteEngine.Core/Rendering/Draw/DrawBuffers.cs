@@ -42,7 +42,7 @@ internal sealed class DrawBuffers
         _gfxCmd = ctxPayload.Gfx.Commands;
         _sceneSnapshot = ctxPayload.Snapshot;
         var registry = ctxPayload.Registry;
-        
+
         _drawUbo = registry.GetRenderUbo<DrawObjectUniform>();
         _materialUbo = registry.GetRenderUbo<MaterialUniformRecord>();
 
@@ -62,6 +62,7 @@ internal sealed class DrawBuffers
         _drawUbo.ResetCursor();
         _materialUbo.ResetCursor();
     }
+
     public void EnsureDrawBuffers(nint drawCapacity, nint materialCapacity)
     {
         if (drawCapacity > _drawUbo.Capacity)

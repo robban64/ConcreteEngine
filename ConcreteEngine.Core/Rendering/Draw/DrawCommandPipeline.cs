@@ -1,14 +1,8 @@
 #region
 
-using ConcreteEngine.Core.Engine.Data;
-using ConcreteEngine.Core.Engine.RenderingSystem.Producers;
 using ConcreteEngine.Core.Rendering.Data;
 using ConcreteEngine.Core.Rendering.Passes;
-using ConcreteEngine.Core.Rendering.Registry;
-using ConcreteEngine.Core.Rendering.State;
-using ConcreteEngine.Graphics.Gfx;
 using ConcreteEngine.Graphics.Gfx.Utility;
-using RenderFrameInfo = ConcreteEngine.Core.Rendering.State.RenderFrameInfo;
 
 #endregion
 

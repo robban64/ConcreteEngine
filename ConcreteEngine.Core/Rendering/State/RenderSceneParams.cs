@@ -1,19 +1,10 @@
 #region
 
 using System.Numerics;
-using ConcreteEngine.Core.Assets.Materials;
-using ConcreteEngine.Core.Rendering.Data;
 
 #endregion
 
 namespace ConcreteEngine.Core.Rendering.State;
-
-public readonly struct SkyboxParams(MaterialId materialId, Quaternion rotation, float intensity)
-{
-    public MaterialId MaterialId { get; init; } = materialId;
-    public Quaternion Rotation { get; init; } = rotation;
-    public float Intensity { get; init; } = intensity;
-}
 
 public readonly struct DirLightParams(Vector3 direction, Vector3 diffuse, float intensity, float specular)
 {

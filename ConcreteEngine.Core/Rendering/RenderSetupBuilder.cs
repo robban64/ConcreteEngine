@@ -1,15 +1,14 @@
+#region
+
 using ConcreteEngine.Common;
 using ConcreteEngine.Common.Numerics;
 using ConcreteEngine.Core.Rendering.Data;
 using ConcreteEngine.Core.Rendering.Definitions;
 using ConcreteEngine.Core.Rendering.Descriptors;
-using ConcreteEngine.Core.Rendering.Draw;
 using ConcreteEngine.Core.Rendering.Passes;
-using ConcreteEngine.Core.Rendering.Registry;
-using ConcreteEngine.Core.Rendering.State;
-using ConcreteEngine.Graphics.Gfx;
 using ConcreteEngine.Graphics.Gfx.Resources;
-using ConcreteEngine.Graphics.Primitives;
+
+#endregion
 
 namespace ConcreteEngine.Core.Rendering;
 
@@ -42,8 +41,8 @@ public sealed class RenderSetupBuilder
 
         return Ctx.Compile();
     }
-    
-    
+
+
     public RenderSetupBuilder RegisterFbo<TTag>(FboVariant variant, RegisterFboEntry entry)
         where TTag : unmanaged, IRenderPassTag
     {
@@ -53,7 +52,7 @@ public sealed class RenderSetupBuilder
         Ctx.FboSetup.Add((variant, entry, Action));
         return this;
 
-        void Action(FboVariant v, RegisterFboEntry e) 
+        void Action(FboVariant v, RegisterFboEntry e)
             => EngineCtx.Registry.FboRegistry.Register<TTag>(v, e, Ctx.OutputSize);
     }
 

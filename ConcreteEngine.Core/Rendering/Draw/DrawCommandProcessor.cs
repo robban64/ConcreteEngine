@@ -1,13 +1,7 @@
 #region
 
-using System.Numerics;
-using System.Runtime.CompilerServices;
-using ConcreteEngine.Common.Numerics;
-using ConcreteEngine.Core.Assets.Materials;
 using ConcreteEngine.Core.Rendering.Data;
-using ConcreteEngine.Core.Rendering.Definitions;
 using ConcreteEngine.Core.Rendering.Registry;
-using ConcreteEngine.Core.Rendering.State;
 using ConcreteEngine.Graphics.Gfx;
 using ConcreteEngine.Graphics.Gfx.Resources;
 
@@ -56,9 +50,9 @@ internal sealed class DrawCommandProcessor
 
     public void DrawMesh(DrawCommand cmd, int submitIndex)
     {
-        if(_ctx.PrevMaterial != cmd.MaterialId)
+        if (_ctx.PrevMaterial != cmd.MaterialId)
             _buffers.ApplyDrawMaterial(cmd.MaterialId, _applyShader);
-        
+
         _buffers.BindDrawObject(submitIndex);
         _gfxCmd.BindMesh(cmd.MeshId);
         _gfxCmd.DrawBoundMesh(cmd.MeshId, cmd.DrawCount);

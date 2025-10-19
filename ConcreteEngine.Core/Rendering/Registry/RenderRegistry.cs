@@ -41,7 +41,6 @@ internal sealed class RenderRegistry
         UboRegistry.BeginRegistration();
         FboRegistry.BeginRegistration();
         //FboRegistry.RegisterTemp();
-
     }
 
     public void FinishRegistration()

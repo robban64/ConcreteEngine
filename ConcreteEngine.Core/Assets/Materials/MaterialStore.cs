@@ -1,14 +1,11 @@
 #region
 
-using System.Runtime.CompilerServices;
 using ConcreteEngine.Common;
 using ConcreteEngine.Common.Collections;
 using ConcreteEngine.Core.Assets.Data;
-using ConcreteEngine.Core.Assets.Shaders;
 using ConcreteEngine.Core.Assets.Textures;
 using ConcreteEngine.Core.Rendering.Data;
 using ConcreteEngine.Core.Rendering.Definitions;
-using ConcreteEngine.Core.Rendering.Registry;
 using ConcreteEngine.Graphics.Gfx.Definitions;
 using ConcreteEngine.Graphics.Gfx.Resources;
 
@@ -101,7 +98,7 @@ public sealed class MaterialStore : IMaterialStore
         var snapshot = material.State.Snapshot();
         data = new DrawMaterialPayload(in meta, in snapshot);
     }
-    
+
     public int FillTextureInfo(Material material, Span<TextureSlotInfo> span)
     {
         var textureSlots = material.TextureSlots.Slots;
@@ -111,6 +108,7 @@ public sealed class MaterialStore : IMaterialStore
             var textureId = ResolveTextureId(slot);
             span[i] = new TextureSlotInfo(textureId, slot.SlotKind, slot.TextureKind);
         }
+
         return textureSlots.Length;
     }
 

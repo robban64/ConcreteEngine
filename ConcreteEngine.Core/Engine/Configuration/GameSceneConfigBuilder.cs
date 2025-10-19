@@ -1,6 +1,5 @@
 #region
 
-using ConcreteEngine.Core.Features;
 using ConcreteEngine.Core.Modules;
 using ConcreteEngine.Core.Rendering;
 using ConcreteEngine.Core.Rendering.Descriptors;
@@ -20,7 +19,7 @@ public interface IGameSceneRenderBuilder
     void RegisterRender3D(RenderTargetDescriptor desc);
 }
 
-public sealed class GameSceneConfigBuilder(FeatureManager features, ModuleManager modules)
+public sealed class GameSceneConfigBuilder(ModuleManager modules)
     : IGameSceneRenderBuilder, IGameSceneModuleBuilder
 {
     private readonly List<Func<GameModule>> _modules = new();

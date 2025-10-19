@@ -24,7 +24,7 @@ internal sealed class DrawStateContext
 {
     public TextureId DepthTexture { get; private set; }
     public PassStateMode PassState { get; private set; }
-    public MaterialId PrevMaterial { get; private set; } = new (-1);
+    public MaterialId PrevMaterial { get; private set; } = new(-1);
 
     public readonly RenderCoreShaders CoreShaders;
 
@@ -34,10 +34,10 @@ internal sealed class DrawStateContext
         DepthTexture = depthFbo.Attachments.DepthTextureId;
         CoreShaders = registry.ShaderRegistry.CoreShaders;
     }
-    
+
     public bool IsMain => PassState == PassStateMode.Main;
     public bool IsDepth => PassState == PassStateMode.Depth;
-    
+
     public void SetDepthMode() => PassState = PassStateMode.Depth;
 
     public void ResetPassMode() => PassState = PassStateMode.Main;
@@ -54,7 +54,8 @@ internal sealed class DrawStateContext
         if (material == PrevMaterial) return false;
         PrevMaterial = material;
         return true;
-    } 
+    }
+
     public ShaderId ResolveShaderPolicy(ShaderId cmdShader) => PassState switch
     {
         PassStateMode.Main => cmdShader,
@@ -62,6 +63,4 @@ internal sealed class DrawStateContext
         PassStateMode.Depth => CoreShaders.DepthShader,
         _ => throw new ArgumentOutOfRangeException()
     };
-    
-
 }

@@ -11,7 +11,7 @@ using ConcreteEngine.Graphics.Primitives;
 
 namespace ConcreteEngine.Core.Rendering.Registry;
 
-internal sealed class RenderUboRegistry 
+internal sealed class RenderUboRegistry
 {
     private readonly RenderUbo[] _uboRegistry = new RenderUbo[RenderLimits.UboSlots];
     private int _uboCount = 0;

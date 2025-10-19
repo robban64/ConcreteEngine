@@ -5,7 +5,6 @@
 #region
 
 using ConcreteEngine.Core.Engine;
-using ConcreteEngine.Core.Features;
 using ConcreteEngine.Core.Modules;
 using ConcreteEngine.Core.Scene;
 
@@ -16,7 +15,6 @@ namespace ConcreteEngine.Core;
 public sealed class GameSceneContext
 {
     private readonly IEngineSystemManager _systems;
-    public required FeatureManager Features { get; init; }
     public ModuleManager Modules { get; internal set; }
     public IWorld World { get; internal set; } = null!;
     public Camera3D Camera { get; internal set; } = null!;
@@ -29,28 +27,10 @@ public sealed class GameSceneContext
     }
 }
 
-public sealed class GameFeatureContext
-{
-    private readonly GameSceneContext _scene;
-
-    public FeatureManager Features => _scene.Features;
-    public ModuleManager Modules => _scene.Modules;
-    public IWorld World => _scene.World;
-    public Camera3D Camera => _scene.Camera;
-
-    public T GetSystem<T>() where T : IGameEngineSystem => _scene.GetSystem<T>();
-
-    internal GameFeatureContext(GameSceneContext scene)
-    {
-        _scene = scene;
-    }
-}
-
 public sealed class GameModuleContext
 {
     private readonly GameSceneContext _scene;
 
-    public FeatureManager Features => _scene.Features;
     public ModuleManager Modules => _scene.Modules;
     public Camera3D Camera => _scene.Camera;
 

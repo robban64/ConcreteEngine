@@ -1,7 +1,7 @@
 #region
 
 using ConcreteEngine.Core.Engine.Data;
-using ConcreteEngine.Core.Rendering.Batching;
+using ConcreteEngine.Core.Engine.RenderingSystem.Batching;
 using ConcreteEngine.Core.Rendering.Draw;
 using ConcreteEngine.Core.Rendering.State;
 using ConcreteEngine.Core.Scene;
@@ -9,7 +9,7 @@ using ConcreteEngine.Graphics.Gfx;
 
 #endregion
 
-namespace ConcreteEngine.Core.Rendering.Commands;
+namespace ConcreteEngine.Core.Rendering.Producers;
 
 public sealed class CommandProducerContext
 {

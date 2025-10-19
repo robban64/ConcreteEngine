@@ -5,12 +5,12 @@ using ConcreteEngine.Common;
 using ConcreteEngine.Common.Numerics;
 using ConcreteEngine.Core.Engine;
 using ConcreteEngine.Core.Engine.Data;
-using ConcreteEngine.Core.Rendering.Batching;
-using ConcreteEngine.Core.Rendering.Commands;
+using ConcreteEngine.Core.Engine.RenderingSystem.Batching;
 using ConcreteEngine.Core.Rendering.Data;
 using ConcreteEngine.Core.Rendering.Definitions;
 using ConcreteEngine.Core.Rendering.Draw;
 using ConcreteEngine.Core.Rendering.Passes;
+using ConcreteEngine.Core.Rendering.Producers;
 using ConcreteEngine.Core.Rendering.Registry;
 using ConcreteEngine.Core.Rendering.State;
 using ConcreteEngine.Graphics;
@@ -39,45 +39,44 @@ public sealed class RenderSystem : IRenderSystem
     private readonly GraphicsRuntime _graphics;
     private readonly GfxContext _gfx;
 
-
     private readonly RenderRegistry _renderRegistry;
     private readonly DrawCommandPipeline _drawPipeline;
     private readonly RenderPassPipeline _passPipeline;
 
-    private readonly BatcherRegistry _batches;
 
     private readonly RenderView _renderView;
 
     public RenderSceneProps RenderProps { get; }
     private RenderSystemContext SystemContext { get; }
+    private readonly RenderStateContext _stateContext;
 
     public bool Initialized { get; private set; } = false;
 
-    internal RenderSystem(GraphicsRuntime graphics)
+    internal RenderSystem(GraphicsRuntime graphics, BatcherRegistry batches, DrawCommandCollector collector)
     {
         _graphics = graphics;
         _gfx = graphics.Gfx;
 
-        _batches = new BatcherRegistry();
 
         _renderView = new RenderView();
 
         RenderProps = new RenderSceneProps();
-        RenderProps.Commit();
+        var snapshot = RenderProps.Commit();
 
         _renderRegistry = new RenderRegistry(_gfx);
         _drawPipeline = new DrawCommandPipeline();
         _passPipeline = new RenderPassPipeline();
 
+        _stateContext = new RenderStateContext { View = _renderView, Snapshot = snapshot };
+
         SystemContext = new RenderSystemContext
         {
-            Batchers = _batches,
+            Collector = collector,
+            Batchers = batches,
             CommandPipeline = _drawPipeline,
             Gfx = _gfx,
             Registry = _renderRegistry,
             PassPipeline = _passPipeline,
-            Snapshot = RenderProps.Snapshot,
-            View = _renderView
         };
     }
 
@@ -104,10 +103,7 @@ public sealed class RenderSystem : IRenderSystem
         _renderRegistry.ShaderRegistry.RegisterCoreShader(in coreShaders);
         _renderRegistry.FinishRegistration();
 
-        // Batcher 
-        plan.BatcherSetup(_gfx, _batches);
-
-        _drawPipeline.Initialize(SystemContext, plan.CollectorSetup);
+        _drawPipeline.Initialize(SystemContext, _stateContext);
         _passPipeline.Initialize(SystemContext);
 
         PassPipeline3D.RegisterPassPipeline(_passPipeline, in _renderRegistry.ShaderRegistry.CoreShaders);
@@ -136,7 +132,7 @@ public sealed class RenderSystem : IRenderSystem
     {
         Debug.Assert(Initialized);
 
-        SystemContext.SetCurrentFrameInfo(in frameInfo, in runtimeParams);
+        _stateContext.SetCurrentFrameInfo(in frameInfo, in runtimeParams);
 
         var snapshot = RenderProps.Commit();
         _renderView.PrepareFrame(in viewSnapshot);
@@ -152,7 +148,7 @@ public sealed class RenderSystem : IRenderSystem
 
     internal void StartFrame(BeginFrameStatus status)
     {
-        ref readonly var frameInfo = ref SystemContext.CurrentFrameInfo;
+        ref readonly var frameInfo = ref _stateContext.CurrentFrameInfo;
         _graphics.BeginFrame(frameInfo.ToGfxFrameInfo());
 
         if (status == BeginFrameStatus.Resize)

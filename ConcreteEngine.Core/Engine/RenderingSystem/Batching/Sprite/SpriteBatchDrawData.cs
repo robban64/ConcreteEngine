@@ -6,7 +6,7 @@ using ConcreteEngine.Graphics.Gfx.Resources;
 
 #endregion
 
-namespace ConcreteEngine.Core.Rendering.Batching;
+namespace ConcreteEngine.Core.Engine.RenderingSystem.Batching;
 
 public readonly record struct SpriteBatchDrawItem(
     Vector2 Position,

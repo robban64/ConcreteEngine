@@ -6,7 +6,7 @@ using ConcreteEngine.Graphics.Primitives;
 
 #endregion
 
-namespace ConcreteEngine.Core.Rendering.Batching;
+namespace ConcreteEngine.Core.Engine.RenderingSystem.Batching;
 
 public sealed class ParticleBatcher : RenderBatcher<TerrainBatchResult>
 {

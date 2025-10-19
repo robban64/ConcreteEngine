@@ -4,7 +4,6 @@ using System.Numerics;
 using System.Runtime.CompilerServices;
 using ConcreteEngine.Common.Numerics;
 using ConcreteEngine.Core.Assets.Materials;
-using ConcreteEngine.Core.Rendering.Commands;
 using ConcreteEngine.Core.Rendering.Data;
 using ConcreteEngine.Core.Rendering.Definitions;
 using ConcreteEngine.Core.Rendering.Registry;
@@ -57,8 +56,9 @@ internal sealed class DrawCommandProcessor
 
     public void DrawMesh(DrawCommand cmd, int submitIndex)
     {
-        // buff
-        _buffers.ApplyDrawMaterial(cmd.MaterialId, _applyShader);
+        if(_ctx.PrevMaterial != cmd.MaterialId)
+            _buffers.ApplyDrawMaterial(cmd.MaterialId, _applyShader);
+        
         _buffers.BindDrawObject(submitIndex);
         _gfxCmd.BindMesh(cmd.MeshId);
         _gfxCmd.DrawBoundMesh(cmd.MeshId, cmd.DrawCount);

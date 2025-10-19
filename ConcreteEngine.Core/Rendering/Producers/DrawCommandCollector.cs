@@ -10,7 +10,7 @@ using ConcreteEngine.Core.Rendering.State;
 
 #endregion
 
-namespace ConcreteEngine.Core.Rendering.Commands;
+namespace ConcreteEngine.Core.Rendering.Producers;
 
 public interface IDrawCommandCollector
 {
@@ -18,7 +18,7 @@ public interface IDrawCommandCollector
     void RegisterProducer<TProducer>(TProducer producer) where TProducer : IDrawCommandProducer;
 
 }
-internal sealed class DrawCommandCollector : IDrawCommandCollector
+public sealed class DrawCommandCollector : IDrawCommandCollector
 {
     private readonly Dictionary<Type, IDrawCommandProducer> _producers = new(8);
 

@@ -7,11 +7,12 @@ using ConcreteEngine.Core.Engine;
 using ConcreteEngine.Core.Engine.Configuration;
 using ConcreteEngine.Core.Engine.Data;
 using ConcreteEngine.Core.Engine.Platform;
+using ConcreteEngine.Core.Engine.RenderingSystem;
+using ConcreteEngine.Core.Engine.RenderingSystem.Batching;
 using ConcreteEngine.Core.Engine.Time;
 using ConcreteEngine.Core.Features;
 using ConcreteEngine.Core.Modules;
 using ConcreteEngine.Core.Rendering;
-using ConcreteEngine.Core.Rendering.Batching;
 using ConcreteEngine.Core.Rendering.Data;
 using ConcreteEngine.Core.Rendering.Definitions;
 using ConcreteEngine.Core.Rendering.Descriptors;
@@ -35,11 +36,14 @@ public sealed class GameEngine : IDisposable
 {
     private readonly IEngineWindowHost _window;
     private readonly GraphicsRuntime _graphics;
+    
 
     private readonly EngineCoreSystem _coreSystems;
     private readonly AssetSystem _assets;
     private readonly InputSystem _inputSystem;
     private readonly RenderSystem _renderer;
+    private readonly EngineRenderingController _renderingController;
+
 
     private readonly ModuleManager _modules;
     private readonly FeatureManager _features;
@@ -74,11 +78,14 @@ public sealed class GameEngine : IDisposable
         // time
         _timeHub = new EngineTimeHub(GameTickUpdate, FpsTickUpdate, OnGpuTickUpload, OnGpuTickDispose);
 
-        // input
+        // systems
+        _renderingController = new EngineRenderingController(_graphics.Gfx);
+
         _inputSystem = new InputSystem(input);
         _assets = new AssetSystem();
-        _renderer = new RenderSystem(_graphics);
+        _renderer = new RenderSystem(_graphics, _renderingController.Batchers, _renderingController.CommandCollector);
         _coreSystems = new EngineCoreSystem(_renderer, _inputSystem, _assets);
+
 
         _stateMachine = new LinearStateMachine<EngineStateLevel>(Enum.GetValues<EngineStateLevel>());
     }
@@ -99,6 +106,18 @@ public sealed class GameEngine : IDisposable
 
     public void RegisterRenderer()
     {
+        _renderingController.Initialize((gfx, batchers) =>
+        {
+            batchers.Register(new TerrainBatcher(gfx));
+            //_batches.Register(new SpriteBatcher(_gfx));
+            //_batches.Register(new TilemapBatcher(_gfx, 64, 32));
+        }, collector =>
+        {
+            collector.RegisterProducerSink<IMeshDrawSink>(new MeshDrawProducer());
+            collector.RegisterProducerSink<ITerrainDrawSink>(new TerrainDrawProducer());
+            collector.RegisterProducer<SceneDrawProducer>(new SceneDrawProducer());
+        });
+        
         var builder = _renderer.StartBuilder(_window.OutputSize);
         builder.SetupRegistry((registry) =>
         {
@@ -134,19 +153,7 @@ public sealed class GameEngine : IDisposable
                 new RegisterFboEntry().AttachColorTexture(GfxFboColorTextureDesc.Default()));
         });
 
-        builder.SetupBatchers((gfx, batchers) =>
-        {
-            batchers.Register(new TerrainBatcher(gfx));
-            //_batches.Register(new SpriteBatcher(_gfx));
-            //_batches.Register(new TilemapBatcher(_gfx, 64, 32));
-        });
 
-        builder.SetupDrawPipeline(collector =>
-        {
-            collector.RegisterProducerSink<IMeshDrawSink>(new MeshDrawProducer());
-            collector.RegisterProducerSink<ITerrainDrawSink>(new TerrainDrawProducer());
-            collector.RegisterProducer<SceneDrawProducer>(new SceneDrawProducer());
-        });
         builder.SetupPassPipeline(RenderPipelineVersion.Default3D);
         _renderer.ApplyBuilder(builder);
     }

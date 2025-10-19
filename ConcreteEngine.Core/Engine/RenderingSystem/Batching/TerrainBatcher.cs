@@ -11,7 +11,7 @@ using ConcreteEngine.Graphics.Primitives;
 
 #endregion
 
-namespace ConcreteEngine.Core.Rendering.Batching;
+namespace ConcreteEngine.Core.Engine.RenderingSystem.Batching;
 
 public readonly struct TerrainBatchResult(MeshId meshId, int drawCount)
 {

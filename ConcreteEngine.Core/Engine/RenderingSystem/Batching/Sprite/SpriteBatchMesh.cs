@@ -11,7 +11,7 @@ using static ConcreteEngine.Core.Rendering.Data.RenderLimits;
 
 #endregion
 
-namespace ConcreteEngine.Core.Rendering.Batching;
+namespace ConcreteEngine.Core.Engine.RenderingSystem.Batching;
 
 internal sealed class SpriteBatchMesh : IDisposable
 {

@@ -36,13 +36,13 @@ internal sealed class DrawBuffers
 
     internal DrawBuffers(DrawStateContext ctx, DrawStateContextPayload ctxPayload)
     {
-        _gfxBuffers = ctxPayload.Gfx.Buffers;
-        _gfxCmd = ctxPayload.Gfx.Commands;
-
-        _sceneState = ctxPayload.Snapshot;
         _ctx = ctx;
 
+        _gfxBuffers = ctxPayload.Gfx.Buffers;
+        _gfxCmd = ctxPayload.Gfx.Commands;
+        _sceneState = ctxPayload.Snapshot;
         var registry = ctxPayload.Registry;
+        
         _drawUbo = registry.GetRenderUbo<DrawObjectUniform>();
         _materialUbo = registry.GetRenderUbo<MaterialUniformRecord>();
 

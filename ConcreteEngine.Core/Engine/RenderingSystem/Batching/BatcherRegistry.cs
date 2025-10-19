@@ -4,7 +4,7 @@ using ConcreteEngine.Common.Collections;
 
 #endregion
 
-namespace ConcreteEngine.Core.Rendering.Batching;
+namespace ConcreteEngine.Core.Engine.RenderingSystem.Batching;
 
 public sealed class BatcherRegistry
 {

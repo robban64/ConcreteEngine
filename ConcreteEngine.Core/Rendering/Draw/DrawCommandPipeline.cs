@@ -1,8 +1,6 @@
 #region
 
 using ConcreteEngine.Core.Engine.Data;
-using ConcreteEngine.Core.Rendering.Batching;
-using ConcreteEngine.Core.Rendering.Commands;
 using ConcreteEngine.Core.Rendering.Data;
 using ConcreteEngine.Core.Rendering.Passes;
 using ConcreteEngine.Core.Rendering.Producers;
@@ -28,28 +26,28 @@ internal sealed class DrawCommandPipeline
     private DrawBuffers _drawBuffers = null!;
     private DrawStateOps _drawStateOps = null!;
 
-    private RenderSystemContext _ctx = null!;
-
+    private RenderStateContext _stateContext = null!;
 
     internal DrawStateOps DrawStateOps => _drawStateOps;
     internal DrawBuffers DrawBuffer => _drawBuffers;
     internal DrawCommandProcessor DrawCmdProcessor => _drawCmdProc;
-    internal DrawCommandCollector DrawCmdCollector => _commandCollector;
 
     internal DrawCommandPipeline()
     {
     }
 
-    public void Initialize(RenderSystemContext ctx, Action<IDrawCommandCollector> collectorSetup)
+    public void Initialize(RenderSystemContext ctx, RenderStateContext stateContext)
     {
-        _ctx = ctx;
+        _stateContext = stateContext;
+
+        _commandCollector = ctx.Collector;
+        _sceneDrawProducer = _commandCollector.GetProducer<SceneDrawProducer>();
 
         var drawCtx = new DrawStateContext(ctx.Registry);
         var drawCtxPayload = new DrawStateContextPayload
         {
-            Gfx = ctx.Gfx, Registry = ctx.Registry, RenderView = ctx.View, Snapshot = ctx.Snapshot
+            Gfx = ctx.Gfx, Registry = ctx.Registry, RenderView = _stateContext.View, Snapshot = _stateContext.Snapshot
         };
-        var cmdProducerCtx = new CommandProducerContext { Gfx = ctx.Gfx, DrawBatchers = ctx.Batchers };
 
         //
         _drawBuffers = new DrawBuffers(drawCtx, drawCtxPayload);
@@ -59,13 +57,6 @@ internal sealed class DrawCommandPipeline
         //
         _commandBuffer = new DrawCommandBuffer(_drawCmdProc, _drawBuffers);
         _materialBuffer = new MaterialDrawBuffer();
-
-        //
-        _commandCollector = new DrawCommandCollector();
-        collectorSetup(_commandCollector);
-        _sceneDrawProducer = _commandCollector.GetProducer<SceneDrawProducer>();
-        _commandCollector.AttachContext(cmdProducerCtx);
-        _commandCollector.InitializeProducers();
 
         //
         _commandBuffer.Initialize();
@@ -96,7 +87,7 @@ internal sealed class DrawCommandPipeline
     internal void PrepareDrawBuffers()
     {
         // Fill command buffer
-        _commandCollector.CollectTo(_ctx.CurrentFrameInfo.Alpha, _ctx.Snapshot, _commandBuffer);
+        _commandCollector.CollectTo(_stateContext.CurrentFrameInfo.Alpha, _stateContext.Snapshot, _commandBuffer);
 
         // Sort command buffer and prepare passes
         _commandBuffer.ReadyDrawCommands();
@@ -112,8 +103,8 @@ internal sealed class DrawCommandPipeline
 
     internal void UploadUniformGlobals()
     {
-        _drawBuffers.UploadGlobalUniforms(in _ctx.CurrentFrameInfo, in _ctx.CurrentRuntimeParams);
-        _drawBuffers.UploadCameraView(_ctx.View);
+        _drawBuffers.UploadGlobalUniforms(in _stateContext.CurrentFrameInfo, in _stateContext.CurrentRuntimeParams);
+        _drawBuffers.UploadCameraView(_stateContext.View);
     }
 
     internal void UploadDrawUniformData()

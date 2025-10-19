@@ -1,12 +1,11 @@
 using ConcreteEngine.Common;
 using ConcreteEngine.Common.Numerics;
-using ConcreteEngine.Core.Rendering.Batching;
-using ConcreteEngine.Core.Rendering.Commands;
 using ConcreteEngine.Core.Rendering.Data;
 using ConcreteEngine.Core.Rendering.Definitions;
 using ConcreteEngine.Core.Rendering.Descriptors;
 using ConcreteEngine.Core.Rendering.Draw;
 using ConcreteEngine.Core.Rendering.Passes;
+using ConcreteEngine.Core.Rendering.Producers;
 using ConcreteEngine.Core.Rendering.Registry;
 using ConcreteEngine.Core.Rendering.State;
 using ConcreteEngine.Graphics.Gfx;
@@ -38,7 +37,6 @@ public sealed class RenderSetupBuilder
     {
         EnsureNotDone();
         InvalidOpThrower.ThrowIf(Ctx.Version == RenderPipelineVersion.None, nameof(Ctx.Version));
-        InvalidOpThrower.ThrowIfAnyNull(Ctx.BatcherSetup, Ctx.CollectorSetup);
         InvalidOpThrower.ThrowIfAnyNull(Ctx.FboSetup, Ctx.ShaderProvider, Ctx.CoreShaderSetup);
 
         Ctx.Done = true;
@@ -51,20 +49,6 @@ public sealed class RenderSetupBuilder
         EnsureNotDone();
         ArgumentNullException.ThrowIfNull(registryBuilder, nameof(registryBuilder));
         registryBuilder(new RenderRegistryBuilder(SystemCtx.Registry, Ctx));
-    }
-
-    public void SetupBatchers(Action<GfxContext, BatcherRegistry> builder)
-    {
-        EnsureNotDone();
-        ArgumentNullException.ThrowIfNull(builder, nameof(builder));
-        Ctx.BatcherSetup = builder;
-    }
-
-    public void SetupDrawPipeline(Action<IDrawCommandCollector> builder)
-    {
-        EnsureNotDone();
-        ArgumentNullException.ThrowIfNull(builder, nameof(builder));
-        Ctx.CollectorSetup = builder;
     }
 
     public void SetupPassPipeline(RenderPipelineVersion version)

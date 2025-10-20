@@ -22,7 +22,7 @@ public interface IEngineInputSource
     public Vector2 MouseDelta { get; }
     public Vector2 Scroll { get; }
 
-    void Update();
+    void Update(bool enableInput);
 }
 
 public sealed class EngineInputSource : IEngineInputSource
@@ -44,10 +44,10 @@ public sealed class EngineInputSource : IEngineInputSource
     }
 
 
-    public void Update()
+    public void Update(bool enableInput)
     {
-        _keyboardInput.Update();
-        _mouseInput.Update();
+        _keyboardInput.Update(enableInput);
+        _mouseInput.Update(enableInput);
     }
 
     // Keyboard API

@@ -24,9 +24,9 @@ public class InputSystem : IInputSystem
     {
     }
 
-    public void Update()
+    public void Update(bool enableInput = true)
     {
-        _inputSource.Update();
+        _inputSource.Update(enableInput);
     }
 
     public void Shutdown()

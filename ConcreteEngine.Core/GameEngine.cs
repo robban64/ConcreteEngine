@@ -100,7 +100,10 @@ public sealed class GameEngine : IDisposable
 
     private void RegisterRenderer()
     {
-        var builder = _engineRenderSystem.Initialize((gfx, batchers) => { batchers.Register(new TerrainBatcher(gfx)); });
+        var builder = _engineRenderSystem.Initialize((gfx, batchers) =>
+        {
+            batchers.Register(new TerrainBatcher(gfx));
+        });
 
         _engineRenderSystem.SetupRenderer(builder);
     }
@@ -177,13 +180,13 @@ public sealed class GameEngine : IDisposable
     private void GameTickUpdate(int tick)
     {
         _updateInfo.UpdateTick(tick);
-        if (!_debugClient.BlockInput()) _inputSystem.Update();
+        _inputSystem.Update(!_debugClient.BlockInput());
         _sceneManager.Current?.UpdateTick(tick);
     }
 
     private void DebugTickUpdate(int tick)
     {
-        if(!_debugClient.Enabled) return;
+        if (!_debugClient.Enabled) return;
         _debugClient.SendAssetData(_assets.InternalStore, _assets.Materials);
         _debugClient.SendWorldData(_sceneManager.Current?.InternalWorld, _engineRenderSystem);
         _debugClient.SendFrameData(in _renderEngineInfo.GetRenderFrameInfo(), _renderEngineInfo.GfxResult);
@@ -250,7 +253,6 @@ public sealed class GameEngine : IDisposable
         if (_isDisposed) return;
         Console.WriteLine("Disposing GameEngine");
         _isDisposed = true;
-
         _assets?.Shutdown();
         //_graphics?.Dispose();
     }

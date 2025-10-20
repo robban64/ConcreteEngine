@@ -8,8 +8,11 @@ using Silk.NET.Windowing;
 namespace Tools.DebugInterface;
 
 public readonly record struct DebugFrameRenderMetric(long FrameIndex, float Fps, float Alpha);
+
 public readonly record struct DebugGfxFrameMetric(int TriangleCount, int DrawCalls);
+
 public readonly record struct DebugGfxStoreMetric(int GfxStoreCount, int BkStoreCount, int GfxStoreFree, int BkFree);
+
 public sealed class DebugDataContainer
 {
     public DebugFrameRenderMetric FrameMetric { get; set; }
@@ -21,14 +24,18 @@ public sealed class DebugDataContainer
     public Dictionary<string, (int, int)> AssetMetrics { get; } = new(8);
 }
 
-public sealed class DebugInterfaceService
+public sealed class DebugInterfaceService : IDisposable
 {
     private readonly ImGuiController _controller;
+    private readonly DebugConsoleUi _console;
 
     public DebugDataContainer Data { get; } = new();
 
     public DebugInterfaceService(GL gl, IWindow window, IInputContext inputCtx)
-        => _controller = new ImGuiController(gl, window, inputCtx);
+    {
+        _controller = new ImGuiController(gl, window, inputCtx);
+        _console = new DebugConsoleUi();
+    }
 
     public void Dispose() => _controller.Dispose();
 
@@ -84,6 +91,8 @@ public sealed class DebugInterfaceService
         DrawCpuMetrics();
         DrawGpuMetrics();
 
+        _console.DrawConsole(200, 200);
+
         ImGui.End();
         ImGui.PopStyleVar();
     }
@@ -135,7 +144,7 @@ public sealed class DebugInterfaceService
             ImGui.TableSetupColumn("Files", ImGuiTableColumnFlags.WidthFixed);
             ImGui.TableHeadersRow();
 
-            foreach (var (type,(count, fileCount)) in Data.AssetMetrics)
+            foreach (var (type, (count, fileCount)) in Data.AssetMetrics)
             {
                 ImGui.TableNextRow();
 

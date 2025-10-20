@@ -14,52 +14,24 @@ using Silk.NET.Windowing;
 
 namespace ConcreteEngine.Core.Platform;
 
-public interface IEngineWindowHost : IDisposable
-{
-    string Title { get; set; }
-    Size2D OutputSize { get; }
-    Size2D WindowSize { get; set; }
-    Vector2I Position { get; set; }
-
-    GraphicsBackend Backend { get; }
-
-    void CenterOnCurrentMonitor();
-}
-
-public sealed class EngineWindowHost : IEngineWindowHost
+public sealed class EngineWindowHost 
 {
     private readonly WindowOptions _options;
     private readonly GraphicsBackend _backend;
 
-    private IWindow _window = null!;
     private bool _disposed;
+
+    private IWindow _window = null!;
+    private EngineWindow _engineWindow = null!;
 
     private EngineInputSource _inputSource = null!;
 
     private GameEngine _engine = null!;
+    
+    public IWindow InternalWindow => _window;
 
     public GraphicsBackend Backend => _backend;
-
-    public string Title
-    {
-        get => _window.Title;
-        set => _window.Title = value;
-    }
-
-    // Placement / size
-    public Vector2I Position
-    {
-        get => _window.Position.ToVector2I();
-        set => _window.Position = new Vector2D<int>(value.X, value.Y);
-    }
-
-    public Size2D WindowSize
-    {
-        get => _window.Size.ToSize2D();
-        set => _window.Size = new Vector2D<int>(value.Width, value.Height);
-    }
-
-    public Size2D OutputSize => _window.FramebufferSize.ToSize2D();
+    
 
     private GameEngineBuilder? _builder = null;
 
@@ -85,21 +57,6 @@ public sealed class EngineWindowHost : IEngineWindowHost
         _window.Dispose();
     }
 
-    public void CenterOnCurrentMonitor()
-    {
-        var monitor = _window.Monitor;
-        if (monitor is not null)
-        {
-            var area = monitor.Bounds;
-            var size = _window.Size;
-            var pos = new Vector2D<int>(
-                area.Origin.X + Math.Max(0, (area.Size.X - size.X) / 2),
-                area.Origin.Y + Math.Max(0, (area.Size.Y - size.Y) / 2)
-            );
-            _window.Position = pos;
-        }
-    }
-
     private void OnLoad()
     {
         if (_builder == null) throw new InvalidOperationException("Builder not initialized");
@@ -111,8 +68,9 @@ public sealed class EngineWindowHost : IEngineWindowHost
             _ => throw new GraphicsException("Invalid GraphicsBackend. Only OpenGL supported")
         };
 
+        _engineWindow = new EngineWindow(_window);
         _inputSource = new EngineInputSource(_window.CreateInput());
-        _engine = _builder.Build(this, _inputSource, graphics);
+        _engine = _builder.Build(_engineWindow, _inputSource, graphics);
         _builder = null;
     }
 

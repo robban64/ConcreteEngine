@@ -9,7 +9,7 @@ using ConcreteEngine.Renderer.State;
 
 namespace ConcreteEngine.Core.Data;
 
-public sealed class RenderFrameInfo
+public sealed class RenderEngineFrameInfo
 {
     public long FrameIndex { get; private set; } = -1;
     public float Alpha { get; private set; } = 0;
@@ -22,9 +22,16 @@ public sealed class RenderFrameInfo
 
     private int RandomSeed => (int)FrameIndex + 666;
 
+    public RenderEngineFrameInfo(Size2D outputSize)
+    {
+        OutputSize = outputSize;
+        PrevOutputSize = outputSize;
+    }
+
+
     internal BeginFrameStatus BeginRenderFrame(
         float dt, float alpha,
-        IEngineWindowHost window,
+        EngineWindow window,
         IEngineInputSource input,
         out Renderer.State.RenderFrameInfo frameInfo,
         out RenderRuntimeParams runtimeParams)

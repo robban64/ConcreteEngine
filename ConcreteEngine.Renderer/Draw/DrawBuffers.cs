@@ -15,7 +15,6 @@ namespace ConcreteEngine.Renderer.Draw;
 
 internal sealed class DrawBuffers
 {
-    private readonly GfxCommands _gfxCmd;
     private readonly GfxBuffers _gfxBuffers;
 
     private readonly UniformBufferId _engineUbo;
@@ -39,7 +38,6 @@ internal sealed class DrawBuffers
         _ctx = ctx;
 
         _gfxBuffers = ctxPayload.Gfx.Buffers;
-        _gfxCmd = ctxPayload.Gfx.Commands;
         _sceneSnapshot = ctxPayload.Snapshot;
         var registry = ctxPayload.Registry;
 
@@ -78,24 +76,14 @@ internal sealed class DrawBuffers
         }
     }
 
-    public void ApplyDrawMaterial(MaterialId materialId, Action<ShaderId> applyShader)
+    public ReadOnlySpan<TextureSlotInfo> ResolveMaterial(MaterialId materialId, out DrawMaterialMeta materialMeta)
     {
-        if (!_ctx.ResolveMaterialBind(materialId)) return;
-        var slots = _materialBuffer.GetMetaAndSlots(materialId, out var meta);
-        applyShader(meta.ShaderId);
-        for (var i = 0; i < slots.Length; i++)
-        {
-            var value = slots[i];
+        if (_ctx.ResolveMaterialBind(materialId)) 
+            return _materialBuffer.GetMetaAndSlots(materialId, out materialMeta);
 
-            if (value.SlotKind == TextureSlotKind.Shadowmap)
-                _gfxCmd.BindTexture(_ctx.DepthTexture, i);
-            else
-                _gfxCmd.BindTexture(value.Texture, i);
-        }
-
-        BindMaterialObject(materialId);
+        materialMeta = default;
+        return ReadOnlySpan<TextureSlotInfo>.Empty;
     }
-
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public void BindMaterialObject(MaterialId matId)

@@ -17,7 +17,7 @@ public readonly record struct UpdateTickInfo(
 public sealed class UpdateFrameInfo
 {
     private UpdateTickInfo _updateTickInfo;
-
+    
     public ref readonly UpdateTickInfo UpdateTickInfo => ref _updateTickInfo;
 
     internal void BeginUpdateFrame(float deltaTime, Size2D viewport, Size2D outputSize)

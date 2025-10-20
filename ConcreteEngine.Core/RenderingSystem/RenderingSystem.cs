@@ -19,7 +19,6 @@ using ConcreteEngine.Renderer.Definitions;
 using ConcreteEngine.Renderer.Descriptors;
 using ConcreteEngine.Renderer.Passes;
 using ConcreteEngine.Renderer.State;
-using RenderFrameInfo = ConcreteEngine.Renderer.State.RenderFrameInfo;
 
 #endregion
 
@@ -37,14 +36,14 @@ public sealed class RenderingSystem : IRenderingSystem
     public RenderSceneProps SceneProperties { get; }
     public RenderSceneSnapshot SceneSnapshot => SceneProperties.Snapshot;
 
-    private readonly IEngineWindowHost _window;
+    private readonly EngineWindow _window;
     private readonly GraphicsRuntime _graphics;
     private readonly RenderEngine _renderer;
     private readonly AssetSystem _assets;
 
     private readonly RenderEntityBus _renderEntityBus;
 
-    internal RenderingSystem(IEngineWindowHost window, GraphicsRuntime graphics, AssetSystem assets)
+    internal RenderingSystem(EngineWindow window, GraphicsRuntime graphics, AssetSystem assets)
     {
         _window = window;
         _graphics = graphics;

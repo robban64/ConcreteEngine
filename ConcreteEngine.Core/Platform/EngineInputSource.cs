@@ -22,17 +22,20 @@ public interface IEngineInputSource
     public Vector2 MouseDelta { get; }
     public Vector2 Scroll { get; }
 
-
     void Update();
 }
 
 public sealed class EngineInputSource : IEngineInputSource
 {
+    private readonly IInputContext  _context;
     private readonly KeyboardInput _keyboardInput;
     private readonly MouseInput _mouseInput;
+    
+    internal IInputContext InputContext => _context;
 
     public EngineInputSource(IInputContext input)
     {
+        _context = input;
         var keyboard = input.Keyboards.First();
         var mouse = input.Mice.First();
 

@@ -42,6 +42,8 @@ internal sealed class AssetStore : IAssetStore
 
     private readonly Dictionary<Type, AssetTypeMeta> _typeMeta = new(8);
 
+    internal IReadOnlyDictionary<Type, AssetTypeMeta> GetMetrics() => _typeMeta;
+
     internal AssetStore()
     {
     }

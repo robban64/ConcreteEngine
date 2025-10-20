@@ -141,7 +141,7 @@ public sealed class GameEngine : IDisposable
         _renderEngineInfo.EndRenderFrame(gfxFrameResult);
 
         var entities = _sceneManager.Current?.InternalWorld.EntityCount ?? 0;
-        _imGuiSystem.Render(new ImGuiStats(in frameInfo, in runtimeParams,in gfxFrameResult, entities));
+        _imGuiSystem.Render(new DebugFrameStats(in frameInfo,in gfxFrameResult, entities));
         // _renderTime.TickOrRenderEffect();
         //_renderTime.TickOrGpuDispose();
         //_renderTime.TickOrGpuUpload();
@@ -182,6 +182,7 @@ public sealed class GameEngine : IDisposable
 
     private void FpsTickUpdate(int tick)
     {
+        _imGuiSystem.RefreshAsset(_assets.InternalStore.GetMetrics());
         _imGuiSystem.RefreshStats();
     }
 

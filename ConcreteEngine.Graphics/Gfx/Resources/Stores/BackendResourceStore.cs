@@ -5,6 +5,7 @@ using System.Diagnostics.CodeAnalysis;
 using System.Runtime.CompilerServices;
 using ConcreteEngine.Common.Collections;
 using ConcreteEngine.Graphics.Gfx.Definitions;
+using ConcreteEngine.Graphics.Gfx.Utility;
 
 #endregion
 
@@ -62,9 +63,15 @@ internal sealed class BackendResourceStore<TId, THandle> : IBackendResourceStore
         Throwers.ThrowOnDefaultHandle(value);
         int idx = _free.Count > 0 ? _free.Pop() : Allocate();
         var prev = _records[idx];
-        var gen = (ushort)(prev.Gen + 1);
-        _records[idx] = new BkHandle<THandle>(value, gen, true);
-        return GfxRefToken<TId>.From(new GfxHandle(idx, gen, Kind));
+        var newHandle = new BkHandle<THandle>(value, (ushort)(prev.Gen + 1), true);
+        _records[idx] = newHandle;
+        
+        UpdateMetrics();
+        GfxDebugMetrics.GetStoreMetrics<TId>().LastAddedBackend =
+            BackendStoreEvent.Create(newHandle.Handle.Value, newHandle.Gen, true);
+
+
+        return GfxRefToken<TId>.From(new GfxHandle(idx, newHandle.Gen, Kind));
     }
 
 
@@ -80,6 +87,10 @@ internal sealed class BackendResourceStore<TId, THandle> : IBackendResourceStore
 
         _records[handle.Slot] = default;
         _free.Push(handle.Slot);
+
+        UpdateMetrics();
+        GfxDebugMetrics.GetStoreMetrics<TId>().LastRemovedBackend =
+            BackendStoreEvent.Create(record.Handle.Value, handle.Gen, false);
     }
 
     public GfxRefToken<TId> Replace(GfxRefToken<TId> refToken, THandle value)
@@ -89,9 +100,15 @@ internal sealed class BackendResourceStore<TId, THandle> : IBackendResourceStore
         var oldValue = GetUntyped(handle);
         Throwers.IsUniqueHandleOrThrow(value.Value, oldValue.Value);
 
-        var gen = (ushort)(handle.Gen + 1);
-        _records[handle.Slot] = new BkHandle<THandle>(value, gen, true);
-        return GfxRefToken<TId>.From(handle with { Gen = gen });
+        var result = new BkHandle<THandle>(value, (ushort)(handle.Gen + 1), true);
+        _records[handle.Slot] = result;
+
+        UpdateMetrics();
+        GfxDebugMetrics.GetStoreMetrics<TId>().LastReplacedBackend =
+            BackendStoreEvent.Create(result.Handle.Value, result.Gen, true);
+
+
+        return GfxRefToken<TId>.From(handle with { Gen = result.Gen });
     }
 
     private int Allocate()
@@ -107,6 +124,24 @@ internal sealed class BackendResourceStore<TId, THandle> : IBackendResourceStore
         }
 
         return _idx++;
+    }
+
+    private void UpdateMetrics()
+    {
+        GfxDebugMetrics.GetStoreMetrics<TId>().BackendStoreCount = GetAliveCount();
+        GfxDebugMetrics.GetStoreMetrics<TId>().BackendStoreFree = _free.Count;
+    }
+
+    private int GetAliveCount()
+    {
+        var span = _records.AsSpan(0, _idx);
+        var count = 0;
+        foreach (var record in span)
+        {
+            if (record.IsValid) count++;
+        }
+
+        return count;
     }
 
     private static class Throwers

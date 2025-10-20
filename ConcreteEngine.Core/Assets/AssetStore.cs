@@ -34,7 +34,6 @@ internal sealed class AssetStore : IAssetStore
     private AssetFileId MakeAssetFileId() => new(++_assetFileId);
 
 
-    // AssetObject abstract class
     private readonly Dictionary<AssetId, AssetObject> _assets = new(32);
     private readonly Dictionary<AssetFileId, AssetFileEntry> _files = new(32);
     private readonly Dictionary<AssetId, AssetFileId[]> _bindings = new(32);
@@ -42,7 +41,7 @@ internal sealed class AssetStore : IAssetStore
 
     private readonly Dictionary<Type, AssetTypeMeta> _typeMeta = new(8);
 
-    internal IReadOnlyDictionary<Type, AssetTypeMeta> GetMetrics() => _typeMeta;
+    internal IReadOnlyDictionary<Type, AssetTypeMeta> GetAssetTypeMeta() => _typeMeta;
 
     internal AssetStore()
     {

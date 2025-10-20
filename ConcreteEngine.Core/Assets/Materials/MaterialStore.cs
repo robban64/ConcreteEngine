@@ -15,9 +15,11 @@ namespace ConcreteEngine.Core.Assets.Materials;
 
 public interface IMaterialStore
 {
+    public int Count { get; }
+    public int FreeSlots { get; }
+
     Material Get(MaterialId materialId);
     Material Get(string name);
-
     Material CreateMaterial(string templateName, string name);
 }
 

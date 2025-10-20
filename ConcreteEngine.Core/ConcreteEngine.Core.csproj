@@ -11,7 +11,6 @@
         <PackageReference Include="Silk.NET.Assimp" Version="2.22.0"/>
         <PackageReference Include="Silk.NET.Input" Version="2.22.0"/>
         <PackageReference Include="Silk.NET.Maths" Version="2.22.0"/>
-        <PackageReference Include="Silk.NET.OpenGL.Extensions.ImGui" Version="2.22.0" />
         <PackageReference Include="Silk.NET.Windowing" Version="2.22.0"/>
         <PackageReference Include="StbImageSharp" Version="2.30.15"/>
     </ItemGroup>
@@ -20,6 +19,7 @@
         <ProjectReference Include="..\ConcreteEngine.Common\ConcreteEngine.Common.csproj"/>
         <ProjectReference Include="..\ConcreteEngine.Graphics\ConcreteEngine.Graphics.csproj"/>
         <ProjectReference Include="..\ConcreteEngine.Renderer\ConcreteEngine.Renderer.csproj" />
+        <ProjectReference Include="..\Tools.DebugInterface\Tools.DebugInterface.csproj" />
     </ItemGroup>
 
     <ItemGroup>

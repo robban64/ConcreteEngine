@@ -19,6 +19,9 @@ public sealed class RenderEngineFrameInfo
     public Size2D PrevOutputSize { get; private set; }
 
     public GfxFrameResult GfxResult { get; private set; }
+    public ref readonly RenderFrameInfo GetRenderFrameInfo() => ref _renderFrameInfo;
+
+    private RenderFrameInfo _renderFrameInfo;
 
     private int RandomSeed => (int)FrameIndex + 666;
 
@@ -33,7 +36,7 @@ public sealed class RenderEngineFrameInfo
         float dt, float alpha,
         EngineWindow window,
         IEngineInputSource input,
-        out Renderer.State.RenderFrameInfo frameInfo,
+        out RenderFrameInfo frameInfo,
         out RenderRuntimeParams runtimeParams)
     {
         FrameIndex++;
@@ -41,7 +44,7 @@ public sealed class RenderEngineFrameInfo
         Alpha = alpha;
         OutputSize = window.OutputSize;
 
-        frameInfo = new Renderer.State.RenderFrameInfo(FrameIndex, dt, Alpha, OutputSize);
+        _renderFrameInfo = frameInfo = new RenderFrameInfo(FrameIndex, dt, Alpha, OutputSize);
         runtimeParams = new RenderRuntimeParams(window.WindowSize, input.MousePosition, Time, 9999);
 
         var status = BeginFrameStatus.None;

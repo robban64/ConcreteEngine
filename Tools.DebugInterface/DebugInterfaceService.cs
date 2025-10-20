@@ -1,43 +1,36 @@
 using System.Numerics;
-using ConcreteEngine.Core.Assets.Data;
-using ConcreteEngine.Core.Data;
-using ConcreteEngine.Graphics;
-using ConcreteEngine.Graphics.Gfx.Utility;
-using ConcreteEngine.Renderer.State;
 using ImGuiNET;
 using Silk.NET.Input;
 using Silk.NET.OpenGL;
 using Silk.NET.OpenGL.Extensions.ImGui;
 using Silk.NET.Windowing;
 
-namespace ConcreteEngine.Core.Interface;
+namespace Tools.DebugInterface;
 
-public record struct DebugFrameStats(
-    in RenderFrameInfo FrameInfo,
-    in GfxFrameResult FrameResult,
-    int Entities);
-
-public sealed class GuiDebugModel
+public readonly record struct DebugFrameRenderMetric(long FrameIndex, float Fps, float Alpha);
+public readonly record struct DebugGfxFrameMetric(int TriangleCount, int DrawCalls);
+public readonly record struct DebugGfxStoreMetric(int GfxStoreCount, int BkStoreCount, int GfxStoreFree, int BkFree);
+public sealed class DebugDataContainer
 {
-    public RenderFrameInfo FrameInfo { get; set; }
-    public GfxFrameResult GfxResult { get; set; }
+    public DebugFrameRenderMetric FrameMetric { get; set; }
+    public DebugGfxFrameMetric GfxFrameMetric { get; set; }
     public int Entities { get; set; }
-    public Dictionary<Type, AssetTypeMetaSnapshot> AssetMetas { get; } = new(8);
+    public (int, int) ShadowMap { get; set; }
+    public (int, int) Materials { get; set; }
+    public Dictionary<string, DebugGfxStoreMetric> GfxStoreMetrics { get; } = new(8);
+    public Dictionary<string, (int, int)> AssetMetrics { get; } = new(8);
 }
 
-internal sealed class ImGuiSystem : IDisposable
+public sealed class DebugInterfaceService
 {
     private readonly ImGuiController _controller;
 
-    private readonly GuiDebugModel _model = new();
+    public DebugDataContainer Data { get; } = new();
 
-    private DebugFrameStats _nextStats;
-
-    public ImGuiSystem(GL gl, IWindow window, IInputContext inputCtx)
+    public DebugInterfaceService(GL gl, IWindow window, IInputContext inputCtx)
         => _controller = new ImGuiController(gl, window, inputCtx);
 
     public void Dispose() => _controller.Dispose();
-
 
     public bool BlockInput()
     {
@@ -45,26 +38,10 @@ internal sealed class ImGuiSystem : IDisposable
         return io.WantCaptureKeyboard || io.WantCaptureMouse;
     }
 
-    public void RefreshAsset(IReadOnlyDictionary<Type, AssetTypeMeta> assetMetas)
-    {
-        _model.AssetMetas.Clear();
-        foreach (var (k, v) in assetMetas)
-            _model.AssetMetas.Add(k, v.ToSnapshot());
-    }
-
-    public void RefreshStats()
-    {
-        _model.FrameInfo = _nextStats.FrameInfo;
-        _model.GfxResult = _nextStats.FrameResult;
-        _model.Entities = _nextStats.Entities;
-    }
-
     public void Update(float delta) => _controller.Update(delta);
 
-    public void Render(in DebugFrameStats stats)
+    public void Render()
     {
-        _nextStats = stats;
-
         var vp = ImGui.GetMainViewport();
         DrawLeft(200);
         DrawRight(200);
@@ -76,7 +53,7 @@ internal sealed class ImGuiSystem : IDisposable
         var vp = ImGui.GetMainViewport();
 
         ImGui.SetNextWindowPos(vp.WorkPos);
-        ImGui.SetNextWindowSize(new Vector2(width, 0f)); // auto height
+        ImGui.SetNextWindowSize(new Vector2(width, 0f));
 
         ImGui.PushStyleVar(ImGuiStyleVar.ItemSpacing, new Vector2(0f, 8f));
         ImGui.Begin("##LeftSidebar",
@@ -115,18 +92,18 @@ internal sealed class ImGuiSystem : IDisposable
     {
         ImGui.TextUnformatted("CPU Metrics");
         ImGui.Separator();
-        ImGui.TextUnformatted($"FPS: {Format(_model.FrameInfo.Fps)}");
-        ImGui.TextUnformatted($"Delta Time: {Format(_model.FrameInfo.DeltaTime)} ms");
+        ImGui.TextUnformatted($"Frame Index: {Data.FrameMetric.FrameIndex} ms");
+        ImGui.TextUnformatted($"FPS: {Format(Data.FrameMetric.Fps)}");
+        ImGui.TextUnformatted($"Alpha: {Format(Data.FrameMetric.Alpha)} ms");
         ImGui.Separator();
-        ImGui.TextUnformatted($"Frame Index: {_model.FrameInfo.FrameIndex} ms");
     }
 
     private void DrawGpuMetrics()
     {
         ImGui.TextUnformatted("GPU Metrics");
         ImGui.Separator();
-        ImGui.TextUnformatted($"Verts: {_model.GfxResult.TriangleCount}");
-        ImGui.TextUnformatted($"Draws: {_model.GfxResult.DrawCalls}");
+        ImGui.TextUnformatted($"Verts: {Data.GfxFrameMetric.TriangleCount}");
+        ImGui.TextUnformatted($"Draws: {Data.GfxFrameMetric.DrawCalls}");
         ImGui.Separator();
     }
 
@@ -134,7 +111,8 @@ internal sealed class ImGuiSystem : IDisposable
     {
         ImGui.TextUnformatted("Scene Metrics");
         ImGui.Separator();
-        ImGui.TextUnformatted($"Entities: {_model.Entities}");
+        ImGui.TextUnformatted($"Entities: {Data.Entities}");
+        ImGui.TextUnformatted($"ShadowMap: {Data.ShadowMap.Item1}({Data.ShadowMap.Item2})");
         ImGui.Separator();
     }
 
@@ -143,7 +121,7 @@ internal sealed class ImGuiSystem : IDisposable
         ImGui.TextUnformatted("Asset Store");
         ImGui.Separator();
 
-        if (_model.AssetMetas.Count == 0)
+        if (Data.AssetMetrics.Count == 0)
         {
             ImGui.TextDisabled("No asset metas");
             return;
@@ -157,18 +135,18 @@ internal sealed class ImGuiSystem : IDisposable
             ImGui.TableSetupColumn("Files", ImGuiTableColumnFlags.WidthFixed);
             ImGui.TableHeadersRow();
 
-            foreach (var (type, meta) in _model.AssetMetas)
+            foreach (var (type,(count, fileCount)) in Data.AssetMetrics)
             {
                 ImGui.TableNextRow();
 
                 ImGui.TableSetColumnIndex(0);
-                ImGui.TextUnformatted(type.Name.AsSpan(0, int.Min(8, type.Name.Length - 1)));
+                ImGui.TextUnformatted(type);
 
                 ImGui.TableSetColumnIndex(1);
-                ImGui.TextUnformatted(meta.Count.ToString());
+                ImGui.TextUnformatted(count.ToString());
 
                 ImGui.TableSetColumnIndex(2);
-                ImGui.TextUnformatted(meta.FileCount.ToString());
+                ImGui.TextUnformatted(fileCount.ToString());
             }
 
             ImGui.EndTable();
@@ -190,21 +168,18 @@ internal sealed class ImGuiSystem : IDisposable
             ImGui.TableSetupColumn("BK", ImGuiTableColumnFlags.WidthFixed);
             ImGui.TableHeadersRow();
 
-            var dict = GfxDebugMetrics.GetStoreMetrics();
-            foreach (var kv in dict)
+            var dict = Data.GfxStoreMetrics;
+            foreach (var (k, v) in dict)
             {
-                var kind = kv.Key.ToString();
-                var m = kv.Value;
-
                 ImGui.TableNextRow();
                 ImGui.TableSetColumnIndex(0);
-                ImGui.TextUnformatted(kind.AsSpan(0, int.Min(8, kind.Length - 1)));
+                ImGui.TextUnformatted(k);
 
                 ImGui.TableSetColumnIndex(1);
-                ImGui.TextUnformatted($"{m.GfxStoreCount}({m.GfxStoreFree})");
+                ImGui.TextUnformatted($"{v.GfxStoreCount}({v.GfxStoreFree})");
 
                 ImGui.TableSetColumnIndex(2);
-                ImGui.TextUnformatted($"{m.BackendStoreCount}({m.BackendStoreFree})");
+                ImGui.TextUnformatted($"{v.BkStoreCount}({v.BkFree})");
             }
 
             ImGui.EndTable();

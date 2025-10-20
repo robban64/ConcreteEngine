@@ -28,8 +28,8 @@ internal sealed class SceneManager
     public void ApplyPendingScene(
         GameSceneContext context,
         GameSceneConfigBuilder builder,
-        RenderingSystem.RenderingSystem renderer,
-        Action<SceneBuildResult, RenderingSystem.RenderingSystem>? afterBuild)
+        RenderingSystem.EngineRenderSystem renderer,
+        Action<SceneBuildResult, RenderingSystem.EngineRenderSystem>? afterBuild)
     {
         if (_pendingIndex < 0) return;
 

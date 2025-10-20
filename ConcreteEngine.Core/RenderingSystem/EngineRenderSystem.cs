@@ -30,7 +30,7 @@ public interface IRenderingSystem : IGameEngineSystem
     BatcherRegistry Batchers { get; }
 }
 
-public sealed class RenderingSystem : IRenderingSystem
+public sealed class EngineRenderSystem : IRenderingSystem
 {
     public BatcherRegistry Batchers { get; }
     public RenderSceneProps SceneProperties { get; }
@@ -45,7 +45,7 @@ public sealed class RenderingSystem : IRenderingSystem
 
     internal RenderEngine RenderEngine => _renderer;
 
-    internal RenderingSystem(EngineWindow window, GraphicsRuntime graphics, AssetSystem assets)
+    internal EngineRenderSystem(EngineWindow window, GraphicsRuntime graphics, AssetSystem assets)
     {
         _window = window;
         _graphics = graphics;

@@ -43,6 +43,8 @@ public sealed class RenderingSystem : IRenderingSystem
 
     private readonly RenderEntityBus _renderEntityBus;
 
+    internal RenderEngine RenderEngine => _renderer;
+
     internal RenderingSystem(EngineWindow window, GraphicsRuntime graphics, AssetSystem assets)
     {
         _window = window;
@@ -70,6 +72,7 @@ public sealed class RenderingSystem : IRenderingSystem
     internal void RenderEmptyFrame(in RenderFrameInfo frameInfo) => _renderer.RenderEmptyFrame(in frameInfo);
 
     internal void PreRender(
+        BeginFrameStatus status,
         in RenderFrameInfo frameInfo,
         in RenderRuntimeParams runtimeParams,
         in RenderViewSnapshot viewSnapshot)
@@ -80,18 +83,17 @@ public sealed class RenderingSystem : IRenderingSystem
         var snapshot = SceneProperties.Commit();
         //_sceneDrawProducer.SetSceneGlobals(snapshot);
         _renderer.PrepareFrame(in frameInfo, in runtimeParams, in viewSnapshot);
-    }
-
-    internal void FillDrawBuffers(float alpha)
-    {
+        
+        // fill buffers
         _renderEntityBus.FlushEntities(_renderer.CommandBuffer);
         SubmitMaterialData();
         _renderer.FillDrawBuffers();
+        
+        _renderer.StartFrame(status);
     }
 
-    internal void ExecuteFrame(BeginFrameStatus status, out GfxFrameResult frameResult)
+    internal void ExecuteFrame(out GfxFrameResult frameResult)
     {
-        _renderer.StartFrame(status);
         _renderer.UploadFrameData();
         _renderer.Render();
         _renderer.EndRenderFrame(out frameResult);

@@ -1,5 +1,7 @@
 #region
 
+using System.Diagnostics;
+using System.Diagnostics.CodeAnalysis;
 using ConcreteEngine.Common;
 using ConcreteEngine.Common.Numerics;
 using ConcreteEngine.Graphics.Gfx;
@@ -20,10 +22,11 @@ internal sealed class RenderFboRegistry
     private int _fboCount = 0;
 
     private readonly RenderFbo[] _fboRegistry = new RenderFbo[RenderLimits.FboSlots];
-    public ReadOnlySpan<RenderFbo> FrameBuffers => _fboRegistry.AsSpan(0, _fboCount);
+
+    private ReadOnlySpan<RenderFbo> FrameBufferSpan => _fboRegistry.AsSpan(0, _fboCount);
 
 
-    public RenderFboRegistry(GfxContext gfx)
+    internal RenderFboRegistry(GfxContext gfx)
     {
         _gfxApi = gfx.ResourceContext.ResourceManager.GetGfxApi();
         _gfxFbo = gfx.FrameBuffers;
@@ -31,7 +34,7 @@ internal sealed class RenderFboRegistry
         _gfxApi.BindMetaChanged<FrameBufferId, FrameBufferMeta>(OnFboChange);
     }
 
-    public void BeginRegistration()
+    internal void BeginRegistration()
     {
         RegisterTag<ShadowPassTag>();
         RegisterTag<ScenePassTag>();
@@ -40,15 +43,10 @@ internal sealed class RenderFboRegistry
         RegisterTag<ScreenPassTag>();
     }
 
-    public void FinishRegistration()
-    {
-        _fboRegistry.AsSpan(0, _fboCount).Sort(RenderFbo.FboKeyComparer.Instance);
-    }
-
-    public void RegisterTag<TTag>() where TTag : unmanaged, IRenderPassTag
+    internal void RegisterTag<TTag>() where TTag : unmanaged, IRenderPassTag
         => TagRegistry.RegisterTag<TTag>();
 
-    public void Register<TTag>(FboVariant variant, RegisterFboEntry entry, Size2D outputSize)
+    internal void Register<TTag>(FboVariant variant, RegisterFboEntry entry, Size2D outputSize)
         where TTag : unmanaged, IRenderPassTag
     {
         InvalidOpThrower.ThrowIf(_fboCount >= RenderLimits.FboSlots);
@@ -67,12 +65,57 @@ internal sealed class RenderFboRegistry
         _fboRegistry[_fboCount++] = renderFbo;
     }
 
-    internal void RecreateSizedFrameBuffer(Size2D outputSize)
+    internal void FinishRegistration()
+    {
+        _fboRegistry.AsSpan(0, _fboCount).Sort(RenderFbo.FboKeyComparer.Instance);
+    }
+    
+    
+    public bool TryGetRenderFbo(FboTagKey key, out RenderFbo? fbo)
+    {
+        fbo = GetRenderFbo(key);
+        return fbo != null;
+    }
+
+    public RenderFbo? GetRenderFbo(FboTagKey key)
+    {
+        foreach (var fb in FrameBufferSpan)
+        {
+            if (fb.TagKey == key) return fb;
+        }
+
+        return null;
+    }
+
+    public RenderFbo? GetRenderFboById(FrameBufferId id)
+    {
+        foreach (var fb in FrameBufferSpan)
+        {
+            if (fb.FboId == id) return fb;
+        }
+
+        return null;
+    }
+
+    public void ResizeFixedFrameBuffer(FrameBufferId fboId, Size2D outputSize)
+    {
+        var fbo = GetRenderFboById(fboId);
+        
+        if (fbo == null) ThrowNotFound(fboId);
+        InvalidOpThrower.ThrowIfNot(fbo.IsFixedSize, nameof(fbo.IsFixedSize));
+        InvalidOpThrower.ThrowIf(fbo.Size == outputSize, nameof(outputSize));
+        
+        fbo.ChangeSizePolicy(RenderFbo.SizePolicy.Fixed(outputSize));
+        
+        _gfxFbo.RecreateFrameBuffer(fboId, outputSize);
+    }
+
+    public void RecreateScreenRelativeFbo(Size2D outputSize)
     {
         ArgumentOutOfRangeException.ThrowIfLessThan(outputSize.Width, 1, nameof(outputSize));
         ArgumentOutOfRangeException.ThrowIfLessThan(outputSize.Height, 1, nameof(outputSize));
 
-        var fbos = FrameBuffers;
+        var fbos = FrameBufferSpan;
         Span<(FrameBufferId, Size2D)> newSizes = stackalloc (FrameBufferId, Size2D)[fbos.Length];
         var idx = 0;
         foreach (var fbo in fbos)
@@ -81,45 +124,26 @@ internal sealed class RenderFboRegistry
             newSizes[idx++] = (fbo.FboId, fbo.CalculateNewSize(outputSize));
         }
 
+        Console.WriteLine($"Recreating {newSizes.Length} FBO");
         _gfxFbo.RecreateSizedFrameBuffer(newSizes.Slice(0, idx));
     }
 
 
-    public RenderFbo? GetRenderFbo(FboTagKey key)
-    {
-        var span = _fboRegistry.AsSpan(0, _fboCount);
-        foreach (var fb in span)
-        {
-            if (fb.TagKey == key) return fb;
-        }
-
-        return null;
-    }
-
-    public bool TryGetRenderFbo(FboTagKey key, out RenderFbo fbo)
-    {
-        var span = _fboRegistry.AsSpan(0, _fboCount);
-        foreach (var fb in span)
-        {
-            if (fb.TagKey != key) continue;
-            fbo = fb;
-            return true;
-        }
-
-        fbo = null!;
-        return false;
-    }
 
     private void OnFboChange(FrameBufferId id, in GfxMetaChanged<FrameBufferMeta> message)
     {
-        RenderFbo? renderFbo = null;
-        foreach (var fb in FrameBuffers)
-        {
-            if (fb.FboId != id) continue;
-            renderFbo = fb;
-        }
-
-        InvalidOpThrower.ThrowIfNull(renderFbo, nameof(id));
-        renderFbo!.UpdateFromMeta(in message.NewMeta);
+        ArgumentOutOfRangeException.ThrowIfLessThan(id.Value, 1, nameof(id));
+        var renderFbo = GetRenderFboById(id);
+        if (renderFbo is null) ThrowNotFound(id);
+        renderFbo.UpdateFromMeta(in message.NewMeta);
     }
+
+
+    [DoesNotReturn, StackTraceHidden]
+    private static void ThrowNotFound(FrameBufferId id) =>
+        throw new InvalidOperationException($"FrameBuffer with id: {id} not found");
+
+    [DoesNotReturn, StackTraceHidden]
+    private static void ThrowNotFound(FboTagKey key) =>
+        throw new InvalidOperationException($"FrameBuffer with key: {key} not found");
 }

@@ -2,9 +2,11 @@
 
 using System.Numerics;
 using System.Runtime.CompilerServices;
+using ConcreteEngine.Common;
 using ConcreteEngine.Common.Numerics;
 using ConcreteEngine.Graphics.Gfx.Definitions;
 using ConcreteEngine.Graphics.Gfx.Resources;
+using ConcreteEngine.Renderer.Data;
 using ConcreteEngine.Renderer.Passes;
 
 #endregion
@@ -23,8 +25,7 @@ public sealed class RenderFbo : IComparable<RenderFbo>
     public FboAttachmentIds Attachments { get; private set; }
     public RenderBufferMsaa MultiSample { get; private set; }
 
-
-    private readonly SizePolicy _sizePolicy;
+    private SizePolicy _sizePolicy;
 
     internal RenderFbo(FrameBufferId fboId, FboTagKey tagKey, int version, SizePolicy sizePolicy)
     {
@@ -34,12 +35,17 @@ public sealed class RenderFbo : IComparable<RenderFbo>
         Version = version;
     }
 
-
     internal void UpdateFromMeta(in FrameBufferMeta meta)
     {
         Size = meta.Size;
         Attachments = meta.Attachments;
         MultiSample = meta.MultiSample;
+    }
+
+    internal void ChangeSizePolicy(SizePolicy sizePolicy)
+    {
+        ArgumentNullException.ThrowIfNull(sizePolicy, nameof(sizePolicy));
+        _sizePolicy = sizePolicy;
     }
 
     public bool IsFixedSize => _sizePolicy.Mode == SizePolicy.ResizeMode.Fixed;
@@ -88,6 +94,18 @@ public sealed class RenderFbo : IComparable<RenderFbo>
             _calc = calc;
             _ratio = ratio;
             _fixed = fixedSize;
+
+            switch (mode)
+            {
+                case ResizeMode.Fixed:
+                    ArgOutOfRangeThrower.ThrowIfSizeTooSmall(fixedSize, RenderLimits.MinOutputSize);
+                    ArgOutOfRangeThrower.ThrowIfSizeTooBig(fixedSize, RenderLimits.MaxOutputSize);
+                    break;
+                case ResizeMode.Calculated:
+                    ArgumentOutOfRangeException.ThrowIfEqual(ratio.X, 0, nameof(ratio));
+                    ArgumentOutOfRangeException.ThrowIfEqual(ratio.Y, 0, nameof(ratio));
+                    break;
+            }
         }
 
         public static SizePolicy Default() => new(ResizeMode.Default, null, Vector2.One, default);

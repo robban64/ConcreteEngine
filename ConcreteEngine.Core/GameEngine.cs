@@ -1,5 +1,6 @@
 #region
 
+using ConcreteEngine.Common.Numerics;
 using ConcreteEngine.Common.Patterns;
 using ConcreteEngine.Core.Assets;
 using ConcreteEngine.Core.Configuration;
@@ -11,6 +12,7 @@ using ConcreteEngine.Core.Scene;
 using ConcreteEngine.Core.Scene.Modules;
 using ConcreteEngine.Core.Time;
 using ConcreteEngine.Graphics;
+using ConcreteEngine.Renderer.Passes;
 using ConcreteEngine.Renderer.State;
 using Silk.NET.Input;
 using Silk.NET.OpenGL;
@@ -101,6 +103,7 @@ public sealed class GameEngine : IDisposable
         _renderingSystem.SetupRenderer(builder);
     }
 
+    private bool hasResized = false;
 
     internal void Render(float dt)
     {
@@ -133,9 +136,8 @@ public sealed class GameEngine : IDisposable
 
         scene.BeforeRender(out var viewSnapshot);
 
-        _renderingSystem.PreRender(in frameInfo, in runtimeParams, in viewSnapshot);
-        _renderingSystem.FillDrawBuffers(frameInfo.Alpha);
-        _renderingSystem.ExecuteFrame(beginStatus, out var gfxFrameResult);
+        _renderingSystem.PreRender(beginStatus, in frameInfo, in runtimeParams, in viewSnapshot);
+        _renderingSystem.ExecuteFrame(out var gfxFrameResult);
         _renderEngineInfo.EndRenderFrame(gfxFrameResult);
 
         var entities = _sceneManager.Current?.InternalWorld.EntityCount ?? 0;

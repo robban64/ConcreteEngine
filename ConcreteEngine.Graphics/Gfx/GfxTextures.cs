@@ -57,7 +57,7 @@ public sealed class GfxTextures
 
     public TextureId CreateTexture(in GfxTextureDescriptor desc, in GfxTextureProperties props)
     {
-        var textRef = CreateTextureInternal(in desc, in props, out var meta);
+        var textRef = CreateDriverTexture(in desc, in props, out var meta);
         var textureId = _textureStore.Add(in meta, in textRef);
         return textureId;
     }
@@ -75,12 +75,11 @@ public sealed class GfxTextures
 
     internal GfxRefToken<TextureId> ReplaceTexture(TextureId textureId, in GfxReplaceTexture newProps)
     {
-        var meta = _textureStore.GetMeta(textureId);
+        var texRef = _textureStore.GetRefAndMeta(textureId, out var meta);
         var samples = meta.Kind == TextureKind.Multisample2D ? newProps.Samples ?? meta.Samples : newProps.Samples;
         var msaa = GfxUtilsEnum.ToRenderBufferMsaa(samples);
 
         ValidateRecreateTexture(newProps, in meta);
-
 
         var desc = new GfxTextureDescriptor(newProps.Width, newProps.Height,
             meta.Kind, meta.PixelFormat, meta.Depth, msaa);
@@ -88,7 +87,8 @@ public sealed class GfxTextures
         var props = new GfxTextureProperties((float)meta.Lod, meta.Preset, meta.Anisotropy, meta.CompareTextureFunc,
             meta.BorderColor);
 
-        var newTexRef = CreateTextureInternal(in desc, in props, out var newMeta);
+        var newTexRef = CreateDriverTexture(in desc, in props, out var newMeta, recreate: texRef);
+        Debug.Assert(newTexRef.Handle.Gen > texRef.Handle.Gen);
         _textureStore.Replace(textureId, in newMeta, in newTexRef, out _);
         return newTexRef;
     }
@@ -151,8 +151,8 @@ public sealed class GfxTextures
     }
 
 
-    private GfxRefToken<TextureId> CreateTextureInternal(in GfxTextureDescriptor desc, in GfxTextureProperties props,
-        out TextureMeta meta)
+    private GfxRefToken<TextureId> CreateDriverTexture(in GfxTextureDescriptor desc, in GfxTextureProperties props,
+        out TextureMeta meta, GfxRefToken<TextureId>? recreate = null)
     {
         ValidateTextureDescriptor(in desc, in props);
         var size = new Size2D(desc.Width, desc.Height);
@@ -160,7 +160,12 @@ public sealed class GfxTextures
         if (levels < 1) throw new InvalidOperationException(nameof(levels));
         var samples = desc.Samples.ToSamples();
 
-        var texRef = _driver.CreateTexture(desc.Kind);
+        GfxRefToken<TextureId> texRef;
+        if (recreate is { } recreateRef)
+            texRef = _driver.CreateReplaceTexture(recreateRef, desc.Kind);
+        else
+            texRef = _driver.CreateTexture(desc.Kind);
+            
 
         switch (desc.Kind)
         {
@@ -186,7 +191,6 @@ public sealed class GfxTextures
             (byte)levels, (byte)samples, props.Preset, desc.Kind, props.Anisotropy, desc.Format,
             props.CompareTextureFunc, props.BorderColor
         );
-
 
         return texRef;
     }

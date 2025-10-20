@@ -82,18 +82,18 @@ internal sealed class BackendResourceStore<TId, THandle> : IBackendResourceStore
         _free.Push(handle.Slot);
     }
 
-    // Don't think this should be used, leaving it here for now
-  /*  private GfxHandle Replace(in GfxHandle handle, THandle value)
+    public GfxRefToken<TId> Replace(GfxRefToken<TId> refToken, THandle value)
     {
+        var handle = refToken.Handle;
         Throwers.ThrowOnDefaultHandle(value);
         var oldValue = GetUntyped(handle);
         Throwers.IsUniqueHandleOrThrow(value.Value, oldValue.Value);
 
         var gen = (ushort)(handle.Gen + 1);
         _records[handle.Slot] = new BkHandle<THandle>(value, gen, true);
-        return handle with { Gen = gen };
+        return GfxRefToken<TId>.From(handle with { Gen = gen });
     }
-*/
+
     private int Allocate()
     {
         var len = _records.Length;

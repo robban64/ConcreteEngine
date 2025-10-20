@@ -126,8 +126,15 @@ public sealed class RenderEngine
         _graphics.BeginFrame(frameInfo.ToGfxFrameInfo());
 
         if (status == BeginFrameStatus.Resize)
-            _renderRegistry.FboRegistry.RecreateSizedFrameBuffer(frameInfo.OutputSize);
+            _renderRegistry.FboRegistry.RecreateScreenRelativeFbo(frameInfo.OutputSize);
     }
+
+    public void ResizeFrameBuffer(FrameBufferId fboId, Size2D newSize)
+        => _renderRegistry.FboRegistry.ResizeFixedFrameBuffer(fboId, newSize);
+    
+    public RenderFbo? GetRenderFbo<TTag>(FboVariant variant) where TTag : unmanaged, IRenderPassTag
+        => _renderRegistry.FboRegistry.GetRenderFbo(TagRegistry.FboKey<TTag>(variant));
+
 
     public void UploadFrameData()
     {

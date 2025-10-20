@@ -1,5 +1,6 @@
 #region
 
+using ConcreteEngine.Common;
 using ConcreteEngine.Common.Numerics;
 using ConcreteEngine.Graphics.Gfx.Contracts;
 using ConcreteEngine.Graphics.Gfx.Definitions;
@@ -30,6 +31,15 @@ internal sealed class GlTextures : IGraphicsDriverModule
     {
         _gl.CreateTextures(kind.ToGlEnum(), 1, out uint texture);
         return _textureStore.Add(new GlTextureHandle(texture));
+    }
+
+    public GfxRefToken<TextureId> CreateReplaceTexture(GfxRefToken<TextureId> texRef, TextureKind kind)
+    {
+        _textureStore.GetHandle(texRef);
+        
+        _gl.CreateTextures(kind.ToGlEnum(), 1, out uint texture);
+        var newHandle = new  GlTextureHandle(texture);
+        return _textureStore.Replace(texRef, newHandle);
     }
 
     public void TextureStorage2D(GfxRefToken<TextureId> texRef, Size2D size, BkTextureStoreDesc desc)

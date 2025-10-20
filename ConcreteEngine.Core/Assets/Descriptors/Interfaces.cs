@@ -1,5 +1,9 @@
+#region
+
 using System.Text.Json.Serialization;
 using ConcreteEngine.Core.Assets.Data;
+
+#endregion
 
 namespace ConcreteEngine.Core.Assets.Descriptors;
 
@@ -11,9 +15,7 @@ public interface IAssetDescriptor
 
 public interface IAssetCatalog
 {
-    [JsonIgnore]
-    int Count { get; }
-    
-    [JsonIgnore]
-    IReadOnlyList<IAssetDescriptor> Records { get; }
+    [JsonIgnore] int Count { get; }
+
+    [JsonIgnore] IReadOnlyList<IAssetDescriptor> Records { get; }
 }

@@ -5,14 +5,14 @@ using ConcreteEngine.Common;
 using ConcreteEngine.Common.Numerics;
 using ConcreteEngine.Core.Assets;
 using ConcreteEngine.Core.Assets.Meshes;
-using ConcreteEngine.Core.Engine.Configuration;
-using ConcreteEngine.Core.Rendering;
-using ConcreteEngine.Core.Rendering.Data;
-using ConcreteEngine.Core.Rendering.Descriptors;
+using ConcreteEngine.Core.Assets.Textures;
+using ConcreteEngine.Core.Configuration;
+using ConcreteEngine.Core.RenderingSystem;
 using ConcreteEngine.Core.Scene;
 using ConcreteEngine.Core.Scene.Entities;
 using ConcreteEngine.Graphics;
 using ConcreteEngine.Graphics.Primitives;
+using ConcreteEngine.Renderer.Descriptors;
 using Shader = ConcreteEngine.Core.Assets.Shaders.Shader;
 
 #endregion
@@ -25,19 +25,29 @@ public sealed class Demo3DScene : GameScene
     {
         var rng = Random.Shared;
 
-        var renderer = Context.GetSystem<IRenderSystem>();
+        var renderer = Context.GetSystem<IRenderingSystem>();
         var assets = Context.GetSystem<IAssetSystem>();
         var (store, materialStore) = (assets.Store, assets.MaterialStore);
 
-        var skyboxMaterial = materialStore.CreateMaterial("SkyboxMat","SkyboxMat1");
-
-        var rb = renderer.RenderProps;
-        rb.SetSkybox(skyboxMaterial.Id, Quaternion.Identity);
- 
-
-
+        // Scene globals
+        var rb = renderer.SceneProperties;
         rb.SetShadowDefault(2048);
 
+        // Skybox
+        var skyboxMaterial = materialStore.CreateMaterial("SkyboxMat","SkyboxMat1");
+        Context.World.Sky.SetSkyMaterial(skyboxMaterial.Id);
+        
+        // Terrain
+        var heightmap = assets.Store.GetByName<Texture2D>("Heightmap");
+        var terrainMat = assets.MaterialStore.CreateMaterial("TerrainMat", "TerrainMat1");
+        terrainMat.State.UvRepeat = 28;
+        terrainMat.State.Shininess = 10;
+        terrainMat.State.Specular = 0.04f;
+        
+        Context.World.Terrain.CreateTerrainMesh(heightmap);
+        Context.World.Terrain.SetMaterial(terrainMat.Id);
+
+        // Entities
         var boatMat = materialStore.CreateMaterial("BoatMat", "BoatMat1");
         var boatMesh = store.GetByName<Mesh>("Boat");
         boatMat.State.Specular = 0;

@@ -15,9 +15,9 @@ internal sealed class GlFrameBuffers : IGraphicsDriverModule
 {
     private readonly GL _gl;
     private readonly GlCapabilities _capabilities;
-    private readonly BackendOps<FrameBufferId, GlFboHandle, FrameBufferMeta, FrameBufferDef> _fboStore;
-    private readonly BackendOps<RenderBufferId, GlRboHandle, RenderBufferMeta, RenderBufferDef> _rboStore;
-    private readonly BackendOps<TextureId, GlTextureHandle, TextureMeta, TextureDef> _textureStore;
+    private readonly BackendResourceStore<FrameBufferId, GlFboHandle> _fboStore;
+    private readonly BackendResourceStore<RenderBufferId, GlRboHandle> _rboStore;
+    private readonly BackendResourceStore<TextureId, GlTextureHandle> _textureStore;
 
 
     internal GlFrameBuffers(GlCtx ctx)

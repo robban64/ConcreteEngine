@@ -15,7 +15,7 @@ internal sealed class GlBackendDriver : IGraphicsDriver
     private readonly GraphicsConfiguration _configuration;
 
     private readonly ResourceBackendDispatcher _dispatcher;
-    private readonly BackendOpsHub _store;
+    private readonly BackendStoreBundle _store;
 
     private readonly GlCapabilities _capabilities;
     private readonly GlDebugger _debugger;
@@ -31,7 +31,7 @@ internal sealed class GlBackendDriver : IGraphicsDriver
     public DeviceCapabilities Capabilities => _capabilities.Caps;
 
 
-    internal GlBackendDriver(GlStartupConfig config, BackendOpsHub store, ResourceBackendDispatcher dispatcher)
+    internal GlBackendDriver(GlStartupConfig config, BackendStoreBundle store, ResourceBackendDispatcher dispatcher)
     {
         _gl = config.DriverContext;
         _store = store;

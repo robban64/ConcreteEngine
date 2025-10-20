@@ -1,11 +1,9 @@
 #region
 
 using ConcreteEngine.Common;
-using ConcreteEngine.Core.Assets.Data;
 using ConcreteEngine.Core.Assets.Descriptors;
 using ConcreteEngine.Core.Assets.Internal;
 using ConcreteEngine.Core.Assets.Materials;
-using ConcreteEngine.Core.Engine;
 using ConcreteEngine.Graphics.Gfx;
 
 #endregion
@@ -25,11 +23,11 @@ public sealed class AssetSystem : IAssetSystem
         None = 0,
         ManifestLoaded = 1,
         Booting = 2,
-        Ready = 3,  
-        Loading = 4, 
+        Ready = 3,
+        Loading = 4,
         Unloaded = 5
     }
-    
+
     private AssetConfigLoader? _configLoader;
     private AssetStartupWorker? _processor;
     private AssetGfxUploader? _uploader;
@@ -37,7 +35,7 @@ public sealed class AssetSystem : IAssetSystem
 
     private AssetManifest _manifest = null!;
 
-    private readonly MaterialStore _materialStore ;
+    private readonly MaterialStore _materialStore;
 
     private readonly AssetStore _assetStore;
 
@@ -48,10 +46,10 @@ public sealed class AssetSystem : IAssetSystem
         _assetStore = new AssetStore();
         _materialStore = new MaterialStore(_assetStore);
     }
-    
+
     internal AssetStore InternalStore => _assetStore;
     public IAssetStore Store => _assetStore;
-    public IMaterialStore MaterialStore  =>  _materialStore;
+    public IMaterialStore MaterialStore => _materialStore;
 
     internal MaterialStore Materials => _materialStore;
 
@@ -74,7 +72,7 @@ public sealed class AssetSystem : IAssetSystem
         ArgumentNullException.ThrowIfNull(_configLoader, nameof(_configLoader));
 
         CurrentStatus = Status.Booting;
-        
+
         _uploader = new AssetGfxUploader(gfx);
         _loader = new AssetLoader();
         _processor = new AssetStartupWorker(_loader, _configLoader, _manifest);
@@ -92,13 +90,13 @@ public sealed class AssetSystem : IAssetSystem
     internal void FinishLoading()
     {
         _materialStore.InitializeStore();
-        
+
         _processor?.Finish();
         _processor = null;
 
         _loader?.DeactivateLoader();
         _loader = null;
-        
+
         _uploader = null;
         _configLoader = null;
 

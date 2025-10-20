@@ -26,8 +26,8 @@ internal interface IBackendReadResourceStore<out THandle>
     //GfxHandle Replace(in GfxHandle handle, THandle value);
 }
 
-internal sealed class BackendResourceStore<THandle> : IBackendResourceStore, IBackendReadResourceStore<THandle>
-    where THandle : unmanaged, IResourceHandle, IEquatable<THandle>
+internal sealed class BackendResourceStore<TId, THandle> : IBackendResourceStore, IBackendReadResourceStore<THandle>
+    where THandle : unmanaged, IResourceHandle, IEquatable<THandle> where TId : unmanaged, IResourceId
 {
     private int _idx = 0;
     private BkHandle<THandle>[] _records = new BkHandle<THandle>[16];
@@ -42,8 +42,7 @@ internal sealed class BackendResourceStore<THandle> : IBackendResourceStore, IBa
         Kind = kind;
     }
 
-    public THandle GetHandle<TId>(GfxRefToken<TId> refToken) where TId : unmanaged, IResourceId =>
-        _records[refToken.Handle.Slot].Handle;
+    public THandle GetHandle(GfxRefToken<TId> refToken) => _records[refToken.Handle.Slot].Handle;
 
     public NativeHandle GetNativeHandle(in GfxHandle handle) => NativeHandle.From(GetUntyped(in handle));
 
@@ -58,14 +57,14 @@ internal sealed class BackendResourceStore<THandle> : IBackendResourceStore, IBa
     public bool IsValid(in GfxHandle handle) => _records[handle.Slot].IsValid;
 
 
-    public GfxHandle Add(THandle value)
+    public GfxRefToken<TId> Add(THandle value)
     {
         Throwers.ThrowOnDefaultHandle(value);
         int idx = _free.Count > 0 ? _free.Pop() : Allocate();
         var prev = _records[idx];
         var gen = (ushort)(prev.Gen + 1);
         _records[idx] = new BkHandle<THandle>(value, gen, true);
-        return new GfxHandle(idx, gen, Kind);
+        return GfxRefToken<TId>.From(new GfxHandle(idx, gen, Kind));
     }
 
 
@@ -84,7 +83,7 @@ internal sealed class BackendResourceStore<THandle> : IBackendResourceStore, IBa
     }
 
     // Don't think this should be used, leaving it here for now
-    public GfxHandle Replace(in GfxHandle handle, THandle value)
+  /*  private GfxHandle Replace(in GfxHandle handle, THandle value)
     {
         Throwers.ThrowOnDefaultHandle(value);
         var oldValue = GetUntyped(handle);
@@ -94,7 +93,7 @@ internal sealed class BackendResourceStore<THandle> : IBackendResourceStore, IBa
         _records[handle.Slot] = new BkHandle<THandle>(value, gen, true);
         return handle with { Gen = gen };
     }
-
+*/
     private int Allocate()
     {
         var len = _records.Length;

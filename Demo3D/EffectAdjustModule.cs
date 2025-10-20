@@ -1,11 +1,8 @@
 using ConcreteEngine.Common.Numerics;
-using ConcreteEngine.Core.Engine;
-using ConcreteEngine.Core.Engine.Data;
-using ConcreteEngine.Core.Engine.Platform;
-using ConcreteEngine.Core.Modules;
-using ConcreteEngine.Core.Rendering;
-using ConcreteEngine.Core.Rendering.Data;
-using ConcreteEngine.Core.Rendering.State;
+using ConcreteEngine.Core.Data;
+using ConcreteEngine.Core.Platform;
+using ConcreteEngine.Core.RenderingSystem;
+using ConcreteEngine.Core.Scene.Modules;
 using Silk.NET.Input;
 
 namespace Demo3D;
@@ -20,8 +17,8 @@ internal sealed class EffectAdjustModule : GameModule
     public override void Initialize()
     {
         _input = Context.GetSystem<IInputSystem>().InputSource;
-        var renderer = Context.GetSystem<IRenderSystem>();
-        _renderProps = renderer.RenderProps;
+        var renderer = Context.GetSystem<IRenderingSystem>();
+        _renderProps = renderer.SceneProperties;
     }
 
     public override void Update(in UpdateTickInfo frameCtx)

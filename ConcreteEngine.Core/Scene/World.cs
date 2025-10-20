@@ -1,6 +1,7 @@
 #region
 
-using ConcreteEngine.Core.Rendering.State;
+using ConcreteEngine.Core.RenderingSystem;
+using ConcreteEngine.Core.RenderingSystem.Batching;
 using ConcreteEngine.Core.Scene.Entities;
 
 #endregion
@@ -9,59 +10,81 @@ namespace ConcreteEngine.Core.Scene;
 
 public interface IWorld
 {
+    public int EntityCount { get; }
+
     RenderSceneProps RenderProps { get; }
+    WorldSkybox Sky { get; }
+    WorldTerrain Terrain { get; }
 
     EntityId Create();
     EntityStore<Transform> Transforms { get; }
     EntityStore<MeshComponent> Meshes { get; }
     EntityStore<Transform2D> Transforms2D { get; }
-    EntityStore<Transform2D> PrevTransforms2D { get; }
     EntityStore<SpriteComponent> Sprites { get; }
-    EntityStore<TilemapComponent> Tilemaps { get; }
-    EntityStore<LightComponent> Lights { get; }
+
+    EntityEnumerator<T1> Query<T1>() where T1 : unmanaged;
+    EntityEnumerator<T1, T2> Query<T1, T2>() where T1 : unmanaged where T2 : unmanaged;
+    EntityEnumerator<T1, T2, T3> Query<T1, T2, T3>() where T1 : unmanaged where T2 : unmanaged where T3 : unmanaged;
 }
 
 public sealed class World : IWorld
 {
-    private int _idIdx = 1;
-
     public RenderSceneProps RenderProps { get; }
 
-    internal World(RenderSceneProps renderProps)
+    public WorldSkybox Sky { get; }
+    public WorldTerrain Terrain { get; }
+
+    public EntityStore<Transform> Transforms { get; }
+    public EntityStore<MeshComponent> Meshes { get; }
+    public EntityStore<Transform2D> Transforms2D { get; }
+    public EntityStore<SpriteComponent> Sprites { get; }
+
+    
+    public EntityId Create() => new(_idIdx++);
+    public int EntityCount => _idIdx;
+
+    private int _idIdx = 1;
+
+    internal World(RenderSceneProps renderProps, BatcherRegistry batchers)
     {
         RenderProps = renderProps;
+        Terrain = new WorldTerrain(batchers.Get<TerrainBatcher>());
+        Sky = new WorldSkybox();
+
+        Transforms2D = GenericStores<Transform2D>.CreateStore();
+        Transforms = GenericStores<Transform>.CreateStore();
+        Meshes = GenericStores<MeshComponent>.CreateStore();
+        Sprites = GenericStores<SpriteComponent>.CreateStore();
     }
-
-
-    public EntityId Create() => new(_idIdx++);
-
-    public EntityStore<Transform> Transforms { get; } = new();
-    public EntityStore<MeshComponent> Meshes { get; } = new();
-    public EntityStore<Transform2D> Transforms2D { get; } = new();
-    public EntityStore<Transform2D> PrevTransforms2D { get; } = new();
-    public EntityStore<SpriteComponent> Sprites { get; } = new();
-    public EntityStore<TilemapComponent> Tilemaps { get; } = new(4);
-    public EntityStore<LightComponent> Lights { get; } = new();
-
 
     public void Cleanup()
     {
         Transforms.Cleanup();
         Transforms2D.Cleanup();
-        PrevTransforms2D.Cleanup();
         Sprites.Cleanup();
-        Tilemaps.Cleanup();
-        Lights.Cleanup();
         Meshes.Cleanup();
+    }
 
-        if (PrevTransforms2D.Count > 0)
+    public EntityEnumerator<T1> Query<T1>() where T1 : unmanaged =>
+        new(GenericStores<T1>.Store);
+
+    public EntityEnumerator<T1, T2> Query<T1, T2>() where T1 : unmanaged where T2 : unmanaged
+        => new(GenericStores<T1>.Store, GenericStores<T2>.Store);
+
+    public EntityEnumerator<T1, T2, T3> Query<T1, T2, T3>()
+        where T1 : unmanaged where T2 : unmanaged where T3 : unmanaged
+        => new(GenericStores<T1>.Store, GenericStores<T2>.Store, GenericStores<T3>.Store);
+
+
+    private static class GenericStores<T> where T : unmanaged
+    {
+        public static EntityStore<T> Store { get; private set; } = null!;
+
+        public static EntityStore<T> CreateStore()
         {
-            foreach (var view in PrevTransforms2D.View2(Transforms2D))
-            {
-                ref var prev = ref view.Value1;
-                ref var curr = ref view.Value2;
-                prev.Position = curr.Position;
-            }
+            var store = new EntityStore<T>();
+            Store = store;
+            return store;
         }
     }
 }

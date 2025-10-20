@@ -15,7 +15,7 @@ internal sealed class GlTextures : IGraphicsDriverModule
 {
     private readonly GL _gl;
     private readonly GlCapabilities _capabilities;
-    private readonly BackendOps<TextureId, GlTextureHandle, TextureMeta, TextureDef> _textureStore;
+    private readonly BackendResourceStore<TextureId, GlTextureHandle> _textureStore;
 
 
     internal GlTextures(GlCtx ctx)

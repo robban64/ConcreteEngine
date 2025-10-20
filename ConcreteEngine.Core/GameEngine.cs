@@ -2,22 +2,17 @@
 
 using ConcreteEngine.Common.Patterns;
 using ConcreteEngine.Core.Assets;
-using ConcreteEngine.Core.Engine;
-using ConcreteEngine.Core.Engine.Configuration;
-using ConcreteEngine.Core.Engine.Data;
-using ConcreteEngine.Core.Engine.Platform;
-using ConcreteEngine.Core.Engine.Time;
-using ConcreteEngine.Core.Features;
-using ConcreteEngine.Core.Modules;
-using ConcreteEngine.Core.Rendering;
-using ConcreteEngine.Core.Rendering.Data;
-using ConcreteEngine.Core.Rendering.State;
+using ConcreteEngine.Core.Configuration;
+using ConcreteEngine.Core.Data;
+using ConcreteEngine.Core.Platform;
+using ConcreteEngine.Core.RenderingSystem.Batching;
 using ConcreteEngine.Core.Scene;
+using ConcreteEngine.Core.Scene.Modules;
+using ConcreteEngine.Core.Time;
 using ConcreteEngine.Graphics;
-using ConcreteEngine.Graphics.Gfx.Resources;
+using ConcreteEngine.Renderer.State;
 using Silk.NET.OpenGL;
-using RenderFrameInfo = ConcreteEngine.Core.Engine.Data.RenderFrameInfo;
-using Shader = ConcreteEngine.Core.Assets.Shaders.Shader;
+using RenderFrameInfo = ConcreteEngine.Core.Data.RenderFrameInfo;
 
 #endregion
 
@@ -31,10 +26,10 @@ public sealed class GameEngine : IDisposable
     private readonly EngineCoreSystem _coreSystems;
     private readonly AssetSystem _assets;
     private readonly InputSystem _inputSystem;
-    private readonly RenderSystem _renderer;
+    private readonly RenderingSystem.RenderingSystem _renderingSystem;
+
 
     private readonly ModuleManager _modules;
-    private readonly FeatureManager _features;
     private readonly SceneManager _sceneManager;
 
     private readonly UpdateFrameInfo _updateInfo = new();
@@ -61,16 +56,17 @@ public sealed class GameEngine : IDisposable
         _sceneManager = new SceneManager(sceneFactories);
 
         _modules = new ModuleManager();
-        _features = new FeatureManager();
 
         // time
         _timeHub = new EngineTimeHub(GameTickUpdate, FpsTickUpdate, OnGpuTickUpload, OnGpuTickDispose);
 
-        // input
+        // systems
+
         _inputSystem = new InputSystem(input);
         _assets = new AssetSystem();
-        _renderer = new RenderSystem(_graphics, _window.OutputSize);
-        _coreSystems = new EngineCoreSystem(_renderer, _inputSystem, _assets);
+        _renderingSystem = new RenderingSystem.RenderingSystem(_window, _graphics, _assets);
+        _coreSystems = new EngineCoreSystem(_renderingSystem, _inputSystem, _assets);
+
 
         _stateMachine = new LinearStateMachine<EngineStateLevel>(Enum.GetValues<EngineStateLevel>());
     }
@@ -85,37 +81,30 @@ public sealed class GameEngine : IDisposable
     private void InitializeSystems()
     {
         _assets.FinishLoading();
-
-        _renderer.InitializeDraw();
         _coreSystems.Initialize();
+        RegisterRenderer();
     }
 
-    private void UploadMaterialData()
+    private void RegisterRenderer()
     {
-        Span<TextureSlotInfo> slots = stackalloc TextureSlotInfo[RenderLimits.TextureSlots];
-        foreach (var material in _assets.Materials.MaterialSpan)
-        {
-            var length = _assets.Materials.FillTextureInfo(material!, slots);
-            _assets.Materials.GetMaterialUploadData(material!, out var payload);
-            _renderer.SubmitMaterialDrawData(in payload, slots.Slice(0, length));
-        }
+        var builder = _renderingSystem.Initialize((gfx, batchers) => { batchers.Register(new TerrainBatcher(gfx)); });
+
+        _renderingSystem.SetupRenderer(builder);
     }
 
 
-
-    private Action? _uploadMaterialDel;
     internal void Render(float dt)
     {
         var alpha = _timeHub.Alpha;
 
         var frameStatus = _renderInfo.BeginRenderFrame(dt, alpha, _window, _inputSystem.InputSource,
-            out var tickInfo, out var tickParams);
+            out var frameInfo, out var runtimeParams);
 
         _timeHub.RenderFrame(dt);
 
         if (_sceneManager.Current is not { } scene)
         {
-            _renderer.RenderEmptyFrame(in tickInfo);
+            _renderingSystem.RenderEmptyFrame(in frameInfo);
             return;
         }
 
@@ -131,20 +120,16 @@ public sealed class GameEngine : IDisposable
             beginStatus = BeginFrameStatus.Resize;
         }
 
+        scene.BeforeRender(out var viewSnapshot);
 
-        scene.BeforeRender(out var viewInfo);
-        _renderer.BeginRenderFrame(beginStatus, in tickInfo, in tickParams, in viewInfo);
+        _renderingSystem.PreRender(in frameInfo, in runtimeParams, in viewSnapshot);
+        _renderingSystem.FillDrawBuffers(frameInfo.Alpha);
+        _renderingSystem.ExecuteFrame(beginStatus, out var gfxFrameResult);
+        _renderInfo.EndRenderFrame(gfxFrameResult);
 
         // _renderTime.TickOrRenderEffect();
-
-        _uploadMaterialDel ??= UploadMaterialData;
-        _renderer.Render(in tickInfo, _uploadMaterialDel);
-
         //_renderTime.TickOrGpuDispose();
         //_renderTime.TickOrGpuUpload();
-
-        _renderer.EndRenderFrame(out var gfxFrameResult);
-        _renderInfo.EndRenderFrame(gfxFrameResult);
     }
 
     private void OnGpuTickDispose(int tick)
@@ -176,10 +161,8 @@ public sealed class GameEngine : IDisposable
     private void GameTickUpdate(int tick)
     {
         _updateInfo.UpdateTick(tick);
-        _renderer.BeginTick(_updateInfo.UpdateTickInfo);
         _inputSystem.Update();
         _sceneManager.Current?.UpdateTick(tick);
-        _renderer.EndTick();
     }
 
     private void FpsTickUpdate(int tick)
@@ -207,7 +190,6 @@ public sealed class GameEngine : IDisposable
                 _stateMachine.Next(_assets.ProcessLoader(8));
                 break;
             case EngineStateLevel.InitializeSystem:
-                InitializeGraphics();
                 InitializeSystems();
                 _stateMachine.Next();
                 break;
@@ -218,40 +200,23 @@ public sealed class GameEngine : IDisposable
         }
     }
 
-    private void InitializeGraphics()
-    {
-        var store = _assets.Store;
-
-        var shaderCount = store.GetMetaSnapshot<Shader>().Count;
-        Span<ShaderId> shaderIds = stackalloc ShaderId[shaderCount];
-        store.ExtractSpan<Shader, ShaderId>(shaderIds, static shader => shader.ResourceId);
-        
-        _renderer.InitializeRegistry(shaderIds, new RenderCoreShaders
-        {
-            DepthShader = store.GetByName<Shader>("Depth").ResourceId,
-            ColorFilterShader = store.GetByName<Shader>("ColorFilter").ResourceId,
-            CompositeShader = store.GetByName<Shader>("Composite").ResourceId,
-            PresentShader = store.GetByName<Shader>("Present").ResourceId
-
-        });
-    }
 
     private void UpdateSceneTransitionIfNeeded()
     {
         if (!_sceneManager.HasPendingSwitch)
             return;
 
-        var sceneContext = new GameSceneContext(_coreSystems) { Features = _features, Modules = _modules };
-        var builder = new GameSceneConfigBuilder(_features, _modules);
+        var sceneContext = new GameSceneContext(_coreSystems) { Modules = _modules };
+        var builder = new GameSceneConfigBuilder(_modules);
 
-        _sceneManager.ApplyPendingScene(sceneContext, builder, _renderer, AfterBuild);
+        _sceneManager.ApplyPendingScene(sceneContext, builder, _renderingSystem, AfterBuild);
 
-        _features.Load(new GameFeatureContext(sceneContext));
         _modules.Load(new GameModuleContext(sceneContext));
         return;
 
-        void AfterBuild(SceneManager.SceneBuildResult result, RenderSystem renderer)
+        void AfterBuild(SceneManager.SceneBuildResult result, RenderingSystem.RenderingSystem renderer)
         {
+            renderer.AttachWorld((World)result.Context.World);
             foreach (var module in result.Modules) result.Context.Modules.AddModule(module());
         }
     }

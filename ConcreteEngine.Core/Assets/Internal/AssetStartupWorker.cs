@@ -3,7 +3,6 @@
 using System.Diagnostics.CodeAnalysis;
 using ConcreteEngine.Common;
 using ConcreteEngine.Core.Assets.Descriptors;
-using ConcreteEngine.Core.Assets.Materials;
 
 #endregion
 

@@ -14,9 +14,9 @@ namespace ConcreteEngine.Graphics.OpenGL;
 internal sealed class GlBuffers : IGraphicsDriverModule
 {
     private readonly GL _gl;
-    private readonly BackendOps<VertexBufferId, GlVboHandle, VertexBufferMeta, VertexBufferDef> _vboStore;
-    private readonly BackendOps<IndexBufferId, GlIboHandle, IndexBufferMeta, IndexBufferDef> _iboStore;
-    private readonly BackendOps<UniformBufferId, GlUboHandle, UniformBufferMeta, UniformBufferDef> _uboStore;
+    private readonly BackendResourceStore<VertexBufferId, GlVboHandle> _vboStore;
+    private readonly BackendResourceStore<IndexBufferId, GlIboHandle> _iboStore;
+    private readonly BackendResourceStore<UniformBufferId, GlUboHandle> _uboStore;
 
     internal GlBuffers(GlCtx ctx)
     {
@@ -52,69 +52,69 @@ internal sealed class GlBuffers : IGraphicsDriverModule
     public void SetVertexBufferData(GfxRefToken<VertexBufferId> vboRef, ReadOnlySpan<byte> data, nint size,
         BufferUsage usage)
     {
-        _gl.NamedBufferData(GetVboHandle(vboRef).Value, (nuint)size, data, usage.ToGlEnum());
+        _gl.NamedBufferData(_vboStore.GetHandle(vboRef), (nuint)size, data, usage.ToGlEnum());
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public void SetIndexBufferData(GfxRefToken<IndexBufferId> iboRef, ReadOnlySpan<byte> data, nint size,
         BufferUsage usage)
     {
-        _gl.NamedBufferData(GetIboHandle(iboRef).Value, (nuint)size, data, usage.ToGlEnum());
+        _gl.NamedBufferData(_iboStore.GetHandle(iboRef), (nuint)size, data, usage.ToGlEnum());
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public void SetUniformBufferData(GfxRefToken<UniformBufferId> uboRef, ReadOnlySpan<byte> data, nint size,
         BufferUsage usage)
     {
-        _gl.NamedBufferData(GetUboHandle(uboRef).Value, (nuint)size, data, usage.ToGlEnum());
+        _gl.NamedBufferData(_uboStore.GetHandle(uboRef), (nuint)size, data, usage.ToGlEnum());
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public unsafe void ResizeVertexBuffer(GfxRefToken<VertexBufferId> vboRef, nint size, BufferUsage usage)
 
     {
-        _gl.NamedBufferData(GetVboHandle(vboRef).Value, (nuint)size, (void*)0, usage.ToGlEnum());
+        _gl.NamedBufferData(_vboStore.GetHandle(vboRef), (nuint)size, (void*)0, usage.ToGlEnum());
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public unsafe void ResizeIndexBuffer(GfxRefToken<IndexBufferId> iboRef, nint size, BufferUsage usage)
 
     {
-        _gl.NamedBufferData(GetIboHandle(iboRef).Value, (nuint)size, (void*)0, usage.ToGlEnum());
+        _gl.NamedBufferData(_iboStore.GetHandle(iboRef), (nuint)size, (void*)0, usage.ToGlEnum());
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public unsafe void ResizeUniformBuffer(GfxRefToken<UniformBufferId> uboRef, nint size, BufferUsage usage)
 
     {
-        _gl.NamedBufferData(GetUboHandle(uboRef).Value, (nuint)size, (void*)0, usage.ToGlEnum());
+        _gl.NamedBufferData(_uboStore.GetHandle(uboRef), (nuint)size, (void*)0, usage.ToGlEnum());
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public void UploadVertexBufferData(GfxRefToken<VertexBufferId> vboRef, ReadOnlySpan<byte> data, nint offset,
         nint size)
     {
-        _gl.NamedBufferSubData(GetVboHandle(vboRef).Value, offset, (nuint)size, data);
+        _gl.NamedBufferSubData(_vboStore.GetHandle(vboRef), offset, (nuint)size, data);
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public void UploadIndexBufferData(GfxRefToken<IndexBufferId> iboRef, ReadOnlySpan<byte> data, nint offset,
         nint size)
     {
-        _gl.NamedBufferSubData(GetIboHandle(iboRef).Value, offset, (nuint)size, data);
+        _gl.NamedBufferSubData(_iboStore.GetHandle(iboRef), offset, (nuint)size, data);
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public void UploadUniformBufferData(GfxRefToken<UniformBufferId> uboRef, ReadOnlySpan<byte> data, nint offset,
         nint size)
     {
-        _gl.NamedBufferSubData(GetUboHandle(uboRef).Value, offset, (nuint)size, data);
+        _gl.NamedBufferSubData(_uboStore.GetHandle(uboRef), offset, (nuint)size, data);
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public void BindUniformBufferRange(GfxRefToken<UniformBufferId> uboRef, int slot, nint offset, nint size)
     {
-        var nHandle = GetUboHandle(uboRef).Value;
+        var nHandle = _uboStore.GetHandle(uboRef);
         _gl.BindBufferRange(BufferTargetARB.UniformBuffer, (uint)slot, nHandle, offset, (nuint)size);
     }
 
@@ -140,12 +140,4 @@ internal sealed class GlBuffers : IGraphicsDriverModule
         return new NativeHandle(buffer);
     }
 
-    [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    private GlVboHandle GetVboHandle(GfxRefToken<VertexBufferId> vboRef) => _vboStore.GetHandle(vboRef);
-
-    [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    private GlIboHandle GetIboHandle(GfxRefToken<IndexBufferId> iboRef) => _iboStore.GetHandle(iboRef);
-
-    [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    private GlUboHandle GetUboHandle(GfxRefToken<UniformBufferId> uboRef) => _uboStore.GetHandle(uboRef);
 }

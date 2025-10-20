@@ -1,10 +1,10 @@
 #region
 
 using ConcreteEngine.Common.Numerics;
-using ConcreteEngine.Core.Engine.Configuration;
-using ConcreteEngine.Core.Engine.Data;
-using ConcreteEngine.Core.Rendering;
-using ConcreteEngine.Core.Rendering.State;
+using ConcreteEngine.Core.Configuration;
+using ConcreteEngine.Core.Data;
+using ConcreteEngine.Core.RenderingSystem;
+using ConcreteEngine.Renderer.State;
 
 #endregion
 
@@ -28,14 +28,12 @@ public abstract class GameScene
     internal void Update(in UpdateTickInfo frameCtx, Size2D output)
     {
         _camera.Viewport = output;
-        Context.Features.Update(in frameCtx);
         Context.Modules.Update(in frameCtx);
     }
 
     internal void UpdateTick(int tick)
     {
         Context.Modules.GameTickUpdate(tick);
-        Context.Features.GameTickUpdate(tick);
         World.Cleanup();
     }
 
@@ -47,8 +45,8 @@ public abstract class GameScene
 
     internal void AttachContext(GameSceneContext context)
     {
-        var renderer = context.GetSystem<IRenderSystem>();
-        _world = new World(renderer.RenderProps);
+        var renderer = context.GetSystem<IRenderingSystem>();
+        _world = new World(renderer.SceneProperties, renderer.Batchers);
         context.World = World;
         context.Camera = _camera;
         Context = context;

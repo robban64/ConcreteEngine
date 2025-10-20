@@ -4,11 +4,11 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ConcreteEngine.Graphics", "
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ConcreteEngine.Core", "ConcreteEngine.Core\ConcreteEngine.Core.csproj", "{F43FF68D-8170-4802-BE9E-DCBD628C6F08}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Demo2D", "Demo2D\Demo2D.csproj", "{E9117BD5-4D48-47DB-B4C1-E13B27EB58A9}"
-EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ConcreteEngine.Common", "ConcreteEngine.Common\ConcreteEngine.Common.csproj", "{44B37750-4689-4EAB-BBBD-2EDE1A0C0F39}"
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Demo3D", "Demo3D\Demo3D.csproj", "{F41247F4-C0D4-4031-B619-AF456F95D065}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ConcreteEngine.Renderer", "ConcreteEngine.Renderer\ConcreteEngine.Renderer.csproj", "{B2C7ADA5-CEBB-48B4-96ED-2E8CF82D884B}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -24,10 +24,6 @@ Global
 		{F43FF68D-8170-4802-BE9E-DCBD628C6F08}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{F43FF68D-8170-4802-BE9E-DCBD628C6F08}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{F43FF68D-8170-4802-BE9E-DCBD628C6F08}.Release|Any CPU.Build.0 = Release|Any CPU
-		{E9117BD5-4D48-47DB-B4C1-E13B27EB58A9}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
-		{E9117BD5-4D48-47DB-B4C1-E13B27EB58A9}.Debug|Any CPU.Build.0 = Debug|Any CPU
-		{E9117BD5-4D48-47DB-B4C1-E13B27EB58A9}.Release|Any CPU.ActiveCfg = Release|Any CPU
-		{E9117BD5-4D48-47DB-B4C1-E13B27EB58A9}.Release|Any CPU.Build.0 = Release|Any CPU
 		{44B37750-4689-4EAB-BBBD-2EDE1A0C0F39}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
 		{44B37750-4689-4EAB-BBBD-2EDE1A0C0F39}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{44B37750-4689-4EAB-BBBD-2EDE1A0C0F39}.Release|Any CPU.ActiveCfg = Release|Any CPU
@@ -36,5 +32,9 @@ Global
 		{F41247F4-C0D4-4031-B619-AF456F95D065}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{F41247F4-C0D4-4031-B619-AF456F95D065}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{F41247F4-C0D4-4031-B619-AF456F95D065}.Release|Any CPU.Build.0 = Release|Any CPU
+		{B2C7ADA5-CEBB-48B4-96ED-2E8CF82D884B}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{B2C7ADA5-CEBB-48B4-96ED-2E8CF82D884B}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{B2C7ADA5-CEBB-48B4-96ED-2E8CF82D884B}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{B2C7ADA5-CEBB-48B4-96ED-2E8CF82D884B}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 EndGlobal

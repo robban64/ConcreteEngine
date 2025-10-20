@@ -7,24 +7,19 @@ public interface IGfxResourceManager
 
 internal sealed class GfxResourceManager : IGfxResourceManager
 {
-    private readonly GfxStoreHub _gfxStores;
-    private readonly BackendStoreHub _backendHub;
-
-    private readonly ResourceBackendDispatcher _dispatchers;
-
     private readonly GfxResourceApi _resourceApi;
 
-    internal BackendStoreHub BackendStoreHub => _backendHub;
-    internal GfxStoreHub GfxStoreHub => _gfxStores;
-    internal ResourceBackendDispatcher BackendDispatcher => _dispatchers;
+    internal BackendStoreHub BackendStoreHub { get; }
+    internal GfxStoreHub GfxStoreHub { get; }
+    internal ResourceBackendDispatcher BackendDispatcher { get; }
 
     internal GfxResourceManager()
     {
-        _gfxStores = new GfxStoreHub();
-        _backendHub = new BackendStoreHub();
-        _dispatchers = new ResourceBackendDispatcher { OnDelete = OnDeleted };
+        GfxStoreHub = new GfxStoreHub();
+        BackendStoreHub = new BackendStoreHub();
+        BackendDispatcher = new ResourceBackendDispatcher { OnDelete = OnDeleted };
 
-        _resourceApi = new GfxResourceApi(_gfxStores);
+        _resourceApi = new GfxResourceApi(GfxStoreHub);
     }
 
     internal void OnDeleted(in DeleteResourceCommand cmd)

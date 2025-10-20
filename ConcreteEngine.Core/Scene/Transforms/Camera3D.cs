@@ -2,8 +2,8 @@
 
 using System.Numerics;
 using ConcreteEngine.Common.Numerics;
-using ConcreteEngine.Core.Rendering.Data;
-using ConcreteEngine.Core.Rendering.State;
+using ConcreteEngine.Renderer.Data;
+using ConcreteEngine.Renderer.State;
 
 #endregion
 

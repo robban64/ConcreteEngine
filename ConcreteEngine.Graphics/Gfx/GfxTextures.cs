@@ -14,15 +14,13 @@ namespace ConcreteEngine.Graphics.Gfx;
 
 public sealed class GfxTextures
 {
-    private readonly GfxStoreHub _resources;
-    private readonly GfxResourceRepository _repository;
-
     private readonly GlTextures _driver;
+
+    private readonly GfxResourceStore<TextureId, TextureMeta> _textureStore;
 
     internal GfxTextures(GfxContextInternal context)
     {
-        _resources = context.Stores;
-        _repository = context.Repositories;
+        _textureStore = context.Stores.TextureStore;
         _driver = context.Driver.Textures;
     }
 
@@ -60,13 +58,13 @@ public sealed class GfxTextures
     public TextureId CreateTexture(in GfxTextureDescriptor desc, in GfxTextureProperties props)
     {
         var textRef = CreateTextureInternal(in desc, in props, out var meta);
-        var textureId = _resources.TextureStore.Add(in meta, in textRef);
+        var textureId = _textureStore.Add(in meta, in textRef);
         return textureId;
     }
 
     public void ApplyProperties(TextureId textureId)
     {
-        var texRef = _resources.TextureStore.GetRefAndMeta(textureId, out var meta);
+        var texRef = _textureStore.GetRefAndMeta(textureId, out var meta);
         if (meta.IsMsaa) return;
         var wrapR = SupportsWrapR(meta.Kind);
         ApplyTextureProperties(texRef, in meta, wrapR);
@@ -77,7 +75,7 @@ public sealed class GfxTextures
 
     internal GfxRefToken<TextureId> ReplaceTexture(TextureId textureId, in GfxReplaceTexture newProps)
     {
-        var meta = _resources.TextureStore.GetMeta(textureId);
+        var meta = _textureStore.GetMeta(textureId);
         var samples = meta.Kind == TextureKind.Multisample2D ? newProps.Samples ?? meta.Samples : newProps.Samples;
         var msaa = GfxUtilsEnum.ToRenderBufferMsaa(samples);
 
@@ -91,14 +89,14 @@ public sealed class GfxTextures
             meta.BorderColor);
 
         var newTexRef = CreateTextureInternal(in desc, in props, out var newMeta);
-        _resources.TextureStore.Replace(textureId, in newMeta, in newTexRef, out _);
+        _textureStore.Replace(textureId, in newMeta, in newTexRef, out _);
         return newTexRef;
     }
 
 
     public void UploadTexture2D(TextureId textureId, ReadOnlySpan<byte> data, int width, int height)
     {
-        var texRef = _resources.TextureStore.GetRefAndMeta(textureId, out var meta);
+        var texRef = _textureStore.GetRefAndMeta(textureId, out var meta);
         if (meta.Kind == TextureKind.Unknown) throw new InvalidOperationException(nameof(meta.Kind));
 
         var (size, metaSize) = (new Size2D(width, height), new Size2D(meta.Width, meta.Height));
@@ -108,12 +106,12 @@ public sealed class GfxTextures
 
         //if (data.Length != meta.SizeInBytes)
         var newMeta = TextureMeta.CopyWithNewSize(in meta);
-        _resources.TextureStore.ReplaceMeta(textureId, in newMeta, out _);
+        _textureStore.ReplaceMeta(textureId, in newMeta, out _);
     }
 
     public void UploadTexture3D(TextureId textureId, ReadOnlySpan<byte> data, int width, int height, int depth)
     {
-        var texRef = _resources.TextureStore.GetRefAndMeta(textureId, out var meta);
+        var texRef = _textureStore.GetRefAndMeta(textureId, out var meta);
         if (meta.Kind != TextureKind.Texture3D) throw new InvalidOperationException(nameof(meta.Kind));
 
         var (size, metaSize) = (new Size3D(width, height, depth), new Size3D(meta.Width, meta.Height, meta.Depth));
@@ -123,14 +121,14 @@ public sealed class GfxTextures
 
         //if (data.Length != meta.SizeInBytes)
         var newMeta = TextureMeta.CopyWithNewSize(in meta);
-        _resources.TextureStore.ReplaceMeta(textureId, in newMeta, out _);
+        _textureStore.ReplaceMeta(textureId, in newMeta, out _);
     }
 
     public void UploadCubeMapFace(TextureId textureId, ReadOnlySpan<byte> data, int width, int height, int faceIdx)
     {
         ArgumentOutOfRangeException.ThrowIfGreaterThan(faceIdx, 5, nameof(faceIdx));
 
-        var texRef = _resources.TextureStore.GetRefAndMeta(textureId, out var meta);
+        var texRef = _textureStore.GetRefAndMeta(textureId, out var meta);
         if (meta.Kind != TextureKind.CubeMap) throw new InvalidOperationException(nameof(meta.Kind));
 
         var (size, metaSize) = (new Size2D(width, height), new Size2D(meta.Width, meta.Height));
@@ -141,13 +139,13 @@ public sealed class GfxTextures
         if (faceIdx == 5)
         {
             var newMeta = TextureMeta.CopyWithNewSize(in meta);
-            _resources.TextureStore.ReplaceMeta(textureId, in newMeta, out _);
+            _textureStore.ReplaceMeta(textureId, in newMeta, out _);
         }
     }
 
     public void GenerateMipMaps(TextureId textureId)
     {
-        var texRef = _resources.TextureStore.GetRefAndMeta(textureId, out var meta);
+        var texRef = _textureStore.GetRefAndMeta(textureId, out var meta);
         Debug.Assert(meta.Levels > 1);
         _driver.GenerateMipMaps(texRef);
     }

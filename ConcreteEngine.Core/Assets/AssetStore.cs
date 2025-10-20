@@ -11,10 +11,10 @@ public interface IAssetStore
 {
     T GetByRef<T>(AssetRef<T> id) where T : AssetObject;
     T GetByName<T>(string name) where T : AssetObject;
-   
+
     bool TryGetByRef<T>(AssetRef<T> assetRef, out T? asset) where T : AssetObject;
     bool TryGetByName<T>(string name, out T? asset) where T : AssetObject;
-   
+
     AssetTypeMetaSnapshot GetMetaSnapshot<TAsset>() where TAsset : AssetObject;
 
     void ExtractList<TAsset, TData>(List<TData> list, Func<TAsset, TData> transform)

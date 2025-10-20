@@ -55,18 +55,22 @@ public sealed class GraphicsRuntime : IGraphicsRuntime
         _repository = new GfxResourceRepository(_resources);
         _disposer = new GfxResourceDisposer(_resources, _repository);
 
-        var backendOps = _resources.BackendStoreHub.BackendOps;
-        var driver = new GlBackendDriver(glConfig, backendOps, _resources.BackendDispatcher);
-        driver.Initialize();
-        UniformBufferUtils.Init(driver.Capabilities.UniformBufferOffsetAlignment);
-
-        _driver = driver;
+        InitDriver(glConfig);
 
         var gfxCtxInternal = new GfxContextInternal(_driver, _repository, _resources.GfxStoreHub);
         var gfxResourceContext = new GfxResourceContext(_resources, _repository, _disposer);
         _gfxContext = new GfxContext(gfxCtxInternal, gfxResourceContext);
 
         _isInitialized = true;
+    }
+
+    private void InitDriver(GlStartupConfig glConfig)
+    {
+        var backendOps = _resources.BackendStoreHub.StoreBundle;
+        var driver = new GlBackendDriver(glConfig, backendOps, _resources.BackendDispatcher);
+        driver.Initialize();
+        UniformBufferUtils.Init(driver.Capabilities.UniformBufferOffsetAlignment);
+        _driver = driver;
     }
 
     public void BeginFrame(in GfxFrameInfo frameCtx)
@@ -82,8 +86,6 @@ public sealed class GraphicsRuntime : IGraphicsRuntime
         _gfxContext.Commands.EndFrame(out result);
     }
 
-
-
     public void Shutdown()
     {
     }
@@ -92,17 +94,4 @@ public sealed class GraphicsRuntime : IGraphicsRuntime
     {
     }
 
-    /*
-    private void RecreateFbo(Size2D size)
-    {
-        ArgumentOutOfRangeException.ThrowIfLessThanOrEqual(size.Width, 0);
-        ArgumentOutOfRangeException.ThrowIfLessThanOrEqual(size.Height, 0);
-
-        var fboStore = _resources.GfxStoreHub.FboStore;
-        Console.WriteLine($"Recreating {fboStore.Count} FBO");
-
-        foreach (var fboId in fboStore.IdEnumerator)
-            _gfxContext.FrameBuffers.RecreateFrameBuffer(fboId, size);
-    }
-*/
 }

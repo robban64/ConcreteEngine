@@ -59,7 +59,7 @@ public readonly record struct FrameBufferId(int Value) : IResourceId
 
 public readonly record struct RenderBufferId(int Value) : IResourceId
 {
-    public static ResourceKind Kind => ResourceKind.FrameBuffer;
+    public static ResourceKind Kind => ResourceKind.RenderBuffer;
     public static implicit operator int(RenderBufferId id) => id.Value;
     public static explicit operator RenderBufferId(int value) => new(value);
 }

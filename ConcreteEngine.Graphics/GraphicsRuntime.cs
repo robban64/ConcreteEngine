@@ -66,7 +66,7 @@ public sealed class GraphicsRuntime : IGraphicsRuntime
 
     private void InitDriver(GlStartupConfig glConfig)
     {
-        var backendOps = _resources.BackendStoreHub.BackendOps;
+        var backendOps = _resources.BackendStoreHub.StoreBundle;
         var driver = new GlBackendDriver(glConfig, backendOps, _resources.BackendDispatcher);
         driver.Initialize();
         UniformBufferUtils.Init(driver.Capabilities.UniformBufferOffsetAlignment);

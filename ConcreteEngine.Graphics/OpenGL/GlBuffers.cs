@@ -14,9 +14,9 @@ namespace ConcreteEngine.Graphics.OpenGL;
 internal sealed class GlBuffers : IGraphicsDriverModule
 {
     private readonly GL _gl;
-    private readonly BackendOps<VertexBufferId, GlVboHandle, VertexBufferMeta, VertexBufferDef> _vboStore;
-    private readonly BackendOps<IndexBufferId, GlIboHandle, IndexBufferMeta, IndexBufferDef> _iboStore;
-    private readonly BackendOps<UniformBufferId, GlUboHandle, UniformBufferMeta, UniformBufferDef> _uboStore;
+    private readonly BackendResourceStore<VertexBufferId, GlVboHandle> _vboStore;
+    private readonly BackendResourceStore<IndexBufferId, GlIboHandle> _iboStore;
+    private readonly BackendResourceStore<UniformBufferId, GlUboHandle> _uboStore;
 
     internal GlBuffers(GlCtx ctx)
     {

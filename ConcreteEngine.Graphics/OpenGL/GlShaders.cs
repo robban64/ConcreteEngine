@@ -14,7 +14,7 @@ namespace ConcreteEngine.Graphics.OpenGL;
 internal sealed class GlShaders : IGraphicsDriverModule
 {
     private readonly GL _gl;
-    private readonly BackendOps<ShaderId, GlShaderHandle, ShaderMeta, ShaderDef> _shaderStore;
+    private readonly BackendResourceStore<ShaderId, GlShaderHandle> _shaderStore;
 
     private GlShaderHandle _activeProg;
 

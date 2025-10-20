@@ -15,9 +15,9 @@ internal sealed class GlStates : IGraphicsDriverModule
 {
     private readonly GL _gl;
 
-    private readonly BackendOps<MeshId, GlMeshHandle, MeshMeta, MeshDef> _meshStore;
-    private readonly BackendOps<TextureId, GlTextureHandle, TextureMeta, TextureDef> _textureStore;
-    private readonly BackendOps<FrameBufferId, GlFboHandle, FrameBufferMeta, FrameBufferDef> _fboStore;
+    private readonly BackendResourceStore<MeshId, GlMeshHandle> _meshStore;
+    private readonly BackendResourceStore<TextureId, GlTextureHandle> _textureStore;
+    private readonly BackendResourceStore<FrameBufferId, GlFboHandle> _fboStore;
 
 
     internal GlStates(GlCtx ctx)

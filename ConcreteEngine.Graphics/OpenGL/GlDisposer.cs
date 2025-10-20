@@ -11,7 +11,7 @@ namespace ConcreteEngine.Graphics.OpenGL;
 internal sealed class GlDisposer : IGraphicsDriverModule
 {
     private readonly GL _gl;
-    private readonly BackendOpsHub _store;
+    private readonly BackendStoreBundle _store;
     private readonly ResourceBackendDispatcher _dispatcher;
 
     internal GlDisposer(GlCtx ctx)

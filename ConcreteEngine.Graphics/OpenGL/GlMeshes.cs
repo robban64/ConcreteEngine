@@ -12,9 +12,9 @@ namespace ConcreteEngine.Graphics.OpenGL;
 internal sealed class GlMeshes : IGraphicsDriverModule
 {
     private readonly GL _gl;
-    private readonly BackendOpsHub _store;
+    private readonly BackendStoreBundle _store;
     private readonly GlCapabilities _capabilities;
-    private readonly BackendOps<MeshId, GlMeshHandle, MeshMeta, MeshDef> _meshStore;
+    private readonly BackendResourceStore<MeshId, GlMeshHandle> _meshStore;
 
     internal GlMeshes(GlCtx ctx)
     {

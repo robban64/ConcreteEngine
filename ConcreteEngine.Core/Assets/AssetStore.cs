@@ -2,6 +2,7 @@
 
 using ConcreteEngine.Core.Assets.Data;
 using ConcreteEngine.Core.Assets.Descriptors;
+using Tools.DebugInterface;
 
 #endregion
 
@@ -40,7 +41,7 @@ internal sealed class AssetStore : IAssetStore
     private readonly Dictionary<AssetKey, AssetId> _names = new(32);
 
     private readonly Dictionary<Type, AssetTypeMeta> _typeMeta = new(8);
-
+    
     internal IReadOnlyDictionary<Type, AssetTypeMeta> GetAssetTypeMeta() => _typeMeta;
 
     internal AssetStore()

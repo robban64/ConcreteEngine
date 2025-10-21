@@ -8,6 +8,7 @@ using ConcreteEngine.Graphics.Gfx.Definitions;
 using ConcreteEngine.Graphics.Gfx.Resources;
 using ConcreteEngine.Renderer.Data;
 using ConcreteEngine.Renderer.Definitions;
+using Tools.DebugInterface;
 
 #endregion
 
@@ -37,6 +38,7 @@ public sealed class MaterialStore : IMaterialStore
     private readonly Dictionary<string, MaterialId> _materialDict = new(8);
 
     public int Count => _idx;
+    
     public int FreeSlots => _free.Count;
 
     internal MaterialStore(AssetStore assetStore)
@@ -145,40 +147,8 @@ public sealed class MaterialStore : IMaterialStore
 
         return NextId();
     }
+    
+    [DebugWatch]
+    internal (int Count, int FreeSlots) MaterialDebugInfo => (Count, FreeSlots);
 
-
-    /*
-     *
-       private void ProcessMaterial(Material material)
-       {
-           Span<TextureSlotInfo> textureSlots = stackalloc TextureSlotInfo[RenderLimits.TextureSlots];
-           var count = CreateTextureSlotInfo(material, textureSlots);
-           var shaderId = ResolveShader(material).ResourceId;
-           var slots = textureSlots.Slice(0, count);
-           var materialId = MaterialInvoke(shaderId, material.Parameters.GetDataParams(), slots);
-           material.Attach(materialId);
-       }
-
-
-       public void ProcessStore()
-       {
-           Span<TextureSlotInfo> textureSlots = stackalloc TextureSlotInfo[RenderLimits.TextureSlots];
-           foreach (var material in _materialDict.Values)
-           {
-               var count = CreateTextureSlotInfo(material, textureSlots);
-               var shaderId = ResolveShader(material).ResourceId;
-               var slots = textureSlots.Slice(0, count);
-               var materialId = MaterialInvoke(shaderId, material.Parameters.GetDataParams(), slots);
-               material.Attach(materialId);
-           }
-       }
-
-       public void InvokeUpdateRenderMaterials()
-       {
-           foreach (var material in _materialDict.Values)
-           {
-               if (material.Id > 0) MaterialUpdate(material.Id, material.Parameters.GetDataParams());
-           }
-       }
-     */
 }

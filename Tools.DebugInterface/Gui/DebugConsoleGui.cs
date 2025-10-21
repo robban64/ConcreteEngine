@@ -3,7 +3,7 @@ using ImGuiNET;
 
 namespace Tools.DebugInterface;
 
-public class DebugConsoleUi
+public class DebugConsoleGui
 {
     private readonly List<string> _log = new();
     private string _input = string.Empty;

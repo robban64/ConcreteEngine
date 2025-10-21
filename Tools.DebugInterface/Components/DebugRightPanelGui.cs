@@ -1,7 +1,7 @@
 using System.Numerics;
 using ImGuiNET;
 
-namespace Tools.DebugInterface.Gui;
+namespace Tools.DebugInterface.Components;
 
 internal sealed class DebugRightPanelGui(DebugDataContainer data)
 {
@@ -19,6 +19,7 @@ internal sealed class DebugRightPanelGui(DebugDataContainer data)
             ImGuiWindowFlags.NoCollapse | ImGuiWindowFlags.NoBringToFrontOnFocus | ImGuiWindowFlags.NoNavFocus);
 
         DrawCpuMetrics();
+        DrawGcMetrics();
         DrawGpuMetrics();
 
         ImGui.End();
@@ -29,9 +30,20 @@ internal sealed class DebugRightPanelGui(DebugDataContainer data)
     {
         ImGui.TextUnformatted("CPU Metrics");
         ImGui.Separator();
-        ImGui.TextUnformatted($"Frame Index: {data.FrameMetrics.FrameIndex} ms");
-        ImGui.TextUnformatted($"FPS: {Format(data.FrameMetrics.Fps)}");
-        ImGui.TextUnformatted($"Alpha: {Format(data.FrameMetrics.Alpha)} ms");
+        ImGui.TextUnformatted(data.FrameMetrics.FrameIndex);
+        ImGui.TextUnformatted(data.FrameMetrics.Fps);
+        ImGui.TextUnformatted(data.FrameMetrics.Alpha);
+        ImGui.Separator();
+    }
+    
+    private void DrawGcMetrics()
+    {
+        ImGui.TextUnformatted("GC / Memory Metrics");
+        ImGui.Separator();
+        ImGui.TextUnformatted(data.MemoryMetrics.GcGen);
+        ImGui.TextUnformatted(data.MemoryMetrics.TotalMemory);
+        ImGui.TextUnformatted(data.MemoryMetrics.HeapSize);
+        ImGui.TextUnformatted(data.MemoryMetrics.Allocated);
         ImGui.Separator();
     }
 
@@ -39,8 +51,8 @@ internal sealed class DebugRightPanelGui(DebugDataContainer data)
     {
         ImGui.TextUnformatted("GPU Metrics");
         ImGui.Separator();
-        ImGui.TextUnformatted($"Verts: {data.FrameMetrics.TriangleCount}");
-        ImGui.TextUnformatted($"Draws: {data.FrameMetrics.DrawCalls}");
+        ImGui.TextUnformatted(data.FrameMetrics.TriangleCount);
+        ImGui.TextUnformatted(data.FrameMetrics.DrawCalls);
         ImGui.Separator();
     }
     

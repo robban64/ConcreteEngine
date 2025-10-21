@@ -149,6 +149,6 @@ public sealed class MaterialStore : IMaterialStore
     }
     
     [DebugWatch]
-    internal (int Count, int FreeSlots) MaterialDebugInfo => (Count, FreeSlots);
+    internal string MaterialDebugInfo => $"{Count}({FreeSlots})";
 
 }

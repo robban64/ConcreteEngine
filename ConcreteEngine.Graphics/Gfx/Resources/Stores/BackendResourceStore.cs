@@ -4,6 +4,7 @@ using System.Diagnostics;
 using System.Diagnostics.CodeAnalysis;
 using System.Runtime.CompilerServices;
 using ConcreteEngine.Common.Collections;
+using ConcreteEngine.Graphics.Diagnostic;
 using ConcreteEngine.Graphics.Gfx.Definitions;
 using ConcreteEngine.Graphics.Gfx.Utility;
 
@@ -67,10 +68,6 @@ internal sealed class BackendResourceStore<TId, THandle> : IBackendResourceStore
         _records[idx] = newHandle;
         
         UpdateMetrics();
-        GfxDebugMetrics.GetStoreMetrics<TId>().LastAddedBackend =
-            BackendStoreEvent.Create(newHandle.Handle.Value, newHandle.Gen, true);
-
-
         return GfxRefToken<TId>.From(new GfxHandle(idx, newHandle.Gen, Kind));
     }
 
@@ -89,8 +86,6 @@ internal sealed class BackendResourceStore<TId, THandle> : IBackendResourceStore
         _free.Push(handle.Slot);
 
         UpdateMetrics();
-        GfxDebugMetrics.GetStoreMetrics<TId>().LastRemovedBackend =
-            BackendStoreEvent.Create(record.Handle.Value, handle.Gen, false);
     }
 
     public GfxRefToken<TId> Replace(GfxRefToken<TId> refToken, THandle value)
@@ -104,10 +99,6 @@ internal sealed class BackendResourceStore<TId, THandle> : IBackendResourceStore
         _records[handle.Slot] = result;
 
         UpdateMetrics();
-        GfxDebugMetrics.GetStoreMetrics<TId>().LastReplacedBackend =
-            BackendStoreEvent.Create(result.Handle.Value, result.Gen, true);
-
-
         return GfxRefToken<TId>.From(handle with { Gen = result.Gen });
     }
 

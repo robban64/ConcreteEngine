@@ -12,6 +12,7 @@ using ConcreteEngine.Core.Scene;
 using ConcreteEngine.Core.Scene.Modules;
 using ConcreteEngine.Core.Time;
 using ConcreteEngine.Graphics;
+using ConcreteEngine.Graphics.Diagnostic;
 using ConcreteEngine.Renderer.Passes;
 using ConcreteEngine.Renderer.State;
 using Silk.NET.Input;
@@ -95,6 +96,8 @@ public sealed class GameEngine : IDisposable
         _assets.FinishLoading();
         _coreSystems.Initialize();
         RegisterRenderer();
+
+        GfxDebugMetrics.LogEnabled = true;
     }
 
     private void RegisterRenderer()

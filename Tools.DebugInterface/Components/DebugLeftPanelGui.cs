@@ -1,7 +1,7 @@
 using System.Numerics;
 using ImGuiNET;
 
-namespace Tools.DebugInterface.Gui;
+namespace Tools.DebugInterface.Components;
 
 internal sealed class DebugLeftPanelGui(DebugDataContainer data)
 {
@@ -29,8 +29,8 @@ internal sealed class DebugLeftPanelGui(DebugDataContainer data)
     {
         ImGui.TextUnformatted("Scene Metrics");
         ImGui.Separator();
-        ImGui.TextUnformatted($"Entities: {data.EntityCount}");
-        ImGui.TextUnformatted($"ShadowMap: {data.ShadowMapSize}");
+        ImGui.TextUnformatted(data.EntityCount);
+        ImGui.TextUnformatted(data.ShadowMapSize);
         ImGui.Separator();
     }
 
@@ -38,6 +38,9 @@ internal sealed class DebugLeftPanelGui(DebugDataContainer data)
     {
         ImGui.TextUnformatted("Asset Store");
         ImGui.Separator();
+        ImGui.TextUnformatted(data.MaterialDebugInfo);
+        ImGui.Separator();
+
 
         if (data.AssetMetrics.Count == 0)
         {
@@ -61,10 +64,10 @@ internal sealed class DebugLeftPanelGui(DebugDataContainer data)
                 ImGui.TextUnformatted(type);
 
                 ImGui.TableSetColumnIndex(1);
-                ImGui.TextUnformatted(count.ToString());
+                ImGui.TextUnformatted(count);
 
                 ImGui.TableSetColumnIndex(2);
-                ImGui.TextUnformatted(fileCount.ToString());
+                ImGui.TextUnformatted(fileCount);
             }
 
             ImGui.EndTable();
@@ -94,10 +97,10 @@ internal sealed class DebugLeftPanelGui(DebugDataContainer data)
                 ImGui.TextUnformatted(k);
 
                 ImGui.TableSetColumnIndex(1);
-                ImGui.TextUnformatted($"{v.GfxStoreCount}({v.GfxStoreFree})");
+                ImGui.TextUnformatted(v.Item1);
 
                 ImGui.TableSetColumnIndex(2);
-                ImGui.TextUnformatted($"{v.BkStoreCount}({v.BkFree})");
+                ImGui.TextUnformatted(v.Item2);
             }
 
             ImGui.EndTable();

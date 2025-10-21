@@ -3,6 +3,7 @@
 using System.Runtime.CompilerServices;
 using ConcreteEngine.Common;
 using ConcreteEngine.Common.Collections;
+using ConcreteEngine.Graphics.Diagnostic;
 using ConcreteEngine.Graphics.Gfx.Definitions;
 using ConcreteEngine.Graphics.Gfx.Utility;
 
@@ -51,7 +52,7 @@ internal sealed class GfxResourceStore<TId, TMeta> : IGfxResourceStore<TId>
         _meta = new TMeta[initialCapacity];
         _handle = new GfxHandle[initialCapacity];
         _free = new Stack<int>();
-        
+
         GfxDebugMetrics.RegisterStore<TId>();
     }
 
@@ -100,8 +101,11 @@ internal sealed class GfxResourceStore<TId, TMeta> : IGfxResourceStore<TId>
         var newId = _makeId(idx);
 
         UpdateMetrics();
-        GfxDebugMetrics.GetStoreMetrics<TId>().LastAddedGfx
-            = FrontendStoreEvent.Create(newId.Value, refToken.Handle.Slot, refToken.Handle.Gen, refToken.Handle.Kind);
+        if (GfxDebugMetrics.LogEnabled)
+        {
+            GfxDebugMetrics.Log(GfxDebugLog.MakeStore(TId.Kind,
+                $"New GfxResource - Id: {GfxDebugLog.FormatId(newId.Value)} - {refToken.Handle.ToDebugString()}"));
+        }
 
         return newId;
     }
@@ -121,10 +125,10 @@ internal sealed class GfxResourceStore<TId, TMeta> : IGfxResourceStore<TId>
         _meta[idx] = default!;
         _handle[idx] = default!;
         _free.Push(idx);
-        
+
         UpdateMetrics();
-        GfxDebugMetrics.GetStoreMetrics<TId>().LastRemovedGfx 
-            = FrontendStoreEvent.Create(id.Value, handle.Slot, handle.Gen, handle.Kind);
+        if (GfxDebugMetrics.LogEnabled)
+            GfxDebugMetrics.Log(GfxDebugLog.MakeStore(TId.Kind, $"Remove GfxResource - Id: {id.Value}"));
 
         return handle;
     }
@@ -132,18 +136,23 @@ internal sealed class GfxResourceStore<TId, TMeta> : IGfxResourceStore<TId>
     public TId Replace(TId id, in TMeta newMeta, in GfxRefToken<TId> newHandle, out GfxRefToken<TId> oldHandle)
     {
         ArgumentOutOfRangeException.ThrowIfEqual(id.Value, 0, nameof(id));
+        var handle = newHandle.Handle;
         var idx = id.Value - 1;
         oldHandle = new GfxRefToken<TId>(in _handle[idx]);
         var oldMeta = _meta[idx];
         _meta[idx] = newMeta;
-        _handle[idx] = newHandle.Handle;
+        _handle[idx] = handle;
 
-        var message = new GfxMetaChanged<TMeta>(in newMeta, in oldMeta, newHandle.Handle.Gen, true, ResourceKind);
+        var message = new GfxMetaChanged<TMeta>(in newMeta, in oldMeta, handle.Gen, true, ResourceKind);
         ChangeCallback?.Invoke(id, in message);
 
         UpdateMetrics();
-        GfxDebugMetrics.GetStoreMetrics<TId>().LastReplacedGfx 
-            = FrontendStoreEvent.Create(id.Value, newHandle.Handle.Slot, newHandle.Handle.Gen, newHandle.Handle.Kind);
+
+        if (GfxDebugMetrics.LogEnabled)
+        {
+            GfxDebugMetrics.Log(GfxDebugLog.MakeStore(TId.Kind,
+                $"Replaced GfxResource - Id: {GfxDebugLog.FormatId(id.Value)} - {oldHandle.Handle.ToDebugString()} -> {handle.ToDebugString()}"));
+        }
 
         return id;
     }
@@ -175,7 +184,7 @@ internal sealed class GfxResourceStore<TId, TMeta> : IGfxResourceStore<TId>
 
         return _idx++;
     }
-    
+
     private int GetAliveCount()
     {
         var span = _handle.AsSpan(0, _idx);
@@ -187,7 +196,7 @@ internal sealed class GfxResourceStore<TId, TMeta> : IGfxResourceStore<TId>
 
         return count;
     }
-    
+
     private void UpdateMetrics()
     {
         GfxDebugMetrics.GetStoreMetrics<TId>().GfxStoreCount = GetAliveCount();

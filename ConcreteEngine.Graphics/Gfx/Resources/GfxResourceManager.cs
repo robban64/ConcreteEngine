@@ -24,7 +24,7 @@ internal sealed class GfxResourceManager : IGfxResourceManager
 
     internal void OnDeleted(in DeleteResourceCommand cmd)
     {
-        Console.WriteLine($"Deleted {cmd.Handle.Kind} - Id: {cmd.IdValue}");
+        Console.WriteLine($"Deleted {cmd.Handle.Kind} - Handle: {cmd.BackendHandle.Value} - Gen: {cmd.Handle.Gen}");
     }
 
 

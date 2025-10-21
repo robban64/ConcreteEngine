@@ -57,7 +57,7 @@ public sealed class GraphicsRuntime : IGraphicsRuntime
 
         InitDriver(glConfig);
 
-        var gfxCtxInternal = new GfxContextInternal(_driver, _repository, _resources.GfxStoreHub);
+        var gfxCtxInternal = new GfxContextInternal(_driver, _repository, _resources.GfxStoreHub, _disposer);
         var gfxResourceContext = new GfxResourceContext(_resources, _repository, _disposer);
         _gfxContext = new GfxContext(gfxCtxInternal, gfxResourceContext);
 

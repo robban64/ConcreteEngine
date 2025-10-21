@@ -16,10 +16,12 @@ public sealed class GfxTextures
 {
     private readonly GlTextures _driver;
 
+    private readonly GfxResourceDisposer _disposer;
     private readonly GfxResourceStore<TextureId, TextureMeta> _textureStore;
 
     internal GfxTextures(GfxContextInternal context)
     {
+        _disposer = context.Disposer;
         _textureStore = context.Stores.TextureStore;
         _driver = context.Driver.Textures;
     }
@@ -88,7 +90,6 @@ public sealed class GfxTextures
             meta.BorderColor);
 
         var newTexRef = CreateDriverTexture(in desc, in props, out var newMeta, recreate: texRef);
-        Debug.Assert(newTexRef.Handle.Gen > texRef.Handle.Gen);
         _textureStore.Replace(textureId, in newMeta, in newTexRef, out _);
         return newTexRef;
     }
@@ -160,11 +161,11 @@ public sealed class GfxTextures
         if (levels < 1) throw new InvalidOperationException(nameof(levels));
         var samples = desc.Samples.ToSamples();
 
-        GfxRefToken<TextureId> texRef;
         if (recreate is { } recreateRef)
-            texRef = _driver.CreateReplaceTexture(recreateRef, desc.Kind);
-        else
-            texRef = _driver.CreateTexture(desc.Kind);
+            _disposer.EnqueueReplace(recreateRef);
+        //texRef = _driver.CreateReplaceTexture(recreateRef, desc.Kind);
+        
+        var texRef = _driver.CreateTexture(desc.Kind);
             
 
         switch (desc.Kind)

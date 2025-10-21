@@ -14,6 +14,8 @@ namespace ConcreteEngine.Graphics.Gfx;
 
 public sealed class GfxFrameBuffers
 {
+    private readonly GfxResourceDisposer _disposer;
+
     private readonly GfxStoreHub _resources;
     private readonly GfxTextures _gfxTextures;
     private readonly GlFrameBuffers _driver;
@@ -22,6 +24,7 @@ public sealed class GfxFrameBuffers
 
     internal GfxFrameBuffers(GfxContextInternal context, GfxTextures gfxTextures)
     {
+        _disposer = context.Disposer;
         _driver = context.Driver.FrameBuffers;
         _gfxTextures = gfxTextures;
         _resources = context.Stores;
@@ -101,10 +104,11 @@ public sealed class GfxFrameBuffers
     public void RecreateFrameBuffer(FrameBufferId fboId, Size2D newSize)
     {
         ArgumentOutOfRangeException.ThrowIfLessThanOrEqual(fboId.Value, 0, nameof(fboId));
-
         var oldFboRef = _resources.FboStore.GetRefAndMeta(fboId, out var oldMeta);
+        _disposer.EnqueueReplace(oldFboRef);
+        
         var newMeta = FrameBufferMeta.MakeResizeCopy(in oldMeta, newSize);
-        var fboRef = _driver.CreateReplaceFrameBuffer(oldFboRef);
+        var fboRef = _driver.CreateFrameBuffer();
         _resources.FboStore.Replace(fboId, in newMeta, fboRef, out _);
 
         var attachments = newMeta.Attachments;
@@ -154,8 +158,10 @@ public sealed class GfxFrameBuffers
         RenderBufferMsaa msaa, out RenderBufferMeta meta)
     {
         var rboRef = _resources.RboStore.GetRefHandle(rboId);
+        _disposer.EnqueueReplace(rboRef);
+
         var samples = msaa.ToSamples();
-        var newRboRef = _driver.CreateReplaceRenderBuffer(rboRef, attachmentSlot, size, samples);
+        var newRboRef = _driver.CreateRenderBuffer(attachmentSlot, size, samples);
         _driver.AttachRenderBuffer(fboRef, newRboRef, attachmentSlot);
         meta = new RenderBufferMeta(size, attachmentSlot, msaa);
         return _resources.RboStore.Replace(rboId, in meta, in newRboRef, out _);

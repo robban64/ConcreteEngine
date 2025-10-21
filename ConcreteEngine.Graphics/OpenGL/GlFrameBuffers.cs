@@ -15,6 +15,7 @@ internal sealed class GlFrameBuffers : IGraphicsDriverModule
 {
     private readonly GL _gl;
     private readonly GlCapabilities _capabilities;
+    private readonly GfxResourceDisposer _disposeQueue;
     private readonly BackendResourceStore<FrameBufferId, GlFboHandle> _fboStore;
     private readonly BackendResourceStore<RenderBufferId, GlRboHandle> _rboStore;
     private readonly BackendResourceStore<TextureId, GlTextureHandle> _textureStore;
@@ -71,8 +72,10 @@ internal sealed class GlFrameBuffers : IGraphicsDriverModule
 
     public GfxRefToken<FrameBufferId> CreateReplaceFrameBuffer(GfxRefToken<FrameBufferId> fboRef)
     {
-        _fboStore.GetHandle(fboRef);
+        var oldHandle = _fboStore.GetHandle(fboRef);
+        _gl.DeleteFramebuffers(1,oldHandle);
         _gl.CreateFramebuffers(1, out uint fbo);
+
         var newHandle = new GlFboHandle(fbo);
         return _fboStore.Replace(fboRef, newHandle);
     }
@@ -95,11 +98,13 @@ internal sealed class GlFrameBuffers : IGraphicsDriverModule
     public GfxRefToken<RenderBufferId> CreateReplaceRenderBuffer(GfxRefToken<RenderBufferId> rboRef,
         FrameBufferAttachmentSlot attachment, Size2D size, int samples)
     {
-        _rboStore.GetHandle(rboRef);
+        var oldHandle = _rboStore.GetHandle(rboRef);
         var internalFormat = attachment.ToGlInternalFormatEnum();
         var (width, height) = size.ToUnsigned();
-
+        
+        _gl.DeleteRenderbuffers(1,oldHandle);
         _gl.CreateRenderbuffers(1, out uint rbo);
+        
         if (samples > 0)
             _gl.NamedRenderbufferStorageMultisample(rbo, (uint)samples, internalFormat, width, height);
         else

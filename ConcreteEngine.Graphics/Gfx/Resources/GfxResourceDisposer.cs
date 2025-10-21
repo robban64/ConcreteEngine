@@ -8,8 +8,8 @@ namespace ConcreteEngine.Graphics.Gfx.Resources;
 
 public interface IGfxResourceDisposer
 {
-    public int PendingCount { get; }
-    public void EnqueueRemoval<TId>(TId id, bool replace) where TId : unmanaged, IResourceId;
+    int PendingCount { get; }
+    void EnqueueRemoval<TId>(TId id) where TId : unmanaged, IResourceId;
 }
 
 internal sealed class GfxResourceDisposer : IGfxResourceDisposer
@@ -17,16 +17,17 @@ internal sealed class GfxResourceDisposer : IGfxResourceDisposer
     private const int DrainPerFrame = 4;
     private const int DrainDelayTicks = 16;
 
-    private readonly GfxResourceManager _resources;
-    private readonly GfxResourceRepository _repository;
+    private readonly BackendStoreHub _backendStoreHub;
+    private readonly GfxStoreHub _gfxStoreHub;
+
 
     private readonly ResourceDisposeQueue _disposeQueue;
     public int PendingCount => _disposeQueue.PendingCount;
 
     internal GfxResourceDisposer(GfxResourceManager resources, GfxResourceRepository repository)
     {
-        _resources = resources;
-        _repository = repository;
+        _backendStoreHub = resources.BackendStoreHub;
+        _gfxStoreHub = resources.GfxStoreHub;
         _disposeQueue = new ResourceDisposeQueue();
     }
 
@@ -35,30 +36,49 @@ internal sealed class GfxResourceDisposer : IGfxResourceDisposer
         int drainCount = 0;
         while (drainCount < DrainPerFrame && _disposeQueue.TryGetNext(DrainDelayTicks, out var cmd))
         {
-            driver.Disposer.DeleteGfxResource(in cmd);
+            driver.Disposer.DeleteGlResource(in cmd);
+            _backendStoreHub.Get(cmd.Handle.Kind).Remove(cmd.Handle);
+            if (!cmd.Replace)
+            {
+                _gfxStoreHub.RemoveResource(cmd.GfxId, cmd.Handle.Kind);
+            }
             drainCount++;
         }
     }
 
-    public void EnqueueRemoval<TId>(TId id, bool replace) where TId : unmanaged, IResourceId
+    public void EnqueueRemoval<TId>(TId id) where TId : unmanaged, IResourceId
     {
         ArgumentOutOfRangeException.ThrowIfLessThanOrEqual(id.Value, 0);
         var resourceKind = TId.Kind;
-        var fStore = _resources.GfxStoreHub.GetStore<TId>();
+        var fStore = _gfxStoreHub.GetStore<TId>();
         var gfxHandle = fStore.GetHandleUntyped(id);
 
-        var bStore = _resources.BackendStoreHub.Get(resourceKind);
+        var bStore = _backendStoreHub.Get(resourceKind);
         var native = bStore.GetNativeHandle(in gfxHandle);
 
-        var cmd = new DeleteResourceCommand(gfxHandle, native, id.Value, 0, replace);
+        var cmd = DeleteResourceCommand.MakeDelete(gfxHandle, native, id.Value);
         _disposeQueue.Enqueue(cmd);
+    }
+    
+    public void EnqueueReplace<TId>(GfxRefToken<TId> refToken) 
+        where TId : unmanaged, IResourceId 
+    {
+        ArgumentOutOfRangeException.ThrowIfEqual(refToken.Handle.IsValid, false);
+        var fkStore = _gfxStoreHub.GetStore<TId>();
+        
+        var bkStore = _backendStoreHub.Get(TId.Kind);
+        var handle = bkStore.GetNativeHandle(refToken);
+        var cmd = DeleteResourceCommand.MakeReplace(refToken, handle);
+        _disposeQueue.Enqueue(cmd);
+
     }
 
 
     private sealed class ResourceDisposeQueue
     {
         private readonly Queue<DeleteResourceCommand> _disposeQueue = new(8);
-        private readonly HashSet<int> _disposeSet = new(8);
+
+        private readonly HashSet<GfxHandle> _disposeSet = new(8);
 
         public int PendingCount => _disposeQueue.Count;
 
@@ -70,7 +90,7 @@ internal sealed class GfxResourceDisposer : IGfxResourceDisposer
         {
             // Kept for now to catch bugs
             InvalidOpThrower.ThrowIf(_isDisposing);
-            InvalidOpThrower.ThrowIfNot(_disposeSet.Add(cmd.IdValue));
+            InvalidOpThrower.ThrowIfNot(_disposeSet.Add(cmd.Handle));
 
             _disposeQueue.Enqueue(cmd);
         }
@@ -83,11 +103,15 @@ internal sealed class GfxResourceDisposer : IGfxResourceDisposer
             if (_disposeQueue.Count == 0)
             {
                 _ticks = 0;
+                _isDisposing = false;
                 return false;
             }
 
             if (++_ticks < delayTicks)
+            {
+                _isDisposing = false;
                 return false;
+            }
 
             _isDisposing = true;
 

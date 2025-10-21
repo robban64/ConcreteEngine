@@ -97,8 +97,8 @@ internal sealed class BackendResourceStore<TId, THandle> : IBackendResourceStore
     {
         var handle = refToken.Handle;
         Throwers.ThrowOnDefaultHandle(value);
-        var oldValue = GetUntyped(handle);
-        Throwers.IsUniqueHandleOrThrow(value.Value, oldValue.Value);
+        //var oldValue = GetUntyped(handle);
+        //Throwers.IsUniqueHandleOrThrow(value.Value, oldValue.Value);
 
         var result = new BkHandle<THandle>(value, (ushort)(handle.Gen + 1), true);
         _records[handle.Slot] = result;

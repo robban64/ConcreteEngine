@@ -1,5 +1,6 @@
 using System.Numerics;
 using ImGuiNET;
+using Tools.DebugInterface.Data;
 
 namespace Tools.DebugInterface.Components;
 

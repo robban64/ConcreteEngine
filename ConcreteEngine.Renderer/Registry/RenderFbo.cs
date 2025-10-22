@@ -7,6 +7,7 @@ using ConcreteEngine.Common.Numerics;
 using ConcreteEngine.Graphics.Gfx.Definitions;
 using ConcreteEngine.Graphics.Gfx.Resources;
 using ConcreteEngine.Renderer.Data;
+using ConcreteEngine.Renderer.Definitions;
 using ConcreteEngine.Renderer.Passes;
 
 #endregion
@@ -25,13 +26,13 @@ public sealed class RenderFbo : IComparable<RenderFbo>
     public FboAttachmentIds Attachments { get; private set; }
     public RenderBufferMsaa MultiSample { get; private set; }
 
-    private SizePolicy _sizePolicy;
+    public RenderFboSizePolicy SizePolicy { get; private set; }
 
-    internal RenderFbo(FrameBufferId fboId, FboTagKey tagKey, int version, SizePolicy sizePolicy)
+    internal RenderFbo(FrameBufferId fboId, FboTagKey tagKey, int version, RenderFboSizePolicy sizePolicy)
     {
         FboId = fboId;
         TagKey = tagKey;
-        _sizePolicy = sizePolicy;
+        SizePolicy = sizePolicy;
         Version = version;
     }
 
@@ -42,15 +43,15 @@ public sealed class RenderFbo : IComparable<RenderFbo>
         MultiSample = meta.MultiSample;
     }
 
-    internal void ChangeSizePolicy(SizePolicy sizePolicy)
+    internal void ChangeSizePolicy(RenderFboSizePolicy sizePolicy)
     {
         ArgumentNullException.ThrowIfNull(sizePolicy, nameof(sizePolicy));
-        _sizePolicy = sizePolicy;
+        SizePolicy = sizePolicy;
     }
 
-    public bool IsFixedSize => _sizePolicy.Mode == SizePolicy.ResizeMode.Fixed;
+    public bool IsFixedSize => SizePolicy.Mode == FboResizeMode.Fixed;
 
-    public Size2D CalculateNewSize(Size2D outputSize) => _sizePolicy.Calculate(outputSize);
+    public Size2D CalculateNewSize(Size2D outputSize) => SizePolicy.Calculate(outputSize);
 
     public int CompareTo(RenderFbo? other) => TagKey.CompareTo(other!.TagKey);
 
@@ -74,55 +75,52 @@ public sealed class RenderFbo : IComparable<RenderFbo>
         }
     }
 
-    public sealed class SizePolicy
+}
+
+
+
+public sealed class RenderFboSizePolicy
+{
+
+    public FboResizeMode Mode { get; }
+    private readonly CalcFboOutputDel? _calc;
+    private readonly Vector2 _ratio;
+    private readonly Size2D _fixed;
+
+    private RenderFboSizePolicy(FboResizeMode mode, CalcFboOutputDel? calc, Vector2 ratio, Size2D fixedSize)
     {
-        public enum ResizeMode : byte
+        Mode = mode;
+        _calc = calc;
+        _ratio = ratio;
+        _fixed = fixedSize;
+
+        switch (mode)
         {
-            Default,
-            Fixed,
-            Calculated
+            case FboResizeMode.Fixed:
+                ArgOutOfRangeThrower.ThrowIfSizeTooSmall(fixedSize, RenderLimits.MinOutputSize);
+                ArgOutOfRangeThrower.ThrowIfSizeTooBig(fixedSize, RenderLimits.MaxOutputSize);
+                break;
+            case FboResizeMode.Calculated:
+                ArgumentOutOfRangeException.ThrowIfEqual(ratio.X, 0, nameof(ratio));
+                ArgumentOutOfRangeException.ThrowIfEqual(ratio.Y, 0, nameof(ratio));
+                break;
         }
+    }
 
-        public ResizeMode Mode { get; }
-        private readonly CalcFboOutputDel? _calc;
-        private readonly Vector2 _ratio;
-        private readonly Size2D _fixed;
+    public static RenderFboSizePolicy Default() => new(FboResizeMode.Default, null, Vector2.One, default);
+    public static RenderFboSizePolicy Fixed(Size2D size) => new(FboResizeMode.Fixed, null, Vector2.One, size);
 
-        private SizePolicy(ResizeMode mode, CalcFboOutputDel? calc, Vector2 ratio, Size2D fixedSize)
+    public static RenderFboSizePolicy Calculated(CalcFboOutputDel calcFboOutput, Vector2 ratio) =>
+        new(FboResizeMode.Calculated, calcFboOutput, ratio, default);
+
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public Size2D Calculate(Size2D outputSize)
+    {
+        return Mode switch
         {
-            Mode = mode;
-            _calc = calc;
-            _ratio = ratio;
-            _fixed = fixedSize;
-
-            switch (mode)
-            {
-                case ResizeMode.Fixed:
-                    ArgOutOfRangeThrower.ThrowIfSizeTooSmall(fixedSize, RenderLimits.MinOutputSize);
-                    ArgOutOfRangeThrower.ThrowIfSizeTooBig(fixedSize, RenderLimits.MaxOutputSize);
-                    break;
-                case ResizeMode.Calculated:
-                    ArgumentOutOfRangeException.ThrowIfEqual(ratio.X, 0, nameof(ratio));
-                    ArgumentOutOfRangeException.ThrowIfEqual(ratio.Y, 0, nameof(ratio));
-                    break;
-            }
-        }
-
-        public static SizePolicy Default() => new(ResizeMode.Default, null, Vector2.One, default);
-        public static SizePolicy Fixed(Size2D size) => new(ResizeMode.Fixed, null, Vector2.One, size);
-
-        public static SizePolicy Calculated(CalcFboOutputDel calcFboOutput, Vector2 ratio) =>
-            new(ResizeMode.Calculated, calcFboOutput, ratio, default);
-
-        [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public Size2D Calculate(Size2D outputSize)
-        {
-            return Mode switch
-            {
-                ResizeMode.Fixed => _fixed,
-                ResizeMode.Calculated => _calc!(outputSize, _ratio),
-                _ => outputSize
-            };
-        }
+            FboResizeMode.Fixed => _fixed,
+            FboResizeMode.Calculated => _calc!(outputSize, _ratio),
+            _ => outputSize
+        };
     }
 }

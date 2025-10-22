@@ -1,4 +1,4 @@
-namespace Tools.DebugInterface;
+namespace Tools.DebugInterface.Data;
 
 
 public sealed class DebugFrameMetrics
@@ -8,21 +8,11 @@ public sealed class DebugFrameMetrics
     public string? Alpha { get; set; }
     public string? TriangleCount { get; set; } 
     public string? DrawCalls { get; set; }
-
-}
-
-public sealed class DebugMemoryMetrics
-{
-    public string? GcGen { get; set; }
-    public string? TotalMemory { get; set; }
     public string? Allocated { get; set; }
-    public string? HeapSize { get; set; }
 }
 
 public sealed class DebugDataContainer
 {
-    internal DebugMemoryMetrics MemoryMetrics { get; init; } = new();
-
     public DebugFrameMetrics FrameMetrics { get; init; } = new();
     public string? EntityCount { get; set; }
     public string? ShadowMapSize { get; set; }

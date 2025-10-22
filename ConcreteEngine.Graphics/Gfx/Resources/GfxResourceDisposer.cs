@@ -1,6 +1,7 @@
 #region
 
 using ConcreteEngine.Common;
+using ConcreteEngine.Graphics.Diagnostic;
 
 #endregion
 
@@ -14,8 +15,8 @@ public interface IGfxResourceDisposer
 
 internal sealed class GfxResourceDisposer : IGfxResourceDisposer
 {
-    private const int DrainPerFrame = 4;
-    private const int DrainDelayTicks = 16;
+    private const int DrainPerFrame = 6;
+    private const int DrainDelayTicks = 2;
 
     private readonly BackendStoreHub _backendStoreHub;
     private readonly GfxStoreHub _gfxStoreHub;
@@ -58,6 +59,8 @@ internal sealed class GfxResourceDisposer : IGfxResourceDisposer
 
         var cmd = DeleteResourceCommand.MakeDelete(gfxHandle, native, id.Value);
         _disposeQueue.Enqueue(cmd);
+        
+        GfxDebugMetrics.Log(DebugLog.MakeEnqueueDispose(id.Value, gfxHandle));
     }
     
     public void EnqueueReplace<TId>(GfxRefToken<TId> refToken) 
@@ -71,6 +74,7 @@ internal sealed class GfxResourceDisposer : IGfxResourceDisposer
         var cmd = DeleteResourceCommand.MakeReplace(refToken, handle);
         _disposeQueue.Enqueue(cmd);
 
+        GfxDebugMetrics.Log(DebugLog.MakeEnqueueDispose((int)handle.Value, refToken));
     }
 
 

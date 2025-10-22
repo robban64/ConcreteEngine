@@ -47,7 +47,7 @@ internal sealed class AssetStore : IAssetStore
     internal AssetStore()
     {
     }
-
+    
     public T GetByRef<T>(AssetRef<T> assetRef) where T : AssetObject
     {
         if (TryGetByRef(assetRef, out var value)) return value!;
@@ -73,19 +73,37 @@ internal sealed class AssetStore : IAssetStore
         asset = null;
         return false;
     }
+    
+    internal bool TryGetByRef(AssetId assetId, Type type, out AssetObject? asset) 
+    {
+        if (_assets.TryGetValue(assetId, out var obj))
+        {
+            asset = obj;
+            return true;
+        }
+        asset = null;
+        return false;
+    }
 
     public bool TryGetByName<T>(string name, out T? asset) where T : AssetObject
     {
-        asset = null;
-        if (!_names.TryGetValue(AssetKey.For<T>(name), out var id)) return false;
-        if (!_assets.TryGetValue(id, out var objT)) return false;
-        if (objT is T t)
+        if (TryGetByName(name, typeof(T), out var objT) && objT is T t)
         {
             asset = t;
             return true;
         }
-
+        asset = null;
         return false;
+    }
+    
+    internal bool TryGetByName(string name, Type type, out AssetObject? asset) 
+    {
+        asset = null;
+        if (!_names.TryGetValue(new AssetKey(type, name), out var id)) return false;
+        if (!_assets.TryGetValue(id, out var objT)) return false;
+        asset = objT;
+        return true;
+
     }
 
     private ReadOnlySpan<AssetFileId> GetFileIds(AssetId id)

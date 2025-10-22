@@ -12,7 +12,7 @@ public sealed class Texture2D : AssetObject
 {
     public AssetRef<Texture2D> RefId => new(RawId);
 
-    public required TextureId ResourceId { get; init; }
+    public new required TextureId ResourceId { get; init; }
 
     public required int Width { get; init; }
     public required int Height { get; init; }

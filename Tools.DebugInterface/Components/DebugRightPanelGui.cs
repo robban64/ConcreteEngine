@@ -1,5 +1,6 @@
 using System.Numerics;
 using ImGuiNET;
+using Tools.DebugInterface.Data;
 
 namespace Tools.DebugInterface.Components;
 
@@ -40,10 +41,7 @@ internal sealed class DebugRightPanelGui(DebugDataContainer data)
     {
         ImGui.TextUnformatted("GC / Memory Metrics");
         ImGui.Separator();
-        ImGui.TextUnformatted(data.MemoryMetrics.GcGen);
-        ImGui.TextUnformatted(data.MemoryMetrics.TotalMemory);
-        ImGui.TextUnformatted(data.MemoryMetrics.HeapSize);
-        ImGui.TextUnformatted(data.MemoryMetrics.Allocated);
+        ImGui.TextUnformatted(data.FrameMetrics.Allocated);
         ImGui.Separator();
     }
 

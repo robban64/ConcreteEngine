@@ -6,6 +6,7 @@ using Silk.NET.OpenGL;
 using Silk.NET.OpenGL.Extensions.ImGui;
 using Silk.NET.Windowing;
 using Tools.DebugInterface.Components;
+using Tools.DebugInterface.Data;
 
 namespace Tools.DebugInterface;
 
@@ -36,18 +37,17 @@ public sealed class DebugInterfaceService : IDisposable
 
         var shadowSize = Registry.ReadBound("ShadowMapSize");
         Data.ShadowMapSize = $"ShadowMapSize: {shadowSize}";
+    }
 
+    public void UpdateSlowRead1()
+    {
         var matInfo = Registry.ReadBound("MaterialDebugInfo");
         Data.MaterialDebugInfo = $"Materials: {matInfo}";
-
-        var metrics = Data.MemoryMetrics;
-        var allocated = GC.GetAllocatedBytesForCurrentThread();
-        var gcInfo = GC.GetGCMemoryInfo();
-
-        metrics.GcGen = $"GC Gen: {GC.CollectionCount(0)}, {GC.CollectionCount(1)}, {GC.CollectionCount(1)}";
-        metrics.TotalMemory = $"AppMemory: {FormatMb(GC.GetTotalMemory(false))}";
-        metrics.Allocated   = $"Allocated: {FormatMb(allocated)}";
-        metrics.HeapSize    = $"Heap Size: {FormatMb(gcInfo.HeapSizeBytes)}";
+    }
+    
+    public void UpdateSlowRead2()
+    {
+        Data.FrameMetrics.Allocated   = $"Allocated: {FormatMb(GC.GetAllocatedBytesForCurrentThread())}";
     }
 
     private static string FormatMb(long bytes) => $"{bytes / 1024 / 1024} MB";

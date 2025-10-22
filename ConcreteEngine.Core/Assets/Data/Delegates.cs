@@ -14,3 +14,4 @@ internal delegate TAsset AssetFileAssembleDel<out TAsset, in TDesc>(
     TDesc manifest,
     out AssetFileSpec[] fileSpecs
 ) where TAsset : AssetObject where TDesc : class, IAssetDescriptor;
+

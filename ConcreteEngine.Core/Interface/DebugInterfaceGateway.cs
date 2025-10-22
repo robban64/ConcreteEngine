@@ -28,6 +28,8 @@ internal sealed class DebugInterfaceGateway
 
     public bool Enabled { get; set; } = true;
 
+    private int _ticker = 0;
+
     public DebugInterfaceGateway(GL gl, IWindow window, IInputContext inputCtx)
     {
         _debug = new DebugInterfaceService(gl, window, inputCtx);
@@ -55,7 +57,8 @@ internal sealed class DebugInterfaceGateway
     public void SetupConsoleCommands()
     {
         var console = _debug.DevConsole;
-        console.RegisterCommand("structSize", DebugCommandUtils.OnCmdStructSizes);
+        console.RegisterCommand("struct-size", DebugCommandController.OnCmdStructSizes);
+        console.RegisterCommand("recreate-shader", DebugCommandController.RecreateShader);
     }
 
 
@@ -79,6 +82,15 @@ internal sealed class DebugInterfaceGateway
     public void RefreshData(AssetStore assetStore, in RenderFrameInfo frameInfo, in GfxFrameResult gfxFrame)
     {
         if (!Enabled) return;
+
+        _ticker++;
+        if (_ticker == 3) RefreshDataSlow1(assetStore);
+        if (_ticker == 6)
+        {
+            RefreshDataSlow2();
+            _ticker = 0;
+        }
+        
         var metrics = _debug.Data.FrameMetrics;
         metrics.FrameIndex = $"FrameIdx: {frameInfo.FrameIndex} ms";
         metrics.Fps = $"FPS: {Format(frameInfo.Fps)}";
@@ -86,7 +98,6 @@ internal sealed class DebugInterfaceGateway
         metrics.DrawCalls = $"Draws: {gfxFrame.DrawCalls}";
         metrics.TriangleCount = $"Verts: {gfxFrame.TriangleCount}";
         
-        RefreshStore(assetStore);
         UpdateGfxStoreMetric(_debug.Data.GfxStoreMetrics);
 
         while (GfxDebugMetrics.LogQueue.Count > 0)
@@ -94,12 +105,21 @@ internal sealed class DebugInterfaceGateway
             var cmd = GfxDebugMetrics.LogQueue.Dequeue();
             
             _debug.DevConsole.AddLog(cmd.ToDebugString());
-            if(cmd.Detailed is not null)
-                _debug.DevConsole.AddLog(cmd.Detailed);
-
         }
 
         if (HasBindings) _debug.UpdateRead();
+    }
+
+    private void RefreshDataSlow1(AssetStore assetStore)
+    {
+        RefreshStore(assetStore);
+        _debug.UpdateSlowRead1();
+    }
+    
+    private void RefreshDataSlow2()
+    {
+        _debug.UpdateSlowRead2();
+
     }
 
     private void RefreshStore(AssetStore assetStore)
@@ -117,7 +137,7 @@ internal sealed class DebugInterfaceGateway
         {
             var gfxStr = $"{v.GfxStoreCount}({v.GfxStoreFree})";
             var bkStr = $"{v.BackendStoreCount}({v.BackendStoreFree})";
-            metrics[k.ToSimpleName()] = (gfxStr, bkStr);
+            metrics[k.ToLogName()] = (gfxStr, bkStr);
         }
     }
     

@@ -9,6 +9,7 @@ using ConcreteEngine.Graphics.Gfx.Resources;
 using ConcreteEngine.Renderer.Data;
 using ConcreteEngine.Renderer.Definitions;
 using Tools.DebugInterface;
+using Tools.DebugInterface.Data;
 
 #endregion
 

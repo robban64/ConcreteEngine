@@ -1,4 +1,4 @@
-namespace Tools.DebugInterface;
+namespace Tools.DebugInterface.Data;
 
 [AttributeUsage(AttributeTargets.Property | AttributeTargets.Field)]
 public sealed class DebugWatchAttribute : Attribute

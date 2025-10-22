@@ -4,6 +4,7 @@ using ConcreteEngine.Core.RenderingSystem;
 using ConcreteEngine.Core.RenderingSystem.Batching;
 using ConcreteEngine.Core.Scene.Entities;
 using Tools.DebugInterface;
+using Tools.DebugInterface.Data;
 
 #endregion
 

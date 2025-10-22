@@ -66,9 +66,12 @@ internal sealed class BackendResourceStore<TId, THandle> : IBackendResourceStore
         var prev = _records[idx];
         var newHandle = new BkHandle<THandle>(value, (ushort)(prev.Gen + 1), true);
         _records[idx] = newHandle;
-        
+
+        var result = GfxRefToken<TId>.From(new GfxHandle(idx, newHandle.Gen, Kind));
         UpdateMetrics();
-        return GfxRefToken<TId>.From(new GfxHandle(idx, newHandle.Gen, Kind));
+        GfxDebugMetrics.Log(DebugLog.MakeAddBackendStore(newHandle.Handle.Value, result));
+
+        return result;
     }
 
 
@@ -84,7 +87,7 @@ internal sealed class BackendResourceStore<TId, THandle> : IBackendResourceStore
 
         _records[handle.Slot] = default;
         _free.Push(handle.Slot);
-
+        GfxDebugMetrics.Log(DebugLog.MakeRemoveBackendStore(record.Handle.Value, handle));
         UpdateMetrics();
     }
 
@@ -95,11 +98,13 @@ internal sealed class BackendResourceStore<TId, THandle> : IBackendResourceStore
         //var oldValue = GetUntyped(handle);
         //Throwers.IsUniqueHandleOrThrow(value.Value, oldValue.Value);
 
-        var result = new BkHandle<THandle>(value, (ushort)(handle.Gen + 1), true);
-        _records[handle.Slot] = result;
+        var newRecord = new BkHandle<THandle>(value, (ushort)(handle.Gen + 1), true);
+        _records[handle.Slot] = newRecord;
 
+        var newRef = GfxRefToken<TId>.From(handle with { Gen = newRecord.Gen });
         UpdateMetrics();
-        return GfxRefToken<TId>.From(handle with { Gen = result.Gen });
+        GfxDebugMetrics.Log(DebugLog.MakeReplaceBackendStore(value.Value, newRef));
+        return GfxRefToken<TId>.From(handle with { Gen = newRecord.Gen });
     }
 
     private int Allocate()

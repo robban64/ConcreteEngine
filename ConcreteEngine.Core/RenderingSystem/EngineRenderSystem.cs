@@ -45,12 +45,17 @@ public sealed class EngineRenderSystem : IRenderingSystem
 
     internal RenderEngine RenderEngine => _renderer;
 
-    internal EngineRenderSystem(EngineWindow window, GraphicsRuntime graphics, AssetSystem assets)
+    private readonly Action<ReadOnlySpan<FrameBufferId>> _drainFboIds;
+    private readonly EngineEventBus _eventBus;
+
+    internal EngineRenderSystem(EngineWindow window, GraphicsRuntime graphics, AssetSystem assets,EngineEventBus eventBus)
     {
         _window = window;
         _graphics = graphics;
         _assets = assets;
         _graphics = graphics;
+        _eventBus = eventBus;
+        _drainFboIds = OnDrainFboIds;
         SceneProperties = new RenderSceneProps();
         Batchers = new BatcherRegistry();
         
@@ -71,12 +76,25 @@ public sealed class EngineRenderSystem : IRenderingSystem
 
     internal void RenderEmptyFrame(in RenderFrameInfo frameInfo) => _renderer.RenderEmptyFrame(in frameInfo);
 
+    private void OnDrainFboIds(ReadOnlySpan<FrameBufferId> fboIds)
+    {
+        foreach (var fboId in fboIds)
+            _assets.EnqueueRecreateFrameBuffer(fboId);
+    }
+    
     internal void PreRender(
         BeginFrameStatus status,
         in RenderFrameInfo frameInfo,
         in RenderRuntimeParams runtimeParams,
         in RenderViewSnapshot viewSnapshot)
     {
+        if (status == BeginFrameStatus.Resize)
+        {
+            _graphics.Gfx.Commands.BindFramebuffer(default);
+            _graphics.Gfx.Commands.UnbindAllTextures();
+            _renderer.RecreateScreenRelativeFbo(frameInfo.OutputSize);
+        }
+        
         _renderEntityBus.Reset();
         _renderEntityBus.CollectEntities();
 
@@ -87,7 +105,7 @@ public sealed class EngineRenderSystem : IRenderingSystem
         // fill buffers
         _renderEntityBus.FlushEntities(_renderer.CommandBuffer);
         SubmitMaterialData();
-        _renderer.FillDrawBuffers();
+        _renderer.CollectDrawBuffers();
         
         _renderer.StartFrame(status);
     }

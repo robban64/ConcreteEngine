@@ -1,10 +1,16 @@
 #region
 
 using ConcreteEngine.Common;
+using ConcreteEngine.Core.Assets.Data;
 using ConcreteEngine.Core.Assets.Descriptors;
 using ConcreteEngine.Core.Assets.Internal;
 using ConcreteEngine.Core.Assets.Materials;
+using ConcreteEngine.Core.Assets.Shaders;
+using ConcreteEngine.Core.Interface;
 using ConcreteEngine.Graphics.Gfx;
+using ConcreteEngine.Graphics.Gfx.Definitions;
+using ConcreteEngine.Graphics.Gfx.Resources;
+using ConcreteEngine.Renderer.Passes;
 
 #endregion
 
@@ -28,6 +34,8 @@ public sealed class AssetSystem : IAssetSystem
         Unloaded = 5
     }
 
+    private readonly AssetPendingQueue _pendingQueue;
+
     private AssetConfigLoader? _configLoader;
     private AssetStartupWorker? _processor;
     private AssetGfxUploader? _uploader;
@@ -45,6 +53,7 @@ public sealed class AssetSystem : IAssetSystem
     {
         _assetStore = new AssetStore();
         _materialStore = new MaterialStore(_assetStore);
+        _pendingQueue = new AssetPendingQueue();
     }
 
     internal AssetStore InternalStore => _assetStore;
@@ -62,6 +71,23 @@ public sealed class AssetSystem : IAssetSystem
         _manifest = _configLoader.LoadAssetManifest();
 
         CurrentStatus = Status.ManifestLoaded;
+
+        DebugCommandController.RecreateShaderAction = EnqueueRecreateShader;
+    }
+
+    internal void EnqueueRecreateShader(string name)
+    {
+        if (!_assetStore.TryGetByName(name, typeof(Shader), out var obj) || obj is not Shader s) return;
+        _pendingQueue.Enqueue(new RecreateRequest(s.ResourceId, s.RawId, AssetKind.Shader, ResourceKind.Shader));
+    }
+    
+    internal void EnqueueRecreateFrameBuffer(FrameBufferId fbo) 
+    {
+        _pendingQueue.Enqueue(new RecreateRequest(fbo, new AssetId(-1), AssetKind.Unknown, ResourceKind.FrameBuffer));
+    }
+
+    internal void ProcessPendingQueue(long frameIndex)
+    {
     }
 
 

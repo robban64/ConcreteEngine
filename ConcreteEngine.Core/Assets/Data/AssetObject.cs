@@ -9,4 +9,6 @@ public abstract class AssetObject
 
     public abstract AssetKind Kind { get; }
     public abstract AssetCategory Category { get; }
+    
+    internal int ResourceId {get; init;}
 }

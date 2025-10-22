@@ -7,12 +7,19 @@ using ConcreteEngine.Common.Numerics;
 using ConcreteEngine.Graphics.Gfx;
 using ConcreteEngine.Graphics.Gfx.Resources;
 using ConcreteEngine.Renderer.Data;
+using ConcreteEngine.Renderer.Definitions;
 using ConcreteEngine.Renderer.Descriptors;
 using ConcreteEngine.Renderer.Passes;
 
 #endregion
 
 namespace ConcreteEngine.Renderer.Registry;
+
+public interface IRenderFboRegistry
+{
+    void RecreateFixedFrameBuffer(FrameBufferId fboId, Size2D outputSize);
+    void RecreateScreenRelativeFbo(Size2D outputSize);
+}
 
 internal sealed class RenderFboRegistry
 {
@@ -57,7 +64,7 @@ internal sealed class RenderFboRegistry
         var meta = _gfxApi.GetMeta<FrameBufferId, FrameBufferMeta>(fboId);
 
         var key = TagRegistry.FboKey<TTag>(variant);
-        var sizePolicy = entry.FboSizePolicy ?? RenderFbo.SizePolicy.Default();
+        var sizePolicy = entry.FboSizePolicy ?? RenderFboSizePolicy.Default();
 
         var renderFbo = new RenderFbo(fboId, key, 0, sizePolicy);
         renderFbo.UpdateFromMeta(in meta);
@@ -69,8 +76,8 @@ internal sealed class RenderFboRegistry
     {
         _fboRegistry.AsSpan(0, _fboCount).Sort(RenderFbo.FboKeyComparer.Instance);
     }
-    
-    
+
+
     public bool TryGetRenderFbo(FboTagKey key, out RenderFbo? fbo)
     {
         fbo = GetRenderFbo(key);
@@ -97,16 +104,29 @@ internal sealed class RenderFboRegistry
         return null;
     }
 
-    public void ResizeFixedFrameBuffer(FrameBufferId fboId, Size2D outputSize)
+    public void DrainFboIds(FboResizeMode mode, Action<ReadOnlySpan<FrameBufferId>> pendingIds)
+    {
+        Span<FrameBufferId> newSizes = stackalloc FrameBufferId[FrameBufferSpan.Length];
+        var idx = 0;
+        foreach (var fbo in FrameBufferSpan)
+        {
+            if (fbo.SizePolicy.Mode != mode) continue;
+            newSizes[idx++] = fbo.FboId;
+        }
+
+        pendingIds(newSizes);
+    }
+
+    public void RecreateFixedFrameBuffer(FrameBufferId fboId, Size2D outputSize)
     {
         var fbo = GetRenderFboById(fboId);
-        
+
         if (fbo == null) ThrowNotFound(fboId);
         InvalidOpThrower.ThrowIfNot(fbo.IsFixedSize, nameof(fbo.IsFixedSize));
         InvalidOpThrower.ThrowIf(fbo.Size == outputSize, nameof(outputSize));
-        
-        fbo.ChangeSizePolicy(RenderFbo.SizePolicy.Fixed(outputSize));
-        
+
+        fbo.ChangeSizePolicy(RenderFboSizePolicy.Fixed(outputSize));
+
         _gfxFbo.RecreateFrameBuffer(fboId, outputSize);
     }
 
@@ -124,10 +144,9 @@ internal sealed class RenderFboRegistry
             newSizes[idx++] = (fbo.FboId, fbo.CalculateNewSize(outputSize));
         }
 
-        Console.WriteLine($"Recreating {newSizes.Length} FBO");
+        Console.WriteLine($"Recreating {idx} FBO");
         _gfxFbo.RecreateSizedFrameBuffer(newSizes.Slice(0, idx));
     }
-
 
 
     private void OnFboChange(FrameBufferId id, in GfxMetaChanged<FrameBufferMeta> message)

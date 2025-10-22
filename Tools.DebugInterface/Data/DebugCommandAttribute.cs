@@ -1,4 +1,4 @@
-namespace Tools.DebugInterface;
+namespace Tools.DebugInterface.Data;
 
 [AttributeUsage(AttributeTargets.Method, Inherited = false, AllowMultiple = false)]
 public sealed class DebugCommandAttribute(string name) : Attribute

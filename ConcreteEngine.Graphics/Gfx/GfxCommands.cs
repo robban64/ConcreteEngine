@@ -262,6 +262,8 @@ public sealed class GfxCommands
         _states.BindTexture(refHandle, slot);
     }
 
+    public void UnbindAllTextures() => _states.UnbindAllTextures();
+
     public void UseShader(ShaderId id)
     {
         if (_boundShaderId == id) return;

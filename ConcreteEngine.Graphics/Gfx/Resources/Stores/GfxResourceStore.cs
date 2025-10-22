@@ -101,12 +101,7 @@ internal sealed class GfxResourceStore<TId, TMeta> : IGfxResourceStore<TId>
         var newId = _makeId(idx);
 
         UpdateMetrics();
-        if (GfxDebugMetrics.LogEnabled)
-        {
-            GfxDebugMetrics.Log(GfxDebugLog.MakeStore(TId.Kind,
-                $"New GfxResource - Id: {GfxDebugLog.FormatId(newId.Value)} - {refToken.Handle.ToDebugString()}"));
-        }
-
+        GfxDebugMetrics.Log(DebugLog.MakeAddGfxStore(newId.Value, refToken));
         return newId;
     }
 
@@ -127,9 +122,7 @@ internal sealed class GfxResourceStore<TId, TMeta> : IGfxResourceStore<TId>
         _free.Push(idx);
 
         UpdateMetrics();
-        if (GfxDebugMetrics.LogEnabled)
-            GfxDebugMetrics.Log(GfxDebugLog.MakeStore(TId.Kind, $"Remove GfxResource - Id: {id.Value}"));
-
+        GfxDebugMetrics.Log(DebugLog.MakeRemoveGfxStore(id.Value, handle));
         return handle;
     }
 
@@ -147,12 +140,7 @@ internal sealed class GfxResourceStore<TId, TMeta> : IGfxResourceStore<TId>
         ChangeCallback?.Invoke(id, in message);
 
         UpdateMetrics();
-
-        if (GfxDebugMetrics.LogEnabled)
-        {
-            GfxDebugMetrics.Log(GfxDebugLog.MakeStore(TId.Kind,
-                $"Replaced GfxResource - Id: {GfxDebugLog.FormatId(id.Value)} - {oldHandle.Handle.ToDebugString()} -> {handle.ToDebugString()}"));
-        }
+        GfxDebugMetrics.Log(DebugLog.MakeReplaceGfxStore(id.Value, handle));
 
         return id;
     }

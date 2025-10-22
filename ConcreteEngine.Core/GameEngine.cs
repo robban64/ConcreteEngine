@@ -27,6 +27,8 @@ public sealed class GameEngine : IDisposable
     private readonly EngineWindow _window;
     private readonly GraphicsRuntime _graphics;
 
+    private EngineEventBus _eventBus;
+
     private readonly EngineCoreSystem _coreSystems;
     private readonly AssetSystem _assets;
     private readonly InputSystem _inputSystem;
@@ -70,7 +72,7 @@ public sealed class GameEngine : IDisposable
 
         _inputSystem = new InputSystem(input);
         _assets = new AssetSystem();
-        _engineRenderSystem = new RenderingSystem.EngineRenderSystem(engineWindow, _graphics, _assets);
+        _engineRenderSystem = new RenderingSystem.EngineRenderSystem(engineWindow, _graphics, _assets,_eventBus);
         _coreSystems = new EngineCoreSystem(_engineRenderSystem, _inputSystem, _assets);
 
 

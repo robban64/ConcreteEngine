@@ -92,16 +92,25 @@ public sealed class RenderEngine
     }
 
     //
-    public void RenderEmptyFrame(in RenderFrameInfo frameInfo)
-    {
-        _graphics.BeginFrame(frameInfo.ToGfxFrameInfo());
-        _graphics.EndFrame(out _);
-    }
-
     public void SubmitMaterialDrawData(in DrawMaterialPayload payload, ReadOnlySpan<TextureSlotInfo> slots) =>
         _drawPipeline.SubmitMaterialDrawData(in payload, slots);
 
+    public RenderFbo? GetRenderFbo<TTag>(FboVariant variant) where TTag : unmanaged, IRenderPassTag
+        => _renderRegistry.FboRegistry.GetRenderFbo(TagRegistry.FboKey<TTag>(variant));
 
+    public void RecreateFixedFrameBuffer(FrameBufferId fboId, Size2D newSize)
+        => _renderRegistry.FboRegistry.RecreateFixedFrameBuffer(fboId, newSize);
+
+    public void RecreateScreenRelativeFbo(Size2D newSize)
+        => _renderRegistry.FboRegistry.RecreateScreenRelativeFbo(newSize);
+
+    public void GetRecreateScreenRelativeFboIds(Size2D newSize, Func<ReadOnlySpan<FrameBufferId>> pendingIds)
+        => _renderRegistry.FboRegistry.RecreateScreenRelativeFbo(newSize);
+
+    public void DrainFboIds(FboResizeMode mode, Action<ReadOnlySpan<FrameBufferId>> pendingIds)
+        => _renderRegistry.FboRegistry.DrainFboIds(mode, pendingIds);
+
+    //
     public void PrepareFrame(
         in RenderFrameInfo frameInfo,
         in RenderRuntimeParams runtimeParams,
@@ -118,7 +127,7 @@ public sealed class RenderEngine
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public void FillDrawBuffers() => _drawPipeline.PrepareDrawBuffers();
+    public void CollectDrawBuffers() => _drawPipeline.PrepareDrawBuffers();
 
     public void StartFrame(BeginFrameStatus status)
     {
@@ -128,13 +137,6 @@ public sealed class RenderEngine
         if (status == BeginFrameStatus.Resize)
             _renderRegistry.FboRegistry.RecreateScreenRelativeFbo(frameInfo.OutputSize);
     }
-
-    public void ResizeFrameBuffer(FrameBufferId fboId, Size2D newSize)
-        => _renderRegistry.FboRegistry.ResizeFixedFrameBuffer(fboId, newSize);
-    
-    public RenderFbo? GetRenderFbo<TTag>(FboVariant variant) where TTag : unmanaged, IRenderPassTag
-        => _renderRegistry.FboRegistry.GetRenderFbo(TagRegistry.FboKey<TTag>(variant));
-
 
     public void UploadFrameData()
     {
@@ -172,6 +174,12 @@ public sealed class RenderEngine
     public void EndRenderFrame(out GfxFrameResult frameResult)
     {
         _graphics.EndFrame(out frameResult);
+    }
+
+    public void RenderEmptyFrame(in RenderFrameInfo frameInfo)
+    {
+        _graphics.BeginFrame(frameInfo.ToGfxFrameInfo());
+        _graphics.EndFrame(out _);
     }
 
     public void Shutdown()

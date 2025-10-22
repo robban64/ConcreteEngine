@@ -25,11 +25,19 @@ public class DebugConsole
     }
 
 
-    public void RegisterCommand(string command, Func<string> commandHandler) => _commands[command] = commandHandler;
+    public void RegisterCommand(string command, Func<string?, string?, string> commandHandler) =>
+        _commands[command] = commandHandler;
+
+    public void RegisterCommand(string command, Func<string> commandHandler) =>
+        _commands[command] = commandHandler;
+
+    public void RegisterCommand(string command, Action<DebugConsoleCtx, string?, string?> commandHandler) =>
+        _commands[command] = commandHandler;
 
     public void RegisterCommand(string command, Action<DebugConsoleCtx> commandHandler) =>
         _commands[command] = commandHandler;
 
+    
     public void AddLog(string? msg)
     {
         if (msg is null) return;
@@ -42,19 +50,11 @@ public class DebugConsole
         if (string.IsNullOrWhiteSpace(commandLine)) return false;
 
         _scrollToBottom = true;
-
-        _log.Add($"> {commandLine}");
-        var cmd = commandLine.Trim();
-        if (_commands.TryGetValue(cmd, out var commandHandler))
-        {
-            if (commandHandler is Func<string> func)
-                _log.Add(func());
-            if (commandHandler is Action<DebugConsoleCtx> action)
-                action(_ctx);
-            else throw new InvalidOperationException($"Invalid command handler {commandHandler.GetType().Name}");
-
-            return true;
-        }
+        _log.Add($">> {commandLine}");
+        var parts = commandLine.Trim().Split(' ', 3, StringSplitOptions.RemoveEmptyEntries);
+        var cmd = parts[0];
+        var arg1 = parts.Length > 1 ? parts[1] : null;
+        var arg2 = parts.Length > 2 ? parts[2] : null;
 
         if (cmd == "clear")
         {
@@ -62,9 +62,33 @@ public class DebugConsole
             _log.Add("[console cleared]");
             return true;
         }
+        
+        if (!_commands.TryGetValue(cmd, out var commandHandler))
+        {
+            _log.Add($"Unknown command: {cmd}");
+            return false;
+        }
+        
+        switch (commandHandler)
+        {
+            case Func<string?, string?, string> funcArg:
+                _log.Add(funcArg(arg1, arg2));
+                break;
+            case Func<string> funcNoArg:
+                _log.Add(funcNoArg());
+                break;
+            case Action<DebugConsoleCtx, string?, string?> actionArg:
+                actionArg(_ctx, arg1, arg2);
+                break;
+            case Action<DebugConsoleCtx> actionNoArg:
+                actionNoArg(_ctx);
+                break;
+            default:
+                _log.Add($"Invalid invoke handler: {commandHandler.GetType().Name}");
+                return false;
+        }
 
-        _log.Add($"Unknown command: {commandLine}");
-        return false;
+        return true;
     }
 
     public void DrawConsole(int leftPanelWidth, int rightPanelWidth)

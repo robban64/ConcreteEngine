@@ -143,13 +143,8 @@ public sealed class GameEngine : IDisposable
             beginStatus = BeginFrameStatus.Resize;
         }
 
-        //Todo move out
         _assets.UpdatePendingQueue(frameInfo.FrameIndex);
-        while (_assets.TryProcessPendingQueue(out var req))
-        {
-            if (req.ResourceKind == ResourceKind.FrameBuffer)
-                _engineRenderSystem.OnRecreateFrameBuffer(in req);
-        }
+        _assets.ProcessPendingQueue(_engineRenderSystem);
 
         scene.BeforeRender(out var viewSnapshot);
 

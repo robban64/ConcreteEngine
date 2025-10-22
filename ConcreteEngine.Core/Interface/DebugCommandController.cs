@@ -10,6 +10,7 @@ namespace ConcreteEngine.Core.Interface;
 
 internal static class DebugCommandController
 {
+    //
     internal static Action<string>? RecreateShaderAction { get; set; }
     internal static Action<int, RecreateSpecialAction>? ResizeShadowMapAction { get; set; }
 

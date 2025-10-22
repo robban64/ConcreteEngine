@@ -24,8 +24,7 @@ internal sealed class MeshLoaderModule(AssetGfxUploader uploader)
             ResourceId = info.MeshId,
             Name = manifest.Name,
             DrawCount = info.DrawCount,
-            IsCoreAsset = false,
-            Generation = 0
+            IsCoreAsset = false
         };
     }
 

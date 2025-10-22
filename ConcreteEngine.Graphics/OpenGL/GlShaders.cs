@@ -45,9 +45,9 @@ internal sealed class GlShaders : IGraphicsDriverModule
 
     public GfxRefToken<ShaderId> CreateShader(string vertexSource, string fragmentSource)
     {
-        uint vertexShader = CreateShader(ShaderType.VertexShader, vertexSource);
-        uint fragmentShader = CreateShader(ShaderType.FragmentShader, fragmentSource);
-        uint handle = CreateShaderProgram(vertexShader, fragmentShader);
+        var vertexShader = CreateShader(ShaderType.VertexShader, vertexSource);
+        var fragmentShader = CreateShader(ShaderType.FragmentShader, fragmentSource);
+        var handle = CreateShaderProgram(vertexShader, fragmentShader);
         _gl.DetachShader(handle, vertexShader);
         _gl.DetachShader(handle, fragmentShader);
         _gl.DeleteShader(vertexShader);

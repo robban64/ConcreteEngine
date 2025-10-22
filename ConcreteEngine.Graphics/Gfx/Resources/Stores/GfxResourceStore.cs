@@ -138,7 +138,6 @@ internal sealed class GfxResourceStore<TId, TMeta> : IGfxResourceStore<TId>
 
         var message = new GfxMetaChanged<TMeta>(in newMeta, in oldMeta, handle.Gen, true, ResourceKind);
         ChangeCallback?.Invoke(id, in message);
-
         UpdateMetrics();
         GfxDebugMetrics.Log(DebugLog.MakeReplaceGfxStore(id.Value, handle));
 

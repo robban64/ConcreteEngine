@@ -7,6 +7,7 @@ using ConcreteEngine.Core.Assets.Internal;
 using ConcreteEngine.Core.Assets.Materials;
 using ConcreteEngine.Core.Assets.Shaders;
 using ConcreteEngine.Core.Interface;
+using ConcreteEngine.Core.RenderingSystem;
 using ConcreteEngine.Graphics.Gfx;
 using ConcreteEngine.Graphics.Gfx.Definitions;
 using ConcreteEngine.Graphics.Gfx.Resources;
@@ -36,16 +37,16 @@ public sealed class AssetSystem : IAssetSystem
 
     private readonly AssetPendingQueue _pendingQueue;
 
+    private AssetLoader? _loader;
     private AssetConfigLoader? _configLoader;
     private AssetStartupWorker? _processor;
-    private AssetGfxUploader? _uploader;
-    private AssetLoader? _loader;
+
+    private AssetGfxUploader _gfxUploader = null!;
 
     private AssetManifest _manifest = null!;
 
-    private readonly MaterialStore _materialStore;
-
     private readonly AssetStore _assetStore;
+    private readonly MaterialStore _materialStore;
 
     public Status CurrentStatus { get; private set; } = Status.None;
 
@@ -91,11 +92,42 @@ public sealed class AssetSystem : IAssetSystem
     {
         _pendingQueue.OnFrameStart(frameIndex);
     }
-    internal bool TryProcessPendingQueue(out RecreateRequest request)
+
+    internal void ProcessPendingQueue(EngineRenderSystem renderSystem)
     {
-        if (_pendingQueue.Count > 0) return _pendingQueue.TryDrain(out request);
-        request = default;
-        return false;
+        while (_pendingQueue.TryDrain(out var req))
+        {
+            if (req.ResourceKind == ResourceKind.FrameBuffer)
+                renderSystem.OnRecreateFrameBuffer(in req);
+            else if (req.ResourceKind == ResourceKind.Shader)
+                RecreateShader(req);
+        }
+    }
+
+    private void RecreateShader(in RecreateRequest req)
+    {
+        ArgumentOutOfRangeException.ThrowIfLessThanOrEqual(req.AssetId.Value, 0, nameof(req.AssetId));
+        ArgumentOutOfRangeException.ThrowIfNotEqual((int)req.Kind, (int)AssetKind.Shader, nameof(req.Kind));
+        ArgumentOutOfRangeException.ThrowIfNotEqual((int)req.ResourceKind, (int)ResourceKind.Shader);
+        InvalidOpThrower.ThrowIfNull(_gfxUploader, nameof(_gfxUploader));
+
+        var shader = _assetStore.GetByRef(AssetRef<Shader>.Make(req.AssetId));
+        if (!_assetStore.TryGetFileIds(req.AssetId, out var fileIds))
+            return;
+
+        InvalidOpThrower.ThrowIf(fileIds.Length != 2);
+        var (vertId, fragId) = (fileIds[0], fileIds[1]);
+        var vertFile = _assetStore.TryGetFileEntry(vertId, out var vertEntry) ? vertEntry : null;
+        var fragFile = _assetStore.TryGetFileEntry(fragId, out var fragEntry) ? fragEntry : null;
+        InvalidOpThrower.ThrowIf(vertFile == null || fragFile == null);
+        
+        if (_loader is null)
+        {
+            _loader = new AssetLoader();
+            _loader.ActivateLoader(_assetStore, _gfxUploader);
+        }
+        
+        _loader.ReloadShader(shader, vertFile!, fragFile!);
     }
 
 
@@ -107,10 +139,10 @@ public sealed class AssetSystem : IAssetSystem
 
         CurrentStatus = Status.Booting;
 
-        _uploader = new AssetGfxUploader(gfx);
+        _gfxUploader = new AssetGfxUploader(gfx);
         _loader = new AssetLoader();
         _processor = new AssetStartupWorker(_loader, _configLoader, _manifest);
-        _processor.Start(_assetStore, _uploader);
+        _processor.Start(_assetStore, _gfxUploader);
     }
 
     internal bool ProcessLoader(int n)
@@ -131,7 +163,6 @@ public sealed class AssetSystem : IAssetSystem
         _loader?.DeactivateLoader();
         _loader = null;
 
-        _uploader = null;
         _configLoader = null;
 
         CurrentStatus = Status.Ready;

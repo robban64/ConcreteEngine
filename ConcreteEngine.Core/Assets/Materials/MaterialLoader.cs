@@ -72,8 +72,7 @@ internal sealed class MaterialLoader
             Name = record.Name,
             ShaderRef = shader,
             Params = matParams,
-            IsCoreAsset = false,
-            Generation = 0
+            IsCoreAsset = false
         };
     }
 }

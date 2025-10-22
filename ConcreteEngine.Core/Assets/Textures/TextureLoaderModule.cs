@@ -25,8 +25,7 @@ internal sealed class TextureLoaderModule(AssetGfxUploader uploader)
             ResourceId = info.TextureId,
             Width = info.Width,
             Height = info.Height,
-            IsCoreAsset = false,
-            Generation = 0
+            IsCoreAsset = false
         };
 
         if (payload.Data is { } tData)
@@ -47,8 +46,7 @@ internal sealed class TextureLoaderModule(AssetGfxUploader uploader)
             Name = manifest.Name,
             ResourceId = info.TextureId,
             Size = info.Size,
-            IsCoreAsset = false,
-            Generation = 0
+            IsCoreAsset = false
         };
     }
 

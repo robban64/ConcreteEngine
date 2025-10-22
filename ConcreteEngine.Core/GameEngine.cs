@@ -148,20 +148,7 @@ public sealed class GameEngine : IDisposable
         while (_assets.TryProcessPendingQueue(out var req))
         {
             if (req.ResourceKind == ResourceKind.FrameBuffer)
-            {
-                _graphics.Gfx.Commands.BindFramebuffer(default);
-                _graphics.Gfx.Commands.UnbindAllTextures();
-                if(req.SpecialAction == RecreateSpecialAction.RecreateScreenDependentFbo)
-                    _engineRenderSystem.RenderEngine.RecreateScreenRelativeFbo(_window.OutputSize);
-                if (req.SpecialAction == RecreateSpecialAction.RecreateShadowFbo)
-                {
-                    var fbo = _engineRenderSystem.RenderEngine.GetRenderFbo<ShadowPassTag>(FboVariant.Default);
-                    _sceneManager.Current?.InternalWorld.RenderProps.SetShadowDefault(req.Param0);
-                    _engineRenderSystem.RenderEngine.RecreateFixedFrameBuffer(fbo.FboId, new Size2D(req.Param0,req.Param0));
-                }
-                    
-
-            }
+                _engineRenderSystem.OnRecreateFrameBuffer(in req);
         }
 
         scene.BeforeRender(out var viewSnapshot);

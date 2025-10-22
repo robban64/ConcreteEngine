@@ -7,12 +7,14 @@ namespace ConcreteEngine.Graphics.Diagnostic;
 public static class GfxDebugMetrics
 {
     private static readonly Dictionary<ResourceKind, StoreMetrics> Stores = new(8);
-    public static IReadOnlyDictionary<ResourceKind, StoreMetrics> GetStoreMetrics() => Stores;
 
-    public static HashSet<(GfxLogSource, GfxLogLayer)> IgnoreSourceLayer { get; } = [];
-    public static HashSet<GfxLogAction> IgnoreAction { get; } = [];
+    private static HashSet<(GfxLogSource, GfxLogLayer)> IgnoreSourceLayer { get; } = [];
+    private static HashSet<GfxLogAction> IgnoreAction { get; } = [];
+    private static HashSet<ResourceKind> IgnoreKind { get; } = [];
 
     public static Queue<GfxDebugLog> LogQueue = new(4);
+
+    public static IReadOnlyDictionary<ResourceKind, StoreMetrics> GetStoreMetrics() => Stores;
 
     private static bool _logEnabled = false;
 
@@ -36,10 +38,31 @@ public static class GfxDebugMetrics
             return;
         }
 
-        if (IgnoreSourceLayer.Contains((log.Source, log.Layer)) || IgnoreAction.Contains(log.Action))
+        if (IgnoreSourceLayer.Contains((log.Source, log.Layer)) 
+            || IgnoreAction.Contains(log.Action)
+            || IgnoreKind.Contains(log.Kind))
             return;
 
         LogQueue.Enqueue(log);
+    }
+    
+    public static void ToggleLog(GfxLogSource source, GfxLogLayer layer, bool enabled)
+    {
+        var key = (source, layer);
+        if (enabled) IgnoreSourceLayer.Remove(key);
+        else IgnoreSourceLayer.Add(key);
+    }
+
+    public static void ToggleLog(GfxLogAction action, bool enabled)
+    {
+        if (enabled) IgnoreAction.Remove(action);
+        else IgnoreAction.Add(action);
+    }
+
+    public static void ToggleLog(ResourceKind kind, bool enabled)
+    {
+        if (enabled) IgnoreKind.Remove(kind);
+        else IgnoreKind.Add(kind);
     }
 
     internal static void RegisterStore<TId>() where TId : unmanaged, IResourceId

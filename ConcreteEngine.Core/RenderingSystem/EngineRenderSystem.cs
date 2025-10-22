@@ -45,24 +45,23 @@ public sealed class EngineRenderSystem : IRenderingSystem
 
     internal RenderEngine RenderEngine => _renderer;
 
-    private readonly Action<ReadOnlySpan<FrameBufferId>> _drainFboIds;
     private readonly EngineEventBus _eventBus;
 
-    internal EngineRenderSystem(EngineWindow window, GraphicsRuntime graphics, AssetSystem assets,EngineEventBus eventBus)
+    internal EngineRenderSystem(EngineWindow window, GraphicsRuntime graphics, AssetSystem assets,
+        EngineEventBus eventBus)
     {
         _window = window;
         _graphics = graphics;
         _assets = assets;
         _graphics = graphics;
         _eventBus = eventBus;
-        //_drainFboIds = OnDrainFboIds;
         SceneProperties = new RenderSceneProps();
         Batchers = new BatcherRegistry();
-        
-        
+
+
         PrimitiveMeshes.CreatePrimitives(graphics.Gfx.Meshes);
         InvalidOpThrower.ThrowIf(PrimitiveMeshes.FsqQuad == 0 || PrimitiveMeshes.SkyboxCube == 0);
-        
+
         _renderer = new RenderEngine(graphics, SceneProperties.Snapshot, PrimitiveMeshes.FsqQuad);
         _renderEntityBus = new RenderEntityBus();
     }
@@ -76,13 +75,21 @@ public sealed class EngineRenderSystem : IRenderingSystem
 
     internal void RenderEmptyFrame(in RenderFrameInfo frameInfo) => _renderer.RenderEmptyFrame(in frameInfo);
 
-    /*
-    private void OnDrainFboIds(ReadOnlySpan<FrameBufferId> fboIds)
+    internal void OnRecreateFrameBuffer(in RecreateRequest req)
     {
-        foreach (var fboId in fboIds)
-            _assets.EnqueueRecreateFrameBuffer(fboId);
+        _graphics.Gfx.Commands.BindFramebuffer(default);
+        _graphics.Gfx.Commands.UnbindAllTextures();
+
+        if (req.SpecialAction == RecreateSpecialAction.RecreateScreenDependentFbo)
+            _renderer.FboRegistry.RecreateScreenDependentFbo(_window.OutputSize);
+        else if (req.SpecialAction == RecreateSpecialAction.RecreateShadowFbo)
+        {
+            SceneProperties.SetShadowDefault(req.Param0);
+            _renderer.FboRegistry.RecreateFixedFrameBuffer<ShadowPassTag>(FboVariant.Default,
+                new Size2D(req.Param0, req.Param0));
+        }
     }
-    */
+
     internal void PreRender(
         BeginFrameStatus status,
         in RenderFrameInfo frameInfo,
@@ -103,12 +110,12 @@ public sealed class EngineRenderSystem : IRenderingSystem
         var snapshot = SceneProperties.Commit();
         //_sceneDrawProducer.SetSceneGlobals(snapshot);
         _renderer.PrepareFrame(in frameInfo, in runtimeParams, in viewSnapshot);
-        
+
         // fill buffers
         _renderEntityBus.FlushEntities(_renderer.CommandBuffer);
         SubmitMaterialData();
         _renderer.CollectDrawBuffers();
-        
+
         _renderer.StartFrame(status);
     }
 

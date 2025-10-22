@@ -41,7 +41,9 @@ public sealed class GraphicsRuntime : IGraphicsRuntime
 
     public GraphicsRuntime()
     {
-        GfxDebugMetrics.IgnoreSourceLayer.Add((GfxLogSource.Store, GfxLogLayer.Backend));
+        GfxDebugMetrics.ToggleLog(GfxLogSource.Store, GfxLogLayer.Backend, false);
+        
+        GfxDebugMetrics.ToggleLog(GfxLogAction.EnqueueDispose, false);
     }
 
     public GfxContext Gfx => _gfxContext;

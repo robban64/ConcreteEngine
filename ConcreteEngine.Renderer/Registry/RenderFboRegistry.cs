@@ -17,11 +17,12 @@ namespace ConcreteEngine.Renderer.Registry;
 
 public interface IRenderFboRegistry
 {
-    void RecreateFixedFrameBuffer(FrameBufferId fboId, Size2D outputSize);
-    void RecreateScreenRelativeFbo(Size2D outputSize);
+    public void RecreateFixedFrameBuffer<TTag>(FboVariant variant, Size2D outputSize)
+        where TTag : unmanaged, IRenderPassTag;
+    void RecreateScreenDependentFbo(Size2D outputSize);
 }
 
-internal sealed class RenderFboRegistry
+internal sealed class RenderFboRegistry : IRenderFboRegistry
 {
     private readonly GfxFrameBuffers _gfxFbo;
     private readonly GfxResourceApi _gfxApi;
@@ -56,6 +57,9 @@ internal sealed class RenderFboRegistry
     internal void Register<TTag>(FboVariant variant, RegisterFboEntry entry, Size2D outputSize)
         where TTag : unmanaged, IRenderPassTag
     {
+        ArgOutOfRangeThrower.ThrowIfSizeTooSmall(outputSize, new Size2D(RenderLimits.MinOutputSize));
+        ArgOutOfRangeThrower.ThrowIfSizeTooBig(outputSize, new Size2D(RenderLimits.MaxOutputSize));
+
         InvalidOpThrower.ThrowIf(_fboCount >= RenderLimits.FboSlots);
         InvalidOpThrower.ThrowIfNotNull(_fboRegistry[_fboCount]);
 
@@ -117,23 +121,33 @@ internal sealed class RenderFboRegistry
         pendingIds(newSizes);
     }
 
-    public void RecreateFixedFrameBuffer(FrameBufferId fboId, Size2D outputSize)
+    public void RecreateFixedFrameBuffer<TTag>(FboVariant variant, Size2D outputSize) where TTag : unmanaged, IRenderPassTag
     {
-        var fbo = GetRenderFboById(fboId);
-
-        if (fbo == null) ThrowNotFound(fboId);
+        ArgOutOfRangeThrower.ThrowIfSizeTooSmall(outputSize, new Size2D(RenderLimits.MinOutputSize));
+        if (typeof(TTag) == typeof(ShadowPassTag))
+        {
+            ArgOutOfRangeThrower.ThrowIfSizeTooBig(outputSize, new Size2D(RenderLimits.MaxShadowMapSize));
+            ArgOutOfRangeThrower.ThrowIfSizeTooSmall(outputSize, new Size2D(RenderLimits.MinShadowMapSize));
+        }
+        else
+        {
+            ArgOutOfRangeThrower.ThrowIfSizeTooBig(outputSize, new Size2D(RenderLimits.MaxOutputSize));
+        }
+        
+        var key = TagRegistry.FboKey<TTag>(variant);
+        var fbo = GetRenderFbo(key);
+        if (fbo == null) ThrowNotFound(key);
         InvalidOpThrower.ThrowIfNot(fbo.IsFixedSize, nameof(fbo.IsFixedSize));
         InvalidOpThrower.ThrowIf(fbo.Size == outputSize, nameof(outputSize));
 
         fbo.ChangeSizePolicy(RenderFboSizePolicy.Fixed(outputSize));
-
-        _gfxFbo.RecreateFrameBuffer(fboId, outputSize);
+        _gfxFbo.RecreateFrameBuffer(fbo.FboId, outputSize);
     }
 
-    public void RecreateScreenRelativeFbo(Size2D outputSize)
+    public void RecreateScreenDependentFbo(Size2D outputSize)
     {
-        ArgumentOutOfRangeException.ThrowIfLessThan(outputSize.Width, 1, nameof(outputSize));
-        ArgumentOutOfRangeException.ThrowIfLessThan(outputSize.Height, 1, nameof(outputSize));
+        ArgOutOfRangeThrower.ThrowIfSizeTooSmall(outputSize, new Size2D(RenderLimits.MinOutputSize));
+        ArgOutOfRangeThrower.ThrowIfSizeTooBig(outputSize, new Size2D(RenderLimits.MaxOutputSize));
 
         var fbos = FrameBufferSpan;
         Span<(FrameBufferId, Size2D)> newSizes = stackalloc (FrameBufferId, Size2D)[fbos.Length];

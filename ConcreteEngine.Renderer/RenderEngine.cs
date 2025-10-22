@@ -39,6 +39,7 @@ public sealed class RenderEngine
     public bool Initialized { get; private set; } = false;
 
     public DrawCommandBuffer CommandBuffer => _drawPipeline.CommandBuffer;
+    public IRenderFboRegistry FboRegistry => _renderRegistry.FboRegistry;
 
     public RenderEngine(GraphicsRuntime graphics, RenderSceneSnapshot sceneSnapshot, MeshId fsqMesh)
     {
@@ -95,21 +96,6 @@ public sealed class RenderEngine
     public void SubmitMaterialDrawData(in DrawMaterialPayload payload, ReadOnlySpan<TextureSlotInfo> slots) =>
         _drawPipeline.SubmitMaterialDrawData(in payload, slots);
 
-    public RenderFbo? GetRenderFbo<TTag>(FboVariant variant) where TTag : unmanaged, IRenderPassTag
-        => _renderRegistry.FboRegistry.GetRenderFbo(TagRegistry.FboKey<TTag>(variant));
-
-    public void RecreateFixedFrameBuffer(FrameBufferId fboId, Size2D newSize)
-        => _renderRegistry.FboRegistry.RecreateFixedFrameBuffer(fboId, newSize);
-
-    public void RecreateScreenRelativeFbo(Size2D newSize)
-        => _renderRegistry.FboRegistry.RecreateScreenRelativeFbo(newSize);
-
-    public void GetRecreateScreenRelativeFboIds(Size2D newSize, Func<ReadOnlySpan<FrameBufferId>> pendingIds)
-        => _renderRegistry.FboRegistry.RecreateScreenRelativeFbo(newSize);
-
-    public void DrainFboIds(FboResizeMode mode, Action<ReadOnlySpan<FrameBufferId>> pendingIds)
-        => _renderRegistry.FboRegistry.DrainFboIds(mode, pendingIds);
-
     //
     public void PrepareFrame(
         in RenderFrameInfo frameInfo,
@@ -135,7 +121,7 @@ public sealed class RenderEngine
         _graphics.BeginFrame(frameInfo.ToGfxFrameInfo());
 
         if (status == BeginFrameStatus.Resize)
-            _renderRegistry.FboRegistry.RecreateScreenRelativeFbo(frameInfo.OutputSize);
+            _renderRegistry.FboRegistry.RecreateScreenDependentFbo(frameInfo.OutputSize);
     }
 
     public void UploadFrameData()

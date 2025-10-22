@@ -13,6 +13,12 @@ namespace ConcreteEngine.Common;
 [StackTraceHidden]
 public static class ArgOutOfRangeThrower
 {
+    public static void ThrowIfNotEqual(Size2D a, Size2D b)
+    {
+        ArgumentOutOfRangeException.ThrowIfNotEqual(a.Width, b.Width, nameof(a));
+        ArgumentOutOfRangeException.ThrowIfNotEqual(a.Height, b.Height, nameof(a));
+    }
+    
     public static void ThrowIfSizeTooSmall(Size2D size, int min)
     {
         ArgumentOutOfRangeException.ThrowIfLessThan(size.Width, min, nameof(size));

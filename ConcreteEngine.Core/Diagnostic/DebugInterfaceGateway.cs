@@ -1,29 +1,21 @@
-using System.Runtime.CompilerServices;
 using ConcreteEngine.Core.Assets;
 using ConcreteEngine.Core.Assets.Materials;
-using ConcreteEngine.Core.Data;
-using ConcreteEngine.Core.RenderingSystem;
 using ConcreteEngine.Core.Scene;
-using ConcreteEngine.Core.Scene.Entities;
 using ConcreteEngine.Graphics;
 using ConcreteEngine.Graphics.Diagnostic;
-using ConcreteEngine.Graphics.Gfx.Definitions;
-using ConcreteEngine.Graphics.Gfx.Utility;
-using ConcreteEngine.Renderer;
-using ConcreteEngine.Renderer.Data;
-using ConcreteEngine.Renderer.Passes;
 using ConcreteEngine.Renderer.State;
 using Silk.NET.Input;
 using Silk.NET.OpenGL;
 using Silk.NET.Windowing;
 using Tools.DebugInterface;
 
-namespace ConcreteEngine.Core.Interface;
+namespace ConcreteEngine.Core.Diagnostic;
 
 internal sealed class DebugInterfaceGateway
 {
     private readonly DebugInterfaceService _debug;
 
+    private AssetSystem? _assetSystem;
     public bool HasBindings = false;
 
     public bool Enabled { get; set; } = true;
@@ -39,25 +31,25 @@ internal sealed class DebugInterfaceGateway
         
         //_debug.Registry.RegisterFromAssemblies(typeof(RenderEngine).Assembly);
         //_debug.Registry.RegisterFromAssemblies(typeof(GraphicsRuntime).Assembly);
+        
+        
+        GfxDebugMetrics.ToggleLog(GfxLogSource.Store, GfxLogLayer.Backend, false);
+        GfxDebugMetrics.ToggleLog(GfxLogAction.EnqueueDispose, false);
     }
 
     public void SetupCommandCallbacks(AssetSystem assetSystem)
     {
-        DebugCommandController.RecreateShaderAction = assetSystem.EnqueueRecreateShader;
-        DebugCommandController.ResizeShadowMapAction = assetSystem.EnqueueRecreateFrameBuffer;
-        SetupConsoleCommands();
+        ArgumentNullException.ThrowIfNull(assetSystem);
+        
+        _assetSystem = assetSystem;
+        DebugCommandController.Attach(assetSystem);
+        var console = _debug.DevConsole;
+        console.RegisterCommand("inspect-structs", DebugCommandController.OnCmdStructSizes);
+        console.RegisterCommand("reload-shader", DebugCommandController.OnRecreateShader);
+        console.RegisterCommand("shadow-map", DebugCommandController.OnSetShadowMapSize);
+ 
     }
     
-    private void SetupConsoleCommands()
-    {
-        var console = _debug.DevConsole;
-        console.RegisterCommand("struct-size", DebugCommandController.OnCmdStructSizes);
-        console.RegisterCommand("recreate-shader", DebugCommandController.OnRecreateShader);
-        console.RegisterCommand("shadow-map", DebugCommandController.OnSetShadowMapSize);
-
-    }
-
-
     public void SetupBindings(MaterialStore materialStore, World world)
     {
         if (!Enabled) return;
@@ -135,7 +127,9 @@ internal sealed class DebugInterfaceGateway
     {
         foreach (var (k, v) in assetStore.GetAssetTypeMeta())
         {
-            _debug.Data.AssetMetrics[k.Name] = (v.Count.ToString(), v.FileCount.ToString());
+            var name = k.Name;
+            if(name == nameof(MaterialTemplate)) name = "MatTemplate";
+            _debug.Data.AssetMetrics[name] = (v.Count.ToString(), v.FileCount.ToString());
         }
     }
 

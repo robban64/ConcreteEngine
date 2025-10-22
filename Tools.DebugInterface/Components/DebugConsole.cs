@@ -176,7 +176,7 @@ public class DebugConsole
         ImGui.SetNextItemWidth(-1f);
 
 
-        var submitted = ImGui.InputTextWithHint("##ConsoleInput", "type a command…", ref _input, 1024,
+        var submitted = ImGui.InputTextWithHint("##ConsoleInput", "$", ref _input, 1024,
             ImGuiInputTextFlags.EnterReturnsTrue);
 
         ImGui.PopStyleVar();

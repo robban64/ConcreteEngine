@@ -25,7 +25,7 @@ internal sealed class GfxResourceDisposer : IGfxResourceDisposer
     private readonly ResourceDisposeQueue _disposeQueue;
     public int PendingCount => _disposeQueue.PendingCount;
 
-    internal GfxResourceDisposer(GfxResourceManager resources, GfxResourceRepository repository)
+    internal GfxResourceDisposer(GfxResourceManager resources)
     {
         _backendStoreHub = resources.BackendStoreHub;
         _gfxStoreHub = resources.GfxStoreHub;

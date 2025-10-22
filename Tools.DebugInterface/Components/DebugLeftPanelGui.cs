@@ -62,8 +62,7 @@ internal sealed class DebugLeftPanelGui(DebugDataContainer data)
         }
 
         const ImGuiTableFlags flags =
-            ImGuiTableFlags.Borders | ImGuiTableFlags.RowBg | ImGuiTableFlags.SizingFixedFit |
-            ImGuiTableFlags.Resizable;
+            ImGuiTableFlags.Borders | ImGuiTableFlags.RowBg | ImGuiTableFlags.SizingFixedFit;
 
         if (ImGui.BeginTable("asset_store_tbl", 3, flags))
         {

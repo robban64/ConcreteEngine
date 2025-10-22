@@ -12,7 +12,7 @@ public static class GfxDebugMetrics
     private static HashSet<GfxLogAction> IgnoreAction { get; } = [];
     private static HashSet<ResourceKind> IgnoreKind { get; } = [];
 
-    public static Queue<GfxDebugLog> LogQueue = new(4);
+    public static Queue<GfxDebugLog> LogQueue = new(16);
 
     public static IReadOnlyDictionary<ResourceKind, StoreMetrics> GetStoreMetrics() => Stores;
 

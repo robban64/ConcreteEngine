@@ -37,13 +37,8 @@ public sealed class GraphicsRuntime : IGraphicsRuntime
 
     private GfxContext _gfxContext = null!;
 
-    private GfxFrameInfo _frameCtx;
-
     public GraphicsRuntime()
     {
-        GfxDebugMetrics.ToggleLog(GfxLogSource.Store, GfxLogLayer.Backend, false);
-        
-        GfxDebugMetrics.ToggleLog(GfxLogAction.EnqueueDispose, false);
     }
 
     public GfxContext Gfx => _gfxContext;
@@ -57,7 +52,7 @@ public sealed class GraphicsRuntime : IGraphicsRuntime
 
         _resources = new GfxResourceManager();
         _repository = new GfxResourceRepository(_resources);
-        _disposer = new GfxResourceDisposer(_resources, _repository);
+        _disposer = new GfxResourceDisposer(_resources);
 
         InitDriver(glConfig);
 
@@ -79,7 +74,6 @@ public sealed class GraphicsRuntime : IGraphicsRuntime
 
     public void BeginFrame(in GfxFrameInfo frameCtx)
     {
-        _frameCtx = frameCtx;
         _gfxContext.Commands.BeginFrame(in frameCtx);
     }
 
@@ -97,5 +91,4 @@ public sealed class GraphicsRuntime : IGraphicsRuntime
     public void Dispose()
     {
     }
-
 }

@@ -5,7 +5,7 @@ using ConcreteEngine.Common.Patterns;
 using ConcreteEngine.Core.Assets;
 using ConcreteEngine.Core.Configuration;
 using ConcreteEngine.Core.Data;
-using ConcreteEngine.Core.Interface;
+using ConcreteEngine.Core.Diagnostic;
 using ConcreteEngine.Core.Platform;
 using ConcreteEngine.Core.RenderingSystem.Batching;
 using ConcreteEngine.Core.Scene;
@@ -99,6 +99,7 @@ public sealed class GameEngine : IDisposable
         _assets.FinishLoading();
         _coreSystems.Initialize();
         RegisterRenderer();
+        
         _debugGateway.SetupCommandCallbacks(_assets);
 
         GfxDebugMetrics.LogEnabled = true;

@@ -31,17 +31,20 @@ internal sealed class RenderTickScheduler
 
     public void Accumulate(float dt)
     {
+        /*
         _gfxUploadTicker.Accumulate(dt);
         _gfxDisposeTicker.Accumulate(dt);
         _renderEffectTicker.Accumulate(dt);
+        */
     }
 
     public void Advance()
     {
+        /*
         _a = _gfxUploadTicker.DrainAllTicks();
         _b = _gfxDisposeTicker.DrainAllTicks();
         _c = _renderEffectTicker.DrainAllTicks();
-
+        */
         //if (a > 0) _onGpuUpload(a); 
         //if (b > 0) _onGpuDispose(b);
         //if (c > 0) _onRenderEffect(c);

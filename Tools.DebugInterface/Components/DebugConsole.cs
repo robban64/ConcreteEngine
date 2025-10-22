@@ -37,7 +37,7 @@ public class DebugConsole
     public void RegisterCommand(string command, Action<DebugConsoleCtx> commandHandler) =>
         _commands[command] = commandHandler;
 
-    
+
     public void AddLog(string? msg)
     {
         if (msg is null) return;
@@ -62,13 +62,13 @@ public class DebugConsole
             _log.Add("[console cleared]");
             return true;
         }
-        
+
         if (!_commands.TryGetValue(cmd, out var commandHandler))
         {
             _log.Add($"Unknown command: {cmd}");
             return false;
         }
-        
+
         switch (commandHandler)
         {
             case Func<string?, string?, string> funcArg:
@@ -125,7 +125,7 @@ public class DebugConsole
 
         ImGui.PushStyleColor(ImGuiCol.WindowBg, new Vector4(0.08f, 0.08f, 0.08f, 0.94f));
         ImGui.PushStyleColor(ImGuiCol.Border, new Vector4(0, 0, 0, 0));
-        ImGui.PushStyleVar(ImGuiStyleVar.WindowPadding, new Vector2(10f, 8f));
+        ImGui.PushStyleVar(ImGuiStyleVar.WindowPadding, new Vector2(12f, 10f));
         ImGui.PushStyleVar(ImGuiStyleVar.WindowRounding, 2f);
         ImGui.PushStyleVar(ImGuiStyleVar.ChildRounding, 2f);
         ImGui.PushStyleVar(ImGuiStyleVar.FrameRounding, 2f);
@@ -134,29 +134,19 @@ public class DebugConsole
         {
             ImGui.End();
             ImGui.PopStyleVar(3);
-            ImGui.PopStyleVar(); // WindowPadding
+            ImGui.PopStyleVar();
             ImGui.PopStyleColor(2);
             return;
         }
 
-        {
-            var dl = ImGui.GetWindowDrawList();
-            var winPos = ImGui.GetWindowPos();
-            var crMin = ImGui.GetWindowContentRegionMin();
-            var crMax = ImGui.GetWindowContentRegionMax();
-
-            var x1 = winPos.X + crMin.X;
-            var x2 = winPos.X + crMax.X;
-            var y = winPos.Y + crMin.Y + 1f;
-
-            var lineCol = ImGui.ColorConvertFloat4ToU32(new Vector4(0.40f, 0.41f, 0.43f, 0.55f));
-            dl.AddLine(new Vector2(x1, y), new Vector2(x2, y), lineCol, 1.0f);
-
-            ImGui.Dummy(new Vector2(0, 6f));
-        }
+        ImGui.PushStyleColor(ImGuiCol.Text, 0x99FFFFFF);
+        ImGui.SeparatorText("Console");
+        ImGui.PopStyleColor();
+        ImGui.Dummy(new Vector2(0, 4f));
 
         var inputHeight = ImGui.GetFrameHeightWithSpacing() + 8f;
 
+        ImGui.PushStyleColor(ImGuiCol.ChildBg, new Vector4(0.10f, 0.10f, 0.10f, 0.75f));
         ImGui.BeginChild(
             "ConsoleLogRegion",
             new Vector2(0, -inputHeight),
@@ -175,19 +165,21 @@ public class DebugConsole
         }
 
         ImGui.EndChild();
-
-        ImGui.Dummy(new Vector2(0, 5f));
+        ImGui.PopStyleColor();
+        ImGui.Dummy(new Vector2(0, 6f));
 
         ImGui.PushStyleColor(ImGuiCol.FrameBg, new Vector4(0.14f, 0.14f, 0.14f, 1.00f));
         ImGui.PushStyleColor(ImGuiCol.FrameBgHovered, new Vector4(0.22f, 0.22f, 0.22f, 1.00f));
         ImGui.PushStyleColor(ImGuiCol.FrameBgActive, new Vector4(0.18f, 0.18f, 0.18f, 1.00f));
         ImGui.PushStyleColor(ImGuiCol.Text, new Vector4(0.92f, 0.92f, 0.92f, 1.00f));
-        ImGui.PushStyleVar(ImGuiStyleVar.FramePadding, new Vector2(8f, 6f)); // add height
+        ImGui.PushStyleVar(ImGuiStyleVar.FramePadding, new Vector2(8f, 6f));
         ImGui.SetNextItemWidth(-1f);
 
-        var submitted = ImGui.InputTextWithHint("##ConsoleInput", "$", ref _input, 1024,
+
+        var submitted = ImGui.InputTextWithHint("##ConsoleInput", "type a command…", ref _input, 1024,
             ImGuiInputTextFlags.EnterReturnsTrue);
 
+        ImGui.PopStyleVar();
         ImGui.PopStyleColor(4);
 
         if (submitted)
@@ -204,8 +196,8 @@ public class DebugConsole
 
         ImGui.End();
 
-        ImGui.PopStyleVar(3); // FrameRounding, ChildRounding, WindowRounding
-        ImGui.PopStyleVar(); // WindowPadding
+        ImGui.PopStyleVar(3);
+        ImGui.PopStyleVar();
         ImGui.PopStyleColor(2);
     }
 }

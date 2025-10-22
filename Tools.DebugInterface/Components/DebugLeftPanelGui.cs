@@ -1,6 +1,7 @@
 using System.Numerics;
 using ImGuiNET;
 using Tools.DebugInterface.Data;
+using static Tools.DebugInterface.Components.CommonComponents;
 
 namespace Tools.DebugInterface.Components;
 
@@ -11,37 +12,48 @@ internal sealed class DebugLeftPanelGui(DebugDataContainer data)
         var vp = ImGui.GetMainViewport();
 
         ImGui.SetNextWindowPos(vp.WorkPos);
+
         ImGui.SetNextWindowSize(new Vector2(width, 0f));
 
-        ImGui.PushStyleVar(ImGuiStyleVar.ItemSpacing, new Vector2(0f, 8f));
-        ImGui.Begin("##LeftSidebar",
-            ImGuiWindowFlags.NoTitleBar | ImGuiWindowFlags.NoMove | ImGuiWindowFlags.NoResize |
-            ImGuiWindowFlags.NoCollapse | ImGuiWindowFlags.NoBringToFrontOnFocus | ImGuiWindowFlags.NoNavFocus);
+        ImGui.PushStyleVar(ImGuiStyleVar.ItemSpacing, new Vector2(8f, 6f));
+        ImGui.PushStyleVar(ImGuiStyleVar.WindowPadding, new Vector2(12f, 10f));
+        ImGui.SetNextWindowBgAlpha(0.95f);
 
-        DrawSceneMetrics();
-        DrawAssetStoreTable();
-        DrawGfxStoreTable();
+        var flags =
+            ImGuiWindowFlags.NoTitleBar | ImGuiWindowFlags.NoMove | ImGuiWindowFlags.NoResize |
+            ImGuiWindowFlags.NoCollapse | ImGuiWindowFlags.NoBringToFrontOnFocus | ImGuiWindowFlags.NoNavFocus;
+
+        if (ImGui.Begin("##LeftSidebar", flags))
+        {
+            DrawSceneMetrics();
+            ImGui.Dummy(new Vector2(0, 6));
+            DrawAssetStoreTable();
+            ImGui.Dummy(new Vector2(0, 6));
+            DrawGfxStoreTable();
+        }
 
         ImGui.End();
-        ImGui.PopStyleVar();
+        ImGui.PopStyleVar(2);
     }
 
     private void DrawSceneMetrics()
     {
-        ImGui.TextUnformatted("Scene Metrics");
-        ImGui.Separator();
-        ImGui.TextUnformatted(data.EntityCount);
-        ImGui.TextUnformatted(data.ShadowMapSize);
-        ImGui.Separator();
+        DrawSectionHeader("Scene Metrics");
+        MetricLine(data.EntityCount);
+        MetricLine(data.ShadowMapSize);
     }
 
     private void DrawAssetStoreTable()
     {
-        ImGui.TextUnformatted("Asset Store");
-        ImGui.Separator();
-        ImGui.TextUnformatted(data.MaterialDebugInfo);
-        ImGui.Separator();
+        DrawSectionHeader("Asset Store");
 
+        if (!string.IsNullOrEmpty(data.MaterialDebugInfo))
+        {
+            ImGui.PushTextWrapPos(0f);
+            ImGui.TextDisabled(data.MaterialDebugInfo);
+            ImGui.PopTextWrapPos();
+            ImGui.Dummy(new Vector2(0, 4));
+        }
 
         if (data.AssetMetrics.Count == 0)
         {
@@ -49,15 +61,18 @@ internal sealed class DebugLeftPanelGui(DebugDataContainer data)
             return;
         }
 
-        if (ImGui.BeginTable("asset_store_tbl", 3,
-                ImGuiTableFlags.Borders | ImGuiTableFlags.RowBg | ImGuiTableFlags.SizingFixedFit))
+        const ImGuiTableFlags flags =
+            ImGuiTableFlags.Borders | ImGuiTableFlags.RowBg | ImGuiTableFlags.SizingFixedFit |
+            ImGuiTableFlags.Resizable;
+
+        if (ImGui.BeginTable("asset_store_tbl", 3, flags))
         {
-            ImGui.TableSetupColumn("Type", ImGuiTableColumnFlags.WidthStretch);
-            ImGui.TableSetupColumn("Count", ImGuiTableColumnFlags.WidthFixed);
-            ImGui.TableSetupColumn("Files", ImGuiTableColumnFlags.WidthFixed);
+            ImGui.TableSetupColumn("Type", ImGuiTableColumnFlags.WidthStretch, 1.00f);
+            ImGui.TableSetupColumn("Count", ImGuiTableColumnFlags.WidthStretch, 0.35f);
+            ImGui.TableSetupColumn("Files", ImGuiTableColumnFlags.WidthStretch, 0.35f);
             ImGui.TableHeadersRow();
 
-            foreach (var (type, (count, fileCount)) in data.AssetMetrics)
+            foreach (var (type, pair) in data.AssetMetrics)
             {
                 ImGui.TableNextRow();
 
@@ -65,48 +80,47 @@ internal sealed class DebugLeftPanelGui(DebugDataContainer data)
                 ImGui.TextUnformatted(type);
 
                 ImGui.TableSetColumnIndex(1);
-                ImGui.TextUnformatted(count);
+                RightAlignCellText(pair.Item1);
 
                 ImGui.TableSetColumnIndex(2);
-                ImGui.TextUnformatted(fileCount);
+                RightAlignCellText(pair.Item2);
             }
 
             ImGui.EndTable();
         }
-
-        ImGui.Separator();
     }
-
 
     private void DrawGfxStoreTable()
     {
-        ImGui.TextUnformatted("GFX Store");
-        ImGui.Separator();
-        if (ImGui.BeginTable("gfx_metrics_table", 3,
-                ImGuiTableFlags.Borders | ImGuiTableFlags.RowBg | ImGuiTableFlags.SizingFixedFit))
+        DrawSectionHeader("GFX Store");
+
+        const ImGuiTableFlags flags =
+            ImGuiTableFlags.Borders |
+            ImGuiTableFlags.RowBg |
+            ImGuiTableFlags.SizingStretchProp;
+
+        if (ImGui.BeginTable("gfx_metrics_table", 3, flags))
         {
-            ImGui.TableSetupColumn("Kind", ImGuiTableColumnFlags.WidthStretch);
-            ImGui.TableSetupColumn("Gfx", ImGuiTableColumnFlags.WidthFixed);
-            ImGui.TableSetupColumn("BK", ImGuiTableColumnFlags.WidthFixed);
+            ImGui.TableSetupColumn("Kind", ImGuiTableColumnFlags.WidthStretch, 1.00f);
+            ImGui.TableSetupColumn("Gfx", ImGuiTableColumnFlags.WidthStretch, 0.35f);
+            ImGui.TableSetupColumn("BK", ImGuiTableColumnFlags.WidthStretch, 0.35f);
             ImGui.TableHeadersRow();
 
-            var dict = data.GfxStoreMetrics;
-            foreach (var (k, v) in dict)
+            foreach (var (k, v) in data.GfxStoreMetrics)
             {
                 ImGui.TableNextRow();
+
                 ImGui.TableSetColumnIndex(0);
                 ImGui.TextUnformatted(k);
 
                 ImGui.TableSetColumnIndex(1);
-                ImGui.TextUnformatted(v.Item1);
+                RightAlignCellText(v.Item1);
 
                 ImGui.TableSetColumnIndex(2);
-                ImGui.TextUnformatted(v.Item2);
+                RightAlignCellText(v.Item2);
             }
 
             ImGui.EndTable();
         }
-
-        ImGui.Separator();
     }
 }

@@ -55,7 +55,7 @@ public sealed class EngineRenderSystem : IRenderingSystem
         _assets = assets;
         _graphics = graphics;
         _eventBus = eventBus;
-        _drainFboIds = OnDrainFboIds;
+        //_drainFboIds = OnDrainFboIds;
         SceneProperties = new RenderSceneProps();
         Batchers = new BatcherRegistry();
         
@@ -76,25 +76,27 @@ public sealed class EngineRenderSystem : IRenderingSystem
 
     internal void RenderEmptyFrame(in RenderFrameInfo frameInfo) => _renderer.RenderEmptyFrame(in frameInfo);
 
+    /*
     private void OnDrainFboIds(ReadOnlySpan<FrameBufferId> fboIds)
     {
         foreach (var fboId in fboIds)
             _assets.EnqueueRecreateFrameBuffer(fboId);
     }
-    
+    */
     internal void PreRender(
         BeginFrameStatus status,
         in RenderFrameInfo frameInfo,
         in RenderRuntimeParams runtimeParams,
         in RenderViewSnapshot viewSnapshot)
     {
+        /*
         if (status == BeginFrameStatus.Resize)
         {
             _graphics.Gfx.Commands.BindFramebuffer(default);
             _graphics.Gfx.Commands.UnbindAllTextures();
             _renderer.RecreateScreenRelativeFbo(frameInfo.OutputSize);
         }
-        
+        */
         _renderEntityBus.Reset();
         _renderEntityBus.CollectEntities();
 

@@ -3,12 +3,22 @@ using ConcreteEngine.Graphics.Gfx.Definitions;
 
 namespace ConcreteEngine.Core.Assets;
 
+public enum RecreateSpecialAction : byte
+{
+    None = 0,
+    RecreateScreenDependentFbo = 1,
+    RecreateShadowFbo = 2,
+}
+
 public readonly record struct RecreateRequest(
     int ResourceId,
     AssetId AssetId,
     AssetKind Kind,
     ResourceKind ResourceKind,
-    byte Priority = 0
+    RecreateSpecialAction  SpecialAction = RecreateSpecialAction.None,
+    byte Priority = 0,
+    int Param0 = 0,
+    int Param1 = 0
 );
 
 internal sealed class AssetPendingQueue
@@ -25,7 +35,7 @@ internal sealed class AssetPendingQueue
         _intervalFrames = Math.Max(1, intervalFrames);
         _lastDrainFrame = -_intervalFrames;
     }
-    
+
     public int Count => _queue.Count;
 
     public int IntervalFrames

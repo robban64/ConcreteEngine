@@ -71,8 +71,6 @@ public sealed class AssetSystem : IAssetSystem
         _manifest = _configLoader.LoadAssetManifest();
 
         CurrentStatus = Status.ManifestLoaded;
-
-        DebugCommandController.RecreateShaderAction = EnqueueRecreateShader;
     }
 
     internal void EnqueueRecreateShader(string name)
@@ -80,14 +78,24 @@ public sealed class AssetSystem : IAssetSystem
         if (!_assetStore.TryGetByName(name, typeof(Shader), out var obj) || obj is not Shader s) return;
         _pendingQueue.Enqueue(new RecreateRequest(s.ResourceId, s.RawId, AssetKind.Shader, ResourceKind.Shader));
     }
-    
-    internal void EnqueueRecreateFrameBuffer(FrameBufferId fbo) 
+
+    internal void EnqueueRecreateFrameBuffer(int width, RecreateSpecialAction action)
     {
-        _pendingQueue.Enqueue(new RecreateRequest(fbo, new AssetId(-1), AssetKind.Unknown, ResourceKind.FrameBuffer));
+        ArgumentOutOfRangeException.ThrowIfEqual((int)action, (int)RecreateSpecialAction.None, nameof(action));
+        var req = new RecreateRequest(-1, new AssetId(-1), AssetKind.Unknown, ResourceKind.FrameBuffer,
+            action, Param0: width, Param1: width);
+        _pendingQueue.Enqueue(req);
     }
 
-    internal void ProcessPendingQueue(long frameIndex)
+    internal void UpdatePendingQueue(long frameIndex)
     {
+        _pendingQueue.OnFrameStart(frameIndex);
+    }
+    internal bool TryProcessPendingQueue(out RecreateRequest request)
+    {
+        if (_pendingQueue.Count > 0) return _pendingQueue.TryDrain(out request);
+        request = default;
+        return false;
     }
 
 

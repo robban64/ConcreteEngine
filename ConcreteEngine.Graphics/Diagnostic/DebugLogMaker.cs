@@ -39,12 +39,12 @@ internal static class DebugLog
     {
         var handle = (int)cmd.BackendHandle.Value;
         var h = cmd.Handle;
-        return new GfxDebugLog(handle, h.Slot, h.Gen, h.Kind, GfxLogLayer.Gfx, GfxLogSource.Resource,
+        return new GfxDebugLog(handle, h.Slot, h.Gen, h.Kind, GfxLogLayer.Backend, GfxLogSource.Resource,
             GfxLogAction.Dispose);
     }
 
     public static GfxDebugLog MakeEnqueueDispose(int id, GfxHandle h)
-        => new(id, h.Slot, h.Gen, h.Kind, GfxLogLayer.Gfx, GfxLogSource.Resource, GfxLogAction.EnqueueDispose);
+        => new(id, h.Slot, h.Gen, h.Kind, GfxLogLayer.Backend, GfxLogSource.Resource, GfxLogAction.EnqueueDispose);
 
     public static GfxDebugLog MakeFboInvalid(int id, GfxHandle h)
         => new(id, h.Slot, h.Gen, h.Kind, GfxLogLayer.Gfx, GfxLogSource.Framebuffer, GfxLogAction.Invalidate);

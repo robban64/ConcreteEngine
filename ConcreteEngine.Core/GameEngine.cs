@@ -13,6 +13,7 @@ using ConcreteEngine.Core.Scene.Modules;
 using ConcreteEngine.Core.Time;
 using ConcreteEngine.Graphics;
 using ConcreteEngine.Graphics.Diagnostic;
+using ConcreteEngine.Graphics.Gfx.Definitions;
 using ConcreteEngine.Renderer.Passes;
 using ConcreteEngine.Renderer.State;
 using Silk.NET.Input;
@@ -98,6 +99,7 @@ public sealed class GameEngine : IDisposable
         _assets.FinishLoading();
         _coreSystems.Initialize();
         RegisterRenderer();
+        _debugGateway.SetupCommandCallbacks(_assets);
 
         GfxDebugMetrics.LogEnabled = true;
     }
@@ -139,6 +141,27 @@ public sealed class GameEngine : IDisposable
         {
             _timeHub.DebounceTicker = null;
             beginStatus = BeginFrameStatus.Resize;
+        }
+
+        //Todo move out
+        _assets.UpdatePendingQueue(frameInfo.FrameIndex);
+        while (_assets.TryProcessPendingQueue(out var req))
+        {
+            if (req.ResourceKind == ResourceKind.FrameBuffer)
+            {
+                _graphics.Gfx.Commands.BindFramebuffer(default);
+                _graphics.Gfx.Commands.UnbindAllTextures();
+                if(req.SpecialAction == RecreateSpecialAction.RecreateScreenDependentFbo)
+                    _engineRenderSystem.RenderEngine.RecreateScreenRelativeFbo(_window.OutputSize);
+                if (req.SpecialAction == RecreateSpecialAction.RecreateShadowFbo)
+                {
+                    var fbo = _engineRenderSystem.RenderEngine.GetRenderFbo<ShadowPassTag>(FboVariant.Default);
+                    _sceneManager.Current?.InternalWorld.RenderProps.SetShadowDefault(req.Param0);
+                    _engineRenderSystem.RenderEngine.RecreateFixedFrameBuffer(fbo.FboId, new Size2D(req.Param0,req.Param0));
+                }
+                    
+
+            }
         }
 
         scene.BeforeRender(out var viewSnapshot);

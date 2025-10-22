@@ -23,11 +23,11 @@ public class EngineCoreSystem : IEngineSystemManager
 {
     private readonly DictionaryTypeRegistry<IGameEngineSystem, IGameEngineSystem> _systems = new(4);
 
-    private readonly RenderingSystem.EngineRenderSystem _renderer;
+    private readonly EngineRenderSystem _renderer;
     private readonly InputSystem _inputSystem;
     private readonly AssetSystem _assets;
 
-    internal EngineCoreSystem(RenderingSystem.EngineRenderSystem renderer, InputSystem inputSystem, AssetSystem assets)
+    internal EngineCoreSystem(EngineRenderSystem renderer, InputSystem inputSystem, AssetSystem assets)
     {
         _renderer = renderer;
         _inputSystem = inputSystem;

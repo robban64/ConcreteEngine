@@ -44,10 +44,10 @@ public sealed class DebugInterfaceService : IDisposable
         var matInfo = Registry.ReadBound("MaterialDebugInfo");
         Data.MaterialDebugInfo = $"Materials: {matInfo}";
     }
-    
+
     public void UpdateSlowRead2()
     {
-        Data.FrameMetrics.Allocated   = $"Allocated: {FormatMb(GC.GetAllocatedBytesForCurrentThread())}";
+        Data.FrameMetrics.Allocated = $"Allocated: {FormatMb(GC.GetAllocatedBytesForCurrentThread())}";
     }
 
     private static string FormatMb(long bytes) => $"{bytes / 1024 / 1024} MB";
@@ -58,7 +58,20 @@ public sealed class DebugInterfaceService : IDisposable
     public bool BlockInput()
     {
         var io = ImGui.GetIO();
-        return io.WantCaptureKeyboard || io.WantCaptureMouse;
+
+        var blockKeyboard = io.WantTextInput || ImGui.IsAnyItemActive() || ImGui.IsAnyItemFocused();
+
+        var anyMouseDown = io.MouseDown[0] || io.MouseDown[1] || io.MouseDown[2] || io.MouseDown[3] || io.MouseDown[4];
+
+        var overUi = ImGui.IsAnyItemHovered() || ImGui.IsAnyItemActive() ||
+                     ImGui.IsWindowHovered(ImGuiHoveredFlags.AnyWindow);
+
+        var blockMouse = anyMouseDown && overUi;
+
+        if (ImGui.IsPopupOpen(null, ImGuiPopupFlags.AnyPopupId))
+            blockMouse |= ImGui.IsWindowHovered(ImGuiHoveredFlags.AnyWindow);
+
+        return blockKeyboard || blockMouse;
     }
 
     public void Update(float delta) => _controller.Update(delta);

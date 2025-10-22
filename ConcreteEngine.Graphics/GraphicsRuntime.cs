@@ -2,6 +2,7 @@
 
 using ConcreteEngine.Common;
 using ConcreteEngine.Common.Numerics;
+using ConcreteEngine.Graphics.Diagnostic;
 using ConcreteEngine.Graphics.Error;
 using ConcreteEngine.Graphics.Gfx;
 using ConcreteEngine.Graphics.Gfx.Internal;
@@ -40,6 +41,7 @@ public sealed class GraphicsRuntime : IGraphicsRuntime
 
     public GraphicsRuntime()
     {
+        GfxDebugMetrics.IgnoreSourceLayer.Add((GfxLogSource.Store, GfxLogLayer.Backend));
     }
 
     public GfxContext Gfx => _gfxContext;

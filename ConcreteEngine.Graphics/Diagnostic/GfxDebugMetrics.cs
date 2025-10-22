@@ -4,11 +4,13 @@ using ConcreteEngine.Graphics.Gfx.Resources;
 
 namespace ConcreteEngine.Graphics.Diagnostic;
 
-
 public static class GfxDebugMetrics
 {
     private static readonly Dictionary<ResourceKind, StoreMetrics> Stores = new(8);
     public static IReadOnlyDictionary<ResourceKind, StoreMetrics> GetStoreMetrics() => Stores;
+
+    public static HashSet<(GfxLogSource, GfxLogLayer)> IgnoreSourceLayer { get; } = [];
+    public static HashSet<GfxLogAction> IgnoreAction { get; } = [];
 
     public static Queue<GfxDebugLog> LogQueue = new(4);
 
@@ -33,6 +35,9 @@ public static class GfxDebugMetrics
             Debug.Assert(false);
             return;
         }
+
+        if (IgnoreSourceLayer.Contains((log.Source, log.Layer)) || IgnoreAction.Contains(log.Action))
+            return;
 
         LogQueue.Enqueue(log);
     }

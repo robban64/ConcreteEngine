@@ -41,6 +41,23 @@ internal sealed class DebugInterfaceGateway
         //_debug.Registry.RegisterFromAssemblies(typeof(GraphicsRuntime).Assembly);
     }
 
+    public void SetupCommandCallbacks(AssetSystem assetSystem)
+    {
+        DebugCommandController.RecreateShaderAction = assetSystem.EnqueueRecreateShader;
+        DebugCommandController.ResizeShadowMapAction = assetSystem.EnqueueRecreateFrameBuffer;
+        SetupConsoleCommands();
+    }
+    
+    private void SetupConsoleCommands()
+    {
+        var console = _debug.DevConsole;
+        console.RegisterCommand("struct-size", DebugCommandController.OnCmdStructSizes);
+        console.RegisterCommand("recreate-shader", DebugCommandController.OnRecreateShader);
+        console.RegisterCommand("shadow-map", DebugCommandController.OnSetShadowMapSize);
+
+    }
+
+
     public void SetupBindings(MaterialStore materialStore, World world)
     {
         if (!Enabled) return;
@@ -50,16 +67,8 @@ internal sealed class DebugInterfaceGateway
         StaticDebugProvider.Bind(nameof(World.EntityCount), world);
         StaticDebugProvider.Bind(nameof(World.ShadowMapSize), world);
         HasBindings = true;
-
-        SetupConsoleCommands();
     }
 
-    public void SetupConsoleCommands()
-    {
-        var console = _debug.DevConsole;
-        console.RegisterCommand("struct-size", DebugCommandController.OnCmdStructSizes);
-        console.RegisterCommand("recreate-shader", DebugCommandController.RecreateShader);
-    }
 
 
     public bool BlockInput()

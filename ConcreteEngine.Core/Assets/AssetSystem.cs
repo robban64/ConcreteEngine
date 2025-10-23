@@ -32,7 +32,7 @@ public sealed class AssetSystem : IAssetSystem
         Unloaded = 5
     }
 
-    private readonly AssetPendingQueue _pendingQueue;
+    private readonly ResourcePendingQueue _pendingQueue;
 
     private AssetLoader? _loader;
     private AssetConfigLoader? _configLoader;
@@ -51,13 +51,13 @@ public sealed class AssetSystem : IAssetSystem
     {
         _assetStore = new AssetStore();
         _materialStore = new MaterialStore(_assetStore);
-        _pendingQueue = new AssetPendingQueue();
+        _pendingQueue = new ResourcePendingQueue();
     }
 
     internal AssetStore StoreImpl => _assetStore;
     public IAssetStore Store => _assetStore;
 
-    
+
     internal MaterialStore MaterialStoreImpl => _materialStore;
     public IMaterialStore MaterialStore => _materialStore;
 
@@ -111,22 +111,11 @@ public sealed class AssetSystem : IAssetSystem
         InvalidOpThrower.ThrowIfNull(_gfxUploader, nameof(_gfxUploader));
 
         var shader = _assetStore.GetByRef(AssetRef<Shader>.Make(req.AssetId));
-        if (!_assetStore.TryGetFileIds(req.AssetId, out var fileIds))
-            return;
+        _loader ??= new AssetLoader();
+        if (!_loader.IsActive) 
+            _loader.ActivateLazyLoader(_assetStore, _gfxUploader);
 
-        InvalidOpThrower.ThrowIf(fileIds.Length != 2);
-        var (vertId, fragId) = (fileIds[0], fileIds[1]);
-        var vertFile = _assetStore.TryGetFileEntry(vertId, out var vertEntry) ? vertEntry : null;
-        var fragFile = _assetStore.TryGetFileEntry(fragId, out var fragEntry) ? fragEntry : null;
-        InvalidOpThrower.ThrowIf(vertFile == null || fragFile == null);
-
-        if (_loader is null)
-        {
-            _loader = new AssetLoader();
-            _loader.ActivateLoader(_assetStore, _gfxUploader);
-        }
-
-        _loader.ReloadShader(shader, vertFile!, fragFile!);
+        _loader.ReloadShader(shader);
     }
 
 

@@ -25,7 +25,7 @@ public readonly record struct RecreateRequest(
     int Param1 = 0
 );
 
-internal sealed class AssetPendingQueue
+internal sealed class ResourcePendingQueue
 {
     private readonly Queue<RecreateRequest> _queue = new(8);
     private readonly HashSet<int> _ids = new(8);
@@ -34,7 +34,7 @@ internal sealed class AssetPendingQueue
     private long _lastDrainFrame;
     private bool _drainEnabledThisFrame;
 
-    public AssetPendingQueue(int intervalFrames = 30)
+    public ResourcePendingQueue(int intervalFrames = 30)
     {
         _intervalFrames = Math.Max(1, intervalFrames);
         _lastDrainFrame = -_intervalFrames;

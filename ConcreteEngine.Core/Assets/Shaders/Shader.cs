@@ -25,6 +25,5 @@ public sealed class Shader : AssetObject
     internal void OnReload(int samplers)
     {
         Samplers = samplers;
-        BumpGeneration();
     }
 }

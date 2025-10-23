@@ -124,6 +124,8 @@ internal static class DebugController
         ctx.AddLog(StructStr<FrameBufferMeta>());
         ctx.AddLog(StructStr<RenderBufferMeta>());
         ctx.AddLog(StructStr<UniformBufferMeta>());
+        ctx.AddLog(StructStr<GfxDebugLog>());
+
     }
 
     private static string StructStr<T>() where T : unmanaged =>

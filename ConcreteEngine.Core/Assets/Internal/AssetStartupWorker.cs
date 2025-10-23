@@ -62,7 +62,7 @@ internal sealed class AssetStartupWorker
         _loadMeshFunc = (desc) => _loader.LoadMesh(desc);
         _loadMaterialFunc = (desc) => _loader.LoadAllMaterials(desc);
 
-        _loader.ActivateLoader(store, uploader);
+        _loader.ActivateFullLoader(store, uploader);
     }
 
     internal void Finish()

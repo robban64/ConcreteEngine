@@ -17,7 +17,7 @@ public static class GfxDebugMetrics
     private static HashSet<GfxLogAction> IgnoreAction { get; } = [];
     private static HashSet<ResourceKind> IgnoreKind { get; } = [];
 
-    public static Queue<GfxDebugLog> LogQueue = new(16);
+    public static Queue<GfxDebugLog> LogQueue { get; } = new(16);
 
 
     //public static bool MetricsEnabled { get; private set; } = true;

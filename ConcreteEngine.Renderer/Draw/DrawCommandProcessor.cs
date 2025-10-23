@@ -4,7 +4,6 @@ using ConcreteEngine.Graphics.Gfx;
 using ConcreteEngine.Graphics.Gfx.Resources;
 using ConcreteEngine.Renderer.Data;
 using ConcreteEngine.Renderer.Definitions;
-using ConcreteEngine.Renderer.Registry;
 
 #endregion
 
@@ -54,7 +53,6 @@ internal sealed class DrawCommandProcessor
             else
                 _gfxCmd.BindTexture(value.Texture, i);
         }
-
     }
 
     public void DrawMesh(DrawCommand cmd, int submitIndex)

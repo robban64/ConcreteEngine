@@ -1,7 +1,6 @@
 #region
 
 using System.Runtime.InteropServices;
-using ConcreteEngine.Common;
 using ConcreteEngine.Core.Assets.Meshes;
 using ConcreteEngine.Core.Assets.Shaders;
 using ConcreteEngine.Core.Assets.Textures;
@@ -59,7 +58,7 @@ internal sealed class AssetGfxUploader
         var shaderId = _shaders.CreateShader(data.Vs, data.Fs, out var samplers);
         info = new ShaderCreationInfo(shaderId, samplers);
     }
-    
+
     public void RecreateShader(ShaderId shaderId, in ShaderPayload data, out ShaderCreationInfo info)
     {
         _shaders.RecreateShader(shaderId, data.Vs, data.Fs, out var samplers);

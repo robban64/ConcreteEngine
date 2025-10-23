@@ -1,5 +1,9 @@
+#region
+
 using ConcreteEngine.Core.Assets.Data;
 using ConcreteEngine.Graphics.Gfx.Definitions;
+
+#endregion
 
 namespace ConcreteEngine.Core.Assets;
 
@@ -15,7 +19,7 @@ public readonly record struct RecreateRequest(
     AssetId AssetId,
     AssetKind Kind,
     ResourceKind ResourceKind,
-    RecreateSpecialAction  SpecialAction = RecreateSpecialAction.None,
+    RecreateSpecialAction SpecialAction = RecreateSpecialAction.None,
     byte Priority = 0,
     int Param0 = 0,
     int Param1 = 0

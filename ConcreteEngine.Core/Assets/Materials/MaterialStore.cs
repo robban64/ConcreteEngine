@@ -8,7 +8,6 @@ using ConcreteEngine.Graphics.Gfx.Definitions;
 using ConcreteEngine.Graphics.Gfx.Resources;
 using ConcreteEngine.Renderer.Data;
 using ConcreteEngine.Renderer.Definitions;
-using Tools.DebugInterface;
 using Tools.DebugInterface.Data;
 
 #endregion
@@ -39,7 +38,7 @@ public sealed class MaterialStore : IMaterialStore
     private readonly Dictionary<string, MaterialId> _materialDict = new(8);
 
     public int Count => _idx;
-    
+
     public int FreeSlots => _free.Count;
 
     internal MaterialStore(AssetStore assetStore)
@@ -148,8 +147,6 @@ public sealed class MaterialStore : IMaterialStore
 
         return NextId();
     }
-    
-    [DebugWatch]
-    internal string MaterialDebugInfo => $"{Count}({FreeSlots})";
 
+    [DebugWatch] internal string MaterialDebugInfo => $"{Count}({FreeSlots})";
 }

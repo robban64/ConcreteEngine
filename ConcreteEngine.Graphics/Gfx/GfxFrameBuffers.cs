@@ -1,6 +1,5 @@
 #region
 
-using ConcreteEngine.Common;
 using ConcreteEngine.Common.Numerics;
 using ConcreteEngine.Graphics.Gfx.Contracts;
 using ConcreteEngine.Graphics.Gfx.Definitions;
@@ -30,7 +29,7 @@ public sealed class GfxFrameBuffers
         _fboStore = context.Stores.FboStore;
         _rboStore = context.Stores.RboStore;
         _textureStore = context.Stores.TextureStore;
-        
+
         _disposer = context.Disposer;
         _driver = context.Driver.FrameBuffers;
         _gfxTextures = gfxTextures;
@@ -82,7 +81,7 @@ public sealed class GfxFrameBuffers
         {
             var rboId = CreateAttachRenderBuffer(fboRef, size,
                 FrameBufferAttachmentSlot.Color, desc.Multisample, out _);
-            
+
             attachments = attachments with { ColorRenderBufferId = rboId };
         }
 
@@ -112,7 +111,7 @@ public sealed class GfxFrameBuffers
         ArgumentOutOfRangeException.ThrowIfLessThanOrEqual(fboId.Value, 0, nameof(fboId));
         var oldFboRef = _fboStore.GetRefAndMeta(fboId, out var oldMeta);
         _disposer.EnqueueReplace(oldFboRef);
-        
+
         var newMeta = FrameBufferMeta.MakeResizeCopy(in oldMeta, newSize);
         var fboRef = _driver.CreateFrameBuffer();
         _fboStore.Replace(fboId, in newMeta, fboRef, out _);
@@ -136,13 +135,13 @@ public sealed class GfxFrameBuffers
 
         if (attachments.ColorRenderBufferId.IsValid())
         {
-            RecreateAttachRenderBuffer(attachments.ColorRenderBufferId,fboRef, newSize,
+            RecreateAttachRenderBuffer(attachments.ColorRenderBufferId, fboRef, newSize,
                 FrameBufferAttachmentSlot.Color, newMeta.MultiSample, out _);
         }
 
         if (attachments.DepthRenderBufferId.IsValid())
         {
-             RecreateAttachRenderBuffer(attachments.DepthRenderBufferId,fboRef, newSize,
+            RecreateAttachRenderBuffer(attachments.DepthRenderBufferId, fboRef, newSize,
                 FrameBufferAttachmentSlot.DepthStencil, newMeta.MultiSample, out _);
         }
 

@@ -1,5 +1,9 @@
+#region
+
 using System.Numerics;
 using ImGuiNET;
+
+#endregion
 
 namespace Tools.DebugInterface.Components;
 
@@ -7,7 +11,7 @@ internal sealed class CommonComponents
 {
     public static void DrawSectionHeader(string title)
     {
-        ImGui.PushStyleColor(ImGuiCol.Text, 0x99FFFFFF); 
+        ImGui.PushStyleColor(ImGuiCol.Text, 0x99FFFFFF);
         ImGui.SeparatorText(title);
         ImGui.PopStyleColor();
 
@@ -27,7 +31,7 @@ internal sealed class CommonComponents
         if (!string.IsNullOrEmpty(text))
             ImGui.TextUnformatted(text);
     }
-    
+
     public static void RightAlignCellText(string? text)
     {
         var s = text ?? "";
@@ -36,5 +40,4 @@ internal sealed class CommonComponents
         ImGui.SetCursorPosX(ImGui.GetCursorPosX() + Math.Max(0, avail - w));
         ImGui.TextUnformatted(s);
     }
-
 }

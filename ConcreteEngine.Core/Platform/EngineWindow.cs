@@ -1,6 +1,10 @@
+#region
+
 using ConcreteEngine.Common.Numerics;
 using Silk.NET.Maths;
 using Silk.NET.Windowing;
+
+#endregion
 
 namespace ConcreteEngine.Core.Platform;
 
@@ -10,16 +14,16 @@ public interface IEngineWindow
     Size2D OutputSize { get; }
     Size2D WindowSize { get; set; }
     Vector2I Position { get; set; }
-    
+
     void CenterOnCurrentMonitor();
 }
 
-internal sealed class EngineWindow: IEngineWindow
+internal sealed class EngineWindow : IEngineWindow
 {
     private readonly IWindow _window;
 
     internal IWindow PlatformWindow => _window;
-    
+
     internal EngineWindow(IWindow window) => _window = window;
 
     public string Title
@@ -41,7 +45,7 @@ internal sealed class EngineWindow: IEngineWindow
     }
 
     public Size2D OutputSize => _window.FramebufferSize.ToSize2D();
-    
+
     public void CenterOnCurrentMonitor()
     {
         var monitor = _window.Monitor;

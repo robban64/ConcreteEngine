@@ -47,7 +47,7 @@ public sealed class EntityStore<T> where T : unmanaged
             var newSize = ArrayUtility.CapacityGrowthPow2(Math.Max(_idx, 8));
             Array.Resize(ref _data, newSize);
             Array.Resize(ref _entities, newSize);
-            Array.Resize(ref _sparse,  newSize);
+            Array.Resize(ref _sparse, newSize);
         }
 
         IsDirty = true;

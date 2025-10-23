@@ -1,8 +1,6 @@
 #region
 
 using ConcreteEngine.Common;
-using ConcreteEngine.Common.Numerics;
-using ConcreteEngine.Graphics.Diagnostic;
 using ConcreteEngine.Graphics.Error;
 using ConcreteEngine.Graphics.Gfx;
 using ConcreteEngine.Graphics.Gfx.Internal;

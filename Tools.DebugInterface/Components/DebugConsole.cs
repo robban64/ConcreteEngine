@@ -1,5 +1,9 @@
+#region
+
 using System.Numerics;
 using ImGuiNET;
+
+#endregion
 
 namespace Tools.DebugInterface.Components;
 

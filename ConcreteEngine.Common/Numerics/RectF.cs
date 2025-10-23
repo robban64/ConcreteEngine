@@ -22,5 +22,4 @@ public readonly struct RectF(float left, float top, float width, float height)
     }
 
     public bool Contains(Vector2 point) => point.X >= Left && point.X <= Right && point.Y >= Top && point.Y <= Bottom;
-
 }

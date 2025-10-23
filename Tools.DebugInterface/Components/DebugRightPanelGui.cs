@@ -1,7 +1,11 @@
+#region
+
 using System.Numerics;
 using ImGuiNET;
 using Tools.DebugInterface.Data;
 using static Tools.DebugInterface.Components.CommonComponents;
+
+#endregion
 
 namespace Tools.DebugInterface.Components;
 

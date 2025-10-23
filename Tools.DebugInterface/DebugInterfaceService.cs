@@ -1,5 +1,5 @@
-using System.Numerics;
-using System.Reflection;
+#region
+
 using ImGuiNET;
 using Silk.NET.Input;
 using Silk.NET.OpenGL;
@@ -7,6 +7,8 @@ using Silk.NET.OpenGL.Extensions.ImGui;
 using Silk.NET.Windowing;
 using Tools.DebugInterface.Components;
 using Tools.DebugInterface.Data;
+
+#endregion
 
 namespace Tools.DebugInterface;
 

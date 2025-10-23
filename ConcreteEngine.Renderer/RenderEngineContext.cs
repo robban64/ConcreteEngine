@@ -19,7 +19,7 @@ internal sealed class RenderStateContext
     public ref readonly RenderRuntimeParams CurrentRuntimeParams => ref _frameParams;
 
     public MeshId FsqMesh { get; init; }
-    
+
     public required RenderSceneSnapshot Snapshot { get; init; }
     public required RenderView View { get; init; }
 

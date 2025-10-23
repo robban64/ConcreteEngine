@@ -27,10 +27,10 @@ public interface IEngineInputSource
 
 public sealed class EngineInputSource : IEngineInputSource
 {
-    private readonly IInputContext  _context;
+    private readonly IInputContext _context;
     private readonly KeyboardInput _keyboardInput;
     private readonly MouseInput _mouseInput;
-    
+
     internal IInputContext InputContext => _context;
 
     public EngineInputSource(IInputContext input)

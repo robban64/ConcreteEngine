@@ -7,7 +7,7 @@ public readonly record struct EntityId(int Id) : IComparable<EntityId>
 
     public static implicit operator int(EntityId id) => id.Id;
     public static explicit operator EntityId(int value) => new(value);
-    
+
     /*
     public static EntityId MakeMeshId(int id) => new (id, 0, DomainKind.Mesh);
     public static EntityId MakeTerrainId(int id) => new (id, 0, DomainKind.Terrain);

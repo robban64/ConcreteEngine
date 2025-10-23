@@ -1,22 +1,19 @@
 #region
 
-using ConcreteEngine.Common.Numerics;
 using ConcreteEngine.Common.Patterns;
 using ConcreteEngine.Core.Assets;
 using ConcreteEngine.Core.Configuration;
 using ConcreteEngine.Core.Data;
 using ConcreteEngine.Core.Diagnostic;
 using ConcreteEngine.Core.Platform;
+using ConcreteEngine.Core.RenderingSystem;
 using ConcreteEngine.Core.RenderingSystem.Batching;
 using ConcreteEngine.Core.Scene;
 using ConcreteEngine.Core.Scene.Modules;
 using ConcreteEngine.Core.Time;
 using ConcreteEngine.Graphics;
 using ConcreteEngine.Graphics.Diagnostic;
-using ConcreteEngine.Graphics.Gfx.Definitions;
-using ConcreteEngine.Renderer.Passes;
 using ConcreteEngine.Renderer.State;
-using Silk.NET.Input;
 using Silk.NET.OpenGL;
 
 #endregion
@@ -33,7 +30,7 @@ public sealed class GameEngine : IDisposable
     private readonly EngineCoreSystem _coreSystems;
     private readonly AssetSystem _assets;
     private readonly InputSystem _inputSystem;
-    private readonly RenderingSystem.EngineRenderSystem _engineRenderSystem;
+    private readonly EngineRenderSystem _engineRenderSystem;
 
 
     private readonly ModuleManager _modules;
@@ -73,7 +70,7 @@ public sealed class GameEngine : IDisposable
 
         _inputSystem = new InputSystem(input);
         _assets = new AssetSystem();
-        _engineRenderSystem = new RenderingSystem.EngineRenderSystem(engineWindow, _graphics, _assets,_eventBus);
+        _engineRenderSystem = new EngineRenderSystem(engineWindow, _graphics, _assets, _eventBus);
         _coreSystems = new EngineCoreSystem(_engineRenderSystem, _inputSystem, _assets);
 
 
@@ -99,7 +96,7 @@ public sealed class GameEngine : IDisposable
         _assets.FinishLoading();
         _coreSystems.Initialize();
         RegisterRenderer();
-        
+
         _debugGateway.SetupCommandCallbacks(_assets);
 
         GfxDebugMetrics.LogEnabled = true;
@@ -243,7 +240,7 @@ public sealed class GameEngine : IDisposable
         _modules.Load(new GameModuleContext(sceneContext));
         return;
 
-        void AfterBuild(SceneManager.SceneBuildResult result, RenderingSystem.EngineRenderSystem renderer)
+        void AfterBuild(SceneManager.SceneBuildResult result, EngineRenderSystem renderer)
         {
             renderer.AttachWorld((World)result.Context.World);
             _debugGateway.SetupBindings(_assets.Materials, (World)result.Context.World);

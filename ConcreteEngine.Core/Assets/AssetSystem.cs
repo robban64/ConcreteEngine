@@ -9,8 +9,6 @@ using ConcreteEngine.Core.Assets.Shaders;
 using ConcreteEngine.Core.RenderingSystem;
 using ConcreteEngine.Graphics.Gfx;
 using ConcreteEngine.Graphics.Gfx.Definitions;
-using ConcreteEngine.Graphics.Gfx.Resources;
-using ConcreteEngine.Renderer.Passes;
 
 #endregion
 
@@ -119,13 +117,13 @@ public sealed class AssetSystem : IAssetSystem
         var vertFile = _assetStore.TryGetFileEntry(vertId, out var vertEntry) ? vertEntry : null;
         var fragFile = _assetStore.TryGetFileEntry(fragId, out var fragEntry) ? fragEntry : null;
         InvalidOpThrower.ThrowIf(vertFile == null || fragFile == null);
-        
+
         if (_loader is null)
         {
             _loader = new AssetLoader();
             _loader.ActivateLoader(_assetStore, _gfxUploader);
         }
-        
+
         _loader.ReloadShader(shader, vertFile!, fragFile!);
     }
 

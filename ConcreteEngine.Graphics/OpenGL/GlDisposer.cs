@@ -46,7 +46,7 @@ internal sealed class GlDisposer : IGraphicsDriverModule
                 break;
             default: throw new ArgumentOutOfRangeException(nameof(cmd), cmd, $"Invalid resource {cmd.Handle.Kind}");
         }
-        
+
         _dispatcher.OnDelete(in cmd);
     }
 

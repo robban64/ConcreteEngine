@@ -1,3 +1,5 @@
+#region
+
 using ConcreteEngine.Core.Assets;
 using ConcreteEngine.Core.Assets.Materials;
 using ConcreteEngine.Core.Scene;
@@ -8,6 +10,8 @@ using Silk.NET.Input;
 using Silk.NET.OpenGL;
 using Silk.NET.Windowing;
 using Tools.DebugInterface;
+
+#endregion
 
 namespace ConcreteEngine.Core.Diagnostic;
 
@@ -28,11 +32,11 @@ internal sealed class DebugInterfaceGateway
         _debug.Registry.RegisterFromAssemblies(typeof(GameEngine).Assembly,
             "ConcreteEngine.Core.Assets.Materials",
             "ConcreteEngine.Core.Scene");
-        
+
         //_debug.Registry.RegisterFromAssemblies(typeof(RenderEngine).Assembly);
         //_debug.Registry.RegisterFromAssemblies(typeof(GraphicsRuntime).Assembly);
-        
-        
+
+
         GfxDebugMetrics.ToggleLog(GfxLogSource.Store, GfxLogLayer.Backend, false);
         GfxDebugMetrics.ToggleLog(GfxLogAction.EnqueueDispose, false);
     }
@@ -40,16 +44,15 @@ internal sealed class DebugInterfaceGateway
     public void SetupCommandCallbacks(AssetSystem assetSystem)
     {
         ArgumentNullException.ThrowIfNull(assetSystem);
-        
+
         _assetSystem = assetSystem;
         DebugCommandController.Attach(assetSystem);
         var console = _debug.DevConsole;
         console.RegisterCommand("inspect-structs", DebugCommandController.OnCmdStructSizes);
         console.RegisterCommand("reload-shader", DebugCommandController.OnRecreateShader);
         console.RegisterCommand("shadow-map", DebugCommandController.OnSetShadowMapSize);
- 
     }
-    
+
     public void SetupBindings(MaterialStore materialStore, World world)
     {
         if (!Enabled) return;
@@ -60,7 +63,6 @@ internal sealed class DebugInterfaceGateway
         StaticDebugProvider.Bind(nameof(World.ShadowMapSize), world);
         HasBindings = true;
     }
-
 
 
     public bool BlockInput()
@@ -91,20 +93,20 @@ internal sealed class DebugInterfaceGateway
             RefreshDataSlow2();
             _ticker = 0;
         }
-        
+
         var metrics = _debug.Data.FrameMetrics;
         metrics.FrameIndex = $"FrameIdx: {frameInfo.FrameIndex} ms";
         metrics.Fps = $"FPS: {Format(frameInfo.Fps)}";
         metrics.Alpha = $"Alpha: {Format(frameInfo.Alpha)} ms";
         metrics.DrawCalls = $"Draws: {gfxFrame.DrawCalls}";
         metrics.TriangleCount = $"Verts: {gfxFrame.TriangleCount}";
-        
+
         UpdateGfxStoreMetric(_debug.Data.GfxStoreMetrics);
 
         while (GfxDebugMetrics.LogQueue.Count > 0)
         {
             var cmd = GfxDebugMetrics.LogQueue.Dequeue();
-            
+
             _debug.DevConsole.AddLog(cmd.ToDebugString());
         }
 
@@ -116,11 +118,10 @@ internal sealed class DebugInterfaceGateway
         RefreshStore(assetStore);
         _debug.UpdateSlowRead1();
     }
-    
+
     private void RefreshDataSlow2()
     {
         _debug.UpdateSlowRead2();
-
     }
 
     private void RefreshStore(AssetStore assetStore)
@@ -128,7 +129,7 @@ internal sealed class DebugInterfaceGateway
         foreach (var (k, v) in assetStore.GetAssetTypeMeta())
         {
             var name = k.Name;
-            if(name == nameof(MaterialTemplate)) name = "MatTemplate";
+            if (name == nameof(MaterialTemplate)) name = "MatTemplate";
             _debug.Data.AssetMetrics[name] = (v.Count.ToString(), v.FileCount.ToString());
         }
     }
@@ -143,7 +144,6 @@ internal sealed class DebugInterfaceGateway
             metrics[k.ToLogName()] = (gfxStr, bkStr);
         }
     }
-    
-    private static string Format(float value) => value.ToString("0.00");
 
+    private static string Format(float value) => value.ToString("0.00");
 }

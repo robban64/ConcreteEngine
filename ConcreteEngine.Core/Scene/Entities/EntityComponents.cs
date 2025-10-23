@@ -4,13 +4,10 @@ using System.Numerics;
 using ConcreteEngine.Common.Numerics;
 using ConcreteEngine.Graphics.Gfx.Resources;
 using ConcreteEngine.Renderer.Data;
-using Silk.NET.Maths;
 
 #endregion
 
 namespace ConcreteEngine.Core.Scene.Entities;
-
-
 
 public struct Transform(Vector3 position, Vector3 scale, Quaternion rotation)
 {

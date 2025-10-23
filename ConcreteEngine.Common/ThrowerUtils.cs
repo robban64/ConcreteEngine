@@ -4,7 +4,6 @@ using System.Diagnostics;
 using System.Diagnostics.CodeAnalysis;
 using System.Runtime.CompilerServices;
 using ConcreteEngine.Common.Numerics;
-using static System.Enum;
 
 #endregion
 
@@ -18,7 +17,7 @@ public static class ArgOutOfRangeThrower
         ArgumentOutOfRangeException.ThrowIfNotEqual(a.Width, b.Width, nameof(a));
         ArgumentOutOfRangeException.ThrowIfNotEqual(a.Height, b.Height, nameof(a));
     }
-    
+
     public static void ThrowIfSizeTooSmall(Size2D size, int min)
     {
         ArgumentOutOfRangeException.ThrowIfLessThan(size.Width, min, nameof(size));
@@ -76,7 +75,7 @@ public static class InvalidOpThrower
             ThrowOperation(message ?? $"Size too big: ({size.Width}x{size.Height}) > ({max.Width}x{max.Height})");
     }
 
-    
+
     public static void ThrowIfNull(object? obj, string? param = null, string? message = null)
     {
         if (obj is null) ThrowOperation(param, message);

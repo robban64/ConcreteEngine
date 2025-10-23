@@ -1,4 +1,3 @@
-
 namespace Tools.DebugInterface;
 
 public static class StaticDebugProvider
@@ -14,5 +13,4 @@ public static class StaticDebugProvider
     public static void Bind(string name, Func<object?> provider) => Targets[name] = provider;
 
     public static object? Resolve(string name) => Targets.TryGetValue(name, out var p) ? p() : null;
-
 }

@@ -1,6 +1,10 @@
+#region
+
 using System.Diagnostics;
 using ConcreteEngine.Graphics.Gfx.Definitions;
 using ConcreteEngine.Graphics.Gfx.Resources;
+
+#endregion
 
 namespace ConcreteEngine.Graphics.Diagnostic;
 
@@ -38,14 +42,14 @@ public static class GfxDebugMetrics
             return;
         }
 
-        if (IgnoreSourceLayer.Contains((log.Source, log.Layer)) 
+        if (IgnoreSourceLayer.Contains((log.Source, log.Layer))
             || IgnoreAction.Contains(log.Action)
             || IgnoreKind.Contains(log.Kind))
             return;
 
         LogQueue.Enqueue(log);
     }
-    
+
     public static void ToggleLog(GfxLogSource source, GfxLogLayer layer, bool enabled)
     {
         var key = (source, layer);

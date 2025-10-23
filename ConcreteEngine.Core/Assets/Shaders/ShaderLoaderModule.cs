@@ -1,6 +1,5 @@
 #region
 
-using ConcreteEngine.Common;
 using ConcreteEngine.Core.Assets.Data;
 using ConcreteEngine.Core.Assets.Descriptors;
 using ConcreteEngine.Core.Assets.Internal;
@@ -27,7 +26,7 @@ internal sealed class ShaderLoaderModule(AssetGfxUploader uploader)
             IsCoreAsset = false
         };
     }
-    
+
     public void ReloadShader(Shader shader, AssetFileEntry vert, AssetFileEntry frag, out AssetFileSpec[] specs)
     {
         var desc = new ShaderDescriptor(shader.Name, vert.RelativePath, frag.RelativePath);
@@ -35,7 +34,6 @@ internal sealed class ShaderLoaderModule(AssetGfxUploader uploader)
         uploader.RecreateShader(shader.ResourceId, payload, out var info);
         specs = [payload.VertexFileSpec, payload.FragmentFileSpec];
         shader.OnReload(info.Samplers);
-  
     }
 
     public void Prepare() => _loader.Prepare();

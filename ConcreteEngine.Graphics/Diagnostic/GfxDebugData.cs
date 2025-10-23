@@ -1,4 +1,8 @@
+#region
+
 using ConcreteEngine.Graphics.Gfx.Definitions;
+
+#endregion
 
 namespace ConcreteEngine.Graphics.Diagnostic;
 
@@ -19,10 +23,10 @@ public readonly record struct GfxDebugLog(
 
         if (HandleId != -1)
             info = $"{idLabel}={HandleId.ToString(),-2}";
-        
+
         if (Gen != 0)
             info = info.Length == 0 ? $"Gen={Gen.ToString(),-2}" : $"{info} Gen={Gen.ToString(),-2}";
-        
+
         if (OtherValue != -1)
             info = info.Length == 0 ? $"Slot={OtherValue.ToString(),-2}" : $"{info} Slot={OtherValue.ToString(),-2}";
 

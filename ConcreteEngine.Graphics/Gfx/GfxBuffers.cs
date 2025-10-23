@@ -156,7 +156,7 @@ public sealed class GfxBuffers
     {
         UniformBufferUtils.IsStd140AlignedOrThrow<T>(out nint stride);
         var uboRef = _resources.UboStore.GetRefHandle(uboId);
-        _driverBuffer.UploadUniformBufferData(uboRef, ToByteBuffer(data), offset, stride*data.Length);
+        _driverBuffer.UploadUniformBufferData(uboRef, ToByteBuffer(data), offset, stride * data.Length);
     }
 
     public void BindUniformBufferRange(UniformBufferId uboId, nint offset, nint size)

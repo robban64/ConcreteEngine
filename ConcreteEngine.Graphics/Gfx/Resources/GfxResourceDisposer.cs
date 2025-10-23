@@ -43,6 +43,7 @@ internal sealed class GfxResourceDisposer : IGfxResourceDisposer
             {
                 _gfxStoreHub.RemoveResource(cmd.GfxId, cmd.Handle.Kind);
             }
+
             drainCount++;
         }
     }
@@ -59,16 +60,16 @@ internal sealed class GfxResourceDisposer : IGfxResourceDisposer
 
         var cmd = DeleteResourceCommand.MakeDelete(gfxHandle, native, id.Value);
         _disposeQueue.Enqueue(cmd);
-        
+
         GfxDebugMetrics.Log(DebugLog.MakeEnqueueDispose(id.Value, gfxHandle));
     }
-    
-    public void EnqueueReplace<TId>(GfxRefToken<TId> refToken) 
-        where TId : unmanaged, IResourceId 
+
+    public void EnqueueReplace<TId>(GfxRefToken<TId> refToken)
+        where TId : unmanaged, IResourceId
     {
         ArgumentOutOfRangeException.ThrowIfEqual(refToken.Handle.IsValid, false);
         var fkStore = _gfxStoreHub.GetStore<TId>();
-        
+
         var bkStore = _backendStoreHub.Get(TId.Kind);
         var handle = bkStore.GetNativeHandle(refToken);
         var cmd = DeleteResourceCommand.MakeReplace(refToken, handle);

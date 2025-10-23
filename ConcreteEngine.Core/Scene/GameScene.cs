@@ -19,7 +19,7 @@ public abstract class GameScene
 
     protected World World => _world;
     protected Camera3D Camera => _camera;
-    
+
     internal World InternalWorld => _world;
 
     protected GameScene()

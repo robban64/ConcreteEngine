@@ -5,7 +5,6 @@ using System.Runtime.CompilerServices;
 using ConcreteEngine.Graphics.Gfx;
 using ConcreteEngine.Graphics.Gfx.Resources;
 using ConcreteEngine.Renderer.Data;
-using ConcreteEngine.Renderer.Definitions;
 using ConcreteEngine.Renderer.Registry;
 using ConcreteEngine.Renderer.State;
 
@@ -78,7 +77,7 @@ internal sealed class DrawBuffers
 
     public ReadOnlySpan<TextureSlotInfo> ResolveMaterial(MaterialId materialId, out DrawMaterialMeta materialMeta)
     {
-        if (_ctx.ResolveMaterialBind(materialId)) 
+        if (_ctx.ResolveMaterialBind(materialId))
             return _materialBuffer.GetMetaAndSlots(materialId, out materialMeta);
 
         materialMeta = default;

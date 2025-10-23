@@ -1,12 +1,11 @@
 namespace Tools.DebugInterface.Data;
 
-
 public sealed class DebugFrameMetrics
 {
     public string? FrameIndex { get; set; }
     public string? Fps { get; set; }
     public string? Alpha { get; set; }
-    public string? TriangleCount { get; set; } 
+    public string? TriangleCount { get; set; }
     public string? DrawCalls { get; set; }
     public string? Allocated { get; set; }
 }

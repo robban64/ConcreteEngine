@@ -1,9 +1,13 @@
+#region
+
 using System.Runtime.CompilerServices;
 using ConcreteEngine.Core.Assets;
 using ConcreteEngine.Core.Scene.Entities;
 using ConcreteEngine.Graphics.Gfx.Resources;
 using ConcreteEngine.Renderer.Data;
 using Tools.DebugInterface.Components;
+
+#endregion
 
 namespace ConcreteEngine.Core.Diagnostic;
 
@@ -16,7 +20,7 @@ internal static class DebugCommandController
     {
         _assetSystem = assetSystem;
     }
-    
+
     public static void OnRecreateShader(DebugConsoleCtx ctx, string? arg1, string? arg2)
     {
         if (_assetSystem is null) return;
@@ -71,9 +75,8 @@ internal static class DebugCommandController
         ctx.AddLog(StructStr<FrameBufferMeta>());
         ctx.AddLog(StructStr<RenderBufferMeta>());
         ctx.AddLog(StructStr<UniformBufferMeta>());
-
     }
 
-    private static string StructStr<T>() where T : unmanaged 
+    private static string StructStr<T>() where T : unmanaged
         => $"{typeof(T).Name,-18} - {Unsafe.SizeOf<T>().ToString()} bytes";
 }

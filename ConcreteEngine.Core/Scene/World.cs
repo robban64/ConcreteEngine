@@ -3,7 +3,6 @@
 using ConcreteEngine.Core.RenderingSystem;
 using ConcreteEngine.Core.RenderingSystem.Batching;
 using ConcreteEngine.Core.Scene.Entities;
-using Tools.DebugInterface;
 using Tools.DebugInterface.Data;
 
 #endregion
@@ -40,7 +39,6 @@ public sealed class World : IWorld
     public EntityStore<MeshComponent> Meshes { get; }
     public EntityStore<Transform2D> Transforms2D { get; }
     public EntityStore<SpriteComponent> Sprites { get; }
-    
 
 
     private int _idIdx = 1;
@@ -55,16 +53,13 @@ public sealed class World : IWorld
         Transforms = GenericStores<Transform>.CreateStore();
         Meshes = GenericStores<MeshComponent>.CreateStore();
         Sprites = GenericStores<SpriteComponent>.CreateStore();
-        
-
     }
-    public EntityId Create() => new(_idIdx++);
-    
-    [DebugWatch]
-    public int EntityCount => _idIdx;
 
-    [DebugWatch]
-    public int ShadowMapSize => RenderProps.Snapshot.Shadows.ShadowMapSize;
+    public EntityId Create() => new(_idIdx++);
+
+    [DebugWatch] public int EntityCount => _idIdx;
+
+    [DebugWatch] public int ShadowMapSize => RenderProps.Snapshot.Shadows.ShadowMapSize;
 
     public void Cleanup()
     {

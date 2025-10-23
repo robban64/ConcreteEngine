@@ -1,7 +1,10 @@
+#region
+
 using ConcreteEngine.Graphics.Gfx.Definitions;
 
-namespace ConcreteEngine.Graphics.Diagnostic;
+#endregion
 
+namespace ConcreteEngine.Graphics.Diagnostic;
 
 public enum GfxLogSource : byte
 {

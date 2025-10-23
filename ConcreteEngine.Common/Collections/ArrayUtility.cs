@@ -1,4 +1,8 @@
+#region
+
 using System.Runtime.CompilerServices;
+
+#endregion
 
 namespace ConcreteEngine.Common.Collections;
 

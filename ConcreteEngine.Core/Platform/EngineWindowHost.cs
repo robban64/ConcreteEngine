@@ -1,12 +1,10 @@
 #region
 
-using ConcreteEngine.Common.Numerics;
 using ConcreteEngine.Core.Configuration;
 using ConcreteEngine.Graphics;
 using ConcreteEngine.Graphics.Error;
 using ConcreteEngine.Graphics.Gfx.Definitions;
 using Silk.NET.Input;
-using Silk.NET.Maths;
 using Silk.NET.OpenGL;
 using Silk.NET.Windowing;
 
@@ -14,7 +12,7 @@ using Silk.NET.Windowing;
 
 namespace ConcreteEngine.Core.Platform;
 
-public sealed class EngineWindowHost 
+public sealed class EngineWindowHost
 {
     private readonly WindowOptions _options;
     private readonly GraphicsBackend _backend;
@@ -27,11 +25,11 @@ public sealed class EngineWindowHost
     private EngineInputSource _inputSource = null!;
 
     private GameEngine _engine = null!;
-    
+
     public IWindow InternalWindow => _window;
 
     public GraphicsBackend Backend => _backend;
-    
+
 
     private GameEngineBuilder? _builder = null;
 

@@ -1,4 +1,8 @@
+#region
+
 using ConcreteEngine.Graphics.Gfx.Definitions;
+
+#endregion
 
 namespace ConcreteEngine.Graphics.Gfx.Contracts;
 
@@ -33,7 +37,6 @@ public readonly record struct IndexBufferDesc(
     BufferUsage Usage,
     BufferStorage Storage,
     BufferAccess Access);
-
 
 public readonly record struct BufferDescriptor(
     BufferUsage Usage,

@@ -2,7 +2,6 @@
 
 using ConcreteEngine.Core.Assets.Data;
 using ConcreteEngine.Core.Assets.Descriptors;
-using Tools.DebugInterface;
 
 #endregion
 

@@ -19,6 +19,7 @@ public interface IRenderFboRegistry
 {
     public void RecreateFixedFrameBuffer<TTag>(FboVariant variant, Size2D outputSize)
         where TTag : unmanaged, IRenderPassTag;
+
     void RecreateScreenDependentFbo(Size2D outputSize);
 }
 
@@ -121,7 +122,8 @@ internal sealed class RenderFboRegistry : IRenderFboRegistry
         pendingIds(newSizes);
     }
 
-    public void RecreateFixedFrameBuffer<TTag>(FboVariant variant, Size2D outputSize) where TTag : unmanaged, IRenderPassTag
+    public void RecreateFixedFrameBuffer<TTag>(FboVariant variant, Size2D outputSize)
+        where TTag : unmanaged, IRenderPassTag
     {
         ArgOutOfRangeThrower.ThrowIfSizeTooSmall(outputSize, new Size2D(RenderLimits.MinOutputSize));
         if (typeof(TTag) == typeof(ShadowPassTag))
@@ -133,7 +135,7 @@ internal sealed class RenderFboRegistry : IRenderFboRegistry
         {
             ArgOutOfRangeThrower.ThrowIfSizeTooBig(outputSize, new Size2D(RenderLimits.MaxOutputSize));
         }
-        
+
         var key = TagRegistry.FboKey<TTag>(variant);
         var fbo = GetRenderFbo(key);
         if (fbo == null) ThrowNotFound(key);

@@ -1,6 +1,10 @@
+#region
+
 using System.Linq.Expressions;
 using System.Reflection;
 using Tools.DebugInterface.Data;
+
+#endregion
 
 namespace Tools.DebugInterface;
 

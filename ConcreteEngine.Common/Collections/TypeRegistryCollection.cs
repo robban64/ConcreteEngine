@@ -1,7 +1,5 @@
 #region
 
-using System.Collections;
-
 #endregion
 
 namespace ConcreteEngine.Common.Collections;
@@ -49,6 +47,4 @@ public sealed class TypeRegistryCollection<TValue>(int capacity = 16)
     public void Clear() => _registry.Clear();
 
     internal IReadOnlyDictionary<Type, TValue> Dictionary => _registry;
-
-
 }

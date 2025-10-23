@@ -74,14 +74,10 @@ public sealed class RenderFbo : IComparable<RenderFbo>
             return x.TagKey.CompareTo(y.TagKey);
         }
     }
-
 }
-
-
 
 public sealed class RenderFboSizePolicy
 {
-
     public FboResizeMode Mode { get; }
     private readonly CalcFboOutputDel? _calc;
     private readonly Vector2 _ratio;

@@ -35,13 +35,13 @@ internal static class DebugController
         _frameInfo = frameInfo;
     }
 
-    internal static DebugFrameMetrics MakeFrameMetrics()
+    internal static DebugFrameMetrics GetFrameMetrics()
     {
         if (_frameInfo is null) return default;
 
         var gfxInfo = _frameInfo.GfxResult;
         return new DebugFrameMetrics
-            (_frameInfo.FrameIndex, _frameInfo.Fps, _frameInfo.Alpha, gfxInfo.DrawCalls, gfxInfo.DrawCalls);
+            (_frameInfo.FrameIndex, _frameInfo.Fps, _frameInfo.Alpha, gfxInfo.TriangleCount, gfxInfo.DrawCalls);
     }
 
     internal static DebugMemoryMetrics GetMemoryMetrics() => new((int)GC.GetAllocatedBytesForCurrentThread());
@@ -107,7 +107,7 @@ internal static class DebugController
         ctx.AddLog("Invalid argument value. Supported are 1,2,4,8 (1024, 2048, 4096, 8192)");
     }
 
-    public static void OnCmdStructSizes(DebugConsoleCtx ctx)
+    public static void OnCmdStructSizes(DebugConsoleCtx ctx, string? _, string? __)
     {
         ctx.AddLog(StructStr<TextureSlotInfo>());
         ctx.AddLog(StructStr<Transform>());

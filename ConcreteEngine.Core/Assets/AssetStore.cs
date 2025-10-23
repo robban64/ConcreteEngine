@@ -41,11 +41,16 @@ internal sealed class AssetStore : IAssetStore
 
     private readonly Dictionary<Type, AssetTypeMeta> _typeMeta = new(8);
 
-    internal IReadOnlyDictionary<Type, AssetTypeMeta> GetAssetTypeMeta() => _typeMeta;
 
     internal AssetStore()
     {
     }
+    
+    internal IReadOnlyDictionary<Type, AssetTypeMeta> GetAssetTypeMeta() => _typeMeta;
+
+    public AssetTypeMetaSnapshot GetMetaSnapshot<TAsset>() where TAsset : AssetObject =>
+        _typeMeta[typeof(TAsset)].ToSnapshot();
+
 
     public bool TryGetFileEntry(AssetFileId id, out AssetFileEntry? entry) => _files.TryGetValue(id, out entry);
 
@@ -120,8 +125,6 @@ internal sealed class AssetStore : IAssetStore
         return true;
     }
 
-    public AssetTypeMetaSnapshot GetMetaSnapshot<TAsset>() where TAsset : AssetObject =>
-        _typeMeta[typeof(TAsset)].ToSnapshot();
 
 
     public void ExtractList<TAsset, TData>(List<TData> list, Func<TAsset, TData> transform)
@@ -175,7 +178,7 @@ internal sealed class AssetStore : IAssetStore
     private void RegisterInternal<TAsset>(AssetId id, TAsset asset, ReadOnlySpan<AssetFileSpec> fileSpecs)
         where TAsset : AssetObject
     {
-        ArgumentNullException.ThrowIfNull(asset);
+        ArgumentNullException.ThrowIfNull(asset,nameof(asset));
         ArgumentOutOfRangeException.ThrowIfLessThanOrEqual(id.Value, 0);
         ArgumentOutOfRangeException.ThrowIfNotEqual(asset.RawId.Value, id.Value);
 

@@ -24,7 +24,9 @@ internal sealed class DebugGateway
     public bool HasBoundMetrics {get; private set;}
     public bool Enabled { get; private set; } = true;
 
-    private int _ticker = 0;
+    private bool _tickToggle;
+    private int _ticker2 = 0, _ticker4 = 0, _ticker8 = 0;
+    
 
     
     public DebugGateway(GL gl, IWindow window, IInputContext inputCtx)
@@ -66,7 +68,7 @@ internal sealed class DebugGateway
         if (HasBoundMetrics) throw new InvalidOperationException(nameof(HasBoundMetrics));
         HasBoundMetrics = true;
 
-        DebugRouter.PullFrameMetrics = DebugController.MakeFrameMetrics;
+        DebugRouter.PullFrameMetrics = DebugController.GetFrameMetrics;
         DebugRouter.PullMaterialMetrics = DebugController.GetMaterialMetrics;
         DebugRouter.PullSceneMetrics = DebugController.GetSceneMetrics;
         DebugRouter.PullMemoryMetrics = DebugController.GetMemoryMetrics;
@@ -87,63 +89,46 @@ internal sealed class DebugGateway
         _debug.Render();
     }
 
-    public void RefreshMetrics()
+    public void RefreshMetrics(bool force = false)
     {
         if (!Enabled) return;
-/*
-        _ticker++;
-        if (_ticker == 3) RefreshDataSlow1(assetStore);
-        if (_ticker == 6)
+        if (force)
         {
-            RefreshDataSlow2();
-            _ticker = 0;
+            _debug.RefreshFrameMetrics();
+            _debug.RefreshStoreMetrics();
+            _debug.RefreshSceneMetrics();
+            _debug.RefreshMemoryMetrics();
+            DrainGfxLogs();
+            return;
         }
-*/
-        _debug.RefreshFrameMetrics();
-        _debug.RefreshMemoryMetrics();
-        _debug.RefreshSceneMetrics();
-        _debug.RefreshStoreMetrics();
 
+        _debug.RefreshFrameMetrics();
+
+        if (_tickToggle)
+        {
+            _debug.RefreshStoreMetrics();
+            _debug.RefreshSceneMetrics();
+        }
+        else
+        {
+            DrainGfxLogs();
+        }
+        _tickToggle = !_tickToggle;
+
+        if (++_ticker8 >= 8)
+        {
+            _ticker8 = 0;
+            _debug.RefreshMemoryMetrics();
+        }
+        
+    }
+
+    private void DrainGfxLogs()
+    {
         while (GfxDebugMetrics.LogQueue.Count > 0)
         {
             var cmd = GfxDebugMetrics.LogQueue.Dequeue();
             _debug.DevConsole.AddLog(cmd.ToDebugString());
         }
-
-        if (HasBindings) _debug.RefreshSceneMetrics();
     }
-/*
-    private void RefreshDataSlow1(AssetStore assetStore)
-    {
-        RefreshStore(assetStore);
-        _debug.RefreshStoreMetrics();
-    }
-
-    private void RefreshDataSlow2()
-    {
-        _debug.RefreshMemoryMetrics();
-    }
-
-    private void RefreshStore(AssetStore assetStore)
-    {
-        foreach (var (k, v) in assetStore.GetAssetTypeMeta())
-        {
-            var name = k.Name;
-            if (name == nameof(MaterialTemplate)) name = "MatTemplate";
-            _debug.TextData.AssetMetrics[name] = (v.Count.ToString(), v.FileCount.ToString());
-        }
-    }
-
-    private static void UpdateGfxStoreMetric(Dictionary<string, (string, string)> metrics)
-    {
-        var dict = GfxDebugMetrics.GetStoreMetrics();
-        foreach (var (k, v) in dict)
-        {
-            var gfxStr = $"{v.GfxStoreCount}({v.GfxStoreFree})";
-            var bkStr = $"{v.BackendStoreCount}({v.BackendStoreFree})";
-            metrics[k.ToLogName()] = (gfxStr, bkStr);
-        }
-    }
-*/
-    
 }

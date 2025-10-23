@@ -51,7 +51,7 @@ internal sealed class DebugRightPanelGui(DebugTextData data)
     private void DrawGcMetrics()
     {
         DrawSectionHeader("GC / Memory");
-        MetricLine(data.FrameMetrics.Allocated);
+        MetricLine(data.MemoryMetrics);
     }
 
     private void DrawGpuMetrics()

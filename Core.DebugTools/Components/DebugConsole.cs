@@ -21,26 +21,11 @@ public class DebugConsole
 
     private readonly DebugConsoleCtx _ctx;
     private readonly List<string> _log = new(64);
-    private readonly Dictionary<string, Delegate> _commands = new(4);
 
     public DebugConsole()
     {
         _ctx = new DebugConsoleCtx(this);
     }
-
-
-    public void RegisterCommand(string command, Func<string?, string?, string> commandHandler) =>
-        _commands[command] = commandHandler;
-
-    public void RegisterCommand(string command, Func<string> commandHandler) =>
-        _commands[command] = commandHandler;
-
-    public void RegisterCommand(string command, Action<DebugConsoleCtx, string?, string?> commandHandler) =>
-        _commands[command] = commandHandler;
-
-    public void RegisterCommand(string command, Action<DebugConsoleCtx> commandHandler) =>
-        _commands[command] = commandHandler;
-
 
     public void AddLog(string? msg)
     {
@@ -67,29 +52,10 @@ public class DebugConsole
             return true;
         }
 
-        if (!_commands.TryGetValue(cmd, out var commandHandler))
+        if (!DebugRouter.InvokeCommand(_ctx, cmd, arg1, arg2))
         {
             _log.Add($"Unknown command: {cmd}");
             return false;
-        }
-
-        switch (commandHandler)
-        {
-            case Func<string?, string?, string> funcArg:
-                _log.Add(funcArg(arg1, arg2));
-                break;
-            case Func<string> funcNoArg:
-                _log.Add(funcNoArg());
-                break;
-            case Action<DebugConsoleCtx, string?, string?> actionArg:
-                actionArg(_ctx, arg1, arg2);
-                break;
-            case Action<DebugConsoleCtx> actionNoArg:
-                actionNoArg(_ctx);
-                break;
-            default:
-                _log.Add($"Invalid invoke handler: {commandHandler.GetType().Name}");
-                return false;
         }
 
         return true;

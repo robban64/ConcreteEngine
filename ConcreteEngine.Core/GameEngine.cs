@@ -241,6 +241,7 @@ public sealed class GameEngine : IDisposable
         _debugGateway.AttachDebugTools((World)result.Context.World, _assets, _renderFrameInfo);
         _debugGateway.RegisterCommands();
         _debugGateway.RegisterMetrics();
+        _debugGateway.RefreshMetrics(true);
 
         renderer.AttachWorld((World)result.Context.World);
         foreach (var module in result.Modules) result.Context.Modules.AddModule(module());

@@ -3,6 +3,7 @@
 using System.Runtime.CompilerServices;
 using ConcreteEngine.Common;
 using ConcreteEngine.Common.Collections;
+using ConcreteEngine.Graphics.Diagnostic;
 using ConcreteEngine.Graphics.Gfx.Definitions;
 
 #endregion
@@ -37,9 +38,6 @@ internal sealed class GfxResourceStore<TId, TMeta> : IGfxResourceStore<TId>
 
     public int Count => _idx;
 
-    internal ReadOnlySpan<TMeta> AsMetaSpan() => _meta;
-    internal ReadOnlySpan<GfxHandle> AsHandleSpan() => _handle;
-
     internal GfxResourceStore(int initialCapacity, MakeIdDelegate<TId> makeId)
     {
         ArgumentOutOfRangeException.ThrowIfLessThan(initialCapacity, 4, nameof(initialCapacity));
@@ -53,6 +51,8 @@ internal sealed class GfxResourceStore<TId, TMeta> : IGfxResourceStore<TId>
         _meta = new TMeta[initialCapacity];
         _handle = new GfxHandle[initialCapacity];
         _free = new Stack<int>();
+
+        GfxDebugMetrics.RegisterStore<TId>();
     }
 
     internal void BindOnChangeCallback(GfxMetaChangedDel<TId, TMeta> callback)
@@ -84,7 +84,7 @@ internal sealed class GfxResourceStore<TId, TMeta> : IGfxResourceStore<TId>
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public GfxRefToken<TId> GetRefAndMeta(TId id, out TMeta meta)
     {
-        int idx = id.Value - 1;
+        var idx = id.Value - 1;
         meta = _meta[idx];
         return GfxRefToken<TId>.From(in _handle[idx]);
     }
@@ -94,10 +94,14 @@ internal sealed class GfxResourceStore<TId, TMeta> : IGfxResourceStore<TId>
     public TId Add(in TMeta meta, in GfxRefToken<TId> refToken)
     {
         ArgumentOutOfRangeException.ThrowIfEqual(refToken.Handle.IsValid, false, nameof(refToken));
-        int idx = _free.Count > 0 ? _free.Pop() : Allocate();
+        var idx = _free.Count > 0 ? _free.Pop() : Allocate();
         _meta[idx] = meta;
-        _handle[idx] = refToken.Handle;
-        return _makeId(idx);
+        _handle[idx] = refToken;
+        var newId = _makeId(idx);
+
+        UpdateMetrics();
+        GfxDebugMetrics.Log(DebugLog.MakeAddGfxStore(newId.Value, refToken));
+        return newId;
     }
 
     public GfxHandle Remove(TId id)
@@ -109,26 +113,32 @@ internal sealed class GfxResourceStore<TId, TMeta> : IGfxResourceStore<TId>
     public GfxHandle Remove(TId id, out TMeta oldMeta)
     {
         ArgumentOutOfRangeException.ThrowIfEqual(id.Value, 0, nameof(id));
-        int idx = id.Value - 1;
+        var idx = id.Value - 1;
         var handle = _handle[idx];
         oldMeta = _meta[idx];
         _meta[idx] = default!;
         _handle[idx] = default!;
         _free.Push(idx);
+
+        UpdateMetrics();
+        GfxDebugMetrics.Log(DebugLog.MakeRemoveGfxStore(id.Value, handle));
         return handle;
     }
 
     public TId Replace(TId id, in TMeta newMeta, in GfxRefToken<TId> newHandle, out GfxRefToken<TId> oldHandle)
     {
         ArgumentOutOfRangeException.ThrowIfEqual(id.Value, 0, nameof(id));
-        int idx = id.Value - 1;
+        var handle = newHandle.Handle;
+        var idx = id.Value - 1;
         oldHandle = new GfxRefToken<TId>(in _handle[idx]);
         var oldMeta = _meta[idx];
         _meta[idx] = newMeta;
-        _handle[idx] = newHandle.Handle;
+        _handle[idx] = handle;
 
-        var message = new GfxMetaChanged<TMeta>(in newMeta, in oldMeta, newHandle.Handle.Gen, true, ResourceKind);
+        var message = new GfxMetaChanged<TMeta>(in newMeta, in oldMeta, handle.Gen, true, ResourceKind);
         ChangeCallback?.Invoke(id, in message);
+        UpdateMetrics();
+        GfxDebugMetrics.Log(DebugLog.MakeReplaceGfxStore(id.Value, handle));
 
         return id;
     }
@@ -160,6 +170,25 @@ internal sealed class GfxResourceStore<TId, TMeta> : IGfxResourceStore<TId>
 
         return _idx++;
     }
+
+    private int GetAliveCount()
+    {
+        var span = _handle.AsSpan(0, _idx);
+        var count = 0;
+        foreach (var record in span)
+        {
+            if (record.IsValid) count++;
+        }
+
+        return count;
+    }
+
+    private void UpdateMetrics()
+    {
+        GfxDebugMetrics.GetStoreMetrics<TId>().GfxStoreCount = GetAliveCount();
+        GfxDebugMetrics.GetStoreMetrics<TId>().GfxStoreFree = _free.Count;
+    }
+
 
     public IdEnumerable IdEnumerator => new(this);
 

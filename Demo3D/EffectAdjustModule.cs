@@ -1,9 +1,11 @@
-using ConcreteEngine.Common.Numerics;
+#region
+
 using ConcreteEngine.Core.Data;
 using ConcreteEngine.Core.Platform;
 using ConcreteEngine.Core.RenderingSystem;
 using ConcreteEngine.Core.Scene.Modules;
-using Silk.NET.Input;
+
+#endregion
 
 namespace Demo3D;
 
@@ -23,6 +25,5 @@ internal sealed class EffectAdjustModule : GameModule
 
     public override void Update(in UpdateTickInfo frameCtx)
     {
-
     }
 }

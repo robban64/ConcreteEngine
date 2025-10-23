@@ -16,10 +16,12 @@ public sealed class GfxTextures
 {
     private readonly GlTextures _driver;
 
+    private readonly GfxResourceDisposer _disposer;
     private readonly GfxResourceStore<TextureId, TextureMeta> _textureStore;
 
     internal GfxTextures(GfxContextInternal context)
     {
+        _disposer = context.Disposer;
         _textureStore = context.Stores.TextureStore;
         _driver = context.Driver.Textures;
     }
@@ -57,7 +59,7 @@ public sealed class GfxTextures
 
     public TextureId CreateTexture(in GfxTextureDescriptor desc, in GfxTextureProperties props)
     {
-        var textRef = CreateTextureInternal(in desc, in props, out var meta);
+        var textRef = CreateDriverTexture(in desc, in props, out var meta);
         var textureId = _textureStore.Add(in meta, in textRef);
         return textureId;
     }
@@ -75,12 +77,13 @@ public sealed class GfxTextures
 
     internal GfxRefToken<TextureId> ReplaceTexture(TextureId textureId, in GfxReplaceTexture newProps)
     {
-        var meta = _textureStore.GetMeta(textureId);
+        var texRef = _textureStore.GetRefAndMeta(textureId, out var meta);
+        _disposer.EnqueueReplace(texRef);
+
         var samples = meta.Kind == TextureKind.Multisample2D ? newProps.Samples ?? meta.Samples : newProps.Samples;
         var msaa = GfxUtilsEnum.ToRenderBufferMsaa(samples);
 
         ValidateRecreateTexture(newProps, in meta);
-
 
         var desc = new GfxTextureDescriptor(newProps.Width, newProps.Height,
             meta.Kind, meta.PixelFormat, meta.Depth, msaa);
@@ -88,7 +91,7 @@ public sealed class GfxTextures
         var props = new GfxTextureProperties((float)meta.Lod, meta.Preset, meta.Anisotropy, meta.CompareTextureFunc,
             meta.BorderColor);
 
-        var newTexRef = CreateTextureInternal(in desc, in props, out var newMeta);
+        var newTexRef = CreateDriverTexture(in desc, in props, out var newMeta);
         _textureStore.Replace(textureId, in newMeta, in newTexRef, out _);
         return newTexRef;
     }
@@ -151,7 +154,7 @@ public sealed class GfxTextures
     }
 
 
-    private GfxRefToken<TextureId> CreateTextureInternal(in GfxTextureDescriptor desc, in GfxTextureProperties props,
+    private GfxRefToken<TextureId> CreateDriverTexture(in GfxTextureDescriptor desc, in GfxTextureProperties props,
         out TextureMeta meta)
     {
         ValidateTextureDescriptor(in desc, in props);
@@ -186,7 +189,6 @@ public sealed class GfxTextures
             (byte)levels, (byte)samples, props.Preset, desc.Kind, props.Anisotropy, desc.Format,
             props.CompareTextureFunc, props.BorderColor
         );
-
 
         return texRef;
     }

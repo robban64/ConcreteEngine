@@ -21,6 +21,7 @@ public interface IMeshRepository
 {
     IMeshLayout Get(MeshId meshId);
 }
+
 // TODO Delete
 internal sealed class MeshRepository : IMeshRepository
 {

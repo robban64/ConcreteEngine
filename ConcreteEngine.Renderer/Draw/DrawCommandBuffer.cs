@@ -55,7 +55,7 @@ public sealed class DrawCommandBuffer
         _indexBuffer[_submitIdx] = new DrawCommandRef(meta, _submitIdx);
 
         //_transformBuffer[_submitIdx] = new DrawObjectUniform(model: in model, normal: in normal);
-        DrawObjectUniform.Fill(in model,in normal, out _transformBuffer[_submitIdx]);
+        DrawObjectUniform.Fill(in model, in normal, out _transformBuffer[_submitIdx]);
         _submitIdx++;
     }
 
@@ -86,7 +86,6 @@ public sealed class DrawCommandBuffer
             ref readonly var transform = ref drawTransforms[i].Transform;
             TransformUtils.CreateNormalMatrix(in transform, out var normalModel);
             DrawObjectUniform.Fill(in transform, in normalModel, out transformBuffer[i]);
-
         }
 
         _submitIdx += count;

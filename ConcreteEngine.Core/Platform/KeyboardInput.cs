@@ -13,6 +13,8 @@ internal sealed class KeyboardInput : IDisposable
     private readonly HashSet<Key> _keysPressed = [];
     private readonly HashSet<Key> _keysReleased = [];
 
+    internal bool Enabled { get; set; }
+
     public KeyboardInput(IKeyboard keyboard)
     {
         _keyboard = keyboard;
@@ -20,15 +22,19 @@ internal sealed class KeyboardInput : IDisposable
         _keyboard.KeyUp += OnKeyUp;
     }
 
-    public void Update()
+    public void Update(bool enable)
     {
+        Enabled = enable;
+
         _keysPressed.Clear();
         _keysReleased.Clear();
+        if (!Enabled) _keysDown.Clear();
         //_keysDown.Clear();
     }
 
     private void OnKeyDown(IKeyboard keyboard, Key key, int scancode)
     {
+        if (!Enabled) return;
         if (_keysDown.Add(key))
         {
             _keysPressed.Add(key);
@@ -37,6 +43,7 @@ internal sealed class KeyboardInput : IDisposable
 
     private void OnKeyUp(IKeyboard keyboard, Key key, int scancode)
     {
+        if (!Enabled) return;
         _keysDown.Remove(key);
         _keysReleased.Add(key);
     }

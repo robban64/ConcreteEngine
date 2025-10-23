@@ -72,7 +72,7 @@ public sealed class ActionSequenceMachine<TCtx>
 
     public ExecutionResult Run(TCtx context)
     {
-        if(context is null) throw new ArgumentNullException(nameof(context));
+        if (context is null) throw new ArgumentNullException(nameof(context));
         ArgumentOutOfRangeException.ThrowIfLessThan(_registerActions.Count, 2);
 
         _froozen = true;

@@ -49,5 +49,4 @@ public sealed class GfxResourceApi
     {
         public static TypePair Of<TId, TMeta>() => new(typeof(TId), typeof(TMeta));
     }
-
 }

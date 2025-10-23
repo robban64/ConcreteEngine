@@ -6,9 +6,14 @@ using ConcreteEngine.Graphics.Gfx.Resources;
 
 namespace ConcreteEngine.Graphics.Gfx.Internal;
 
-internal sealed class GfxContextInternal(IGraphicsDriver driver, GfxResourceRepository repositories, GfxStoreHub stores)
+internal sealed class GfxContextInternal(
+    IGraphicsDriver driver,
+    GfxResourceRepository repositories,
+    GfxStoreHub stores,
+    GfxResourceDisposer disposer)
 {
     public IGraphicsDriver Driver { get; } = driver;
     public GfxResourceRepository Repositories { get; } = repositories;
     public GfxStoreHub Stores { get; } = stores;
+    public GfxResourceDisposer Disposer { get; } = disposer;
 }

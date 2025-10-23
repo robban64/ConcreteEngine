@@ -1,17 +1,16 @@
 namespace ConcreteEngine.Graphics.Gfx.Resources;
 
-internal readonly struct DeleteResourceCommand(
-    in GfxHandle handle,
-    NativeHandle nativeHandle,
-    int idValue,
-    ushort priority,
-    bool replace
-)
+internal readonly record struct DeleteResourceCommand(
+    GfxHandle Handle,
+    NativeHandle BackendHandle,
+    int GfxId,
+    ushort Priority,
+    bool Replace)
 {
-    public GfxHandle Handle { get; init; } = handle;
-    public NativeHandle NativeHandle { get; init; } = nativeHandle;
-    public int IdValue { get; init; } = idValue;
-    public ushort Priority { get; init; } = priority;
-    public bool Replace { get; init; } = replace;
+    public static DeleteResourceCommand MakeReplace(GfxHandle gfxHandle, NativeHandle bkHandle, ushort priority = 0)
+        => new(gfxHandle, bkHandle, 0, priority, true);
 
+    public static DeleteResourceCommand MakeDelete(GfxHandle gfxHandle, NativeHandle bkHandle, int gfxId,
+        ushort priority = 0)
+        => new(gfxHandle, bkHandle, gfxId, priority, false);
 }

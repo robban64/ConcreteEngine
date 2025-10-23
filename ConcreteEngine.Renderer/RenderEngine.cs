@@ -39,6 +39,7 @@ public sealed class RenderEngine
     public bool Initialized { get; private set; } = false;
 
     public DrawCommandBuffer CommandBuffer => _drawPipeline.CommandBuffer;
+    public IRenderFboRegistry FboRegistry => _renderRegistry.FboRegistry;
 
     public RenderEngine(GraphicsRuntime graphics, RenderSceneSnapshot sceneSnapshot, MeshId fsqMesh)
     {
@@ -92,16 +93,10 @@ public sealed class RenderEngine
     }
 
     //
-    public void RenderEmptyFrame(in RenderFrameInfo frameInfo)
-    {
-        _graphics.BeginFrame(frameInfo.ToGfxFrameInfo());
-        _graphics.EndFrame(out _);
-    }
-
     public void SubmitMaterialDrawData(in DrawMaterialPayload payload, ReadOnlySpan<TextureSlotInfo> slots) =>
         _drawPipeline.SubmitMaterialDrawData(in payload, slots);
 
-
+    //
     public void PrepareFrame(
         in RenderFrameInfo frameInfo,
         in RenderRuntimeParams runtimeParams,
@@ -118,7 +113,7 @@ public sealed class RenderEngine
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public void FillDrawBuffers() => _drawPipeline.PrepareDrawBuffers();
+    public void CollectDrawBuffers() => _drawPipeline.PrepareDrawBuffers();
 
     public void StartFrame(BeginFrameStatus status)
     {
@@ -126,7 +121,7 @@ public sealed class RenderEngine
         _graphics.BeginFrame(frameInfo.ToGfxFrameInfo());
 
         if (status == BeginFrameStatus.Resize)
-            _renderRegistry.FboRegistry.RecreateSizedFrameBuffer(frameInfo.OutputSize);
+            _renderRegistry.FboRegistry.RecreateScreenDependentFbo(frameInfo.OutputSize);
     }
 
     public void UploadFrameData()
@@ -165,6 +160,12 @@ public sealed class RenderEngine
     public void EndRenderFrame(out GfxFrameResult frameResult)
     {
         _graphics.EndFrame(out frameResult);
+    }
+
+    public void RenderEmptyFrame(in RenderFrameInfo frameInfo)
+    {
+        _graphics.BeginFrame(frameInfo.ToGfxFrameInfo());
+        _graphics.EndFrame(out _);
     }
 
     public void Shutdown()

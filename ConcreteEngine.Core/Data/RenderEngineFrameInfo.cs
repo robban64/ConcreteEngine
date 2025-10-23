@@ -9,7 +9,7 @@ using ConcreteEngine.Renderer.State;
 
 namespace ConcreteEngine.Core.Data;
 
-public sealed class RenderFrameInfo
+public sealed class RenderEngineFrameInfo
 {
     public long FrameIndex { get; private set; } = -1;
     public float Alpha { get; private set; } = 0;
@@ -19,14 +19,24 @@ public sealed class RenderFrameInfo
     public Size2D PrevOutputSize { get; private set; }
 
     public GfxFrameResult GfxResult { get; private set; }
+    public ref readonly RenderFrameInfo GetRenderFrameInfo() => ref _renderFrameInfo;
+
+    private RenderFrameInfo _renderFrameInfo;
 
     private int RandomSeed => (int)FrameIndex + 666;
 
+    public RenderEngineFrameInfo(Size2D outputSize)
+    {
+        OutputSize = outputSize;
+        PrevOutputSize = outputSize;
+    }
+
+
     internal BeginFrameStatus BeginRenderFrame(
         float dt, float alpha,
-        IEngineWindowHost window,
+        EngineWindow window,
         IEngineInputSource input,
-        out Renderer.State.RenderFrameInfo frameInfo,
+        out RenderFrameInfo frameInfo,
         out RenderRuntimeParams runtimeParams)
     {
         FrameIndex++;
@@ -34,7 +44,7 @@ public sealed class RenderFrameInfo
         Alpha = alpha;
         OutputSize = window.OutputSize;
 
-        frameInfo = new Renderer.State.RenderFrameInfo(FrameIndex, dt, Alpha, OutputSize);
+        _renderFrameInfo = frameInfo = new RenderFrameInfo(FrameIndex, dt, Alpha, OutputSize);
         runtimeParams = new RenderRuntimeParams(window.WindowSize, input.MousePosition, Time, 9999);
 
         var status = BeginFrameStatus.None;

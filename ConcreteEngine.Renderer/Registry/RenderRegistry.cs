@@ -59,5 +59,5 @@ internal sealed class RenderRegistry
     public RenderFbo GetRenderFbo(FboTagKey key) => FboRegistry.GetRenderFbo(key)!;
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public bool TryGetRenderFbo(FboTagKey key, out RenderFbo fbo) => FboRegistry.TryGetRenderFbo(key, out fbo);
+    public bool TryGetRenderFbo(FboTagKey key, out RenderFbo? fbo) => FboRegistry.TryGetRenderFbo(key, out fbo);
 }

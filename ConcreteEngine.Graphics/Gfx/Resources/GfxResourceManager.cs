@@ -1,3 +1,9 @@
+#region
+
+using ConcreteEngine.Graphics.Diagnostic;
+
+#endregion
+
 namespace ConcreteEngine.Graphics.Gfx.Resources;
 
 public interface IGfxResourceManager
@@ -24,7 +30,7 @@ internal sealed class GfxResourceManager : IGfxResourceManager
 
     internal void OnDeleted(in DeleteResourceCommand cmd)
     {
-        Console.WriteLine($"Deleted {cmd.Handle.Kind} - Id: {cmd.IdValue}");
+        GfxDebugMetrics.Log(DebugLog.MakeResourceDispose(in cmd));
     }
 
 

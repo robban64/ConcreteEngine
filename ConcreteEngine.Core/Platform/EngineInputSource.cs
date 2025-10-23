@@ -22,17 +22,20 @@ public interface IEngineInputSource
     public Vector2 MouseDelta { get; }
     public Vector2 Scroll { get; }
 
-
-    void Update();
+    void Update(bool enableInput);
 }
 
 public sealed class EngineInputSource : IEngineInputSource
 {
+    private readonly IInputContext _context;
     private readonly KeyboardInput _keyboardInput;
     private readonly MouseInput _mouseInput;
 
+    internal IInputContext InputContext => _context;
+
     public EngineInputSource(IInputContext input)
     {
+        _context = input;
         var keyboard = input.Keyboards.First();
         var mouse = input.Mice.First();
 
@@ -41,10 +44,10 @@ public sealed class EngineInputSource : IEngineInputSource
     }
 
 
-    public void Update()
+    public void Update(bool enableInput)
     {
-        _keyboardInput.Update();
-        _mouseInput.Update();
+        _keyboardInput.Update(enableInput);
+        _mouseInput.Update(enableInput);
     }
 
     // Keyboard API

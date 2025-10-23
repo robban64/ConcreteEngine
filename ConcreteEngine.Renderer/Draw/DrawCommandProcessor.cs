@@ -3,7 +3,7 @@
 using ConcreteEngine.Graphics.Gfx;
 using ConcreteEngine.Graphics.Gfx.Resources;
 using ConcreteEngine.Renderer.Data;
-using ConcreteEngine.Renderer.Registry;
+using ConcreteEngine.Renderer.Definitions;
 
 #endregion
 
@@ -12,12 +12,9 @@ namespace ConcreteEngine.Renderer.Draw;
 internal sealed class DrawCommandProcessor
 {
     private readonly GfxCommands _gfxCmd;
-    private readonly RenderRegistry _registry;
 
     private readonly DrawBuffers _buffers;
     private readonly DrawStateContext _ctx;
-
-    private readonly Action<ShaderId> _applyShader;
 
     internal DrawCommandProcessor(
         DrawStateContext ctx,
@@ -27,9 +24,6 @@ internal sealed class DrawCommandProcessor
         _ctx = ctx;
         _buffers = buffers;
         _gfxCmd = ctxPayload.Gfx.Commands;
-        _registry = ctxPayload.Registry;
-
-        _applyShader = UseShader;
     }
 
 
@@ -48,10 +42,28 @@ internal sealed class DrawCommandProcessor
 
     private void UseShader(ShaderId shaderId) => _gfxCmd.UseShader(shaderId);
 
+    private void BindTextureSlots(ReadOnlySpan<TextureSlotInfo> slots)
+    {
+        for (var i = 0; i < slots.Length; i++)
+        {
+            var value = slots[i];
+
+            if (value.SlotKind == TextureSlotKind.Shadowmap)
+                _gfxCmd.BindTexture(_ctx.DepthTexture, i);
+            else
+                _gfxCmd.BindTexture(value.Texture, i);
+        }
+    }
+
     public void DrawMesh(DrawCommand cmd, int submitIndex)
     {
         if (_ctx.PrevMaterial != cmd.MaterialId)
-            _buffers.ApplyDrawMaterial(cmd.MaterialId, _applyShader);
+        {
+            var texSlots = _buffers.ResolveMaterial(cmd.MaterialId, out var materialMeta);
+            UseShader(materialMeta.ShaderId);
+            BindTextureSlots(texSlots);
+            _buffers.BindMaterialObject(cmd.MaterialId);
+        }
 
         _buffers.BindDrawObject(submitIndex);
         _gfxCmd.BindMesh(cmd.MeshId);

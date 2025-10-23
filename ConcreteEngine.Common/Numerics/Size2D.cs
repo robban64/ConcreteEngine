@@ -13,6 +13,10 @@ public readonly record struct Size2D(
     [property: DataMember(Name = "y")] int Height
 )
 {
+    public Size2D(int size) : this(size, size)
+    {
+    }
+
     public float AspectRatio => Height == 0 ? 0f : (float)Width / Height;
 
     public Size2D ScaleUniform(float factor) => new((int)(Width * factor), (int)(Height * factor));

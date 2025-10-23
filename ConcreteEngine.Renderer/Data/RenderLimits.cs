@@ -2,6 +2,12 @@ namespace ConcreteEngine.Renderer.Data;
 
 public static class RenderLimits
 {
+    public const int MinOutputSize = 16;
+    public const int MaxOutputSize = 8192;
+
+    public const int MinShadowMapSize = 512;
+    public const int MaxShadowMapSize = 8192;
+
     public const int TextureSlots = 16;
     public const int PassSlots = 16;
     public const int UboSlots = 16;
@@ -17,9 +23,6 @@ public static class RenderLimits
     public const int MaxMaterialCount = 1024;
     public const int MaxMaterialBufferCapacity = 1024;
 
-
-    public const int MinShadowMapSize = 512;
-    public const int MaxShadowMapSize = 8192;
 
     public const int MaxSpriteBatchSize = 1024;
 }

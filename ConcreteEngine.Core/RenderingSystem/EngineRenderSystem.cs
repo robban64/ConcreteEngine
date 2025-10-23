@@ -19,7 +19,6 @@ using ConcreteEngine.Renderer.Definitions;
 using ConcreteEngine.Renderer.Descriptors;
 using ConcreteEngine.Renderer.Passes;
 using ConcreteEngine.Renderer.State;
-using RenderFrameInfo = ConcreteEngine.Renderer.State.RenderFrameInfo;
 
 #endregion
 
@@ -31,32 +30,38 @@ public interface IRenderingSystem : IGameEngineSystem
     BatcherRegistry Batchers { get; }
 }
 
-public sealed class RenderingSystem : IRenderingSystem
+public sealed class EngineRenderSystem : IRenderingSystem
 {
     public BatcherRegistry Batchers { get; }
     public RenderSceneProps SceneProperties { get; }
     public RenderSceneSnapshot SceneSnapshot => SceneProperties.Snapshot;
 
-    private readonly IEngineWindowHost _window;
+    private readonly EngineWindow _window;
     private readonly GraphicsRuntime _graphics;
     private readonly RenderEngine _renderer;
     private readonly AssetSystem _assets;
 
     private readonly RenderEntityBus _renderEntityBus;
 
-    internal RenderingSystem(IEngineWindowHost window, GraphicsRuntime graphics, AssetSystem assets)
+    internal RenderEngine RenderEngine => _renderer;
+
+    private readonly EngineEventBus _eventBus;
+
+    internal EngineRenderSystem(EngineWindow window, GraphicsRuntime graphics, AssetSystem assets,
+        EngineEventBus eventBus)
     {
         _window = window;
         _graphics = graphics;
         _assets = assets;
         _graphics = graphics;
+        _eventBus = eventBus;
         SceneProperties = new RenderSceneProps();
         Batchers = new BatcherRegistry();
-        
-        
+
+
         PrimitiveMeshes.CreatePrimitives(graphics.Gfx.Meshes);
         InvalidOpThrower.ThrowIf(PrimitiveMeshes.FsqQuad == 0 || PrimitiveMeshes.SkyboxCube == 0);
-        
+
         _renderer = new RenderEngine(graphics, SceneProperties.Snapshot, PrimitiveMeshes.FsqQuad);
         _renderEntityBus = new RenderEntityBus();
     }
@@ -70,29 +75,52 @@ public sealed class RenderingSystem : IRenderingSystem
 
     internal void RenderEmptyFrame(in RenderFrameInfo frameInfo) => _renderer.RenderEmptyFrame(in frameInfo);
 
+    internal void OnRecreateFrameBuffer(in RecreateRequest req)
+    {
+        _graphics.Gfx.Commands.BindFramebuffer(default);
+        _graphics.Gfx.Commands.UnbindAllTextures();
+
+        if (req.SpecialAction == RecreateSpecialAction.RecreateScreenDependentFbo)
+            _renderer.FboRegistry.RecreateScreenDependentFbo(_window.OutputSize);
+        else if (req.SpecialAction == RecreateSpecialAction.RecreateShadowFbo)
+        {
+            SceneProperties.SetShadowDefault(req.Param0);
+            _renderer.FboRegistry.RecreateFixedFrameBuffer<ShadowPassTag>(FboVariant.Default,
+                new Size2D(req.Param0, req.Param0));
+        }
+    }
+
     internal void PreRender(
+        BeginFrameStatus status,
         in RenderFrameInfo frameInfo,
         in RenderRuntimeParams runtimeParams,
         in RenderViewSnapshot viewSnapshot)
     {
+        /*
+        if (status == BeginFrameStatus.Resize)
+        {
+            _graphics.Gfx.Commands.BindFramebuffer(default);
+            _graphics.Gfx.Commands.UnbindAllTextures();
+            _renderer.RecreateScreenRelativeFbo(frameInfo.OutputSize);
+        }
+        */
         _renderEntityBus.Reset();
         _renderEntityBus.CollectEntities();
 
         var snapshot = SceneProperties.Commit();
         //_sceneDrawProducer.SetSceneGlobals(snapshot);
         _renderer.PrepareFrame(in frameInfo, in runtimeParams, in viewSnapshot);
-    }
 
-    internal void FillDrawBuffers(float alpha)
-    {
+        // fill buffers
         _renderEntityBus.FlushEntities(_renderer.CommandBuffer);
         SubmitMaterialData();
-        _renderer.FillDrawBuffers();
+        _renderer.CollectDrawBuffers();
+
+        _renderer.StartFrame(status);
     }
 
-    internal void ExecuteFrame(BeginFrameStatus status, out GfxFrameResult frameResult)
+    internal void ExecuteFrame(out GfxFrameResult frameResult)
     {
-        _renderer.StartFrame(status);
         _renderer.UploadFrameData();
         _renderer.Render();
         _renderer.EndRenderFrame(out frameResult);

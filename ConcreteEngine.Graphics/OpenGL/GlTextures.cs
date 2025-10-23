@@ -32,6 +32,16 @@ internal sealed class GlTextures : IGraphicsDriverModule
         return _textureStore.Add(new GlTextureHandle(texture));
     }
 
+    public GfxRefToken<TextureId> CreateReplaceTexture(GfxRefToken<TextureId> texRef, TextureKind kind)
+    {
+        var oldHandle = _textureStore.GetHandle(texRef);
+        _gl.DeleteTextures(1, oldHandle);
+        _gl.CreateTextures(kind.ToGlEnum(), 1, out uint texture);
+
+        var newHandle = new GlTextureHandle(texture);
+        return _textureStore.Replace(texRef, newHandle);
+    }
+
     public void TextureStorage2D(GfxRefToken<TextureId> texRef, Size2D size, BkTextureStoreDesc desc)
     {
         var handle = _textureStore.GetHandle(texRef);

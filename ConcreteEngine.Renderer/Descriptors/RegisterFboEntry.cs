@@ -19,7 +19,7 @@ public sealed class RegisterFboEntry
     public bool DepthStencilBuffer { get; private set; }
     public RenderBufferMsaa Multisample { get; private set; } = RenderBufferMsaa.None;
 
-    public RenderFbo.SizePolicy? FboSizePolicy { get; private set; }
+    public RenderFboSizePolicy? FboSizePolicy { get; private set; }
 
     public RegisterFboEntry AttachColorTexture(GfxFboColorTextureDesc desc,
         RenderBufferMsaa multisample = RenderBufferMsaa.None)
@@ -43,20 +43,20 @@ public sealed class RegisterFboEntry
 
     public RegisterFboEntry UseCalculatedSize(CalcFboOutputDel calcDel, Vector2 ratio)
     {
-        FboSizePolicy = RenderFbo.SizePolicy.Calculated(calcDel, ratio);
+        FboSizePolicy = RenderFboSizePolicy.Calculated(calcDel, ratio);
         return this;
     }
 
     public RegisterFboEntry UseFixedSize(Size2D fixedSize)
     {
-        FboSizePolicy = RenderFbo.SizePolicy.Fixed(fixedSize);
+        FboSizePolicy = RenderFboSizePolicy.Fixed(fixedSize);
         return this;
     }
 
 
     internal GfxFrameBufferDescriptor Build(Size2D outputSize)
     {
-        FboSizePolicy ??= RenderFbo.SizePolicy.Default();
+        FboSizePolicy ??= RenderFboSizePolicy.Default();
         var size = FboSizePolicy.Calculate(outputSize);
 
         InvalidOpThrower.ThrowIf(size.Width < 1 || size.Height < 1, nameof(size));

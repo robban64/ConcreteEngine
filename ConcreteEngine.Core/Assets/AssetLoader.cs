@@ -41,6 +41,11 @@ internal sealed class AssetLoader
     public List<MaterialTemplate> LoadAllMaterials(MaterialManifest manifest)
         => _materialLoader.LoadMaterials(_store, manifest.Records)!;
 
+    public void ReloadShader(Shader shader, AssetFileEntry vertFile, AssetFileEntry fragFile)
+    {
+        _shaderLoader.ReloadShader(shader, vertFile, fragFile, out var specs);
+    }
+
 
     public void ActivateLoader(AssetStore store, AssetGfxUploader gfx)
     {

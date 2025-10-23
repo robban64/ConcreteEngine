@@ -23,7 +23,7 @@ internal sealed class RenderEntityBus
 
     private int _idx = 0;
     private DrawEntity[] _entities = new DrawEntity[DefaultCapacity];
-    
+
     private int ActiveSkyCount => _world?.Sky.IsActive ?? false ? 1 : 0;
     private int ActiveTerrainCount => _world?.Terrain.IsActive ?? false ? 1 : 0;
     public int DrawCount => (_world?.EntityCount ?? 0) + ActiveSkyCount + ActiveTerrainCount;
@@ -77,7 +77,6 @@ internal sealed class RenderEntityBus
             );
             TransformUtils.CreateNormalMatrix(in model, out var normal);
             buffer.SubmitDraw(cmd, meta, in model, in normal);
-
         }
     }
 

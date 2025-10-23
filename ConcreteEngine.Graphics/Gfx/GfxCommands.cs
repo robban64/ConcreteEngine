@@ -90,6 +90,7 @@ public sealed class GfxCommands
         //_stateFunc = new GfxPassStateFunc(BlendMode.Unset, CullMode.Unset, DepthMode.Unset);
 
         _driver.EndFrame();
+        _boundTextures.AsSpan().Clear();
     }
 
     public void BeginScreenPass(in GfxPassClear passClear, in GfxPassState states)
@@ -261,6 +262,8 @@ public sealed class GfxCommands
         var refHandle = _store.TextureStore.GetRefHandle(texture);
         _states.BindTexture(refHandle, slot);
     }
+
+    public void UnbindAllTextures() => _states.UnbindAllTextures();
 
     public void UseShader(ShaderId id)
     {

@@ -22,7 +22,6 @@ public readonly struct GfxFrameBufferDescriptor(
     public bool ColorBuffer { get; init; } = colorBuffer;
     public bool DepthStencilBuffer { get; init; } = depthStencilBuffer;
     public RenderBufferMsaa Multisample { get; init; } = multisample;
-
 }
 
 public readonly record struct GfxFboColorTextureDesc(

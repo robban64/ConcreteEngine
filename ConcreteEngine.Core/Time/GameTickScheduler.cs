@@ -13,7 +13,7 @@ internal sealed class GameTickScheduler
     private const int MaxTicksPerFrame = 6;
 
     private FrameTickTimer _gameTicker = new(1f / GameTicksPerSecond);
-    private FrameTickTimer _fpsTicker = new(1f);
+    private FrameTickTimer _fpsTicker = new(0.5f);
 
     private SimpleTicker _animationClock = new(5, GameTicksPerSecond);
 

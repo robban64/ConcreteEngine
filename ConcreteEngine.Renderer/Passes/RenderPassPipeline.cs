@@ -77,7 +77,7 @@ public sealed class RenderPassPipeline
 
         var key = new FboTagKey(pass.PassKey.TagIndex, pass.PassKey.Variant);
         if (_renderRegistry.TryGetRenderFbo(key, out var fbo))
-            _ctx.AttachPass(fbo, pass.PassKey);
+            _ctx.AttachPass(fbo!, pass.PassKey);
         else if (pass.PassOp == PassOpKind.Screen)
             _ctx.AttachScreenPass(pass.PassKey, _outputSize);
         else

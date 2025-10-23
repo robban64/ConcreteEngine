@@ -21,6 +21,8 @@ internal class MouseInput : IDisposable
 
     private Vector2 _lastPos;
 
+    public bool Enabled { get; set; } = true;
+
     public MouseInput(IMouse mouse)
     {
         _mouse = mouse;
@@ -32,12 +34,20 @@ internal class MouseInput : IDisposable
         _lastPos = Position;
     }
 
-    public void Update()
+    public void Update(bool enable)
     {
-        for (var i = 0; i < BufferSize; i++)
+        Enabled = enable;
+
+        _buttonsPressed.AsSpan().Clear();
+        _buttonsReleased.AsSpan().Clear();
+
+        if (!Enabled)
         {
-            _buttonsPressed[i] = 0;
-            _buttonsReleased[i] = 0;
+            _buttonsDown.AsSpan().Clear();
+            PositionDelta = Vector2.Zero;
+            _lastPos = Vector2.Zero;
+            Scroll = Vector2.Zero;
+            return;
         }
 
         PositionDelta = Position - _lastPos;
@@ -50,17 +60,19 @@ internal class MouseInput : IDisposable
 
     private void OnScroll(IMouse mouse, ScrollWheel scroll)
     {
+        if (!Enabled) return;
         Scroll = new Vector2(scroll.X, scroll.Y);
     }
 
     private void OnMouseMove(IMouse mouse, Vector2 position)
     {
+        if (!Enabled) return;
         Position = position;
     }
 
     private void OnMouseDown(IMouse mouse, MouseButton button)
     {
-        if ((int)button < 0) return;
+        if (!Enabled || (int)button < 0) return;
 
         if (_buttonsDown[(int)button] == 0)
         {
@@ -72,7 +84,7 @@ internal class MouseInput : IDisposable
 
     private void OnMouseUp(IMouse mouse, MouseButton button)
     {
-        if ((int)button < 0) return;
+        if (!Enabled || (int)button < 0) return;
 
         _buttonsDown[(int)button] = 0;
         _buttonsReleased[(int)button] = 1;

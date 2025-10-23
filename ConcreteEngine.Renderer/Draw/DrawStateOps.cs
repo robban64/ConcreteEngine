@@ -37,7 +37,7 @@ public sealed class DrawStateOps
     {
         _ctx.SetDepthMode();
 
-        _renderView.ApplyLightViewOverride(_sceneSnapshot.DirLight.Direction);
+        _renderView.ApplyLightViewOverride(_sceneSnapshot.DirLight.Direction, _sceneSnapshot);
         _drawBuffers.UploadShadow(in _renderView.ProjectionViewMatrix);
         _drawBuffers.UploadCameraView(_renderView);
     }

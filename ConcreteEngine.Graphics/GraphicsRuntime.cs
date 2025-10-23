@@ -1,7 +1,6 @@
 #region
 
 using ConcreteEngine.Common;
-using ConcreteEngine.Common.Numerics;
 using ConcreteEngine.Graphics.Error;
 using ConcreteEngine.Graphics.Gfx;
 using ConcreteEngine.Graphics.Gfx.Internal;
@@ -36,8 +35,6 @@ public sealed class GraphicsRuntime : IGraphicsRuntime
 
     private GfxContext _gfxContext = null!;
 
-    private GfxFrameInfo _frameCtx;
-
     public GraphicsRuntime()
     {
     }
@@ -53,11 +50,11 @@ public sealed class GraphicsRuntime : IGraphicsRuntime
 
         _resources = new GfxResourceManager();
         _repository = new GfxResourceRepository(_resources);
-        _disposer = new GfxResourceDisposer(_resources, _repository);
+        _disposer = new GfxResourceDisposer(_resources);
 
         InitDriver(glConfig);
 
-        var gfxCtxInternal = new GfxContextInternal(_driver, _repository, _resources.GfxStoreHub);
+        var gfxCtxInternal = new GfxContextInternal(_driver, _repository, _resources.GfxStoreHub, _disposer);
         var gfxResourceContext = new GfxResourceContext(_resources, _repository, _disposer);
         _gfxContext = new GfxContext(gfxCtxInternal, gfxResourceContext);
 
@@ -75,7 +72,6 @@ public sealed class GraphicsRuntime : IGraphicsRuntime
 
     public void BeginFrame(in GfxFrameInfo frameCtx)
     {
-        _frameCtx = frameCtx;
         _gfxContext.Commands.BeginFrame(in frameCtx);
     }
 
@@ -93,5 +89,4 @@ public sealed class GraphicsRuntime : IGraphicsRuntime
     public void Dispose()
     {
     }
-
 }

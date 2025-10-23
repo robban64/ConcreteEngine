@@ -1,7 +1,6 @@
 #region
 
 using System.Numerics;
-using ConcreteEngine.Common;
 using ConcreteEngine.Common.Numerics;
 using ConcreteEngine.Core.Assets;
 using ConcreteEngine.Core.Assets.Meshes;
@@ -10,8 +9,6 @@ using ConcreteEngine.Core.Configuration;
 using ConcreteEngine.Core.RenderingSystem;
 using ConcreteEngine.Core.Scene;
 using ConcreteEngine.Core.Scene.Entities;
-using ConcreteEngine.Graphics;
-using ConcreteEngine.Graphics.Primitives;
 using ConcreteEngine.Renderer.Descriptors;
 using Shader = ConcreteEngine.Core.Assets.Shaders.Shader;
 
@@ -34,16 +31,16 @@ public sealed class Demo3DScene : GameScene
         rb.SetShadowDefault(2048);
 
         // Skybox
-        var skyboxMaterial = materialStore.CreateMaterial("SkyboxMat","SkyboxMat1");
+        var skyboxMaterial = materialStore.CreateMaterial("SkyboxMat", "SkyboxMat1");
         Context.World.Sky.SetSkyMaterial(skyboxMaterial.Id);
-        
+
         // Terrain
         var heightmap = assets.Store.GetByName<Texture2D>("Heightmap");
         var terrainMat = assets.MaterialStore.CreateMaterial("TerrainMat", "TerrainMat1");
         terrainMat.State.UvRepeat = 28;
         terrainMat.State.Shininess = 10;
         terrainMat.State.Specular = 0.04f;
-        
+
         Context.World.Terrain.CreateTerrainMesh(heightmap);
         Context.World.Terrain.SetMaterial(terrainMat.Id);
 

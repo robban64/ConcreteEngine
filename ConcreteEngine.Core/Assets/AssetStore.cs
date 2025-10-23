@@ -34,7 +34,6 @@ internal sealed class AssetStore : IAssetStore
     private AssetFileId MakeAssetFileId() => new(++_assetFileId);
 
 
-    // AssetObject abstract class
     private readonly Dictionary<AssetId, AssetObject> _assets = new(32);
     private readonly Dictionary<AssetFileId, AssetFileEntry> _files = new(32);
     private readonly Dictionary<AssetId, AssetFileId[]> _bindings = new(32);
@@ -42,8 +41,24 @@ internal sealed class AssetStore : IAssetStore
 
     private readonly Dictionary<Type, AssetTypeMeta> _typeMeta = new(8);
 
+    internal IReadOnlyDictionary<Type, AssetTypeMeta> GetAssetTypeMeta() => _typeMeta;
+
     internal AssetStore()
     {
+    }
+
+    public bool TryGetFileEntry(AssetFileId id, out AssetFileEntry? entry) => _files.TryGetValue(id, out entry);
+
+    internal bool TryGetFileIds(AssetId id, out ReadOnlySpan<AssetFileId> fileIds)
+    {
+        if (_bindings.TryGetValue(id, out var res))
+        {
+            fileIds = res;
+            return true;
+        }
+
+        fileIds = ReadOnlySpan<AssetFileId>.Empty;
+        return false;
     }
 
     public T GetByRef<T>(AssetRef<T> assetRef) where T : AssetObject
@@ -72,26 +87,38 @@ internal sealed class AssetStore : IAssetStore
         return false;
     }
 
+    internal bool TryGetByRef(AssetId assetId, Type type, out AssetObject? asset)
+    {
+        if (_assets.TryGetValue(assetId, out var obj))
+        {
+            asset = obj;
+            return true;
+        }
+
+        asset = null;
+        return false;
+    }
+
     public bool TryGetByName<T>(string name, out T? asset) where T : AssetObject
     {
-        asset = null;
-        if (!_names.TryGetValue(AssetKey.For<T>(name), out var id)) return false;
-        if (!_assets.TryGetValue(id, out var objT)) return false;
-        if (objT is T t)
+        if (TryGetByName(name, typeof(T), out var objT) && objT is T t)
         {
             asset = t;
             return true;
         }
 
+        asset = null;
         return false;
     }
 
-    private ReadOnlySpan<AssetFileId> GetFileIds(AssetId id)
+    internal bool TryGetByName(string name, Type type, out AssetObject? asset)
     {
-        if (_bindings.TryGetValue(id, out var arr)) return arr!;
-        throw new InvalidCastException($"Asset '{id}' not found or incorrect type.");
+        asset = null;
+        if (!_names.TryGetValue(new AssetKey(type, name), out var id)) return false;
+        if (!_assets.TryGetValue(id, out var objT)) return false;
+        asset = objT;
+        return true;
     }
-
 
     public AssetTypeMetaSnapshot GetMetaSnapshot<TAsset>() where TAsset : AssetObject =>
         _typeMeta[typeof(TAsset)].ToSnapshot();
@@ -135,9 +162,7 @@ internal sealed class AssetStore : IAssetStore
         return asset;
     }
 
-    internal TAsset RegisterWithFiles<TAsset, TDesc>(
-        TDesc descriptor,
-        AssetFileAssembleDel<TAsset, TDesc> factory)
+    internal TAsset RegisterWithFiles<TAsset, TDesc>(TDesc descriptor, AssetFileAssembleDel<TAsset, TDesc> factory)
         where TAsset : AssetObject where TDesc : class, IAssetDescriptor
     {
         var id = MakeAssetId();

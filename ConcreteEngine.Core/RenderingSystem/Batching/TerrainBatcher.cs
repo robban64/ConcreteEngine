@@ -78,7 +78,7 @@ public sealed class TerrainBatcher : RenderBatcher<TerrainBatchResult>
     public override void Dispose()
     {
         if (MeshId.IsValid())
-            Gfx.ResourceContext.Disposer.EnqueueRemoval(MeshId, false);
+            Gfx.ResourceContext.Disposer.EnqueueRemoval(MeshId);
     }
 
     private void GenerateMesh()

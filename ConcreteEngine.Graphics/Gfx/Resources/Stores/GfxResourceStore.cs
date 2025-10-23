@@ -185,8 +185,8 @@ internal sealed class GfxResourceStore<TId, TMeta> : IGfxResourceStore<TId>
 
     private void UpdateMetrics()
     {
-        GfxDebugMetrics.GetStoreMetrics<TId>().GfxStoreCount = GetAliveCount();
-        GfxDebugMetrics.GetStoreMetrics<TId>().GfxStoreFree = _free.Count;
+        GfxDebugMetrics.GetStoreMetrics<TId>().GfxCount = GetAliveCount();
+        GfxDebugMetrics.GetStoreMetrics<TId>().GfxFree = _free.Count;
     }
 
 

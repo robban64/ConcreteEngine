@@ -5,7 +5,7 @@ using ImGuiNET;
 
 #endregion
 
-namespace Tools.DebugInterface.Components;
+namespace Core.DebugTools.Components;
 
 public sealed class DebugConsoleCtx(DebugConsole debugConsole)
 {

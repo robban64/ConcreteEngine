@@ -54,11 +54,13 @@ public sealed class AssetSystem : IAssetSystem
         _pendingQueue = new AssetPendingQueue();
     }
 
-    internal AssetStore InternalStore => _assetStore;
+    internal AssetStore StoreImpl => _assetStore;
     public IAssetStore Store => _assetStore;
+
+    
+    internal MaterialStore MaterialStoreImpl => _materialStore;
     public IMaterialStore MaterialStore => _materialStore;
 
-    internal MaterialStore Materials => _materialStore;
 
     internal void Initialize()
     {

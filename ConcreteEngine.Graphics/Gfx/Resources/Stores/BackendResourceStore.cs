@@ -123,8 +123,8 @@ internal sealed class BackendResourceStore<TId, THandle> : IBackendResourceStore
 
     private void UpdateMetrics()
     {
-        GfxDebugMetrics.GetStoreMetrics<TId>().BackendStoreCount = GetAliveCount();
-        GfxDebugMetrics.GetStoreMetrics<TId>().BackendStoreFree = _free.Count;
+        GfxDebugMetrics.GetStoreMetrics<TId>().BkCount = GetAliveCount();
+        GfxDebugMetrics.GetStoreMetrics<TId>().BkFree = _free.Count;
     }
 
     private int GetAliveCount()

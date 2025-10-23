@@ -8,7 +8,7 @@ using ConcreteEngine.Graphics.Gfx.Definitions;
 using ConcreteEngine.Graphics.Gfx.Resources;
 using ConcreteEngine.Renderer.Data;
 using ConcreteEngine.Renderer.Definitions;
-using Tools.DebugInterface.Data;
+using Core.DebugTools.Data;
 
 #endregion
 
@@ -148,5 +148,4 @@ public sealed class MaterialStore : IMaterialStore
         return NextId();
     }
 
-    [DebugWatch] internal string MaterialDebugInfo => $"{Count}({FreeSlots})";
 }

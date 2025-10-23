@@ -1,58 +1,68 @@
 #region
 
+using Core.DebugTools.Components;
+using Core.DebugTools.Data;
 using ImGuiNET;
 using Silk.NET.Input;
 using Silk.NET.OpenGL;
 using Silk.NET.OpenGL.Extensions.ImGui;
 using Silk.NET.Windowing;
-using Tools.DebugInterface.Components;
-using Tools.DebugInterface.Data;
 
 #endregion
 
-namespace Tools.DebugInterface;
+namespace Core.DebugTools;
 
-public sealed class DebugInterfaceService : IDisposable
+public sealed class DebugService : IDisposable
 {
     private readonly ImGuiController _controller;
-    public DebugRegistry Registry { get; }
+
     public DebugDataContainer Data { get; }
+    public DebugTextData TextData { get; }
 
     public DebugConsole DevConsole { get; }
     private readonly DebugLeftPanelGui _leftPanel;
     private readonly DebugRightPanelGui _rightPanel;
 
-    public DebugInterfaceService(GL gl, IWindow window, IInputContext inputCtx)
+    public DebugService(GL gl, IWindow window, IInputContext inputCtx)
     {
         _controller = new ImGuiController(gl, window, inputCtx);
         Data = new DebugDataContainer();
-        Registry = new DebugRegistry();
+        TextData = new DebugTextData();
+
         DevConsole = new DebugConsole();
-        _leftPanel = new DebugLeftPanelGui(Data);
-        _rightPanel = new DebugRightPanelGui(Data);
+        _leftPanel = new DebugLeftPanelGui(TextData);
+        _rightPanel = new DebugRightPanelGui(TextData);
     }
 
-    public void UpdateRead()
+    public void RefreshSceneMetrics()
     {
-        var entityCount = Registry.ReadBound("EntityCount");
-        Data.EntityCount = $"Entities: {entityCount}";
-
-        var shadowSize = Registry.ReadBound("ShadowMapSize");
-        Data.ShadowMapSize = $"ShadowMapSize: {shadowSize}";
+        Data.SceneMetrics = DebugRouter.PullSceneMetrics?.Invoke() ?? default;
+        TextData.UpdateSceneMetrics(in Data.SceneMetrics);
     }
 
-    public void UpdateSlowRead1()
+    public void RefreshFrameMetrics()
     {
-        var matInfo = Registry.ReadBound("MaterialDebugInfo");
-        Data.MaterialDebugInfo = $"Materials: {matInfo}";
+        Data.FrameMetrics = DebugRouter.PullFrameMetrics?.Invoke() ?? default;
+        TextData.UpdateFrameMetrics(in Data.FrameMetrics);
     }
 
-    public void UpdateSlowRead2()
+    public void RefreshStoreMetrics()
     {
-        Data.FrameMetrics.Allocated = $"Allocated: {FormatMb(GC.GetAllocatedBytesForCurrentThread())}";
+        Data.MaterialMetrics = DebugRouter.PullMaterialMetrics?.Invoke() ?? default;
+        DebugRouter.FillAssetMetrics?.Invoke(Data.AssetMetrics);
+        DebugRouter.FillGfxStoreMetrics?.Invoke(Data.GfxStoreMetrics);
+        
+        TextData.UpdateStoreMetrics(Data);
+    }
+
+    public void RefreshMemoryMetrics()
+    {
+        Data.MemoryMetrics = DebugRouter.PullMemoryMetrics?.Invoke() ?? default;
+        TextData.UpdateMemoryMetrics(in Data.MemoryMetrics);
     }
 
     private static string FormatMb(long bytes) => $"{bytes / 1024 / 1024} MB";
+    private static string Format(float value) => value.ToString("0.00");
 
 
     public void Dispose() => _controller.Dispose();

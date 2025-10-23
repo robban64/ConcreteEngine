@@ -11,13 +11,13 @@ public interface IInputSystem : IGameEngineSystem
 
 public class InputSystem : IInputSystem
 {
-    private IEngineInputSource _inputSource;
+    public EngineInputSource InputSourceImpl { get; }
+    public IEngineInputSource InputSource => InputSourceImpl;
 
-    public IEngineInputSource InputSource => _inputSource;
-
-    public InputSystem(IEngineInputSource inputSource)
+    public InputSystem(EngineInputSource inputSource)
     {
-        _inputSource = inputSource;
+        InputSourceImpl = inputSource;
+        
     }
 
     public void Initialize()
@@ -26,7 +26,7 @@ public class InputSystem : IInputSystem
 
     public void Update(bool enableInput = true)
     {
-        _inputSource.Update(enableInput);
+        InputSource.Update(enableInput);
     }
 
     public void Shutdown()

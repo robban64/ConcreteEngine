@@ -128,7 +128,7 @@ public sealed class EngineRenderSystem : IRenderingSystem
 
     private void SubmitMaterialData()
     {
-        var matStore = _assets.Materials;
+        var matStore = _assets.MaterialStoreImpl;
 
         Span<TextureSlotInfo> slots = stackalloc TextureSlotInfo[RenderLimits.TextureSlots];
         foreach (var material in matStore.MaterialSpan)

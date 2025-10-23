@@ -11,6 +11,7 @@ namespace ConcreteEngine.Graphics.Diagnostic;
 public static class GfxDebugMetrics
 {
     private static readonly Dictionary<ResourceKind, StoreMetrics> Stores = new(8);
+    public static IReadOnlyDictionary<ResourceKind, StoreMetrics> GetStoreMetrics() => Stores;
 
     private static HashSet<(GfxLogSource, GfxLogLayer)> IgnoreSourceLayer { get; } = [];
     private static HashSet<GfxLogAction> IgnoreAction { get; } = [];
@@ -18,7 +19,8 @@ public static class GfxDebugMetrics
 
     public static Queue<GfxDebugLog> LogQueue = new(16);
 
-    public static IReadOnlyDictionary<ResourceKind, StoreMetrics> GetStoreMetrics() => Stores;
+
+    //public static bool MetricsEnabled { get; private set; } = true;
 
     private static bool _logEnabled = false;
 
@@ -81,9 +83,9 @@ public static class GfxDebugMetrics
 
 public sealed class StoreMetrics
 {
-    public int GfxStoreCount { get; set; }
-    public int GfxStoreFree { get; set; }
+    public int GfxCount { get; set; }
+    public int GfxFree { get; set; }
 
-    public int BackendStoreCount { get; set; }
-    public int BackendStoreFree { get; set; }
+    public int BkCount { get; set; }
+    public int BkFree { get; set; }
 }

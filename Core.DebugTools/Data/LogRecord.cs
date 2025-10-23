@@ -1,4 +1,4 @@
-namespace Tools.DebugInterface.Data;
+namespace Core.DebugTools.Data;
 
 public enum LogLevel
 {

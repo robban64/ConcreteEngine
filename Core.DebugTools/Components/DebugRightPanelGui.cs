@@ -1,15 +1,15 @@
 #region
 
 using System.Numerics;
+using Core.DebugTools.Data;
 using ImGuiNET;
-using Tools.DebugInterface.Data;
-using static Tools.DebugInterface.Components.CommonComponents;
+using static Core.DebugTools.Components.CommonComponents;
 
 #endregion
 
-namespace Tools.DebugInterface.Components;
+namespace Core.DebugTools.Components;
 
-internal sealed class DebugRightPanelGui(DebugDataContainer data)
+internal sealed class DebugRightPanelGui(DebugTextData data)
 {
     public void DrawRight(int width)
     {

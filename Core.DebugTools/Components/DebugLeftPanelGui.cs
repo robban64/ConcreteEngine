@@ -1,15 +1,15 @@
 #region
 
 using System.Numerics;
+using Core.DebugTools.Data;
 using ImGuiNET;
-using Tools.DebugInterface.Data;
-using static Tools.DebugInterface.Components.CommonComponents;
+using static Core.DebugTools.Components.CommonComponents;
 
 #endregion
 
-namespace Tools.DebugInterface.Components;
+namespace Core.DebugTools.Components;
 
-internal sealed class DebugLeftPanelGui(DebugDataContainer data)
+internal sealed class DebugLeftPanelGui(DebugTextData data)
 {
     public void Draw(int width)
     {
@@ -43,18 +43,18 @@ internal sealed class DebugLeftPanelGui(DebugDataContainer data)
     private void DrawSceneMetrics()
     {
         DrawSectionHeader("Scene Metrics");
-        MetricLine(data.EntityCount);
-        MetricLine(data.ShadowMapSize);
+        MetricLine(data.SceneMetrics.EntityCount);
+        MetricLine(data.SceneMetrics.ShadowMapSize);
     }
 
     private void DrawAssetStoreTable()
     {
         DrawSectionHeader("Asset Store");
 
-        if (!string.IsNullOrEmpty(data.MaterialDebugInfo))
+        if (!string.IsNullOrEmpty(data.MaterialMetrics))
         {
             ImGui.PushTextWrapPos(0f);
-            ImGui.TextDisabled(data.MaterialDebugInfo);
+            ImGui.TextDisabled(data.MaterialMetrics);
             ImGui.PopTextWrapPos();
             ImGui.Dummy(new Vector2(0, 4));
         }
@@ -75,18 +75,18 @@ internal sealed class DebugLeftPanelGui(DebugDataContainer data)
             ImGui.TableSetupColumn("Files", ImGuiTableColumnFlags.WidthStretch, 0.35f);
             ImGui.TableHeadersRow();
 
-            foreach (var (type, pair) in data.AssetMetrics)
+            foreach (var it in data.AssetMetrics)
             {
                 ImGui.TableNextRow();
 
                 ImGui.TableSetColumnIndex(0);
-                ImGui.TextUnformatted(type);
+                ImGui.TextUnformatted(it.Name);
 
                 ImGui.TableSetColumnIndex(1);
-                RightAlignCellText(pair.Item1);
+                RightAlignCellText(it.Count);
 
                 ImGui.TableSetColumnIndex(2);
-                RightAlignCellText(pair.Item2);
+                RightAlignCellText(it.Files);
             }
 
             ImGui.EndTable();
@@ -109,18 +109,18 @@ internal sealed class DebugLeftPanelGui(DebugDataContainer data)
             ImGui.TableSetupColumn("BK", ImGuiTableColumnFlags.WidthStretch, 0.35f);
             ImGui.TableHeadersRow();
 
-            foreach (var (k, v) in data.GfxStoreMetrics)
+            foreach (var it in data.GfxStoreMetrics)
             {
                 ImGui.TableNextRow();
 
                 ImGui.TableSetColumnIndex(0);
-                ImGui.TextUnformatted(k);
+                ImGui.TextUnformatted(it.Name);
 
                 ImGui.TableSetColumnIndex(1);
-                RightAlignCellText(v.Item1);
+                RightAlignCellText(it.GfxStore);
 
                 ImGui.TableSetColumnIndex(2);
-                RightAlignCellText(v.Item2);
+                RightAlignCellText(it.BkStore);
             }
 
             ImGui.EndTable();

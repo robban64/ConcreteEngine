@@ -10,7 +10,7 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Demo3D", "Demo3D\Demo3D.csp
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ConcreteEngine.Renderer", "ConcreteEngine.Renderer\ConcreteEngine.Renderer.csproj", "{B2C7ADA5-CEBB-48B4-96ED-2E8CF82D884B}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Tools.DebugInterface", "Tools.DebugInterface\Tools.DebugInterface.csproj", "{F5FEEAB6-E5CC-4415-A47D-AFED2B5C427D}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Core.DebugTools", "Core.DebugTools\Core.DebugTools.csproj", "{F5FEEAB6-E5CC-4415-A47D-AFED2B5C427D}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution

@@ -11,6 +11,7 @@ using Silk.NET.Input;
 using Silk.NET.OpenGL;
 using Silk.NET.Windowing;
 using Core.DebugTools;
+using Core.DebugTools.Components;
 
 #endregion
 
@@ -19,16 +20,15 @@ namespace ConcreteEngine.Core.Diagnostic;
 internal sealed class DebugGateway
 {
     private readonly DebugService _debug;
-    
-    public bool HasBoundCommands {get; private set;}
-    public bool HasBoundMetrics {get; private set;}
+
+    public bool HasBoundCommands { get; private set; }
+    public bool HasBoundMetrics { get; private set; }
     public bool Enabled { get; private set; } = true;
 
     private bool _tickToggle;
     private int _ticker2 = 0, _ticker4 = 0, _ticker8 = 0;
-    
 
-    
+
     public DebugGateway(GL gl, IWindow window, IInputContext inputCtx)
     {
         _debug = new DebugService(gl, window, inputCtx);
@@ -36,7 +36,7 @@ internal sealed class DebugGateway
         GfxDebugMetrics.ToggleLog(GfxLogSource.Store, GfxLogLayer.Backend, false);
         GfxDebugMetrics.ToggleLog(GfxLogAction.EnqueueDispose, false);
     }
-    
+
     public bool HasBindings => HasBoundCommands || HasBoundMetrics;
     public bool Active => Enabled && HasBindings;
 
@@ -47,21 +47,40 @@ internal sealed class DebugGateway
         ArgumentNullException.ThrowIfNull(world, nameof(world));
         ArgumentNullException.ThrowIfNull(assetSystem, nameof(assetSystem));
         ArgumentNullException.ThrowIfNull(frameInfo, nameof(frameInfo));
-        
+
         DebugController.Attach(world, assetSystem, frameInfo);
     }
-    
+
     public void RegisterCommands()
     {
         if (!Enabled) return;
         if (HasBoundCommands) throw new InvalidOperationException(nameof(HasBoundCommands));
         HasBoundCommands = true;
-        
-        DebugRouter.RegisterCommand("inspect-structs", DebugController.OnCmdStructSizes);
-        DebugRouter.RegisterCommand("reload-shader", DebugController.OnRecreateShader);
-        DebugRouter.RegisterCommand("shadow-map", DebugController.OnSetShadowMapSize);
+
+        DebugRouter.RegisterCommand("inspect-structs", CmdWrapper(DebugController.OnCmdStructSizes));
+        DebugRouter.RegisterCommand("reload-shader", CmdWrapper(DebugController.OnRecreateShader));
+        DebugRouter.RegisterCommand("shadow-map", CmdWrapper(DebugController.OnSetShadowMapSize));
     }
-    
+
+
+
+    public void R()
+    {
+    }
+
+    private static void CommandProxy(DebugConsoleCtx ctx, string? arg1, string? arg2,
+        Action<DebugConsoleCtx, string?, string?> commandHandler)
+    {
+        try
+        {
+            commandHandler(ctx, arg1, arg2);
+        }
+        catch (Exception ex) when (DebugParser.IsSafeError(ex))
+        {
+            ctx.AddLog(DebugParser.ErrorMessageFor(ex));
+        }
+    }
+
     public void RegisterMetrics()
     {
         if (!Enabled) return;
@@ -113,6 +132,7 @@ internal sealed class DebugGateway
         {
             DrainGfxLogs();
         }
+
         _tickToggle = !_tickToggle;
 
         if (++_ticker8 >= 8)
@@ -120,7 +140,6 @@ internal sealed class DebugGateway
             _ticker8 = 0;
             _debug.RefreshMemoryMetrics();
         }
-        
     }
 
     private void DrainGfxLogs()
@@ -130,5 +149,20 @@ internal sealed class DebugGateway
             var cmd = GfxDebugMetrics.LogQueue.Dequeue();
             _debug.DevConsole.AddLog(cmd.ToDebugString());
         }
+    }
+    
+    private static Action<DebugConsoleCtx, string?, string?> CmdWrapper(Action<DebugConsoleCtx, string?, string?> f)
+    {
+        return (ctx, a1, a2) =>
+        {
+            try
+            {
+                f(ctx, a1, a2);
+            }
+            catch (Exception ex) when (DebugParser.IsSafeError(ex))
+            {
+                ctx.AddLog(DebugParser.ErrorMessageFor(ex));
+            }
+        };
     }
 }

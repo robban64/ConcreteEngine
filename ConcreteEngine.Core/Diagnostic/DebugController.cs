@@ -69,7 +69,6 @@ internal static class DebugController
             result.Add(new DebugGfxStoreMetricRecord(k.ToLogName(), v.GfxCount, v.GfxFree, v.BkCount, v.BkFree));
     }
 
-
     public static void OnRecreateShader(DebugConsoleCtx ctx, string? arg1, string? arg2)
     {
         if (_assetSystem is null) return;
@@ -81,30 +80,16 @@ internal static class DebugController
     public static void OnSetShadowMapSize(DebugConsoleCtx ctx, string? arg1, string? arg2)
     {
         if (_assetSystem is null) return;
-        if (string.IsNullOrWhiteSpace(arg1))
+        ArgumentNullException.ThrowIfNull(arg1, nameof(arg1));
+        var size = DebugParser.IntArg(arg1);
+        var shadowSize = DebugUtils.GetShadowSize(size);
+        if (shadowSize <= 0)
         {
-            ctx.AddLog("Invalid argument");
-            return;
+            throw new ArgumentException("Supported are 1,2,4,8 (1024, 2048, 4096, 8192)",
+                nameof(arg1));
         }
-
-        if (!int.TryParse(arg1, out var size))
-        {
-            ctx.AddLog($"Invalid argument format {arg1}");
-            return;
-        }
-
-        if (size == 1) size = 1024;
-        if (size == 2) size = 2048;
-        if (size == 4) size = 4096;
-        if (size == 8) size = 8192;
-
-        if (size == 1024 || size == 2048 || size == 4096 || size == 8192)
-        {
-            _assetSystem.EnqueueRecreateFrameBuffer(size, RecreateSpecialAction.RecreateShadowFbo);
-            return;
-        }
-
-        ctx.AddLog("Invalid argument value. Supported are 1,2,4,8 (1024, 2048, 4096, 8192)");
+        
+        _assetSystem.EnqueueRecreateFrameBuffer(size, RecreateSpecialAction.RecreateShadowFbo);
     }
 
     public static void OnCmdStructSizes(DebugConsoleCtx ctx, string? _, string? __)
@@ -125,7 +110,6 @@ internal static class DebugController
         ctx.AddLog(StructStr<RenderBufferMeta>());
         ctx.AddLog(StructStr<UniformBufferMeta>());
         ctx.AddLog(StructStr<GfxDebugLog>());
-
     }
 
     private static string StructStr<T>() where T : unmanaged =>

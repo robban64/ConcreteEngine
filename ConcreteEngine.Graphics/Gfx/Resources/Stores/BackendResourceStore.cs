@@ -36,6 +36,10 @@ internal sealed class BackendResourceStore<TId, THandle> : IBackendResourceStore
 
     public ResourceKind Kind { get; }
     public GraphicsBackend Backend => GraphicsBackend.OpenGl;
+    
+    public int Count => _idx;
+    public int FreeCount => _free.Count;
+    public int Capacity => _records.Length;
 
     public BackendResourceStore(ResourceKind kind)
     {
@@ -67,9 +71,7 @@ internal sealed class BackendResourceStore<TId, THandle> : IBackendResourceStore
         _records[idx] = newHandle;
 
         var result = GfxRefToken<TId>.From(new GfxHandle(idx, newHandle.Gen, Kind));
-        UpdateMetrics();
         GfxDebugMetrics.Log(DebugLog.MakeAddBackendStore(newHandle.Handle.Value, result));
-
         return result;
     }
 
@@ -87,7 +89,6 @@ internal sealed class BackendResourceStore<TId, THandle> : IBackendResourceStore
         _records[handle.Slot] = default;
         _free.Push(handle.Slot);
         GfxDebugMetrics.Log(DebugLog.MakeRemoveBackendStore(record.Handle.Value, handle));
-        UpdateMetrics();
     }
 
     public GfxRefToken<TId> Replace(GfxRefToken<TId> refToken, THandle value)
@@ -101,7 +102,6 @@ internal sealed class BackendResourceStore<TId, THandle> : IBackendResourceStore
         _records[handle.Slot] = newRecord;
 
         var newRef = GfxRefToken<TId>.From(handle with { Gen = newRecord.Gen });
-        UpdateMetrics();
         GfxDebugMetrics.Log(DebugLog.MakeReplaceBackendStore(value.Value, newRef));
         return GfxRefToken<TId>.From(handle with { Gen = newRecord.Gen });
     }
@@ -121,13 +121,7 @@ internal sealed class BackendResourceStore<TId, THandle> : IBackendResourceStore
         return _idx++;
     }
 
-    private void UpdateMetrics()
-    {
-        GfxDebugMetrics.GetStoreMetrics<TId>().BkCount = GetAliveCount();
-        GfxDebugMetrics.GetStoreMetrics<TId>().BkFree = _free.Count;
-    }
-
-    private int GetAliveCount()
+    public int GetAliveCount()
     {
         var span = _records.AsSpan(0, _idx);
         var count = 0;

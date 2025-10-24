@@ -12,7 +12,7 @@ public static class DebugRouter
     public static Func<DebugSceneMetrics>? PullSceneMetrics { get; set; }
     public static Func<DebugMaterialMetrics>? PullMaterialMetrics { get; set; }
     public static Func<DebugMemoryMetrics>? PullMemoryMetrics { get; set; }
-    public static Action<List<DebugGfxStoreMetricRecord>>? FillGfxStoreMetrics { get; set; }
+    public static Action<List<DebugStoreMetrics>>? FillGfxStoreMetrics { get; set; }
     public static Action<List<DebugAssetStoreMetricRecord>>? FillAssetMetrics { get; set; }
 
 

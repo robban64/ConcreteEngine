@@ -28,4 +28,16 @@ public sealed class DebugMemoryMetricsText
 
 public readonly record struct AssetStoreMetricsTextRecord(string Name, string Count, string Files);
 
-public readonly record struct GfxStoreMetricsTextRecord(string Name, string GfxStore, string BkStore);
+public sealed class GfxStoreTextRecord(string name, string simpleName)
+{
+    public string? Name { get;  } = name;
+    public string? SimpleName { get;  } = simpleName;
+    public GfxStoreMetricsTextRecord GfxStore { get; } = new();
+    public GfxStoreMetricsTextRecord BkStore { get; } = new();
+}
+
+public sealed class GfxStoreMetricsTextRecord
+{
+    public string? StoreCount{ get; set; }
+    public string? StoreAliveCap{ get; set; }
+}

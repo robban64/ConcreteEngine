@@ -96,34 +96,58 @@ internal sealed class DebugLeftPanelGui(DebugTextData data)
     private void DrawGfxStoreTable()
     {
         DrawSectionHeader("GFX Store");
+        ImGui.PushStyleVar(ImGuiStyleVar.FramePadding, new Vector2(12, 4));
+        if (ImGui.BeginTabBar("metrics_tabs", ImGuiTabBarFlags.FittingPolicyScroll))
+        {
+            if (ImGui.BeginTabItem("Main"))
+            {
+                DrawGfxStoreTable(data.GfxStoreMetrics, false);
+                ImGui.EndTabItem();
+            }
 
+            if (ImGui.BeginTabItem("Back"))
+            {
+                DrawGfxStoreTable(data.GfxStoreMetrics, true);
+                ImGui.EndTabItem();
+            }
+
+            ImGui.EndTabBar();
+        }
+
+        ImGui.PopStyleVar();
+
+    }
+
+    private static void DrawGfxStoreTable(List<GfxStoreTextRecord> metrics, bool bkStore)
+    {
         const ImGuiTableFlags flags =
             ImGuiTableFlags.Borders |
             ImGuiTableFlags.RowBg |
             ImGuiTableFlags.SizingStretchProp;
 
-        if (ImGui.BeginTable("gfx_metrics_table", 3, flags))
+        if (!ImGui.BeginTable("metrics_table", 3, flags))
+            return;
+
+        ImGui.TableSetupColumn("Kind", ImGuiTableColumnFlags.WidthStretch);
+        ImGui.TableSetupColumn("Cnt/Free", ImGuiTableColumnFlags.WidthStretch);
+        ImGui.TableSetupColumn("Live/Cap", ImGuiTableColumnFlags.WidthStretch);
+        ImGui.TableHeadersRow();
+
+        foreach (var it in metrics)
         {
-            ImGui.TableSetupColumn("Kind", ImGuiTableColumnFlags.WidthStretch, 1.00f);
-            ImGui.TableSetupColumn("Gfx", ImGuiTableColumnFlags.WidthStretch, 0.35f);
-            ImGui.TableSetupColumn("BK", ImGuiTableColumnFlags.WidthStretch, 0.35f);
-            ImGui.TableHeadersRow();
+            var count = bkStore ? it.BkStore.StoreCount : it.GfxStore.StoreCount;
+            var alive = bkStore ? it.BkStore.StoreAliveCap : it.GfxStore.StoreAliveCap;
+            ImGui.TableNextRow();
+            ImGui.TableSetColumnIndex(0);
+            ImGui.TextUnformatted(it.SimpleName);
 
-            foreach (var it in data.GfxStoreMetrics)
-            {
-                ImGui.TableNextRow();
+            ImGui.TableSetColumnIndex(1);
+            RightAlignCellText(count);
 
-                ImGui.TableSetColumnIndex(0);
-                ImGui.TextUnformatted(it.Name);
-
-                ImGui.TableSetColumnIndex(1);
-                RightAlignCellText(it.GfxStore);
-
-                ImGui.TableSetColumnIndex(2);
-                RightAlignCellText(it.BkStore);
-            }
-
-            ImGui.EndTable();
+            ImGui.TableSetColumnIndex(2);
+            RightAlignCellText(alive);
         }
+
+        ImGui.EndTable();
     }
 }

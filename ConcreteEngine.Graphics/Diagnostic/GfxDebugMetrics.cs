@@ -14,19 +14,16 @@ internal readonly record struct DebugFilter(byte Kind, byte Layer, byte Source, 
         : this((byte)Kind, (byte)Layer, (byte)Source, (byte)Action)
     {
     }
+    
+
+    
 }
 
 public static class GfxDebugMetrics
 {
-    private sealed record StoreBindingRecord(Delegate GetGfxStore, Delegate GetBackendStore);
-
     private static readonly ResourceKind[] Kinds = Enum.GetValues<ResourceKind>();
 
-    private static readonly StoreMetrics[] Stores = new StoreMetrics[Kinds.Length - 1];
-
-    private static readonly Dictionary<ResourceKind, StoreBindingRecord> StoreBindings = new(Kinds.Length - 1);
-
-    public static ReadOnlySpan<StoreMetrics> GetStoreMetrics() => Stores;
+    private static readonly IStoreMetrics[] Stores = new IStoreMetrics[Kinds.Length - 1];
 
     private static readonly List<DebugFilter> IgnoreFilter = new(4);
 
@@ -34,17 +31,6 @@ public static class GfxDebugMetrics
 
     //public static bool MetricsEnabled { get; private set; } = true;
     private static bool _logEnabled = false;
-    
-    public static ReadOnlySpan<ResourceKind> GetResourceKinds() => Kinds;
-    public static StoreMetrics GetStoreMetrics(ResourceKind kind) => Stores[(int)kind - 1];
-    public static StoreMetrics GetStoreMetrics<TId>() where TId : unmanaged, IResourceId => Stores[(int)TId.Kind - 1];
-
-    public static TMeta GetStoreMeta<TId, TMeta>(TId id) where TId : unmanaged, IResourceId
-        where TMeta : unmanaged, IResourceMeta
-    {
-        var del = (GetGfxStoreDel<TId, TMeta>)StoreBindings[TId.Kind].GetGfxStore;
-        return del().GetMeta(id);
-    }
 
     public static bool LogEnabled
     {
@@ -56,10 +42,28 @@ public static class GfxDebugMetrics
             _logEnabled = value;
         }
     }
-    
-    
-    internal static void RegisterStore<TId, TMeta,THandle>
-        (GetGfxStoreDel<TId, TMeta> gfx, GetBackendStoreDel<TId, THandle> bk)
+
+    public static ReadOnlySpan<ResourceKind> GetResourceKinds() => Kinds;
+    public static IStoreMetrics GetStoreMetrics(ResourceKind kind) => Stores[(int)kind - 1];
+    public static IStoreMetrics GetStoreMetrics<TId>() where TId : unmanaged, IResourceId => Stores[(int)TId.Kind - 1];
+/*
+    public static TMeta GetStoreMeta<TId, TMeta>(TId id) where TId : unmanaged, IResourceId
+        where TMeta : unmanaged, IResourceMeta
+    {
+        var del = (GetGfxStoreDel<TId, TMeta>)Stores[(int)TId.Kind - 1];
+        return del().GetMeta(id);
+    }
+*/
+    public static ReadOnlySpan<IStoreMetrics> GetStoreMetrics()
+    {
+        foreach (var it in Stores)
+            it.Invoke();
+        return Stores;
+    }
+
+
+    internal static void RegisterStore<TId, TMeta, THandle>(GetGfxStoreDel<TId, TMeta> gfx,
+        GetBackendStoreDel<TId, THandle> bk)
         where TId : unmanaged, IResourceId
         where TMeta : unmanaged, IResourceMeta
         where THandle : unmanaged, IResourceHandle, IEquatable<THandle>
@@ -67,8 +71,23 @@ public static class GfxDebugMetrics
         var kind = (int)TId.Kind;
         ArgumentOutOfRangeException.ThrowIfLessThan(kind, 1, nameof(kind));
 
-        StoreBindings.Add(TId.Kind,new StoreBindingRecord(gfx,bk));
-        Stores[kind - 1] = new StoreMetrics(TId.Kind);
+        Stores[kind - 1] = new StoreMetrics<TId, TMeta, THandle>(TId.Kind, gfx, bk);
+    }
+
+
+    internal static void Log(GfxDebugLog log)
+    {
+        if (!LogEnabled) return;
+        if (LogQueue.Count > 100)
+        {
+            Debug.Assert(false);
+            return;
+        }
+
+        if (!FilterLog(in log))
+            return;
+
+        LogQueue.Enqueue(log);
     }
 
     private static bool FilterLog(in GfxDebugLog log)
@@ -85,21 +104,6 @@ public static class GfxDebugMetrics
         return false;
     }
 
-    internal static void Log(GfxDebugLog log)
-    {
-        if (!LogEnabled) return;
-        if (LogQueue.Count > 100)
-        {
-            Debug.Assert(false);
-            return;
-        }
-
-        if (!FilterLog(in log))
-            return;
-
-        LogQueue.Enqueue(log);
-    }
-    
 
     public static void ToggleLog(
         bool enabled,
@@ -112,42 +116,66 @@ public static class GfxDebugMetrics
 
         if (enabled)
         {
-            // remove exact rule if present
             for (var i = 0; i < IgnoreFilter.Count; i++)
-                if (IgnoreFilter[i].Equals(rule)) { IgnoreFilter.RemoveAt(i); return; }
+                if (IgnoreFilter[i].Equals(rule))
+                {
+                    IgnoreFilter.RemoveAt(i);
+                    return;
+                }
         }
         else
         {
-            // add if not already present
-            for (var i = 0; i < IgnoreFilter.Count; i++)
-                if (IgnoreFilter[i].Equals(rule)) return;
+            foreach (var t in IgnoreFilter)
+                if (t == rule)
+                    return;
+
             IgnoreFilter.Add(rule);
         }
     }
 
-    // --- Back-compat thin wrappers (optional; delete once call sites are updated) ---
-    public static void ToggleLog(GfxLogLayer layer, bool enabled) =>
-        ToggleLog(enabled, layer: layer);
-
-    public static void ToggleLog(GfxLogAction action, bool enabled) =>
-        ToggleLog(enabled, action: action);
-
-    public static void ToggleLog(GfxLogSource source, bool enabled) =>
-        ToggleLog(enabled, source: source);
-
-    public static void ToggleLog(ResourceKind kind, bool enabled) =>
-        ToggleLog(enabled, kind: kind);
+    public static void ToggleLog(GfxLogLayer layer, bool enabled) => ToggleLog(enabled, layer: layer);
+    public static void ToggleLog(GfxLogAction action, bool enabled) => ToggleLog(enabled, action: action);
+    public static void ToggleLog(GfxLogSource source, bool enabled) => ToggleLog(enabled, source: source);
+    public static void ToggleLog(ResourceKind kind, bool enabled) => ToggleLog(enabled, kind: kind);
 }
 
-public sealed class StoreMetrics(ResourceKind kind)
+public readonly record struct GfxStoreMetricsRecord(int Count, int Alive, int Free, int Capacity);
+
+public interface IStoreMetrics
 {
+    ResourceKind Kind { get; }
+    string Name { get; }
+    string ShortName { get; }
+
+    GfxStoreMetricsRecord GfxStoreMetrics { get; }
+    GfxStoreMetricsRecord BackendStoreMetrics { get; }
+    
+    void Invoke();
+}
+
+internal sealed class StoreMetrics<TId, TMeta, THandle>(
+    ResourceKind kind,
+    GetGfxStoreDel<TId, TMeta> getGfxStore,
+    GetBackendStoreDel<TId, THandle> getBackendStore) : IStoreMetrics
+    where TId : unmanaged, IResourceId
+    where TMeta : unmanaged, IResourceMeta
+    where THandle : unmanaged, IResourceHandle, IEquatable<THandle>
+
+{
+    internal GetGfxStoreDel<TId, TMeta> GetBackendStore { get; } = getGfxStore;
+    internal GetBackendStoreDel<TId, THandle> GetGfxStore { get; } = getBackendStore;
     public ResourceKind Kind { get; } = kind;
     public string Name { get; } = kind.ToLogName();
     public string ShortName { get; } = kind.ToLogName(true);
+    public GfxStoreMetricsRecord GfxStoreMetrics { get; private set; }
+    public GfxStoreMetricsRecord BackendStoreMetrics { get; private set; }
+    
+    public void Invoke()
+    {
+        var gfx = GetGfxStore();
+        var bk = GetBackendStore();
+        GfxStoreMetrics = new GfxStoreMetricsRecord(gfx.Count,gfx.GetAliveCount(),gfx.FreeCount,gfx.Capacity);
+        BackendStoreMetrics = new GfxStoreMetricsRecord(bk.Count,bk.GetAliveCount(),bk.FreeCount,bk.Capacity);
 
-    public int GfxCount { get; set; }
-    public int GfxFree { get; set; }
-
-    public int BkCount { get; set; }
-    public int BkFree { get; set; }
+    }
 }

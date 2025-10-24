@@ -61,12 +61,24 @@ internal static class DebugController
             result.Add(new DebugAssetStoreMetricRecord(k.Name, v.Count, v.FileCount));
     }
 
-    internal static void DrainGfxStoreMetrics(List<DebugGfxStoreMetricRecord> result)
+    internal static void DrainGfxStoreMetrics(List<DebugStoreMetrics> result)
     {
         var store = GfxDebugMetrics.GetStoreMetrics();
-        result.Clear();
-        foreach (var v in store)
-            result.Add(new DebugGfxStoreMetricRecord(v.Name, v.GfxCount, v.GfxFree, v.BkCount, v.BkFree, (byte)v.Kind));
+        if (result.Count != store.Length)
+        {
+            result.Clear();
+            foreach (var v in store)
+                result.Add(new DebugStoreMetrics(v.Name, v.ShortName, (byte)v.Kind));
+        }
+
+        for (int i = 0; i < store.Length; i++)
+        {
+            var v = store[i];
+            var r = result[i];
+            var (gfx, bk) = (v.GfxStoreMetrics, v.BackendStoreMetrics);
+            r.GfxStoreMetrics = new DebugGfxStoreMetricsRecord(gfx.Count, gfx.Alive, gfx.Free, gfx.Capacity);
+            r.BackendStoreMetrics = new DebugGfxStoreMetricsRecord(bk.Count, bk.Alive, bk.Free, bk.Capacity);
+        }
     }
 
     public static void OnRecreateShader(DebugConsoleCtx ctx, string? arg1, string? arg2)
@@ -91,7 +103,7 @@ internal static class DebugController
 
         _assetSystem.EnqueueRecreateFrameBuffer(size, RecreateSpecialAction.RecreateShadowFbo);
     }
-    
+
 
     public static void OnCmdStructSizes(DebugConsoleCtx ctx, string? _, string? __)
     {

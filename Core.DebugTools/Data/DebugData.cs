@@ -7,7 +7,7 @@ public sealed class DebugDataContainer
     public DebugMaterialMetrics MaterialMetrics;
     public DebugMemoryMetrics MemoryMetrics;
 
-    public List<DebugGfxStoreMetricRecord> GfxStoreMetrics { get; } = new(8);
+    public List<DebugStoreMetrics> GfxStoreMetrics { get; } = new(8);
     public List<DebugAssetStoreMetricRecord> AssetMetrics { get; } = new(8);
 
 

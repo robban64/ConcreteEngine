@@ -11,9 +11,18 @@ public readonly record struct DebugSceneMetrics(int EntityCount, int ShadowMapSi
 
 public readonly record struct DebugMaterialMetrics(int Count, int Free);
 
-
-public readonly record struct DebugGfxStoreMetricRecord(string Name, int GfxCount, int GfxFree, int BkCount, int BkFree, byte Kind);
+public readonly record struct DebugGfxStoreMetricsRecord(int Count, int Alive, int Free, int Capacity);
 
 public readonly record struct DebugAssetStoreMetricRecord(string Name, int Count, int Files);
 
 public readonly record struct DebugMemoryMetrics(int Allocated);
+
+public sealed class DebugStoreMetrics(string name, string shortName, byte kind)
+{
+    public string Name { get; } = name;
+    public string ShortName { get; } = shortName;
+    public byte Kind { get; } = kind;
+
+    public DebugGfxStoreMetricsRecord GfxStoreMetrics { get; set; }
+    public DebugGfxStoreMetricsRecord BackendStoreMetrics { get; set; }
+}

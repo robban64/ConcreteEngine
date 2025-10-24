@@ -62,13 +62,13 @@ internal sealed class DebugGateway
         DebugRouter.RegisterCommand("inspect-structs", CmdWrapper(DebugController.OnCmdStructSizes));
         DebugRouter.RegisterCommand("reload-shader", CmdWrapper(DebugController.OnRecreateShader));
         DebugRouter.RegisterCommand("shadow-map", CmdWrapper(DebugController.OnSetShadowMapSize));
-        DebugRouter.RegisterCommand("fbo-meta", CmdWrapper(static (ctx, arg1, arg2) =>
+       /* DebugRouter.RegisterCommand("fbo-meta", CmdWrapper(static (ctx, arg1, arg2) =>
         {
             var opts = new JsonSerializerOptions { IncludeFields = true };
 
             var meta = GfxDebugMetrics.GetStoreMeta<FrameBufferId, FrameBufferMeta>(new FrameBufferId(2));
             ctx.AddLog(JsonSerializer.Serialize(meta,opts));
-        }));
+        }));*/
     }
 
 

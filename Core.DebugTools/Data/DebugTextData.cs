@@ -6,7 +6,7 @@ public sealed class DebugTextData
     public DebugSceneMetricsText SceneMetrics { get; } = new();
     public string? MaterialMetrics { get; set; }
     public string? MemoryMetrics { get; set; }
-    public List<GfxStoreMetricsTextRecord> GfxStoreMetrics { get; } = new(8);
+    public List<GfxStoreTextRecord> GfxStoreMetrics { get; } = new(8);
     public List<AssetStoreMetricsTextRecord> AssetMetrics { get; } = new(8);
 
 
@@ -36,12 +36,25 @@ public sealed class DebugTextData
             AssetMetrics.Add(new AssetStoreMetricsTextRecord(it.Name, it.Count.ToString(), it.Files.ToString()));
         }
 
-        GfxStoreMetrics.Clear();
-        foreach (var it in data.GfxStoreMetrics)
+        if (GfxStoreMetrics.Count != data.GfxStoreMetrics.Count)
         {
-            var gfxStr = $"{it.GfxCount}({it.GfxFree})";
-            var bkStr = $"{it.BkCount}({it.BkFree})";
-            GfxStoreMetrics.Add(new GfxStoreMetricsTextRecord(it.Name, gfxStr, bkStr));
+            GfxStoreMetrics.Clear();
+            foreach (var t in data.GfxStoreMetrics)
+                GfxStoreMetrics.Add(new GfxStoreTextRecord(t.Name, t.ShortName));
+        }
+
+        for (int i = 0; i < data.GfxStoreMetrics.Count; i++)
+        {
+            var it = data.GfxStoreMetrics[i];
+            var curr = GfxStoreMetrics[i];
+            
+            DebugGfxStoreMetricsRecord gfx = it.GfxStoreMetrics, bk = it.BackendStoreMetrics;
+            curr.GfxStore.StoreCount = $"{gfx.Count}/{gfx.Free}";
+            curr.GfxStore.StoreAliveCap = $"{gfx.Alive}/{gfx.Capacity}";
+
+            curr.BkStore.StoreCount = $"{bk.Count}/{bk.Free}";
+            curr.BkStore.StoreAliveCap = $"{bk.Alive}/{bk.Capacity}";
+
         }
     }
 

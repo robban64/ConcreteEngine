@@ -91,8 +91,9 @@ public sealed class DebugService : IDisposable
     public void Render()
     {
         var vp = ImGui.GetMainViewport();
-        _leftPanel.Draw(200);
-        _rightPanel.DrawRight(200);
+        ImGui.ShowDemoWindow();
+        _leftPanel.Draw(224);
+        _rightPanel.DrawRight(160);
         DevConsole.DrawConsole(200, 200);
         _controller.Render();
     }

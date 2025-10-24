@@ -52,7 +52,6 @@ internal sealed class GfxResourceStore<TId, TMeta> : IGfxResourceStore<TId>
         _handle = new GfxHandle[initialCapacity];
         _free = new Stack<int>();
 
-        GfxDebugMetrics.RegisterStore<TId>();
     }
 
     internal void BindOnChangeCallback(GfxMetaChangedDel<TId, TMeta> callback)

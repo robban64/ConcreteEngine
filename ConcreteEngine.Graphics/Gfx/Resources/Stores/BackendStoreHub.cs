@@ -31,7 +31,7 @@ internal sealed class BackendStoreHub
             throw new InvalidOperationException("Duplicate backend store.");
     }
 
-    internal IBackendResourceStore Get(ResourceKind kind)
+    internal IBackendResourceStore GetStore(ResourceKind kind)
     {
         if (!_stores.TryGetValue(kind, out var store))
             throw new InvalidOperationException("Missing backend store.");
@@ -39,7 +39,7 @@ internal sealed class BackendStoreHub
         return store;
     }
 
-    public BackendResourceStore<TId, THandle> Get<TId, THandle>()
+    public BackendResourceStore<TId, THandle> GetStore<TId, THandle>()
         where TId : unmanaged, IResourceId where THandle : unmanaged, IResourceHandle, IEquatable<THandle>
     {
         if (!_stores.TryGetValue(TId.Kind, out var s) || s is not BackendResourceStore<TId, THandle> store)

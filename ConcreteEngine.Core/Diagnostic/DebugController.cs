@@ -65,8 +65,8 @@ internal static class DebugController
     {
         var store = GfxDebugMetrics.GetStoreMetrics();
         result.Clear();
-        foreach (var (k, v) in store)
-            result.Add(new DebugGfxStoreMetricRecord(k.ToLogName(), v.GfxCount, v.GfxFree, v.BkCount, v.BkFree));
+        foreach (var v in store)
+            result.Add(new DebugGfxStoreMetricRecord(v.Name, v.GfxCount, v.GfxFree, v.BkCount, v.BkFree, (byte)v.Kind));
     }
 
     public static void OnRecreateShader(DebugConsoleCtx ctx, string? arg1, string? arg2)
@@ -88,9 +88,10 @@ internal static class DebugController
             throw new ArgumentException("Supported are 1,2,4,8 (1024, 2048, 4096, 8192)",
                 nameof(arg1));
         }
-        
+
         _assetSystem.EnqueueRecreateFrameBuffer(size, RecreateSpecialAction.RecreateShadowFbo);
     }
+    
 
     public static void OnCmdStructSizes(DebugConsoleCtx ctx, string? _, string? __)
     {

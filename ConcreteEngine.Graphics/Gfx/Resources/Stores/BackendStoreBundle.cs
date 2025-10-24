@@ -14,13 +14,13 @@ internal sealed class BackendStoreBundle
 
     internal BackendStoreBundle(BackendStoreHub stores)
     {
-        Texture = stores.Get<TextureId, GlTextureHandle>();
-        Shader = stores.Get<ShaderId, GlShaderHandle>();
-        VertexArray = stores.Get<MeshId, GlMeshHandle>();
-        VertexBuffer = stores.Get<VertexBufferId, GlVboHandle>();
-        IndexBuffer = stores.Get<IndexBufferId, GlIboHandle>();
-        FrameBuffer = stores.Get<FrameBufferId, GlFboHandle>();
-        RenderBuffer = stores.Get<RenderBufferId, GlRboHandle>();
-        UniformBuffer = stores.Get<UniformBufferId, GlUboHandle>();
+        Texture = stores.GetStore<TextureId, GlTextureHandle>();
+        Shader = stores.GetStore<ShaderId, GlShaderHandle>();
+        VertexArray = stores.GetStore<MeshId, GlMeshHandle>();
+        VertexBuffer = stores.GetStore<VertexBufferId, GlVboHandle>();
+        IndexBuffer = stores.GetStore<IndexBufferId, GlIboHandle>();
+        FrameBuffer = stores.GetStore<FrameBufferId, GlFboHandle>();
+        RenderBuffer = stores.GetStore<RenderBufferId, GlRboHandle>();
+        UniformBuffer = stores.GetStore<UniformBufferId, GlUboHandle>();
     }
 }

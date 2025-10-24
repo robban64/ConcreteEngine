@@ -1,11 +1,13 @@
 #region
 
+using System.Text.Json;
 using ConcreteEngine.Core.Assets;
 using ConcreteEngine.Core.Assets.Materials;
 using ConcreteEngine.Core.Data;
 using ConcreteEngine.Core.Scene;
 using ConcreteEngine.Graphics;
 using ConcreteEngine.Graphics.Diagnostic;
+using ConcreteEngine.Graphics.Gfx.Resources;
 using ConcreteEngine.Renderer.State;
 using Silk.NET.Input;
 using Silk.NET.OpenGL;
@@ -33,8 +35,8 @@ internal sealed class DebugGateway
     {
         _debug = new DebugService(gl, window, inputCtx);
 
-        GfxDebugMetrics.ToggleLog(GfxLogSource.Store, GfxLogLayer.Backend, false);
-        GfxDebugMetrics.ToggleLog(GfxLogAction.EnqueueDispose, false);
+        GfxDebugMetrics.ToggleLog(false, source: GfxLogSource.Store, layer: GfxLogLayer.Backend);
+        GfxDebugMetrics.ToggleLog(false, action: GfxLogAction.EnqueueDispose);
     }
 
     public bool HasBindings => HasBoundCommands || HasBoundMetrics;
@@ -60,6 +62,13 @@ internal sealed class DebugGateway
         DebugRouter.RegisterCommand("inspect-structs", CmdWrapper(DebugController.OnCmdStructSizes));
         DebugRouter.RegisterCommand("reload-shader", CmdWrapper(DebugController.OnRecreateShader));
         DebugRouter.RegisterCommand("shadow-map", CmdWrapper(DebugController.OnSetShadowMapSize));
+        DebugRouter.RegisterCommand("fbo-meta", CmdWrapper(static (ctx, arg1, arg2) =>
+        {
+            var opts = new JsonSerializerOptions { IncludeFields = true };
+
+            var meta = GfxDebugMetrics.GetStoreMeta<FrameBufferId, FrameBufferMeta>(new FrameBufferId(2));
+            ctx.AddLog(JsonSerializer.Serialize(meta,opts));
+        }));
     }
 
 

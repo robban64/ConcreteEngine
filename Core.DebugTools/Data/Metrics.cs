@@ -12,7 +12,7 @@ public readonly record struct DebugSceneMetrics(int EntityCount, int ShadowMapSi
 public readonly record struct DebugMaterialMetrics(int Count, int Free);
 
 
-public readonly record struct DebugGfxStoreMetricRecord(string Name, int GfxCount, int GfxFree, int BkCount, int BkFree);
+public readonly record struct DebugGfxStoreMetricRecord(string Name, int GfxCount, int GfxFree, int BkCount, int BkFree, byte Kind);
 
 public readonly record struct DebugAssetStoreMetricRecord(string Name, int Count, int Files);
 

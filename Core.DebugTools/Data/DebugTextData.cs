@@ -1,3 +1,5 @@
+using Core.DebugTools.Utils;
+
 namespace Core.DebugTools.Data;
 
 public sealed class DebugTextData
@@ -51,6 +53,7 @@ public sealed class DebugTextData
             DebugGfxStoreMetricsRecord gfx = it.GfxStoreMetrics, bk = it.BackendStoreMetrics;
             curr.GfxStore.StoreCount = $"{gfx.Count}/{gfx.Free}";
             curr.GfxStore.StoreAliveCap = $"{gfx.Alive}/{gfx.Capacity}";
+            curr.GfxStore.SpecialMetric = MetricsFormatter.FormatSpecialMetaMetric(gfx.Special);
 
             curr.BkStore.StoreCount = $"{bk.Count}/{bk.Free}";
             curr.BkStore.StoreAliveCap = $"{bk.Alive}/{bk.Capacity}";

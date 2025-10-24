@@ -8,22 +8,11 @@ using ConcreteEngine.Graphics.Gfx.Resources;
 
 namespace ConcreteEngine.Graphics.Diagnostic;
 
-internal readonly record struct DebugFilter(byte Kind, byte Layer, byte Source, byte Action)
-{
-    public DebugFilter(ResourceKind Kind, GfxLogLayer Layer, GfxLogSource Source, GfxLogAction Action)
-        : this((byte)Kind, (byte)Layer, (byte)Source, (byte)Action)
-    {
-    }
-    
-
-    
-}
-
 public static class GfxDebugMetrics
 {
     private static readonly ResourceKind[] Kinds = Enum.GetValues<ResourceKind>();
 
-    private static readonly IStoreMetrics[] Stores = new IStoreMetrics[Kinds.Length - 1];
+    private static readonly IStoreMetrics[] StoreMetrics = new IStoreMetrics[StoreCount];
 
     private static readonly List<DebugFilter> IgnoreFilter = new(4);
 
@@ -43,37 +32,45 @@ public static class GfxDebugMetrics
         }
     }
 
+    public static int StoreCount => Kinds.Length - 1;
     public static ReadOnlySpan<ResourceKind> GetResourceKinds() => Kinds;
-    public static IStoreMetrics GetStoreMetrics(ResourceKind kind) => Stores[(int)kind - 1];
-    public static IStoreMetrics GetStoreMetrics<TId>() where TId : unmanaged, IResourceId => Stores[(int)TId.Kind - 1];
-/*
-    public static TMeta GetStoreMeta<TId, TMeta>(TId id) where TId : unmanaged, IResourceId
-        where TMeta : unmanaged, IResourceMeta
+    internal static IStoreMetrics GetStoreMetrics(ResourceKind kind) => StoreMetrics[(int)kind - 1];
+
+    internal static IStoreMetrics GetStoreMetrics<TId>() where TId : unmanaged, IResourceId =>
+        StoreMetrics[(int)TId.Kind - 1];
+
+    public static ReadOnlySpan<(string, string)> GetStoreNames()
     {
-        var del = (GetGfxStoreDel<TId, TMeta>)Stores[(int)TId.Kind - 1];
-        return del().GetMeta(id);
-    }
-*/
-    public static ReadOnlySpan<IStoreMetrics> GetStoreMetrics()
-    {
-        foreach (var it in Stores)
-            it.Invoke();
-        return Stores;
+        var names = new (string, string)[StoreCount];
+        for (int i = 0; i < StoreMetrics.Length; i++)
+        {
+            var it = StoreMetrics[i];
+            names[i] = (it.Name, it.ShortName);
+        }
+
+        return names;
     }
 
+    public static void DrainStoreMetrics(Span<GfxStoreMetricsPayload> span)
+    {
+        for (int i = 0; i < StoreMetrics.Length; i++)
+            StoreMetrics[i].GetResult(out span[i]);
+    }
 
-    internal static void RegisterStore<TId, TMeta, THandle>(GetGfxStoreDel<TId, TMeta> gfx,
-        GetBackendStoreDel<TId, THandle> bk)
+    
+    
+    internal static void BindStore<TId, TMeta, THandle>(
+        GetGfxStoreDel<TId, TMeta> gfx,
+        GetBackendStoreDel<TId, THandle> bk,
+        GetSpecialMetric<TMeta> specialMetricDel)
         where TId : unmanaged, IResourceId
         where TMeta : unmanaged, IResourceMeta
         where THandle : unmanaged, IResourceHandle, IEquatable<THandle>
     {
         var kind = (int)TId.Kind;
         ArgumentOutOfRangeException.ThrowIfLessThan(kind, 1, nameof(kind));
-
-        Stores[kind - 1] = new StoreMetrics<TId, TMeta, THandle>(TId.Kind, gfx, bk);
+        StoreMetrics[kind - 1] = new StoreMetrics<TId, TMeta, THandle>(TId.Kind, gfx, bk, specialMetricDel);
     }
-
 
     internal static void Log(GfxDebugLog log)
     {
@@ -104,7 +101,6 @@ public static class GfxDebugMetrics
         return false;
     }
 
-
     public static void ToggleLog(
         bool enabled,
         ResourceKind kind = 0,
@@ -126,8 +122,9 @@ public static class GfxDebugMetrics
         else
         {
             foreach (var t in IgnoreFilter)
-                if (t == rule)
-                    return;
+            {
+                if (t == rule) return;
+            }
 
             IgnoreFilter.Add(rule);
         }
@@ -137,45 +134,4 @@ public static class GfxDebugMetrics
     public static void ToggleLog(GfxLogAction action, bool enabled) => ToggleLog(enabled, action: action);
     public static void ToggleLog(GfxLogSource source, bool enabled) => ToggleLog(enabled, source: source);
     public static void ToggleLog(ResourceKind kind, bool enabled) => ToggleLog(enabled, kind: kind);
-}
-
-public readonly record struct GfxStoreMetricsRecord(int Count, int Alive, int Free, int Capacity);
-
-public interface IStoreMetrics
-{
-    ResourceKind Kind { get; }
-    string Name { get; }
-    string ShortName { get; }
-
-    GfxStoreMetricsRecord GfxStoreMetrics { get; }
-    GfxStoreMetricsRecord BackendStoreMetrics { get; }
-    
-    void Invoke();
-}
-
-internal sealed class StoreMetrics<TId, TMeta, THandle>(
-    ResourceKind kind,
-    GetGfxStoreDel<TId, TMeta> getGfxStore,
-    GetBackendStoreDel<TId, THandle> getBackendStore) : IStoreMetrics
-    where TId : unmanaged, IResourceId
-    where TMeta : unmanaged, IResourceMeta
-    where THandle : unmanaged, IResourceHandle, IEquatable<THandle>
-
-{
-    internal GetGfxStoreDel<TId, TMeta> GetBackendStore { get; } = getGfxStore;
-    internal GetBackendStoreDel<TId, THandle> GetGfxStore { get; } = getBackendStore;
-    public ResourceKind Kind { get; } = kind;
-    public string Name { get; } = kind.ToLogName();
-    public string ShortName { get; } = kind.ToLogName(true);
-    public GfxStoreMetricsRecord GfxStoreMetrics { get; private set; }
-    public GfxStoreMetricsRecord BackendStoreMetrics { get; private set; }
-    
-    public void Invoke()
-    {
-        var gfx = GetGfxStore();
-        var bk = GetBackendStore();
-        GfxStoreMetrics = new GfxStoreMetricsRecord(gfx.Count,gfx.GetAliveCount(),gfx.FreeCount,gfx.Capacity);
-        BackendStoreMetrics = new GfxStoreMetricsRecord(bk.Count,bk.GetAliveCount(),bk.FreeCount,bk.Capacity);
-
-    }
 }

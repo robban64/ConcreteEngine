@@ -71,25 +71,6 @@ internal sealed class DebugGateway
         }));*/
     }
 
-
-
-    public void R()
-    {
-    }
-
-    private static void CommandProxy(DebugConsoleCtx ctx, string? arg1, string? arg2,
-        Action<DebugConsoleCtx, string?, string?> commandHandler)
-    {
-        try
-        {
-            commandHandler(ctx, arg1, arg2);
-        }
-        catch (Exception ex) when (DebugParser.IsSafeError(ex))
-        {
-            ctx.AddLog(DebugParser.ErrorMessageFor(ex));
-        }
-    }
-
     public void RegisterMetrics()
     {
         if (!Enabled) return;

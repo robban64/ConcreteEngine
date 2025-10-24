@@ -61,25 +61,8 @@ internal static class DebugController
             result.Add(new DebugAssetStoreMetricRecord(k.Name, v.Count, v.FileCount));
     }
 
-    internal static void DrainGfxStoreMetrics(List<DebugStoreMetrics> result)
-    {
-        var store = GfxDebugMetrics.GetStoreMetrics();
-        if (result.Count != store.Length)
-        {
-            result.Clear();
-            foreach (var v in store)
-                result.Add(new DebugStoreMetrics(v.Name, v.ShortName, (byte)v.Kind));
-        }
-
-        for (int i = 0; i < store.Length; i++)
-        {
-            var v = store[i];
-            var r = result[i];
-            var (gfx, bk) = (v.GfxStoreMetrics, v.BackendStoreMetrics);
-            r.GfxStoreMetrics = new DebugGfxStoreMetricsRecord(gfx.Count, gfx.Alive, gfx.Free, gfx.Capacity);
-            r.BackendStoreMetrics = new DebugGfxStoreMetricsRecord(bk.Count, bk.Alive, bk.Free, bk.Capacity);
-        }
-    }
+    internal static void DrainGfxStoreMetrics(List<DebugStoreMetrics> result) =>
+        DebugGfxController.DrainGfxStoreMetrics(result);
 
     public static void OnRecreateShader(DebugConsoleCtx ctx, string? arg1, string? arg2)
     {
@@ -107,6 +90,7 @@ internal static class DebugController
 
     public static void OnCmdStructSizes(DebugConsoleCtx ctx, string? _, string? __)
     {
+        /*
         ctx.AddLog(StructStr<TextureSlotInfo>());
         ctx.AddLog(StructStr<Transform>());
         ctx.AddLog(StructStr<MeshComponent>());
@@ -115,6 +99,9 @@ internal static class DebugController
         ctx.AddLog(StructStr<MaterialUniformRecord>());
         ctx.AddLog(StructStr<DrawObjectUniform>());
         ctx.AddLog(StructStr<RecreateRequest>());
+        ctx.AddLog(StructStr<GfxDebugLog>());
+        */
+
         ctx.AddLog(StructStr<TextureMeta>());
         ctx.AddLog(StructStr<MeshMeta>());
         ctx.AddLog(StructStr<VertexBufferMeta>());
@@ -122,7 +109,9 @@ internal static class DebugController
         ctx.AddLog(StructStr<FrameBufferMeta>());
         ctx.AddLog(StructStr<RenderBufferMeta>());
         ctx.AddLog(StructStr<UniformBufferMeta>());
-        ctx.AddLog(StructStr<GfxDebugLog>());
+
+        ctx.AddLog(StructStr<GfxStoreMetricsRecord>());
+        ctx.AddLog(StructStr<GfxStoreMetricsPayload>());
     }
 
     private static string StructStr<T>() where T : unmanaged =>

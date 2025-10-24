@@ -8,7 +8,7 @@ namespace ConcreteEngine.Graphics.Gfx.Resources;
 
 internal sealed class ResourceBackendDispatcher
 {
-    public required BackendDelete OnDelete { get; init; }
+    public required BackendDeleteDel OnDelete { get; init; }
 }
 
 internal sealed class BackendStoreHub

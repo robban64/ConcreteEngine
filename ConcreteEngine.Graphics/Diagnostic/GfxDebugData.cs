@@ -6,6 +6,37 @@ using ConcreteEngine.Graphics.Gfx.Definitions;
 
 namespace ConcreteEngine.Graphics.Diagnostic;
 
+public readonly struct GfxStoreMetricsPayload(
+    in GfxStoreMetricsRecord fk,
+    in GfxStoreMetricsRecord bk,
+    ResourceKind kind)
+{
+    public readonly GfxStoreMetricsRecord Fk = fk;
+    public readonly GfxStoreMetricsRecord Bk = bk;
+    public readonly ResourceKind Kind  = kind;
+}
+
+public readonly record struct GfxStoreMetricsRecord(
+    int Count,
+    int Alive,
+    int Free,
+    int Capacity,
+    in GfxMetaSpecialMetric Special);
+
+public readonly record struct GfxMetaSpecialMetric(
+    long Value,
+    int ResourceId,
+    ushort Param2 = 0,
+    ResourceKind Kind = 0);
+
+internal readonly record struct DebugFilter(byte Kind, byte Layer, byte Source, byte Action)
+{
+    public DebugFilter(ResourceKind Kind, GfxLogLayer Layer, GfxLogSource Source, GfxLogAction Action)
+        : this((byte)Kind, (byte)Layer, (byte)Source, (byte)Action)
+    {
+    }
+}
+
 public readonly record struct GfxDebugLog(
     int HandleId = 0,
     int OtherValue = 0,

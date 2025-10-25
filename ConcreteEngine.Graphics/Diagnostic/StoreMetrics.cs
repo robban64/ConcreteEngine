@@ -1,3 +1,4 @@
+using ConcreteEngine.Common.Diagnostics;
 using ConcreteEngine.Graphics.Gfx.Definitions;
 using ConcreteEngine.Graphics.Gfx.Resources;
 
@@ -8,8 +9,8 @@ internal interface IStoreMetrics
     ResourceKind Kind { get; }
     string Name { get; }
     string ShortName { get; }
-    ref readonly GfxStoreMetricsRecord GfxStoreMetrics { get; }
-    ref readonly GfxStoreMetricsRecord BackendStoreMetrics { get; }
+    ref readonly StoreMetric<CollectionSample> GfxStoreMetrics { get; }
+    ref readonly StoreMetric<CollectionSample> BackendStoreMetrics { get; }
 
     void GetResult(out GfxStoreMetricsPayload payload);
 }
@@ -32,22 +33,27 @@ internal sealed class StoreMetrics<TId, TMeta, THandle>(
     public string Name { get; } = kind.ToResourceName();
     public string ShortName { get; } = kind.ToShortText();
 
-    private GfxStoreMetricsRecord _gfxStoreMetrics;
-    private GfxStoreMetricsRecord _backendStoreMetrics;
+    private StoreMetric<CollectionSample> _gfxStoreMetrics;
+    private StoreMetric<CollectionSample> _backendStoreMetrics;
 
-    public ref readonly GfxStoreMetricsRecord GfxStoreMetrics => ref _gfxStoreMetrics;
-    public ref readonly GfxStoreMetricsRecord BackendStoreMetrics => ref _gfxStoreMetrics;
+    public ref readonly StoreMetric<CollectionSample> GfxStoreMetrics => ref _gfxStoreMetrics;
+    public ref readonly StoreMetric<CollectionSample> BackendStoreMetrics => ref _gfxStoreMetrics;
 
     public void GetResult(out GfxStoreMetricsPayload payload)
     {
         var gfx = GetGfxStore();
         var bk = GetBackendStore();
 
-        _gfxStoreMetrics = new GfxStoreMetricsRecord
-            (gfx.Count, gfx.GetAliveCount(), gfx.FreeCount, gfx.Capacity, GetSpecialMetricDel(gfx.MetaSpan));
+        var gfxSample = new CollectionSample(gfx.Count, gfx.Capacity, gfx.GetAliveCount(), gfx.FreeCount);
+        var bkSample = new CollectionSample(bk.Count, bk.Capacity, bk.GetAliveCount(), bk.FreeCount);
 
-        _backendStoreMetrics = new GfxStoreMetricsRecord(bk.Count, bk.GetAliveCount(), bk.FreeCount, bk.Capacity, default);
+        _gfxStoreMetrics = new StoreMetric<CollectionSample>(in gfxSample, default);
+        _backendStoreMetrics = new StoreMetric<CollectionSample>(in bkSample, default);
 
-        payload = new GfxStoreMetricsPayload(in _gfxStoreMetrics, in _backendStoreMetrics, Kind);
+        var m = GetSpecialMetricDel(gfx.MetaSpan);
+        var specialMeta = new GfxResourceMetric<ValueSample>
+            (m.ResourceId, new ValueSample(m.Value, m.Param2), MetricHeader.FromKind(m.Kind));
+
+        payload = new GfxStoreMetricsPayload(in _gfxStoreMetrics, in _backendStoreMetrics, in specialMeta, Kind);
     }
 }

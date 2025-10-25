@@ -1,5 +1,6 @@
 #region
 
+using System.Diagnostics;
 using ConcreteEngine.Common.Numerics;
 using ConcreteEngine.Core.Platform;
 using ConcreteEngine.Graphics;
@@ -12,6 +13,7 @@ namespace ConcreteEngine.Core.Data;
 public sealed class RenderEngineFrameInfo
 {
     public long FrameIndex { get; private set; } = -1;
+    public long TimeStamp { get; private set; } = -1;
     public float Alpha { get; private set; } = 0;
     public float Time { get; private set; } = 0;
     public float Fps { get; private set; } = 0;
@@ -39,6 +41,7 @@ public sealed class RenderEngineFrameInfo
         out RenderFrameInfo frameInfo,
         out RenderRuntimeParams runtimeParams)
     {
+        TimeStamp = Stopwatch.GetTimestamp() * 1000 / Stopwatch.Frequency;
         FrameIndex++;
         Time += dt;
         Alpha = alpha;

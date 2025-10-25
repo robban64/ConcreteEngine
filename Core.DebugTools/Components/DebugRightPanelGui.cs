@@ -9,7 +9,7 @@ using static Core.DebugTools.Components.CommonComponents;
 
 namespace Core.DebugTools.Components;
 
-internal sealed class DebugRightPanelGui(DebugTextData data)
+internal sealed class DebugRightPanelGui(MetricReport data)
 {
     public void DrawRight(int width)
     {

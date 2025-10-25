@@ -9,7 +9,7 @@ using static Core.DebugTools.Components.CommonComponents;
 
 namespace Core.DebugTools.Components;
 
-internal sealed class DebugLeftPanelGui(DebugTextData data)
+internal sealed class DebugLeftPanelGui(MetricReport data)
 {
     private static int _popupInput = 1;
 
@@ -85,10 +85,10 @@ internal sealed class DebugLeftPanelGui(DebugTextData data)
                 ImGui.TextUnformatted(it.Name);
 
                 ImGui.TableSetColumnIndex(1);
-                RightAlignCellText(it.Count);
+                RightAlignCellText(it.Assets);
 
                 ImGui.TableSetColumnIndex(2);
-                RightAlignCellText(it.Files);
+                RightAlignCellText(it.AssetFiles);
             }
 
             ImGui.EndTable();
@@ -154,7 +154,7 @@ internal sealed class DebugLeftPanelGui(DebugTextData data)
             var special = bkStore ? it.BkStore.SpecialMetric : it.GfxStore.SpecialMetric;
 
             ImGui.SameLine(0, 0);
-            ImGui.TextUnformatted(it.SimpleName);
+            ImGui.TextUnformatted(it.ShortName);
 
             ImGui.TableSetColumnIndex(1);
             RightAlignCellText(count);
@@ -223,7 +223,7 @@ internal sealed class DebugLeftPanelGui(DebugTextData data)
             var alive = bkStore ? it.BkStore.StoreAliveCap : it.GfxStore.StoreAliveCap;
             ImGui.TableNextRow();
             ImGui.TableSetColumnIndex(0);
-            ImGui.TextUnformatted(it.SimpleName);
+            ImGui.TextUnformatted(it.ShortName);
 
             ImGui.TableSetColumnIndex(1);
             RightAlignCellText(count);

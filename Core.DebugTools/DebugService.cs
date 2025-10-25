@@ -16,8 +16,8 @@ public sealed class DebugService : IDisposable
 {
     private readonly ImGuiController _controller;
 
-    public DebugDataContainer Data { get; }
-    public DebugTextData TextData { get; }
+    public MetricData Data { get; }
+    public MetricReport TextData { get; }
 
     public DebugConsole DevConsole { get; }
     private readonly DebugLeftPanelGui _leftPanel;
@@ -26,8 +26,8 @@ public sealed class DebugService : IDisposable
     public DebugService(GL gl, IWindow window, IInputContext inputCtx)
     {
         _controller = new ImGuiController(gl, window, inputCtx);
-        Data = new DebugDataContainer();
-        TextData = new DebugTextData();
+        Data = new MetricData();
+        TextData = new MetricReport();
 
         DevConsole = new DebugConsole();
         _leftPanel = new DebugLeftPanelGui(TextData);
@@ -49,21 +49,20 @@ public sealed class DebugService : IDisposable
     public void RefreshStoreMetrics()
     {
         Data.MaterialMetrics = DebugRouter.PullMaterialMetrics?.Invoke() ?? default;
-        DebugRouter.FillAssetMetrics?.Invoke(Data.AssetMetrics);
-        DebugRouter.FillGfxStoreMetrics?.Invoke(Data.GfxStoreMetrics);
+        TextData.UpdateMaterialMetrics(in Data.MaterialMetrics);
         
-        TextData.UpdateStoreMetrics(Data);
+        DebugRouter.FillAssetMetrics?.Invoke(Data);
+        DebugRouter.FillGfxStoreMetrics?.Invoke(Data);
+        TextData.UpdateAssetMetrics(Data.AssetMetrics);
+        TextData.UpdateGfxStoreMetrics(Data.GfxStoreMetrics);
+
     }
 
     public void RefreshMemoryMetrics()
     {
         Data.MemoryMetrics = DebugRouter.PullMemoryMetrics?.Invoke() ?? default;
-        TextData.UpdateMemoryMetrics(in Data.MemoryMetrics);
+        TextData.UpdateMemoryMetrics(Data.MemoryMetrics);
     }
-
-    private static string FormatMb(long bytes) => $"{bytes / 1024 / 1024} MB";
-    private static string Format(float value) => value.ToString("0.00");
-
 
     public void Dispose() => _controller.Dispose();
 

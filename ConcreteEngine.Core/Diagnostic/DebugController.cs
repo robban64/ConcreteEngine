@@ -1,7 +1,10 @@
 #region
 
+using System.Diagnostics;
 using System.Runtime.CompilerServices;
+using ConcreteEngine.Common.Diagnostics;
 using ConcreteEngine.Core.Assets;
+using ConcreteEngine.Core.Assets.Data;
 using ConcreteEngine.Core.Assets.Materials;
 using ConcreteEngine.Core.Data;
 using ConcreteEngine.Core.Scene;
@@ -35,34 +38,56 @@ internal static class DebugController
         _frameInfo = frameInfo;
     }
 
-    internal static DebugFrameMetrics GetFrameMetrics()
+    internal static FrameMetric<RenderInfoSample> GetFrameMetrics()
     {
-        if (_frameInfo is null) return default;
+        if (_frameInfo is not { } f) return default;
 
-        var gfxInfo = _frameInfo.GfxResult;
-        return new DebugFrameMetrics
-            (_frameInfo.FrameIndex, _frameInfo.Fps, _frameInfo.Alpha, gfxInfo.TriangleCount, gfxInfo.DrawCalls);
+        var gfxInfo = f.GfxResult;
+        var sample = new RenderInfoSample(f.Fps, f.Alpha, 0, gfxInfo.TriangleCount, gfxInfo.DrawCalls);
+        return new FrameMetric<RenderInfoSample>(f.FrameIndex, f.TimeStamp, in sample, default);
     }
 
-    internal static DebugMemoryMetrics GetMemoryMetrics() => new((int)GC.GetAllocatedBytesForCurrentThread());
+    internal static PairSample GetMemoryMetrics() => new((int)GC.GetAllocatedBytesForCurrentThread());
 
-    internal static DebugSceneMetrics GetSceneMetrics() =>
-        _world is not null ? new DebugSceneMetrics(_world.EntityCount, _world.ShadowMapSize) : default;
+    internal static PairSample GetSceneMetrics() =>
+        _world is not null ? new(_world.EntityCount, _world.ShadowMapSize) : default;
 
-    internal static DebugMaterialMetrics GetMaterialMetrics() =>
-        Materials is not null ? new DebugMaterialMetrics(Materials.Count, Materials.FreeSlots) : default;
+    internal static StoreMetric<CollectionSample> GetMaterialMetrics()
+    {
+        if (Materials is not { } m) return default;
+        var sample = new CollectionSample(m.Count, 0, 0, m.FreeSlots);
+        return new StoreMetric<CollectionSample>(sample, default);
+    }
 
-    internal static void DrainAssetStoreMetrics(List<DebugAssetStoreMetricRecord> result)
+    internal static void DrainAssetStoreMetrics(MetricData data)
     {
         if (_assetSystem is null) return;
-        var store = _assetSystem.StoreImpl.GetAssetTypeMeta();
-        result.Clear();
-        foreach (var (k, v) in store)
-            result.Add(new DebugAssetStoreMetricRecord(k.Name, v.Count, v.FileCount));
+
+        var store = _assetSystem.StoreImpl;
+
+        if (data.AssetMetrics.Length != store.TypeCount)
+        {
+            data.AssetMetrics = new DebugAssetStoreMetrics[store.TypeCount];
+            var names = store.GetStoreNames();
+            Debug.Assert(data.AssetMetrics.Length == store.TypeCount);
+            for (int i = 0; i < data.AssetMetrics.Length; i++)
+                data.AssetMetrics[i] = new DebugAssetStoreMetrics(names[i], "", 1);
+        }
+
+        var result = data.AssetMetrics;
+        Span<AssetTypeMetaSnapshot> span = stackalloc AssetTypeMetaSnapshot[store.TypeCount];
+        store.ExtractMeta(span);
+        for (int i = 0; i < span.Length; i++)
+        {
+            var res = result[i];
+            ref readonly var metrics = ref span[i];
+
+            var sample = new CollectionSample(metrics.Count, metrics.FileCount, 0);
+            res.Metrics = new StoreMetric<CollectionSample>(sample, default);
+        }
     }
 
-    internal static void DrainGfxStoreMetrics(List<DebugStoreMetrics> result) =>
-        DebugGfxController.DrainGfxStoreMetrics(result);
+    internal static void DrainGfxStoreMetrics(MetricData data) => DebugGfxController.DrainGfxStoreMetrics(data);
 
     public static void OnRecreateShader(DebugConsoleCtx ctx, string? arg1, string? arg2)
     {
@@ -110,7 +135,10 @@ internal static class DebugController
         ctx.AddLog(StructStr<RenderBufferMeta>());
         ctx.AddLog(StructStr<UniformBufferMeta>());
 
-        ctx.AddLog(StructStr<GfxStoreMetricsRecord>());
+        ctx.AddLog(StructStr<StoreMetric<CollectionSample>>());
+        ctx.AddLog(StructStr<GfxResourceMetric<ValueSample>>());
+
+
         ctx.AddLog(StructStr<GfxStoreMetricsPayload>());
     }
 

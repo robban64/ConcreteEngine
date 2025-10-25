@@ -26,20 +26,25 @@ public sealed class DebugMemoryMetricsText
     public string? Allocated { get; set; }
 }
 
-public readonly record struct AssetStoreMetricsTextRecord(string Name, string Count, string Files);
-
-public sealed class GfxStoreTextRecord(string name, string simpleName)
+public sealed class AssetStoreTextRecord(string name, string shortName)
 {
     public string? Name { get; } = name;
-    public string? SimpleName { get; } = simpleName;
-    public GfxStoreMetricsTextRecord GfxStore { get; } = new();
-    public GfxStoreMetricsTextRecord BkStore { get; } = new();
+    public string? ShortName { get; } = shortName;
+    public string? Assets { get; set; }
+    public string? AssetFiles { get; set; }
 }
 
-public sealed class GfxStoreMetricsTextRecord
+public sealed class GfxStoreTextRecord(string name, string shortName)
 {
-    public string? StoreCount { get; set; }
-    public string? StoreAliveCap { get; set; }
+    public string? Name { get; } = name;
+    public string? ShortName { get; } = shortName;
+    public TextRecord GfxStore { get; } = new();
+    public TextRecord BkStore { get; } = new();
 
-    public string? SpecialMetric { get; set; }
+    public sealed class TextRecord
+    {
+        public string? StoreCount { get; set; }
+        public string? StoreAliveCap { get; set; }
+        public string? SpecialMetric { get; set; }
+    }
 }

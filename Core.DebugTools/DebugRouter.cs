@@ -1,3 +1,4 @@
+using ConcreteEngine.Common.Diagnostics;
 using Core.DebugTools.Components;
 using Core.DebugTools.Data;
 
@@ -8,12 +9,12 @@ public static class DebugRouter
     private static Dictionary<string, Action<DebugConsoleCtx, string?, string?>> _commands = new(4);
 
     // Fetchers
-    public static Func<DebugFrameMetrics>? PullFrameMetrics { get; set; }
-    public static Func<DebugSceneMetrics>? PullSceneMetrics { get; set; }
-    public static Func<DebugMaterialMetrics>? PullMaterialMetrics { get; set; }
-    public static Func<DebugMemoryMetrics>? PullMemoryMetrics { get; set; }
-    public static Action<List<DebugStoreMetrics>>? FillGfxStoreMetrics { get; set; }
-    public static Action<List<DebugAssetStoreMetricRecord>>? FillAssetMetrics { get; set; }
+    public static Func<FrameMetric<RenderInfoSample>>? PullFrameMetrics { get; set; }
+    public static Func<PairSample>? PullSceneMetrics { get; set; }
+    public static Func<StoreMetric<CollectionSample>>? PullMaterialMetrics { get; set; }
+    public static Func<PairSample>? PullMemoryMetrics { get; set; }
+    public static Action<MetricData>? FillGfxStoreMetrics { get; set; }
+    public static Action<MetricData>? FillAssetMetrics { get; set; }
 
 
     // Commands

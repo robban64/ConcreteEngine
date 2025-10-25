@@ -38,8 +38,8 @@ public sealed class MaterialStore : IMaterialStore
     private readonly Dictionary<string, MaterialId> _materialDict = new(8);
 
     public int Count => _idx;
-
     public int FreeSlots => _free.Count;
+    
 
     internal MaterialStore(AssetStore assetStore)
     {

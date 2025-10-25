@@ -42,6 +42,10 @@ internal sealed class AssetStore : IAssetStore
 
     private readonly Dictionary<Type, AssetTypeMeta> _typeMeta = new(8);
 
+    public int Count => _assetId;
+    public int FileCount => _files.Count;
+    public int Capacity => _assets.Capacity;
+    public int TypeCount => _typeMeta.Count;
 
     internal AssetStore()
     {
@@ -126,8 +130,6 @@ internal sealed class AssetStore : IAssetStore
         return true;
     }
 
-
-
     public void ExtractList<TAsset, TData>(List<TData> list, Func<TAsset, TData> transform)
         where TAsset : AssetObject
     {
@@ -146,6 +148,26 @@ internal sealed class AssetStore : IAssetStore
             if (asset is TAsset typedAsset) span[idx++] = transform(typedAsset);
             if (idx >= span.Length) break;
         }
+    }
+
+    public void ExtractMeta(Span<AssetTypeMetaSnapshot> span)
+    {
+        var idx = 0;
+        foreach (var meta in _typeMeta.Values)
+        {
+            span[idx++] = meta.ToSnapshot();
+            if (idx >= span.Length) break;
+        }
+    }
+    
+    public ReadOnlySpan<string> GetStoreNames()
+    {
+        var names = new string[Count];
+        var idx = 0;
+        foreach (var it in _typeMeta.Keys)
+            names[idx++] = it.Name;
+        
+        return names;
     }
 
     public void Process<TAsset>(Action<TAsset> action) where TAsset : AssetObject

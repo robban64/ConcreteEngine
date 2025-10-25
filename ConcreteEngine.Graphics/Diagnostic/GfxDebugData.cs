@@ -1,5 +1,6 @@
 #region
 
+using ConcreteEngine.Common.Diagnostics;
 using ConcreteEngine.Graphics.Gfx.Definitions;
 
 #endregion
@@ -7,12 +8,14 @@ using ConcreteEngine.Graphics.Gfx.Definitions;
 namespace ConcreteEngine.Graphics.Diagnostic;
 
 public readonly struct GfxStoreMetricsPayload(
-    in GfxStoreMetricsRecord fk,
-    in GfxStoreMetricsRecord bk,
+    in StoreMetric<CollectionSample> fk,
+    in StoreMetric<CollectionSample> bk,
+    in GfxResourceMetric<ValueSample> special,
     ResourceKind kind)
 {
-    public readonly GfxStoreMetricsRecord Fk = fk;
-    public readonly GfxStoreMetricsRecord Bk = bk;
+    public readonly StoreMetric<CollectionSample> Fk = fk;
+    public readonly StoreMetric<CollectionSample> Bk = bk;
+    public readonly GfxResourceMetric<ValueSample> Special = special;
     public readonly ResourceKind Kind = kind;
 }
 
@@ -28,7 +31,6 @@ public readonly record struct GfxMetaSpecialMetric(
     int ResourceId,
     ushort Param2 = 0,
     ResourceKind Kind = 0);
-
 
 /*
 

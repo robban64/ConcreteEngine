@@ -12,7 +12,7 @@ using Silk.NET.Windowing;
 
 namespace Core.DebugTools;
 
-public sealed class DebugService : IDisposable
+public sealed class DiagnosticsService : IDisposable
 {
     private readonly ImGuiController _controller;
 
@@ -23,7 +23,7 @@ public sealed class DebugService : IDisposable
     private readonly DebugLeftPanelGui _leftPanel;
     private readonly DebugRightPanelGui _rightPanel;
 
-    public DebugService(GL gl, IWindow window, IInputContext inputCtx)
+    public DiagnosticsService(GL gl, IWindow window, IInputContext inputCtx)
     {
         _controller = new ImGuiController(gl, window, inputCtx);
         Data = new MetricData();
@@ -36,23 +36,23 @@ public sealed class DebugService : IDisposable
 
     public void RefreshSceneMetrics()
     {
-        Data.SceneMetrics = DebugRouter.PullSceneMetrics?.Invoke() ?? default;
+        Data.SceneMetrics = RouteTable.PullSceneMetrics?.Invoke() ?? default;
         TextData.UpdateSceneMetrics(in Data.SceneMetrics);
     }
 
     public void RefreshFrameMetrics()
     {
-        Data.FrameMetrics = DebugRouter.PullFrameMetrics?.Invoke() ?? default;
+        Data.FrameMetrics = RouteTable.PullFrameMetrics?.Invoke() ?? default;
         TextData.UpdateFrameMetrics(in Data.FrameMetrics);
     }
 
     public void RefreshStoreMetrics()
     {
-        Data.MaterialMetrics = DebugRouter.PullMaterialMetrics?.Invoke() ?? default;
+        Data.MaterialMetrics = RouteTable.PullMaterialMetrics?.Invoke() ?? default;
         TextData.UpdateMaterialMetrics(in Data.MaterialMetrics);
         
-        DebugRouter.FillAssetMetrics?.Invoke(Data);
-        DebugRouter.FillGfxStoreMetrics?.Invoke(Data);
+        RouteTable.FillAssetMetrics?.Invoke(Data);
+        RouteTable.FillGfxStoreMetrics?.Invoke(Data);
         TextData.UpdateAssetMetrics(Data.AssetMetrics);
         TextData.UpdateGfxStoreMetrics(Data.GfxStoreMetrics);
 
@@ -60,7 +60,7 @@ public sealed class DebugService : IDisposable
 
     public void RefreshMemoryMetrics()
     {
-        Data.MemoryMetrics = DebugRouter.PullMemoryMetrics?.Invoke() ?? default;
+        Data.MemoryMetrics = RouteTable.PullMemoryMetrics?.Invoke() ?? default;
         TextData.UpdateMemoryMetrics(Data.MemoryMetrics);
     }
 

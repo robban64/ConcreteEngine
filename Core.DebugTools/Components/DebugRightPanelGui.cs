@@ -32,8 +32,6 @@ internal sealed class DebugRightPanelGui(MetricReport data)
             DrawCpuMetrics();
             ImGui.Dummy(new Vector2(0, 6));
             DrawGcMetrics();
-            ImGui.Dummy(new Vector2(0, 6));
-            DrawGpuMetrics();
         }
 
         ImGui.End();
@@ -42,22 +40,19 @@ internal sealed class DebugRightPanelGui(MetricReport data)
 
     private void DrawCpuMetrics()
     {
-        DrawSectionHeader("CPU Metrics");
+        DrawSectionHeader("Frame Metrics");
         MetricLine(data.FrameMetrics.FrameIndex);
         MetricLine(data.FrameMetrics.Fps);
         MetricLine(data.FrameMetrics.Alpha);
+        MetricLine(data.FrameMetrics.DrawCalls);
+        MetricLine(data.FrameMetrics.TriangleCount);
+        MetricLine(data.FrameMetrics.Passes);
+
     }
 
     private void DrawGcMetrics()
     {
         DrawSectionHeader("GC / Memory");
         MetricLine(data.MemoryMetrics);
-    }
-
-    private void DrawGpuMetrics()
-    {
-        DrawSectionHeader("GPU Metrics");
-        MetricLine(data.FrameMetrics.TriangleCount);
-        MetricLine(data.FrameMetrics.DrawCalls);
     }
 }

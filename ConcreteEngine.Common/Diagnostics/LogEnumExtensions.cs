@@ -1,7 +1,4 @@
-using ConcreteEngine.Common.Diagnostics;
-using ConcreteEngine.Graphics.Gfx.Definitions;
-
-namespace ConcreteEngine.Graphics.Diagnostic;
+namespace ConcreteEngine.Common.Diagnostics;
 
 public static class LogEnumExtensions
 {

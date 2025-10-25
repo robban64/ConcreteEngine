@@ -7,6 +7,7 @@ using ConcreteEngine.Core.Assets;
 using ConcreteEngine.Core.Assets.Data;
 using ConcreteEngine.Core.Assets.Materials;
 using ConcreteEngine.Core.Data;
+using ConcreteEngine.Core.Diagnostic.utils;
 using ConcreteEngine.Core.Scene;
 using ConcreteEngine.Core.Scene.Entities;
 using ConcreteEngine.Graphics.Diagnostic;
@@ -22,73 +23,15 @@ using Core.DebugTools.Data;
 
 namespace ConcreteEngine.Core.Diagnostic;
 
-internal static class DebugController
+internal static class CommandRouter
 {
     //
-    private static World? _world;
     private static AssetSystem? _assetSystem;
-    private static RenderEngineFrameInfo? _frameInfo;
 
-    private static MaterialStore? Materials => _assetSystem?.MaterialStoreImpl;
-
-
-    internal static void Attach(World world, AssetSystem assetSystem, RenderEngineFrameInfo frameInfo)
+    internal static void Attach(AssetSystem assetSystem)
     {
-        _world = world;
         _assetSystem = assetSystem;
-        _frameInfo = frameInfo;
     }
-
-    internal static FrameMetric<RenderInfoSample> GetFrameMetrics()
-    {
-        if (_frameInfo is not { } f) return default;
-
-        var gfxInfo = f.GfxResult;
-        var sample = new RenderInfoSample(f.Fps, f.Alpha, 0, gfxInfo.TriangleCount, gfxInfo.DrawCalls);
-        return new FrameMetric<RenderInfoSample>(f.FrameIndex, f.TimeStamp, in sample, default);
-    }
-
-    internal static PairSample GetMemoryMetrics() => new((int)GC.GetAllocatedBytesForCurrentThread());
-
-    internal static PairSample GetSceneMetrics() =>
-        _world is not null ? new(_world.EntityCount, _world.ShadowMapSize) : default;
-
-    internal static StoreMetric<CollectionSample> GetMaterialMetrics()
-    {
-        if (Materials is not { } m) return default;
-        var sample = new CollectionSample(m.Count, 0, 0, m.FreeSlots);
-        return new StoreMetric<CollectionSample>(sample, default);
-    }
-
-    internal static void DrainAssetStoreMetrics(MetricData data)
-    {
-        if (_assetSystem is null) return;
-
-        var store = _assetSystem.StoreImpl;
-
-        if (data.AssetMetrics.Length != store.TypeCount)
-        {
-            data.AssetMetrics = new DebugAssetStoreMetrics[store.TypeCount];
-            var names = store.GetStoreNames();
-            Debug.Assert(data.AssetMetrics.Length == store.TypeCount);
-            for (int i = 0; i < data.AssetMetrics.Length; i++)
-                data.AssetMetrics[i] = new DebugAssetStoreMetrics(names[i], "", 1);
-        }
-
-        var result = data.AssetMetrics;
-        Span<AssetTypeMetaSnapshot> span = stackalloc AssetTypeMetaSnapshot[store.TypeCount];
-        store.ExtractMeta(span);
-        for (int i = 0; i < span.Length; i++)
-        {
-            var res = result[i];
-            ref readonly var metrics = ref span[i];
-
-            var sample = new CollectionSample(metrics.Count, metrics.FileCount, 0);
-            res.Metrics = new StoreMetric<CollectionSample>(sample, default);
-        }
-    }
-
-    internal static void DrainGfxStoreMetrics(MetricData data) => DebugGfxController.DrainGfxStoreMetrics(data);
 
     public static void OnRecreateShader(DebugConsoleCtx ctx, string? arg1, string? arg2)
     {
@@ -102,8 +45,8 @@ internal static class DebugController
     {
         if (_assetSystem is null) return;
         ArgumentNullException.ThrowIfNull(arg1, nameof(arg1));
-        var size = DebugParser.IntArg(arg1);
-        var shadowSize = DebugUtils.GetShadowSize(size);
+        var size = CommandUtils.IntArg(arg1);
+        var shadowSize = CommandUtils.GetShadowSize(size);
         if (shadowSize <= 0)
         {
             throw new ArgumentException("Supported are 1,2,4,8 (1024, 2048, 4096, 8192)",

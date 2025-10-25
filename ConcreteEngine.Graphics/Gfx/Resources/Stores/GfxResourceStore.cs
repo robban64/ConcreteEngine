@@ -107,7 +107,7 @@ internal sealed class GfxResourceStore<TId, TMeta> : IGfxResourceStore<TId>
         _handle[idx] = refToken;
         var newId = _makeResourceId(idx);
 
-        GfxDebugLog.LogGfxStore(newId, refToken, TId.Kind.ToLogTopic(), LogAction.Add);
+        GfxLog.LogGfxStore(newId, refToken, TId.Kind.ToLogTopic(), LogAction.Add);
         return newId;
     }
 
@@ -127,7 +127,7 @@ internal sealed class GfxResourceStore<TId, TMeta> : IGfxResourceStore<TId>
         _handle[idx] = default!;
         _free.Push(idx);
 
-        GfxDebugLog.LogGfxStore(id, handle, TId.Kind.ToLogTopic(), LogAction.Remove);
+        GfxLog.LogGfxStore(id, handle, TId.Kind.ToLogTopic(), LogAction.Remove);
         return handle;
     }
 
@@ -143,7 +143,7 @@ internal sealed class GfxResourceStore<TId, TMeta> : IGfxResourceStore<TId>
 
         var message = new GfxMetaChanged<TMeta>(in newMeta, in oldMeta, handle.Gen, true, ResourceKind);
         ChangeCallback?.Invoke(id, in message);
-        GfxDebugLog.LogGfxStore(id, handle, TId.Kind.ToLogTopic(), LogAction.Replace);
+        GfxLog.LogGfxStore(id, handle, TId.Kind.ToLogTopic(), LogAction.Replace);
         return id;
     }
 

@@ -7,6 +7,7 @@ public sealed class DebugFrameMetricsText
     public string? Alpha { get; set; }
     public string? TriangleCount { get; set; }
     public string? DrawCalls { get; set; }
+    public string Passes { get; set; }
 }
 
 public sealed class DebugSceneMetricsText

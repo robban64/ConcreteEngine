@@ -19,13 +19,6 @@ public readonly struct GfxStoreMetricsPayload(
     public readonly ResourceKind Kind = kind;
 }
 
-public readonly record struct GfxStoreMetricsRecord(
-    int Count,
-    int Alive,
-    int Free,
-    int Capacity,
-    in GfxMetaSpecialMetric Special);
-
 public readonly record struct GfxMetaSpecialMetric(
     long Value,
     int ResourceId,

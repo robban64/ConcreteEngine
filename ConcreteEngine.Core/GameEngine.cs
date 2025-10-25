@@ -41,7 +41,7 @@ public sealed class GameEngine : IDisposable
 
     private readonly EngineTimeHub _timeHub;
 
-    private readonly EngineDebugGateway _engineDebugGateway;
+    private readonly EngineGateway _engineGateway;
 
     private bool _isDisposed = false;
 
@@ -77,8 +77,8 @@ public sealed class GameEngine : IDisposable
         _stateMachine = new LinearStateMachine<EngineStateLevel>(Enum.GetValues<EngineStateLevel>());
 
         var internalInput = input.InputContext;
-        _engineDebugGateway =
-            new EngineDebugGateway(gfxBundle.Config.DriverContext, engineWindow.PlatformWindow, internalInput);
+        _engineGateway =
+            new EngineGateway(gfxBundle.Config.DriverContext, engineWindow.PlatformWindow, internalInput);
 
         _updateInfo = new UpdateFrameInfo();
         _renderFrameInfo = new RenderEngineFrameInfo(_window.OutputSize);
@@ -98,7 +98,7 @@ public sealed class GameEngine : IDisposable
         RegisterRenderer();
         
         // prevent spam from first load. Move up to log startup issues
-        GfxDebugLog.Enabled = true;
+        GfxLog.Enabled = true;
     }
 
     private void RegisterRenderer()
@@ -120,7 +120,7 @@ public sealed class GameEngine : IDisposable
 
         _timeHub.RenderFrame(dt);
 
-        _engineDebugGateway.Update(dt);
+        _engineGateway.Update(dt);
 
         if (_sceneManager.Current is not { } scene)
         {
@@ -149,7 +149,7 @@ public sealed class GameEngine : IDisposable
         _engineRenderSystem.ExecuteFrame(out var gfxFrameResult);
         _renderFrameInfo.EndRenderFrame(gfxFrameResult);
 
-        _engineDebugGateway.RenderMetricsUi();
+        _engineGateway.RenderMetricsUi();
 
 
         // _renderTime.TickOrRenderEffect();
@@ -186,14 +186,14 @@ public sealed class GameEngine : IDisposable
     private void GameTickUpdate(int tick)
     {
         _updateInfo.UpdateTick(tick);
-        _inputSystem.Update(!_engineDebugGateway.BlockInput());
+        _inputSystem.Update(!_engineGateway.BlockInput());
         _sceneManager.Current?.UpdateTick(tick);
     }
 
     private void DebugTickUpdate(int tick)
     {
-        if (!_engineDebugGateway.Enabled) return;
-        _engineDebugGateway.RefreshMetrics();
+        if (!_engineGateway.Enabled) return;
+        _engineGateway.RefreshMetrics();
     }
 
 
@@ -238,10 +238,10 @@ public sealed class GameEngine : IDisposable
     
     private void OnSceneBuild(SceneManager.SceneBuildResult result, EngineRenderSystem renderer)
     {
-        _engineDebugGateway.AttachDebugTools((World)result.Context.World, _assets, _renderFrameInfo);
-        _engineDebugGateway.RegisterCommands();
-        _engineDebugGateway.RegisterMetrics();
-        _engineDebugGateway.RefreshMetrics(true);
+        _engineGateway.AttachDebugTools((World)result.Context.World, _assets, _renderFrameInfo);
+        _engineGateway.RegisterCommands();
+        _engineGateway.RegisterMetrics();
+        _engineGateway.RefreshMetrics(true);
 
         renderer.AttachWorld((World)result.Context.World);
         foreach (var module in result.Modules) result.Context.Modules.AddModule(module());

@@ -4,6 +4,7 @@ using System.Text.Json;
 using ConcreteEngine.Core.Assets;
 using ConcreteEngine.Core.Assets.Materials;
 using ConcreteEngine.Core.Data;
+using ConcreteEngine.Core.Diagnostic.utils;
 using ConcreteEngine.Core.Scene;
 using ConcreteEngine.Graphics;
 using ConcreteEngine.Graphics.Diagnostic;
@@ -19,9 +20,9 @@ using Core.DebugTools.Components;
 
 namespace ConcreteEngine.Core.Diagnostic;
 
-internal sealed class EngineDebugGateway
+internal sealed class EngineGateway
 {
-    private readonly DebugService _debug;
+    private readonly DiagnosticsService _diagnostics;
 
     public bool HasBoundCommands { get; private set; }
     public bool HasBoundMetrics { get; private set; }
@@ -31,9 +32,9 @@ internal sealed class EngineDebugGateway
     private int _ticker2 = 0, _ticker4 = 0, _ticker8 = 0;
 
 
-    public EngineDebugGateway(GL gl, IWindow window, IInputContext inputCtx)
+    public EngineGateway(GL gl, IWindow window, IInputContext inputCtx)
     {
-        _debug = new DebugService(gl, window, inputCtx);
+        _diagnostics = new DiagnosticsService(gl, window, inputCtx);
 
         //GfxDebugLog.ToggleLog(false, source: GfxLogSource.Store, layer: GfxLogLayer.Backend);
         //GfxDebugLog.ToggleLog(false, action: GfxLogAction.EnqueueDispose);
@@ -42,7 +43,7 @@ internal sealed class EngineDebugGateway
     public bool HasBindings => HasBoundCommands || HasBoundMetrics;
     public bool Active => Enabled && HasBindings;
 
-    public bool BlockInput() => Enabled && _debug.BlockInput();
+    public bool BlockInput() => Enabled && _diagnostics.BlockInput();
 
     public void AttachDebugTools(World world, AssetSystem assetSystem, RenderEngineFrameInfo frameInfo)
     {
@@ -50,7 +51,8 @@ internal sealed class EngineDebugGateway
         ArgumentNullException.ThrowIfNull(assetSystem, nameof(assetSystem));
         ArgumentNullException.ThrowIfNull(frameInfo, nameof(frameInfo));
 
-        DebugController.Attach(world, assetSystem, frameInfo);
+        CommandRouter.Attach(assetSystem);
+        MetricRouter.Attach(world, assetSystem, frameInfo);
     }
 
     public void RegisterCommands()
@@ -59,10 +61,10 @@ internal sealed class EngineDebugGateway
         if (HasBoundCommands) throw new InvalidOperationException(nameof(HasBoundCommands));
         HasBoundCommands = true;
 
-        DebugRouter.RegisterCommand("inspect-structs", CmdWrapper(DebugController.OnCmdStructSizes));
-        DebugRouter.RegisterCommand("reload-shader", CmdWrapper(DebugController.OnRecreateShader));
-        DebugRouter.RegisterCommand("shadow-map", CmdWrapper(DebugController.OnSetShadowMapSize));
-       /* DebugRouter.RegisterCommand("fbo-meta", CmdWrapper(static (ctx, arg1, arg2) =>
+        RouteTable.RegisterCommand("inspect-structs", CmdWrapper(CommandRouter.OnCmdStructSizes));
+        RouteTable.RegisterCommand("reload-shader", CmdWrapper(CommandRouter.OnRecreateShader));
+        RouteTable.RegisterCommand("shadow-map", CmdWrapper(CommandRouter.OnSetShadowMapSize));
+       /* RouteTable.RegisterCommand("fbo-meta", CmdWrapper(static (ctx, arg1, arg2) =>
         {
             var opts = new JsonSerializerOptions { IncludeFields = true };
 
@@ -77,25 +79,25 @@ internal sealed class EngineDebugGateway
         if (HasBoundMetrics) throw new InvalidOperationException(nameof(HasBoundMetrics));
         HasBoundMetrics = true;
 
-        DebugRouter.PullFrameMetrics = DebugController.GetFrameMetrics;
-        DebugRouter.PullMaterialMetrics = DebugController.GetMaterialMetrics;
-        DebugRouter.PullSceneMetrics = DebugController.GetSceneMetrics;
-        DebugRouter.PullMemoryMetrics = DebugController.GetMemoryMetrics;
+        RouteTable.PullFrameMetrics = MetricRouter.GetFrameMetrics;
+        RouteTable.PullMaterialMetrics = MetricRouter.GetMaterialMetrics;
+        RouteTable.PullSceneMetrics = MetricRouter.GetSceneMetrics;
+        RouteTable.PullMemoryMetrics = MetricRouter.GetMemoryMetrics;
 
-        DebugRouter.FillAssetMetrics = DebugController.DrainAssetStoreMetrics;
-        DebugRouter.FillGfxStoreMetrics = DebugController.DrainGfxStoreMetrics;
+        RouteTable.FillAssetMetrics = MetricRouter.DrainAssetStoreMetrics;
+        RouteTable.FillGfxStoreMetrics = MetricRouter.DrainGfxStoreMetrics;
     }
 
     public void Update(float delta)
     {
         if (!Enabled) return;
-        _debug.Update(delta);
+        _diagnostics.Update(delta);
     }
 
     public void RenderMetricsUi()
     {
         if (!Enabled) return;
-        _debug.Render();
+        _diagnostics.Render();
     }
 
     public void RefreshMetrics(bool force = false)
@@ -103,20 +105,20 @@ internal sealed class EngineDebugGateway
         if (!Enabled) return;
         if (force)
         {
-            _debug.RefreshFrameMetrics();
-            _debug.RefreshStoreMetrics();
-            _debug.RefreshSceneMetrics();
-            _debug.RefreshMemoryMetrics();
+            _diagnostics.RefreshFrameMetrics();
+            _diagnostics.RefreshStoreMetrics();
+            _diagnostics.RefreshSceneMetrics();
+            _diagnostics.RefreshMemoryMetrics();
             DrainGfxLogs();
             return;
         }
 
-        _debug.RefreshFrameMetrics();
+        _diagnostics.RefreshFrameMetrics();
 
         if (_tickToggle)
         {
-            _debug.RefreshStoreMetrics();
-            _debug.RefreshSceneMetrics();
+            _diagnostics.RefreshStoreMetrics();
+            _diagnostics.RefreshSceneMetrics();
         }
         else
         {
@@ -128,16 +130,16 @@ internal sealed class EngineDebugGateway
         if (++_ticker8 >= 8)
         {
             _ticker8 = 0;
-            _debug.RefreshMemoryMetrics();
+            _diagnostics.RefreshMemoryMetrics();
         }
     }
 
     private void DrainGfxLogs()
     {
-        while (GfxDebugLog.LogQueue.Count > 0)
+        while (GfxLog.LogQueue.Count > 0)
         {
-            var cmd = GfxDebugLog.LogQueue.Dequeue();
-            _debug.DevConsole.AddLog(cmd.ToString());
+            var cmd = GfxLog.LogQueue.Dequeue();
+            _diagnostics.DevConsole.AddLog(cmd.ToString());
         }
     }
     
@@ -146,9 +148,9 @@ internal sealed class EngineDebugGateway
         return (ctx, a1, a2) =>
         {
             try { f(ctx, a1, a2); }
-            catch (Exception ex) when (DebugParser.IsSafeError(ex))
+            catch (Exception ex) when (CommandUtils.IsSafeError(ex))
             {
-                ctx.AddLog(DebugParser.ErrorMessageFor(ex));
+                ctx.AddLog(CommandUtils.ErrorMessageFor(ex));
             }
         };
     }

@@ -16,12 +16,12 @@ public sealed class MetricReport
     internal void UpdateFrameMetrics(in FrameMetric<RenderInfoSample> m)
     {
         var sample = m.Sample;
-        FrameMetrics.FrameIndex = $"FrameId: {m.FrameId} ms";
+        FrameMetrics.FrameIndex = $"FrameId: {m.FrameId}";
         FrameMetrics.Fps = $"FPS: {Format(sample.Fps)}";
         FrameMetrics.Alpha = $"Alpha: {Format(sample.Alpha)} ms";
         FrameMetrics.DrawCalls = $"Draws: {sample.Draws}";
         FrameMetrics.TriangleCount = $"Tris: {sample.Tris}";
-        FrameMetrics.TriangleCount = $"Passes: {sample.Passes}";
+        FrameMetrics.Passes = $"Passes: {sample.Passes}";
     }
 
     internal void UpdateSceneMetrics(in PairSample m)

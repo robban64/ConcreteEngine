@@ -10,7 +10,7 @@ using ConcreteEngine.Graphics.Gfx.Resources;
 
 namespace ConcreteEngine.Graphics.Diagnostic;
 
-public static class GfxDebugLog
+public static class GfxLog
 {
     public static Queue<LogEvent> LogQueue { get; } = new(16);
 

@@ -72,7 +72,7 @@ internal sealed class BackendResourceStore<TId, THandle> : IBackendResourceStore
         _records[idx] = newHandle;
 
         var result = GfxRefToken<TId>.From(new GfxHandle(idx, newHandle.Gen, Kind));
-        GfxDebugLog.LogBkStore(value, result, TId.Kind.ToLogTopic(),  LogAction.Add);
+        GfxLog.LogBkStore(value, result, TId.Kind.ToLogTopic(),  LogAction.Add);
         return result;
     }
 
@@ -89,7 +89,7 @@ internal sealed class BackendResourceStore<TId, THandle> : IBackendResourceStore
 
         _records[handle.Slot] = default;
         _free.Push(handle.Slot);
-        GfxDebugLog.LogBkStore(record.Handle, handle, TId.Kind.ToLogTopic(),  LogAction.Remove);
+        GfxLog.LogBkStore(record.Handle, handle, TId.Kind.ToLogTopic(),  LogAction.Remove);
     }
 
     public GfxRefToken<TId> Replace(GfxRefToken<TId> refToken, THandle value)
@@ -104,8 +104,8 @@ internal sealed class BackendResourceStore<TId, THandle> : IBackendResourceStore
 
         var newRef = GfxRefToken<TId>.From(handle with { Gen = newRecord.Gen });
         
-        GfxDebugLog.LogBkStore(value, refToken, TId.Kind.ToLogTopic(),  LogAction.Replace,0);
-        GfxDebugLog.LogBkStore(value, newRef, TId.Kind.ToLogTopic(),  LogAction.Replace, 1);
+        GfxLog.LogBkStore(value, refToken, TId.Kind.ToLogTopic(),  LogAction.Replace,0);
+        GfxLog.LogBkStore(value, newRef, TId.Kind.ToLogTopic(),  LogAction.Replace, 1);
 
         return newRef;
         //return GfxRefToken<TId>.From(handle with { Gen = newRecord.Gen });

@@ -4,7 +4,7 @@ using Core.DebugTools.Data;
 
 namespace Core.DebugTools;
 
-public static class DebugRouter
+public static class RouteTable
 {
     private static Dictionary<string, Action<DebugConsoleCtx, string?, string?>> _commands = new(4);
 

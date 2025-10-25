@@ -9,7 +9,7 @@ using ConcreteEngine.Graphics.Gfx.Resources;
 
 namespace ConcreteEngine.Graphics.Diagnostic;
 
-public static class GfxDebugMetrics
+public static class GfxMetrics
 {
     private static readonly ResourceKind[] Kinds = Enum.GetValues<ResourceKind>();
 

@@ -52,7 +52,7 @@ public class DebugConsole
             return true;
         }
 
-        if (!DebugRouter.InvokeCommand(_ctx, cmd, arg1, arg2))
+        if (!RouteTable.InvokeCommand(_ctx, cmd, arg1, arg2))
         {
             _log.Add($"Unknown command: {cmd}");
             return false;

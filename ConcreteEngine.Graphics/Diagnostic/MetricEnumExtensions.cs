@@ -9,8 +9,6 @@ namespace ConcreteEngine.Graphics.Diagnostic;
 
 public static class MetricEnumExtensions
 {
-  
-    
     public static LogTopic ToLogTopic(this ResourceKind kind)
     {
         return kind switch
@@ -27,8 +25,7 @@ public static class MetricEnumExtensions
             _ => throw new ArgumentOutOfRangeException(nameof(kind), kind, null)
         };
     }
-    
-    
+
     public static ResourceKind ToResourceKind(this LogTopic topic)
     {
         return topic switch
@@ -46,7 +43,6 @@ public static class MetricEnumExtensions
         };
     }
 
-
     public static string ToResourceName(this ResourceKind kind)
     {
         return kind switch
@@ -62,7 +58,7 @@ public static class MetricEnumExtensions
             _ => "Invalid"
         };
     }
-    
+
     public static string ToShortText(this ResourceKind kind)
     {
         return kind switch

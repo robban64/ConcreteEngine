@@ -69,7 +69,7 @@ internal sealed class EngineStateMachine
         _currentState.AttachState(nextStateType, _context);
     }
 
-    public void Update(in FrameMetaInfo frameCtx)
+    public void Replace(in FrameMetaInfo frameCtx)
     {
         if (_currentState == null) return;
         var state = _currentState;

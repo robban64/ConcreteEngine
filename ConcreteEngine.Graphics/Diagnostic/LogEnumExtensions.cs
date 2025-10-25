@@ -1,0 +1,93 @@
+using ConcreteEngine.Common.Diagnostics;
+using ConcreteEngine.Graphics.Gfx.Definitions;
+
+namespace ConcreteEngine.Graphics.Diagnostic;
+
+public static class LogEnumExtensions
+{
+    public static string ToLogText(this LogLevel value)
+    {
+        return value switch
+        {
+            LogLevel.Unset => "Unset",
+            LogLevel.Trace => "Trace",
+            LogLevel.Debug => "Debug",
+            LogLevel.Info => "Info",
+            LogLevel.Warn => "Warn",
+            LogLevel.Error => "Error",
+            LogLevel.Critical => "Critical",
+            _ => "Unknown"
+        };
+    }
+
+    public static string ToLogText(this LogTopic value)
+    {
+        return value switch
+        {
+            LogTopic.Unknown => "Unknown",
+            LogTopic.Texture => "Texture",
+            LogTopic.Shader => "Shader",
+            LogTopic.Mesh => "Mesh",
+            LogTopic.VertexBuffer => "VertexBuffer",
+            LogTopic.IndexBuffer => "IndexBuffer",
+            LogTopic.UniformBuffer => "UniformBuffer",
+            LogTopic.FrameBuffer => "FrameBuffer",
+            LogTopic.RenderBuffer => "RenderBuffer",
+            LogTopic.Material => "Material",
+            LogTopic.Asset => "Asset",
+            LogTopic.Renderer => "Renderer",
+            LogTopic.Frame => "Frame",
+            LogTopic.Pass => "Pass",
+            LogTopic.CommandList => "CommandList",
+            LogTopic.Pipeline => "Pipeline",
+            _ => "Unknown"
+        };
+    }
+
+    public static string ToLogText(this LogScope value)
+    {
+        return value switch
+        {
+            LogScope.Unknown => "Unknown",
+            LogScope.Backend => "Backend",
+            LogScope.Gfx => "Gfx",
+            LogScope.Renderer => "Renderer",
+            LogScope.Engine => "Engine",
+            LogScope.BackendResourceStore => "BackendResourceStore",
+            LogScope.GfxResourceStore => "GfxResourceStore",
+            LogScope.MaterialStore => "MaterialStore",
+            LogScope.AssetStore => "AssetStore",
+            _ => "Unknown"
+        };
+    }
+
+    public static string ToLogText(this LogAction value)
+    {
+        return value switch
+        {
+            LogAction.Unknown => "Unknown",
+            LogAction.Add => "Add",
+            LogAction.Remove => "Remove",
+            LogAction.Replace => "Replace",
+            LogAction.Create => "Create",
+            LogAction.Destroy => "Destroy",
+            LogAction.Bind => "Bind",
+            LogAction.Unbind => "Unbind",
+            LogAction.Upload => "Upload",
+            LogAction.Download => "Download",
+            LogAction.Map => "Map",
+            LogAction.Unmap => "Unmap",
+            LogAction.Compile => "Compile",
+            LogAction.Link => "Link",
+            LogAction.Begin => "Begin",
+            LogAction.End => "End",
+            LogAction.Submit => "Submit",
+            LogAction.Resize => "Resize",
+            LogAction.Evict => "Evict",
+            LogAction.Execute => "Execute",
+            LogAction.EnqRemove => "EnqRemove",
+            LogAction.EnqReplace => "EnqReplace",
+            _ => "Unknown"
+        };
+    }
+}

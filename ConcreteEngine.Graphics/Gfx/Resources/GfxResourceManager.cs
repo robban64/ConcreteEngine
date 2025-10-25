@@ -4,6 +4,7 @@ using ConcreteEngine.Graphics.Diagnostic;
 
 #endregion
 
+using ConcreteEngine.Common.Diagnostics;
 using Metrics = ConcreteEngine.Graphics.Diagnostic.GfxDebugMetrics;
 
 namespace ConcreteEngine.Graphics.Gfx.Resources;
@@ -63,7 +64,7 @@ internal sealed class GfxResourceManager : IGfxResourceManager
 
     internal void OnDeleted(in DeleteResourceCommand cmd)
     {
-        GfxDebugMetrics.Log(DebugLog.MakeResourceDispose(in cmd));
+        GfxDebugLog.LogBackend(cmd.BackendHandle.Value, cmd.Handle, cmd.Handle.Kind.ToLogTopic(), LogAction.Destroy);
     }
 
 

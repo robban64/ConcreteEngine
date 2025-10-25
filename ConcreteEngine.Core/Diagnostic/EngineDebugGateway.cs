@@ -19,7 +19,7 @@ using Core.DebugTools.Components;
 
 namespace ConcreteEngine.Core.Diagnostic;
 
-internal sealed class DebugGateway
+internal sealed class EngineDebugGateway
 {
     private readonly DebugService _debug;
 
@@ -31,12 +31,12 @@ internal sealed class DebugGateway
     private int _ticker2 = 0, _ticker4 = 0, _ticker8 = 0;
 
 
-    public DebugGateway(GL gl, IWindow window, IInputContext inputCtx)
+    public EngineDebugGateway(GL gl, IWindow window, IInputContext inputCtx)
     {
         _debug = new DebugService(gl, window, inputCtx);
 
-        GfxDebugMetrics.ToggleLog(false, source: GfxLogSource.Store, layer: GfxLogLayer.Backend);
-        GfxDebugMetrics.ToggleLog(false, action: GfxLogAction.EnqueueDispose);
+        //GfxDebugLog.ToggleLog(false, source: GfxLogSource.Store, layer: GfxLogLayer.Backend);
+        //GfxDebugLog.ToggleLog(false, action: GfxLogAction.EnqueueDispose);
     }
 
     public bool HasBindings => HasBoundCommands || HasBoundMetrics;
@@ -134,10 +134,10 @@ internal sealed class DebugGateway
 
     private void DrainGfxLogs()
     {
-        while (GfxDebugMetrics.LogQueue.Count > 0)
+        while (GfxDebugLog.LogQueue.Count > 0)
         {
-            var cmd = GfxDebugMetrics.LogQueue.Dequeue();
-            _debug.DevConsole.AddLog(cmd.ToDebugString());
+            var cmd = GfxDebugLog.LogQueue.Dequeue();
+            _debug.DevConsole.AddLog(cmd.ToString());
         }
     }
     
@@ -145,10 +145,7 @@ internal sealed class DebugGateway
     {
         return (ctx, a1, a2) =>
         {
-            try
-            {
-                f(ctx, a1, a2);
-            }
+            try { f(ctx, a1, a2); }
             catch (Exception ex) when (DebugParser.IsSafeError(ex))
             {
                 ctx.AddLog(DebugParser.ErrorMessageFor(ex));

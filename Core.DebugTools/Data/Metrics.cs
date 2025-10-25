@@ -1,11 +1,6 @@
 namespace Core.DebugTools.Data;
 
-public readonly record struct DebugFrameMetrics(
-    long FrameIndex,
-    float Fps,
-    float Alpha,
-    int TriangleCount,
-    int DrawCalls);
+public readonly record struct DebugFrameMetrics(long FrameIndex, float Fps, float Alpha, int TriangleCount, int DrawCalls);
 
 public readonly record struct DebugMemoryMetrics(int Allocated);
 
@@ -16,10 +11,7 @@ public readonly record struct DebugMaterialMetrics(int Count, int Free);
 public readonly record struct DebugAssetStoreMetricRecord(string Name, int Count, int Files);
 
 public readonly record struct DebugGfxStoreMetricsRecord(
-    int Count,
-    int Alive,
-    int Free,
-    int Capacity,
+    int Count, int Alive, int Free, int Capacity,
     in DebugGfxStoreMetricsRecord.SpecialMetric Special)
 {
     public readonly record struct SpecialMetric(long Value, int ResourceId, ushort Param0 = 0, byte Kind = 0);

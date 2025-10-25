@@ -3,6 +3,7 @@
 using System.Runtime.CompilerServices;
 using ConcreteEngine.Common;
 using ConcreteEngine.Common.Collections;
+using ConcreteEngine.Common.Diagnostics;
 using ConcreteEngine.Graphics.Diagnostic;
 using ConcreteEngine.Graphics.Gfx.Definitions;
 
@@ -106,7 +107,7 @@ internal sealed class GfxResourceStore<TId, TMeta> : IGfxResourceStore<TId>
         _handle[idx] = refToken;
         var newId = _makeResourceId(idx);
 
-        GfxDebugMetrics.Log(DebugLog.MakeAddGfxStore(newId.Value, refToken));
+        GfxDebugLog.LogGfxStore(newId, refToken, TId.Kind.ToLogTopic(), LogAction.Add);
         return newId;
     }
 
@@ -126,7 +127,7 @@ internal sealed class GfxResourceStore<TId, TMeta> : IGfxResourceStore<TId>
         _handle[idx] = default!;
         _free.Push(idx);
 
-        GfxDebugMetrics.Log(DebugLog.MakeRemoveGfxStore(id.Value, handle));
+        GfxDebugLog.LogGfxStore(id, handle, TId.Kind.ToLogTopic(), LogAction.Remove);
         return handle;
     }
 
@@ -142,8 +143,7 @@ internal sealed class GfxResourceStore<TId, TMeta> : IGfxResourceStore<TId>
 
         var message = new GfxMetaChanged<TMeta>(in newMeta, in oldMeta, handle.Gen, true, ResourceKind);
         ChangeCallback?.Invoke(id, in message);
-        GfxDebugMetrics.Log(DebugLog.MakeReplaceGfxStore(id.Value, handle));
-
+        GfxDebugLog.LogGfxStore(id, handle, TId.Kind.ToLogTopic(), LogAction.Replace);
         return id;
     }
 

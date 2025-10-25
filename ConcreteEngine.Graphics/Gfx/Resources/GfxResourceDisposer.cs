@@ -1,6 +1,7 @@
 #region
 
 using ConcreteEngine.Common;
+using ConcreteEngine.Common.Diagnostics;
 using ConcreteEngine.Graphics.Diagnostic;
 
 #endregion
@@ -61,7 +62,7 @@ internal sealed class GfxResourceDisposer : IGfxResourceDisposer
         var cmd = DeleteResourceCommand.MakeDelete(gfxHandle, native, id.Value);
         _disposeQueue.Enqueue(cmd);
 
-        GfxDebugMetrics.Log(DebugLog.MakeEnqueueDispose(id.Value, gfxHandle));
+        GfxDebugLog.LogBackend(native.Value, gfxHandle, TId.Kind.ToLogTopic(), LogAction.Evict);
     }
 
     public void EnqueueReplace<TId>(GfxRefToken<TId> refToken)
@@ -75,7 +76,7 @@ internal sealed class GfxResourceDisposer : IGfxResourceDisposer
         var cmd = DeleteResourceCommand.MakeReplace(refToken, handle);
         _disposeQueue.Enqueue(cmd);
 
-        GfxDebugMetrics.Log(DebugLog.MakeEnqueueDispose((int)handle.Value, refToken));
+        GfxDebugLog.LogBackend(handle.Value, refToken, TId.Kind.ToLogTopic(), LogAction.Evict);
     }
 
 

@@ -13,7 +13,7 @@ public readonly struct GfxStoreMetricsPayload(
 {
     public readonly GfxStoreMetricsRecord Fk = fk;
     public readonly GfxStoreMetricsRecord Bk = bk;
-    public readonly ResourceKind Kind  = kind;
+    public readonly ResourceKind Kind = kind;
 }
 
 public readonly record struct GfxStoreMetricsRecord(
@@ -29,15 +29,10 @@ public readonly record struct GfxMetaSpecialMetric(
     ushort Param2 = 0,
     ResourceKind Kind = 0);
 
-internal readonly record struct DebugFilter(byte Kind, byte Layer, byte Source, byte Action)
-{
-    public DebugFilter(ResourceKind Kind, GfxLogLayer Layer, GfxLogSource Source, GfxLogAction Action)
-        : this((byte)Kind, (byte)Layer, (byte)Source, (byte)Action)
-    {
-    }
-}
 
-public readonly record struct GfxDebugLog(
+/*
+
+public readonly record struct GfxDebuggLog(
     int HandleId = 0,
     int OtherValue = 0,
     ushort Gen = 0,
@@ -66,7 +61,7 @@ public readonly record struct GfxDebugLog(
 
     public string ToDebugStringInternal(string info)
     {
-        var kindName = Kind.ToLogName();
+        var kindName = Kind.ToResourceName();
         kindName = kindName.Length > 10 ? kindName.Substring(0, 10) : kindName;
 
         var t = DateTimeOffset.FromUnixTimeMilliseconds(Time).ToLocalTime();
@@ -88,4 +83,4 @@ public readonly record struct GfxDebugLog(
             _ => ToDebugUnknownString()
         };
     }
-}
+}*/

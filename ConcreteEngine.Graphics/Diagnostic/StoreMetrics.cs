@@ -29,8 +29,8 @@ internal sealed class StoreMetrics<TId, TMeta, THandle>(
     private GetSpecialMetric<TMeta> GetSpecialMetricDel { get; } = getSpecialMetricDel;
 
     public ResourceKind Kind { get; } = kind;
-    public string Name { get; } = kind.ToLogName();
-    public string ShortName { get; } = kind.ToLogName(true);
+    public string Name { get; } = kind.ToResourceName();
+    public string ShortName { get; } = kind.ToShortText();
 
     private GfxStoreMetricsRecord _gfxStoreMetrics;
     private GfxStoreMetricsRecord _backendStoreMetrics;

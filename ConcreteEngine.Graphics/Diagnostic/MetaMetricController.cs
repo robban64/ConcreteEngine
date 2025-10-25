@@ -17,14 +17,14 @@ internal static class MetaMetricController
 
     public static GfxMetaSpecialMetric GetTextureMetric(ReadOnlySpan<TextureMeta> metas)
     {
-        (long max, int maxIdx, ushort p2) = (0, 0, 0);
+        (long max, var maxIdx, ushort p2) = (0, 0, 0);
 
-        for (int i = 0; i < metas.Length; i++)
+        for (var i = 0; i < metas.Length; i++)
         {
             ref readonly var m = ref metas[i];
             long dim = m.Width >= m.Height ? m.Width : m.Height;
             if (!UpdateMax(ref max, ref maxIdx, dim, i)) continue;
-            byte mip = (byte)(m.Levels > 1 ? 1 : 0);
+            var mip = (byte)(m.Levels > 1 ? 1 : 0);
             p2 = (ushort)(mip | (m.Samples << 1));
         }
 
@@ -33,8 +33,8 @@ internal static class MetaMetricController
 
     public static GfxMetaSpecialMetric GetShaderMetric(ReadOnlySpan<ShaderMeta> metas)
     {
-        (long max, int maxIdx) = (0, 0);
-        for (int i = 0; i < metas.Length; i++)
+        (long max, var maxIdx) = (0, 0);
+        for (var i = 0; i < metas.Length; i++)
         {
             long v = metas[i].SamplerSlots;
             UpdateMax(ref max, ref maxIdx, v, i);
@@ -45,8 +45,8 @@ internal static class MetaMetricController
 
     public static GfxMetaSpecialMetric GetMeshMetric(ReadOnlySpan<MeshMeta> metas)
     {
-        (long max, int maxIdx) = (0, 0);
-        for (int i = 0; i < metas.Length; i++)
+        (long max, var maxIdx) = (0, 0);
+        for (var i = 0; i < metas.Length; i++)
         {
             long v = metas[i].DrawCount;
             UpdateMax(ref max, ref maxIdx, v, i);
@@ -58,8 +58,8 @@ internal static class MetaMetricController
 
     public static GfxMetaSpecialMetric GetVboMetric(ReadOnlySpan<VertexBufferMeta> metas)
     {
-        (long max, int maxIdx, ushort stride) = (0, 0, 0);
-        for (int i = 0; i < metas.Length; i++)
+        (long max, var maxIdx, ushort stride) = (0, 0, 0);
+        for (var i = 0; i < metas.Length; i++)
         {
             ref readonly var m = ref metas[i];
             if (UpdateMax(ref max, ref maxIdx, m.Capacity, i))
@@ -71,8 +71,8 @@ internal static class MetaMetricController
 
     public static GfxMetaSpecialMetric GetIboMetric(ReadOnlySpan<IndexBufferMeta> metas)
     {
-        (long max, int maxIdx, ushort stride) = (0, 0, 0);
-        for (int i = 0; i < metas.Length; i++)
+        (long max, var maxIdx, ushort stride) = (0, 0, 0);
+        for (var i = 0; i < metas.Length; i++)
         {
             ref readonly var m = ref metas[i];
             if (UpdateMax(ref max, ref maxIdx, m.Capacity, i))
@@ -84,8 +84,8 @@ internal static class MetaMetricController
 
     public static GfxMetaSpecialMetric GetUboMetric(ReadOnlySpan<UniformBufferMeta> metas)
     {
-        (long max, int maxIdx, ushort stride) = (0, 0, 0);
-        for (int i = 0; i < metas.Length; i++)
+        (long max, var maxIdx, ushort stride) = (0, 0, 0);
+        for (var i = 0; i < metas.Length; i++)
         {
             ref readonly var m = ref metas[i];
             if (UpdateMax(ref max, ref maxIdx, m.Capacity, i))
@@ -98,32 +98,32 @@ internal static class MetaMetricController
 
     public static GfxMetaSpecialMetric GetFboMetric(ReadOnlySpan<FrameBufferMeta> metas)
     {
-        (long max, int maxIdx, int attach) = (0, 0, 0);
+        (long max, var maxIdx, var attach) = (0, 0, 0);
 
-        for (int i = 0; i < metas.Length; i++)
+        for (var i = 0; i < metas.Length; i++)
         {
             ref readonly var m = ref metas[i];
-            long pix = (long)m.Size.Width * m.Size.Height;
+            var pix = (long)m.Size.Width * m.Size.Height;
             if (!UpdateMax(ref max, ref maxIdx, pix, i)) continue;
 
             ref readonly var a = ref m.Attachments;
-            int cnt = 0;
-            if (a.ColorTextureId.Value > 0) cnt++;
-            if (a.DepthTextureId.Value > 0) cnt++;
-            if (a.ColorRenderBufferId.Value > 0) cnt++;
-            if (a.DepthRenderBufferId.Value > 0) cnt++;
+            var cnt = 0;
+            if (a.ColorTextureId > 0) cnt++;
+            if (a.DepthTextureId > 0) cnt++;
+            if (a.ColorRenderBufferId > 0) cnt++;
+            if (a.DepthRenderBufferId > 0) cnt++;
             attach = cnt;
         }
 
-        return new GfxMetaSpecialMetric(max, maxIdx + 1, (ushort)(attach), ResourceKind.FrameBuffer);
+        return new GfxMetaSpecialMetric(max, maxIdx + 1, (ushort)attach, ResourceKind.FrameBuffer);
     }
 
     public static GfxMetaSpecialMetric GetRboMetric(ReadOnlySpan<RenderBufferMeta> metas)
     {
-        (long max, int maxIdx) = (0, 0);
-        for (int i = 0; i < metas.Length; i++)
+        (long max, var maxIdx) = (0, 0);
+        for (var i = 0; i < metas.Length; i++)
         {
-            long v = (long)metas[i].Multisample;
+            var v = (long)metas[i].Multisample;
             UpdateMax(ref max, ref maxIdx, v, i);
         }
 

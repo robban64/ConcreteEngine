@@ -18,10 +18,10 @@ public enum DrawCommandId : byte
 public enum DrawCommandQueue : byte
 {
     None = 0,
-    Skybox = 10,
     Terrain = 20,
     Opaque = 30,
-    Transparent = 40,
+    Skybox = 40,
+    Transparent = 50,
     Additive = 60,
     Overlay = 100
 }

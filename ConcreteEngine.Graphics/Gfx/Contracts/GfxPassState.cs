@@ -7,6 +7,7 @@ using ConcreteEngine.Graphics.Gfx.Definitions;
 
 namespace ConcreteEngine.Graphics.Gfx.Contracts;
 
+//TODO make a bit mask flag or something. this is terrible
 public readonly record struct GfxPassState(
     bool? DepthTest = null,
     bool? DepthWrite = null,
@@ -36,7 +37,10 @@ public readonly record struct GfxPassStateFunc(
     PolygonOffsetLevel PolygonOffset = PolygonOffsetLevel.Unset)
 {
     public static GfxPassStateFunc MakeDefault() =>
-        new(BlendMode.Alpha, CullMode.BackCcw, DepthMode.Lequal, PolygonOffsetLevel.None);
+        new(BlendMode.Alpha, CullMode.BackCcw, DepthMode.Less, PolygonOffsetLevel.None);
+
+    public static GfxPassStateFunc MakeSky() =>
+        new(BlendMode.Unset, CullMode.Unset, DepthMode.Lequal, PolygonOffsetLevel.Unset);
 
     public static GfxPassStateFunc MakeDepth() =>
         new(BlendMode.Unset, CullMode.FrontCcw, DepthMode.Lequal, PolygonOffsetLevel.Medium);

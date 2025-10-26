@@ -10,6 +10,7 @@ using ConcreteEngine.Core.Data;
 using ConcreteEngine.Core.Scene;
 using ConcreteEngine.Core.Scene.Entities;
 using ConcreteEngine.Graphics.Diagnostic;
+using ConcreteEngine.Graphics.Gfx.Contracts;
 using ConcreteEngine.Graphics.Gfx.Resources;
 using ConcreteEngine.Renderer.Data;
 using ConcreteEngine.Renderer.State;
@@ -137,9 +138,15 @@ internal static class DebugController
 
         ctx.AddLog(StructStr<StoreMetric<CollectionSample>>());
         ctx.AddLog(StructStr<GfxResourceMetric<ValueSample>>());
-
-
+        
         ctx.AddLog(StructStr<GfxStoreMetricsPayload>());
+        ctx.AddLog(StructStr<MaterialParams>());
+        ctx.AddLog(StructStr<DrawMaterialMeta>());
+        ctx.AddLog(StructStr<DrawMaterialPayload>());
+        
+        ctx.AddLog(StructStr<GfxPassState>());
+
+
     }
 
     private static string StructStr<T>() where T : unmanaged =>

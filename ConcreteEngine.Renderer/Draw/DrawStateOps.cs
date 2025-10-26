@@ -51,13 +51,22 @@ public sealed class DrawStateOps
 
 
     public void ApplyStateFunctions(GfxPassStateFunc passFunc)
-        => _gfxCmd.ApplyStateFunctions(passFunc);
+    {
+        _gfxCmd.ApplyStateFunctions(passFunc);
+        _ctx.PassStateFunc = passFunc;
+    }
 
-    public void BeginScreenPass(in GfxPassClear passClear, in GfxPassState states) =>
+    public void BeginScreenPass(in GfxPassClear passClear, in GfxPassState states)
+    {
         _gfxCmd.BeginScreenPass(in passClear, in states);
+        _ctx.PassState = states;
+    }
 
-    public void BeginRenderPass(FrameBufferId fboId, in GfxPassClear passClear, in GfxPassState states) =>
+    public void BeginRenderPass(FrameBufferId fboId, in GfxPassClear passClear, in GfxPassState states)
+    {
         _gfxCmd.BeginRenderPass(fboId, in passClear, in states);
+        _ctx.PassState = states;
+    }
 
     public void EndRenderPass() => _gfxCmd.EndRenderPass();
 

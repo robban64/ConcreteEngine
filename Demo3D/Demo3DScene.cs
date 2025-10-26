@@ -32,12 +32,13 @@ public sealed class Demo3DScene : GameScene
 
         // Skybox
         var skyboxMaterial = materialStore.CreateMaterial("SkyboxMat", "SkyboxMat1");
+        skyboxMaterial.IsSkybox = true;
         Context.World.Sky.SetSkyMaterial(skyboxMaterial.Id);
 
         // Terrain
         var heightmap = assets.Store.GetByName<Texture2D>("Heightmap");
         var terrainMat = assets.MaterialStore.CreateMaterial("TerrainMat", "TerrainMat1");
-        terrainMat.State.UvRepeat = 28;
+        terrainMat.State.UvRepeat = 14;
         terrainMat.State.Shininess = 10;
         terrainMat.State.Specular = 0.04f;
 

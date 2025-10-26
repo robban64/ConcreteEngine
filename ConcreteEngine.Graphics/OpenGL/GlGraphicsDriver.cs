@@ -10,12 +10,8 @@ namespace ConcreteEngine.Graphics.OpenGL;
 internal sealed class GlBackendDriver : IGraphicsDriver
 {
     private readonly GL _gl;
-    private readonly GlCtx _ctx;
 
     private readonly GraphicsConfiguration _configuration;
-
-    private readonly ResourceBackendDispatcher _dispatcher;
-    private readonly BackendStoreBundle _store;
 
     private readonly GlCapabilities _capabilities;
     private readonly GlDebugger _debugger;
@@ -34,21 +30,19 @@ internal sealed class GlBackendDriver : IGraphicsDriver
     internal GlBackendDriver(GlStartupConfig config, BackendStoreBundle store, ResourceBackendDispatcher dispatcher)
     {
         _gl = config.DriverContext;
-        _store = store;
-        _dispatcher = dispatcher;
         _capabilities = new GlCapabilities();
         _configuration = new GraphicsConfiguration();
 
-        _ctx = new GlCtx { Capabilities = _capabilities, Gl = _gl, Store = _store, Dispatcher = _dispatcher };
+        var ctx = new GlCtx { Capabilities = _capabilities, Gl = _gl, Store = store, Dispatcher = dispatcher };
 
         _debugger = new GlDebugger(_gl);
-        _disposer = new GlDisposer(_ctx);
-        _buffers = new GlBuffers(_ctx);
-        _textures = new GlTextures(_ctx);
-        _meshes = new GlMeshes(_ctx);
-        _shaders = new GlShaders(_ctx);
-        _states = new GlStates(_ctx);
-        _frameBuffers = new GlFrameBuffers(_ctx);
+        _disposer = new GlDisposer(ctx);
+        _buffers = new GlBuffers(ctx);
+        _textures = new GlTextures(ctx);
+        _meshes = new GlMeshes(ctx);
+        _shaders = new GlShaders(ctx);
+        _states = new GlStates(ctx);
+        _frameBuffers = new GlFrameBuffers(ctx);
     }
 
     public GlDebugger Debugger => _debugger;

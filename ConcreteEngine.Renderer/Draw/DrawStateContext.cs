@@ -1,6 +1,7 @@
 #region
 
 using ConcreteEngine.Graphics.Gfx;
+using ConcreteEngine.Graphics.Gfx.Contracts;
 using ConcreteEngine.Graphics.Gfx.Resources;
 using ConcreteEngine.Renderer.Data;
 using ConcreteEngine.Renderer.Definitions;
@@ -23,12 +24,18 @@ internal sealed class DrawStateContextPayload
 internal sealed class DrawStateContext
 {
     public TextureId DepthTexture { get; private set; }
-    public PassStateMode PassState { get; private set; }
+    public PassStateMode PassMode { get; private set; }
     public MaterialId PrevMaterial { get; private set; } = new(-1);
 
     public MeshId FsqMesh { get; }
 
     public readonly RenderCoreShaders CoreShaders;
+    
+    public GfxPassState PassState;
+    public GfxPassStateFunc PassStateFunc;
+
+    public GfxPassState? OverridePassState = null;
+    public GfxPassStateFunc? OverridePassStateFunc = null;
 
     internal DrawStateContext(RenderRegistry registry, MeshId fsqMesh)
     {
@@ -38,18 +45,18 @@ internal sealed class DrawStateContext
         CoreShaders = registry.ShaderRegistry.CoreShaders;
     }
 
-    public bool IsMain => PassState == PassStateMode.Main;
-    public bool IsDepth => PassState == PassStateMode.Depth;
+    public bool IsMain => PassMode == PassStateMode.Main;
+    public bool IsDepth => PassMode == PassStateMode.Depth;
 
-    public void SetDepthMode() => PassState = PassStateMode.Depth;
+    public void SetDepthMode() => PassMode = PassStateMode.Depth;
 
-    public void ResetPassMode() => PassState = PassStateMode.Main;
+    public void ResetPassMode() => PassMode = PassStateMode.Main;
     public void ResetMaterialState() => PrevMaterial = default;
 
     public void ResetState()
     {
         PrevMaterial = default;
-        PassState = PassStateMode.Main;
+        PassMode = PassStateMode.Main;
     }
 
     public bool ResolveMaterialBind(MaterialId material)
@@ -59,7 +66,7 @@ internal sealed class DrawStateContext
         return true;
     }
 
-    public ShaderId ResolveShaderPolicy(ShaderId cmdShader) => PassState switch
+    public ShaderId ResolveShaderPolicy(ShaderId cmdShader) => PassMode switch
     {
         PassStateMode.Main => cmdShader,
         PassStateMode.Post => cmdShader,

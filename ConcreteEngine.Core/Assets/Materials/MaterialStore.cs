@@ -4,6 +4,7 @@ using ConcreteEngine.Common;
 using ConcreteEngine.Common.Collections;
 using ConcreteEngine.Core.Assets.Data;
 using ConcreteEngine.Core.Assets.Textures;
+using ConcreteEngine.Graphics.Gfx.Contracts;
 using ConcreteEngine.Graphics.Gfx.Definitions;
 using ConcreteEngine.Graphics.Gfx.Resources;
 using ConcreteEngine.Renderer.Data;
@@ -96,9 +97,12 @@ public sealed class MaterialStore : IMaterialStore
         return true;
     }
 
+    //TODO rework
     public void GetMaterialUploadData(Material material, out DrawMaterialPayload data)
     {
-        var meta = new DrawMaterialMeta(material.Id, ResolveShader(material));
+        GfxPassState? state = material.IsSkybox ? new GfxPassState(DepthWrite: false) : null;
+        GfxPassStateFunc? funcs = material.IsSkybox ? GfxPassStateFunc.MakeSky() : null;
+        var meta = new DrawMaterialMeta(material.Id, ResolveShader(material), state, funcs);
         var snapshot = material.State.Snapshot();
         data = new DrawMaterialPayload(in meta, in snapshot);
     }

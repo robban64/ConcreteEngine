@@ -44,6 +44,45 @@ public sealed class Demo3DScene : GameScene
 
         Context.World.Terrain.CreateTerrainMesh(heightmap);
         Context.World.Terrain.SetMaterial(terrainMat.Id);
+        
+
+
+        var treeMat = materialStore.CreateMaterial("TreeBarkMat", "TreeMat1");
+        var birchMat = materialStore.CreateMaterial("TreeBirchBarkMat", "TreeMat2");
+
+        var treeMesh = store.GetByName<Mesh>("Tree1");
+        var treeMesh1 = store.GetByName<Mesh>("Tree2");
+        var treeMesh2 = store.GetByName<Mesh>("Tree3");
+        
+        {
+            var mesh = store.GetByName<Mesh>("Cube");
+            var entityId = World.Create();
+            World.Meshes.Add(entityId,
+                new MeshComponent(mesh.ResourceId, treeMat.Id, mesh.DrawCount));
+            World.Transforms.Add(entityId,
+                new Transform(new Vector3(-50, 0, -50), Vector3.One, Quaternion.Identity));
+
+        }
+
+
+        int swap = 0;
+        for (int i = 0; i < 6; i++)
+        {
+            var (mesh, mat) = swap switch
+            {
+                0 => (treeMesh,treeMat),
+                1 => (treeMesh1,birchMat),
+                _ => (treeMesh2, birchMat)
+            };
+            var entityId = World.Create();
+            World.Meshes.Add(entityId,
+                new MeshComponent(mesh.ResourceId, mat.Id, mesh.DrawCount));
+            World.Transforms.Add(entityId,
+                new Transform(new Vector3( (i * 4) -100, 0,  (i * 4) -100), Vector3.One, Quaternion.Identity));
+
+            if (swap++ > 2) swap = 0;
+        }
+
 
         // Entities
         var boatMat = materialStore.CreateMaterial("BoatMat", "BoatMat1");
@@ -52,7 +91,7 @@ public sealed class Demo3DScene : GameScene
         boatMat.State.Shininess = 1;
 
 
-        var rockMat = materialStore.CreateMaterial("Rock01Mat", "Rock01Mat1");
+        var rockMat = materialStore.CreateMaterial("Rock1Mat", "Rock1Mat1");
         rockMat.State.Specular = 0.3f;
         var rockMesh = store.GetByName<Mesh>("Rock1");
         var rock2Mesh = store.GetByName<Mesh>("Rock2");

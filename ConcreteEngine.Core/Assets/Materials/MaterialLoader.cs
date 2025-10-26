@@ -58,7 +58,7 @@ internal sealed class MaterialLoader
                 slotAsset = cub!.RawId;
 
             if (slotAsset is not { } slotAssetId)
-                throw new InvalidOperationException($"Slot asset doesn't exist {slot}");
+                throw new InvalidOperationException($"Texture {slot.Name} does not exists for {record.Name}");
 
             slotInfo[i] = new AssetTextureSlot(slotAssetId, slot.SlotKind, slot.TextureKind);
         }

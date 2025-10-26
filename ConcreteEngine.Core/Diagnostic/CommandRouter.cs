@@ -53,7 +53,7 @@ internal static class CommandRouter
                 nameof(arg1));
         }
 
-        _assetSystem.EnqueueRecreateFrameBuffer(size, RecreateSpecialAction.RecreateShadowFbo);
+        _assetSystem.EnqueueRecreateFrameBuffer(shadowSize, RecreateSpecialAction.RecreateShadowFbo);
     }
 
 

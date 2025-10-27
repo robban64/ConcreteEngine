@@ -23,6 +23,7 @@ namespace ConcreteEngine.Core.Diagnostic;
 internal sealed class EngineGateway
 {
     private readonly DiagnosticsService _diagnostics;
+    private readonly LogParser  _logParser;
 
     public bool HasBoundCommands { get; private set; }
     public bool HasBoundMetrics { get; private set; }
@@ -35,6 +36,7 @@ internal sealed class EngineGateway
     public EngineGateway(GL gl, IWindow window, IInputContext inputCtx)
     {
         _diagnostics = new DiagnosticsService(gl, window, inputCtx);
+        _logParser = new LogParser();
 
         //GfxDebugLog.ToggleLog(false, source: GfxLogSource.Store, layer: GfxLogLayer.Backend);
         //GfxDebugLog.ToggleLog(false, action: GfxLogAction.EnqueueDispose);
@@ -139,7 +141,7 @@ internal sealed class EngineGateway
         while (GfxLog.LogQueue.Count > 0)
         {
             var cmd = GfxLog.LogQueue.Dequeue();
-            _diagnostics.DevConsole.AddLog(cmd.ToString());
+            _diagnostics.DevConsole.AddLog(_logParser.Format(cmd));
         }
     }
     

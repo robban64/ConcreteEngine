@@ -1,3 +1,5 @@
+using System.Text;
+
 namespace ConcreteEngine.Common.Diagnostics;
 
 public readonly record struct LogEvent(
@@ -15,83 +17,36 @@ public readonly record struct LogEvent(
     public long Time { get; } = DateTimeOffset.Now.ToUnixTimeMilliseconds();
 
     public static implicit operator uint(LogEvent log) => log.Id;
+
+    public string ToBaseFormat(string? p0 = null, string? p1 = null, string? fp = null, string? gen = null,
+        string? flags = null)
+    {
+        var t = DateTimeOffset.FromUnixTimeMilliseconds(Time).ToLocalTime();
+        var head = $"[{Level.ToLogText()}] [{t:HH:mm:ss.fff}] {Scope.ToLogText()}:";
+        var subj = $"{Action.ToLogText()}-{Topic.ToLogText()}";
+        var id = $"Id={Id} Gen={Gen}";
+
+        var bodyParts = new List<string>(5);
+        if (p0 is not null)    bodyParts.Add($"{p0}={Param0}");
+        if (p1 is not null)    bodyParts.Add($"{p1}={Param1}");
+        if (fp is not null)    bodyParts.Add($"{fp}={FParam0}");
+        if (gen is not null)   bodyParts.Add($"{gen}={Gen}");
+        if (flags is not null) bodyParts.Add($"{flags}={Flags}");
+
+        var body = bodyParts.Count > 0
+            ? string.Join("; ", bodyParts)
+            : string.Empty;
+
+        return $"{head} {subj}{id} {{ {body} }}";
+    }
+    
+   
 }
 
 public readonly record struct LogFilterWildcard(byte Topic, byte Scope, byte Action, byte Level)
 {
-    public LogFilterWildcard(LogTopic Topic ,LogScope Scope, LogAction Action, LogLevel Level)
+    public LogFilterWildcard(LogTopic Topic, LogScope Scope, LogAction Action, LogLevel Level)
         : this((byte)Topic, (byte)Scope, (byte)Action, (byte)Level)
     {
     }
-}
-
-public enum LogLevel : byte
-{
-    Unset = 0,
-    Trace = 1,
-    Debug = 2,
-    Info = 3,
-    Warn = 4,
-    Error = 5,
-    Critical = 6
-}
-
-public enum LogTopic : byte
-{
-    Unknown = 0,
-    Texture = 1,
-    Shader = 2,
-    Mesh = 3,
-    VertexBuffer = 4,
-    IndexBuffer = 5,
-    UniformBuffer = 6,
-    FrameBuffer = 7,
-    RenderBuffer = 8,
-    Material = 9,
-    Asset = 10,
-    Renderer = 11,
-    Frame = 12,
-    Pass = 13,
-    CommandList = 14,
-    Pipeline = 15,
-}
-
-public enum LogScope : byte
-{
-    Unknown = 0,
-    Backend = 1,
-    Gfx = 2,
-    Renderer = 3,
-    Engine = 4,
-    BackendResourceStore = 5,
-    GfxResourceStore = 6,
-    MaterialStore = 7,
-    AssetStore = 8,
-}
-
-public enum LogAction : byte
-{
-    Unknown = 0,
-    Add = 1,
-    Remove = 2,
-    Replace = 3,
-    Create = 4,
-    Destroy = 5,
-    Bind = 6,
-    Unbind = 7,
-    Upload = 8,
-    Download = 9,
-    Map = 10,
-    Unmap = 11,
-    Compile = 12,
-    Link = 13,
-    Begin = 14,
-    End = 15,
-    Submit = 16,
-    Resize = 17,
-    Evict = 18,
-    Execute = 19,
-    EnqRemove  = 20,
-    EnqReplace  = 21,
-
 }

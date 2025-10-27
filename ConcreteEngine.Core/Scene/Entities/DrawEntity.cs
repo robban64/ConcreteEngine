@@ -3,6 +3,7 @@
 using System.Runtime.InteropServices;
 using ConcreteEngine.Core.Assets.Data;
 using ConcreteEngine.Core.RenderingSystem;
+using ConcreteEngine.Core.RenderingSystem.Data;
 using ConcreteEngine.Graphics.Gfx.Resources;
 using ConcreteEngine.Renderer.Data;
 using ConcreteEngine.Renderer.Definitions;
@@ -22,6 +23,7 @@ public struct DrawEntity(
 {
     public Transform Transform = transform;
     public ModelId Model = model.Model;
+    public MaterialId Material = model.Material;
     public int DrawCount = model.DrawCount;
     public PassMask PassPassMask = passMask;
     public ushort DepthKey = depthKey;
@@ -30,6 +32,5 @@ public struct DrawEntity(
 
     // ensure 64-byte
     private int _pad;
-    private int _pad1;
 
 }

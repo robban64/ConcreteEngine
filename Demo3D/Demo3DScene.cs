@@ -90,7 +90,7 @@ public sealed class Demo3DScene : GameScene
             var mesh = store.GetByName<Model>("Cube");
             var entityId = World.Create();
             World.Meshes.Add(entityId,
-                new ModelComponent(mesh.ResourceId, treeMat.Id, mesh.DrawCount));
+                new ModelComponent(mesh.RenderId, treeMat.Id, mesh.DrawCount));
             World.Transforms.Add(entityId,
                 new Transform(new Vector3(half, worldTerrain.GetSmoothHeight(half, half) + 1f, half),
                     Vector3.One, Quaternion.Identity));

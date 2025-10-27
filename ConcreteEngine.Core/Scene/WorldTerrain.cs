@@ -1,10 +1,13 @@
 #region
 
+using System.Diagnostics;
 using System.Numerics;
 using ConcreteEngine.Common.Numerics.Maths;
 using ConcreteEngine.Core.Assets.Data;
 using ConcreteEngine.Core.Assets.Textures;
+using ConcreteEngine.Core.RenderingSystem;
 using ConcreteEngine.Core.RenderingSystem.Batching;
+using ConcreteEngine.Core.RenderingSystem.Data;
 using ConcreteEngine.Core.Scene.Entities;
 using ConcreteEngine.Renderer.Data;
 
@@ -17,8 +20,11 @@ public sealed class WorldTerrain
     private const int TerrainHeight = 12;
     private const int TerrainStep = 1;
 
+    public ModelId Model { get; private set; }
+
     private MaterialId _materialId;
     private AssetRef<Texture2D> _heightmap;
+    private IModelRegistry _modelRegistry;
     private TerrainBatcher _terrain;
 
     private Transform _transform = new(Vector3.Zero, Vector3.One, Quaternion.Identity);
@@ -27,6 +33,8 @@ public sealed class WorldTerrain
     {
         _terrain = terrain;
     }
+    
+    internal void AttachModelRegistry(IModelRegistry modelRegistry) => _modelRegistry = modelRegistry;
 
     public bool IsActive => _heightmap.IsValid && _terrain.TextureRef.IsValid && _materialId > 0;
 
@@ -63,6 +71,9 @@ public sealed class WorldTerrain
         _heightmap = heightmap.RefId;
         _terrain.Initialize(heightmap, TerrainHeight, TerrainStep);
         _terrain.BuildBatch();
+
+        Debug.Assert(_terrain.MeshId > 0);
+        Model = _modelRegistry.CreateModel(_terrain.MeshId, _terrain.DrawCount);
     }
 
     internal void OnPreRender()
@@ -73,7 +84,7 @@ public sealed class WorldTerrain
 
     internal void GetDrawEntity(out DrawEntity drawEntity)
     {
-        var mesh = new ModelComponent(_terrain.MeshId, _materialId, _terrain.DrawCount);
-        EntityUtility.MakeDrawTerrain(in mesh, in _transform, out drawEntity);
+        var model = new ModelComponent(Model, _materialId, _terrain.DrawCount);
+        EntityUtility.MakeDrawTerrain(model, in _transform, out drawEntity);
     }
 }

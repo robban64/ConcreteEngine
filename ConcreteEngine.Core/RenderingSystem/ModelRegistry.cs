@@ -4,41 +4,32 @@ using ConcreteEngine.Common.Collections;
 using ConcreteEngine.Common.Numerics;
 using ConcreteEngine.Core.Assets;
 using ConcreteEngine.Core.Assets.Meshes;
+using ConcreteEngine.Core.RenderingSystem.Data;
 using ConcreteEngine.Core.Scene.Entities;
 using ConcreteEngine.Graphics.Gfx.Resources;
 using ConcreteEngine.Renderer.Data;
 
 namespace ConcreteEngine.Core.RenderingSystem;
 
-public readonly record struct ModelId(int Value)
+public interface IModelRegistry
 {
-    public static implicit operator int(ModelId id) => id.Value;
+    ModelId CreateModel(MeshId mesh, int drawCount);
 }
 
-public readonly struct MeshPart(MeshId mesh, int drawCount)
-{
-    public readonly MeshId Mesh = mesh;
-    public readonly int DrawCount = drawCount;
-}
-
-public readonly ref struct ModelPartView(ReadOnlySpan<MeshPart> parts, ReadOnlySpan<Matrix4x4> locals, RangeU16 ranges)
-{
-    public readonly ReadOnlySpan<MeshPart> Parts = parts;
-    public readonly ReadOnlySpan<Matrix4x4> Locals = locals;
-    public readonly RangeU16 Range = ranges;
-}
-
-internal sealed class ModelRenderRegistry
+internal sealed class ModelRegistry : IModelRegistry
 {
     private const int DefaultCapacity = 128;
-
+    
     private MeshPart[] _parts = new MeshPart[DefaultCapacity];
     private Matrix4x4[] _localTransforms = new Matrix4x4[DefaultCapacity];
     private RangeU16[] _partRanges = new RangeU16[DefaultCapacity];
 
     //private MaterialId[] _materials = new MaterialId[DefaultCapacity];
-
-    public ModelPartView GetParts(ModelId id)
+    
+    private int _modelIdx = 0;
+    private int _idx = 0;
+    
+    public ModelPartView GetPartsView(ModelId id)
     {
         var range = _partRanges[id - 1];
         var parts = _parts.AsSpan(range.Offset, range.Length);
@@ -46,6 +37,17 @@ internal sealed class ModelRenderRegistry
         return new ModelPartView(parts, locals, range);
     }
 
+    public ModelId CreateModel(MeshId mesh, int drawCount)
+    {
+        EnsureCapacity(_idx + 1, _modelIdx + 1);
+        
+        _parts[_idx] = new MeshPart(mesh, drawCount);
+        _localTransforms[_idx] = Matrix4x4.Identity;
+        _partRanges[_modelIdx] = new RangeU16((ushort)_idx, 1);
+
+        _idx++;
+        return new ModelId(++_modelIdx);
+    }
 
     internal void Setup(AssetSystem assets)
     {
@@ -55,22 +57,24 @@ internal sealed class ModelRenderRegistry
         models.Sort();
 
         var totalParts = 0;
-        foreach (var meshes in models) totalParts += meshes.MeshParts.Length;
+        foreach (var model in models) totalParts += model.MeshParts.Length;
 
         EnsureCapacity(totalParts, models.Capacity);
 
-        var idx = 0;
+        var idx = _idx;
         for (int i = 0; i < models.Count; i++)
         {
-            var meshes = models[i];
-            _partRanges[i] = new RangeU16((ushort)idx, (ushort)meshes.MeshParts.Length);
-            foreach (var part in meshes.MeshParts)
+            var model = models[i];
+            model.AttachToRenderer(new ModelId(++_modelIdx));
+            _partRanges[i] = new RangeU16((ushort)idx, (ushort)model.MeshParts.Length);
+            foreach (var part in model.MeshParts)
             {
                 _parts[idx] = new MeshPart(part.ResourceId, part.DrawCount);
                 _localTransforms[idx] = part.Transform;
                 idx++;
             }
         }
+        _idx = idx;
     }
 
     private void EnsureCapacity(int cap, int rangeCap)

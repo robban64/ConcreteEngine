@@ -2,6 +2,7 @@
 
 using System.Diagnostics;
 using System.Diagnostics.CodeAnalysis;
+using System.Numerics;
 using System.Runtime.CompilerServices;
 using ConcreteEngine.Common.Collections;
 using ConcreteEngine.Common.Numerics;
@@ -22,12 +23,12 @@ internal sealed class RenderEntityBus
 
     private World? _world;
 
-    private readonly ModelRenderRegistry _modelRegistry;
+    private readonly ModelRegistry _modelRegistry;
 
     private int _idx = 0;
     private DrawEntity[] _entities = new DrawEntity[DefaultCapacity];
 
-    internal RenderEntityBus(ModelRenderRegistry modelRegistry)
+    internal RenderEntityBus(ModelRegistry modelRegistry)
     {
         _modelRegistry = modelRegistry;
     }
@@ -60,12 +61,14 @@ internal sealed class RenderEntityBus
 
         foreach (var query in _world.Query<ModelComponent, Transform>())
         {
-            ref var mesh = ref query.Value1;
+            ref var model = ref query.Value1;
             ref var transform = ref query.Value2;
-            EntityUtility.MakeDrawMesh(in mesh, in transform, out var drawEntity);
-            _entities[_idx++] = drawEntity;
+
+            EntityUtility.MakeDrawMesh(model, in transform, out _entities[_idx]);
+            _idx++;
         }
     }
+
 
     public void FlushEntities(DrawCommandBuffer buffer)
     {
@@ -75,21 +78,42 @@ internal sealed class RenderEntityBus
 
         foreach (ref var entity in entitySpan)
         {
-            var parts = _modelRegistry.GetParts(entity.Model);
-            var cmd = new DrawCommand(parts.MeshId, entity.MaterialId, entity.DrawCount);
-            var meta = new DrawCommandMeta(entity.CommandId, entity.Queue, entity.PassPassMask, entity.DepthKey);
-
+            var view = _modelRegistry.GetPartsView(entity.Model);
             MatrixMath.CreateModelMatrix(
                 entity.Transform.Position,
                 entity.Transform.Scale,
                 entity.Transform.Rotation,
-                out var model
+                out var world
             );
-            MatrixMath.CreateNormalMatrix(in model, out var normal);
-            buffer.SubmitDraw(cmd, meta, in model, in normal);
+            Matrix4x4 model;
+            Matrix3 normal;
+            for (var i = 0; i < view.Locals.Length; i++)
+            {
+                MatrixMath.MultiplyAffine(in view.Locals[i], in world, out model);
+                MatrixMath.CreateNormalMatrix(in model, out normal);
+
+                var parts = view.Parts[i];
+                var cmd = new DrawCommand(parts.Mesh, entity.Material, entity.DrawCount);
+                var meta = new DrawCommandMeta(entity.CommandId, entity.Queue, entity.PassPassMask, entity.DepthKey);
+                buffer.SubmitDraw(cmd, meta, in model, in normal);
+            }
         }
     }
 
+    /*
+    private void ResolveEntity(ModelId modelId, in Transform transform)
+    {
+        var view = _modelRegistry.GetPartsView(modelId);
+
+        MatrixMath.CreateModelMatrix(xf.Position, xf.Scale, xf.Rotation, out var world);
+        for (int i = 0; i < view.Parts.Length; i++)
+        {
+            ref readonly var part = ref view.Parts[i];
+            ref readonly var local = ref view.Locals[i];
+            var modelTransform = wo
+        }
+    }
+*/
     public void Reset()
     {
         _idx = 0;

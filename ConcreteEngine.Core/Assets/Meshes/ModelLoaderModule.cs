@@ -43,10 +43,12 @@ internal sealed class ModelLoaderModule
         _loader.LoadMesh(manifest, out fileSpecs, out var meshesInfo);
 
         var meshParts = new ModelMesh[meshesInfo.Length];
+        var drawCount = 0;
         for (int i = 0; i < meshesInfo.Length; i++)
         {
             var info = meshesInfo[i];
             meshParts[i] = new ModelMesh(refId, info.Name, info.Info.MeshId, info.Info.DrawCount, info.Transform);
+            drawCount += info.Info.DrawCount;
         }
 
         return new Model
@@ -54,6 +56,7 @@ internal sealed class ModelLoaderModule
             RawId = assetId,
             Name = manifest.Name,
             MeshParts = meshParts,
+            DrawCount = drawCount,
             IsCoreAsset = false
         };
     }

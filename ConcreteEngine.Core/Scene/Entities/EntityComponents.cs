@@ -5,6 +5,7 @@ using ConcreteEngine.Common.Numerics;
 using ConcreteEngine.Core.Assets.Data;
 using ConcreteEngine.Core.Assets.Meshes;
 using ConcreteEngine.Core.RenderingSystem;
+using ConcreteEngine.Core.RenderingSystem.Data;
 using ConcreteEngine.Graphics.Gfx.Resources;
 using ConcreteEngine.Renderer.Data;
 
@@ -20,17 +21,17 @@ public struct Transform(Vector3 position, Vector3 scale, Quaternion rotation)
 
     public Transform(Vector3 position) : this(position, Vector3.One, Quaternion.Identity)
     {
-        
     }
 }
 
-public struct ModelComponent(AssetRef<Model> assetModel, ModelId model, int drawCount)
+public struct ModelComponent(ModelId model, MaterialId material, int drawCount)
 {
-    public AssetId AssetModel = assetModel;
     public ModelId Model = model;
+    public MaterialId Material = material;
     public int DrawCount = drawCount;
     private int _pad0;
 }
+
 /*
 public struct MeshComponent(MeshId meshId, MaterialId materialId, int drawCount)
 {

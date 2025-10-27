@@ -4,6 +4,7 @@ using System.Numerics;
 using System.Runtime.CompilerServices;
 using ConcreteEngine.Core.Assets.Data;
 using ConcreteEngine.Core.Assets.Textures;
+using ConcreteEngine.Core.RenderingSystem.Data;
 using ConcreteEngine.Graphics.Gfx;
 using ConcreteEngine.Graphics.Gfx.Contracts;
 using ConcreteEngine.Graphics.Gfx.Definitions;
@@ -24,6 +25,7 @@ public readonly struct TerrainBatchResult(MeshId meshId, int drawCount)
 public sealed class TerrainBatcher : RenderBatcher<TerrainBatchResult>
 {
     public AssetRef<Texture2D> TextureRef { get; private set; }
+    public ModelId ModelId { get; private set; }
     public MeshId MeshId { get; private set; }
     public int MaxHeight { get; private set; }
     public int Step { get; private set; }

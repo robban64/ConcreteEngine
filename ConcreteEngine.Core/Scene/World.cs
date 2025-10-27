@@ -31,17 +31,18 @@ public interface IWorld
 public sealed class World : IWorld
 {
     public RenderSceneProps RenderProps { get; }
+    
+    public IModelRegistry ModelRegistry {get; private set;}
 
     public WorldSkybox Sky { get; }
     public WorldTerrain Terrain { get; }
-
-    public EntityStore<Transform> Transforms { get; }
-    public EntityStore<ModelComponent> Meshes { get; }
-    public EntityStore<Transform2D> Transforms2D { get; }
-    public EntityStore<SpriteComponent> Sprites { get; }
-
+    
+    public EntityId Create() => new(_idIdx++);
 
     private int _idIdx = 1;
+    public int EntityCount => _idIdx;
+    public int ShadowMapSize => RenderProps.Snapshot.Shadows.ShadowMapSize;
+
 
     internal World(RenderSceneProps renderProps, BatcherRegistry batchers)
     {
@@ -55,10 +56,13 @@ public sealed class World : IWorld
         Sprites = GenericStores<SpriteComponent>.CreateStore();
     }
 
-    public EntityId Create() => new(_idIdx++);
+    internal void AttachModelRegistry(IModelRegistry modelRegistry)
+    {
+        ModelRegistry = modelRegistry;
+        Terrain.AttachModelRegistry(modelRegistry);
+        Sky.AttachModelRegistry(modelRegistry);
+    }
 
-    public int EntityCount => _idIdx;
-    public int ShadowMapSize => RenderProps.Snapshot.Shadows.ShadowMapSize;
 
     public void Cleanup()
     {
@@ -67,6 +71,12 @@ public sealed class World : IWorld
         Sprites.Cleanup();
         Meshes.Cleanup();
     }
+    
+    public EntityStore<Transform> Transforms { get; }
+    public EntityStore<ModelComponent> Meshes { get; }
+    public EntityStore<Transform2D> Transforms2D { get; }
+    public EntityStore<SpriteComponent> Sprites { get; }
+
 
     public EntityEnumerator<T1> Query<T1>() where T1 : unmanaged => new(GenericStores<T1>.Store);
 

@@ -43,7 +43,7 @@ public sealed class EngineRenderSystem : IRenderingSystem
     private readonly RenderEngine _renderer;
     private readonly AssetSystem _assets;
 
-    private readonly ModelRenderRegistry _modelRegistry;
+    private readonly ModelRegistry _modelRegistry;
     private readonly RenderEntityBus _renderEntityBus;
 
 
@@ -68,7 +68,7 @@ public sealed class EngineRenderSystem : IRenderingSystem
 
         _renderer = new RenderEngine(graphics, SceneProperties.Snapshot, PrimitiveMeshes.FsqQuad);
 
-        _modelRegistry = new ModelRenderRegistry();
+        _modelRegistry = new ModelRegistry();
         _renderEntityBus = new RenderEntityBus(_modelRegistry);
     }
 
@@ -78,6 +78,7 @@ public sealed class EngineRenderSystem : IRenderingSystem
         ArgumentNullException.ThrowIfNull(world);
         _modelRegistry.Setup(_assets);
         _renderEntityBus.AttachWorld(world);
+        world.AttachModelRegistry(_modelRegistry);
     }
 
     internal void RenderEmptyFrame(in RenderFrameInfo frameInfo) => _renderer.RenderEmptyFrame(in frameInfo);

@@ -90,7 +90,7 @@ public sealed class DiagnosticsService : IDisposable
     public void Render()
     {
         var vp = ImGui.GetMainViewport();
-        ImGui.ShowDemoWindow();
+        //ImGui.ShowDemoWindow();
         _leftPanel.Draw(224);
         _rightPanel.DrawRight(160);
         DevConsole.DrawConsole(200, 200);

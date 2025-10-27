@@ -165,7 +165,7 @@ public sealed class GfxCommands
 
     public void ApplyState(in GfxPassState cmdState)
     {
-        _activeState = cmdState;
+        _activeState = cmdState;    
         if (cmdState.Scissor is { } scissor) _states.ToggleScissorTest(scissor);
         if (cmdState.Cull is { } cull) _states.ToggleCullFace(cull);
         if (cmdState.DepthTest is { } depthTest) _states.ToggleDepthTest(depthTest);
@@ -178,11 +178,11 @@ public sealed class GfxCommands
 
     public void ApplyStateFunctions(GfxPassStateFunc cmdFunc)
     {
-        _stateFunc = cmdFunc;
         SetBlendMode(cmdFunc.Blend);
         SetCullMode(cmdFunc.Cull);
         SetDepthMode(cmdFunc.Depth);
         SetPolygonOffset(cmdFunc.PolygonOffset);
+        _stateFunc = cmdFunc;
     }
 
 

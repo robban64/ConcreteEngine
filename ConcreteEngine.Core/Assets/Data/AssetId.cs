@@ -1,12 +1,20 @@
 namespace ConcreteEngine.Core.Assets.Data;
 
-public readonly record struct AssetId(int Value);
+public readonly record struct AssetId(int Value)
+{
+    public bool IsValid => Value > 0;
+}
 
-public readonly record struct AssetFileId(int Value);
+public readonly record struct AssetFileId(int Value)
+{
+    public bool IsValid => Value > 0;
+}
 
 public readonly record struct AssetRef<TAsset>(AssetId Id) where TAsset : AssetObject
 {
     public int Value => Id.Value;
+    public bool IsValid => Id.IsValid;
+
     public static explicit operator AssetRef<TAsset>(AssetId id) => new(id);
     public static implicit operator AssetId(AssetRef<TAsset> typed) => typed.Id;
 

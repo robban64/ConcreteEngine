@@ -12,5 +12,5 @@ public abstract class AssetObject
 
     internal int ResourceId { get; init; }
 
-    protected void BumpGeneration() => Generation++;
+    internal void BumpGeneration() => Generation++;
 }

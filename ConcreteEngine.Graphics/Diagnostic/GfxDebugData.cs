@@ -1,12 +1,33 @@
 #region
 
+using ConcreteEngine.Common.Diagnostics;
 using ConcreteEngine.Graphics.Gfx.Definitions;
 
 #endregion
 
 namespace ConcreteEngine.Graphics.Diagnostic;
 
-public readonly record struct GfxDebugLog(
+public readonly struct GfxStoreMetricsPayload(
+    in StoreMetric<CollectionSample> fk,
+    in StoreMetric<CollectionSample> bk,
+    in GfxResourceMetric<ValueSample> special,
+    ResourceKind kind)
+{
+    public readonly StoreMetric<CollectionSample> Fk = fk;
+    public readonly StoreMetric<CollectionSample> Bk = bk;
+    public readonly GfxResourceMetric<ValueSample> Special = special;
+    public readonly ResourceKind Kind = kind;
+}
+
+public readonly record struct GfxMetaSpecialMetric(
+    long Value,
+    int ResourceId,
+    ushort Param2 = 0,
+    ResourceKind Kind = 0);
+
+/*
+
+public readonly record struct GfxDebuggLog(
     int HandleId = 0,
     int OtherValue = 0,
     ushort Gen = 0,
@@ -35,7 +56,7 @@ public readonly record struct GfxDebugLog(
 
     public string ToDebugStringInternal(string info)
     {
-        var kindName = Kind.ToLogName();
+        var kindName = Kind.ToResourceName();
         kindName = kindName.Length > 10 ? kindName.Substring(0, 10) : kindName;
 
         var t = DateTimeOffset.FromUnixTimeMilliseconds(Time).ToLocalTime();
@@ -57,4 +78,4 @@ public readonly record struct GfxDebugLog(
             _ => ToDebugUnknownString()
         };
     }
-}
+}*/

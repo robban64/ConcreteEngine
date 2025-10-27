@@ -1,6 +1,8 @@
 #region
 
 using System.Numerics;
+using System.Runtime.CompilerServices;
+using ConcreteEngine.Core.Assets.Data;
 using ConcreteEngine.Core.Assets.Textures;
 using ConcreteEngine.Graphics.Gfx;
 using ConcreteEngine.Graphics.Gfx.Contracts;
@@ -21,51 +23,60 @@ public readonly struct TerrainBatchResult(MeshId meshId, int drawCount)
 
 public sealed class TerrainBatcher : RenderBatcher<TerrainBatchResult>
 {
-    public Texture2D HeightMap { get; private set; }
+    public AssetRef<Texture2D> TextureRef { get; private set; }
+    public MeshId MeshId { get; private set; }
     public int MaxHeight { get; private set; }
     public int Step { get; private set; }
-
+    public int Dimension { get; private set; }
     public int Size { get; private set; }
     public int VertexCount { get; private set; }
-    public MeshId MeshId { get; private set; }
     public int DrawCount { get; private set; }
 
-    private Vertex3D[] _vertices;
+    private float[] _heights;
+
     private uint[] _indices;
+    private Vertex3D[] _vertices;
+    
 
     internal TerrainBatcher(GfxContext gfx) : base(gfx)
     {
     }
+    
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public float GetHeight(int x, int z)
+    {
+        x = Math.Clamp(x, 0, Dimension - 1);
+        z = Math.Clamp(z, 0, Dimension - 1);
+        return _heights[z * Dimension + x];
+    }
 
     public void Initialize(Texture2D heightMap, int maxHeight, int step)
     {
-        HeightMap = heightMap;
-        Size = HeightMap.Width;
+        if (heightMap.PixelData is null)
+            throw new ArgumentNullException(nameof(heightMap.PixelData));
+
+        (int width, int height) = (heightMap.Width, heightMap.Height);
+        var data = heightMap.PixelData!.Value.Span;
+        ArgumentOutOfRangeException.ThrowIfLessThan(width, 32);
+        ArgumentOutOfRangeException.ThrowIfNotEqual(width, height);
+        ArgumentOutOfRangeException.ThrowIfNotEqual(data.Length, width * width * 4);
+        ArgumentOutOfRangeException.ThrowIfLessThanOrEqual(step, 0);
+        ArgumentOutOfRangeException.ThrowIfGreaterThan(step, 16);
+
+        TextureRef = heightMap.RefId;
+        Dimension = width;
+        Size = width * width;
         MaxHeight = maxHeight;
         Step = step;
+        BuildHeightMap(data, width, maxHeight);
     }
 
     public override TerrainBatchResult BuildBatch()
     {
-        if (HeightMap.PixelData is null)
-            throw new ArgumentNullException(nameof(HeightMap.PixelData));
-
-        ArgumentOutOfRangeException.ThrowIfLessThan(HeightMap.Width, 32);
-        ArgumentOutOfRangeException.ThrowIfNotEqual(HeightMap.Width, HeightMap.Height);
-        ArgumentOutOfRangeException.ThrowIfNotEqual(HeightMap.PixelData.Value.Length, Size * Size * 4);
-
-        ArgumentOutOfRangeException.ThrowIfLessThanOrEqual(Step, 0);
-        ArgumentOutOfRangeException.ThrowIfGreaterThan(Step, 16);
-
-        var data = HeightMap.PixelData.Value;
-
-
-        int vertexRowCount = (Size - 1) / Step + 1;
+        int vertexRowCount = (Dimension - 1) / Step + 1;
         VertexCount = vertexRowCount * vertexRowCount;
 
-        var heightmap = data.Span;
-
-        GenerateVertex(heightmap, vertexRowCount);
+        GenerateVertex(vertexRowCount);
         GenerateIndices(vertexRowCount);
         RecomputeNormalsFromIndices();
         GenerateMesh();
@@ -80,6 +91,22 @@ public sealed class TerrainBatcher : RenderBatcher<TerrainBatchResult>
         if (MeshId.IsValid())
             Gfx.ResourceContext.Disposer.EnqueueRemoval(MeshId);
     }
+    
+    private void BuildHeightMap(ReadOnlySpan<byte> data, int width, int maxHeight)
+    {
+        var size = width * width;
+        _heights = new float[size];
+
+        for (int z = 0; z < width; z++)
+        {
+            int rowStart = z * width;
+            for (int x = 0; x < width; x++)
+            {
+                _heights[rowStart + x] = SampleHeight(data, x, z, width, maxHeight);
+            }
+        }
+    }
+    
 
     private void GenerateMesh()
     {
@@ -107,30 +134,20 @@ public sealed class TerrainBatcher : RenderBatcher<TerrainBatchResult>
         MeshId = builder.Finish();
     }
 
-
-    /* builder.StartBuilder(DrawPrimitive.Triangles, MeshDrawKind.Elements, DrawElementSize.UnsignedInt);
-     builder.CreateVertexBuffer(new GpuVboDescriptor<Vertex3D>
-     {
-         Data = _vertices, Usage = BufferUsage.DynamicDraw, BindingIndex = 0
-     });
-     builder.CreateIndexBuffer(new GpuIboDescriptor<uint>() { Data = _indices, Usage = BufferUsage.DynamicDraw });
-     var result = builder.BuildMesh(attributes);
-*/
-
-    private void GenerateVertex(ReadOnlySpan<byte> heightmap, int vertexRowCount)
+    private void GenerateVertex(int vertexRowCount)
     {
         _vertices = new Vertex3D[VertexCount];
 
         for (var vz = 0; vz < vertexRowCount; vz++)
         {
-            var zPix = Math.Min(vz * Step, Size - 1);
+            var zPix = Math.Min(vz * Step, Dimension - 1);
             for (var vx = 0; vx < vertexRowCount; vx++)
             {
-                var xPix = Math.Min(vx * Step, Size - 1);
+                var xPix = Math.Min(vx * Step, Dimension - 1);
 
-                var y = SampleH(heightmap, xPix, zPix);
+                var y = GetHeight(xPix, zPix);
                 var pos = new Vector3(xPix, y, zPix);
-                var uv = new Vector2(xPix / (float)(Size - 1), zPix / (float)(Size - 1));
+                var uv = new Vector2(xPix / (float)(Dimension - 1), zPix / (float)(Dimension - 1));
 
                 var vi = vz * vertexRowCount + vx;
                 _vertices[vi] = new Vertex3D(pos, uv, Vector3.UnitY, Vector3.UnitX);
@@ -143,8 +160,8 @@ public sealed class TerrainBatcher : RenderBatcher<TerrainBatchResult>
             for (var vx = 0; vx < vertexRowCount; vx++)
             {
                 var vi = vz * vertexRowCount + vx;
-                var n = GetNormal(heightmap, vx, vz);
-                var t = GetTangent(heightmap, vx, vz, n);
+                var n = GetNormal(vx, vz);
+                var t = GetTangent(vx, vz, n);
                 _vertices[vi].Normal = n;
                 _vertices[vi].Tangent = t;
             }
@@ -230,30 +247,12 @@ public sealed class TerrainBatcher : RenderBatcher<TerrainBatchResult>
             _vertices[i].Normal = NormalizeSafe(_vertices[i].Normal);
     }
 
-
-    private float SampleH(ReadOnlySpan<byte> heightmap, int x, int z)
+    private Vector3 GetTangent(int vx, int vz, Vector3 n)
     {
-        x = Math.Clamp(x, 0, Size - 1);
-        z = Math.Clamp(z, 0, Size - 1);
-
-        const int channels = 4;
-
-        var rowStrideBytes = heightmap.Length / Size;
-
-        var idx = z * rowStrideBytes + x * channels;
-        if ((uint)(idx + channels - 1) >= (uint)heightmap.Length)
-            return 0f;
-
-        byte r = heightmap[idx];
-        return r / 255f * MaxHeight;
-    }
-
-    private Vector3 GetTangent(ReadOnlySpan<byte> heightmap, int vx, int vz, Vector3 n)
-    {
-        var xPix = Math.Min(vx * Step, Size - 1);
-        var zPix = Math.Min(vz * Step, Size - 1);
-        var hL = SampleH(heightmap, xPix - Step, zPix);
-        var hR = SampleH(heightmap, xPix + Step, zPix);
+        var xPix = Math.Min(vx * Step, Dimension - 1);
+        var zPix = Math.Min(vz * Step, Dimension - 1);
+        var hL = GetHeight(xPix - Step, zPix);
+        var hR = GetHeight(xPix + Step, zPix);
 
         var rawT = new Vector3(2 * Step, hR - hL, 0f);
         var t = rawT - n * Vector3.Dot(rawT, n);
@@ -261,23 +260,40 @@ public sealed class TerrainBatcher : RenderBatcher<TerrainBatchResult>
     }
 
 
-    private Vector3 GetNormal(ReadOnlySpan<byte> heightmap, int vx, int vz)
+    private Vector3 GetNormal(int vx, int vz)
     {
-        var xPix = Math.Min(vx * Step, Size - 1);
-        var zPix = Math.Min(vz * Step, Size - 1);
+        var xPix = Math.Min(vx * Step, Dimension - 1);
+        var zPix = Math.Min(vz * Step, Dimension - 1);
 
-        var hL = SampleH(heightmap, xPix - Step, zPix);
-        var hR = SampleH(heightmap, xPix + Step, zPix);
-        var hD = SampleH(heightmap, xPix, zPix - Step);
-        var hU = SampleH(heightmap, xPix, zPix + Step);
+        var hL = GetHeight(xPix - Step, zPix);
+        var hR = GetHeight(xPix + Step, zPix);
+        var hD = GetHeight(xPix, zPix - Step);
+        var hU = GetHeight(xPix, zPix + Step);
 
         var dx = new Vector3(2 * Step, hR - hL, 0f);
         var dz = new Vector3(0f, hU - hD, 2 * Step);
 
         return NormalizeSafe(Vector3.Cross(dz, dx));
     }
+    
+    private static float SampleHeight(ReadOnlySpan<byte> data, int x, int z, int dimension, int maxHeight)
+    {
+        x = Math.Clamp(x, 0, dimension - 1);
+        z = Math.Clamp(z, 0, dimension - 1);
 
-    static Vector3 NormalizeSafe(in Vector3 v)
+        const int channels = 4;
+
+        var rowStrideBytes = data.Length / dimension;
+
+        var idx = z * rowStrideBytes + x * channels;
+        if ((uint)(idx + channels - 1) >= (uint)data.Length)
+            return 0f;
+
+        byte r = data[idx];
+        return r / 255f * maxHeight;
+    }
+
+    private static Vector3 NormalizeSafe(Vector3 v)
     {
         var len2 = v.LengthSquared();
         return len2 > 1e-12f ? v / MathF.Sqrt(len2) : Vector3.UnitY;

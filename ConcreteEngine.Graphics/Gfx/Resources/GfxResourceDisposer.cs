@@ -1,6 +1,7 @@
 #region
 
 using ConcreteEngine.Common;
+using ConcreteEngine.Common.Diagnostics;
 using ConcreteEngine.Graphics.Diagnostic;
 
 #endregion
@@ -38,7 +39,7 @@ internal sealed class GfxResourceDisposer : IGfxResourceDisposer
         while (drainCount < DrainPerFrame && _disposeQueue.TryGetNext(DrainDelayTicks, out var cmd))
         {
             driver.Disposer.DeleteGlResource(in cmd);
-            _backendStoreHub.Get(cmd.Handle.Kind).Remove(cmd.Handle);
+            _backendStoreHub.GetStore(cmd.Handle.Kind).Remove(cmd.Handle);
             if (!cmd.Replace)
             {
                 _gfxStoreHub.RemoveResource(cmd.GfxId, cmd.Handle.Kind);
@@ -55,13 +56,13 @@ internal sealed class GfxResourceDisposer : IGfxResourceDisposer
         var fStore = _gfxStoreHub.GetStore<TId>();
         var gfxHandle = fStore.GetHandleUntyped(id);
 
-        var bStore = _backendStoreHub.Get(resourceKind);
+        var bStore = _backendStoreHub.GetStore(resourceKind);
         var native = bStore.GetNativeHandle(in gfxHandle);
 
         var cmd = DeleteResourceCommand.MakeDelete(gfxHandle, native, id.Value);
         _disposeQueue.Enqueue(cmd);
 
-        GfxDebugMetrics.Log(DebugLog.MakeEnqueueDispose(id.Value, gfxHandle));
+        GfxLog.LogBackend(native.Value, gfxHandle, TId.Kind.ToLogTopic(), LogAction.Evict);
     }
 
     public void EnqueueReplace<TId>(GfxRefToken<TId> refToken)
@@ -70,12 +71,12 @@ internal sealed class GfxResourceDisposer : IGfxResourceDisposer
         ArgumentOutOfRangeException.ThrowIfEqual(refToken.Handle.IsValid, false);
         var fkStore = _gfxStoreHub.GetStore<TId>();
 
-        var bkStore = _backendStoreHub.Get(TId.Kind);
+        var bkStore = _backendStoreHub.GetStore(TId.Kind);
         var handle = bkStore.GetNativeHandle(refToken);
         var cmd = DeleteResourceCommand.MakeReplace(refToken, handle);
         _disposeQueue.Enqueue(cmd);
 
-        GfxDebugMetrics.Log(DebugLog.MakeEnqueueDispose((int)handle.Value, refToken));
+        GfxLog.LogBackend(handle.Value, refToken, TId.Kind.ToLogTopic(), LogAction.Evict);
     }
 
 

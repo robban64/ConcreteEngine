@@ -1,5 +1,6 @@
 #region
 
+using ConcreteEngine.Common;
 using ConcreteEngine.Core.Assets.Data;
 using ConcreteEngine.Core.Assets.Descriptors;
 using ConcreteEngine.Core.Assets.Internal;
@@ -14,70 +15,91 @@ namespace ConcreteEngine.Core.Assets;
 
 internal sealed class AssetLoader
 {
-    private AssetStore _store = null!;
+    
+    private AssetStore? _store;
 
-    private TextureLoaderModule _textureLoader = null!;
-    private MeshLoaderModule _meshLoader = null!;
-    private ShaderLoaderModule _shaderLoader = null!;
-    private MaterialLoader _materialLoader = null!;
+    private TextureLoaderModule? _textureLoader;
+    private MeshLoaderModule? _meshLoader;
+    private ShaderLoaderModule? _shaderLoader;
+    private MaterialLoader? _materialLoader;
 
-    private AssetFileAssembleDel<Shader, ShaderDescriptor> _loadShaderDel = null!;
-    private AssetFileAssembleDel<Texture2D, TextureDescriptor> _loadTextureDel = null!;
-    private AssetFileAssembleDel<CubeMap, CubeMapDescriptor> _loadCubeMapDel = null!;
-    private AssetFileAssembleDel<Mesh, MeshDescriptor> _loadMeshDel = null!;
+    private AssetFileAssembleDel<Shader, ShaderDescriptor>? _loadShaderDel;
+    private AssetFileAssembleDel<Texture2D, TextureDescriptor>? _loadTextureDel;
+    private AssetFileAssembleDel<CubeMap, CubeMapDescriptor>? _loadCubeMapDel;
+    private AssetFileAssembleDel<Mesh, MeshDescriptor>? _loadMeshDel;
+    
+    public bool IsActive { get; private set; }
 
     public Shader LoadShader(ShaderDescriptor manifest)
-        => _store.RegisterWithFiles(manifest, _loadShaderDel);
+        => _store!.RegisterWithFiles(manifest, _loadShaderDel!);
 
     public Texture2D LoadTexture2D(TextureDescriptor manifest) =>
-        _store.RegisterWithFiles(manifest, _loadTextureDel);
+        _store!.RegisterWithFiles(manifest, _loadTextureDel!);
 
     public CubeMap LoadCubeMap(CubeMapDescriptor manifest)
-        => _store.RegisterWithFiles(manifest, _loadCubeMapDel);
+        => _store!.RegisterWithFiles(manifest, _loadCubeMapDel!);
 
     public Mesh LoadMesh(MeshDescriptor manifest)
-        => _store.RegisterWithFiles(manifest, _loadMeshDel);
+        => _store!.RegisterWithFiles(manifest, _loadMeshDel!);
 
     public List<MaterialTemplate> LoadAllMaterials(MaterialManifest manifest)
-        => _materialLoader.LoadMaterials(_store, manifest.Records)!;
+        => _materialLoader!.LoadMaterials(_store!, manifest.Records)!;
 
-    public void ReloadShader(Shader shader, AssetFileEntry vertFile, AssetFileEntry fragFile)
+    public void ReloadShader(Shader shader)
     {
-        _shaderLoader.ReloadShader(shader, vertFile, fragFile, out var specs);
+        InvalidOpThrower.ThrowIf(!IsActive,nameof(IsActive));
+        _store!.Reload(shader, _shaderLoader!.ReloadShader);
     }
 
 
-    public void ActivateLoader(AssetStore store, AssetGfxUploader gfx)
+    public void ActivateFullLoader(AssetStore store, AssetGfxUploader gfx)
     {
+        InvalidOpThrower.ThrowIf(IsActive);
+        
         _store = store;
 
-        _textureLoader = new TextureLoaderModule(gfx);
-        _meshLoader = new MeshLoaderModule(gfx);
-        _shaderLoader = new ShaderLoaderModule(gfx);
-        _materialLoader = new MaterialLoader();
+        _textureLoader ??= new TextureLoaderModule(gfx);
+        _meshLoader ??= new MeshLoaderModule(gfx);
+        _shaderLoader ??= new ShaderLoaderModule(gfx);
+        _materialLoader ??= new MaterialLoader();
 
-        _loadShaderDel = _shaderLoader.LoadShader;
-        _loadTextureDel = _textureLoader.LoadTexture2D;
-        _loadCubeMapDel = _textureLoader.LoadCubeMap;
-        _loadMeshDel = _meshLoader.LoadMesh;
+        _loadShaderDel ??= _shaderLoader.LoadShader;
+        _loadTextureDel ??= _textureLoader.LoadTexture2D;
+        _loadCubeMapDel ??= _textureLoader.LoadCubeMap;
+        _loadMeshDel ??= _meshLoader.LoadMesh;
 
         _shaderLoader.Prepare();
+        
+        IsActive = true;
+    }
+
+    public void ActivateLazyLoader(AssetStore store, AssetGfxUploader gfx)
+    {
+        IsActive = true;
+        _store = store;
+        _textureLoader ??= new TextureLoaderModule(gfx);
+        _meshLoader ??= new MeshLoaderModule(gfx);
+        _shaderLoader ??= new ShaderLoaderModule(gfx);
+        _materialLoader ??= new MaterialLoader();
     }
 
 
     public void DeactivateLoader()
     {
-        _loadShaderDel = null!;
-        _loadTextureDel = null!;
-        _loadCubeMapDel = null!;
-        _loadMeshDel = null!;
+        _loadShaderDel = null;
+        _loadTextureDel = null;
+        _loadCubeMapDel = null;
+        _loadMeshDel = null;
 
-        _meshLoader.Unload();
-        _textureLoader.Unload();
-        _shaderLoader.Unload();
+        _meshLoader?.Unload();
+        _textureLoader?.Unload();
+        _shaderLoader?.Unload();
 
-        _meshLoader = null!;
-        _textureLoader = null!;
-        _shaderLoader = null!;
+        _meshLoader = null;
+        _textureLoader = null;
+        _shaderLoader = null;
+        _materialLoader = null;
+        
+        IsActive = false;
     }
 }

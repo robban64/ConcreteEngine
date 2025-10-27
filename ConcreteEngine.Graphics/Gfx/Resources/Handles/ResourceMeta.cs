@@ -93,6 +93,8 @@ public readonly struct VertexBufferMeta(
     public readonly BufferUsage Usage = usage;
     public readonly BufferStorage Storage = storage;
     public readonly BufferAccess Access = access;
+    
+    public nint Capacity => Stride * ElementCount;
 
     public static VertexBufferMeta CreateCopy(in VertexBufferMeta meta, int count, nint stride, BufferUsage usage) =>
         new(meta.BindingIdx, count, stride, usage, meta.Storage, meta.Access);
@@ -112,6 +114,8 @@ public readonly struct IndexBufferMeta(
     public readonly BufferUsage Usage = usage;
     public readonly BufferStorage Storage = storage;
     public readonly BufferAccess Access = access;
+
+    public nint Capacity => Stride * ElementCount;
 
     public static IndexBufferMeta CreateCopy(in IndexBufferMeta meta, int count, nint stride, BufferUsage usage) =>
         new(count, stride, usage, meta.Storage, meta.Access);

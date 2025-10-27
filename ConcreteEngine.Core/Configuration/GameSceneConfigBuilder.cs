@@ -15,7 +15,6 @@ public interface IGameSceneModuleBuilder
 
 public interface IGameSceneRenderBuilder
 {
-    void RegisterRender2D(RenderTargetDescriptor desc);
     void RegisterRender3D(RenderTargetDescriptor desc);
 }
 

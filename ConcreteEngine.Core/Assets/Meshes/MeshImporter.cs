@@ -1,5 +1,6 @@
 #region
 
+using System.Diagnostics;
 using System.Numerics;
 using ConcreteEngine.Graphics.Primitives;
 using Silk.NET.Assimp;
@@ -9,6 +10,7 @@ using AssimpMesh = Silk.NET.Assimp.Mesh;
 
 namespace ConcreteEngine.Core.Assets.Meshes;
 
+//TODO improve loading speed
 internal sealed class MeshImporter
 {
     private Assimp? _assimp;
@@ -38,14 +40,16 @@ internal sealed class MeshImporter
         if (_assimp == null)
             _assimp = Assimp.GetApi();
 
-        var steps =
+        //PostProcessSteps.PreTransformVertices | 
+        const PostProcessSteps steps =
             PostProcessSteps.Triangulate |
             PostProcessSteps.SortByPrimitiveType |
+            PostProcessSteps.JoinIdenticalVertices |
             PostProcessSteps.GenerateSmoothNormals |
+            PostProcessSteps.ImproveCacheLocality |
             PostProcessSteps.CalculateTangentSpace |
-            PostProcessSteps.PreTransformVertices | // bake nodes
+            PostProcessSteps.OptimizeMeshes |
             PostProcessSteps.FlipUVs;
-
 
         var scene = _assimp.ImportFile(path, (uint)steps);
 
@@ -54,12 +58,14 @@ internal sealed class MeshImporter
             var error = _assimp.GetErrorStringS();
             throw new Exception(error);
         }
-
-        if (scene->MNumMeshes > 1)
-            throw new NotSupportedException($"{path} have several meshes, only one mesh is supported atm.");
+        
+        for (int i=0; i< scene->MNumMeshes; i++)
+            Console.WriteLine($"{scene->MMeshes[i]->MName} - {scene->MMeshes[i]->MNumVertices}");
 
         var mesh = scene->MMeshes[0];
-        LoadMeshData(mesh);
+
+        //var factor = path.Contains("tree") ? 0.01f : 1f;
+        LoadMeshData(mesh, 1f);
 
         return (_vertices, _indices);
 
@@ -82,25 +88,26 @@ internal sealed class MeshImporter
 
     private unsafe void LoadMeshData(AssimpMesh* mesh, float scaleFactor = 1)
     {
-        int vertexCount = (int)mesh->MNumVertices;
-        int indexCount = (int)(mesh->MNumFaces * 3);
+        var vertexCount = (int)mesh->MNumVertices;
+        var indexCount = (int)(mesh->MNumFaces * 3);
 
         _vertices.Clear();
         _indices.Clear();
+
         if (_vertices.Count < vertexCount)
             _vertices.EnsureCapacity(vertexCount);
         if (_indices.Count < vertexCount)
             _indices.EnsureCapacity(indexCount);
 
-        ComputeBBox(mesh, out var bboxMin, out var bboxMax);
-        float scale = DecideScale(bboxMin, bboxMax);
-        var offset = (bboxMin + bboxMax) * 0.5f;
+        //ComputeBBox(mesh, out var bboxMin, out var bboxMax);
+        //var scale = DecideScale(bboxMin, bboxMax, scaleFactor);
+        //var offset = (bboxMin + bboxMax) * 0.5f;
 
         for (uint i = 0; i < mesh->MNumVertices; i++)
         {
             var vertex = new Vertex3D();
             var pos = mesh->MVertices[i];
-            vertex.Position = (pos - offset) * scale;
+            vertex.Position = pos; //(pos - offset) * scale;
 
             // texture coordinates
             if (mesh->MTextureCoords[0] != null)
@@ -145,12 +152,13 @@ internal sealed class MeshImporter
         }
     }
 
-    private static float DecideScale(in Vector3 bboxMin, in Vector3 bboxMax)
+    // cm->0.01f, mm->0.001f, m->1f
+    private static float DecideScale(Vector3 bboxMin, Vector3 bboxMax, float unitScale)
     {
         var size = bboxMax - bboxMin;
         var maxDim = MathF.Max(size.X, MathF.Max(size.Y, size.Z));
+        Console.WriteLine($"{maxDim} - {bboxMin.ToString()} - {bboxMax.ToString()}");
 
-        float unitScale = 1f; // cm->0.01f, mm->0.001f, m->1f
 
         return unitScale * (maxDim > 100f ? 0.01f : maxDim < 0.01f ? 0.001f : 1f);
     }

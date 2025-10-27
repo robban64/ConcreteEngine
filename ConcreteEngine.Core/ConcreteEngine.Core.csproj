@@ -19,7 +19,7 @@
         <ProjectReference Include="..\ConcreteEngine.Common\ConcreteEngine.Common.csproj"/>
         <ProjectReference Include="..\ConcreteEngine.Graphics\ConcreteEngine.Graphics.csproj"/>
         <ProjectReference Include="..\ConcreteEngine.Renderer\ConcreteEngine.Renderer.csproj" />
-        <ProjectReference Include="..\Tools.DebugInterface\Tools.DebugInterface.csproj" />
+        <ProjectReference Include="..\Core.DebugTools\Core.DebugTools.csproj" />
     </ItemGroup>
 
     <ItemGroup>

@@ -96,19 +96,10 @@ public sealed class EngineRenderSystem : IRenderingSystem
         in RenderRuntimeParams runtimeParams,
         in RenderViewSnapshot viewSnapshot)
     {
-        /*
-        if (status == BeginFrameStatus.Resize)
-        {
-            _graphics.Gfx.Commands.BindFramebuffer(default);
-            _graphics.Gfx.Commands.UnbindAllTextures();
-            _renderer.RecreateScreenRelativeFbo(frameInfo.OutputSize);
-        }
-        */
         _renderEntityBus.Reset();
         _renderEntityBus.CollectEntities();
 
-        var snapshot = SceneProperties.Commit();
-        //_sceneDrawProducer.SetSceneGlobals(snapshot);
+        SceneProperties.Commit();
         _renderer.PrepareFrame(in frameInfo, in runtimeParams, in viewSnapshot);
 
         // fill buffers
@@ -128,7 +119,7 @@ public sealed class EngineRenderSystem : IRenderingSystem
 
     private void SubmitMaterialData()
     {
-        var matStore = _assets.Materials;
+        var matStore = _assets.MaterialStoreImpl;
 
         Span<TextureSlotInfo> slots = stackalloc TextureSlotInfo[RenderLimits.TextureSlots];
         foreach (var material in matStore.MaterialSpan)

@@ -2,6 +2,7 @@
 
 using System.Numerics;
 using ConcreteEngine.Common.Numerics;
+using ConcreteEngine.Common.Numerics.Maths;
 using ConcreteEngine.Renderer.Data;
 using ConcreteEngine.Renderer.State;
 
@@ -163,7 +164,7 @@ public sealed class Camera3D : ICamera
         _dirty = false;
 
         _rotation = Quaternion.CreateFromYawPitchRoll(_yaw, _pitch, 0);
-        TransformUtils.CreateModelMatrix(_translation, _scale, _rotation, out var viewModel);
+        MatrixMath.CreateModelMatrix(_translation, _scale, _rotation, out var viewModel);
         Matrix4x4.Invert(viewModel, out _viewMatrix);
 
         var fov = MathHelper.ToRadians(_fov / 2f);

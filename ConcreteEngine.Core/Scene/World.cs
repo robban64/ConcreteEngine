@@ -3,7 +3,7 @@
 using ConcreteEngine.Core.RenderingSystem;
 using ConcreteEngine.Core.RenderingSystem.Batching;
 using ConcreteEngine.Core.Scene.Entities;
-using Tools.DebugInterface.Data;
+using Core.DebugTools.Data;
 
 #endregion
 
@@ -57,9 +57,8 @@ public sealed class World : IWorld
 
     public EntityId Create() => new(_idIdx++);
 
-    [DebugWatch] public int EntityCount => _idIdx;
-
-    [DebugWatch] public int ShadowMapSize => RenderProps.Snapshot.Shadows.ShadowMapSize;
+    public int EntityCount => _idIdx;
+    public int ShadowMapSize => RenderProps.Snapshot.Shadows.ShadowMapSize;
 
     public void Cleanup()
     {
@@ -69,15 +68,14 @@ public sealed class World : IWorld
         Meshes.Cleanup();
     }
 
-    public EntityEnumerator<T1> Query<T1>() where T1 : unmanaged =>
-        new(GenericStores<T1>.Store);
+    public EntityEnumerator<T1> Query<T1>() where T1 : unmanaged => new(GenericStores<T1>.Store);
 
-    public EntityEnumerator<T1, T2> Query<T1, T2>() where T1 : unmanaged where T2 : unmanaged
-        => new(GenericStores<T1>.Store, GenericStores<T2>.Store);
+    public EntityEnumerator<T1, T2> Query<T1, T2>() where T1 : unmanaged where T2 : unmanaged =>
+        new(GenericStores<T1>.Store, GenericStores<T2>.Store);
 
     public EntityEnumerator<T1, T2, T3> Query<T1, T2, T3>()
-        where T1 : unmanaged where T2 : unmanaged where T3 : unmanaged
-        => new(GenericStores<T1>.Store, GenericStores<T2>.Store, GenericStores<T3>.Store);
+        where T1 : unmanaged where T2 : unmanaged where T3 : unmanaged =>
+        new(GenericStores<T1>.Store, GenericStores<T2>.Store, GenericStores<T3>.Store);
 
 
     private static class GenericStores<T> where T : unmanaged

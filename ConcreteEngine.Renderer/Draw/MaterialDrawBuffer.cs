@@ -49,21 +49,44 @@ internal sealed class MaterialDrawBuffer
     public void SubmitDrawData(in DrawMaterialPayload payload, ReadOnlySpan<TextureSlotInfo> slots)
     {
         ArgumentOutOfRangeException.ThrowIfGreaterThan(slots.Length, TextureSlots);
-        EnsureCapacity(1);
+
+        var index = payload.Meta.MaterialId - 1;
+
+        EnsureCapacity(index);
         EnsureTextureSlotCapacity(slots.Length);
 
-        _buffer[_idx] = new MaterialUniformRecord(in payload.MatParams);
-        _metas[_idx] = payload.Meta;
+        _buffer[index] = new MaterialUniformRecord(in payload.MatParams);
+        _metas[index] = payload.Meta;
 
         var slotIdx = _slotIdx;
         for (var i = 0; i < slots.Length; i++, slotIdx++)
             _textureSlots[slotIdx] = slots[i];
 
-        _slotRanges[_idx] = new RangeU16((ushort)_slotIdx, (ushort)slots.Length);
+        _slotRanges[index] = new RangeU16((ushort)_slotIdx, (ushort)slots.Length);
 
         _idx++;
         _slotIdx = slotIdx;
     }
+    /*
+     public void SubmitDrawData(in DrawMaterialPayload payload, ReadOnlySpan<TextureSlotInfo> slots)
+       {
+           ArgumentOutOfRangeException.ThrowIfGreaterThan(slots.Length, TextureSlots);
+           EnsureCapacity(1);
+           EnsureTextureSlotCapacity(slots.Length);
+
+           _buffer[_idx] = new MaterialUniformRecord(in payload.MatParams);
+           _metas[_idx] = payload.Meta;
+
+           var slotIdx = _slotIdx;
+           for (var i = 0; i < slots.Length; i++, slotIdx++)
+               _textureSlots[slotIdx] = slots[i];
+
+           _slotRanges[_idx] = new RangeU16((ushort)_slotIdx, (ushort)slots.Length);
+
+           _idx++;
+           _slotIdx = slotIdx;
+       }
+     */
 
     internal ReadOnlySpan<MaterialUniformRecord> DrainDrawMaterialData()
     {

@@ -37,11 +37,11 @@ public sealed class GameEngine : IDisposable
     private readonly SceneManager _sceneManager;
 
     private readonly UpdateFrameInfo _updateInfo;
-    private readonly RenderEngineFrameInfo _renderEngineInfo;
+    private readonly RenderEngineFrameInfo _renderFrameInfo;
 
     private readonly EngineTimeHub _timeHub;
 
-    private readonly DebugInterfaceGateway _debugGateway;
+    private readonly EngineGateway _engineGateway;
 
     private bool _isDisposed = false;
 
@@ -50,7 +50,7 @@ public sealed class GameEngine : IDisposable
     internal GameEngine(
         EngineWindow engineWindow,
         GfxRuntimeBundle<GL> gfxBundle,
-        IEngineInputSource input,
+        EngineInputSource input,
         List<Func<GameScene>> sceneFactories
     )
     {
@@ -76,12 +76,12 @@ public sealed class GameEngine : IDisposable
 
         _stateMachine = new LinearStateMachine<EngineStateLevel>(Enum.GetValues<EngineStateLevel>());
 
-        var internalInput = ((EngineInputSource)input).InputContext;
-        _debugGateway =
-            new DebugInterfaceGateway(gfxBundle.Config.DriverContext, engineWindow.PlatformWindow, internalInput);
+        var internalInput = input.InputContext;
+        _engineGateway =
+            new EngineGateway(gfxBundle.Config.DriverContext, engineWindow.PlatformWindow, internalInput);
 
         _updateInfo = new UpdateFrameInfo();
-        _renderEngineInfo = new RenderEngineFrameInfo(_window.OutputSize);
+        _renderFrameInfo = new RenderEngineFrameInfo(_window.OutputSize);
     }
 
 
@@ -96,10 +96,9 @@ public sealed class GameEngine : IDisposable
         _assets.FinishLoading();
         _coreSystems.Initialize();
         RegisterRenderer();
-
-        _debugGateway.SetupCommandCallbacks(_assets);
-
-        GfxDebugMetrics.LogEnabled = true;
+        
+        // prevent spam from first load. Move up to log startup issues
+        GfxLog.Enabled = true;
     }
 
     private void RegisterRenderer()
@@ -116,12 +115,12 @@ public sealed class GameEngine : IDisposable
     {
         var alpha = _timeHub.Alpha;
 
-        var frameStatus = _renderEngineInfo.BeginRenderFrame(dt, alpha, _window, _inputSystem.InputSource,
+        var frameStatus = _renderFrameInfo.BeginRenderFrame(dt, alpha, _window, _inputSystem.InputSource,
             out var frameInfo, out var runtimeParams);
 
         _timeHub.RenderFrame(dt);
 
-        _debugGateway.Update(dt);
+        _engineGateway.Update(dt);
 
         if (_sceneManager.Current is not { } scene)
         {
@@ -129,7 +128,7 @@ public sealed class GameEngine : IDisposable
             return;
         }
 
-        if (_renderEngineInfo.FrameIndex > 1 && frameStatus == RenderEngineFrameInfo.BeginFrameStatus.Resize)
+        if (_renderFrameInfo.FrameIndex > 1 && frameStatus == RenderEngineFrameInfo.BeginFrameStatus.Resize)
         {
             _timeHub.DebounceTicker ??= new DebounceTicker(30);
         }
@@ -148,9 +147,9 @@ public sealed class GameEngine : IDisposable
 
         _engineRenderSystem.PreRender(beginStatus, in frameInfo, in runtimeParams, in viewSnapshot);
         _engineRenderSystem.ExecuteFrame(out var gfxFrameResult);
-        _renderEngineInfo.EndRenderFrame(gfxFrameResult);
+        _renderFrameInfo.EndRenderFrame(gfxFrameResult);
 
-        _debugGateway.Render();
+        _engineGateway.RenderMetricsUi();
 
 
         // _renderTime.TickOrRenderEffect();
@@ -187,17 +186,14 @@ public sealed class GameEngine : IDisposable
     private void GameTickUpdate(int tick)
     {
         _updateInfo.UpdateTick(tick);
-        _inputSystem.Update(!_debugGateway.BlockInput());
+        _inputSystem.Update(!_engineGateway.BlockInput());
         _sceneManager.Current?.UpdateTick(tick);
     }
 
     private void DebugTickUpdate(int tick)
     {
-        if (!_debugGateway.Enabled) return;
-        _debugGateway.RefreshData(
-            _assets.InternalStore,
-            in _renderEngineInfo.GetRenderFrameInfo(),
-            _renderEngineInfo.GfxResult);
+        if (!_engineGateway.Enabled) return;
+        _engineGateway.RefreshMetrics();
     }
 
 
@@ -235,17 +231,20 @@ public sealed class GameEngine : IDisposable
         var sceneContext = new GameSceneContext(_coreSystems) { Modules = _modules };
         var builder = new GameSceneConfigBuilder(_modules);
 
-        _sceneManager.ApplyPendingScene(sceneContext, builder, _engineRenderSystem, AfterBuild);
+        _sceneManager.ApplyPendingScene(sceneContext, builder, _engineRenderSystem, OnSceneBuild);
 
         _modules.Load(new GameModuleContext(sceneContext));
-        return;
+    }
+    
+    private void OnSceneBuild(SceneManager.SceneBuildResult result, EngineRenderSystem renderer)
+    {
+        _engineGateway.AttachDebugTools((World)result.Context.World, _assets, _renderFrameInfo);
+        _engineGateway.RegisterCommands();
+        _engineGateway.RegisterMetrics();
+        _engineGateway.RefreshMetrics(true);
 
-        void AfterBuild(SceneManager.SceneBuildResult result, EngineRenderSystem renderer)
-        {
-            renderer.AttachWorld((World)result.Context.World);
-            _debugGateway.SetupBindings(_assets.Materials, (World)result.Context.World);
-            foreach (var module in result.Modules) result.Context.Modules.AddModule(module());
-        }
+        renderer.AttachWorld((World)result.Context.World);
+        foreach (var module in result.Modules) result.Context.Modules.AddModule(module());
     }
 
     internal void Close()

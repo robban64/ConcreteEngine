@@ -3,6 +3,7 @@
 using System.Runtime.CompilerServices;
 using ConcreteEngine.Common;
 using ConcreteEngine.Common.Collections;
+using ConcreteEngine.Common.Diagnostics;
 using ConcreteEngine.Graphics.Diagnostic;
 using ConcreteEngine.Graphics.Gfx.Definitions;
 
@@ -14,6 +15,9 @@ public interface IGfxResourceStore
 {
     ResourceKind ResourceKind { get; }
     int Count { get; }
+    int FreeCount { get; }
+    int Capacity { get; }
+    int GetAliveCount();
 }
 
 internal interface IGfxResourceStore<in TId> : IGfxResourceStore where TId : unmanaged, IResourceId
@@ -25,7 +29,7 @@ internal interface IGfxResourceStore<in TId> : IGfxResourceStore where TId : unm
 internal sealed class GfxResourceStore<TId, TMeta> : IGfxResourceStore<TId>
     where TId : unmanaged, IResourceId where TMeta : unmanaged, IResourceMeta
 {
-    private readonly MakeIdDelegate<TId> _makeId;
+    private readonly MakeResourceIdDel<TId> _makeResourceId;
     internal GfxMetaChangedDel<TId, TMeta>? ChangeCallback;
 
     public ResourceKind ResourceKind => TId.Kind;
@@ -36,25 +40,29 @@ internal sealed class GfxResourceStore<TId, TMeta> : IGfxResourceStore<TId>
 
     private readonly Stack<int> _free;
 
-    public int Count => _idx;
 
-    internal GfxResourceStore(int initialCapacity, MakeIdDelegate<TId> makeId)
+    public int Count => _idx;
+    public int FreeCount => _free.Count;
+    public int Capacity => _handle.Length;
+    internal ReadOnlySpan<TMeta> MetaSpan => _meta.AsSpan(0, _idx);
+
+    
+
+    internal GfxResourceStore(int initialCapacity, MakeResourceIdDel<TId> makeResourceId)
     {
         ArgumentOutOfRangeException.ThrowIfLessThan(initialCapacity, 4, nameof(initialCapacity));
         ArgumentOutOfRangeException.ThrowIfGreaterThan(initialCapacity, GfxLimits.StoreLimit, nameof(initialCapacity));
-        ArgumentNullException.ThrowIfNull(makeId);
+        ArgumentNullException.ThrowIfNull(makeResourceId);
 
         InvalidOpThrower.ThrowIf(ResourceKind == ResourceKind.Invalid);
 
-        _makeId = makeId;
+        _makeResourceId = makeResourceId;
 
         _meta = new TMeta[initialCapacity];
         _handle = new GfxHandle[initialCapacity];
         _free = new Stack<int>();
-
-        GfxDebugMetrics.RegisterStore<TId>();
     }
-
+    
     internal void BindOnChangeCallback(GfxMetaChangedDel<TId, TMeta> callback)
     {
         ArgumentNullException.ThrowIfNull(callback);
@@ -97,10 +105,9 @@ internal sealed class GfxResourceStore<TId, TMeta> : IGfxResourceStore<TId>
         var idx = _free.Count > 0 ? _free.Pop() : Allocate();
         _meta[idx] = meta;
         _handle[idx] = refToken;
-        var newId = _makeId(idx);
+        var newId = _makeResourceId(idx);
 
-        UpdateMetrics();
-        GfxDebugMetrics.Log(DebugLog.MakeAddGfxStore(newId.Value, refToken));
+        GfxLog.LogGfxStore(newId, refToken, TId.Kind.ToLogTopic(), LogAction.Add);
         return newId;
     }
 
@@ -120,8 +127,7 @@ internal sealed class GfxResourceStore<TId, TMeta> : IGfxResourceStore<TId>
         _handle[idx] = default!;
         _free.Push(idx);
 
-        UpdateMetrics();
-        GfxDebugMetrics.Log(DebugLog.MakeRemoveGfxStore(id.Value, handle));
+        GfxLog.LogGfxStore(id, handle, TId.Kind.ToLogTopic(), LogAction.Remove);
         return handle;
     }
 
@@ -137,9 +143,7 @@ internal sealed class GfxResourceStore<TId, TMeta> : IGfxResourceStore<TId>
 
         var message = new GfxMetaChanged<TMeta>(in newMeta, in oldMeta, handle.Gen, true, ResourceKind);
         ChangeCallback?.Invoke(id, in message);
-        UpdateMetrics();
-        GfxDebugMetrics.Log(DebugLog.MakeReplaceGfxStore(id.Value, handle));
-
+        GfxLog.LogGfxStore(id, handle, TId.Kind.ToLogTopic(), LogAction.Replace);
         return id;
     }
 
@@ -171,7 +175,7 @@ internal sealed class GfxResourceStore<TId, TMeta> : IGfxResourceStore<TId>
         return _idx++;
     }
 
-    private int GetAliveCount()
+    public int GetAliveCount()
     {
         var span = _handle.AsSpan(0, _idx);
         var count = 0;
@@ -182,13 +186,6 @@ internal sealed class GfxResourceStore<TId, TMeta> : IGfxResourceStore<TId>
 
         return count;
     }
-
-    private void UpdateMetrics()
-    {
-        GfxDebugMetrics.GetStoreMetrics<TId>().GfxStoreCount = GetAliveCount();
-        GfxDebugMetrics.GetStoreMetrics<TId>().GfxStoreFree = _free.Count;
-    }
-
 
     public IdEnumerable IdEnumerator => new(this);
 
@@ -218,7 +215,7 @@ internal sealed class GfxResourceStore<TId, TMeta> : IGfxResourceStore<TId>
         public TId Current
         {
             [MethodImpl(MethodImplOptions.AggressiveInlining)]
-            get => _store._makeId(_i);
+            get => _store._makeResourceId(_i);
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]

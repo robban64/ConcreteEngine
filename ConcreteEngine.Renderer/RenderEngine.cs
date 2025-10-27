@@ -41,6 +41,8 @@ public sealed class RenderEngine
     public DrawCommandBuffer CommandBuffer => _drawPipeline.CommandBuffer;
     public IRenderFboRegistry FboRegistry => _renderRegistry.FboRegistry;
 
+    public int PassCount => _passPipeline.PassCount;
+
     public RenderEngine(GraphicsRuntime graphics, RenderSceneSnapshot sceneSnapshot, MeshId fsqMesh)
     {
         _graphics = graphics;

@@ -16,6 +16,9 @@ public sealed class Material
     public MaterialId Id { get; }
     public MaterialState State { get; }
     public MaterialTextureSlots TextureSlots { get; }
+    
+    //TODO temp
+    public bool IsSkybox { get; set; } = false;
 
     public bool Attached => Id > 0;
 

@@ -4,11 +4,12 @@ using ConcreteEngine.Common;
 using ConcreteEngine.Common.Collections;
 using ConcreteEngine.Core.Assets.Data;
 using ConcreteEngine.Core.Assets.Textures;
+using ConcreteEngine.Graphics.Gfx.Contracts;
 using ConcreteEngine.Graphics.Gfx.Definitions;
 using ConcreteEngine.Graphics.Gfx.Resources;
 using ConcreteEngine.Renderer.Data;
 using ConcreteEngine.Renderer.Definitions;
-using Tools.DebugInterface.Data;
+using Core.DebugTools.Data;
 
 #endregion
 
@@ -38,8 +39,8 @@ public sealed class MaterialStore : IMaterialStore
     private readonly Dictionary<string, MaterialId> _materialDict = new(8);
 
     public int Count => _idx;
-
     public int FreeSlots => _free.Count;
+    
 
     internal MaterialStore(AssetStore assetStore)
     {
@@ -96,9 +97,12 @@ public sealed class MaterialStore : IMaterialStore
         return true;
     }
 
+    //TODO rework
     public void GetMaterialUploadData(Material material, out DrawMaterialPayload data)
     {
-        var meta = new DrawMaterialMeta(material.Id, ResolveShader(material));
+        GfxPassState? state = material.IsSkybox ? new GfxPassState(DepthWrite: false) : null;
+        GfxPassStateFunc? funcs = material.IsSkybox ? GfxPassStateFunc.MakeSky() : null;
+        var meta = new DrawMaterialMeta(material.Id, ResolveShader(material), state, funcs);
         var snapshot = material.State.Snapshot();
         data = new DrawMaterialPayload(in meta, in snapshot);
     }
@@ -148,5 +152,4 @@ public sealed class MaterialStore : IMaterialStore
         return NextId();
     }
 
-    [DebugWatch] internal string MaterialDebugInfo => $"{Count}({FreeSlots})";
 }

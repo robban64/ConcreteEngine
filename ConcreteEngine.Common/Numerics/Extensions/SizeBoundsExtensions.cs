@@ -4,7 +4,7 @@ using Silk.NET.Maths;
 
 #endregion
 
-namespace ConcreteEngine.Common.Numerics;
+namespace ConcreteEngine.Common.Numerics.Extensions;
 
 public static class SizeBoundsExtensions
 {

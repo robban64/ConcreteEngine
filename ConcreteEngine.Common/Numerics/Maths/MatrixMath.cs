@@ -7,9 +7,9 @@ using System.Runtime.CompilerServices;
 
 // ReSharper disable InconsistentNaming
 
-namespace ConcreteEngine.Common.Numerics;
+namespace ConcreteEngine.Common.Numerics.Maths;
 
-public static class TransformUtils
+public static class MatrixMath
 {
     [MethodImpl(MethodImplOptions.AggressiveInlining | MethodImplOptions.AggressiveOptimization)]
     public static void CreateModelMatrix(in Vector3 transform, in Vector3 scale, in Quaternion rotation,

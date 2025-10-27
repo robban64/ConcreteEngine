@@ -6,6 +6,7 @@ using System.Numerics;
 using System.Runtime.CompilerServices;
 using ConcreteEngine.Common.Collections;
 using ConcreteEngine.Common.Numerics;
+using ConcreteEngine.Common.Numerics.Maths;
 using ConcreteEngine.Renderer.Data;
 using ConcreteEngine.Renderer.Passes;
 using static ConcreteEngine.Renderer.Data.RenderLimits;
@@ -84,7 +85,7 @@ public sealed class DrawCommandBuffer
             indices[i] = new DrawCommandRef(drawMeta[i], idx);
 
             ref readonly var transform = ref drawTransforms[i].Transform;
-            TransformUtils.CreateNormalMatrix(in transform, out var normalModel);
+            MatrixMath.CreateNormalMatrix(in transform, out var normalModel);
             DrawObjectUniform.Fill(in transform, in normalModel, out transformBuffer[i]);
         }
 

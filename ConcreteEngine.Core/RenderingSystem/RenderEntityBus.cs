@@ -5,6 +5,7 @@ using System.Diagnostics.CodeAnalysis;
 using System.Runtime.CompilerServices;
 using ConcreteEngine.Common.Collections;
 using ConcreteEngine.Common.Numerics;
+using ConcreteEngine.Common.Numerics.Maths;
 using ConcreteEngine.Core.Scene;
 using ConcreteEngine.Core.Scene.Entities;
 using ConcreteEngine.Renderer.Data;
@@ -69,13 +70,13 @@ internal sealed class RenderEntityBus
             var cmd = new DrawCommand(entity.MeshId, entity.MaterialId, entity.DrawCount);
             var meta = new DrawCommandMeta(entity.CommandId, entity.Queue, entity.PassPassMask, entity.DepthKey);
 
-            TransformUtils.CreateModelMatrix(
+            MatrixMath.CreateModelMatrix(
                 entity.Transform.Position,
                 entity.Transform.Scale,
                 entity.Transform.Rotation,
                 out var model
             );
-            TransformUtils.CreateNormalMatrix(in model, out var normal);
+            MatrixMath.CreateNormalMatrix(in model, out var normal);
             buffer.SubmitDraw(cmd, meta, in model, in normal);
         }
     }

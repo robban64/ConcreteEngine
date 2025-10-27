@@ -1,6 +1,7 @@
 #region
 
 using ConcreteEngine.Common.Numerics;
+using ConcreteEngine.Common.Numerics.Extensions;
 using Silk.NET.Maths;
 using Silk.NET.Windowing;
 

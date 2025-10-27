@@ -16,6 +16,7 @@ public interface IWorld
     RenderSceneProps RenderProps { get; }
     WorldSkybox Sky { get; }
     WorldTerrain Terrain { get; }
+    
 
     EntityId Create();
     EntityStore<Transform> Transforms { get; }
@@ -31,21 +32,24 @@ public interface IWorld
 public sealed class World : IWorld
 {
     public RenderSceneProps RenderProps { get; }
-    
     public IModelRegistry ModelRegistry {get; private set;}
+    
 
     public WorldSkybox Sky { get; }
     public WorldTerrain Terrain { get; }
     
+    public MaterialEntityRegistry EntityMaterials { get; }
+
     public EntityId Create() => new(_idIdx++);
 
     private int _idIdx = 1;
     public int EntityCount => _idIdx;
     public int ShadowMapSize => RenderProps.Snapshot.Shadows.ShadowMapSize;
 
-
     internal World(RenderSceneProps renderProps, BatcherRegistry batchers)
     {
+        EntityMaterials = new MaterialEntityRegistry();
+        
         RenderProps = renderProps;
         Terrain = new WorldTerrain(batchers.Get<TerrainBatcher>());
         Sky = new WorldSkybox();

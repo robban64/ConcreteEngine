@@ -22,23 +22,23 @@ public sealed class WorldTerrain
 
     public ModelId Model { get; private set; }
 
-    private MaterialId _materialId;
+    public MaterialId Material { get; private set; }
     private AssetRef<Texture2D> _heightmap;
     private IModelRegistry _modelRegistry;
     private TerrainBatcher _terrain;
 
-    private Transform _transform = new(Vector3.Zero, Vector3.One, Quaternion.Identity);
+    public Transform Transform { get; private set; } = new(Vector3.Zero, Vector3.One, Quaternion.Identity);
 
     public WorldTerrain(TerrainBatcher terrain)
     {
         _terrain = terrain;
     }
-    
+
     internal void AttachModelRegistry(IModelRegistry modelRegistry) => _modelRegistry = modelRegistry;
 
-    public bool IsActive => _heightmap.IsValid && _terrain.TextureRef.IsValid && _materialId > 0;
+    public bool IsActive => _heightmap.IsValid && _terrain.TextureRef.IsValid && Material > 0;
 
-    public void SetMaterial(MaterialId materialId) => _materialId = materialId;
+    public void SetMaterial(MaterialId materialId) => Material = materialId;
 
     public float GetSmoothHeight(float x, float z)
     {
@@ -73,7 +73,7 @@ public sealed class WorldTerrain
         _terrain.BuildBatch();
 
         Debug.Assert(_terrain.MeshId > 0);
-        Model = _modelRegistry.CreateModel(_terrain.MeshId, _terrain.DrawCount);
+        Model = _modelRegistry.CreateModel(_terrain.MeshId, 0, _terrain.DrawCount);
     }
 
     internal void OnPreRender()
@@ -82,9 +82,4 @@ public sealed class WorldTerrain
             return;
     }
 
-    internal void GetDrawEntity(out DrawEntity drawEntity)
-    {
-        var model = new ModelComponent(Model, _materialId, _terrain.DrawCount);
-        EntityUtility.MakeDrawTerrain(model, in _transform, out drawEntity);
-    }
 }

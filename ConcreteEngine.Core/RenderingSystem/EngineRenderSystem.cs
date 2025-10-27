@@ -105,14 +105,15 @@ public sealed class EngineRenderSystem : IRenderingSystem
         in RenderViewSnapshot viewSnapshot)
     {
         _renderEntityBus.Reset();
-        _renderEntityBus.CollectEntities();
 
         SceneProperties.Commit();
         _renderer.PrepareFrame(in frameInfo, in runtimeParams, in viewSnapshot);
 
-        // fill buffers
-        _renderEntityBus.FlushEntities(_renderer.CommandBuffer);
         SubmitMaterialData();
+
+        // fill buffers
+        _renderEntityBus.CollectEntities();
+        _renderEntityBus.FlushEntities(_renderer.CommandBuffer);
         _renderer.CollectDrawBuffers();
 
         _renderer.StartFrame(status);

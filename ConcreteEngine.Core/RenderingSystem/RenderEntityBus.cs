@@ -10,6 +10,7 @@ using ConcreteEngine.Common.Numerics.Maths;
 using ConcreteEngine.Core.Scene;
 using ConcreteEngine.Core.Scene.Entities;
 using ConcreteEngine.Renderer.Data;
+using ConcreteEngine.Renderer.Definitions;
 using ConcreteEngine.Renderer.Draw;
 
 #endregion
@@ -41,41 +42,34 @@ internal sealed class RenderEntityBus
     internal void AttachWorld(World world) => _world = world;
     internal bool IsAttached => _world is not null;
 
+    public void Reset()
+    {
+        _idx = 0;
+    }
+
     public void CollectEntities()
     {
         if (_world is null) return;
 
         EnsureCapacity(DrawCount);
 
-        if (ActiveSkyCount > 0)
-        {
-            _world.Sky.GetDrawEntity(out var skyEntity);
-            _entities[_idx++] = skyEntity;
-        }
-
-        if (ActiveTerrainCount > 0)
-        {
-            _world.Terrain.GetDrawEntity(out var terrainEntity);
-            _entities[_idx++] = terrainEntity;
-        }
-
         foreach (var query in _world.Query<ModelComponent, Transform>())
         {
             ref var model = ref query.Value1;
             ref var transform = ref query.Value2;
 
-            EntityUtility.MakeDrawMesh(model, in transform, out _entities[_idx]);
+            EntityUtility.MakeDrawMesh(query.Entity, model.Model, model.DrawCount, in transform, out _entities[_idx]);
             _idx++;
         }
     }
-
 
     public void FlushEntities(DrawCommandBuffer buffer)
     {
         if (_world is null) return;
 
+        FlushWorldEntities(buffer);
+        
         var entitySpan = _entities.AsSpan(0, _idx);
-
         foreach (ref var entity in entitySpan)
         {
             var view = _modelRegistry.GetPartsView(entity.Model);
@@ -87,37 +81,57 @@ internal sealed class RenderEntityBus
             );
             Matrix4x4 model;
             Matrix3 normal;
+
+            var materials = _world.EntityMaterials.GetMaterialIds(entity.Entity);
+            var meta = new DrawCommandMeta(entity.CommandId, entity.Queue, entity.PassMask, entity.DepthKey);
             for (var i = 0; i < view.Locals.Length; i++)
             {
                 MatrixMath.MultiplyAffine(in view.Locals[i], in world, out model);
                 MatrixMath.CreateNormalMatrix(in model, out normal);
 
                 var parts = view.Parts[i];
-                var cmd = new DrawCommand(parts.Mesh, entity.Material, entity.DrawCount);
-                var meta = new DrawCommandMeta(entity.CommandId, entity.Queue, entity.PassPassMask, entity.DepthKey);
+                var cmd = new DrawCommand(parts.Mesh, materials[parts.MaterialSlot], parts.DrawCount);
                 buffer.SubmitDraw(cmd, meta, in model, in normal);
             }
         }
     }
 
-    /*
-    private void ResolveEntity(ModelId modelId, in Transform transform)
+    private void FlushWorldEntities(DrawCommandBuffer buffer)
     {
-        var view = _modelRegistry.GetPartsView(modelId);
+        if (_world is null) return;
 
-        MatrixMath.CreateModelMatrix(xf.Position, xf.Scale, xf.Rotation, out var world);
-        for (int i = 0; i < view.Parts.Length; i++)
+        if (ActiveSkyCount > 0)
         {
-            ref readonly var part = ref view.Parts[i];
-            ref readonly var local = ref view.Locals[i];
-            var modelTransform = wo
+            var sky = _world.Sky;
+            CreateTransformMatrices(sky.Transform, out var model, out var norm);
+            var meta = new DrawCommandMeta(DrawCommandId.Skybox, DrawCommandQueue.Skybox, PassMask.Main, 0);
+            var cmd = new DrawCommand(sky.Mesh, sky.Material);
+            buffer.SubmitDraw(cmd, meta, in model, in norm);
+        }
+
+        if (ActiveTerrainCount > 0)
+        {
+            var terrain = _world.Terrain;
+            var view = _modelRegistry.GetPartsView(terrain.Model);
+            
+            CreateTransformMatrices(terrain.Transform, out var model, out var norm);
+            var meta = new DrawCommandMeta(DrawCommandId.Terrain, DrawCommandQueue.Terrain);
+            var cmd = new DrawCommand(view.Parts[0].Mesh, terrain.Material);
+            buffer.SubmitDraw(cmd, meta, in model, in norm);
         }
     }
-*/
-    public void Reset()
+
+    private void CreateTransformMatrices(Transform transform, out Matrix4x4 model, out Matrix3 normal)
     {
-        _idx = 0;
+        MatrixMath.CreateModelMatrix(
+            transform.Position,
+            transform.Scale,
+            transform.Rotation,
+            out model
+        );
+        MatrixMath.CreateNormalMatrix(in model, out normal);
     }
+
 
     private void EnsureCapacity(int amount)
     {

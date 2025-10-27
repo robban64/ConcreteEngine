@@ -13,7 +13,7 @@ namespace ConcreteEngine.Core.RenderingSystem;
 
 public interface IModelRegistry
 {
-    ModelId CreateModel(MeshId mesh, int drawCount);
+    ModelId CreateModel(MeshId mesh, int materialSlot, int drawCount);
 }
 
 internal sealed class ModelRegistry : IModelRegistry
@@ -22,12 +22,11 @@ internal sealed class ModelRegistry : IModelRegistry
     
     private MeshPart[] _parts = new MeshPart[DefaultCapacity];
     private Matrix4x4[] _localTransforms = new Matrix4x4[DefaultCapacity];
-    private RangeU16[] _partRanges = new RangeU16[DefaultCapacity];
-
-    //private MaterialId[] _materials = new MaterialId[DefaultCapacity];
     
+    private RangeU16[] _partRanges = new RangeU16[DefaultCapacity];
+    
+    private int _partIdx = 0;
     private int _modelIdx = 0;
-    private int _idx = 0;
     
     public ModelPartView GetPartsView(ModelId id)
     {
@@ -37,15 +36,15 @@ internal sealed class ModelRegistry : IModelRegistry
         return new ModelPartView(parts, locals, range);
     }
 
-    public ModelId CreateModel(MeshId mesh, int drawCount)
+    public ModelId CreateModel(MeshId mesh, int materialSlot, int drawCount)
     {
-        EnsureCapacity(_idx + 1, _modelIdx + 1);
+        EnsureCapacity(_partIdx + 1, _modelIdx + 1);
         
-        _parts[_idx] = new MeshPart(mesh, drawCount);
-        _localTransforms[_idx] = Matrix4x4.Identity;
-        _partRanges[_modelIdx] = new RangeU16((ushort)_idx, 1);
+        _parts[_partIdx] = new MeshPart(mesh, materialSlot, drawCount);
+        _localTransforms[_partIdx] = Matrix4x4.Identity;
+        _partRanges[_modelIdx] = new RangeU16((ushort)_partIdx, 1);
 
-        _idx++;
+        _partIdx++;
         return new ModelId(++_modelIdx);
     }
 
@@ -61,20 +60,20 @@ internal sealed class ModelRegistry : IModelRegistry
 
         EnsureCapacity(totalParts, models.Capacity);
 
-        var idx = _idx;
-        for (int i = 0; i < models.Count; i++)
+        var idx = _partIdx;
+        for (var i = 0; i < models.Count; i++)
         {
             var model = models[i];
             model.AttachToRenderer(new ModelId(++_modelIdx));
             _partRanges[i] = new RangeU16((ushort)idx, (ushort)model.MeshParts.Length);
             foreach (var part in model.MeshParts)
             {
-                _parts[idx] = new MeshPart(part.ResourceId, part.DrawCount);
+                _parts[idx] = new MeshPart(part.ResourceId, 0, part.DrawCount);
                 _localTransforms[idx] = part.Transform;
                 idx++;
             }
         }
-        _idx = idx;
+        _partIdx = idx;
     }
 
     private void EnsureCapacity(int cap, int rangeCap)

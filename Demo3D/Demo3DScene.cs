@@ -89,11 +89,11 @@ public sealed class Demo3DScene : GameScene
         {
             var mesh = store.GetByName<Model>("Cube");
             var entityId = World.Create();
-            World.Meshes.Add(entityId,
-                new ModelComponent(mesh.RenderId, treeMat.Id, mesh.DrawCount));
+            World.Meshes.Add(entityId, new ModelComponent(mesh.RenderId, mesh.DrawCount));
             World.Transforms.Add(entityId,
                 new Transform(new Vector3(half, worldTerrain.GetSmoothHeight(half, half) + 1f, half),
                     Vector3.One, Quaternion.Identity));
+            World.EntityMaterials.AttachEntity(entityId, treeMat.Id);
         }
 
         Camera.Translation = new Vector3(half - 30, worldTerrain.GetSmoothHeight(half - 30, half + 30) + 4f, half + 30);

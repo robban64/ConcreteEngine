@@ -14,7 +14,9 @@ namespace ConcreteEngine.Core.Scene.Entities;
 
 [StructLayout(LayoutKind.Sequential)]
 public struct DrawEntity(
-    in ModelComponent model,
+    EntityId entity,
+    ModelId model,
+    int drawCount,
     in Transform transform,
     DrawCommandId commandId,
     DrawCommandQueue queue,
@@ -22,15 +24,14 @@ public struct DrawEntity(
     ushort depthKey = 0)
 {
     public Transform Transform = transform;
-    public ModelId Model = model.Model;
-    public MaterialId Material = model.Material;
-    public int DrawCount = model.DrawCount;
-    public PassMask PassPassMask = passMask;
+    public EntityId Entity = entity;
+    public ModelId Model = model;
+    public PassMask PassMask = passMask;
+    public int DrawCount = drawCount;
     public ushort DepthKey = depthKey;
     public DrawCommandId CommandId = commandId;
     public DrawCommandQueue Queue = queue;
 
     // ensure 64-byte
     private int _pad;
-
 }

@@ -89,5 +89,5 @@ public sealed record MeshDescriptor(
     string Filename)
     : IAssetDescriptor
 {
-    public AssetKind Kind => AssetKind.Mesh;
+    public AssetKind Kind => AssetKind.Model;
 }

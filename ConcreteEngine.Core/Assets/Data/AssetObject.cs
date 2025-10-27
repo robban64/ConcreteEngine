@@ -1,6 +1,6 @@
 namespace ConcreteEngine.Core.Assets.Data;
 
-public abstract class AssetObject
+public abstract class AssetObject : IComparable<AssetObject>
 {
     internal AssetId RawId { get; init; }
     public required string Name { get; init; }
@@ -10,7 +10,10 @@ public abstract class AssetObject
     public abstract AssetKind Kind { get; }
     public abstract AssetCategory Category { get; }
 
-    internal int ResourceId { get; init; }
 
     internal void BumpGeneration() => Generation++;
+    public int CompareTo(AssetObject? other)
+    {
+        return other is null ? 1 : RawId.Value.CompareTo(other.RawId.Value);
+    }
 }

@@ -50,7 +50,8 @@ internal sealed class AssetStore : IAssetStore
     internal AssetStore()
     {
     }
-    
+
+    public int GetAssetCount<TAsset>() where TAsset : AssetObject => _typeMeta[typeof(TAsset)].Count;
     internal IReadOnlyDictionary<Type, AssetTypeMeta> GetAssetTypeMeta() => _typeMeta;
 
     public AssetTypeMetaSnapshot GetMetaSnapshot<TAsset>() where TAsset : AssetObject =>
@@ -139,6 +140,15 @@ internal sealed class AssetStore : IAssetStore
         }
     }
 
+    public void DrainSpan<TAsset, TData>(Span<TData> span, Action<TAsset, Span<TData>> transform)
+        where TAsset : AssetObject where TData : unmanaged
+    {
+        foreach (var asset in _assets.Values)
+        {
+            if (asset is TAsset typedAsset) transform(typedAsset, span);
+        }
+    }
+
     public void ExtractSpan<TAsset, TData>(Span<TData> span, Func<TAsset, TData> transform)
         where TAsset : AssetObject where TData : unmanaged
     {
@@ -159,6 +169,8 @@ internal sealed class AssetStore : IAssetStore
             if (idx >= span.Length) break;
         }
     }
+    
+    
     
     public ReadOnlySpan<string> GetStoreNames()
     {

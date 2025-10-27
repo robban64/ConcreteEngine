@@ -8,22 +8,22 @@ using Silk.NET.Maths;
 
 namespace Demo3D;
 
-public readonly record struct ScenePlacement(Mesh Mesh, Material Material, float Offset = 0f);
+public readonly record struct ScenePlacement(Model Model, Material Material, float Offset = 0f);
 
 public sealed class EntitySpawner(World world, float size = 256f, float margin = 4f)
 {
-    private EntityId CreateOnTerrain(Mesh mesh, Material mat, Vector3 p, Vector3? s = null, Quaternion? r = null)
+    private EntityId CreateOnTerrain(Model model, Material mat, Vector3 p, Vector3? s = null, Quaternion? r = null)
     {
         var height = world.Terrain.GetSmoothHeight(p.X, p.Z) + p.Y;
         var scale = s.GetValueOrDefault(Vector3.One);
         var rotation = r.GetValueOrDefault(Quaternion.Identity);
-        return CreateModelEntity(mesh, mat, new Transform(p with { Y = height }, scale, rotation));
+        return CreateModelEntity(model, mat, new Transform(p with { Y = height }, scale, rotation));
     }
 
-    private EntityId CreateModelEntity(Mesh mesh, Material material, Transform transform)
+    private EntityId CreateModelEntity(Model model, Material material, Transform transform)
     {
         var entityId = world.Create();
-        world.Meshes.Add(entityId, new MeshComponent(mesh.ResourceId, material.Id, mesh.DrawCount));
+        world.Meshes.Add(entityId, new ModelComponent(model.ResourceId, material.Id, model.DrawCount));
         world.Transforms.Add(entityId, transform);
         return entityId;
     }

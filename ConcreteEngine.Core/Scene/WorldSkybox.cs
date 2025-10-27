@@ -29,7 +29,7 @@ public sealed class WorldSkybox
 
     internal void GetDrawEntity(out DrawEntity drawEntity)
     {
-        var mesh = new MeshComponent(_meshId, _materialId, 0);
+        var mesh = new ModelComponent(_meshId, _materialId, 0);
         EntityUtility.MakeSkybox(in mesh, in _transform, out drawEntity);
     }
 }

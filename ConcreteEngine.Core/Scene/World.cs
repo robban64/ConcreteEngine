@@ -19,7 +19,7 @@ public interface IWorld
 
     EntityId Create();
     EntityStore<Transform> Transforms { get; }
-    EntityStore<MeshComponent> Meshes { get; }
+    EntityStore<ModelComponent> Meshes { get; }
     EntityStore<Transform2D> Transforms2D { get; }
     EntityStore<SpriteComponent> Sprites { get; }
 
@@ -36,7 +36,7 @@ public sealed class World : IWorld
     public WorldTerrain Terrain { get; }
 
     public EntityStore<Transform> Transforms { get; }
-    public EntityStore<MeshComponent> Meshes { get; }
+    public EntityStore<ModelComponent> Meshes { get; }
     public EntityStore<Transform2D> Transforms2D { get; }
     public EntityStore<SpriteComponent> Sprites { get; }
 
@@ -51,7 +51,7 @@ public sealed class World : IWorld
 
         Transforms2D = GenericStores<Transform2D>.CreateStore();
         Transforms = GenericStores<Transform>.CreateStore();
-        Meshes = GenericStores<MeshComponent>.CreateStore();
+        Meshes = GenericStores<ModelComponent>.CreateStore();
         Sprites = GenericStores<SpriteComponent>.CreateStore();
     }
 

@@ -4,7 +4,7 @@ public enum AssetKind
 {
     Unknown = 0,
     Shader = 1,
-    Mesh = 2,
+    Model = 2,
     Texture2D = 3,
     TextureCubeMap = 4,
     Material = 5

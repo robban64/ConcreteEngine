@@ -73,7 +73,7 @@ public sealed class WorldTerrain
 
     internal void GetDrawEntity(out DrawEntity drawEntity)
     {
-        var mesh = new MeshComponent(_terrain.MeshId, _materialId, _terrain.DrawCount);
+        var mesh = new ModelComponent(_terrain.MeshId, _materialId, _terrain.DrawCount);
         EntityUtility.MakeDrawTerrain(in mesh, in _transform, out drawEntity);
     }
 }

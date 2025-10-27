@@ -22,8 +22,16 @@ internal sealed class RenderEntityBus
 
     private World? _world;
 
+    private readonly ModelRenderRegistry _modelRegistry;
+
     private int _idx = 0;
     private DrawEntity[] _entities = new DrawEntity[DefaultCapacity];
+
+    internal RenderEntityBus(ModelRenderRegistry modelRegistry)
+    {
+        _modelRegistry = modelRegistry;
+    }
+
 
     private int ActiveSkyCount => _world?.Sky.IsActive ?? false ? 1 : 0;
     private int ActiveTerrainCount => _world?.Terrain.IsActive ?? false ? 1 : 0;
@@ -50,7 +58,7 @@ internal sealed class RenderEntityBus
             _entities[_idx++] = terrainEntity;
         }
 
-        foreach (var query in _world.Query<MeshComponent, Transform>())
+        foreach (var query in _world.Query<ModelComponent, Transform>())
         {
             ref var mesh = ref query.Value1;
             ref var transform = ref query.Value2;
@@ -67,7 +75,8 @@ internal sealed class RenderEntityBus
 
         foreach (ref var entity in entitySpan)
         {
-            var cmd = new DrawCommand(entity.MeshId, entity.MaterialId, entity.DrawCount);
+            var parts = _modelRegistry.GetParts(entity.Model);
+            var cmd = new DrawCommand(parts.MeshId, entity.MaterialId, entity.DrawCount);
             var meta = new DrawCommandMeta(entity.CommandId, entity.Queue, entity.PassPassMask, entity.DepthKey);
 
             MatrixMath.CreateModelMatrix(

@@ -19,14 +19,14 @@ internal sealed class AssetLoader
     private AssetStore? _store;
 
     private TextureLoaderModule? _textureLoader;
-    private MeshLoaderModule? _meshLoader;
+    private ModelLoaderModule? _meshLoader;
     private ShaderLoaderModule? _shaderLoader;
     private MaterialLoader? _materialLoader;
 
     private AssetFileAssembleDel<Shader, ShaderDescriptor>? _loadShaderDel;
     private AssetFileAssembleDel<Texture2D, TextureDescriptor>? _loadTextureDel;
     private AssetFileAssembleDel<CubeMap, CubeMapDescriptor>? _loadCubeMapDel;
-    private AssetFileAssembleDel<Mesh, MeshDescriptor>? _loadMeshDel;
+    private AssetFileAssembleDel<Model, MeshDescriptor>? _loadMeshDel;
     
     public bool IsActive { get; private set; }
 
@@ -39,7 +39,7 @@ internal sealed class AssetLoader
     public CubeMap LoadCubeMap(CubeMapDescriptor manifest)
         => _store!.RegisterWithFiles(manifest, _loadCubeMapDel!);
 
-    public Mesh LoadMesh(MeshDescriptor manifest)
+    public Model LoadMesh(MeshDescriptor manifest)
         => _store!.RegisterWithFiles(manifest, _loadMeshDel!);
 
     public List<MaterialTemplate> LoadAllMaterials(MaterialManifest manifest)
@@ -59,14 +59,14 @@ internal sealed class AssetLoader
         _store = store;
 
         _textureLoader ??= new TextureLoaderModule(gfx);
-        _meshLoader ??= new MeshLoaderModule(gfx);
+        _meshLoader ??= new ModelLoaderModule(gfx);
         _shaderLoader ??= new ShaderLoaderModule(gfx);
         _materialLoader ??= new MaterialLoader();
 
         _loadShaderDel ??= _shaderLoader.LoadShader;
         _loadTextureDel ??= _textureLoader.LoadTexture2D;
         _loadCubeMapDel ??= _textureLoader.LoadCubeMap;
-        _loadMeshDel ??= _meshLoader.LoadMesh;
+        _loadMeshDel ??= _meshLoader.LoadModel;
 
         _shaderLoader.Prepare();
         
@@ -78,7 +78,7 @@ internal sealed class AssetLoader
         IsActive = true;
         _store = store;
         _textureLoader ??= new TextureLoaderModule(gfx);
-        _meshLoader ??= new MeshLoaderModule(gfx);
+        _meshLoader ??= new ModelLoaderModule(gfx);
         _shaderLoader ??= new ShaderLoaderModule(gfx);
         _materialLoader ??= new MaterialLoader();
     }

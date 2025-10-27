@@ -52,21 +52,21 @@ public sealed class Demo3DScene : GameScene
         var treeMat = materialStore.CreateMaterial("TreeBarkMat", "TreeMat1");
         var birchMat = materialStore.CreateMaterial("TreeBirchBarkMat", "TreeMat2");
 
-        var treeMesh = store.GetByName<Mesh>("Tree1");
-        var treeMesh1 = store.GetByName<Mesh>("Tree2");
-        var treeMesh2 = store.GetByName<Mesh>("Tree3");
+        var treeMesh = store.GetByName<Model>("Tree1");
+        var treeMesh1 = store.GetByName<Model>("Tree2");
+        var treeMesh2 = store.GetByName<Model>("Tree3");
 
         // Rocks
         var rockMat = materialStore.CreateMaterial("Rock1Mat", "Rock1Mat1");
         var rockMat2 = materialStore.CreateMaterial("Rock2Mat", "Rock1Mat2");
         rockMat.State.Specular = 0.3f;
         rockMat2.State.Specular = 0.25f;
-        var rockMesh = store.GetByName<Mesh>("Rock1");
-        var rock2Mesh = store.GetByName<Mesh>("Rock2");
+        var rockMesh = store.GetByName<Model>("Rock1");
+        var rock2Mesh = store.GetByName<Model>("Rock2");
 
         // Boat
         var boatMat = materialStore.CreateMaterial("BoatMat", "BoatMat1");
-        var boatMesh = store.GetByName<Mesh>("Boat");
+        var boatMesh = store.GetByName<Model>("Boat");
         boatMat.State.Specular = 0;
         boatMat.State.Shininess = 1;
 
@@ -87,10 +87,10 @@ public sealed class Demo3DScene : GameScene
         float half = 256 / 2f;
 
         {
-            var mesh = store.GetByName<Mesh>("Cube");
+            var mesh = store.GetByName<Model>("Cube");
             var entityId = World.Create();
             World.Meshes.Add(entityId,
-                new MeshComponent(mesh.ResourceId, treeMat.Id, mesh.DrawCount));
+                new ModelComponent(mesh.ResourceId, treeMat.Id, mesh.DrawCount));
             World.Transforms.Add(entityId,
                 new Transform(new Vector3(half, worldTerrain.GetSmoothHeight(half, half) + 1f, half),
                     Vector3.One, Quaternion.Identity));

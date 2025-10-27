@@ -1,5 +1,6 @@
 #region
 
+using System.Numerics;
 using ConcreteEngine.Core.Assets.Data;
 using ConcreteEngine.Graphics.Gfx.Contracts;
 using ConcreteEngine.Graphics.Gfx.Resources;
@@ -9,11 +10,28 @@ using ConcreteEngine.Graphics.Primitives;
 
 namespace ConcreteEngine.Core.Assets.Meshes;
 
-internal record struct MeshCreationInfo(MeshId MeshId, int DrawCount);
 
-internal sealed record MeshResultPayload(
-    MeshDrawProperties Properties,
-    List<uint> Indices,
-    List<Vertex3D> Vertices,
-    IReadOnlyList<VertexAttributeDesc> Attributes,
-    AssetFileSpec FileSpec);
+public readonly ref struct MeshImportData(ReadOnlySpan<Vertex3D> vertices, ReadOnlySpan<uint> indices)
+{
+    public readonly ReadOnlySpan<Vertex3D> Vertices = vertices;
+    public readonly ReadOnlySpan<uint> Indices = indices;
+}
+
+internal readonly ref struct MeshUploadPayload(
+    ReadOnlySpan<VertexAttributeDesc> attributes,
+    ReadOnlySpan<Vertex3D> vertices,
+    ReadOnlySpan<uint> indices,
+    MeshDrawProperties properties)
+{
+    public readonly ReadOnlySpan<VertexAttributeDesc> Attributes = attributes;
+    public readonly ReadOnlySpan<Vertex3D> Vertices = vertices;
+    public readonly ReadOnlySpan<uint> Indices = indices;
+    public readonly MeshDrawProperties Properties = properties;
+}
+
+internal readonly record struct MeshCreationInfo(MeshId MeshId, int DrawCount);
+
+
+internal sealed record MeshPartImportResult(string Name, MeshCreationInfo Info, in Matrix4x4 Transform);
+
+internal sealed record MeshResultPayload(MeshCreationInfo[] MeshesInfo, AssetFileSpec FileSpec);

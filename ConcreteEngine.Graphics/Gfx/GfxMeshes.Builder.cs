@@ -22,6 +22,8 @@ public interface IGfxMeshBuilder
 
     void AddAttribute(in VertexAttributeDesc attribute);
     void SetAttributeRange(IReadOnlyList<VertexAttributeDesc> attributes);
+    void SetAttributeRange(ReadOnlySpan<VertexAttributeDesc> attributes);
+
 }
 
 internal sealed class GfxMeshBuilder : IGfxMeshBuilder
@@ -102,6 +104,17 @@ internal sealed class GfxMeshBuilder : IGfxMeshBuilder
     {
         EnsureStarted();
         InvalidOpThrower.ThrowIfNullOrEmptyCollection(attributes, nameof(attributes));
+        InvalidOpThrower.ThrowIfNot(_state.Attributes.Count == 0, nameof(attributes));
+
+        _state.Attributes.AddRange(attributes);
+
+        if (_phase < Phase.AttributesSet) _phase = Phase.AttributesSet;
+    }
+
+    public void SetAttributeRange(ReadOnlySpan<VertexAttributeDesc> attributes)
+    {
+        EnsureStarted();
+        ArgumentOutOfRangeException.ThrowIfEqual(attributes.Length, 0, nameof(attributes));
         InvalidOpThrower.ThrowIfNot(_state.Attributes.Count == 0, nameof(attributes));
 
         _state.Attributes.AddRange(attributes);

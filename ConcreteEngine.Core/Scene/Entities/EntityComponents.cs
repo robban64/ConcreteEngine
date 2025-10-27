@@ -2,6 +2,9 @@
 
 using System.Numerics;
 using ConcreteEngine.Common.Numerics;
+using ConcreteEngine.Core.Assets.Data;
+using ConcreteEngine.Core.Assets.Meshes;
+using ConcreteEngine.Core.RenderingSystem;
 using ConcreteEngine.Graphics.Gfx.Resources;
 using ConcreteEngine.Renderer.Data;
 
@@ -21,14 +24,21 @@ public struct Transform(Vector3 position, Vector3 scale, Quaternion rotation)
     }
 }
 
+public struct ModelComponent(AssetRef<Model> assetModel, ModelId model, int drawCount)
+{
+    public AssetId AssetModel = assetModel;
+    public ModelId Model = model;
+    public int DrawCount = drawCount;
+    private int _pad0;
+}
+/*
 public struct MeshComponent(MeshId meshId, MaterialId materialId, int drawCount)
 {
     public MeshId MeshId = meshId;
     public MaterialId MaterialId = materialId;
     public int DrawCount = drawCount;
     private int _pad;
-}
-
+}*/
 public struct Transform2D(Vector2 position, Vector2 scale, float rotation)
 {
     public Vector2 Position = position;

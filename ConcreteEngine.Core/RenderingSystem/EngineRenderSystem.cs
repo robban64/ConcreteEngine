@@ -1,8 +1,10 @@
 #region
 
+using System.Numerics;
 using ConcreteEngine.Common;
 using ConcreteEngine.Common.Numerics;
 using ConcreteEngine.Core.Assets;
+using ConcreteEngine.Core.Assets.Meshes;
 using ConcreteEngine.Core.Assets.Shaders;
 using ConcreteEngine.Core.Platform;
 using ConcreteEngine.Core.RenderingSystem.Batching;
@@ -41,7 +43,9 @@ public sealed class EngineRenderSystem : IRenderingSystem
     private readonly RenderEngine _renderer;
     private readonly AssetSystem _assets;
 
+    private readonly ModelRenderRegistry _modelRegistry;
     private readonly RenderEntityBus _renderEntityBus;
+
 
     internal RenderEngine RenderEngine => _renderer;
 
@@ -63,13 +67,16 @@ public sealed class EngineRenderSystem : IRenderingSystem
         InvalidOpThrower.ThrowIf(PrimitiveMeshes.FsqQuad == 0 || PrimitiveMeshes.SkyboxCube == 0);
 
         _renderer = new RenderEngine(graphics, SceneProperties.Snapshot, PrimitiveMeshes.FsqQuad);
-        _renderEntityBus = new RenderEntityBus();
+
+        _modelRegistry = new ModelRenderRegistry();
+        _renderEntityBus = new RenderEntityBus(_modelRegistry);
     }
 
 
     internal void AttachWorld(World world)
     {
         ArgumentNullException.ThrowIfNull(world);
+        _modelRegistry.Setup(_assets);
         _renderEntityBus.AttachWorld(world);
     }
 

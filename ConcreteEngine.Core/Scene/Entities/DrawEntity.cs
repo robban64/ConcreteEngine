@@ -1,6 +1,8 @@
 #region
 
 using System.Runtime.InteropServices;
+using ConcreteEngine.Core.Assets.Data;
+using ConcreteEngine.Core.RenderingSystem;
 using ConcreteEngine.Graphics.Gfx.Resources;
 using ConcreteEngine.Renderer.Data;
 using ConcreteEngine.Renderer.Definitions;
@@ -11,7 +13,7 @@ namespace ConcreteEngine.Core.Scene.Entities;
 
 [StructLayout(LayoutKind.Sequential)]
 public struct DrawEntity(
-    in MeshComponent mesh,
+    in ModelComponent model,
     in Transform transform,
     DrawCommandId commandId,
     DrawCommandQueue queue,
@@ -19,14 +21,15 @@ public struct DrawEntity(
     ushort depthKey = 0)
 {
     public Transform Transform = transform;
-    public MeshId MeshId = mesh.MeshId;
-    public MaterialId MaterialId = mesh.MaterialId;
-    public int DrawCount = mesh.DrawCount;
+    public ModelId Model = model.Model;
+    public int DrawCount = model.DrawCount;
     public PassMask PassPassMask = passMask;
     public ushort DepthKey = depthKey;
     public DrawCommandId CommandId = commandId;
     public DrawCommandQueue Queue = queue;
 
     // ensure 64-byte
-    private int Pad;
+    private int _pad;
+    private int _pad1;
+
 }

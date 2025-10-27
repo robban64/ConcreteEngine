@@ -10,7 +10,6 @@ using ConcreteEngine.Graphics.Primitives;
 
 namespace ConcreteEngine.Core.Assets.Meshes;
 
-
 public readonly ref struct MeshImportData(ReadOnlySpan<Vertex3D> vertices, ReadOnlySpan<uint> indices)
 {
     public readonly ReadOnlySpan<Vertex3D> Vertices = vertices;
@@ -31,7 +30,10 @@ internal readonly ref struct MeshUploadPayload(
 
 internal readonly record struct MeshCreationInfo(MeshId MeshId, int DrawCount);
 
-
-internal sealed record MeshPartImportResult(string Name, MeshCreationInfo Info, in Matrix4x4 Transform);
+internal sealed record MeshPartImportResult(
+    string Name,
+    int MaterialSlot,
+    MeshCreationInfo Info,
+    in Matrix4x4 Transform);
 
 internal sealed record MeshResultPayload(MeshCreationInfo[] MeshesInfo, AssetFileSpec FileSpec);

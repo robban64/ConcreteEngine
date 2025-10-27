@@ -4,28 +4,32 @@ using ConcreteEngine.Core.Assets.Materials;
 using ConcreteEngine.Core.Assets.Meshes;
 using ConcreteEngine.Core.Scene;
 using ConcreteEngine.Core.Scene.Entities;
+using ConcreteEngine.Renderer.Data;
 using Silk.NET.Maths;
 
 namespace Demo3D;
 
-public readonly record struct ScenePlacement(Model Model, Material Material, float Offset = 0f);
+public sealed record ScenePlacement(Model Model, Material Mat, Material? Mat2 = null, float Offset = 0f);
 
 public sealed class EntitySpawner(World world, float size = 256f, float margin = 4f)
 {
-    private EntityId CreateOnTerrain(Model model, Material mat, Vector3 p, Vector3? s = null, Quaternion? r = null)
+    private EntityId CreateOnTerrain(ScenePlacement sp, Vector3 p, Vector3? s = null, Quaternion? r = null)
     {
         var height = world.Terrain.GetSmoothHeight(p.X, p.Z) + p.Y;
         var scale = s.GetValueOrDefault(Vector3.One);
         var rotation = r.GetValueOrDefault(Quaternion.Identity);
-        return CreateModelEntity(model, mat, new Transform(p with { Y = height }, scale, rotation));
+        return CreateModelEntity(sp, new Transform(p with { Y = height }, scale, rotation));
     }
 
-    private EntityId CreateModelEntity(Model model, Material material, Transform transform)
+    private EntityId CreateModelEntity(ScenePlacement sp, Transform transform)
     {
         var entityId = world.Create();
-        world.Meshes.Add(entityId, new ModelComponent(model.RenderId,  model.DrawCount));
+        world.Meshes.Add(entityId, new ModelComponent(sp.Model.RenderId, sp.Model.DrawCount));
         world.Transforms.Add(entityId, transform);
-        world.EntityMaterials.AttachEntity(entityId, material.Id);
+        if (sp.Mat2 != null)
+            world.EntityMaterials.AttachEntity(entityId, sp.Mat.Id, sp.Mat2.Id);
+        else
+            world.EntityMaterials.AttachEntity(entityId, sp.Mat.Id);
 
         return entityId;
     }
@@ -48,13 +52,14 @@ public sealed class EntitySpawner(World world, float size = 256f, float margin =
             float x = MathHelper.Lerp(rx, xPrev, bias);
             float z = MathHelper.Lerp(rz, zPrev, bias);
 
-            var (mesh, mat,offset) = variants[rng.Next(variants.Length)];
             float s = 0.9f + (float)rng.NextDouble() * 0.4f;
             var scale = new Vector3(s);
             var rot = Yaw((float)(rng.NextDouble() * MathF.Tau));
 
-            CreateOnTerrain(mesh, mat, new Vector3(x, offset, z), scale, rot);
-            xPrev = x; zPrev = z;
+            var sp = variants[rng.Next(variants.Length)];
+            CreateOnTerrain(sp, new Vector3(x, sp.Offset, z), scale, rot);
+            xPrev = x;
+            zPrev = z;
         }
     }
 
@@ -71,7 +76,7 @@ public sealed class EntitySpawner(World world, float size = 256f, float margin =
         var center = new Vector2(size * 0.5f, size * 0.5f);
         float min = margin, max = size - margin;
         float maxRadius = (MathF.Min(center.X, center.Y) - margin);
-        float tighten = 0.2f + 0.7f * intensity; 
+        float tighten = 0.2f + 0.7f * intensity;
 
         for (int i = 0; i < amount; i++)
         {
@@ -80,11 +85,13 @@ public sealed class EntitySpawner(World world, float size = 256f, float margin =
             float r = MathF.Pow(t, 1f / (0.0001f + tighten)) * maxRadius;
             float x = MathHelper.Clamp(center.X + MathF.Cos(a) * r, min, max);
             float z = MathHelper.Clamp(center.Y + MathF.Sin(a) * r, min, max);
-            var (mesh, mat, offset) = variants[rng.Next(variants.Length)];
+
             float tScale = 0.9f + (float)rng.NextDouble() * 0.3f;
             var scale = new Vector3(tScale, tScale * 1.3f, tScale);
             var rot = Yaw((float)(rng.NextDouble() * MathF.Tau));
-            CreateOnTerrain(mesh, mat, new Vector3(x, offset, z), scale, rot);
+
+            ref readonly var sp = ref variants[rng.Next(variants.Length)];
+            CreateOnTerrain(sp, new Vector3(x, sp.Offset, z), scale, rot);
         }
     }
 
@@ -113,11 +120,12 @@ public sealed class EntitySpawner(World world, float size = 256f, float margin =
             float x = MathHelper.Clamp(c.X + MathF.Cos(a) * r, min, max);
             float z = MathHelper.Clamp(c.Y + MathF.Sin(a) * r, min, max);
 
-            var (mesh, mat, offset) = variants[rng.Next(variants.Length)];
             float s = 0.95f + (float)rng.NextDouble() * 0.3f;
             var scale = new Vector3(s);
             var rot = Yaw((float)(rng.NextDouble() * MathF.Tau));
-            CreateOnTerrain(mesh, mat, new Vector3(x, offset, z), scale, rot);
+
+            var sp = variants[rng.Next(variants.Length)];
+            CreateOnTerrain(sp, new Vector3(x, sp.Offset, z), scale, rot);
         }
     }
 
@@ -128,6 +136,7 @@ public sealed class EntitySpawner(World world, float size = 256f, float margin =
         float z = MathHelper.Lerp(margin, max, (float)rng.NextDouble());
         return (x, z);
     }
+
     private static float Clamp01(float v) => v < 0f ? 0f : (v > 1f ? 1f : v);
 
     private static Quaternion Yaw(float radians) => Quaternion.CreateFromAxisAngle(Vector3.UnitY, radians);

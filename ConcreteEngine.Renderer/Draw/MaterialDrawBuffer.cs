@@ -17,16 +17,16 @@ internal sealed class MaterialDrawBuffer
 {
     private const int MaxTextureSlotCapacity = MaxMaterialBufferCapacity * TextureSlots;
     private const int DefaultTextureSlotCapacity = DefaultMaterialBufferCapacity * TextureSlots;
-
-    private int _idx = 0;
-    private int _slotIdx = 0;
-    private bool _hasDrained = false;
-
+    
     private RangeU16[] _slotRanges = new RangeU16[DefaultMaterialBufferCapacity];
     private TextureSlotInfo[] _textureSlots = new TextureSlotInfo[DefaultTextureSlotCapacity];
 
     private DrawMaterialMeta[] _metas = new DrawMaterialMeta[DefaultMaterialBufferCapacity];
     private MaterialUniformRecord[] _buffer = new MaterialUniformRecord[DefaultMaterialBufferCapacity];
+
+    private int _idx = 0;
+    private int _slotIdx = 0;
+    private bool _hasDrained = false;
 
     public int Count => _idx;
     public bool HasDrained => _hasDrained;
@@ -52,7 +52,7 @@ internal sealed class MaterialDrawBuffer
 
         var index = payload.Meta.MaterialId - 1;
 
-        EnsureCapacity(index);
+        EnsureCapacity(index + 1);
         EnsureTextureSlotCapacity(slots.Length);
 
         _buffer[index] = new MaterialUniformRecord(in payload.MatParams);
@@ -108,20 +108,23 @@ internal sealed class MaterialDrawBuffer
 
     private void EnsureCapacity(int amount)
     {
-        if (_metas.Length >= amount) return;
-        var newCap = ArrayUtility.CapacityGrowthToFit(amount, Math.Max(amount, 4));
+        if (_metas.Length > amount) return;
+        var newCap = ArrayUtility.CapacityGrowthToFit(_metas.Length, Math.Max(amount, 32));
 
         if (newCap > MaxMaterialBufferCapacity)
             ThrowMaxCapacityExceeded();
 
         Array.Resize(ref _metas, newCap);
         Array.Resize(ref _buffer, newCap);
+        Array.Resize(ref _slotRanges, newCap);
+
+        
     }
 
     private void EnsureTextureSlotCapacity(int amount)
     {
-        if (_textureSlots.Length >= amount) return;
-        var newCap = ArrayUtility.CapacityGrowthToFit(amount, Math.Max(amount, 4));
+        if (_textureSlots.Length > amount) return;
+        var newCap = ArrayUtility.CapacityGrowthToFit(_textureSlots.Length, Math.Max(amount, 32));
 
         if (newCap > MaxTextureSlotCapacity)
             ThrowMaxCapacityExceeded();

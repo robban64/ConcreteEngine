@@ -24,7 +24,7 @@ internal sealed class ModelLoaderModule
     {
         _uploader = uploader;
         _loader = new MeshLoader(OnProcess);
-        
+
         if (DefaultAttribs.Length != 0) return;
         var attribBuilder = new VertexAttributeMaker<Vertex3D>();
         DefaultAttribs =
@@ -39,7 +39,7 @@ internal sealed class ModelLoaderModule
     public Model LoadModel(AssetId assetId, MeshDescriptor manifest, out AssetFileSpec[] fileSpecs)
     {
         var refId = AssetRef<Model>.Make(assetId);
-        
+
         _loader.LoadMesh(manifest, out fileSpecs, out var meshesInfo);
 
         var meshParts = new ModelMesh[meshesInfo.Length];
@@ -47,7 +47,10 @@ internal sealed class ModelLoaderModule
         for (int i = 0; i < meshesInfo.Length; i++)
         {
             var info = meshesInfo[i];
-            meshParts[i] = new ModelMesh(refId, info.Name, info.Info.MeshId, info.Info.DrawCount, info.Transform);
+            var meshInfo = info.Info;
+            meshParts[i] = new ModelMesh(refId, info.Name, meshInfo.MeshId, info.MaterialSlot,
+                meshInfo.DrawCount, info.Transform);
+            
             drawCount += info.Info.DrawCount;
         }
 
@@ -80,8 +83,7 @@ internal sealed class ModelLoaderModule
                 Primitive: DrawPrimitive.Triangles
             )
         );
-        
+
         return _uploader.UploadMesh(payload);
     }
-
 }

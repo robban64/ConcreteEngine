@@ -40,5 +40,6 @@ public sealed record ModelMesh(
     AssetRef<Model> AssetRef,
     string MeshName,
     MeshId ResourceId,
+    int MaterialSlot,
     int DrawCount,
     Matrix4x4 Transform);

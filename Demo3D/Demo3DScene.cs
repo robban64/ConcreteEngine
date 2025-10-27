@@ -52,6 +52,10 @@ public sealed class Demo3DScene : GameScene
         var treeMat = materialStore.CreateMaterial("TreeBarkMat", "TreeMat1");
         var birchMat = materialStore.CreateMaterial("TreeBirchBarkMat", "TreeMat2");
 
+        var leaf1Mat = materialStore.CreateMaterial("TreeLeaf1Mat", "Leaf1");
+        var leaf2Mat = materialStore.CreateMaterial("TreeLeaf2Mat", "Leaf2");
+
+        
         var treeMesh = store.GetByName<Model>("Tree1");
         var treeMesh1 = store.GetByName<Model>("Tree2");
         var treeMesh2 = store.GetByName<Model>("Tree3");
@@ -74,13 +78,13 @@ public sealed class Demo3DScene : GameScene
 
         _spawner.PlaceTreesBasic(20,
         [
-            new ScenePlacement(treeMesh, treeMat),
-            new ScenePlacement(treeMesh1, birchMat),
-            new ScenePlacement(treeMesh2, birchMat)
+            new ScenePlacement(treeMesh, treeMat, leaf1Mat),
+            new ScenePlacement(treeMesh1, birchMat, leaf2Mat),
+            new ScenePlacement(treeMesh2, birchMat, leaf2Mat)
         ]);
 
         _spawner.PlaceGroundRocksBasic(90,
-            [new ScenePlacement(rockMesh, rockMat, 0.5f), new ScenePlacement(rock2Mesh, rockMat2, 0.6f)],
+            [new ScenePlacement(rockMesh, rockMat, null, 0.5f), new ScenePlacement(rock2Mesh, rockMat2, null, 0.6f)],
             intensity: 0.5f);
         _spawner.PlacePropsRingBasic(12, [new ScenePlacement(boatMesh, boatMat)]);
 

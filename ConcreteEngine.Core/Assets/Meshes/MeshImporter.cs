@@ -83,14 +83,15 @@ internal sealed class MeshImporter
         var current = node->MTransformation * parent;
         for (uint i = 0; i < node->MNumMeshes; i++)
         {
-            uint meshIndex = node->MMeshes[i];
+            var meshIndex = node->MMeshes[i];
             var mesh = scene->MMeshes[meshIndex];
-            Console.WriteLine($"Loading({i}): {scene->MMeshes[i]->MName} - {scene->MMeshes[i]->MNumVertices}");
+            Console.WriteLine($"Loading({i}): {scene->MMeshes[i]->MName} - {scene->MMeshes[i]->MMaterialIndex}");
 
             var meshData = LoadMeshData(mesh);
 
             _resultInfo.Add(new MeshPartImportResult(
                 mesh->MName.AsString,
+                (int)scene->MMeshes[i]->MMaterialIndex,
                 meshData,
                 current
             ));

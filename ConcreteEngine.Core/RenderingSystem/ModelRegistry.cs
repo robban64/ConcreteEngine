@@ -68,7 +68,7 @@ internal sealed class ModelRegistry : IModelRegistry
             _partRanges[i] = new RangeU16((ushort)idx, (ushort)model.MeshParts.Length);
             foreach (var part in model.MeshParts)
             {
-                _parts[idx] = new MeshPart(part.ResourceId, 0, part.DrawCount);
+                _parts[idx] = new MeshPart(part.ResourceId, part.MaterialSlot, part.DrawCount);
                 _localTransforms[idx] = part.Transform;
                 idx++;
             }

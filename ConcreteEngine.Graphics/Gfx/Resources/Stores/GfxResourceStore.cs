@@ -39,15 +39,7 @@ internal sealed class GfxResourceStore<TId, TMeta> : IGfxResourceStore<TId>
     private GfxHandle[] _handle;
 
     private readonly Stack<int> _free;
-
-
-    public int Count => _idx;
-    public int FreeCount => _free.Count;
-    public int Capacity => _handle.Length;
-    internal ReadOnlySpan<TMeta> MetaSpan => _meta.AsSpan(0, _idx);
-
     
-
     internal GfxResourceStore(int initialCapacity, MakeResourceIdDel<TId> makeResourceId)
     {
         ArgumentOutOfRangeException.ThrowIfLessThan(initialCapacity, 4, nameof(initialCapacity));
@@ -62,6 +54,11 @@ internal sealed class GfxResourceStore<TId, TMeta> : IGfxResourceStore<TId>
         _handle = new GfxHandle[initialCapacity];
         _free = new Stack<int>();
     }
+    
+    public int Count => _idx;
+    public int FreeCount => _free.Count;
+    public int Capacity => _handle.Length;
+    internal ReadOnlySpan<TMeta> MetaSpan => _meta.AsSpan(0, _idx);
     
     internal void BindOnChangeCallback(GfxMetaChangedDel<TId, TMeta> callback)
     {
@@ -99,15 +96,19 @@ internal sealed class GfxResourceStore<TId, TMeta> : IGfxResourceStore<TId>
 
     public GfxHandle GetHandleUntyped(TId id) => _handle[id.Value - 1];
 
-    public TId Add(in TMeta meta, in GfxRefToken<TId> refToken)
+    public TId Add(in TMeta meta, in GfxRefToken<TId> addRef)
     {
-        ArgumentOutOfRangeException.ThrowIfEqual(refToken.Handle.IsValid, false, nameof(refToken));
+        var addHandle = addRef.Handle;
+        ArgumentOutOfRangeException.ThrowIfEqual(addHandle.IsValid, false, nameof(addRef));
+        ArgumentOutOfRangeException.ThrowIfLessThan(addHandle.Slot, 0, nameof(addRef));
+
+        var newRef = GfxRefToken<TId>.Make(addHandle.Slot, 1);
         var idx = _free.Count > 0 ? _free.Pop() : Allocate();
         _meta[idx] = meta;
-        _handle[idx] = refToken;
+        _handle[idx] = newRef;
         var newId = _makeResourceId(idx);
 
-        GfxLog.LogGfxStore(newId, refToken, TId.Kind.ToLogTopic(), LogAction.Add);
+        GfxLog.LogGfxStore(newId, newRef, TId.Kind.ToLogTopic(), LogAction.Add);
         return newId;
     }
 
@@ -131,19 +132,24 @@ internal sealed class GfxResourceStore<TId, TMeta> : IGfxResourceStore<TId>
         return handle;
     }
 
-    public TId Replace(TId id, in TMeta newMeta, in GfxRefToken<TId> newHandle, out GfxRefToken<TId> oldHandle)
+    public TId Replace(TId id, in TMeta newMeta, in GfxRefToken<TId> incRef, out GfxRefToken<TId> oldRef)
     {
         ArgumentOutOfRangeException.ThrowIfEqual(id.Value, 0, nameof(id));
-        var handle = newHandle.Handle;
+
         var idx = id.Value - 1;
-        oldHandle = new GfxRefToken<TId>(in _handle[idx]);
+        oldRef = new GfxRefToken<TId>(_handle[idx]);
+        
+        var newSlot = incRef.Handle.Slot;
+        var newGen = (ushort)(oldRef.Handle.Gen + 1);
+        var newRef = GfxRefToken<TId>.Make(newSlot, newGen);
+
         var oldMeta = _meta[idx];
         _meta[idx] = newMeta;
-        _handle[idx] = handle;
+        _handle[idx] = newRef;
 
-        var message = new GfxMetaChanged<TMeta>(in newMeta, in oldMeta, handle.Gen, true, ResourceKind);
+        var message = new GfxMetaChanged<TMeta>(in newMeta, in oldMeta, newRef.Gen, true, ResourceKind);
         ChangeCallback?.Invoke(id, in message);
-        GfxLog.LogGfxStore(id, handle, TId.Kind.ToLogTopic(), LogAction.Replace);
+        GfxLog.LogGfxStore(id, newRef, TId.Kind.ToLogTopic(), LogAction.Replace);
         return id;
     }
 

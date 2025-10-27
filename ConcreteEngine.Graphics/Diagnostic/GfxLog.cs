@@ -87,10 +87,10 @@ public static class GfxLog
         => new(handle, slot, alive ? 1 : 0, Flags: flags, Scope: LogScope.Backend, Topic: topic, Action: action);
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    internal static void LogBkStore<THandle>(THandle handle, GfxHandle h, LogTopic topic, LogAction action,
+    internal static void LogBkStore<THandle>(BkHandle<THandle> handle, int slot, LogTopic topic, LogAction action,
         ushort flags = 0)
         where THandle : unmanaged, IResourceHandle, IEquatable<THandle> =>
-        Event(LogBk(handle.Value, h.Slot, flags, h.IsValid, topic, action));
+        Event(LogBk(handle, (int)slot, flags, true, topic, action));
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     internal static void LogBackend(uint handle, GfxHandle h, LogTopic topic, LogAction action, ushort flags = 0) =>

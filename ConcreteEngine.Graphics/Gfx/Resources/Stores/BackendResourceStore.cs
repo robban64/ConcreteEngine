@@ -67,13 +67,9 @@ internal sealed class BackendResourceStore<TId, THandle> : IBackendResourceStore
     {
         Throwers.ThrowOnDefaultHandle(value);
         int idx = _free.Count > 0 ? _free.Pop() : Allocate();
-        var prev = _records[idx];
-        var newHandle = new BkHandle<THandle>(value, (ushort)(prev.Gen + 1), true);
-        _records[idx] = newHandle;
-
-        var result = GfxRefToken<TId>.From(new GfxHandle(idx, newHandle.Gen, Kind));
-        GfxLog.LogBkStore(value, result, TId.Kind.ToLogTopic(),  LogAction.Add);
-        return result;
+        var newHandle =  _records[idx] = new BkHandle<THandle>(value, true);
+        GfxLog.LogBkStore(newHandle, idx, TId.Kind.ToLogTopic(),  LogAction.Add);
+        return new GfxRefToken<TId>(new GfxHandle(idx, 1, TId.Kind));
     }
 
 
@@ -83,34 +79,26 @@ internal sealed class BackendResourceStore<TId, THandle> : IBackendResourceStore
         ArgumentOutOfRangeException.ThrowIfEqual((int)handle.Kind, (int)ResourceKind.Invalid);
         ArgumentOutOfRangeException.ThrowIfEqual(handle.Gen, 0);
 
-        var idx = handle.Slot;
-        var record = _records[idx];
-        Throwers.IsValidRecordOrThrow(record, handle);
-
+        var record = _records[handle.Slot];
         _records[handle.Slot] = default;
         _free.Push(handle.Slot);
-        GfxLog.LogBkStore(record.Handle, handle, TId.Kind.ToLogTopic(),  LogAction.Remove);
+        GfxLog.LogBkStore(record, handle.Slot, TId.Kind.ToLogTopic(),  LogAction.Remove);
     }
-
+/*
     public GfxRefToken<TId> Replace(GfxRefToken<TId> refToken, THandle value)
     {
-        var handle = refToken.Handle;
         Throwers.ThrowOnDefaultHandle(value);
-        //var oldValue = GetUntyped(handle);
-        //Throwers.IsUniqueHandleOrThrow(value.Value, oldValue.Value);
 
-        var newRecord = new BkHandle<THandle>(value, (ushort)(handle.Gen + 1), true);
-        _records[handle.Slot] = newRecord;
-
-        var newRef = GfxRefToken<TId>.From(handle with { Gen = newRecord.Gen });
+        var handle = refToken.Handle;
+        var prev = _records[handle.Slot];
+        var newRecord = _records[handle.Slot] = new BkHandle<THandle>(value, true);
         
-        GfxLog.LogBkStore(value, refToken, TId.Kind.ToLogTopic(),  LogAction.Replace,0);
-        GfxLog.LogBkStore(value, newRef, TId.Kind.ToLogTopic(),  LogAction.Replace, 1);
+        GfxLog.LogBkStore(value, prev, TId.Kind.ToLogTopic(),  LogAction.Replace,0);
+        GfxLog.LogBkStore(value, refToken, TId.Kind.ToLogTopic(),  LogAction.Replace, 1);
 
-        return newRef;
-        //return GfxRefToken<TId>.From(handle with { Gen = newRecord.Gen });
+        return GfxRefToken<TId>.MakeBkRef(handle.Slot);
     }
-
+*/
     private int Allocate()
     {
         var len = _records.Length;
@@ -155,9 +143,10 @@ internal sealed class BackendResourceStore<TId, THandle> : IBackendResourceStore
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static void IsValidRecordOrThrow(BkHandle<THandle> e, GfxHandle handle)
         {
-            var isValid = e.IsValid && e.Gen == handle.Gen;
+            var isValid = e.IsValid && handle.IsValid;
             if (!isValid) ThrowInvalid(nameof(e));
         }
+
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static void IsUniqueHandleOrThrow(uint h1, uint h2)

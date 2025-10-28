@@ -125,14 +125,8 @@ public sealed class EngineRenderSystem : IRenderingSystem
         _renderer.UploadFrameData();
         _renderer.Render();
         _renderer.EndRenderFrame(out frameResult);
-        
-        
-        var matStore = _assets.MaterialStoreImpl;
-        foreach (var material in matStore.MaterialSpan)
-        {
-            material?.State.ClearDirty();
-        }
 
+        ClearMaterialDirty();
     }
     
 
@@ -157,6 +151,16 @@ public sealed class EngineRenderSystem : IRenderingSystem
         }
 
         _hasUploadedMaterial = true;
+    }
+
+    private void ClearMaterialDirty()
+    {
+        var matStore = _assets.MaterialStoreImpl;
+        foreach (var material in matStore.MaterialSpan)
+        {
+            if(material == null || !material.State.Dirty) continue;
+            material.State.ClearDirty();
+        }
     }
 
     public void Shutdown()

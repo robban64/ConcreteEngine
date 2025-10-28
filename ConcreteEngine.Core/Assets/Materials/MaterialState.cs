@@ -16,6 +16,7 @@ public sealed class MaterialState
     private float _uvRepeat = 1f;
 
     private bool _dirty;
+    private bool _clearDirty = false;
 
 
     internal MaterialState(MaterialState param)
@@ -36,7 +37,18 @@ public sealed class MaterialState
     
     
     public bool Dirty => _dirty;
-    internal void ClearDirty() => _dirty = false;
+    internal void ClearDirty()
+    {
+        if (_clearDirty && _dirty)
+        {
+            _dirty  = false;
+            _clearDirty = false;
+            return;
+        }
+        
+        _clearDirty = true;
+    }
+
     public Color4 Color
     {
         get => _color;

@@ -150,8 +150,8 @@ internal sealed class DrawBuffers
 
     private void UploadFrameUniformRecord()
     {
-        var fog = _sceneSnapshot.Fog;
-        var ambient = _sceneSnapshot.Ambient;
+        ref readonly var fog = ref _sceneSnapshot.Fog;
+        ref readonly var ambient = ref _sceneSnapshot.Ambient;
 
         float kExp2 = 1f / (fog.Density * fog.Density);
         float kHeight = 1f / MathF.Max(x: fog.HeightFalloff, y: 1e-6f);
@@ -169,7 +169,7 @@ internal sealed class DrawBuffers
 
     private void UploadDirLight()
     {
-        var dirLight = _sceneSnapshot.DirLight;
+        ref readonly var dirLight = ref _sceneSnapshot.DirLight;
         var data = new DirLightUniformRecord(
             direction: dirLight.Direction.AsVector4(),
             diffuse: new Vector4(dirLight.Diffuse, dirLight.Intensity),
@@ -189,7 +189,7 @@ internal sealed class DrawBuffers
         //0.001f, 0.005f
         // 0.0004f, 0.0025f
         
-        var shadow = _sceneSnapshot.Shadows;
+        ref readonly var shadow = ref _sceneSnapshot.Shadows;
         var size = 1.0f / shadow.ShadowMapSize;
         var data = new ShadowUniformRecord(
             lightViewProj: lightViewProjection,
@@ -210,7 +210,7 @@ internal sealed class DrawBuffers
             fx: new Vector4(0.04f, 0.0025f, 0.065f, 0.095f)
         );
 */
-        var effect = _sceneSnapshot.PostEffects;
+        ref readonly var effect = ref _sceneSnapshot.PostEffects;
         var (g, wb, b, fx) = (effect.Grade, effect.WhiteBalance, effect.Bloom, Fx: effect.ImageFx);
         var data = new PostProcessUniform(
             grade: new Vector4(g.Exposure * 0.10f, 0.8f + g.Saturation * 0.4f, 0.9f + g.Contrast * 0.2f,

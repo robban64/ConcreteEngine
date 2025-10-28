@@ -4,6 +4,7 @@ using ConcreteEngine.Common;
 using ConcreteEngine.Common.Collections;
 using ConcreteEngine.Core.Assets.Data;
 using ConcreteEngine.Core.Assets.Textures;
+using ConcreteEngine.Graphics.Gfx;
 using ConcreteEngine.Graphics.Gfx.Contracts;
 using ConcreteEngine.Graphics.Gfx.Definitions;
 using ConcreteEngine.Graphics.Gfx.Resources;
@@ -122,7 +123,17 @@ public sealed class MaterialStore : IMaterialStore
 
     private TextureId ResolveTextureId(AssetTextureSlot assetSlot)
     {
-        if (!assetSlot.Asset.IsValid) return default;
+        if (assetSlot.SlotKind == TextureSlotKind.Shadowmap) return default;
+
+        if (!assetSlot.Asset.IsValid)
+        {
+            switch (assetSlot.SlotKind)
+            {
+                case TextureSlotKind.Albedo: return GfxTextures.FallbackTextures.AlbedoTextureId;
+                case TextureSlotKind.Normal: return GfxTextures.FallbackTextures.NormalTextureId;
+                case TextureSlotKind.Mask: return GfxTextures.FallbackTextures.AlphaMaskTextureId;
+            }
+        }
 
         if (assetSlot.TextureKind == TextureKind.Texture2D)
             return _assetStore.GetByRef(new AssetRef<Texture2D>(assetSlot.Asset)).ResourceId;

@@ -227,6 +227,7 @@ internal static class GlEnumExtensions
             // sRGB only for internal format
             TexturePixelFormat.SrgbAlpha => (PixelFormat.Rgba, PixelType.UnsignedByte),
             TexturePixelFormat.Red => (PixelFormat.Red, PixelType.UnsignedByte),
+            TexturePixelFormat.Depth => (PixelFormat.DepthComponent, PixelType.UnsignedByte),
 
             _ => throw new ArgumentOutOfRangeException(nameof(f))
         };

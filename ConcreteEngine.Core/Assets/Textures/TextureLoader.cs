@@ -23,7 +23,17 @@ internal sealed class TextureLoader
         if (!fi.Exists) throw new FileNotFoundException("File not found.", path);
 
         using var stream = File.OpenRead(path);
-        var image = ImageResult.FromStream(stream, ColorComponents.RedGreenBlueAlpha);
+
+        var colorComponent = record.PixelFormat switch
+        {
+            TexturePixelFormat.Rgb => ColorComponents.RedGreenBlueAlpha,
+            TexturePixelFormat.Rgba => ColorComponents.RedGreenBlueAlpha,
+            TexturePixelFormat.SrgbAlpha => ColorComponents.RedGreenBlueAlpha,
+            TexturePixelFormat.Depth => ColorComponents.Grey,
+            TexturePixelFormat.Red => ColorComponents.Grey,
+            _ => throw new ArgumentOutOfRangeException()
+        };
+        var image = ImageResult.FromStream(stream, colorComponent);
         ValidateImageResult(image);
 
         var desc = new GfxTextureDescriptor(

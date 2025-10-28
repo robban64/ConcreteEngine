@@ -17,8 +17,9 @@ public readonly record struct AssetTextureSlot(
 public sealed class MaterialTextureSlots
 {
     public bool IsCubeMap { get; private set; }
-
+    
     public bool HasNormalMap { get; private set; }
+    public bool HasAlphaMap { get; set; } = false;
     public bool HasShadowMap { get; private set; }
 
     private AssetTextureSlot[] _slots;
@@ -42,6 +43,7 @@ public sealed class MaterialTextureSlots
             if (!IsCubeMap) IsCubeMap = slot.TextureKind == TextureKind.CubeMap;
             if (!HasNormalMap) HasNormalMap = slot.SlotKind == TextureSlotKind.Normal;
             if (!HasShadowMap) HasShadowMap = slot.SlotKind == TextureSlotKind.Shadowmap;
+            if (!HasAlphaMap) HasAlphaMap = slot.SlotKind == TextureSlotKind.Alpha;
         }
     }
 }

@@ -14,9 +14,16 @@ public sealed class MaterialState
     public float Shininess { get; set; } = 24f;
     public float Specular { get; set; } = 0.25f;
     public float UvRepeat { get; set; } = 1;
+    
 
-    internal MaterialState(MaterialState param) => Set(param.Snapshot());
-
+    //internal MaterialState(MaterialState param) => Set(param.Snapshot());
+    internal MaterialState(MaterialState param)
+    {
+        Color = param.Color;
+        Specular = param.Specular;
+        UvRepeat = param.UvRepeat;
+        Shininess = param.Shininess;
+    }
     internal MaterialState(MaterialDescriptor.MaterialParamsDesc desc)
     {
         Color = desc.Color ?? Color;
@@ -33,10 +40,4 @@ public sealed class MaterialState
         UvRepeat = param.UvRepeat;
     }
 
-    public MaterialParams Snapshot() => new(
-        Color: Color,
-        Specular: Specular,
-        Shininess: Shininess,
-        UvRepeat: UvRepeat
-    );
 }

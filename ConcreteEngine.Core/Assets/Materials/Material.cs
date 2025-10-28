@@ -20,7 +20,6 @@ public sealed class Material
     public GfxPassState? PassState { get; set; } =  null;
     public GfxPassStateFunc? PassFuncs { get; set; } = null;
 
-
     public MaterialTextureSlots TextureSlots { get; }
     
     public bool Attached => Id > 0;
@@ -36,4 +35,14 @@ public sealed class Material
         State = new MaterialState(template.Params);
         TextureSlots = new MaterialTextureSlots(template.TextureSlots.Slots);
     }
+    
+    
+    public MaterialParams Snapshot() => new(
+        Color: State.Color,
+        Specular: State.Specular,
+        Shininess: State.Shininess,
+        UvRepeat: State.UvRepeat,
+        HasNormal: TextureSlots.HasNormalMap,
+        HasAlpha:  TextureSlots.HasAlphaMap
+    );
 }

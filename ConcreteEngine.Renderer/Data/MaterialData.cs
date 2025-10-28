@@ -14,8 +14,8 @@ public readonly record struct MaterialParams(
     float Specular,
     float Shininess,
     float UvRepeat = 1f,
-    // todo remove
-    float Normal = 1f);
+    bool HasNormal = false,
+    bool HasAlpha = false);
 
 public readonly record struct DrawMaterialMeta(MaterialId MaterialId, ShaderId ShaderId, GfxPassState? PassState, GfxPassStateFunc? PassStateFunc);
 

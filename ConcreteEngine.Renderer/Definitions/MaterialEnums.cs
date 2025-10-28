@@ -25,13 +25,14 @@ public enum TextureSlotKind : byte
 {
     Albedo = 0,
     Normal = 1,
-    Specular = 2,
-    Emissive = 3,
-    Environment = 4,
-    Shadowmap = 5,
-    Lightmap = 6,
-    Splatmap = 7,
-    Heightmap = 8,
-    Custom0 = 9,
-    Custom1 = 10
+    Alpha = 2,
+    Specular = 3,
+    Emissive = 4,
+    Environment = 5,
+    Shadowmap = 6,
+    Lightmap = 7,
+    Splatmap = 8,
+    Heightmap = 9,
+    Custom0 = 10,
+    Custom1 = 11
 }

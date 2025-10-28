@@ -213,6 +213,7 @@ internal static class GlEnumExtensions
             TexturePixelFormat.Rgba => SizedInternalFormat.Rgba8,
             TexturePixelFormat.SrgbAlpha => SizedInternalFormat.Srgb8Alpha8,
             TexturePixelFormat.Depth => SizedInternalFormat.DepthComponent24,
+            TexturePixelFormat.Red =>  SizedInternalFormat.R8,
             _ => throw new ArgumentOutOfRangeException(nameof(format))
         };
     }
@@ -225,6 +226,8 @@ internal static class GlEnumExtensions
             TexturePixelFormat.Rgba => (PixelFormat.Rgba, PixelType.UnsignedByte),
             // sRGB only for internal format
             TexturePixelFormat.SrgbAlpha => (PixelFormat.Rgba, PixelType.UnsignedByte),
+            TexturePixelFormat.Red => (PixelFormat.Red, PixelType.UnsignedByte),
+
             _ => throw new ArgumentOutOfRangeException(nameof(f))
         };
     }

@@ -136,7 +136,7 @@ public readonly struct MaterialUniformRecord : IStd140Uniform
     {
         MatColor = new Vector4(mat.Color.AsVec3(), 1);
         MatParams0 = new Vector4(mat.Specular, mat.UvRepeat, 0.0f, 0.0f);
-        MatParams1 = new Vector4(mat.Shininess, mat.Normal, 0.0f, 0.0f);
+        MatParams1 = new Vector4(mat.Shininess, mat.HasNormal ? 1f : 0f, mat.HasAlpha ? 1f : 0f, 0.0f);
     }
 }
 
@@ -158,8 +158,8 @@ public readonly struct DrawObjectUniform : IStd140Uniform
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public static void Fill(in Matrix4x4 model, in Matrix3 normal, out DrawObjectUniform dst)
-        => dst = new DrawObjectUniform(in model, in normal);
+    public static void Fill(in Matrix4x4 model, in Matrix3 normal, out DrawObjectUniform dst) =>
+        dst = new DrawObjectUniform(in model, in normal);
 }
 
 [StructLayout(LayoutKind.Sequential)]

@@ -101,7 +101,7 @@ public sealed class MaterialStore : IMaterialStore
     public void GetMaterialUploadData(Material material, out DrawMaterialPayload data)
     {
         var meta = new DrawMaterialMeta(material.Id, ResolveShader(material), material.PassState, material.PassFuncs);
-        var snapshot = material.State.Snapshot();
+        var snapshot = material.Snapshot();
         data = new DrawMaterialPayload(in meta, in snapshot);
     }
 

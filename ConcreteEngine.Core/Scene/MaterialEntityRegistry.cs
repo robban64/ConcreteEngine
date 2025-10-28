@@ -10,8 +10,7 @@ public interface IMaterialEntityRegistry
 }
 public sealed class MaterialEntityRegistry : IMaterialEntityRegistry
 {
-    //private List<MaterialId>[] _materials = new List<MaterialId>[32];
-    private readonly Dictionary<EntityId, List<MaterialId>> _register = new(64);
+    private readonly Dictionary<EntityId, MaterialId[]> _register = new(64);
     
     public void AttachEntity(EntityId entityId, params MaterialId[] materialIds)
     {
@@ -19,11 +18,11 @@ public sealed class MaterialEntityRegistry : IMaterialEntityRegistry
         ArgumentOutOfRangeException.ThrowIfLessThanOrEqual(materialIds.Length, 0);
         ArgumentOutOfRangeException.ThrowIfLessThanOrEqual(entityId.Id, 0);
         
-        if (!_register.TryAdd(entityId, materialIds.ToList()))
+        if (!_register.TryAdd(entityId, materialIds))
             throw new InvalidOperationException($"Entity {entityId} already attached to material");
     }
 
-    public List<MaterialId> GetMaterialIds(EntityId entityId)
+    public ReadOnlySpan<MaterialId> GetMaterialIds(EntityId entityId)
     {
         Debug.Assert(entityId.Id > 0);
         Debug.Assert(_register.ContainsKey(entityId));

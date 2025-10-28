@@ -100,9 +100,7 @@ public sealed class MaterialStore : IMaterialStore
     //TODO rework
     public void GetMaterialUploadData(Material material, out DrawMaterialPayload data)
     {
-        GfxPassState? state = material.IsSkybox ? new GfxPassState(DepthWrite: false) : null;
-        GfxPassStateFunc? funcs = material.IsSkybox ? GfxPassStateFunc.MakeSky() : null;
-        var meta = new DrawMaterialMeta(material.Id, ResolveShader(material), state, funcs);
+        var meta = new DrawMaterialMeta(material.Id, ResolveShader(material), material.PassState, material.PassFuncs);
         var snapshot = material.State.Snapshot();
         data = new DrawMaterialPayload(in meta, in snapshot);
     }

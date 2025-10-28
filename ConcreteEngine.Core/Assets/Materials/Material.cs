@@ -2,7 +2,9 @@
 
 using ConcreteEngine.Core.Assets.Data;
 using ConcreteEngine.Core.Assets.Shaders;
+using ConcreteEngine.Graphics.Gfx.Contracts;
 using ConcreteEngine.Renderer.Data;
+using ConcreteEngine.Renderer.Definitions;
 
 #endregion
 
@@ -15,11 +17,12 @@ public sealed class Material
     public AssetRef<Shader> ShaderRef { get; }
     public MaterialId Id { get; }
     public MaterialState State { get; }
+    public GfxPassState? PassState { get; set; } =  null;
+    public GfxPassStateFunc? PassFuncs { get; set; } = null;
+
+
     public MaterialTextureSlots TextureSlots { get; }
     
-    //TODO temp
-    public bool IsSkybox { get; set; } = false;
-
     public bool Attached => Id > 0;
 
     internal Material(MaterialId id, MaterialTemplate template, string name)

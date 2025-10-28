@@ -57,9 +57,8 @@ internal sealed class RenderEntityBus
         {
             ref var model = ref query.Value1;
             ref var transform = ref query.Value2;
-
-            EntityUtility.MakeDrawMesh(query.Entity, model.Model, model.DrawCount, in transform, out _entities[_idx]);
-            _idx++;
+            _entities[_idx++] = new DrawEntity(query.Entity, model.Model, model.DrawCount, in transform,
+                DrawCommandId.Mesh, DrawCommandQueue.Opaque, PassMask.Default);
         }
     }
 
@@ -91,6 +90,7 @@ internal sealed class RenderEntityBus
 
                 var parts = view.Parts[i];
                 var cmd = new DrawCommand(parts.Mesh, materials[parts.MaterialSlot], parts.DrawCount);
+                meta = new DrawCommandMeta(entity.CommandId, entity.Queue, entity.PassMask, entity.DepthKey);
                 buffer.SubmitDraw(cmd, meta, in model, in normal);
             }
         }

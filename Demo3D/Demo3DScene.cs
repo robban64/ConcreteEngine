@@ -11,6 +11,8 @@ using ConcreteEngine.Core.Configuration;
 using ConcreteEngine.Core.RenderingSystem;
 using ConcreteEngine.Core.Scene;
 using ConcreteEngine.Core.Scene.Entities;
+using ConcreteEngine.Graphics.Gfx.Contracts;
+using ConcreteEngine.Graphics.Gfx.Definitions;
 using ConcreteEngine.Renderer.Descriptors;
 using Shader = ConcreteEngine.Core.Assets.Shaders.Shader;
 
@@ -34,7 +36,8 @@ public sealed class Demo3DScene : GameScene
 
         // Skybox
         var skyboxMaterial = materialStore.CreateMaterial("SkyboxMat", "SkyboxMat1");
-        skyboxMaterial.IsSkybox = true;
+        skyboxMaterial.PassFuncs = GfxPassStateFunc.MakeSky();
+        skyboxMaterial.PassState = new GfxPassState(DepthWrite: false);
         Context.World.Sky.SetSkyMaterial(skyboxMaterial.Id);
 
         // Terrain
@@ -54,6 +57,14 @@ public sealed class Demo3DScene : GameScene
 
         var leaf1Mat = materialStore.CreateMaterial("TreeLeaf1Mat", "Leaf1");
         var leaf2Mat = materialStore.CreateMaterial("TreeLeaf2Mat", "Leaf2");
+        
+        var leafState = new GfxPassState(Cull: false,  ColorMask: true);
+        var leafFunc = new GfxPassStateFunc( Depth: DepthMode.Less, Cull: CullMode.FrontCcw);
+        leaf1Mat.PassState = leafState;
+        leaf1Mat.PassFuncs = leafFunc;
+        
+        leaf2Mat.PassState = leafState;
+        leaf2Mat.PassFuncs = leafFunc;
 
         
         var treeMesh = store.GetByName<Model>("Tree1");

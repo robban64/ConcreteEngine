@@ -12,7 +12,6 @@ using ConcreteEngine.Graphics.OpenGL;
 
 namespace ConcreteEngine.Graphics.Gfx;
 
-
 public sealed class GfxTextures
 {
     private readonly GlTextures _driver;
@@ -22,10 +21,9 @@ public sealed class GfxTextures
 
     public static class FallbackTextures
     {
-        public static TextureId AlbedoTextureId { get; internal set; } = default;
-        public static TextureId NormalTextureId { get; internal set; } = default;
-        public static TextureId AlphaMaskTextureId { get; internal set; } = default;
-
+        public static TextureId AlbedoId { get; internal set; } = default;
+        public static TextureId NormalId { get; internal set; } = default;
+        public static TextureId AlphaMaskId { get; internal set; } = default;
     }
 
     internal GfxTextures(GfxContextInternal context)
@@ -34,18 +32,19 @@ public sealed class GfxTextures
         _textureStore = context.Stores.TextureStore;
         _driver = context.Driver.Textures;
 
-        FallbackTextures.AlbedoTextureId = CreateOnePixelTexture([255, 255, 255, 255], TexturePixelFormat.SrgbAlpha);
-        FallbackTextures.NormalTextureId = CreateOnePixelTexture([128, 128, 255], TexturePixelFormat.Rgb);
-        FallbackTextures.AlphaMaskTextureId = CreateOnePixelTexture([255], TexturePixelFormat.Depth);
+        FallbackTextures.AlbedoId = CreateOnePixelTexture([255, 255, 255, 255], TexturePixelFormat.SrgbAlpha);
+        FallbackTextures.NormalId = CreateOnePixelTexture([128, 128, 255], TexturePixelFormat.Rgb);
+        FallbackTextures.AlphaMaskId
+            = CreateOnePixelTexture([255], TexturePixelFormat.Depth, TexturePreset.NearestClamp);
     }
-    
-    private TextureId CreateOnePixelTexture(byte[] pixelData, TexturePixelFormat format)
+
+    private TextureId CreateOnePixelTexture(byte[] pixelData, TexturePixelFormat format,
+        TexturePreset preset = TexturePreset.NearestRepeat)
     {
         var desc = new GfxTextureDescriptor(1, 1, TextureKind.Texture2D, format);
-        var props = new GfxTextureProperties(0, TexturePreset.NearestRepeat, TextureAnisotropy.Off);
+        var props = new GfxTextureProperties(0, preset, TextureAnisotropy.Off);
         return BuildTexture(desc, props, pixelData);
     }
-  
 
 
     // utilities

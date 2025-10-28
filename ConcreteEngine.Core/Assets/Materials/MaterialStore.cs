@@ -129,9 +129,9 @@ public sealed class MaterialStore : IMaterialStore
         {
             switch (assetSlot.SlotKind)
             {
-                case TextureSlotKind.Albedo: return GfxTextures.FallbackTextures.AlbedoTextureId;
-                case TextureSlotKind.Normal: return GfxTextures.FallbackTextures.NormalTextureId;
-                case TextureSlotKind.Mask: return GfxTextures.FallbackTextures.AlphaMaskTextureId;
+                case TextureSlotKind.Albedo: return GfxTextures.FallbackTextures.AlbedoId;
+                case TextureSlotKind.Normal: return GfxTextures.FallbackTextures.NormalId;
+                case TextureSlotKind.Mask: return GfxTextures.FallbackTextures.AlphaMaskId;
             }
         }
 

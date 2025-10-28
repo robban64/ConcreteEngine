@@ -128,7 +128,7 @@ internal sealed class GlStates : IGraphicsDriverModule
 
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public void UnbindTextureSlot(int slot) => _gl.BindTextureUnit(0, (uint)slot);
+    public void UnbindTextureSlot(int slot) => _gl.BindTextureUnit((uint)slot, 0);
 
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]

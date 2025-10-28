@@ -25,7 +25,7 @@ public enum TextureSlotKind : byte
 {
     Albedo = 0,
     Normal = 1,
-    Alpha = 2,
+    Mask = 2,
     Specular = 3,
     Emissive = 4,
     Environment = 5,

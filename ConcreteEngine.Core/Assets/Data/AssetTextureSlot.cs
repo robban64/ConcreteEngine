@@ -10,7 +10,7 @@ namespace ConcreteEngine.Core.Assets.Data;
 public readonly record struct AssetTextureSlot(
     AssetId Asset,
     TextureSlotKind SlotKind,
-    TextureKind TextureKind
+    TextureKind TextureKind = TextureKind.Texture2D
     //bool Srgb
 );
 
@@ -40,10 +40,11 @@ public sealed class MaterialTextureSlots
 
         foreach (var slot in _slots)
         {
+            if (!HasShadowMap) HasShadowMap = slot.SlotKind == TextureSlotKind.Shadowmap;
+            if(!slot.Asset.IsValid) continue;
             if (!IsCubeMap) IsCubeMap = slot.TextureKind == TextureKind.CubeMap;
             if (!HasNormalMap) HasNormalMap = slot.SlotKind == TextureSlotKind.Normal;
-            if (!HasShadowMap) HasShadowMap = slot.SlotKind == TextureSlotKind.Shadowmap;
-            if (!HasAlphaMap) HasAlphaMap = slot.SlotKind == TextureSlotKind.Alpha;
+            if (!HasAlphaMap) HasAlphaMap = slot.SlotKind == TextureSlotKind.Mask;
         }
     }
 }

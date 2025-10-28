@@ -122,8 +122,7 @@ public sealed class MaterialStore : IMaterialStore
 
     private TextureId ResolveTextureId(AssetTextureSlot assetSlot)
     {
-        //TODO use some better structure than hardcoded checks everywhere
-        if (assetSlot.SlotKind == TextureSlotKind.Shadowmap) return default;
+        if (!assetSlot.Asset.IsValid) return default;
 
         if (assetSlot.TextureKind == TextureKind.Texture2D)
             return _assetStore.GetByRef(new AssetRef<Texture2D>(assetSlot.Asset)).ResourceId;

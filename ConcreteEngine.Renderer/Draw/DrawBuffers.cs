@@ -112,10 +112,13 @@ internal sealed class DrawBuffers
     public void UploadGlobalUniforms(in RenderFrameInfo frameInfo, in RenderRuntimeParams runtimeParams)
     {
         UploadEngineUniformRecord(in frameInfo, in runtimeParams);
-        UploadFrameUniformRecord();
-        UploadDirLight();
         UploadLight();
-        UploadPost();
+        if (_sceneSnapshot.IsDirty)
+        {
+            UploadFrameUniformRecord();
+            UploadDirLight();
+            UploadPost();
+        }
     }
 
     public void UploadCameraView(RenderView view)
@@ -178,7 +181,6 @@ internal sealed class DrawBuffers
     private void UploadLight()
     {
         var data = new LightUniformRecord(0, default);
-
         _gfxBuffers.UploadUniformGpuData(_lightUbo, in data, 0);
     }
 
@@ -186,7 +188,7 @@ internal sealed class DrawBuffers
     {
         //0.001f, 0.005f
         // 0.0004f, 0.0025f
-
+        
         var shadow = _sceneSnapshot.Shadows;
         var size = 1.0f / shadow.ShadowMapSize;
         var data = new ShadowUniformRecord(

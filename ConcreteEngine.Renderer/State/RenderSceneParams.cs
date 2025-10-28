@@ -44,6 +44,7 @@ public readonly struct FogParams(
 
 public readonly struct ShadowParams(
     int shadowMapSize,
+    float distance,
     float zPad,
     float constBias,
     float slopeBias,
@@ -52,6 +53,7 @@ public readonly struct ShadowParams(
 )
 {
     public int ShadowMapSize { get; init; } = shadowMapSize;
+    public float Distance { get; } = distance;
     public float ZPad { get; init; } = zPad;
     public float ConstBias { get; init; } = constBias;
     public float SlopeBias { get; init; } = slopeBias;

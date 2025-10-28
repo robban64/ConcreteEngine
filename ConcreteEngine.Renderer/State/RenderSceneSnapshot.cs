@@ -3,6 +3,7 @@ namespace ConcreteEngine.Renderer.State;
 public sealed class RenderSceneSnapshot
 {
     public long Version { get; private set; }
+    public bool IsDirty { get; private set; } = true;
 
     private AmbientParams _ambient;
     private FogParams _fog;
@@ -24,6 +25,8 @@ public sealed class RenderSceneSnapshot
         in ShadowParams shadows,
         in PostEffectParams postEffect)
     {
+        IsDirty = true;
+        
         Version = version;
         _ambient = ambient;
         _fog = fog;
@@ -31,4 +34,6 @@ public sealed class RenderSceneSnapshot
         _shadows = shadows;
         _postEffect = postEffect;
     }
+    
+    public void ClearDirty() => IsDirty =  false;
 }

@@ -61,7 +61,7 @@ public sealed class RenderView
     internal void ApplyLightViewOverride(Vector3 direction, RenderSceneSnapshot sceneSnapshot)
     {
         RenderTransform.CreateDirLightView(direction, in _snapshot, out var viewMat, out var projMat,
-            shadowMapSize: sceneSnapshot.Shadows.ShadowMapSize);
+            shadowMapSize: sceneSnapshot.Shadows.ShadowMapSize, shadowDistance: 120f);
         var projViewMat = viewMat * projMat;
         _override = new ViewProjectionData(in viewMat, in projMat, in projViewMat);
         _useOverride = true;

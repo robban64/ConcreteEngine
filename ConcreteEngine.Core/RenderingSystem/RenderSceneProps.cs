@@ -12,7 +12,7 @@ namespace ConcreteEngine.Core.RenderingSystem;
 public sealed class RenderSceneProps
 {
     private bool _dirty = true;
-
+    private bool _clearSnapshotDirtyNext = false;
     private readonly RenderSceneSnapshot _snapshot = new();
 
     private AmbientParams _ambient = MakeDefaultAmbient();
@@ -53,15 +53,19 @@ public sealed class RenderSceneProps
         _dirty = true;
     }
 
-    public void SetShadowDefault(int size)
+    public void SetShadowDefault(int size, float? distance = null)
     {
         ArgumentOutOfRangeException.ThrowIfLessThan(size, RenderLimits.MinShadowMapSize);
         ArgumentOutOfRangeException.ThrowIfGreaterThan(size, RenderLimits.MaxShadowMapSize);
 
+        if (distance is not { } dist) 
+            dist = _shadow.Distance > 1 ? _shadow.Distance : 120f;
+        
         var constBias = 0.8f / size;
         var slopeBias = constBias * 6f;
         _shadow = new ShadowParams(
             shadowMapSize: size,
+            distance: dist,
             zPad: 0.5f,
             constBias: constBias,
             slopeBias: slopeBias,
@@ -79,7 +83,17 @@ public sealed class RenderSceneProps
 
     internal RenderSceneSnapshot Commit()
     {
-        if (!_dirty) return _snapshot;
+        if (!_dirty)
+        {
+            if (_snapshot.IsDirty && !_clearSnapshotDirtyNext) _clearSnapshotDirtyNext = true;
+            else if (_snapshot.IsDirty && _clearSnapshotDirtyNext)
+            {
+                _snapshot.ClearDirty();
+                _clearSnapshotDirtyNext = false;
+            }
+
+            return _snapshot;
+        }
 
         Version++;
 

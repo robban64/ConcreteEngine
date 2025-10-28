@@ -1,7 +1,9 @@
 #region
 
+using System.Diagnostics;
 using System.Numerics;
 using ConcreteEngine.Common;
+using ConcreteEngine.Common.Diagnostics.Utility;
 using ConcreteEngine.Common.Numerics;
 using ConcreteEngine.Core.Assets;
 using ConcreteEngine.Core.Assets.Meshes;
@@ -37,7 +39,7 @@ public sealed class EngineRenderSystem : IRenderingSystem
     public BatcherRegistry Batchers { get; }
     public RenderSceneProps SceneProperties { get; }
     public RenderSceneSnapshot SceneSnapshot => SceneProperties.Snapshot;
-
+    
     private readonly EngineWindow _window;
     private readonly GraphicsRuntime _graphics;
     private readonly RenderEngine _renderer;
@@ -46,10 +48,12 @@ public sealed class EngineRenderSystem : IRenderingSystem
     private readonly ModelRegistry _modelRegistry;
     private readonly RenderEntityBus _renderEntityBus;
 
-
     internal RenderEngine RenderEngine => _renderer;
 
     private readonly EngineEventBus _eventBus;
+    
+    
+    private bool _hasUploadedMaterial = false;
 
     internal EngineRenderSystem(EngineWindow window, GraphicsRuntime graphics, AssetSystem assets,
         EngineEventBus eventBus)
@@ -108,14 +112,11 @@ public sealed class EngineRenderSystem : IRenderingSystem
 
         SceneProperties.Commit();
         _renderer.PrepareFrame(in frameInfo, in runtimeParams, in viewSnapshot);
-
         SubmitMaterialData();
-
         // fill buffers
         _renderEntityBus.CollectEntities();
         _renderEntityBus.FlushEntities(_renderer.CommandBuffer);
         _renderer.CollectDrawBuffers();
-
         _renderer.StartFrame(status);
     }
 
@@ -124,19 +125,38 @@ public sealed class EngineRenderSystem : IRenderingSystem
         _renderer.UploadFrameData();
         _renderer.Render();
         _renderer.EndRenderFrame(out frameResult);
+        
+        
+        var matStore = _assets.MaterialStoreImpl;
+        foreach (var material in matStore.MaterialSpan)
+        {
+            material?.State.ClearDirty();
+        }
+
     }
+    
 
     private void SubmitMaterialData()
     {
         var matStore = _assets.MaterialStoreImpl;
-
-        Span<TextureSlotInfo> slots = stackalloc TextureSlotInfo[RenderLimits.TextureSlots];
+        var isDirty = false;
         foreach (var material in matStore.MaterialSpan)
         {
-            var length = matStore.FillTextureInfo(material!, slots);
-            matStore.GetMaterialUploadData(material!, out var payload);
-            _renderer.SubmitMaterialDrawData(in payload, slots.Slice(0, length));
+            if (material?.State.Dirty != true) continue;
+            isDirty = true;
+            _hasUploadedMaterial = false;
         }
+        
+        if(!isDirty && _hasUploadedMaterial) return;
+        
+
+        foreach (var material in matStore.MaterialSpan)
+        {
+            matStore.GetMaterialUploadData(material!, out var payload);
+            _renderer.SubmitMaterialDrawData(in payload, material!.TextureSlots.CacheSlots);
+        }
+
+        _hasUploadedMaterial = true;
     }
 
     public void Shutdown()

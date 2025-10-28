@@ -33,9 +33,8 @@ public sealed class Material
         ShaderRef = template.ShaderRef;
 
         State = new MaterialState(template.Params);
-        TextureSlots = new MaterialTextureSlots(template.TextureSlots.Slots);
+        TextureSlots = new MaterialTextureSlots(template.TextureSlots.AssetSlots);
     }
-    
     
     public MaterialParams Snapshot() => new(
         Color: State.Color,

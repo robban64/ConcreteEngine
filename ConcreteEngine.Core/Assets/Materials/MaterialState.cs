@@ -10,13 +10,14 @@ namespace ConcreteEngine.Core.Assets.Materials;
 
 public sealed class MaterialState
 {
-    public Color4 Color { get; set; } = Color4.White;
-    public float Shininess { get; set; } = 24f;
-    public float Specular { get; set; } = 0.25f;
-    public float UvRepeat { get; set; } = 1;
-    
+    private Color4 _color = Color4.White;
+    private float _shininess = 24f;
+    private float _specular = 0.25f;
+    private float _uvRepeat = 1f;
 
-    //internal MaterialState(MaterialState param) => Set(param.Snapshot());
+    private bool _dirty;
+
+
     internal MaterialState(MaterialState param)
     {
         Color = param.Color;
@@ -24,12 +25,56 @@ public sealed class MaterialState
         UvRepeat = param.UvRepeat;
         Shininess = param.Shininess;
     }
+
     internal MaterialState(MaterialDescriptor.MaterialParamsDesc desc)
     {
         Color = desc.Color ?? Color;
         Shininess = desc.Shininess ?? Shininess;
         Specular = desc.Specular ?? Specular;
         UvRepeat = desc.UvRepeat ?? UvRepeat;
+    }
+    
+    
+    public bool Dirty => _dirty;
+    internal void ClearDirty() => _dirty = false;
+    public Color4 Color
+    {
+        get => _color;
+        set
+        {
+            _color = value;
+            _dirty = true;
+        }
+    }
+
+    public float Shininess
+    {
+        get => _shininess;
+        set
+        {
+            _shininess = value;
+            _dirty = true;
+        }
+    }
+
+    public float Specular
+    {
+        get => _specular;
+        set
+        {
+            _specular = value;
+            _dirty = true;
+        }
+    }
+
+    public float UvRepeat
+    {
+        get => _uvRepeat;
+        set
+        {
+            _uvRepeat = value;
+            _dirty = true;
+        }
     }
 
     internal void Set(in MaterialParams param)
@@ -39,5 +84,4 @@ public sealed class MaterialState
         Shininess = param.Shininess;
         UvRepeat = param.UvRepeat;
     }
-
 }

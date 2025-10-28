@@ -81,6 +81,8 @@ public sealed class MaterialStore : IMaterialStore
         var material = new Material(id, template, name);
         _materials[id - 1] = material;
         _materialDict.Add(name, id);
+
+        FillTextureInfo(material);
         return material;
     }
 
@@ -106,17 +108,18 @@ public sealed class MaterialStore : IMaterialStore
         data = new DrawMaterialPayload(in meta, in snapshot);
     }
 
-    public int FillTextureInfo(Material material, Span<TextureSlotInfo> span)
+    private void FillTextureInfo(Material material)
     {
-        var textureSlots = material.TextureSlots.Slots;
+        var textureSlots = material.TextureSlots.AssetSlots;
+        var result = new TextureSlotInfo[textureSlots.Length];
         for (var i = 0; i < textureSlots.Length; i++)
         {
             var slot = textureSlots[i];
             var textureId = ResolveTextureId(slot);
-            span[i] = new TextureSlotInfo(textureId, slot.SlotKind, slot.TextureKind);
+            result[i] = new TextureSlotInfo(textureId, slot.SlotKind, slot.TextureKind);
         }
 
-        return textureSlots.Length;
+        material.TextureSlots.CacheSlots = result;
     }
 
     public ShaderId ResolveShader(Material material) => _assetStore.GetByRef(material.ShaderRef).ResourceId;

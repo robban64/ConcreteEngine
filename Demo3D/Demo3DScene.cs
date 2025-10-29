@@ -8,9 +8,9 @@ using ConcreteEngine.Core.Assets.Materials;
 using ConcreteEngine.Core.Assets.Meshes;
 using ConcreteEngine.Core.Assets.Textures;
 using ConcreteEngine.Core.Configuration;
-using ConcreteEngine.Core.RenderingSystem;
 using ConcreteEngine.Core.Scene;
-using ConcreteEngine.Core.Scene.Entities;
+using ConcreteEngine.Core.World.Entities;
+using ConcreteEngine.Core.World.Render;
 using ConcreteEngine.Graphics.Gfx.Contracts;
 using ConcreteEngine.Graphics.Gfx.Definitions;
 using ConcreteEngine.Renderer.Descriptors;
@@ -31,7 +31,7 @@ public sealed class Demo3DScene : GameScene
         var (store, materialStore) = (assets.Store, assets.MaterialStore);
 
         // Scene globals
-        var rb = renderer.SceneProperties;
+        var rb = renderer.WorldRenderParams;
         rb.SetShadowDefault(2048);
 
         // Skybox

@@ -3,7 +3,7 @@
 using ConcreteEngine.Common.Collections;
 using ConcreteEngine.Core.Assets;
 using ConcreteEngine.Core.Platform;
-using ConcreteEngine.Core.RenderingSystem;
+using ConcreteEngine.Core.World.Render;
 
 #endregion
 
@@ -23,11 +23,11 @@ public class EngineCoreSystem : IEngineSystemManager
 {
     private readonly DictionaryTypeRegistry<IGameEngineSystem, IGameEngineSystem> _systems = new(4);
 
-    private readonly EngineRenderSystem _renderer;
+    private readonly WorldRenderer _renderer;
     private readonly InputSystem _inputSystem;
     private readonly AssetSystem _assets;
 
-    internal EngineCoreSystem(EngineRenderSystem renderer, InputSystem inputSystem, AssetSystem assets)
+    internal EngineCoreSystem(WorldRenderer renderer, InputSystem inputSystem, AssetSystem assets)
     {
         _renderer = renderer;
         _inputSystem = inputSystem;

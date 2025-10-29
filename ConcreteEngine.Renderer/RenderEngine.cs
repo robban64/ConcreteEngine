@@ -43,7 +43,7 @@ public sealed class RenderEngine
 
     public int PassCount => _passPipeline.PassCount;
 
-    public RenderEngine(GraphicsRuntime graphics, RenderSceneSnapshot sceneSnapshot, MeshId fsqMesh)
+    public RenderEngine(GraphicsRuntime graphics, RenderParamsSnapshot paramsSnapshot, MeshId fsqMesh)
     {
         _graphics = graphics;
 
@@ -53,7 +53,7 @@ public sealed class RenderEngine
         _drawPipeline = new DrawCommandPipeline();
         _passPipeline = new RenderPassPipeline();
 
-        _stateContext = new RenderStateContext { View = _renderView, Snapshot = sceneSnapshot, FsqMesh = fsqMesh };
+        _stateContext = new RenderStateContext { View = _renderView, Snapshot = paramsSnapshot, FsqMesh = fsqMesh };
 
         EngineContext = new RenderEngineContext
         {

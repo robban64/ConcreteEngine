@@ -47,7 +47,7 @@ internal sealed class EngineGateway
 
     public bool BlockInput() => Enabled && _diagnostics.BlockInput();
 
-    public void AttachDebugTools(World world, AssetSystem assetSystem, RenderEngineFrameInfo frameInfo)
+    public void AttachDebugTools(World.World world, AssetSystem assetSystem, RenderEngineFrameInfo frameInfo)
     {
         ArgumentNullException.ThrowIfNull(world, nameof(world));
         ArgumentNullException.ThrowIfNull(assetSystem, nameof(assetSystem));

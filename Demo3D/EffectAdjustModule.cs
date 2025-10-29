@@ -2,8 +2,9 @@
 
 using ConcreteEngine.Core.Data;
 using ConcreteEngine.Core.Platform;
-using ConcreteEngine.Core.RenderingSystem;
 using ConcreteEngine.Core.Scene.Modules;
+using ConcreteEngine.Core.World;
+using ConcreteEngine.Core.World.Render;
 
 #endregion
 
@@ -12,7 +13,7 @@ namespace Demo3D;
 internal sealed class EffectAdjustModule : GameModule
 {
     private IEngineInputSource _input;
-    private RenderSceneProps _renderProps;
+    private WorldRenderParams _worldRenderParams;
     private float _value = 0.0f;
     private float _fvalue = 0.0f;
 
@@ -20,7 +21,7 @@ internal sealed class EffectAdjustModule : GameModule
     {
         _input = Context.GetSystem<IInputSystem>().InputSource;
         var renderer = Context.GetSystem<IRenderingSystem>();
-        _renderProps = renderer.SceneProperties;
+        _worldRenderParams = renderer.WorldRenderParams;
     }
 
     public override void Update(in UpdateTickInfo frameCtx)

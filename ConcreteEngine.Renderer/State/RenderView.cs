@@ -58,9 +58,9 @@ public sealed class RenderView
 
     internal void ClearOverride() => _useOverride = false;
 
-    internal void ApplyLightViewOverride(Vector3 direction, RenderSceneSnapshot sceneSnapshot)
+    internal void ApplyLightViewOverride(Vector3 direction, RenderParamsSnapshot paramsSnapshot)
     {
-        ref readonly var shadow = ref sceneSnapshot.Shadows;
+        ref readonly var shadow = ref paramsSnapshot.Shadows;
 
         RenderTransform.CreateDirLightView(direction, in _snapshot, out var viewMat, out var projMat,
             shadowMapSize: shadow.ShadowMapSize, shadowDistance: shadow.Distance);

@@ -12,14 +12,14 @@ namespace ConcreteEngine.Core.Diagnostic;
 
 internal static class MetricRouter
 {
-    private static World? _world;
+    private static World.World? _world;
     private static AssetSystem? _assetSystem;
     private static RenderEngineFrameInfo? _frameInfo;
 
     private static MaterialStore? Materials => _assetSystem?.MaterialStoreImpl;
 
 
-    internal static void Attach(World world, AssetSystem assetSystem, RenderEngineFrameInfo frameInfo)
+    internal static void Attach(World.World world, AssetSystem assetSystem, RenderEngineFrameInfo frameInfo)
     {
         _world = world;
         _assetSystem = assetSystem;

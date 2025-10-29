@@ -6,6 +6,7 @@
 
 using ConcreteEngine.Core.Scene;
 using ConcreteEngine.Core.Scene.Modules;
+using ConcreteEngine.Core.World;
 
 #endregion
 

@@ -2,9 +2,9 @@ using System.Numerics;
 using ConcreteEngine.Common.Numerics.Maths;
 using ConcreteEngine.Core.Assets.Materials;
 using ConcreteEngine.Core.Assets.Meshes;
-using ConcreteEngine.Core.RenderingSystem;
 using ConcreteEngine.Core.Scene;
-using ConcreteEngine.Core.Scene.Entities;
+using ConcreteEngine.Core.World;
+using ConcreteEngine.Core.World.Entities;
 using ConcreteEngine.Renderer.Data;
 using Silk.NET.Maths;
 

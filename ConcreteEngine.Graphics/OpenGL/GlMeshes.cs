@@ -14,34 +14,36 @@ namespace ConcreteEngine.Graphics.OpenGL;
 internal sealed class GlMeshes : IGraphicsDriverModule
 {
     private readonly GL _gl;
-    private readonly BackendStoreBundle _store;
     private readonly GlCapabilities _capabilities;
     private readonly BackendResourceStore<MeshId, GlMeshHandle> _meshStore;
+    private readonly BackendResourceStore<VertexBufferId, GlVboHandle> _vboStore;
+    private readonly BackendResourceStore<IndexBufferId, GlIboHandle> _iboStore;
 
     internal GlMeshes(GlCtx ctx)
     {
         _gl = ctx.Gl;
         _capabilities = ctx.Capabilities;
-        _store = ctx.Store;
-        _meshStore = _store.VertexArray;
+        _meshStore = ctx.Store.VertexArray;
+        _vboStore = ctx.Store.VertexBuffer;
+        _iboStore = ctx.Store.IndexBuffer;
     }
 
     public GfxRefToken<MeshId> CreateVertexArray()
     {
         _gl.CreateVertexArrays(1, out uint vao);
-        return _store.VertexArray.Add(new GlMeshHandle(vao));
+        return _meshStore.Add(new GlMeshHandle(vao));
     }
 
     public void AttachIndexBuffer(GfxRefToken<MeshId> vao, GfxRefToken<IndexBufferId> ibo)
     {
-        var iboHandle = _store.IndexBuffer.GetHandle(ibo).Value;
+        var iboHandle = _iboStore.GetHandle(ibo).Value;
         _gl.VertexArrayElementBuffer(_meshStore.GetHandle(vao), iboHandle);
     }
 
     public void AttachVertexBuffer(GfxRefToken<MeshId> vao, int binding, GfxRefToken<VertexBufferId> vbo,
         in VertexBufferMeta m)
     {
-        var vboHandle = _store.VertexBuffer.GetHandle(vbo);
+        var vboHandle = _vboStore.GetHandle(vbo);
         var handle = _meshStore.GetHandle(vao);
         _gl.VertexArrayVertexBuffer(handle, (uint)binding, vboHandle, 0, (uint)m.Stride);
         if (m.Divisor != 0)

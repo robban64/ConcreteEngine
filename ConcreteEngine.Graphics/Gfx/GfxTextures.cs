@@ -232,7 +232,7 @@ public sealed class GfxTextures
             _driver.GenerateMipMaps(texRef);
     }
 
-    private void ValidateRecreateTexture(GfxReplaceTexture newValue, in TextureMeta meta)
+    private static void ValidateRecreateTexture(GfxReplaceTexture newValue, in TextureMeta meta)
     {
         if (meta.Kind == TextureKind.Unknown || meta.PixelFormat == TexturePixelFormat.Unknown)
             throw new InvalidOperationException("Invalid meta texture meta.");
@@ -256,7 +256,7 @@ public sealed class GfxTextures
             throw new ArgumentException("Samples can only be set for Multisample2D.");
     }
 
-    private void ValidateTextureDescriptor(in GfxTextureDescriptor desc, in GfxTextureProperties props)
+    private static void ValidateTextureDescriptor(in GfxTextureDescriptor desc, in GfxTextureProperties props)
     {
         if (desc.Width <= 0 || desc.Height <= 0)
             throw new ArgumentOutOfRangeException(nameof(desc), "Size must be > 0");
@@ -303,14 +303,14 @@ public sealed class GfxTextures
         }
     }
 
-    private void ValidateUploadSize(Size2D size, Size2D metaSize)
+    private static void ValidateUploadSize(Size2D size, Size2D metaSize)
     {
         if (size.IsZero() || metaSize.IsNegative()) throw new ArgumentOutOfRangeException(nameof(size));
         if (size != metaSize)
             throw new InvalidOperationException($"Size {size} must match TextureMeta size {metaSize}");
     }
 
-    private void ValidateUploadSize3D(Size3D size, Size3D metaSize)
+    private static void ValidateUploadSize3D(Size3D size, Size3D metaSize)
     {
         if (size.IsZero() || metaSize.IsNegative()) throw new ArgumentOutOfRangeException(nameof(size));
         if (size != metaSize)

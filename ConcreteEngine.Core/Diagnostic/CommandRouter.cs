@@ -9,7 +9,6 @@ using ConcreteEngine.Core.Assets.Materials;
 using ConcreteEngine.Core.Data;
 using ConcreteEngine.Core.Diagnostic.utils;
 using ConcreteEngine.Core.Scene;
-using ConcreteEngine.Core.Scene.Entities;
 using ConcreteEngine.Graphics.Diagnostic;
 using ConcreteEngine.Graphics.Gfx.Contracts;
 using ConcreteEngine.Graphics.Gfx.Resources;

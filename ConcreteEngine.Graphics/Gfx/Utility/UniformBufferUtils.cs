@@ -88,7 +88,7 @@ public static class UniformBufferUtils
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static void IsStd140AlignedOrThrow<T>(out nint stride) where T : unmanaged, IStd140Uniform
     {
-        stride = (nint)Unsafe.SizeOf<T>();
+        stride = Unsafe.SizeOf<T>();
         if (stride % 16 != 0) ThrowStd140NotAligned<T>();
     }
 }

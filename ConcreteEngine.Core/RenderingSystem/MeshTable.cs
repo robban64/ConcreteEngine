@@ -16,13 +16,12 @@ public interface IModelRegistry
     ModelId CreateModel(MeshId mesh, int materialSlot, int drawCount);
 }
 
-internal sealed class ModelRegistry : IModelRegistry
+internal sealed class MeshTable : IModelRegistry
 {
     private const int DefaultCapacity = 128;
     
     private MeshPart[] _parts = new MeshPart[DefaultCapacity];
     private Matrix4x4[] _localTransforms = new Matrix4x4[DefaultCapacity];
-    
     private RangeU16[] _partRanges = new RangeU16[DefaultCapacity];
     
     private int _partIdx = 0;

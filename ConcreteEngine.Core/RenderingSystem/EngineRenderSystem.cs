@@ -45,7 +45,7 @@ public sealed class EngineRenderSystem : IRenderingSystem
     private readonly RenderEngine _renderer;
     private readonly AssetSystem _assets;
 
-    private readonly ModelRegistry _modelRegistry;
+    private readonly MeshTable _meshTable;
     private readonly RenderEntityBus _renderEntityBus;
 
     internal RenderEngine RenderEngine => _renderer;
@@ -72,17 +72,17 @@ public sealed class EngineRenderSystem : IRenderingSystem
 
         _renderer = new RenderEngine(graphics, SceneProperties.Snapshot, PrimitiveMeshes.FsqQuad);
 
-        _modelRegistry = new ModelRegistry();
-        _renderEntityBus = new RenderEntityBus(_modelRegistry);
+        _meshTable = new MeshTable();
+        _renderEntityBus = new RenderEntityBus(_meshTable);
     }
 
 
     internal void AttachWorld(World world)
     {
         ArgumentNullException.ThrowIfNull(world);
-        _modelRegistry.Setup(_assets);
+        _meshTable.Setup(_assets);
         _renderEntityBus.AttachWorld(world);
-        world.AttachModelRegistry(_modelRegistry);
+        world.AttachModelRegistry(_meshTable);
     }
 
     internal void RenderEmptyFrame(in RenderFrameInfo frameInfo) => _renderer.RenderEmptyFrame(in frameInfo);
@@ -102,6 +102,8 @@ public sealed class EngineRenderSystem : IRenderingSystem
         }
     }
 
+    private FrameTimer _frameTimer = new FrameTimer();
+
     internal void PreRender(
         BeginFrameStatus status,
         in RenderFrameInfo frameInfo,
@@ -115,7 +117,9 @@ public sealed class EngineRenderSystem : IRenderingSystem
         SubmitMaterialData();
         // fill buffers
         _renderEntityBus.CollectEntities();
+        _frameTimer.Begin();
         _renderEntityBus.FlushEntities(_renderer.CommandBuffer);
+        if(_frameTimer.End(out _)) Console.WriteLine(_frameTimer.ResultString);
         _renderer.CollectDrawBuffers();
         _renderer.StartFrame(status);
     }

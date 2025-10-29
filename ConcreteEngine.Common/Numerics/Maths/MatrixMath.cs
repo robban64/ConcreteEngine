@@ -131,6 +131,40 @@ public static class MatrixMath
         float s = 1f / det;
         n = new Matrix3(C11 * s, C12 * s, C13 * s, C21 * s, C22 * s, C23 * s, C31 * s, C32 * s, C33 * s);
     }
+    
+    [MethodImpl(MethodImplOptions.AggressiveInlining | MethodImplOptions.AggressiveOptimization)]
+    public static void CreateNormalMatrix(in Matrix4x4 m, out Vector4 v0, out Vector4 v1, out Vector4 v2)
+    {
+        float a = m.M11, b = m.M12, c = m.M13;
+        float d = m.M21, e = m.M22, f = m.M23;
+        float g = m.M31, h = m.M32, k = m.M33;
+
+        float C11 = e * k - f * h;
+        float C12 = -(d * k - f * g);
+        float C13 = d * h - e * g;
+
+        float C21 = -(b * k - c * h);
+        float C22 = a * k - c * g;
+        float C23 = -(a * h - b * g);
+
+        float C31 = b * f - c * e;
+        float C32 = -(a * f - c * d);
+        float C33 = a * e - b * d;
+
+        float det = a * C11 + b * C12 + c * C13;
+        if (MathF.Abs(det) < 1e-8f)
+        {
+            v0 = new Vector4(1, 0, 0, 0);
+            v1 = new Vector4(0, 1, 0, 0);
+            v2 = new Vector4(0, 0, 1, 0);
+            return;
+        }
+
+        float s = 1f / det;
+        v0 = new Vector4(C11 * s, C21 * s, C31 * s, 0f);
+        v1 = new Vector4(C12 * s, C22 * s, C32 * s, 0f);
+        v2 = new Vector4(C13 * s, C23 * s, C33 * s, 0f);
+    }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining | MethodImplOptions.AggressiveOptimization)]
     public static bool InvertAffine(in Matrix4x4 m, out Matrix4x4 inv)

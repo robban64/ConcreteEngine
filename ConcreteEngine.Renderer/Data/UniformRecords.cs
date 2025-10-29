@@ -147,8 +147,15 @@ public readonly struct DrawObjectUniform : IStd140Uniform
     public readonly Vector4 NormalCol0;
     public readonly Vector4 NormalCol1;
     public readonly Vector4 NormalCol2;
+    
+    public DrawObjectUniform(in Matrix4x4 model, in Vector4 v0, in Vector4 v1, in Vector4 v2)
+    {
+        Model = model;
+        NormalCol0 = v0;
+        NormalCol1 = v1;
+        NormalCol2 = v2;
+    }
 
-    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public DrawObjectUniform(in Matrix4x4 model, in Matrix3 normal)
     {
         Model = model;

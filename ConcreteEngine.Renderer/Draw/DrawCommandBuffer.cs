@@ -48,15 +48,16 @@ public sealed class DrawCommandBuffer
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public void SubmitDraw(DrawCommand cmd, DrawCommandMeta meta, in Matrix4x4 model, in Matrix3 normal)
+    public void SubmitDraw(DrawCommand cmd, DrawCommandMeta meta, in Matrix4x4 model, in Vector4 v0, in Vector4 v1,
+        in Vector4 v2)
     {
         EnsureCapacity(1);
         _commandBuffer[_submitIdx] = cmd;
         _metaBuffer[_submitIdx] = meta;
         _indexBuffer[_submitIdx] = new DrawCommandRef(meta, _submitIdx);
 
-        //_transformBuffer[_submitIdx] = new DrawObjectUniform(model: in model, normal: in normal);
-        DrawObjectUniform.Fill(in model, in normal, out _transformBuffer[_submitIdx]);
+        _transformBuffer[_submitIdx] = new DrawObjectUniform(in model, in v0, v1, v2);
+        //DrawObjectUniform.Fill(in model, in normal, out _transformBuffer[_submitIdx]);
         _submitIdx++;
     }
 

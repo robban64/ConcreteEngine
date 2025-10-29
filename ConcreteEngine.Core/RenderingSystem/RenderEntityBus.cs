@@ -5,6 +5,7 @@ using System.Diagnostics.CodeAnalysis;
 using System.Numerics;
 using System.Runtime.CompilerServices;
 using ConcreteEngine.Common.Collections;
+using ConcreteEngine.Common.Diagnostics.Utility;
 using ConcreteEngine.Common.Numerics;
 using ConcreteEngine.Common.Numerics.Maths;
 using ConcreteEngine.Core.Scene;
@@ -24,14 +25,14 @@ internal sealed class RenderEntityBus
 
     private World? _world;
 
-    private readonly ModelRegistry _modelRegistry;
+    private readonly MeshTable _meshTable;
 
     private int _idx = 0;
     private DrawEntity[] _entities = new DrawEntity[DefaultCapacity];
 
-    internal RenderEntityBus(ModelRegistry modelRegistry)
+    internal RenderEntityBus(MeshTable meshTable)
     {
-        _modelRegistry = modelRegistry;
+        _meshTable = meshTable;
     }
 
 
@@ -62,6 +63,7 @@ internal sealed class RenderEntityBus
         }
     }
 
+    private FrameTimer _timer = new FrameTimer();
     public void FlushEntities(DrawCommandBuffer buffer)
     {
         if (_world is null) return;
@@ -71,7 +73,7 @@ internal sealed class RenderEntityBus
         var entitySpan = _entities.AsSpan(0, _idx);
         foreach (ref var entity in entitySpan)
         {
-            var view = _modelRegistry.GetPartsView(entity.Model);
+            var view = _meshTable.GetPartsView(entity.Model);
             MatrixMath.CreateModelMatrix(
                 entity.Transform.Position,
                 entity.Transform.Scale,
@@ -79,19 +81,19 @@ internal sealed class RenderEntityBus
                 out var world
             );
             Matrix4x4 model;
-            Matrix3 normal;
+            Vector4 v0,v1,v2;
 
             var materials = _world.EntityMaterials.GetMaterialIds(entity.Entity);
             var meta = new DrawCommandMeta(entity.CommandId, entity.Queue, entity.PassMask, entity.DepthKey);
             for (var i = 0; i < view.Locals.Length; i++)
             {
                 MatrixMath.MultiplyAffine(in view.Locals[i], in world, out model);
-                MatrixMath.CreateNormalMatrix(in model, out normal);
+                MatrixMath.CreateNormalMatrix(in model, out  v0, out  v1, out  v2);
 
                 var parts = view.Parts[i];
                 var cmd = new DrawCommand(parts.Mesh, materials[parts.MaterialSlot], parts.DrawCount);
-                meta = new DrawCommandMeta(entity.CommandId, entity.Queue, entity.PassMask, entity.DepthKey);
-                buffer.SubmitDraw(cmd, meta, in model, in normal);
+                //meta = new DrawCommandMeta(entity.CommandId, entity.Queue, entity.PassMask, entity.DepthKey);
+                buffer.SubmitDraw(cmd, meta, in model, in v0, in v1, in v2);
             }
         }
     }
@@ -103,25 +105,26 @@ internal sealed class RenderEntityBus
         if (ActiveSkyCount > 0)
         {
             var sky = _world.Sky;
-            CreateTransformMatrices(sky.Transform, out var model, out var norm);
+            CreateTransformMatrices(sky.Transform, out var model, out var v0, out var v1, out var v2);
             var meta = new DrawCommandMeta(DrawCommandId.Skybox, DrawCommandQueue.Skybox, PassMask.Main, 0);
             var cmd = new DrawCommand(sky.Mesh, sky.Material);
-            buffer.SubmitDraw(cmd, meta, in model, in norm);
+            buffer.SubmitDraw(cmd, meta, in model, in v0, in v1, in v2);
         }
 
         if (ActiveTerrainCount > 0)
         {
             var terrain = _world.Terrain;
-            var view = _modelRegistry.GetPartsView(terrain.Model);
+            var view = _meshTable.GetPartsView(terrain.Model);
             
-            CreateTransformMatrices(terrain.Transform, out var model, out var norm);
+            CreateTransformMatrices(terrain.Transform, out var model, out var v0, out var v1, out var v2);
             var meta = new DrawCommandMeta(DrawCommandId.Terrain, DrawCommandQueue.Terrain);
             var cmd = new DrawCommand(view.Parts[0].Mesh, terrain.Material);
-            buffer.SubmitDraw(cmd, meta, in model, in norm);
+            buffer.SubmitDraw(cmd, meta, in model, in v0, in v1, in v2);
         }
     }
 
-    private void CreateTransformMatrices(Transform transform, out Matrix4x4 model, out Matrix3 normal)
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    private static void CreateTransformMatrices(in Transform transform, out Matrix4x4 model, out Vector4 v0, out Vector4 v1,  out Vector4 v2)
     {
         MatrixMath.CreateModelMatrix(
             transform.Position,
@@ -129,7 +132,8 @@ internal sealed class RenderEntityBus
             transform.Rotation,
             out model
         );
-        MatrixMath.CreateNormalMatrix(in model, out normal);
+        
+        MatrixMath.CreateNormalMatrix(in model, out v0, out v1, out v2);
     }
 
 

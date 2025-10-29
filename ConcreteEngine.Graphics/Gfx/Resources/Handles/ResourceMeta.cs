@@ -58,35 +58,14 @@ public readonly struct ShaderMeta(int samplerSlots) : IResourceMeta
 }
 
 [StructLayout(LayoutKind.Sequential)]
-public readonly struct MeshMeta(
-    DrawPrimitive primitive,
-    DrawMeshKind kind,
-    DrawElementSize elementSize,
-    int drawCount,
-    IndexBufferId iboId,
-    byte vboCount,
-    VboAttachment vboAttachment
-) : IResourceMeta
+public readonly record struct MeshMeta : IResourceMeta
 {
-    public int DrawCount { get; init; } = drawCount;
-    public IndexBufferId IndexBufferId { get; init; } = iboId;
-    public VboAttachment VboAttachment { get; init; } = vboAttachment;
-    public byte VboCount { get; init; } = vboCount;
-    public DrawPrimitive Primitive { get; init; }= primitive;
-    public DrawMeshKind Kind { get; init; } = kind;
-    public DrawElementSize ElementSize { get; init; } = elementSize;
-
-    public void Deconstruct(out int drawCount, out IndexBufferId indexBufferId, out VboAttachment vboAttachment,
-        out byte vboCount, out DrawPrimitive primitive, out DrawMeshKind kind, out DrawElementSize elementSize)
-    {
-        drawCount = DrawCount;
-        indexBufferId = IndexBufferId;
-        vboAttachment = VboAttachment;
-        vboCount = VboCount;
-        primitive = Primitive;
-        kind = Kind;
-        elementSize = ElementSize;
-    }
+    public int DrawCount { get; init; } 
+    public int AttributeCount { get; init; }
+    public byte VboCount { get; init; } 
+    public DrawPrimitive Primitive { get; init; } 
+    public DrawMeshKind Kind { get; init; } 
+    public DrawElementSize ElementSize { get; init; } 
 }
 
 [StructLayout(LayoutKind.Sequential)]
@@ -124,7 +103,7 @@ public readonly struct IndexBufferMeta(
     BufferAccess access
 ) : IResourceMeta
 {
-    public readonly nint Stride = stride;
+    public readonly int Stride = stride;
     public readonly int ElementCount = elementCount;
     public readonly BufferUsage Usage = usage;
     public readonly BufferStorage Storage = storage;

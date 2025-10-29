@@ -13,6 +13,13 @@ public readonly record struct VboAttachment(
     VertexBufferId V2,
     VertexBufferId V3);
 
+
+public sealed record MeshLayout(
+    MeshId MeshId,
+    IndexBufferId IboId,
+    VertexBufferId[] VboIds,
+    VertexAttribute[] Attributes);
+
 public readonly struct VertexLayout(
     byte slot,
     int components,

@@ -13,6 +13,7 @@ namespace ConcreteEngine.Graphics.Gfx;
 public interface IGfxMeshBuilder
 {
     MeshId Finish();
+    MeshId Finish(out MeshMeta meta);
 
     void UploadVertices<T>(ReadOnlySpan<T> data, BufferUsage usage,
         BufferStorage storage, BufferAccess access) where T : unmanaged;
@@ -20,10 +21,9 @@ public interface IGfxMeshBuilder
     void UploadIndices<T>(ReadOnlySpan<T> data, BufferUsage usage,
         BufferStorage storage, BufferAccess access) where T : unmanaged;
 
-    void AddAttribute(in VertexAttributeDesc attribute);
-    void SetAttributeRange(IReadOnlyList<VertexAttributeDesc> attributes);
-    void SetAttributeRange(ReadOnlySpan<VertexAttributeDesc> attributes);
-
+    void AddAttribute(in VertexAttribute attribute);
+    void SetAttributeRange(IReadOnlyList<VertexAttribute> attributes);
+    void SetAttributeRange(ReadOnlySpan<VertexAttribute> attributes);
 }
 
 internal sealed class GfxMeshBuilder : IGfxMeshBuilder
@@ -32,9 +32,9 @@ internal sealed class GfxMeshBuilder : IGfxMeshBuilder
 
     private GfxMeshes _gfxMeshes = null!;
     private GfxBuffers _gfxBuffers = null!;
-    private Phase _phase = Phase.Idle;
+    private Phase _phase;
 
-    internal GfxMeshBuilder Init(GfxMeshes gfxMeshes, GfxBuffers gfxBuffers, in MeshDrawProperties props)
+    internal GfxMeshBuilder(GfxMeshes gfxMeshes, GfxBuffers gfxBuffers, in MeshDrawProperties props)
     {
         _gfxMeshes = gfxMeshes;
         _gfxBuffers = gfxBuffers;
@@ -44,7 +44,6 @@ internal sealed class GfxMeshBuilder : IGfxMeshBuilder
         _state.DrawProperties = props;
 
         _phase = Phase.Started;
-        return this;
     }
 
     public MeshId Finish()
@@ -53,21 +52,43 @@ internal sealed class GfxMeshBuilder : IGfxMeshBuilder
         EnsureStarted();
 
         _gfxMeshes.SetVertexAttributes(_state.MeshId, _state.Attributes);
-        var id = _gfxMeshes.FinishUploadCommit(_state);
+        var id = _gfxMeshes.FinishUploadCommit(_state, out _);
 
         _state.ResetState();
         _phase = Phase.Idle;
+
+        _gfxMeshes.CloseBuilder();
         _gfxMeshes = null!;
         _gfxBuffers = null!;
+        
         return id;
     }
+
+    public MeshId Finish(out MeshMeta meta)
+    {
+        InvalidOpThrower.ThrowIfNot(_state.MeshId.IsValid());
+        EnsureStarted();
+
+        _gfxMeshes.SetVertexAttributes(_state.MeshId, _state.Attributes);
+        var id = _gfxMeshes.FinishUploadCommit(_state, out meta);
+
+        _state.ResetState();
+        _phase = Phase.Idle;
+
+        _gfxMeshes.CloseBuilder();
+        _gfxMeshes = null!;
+        _gfxBuffers = null!;
+        
+        return id;
+    }
+
 
     public void UploadVertices<T>(ReadOnlySpan<T> data, BufferUsage usage,
         BufferStorage storage, BufferAccess access) where T : unmanaged
     {
         EnsureStarted();
         var binding = _state.VboIds.Count;
-        var vboId = _gfxBuffers.CreateVertexBuffer(data, binding, storage, access);
+        var vboId = _gfxBuffers.CreateVertexBuffer(data,0, 0, storage, access);
 
         _state.VboIds.Add(vboId);
         _gfxMeshes.AttachVertexBuffer(_state.MeshId, vboId, binding);
@@ -100,7 +121,7 @@ internal sealed class GfxMeshBuilder : IGfxMeshBuilder
         _gfxMeshes.AttachIndexBuffer(_state.MeshId, _state.IboId);
     }
 
-    public void SetAttributeRange(IReadOnlyList<VertexAttributeDesc> attributes)
+    public void SetAttributeRange(IReadOnlyList<VertexAttribute> attributes)
     {
         EnsureStarted();
         InvalidOpThrower.ThrowIfNullOrEmptyCollection(attributes, nameof(attributes));
@@ -111,7 +132,7 @@ internal sealed class GfxMeshBuilder : IGfxMeshBuilder
         if (_phase < Phase.AttributesSet) _phase = Phase.AttributesSet;
     }
 
-    public void SetAttributeRange(ReadOnlySpan<VertexAttributeDesc> attributes)
+    public void SetAttributeRange(ReadOnlySpan<VertexAttribute> attributes)
     {
         EnsureStarted();
         ArgumentOutOfRangeException.ThrowIfEqual(attributes.Length, 0, nameof(attributes));
@@ -122,7 +143,7 @@ internal sealed class GfxMeshBuilder : IGfxMeshBuilder
         if (_phase < Phase.AttributesSet) _phase = Phase.AttributesSet;
     }
 
-    public void SetAttributeSpan(ReadOnlySpan<VertexAttributeDesc> attributes)
+    public void SetAttributeSpan(ReadOnlySpan<VertexAttribute> attributes)
     {
         EnsureStarted();
         InvalidOpThrower.ThrowIf(attributes.Length == 0, nameof(attributes));
@@ -133,7 +154,7 @@ internal sealed class GfxMeshBuilder : IGfxMeshBuilder
         if (_phase < Phase.AttributesSet) _phase = Phase.AttributesSet;
     }
 
-    public void AddAttribute(in VertexAttributeDesc attribute)
+    public void AddAttribute(in VertexAttribute attribute)
     {
         EnsureStarted();
 
@@ -148,17 +169,17 @@ internal sealed class GfxMeshBuilder : IGfxMeshBuilder
     private enum Phase : byte
     {
         Idle = 0,
-        Started,
-        BuffersUploading,
-        AttributesSet
+        Started = 1,
+        BuffersUploading = 2,
+        AttributesSet = 3
     }
 
     internal sealed class State
     {
         public MeshId MeshId { get; set; }
         public IndexBufferId IboId { get; set; }
-        public List<VertexBufferId> VboIds { get; set; } = new();
-        public List<VertexAttributeDesc> Attributes { get; set; } = new();
+        public List<VertexBufferId> VboIds { get; set; } = new(2);
+        public List<VertexAttribute> Attributes { get; set; } = new(4);
         public MeshDrawProperties DrawProperties { get; set; } = MeshDrawProperties.MakeDefault();
 
         public void ValidateState()

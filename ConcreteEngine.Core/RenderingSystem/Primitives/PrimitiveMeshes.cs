@@ -40,8 +40,8 @@ public static class PrimitiveMeshes
         var builder = meshes.StartUploadBuilder(in props);
         builder.UploadVertices(vertices, BufferUsage.StaticDraw, BufferStorage.Static, BufferAccess.None);
         var attribBuilder = new VertexAttributeMaker<Vertex2D>();
-        builder.AddAttribute(attribBuilder.Make<Vector2>());
-        builder.AddAttribute(attribBuilder.Make<Vector2>());
+        builder.AddAttribute(attribBuilder.Make<Vector2>(0));
+        builder.AddAttribute(attribBuilder.Make<Vector2>(1));
         FsqQuad = builder.Finish();
     }
 
@@ -70,7 +70,7 @@ public static class PrimitiveMeshes
 
         var builder = meshes.StartUploadBuilder(in props);
         builder.UploadVertices(vertices, BufferUsage.StaticDraw, BufferStorage.Static, BufferAccess.None);
-        builder.AddAttribute(new VertexAttributeMaker<Vector3>().Make<Vector3>());
+        builder.AddAttribute(new VertexAttributeMaker<Vector3>().Make<Vector3>(0));
         SkyboxCube = builder.Finish();
     }
 }

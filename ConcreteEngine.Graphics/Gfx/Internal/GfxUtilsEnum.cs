@@ -16,7 +16,7 @@ internal static class GfxUtilsEnum
         fmt switch
         {
             VertexFormat.UByte => 1,
-            VertexFormat.Short => 2,
+            VertexFormat.UShort => 2,
             VertexFormat.Float => 4,
             _ => throw new ArgumentOutOfRangeException(nameof(fmt))
         };

@@ -81,12 +81,10 @@ internal sealed class MeshImporter
     {
         
         var current = node->MTransformation * parent;
-        for (uint i = 0; i < node->MNumMeshes; i++)
+        for (var i = 0; i < node->MNumMeshes; i++)
         {
             var meshIndex = node->MMeshes[i];
             var mesh = scene->MMeshes[meshIndex];
-            Console.WriteLine($"Loading({i}): {scene->MMeshes[i]->MName} - {scene->MMeshes[i]->MMaterialIndex}");
-
             var meshData = LoadMeshData(mesh);
 
             _resultInfo.Add(new MeshPartImportResult(
@@ -108,8 +106,8 @@ internal sealed class MeshImporter
     private unsafe MeshCreationInfo LoadMeshData(AssimpMesh* mesh)
     {
 
-        int vertexCount = (int)mesh->MNumVertices;
-        int indexCount = (int)(mesh->MNumFaces * 3);
+        var vertexCount = (int)mesh->MNumVertices;
+        var indexCount = (int)(mesh->MNumFaces * 3);
         EnsureCapacity(vertexCount, indexCount);
 
         var vertices = _verts.AsSpan(0, vertexCount);

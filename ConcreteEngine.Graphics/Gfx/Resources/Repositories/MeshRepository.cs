@@ -14,7 +14,7 @@ public interface IMeshLayout
     IndexBufferId IndexBufferId { get; }
     MeshDrawProperties Properties { get; }
     ReadOnlySpan<VertexBufferId> GetVertexBufferIds();
-    ReadOnlySpan<VertexAttributeDesc> GetAttributes();
+    ReadOnlySpan<VertexAttribute> GetAttributes();
 }
 
 public interface IMeshRepository
@@ -34,7 +34,7 @@ internal sealed class MeshRepository : IMeshRepository
 
 
     internal void AddRecord(MeshId meshId, in MeshMeta meta, IndexBufferId iboId, IReadOnlyList<VertexBufferId> vboIds,
-        IReadOnlyList<VertexAttributeDesc> attr)
+        IReadOnlyList<VertexAttribute> attr)
     {
         _registry.Add(meshId, new MeshLayout(meshId, in meta, iboId, vboIds, attr));
     }
@@ -74,7 +74,7 @@ internal sealed class MeshRepository : IMeshRepository
         }
 
         internal MeshLayout(MeshId meshId, in MeshMeta meta, IndexBufferId iboId, IReadOnlyList<VertexBufferId> vboIds,
-            IReadOnlyList<VertexAttributeDesc> attr)
+            IReadOnlyList<VertexAttribute> attr)
         {
             MeshId = meshId;
             IndexBufferId = iboId;
@@ -86,10 +86,10 @@ internal sealed class MeshRepository : IMeshRepository
         public MeshId MeshId { get; init; }
         public IndexBufferId IndexBufferId { get; init; } = default;
         public VertexBufferId[] VertexBufferIds { get; init; }
-        public VertexAttributeDesc[] Attributes { get; init; }
+        public VertexAttribute[] Attributes { get; init; }
         public MeshDrawProperties Properties { get; internal set; }
 
         public ReadOnlySpan<VertexBufferId> GetVertexBufferIds() => VertexBufferIds;
-        public ReadOnlySpan<VertexAttributeDesc> GetAttributes() => Attributes;
+        public ReadOnlySpan<VertexAttribute> GetAttributes() => Attributes;
     }
 }

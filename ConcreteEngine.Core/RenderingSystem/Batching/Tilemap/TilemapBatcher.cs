@@ -5,7 +5,7 @@ using ConcreteEngine.Graphics.Gfx;
 #endregion
 
 namespace ConcreteEngine.Core.RenderingSystem.Batching;
-
+/*
 public class TilemapBatcher : RenderBatcher<TilemapBatchResult>
 {
     private const int MinMapSize = 64;
@@ -46,4 +46,4 @@ public class TilemapBatcher : RenderBatcher<TilemapBatchResult>
     {
         _chunk.Dispose();
     }
-}
+}*/

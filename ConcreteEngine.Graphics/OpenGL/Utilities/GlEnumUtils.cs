@@ -192,6 +192,17 @@ internal static class GlEnumExtensions
         };
     }
 
+    public static VertexAttribType ToGlEnum(this VertexFormat value)
+    {
+        return value switch
+        {
+            VertexFormat.Float => VertexAttribType.Float,
+            VertexFormat.UByte => VertexAttribType.UnsignedByte,
+            VertexFormat.UShort => VertexAttribType.UnsignedShort,
+            _ => throw new ArgumentOutOfRangeException(nameof(value), value, null)
+        };
+    }
+
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static ClearBufferMask ToGlEnum(this ClearBufferFlag flags)
     {

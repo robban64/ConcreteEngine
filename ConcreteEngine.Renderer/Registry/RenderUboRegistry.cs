@@ -21,7 +21,7 @@ internal sealed class RenderUboRegistry
 
     internal RenderUboRegistry(GfxContext gfx)
     {
-        _gfxApi = gfx.ResourceContext.ResourceManager.GetGfxApi();
+        _gfxApi = gfx.ResourceManager.GetGfxApi();
         _gfxBuffers = gfx.Buffers;
 
         _gfxApi.BindMetaChanged<UniformBufferId, UniformBufferMeta>(OnUboChange);

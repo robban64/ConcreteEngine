@@ -88,7 +88,10 @@ internal sealed class DrawCommandPipeline
 
     internal void UploadDrawUniformData()
     {
-        _drawBuffers.UploadMaterial(_materialBuffer.DrainDrawMaterialData());
+        var materialPayload = _materialBuffer.DrainDrawMaterialData();
+        if(materialPayload.Length > 0)
+            _drawBuffers.UploadMaterial(materialPayload);
+        
         _drawBuffers.UploadDrawObjects(_commandBuffer.DrainTransformQueue());
     }
 

@@ -91,7 +91,7 @@ public sealed class TerrainBatcher : RenderBatcher<TerrainBatchResult>
     public override void Dispose()
     {
         if (MeshId.IsValid())
-            Gfx.ResourceContext.Disposer.EnqueueRemoval(MeshId);
+            Gfx.Disposer.EnqueueRemoval(MeshId);
     }
     
     private void BuildHeightMap(ReadOnlySpan<byte> data, int width, int maxHeight)
@@ -128,10 +128,10 @@ public sealed class TerrainBatcher : RenderBatcher<TerrainBatchResult>
             BufferAccess.MapWrite);
 
         var attribBuilder = new VertexAttributeMaker<Vertex3D>();
-        builder.AddAttribute(attribBuilder.Make<Vector3>());
-        builder.AddAttribute(attribBuilder.Make<Vector2>());
-        builder.AddAttribute(attribBuilder.Make<Vector3>());
-        builder.AddAttribute(attribBuilder.Make<Vector3>());
+        builder.AddAttribute(attribBuilder.Make<Vector3>(0));
+        builder.AddAttribute(attribBuilder.Make<Vector2>(1));
+        builder.AddAttribute(attribBuilder.Make<Vector3>(2));
+        builder.AddAttribute(attribBuilder.Make<Vector3>(3));
 
         MeshId = builder.Finish();
     }

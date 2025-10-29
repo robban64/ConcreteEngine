@@ -17,7 +17,7 @@ public sealed class GfxTextures
     private readonly GlTextures _driver;
 
     private readonly GfxResourceDisposer _disposer;
-    private readonly GfxResourceStore<TextureId, TextureMeta> _textureStore;
+    private readonly TextureStore _textureStore;
 
     public static class FallbackTextures
     {
@@ -29,7 +29,7 @@ public sealed class GfxTextures
     internal GfxTextures(GfxContextInternal context)
     {
         _disposer = context.Disposer;
-        _textureStore = context.Stores.TextureStore;
+        _textureStore = context.Resources.GfxStoreHub.TextureStore;
         _driver = context.Driver.Textures;
 
         FallbackTextures.AlbedoId = CreateOnePixelTexture([255, 255, 255, 255], TexturePixelFormat.SrgbAlpha);

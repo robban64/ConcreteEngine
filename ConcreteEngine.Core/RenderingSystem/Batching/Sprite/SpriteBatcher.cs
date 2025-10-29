@@ -6,7 +6,7 @@ using ConcreteEngine.Graphics.Gfx;
 #endregion
 
 namespace ConcreteEngine.Core.RenderingSystem.Batching;
-
+/*
 public sealed class SpriteBatcher : RenderBatcher<SpriteBatchBuildResult>
 {
     private const int MaxSpriteBatchSize = 1024;
@@ -95,4 +95,4 @@ public sealed class SpriteBatcher : RenderBatcher<SpriteBatchBuildResult>
         foreach (var spriteBatch in _spriteBatches.Values)
             spriteBatch.Dispose();
     }
-}
+}*/

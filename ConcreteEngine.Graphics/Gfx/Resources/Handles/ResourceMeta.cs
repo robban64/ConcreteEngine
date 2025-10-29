@@ -62,48 +62,51 @@ public readonly struct MeshMeta(
     DrawPrimitive primitive,
     DrawMeshKind kind,
     DrawElementSize elementSize,
-    int attributeLength,
-    int drawCount
+    int drawCount,
+    IndexBufferId iboId,
+    byte vboCount,
+    VboAttachment vboAttachment
 ) : IResourceMeta
 {
-    public readonly int AttributeLength = attributeLength;
     public readonly int DrawCount = drawCount;
+    public readonly IndexBufferId IndexBufferId = iboId;
+    public readonly VboAttachment VboAttachment = vboAttachment;
+    public readonly byte VboCount = vboCount;
     public readonly DrawPrimitive Primitive = primitive;
     public readonly DrawMeshKind Kind = kind;
     public readonly DrawElementSize ElementSize = elementSize;
-
-
-    public static MeshMeta CreateCopy(in MeshMeta meta, int vertexAttribPointers, int drawCount) =>
-        new(meta.Primitive, meta.Kind, meta.ElementSize, vertexAttribPointers, drawCount);
 }
 
 [StructLayout(LayoutKind.Sequential)]
 public readonly struct VertexBufferMeta(
-    int bindingIdx,
+    int stride,
     int elementCount,
-    nint stride,
+    uint offset,
+    byte divisor,
     BufferUsage usage,
     BufferStorage storage,
     BufferAccess access
 ) : IResourceMeta
 {
-    public readonly nint Stride = stride;
-    public readonly int BindingIdx = bindingIdx;
+    public readonly int Stride = stride;
     public readonly int ElementCount = elementCount;
+    public readonly uint Offset = offset;
+    public readonly byte Divisor = divisor;
     public readonly BufferUsage Usage = usage;
     public readonly BufferStorage Storage = storage;
     public readonly BufferAccess Access = access;
-    
+
     public nint Capacity => Stride * ElementCount;
 
-    public static VertexBufferMeta CreateCopy(in VertexBufferMeta meta, int count, nint stride, BufferUsage usage) =>
-        new(meta.BindingIdx, count, stride, usage, meta.Storage, meta.Access);
+    public static VertexBufferMeta CreateCopy(in VertexBufferMeta m, int count, int stride, uint offset,
+        BufferUsage usage) =>
+        new(stride, count, offset, m.Divisor, usage, m.Storage, m.Access);
 }
 
 [StructLayout(LayoutKind.Sequential)]
 public readonly struct IndexBufferMeta(
     int elementCount,
-    nint stride,
+    int stride,
     BufferUsage usage,
     BufferStorage storage,
     BufferAccess access
@@ -117,7 +120,7 @@ public readonly struct IndexBufferMeta(
 
     public nint Capacity => Stride * ElementCount;
 
-    public static IndexBufferMeta CreateCopy(in IndexBufferMeta meta, int count, nint stride, BufferUsage usage) =>
+    public static IndexBufferMeta CreateCopy(in IndexBufferMeta meta, int count, int stride, BufferUsage usage) =>
         new(count, stride, usage, meta.Storage, meta.Access);
 }
 
@@ -151,7 +154,7 @@ public readonly struct RenderBufferMeta(
 [StructLayout(LayoutKind.Sequential)]
 public readonly struct UniformBufferMeta(
     UboSlot slot,
-    nint stride,
+    int stride,
     nint capacity,
     BufferUsage usage,
     BufferStorage storage,
@@ -159,7 +162,7 @@ public readonly struct UniformBufferMeta(
     : IResourceMeta
 {
     public readonly nint Capacity = capacity;
-    public readonly nint Stride = stride;
+    public readonly int Stride = stride;
     public readonly UboSlot Slot = slot;
     public readonly BufferUsage Usage = usage;
     public readonly BufferStorage Storage = storage;

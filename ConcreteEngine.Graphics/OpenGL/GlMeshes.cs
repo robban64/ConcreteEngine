@@ -1,7 +1,9 @@
 #region
 
 using ConcreteEngine.Graphics.Gfx.Contracts;
+using ConcreteEngine.Graphics.Gfx.Definitions;
 using ConcreteEngine.Graphics.Gfx.Resources;
+using ConcreteEngine.Graphics.OpenGL.Utilities;
 using Silk.NET.OpenGL;
 
 #endregion
@@ -30,47 +32,41 @@ internal sealed class GlMeshes : IGraphicsDriverModule
         return _store.VertexArray.Add(new GlMeshHandle(vao));
     }
 
-    //TODO Binding index?
-    public void AttachVertexBuffer(in GfxRefToken<MeshId> vao, in GfxRefToken<VertexBufferId> vbo, int bindingIdx,
-        nint offset, nint stride)
-    {
-        var vboHandle = _store.VertexBuffer.GetHandle(vbo);
-        var handle = _meshStore.GetHandle(vao);
-        _gl.VertexArrayVertexBuffer(handle, (uint)bindingIdx, vboHandle, offset, (uint)stride);
-    }
-
-    public void AttachIndexBuffer(in GfxRefToken<MeshId> vao, in GfxRefToken<IndexBufferId> ibo)
+    public void AttachIndexBuffer(GfxRefToken<MeshId> vao, GfxRefToken<IndexBufferId> ibo)
     {
         var iboHandle = _store.IndexBuffer.GetHandle(ibo).Value;
         _gl.VertexArrayElementBuffer(_meshStore.GetHandle(vao), iboHandle);
     }
 
-    public void AddVertexAttributeRange(GfxRefToken<MeshId> vao, IReadOnlyList<VertexAttributeDesc> attribs)
+    public void AttachVertexBuffer(GfxRefToken<MeshId> vao, int binding, GfxRefToken<VertexBufferId> vbo,
+        in VertexBufferMeta m)
+    {
+        var vboHandle = _store.VertexBuffer.GetHandle(vbo);
+        var handle = _meshStore.GetHandle(vao);
+        _gl.VertexArrayVertexBuffer(handle, (uint)binding, vboHandle, 0, (uint)m.Stride);
+        if (m.Divisor != 0)
+            _gl.VertexArrayBindingDivisor(handle, (uint)binding, m.Divisor);
+    }
+
+    public void AddVertexAttributeRange(GfxRefToken<MeshId> vao, IReadOnlyList<VertexAttribute> attribs)
     {
         var vaoHandle = _meshStore.GetHandle(vao);
         for (int i = 0; i < attribs.Count; i++)
-            AddVertexAttributeInternal(vaoHandle, (uint)i, attribs[i]);
+            AddVertexAttribute(vaoHandle, attribs[i]);
     }
 
-    public void AddVertexAttributeFromSpan(GfxRefToken<MeshId> vao, ReadOnlySpan<VertexAttributeDesc> attribs)
+    public void AddVertexAttributeFromSpan(GfxRefToken<MeshId> vao, ReadOnlySpan<VertexAttribute> attribs)
     {
         var vaoHandle = _meshStore.GetHandle(vao);
         for (int i = 0; i < attribs.Length; i++)
-            AddVertexAttributeInternal(vaoHandle, (uint)i, attribs[i]);
+            AddVertexAttribute(vaoHandle, in attribs[i]);
     }
 
-
-    private void AddVertexAttributeInternal(uint vao, uint attribIdx, in VertexAttributeDesc attr)
+    private void AddVertexAttribute(GlMeshHandle vao, in VertexAttribute a)
     {
-        var (vboIdx, offset) = ((uint)attr.VboBinding, (uint)attr.Offset);
-        var size = attr.Components;
-        var primitive = VertexAttribType.Float;
-
-        _gl.VertexArrayAttribFormat(vao, attribIdx, size, primitive, attr.Norm, offset);
-
-        _gl.VertexArrayAttribBinding(vao, attribIdx, vboIdx);
-        _gl.EnableVertexArrayAttrib(vao, attribIdx);
-
-        //if (divisor != 0) _gl.VertexArrayBindingDivisor(vao, vboIdx, divisor);
+        var primitive = a.Format.ToGlEnum();
+        _gl.VertexArrayAttribFormat(vao, a.Location, a.Components, primitive, a.Normalized, (uint)a.Offset);
+        _gl.VertexArrayAttribBinding(vao, a.Location, a.Binding);
+        _gl.EnableVertexArrayAttrib(vao, a.Location);
     }
 }

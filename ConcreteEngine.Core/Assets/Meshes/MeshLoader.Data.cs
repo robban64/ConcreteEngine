@@ -17,12 +17,12 @@ public readonly ref struct MeshImportData(ReadOnlySpan<Vertex3D> vertices, ReadO
 }
 
 internal readonly ref struct MeshUploadPayload(
-    ReadOnlySpan<VertexAttributeDesc> attributes,
+    ReadOnlySpan<VertexAttribute> attributes,
     ReadOnlySpan<Vertex3D> vertices,
     ReadOnlySpan<uint> indices,
     MeshDrawProperties properties)
 {
-    public readonly ReadOnlySpan<VertexAttributeDesc> Attributes = attributes;
+    public readonly ReadOnlySpan<VertexAttribute> Attributes = attributes;
     public readonly ReadOnlySpan<Vertex3D> Vertices = vertices;
     public readonly ReadOnlySpan<uint> Indices = indices;
     public readonly MeshDrawProperties Properties = properties;

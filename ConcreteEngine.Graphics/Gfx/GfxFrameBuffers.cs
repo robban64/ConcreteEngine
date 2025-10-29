@@ -15,9 +15,9 @@ public sealed class GfxFrameBuffers
 {
     private readonly GfxResourceDisposer _disposer;
 
-    private readonly GfxResourceStore<FrameBufferId, FrameBufferMeta> _fboStore;
-    private readonly GfxResourceStore<RenderBufferId, RenderBufferMeta> _rboStore;
-    private readonly GfxResourceStore<TextureId, TextureMeta> _textureStore;
+    private readonly FboStore _fboStore;
+    private readonly RboStore _rboStore;
+    private readonly TextureStore _textureStore;
 
     private readonly GfxTextures _gfxTextures;
     private readonly GlFrameBuffers _driver;
@@ -26,9 +26,9 @@ public sealed class GfxFrameBuffers
 
     internal GfxFrameBuffers(GfxContextInternal context, GfxTextures gfxTextures)
     {
-        _fboStore = context.Stores.FboStore;
-        _rboStore = context.Stores.RboStore;
-        _textureStore = context.Stores.TextureStore;
+        _fboStore = context.Resources.GfxStoreHub.FboStore;
+        _rboStore = context.Resources.GfxStoreHub.RboStore;
+        _textureStore = context.Resources.GfxStoreHub.TextureStore;
 
         _disposer = context.Disposer;
         _driver = context.Driver.FrameBuffers;

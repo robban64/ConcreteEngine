@@ -13,6 +13,7 @@ using static ConcreteEngine.Renderer.Data.RenderLimits;
 
 namespace ConcreteEngine.Core.RenderingSystem.Batching;
 
+/*
 internal sealed class SpriteBatchMesh : IDisposable
 {
     private const int VerticesPerSprite = 4;
@@ -113,20 +114,7 @@ internal sealed class SpriteBatchMesh : IDisposable
             vertices[vi + 3] = new Vertex2D(x + w, y + h, u1, v1);
 
 
-            // Bottom-left (centered origin)
-            /*
-
-           var halfW = w * 0.5f;
-           var halfH = h * 0.5f;
-
-            vertices[vi + 0] = new Vertex2D(new(x - halfW, y - halfH), new(u0, v0));
-            // Bottom-right
-            vertices[vi + 1] = new Vertex2D(new(x + halfW, y - halfH), new(u1, v0));
-            // Top-left
-            vertices[vi + 2] = new Vertex2D(new(x - halfW, y + halfH), new(u0, v1));
-            // Top-right
-            vertices[vi + 3] = new Vertex2D(new(x + halfW, y + halfH), new(u1, v1));
-            */
+           
         }
 
         _gfx.Buffers.UploadVertexBuffer<Vertex2D>(_vertexBufferId, vertices, 0);
@@ -143,3 +131,19 @@ internal sealed class SpriteBatchMesh : IDisposable
         _disposed = true;
     }
 }
+*/
+
+// Bottom-left (centered origin)
+/*
+
+var halfW = w * 0.5f;
+var halfH = h * 0.5f;
+
+vertices[vi + 0] = new Vertex2D(new(x - halfW, y - halfH), new(u0, v0));
+// Bottom-right
+vertices[vi + 1] = new Vertex2D(new(x + halfW, y - halfH), new(u1, v0));
+// Top-left
+vertices[vi + 2] = new Vertex2D(new(x - halfW, y + halfH), new(u0, v1));
+// Top-right
+vertices[vi + 3] = new Vertex2D(new(x + halfW, y + halfH), new(u1, v1));
+*/

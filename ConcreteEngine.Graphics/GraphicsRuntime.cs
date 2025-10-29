@@ -31,7 +31,14 @@ public sealed class GraphicsRuntime : IGraphicsRuntime
 
     private GfxResourceDisposer _disposer = null!;
     private GfxResourceManager _resources = null!;
-    private GfxResourceRepository _repository = null!;
+    
+    private GfxBuffers _buffers = null!;
+    private GfxMeshes _meshes = null!;
+    private GfxShaders _shaders = null!;
+    private GfxTextures _textures = null!;
+    private GfxFrameBuffers _frameBuffers = null!;
+    private GfxCommands _cmd = null!;
+
 
     private GfxContext _gfxContext = null!;
 
@@ -49,14 +56,30 @@ public sealed class GraphicsRuntime : IGraphicsRuntime
             throw GraphicsException.UnsupportedFeature("Only OpenGL is supported");
 
         _resources = new GfxResourceManager();
-        _repository = new GfxResourceRepository(_resources);
         _disposer = new GfxResourceDisposer(_resources);
 
         InitDriver(glConfig);
 
-        var gfxCtxInternal = new GfxContextInternal(_driver, _repository, _resources.GfxStoreHub, _disposer);
-        var gfxResourceContext = new GfxResourceContext(_resources, _repository, _disposer);
-        _gfxContext = new GfxContext(gfxCtxInternal, gfxResourceContext);
+        var gfxCtxInternal = new GfxContextInternal(_driver, _resources, _disposer);
+
+        _buffers = new GfxBuffers(gfxCtxInternal);
+        _shaders = new GfxShaders(gfxCtxInternal);
+        _textures = new GfxTextures(gfxCtxInternal);
+        _meshes = new GfxMeshes(gfxCtxInternal, _buffers);
+        _frameBuffers = new GfxFrameBuffers(gfxCtxInternal, _textures);
+        _cmd = new GfxCommands(gfxCtxInternal);
+
+        _gfxContext = new GfxContext
+        {
+            ResourceManager = _resources,
+            Disposer = _disposer,
+            Buffers = _buffers,
+            Meshes = _meshes,
+            Shaders = _shaders,
+            Textures = _textures,
+            FrameBuffers = _frameBuffers,
+            Commands = _cmd,
+        };
 
         _isInitialized = true;
     }

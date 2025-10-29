@@ -27,7 +27,10 @@ public sealed class GfxCommands
     private readonly GlTextures _textures;
     private readonly GlFrameBuffers _frameBuffers;
 
-    private readonly GfxStoreHub _store;
+    private readonly FboStore _fboStore;
+    private readonly TextureStore _textureStore;
+    private readonly MeshStore _meshStore;
+    private readonly ShaderStore _shaderStore;
 
     //States
     private GfxPassState _activeState;
@@ -60,7 +63,11 @@ public sealed class GfxCommands
         _shaders = ctx.Driver.Shaders;
         _textures = ctx.Driver.Textures;
         _frameBuffers = ctx.Driver.FrameBuffers;
-        _store = ctx.Stores;
+
+        _fboStore = ctx.Resources.GfxStoreHub.FboStore;
+        _textureStore = ctx.Resources.GfxStoreHub.TextureStore;
+        _meshStore = ctx.Resources.GfxStoreHub.MeshStore;
+        _shaderStore = ctx.Resources.GfxStoreHub.ShaderStore;
 
         _boundTextures = new TextureId[Configuration.TextureSlots];
 
@@ -109,7 +116,7 @@ public sealed class GfxCommands
         ArgumentOutOfRangeException.ThrowIfNegativeOrZero(fboId.Value, nameof(fboId));
         if (_boundFboId == fboId) GraphicsException.ThrowInvalidState($"FBO is {fboId} already bound.");
 
-        ref readonly var meta = ref _store.FboStore.GetMeta(fboId);
+        ref readonly var meta = ref _fboStore.GetMeta(fboId);
 
         BindFramebuffer(fboId);
         SetViewport(meta.Size);
@@ -118,7 +125,7 @@ public sealed class GfxCommands
 
         if (meta.Attachments.DepthTextureId != default)
         {
-            _frameBuffers.SetDrawReadBuffer(_store.FboStore.GetRefHandle(fboId), false);
+            _frameBuffers.SetDrawReadBuffer(_fboStore.GetRefHandle(fboId), false);
         }
 
         _activeOutputSize = meta.Size;
@@ -140,11 +147,11 @@ public sealed class GfxCommands
         Debug.Assert(fromId != default);
         Debug.Assert(fromId != toId, "READ and DRAW FBO must differ for resolve.");
 
-        ref readonly var fromFbo = ref _store.FboStore.GetMeta(fromId);
-        var fromHandle = _store.FboStore.GetRefHandle(fromId);
+        ref readonly var fromFbo = ref _fboStore.GetMeta(fromId);
+        var fromHandle = _fboStore.GetRefHandle(fromId);
         var srcSize = fromFbo.Size;
 
-        if (!_store.FboStore.TryGetRef(toId, out var toHandle, out var toFbo))
+        if (!_fboStore.TryGetRef(toId, out var toHandle, out var toFbo))
         {
             _frameBuffers.BlitDefault(fromHandle, srcSize, _activeOutputSize, false);
             return;
@@ -242,7 +249,7 @@ public sealed class GfxCommands
             return;
         }
 
-        _states.BindFrameBuffer(_store.FboStore.GetRefHandle(id));
+        _states.BindFrameBuffer(_fboStore.GetRefHandle(id));
         _boundFboId = id;
     }
 
@@ -259,7 +266,7 @@ public sealed class GfxCommands
             return;
         }
 
-        var refHandle = _store.TextureStore.GetRefHandle(texture);
+        var refHandle = _textureStore.GetRefHandle(texture);
         _states.BindTexture(refHandle, slot);
     }
 
@@ -277,7 +284,7 @@ public sealed class GfxCommands
             return;
         }
 
-        var handle = _store.ShaderStore.GetRefHandle(id);
+        var handle = _shaderStore.GetRefHandle(id);
         _shaders.UseShader(handle);
         _boundShaderId = id;
     }
@@ -294,7 +301,7 @@ public sealed class GfxCommands
             return;
         }
 
-        var meshRef = _store.MeshStore.GetRefAndMeta(id, out _boundMeshMeta);
+        var meshRef = _meshStore.GetRefAndMeta(id, out _boundMeshMeta);
         _boundMeshId = id;
         _states.BindMesh(meshRef);
     }

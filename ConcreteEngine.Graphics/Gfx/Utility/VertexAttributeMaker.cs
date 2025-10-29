@@ -18,12 +18,13 @@ public struct VertexAttributeMaker<TElement> where TElement : unmanaged
     {
     }
 
-    public VertexAttributeDesc Make<TComponent>(
-        int vboBinding = 0,
+    public VertexAttribute Make<TComponent>(
+        byte location,
+        byte binding = 0,
         VertexFormat vertexFormat = VertexFormat.Float,
         bool norm = false) where TComponent : unmanaged
     {
-        int stride = Unsafe.SizeOf<TComponent>();
+        var stride = Unsafe.SizeOf<TComponent>();
         var scalar = vertexFormat.SizeInBytes();
 
         ArgumentOutOfRangeException.ThrowIfGreaterThan(stride, ElementSize, nameof(stride));
@@ -31,13 +32,13 @@ public struct VertexAttributeMaker<TElement> where TElement : unmanaged
         if (stride % scalar != 0)
             throw new ArgumentException("Component size must be a multiple.", nameof(TComponent));
 
-        int remaining = ElementSize - Offset;
+        var remaining = ElementSize - Offset;
         ArgumentOutOfRangeException.ThrowIfLessThan(remaining, stride, nameof(Offset));
 
-        int componentCount = stride / scalar;
+        var componentCount = stride / scalar;
 
         var attribOffset = Offset;
         Offset += stride;
-        return new VertexAttributeDesc(vboBinding, componentCount, attribOffset);
+        return new VertexAttribute(location, binding, componentCount, attribOffset);
     }
 }

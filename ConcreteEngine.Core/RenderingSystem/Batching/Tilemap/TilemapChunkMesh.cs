@@ -13,7 +13,7 @@ using Silk.NET.Maths;
 #endregion
 
 namespace ConcreteEngine.Core.RenderingSystem.Batching;
-
+/*
 internal sealed class TilemapChunkMesh : IDisposable
 {
     private const int VerticesPerTile = 4;
@@ -156,4 +156,4 @@ internal sealed class TilemapChunkMesh : IDisposable
         _gfx.ResourceContext.Disposer.EnqueueRemoval(_meshId);
         _disposed = true;
     }
-}
+}*/

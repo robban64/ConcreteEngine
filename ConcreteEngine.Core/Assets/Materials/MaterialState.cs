@@ -34,18 +34,19 @@ public sealed class MaterialState
         Specular = desc.Specular ?? Specular;
         UvRepeat = desc.UvRepeat ?? UvRepeat;
     }
-    
-    
+
+
     public bool Dirty => _dirty;
+
     internal void ClearDirty()
     {
         if (_clearDirty && _dirty)
         {
-            _dirty  = false;
+            _dirty = false;
             _clearDirty = false;
             return;
         }
-        
+
         _clearDirty = true;
     }
 

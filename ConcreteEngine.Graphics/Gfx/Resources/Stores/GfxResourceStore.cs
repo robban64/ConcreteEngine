@@ -39,7 +39,7 @@ internal sealed class GfxResourceStore<TId, TMeta> : IGfxResourceStore<TId>
     private GfxHandle[] _handle;
 
     private readonly Stack<int> _free;
-    
+
     internal GfxResourceStore(int initialCapacity, MakeResourceIdDel<TId> makeResourceId)
     {
         ArgumentOutOfRangeException.ThrowIfLessThan(initialCapacity, 4, nameof(initialCapacity));
@@ -54,12 +54,12 @@ internal sealed class GfxResourceStore<TId, TMeta> : IGfxResourceStore<TId>
         _handle = new GfxHandle[initialCapacity];
         _free = new Stack<int>();
     }
-    
+
     public int Count => _idx;
     public int FreeCount => _free.Count;
     public int Capacity => _handle.Length;
     internal ReadOnlySpan<TMeta> MetaSpan => _meta.AsSpan(0, _idx);
-    
+
     internal void BindOnChangeCallback(GfxMetaChangedDel<TId, TMeta> callback)
     {
         ArgumentNullException.ThrowIfNull(callback);
@@ -138,7 +138,7 @@ internal sealed class GfxResourceStore<TId, TMeta> : IGfxResourceStore<TId>
 
         var idx = id.Value - 1;
         oldRef = new GfxRefToken<TId>(_handle[idx]);
-        
+
         var newSlot = incRef.Handle.Slot;
         var newGen = (ushort)(oldRef.Handle.Gen + 1);
         var newRef = GfxRefToken<TId>.Make(newSlot, newGen);

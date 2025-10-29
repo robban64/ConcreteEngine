@@ -1,7 +1,10 @@
+#region
+
 using System.Diagnostics;
 
-namespace ConcreteEngine.Common.Diagnostics.Utility;
+#endregion
 
+namespace ConcreteEngine.Common.Diagnostics.Utility;
 
 public sealed class FrameTimer
 {
@@ -22,7 +25,7 @@ public sealed class FrameTimer
     {
         return End(out _);
     }
-    
+
     public bool End(out double meanMs)
     {
         _sw.Stop();

@@ -1,7 +1,6 @@
 #region
 
 using ConcreteEngine.Graphics.Gfx.Definitions;
-using ConcreteEngine.Graphics.Gfx.Resources;
 
 #endregion
 
@@ -12,7 +11,6 @@ public readonly record struct VboAttachment(
     VertexBufferId V1,
     VertexBufferId V2,
     VertexBufferId V3);
-
 
 public sealed record MeshLayout(
     MeshId MeshId,
@@ -61,7 +59,7 @@ public readonly record struct MeshDrawProperties(
 {
     public static MeshDrawProperties FromMeta(in MeshMeta meta) =>
         new(meta.Primitive, meta.Kind, meta.ElementSize, meta.DrawCount);
-    
+
     public static MeshDrawProperties MakeDefault() =>
         new(DrawPrimitive.Triangles, DrawMeshKind.Invalid, DrawElementSize.Invalid, 0);
 

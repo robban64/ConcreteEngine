@@ -5,12 +5,10 @@ using ConcreteEngine.Common.Collections;
 using ConcreteEngine.Core.Assets.Data;
 using ConcreteEngine.Core.Assets.Textures;
 using ConcreteEngine.Graphics.Gfx;
-using ConcreteEngine.Graphics.Gfx.Contracts;
 using ConcreteEngine.Graphics.Gfx.Definitions;
 using ConcreteEngine.Graphics.Gfx.Resources;
 using ConcreteEngine.Renderer.Data;
 using ConcreteEngine.Renderer.Definitions;
-using Core.DebugTools.Data;
 
 #endregion
 
@@ -41,7 +39,7 @@ public sealed class MaterialStore : IMaterialStore
 
     public int Count => _idx;
     public int FreeSlots => _free.Count;
-    
+
 
     internal MaterialStore(AssetStore assetStore)
     {
@@ -162,5 +160,4 @@ public sealed class MaterialStore : IMaterialStore
 
         return NextId();
     }
-
 }

@@ -1,6 +1,10 @@
+#region
+
 using ConcreteEngine.Common.Diagnostics;
 using Core.DebugTools.Components;
 using Core.DebugTools.Data;
+
+#endregion
 
 namespace Core.DebugTools;
 

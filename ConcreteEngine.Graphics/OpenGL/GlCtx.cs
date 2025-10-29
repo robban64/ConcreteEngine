@@ -1,6 +1,5 @@
 #region
 
-using ConcreteEngine.Graphics.Gfx.Resources;
 using Silk.NET.OpenGL;
 
 #endregion

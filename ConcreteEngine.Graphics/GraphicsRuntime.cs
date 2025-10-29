@@ -4,7 +4,6 @@ using ConcreteEngine.Common;
 using ConcreteEngine.Graphics.Error;
 using ConcreteEngine.Graphics.Gfx;
 using ConcreteEngine.Graphics.Gfx.Internal;
-using ConcreteEngine.Graphics.Gfx.Resources;
 using ConcreteEngine.Graphics.Gfx.Utility;
 using ConcreteEngine.Graphics.OpenGL;
 
@@ -31,7 +30,7 @@ public sealed class GraphicsRuntime : IGraphicsRuntime
 
     private GfxResourceDisposer _disposer = null!;
     private GfxResourceManager _resources = null!;
-    
+
     private GfxBuffers _buffers = null!;
     private GfxMeshes _meshes = null!;
     private GfxShaders _shaders = null!;

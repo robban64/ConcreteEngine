@@ -1,6 +1,10 @@
+#region
+
 using System.Globalization;
 using System.Text;
 using ConcreteEngine.Common.Diagnostics;
+
+#endregion
 
 namespace ConcreteEngine.Core.Diagnostic;
 

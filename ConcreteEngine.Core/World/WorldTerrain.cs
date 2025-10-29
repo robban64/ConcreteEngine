@@ -75,11 +75,4 @@ public sealed class WorldTerrain
         Debug.Assert(_terrain.MeshId > 0);
         Model = _meshTable.CreateModel(_terrain.MeshId, 0, _terrain.DrawCount);
     }
-
-    internal void OnPreRender()
-    {
-        if (!IsActive)
-            return;
-    }
-
 }

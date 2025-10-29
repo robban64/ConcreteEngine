@@ -1,20 +1,14 @@
 #region
 
-using System.Text.Json;
 using ConcreteEngine.Core.Assets;
-using ConcreteEngine.Core.Assets.Materials;
 using ConcreteEngine.Core.Data;
 using ConcreteEngine.Core.Diagnostic.utils;
-using ConcreteEngine.Core.Scene;
-using ConcreteEngine.Graphics;
 using ConcreteEngine.Graphics.Diagnostic;
-using ConcreteEngine.Graphics.Gfx.Resources;
-using ConcreteEngine.Renderer.State;
+using Core.DebugTools;
+using Core.DebugTools.Components;
 using Silk.NET.Input;
 using Silk.NET.OpenGL;
 using Silk.NET.Windowing;
-using Core.DebugTools;
-using Core.DebugTools.Components;
 
 #endregion
 
@@ -23,7 +17,7 @@ namespace ConcreteEngine.Core.Diagnostic;
 internal sealed class EngineGateway
 {
     private readonly DiagnosticsService _diagnostics;
-    private readonly LogParser  _logParser;
+    private readonly LogParser _logParser;
 
     public bool HasBoundCommands { get; private set; }
     public bool HasBoundMetrics { get; private set; }
@@ -66,13 +60,13 @@ internal sealed class EngineGateway
         RouteTable.RegisterCommand("inspect-structs", CmdWrapper(CommandRouter.OnCmdStructSizes));
         RouteTable.RegisterCommand("reload-shader", CmdWrapper(CommandRouter.OnRecreateShader));
         RouteTable.RegisterCommand("shadow-map", CmdWrapper(CommandRouter.OnSetShadowMapSize));
-       /* RouteTable.RegisterCommand("fbo-meta", CmdWrapper(static (ctx, arg1, arg2) =>
-        {
-            var opts = new JsonSerializerOptions { IncludeFields = true };
+        /* RouteTable.RegisterCommand("fbo-meta", CmdWrapper(static (ctx, arg1, arg2) =>
+         {
+             var opts = new JsonSerializerOptions { IncludeFields = true };
 
-            var meta = GfxDebugMetrics.GetStoreMeta<FrameBufferId, FrameBufferMeta>(new FrameBufferId(2));
-            ctx.AddLog(JsonSerializer.Serialize(meta,opts));
-        }));*/
+             var meta = GfxDebugMetrics.GetStoreMeta<FrameBufferId, FrameBufferMeta>(new FrameBufferId(2));
+             ctx.AddLog(JsonSerializer.Serialize(meta,opts));
+         }));*/
     }
 
     public void RegisterMetrics()
@@ -144,12 +138,15 @@ internal sealed class EngineGateway
             _diagnostics.DevConsole.AddLog(_logParser.Format(cmd));
         }
     }
-    
+
     private static Action<DebugConsoleCtx, string?, string?> CmdWrapper(Action<DebugConsoleCtx, string?, string?> f)
     {
         return (ctx, a1, a2) =>
         {
-            try { f(ctx, a1, a2); }
+            try
+            {
+                f(ctx, a1, a2);
+            }
             catch (Exception ex) when (CommandUtils.IsSafeError(ex))
             {
                 ctx.AddLog(CommandUtils.ErrorMessageFor(ex));

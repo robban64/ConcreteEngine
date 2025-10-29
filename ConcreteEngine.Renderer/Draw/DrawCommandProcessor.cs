@@ -1,7 +1,6 @@
 #region
 
 using ConcreteEngine.Graphics.Gfx;
-using ConcreteEngine.Graphics.Gfx.Contracts;
 using ConcreteEngine.Graphics.Gfx.Resources;
 using ConcreteEngine.Renderer.Data;
 using ConcreteEngine.Renderer.Definitions;
@@ -62,30 +61,30 @@ internal sealed class DrawCommandProcessor
         UseShader(materialMeta.ShaderId);
         BindTextureSlots(texSlots);
         _buffers.BindMaterialObject(materialId);
-            
-        if(materialMeta.PassState is {} passState)
+
+        if (materialMeta.PassState is { } passState)
         {
             _ctx.OverridePassState = passState;
             _gfxCmd.ApplyState(in passState);
         }
-        else if(_ctx.OverridePassState is not null)
+        else if (_ctx.OverridePassState is not null)
         {
             _ctx.OverridePassState = null;
             _gfxCmd.ApplyState(in _ctx.PassState);
         }
 
-        if(materialMeta.PassStateFunc is {} passStateFunc)
+        if (materialMeta.PassStateFunc is { } passStateFunc)
         {
             _ctx.OverridePassStateFunc = passStateFunc;
             _gfxCmd.ApplyStateFunctions(passStateFunc);
         }
-        else if(_ctx.OverridePassStateFunc is not null)
+        else if (_ctx.OverridePassStateFunc is not null)
         {
             _ctx.OverridePassStateFunc = null;
             _gfxCmd.ApplyStateFunctions(_ctx.PassStateFunc);
         }
-
     }
+
     public void DrawMesh(DrawCommand cmd, int submitIndex)
     {
         if (_ctx.PrevMaterial != cmd.MaterialId) BindMaterial(cmd.MaterialId);

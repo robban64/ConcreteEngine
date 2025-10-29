@@ -1,6 +1,8 @@
-using System.Numerics;
+#region
+
 using System.Runtime.CompilerServices;
-using ConcreteEngine.Common.Numerics;
+
+#endregion
 
 namespace ConcreteEngine.Common.Diagnostics;
 
@@ -8,8 +10,10 @@ namespace ConcreteEngine.Common.Diagnostics;
 public readonly record struct MetricHeader(ushort Flags = 0, byte Kind = 0, byte State = 0)
 {
     public static MetricHeader FromKind(byte kind) => new(Kind: kind);
-    public static MetricHeader FromKind<T>(T kind) where T : unmanaged, Enum 
+
+    public static MetricHeader FromKind<T>(T kind) where T : unmanaged, Enum
         => new(Kind: Unsafe.As<T, byte>(ref kind));
+
     public static MetricHeader FromFlags(ushort flags) => new(Flags: flags);
 }
 

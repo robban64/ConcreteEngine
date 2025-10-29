@@ -58,9 +58,9 @@ public sealed class WorldRenderParams
         ArgumentOutOfRangeException.ThrowIfLessThan(size, RenderLimits.MinShadowMapSize);
         ArgumentOutOfRangeException.ThrowIfGreaterThan(size, RenderLimits.MaxShadowMapSize);
 
-        if (distance is not { } dist) 
+        if (distance is not { } dist)
             dist = _shadow.Distance > 1 ? _shadow.Distance : 120f;
-        
+
         var constBias = 0.8f / size;
         var slopeBias = constBias * 6f;
         _shadow = new ShadowParams(

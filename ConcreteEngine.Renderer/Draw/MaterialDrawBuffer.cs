@@ -17,7 +17,7 @@ internal sealed class MaterialDrawBuffer
 {
     private const int MaxTextureSlotCapacity = MaxMaterialBufferCapacity * TextureSlots;
     private const int DefaultTextureSlotCapacity = DefaultMaterialBufferCapacity * TextureSlots;
-    
+
     private RangeU16[] _slotRanges = new RangeU16[DefaultMaterialBufferCapacity];
     private TextureSlotInfo[] _textureSlots = new TextureSlotInfo[DefaultTextureSlotCapacity];
 
@@ -117,8 +117,6 @@ internal sealed class MaterialDrawBuffer
         Array.Resize(ref _metas, newCap);
         Array.Resize(ref _buffer, newCap);
         Array.Resize(ref _slotRanges, newCap);
-
-        
     }
 
     private void EnsureTextureSlotCapacity(int amount)

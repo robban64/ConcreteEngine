@@ -4,7 +4,6 @@ using System.Diagnostics;
 using System.Runtime.CompilerServices;
 using ConcreteEngine.Common;
 using ConcreteEngine.Common.Diagnostics;
-using ConcreteEngine.Graphics.Gfx.Resources;
 
 #endregion
 

@@ -1,10 +1,7 @@
 #region
 
 using System.Numerics;
-using ConcreteEngine.Common.Numerics;
-using ConcreteEngine.Common.Numerics.Maths;
 using ConcreteEngine.Core.Assets;
-using ConcreteEngine.Core.Assets.Materials;
 using ConcreteEngine.Core.Assets.Meshes;
 using ConcreteEngine.Core.Assets.Textures;
 using ConcreteEngine.Core.Configuration;
@@ -14,7 +11,6 @@ using ConcreteEngine.Core.World.Render;
 using ConcreteEngine.Graphics.Gfx.Contracts;
 using ConcreteEngine.Graphics.Gfx.Definitions;
 using ConcreteEngine.Renderer.Descriptors;
-using Shader = ConcreteEngine.Core.Assets.Shaders.Shader;
 
 #endregion
 
@@ -95,7 +91,10 @@ public sealed class Demo3DScene : GameScene
         ]);
 
         _spawner.PlaceGroundRocksBasic(90,
-            [new ScenePlacement(rockMesh, rockMat.Id, default, 0.5f), new ScenePlacement(rock2Mesh, rockMat2.Id, default, 0.6f)],
+            [
+                new ScenePlacement(rockMesh, rockMat.Id, default, 0.5f),
+                new ScenePlacement(rock2Mesh, rockMat2.Id, default, 0.6f)
+            ],
             intensity: 0.5f);
         _spawner.PlacePropsRingBasic(12, [new ScenePlacement(boatMesh, boatMat.Id)]);
 
@@ -105,7 +104,7 @@ public sealed class Demo3DScene : GameScene
             var mesh = store.GetByName<Model>("Cube");
             var entityId = World.Create();
             var mat = World.EntityMaterials.Add(treeMat.Id);
-            World.Meshes.Add(entityId, new ModelComponent(mesh.RenderId, mesh.DrawCount,mat));
+            World.Meshes.Add(entityId, new ModelComponent(mesh.RenderId, mesh.DrawCount, mat));
             World.Transforms.Add(entityId,
                 new Transform(new Vector3(half, worldTerrain.GetSmoothHeight(half, half) + 1f, half),
                     Vector3.One, Quaternion.Identity));

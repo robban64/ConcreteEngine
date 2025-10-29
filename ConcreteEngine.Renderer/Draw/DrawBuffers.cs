@@ -188,7 +188,7 @@ internal sealed class DrawBuffers
     {
         //0.001f, 0.005f
         // 0.0004f, 0.0025f
-        
+
         ref readonly var shadow = ref _paramsSnapshot.Shadows;
         var size = 1.0f / shadow.ShadowMapSize;
         var data = new ShadowUniformRecord(

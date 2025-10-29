@@ -134,7 +134,7 @@ internal sealed class DebugLeftPanelGui(MetricReport data)
         ImGui.TableSetupColumn("Nam", ImGuiTableColumnFlags.WidthFixed, 30f);
         ImGui.TableSetupColumn("Cnt/Free", ImGuiTableColumnFlags.WidthStretch, 0.8f);
         ImGui.TableSetupColumn("Live/Cap", ImGuiTableColumnFlags.WidthStretch, 0.8f);
-        if(!bkStore)         ImGui.TableSetupColumn("*", ImGuiTableColumnFlags.WidthStretch, 1f);
+        if (!bkStore) ImGui.TableSetupColumn("*", ImGuiTableColumnFlags.WidthStretch, 1f);
 
         ImGui.TableHeadersRow();
 

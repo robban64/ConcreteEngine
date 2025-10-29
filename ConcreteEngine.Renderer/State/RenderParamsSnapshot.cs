@@ -26,7 +26,7 @@ public sealed class RenderParamsSnapshot
         in PostEffectParams postEffect)
     {
         IsDirty = true;
-        
+
         Version = version;
         _ambient = ambient;
         _fog = fog;
@@ -34,6 +34,6 @@ public sealed class RenderParamsSnapshot
         _shadows = shadows;
         _postEffect = postEffect;
     }
-    
-    public void ClearDirty() => IsDirty =  false;
+
+    public void ClearDirty() => IsDirty = false;
 }

@@ -96,17 +96,14 @@ public sealed class GameEngine : IDisposable
         _assets.FinishLoading();
         _coreSystems.Initialize();
         RegisterRenderer();
-        
+
         // prevent spam from first load. Move up to log startup issues
         GfxLog.Enabled = true;
     }
 
     private void RegisterRenderer()
     {
-        var builder = _worldRenderer.Initialize((gfx, batchers) =>
-        {
-            batchers.Register(new TerrainBatcher(gfx));
-        });
+        var builder = _worldRenderer.Initialize((gfx, batchers) => { batchers.Register(new TerrainBatcher(gfx)); });
 
         _worldRenderer.SetupRenderer(builder);
     }
@@ -235,7 +232,7 @@ public sealed class GameEngine : IDisposable
 
         _modules.Load(new GameModuleContext(sceneContext));
     }
-    
+
     private void OnSceneBuild(SceneManager.SceneBuildResult result, WorldRenderer renderer)
     {
         _engineGateway.AttachDebugTools((World.World)result.Context.World, _assets, _renderFrameInfo);

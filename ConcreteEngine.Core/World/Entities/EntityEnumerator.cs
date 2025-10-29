@@ -12,7 +12,7 @@ public struct EntityEnumerator<T1>(EntityStore<T1> r)
     {
         public readonly EntityId Entity = e;
         public readonly int Index = idx;
-        public ref T1 Value => ref r.GetByIndex(Index);
+        public ref T1 Component => ref r.GetByIndex(Index);
     }
 
     public EntityEnumerator<T1> GetEnumerator()
@@ -34,8 +34,8 @@ public struct EntityEnumerator<T1, T2>(EntityStore<T1> r1, EntityStore<T2> r2)
     {
         public readonly EntityId Entity = e;
         public readonly int Index = idx;
-        public ref T1 Value1 => ref r1.GetByIndex(Index);
-        public ref T2 Value2 => ref r2.GetByIndex(Index);
+        public ref T1 Component1 => ref r1.GetByIndex(Index);
+        public ref T2 Component2 => ref r2.GetByIndex(Index);
     }
 
     public EntityEnumerator<T1, T2> GetEnumerator()
@@ -57,9 +57,9 @@ public struct EntityEnumerator<T1, T2, T3>(EntityStore<T1> r1, EntityStore<T2> r
     {
         public readonly EntityId Entity = e;
         public readonly int Index = idx;
-        public ref T1 Value1 => ref r1.GetByIndex(Index);
-        public ref T2 Value2 => ref r2.GetByIndex(Index);
-        public ref T3 Value3 => ref r3.GetByIndex(Index);
+        public ref T1 Component1 => ref r1.GetByIndex(Index);
+        public ref T2 Component2 => ref r2.GetByIndex(Index);
+        public ref T3 Component3 => ref r3.GetByIndex(Index);
     }
 
     public EntityEnumerator<T1, T2, T3> GetEnumerator()

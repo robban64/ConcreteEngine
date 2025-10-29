@@ -15,7 +15,7 @@ public interface IWorld
     WorldRenderParams WorldRenderParams { get; }
     WorldSkybox Sky { get; }
     WorldTerrain Terrain { get; }
-    
+
 
     EntityId Create();
     EntityStore<Transform> Transforms { get; }
@@ -36,7 +36,7 @@ public sealed class World : IWorld
     public WorldRenderParams WorldRenderParams { get; }
     public WorldSkybox Sky { get; }
     public WorldTerrain Terrain { get; }
-    
+
     private MeshTable _meshTable = null!;
     private MaterialTable _materialTable = null!;
 
@@ -51,18 +51,18 @@ public sealed class World : IWorld
         Meshes = GenericStores<ModelComponent>.CreateStore();
         Sprites = GenericStores<SpriteComponent>.CreateStore();
     }
-    
+
     public int EntityCount => _idIdx;
     public int ShadowMapSize => WorldRenderParams.Snapshot.Shadows.ShadowMapSize;
 
-    public IMeshTable MeshTable  => _meshTable;
+    public IMeshTable MeshTable => _meshTable;
     public IMaterialTable EntityMaterials => _materialTable;
 
 
     internal void AttachRender(MeshTable meshTable, MaterialTable materialTable)
     {
         _meshTable = meshTable;
-        _materialTable =  materialTable;
+        _materialTable = materialTable;
         Terrain.AttachModelRegistry(meshTable);
         Sky.AttachModelRegistry(meshTable);
     }
@@ -75,7 +75,7 @@ public sealed class World : IWorld
         Sprites.Cleanup();
         Meshes.Cleanup();
     }
-    
+
     public EntityStore<Transform> Transforms { get; }
     public EntityStore<ModelComponent> Meshes { get; }
     public EntityStore<Transform2D> Transforms2D { get; }

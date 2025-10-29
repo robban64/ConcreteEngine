@@ -147,7 +147,7 @@ public readonly struct DrawObjectUniform : IStd140Uniform
     public readonly Vector4 NormalCol0;
     public readonly Vector4 NormalCol1;
     public readonly Vector4 NormalCol2;
-    
+
     public DrawObjectUniform(in Matrix4x4 model, in Vector4 v0, in Vector4 v1, in Vector4 v2)
     {
         Model = model;

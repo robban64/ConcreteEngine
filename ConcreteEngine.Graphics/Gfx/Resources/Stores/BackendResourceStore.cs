@@ -37,7 +37,7 @@ internal sealed class BackendResourceStore<TId, THandle> : IBackendResourceStore
 
     public ResourceKind Kind { get; }
     public GraphicsBackend Backend => GraphicsBackend.OpenGl;
-    
+
     public int Count => _idx;
     public int FreeCount => _free.Count;
     public int Capacity => _records.Length;
@@ -67,8 +67,8 @@ internal sealed class BackendResourceStore<TId, THandle> : IBackendResourceStore
     {
         Throwers.ThrowOnDefaultHandle(value);
         int idx = _free.Count > 0 ? _free.Pop() : Allocate();
-        var newHandle =  _records[idx] = new BkHandle<THandle>(value, true);
-        GfxLog.LogBkStore(newHandle, idx, TId.Kind.ToLogTopic(),  LogAction.Add);
+        var newHandle = _records[idx] = new BkHandle<THandle>(value, true);
+        GfxLog.LogBkStore(newHandle, idx, TId.Kind.ToLogTopic(), LogAction.Add);
         return new GfxRefToken<TId>(new GfxHandle(idx, 1, TId.Kind));
     }
 
@@ -82,8 +82,9 @@ internal sealed class BackendResourceStore<TId, THandle> : IBackendResourceStore
         var record = _records[handle.Slot];
         _records[handle.Slot] = default;
         _free.Push(handle.Slot);
-        GfxLog.LogBkStore(record, handle.Slot, TId.Kind.ToLogTopic(),  LogAction.Remove);
+        GfxLog.LogBkStore(record, handle.Slot, TId.Kind.ToLogTopic(), LogAction.Remove);
     }
+
 /*
     public GfxRefToken<TId> Replace(GfxRefToken<TId> refToken, THandle value)
     {
@@ -92,7 +93,7 @@ internal sealed class BackendResourceStore<TId, THandle> : IBackendResourceStore
         var handle = refToken.Handle;
         var prev = _records[handle.Slot];
         var newRecord = _records[handle.Slot] = new BkHandle<THandle>(value, true);
-        
+
         GfxLog.LogBkStore(value, prev, TId.Kind.ToLogTopic(),  LogAction.Replace,0);
         GfxLog.LogBkStore(value, refToken, TId.Kind.ToLogTopic(),  LogAction.Replace, 1);
 

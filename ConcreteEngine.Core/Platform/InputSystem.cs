@@ -17,7 +17,6 @@ public class InputSystem : IInputSystem
     public InputSystem(EngineInputSource inputSource)
     {
         InputSourceImpl = inputSource;
-        
     }
 
     public void Initialize()

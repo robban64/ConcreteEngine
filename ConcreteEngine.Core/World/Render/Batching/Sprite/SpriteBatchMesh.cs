@@ -105,7 +105,7 @@ internal sealed class SpriteBatchMesh : IDisposable
             vertices[vi + 3] = new Vertex2D(x + w, y + h, u1, v1);
 
 
-           
+
         }
 
         _gfx.Buffers.UploadVertexBuffer<Vertex2D>(_vertexBufferId, vertices, 0);

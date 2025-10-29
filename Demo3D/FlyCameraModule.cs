@@ -3,7 +3,6 @@
 using System.Numerics;
 using ConcreteEngine.Core.Data;
 using ConcreteEngine.Core.Platform;
-using ConcreteEngine.Core.Scene;
 using ConcreteEngine.Core.Scene.Modules;
 using ConcreteEngine.Core.World;
 using Silk.NET.Input;

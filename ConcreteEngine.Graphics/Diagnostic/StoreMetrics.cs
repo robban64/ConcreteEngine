@@ -1,6 +1,9 @@
+#region
+
 using ConcreteEngine.Common.Diagnostics;
 using ConcreteEngine.Graphics.Gfx.Definitions;
-using ConcreteEngine.Graphics.Gfx.Resources;
+
+#endregion
 
 namespace ConcreteEngine.Graphics.Diagnostic;
 

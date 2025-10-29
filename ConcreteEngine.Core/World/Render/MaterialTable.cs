@@ -1,8 +1,12 @@
+#region
+
 using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
 using ConcreteEngine.Common.Collections;
 using ConcreteEngine.Core.World.Data;
 using ConcreteEngine.Renderer.Data;
+
+#endregion
 
 namespace ConcreteEngine.Core.World.Render;
 

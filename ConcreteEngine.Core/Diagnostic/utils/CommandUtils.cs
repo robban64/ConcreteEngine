@@ -1,4 +1,8 @@
+#region
+
 using System.Globalization;
+
+#endregion
 
 namespace ConcreteEngine.Core.Diagnostic.utils;
 
@@ -19,7 +23,7 @@ internal static class CommandUtils
 
         return -1;
     }
-    
+
     internal static int IntArg(ReadOnlySpan<char> value)
     {
         if (!int.TryParse(value, CultureInfo.InvariantCulture, out var result))
@@ -40,7 +44,7 @@ internal static class CommandUtils
         if (value.Equals("false", StringComparison.OrdinalIgnoreCase)) return false;
         throw new FormatException($"Invalid bool: '{value.ToString()}'");
     }
-    
+
 
     internal static bool IsSafeError(Exception ex) => ex switch
     {

@@ -30,7 +30,7 @@ internal sealed class DrawStateContext
     public MeshId FsqMesh { get; }
 
     public readonly RenderCoreShaders CoreShaders;
-    
+
     public GfxPassState PassState;
     public GfxPassStateFunc PassStateFunc;
 

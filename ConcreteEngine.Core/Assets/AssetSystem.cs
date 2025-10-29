@@ -112,7 +112,7 @@ public sealed class AssetSystem : IAssetSystem
 
         var shader = _assetStore.GetByRef(AssetRef<Shader>.Make(req.AssetId));
         _loader ??= new AssetLoader();
-        if (!_loader.IsActive) 
+        if (!_loader.IsActive)
             _loader.ActivateLazyLoader(_assetStore, _gfxUploader);
 
         _loader.ReloadShader(shader);

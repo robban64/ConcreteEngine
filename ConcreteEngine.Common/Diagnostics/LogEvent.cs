@@ -1,5 +1,3 @@
-using System.Text;
-
 namespace ConcreteEngine.Common.Diagnostics;
 
 public readonly record struct LogEvent(
@@ -27,10 +25,10 @@ public readonly record struct LogEvent(
         var id = $"Id={Id} Gen={Gen}";
 
         var bodyParts = new List<string>(5);
-        if (p0 is not null)    bodyParts.Add($"{p0}={Param0}");
-        if (p1 is not null)    bodyParts.Add($"{p1}={Param1}");
-        if (fp is not null)    bodyParts.Add($"{fp}={FParam0}");
-        if (gen is not null)   bodyParts.Add($"{gen}={Gen}");
+        if (p0 is not null) bodyParts.Add($"{p0}={Param0}");
+        if (p1 is not null) bodyParts.Add($"{p1}={Param1}");
+        if (fp is not null) bodyParts.Add($"{fp}={FParam0}");
+        if (gen is not null) bodyParts.Add($"{gen}={Gen}");
         if (flags is not null) bodyParts.Add($"{flags}={Flags}");
 
         var body = bodyParts.Count > 0
@@ -39,8 +37,6 @@ public readonly record struct LogEvent(
 
         return $"{head} {subj}{id} {{ {body} }}";
     }
-    
-   
 }
 
 public readonly record struct LogFilterWildcard(byte Topic, byte Scope, byte Action, byte Level)

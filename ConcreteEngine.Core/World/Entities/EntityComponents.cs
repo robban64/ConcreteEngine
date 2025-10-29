@@ -25,16 +25,9 @@ public struct ModelComponent(ModelId model, int drawCount, MaterialTagKey materi
     public ModelId Model = model;
     public int DrawCount = drawCount;
     public MaterialTagKey MaterialKey = materialTagKey;
+    private int _pad;
 }
 
-/*
-public struct MeshComponent(MeshId meshId, MaterialId materialId, int drawCount)
-{
-    public MeshId MeshId = meshId;
-    public MaterialId MaterialId = materialId;
-    public int DrawCount = drawCount;
-    private int _pad;
-}*/
 public struct Transform2D(Vector2 position, Vector2 scale, float rotation)
 {
     public Vector2 Position = position;

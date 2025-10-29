@@ -1,6 +1,7 @@
 #region
 
 using ConcreteEngine.Common;
+using ConcreteEngine.Common.Diagnostics.Utility;
 using ConcreteEngine.Common.Numerics;
 using ConcreteEngine.Core.Assets;
 using ConcreteEngine.Core.Assets.Shaders;
@@ -33,7 +34,7 @@ public sealed class WorldRenderer : IRenderingSystem
 {
     public BatcherRegistry Batchers { get; }
     public WorldRenderParams WorldRenderParams { get; }
-    
+
     private readonly EngineWindow _window;
     private readonly GraphicsRuntime _graphics;
     private readonly RenderEngine _renderer;
@@ -46,7 +47,7 @@ public sealed class WorldRenderer : IRenderingSystem
     internal RenderEngine RenderEngine => _renderer;
 
     private readonly EngineEventBus _eventBus;
-    
+
     private bool _hasUploadedMaterial = false;
 
     internal WorldRenderer(EngineWindow window, GraphicsRuntime graphics, AssetSystem assets,
@@ -97,7 +98,6 @@ public sealed class WorldRenderer : IRenderingSystem
         }
     }
 
-
     internal void PreRender(
         BeginFrameStatus status,
         in RenderFrameInfo frameInfo,
@@ -108,14 +108,13 @@ public sealed class WorldRenderer : IRenderingSystem
 
         WorldRenderParams.Commit();
         _renderer.PrepareFrame(in frameInfo, in runtimeParams, in viewSnapshot);
-        
+
         // Upload materials
         SubmitMaterialData();
-        
+
         // upload world
         _renderEntityBus.CollectEntities();
         _renderEntityBus.FlushEntities(_renderer.CommandBuffer);
-        
         // fill buffers
         _renderer.CollectDrawBuffers();
         _renderer.StartFrame(status);
@@ -129,7 +128,7 @@ public sealed class WorldRenderer : IRenderingSystem
 
         ClearMaterialDirty();
     }
-    
+
 
     private void SubmitMaterialData()
     {
@@ -141,9 +140,9 @@ public sealed class WorldRenderer : IRenderingSystem
             isDirty = true;
             _hasUploadedMaterial = false;
         }
-        
-        if(!isDirty && _hasUploadedMaterial) return;
-        
+
+        if (!isDirty && _hasUploadedMaterial) return;
+
 
         foreach (var material in matStore.MaterialSpan)
         {
@@ -159,7 +158,7 @@ public sealed class WorldRenderer : IRenderingSystem
         var matStore = _assets.MaterialStoreImpl;
         foreach (var material in matStore.MaterialSpan)
         {
-            if(material == null || !material.State.Dirty) continue;
+            if (material == null || !material.State.Dirty) continue;
             material.State.ClearDirty();
         }
     }

@@ -21,9 +21,9 @@ public sealed class MaterialManifest : IAssetCatalog
 public sealed record MaterialDescriptor(string Name, string? Shader = null) : IAssetDescriptor
 {
     public AssetKind Kind => AssetKind.Material;
-    
+
     public bool DepthWrite { get; init; } = true;
-    public bool ReceiveShadows { get; init; } = true; 
+    public bool ReceiveShadows { get; init; } = true;
     public bool CastShadows { get; init; } = true;
 
     public MaterialProfile Profile { get; init; } = MaterialProfile.None;
@@ -32,7 +32,7 @@ public sealed record MaterialDescriptor(string Name, string? Shader = null) : IA
     public MaterialParamsDesc Parameters { get; init; } = new();
     public TextureSlot[] TextureSlots { get; init; } = Array.Empty<TextureSlot>();
 
-    public sealed record TextureSlotBinds(bool AlphaMask = false, bool Normals= false, bool Shadows= false);
+    public sealed record TextureSlotBinds(bool AlphaMask = false, bool Normals = false, bool Shadows = false);
 
     public sealed record TextureSlot(
         string Name,

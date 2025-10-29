@@ -15,8 +15,6 @@ using AssimpNode = Silk.NET.Assimp.Node;
 
 namespace ConcreteEngine.Core.Assets.Meshes;
 
-
-
 internal sealed class MeshImporter
 {
     //PostProcessSteps.PreTransformVertices | 
@@ -50,7 +48,7 @@ internal sealed class MeshImporter
     {
         _resultInfo.Clear();
         _resultInfo.TrimExcess();
-        
+
         Array.Resize(ref _verts, 0);
         Array.Resize(ref _indices, 0);
 
@@ -77,9 +75,9 @@ internal sealed class MeshImporter
 
         return _resultInfo.ToArray();
     }
+
     private unsafe void TraverseNode(AssimpNode* node, Matrix4x4 parent, AssimpScene* scene)
     {
-        
         var current = node->MTransformation * parent;
         for (var i = 0; i < node->MNumMeshes; i++)
         {
@@ -105,7 +103,6 @@ internal sealed class MeshImporter
 
     private unsafe MeshCreationInfo LoadMeshData(AssimpMesh* mesh)
     {
-
         var vertexCount = (int)mesh->MNumVertices;
         var indexCount = (int)(mesh->MNumFaces * 3);
         EnsureCapacity(vertexCount, indexCount);

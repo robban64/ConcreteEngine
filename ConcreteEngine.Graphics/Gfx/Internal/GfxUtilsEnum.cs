@@ -29,7 +29,7 @@ internal static class GfxUtilsEnum
             DrawElementSize.UnsignedInt => 4,
             _ => throw new ArgumentOutOfRangeException(nameof(t))
         };
-    
+
     public static DrawElementSize ToDrawElementSize(int stride) =>
         stride switch
         {

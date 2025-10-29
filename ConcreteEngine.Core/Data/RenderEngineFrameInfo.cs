@@ -18,7 +18,7 @@ public sealed class RenderEngineFrameInfo
     public float Time { get; private set; } = 0;
     public float Fps { get; private set; } = 0;
     public int Passes { get; internal set; } = 0;
-    
+
     public Size2D OutputSize { get; private set; }
     public Size2D PrevOutputSize { get; private set; }
 

@@ -1,3 +1,5 @@
+#region
+
 using System.Diagnostics;
 using System.Numerics;
 using ConcreteEngine.Common.Collections;
@@ -6,6 +8,8 @@ using ConcreteEngine.Core.Assets;
 using ConcreteEngine.Core.Assets.Meshes;
 using ConcreteEngine.Core.World.Data;
 using ConcreteEngine.Graphics.Gfx.Resources;
+
+#endregion
 
 namespace ConcreteEngine.Core.World.Render;
 
@@ -17,14 +21,14 @@ public interface IMeshTable
 internal sealed class MeshTable : IMeshTable
 {
     private const int DefaultCapacity = 128;
-    
+
     private MeshPart[] _parts = new MeshPart[DefaultCapacity];
     private Matrix4x4[] _localTransforms = new Matrix4x4[DefaultCapacity];
     private RangeU16[] _partRanges = new RangeU16[DefaultCapacity];
-    
+
     private int _partIdx = 0;
     private int _modelIdx = 0;
-    
+
     public ModelPartView GetPartsView(ModelId id)
     {
         var range = _partRanges[id - 1];
@@ -36,7 +40,7 @@ internal sealed class MeshTable : IMeshTable
     public ModelId CreateModel(MeshId mesh, int materialSlot, int drawCount)
     {
         EnsureCapacity(_partIdx + 1, _modelIdx + 1);
-        
+
         _parts[_partIdx] = new MeshPart(mesh, materialSlot, drawCount);
         _localTransforms[_partIdx] = Matrix4x4.Identity;
         _partRanges[_modelIdx] = new RangeU16((ushort)_partIdx, 1);
@@ -70,6 +74,7 @@ internal sealed class MeshTable : IMeshTable
                 idx++;
             }
         }
+
         _partIdx = idx;
     }
 

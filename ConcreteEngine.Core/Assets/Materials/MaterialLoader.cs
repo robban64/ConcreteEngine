@@ -15,6 +15,7 @@ namespace ConcreteEngine.Core.Assets.Materials;
 internal sealed class MaterialLoader
 {
     private sealed record MatProfileInfo(string Shader, params ProfileSlot[] Slots);
+
     private readonly record struct ProfileSlot(TextureSlotKind SlotKind, TextureKind TexKind = TextureKind.Texture2D);
 
 
@@ -158,5 +159,4 @@ internal sealed class MaterialLoader
 
         return slots.ToArray();
     }
-
 }

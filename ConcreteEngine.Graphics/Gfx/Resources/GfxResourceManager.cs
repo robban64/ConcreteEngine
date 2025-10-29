@@ -1,10 +1,9 @@
 #region
 
+using ConcreteEngine.Common.Diagnostics;
 using ConcreteEngine.Graphics.Diagnostic;
 
 #endregion
-
-using ConcreteEngine.Common.Diagnostics;
 
 namespace ConcreteEngine.Graphics.Gfx.Resources;
 
@@ -56,7 +55,8 @@ internal sealed class GfxResourceManager : IGfxResourceManager
         GfxMetrics.BindStore(gfx.GetStore<RenderBufferId, RenderBufferMeta>, bk.GetStore<RenderBufferId, GlRboHandle>,
             MetaMetricController.GetRboMetric);
 
-        GfxMetrics.BindStore(gfx.GetStore<UniformBufferId, UniformBufferMeta>, bk.GetStore<UniformBufferId, GlUboHandle>,
+        GfxMetrics.BindStore(gfx.GetStore<UniformBufferId, UniformBufferMeta>,
+            bk.GetStore<UniformBufferId, GlUboHandle>,
             MetaMetricController.GetUboMetric);
     }
 

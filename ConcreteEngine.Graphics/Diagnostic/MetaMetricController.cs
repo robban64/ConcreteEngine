@@ -1,10 +1,11 @@
+#region
+
 using System.Runtime.CompilerServices;
 using ConcreteEngine.Graphics.Gfx.Definitions;
-using ConcreteEngine.Graphics.Gfx.Resources;
+
+#endregion
 
 namespace ConcreteEngine.Graphics.Diagnostic;
-
-
 
 internal static class MetaMetricController
 {

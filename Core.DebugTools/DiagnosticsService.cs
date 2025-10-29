@@ -50,12 +50,11 @@ public sealed class DiagnosticsService : IDisposable
     {
         Data.MaterialMetrics = RouteTable.PullMaterialMetrics?.Invoke() ?? default;
         TextData.UpdateMaterialMetrics(in Data.MaterialMetrics);
-        
+
         RouteTable.FillAssetMetrics?.Invoke(Data);
         RouteTable.FillGfxStoreMetrics?.Invoke(Data);
         TextData.UpdateAssetMetrics(Data.AssetMetrics);
         TextData.UpdateGfxStoreMetrics(Data.GfxStoreMetrics);
-
     }
 
     public void RefreshMemoryMetrics()

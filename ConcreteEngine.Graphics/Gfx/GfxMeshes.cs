@@ -1,11 +1,8 @@
 #region
 
-using System.Runtime.CompilerServices;
 using ConcreteEngine.Common;
 using ConcreteEngine.Graphics.Gfx.Contracts;
-using ConcreteEngine.Graphics.Gfx.Definitions;
 using ConcreteEngine.Graphics.Gfx.Internal;
-using ConcreteEngine.Graphics.Gfx.Resources;
 
 #endregion
 
@@ -82,7 +79,7 @@ public sealed class GfxMeshes
         var meshRef = _meshStore.GetRefAndMeta(meshId, out var meta);
         var vboRef = _vboStore.GetRefAndMeta(vboId, out var vboMeta);
         _driver.Meshes.AttachVertexBuffer(meshRef, binding, vboRef, in vboMeta);
-        var newMeta = meta with { VboCount = (byte)(meta.VboCount + 1)};
+        var newMeta = meta with { VboCount = (byte)(meta.VboCount + 1) };
         _meshStore.ReplaceMeta(meshId, in newMeta, out _);
     }
 

@@ -53,15 +53,21 @@ internal sealed class RenderEntityBus
 
         EnsureCapacity(DrawCount);
 
+        var idx = _idx;
         foreach (var query in _world.Query<ModelComponent, Transform>())
         {
-            ref var model = ref query.Value1;
-            if(model.MaterialKey == default) continue;
-            ref var transform = ref query.Value2;
-            _entities[_idx++] = new DrawEntity(query.Entity, model.Model, model.MaterialKey, model.DrawCount,
+            ref var model = ref query.Component1;
+            ref var transform = ref query.Component2;
+            
+            //if (model.MaterialKey == default) continue;
+            //if (model.Model == default) continue;
+            
+            _entities[idx++] = new DrawEntity(query.Entity, model.Model, model.MaterialKey, model.DrawCount,
                 in transform,
                 DrawCommandId.Mesh, DrawCommandQueue.Opaque, PassMask.Default);
         }
+
+        _idx += idx;
     }
 
     public void FlushEntities(DrawCommandBuffer buffer)
@@ -72,26 +78,29 @@ internal sealed class RenderEntityBus
 
         var entitySpan = _entities.AsSpan(0, _idx);
 
-        Span<MaterialId> matSpan = stackalloc MaterialId[7];
+        Span<MaterialId> matSpan = stackalloc MaterialId[7]; // max
+        ModelPartView view = default; // ref struct
+        var prevModel = new ModelId(-1);
         var prevMatKey = new MaterialTagKey(-1);
         foreach (ref var entity in entitySpan)
         {
-            var view = _meshTable.GetPartsView(entity.Model);
+            if (entity.Model != prevModel)
+                view = _meshTable.GetPartsView(entity.Model);
+            if (entity.MaterialKey != prevMatKey)
+                _materialTable.ResolveMaterial(entity.MaterialKey, matSpan);
+
             MatrixMath.CreateModelMatrix(
                 entity.Transform.Position,
                 entity.Transform.Scale,
                 entity.Transform.Rotation,
                 out var world
             );
-            
+
             // stack space for nested loop
             Matrix4x4 model;
             Vector4 v0, v1, v2;
             //
 
-            if (entity.MaterialKey != prevMatKey)
-                _materialTable.ResolveMaterial(entity.MaterialKey, matSpan);
-            
             var meta = new DrawCommandMeta(entity.CommandId, entity.Queue, entity.PassMask, entity.DepthKey);
             for (var i = 0; i < view.Locals.Length; i++)
             {
@@ -105,6 +114,7 @@ internal sealed class RenderEntityBus
             }
 
             prevMatKey = entity.MaterialKey;
+            prevModel = entity.Model;
         }
     }
 

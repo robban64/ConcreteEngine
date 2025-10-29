@@ -1,9 +1,11 @@
+#region
+
 using System.Runtime.InteropServices;
 using ConcreteEngine.Renderer.Data;
 
+#endregion
+
 namespace ConcreteEngine.Core.World.Data;
-
-
 
 public readonly record struct MaterialTagKey(int Value);
 
@@ -31,7 +33,7 @@ internal readonly record struct MaterialTag
         Slot5 = slot5;
         Slot6 = slot6;
 
-        var c = 7;
+        var c = 6;
         if (Slot0 == 0) c = 0;
         else if (Slot1 == 0) c = 1;
         else if (Slot2 == 0) c = 2;

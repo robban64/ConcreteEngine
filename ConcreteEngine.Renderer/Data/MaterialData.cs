@@ -17,7 +17,11 @@ public readonly record struct MaterialParams(
     bool HasNormal = false,
     bool HasAlpha = false);
 
-public readonly record struct DrawMaterialMeta(MaterialId MaterialId, ShaderId ShaderId, GfxPassState? PassState, GfxPassStateFunc? PassStateFunc);
+public readonly record struct DrawMaterialMeta(
+    MaterialId MaterialId,
+    ShaderId ShaderId,
+    GfxPassState? PassState,
+    GfxPassStateFunc? PassStateFunc);
 
 [StructLayout(LayoutKind.Sequential)]
 public readonly struct DrawMaterialPayload(in DrawMaterialMeta meta, in MaterialParams param)

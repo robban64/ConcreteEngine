@@ -1,6 +1,5 @@
 namespace ConcreteEngine.Common.Diagnostics;
 
-
 public enum LogLevel : byte
 {
     Unset = 0,
@@ -67,7 +66,6 @@ public enum LogAction : byte
     Resize = 17,
     Evict = 18,
     Execute = 19,
-    EnqRemove  = 20,
-    EnqReplace  = 21,
-
+    EnqRemove = 20,
+    EnqReplace = 21,
 }

@@ -4,7 +4,6 @@ using ConcreteEngine.Common;
 using ConcreteEngine.Graphics.Gfx.Contracts;
 using ConcreteEngine.Graphics.Gfx.Definitions;
 using ConcreteEngine.Graphics.Gfx.Internal;
-using ConcreteEngine.Graphics.Gfx.Resources;
 
 #endregion
 
@@ -107,7 +106,7 @@ internal sealed class GfxMeshBuilder : IGfxMeshBuilder
         InvalidOpThrower.ThrowIfNullOrEmptyCollection(attributes, nameof(attributes));
         InvalidOpThrower.ThrowIfNot(_state.AttribCount == 0, nameof(attributes));
         InvalidOpThrower.ThrowIf(attributes.Count >= GfxLimits.MaxVertexAttribs, nameof(_vboIdx));
-        
+
         _state.Attributes = attributes.ToArray();
         _state.AttribCount = attributes.Count;
         if (_phase < Phase.AttributesSet) _phase = Phase.AttributesSet;
@@ -136,8 +135,8 @@ internal sealed class GfxMeshBuilder : IGfxMeshBuilder
         stateAttributes[_state.AttribCount++] = attribute;
 
         if (_state.AttribCount >= _state.Attributes.Length)
-            Array.Resize(ref stateAttributes,GfxLimits.MaxVertexAttribs);
-        
+            Array.Resize(ref stateAttributes, GfxLimits.MaxVertexAttribs);
+
         if (_phase < Phase.AttributesSet) _phase = Phase.AttributesSet;
     }
 

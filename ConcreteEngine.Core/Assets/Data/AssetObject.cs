@@ -12,6 +12,7 @@ public abstract class AssetObject : IComparable<AssetObject>
 
 
     internal void BumpGeneration() => Generation++;
+
     public int CompareTo(AssetObject? other)
     {
         return other is null ? 1 : RawId.Value.CompareTo(other.RawId.Value);

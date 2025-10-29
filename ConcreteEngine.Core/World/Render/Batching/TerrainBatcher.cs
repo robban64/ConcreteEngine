@@ -38,12 +38,12 @@ public sealed class TerrainBatcher : RenderBatcher<TerrainBatchResult>
 
     private uint[] _indices;
     private Vertex3D[] _vertices;
-    
+
 
     internal TerrainBatcher(GfxContext gfx) : base(gfx)
     {
     }
-    
+
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public float GetHeight(int x, int z)
     {
@@ -93,7 +93,7 @@ public sealed class TerrainBatcher : RenderBatcher<TerrainBatchResult>
         if (MeshId.IsValid())
             Gfx.Disposer.EnqueueRemoval(MeshId);
     }
-    
+
     private void BuildHeightMap(ReadOnlySpan<byte> data, int width, int maxHeight)
     {
         var size = width * width;
@@ -108,7 +108,7 @@ public sealed class TerrainBatcher : RenderBatcher<TerrainBatchResult>
             }
         }
     }
-    
+
 
     private void GenerateMesh()
     {
@@ -276,7 +276,7 @@ public sealed class TerrainBatcher : RenderBatcher<TerrainBatchResult>
 
         return NormalizeSafe(Vector3.Cross(dz, dx));
     }
-    
+
     private static float SampleHeight(ReadOnlySpan<byte> data, int x, int z, int dimension, int maxHeight)
     {
         x = Math.Clamp(x, 0, dimension - 1);

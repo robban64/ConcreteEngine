@@ -1,14 +1,18 @@
+#region
+
 using ConcreteEngine.Core.Assets.Data;
 using ConcreteEngine.Graphics.Gfx.Definitions;
 using ConcreteEngine.Renderer.Data;
 using ConcreteEngine.Renderer.Definitions;
+
+#endregion
 
 namespace ConcreteEngine.Core.Assets.Materials;
 
 public sealed class MaterialTextureSlots
 {
     public bool IsCubeMap { get; private set; }
-    
+
     public bool HasNormalMap { get; private set; }
     public bool HasAlphaMap { get; set; } = false;
     public bool HasShadowMap { get; private set; }
@@ -22,9 +26,9 @@ public sealed class MaterialTextureSlots
         Refresh();
     }
 
-    
+
     public ReadOnlySpan<AssetTextureSlot> AssetSlots => _assetSlots;
-    
+
     private void Refresh()
     {
         IsCubeMap = false;
@@ -34,7 +38,7 @@ public sealed class MaterialTextureSlots
         foreach (var slot in _assetSlots)
         {
             if (!HasShadowMap) HasShadowMap = slot.SlotKind == TextureSlotKind.Shadowmap;
-            if(!slot.Asset.IsValid) continue;
+            if (!slot.Asset.IsValid) continue;
             if (!IsCubeMap) IsCubeMap = slot.TextureKind == TextureKind.CubeMap;
             if (!HasNormalMap) HasNormalMap = slot.SlotKind == TextureSlotKind.Normal;
             if (!HasAlphaMap) HasAlphaMap = slot.SlotKind == TextureSlotKind.Mask;

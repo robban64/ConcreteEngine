@@ -224,7 +224,7 @@ internal static class GlEnumExtensions
             TexturePixelFormat.Rgba => SizedInternalFormat.Rgba8,
             TexturePixelFormat.SrgbAlpha => SizedInternalFormat.Srgb8Alpha8,
             TexturePixelFormat.Depth => SizedInternalFormat.DepthComponent24,
-            TexturePixelFormat.Red =>  SizedInternalFormat.R8,
+            TexturePixelFormat.Red => SizedInternalFormat.R8,
             _ => throw new ArgumentOutOfRangeException(nameof(format))
         };
     }

@@ -1,7 +1,10 @@
+#region
+
 using ConcreteEngine.Common.Diagnostics;
 
-namespace Core.DebugTools.Data;
+#endregion
 
+namespace Core.DebugTools.Data;
 
 public sealed record LogRecord(
     DateTimeOffset Time,

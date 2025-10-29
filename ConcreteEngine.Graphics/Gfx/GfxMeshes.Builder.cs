@@ -12,9 +12,6 @@ namespace ConcreteEngine.Graphics.Gfx;
 
 public interface IGfxMeshBuilder
 {
-    MeshId Finish();
-    MeshId Finish(out MeshMeta meta);
-
     void UploadVertices<T>(ReadOnlySpan<T> data, BufferUsage usage,
         BufferStorage storage, BufferAccess access) where T : unmanaged;
 
@@ -46,40 +43,21 @@ internal sealed class GfxMeshBuilder : IGfxMeshBuilder
         _phase = Phase.Started;
     }
 
-    public MeshId Finish()
+    public State Finish()
     {
         InvalidOpThrower.ThrowIfNot(_state.MeshId.IsValid());
         EnsureStarted();
 
+        _state.ValidateState();
+        
         _gfxMeshes.SetVertexAttributes(_state.MeshId, _state.Attributes);
-        var id = _gfxMeshes.FinishUploadCommit(_state, out _);
 
-        _state.ResetState();
-        _phase = Phase.Idle;
+        _phase = Phase.Closed;
 
-        _gfxMeshes.CloseBuilder();
         _gfxMeshes = null!;
         _gfxBuffers = null!;
         
-        return id;
-    }
-
-    public MeshId Finish(out MeshMeta meta)
-    {
-        InvalidOpThrower.ThrowIfNot(_state.MeshId.IsValid());
-        EnsureStarted();
-
-        _gfxMeshes.SetVertexAttributes(_state.MeshId, _state.Attributes);
-        var id = _gfxMeshes.FinishUploadCommit(_state, out meta);
-
-        _state.ResetState();
-        _phase = Phase.Idle;
-
-        _gfxMeshes.CloseBuilder();
-        _gfxMeshes = null!;
-        _gfxBuffers = null!;
-        
-        return id;
+        return _state;
     }
 
 
@@ -168,7 +146,7 @@ internal sealed class GfxMeshBuilder : IGfxMeshBuilder
 
     private enum Phase : byte
     {
-        Idle = 0,
+        Closed = 0,
         Started = 1,
         BuffersUploading = 2,
         AttributesSet = 3

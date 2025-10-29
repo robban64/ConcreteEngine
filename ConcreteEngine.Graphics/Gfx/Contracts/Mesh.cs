@@ -54,11 +54,7 @@ public readonly record struct MeshDrawProperties(
 {
     public static MeshDrawProperties FromMeta(in MeshMeta meta) =>
         new(meta.Primitive, meta.Kind, meta.ElementSize, meta.DrawCount);
-
-    public static MeshMeta ToMeta(in MeshDrawProperties props, IndexBufferId iboId, byte vboCount,
-        in VboAttachment attachment) =>
-        new(props.Primitive, props.Kind, props.ElementSize, props.DrawCount, iboId, vboCount, attachment);
-
+    
     public static MeshDrawProperties MakeDefault() =>
         new(DrawPrimitive.Triangles, DrawMeshKind.Invalid, DrawElementSize.Invalid, 0);
 

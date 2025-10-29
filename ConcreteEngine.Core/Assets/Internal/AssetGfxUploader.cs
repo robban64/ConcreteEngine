@@ -35,8 +35,8 @@ internal sealed class AssetGfxUploader
         builder.UploadVertices(vSpan, BufferUsage.StaticDraw, BufferStorage.Static, BufferAccess.None);
         builder.UploadIndices(iSpan, BufferUsage.StaticDraw, BufferStorage.Static, BufferAccess.None);
         builder.SetAttributeRange(payload.Attributes);
-        var meshId = builder.Finish();
-        return new MeshCreationInfo(meshId, payload.Indices.Length);
+        var meshId = _meshes.FinishUploadBuilder(out var meta);
+        return new MeshCreationInfo(meshId, meta.DrawCount);
     }
 
     public void UploadTexture(in TexturePayload payload, out TextureCreationInfo info)

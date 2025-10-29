@@ -132,8 +132,7 @@ public sealed class TerrainBatcher : RenderBatcher<TerrainBatchResult>
         builder.AddAttribute(attribBuilder.Make<Vector2>(1));
         builder.AddAttribute(attribBuilder.Make<Vector3>(2));
         builder.AddAttribute(attribBuilder.Make<Vector3>(3));
-
-        MeshId = builder.Finish();
+        MeshId = Gfx.Meshes.FinishUploadBuilder(out _);
     }
 
     private void GenerateVertex(int vertexRowCount)

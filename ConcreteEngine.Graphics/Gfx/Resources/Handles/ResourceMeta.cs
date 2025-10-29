@@ -68,13 +68,25 @@ public readonly struct MeshMeta(
     VboAttachment vboAttachment
 ) : IResourceMeta
 {
-    public readonly int DrawCount = drawCount;
-    public readonly IndexBufferId IndexBufferId = iboId;
-    public readonly VboAttachment VboAttachment = vboAttachment;
-    public readonly byte VboCount = vboCount;
-    public readonly DrawPrimitive Primitive = primitive;
-    public readonly DrawMeshKind Kind = kind;
-    public readonly DrawElementSize ElementSize = elementSize;
+    public int DrawCount { get; init; } = drawCount;
+    public IndexBufferId IndexBufferId { get; init; } = iboId;
+    public VboAttachment VboAttachment { get; init; } = vboAttachment;
+    public byte VboCount { get; init; } = vboCount;
+    public DrawPrimitive Primitive { get; init; }= primitive;
+    public DrawMeshKind Kind { get; init; } = kind;
+    public DrawElementSize ElementSize { get; init; } = elementSize;
+
+    public void Deconstruct(out int drawCount, out IndexBufferId indexBufferId, out VboAttachment vboAttachment,
+        out byte vboCount, out DrawPrimitive primitive, out DrawMeshKind kind, out DrawElementSize elementSize)
+    {
+        drawCount = DrawCount;
+        indexBufferId = IndexBufferId;
+        vboAttachment = VboAttachment;
+        vboCount = VboCount;
+        primitive = Primitive;
+        kind = Kind;
+        elementSize = ElementSize;
+    }
 }
 
 [StructLayout(LayoutKind.Sequential)]

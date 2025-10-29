@@ -15,7 +15,7 @@ namespace ConcreteEngine.Core.Assets.Meshes;
 
 internal sealed class ModelLoaderModule
 {
-    private static VertexAttribute[] DefaultAttribs { get; set; } = Array.Empty<VertexAttribute>();
+    private VertexAttribute[] DefaultAttribs { get; }
 
     private MeshLoader _loader;
     private readonly AssetGfxUploader _uploader;
@@ -25,7 +25,6 @@ internal sealed class ModelLoaderModule
         _uploader = uploader;
         _loader = new MeshLoader(OnProcess);
 
-        if (DefaultAttribs.Length != 0) return;
         var attribBuilder = new VertexAttributeMaker<Vertex3D>();
         DefaultAttribs =
         [

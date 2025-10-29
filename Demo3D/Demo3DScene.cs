@@ -57,16 +57,16 @@ public sealed class Demo3DScene : GameScene
 
         var leaf1Mat = materialStore.CreateMaterial("TreeLeaf1Mat", "Leaf1");
         var leaf2Mat = materialStore.CreateMaterial("TreeLeaf2Mat", "Leaf2");
-        
-        var leafState = new GfxPassState(Cull: false,  ColorMask: true);
-        var leafFunc = new GfxPassStateFunc( Depth: DepthMode.Less, Cull: CullMode.FrontCcw);
+
+        var leafState = new GfxPassState(Cull: false, ColorMask: true);
+        var leafFunc = new GfxPassStateFunc(Depth: DepthMode.Less, Cull: CullMode.FrontCcw);
         leaf1Mat.PassState = leafState;
         leaf1Mat.PassFuncs = leafFunc;
-        
+
         leaf2Mat.PassState = leafState;
         leaf2Mat.PassFuncs = leafFunc;
 
-        
+
         var treeMesh = store.GetByName<Model>("Tree1");
         var treeMesh1 = store.GetByName<Model>("Tree2");
         var treeMesh2 = store.GetByName<Model>("Tree3");
@@ -89,26 +89,26 @@ public sealed class Demo3DScene : GameScene
 
         _spawner.PlaceTreesBasic(20,
         [
-            new ScenePlacement(treeMesh, treeMat, leaf1Mat),
-            new ScenePlacement(treeMesh1, birchMat, leaf2Mat),
-            new ScenePlacement(treeMesh2, birchMat, leaf2Mat)
+            new ScenePlacement(treeMesh, treeMat.Id, leaf1Mat.Id),
+            new ScenePlacement(treeMesh1, birchMat.Id, leaf2Mat.Id),
+            new ScenePlacement(treeMesh2, birchMat.Id, leaf2Mat.Id)
         ]);
 
         _spawner.PlaceGroundRocksBasic(90,
-            [new ScenePlacement(rockMesh, rockMat, null, 0.5f), new ScenePlacement(rock2Mesh, rockMat2, null, 0.6f)],
+            [new ScenePlacement(rockMesh, rockMat.Id, default, 0.5f), new ScenePlacement(rock2Mesh, rockMat2.Id, default, 0.6f)],
             intensity: 0.5f);
-        _spawner.PlacePropsRingBasic(12, [new ScenePlacement(boatMesh, boatMat)]);
+        _spawner.PlacePropsRingBasic(12, [new ScenePlacement(boatMesh, boatMat.Id)]);
 
         float half = 256 / 2f;
 
         {
             var mesh = store.GetByName<Model>("Cube");
             var entityId = World.Create();
-            World.Meshes.Add(entityId, new ModelComponent(mesh.RenderId, mesh.DrawCount));
+            var mat = World.EntityMaterials.Add(treeMat.Id);
+            World.Meshes.Add(entityId, new ModelComponent(mesh.RenderId, mesh.DrawCount,mat));
             World.Transforms.Add(entityId,
                 new Transform(new Vector3(half, worldTerrain.GetSmoothHeight(half, half) + 1f, half),
                     Vector3.One, Quaternion.Identity));
-            World.EntityMaterials.AttachEntity(entityId, treeMat.Id);
         }
 
         Camera.Translation = new Vector3(half - 30, worldTerrain.GetSmoothHeight(half - 30, half + 30) + 4f, half + 30);

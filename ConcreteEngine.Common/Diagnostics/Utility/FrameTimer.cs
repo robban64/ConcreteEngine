@@ -18,6 +18,11 @@ public sealed class FrameTimer
     public FrameTimer(int sampleFrames = 60) => _sampleFrames = sampleFrames;
     public void Begin() => _sw.Restart();
 
+    public bool End()
+    {
+        return End(out _);
+    }
+    
     public bool End(out double meanMs)
     {
         _sw.Stop();

@@ -58,12 +58,23 @@ internal sealed class RenderEntityBus
         {
             ref var model = ref query.Value1;
             ref var transform = ref query.Value2;
-            _entities[_idx++] = new DrawEntity(query.Entity, model.Model, model.DrawCount, in transform,
+            _entities[_idx++] = new DrawEntity(query.Entity, model.Model, model.MaterialKey, model.DrawCount, in transform,
                 DrawCommandId.Mesh, DrawCommandQueue.Opaque, PassMask.Default);
         }
     }
 
-    private FrameTimer _timer = new FrameTimer();
+    [MethodImpl(MethodImplOptions.NoInlining)]
+    private void Test()
+    {
+        var span = _entities.AsSpan(0, _idx);
+        Span<MaterialId> matSpan = stackalloc MaterialId[7];
+        foreach (ref var entity in span)
+        {
+            _world!.EntityMaterials.ResolveMaterial(entity.MaterialKey, matSpan);
+        }
+
+    }
+
     public void FlushEntities(DrawCommandBuffer buffer)
     {
         if (_world is null) return;
@@ -71,6 +82,9 @@ internal sealed class RenderEntityBus
         FlushWorldEntities(buffer);
         
         var entitySpan = _entities.AsSpan(0, _idx);
+        Test();
+        
+        Span<MaterialId> matSpan = stackalloc MaterialId[7];
         foreach (ref var entity in entitySpan)
         {
             var view = _meshTable.GetPartsView(entity.Model);
@@ -83,7 +97,7 @@ internal sealed class RenderEntityBus
             Matrix4x4 model;
             Vector4 v0,v1,v2;
 
-            var materials = _world.EntityMaterials.GetMaterialIds(entity.Entity);
+            var materialLength = _world.EntityMaterials.ResolveMaterial(entity.MaterialKey, matSpan);
             var meta = new DrawCommandMeta(entity.CommandId, entity.Queue, entity.PassMask, entity.DepthKey);
             for (var i = 0; i < view.Locals.Length; i++)
             {
@@ -91,7 +105,7 @@ internal sealed class RenderEntityBus
                 MatrixMath.CreateNormalMatrix(in model, out  v0, out  v1, out  v2);
 
                 var parts = view.Parts[i];
-                var cmd = new DrawCommand(parts.Mesh, materials[parts.MaterialSlot], parts.DrawCount);
+                var cmd = new DrawCommand(parts.Mesh, new MaterialId(matSpan[parts.MaterialSlot]), parts.DrawCount);
                 //meta = new DrawCommandMeta(entity.CommandId, entity.Queue, entity.PassMask, entity.DepthKey);
                 buffer.SubmitDraw(cmd, meta, in model, in v0, in v1, in v2);
             }

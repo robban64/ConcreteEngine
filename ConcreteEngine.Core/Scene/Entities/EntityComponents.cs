@@ -24,10 +24,11 @@ public struct Transform(Vector3 position, Vector3 scale, Quaternion rotation)
     }
 }
 
-public struct ModelComponent(ModelId model, int drawCount)
+public struct ModelComponent(ModelId model, int drawCount, MaterialTagKey materialTagKey)
 {
     public ModelId Model = model;
     public int DrawCount = drawCount;
+    public MaterialTagKey MaterialKey = materialTagKey;
 }
 
 /*

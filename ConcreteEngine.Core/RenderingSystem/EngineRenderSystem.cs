@@ -117,9 +117,9 @@ public sealed class EngineRenderSystem : IRenderingSystem
         SubmitMaterialData();
         // fill buffers
         _renderEntityBus.CollectEntities();
-        _frameTimer.Begin();
+        //_frameTimer.Begin();
         _renderEntityBus.FlushEntities(_renderer.CommandBuffer);
-        if(_frameTimer.End(out _)) Console.WriteLine(_frameTimer.ResultString);
+       // if(_frameTimer.End(out _)) Console.WriteLine(_frameTimer.ResultString);
         _renderer.CollectDrawBuffers();
         _renderer.StartFrame(status);
     }

@@ -2,6 +2,7 @@ using System.Numerics;
 using ConcreteEngine.Common.Numerics.Maths;
 using ConcreteEngine.Core.Assets.Materials;
 using ConcreteEngine.Core.Assets.Meshes;
+using ConcreteEngine.Core.RenderingSystem;
 using ConcreteEngine.Core.Scene;
 using ConcreteEngine.Core.Scene.Entities;
 using ConcreteEngine.Renderer.Data;
@@ -9,7 +10,7 @@ using Silk.NET.Maths;
 
 namespace Demo3D;
 
-public sealed record ScenePlacement(Model Model, Material Mat, Material? Mat2 = null, float Offset = 0f);
+public sealed record ScenePlacement(Model Model, MaterialId Mat, MaterialId Mat2 = default, float Offset = 0f);
 
 public sealed class EntitySpawner(World world, float size = 256f, float margin = 4f)
 {
@@ -24,12 +25,9 @@ public sealed class EntitySpawner(World world, float size = 256f, float margin =
     private EntityId CreateModelEntity(ScenePlacement sp, Transform transform)
     {
         var entityId = world.Create();
-        world.Meshes.Add(entityId, new ModelComponent(sp.Model.RenderId, sp.Model.DrawCount));
+        var key = sp.Mat2 != default ? world.EntityMaterials.Add(sp.Mat, sp.Mat2) : world.EntityMaterials.Add(sp.Mat);
+        world.Meshes.Add(entityId, new ModelComponent(sp.Model.RenderId, sp.Model.DrawCount, key));
         world.Transforms.Add(entityId, transform);
-        if (sp.Mat2 != null)
-            world.EntityMaterials.AttachEntity(entityId, sp.Mat.Id, sp.Mat2.Id);
-        else
-            world.EntityMaterials.AttachEntity(entityId, sp.Mat.Id);
 
         return entityId;
     }

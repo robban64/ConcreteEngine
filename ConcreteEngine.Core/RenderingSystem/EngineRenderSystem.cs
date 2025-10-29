@@ -102,7 +102,6 @@ public sealed class EngineRenderSystem : IRenderingSystem
         }
     }
 
-    private FrameTimer _frameTimer = new FrameTimer();
 
     internal void PreRender(
         BeginFrameStatus status,
@@ -114,12 +113,15 @@ public sealed class EngineRenderSystem : IRenderingSystem
 
         SceneProperties.Commit();
         _renderer.PrepareFrame(in frameInfo, in runtimeParams, in viewSnapshot);
+        
+        // Upload materials
         SubmitMaterialData();
-        // fill buffers
+        
+        // upload world
         _renderEntityBus.CollectEntities();
-        //_frameTimer.Begin();
         _renderEntityBus.FlushEntities(_renderer.CommandBuffer);
-       // if(_frameTimer.End(out _)) Console.WriteLine(_frameTimer.ResultString);
+        
+        // fill buffers
         _renderer.CollectDrawBuffers();
         _renderer.StartFrame(status);
     }

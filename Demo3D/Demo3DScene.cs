@@ -30,7 +30,7 @@ public sealed class Demo3DScene : GameScene
 
         // Scene globals
         var rb = renderer.WorldRenderParams;
-        rb.SetShadowDefault(2048);
+        rb.SetShadowDefault(2048, 60f);
 
         // Skybox
         var skyboxMaterial = materialStore.CreateMaterial("SkyboxMat", "SkyboxMat1");
@@ -55,8 +55,8 @@ public sealed class Demo3DScene : GameScene
 
         var leaf1Mat = materialStore.CreateMaterial("TreeLeaf1Mat", "Leaf1");
         var leaf2Mat = materialStore.CreateMaterial("TreeLeaf2Mat", "Leaf2");
-        leaf1Mat.State.Color = new Color4(0.55f, 0.85f, 0.45f, 1f);
-        leaf2Mat.State.Color = new Color4(0.55f, 0.85f, 0.45f, 1f);
+        leaf1Mat.State.Color = new Color4(0.55f, 0.85f, 0.45f);
+        leaf2Mat.State.Color = new Color4(0.55f, 0.85f, 0.45f);
 
         var leafState = GfxPassState.Set(GfxStateFlags.DepthTest | GfxStateFlags.DepthWrite  | GfxStateFlags.PolygonOffset, disable: GfxStateFlags.Cull);
         var leafFunc = new GfxPassStateFunc(Depth: DepthMode.Lequal, Cull: CullMode.FrontCcw, PolygonOffset: PolygonOffsetLevel.Slope);
@@ -74,13 +74,11 @@ public sealed class Demo3DScene : GameScene
         // Rocks
         var rockMat = materialStore.CreateMaterial("Rock1Mat", "Rock1Mat1");
         var rockMat2 = materialStore.CreateMaterial("Rock2Mat", "Rock1Mat2");
-        rockMat.State.Color= new Color4(0.55f, 0.55f, 0.55f, 1f);;
         rockMat.State.Shininess = 10f;
         rockMat.State.Specular = 0.12f;
 
-        rockMat2.State.Color= new Color4(0.55f, 0.55f, 0.55f, 1f);;
-        rockMat2.State.Shininess = 10f;
-        rockMat2.State.Specular = 0.12f;
+        rockMat2.State.Shininess = 24f;
+        rockMat2.State.Specular = 0.25f;
 
         var rockMesh = store.GetByName<Model>("Rock1");
         var rock2Mesh = store.GetByName<Model>("Rock2");

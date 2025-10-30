@@ -37,13 +37,33 @@ internal sealed class DrawCommandProcessor
     {
         _ctx.ResetMaterialState();
         if (_ctx.IsDepth)
+        {
             UseShader(_ctx.CoreShaders.DepthShader);
+            _gfxCmd.UnbindAllTextures();
+        }
     }
 
     private void UseShader(ShaderId shaderId) => _gfxCmd.UseShader(shaderId);
 
     private void BindTextureSlots(ReadOnlySpan<TextureSlotInfo> slots)
     {
+        if (_ctx.IsDepth)
+        {
+            _gfxCmd.BindTexture(slots[0].Texture, 0);
+
+            for (var i = 1; i < slots.Length; i++)
+            {
+                var value = slots[i];
+                if (value.SlotKind != TextureSlotKind.Mask) continue;
+                _gfxCmd.BindTexture(value.Texture, 1);
+                return;
+            }
+
+            _gfxCmd.BindTexture(GfxTextures.FallbackTextures.AlphaMaskId, 1);
+
+            return;
+        }
+
         for (var i = 0; i < slots.Length; i++)
         {
             var value = slots[i];
@@ -57,7 +77,10 @@ internal sealed class DrawCommandProcessor
     private void BindMaterial(MaterialId materialId)
     {
         var texSlots = _buffers.ResolveMaterial(materialId, out var materialMeta);
+        //if (!_ctx.IsDepth)
+        // use regular for now.
         UseShader(materialMeta.ShaderId);
+
         BindTextureSlots(texSlots);
         _buffers.BindMaterialObject(materialId);
 

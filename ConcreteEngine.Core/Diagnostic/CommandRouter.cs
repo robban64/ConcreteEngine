@@ -82,11 +82,11 @@ internal static class CommandRouter
 
         ctx.AddLog(StructStr<GfxPassState>());
         
-        ctx.AddLog(StructStr<MeshPart>());
-        ctx.AddLog(StructStr<MaterialTag>());
-        ctx.AddLog(StructStr<DrawEntity>());
         ctx.AddLog(StructStr<Transform>());
 
+        ctx.AddLog(StructStr<MeshPart>());
+        ctx.AddLog(StructStr<DrawEntity>());
+        ctx.AddLog(StructStr<MaterialTag>());
     }
 
     private static string StructStr<T>() where T : unmanaged =>

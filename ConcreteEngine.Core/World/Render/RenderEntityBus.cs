@@ -47,7 +47,7 @@ internal sealed class RenderEntityBus
         _idx = 0;
     }
 
-    public void CollectEntities()
+    public void CollectEntities(in Matrix4x4 viewMat, float near, float far)
     {
         if (_world is null) return;
 
@@ -59,39 +59,50 @@ internal sealed class RenderEntityBus
             ref var model = ref query.Component1;
             ref var transform = ref query.Component2;
             
+            Debug.Assert(model.Model != default && model.MaterialKey != default);
             //if (model.MaterialKey == default) continue;
             //if (model.Model == default) continue;
             
-            _entities[idx++] = new DrawEntity(query.Entity, model.Model, model.MaterialKey, model.DrawCount,
-                in transform,
-                DrawCommandId.Mesh, DrawCommandQueue.Opaque, PassMask.Default);
+            var depthKey = DepthKeyUtility.MakeDepthKey(in viewMat, transform.Position , near, far);
+
+            _entities[idx++] = new DrawEntity(
+                entity: query.Entity,
+                model: model.Model,
+                materialKey: model.MaterialKey,
+                drawCount: model.DrawCount,
+                transform: in transform,
+                commandId: DrawCommandId.Mesh,
+                queue: DrawCommandQueue.Opaque,
+                passMask: PassMask.Default,
+                depthKey: depthKey);
         }
 
         _idx += idx;
     }
 
-    public void FlushEntities(DrawCommandBuffer buffer)
+    public void FlushEntities(DrawCommandBuffer buffer, in Matrix4x4 viewMat, float near, float far)
     {
         if (_world is null) return;
 
         FlushWorldEntities(buffer);
-
-        var entitySpan = _entities.AsSpan(0, _idx);
-
-        Span<MaterialId> matSpan = stackalloc MaterialId[7]; // max
-        ModelPartView view = default; // ref struct
+        
+        ModelPartView modelView = default; // ref struct
         var prevModel = new ModelId(-1);
         var prevMatKey = new MaterialTagKey(-1);
+        
+        var entitySpan = _entities.AsSpan(0, _idx);
+        Span<MaterialId> matSpan = stackalloc MaterialId[7]; // max
+
         foreach (ref var entity in entitySpan)
         {
             if (entity.Model != prevModel)
-                view = _meshTable.GetPartsView(entity.Model);
+                modelView = _meshTable.GetPartsView(entity.Model);
             if (entity.MaterialKey != prevMatKey)
                 _materialTable.ResolveMaterial(entity.MaterialKey, matSpan);
 
             MatrixMath.CreateModelMatrix(
                 entity.Transform.Position,
-                entity.Transform.Scale,
+                entity.Transform.Scale ,
                 entity.Transform.Rotation,
                 out var world
             );
@@ -99,17 +110,17 @@ internal sealed class RenderEntityBus
             // stack space for nested loop
             Matrix4x4 model;
             Vector4 v0, v1, v2;
-            //
 
+            //var depthKey = DepthKeyUtility.MakeDepthKey(in viewMat, entity.Transform.Position , near, far);
             var meta = new DrawCommandMeta(entity.CommandId, entity.Queue, entity.PassMask, entity.DepthKey);
-            for (var i = 0; i < view.Locals.Length; i++)
+            for (var i = 0; i < modelView.Locals.Length; i++)
             {
-                MatrixMath.MultiplyAffine(in view.Locals[i], in world, out model);
+                MatrixMath.MultiplyAffine(in modelView.Locals[i], in world, out model);
                 MatrixMath.CreateNormalMatrix(in model, out v0, out v1, out v2);
 
-                var parts = view.Parts[i];
+                var parts = modelView.Parts[i];
                 var cmd = new DrawCommand(parts.Mesh, new MaterialId(matSpan[parts.MaterialSlot]), parts.DrawCount);
-                //meta = new DrawCommandMeta(entity.CommandId, entity.Queue, entity.PassMask, entity.DepthKey);
+                //meta = new DrawCommandMeta(entity.CommandId, entity.Queue, entity.PassMask, depthKey);
                 buffer.SubmitDraw(cmd, meta, in model, in v0, in v1, in v2);
             }
 

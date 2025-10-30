@@ -11,10 +11,9 @@ namespace ConcreteEngine.Core.Assets.Materials;
 public sealed class MaterialState
 {
     private Color4 _color = Color4.White;
-    private float _shininess = 24f;
-    private float _specular = 0.25f;
+    private float _shininess = 12f;
+    private float _specular = 0.12f;
     private float _uvRepeat = 1f;
-
     private bool _dirty;
     private bool _clearDirty = false;
 

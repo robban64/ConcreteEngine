@@ -1,6 +1,7 @@
 #region
 
 using System.Numerics;
+using ConcreteEngine.Common.Numerics;
 using ConcreteEngine.Core.Assets;
 using ConcreteEngine.Core.Assets.Meshes;
 using ConcreteEngine.Core.Assets.Textures;
@@ -41,8 +42,8 @@ public sealed class Demo3DScene : GameScene
         var heightmap = assets.Store.GetByName<Texture2D>("Heightmap");
         var terrainMat = assets.MaterialStore.CreateMaterial("TerrainMat", "TerrainMat1");
         terrainMat.State.UvRepeat = 14;
-        terrainMat.State.Shininess = 10;
-        terrainMat.State.Specular = 0.04f;
+        terrainMat.State.Shininess = 4;
+        terrainMat.State.Specular = 0.02f;
 
         var worldTerrain = Context.World.Terrain;
         worldTerrain.CreateTerrainMesh(heightmap);
@@ -54,9 +55,11 @@ public sealed class Demo3DScene : GameScene
 
         var leaf1Mat = materialStore.CreateMaterial("TreeLeaf1Mat", "Leaf1");
         var leaf2Mat = materialStore.CreateMaterial("TreeLeaf2Mat", "Leaf2");
+        leaf1Mat.State.Color = new Color4(0.55f, 0.85f, 0.45f, 1f);
+        leaf2Mat.State.Color = new Color4(0.55f, 0.85f, 0.45f, 1f);
 
-        var leafState = GfxPassState.Set(enable: GfxStateFlags.ColorMask, disable: GfxStateFlags.Cull);
-        var leafFunc = new GfxPassStateFunc(Depth: DepthMode.Less, Cull: CullMode.FrontCcw);
+        var leafState = GfxPassState.Set(GfxStateFlags.DepthTest | GfxStateFlags.DepthWrite  | GfxStateFlags.PolygonOffset, disable: GfxStateFlags.Cull);
+        var leafFunc = new GfxPassStateFunc(Depth: DepthMode.Lequal, Cull: CullMode.FrontCcw, PolygonOffset: PolygonOffsetLevel.Slope);
         leaf1Mat.PassState = leafState;
         leaf1Mat.PassFunctions = leafFunc;
 
@@ -71,8 +74,14 @@ public sealed class Demo3DScene : GameScene
         // Rocks
         var rockMat = materialStore.CreateMaterial("Rock1Mat", "Rock1Mat1");
         var rockMat2 = materialStore.CreateMaterial("Rock2Mat", "Rock1Mat2");
-        rockMat.State.Specular = 0.3f;
-        rockMat2.State.Specular = 0.25f;
+        rockMat.State.Color= new Color4(0.55f, 0.55f, 0.55f, 1f);;
+        rockMat.State.Shininess = 10f;
+        rockMat.State.Specular = 0.12f;
+
+        rockMat2.State.Color= new Color4(0.55f, 0.55f, 0.55f, 1f);;
+        rockMat2.State.Shininess = 10f;
+        rockMat2.State.Specular = 0.12f;
+
         var rockMesh = store.GetByName<Model>("Rock1");
         var rock2Mesh = store.GetByName<Model>("Rock2");
 

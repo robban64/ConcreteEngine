@@ -42,6 +42,7 @@ internal sealed class DrawStateContext
         FsqMesh = fsqMesh;
         var depthFbo = registry.GetRenderFbo(TagRegistry.FboKey<ShadowPassTag>(FboVariant.Default));
         DepthTexture = depthFbo.Attachments.DepthTextureId;
+        // DepthTexture = GfxTextures.FallbackTextures.AlphaMaskId;
         CoreShaders = registry.ShaderRegistry.CoreShaders;
     }
 

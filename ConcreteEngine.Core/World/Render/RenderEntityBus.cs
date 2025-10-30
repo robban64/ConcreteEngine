@@ -101,7 +101,7 @@ internal sealed class RenderEntityBus
         {
             if (entity.Model != prevModel)
             {
-                modelView = _meshTable.GetPartsView(entity.Model);
+                modelView = _meshTable.GetPartsRefView(entity.Model);
                 prevModel = entity.Model;
             }
 
@@ -123,13 +123,17 @@ internal sealed class RenderEntityBus
             Matrix4x4 model;
             Vector4 v0, v1, v2;
 
+            modelView = _meshTable.GetPartsRefView(entity.Model);
+            _materialTable.ResolveSubmitMaterial(entity.MaterialKey, out tag);
+            matSpan = tag.AsReadOnlySpan();
+
             var parts = modelView.Parts;
             var locals = modelView.Locals;
             
             ref var mat0 = ref MemoryMarshal.GetReference(matSpan);
 
             var baseMeta = new DrawCommandMeta(entity.CommandId, entity.Queue, entity.PassMask, entity.DepthKey);
-            for (var i = 0; i < modelView.Locals.Length; i++)
+            for (var i = 0; i < locals.Length; i++)
             {
                 ref readonly var part = ref parts[i];
                 ref readonly var local = ref locals[i];
@@ -170,7 +174,7 @@ internal sealed class RenderEntityBus
         if (ActiveTerrainCount > 0)
         {
             var terrain = _world.Terrain;
-            var view = _meshTable.GetPartsView(terrain.Model);
+            var view = _meshTable.GetPartsRefView(terrain.Model);
 
             CreateTransformMatrices(terrain.Transform, out var model, out var v0, out var v1, out var v2);
             var meta = new DrawCommandMeta(DrawCommandId.Terrain, DrawCommandQueue.Terrain);

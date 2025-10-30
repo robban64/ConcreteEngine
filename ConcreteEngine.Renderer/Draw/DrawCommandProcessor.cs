@@ -47,7 +47,6 @@ internal sealed class DrawCommandProcessor
         for (var i = 0; i < slots.Length; i++)
         {
             var value = slots[i];
-
             if (value.SlotKind == TextureSlotKind.Shadowmap)
                 _gfxCmd.BindTexture(_ctx.DepthTexture, i);
             else

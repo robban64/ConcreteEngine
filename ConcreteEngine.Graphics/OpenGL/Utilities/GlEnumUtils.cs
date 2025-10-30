@@ -46,6 +46,7 @@ internal static class GlEnumExtensions
             PolygonOffsetLevel.Slight => (1.0f, 1.0f),
             PolygonOffsetLevel.Medium => (4.0f, 2.0f),
             PolygonOffsetLevel.Strong => (4.0f, 4.0f),
+            PolygonOffsetLevel.Slope => (1.5f, 2.0f),
             _ => (0.0f, 0.0f)
         };
     }

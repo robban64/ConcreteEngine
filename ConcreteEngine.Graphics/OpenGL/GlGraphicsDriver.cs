@@ -65,6 +65,7 @@ internal sealed class GlBackendDriver : IGraphicsDriver
         _gl.Enable(GLEnum.Dither);
         _gl.Enable(GLEnum.Multisample);
         _gl.Enable(EnableCap.TextureCubeMapSeamless);
+        _gl.Enable(EnableCap.SampleAlphaToCoverage);
         _gl.PixelStore(GLEnum.UnpackAlignment, 1);
 
         _gl.DepthMask(true);

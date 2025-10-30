@@ -41,5 +41,6 @@ public enum PolygonOffsetLevel : byte
     None = 1,
     Slight = 2,
     Medium = 3,
-    Strong = 4
+    Strong = 4,
+    Slope = 5
 }

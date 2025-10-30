@@ -63,6 +63,8 @@ public sealed class WorldRenderParams
 
         var constBias = 0.8f / size;
         var slopeBias = constBias * 6f;
+        //var constBias = 1.2f / size;
+        //var slopeBias = constBias * 3f;
         _shadow = new ShadowParams(
             shadowMapSize: size,
             distance: dist,

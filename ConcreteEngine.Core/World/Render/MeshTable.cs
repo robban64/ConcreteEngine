@@ -29,7 +29,7 @@ internal sealed class MeshTable : IMeshTable
     private int _partIdx = 0;
     private int _modelIdx = 0;
 
-    public ModelPartView GetPartsView(ModelId id)
+    public ModelPartView GetPartsRefView(ModelId id)
     {
         var range = _partRanges[id - 1];
         var parts = _parts.AsSpan(range.Offset, range.Length);

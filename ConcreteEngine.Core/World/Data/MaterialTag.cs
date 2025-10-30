@@ -25,7 +25,13 @@ public readonly record struct MaterialTag
     public byte EndIndex { get; init; }
     public byte TransparencyMask  { get; init; } 
 
-    
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public bool IsTransparent(int slot) => (TransparencyMask & (1 << slot)) != 0;
+
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public ReadOnlySpan<MaterialId> AsReadOnlySpan()
+        => MemoryMarshal.CreateReadOnlySpan(ref Unsafe.AsRef(in Slot0), EndIndex);
+
     public MaterialTag(MaterialId slot0, MaterialId slot1 = default, MaterialId slot2 = default,
         MaterialId slot3 = default, MaterialId slot4 = default,
         MaterialId slot5 = default, byte transparencyMask = 0)
@@ -49,11 +55,5 @@ public readonly record struct MaterialTag
         EndIndex = idx;
     }
     
-    [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public bool IsTransparent(int slot) => (TransparencyMask & (1 << slot)) != 0;
-
-    [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public ReadOnlySpan<MaterialId> AsReadOnlySpan()
-        => MemoryMarshal.CreateReadOnlySpan(ref Unsafe.AsRef(in Slot0), EndIndex);
 
 }

@@ -56,15 +56,15 @@ public sealed class DrawStateOps
         _ctx.PassStateFunc = passFunc;
     }
 
-    public void BeginScreenPass(in GfxPassClear passClear, in GfxPassState states)
+    public void BeginScreenPass(in GfxPassClear passClear,  GfxPassState states)
     {
-        _gfxCmd.BeginScreenPass(in passClear, in states);
+        _gfxCmd.BeginScreenPass(in passClear,  states);
         _ctx.PassState = states;
     }
 
-    public void BeginRenderPass(FrameBufferId fboId, in GfxPassClear passClear, in GfxPassState states)
+    public void BeginRenderPass(FrameBufferId fboId, in GfxPassClear passClear,  GfxPassState states)
     {
-        _gfxCmd.BeginRenderPass(fboId, in passClear, in states);
+        _gfxCmd.BeginRenderPass(fboId, in passClear,  states);
         _ctx.PassState = states;
     }
 
@@ -75,7 +75,7 @@ public sealed class DrawStateOps
 
     public void ClearColor(in GfxPassClear clear) => _gfxCmd.Clear(clear);
 
-    public void ToggleStates(in GfxPassState states) => _gfxCmd.ApplyState(states);
+    public void ToggleStates( GfxPassState states) => _gfxCmd.ApplyState(states);
 
     public void GenerateMips(TextureId textureId) => _gfxTextures.GenerateMipMaps(textureId);
 

@@ -65,12 +65,12 @@ internal sealed class DrawCommandProcessor
         if (materialMeta.PassState is { } passState)
         {
             _ctx.OverridePassState = passState;
-            _gfxCmd.ApplyState(in passState);
+            _gfxCmd.ApplyState( passState);
         }
         else if (_ctx.OverridePassState is not null)
         {
             _ctx.OverridePassState = null;
-            _gfxCmd.ApplyState(in _ctx.PassState);
+            _gfxCmd.ApplyState( _ctx.PassState);
         }
 
         if (materialMeta.PassStateFunc is { } passStateFunc)

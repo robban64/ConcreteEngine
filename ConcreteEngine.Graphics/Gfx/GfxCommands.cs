@@ -3,6 +3,7 @@
 using System.Diagnostics;
 using System.Numerics;
 using System.Runtime.CompilerServices;
+using ConcreteEngine.Common.Diagnostics.Utility;
 using ConcreteEngine.Common.Numerics;
 using ConcreteEngine.Graphics.Error;
 using ConcreteEngine.Graphics.Gfx.Contracts;
@@ -32,7 +33,7 @@ public sealed class GfxCommands
     private readonly ShaderStore _shaderStore;
 
     //States
-    private GfxPassState _activeState;
+    private GfxStateFlags _activeFlags;
     private GfxPassStateFunc _stateFunc;
     private GfxPassClear _activeClear;
 
@@ -52,7 +53,6 @@ public sealed class GfxCommands
     private int _drawTriangleCount;
     private int _drawCallCount;
 
-    public GfxPassState ActiveState => _activeState;
 
 
     internal GfxCommands(GfxContextInternal ctx)
@@ -99,18 +99,19 @@ public sealed class GfxCommands
         _boundTextures.AsSpan().Clear();
     }
 
-    public void BeginScreenPass(in GfxPassClear passClear, in GfxPassState states)
+    public void BeginScreenPass(in GfxPassClear passClear, GfxPassState states)
     {
         BindFramebuffer(default);
         SetViewport(_activeOutputSize);
 
-        ApplyState(in states);
+        ApplyState(states);
         Clear(in passClear);
 
         _activeOutputSize = _frameCtx.OutputSize;
     }
 
-    public void BeginRenderPass(FrameBufferId fboId, in GfxPassClear passClear, in GfxPassState states)
+
+    public void BeginRenderPass(FrameBufferId fboId, in GfxPassClear passClear, GfxPassState states)
     {
         ArgumentOutOfRangeException.ThrowIfNegativeOrZero(fboId.Value, nameof(fboId));
         if (_boundFboId == fboId) GraphicsException.ThrowInvalidState($"FBO is {fboId} already bound.");
@@ -119,7 +120,7 @@ public sealed class GfxCommands
 
         BindFramebuffer(fboId);
         SetViewport(meta.Size);
-        ApplyState(in states);
+        ApplyState(states);
         Clear(in passClear);
 
         if (meta.Attachments.DepthTextureId != default)
@@ -169,17 +170,37 @@ public sealed class GfxCommands
             _states.ClearBuffer(passClear.ClearBuffer);
     }
 
-    public void ApplyState(in GfxPassState cmdState)
+    /*
+          public void ApplyState(in GfxPassState cmdState)
+       {
+           _activeState = cmdState;
+           if (cmdState.Scissor is { } scissor) _states.ToggleScissorTest(scissor);
+           if (cmdState.Cull is { } cull) _states.ToggleCullFace(cull);
+           if (cmdState.DepthTest is { } depthTest) _states.ToggleDepthTest(depthTest);
+           if (cmdState.DepthWrite is { } depthWrite) _states.ToggleDepthMask(depthWrite);
+           if (cmdState.Blend is { } blend) _states.ToggleBlendState(blend);
+           if (cmdState.FramebufferSrgb is { } srgb) _states.ToggleFrameBufferSrgb(srgb);
+           if (cmdState.ColorMask is { } colorMask) _states.ColorMask(colorMask);
+           if (cmdState.PolygonOffset is { } polygonOffset) _states.TogglePolygonOffset(polygonOffset);
+       }
+     */
+
+    public void ApplyState(GfxPassState state)
     {
-        _activeState = cmdState;
-        if (cmdState.Scissor is { } scissor) _states.ToggleScissorTest(scissor);
-        if (cmdState.Cull is { } cull) _states.ToggleCullFace(cull);
-        if (cmdState.DepthTest is { } depthTest) _states.ToggleDepthTest(depthTest);
-        if (cmdState.DepthWrite is { } depthWrite) _states.ToggleDepthMask(depthWrite);
-        if (cmdState.Blend is { } blend) _states.ToggleBlendState(blend);
-        if (cmdState.FramebufferSrgb is { } srgb) _states.ToggleFrameBufferSrgb(srgb);
-        if (cmdState.ColorMask is { } colorMask) _states.ColorMask(colorMask);
-        if (cmdState.PolygonOffset is { } polygonOffset) _states.TogglePolygonOffset(polygonOffset);
+        var d = state.Defined;
+        if (d == 0) return;
+        var e = state.Enabled;
+
+        if ((d & GfxStateFlags.Scissor) != 0) _states.ToggleScissorTest((e & GfxStateFlags.Scissor) != 0);
+        if ((d & GfxStateFlags.Cull) != 0) _states.ToggleCullFace((e & GfxStateFlags.Cull) != 0);
+        if ((d & GfxStateFlags.DepthTest) != 0) _states.ToggleDepthTest((e & GfxStateFlags.DepthTest) != 0);
+        if ((d & GfxStateFlags.DepthWrite) != 0) _states.ToggleDepthMask((e & GfxStateFlags.DepthWrite) != 0);
+        if ((d & GfxStateFlags.Blend) != 0) _states.ToggleBlendState((e & GfxStateFlags.Blend) != 0);
+        if ((d & GfxStateFlags.FramebufferSrgb) != 0) _states.ToggleFrameBufferSrgb((e & GfxStateFlags.FramebufferSrgb) != 0);
+        if ((d & GfxStateFlags.ColorMask) != 0) _states.ColorMask((e & GfxStateFlags.ColorMask) != 0);
+        if ((d & GfxStateFlags.PolygonOffset) != 0) _states.TogglePolygonOffset((e & GfxStateFlags.PolygonOffset) != 0);
+
+        _activeFlags = GfxPassState.Merge(_activeFlags, state);
     }
 
     public void ApplyStateFunctions(GfxPassStateFunc cmdFunc)

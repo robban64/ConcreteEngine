@@ -1,12 +1,12 @@
 #region
 
 using System.Runtime.InteropServices;
-using ConcreteEngine.Core.World.Data;
+using ConcreteEngine.Core.World.Entities;
 using ConcreteEngine.Renderer.Definitions;
 
 #endregion
 
-namespace ConcreteEngine.Core.World.Entities;
+namespace ConcreteEngine.Core.World.Data;
 
 [StructLayout(LayoutKind.Sequential)]
 public struct DrawEntity(

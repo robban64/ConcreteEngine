@@ -190,7 +190,6 @@ public sealed class WorldRenderer : IRenderingSystem
                 PresentShader = _assets.Store.GetByName<Shader>("Present").ResourceId
             });
 
-
         builder.RegisterFbo<ShadowPassTag>(FboVariant.Default,
             new RegisterFboEntry().AttachDepthTexture(GfxFboDepthTextureDesc.Default())
                 .UseFixedSize(new Size2D(2048, 2048)));

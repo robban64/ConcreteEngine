@@ -44,7 +44,7 @@ public sealed class EntityStore<T> where T : unmanaged
         if (_idx >= _data.Length)
         {
             Debug.Assert(_data.Length == _entities.Length);
-            var newSize = ArrayUtility.CapacityGrowthPow2(Math.Max(_idx, 8));
+            var newSize = ArrayUtility.CapacityGrowthPow2(Math.Max(_idx, 32));
             Array.Resize(ref _data, newSize);
             Array.Resize(ref _entities, newSize);
             Array.Resize(ref _sparse, newSize);

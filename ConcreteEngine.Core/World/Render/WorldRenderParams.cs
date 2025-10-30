@@ -7,7 +7,7 @@ using ConcreteEngine.Renderer.State;
 
 #endregion
 
-namespace ConcreteEngine.Core.World;
+namespace ConcreteEngine.Core.World.Render;
 
 public sealed class WorldRenderParams
 {

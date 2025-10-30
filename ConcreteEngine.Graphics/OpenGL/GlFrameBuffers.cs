@@ -51,8 +51,8 @@ internal sealed class GlFrameBuffers : IGraphicsDriverModule
     {
         var filter = linear ? BlitFramebufferFilter.Linear : BlitFramebufferFilter.Nearest;
         var read = _fboStore.GetHandle(readFbo);
-        _gl.ReadBuffer(ReadBufferMode.ColorAttachment0);
-        _gl.DrawBuffer(DrawBufferMode.ColorAttachment0);
+        //_gl.ReadBuffer(ReadBufferMode.ColorAttachment0);
+        //_gl.DrawBuffer(DrawBufferMode.ColorAttachment0);
 
         _gl.BlitNamedFramebuffer(
             read, 0,

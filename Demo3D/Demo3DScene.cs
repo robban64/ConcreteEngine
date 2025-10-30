@@ -33,7 +33,7 @@ public sealed class Demo3DScene : GameScene
         // Skybox
         var skyboxMaterial = materialStore.CreateMaterial("SkyboxMat", "SkyboxMat1");
         skyboxMaterial.PassFuncs = GfxPassStateFunc.MakeSky();
-        skyboxMaterial.PassState = new GfxPassState(DepthWrite: false);
+        skyboxMaterial.PassState = GfxPassState.Disable(GfxStateFlags.DepthWrite);
         Context.World.Sky.SetSkyMaterial(skyboxMaterial.Id);
 
         // Terrain
@@ -54,7 +54,7 @@ public sealed class Demo3DScene : GameScene
         var leaf1Mat = materialStore.CreateMaterial("TreeLeaf1Mat", "Leaf1");
         var leaf2Mat = materialStore.CreateMaterial("TreeLeaf2Mat", "Leaf2");
 
-        var leafState = new GfxPassState(Cull: false, ColorMask: true);
+        var leafState =  GfxPassState.Set(enable: GfxStateFlags.ColorMask, disable: GfxStateFlags.Cull);
         var leafFunc = new GfxPassStateFunc(Depth: DepthMode.Less, Cull: CullMode.FrontCcw);
         leaf1Mat.PassState = leafState;
         leaf1Mat.PassFuncs = leafFunc;

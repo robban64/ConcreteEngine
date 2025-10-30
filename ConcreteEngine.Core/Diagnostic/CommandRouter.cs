@@ -89,6 +89,7 @@ internal static class CommandRouter
         ctx.AddLog(StructStr<MaterialTag>());
     }
 
+
     private static string StructStr<T>() where T : unmanaged =>
         $"{typeof(T).Name,-18} - {Unsafe.SizeOf<T>().ToString()} bytes";
 }

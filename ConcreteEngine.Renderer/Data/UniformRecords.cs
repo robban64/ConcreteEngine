@@ -163,6 +163,11 @@ public readonly struct DrawObjectUniform : IStd140Uniform
         NormalCol1 = new Vector4(normal.M12, normal.M22, normal.M32, 0f);
         NormalCol2 = new Vector4(normal.M13, normal.M23, normal.M33, 0f);
     }
+    
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public static void Fill(in Matrix4x4 model, in Vector4 v0, in Vector4 v1, in Vector4 v2, out DrawObjectUniform dst) =>
+        dst = new DrawObjectUniform(in model, in v0, in v1, in v2);
+
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static void Fill(in Matrix4x4 model, in Matrix3 normal, out DrawObjectUniform dst) =>

@@ -13,21 +13,22 @@ namespace ConcreteEngine.Core.Assets.Meshes;
 
 public sealed class Model : AssetObject, IComparable<Model>
 {
-    public ModelId RenderId { get; private set; } = default;
+    public ModelId ModelId { get; private set; } = default;
     public required ModelMesh[] MeshParts { get; init; }
     public required int DrawCount { get; init; }
-
 
     public AssetRef<Model> RefId => new(RawId);
     public override AssetKind Kind => AssetKind.Model;
     public override AssetCategory Category => AssetCategory.Graphic;
     public ResourceKind GfxResourceKind => ResourceKind.Mesh;
 
+    public ModelBaseDrawInfo ToBaseDrawInfo() => new(ModelId, MeshParts.Length, DrawCount);
+
     internal void AttachToRenderer(ModelId modelId)
     {
         ArgumentOutOfRangeException.ThrowIfLessThanOrEqual(modelId.Value, 0, nameof(modelId));
-        InvalidOpThrower.ThrowIf(RenderId.Value > 0, nameof(RenderId));
-        RenderId = modelId;
+        InvalidOpThrower.ThrowIf(ModelId.Value > 0, nameof(ModelId));
+        ModelId = modelId;
     }
 
     public int CompareTo(Model? other)
@@ -35,6 +36,8 @@ public sealed class Model : AssetObject, IComparable<Model>
         return other is null ? 1 : RawId.Value.CompareTo(other.RawId.Value);
     }
 }
+
+public readonly record struct ModelBaseDrawInfo(ModelId Model, int PartCount, int DrawCount);
 
 public sealed record ModelMesh(
     AssetRef<Model> AssetRef,

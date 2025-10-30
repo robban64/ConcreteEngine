@@ -98,8 +98,6 @@ public sealed class WorldRenderer : IRenderingSystem
         }
     }
 
-    private FrameTimer f1 = new FrameTimer();
-    private FrameTimer f2 = new FrameTimer();
     internal void PreRender(
         BeginFrameStatus status,
         in RenderFrameInfo frameInfo,
@@ -109,21 +107,16 @@ public sealed class WorldRenderer : IRenderingSystem
         _renderEntityBus.Reset();
 
         WorldRenderParams.Commit();
+
         _renderer.PrepareFrame(in frameInfo, in runtimeParams, in viewSnapshot);
 
         // Upload materials
         SubmitMaterialData();
 
-        // upload world
-        f1.Begin();
         _renderEntityBus.CollectEntities(in viewSnapshot.ViewMatrix,
             viewSnapshot.ProjectionInfo.Near, viewSnapshot.ProjectionInfo.Far);
-        if(f1.End()) Console.WriteLine($"Collect: {f1.ResultString}");
-        
-        f2.Begin();
-        _renderEntityBus.FlushEntities(_renderer.CommandBuffer, in viewSnapshot.ViewMatrix,
-            viewSnapshot.ProjectionInfo.Near, viewSnapshot.ProjectionInfo.Far);
-        if(f2.End()) Console.WriteLine($"Flush: {f2.ResultString}");
+
+        _renderEntityBus.FlushEntities(_renderer.CommandBuffer);
 
         // fill buffers
         _renderer.CollectDrawBuffers();

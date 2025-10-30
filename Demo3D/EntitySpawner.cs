@@ -4,14 +4,16 @@ using System.Numerics;
 using ConcreteEngine.Common.Numerics.Maths;
 using ConcreteEngine.Core.Assets.Meshes;
 using ConcreteEngine.Core.World;
+using ConcreteEngine.Core.World.Data;
 using ConcreteEngine.Core.World.Entities;
+using ConcreteEngine.Core.World.Utility;
 using ConcreteEngine.Renderer.Data;
 
 #endregion
 
 namespace Demo3D;
 
-public sealed record ScenePlacement(Model Model, MaterialId Mat, MaterialId Mat2 = default, float Offset = 0f);
+public readonly record struct ScenePlacement(ModelBaseDrawInfo ModelInfo, MaterialTag Mat, float Offset = 0f);
 
 public sealed class EntitySpawner(World world, float size = 256f, float margin = 4f)
 {
@@ -26,8 +28,8 @@ public sealed class EntitySpawner(World world, float size = 256f, float margin =
     private EntityId CreateModelEntity(ScenePlacement sp, Transform transform)
     {
         var entityId = world.Create();
-        var key = sp.Mat2 != default ? world.EntityMaterials.Add(sp.Mat, sp.Mat2) : world.EntityMaterials.Add(sp.Mat);
-        world.Meshes.Add(entityId, new ModelComponent(sp.Model.RenderId, sp.Model.DrawCount, key));
+        var key = world.EntityMaterials.Add(sp.Mat);
+        world.Meshes.Add(entityId, new ModelComponent(sp.ModelInfo.Model, sp.ModelInfo.DrawCount, key));
         world.Transforms.Add(entityId, transform);
 
         return entityId;

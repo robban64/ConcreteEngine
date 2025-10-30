@@ -12,10 +12,7 @@ namespace ConcreteEngine.Core.World.Render;
 
 public interface IMaterialTable
 {
-    MaterialTagKey Add(MaterialId m0, MaterialId m1 = default, MaterialId m2 = default, MaterialId m3 = default,
-        MaterialId m4 = default, MaterialId m5 = default, MaterialId m6 = default, MaterialId m7 = default);
-
-    MaterialTagKey AddSpan(ReadOnlySpan<MaterialId> s);
+    MaterialTagKey Add(in MaterialTag tag);
 }
 
 public sealed class MaterialTable : IMaterialTable
@@ -24,23 +21,21 @@ public sealed class MaterialTable : IMaterialTable
     private MaterialTag[] _table = new MaterialTag[64];
     private readonly Dictionary<MaterialTag, MaterialTagKey> _byTag = new(64);
 
-    public MaterialTagKey Add(MaterialId m0, MaterialId m1 = default, MaterialId m2 = default, MaterialId m3 = default,
-        MaterialId m4 = default, MaterialId m5 = default, MaterialId m6 = default, MaterialId m7 = default)
+    public MaterialTagKey Add(in MaterialTag tag)
     {
-        ArgumentOutOfRangeException.ThrowIfLessThanOrEqual(m0.Id, 0);
+        ArgumentOutOfRangeException.ThrowIfLessThanOrEqual(tag.Slot0, 0);
         EnsureCapacity(1);
-        var tag = new MaterialTag(m0, m1, m2, m3, m4, m5, m6);
         return AddTag(tag);
     }
-
+/*
     public MaterialTagKey AddSpan(ReadOnlySpan<MaterialId> s)
     {
         ArgumentOutOfRangeException.ThrowIfLessThan(s.Length, 8, nameof(s));
         EnsureCapacity(1);
-        var tag = new MaterialTag(s[0], s[1], s[2], s[3], s[4], s[5], s[6]);
+        var tag = new MaterialTag(s[0], s[1], s[2], s[3], s[4], s[5]);
         return AddTag(tag);
     }
-
+*/
     private MaterialTagKey AddTag(MaterialTag tag)
     {
         if (_byTag.TryGetValue(tag, out var key)) return key;
@@ -58,12 +53,15 @@ public sealed class MaterialTable : IMaterialTable
             Array.Resize(ref _table, ArrayUtility.CapacityGrowthLinear(_keyIdx, newSize, 32));
     }
 
-    public int ResolveMaterial(MaterialTagKey key, Span<MaterialId> span)
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public void ResolveSubmitMaterial(MaterialTagKey key, out MaterialTag tag) => tag = _table[key.Value - 1];
+
+    public int DrainMaterials(MaterialTagKey key, Span<MaterialId> span)
     {
         var table = _table[key.Value - 1];
-        ref readonly MaterialId r0 = ref table.Slot0;
-        var src = MemoryMarshal.CreateReadOnlySpan(ref Unsafe.AsRef(in r0), table.Count);
+        var src = table.AsReadOnlySpan();
         src.CopyTo(span);
-        return table.Count;
+        return table.EndIndex;
     }
+    
 }

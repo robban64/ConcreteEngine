@@ -46,18 +46,19 @@ public sealed class DrawCommandBuffer
     {
     }
 
-    [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public void SubmitDraw(DrawCommand cmd, DrawCommandMeta meta, in Matrix4x4 model, in Vector4 v0, in Vector4 v1,
+    public void SubmitDraw(
+        DrawCommand cmd,
+        DrawCommandMeta meta,
+        in Matrix4x4 model,
+        in Vector4 v0,
+        in Vector4 v1,
         in Vector4 v2)
     {
-        EnsureCapacity(1);
-        _commandBuffer[_submitIdx] = cmd;
-        _metaBuffer[_submitIdx] = meta;
-        _indexBuffer[_submitIdx] = new DrawCommandRef(meta, _submitIdx);
-
-        _transformBuffer[_submitIdx] = new DrawObjectUniform(in model, in v0, v1, v2);
-        //DrawObjectUniform.Fill(in model, in normal, out _transformBuffer[_submitIdx]);
-        _submitIdx++;
+        var idx = _submitIdx++;
+        _commandBuffer[idx] = cmd;
+        _metaBuffer[idx] = meta;
+        _indexBuffer[idx] = new DrawCommandRef(meta, idx);
+        _transformBuffer[idx] = new DrawObjectUniform(in model, in v0, in v1, v2);
     }
 
     public void SubmitDrawBatch(in DrawCommandPackage package)
@@ -177,12 +178,26 @@ public sealed class DrawCommandBuffer
         _submitIdx = 0;
     }
 
+    public void EnsureBufferCapacity(int size)
+    {
+        if (_commandBuffer.Length >= size) return;
+        var newCap = ArrayUtility.CapacityGrowthPow2(Math.Max(size, 64));
+
+        if (newCap > MaxCommandBuffCapacity)
+            ThrowMaxCapacityExceeded();
+
+        Array.Resize(ref _commandBuffer, newCap);
+        Array.Resize(ref _transformBuffer, newCap);
+        Array.Resize(ref _metaBuffer, newCap);
+        Array.Resize(ref _indexBuffer, newCap);
+    }
+
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     private void EnsureCapacity(int amount)
     {
         var idx = _submitIdx + amount;
         if (_commandBuffer.Length >= idx) return;
-        var newCap = ArrayUtility.CapacityGrowthPow2(Math.Max(idx, 4));
+        var newCap = ArrayUtility.CapacityGrowthPow2(Math.Max(idx, 64));
 
         if (newCap > MaxCommandBuffCapacity)
             ThrowMaxCapacityExceeded();

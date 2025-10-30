@@ -4,6 +4,7 @@ using System.Diagnostics;
 using System.Diagnostics.CodeAnalysis;
 using System.Numerics;
 using System.Runtime.CompilerServices;
+using System.Runtime.InteropServices;
 using ConcreteEngine.Common.Collections;
 using ConcreteEngine.Common.Numerics.Maths;
 using ConcreteEngine.Core.World.Data;
@@ -58,12 +59,12 @@ internal sealed class RenderEntityBus
         {
             ref var model = ref query.Component1;
             ref var transform = ref query.Component2;
-            
+
             Debug.Assert(model.Model != default && model.MaterialKey != default);
             //if (model.MaterialKey == default) continue;
             //if (model.Model == default) continue;
-            
-            var depthKey = DepthKeyUtility.MakeDepthKey(in viewMat, transform.Position , near, far);
+
+            var depthKey = DepthKeyUtility.MakeDepthKey(in viewMat, transform.Position, near, far);
 
             _entities[idx++] = new DrawEntity(
                 entity: query.Entity,
@@ -80,29 +81,40 @@ internal sealed class RenderEntityBus
         _idx += idx;
     }
 
-    public void FlushEntities(DrawCommandBuffer buffer, in Matrix4x4 viewMat, float near, float far)
+    public void FlushEntities(DrawCommandBuffer buffer)
     {
         if (_world is null) return;
-
-        FlushWorldEntities(buffer);
         
+        buffer.EnsureBufferCapacity(_world.EntityCount + 64);
+        
+        FlushWorldEntities(buffer);
+
         ModelPartView modelView = default; // ref struct
         var prevModel = new ModelId(-1);
         var prevMatKey = new MaterialTagKey(-1);
-        
+
         var entitySpan = _entities.AsSpan(0, _idx);
-        Span<MaterialId> matSpan = stackalloc MaterialId[7]; // max
+        ReadOnlySpan<MaterialId> matSpan = default;
+        MaterialTag tag = default;
 
         foreach (ref var entity in entitySpan)
         {
             if (entity.Model != prevModel)
+            {
                 modelView = _meshTable.GetPartsView(entity.Model);
+                prevModel = entity.Model;
+            }
+
             if (entity.MaterialKey != prevMatKey)
-                _materialTable.ResolveMaterial(entity.MaterialKey, matSpan);
+            {
+                _materialTable.ResolveSubmitMaterial(entity.MaterialKey, out tag);
+                matSpan = tag.AsReadOnlySpan();
+                prevMatKey = entity.MaterialKey;
+            }
 
             MatrixMath.CreateModelMatrix(
                 entity.Transform.Position,
-                entity.Transform.Scale ,
+                entity.Transform.Scale,
                 entity.Transform.Rotation,
                 out var world
             );
@@ -111,16 +123,29 @@ internal sealed class RenderEntityBus
             Matrix4x4 model;
             Vector4 v0, v1, v2;
 
-            //var depthKey = DepthKeyUtility.MakeDepthKey(in viewMat, entity.Transform.Position , near, far);
-            var meta = new DrawCommandMeta(entity.CommandId, entity.Queue, entity.PassMask, entity.DepthKey);
+            var parts = modelView.Parts;
+            var locals = modelView.Locals;
+            
+            ref var mat0 = ref MemoryMarshal.GetReference(matSpan);
+
+            var baseMeta = new DrawCommandMeta(entity.CommandId, entity.Queue, entity.PassMask, entity.DepthKey);
             for (var i = 0; i < modelView.Locals.Length; i++)
             {
-                MatrixMath.MultiplyAffine(in modelView.Locals[i], in world, out model);
+                ref readonly var part = ref parts[i];
+                ref readonly var local = ref locals[i];
+                ref readonly var mat = ref Unsafe.Add(ref mat0, part.MaterialSlot);
+
+                MatrixMath.MultiplyAffine(in local, in world, out model);
                 MatrixMath.CreateNormalMatrix(in model, out v0, out v1, out v2);
 
-                var parts = modelView.Parts[i];
-                var cmd = new DrawCommand(parts.Mesh, new MaterialId(matSpan[parts.MaterialSlot]), parts.DrawCount);
-                //meta = new DrawCommandMeta(entity.CommandId, entity.Queue, entity.PassMask, depthKey);
+                var cmd = new DrawCommand(part.Mesh, mat, part.DrawCount);
+                var meta = baseMeta;
+                if (tag.IsTransparent(part.MaterialSlot))
+                {
+                    var depthKey = (ushort)(ushort.MaxValue - meta.DepthKey);
+                    meta = new DrawCommandMeta(entity.CommandId, DrawCommandQueue.Transparent, entity.PassMask, depthKey);
+                }
+
                 buffer.SubmitDraw(cmd, meta, in model, in v0, in v1, in v2);
             }
 

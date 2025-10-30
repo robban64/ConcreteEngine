@@ -8,6 +8,7 @@ using ConcreteEngine.Core.Configuration;
 using ConcreteEngine.Core.Scene;
 using ConcreteEngine.Core.World.Entities;
 using ConcreteEngine.Core.World.Render;
+using ConcreteEngine.Core.World.Utility;
 using ConcreteEngine.Graphics.Gfx.Contracts;
 using ConcreteEngine.Graphics.Gfx.Definitions;
 using ConcreteEngine.Renderer.Descriptors;
@@ -54,7 +55,7 @@ public sealed class Demo3DScene : GameScene
         var leaf1Mat = materialStore.CreateMaterial("TreeLeaf1Mat", "Leaf1");
         var leaf2Mat = materialStore.CreateMaterial("TreeLeaf2Mat", "Leaf2");
 
-        var leafState =  GfxPassState.Set(enable: GfxStateFlags.ColorMask, disable: GfxStateFlags.Cull);
+        var leafState = GfxPassState.Set(enable: GfxStateFlags.ColorMask, disable: GfxStateFlags.Cull);
         var leafFunc = new GfxPassStateFunc(Depth: DepthMode.Less, Cull: CullMode.FrontCcw);
         leaf1Mat.PassState = leafState;
         leaf1Mat.PassFunctions = leafFunc;
@@ -83,28 +84,34 @@ public sealed class Demo3DScene : GameScene
 
         _spawner = new EntitySpawner(World);
 
+        var treeMatTag = MaterialTagBuilder.Start(treeMat.Id).WithSlot(leaf1Mat.Id, true).Build();
+        var birchMatTag = MaterialTagBuilder.Start(birchMat.Id).WithSlot(leaf2Mat.Id, true).Build();
+        var rockMat1Tag = MaterialTagBuilder.BuildOne(rockMat.Id);
+        var rockMat2Tag = MaterialTagBuilder.BuildOne(rockMat2.Id);
+        var boatMatTag = MaterialTagBuilder.BuildOne(boatMat.Id);
+
         _spawner.PlaceTreesBasic(20,
         [
-            new ScenePlacement(treeMesh, treeMat.Id, leaf1Mat.Id),
-            new ScenePlacement(treeMesh1, birchMat.Id, leaf2Mat.Id),
-            new ScenePlacement(treeMesh2, birchMat.Id, leaf2Mat.Id)
+            new ScenePlacement(treeMesh.ToBaseDrawInfo(), treeMatTag),
+            new ScenePlacement(treeMesh1.ToBaseDrawInfo(), birchMatTag),
+            new ScenePlacement(treeMesh2.ToBaseDrawInfo(), birchMatTag)
         ]);
 
         _spawner.PlaceGroundRocksBasic(90,
             [
-                new ScenePlacement(rockMesh, rockMat.Id, default, 0.5f),
-                new ScenePlacement(rock2Mesh, rockMat2.Id, default, 0.6f)
+                new ScenePlacement(rockMesh.ToBaseDrawInfo(), rockMat1Tag, 0.5f),
+                new ScenePlacement(rock2Mesh.ToBaseDrawInfo(), rockMat2Tag, 0.6f)
             ],
             intensity: 0.5f);
-        _spawner.PlacePropsRingBasic(12, [new ScenePlacement(boatMesh, boatMat.Id)]);
+        _spawner.PlacePropsRingBasic(12, [new ScenePlacement(boatMesh.ToBaseDrawInfo(), boatMatTag)]);
 
         float half = 256 / 2f;
 
         {
             var mesh = store.GetByName<Model>("Cube");
             var entityId = World.Create();
-            var mat = World.EntityMaterials.Add(treeMat.Id);
-            World.Meshes.Add(entityId, new ModelComponent(mesh.RenderId, mesh.DrawCount, mat));
+            var mat = World.EntityMaterials.Add(rockMat1Tag);
+            World.Meshes.Add(entityId, new ModelComponent(mesh.ModelId, mesh.DrawCount, mat));
             World.Transforms.Add(entityId,
                 new Transform(new Vector3(half, worldTerrain.GetSmoothHeight(half, half) + 1f, half),
                     Vector3.One, Quaternion.Identity));

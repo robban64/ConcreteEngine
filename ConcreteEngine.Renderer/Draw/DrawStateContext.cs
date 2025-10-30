@@ -34,8 +34,8 @@ internal sealed class DrawStateContext
     public GfxPassState PassState;
     public GfxPassStateFunc PassStateFunc;
 
-    public GfxPassState? OverridePassState = null;
-    public GfxPassStateFunc? OverridePassStateFunc = null;
+    public GfxPassState OverridePassState = default;
+    public GfxPassStateFunc OverridePassStateFunc = default;
 
     internal DrawStateContext(RenderRegistry registry, MeshId fsqMesh)
     {

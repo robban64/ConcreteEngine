@@ -62,25 +62,23 @@ internal sealed class DrawCommandProcessor
         BindTextureSlots(texSlots);
         _buffers.BindMaterialObject(materialId);
 
-        if (materialMeta.PassState is { } passState)
+        if (materialMeta.PassState != default)
         {
-            _ctx.OverridePassState = passState;
-            _gfxCmd.ApplyState( passState);
+            _gfxCmd.ApplyState(_ctx.OverridePassState = materialMeta.PassState);
         }
-        else if (_ctx.OverridePassState is not null)
+        else if (_ctx.OverridePassState != default)
         {
-            _ctx.OverridePassState = null;
-            _gfxCmd.ApplyState( _ctx.PassState);
+            _ctx.OverridePassState = default;
+            _gfxCmd.ApplyState(_ctx.PassState);
         }
 
-        if (materialMeta.PassStateFunc is { } passStateFunc)
+        if (materialMeta.PassStateFunc != default)
         {
-            _ctx.OverridePassStateFunc = passStateFunc;
-            _gfxCmd.ApplyStateFunctions(passStateFunc);
+            _gfxCmd.ApplyStateFunctions(_ctx.OverridePassStateFunc = materialMeta.PassStateFunc);
         }
-        else if (_ctx.OverridePassStateFunc is not null)
+        else if (_ctx.OverridePassStateFunc != default)
         {
-            _ctx.OverridePassStateFunc = null;
+            _ctx.OverridePassStateFunc = default;
             _gfxCmd.ApplyStateFunctions(_ctx.PassStateFunc);
         }
     }

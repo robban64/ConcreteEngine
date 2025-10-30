@@ -16,8 +16,8 @@ public sealed class Material
     public AssetRef<Shader> ShaderRef { get; }
     public MaterialId Id { get; }
     public MaterialState State { get; }
-    public GfxPassState? PassState { get; set; } = null;
-    public GfxPassStateFunc? PassFuncs { get; set; } = null;
+    public GfxPassState PassState { get; set; } = default;
+    public GfxPassStateFunc PassFunctions { get; set; } = default;
 
     public MaterialTextureSlots TextureSlots { get; }
 

@@ -1,5 +1,6 @@
 #region
 
+using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
 using ConcreteEngine.Renderer.Data;
 
@@ -44,4 +45,7 @@ internal readonly record struct MaterialTag
 
         Count = c;
     }
+    public ReadOnlySpan<MaterialId> AsReadOnlySpan()
+        => MemoryMarshal.CreateReadOnlySpan(ref Unsafe.AsRef(in Slot0), Count);
+
 }

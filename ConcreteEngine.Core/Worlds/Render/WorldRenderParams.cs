@@ -111,39 +111,35 @@ public sealed class WorldRenderParams
         return _snapshot;
     }
 
-    private static DirLightParams MakeDefaultDirLight() =>
-        new(
-            direction: new Vector3(-0.4f, -1.0f, 0.35f),
-            diffuse: new Vector3(1.00f, 0.96f, 0.90f),
-            intensity: 1.2f,
-            specular: 0.7f
-        );
+    private static DirLightParams MakeDefaultDirLight() => new(
+        direction: new Vector3(-0.35f, -0.95f, 0.25f),
+        diffuse: new Vector3(1.05f, 0.92f, 0.82f),
+        intensity: 1.35f,
+        specular: 0.75f
+    );
 
-    private static AmbientParams MakeDefaultAmbient() =>
-        new(
-            ambient: new(0.28f, 0.32f, 0.38f),
-            ambientGround: new(0.18f, 0.16f, 0.14f),
-            exposure: 0.2f
-        );
+    private static AmbientParams MakeDefaultAmbient() => new(
+        ambient: new Vector3(0.34f, 0.38f, 0.44f),
+        ambientGround: new Vector3(0.20f, 0.17f, 0.15f),
+        exposure: 0.26f
+    );
 
-    private static FogParams MakeDefaultFog() =>
-        new(
-            color: new(0.78f, 0.84f, 0.90f),
-            density: 650f,
-            heightFalloff: 6000f,
-            baseHeight: 0f,
-            strength: 1.0f,
-            heightInfluence: 0.8f,
-            scattering: 0.085f,
-            maxDistance: 9000f
-        );
+    private static FogParams MakeDefaultFog() => new(
+        color: new Vector3(0.70f, 0.89f, 0.68f),
+        density: 720f,
+        heightFalloff: 5200f,
+        baseHeight: 0f,
+        strength: 1.05f,
+        heightInfluence: 0.85f,
+        scattering: 0.09f,
+        maxDistance: 9500f
+    );
 
 
-    private static PostEffectParams MakeDefaultPostEffect() =>
-        new(
-            Grade: new(-0.10f, 0.80f, 0.805f, 0.70f),
-            WhiteBalance: new(-0.10f, 0.25f),
-            Bloom: new(0.35f, 0.75f, 8.0f),
-            ImageFx: new(0.25f, 0.15f, 0.30f, 0.60f)
-        );
+    private static PostEffectParams MakeDefaultPostEffect() => new(
+        Grade: new(-0.10f, 0.80f, 0.805f, 0.70f),
+        WhiteBalance: new(-0.10f, 0.25f),
+        Bloom: new(0.35f, 0.75f, 8.0f),
+        ImageFx: new(0.25f, 0.15f, 0.30f, 0.60f)
+    );
 }

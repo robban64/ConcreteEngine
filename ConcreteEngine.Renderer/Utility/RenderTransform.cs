@@ -43,13 +43,6 @@ internal static class RenderTransform
             maxLs = Vector3.Max(maxLs, p);
         }
 
-        // texel snapping
-        var size = maxLs - minLs;
-        var texel = new Vector2(size.X / shadowMapSize, size.Y / shadowMapSize);
-        minLs.X = MathF.Floor(minLs.X / texel.X) * texel.X;
-        minLs.Y = MathF.Floor(minLs.Y / texel.Y) * texel.Y;
-        maxLs.X = minLs.X + MathF.Ceiling(size.X / texel.X) * texel.X;
-        maxLs.Y = minLs.Y + MathF.Ceiling(size.Y / texel.Y) * texel.Y;
 
         var snappedCenterLs = new Vector3(
             0.5f * (minLs.X + maxLs.X),
@@ -69,6 +62,17 @@ internal static class RenderTransform
             minLs = Vector3.Min(minLs, p);
             maxLs = Vector3.Max(maxLs, p);
         }
+        
+        // texel snapping
+        var size = maxLs - minLs;
+        float ext = MathF.Max(size.X, size.Y);
+        size.X = size.Y = ext;
+        var texel = new Vector2(size.X / shadowMapSize, size.Y / shadowMapSize);
+        minLs.X = MathF.Floor(minLs.X / texel.X) * texel.X;
+        minLs.Y = MathF.Floor(minLs.Y / texel.Y) * texel.Y;
+        maxLs.X = minLs.X + MathF.Ceiling(size.X / texel.X) * texel.X;
+        maxLs.Y = minLs.Y + MathF.Ceiling(size.Y / texel.Y) * texel.Y;
+
 
         var nearLs = MathF.Max(0f, -maxLs.Z);
         var farLs = MathF.Max(nearLs + 0.001f, -minLs.Z) + zPad;

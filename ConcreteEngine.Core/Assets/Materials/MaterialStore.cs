@@ -101,7 +101,9 @@ public sealed class MaterialStore : IMaterialStore
     //TODO rework
     public void GetMaterialUploadData(Material material, out DrawMaterialPayload data)
     {
-        var meta = new DrawMaterialMeta(material.Id, ResolveShader(material), material.PassState, material.PassFunctions);
+        var shader = ResolveShader(material);
+        var pipeline = material.State.Pipeline;
+        var meta = new DrawMaterialMeta(material.Id, shader, pipeline.PassState, pipeline.PassFunctions);
         var snapshot = material.Snapshot();
         data = new DrawMaterialPayload(in meta, in snapshot);
     }

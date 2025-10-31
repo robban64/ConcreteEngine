@@ -9,20 +9,18 @@ using ConcreteEngine.Renderer.Data;
 
 namespace ConcreteEngine.Core.Assets.Materials;
 
+public readonly record struct MaterialPipelineState(GfxPassState PassState, GfxPassStateFunc PassFunctions);
+
 public sealed class Material
 {
+    
     public string TemplateName { get; }
     public string Name { get; }
     public AssetRef<Shader> ShaderRef { get; }
     public MaterialId Id { get; }
     public MaterialState State { get; }
-    public GfxPassState PassState { get; set; } = default;
-    public GfxPassStateFunc PassFunctions { get; set; } = default;
-
     public MaterialTextureSlots TextureSlots { get; }
-
-    public bool Attached => Id > 0;
-
+    
     internal Material(MaterialId id, MaterialTemplate template, string name)
     {
         Id = id;
@@ -34,6 +32,8 @@ public sealed class Material
         State = new MaterialState(template.Params);
         TextureSlots = new MaterialTextureSlots(template.TextureSlots.AssetSlots);
     }
+
+    public bool Attached => Id > 0;
 
     public MaterialParams Snapshot() => new(
         Color: State.Color,

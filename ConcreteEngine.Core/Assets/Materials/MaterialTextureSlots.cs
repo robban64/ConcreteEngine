@@ -12,9 +12,8 @@ namespace ConcreteEngine.Core.Assets.Materials;
 public sealed class MaterialTextureSlots
 {
     public bool IsCubeMap { get; private set; }
-
     public bool HasNormalMap { get; private set; }
-    public bool HasAlphaMap { get; set; } = false;
+    public bool HasAlphaMap { get; private set; } = false;
     public bool HasShadowMap { get; private set; }
     
 

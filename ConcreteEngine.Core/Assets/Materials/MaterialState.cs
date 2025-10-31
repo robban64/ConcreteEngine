@@ -10,16 +10,19 @@ namespace ConcreteEngine.Core.Assets.Materials;
 
 public sealed class MaterialState
 {
+    private bool _isDirty;
+    private bool _clearDirty = false;
+
     private Color4 _color = Color4.White;
     private float _shininess = 12f;
     private float _specular = 0.12f;
     private float _uvRepeat = 1f;
 
     private bool _transparency = false;
-    
-    private bool _dirty;
-    private bool _clearDirty = false;
+    private MaterialPipelineState _pipeline;
 
+
+    internal bool IsDirty { get; set; }
 
     internal MaterialState(MaterialState param)
     {
@@ -37,19 +40,14 @@ public sealed class MaterialState
         UvRepeat = desc.UvRepeat ?? UvRepeat;
     }
 
-
-    public bool Dirty => _dirty;
-
-    internal void ClearDirty()
+    public MaterialPipelineState Pipeline
     {
-        if (_clearDirty && _dirty)
+        get => _pipeline;
+        set
         {
-            _dirty = false;
-            _clearDirty = false;
-            return;
+            _pipeline = value;
+            IsDirty = true;
         }
-
-        _clearDirty = true;
     }
 
     public Color4 Color
@@ -58,7 +56,7 @@ public sealed class MaterialState
         set
         {
             _color = value;
-            _dirty = true;
+            IsDirty = true;
         }
     }
 
@@ -68,7 +66,7 @@ public sealed class MaterialState
         set
         {
             _shininess = value;
-            _dirty = true;
+            IsDirty = true;
         }
     }
 
@@ -78,7 +76,7 @@ public sealed class MaterialState
         set
         {
             _specular = value;
-            _dirty = true;
+            IsDirty = true;
         }
     }
 
@@ -88,7 +86,7 @@ public sealed class MaterialState
         set
         {
             _uvRepeat = value;
-            _dirty = true;
+            IsDirty = true;
         }
     }
 
@@ -98,7 +96,7 @@ public sealed class MaterialState
         set
         {
             _transparency = value;
-            _dirty = true;
+            IsDirty = true;
         }
     }
 
@@ -109,5 +107,18 @@ public sealed class MaterialState
         Shininess = param.Shininess;
         UvRepeat = param.UvRepeat;
         Transparency = param.Transparent;
+        IsDirty = true;
+    }
+
+    internal void ClearDirty()
+    {
+        if (_clearDirty && _isDirty)
+        {
+            _isDirty = false;
+            _clearDirty = false;
+            return;
+        }
+
+        _clearDirty = true;
     }
 }

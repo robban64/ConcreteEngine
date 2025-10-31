@@ -3,6 +3,7 @@
 using System.Numerics;
 using ConcreteEngine.Common.Numerics;
 using ConcreteEngine.Core.Assets;
+using ConcreteEngine.Core.Assets.Materials;
 using ConcreteEngine.Core.Assets.Meshes;
 using ConcreteEngine.Core.Assets.Textures;
 using ConcreteEngine.Core.Configuration;
@@ -34,8 +35,10 @@ public sealed class Demo3DScene : GameScene
 
         // Skybox
         var skyboxMaterial = materialStore.CreateMaterial("SkyboxMat", "SkyboxMat1");
-        skyboxMaterial.PassFunctions = GfxPassStateFunc.MakeSky();
-        skyboxMaterial.PassState = GfxPassState.Disable(GfxStateFlags.DepthWrite);
+        skyboxMaterial.State.Pipeline = new MaterialPipelineState(
+            GfxPassState.Disable(GfxStateFlags.DepthWrite),
+            GfxPassStateFunc.MakeSky());
+        
         Context.World.Sky.SetSkyMaterial(skyboxMaterial.Id);
 
         // Terrain
@@ -67,11 +70,10 @@ public sealed class Demo3DScene : GameScene
 
         var leafState = GfxPassState.Set(GfxStateFlags.DepthTest | GfxStateFlags.DepthWrite  | GfxStateFlags.PolygonOffset, disable: GfxStateFlags.Cull);
         var leafFunc = new GfxPassStateFunc(Depth: DepthMode.Lequal, Cull: CullMode.FrontCcw, PolygonOffset: PolygonOffsetLevel.Slope);
-        leaf1Mat.PassState = leafState;
-        leaf1Mat.PassFunctions = leafFunc;
+        var leafPipelineState = new MaterialPipelineState(leafState,leafFunc);
 
-        leaf2Mat.PassState = leafState;
-        leaf2Mat.PassFunctions = leafFunc;
+        leaf1Mat.State.Pipeline = leafPipelineState;
+        leaf2Mat.State.Pipeline = leafPipelineState;
 
 
         var treeMesh = store.GetByName<Model>("Tree1");

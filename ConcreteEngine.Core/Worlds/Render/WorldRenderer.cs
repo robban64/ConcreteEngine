@@ -150,7 +150,7 @@ public sealed class WorldRenderer : IRenderingSystem
         var isDirty = false;
         foreach (var material in matStore.MaterialSpan)
         {
-            if (material?.State.Dirty != true) continue;
+            if (material?.State.IsDirty != true) continue;
             isDirty = true;
             _hasUploadedMaterial = false;
         }
@@ -172,7 +172,7 @@ public sealed class WorldRenderer : IRenderingSystem
         var matStore = _assets.MaterialStoreImpl;
         foreach (var material in matStore.MaterialSpan)
         {
-            if (material == null || !material.State.Dirty) continue;
+            if (material == null || !material.State.IsDirty) continue;
             material.State.ClearDirty();
         }
     }

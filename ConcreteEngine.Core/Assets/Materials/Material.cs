@@ -40,6 +40,7 @@ public sealed class Material
         Specular: State.Specular,
         Shininess: State.Shininess,
         UvRepeat: State.UvRepeat,
+        Transparent: State.Transparency,
         HasNormal: TextureSlots.HasNormalMap,
         HasAlpha: TextureSlots.HasAlphaMap
     );

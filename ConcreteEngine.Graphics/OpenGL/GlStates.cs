@@ -35,6 +35,13 @@ internal sealed class GlStates : IGraphicsDriverModule
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public void ColorMask(bool v) => _gl.ColorMask(v, v, v, v);
+    
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public void ToggleSampleAlphaCoverage(bool enabled)
+    {
+        if (enabled) _gl.Enable(GLEnum.SampleAlphaToCoverage);
+        else _gl.Disable(GLEnum.SampleAlphaToCoverage);
+    }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public void TogglePolygonOffset(bool enabled)

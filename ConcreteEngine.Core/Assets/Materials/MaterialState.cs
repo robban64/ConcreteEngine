@@ -14,6 +14,9 @@ public sealed class MaterialState
     private float _shininess = 12f;
     private float _specular = 0.12f;
     private float _uvRepeat = 1f;
+
+    private bool _transparency = false;
+    
     private bool _dirty;
     private bool _clearDirty = false;
 
@@ -89,11 +92,22 @@ public sealed class MaterialState
         }
     }
 
+    public bool Transparency
+    {
+        get => _transparency;
+        set
+        {
+            _transparency = value;
+            _dirty = true;
+        }
+    }
+
     internal void Set(in MaterialParams param)
     {
         Color = param.Color;
         Specular = param.Specular;
         Shininess = param.Shininess;
         UvRepeat = param.UvRepeat;
+        Transparency = param.Transparent;
     }
 }

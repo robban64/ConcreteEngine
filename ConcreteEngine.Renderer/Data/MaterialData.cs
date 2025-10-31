@@ -14,6 +14,7 @@ public readonly record struct MaterialParams(
     float Specular,
     float Shininess,
     float UvRepeat = 1f,
+    bool Transparent = false,
     bool HasNormal = false,
     bool HasAlpha = false);
 

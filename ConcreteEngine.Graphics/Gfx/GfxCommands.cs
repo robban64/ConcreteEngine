@@ -199,6 +199,7 @@ public sealed class GfxCommands
         if ((d & GfxStateFlags.FramebufferSrgb) != 0) _states.ToggleFrameBufferSrgb((e & GfxStateFlags.FramebufferSrgb) != 0);
         if ((d & GfxStateFlags.ColorMask) != 0) _states.ColorMask((e & GfxStateFlags.ColorMask) != 0);
         if ((d & GfxStateFlags.PolygonOffset) != 0) _states.TogglePolygonOffset((e & GfxStateFlags.PolygonOffset) != 0);
+        if ((d & GfxStateFlags.SampleAlphaCoverage) != 0) _states.ToggleSampleAlphaCoverage((e & GfxStateFlags.SampleAlphaCoverage) != 0);
 
         _activeFlags = GfxPassState.Merge(_activeFlags, state);
     }

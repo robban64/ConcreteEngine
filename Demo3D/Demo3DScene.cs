@@ -55,8 +55,15 @@ public sealed class Demo3DScene : GameScene
 
         var leaf1Mat = materialStore.CreateMaterial("TreeLeaf1Mat", "Leaf1");
         var leaf2Mat = materialStore.CreateMaterial("TreeLeaf2Mat", "Leaf2");
+        leaf1Mat.State.Transparency = true;
         leaf1Mat.State.Color = new Color4(0.55f, 0.85f, 0.45f);
+        leaf1Mat.State.Shininess = 0f;
+        leaf1Mat.State.Specular = 0f;
+        leaf2Mat.State.Transparency = true;
         leaf2Mat.State.Color = new Color4(0.55f, 0.85f, 0.45f);
+        leaf2Mat.State.Shininess = 0f;
+        leaf2Mat.State.Specular = 0f;
+        
 
         var leafState = GfxPassState.Set(GfxStateFlags.DepthTest | GfxStateFlags.DepthWrite  | GfxStateFlags.PolygonOffset, disable: GfxStateFlags.Cull);
         var leafFunc = new GfxPassStateFunc(Depth: DepthMode.Lequal, Cull: CullMode.FrontCcw, PolygonOffset: PolygonOffsetLevel.Slope);

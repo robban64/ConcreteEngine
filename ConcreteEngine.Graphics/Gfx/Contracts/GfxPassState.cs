@@ -21,6 +21,7 @@ public enum GfxStateFlags : ushort
     FramebufferSrgb = 1 << 5,
     ColorMask = 1 << 6,
     PolygonOffset = 1 << 7,
+    SampleAlphaCoverage = 1 << 8
 }
 
 public readonly record struct GfxPassState(GfxStateFlags Enabled, GfxStateFlags Defined)
@@ -47,14 +48,15 @@ public readonly record struct GfxPassState(GfxStateFlags Enabled, GfxStateFlags 
 
     public static GfxPassState MakeScene() =>
         new(
-            Enabled: DepthTest | DepthWrite | Cull | FramebufferSrgb | ColorMask,
-            Defined: DepthTest | DepthWrite | Cull | Blend | Scissor | FramebufferSrgb | ColorMask | PolygonOffset
+            Enabled: DepthTest | DepthWrite | Cull | FramebufferSrgb | ColorMask | SampleAlphaCoverage,
+            Defined: DepthTest | DepthWrite | Cull | Blend | Scissor | FramebufferSrgb | ColorMask |
+                     PolygonOffset | SampleAlphaCoverage
         );
 
     public static GfxPassState MakeShadow() =>
         new(
             Enabled: DepthTest | DepthWrite | Cull | FramebufferSrgb | PolygonOffset,
-            Defined: DepthTest | DepthWrite | Cull | Blend | Scissor | FramebufferSrgb | ColorMask | PolygonOffset
+            Defined: DepthTest | DepthWrite | Cull | Blend | Scissor | FramebufferSrgb | ColorMask | PolygonOffset | SampleAlphaCoverage
         );
 
     public static GfxPassState MakeLighting() =>

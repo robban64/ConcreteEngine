@@ -1,5 +1,6 @@
 #region
 
+using ConcreteEngine.Common.Diagnostics.Utility;
 using ConcreteEngine.Common.Numerics;
 using ConcreteEngine.Core.Configuration;
 using ConcreteEngine.Core.Data;
@@ -20,7 +21,7 @@ public abstract class GameScene
     protected GameSceneContext Context { get; private set; } = null!;
 
     protected World.World World => _world;
-    protected Camera3D Camera => _camera;
+    public Camera3D Camera => _camera;
 
     internal World.World InternalWorld => _world;
 
@@ -39,13 +40,10 @@ public abstract class GameScene
     {
         Context.Modules.GameTickUpdate(tick);
         World.Cleanup();
-    }
+        
+        Camera.EndTick();
 
-    internal void BeforeRender(out RenderViewSnapshot viewSnapshot)
-    {
-        _camera.MakeRenderViewInfo(out viewSnapshot);
     }
-
 
     internal void AttachContext(GameSceneContext context)
     {

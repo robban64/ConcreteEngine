@@ -140,9 +140,7 @@ public sealed class GameEngine : IDisposable
         _assets.UpdatePendingQueue(frameInfo.FrameIndex);
         _assets.ProcessPendingQueue(_worldRenderer);
 
-        scene.BeforeRender(out var viewSnapshot);
-
-        _worldRenderer.PreRender(beginStatus, in frameInfo, in runtimeParams, in viewSnapshot);
+        _worldRenderer.PreRender(beginStatus, in frameInfo, in runtimeParams, scene.Camera);
         _worldRenderer.ExecuteFrame(out var gfxFrameResult);
         _renderFrameInfo.EndRenderFrame(gfxFrameResult);
 
@@ -185,6 +183,8 @@ public sealed class GameEngine : IDisposable
         _updateInfo.UpdateTick(tick);
         _inputSystem.Update(!_engineGateway.BlockInput());
         _sceneManager.Current?.UpdateTick(tick);
+        
+        
     }
 
     private void DebugTickUpdate(int tick)
@@ -240,7 +240,7 @@ public sealed class GameEngine : IDisposable
         _engineGateway.RegisterMetrics();
         _engineGateway.RefreshMetrics(true);
 
-        renderer.AttachWorld((World.World)result.Context.World);
+        renderer.AttachWorld((World.World)result.Context.World, result.Context.Camera);
         foreach (var module in result.Modules) result.Context.Modules.AddModule(module());
     }
 

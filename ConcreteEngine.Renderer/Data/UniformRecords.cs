@@ -121,7 +121,7 @@ public readonly struct MaterialUniformRecord : IStd140Uniform
 {
     public readonly Vector4 MatColor; // rgb = tint
     public readonly Vector4 MatParams0; // x = SpecularStrength, y = uvRepeat, z,w reserved
-    public readonly Vector4 MatParams1; // x = Shininess, y = HasNormals z = HasAlpha, w reserved
+    public readonly Vector4 MatParams1; // x = Shininess, y = HasNormals z = Transparency, w = HasAlpha
 
     public MaterialUniformRecord(Vector4 matColor,
         Vector4 matParams0,
@@ -134,9 +134,12 @@ public readonly struct MaterialUniformRecord : IStd140Uniform
 
     public MaterialUniformRecord(in MaterialParams mat)
     {
+        var transparency = mat.Transparent ? 1f : 0f;
+        var hasAlpha = mat.HasAlpha ? 1f : 0f;
+        var hasNormals = mat.HasNormal ? 1f : 0f;
         MatColor = new Vector4(mat.Color.AsVec3(), 1);
         MatParams0 = new Vector4(mat.Specular, mat.UvRepeat, 1.0f, 1.0f);
-        MatParams1 = new Vector4(mat.Shininess, mat.HasNormal ? 1f : 0f, mat.HasAlpha ? 1f : 0f, 0.0f);
+        MatParams1 = new Vector4(mat.Shininess, hasNormals, transparency, hasAlpha);
     }
 }
 

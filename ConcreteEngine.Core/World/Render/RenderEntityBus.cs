@@ -48,12 +48,13 @@ internal sealed class RenderEntityBus
         _idx = 0;
     }
 
-    public void CollectEntities(in Matrix4x4 viewMat, float near, float far)
+    public void CollectEntities(in Matrix4x4 viewMat, in ProjectionInfo projInfo)
     {
         if (_world is null) return;
 
         EnsureCapacity(DrawCount);
 
+        float near = projInfo.Near, far = projInfo.Far;
         var idx = _idx;
         foreach (var query in _world.Query<ModelComponent, Transform>())
         {

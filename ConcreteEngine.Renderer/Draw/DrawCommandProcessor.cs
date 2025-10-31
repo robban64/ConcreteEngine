@@ -45,43 +45,46 @@ internal sealed class DrawCommandProcessor
 
     private void UseShader(ShaderId shaderId) => _gfxCmd.UseShader(shaderId);
 
-    private void BindTextureSlots(ReadOnlySpan<TextureSlotInfo> slots)
+    private void BindDepthTextureSlots(ReadOnlySpan<TextureSlotInfo> slots)
     {
-        if (_ctx.IsDepth)
+        _gfxCmd.BindTexture(slots[0].Texture, 0);
+
+        for (var i = 1; i < slots.Length; i++)
         {
-            _gfxCmd.BindTexture(slots[0].Texture, 0);
-
-            for (var i = 1; i < slots.Length; i++)
-            {
-                var value = slots[i];
-                if (value.SlotKind != TextureSlotKind.Mask) continue;
-                _gfxCmd.BindTexture(value.Texture, 1);
-                return;
-            }
-
-            _gfxCmd.BindTexture(GfxTextures.FallbackTextures.AlphaMaskId, 1);
-
+            var value = slots[i];
+            if (value.SlotKind != TextureSlotKind.Mask) continue;
+            _gfxCmd.BindTexture(value.Texture, 1);
             return;
         }
 
+        _gfxCmd.BindTexture(GfxTextures.FallbackTextures.AlphaMaskId, 1);
+
+    }
+
+    private void BindTextureSlots(ReadOnlySpan<TextureSlotInfo> slots)
+    {
         for (var i = 0; i < slots.Length; i++)
         {
             var value = slots[i];
-            if (value.SlotKind == TextureSlotKind.Shadowmap)
-                _gfxCmd.BindTexture(_ctx.DepthTexture, i);
-            else
-                _gfxCmd.BindTexture(value.Texture, i);
+            _gfxCmd.BindTexture(value.SlotKind != TextureSlotKind.Shadowmap ? value.Texture : _ctx.DepthTexture, i);
         }
     }
 
     private void BindMaterial(MaterialId materialId)
     {
         var texSlots = _buffers.ResolveMaterial(materialId, out var materialMeta);
-        //if (!_ctx.IsDepth)
-        // use regular for now.
-        UseShader(materialMeta.ShaderId);
 
-        BindTextureSlots(texSlots);
+        switch (_ctx.PassMode)
+        {
+            case PassStateMode.Main:
+                UseShader(materialMeta.ShaderId);
+                BindTextureSlots(texSlots);
+                break;
+            case PassStateMode.Depth:
+                BindDepthTextureSlots(texSlots);
+                break;
+        }
+            
         _buffers.BindMaterialObject(materialId);
 
         if (materialMeta.PassState != default)

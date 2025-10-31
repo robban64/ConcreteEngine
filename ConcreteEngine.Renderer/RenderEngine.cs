@@ -42,6 +42,7 @@ public sealed class RenderEngine
     public IRenderFboRegistry FboRegistry => _renderRegistry.FboRegistry;
 
     public int PassCount => _passPipeline.PassCount;
+    public RenderView RenderView => _renderView;
 
     public RenderEngine(GraphicsRuntime graphics, RenderParamsSnapshot paramsSnapshot, MeshId fsqMesh)
     {
@@ -101,14 +102,11 @@ public sealed class RenderEngine
     //
     public void PrepareFrame(
         in RenderFrameInfo frameInfo,
-        in RenderRuntimeParams runtimeParams,
-        in RenderViewSnapshot viewSnapshot)
+        in RenderRuntimeParams runtimeParams)
     {
         Debug.Assert(Initialized);
 
         _stateContext.SetCurrentFrameInfo(in frameInfo, in runtimeParams);
-
-        _renderView.PrepareFrame(in viewSnapshot);
 
         _passPipeline.Prepare(frameInfo.OutputSize);
         _drawPipeline.Prepare();

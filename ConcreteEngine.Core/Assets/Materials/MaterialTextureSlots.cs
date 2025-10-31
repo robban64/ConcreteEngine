@@ -16,6 +16,7 @@ public sealed class MaterialTextureSlots
     public bool HasNormalMap { get; private set; }
     public bool HasAlphaMap { get; set; } = false;
     public bool HasShadowMap { get; private set; }
+    
 
     private readonly AssetTextureSlot[] _assetSlots;
     internal TextureSlotInfo[] CacheSlots { get; set; } = Array.Empty<TextureSlotInfo>();

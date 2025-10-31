@@ -33,8 +33,7 @@ public sealed class GfxTextures
 
         FallbackTextures.AlbedoId = CreateOnePixelTexture([255, 255, 255, 255], TexturePixelFormat.SrgbAlpha);
         FallbackTextures.NormalId = CreateOnePixelTexture([128, 128, 255], TexturePixelFormat.Rgb);
-        FallbackTextures.AlphaMaskId
-            = CreateOnePixelTexture([255], TexturePixelFormat.Depth, TexturePreset.NearestClamp);
+        FallbackTextures.AlphaMaskId = CreateOnePixelTexture([255], TexturePixelFormat.Red, TexturePreset.NearestClamp);
     }
 
     private TextureId CreateOnePixelTexture(byte[] pixelData, TexturePixelFormat format,

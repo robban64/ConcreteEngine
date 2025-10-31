@@ -17,6 +17,9 @@ public sealed class Camera3D : ICamera
     private float _yaw = 0;
     private float _pitch = 0;
 
+    private CameraTransformInfo _prevTick;
+    private CameraTransformInfo _currTick;
+
     private Vector3 _translation = Vector3.Zero;
     private Vector3 _scale = Vector3.One;
     private Quaternion _rotation = Quaternion.Identity;
@@ -31,6 +34,11 @@ public sealed class Camera3D : ICamera
     private float _nearPlane = 0.2f;
     private float _aspectRatio;
 
+    public Camera3D()
+    {
+        Ensure();
+        _dirty = true;
+    }
 
     public Vector3 Right => Vector3.Normalize(Vector3.Transform(Vector3.UnitX, _rotation));
     public Vector3 Up => Vector3.Normalize(Vector3.Transform(Vector3.UnitY, _rotation));
@@ -172,19 +180,31 @@ public sealed class Camera3D : ICamera
         _projectionViewMatrix = _viewMatrix * _projectionMatrix;
     }
 
-    internal void MakeRenderViewInfo(out RenderViewSnapshot viewSnapshot)
+    internal void EndTick()
     {
         Ensure();
+        _prevTick = _currTick;
+        CameraTransformInfo.FromCamera(this, out _currTick);
+    }
+
+    internal void GetRenderSnapshot(float alpha, out RenderViewSnapshot viewSnapshot)
+    {
+        var camPos = Vector3.Lerp(_prevTick.Translation, _currTick.Translation, alpha);
+        var camRot = Quaternion.Slerp(_prevTick.Rotation, _currTick.Rotation, alpha);
+        MatrixMath.CreateModelMatrix(camPos, Vector3.One, camRot, out var viewMatrix);
+        Matrix4x4.Invert(viewMatrix, out viewMatrix);
+
         var projInfo = new ProjectionInfo(_aspectRatio, _fov, _nearPlane, _farPlane);
         viewSnapshot = new RenderViewSnapshot(
-            viewMatrix: in _viewMatrix,
+            viewMatrix: in viewMatrix,
             projectionMatrix: in _projectionMatrix,
-            projectionViewMatrix: in _projectionViewMatrix,
+            projectionViewMatrix: viewMatrix * _projectionMatrix,
             projectionInfo: in projInfo,
-            position: _translation,
-            forward: Forward,
-            right: Right,
-            up: Up
+            position: in camPos,
+            rotation: in camRot,
+            forward: Vector3.Normalize(Vector3.Transform(-Vector3.UnitZ, camRot)),
+            right: Vector3.Normalize(Vector3.Transform(Vector3.UnitX, camRot)),
+            up: Vector3.Normalize(Vector3.Transform(Vector3.UnitY, camRot))
         );
     }
 }

@@ -44,11 +44,12 @@ public sealed class WorldRenderer : IRenderingSystem
     private readonly MaterialTable _materialTable;
     private readonly RenderEntityBus _renderEntityBus;
 
-    internal RenderEngine RenderEngine => _renderer;
-
     private readonly EngineEventBus _eventBus;
 
     private bool _hasUploadedMaterial = false;
+
+    internal RenderEngine RenderEngine => _renderer;
+    internal RenderView RenderView => _renderer.RenderView;
 
     internal WorldRenderer(EngineWindow window, GraphicsRuntime graphics, AssetSystem assets,
         EngineEventBus eventBus)
@@ -61,7 +62,6 @@ public sealed class WorldRenderer : IRenderingSystem
         WorldRenderParams = new WorldRenderParams();
         Batchers = new BatcherRegistry();
 
-
         PrimitiveMeshes.CreatePrimitives(graphics.Gfx.Meshes);
         InvalidOpThrower.ThrowIf(PrimitiveMeshes.FsqQuad == 0 || PrimitiveMeshes.SkyboxCube == 0);
 
@@ -73,12 +73,14 @@ public sealed class WorldRenderer : IRenderingSystem
     }
 
 
-    internal void AttachWorld(World world)
+    internal void AttachWorld(World world, Camera3D camera)
     {
         ArgumentNullException.ThrowIfNull(world);
         _meshTable.Setup(_assets);
         _renderEntityBus.AttachWorld(world);
         world.AttachRender(_meshTable, _materialTable);
+
+        PrepareRenderView(1, camera);
     }
 
     internal void RenderEmptyFrame(in RenderFrameInfo frameInfo) => _renderer.RenderEmptyFrame(in frameInfo);
@@ -102,19 +104,21 @@ public sealed class WorldRenderer : IRenderingSystem
         BeginFrameStatus status,
         in RenderFrameInfo frameInfo,
         in RenderRuntimeParams runtimeParams,
-        in RenderViewSnapshot viewSnapshot)
+        Camera3D camera)
     {
         _renderEntityBus.Reset();
 
         WorldRenderParams.Commit();
 
-        _renderer.PrepareFrame(in frameInfo, in runtimeParams, in viewSnapshot);
+        PrepareRenderView(frameInfo.Alpha, camera);
+
+        _renderer.PrepareFrame(in frameInfo, in runtimeParams);
 
         // Upload materials
         SubmitMaterialData();
 
-        _renderEntityBus.CollectEntities(in viewSnapshot.ViewMatrix,
-            viewSnapshot.ProjectionInfo.Near, viewSnapshot.ProjectionInfo.Far);
+        var renderView = RenderView;
+        _renderEntityBus.CollectEntities(in renderView.ViewMatrix, renderView.ProjectionInfo);
 
         _renderEntityBus.FlushEntities(_renderer.CommandBuffer);
 
@@ -131,7 +135,13 @@ public sealed class WorldRenderer : IRenderingSystem
 
         ClearMaterialDirty();
     }
+    private FrameTimer _frameTimer = new();
 
+    private void PrepareRenderView(float alpha, Camera3D camera)
+    {
+        camera.GetRenderSnapshot(alpha, out var viewSnapshot);
+        RenderView.SetViewData(in viewSnapshot);
+    }
 
     private void SubmitMaterialData()
     {

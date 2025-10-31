@@ -2,7 +2,7 @@
 
 using ConcreteEngine.Core.Configuration;
 using ConcreteEngine.Core.Scene.Modules;
-using ConcreteEngine.Core.World.Render;
+using ConcreteEngine.Core.Worlds.Render;
 using ConcreteEngine.Renderer;
 using ConcreteEngine.Renderer.Descriptors;
 

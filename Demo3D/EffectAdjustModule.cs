@@ -3,8 +3,7 @@
 using ConcreteEngine.Core.Data;
 using ConcreteEngine.Core.Platform;
 using ConcreteEngine.Core.Scene.Modules;
-using ConcreteEngine.Core.World;
-using ConcreteEngine.Core.World.Render;
+using ConcreteEngine.Core.Worlds.Render;
 
 #endregion
 

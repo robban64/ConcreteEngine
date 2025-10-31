@@ -3,6 +3,7 @@
 using ConcreteEngine.Core.Assets;
 using ConcreteEngine.Core.Data;
 using ConcreteEngine.Core.Diagnostic.utils;
+using ConcreteEngine.Core.Worlds;
 using ConcreteEngine.Graphics.Diagnostic;
 using Core.DebugTools;
 using Core.DebugTools.Components;
@@ -41,7 +42,7 @@ internal sealed class EngineGateway
 
     public bool BlockInput() => Enabled && _diagnostics.BlockInput();
 
-    public void AttachDebugTools(World.World world, AssetSystem assetSystem, RenderEngineFrameInfo frameInfo)
+    public void AttachDebugTools(World world, AssetSystem assetSystem, RenderEngineFrameInfo frameInfo)
     {
         ArgumentNullException.ThrowIfNull(world, nameof(world));
         ArgumentNullException.ThrowIfNull(assetSystem, nameof(assetSystem));

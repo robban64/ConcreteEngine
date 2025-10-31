@@ -9,8 +9,9 @@ using ConcreteEngine.Core.Platform;
 using ConcreteEngine.Core.Scene;
 using ConcreteEngine.Core.Scene.Modules;
 using ConcreteEngine.Core.Time;
-using ConcreteEngine.Core.World.Render;
-using ConcreteEngine.Core.World.Render.Batching;
+using ConcreteEngine.Core.Worlds;
+using ConcreteEngine.Core.Worlds.Render;
+using ConcreteEngine.Core.Worlds.Render.Batching;
 using ConcreteEngine.Graphics;
 using ConcreteEngine.Graphics.Diagnostic;
 using ConcreteEngine.Renderer.State;
@@ -235,12 +236,12 @@ public sealed class GameEngine : IDisposable
 
     private void OnSceneBuild(SceneManager.SceneBuildResult result, WorldRenderer renderer)
     {
-        _engineGateway.AttachDebugTools((World.World)result.Context.World, _assets, _renderFrameInfo);
+        _engineGateway.AttachDebugTools((World)result.Context.World, _assets, _renderFrameInfo);
         _engineGateway.RegisterCommands();
         _engineGateway.RegisterMetrics();
         _engineGateway.RefreshMetrics(true);
 
-        renderer.AttachWorld((World.World)result.Context.World, result.Context.Camera);
+        renderer.AttachWorld((World)result.Context.World, result.Context.Camera);
         foreach (var module in result.Modules) result.Context.Modules.AddModule(module());
     }
 

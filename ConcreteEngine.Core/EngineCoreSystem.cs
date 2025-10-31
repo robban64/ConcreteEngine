@@ -3,7 +3,7 @@
 using ConcreteEngine.Common.Collections;
 using ConcreteEngine.Core.Assets;
 using ConcreteEngine.Core.Platform;
-using ConcreteEngine.Core.World.Render;
+using ConcreteEngine.Core.Worlds.Render;
 
 #endregion
 

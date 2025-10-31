@@ -6,7 +6,7 @@ using ConcreteEngine.Core.Assets.Descriptors;
 using ConcreteEngine.Core.Assets.Internal;
 using ConcreteEngine.Core.Assets.Materials;
 using ConcreteEngine.Core.Assets.Shaders;
-using ConcreteEngine.Core.World.Render;
+using ConcreteEngine.Core.Worlds.Render;
 using ConcreteEngine.Graphics.Gfx;
 using ConcreteEngine.Graphics.Gfx.Definitions;
 

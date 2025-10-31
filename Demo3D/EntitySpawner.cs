@@ -3,10 +3,9 @@
 using System.Numerics;
 using ConcreteEngine.Common.Numerics.Maths;
 using ConcreteEngine.Core.Assets.Meshes;
-using ConcreteEngine.Core.World;
-using ConcreteEngine.Core.World.Data;
-using ConcreteEngine.Core.World.Entities;
-using ConcreteEngine.Core.World.Utility;
+using ConcreteEngine.Core.Worlds;
+using ConcreteEngine.Core.Worlds.Data;
+using ConcreteEngine.Core.Worlds.Entities;
 using ConcreteEngine.Renderer.Data;
 
 #endregion

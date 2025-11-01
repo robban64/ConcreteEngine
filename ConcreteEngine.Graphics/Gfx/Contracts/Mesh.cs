@@ -6,12 +6,6 @@ using ConcreteEngine.Graphics.Gfx.Definitions;
 
 namespace ConcreteEngine.Graphics.Gfx.Contracts;
 
-public readonly record struct VboAttachment(
-    VertexBufferId V0,
-    VertexBufferId V1,
-    VertexBufferId V2,
-    VertexBufferId V3);
-
 public sealed record MeshLayout(
     MeshId MeshId,
     IndexBufferId IboId,
@@ -54,16 +48,23 @@ public readonly record struct MeshDrawProperties(
     DrawPrimitive Primitive,
     DrawMeshKind Kind,
     DrawElementSize ElementSize,
-    int DrawCount
+    int DrawCount,
+    int InstanceCount = 0
 )
 {
     public static MeshDrawProperties FromMeta(in MeshMeta meta) =>
         new(meta.Primitive, meta.Kind, meta.ElementSize, meta.DrawCount);
 
-    public static MeshDrawProperties MakeDefault() =>
-        new(DrawPrimitive.Triangles, DrawMeshKind.Invalid, DrawElementSize.Invalid, 0);
+    public static MeshDrawProperties MakeArray(int drawCount = 0) =>
+        new(DrawPrimitive.Triangles, DrawMeshKind.Invalid, DrawElementSize.Invalid, drawCount);
 
-    public static MeshDrawProperties MakeTriElemental(DrawMeshKind kind = DrawMeshKind.Elements,
+    public static MeshDrawProperties MakeInstance(int drawCount, int instances) =>
+        new(DrawPrimitive.Triangles, DrawMeshKind.Invalid, DrawElementSize.Invalid, drawCount, instances);
+
+    
+    public static MeshDrawProperties MakeElemental(DrawMeshKind kind = DrawMeshKind.Elements,
         DrawElementSize size = DrawElementSize.UnsignedInt, int drawCount = 0) =>
         new(DrawPrimitive.Triangles, kind, size, drawCount);
+    
+    
 }

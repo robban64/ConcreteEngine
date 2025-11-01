@@ -54,7 +54,6 @@ public sealed class GfxCommands
     private int _drawCallCount;
 
 
-
     internal GfxCommands(GfxContextInternal ctx)
     {
         _driver = ctx.Driver;
@@ -196,10 +195,12 @@ public sealed class GfxCommands
         if ((d & GfxStateFlags.DepthTest) != 0) _states.ToggleDepthTest((e & GfxStateFlags.DepthTest) != 0);
         if ((d & GfxStateFlags.DepthWrite) != 0) _states.ToggleDepthMask((e & GfxStateFlags.DepthWrite) != 0);
         if ((d & GfxStateFlags.Blend) != 0) _states.ToggleBlendState((e & GfxStateFlags.Blend) != 0);
-        if ((d & GfxStateFlags.FramebufferSrgb) != 0) _states.ToggleFrameBufferSrgb((e & GfxStateFlags.FramebufferSrgb) != 0);
+        if ((d & GfxStateFlags.FramebufferSrgb) != 0)
+            _states.ToggleFrameBufferSrgb((e & GfxStateFlags.FramebufferSrgb) != 0);
         if ((d & GfxStateFlags.ColorMask) != 0) _states.ColorMask((e & GfxStateFlags.ColorMask) != 0);
         if ((d & GfxStateFlags.PolygonOffset) != 0) _states.TogglePolygonOffset((e & GfxStateFlags.PolygonOffset) != 0);
-        if ((d & GfxStateFlags.SampleAlphaCoverage) != 0) _states.ToggleSampleAlphaCoverage((e & GfxStateFlags.SampleAlphaCoverage) != 0);
+        if ((d & GfxStateFlags.SampleAlphaCoverage) != 0)
+            _states.ToggleSampleAlphaCoverage((e & GfxStateFlags.SampleAlphaCoverage) != 0);
 
         _activeFlags = GfxPassState.Merge(_activeFlags, state);
     }
@@ -328,7 +329,7 @@ public sealed class GfxCommands
     }
 
 
-    public void DrawBoundMesh(MeshId id, int drawCount)
+    public void DrawBoundMesh(MeshId id, int drawCount, int instanceCount = 0)
     {
         Debug.Assert(_boundMeshId > 0);
 
@@ -344,6 +345,12 @@ public sealed class GfxCommands
                 Debug.Assert(meta.ElementSize != DrawElementSize.Invalid);
                 _states.DrawElements(meta.Primitive, meta.ElementSize, count);
                 break;
+            case DrawMeshKind.ArraysInstanced:
+                var drawInstances = instanceCount > 0 ? instanceCount : meta.InstanceCount;
+                Debug.Assert(drawCount == 0 || drawInstances > meta.InstanceCount);
+                _states.DrawInstanced(meta.Primitive, meta.ElementSize, count, drawInstances);
+                break;
+            case DrawMeshKind.Invalid:
             default:
                 GraphicsException.ThrowUnsupportedFeature(nameof(meta.Kind));
                 return;

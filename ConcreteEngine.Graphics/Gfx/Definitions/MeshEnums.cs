@@ -5,7 +5,7 @@ public enum DrawMeshKind : byte
     Invalid = 0,
     Arrays = 1,
     Elements = 2,
-    Instanced = 3
+    ArraysInstanced = 3
 }
 
 public enum DrawElementSize : byte

@@ -16,7 +16,8 @@ namespace ConcreteEngine.Core.Assets;
 internal sealed class AssetLoader
 {
     private AssetStore? _store;
-
+    private AssetDataProvider? _dataProvider;
+    
     private TextureLoaderModule? _textureLoader;
     private ModelLoaderModule? _meshLoader;
     private ShaderLoaderModule? _shaderLoader;
@@ -39,7 +40,13 @@ internal sealed class AssetLoader
         => _store!.RegisterWithFiles(manifest, _loadCubeMapDel!);
 
     public Model LoadMesh(MeshDescriptor manifest)
-        => _store!.RegisterWithFiles(manifest, _loadMeshDel!);
+    {
+        if (manifest.LoadMode == AssetLoadingMode.MemoryOnly)
+        {
+            return null!;
+        }
+        return _store!.RegisterWithFiles(manifest, _loadMeshDel!);
+    }
 
     public List<MaterialTemplate> LoadAllMaterials(MaterialManifest manifest)
         => _materialLoader!.LoadMaterials(_store!, manifest.Records)!;

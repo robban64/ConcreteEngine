@@ -50,10 +50,10 @@ internal sealed class TextureLoader
         );
 
         var fileSpec = new AssetFileSpec(
-            storage: AssetStorageKind.FileSystem,
-            logicalName: record.Name,
-            relativePath: record.Filename,
-            sizeBytes: fi.Length);
+            Storage: AssetStorageKind.FileSystem,
+            LogicalName: record.Name,
+            RelativePath: record.Filename,
+            SizeBytes: fi.Length);
 
         //info = AssetProcessInfo.MakeDone<TextureManifestRecord>();
         return new TexturePayload(image.Data, desc, props, in fileSpec);
@@ -79,10 +79,10 @@ internal sealed class TextureLoader
             faceData[i] = image.Data;
 
             faceFiles[i] = new AssetFileSpec(
-                storage: AssetStorageKind.FileSystem,
-                logicalName: record.Name,
-                relativePath: record.Textures[i],
-                sizeBytes: fi.Length);
+                Storage: AssetStorageKind.FileSystem,
+                LogicalName: record.Name,
+                RelativePath: record.Textures[i],
+                SizeBytes: fi.Length);
         }
 
         var desc = new GfxTextureDescriptor(

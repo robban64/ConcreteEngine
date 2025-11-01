@@ -18,7 +18,7 @@ public sealed class MaterialManifest : IAssetCatalog
     IReadOnlyList<IAssetDescriptor> IAssetCatalog.Records => Records;
 }
 
-public sealed record MaterialDescriptor(string Name, string? Shader = null) : IAssetDescriptor
+public sealed record MaterialDescriptor(string Name, string? Shader = null, AssetLoadingMode LoadMode = AssetLoadingMode.Processed) : IAssetDescriptor
 {
     public AssetKind Kind => AssetKind.Material;
 

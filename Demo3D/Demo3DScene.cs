@@ -31,7 +31,7 @@ public sealed class Demo3DScene : GameScene
 
         // Scene globals
         var rb = renderer.WorldRenderParams;
-        rb.SetShadowDefault(2048, 60f);
+        rb.SetShadowDefault(2048, 120f);
 
         // Skybox
         var skyboxMaterial = materialStore.CreateMaterial("SkyboxMat", "SkyboxMat1");

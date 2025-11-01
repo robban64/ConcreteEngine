@@ -160,7 +160,7 @@ internal sealed class MeshBuildState
     public IndexBufferId IboId { get; set; }
     public VertexBufferId[] VboIds { get; set; } = new VertexBufferId[4];
     public VertexAttribute[] Attributes { get; set; } = Array.Empty<VertexAttribute>();
-    public MeshDrawProperties DrawProperties { get; set; } = MeshDrawProperties.MakeDefault();
+    public MeshDrawProperties DrawProperties { get; set; } = MeshDrawProperties.MakeArray();
 
     public MeshLayout Compile()
     {

@@ -36,4 +36,3 @@ internal sealed record MeshPartImportResult(
     MeshCreationInfo Info,
     in Matrix4x4 Transform);
 
-internal sealed record MeshResultPayload(MeshCreationInfo[] MeshesInfo, AssetFileSpec FileSpec);

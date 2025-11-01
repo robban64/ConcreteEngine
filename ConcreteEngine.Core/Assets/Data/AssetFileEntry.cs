@@ -22,19 +22,11 @@ public sealed record AssetFileEntry
     public string? Source { get; init; }
 }
 
-internal readonly struct AssetFileSpec(
-    AssetStorageKind storage,
-    string logicalName,
-    string relativePath,
-    long sizeBytes,
-    string? contentHash = null,
-    string? source = null
-)
-{
-    public long SizeBytes { get; } = sizeBytes;
-    public string LogicalName { get; } = logicalName;
-    public string RelativePath { get; } = relativePath;
-    public string? ContentHash { get; } = contentHash;
-    public string? Source { get; } = source;
-    public AssetStorageKind Storage { get; } = storage;
-}
+internal sealed record AssetFileSpec(
+    AssetStorageKind Storage,
+    string LogicalName,
+    string RelativePath,
+    long SizeBytes,
+    string? ContentHash = null,
+    string? Source = null
+);

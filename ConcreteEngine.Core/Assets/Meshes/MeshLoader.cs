@@ -31,10 +31,10 @@ internal sealed class MeshLoader
         fileSpec =
         [
             new AssetFileSpec(
-                storage: AssetStorageKind.FileSystem,
-                logicalName: record.Name,
-                relativePath: record.Filename,
-                sizeBytes: fi.Length
+                Storage: AssetStorageKind.FileSystem,
+                LogicalName: record.Name,
+                RelativePath: record.Filename,
+                SizeBytes: fi.Length
             )
         ];
     }

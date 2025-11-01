@@ -61,6 +61,7 @@ public readonly struct ShaderMeta(int samplerSlots) : IResourceMeta
 public readonly record struct MeshMeta : IResourceMeta
 {
     public int DrawCount { get; init; }
+    public int InstanceCount { get; init; }
     public int AttributeCount { get; init; }
     public byte VboCount { get; init; }
     public DrawPrimitive Primitive { get; init; }

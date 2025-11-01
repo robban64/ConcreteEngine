@@ -35,7 +35,7 @@ internal sealed class GlStates : IGraphicsDriverModule
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public void ColorMask(bool v) => _gl.ColorMask(v, v, v, v);
-    
+
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public void ToggleSampleAlphaCoverage(bool enabled)
     {
@@ -162,5 +162,12 @@ internal sealed class GlStates : IGraphicsDriverModule
     public unsafe void DrawElements(DrawPrimitive primitive, DrawElementSize elementSize, int drawCount)
     {
         _gl.DrawElements(primitive.ToGlEnum(), (uint)drawCount, elementSize.ToGlEnum(), (void*)0);
+    }
+
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public void DrawInstanced(DrawPrimitive primitive, DrawElementSize elementSize, int drawCount,
+        int instanceCount)
+    {
+        _gl.DrawArraysInstanced(primitive.ToGlEnum(), 0, (uint)drawCount, (uint)instanceCount);
     }
 }

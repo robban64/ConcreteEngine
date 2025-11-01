@@ -119,7 +119,7 @@ public sealed class TerrainBatcher : RenderBatcher<TerrainBatchResult>
 
         var drawCount = _indices.Length;
 
-        var props = MeshDrawProperties.MakeTriElemental(drawCount: drawCount);
+        var props = MeshDrawProperties.MakeElemental(drawCount: drawCount);
         var builder = Gfx.Meshes.StartUploadBuilder(in props);
         builder.UploadVertices<Vertex3D>(_vertices, BufferUsage.DynamicDraw, BufferStorage.Dynamic,
             BufferAccess.MapWrite);

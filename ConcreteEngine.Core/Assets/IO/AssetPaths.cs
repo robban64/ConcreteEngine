@@ -6,11 +6,12 @@ internal static class AssetPaths
     public const string AssetFolder = "assets";
 
     public const string ManifestFilename = "manifest.json";
-
     public const string ShaderFolder = "shaders";
     public const string TextureFolder = "textures";
     public const string CubeMapFolder = "cubemaps";
     public const string MeshFolder = "meshes";
+    
+    public const string DefinitionFolder = "definitions";
 
     public static string AssetPath => Path.Combine(AppContext.BaseDirectory, AssetFolder);
 
@@ -26,7 +27,7 @@ internal static class AssetPaths
 
     internal static string CorePath => Path.Combine(AppContext.BaseDirectory, AssetCoreFolder);
 
-    internal static string CoreShaderPath(string fileName) => Path.Combine(CorePath, ShaderFolder, fileName);
+    internal static string CoreShaderPath(string subPath, string fileName) => Path.Combine(CorePath, ShaderFolder,subPath, fileName);
     internal static string CoreTexturePath(string fileName) => Path.Combine(CorePath, TextureFolder, fileName);
     internal static string CoreCubeMapPath(string fileName) => Path.Combine(CorePath, CubeMapFolder, fileName);
     internal static string CoreMeshPath(string fileName) => Path.Combine(CorePath, MeshFolder, fileName);

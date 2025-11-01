@@ -216,11 +216,12 @@ internal sealed class AssetStore : IAssetStore
         return asset;
     }
 
-    internal TAsset RegisterWithFiles<TAsset, TDesc>(TDesc descriptor, AssetFileAssembleDel<TAsset, TDesc> factory)
+    internal TAsset RegisterWithFiles<TAsset, TDesc>(TDesc descriptor, bool isCoreAsset,
+        AssetFileAssembleDel<TAsset, TDesc> factory)
         where TAsset : AssetObject where TDesc : class, IAssetDescriptor
     {
         var id = MakeAssetId();
-        var asset = factory(id, descriptor, out var fileSpecs);
+        var asset = factory(id, descriptor, isCoreAsset, out var fileSpecs);
         ArgumentNullException.ThrowIfNull(fileSpecs, nameof(fileSpecs));
         RegisterInternal(id, asset, fileSpecs);
         return asset;

@@ -14,7 +14,7 @@ internal sealed class ShaderLoaderModule(AssetGfxUploader uploader)
 
     public bool IsPrepared { get; private set; }
 
-    public Shader LoadShader(AssetId assetId, ShaderDescriptor manifest, out AssetFileSpec[] specs)
+    public Shader LoadShader(AssetId assetId, ShaderDescriptor manifest, bool isCoreAsset, out AssetFileSpec[] specs)
     {
         if (!IsPrepared) Prepare();
 
@@ -27,7 +27,7 @@ internal sealed class ShaderLoaderModule(AssetGfxUploader uploader)
             ResourceId = info.ShaderId,
             Name = manifest.Name,
             Samplers = info.Samplers,
-            IsCoreAsset = false
+            IsCoreAsset = isCoreAsset
         };
     }
 

@@ -12,7 +12,7 @@ internal sealed class TextureLoaderModule(AssetGfxUploader uploader)
 {
     private TextureLoader _loader = new();
 
-    public Texture2D LoadTexture2D(AssetId id, TextureDescriptor manifest, out AssetFileSpec[] fileSpecs)
+    public Texture2D LoadTexture2D(AssetId id, TextureDescriptor manifest, bool isCoreAsset, out AssetFileSpec[] fileSpecs)
     {
         var payload = _loader.LoadTexture(manifest);
         uploader.UploadTexture(payload, out var info);
@@ -25,7 +25,7 @@ internal sealed class TextureLoaderModule(AssetGfxUploader uploader)
             ResourceId = info.TextureId,
             Width = info.Width,
             Height = info.Height,
-            IsCoreAsset = false
+            IsCoreAsset = isCoreAsset
         };
 
         if (payload.Data is { } tData)
@@ -34,7 +34,7 @@ internal sealed class TextureLoaderModule(AssetGfxUploader uploader)
         return texture;
     }
 
-    public CubeMap LoadCubeMap(AssetId id, CubeMapDescriptor manifest, out AssetFileSpec[] fileSpecs)
+    public CubeMap LoadCubeMap(AssetId id, CubeMapDescriptor manifest,bool isCoreAsset, out AssetFileSpec[] fileSpecs)
     {
         var payload = _loader.LoadCubeMap(manifest);
         uploader.UploadCubeMap(payload, out var info);
@@ -46,7 +46,7 @@ internal sealed class TextureLoaderModule(AssetGfxUploader uploader)
             Name = manifest.Name,
             ResourceId = info.TextureId,
             Size = info.Size,
-            IsCoreAsset = false
+            IsCoreAsset = isCoreAsset
         };
     }
 

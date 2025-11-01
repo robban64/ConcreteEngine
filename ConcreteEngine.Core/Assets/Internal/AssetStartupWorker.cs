@@ -21,10 +21,10 @@ internal sealed class AssetStartupWorker
         Finished
     }
 
-    private Action<ShaderDescriptor> _loadShaderFunc = null!;
-    private Action<TextureDescriptor> _loadTextureFunc = null!;
-    private Action<CubeMapDescriptor> _loadCubeMapFunc = null!;
-    private Action<MeshDescriptor> _loadMeshFunc = null!;
+    private Action<ShaderDescriptor, bool> _loadShaderFunc = null!;
+    private Action<TextureDescriptor,bool> _loadTextureFunc = null!;
+    private Action<CubeMapDescriptor,bool> _loadCubeMapFunc = null!;
+    private Action<MeshDescriptor,bool> _loadMeshFunc = null!;
     private Action<MaterialManifest> _loadMaterialFunc = null!;
 
     private readonly AssetLoader _loader;
@@ -56,10 +56,10 @@ internal sealed class AssetStartupWorker
         InvalidOpThrower.ThrowIf(_processOrder != ProcessStepOrder.NotStarted);
         _processOrder = (ProcessStepOrder)1;
 
-        _loadShaderFunc = (desc) => _loader.LoadShader(desc);
-        _loadTextureFunc = (desc) => _loader.LoadTexture2D(desc);
-        _loadCubeMapFunc = (desc) => _loader.LoadCubeMap(desc);
-        _loadMeshFunc = (desc) => _loader.LoadMesh(desc);
+        _loadShaderFunc = (desc, isCore) => _loader.LoadShader(desc,isCore);
+        _loadTextureFunc = (desc,isCore) => _loader.LoadTexture2D(desc,isCore);
+        _loadCubeMapFunc = (desc, isCore) => _loader.LoadCubeMap(desc,isCore);
+        _loadMeshFunc = (desc, isCore) => _loader.LoadMesh(desc,isCore);
         _loadMaterialFunc = (desc) => _loader.LoadAllMaterials(desc);
 
         _loader.ActivateFullLoader(store, uploader);
@@ -101,7 +101,7 @@ internal sealed class AssetStartupWorker
         {
             case ProcessStepOrder.NotStarted:
             case ProcessStepOrder.Shaders:
-                ProcessManifestStep<ShaderManifest, ShaderDescriptor>(_loadShaderFunc);
+                ProcessManifestStep<ShaderManifest, ShaderDescriptor>(_loadShaderFunc, CoreShaderManifest.GetManifest.Records);
                 break;
             case ProcessStepOrder.Textures:
                 ProcessManifestStep<TextureManifest, TextureDescriptor>(_loadTextureFunc);
@@ -133,13 +133,25 @@ internal sealed class AssetStartupWorker
         => CurrentManifest<TCatalog>().Records as IReadOnlyList<TDesc> ?? throw new InvalidOperationException();
 
 
-    private void ProcessManifestStep<TCatalog, TDesc>(Action<TDesc> onStartStep)
+    private void ProcessManifestStep<TCatalog, TDesc>(Action<TDesc, bool> onStartStep, TDesc[]? coreManifest = null)
         where TCatalog : class, IAssetCatalog where TDesc : class, IAssetDescriptor
     {
         if (_idx == 0) _currentManifest = NextManifest();
-        onStartStep(CurrentRecords<TCatalog, TDesc>()[_idx++]);
+        var coreLength = coreManifest?.Length ?? 0;
+        if (coreLength > 0 && _idx < coreLength)
+        {
+            onStartStep(coreManifest![_idx++], true);
+            return;
+        }
 
-        if (_idx < _currentManifest!.Count) return;
+        var records = CurrentRecords<TCatalog, TDesc>();
+        if (records.Count == 0)
+        {
+            NextStepOrder();
+            return;
+        }
+        onStartStep(CurrentRecords<TCatalog, TDesc>()[_idx++], false);
+        if (_idx < _currentManifest!.Count + coreLength) return;
         NextStepOrder();
     }
 

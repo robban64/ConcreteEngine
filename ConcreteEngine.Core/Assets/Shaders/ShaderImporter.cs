@@ -11,8 +11,8 @@ internal sealed class ShaderImporter
 {
     private const string Identifier = "@import ";
 
-    private static string UboPath => AssetPaths.CoreShaderPath("ubo.glsl");
-    private static string StructPath => AssetPaths.CoreShaderPath("structs.glsl");
+    private static string UboPath => AssetPaths.CoreShaderPath("definitions","ubo.glsl");
+    private static string StructPath => AssetPaths.CoreShaderPath("definitions","structs.glsl");
 
     private StringBuilder? _sb;
 

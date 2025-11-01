@@ -30,22 +30,22 @@ internal sealed class AssetLoader
 
     public bool IsActive { get; private set; }
 
-    public Shader LoadShader(ShaderDescriptor manifest)
-        => _store!.RegisterWithFiles(manifest, _loadShaderDel!);
+    public Shader LoadShader(ShaderDescriptor manifest, bool isCoreAsset)
+        => _store!.RegisterWithFiles(manifest, isCoreAsset, _loadShaderDel!);
 
-    public Texture2D LoadTexture2D(TextureDescriptor manifest) =>
-        _store!.RegisterWithFiles(manifest, _loadTextureDel!);
+    public Texture2D LoadTexture2D(TextureDescriptor manifest,bool isCoreAsset) =>
+        _store!.RegisterWithFiles(manifest, isCoreAsset, _loadTextureDel!);
 
-    public CubeMap LoadCubeMap(CubeMapDescriptor manifest)
-        => _store!.RegisterWithFiles(manifest, _loadCubeMapDel!);
+    public CubeMap LoadCubeMap(CubeMapDescriptor manifest,bool isCoreAsset)
+        => _store!.RegisterWithFiles(manifest,isCoreAsset, _loadCubeMapDel!);
 
-    public Model LoadMesh(MeshDescriptor manifest)
+    public Model LoadMesh(MeshDescriptor manifest,bool isCoreAsset)
     {
         if (manifest.LoadMode == AssetLoadingMode.MemoryOnly)
         {
             return null!;
         }
-        return _store!.RegisterWithFiles(manifest, _loadMeshDel!);
+        return _store!.RegisterWithFiles(manifest,isCoreAsset, _loadMeshDel!);
     }
 
     public List<MaterialTemplate> LoadAllMaterials(MaterialManifest manifest)

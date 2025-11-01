@@ -12,6 +12,7 @@ internal delegate TAsset AssetAssembleDel<out TAsset, in TDesc>(AssetId id, TDes
 internal delegate TAsset AssetFileAssembleDel<out TAsset, in TDesc>(
     AssetId id,
     TDesc manifest,
+    bool isCoreAsset,
     out AssetFileSpec[] fileSpecs
 ) where TAsset : AssetObject where TDesc : class, IAssetDescriptor;
 

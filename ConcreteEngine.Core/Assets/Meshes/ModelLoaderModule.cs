@@ -35,7 +35,7 @@ internal sealed class ModelLoaderModule
         ];
     }
 
-    public Model LoadModel(AssetId assetId, MeshDescriptor manifest, out AssetFileSpec[] fileSpecs)
+    public Model LoadModel(AssetId assetId, MeshDescriptor manifest, bool isCoreAsset, out AssetFileSpec[] fileSpecs)
     {
         var refId = AssetRef<Model>.Make(assetId);
 
@@ -59,7 +59,7 @@ internal sealed class ModelLoaderModule
             Name = manifest.Name,
             MeshParts = meshParts,
             DrawCount = drawCount,
-            IsCoreAsset = false
+            IsCoreAsset = isCoreAsset
         };
     }
 

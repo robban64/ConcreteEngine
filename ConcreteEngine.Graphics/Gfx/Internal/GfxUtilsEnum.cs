@@ -16,7 +16,7 @@ internal static class GfxUtilsEnum
         fmt switch
         {
             VertexFormat.UByte => 1,
-            VertexFormat.Short => 2,
+            VertexFormat.UShort => 2,
             VertexFormat.Float => 4,
             _ => throw new ArgumentOutOfRangeException(nameof(fmt))
         };
@@ -28,6 +28,15 @@ internal static class GfxUtilsEnum
             DrawElementSize.UnsignedShort => 2,
             DrawElementSize.UnsignedInt => 4,
             _ => throw new ArgumentOutOfRangeException(nameof(t))
+        };
+
+    public static DrawElementSize ToDrawElementSize(int stride) =>
+        stride switch
+        {
+            1 => DrawElementSize.UnsignedByte,
+            2 => DrawElementSize.UnsignedShort,
+            4 => DrawElementSize.UnsignedInt,
+            _ => throw new ArgumentOutOfRangeException(nameof(stride))
         };
 
     public static DrawElementSize ToDrawElementSize<T>() =>

@@ -6,7 +6,7 @@ using ConcreteEngine.Core.Assets.Descriptors;
 using ConcreteEngine.Core.Assets.Internal;
 using ConcreteEngine.Core.Assets.Materials;
 using ConcreteEngine.Core.Assets.Shaders;
-using ConcreteEngine.Core.RenderingSystem;
+using ConcreteEngine.Core.Worlds.Render;
 using ConcreteEngine.Graphics.Gfx;
 using ConcreteEngine.Graphics.Gfx.Definitions;
 
@@ -92,7 +92,7 @@ public sealed class AssetSystem : IAssetSystem
         _pendingQueue.OnFrameStart(frameIndex);
     }
 
-    internal void ProcessPendingQueue(EngineRenderSystem renderSystem)
+    internal void ProcessPendingQueue(WorldRenderer renderSystem)
     {
         while (_pendingQueue.TryDrain(out var req))
         {
@@ -112,7 +112,7 @@ public sealed class AssetSystem : IAssetSystem
 
         var shader = _assetStore.GetByRef(AssetRef<Shader>.Make(req.AssetId));
         _loader ??= new AssetLoader();
-        if (!_loader.IsActive) 
+        if (!_loader.IsActive)
             _loader.ActivateLazyLoader(_assetStore, _gfxUploader);
 
         _loader.ReloadShader(shader);

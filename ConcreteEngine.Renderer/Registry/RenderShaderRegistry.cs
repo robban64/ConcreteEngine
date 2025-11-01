@@ -27,7 +27,7 @@ internal sealed class RenderShaderRegistry : IRenderShaderRegistry
 
     internal RenderShaderRegistry(GfxContext gfx)
     {
-        _gfxApi = gfx.ResourceContext.ResourceManager.GetGfxApi();
+        _gfxApi = gfx.ResourceManager.GetGfxApi();
         _gfxShaders = gfx.Shaders;
     }
 

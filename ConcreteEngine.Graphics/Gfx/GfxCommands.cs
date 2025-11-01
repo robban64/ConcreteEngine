@@ -3,12 +3,12 @@
 using System.Diagnostics;
 using System.Numerics;
 using System.Runtime.CompilerServices;
+using ConcreteEngine.Common.Diagnostics.Utility;
 using ConcreteEngine.Common.Numerics;
 using ConcreteEngine.Graphics.Error;
 using ConcreteEngine.Graphics.Gfx.Contracts;
 using ConcreteEngine.Graphics.Gfx.Definitions;
 using ConcreteEngine.Graphics.Gfx.Internal;
-using ConcreteEngine.Graphics.Gfx.Resources;
 using ConcreteEngine.Graphics.OpenGL;
 using ConcreteEngine.Graphics.OpenGL.Utilities;
 
@@ -27,30 +27,31 @@ public sealed class GfxCommands
     private readonly GlTextures _textures;
     private readonly GlFrameBuffers _frameBuffers;
 
-    private readonly GfxStoreHub _store;
+    private readonly FboStore _fboStore;
+    private readonly TextureStore _textureStore;
+    private readonly MeshStore _meshStore;
+    private readonly ShaderStore _shaderStore;
 
     //States
-    private GfxPassState _activeState;
+    private GfxStateFlags _activeFlags;
     private GfxPassStateFunc _stateFunc;
     private GfxPassClear _activeClear;
 
     private readonly TextureId[] _boundTextures;
 
-    private FrameBufferId _boundFboId = default;
+    private FrameBufferId _boundFboId;
 
-    private MeshId _boundMeshId = default;
-    private MeshMeta _boundMeshMeta = default;
+    private MeshId _boundMeshId;
+    private MeshMeta _boundMeshMeta;
 
-    private ShaderId _boundShaderId = default;
+    private ShaderId _boundShaderId;
     private int[]? _boundUniforms = Array.Empty<int>();
 
     //
     private Size2D _activeOutputSize;
     private GfxFrameInfo _frameCtx;
-    private int _drawTriangleCount = 0;
-    private int _drawCallCount = 0;
-
-    public GfxPassState ActiveState => _activeState;
+    private int _drawTriangleCount;
+    private int _drawCallCount;
 
 
     internal GfxCommands(GfxContextInternal ctx)
@@ -60,7 +61,11 @@ public sealed class GfxCommands
         _shaders = ctx.Driver.Shaders;
         _textures = ctx.Driver.Textures;
         _frameBuffers = ctx.Driver.FrameBuffers;
-        _store = ctx.Stores;
+
+        _fboStore = ctx.Resources.GfxStoreHub.FboStore;
+        _textureStore = ctx.Resources.GfxStoreHub.TextureStore;
+        _meshStore = ctx.Resources.GfxStoreHub.MeshStore;
+        _shaderStore = ctx.Resources.GfxStoreHub.ShaderStore;
 
         _boundTextures = new TextureId[Configuration.TextureSlots];
 
@@ -93,32 +98,33 @@ public sealed class GfxCommands
         _boundTextures.AsSpan().Clear();
     }
 
-    public void BeginScreenPass(in GfxPassClear passClear, in GfxPassState states)
+    public void BeginScreenPass(in GfxPassClear passClear, GfxPassState states)
     {
         BindFramebuffer(default);
         SetViewport(_activeOutputSize);
 
-        ApplyState(in states);
+        ApplyState(states);
         Clear(in passClear);
 
         _activeOutputSize = _frameCtx.OutputSize;
     }
 
-    public void BeginRenderPass(FrameBufferId fboId, in GfxPassClear passClear, in GfxPassState states)
+
+    public void BeginRenderPass(FrameBufferId fboId, in GfxPassClear passClear, GfxPassState states)
     {
         ArgumentOutOfRangeException.ThrowIfNegativeOrZero(fboId.Value, nameof(fboId));
         if (_boundFboId == fboId) GraphicsException.ThrowInvalidState($"FBO is {fboId} already bound.");
 
-        ref readonly var meta = ref _store.FboStore.GetMeta(fboId);
+        ref readonly var meta = ref _fboStore.GetMeta(fboId);
 
         BindFramebuffer(fboId);
         SetViewport(meta.Size);
-        ApplyState(in states);
+        ApplyState(states);
         Clear(in passClear);
 
         if (meta.Attachments.DepthTextureId != default)
         {
-            _frameBuffers.SetDrawReadBuffer(_store.FboStore.GetRefHandle(fboId), false);
+            _frameBuffers.SetDrawReadBuffer(_fboStore.GetRefHandle(fboId), false);
         }
 
         _activeOutputSize = meta.Size;
@@ -140,11 +146,11 @@ public sealed class GfxCommands
         Debug.Assert(fromId != default);
         Debug.Assert(fromId != toId, "READ and DRAW FBO must differ for resolve.");
 
-        ref readonly var fromFbo = ref _store.FboStore.GetMeta(fromId);
-        var fromHandle = _store.FboStore.GetRefHandle(fromId);
+        ref readonly var fromFbo = ref _fboStore.GetMeta(fromId);
+        var fromHandle = _fboStore.GetRefHandle(fromId);
         var srcSize = fromFbo.Size;
 
-        if (!_store.FboStore.TryGetRef(toId, out var toHandle, out var toFbo))
+        if (!_fboStore.TryGetRef(toId, out var toHandle, out var toFbo))
         {
             _frameBuffers.BlitDefault(fromHandle, srcSize, _activeOutputSize, false);
             return;
@@ -163,17 +169,40 @@ public sealed class GfxCommands
             _states.ClearBuffer(passClear.ClearBuffer);
     }
 
-    public void ApplyState(in GfxPassState cmdState)
+    /*
+          public void ApplyState(in GfxPassState cmdState)
+       {
+           _activeState = cmdState;
+           if (cmdState.Scissor is { } scissor) _states.ToggleScissorTest(scissor);
+           if (cmdState.Cull is { } cull) _states.ToggleCullFace(cull);
+           if (cmdState.DepthTest is { } depthTest) _states.ToggleDepthTest(depthTest);
+           if (cmdState.DepthWrite is { } depthWrite) _states.ToggleDepthMask(depthWrite);
+           if (cmdState.Blend is { } blend) _states.ToggleBlendState(blend);
+           if (cmdState.FramebufferSrgb is { } srgb) _states.ToggleFrameBufferSrgb(srgb);
+           if (cmdState.ColorMask is { } colorMask) _states.ColorMask(colorMask);
+           if (cmdState.PolygonOffset is { } polygonOffset) _states.TogglePolygonOffset(polygonOffset);
+       }
+     */
+
+    public void ApplyState(GfxPassState state)
     {
-        _activeState = cmdState;    
-        if (cmdState.Scissor is { } scissor) _states.ToggleScissorTest(scissor);
-        if (cmdState.Cull is { } cull) _states.ToggleCullFace(cull);
-        if (cmdState.DepthTest is { } depthTest) _states.ToggleDepthTest(depthTest);
-        if (cmdState.DepthWrite is { } depthWrite) _states.ToggleDepthMask(depthWrite);
-        if (cmdState.Blend is { } blend) _states.ToggleBlendState(blend);
-        if (cmdState.FramebufferSrgb is { } srgb) _states.ToggleFrameBufferSrgb(srgb);
-        if (cmdState.ColorMask is { } colorMask) _states.ColorMask(colorMask);
-        if (cmdState.PolygonOffset is { } polygonOffset) _states.TogglePolygonOffset(polygonOffset);
+        var d = state.Defined;
+        if (d == 0) return;
+        var e = state.Enabled;
+
+        if ((d & GfxStateFlags.Scissor) != 0) _states.ToggleScissorTest((e & GfxStateFlags.Scissor) != 0);
+        if ((d & GfxStateFlags.Cull) != 0) _states.ToggleCullFace((e & GfxStateFlags.Cull) != 0);
+        if ((d & GfxStateFlags.DepthTest) != 0) _states.ToggleDepthTest((e & GfxStateFlags.DepthTest) != 0);
+        if ((d & GfxStateFlags.DepthWrite) != 0) _states.ToggleDepthMask((e & GfxStateFlags.DepthWrite) != 0);
+        if ((d & GfxStateFlags.Blend) != 0) _states.ToggleBlendState((e & GfxStateFlags.Blend) != 0);
+        if ((d & GfxStateFlags.FramebufferSrgb) != 0)
+            _states.ToggleFrameBufferSrgb((e & GfxStateFlags.FramebufferSrgb) != 0);
+        if ((d & GfxStateFlags.ColorMask) != 0) _states.ColorMask((e & GfxStateFlags.ColorMask) != 0);
+        if ((d & GfxStateFlags.PolygonOffset) != 0) _states.TogglePolygonOffset((e & GfxStateFlags.PolygonOffset) != 0);
+        if ((d & GfxStateFlags.SampleAlphaCoverage) != 0)
+            _states.ToggleSampleAlphaCoverage((e & GfxStateFlags.SampleAlphaCoverage) != 0);
+
+        _activeFlags = GfxPassState.Merge(_activeFlags, state);
     }
 
     public void ApplyStateFunctions(GfxPassStateFunc cmdFunc)
@@ -242,7 +271,7 @@ public sealed class GfxCommands
             return;
         }
 
-        _states.BindFrameBuffer(_store.FboStore.GetRefHandle(id));
+        _states.BindFrameBuffer(_fboStore.GetRefHandle(id));
         _boundFboId = id;
     }
 
@@ -259,7 +288,7 @@ public sealed class GfxCommands
             return;
         }
 
-        var refHandle = _store.TextureStore.GetRefHandle(texture);
+        var refHandle = _textureStore.GetRefHandle(texture);
         _states.BindTexture(refHandle, slot);
     }
 
@@ -277,7 +306,7 @@ public sealed class GfxCommands
             return;
         }
 
-        var handle = _store.ShaderStore.GetRefHandle(id);
+        var handle = _shaderStore.GetRefHandle(id);
         _shaders.UseShader(handle);
         _boundShaderId = id;
     }
@@ -294,13 +323,13 @@ public sealed class GfxCommands
             return;
         }
 
-        var meshRef = _store.MeshStore.GetRefAndMeta(id, out _boundMeshMeta);
+        var meshRef = _meshStore.GetRefAndMeta(id, out _boundMeshMeta);
         _boundMeshId = id;
         _states.BindMesh(meshRef);
     }
 
 
-    public void DrawBoundMesh(MeshId id, int drawCount)
+    public void DrawBoundMesh(MeshId id, int drawCount, int instanceCount = 0)
     {
         Debug.Assert(_boundMeshId > 0);
 
@@ -316,6 +345,12 @@ public sealed class GfxCommands
                 Debug.Assert(meta.ElementSize != DrawElementSize.Invalid);
                 _states.DrawElements(meta.Primitive, meta.ElementSize, count);
                 break;
+            case DrawMeshKind.ArraysInstanced:
+                var drawInstances = instanceCount > 0 ? instanceCount : meta.InstanceCount;
+                Debug.Assert(drawCount == 0 || drawInstances > meta.InstanceCount);
+                _states.DrawInstanced(meta.Primitive, meta.ElementSize, count, drawInstances);
+                break;
+            case DrawMeshKind.Invalid:
             default:
                 GraphicsException.ThrowUnsupportedFeature(nameof(meta.Kind));
                 return;
@@ -328,26 +363,26 @@ public sealed class GfxCommands
 
     // Dont use for now.
     public void SetUniform(int uniform, int value) =>
-        _shaders.SetUniform(_boundUniforms![(int)uniform], value);
+        _shaders.SetUniform(_boundUniforms![uniform], value);
 
     public void SetUniform(int uniform, uint value) =>
-        _shaders.SetUniform(_boundUniforms![(int)uniform], value);
+        _shaders.SetUniform(_boundUniforms![uniform], value);
 
     public void SetUniform(int uniform, float value) =>
-        _shaders.SetUniform(_boundUniforms![(int)uniform], value);
+        _shaders.SetUniform(_boundUniforms![uniform], value);
 
     public void SetUniform(int uniform, Vector2 value) =>
-        _shaders.SetUniform(_boundUniforms![(int)uniform], value);
+        _shaders.SetUniform(_boundUniforms![uniform], value);
 
     public void SetUniform(int uniform, Vector3 value) =>
-        _shaders.SetUniform(_boundUniforms![(int)uniform], value);
+        _shaders.SetUniform(_boundUniforms![uniform], value);
 
     public void SetUniform(int uniform, Vector4 value) =>
-        _shaders.SetUniform(_boundUniforms![(int)uniform], value);
+        _shaders.SetUniform(_boundUniforms![uniform], value);
 
     public void SetUniform(int uniform, in Matrix4x4 value) =>
-        _shaders.SetUniform(_boundUniforms![(int)uniform], in value);
+        _shaders.SetUniform(_boundUniforms![uniform], in value);
 
     public void SetUniform(int uniform, in Matrix3 value) =>
-        _shaders.SetUniform(_boundUniforms![(int)uniform], in value);
+        _shaders.SetUniform(_boundUniforms![uniform], in value);
 }

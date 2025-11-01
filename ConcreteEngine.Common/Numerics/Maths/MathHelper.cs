@@ -11,7 +11,7 @@ public sealed class MathHelper
 {
     public const float OneDegree = MathF.PI / 180f;
     public const float OneRadian = 180f / MathF.PI;
-    
+
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static float Lerp(float a, float b, float t) => a + (b - a) * t;
 

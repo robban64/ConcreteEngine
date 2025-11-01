@@ -1,7 +1,6 @@
 #region
 
 using ConcreteEngine.Graphics.Gfx;
-using ConcreteEngine.Graphics.Gfx.Contracts;
 using ConcreteEngine.Graphics.Gfx.Resources;
 using ConcreteEngine.Renderer.Data;
 using ConcreteEngine.Renderer.Definitions;
@@ -38,54 +37,77 @@ internal sealed class DrawCommandProcessor
     {
         _ctx.ResetMaterialState();
         if (_ctx.IsDepth)
+        {
             UseShader(_ctx.CoreShaders.DepthShader);
+            _gfxCmd.UnbindAllTextures();
+        }
     }
 
     private void UseShader(ShaderId shaderId) => _gfxCmd.UseShader(shaderId);
+
+    private void BindDepthTextureSlots(ReadOnlySpan<TextureSlotInfo> slots)
+    {
+        _gfxCmd.BindTexture(slots[0].Texture, 0);
+
+        for (var i = 1; i < slots.Length; i++)
+        {
+            var value = slots[i];
+            if (value.SlotKind != TextureSlotKind.Mask) continue;
+            _gfxCmd.BindTexture(value.Texture, 1);
+            return;
+        }
+
+        _gfxCmd.BindTexture(GfxTextures.FallbackTextures.AlphaMaskId, 1);
+
+    }
 
     private void BindTextureSlots(ReadOnlySpan<TextureSlotInfo> slots)
     {
         for (var i = 0; i < slots.Length; i++)
         {
             var value = slots[i];
-
-            if (value.SlotKind == TextureSlotKind.Shadowmap)
-                _gfxCmd.BindTexture(_ctx.DepthTexture, i);
-            else
-                _gfxCmd.BindTexture(value.Texture, i);
+            _gfxCmd.BindTexture(value.SlotKind != TextureSlotKind.Shadowmap ? value.Texture : _ctx.DepthTexture, i);
         }
     }
 
     private void BindMaterial(MaterialId materialId)
     {
         var texSlots = _buffers.ResolveMaterial(materialId, out var materialMeta);
-        UseShader(materialMeta.ShaderId);
-        BindTextureSlots(texSlots);
-        _buffers.BindMaterialObject(materialId);
-            
-        if(materialMeta.PassState is {} passState)
+
+        switch (_ctx.PassMode)
         {
-            _ctx.OverridePassState = passState;
-            _gfxCmd.ApplyState(in passState);
+            case PassStateMode.Main:
+                UseShader(materialMeta.ShaderId);
+                BindTextureSlots(texSlots);
+                break;
+            case PassStateMode.Depth:
+                BindDepthTextureSlots(texSlots);
+                break;
         }
-        else if(_ctx.OverridePassState is not null)
+            
+        _buffers.BindMaterialObject(materialId);
+
+        if (materialMeta.PassState != default)
         {
-            _ctx.OverridePassState = null;
-            _gfxCmd.ApplyState(in _ctx.PassState);
+            _gfxCmd.ApplyState(_ctx.OverridePassState = materialMeta.PassState);
+        }
+        else if (_ctx.OverridePassState != default)
+        {
+            _ctx.OverridePassState = default;
+            _gfxCmd.ApplyState(_ctx.PassState);
         }
 
-        if(materialMeta.PassStateFunc is {} passStateFunc)
+        if (materialMeta.PassStateFunc != default)
         {
-            _ctx.OverridePassStateFunc = passStateFunc;
-            _gfxCmd.ApplyStateFunctions(passStateFunc);
+            _gfxCmd.ApplyStateFunctions(_ctx.OverridePassStateFunc = materialMeta.PassStateFunc);
         }
-        else if(_ctx.OverridePassStateFunc is not null)
+        else if (_ctx.OverridePassStateFunc != default)
         {
-            _ctx.OverridePassStateFunc = null;
+            _ctx.OverridePassStateFunc = default;
             _gfxCmd.ApplyStateFunctions(_ctx.PassStateFunc);
         }
-
     }
+
     public void DrawMesh(DrawCommand cmd, int submitIndex)
     {
         if (_ctx.PrevMaterial != cmd.MaterialId) BindMaterial(cmd.MaterialId);

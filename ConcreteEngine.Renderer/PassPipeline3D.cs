@@ -50,7 +50,7 @@ internal static class PassPipeline3D
                 RenderPassState.MakeResolve())
             .OnPassBegin(static (RenderPassCtx ctx, in RenderPassState state) =>
             {
-                ctx.Ops.ToggleStates(new GfxPassState { FramebufferSrgb = false });
+                ctx.Ops.ToggleStates(GfxPassState.Disable(GfxStateFlags.FramebufferSrgb));
                 ctx.Ops.Blit(state.TargetFboId, ctx.Target.FboId, state.LinearFilter);
                 return PassAction.ResolveTargetResult();
             }).OnPassEnd(static (RenderPassCtx ctx, in RenderPassState state) =>

@@ -10,5 +10,8 @@ public enum FrameBufferAttachmentSlot : byte
 
 public enum RenderBufferMsaa : byte
 {
-    None = 0, X2 = 2, X4 = 4, X8 = 8
+    None = 0,
+    X2 = 2,
+    X4 = 4,
+    X8 = 8
 }

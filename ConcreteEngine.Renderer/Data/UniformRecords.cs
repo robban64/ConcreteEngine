@@ -121,7 +121,7 @@ public readonly struct MaterialUniformRecord : IStd140Uniform
 {
     public readonly Vector4 MatColor; // rgb = tint
     public readonly Vector4 MatParams0; // x = SpecularStrength, y = uvRepeat, z,w reserved
-    public readonly Vector4 MatParams1; // x = Shininess, yzw reserved
+    public readonly Vector4 MatParams1; // x = Shininess, y = HasNormals z = Transparency, w = HasAlpha
 
     public MaterialUniformRecord(Vector4 matColor,
         Vector4 matParams0,
@@ -134,9 +134,12 @@ public readonly struct MaterialUniformRecord : IStd140Uniform
 
     public MaterialUniformRecord(in MaterialParams mat)
     {
+        var transparency = mat.Transparent ? 1f : 0f;
+        var hasAlpha = mat.HasAlpha ? 1f : 0f;
+        var hasNormals = mat.HasNormal ? 1f : 0f;
         MatColor = new Vector4(mat.Color.AsVec3(), 1);
-        MatParams0 = new Vector4(mat.Specular, mat.UvRepeat, 0.0f, 0.0f);
-        MatParams1 = new Vector4(mat.Shininess, mat.Normal, 0.0f, 0.0f);
+        MatParams0 = new Vector4(mat.Specular, mat.UvRepeat, 1.0f, 1.0f);
+        MatParams1 = new Vector4(mat.Shininess, hasNormals, transparency, hasAlpha);
     }
 }
 
@@ -148,7 +151,14 @@ public readonly struct DrawObjectUniform : IStd140Uniform
     public readonly Vector4 NormalCol1;
     public readonly Vector4 NormalCol2;
 
-    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public DrawObjectUniform(in Matrix4x4 model, in Vector4 v0, in Vector4 v1, in Vector4 v2)
+    {
+        Model = model;
+        NormalCol0 = v0;
+        NormalCol1 = v1;
+        NormalCol2 = v2;
+    }
+
     public DrawObjectUniform(in Matrix4x4 model, in Matrix3 normal)
     {
         Model = model;
@@ -156,10 +166,15 @@ public readonly struct DrawObjectUniform : IStd140Uniform
         NormalCol1 = new Vector4(normal.M12, normal.M22, normal.M32, 0f);
         NormalCol2 = new Vector4(normal.M13, normal.M23, normal.M33, 0f);
     }
+    
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public static void Fill(in Matrix4x4 model, in Vector4 v0, in Vector4 v1, in Vector4 v2, out DrawObjectUniform dst) =>
+        dst = new DrawObjectUniform(in model, in v0, in v1, in v2);
+
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public static void Fill(in Matrix4x4 model, in Matrix3 normal, out DrawObjectUniform dst)
-        => dst = new DrawObjectUniform(in model, in normal);
+    public static void Fill(in Matrix4x4 model, in Matrix3 normal, out DrawObjectUniform dst) =>
+        dst = new DrawObjectUniform(in model, in normal);
 }
 
 [StructLayout(LayoutKind.Sequential)]

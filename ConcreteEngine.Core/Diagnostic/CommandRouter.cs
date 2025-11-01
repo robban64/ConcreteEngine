@@ -1,23 +1,16 @@
 #region
 
-using System.Diagnostics;
 using System.Runtime.CompilerServices;
 using ConcreteEngine.Common.Diagnostics;
 using ConcreteEngine.Core.Assets;
-using ConcreteEngine.Core.Assets.Data;
-using ConcreteEngine.Core.Assets.Materials;
-using ConcreteEngine.Core.Data;
 using ConcreteEngine.Core.Diagnostic.utils;
-using ConcreteEngine.Core.Scene;
-using ConcreteEngine.Core.Scene.Entities;
+using ConcreteEngine.Core.Worlds.Data;
+using ConcreteEngine.Core.Worlds.Entities;
 using ConcreteEngine.Graphics.Diagnostic;
 using ConcreteEngine.Graphics.Gfx.Contracts;
 using ConcreteEngine.Graphics.Gfx.Resources;
 using ConcreteEngine.Renderer.Data;
-using ConcreteEngine.Renderer.State;
-using Core.DebugTools;
 using Core.DebugTools.Components;
-using Core.DebugTools.Data;
 
 #endregion
 
@@ -81,16 +74,21 @@ internal static class CommandRouter
 
         ctx.AddLog(StructStr<StoreMetric<CollectionSample>>());
         ctx.AddLog(StructStr<GfxResourceMetric<ValueSample>>());
-        
+
         ctx.AddLog(StructStr<GfxStoreMetricsPayload>());
         ctx.AddLog(StructStr<MaterialParams>());
         ctx.AddLog(StructStr<DrawMaterialMeta>());
         ctx.AddLog(StructStr<DrawMaterialPayload>());
-        
+
         ctx.AddLog(StructStr<GfxPassState>());
+        
+        ctx.AddLog(StructStr<Transform>());
 
-
+        ctx.AddLog(StructStr<MeshPart>());
+        ctx.AddLog(StructStr<DrawEntity>());
+        ctx.AddLog(StructStr<MaterialTag>());
     }
+
 
     private static string StructStr<T>() where T : unmanaged =>
         $"{typeof(T).Name,-18} - {Unsafe.SizeOf<T>().ToString()} bytes";

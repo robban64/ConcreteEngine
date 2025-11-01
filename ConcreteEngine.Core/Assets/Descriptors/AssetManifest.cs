@@ -31,7 +31,8 @@ public sealed class ShaderManifest : IAssetCatalog
 public sealed record ShaderDescriptor(
     string Name,
     string VertexFilename,
-    string FragmentFilename
+    string FragmentFilename,
+    AssetLoadingMode LoadMode = AssetLoadingMode.Processed
 ) : IAssetDescriptor
 {
     public AssetKind Kind => AssetKind.Shader;
@@ -52,7 +53,8 @@ public sealed record TextureDescriptor(
     TexturePixelFormat PixelFormat = TexturePixelFormat.SrgbAlpha,
     TextureAnisotropy Anisotropy = TextureAnisotropy.Off,
     bool InMemory = false,
-    float LodBias = 0)
+    float LodBias = 0,
+    AssetLoadingMode LoadMode = AssetLoadingMode.Processed)
     : IAssetDescriptor
 {
     public AssetKind Kind => AssetKind.Texture2D;
@@ -71,8 +73,9 @@ public sealed record CubeMapDescriptor(
     int Width,
     int Height,
     TexturePreset Preset,
-    TexturePixelFormat PixelFormat = TexturePixelFormat.Rgba
-) : IAssetDescriptor
+    TexturePixelFormat PixelFormat = TexturePixelFormat.Rgba,
+    AssetLoadingMode LoadMode = AssetLoadingMode.Processed
+    ) : IAssetDescriptor
 {
     public AssetKind Kind => AssetKind.TextureCubeMap;
 }
@@ -86,8 +89,9 @@ public sealed class MeshManifest : IAssetCatalog
 
 public sealed record MeshDescriptor(
     string Name,
-    string Filename)
+    string Filename,
+    AssetLoadingMode LoadMode = AssetLoadingMode.Processed)
     : IAssetDescriptor
 {
-    public AssetKind Kind => AssetKind.Mesh;
+    public AssetKind Kind => AssetKind.Model;
 }

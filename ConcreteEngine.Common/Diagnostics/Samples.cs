@@ -1,5 +1,9 @@
+#region
+
 using System.Numerics;
 using ConcreteEngine.Common.Numerics;
+
+#endregion
 
 namespace ConcreteEngine.Common.Diagnostics;
 
@@ -15,10 +19,11 @@ public readonly record struct BufferSample(long Capacity, long Size, int Stride,
 // App samples
 public readonly record struct RenderInfoSample(float Fps, float Alpha, int Passes, int Draws, int Tris);
 
-
 // Generic samples
 public readonly record struct ScalarSample(float Value, int Param0 = 0, int Param1 = 0);
+
 public readonly record struct PairSample(int Value, int Param0 = 0);
+
 public readonly record struct ValueSample(long Value, int Param0 = 0, int Param1 = 0);
 
 public readonly record struct RangeSample(Range32 Range, int Param0 = 0);

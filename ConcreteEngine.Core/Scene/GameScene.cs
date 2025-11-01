@@ -1,15 +1,19 @@
 #region
 
+using ConcreteEngine.Common.Diagnostics.Utility;
 using ConcreteEngine.Common.Numerics;
 using ConcreteEngine.Core.Configuration;
 using ConcreteEngine.Core.Data;
-using ConcreteEngine.Core.RenderingSystem;
+using ConcreteEngine.Core.Worlds;
+using ConcreteEngine.Core.Worlds.Render;
+using ConcreteEngine.Core.Worlds.Transforms;
 using ConcreteEngine.Renderer.State;
 
 #endregion
 
 namespace ConcreteEngine.Core.Scene;
 
+//TODO rework
 public abstract class GameScene
 {
     private World _world = null!;
@@ -18,7 +22,7 @@ public abstract class GameScene
     protected GameSceneContext Context { get; private set; } = null!;
 
     protected World World => _world;
-    protected Camera3D Camera => _camera;
+    public Camera3D Camera => _camera;
 
     internal World InternalWorld => _world;
 
@@ -37,18 +41,15 @@ public abstract class GameScene
     {
         Context.Modules.GameTickUpdate(tick);
         World.Cleanup();
-    }
+        
+        Camera.EndTick();
 
-    internal void BeforeRender(out RenderViewSnapshot viewSnapshot)
-    {
-        _camera.MakeRenderViewInfo(out viewSnapshot);
     }
-
 
     internal void AttachContext(GameSceneContext context)
     {
         var renderer = context.GetSystem<IRenderingSystem>();
-        _world = new World(renderer.SceneProperties, renderer.Batchers);
+        _world = new World(renderer.WorldRenderParams, renderer.Batchers);
         context.World = World;
         context.Camera = _camera;
         Context = context;

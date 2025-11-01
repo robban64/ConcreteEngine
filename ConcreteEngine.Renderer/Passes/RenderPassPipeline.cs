@@ -28,7 +28,7 @@ public sealed class RenderPassPipeline
     internal RenderPassPipeline()
     {
     }
-    
+
     public int PassCount => _entries.Count;
 
     internal void Initialize(RenderEngineContext ctx)

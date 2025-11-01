@@ -4,7 +4,6 @@ using ConcreteEngine.Common;
 using ConcreteEngine.Graphics.Gfx.Contracts;
 using ConcreteEngine.Graphics.Gfx.Definitions;
 using ConcreteEngine.Graphics.Gfx.Internal;
-using ConcreteEngine.Graphics.Gfx.Resources;
 
 #endregion
 
@@ -12,64 +11,67 @@ namespace ConcreteEngine.Graphics.Gfx;
 
 public interface IGfxMeshBuilder
 {
-    MeshId Finish();
-
     void UploadVertices<T>(ReadOnlySpan<T> data, BufferUsage usage,
         BufferStorage storage, BufferAccess access) where T : unmanaged;
 
     void UploadIndices<T>(ReadOnlySpan<T> data, BufferUsage usage,
         BufferStorage storage, BufferAccess access) where T : unmanaged;
 
-    void AddAttribute(in VertexAttributeDesc attribute);
-    void SetAttributeRange(IReadOnlyList<VertexAttributeDesc> attributes);
+    void AddAttribute(in VertexAttribute attribute);
+    void SetAttributeRange(IReadOnlyList<VertexAttribute> attributes);
+    void SetAttributeSpan(ReadOnlySpan<VertexAttribute> attributes);
 }
 
 internal sealed class GfxMeshBuilder : IGfxMeshBuilder
 {
-    private readonly State _state = new();
+    private readonly MeshBuildState _state = new();
 
     private GfxMeshes _gfxMeshes = null!;
     private GfxBuffers _gfxBuffers = null!;
-    private Phase _phase = Phase.Idle;
+    private Phase _phase;
 
-    internal GfxMeshBuilder Init(GfxMeshes gfxMeshes, GfxBuffers gfxBuffers, in MeshDrawProperties props)
+    private int _vboIdx = 0;
+
+    internal GfxMeshBuilder(GfxMeshes gfxMeshes, GfxBuffers gfxBuffers, in MeshDrawProperties props)
     {
         _gfxMeshes = gfxMeshes;
         _gfxBuffers = gfxBuffers;
 
-        _state.ResetState();
-        _state.MeshId = _gfxMeshes.CreateEmptyMesh();
+        //_state.ResetState();
+        _state.MeshId = _gfxMeshes.CreateEmptyMesh(in props);
         _state.DrawProperties = props;
 
         _phase = Phase.Started;
-        return this;
     }
 
-    public MeshId Finish()
+    public MeshLayout Finish()
     {
         InvalidOpThrower.ThrowIfNot(_state.MeshId.IsValid());
         EnsureStarted();
 
-        _gfxMeshes.SetVertexAttributes(_state.MeshId, _state.Attributes);
-        var id = _gfxMeshes.FinishUploadCommit(_state);
+        _state.ValidateState();
+        var result = _state.Compile();
+        _gfxMeshes.SetVertexAttributes(result.MeshId, result.Attributes);
 
-        _state.ResetState();
-        _phase = Phase.Idle;
+        _phase = Phase.Closed;
+
         _gfxMeshes = null!;
         _gfxBuffers = null!;
-        return id;
+
+        return result;
     }
+
 
     public void UploadVertices<T>(ReadOnlySpan<T> data, BufferUsage usage,
         BufferStorage storage, BufferAccess access) where T : unmanaged
     {
         EnsureStarted();
-        var binding = _state.VboIds.Count;
-        var vboId = _gfxBuffers.CreateVertexBuffer(data, binding, storage, access);
+        InvalidOpThrower.ThrowIf(_vboIdx >= GfxLimits.MaxVboBindings, nameof(_vboIdx));
+        var vboId = _gfxBuffers.CreateVertexBuffer(data, 0, 0, storage, access);
 
-        _state.VboIds.Add(vboId);
-        _gfxMeshes.AttachVertexBuffer(_state.MeshId, vboId, binding);
-
+        _state.VboIds[_vboIdx] = vboId;
+        _gfxMeshes.AttachVertexBuffer(_state.MeshId, vboId, _vboIdx);
+        _vboIdx++;
         if (_phase < Phase.BuffersUploading) _phase = Phase.BuffersUploading;
     }
 
@@ -98,33 +100,42 @@ internal sealed class GfxMeshBuilder : IGfxMeshBuilder
         _gfxMeshes.AttachIndexBuffer(_state.MeshId, _state.IboId);
     }
 
-    public void SetAttributeRange(IReadOnlyList<VertexAttributeDesc> attributes)
+    public void SetAttributeRange(IReadOnlyList<VertexAttribute> attributes)
     {
         EnsureStarted();
         InvalidOpThrower.ThrowIfNullOrEmptyCollection(attributes, nameof(attributes));
-        InvalidOpThrower.ThrowIfNot(_state.Attributes.Count == 0, nameof(attributes));
+        InvalidOpThrower.ThrowIfNot(_state.AttribCount == 0, nameof(attributes));
+        InvalidOpThrower.ThrowIf(attributes.Count >= GfxLimits.MaxVertexAttribs, nameof(_vboIdx));
 
-        _state.Attributes.AddRange(attributes);
-
+        _state.Attributes = attributes.ToArray();
+        _state.AttribCount = attributes.Count;
         if (_phase < Phase.AttributesSet) _phase = Phase.AttributesSet;
     }
 
-    public void SetAttributeSpan(ReadOnlySpan<VertexAttributeDesc> attributes)
+    public void SetAttributeSpan(ReadOnlySpan<VertexAttribute> attributes)
     {
         EnsureStarted();
-        InvalidOpThrower.ThrowIf(attributes.Length == 0, nameof(attributes));
-        InvalidOpThrower.ThrowIfNot(_state.Attributes.Count == 0, nameof(attributes));
+        ArgumentOutOfRangeException.ThrowIfEqual(attributes.Length, 0, nameof(attributes));
+        InvalidOpThrower.ThrowIfNot(_state.AttribCount == 0, nameof(attributes));
+        InvalidOpThrower.ThrowIf(attributes.Length >= GfxLimits.MaxVertexAttribs, nameof(_vboIdx));
 
-        _state.Attributes.AddRange(attributes);
-
+        _state.Attributes = attributes.ToArray();
+        _state.AttribCount = attributes.Length;
         if (_phase < Phase.AttributesSet) _phase = Phase.AttributesSet;
     }
 
-    public void AddAttribute(in VertexAttributeDesc attribute)
+    public void AddAttribute(in VertexAttribute attribute)
     {
         EnsureStarted();
+        InvalidOpThrower.ThrowIf(_state.AttribCount + 1 >= GfxLimits.MaxVertexAttribs, nameof(_vboIdx));
+        if (_state.Attributes.Length == 0 && _state.AttribCount == 0)
+            _state.Attributes = new VertexAttribute[4];
 
-        _state.Attributes.Add(attribute);
+        var stateAttributes = _state.Attributes;
+        stateAttributes[_state.AttribCount++] = attribute;
+
+        if (_state.AttribCount >= _state.Attributes.Length)
+            Array.Resize(ref stateAttributes, GfxLimits.MaxVertexAttribs);
 
         if (_phase < Phase.AttributesSet) _phase = Phase.AttributesSet;
     }
@@ -134,43 +145,42 @@ internal sealed class GfxMeshBuilder : IGfxMeshBuilder
 
     private enum Phase : byte
     {
-        Idle = 0,
-        Started,
-        BuffersUploading,
-        AttributesSet
+        Closed = 0,
+        Started = 1,
+        BuffersUploading = 2,
+        AttributesSet = 3
+    }
+}
+
+internal sealed class MeshBuildState
+{
+    public int AttribCount { get; set; }
+    public int VboCount { get; set; }
+    public MeshId MeshId { get; set; }
+    public IndexBufferId IboId { get; set; }
+    public VertexBufferId[] VboIds { get; set; } = new VertexBufferId[4];
+    public VertexAttribute[] Attributes { get; set; } = Array.Empty<VertexAttribute>();
+    public MeshDrawProperties DrawProperties { get; set; } = MeshDrawProperties.MakeArray();
+
+    public MeshLayout Compile()
+    {
+        var vbo = VboCount == VboIds.Length ? VboIds : VboIds.AsSpan(0, VboCount).ToArray();
+        var attribs = AttribCount == Attributes.Length ? Attributes : Attributes.AsSpan(0, AttribCount).ToArray();
+        return new MeshLayout(MeshId, IboId, vbo, attribs);
     }
 
-    internal sealed class State
+    public void ValidateState()
     {
-        public MeshId MeshId { get; set; }
-        public IndexBufferId IboId { get; set; }
-        public List<VertexBufferId> VboIds { get; set; } = new();
-        public List<VertexAttributeDesc> Attributes { get; set; } = new();
-        public MeshDrawProperties DrawProperties { get; set; } = MeshDrawProperties.MakeDefault();
+        InvalidOpThrower.ThrowIfNot(MeshId.IsValid(), nameof(MeshId));
+        InvalidOpThrower.ThrowIfNullOrEmptyCollection(VboIds, nameof(VboIds));
+        InvalidOpThrower.ThrowIfNullOrEmptyCollection(Attributes, nameof(Attributes));
 
-        public void ValidateState()
+        InvalidOpThrower.ThrowIfNot(VboIds[0].IsValid(), nameof(VboIds));
+
+        if (IboId.IsValid())
         {
-            InvalidOpThrower.ThrowIfNot(MeshId.IsValid(), nameof(MeshId));
-            InvalidOpThrower.ThrowIfNullOrEmptyCollection(VboIds, nameof(VboIds));
-            InvalidOpThrower.ThrowIfNullOrEmptyCollection(Attributes, nameof(Attributes));
-
-            foreach (var vboId in VboIds)
-                InvalidOpThrower.ThrowIfNot(vboId.IsValid(), nameof(vboId));
-
-            if (IboId.IsValid())
-            {
-                InvalidOpThrower.ThrowIf(DrawProperties.ElementSize == DrawElementSize.Invalid);
-                InvalidOpThrower.ThrowIf(DrawProperties.Kind != DrawMeshKind.Elements);
-            }
-        }
-
-        public void ResetState()
-        {
-            MeshId = default;
-            IboId = default;
-            VboIds.Clear();
-            Attributes.Clear();
-            DrawProperties = MeshDrawProperties.MakeDefault();
+            InvalidOpThrower.ThrowIf(DrawProperties.ElementSize == DrawElementSize.Invalid);
+            InvalidOpThrower.ThrowIf(DrawProperties.Kind != DrawMeshKind.Elements);
         }
     }
 }

@@ -4,12 +4,11 @@ using ConcreteEngine.Common;
 using ConcreteEngine.Common.Collections;
 using ConcreteEngine.Core.Assets.Data;
 using ConcreteEngine.Core.Assets.Textures;
-using ConcreteEngine.Graphics.Gfx.Contracts;
+using ConcreteEngine.Graphics.Gfx;
 using ConcreteEngine.Graphics.Gfx.Definitions;
 using ConcreteEngine.Graphics.Gfx.Resources;
 using ConcreteEngine.Renderer.Data;
 using ConcreteEngine.Renderer.Definitions;
-using Core.DebugTools.Data;
 
 #endregion
 
@@ -40,7 +39,7 @@ public sealed class MaterialStore : IMaterialStore
 
     public int Count => _idx;
     public int FreeSlots => _free.Count;
-    
+
 
     internal MaterialStore(AssetStore assetStore)
     {
@@ -80,6 +79,8 @@ public sealed class MaterialStore : IMaterialStore
         var material = new Material(id, template, name);
         _materials[id - 1] = material;
         _materialDict.Add(name, id);
+
+        FillTextureInfo(material);
         return material;
     }
 
@@ -100,32 +101,42 @@ public sealed class MaterialStore : IMaterialStore
     //TODO rework
     public void GetMaterialUploadData(Material material, out DrawMaterialPayload data)
     {
-        GfxPassState? state = material.IsSkybox ? new GfxPassState(DepthWrite: false) : null;
-        GfxPassStateFunc? funcs = material.IsSkybox ? GfxPassStateFunc.MakeSky() : null;
-        var meta = new DrawMaterialMeta(material.Id, ResolveShader(material), state, funcs);
-        var snapshot = material.State.Snapshot();
+        var shader = ResolveShader(material);
+        var pipeline = material.State.Pipeline;
+        var meta = new DrawMaterialMeta(material.Id, shader, pipeline.PassState, pipeline.PassFunctions);
+        var snapshot = material.Snapshot();
         data = new DrawMaterialPayload(in meta, in snapshot);
     }
 
-    public int FillTextureInfo(Material material, Span<TextureSlotInfo> span)
+    private void FillTextureInfo(Material material)
     {
-        var textureSlots = material.TextureSlots.Slots;
+        var textureSlots = material.TextureSlots.AssetSlots;
+        var result = new TextureSlotInfo[textureSlots.Length];
         for (var i = 0; i < textureSlots.Length; i++)
         {
             var slot = textureSlots[i];
             var textureId = ResolveTextureId(slot);
-            span[i] = new TextureSlotInfo(textureId, slot.SlotKind, slot.TextureKind);
+            result[i] = new TextureSlotInfo(textureId, slot.SlotKind, slot.TextureKind);
         }
 
-        return textureSlots.Length;
+        material.TextureSlots.CacheSlots = result;
     }
 
     public ShaderId ResolveShader(Material material) => _assetStore.GetByRef(material.ShaderRef).ResourceId;
 
     private TextureId ResolveTextureId(AssetTextureSlot assetSlot)
     {
-        //TODO use some better structure than hardcoded checks everywhere
         if (assetSlot.SlotKind == TextureSlotKind.Shadowmap) return default;
+
+        if (!assetSlot.Asset.IsValid)
+        {
+            switch (assetSlot.SlotKind)
+            {
+                case TextureSlotKind.Albedo: return GfxTextures.FallbackTextures.AlbedoId;
+                case TextureSlotKind.Normal: return GfxTextures.FallbackTextures.NormalId;
+                case TextureSlotKind.Mask: return GfxTextures.FallbackTextures.AlphaMaskId;
+            }
+        }
 
         if (assetSlot.TextureKind == TextureKind.Texture2D)
             return _assetStore.GetByRef(new AssetRef<Texture2D>(assetSlot.Asset)).ResourceId;
@@ -151,5 +162,4 @@ public sealed class MaterialStore : IMaterialStore
 
         return NextId();
     }
-
 }

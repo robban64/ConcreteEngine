@@ -6,7 +6,8 @@ public enum TexturePixelFormat : byte
     Rgb = 1,
     Rgba = 2,
     SrgbAlpha = 3,
-    Depth = 4
+    Depth = 4,
+    Red = 5
 }
 
 public enum TextureKind : byte

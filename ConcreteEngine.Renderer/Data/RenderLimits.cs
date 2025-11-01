@@ -17,9 +17,8 @@ public static class RenderLimits
 
     public const int DefaultCommandBuffCapacity = 128;
     public const int MaxCommandBuffCapacity = 10_000;
-    public const int MaxCmdBuffTransformBufferCapacity = 32;
 
-    public const int DefaultMaterialBufferCapacity = 16;
+    public const int DefaultMaterialBufferCapacity = 32;
     public const int MaxMaterialCount = 1024;
     public const int MaxMaterialBufferCapacity = 1024;
 

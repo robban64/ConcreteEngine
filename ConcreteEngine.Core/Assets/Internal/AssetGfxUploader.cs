@@ -1,13 +1,11 @@
 #region
 
-using System.Runtime.InteropServices;
 using ConcreteEngine.Core.Assets.Meshes;
 using ConcreteEngine.Core.Assets.Shaders;
 using ConcreteEngine.Core.Assets.Textures;
 using ConcreteEngine.Graphics.Gfx;
 using ConcreteEngine.Graphics.Gfx.Definitions;
 using ConcreteEngine.Graphics.Gfx.Resources;
-using ConcreteEngine.Graphics.Primitives;
 
 #endregion
 
@@ -26,17 +24,17 @@ internal sealed class AssetGfxUploader
         _shaders = gfx.Shaders;
     }
 
-    public void UploadMesh(in MeshResultPayload payload, out MeshCreationInfo info)
+    public MeshCreationInfo UploadMesh(MeshUploadPayload payload)
     {
-        ReadOnlySpan<Vertex3D> vSpan = CollectionsMarshal.AsSpan(payload.Vertices);
-        ReadOnlySpan<uint> iSpan = CollectionsMarshal.AsSpan(payload.Indices);
+        var vSpan = payload.Vertices;
+        var iSpan = payload.Indices;
 
         var builder = _meshes.StartUploadBuilder(payload.Properties);
         builder.UploadVertices(vSpan, BufferUsage.StaticDraw, BufferStorage.Static, BufferAccess.None);
         builder.UploadIndices(iSpan, BufferUsage.StaticDraw, BufferStorage.Static, BufferAccess.None);
-        builder.SetAttributeRange(payload.Attributes);
-        var meshId = builder.Finish();
-        info = new MeshCreationInfo(meshId, 0);
+        builder.SetAttributeSpan(payload.Attributes);
+        var meshId = _meshes.FinishUploadBuilder(out var meta);
+        return new MeshCreationInfo(meshId, meta.DrawCount);
     }
 
     public void UploadTexture(in TexturePayload payload, out TextureCreationInfo info)

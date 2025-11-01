@@ -37,7 +37,7 @@ internal sealed class RenderFboRegistry : IRenderFboRegistry
 
     internal RenderFboRegistry(GfxContext gfx)
     {
-        _gfxApi = gfx.ResourceContext.ResourceManager.GetGfxApi();
+        _gfxApi = gfx.ResourceManager.GetGfxApi();
         _gfxFbo = gfx.FrameBuffers;
 
         _gfxApi.BindMetaChanged<FrameBufferId, FrameBufferMeta>(OnFboChange);

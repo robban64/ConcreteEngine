@@ -1,33 +1,87 @@
 #region
 
+using System.Runtime.CompilerServices;
 using ConcreteEngine.Common.Numerics;
 using ConcreteEngine.Graphics.Gfx.Definitions;
+using static ConcreteEngine.Graphics.Gfx.Contracts.GfxStateFlags;
 
 #endregion
 
 namespace ConcreteEngine.Graphics.Gfx.Contracts;
 
-//TODO make a bit mask flag or something. this is terrible
-public readonly record struct GfxPassState(
-    bool? DepthTest = null,
-    bool? DepthWrite = null,
-    bool? Cull = null,
-    bool? Blend = null,
-    bool? Scissor = null,
-    bool? FramebufferSrgb = null,
-    bool? ColorMask = null,
-    bool? PolygonOffset = null
-)
+[Flags]
+public enum GfxStateFlags : ushort
 {
-    public static GfxPassState MakeScene() => new(true, true, true, false, false, true, true, false);
-    public static GfxPassState MakeShadow() => new(true, true, true, false, false, true, false, true);
-    public static GfxPassState MakeLighting() => new(true, true, true, true, false, true, false, true);
+    None = 0,
+    DepthTest = 1 << 0,
+    DepthWrite = 1 << 1,
+    Cull = 1 << 2,
+    Blend = 1 << 3,
+    Scissor = 1 << 4,
+    FramebufferSrgb = 1 << 5,
+    ColorMask = 1 << 6,
+    PolygonOffset = 1 << 7,
+    SampleAlphaCoverage = 1 << 8
+}
 
-    public static GfxPassState MakePostProcess(bool blend = false) =>
-        new(false, false, false, blend, false, true, true, false);
+public readonly record struct GfxPassState(GfxStateFlags Enabled, GfxStateFlags Defined)
+{
+    public bool IsSet(GfxStateFlags flag) => (Defined & flag) != 0;
+    public bool IsEnabled(GfxStateFlags flag) => (Enabled & flag) != 0;
 
-    public static GfxPassState MakeScreen() => new(false, false, false, false, false, false, true, false);
-    public static GfxPassState MakeOff() => new(false, false, false, false, false, false, true, false);
+    public static GfxPassState Enable(GfxStateFlags flags) => new(flags, flags);
+
+    public static GfxPassState Disable(GfxStateFlags flags) => new(0, flags);
+
+    public static GfxPassState Set(GfxStateFlags enable, GfxStateFlags disable) =>
+        new(enable, enable | disable);
+
+    public static GfxPassState Patch(GfxStateFlags defined, GfxStateFlags enabled) =>
+        new(enabled, defined);
+
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public static GfxStateFlags Merge(GfxStateFlags current, GfxPassState patch)
+    {
+        var d = patch.Defined;
+        return (current & ~d) | (patch.Enabled & d);
+    }
+
+    public static GfxPassState MakeScene() =>
+        new(
+            Enabled: DepthTest | DepthWrite | Cull | FramebufferSrgb | ColorMask | SampleAlphaCoverage,
+            Defined: DepthTest | DepthWrite | Cull | Blend | Scissor | FramebufferSrgb | ColorMask |
+                     PolygonOffset | SampleAlphaCoverage
+        );
+
+    public static GfxPassState MakeShadow() =>
+        new(
+            Enabled: DepthTest | DepthWrite | Cull | FramebufferSrgb | PolygonOffset,
+            Defined: DepthTest | DepthWrite | Cull | Blend | Scissor | FramebufferSrgb | ColorMask | PolygonOffset | SampleAlphaCoverage
+        );
+
+    public static GfxPassState MakeLighting() =>
+        new(
+            Enabled: DepthTest | DepthWrite | Cull | Blend | FramebufferSrgb | PolygonOffset,
+            Defined: DepthTest | DepthWrite | Cull | Blend | Scissor | FramebufferSrgb | ColorMask | PolygonOffset
+        );
+
+    public static GfxPassState MakePostProcess() =>
+        new(
+            Enabled: FramebufferSrgb | ColorMask,
+            Defined: DepthTest | DepthWrite | Cull | Blend | Scissor | FramebufferSrgb | ColorMask | PolygonOffset
+        );
+
+    public static GfxPassState MakeScreen() =>
+        new(
+            Enabled: ColorMask,
+            Defined: DepthTest | DepthWrite | Cull | Blend | Scissor | FramebufferSrgb | ColorMask | PolygonOffset
+        );
+
+    public static GfxPassState MakeOff() =>
+        new(
+            Enabled: ColorMask,
+            Defined: DepthTest | DepthWrite | Cull | Blend | Scissor | FramebufferSrgb | ColorMask | PolygonOffset
+        );
 }
 
 public readonly record struct GfxPassStateFunc(

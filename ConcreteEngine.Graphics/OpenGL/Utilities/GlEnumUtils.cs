@@ -46,6 +46,7 @@ internal static class GlEnumExtensions
             PolygonOffsetLevel.Slight => (1.0f, 1.0f),
             PolygonOffsetLevel.Medium => (4.0f, 2.0f),
             PolygonOffsetLevel.Strong => (4.0f, 4.0f),
+            PolygonOffsetLevel.Slope => (1.5f, 2.0f),
             _ => (0.0f, 0.0f)
         };
     }
@@ -192,6 +193,17 @@ internal static class GlEnumExtensions
         };
     }
 
+    public static VertexAttribType ToGlEnum(this VertexFormat value)
+    {
+        return value switch
+        {
+            VertexFormat.Float => VertexAttribType.Float,
+            VertexFormat.UByte => VertexAttribType.UnsignedByte,
+            VertexFormat.UShort => VertexAttribType.UnsignedShort,
+            _ => throw new ArgumentOutOfRangeException(nameof(value), value, null)
+        };
+    }
+
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static ClearBufferMask ToGlEnum(this ClearBufferFlag flags)
     {
@@ -213,6 +225,7 @@ internal static class GlEnumExtensions
             TexturePixelFormat.Rgba => SizedInternalFormat.Rgba8,
             TexturePixelFormat.SrgbAlpha => SizedInternalFormat.Srgb8Alpha8,
             TexturePixelFormat.Depth => SizedInternalFormat.DepthComponent24,
+            TexturePixelFormat.Red => SizedInternalFormat.R8,
             _ => throw new ArgumentOutOfRangeException(nameof(format))
         };
     }
@@ -225,6 +238,9 @@ internal static class GlEnumExtensions
             TexturePixelFormat.Rgba => (PixelFormat.Rgba, PixelType.UnsignedByte),
             // sRGB only for internal format
             TexturePixelFormat.SrgbAlpha => (PixelFormat.Rgba, PixelType.UnsignedByte),
+            TexturePixelFormat.Red => (PixelFormat.Red, PixelType.UnsignedByte),
+            TexturePixelFormat.Depth => (PixelFormat.DepthComponent, PixelType.UnsignedByte),
+
             _ => throw new ArgumentOutOfRangeException(nameof(f))
         };
     }

@@ -3,7 +3,6 @@
 using System.Runtime.CompilerServices;
 using ConcreteEngine.Common.Numerics;
 using ConcreteEngine.Graphics.Gfx.Definitions;
-using ConcreteEngine.Graphics.Gfx.Resources;
 using ConcreteEngine.Graphics.OpenGL.Utilities;
 using Silk.NET.OpenGL;
 
@@ -36,6 +35,13 @@ internal sealed class GlStates : IGraphicsDriverModule
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public void ColorMask(bool v) => _gl.ColorMask(v, v, v, v);
+
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public void ToggleSampleAlphaCoverage(bool enabled)
+    {
+        if (enabled) _gl.Enable(GLEnum.SampleAlphaToCoverage);
+        else _gl.Disable(GLEnum.SampleAlphaToCoverage);
+    }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public void TogglePolygonOffset(bool enabled)
@@ -128,7 +134,7 @@ internal sealed class GlStates : IGraphicsDriverModule
 
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public void UnbindTextureSlot(int slot) => _gl.BindTextureUnit(0, (uint)slot);
+    public void UnbindTextureSlot(int slot) => _gl.BindTextureUnit((uint)slot, 0);
 
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
@@ -156,5 +162,12 @@ internal sealed class GlStates : IGraphicsDriverModule
     public unsafe void DrawElements(DrawPrimitive primitive, DrawElementSize elementSize, int drawCount)
     {
         _gl.DrawElements(primitive.ToGlEnum(), (uint)drawCount, elementSize.ToGlEnum(), (void*)0);
+    }
+
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public void DrawInstanced(DrawPrimitive primitive, DrawElementSize elementSize, int drawCount,
+        int instanceCount)
+    {
+        _gl.DrawArraysInstanced(primitive.ToGlEnum(), 0, (uint)drawCount, (uint)instanceCount);
     }
 }

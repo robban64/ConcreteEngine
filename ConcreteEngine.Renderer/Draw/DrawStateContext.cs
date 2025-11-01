@@ -17,7 +17,7 @@ internal sealed class DrawStateContextPayload
 {
     public required RenderRegistry Registry { get; init; }
     public required RenderView RenderView { get; init; }
-    public required RenderSceneSnapshot Snapshot { get; init; }
+    public required RenderParamsSnapshot Snapshot { get; init; }
     public required GfxContext Gfx { get; init; }
 }
 
@@ -30,18 +30,19 @@ internal sealed class DrawStateContext
     public MeshId FsqMesh { get; }
 
     public readonly RenderCoreShaders CoreShaders;
-    
+
     public GfxPassState PassState;
     public GfxPassStateFunc PassStateFunc;
 
-    public GfxPassState? OverridePassState = null;
-    public GfxPassStateFunc? OverridePassStateFunc = null;
+    public GfxPassState OverridePassState = default;
+    public GfxPassStateFunc OverridePassStateFunc = default;
 
     internal DrawStateContext(RenderRegistry registry, MeshId fsqMesh)
     {
         FsqMesh = fsqMesh;
         var depthFbo = registry.GetRenderFbo(TagRegistry.FboKey<ShadowPassTag>(FboVariant.Default));
         DepthTexture = depthFbo.Attachments.DepthTextureId;
+        // DepthTexture = GfxTextures.FallbackTextures.AlphaMaskId;
         CoreShaders = registry.ShaderRegistry.CoreShaders;
     }
 

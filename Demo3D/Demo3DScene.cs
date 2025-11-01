@@ -2,17 +2,18 @@
 
 using System.Numerics;
 using ConcreteEngine.Common.Numerics;
-using ConcreteEngine.Common.Numerics.Maths;
 using ConcreteEngine.Core.Assets;
 using ConcreteEngine.Core.Assets.Materials;
 using ConcreteEngine.Core.Assets.Meshes;
 using ConcreteEngine.Core.Assets.Textures;
 using ConcreteEngine.Core.Configuration;
-using ConcreteEngine.Core.RenderingSystem;
 using ConcreteEngine.Core.Scene;
-using ConcreteEngine.Core.Scene.Entities;
+using ConcreteEngine.Core.Worlds.Entities;
+using ConcreteEngine.Core.Worlds.Render;
+using ConcreteEngine.Core.Worlds.Utility;
+using ConcreteEngine.Graphics.Gfx.Contracts;
+using ConcreteEngine.Graphics.Gfx.Definitions;
 using ConcreteEngine.Renderer.Descriptors;
-using Shader = ConcreteEngine.Core.Assets.Shaders.Shader;
 
 #endregion
 
@@ -29,20 +30,23 @@ public sealed class Demo3DScene : GameScene
         var (store, materialStore) = (assets.Store, assets.MaterialStore);
 
         // Scene globals
-        var rb = renderer.SceneProperties;
-        rb.SetShadowDefault(2048);
+        var rb = renderer.WorldRenderParams;
+        rb.SetShadowDefault(2048, 120f);
 
         // Skybox
         var skyboxMaterial = materialStore.CreateMaterial("SkyboxMat", "SkyboxMat1");
-        skyboxMaterial.IsSkybox = true;
+        skyboxMaterial.State.Pipeline = new MaterialPipelineState(
+            GfxPassState.Disable(GfxStateFlags.DepthWrite),
+            GfxPassStateFunc.MakeSky());
+        
         Context.World.Sky.SetSkyMaterial(skyboxMaterial.Id);
 
         // Terrain
         var heightmap = assets.Store.GetByName<Texture2D>("Heightmap");
         var terrainMat = assets.MaterialStore.CreateMaterial("TerrainMat", "TerrainMat1");
         terrainMat.State.UvRepeat = 14;
-        terrainMat.State.Shininess = 10;
-        terrainMat.State.Specular = 0.04f;
+        terrainMat.State.Shininess = 4;
+        terrainMat.State.Specular = 0.02f;
 
         var worldTerrain = Context.World.Terrain;
         worldTerrain.CreateTerrainMesh(heightmap);
@@ -52,45 +56,78 @@ public sealed class Demo3DScene : GameScene
         var treeMat = materialStore.CreateMaterial("TreeBarkMat", "TreeMat1");
         var birchMat = materialStore.CreateMaterial("TreeBirchBarkMat", "TreeMat2");
 
-        var treeMesh = store.GetByName<Mesh>("Tree1");
-        var treeMesh1 = store.GetByName<Mesh>("Tree2");
-        var treeMesh2 = store.GetByName<Mesh>("Tree3");
+        var leaf1Mat = materialStore.CreateMaterial("TreeLeaf1Mat", "Leaf1");
+        var leaf2Mat = materialStore.CreateMaterial("TreeLeaf2Mat", "Leaf2");
+        leaf1Mat.State.Transparency = true;
+        leaf1Mat.State.Color = new Color4(0.55f, 0.85f, 0.45f);
+        leaf1Mat.State.Shininess = 0f;
+        leaf1Mat.State.Specular = 0f;
+        leaf2Mat.State.Transparency = true;
+        leaf2Mat.State.Color = new Color4(0.55f, 0.85f, 0.45f);
+        leaf2Mat.State.Shininess = 0f;
+        leaf2Mat.State.Specular = 0f;
+        
+
+        var leafState = GfxPassState.Set(GfxStateFlags.DepthTest | GfxStateFlags.DepthWrite  | GfxStateFlags.PolygonOffset, disable: GfxStateFlags.Cull);
+        var leafFunc = new GfxPassStateFunc(Depth: DepthMode.Lequal, Cull: CullMode.FrontCcw, PolygonOffset: PolygonOffsetLevel.Slope);
+        var leafPipelineState = new MaterialPipelineState(leafState,leafFunc);
+
+        leaf1Mat.State.Pipeline = leafPipelineState;
+        leaf2Mat.State.Pipeline = leafPipelineState;
+
+
+        var treeMesh = store.GetByName<Model>("Tree1");
+        var treeMesh1 = store.GetByName<Model>("Tree2");
+        var treeMesh2 = store.GetByName<Model>("Tree3");
 
         // Rocks
         var rockMat = materialStore.CreateMaterial("Rock1Mat", "Rock1Mat1");
         var rockMat2 = materialStore.CreateMaterial("Rock2Mat", "Rock1Mat2");
-        rockMat.State.Specular = 0.3f;
+        rockMat.State.Shininess = 10f;
+        rockMat.State.Specular = 0.12f;
+
+        rockMat2.State.Shininess = 24f;
         rockMat2.State.Specular = 0.25f;
-        var rockMesh = store.GetByName<Mesh>("Rock1");
-        var rock2Mesh = store.GetByName<Mesh>("Rock2");
+
+        var rockMesh = store.GetByName<Model>("Rock1");
+        var rock2Mesh = store.GetByName<Model>("Rock2");
 
         // Boat
         var boatMat = materialStore.CreateMaterial("BoatMat", "BoatMat1");
-        var boatMesh = store.GetByName<Mesh>("Boat");
+        var boatMesh = store.GetByName<Model>("Boat");
         boatMat.State.Specular = 0;
         boatMat.State.Shininess = 1;
 
         _spawner = new EntitySpawner(World);
 
+        var treeMatTag = MaterialTagBuilder.Start(treeMat.Id).WithSlot(leaf1Mat.Id, true).Build();
+        var birchMatTag = MaterialTagBuilder.Start(birchMat.Id).WithSlot(leaf2Mat.Id, true).Build();
+        var rockMat1Tag = MaterialTagBuilder.BuildOne(rockMat.Id);
+        var rockMat2Tag = MaterialTagBuilder.BuildOne(rockMat2.Id);
+        var boatMatTag = MaterialTagBuilder.BuildOne(boatMat.Id);
+
         _spawner.PlaceTreesBasic(20,
         [
-            new ScenePlacement(treeMesh, treeMat),
-            new ScenePlacement(treeMesh1, birchMat),
-            new ScenePlacement(treeMesh2, birchMat)
+            new ScenePlacement(treeMesh.ToBaseDrawInfo(), treeMatTag),
+            new ScenePlacement(treeMesh1.ToBaseDrawInfo(), birchMatTag),
+            new ScenePlacement(treeMesh2.ToBaseDrawInfo(), birchMatTag)
         ]);
 
         _spawner.PlaceGroundRocksBasic(90,
-            [new ScenePlacement(rockMesh, rockMat, 0.5f), new ScenePlacement(rock2Mesh, rockMat2, 0.6f)],
+            [
+                new ScenePlacement(rockMesh.ToBaseDrawInfo(), rockMat1Tag, 0.5f),
+                new ScenePlacement(rock2Mesh.ToBaseDrawInfo(), rockMat2Tag, 0.6f)
+            ],
             intensity: 0.5f);
-        _spawner.PlacePropsRingBasic(12, [new ScenePlacement(boatMesh, boatMat)]);
+        _spawner.PlacePropsRingBasic(12, [new ScenePlacement(boatMesh.ToBaseDrawInfo(), boatMatTag)]);
 
         float half = 256 / 2f;
 
         {
-            var mesh = store.GetByName<Mesh>("Cube");
+            var mesh = store.GetByName<Model>("Cube");
             var entityId = World.Create();
-            World.Meshes.Add(entityId,
-                new MeshComponent(mesh.ResourceId, treeMat.Id, mesh.DrawCount));
+            var mat = World.EntityMaterials.Add(rockMat1Tag);
+            World.Meshes.Add(entityId, new ModelComponent(mesh.ModelId, mesh.DrawCount, mat));
             World.Transforms.Add(entityId,
                 new Transform(new Vector3(half, worldTerrain.GetSmoothHeight(half, half) + 1f, half),
                     Vector3.One, Quaternion.Identity));

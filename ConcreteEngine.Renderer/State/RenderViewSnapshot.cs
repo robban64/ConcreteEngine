@@ -12,7 +12,8 @@ public readonly struct RenderViewSnapshot(
     in Matrix4x4 projectionMatrix,
     in Matrix4x4 projectionViewMatrix,
     in ProjectionInfo projectionInfo,
-    Vector3 position,
+    in Vector3 position,
+    in Quaternion rotation,
     Vector3 forward,
     Vector3 right,
     Vector3 up
@@ -22,6 +23,7 @@ public readonly struct RenderViewSnapshot(
     public readonly Matrix4x4 ProjectionMatrix = projectionMatrix;
     public readonly Matrix4x4 ProjectionViewMatrix = projectionViewMatrix;
     public readonly ProjectionInfo ProjectionInfo = projectionInfo;
+    public readonly Quaternion Rotation = rotation;
     public readonly Vector3 Position = position;
     public readonly Vector3 Forward = forward;
     public readonly Vector3 Right = right;

@@ -1,12 +1,16 @@
+#region
+
 using System.Diagnostics;
 using ConcreteEngine.Common.Diagnostics;
 using ConcreteEngine.Core.Assets;
 using ConcreteEngine.Core.Assets.Data;
 using ConcreteEngine.Core.Assets.Materials;
 using ConcreteEngine.Core.Data;
-using ConcreteEngine.Core.Scene;
+using ConcreteEngine.Core.Worlds;
 using ConcreteEngine.Graphics.Diagnostic;
 using Core.DebugTools.Data;
+
+#endregion
 
 namespace ConcreteEngine.Core.Diagnostic;
 
@@ -32,7 +36,7 @@ internal static class MetricRouter
         if (_frameInfo is not { } f) return default;
 
         var gfxInfo = f.GfxResult;
-        var sample = new RenderInfoSample(f.Fps, f.Alpha, 0, gfxInfo.DrawCalls,gfxInfo.TriangleCount);
+        var sample = new RenderInfoSample(f.Fps, f.Alpha, 0, gfxInfo.DrawCalls, gfxInfo.TriangleCount);
         return new FrameMetric<RenderInfoSample>(f.FrameIndex, f.TimeStamp, in sample, default);
     }
 

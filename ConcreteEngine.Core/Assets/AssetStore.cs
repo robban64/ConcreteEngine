@@ -50,7 +50,8 @@ internal sealed class AssetStore : IAssetStore
     internal AssetStore()
     {
     }
-    
+
+    public int GetAssetCount<TAsset>() where TAsset : AssetObject => _typeMeta[typeof(TAsset)].Count;
     internal IReadOnlyDictionary<Type, AssetTypeMeta> GetAssetTypeMeta() => _typeMeta;
 
     public AssetTypeMetaSnapshot GetMetaSnapshot<TAsset>() where TAsset : AssetObject =>
@@ -139,6 +140,15 @@ internal sealed class AssetStore : IAssetStore
         }
     }
 
+    public void DrainSpan<TAsset, TData>(Span<TData> span, Action<TAsset, Span<TData>> transform)
+        where TAsset : AssetObject where TData : unmanaged
+    {
+        foreach (var asset in _assets.Values)
+        {
+            if (asset is TAsset typedAsset) transform(typedAsset, span);
+        }
+    }
+
     public void ExtractSpan<TAsset, TData>(Span<TData> span, Func<TAsset, TData> transform)
         where TAsset : AssetObject where TData : unmanaged
     {
@@ -159,14 +169,15 @@ internal sealed class AssetStore : IAssetStore
             if (idx >= span.Length) break;
         }
     }
-    
+
+
     public ReadOnlySpan<string> GetStoreNames()
     {
         var names = new string[Count];
         var idx = 0;
         foreach (var it in _typeMeta.Keys)
             names[idx++] = it.Name;
-        
+
         return names;
     }
 
@@ -182,20 +193,18 @@ internal sealed class AssetStore : IAssetStore
     public void Reload<TAsset>(TAsset asset, AssetFileReloadDel<TAsset> factory) where TAsset : AssetObject
     {
         var gen = asset.Generation;
-        
+
         TryGetFileIds(asset.RawId, out var fileIds);
         var files = new AssetFileEntry[fileIds.Length];
-        for(var i = 0; i < fileIds.Length; i++)
+        for (var i = 0; i < fileIds.Length; i++)
             files[i] = _files[fileIds[i]];
-        
+
         factory(asset, files, out var fileSpecs);
         InvalidOpThrower.ThrowIf(gen != asset.Generation, nameof(asset.Generation));
         InvalidOpThrower.ThrowIf(files.Length != fileSpecs.Length, nameof(fileSpecs.Length));
 
         asset.BumpGeneration();
-        if(fileSpecs.Length > 0) RegisterExistingBindings(asset.RawId, files, fileSpecs);
-        
-        
+        if (fileSpecs.Length > 0) RegisterExistingBindings(asset.RawId, files, fileSpecs);
     }
 
     internal TAsset Register<TAsset, TDesc>(TDesc descriptor, AssetAssembleDel<TAsset, TDesc> factory)
@@ -220,7 +229,7 @@ internal sealed class AssetStore : IAssetStore
     private void RegisterInternal<TAsset>(AssetId id, TAsset asset, ReadOnlySpan<AssetFileSpec> fileSpecs)
         where TAsset : AssetObject
     {
-        ArgumentNullException.ThrowIfNull(asset,nameof(asset));
+        ArgumentNullException.ThrowIfNull(asset, nameof(asset));
         ArgumentOutOfRangeException.ThrowIfLessThanOrEqual(id.Value, 0);
         ArgumentOutOfRangeException.ThrowIfNotEqual(asset.RawId.Value, id.Value);
 
@@ -250,8 +259,9 @@ internal sealed class AssetStore : IAssetStore
 
         _bindings.Add(assetId, fileIds);
     }
-    
-    private void RegisterExistingBindings(AssetId assetId, ReadOnlySpan<AssetFileEntry> prevFiles, ReadOnlySpan<AssetFileSpec> fileSpecs)
+
+    private void RegisterExistingBindings(AssetId assetId, ReadOnlySpan<AssetFileEntry> prevFiles,
+        ReadOnlySpan<AssetFileSpec> fileSpecs)
     {
         for (var i = 0; i < fileSpecs.Length; i++)
         {

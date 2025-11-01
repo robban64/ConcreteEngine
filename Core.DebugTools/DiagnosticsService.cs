@@ -50,12 +50,11 @@ public sealed class DiagnosticsService : IDisposable
     {
         Data.MaterialMetrics = RouteTable.PullMaterialMetrics?.Invoke() ?? default;
         TextData.UpdateMaterialMetrics(in Data.MaterialMetrics);
-        
+
         RouteTable.FillAssetMetrics?.Invoke(Data);
         RouteTable.FillGfxStoreMetrics?.Invoke(Data);
         TextData.UpdateAssetMetrics(Data.AssetMetrics);
         TextData.UpdateGfxStoreMetrics(Data.GfxStoreMetrics);
-
     }
 
     public void RefreshMemoryMetrics()
@@ -90,7 +89,7 @@ public sealed class DiagnosticsService : IDisposable
     public void Render()
     {
         var vp = ImGui.GetMainViewport();
-        ImGui.ShowDemoWindow();
+        //ImGui.ShowDemoWindow();
         _leftPanel.Draw(224);
         _rightPanel.DrawRight(160);
         DevConsole.DrawConsole(200, 200);

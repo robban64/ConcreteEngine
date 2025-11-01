@@ -1,7 +1,6 @@
 #region
 
 using ConcreteEngine.Graphics.Gfx.Internal;
-using ConcreteEngine.Graphics.Gfx.Resources;
 using ConcreteEngine.Graphics.OpenGL;
 
 #endregion
@@ -12,12 +11,12 @@ public sealed class GfxShaders
 {
     private readonly GfxResourceDisposer _disposer;
 
-    private readonly GfxResourceStore<ShaderId, ShaderMeta> _store;
+    private readonly ShaderStore _store;
     private readonly GlShaders _driver;
 
     internal GfxShaders(GfxContextInternal context)
     {
-        _store = context.Stores.ShaderStore;
+        _store = context.Resources.GfxStoreHub.ShaderStore;
         _driver = context.Driver.Shaders;
         _disposer = context.Disposer;
     }

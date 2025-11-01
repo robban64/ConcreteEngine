@@ -16,7 +16,7 @@ public sealed class DrawStateOps
     private readonly GfxTextures _gfxTextures;
     private readonly RenderRegistry _renderRegistry;
     private readonly RenderView _renderView;
-    private readonly RenderSceneSnapshot _sceneSnapshot;
+    private readonly RenderParamsSnapshot _paramsSnapshot;
     private readonly DrawBuffers _drawBuffers;
 
     private readonly DrawStateContext _ctx;
@@ -25,7 +25,7 @@ public sealed class DrawStateOps
     {
         _renderRegistry = ctxPayload.Registry;
         _renderView = ctxPayload.RenderView;
-        _sceneSnapshot = ctxPayload.Snapshot;
+        _paramsSnapshot = ctxPayload.Snapshot;
         _drawBuffers = drawBuffers;
         _gfxCmd = ctxPayload.Gfx.Commands;
         _gfxTextures = ctxPayload.Gfx.Textures;
@@ -37,7 +37,7 @@ public sealed class DrawStateOps
     {
         _ctx.SetDepthMode();
 
-        _renderView.ApplyLightViewOverride(_sceneSnapshot.DirLight.Direction, _sceneSnapshot);
+        _renderView.ApplyLightViewOverride(_paramsSnapshot.DirLight.Direction, _paramsSnapshot);
         _drawBuffers.UploadShadow(in _renderView.ProjectionViewMatrix);
         _drawBuffers.UploadCameraView(_renderView);
     }
@@ -56,15 +56,15 @@ public sealed class DrawStateOps
         _ctx.PassStateFunc = passFunc;
     }
 
-    public void BeginScreenPass(in GfxPassClear passClear, in GfxPassState states)
+    public void BeginScreenPass(in GfxPassClear passClear,  GfxPassState states)
     {
-        _gfxCmd.BeginScreenPass(in passClear, in states);
+        _gfxCmd.BeginScreenPass(in passClear,  states);
         _ctx.PassState = states;
     }
 
-    public void BeginRenderPass(FrameBufferId fboId, in GfxPassClear passClear, in GfxPassState states)
+    public void BeginRenderPass(FrameBufferId fboId, in GfxPassClear passClear,  GfxPassState states)
     {
-        _gfxCmd.BeginRenderPass(fboId, in passClear, in states);
+        _gfxCmd.BeginRenderPass(fboId, in passClear,  states);
         _ctx.PassState = states;
     }
 
@@ -75,7 +75,7 @@ public sealed class DrawStateOps
 
     public void ClearColor(in GfxPassClear clear) => _gfxCmd.Clear(clear);
 
-    public void ToggleStates(in GfxPassState states) => _gfxCmd.ApplyState(states);
+    public void ToggleStates( GfxPassState states) => _gfxCmd.ApplyState(states);
 
     public void GenerateMips(TextureId textureId) => _gfxTextures.GenerateMipMaps(textureId);
 

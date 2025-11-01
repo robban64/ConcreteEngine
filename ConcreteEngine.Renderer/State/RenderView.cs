@@ -1,6 +1,7 @@
 #region
 
 using System.Numerics;
+using ConcreteEngine.Common.Numerics.Maths;
 using ConcreteEngine.Renderer.Data;
 using ConcreteEngine.Renderer.Utility;
 
@@ -14,7 +15,7 @@ public sealed class RenderView
     private ViewProjectionData _override;
 
     private bool _useOverride = false;
-
+    
     public ref readonly Matrix4x4 ViewMatrix
         => ref (_useOverride ? ref _override.ViewMatrix : ref _snapshot.ViewMatrix);
 
@@ -31,11 +32,7 @@ public sealed class RenderView
     public Vector3 Up => _snapshot.Up;
 
 
-    public RenderView()
-    {
-    }
-
-    internal void GetCurrentData(out Matrix4x4 view, out Matrix4x4 projection, out Matrix4x4 projectionView)
+    public void GetCurrentData(out Matrix4x4 view, out Matrix4x4 projection, out Matrix4x4 projectionView)
     {
         if (_useOverride)
         {
@@ -49,8 +46,8 @@ public sealed class RenderView
         projection = _snapshot.ProjectionMatrix;
         projectionView = _snapshot.ProjectionViewMatrix;
     }
-
-    internal void PrepareFrame(in RenderViewSnapshot view)
+    
+    public void SetViewData(in RenderViewSnapshot view)
     {
         _useOverride = false;
         _snapshot = view;
@@ -58,10 +55,13 @@ public sealed class RenderView
 
     internal void ClearOverride() => _useOverride = false;
 
-    internal void ApplyLightViewOverride(Vector3 direction, RenderSceneSnapshot sceneSnapshot)
+    internal void ApplyLightViewOverride(Vector3 direction, RenderParamsSnapshot paramsSnapshot)
     {
+        ref readonly var shadow = ref paramsSnapshot.Shadows;
+
         RenderTransform.CreateDirLightView(direction, in _snapshot, out var viewMat, out var projMat,
-            shadowMapSize: sceneSnapshot.Shadows.ShadowMapSize);
+            shadowMapSize: shadow.ShadowMapSize, shadowDistance: shadow.Distance);
+
         var projViewMat = viewMat * projMat;
         _override = new ViewProjectionData(in viewMat, in projMat, in projViewMat);
         _useOverride = true;

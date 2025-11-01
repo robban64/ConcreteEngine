@@ -6,11 +6,12 @@ using ConcreteEngine.Core.Configuration;
 using ConcreteEngine.Core.Data;
 using ConcreteEngine.Core.Diagnostic;
 using ConcreteEngine.Core.Platform;
-using ConcreteEngine.Core.RenderingSystem;
-using ConcreteEngine.Core.RenderingSystem.Batching;
 using ConcreteEngine.Core.Scene;
 using ConcreteEngine.Core.Scene.Modules;
 using ConcreteEngine.Core.Time;
+using ConcreteEngine.Core.Worlds;
+using ConcreteEngine.Core.Worlds.Render;
+using ConcreteEngine.Core.Worlds.Render.Batching;
 using ConcreteEngine.Graphics;
 using ConcreteEngine.Graphics.Diagnostic;
 using ConcreteEngine.Renderer.State;
@@ -30,7 +31,7 @@ public sealed class GameEngine : IDisposable
     private readonly EngineCoreSystem _coreSystems;
     private readonly AssetSystem _assets;
     private readonly InputSystem _inputSystem;
-    private readonly EngineRenderSystem _engineRenderSystem;
+    private readonly WorldRenderer _worldRenderer;
 
 
     private readonly ModuleManager _modules;
@@ -70,8 +71,8 @@ public sealed class GameEngine : IDisposable
 
         _inputSystem = new InputSystem(input);
         _assets = new AssetSystem();
-        _engineRenderSystem = new EngineRenderSystem(engineWindow, _graphics, _assets, _eventBus);
-        _coreSystems = new EngineCoreSystem(_engineRenderSystem, _inputSystem, _assets);
+        _worldRenderer = new WorldRenderer(engineWindow, _graphics, _assets, _eventBus);
+        _coreSystems = new EngineCoreSystem(_worldRenderer, _inputSystem, _assets);
 
 
         _stateMachine = new LinearStateMachine<EngineStateLevel>(Enum.GetValues<EngineStateLevel>());
@@ -96,19 +97,16 @@ public sealed class GameEngine : IDisposable
         _assets.FinishLoading();
         _coreSystems.Initialize();
         RegisterRenderer();
-        
+
         // prevent spam from first load. Move up to log startup issues
         GfxLog.Enabled = true;
     }
 
     private void RegisterRenderer()
     {
-        var builder = _engineRenderSystem.Initialize((gfx, batchers) =>
-        {
-            batchers.Register(new TerrainBatcher(gfx));
-        });
+        var builder = _worldRenderer.Initialize((gfx, batchers) => { batchers.Register(new TerrainBatcher(gfx)); });
 
-        _engineRenderSystem.SetupRenderer(builder);
+        _worldRenderer.SetupRenderer(builder);
     }
 
     internal void Render(float dt)
@@ -124,7 +122,7 @@ public sealed class GameEngine : IDisposable
 
         if (_sceneManager.Current is not { } scene)
         {
-            _engineRenderSystem.RenderEmptyFrame(in frameInfo);
+            _worldRenderer.RenderEmptyFrame(in frameInfo);
             return;
         }
 
@@ -141,12 +139,10 @@ public sealed class GameEngine : IDisposable
         }
 
         _assets.UpdatePendingQueue(frameInfo.FrameIndex);
-        _assets.ProcessPendingQueue(_engineRenderSystem);
+        _assets.ProcessPendingQueue(_worldRenderer);
 
-        scene.BeforeRender(out var viewSnapshot);
-
-        _engineRenderSystem.PreRender(beginStatus, in frameInfo, in runtimeParams, in viewSnapshot);
-        _engineRenderSystem.ExecuteFrame(out var gfxFrameResult);
+        _worldRenderer.PreRender(beginStatus, in frameInfo, in runtimeParams, scene.Camera);
+        _worldRenderer.ExecuteFrame(out var gfxFrameResult);
         _renderFrameInfo.EndRenderFrame(gfxFrameResult);
 
         _engineGateway.RenderMetricsUi();
@@ -188,6 +184,8 @@ public sealed class GameEngine : IDisposable
         _updateInfo.UpdateTick(tick);
         _inputSystem.Update(!_engineGateway.BlockInput());
         _sceneManager.Current?.UpdateTick(tick);
+        
+        
     }
 
     private void DebugTickUpdate(int tick)
@@ -231,19 +229,19 @@ public sealed class GameEngine : IDisposable
         var sceneContext = new GameSceneContext(_coreSystems) { Modules = _modules };
         var builder = new GameSceneConfigBuilder(_modules);
 
-        _sceneManager.ApplyPendingScene(sceneContext, builder, _engineRenderSystem, OnSceneBuild);
+        _sceneManager.ApplyPendingScene(sceneContext, builder, _worldRenderer, OnSceneBuild);
 
         _modules.Load(new GameModuleContext(sceneContext));
     }
-    
-    private void OnSceneBuild(SceneManager.SceneBuildResult result, EngineRenderSystem renderer)
+
+    private void OnSceneBuild(SceneManager.SceneBuildResult result, WorldRenderer renderer)
     {
         _engineGateway.AttachDebugTools((World)result.Context.World, _assets, _renderFrameInfo);
         _engineGateway.RegisterCommands();
         _engineGateway.RegisterMetrics();
         _engineGateway.RefreshMetrics(true);
 
-        renderer.AttachWorld((World)result.Context.World);
+        renderer.AttachWorld((World)result.Context.World, result.Context.Camera);
         foreach (var module in result.Modules) result.Context.Modules.AddModule(module());
     }
 

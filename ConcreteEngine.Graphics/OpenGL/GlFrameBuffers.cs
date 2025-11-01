@@ -3,7 +3,6 @@
 using ConcreteEngine.Common.Numerics;
 using ConcreteEngine.Graphics.Error;
 using ConcreteEngine.Graphics.Gfx.Definitions;
-using ConcreteEngine.Graphics.Gfx.Resources;
 using ConcreteEngine.Graphics.OpenGL.Utilities;
 using Silk.NET.OpenGL;
 
@@ -52,8 +51,8 @@ internal sealed class GlFrameBuffers : IGraphicsDriverModule
     {
         var filter = linear ? BlitFramebufferFilter.Linear : BlitFramebufferFilter.Nearest;
         var read = _fboStore.GetHandle(readFbo);
-        _gl.ReadBuffer(ReadBufferMode.ColorAttachment0);
-        _gl.DrawBuffer(DrawBufferMode.ColorAttachment0);
+        //_gl.ReadBuffer(ReadBufferMode.ColorAttachment0);
+        //_gl.DrawBuffer(DrawBufferMode.ColorAttachment0);
 
         _gl.BlitNamedFramebuffer(
             read, 0,

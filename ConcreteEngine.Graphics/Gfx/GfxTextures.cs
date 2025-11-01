@@ -5,7 +5,6 @@ using ConcreteEngine.Common.Numerics;
 using ConcreteEngine.Graphics.Gfx.Contracts;
 using ConcreteEngine.Graphics.Gfx.Definitions;
 using ConcreteEngine.Graphics.Gfx.Internal;
-using ConcreteEngine.Graphics.Gfx.Resources;
 using ConcreteEngine.Graphics.OpenGL;
 
 #endregion
@@ -17,14 +16,34 @@ public sealed class GfxTextures
     private readonly GlTextures _driver;
 
     private readonly GfxResourceDisposer _disposer;
-    private readonly GfxResourceStore<TextureId, TextureMeta> _textureStore;
+    private readonly TextureStore _textureStore;
+
+    public static class FallbackTextures
+    {
+        public static TextureId AlbedoId { get; internal set; } = default;
+        public static TextureId NormalId { get; internal set; } = default;
+        public static TextureId AlphaMaskId { get; internal set; } = default;
+    }
 
     internal GfxTextures(GfxContextInternal context)
     {
         _disposer = context.Disposer;
-        _textureStore = context.Stores.TextureStore;
+        _textureStore = context.Resources.GfxStoreHub.TextureStore;
         _driver = context.Driver.Textures;
+
+        FallbackTextures.AlbedoId = CreateOnePixelTexture([255, 255, 255, 255], TexturePixelFormat.SrgbAlpha);
+        FallbackTextures.NormalId = CreateOnePixelTexture([128, 128, 255], TexturePixelFormat.Rgb);
+        FallbackTextures.AlphaMaskId = CreateOnePixelTexture([255], TexturePixelFormat.Red, TexturePreset.NearestClamp);
     }
+
+    private TextureId CreateOnePixelTexture(byte[] pixelData, TexturePixelFormat format,
+        TexturePreset preset = TexturePreset.NearestRepeat)
+    {
+        var desc = new GfxTextureDescriptor(1, 1, TextureKind.Texture2D, format);
+        var props = new GfxTextureProperties(0, preset, TextureAnisotropy.Off);
+        return BuildTexture(desc, props, pixelData);
+    }
+
 
     // utilities
     public TextureId BuildTexture(in GfxTextureDescriptor desc, in GfxTextureProperties props,
@@ -70,9 +89,6 @@ public sealed class GfxTextures
         if (meta.IsMsaa) return;
         var wrapR = SupportsWrapR(meta.Kind);
         ApplyTextureProperties(texRef, in meta, wrapR);
-
-        // if (meta.IsMipMapped)
-        //   GenerateMipMaps(textureId);
     }
 
     internal GfxRefToken<TextureId> ReplaceTexture(TextureId textureId, in GfxReplaceTexture newProps)
@@ -214,7 +230,7 @@ public sealed class GfxTextures
             _driver.GenerateMipMaps(texRef);
     }
 
-    private void ValidateRecreateTexture(GfxReplaceTexture newValue, in TextureMeta meta)
+    private static void ValidateRecreateTexture(GfxReplaceTexture newValue, in TextureMeta meta)
     {
         if (meta.Kind == TextureKind.Unknown || meta.PixelFormat == TexturePixelFormat.Unknown)
             throw new InvalidOperationException("Invalid meta texture meta.");
@@ -238,7 +254,7 @@ public sealed class GfxTextures
             throw new ArgumentException("Samples can only be set for Multisample2D.");
     }
 
-    private void ValidateTextureDescriptor(in GfxTextureDescriptor desc, in GfxTextureProperties props)
+    private static void ValidateTextureDescriptor(in GfxTextureDescriptor desc, in GfxTextureProperties props)
     {
         if (desc.Width <= 0 || desc.Height <= 0)
             throw new ArgumentOutOfRangeException(nameof(desc), "Size must be > 0");
@@ -285,14 +301,14 @@ public sealed class GfxTextures
         }
     }
 
-    private void ValidateUploadSize(Size2D size, Size2D metaSize)
+    private static void ValidateUploadSize(Size2D size, Size2D metaSize)
     {
         if (size.IsZero() || metaSize.IsNegative()) throw new ArgumentOutOfRangeException(nameof(size));
         if (size != metaSize)
             throw new InvalidOperationException($"Size {size} must match TextureMeta size {metaSize}");
     }
 
-    private void ValidateUploadSize3D(Size3D size, Size3D metaSize)
+    private static void ValidateUploadSize3D(Size3D size, Size3D metaSize)
     {
         if (size.IsZero() || metaSize.IsNegative()) throw new ArgumentOutOfRangeException(nameof(size));
         if (size != metaSize)

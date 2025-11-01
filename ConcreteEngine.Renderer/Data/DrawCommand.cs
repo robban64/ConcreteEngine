@@ -16,6 +16,7 @@ public readonly struct DrawCommand(MeshId meshId, MaterialId materialId, int dra
     public readonly MeshId MeshId = meshId;
     public readonly MaterialId MaterialId = materialId;
     public readonly int DrawCount = drawCount;
+    private readonly int pad;
 }
 
 //TODO Remove if not used in the future

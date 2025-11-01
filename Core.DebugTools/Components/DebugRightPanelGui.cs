@@ -47,7 +47,6 @@ internal sealed class DebugRightPanelGui(MetricReport data)
         MetricLine(data.FrameMetrics.DrawCalls);
         MetricLine(data.FrameMetrics.TriangleCount);
         MetricLine(data.FrameMetrics.Passes);
-
     }
 
     private void DrawGcMetrics()

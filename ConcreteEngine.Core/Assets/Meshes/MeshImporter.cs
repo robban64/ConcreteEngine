@@ -1,142 +1,152 @@
 #region
 
-using System.Diagnostics;
 using System.Numerics;
+using System.Runtime.CompilerServices;
+using System.Runtime.InteropServices;
+using ConcreteEngine.Common.Collections;
+using ConcreteEngine.Common.Numerics.Extensions;
 using ConcreteEngine.Graphics.Primitives;
 using Silk.NET.Assimp;
 using AssimpMesh = Silk.NET.Assimp.Mesh;
+using AssimpScene = Silk.NET.Assimp.Scene;
+using AssimpNode = Silk.NET.Assimp.Node;
 
 #endregion
 
 namespace ConcreteEngine.Core.Assets.Meshes;
 
-//TODO improve loading speed
 internal sealed class MeshImporter
 {
-    private Assimp? _assimp;
-    private readonly List<Vertex3D> _vertices = new(1024);
-    private readonly List<uint> _indices = new(1024);
+    //PostProcessSteps.PreTransformVertices | 
+    private const PostProcessSteps Steps =
+        PostProcessSteps.Triangulate |
+        PostProcessSteps.SortByPrimitiveType |
+        PostProcessSteps.JoinIdenticalVertices |
+        PostProcessSteps.GenerateSmoothNormals |
+        PostProcessSteps.ImproveCacheLocality |
+        PostProcessSteps.CalculateTangentSpace |
+        PostProcessSteps.OptimizeMeshes |
+        PostProcessSteps.FlipUVs;
 
-    //private Vertex3D[] _verticesBuffer = [];
-    //private uint[] _indicesBuffer = [];
+
+    private Assimp? _assimp;
+
+    private Vertex3D[] _verts = new Vertex3D[2048];
+    private uint[] _indices = new uint[2048];
+
+    private readonly List<MeshPartImportResult> _resultInfo = new(4);
+
+    private readonly Func<MeshImportData, MeshCreationInfo> _onProcess;
+
+    internal MeshImporter(Func<MeshImportData, MeshCreationInfo> onProcess)
+    {
+        _onProcess = onProcess;
+    }
 
 
     public void ClearCache()
     {
-        _vertices.Clear();
-        _indices.Clear();
-        _vertices.TrimExcess();
-        _indices.TrimExcess();
+        _resultInfo.Clear();
+        _resultInfo.TrimExcess();
 
-        //Array.Resize(ref _verticesBuffer, 0);
-        //Array.Resize(ref _indicesBuffer, 0);
+        Array.Resize(ref _verts, 0);
+        Array.Resize(ref _indices, 0);
 
         _assimp?.Dispose();
         _assimp = null;
     }
 
-    public unsafe (List<Vertex3D> Vertices, List<uint> Indices) ImportMesh(string path)
+    public unsafe MeshPartImportResult[] ImportMesh(string path)
     {
         if (_assimp == null)
             _assimp = Assimp.GetApi();
 
-        //PostProcessSteps.PreTransformVertices | 
-        const PostProcessSteps steps =
-            PostProcessSteps.Triangulate |
-            PostProcessSteps.SortByPrimitiveType |
-            PostProcessSteps.JoinIdenticalVertices |
-            PostProcessSteps.GenerateSmoothNormals |
-            PostProcessSteps.ImproveCacheLocality |
-            PostProcessSteps.CalculateTangentSpace |
-            PostProcessSteps.OptimizeMeshes |
-            PostProcessSteps.FlipUVs;
-
-        var scene = _assimp.ImportFile(path, (uint)steps);
+        var scene = _assimp.ImportFile(path, (uint)Steps);
 
         if (scene == null || scene->MFlags == Assimp.SceneFlagsIncomplete || scene->MRootNode == null)
         {
             var error = _assimp.GetErrorStringS();
-            throw new Exception(error);
+            throw new InvalidOperationException(error);
         }
-        
-        for (int i=0; i< scene->MNumMeshes; i++)
-            Console.WriteLine($"{scene->MMeshes[i]->MName} - {scene->MMeshes[i]->MNumVertices}");
 
-        var mesh = scene->MMeshes[0];
+        _resultInfo.Clear();
 
-        //var factor = path.Contains("tree") ? 0.01f : 1f;
-        LoadMeshData(mesh, 1f);
+        TraverseNode(scene->MRootNode, Matrix4x4.Identity, scene);
 
-        return (_vertices, _indices);
+        return _resultInfo.ToArray();
+    }
 
-        /*
-   if(_verticesBuffer.Length < _vertices.Count)
-       Array.Resize(ref _verticesBuffer, Math.Max(_vertices.Count, _verticesBuffer.Length * 2));
+    private unsafe void TraverseNode(AssimpNode* node, Matrix4x4 parent, AssimpScene* scene)
+    {
+        var current = node->MTransformation * parent;
+        for (var i = 0; i < node->MNumMeshes; i++)
+        {
+            var meshIndex = node->MMeshes[i];
+            var mesh = scene->MMeshes[meshIndex];
+            var meshData = LoadMeshData(mesh);
 
-   if(_indicesBuffer.Length < _indices.Count)
-       Array.Resize(ref _indicesBuffer, Math.Max(_indices.Count, _indicesBuffer.Length * 2));
+            _resultInfo.Add(new MeshPartImportResult(
+                mesh->MName.AsString,
+                (int)scene->MMeshes[i]->MMaterialIndex,
+                meshData,
+                current
+            ));
+        }
 
-
-   CollectionsMarshal.AsSpan(_vertices).CopyTo(_verticesBuffer.AsSpan(0, _vertices.Count));
-   CollectionsMarshal.AsSpan(_indices).CopyTo(_indicesBuffer.AsSpan(0, _indices.Count));
-
-   var verticesRes = _verticesBuffer.AsMemory(0, _vertices.Count);
-   var indicesRes = _indicesBuffer.AsMemory(0, _indices.Count);
-*/
+        // Process children
+        for (uint i = 0; i < node->MNumChildren; i++)
+        {
+            TraverseNode(node->MChildren[i], current, scene);
+        }
     }
 
 
-    private unsafe void LoadMeshData(AssimpMesh* mesh, float scaleFactor = 1)
+    private unsafe MeshCreationInfo LoadMeshData(AssimpMesh* mesh)
     {
         var vertexCount = (int)mesh->MNumVertices;
         var indexCount = (int)(mesh->MNumFaces * 3);
+        EnsureCapacity(vertexCount, indexCount);
 
-        _vertices.Clear();
-        _indices.Clear();
-
-        if (_vertices.Count < vertexCount)
-            _vertices.EnsureCapacity(vertexCount);
-        if (_indices.Count < vertexCount)
-            _indices.EnsureCapacity(indexCount);
-
-        //ComputeBBox(mesh, out var bboxMin, out var bboxMax);
-        //var scale = DecideScale(bboxMin, bboxMax, scaleFactor);
-        //var offset = (bboxMin + bboxMax) * 0.5f;
+        var vertices = _verts.AsSpan(0, vertexCount);
+        ref var v0 = ref MemoryMarshal.GetReference(vertices);
 
         for (uint i = 0; i < mesh->MNumVertices; i++)
         {
-            var vertex = new Vertex3D();
-            var pos = mesh->MVertices[i];
-            vertex.Position = pos; //(pos - offset) * scale;
-
-            // texture coordinates
-            if (mesh->MTextureCoords[0] != null)
-            {
-                var texcoord3 = mesh->MTextureCoords[0][i];
-                vertex.TexCoords = new Vector2(texcoord3.X, texcoord3.Y);
-            }
-
-            // normals
-            if (mesh->MNormals != null)
-                vertex.Normal = mesh->MNormals[i];
-
-            // tangent
-            if (mesh->MTangents != null)
-                vertex.Tangent = mesh->MTangents[i];
-
-            // bitangent (not used)
-            // if (mesh->MBitangents != null)
-            // vertex.Bitangent = mesh->MBitangents[i];
-
-            _vertices.Add(vertex);
+            ref var v = ref Unsafe.Add(ref v0, i);
+            v.Position = mesh->MVertices[i];
+            v.Normal = mesh->MNormals != null ? mesh->MNormals[i] : default;
+            v.Tangent = mesh->MTangents != null ? mesh->MTangents[i] : default;
+            v.TexCoords = mesh->MTextureCoords[0] != null ? v.TexCoords = mesh->MTextureCoords[0][i].ToVec2() : default;
         }
 
+        var indices = _indices.AsSpan(0, indexCount);
+        var idx = 0;
         for (uint i = 0; i < mesh->MNumFaces; i++)
         {
             var face = mesh->MFaces[i];
-            _indices.Add(face.MIndices[0]);
-            _indices.Add(face.MIndices[1]);
-            _indices.Add(face.MIndices[2]);
+            indices[idx++] = face.MIndices[0];
+            indices[idx++] = face.MIndices[1];
+            indices[idx++] = face.MIndices[2];
+        }
+
+
+        var vRes = _verts.AsSpan(0, vertexCount);
+        var iRes = _indices.AsSpan(0, indexCount);
+        return _onProcess(new MeshImportData(vRes, iRes));
+    }
+
+    private void EnsureCapacity(int vertexCount, int indexCount)
+    {
+        if (_verts.Length < vertexCount)
+        {
+            var cap = ArrayUtility.CapacityGrowthPow2(int.Max(vertexCount, 8));
+            Array.Resize(ref _verts, cap);
+        }
+
+        if (_indices.Length < indexCount)
+        {
+            var cap = ArrayUtility.CapacityGrowthPow2(int.Max(indexCount, 8));
+            Array.Resize(ref _indices, cap);
         }
     }
 

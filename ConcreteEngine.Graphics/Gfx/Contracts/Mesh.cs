@@ -1,37 +1,70 @@
 #region
 
 using ConcreteEngine.Graphics.Gfx.Definitions;
-using ConcreteEngine.Graphics.Gfx.Resources;
 
 #endregion
 
 namespace ConcreteEngine.Graphics.Gfx.Contracts;
 
+public sealed record MeshLayout(
+    MeshId MeshId,
+    IndexBufferId IboId,
+    VertexBufferId[] VboIds,
+    VertexAttribute[] Attributes);
+
+public readonly struct VertexLayout(
+    byte slot,
+    int components,
+    int offset,
+    VertexFormat format = VertexFormat.Float,
+    bool normalized = false
+)
+{
+    public readonly int Components = components;
+    public readonly int Offset = offset;
+    public readonly byte Slot = slot;
+    public readonly VertexFormat Format = format;
+    public readonly bool Normalized = normalized;
+}
+
+public readonly struct VertexAttribute(
+    byte location,
+    byte binding,
+    int components,
+    int offset,
+    VertexFormat format = VertexFormat.Float,
+    bool normalized = false
+)
+{
+    public readonly int Components = components;
+    public readonly int Offset = offset;
+    public readonly byte Binding = binding;
+    public readonly byte Location = location;
+    public readonly VertexFormat Format = format;
+    public readonly bool Normalized = normalized;
+}
+
 public readonly record struct MeshDrawProperties(
     DrawPrimitive Primitive,
     DrawMeshKind Kind,
     DrawElementSize ElementSize,
-    int DrawCount
+    int DrawCount,
+    int InstanceCount = 0
 )
 {
     public static MeshDrawProperties FromMeta(in MeshMeta meta) =>
         new(meta.Primitive, meta.Kind, meta.ElementSize, meta.DrawCount);
 
-    public static MeshMeta ToMeta(in MeshDrawProperties props, int attributeLength) =>
-        new(props.Primitive, props.Kind, props.ElementSize, attributeLength, props.DrawCount);
+    public static MeshDrawProperties MakeArray(int drawCount = 0) =>
+        new(DrawPrimitive.Triangles, DrawMeshKind.Invalid, DrawElementSize.Invalid, drawCount);
 
-    public static MeshDrawProperties MakeDefault() =>
-        new(DrawPrimitive.Triangles, DrawMeshKind.Invalid, DrawElementSize.Invalid, 0);
+    public static MeshDrawProperties MakeInstance(int drawCount, int instances) =>
+        new(DrawPrimitive.Triangles, DrawMeshKind.Invalid, DrawElementSize.Invalid, drawCount, instances);
 
-    public static MeshDrawProperties MakeTriElemental(DrawMeshKind kind = DrawMeshKind.Elements,
+    
+    public static MeshDrawProperties MakeElemental(DrawMeshKind kind = DrawMeshKind.Elements,
         DrawElementSize size = DrawElementSize.UnsignedInt, int drawCount = 0) =>
         new(DrawPrimitive.Triangles, kind, size, drawCount);
+    
+    
 }
-
-public readonly record struct VertexAttributeDesc(
-    int VboBinding,
-    int Components,
-    int Offset,
-    VertexFormat Format = VertexFormat.Float,
-    bool Norm = false
-);

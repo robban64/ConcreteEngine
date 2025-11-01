@@ -23,7 +23,17 @@ internal sealed class TextureLoader
         if (!fi.Exists) throw new FileNotFoundException("File not found.", path);
 
         using var stream = File.OpenRead(path);
-        var image = ImageResult.FromStream(stream, ColorComponents.RedGreenBlueAlpha);
+
+        var colorComponent = record.PixelFormat switch
+        {
+            TexturePixelFormat.Rgb => ColorComponents.RedGreenBlueAlpha,
+            TexturePixelFormat.Rgba => ColorComponents.RedGreenBlueAlpha,
+            TexturePixelFormat.SrgbAlpha => ColorComponents.RedGreenBlueAlpha,
+            TexturePixelFormat.Depth => ColorComponents.Grey,
+            TexturePixelFormat.Red => ColorComponents.Grey,
+            _ => throw new ArgumentOutOfRangeException()
+        };
+        var image = ImageResult.FromStream(stream, colorComponent);
         ValidateImageResult(image);
 
         var desc = new GfxTextureDescriptor(
@@ -40,10 +50,10 @@ internal sealed class TextureLoader
         );
 
         var fileSpec = new AssetFileSpec(
-            storage: AssetStorageKind.FileSystem,
-            logicalName: record.Name,
-            relativePath: record.Filename,
-            sizeBytes: fi.Length);
+            Storage: AssetStorageKind.FileSystem,
+            LogicalName: record.Name,
+            RelativePath: record.Filename,
+            SizeBytes: fi.Length);
 
         //info = AssetProcessInfo.MakeDone<TextureManifestRecord>();
         return new TexturePayload(image.Data, desc, props, in fileSpec);
@@ -69,10 +79,10 @@ internal sealed class TextureLoader
             faceData[i] = image.Data;
 
             faceFiles[i] = new AssetFileSpec(
-                storage: AssetStorageKind.FileSystem,
-                logicalName: record.Name,
-                relativePath: record.Textures[i],
-                sizeBytes: fi.Length);
+                Storage: AssetStorageKind.FileSystem,
+                LogicalName: record.Name,
+                RelativePath: record.Textures[i],
+                SizeBytes: fi.Length);
         }
 
         var desc = new GfxTextureDescriptor(

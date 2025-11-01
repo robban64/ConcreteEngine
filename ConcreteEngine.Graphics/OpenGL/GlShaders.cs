@@ -59,12 +59,12 @@ internal sealed class GlShaders : IGraphicsDriverModule
         var handle = _shaderStore.GetHandle(shaderRef).Value;
 
         UseShader(shaderRef);
-        _gl.GetProgram(handle, ProgramPropertyARB.ActiveUniforms, out int uniformsLength);
+        _gl.GetProgram(handle, ProgramPropertyARB.ActiveUniforms, out var uniformsLength);
         var uniforms = new List<(string, int)>(uniformsLength);
         for (uint uniformIndex = 0; uniformIndex < uniformsLength; uniformIndex++)
         {
-            string uniformName = _gl.GetActiveUniform(handle, uniformIndex, out _, out var type);
-            int uniformLocation = _gl.GetUniformLocation(handle, uniformName);
+            var uniformName = _gl.GetActiveUniform(handle, uniformIndex, out _, out var type);
+            var uniformLocation = _gl.GetUniformLocation(handle, uniformName);
             if (uniformLocation >= 0)
             {
                 uniforms.Add((uniformName, uniformLocation));
@@ -79,12 +79,12 @@ internal sealed class GlShaders : IGraphicsDriverModule
         var handle = _shaderStore.GetHandle(shaderRef).Value;
 
         UseShader(shaderRef);
-        _gl.GetProgram(handle, ProgramPropertyARB.ActiveUniforms, out int uniformsLength);
-        int samplers = 0;
+        _gl.GetProgram(handle, ProgramPropertyARB.ActiveUniforms, out var uniformsLength);
+        var samplers = 0;
         for (uint idx = 0; idx < uniformsLength; idx++)
         {
-            string uniformName = _gl.GetActiveUniform(handle, idx, out _, out var type);
-            int uniformLocation = _gl.GetUniformLocation(handle, uniformName);
+            var uniformName = _gl.GetActiveUniform(handle, idx, out _, out var type);
+            var uniformLocation = _gl.GetUniformLocation(handle, uniformName);
             if (type == UniformType.Sampler2D ||
                 type == UniformType.SamplerCube ||
                 type == UniformType.IntSampler2D)
@@ -98,13 +98,13 @@ internal sealed class GlShaders : IGraphicsDriverModule
 
     private uint CreateShaderProgram(uint vertexShader, uint fragmentShader)
     {
-        uint program = _gl.CreateProgram();
+        var program = _gl.CreateProgram();
         _gl.AttachShader(program, vertexShader);
         _gl.AttachShader(program, fragmentShader);
         _gl.LinkProgram(program);
 
-        _gl.GetProgram(program, ProgramPropertyARB.LinkStatus, out int lStatus);
-        if (lStatus != (int)GLEnum.True)
+        _gl.GetProgram(program, ProgramPropertyARB.LinkStatus, out var status);
+        if (status != (int)GLEnum.True)
             throw GraphicsException.ShaderLinkFailed(program.ToString(), _gl.GetProgramInfoLog(program));
 
         return program;
@@ -112,12 +112,12 @@ internal sealed class GlShaders : IGraphicsDriverModule
 
     private uint CreateShader(ShaderType shaderType, string source)
     {
-        uint shader = _gl.CreateShader(shaderType);
+        var shader = _gl.CreateShader(shaderType);
         _gl.ShaderSource(shader, source);
 
         _gl.CompileShader(shader);
 
-        _gl.GetShader(shader, ShaderParameterName.CompileStatus, out int vStatus);
+        _gl.GetShader(shader, ShaderParameterName.CompileStatus, out var vStatus);
         if (vStatus != (int)GLEnum.True)
             throw GraphicsException.ShaderCompileFailed(nameof(shaderType), _gl.GetShaderInfoLog(shader));
 

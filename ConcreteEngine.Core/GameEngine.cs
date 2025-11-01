@@ -138,8 +138,11 @@ public sealed class GameEngine : IDisposable
             beginStatus = BeginFrameStatus.Resize;
         }
 
-        _assets.UpdatePendingQueue(frameInfo.FrameIndex);
-        _assets.ProcessPendingQueue(_worldRenderer);
+        if (_assets.PendingAssetCount > 0)
+        {
+            _assets.UpdatePendingQueue(frameInfo.FrameIndex);
+            _assets.ProcessPendingQueue();
+        }
 
         _worldRenderer.PreRender(beginStatus, in frameInfo, in runtimeParams, scene.Camera);
         _worldRenderer.ExecuteFrame(out var gfxFrameResult);
@@ -161,6 +164,13 @@ public sealed class GameEngine : IDisposable
     {
     }
 
+    private void ProcessCommandQueue()
+    {
+        CommandRouter.DrainCommandQueue(_assets, _worldRenderer,
+            static (assets, cmd) => assets.EnqueueRecreateShader(cmd.Name),
+            static (worldRenderer, cmd) => worldRenderer.OnRecreateFrameBuffer(cmd));
+    }
+
     internal void Update(float dt)
     {
         _updateInfo.BeginUpdateFrame(dt, _window.WindowSize, _window.OutputSize);
@@ -171,12 +181,15 @@ public sealed class GameEngine : IDisposable
             return;
         }
 
+        if (CommandRouter.CommandQueueCount > 0) ProcessCommandQueue();
+
         _timeHub.UpdateFrame(dt);
 
         var updateInfo = _updateInfo.UpdateTickInfo;
         _sceneManager.Current?.Update(in updateInfo, _window.OutputSize);
 
         UpdateSceneTransitionIfNeeded();
+        
     }
 
     private void GameTickUpdate(int tick)
@@ -184,8 +197,6 @@ public sealed class GameEngine : IDisposable
         _updateInfo.UpdateTick(tick);
         _inputSystem.Update(!_engineGateway.BlockInput());
         _sceneManager.Current?.UpdateTick(tick);
-        
-        
     }
 
     private void DebugTickUpdate(int tick)

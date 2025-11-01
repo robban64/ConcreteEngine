@@ -6,6 +6,7 @@ using ConcreteEngine.Core.Assets.Descriptors;
 using ConcreteEngine.Core.Assets.Internal;
 using ConcreteEngine.Core.Assets.Materials;
 using ConcreteEngine.Core.Assets.Shaders;
+using ConcreteEngine.Core.Diagnostic;
 using ConcreteEngine.Core.Worlds.Render;
 using ConcreteEngine.Graphics.Gfx;
 using ConcreteEngine.Graphics.Gfx.Definitions;
@@ -46,6 +47,8 @@ public sealed class AssetSystem : IAssetSystem
     private readonly MaterialStore _materialStore;
 
     public Status CurrentStatus { get; private set; } = Status.None;
+    
+    public int PendingAssetCount => _pendingQueue.Count;
 
     internal AssetSystem()
     {
@@ -73,33 +76,33 @@ public sealed class AssetSystem : IAssetSystem
         CurrentStatus = Status.ManifestLoaded;
     }
 
+    internal void ProcessAssetCommandRequest(AssetCommandRequest request)
+    {
+        if (request.Kind != AssetKind.Shader) throw new ArgumentException("Only shader can be reloaded atm");
+        var name = request.Name;
+        if (!_assetStore.TryGetByName(name, typeof(Shader), out var obj) || obj is not Shader s) return;
+        //_pendingQueue.Enqueue(new RecreateRequest(s.ResourceId, s.RawId, AssetKind.Shader, ResourceKind.Shader));
+    }
+
     internal void EnqueueRecreateShader(string name)
     {
         if (!_assetStore.TryGetByName(name, typeof(Shader), out var obj) || obj is not Shader s) return;
-        _pendingQueue.Enqueue(new RecreateRequest(s.ResourceId, s.RawId, AssetKind.Shader, ResourceKind.Shader));
+        _pendingQueue.Enqueue(new RecreateRequest(s.ResourceId, s.RawId, AssetKind.Shader));
     }
 
-    internal void EnqueueRecreateFrameBuffer(int width, RecreateSpecialAction action)
-    {
-        ArgumentOutOfRangeException.ThrowIfEqual((int)action, (int)RecreateSpecialAction.None, nameof(action));
-        var req = new RecreateRequest(-1, new AssetId(-1), AssetKind.Unknown, ResourceKind.FrameBuffer,
-            action, Param0: width, Param1: width);
-        _pendingQueue.Enqueue(req);
-    }
 
     internal void UpdatePendingQueue(long frameIndex)
     {
         _pendingQueue.OnFrameStart(frameIndex);
     }
 
-    internal void ProcessPendingQueue(WorldRenderer renderSystem)
+    internal void ProcessPendingQueue()
     {
         while (_pendingQueue.TryDrain(out var req))
         {
-            if (req.ResourceKind == ResourceKind.FrameBuffer)
-                renderSystem.OnRecreateFrameBuffer(in req);
-            else if (req.ResourceKind == ResourceKind.Shader)
+            if (req.Kind == AssetKind.Shader)
                 RecreateShader(req);
+            else throw new InvalidOperationException($"Unsupported asset kind {req.Kind}");
         }
     }
 
@@ -107,7 +110,6 @@ public sealed class AssetSystem : IAssetSystem
     {
         ArgumentOutOfRangeException.ThrowIfLessThanOrEqual(req.AssetId.Value, 0, nameof(req.AssetId));
         ArgumentOutOfRangeException.ThrowIfNotEqual((int)req.Kind, (int)AssetKind.Shader, nameof(req.Kind));
-        ArgumentOutOfRangeException.ThrowIfNotEqual((int)req.ResourceKind, (int)ResourceKind.Shader);
         InvalidOpThrower.ThrowIfNull(_gfxUploader, nameof(_gfxUploader));
 
         var shader = _assetStore.GetByRef(AssetRef<Shader>.Make(req.AssetId));
@@ -115,7 +117,14 @@ public sealed class AssetSystem : IAssetSystem
         if (!_loader.IsActive)
             _loader.ActivateLazyLoader(_assetStore, _gfxUploader);
 
-        _loader.ReloadShader(shader);
+        try
+        {
+            _loader.ReloadShader(shader);
+        }
+        catch (Exception e)
+        {
+            Console.WriteLine("failed load shader: " + e.Message);
+        }
     }
 
 

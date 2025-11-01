@@ -10,6 +10,7 @@ internal sealed class GfxContextInternal(
     GfxResourceDisposer disposer)
 {
     public IGraphicsDriver Driver { get; } = driver;
+    
     public GfxResourceManager Resources { get; } = resources;
     public GfxResourceDisposer Disposer { get; } = disposer;
 }

@@ -44,7 +44,7 @@ internal sealed class GlBackendDriver : IGraphicsDriver
         _frameBuffers = new GlFrameBuffers(ctx);
     }
 
-    public GlDebugger Debugger => _debugger;
+    public IDriverDebugger Debugger => _debugger;
     public GlDisposer Disposer => _disposer;
     public GlBuffers Buffers => _buffers;
     public GlTextures Textures => _textures;

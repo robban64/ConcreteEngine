@@ -19,10 +19,10 @@ internal sealed class ShaderLoader
         _shaderImporter.ImportAllDefinitions();
     }
 
-    public ShaderPayload LoadShader(ShaderDescriptor record)
+    public ShaderPayload LoadShader(ShaderDescriptor record, string basePath)
     {
-        var vertPath = AssetPaths.GetShaderPath(record.VertexFilename);
-        var fragPath = AssetPaths.GetShaderPath(record.FragmentFilename);
+        var vertPath = Path.Combine(basePath, record.VertexFilename);
+        var fragPath = Path.Combine(basePath, record.FragmentFilename);
 
         var vertInfo = new FileInfo(vertPath);
         if (!vertInfo.Exists) throw new FileNotFoundException("File not found.", vertPath);

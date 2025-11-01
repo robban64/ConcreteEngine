@@ -5,6 +5,7 @@ using ConcreteEngine.Common.Diagnostics.Utility;
 using ConcreteEngine.Common.Numerics;
 using ConcreteEngine.Core.Assets;
 using ConcreteEngine.Core.Assets.Shaders;
+using ConcreteEngine.Core.Diagnostic;
 using ConcreteEngine.Core.Platform;
 using ConcreteEngine.Core.Utils;
 using ConcreteEngine.Core.Worlds.Render.Batching;
@@ -86,18 +87,17 @@ public sealed class WorldRenderer : IRenderingSystem
 
     internal void RenderEmptyFrame(in RenderFrameInfo frameInfo) => _renderer.RenderEmptyFrame(in frameInfo);
 
-    internal void OnRecreateFrameBuffer(in RecreateRequest req)
+    internal void OnRecreateFrameBuffer(FboCommandRequest req)
     {
         _graphics.Gfx.Commands.BindFramebuffer(default);
         _graphics.Gfx.Commands.UnbindAllTextures();
 
-        if (req.SpecialAction == RecreateSpecialAction.RecreateScreenDependentFbo)
+        if (req.Action == FboRequestAction.RecreateScreenDependentFbo)
             _renderer.FboRegistry.RecreateScreenDependentFbo(_window.OutputSize);
-        else if (req.SpecialAction == RecreateSpecialAction.RecreateShadowFbo)
+        else if (req.Action == FboRequestAction.RecreateShadowFbo)
         {
-            WorldRenderParams.SetShadowDefault(req.Param0);
-            _renderer.FboRegistry.RecreateFixedFrameBuffer<ShadowPassTag>(FboVariant.Default,
-                new Size2D(req.Param0, req.Param0));
+            WorldRenderParams.SetShadowDefault(req.Size.Width);
+            _renderer.FboRegistry.RecreateFixedFrameBuffer<ShadowPassTag>(FboVariant.Default, req.Size);
         }
     }
 
@@ -136,6 +136,7 @@ public sealed class WorldRenderer : IRenderingSystem
 
         ClearMaterialDirty();
     }
+
     private FrameTimer _frameTimer = new();
 
     private void PrepareRenderView(float alpha, Camera3D camera)

@@ -18,6 +18,8 @@ internal sealed class AssetLoader
     private AssetStore? _store;
     private AssetDataProvider? _dataProvider;
     
+    private AssetGfxUploader? _gfxUploader;
+    
     private TextureLoaderModule? _textureLoader;
     private ModelLoaderModule? _meshLoader;
     private ShaderLoaderModule? _shaderLoader;
@@ -54,6 +56,7 @@ internal sealed class AssetLoader
     public void ReloadShader(Shader shader)
     {
         InvalidOpThrower.ThrowIf(!IsActive, nameof(IsActive));
+        _shaderLoader ??= new ShaderLoaderModule(_gfxUploader!);
         _store!.Reload(shader, _shaderLoader!.ReloadShader);
     }
 
@@ -64,6 +67,7 @@ internal sealed class AssetLoader
 
         _store = store;
 
+        _gfxUploader = gfx;
         _textureLoader ??= new TextureLoaderModule(gfx);
         _meshLoader ??= new ModelLoaderModule(gfx);
         _shaderLoader ??= new ShaderLoaderModule(gfx);
@@ -83,10 +87,13 @@ internal sealed class AssetLoader
     {
         IsActive = true;
         _store = store;
+        _gfxUploader = gfx;
+        /*
         _textureLoader ??= new TextureLoaderModule(gfx);
         _meshLoader ??= new ModelLoaderModule(gfx);
         _shaderLoader ??= new ShaderLoaderModule(gfx);
         _materialLoader ??= new MaterialLoader();
+        */
     }
 
 
@@ -106,6 +113,8 @@ internal sealed class AssetLoader
         _shaderLoader = null;
         _materialLoader = null;
 
+        _gfxUploader = null;
+        
         IsActive = false;
     }
 }

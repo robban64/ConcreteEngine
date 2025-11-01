@@ -10,7 +10,12 @@ using Silk.NET.OpenGL;
 
 namespace ConcreteEngine.Graphics.OpenGL;
 
-internal sealed class GlDebugger : IGraphicsDriverModule
+internal interface IDriverDebugger
+{
+    void ToggleDebug(bool enabled);
+}
+
+internal sealed class GlDebugger : IGraphicsDriverModule, IDriverDebugger
 {
     private readonly GL _gl;
     private static DebugProc? _debugProc;
@@ -20,9 +25,23 @@ internal sealed class GlDebugger : IGraphicsDriverModule
         _gl = gl;
     }
 
+
+    public void ToggleDebug(bool enabled)
+    {
+        if (enabled)
+        {
+            _gl.Enable(EnableCap.DebugOutput);
+            _gl.Enable(EnableCap.DebugOutputSynchronous);
+        }
+        else
+        {
+            _gl.Disable(EnableCap.DebugOutput);
+            _gl.Disable(EnableCap.DebugOutputSynchronous);
+        }
+    }
+
     public unsafe void EnableGlDebug()
     {
-        //static DebugProc? _debugProc
         _debugProc = (src, type, id, severity, len, msg, user) =>
         {
             var text = SilkMarshal.PtrToString(msg);
@@ -42,11 +61,5 @@ internal sealed class GlDebugger : IGraphicsDriverModule
         _gl.DebugMessageCallback(_debugProc, null);
         _gl.DebugMessageControl(GLEnum.DontCare, GLEnum.DontCare, GLEnum.DebugSeverityNotification,
             0, null, false);
-
-
-        _gl.Enable(EnableCap.DebugOutput);
-        _gl.Enable(EnableCap.DebugOutputSynchronous);
-        _gl.DebugMessageCallback(_debugProc, null);
-        _gl.DebugMessageControl(GLEnum.DontCare, GLEnum.DontCare, GLEnum.DebugSeverityNotification, 0, null, false);
     }
 }

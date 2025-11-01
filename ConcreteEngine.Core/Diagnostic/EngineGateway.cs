@@ -48,7 +48,6 @@ internal sealed class EngineGateway
         ArgumentNullException.ThrowIfNull(assetSystem, nameof(assetSystem));
         ArgumentNullException.ThrowIfNull(frameInfo, nameof(frameInfo));
 
-        CommandRouter.Attach(assetSystem);
         MetricRouter.Attach(world, assetSystem, frameInfo);
     }
 

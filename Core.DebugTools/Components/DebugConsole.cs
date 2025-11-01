@@ -10,6 +10,7 @@ namespace Core.DebugTools.Components;
 public sealed class DebugConsoleCtx(DebugConsole debugConsole)
 {
     public void AddLog(string? msg) => debugConsole.AddLog(msg);
+    public void AddMissingArg(string arg) => debugConsole.AddLog($"Argument: {arg} is null or empty");
 }
 
 public class DebugConsole

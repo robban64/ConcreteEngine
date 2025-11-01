@@ -62,4 +62,17 @@ internal sealed class AssetGfxUploader
         _shaders.RecreateShader(shaderId, data.Vs, data.Fs, out var samplers);
         info = new ShaderCreationInfo(shaderId, samplers);
     }
+    /*
+     * 
+       public bool RecreateShader(ShaderId shaderId, in ShaderPayload data, out ShaderCreationInfo info)
+       {
+           if (!_shaders.RecreateShader(shaderId, data.Vs, data.Fs, out var status, out var samplers))
+           {
+               info = default;
+               return false;
+           }
+           info = new ShaderCreationInfo(shaderId, samplers);
+           return true;
+       }
+     */
 }

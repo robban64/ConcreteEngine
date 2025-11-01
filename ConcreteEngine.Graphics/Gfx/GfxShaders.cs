@@ -1,5 +1,6 @@
 #region
 
+using ConcreteEngine.Graphics.Error;
 using ConcreteEngine.Graphics.Gfx.Internal;
 using ConcreteEngine.Graphics.OpenGL;
 
@@ -10,6 +11,7 @@ namespace ConcreteEngine.Graphics.Gfx;
 public sealed class GfxShaders
 {
     private readonly GfxResourceDisposer _disposer;
+    private readonly IDriverDebugger _drivDebug;
 
     private readonly ShaderStore _store;
     private readonly GlShaders _driver;
@@ -19,6 +21,7 @@ public sealed class GfxShaders
         _store = context.Resources.GfxStoreHub.ShaderStore;
         _driver = context.Driver.Shaders;
         _disposer = context.Disposer;
+        _drivDebug = context.Driver.Debugger;
     }
 
     public ShaderId CreateShader(string vs, string fs, out int samplers)
@@ -29,16 +32,33 @@ public sealed class GfxShaders
         return _store.Add(in meta, programRef);
     }
 
-    public ShaderId RecreateShader(ShaderId shaderId, string vs, string fs, out int samplers)
+    public void RecreateShader(ShaderId shaderId, string vs, string fs, out int samplers)
     {
         ArgumentOutOfRangeException.ThrowIfLessThanOrEqual(shaderId.Value, 0, nameof(shaderId));
-        var oldRef = _store.GetRefAndMeta(shaderId, out _);
-        _disposer.EnqueueReplace(oldRef);
+        ArgumentException.ThrowIfNullOrEmpty(vs, nameof(shaderId));
+        ArgumentException.ThrowIfNullOrEmpty(vs, nameof(shaderId));
 
-        var programRef = _driver.CreateShader(vs, fs);
-        samplers = _driver.GetSamplersFromProgram(programRef);
-        var meta = new ShaderMeta(samplers);
-        return _store.Replace(shaderId, in meta, programRef, out _);
+        _drivDebug.ToggleDebug(false);
+
+        try
+        {
+            var oldRef = _store.GetRefAndMeta(shaderId, out _);
+            var newRef = _driver.CreateShader(vs, fs);
+            samplers = _driver.GetSamplersFromProgram(newRef);
+            var meta = new ShaderMeta(samplers);
+            _store.Replace(shaderId, in meta, newRef, out _);
+            _disposer.EnqueueReplace(oldRef);
+        }
+        finally
+        {
+            _drivDebug.ToggleDebug(true);
+        }
+        /*catch (Exception ex) when (ErrorUtils.IsSafeError(ex))
+        {
+            status = $"Shader reload failed for {shaderId}: {ex.Message}";
+            samplers = 0;
+            return false;
+        }*/
     }
 
     public List<(string, int)> GetUniformList(ShaderId shaderId)

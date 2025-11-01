@@ -9,6 +9,7 @@ using ConcreteEngine.Core.Platform;
 using ConcreteEngine.Core.Scene;
 using ConcreteEngine.Core.Scene.Modules;
 using ConcreteEngine.Core.Time;
+using ConcreteEngine.Core.Utils;
 using ConcreteEngine.Core.Worlds;
 using ConcreteEngine.Core.Worlds.Render;
 using ConcreteEngine.Core.Worlds.Render.Batching;
@@ -138,6 +139,7 @@ public sealed class GameEngine : IDisposable
             beginStatus = BeginFrameStatus.Resize;
         }
 
+        if (CommandRouter.CommandQueueCount > 0) ProcessCommandQueue();
         if (_assets.PendingAssetCount > 0)
         {
             _assets.UpdatePendingQueue(frameInfo.FrameIndex);
@@ -166,11 +168,25 @@ public sealed class GameEngine : IDisposable
 
     private void ProcessCommandQueue()
     {
-        CommandRouter.DrainCommandQueue(_assets, _worldRenderer,
-            static (assets, cmd) => assets.EnqueueRecreateShader(cmd.Name),
-            static (worldRenderer, cmd) => worldRenderer.OnRecreateFrameBuffer(cmd));
+        while (CommandRouter.TryDequeueCommand(out var cmd))
+        {
+            try
+            {
+                ProcessRequest(cmd);
+            }
+            catch (Exception ex) when (ErrorUtils.IsUserOrDataError(ex))
+            {
+                Console.WriteLine("Error while processing command queue");
+            }
+        }
     }
-
+    void ProcessRequest(CommandRequestContract cmd)
+    {
+        if (cmd.Scope == CommandRequestScope.AssetCommand && cmd is AssetCommandRequest assetCmd)
+            _assets.EnqueueRecreateShader(assetCmd.Name);
+        else if (cmd.Scope == CommandRequestScope.RenderCommand && cmd is FboCommandRequest fboCmd)
+            _worldRenderer.RecreateFrameBuffer(fboCmd);
+    }
     internal void Update(float dt)
     {
         _updateInfo.BeginUpdateFrame(dt, _window.WindowSize, _window.OutputSize);
@@ -180,9 +196,7 @@ public sealed class GameEngine : IDisposable
             RunSetupStateMachine();
             return;
         }
-
-        if (CommandRouter.CommandQueueCount > 0) ProcessCommandQueue();
-
+        
         _timeHub.UpdateFrame(dt);
 
         var updateInfo = _updateInfo.UpdateTickInfo;

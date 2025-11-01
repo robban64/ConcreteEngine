@@ -6,7 +6,7 @@ using System.Runtime.CompilerServices;
 
 namespace ConcreteEngine.Graphics.Error;
 
-public sealed partial class GraphicsException(string message) : InvalidOperationException(message)
+public sealed partial class GraphicsException(string message, Exception? inner = null) : Exception(message, inner)
 {
     // Exceptions
     public static GraphicsException ResourceIsNull<T>(string? name = null) => new($"{Label<T>(name)} is null.");
@@ -56,6 +56,13 @@ public sealed partial class GraphicsException(string message) : InvalidOperation
 
     public static GraphicsException UnsupportedFeature(string feature) =>
         new($"The feature '{feature}' is not supported (yet).");
+
+    public static GraphicsException LimitExceeded(string capabilityName, int limit) =>
+        new($"{capabilityName} limit has been exceeded ({limit}).");
+
+    
+    public static GraphicsException CapabilityExceeded(string capabilityName, int attempted, int maximum) =>
+        new($"{capabilityName} value {attempted} exceeds the maximum supported ({maximum}).");
 
     public static GraphicsException CapabilityExceeded<T>(string capabilityName, int attempted, int maximum) =>
         new($"{Label<T>()}: {capabilityName} value {attempted} exceeds the maximum supported ({maximum}).");

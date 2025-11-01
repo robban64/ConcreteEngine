@@ -87,17 +87,30 @@ public sealed class WorldRenderer : IRenderingSystem
 
     internal void RenderEmptyFrame(in RenderFrameInfo frameInfo) => _renderer.RenderEmptyFrame(in frameInfo);
 
-    internal void OnRecreateFrameBuffer(FboCommandRequest req)
+    internal void RecreateFrameBuffer(FboCommandRequest req)
     {
         _graphics.Gfx.Commands.BindFramebuffer(default);
         _graphics.Gfx.Commands.UnbindAllTextures();
 
-        if (req.Action == FboRequestAction.RecreateScreenDependentFbo)
-            _renderer.FboRegistry.RecreateScreenDependentFbo(_window.OutputSize);
-        else if (req.Action == FboRequestAction.RecreateShadowFbo)
+        try
         {
-            WorldRenderParams.SetShadowDefault(req.Size.Width);
-            _renderer.FboRegistry.RecreateFixedFrameBuffer<ShadowPassTag>(FboVariant.Default, req.Size);
+            switch (req.Action)
+            {
+                case FboRequestAction.RecreateScreenDependentFbo:
+                    _renderer.FboRegistry.RecreateScreenDependentFbo(_window.OutputSize);
+                    break;
+                case FboRequestAction.RecreateShadowFbo:
+                    _renderer.FboRegistry.RecreateFixedFrameBuffer<ShadowPassTag>(FboVariant.Default, req.Size);
+                    WorldRenderParams.SetShadowDefault(req.Size.Width);
+                    break;
+                case FboRequestAction.None:
+                default:
+                    throw new ArgumentOutOfRangeException(nameof(req.Action));
+            }
+        }
+        catch (Exception ex) when (ErrorUtils.IsUserOrDataError(ex) || ErrorUtils.IsInvalidOpError(ex))
+        {
+            Console.WriteLine(ex.Message);
         }
     }
 

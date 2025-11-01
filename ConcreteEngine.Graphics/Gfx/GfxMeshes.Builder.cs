@@ -1,6 +1,7 @@
 #region
 
 using ConcreteEngine.Common;
+using ConcreteEngine.Graphics.Error;
 using ConcreteEngine.Graphics.Gfx.Contracts;
 using ConcreteEngine.Graphics.Gfx.Definitions;
 using ConcreteEngine.Graphics.Gfx.Internal;
@@ -66,7 +67,9 @@ internal sealed class GfxMeshBuilder : IGfxMeshBuilder
         BufferStorage storage, BufferAccess access) where T : unmanaged
     {
         EnsureStarted();
-        InvalidOpThrower.ThrowIf(_vboIdx >= GfxLimits.MaxVboBindings, nameof(_vboIdx));
+        if(_vboIdx >= GfxLimits.MaxVboBindings) 
+            throw GraphicsException.LimitExceeded(nameof(GfxLimits.MaxVboBindings), GfxLimits.MaxVboBindings);
+        
         var vboId = _gfxBuffers.CreateVertexBuffer(data, 0, 0, storage, access);
 
         _state.VboIds[_vboIdx] = vboId;
@@ -105,7 +108,8 @@ internal sealed class GfxMeshBuilder : IGfxMeshBuilder
         EnsureStarted();
         InvalidOpThrower.ThrowIfNullOrEmptyCollection(attributes, nameof(attributes));
         InvalidOpThrower.ThrowIfNot(_state.AttribCount == 0, nameof(attributes));
-        InvalidOpThrower.ThrowIf(attributes.Count >= GfxLimits.MaxVertexAttribs, nameof(_vboIdx));
+        if(attributes.Count >= GfxLimits.MaxVertexAttribs) 
+            throw GraphicsException.LimitExceeded(nameof(GfxLimits.MaxVertexAttribs), GfxLimits.MaxVertexAttribs);
 
         _state.Attributes = attributes.ToArray();
         _state.AttribCount = attributes.Count;
@@ -117,7 +121,8 @@ internal sealed class GfxMeshBuilder : IGfxMeshBuilder
         EnsureStarted();
         ArgumentOutOfRangeException.ThrowIfEqual(attributes.Length, 0, nameof(attributes));
         InvalidOpThrower.ThrowIfNot(_state.AttribCount == 0, nameof(attributes));
-        InvalidOpThrower.ThrowIf(attributes.Length >= GfxLimits.MaxVertexAttribs, nameof(_vboIdx));
+        if(attributes.Length >= GfxLimits.MaxVertexAttribs) 
+            throw GraphicsException.LimitExceeded(nameof(GfxLimits.MaxVertexAttribs), GfxLimits.MaxVertexAttribs);
 
         _state.Attributes = attributes.ToArray();
         _state.AttribCount = attributes.Length;
@@ -127,7 +132,9 @@ internal sealed class GfxMeshBuilder : IGfxMeshBuilder
     public void AddAttribute(in VertexAttribute attribute)
     {
         EnsureStarted();
-        InvalidOpThrower.ThrowIf(_state.AttribCount + 1 >= GfxLimits.MaxVertexAttribs, nameof(_vboIdx));
+        if(_state.AttribCount + 1 >= GfxLimits.MaxVertexAttribs) 
+            throw GraphicsException.LimitExceeded(nameof(GfxLimits.MaxVertexAttribs), GfxLimits.MaxVertexAttribs);
+
         if (_state.Attributes.Length == 0 && _state.AttribCount == 0)
             _state.Attributes = new VertexAttribute[4];
 

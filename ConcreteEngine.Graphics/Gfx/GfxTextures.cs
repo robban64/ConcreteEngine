@@ -2,6 +2,7 @@
 
 using System.Diagnostics;
 using ConcreteEngine.Common.Numerics;
+using ConcreteEngine.Graphics.Error;
 using ConcreteEngine.Graphics.Gfx.Contracts;
 using ConcreteEngine.Graphics.Gfx.Definitions;
 using ConcreteEngine.Graphics.Gfx.Internal;
@@ -116,7 +117,7 @@ public sealed class GfxTextures
     public void UploadTexture2D(TextureId textureId, ReadOnlySpan<byte> data, int width, int height)
     {
         var texRef = _textureStore.GetRefAndMeta(textureId, out var meta);
-        if (meta.Kind == TextureKind.Unknown) throw new InvalidOperationException(nameof(meta.Kind));
+        if (meta.Kind == TextureKind.Unknown) throw new GraphicsException(nameof(meta.Kind));
 
         var (size, metaSize) = (new Size2D(width, height), new Size2D(meta.Width, meta.Height));
         ValidateUploadSize(size, metaSize);
@@ -131,7 +132,7 @@ public sealed class GfxTextures
     public void UploadTexture3D(TextureId textureId, ReadOnlySpan<byte> data, int width, int height, int depth)
     {
         var texRef = _textureStore.GetRefAndMeta(textureId, out var meta);
-        if (meta.Kind != TextureKind.Texture3D) throw new InvalidOperationException(nameof(meta.Kind));
+        if (meta.Kind != TextureKind.Texture3D) throw new GraphicsException(nameof(meta.Kind));
 
         var (size, metaSize) = (new Size3D(width, height, depth), new Size3D(meta.Width, meta.Height, meta.Depth));
         ValidateUploadSize3D(size, metaSize);
@@ -148,7 +149,7 @@ public sealed class GfxTextures
         ArgumentOutOfRangeException.ThrowIfGreaterThan(faceIdx, 5, nameof(faceIdx));
 
         var texRef = _textureStore.GetRefAndMeta(textureId, out var meta);
-        if (meta.Kind != TextureKind.CubeMap) throw new InvalidOperationException(nameof(meta.Kind));
+        if (meta.Kind != TextureKind.CubeMap) throw new GraphicsException(nameof(meta.Kind));
 
         var (size, metaSize) = (new Size2D(width, height), new Size2D(meta.Width, meta.Height));
         ValidateUploadSize(size, metaSize);
@@ -176,7 +177,7 @@ public sealed class GfxTextures
         ValidateTextureDescriptor(in desc, in props);
         var size = new Size2D(desc.Width, desc.Height);
         var (mipPreset, levels) = GetMipValues(desc.Width, desc.Height, props.Preset, desc.Depth);
-        if (levels < 1) throw new InvalidOperationException(nameof(levels));
+        if (levels < 1) throw new GraphicsException(nameof(levels));
         var samples = desc.Samples.ToSamples();
 
         var texRef = _driver.CreateTexture(desc.Kind);
@@ -233,25 +234,25 @@ public sealed class GfxTextures
     private static void ValidateRecreateTexture(GfxReplaceTexture newValue, in TextureMeta meta)
     {
         if (meta.Kind == TextureKind.Unknown || meta.PixelFormat == TexturePixelFormat.Unknown)
-            throw new InvalidOperationException("Invalid meta texture meta.");
+            throw new GraphicsException("Invalid meta texture meta.");
 
         if (meta.Kind == TextureKind.CubeMap && newValue.Width != newValue.Height)
-            throw new ArgumentException("CubeMap must be square.");
+            throw new GraphicsException("CubeMap must be square.");
 
         var depth = newValue.Depth ?? meta.Depth;
         if (meta.Kind == TextureKind.Texture3D)
         {
             if (depth <= 0)
-                throw new ArgumentOutOfRangeException(nameof(depth));
+                throw new GraphicsException(nameof(depth));
         }
         else
         {
             if (depth != 1)
-                throw new ArgumentException("Depth must be 1 for non-3D textures");
+                throw new GraphicsException("Depth must be 1 for non-3D textures");
         }
 
         if (meta.Kind != TextureKind.Multisample2D && newValue.Samples is not null)
-            throw new ArgumentException("Samples can only be set for Multisample2D.");
+            throw new GraphicsException("Samples can only be set for Multisample2D.");
     }
 
     private static void ValidateTextureDescriptor(in GfxTextureDescriptor desc, in GfxTextureProperties props)
@@ -263,12 +264,12 @@ public sealed class GfxTextures
         if (desc.Kind == TextureKind.Texture3D)
         {
             if (desc.Depth <= 0)
-                throw new ArgumentOutOfRangeException(nameof(desc.Depth));
+                throw new GraphicsException("Texture3D require positive depth");
         }
         else
         {
             if (desc.Depth != 1)
-                throw new ArgumentException("Depth must be 1 for non-3D textures");
+                throw new GraphicsException("Depth must be 1 for non-3D textures");
         }
 
         // Type
@@ -290,14 +291,14 @@ public sealed class GfxTextures
         (bool mipPreset, int levels) = GetMipValues(desc.Width, desc.Height, props.Preset, desc.Depth);
 
         if (isMsaa && levels != 1)
-            throw new InvalidOperationException("Multisample textures cannot have mipmaps");
+            throw new GraphicsException("Multisample textures cannot have mipmaps");
 
         if (!mipPreset)
         {
             if (props.Anisotropy != TextureAnisotropy.Off)
-                throw new InvalidOperationException("Anisotropy requires mipmaps");
+                throw new GraphicsException("Anisotropy requires mipmaps");
             if (props.LodBias != 0f)
-                throw new InvalidOperationException("LodBias requires mipmaps");
+                throw new GraphicsException("LodBias requires mipmaps");
         }
     }
 
@@ -305,14 +306,14 @@ public sealed class GfxTextures
     {
         if (size.IsZero() || metaSize.IsNegative()) throw new ArgumentOutOfRangeException(nameof(size));
         if (size != metaSize)
-            throw new InvalidOperationException($"Size {size} must match TextureMeta size {metaSize}");
+            throw new GraphicsException($"Size {size} must match TextureMeta size {metaSize}");
     }
 
     private static void ValidateUploadSize3D(Size3D size, Size3D metaSize)
     {
         if (size.IsZero() || metaSize.IsNegative()) throw new ArgumentOutOfRangeException(nameof(size));
         if (size != metaSize)
-            throw new InvalidOperationException($"Size {size} must match TextureMeta size {metaSize}");
+            throw new GraphicsException($"Size {size} must match TextureMeta size {metaSize}");
     }
 
     private static bool SupportsWrapR(TextureKind kind) => kind is TextureKind.CubeMap or TextureKind.Texture3D;

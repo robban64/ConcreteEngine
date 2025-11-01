@@ -5,7 +5,7 @@ using ConcreteEngine.Common.Diagnostics;
 using ConcreteEngine.Common.Numerics;
 using ConcreteEngine.Core.Assets;
 using ConcreteEngine.Core.Assets.Data;
-using ConcreteEngine.Core.Diagnostic.utils;
+using ConcreteEngine.Core.Diagnostic.Utils;
 using ConcreteEngine.Core.Worlds.Data;
 using ConcreteEngine.Core.Worlds.Entities;
 using ConcreteEngine.Core.Worlds.Render;
@@ -55,7 +55,7 @@ internal sealed record FboCommandRequest(FboRequestAction Action, Size2D Size, s
 
 internal static class CommandRouter
 {
-    private static List<CommandRequestContract> _commandQueue = new(4);
+    private static Queue<CommandRequestContract> _commandQueue = new(4);
     
     public static int CommandQueueCount => _commandQueue.Count;
 
@@ -70,6 +70,9 @@ internal static class CommandRouter
         _commandQueue.Clear();
     }
 
+    internal static bool TryDequeueCommand(out CommandRequestContract request)
+        => _commandQueue.TryDequeue(out request);
+
     public static void OnRecreateShader(DebugConsoleCtx ctx, string? arg1, string? arg2)
     {
         if (string.IsNullOrWhiteSpace(arg1) || arg1.Length < 2)
@@ -78,13 +81,13 @@ internal static class CommandRouter
             return;
         }
 
-        _commandQueue.Add(new AssetCommandRequest(arg1, AssetRequestAction.ReloadAsset, AssetKind.Shader, arg1, arg2));
+        _commandQueue.Enqueue(new AssetCommandRequest(arg1, AssetRequestAction.ReloadAsset, AssetKind.Shader, arg1, arg2));
         ctx.AddLog("Shader recreate enqueued");
     }
 
     public static void OnSetShadowMapSize(DebugConsoleCtx ctx, string? arg1, string? arg2)
     {
-        if (string.IsNullOrWhiteSpace(arg1) || arg1.Length < 2)
+        if (string.IsNullOrWhiteSpace(arg1))
         {
             ctx.AddMissingArg(nameof(arg1));
             return;
@@ -98,7 +101,7 @@ internal static class CommandRouter
                 nameof(arg1));
         }
 
-        _commandQueue.Add(new FboCommandRequest(FboRequestAction.RecreateShadowFbo, new Size2D(shadowSize), arg1, arg2));
+        _commandQueue.Enqueue(new FboCommandRequest(FboRequestAction.RecreateShadowFbo, new Size2D(shadowSize), arg1, arg2));
     }
 
 

@@ -2,7 +2,8 @@
 
 using ConcreteEngine.Core.Assets;
 using ConcreteEngine.Core.Data;
-using ConcreteEngine.Core.Diagnostic.utils;
+using ConcreteEngine.Core.Diagnostic.Utils;
+using ConcreteEngine.Core.Utils;
 using ConcreteEngine.Core.Worlds;
 using ConcreteEngine.Graphics.Diagnostic;
 using Core.DebugTools;
@@ -147,9 +148,9 @@ internal sealed class EngineGateway
             {
                 f(ctx, a1, a2);
             }
-            catch (Exception ex) when (CommandUtils.IsSafeError(ex))
+            catch (Exception ex) when (ErrorUtils.IsUserOrDataError(ex))
             {
-                ctx.AddLog(CommandUtils.ErrorMessageFor(ex));
+                ctx.AddLog(ErrorUtils.ErrorMessageFor(ex));
             }
         };
     }

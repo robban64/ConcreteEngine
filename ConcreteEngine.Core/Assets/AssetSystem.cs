@@ -7,6 +7,8 @@ using ConcreteEngine.Core.Assets.Internal;
 using ConcreteEngine.Core.Assets.Materials;
 using ConcreteEngine.Core.Assets.Shaders;
 using ConcreteEngine.Core.Diagnostic;
+using ConcreteEngine.Core.Diagnostic.Utils;
+using ConcreteEngine.Core.Utils;
 using ConcreteEngine.Core.Worlds.Render;
 using ConcreteEngine.Graphics.Gfx;
 using ConcreteEngine.Graphics.Gfx.Definitions;
@@ -76,14 +78,6 @@ public sealed class AssetSystem : IAssetSystem
         CurrentStatus = Status.ManifestLoaded;
     }
 
-    internal void ProcessAssetCommandRequest(AssetCommandRequest request)
-    {
-        if (request.Kind != AssetKind.Shader) throw new ArgumentException("Only shader can be reloaded atm");
-        var name = request.Name;
-        if (!_assetStore.TryGetByName(name, typeof(Shader), out var obj) || obj is not Shader s) return;
-        //_pendingQueue.Enqueue(new RecreateRequest(s.ResourceId, s.RawId, AssetKind.Shader, ResourceKind.Shader));
-    }
-
     internal void EnqueueRecreateShader(string name)
     {
         if (!_assetStore.TryGetByName(name, typeof(Shader), out var obj) || obj is not Shader s) return;
@@ -121,9 +115,9 @@ public sealed class AssetSystem : IAssetSystem
         {
             _loader.ReloadShader(shader);
         }
-        catch (Exception e)
+        catch (Exception e) when(ErrorUtils.IsUserOrDataError(e) || ErrorUtils.IsGfxError(e))
         {
-            Console.WriteLine("failed load shader: " + e.Message);
+            Console.WriteLine(ErrorUtils.ErrorMessageFor(e));
         }
     }
 

@@ -33,9 +33,6 @@ internal sealed class EngineGateway
     {
         _diagnostics = new DiagnosticsService(gl, window, inputCtx);
         _logParser = new LogParser();
-
-        //GfxDebugLog.ToggleLog(false, source: GfxLogSource.Store, layer: GfxLogLayer.Backend);
-        //GfxDebugLog.ToggleLog(false, action: GfxLogAction.EnqueueDispose);
     }
 
     public bool HasBindings => HasBoundCommands || HasBoundMetrics;
@@ -51,6 +48,11 @@ internal sealed class EngineGateway
 
         MetricRouter.Attach(world, assetSystem, frameInfo);
     }
+
+    public void AttachLogger() => Logger.Attach(ProcessStringLog);
+    public void AttachGfxLogger() => GfxLog.Enabled = true;
+
+    private void ProcessStringLog(StringLogEvent log) => _diagnostics.DevConsole.AddLog(_logParser.Format(log));
 
     public void RegisterCommands()
     {
@@ -120,6 +122,7 @@ internal sealed class EngineGateway
         else
         {
             DrainGfxLogs();
+            DrainEngineLogs();
         }
 
         _tickToggle = !_tickToggle;
@@ -128,6 +131,15 @@ internal sealed class EngineGateway
         {
             _ticker8 = 0;
             _diagnostics.RefreshMemoryMetrics();
+        }
+    }
+
+    private void DrainEngineLogs()
+    {
+        while (Logger.LogQueue.Count > 0)
+        {
+            var cmd = Logger.LogQueue.Dequeue();
+            _diagnostics.DevConsole.AddLog(_logParser.Format(cmd));
         }
     }
 

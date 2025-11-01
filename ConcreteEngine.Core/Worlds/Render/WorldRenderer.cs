@@ -1,6 +1,7 @@
 #region
 
 using ConcreteEngine.Common;
+using ConcreteEngine.Common.Diagnostics;
 using ConcreteEngine.Common.Diagnostics.Utility;
 using ConcreteEngine.Common.Numerics;
 using ConcreteEngine.Core.Assets;
@@ -92,25 +93,18 @@ public sealed class WorldRenderer : IRenderingSystem
         _graphics.Gfx.Commands.BindFramebuffer(default);
         _graphics.Gfx.Commands.UnbindAllTextures();
 
-        try
+        switch (req.Action)
         {
-            switch (req.Action)
-            {
-                case FboRequestAction.RecreateScreenDependentFbo:
-                    _renderer.FboRegistry.RecreateScreenDependentFbo(_window.OutputSize);
-                    break;
-                case FboRequestAction.RecreateShadowFbo:
-                    _renderer.FboRegistry.RecreateFixedFrameBuffer<ShadowPassTag>(FboVariant.Default, req.Size);
-                    WorldRenderParams.SetShadowDefault(req.Size.Width);
-                    break;
-                case FboRequestAction.None:
-                default:
-                    throw new ArgumentOutOfRangeException(nameof(req.Action));
-            }
-        }
-        catch (Exception ex) when (ErrorUtils.IsUserOrDataError(ex) || ErrorUtils.IsInvalidOpError(ex))
-        {
-            Console.WriteLine(ex.Message);
+            case FboRequestAction.RecreateScreenDependentFbo:
+                _renderer.FboRegistry.RecreateScreenDependentFbo(_window.OutputSize);
+                break;
+            case FboRequestAction.RecreateShadowFbo:
+                _renderer.FboRegistry.RecreateFixedFrameBuffer<ShadowPassTag>(FboVariant.Default, req.Size);
+                WorldRenderParams.SetShadowDefault(req.Size.Width);
+                break;
+            case FboRequestAction.None:
+            default:
+                throw new ArgumentOutOfRangeException(nameof(req.Action));
         }
     }
 

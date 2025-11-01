@@ -167,9 +167,6 @@ internal sealed class MeshImporter
     {
         var size = bboxMax - bboxMin;
         var maxDim = MathF.Max(size.X, MathF.Max(size.Y, size.Z));
-        Console.WriteLine($"{maxDim} - {bboxMin.ToString()} - {bboxMax.ToString()}");
-
-
         return unitScale * (maxDim > 100f ? 0.01f : maxDim < 0.01f ? 0.001f : 1f);
     }
 }

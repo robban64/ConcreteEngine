@@ -2,8 +2,10 @@
 
 using System.Text.Json;
 using System.Text.Json.Serialization;
+using ConcreteEngine.Common.Diagnostics;
 using ConcreteEngine.Core.Assets.Descriptors;
 using ConcreteEngine.Core.Assets.IO;
+using ConcreteEngine.Core.Diagnostic;
 
 #endregion
 
@@ -31,6 +33,8 @@ internal sealed class AssetConfigLoader
 
     public AssetManifest LoadAssetManifest()
     {
+        Logger.LogString(LogScope.Assets, "Loading Asset Manifest...");
+        
         if (!Directory.Exists(AssetPaths.AssetFolder))
             throw new DirectoryNotFoundException($"Asset '{AssetPaths.AssetFolder}' directory not found.");
 
@@ -38,8 +42,6 @@ internal sealed class AssetConfigLoader
 
         if (!File.Exists(path))
             throw new FileNotFoundException($"Manifest '{path}' not found.");
-
-        Console.WriteLine("Loading Asset Manifest...");
 
         using var fs = new FileStream(path, FileMode.Open, FileAccess.Read, FileShare.Read,
             64 * 1024, FileOptions.SequentialScan);
@@ -66,7 +68,7 @@ internal sealed class AssetConfigLoader
         var manifest = JsonSerializer.Deserialize<T>(fs, _jsonOptions)
                        ?? throw new InvalidDataException($"Invalid resource manifest for {typeof(T).Name}.");
 
-        Console.WriteLine($"Loading Assets - ({typeof(T).Name})");
+        Logger.LogString(LogScope.Assets, $"Loading Assets - ({typeof(T).Name})");
 
         return manifest;
     }

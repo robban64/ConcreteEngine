@@ -1,6 +1,7 @@
 #region
 
 using ConcreteEngine.Common;
+using ConcreteEngine.Common.Diagnostics;
 using ConcreteEngine.Core.Assets.Data;
 using ConcreteEngine.Core.Assets.Descriptors;
 using ConcreteEngine.Core.Assets.Internal;
@@ -8,6 +9,7 @@ using ConcreteEngine.Core.Assets.Materials;
 using ConcreteEngine.Core.Assets.Meshes;
 using ConcreteEngine.Core.Assets.Shaders;
 using ConcreteEngine.Core.Assets.Textures;
+using ConcreteEngine.Core.Diagnostic;
 
 #endregion
 
@@ -81,6 +83,8 @@ internal sealed class AssetLoader
         _shaderLoader.Prepare();
 
         IsActive = true;
+        
+        Logger.LogString(LogScope.Assets, "Startup Asset Loader - Activated");
     }
 
     public void ActivateLazyLoader(AssetStore store, AssetGfxUploader gfx)
@@ -88,6 +92,7 @@ internal sealed class AssetLoader
         IsActive = true;
         _store = store;
         _gfxUploader = gfx;
+        Logger.LogString(LogScope.Assets, "Asset Loader - Activated");
         /*
         _textureLoader ??= new TextureLoaderModule(gfx);
         _meshLoader ??= new ModelLoaderModule(gfx);
@@ -116,5 +121,8 @@ internal sealed class AssetLoader
         _gfxUploader = null;
         
         IsActive = false;
+        
+        Logger.LogString(LogScope.Assets, "Asset Loader - Closed");
+
     }
 }

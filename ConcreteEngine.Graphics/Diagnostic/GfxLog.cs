@@ -89,7 +89,7 @@ public static class GfxLog
     internal static void LogBkStore<THandle>(BkHandle<THandle> handle, int slot, LogTopic topic, LogAction action,
         ushort flags = 0)
         where THandle : unmanaged, IResourceHandle, IEquatable<THandle> =>
-        Event(LogBk(handle, (int)slot, flags, true, topic, action));
+        Event(LogBk(handle, slot, flags, true, topic, action));
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     internal static void LogBackend(uint handle, GfxHandle h, LogTopic topic, LogAction action, ushort flags = 0) =>
@@ -111,13 +111,4 @@ public static class GfxLog
         return false;
     }
 
-/*
-    public static LogEvent MakeResourceDispose(in DeleteResourceCommand cmd)
-    {
-        var handle = (int)cmd.BackendHandle.Value;
-        var h = cmd.Handle;
-        return new LogEvent(handle, h.Slot, h.Gen, h.Kind, GfxLogLayer.Backend, GfxLogSource.Resource,
-            GfxLogAction.Dispose);
-    }
-*/
 }

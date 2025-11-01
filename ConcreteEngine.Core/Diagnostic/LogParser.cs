@@ -17,16 +17,27 @@ internal sealed class LogParser
     {
         return log.Scope switch
         {
+            LogScope.Engine => ToBaseFormat(in log, id: "Id"),
+            LogScope.Assets => ToBaseFormat(in log, id: "AssetId"),
+            LogScope.World => ToBaseFormat(in log, id: "World"),
+            LogScope.Renderer => ToBaseFormat(in log, id: "RendererId"),
             LogScope.Backend => ToBaseFormat(in log, id: "Handle", p0: "Slot", p1: "Alive"),
             LogScope.Gfx => ToBaseFormat(in log, id: "GfxId", p0: "Slot", p1: "Alive"),
-            LogScope.Renderer => ToBaseFormat(in log, id: "RendererId"),
-            LogScope.Engine => ToBaseFormat(in log, id: "Id"),
-            LogScope.BkStore => ToBaseFormat(in log, id: "Handle", p0: "Slot"),
-            LogScope.GfxStore => ToBaseFormat(in log, id: "GfxId", p0: "Slot"),
-            LogScope.MaterialStore => ToBaseFormat(in log, id: "MaterialId"),
-            LogScope.AssetStore => ToBaseFormat(in log, id: "AssetId"),
             _ => ToBaseFormat(in log, id: "Id", p0: "P0", p1: "P1", fp: "F0", flags: "Flags"),
         };
+    }
+
+    public string Format(StringLogEvent log)
+    {
+        _sb.Clear();
+
+        var t = DateTimeOffset.FromUnixTimeMilliseconds(log.Time).ToLocalTime();
+        _sb.Append('[').Append(log.Level.ToLogText()).Append("] [")
+            .Append(t.ToString("HH:mm:ss.fff")).Append("] ")
+            .Append(log.Scope.ToLogText().PadLeft(10)).Append(": ")
+            .Append(log.Message);
+        
+        return _sb.ToString();
     }
 
     private string ToBaseFormat(

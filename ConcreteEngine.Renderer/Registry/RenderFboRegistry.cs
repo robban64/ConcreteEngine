@@ -163,8 +163,6 @@ internal sealed class RenderFboRegistry : IRenderFboRegistry
             newSizes[idx++] = (fbo.FboId, fbo.CalculateNewSize(outputSize));
         }
 
-        Console.WriteLine($"Recreating {idx} FBO");
-        
         try
         {
             _gfxFbo.RecreateSizedFrameBuffer(newSizes.Slice(0, idx));

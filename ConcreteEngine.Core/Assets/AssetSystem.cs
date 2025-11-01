@@ -1,10 +1,12 @@
 #region
 
 using ConcreteEngine.Common;
+using ConcreteEngine.Common.Diagnostics;
 using ConcreteEngine.Core.Assets.Data;
 using ConcreteEngine.Core.Assets.Descriptors;
 using ConcreteEngine.Core.Assets.Internal;
 using ConcreteEngine.Core.Assets.Materials;
+using ConcreteEngine.Core.Assets.Meshes;
 using ConcreteEngine.Core.Assets.Shaders;
 using ConcreteEngine.Core.Diagnostic;
 using ConcreteEngine.Core.Diagnostic.Utils;
@@ -80,7 +82,8 @@ public sealed class AssetSystem : IAssetSystem
 
     internal void EnqueueRecreateShader(string name)
     {
-        if (!_assetStore.TryGetByName(name, typeof(Shader), out var obj) || obj is not Shader s) return;
+        if (!_assetStore.TryGetByName(name, typeof(Shader), out var obj) || obj is not Shader s)
+            throw new KeyNotFoundException($"No shader found with name {name}");
         _pendingQueue.Enqueue(new RecreateRequest(s.ResourceId, s.RawId, AssetKind.Shader));
     }
 
@@ -115,9 +118,9 @@ public sealed class AssetSystem : IAssetSystem
         {
             _loader.ReloadShader(shader);
         }
-        catch (Exception e) when(ErrorUtils.IsUserOrDataError(e) || ErrorUtils.IsGfxError(e))
+        catch (Exception e) when(ErrorUtils.IsGfxError(e))
         {
-            Console.WriteLine(ErrorUtils.ErrorMessageFor(e));
+            throw new InvalidOperationException(e.Message, e);
         }
     }
 
@@ -134,6 +137,7 @@ public sealed class AssetSystem : IAssetSystem
         _loader = new AssetLoader();
         _processor = new AssetStartupWorker(_loader, _configLoader, _manifest);
         _processor.Start(_assetStore, _gfxUploader);
+
     }
 
     internal bool ProcessLoader(int n)

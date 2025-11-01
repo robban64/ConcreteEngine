@@ -31,7 +31,7 @@ public static class LogEnumExtensions
             LogTopic.FrameBuffer => "FrameBuf",
             LogTopic.RenderBuffer => "RenderBuf",
             LogTopic.Material => "Material",
-            LogTopic.Asset => "Asset",
+            LogTopic.Io => "AssetIO",
             LogTopic.Renderer => "Renderer",
             LogTopic.Frame => "Frame",
             LogTopic.Pass => "Pass",
@@ -46,14 +46,12 @@ public static class LogEnumExtensions
         return value switch
         {
             LogScope.Unknown => "Unknown",
+            LogScope.Engine => "Engine",
+            LogScope.Assets => "Assets",
+            LogScope.World => "World",
             LogScope.Backend => "Backend",
             LogScope.Gfx => "Gfx",
             LogScope.Renderer => "Renderer",
-            LogScope.Engine => "Engine",
-            LogScope.BkStore => "BkStore",
-            LogScope.GfxStore => "GfxStore",
-            LogScope.MaterialStore => "MatStore",
-            LogScope.AssetStore => "AssetStore",
             _ => "Unknown"
         };
     }
@@ -63,6 +61,8 @@ public static class LogEnumExtensions
         return value switch
         {
             LogAction.Unknown => "Unknown",
+            LogAction.Load => "Load",
+            LogAction.Unload => "Unload",
             LogAction.Add => "Add",
             LogAction.Remove => "Remove",
             LogAction.Replace => "Replace",

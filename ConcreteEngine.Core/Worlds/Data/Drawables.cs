@@ -24,8 +24,8 @@ public struct DrawEntity(
     public EntityId Entity = entity;
     public ModelId Model = model;
     public MaterialTagKey MaterialKey = materialKey;
-    public PassMask PassMask = passMask;
     public int DrawCount = drawCount;
+    public PassMask PassMask = passMask;
     public ushort DepthKey = depthKey;
     public DrawCommandId CommandId = commandId;
     public DrawCommandQueue Queue = queue;

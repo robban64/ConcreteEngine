@@ -1,7 +1,10 @@
 #region
 
+using ConcreteEngine.Common.Diagnostics;
 using ConcreteEngine.Common.Patterns;
 using ConcreteEngine.Core.Assets;
+using ConcreteEngine.Core.Assets.Data;
+using ConcreteEngine.Core.Assets.Meshes;
 using ConcreteEngine.Core.Configuration;
 using ConcreteEngine.Core.Data;
 using ConcreteEngine.Core.Diagnostic;
@@ -89,6 +92,8 @@ public sealed class GameEngine : IDisposable
 
     private void StartAssetLoader()
     {
+        _engineGateway.AttachLogger();
+        
         _assets.Initialize();
         _assets.StartLoader(_graphics.Gfx);
     }
@@ -98,9 +103,8 @@ public sealed class GameEngine : IDisposable
         _assets.FinishLoading();
         _coreSystems.Initialize();
         RegisterRenderer();
-
         // prevent spam from first load. Move up to log startup issues
-        GfxLog.Enabled = true;
+        _engineGateway.AttachLogger();
     }
 
     private void RegisterRenderer()
@@ -173,13 +177,18 @@ public sealed class GameEngine : IDisposable
             try
             {
                 ProcessRequest(cmd);
+                Logger.LogString(LogScope.Engine,  $"Command invoked: {cmd}");
             }
-            catch (Exception ex) when (ErrorUtils.IsUserOrDataError(ex))
+            catch (Exception ex) when (ErrorUtils.IsUserOrDataError(ex) || ErrorUtils.IsInvalidOpError(ex))
             {
-                Console.WriteLine("Error while processing command queue");
+                var msg = $"Error while processing command {cmd}";
+                Logger.LogString(LogScope.Engine, msg, LogLevel.Critical);
+                Logger.LogString(LogScope.Engine, ex.Message, LogLevel.Critical);
             }
+            
         }
     }
+
     void ProcessRequest(CommandRequestContract cmd)
     {
         if (cmd.Scope == CommandRequestScope.AssetCommand && cmd is AssetCommandRequest assetCmd)
@@ -187,6 +196,7 @@ public sealed class GameEngine : IDisposable
         else if (cmd.Scope == CommandRequestScope.RenderCommand && cmd is FboCommandRequest fboCmd)
             _worldRenderer.RecreateFrameBuffer(fboCmd);
     }
+
     internal void Update(float dt)
     {
         _updateInfo.BeginUpdateFrame(dt, _window.WindowSize, _window.OutputSize);
@@ -196,14 +206,13 @@ public sealed class GameEngine : IDisposable
             RunSetupStateMachine();
             return;
         }
-        
+
         _timeHub.UpdateFrame(dt);
 
         var updateInfo = _updateInfo.UpdateTickInfo;
         _sceneManager.Current?.Update(in updateInfo, _window.OutputSize);
 
         UpdateSceneTransitionIfNeeded();
-        
     }
 
     private void GameTickUpdate(int tick)

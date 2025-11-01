@@ -118,7 +118,7 @@ internal sealed class AssetStartupWorker
             case ProcessStepOrder.Finished:
                 return true;
             default:
-                throw new ArgumentOutOfRangeException();
+                throw new ArgumentOutOfRangeException(nameof(_processOrder));
         }
 
         return false;
@@ -126,11 +126,11 @@ internal sealed class AssetStartupWorker
 
 
     private T CurrentManifest<T>() where T : class, IAssetCatalog
-        => _currentManifest as T ?? throw new InvalidOperationException();
+        => (T)_currentManifest!;
 
     private IReadOnlyList<TDesc> CurrentRecords<TCatalog, TDesc>()
         where TCatalog : class, IAssetCatalog where TDesc : class, IAssetDescriptor
-        => CurrentManifest<TCatalog>().Records as IReadOnlyList<TDesc> ?? throw new InvalidOperationException();
+        => (IReadOnlyList<TDesc>)CurrentManifest<TCatalog>().Records;
 
 
     private void ProcessManifestStep<TCatalog, TDesc>(Action<TDesc, bool> onStartStep, TDesc[]? coreManifest = null)
@@ -172,7 +172,7 @@ internal sealed class AssetStartupWorker
             ProcessStepOrder.Meshes => _configLoader.LoadAssetCatalog<MeshManifest>(Layout.Mesh),
             ProcessStepOrder.Materials => _configLoader.LoadAssetCatalog<MaterialManifest>(Layout.Material),
             ProcessStepOrder.Finished => _currentManifest,
-            _ => throw new ArgumentOutOfRangeException()
+            _ => throw new ArgumentOutOfRangeException(nameof(_processOrder))
         };
     }
 

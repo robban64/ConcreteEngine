@@ -12,6 +12,7 @@ using ConcreteEngine.Core.Diagnostic;
 using ConcreteEngine.Core.Diagnostic.Utils;
 using ConcreteEngine.Core.Utils;
 using ConcreteEngine.Core.Worlds.Render;
+using ConcreteEngine.Graphics.Error;
 using ConcreteEngine.Graphics.Gfx;
 using ConcreteEngine.Graphics.Gfx.Definitions;
 
@@ -51,7 +52,7 @@ public sealed class AssetSystem : IAssetSystem
     private readonly MaterialStore _materialStore;
 
     public Status CurrentStatus { get; private set; } = Status.None;
-    
+
     public int PendingAssetCount => _pendingQueue.Count;
 
     internal AssetSystem()
@@ -95,11 +96,45 @@ public sealed class AssetSystem : IAssetSystem
 
     internal void ProcessPendingQueue()
     {
-        while (_pendingQueue.TryDrain(out var req))
+        while (_pendingQueue.TryDrain(out var rq))
         {
-            if (req.Kind == AssetKind.Shader)
-                RecreateShader(req);
-            else throw new InvalidOperationException($"Unsupported asset kind {req.Kind}");
+            try
+            {
+                ProcessRequest(in rq);
+                Logger.LogString(LogScope.Engine, $"Recreating: {rq}");
+            }
+            catch (Exception ex)
+            {
+                var msg = $"{ex.GetType().Name}: Error while processing request {rq}";
+                var level = ErrorUtils.IsUserOrDataError(ex) ? LogLevel.Warn : LogLevel.Critical;
+                Logger.LogString(LogScope.Assets, msg, level);
+                Logger.LogString(LogScope.Assets, ex.Message, level);
+
+                if (ErrorUtils.IsUserOrDataError(ex) || ex is InvalidOperationException { InnerException: null } ||
+                    ex is GraphicsException)
+                {
+                    continue;
+                }
+                
+                throw;
+            }
+        }
+
+        return;
+
+        void ProcessRequest(in RecreateRequest req)
+        {
+            switch (req.Kind)
+            {
+                case AssetKind.Shader: RecreateShader(req); break;
+                case AssetKind.Model:
+                case AssetKind.Texture2D:
+                case AssetKind.TextureCubeMap:
+                case AssetKind.Material:
+                case AssetKind.Unknown:
+                default:
+                    throw new ArgumentException($"{req.Kind} is invalid for recreate", nameof(req.Kind));
+            }
         }
     }
 
@@ -114,14 +149,7 @@ public sealed class AssetSystem : IAssetSystem
         if (!_loader.IsActive)
             _loader.ActivateLazyLoader(_assetStore, _gfxUploader);
 
-        try
-        {
-            _loader.ReloadShader(shader);
-        }
-        catch (Exception e) when(ErrorUtils.IsGfxError(e))
-        {
-            throw new InvalidOperationException(e.Message, e);
-        }
+        _loader.ReloadShader(shader);
     }
 
 
@@ -137,7 +165,6 @@ public sealed class AssetSystem : IAssetSystem
         _loader = new AssetLoader();
         _processor = new AssetStartupWorker(_loader, _configLoader, _manifest);
         _processor.Start(_assetStore, _gfxUploader);
-
     }
 
     internal bool ProcessLoader(int n)

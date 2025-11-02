@@ -93,7 +93,7 @@ public sealed class GameEngine : IDisposable
     private void StartAssetLoader()
     {
         _engineGateway.AttachLogger();
-        
+
         _assets.Initialize();
         _assets.StartLoader(_graphics.Gfx);
     }
@@ -144,11 +144,7 @@ public sealed class GameEngine : IDisposable
         }
 
         if (CommandRouter.CommandQueueCount > 0) ProcessCommandQueue();
-        if (_assets.PendingAssetCount > 0)
-        {
-            _assets.UpdatePendingQueue(frameInfo.FrameIndex);
-            _assets.ProcessPendingQueue();
-        }
+        if (_assets.PendingAssetCount > 0) ProcessPendingQueue(frameInfo.FrameIndex);
 
         _worldRenderer.PreRender(beginStatus, in frameInfo, in runtimeParams, scene.Camera);
         _worldRenderer.ExecuteFrame(out var gfxFrameResult);
@@ -170,6 +166,12 @@ public sealed class GameEngine : IDisposable
     {
     }
 
+    private void ProcessPendingQueue(long frameIndex)
+    {
+        _assets.UpdatePendingQueue(frameIndex);
+        _assets.ProcessPendingQueue();
+    }
+
     private void ProcessCommandQueue()
     {
         while (CommandRouter.TryDequeueCommand(out var cmd))
@@ -177,15 +179,18 @@ public sealed class GameEngine : IDisposable
             try
             {
                 ProcessRequest(cmd);
-                Logger.LogString(LogScope.Engine,  $"Command invoked: {cmd}");
+                Logger.LogString(LogScope.Engine, $"Command invoked: {cmd}");
             }
-            catch (Exception ex) when (ErrorUtils.IsUserOrDataError(ex) || ErrorUtils.IsInvalidOpError(ex))
+            catch (Exception ex)
             {
                 var msg = $"Error while processing command {cmd}";
-                Logger.LogString(LogScope.Engine, msg, LogLevel.Critical);
-                Logger.LogString(LogScope.Engine, ex.Message, LogLevel.Critical);
+                var level = ErrorUtils.IsUserOrDataError(ex) ? LogLevel.Warn : LogLevel.Critical;
+                Logger.LogString(LogScope.Engine, msg, level);
+                Logger.LogString(LogScope.Engine, ex.Message, level);
+
+                if (!ErrorUtils.IsUserOrDataError(ex) && ex is not InvalidOperationException { InnerException: null })
+                    throw;
             }
-            
         }
     }
 

@@ -6,7 +6,8 @@ using System.Runtime.CompilerServices;
 
 namespace ConcreteEngine.Graphics.Error;
 
-public sealed partial class GraphicsException(string message, Exception? inner = null) : Exception(message, inner)
+public sealed partial class GraphicsException(string message, Exception? inner = null) 
+    : Exception(message, inner)
 {
     // Exceptions
     public static GraphicsException ResourceIsNull<T>(string? name = null) => new($"{Label<T>(name)} is null.");

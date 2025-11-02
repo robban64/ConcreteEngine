@@ -39,26 +39,21 @@ public sealed class GfxShaders
         ArgumentException.ThrowIfNullOrEmpty(vs, nameof(shaderId));
 
         _drivDebug.ToggleDebug(false);
-
+        GfxRefToken<ShaderId> oldRef = default, newRef = default;
         try
         {
-            var oldRef = _store.GetRefAndMeta(shaderId, out _);
-            var newRef = _driver.CreateShader(vs, fs);
-            samplers = _driver.GetSamplersFromProgram(newRef);
-            var meta = new ShaderMeta(samplers);
-            _store.Replace(shaderId, in meta, newRef, out _);
-            _disposer.EnqueueReplace(oldRef);
+            oldRef = _store.GetRefAndMeta(shaderId, out _);
+            newRef = _driver.CreateShader(vs, fs);
         }
         finally
         {
             _drivDebug.ToggleDebug(true);
         }
-        /*catch (Exception ex) when (ErrorUtils.IsSafeError(ex))
-        {
-            status = $"Shader reload failed for {shaderId}: {ex.Message}";
-            samplers = 0;
-            return false;
-        }*/
+        
+        samplers = _driver.GetSamplersFromProgram(newRef);
+        var meta = new ShaderMeta(samplers);
+        _store.Replace(shaderId, in meta, newRef, out _);
+        _disposer.EnqueueReplace(oldRef);
     }
 
     public List<(string, int)> GetUniformList(ShaderId shaderId)

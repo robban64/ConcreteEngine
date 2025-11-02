@@ -44,13 +44,41 @@ internal sealed class GlShaders : IGraphicsDriverModule
 
     public GfxRefToken<ShaderId> CreateShader(string vertexSource, string fragmentSource)
     {
-        var vertexShader = CreateShader(ShaderType.VertexShader, vertexSource);
-        var fragmentShader = CreateShader(ShaderType.FragmentShader, fragmentSource);
-        var handle = CreateShaderProgram(vertexShader, fragmentShader);
-        _gl.DetachShader(handle, vertexShader);
-        _gl.DetachShader(handle, fragmentShader);
-        _gl.DeleteShader(vertexShader);
-        _gl.DeleteShader(fragmentShader);
+        uint vertexShader = 0, fragmentShader = 0;
+
+        try
+        {
+            vertexShader = _gl.CreateShader(ShaderType.VertexShader);
+            vertexShader = CompileShader(vertexShader, ShaderType.VertexShader, vertexSource);
+            
+            fragmentShader = _gl.CreateShader(ShaderType.FragmentShader);
+            fragmentShader = CompileShader(fragmentShader, ShaderType.FragmentShader, fragmentSource);
+        }
+        catch
+        {
+            if(vertexShader > 0) _gl.DeleteShader(vertexShader);
+            if(fragmentShader> 0) _gl.DeleteShader(fragmentShader);
+            throw;
+        }
+
+        GlShaderHandle handle = default;
+        try
+        {
+            handle = CreateShaderProgram(vertexShader, fragmentShader);
+        }
+        catch
+        {
+            _gl.DeleteProgram(handle);
+            throw;
+        }
+        finally
+        {
+            _gl.DetachShader(handle, vertexShader);
+            _gl.DetachShader(handle, fragmentShader);
+            _gl.DeleteShader(vertexShader);
+            _gl.DeleteShader(fragmentShader);
+        }
+        
         return _shaderStore.Add(new GlShaderHandle(handle));
     }
 
@@ -96,7 +124,7 @@ internal sealed class GlShaders : IGraphicsDriverModule
         return samplers;
     }
 
-    private uint CreateShaderProgram(uint vertexShader, uint fragmentShader)
+    private GlShaderHandle CreateShaderProgram(uint vertexShader, uint fragmentShader)
     {
         var program = _gl.CreateProgram();
         _gl.AttachShader(program, vertexShader);
@@ -107,14 +135,12 @@ internal sealed class GlShaders : IGraphicsDriverModule
         if (status != (int)GLEnum.True)
             throw GraphicsException.ShaderLinkFailed(program.ToString(), _gl.GetProgramInfoLog(program));
 
-        return program;
+        return new GlShaderHandle(program);
     }
 
-    private uint CreateShader(ShaderType shaderType, string source)
+    private uint CompileShader(uint shader, ShaderType shaderType, string source)
     {
-        var shader = _gl.CreateShader(shaderType);
         _gl.ShaderSource(shader, source);
-
         _gl.CompileShader(shader);
 
         _gl.GetShader(shader, ShaderParameterName.CompileStatus, out var vStatus);

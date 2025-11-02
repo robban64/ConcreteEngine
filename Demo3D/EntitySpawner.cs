@@ -14,7 +14,7 @@ namespace Demo3D;
 
 public readonly record struct ScenePlacement(ModelBaseDrawInfo ModelInfo, MaterialTag Mat, float Offset = 0f);
 
-public sealed class EntitySpawner(World world, float size = 256f, float margin = 4f)
+public sealed class EntitySpawner(IWorld world, float size = 256f, float margin = 4f)
 {
     private EntityId CreateOnTerrain(ScenePlacement sp, Vector3 p, Vector3? s = null, Quaternion? r = null)
     {

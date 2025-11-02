@@ -25,7 +25,7 @@ public sealed class Demo3DScene : GameScene
 
     public override void Initialize()
     {
-        var renderer = Context.GetSystem<IRenderingSystem>();
+        var renderer = Context.GetSystem<IWorldRenderer>();
         var assets = Context.GetSystem<IAssetSystem>();
         var (store, materialStore) = (assets.Store, assets.MaterialStore);
 

@@ -29,7 +29,7 @@ public sealed class FlyCameraModule : GameModule
 
     public override void Update(in UpdateTickInfo frameCtx)
     {
-        _camera = Context.Camera;
+        _camera = Context.World.Camera;
 
         var dt = frameCtx.DeltaTime;
 

@@ -36,6 +36,8 @@ public sealed class GameEngine : IDisposable
     private readonly EngineCoreSystem _coreSystems;
     private readonly AssetSystem _assets;
     private readonly InputSystem _inputSystem;
+
+    private readonly World _world;
     private readonly WorldRenderer _worldRenderer;
 
 
@@ -76,7 +78,9 @@ public sealed class GameEngine : IDisposable
 
         _inputSystem = new InputSystem(input);
         _assets = new AssetSystem();
-        _worldRenderer = new WorldRenderer(engineWindow, _graphics, _assets, _eventBus);
+
+        _world = new World();
+        _worldRenderer = new WorldRenderer(engineWindow, _graphics, _assets, _eventBus, _world.WorldRenderParams);
         _coreSystems = new EngineCoreSystem(_worldRenderer, _inputSystem, _assets);
 
 
@@ -139,26 +143,20 @@ public sealed class GameEngine : IDisposable
             _timeHub.DebounceTicker = null;
             beginStatus = BeginFrameStatus.Resize;
         }
-        
+
         if (_timeHub.RenderTicker.TryProcessDiagnostic(dt))
         {
             _engineGateway.RefreshMetrics();
         }
-        
+
         if (CommandRouter.CommandQueueCount > 0) ProcessCommandQueue();
         if (_assets.PendingAssetCount > 0) ProcessPendingQueue(frameInfo.FrameIndex);
 
-        _worldRenderer.PreRender(beginStatus, in frameInfo, in runtimeParams, scene.Camera);
+        _worldRenderer.PreRender(beginStatus, in frameInfo, in runtimeParams, _world.Camera);
         _worldRenderer.ExecuteFrame(out var gfxFrameResult);
         _renderFrameInfo.EndRenderFrame(gfxFrameResult);
 
         _engineGateway.RenderMetricsUi();
-
-
-
-        // _renderTime.TickOrRenderEffect();
-        //_renderTime.TickOrGpuDispose();
-        //_renderTime.TickOrGpuUpload();
     }
 
 
@@ -201,6 +199,7 @@ public sealed class GameEngine : IDisposable
     internal void Update(float dt)
     {
         _updateInfo.BeginUpdateFrame(dt, _window.WindowSize, _window.OutputSize);
+        var updateInfo = _updateInfo.UpdateTickInfo;
 
         if (_stateMachine.Current != EngineStateLevel.Running)
         {
@@ -212,17 +211,19 @@ public sealed class GameEngine : IDisposable
 
         _timeHub.AdvanceTick(dt);
 
-        var updateInfo = _updateInfo.UpdateTickInfo;
-        _sceneManager.Current?.Update(in updateInfo, _window.OutputSize);
 
+        _sceneManager.Current?.Update(in updateInfo, _window.OutputSize);
+        
         UpdateSceneTransitionIfNeeded();
     }
 
     private void GameTickUpdate(int tick)
     {
+        _world.UpdateTick(_window.WindowSize);
         _updateInfo.UpdateTick(tick);
         _inputSystem.Update(!_engineGateway.BlockInput());
         _sceneManager.Current?.UpdateTick(tick);
+        _world.EndTick();
     }
 
     private void DebugTickUpdate(int tick)
@@ -255,30 +256,31 @@ public sealed class GameEngine : IDisposable
         }
     }
 
-
     private void UpdateSceneTransitionIfNeeded()
     {
         if (!_sceneManager.HasPendingSwitch)
             return;
-
-        var sceneContext = new GameSceneContext(_coreSystems) { Modules = _modules };
-        var builder = new GameSceneConfigBuilder(_modules);
-
-        _sceneManager.ApplyPendingScene(sceneContext, builder, _worldRenderer, OnSceneBuild);
-
-        _modules.Load(new GameModuleContext(sceneContext));
-    }
-
-    private void OnSceneBuild(SceneManager.SceneBuildResult result, WorldRenderer renderer)
-    {
-        _engineGateway.AttachDebugTools((World)result.Context.World, _assets, _renderFrameInfo);
+        
+        _worldRenderer.AttachWorld(_world);
+        _engineGateway.AttachDebugTools(_world, _assets, _renderFrameInfo);
         _engineGateway.RegisterCommands();
         _engineGateway.RegisterMetrics();
         _engineGateway.RefreshMetrics(true);
 
-        renderer.AttachWorld((World)result.Context.World, result.Context.Camera);
-        foreach (var module in result.Modules) result.Context.Modules.AddModule(module());
+
+        var sceneContext = new GameSceneContext(_coreSystems, _world) { Modules = _modules };
+        var builder = new GameSceneConfigBuilder(_modules);
+
+        _sceneManager.ApplyPendingScene(sceneContext, builder, static (result) =>
+        {
+            for(int i = 0; i <  result.Modules.Count; i++)
+                result.Context.Modules.AddModule(result.Modules[i]());
+        });
+
+        _modules.Load(new GameModuleContext(sceneContext));
     }
+
+
 
     internal void Close()
     {

@@ -19,7 +19,7 @@ internal sealed class EffectAdjustModule : GameModule
     public override void Initialize()
     {
         _input = Context.GetSystem<IInputSystem>().InputSource;
-        var renderer = Context.GetSystem<IRenderingSystem>();
+        var renderer = Context.GetSystem<IWorldRenderer>();
         _worldRenderParams = renderer.WorldRenderParams;
     }
 

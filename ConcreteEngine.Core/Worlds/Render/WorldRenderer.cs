@@ -27,13 +27,13 @@ using ConcreteEngine.Renderer.State;
 
 namespace ConcreteEngine.Core.Worlds.Render;
 
-public interface IRenderingSystem : IGameEngineSystem
+public interface IWorldRenderer : IGameEngineSystem
 {
     WorldRenderParams WorldRenderParams { get; }
     BatcherRegistry Batchers { get; }
 }
 
-public sealed class WorldRenderer : IRenderingSystem
+public sealed class WorldRenderer : IWorldRenderer
 {
     public BatcherRegistry Batchers { get; }
     public WorldRenderParams WorldRenderParams { get; }
@@ -55,14 +55,14 @@ public sealed class WorldRenderer : IRenderingSystem
     internal RenderView RenderView => _renderer.RenderView;
 
     internal WorldRenderer(EngineWindow window, GraphicsRuntime graphics, AssetSystem assets,
-        EngineEventBus eventBus)
+        EngineEventBus eventBus, WorldRenderParams worldRenderParams)
     {
         _window = window;
         _graphics = graphics;
         _assets = assets;
         _graphics = graphics;
         _eventBus = eventBus;
-        WorldRenderParams = new WorldRenderParams();
+        WorldRenderParams = worldRenderParams;
         Batchers = new BatcherRegistry();
 
         PrimitiveMeshes.CreatePrimitives(graphics.Gfx.Meshes);
@@ -76,14 +76,14 @@ public sealed class WorldRenderer : IRenderingSystem
     }
 
 
-    internal void AttachWorld(World world, Camera3D camera)
+    internal void AttachWorld(World world)
     {
         ArgumentNullException.ThrowIfNull(world);
         _meshTable.Setup(_assets);
         _renderEntityBus.AttachWorld(world);
-        world.AttachRender(_meshTable, _materialTable);
+        world.AttachRender(Batchers,_meshTable, _materialTable);
 
-        PrepareRenderView(1, camera);
+        PrepareRenderView(1, world.Camera);
     }
 
     internal void RenderEmptyFrame(in RenderFrameInfo frameInfo) => _renderer.RenderEmptyFrame(in frameInfo);

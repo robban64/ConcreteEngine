@@ -1,8 +1,11 @@
 #region
 
+using ConcreteEngine.Common.Numerics;
+using ConcreteEngine.Core.Data;
 using ConcreteEngine.Core.Worlds.Entities;
 using ConcreteEngine.Core.Worlds.Render;
 using ConcreteEngine.Core.Worlds.Render.Batching;
+using ConcreteEngine.Core.Worlds.Transforms;
 
 #endregion
 
@@ -12,9 +15,14 @@ public interface IWorld
 {
     public int EntityCount { get; }
 
+    public Camera3D Camera { get; }
+
     WorldRenderParams WorldRenderParams { get; }
     WorldSkybox Sky { get; }
     WorldTerrain Terrain { get; }
+
+    IMeshTable MeshTable  { get; }
+    IMaterialTable EntityMaterials  { get; }
 
 
     EntityId Create();
@@ -33,18 +41,19 @@ public sealed class World : IWorld
     public EntityId Create() => new(_idIdx++);
     private int _idIdx = 1;
 
-    public WorldRenderParams WorldRenderParams { get; }
-    public WorldSkybox Sky { get; }
-    public WorldTerrain Terrain { get; }
+    private WorldSkybox _sky = null!;
+    private WorldTerrain _terrain = null!;
 
     private MeshTable _meshTable = null!;
     private MaterialTable _materialTable = null!;
 
-    internal World(WorldRenderParams worldRenderParams, BatcherRegistry batchers)
+    public Camera3D Camera { get; }
+    public WorldRenderParams WorldRenderParams { get; }
+    
+    internal World()
     {
-        WorldRenderParams = worldRenderParams;
-        Terrain = new WorldTerrain(batchers.Get<TerrainBatcher>());
-        Sky = new WorldSkybox();
+        Camera = new Camera3D();
+        WorldRenderParams = new WorldRenderParams();
 
         Transforms2D = GenericStores<Transform2D>.CreateStore();
         Transforms = GenericStores<Transform>.CreateStore();
@@ -52,23 +61,39 @@ public sealed class World : IWorld
         Sprites = GenericStores<SpriteComponent>.CreateStore();
     }
 
-    public int EntityCount => _idIdx;
-    public int ShadowMapSize => WorldRenderParams.Snapshot.Shadows.ShadowMapSize;
-
+    public WorldSkybox Sky => _sky;
+    public WorldTerrain Terrain => _terrain;
+    
     public IMeshTable MeshTable => _meshTable;
     public IMaterialTable EntityMaterials => _materialTable;
 
+    public int EntityCount => _idIdx;
+    public int ShadowMapSize => WorldRenderParams.Snapshot.Shadows.ShadowMapSize;
 
-    internal void AttachRender(MeshTable meshTable, MaterialTable materialTable)
+    internal void AttachRender(BatcherRegistry batchers, MeshTable meshTable, MaterialTable materialTable)
     {
         _meshTable = meshTable;
         _materialTable = materialTable;
+
+        _terrain = new WorldTerrain(batchers.Get<TerrainBatcher>());
+        _sky = new WorldSkybox();
+
         Terrain.AttachModelRegistry(meshTable);
         Sky.AttachModelRegistry(meshTable);
     }
 
+    internal void UpdateTick(Size2D viewSize)
+    {
+        if(Camera.Viewport != viewSize) Camera.Viewport = viewSize;
+    }
 
-    public void Cleanup()
+    internal void EndTick()
+    {
+        Camera.EndTick();
+        Cleanup();
+    }
+
+    private void Cleanup()
     {
         Transforms.Cleanup();
         Transforms2D.Cleanup();

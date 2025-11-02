@@ -16,42 +16,30 @@ namespace ConcreteEngine.Core.Scene;
 //TODO rework
 public abstract class GameScene
 {
-    private World _world = null!;
-    private readonly Camera3D _camera;
-
     protected GameSceneContext Context { get; private set; } = null!;
 
-    protected World World => _world;
-    public Camera3D Camera => _camera;
+    protected IWorld World => Context.World;
+    protected Camera3D Camera => World.Camera;
 
-    internal World InternalWorld => _world;
 
     protected GameScene()
     {
-        _camera = new Camera3D();
     }
 
     internal void Update(in UpdateTickInfo frameCtx, Size2D output)
     {
-        _camera.Viewport = output;
         Context.Modules.Update(in frameCtx);
     }
 
     internal void UpdateTick(int tick)
     {
         Context.Modules.GameTickUpdate(tick);
-        World.Cleanup();
-        
-        Camera.EndTick();
 
     }
 
     internal void AttachContext(GameSceneContext context)
     {
-        var renderer = context.GetSystem<IRenderingSystem>();
-        _world = new World(renderer.WorldRenderParams, renderer.Batchers);
-        context.World = World;
-        context.Camera = _camera;
+        var renderer = context.GetSystem<IWorldRenderer>();
         Context = context;
     }
 

@@ -29,8 +29,7 @@ internal sealed class SceneManager
     public void ApplyPendingScene(
         GameSceneContext context,
         GameSceneConfigBuilder builder,
-        WorldRenderer renderer,
-        Action<SceneBuildResult, WorldRenderer>? afterBuild)
+        Action<SceneBuildResult>? afterBuild)
     {
         if (_pendingIndex < 0) return;
 
@@ -50,7 +49,7 @@ internal sealed class SceneManager
             builder.RenderType,
             builder.RenderTargetsDesc,
             builder.Modules,
-            context), renderer);
+            context));
 
         newScene.InitializeInternal();
 

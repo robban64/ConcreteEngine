@@ -38,7 +38,7 @@ public class EngineCoreSystem : IEngineSystemManager
     {
         _systems.Register<IInputSystem>(_inputSystem);
         _systems.Register<IAssetSystem>(_assets);
-        _systems.Register<IRenderingSystem>(_renderer);
+        _systems.Register<IWorldRenderer>(_renderer);
         _systems.Freeze();
     }
 

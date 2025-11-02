@@ -2,7 +2,7 @@
 
 #endregion
 
-namespace ConcreteEngine.Core.Time;
+namespace ConcreteEngine.Core.Time.Tickers;
 
 public struct SimpleTicker(int fps, int ticksPerSec)
 {

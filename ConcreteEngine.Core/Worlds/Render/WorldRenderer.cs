@@ -144,7 +144,7 @@ public sealed class WorldRenderer : IRenderingSystem
         ClearMaterialDirty();
     }
 
-    private FrameTimer _frameTimer = new();
+    private FrameProfileTimer _frameProfileTimer = new();
 
     private void PrepareRenderView(float alpha, Camera3D camera)
     {

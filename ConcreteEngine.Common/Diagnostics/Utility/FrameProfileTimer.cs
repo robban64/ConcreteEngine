@@ -6,7 +6,7 @@ using System.Diagnostics;
 
 namespace ConcreteEngine.Common.Diagnostics.Utility;
 
-public sealed class FrameTimer
+public sealed class FrameProfileTimer
 {
     private const double TargetFrameMs = 16.6667; // 60 FPS 
 
@@ -18,7 +18,7 @@ public sealed class FrameTimer
     private readonly int _sampleFrames;
     private readonly Stopwatch _sw = new();
 
-    public FrameTimer(int sampleFrames = 60) => _sampleFrames = sampleFrames;
+    public FrameProfileTimer(int sampleFrames = 60) => _sampleFrames = sampleFrames;
     public void Begin() => _sw.Restart();
 
     public bool End()

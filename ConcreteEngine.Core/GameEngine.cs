@@ -12,6 +12,7 @@ using ConcreteEngine.Core.Platform;
 using ConcreteEngine.Core.Scene;
 using ConcreteEngine.Core.Scene.Modules;
 using ConcreteEngine.Core.Time;
+using ConcreteEngine.Core.Time.Tickers;
 using ConcreteEngine.Core.Utils;
 using ConcreteEngine.Core.Worlds;
 using ConcreteEngine.Core.Worlds.Render;
@@ -69,7 +70,7 @@ public sealed class GameEngine : IDisposable
         _modules = new ModuleManager();
 
         // time
-        _timeHub = new EngineTimeHub(GameTickUpdate, DebugTickUpdate, OnGpuTickUpload, OnGpuTickDispose);
+        _timeHub = new EngineTimeHub(GameTickUpdate, DebugTickUpdate);
 
         // systems
 
@@ -121,10 +122,6 @@ public sealed class GameEngine : IDisposable
         var frameStatus = _renderFrameInfo.BeginRenderFrame(dt, alpha, _window, _inputSystem.InputSource,
             out var frameInfo, out var runtimeParams);
 
-        _timeHub.RenderFrame(dt);
-
-        _engineGateway.Update(dt);
-
         if (_sceneManager.Current is not { } scene)
         {
             _worldRenderer.RenderEmptyFrame(in frameInfo);
@@ -142,7 +139,12 @@ public sealed class GameEngine : IDisposable
             _timeHub.DebounceTicker = null;
             beginStatus = BeginFrameStatus.Resize;
         }
-
+        
+        if (_timeHub.RenderTicker.TryProcessDiagnostic(dt))
+        {
+            _engineGateway.RefreshMetrics();
+        }
+        
         if (CommandRouter.CommandQueueCount > 0) ProcessCommandQueue();
         if (_assets.PendingAssetCount > 0) ProcessPendingQueue(frameInfo.FrameIndex);
 
@@ -153,18 +155,12 @@ public sealed class GameEngine : IDisposable
         _engineGateway.RenderMetricsUi();
 
 
+
         // _renderTime.TickOrRenderEffect();
         //_renderTime.TickOrGpuDispose();
         //_renderTime.TickOrGpuUpload();
     }
 
-    private void OnGpuTickDispose(int tick)
-    {
-    }
-
-    private void OnGpuTickUpload(int tick)
-    {
-    }
 
     private void ProcessPendingQueue(long frameIndex)
     {
@@ -212,7 +208,9 @@ public sealed class GameEngine : IDisposable
             return;
         }
 
-        _timeHub.UpdateFrame(dt);
+        _engineGateway.Update(dt);
+
+        _timeHub.AdvanceTick(dt);
 
         var updateInfo = _updateInfo.UpdateTickInfo;
         _sceneManager.Current?.Update(in updateInfo, _window.OutputSize);
@@ -229,8 +227,6 @@ public sealed class GameEngine : IDisposable
 
     private void DebugTickUpdate(int tick)
     {
-        if (!_engineGateway.Enabled) return;
-        _engineGateway.RefreshMetrics();
     }
 
 

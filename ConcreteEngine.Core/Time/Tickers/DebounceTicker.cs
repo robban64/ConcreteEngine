@@ -1,4 +1,4 @@
-namespace ConcreteEngine.Core.Time;
+namespace ConcreteEngine.Core.Time.Tickers;
 
 internal sealed class DebounceTicker(int ticks)
 {

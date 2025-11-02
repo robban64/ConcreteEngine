@@ -27,6 +27,7 @@ internal sealed class EngineGateway
 
     private bool _tickToggle;
     private int _ticker2 = 0, _ticker4 = 0, _ticker8 = 0;
+    private int _ticker = 0, _slowTicker = 0;
 
 
     public EngineGateway(GL gl, IWindow window, IInputContext inputCtx)
@@ -111,25 +112,20 @@ internal sealed class EngineGateway
             DrainGfxLogs();
             return;
         }
-
-        _diagnostics.RefreshFrameMetrics();
-
-        if (_tickToggle)
+        
+        switch (_ticker++)
         {
-            _diagnostics.RefreshStoreMetrics();
-            _diagnostics.RefreshSceneMetrics();
-        }
-        else
-        {
-            DrainGfxLogs();
-            DrainEngineLogs();
+            case 0: _diagnostics.RefreshFrameMetrics(); break;
+            case 1: _diagnostics.RefreshStoreMetrics(); break;
+            case 2: _diagnostics.RefreshSceneMetrics(); break;
+            case 3: DrainEngineLogs(); break;
+            case 4: DrainGfxLogs(); break;
+            default: _ticker = 0; break;
         }
 
-        _tickToggle = !_tickToggle;
-
-        if (++_ticker8 >= 8)
+        if (_slowTicker++ >= 30)
         {
-            _ticker8 = 0;
+            _slowTicker = 0;
             _diagnostics.RefreshMemoryMetrics();
         }
     }

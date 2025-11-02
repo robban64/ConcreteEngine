@@ -1,6 +1,7 @@
 #region
 
 using ConcreteEngine.Core.Data;
+using ConcreteEngine.Core.Time.Tickers;
 
 #endregion
 
@@ -8,45 +9,31 @@ namespace ConcreteEngine.Core.Time;
 
 internal sealed class RenderTickScheduler
 {
-    public const int ParticleLodTicksPerSecond = 15;
-    public const int GpuUploadTicksPerSecond = 20;
-    public const int GpuDisposeTicksPerSecond = 1; // 1 Hz
-
-    private readonly FrameTickTimer _renderEffectTicker = new(1f / ParticleLodTicksPerSecond);
-
-
-    private readonly FrameTickTimer _gfxUploadTicker = new(1f / GpuUploadTicksPerSecond);
-    private readonly FrameTickTimer _gfxDisposeTicker = new(1f / GpuDisposeTicksPerSecond);
-
-    private readonly RenderTickDelegate _onGfxUpload;
-    private readonly RenderTickDelegate _onGfxDispose;
-
-    private int _a, _b, _c;
-
-    internal RenderTickScheduler(RenderTickDelegate onGfxUpload, RenderTickDelegate onGfxDispose)
+    private struct RenderFrameTicker(float targetFrameMs)
     {
-        _onGfxUpload = onGfxUpload;
-        _onGfxDispose = onGfxDispose;
+        private int _frameCounter = 0;
+        private float _accumulator = 0f;
+        public bool TryProcessFrame(float dt)
+        {
+            _frameCounter++;
+            _accumulator += dt;
+            if (_accumulator < targetFrameMs) return false;
+            _frameCounter = 0;
+            _accumulator = 0;
+            return true;
+        }
     }
 
-    public void Accumulate(float dt)
-    {
-        /*
-        _gfxUploadTicker.Accumulate(dt);
-        _gfxDisposeTicker.Accumulate(dt);
-        _renderEffectTicker.Accumulate(dt);
-        */
-    }
+    //public const int ParticleLodTicksPerSecond = 15;
+    public const int GuiRenderFramePerSecond = 30;
+    public const int DiagnosticFramePerSecond = 4; // 4 Hz
+    
+    //private RenderFrameTicker _renderEffectTicker = new(1f / ParticleLodTicksPerSecond);
+    private RenderFrameTicker _guiTicker = new(1f / GuiRenderFramePerSecond);
+    private RenderFrameTicker _diagnosticTicker = new(1f / DiagnosticFramePerSecond);
 
-    public void Advance()
-    {
-        /*
-        _a = _gfxUploadTicker.DrainAllTicks();
-        _b = _gfxDisposeTicker.DrainAllTicks();
-        _c = _renderEffectTicker.DrainAllTicks();
-        */
-        //if (a > 0) _onGpuUpload(a); 
-        //if (b > 0) _onGpuDispose(b);
-        //if (c > 0) _onRenderEffect(c);
-    }
+
+    public void TryRenderGui(float dt) => _guiTicker.TryProcessFrame(dt);
+    public bool TryProcessDiagnostic(float dt) => _diagnosticTicker.TryProcessFrame(dt);
+    
 }

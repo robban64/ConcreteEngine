@@ -3,12 +3,13 @@
 using System.Numerics;
 using ConcreteEngine.Common.Numerics;
 using ConcreteEngine.Common.Numerics.Maths;
+using ConcreteEngine.Core.Worlds.Data;
 using ConcreteEngine.Renderer.Data;
 using ConcreteEngine.Renderer.State;
 
 #endregion
 
-namespace ConcreteEngine.Core.Worlds.Transforms;
+namespace ConcreteEngine.Core.Worlds.View;
 
 public sealed class Camera3D : ICamera
 {
@@ -17,8 +18,8 @@ public sealed class Camera3D : ICamera
     private float _yaw = 0;
     private float _pitch = 0;
 
-    private CameraTransformInfo _prevTick;
-    private CameraTransformInfo _currTick;
+    private CameraTransformData _prevTick;
+    private CameraTransformData _currTick;
 
     private Vector3 _translation = Vector3.Zero;
     private Vector3 _scale = Vector3.One;
@@ -26,7 +27,7 @@ public sealed class Camera3D : ICamera
     private Matrix4x4 _viewMatrix = Matrix4x4.Identity;
     private Matrix4x4 _projectionMatrix = Matrix4x4.Identity;
     private Matrix4x4 _projectionViewMatrix = Matrix4x4.Identity;
-
+    
     private Size2D _viewportSize;
 
     private float _fov = 70;
@@ -184,7 +185,7 @@ public sealed class Camera3D : ICamera
     {
         Ensure();
         _prevTick = _currTick;
-        CameraTransformInfo.FromCamera(this, out _currTick);
+        CameraTransformData.FromCamera(this, out _currTick);
     }
 
     internal void GetRenderSnapshot(float alpha, out RenderViewSnapshot viewSnapshot)
@@ -201,10 +202,7 @@ public sealed class Camera3D : ICamera
             projectionViewMatrix: viewMatrix * _projectionMatrix,
             projectionInfo: in projInfo,
             position: in camPos,
-            rotation: in camRot,
-            forward: Vector3.Normalize(Vector3.Transform(-Vector3.UnitZ, camRot)),
-            right: Vector3.Normalize(Vector3.Transform(Vector3.UnitX, camRot)),
-            up: Vector3.Normalize(Vector3.Transform(Vector3.UnitY, camRot))
+            rotation: in camRot
         );
     }
 }

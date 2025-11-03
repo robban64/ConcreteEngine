@@ -230,7 +230,6 @@ public sealed class GameEngine : IDisposable
     {
     }
 
-
     private void RunSetupStateMachine()
     {
         switch (_stateMachine.Current)
@@ -279,8 +278,6 @@ public sealed class GameEngine : IDisposable
 
         _modules.Load(new GameModuleContext(sceneContext));
     }
-
-
 
     internal void Close()
     {

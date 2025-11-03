@@ -6,7 +6,7 @@ using ConcreteEngine.Core.Configuration;
 using ConcreteEngine.Core.Data;
 using ConcreteEngine.Core.Worlds;
 using ConcreteEngine.Core.Worlds.Render;
-using ConcreteEngine.Core.Worlds.Transforms;
+using ConcreteEngine.Core.Worlds.View;
 using ConcreteEngine.Renderer.State;
 
 #endregion
@@ -34,14 +34,9 @@ public abstract class GameScene
     internal void UpdateTick(int tick)
     {
         Context.Modules.GameTickUpdate(tick);
-
     }
 
-    internal void AttachContext(GameSceneContext context)
-    {
-        var renderer = context.GetSystem<IWorldRenderer>();
-        Context = context;
-    }
+    internal void AttachContext(GameSceneContext context) => Context = context;
 
     internal void Build(GameSceneConfigBuilder builder)
     {

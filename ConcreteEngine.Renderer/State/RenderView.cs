@@ -31,6 +31,7 @@ public sealed class RenderView
     public Vector3 Right => _snapshot.Right;
     public Vector3 Up => _snapshot.Up;
 
+    
 
     public void GetCurrentData(out Matrix4x4 view, out Matrix4x4 projection, out Matrix4x4 projectionView)
     {

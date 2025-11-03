@@ -6,7 +6,7 @@ using ConcreteEngine.Common.Numerics.Extensions;
 
 #endregion
 
-namespace ConcreteEngine.Core.Worlds.Transforms;
+namespace ConcreteEngine.Core.Worlds.View;
 
 public sealed class Camera2D : ICamera
 {

@@ -109,6 +109,7 @@ internal sealed class EngineGateway
             _diagnostics.RefreshStoreMetrics();
             _diagnostics.RefreshSceneMetrics();
             _diagnostics.RefreshMemoryMetrics();
+            DrainEngineLogs();
             DrainGfxLogs();
             return;
         }

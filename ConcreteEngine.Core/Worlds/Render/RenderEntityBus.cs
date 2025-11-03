@@ -9,7 +9,7 @@ using ConcreteEngine.Common.Collections;
 using ConcreteEngine.Common.Numerics.Maths;
 using ConcreteEngine.Core.Worlds.Data;
 using ConcreteEngine.Core.Worlds.Entities;
-using ConcreteEngine.Core.Worlds.Transforms;
+using ConcreteEngine.Core.Worlds.Utility;
 using ConcreteEngine.Renderer.Data;
 using ConcreteEngine.Renderer.Definitions;
 using ConcreteEngine.Renderer.Draw;

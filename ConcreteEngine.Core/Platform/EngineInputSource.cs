@@ -36,8 +36,8 @@ public sealed class EngineInputSource : IEngineInputSource
     public EngineInputSource(IInputContext input)
     {
         _context = input;
-        var keyboard = input.Keyboards.First();
-        var mouse = input.Mice.First();
+        var keyboard = input.Keyboards[0];
+        var mouse = input.Mice[0];
 
         _keyboardInput = new KeyboardInput(keyboard);
         _mouseInput = new MouseInput(mouse);

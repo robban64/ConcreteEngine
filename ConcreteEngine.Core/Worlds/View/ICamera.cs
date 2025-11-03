@@ -5,7 +5,7 @@ using ConcreteEngine.Common.Numerics;
 
 #endregion
 
-namespace ConcreteEngine.Core.Worlds.Transforms;
+namespace ConcreteEngine.Core.Worlds.View;
 
 public interface ICamera
 {

@@ -10,7 +10,7 @@ using ConcreteEngine.Core.Diagnostic;
 using ConcreteEngine.Core.Platform;
 using ConcreteEngine.Core.Utils;
 using ConcreteEngine.Core.Worlds.Render.Batching;
-using ConcreteEngine.Core.Worlds.Transforms;
+using ConcreteEngine.Core.Worlds.View;
 using ConcreteEngine.Graphics;
 using ConcreteEngine.Graphics.Gfx;
 using ConcreteEngine.Graphics.Gfx.Contracts;

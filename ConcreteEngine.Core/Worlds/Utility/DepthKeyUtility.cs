@@ -1,6 +1,6 @@
 using System.Numerics;
 
-namespace ConcreteEngine.Core.Worlds.Transforms;
+namespace ConcreteEngine.Core.Worlds.Utility;
 
 internal static class DepthKeyUtility
 {

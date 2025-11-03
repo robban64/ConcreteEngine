@@ -43,7 +43,6 @@ internal static class RenderTransform
             maxLs = Vector3.Max(maxLs, p);
         }
 
-
         var snappedCenterLs = new Vector3(
             0.5f * (minLs.X + maxLs.X),
             0.5f * (minLs.Y + maxLs.Y),
@@ -97,23 +96,27 @@ internal static class RenderTransform
         var tanY = 1f / view.ProjectionMatrix.M22;
         var tanX = 1f / view.ProjectionMatrix.M11;
 
+        var up = view.Up;
+        var right = view.Right;
+        var forward = view.Forward;
+
         // extents at near/far
         float nx = near * tanX, ny = near * tanY;
         float fx = far * tanX, fy = far * tanY;
 
-        var nc = view.Position + view.Forward * near;
-        var fc = view.Position + view.Forward * far;
+        var nc = view.Position + forward * near;
+        var fc = view.Position + forward * far;
 
         // NearPlane plane
-        corners[0] = nc + view.Up * ny - view.Right * nx; // NT-L
-        corners[1] = nc + view.Up * ny + view.Right * nx; // NT-R
-        corners[2] = nc - view.Up * ny - view.Right * nx; // NB-L
-        corners[3] = nc - view.Up * ny + view.Right * nx; // NB-R
+        corners[0] = nc + up * ny - right * nx; // NT-L
+        corners[1] = nc + up * ny + right * nx; // NT-R
+        corners[2] = nc - up * ny - right * nx; // NB-L
+        corners[3] = nc - up * ny + right * nx; // NB-R
 
         // FarPlane plane
-        corners[4] = fc + view.Up * fy - view.Right * fx; // FT-L
-        corners[5] = fc + view.Up * fy + view.Right * fx; // FT-R
-        corners[6] = fc - view.Up * fy - view.Right * fx; // FB-L
-        corners[7] = fc - view.Up * fy + view.Right * fx; // FB-R
+        corners[4] = fc + up * fy - right * fx; // FT-L
+        corners[5] = fc + up * fy + right * fx; // FT-R
+        corners[6] = fc - up * fy - right * fx; // FB-L
+        corners[7] = fc - up * fy + right * fx; // FB-R
     }
 }

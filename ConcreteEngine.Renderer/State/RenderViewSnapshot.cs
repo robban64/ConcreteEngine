@@ -13,10 +13,7 @@ public readonly struct RenderViewSnapshot(
     in Matrix4x4 projectionViewMatrix,
     in ProjectionInfo projectionInfo,
     in Vector3 position,
-    in Quaternion rotation,
-    Vector3 forward,
-    Vector3 right,
-    Vector3 up
+    in Quaternion rotation
 )
 {
     public readonly Matrix4x4 ViewMatrix = viewMatrix;
@@ -25,7 +22,9 @@ public readonly struct RenderViewSnapshot(
     public readonly ProjectionInfo ProjectionInfo = projectionInfo;
     public readonly Quaternion Rotation = rotation;
     public readonly Vector3 Position = position;
-    public readonly Vector3 Forward = forward;
-    public readonly Vector3 Right = right;
-    public readonly Vector3 Up = up;
+    
+    public Vector3 Right => Vector3.Normalize(Vector3.Transform(Vector3.UnitX, Rotation));
+    public Vector3 Up => Vector3.Normalize(Vector3.Transform(Vector3.UnitY, Rotation));
+    public Vector3 Forward => Vector3.Normalize(Vector3.Transform(-Vector3.UnitZ, Rotation));
+
 }

@@ -7,62 +7,24 @@ using ImGuiNET;
 
 namespace Core.DebugTools.Components;
 
-public sealed class DebugConsoleCtx(DebugConsole debugConsole)
-{
-    public void AddLog(string? msg) => debugConsole.AddLog(msg);
-    public void AddMissingArg(string arg) => debugConsole.AddLog($"Argument: {arg} is null or empty");
-}
-
-public class DebugConsole
+public class DevConsoleGui
 {
     private bool _justOpened = true;
     private bool _scrollToBottom = false;
 
     private string _input = string.Empty;
 
-    private readonly DebugConsoleCtx _ctx;
-    private readonly List<string> _log = new(64);
+    private readonly Func<string, bool> _execCmd;
 
-    public DebugConsole()
+    public DevConsoleGui(Func<string, bool> execCmd)
     {
-        _ctx = new DebugConsoleCtx(this);
+        ArgumentNullException.ThrowIfNull(execCmd);
+        _execCmd = execCmd;
     }
+    
+    internal void ScrollToBottom() => _scrollToBottom = true;
 
-    public void AddLog(string? msg)
-    {
-        if (msg is null) return;
-        _log.Add(msg);
-        _scrollToBottom = true;
-    }
-
-    public bool ExecCommand(string commandLine)
-    {
-        if (string.IsNullOrWhiteSpace(commandLine)) return false;
-
-        _scrollToBottom = true;
-        _log.Add($">> {commandLine}");
-        var parts = commandLine.Trim().Split(' ', 3, StringSplitOptions.RemoveEmptyEntries);
-        var cmd = parts[0];
-        var arg1 = parts.Length > 1 ? parts[1] : null;
-        var arg2 = parts.Length > 2 ? parts[2] : null;
-
-        if (cmd == "clear")
-        {
-            _log.Clear();
-            _log.Add("[console cleared]");
-            return true;
-        }
-
-        if (!RouteTable.InvokeCommand(_ctx, cmd, arg1, arg2))
-        {
-            _log.Add($"Unknown command: {cmd}");
-            return false;
-        }
-
-        return true;
-    }
-
-    public void DrawConsole(int leftPanelWidth, int rightPanelWidth)
+    internal void DrawConsole(List<string> logs, int leftPanelWidth, int rightPanelWidth)
     {
         const ImGuiWindowFlags flags =
             ImGuiWindowFlags.NoMove | ImGuiWindowFlags.NoResize |
@@ -125,7 +87,7 @@ public class DebugConsole
             ImGuiWindowFlags.HorizontalScrollbar | ImGuiWindowFlags.AlwaysVerticalScrollbar
         );
 
-        foreach (var line in _log)
+        foreach (var line in logs)
             ImGui.TextUnformatted(line);
 
         if (_justOpened || _scrollToBottom)
@@ -159,7 +121,7 @@ public class DebugConsole
             _input = string.Empty;
 
             if (!string.IsNullOrEmpty(text))
-                ExecCommand(text);
+                _execCmd(text);
 
             ImGui.SetKeyboardFocusHere();
             _scrollToBottom = true;

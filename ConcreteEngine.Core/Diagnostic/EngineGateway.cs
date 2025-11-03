@@ -20,7 +20,7 @@ namespace ConcreteEngine.Core.Diagnostic;
 
 internal sealed class EngineGateway
 {
-    private readonly DiagnosticsService _diagnostics;
+    private readonly DebugToolsSystem _diagnostics;
     private readonly LogParser _logParser;
 
     public bool HasBoundCommands { get; private set; }
@@ -33,7 +33,7 @@ internal sealed class EngineGateway
 
     public EngineGateway(GL gl, IWindow window, IInputContext inputCtx)
     {
-        _diagnostics = new DiagnosticsService(gl, window, inputCtx);
+        _diagnostics = new DebugToolsSystem(gl, window, inputCtx);
         _logParser = new LogParser();
     }
 
@@ -50,12 +50,13 @@ internal sealed class EngineGateway
 
         _assets = assetSystem;
         MetricRouter.Attach(world, assetSystem, frameInfo);
+        EditorRouter.Attach(world, assetSystem);
     }
 
     public void AttachLogger() => Logger.Attach(ProcessStringLog);
     public void AttachGfxLogger() => GfxLog.Enabled = true;
 
-    private void ProcessStringLog(StringLogEvent log) => _diagnostics.DevConsole.AddLog(_logParser.Format(log));
+    private void ProcessStringLog(StringLogEvent log) => _diagnostics.devConsole.AddLog(_logParser.Format(log));
 
     public void RegisterCommands()
     {
@@ -66,14 +67,12 @@ internal sealed class EngineGateway
         RouteTable.RegisterCommand("inspect-structs", CmdWrapper(CommandRouter.OnCmdStructSizes));
         RouteTable.RegisterCommand("reload-shader", CmdWrapper(CommandRouter.OnRecreateShader));
         RouteTable.RegisterCommand("shadow-map", CmdWrapper(CommandRouter.OnSetShadowMapSize));
-        /* RouteTable.RegisterCommand("fbo-meta", CmdWrapper(static (ctx, arg1, arg2) =>
-         {
-             var opts = new JsonSerializerOptions { IncludeFields = true };
 
-             var meta = GfxDebugMetrics.GetStoreMeta<FrameBufferId, FrameBufferMeta>(new FrameBufferId(2));
-             ctx.AddLog(JsonSerializer.Serialize(meta,opts));
-         }));*/
+        EditorTable.FillAssetStoreView = EditorRouter.DrainAssetStoreData;
+        EditorTable.FetchAssetObjectFiles = EditorRouter.FetchAssetObjectFiles;
+
     }
+
 
     public void RegisterMetrics()
     {
@@ -105,12 +104,13 @@ internal sealed class EngineGateway
     public void RefreshMetrics(bool force = false)
     {
         if (!Enabled) return;
+        var metrics = _diagnostics.Metrics;
         if (force)
         {
-            _diagnostics.RefreshFrameMetrics();
-            _diagnostics.RefreshStoreMetrics();
-            _diagnostics.RefreshSceneMetrics();
-            _diagnostics.RefreshMemoryMetrics();
+            metrics.RefreshFrameMetrics();
+            metrics.RefreshStoreMetrics();
+            metrics.RefreshSceneMetrics();
+            metrics.RefreshMemoryMetrics();
             DrainEngineLogs();
             DrainGfxLogs();
             return;
@@ -118,12 +118,12 @@ internal sealed class EngineGateway
 
         switch (_ticker++)
         {
-            case 0: _diagnostics.RefreshFrameMetrics(); break;
+            case 0: metrics.RefreshFrameMetrics(); break;
             case 1:
-                _diagnostics.RefreshStoreMetrics();
+                metrics.RefreshStoreMetrics();
                 RefreshAssetStoreView();
                 break;
-            case 2: _diagnostics.RefreshSceneMetrics(); break;
+            case 2: metrics.RefreshSceneMetrics(); break;
             case 3: DrainEngineLogs(); break;
             case 4: DrainGfxLogs(); break;
             default: _ticker = 0; break;
@@ -132,23 +132,13 @@ internal sealed class EngineGateway
         if (_slowTicker++ >= 30)
         {
             _slowTicker = 0;
-            _diagnostics.RefreshMemoryMetrics();
+            metrics.RefreshMemoryMetrics();
         }
     }
 
     private void RefreshAssetStoreView()
     {
-        _assets.StoreImpl.Process<Assets.Shaders.Shader>((it) => _diagnostics.AssetStoreViewModel.AssetObjects.Add(
-            new AssetObjectViewModel
-            {
-                AssetId = it.RawId.Value,
-                Name = it.Name,
-                Generation = 0,
-                IsCoreAsset = it.IsCoreAsset,
-                Kind = it.Kind.ToLogTopic().ToLogText()
-            }));
-        
-        _diagnostics.RefreshAssetStoreDetailed();
+        _diagnostics.Editor.RefreshAssetStoreDetailed();
     }
 
     private void DrainEngineLogs()
@@ -156,7 +146,7 @@ internal sealed class EngineGateway
         while (Logger.LogQueue.Count > 0)
         {
             var cmd = Logger.LogQueue.Dequeue();
-            _diagnostics.DevConsole.AddLog(_logParser.Format(cmd));
+            _diagnostics.devConsole.AddLog(_logParser.Format(cmd));
         }
     }
 
@@ -165,7 +155,7 @@ internal sealed class EngineGateway
         while (GfxLog.LogQueue.Count > 0)
         {
             var cmd = GfxLog.LogQueue.Dequeue();
-            _diagnostics.DevConsole.AddLog(_logParser.Format(cmd));
+            _diagnostics.devConsole.AddLog(_logParser.Format(cmd));
         }
     }
 

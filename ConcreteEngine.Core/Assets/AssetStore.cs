@@ -53,10 +53,10 @@ internal sealed class AssetStore : IAssetStore
 
     public int GetAssetCount<TAsset>() where TAsset : AssetObject => _typeMeta[typeof(TAsset)].Count;
     internal IReadOnlyDictionary<Type, AssetTypeMeta> GetAssetTypeMeta() => _typeMeta;
+    internal Dictionary<AssetId, AssetObject>.ValueCollection AssetValues => _assets.Values;
 
     public AssetTypeMetaSnapshot GetMetaSnapshot<TAsset>() where TAsset : AssetObject =>
         _typeMeta[typeof(TAsset)].ToSnapshot();
-
 
     public bool TryGetFileEntry(AssetFileId id, out AssetFileEntry? entry) => _files.TryGetValue(id, out entry);
 

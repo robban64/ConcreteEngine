@@ -41,17 +41,17 @@ internal sealed class DebugRightPanelGui(MetricReport data)
     private void DrawCpuMetrics()
     {
         DrawSectionHeader("Frame Metrics");
-        MetricLine(data.FrameMetrics.FrameIndex);
-        MetricLine(data.FrameMetrics.Fps);
-        MetricLine(data.FrameMetrics.Alpha);
-        MetricLine(data.FrameMetrics.DrawCalls);
-        MetricLine(data.FrameMetrics.TriangleCount);
-        MetricLine(data.FrameMetrics.Passes);
+        TextIfNotNull(data.FrameMetrics.FrameIndex);
+        TextIfNotNull(data.FrameMetrics.Fps);
+        TextIfNotNull(data.FrameMetrics.Alpha);
+        TextIfNotNull(data.FrameMetrics.DrawCalls);
+        TextIfNotNull(data.FrameMetrics.TriangleCount);
+        TextIfNotNull(data.FrameMetrics.Passes);
     }
 
     private void DrawGcMetrics()
     {
         DrawSectionHeader("GC / Memory");
-        MetricLine(data.MemoryMetrics);
+        TextIfNotNull(data.MemoryMetrics);
     }
 }

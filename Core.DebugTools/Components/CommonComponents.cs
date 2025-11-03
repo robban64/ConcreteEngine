@@ -26,18 +26,30 @@ internal static class CommonComponents
         ImGui.Dummy(new Vector2(0, 4));
     }
 
-    public static void MetricLine(string? text)
+    public static void TextIfNotNull(string? text)
     {
         if (!string.IsNullOrEmpty(text))
             ImGui.TextUnformatted(text);
     }
 
+    public static void CenterAlignCellText(string? text)
+    {
+        var s = text ?? string.Empty;
+        float columnWidth = ImGui.GetColumnWidth();
+        float textWidth = ImGui.CalcTextSize(s).X;
+        float offset = (columnWidth - textWidth) * 0.5f;
+
+        ImGui.SetCursorPosX(ImGui.GetCursorPosX() + offset);
+        ImGui.TextUnformatted(s);
+    }
+    
     public static void RightAlignCellText(string? text)
     {
-        var s = text ?? "";
+        var s = text ?? string.Empty;
         var avail = ImGui.GetContentRegionAvail().X;
         var w = ImGui.CalcTextSize(s).X;
         ImGui.SetCursorPosX(ImGui.GetCursorPosX() + Math.Max(0, avail - w));
         ImGui.TextUnformatted(s);
     }
+    
 }

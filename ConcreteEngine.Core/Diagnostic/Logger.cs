@@ -12,7 +12,7 @@ public sealed record StringLogEvent(LogScope Scope, string Message, LogLevel Lev
 };
 
 public static class Logger
-{
+{ 
     internal static Queue<LogEvent> LogQueue { get; } = new(16);
     private static bool _enabled = true;
 

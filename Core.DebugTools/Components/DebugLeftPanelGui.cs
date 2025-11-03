@@ -33,9 +33,9 @@ internal sealed class DebugLeftPanelGui(MetricReport data)
         {
             DrawSceneMetrics();
             ImGui.Dummy(new Vector2(0, 6));
-            DrawAssetStoreTable();
+            DrawAssetStoreMetrics();
             ImGui.Dummy(new Vector2(0, 6));
-            DrawGfxStoreTable();
+            DrawGfxStoreMetrics();
         }
 
         ImGui.End();
@@ -45,11 +45,11 @@ internal sealed class DebugLeftPanelGui(MetricReport data)
     private void DrawSceneMetrics()
     {
         DrawSectionHeader("Scene Metrics");
-        MetricLine(data.SceneMetrics.EntityCount);
-        MetricLine(data.SceneMetrics.ShadowMapSize);
+        TextIfNotNull(data.SceneMetrics.EntityCount);
+        TextIfNotNull(data.SceneMetrics.ShadowMapSize);
     }
 
-    private void DrawAssetStoreTable()
+    private void DrawAssetStoreMetrics()
     {
         DrawSectionHeader("Asset Store");
 
@@ -95,7 +95,7 @@ internal sealed class DebugLeftPanelGui(MetricReport data)
         }
     }
 
-    private void DrawGfxStoreTable()
+    private void DrawGfxStoreMetrics()
     {
         DrawSectionHeader("GFX Store");
         ImGui.PushStyleVar(ImGuiStyleVar.FramePadding, new Vector2(12, 4));

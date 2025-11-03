@@ -13,8 +13,8 @@ public sealed class MetricReport
     public DebugSceneMetricsText SceneMetrics { get; } = new();
     public string? MaterialMetrics { get; set; }
     public string? MemoryMetrics { get; set; }
-    public List<GfxStoreTextRecord> GfxStoreMetrics { get; } = new(8);
-    public List<AssetStoreTextRecord> AssetMetrics { get; } = new(8);
+    public List<GfxStoreMetricTextRecord> GfxStoreMetrics { get; } = new(8);
+    public List<AssetStoreMetricTextRecord> AssetMetrics { get; } = new(8);
 
 
     internal void UpdateFrameMetrics(in FrameMetric<RenderInfoSample> m)
@@ -47,7 +47,7 @@ public sealed class MetricReport
             foreach (var it in result)
             {
                 var name = it.Name == "MaterialTemplate" ? "MatTemplate" : it.Name;
-                AssetMetrics.Add(new AssetStoreTextRecord(name, ""));
+                AssetMetrics.Add(new AssetStoreMetricTextRecord(name, ""));
             }
         }
 
@@ -68,7 +68,7 @@ public sealed class MetricReport
         {
             GfxStoreMetrics.Clear();
             foreach (var t in metrics)
-                GfxStoreMetrics.Add(new GfxStoreTextRecord(t.Name, t.ShortName));
+                GfxStoreMetrics.Add(new GfxStoreMetricTextRecord(t.Name, t.ShortName));
         }
 
         for (int i = 0; i < metrics.Length; i++)

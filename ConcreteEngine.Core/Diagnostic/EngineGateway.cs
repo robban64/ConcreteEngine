@@ -1,5 +1,6 @@
 #region
 
+using ConcreteEngine.Common.Diagnostics;
 using ConcreteEngine.Core.Assets;
 using ConcreteEngine.Core.Data;
 using ConcreteEngine.Core.Diagnostic.Utils;
@@ -8,6 +9,7 @@ using ConcreteEngine.Core.Worlds;
 using ConcreteEngine.Graphics.Diagnostic;
 using Core.DebugTools;
 using Core.DebugTools.Components;
+using Core.DebugTools.Data;
 using Silk.NET.Input;
 using Silk.NET.OpenGL;
 using Silk.NET.Windowing;
@@ -25,10 +27,9 @@ internal sealed class EngineGateway
     public bool HasBoundMetrics { get; private set; }
     public bool Enabled { get; private set; } = true;
 
-    private bool _tickToggle;
-    private int _ticker2 = 0, _ticker4 = 0, _ticker8 = 0;
     private int _ticker = 0, _slowTicker = 0;
 
+    private AssetSystem _assets;
 
     public EngineGateway(GL gl, IWindow window, IInputContext inputCtx)
     {
@@ -47,6 +48,7 @@ internal sealed class EngineGateway
         ArgumentNullException.ThrowIfNull(assetSystem, nameof(assetSystem));
         ArgumentNullException.ThrowIfNull(frameInfo, nameof(frameInfo));
 
+        _assets = assetSystem;
         MetricRouter.Attach(world, assetSystem, frameInfo);
     }
 
@@ -113,11 +115,14 @@ internal sealed class EngineGateway
             DrainGfxLogs();
             return;
         }
-        
+
         switch (_ticker++)
         {
             case 0: _diagnostics.RefreshFrameMetrics(); break;
-            case 1: _diagnostics.RefreshStoreMetrics(); break;
+            case 1:
+                _diagnostics.RefreshStoreMetrics();
+                RefreshAssetStoreView();
+                break;
             case 2: _diagnostics.RefreshSceneMetrics(); break;
             case 3: DrainEngineLogs(); break;
             case 4: DrainGfxLogs(); break;
@@ -129,6 +134,21 @@ internal sealed class EngineGateway
             _slowTicker = 0;
             _diagnostics.RefreshMemoryMetrics();
         }
+    }
+
+    private void RefreshAssetStoreView()
+    {
+        _assets.StoreImpl.Process<Assets.Shaders.Shader>((it) => _diagnostics.AssetStoreViewModel.AssetObjects.Add(
+            new AssetObjectViewModel
+            {
+                AssetId = it.RawId.Value,
+                Name = it.Name,
+                Generation = 0,
+                IsCoreAsset = it.IsCoreAsset,
+                Kind = it.Kind.ToLogTopic().ToLogText()
+            }));
+        
+        _diagnostics.RefreshAssetStoreDetailed();
     }
 
     private void DrainEngineLogs()

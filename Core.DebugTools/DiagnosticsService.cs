@@ -22,6 +22,7 @@ public sealed class DiagnosticsService : IDisposable
     public DebugConsole DevConsole { get; }
     private readonly DebugLeftPanelGui _leftPanel;
     private readonly DebugRightPanelGui _rightPanel;
+    private readonly AssetStoreGui  _assetStoreGui;
 
     public DiagnosticsService(GL gl, IWindow window, IInputContext inputCtx)
     {
@@ -32,6 +33,7 @@ public sealed class DiagnosticsService : IDisposable
         DevConsole = new DebugConsole();
         _leftPanel = new DebugLeftPanelGui(TextData);
         _rightPanel = new DebugRightPanelGui(TextData);
+        _assetStoreGui = new AssetStoreGui();
     }
 
     public void RefreshSceneMetrics()
@@ -48,6 +50,7 @@ public sealed class DiagnosticsService : IDisposable
 
     public void RefreshStoreMetrics()
     {
+        
         Data.MaterialMetrics = RouteTable.PullMaterialMetrics?.Invoke() ?? default;
         TextData.UpdateMaterialMetrics(in Data.MaterialMetrics);
 
@@ -62,6 +65,14 @@ public sealed class DiagnosticsService : IDisposable
         Data.MemoryMetrics = RouteTable.PullMemoryMetrics?.Invoke() ?? default;
         TextData.UpdateMemoryMetrics(Data.MemoryMetrics);
     }
+    
+    
+    public void RefreshAssetStoreDetailed()
+    {
+        _assetStoreGui.Refresh();
+    }
+
+    public AssetStoreViewModel AssetStoreViewModel => _assetStoreGui.ViewModel;
 
     public void Dispose() => _controller.Dispose();
 
@@ -90,6 +101,7 @@ public sealed class DiagnosticsService : IDisposable
     {
         var vp = ImGui.GetMainViewport();
         ImGui.ShowDemoWindow();
+        _assetStoreGui.Draw();
         _leftPanel.Draw(224);
         _rightPanel.DrawRight(160);
         DevConsole.DrawConsole(200, 200);

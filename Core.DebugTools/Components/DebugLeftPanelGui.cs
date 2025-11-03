@@ -120,7 +120,7 @@ internal sealed class DebugLeftPanelGui(MetricReport data)
     }
 
 
-    private static void DrawMetricsTableClickable(List<GfxStoreTextRecord> metrics, bool bkStore)
+    private static void DrawMetricsTableClickable(List<GfxStoreMetricTextRecord> metrics, bool bkStore)
     {
         const ImGuiTableFlags flags =
             ImGuiTableFlags.Borders |
@@ -202,7 +202,7 @@ internal sealed class DebugLeftPanelGui(MetricReport data)
         ImGui.EndTable();
     }
 
-    private static void DrawGfxStoreTable(List<GfxStoreTextRecord> metrics, bool bkStore)
+    private static void DrawGfxStoreTable(List<GfxStoreMetricTextRecord> metrics, bool bkStore)
     {
         const ImGuiTableFlags flags =
             ImGuiTableFlags.Borders |

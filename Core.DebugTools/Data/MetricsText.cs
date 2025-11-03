@@ -27,7 +27,7 @@ public sealed class DebugMemoryMetricsText
     public string? Allocated { get; set; }
 }
 
-public sealed class AssetStoreTextRecord(string name, string shortName)
+public sealed class AssetStoreMetricTextRecord(string name, string shortName)
 {
     public string? Name { get; } = name;
     public string? ShortName { get; } = shortName;
@@ -35,7 +35,7 @@ public sealed class AssetStoreTextRecord(string name, string shortName)
     public string? AssetFiles { get; set; }
 }
 
-public sealed class GfxStoreTextRecord(string name, string shortName)
+public sealed class GfxStoreMetricTextRecord(string name, string shortName)
 {
     public string? Name { get; } = name;
     public string? ShortName { get; } = shortName;

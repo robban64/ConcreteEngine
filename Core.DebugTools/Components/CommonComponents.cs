@@ -7,7 +7,7 @@ using ImGuiNET;
 
 namespace Core.DebugTools.Components;
 
-internal sealed class CommonComponents
+internal static class CommonComponents
 {
     public static void DrawSectionHeader(string title)
     {

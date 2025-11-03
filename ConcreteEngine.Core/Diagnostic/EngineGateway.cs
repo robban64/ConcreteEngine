@@ -8,7 +8,6 @@ using ConcreteEngine.Core.Utils;
 using ConcreteEngine.Core.Worlds;
 using ConcreteEngine.Graphics.Diagnostic;
 using Core.DebugTools;
-using Core.DebugTools.Components;
 using Core.DebugTools.Data;
 using Silk.NET.Input;
 using Silk.NET.OpenGL;

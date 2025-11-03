@@ -3,11 +3,11 @@
 using System.Numerics;
 using Core.DebugTools.Data;
 using ImGuiNET;
-using static Core.DebugTools.Components.CommonComponents;
+using static Core.DebugTools.Utils.GuiUtils;
 
 #endregion
 
-namespace Core.DebugTools.Components;
+namespace Core.DebugTools.Gui;
 
 internal sealed class DebugRightPanelGui(MetricReport data)
 {

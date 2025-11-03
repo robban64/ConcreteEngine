@@ -1,4 +1,4 @@
-namespace Core.DebugTools.Components;
+namespace Core.DebugTools.Utils;
 
 internal static class StringUtils
 {

@@ -5,9 +5,9 @@ using ImGuiNET;
 
 #endregion
 
-namespace Core.DebugTools.Components;
+namespace Core.DebugTools.Utils;
 
-internal static class CommonComponents
+internal static class GuiUtils
 {
     public static void DrawSectionHeader(string title)
     {
@@ -32,17 +32,20 @@ internal static class CommonComponents
             ImGui.TextUnformatted(text);
     }
 
+    public static void SetupTableColumnId(string name) =>
+        ImGui.TableSetupColumn(name, ImGuiTableColumnFlags.WidthFixed, 22.0f);
+
     public static void CenterAlignCellText(string? text)
     {
         var s = text ?? string.Empty;
-        float columnWidth = ImGui.GetColumnWidth();
-        float textWidth = ImGui.CalcTextSize(s).X;
-        float offset = (columnWidth - textWidth) * 0.5f;
+        var columnWidth = ImGui.GetColumnWidth();
+        var textWidth = ImGui.CalcTextSize(s).X;
+        var offset = (columnWidth - textWidth) * 0.5f;
 
         ImGui.SetCursorPosX(ImGui.GetCursorPosX() + offset);
         ImGui.TextUnformatted(s);
     }
-    
+
     public static void RightAlignCellText(string? text)
     {
         var s = text ?? string.Empty;
@@ -51,5 +54,4 @@ internal static class CommonComponents
         ImGui.SetCursorPosX(ImGui.GetCursorPosX() + Math.Max(0, avail - w));
         ImGui.TextUnformatted(s);
     }
-    
 }

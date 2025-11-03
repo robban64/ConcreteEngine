@@ -1,4 +1,4 @@
-using Core.DebugTools.Components;
+using Core.DebugTools.Gui;
 
 namespace Core.DebugTools;
 

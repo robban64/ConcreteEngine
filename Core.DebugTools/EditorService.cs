@@ -1,5 +1,5 @@
-using Core.DebugTools.Components;
 using Core.DebugTools.Data;
+using Core.DebugTools.Gui;
 
 namespace Core.DebugTools;
 
@@ -14,15 +14,9 @@ public sealed class EditorService
         _assetStoreGui = new AssetStoreGui(AssetStoreViewModel);
     }
     
-    
     public void RefreshAssetStoreDetailed()
     {
         EditorTable.FillAssetStoreView?.Invoke(AssetStoreViewModel);
-    }
-
-    public void DrawLeft()
-    {
-        _assetStoreGui.DrawLeft();
     }
 
 }

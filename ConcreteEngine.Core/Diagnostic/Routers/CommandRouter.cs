@@ -14,7 +14,6 @@ using ConcreteEngine.Graphics.Gfx.Contracts;
 using ConcreteEngine.Graphics.Gfx.Resources;
 using ConcreteEngine.Renderer.Data;
 using Core.DebugTools;
-using Core.DebugTools.Components;
 
 #endregion
 

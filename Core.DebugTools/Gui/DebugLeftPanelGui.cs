@@ -3,11 +3,11 @@
 using System.Numerics;
 using Core.DebugTools.Data;
 using ImGuiNET;
-using static Core.DebugTools.Components.CommonComponents;
+using static Core.DebugTools.Utils.GuiUtils;
 
 #endregion
 
-namespace Core.DebugTools.Components;
+namespace Core.DebugTools.Gui;
 
 internal sealed class DebugLeftPanelGui(MetricReport data)
 {
@@ -70,29 +70,27 @@ internal sealed class DebugLeftPanelGui(MetricReport data)
         const ImGuiTableFlags flags =
             ImGuiTableFlags.Borders | ImGuiTableFlags.RowBg | ImGuiTableFlags.SizingFixedFit;
 
-        if (ImGui.BeginTable("asset_store_tbl", 3, flags))
+        if (!ImGui.BeginTable("asset_store_tbl", 3, flags)) return;
+        ImGui.TableSetupColumn("Type", ImGuiTableColumnFlags.WidthStretch, 1.00f);
+        ImGui.TableSetupColumn("Count", ImGuiTableColumnFlags.WidthStretch, 0.35f);
+        ImGui.TableSetupColumn("Files", ImGuiTableColumnFlags.WidthStretch, 0.35f);
+        ImGui.TableHeadersRow();
+
+        foreach (var it in data.AssetMetrics)
         {
-            ImGui.TableSetupColumn("Type", ImGuiTableColumnFlags.WidthStretch, 1.00f);
-            ImGui.TableSetupColumn("Count", ImGuiTableColumnFlags.WidthStretch, 0.35f);
-            ImGui.TableSetupColumn("Files", ImGuiTableColumnFlags.WidthStretch, 0.35f);
-            ImGui.TableHeadersRow();
+            ImGui.TableNextRow();
 
-            foreach (var it in data.AssetMetrics)
-            {
-                ImGui.TableNextRow();
+            ImGui.TableSetColumnIndex(0);
+            ImGui.TextUnformatted(it.Name);
 
-                ImGui.TableSetColumnIndex(0);
-                ImGui.TextUnformatted(it.Name);
+            ImGui.TableSetColumnIndex(1);
+            RightAlignCellText(it.Assets);
 
-                ImGui.TableSetColumnIndex(1);
-                RightAlignCellText(it.Assets);
-
-                ImGui.TableSetColumnIndex(2);
-                RightAlignCellText(it.AssetFiles);
-            }
-
-            ImGui.EndTable();
+            ImGui.TableSetColumnIndex(2);
+            RightAlignCellText(it.AssetFiles);
         }
+
+        ImGui.EndTable();
     }
 
     private void DrawGfxStoreMetrics()
@@ -145,7 +143,7 @@ internal sealed class DebugLeftPanelGui(MetricReport data)
             ImGui.PushID(i);
 
             ImGui.TableSetColumnIndex(0);
-            bool open = ImGui.Selectable("##row",
+            var open = ImGui.Selectable("##row",
                 false,
                 ImGuiSelectableFlags.SpanAllColumns | ImGuiSelectableFlags.AllowOverlap);
 
@@ -184,7 +182,7 @@ internal sealed class DebugLeftPanelGui(MetricReport data)
                 ImGui.InputInt("##Id", ref _popupInput);
                 if (_popupInput < 1) _popupInput = 1;
 
-                bool canPrint = _popupInput >= 1;
+                var canPrint = _popupInput >= 1;
                 if (!canPrint) ImGui.BeginDisabled();
                 if (ImGui.Button("Print"))
                 {
@@ -202,36 +200,4 @@ internal sealed class DebugLeftPanelGui(MetricReport data)
         ImGui.EndTable();
     }
 
-    private static void DrawGfxStoreTable(List<GfxStoreMetricTextRecord> metrics, bool bkStore)
-    {
-        const ImGuiTableFlags flags =
-            ImGuiTableFlags.Borders |
-            ImGuiTableFlags.RowBg |
-            ImGuiTableFlags.SizingStretchProp;
-
-        if (!ImGui.BeginTable("metrics_table", 3, flags))
-            return;
-
-        ImGui.TableSetupColumn("Kind", ImGuiTableColumnFlags.WidthStretch);
-        ImGui.TableSetupColumn("Cnt/Free", ImGuiTableColumnFlags.WidthStretch);
-        ImGui.TableSetupColumn("Live/Cap", ImGuiTableColumnFlags.WidthStretch);
-        ImGui.TableHeadersRow();
-
-        foreach (var it in metrics)
-        {
-            var count = bkStore ? it.BkStore.StoreCount : it.GfxStore.StoreCount;
-            var alive = bkStore ? it.BkStore.StoreAliveCap : it.GfxStore.StoreAliveCap;
-            ImGui.TableNextRow();
-            ImGui.TableSetColumnIndex(0);
-            ImGui.TextUnformatted(it.ShortName);
-
-            ImGui.TableSetColumnIndex(1);
-            RightAlignCellText(count);
-
-            ImGui.TableSetColumnIndex(2);
-            RightAlignCellText(alive);
-        }
-
-        ImGui.EndTable();
-    }
 }

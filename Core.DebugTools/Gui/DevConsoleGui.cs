@@ -5,7 +5,7 @@ using ImGuiNET;
 
 #endregion
 
-namespace Core.DebugTools.Components;
+namespace Core.DebugTools.Gui;
 
 public class DevConsoleGui
 {

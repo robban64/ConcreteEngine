@@ -21,3 +21,10 @@ public sealed record AssetObjectFileViewModel(
     string RelativePath,
     long SizeInBytes,
     string? ContentHash);
+
+public interface IAssetViewModel
+{
+    
+}
+
+public sealed record ShaderViewModel();

@@ -1,7 +1,7 @@
 #region
 
-using Core.DebugTools.Components;
 using Core.DebugTools.Data;
+using Core.DebugTools.Gui;
 using ImGuiNET;
 using Silk.NET.Input;
 using Silk.NET.OpenGL;
@@ -20,7 +20,7 @@ public sealed class DebugToolsSystem : IDisposable
     public MetricService Metrics { get;  }
     public EditorService Editor { get;  }
     
-    private readonly DebugLeftPanelGui _leftPanel;
+    private readonly EditorLeftPanel _leftPanel;
     private readonly DebugRightPanelGui _rightPanel;
 
     public DebugToolsSystem(GL gl, IWindow window, IInputContext inputCtx)
@@ -30,7 +30,7 @@ public sealed class DebugToolsSystem : IDisposable
         Editor = new EditorService();
         Metrics = new MetricService();
         devConsole = new DevConsoleService();
-        _leftPanel = new DebugLeftPanelGui(Metrics.TextData);
+        _leftPanel = new EditorLeftPanel(Metrics.TextData, Editor.AssetStoreViewModel);
         _rightPanel = new DebugRightPanelGui(Metrics.TextData);
     }
 
@@ -62,8 +62,7 @@ public sealed class DebugToolsSystem : IDisposable
     {
         var vp = ImGui.GetMainViewport();
         ImGui.ShowDemoWindow();
-        Editor.DrawLeft();
-        _leftPanel.Draw(224);
+        _leftPanel.Draw(280);
         _rightPanel.DrawRight(160);
         devConsole.Draw();
         _controller.Render();

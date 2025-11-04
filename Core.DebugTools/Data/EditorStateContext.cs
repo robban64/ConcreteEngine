@@ -2,7 +2,7 @@ using Core.DebugTools.Definitions;
 
 namespace Core.DebugTools.Data;
 
-internal sealed class EditorViewState
+internal sealed class EditorStateContext
 {
     public LeftPanelMode LeftMode { get; set; }
 

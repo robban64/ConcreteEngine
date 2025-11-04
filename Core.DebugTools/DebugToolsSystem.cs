@@ -16,17 +16,18 @@ public sealed class DebugToolsSystem : IDisposable
 {
     private readonly ImGuiController _controller;
 
-    public DevConsoleService devConsole { get; }
+    public DevConsoleService DevConsole { get; }
     public MetricService Metrics { get;  }
-    public EditorService Editor { get;  }
+    
+    private readonly EditorService _editor;
 
     public DebugToolsSystem(GL gl, IWindow window, IInputContext inputCtx)
     {
         _controller = new ImGuiController(gl, window, inputCtx);
 
         Metrics = new MetricService();
-        devConsole = new DevConsoleService();
-        Editor = new EditorService(Metrics);
+        DevConsole = new DevConsoleService();
+        _editor = new EditorService(Metrics);
     }
 
     public void Update(float delta) => _controller.Update(delta);
@@ -34,8 +35,8 @@ public sealed class DebugToolsSystem : IDisposable
     public void Render()
     {
         var vp = ImGui.GetMainViewport();
-        Editor.Render();
-        devConsole.Draw();
+        _editor.Render();
+        DevConsole.Draw();
         _controller.Render();
     }
 

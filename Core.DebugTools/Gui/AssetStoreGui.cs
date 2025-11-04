@@ -10,26 +10,24 @@ namespace Core.DebugTools.Gui;
 internal sealed class AssetStoreGui
 {
     private int _popupInput = 0;
-    private bool _popupOpen = false;
-    
+
     private readonly Action<EditorAssetSelection> _selectTypeChanged;
     private readonly Action<AssetObjectViewModel?> _assetSelectedChanged;
     private readonly AssetStoreViewModel _viewModel;
 
-    private static readonly string[] AssetTypeArray = ["None","Shader", "Texture", "Model", "Material"];
+    private static readonly string[] AssetTypeArray = ["None", "Shader", "Texture", "Model", "Material"];
 
-
-    public AssetStoreGui(EditorViewState viewState, Action<EditorAssetSelection> selectTypeChanged, Action<AssetObjectViewModel?> assetSelectedChanged)
+    public AssetStoreGui(EditorStateContext stateContext, Action<EditorAssetSelection> selectTypeChanged,
+        Action<AssetObjectViewModel?> assetSelectedChanged)
     {
-        _viewModel = viewState.AssetViewModel;
+        _viewModel = stateContext.AssetViewModel;
         _selectTypeChanged = selectTypeChanged;
         _assetSelectedChanged = assetSelectedChanged;
-        
     }
 
     private void OnSelectTypeChange(EditorAssetSelection selection)
     {
-        if(selection == _viewModel.TypeSelection) return;
+        if (selection == _viewModel.TypeSelection) return;
         _selectTypeChanged(selection);
     }
 
@@ -47,9 +45,9 @@ internal sealed class AssetStoreGui
     {
         const ImGuiTableFlags flags = ImGuiTableFlags.SizingFixedFit | ImGuiTableFlags.BordersInnerH;
         const int rowHeight = 32;
-        
+
         var btnSize = new Vector2(rowHeight, 22);
-        
+
         if (!ImGui.BeginTable("##asset_store_object_tbl", 3, flags)) return;
 
         ImGui.TableSetupColumn("Id", ImGuiTableColumnFlags.WidthFixed, 32);
@@ -58,7 +56,7 @@ internal sealed class AssetStoreGui
 
         ImGui.PushStyleVar(ImGuiStyleVar.CellPadding, new Vector2(8, 8));
 
-        Span<char> buffer = stackalloc char[10]; 
+        Span<char> buffer = stackalloc char[10];
         var formatter = new NumberSpanFormatter(buffer);
 
         foreach (var it in _viewModel.AssetObjects)
@@ -81,7 +79,7 @@ internal sealed class AssetStoreGui
             if (ImGui.Button(">", btnSize))
             {
                 if (_popupInput < 1) _popupInput = 1;
-                if(!_popupOpen) _assetSelectedChanged(it);
+                _assetSelectedChanged(it);
 
                 var itemMin = ImGui.GetItemRectMin();
                 var itemMax = ImGui.GetItemRectMax();
@@ -93,8 +91,8 @@ internal sealed class AssetStoreGui
             {
                 DrawAssetFilePopupContent(bufferStr, it);
                 ImGui.EndPopup();
-
             }
+
             ImGui.PopID();
         }
 
@@ -140,7 +138,7 @@ internal sealed class AssetStoreGui
     {
         if (_viewModel.AssetFileObjects.Count == 0) return;
 
-        Span<char> buffer = stackalloc char[10]; 
+        Span<char> buffer = stackalloc char[10];
         var formatter = new NumberSpanFormatter(buffer);
 
         ImGui.PushStyleVar(ImGuiStyleVar.CellPadding, new Vector2(4, 6));
@@ -157,16 +155,16 @@ internal sealed class AssetStoreGui
 
             ImGui.TableNextRow();
             ImGui.TableNextColumn();
-            var bufferStr =  formatter.Format(asset.ResourceId);
+            var bufferStr = formatter.Format(asset.ResourceId);
             CenterAlignCellText(bufferStr);
 
             ImGui.TableNextColumn();
-            bufferStr =  formatter.Format(asset.Generation);
+            bufferStr = formatter.Format(asset.Generation);
             CenterAlignCellText(bufferStr);
 
             ImGui.TableNextColumn();
             ImGui.TextUnformatted(StringUtils.BoolToYesNo(asset.IsCoreAsset));
-            
+
             ImGui.TableNextColumn();
             ImGui.TextUnformatted(asset.SpecialValue);
 
@@ -189,14 +187,14 @@ internal sealed class AssetStoreGui
                 ImGui.TableNextRow();
                 ImGui.PushID(it.AssetFileId);
 
-                var bufferStr =  formatter.Format(it.AssetFileId);
+                var bufferStr = formatter.Format(it.AssetFileId);
                 ImGui.TableNextColumn();
                 CenterAlignCellText(bufferStr);
 
                 ImGui.TableNextColumn();
                 ImGui.TextUnformatted(it.RelativePath);
 
-                bufferStr =  formatter.Format(it.SizeInBytes);
+                bufferStr = formatter.Format(it.SizeInBytes);
                 ImGui.TableNextColumn();
                 CenterAlignCellText(bufferStr);
 

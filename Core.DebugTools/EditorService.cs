@@ -11,13 +11,13 @@ public sealed class EditorService
     private readonly EditorLeftPanel _leftPanel;
     private readonly DebugRightPanelGui _rightPanel;
     
-    private readonly EditorViewState  _viewState;
+    private readonly EditorStateContext  _stateContext;
 
     public EditorService(MetricService metricService)
     {
         _metricService = metricService;
-        _viewState = new EditorViewState();
-        _leftPanel = new EditorLeftPanel(_metricService, _viewState);
+        _stateContext = new EditorStateContext();
+        _leftPanel = new EditorLeftPanel(_metricService, _stateContext);
         _rightPanel = new DebugRightPanelGui(_metricService.TextData);
     }
     

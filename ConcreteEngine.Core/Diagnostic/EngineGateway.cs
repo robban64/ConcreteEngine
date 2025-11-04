@@ -55,7 +55,7 @@ internal sealed class EngineGateway
     public void AttachLogger() => Logger.Attach(ProcessStringLog);
     public void AttachGfxLogger() => GfxLog.Enabled = true;
 
-    private void ProcessStringLog(StringLogEvent log) => _diagnostics.devConsole.AddLog(_logParser.Format(log));
+    private void ProcessStringLog(StringLogEvent log) => _diagnostics.DevConsole.AddLog(_logParser.Format(log));
 
     public void RegisterCommands()
     {
@@ -69,7 +69,6 @@ internal sealed class EngineGateway
 
         EditorTable.FillAssetStoreView = EditorRouter.DrainAssetStoreData;
         EditorTable.FetchAssetObjectFiles = EditorRouter.FetchAssetObjectFiles;
-
     }
 
 
@@ -107,7 +106,9 @@ internal sealed class EngineGateway
         if (force)
         {
             metrics.RefreshFrameMetrics();
-            metrics.RefreshStoreMetrics();
+            metrics.RefreshAssetMetrics();
+            metrics.RefreshGfxResourceMetrics();
+
             metrics.RefreshSceneMetrics();
             metrics.RefreshMemoryMetrics();
             DrainEngineLogs();
@@ -115,15 +116,15 @@ internal sealed class EngineGateway
             return;
         }
 
-        switch (_ticker++)
+        if (_ticker % 2 == 0) metrics.RefreshFrameMetrics();
+        switch (_ticker)
         {
-            case 0: metrics.RefreshFrameMetrics(); break;
-            case 1: metrics.RefreshStoreMetrics(); break;
-            case 2: metrics.RefreshSceneMetrics(); break;
-            case 3: DrainEngineLogs(); break;
-            case 4: DrainGfxLogs(); break;
-            default: _ticker = 0; break;
+            case 6: metrics.RefreshSceneMetrics(); break;
+            case 8: metrics.RefreshGfxResourceMetrics(); break;
+            case 10: metrics.RefreshAssetMetrics(); break;
         }
+
+        if (_ticker++ >= 12) _ticker = 0;
 
         if (_slowTicker++ >= 30)
         {
@@ -138,7 +139,7 @@ internal sealed class EngineGateway
         while (Logger.LogQueue.Count > 0)
         {
             var cmd = Logger.LogQueue.Dequeue();
-            _diagnostics.devConsole.AddLog(_logParser.Format(cmd));
+            _diagnostics.DevConsole.AddLog(_logParser.Format(cmd));
         }
     }
 
@@ -147,7 +148,7 @@ internal sealed class EngineGateway
         while (GfxLog.LogQueue.Count > 0)
         {
             var cmd = GfxLog.LogQueue.Dequeue();
-            _diagnostics.devConsole.AddLog(_logParser.Format(cmd));
+            _diagnostics.DevConsole.AddLog(_logParser.Format(cmd));
         }
     }
 

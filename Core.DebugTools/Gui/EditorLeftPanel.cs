@@ -10,18 +10,18 @@ internal sealed class EditorLeftPanel
 {
     private readonly MetricService _metricService;
     private readonly AssetStoreGui _assetStoreGui;
-    private EditorViewState _viewState;
+    private readonly EditorStateContext _stateContext;
 
-    public EditorLeftPanel(MetricService metricService, EditorViewState viewState)
+    public EditorLeftPanel(MetricService metricService, EditorStateContext stateContext)
     {
         _metricService = metricService;
-        _viewState = viewState;
-        _assetStoreGui = new AssetStoreGui(viewState, OnSelectionChanged, OnAssetSelectedChanged);
+        _stateContext = stateContext;
+        _assetStoreGui = new AssetStoreGui(stateContext, OnSelectionChanged, OnAssetSelectedChanged);
     }
 
     private void OnAssetSelectedChanged(AssetObjectViewModel? asset)
     {
-        var model = _viewState.AssetViewModel;
+        var model = _stateContext.AssetViewModel;
         model.AssetFileObjects.Clear();
         if (asset is null) return;
         EditorTable.FetchAssetObjectFiles?.Invoke(asset, model.AssetFileObjects);
@@ -29,7 +29,7 @@ internal sealed class EditorLeftPanel
 
     private void OnSelectionChanged(EditorAssetSelection selection)
     {
-        var model = _viewState.AssetViewModel;
+        var model = _stateContext.AssetViewModel;
 
         if (selection == model.TypeSelection) return;
         model.TypeSelection = selection;
@@ -43,15 +43,15 @@ internal sealed class EditorLeftPanel
 
     private void OnModeChanged(LeftPanelMode mode)
     {
-        if (mode == _viewState.LeftMode) return;
-        _viewState.LeftMode = mode;
+        if (mode == _stateContext.LeftMode) return;
+        _stateContext.LeftMode = mode;
 
-        switch (_viewState.LeftMode)
+        switch (_stateContext.LeftMode)
         {
             case LeftPanelMode.Editor:
                 _metricService.ActiveStoreMetrics = false;
                 _metricService.ActiveSceneMetrics = false;
-                OnSelectionChanged(_viewState.AssetViewModel.TypeSelection);
+                OnSelectionChanged(_stateContext.AssetViewModel.TypeSelection);
                 return;
             case LeftPanelMode.Metrics:
                 _metricService.ActiveStoreMetrics = true;
@@ -79,7 +79,7 @@ internal sealed class EditorLeftPanel
 
             ImGui.Separator();
 
-            switch (_viewState.LeftMode)
+            switch (_stateContext.LeftMode)
             {
                 case LeftPanelMode.Metrics: DrawMetrics(); break;
                 case LeftPanelMode.Editor: DrawEditor(); break;
@@ -97,19 +97,19 @@ internal sealed class EditorLeftPanel
         {
             if (ImGui.BeginTabItem("None"))
             {
-                if(_viewState.LeftMode != LeftPanelMode.None) OnModeChanged(LeftPanelMode.None);
+                if (_stateContext.LeftMode != LeftPanelMode.None) OnModeChanged(LeftPanelMode.None);
                 ImGui.EndTabItem();
             }
 
             if (ImGui.BeginTabItem("Main"))
             {
-                if(_viewState.LeftMode != LeftPanelMode.Editor) OnModeChanged(LeftPanelMode.Editor);
+                if (_stateContext.LeftMode != LeftPanelMode.Editor) OnModeChanged(LeftPanelMode.Editor);
                 ImGui.EndTabItem();
             }
 
             if (ImGui.BeginTabItem("Metrics"))
             {
-                if(_viewState.LeftMode != LeftPanelMode.Metrics) OnModeChanged(LeftPanelMode.Metrics);
+                if (_stateContext.LeftMode != LeftPanelMode.Metrics) OnModeChanged(LeftPanelMode.Metrics);
                 ImGui.EndTabItem();
             }
 

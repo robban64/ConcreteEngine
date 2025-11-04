@@ -9,7 +9,7 @@ public static class AssetStoreMetricsGui
 {
     public static void DrawAssetStoreMetrics(MetricReport report)
     {
-        DrawSectionHeader("Asset Store");
+        DrawSectionHeader("Asset Metrics");
 
         if (!string.IsNullOrEmpty(report.MaterialMetrics))
         {

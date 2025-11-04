@@ -11,7 +11,7 @@ internal static class GfxStoreMetricsGui
 
     public static void DrawGfxStoreMetrics(MetricReport data)
     {
-        DrawSectionHeader("GFX Store");
+        DrawSectionHeader("GFX Metrics");
         ImGui.PushStyleVar(ImGuiStyleVar.FramePadding, new Vector2(12, 4));
         if (ImGui.BeginTabBar("metrics_tabs", ImGuiTabBarFlags.FittingPolicyScroll))
         {

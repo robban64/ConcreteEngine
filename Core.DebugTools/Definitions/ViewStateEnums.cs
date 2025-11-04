@@ -7,6 +7,14 @@ public enum LeftPanelMode
     Metrics
 }
 
+public enum TopPanelMode
+{
+    None,
+    Empty,
+    SkyBox,
+    Terrain
+}
+
 public enum EditorAssetSelection
 {
     None,

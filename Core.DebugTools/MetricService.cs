@@ -26,15 +26,20 @@ public sealed class MetricService
         TextData.UpdateFrameMetrics(in Data.FrameMetrics);
     }
 
-    public void RefreshStoreMetrics()
+    public void RefreshAssetMetrics()
     {
         if(!ActiveStoreMetrics) return;
         Data.MaterialMetrics = RouteTable.PullMaterialMetrics?.Invoke() ?? default;
         TextData.UpdateMaterialMetrics(in Data.MaterialMetrics);
 
         RouteTable.FillAssetMetrics?.Invoke(Data);
-        RouteTable.FillGfxStoreMetrics?.Invoke(Data);
         TextData.UpdateAssetMetrics(Data.AssetMetrics);
+    }
+
+    public void RefreshGfxResourceMetrics()
+    {
+        if(!ActiveStoreMetrics) return;
+        RouteTable.FillGfxStoreMetrics?.Invoke(Data);
         TextData.UpdateGfxStoreMetrics(Data.GfxStoreMetrics);
     }
 

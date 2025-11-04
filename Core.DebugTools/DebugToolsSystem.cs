@@ -30,7 +30,7 @@ public sealed class DebugToolsSystem : IDisposable
         Editor = new EditorService();
         Metrics = new MetricService();
         devConsole = new DevConsoleService();
-        _leftPanel = new EditorLeftPanel(Metrics.TextData, Editor.AssetStoreViewModel);
+        _leftPanel = new EditorLeftPanel(Metrics, Editor.AssetStoreViewModel);
         _rightPanel = new DebugRightPanelGui(Metrics.TextData);
     }
 

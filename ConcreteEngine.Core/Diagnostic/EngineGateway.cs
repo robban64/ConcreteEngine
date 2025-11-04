@@ -118,10 +118,7 @@ internal sealed class EngineGateway
         switch (_ticker++)
         {
             case 0: metrics.RefreshFrameMetrics(); break;
-            case 1:
-                metrics.RefreshStoreMetrics();
-                RefreshAssetStoreView();
-                break;
+            case 1: metrics.RefreshStoreMetrics(); break;
             case 2: metrics.RefreshSceneMetrics(); break;
             case 3: DrainEngineLogs(); break;
             case 4: DrainGfxLogs(); break;
@@ -135,10 +132,6 @@ internal sealed class EngineGateway
         }
     }
 
-    private void RefreshAssetStoreView()
-    {
-        _diagnostics.Editor.RefreshAssetStoreDetailed();
-    }
 
     private void DrainEngineLogs()
     {

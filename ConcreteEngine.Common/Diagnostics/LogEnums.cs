@@ -1,5 +1,15 @@
 namespace ConcreteEngine.Common.Diagnostics;
 
+
+[Flags]
+public enum LogFilter : ushort
+{
+    LogLevel = 0,
+    LogTopic = 1 << 0,
+    LogScope = 1 << 1,
+    LogAction = 1 << 2
+}
+
 public enum LogLevel : byte
 {
     Unset = 0,

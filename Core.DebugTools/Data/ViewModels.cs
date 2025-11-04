@@ -14,17 +14,10 @@ public record AssetObjectViewModel(
     string Name,
     bool IsCoreAsset,
     int Generation,
-    string AssetKind);
+    string Kind);
 
 public sealed record AssetObjectFileViewModel(
     int AssetFileId,
     string RelativePath,
     long SizeInBytes,
     string? ContentHash);
-
-public interface IAssetViewModel
-{
-    
-}
-
-public sealed record ShaderViewModel();

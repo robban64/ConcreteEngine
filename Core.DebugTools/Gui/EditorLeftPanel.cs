@@ -8,15 +8,34 @@ namespace Core.DebugTools.Gui;
 
 internal sealed class EditorLeftPanel
 {
-    private readonly MetricReport _metricReport;
+    private readonly MetricService _metricService;
     private readonly AssetStoreGui _assetStoreGui;
 
     public LeftPanelMode Mode { get; set; }
 
-    public EditorLeftPanel(MetricReport metricReport, AssetStoreViewModel viewModel)
+    public EditorLeftPanel(MetricService metricService, AssetStoreViewModel viewModel)
     {
-        _metricReport = metricReport;
+        _metricService = metricService;
         _assetStoreGui = new AssetStoreGui(viewModel);
+    }
+
+    private void OnModeChanged(LeftPanelMode mode)
+    {
+        if(mode == Mode) return;
+        Mode = mode;
+        if (Mode == LeftPanelMode.Editor)
+        {
+            EditorTable.FillAssetStoreView?.Invoke(_assetStoreGui.ViewModel);
+            _metricService.ActiveStoreMetrics = false;
+            _metricService.ActiveSceneMetrics = false;
+            return;
+        }
+
+        if (Mode == LeftPanelMode.Metrics)
+        {
+            _metricService.ActiveStoreMetrics = true;
+            _metricService.ActiveSceneMetrics = true;
+        }
     }
 
     public void Draw(int width)
@@ -56,13 +75,14 @@ internal sealed class EditorLeftPanel
         {
             if (ImGui.BeginTabItem("Main"))
             {
+                OnModeChanged(LeftPanelMode.Editor);
                 Mode = LeftPanelMode.Editor;
                 ImGui.EndTabItem();
             }
             
             if (ImGui.BeginTabItem("Metrics"))
             {
-                Mode = LeftPanelMode.Metrics;
+                OnModeChanged(LeftPanelMode.Metrics);
                 ImGui.EndTabItem();
             }
             ImGui.EndTabBar();
@@ -78,10 +98,11 @@ internal sealed class EditorLeftPanel
 
     private void DrawMetrics()
     {
-        SceneMetricsGui.DrawSceneMetrics(_metricReport.SceneMetrics);
+        var metrics = _metricService.TextData;
+        SceneMetricsGui.DrawSceneMetrics(metrics.SceneMetrics);
         ImGui.Dummy(new Vector2(0, 6));
-        AssetStoreMetricsGui.DrawAssetStoreMetrics(_metricReport);
+        AssetStoreMetricsGui.DrawAssetStoreMetrics(metrics);
         ImGui.Dummy(new Vector2(0, 6));
-        GfxStoreMetricsGui.DrawGfxStoreMetrics(_metricReport);
+        GfxStoreMetricsGui.DrawGfxStoreMetrics(metrics);
     }
 }

@@ -9,6 +9,7 @@ namespace Core.DebugTools.Utils;
 
 internal static class GuiUtils
 {
+    
     public static void DrawSectionHeader(string title)
     {
         ImGui.PushStyleColor(ImGuiCol.Text, 0x99FFFFFF);
@@ -34,6 +35,23 @@ internal static class GuiUtils
 
     public static void SetupTableColumnId(string name) =>
         ImGui.TableSetupColumn(name, ImGuiTableColumnFlags.WidthFixed, 22.0f);
+
+    public static void CenterAlignCellTextVertical(ReadOnlySpan<char> text, float rowHeight)
+    {
+        var fontSize = ImGui.GetFontSize();
+        var yOffset = (rowHeight - fontSize) * 0.5f;
+        ImGui.SetCursorPosY(ImGui.GetCursorPosY() + yOffset);
+        ImGui.TextUnformatted(text);
+    }
+    public static void CenterAlignCellText(ReadOnlySpan<char> text)
+    {
+        var columnWidth = ImGui.GetColumnWidth();
+        var textWidth = ImGui.CalcTextSize(text).X;
+        var offset = (columnWidth - textWidth) * 0.5f;
+
+        ImGui.SetCursorPosX(ImGui.GetCursorPosX() + offset);
+        ImGui.TextUnformatted(text);
+    }
 
     public static void CenterAlignCellText(string? text)
     {

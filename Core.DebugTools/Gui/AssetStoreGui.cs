@@ -56,7 +56,7 @@ internal sealed class AssetStoreGui
 
         ImGui.PushStyleVar(ImGuiStyleVar.CellPadding, new Vector2(8, 8));
 
-        Span<char> buffer = stackalloc char[10];
+        Span<char> buffer = stackalloc char[8];
         var formatter = new NumberSpanFormatter(buffer);
 
         foreach (var it in _viewModel.AssetObjects)
@@ -89,7 +89,7 @@ internal sealed class AssetStoreGui
 
             if (ImGui.BeginPopup(bufferStr))
             {
-                DrawAssetFilePopupContent(bufferStr, it);
+                DrawAssetFilePopupContent(it);
                 ImGui.EndPopup();
             }
 
@@ -134,11 +134,11 @@ internal sealed class AssetStoreGui
     }
 
 
-    private void DrawAssetFilePopupContent(ReadOnlySpan<char> popup, AssetObjectViewModel asset)
+    private void DrawAssetFilePopupContent(AssetObjectViewModel asset)
     {
         if (_viewModel.AssetFileObjects.Count == 0) return;
 
-        Span<char> buffer = stackalloc char[10];
+        Span<char> buffer = stackalloc char[8];
         var formatter = new NumberSpanFormatter(buffer);
 
         ImGui.PushStyleVar(ImGuiStyleVar.CellPadding, new Vector2(4, 6));
@@ -208,11 +208,15 @@ internal sealed class AssetStoreGui
             ImGui.EndTable();
         }
 
-        ImGui.Separator();
-        if (ImGui.Button("Reload", new Vector2(72, 28)))
+        if (asset.HasActions)
         {
-            ImGui.CloseCurrentPopup();
+            ImGui.Separator();
+            if (ImGui.Button("Reload", new Vector2(72, 28)))
+            {
+                ImGui.CloseCurrentPopup();
+            }
         }
+
 
         ImGui.PopStyleVar();
     }

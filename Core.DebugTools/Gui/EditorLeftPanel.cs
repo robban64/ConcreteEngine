@@ -2,6 +2,7 @@ using System.Numerics;
 using Core.DebugTools.Data;
 using Core.DebugTools.Definitions;
 using Core.DebugTools.Gui.Metrics;
+using Core.DebugTools.Utils;
 using ImGuiNET;
 
 namespace Core.DebugTools.Gui;
@@ -60,18 +61,20 @@ internal sealed class EditorLeftPanel
         }
     }
 
-    public void Draw(int width)
+    public void Draw(int width, int offset)
     {
         const ImGuiWindowFlags flags = ImGuiWindowFlags.NoTitleBar | ImGuiWindowFlags.NoMove |
                                        ImGuiWindowFlags.NoResize | ImGuiWindowFlags.NoCollapse |
                                        ImGuiWindowFlags.NoBringToFrontOnFocus | ImGuiWindowFlags.NoNavFocus;
-
         var vp = ImGui.GetMainViewport();
-        ImGui.SetNextWindowPos(vp.WorkPos);
-        ImGui.SetNextWindowSize(new Vector2(width, 0f));
+
+        var height = _stateContext.LeftMode == LeftPanelMode.None ? 0 : vp.WorkSize.Y - offset;
+
+        ImGui.SetNextWindowPos(new Vector2(0, offset));
+        ImGui.SetNextWindowSize(new Vector2(width, height));
         ImGui.PushStyleVar(ImGuiStyleVar.ItemSpacing, new Vector2(8f, 6f));
         ImGui.PushStyleVar(ImGuiStyleVar.WindowPadding, new Vector2(12f, 10f));
-        ImGui.SetNextWindowBgAlpha(0.95f);
+        ImGui.SetNextWindowBgAlpha(GuiTheme.PanelOpacity);
 
         if (ImGui.Begin("##LeftSidebar", flags))
         {
@@ -101,7 +104,7 @@ internal sealed class EditorLeftPanel
                 ImGui.EndTabItem();
             }
 
-            if (ImGui.BeginTabItem("Main"))
+            if (ImGui.BeginTabItem("Assets"))
             {
                 if (_stateContext.LeftMode != LeftPanelMode.Editor) OnModeChanged(LeftPanelMode.Editor);
                 ImGui.EndTabItem();

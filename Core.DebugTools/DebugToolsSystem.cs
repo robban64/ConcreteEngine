@@ -36,7 +36,6 @@ public sealed class DebugToolsSystem : IDisposable
     {
         var vp = ImGui.GetMainViewport();
         _editor.Render();
-        DevConsole.Draw();
         _controller.Render();
     }
 

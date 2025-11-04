@@ -17,7 +17,8 @@ public record AssetObjectViewModel(
     bool IsCoreAsset,
     int Generation,
     string SpecialName,
-    string SpecialValue);
+    string SpecialValue,
+    bool HasActions);
 
 public sealed record AssetObjectFileViewModel(
     int AssetFileId,

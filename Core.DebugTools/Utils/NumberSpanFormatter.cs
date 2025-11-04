@@ -1,8 +1,8 @@
 namespace Core.DebugTools.Utils;
 
-internal ref struct NumberSpanFormatter(Span<char> buffer)
+internal readonly ref struct NumberSpanFormatter(Span<char> buffer)
 {
-    private Span<char> _buffer = buffer;
+    private readonly Span<char> _buffer = buffer;
 
     public ReadOnlySpan<char> Format(int value)
     {
@@ -11,6 +11,7 @@ internal ref struct NumberSpanFormatter(Span<char> buffer)
 
         return _buffer.Slice(0, charsWritten);
     }
+    
     
     public ReadOnlySpan<char> Format(long value)
     {

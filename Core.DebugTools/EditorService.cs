@@ -1,5 +1,8 @@
+using System.Numerics;
+using ConcreteEngine.Common.Numerics;
 using Core.DebugTools.Data;
 using Core.DebugTools.Gui;
+using Core.DebugTools.Utils;
 using ImGuiNET;
 
 namespace Core.DebugTools;
@@ -10,20 +13,26 @@ public sealed class EditorService
 
     private readonly EditorLeftPanel _leftPanel;
     private readonly DebugRightPanelGui _rightPanel;
-    
-    private readonly EditorStateContext  _stateContext;
+    private readonly DevConsoleService _devConsole;
+
+    private readonly EditorStateContext _stateContext;
 
     public EditorService(MetricService metricService)
     {
         _metricService = metricService;
         _stateContext = new EditorStateContext();
+        _devConsole = new DevConsoleService();
         _leftPanel = new EditorLeftPanel(_metricService, _stateContext);
         _rightPanel = new DebugRightPanelGui(_metricService.TextData);
     }
-    
+
+
     public void Render()
     {
-        _leftPanel.Draw(240);
-        _rightPanel.DrawRight(160);
+        
+        TopbarGui.Draw();
+        _leftPanel.Draw(240, offset: GuiTheme.TopbarHeight);
+        _rightPanel.DrawRight(160, offset: GuiTheme.TopbarHeight);
+        _devConsole.Draw(240, 160);
     }
 }

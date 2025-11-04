@@ -39,11 +39,11 @@ public class DevConsoleGui
         var centerW = MathF.Max(0, vp.WorkSize.X - leftPanelWidth - rightPanelWidth);
         var centerH = vp.WorkSize.Y;
 
-        const float minW = 600f, maxWCap = 980f;
-        const float minH = 200f, maxH = 520f;
+        const float minW = 400f, maxWCap = 980f;
+        const float minH = 160f, maxH = 240f;
 
         var targetW = Math.Clamp(centerW * 0.80f, minW, Math.Min(maxWCap, centerW));
-        var targetH = Math.Clamp(centerH * 0.30f, minH, maxH);
+        var targetH = Math.Clamp(centerH * 0.25f, minH, maxH);
 
         const float margin = 12f;
         var posX = centerX + MathF.Max(0, (centerW - targetW) * 0.5f);
@@ -63,7 +63,7 @@ public class DevConsoleGui
         ImGui.PushStyleVar(ImGuiStyleVar.ChildRounding, 2f);
         ImGui.PushStyleVar(ImGuiStyleVar.FrameRounding, 2f);
 
-        if (!ImGui.Begin("Console", flags))
+        if (!ImGui.Begin("##DevConsole", flags))
         {
             ImGui.End();
             ImGui.PopStyleVar(3);

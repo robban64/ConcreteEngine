@@ -62,17 +62,20 @@ internal static class EditorRouter
 
     private static AssetObjectViewModel MakeAssetObjectModel(AssetObject obj)
     {
-        int resourceId = 0;
-        string resourceName = "GfxId";
+        var resourceId = 0;
+        var resourceName = "GfxId";
 
-        string specialName = "";
-        string specialValue = "";
+        var specialName = "";
+        var specialValue = "";
+
+        var hasActions = false;
 
         if (obj is Shader shader)
         {
             specialName = "Samplers";
             specialValue = shader.Samplers.ToString();
             resourceId = shader.ResourceId;
+            hasActions = true;
         }
         else if (obj is Texture2D tex)
         {
@@ -105,7 +108,8 @@ internal static class EditorRouter
             obj.IsCoreAsset,
             obj.Generation,
             specialName,
-            specialValue);
+            specialValue,
+            hasActions);
     }
 
     private static AssetObjectFileViewModel MakeAssetObjectFile(AssetFileEntry entry) =>

@@ -22,12 +22,12 @@ public sealed class DevConsoleService
         _ctx = new DebugConsoleCtx(this);
     }
     
-    public void Draw()
+    public void Draw(int leftPanelWidth, int rightPanelWidth)
     {
-        _consoleGui.DrawConsole(_log,200, 200);
+        _consoleGui.DrawConsole(_log,leftPanelWidth, rightPanelWidth);
     }
     
-    public bool ExecCommand(string commandLine)
+    private bool ExecCommand(string commandLine)
     {
         if (string.IsNullOrWhiteSpace(commandLine)) return false;
 

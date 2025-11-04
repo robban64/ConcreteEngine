@@ -7,6 +7,11 @@ using Core.DebugTools.Data;
 
 namespace Core.DebugTools;
 
+public static class CoreCmdNames
+{
+    public const string ReloadShader = "reload-shader";
+}
+
 public static class RouteTable
 {
     private static Dictionary<string, Action<DebugConsoleCtx, string?, string?>> _commands = new(4);

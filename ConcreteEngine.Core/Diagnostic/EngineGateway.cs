@@ -26,7 +26,9 @@ internal sealed class EngineGateway
     public bool HasBoundMetrics { get; private set; }
     public bool Enabled { get; private set; } = true;
 
-    private int _ticker = 0, _slowTicker = 0;
+    private int _ticker = 0, _mediumTicker = 0, _slowTicker = 0;
+
+    private int _logTicker = 0;
 
     private AssetSystem _assets;
 
@@ -64,7 +66,7 @@ internal sealed class EngineGateway
         HasBoundCommands = true;
 
         RouteTable.RegisterCommand("inspect-structs", CmdWrapper(CommandRouter.OnCmdStructSizes));
-        RouteTable.RegisterCommand("reload-shader", CmdWrapper(CommandRouter.OnRecreateShader));
+        RouteTable.RegisterCommand(CoreCmdNames.ReloadShader, CmdWrapper(CommandRouter.OnRecreateShader));
         RouteTable.RegisterCommand("shadow-map", CmdWrapper(CommandRouter.OnSetShadowMapSize));
 
         EditorTable.FillAssetStoreView = EditorRouter.DrainAssetStoreData;
@@ -115,16 +117,28 @@ internal sealed class EngineGateway
             DrainGfxLogs();
             return;
         }
-
-        if (_ticker % 2 == 0) metrics.RefreshFrameMetrics();
-        switch (_ticker)
+        
+        if(_logTicker == 4) DrainEngineLogs();
+        if (_logTicker++ >= 8)
         {
-            case 6: metrics.RefreshSceneMetrics(); break;
-            case 8: metrics.RefreshGfxResourceMetrics(); break;
-            case 10: metrics.RefreshAssetMetrics(); break;
+            DrainGfxLogs();
+            _logTicker = 0;
+        }
+        
+        if (_ticker++ >= 4)
+        {
+            metrics.RefreshFrameMetrics();
+            _ticker = 0;
+        }
+        
+        switch (_mediumTicker)
+        {
+            case 5: metrics.RefreshSceneMetrics(); break;
+            case 10: metrics.RefreshGfxResourceMetrics(); break;
+            case 15: metrics.RefreshAssetMetrics(); break;
         }
 
-        if (_ticker++ >= 12) _ticker = 0;
+        if (_mediumTicker++ >= 15) _mediumTicker = 0;
 
         if (_slowTicker++ >= 30)
         {

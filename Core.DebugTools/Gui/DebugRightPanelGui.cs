@@ -2,6 +2,7 @@
 
 using System.Numerics;
 using Core.DebugTools.Data;
+using Core.DebugTools.Utils;
 using ImGuiNET;
 using static Core.DebugTools.Utils.GuiUtils;
 
@@ -11,21 +12,20 @@ namespace Core.DebugTools.Gui;
 
 internal sealed class DebugRightPanelGui(MetricReport data)
 {
-    public void DrawRight(int width)
+    public void DrawRight(int width, int offset)
     {
-        var vp = ImGui.GetMainViewport();
+        const ImGuiWindowFlags flags =
+            ImGuiWindowFlags.NoTitleBar | ImGuiWindowFlags.NoMove | ImGuiWindowFlags.NoResize |
+            ImGuiWindowFlags.NoCollapse | ImGuiWindowFlags.NoBringToFrontOnFocus | ImGuiWindowFlags.NoNavFocus;
 
-        ImGui.SetNextWindowPos(new Vector2(vp.WorkPos.X + vp.WorkSize.X, vp.WorkPos.Y),
-            ImGuiCond.Always, new Vector2(1f, 0f));
-        ImGui.SetNextWindowSize(new Vector2(width, 0f));
+        var vp = ImGui.GetMainViewport();
+        var vpSize = vp.WorkSize;
+        ImGui.SetNextWindowPos(new Vector2(vpSize.X - width, offset));
+        ImGui.SetNextWindowSize(new Vector2(width, vpSize.Y - offset));
 
         ImGui.PushStyleVar(ImGuiStyleVar.ItemSpacing, new Vector2(8f, 6f));
         ImGui.PushStyleVar(ImGuiStyleVar.WindowPadding, new Vector2(12f, 10f));
-        ImGui.SetNextWindowBgAlpha(0.95f);
-
-        var flags =
-            ImGuiWindowFlags.NoTitleBar | ImGuiWindowFlags.NoMove | ImGuiWindowFlags.NoResize |
-            ImGuiWindowFlags.NoCollapse | ImGuiWindowFlags.NoBringToFrontOnFocus | ImGuiWindowFlags.NoNavFocus;
+        ImGui.SetNextWindowBgAlpha(GuiTheme.PanelOpacity);
 
         if (ImGui.Begin("##RightSidebar", flags))
         {

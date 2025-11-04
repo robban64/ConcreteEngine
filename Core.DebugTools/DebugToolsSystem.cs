@@ -1,9 +1,11 @@
 #region
 
+using System.Numerics;
 using Core.DebugTools.Data;
 using Core.DebugTools.Gui;
 using ImGuiNET;
 using Silk.NET.Input;
+using Silk.NET.Maths;
 using Silk.NET.OpenGL;
 using Silk.NET.OpenGL.Extensions.ImGui;
 using Silk.NET.Windowing;
@@ -21,20 +23,25 @@ public sealed class DebugToolsSystem : IDisposable
     
     private readonly EditorService _editor;
 
+    private ImFontPtr _imFontPtr;
+
     public DebugToolsSystem(GL gl, IWindow window, IInputContext inputCtx)
     {
-        _controller = new ImGuiController(gl, window, inputCtx);
+        var fontPath = Path.Combine(AppContext.BaseDirectory,"Content", "Roboto-Medium.ttf");
+        ImGuiFontConfig fontConfDefault = new(fontPath, 14);
+
+        _controller = new ImGuiController(gl, window, inputCtx, fontConfDefault);
 
         Metrics = new MetricService();
         DevConsole = new DevConsoleService();
         _editor = new EditorService(Metrics);
     }
 
+
     public void Update(float delta) => _controller.Update(delta);
 
     public void Render()
     {
-        var vp = ImGui.GetMainViewport();
         _editor.Render();
         _controller.Render();
     }
@@ -58,6 +65,9 @@ public sealed class DebugToolsSystem : IDisposable
         return blockKeyboard || blockMouse;
     }
 
-    public void Dispose() => _controller.Dispose();
-
+    public void Dispose()
+    {
+        _imFontPtr.Destroy();
+        _controller.Dispose();
+    }
 }

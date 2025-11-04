@@ -17,9 +17,9 @@ using Silk.NET.Windowing;
 
 namespace ConcreteEngine.Core.Diagnostic;
 
-internal sealed class EngineGateway
+internal sealed class EngineGateway : IDisposable
 {
-    private readonly DebugToolsSystem _diagnostics;
+    private readonly DebugToolsSystem _debugTools;
     private readonly LogParser _logParser;
 
     public bool HasBoundCommands { get; private set; }
@@ -34,14 +34,14 @@ internal sealed class EngineGateway
 
     public EngineGateway(GL gl, IWindow window, IInputContext inputCtx)
     {
-        _diagnostics = new DebugToolsSystem(gl, window, inputCtx);
+        _debugTools = new DebugToolsSystem(gl, window, inputCtx);
         _logParser = new LogParser();
     }
 
     public bool HasBindings => HasBoundCommands || HasBoundMetrics;
     public bool Active => Enabled && HasBindings;
 
-    public bool BlockInput() => Enabled && _diagnostics.BlockInput();
+    public bool BlockInput() => Enabled && _debugTools.BlockInput();
 
     public void AttachDebugTools(World world, AssetSystem assetSystem, RenderEngineFrameInfo frameInfo)
     {
@@ -52,12 +52,13 @@ internal sealed class EngineGateway
         _assets = assetSystem;
         MetricRouter.Attach(world, assetSystem, frameInfo);
         EditorRouter.Attach(world, assetSystem);
+
     }
 
     public void AttachLogger() => Logger.Attach(ProcessStringLog);
     public void AttachGfxLogger() => GfxLog.Enabled = true;
 
-    private void ProcessStringLog(StringLogEvent log) => _diagnostics.DevConsole.AddLog(_logParser.Format(log));
+    private void ProcessStringLog(StringLogEvent log) => _debugTools.DevConsole.AddLog(_logParser.Format(log));
 
     public void RegisterCommands()
     {
@@ -92,19 +93,19 @@ internal sealed class EngineGateway
     public void Update(float delta)
     {
         if (!Enabled) return;
-        _diagnostics.Update(delta);
+        _debugTools.Update(delta);
     }
 
     public void RenderMetricsUi()
     {
         if (!Enabled) return;
-        _diagnostics.Render();
+        _debugTools.Render();
     }
 
     public void RefreshMetrics(bool force = false)
     {
         if (!Enabled) return;
-        var metrics = _diagnostics.Metrics;
+        var metrics = _debugTools.Metrics;
         if (force)
         {
             metrics.RefreshFrameMetrics();
@@ -153,7 +154,7 @@ internal sealed class EngineGateway
         while (Logger.LogQueue.Count > 0)
         {
             var cmd = Logger.LogQueue.Dequeue();
-            _diagnostics.DevConsole.AddLog(_logParser.Format(cmd));
+            _debugTools.DevConsole.AddLog(_logParser.Format(cmd));
         }
     }
 
@@ -162,7 +163,7 @@ internal sealed class EngineGateway
         while (GfxLog.LogQueue.Count > 0)
         {
             var cmd = GfxLog.LogQueue.Dequeue();
-            _diagnostics.DevConsole.AddLog(_logParser.Format(cmd));
+            _debugTools.DevConsole.AddLog(_logParser.Format(cmd));
         }
     }
 
@@ -179,5 +180,11 @@ internal sealed class EngineGateway
                 ctx.AddLog(ErrorUtils.ErrorMessageFor(ex));
             }
         };
+    }
+
+    public void Dispose()
+    {
+        Enabled = false;
+        _debugTools.Dispose();
     }
 }

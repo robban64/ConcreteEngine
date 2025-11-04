@@ -2,6 +2,7 @@
 
 using System.Numerics;
 using Core.DebugTools.Data;
+using Core.DebugTools.Definitions;
 using Core.DebugTools.Utils;
 using ImGuiNET;
 using static Core.DebugTools.Utils.GuiUtils;
@@ -10,9 +11,19 @@ using static Core.DebugTools.Utils.GuiUtils;
 
 namespace Core.DebugTools.Gui;
 
-internal sealed class DebugRightPanelGui(MetricReport data)
+internal sealed class RightSidebar
 {
-    public void DrawRight(int width, int offset)
+    private readonly MetricService _metricService;
+    private readonly EditorStateContext _ctx;
+
+    public RightSidebar(MetricService metricService, EditorStateContext ctx)
+    {
+        _metricService = metricService;
+        _ctx = ctx;
+        
+    }
+
+    public void Draw(int width, int offset)
     {
         const ImGuiWindowFlags flags =
             ImGuiWindowFlags.NoTitleBar | ImGuiWindowFlags.NoMove | ImGuiWindowFlags.NoResize |
@@ -29,9 +40,12 @@ internal sealed class DebugRightPanelGui(MetricReport data)
 
         if (ImGui.Begin("##RightSidebar", flags))
         {
-            DrawCpuMetrics();
-            ImGui.Dummy(new Vector2(0, 6));
-            DrawGcMetrics();
+            if (_ctx.ViewMode == EditorViewMode.Metrics)
+            {
+                DrawCpuMetrics();
+                ImGui.Dummy(new Vector2(0, 6));
+                DrawGcMetrics();
+            }
         }
 
         ImGui.End();
@@ -40,6 +54,7 @@ internal sealed class DebugRightPanelGui(MetricReport data)
 
     private void DrawCpuMetrics()
     {
+        var data = _metricService.TextData;
         DrawSectionHeader("Frame Metrics");
         TextIfNotNull(data.FrameMetrics.FrameIndex);
         TextIfNotNull(data.FrameMetrics.Fps);
@@ -51,6 +66,7 @@ internal sealed class DebugRightPanelGui(MetricReport data)
 
     private void DrawGcMetrics()
     {
+        var data = _metricService.TextData;
         DrawSectionHeader("GC / Memory");
         TextIfNotNull(data.MemoryMetrics);
     }

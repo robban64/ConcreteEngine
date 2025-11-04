@@ -11,24 +11,34 @@ internal sealed class AssetStoreGui
 {
     private int _popupInput = 0;
 
-    private readonly Action<EditorAssetSelection> _selectTypeChanged;
-    private readonly Action<AssetObjectViewModel?> _assetSelectedChanged;
+    private readonly EditorStateContext _ctx;
     private readonly AssetStoreViewModel _viewModel;
 
     private static readonly string[] AssetTypeArray = ["None", "Shader", "Texture", "Model", "Material"];
 
-    public AssetStoreGui(EditorStateContext stateContext, Action<EditorAssetSelection> selectTypeChanged,
-        Action<AssetObjectViewModel?> assetSelectedChanged)
+    public AssetStoreGui(EditorStateContext ctx)
     {
-        _viewModel = stateContext.AssetViewModel;
-        _selectTypeChanged = selectTypeChanged;
-        _assetSelectedChanged = assetSelectedChanged;
+        _ctx  = ctx;
+        _viewModel = ctx.AssetViewModel;
+    }
+    
+    private void OnAssetSelectedChanged(AssetObjectViewModel? asset)
+    {
+        _viewModel.AssetFileObjects.Clear();
+        if (asset is null) return;
+        EditorTable.FetchAssetObjectFiles?.Invoke(asset, _viewModel.AssetFileObjects);
     }
 
     private void OnSelectTypeChange(EditorAssetSelection selection)
     {
         if (selection == _viewModel.TypeSelection) return;
-        _selectTypeChanged(selection);
+        _viewModel.TypeSelection = selection;
+        _viewModel.AssetObjects.Clear();
+        _viewModel.AssetFileObjects.Clear();
+
+        if (selection == EditorAssetSelection.None) return;
+
+        EditorTable.FillAssetStoreView?.Invoke(selection, _viewModel.AssetObjects);
     }
 
     public void Draw()
@@ -79,7 +89,7 @@ internal sealed class AssetStoreGui
             if (ImGui.Button(">", btnSize))
             {
                 if (_popupInput < 1) _popupInput = 1;
-                _assetSelectedChanged(it);
+                OnAssetSelectedChanged(it);
 
                 var itemMin = ImGui.GetItemRectMin();
                 var itemMax = ImGui.GetItemRectMax();
@@ -136,8 +146,6 @@ internal sealed class AssetStoreGui
 
     private void DrawAssetFilePopupContent(AssetObjectViewModel asset)
     {
-        if (_viewModel.AssetFileObjects.Count == 0) return;
-
         Span<char> buffer = stackalloc char[8];
         var formatter = new NumberSpanFormatter(buffer);
 
@@ -171,18 +179,35 @@ internal sealed class AssetStoreGui
             ImGui.EndTable();
         }
 
-        DrawSectionHeader("Files");
-        if (ImGui.BeginTable("##asset_store_files_tbl", 4, ImGuiTableFlags.SizingFixedFit | ImGuiTableFlags.Borders))
+        if (_viewModel.AssetFileObjects.Count > 0)
+            DrawFilesTable(formatter, _viewModel);
+
+        if (asset.HasActions)
         {
+            ImGui.Separator();
+            if (ImGui.Button("Reload", new Vector2(72, 28)))
+            {
+                ImGui.CloseCurrentPopup();
+            }
+        }
+
+
+        ImGui.PopStyleVar();
+        return;
+
+        static void DrawFilesTable(NumberSpanFormatter formatter,AssetStoreViewModel viewModel)
+        {
+            DrawSectionHeader("Files");
+            if (!ImGui.BeginTable("##asset_store_files_tbl", 4,
+                    ImGuiTableFlags.SizingFixedFit | ImGuiTableFlags.Borders)) return;
             ImGui.TableSetupColumn("ID", ImGuiTableColumnFlags.WidthFixed);
             ImGui.TableSetupColumn("Path", ImGuiTableColumnFlags.WidthStretch);
             ImGui.TableSetupColumn("Size", ImGuiTableColumnFlags.WidthFixed);
             ImGui.TableSetupColumn("Hash", ImGuiTableColumnFlags.WidthFixed);
 
-
             ImGui.TableHeadersRow();
 
-            foreach (var it in _viewModel.AssetFileObjects)
+            foreach (var it in viewModel.AssetFileObjects)
             {
                 ImGui.TableNextRow();
                 ImGui.PushID(it.AssetFileId);
@@ -207,17 +232,5 @@ internal sealed class AssetStoreGui
 
             ImGui.EndTable();
         }
-
-        if (asset.HasActions)
-        {
-            ImGui.Separator();
-            if (ImGui.Button("Reload", new Vector2(72, 28)))
-            {
-                ImGui.CloseCurrentPopup();
-            }
-        }
-
-
-        ImGui.PopStyleVar();
     }
 }

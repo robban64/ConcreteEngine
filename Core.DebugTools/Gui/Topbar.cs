@@ -1,16 +1,25 @@
 using System.Numerics;
+using Core.DebugTools.Data;
+using Core.DebugTools.Definitions;
 using Core.DebugTools.Utils;
 using ImGuiNET;
 
 namespace Core.DebugTools.Gui;
 
-internal static class TopbarGui
+internal sealed class Topbar
 {
-    private static readonly string[] Modes = ["None", "Editor", "Metrics"];
-    
-    private static int _currentMode = 0;
+    private static readonly string[] Modes = Enum.GetNames<EditorViewMode>();
 
-    public static void Draw()
+    private readonly EditorStateContext _ctx;
+
+    public Topbar(EditorStateContext ctx)
+    {
+        _ctx = ctx;
+    }
+
+    private void OnViewModeChanged(EditorViewMode mode) => _ctx.SetViewMode(mode);
+    
+    public void Draw()
     {
         const ImGuiWindowFlags flags = ImGuiWindowFlags.NoDecoration | ImGuiWindowFlags.NoMove |
                                        ImGuiWindowFlags.NoResize;
@@ -25,10 +34,11 @@ internal static class TopbarGui
 
         if (ImGui.Begin("##TopBar", flags))
         {
+            ImGui.SetWindowFontScale(1.06f);
             for (var i = 0; i < Modes.Length; i++)
             {
                 if (i > 0) ImGui.SameLine();
-                var selected = i == _currentMode;
+                var selected = i == (int)_ctx.ViewMode;
 
                 ImGui.PushStyleVar(ImGuiStyleVar.SelectableTextAlign, new Vector2(0.5f));
                 ImGui.PushStyleColor(ImGuiCol.HeaderHovered, GuiTheme.HoverColor);
@@ -38,7 +48,7 @@ internal static class TopbarGui
                 if (ImGui.Selectable(Modes[i], selected, ImGuiSelectableFlags.None,
                         new Vector2(73, GuiTheme.TopbarHeight)))
                 {
-                    _currentMode = i;
+                    OnViewModeChanged((EditorViewMode)i);
                 }
 
                 ImGui.PopStyleColor(2);

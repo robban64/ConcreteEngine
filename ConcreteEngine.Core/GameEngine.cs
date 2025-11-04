@@ -283,8 +283,9 @@ public sealed class GameEngine : IDisposable
     {
         Console.WriteLine("Closing GameEngine");
         _isDisposed = true;
+        _engineGateway.Dispose();
         _sceneManager.Current?.Unload();
-        _assets?.Shutdown();
+        _assets.Shutdown();
         // _graphics?.Dispose();
     }
 
@@ -293,7 +294,8 @@ public sealed class GameEngine : IDisposable
         if (_isDisposed) return;
         Console.WriteLine("Disposing GameEngine");
         _isDisposed = true;
-        _assets?.Shutdown();
+        _assets.Shutdown();
+        _engineGateway.Dispose();
         //_graphics?.Dispose();
     }
 }

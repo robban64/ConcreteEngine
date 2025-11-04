@@ -12,6 +12,14 @@ public sealed class MetricService
     public bool ActiveStoreMetrics { get; set; } = true;
     public bool ActiveMemoryMetrics { get; set; } = true;
 
+    public void ToogleMetrics(bool value)
+    {
+        ActiveSceneMetrics = value;
+        ActiveFrameMetrics = value;
+        ActiveStoreMetrics = value;
+        ActiveMemoryMetrics = value;
+    }
+
     public void RefreshSceneMetrics()
     {
         if(!ActiveSceneMetrics) return;

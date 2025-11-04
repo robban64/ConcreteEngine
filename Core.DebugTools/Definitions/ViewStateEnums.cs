@@ -1,10 +1,19 @@
 namespace Core.DebugTools.Definitions;
 
-public enum LeftPanelMode
+
+
+public enum EditorViewMode
 {
     None,
     Editor,
     Metrics
+}
+
+public enum SidebarEditorMode
+{
+    None,
+    Assets,
+    Entities
 }
 
 public enum TopPanelMode

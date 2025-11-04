@@ -1,11 +1,15 @@
 using ConcreteEngine.Common.Diagnostics;
 using ConcreteEngine.Core.Assets;
 using ConcreteEngine.Core.Assets.Data;
+using ConcreteEngine.Core.Assets.Materials;
+using ConcreteEngine.Core.Assets.Meshes;
 using ConcreteEngine.Core.Assets.Shaders;
+using ConcreteEngine.Core.Assets.Textures;
 using ConcreteEngine.Core.Data;
 using ConcreteEngine.Core.Diagnostic.Utils;
 using ConcreteEngine.Core.Worlds;
 using Core.DebugTools.Data;
+using Core.DebugTools.Definitions;
 
 namespace ConcreteEngine.Core.Diagnostic;
 
@@ -13,66 +17,97 @@ internal static class EditorRouter
 {
     private static World? _world;
     private static AssetSystem? _assetSystem;
-    
-    
+
+
     internal static void Attach(World world, AssetSystem assetSystem)
     {
         _world = world;
         _assetSystem = assetSystem;
     }
-    
-    public static List<AssetObjectFileViewModel> FetchAssetObjectFiles (AssetObjectViewModel asset)
+
+    public static void FetchAssetObjectFiles(AssetObjectViewModel asset, List<AssetObjectFileViewModel> result)
     {
-        if (_assetSystem is null) return [];
+        if (_assetSystem is null) return;
         var store = _assetSystem.StoreImpl;
-        var result = new List<AssetObjectFileViewModel>(2);
         store.TryGetFileIds(new AssetId(asset.AssetId), out var fileIds);
         foreach (var fileId in fileIds)
         {
             store.TryGetFileEntry(fileId, out var entry);
             result.Add(MakeAssetObjectFile(entry!));
         }
-        return result;
     }
 
-    public static void DrainAssetStoreData(AssetStoreViewModel viewModel)
+    public static void DrainAssetStoreData(EditorAssetSelection selection, List<AssetObjectViewModel> result)
     {
         if (_assetSystem is null) return;
+        if (selection == EditorAssetSelection.None) return;
         var store = _assetSystem.StoreImpl;
-        var meta = store.GetMetaSnapshot<Shader>();
-
-        var resultList = viewModel.AssetObjects;
-        if (meta.Count != resultList.Count)
+        var type = selection switch
         {
-            resultList.Clear();
-            foreach (var obj in store.AssetValues)
-            {
-                if (obj is not Shader it) continue;
-                resultList.Add(MakeAssetObjectModel(it));
-            }
+            EditorAssetSelection.Shader => typeof(Shader),
+            EditorAssetSelection.Texture => typeof(Texture2D),
+            EditorAssetSelection.Model => typeof(Model),
+            EditorAssetSelection.Material => typeof(MaterialTemplate),
+            _ => throw new ArgumentOutOfRangeException(nameof(selection), selection, null)
+        };
 
-            resultList.Sort(static (a, b) => a.AssetId.CompareTo(b.AssetId));
-
-            return;
-        }
-
-        int idx = 0;
         foreach (var obj in store.AssetValues)
         {
-            if (obj is not Shader it) continue;
-            var model = resultList[idx];
-            if (it.RawId == model.AssetId && it.Generation != model.Generation)
-                resultList[idx] = MakeAssetObjectModel(it);
+            if (obj.GetType() != type) continue;
+            result.Add(MakeAssetObjectModel(obj));
         }
 
-        viewModel.AssetKind = "Shader";
+        result.Sort(static (a, b) => a.AssetId.CompareTo(b.AssetId));
     }
 
-    private static AssetObjectViewModel MakeAssetObjectModel(Shader shader) =>
-        new(shader.RawId, shader.ResourceId, shader.Name, shader.IsCoreAsset, shader.Generation,
-            shader.Kind.ToLogTopic().ToLogText());
-    
-    private static AssetObjectFileViewModel MakeAssetObjectFile(AssetFileEntry entry) =>
-        new(entry.Id.Value,entry.RelativePath,entry.SizeBytes,entry.ContentHash);
+    private static AssetObjectViewModel MakeAssetObjectModel(AssetObject obj)
+    {
+        int resourceId = 0;
+        string resourceName = "GfxId";
 
+        string specialName = "";
+        string specialValue = "";
+
+        if (obj is Shader shader)
+        {
+            specialName = "Samplers";
+            specialValue = shader.Samplers.ToString();
+            resourceId = shader.ResourceId;
+        }
+        else if (obj is Texture2D tex)
+        {
+            specialName = "Size";
+            specialValue = $"{tex.Width}X{tex.Height}";
+            resourceId = tex.ResourceId;
+        }
+        else if (obj is Model model)
+        {
+            specialName = "Meshes";
+            specialValue = model.MeshParts.Length.ToString();
+
+            resourceId = model.ModelId;
+            resourceName = "ModelId";
+        }
+        else if (obj is MaterialTemplate material)
+        {
+            specialName = "Slots";
+            specialValue = material.TextureSlots.AssetSlots.Length.ToString();
+
+            resourceId = material.ShaderRef.Value;
+            resourceName = "ShaderRef";
+        }
+
+
+        return new AssetObjectViewModel(obj.RawId,
+            resourceId,
+            resourceName,
+            obj.Name,
+            obj.IsCoreAsset,
+            obj.Generation,
+            specialName,
+            specialValue);
+    }
+
+    private static AssetObjectFileViewModel MakeAssetObjectFile(AssetFileEntry entry) =>
+        new(entry.Id.Value, entry.RelativePath, entry.SizeBytes, entry.ContentHash);
 }

@@ -6,3 +6,12 @@ public enum LeftPanelMode
     Editor,
     Metrics
 }
+
+public enum EditorAssetSelection
+{
+    None,
+    Shader,
+    Texture,
+    Model,
+    Material,
+}

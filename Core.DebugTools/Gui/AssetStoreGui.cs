@@ -1,5 +1,6 @@
 using System.Numerics;
 using Core.DebugTools.Data;
+using Core.DebugTools.Definitions;
 using Core.DebugTools.Utils;
 using ImGuiNET;
 using static Core.DebugTools.Utils.GuiUtils;
@@ -9,23 +10,30 @@ namespace Core.DebugTools.Gui;
 internal sealed class AssetStoreGui
 {
     private int _popupInput = 0;
-    private int _currentTypeIndex = 0;
-
-    private static readonly string[] AssetTypeArray = ["Shader", "Texture", "Model", "Material"];
+    private bool _popupOpen = false;
     
-    public AssetStoreViewModel ViewModel { get; }
+    private readonly Action<EditorAssetSelection> _selectTypeChanged;
+    private readonly Action<AssetObjectViewModel?> _assetSelectedChanged;
+    private readonly AssetStoreViewModel _viewModel;
 
-    public AssetStoreGui(AssetStoreViewModel viewModel)
+    private static readonly string[] AssetTypeArray = ["None","Shader", "Texture", "Model", "Material"];
+
+
+    public AssetStoreGui(EditorViewState viewState, Action<EditorAssetSelection> selectTypeChanged, Action<AssetObjectViewModel?> assetSelectedChanged)
     {
-        ViewModel = viewModel;
+        _viewModel = viewState.AssetViewModel;
+        _selectTypeChanged = selectTypeChanged;
+        _assetSelectedChanged = assetSelectedChanged;
+        
     }
 
-    private void OnFetchAssetObjectFiles(AssetObjectViewModel asset)
+    private void OnSelectTypeChange(EditorAssetSelection selection)
     {
-        ViewModel.AssetFileObjects = EditorTable.FetchAssetObjectFiles?.Invoke(asset) ?? [];
+        if(selection == _viewModel.TypeSelection) return;
+        _selectTypeChanged(selection);
     }
 
-    public void DrawLeft()
+    public void Draw()
     {
         ImGui.SeparatorText("Asset Store");
         DrawAssetTypeSelector();
@@ -41,7 +49,7 @@ internal sealed class AssetStoreGui
         const int rowHeight = 32;
         
         var btnSize = new Vector2(rowHeight, 22);
-
+        
         if (!ImGui.BeginTable("##asset_store_object_tbl", 3, flags)) return;
 
         ImGui.TableSetupColumn("Id", ImGuiTableColumnFlags.WidthFixed, 32);
@@ -53,7 +61,7 @@ internal sealed class AssetStoreGui
         Span<char> buffer = stackalloc char[10]; 
         var formatter = new NumberSpanFormatter(buffer);
 
-        foreach (var it in ViewModel.AssetObjects)
+        foreach (var it in _viewModel.AssetObjects)
         {
             ImGui.PushID(it.AssetId);
             ImGui.TableNextRow(ImGuiTableRowFlags.None, rowHeight);
@@ -73,7 +81,7 @@ internal sealed class AssetStoreGui
             if (ImGui.Button(">", btnSize))
             {
                 if (_popupInput < 1) _popupInput = 1;
-                OnFetchAssetObjectFiles(it);
+                if(!_popupOpen) _assetSelectedChanged(it);
 
                 var itemMin = ImGui.GetItemRectMin();
                 var itemMax = ImGui.GetItemRectMax();
@@ -81,8 +89,12 @@ internal sealed class AssetStoreGui
                 ImGui.OpenPopup(bufferStr);
             }
 
-            DrawAssetFilePopup(bufferStr, it);
+            if (ImGui.BeginPopup(bufferStr))
+            {
+                DrawAssetFilePopupContent(bufferStr, it);
+                ImGui.EndPopup();
 
+            }
             ImGui.PopID();
         }
 
@@ -95,15 +107,15 @@ internal sealed class AssetStoreGui
         ImGui.PushStyleVar(ImGuiStyleVar.ItemSpacing, new Vector2(6, 6));
         ImGui.PushStyleVar(ImGuiStyleVar.FramePadding, new Vector2(8, 6));
 
-        string currentLabel = AssetTypeArray[_currentTypeIndex];
+        string currentLabel = AssetTypeArray[(int)_viewModel.TypeSelection];
         if (ImGui.BeginCombo("##assetTypeSelector", currentLabel, ImGuiComboFlags.HeightLargest))
         {
             for (int i = 0; i < AssetTypeArray.Length; i++)
             {
-                bool isSelected = (i == _currentTypeIndex);
+                bool isSelected = (i == (int)_viewModel.TypeSelection);
 
                 if (ImGui.Selectable(AssetTypeArray[i], isSelected, ImGuiSelectableFlags.None, Vector2.Zero))
-                    _currentTypeIndex = i;
+                    OnSelectTypeChange((EditorAssetSelection)i);
 
                 if (i < AssetTypeArray.Length - 1)
                 {
@@ -124,10 +136,9 @@ internal sealed class AssetStoreGui
     }
 
 
-    private void DrawAssetFilePopup(ReadOnlySpan<char> popup, AssetObjectViewModel asset)
+    private void DrawAssetFilePopupContent(ReadOnlySpan<char> popup, AssetObjectViewModel asset)
     {
-        if (!ImGui.BeginPopup(popup)) return;
-        if (ViewModel.AssetFileObjects.Count == 0) return;
+        if (_viewModel.AssetFileObjects.Count == 0) return;
 
         Span<char> buffer = stackalloc char[10]; 
         var formatter = new NumberSpanFormatter(buffer);
@@ -135,17 +146,18 @@ internal sealed class AssetStoreGui
         ImGui.PushStyleVar(ImGuiStyleVar.CellPadding, new Vector2(4, 6));
         ImGui.SeparatorText(asset.Name);
 
-        if (ImGui.BeginTable("##asset_detail_object_tbl", 3, ImGuiTableFlags.SizingFixedFit | ImGuiTableFlags.Borders))
+        if (ImGui.BeginTable("##asset_detail_object_tbl", 4, ImGuiTableFlags.SizingFixedFit | ImGuiTableFlags.Borders))
         {
-            ImGui.TableSetupColumn("GfxId", ImGuiTableColumnFlags.WidthFixed, 34);
+            ImGui.TableSetupColumn(asset.ResourceName, ImGuiTableColumnFlags.WidthFixed, 34);
             ImGui.TableSetupColumn("Gen", ImGuiTableColumnFlags.WidthFixed, 34);
-            ImGui.TableSetupColumn("IsCore", ImGuiTableColumnFlags.WidthFixed);
+            ImGui.TableSetupColumn("Core", ImGuiTableColumnFlags.WidthFixed);
+            ImGui.TableSetupColumn(asset.SpecialName, ImGuiTableColumnFlags.WidthFixed);
 
             ImGui.TableHeadersRow();
 
             ImGui.TableNextRow();
             ImGui.TableNextColumn();
-            var bufferStr =  formatter.Format(asset.GfxId);
+            var bufferStr =  formatter.Format(asset.ResourceId);
             CenterAlignCellText(bufferStr);
 
             ImGui.TableNextColumn();
@@ -154,45 +166,49 @@ internal sealed class AssetStoreGui
 
             ImGui.TableNextColumn();
             ImGui.TextUnformatted(StringUtils.BoolToYesNo(asset.IsCoreAsset));
+            
+            ImGui.TableNextColumn();
+            ImGui.TextUnformatted(asset.SpecialValue);
+
             ImGui.EndTable();
         }
 
         DrawSectionHeader("Files");
-        if (!ImGui.BeginTable("##asset_store_files_tbl", 4, ImGuiTableFlags.SizingFixedFit | ImGuiTableFlags.Borders))
-            return;
-
-        ImGui.TableSetupColumn("ID", ImGuiTableColumnFlags.WidthFixed);
-        ImGui.TableSetupColumn("Path", ImGuiTableColumnFlags.WidthStretch);
-        ImGui.TableSetupColumn("Size", ImGuiTableColumnFlags.WidthFixed);
-        ImGui.TableSetupColumn("Hash", ImGuiTableColumnFlags.WidthFixed);
-
-
-        ImGui.TableHeadersRow();
-
-        foreach (var it in ViewModel.AssetFileObjects)
+        if (ImGui.BeginTable("##asset_store_files_tbl", 4, ImGuiTableFlags.SizingFixedFit | ImGuiTableFlags.Borders))
         {
-            ImGui.TableNextRow();
-            ImGui.PushID(it.AssetFileId);
+            ImGui.TableSetupColumn("ID", ImGuiTableColumnFlags.WidthFixed);
+            ImGui.TableSetupColumn("Path", ImGuiTableColumnFlags.WidthStretch);
+            ImGui.TableSetupColumn("Size", ImGuiTableColumnFlags.WidthFixed);
+            ImGui.TableSetupColumn("Hash", ImGuiTableColumnFlags.WidthFixed);
 
-            var bufferStr =  formatter.Format(it.AssetFileId);
-            ImGui.TableNextColumn();
-            CenterAlignCellText(bufferStr);
 
-            ImGui.TableNextColumn();
-            ImGui.TextUnformatted(it.RelativePath);
+            ImGui.TableHeadersRow();
 
-             bufferStr =  formatter.Format(it.SizeInBytes);
-            ImGui.TableNextColumn();
-            CenterAlignCellText(bufferStr);
+            foreach (var it in _viewModel.AssetFileObjects)
+            {
+                ImGui.TableNextRow();
+                ImGui.PushID(it.AssetFileId);
 
-            ImGui.TableNextColumn();
-            if (it.ContentHash != null)
-                ImGui.Text(it.ContentHash);
+                var bufferStr =  formatter.Format(it.AssetFileId);
+                ImGui.TableNextColumn();
+                CenterAlignCellText(bufferStr);
 
-            ImGui.PopID();
+                ImGui.TableNextColumn();
+                ImGui.TextUnformatted(it.RelativePath);
+
+                bufferStr =  formatter.Format(it.SizeInBytes);
+                ImGui.TableNextColumn();
+                CenterAlignCellText(bufferStr);
+
+                ImGui.TableNextColumn();
+                if (it.ContentHash != null)
+                    ImGui.Text(it.ContentHash);
+
+                ImGui.PopID();
+            }
+
+            ImGui.EndTable();
         }
-
-        ImGui.EndTable();
 
         ImGui.Separator();
         if (ImGui.Button("Reload", new Vector2(72, 28)))
@@ -201,6 +217,5 @@ internal sealed class AssetStoreGui
         }
 
         ImGui.PopStyleVar();
-        ImGui.EndPopup();
     }
 }

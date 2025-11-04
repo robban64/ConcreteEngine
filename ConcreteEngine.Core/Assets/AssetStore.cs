@@ -58,6 +58,9 @@ internal sealed class AssetStore : IAssetStore
     public AssetTypeMetaSnapshot GetMetaSnapshot<TAsset>() where TAsset : AssetObject =>
         _typeMeta[typeof(TAsset)].ToSnapshot();
 
+    internal AssetTypeMetaSnapshot GetMetaSnapshot(Type type) => _typeMeta[type].ToSnapshot();
+
+
     public bool TryGetFileEntry(AssetFileId id, out AssetFileEntry? entry) => _files.TryGetValue(id, out entry);
 
     internal bool TryGetFileIds(AssetId id, out ReadOnlySpan<AssetFileId> fileIds)

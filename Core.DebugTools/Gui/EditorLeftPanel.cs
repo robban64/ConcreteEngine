@@ -10,31 +10,53 @@ internal sealed class EditorLeftPanel
 {
     private readonly MetricService _metricService;
     private readonly AssetStoreGui _assetStoreGui;
+    private EditorViewState _viewState;
 
-    public LeftPanelMode Mode { get; set; }
-
-    public EditorLeftPanel(MetricService metricService, AssetStoreViewModel viewModel)
+    public EditorLeftPanel(MetricService metricService, EditorViewState viewState)
     {
         _metricService = metricService;
-        _assetStoreGui = new AssetStoreGui(viewModel);
+        _viewState = viewState;
+        _assetStoreGui = new AssetStoreGui(viewState, OnSelectionChanged, OnAssetSelectedChanged);
+    }
+
+    private void OnAssetSelectedChanged(AssetObjectViewModel? asset)
+    {
+        var model = _viewState.AssetViewModel;
+        model.AssetFileObjects.Clear();
+        if (asset is null) return;
+        EditorTable.FetchAssetObjectFiles?.Invoke(asset, model.AssetFileObjects);
+    }
+
+    private void OnSelectionChanged(EditorAssetSelection selection)
+    {
+        var model = _viewState.AssetViewModel;
+
+        if (selection == model.TypeSelection) return;
+        model.TypeSelection = selection;
+        model.AssetObjects.Clear();
+        model.AssetFileObjects.Clear();
+
+        if (selection == EditorAssetSelection.None) return;
+
+        EditorTable.FillAssetStoreView?.Invoke(selection, model.AssetObjects);
     }
 
     private void OnModeChanged(LeftPanelMode mode)
     {
-        if(mode == Mode) return;
-        Mode = mode;
-        if (Mode == LeftPanelMode.Editor)
-        {
-            EditorTable.FillAssetStoreView?.Invoke(_assetStoreGui.ViewModel);
-            _metricService.ActiveStoreMetrics = false;
-            _metricService.ActiveSceneMetrics = false;
-            return;
-        }
+        if (mode == _viewState.LeftMode) return;
+        _viewState.LeftMode = mode;
 
-        if (Mode == LeftPanelMode.Metrics)
+        switch (_viewState.LeftMode)
         {
-            _metricService.ActiveStoreMetrics = true;
-            _metricService.ActiveSceneMetrics = true;
+            case LeftPanelMode.Editor:
+                _metricService.ActiveStoreMetrics = false;
+                _metricService.ActiveSceneMetrics = false;
+                OnSelectionChanged(_viewState.AssetViewModel.TypeSelection);
+                return;
+            case LeftPanelMode.Metrics:
+                _metricService.ActiveStoreMetrics = true;
+                _metricService.ActiveSceneMetrics = true;
+                break;
         }
     }
 
@@ -57,7 +79,7 @@ internal sealed class EditorLeftPanel
 
             ImGui.Separator();
 
-            switch (Mode)
+            switch (_viewState.LeftMode)
             {
                 case LeftPanelMode.Metrics: DrawMetrics(); break;
                 case LeftPanelMode.Editor: DrawEditor(); break;
@@ -73,28 +95,31 @@ internal sealed class EditorLeftPanel
         ImGui.PushStyleVar(ImGuiStyleVar.FramePadding, new Vector2(12, 4));
         if (ImGui.BeginTabBar("left_panel_tabs", ImGuiTabBarFlags.None))
         {
+            if (ImGui.BeginTabItem("None"))
+            {
+                if(_viewState.LeftMode != LeftPanelMode.None) OnModeChanged(LeftPanelMode.None);
+                ImGui.EndTabItem();
+            }
+
             if (ImGui.BeginTabItem("Main"))
             {
-                OnModeChanged(LeftPanelMode.Editor);
-                Mode = LeftPanelMode.Editor;
+                if(_viewState.LeftMode != LeftPanelMode.Editor) OnModeChanged(LeftPanelMode.Editor);
                 ImGui.EndTabItem();
             }
-            
+
             if (ImGui.BeginTabItem("Metrics"))
             {
-                OnModeChanged(LeftPanelMode.Metrics);
+                if(_viewState.LeftMode != LeftPanelMode.Metrics) OnModeChanged(LeftPanelMode.Metrics);
                 ImGui.EndTabItem();
             }
+
             ImGui.EndTabBar();
         }
+
         ImGui.PopStyleVar();
     }
 
-    public void DrawEditor()
-    {
-        _assetStoreGui.DrawLeft();
-    }
-
+    private void DrawEditor() => _assetStoreGui.Draw();
 
     private void DrawMetrics()
     {

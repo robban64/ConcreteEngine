@@ -25,8 +25,6 @@ public sealed class MaterialTextureSlots
         _assetSlots = slots.ToArray();
         Refresh();
     }
-
-
     public ReadOnlySpan<AssetTextureSlot> AssetSlots => _assetSlots;
 
     private void Refresh()

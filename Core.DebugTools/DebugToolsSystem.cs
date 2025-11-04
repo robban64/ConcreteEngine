@@ -19,23 +19,25 @@ public sealed class DebugToolsSystem : IDisposable
     public DevConsoleService devConsole { get; }
     public MetricService Metrics { get;  }
     public EditorService Editor { get;  }
-    
-    private readonly EditorLeftPanel _leftPanel;
-    private readonly DebugRightPanelGui _rightPanel;
 
     public DebugToolsSystem(GL gl, IWindow window, IInputContext inputCtx)
     {
         _controller = new ImGuiController(gl, window, inputCtx);
 
-        Editor = new EditorService();
         Metrics = new MetricService();
         devConsole = new DevConsoleService();
-        _leftPanel = new EditorLeftPanel(Metrics, Editor.AssetStoreViewModel);
-        _rightPanel = new DebugRightPanelGui(Metrics.TextData);
+        Editor = new EditorService(Metrics);
     }
 
+    public void Update(float delta) => _controller.Update(delta);
 
-    public void Dispose() => _controller.Dispose();
+    public void Render()
+    {
+        var vp = ImGui.GetMainViewport();
+        Editor.Render();
+        devConsole.Draw();
+        _controller.Render();
+    }
 
     public bool BlockInput()
     {
@@ -56,15 +58,6 @@ public sealed class DebugToolsSystem : IDisposable
         return blockKeyboard || blockMouse;
     }
 
-    public void Update(float delta) => _controller.Update(delta);
+    public void Dispose() => _controller.Dispose();
 
-    public void Render()
-    {
-        var vp = ImGui.GetMainViewport();
-        ImGui.ShowDemoWindow();
-        _leftPanel.Draw(280);
-        _rightPanel.DrawRight(160);
-        devConsole.Draw();
-        _controller.Render();
-    }
 }

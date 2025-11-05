@@ -12,7 +12,7 @@ using Core.DebugTools.Data;
 
 #endregion
 
-namespace ConcreteEngine.Core.Diagnostic;
+namespace ConcreteEngine.Core.Diagnostic.Routers;
 
 internal static class MetricRouter
 {

@@ -10,14 +10,17 @@ namespace Core.DebugTools.Gui;
 internal sealed class LeftSidebar
 {
     private readonly MetricService _metricService;
-    private readonly AssetStoreGui _assetStoreGui;
     private readonly EditorStateContext _ctx;
 
+    private readonly AssetStoreGui _assetStoreGui;
+    private readonly EntityList _entityList;
+    
     public LeftSidebar(MetricService metricService, EditorStateContext ctx)
     {
         _metricService = metricService;
         _ctx = ctx;
         _assetStoreGui = new AssetStoreGui(ctx);
+        _entityList = new EntityList(ctx);
     }
 
 
@@ -29,11 +32,12 @@ internal sealed class LeftSidebar
         var vp = ImGui.GetMainViewport();
 
         var height = _ctx.ViewMode == EditorViewMode.None ? 0 : vp.WorkSize.Y - offset;
+        height = _ctx.SidebarMode != SidebarEditorMode.None ? height : 0;
 
         ImGui.SetNextWindowPos(new Vector2(0, offset));
         ImGui.SetNextWindowSize(new Vector2(width, height));
         ImGui.PushStyleVar(ImGuiStyleVar.ItemSpacing, new Vector2(8f, 6f));
-        ImGui.PushStyleVar(ImGuiStyleVar.WindowPadding, new Vector2(12f, 10f));
+        ImGui.PushStyleVar(ImGuiStyleVar.WindowPadding, new Vector2(0, 10f));
         ImGui.SetNextWindowBgAlpha(GuiTheme.PanelOpacity);
 
         if (ImGui.Begin("##LeftSidebar", flags))
@@ -49,13 +53,6 @@ internal sealed class LeftSidebar
         ImGui.PopStyleVar(2);
     }
     
-    private void DrawEditor()
-    {
-        DrawModeSelector();
-        ImGui.Separator();
-        _assetStoreGui.Draw();
-    }
-
     private void DrawMetrics()
     {
         var metrics = _metricService.TextData;
@@ -64,6 +61,22 @@ internal sealed class LeftSidebar
         AssetStoreMetricsGui.DrawAssetStoreMetrics(metrics);
         ImGui.Dummy(new Vector2(0, 6));
         GfxStoreMetricsGui.DrawGfxStoreMetrics(metrics);
+    }
+    
+    private void DrawEditor()
+    {
+        ImGui.SetCursorPosX(12f);
+        DrawModeSelector();
+        ImGui.PopStyleVar();
+        
+        switch (_ctx.SidebarMode)
+        {
+            case SidebarEditorMode.Assets: _assetStoreGui.Draw(); break;
+            case SidebarEditorMode.Entities: _entityList.Draw(); break;
+            case SidebarEditorMode.None: break;
+            default: throw new ArgumentOutOfRangeException();
+        }
+        
     }
 
     private void DrawModeSelector()

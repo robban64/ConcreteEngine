@@ -3,6 +3,7 @@
 using ConcreteEngine.Common.Diagnostics;
 using ConcreteEngine.Core.Assets;
 using ConcreteEngine.Core.Data;
+using ConcreteEngine.Core.Diagnostic.Routers;
 using ConcreteEngine.Core.Diagnostic.Utils;
 using ConcreteEngine.Core.Utils;
 using ConcreteEngine.Core.Worlds;
@@ -28,7 +29,7 @@ internal sealed class EngineGateway : IDisposable
 
     private int _ticker = 0, _mediumTicker = 0, _slowTicker = 0;
 
-    private int _logTicker = 0;
+    private bool _drainGfxLogs;
 
     private AssetSystem _assets;
 
@@ -43,6 +44,9 @@ internal sealed class EngineGateway : IDisposable
 
     public bool BlockInput() => Enabled && _debugTools.BlockInput();
 
+    public void AttachLogger() => Logger.Attach(ProcessStringLog);
+    public void AttachGfxLogger() => GfxLog.Enabled = true;
+
     public void AttachDebugTools(World world, AssetSystem assetSystem, RenderEngineFrameInfo frameInfo)
     {
         ArgumentNullException.ThrowIfNull(world, nameof(world));
@@ -50,13 +54,12 @@ internal sealed class EngineGateway : IDisposable
         ArgumentNullException.ThrowIfNull(frameInfo, nameof(frameInfo));
 
         _assets = assetSystem;
+        
+        
         MetricRouter.Attach(world, assetSystem, frameInfo);
         EditorRouter.Attach(world, assetSystem);
 
     }
-
-    public void AttachLogger() => Logger.Attach(ProcessStringLog);
-    public void AttachGfxLogger() => GfxLog.Enabled = true;
 
     private void ProcessStringLog(StringLogEvent log) => _debugTools.DevConsole.AddLog(_logParser.Format(log));
 
@@ -70,8 +73,9 @@ internal sealed class EngineGateway : IDisposable
         RouteTable.RegisterCommand(CoreCmdNames.ReloadShader, CmdWrapper(CommandRouter.OnRecreateShader));
         RouteTable.RegisterCommand("shadow-map", CmdWrapper(CommandRouter.OnSetShadowMapSize));
 
-        EditorTable.FillAssetStoreView = EditorRouter.DrainAssetStoreData;
-        EditorTable.FetchAssetObjectFiles = EditorRouter.FetchAssetObjectFiles;
+        EditorTable.FillAssetStoreView = EditorRouter.PullAssetStoreData;
+        EditorTable.FetchAssetObjectFiles = EditorRouter.PullAssetObjectFiles;
+        EditorTable.FillEntityView  = EditorRouter.PullEntityView;
     }
 
 
@@ -114,18 +118,9 @@ internal sealed class EngineGateway : IDisposable
 
             metrics.RefreshSceneMetrics();
             metrics.RefreshMemoryMetrics();
-            DrainEngineLogs();
-            DrainGfxLogs();
             return;
         }
-        
-        if(_logTicker == 4) DrainEngineLogs();
-        if (_logTicker++ >= 8)
-        {
-            DrainGfxLogs();
-            _logTicker = 0;
-        }
-        
+
         if (_ticker++ >= 4)
         {
             metrics.RefreshFrameMetrics();
@@ -148,24 +143,29 @@ internal sealed class EngineGateway : IDisposable
         }
     }
 
-
-    private void DrainEngineLogs()
+    public void DrainLogs(int n = 6)
     {
-        while (Logger.LogQueue.Count > 0)
+        int idx = 0;
+        if (_drainGfxLogs)
+        {
+            while (idx < n && GfxLog.LogQueue.Count > 0)
+            {
+                var cmd = GfxLog.LogQueue.Dequeue();
+                _debugTools.DevConsole.AddLog(_logParser.Format(cmd));
+                idx++;
+            }
+        }
+        
+        while (idx < n && Logger.LogQueue.Count > 0)
         {
             var cmd = Logger.LogQueue.Dequeue();
             _debugTools.DevConsole.AddLog(_logParser.Format(cmd));
+            idx++;
         }
+
+        _drainGfxLogs = !_drainGfxLogs;
     }
 
-    private void DrainGfxLogs()
-    {
-        while (GfxLog.LogQueue.Count > 0)
-        {
-            var cmd = GfxLog.LogQueue.Dequeue();
-            _debugTools.DevConsole.AddLog(_logParser.Format(cmd));
-        }
-    }
 
     private static Action<DebugConsoleCtx, string?, string?> CmdWrapper(Action<DebugConsoleCtx, string?, string?> f)
     {

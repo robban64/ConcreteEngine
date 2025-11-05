@@ -16,15 +16,18 @@ public class DevConsoleGui
 
     private readonly Func<string, bool> _execCmd;
 
-    public DevConsoleGui(Func<string, bool> execCmd)
+    private readonly List<string> _log;
+
+    public DevConsoleGui(List<string> log, Func<string, bool> execCmd)
     {
         ArgumentNullException.ThrowIfNull(execCmd);
         _execCmd = execCmd;
+        _log = log;
     }
-    
+
     internal void ScrollToBottom() => _scrollToBottom = true;
 
-    internal void DrawConsole(List<string> logs, int leftPanelWidth, int rightPanelWidth)
+    internal void DrawConsole(int leftPanelWidth, int rightPanelWidth)
     {
         const ImGuiWindowFlags flags =
             ImGuiWindowFlags.NoMove | ImGuiWindowFlags.NoResize |
@@ -80,24 +83,27 @@ public class DevConsoleGui
         var inputHeight = ImGui.GetFrameHeightWithSpacing() + 8f;
 
         ImGui.PushStyleColor(ImGuiCol.ChildBg, new Vector4(0.10f, 0.10f, 0.10f, 0.75f));
-        ImGui.BeginChild(
-            "ConsoleLogRegion",
-            new Vector2(0, -inputHeight),
-            ImGuiChildFlags.None,
-            ImGuiWindowFlags.HorizontalScrollbar | ImGuiWindowFlags.AlwaysVerticalScrollbar
-        );
-
-        foreach (var line in logs)
-            ImGui.TextUnformatted(line);
-
-        if (_justOpened || _scrollToBottom)
+        if (ImGui.BeginChild(
+                "ConsoleLogRegion",
+                new Vector2(0, -inputHeight),
+                ImGuiChildFlags.None,
+                ImGuiWindowFlags.HorizontalScrollbar | ImGuiWindowFlags.AlwaysVerticalScrollbar)
+           )
         {
-            ImGui.SetScrollHereY(1.0f);
-            _scrollToBottom = false;
-            _justOpened = false;
+            foreach (var line in _log)
+                ImGui.TextUnformatted(line);
+
+            if (_justOpened || _scrollToBottom)
+            {
+                ImGui.SetScrollHereY(1.0f);
+                _scrollToBottom = false;
+                _justOpened = false;
+            }
+
+            ImGui.EndChild();
         }
 
-        ImGui.EndChild();
+
         ImGui.PopStyleColor();
         ImGui.Dummy(new Vector2(0, 6f));
 

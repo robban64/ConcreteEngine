@@ -7,6 +7,25 @@ public sealed class AssetStoreViewModel
     public EditorAssetSelection TypeSelection { get; set; }
     public List<AssetObjectViewModel> AssetObjects { get; } = new(16);
     public List<AssetObjectFileViewModel> AssetFileObjects { get; } = new(4);
+    
+    public void ResetState(bool clearTypeSelection = false)
+    {
+        if(clearTypeSelection) TypeSelection = EditorAssetSelection.None;
+        AssetObjects.Clear();
+        AssetFileObjects.Clear();
+    }
+}
+
+public sealed class EntityListViewModel
+{
+    public int SelectedEntityId { get; set; } = 0;
+    public List<EntityViewModel> Entities { get; } = new(128);
+
+    public void ResetState()
+    {
+        SelectedEntityId = 0;
+        Entities.Clear();
+    }
 }
 
 public record AssetObjectViewModel(
@@ -25,3 +44,14 @@ public sealed record AssetObjectFileViewModel(
     string RelativePath,
     long SizeInBytes,
     string? ContentHash);
+    
+    
+
+
+public sealed record EntityViewModel(
+    int EntityId,
+    string Name,
+    string TransformSummary,
+    int ComponentCount,
+    int DrawCount
+);

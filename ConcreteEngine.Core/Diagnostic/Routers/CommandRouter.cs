@@ -17,7 +17,7 @@ using Core.DebugTools;
 
 #endregion
 
-namespace ConcreteEngine.Core.Diagnostic;
+namespace ConcreteEngine.Core.Diagnostic.Routers;
 
 internal enum CommandRequestScope : byte
 {

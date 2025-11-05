@@ -31,11 +31,14 @@ internal sealed class RightSidebar
 
         var vp = ImGui.GetMainViewport();
         var vpSize = vp.WorkSize;
+        
+        var height = _ctx.ViewMode == EditorViewMode.None ? 0 : vpSize.Y - offset;
+        height = _ctx.SidebarMode != SidebarEditorMode.None ? height : 0;
+        
+        
         ImGui.SetNextWindowPos(new Vector2(vpSize.X - width, offset));
-        ImGui.SetNextWindowSize(new Vector2(width, vpSize.Y - offset));
+        ImGui.SetNextWindowSize(new Vector2(width, height));
 
-        ImGui.PushStyleVar(ImGuiStyleVar.ItemSpacing, new Vector2(8f, 6f));
-        ImGui.PushStyleVar(ImGuiStyleVar.WindowPadding, new Vector2(12f, 10f));
         ImGui.SetNextWindowBgAlpha(GuiTheme.PanelOpacity);
 
         if (ImGui.Begin("##RightSidebar", flags))

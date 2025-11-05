@@ -1,17 +1,13 @@
-using ConcreteEngine.Common.Diagnostics;
+using System.Text;
 using ConcreteEngine.Core.Assets;
 using ConcreteEngine.Core.Assets.Data;
-using ConcreteEngine.Core.Assets.Materials;
-using ConcreteEngine.Core.Assets.Meshes;
-using ConcreteEngine.Core.Assets.Shaders;
-using ConcreteEngine.Core.Assets.Textures;
-using ConcreteEngine.Core.Data;
-using ConcreteEngine.Core.Diagnostic.Utils;
 using ConcreteEngine.Core.Worlds;
+using ConcreteEngine.Core.Worlds.Entities;
 using Core.DebugTools.Data;
 using Core.DebugTools.Definitions;
+using Core.DebugTools.Utils;
 
-namespace ConcreteEngine.Core.Diagnostic;
+namespace ConcreteEngine.Core.Diagnostic.Routers;
 
 internal static class EditorRouter
 {
@@ -25,7 +21,29 @@ internal static class EditorRouter
         _assetSystem = assetSystem;
     }
 
-    public static void FetchAssetObjectFiles(AssetObjectViewModel asset, List<AssetObjectFileViewModel> result)
+    public static void PullEntityView(EntityListViewModel viewModel)
+    {
+        if (_world is null) return;
+
+        var sb = new StringBuilder(64);
+        Transform defaultTransform = default;
+
+        Span<char> buffer = stackalloc char[16];
+        var formatter = new NumberSpanFormatter(buffer);
+
+        foreach (var it in _world.Query<ModelComponent>())
+        {
+            ref var model = ref it.Component;
+            ref var transform = ref (_world.Transforms.Has(it.Entity)
+                ? ref _world.Transforms.GetById(it.Entity)
+                : ref defaultTransform);
+            
+            viewModel.Entities.Add(EditorObjectMapper.MakeEntityViewModel(sb, formatter, it.Entity, in model, in transform));
+            sb.Clear();
+        }
+    }
+
+    public static void PullAssetObjectFiles(AssetObjectViewModel asset, List<AssetObjectFileViewModel> result)
     {
         if (_assetSystem is null) return;
         var store = _assetSystem.StoreImpl;
@@ -33,85 +51,23 @@ internal static class EditorRouter
         foreach (var fileId in fileIds)
         {
             store.TryGetFileEntry(fileId, out var entry);
-            result.Add(MakeAssetObjectFile(entry!));
+            result.Add(EditorObjectMapper.MakeAssetObjectFile(entry!));
         }
     }
 
-    public static void DrainAssetStoreData(EditorAssetSelection selection, List<AssetObjectViewModel> result)
+    public static void PullAssetStoreData(EditorAssetSelection selection, List<AssetObjectViewModel> result)
     {
         if (_assetSystem is null) return;
         if (selection == EditorAssetSelection.None) return;
         var store = _assetSystem.StoreImpl;
-        var type = selection switch
-        {
-            EditorAssetSelection.Shader => typeof(Shader),
-            EditorAssetSelection.Texture => typeof(Texture2D),
-            EditorAssetSelection.Model => typeof(Model),
-            EditorAssetSelection.Material => typeof(MaterialTemplate),
-            _ => throw new ArgumentOutOfRangeException(nameof(selection), selection, null)
-        };
+        var type = EditorEnumMapper.AssetSelectionToType(selection);
 
         foreach (var obj in store.AssetValues)
         {
             if (obj.GetType() != type) continue;
-            result.Add(MakeAssetObjectModel(obj));
+            result.Add(EditorObjectMapper.MakeAssetObjectModel(obj));
         }
 
         result.Sort(static (a, b) => a.AssetId.CompareTo(b.AssetId));
     }
-
-    private static AssetObjectViewModel MakeAssetObjectModel(AssetObject obj)
-    {
-        var resourceId = 0;
-        var resourceName = "GfxId";
-
-        var specialName = "";
-        var specialValue = "";
-
-        var hasActions = false;
-
-        if (obj is Shader shader)
-        {
-            specialName = "Samplers";
-            specialValue = shader.Samplers.ToString();
-            resourceId = shader.ResourceId;
-            hasActions = true;
-        }
-        else if (obj is Texture2D tex)
-        {
-            specialName = "Size";
-            specialValue = $"{tex.Width}X{tex.Height}";
-            resourceId = tex.ResourceId;
-        }
-        else if (obj is Model model)
-        {
-            specialName = "Meshes";
-            specialValue = model.MeshParts.Length.ToString();
-
-            resourceId = model.ModelId;
-            resourceName = "ModelId";
-        }
-        else if (obj is MaterialTemplate material)
-        {
-            specialName = "Slots";
-            specialValue = material.TextureSlots.AssetSlots.Length.ToString();
-
-            resourceId = material.ShaderRef.Value;
-            resourceName = "ShaderRef";
-        }
-
-
-        return new AssetObjectViewModel(obj.RawId,
-            resourceId,
-            resourceName,
-            obj.Name,
-            obj.IsCoreAsset,
-            obj.Generation,
-            specialName,
-            specialValue,
-            hasActions);
-    }
-
-    private static AssetObjectFileViewModel MakeAssetObjectFile(AssetFileEntry entry) =>
-        new(entry.Id.Value, entry.RelativePath, entry.SizeBytes, entry.ContentHash);
 }

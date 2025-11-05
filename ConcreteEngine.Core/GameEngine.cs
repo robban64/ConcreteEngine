@@ -8,6 +8,7 @@ using ConcreteEngine.Core.Assets.Meshes;
 using ConcreteEngine.Core.Configuration;
 using ConcreteEngine.Core.Data;
 using ConcreteEngine.Core.Diagnostic;
+using ConcreteEngine.Core.Diagnostic.Routers;
 using ConcreteEngine.Core.Platform;
 using ConcreteEngine.Core.Scene;
 using ConcreteEngine.Core.Scene.Modules;
@@ -97,8 +98,6 @@ public sealed class GameEngine : IDisposable
 
     private void StartAssetLoader()
     {
-        _engineGateway.AttachLogger();
-
         _assets.Initialize();
         _assets.StartLoader(_graphics.Gfx);
     }
@@ -108,8 +107,9 @@ public sealed class GameEngine : IDisposable
         _assets.FinishLoading();
         _coreSystems.Initialize();
         RegisterRenderer();
-        // prevent spam from first load. Move up to log startup issues
+        
         _engineGateway.AttachLogger();
+        _engineGateway.AttachGfxLogger();
     }
 
     private void RegisterRenderer()
@@ -144,10 +144,11 @@ public sealed class GameEngine : IDisposable
             beginStatus = BeginFrameStatus.Resize;
         }
 
-        if (_timeHub.RenderTicker.TryProcessDiagnostic(dt))
-        {
+        if (_timeHub.RenderTicker.TryProcessMetrics(dt))
             _engineGateway.RefreshMetrics();
-        }
+        
+        if(_timeHub.RenderTicker.TryProcessLoggers(dt))
+            _engineGateway.DrainLogs();
 
         if (CommandRouter.CommandQueueCount > 0) ProcessCommandQueue();
         if (_assets.PendingAssetCount > 0) ProcessPendingQueue(frameInfo.FrameIndex);

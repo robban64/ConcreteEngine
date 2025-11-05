@@ -18,6 +18,8 @@ public sealed class EditorService
     private readonly RightSidebar _rightSidebar;
 
     private readonly EditorStateContext _stateContext;
+    
+    public DevConsoleService DevConsole => _devConsole;
 
     public EditorService(MetricService metricService)
     {

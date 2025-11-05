@@ -1,8 +1,16 @@
 namespace Core.DebugTools.Utils;
 
-internal readonly ref struct NumberSpanFormatter(Span<char> buffer)
+public readonly ref struct NumberSpanFormatter(Span<char> buffer)
 {
     private readonly Span<char> _buffer = buffer;
+
+    public ReadOnlySpan<char> Format(float value, string format = "F2")
+    {
+        if (!value.TryFormat(_buffer, out int charsWritten, format))
+            throw new InvalidOperationException("Buffer too small for float formatting.");
+
+        return _buffer.Slice(0, charsWritten);
+    }
 
     public ReadOnlySpan<char> Format(int value)
     {

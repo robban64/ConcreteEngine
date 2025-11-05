@@ -10,23 +10,34 @@ public sealed class DebugConsoleCtx(DevConsoleService devConsole)
 
 public sealed class DevConsoleService
 {
+    private const int MaxLogCount = 128;
+    
     private readonly DevConsoleGui _consoleGui;
 
     private readonly DebugConsoleCtx _ctx;
-    
-    private readonly List<string> _log = new(64);
+
+    private readonly List<string> _log = new(MaxLogCount);
 
     internal DevConsoleService()
     {
-        _consoleGui = new DevConsoleGui(ExecCommand);
+        _consoleGui = new DevConsoleGui(_log, ExecCommand);
         _ctx = new DebugConsoleCtx(this);
     }
-    
-    public void Draw(int leftPanelWidth, int rightPanelWidth)
+
+    public void Draw(int leftPanelWidth, int rightPanelWidth) =>
+        _consoleGui.DrawConsole(leftPanelWidth, rightPanelWidth);
+
+    public void AddLog(string? msg)
     {
-        _consoleGui.DrawConsole(_log,leftPanelWidth, rightPanelWidth);
+        if (msg is null) return;
+        _log.Add(msg);
+        _consoleGui.ScrollToBottom();
+        
+        if(_log.Count >= MaxLogCount)
+            _log.RemoveRange(_log.Count / 2, _log.Count - (_log.Count / 2));
+
     }
-    
+
     private bool ExecCommand(string commandLine)
     {
         if (string.IsNullOrWhiteSpace(commandLine)) return false;
@@ -40,25 +51,16 @@ public sealed class DevConsoleService
         if (cmd == "clear")
         {
             _log.Clear();
-            _log.Add("[console cleared]");
+            AddLog("[console cleared]");
             return true;
         }
 
         if (!RouteTable.InvokeCommand(_ctx, cmd, arg1, arg2))
         {
-            _log.Add($"Unknown command: {cmd}");
+            AddLog($"Unknown command: {cmd}");
             return false;
         }
 
         return true;
     }
-
-    
-    public void AddLog(string? msg)
-    {
-        if (msg is null) return;
-        _log.Add(msg);
-        _consoleGui.ScrollToBottom();
-    }
-
 }

@@ -14,10 +14,6 @@ public struct Transform(Vector3 position, Vector3 scale, Quaternion rotation)
     public Vector3 Position = position;
     public Vector3 Scale = scale;
     public Quaternion Rotation = rotation;
-
-    public Transform(Vector3 position) : this(position, Vector3.One, Quaternion.Identity)
-    {
-    }
 }
 
 public struct ModelComponent(ModelId model, int drawCount, MaterialTagKey materialTagKey)

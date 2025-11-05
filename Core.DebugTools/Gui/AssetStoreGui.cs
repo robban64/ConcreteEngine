@@ -77,10 +77,10 @@ internal sealed class AssetStoreGui
             var bufferStr = formatter.Format(it.AssetId);
 
             ImGui.TableNextColumn();
-            CenterAlignCellTextVertical(bufferStr, rowHeight);
+            CenterAlignTextVertical(bufferStr, rowHeight);
 
             ImGui.TableNextColumn();
-            CenterAlignCellTextVertical(it.Name, rowHeight);
+            CenterAlignTextVertical(it.Name, rowHeight);
 
             ImGui.TableNextColumn();
 
@@ -164,11 +164,11 @@ internal sealed class AssetStoreGui
             ImGui.TableNextRow();
             ImGui.TableNextColumn();
             var bufferStr = formatter.Format(asset.ResourceId);
-            CenterAlignCellText(bufferStr);
+            CenterAlignTextHorizontal(bufferStr);
 
             ImGui.TableNextColumn();
             bufferStr = formatter.Format(asset.Generation);
-            CenterAlignCellText(bufferStr);
+            CenterAlignTextHorizontal(bufferStr);
 
             ImGui.TableNextColumn();
             ImGui.TextUnformatted(StringUtils.BoolToYesNo(asset.IsCoreAsset));
@@ -214,14 +214,14 @@ internal sealed class AssetStoreGui
 
                 var bufferStr = formatter.Format(it.AssetFileId);
                 ImGui.TableNextColumn();
-                CenterAlignCellText(bufferStr);
+                CenterAlignTextHorizontal(bufferStr);
 
                 ImGui.TableNextColumn();
                 ImGui.TextUnformatted(it.RelativePath);
 
                 bufferStr = formatter.Format(it.SizeInBytes);
                 ImGui.TableNextColumn();
-                CenterAlignCellText(bufferStr);
+                CenterAlignTextHorizontal(bufferStr);
 
                 ImGui.TableNextColumn();
                 if (it.ContentHash != null)

@@ -8,10 +8,10 @@ public sealed class AssetStoreViewModel
     public EditorAssetSelection TypeSelection { get; set; }
     public List<AssetObjectViewModel> AssetObjects { get; } = new(16);
     public List<AssetObjectFileViewModel> AssetFileObjects { get; } = new(4);
-    
+
     public void ResetState(bool clearTypeSelection = false)
     {
-        if(clearTypeSelection) TypeSelection = EditorAssetSelection.None;
+        if (clearTypeSelection) TypeSelection = EditorAssetSelection.None;
         AssetObjects.Clear();
         AssetFileObjects.Clear();
     }
@@ -46,19 +46,29 @@ public sealed record AssetObjectFileViewModel(
     long SizeInBytes,
     string? ContentHash);
 
-
-
-
-public sealed record EntityViewModel(
-    int EntityId,
-    string Name,
-    string TransformSummary,
-    int ComponentCount,
-    in EntityViewModel.ModelData Model,
-    in EntityViewModel.TransformData Transform
+public sealed class EntityViewModel(
+    int entityId,
+    string name,
+    int componentCount,
+    in EntityEditorModel model,
+    in EntityEditorTransform transform
 )
 {
-    public readonly record struct TransformData(in Vector3 Position, in Vector3 Rotation, in Vector3 Scale);
-    public readonly record struct ModelData(int ModelId, int MaterialTagKey, int DrawCount);
+    public int EntityId { get; } = entityId;
+    public string Name { get; } = name;
+    public int ComponentCount { get; } = componentCount;
+    public EntityEditorModel Model { get; set; } = model;
 
+    private EntityEditorTransform _transform = transform;
+    public ref EntityEditorTransform Transform => ref _transform;
 }
+
+public struct EntityEditorTransform(in Vector3 translation, in Vector3 scale, in Quaternion rotation)
+{
+    public Vector3 Translation = translation;
+    public Vector3 Scale = scale;
+    public Vector3 EulerAngles = Vector3.Zero;
+    public Quaternion Rotation = rotation;
+}
+
+public readonly record struct EntityEditorModel(int ModelId, int MaterialTagKey, int DrawCount);

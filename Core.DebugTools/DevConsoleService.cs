@@ -1,3 +1,4 @@
+using Core.DebugTools.Data;
 using Core.DebugTools.Gui;
 
 namespace Core.DebugTools;
@@ -38,12 +39,19 @@ public sealed class DevConsoleService
 
     }
 
-    internal bool ExecuteInternalCommand(string cmd, string? arg1, string? arg2 = null)
+    internal bool ExecuteInternalCommand(string cmd, string? action, string? arg2 = null)
     {
-        if (RouteTable.InvokeCommand(_ctx, cmd, arg1, arg2)) return true;
+        if (RouteTable.InvokeCommand(_ctx, cmd, action, arg2)) return true;
         AddLog($"Unknown command: {cmd}");
         return false;
     }
+    internal bool ExecuteInternalCommand(ConsoleCommandRequest req)
+    {
+        if (RouteTable.InvokeCommand(_ctx, req)) return true;
+        AddLog($"Unknown command: {req.Command}");
+        return false;
+    }
+    
 
     private bool ExecCommand(string commandLine)
     {

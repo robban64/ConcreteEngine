@@ -10,15 +10,16 @@ namespace Core.DebugTools;
 
 public static class CoreCmdNames
 {
-    public const string ShaderReload = "shader-reload";
+    public const string AssetShader = "asset-shader";
+    public const string WorldShadow = "world-shadow";
     public const string EntityTransform = "entity-transform";
 }
 
-public delegate void CommandRequestDel(DebugConsoleCtx ctx, ConsoleCmdRequest request);
+public delegate void ConsoleCmdRequestDel(DebugConsoleCtx ctx, ConsoleCommandRequest request);
 
 public static class RouteTable
 {
-    private static Dictionary<string, CommandRequestDel> _commands = new(4);
+    private static Dictionary<string, ConsoleCmdRequestDel> _commands = new(4);
 
     // Fetchers
     public static Func<FrameMetric<RenderInfoSample>>? PullFrameMetrics { get; set; }
@@ -29,24 +30,30 @@ public static class RouteTable
     public static Action<MetricData>? FillAssetMetrics { get; set; }
 
 
-    internal static Dictionary<string, CommandRequestDel>.KeyCollection RegisterCommands => _commands.Keys;
+    internal static Dictionary<string, ConsoleCmdRequestDel>.KeyCollection RegisterCommands => _commands.Keys;
 
     // Commands
-    internal static bool InvokeCommand(DebugConsoleCtx ctx, string cmd, string? arg1, string? arg2)
+    internal static bool InvokeCommand(DebugConsoleCtx ctx, string cmd, string? action, string? arg2)
     {
+        ArgumentNullException.ThrowIfNull(ctx, nameof(ctx));
+        ArgumentException.ThrowIfNullOrWhiteSpace(cmd, nameof(cmd));
+        
         if (!_commands.TryGetValue(cmd, out var handler)) return false;
-        handler(ctx, new ConsoleCmdRequest(cmd, arg1, arg2));
+        handler(ctx, new ConsoleCommandRequest(cmd, action, arg2));
         return true;
     }
 
-    internal static bool InvokeCommand(DebugConsoleCtx ctx, ConsoleCmdRequest req)
+    internal static bool InvokeCommand(DebugConsoleCtx ctx, ConsoleCommandRequest req)
     {
+        ArgumentNullException.ThrowIfNull(ctx, nameof(ctx));
+        ArgumentNullException.ThrowIfNull(req, nameof(req));
+
         if (!_commands.TryGetValue(req.Command, out var handler)) return false;
         handler(ctx, req);
         return true;
     }
 
-    public static void RegisterCommand(string command, CommandRequestDel del) => _commands[command] = del;
+    public static void RegisterCommand(string command, ConsoleCmdRequestDel del) => _commands[command] = del;
 
     public static bool UnregisterCommand(string command) => _commands.Remove(command);
 

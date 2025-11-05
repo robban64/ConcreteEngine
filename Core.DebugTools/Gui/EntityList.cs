@@ -1,4 +1,5 @@
 using System.Numerics;
+using ConcreteEngine.Common.Numerics.Maths;
 using Core.DebugTools.Data;
 using Core.DebugTools.Definitions;
 using Core.DebugTools.Editor;
@@ -9,21 +10,22 @@ namespace Core.DebugTools.Gui;
 
 internal sealed class EntityList
 {
+    private struct EntityDataState
+    {
+        public int ModelId;
+        public int MaterialTagKey;
+        public Vector3 Translation;
+        public Vector3 Scale;
+        public Vector3 EulerAngles;
+    }
+
     private const int RowHeight = 32;
     private const int ColumnWidth = 28;
 
-    private static readonly char[] CharBuffer = new char[8];
-
     private readonly EditorStateContext _ctx;
-
     private readonly EntityListViewModel _viewModel;
-    
-    private int _modelId = 0;
-    private int _materialTagKey = 0;
 
-    private Vector3 _translation = Vector3.Zero;
-    private Vector3 _scale = Vector3.One;
-    private Vector3 _rotation = Vector3.Zero;
+    private EntityDataState _entityState = default;
 
     public EntityList(EditorStateContext ctx)
     {
@@ -35,22 +37,37 @@ internal sealed class EntityList
     {
         if (entity is null)
         {
-            _modelId = 0;
-            _materialTagKey = 0;
-            _translation = Vector3.Zero;
-            _scale = Vector3.One;
-            _rotation = Vector3.Zero;
+            _entityState = default;
             return;
         }
+        
+        _entityState.ModelId = entity.Model.ModelId;
+        _entityState.MaterialTagKey = entity.Model.MaterialTagKey;
 
-        var transform = entity.Transform;
-        _modelId = entity.Model.ModelId;
-        _materialTagKey = entity.Model.MaterialTagKey;
-        _translation = transform.Position;
-        _scale = transform.Scale;
-        _rotation = transform.Rotation;
+        ref var transform = ref entity.Transform;
+        _entityState.Translation = transform.Translation;
+        _entityState.Scale = transform.Scale;
+        _entityState.EulerAngles = transform.EulerAngles;
+    }
 
+    private void OnUpdateTranslation(EntityViewModel entity)
+    {
+        entity.Transform.Translation = _entityState.Translation;
+        _ctx.ExecuteSetEntityTransform(entity);
+    }
 
+    private void OnUpdateScale(EntityViewModel entity)
+    {
+        entity.Transform.Scale = _entityState.Scale;
+        _ctx.ExecuteSetEntityTransform(entity);
+    }
+
+    private void OnUpdateRotation(EntityViewModel entity)
+    {
+        ref var transform = ref entity.Transform;
+        transform.Rotation = RotationMath.EulerDegreesToQuaternion(in _entityState.EulerAngles);
+        transform.EulerAngles = _entityState.EulerAngles;
+        _ctx.ExecuteSetEntityTransform(entity);
     }
 
     public void Draw()
@@ -93,7 +110,7 @@ internal sealed class EntityList
     private void DrawList()
     {
         //Span<char> buffer = stackalloc char[8];
-        var formatter = new NumberSpanFormatter(CharBuffer);
+        var formatter = new NumberSpanFormatter(StringUtils.CharBuffer8);
 
         foreach (var entity in _viewModel.Entities)
         {
@@ -125,17 +142,18 @@ internal sealed class EntityList
             GuiUtils.CenterAlignText(bufferStr, RowHeight);
 
             ImGui.TableNextColumn();
-            GuiUtils.CenterAlignText(entity.TransformSummary, RowHeight);
+            GuiUtils.CenterAlignText("text", RowHeight);
 
             bufferStr = formatter.Format(entity.EntityId);
-            
+
             ImGui.PushStyleVar(ImGuiStyleVar.WindowPadding, new Vector2(12, 10));
-            ImGui.SetNextWindowSize(new Vector2(250,0));
+            ImGui.SetNextWindowSize(new Vector2(250, 0));
             if (ImGui.BeginPopup(bufferStr, ImGuiWindowFlags.NoResize))
             {
                 DrawAssetFilePopupContent(entity);
                 ImGui.EndPopup();
             }
+
             ImGui.PopStyleVar();
 
 
@@ -146,44 +164,42 @@ internal sealed class EntityList
         }
     }
 
-    
+
     private void DrawAssetFilePopupContent(EntityViewModel entity)
     {
         ImGui.SeparatorText("Model");
         ImGui.TextUnformatted("ModelId");
-        if (ImGui.InputInt("##model-id", ref _modelId, 0, 0, ImGuiInputTextFlags.None))
+        if (ImGui.InputInt("##model-id", ref _entityState.ModelId, 0, 0, ImGuiInputTextFlags.None))
         {
-            
         }
 
         ImGui.TextUnformatted("MaterialTagKey");
-        if (ImGui.InputInt("##mat-tag", ref _materialTagKey, 0, 0, ImGuiInputTextFlags.None))
+        if (ImGui.InputInt("##mat-tag", ref _entityState.MaterialTagKey, 0, 0, ImGuiInputTextFlags.None))
         {
-            
         }
 
         ImGui.Dummy(new Vector2(0, 2));
         ImGui.SeparatorText("Transform");
-        
+
         ImGui.TextUnformatted("Translation");
         ImGui.Separator();
-        if (ImGui.InputFloat3("##translation", ref _translation, "%.3f", ImGuiInputTextFlags.None))
+        if (ImGui.InputFloat3("##translation", ref _entityState.Translation, "%.3f", ImGuiInputTextFlags.None))
         {
-            Console.WriteLine(_translation.ToString());
+            OnUpdateTranslation(entity);
         }
-        
+
         ImGui.TextUnformatted("Scale");
         ImGui.Separator();
-        if (ImGui.InputFloat3("##scale", ref _scale, "%.3f", ImGuiInputTextFlags.None))
+        if (ImGui.InputFloat3("##scale", ref _entityState.Scale, "%.3f", ImGuiInputTextFlags.None))
         {
-            
+            OnUpdateScale(entity);
         }
 
         ImGui.TextUnformatted("Rotation");
         ImGui.Separator();
-        if (ImGui.InputFloat3("##rotation", ref _rotation, "%.3f", ImGuiInputTextFlags.None))
+        if (ImGui.InputFloat3("##rotation", ref _entityState.EulerAngles, "%.3f", ImGuiInputTextFlags.None))
         {
-            
+            OnUpdateRotation(entity);
         }
     }
 

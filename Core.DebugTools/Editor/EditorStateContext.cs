@@ -1,3 +1,4 @@
+using System.Numerics;
 using ConcreteEngine.Common.Diagnostics;
 using Core.DebugTools.Data;
 using Core.DebugTools.Definitions;
@@ -14,7 +15,7 @@ internal sealed class EditorStateContext
 
     private readonly MetricService _metricService;
     private readonly DevConsoleService _devConsoleService;
-    
+
     private long _lastAction = TimeUtils.GetTimestamp();
 
     public EditorStateContext(MetricService metricService, DevConsoleService devConsoleService)
@@ -37,7 +38,7 @@ internal sealed class EditorStateContext
         SidebarMode = mode;
 
         if (mode != SidebarEditorMode.Assets) AssetViewModel.ResetState();
-        if (mode != SidebarEditorMode.Entities) EntityListViewModel.ResetState();
+        //if (mode != SidebarEditorMode.Entities) EntityListViewModel.ResetState();
 
         switch (mode)
         {
@@ -45,33 +46,36 @@ internal sealed class EditorStateContext
                 EditorTable.FillAssetStoreView?.Invoke(AssetViewModel.TypeSelection, AssetViewModel.AssetObjects);
                 break;
             case SidebarEditorMode.Entities:
-                EditorTable.FillEntityView?.Invoke(EntityListViewModel);
+                if(EntityListViewModel.Entities.Count == 0)
+                    EditorTable.FillEntityView?.Invoke(EntityListViewModel);
                 break;
         }
     }
 
-    
-    private bool CanExecute()
+
+    private bool CanExecute(int ms, bool print = false)
     {
-        if (!TimeUtils.HasIntervalPassed(_lastAction,4000))
+        if (!TimeUtils.HasIntervalPassed(_lastAction, ms))
         {
             _devConsoleService.AddLog("Command delay time has not passed");
-            return  false;
+            return false;
         }
+
         _lastAction = TimeUtils.GetTimestamp();
         return true;
     }
 
     public void ExecuteReloadShader(AssetObjectViewModel viewModel)
     {
-        if(!CanExecute())  return;
-        _devConsoleService.ExecuteInternalCommand(CoreCmdNames.ShaderReload, viewModel.Name);
-    }
-    
-    public void ExecuteSetEntityTransform(AssetObjectViewModel viewModel)
-    {
-        if(!CanExecute())  return;
-        _devConsoleService.ExecuteInternalCommand(CoreCmdNames.ShaderReload, viewModel.Name);
+        if (!CanExecute(1000, true)) return;
+        _devConsoleService.ExecuteInternalCommand(CoreCmdNames.AssetShader, "reload", viewModel.Name);
     }
 
+    public void ExecuteSetEntityTransform(EntityViewModel entity)
+    {
+        //if (!CanExecute(25)) return;
+        var payload = new TransformCmdPayload(entity.EntityId, in entity.Transform);
+        var req = new ConsoleCommandRequest(CoreCmdNames.EntityTransform, "set", Payload: payload);
+        _devConsoleService.ExecuteInternalCommand(req);
+    }
 }

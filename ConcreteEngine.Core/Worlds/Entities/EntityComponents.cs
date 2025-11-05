@@ -9,9 +9,9 @@ using ConcreteEngine.Renderer.Data;
 
 namespace ConcreteEngine.Core.Worlds.Entities;
 
-public struct Transform(Vector3 position, Vector3 scale, Quaternion rotation)
+public struct Transform(Vector3 translation, Vector3 scale, Quaternion rotation)
 {
-    public Vector3 Position = position;
+    public Vector3 Translation = translation;
     public Vector3 Scale = scale;
     public Quaternion Rotation = rotation;
 }

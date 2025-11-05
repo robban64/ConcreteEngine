@@ -1,4 +1,6 @@
+using System.Numerics;
 using System.Text;
+using ConcreteEngine.Common.Numerics.Maths;
 using ConcreteEngine.Core.Assets.Data;
 using ConcreteEngine.Core.Assets.Materials;
 using ConcreteEngine.Core.Assets.Meshes;
@@ -13,23 +15,19 @@ namespace ConcreteEngine.Core.Diagnostic;
 
 internal static class EditorObjectMapper
 {
-    public static EntityViewModel MakeEntityViewModel(StringBuilder sb, NumberSpanFormatter formatter, EntityId id,
-        in ModelComponent model,
-        in Transform transform)
+    public static EntityViewModel MakeEntityViewModel(EntityId id, in ModelComponent model, in Transform transform)
     {
-        var transformSummary = StructTextParser.VectorToText(in transform.Position, formatter, sb);
-        var transformData = new EntityViewModel
-            .TransformData(in transform.Position, in transform.Scale, in transform.Scale);
+        var transformData =
+            new EntityEditorTransform(in transform.Translation, in transform.Scale, in transform.Rotation);
 
-        var modelData = new EntityViewModel.ModelData(model.Model, model.MaterialKey.Value, model.DrawCount);
+        var modelData = new EntityEditorModel(model.Model, model.MaterialKey.Value, model.DrawCount);
 
         return new EntityViewModel(
-            EntityId: id,
-            Name: string.Empty,
-            TransformSummary: transformSummary,
-            ComponentCount: 2,
-            Model: in modelData,
-            Transform: in transformData);
+            entityId: id,
+            name: string.Empty,
+            componentCount: 2,
+            model: in modelData,
+            transform: in transformData);
     }
 
     public static AssetObjectFileViewModel MakeAssetObjectFile(AssetFileEntry entry) =>

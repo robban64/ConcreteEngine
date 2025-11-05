@@ -9,17 +9,18 @@ namespace ConcreteEngine.Common.Numerics.Maths;
 
 public sealed class MathHelper
 {
-    public const float OneDegree = MathF.PI / 180f;
-    public const float OneRadian = 180f / MathF.PI;
+    public const float Deg2Rad = MathF.PI / 180f;
+    public const float Rad2Deg = 180f / MathF.PI;
+    public const float SingularEpsilon = 1e-6f;
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static float Lerp(float a, float b, float t) => a + (b - a) * t;
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public static float ToRadians(float degrees) => OneDegree * degrees;
+    public static float ToRadians(float degrees) => Deg2Rad * degrees;
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public static float ToDegrees(float radians) => OneRadian * radians;
+    public static float ToDegrees(float radians) => Rad2Deg * radians;
 
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]

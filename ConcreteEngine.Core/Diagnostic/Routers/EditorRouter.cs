@@ -25,21 +25,17 @@ internal static class EditorRouter
     {
         if (_world is null) return;
 
-        var sb = new StringBuilder(64);
         Transform defaultTransform = default;
-
-        Span<char> buffer = stackalloc char[16];
-        var formatter = new NumberSpanFormatter(buffer);
 
         foreach (var it in _world.Query<ModelComponent>())
         {
             ref var model = ref it.Component;
-            ref var transform = ref (_world.Transforms.Has(it.Entity)
+
+            ref var transform = ref _world.Transforms.Has(it.Entity)
                 ? ref _world.Transforms.GetById(it.Entity)
-                : ref defaultTransform);
-            
-            viewModel.Entities.Add(EditorObjectMapper.MakeEntityViewModel(sb, formatter, it.Entity, in model, in transform));
-            sb.Clear();
+                : ref defaultTransform;
+
+            viewModel.Entities.Add(EditorObjectMapper.MakeEntityViewModel(it.Entity, in model, in transform));
         }
     }
 

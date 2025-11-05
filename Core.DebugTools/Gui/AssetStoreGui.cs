@@ -16,7 +16,6 @@ internal sealed class AssetStoreGui
     private readonly AssetStoreViewModel _viewModel;
 
     private static readonly string[] AssetTypeArray = ["None", "Shader", "Texture", "Model", "Material"];
-    private static readonly char[] CharBuffer = new char[16];
 
     public AssetStoreGui(EditorStateContext ctx)
     {
@@ -67,7 +66,7 @@ internal sealed class AssetStoreGui
         ImGui.PushStyleVar(ImGuiStyleVar.CellPadding, new Vector2(8, 8));
 
         //Span<char> buffer = stackalloc char[8];
-        var formatter = new NumberSpanFormatter(CharBuffer);
+        var formatter = new NumberSpanFormatter(StringUtils.CharBuffer16);
 
         foreach (var it in _viewModel.AssetObjects)
         {
@@ -145,7 +144,7 @@ internal sealed class AssetStoreGui
     private void DrawAssetFilePopupContent(AssetObjectViewModel asset)
     {
         //Span<char> buffer = stackalloc char[8];
-        var formatter = new NumberSpanFormatter(CharBuffer);
+        var formatter = new NumberSpanFormatter(StringUtils.CharBuffer8);
 
         ImGui.PushStyleVar(ImGuiStyleVar.CellPadding, new Vector2(4, 6));
         ImGui.SeparatorText(asset.Name);

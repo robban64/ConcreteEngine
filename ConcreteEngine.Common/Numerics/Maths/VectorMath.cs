@@ -1,6 +1,7 @@
 #region
 
 using System.Numerics;
+using System.Runtime.CompilerServices;
 
 #endregion
 
@@ -8,6 +9,7 @@ namespace ConcreteEngine.Common.Numerics.Maths;
 
 public static class VectorMath
 {
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static float BarryCentric(Vector3 p1, Vector3 p2, Vector3 p3, Vector2 pos)
     {
         float det = (p2.Z - p3.Z) * (p1.X - p3.X) + (p3.X - p2.X) * (p1.Z - p3.Z);

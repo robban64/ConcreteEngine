@@ -3,9 +3,11 @@
 using System.Runtime.CompilerServices;
 using ConcreteEngine.Common.Diagnostics;
 using ConcreteEngine.Common.Numerics;
+using ConcreteEngine.Common.Numerics.Maths;
 using ConcreteEngine.Core.Assets;
 using ConcreteEngine.Core.Assets.Data;
 using ConcreteEngine.Core.Diagnostic.Utils;
+using ConcreteEngine.Core.Worlds;
 using ConcreteEngine.Core.Worlds.Data;
 using ConcreteEngine.Core.Worlds.Entities;
 using ConcreteEngine.Core.Worlds.Render;
@@ -57,44 +59,50 @@ internal sealed record FboCommandRequest(FboRequestAction Action, Size2D Size)
 internal static class CommandRouter
 {
     private static Queue<CommandRequestContract> _commandQueue = new(4);
-    
+
     public static int CommandQueueCount => _commandQueue.Count;
 
     internal static bool TryDequeueCommand(out CommandRequestContract request)
         => _commandQueue.TryDequeue(out request);
 
-    public static void OnShaderReload(DebugConsoleCtx ctx, ConsoleCmdRequest req)
+    public static void OnAssetShaderCmd(DebugConsoleCtx ctx, ConsoleCommandRequest req)
     {
-        if (string.IsNullOrWhiteSpace(req.Arg1) || req.Arg1.Length < 2)
-        {
-            ctx.AddMissingArg(nameof(req.Arg1));
-            return;
-        }
+        ArgumentNullException.ThrowIfNull(req.Action, nameof(req.Action));
 
-        _commandQueue.Enqueue(new AssetCommandRequest(req.Arg1, AssetRequestAction.ReloadAsset, AssetKind.Shader));
-        ctx.AddLog("Shader reload enqueued");
+        switch (req.Action)
+        {
+            case "reload":
+            {
+                ArgumentException.ThrowIfNullOrWhiteSpace(req.Args, nameof(req.Args));
+                _commandQueue.Enqueue(new AssetCommandRequest(req.Args, AssetRequestAction.ReloadAsset,
+                    AssetKind.Shader));
+                ctx.AddLog("Shader reload enqueued");
+                break;
+            }
+            default:
+                throw new ArgumentException("Unknown CommandRequestAction", nameof(req.Action));
+        }
     }
 
-    public static void OnShadowMap(DebugConsoleCtx ctx, ConsoleCmdRequest req)
+    public static void OnWorldShadowCmd(DebugConsoleCtx ctx, ConsoleCommandRequest req)
     {
         var shadowSize = 0;
+
+        if (req.Payload is GenericCmdPayload payload)
+            shadowSize = payload.IntArg;
+
         if (req.Payload is null)
         {
-            if (string.IsNullOrWhiteSpace(req.Arg1))
+            if (string.IsNullOrWhiteSpace(req.Action))
             {
-                ctx.AddMissingArg(nameof(req.Arg1));
+                ctx.AddMissingArg(nameof(req.Action));
                 return;
             }
 
-            var size = CommandUtils.IntArg(req.Arg1);
+            var size = CommandUtils.IntArg(req.Args);
             shadowSize = CommandUtils.GetShadowSize(size);
+        }
 
-        }
-        else
-        {
-            shadowSize = req.Payload.IntData;
-        }
-        
         if (shadowSize <= 0)
             throw new ArgumentException("Supported are 1,2,4,8 (1024, 2048, 4096, 8192)");
 
@@ -102,8 +110,24 @@ internal static class CommandRouter
         ctx.AddLog("ShadowMap resize enqueued");
     }
 
+    //TODO
+    public static World world;
 
-    public static void OnCmdStructSizes(DebugConsoleCtx ctx, ConsoleCmdRequest req)
+    public static void OnEntityTransformCmd(DebugConsoleCtx ctx, ConsoleCommandRequest req)
+    {
+        if (req.Payload is not TransformCmdPayload payload)
+            throw new ArgumentException(nameof(req.Payload));
+
+        ref var transform = ref world.Transforms.GetById(new EntityId(payload.EntityId));
+        ref readonly var incomingTransform = ref payload.Transform;
+
+        transform.Translation = incomingTransform.Translation;
+        transform.Scale = incomingTransform.Scale;
+        transform.Rotation = incomingTransform.Rotation;
+    }
+
+
+    public static void OnStructSizesCmd(DebugConsoleCtx ctx, ConsoleCommandRequest req)
     {
         /*
         ctx.AddLog(StructStr<TextureSlotInfo>());

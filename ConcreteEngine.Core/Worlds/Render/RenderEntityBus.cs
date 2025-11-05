@@ -66,7 +66,7 @@ internal sealed class RenderEntityBus
             //if (model.MaterialKey == default) continue;
             //if (model.Model == default) continue;
 
-            var depthKey = DepthKeyUtility.MakeDepthKey(in viewMat, transform.Position, near, far);
+            var depthKey = DepthKeyUtility.MakeDepthKey(in viewMat, transform.Translation, near, far);
 
             _entities[idx++] = new DrawEntity(
                 entity: query.Entity,
@@ -115,7 +115,7 @@ internal sealed class RenderEntityBus
             }
 
             MatrixMath.CreateModelMatrix(
-                entity.Transform.Position,
+                entity.Transform.Translation,
                 entity.Transform.Scale,
                 entity.Transform.Rotation,
                 out var world
@@ -190,7 +190,7 @@ internal sealed class RenderEntityBus
         out Vector4 v1, out Vector4 v2)
     {
         MatrixMath.CreateModelMatrix(
-            transform.Position,
+            transform.Translation,
             transform.Scale,
             transform.Rotation,
             out model

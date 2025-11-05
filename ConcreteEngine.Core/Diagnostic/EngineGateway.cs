@@ -59,6 +59,7 @@ internal sealed class EngineGateway : IDisposable
         
         MetricRouter.Attach(world, assetSystem, frameInfo);
         EditorRouter.Attach(world, assetSystem);
+        CommandRouter.world = world;
 
     }
 
@@ -70,9 +71,10 @@ internal sealed class EngineGateway : IDisposable
         if (HasBoundCommands) throw new InvalidOperationException(nameof(HasBoundCommands));
         HasBoundCommands = true;
 
-        RouteTable.RegisterCommand("inspect-structs", CmdWrapper(CommandRouter.OnCmdStructSizes));
-        RouteTable.RegisterCommand(CoreCmdNames.ShaderReload, CmdWrapper(CommandRouter.OnShaderReload));
-        RouteTable.RegisterCommand("shadow-map", CmdWrapper(CommandRouter.OnShadowMap));
+        RouteTable.RegisterCommand("inspect-structs", CmdWrapper(CommandRouter.OnStructSizesCmd));
+        RouteTable.RegisterCommand(CoreCmdNames.AssetShader, CmdWrapper(CommandRouter.OnAssetShaderCmd));
+        RouteTable.RegisterCommand(CoreCmdNames.WorldShadow, CmdWrapper(CommandRouter.OnWorldShadowCmd));
+        RouteTable.RegisterCommand(CoreCmdNames.EntityTransform, CmdWrapper(CommandRouter.OnEntityTransformCmd));
 
         EditorTable.FillAssetStoreView = EditorRouter.PullAssetStoreData;
         EditorTable.FetchAssetObjectFiles = EditorRouter.PullAssetObjectFiles;
@@ -169,7 +171,7 @@ internal sealed class EngineGateway : IDisposable
 
 
     // create closure over incoming
-    private static CommandRequestDel CmdWrapper(CommandRequestDel del)
+    private static ConsoleCmdRequestDel CmdWrapper(ConsoleCmdRequestDel del)
     {
         return (ctx, req) =>
         {

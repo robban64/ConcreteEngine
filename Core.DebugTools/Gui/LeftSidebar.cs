@@ -1,6 +1,7 @@
 using System.Numerics;
 using Core.DebugTools.Data;
 using Core.DebugTools.Definitions;
+using Core.DebugTools.Editor;
 using Core.DebugTools.Gui.Metrics;
 using Core.DebugTools.Utils;
 using ImGuiNET;
@@ -55,33 +56,53 @@ internal sealed class LeftSidebar
     
     private void DrawMetrics()
     {
-        var metrics = _metricService.TextData;
-        SceneMetricsGui.DrawSceneMetrics(metrics.SceneMetrics);
-        ImGui.Dummy(new Vector2(0, 6));
-        AssetStoreMetricsGui.DrawAssetStoreMetrics(metrics);
-        ImGui.Dummy(new Vector2(0, 6));
-        GfxStoreMetricsGui.DrawGfxStoreMetrics(metrics);
+        ImGui.PushStyleVar(ImGuiStyleVar.WindowPadding, new Vector2(12f, 0));
+        if(ImGui.BeginChild("##left-sidebar-metrics", new Vector2(0), ImGuiChildFlags.AlwaysUseWindowPadding | ImGuiChildFlags.AutoResizeY))
+        {
+            var metrics = _metricService.TextData;
+            SceneMetricsGui.DrawSceneMetrics(metrics.SceneMetrics);
+            ImGui.Dummy(new Vector2(0, 6));
+            AssetStoreMetricsGui.DrawAssetStoreMetrics(metrics);
+            ImGui.Dummy(new Vector2(0, 6));
+            GfxStoreMetricsGui.DrawGfxStoreMetrics(metrics);
+            ImGui.EndChild();
+        }
+        ImGui.PopStyleVar();
     }
     
     private void DrawEditor()
     {
-        ImGui.SetCursorPosX(12f);
-        DrawModeSelector();
-        ImGui.PopStyleVar();
-        
-        switch (_ctx.SidebarMode)
+        ImGui.PushStyleVar(ImGuiStyleVar.WindowPadding, new Vector2(12f, 0));
+        if(ImGui.BeginChild("##left-sidebar-editor-header", new Vector2(0), ImGuiChildFlags.AlwaysUseWindowPadding | ImGuiChildFlags.AutoResizeY))
         {
-            case SidebarEditorMode.Assets: _assetStoreGui.Draw(); break;
-            case SidebarEditorMode.Entities: _entityList.Draw(); break;
-            case SidebarEditorMode.None: break;
-            default: throw new ArgumentOutOfRangeException();
+            ImGui.PopStyleVar();
+
+            DrawModeSelector();
+
+            if (_ctx.SidebarMode == SidebarEditorMode.Assets)
+            {
+                _assetStoreGui.DrawSubHeader();
+                _assetStoreGui.Draw();
+            }
+            
+            ImGui.EndChild();
         }
+
+       if(_ctx.SidebarMode == SidebarEditorMode.Entities)
+           _entityList.Draw();
         
     }
 
     private void DrawModeSelector()
     {
         ImGui.PushStyleVar(ImGuiStyleVar.FramePadding, new Vector2(12, 4));
+        ImGui.PushStyleVar(ImGuiStyleVar.TabRounding, 0.5f);
+        ImGui.PushStyleVar(ImGuiStyleVar.TabBarBorderSize, 1f);
+        ImGui.PushStyleVar(ImGuiStyleVar.TabBorderSize, 1);
+        ImGui.PushStyleColor(ImGuiCol.TabHovered, GuiTheme.Blue1);
+        ImGui.PushStyleColor(ImGuiCol.TabActive, GuiTheme.SelectedColor);
+        ImGui.PushStyleColor(ImGuiCol.Tab, GuiTheme.PrimaryColor);
+
 
         if (ImGui.BeginTabBar("left_panel_tabs", ImGuiTabBarFlags.None))
         {
@@ -105,8 +126,8 @@ internal sealed class LeftSidebar
 
             ImGui.EndTabBar();
         }
-
-        ImGui.PopStyleVar();
+        ImGui.PopStyleVar(4);
+        ImGui.PopStyleColor(3);
     }
 
 

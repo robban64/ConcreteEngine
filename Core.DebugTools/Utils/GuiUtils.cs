@@ -1,6 +1,7 @@
 #region
 
 using System.Numerics;
+using ConcreteEngine.Common.Numerics;
 using ImGuiNET;
 
 #endregion
@@ -12,7 +13,7 @@ internal static class GuiUtils
     
     public static void DrawSectionHeader(string title)
     {
-        ImGui.PushStyleColor(ImGuiCol.Text, 0x99FFFFFF);
+        ImGui.PushStyleColor(ImGuiCol.Text, Color4.LightGray.AsVec4());
         ImGui.SeparatorText(title);
         ImGui.PopStyleColor();
 
@@ -32,9 +33,6 @@ internal static class GuiUtils
         if (!string.IsNullOrEmpty(text))
             ImGui.TextUnformatted(text);
     }
-
-    public static void SetupTableColumnId(string name) =>
-        ImGui.TableSetupColumn(name, ImGuiTableColumnFlags.WidthFixed, 22.0f);
 
     public static void CenterAlignTextVertical(ReadOnlySpan<char> text, float rowHeight)
     {
@@ -68,7 +66,6 @@ internal static class GuiUtils
         ImGui.TextUnformatted(text);
 
     }
-
 
     public static void RightAlignCellText(string? text)
     {

@@ -1,6 +1,7 @@
 using System.Numerics;
 using Core.DebugTools.Data;
 using Core.DebugTools.Definitions;
+using Core.DebugTools.Editor;
 using Core.DebugTools.Utils;
 using ImGuiNET;
 using static Core.DebugTools.Utils.GuiUtils;
@@ -15,6 +16,7 @@ internal sealed class AssetStoreGui
     private readonly AssetStoreViewModel _viewModel;
 
     private static readonly string[] AssetTypeArray = ["None", "Shader", "Texture", "Model", "Material"];
+    private static readonly char[] CharBuffer = new char[16];
 
     public AssetStoreGui(EditorStateContext ctx)
     {
@@ -41,17 +43,15 @@ internal sealed class AssetStoreGui
         EditorTable.FillAssetStoreView?.Invoke(selection, _viewModel.AssetObjects);
     }
 
-    public void Draw()
+    public void DrawSubHeader()
     {
         ImGui.SeparatorText("Asset Store");
         DrawAssetTypeSelector();
         ImGui.Separator();
-        DrawAssetObjects();
-        ImGui.End();
-        ImGui.PopStyleVar(2);
+
     }
 
-    private void DrawAssetObjects()
+    public void Draw()
     {
         const ImGuiTableFlags flags = ImGuiTableFlags.SizingFixedFit | ImGuiTableFlags.BordersInnerH;
         const int rowHeight = 32;
@@ -66,8 +66,8 @@ internal sealed class AssetStoreGui
 
         ImGui.PushStyleVar(ImGuiStyleVar.CellPadding, new Vector2(8, 8));
 
-        Span<char> buffer = stackalloc char[8];
-        var formatter = new NumberSpanFormatter(buffer);
+        //Span<char> buffer = stackalloc char[8];
+        var formatter = new NumberSpanFormatter(CharBuffer);
 
         foreach (var it in _viewModel.AssetObjects)
         {
@@ -97,11 +97,13 @@ internal sealed class AssetStoreGui
                 ImGui.OpenPopup(bufferStr);
             }
 
+            ImGui.PushStyleVar(ImGuiStyleVar.WindowPadding, new Vector2(12f, 10f));
             if (ImGui.BeginPopup(bufferStr))
             {
                 DrawAssetFilePopupContent(it);
                 ImGui.EndPopup();
             }
+            ImGui.PopStyleVar();
 
             ImGui.PopID();
         }
@@ -112,12 +114,15 @@ internal sealed class AssetStoreGui
 
     private void DrawAssetTypeSelector()
     {
-        ImGui.PushStyleVar(ImGuiStyleVar.ItemSpacing, new Vector2(6, 6));
         ImGui.PushStyleVar(ImGuiStyleVar.FramePadding, new Vector2(8, 6));
+        ImGui.PushStyleVar(ImGuiStyleVar.WindowPadding, new Vector2(8, 6));
 
         string currentLabel = AssetTypeArray[(int)_viewModel.TypeSelection];
+        ImGui.SetNextItemWidth(ImGui.GetContentRegionAvail().X - 8f);
         if (ImGui.BeginCombo("##assetTypeSelector", currentLabel, ImGuiComboFlags.HeightLargest))
         {
+            ImGui.PushStyleVar(ImGuiStyleVar.ItemSpacing, new Vector2(6, 12));
+
             for (int i = 0; i < AssetTypeArray.Length; i++)
             {
                 bool isSelected = (i == (int)_viewModel.TypeSelection);
@@ -125,17 +130,10 @@ internal sealed class AssetStoreGui
                 if (ImGui.Selectable(AssetTypeArray[i], isSelected, ImGuiSelectableFlags.None, Vector2.Zero))
                     OnSelectTypeChange((EditorAssetSelection)i);
 
-                if (i < AssetTypeArray.Length - 1)
-                {
-                    var p1 = ImGui.GetCursorScreenPos();
-                    var width = ImGui.GetContentRegionAvail().X;
-                    ImGui.GetWindowDrawList().AddLine(p1, p1 + new Vector2(width, 0),
-                        ImGui.GetColorU32(new Vector4(1, 1, 1, 0.05f)));
-                }
-
                 if (isSelected)
                     ImGui.SetItemDefaultFocus();
             }
+            ImGui.PopStyleVar();
 
             ImGui.EndCombo();
         }
@@ -146,8 +144,8 @@ internal sealed class AssetStoreGui
 
     private void DrawAssetFilePopupContent(AssetObjectViewModel asset)
     {
-        Span<char> buffer = stackalloc char[8];
-        var formatter = new NumberSpanFormatter(buffer);
+        //Span<char> buffer = stackalloc char[8];
+        var formatter = new NumberSpanFormatter(CharBuffer);
 
         ImGui.PushStyleVar(ImGuiStyleVar.CellPadding, new Vector2(4, 6));
         ImGui.SeparatorText(asset.Name);
@@ -187,6 +185,7 @@ internal sealed class AssetStoreGui
             ImGui.Separator();
             if (ImGui.Button("Reload", new Vector2(72, 28)))
             {
+                _ctx.ExecuteReloadShader(asset);
                 ImGui.CloseCurrentPopup();
             }
         }

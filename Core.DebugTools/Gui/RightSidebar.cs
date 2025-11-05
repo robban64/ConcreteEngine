@@ -3,6 +3,7 @@
 using System.Numerics;
 using Core.DebugTools.Data;
 using Core.DebugTools.Definitions;
+using Core.DebugTools.Editor;
 using Core.DebugTools.Utils;
 using ImGuiNET;
 using static Core.DebugTools.Utils.GuiUtils;

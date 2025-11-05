@@ -10,6 +10,7 @@ using ConcreteEngine.Core.Worlds;
 using ConcreteEngine.Graphics.Diagnostic;
 using Core.DebugTools;
 using Core.DebugTools.Data;
+using Core.DebugTools.Editor;
 using Silk.NET.Input;
 using Silk.NET.OpenGL;
 using Silk.NET.Windowing;

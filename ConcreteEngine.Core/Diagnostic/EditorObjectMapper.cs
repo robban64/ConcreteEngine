@@ -36,11 +36,13 @@ internal static class EditorObjectMapper
                 specialValue = shader.Samplers.ToString();
                 resourceId = shader.ResourceId;
                 hasActions = true;
+                resourceName = "GfxId";
                 break;
             case Texture2D tex:
                 specialName = "Size";
                 specialValue = $"{tex.Width}X{tex.Height}";
                 resourceId = tex.ResourceId;
+                resourceName = "TexId";
                 break;
             case Model model:
                 specialName = "Meshes";

@@ -18,8 +18,8 @@ internal sealed class ShaderLoaderModule(AssetGfxUploader uploader)
     public Shader LoadShader(AssetId assetId, ShaderDescriptor manifest, bool isCoreAsset, out AssetFileSpec[] specs)
     {
         if (!IsPrepared) Prepare();
-        var basePath = isCoreAsset ? 
-            Path.Combine(AssetPaths.CorePath, AssetPaths.ShaderFolder, "core-shaders")
+        var basePath = isCoreAsset
+            ? Path.Combine(AssetPaths.CorePath, AssetPaths.ShaderFolder, "core-shaders")
             : Path.Combine(AssetPaths.AssetPath, AssetPaths.ShaderFolder);
 
         var payload = _loader.LoadShader(manifest, basePath);
@@ -45,19 +45,11 @@ internal sealed class ShaderLoaderModule(AssetGfxUploader uploader)
         var vert = files[vertIdx];
         var frag = vertIdx == 0 ? files[1] : files[0];
 
-        var basePath = shader.IsCoreAsset ? 
-            Path.Combine(AssetPaths.CorePath, "core-shaders")
+        var basePath = shader.IsCoreAsset
+            ? Path.Combine(AssetPaths.CorePath, "shaders", "core-shaders")
             : Path.Combine(AssetPaths.AssetPath, AssetPaths.ShaderFolder);
-        var vPath = shader.IsCoreAsset
-            ? AssetPaths.CoreShaderPath("core-shaders", vert.RelativePath)
-            : AssetPaths.GetShaderPath(vert.RelativePath);
-        var fPath = shader.IsCoreAsset
-            ? AssetPaths.CoreShaderPath("core-shaders", frag.RelativePath)
-            : AssetPaths.GetShaderPath(frag.RelativePath);
 
-        
-        
-        var desc = new ShaderDescriptor(shader.Name, vPath, fPath);
+        var desc = new ShaderDescriptor(shader.Name, vert.RelativePath, frag.RelativePath);
         var payload = _loader.LoadShader(desc, basePath);
         uploader.RecreateShader(shader.ResourceId, payload, out var info);
         specs = [payload.VertexFileSpec, payload.FragmentFileSpec];

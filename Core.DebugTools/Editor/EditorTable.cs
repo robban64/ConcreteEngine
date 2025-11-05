@@ -1,7 +1,7 @@
 using Core.DebugTools.Data;
 using Core.DebugTools.Definitions;
 
-namespace Core.DebugTools;
+namespace Core.DebugTools.Editor;
 
 public static class EditorTable
 {

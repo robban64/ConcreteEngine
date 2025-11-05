@@ -1,5 +1,6 @@
 using System.Numerics;
 using Core.DebugTools.Data;
+using Core.DebugTools.Utils;
 using ImGuiNET;
 using static Core.DebugTools.Utils.GuiUtils;
 
@@ -11,8 +12,15 @@ internal static class GfxStoreMetricsGui
 
     public static void DrawGfxStoreMetrics(MetricReport data)
     {
-        DrawSectionHeader("GFX Metrics");
+        ImGui.SeparatorText("Gfx Metrics");
         ImGui.PushStyleVar(ImGuiStyleVar.FramePadding, new Vector2(12, 4));
+        ImGui.PushStyleVar(ImGuiStyleVar.TabRounding, 0.5f);
+        ImGui.PushStyleVar(ImGuiStyleVar.TabBarBorderSize, 1f);
+        ImGui.PushStyleVar(ImGuiStyleVar.TabBorderSize, 1);
+        ImGui.PushStyleColor(ImGuiCol.TabHovered, GuiTheme.Blue1);
+        ImGui.PushStyleColor(ImGuiCol.TabActive, GuiTheme.SelectedColor);
+        ImGui.PushStyleColor(ImGuiCol.Tab, GuiTheme.PrimaryColor);
+
         if (ImGui.BeginTabBar("metrics_tabs", ImGuiTabBarFlags.FittingPolicyScroll))
         {
             if (ImGui.BeginTabItem("Main"))
@@ -30,7 +38,8 @@ internal static class GfxStoreMetricsGui
             ImGui.EndTabBar();
         }
 
-        ImGui.PopStyleVar();
+        ImGui.PopStyleVar(4);
+        ImGui.PopStyleColor(3);
     }
 
 

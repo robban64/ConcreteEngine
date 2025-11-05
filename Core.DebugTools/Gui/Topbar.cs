@@ -1,6 +1,7 @@
 using System.Numerics;
 using Core.DebugTools.Data;
 using Core.DebugTools.Definitions;
+using Core.DebugTools.Editor;
 using Core.DebugTools.Utils;
 using ImGuiNET;
 
@@ -41,18 +42,18 @@ internal sealed class Topbar
                 var selected = i == (int)_ctx.ViewMode;
 
                 ImGui.PushStyleVar(ImGuiStyleVar.SelectableTextAlign, new Vector2(0.5f));
-                ImGui.PushStyleColor(ImGuiCol.HeaderHovered, GuiTheme.HoverColor);
-                ImGui.PushStyleColor(ImGuiCol.HeaderActive, GuiTheme.HoverColor);
+                ImGui.PushStyleColor(ImGuiCol.HeaderHovered, GuiTheme.SelectedColor);
+                ImGui.PushStyleColor(ImGuiCol.HeaderActive, GuiTheme.SelectedColor);
                 ImGui.PushStyleColor(ImGuiCol.Header, GuiTheme.PrimaryColor);
-
+                
                 if (ImGui.Selectable(Modes[i], selected, ImGuiSelectableFlags.None,
                         new Vector2(73, GuiTheme.TopbarHeight)))
                 {
                     OnViewModeChanged((EditorViewMode)i);
                 }
 
-                ImGui.PopStyleColor(2);
-                ImGui.PopStyleVar();
+                ImGui.PopStyleColor(3);
+                ImGui.PopStyleVar(1);
             }
         }
 

@@ -9,12 +9,12 @@ public static class AssetStoreMetricsGui
 {
     public static void DrawAssetStoreMetrics(MetricReport report)
     {
-        DrawSectionHeader("Asset Metrics");
+        ImGui.SeparatorText("Asset Metrics");
 
         if (!string.IsNullOrEmpty(report.MaterialMetrics))
         {
             ImGui.PushTextWrapPos(0f);
-            ImGui.TextDisabled(report.MaterialMetrics);
+            DrawSectionHeader(report.MaterialMetrics);
             ImGui.PopTextWrapPos();
             ImGui.Dummy(new Vector2(0, 4));
         }

@@ -2,6 +2,7 @@
 
 using System.Numerics;
 using Core.DebugTools.Data;
+using Core.DebugTools.Editor;
 using Core.DebugTools.Gui;
 using ImGuiNET;
 using Silk.NET.Input;

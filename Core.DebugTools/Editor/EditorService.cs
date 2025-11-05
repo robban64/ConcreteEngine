@@ -1,12 +1,8 @@
-using System.Numerics;
-using ConcreteEngine.Common.Numerics;
-using Core.DebugTools.Data;
 using Core.DebugTools.Definitions;
 using Core.DebugTools.Gui;
 using Core.DebugTools.Utils;
-using ImGuiNET;
 
-namespace Core.DebugTools;
+namespace Core.DebugTools.Editor;
 
 public sealed class EditorService
 {
@@ -24,8 +20,8 @@ public sealed class EditorService
     public EditorService(MetricService metricService)
     {
         _metricService = metricService;
-        _stateContext = new EditorStateContext(_metricService);
         _devConsole = new DevConsoleService();
+        _stateContext = new EditorStateContext(_metricService, DevConsole);
         _topbar = new Topbar(_stateContext);
         _leftSidebar = new LeftSidebar(_metricService, _stateContext);
         _rightSidebar = new RightSidebar(_metricService, _stateContext);

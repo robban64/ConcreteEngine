@@ -38,6 +38,13 @@ public sealed class DevConsoleService
 
     }
 
+    internal bool ExecuteInternalCommand(string cmd, string? arg1, string? arg2 = null)
+    {
+        if (RouteTable.InvokeCommand(_ctx, cmd, arg1, arg2)) return true;
+        AddLog($"Unknown command: {cmd}");
+        return false;
+    }
+
     private bool ExecCommand(string commandLine)
     {
         if (string.IsNullOrWhiteSpace(commandLine)) return false;

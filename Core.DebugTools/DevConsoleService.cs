@@ -62,6 +62,12 @@ public sealed class DevConsoleService
             return true;
         }
 
+        if (cmd == "help" || cmd == "info")
+        {
+            PrintCommands();
+            return true;
+        }
+
         if (!RouteTable.InvokeCommand(_ctx, cmd, arg1, arg2))
         {
             AddLog($"Unknown command: {cmd}");
@@ -69,5 +75,11 @@ public sealed class DevConsoleService
         }
 
         return true;
+    }
+
+    private void PrintCommands()
+    {
+        foreach (var cmd in RouteTable.RegisterCommands)
+            AddLog(cmd);
     }
 }

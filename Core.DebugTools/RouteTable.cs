@@ -1,5 +1,6 @@
 #region
 
+using System.Numerics;
 using ConcreteEngine.Common.Diagnostics;
 using Core.DebugTools.Data;
 
@@ -9,12 +10,15 @@ namespace Core.DebugTools;
 
 public static class CoreCmdNames
 {
-    public const string ReloadShader = "reload-shader";
+    public const string ShaderReload = "shader-reload";
+    public const string EntityTransform = "entity-transform";
 }
+
+public delegate void CommandRequestDel(DebugConsoleCtx ctx, ConsoleCmdRequest request);
 
 public static class RouteTable
 {
-    private static Dictionary<string, Action<DebugConsoleCtx, string?, string?>> _commands = new(4);
+    private static Dictionary<string, CommandRequestDel> _commands = new(4);
 
     // Fetchers
     public static Func<FrameMetric<RenderInfoSample>>? PullFrameMetrics { get; set; }
@@ -25,16 +29,24 @@ public static class RouteTable
     public static Action<MetricData>? FillAssetMetrics { get; set; }
 
 
+    internal static Dictionary<string, CommandRequestDel>.KeyCollection RegisterCommands => _commands.Keys;
+
     // Commands
     internal static bool InvokeCommand(DebugConsoleCtx ctx, string cmd, string? arg1, string? arg2)
     {
-        if (!_commands.TryGetValue(cmd, out var commandHandler)) return false;
-        commandHandler(ctx, arg1, arg2);
+        if (!_commands.TryGetValue(cmd, out var handler)) return false;
+        handler(ctx, new ConsoleCmdRequest(cmd, arg1, arg2));
         return true;
     }
 
-    public static void RegisterCommand(string command, Action<DebugConsoleCtx, string?, string?> commandHandler) =>
-        _commands[command] = commandHandler;
+    internal static bool InvokeCommand(DebugConsoleCtx ctx, ConsoleCmdRequest req)
+    {
+        if (!_commands.TryGetValue(req.Command, out var handler)) return false;
+        handler(ctx, req);
+        return true;
+    }
+
+    public static void RegisterCommand(string command, CommandRequestDel del) => _commands[command] = del;
 
     public static bool UnregisterCommand(string command) => _commands.Remove(command);
 

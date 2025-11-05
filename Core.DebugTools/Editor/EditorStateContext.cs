@@ -14,6 +14,8 @@ internal sealed class EditorStateContext
 
     private readonly MetricService _metricService;
     private readonly DevConsoleService _devConsoleService;
+    
+    private long _lastAction = TimeUtils.GetTimestamp();
 
     public EditorStateContext(MetricService metricService, DevConsoleService devConsoleService)
     {
@@ -48,17 +50,28 @@ internal sealed class EditorStateContext
         }
     }
 
-    private long _timestamp = TimeUtils.GetTimestamp();
+    
+    private bool CanExecute()
+    {
+        if (!TimeUtils.HasIntervalPassed(_lastAction,4000))
+        {
+            _devConsoleService.AddLog("Command delay time has not passed");
+            return  false;
+        }
+        _lastAction = TimeUtils.GetTimestamp();
+        return true;
+    }
 
     public void ExecuteReloadShader(AssetObjectViewModel viewModel)
     {
-        if (!TimeUtils.HasIntervalPassed(_timestamp,4000))
-        {
-            _devConsoleService.AddLog("Command delay time has not passed");
-            return;
-        }
-        
-        _devConsoleService.ExecuteInternalCommand(CoreCmdNames.ReloadShader, viewModel.Name);
-        _timestamp = TimeUtils.GetTimestamp();
+        if(!CanExecute())  return;
+        _devConsoleService.ExecuteInternalCommand(CoreCmdNames.ShaderReload, viewModel.Name);
     }
+    
+    public void ExecuteSetEntityTransform(AssetObjectViewModel viewModel)
+    {
+        if(!CanExecute())  return;
+        _devConsoleService.ExecuteInternalCommand(CoreCmdNames.ShaderReload, viewModel.Name);
+    }
+
 }

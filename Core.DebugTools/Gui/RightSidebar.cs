@@ -59,7 +59,7 @@ internal sealed class RightSidebar
     private void DrawCpuMetrics()
     {
         var data = _metricService.TextData;
-        DrawSectionHeader("Frame Metrics");
+        ImGui.SeparatorText("Frame Metrics");
         TextIfNotNull(data.FrameMetrics.FrameIndex);
         TextIfNotNull(data.FrameMetrics.Fps);
         TextIfNotNull(data.FrameMetrics.Alpha);
@@ -71,7 +71,7 @@ internal sealed class RightSidebar
     private void DrawGcMetrics()
     {
         var data = _metricService.TextData;
-        DrawSectionHeader("GC / Memory");
+        ImGui.SeparatorText("GC / Memory");
         TextIfNotNull(data.MemoryMetrics);
     }
 }

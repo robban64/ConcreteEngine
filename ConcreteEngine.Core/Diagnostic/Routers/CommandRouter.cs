@@ -14,6 +14,7 @@ using ConcreteEngine.Graphics.Gfx.Contracts;
 using ConcreteEngine.Graphics.Gfx.Resources;
 using ConcreteEngine.Renderer.Data;
 using Core.DebugTools;
+using Core.DebugTools.Data;
 
 #endregion
 
@@ -41,17 +42,17 @@ internal enum FboRequestAction : byte
     RecreateShadowFbo = 2,
 }
 
-internal abstract record CommandRequestContract(CommandRequestScope Scope, string? Arg1, string? Arg2)
+internal abstract record CommandRequestContract(CommandRequestScope Scope)
 {
     private static int _idx = 0;
     public int CommandId { get; } = ++_idx;
 }
 
-internal sealed record AssetCommandRequest(string Name, AssetRequestAction Action, AssetKind Kind, string? Arg1, string? Arg2)
-    : CommandRequestContract(CommandRequestScope.AssetCommand, Arg1, Arg2);
+internal sealed record AssetCommandRequest(string Name, AssetRequestAction Action, AssetKind Kind)
+    : CommandRequestContract(CommandRequestScope.AssetCommand);
 
-internal sealed record FboCommandRequest(FboRequestAction Action, Size2D Size, string? Arg1, string? Arg2)
-    : CommandRequestContract(CommandRequestScope.RenderCommand, Arg1, Arg2);
+internal sealed record FboCommandRequest(FboRequestAction Action, Size2D Size)
+    : CommandRequestContract(CommandRequestScope.RenderCommand);
 
 internal static class CommandRouter
 {
@@ -59,53 +60,50 @@ internal static class CommandRouter
     
     public static int CommandQueueCount => _commandQueue.Count;
 
-    internal static void DrainCommandQueue(AssetSystem assets, WorldRenderer worldRenderer,
-        Action<AssetSystem, AssetCommandRequest> onAssetDel, Action<WorldRenderer, FboCommandRequest> onRenderDel)
-    {
-        foreach (var command in _commandQueue)
-        {
-            if (command is AssetCommandRequest assetCommand) onAssetDel(assets, assetCommand);
-            else if (command is FboCommandRequest renderCommand) onRenderDel(worldRenderer, renderCommand);
-        }
-        _commandQueue.Clear();
-    }
-
     internal static bool TryDequeueCommand(out CommandRequestContract request)
         => _commandQueue.TryDequeue(out request);
 
-    public static void OnRecreateShader(DebugConsoleCtx ctx, string? arg1, string? arg2)
+    public static void OnShaderReload(DebugConsoleCtx ctx, ConsoleCmdRequest req)
     {
-        if (string.IsNullOrWhiteSpace(arg1) || arg1.Length < 2)
+        if (string.IsNullOrWhiteSpace(req.Arg1) || req.Arg1.Length < 2)
         {
-            ctx.AddMissingArg(nameof(arg1));
+            ctx.AddMissingArg(nameof(req.Arg1));
             return;
         }
 
-        _commandQueue.Enqueue(new AssetCommandRequest(arg1, AssetRequestAction.ReloadAsset, AssetKind.Shader, arg1, arg2));
-        ctx.AddLog("Shader recreate enqueued");
+        _commandQueue.Enqueue(new AssetCommandRequest(req.Arg1, AssetRequestAction.ReloadAsset, AssetKind.Shader));
+        ctx.AddLog("Shader reload enqueued");
     }
 
-    public static void OnSetShadowMapSize(DebugConsoleCtx ctx, string? arg1, string? arg2)
+    public static void OnShadowMap(DebugConsoleCtx ctx, ConsoleCmdRequest req)
     {
-        if (string.IsNullOrWhiteSpace(arg1))
+        var shadowSize = 0;
+        if (req.Payload is null)
         {
-            ctx.AddMissingArg(nameof(arg1));
-            return;
-        }
+            if (string.IsNullOrWhiteSpace(req.Arg1))
+            {
+                ctx.AddMissingArg(nameof(req.Arg1));
+                return;
+            }
 
-        var size = CommandUtils.IntArg(arg1);
-        var shadowSize = CommandUtils.GetShadowSize(size);
+            var size = CommandUtils.IntArg(req.Arg1);
+            shadowSize = CommandUtils.GetShadowSize(size);
+
+        }
+        else
+        {
+            shadowSize = req.Payload.IntData;
+        }
+        
         if (shadowSize <= 0)
-        {
-            throw new ArgumentException("Supported are 1,2,4,8 (1024, 2048, 4096, 8192)",
-                nameof(arg1));
-        }
+            throw new ArgumentException("Supported are 1,2,4,8 (1024, 2048, 4096, 8192)");
 
-        _commandQueue.Enqueue(new FboCommandRequest(FboRequestAction.RecreateShadowFbo, new Size2D(shadowSize), arg1, arg2));
+        _commandQueue.Enqueue(new FboCommandRequest(FboRequestAction.RecreateShadowFbo, new Size2D(shadowSize)));
+        ctx.AddLog("ShadowMap resize enqueued");
     }
 
 
-    public static void OnCmdStructSizes(DebugConsoleCtx ctx, string? _, string? __)
+    public static void OnCmdStructSizes(DebugConsoleCtx ctx, ConsoleCmdRequest req)
     {
         /*
         ctx.AddLog(StructStr<TextureSlotInfo>());

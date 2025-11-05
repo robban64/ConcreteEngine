@@ -12,14 +12,45 @@ internal sealed class EntityList
     private const int RowHeight = 32;
     private const int ColumnWidth = 28;
 
+    private static readonly char[] CharBuffer = new char[8];
+
     private readonly EditorStateContext _ctx;
 
     private readonly EntityListViewModel _viewModel;
+    
+    private int _modelId = 0;
+    private int _materialTagKey = 0;
+
+    private Vector3 _translation = Vector3.Zero;
+    private Vector3 _scale = Vector3.One;
+    private Vector3 _rotation = Vector3.Zero;
 
     public EntityList(EditorStateContext ctx)
     {
         _ctx = ctx;
         _viewModel = ctx.EntityListViewModel;
+    }
+
+    private void UpdateStateFrom(EntityViewModel? entity)
+    {
+        if (entity is null)
+        {
+            _modelId = 0;
+            _materialTagKey = 0;
+            _translation = Vector3.Zero;
+            _scale = Vector3.One;
+            _rotation = Vector3.Zero;
+            return;
+        }
+
+        var transform = entity.Transform;
+        _modelId = entity.Model.ModelId;
+        _materialTagKey = entity.Model.MaterialTagKey;
+        _translation = transform.Position;
+        _scale = transform.Scale;
+        _rotation = transform.Rotation;
+
+
     }
 
     public void Draw()
@@ -61,8 +92,8 @@ internal sealed class EntityList
 
     private void DrawList()
     {
-        Span<char> buffer = stackalloc char[8];
-        var formatter = new NumberSpanFormatter(buffer);
+        //Span<char> buffer = stackalloc char[8];
+        var formatter = new NumberSpanFormatter(CharBuffer);
 
         foreach (var entity in _viewModel.Entities)
         {
@@ -81,6 +112,7 @@ internal sealed class EntityList
             if (EntitySelectable(bufferStr, selected))
             {
                 _viewModel.SelectedEntityId = entity.EntityId;
+                UpdateStateFrom(entity);
 
                 var itemMin = ImGui.GetItemRectMin();
                 var itemMax = ImGui.GetItemRectMax();
@@ -95,11 +127,16 @@ internal sealed class EntityList
             ImGui.TableNextColumn();
             GuiUtils.CenterAlignText(entity.TransformSummary, RowHeight);
 
-            if (ImGui.BeginPopup(bufferStr))
+            bufferStr = formatter.Format(entity.EntityId);
+            
+            ImGui.PushStyleVar(ImGuiStyleVar.WindowPadding, new Vector2(12, 10));
+            ImGui.SetNextWindowSize(new Vector2(250,0));
+            if (ImGui.BeginPopup(bufferStr, ImGuiWindowFlags.NoResize))
             {
                 DrawAssetFilePopupContent(entity);
                 ImGui.EndPopup();
             }
+            ImGui.PopStyleVar();
 
 
             ImGui.PopID();
@@ -109,29 +146,45 @@ internal sealed class EntityList
         }
     }
 
-    private static int a;
-    private static float a1;
-    private static float a2;
-    private static float a3;
-
-    private static void DrawAssetFilePopupContent(EntityViewModel entity)
+    
+    private void DrawAssetFilePopupContent(EntityViewModel entity)
     {
         ImGui.SeparatorText("Model");
         ImGui.TextUnformatted("ModelId");
-        ImGui.InputInt("##model-id", ref a, 0, 0, ImGuiInputTextFlags.None);
+        if (ImGui.InputInt("##model-id", ref _modelId, 0, 0, ImGuiInputTextFlags.None))
+        {
+            
+        }
 
         ImGui.TextUnformatted("MaterialTagKey");
-        ImGui.InputInt("##mat-tag", ref a, 0, 0, ImGuiInputTextFlags.None);
+        if (ImGui.InputInt("##mat-tag", ref _materialTagKey, 0, 0, ImGuiInputTextFlags.None))
+        {
+            
+        }
 
+        ImGui.Dummy(new Vector2(0, 2));
         ImGui.SeparatorText("Transform");
         
         ImGui.TextUnformatted("Translation");
         ImGui.Separator();
-        ImGui.InputFloat("##tx", ref a1, 0f, 0f, "%.3f", ImGuiInputTextFlags.None);
-        ImGui.SameLine();
-        ImGui.InputFloat("##tz", ref a2, 0f, 0f, "%.3f", ImGuiInputTextFlags.None);
-        ImGui.SameLine();
-        ImGui.InputFloat("##ty", ref a3, 0f, 0f, "%.3f", ImGuiInputTextFlags.None);
+        if (ImGui.InputFloat3("##translation", ref _translation, "%.3f", ImGuiInputTextFlags.None))
+        {
+            Console.WriteLine(_translation.ToString());
+        }
+        
+        ImGui.TextUnformatted("Scale");
+        ImGui.Separator();
+        if (ImGui.InputFloat3("##scale", ref _scale, "%.3f", ImGuiInputTextFlags.None))
+        {
+            
+        }
+
+        ImGui.TextUnformatted("Rotation");
+        ImGui.Separator();
+        if (ImGui.InputFloat3("##rotation", ref _rotation, "%.3f", ImGuiInputTextFlags.None))
+        {
+            
+        }
     }
 
     private static bool EntitySelectable(ReadOnlySpan<char> str, bool selected)

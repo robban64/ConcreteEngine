@@ -71,8 +71,8 @@ internal sealed class EngineGateway : IDisposable
         HasBoundCommands = true;
 
         RouteTable.RegisterCommand("inspect-structs", CmdWrapper(CommandRouter.OnCmdStructSizes));
-        RouteTable.RegisterCommand(CoreCmdNames.ReloadShader, CmdWrapper(CommandRouter.OnRecreateShader));
-        RouteTable.RegisterCommand("shadow-map", CmdWrapper(CommandRouter.OnSetShadowMapSize));
+        RouteTable.RegisterCommand(CoreCmdNames.ShaderReload, CmdWrapper(CommandRouter.OnShaderReload));
+        RouteTable.RegisterCommand("shadow-map", CmdWrapper(CommandRouter.OnShadowMap));
 
         EditorTable.FillAssetStoreView = EditorRouter.PullAssetStoreData;
         EditorTable.FetchAssetObjectFiles = EditorRouter.PullAssetObjectFiles;
@@ -168,13 +168,14 @@ internal sealed class EngineGateway : IDisposable
     }
 
 
-    private static Action<DebugConsoleCtx, string?, string?> CmdWrapper(Action<DebugConsoleCtx, string?, string?> f)
+    // create closure over incoming
+    private static CommandRequestDel CmdWrapper(CommandRequestDel del)
     {
-        return (ctx, a1, a2) =>
+        return (ctx, req) =>
         {
             try
             {
-                f(ctx, a1, a2);
+                del(ctx, req);
             }
             catch (Exception ex) when (ErrorUtils.IsUserOrDataError(ex))
             {

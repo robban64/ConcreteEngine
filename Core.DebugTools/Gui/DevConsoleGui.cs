@@ -61,24 +61,27 @@ public class DevConsoleGui
 
         ImGui.PushStyleColor(ImGuiCol.WindowBg, new Vector4(0.08f, 0.08f, 0.08f, 0.94f));
         ImGui.PushStyleColor(ImGuiCol.Border, new Vector4(0, 0, 0, 0));
-        ImGui.PushStyleVar(ImGuiStyleVar.WindowPadding, new Vector2(12f, 10f));
+        ImGui.PushStyleVar(ImGuiStyleVar.WindowPadding, new Vector2(12f, 6f));
         ImGui.PushStyleVar(ImGuiStyleVar.WindowRounding, 2f);
         ImGui.PushStyleVar(ImGuiStyleVar.ChildRounding, 2f);
         ImGui.PushStyleVar(ImGuiStyleVar.FrameRounding, 2f);
 
-        if (!ImGui.Begin("##DevConsole", flags))
+        if (ImGui.Begin("##DevConsole", flags))
         {
+            DrawInner();
             ImGui.End();
-            ImGui.PopStyleVar(3);
-            ImGui.PopStyleVar();
-            ImGui.PopStyleColor(2);
-            return;
+
         }
 
+        ImGui.PopStyleVar(4);
+        ImGui.PopStyleColor(2);
+    }
+
+    private void DrawInner()
+    {
         ImGui.PushStyleColor(ImGuiCol.Text, 0x99FFFFFF);
         ImGui.SeparatorText("Console");
         ImGui.PopStyleColor();
-        ImGui.Dummy(new Vector2(0, 4f));
 
         var inputHeight = ImGui.GetFrameHeightWithSpacing() + 8f;
 
@@ -105,13 +108,13 @@ public class DevConsoleGui
 
 
         ImGui.PopStyleColor();
-        ImGui.Dummy(new Vector2(0, 6f));
 
         ImGui.PushStyleColor(ImGuiCol.FrameBg, new Vector4(0.14f, 0.14f, 0.14f, 1.00f));
         ImGui.PushStyleColor(ImGuiCol.FrameBgHovered, new Vector4(0.22f, 0.22f, 0.22f, 1.00f));
         ImGui.PushStyleColor(ImGuiCol.FrameBgActive, new Vector4(0.18f, 0.18f, 0.18f, 1.00f));
         ImGui.PushStyleColor(ImGuiCol.Text, new Vector4(0.92f, 0.92f, 0.92f, 1.00f));
         ImGui.PushStyleVar(ImGuiStyleVar.FramePadding, new Vector2(8f, 6f));
+
         ImGui.SetNextItemWidth(-1f);
 
 
@@ -132,11 +135,5 @@ public class DevConsoleGui
             ImGui.SetKeyboardFocusHere();
             _scrollToBottom = true;
         }
-
-        ImGui.End();
-
-        ImGui.PopStyleVar(3);
-        ImGui.PopStyleVar();
-        ImGui.PopStyleColor(2);
     }
 }

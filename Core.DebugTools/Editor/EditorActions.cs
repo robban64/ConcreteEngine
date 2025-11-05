@@ -8,7 +8,7 @@ internal static class EditorActions
     
     public static bool ExecuteReloadShader(AssetObjectViewModel viewModel)
     {
-        return ExecuteCommand!(CoreCmdNames.ReloadShader, viewModel.Name, null);
+        return ExecuteCommand!(CoreCmdNames.ShaderReload, viewModel.Name, null);
     }
 
 }

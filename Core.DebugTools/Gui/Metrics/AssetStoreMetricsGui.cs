@@ -14,7 +14,7 @@ public static class AssetStoreMetricsGui
         if (!string.IsNullOrEmpty(report.MaterialMetrics))
         {
             ImGui.PushTextWrapPos(0f);
-            DrawSectionHeader(report.MaterialMetrics);
+            ImGui.TextUnformatted(report.MaterialMetrics);
             ImGui.PopTextWrapPos();
             ImGui.Dummy(new Vector2(0, 4));
         }

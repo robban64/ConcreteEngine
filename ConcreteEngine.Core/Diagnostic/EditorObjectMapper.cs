@@ -13,11 +13,23 @@ namespace ConcreteEngine.Core.Diagnostic;
 
 internal static class EditorObjectMapper
 {
-    public static EntityViewModel MakeEntityViewModel(StringBuilder sb, NumberSpanFormatter formatter, EntityId id, in ModelComponent model,
+    public static EntityViewModel MakeEntityViewModel(StringBuilder sb, NumberSpanFormatter formatter, EntityId id,
+        in ModelComponent model,
         in Transform transform)
     {
         var transformSummary = StructTextParser.VectorToText(in transform.Position, formatter, sb);
-        return new EntityViewModel(id, "",transformSummary, 2, model.DrawCount);
+        var transformData = new EntityViewModel
+            .TransformData(in transform.Position, in transform.Scale, in transform.Scale);
+
+        var modelData = new EntityViewModel.ModelData(model.Model, model.MaterialKey.Value, model.DrawCount);
+
+        return new EntityViewModel(
+            EntityId: id,
+            Name: string.Empty,
+            TransformSummary: transformSummary,
+            ComponentCount: 2,
+            Model: in modelData,
+            Transform: in transformData);
     }
 
     public static AssetObjectFileViewModel MakeAssetObjectFile(AssetFileEntry entry) =>

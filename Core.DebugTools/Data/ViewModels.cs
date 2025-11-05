@@ -1,3 +1,4 @@
+using System.Numerics;
 using Core.DebugTools.Definitions;
 
 namespace Core.DebugTools.Data;
@@ -44,8 +45,8 @@ public sealed record AssetObjectFileViewModel(
     string RelativePath,
     long SizeInBytes,
     string? ContentHash);
-    
-    
+
+
 
 
 public sealed record EntityViewModel(
@@ -53,5 +54,11 @@ public sealed record EntityViewModel(
     string Name,
     string TransformSummary,
     int ComponentCount,
-    int DrawCount
-);
+    in EntityViewModel.ModelData Model,
+    in EntityViewModel.TransformData Transform
+)
+{
+    public readonly record struct TransformData(in Vector3 Position, in Vector3 Rotation, in Vector3 Scale);
+    public readonly record struct ModelData(int ModelId, int MaterialTagKey, int DrawCount);
+
+}

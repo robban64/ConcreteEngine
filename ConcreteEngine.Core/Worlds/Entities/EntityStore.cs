@@ -28,7 +28,7 @@ public sealed class EntityStore<T> where T : unmanaged
 
     public bool Has(EntityId e)
     {
-        var index = _sparse[e.Id - 1];
+        var index = _sparse[e];
         return (uint)index < (uint)_idx && _entities[index] == e;
     }
 

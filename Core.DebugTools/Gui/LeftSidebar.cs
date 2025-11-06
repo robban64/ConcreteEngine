@@ -10,15 +10,13 @@ namespace Core.DebugTools.Gui;
 
 internal sealed class LeftSidebar
 {
-    private readonly MetricService _metricService;
     private readonly EditorStateContext _ctx;
 
     private readonly AssetStoreGui _assetStoreGui;
     private readonly EntityList _entityList;
     
-    public LeftSidebar(MetricService metricService, EditorStateContext ctx)
+    public LeftSidebar( EditorStateContext ctx)
     {
-        _metricService = metricService;
         _ctx = ctx;
         _assetStoreGui = new AssetStoreGui(ctx);
         _entityList = new EntityList(ctx);
@@ -59,7 +57,7 @@ internal sealed class LeftSidebar
         ImGui.PushStyleVar(ImGuiStyleVar.WindowPadding, new Vector2(12f, 0));
         if(ImGui.BeginChild("##left-sidebar-metrics", new Vector2(0), ImGuiChildFlags.AlwaysUseWindowPadding | ImGuiChildFlags.AutoResizeY))
         {
-            var metrics = _metricService.TextData;
+            var metrics = MetricsTable.TextData;
             SceneMetricsGui.DrawSceneMetrics(metrics.SceneMetrics);
             ImGui.Dummy(new Vector2(0, 6));
             AssetStoreMetricsGui.DrawAssetStoreMetrics(metrics);

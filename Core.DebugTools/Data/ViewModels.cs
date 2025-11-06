@@ -62,13 +62,3 @@ public sealed class EntityViewModel(
     private EntityEditorTransform _transform = transform;
     public ref EntityEditorTransform Transform => ref _transform;
 }
-
-public struct EntityEditorTransform(in Vector3 translation, in Vector3 scale, in Quaternion rotation)
-{
-    public Vector3 Translation = translation;
-    public Vector3 Scale = scale;
-    public Vector3 EulerAngles = Vector3.Zero;
-    public Quaternion Rotation = rotation;
-}
-
-public readonly record struct EntityEditorModel(int ModelId, int MaterialTagKey, int DrawCount);

@@ -55,12 +55,11 @@ internal sealed class EngineGateway : IDisposable
         ArgumentNullException.ThrowIfNull(frameInfo, nameof(frameInfo));
 
         _assets = assetSystem;
-        
-        
+
+
         MetricRouter.Attach(world, assetSystem, frameInfo);
         EditorRouter.Attach(world, assetSystem);
         CommandRouter.world = world;
-
     }
 
     private void ProcessStringLog(StringLogEvent log) => _debugTools.DevConsole.AddLog(_logParser.Format(log));
@@ -71,14 +70,24 @@ internal sealed class EngineGateway : IDisposable
         if (HasBoundCommands) throw new InvalidOperationException(nameof(HasBoundCommands));
         HasBoundCommands = true;
 
-        RouteTable.RegisterCommand("inspect-structs", CmdWrapper(CommandRouter.OnStructSizesCmd));
-        RouteTable.RegisterCommand(CoreCmdNames.AssetShader, CmdWrapper(CommandRouter.OnAssetShaderCmd));
-        RouteTable.RegisterCommand(CoreCmdNames.WorldShadow, CmdWrapper(CommandRouter.OnWorldShadowCmd));
-        RouteTable.RegisterCommand(CoreCmdNames.EntityTransform, CmdWrapper(CommandRouter.OnEntityTransformCmd));
+        RouteTable.RegisterEditorCmd<EditorTransformPayload>(CoreCmdNames.EntityTransform, ConsoleCommandScope.Editor, CommandRouter.OnEntityTransformCmd);
+        RouteTable.RegisterEditorCmd<EditorShaderPayload>(CoreCmdNames.AssetShader, ConsoleCommandScope.Engine, CommandRouter.OnAssetShaderCmd);
+        RouteTable.RegisterEditorCmd<EditorShadowPayload>(CoreCmdNames.WorldShadow, ConsoleCommandScope.Engine, CommandRouter.OnWorldShadowCmd);
+
+        
+        RouteTable.RegisterConsoleCmd<EditorShaderPayload>(CoreCmdNames.AssetShader, string.Empty, CommandParser.ParseShaderRequest);
+        RouteTable.RegisterConsoleCmd<EditorShadowPayload>(CoreCmdNames.WorldShadow, string.Empty, CommandParser.ParseShadowRequest);
+
+        // Misc
+        RouteTable.RegisterNoOpConsoleCmd("inspect-structs", string.Empty, CommandRouter.OnStructSizesCmd);
+
+        //RouteTable.RegisterConsoleCmd(CoreCmdNames.AssetShader, CmdWrapper(CommandRouter.OnAssetShaderCmd));
+        //RouteTable.RegisterConsoleCmd(CoreCmdNames.WorldShadow, CmdWrapper(CommandRouter.OnWorldShadowCmd));
+        //RouteTable.RegisterConsoleCmd(CoreCmdNames.EntityTransform, CmdWrapper(CommandRouter.OnEntityTransformCmd));
 
         EditorTable.FillAssetStoreView = EditorRouter.PullAssetStoreData;
         EditorTable.FetchAssetObjectFiles = EditorRouter.PullAssetObjectFiles;
-        EditorTable.FillEntityView  = EditorRouter.PullEntityView;
+        EditorTable.FillEntityView = EditorRouter.PullEntityView;
     }
 
 
@@ -88,13 +97,13 @@ internal sealed class EngineGateway : IDisposable
         if (HasBoundMetrics) throw new InvalidOperationException(nameof(HasBoundMetrics));
         HasBoundMetrics = true;
 
-        RouteTable.PullFrameMetrics = MetricRouter.GetFrameMetrics;
-        RouteTable.PullMaterialMetrics = MetricRouter.GetMaterialMetrics;
-        RouteTable.PullSceneMetrics = MetricRouter.GetSceneMetrics;
-        RouteTable.PullMemoryMetrics = MetricRouter.GetMemoryMetrics;
+        MetricsTable.PullFrameMetrics = MetricRouter.GetFrameMetrics;
+        MetricsTable.PullMaterialMetrics = MetricRouter.GetMaterialMetrics;
+        MetricsTable.PullSceneMetrics = MetricRouter.GetSceneMetrics;
+        MetricsTable.PullMemoryMetrics = MetricRouter.GetMemoryMetrics;
 
-        RouteTable.FillAssetMetrics = MetricRouter.DrainAssetStoreMetrics;
-        RouteTable.FillGfxStoreMetrics = MetricRouter.DrainGfxStoreMetrics;
+        MetricsTable.FillAssetMetrics = MetricRouter.DrainAssetStoreMetrics;
+        MetricsTable.FillGfxStoreMetrics = MetricRouter.DrainGfxStoreMetrics;
     }
 
     public void Update(float delta)
@@ -112,29 +121,28 @@ internal sealed class EngineGateway : IDisposable
     public void RefreshMetrics(bool force = false)
     {
         if (!Enabled) return;
-        var metrics = _debugTools.Metrics;
         if (force)
         {
-            metrics.RefreshFrameMetrics();
-            metrics.RefreshAssetMetrics();
-            metrics.RefreshGfxResourceMetrics();
+            MetricsTable.RefreshFrameMetrics();
+            MetricsTable.RefreshAssetMetrics();
+            MetricsTable.RefreshGfxResourceMetrics();
 
-            metrics.RefreshSceneMetrics();
-            metrics.RefreshMemoryMetrics();
+            MetricsTable.RefreshSceneMetrics();
+            MetricsTable.RefreshMemoryMetrics();
             return;
         }
 
         if (_ticker++ >= 4)
         {
-            metrics.RefreshFrameMetrics();
+            MetricsTable.RefreshFrameMetrics();
             _ticker = 0;
         }
-        
+
         switch (_mediumTicker)
         {
-            case 5: metrics.RefreshSceneMetrics(); break;
-            case 10: metrics.RefreshGfxResourceMetrics(); break;
-            case 15: metrics.RefreshAssetMetrics(); break;
+            case 5: MetricsTable.RefreshSceneMetrics(); break;
+            case 10: MetricsTable.RefreshGfxResourceMetrics(); break;
+            case 15: MetricsTable.RefreshAssetMetrics(); break;
         }
 
         if (_mediumTicker++ >= 15) _mediumTicker = 0;
@@ -142,7 +150,7 @@ internal sealed class EngineGateway : IDisposable
         if (_slowTicker++ >= 30)
         {
             _slowTicker = 0;
-            metrics.RefreshMemoryMetrics();
+            MetricsTable.RefreshMemoryMetrics();
         }
     }
 
@@ -158,7 +166,7 @@ internal sealed class EngineGateway : IDisposable
                 idx++;
             }
         }
-        
+
         while (idx < n && Logger.LogQueue.Count > 0)
         {
             var cmd = Logger.LogQueue.Dequeue();
@@ -170,8 +178,8 @@ internal sealed class EngineGateway : IDisposable
     }
 
 
-    // create closure over incoming
-    private static ConsoleCmdRequestDel CmdWrapper(ConsoleCmdRequestDel del)
+    /*
+    private static ConsoleCommandReqDel CmdWrapper(ConsoleCommandReqDel del)
     {
         return (ctx, req) =>
         {
@@ -185,7 +193,7 @@ internal sealed class EngineGateway : IDisposable
             }
         };
     }
-
+*/
     public void Dispose()
     {
         Enabled = false;

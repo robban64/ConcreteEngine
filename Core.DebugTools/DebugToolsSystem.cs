@@ -20,7 +20,6 @@ public sealed class DebugToolsSystem : IDisposable
     private readonly ImGuiController _controller;
 
     public DevConsoleService DevConsole => _editor.DevConsole;
-    public MetricService Metrics { get;  }
     
     private readonly EditorService _editor;
 
@@ -33,8 +32,7 @@ public sealed class DebugToolsSystem : IDisposable
 
         _controller = new ImGuiController(gl, window, inputCtx, fontConfDefault);
 
-        Metrics = new MetricService();
-        _editor = new EditorService(Metrics);
+        _editor = new EditorService();
     }
 
 

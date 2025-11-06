@@ -14,12 +14,10 @@ namespace Core.DebugTools.Gui;
 
 internal sealed class RightSidebar
 {
-    private readonly MetricService _metricService;
     private readonly EditorStateContext _ctx;
 
-    public RightSidebar(MetricService metricService, EditorStateContext ctx)
+    public RightSidebar( EditorStateContext ctx)
     {
-        _metricService = metricService;
         _ctx = ctx;
         
     }
@@ -58,7 +56,7 @@ internal sealed class RightSidebar
 
     private void DrawCpuMetrics()
     {
-        var data = _metricService.TextData;
+        var data = MetricsTable.TextData;
         ImGui.SeparatorText("Frame Metrics");
         TextIfNotNull(data.FrameMetrics.FrameIndex);
         TextIfNotNull(data.FrameMetrics.Fps);
@@ -70,7 +68,7 @@ internal sealed class RightSidebar
 
     private void DrawGcMetrics()
     {
-        var data = _metricService.TextData;
+        var data = MetricsTable.TextData;
         ImGui.SeparatorText("GC / Memory");
         TextIfNotNull(data.MemoryMetrics);
     }

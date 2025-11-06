@@ -6,7 +6,6 @@ namespace Core.DebugTools.Editor;
 
 public sealed class EditorService
 {
-    private readonly MetricService _metricService;
     private readonly DevConsoleService _devConsole;
 
     private readonly Topbar _topbar;
@@ -17,14 +16,13 @@ public sealed class EditorService
     
     public DevConsoleService DevConsole => _devConsole;
 
-    public EditorService(MetricService metricService)
+    public EditorService()
     {
-        _metricService = metricService;
         _devConsole = new DevConsoleService();
-        _stateContext = new EditorStateContext(_metricService, DevConsole);
+        _stateContext = new EditorStateContext(DevConsole);
         _topbar = new Topbar(_stateContext);
-        _leftSidebar = new LeftSidebar(_metricService, _stateContext);
-        _rightSidebar = new RightSidebar(_metricService, _stateContext);
+        _leftSidebar = new LeftSidebar(_stateContext);
+        _rightSidebar = new RightSidebar(_stateContext);
     }
 
 

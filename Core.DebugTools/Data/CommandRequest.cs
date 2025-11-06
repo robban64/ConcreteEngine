@@ -2,6 +2,33 @@ using System.Numerics;
 
 namespace Core.DebugTools.Data;
 
+public delegate void ConsoleCommandReqDel(DebugConsoleCtx ctx, string action, string? arg1, string? arg2);
+public delegate void PayloadResolver<TPayload>(string action, string? arg1, string? arg2, out TPayload payload);
+public delegate CommandResponse EditorCommandReqDel<TPayload>(in TPayload payload);
+
+public struct EmptyPayload {}
+
+public readonly ref struct CommandResponse(bool success, string? error)
+{
+    public readonly bool Success  = success;
+    public readonly string? Error  = error;
+    public static CommandResponse Ok() => new(true, null);
+    public static CommandResponse Fail(string error) => new(false, error);
+}
+
+public enum ConsoleCommandScope
+{
+    None,
+    Engine,
+    Editor,
+    Diagnostic
+}
+internal sealed record ConsoleCommandRecord(string Description, bool IsNoOp, ConsoleCommandReqDel ConsoleCmdHandler);
+internal sealed record EditorCommandRecord(ConsoleCommandScope Scope, Type PayloadType, Delegate EditorCmdHandler);
+
+
+//
+
 public sealed record ConsoleCommandRequest(
     string Command,
     string? Action = null,

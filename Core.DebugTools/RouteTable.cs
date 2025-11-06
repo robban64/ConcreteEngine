@@ -3,6 +3,7 @@
 using System.Numerics;
 using ConcreteEngine.Common.Diagnostics;
 using Core.DebugTools.Data;
+using Core.DebugTools.Utils;
 
 #endregion
 
@@ -15,47 +16,105 @@ public static class CoreCmdNames
     public const string EntityTransform = "entity-transform";
 }
 
-public delegate void ConsoleCmdRequestDel(DebugConsoleCtx ctx, ConsoleCommandRequest request);
-
 public static class RouteTable
 {
-    private static Dictionary<string, ConsoleCmdRequestDel> _commands = new(4);
-
-    // Fetchers
-    public static Func<FrameMetric<RenderInfoSample>>? PullFrameMetrics { get; set; }
-    public static Func<PairSample>? PullSceneMetrics { get; set; }
-    public static Func<StoreMetric<CollectionSample>>? PullMaterialMetrics { get; set; }
-    public static Func<PairSample>? PullMemoryMetrics { get; set; }
-    public static Action<MetricData>? FillGfxStoreMetrics { get; set; }
-    public static Action<MetricData>? FillAssetMetrics { get; set; }
+    private static readonly Dictionary<string, ConsoleCommandRecord> ConsoleCmd = new(8);
+    private static readonly Dictionary<string, EditorCommandRecord> EditorCmd = new(8);
+    private static readonly HashSet<string> RegisteredCommands = new(8);
 
 
-    internal static Dictionary<string, ConsoleCmdRequestDel>.KeyCollection RegisterCommands => _commands.Keys;
+
+    public static void RegisterNoOpConsoleCmd(string command, string description, ConsoleCommandReqDel del)
+    {
+        if (!ConsoleCmd.TryAdd(command, new ConsoleCommandRecord(description, true, del)))
+            throw new InvalidOperationException($"Console Command {command} is already registered");
+        
+        RegisteredCommands.Add(command);
+    }
+    
+    public static void RegisterConsoleCmd<TPayload>(string command, string description,
+        PayloadResolver<TPayload> resolver)
+    {
+        var editorDel = (EditorCommandReqDel<TPayload>)EditorCmd[command].EditorCmdHandler;
+        var del = WrapEditorCommand(editorDel, resolver);
+        if (!ConsoleCmd.TryAdd(command, new ConsoleCommandRecord(description, false, del)))
+            throw new InvalidOperationException($"Console Command {command} is already registered");
+        
+        RegisteredCommands.Add(command);
+    }
+
+    public static void RegisterEditorCmd<TPayload>(string command, ConsoleCommandScope scope,
+        EditorCommandReqDel<TPayload> handler)
+    {
+        if (!EditorCmd.TryAdd(command, new EditorCommandRecord(scope, typeof(TPayload), handler)))
+            throw new InvalidOperationException($"Editor Command {command} is already registered");
+        
+        RegisteredCommands.Add(command);
+    }
+
+    internal static void ProcessRegistryRecords(DebugConsoleCtx ctx, Action<DebugConsoleCtx, string, (bool, bool)> action)
+    {
+        foreach (var command in RegisteredCommands)
+        {
+            var result = (ConsoleCmd.ContainsKey(command), EditorCmd.ContainsKey(command));
+            action(ctx,command, result);
+        }
+    }
+
+    internal static void InvokeEditorCommand<TPayload>(string cmd, in TPayload payload)
+    {
+        ArgumentException.ThrowIfNullOrWhiteSpace(cmd, nameof(cmd));
+
+        if (!EditorCmd.TryGetValue(cmd, out var record))
+            throw new KeyNotFoundException($"Unknown command: {cmd}");
+
+        if (typeof(TPayload) != record.PayloadType)
+        {
+            throw new ArgumentException(
+                $"Invalid payload type, expected {record.PayloadType.Name}, got {typeof(TPayload).Name}");
+        }
+
+        ((EditorCommandReqDel<TPayload>)record.EditorCmdHandler)(in payload);
+    }
 
     // Commands
-    internal static bool InvokeCommand(DebugConsoleCtx ctx, string cmd, string? action, string? arg2)
+    internal static void InvokeCommand(DebugConsoleCtx ctx, string cmd, string action, string? arg1,
+        string? arg2 = null)
     {
         ArgumentNullException.ThrowIfNull(ctx, nameof(ctx));
         ArgumentException.ThrowIfNullOrWhiteSpace(cmd, nameof(cmd));
-        
-        if (!_commands.TryGetValue(cmd, out var handler)) return false;
-        handler(ctx, new ConsoleCommandRequest(cmd, action, arg2));
-        return true;
-    }
 
-    internal static bool InvokeCommand(DebugConsoleCtx ctx, ConsoleCommandRequest req)
+        if (!ConsoleCmd.TryGetValue(cmd, out var record))
+            throw new KeyNotFoundException($"Unknown command: {cmd}");
+
+        record.ConsoleCmdHandler(ctx, action, arg1, arg2);
+    }
+    
+    
+
+    // create closure over command
+    private static ConsoleCommandReqDel WrapEditorCommand<TPayload>(EditorCommandReqDel<TPayload> editorDel,
+        PayloadResolver<TPayload> resolver)
     {
-        ArgumentNullException.ThrowIfNull(ctx, nameof(ctx));
-        ArgumentNullException.ThrowIfNull(req, nameof(req));
-
-        if (!_commands.TryGetValue(req.Command, out var handler)) return false;
-        handler(ctx, req);
-        return true;
+        return (ctx, action, arg1, arg2) =>
+        {
+            try
+            {
+                resolver(action, arg1, arg2, out var payload);
+                var response = editorDel(in payload);
+                if (!response.Success)
+                    ctx.AddLog($"Command failed: {response.Error}");
+            }
+            catch (Exception ex) when(ErrorUtils.IsUserOrDataError(ex))
+            {
+                ctx.AddLog($"Error executing command: {ex.Message}");
+            }
+        };
     }
 
-    public static void RegisterCommand(string command, ConsoleCmdRequestDel del) => _commands[command] = del;
 
-    public static bool UnregisterCommand(string command) => _commands.Remove(command);
-
-    public static void ClearCommands() => _commands.Clear();
+    /*
+        public static bool UnregisterCommand(string command) => _consoleCmd.Remove(command);
+        public static void ClearCommands() => _consoleCmd.Clear();
+     */
 }

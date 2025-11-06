@@ -62,72 +62,52 @@ internal static class CommandRouter
 
     public static int CommandQueueCount => _commandQueue.Count;
 
-    internal static bool TryDequeueCommand(out CommandRequestContract request)
-        => _commandQueue.TryDequeue(out request);
+    internal static bool TryDequeueCommand(out CommandRequestContract request) => _commandQueue.TryDequeue(out request);
 
-    public static void OnAssetShaderCmd(DebugConsoleCtx ctx, ConsoleCommandRequest req)
+    public static CommandResponse OnAssetShaderCmd(in EditorShaderPayload shaderPayload)
     {
-        ArgumentNullException.ThrowIfNull(req.Action, nameof(req.Action));
-
-        switch (req.Action)
+        ArgumentException.ThrowIfNullOrWhiteSpace(shaderPayload.Name);
+        switch (shaderPayload.RequestAction)
         {
-            case "reload":
+            case EditorRequestAction.Reload:
             {
-                ArgumentException.ThrowIfNullOrWhiteSpace(req.Args, nameof(req.Args));
-                _commandQueue.Enqueue(new AssetCommandRequest(req.Args, AssetRequestAction.ReloadAsset,
-                    AssetKind.Shader));
-                ctx.AddLog("Shader reload enqueued");
+                var result = new AssetCommandRequest(shaderPayload.Name, AssetRequestAction.ReloadAsset,
+                    AssetKind.Shader);
+                _commandQueue.Enqueue(result);
                 break;
             }
             default:
-                throw new ArgumentException("Unknown CommandRequestAction", nameof(req.Action));
+                throw new ArgumentException("Unknown RequestAction", nameof(shaderPayload.RequestAction));
         }
+
+        return CommandResponse.Ok();
     }
 
-    public static void OnWorldShadowCmd(DebugConsoleCtx ctx, ConsoleCommandRequest req)
+    public static CommandResponse OnWorldShadowCmd(in EditorShadowPayload payload)
     {
-        var shadowSize = 0;
+        if (payload.Size <= 0)
+            throw new ArgumentException("Supported shadow map size are (1024, 2048, 4096, 8192)", nameof(payload.Size));
 
-        if (req.Payload is GenericCmdPayload payload)
-            shadowSize = payload.IntArg;
-
-        if (req.Payload is null)
-        {
-            if (string.IsNullOrWhiteSpace(req.Action))
-            {
-                ctx.AddMissingArg(nameof(req.Action));
-                return;
-            }
-
-            var size = CommandUtils.IntArg(req.Args);
-            shadowSize = CommandUtils.GetShadowSize(size);
-        }
-
-        if (shadowSize <= 0)
-            throw new ArgumentException("Supported are 1,2,4,8 (1024, 2048, 4096, 8192)");
-
-        _commandQueue.Enqueue(new FboCommandRequest(FboRequestAction.RecreateShadowFbo, new Size2D(shadowSize)));
-        ctx.AddLog("ShadowMap resize enqueued");
+        _commandQueue.Enqueue(new FboCommandRequest(FboRequestAction.RecreateShadowFbo, new Size2D(payload.Size)));
+        return CommandResponse.Ok();
     }
 
     //TODO
     public static World world;
 
-    public static void OnEntityTransformCmd(DebugConsoleCtx ctx, ConsoleCommandRequest req)
+    public static CommandResponse OnEntityTransformCmd(in EditorTransformPayload payload)
     {
-        if (req.Payload is not TransformCmdPayload payload)
-            throw new ArgumentException(nameof(req.Payload));
+        ref var entityTransform = ref world.Transforms.GetById(new EntityId(payload.EntityId));
+        ref readonly var transform = ref payload.Transform;
 
-        ref var transform = ref world.Transforms.GetById(new EntityId(payload.EntityId));
-        ref readonly var incomingTransform = ref payload.Transform;
-
-        transform.Translation = incomingTransform.Translation;
-        transform.Scale = incomingTransform.Scale;
-        transform.Rotation = incomingTransform.Rotation;
+        entityTransform.Translation = transform.Translation;
+        entityTransform.Scale = transform.Scale;
+        entityTransform.Rotation = transform.Rotation;
+        return CommandResponse.Ok();
     }
 
 
-    public static void OnStructSizesCmd(DebugConsoleCtx ctx, ConsoleCommandRequest req)
+    public static void OnStructSizesCmd(DebugConsoleCtx ctx, string action, string? arg1, string? arg2)
     {
         /*
         ctx.AddLog(StructStr<TextureSlotInfo>());
@@ -164,6 +144,7 @@ internal static class CommandRouter
         ctx.AddLog(StructStr<MeshPart>());
         ctx.AddLog(StructStr<DrawEntity>());
         ctx.AddLog(StructStr<MaterialTag>());
+
     }
 
 

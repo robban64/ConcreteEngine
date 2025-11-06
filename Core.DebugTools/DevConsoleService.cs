@@ -1,5 +1,6 @@
 using Core.DebugTools.Data;
 using Core.DebugTools.Gui;
+using Core.DebugTools.Utils;
 
 namespace Core.DebugTools;
 
@@ -36,32 +37,18 @@ public sealed class DevConsoleService
         
         if(_log.Count >= MaxLogCount)
             _log.RemoveRange(_log.Count / 2, _log.Count - (_log.Count / 2));
-
     }
-
-    internal bool ExecuteInternalCommand(string cmd, string? action, string? arg2 = null)
-    {
-        if (RouteTable.InvokeCommand(_ctx, cmd, action, arg2)) return true;
-        AddLog($"Unknown command: {cmd}");
-        return false;
-    }
-    internal bool ExecuteInternalCommand(ConsoleCommandRequest req)
-    {
-        if (RouteTable.InvokeCommand(_ctx, req)) return true;
-        AddLog($"Unknown command: {req.Command}");
-        return false;
-    }
-    
 
     private bool ExecCommand(string commandLine)
     {
         if (string.IsNullOrWhiteSpace(commandLine)) return false;
 
         _log.Add($">> {commandLine}");
-        var parts = commandLine.Trim().Split(' ', 3, StringSplitOptions.RemoveEmptyEntries);
+        var parts = commandLine.Trim().Split(' ', 4, StringSplitOptions.RemoveEmptyEntries);
         var cmd = parts[0];
-        var arg1 = parts.Length > 1 ? parts[1] : null;
-        var arg2 = parts.Length > 2 ? parts[2] : null;
+        var action = parts.Length > 1 ? parts[1] : null;
+        var arg1 = parts.Length > 2 ? parts[2] : null;
+        var arg2 = parts.Length > 3 ? parts[3] : null;
 
         if (cmd == "clear")
         {
@@ -76,18 +63,28 @@ public sealed class DevConsoleService
             return true;
         }
 
-        if (!RouteTable.InvokeCommand(_ctx, cmd, arg1, arg2))
+        try
         {
-            AddLog($"Unknown command: {cmd}");
+            RouteTable.InvokeCommand(_ctx, cmd, action??"", arg1, arg2);
+        }
+        catch (Exception ex) when (ex is ArgumentException or KeyNotFoundException)
+        {
+            AddLog($"Error when invoking {cmd} with error: {ex.Message}");
             return false;
         }
 
         return true;
     }
 
+
     private void PrintCommands()
     {
-        foreach (var cmd in RouteTable.RegisterCommands)
-            AddLog(cmd);
+        RouteTable.ProcessRegistryRecords(_ctx, static (ctx, command, existsIn) =>
+        {
+            var console = StringUtils.BoolToYesNo(existsIn.Item1);
+            var editor = StringUtils.BoolToYesNo(existsIn.Item2);
+
+            ctx.AddLog($"{command} - Console={console} , Editor={editor}");
+        });
     }
 }

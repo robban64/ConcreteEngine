@@ -1,13 +1,7 @@
-using ConcreteEngine.Graphics.Error;
-
-namespace ConcreteEngine.Renderer.Utility;
+namespace Core.DebugTools.Utils;
 
 internal static class ErrorUtils
 {
-    public static bool IsGfxError(Exception ex) => ex is GraphicsException;
-    
-    public static bool IsInvalidOpError(Exception ex) => ex is InvalidOperationException;
-    
     public static bool IsUserOrDataError(Exception ex) => ex switch
     {
         OperationCanceledException => true,

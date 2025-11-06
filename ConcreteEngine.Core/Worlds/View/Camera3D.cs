@@ -11,6 +11,7 @@ using ConcreteEngine.Renderer.State;
 
 namespace ConcreteEngine.Core.Worlds.View;
 
+// TODO improve
 public sealed class Camera3D : ICamera
 {
     private bool _dirty = true;
@@ -167,18 +168,11 @@ public sealed class Camera3D : ICamera
         }
     }
 
-    private void Ensure()
+    public void DestructTransform(out Vector3 translation, out Vector3 scale, out Quaternion rotation)
     {
-        if (!_dirty) return;
-        _dirty = false;
-
-        _rotation = Quaternion.CreateFromYawPitchRoll(_yaw, _pitch, 0);
-        MatrixMath.CreateModelMatrix(_translation, _scale, _rotation, out var viewModel);
-        Matrix4x4.Invert(viewModel, out _viewMatrix);
-
-        var fov = MathHelper.ToRadians(_fov / 2f);
-        _projectionMatrix = Matrix4x4.CreatePerspectiveFieldOfView(fov, _aspectRatio, _nearPlane, _farPlane);
-        _projectionViewMatrix = _viewMatrix * _projectionMatrix;
+        translation = _translation;
+        scale = _scale;
+        rotation = _rotation;
     }
 
     internal void EndTick()
@@ -204,5 +198,19 @@ public sealed class Camera3D : ICamera
             position: in camPos,
             rotation: in camRot
         );
+    }
+    
+    private void Ensure()
+    {
+        if (!_dirty) return;
+        _dirty = false;
+
+        _rotation = Quaternion.CreateFromYawPitchRoll(_yaw, _pitch, 0);
+        MatrixMath.CreateModelMatrix(_translation, _scale, _rotation, out var viewModel);
+        Matrix4x4.Invert(viewModel, out _viewMatrix);
+
+        var fov = MathHelper.ToRadians(_fov / 2f);
+        _projectionMatrix = Matrix4x4.CreatePerspectiveFieldOfView(fov, _aspectRatio, _nearPlane, _farPlane);
+        _projectionViewMatrix = _viewMatrix * _projectionMatrix;
     }
 }

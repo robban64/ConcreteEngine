@@ -186,6 +186,7 @@ internal sealed class EngineGateway : IDisposable
             EditorApi.FillAssetStoreView = EngineDataProvider.PullAssetStoreData;
             EditorApi.FetchAssetObjectFiles = EngineDataProvider.PullAssetObjectFiles;
             EditorApi.FillEntityView = EngineDataProvider.PullEntityView;
+            EditorApi.FillCameraData = EngineDataProvider.PullCameraView;
         }
 
 

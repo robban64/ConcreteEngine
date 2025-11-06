@@ -6,14 +6,18 @@ namespace ConcreteEngine.Editor;
 
 internal sealed class EditorStateContext
 {
+    private readonly DevConsoleService _devConsoleService;
+
     public EditorViewMode ViewMode { get; private set; } = EditorViewMode.None;
     public SidebarEditorMode SidebarMode { get; private set; } = SidebarEditorMode.None;
+    public EditorPropertyMode PropertyMode { get; private set; } = EditorPropertyMode.None;
 
     public AssetStoreViewModel AssetViewModel { get; } = new();
     public EntityListViewModel EntityListViewModel { get; } = new();
 
-    private readonly DevConsoleService _devConsoleService;
+    public CameraViewModel CameraModel { get; } = new();
 
+    
     private long _lastAction = TimeUtils.GetTimestamp();
 
     public EditorStateContext(DevConsoleService devConsoleService)
@@ -46,6 +50,24 @@ internal sealed class EditorStateContext
                 if (EntityListViewModel.Entities.Count == 0)
                     EditorApi.FillEntityView?.Invoke(EntityListViewModel);
                 break;
+        }
+    }
+
+    public void SetPropertyMode(EditorPropertyMode mode)
+    {
+        if (mode == PropertyMode) return;
+        PropertyMode = mode;
+
+        switch (mode)
+        {
+            case EditorPropertyMode.None: break;
+            case EditorPropertyMode.Camera:
+                EditorApi.FillCameraData(out var response);
+                CameraModel.FromDataModel(in response);
+                break;
+            case EditorPropertyMode.Light: break;
+            case EditorPropertyMode.SkyBox: break;
+            case EditorPropertyMode.Terrain: break;
         }
     }
 

@@ -56,7 +56,7 @@ internal static class EngineCommandHandler
     public static CommandResponse OnEntityTransformCmd(in EditorTransformPayload payload)
     {
         ref readonly var transform = ref payload.Transform;
-        var cmd = new EntityCommandRecord<EditorTransform>(WorldCommandAction.EntityTransform, payload.EntityId, in transform);
+        var cmd = new EntityCommandRecord<TransformEditorModel>(WorldCommandAction.EntityTransform, payload.EntityId, in transform);
         CommandQueues.EnqueueMain(cmd);
 
         /*

@@ -1,7 +1,5 @@
 namespace ConcreteEngine.Editor.Definitions;
 
-
-
 public enum EditorViewMode
 {
     None,
@@ -16,10 +14,11 @@ public enum SidebarEditorMode
     Entities
 }
 
-public enum TopPanelMode
+public enum EditorPropertyMode
 {
     None,
-    Empty,
+    Camera,
+    Light,
     SkyBox,
     Terrain
 }

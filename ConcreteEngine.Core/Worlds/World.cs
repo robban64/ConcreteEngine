@@ -85,7 +85,7 @@ public sealed class World : IWorld
 
     internal void ProcessCommand(IWorldCommandRecord cmd)
     {
-        if (cmd is EntityCommandRecord<EditorTransform> transformCmd)
+        if (cmd is EntityCommandRecord<TransformEditorModel> transformCmd)
         {
             ref readonly var transform = ref transformCmd.Data;
             ref var entityTransform = ref Transforms.GetById(new EntityId(transformCmd.EntityId));

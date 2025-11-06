@@ -31,10 +31,10 @@ public static class CommandDispatcher
     }
 
     public static void RegisterConsoleCmd<TPayload>(string command, string description,
-        PayloadResolver<TPayload> resolver)
+        CommandPayloadResolverDel<TPayload> resolverDel)
     {
         var editorDel = (EditorCommandReqDel<TPayload>)EditorCmd[command].EditorCmdHandler;
-        var del = WrapEditorCommand(editorDel, resolver);
+        var del = WrapEditorCommand(editorDel, resolverDel);
         if (!ConsoleCmd.TryAdd(command, new ConsoleCommandRecord(description, false, del)))
             throw new InvalidOperationException($"Console Command {command} is already registered");
 
@@ -92,13 +92,13 @@ public static class CommandDispatcher
 
     // create closure over command
     private static ConsoleCommandReqDel WrapEditorCommand<TPayload>(EditorCommandReqDel<TPayload> editorDel,
-        PayloadResolver<TPayload> resolver)
+        CommandPayloadResolverDel<TPayload> resolverDel)
     {
         return (ctx, action, arg1, arg2) =>
         {
             try
             {
-                resolver(action, arg1, arg2, out var payload);
+                resolverDel(action, arg1, arg2, out var payload);
                 var response = editorDel(in payload);
                 if (!response.Success)
                     ctx.AddLog($"Command failed: {response.Error}");

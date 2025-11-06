@@ -1,6 +1,8 @@
+using System.Numerics;
 using ConcreteEngine.Core.Assets;
 using ConcreteEngine.Core.Assets.Data;
 using ConcreteEngine.Core.Worlds;
+using ConcreteEngine.Core.Worlds.Data;
 using ConcreteEngine.Core.Worlds.Entities;
 using ConcreteEngine.Editor.Data;
 using ConcreteEngine.Editor.Definitions;
@@ -17,6 +19,23 @@ internal static class EngineDataProvider
     {
         _world = world;
         _assetSystem = assetSystem;
+    }
+
+    public static void PullCameraView(out CameraEditorModel response)
+    {
+        if (_world is null)
+        {
+            response = default;
+            return;
+        }
+
+        var camera = _world.Camera;
+        camera.DestructTransform(out var translation, out var scale, out var rotation);
+        
+        var transform = new TransformEditorModel(in translation, in scale, in rotation);
+        var proj = new ProjectionEditorModel(camera.AspectRatio, camera.Fov, camera.NearPlane, camera.FarPlane);
+        var viewport = camera.Viewport;
+        response = new CameraEditorModel(in transform, in proj, in viewport);
     }
 
     public static void PullEntityView(EntityListViewModel viewModel)

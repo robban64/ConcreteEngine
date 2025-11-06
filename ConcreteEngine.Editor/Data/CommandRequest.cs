@@ -2,9 +2,6 @@ using ConcreteEngine.Editor.Definitions;
 
 namespace ConcreteEngine.Editor.Data;
 
-public delegate void ConsoleCommandReqDel(DebugConsoleCtx ctx, string action, string? arg1, string? arg2);
-public delegate void PayloadResolver<TPayload>(string action, string? arg1, string? arg2, out TPayload payload);
-public delegate CommandResponse EditorCommandReqDel<TPayload>(in TPayload payload);
 
 public readonly ref struct CommandResponse(bool success, string? error)
 {

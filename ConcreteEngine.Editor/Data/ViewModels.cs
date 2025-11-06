@@ -16,17 +16,7 @@ public sealed class AssetStoreViewModel
     }
 }
 
-public sealed class EntityListViewModel
-{
-    public int SelectedEntityId { get; set; } = 0;
-    public List<EntityViewModel> Entities { get; } = new(128);
 
-    public void ResetState()
-    {
-        SelectedEntityId = 0;
-        Entities.Clear();
-    }
-}
 
 public record AssetObjectViewModel(
     int AssetId,
@@ -45,19 +35,3 @@ public sealed record AssetObjectFileViewModel(
     long SizeInBytes,
     string? ContentHash);
 
-public sealed class EntityViewModel(
-    int entityId,
-    string name,
-    int componentCount,
-    in EntityEditorModel model,
-    in EditorTransform transform
-)
-{
-    public int EntityId { get; } = entityId;
-    public string Name { get; } = name;
-    public int ComponentCount { get; } = componentCount;
-    public EntityEditorModel Model { get; set; } = model;
-
-    private EditorTransform _transform = transform;
-    public ref EditorTransform Transform => ref _transform;
-}

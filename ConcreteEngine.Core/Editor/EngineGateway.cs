@@ -2,7 +2,7 @@
 
 using ConcreteEngine.Core.Assets;
 using ConcreteEngine.Core.Data;
-using ConcreteEngine.Core.Diagnostic.Routers;
+using ConcreteEngine.Core.Editor.Diagnostics;
 using ConcreteEngine.Core.Worlds;
 using ConcreteEngine.Editor;
 using ConcreteEngine.Editor.Data;
@@ -14,7 +14,7 @@ using Silk.NET.Windowing;
 
 #endregion
 
-namespace ConcreteEngine.Core.Diagnostic;
+namespace ConcreteEngine.Core.Editor;
 
 internal sealed class EngineGateway : IDisposable
 {
@@ -55,8 +55,8 @@ internal sealed class EngineGateway : IDisposable
 
 
         MetricRouter.Attach(world, assetSystem, frameInfo);
-        EditorRouter.Attach(world, assetSystem);
-        CommandRouter.world = world;
+        EngineDataProvider.Attach(world, assetSystem);
+        EngineCommandHandler.world = world;
     }
 
     private void ProcessStringLog(StringLogEvent log) => _debugTools.DevConsole.AddLog(_logParser.Format(log));
@@ -67,24 +67,24 @@ internal sealed class EngineGateway : IDisposable
         if (HasBoundCommands) throw new InvalidOperationException(nameof(HasBoundCommands));
         HasBoundCommands = true;
 
-        CommandDispatcher.RegisterEditorCmd<EditorTransformPayload>(CoreCmdNames.EntityTransform, EditorCommandScope.Editor, CommandRouter.OnEntityTransformCmd);
-        CommandDispatcher.RegisterEditorCmd<EditorShaderPayload>(CoreCmdNames.AssetShader, EditorCommandScope.Engine, CommandRouter.OnAssetShaderCmd);
-        CommandDispatcher.RegisterEditorCmd<EditorShadowPayload>(CoreCmdNames.WorldShadow, EditorCommandScope.Engine, CommandRouter.OnWorldShadowCmd);
+        CommandDispatcher.RegisterEditorCmd<EditorTransformPayload>(CoreCmdNames.EntityTransform, EditorCommandScope.Editor, EngineCommandHandler.OnEntityTransformCmd);
+        CommandDispatcher.RegisterEditorCmd<EditorShaderPayload>(CoreCmdNames.AssetShader, EditorCommandScope.Engine, EngineCommandHandler.OnAssetShaderCmd);
+        CommandDispatcher.RegisterEditorCmd<EditorShadowPayload>(CoreCmdNames.WorldShadow, EditorCommandScope.Engine, EngineCommandHandler.OnWorldShadowCmd);
 
         
         CommandDispatcher.RegisterConsoleCmd<EditorShaderPayload>(CoreCmdNames.AssetShader, string.Empty, CommandParser.ParseShaderRequest);
         CommandDispatcher.RegisterConsoleCmd<EditorShadowPayload>(CoreCmdNames.WorldShadow, string.Empty, CommandParser.ParseShadowRequest);
 
         // Misc
-        CommandDispatcher.RegisterNoOpConsoleCmd("inspect-structs", string.Empty, CommandRouter.OnStructSizesCmd);
+        CommandDispatcher.RegisterNoOpConsoleCmd("inspect-structs", string.Empty, EngineCommandHandler.OnStructSizesCmd);
 
         //RouteTable.RegisterConsoleCmd(CoreCmdNames.AssetShader, CmdWrapper(CommandRouter.OnAssetShaderCmd));
         //RouteTable.RegisterConsoleCmd(CoreCmdNames.WorldShadow, CmdWrapper(CommandRouter.OnWorldShadowCmd));
         //RouteTable.RegisterConsoleCmd(CoreCmdNames.EntityTransform, CmdWrapper(CommandRouter.OnEntityTransformCmd));
 
-        EditorApi.FillAssetStoreView = EditorRouter.PullAssetStoreData;
-        EditorApi.FetchAssetObjectFiles = EditorRouter.PullAssetObjectFiles;
-        EditorApi.FillEntityView = EditorRouter.PullEntityView;
+        EditorApi.FillAssetStoreView = EngineDataProvider.PullAssetStoreData;
+        EditorApi.FetchAssetObjectFiles = EngineDataProvider.PullAssetObjectFiles;
+        EditorApi.FillEntityView = EngineDataProvider.PullEntityView;
     }
 
 

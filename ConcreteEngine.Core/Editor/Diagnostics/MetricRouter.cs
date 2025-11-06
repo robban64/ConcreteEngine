@@ -12,7 +12,7 @@ using ConcreteEngine.Graphics.Diagnostic;
 
 #endregion
 
-namespace ConcreteEngine.Core.Diagnostic.Routers;
+namespace ConcreteEngine.Core.Editor.Diagnostics;
 
 internal static class MetricRouter
 {

@@ -5,7 +5,9 @@ using ConcreteEngine.Common.Diagnostics.Utility;
 using ConcreteEngine.Common.Numerics;
 using ConcreteEngine.Core.Assets;
 using ConcreteEngine.Core.Assets.Shaders;
-using ConcreteEngine.Core.Diagnostic.Routers;
+using ConcreteEngine.Core.Editor;
+using ConcreteEngine.Core.Editor.Data;
+using ConcreteEngine.Core.Editor.Definitions;
 using ConcreteEngine.Core.Platform;
 using ConcreteEngine.Core.Utils;
 using ConcreteEngine.Core.Worlds.Render.Batching;
@@ -87,21 +89,21 @@ public sealed class WorldRenderer : IWorldRenderer
 
     internal void RenderEmptyFrame(in RenderFrameInfo frameInfo) => _renderer.RenderEmptyFrame(in frameInfo);
 
-    internal void RecreateFrameBuffer(FboCommandRequest req)
+    internal void RecreateFrameBuffer(FboCommandRecord req)
     {
         _graphics.Gfx.Commands.BindFramebuffer(default);
         _graphics.Gfx.Commands.UnbindAllTextures();
 
         switch (req.Action)
         {
-            case FboRequestAction.RecreateScreenDependentFbo:
+            case FboCommandAction.RecreateScreenDependentFbo:
                 _renderer.FboRegistry.RecreateScreenDependentFbo(_window.OutputSize);
                 break;
-            case FboRequestAction.RecreateShadowFbo:
+            case FboCommandAction.RecreateShadowFbo:
                 _renderer.FboRegistry.RecreateFixedFrameBuffer<ShadowPassTag>(FboVariant.Default, req.Size);
                 WorldRenderParams.SetShadowDefault(req.Size.Width);
                 break;
-            case FboRequestAction.None:
+            case FboCommandAction.None:
             default:
                 throw new ArgumentOutOfRangeException(nameof(req.Action));
         }

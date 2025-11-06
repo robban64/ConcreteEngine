@@ -6,7 +6,7 @@ using ConcreteEngine.Common.Diagnostics;
 
 #endregion
 
-namespace ConcreteEngine.Core.Diagnostic;
+namespace ConcreteEngine.Core.Editor.Diagnostics;
 
 internal sealed class LogParser
 {

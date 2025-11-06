@@ -5,9 +5,9 @@ using ConcreteEngine.Core.Worlds.Entities;
 using ConcreteEngine.Editor.Data;
 using ConcreteEngine.Editor.Definitions;
 
-namespace ConcreteEngine.Core.Diagnostic.Routers;
+namespace ConcreteEngine.Core.Editor;
 
-internal static class EditorRouter
+internal static class EngineDataProvider
 {
     private static World? _world;
     private static AssetSystem? _assetSystem;

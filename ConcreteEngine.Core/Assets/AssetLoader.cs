@@ -9,7 +9,7 @@ using ConcreteEngine.Core.Assets.Materials;
 using ConcreteEngine.Core.Assets.Meshes;
 using ConcreteEngine.Core.Assets.Shaders;
 using ConcreteEngine.Core.Assets.Textures;
-using ConcreteEngine.Core.Diagnostic;
+using ConcreteEngine.Core.Editor.Diagnostics;
 
 #endregion
 

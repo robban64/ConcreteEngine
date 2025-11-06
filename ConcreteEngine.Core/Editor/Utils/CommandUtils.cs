@@ -4,7 +4,7 @@ using System.Globalization;
 
 #endregion
 
-namespace ConcreteEngine.Core.Diagnostic.Utils;
+namespace ConcreteEngine.Core.Editor.Utils;
 
 internal static class CommandUtils
 {

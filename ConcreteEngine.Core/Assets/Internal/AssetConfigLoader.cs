@@ -5,7 +5,7 @@ using System.Text.Json.Serialization;
 using ConcreteEngine.Common.Diagnostics;
 using ConcreteEngine.Core.Assets.Descriptors;
 using ConcreteEngine.Core.Assets.IO;
-using ConcreteEngine.Core.Diagnostic;
+using ConcreteEngine.Core.Editor.Diagnostics;
 
 #endregion
 

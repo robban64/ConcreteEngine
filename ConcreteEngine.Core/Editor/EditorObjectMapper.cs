@@ -6,7 +6,7 @@ using ConcreteEngine.Core.Assets.Textures;
 using ConcreteEngine.Core.Worlds.Entities;
 using ConcreteEngine.Editor.Data;
 
-namespace ConcreteEngine.Core.Diagnostic;
+namespace ConcreteEngine.Core.Editor;
 
 internal static class EditorObjectMapper
 {

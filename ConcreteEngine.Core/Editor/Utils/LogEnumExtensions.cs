@@ -1,7 +1,7 @@
 using ConcreteEngine.Common.Diagnostics;
 using ConcreteEngine.Core.Assets.Data;
 
-namespace ConcreteEngine.Core.Diagnostic.Utils;
+namespace ConcreteEngine.Core.Editor.Utils;
 
 internal static class LogEnumExtensions
 {

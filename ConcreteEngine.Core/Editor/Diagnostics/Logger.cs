@@ -2,9 +2,9 @@ using System.Diagnostics;
 using ConcreteEngine.Common;
 using ConcreteEngine.Common.Diagnostics;
 using ConcreteEngine.Core.Assets.Data;
-using ConcreteEngine.Core.Diagnostic.Utils;
+using ConcreteEngine.Core.Editor.Utils;
 
-namespace ConcreteEngine.Core.Diagnostic;
+namespace ConcreteEngine.Core.Editor.Diagnostics;
 
 public sealed record StringLogEvent(LogScope Scope, string Message, LogLevel Level = LogLevel.Info)
 {

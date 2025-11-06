@@ -7,7 +7,7 @@ using ConcreteEngine.Core.Assets.Descriptors;
 using ConcreteEngine.Core.Assets.Internal;
 using ConcreteEngine.Core.Assets.Materials;
 using ConcreteEngine.Core.Assets.Shaders;
-using ConcreteEngine.Core.Diagnostic;
+using ConcreteEngine.Core.Editor.Diagnostics;
 using ConcreteEngine.Core.Utils;
 using ConcreteEngine.Graphics.Error;
 using ConcreteEngine.Graphics.Gfx;

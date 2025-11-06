@@ -5,8 +5,10 @@ using ConcreteEngine.Common.Patterns;
 using ConcreteEngine.Core.Assets;
 using ConcreteEngine.Core.Configuration;
 using ConcreteEngine.Core.Data;
-using ConcreteEngine.Core.Diagnostic;
-using ConcreteEngine.Core.Diagnostic.Routers;
+using ConcreteEngine.Core.Editor;
+using ConcreteEngine.Core.Editor.Data;
+using ConcreteEngine.Core.Editor.Definitions;
+using ConcreteEngine.Core.Editor.Diagnostics;
 using ConcreteEngine.Core.Platform;
 using ConcreteEngine.Core.Scene;
 using ConcreteEngine.Core.Scene.Modules;
@@ -147,7 +149,7 @@ public sealed class GameEngine : IDisposable
         if(_timeHub.RenderTicker.TryProcessLoggers(dt))
             _engineGateway.DrainLogs();
 
-        if (CommandRouter.CommandQueueCount > 0) ProcessCommandQueue();
+        if (EngineCommandHandler.CommandQueueCount > 0) ProcessCommandQueue();
         if (_assets.PendingAssetCount > 0) ProcessPendingQueue(frameInfo.FrameIndex);
 
         _worldRenderer.PreRender(beginStatus, in frameInfo, in runtimeParams, _world.Camera);
@@ -166,7 +168,7 @@ public sealed class GameEngine : IDisposable
 
     private void ProcessCommandQueue()
     {
-        while (CommandRouter.TryDequeueCommand(out var cmd))
+        while (EngineCommandHandler.TryDequeueCommand(out var cmd))
         {
             try
             {
@@ -186,11 +188,11 @@ public sealed class GameEngine : IDisposable
         }
     }
 
-    void ProcessRequest(CommandRequestContract cmd)
+    void ProcessRequest(EngineCommandRecord cmd)
     {
-        if (cmd.Scope == CommandRequestScope.AssetCommand && cmd is AssetCommandRequest assetCmd)
+        if (cmd.Scope == EngineCommandScope.AssetCommand && cmd is AssetCommandRecord assetCmd)
             _assets.EnqueueRecreateShader(assetCmd.Name);
-        else if (cmd.Scope == CommandRequestScope.RenderCommand && cmd is FboCommandRequest fboCmd)
+        else if (cmd.Scope == EngineCommandScope.RenderCommand && cmd is FboCommandRecord fboCmd)
             _worldRenderer.RecreateFrameBuffer(fboCmd);
     }
 

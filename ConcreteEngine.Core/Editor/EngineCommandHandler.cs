@@ -4,6 +4,8 @@ using System.Runtime.CompilerServices;
 using ConcreteEngine.Common.Diagnostics;
 using ConcreteEngine.Common.Numerics;
 using ConcreteEngine.Core.Assets.Data;
+using ConcreteEngine.Core.Editor.Data;
+using ConcreteEngine.Core.Editor.Definitions;
 using ConcreteEngine.Core.Worlds;
 using ConcreteEngine.Core.Worlds.Data;
 using ConcreteEngine.Core.Worlds.Entities;
@@ -16,49 +18,15 @@ using ConcreteEngine.Renderer.Data;
 
 #endregion
 
-namespace ConcreteEngine.Core.Diagnostic.Routers;
+namespace ConcreteEngine.Core.Editor;
 
-internal enum CommandRequestScope : byte
+internal static class EngineCommandHandler
 {
-    None = 0,
-    CoreCommand = 1,
-    WorldCommand = 2,
-    AssetCommand = 3,
-    RenderCommand = 4
-}
-
-internal enum AssetRequestAction : byte
-{
-    None = 0,
-    ReloadAsset
-}
-
-internal enum FboRequestAction : byte
-{
-    None = 0,
-    RecreateScreenDependentFbo = 1,
-    RecreateShadowFbo = 2,
-}
-
-internal abstract record CommandRequestContract(CommandRequestScope Scope)
-{
-    private static int _idx = 0;
-    public int CommandId { get; } = ++_idx;
-}
-
-internal sealed record AssetCommandRequest(string Name, AssetRequestAction Action, AssetKind Kind)
-    : CommandRequestContract(CommandRequestScope.AssetCommand);
-
-internal sealed record FboCommandRequest(FboRequestAction Action, Size2D Size)
-    : CommandRequestContract(CommandRequestScope.RenderCommand);
-
-internal static class CommandRouter
-{
-    private static Queue<CommandRequestContract> _commandQueue = new(4);
+    private static readonly Queue<EngineCommandRecord> _commandQueue = new(4);
 
     public static int CommandQueueCount => _commandQueue.Count;
 
-    internal static bool TryDequeueCommand(out CommandRequestContract request) => _commandQueue.TryDequeue(out request);
+    internal static bool TryDequeueCommand(out EngineCommandRecord request) => _commandQueue.TryDequeue(out request);
 
     public static CommandResponse OnAssetShaderCmd(in EditorShaderPayload shaderPayload)
     {
@@ -67,7 +35,7 @@ internal static class CommandRouter
         {
             case EditorRequestAction.Reload:
             {
-                var result = new AssetCommandRequest(shaderPayload.Name, AssetRequestAction.ReloadAsset,
+                var result = new AssetCommandRecord(shaderPayload.Name, AssetCommandAction.ReloadAsset,
                     AssetKind.Shader);
                 _commandQueue.Enqueue(result);
                 break;
@@ -84,7 +52,7 @@ internal static class CommandRouter
         if (payload.Size <= 0)
             throw new ArgumentException("Supported shadow map size are (1024, 2048, 4096, 8192)", nameof(payload.Size));
 
-        _commandQueue.Enqueue(new FboCommandRequest(FboRequestAction.RecreateShadowFbo, new Size2D(payload.Size)));
+        _commandQueue.Enqueue(new FboCommandRecord(FboCommandAction.RecreateShadowFbo, new Size2D(payload.Size)));
         return CommandResponse.Ok();
     }
 

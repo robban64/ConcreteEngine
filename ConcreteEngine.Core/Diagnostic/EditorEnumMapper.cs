@@ -2,7 +2,7 @@ using ConcreteEngine.Core.Assets.Materials;
 using ConcreteEngine.Core.Assets.Meshes;
 using ConcreteEngine.Core.Assets.Shaders;
 using ConcreteEngine.Core.Assets.Textures;
-using Core.DebugTools.Definitions;
+using ConcreteEngine.Editor.Definitions;
 
 namespace ConcreteEngine.Core.Diagnostic;
 

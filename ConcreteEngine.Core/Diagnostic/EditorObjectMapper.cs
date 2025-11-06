@@ -1,15 +1,10 @@
-using System.Numerics;
-using System.Text;
-using ConcreteEngine.Common.Numerics.Maths;
 using ConcreteEngine.Core.Assets.Data;
 using ConcreteEngine.Core.Assets.Materials;
 using ConcreteEngine.Core.Assets.Meshes;
 using ConcreteEngine.Core.Assets.Shaders;
 using ConcreteEngine.Core.Assets.Textures;
 using ConcreteEngine.Core.Worlds.Entities;
-using Core.DebugTools.Data;
-using Core.DebugTools.Definitions;
-using Core.DebugTools.Utils;
+using ConcreteEngine.Editor.Data;
 
 namespace ConcreteEngine.Core.Diagnostic;
 

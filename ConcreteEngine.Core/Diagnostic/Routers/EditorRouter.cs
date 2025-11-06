@@ -1,11 +1,9 @@
-using System.Text;
 using ConcreteEngine.Core.Assets;
 using ConcreteEngine.Core.Assets.Data;
 using ConcreteEngine.Core.Worlds;
 using ConcreteEngine.Core.Worlds.Entities;
-using Core.DebugTools.Data;
-using Core.DebugTools.Definitions;
-using Core.DebugTools.Utils;
+using ConcreteEngine.Editor.Data;
+using ConcreteEngine.Editor.Definitions;
 
 namespace ConcreteEngine.Core.Diagnostic.Routers;
 

@@ -6,15 +6,11 @@ using ConcreteEngine.Core.Assets.Data;
 using ConcreteEngine.Core.Assets.Descriptors;
 using ConcreteEngine.Core.Assets.Internal;
 using ConcreteEngine.Core.Assets.Materials;
-using ConcreteEngine.Core.Assets.Meshes;
 using ConcreteEngine.Core.Assets.Shaders;
 using ConcreteEngine.Core.Diagnostic;
-using ConcreteEngine.Core.Diagnostic.Utils;
 using ConcreteEngine.Core.Utils;
-using ConcreteEngine.Core.Worlds.Render;
 using ConcreteEngine.Graphics.Error;
 using ConcreteEngine.Graphics.Gfx;
-using ConcreteEngine.Graphics.Gfx.Definitions;
 
 #endregion
 

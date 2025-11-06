@@ -6,7 +6,6 @@ using ConcreteEngine.Core.Assets.Meshes;
 using ConcreteEngine.Core.Worlds;
 using ConcreteEngine.Core.Worlds.Data;
 using ConcreteEngine.Core.Worlds.Entities;
-using ConcreteEngine.Renderer.Data;
 
 #endregion
 

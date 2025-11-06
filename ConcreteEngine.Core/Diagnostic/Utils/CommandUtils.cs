@@ -1,7 +1,6 @@
 #region
 
 using System.Globalization;
-using ConcreteEngine.Graphics.Error;
 
 #endregion
 

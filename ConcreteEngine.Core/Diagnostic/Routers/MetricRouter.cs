@@ -7,8 +7,8 @@ using ConcreteEngine.Core.Assets.Data;
 using ConcreteEngine.Core.Assets.Materials;
 using ConcreteEngine.Core.Data;
 using ConcreteEngine.Core.Worlds;
+using ConcreteEngine.Editor.Metrics;
 using ConcreteEngine.Graphics.Diagnostic;
-using Core.DebugTools.Data;
 
 #endregion
 

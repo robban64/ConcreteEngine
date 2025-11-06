@@ -1,16 +1,13 @@
 #region
 
-using ConcreteEngine.Common.Diagnostics;
 using ConcreteEngine.Core.Assets;
 using ConcreteEngine.Core.Data;
 using ConcreteEngine.Core.Diagnostic.Routers;
-using ConcreteEngine.Core.Diagnostic.Utils;
-using ConcreteEngine.Core.Utils;
 using ConcreteEngine.Core.Worlds;
+using ConcreteEngine.Editor;
+using ConcreteEngine.Editor.Data;
+using ConcreteEngine.Editor.Definitions;
 using ConcreteEngine.Graphics.Diagnostic;
-using Core.DebugTools;
-using Core.DebugTools.Data;
-using Core.DebugTools.Editor;
 using Silk.NET.Input;
 using Silk.NET.OpenGL;
 using Silk.NET.Windowing;
@@ -70,24 +67,24 @@ internal sealed class EngineGateway : IDisposable
         if (HasBoundCommands) throw new InvalidOperationException(nameof(HasBoundCommands));
         HasBoundCommands = true;
 
-        RouteTable.RegisterEditorCmd<EditorTransformPayload>(CoreCmdNames.EntityTransform, ConsoleCommandScope.Editor, CommandRouter.OnEntityTransformCmd);
-        RouteTable.RegisterEditorCmd<EditorShaderPayload>(CoreCmdNames.AssetShader, ConsoleCommandScope.Engine, CommandRouter.OnAssetShaderCmd);
-        RouteTable.RegisterEditorCmd<EditorShadowPayload>(CoreCmdNames.WorldShadow, ConsoleCommandScope.Engine, CommandRouter.OnWorldShadowCmd);
+        CommandDispatcher.RegisterEditorCmd<EditorTransformPayload>(CoreCmdNames.EntityTransform, EditorCommandScope.Editor, CommandRouter.OnEntityTransformCmd);
+        CommandDispatcher.RegisterEditorCmd<EditorShaderPayload>(CoreCmdNames.AssetShader, EditorCommandScope.Engine, CommandRouter.OnAssetShaderCmd);
+        CommandDispatcher.RegisterEditorCmd<EditorShadowPayload>(CoreCmdNames.WorldShadow, EditorCommandScope.Engine, CommandRouter.OnWorldShadowCmd);
 
         
-        RouteTable.RegisterConsoleCmd<EditorShaderPayload>(CoreCmdNames.AssetShader, string.Empty, CommandParser.ParseShaderRequest);
-        RouteTable.RegisterConsoleCmd<EditorShadowPayload>(CoreCmdNames.WorldShadow, string.Empty, CommandParser.ParseShadowRequest);
+        CommandDispatcher.RegisterConsoleCmd<EditorShaderPayload>(CoreCmdNames.AssetShader, string.Empty, CommandParser.ParseShaderRequest);
+        CommandDispatcher.RegisterConsoleCmd<EditorShadowPayload>(CoreCmdNames.WorldShadow, string.Empty, CommandParser.ParseShadowRequest);
 
         // Misc
-        RouteTable.RegisterNoOpConsoleCmd("inspect-structs", string.Empty, CommandRouter.OnStructSizesCmd);
+        CommandDispatcher.RegisterNoOpConsoleCmd("inspect-structs", string.Empty, CommandRouter.OnStructSizesCmd);
 
         //RouteTable.RegisterConsoleCmd(CoreCmdNames.AssetShader, CmdWrapper(CommandRouter.OnAssetShaderCmd));
         //RouteTable.RegisterConsoleCmd(CoreCmdNames.WorldShadow, CmdWrapper(CommandRouter.OnWorldShadowCmd));
         //RouteTable.RegisterConsoleCmd(CoreCmdNames.EntityTransform, CmdWrapper(CommandRouter.OnEntityTransformCmd));
 
-        EditorTable.FillAssetStoreView = EditorRouter.PullAssetStoreData;
-        EditorTable.FetchAssetObjectFiles = EditorRouter.PullAssetObjectFiles;
-        EditorTable.FillEntityView = EditorRouter.PullEntityView;
+        EditorApi.FillAssetStoreView = EditorRouter.PullAssetStoreData;
+        EditorApi.FetchAssetObjectFiles = EditorRouter.PullAssetObjectFiles;
+        EditorApi.FillEntityView = EditorRouter.PullEntityView;
     }
 
 
@@ -97,13 +94,13 @@ internal sealed class EngineGateway : IDisposable
         if (HasBoundMetrics) throw new InvalidOperationException(nameof(HasBoundMetrics));
         HasBoundMetrics = true;
 
-        MetricsTable.PullFrameMetrics = MetricRouter.GetFrameMetrics;
-        MetricsTable.PullMaterialMetrics = MetricRouter.GetMaterialMetrics;
-        MetricsTable.PullSceneMetrics = MetricRouter.GetSceneMetrics;
-        MetricsTable.PullMemoryMetrics = MetricRouter.GetMemoryMetrics;
+        MetricsApi.PullFrameMetrics = MetricRouter.GetFrameMetrics;
+        MetricsApi.PullMaterialMetrics = MetricRouter.GetMaterialMetrics;
+        MetricsApi.PullSceneMetrics = MetricRouter.GetSceneMetrics;
+        MetricsApi.PullMemoryMetrics = MetricRouter.GetMemoryMetrics;
 
-        MetricsTable.FillAssetMetrics = MetricRouter.DrainAssetStoreMetrics;
-        MetricsTable.FillGfxStoreMetrics = MetricRouter.DrainGfxStoreMetrics;
+        MetricsApi.FillAssetMetrics = MetricRouter.DrainAssetStoreMetrics;
+        MetricsApi.FillGfxStoreMetrics = MetricRouter.DrainGfxStoreMetrics;
     }
 
     public void Update(float delta)
@@ -123,26 +120,26 @@ internal sealed class EngineGateway : IDisposable
         if (!Enabled) return;
         if (force)
         {
-            MetricsTable.RefreshFrameMetrics();
-            MetricsTable.RefreshAssetMetrics();
-            MetricsTable.RefreshGfxResourceMetrics();
+            MetricsApi.RefreshFrameMetrics();
+            MetricsApi.RefreshAssetMetrics();
+            MetricsApi.RefreshGfxResourceMetrics();
 
-            MetricsTable.RefreshSceneMetrics();
-            MetricsTable.RefreshMemoryMetrics();
+            MetricsApi.RefreshSceneMetrics();
+            MetricsApi.RefreshMemoryMetrics();
             return;
         }
 
         if (_ticker++ >= 4)
         {
-            MetricsTable.RefreshFrameMetrics();
+            MetricsApi.RefreshFrameMetrics();
             _ticker = 0;
         }
 
         switch (_mediumTicker)
         {
-            case 5: MetricsTable.RefreshSceneMetrics(); break;
-            case 10: MetricsTable.RefreshGfxResourceMetrics(); break;
-            case 15: MetricsTable.RefreshAssetMetrics(); break;
+            case 5: MetricsApi.RefreshSceneMetrics(); break;
+            case 10: MetricsApi.RefreshGfxResourceMetrics(); break;
+            case 15: MetricsApi.RefreshAssetMetrics(); break;
         }
 
         if (_mediumTicker++ >= 15) _mediumTicker = 0;
@@ -150,7 +147,7 @@ internal sealed class EngineGateway : IDisposable
         if (_slowTicker++ >= 30)
         {
             _slowTicker = 0;
-            MetricsTable.RefreshMemoryMetrics();
+            MetricsApi.RefreshMemoryMetrics();
         }
     }
 

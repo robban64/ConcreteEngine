@@ -3,8 +3,6 @@
 using ConcreteEngine.Common.Diagnostics;
 using ConcreteEngine.Common.Patterns;
 using ConcreteEngine.Core.Assets;
-using ConcreteEngine.Core.Assets.Data;
-using ConcreteEngine.Core.Assets.Meshes;
 using ConcreteEngine.Core.Configuration;
 using ConcreteEngine.Core.Data;
 using ConcreteEngine.Core.Diagnostic;
@@ -19,7 +17,6 @@ using ConcreteEngine.Core.Worlds;
 using ConcreteEngine.Core.Worlds.Render;
 using ConcreteEngine.Core.Worlds.Render.Batching;
 using ConcreteEngine.Graphics;
-using ConcreteEngine.Graphics.Diagnostic;
 using ConcreteEngine.Renderer.State;
 using Silk.NET.OpenGL;
 

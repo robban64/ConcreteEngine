@@ -3,20 +3,16 @@
 using System.Runtime.CompilerServices;
 using ConcreteEngine.Common.Diagnostics;
 using ConcreteEngine.Common.Numerics;
-using ConcreteEngine.Common.Numerics.Maths;
-using ConcreteEngine.Core.Assets;
 using ConcreteEngine.Core.Assets.Data;
-using ConcreteEngine.Core.Diagnostic.Utils;
 using ConcreteEngine.Core.Worlds;
 using ConcreteEngine.Core.Worlds.Data;
 using ConcreteEngine.Core.Worlds.Entities;
-using ConcreteEngine.Core.Worlds.Render;
+using ConcreteEngine.Editor;
+using ConcreteEngine.Editor.Data;
 using ConcreteEngine.Graphics.Diagnostic;
 using ConcreteEngine.Graphics.Gfx.Contracts;
 using ConcreteEngine.Graphics.Gfx.Resources;
 using ConcreteEngine.Renderer.Data;
-using Core.DebugTools;
-using Core.DebugTools.Data;
 
 #endregion
 

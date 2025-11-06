@@ -1,13 +1,10 @@
 #region
 
-using ConcreteEngine.Common.Diagnostics.Utility;
 using ConcreteEngine.Common.Numerics;
 using ConcreteEngine.Core.Configuration;
 using ConcreteEngine.Core.Data;
 using ConcreteEngine.Core.Worlds;
-using ConcreteEngine.Core.Worlds.Render;
 using ConcreteEngine.Core.Worlds.View;
-using ConcreteEngine.Renderer.State;
 
 #endregion
 

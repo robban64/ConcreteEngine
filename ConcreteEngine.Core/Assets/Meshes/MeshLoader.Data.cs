@@ -1,7 +1,6 @@
 #region
 
 using System.Numerics;
-using ConcreteEngine.Core.Assets.Data;
 using ConcreteEngine.Graphics.Gfx.Contracts;
 using ConcreteEngine.Graphics.Gfx.Resources;
 using ConcreteEngine.Graphics.Primitives;

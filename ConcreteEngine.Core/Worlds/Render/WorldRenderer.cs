@@ -1,12 +1,10 @@
 #region
 
 using ConcreteEngine.Common;
-using ConcreteEngine.Common.Diagnostics;
 using ConcreteEngine.Common.Diagnostics.Utility;
 using ConcreteEngine.Common.Numerics;
 using ConcreteEngine.Core.Assets;
 using ConcreteEngine.Core.Assets.Shaders;
-using ConcreteEngine.Core.Diagnostic;
 using ConcreteEngine.Core.Diagnostic.Routers;
 using ConcreteEngine.Core.Platform;
 using ConcreteEngine.Core.Utils;

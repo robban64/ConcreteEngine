@@ -1,6 +1,5 @@
 using System.Numerics;
 using System.Runtime.CompilerServices;
-using System.Runtime.InteropServices;
 using static ConcreteEngine.Common.Numerics.CollisionMethods;
 
 namespace ConcreteEngine.Common.Numerics;

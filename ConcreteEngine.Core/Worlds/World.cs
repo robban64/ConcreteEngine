@@ -1,7 +1,6 @@
 #region
 
 using ConcreteEngine.Common.Numerics;
-using ConcreteEngine.Core.Data;
 using ConcreteEngine.Core.Worlds.Entities;
 using ConcreteEngine.Core.Worlds.Render;
 using ConcreteEngine.Core.Worlds.Render.Batching;

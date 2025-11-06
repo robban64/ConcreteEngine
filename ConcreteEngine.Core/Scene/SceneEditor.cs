@@ -1,7 +1,6 @@
 using ConcreteEngine.Core.Assets;
 using ConcreteEngine.Core.Diagnostic;
 using ConcreteEngine.Core.Platform;
-using ConcreteEngine.Core.Scene.Modules;
 using ConcreteEngine.Core.Worlds;
 using ConcreteEngine.Core.Worlds.Render;
 

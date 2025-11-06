@@ -7,6 +7,7 @@ using ConcreteEngine.Core.Assets.Descriptors;
 using ConcreteEngine.Core.Assets.Internal;
 using ConcreteEngine.Core.Assets.Materials;
 using ConcreteEngine.Core.Assets.Shaders;
+using ConcreteEngine.Core.Editor.Data;
 using ConcreteEngine.Core.Editor.Diagnostics;
 using ConcreteEngine.Core.Utils;
 using ConcreteEngine.Graphics.Error;
@@ -77,21 +78,21 @@ public sealed class AssetSystem : IAssetSystem
         CurrentStatus = Status.ManifestLoaded;
     }
 
-    internal void EnqueueRecreateShader(string name)
+    internal void EnqueueReloadAsset(AssetCommandRecord command)
     {
-        if (!_assetStore.TryGetByName(name, typeof(Shader), out var obj) || obj is not Shader s)
-            throw new KeyNotFoundException($"No shader found with name {name}");
+        ArgumentNullException.ThrowIfNull(command, nameof(command));
+        ArgumentException.ThrowIfNullOrWhiteSpace(command.Name, nameof(command.Name));
+        
+        if (!_assetStore.TryGetByName(command.Name, typeof(Shader), out var obj) || obj is not Shader s)
+            throw new KeyNotFoundException($"No shader found with name {command.Name}");
+        
         _pendingQueue.Enqueue(new RecreateRequest(s.ResourceId, s.RawId, AssetKind.Shader));
     }
 
-
-    internal void UpdatePendingQueue(long frameIndex)
+    internal void ProcessPendingQueue(long frameIndex)
     {
         _pendingQueue.OnFrameStart(frameIndex);
-    }
 
-    internal void ProcessPendingQueue()
-    {
         while (_pendingQueue.TryDrain(out var rq))
         {
             try

@@ -1,10 +1,12 @@
 #region
 
 using ConcreteEngine.Common.Numerics;
+using ConcreteEngine.Core.Editor.Data;
 using ConcreteEngine.Core.Worlds.Entities;
 using ConcreteEngine.Core.Worlds.Render;
 using ConcreteEngine.Core.Worlds.Render.Batching;
 using ConcreteEngine.Core.Worlds.View;
+using ConcreteEngine.Editor.Data;
 
 #endregion
 
@@ -79,6 +81,22 @@ public sealed class World : IWorld
 
         Terrain.AttachModelRegistry(meshTable);
         Sky.AttachModelRegistry(meshTable);
+    }
+
+    internal void ProcessCommand(IWorldCommandRecord cmd)
+    {
+        if (cmd is EntityCommandRecord<EditorTransform> transformCmd)
+        {
+            ref readonly var transform = ref transformCmd.Data;
+            ref var entityTransform = ref Transforms.GetById(new EntityId(transformCmd.EntityId));
+            entityTransform.Translation = transform.Translation;
+            entityTransform.Scale = transform.Scale;
+            entityTransform.Rotation = transform.Rotation;
+        }
+        else
+        {
+            throw new InvalidOperationException("Unknown Command");
+        }
     }
 
     internal void UpdateTick(Size2D viewSize)

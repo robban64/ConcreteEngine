@@ -7,7 +7,7 @@ using ConcreteEngine.Common.Numerics;
 namespace ConcreteEngine.Core.Data;
 
 public readonly record struct UpdateTickInfo(
-    long FrameIndex,
+    long UpdateIndex,
     int GameTick,
     float DeltaTime)
 {
@@ -24,7 +24,7 @@ public sealed class UpdateFrameInfo
     {
         _updateTickInfo = _updateTickInfo with
         {
-            FrameIndex = _updateTickInfo.FrameIndex + 1,
+            UpdateIndex = _updateTickInfo.UpdateIndex + 1,
             DeltaTime = deltaTime,
         };
     }

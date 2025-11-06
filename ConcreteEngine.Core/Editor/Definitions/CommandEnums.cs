@@ -21,3 +21,10 @@ internal enum FboCommandAction : byte
     RecreateScreenDependentFbo = 1,
     RecreateShadowFbo = 2,
 }
+
+internal enum WorldCommandAction : byte
+{
+    None,
+    EntityModel,
+    EntityTransform
+}

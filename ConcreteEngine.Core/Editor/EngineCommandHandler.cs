@@ -22,11 +22,7 @@ namespace ConcreteEngine.Core.Editor;
 
 internal static class EngineCommandHandler
 {
-    private static readonly Queue<EngineCommandRecord> _commandQueue = new(4);
-
-    public static int CommandQueueCount => _commandQueue.Count;
-
-    internal static bool TryDequeueCommand(out EngineCommandRecord request) => _commandQueue.TryDequeue(out request);
+    internal static EditorEngineQueue CommandQueues { get; set; }
 
     public static CommandResponse OnAssetShaderCmd(in EditorShaderPayload shaderPayload)
     {
@@ -35,9 +31,8 @@ internal static class EngineCommandHandler
         {
             case EditorRequestAction.Reload:
             {
-                var result = new AssetCommandRecord(shaderPayload.Name, AssetCommandAction.ReloadAsset,
-                    AssetKind.Shader);
-                _commandQueue.Enqueue(result);
+                CommandQueues.EnqueueDeferred(new AssetCommandRecord(shaderPayload.Name, AssetCommandAction.ReloadAsset,
+                    AssetKind.Shader));
                 break;
             }
             default:
@@ -52,21 +47,20 @@ internal static class EngineCommandHandler
         if (payload.Size <= 0)
             throw new ArgumentException("Supported shadow map size are (1024, 2048, 4096, 8192)", nameof(payload.Size));
 
-        _commandQueue.Enqueue(new FboCommandRecord(FboCommandAction.RecreateShadowFbo, new Size2D(payload.Size)));
+        CommandQueues.EnqueueDeferred(
+            new FboCommandRecord(FboCommandAction.RecreateShadowFbo, new Size2D(payload.Size)));
         return CommandResponse.Ok();
     }
 
-    //TODO
-    public static World world;
 
     public static CommandResponse OnEntityTransformCmd(in EditorTransformPayload payload)
     {
-        ref var entityTransform = ref world.Transforms.GetById(new EntityId(payload.EntityId));
         ref readonly var transform = ref payload.Transform;
+        var cmd = new EntityCommandRecord<EditorTransform>(WorldCommandAction.EntityTransform, payload.EntityId, in transform);
+        CommandQueues.EnqueueMain(cmd);
 
-        entityTransform.Translation = transform.Translation;
-        entityTransform.Scale = transform.Scale;
-        entityTransform.Rotation = transform.Rotation;
+        /*
+        */
         return CommandResponse.Ok();
     }
 
@@ -108,7 +102,6 @@ internal static class EngineCommandHandler
         ctx.AddLog(StructStr<MeshPart>());
         ctx.AddLog(StructStr<DrawEntity>());
         ctx.AddLog(StructStr<MaterialTag>());
-
     }
 
 

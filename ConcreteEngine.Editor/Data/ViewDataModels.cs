@@ -2,7 +2,7 @@ using System.Numerics;
 
 namespace ConcreteEngine.Editor.Data;
 
-public struct EntityEditorTransform(in Vector3 translation, in Vector3 scale, in Quaternion rotation)
+public struct EditorTransform(in Vector3 translation, in Vector3 scale, in Quaternion rotation)
 {
     public Vector3 Translation = translation;
     public Vector3 Scale = scale;

@@ -34,7 +34,6 @@ internal sealed class EngineGateway : IDisposable
         if (_debugTools != null || _logParser != null)
             throw new InvalidOperationException("Debug Tools and Log Parsers is already active.");
 
-        EditorSetup.DebugTools = _debugTools!;
         _debugTools = new DebugToolsSystem(gl, window, inputCtx);
         _logParser = new LogParser();
     }
@@ -50,7 +49,7 @@ internal sealed class EngineGateway : IDisposable
         if (Logger.Enabled && !Logger.IsAttached) Logger.Attach(EditorSetup.ProcessStringLog);
     }
 
-    public void SetupEditor(World world, AssetSystem assetSystem, RenderEngineFrameInfo frameInfo)
+    public void SetupEditor(EditorEngineQueue editorQueues,World world, AssetSystem assetSystem, RenderEngineFrameInfo frameInfo)
     {
         ArgumentNullException.ThrowIfNull(world, nameof(world));
         ArgumentNullException.ThrowIfNull(assetSystem, nameof(assetSystem));
@@ -62,10 +61,13 @@ internal sealed class EngineGateway : IDisposable
         HasBoundCommands = true;
         HasBoundMetrics = true;
 
+        EditorSetup.DebugTools = _debugTools!;
         EditorSetup.AttachEditor(world, assetSystem, frameInfo);
         EditorSetup.RegisterDataProvider();
         EditorSetup.RegisterCommands();
         EditorSetup.RegisterMetrics();
+
+        EngineCommandHandler.CommandQueues = editorQueues;
     }
 
 
@@ -156,7 +158,6 @@ internal sealed class EngineGateway : IDisposable
         {
             MetricRouter.Attach(world, assetSystem, frameInfo);
             EngineDataProvider.Attach(world, assetSystem);
-            EngineCommandHandler.world = world;
         }
 
         public static void RegisterCommands()

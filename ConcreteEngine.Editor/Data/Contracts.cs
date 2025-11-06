@@ -12,8 +12,8 @@ public readonly record struct EditorShadowPayload(int Size, bool Enabled, Editor
 
 public readonly record struct EditorShaderPayload(string Name, EditorRequestAction RequestAction);
 
-public readonly struct EditorTransformPayload(int entityId, in EntityEditorTransform transform)
+public readonly struct EditorTransformPayload(int entityId, in EditorTransform transform)
 {
     public readonly int EntityId = entityId;
-    public readonly EntityEditorTransform Transform = transform;
+    public readonly EditorTransform Transform = transform;
 }

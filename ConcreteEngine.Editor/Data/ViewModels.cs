@@ -50,7 +50,7 @@ public sealed class EntityViewModel(
     string name,
     int componentCount,
     in EntityEditorModel model,
-    in EntityEditorTransform transform
+    in EditorTransform transform
 )
 {
     public int EntityId { get; } = entityId;
@@ -58,6 +58,6 @@ public sealed class EntityViewModel(
     public int ComponentCount { get; } = componentCount;
     public EntityEditorModel Model { get; set; } = model;
 
-    private EntityEditorTransform _transform = transform;
-    public ref EntityEditorTransform Transform => ref _transform;
+    private EditorTransform _transform = transform;
+    public ref EditorTransform Transform => ref _transform;
 }

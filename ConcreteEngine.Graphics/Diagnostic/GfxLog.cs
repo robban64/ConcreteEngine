@@ -34,9 +34,10 @@ public static class GfxLog
         if (!Enabled) return;
         if (LogQueue.Count > 100)
         {
-            InvalidOpThrower.ThrowIf(LogQueue.Count > 512);
-            Debug.Assert(false);
-            return;
+            if (!Enabled)
+                LogQueue.Clear();
+            else
+                throw new InvalidOperationException("Logger queue overflow");
         }
 
         if (FilterLog(in log))

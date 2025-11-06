@@ -107,8 +107,9 @@ public sealed class GameEngine : IDisposable
         _coreSystems.Initialize();
         RegisterRenderer();
         
-        _engineGateway.AttachLogger();
-        _engineGateway.AttachGfxLogger();
+        EngineGateway.SetupLogger();
+        _engineGateway.ToggleEngineLogger(true);
+        _engineGateway.ToggleGfxLogger(true);
     }
 
     private void RegisterRenderer()
@@ -261,11 +262,7 @@ public sealed class GameEngine : IDisposable
             return;
         
         _worldRenderer.AttachWorld(_world);
-        _engineGateway.AttachDebugTools(_world, _assets, _renderFrameInfo);
-        _engineGateway.RegisterCommands();
-        _engineGateway.RegisterMetrics();
-        _engineGateway.RefreshMetrics(true);
-
+        _engineGateway.SetupEditor(_world, _assets, _renderFrameInfo);
 
         var sceneContext = new GameSceneContext(_coreSystems, _world) { Modules = _modules };
         var builder = new GameSceneConfigBuilder(_modules);

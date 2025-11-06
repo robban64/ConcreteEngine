@@ -18,8 +18,8 @@ namespace ConcreteEngine.Core.Editor;
 
 internal sealed class EngineGateway : IDisposable
 {
-    private readonly DebugToolsSystem _debugTools;
-    private readonly LogParser _logParser;
+    private static DebugToolsSystem _debugTools = null!;
+    private static LogParser _logParser = null!;
 
     public bool HasBoundCommands { get; private set; }
     public bool HasBoundMetrics { get; private set; }
@@ -29,79 +29,45 @@ internal sealed class EngineGateway : IDisposable
 
     private bool _drainGfxLogs;
 
-    private AssetSystem _assets;
-
-    public EngineGateway(GL gl, IWindow window, IInputContext inputCtx)
+    internal EngineGateway(GL gl, IWindow window, IInputContext inputCtx)
     {
+        if (_debugTools != null || _logParser != null)
+            throw new InvalidOperationException("Debug Tools and Log Parsers is already active.");
+
+        EditorSetup.DebugTools = _debugTools!;
         _debugTools = new DebugToolsSystem(gl, window, inputCtx);
         _logParser = new LogParser();
     }
 
     public bool HasBindings => HasBoundCommands || HasBoundMetrics;
     public bool Active => Enabled && HasBindings;
-
     public bool BlockInput() => Enabled && _debugTools.BlockInput();
+    public void ToggleEngineLogger(bool enabled) => Logger.Enabled = enabled;
+    public void ToggleGfxLogger(bool enabled) => GfxLog.Enabled = enabled;
 
-    public void AttachLogger() => Logger.Attach(ProcessStringLog);
-    public void AttachGfxLogger() => GfxLog.Enabled = true;
+    public static void SetupLogger()
+    {
+        if (Logger.Enabled && !Logger.IsAttached) Logger.Attach(EditorSetup.ProcessStringLog);
+    }
 
-    public void AttachDebugTools(World world, AssetSystem assetSystem, RenderEngineFrameInfo frameInfo)
+    public void SetupEditor(World world, AssetSystem assetSystem, RenderEngineFrameInfo frameInfo)
     {
         ArgumentNullException.ThrowIfNull(world, nameof(world));
         ArgumentNullException.ThrowIfNull(assetSystem, nameof(assetSystem));
         ArgumentNullException.ThrowIfNull(frameInfo, nameof(frameInfo));
 
-        _assets = assetSystem;
-
-
-        MetricRouter.Attach(world, assetSystem, frameInfo);
-        EngineDataProvider.Attach(world, assetSystem);
-        EngineCommandHandler.world = world;
-    }
-
-    private void ProcessStringLog(StringLogEvent log) => _debugTools.DevConsole.AddLog(_logParser.Format(log));
-
-    public void RegisterCommands()
-    {
         if (!Enabled) return;
         if (HasBoundCommands) throw new InvalidOperationException(nameof(HasBoundCommands));
-        HasBoundCommands = true;
-
-        CommandDispatcher.RegisterEditorCmd<EditorTransformPayload>(CoreCmdNames.EntityTransform, EditorCommandScope.Editor, EngineCommandHandler.OnEntityTransformCmd);
-        CommandDispatcher.RegisterEditorCmd<EditorShaderPayload>(CoreCmdNames.AssetShader, EditorCommandScope.Engine, EngineCommandHandler.OnAssetShaderCmd);
-        CommandDispatcher.RegisterEditorCmd<EditorShadowPayload>(CoreCmdNames.WorldShadow, EditorCommandScope.Engine, EngineCommandHandler.OnWorldShadowCmd);
-
-        
-        CommandDispatcher.RegisterConsoleCmd<EditorShaderPayload>(CoreCmdNames.AssetShader, string.Empty, CommandParser.ParseShaderRequest);
-        CommandDispatcher.RegisterConsoleCmd<EditorShadowPayload>(CoreCmdNames.WorldShadow, string.Empty, CommandParser.ParseShadowRequest);
-
-        // Misc
-        CommandDispatcher.RegisterNoOpConsoleCmd("inspect-structs", string.Empty, EngineCommandHandler.OnStructSizesCmd);
-
-        //RouteTable.RegisterConsoleCmd(CoreCmdNames.AssetShader, CmdWrapper(CommandRouter.OnAssetShaderCmd));
-        //RouteTable.RegisterConsoleCmd(CoreCmdNames.WorldShadow, CmdWrapper(CommandRouter.OnWorldShadowCmd));
-        //RouteTable.RegisterConsoleCmd(CoreCmdNames.EntityTransform, CmdWrapper(CommandRouter.OnEntityTransformCmd));
-
-        EditorApi.FillAssetStoreView = EngineDataProvider.PullAssetStoreData;
-        EditorApi.FetchAssetObjectFiles = EngineDataProvider.PullAssetObjectFiles;
-        EditorApi.FillEntityView = EngineDataProvider.PullEntityView;
-    }
-
-
-    public void RegisterMetrics()
-    {
-        if (!Enabled) return;
         if (HasBoundMetrics) throw new InvalidOperationException(nameof(HasBoundMetrics));
+        HasBoundCommands = true;
         HasBoundMetrics = true;
 
-        MetricsApi.PullFrameMetrics = MetricRouter.GetFrameMetrics;
-        MetricsApi.PullMaterialMetrics = MetricRouter.GetMaterialMetrics;
-        MetricsApi.PullSceneMetrics = MetricRouter.GetSceneMetrics;
-        MetricsApi.PullMemoryMetrics = MetricRouter.GetMemoryMetrics;
-
-        MetricsApi.FillAssetMetrics = MetricRouter.DrainAssetStoreMetrics;
-        MetricsApi.FillGfxStoreMetrics = MetricRouter.DrainGfxStoreMetrics;
+        EditorSetup.AttachEditor(world, assetSystem, frameInfo);
+        EditorSetup.RegisterDataProvider();
+        EditorSetup.RegisterCommands();
+        EditorSetup.RegisterMetrics();
     }
+
 
     public void Update(float delta)
     {
@@ -174,6 +140,65 @@ internal sealed class EngineGateway : IDisposable
         _drainGfxLogs = !_drainGfxLogs;
     }
 
+    public void Dispose()
+    {
+        Enabled = false;
+        _debugTools.Dispose();
+    }
+
+    private static class EditorSetup
+    {
+        public static DebugToolsSystem DebugTools = null!;
+
+        public static void ProcessStringLog(StringLogEvent log) => DebugTools.DevConsole.AddLog(_logParser.Format(log));
+
+        public static void AttachEditor(World world, AssetSystem assetSystem, RenderEngineFrameInfo frameInfo)
+        {
+            MetricRouter.Attach(world, assetSystem, frameInfo);
+            EngineDataProvider.Attach(world, assetSystem);
+            EngineCommandHandler.world = world;
+        }
+
+        public static void RegisterCommands()
+        {
+            CommandDispatcher.RegisterEditorCmd<EditorTransformPayload>(CoreCmdNames.EntityTransform,
+                EditorCommandScope.Editor, EngineCommandHandler.OnEntityTransformCmd);
+            CommandDispatcher.RegisterEditorCmd<EditorShaderPayload>(CoreCmdNames.AssetShader,
+                EditorCommandScope.Engine,
+                EngineCommandHandler.OnAssetShaderCmd);
+            CommandDispatcher.RegisterEditorCmd<EditorShadowPayload>(CoreCmdNames.WorldShadow,
+                EditorCommandScope.Engine,
+                EngineCommandHandler.OnWorldShadowCmd);
+
+            CommandDispatcher.RegisterConsoleCmd<EditorShaderPayload>(CoreCmdNames.AssetShader, string.Empty,
+                CommandParser.ParseShaderRequest);
+            CommandDispatcher.RegisterConsoleCmd<EditorShadowPayload>(CoreCmdNames.WorldShadow, string.Empty,
+                CommandParser.ParseShadowRequest);
+
+            // Misc
+            CommandDispatcher.RegisterNoOpConsoleCmd("inspect-structs", string.Empty,
+                EngineCommandHandler.OnStructSizesCmd);
+        }
+
+        public static void RegisterDataProvider()
+        {
+            EditorApi.FillAssetStoreView = EngineDataProvider.PullAssetStoreData;
+            EditorApi.FetchAssetObjectFiles = EngineDataProvider.PullAssetObjectFiles;
+            EditorApi.FillEntityView = EngineDataProvider.PullEntityView;
+        }
+
+
+        public static void RegisterMetrics()
+        {
+            MetricsApi.PullFrameMetrics = MetricRouter.GetFrameMetrics;
+            MetricsApi.PullMaterialMetrics = MetricRouter.GetMaterialMetrics;
+            MetricsApi.PullSceneMetrics = MetricRouter.GetSceneMetrics;
+            MetricsApi.PullMemoryMetrics = MetricRouter.GetMemoryMetrics;
+            MetricsApi.FillAssetMetrics = MetricRouter.DrainAssetStoreMetrics;
+            MetricsApi.FillGfxStoreMetrics = MetricRouter.DrainGfxStoreMetrics;
+        }
+    }
+
 
     /*
     private static ConsoleCommandReqDel CmdWrapper(ConsoleCommandReqDel del)
@@ -191,9 +216,4 @@ internal sealed class EngineGateway : IDisposable
         };
     }
 */
-    public void Dispose()
-    {
-        Enabled = false;
-        _debugTools.Dispose();
-    }
 }

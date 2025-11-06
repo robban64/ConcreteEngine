@@ -18,6 +18,8 @@ public static class Logger
 
     private static Action<StringLogEvent>? _logStringDel;
 
+    public static bool IsAttached => _logStringDel != null;
+    
     internal static void Attach(Action<StringLogEvent> logStringDel)
     {
         _logStringDel = logStringDel;
@@ -42,9 +44,10 @@ public static class Logger
         if (!Enabled) return;
         if (LogQueue.Count > 100)
         {
-            InvalidOpThrower.ThrowIf(LogQueue.Count > 512);
-            Debug.Assert(false);
-            return;
+            if (!IsAttached || !Enabled)
+                LogQueue.Clear();
+            else
+                throw new InvalidOperationException("Logger queue overflow");
         }
 
         LogQueue.Enqueue(log);

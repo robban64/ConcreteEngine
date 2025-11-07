@@ -11,6 +11,7 @@ using ConcreteEngine.Graphics.Diagnostic;
 using Silk.NET.Input;
 using Silk.NET.OpenGL;
 using Silk.NET.Windowing;
+using static ConcreteEngine.Editor.CommandDispatcher;
 
 #endregion
 
@@ -49,7 +50,8 @@ internal sealed class EngineGateway : IDisposable
         if (Logger.Enabled && !Logger.IsAttached) Logger.Attach(EditorSetup.ProcessStringLog);
     }
 
-    public void SetupEditor(EditorEngineQueue editorQueues,World world, AssetSystem assetSystem, RenderEngineFrameInfo frameInfo)
+    public void SetupEditor(EditorEngineQueue editorQueues, World world, AssetSystem assetSystem,
+        RenderEngineFrameInfo frameInfo)
     {
         ArgumentNullException.ThrowIfNull(world, nameof(world));
         ArgumentNullException.ThrowIfNull(assetSystem, nameof(assetSystem));
@@ -162,22 +164,28 @@ internal sealed class EngineGateway : IDisposable
 
         public static void RegisterCommands()
         {
-            CommandDispatcher.RegisterEditorCmd<EditorTransformPayload>(CoreCmdNames.EntityTransform,
-                EditorCommandScope.Editor, EngineCommandHandler.OnEntityTransformCmd);
-            CommandDispatcher.RegisterEditorCmd<EditorShaderPayload>(CoreCmdNames.AssetShader,
-                EditorCommandScope.Engine,
+            // Editor commands
+            RegisterEditorCmd<EditorTransformPayload>(CoreCmdNames.EntityTransform, EditorCommandScope.Editor, 
+                EngineCommandHandler.OnEntityTransformCmd);
+
+            RegisterEditorCmd<CameraEditorPayload>(CoreCmdNames.CameraTransform, EditorCommandScope.Editor, 
+                EngineCommandHandler.OnCameraDataCmd);
+
+            RegisterEditorCmd<EditorShaderPayload>(CoreCmdNames.AssetShader, EditorCommandScope.Engine,
                 EngineCommandHandler.OnAssetShaderCmd);
-            CommandDispatcher.RegisterEditorCmd<EditorShadowPayload>(CoreCmdNames.WorldShadow,
-                EditorCommandScope.Engine,
+            
+            RegisterEditorCmd<EditorShadowPayload>(CoreCmdNames.WorldShadow, EditorCommandScope.Engine, 
                 EngineCommandHandler.OnWorldShadowCmd);
 
-            CommandDispatcher.RegisterConsoleCmd<EditorShaderPayload>(CoreCmdNames.AssetShader, string.Empty,
+            // Console commands
+            RegisterConsoleCmd<EditorShaderPayload>(CoreCmdNames.AssetShader, string.Empty,
                 CommandParser.ParseShaderRequest);
-            CommandDispatcher.RegisterConsoleCmd<EditorShadowPayload>(CoreCmdNames.WorldShadow, string.Empty,
+            
+            RegisterConsoleCmd<EditorShadowPayload>(CoreCmdNames.WorldShadow, string.Empty,
                 CommandParser.ParseShadowRequest);
 
             // Misc
-            CommandDispatcher.RegisterNoOpConsoleCmd("inspect-structs", string.Empty,
+            RegisterNoOpConsoleCmd("inspect-structs", string.Empty,
                 EngineCommandHandler.OnStructSizesCmd);
         }
 
@@ -186,7 +194,7 @@ internal sealed class EngineGateway : IDisposable
             EditorApi.FillAssetStoreView = EngineDataProvider.PullAssetStoreData;
             EditorApi.FetchAssetObjectFiles = EngineDataProvider.PullAssetObjectFiles;
             EditorApi.FillEntityView = EngineDataProvider.PullEntityView;
-            EditorApi.FillCameraData = EngineDataProvider.PullCameraView;
+            EditorApi.FetchCameraData = EngineDataProvider.PullCameraView;
         }
 
 

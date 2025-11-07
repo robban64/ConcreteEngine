@@ -21,7 +21,7 @@ internal static class EngineDataProvider
         _assetSystem = assetSystem;
     }
 
-    public static bool PullCameraView(long generation, out CameraEditorModel response)
+    public static bool PullCameraView(long generation, out CameraEditorPayload response)
     {
         if (_world is null || _world.Camera.Generation == generation)
         {
@@ -34,7 +34,7 @@ internal static class EngineDataProvider
         var transform = new TransformEditorModel(in translation, in scale, in rotation);
         var proj = new ProjectionEditorModel(camera.AspectRatio, camera.Fov, camera.NearPlane, camera.FarPlane);
         var viewport = camera.Viewport;
-        response = new CameraEditorModel(camera.Generation,in transform, in proj, in viewport);
+        response = new CameraEditorPayload(camera.Generation,in transform, in proj, in viewport);
         return true;
     }
 

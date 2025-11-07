@@ -25,6 +25,7 @@ internal enum FboCommandAction : byte
 internal enum WorldCommandAction : byte
 {
     None,
+    Camera,
     EntityModel,
-    EntityTransform
+    EntityTransform,
 }

@@ -2,6 +2,7 @@ using ConcreteEngine.Common.Diagnostics;
 using ConcreteEngine.Common.Numerics;
 using ConcreteEngine.Core.Assets.Data;
 using ConcreteEngine.Core.Editor.Definitions;
+using ConcreteEngine.Editor.Data;
 
 namespace ConcreteEngine.Core.Editor.Data;
 
@@ -36,4 +37,11 @@ internal sealed record EntityCommandRecord<TData>(WorldCommandAction Action, int
 {
     private readonly TData _data = Data;
     public ref readonly TData Data => ref _data;
+}
+
+internal sealed record CameraCommandRecord(WorldCommandAction Action, in CameraEditorPayload Data) 
+    : EngineCommandRecord(EngineCommandScope.WorldCommand), IWorldCommandRecord 
+{
+    private readonly CameraEditorPayload _data = Data;
+    public ref readonly CameraEditorPayload Data => ref _data;
 }

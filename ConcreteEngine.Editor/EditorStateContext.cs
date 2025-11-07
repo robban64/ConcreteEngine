@@ -78,7 +78,7 @@ internal sealed class EditorStateContext
 
     public void RefreshCameraData()
     {
-        if(!EditorApi.FillCameraData(CameraModel.Generation, out var response))
+        if(!EditorApi.FetchCameraData(CameraModel.Generation, out var response))
             return;
         
         CameraModel.FromDataModel(in response);
@@ -110,4 +110,11 @@ internal sealed class EditorStateContext
         var payload = new EditorTransformPayload(entity.EntityId, in entity.Transform);
         CommandDispatcher.InvokeEditorCommand(CoreCmdNames.EntityTransform, in payload);
     }
+    
+    public void ExecuteSetCameraTransform(in CameraEditorPayload payload)
+    {
+        //if (!CanExecute(25)) return;
+        CommandDispatcher.InvokeEditorCommand(CoreCmdNames.CameraTransform, in payload);
+    }
+
 }

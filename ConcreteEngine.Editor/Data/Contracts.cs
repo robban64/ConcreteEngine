@@ -1,3 +1,5 @@
+using ConcreteEngine.Common.Numerics;
+
 namespace ConcreteEngine.Editor.Data;
 
 public enum EditorRequestAction
@@ -16,4 +18,16 @@ public readonly struct EditorTransformPayload(int entityId, in TransformEditorMo
 {
     public readonly int EntityId = entityId;
     public readonly TransformEditorModel Transform = transform;
+}
+
+public struct CameraEditorPayload(
+    long generation,
+    in TransformEditorModel transform,
+    in ProjectionEditorModel projection,
+    in Size2D viewport)
+{
+    public long Generation = generation;
+    public TransformEditorModel Transform = transform;
+    public ProjectionEditorModel Projection = projection;
+    public Size2D Viewport = viewport;
 }

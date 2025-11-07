@@ -48,19 +48,28 @@ internal static class CameraPropertyGui
     {
         ref var transform = ref _cameraModel.Transform;
         transform.Translation = TransformState.Translation;
+        _ctx.ExecuteSetCameraTransform(in _cameraModel.Model);
     }
 
     private static void OnUpdateScale()
     {
         ref var transform = ref _cameraModel.Transform;
         transform.Scale = TransformState.Scale;
+        _ctx.ExecuteSetCameraTransform(in _cameraModel.Model);
+
     }
 
     private static void OnUpdateRotation()
     {
         ref var transform = ref _cameraModel.Transform;
         transform.Rotation = RotationMath.EulerDegreesToQuaternion(in TransformState.EulerAngles);
-        transform.EulerAngles = TransformState.EulerAngles;
+        _ctx.ExecuteSetCameraTransform(in _cameraModel.Model);
+    }
+    
+    private static void OnUpdateProjection()
+    {
+        _cameraModel.Projection = ProjectionState;
+        _ctx.ExecuteSetCameraTransform(in _cameraModel.Model);
     }
 
 
@@ -138,6 +147,7 @@ internal static class CameraPropertyGui
         if (ImGui.SliderFloat("##camera-near", ref ProjectionState.Near, StateLimits.MinNearPlane,
                 StateLimits.MaxNearPlane, "%.2f"))
         {
+            OnUpdateProjection();
         }
 
         ImGui.SameLine();
@@ -145,6 +155,7 @@ internal static class CameraPropertyGui
         if (ImGui.SliderFloat("##camera-far", ref ProjectionState.Far, StateLimits.MinFarPlane, StateLimits.MaxFarPlane,
                 "%.2f"))
         {
+            OnUpdateProjection();
         }
 
         ImGui.EndGroup();
@@ -157,6 +168,7 @@ internal static class CameraPropertyGui
         if (ImGui.SliderFloat("##camera-fov", ref ProjectionState.Fov, StateLimits.MinFov, StateLimits.MaxFov,
                 "%.2f"))
         {
+            OnUpdateProjection();
         }
         ImGui.EndGroup();
 

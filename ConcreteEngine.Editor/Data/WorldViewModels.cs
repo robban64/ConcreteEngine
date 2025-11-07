@@ -35,25 +35,18 @@ public sealed class CameraViewModel
 {
     public long Generation { get; set; } = 0;
 
-    private TransformEditorModel _transform;
-    private ProjectionEditorModel _projection;
-    private Size2D _viewport;
+    private CameraEditorPayload _model;
+    
+    public ref CameraEditorPayload Model => ref _model;
 
-    public ref TransformEditorModel Transform => ref _transform;
-    public ref ProjectionEditorModel Projection => ref _projection;
-    public ref Size2D Viewport => ref _viewport;
+    public ref TransformEditorModel Transform => ref _model.Transform;
+    public ref ProjectionEditorModel Projection => ref _model.Projection;
+    public ref Size2D Viewport => ref _model.Viewport;
 
 
-    public void FromDataModel(in CameraEditorModel model)
+    public void FromDataModel(in CameraEditorPayload model)
     {
-        var prevEuler = Transform.EulerAngles;
-        _transform = model.Transform;
-        _projection = model.Projection;
-        _viewport = model.Viewport;
-        _transform.EulerAngles = prevEuler;
-        Generation = model.Generation;
+        _model = model;
     }
-
-    public void ToDataModel(out CameraEditorModel model) =>
-        model = new CameraEditorModel(Generation, in _transform, in _projection, in _viewport);
+    
 }

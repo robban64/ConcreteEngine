@@ -42,7 +42,7 @@ internal sealed class EntityListGui
         _entityState.ModelId = entity.Model.ModelId;
         _entityState.MaterialTagKey = entity.Model.MaterialTagKey;
 
-        TransformState.FromStable(ref entity.Transform);
+        TransformState.FromStable(in entity.Transform);
     }
 
     private void OnUpdateTranslation(EntityViewModel entity)
@@ -61,7 +61,6 @@ internal sealed class EntityListGui
     {
         ref var transform = ref entity.Transform;
         transform.Rotation = RotationMath.EulerDegreesToQuaternion(in TransformState.EulerAngles);
-        transform.EulerAngles = TransformState.EulerAngles;
         _ctx.ExecuteSetEntityTransform(entity);
     }
 

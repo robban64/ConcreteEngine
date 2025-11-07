@@ -1,6 +1,8 @@
 using ConcreteEngine.Common.Diagnostics;
 using ConcreteEngine.Editor.Data;
 using ConcreteEngine.Editor.Definitions;
+using ConcreteEngine.Editor.Gui;
+using ConcreteEngine.Editor.Utils;
 
 namespace ConcreteEngine.Editor;
 
@@ -9,20 +11,24 @@ internal sealed class EditorStateContext
     private readonly DevConsoleService _devConsoleService;
 
     public EditorViewMode ViewMode { get; private set; } = EditorViewMode.None;
-    public SidebarEditorMode SidebarMode { get; private set; } = SidebarEditorMode.None;
-    public EditorPropertyMode PropertyMode { get; private set; } = EditorPropertyMode.None;
+    public LeftSidebarMode LeftSidebarMode { get; private set; } = LeftSidebarMode.None;
+    public RightSidebarMode PropertyMode { get; private set; } = RightSidebarMode.None;
 
     public AssetStoreViewModel AssetViewModel { get; } = new();
     public EntityListViewModel EntityListViewModel { get; } = new();
 
     public CameraViewModel CameraModel { get; } = new();
-
     
     private long _lastAction = TimeUtils.GetTimestamp();
 
     public EditorStateContext(DevConsoleService devConsoleService)
     {
         _devConsoleService = devConsoleService;
+    }
+
+    internal void PreRender()
+    {
+        GuiTheme.RightSidebarExpanded = ViewMode == EditorViewMode.Editor;
     }
 
     public void SetViewMode(EditorViewMode mode)
@@ -33,44 +39,51 @@ internal sealed class EditorStateContext
         MetricsApi.ToggleMetrics(ViewMode == EditorViewMode.Metrics);
     }
 
-    public void SetSidebarMode(SidebarEditorMode mode)
+    public void SetSidebarMode(LeftSidebarMode mode)
     {
-        if (mode == SidebarMode) return;
-        SidebarMode = mode;
+        if (mode == LeftSidebarMode) return;
+        LeftSidebarMode = mode;
 
-        if (mode != SidebarEditorMode.Assets) AssetViewModel.ResetState();
+        if (mode != LeftSidebarMode.Assets) AssetViewModel.ResetState();
         //if (mode != SidebarEditorMode.Entities) EntityListViewModel.ResetState();
 
         switch (mode)
         {
-            case SidebarEditorMode.Assets:
+            case LeftSidebarMode.Assets:
                 EditorApi.FillAssetStoreView?.Invoke(AssetViewModel.TypeSelection, AssetViewModel.AssetObjects);
                 break;
-            case SidebarEditorMode.Entities:
+            case LeftSidebarMode.Entities:
                 if (EntityListViewModel.Entities.Count == 0)
                     EditorApi.FillEntityView?.Invoke(EntityListViewModel);
                 break;
         }
     }
 
-    public void SetPropertyMode(EditorPropertyMode mode)
+    public void SetPropertyMode(RightSidebarMode mode)
     {
         if (mode == PropertyMode) return;
         PropertyMode = mode;
 
         switch (mode)
         {
-            case EditorPropertyMode.None: break;
-            case EditorPropertyMode.Camera:
-                EditorApi.FillCameraData(out var response);
-                CameraModel.FromDataModel(in response);
+            case RightSidebarMode.None: break;
+            case RightSidebarMode.Camera:
+                RefreshCameraData();
                 break;
-            case EditorPropertyMode.Light: break;
-            case EditorPropertyMode.SkyBox: break;
-            case EditorPropertyMode.Terrain: break;
+            case RightSidebarMode.Light: break;
+            case RightSidebarMode.Sky: break;
+            case RightSidebarMode.Terrain: break;
         }
     }
 
+    public void RefreshCameraData()
+    {
+        if(!EditorApi.FillCameraData(CameraModel.Generation, out var response))
+            return;
+        
+        CameraModel.FromDataModel(in response);
+        CameraPropertyGui.UpdateStateFromViewModel();
+    }
 
     private bool CanExecute(int ms, bool print = false)
     {

@@ -1,5 +1,5 @@
 using System.Numerics;
-using static ConcreteEngine.Common.Numerics.Maths.MathHelper;
+using static ConcreteEngine.Common.Numerics.Maths.FloatMath;
 
 namespace ConcreteEngine.Common.Numerics.Maths;
 
@@ -44,7 +44,7 @@ public sealed class RotationMath
         // r12 = m12 = -sin(pitch)  => pitch = asin(clamp(-m12))
         // yaw  = atan2(r02, r22) = atan2(m02, m22)
         // roll = atan2(r10, r11) = atan2(m10, m11)
-        float pitchRad = (float)Math.Asin(Clamp(-m12, -1f, 1f));
+        float pitchRad = (float)Math.Asin(Math.Clamp(-m12, -1f, 1f));
         float cosPitch = (float)Math.Cos(pitchRad);
 
         float yawRad, rollRad;

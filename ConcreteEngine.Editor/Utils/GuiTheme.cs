@@ -5,6 +5,9 @@ namespace ConcreteEngine.Editor.Utils;
 
 internal static class GuiTheme
 {
+    public static bool RightSidebarExpanded { get; set; } = false;
+    public static int RightSidebarWidth => RightSidebarExpanded ? 240 : 160;
+    
     public static int TopbarHeight => 44;
     public static float PanelOpacity => 0.95f;
 

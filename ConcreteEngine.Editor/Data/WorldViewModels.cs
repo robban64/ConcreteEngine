@@ -33,6 +33,8 @@ public sealed class EntityViewModel(
 
 public sealed class CameraViewModel
 {
+    public long Generation { get; set; } = 0;
+
     private TransformEditorModel _transform;
     private ProjectionEditorModel _projection;
     private Size2D _viewport;
@@ -48,10 +50,10 @@ public sealed class CameraViewModel
         _transform = model.Transform;
         _projection = model.Projection;
         _viewport = model.Viewport;
-
         _transform.EulerAngles = prevEuler;
+        Generation = model.Generation;
     }
 
     public void ToDataModel(out CameraEditorModel model) =>
-        model = new CameraEditorModel(in _transform, in _projection, in _viewport);
+        model = new CameraEditorModel(Generation, in _transform, in _projection, in _viewport);
 }

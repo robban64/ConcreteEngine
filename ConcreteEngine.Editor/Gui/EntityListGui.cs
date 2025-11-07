@@ -6,15 +6,14 @@ using ImGuiNET;
 
 namespace ConcreteEngine.Editor.Gui;
 
-internal sealed class EntityList
+internal sealed class EntityListGui
 {
     private struct EntityDataState
     {
         public int ModelId;
         public int MaterialTagKey;
-        public Vector3 Translation;
-        public Vector3 Scale;
-        public Vector3 EulerAngles;
+        public TransformDataState Transform;
+        
     }
 
     private const int RowHeight = 32;
@@ -24,8 +23,9 @@ internal sealed class EntityList
     private readonly EntityListViewModel _viewModel;
 
     private EntityDataState _entityState = default;
+    private ref TransformDataState TransformState =>  ref _entityState.Transform;
 
-    public EntityList(EditorStateContext ctx)
+    public EntityListGui(EditorStateContext ctx)
     {
         _ctx = ctx;
         _viewModel = ctx.EntityListViewModel;
@@ -42,29 +42,26 @@ internal sealed class EntityList
         _entityState.ModelId = entity.Model.ModelId;
         _entityState.MaterialTagKey = entity.Model.MaterialTagKey;
 
-        ref var transform = ref entity.Transform;
-        _entityState.Translation = transform.Translation;
-        _entityState.Scale = transform.Scale;
-        _entityState.EulerAngles = transform.EulerAngles;
+        TransformState.FromStable(ref entity.Transform);
     }
 
     private void OnUpdateTranslation(EntityViewModel entity)
     {
-        entity.Transform.Translation = _entityState.Translation;
+        entity.Transform.Translation = TransformState.Translation;
         _ctx.ExecuteSetEntityTransform(entity);
     }
 
     private void OnUpdateScale(EntityViewModel entity)
     {
-        entity.Transform.Scale = _entityState.Scale;
+        entity.Transform.Scale = TransformState.Scale;
         _ctx.ExecuteSetEntityTransform(entity);
     }
 
     private void OnUpdateRotation(EntityViewModel entity)
     {
         ref var transform = ref entity.Transform;
-        transform.Rotation = RotationMath.EulerDegreesToQuaternion(in _entityState.EulerAngles);
-        transform.EulerAngles = _entityState.EulerAngles;
+        transform.Rotation = RotationMath.EulerDegreesToQuaternion(in TransformState.EulerAngles);
+        transform.EulerAngles = TransformState.EulerAngles;
         _ctx.ExecuteSetEntityTransform(entity);
     }
 
@@ -181,21 +178,21 @@ internal sealed class EntityList
 
         ImGui.TextUnformatted("Translation");
         ImGui.Separator();
-        if (ImGui.InputFloat3("##translation", ref _entityState.Translation, "%.3f", ImGuiInputTextFlags.None))
+        if (ImGui.InputFloat3("##translation", ref TransformState.Translation, "%.3f", ImGuiInputTextFlags.None))
         {
             OnUpdateTranslation(entity);
         }
 
         ImGui.TextUnformatted("Scale");
         ImGui.Separator();
-        if (ImGui.InputFloat3("##scale", ref _entityState.Scale, "%.3f", ImGuiInputTextFlags.None))
+        if (ImGui.InputFloat3("##scale", ref TransformState.Scale, "%.3f", ImGuiInputTextFlags.None))
         {
             OnUpdateScale(entity);
         }
 
         ImGui.TextUnformatted("Rotation");
         ImGui.Separator();
-        if (ImGui.InputFloat3("##rotation", ref _entityState.EulerAngles, "%.3f", ImGuiInputTextFlags.None))
+        if (ImGui.InputFloat3("##rotation", ref TransformState.EulerAngles, "%.3f", ImGuiInputTextFlags.None))
         {
             OnUpdateRotation(entity);
         }

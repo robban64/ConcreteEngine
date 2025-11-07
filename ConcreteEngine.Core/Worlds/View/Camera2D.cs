@@ -48,7 +48,7 @@ public sealed class Camera2D : ICamera
         get => _zoom;
         set
         {
-            _zoom = MathF.Max(Math.Min(value, 4), 0.1f);
+            _zoom = MathF.Max(MathF.Min(value, 4f), 0.1f);
             _dirty = true;
         }
     } // >1: zoom in, <1: zoom out

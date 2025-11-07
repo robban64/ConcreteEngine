@@ -9,4 +9,4 @@ public delegate void CommandPayloadResolverDel<TPayload>(string action, string? 
 public delegate CommandResponse EditorCommandReqDel<TPayload>(in TPayload payload);
 
 // editor view delegates
-public delegate void FillCameraDataDel(out CameraEditorModel response);
+public delegate bool FillCameraDataDel(long generation,out CameraEditorModel response);

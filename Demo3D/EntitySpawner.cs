@@ -48,8 +48,8 @@ public sealed class EntitySpawner(IWorld world, float size = 256f, float margin 
         {
             var (rx, rz) = RandXz(rng);
             float bias = 0.6f * intensity;
-            float x = MathHelper.Lerp(rx, xPrev, bias);
-            float z = MathHelper.Lerp(rz, zPrev, bias);
+            float x = float.Lerp(rx, xPrev, bias);
+            float z = float.Lerp(rz, zPrev, bias);
 
             float s = 0.9f + (float)rng.NextDouble() * 0.4f;
             var scale = new Vector3(s);
@@ -82,8 +82,8 @@ public sealed class EntitySpawner(IWorld world, float size = 256f, float margin 
             float a = (float)(rng.NextDouble() * MathF.Tau);
             float t = (float)rng.NextDouble();
             float r = MathF.Pow(t, 1f / (0.0001f + tighten)) * maxRadius;
-            float x = MathHelper.Clamp(center.X + MathF.Cos(a) * r, min, max);
-            float z = MathHelper.Clamp(center.Y + MathF.Sin(a) * r, min, max);
+            float x = float.Clamp(center.X + MathF.Cos(a) * r, min, max);
+            float z = float.Clamp(center.Y + MathF.Sin(a) * r, min, max);
 
             float tScale = 0.9f + (float)rng.NextDouble() * 0.3f;
             var scale = new Vector3(tScale, tScale * 1.3f, tScale);
@@ -108,7 +108,7 @@ public sealed class EntitySpawner(IWorld world, float size = 256f, float margin 
         float min = margin, max = size - margin;
 
         float rCenter = 65f;
-        float halfBand = MathHelper.Lerp(25f, 8f, intensity);
+        float halfBand = float.Lerp(25f, 8f, intensity);
         float rMin = rCenter - halfBand;
         float rMax = rCenter + halfBand;
 
@@ -116,8 +116,8 @@ public sealed class EntitySpawner(IWorld world, float size = 256f, float margin 
         {
             float a = (float)(rng.NextDouble() * MathF.Tau);
             float r = rMin + (float)rng.NextDouble() * (rMax - rMin);
-            float x = MathHelper.Clamp(c.X + MathF.Cos(a) * r, min, max);
-            float z = MathHelper.Clamp(c.Y + MathF.Sin(a) * r, min, max);
+            float x = float.Clamp(c.X + MathF.Cos(a) * r, min, max);
+            float z = float.Clamp(c.Y + MathF.Sin(a) * r, min, max);
 
             float s = 0.95f + (float)rng.NextDouble() * 0.3f;
             var scale = new Vector3(s);
@@ -131,8 +131,8 @@ public sealed class EntitySpawner(IWorld world, float size = 256f, float margin 
     private (float x, float z) RandXz(Random rng)
     {
         float max = size - margin;
-        float x = MathHelper.Lerp(margin, max, (float)rng.NextDouble());
-        float z = MathHelper.Lerp(margin, max, (float)rng.NextDouble());
+        float x = float.Lerp(margin, max, (float)rng.NextDouble());
+        float z = float.Lerp(margin, max, (float)rng.NextDouble());
         return (x, z);
     }
 

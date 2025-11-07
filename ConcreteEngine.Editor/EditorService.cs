@@ -12,28 +12,34 @@ public sealed class EditorService
     private readonly LeftSidebar _leftSidebar;
     private readonly RightSidebar _rightSidebar;
 
-    private readonly EditorStateContext _stateContext;
+    private readonly EditorStateContext _ctx;
     
     public DevConsoleService DevConsole => _devConsole;
 
     public EditorService()
     {
         _devConsole = new DevConsoleService();
-        _stateContext = new EditorStateContext(DevConsole);
-        _topbar = new Topbar(_stateContext);
-        _leftSidebar = new LeftSidebar(_stateContext);
-        _rightSidebar = new RightSidebar(_stateContext);
+        _ctx = new EditorStateContext(DevConsole);
+        _topbar = new Topbar(_ctx);
+        _leftSidebar = new LeftSidebar(_ctx);
+        _rightSidebar = new RightSidebar(_ctx);
+        
+        CameraPropertyGui.Init(_ctx);
     }
 
 
     public void Render()
     {
+        _ctx.PreRender();
+        
         _topbar.Draw();
-        if (_stateContext.ViewMode != EditorViewMode.None)
+        if (_ctx.ViewMode != EditorViewMode.None)
         {
             _leftSidebar.Draw(240, offset: GuiTheme.TopbarHeight);
-            _rightSidebar.Draw(160, offset: GuiTheme.TopbarHeight);
+            
+            if(_ctx.PropertyMode != RightSidebarMode.None)
+                _rightSidebar.Draw(GuiTheme.RightSidebarWidth, offset: GuiTheme.TopbarHeight);
         }
-        _devConsole.Draw(240, 160);
+        _devConsole.Draw(240, GuiTheme.RightSidebarWidth);
     }
 }

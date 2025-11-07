@@ -1,6 +1,7 @@
 #region
 
 using System.Numerics;
+using ConcreteEngine.Common.Diagnostics;
 using ConcreteEngine.Common.Numerics;
 using ConcreteEngine.Common.Numerics.Maths;
 using ConcreteEngine.Core.Worlds.Data;
@@ -14,6 +15,9 @@ namespace ConcreteEngine.Core.Worlds.View;
 // TODO improve
 public sealed class Camera3D : ICamera
 {
+    
+    private static readonly float DirtyThreshold = MetricUnits.Millimeter;
+    
     private bool _dirty = true;
 
     private float _yaw = 0;
@@ -32,9 +36,11 @@ public sealed class Camera3D : ICamera
     private Size2D _viewportSize;
 
     private float _fov = 70;
-    private float _farPlane = 2000;
-    private float _nearPlane = 0.2f;
+    private float _farPlane = 1000;
+    private float _nearPlane = 0.1f;
     private float _aspectRatio;
+
+    public long Generation { get; internal set; } = 0;
 
     public Camera3D()
     {
@@ -52,6 +58,7 @@ public sealed class Camera3D : ICamera
         get => _yaw;
         set
         {
+            if(FloatMath.NearlyEqual( value, _yaw, FloatMath.EpsilonRad)) return;
             _yaw = value;
             _dirty = true;
         }
@@ -62,6 +69,7 @@ public sealed class Camera3D : ICamera
         get => _pitch;
         set
         {
+            if(FloatMath.NearlyEqual( value,  _pitch, FloatMath.EpsilonRad)) return;
             _pitch = value;
             _dirty = true;
         }
@@ -73,6 +81,7 @@ public sealed class Camera3D : ICamera
         get => _translation;
         set
         {
+            if(VectorMath.DistanceNearlyEqual(in value, in _translation, DirtyThreshold)) return;
             _translation = value;
             _dirty = true;
         }
@@ -83,6 +92,7 @@ public sealed class Camera3D : ICamera
         get => _scale;
         set
         {
+            if(VectorMath.DistanceNearlyEqual(in value, in _scale, DirtyThreshold)) return;
             _scale = value;
             _dirty = true;
         }
@@ -93,6 +103,7 @@ public sealed class Camera3D : ICamera
         get => _viewportSize;
         set
         {
+            if(_viewportSize == value) return;
             _viewportSize = value;
             _aspectRatio = value.AspectRatio;
             _dirty = true;
@@ -104,6 +115,7 @@ public sealed class Camera3D : ICamera
         get => _fov;
         set
         {
+            if(FloatMath.NearlyEqual( value, _fov, MetricUnits.Decimeter)) return;
             _fov = value;
             _dirty = true;
         }
@@ -114,6 +126,7 @@ public sealed class Camera3D : ICamera
         get => _farPlane;
         set
         {
+            if(FloatMath.NearlyEqual( value, _farPlane, MetricUnits.Decimeter)) return;
             _farPlane = value;
             _dirty = true;
         }
@@ -124,6 +137,7 @@ public sealed class Camera3D : ICamera
         get => _nearPlane;
         set
         {
+            if(FloatMath.NearlyEqual( value, _nearPlane, MetricUnits.Millimeter)) return;
             _nearPlane = value;
             _dirty = true;
         }
@@ -209,8 +223,10 @@ public sealed class Camera3D : ICamera
         MatrixMath.CreateModelMatrix(_translation, _scale, _rotation, out var viewModel);
         Matrix4x4.Invert(viewModel, out _viewMatrix);
 
-        var fov = MathHelper.ToRadians(_fov / 2f);
+        var fov = FloatMath.ToRadians(_fov / 2f);
         _projectionMatrix = Matrix4x4.CreatePerspectiveFieldOfView(fov, _aspectRatio, _nearPlane, _farPlane);
         _projectionViewMatrix = _viewMatrix * _projectionMatrix;
+
+        Generation++;
     }
 }

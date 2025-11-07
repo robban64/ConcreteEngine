@@ -1,0 +1,190 @@
+using System.Numerics;
+using ConcreteEngine.Common.Diagnostics;
+using ConcreteEngine.Common.Numerics;
+using ConcreteEngine.Common.Numerics.Maths;
+using ConcreteEngine.Editor.Data;
+using ConcreteEngine.Editor.Definitions;
+using ConcreteEngine.Editor.Utils;
+using ImGuiNET;
+
+namespace ConcreteEngine.Editor.Gui;
+
+internal static class CameraPropertyGui
+{
+    private struct CameraDataState
+    {
+        public TransformDataState Transform;
+        public ProjectionEditorModel Projection;
+    }
+
+    private const int WindowPaddingX = 12;
+
+    private static CameraDataState _state;
+    private static ref TransformDataState TransformState => ref _state.Transform;
+    private static ref ProjectionEditorModel ProjectionState => ref _state.Projection;
+
+    private static CameraViewModel _cameraModel  = null!;
+    private static EditorStateContext _ctx = null!;
+
+    private static long _lastFetched = 0;
+    private const long FetchInterval = 1_000;
+
+    public static void Init(EditorStateContext ctx)
+    {
+        _ctx = ctx;
+        _cameraModel = ctx.CameraModel;
+        TransformState.From(in _cameraModel.Transform);
+        ProjectionState = ctx.CameraModel.Projection;
+    }
+
+    public static void UpdateStateFromViewModel()
+    {
+        TransformState.FromStable(in _cameraModel.Transform);
+        ProjectionState = _cameraModel.Projection;
+        _lastFetched = TimeUtils.GetTimestamp();
+    }
+
+    private static void OnUpdateTranslation()
+    {
+        ref var transform = ref _cameraModel.Transform;
+        transform.Translation = TransformState.Translation;
+    }
+
+    private static void OnUpdateScale()
+    {
+        ref var transform = ref _cameraModel.Transform;
+        transform.Scale = TransformState.Scale;
+    }
+
+    private static void OnUpdateRotation()
+    {
+        ref var transform = ref _cameraModel.Transform;
+        transform.Rotation = RotationMath.EulerDegreesToQuaternion(in TransformState.EulerAngles);
+        transform.EulerAngles = TransformState.EulerAngles;
+    }
+
+
+    public static void Draw()
+    {
+        if (TimeUtils.HasIntervalPassed(_lastFetched, FetchInterval))
+        {
+            _ctx.RefreshCameraData();
+        }
+        if (ImGui.BeginChild("##camera-properties", new Vector2(0), ImGuiChildFlags.AutoResizeY ))
+        {
+            DrawInner();
+            ImGui.EndChild();
+        }
+    }
+
+    private static void DrawInner()
+    {
+        ImGui.SeparatorText("Viewport");
+        DrawViewport();
+        ImGui.Dummy(new Vector2(0, 4));
+        ImGui.SeparatorText("Transform");
+        ImGui.Dummy(new Vector2(0, 2));
+        DrawTransform();
+    }
+
+
+    private static void DrawViewport()
+    {
+        var viewport = _cameraModel.Viewport;
+        var formatter = new NumberSpanFormatter(StringUtils.CharBuffer8);
+        var width = ImGui.GetContentRegionAvail().X - WindowPaddingX;
+
+        ImGui.BeginGroup();
+
+        // Row 1
+        ImGui.BeginGroup();
+        ImGui.TextUnformatted("Width:");
+        ImGui.SameLine();
+        ImGui.TextUnformatted(formatter.Format(viewport.Width));
+        ImGui.EndGroup();
+
+        ImGui.SameLine();
+        ImGui.TextUnformatted("-");
+        ImGui.SameLine();
+
+        ImGui.BeginGroup();
+        ImGui.TextUnformatted("Height:");
+        ImGui.SameLine();
+        ImGui.TextUnformatted(formatter.Format(viewport.Height));
+        ImGui.EndGroup();
+        
+        // Row 1
+        ImGui.BeginGroup();
+        ImGui.TextUnformatted("Aspect Ratio:");
+        ImGui.SameLine();
+        ImGui.TextUnformatted(formatter.Format(viewport.AspectRatio));
+        ImGui.EndGroup();
+
+        
+        ImGui.Separator();
+
+        // Row 2
+        ImGui.BeginGroup();
+
+        ImGui.TextUnformatted("Near: ");
+
+        ImGui.SameLine();
+
+        ImGui.SetCursorPosX(WindowPaddingX + 100 + ImGui.CalcTextSize("Near: ").X * 0.5f);
+        ImGui.TextUnformatted("Far: ");
+
+
+        ImGui.SetNextItemWidth(width * 0.5f);
+        if (ImGui.SliderFloat("##camera-near", ref ProjectionState.Near, StateLimits.MinNearPlane,
+                StateLimits.MaxNearPlane, "%.2f"))
+        {
+        }
+
+        ImGui.SameLine();
+        ImGui.SetNextItemWidth(width * 0.5f);
+        if (ImGui.SliderFloat("##camera-far", ref ProjectionState.Far, StateLimits.MinFarPlane, StateLimits.MaxFarPlane,
+                "%.2f"))
+        {
+        }
+
+        ImGui.EndGroup();
+        
+        ImGui.Separator();
+        
+        ImGui.BeginGroup();
+        
+        ImGui.TextUnformatted("Field of view");
+        if (ImGui.SliderFloat("##camera-fov", ref ProjectionState.Fov, StateLimits.MinFov, StateLimits.MaxFov,
+                "%.2f"))
+        {
+        }
+        ImGui.EndGroup();
+
+
+        ImGui.EndGroup();
+    }
+
+    private static void DrawTransform()
+    {
+        ImGui.TextUnformatted("Translation");
+        ImGui.Separator();
+        if (ImGui.InputFloat3("##camera-translation", ref TransformState.Translation, "%.3f", ImGuiInputTextFlags.None))
+        {
+            OnUpdateTranslation();
+        }
+
+        ImGui.TextUnformatted("Scale");
+        ImGui.Separator();
+        if (ImGui.InputFloat3("##camera-scale", ref TransformState.Scale, "%.3f", ImGuiInputTextFlags.None))
+        {
+            OnUpdateScale();
+        }
+
+        ImGui.TextUnformatted("Rotation");
+        ImGui.Separator();
+        if (ImGui.InputFloat3("##camera-rotation", ref TransformState.EulerAngles, "%.3f", ImGuiInputTextFlags.None))
+        {
+            OnUpdateRotation();
+        }
+    }
+}

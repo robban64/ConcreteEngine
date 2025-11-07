@@ -48,7 +48,7 @@ public sealed class FlyCameraModule : GameModule
         if (_input.IsKeyDown(Key.E))
             pitch -= rotateSpeed;
 
-        pitch = Math.Clamp(pitch, -PitchLimit, +PitchLimit);
+        pitch = float.Clamp(pitch, -PitchLimit, +PitchLimit);
 
         _camera.Translation = Vector3.Lerp(_camera.Translation, newPos, dt);
         _camera.Yaw = float.Lerp(_camera.Yaw, yaw, dt);

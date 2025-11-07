@@ -9,7 +9,7 @@ internal sealed class Topbar
 {
     private const int SelectorWidth = 74;
     private static readonly string[] ViewModes = Enum.GetNames<EditorViewMode>();
-    private static readonly string[] PropertyModes = Enum.GetNames<EditorPropertyMode>();
+    private static readonly string[] PropertyModes = Enum.GetNames<RightSidebarMode>();
 
     private readonly EditorStateContext _ctx;
 
@@ -19,7 +19,7 @@ internal sealed class Topbar
     }
 
     private void OnViewModeChanged(EditorViewMode mode) => _ctx.SetViewMode(mode);
-    private void OnPropertyModeChange(EditorPropertyMode mode) => _ctx.SetPropertyMode(mode);
+    private void OnPropertyModeChange(RightSidebarMode mode) => _ctx.SetPropertyMode(mode);
 
     public void Draw()
     {
@@ -87,7 +87,7 @@ internal sealed class Topbar
             if (ImGui.Selectable(PropertyModes[i], selected, ImGuiSelectableFlags.None,
                     new Vector2(GuiTheme.TopbarHeight, GuiTheme.TopbarHeight)))
             {
-                OnPropertyModeChange((EditorPropertyMode)i);
+                OnPropertyModeChange((RightSidebarMode)i);
             }
         }
 

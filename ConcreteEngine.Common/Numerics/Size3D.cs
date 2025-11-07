@@ -8,9 +8,9 @@ namespace ConcreteEngine.Common.Numerics;
 
 [DataContract]
 public readonly record struct Size3D(
-    [property: DataMember(Name = "x")] int Width,
-    [property: DataMember(Name = "y")] int Height,
-    [property: DataMember(Name = "z")] int Depth
+    [property: DataMember(Name = "width")] int Width,
+    [property: DataMember(Name = "height")] int Height,
+    [property: DataMember(Name = "depth")] int Depth
 )
 {
     public float AspectRatioXy => Height == 0 ? 0f : (float)Width / Height;

@@ -1,25 +1,25 @@
 namespace ConcreteEngine.Editor.Definitions;
 
-public enum EditorViewMode
+internal enum EditorViewMode
 {
     None,
     Editor,
     Metrics
 }
 
-public enum SidebarEditorMode
+internal enum LeftSidebarMode
 {
     None,
     Assets,
     Entities
 }
 
-public enum EditorPropertyMode
+internal enum RightSidebarMode
 {
     None,
     Camera,
     Light,
-    SkyBox,
+    Sky,
     Terrain
 }
 

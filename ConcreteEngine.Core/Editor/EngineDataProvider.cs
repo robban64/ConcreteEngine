@@ -21,21 +21,21 @@ internal static class EngineDataProvider
         _assetSystem = assetSystem;
     }
 
-    public static void PullCameraView(out CameraEditorModel response)
+    public static bool PullCameraView(long generation, out CameraEditorModel response)
     {
-        if (_world is null)
+        if (_world is null || _world.Camera.Generation == generation)
         {
             response = default;
-            return;
+            return false;
         }
 
         var camera = _world.Camera;
         camera.DestructTransform(out var translation, out var scale, out var rotation);
-        
         var transform = new TransformEditorModel(in translation, in scale, in rotation);
         var proj = new ProjectionEditorModel(camera.AspectRatio, camera.Fov, camera.NearPlane, camera.FarPlane);
         var viewport = camera.Viewport;
-        response = new CameraEditorModel(in transform, in proj, in viewport);
+        response = new CameraEditorModel(camera.Generation,in transform, in proj, in viewport);
+        return true;
     }
 
     public static void PullEntityView(EntityListViewModel viewModel)

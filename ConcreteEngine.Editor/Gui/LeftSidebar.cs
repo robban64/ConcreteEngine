@@ -11,13 +11,13 @@ internal sealed class LeftSidebar
     private readonly EditorStateContext _ctx;
 
     private readonly AssetStoreGui _assetStoreGui;
-    private readonly EntityList _entityList;
+    private readonly EntityListGui _entityListGui;
     
     public LeftSidebar( EditorStateContext ctx)
     {
         _ctx = ctx;
         _assetStoreGui = new AssetStoreGui(ctx);
-        _entityList = new EntityList(ctx);
+        _entityListGui = new EntityListGui(ctx);
     }
 
 
@@ -26,10 +26,10 @@ internal sealed class LeftSidebar
         const ImGuiWindowFlags flags = ImGuiWindowFlags.NoTitleBar | ImGuiWindowFlags.NoMove |
                                        ImGuiWindowFlags.NoResize | ImGuiWindowFlags.NoCollapse |
                                        ImGuiWindowFlags.NoBringToFrontOnFocus | ImGuiWindowFlags.NoNavFocus;
+        
         var vp = ImGui.GetMainViewport();
-
         var height = _ctx.ViewMode == EditorViewMode.None ? 0 : vp.WorkSize.Y - offset;
-        height = _ctx.SidebarMode != SidebarEditorMode.None ? height : 0;
+        height = _ctx.LeftSidebarMode != LeftSidebarMode.None ? height : 0;
 
         ImGui.SetNextWindowPos(new Vector2(0, offset));
         ImGui.SetNextWindowSize(new Vector2(width, height));
@@ -75,7 +75,7 @@ internal sealed class LeftSidebar
 
             DrawModeSelector();
 
-            if (_ctx.SidebarMode == SidebarEditorMode.Assets)
+            if (_ctx.LeftSidebarMode == LeftSidebarMode.Assets)
             {
                 _assetStoreGui.DrawSubHeader();
                 _assetStoreGui.Draw();
@@ -84,8 +84,8 @@ internal sealed class LeftSidebar
             ImGui.EndChild();
         }
 
-       if(_ctx.SidebarMode == SidebarEditorMode.Entities)
-           _entityList.Draw();
+       if(_ctx.LeftSidebarMode == LeftSidebarMode.Entities)
+           _entityListGui.Draw();
         
     }
 
@@ -104,19 +104,19 @@ internal sealed class LeftSidebar
         {
             if (ImGui.BeginTabItem("None"))
             {
-                _ctx.SetSidebarMode(SidebarEditorMode.None);
+                _ctx.SetSidebarMode(LeftSidebarMode.None);
                 ImGui.EndTabItem();
             }
 
             if (ImGui.BeginTabItem("Assets"))
             {
-                _ctx.SetSidebarMode(SidebarEditorMode.Assets);
+                _ctx.SetSidebarMode(LeftSidebarMode.Assets);
                 ImGui.EndTabItem();
             }
 
             if (ImGui.BeginTabItem("Entities"))
             {
-                _ctx.SetSidebarMode(SidebarEditorMode.Entities);
+                _ctx.SetSidebarMode(LeftSidebarMode.Entities);
                 ImGui.EndTabItem();
             }
 

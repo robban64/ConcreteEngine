@@ -4,9 +4,9 @@ using ConcreteEngine.Editor.Utils;
 
 namespace ConcreteEngine.Editor;
 
-public sealed class EditorService
+public static class EditorService
 {
-    public EditorService()
+    static EditorService()
     {
         StateCtx.Init();
         CameraPropertyComponent.Init();

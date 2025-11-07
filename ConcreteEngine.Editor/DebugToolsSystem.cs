@@ -14,7 +14,6 @@ public sealed class DebugToolsSystem : IDisposable
 {
     private readonly ImGuiController _controller;
 
-    private readonly EditorService _editor;
 
     private ImFontPtr _imFontPtr;
 
@@ -25,7 +24,6 @@ public sealed class DebugToolsSystem : IDisposable
 
         _controller = new ImGuiController(gl, window, inputCtx, fontConfDefault);
 
-        _editor = new EditorService();
     }
 
 

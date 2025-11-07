@@ -1,4 +1,5 @@
 using System.Numerics;
+using ConcreteEngine.Common.Numerics;
 using ConcreteEngine.Core.Data;
 using ConcreteEngine.Core.Platform;
 using ConcreteEngine.Core.Worlds.View;
@@ -6,13 +7,10 @@ using Silk.NET.Input;
 
 namespace ConcreteEngine.Core.Scene.Modules;
 
-
 public sealed class FlyCameraModule : GameModule
 {
-    private const float PitchLimit = MathF.PI / 2f * 0.99f;
-
     private const float BaseSpeed = 90;
-    private const float RotationSpeed = 60;
+    private const float RotationSpeed = 33f;
 
     private Camera3D _camera = null!;
     private IEngineInputSource _input = null!;
@@ -28,10 +26,10 @@ public sealed class FlyCameraModule : GameModule
 
         var dt = frameCtx.DeltaTime;
 
-        var speed = BaseSpeed;
+        var speed = BaseSpeed * dt;
         var rotateSpeed = RotationSpeed * dt;
 
-        float yaw = _camera.Yaw, pitch = _camera.Pitch;
+        (float yaw, float pitch) = _camera.Orientation;
         var newPos = _camera.Translation;
 
         if (_input.IsKeyDown(Key.W))
@@ -48,11 +46,10 @@ public sealed class FlyCameraModule : GameModule
         if (_input.IsKeyDown(Key.E))
             pitch -= rotateSpeed;
 
-        pitch = float.Clamp(pitch, -PitchLimit, +PitchLimit);
+        var orientation = new YawPitch(yaw, pitch).WithClampedPitch();
 
-        _camera.Translation = Vector3.Lerp(_camera.Translation, newPos, dt);
-        _camera.Yaw = float.Lerp(_camera.Yaw, yaw, dt);
-        _camera.Pitch = float.Lerp(_camera.Pitch, pitch, dt);
+        _camera.Translation = newPos;
+        _camera.Orientation = orientation;
     }
 
 

@@ -30,8 +30,7 @@ internal static class EngineDataProvider
         }
 
         var camera = _world.Camera;
-        camera.DestructTransform(out var translation, out var scale, out var rotation);
-        var transform = new TransformEditorModel(in translation, in scale, in rotation);
+        var transform = new ViewTransformEditorModel(camera.Translation, camera.Scale, camera.Orientation);
         var proj = new ProjectionEditorModel(camera.AspectRatio, camera.Fov, camera.NearPlane, camera.FarPlane);
         var viewport = camera.Viewport;
         response = new CameraEditorPayload(camera.Generation,in transform, in proj, in viewport);

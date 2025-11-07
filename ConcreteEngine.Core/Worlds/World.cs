@@ -96,9 +96,9 @@ public sealed class World : IWorld
         else if (cmd is CameraCommandRecord cameraCmd)
         {
             ref readonly var data =  ref cameraCmd.Data;
-            Camera.Translation = data.Transform.Translation;
-            Camera.Scale = data.Transform.Scale;
-            //Camera.Rotation = data.Transform.Rotation;
+            Camera.Translation = data.ViewTransform.Translation;
+            Camera.Scale = data.ViewTransform.Scale;
+            Camera.Orientation = data.ViewTransform.Orientation;
             Camera.FarPlane = data.Projection.Far;
             Camera.NearPlane = data.Projection.Near;
             Camera.Fov = data.Projection.Fov;

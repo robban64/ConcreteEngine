@@ -13,15 +13,15 @@ internal static class CameraPropertyGui
 {
     private struct CameraDataState
     {
-        public TransformDataState Transform;
-        public ProjectionEditorModel Projection;
+        public CameraTransformDataState Transform;
+        public CameraProjectionState Projection;
     }
 
     private const int WindowPaddingX = 12;
 
     private static CameraDataState _state;
-    private static ref TransformDataState TransformState => ref _state.Transform;
-    private static ref ProjectionEditorModel ProjectionState => ref _state.Projection;
+    private static ref CameraTransformDataState TransformState => ref _state.Transform;
+    private static ref CameraProjectionState ProjectionState => ref _state.Projection;
 
     private static CameraViewModel _cameraModel  = null!;
     private static EditorStateContext _ctx = null!;
@@ -34,13 +34,13 @@ internal static class CameraPropertyGui
         _ctx = ctx;
         _cameraModel = ctx.CameraModel;
         TransformState.From(in _cameraModel.Transform);
-        ProjectionState = ctx.CameraModel.Projection;
+        ProjectionState = CameraProjectionState.FromModel(in _cameraModel.Projection);
     }
 
     public static void UpdateStateFromViewModel()
     {
         TransformState.FromStable(in _cameraModel.Transform);
-        ProjectionState = _cameraModel.Projection;
+        ProjectionState = CameraProjectionState.FromModel(in _cameraModel.Projection);
         _lastFetched = TimeUtils.GetTimestamp();
     }
 
@@ -62,13 +62,13 @@ internal static class CameraPropertyGui
     private static void OnUpdateRotation()
     {
         ref var transform = ref _cameraModel.Transform;
-        transform.Rotation = RotationMath.EulerDegreesToQuaternion(in TransformState.EulerAngles);
+        transform.Orientation = YawPitch.FromVector2(TransformState.Orientation);
         _ctx.ExecuteSetCameraTransform(in _cameraModel.Model);
     }
     
     private static void OnUpdateProjection()
     {
-        _cameraModel.Projection = ProjectionState;
+        _cameraModel.Projection = ProjectionState.ToModel();
         _ctx.ExecuteSetCameraTransform(in _cameraModel.Model);
     }
 
@@ -96,16 +96,15 @@ internal static class CameraPropertyGui
         DrawTransform();
     }
 
-
     private static void DrawViewport()
     {
         var viewport = _cameraModel.Viewport;
         var formatter = new NumberSpanFormatter(StringUtils.CharBuffer8);
-        var width = ImGui.GetContentRegionAvail().X - WindowPaddingX;
+        //var width = ImGui.GetContentRegionAvail().X - WindowPaddingX;
 
         ImGui.BeginGroup();
 
-        // Row 1
+        // Row 
         ImGui.BeginGroup();
         ImGui.TextUnformatted("Width:");
         ImGui.SameLine();
@@ -122,44 +121,30 @@ internal static class CameraPropertyGui
         ImGui.TextUnformatted(formatter.Format(viewport.Height));
         ImGui.EndGroup();
         
-        // Row 1
+        // Row 
         ImGui.BeginGroup();
         ImGui.TextUnformatted("Aspect Ratio:");
         ImGui.SameLine();
         ImGui.TextUnformatted(formatter.Format(viewport.AspectRatio));
         ImGui.EndGroup();
 
-        
+        //
         ImGui.Separator();
-
-        // Row 2
+        
+        // Row 
         ImGui.BeginGroup();
-
         ImGui.TextUnformatted("Near: ");
-
         ImGui.SameLine();
 
-        ImGui.SetCursorPosX(WindowPaddingX + 100 + ImGui.CalcTextSize("Near: ").X * 0.5f);
+        ImGui.SetCursorPosX(ImGui.GetContentRegionAvail().X - WindowPaddingX * 2 - ImGui.CalcTextSize("Near: ").X);
         ImGui.TextUnformatted("Far: ");
 
-
-        ImGui.SetNextItemWidth(width * 0.5f);
-        if (ImGui.SliderFloat("##camera-near", ref ProjectionState.Near, StateLimits.MinNearPlane,
-                StateLimits.MaxNearPlane, "%.2f"))
+        if (ImGui.InputFloat2("##camera-near-far", ref ProjectionState.NearFar, "%.2f"))
         {
             OnUpdateProjection();
         }
-
-        ImGui.SameLine();
-        ImGui.SetNextItemWidth(width * 0.5f);
-        if (ImGui.SliderFloat("##camera-far", ref ProjectionState.Far, StateLimits.MinFarPlane, StateLimits.MaxFarPlane,
-                "%.2f"))
-        {
-            OnUpdateProjection();
-        }
-
         ImGui.EndGroup();
-        
+
         ImGui.Separator();
         
         ImGui.BeginGroup();
@@ -194,7 +179,7 @@ internal static class CameraPropertyGui
 
         ImGui.TextUnformatted("Rotation");
         ImGui.Separator();
-        if (ImGui.InputFloat3("##camera-rotation", ref TransformState.EulerAngles, "%.3f", ImGuiInputTextFlags.None))
+        if (ImGui.InputFloat2("##camera-rotation", ref TransformState.Orientation, "%.3f", ImGuiInputTextFlags.None))
         {
             OnUpdateRotation();
         }

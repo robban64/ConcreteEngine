@@ -20,11 +20,11 @@ public sealed class Camera3D : ICamera
     
     private bool _dirty = true;
 
-    private float _yaw = 0;
-    private float _pitch = 0;
 
     private CameraTransformData _prevTick;
     private CameraTransformData _currTick;
+
+    private YawPitch _orientation;
 
     private Vector3 _translation = Vector3.Zero;
     private Vector3 _scale = Vector3.One;
@@ -52,29 +52,17 @@ public sealed class Camera3D : ICamera
     public Vector3 Up => Vector3.Normalize(Vector3.Transform(Vector3.UnitY, _rotation));
     public Vector3 Forward => Vector3.Normalize(Vector3.Transform(-Vector3.UnitZ, _rotation));
 
-
-    public float Yaw
+    public YawPitch Orientation
     {
-        get => _yaw;
+        get => _orientation;
         set
         {
-            if(FloatMath.NearlyEqual( value, _yaw, FloatMath.EpsilonRad)) return;
-            _yaw = value;
+            if(YawPitch.NearlyEqual( value,  _orientation)) return;
+            _orientation = value;
             _dirty = true;
         }
     }
-
-    public float Pitch
-    {
-        get => _pitch;
-        set
-        {
-            if(FloatMath.NearlyEqual( value,  _pitch, FloatMath.EpsilonRad)) return;
-            _pitch = value;
-            _dirty = true;
-        }
-    }
-
+    
 
     public Vector3 Translation
     {
@@ -182,13 +170,6 @@ public sealed class Camera3D : ICamera
         }
     }
 
-    public void DestructTransform(out Vector3 translation, out Vector3 scale, out Quaternion rotation)
-    {
-        translation = _translation;
-        scale = _scale;
-        rotation = _rotation;
-    }
-
     internal void EndTick()
     {
         Ensure();
@@ -200,7 +181,7 @@ public sealed class Camera3D : ICamera
     {
         var camPos = Vector3.Lerp(_prevTick.Translation, _currTick.Translation, alpha);
         var camRot = Quaternion.Slerp(_prevTick.Rotation, _currTick.Rotation, alpha);
-        MatrixMath.CreateModelMatrix(camPos, Vector3.One, camRot, out var viewMatrix);
+        MatrixMath.CreateModelMatrix(camPos, _scale, camRot, out var viewMatrix);
         Matrix4x4.Invert(viewMatrix, out viewMatrix);
 
         var projInfo = new ProjectionInfo(_aspectRatio, _fov, _nearPlane, _farPlane);
@@ -219,7 +200,8 @@ public sealed class Camera3D : ICamera
         if (!_dirty) return;
         _dirty = false;
 
-        _rotation = Quaternion.CreateFromYawPitchRoll(_yaw, _pitch, 0);
+        _orientation.ToQuaternion(out _rotation);
+
         MatrixMath.CreateModelMatrix(_translation, _scale, _rotation, out var viewModel);
         Matrix4x4.Invert(viewModel, out _viewMatrix);
 

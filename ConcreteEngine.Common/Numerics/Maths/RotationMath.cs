@@ -1,10 +1,40 @@
 using System.Numerics;
+using System.Runtime.CompilerServices;
 using static ConcreteEngine.Common.Numerics.Maths.FloatMath;
 
 namespace ConcreteEngine.Common.Numerics.Maths;
 
-public sealed class RotationMath
+public static class RotationMath
 {
+    public static YawPitch QuaternionToYawPitch(in Quaternion q)
+    {
+        const float pitchLimit = 89f;
+
+        var forward = Vector3.Transform(new Vector3(0f, 0f, -1f), q);
+        float pitchRad = (float)Math.Asin(Clamp01(forward.Y));
+        float yawRad = (float)Math.Atan2(forward.X, forward.Z);
+
+        float yawDeg = yawRad * FloatMath.Rad2Deg;
+        float pitchDeg = pitchRad * FloatMath.Rad2Deg;
+
+        if (pitchDeg > pitchLimit) pitchDeg = pitchLimit;
+        else if (pitchDeg < -pitchLimit) pitchDeg = -pitchLimit;
+
+        return new YawPitch(yawDeg, pitchDeg);
+    }
+    
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public static void YawPitchToQuaternion(YawPitch orientation, out Quaternion quaternion)
+    {
+        float yaw = orientation.Yaw * Deg2Rad;
+        float pitch = orientation.Pitch * Deg2Rad;
+
+        var qy = Quaternion.CreateFromAxisAngle(Vector3.UnitY, yaw);
+        var qx = Quaternion.CreateFromAxisAngle(Vector3.UnitX, pitch);
+
+        quaternion = Quaternion.Normalize(Quaternion.Multiply(qy, qx));
+    }
+    
     public static Quaternion EulerDegreesToQuaternion(in Vector3 eulerDegrees)
     {
         var rx = eulerDegrees.X * Deg2Rad; // pitch
@@ -15,7 +45,6 @@ public sealed class RotationMath
         var qy = Quaternion.CreateFromAxisAngle(Vector3.UnitY, ry);
         var qz = Quaternion.CreateFromAxisAngle(Vector3.UnitZ, rz);
 
-        // q = qy * qx * qz  (right operand applied first)
         var q = Quaternion.Normalize(Quaternion.Multiply(Quaternion.Multiply(qy, qx), qz));
         return q;
     }

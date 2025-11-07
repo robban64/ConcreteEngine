@@ -39,7 +39,7 @@ public sealed class CameraViewModel
     
     public ref CameraEditorPayload Model => ref _model;
 
-    public ref TransformEditorModel Transform => ref _model.Transform;
+    public ref ViewTransformEditorModel Transform => ref _model.ViewTransform;
     public ref ProjectionEditorModel Projection => ref _model.Projection;
     public ref Size2D Viewport => ref _model.Viewport;
 

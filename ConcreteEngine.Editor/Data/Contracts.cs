@@ -22,12 +22,12 @@ public readonly struct EditorTransformPayload(int entityId, in TransformEditorMo
 
 public struct CameraEditorPayload(
     long generation,
-    in TransformEditorModel transform,
+    in ViewTransformEditorModel viewTransform,
     in ProjectionEditorModel projection,
     in Size2D viewport)
 {
     public long Generation = generation;
-    public TransformEditorModel Transform = transform;
+    public ViewTransformEditorModel ViewTransform = viewTransform;
     public ProjectionEditorModel Projection = projection;
     public Size2D Viewport = viewport;
 }

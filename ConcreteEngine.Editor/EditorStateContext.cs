@@ -8,7 +8,7 @@ namespace ConcreteEngine.Editor;
 
 internal static class EditorStateContext
 {
-    private const long FetchInterval = 1_000;
+    private const long FetchInterval = 1_500;
 
     public static EditorViewState ViewState { get; private set; }
 

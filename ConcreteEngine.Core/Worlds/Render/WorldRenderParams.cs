@@ -137,9 +137,9 @@ public sealed class WorldRenderParams
 
 
     private static PostEffectParams MakeDefaultPostEffect() => new(
-        Grade: new(-0.10f, 0.80f, 0.805f, 0.70f),
-        WhiteBalance: new(-0.10f, 0.25f),
-        Bloom: new(0.35f, 0.75f, 8.0f),
-        ImageFx: new(0.25f, 0.15f, 0.30f, 0.60f)
+        grade: new(-0.10f, 0.80f, 0.805f, 0.70f),
+        whiteBalance: new(-0.10f, 0.25f),
+        bloom: new(0.35f, 0.75f, 8.0f),
+        imageFx: new(0.25f, 0.15f, 0.30f, 0.60f)
     );
 }

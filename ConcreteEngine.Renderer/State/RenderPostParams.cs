@@ -1,11 +1,26 @@
 namespace ConcreteEngine.Renderer.State;
 
-public readonly record struct PostEffectParams(
-    PostGradeParams Grade,
-    PostWhiteBalanceParams WhiteBalance,
-    PostBloomParams Bloom,
-    PostImageFxParams ImageFx
-);
+public readonly struct PostEffectParams(
+    PostGradeParams grade,
+    PostWhiteBalanceParams whiteBalance,
+    PostBloomParams bloom,
+    PostImageFxParams imageFx
+)
+{
+    public readonly PostGradeParams Grade = grade;
+    public readonly PostWhiteBalanceParams WhiteBalance = whiteBalance;
+    public readonly PostBloomParams Bloom = bloom;
+    public readonly PostImageFxParams ImageFx = imageFx;
+
+    public void Deconstruct(out PostGradeParams grade, out PostWhiteBalanceParams whiteBalance,
+        out PostBloomParams bloom, out PostImageFxParams imageFx)
+    {
+        grade = Grade;
+        whiteBalance = WhiteBalance;
+        bloom = Bloom;
+        imageFx = ImageFx;
+    }
+}
 
 public readonly struct PostImageFxParams(float vignette, float grain, float sharpen, float rolloff)
 {

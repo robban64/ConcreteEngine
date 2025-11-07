@@ -12,6 +12,8 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ConcreteEngine.Renderer", "
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ConcreteEngine.Editor", "ConcreteEngine.Editor\ConcreteEngine.Editor.csproj", "{F5FEEAB6-E5CC-4415-A47D-AFED2B5C427D}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ConcreteEngine.SharedData", "ConcreteEngine.SharedData\ConcreteEngine.SharedData.csproj", "{37FD02D2-DAA3-4D65-A643-EE0694822701}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -42,5 +44,9 @@ Global
 		{F5FEEAB6-E5CC-4415-A47D-AFED2B5C427D}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{F5FEEAB6-E5CC-4415-A47D-AFED2B5C427D}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{F5FEEAB6-E5CC-4415-A47D-AFED2B5C427D}.Release|Any CPU.Build.0 = Release|Any CPU
+		{37FD02D2-DAA3-4D65-A643-EE0694822701}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{37FD02D2-DAA3-4D65-A643-EE0694822701}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{37FD02D2-DAA3-4D65-A643-EE0694822701}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{37FD02D2-DAA3-4D65-A643-EE0694822701}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 EndGlobal

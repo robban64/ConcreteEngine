@@ -11,7 +11,7 @@ namespace ConcreteEngine.Renderer.State;
 public sealed class RenderView
 {
     private RenderViewSnapshot _snapshot;
-    private ViewProjectionData _override;
+    private ViewTransformData _override;
 
     private bool _useOverride = false;
     
@@ -63,7 +63,7 @@ public sealed class RenderView
             shadowMapSize: shadow.ShadowMapSize, shadowDistance: shadow.Distance);
 
         var projViewMat = viewMat * projMat;
-        _override = new ViewProjectionData(in viewMat, in projMat, in projViewMat);
+        _override = new ViewTransformData(in viewMat, in projMat, in projViewMat);
         _useOverride = true;
     }
 }

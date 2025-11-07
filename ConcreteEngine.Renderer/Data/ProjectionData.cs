@@ -6,7 +6,7 @@ using System.Numerics;
 
 namespace ConcreteEngine.Renderer.Data;
 
-public readonly struct ViewProjectionData(
+public readonly struct ViewTransformData(
     in Matrix4x4 viewMatrix,
     in Matrix4x4 projectionMatrix,
     in Matrix4x4 projectionViewMatrix

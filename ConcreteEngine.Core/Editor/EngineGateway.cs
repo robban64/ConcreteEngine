@@ -129,7 +129,7 @@ internal sealed class EngineGateway : IDisposable
             while (idx < n && GfxLog.LogQueue.Count > 0)
             {
                 var cmd = GfxLog.LogQueue.Dequeue();
-                _debugTools.DevConsole.AddLog(_logParser.Format(cmd));
+                _debugTools.AddLog(_logParser.Format(cmd));
                 idx++;
             }
         }
@@ -137,7 +137,7 @@ internal sealed class EngineGateway : IDisposable
         while (idx < n && Logger.LogQueue.Count > 0)
         {
             var cmd = Logger.LogQueue.Dequeue();
-            _debugTools.DevConsole.AddLog(_logParser.Format(cmd));
+            _debugTools.AddLog(_logParser.Format(cmd));
             idx++;
         }
 
@@ -154,7 +154,7 @@ internal sealed class EngineGateway : IDisposable
     {
         public static DebugToolsSystem DebugTools = null!;
 
-        public static void ProcessStringLog(StringLogEvent log) => DebugTools.DevConsole.AddLog(_logParser.Format(log));
+        public static void ProcessStringLog(StringLogEvent log) => DebugTools.AddLog(_logParser.Format(log));
 
         public static void AttachEditor(World world, AssetSystem assetSystem, RenderEngineFrameInfo frameInfo)
         {

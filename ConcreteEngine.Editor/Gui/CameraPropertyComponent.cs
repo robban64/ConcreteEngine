@@ -9,7 +9,7 @@ using ImGuiNET;
 
 namespace ConcreteEngine.Editor.Gui;
 
-internal static class CameraPropertyGui
+internal static class CameraPropertyComponent
 {
     private struct CameraDataState
     {
@@ -23,16 +23,10 @@ internal static class CameraPropertyGui
     private static ref CameraTransformDataState TransformState => ref _state.Transform;
     private static ref CameraProjectionState ProjectionState => ref _state.Projection;
 
-    private static CameraViewModel _cameraModel  = null!;
-    private static EditorStateContext _ctx = null!;
+    private static CameraViewModel _cameraModel => StateCtx.CameraModel;
 
-    private static long _lastFetched = 0;
-    private const long FetchInterval = 1_000;
-
-    public static void Init(EditorStateContext ctx)
+    public static void Init()
     {
-        _ctx = ctx;
-        _cameraModel = ctx.CameraModel;
         TransformState.From(in _cameraModel.Transform);
         ProjectionState = CameraProjectionState.FromModel(in _cameraModel.Projection);
     }
@@ -41,21 +35,20 @@ internal static class CameraPropertyGui
     {
         TransformState.FromStable(in _cameraModel.Transform);
         ProjectionState = CameraProjectionState.FromModel(in _cameraModel.Projection);
-        _lastFetched = TimeUtils.GetTimestamp();
     }
 
     private static void OnUpdateTranslation()
     {
         ref var transform = ref _cameraModel.Transform;
         transform.Translation = TransformState.Translation;
-        _ctx.ExecuteSetCameraTransform(in _cameraModel.Model);
+        StateCtx.ExecuteSetCameraTransform(in _cameraModel.Model);
     }
 
     private static void OnUpdateScale()
     {
         ref var transform = ref _cameraModel.Transform;
         transform.Scale = TransformState.Scale;
-        _ctx.ExecuteSetCameraTransform(in _cameraModel.Model);
+        StateCtx.ExecuteSetCameraTransform(in _cameraModel.Model);
 
     }
 
@@ -63,23 +56,20 @@ internal static class CameraPropertyGui
     {
         ref var transform = ref _cameraModel.Transform;
         transform.Orientation = YawPitch.FromVector2(TransformState.Orientation);
-        _ctx.ExecuteSetCameraTransform(in _cameraModel.Model);
+        StateCtx.ExecuteSetCameraTransform(in _cameraModel.Model);
     }
     
     private static void OnUpdateProjection()
     {
         _cameraModel.Projection = ProjectionState.ToModel();
-        _ctx.ExecuteSetCameraTransform(in _cameraModel.Model);
+        StateCtx.ExecuteSetCameraTransform(in _cameraModel.Model);
     }
 
 
     public static void Draw()
     {
-        if (TimeUtils.HasIntervalPassed(_lastFetched, FetchInterval))
-        {
-            _ctx.RefreshCameraData();
-        }
-        if (ImGui.BeginChild("##camera-properties", new Vector2(0), ImGuiChildFlags.AutoResizeY ))
+        var size = new Vector2(GuiTheme.RightSidebarWidth - WindowPaddingX , 0);
+        if (ImGui.BeginChild("##camera-properties", size, ImGuiChildFlags.AutoResizeY ))
         {
             DrawInner();
             ImGui.EndChild();

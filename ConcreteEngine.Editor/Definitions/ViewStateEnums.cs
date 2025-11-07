@@ -9,14 +9,14 @@ internal enum EditorViewMode
 
 internal enum LeftSidebarMode
 {
-    None,
+    Default,
     Assets,
     Entities
 }
 
 internal enum RightSidebarMode
 {
-    None,
+    Default,
     Camera,
     Light,
     Sky,

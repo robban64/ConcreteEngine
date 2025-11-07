@@ -10,39 +10,30 @@ using static ConcreteEngine.Editor.Utils.GuiUtils;
 
 namespace ConcreteEngine.Editor.Gui;
 
-internal sealed class RightSidebar
+internal static class RightSidebar
 {
-    private readonly EditorStateContext _ctx;
+    private static bool _focus = false;
+    private static bool _prevFocus = false;
 
-    public RightSidebar( EditorStateContext ctx)
+    public static void Draw(int width, int offset)
     {
-        _ctx = ctx;
+        if(StateCtx.ViewState.RightSidebar == RightSidebarMode.Default) return;
         
-    }
-    
-    private bool _focus = false;
-
-    private bool _prevFocus = false;
-
-    public void Draw(int width, int offset)
-    {
         const ImGuiWindowFlags flags =
             ImGuiWindowFlags.NoTitleBar | ImGuiWindowFlags.NoMove | ImGuiWindowFlags.NoResize |
             ImGuiWindowFlags.NoCollapse ;
 
         var vp = ImGui.GetMainViewport();
         var vpSize = vp.WorkSize;
-        
-        var height = _ctx.ViewMode == EditorViewMode.None ? 0 : vpSize.Y - offset;
-        height = _ctx.LeftSidebarMode != LeftSidebarMode.None ? height : 0;
-        
-        
+
+        var height = StateCtx.ViewState.IsEmptyViewMode ? 0 : vpSize.Y - offset;
+        height = StateCtx.ViewState.RightSidebar != RightSidebarMode.Default ? height : 0;
+
+
         ImGui.SetNextWindowPos(new Vector2(vpSize.X - width, offset));
         ImGui.SetNextWindowSize(new Vector2(width, height));
         ImGui.PushStyleVar(ImGuiStyleVar.ItemSpacing, new Vector2(8f, 6f));
         ImGui.PushStyleVar(ImGuiStyleVar.WindowPadding, new Vector2(12f, 10f));
-        ImGui.SetNextWindowBgAlpha(GuiTheme.PanelOpacity);
-
         ImGui.SetNextWindowBgAlpha(GuiTheme.PanelOpacity);
 
         if (ImGui.Begin("##RightSidebar", flags))
@@ -51,16 +42,15 @@ internal sealed class RightSidebar
 
             if (_focus && !_prevFocus)
             {
-                _ctx.RefreshCameraData();
+                StateCtx.RefreshCameraData();
             }
             else if (!_focus && _prevFocus)
             {
-                
             }
-            
-            switch (_ctx.ViewMode)
+
+            switch (StateCtx.ViewState.EditorMode)
             {
-                case EditorViewMode.Metrics:                
+                case EditorViewMode.Metrics:
                     DrawCpuMetrics();
                     ImGui.Dummy(new Vector2(0, 6));
                     DrawGcMetrics();
@@ -69,7 +59,6 @@ internal sealed class RightSidebar
                     DrawEditor();
                     break;
             }
-
         }
 
         ImGui.End();
@@ -77,14 +66,12 @@ internal sealed class RightSidebar
         _prevFocus = _focus;
     }
 
-    private void DrawEditor()
+    private static void DrawEditor()
     {
-        switch (_ctx.PropertyMode)
+        switch (StateCtx.ViewState.RightSidebar)
         {
-            case RightSidebarMode.None:
-                break;
             case RightSidebarMode.Camera:
-                CameraPropertyGui.Draw();
+                CameraPropertyComponent.Draw();
                 break;
             case RightSidebarMode.Light:
                 break;
@@ -92,8 +79,9 @@ internal sealed class RightSidebar
                 break;
             case RightSidebarMode.Terrain:
                 break;
+            case RightSidebarMode.Default:
             default:
-                throw new ArgumentOutOfRangeException();
+                break;
         }
     }
 

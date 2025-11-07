@@ -6,7 +6,7 @@ using ImGuiNET;
 
 namespace ConcreteEngine.Editor.Gui;
 
-internal sealed class EntityListGui
+internal static class EntitiesComponent
 {
     private struct EntityDataState
     {
@@ -19,19 +19,13 @@ internal sealed class EntityListGui
     private const int RowHeight = 32;
     private const int ColumnWidth = 28;
 
-    private readonly EditorStateContext _ctx;
-    private readonly EntityListViewModel _viewModel;
+    private static EntityListViewModel ViewModel => StateCtx.EntityListViewModel;
 
-    private EntityDataState _entityState = default;
-    private ref TransformDataState TransformState =>  ref _entityState.Transform;
+    private static EntityDataState _entityState = default;
+    private static ref TransformDataState TransformState =>  ref _entityState.Transform;
 
-    public EntityListGui(EditorStateContext ctx)
-    {
-        _ctx = ctx;
-        _viewModel = ctx.EntityListViewModel;
-    }
 
-    private void UpdateStateFrom(EntityViewModel? entity)
+    private static void UpdateStateFrom(EntityViewModel? entity)
     {
         if (entity is null)
         {
@@ -45,26 +39,26 @@ internal sealed class EntityListGui
         TransformState.FromStable(in entity.Transform);
     }
 
-    private void OnUpdateTranslation(EntityViewModel entity)
+    private static void OnUpdateTranslation(EntityViewModel entity)
     {
         entity.Transform.Translation = TransformState.Translation;
-        _ctx.ExecuteSetEntityTransform(entity);
+        StateCtx.ExecuteSetEntityTransform(entity);
     }
 
-    private void OnUpdateScale(EntityViewModel entity)
+    private static void OnUpdateScale(EntityViewModel entity)
     {
         entity.Transform.Scale = TransformState.Scale;
-        _ctx.ExecuteSetEntityTransform(entity);
+        StateCtx.ExecuteSetEntityTransform(entity);
     }
 
-    private void OnUpdateRotation(EntityViewModel entity)
+    private static void OnUpdateRotation(EntityViewModel entity)
     {
         ref var transform = ref entity.Transform;
         transform.Rotation = RotationMath.EulerDegreesToQuaternion(in TransformState.EulerAngles);
-        _ctx.ExecuteSetEntityTransform(entity);
+        StateCtx.ExecuteSetEntityTransform(entity);
     }
 
-    public void Draw()
+    public static void Draw()
     {
         ImGui.SeparatorText("Entities");
 
@@ -75,7 +69,7 @@ internal sealed class EntityListGui
         }
     }
 
-    private void DrawEntityList()
+    private static void DrawEntityList()
     {
         const ImGuiTableFlags flags = ImGuiTableFlags.NoBordersInBody;
 
@@ -101,14 +95,14 @@ internal sealed class EntityListGui
         ImGui.EndTable();
     }
 
-    private void DrawList()
+    private static void DrawList()
     {
         //Span<char> buffer = stackalloc char[8];
         var formatter = new NumberSpanFormatter(StringUtils.CharBuffer8);
 
-        foreach (var entity in _viewModel.Entities)
+        foreach (var entity in ViewModel.Entities)
         {
-            var selected = entity.EntityId == _viewModel.SelectedEntityId;
+            var selected = entity.EntityId == ViewModel.SelectedEntityId;
 
             ImGui.PushStyleVar(ImGuiStyleVar.SelectableTextAlign, new Vector2(0.0f, 0.5f));
             ImGui.PushStyleColor(ImGuiCol.HeaderHovered, GuiTheme.SelectedColor);
@@ -122,7 +116,7 @@ internal sealed class EntityListGui
             var bufferStr = formatter.Format(entity.EntityId);
             if (EntitySelectable(bufferStr, selected))
             {
-                _viewModel.SelectedEntityId = entity.EntityId;
+                ViewModel.SelectedEntityId = entity.EntityId;
                 UpdateStateFrom(entity);
 
                 var itemMin = ImGui.GetItemRectMin();
@@ -159,7 +153,7 @@ internal sealed class EntityListGui
     }
 
 
-    private void DrawAssetFilePopupContent(EntityViewModel entity)
+    private static void DrawAssetFilePopupContent(EntityViewModel entity)
     {
         ImGui.SeparatorText("Model");
         ImGui.TextUnformatted("ModelId");

@@ -6,67 +6,86 @@ using ConcreteEngine.Editor.Utils;
 
 namespace ConcreteEngine.Editor;
 
-internal sealed class EditorStateContext
+internal static class EditorStateContext
 {
-    private readonly DevConsoleService _devConsoleService;
+    private const long FetchInterval = 1_000;
 
-    public EditorViewMode ViewMode { get; private set; } = EditorViewMode.None;
-    public LeftSidebarMode LeftSidebarMode { get; private set; } = LeftSidebarMode.None;
-    public RightSidebarMode PropertyMode { get; private set; } = RightSidebarMode.None;
+    public static EditorViewState ViewState { get; private set; }
 
-    public AssetStoreViewModel AssetViewModel { get; } = new();
-    public EntityListViewModel EntityListViewModel { get; } = new();
+    public static AssetStoreViewModel AssetViewModel { get; } = new();
+    public static EntityListViewModel EntityListViewModel { get; } = new();
+    public static CameraViewModel CameraModel { get; } = new();
 
-    public CameraViewModel CameraModel { get; } = new();
-    
-    private long _lastAction = TimeUtils.GetTimestamp();
+    private static long _lastAction = TimeUtils.GetTimestamp();
+    private static long _lastFetched = TimeUtils.GetTimestamp();
 
-    public EditorStateContext(DevConsoleService devConsoleService)
+
+    internal static void Init()
     {
-        _devConsoleService = devConsoleService;
     }
 
-    internal void PreRender()
+    internal static EditorViewState PreRender()
     {
-        GuiTheme.RightSidebarExpanded = ViewMode == EditorViewMode.Editor;
+        GuiTheme.RightSidebarExpanded = ViewState.IsEditorState;
+        MetricsApi.ToggleMetrics(ViewState.IsMetricState);
+
+        if (ViewState.IsEditorState && ViewState.RightSidebar == RightSidebarMode.Camera)
+        {
+            if (TimeUtils.HasIntervalPassed(_lastFetched, FetchInterval))
+            {
+                RefreshCameraData();
+                _lastFetched = TimeUtils.GetTimestamp();
+            }
+        }
+
+        return ViewState;
     }
 
-    public void SetViewMode(EditorViewMode mode)
+    public static void SetViewModeState(EditorViewMode mode)
     {
-        if (mode == ViewMode) return;
-        ViewMode = mode;
-
-        MetricsApi.ToggleMetrics(ViewMode == EditorViewMode.Metrics);
+        if (mode == ViewState.EditorMode) SetState(EditorViewState.MakeNone());
+        else if (mode == EditorViewMode.Editor) SetState(EditorViewState.MakeEditor());
+        else if (mode == EditorViewMode.Metrics) SetState(EditorViewState.MakeMetrics());
     }
 
-    public void SetSidebarMode(LeftSidebarMode mode)
+    public static void ToggleRightSidebarState(RightSidebarMode mode)
     {
-        if (mode == LeftSidebarMode) return;
-        LeftSidebarMode = mode;
+        var newMode = mode == ViewState.RightSidebar ? RightSidebarMode.Default : mode;
+        SetState(ViewState with { RightSidebar = newMode });
+    }
 
-        if (mode != LeftSidebarMode.Assets) AssetViewModel.ResetState();
-        //if (mode != SidebarEditorMode.Entities) EntityListViewModel.ResetState();
+    public static void SetLeftSidebarState(LeftSidebarMode mode)
+    {
+        if (mode == ViewState.LeftSidebar) return;
+        SetState(ViewState with { LeftSidebar = mode });
+    }
 
-        switch (mode)
+    private static void SetState(EditorViewState state)
+    {
+        var prevState = ViewState;
+        ViewState = state;
+        if (state.IsEditorState) OnEditorStateEnter(state, prevState);
+    }
+
+    private static void OnEditorStateEnter(EditorViewState state, EditorViewState prevState)
+    {
+        if (state.IsMetricState) throw new InvalidOperationException("Metric state is already in editor state");
+        if (prevState.LeftSidebar == LeftSidebarMode.Assets && state.LeftSidebar != LeftSidebarMode.Assets)
+            AssetViewModel.ResetState();
+
+        switch (state.LeftSidebar)
         {
             case LeftSidebarMode.Assets:
                 EditorApi.FillAssetStoreView?.Invoke(AssetViewModel.TypeSelection, AssetViewModel.AssetObjects);
                 break;
             case LeftSidebarMode.Entities:
-                if (EntityListViewModel.Entities.Count == 0)
-                    EditorApi.FillEntityView?.Invoke(EntityListViewModel);
+                if (EntityListViewModel.Entities.Count == 0) EditorApi.FillEntityView?.Invoke(EntityListViewModel);
                 break;
         }
-    }
 
-    public void SetPropertyMode(RightSidebarMode mode)
-    {
-        if (mode == PropertyMode) return;
-        PropertyMode = mode;
-
-        switch (mode)
+        switch (state.RightSidebar)
         {
-            case RightSidebarMode.None: break;
+            case RightSidebarMode.Default: break;
             case RightSidebarMode.Camera:
                 RefreshCameraData();
                 break;
@@ -76,20 +95,20 @@ internal sealed class EditorStateContext
         }
     }
 
-    public void RefreshCameraData()
+    public static void RefreshCameraData()
     {
-        if(!EditorApi.FetchCameraData(CameraModel.Generation, out var response))
+        if (!EditorApi.FetchCameraData(CameraModel.Generation, out var response))
             return;
-        
+
         CameraModel.FromDataModel(in response);
-        CameraPropertyGui.UpdateStateFromViewModel();
+        CameraPropertyComponent.UpdateStateFromViewModel();
     }
 
-    private bool CanExecute(int ms, bool print = false)
+    private static bool CanExecute(int ms, bool print = false)
     {
         if (!TimeUtils.HasIntervalPassed(_lastAction, ms))
         {
-            _devConsoleService.AddLog("Command delay time has not passed");
+            DevConsoleService.AddLog("Command delay time has not passed");
             return false;
         }
 
@@ -97,24 +116,23 @@ internal sealed class EditorStateContext
         return true;
     }
 
-    public void ExecuteReloadShader(AssetObjectViewModel viewModel)
+    public static void ExecuteReloadShader(AssetObjectViewModel viewModel)
     {
         if (!CanExecute(1000, true)) return;
         CommandDispatcher.InvokeEditorCommand(CoreCmdNames.AssetShader,
             new EditorShaderPayload(viewModel.Name, EditorRequestAction.Reload));
     }
 
-    public void ExecuteSetEntityTransform(EntityViewModel entity)
+    public static void ExecuteSetEntityTransform(EntityViewModel entity)
     {
         //if (!CanExecute(25)) return;
         var payload = new EditorTransformPayload(entity.EntityId, in entity.Transform);
         CommandDispatcher.InvokeEditorCommand(CoreCmdNames.EntityTransform, in payload);
     }
-    
-    public void ExecuteSetCameraTransform(in CameraEditorPayload payload)
+
+    public static void ExecuteSetCameraTransform(in CameraEditorPayload payload)
     {
         //if (!CanExecute(25)) return;
         CommandDispatcher.InvokeEditorCommand(CoreCmdNames.CameraTransform, in payload);
     }
-
 }

@@ -7,27 +7,16 @@ using ImGuiNET;
 
 namespace ConcreteEngine.Editor.Gui;
 
-public class DevConsoleGui
+internal static class ConsoleComponent
 {
-    private bool _justOpened = true;
-    private bool _scrollToBottom = false;
+    private static bool _justOpened = true;
+    private static bool _scrollToBottom = false;
 
-    private string _input = string.Empty;
+    private static string _input = string.Empty;
 
-    private readonly Func<string, bool> _execCmd;
+    internal static void ScrollToBottom() => _scrollToBottom = true;
 
-    private readonly List<string> _log;
-
-    public DevConsoleGui(List<string> log, Func<string, bool> execCmd)
-    {
-        ArgumentNullException.ThrowIfNull(execCmd);
-        _execCmd = execCmd;
-        _log = log;
-    }
-
-    internal void ScrollToBottom() => _scrollToBottom = true;
-
-    internal void DrawConsole(int leftPanelWidth, int rightPanelWidth)
+    internal static void DrawConsole(int leftPanelWidth, int rightPanelWidth)
     {
         const ImGuiWindowFlags flags =
             ImGuiWindowFlags.NoMove | ImGuiWindowFlags.NoResize |
@@ -77,7 +66,7 @@ public class DevConsoleGui
         ImGui.PopStyleColor(2);
     }
 
-    private void DrawInner()
+    private static void DrawInner()
     {
         ImGui.PushStyleColor(ImGuiCol.Text, 0x99FFFFFF);
         ImGui.SeparatorText("Console");
@@ -93,7 +82,7 @@ public class DevConsoleGui
                 ImGuiWindowFlags.HorizontalScrollbar | ImGuiWindowFlags.AlwaysVerticalScrollbar)
            )
         {
-            foreach (var line in _log)
+            foreach (var line in DevConsoleService.Log)
                 ImGui.TextUnformatted(line);
 
             if (_justOpened || _scrollToBottom)
@@ -130,7 +119,7 @@ public class DevConsoleGui
             _input = string.Empty;
 
             if (!string.IsNullOrEmpty(text))
-                _execCmd(text);
+                DevConsoleService.AddLog(text);
 
             ImGui.SetKeyboardFocusHere();
             _scrollToBottom = true;

@@ -7,49 +7,40 @@ using static ConcreteEngine.Editor.Utils.GuiUtils;
 
 namespace ConcreteEngine.Editor.Gui;
 
-internal sealed class AssetStoreGui
+internal static class AssetsComponent
 {
-    private int _popupInput = 0;
-
-    private readonly EditorStateContext _ctx;
-    private readonly AssetStoreViewModel _viewModel;
-
     private static readonly string[] AssetTypeArray = ["None", "Shader", "Texture", "Model", "Material"];
+    private static AssetStoreViewModel ViewModel => StateCtx.AssetViewModel;
 
-    public AssetStoreGui(EditorStateContext ctx)
+    private static int _popupInput = 0;
+
+    private static void OnAssetSelectedChanged(AssetObjectViewModel? asset)
     {
-        _ctx  = ctx;
-        _viewModel = ctx.AssetViewModel;
-    }
-    
-    private void OnAssetSelectedChanged(AssetObjectViewModel? asset)
-    {
-        _viewModel.AssetFileObjects.Clear();
+        ViewModel.AssetFileObjects.Clear();
         if (asset is null) return;
-        EditorApi.FetchAssetObjectFiles?.Invoke(asset, _viewModel.AssetFileObjects);
+        EditorApi.FetchAssetObjectFiles?.Invoke(asset, ViewModel.AssetFileObjects);
     }
 
-    private void OnSelectTypeChange(EditorAssetSelection selection)
+    private static void OnSelectTypeChange(EditorAssetSelection selection)
     {
-        if (selection == _viewModel.TypeSelection) return;
-        _viewModel.TypeSelection = selection;
-        _viewModel.AssetObjects.Clear();
-        _viewModel.AssetFileObjects.Clear();
+        if (selection == ViewModel.TypeSelection) return;
+        ViewModel.TypeSelection = selection;
+        ViewModel.AssetObjects.Clear();
+        ViewModel.AssetFileObjects.Clear();
 
         if (selection == EditorAssetSelection.None) return;
 
-        EditorApi.FillAssetStoreView?.Invoke(selection, _viewModel.AssetObjects);
+        EditorApi.FillAssetStoreView?.Invoke(selection, ViewModel.AssetObjects);
     }
 
-    public void DrawSubHeader()
+    public static void DrawSubHeader()
     {
         ImGui.SeparatorText("Asset Store");
         DrawAssetTypeSelector();
         ImGui.Separator();
-
     }
 
-    public void Draw()
+    public static void Draw()
     {
         const ImGuiTableFlags flags = ImGuiTableFlags.SizingFixedFit | ImGuiTableFlags.BordersInnerH;
         const int rowHeight = 32;
@@ -67,7 +58,7 @@ internal sealed class AssetStoreGui
         //Span<char> buffer = stackalloc char[8];
         var formatter = new NumberSpanFormatter(StringUtils.CharBuffer16);
 
-        foreach (var it in _viewModel.AssetObjects)
+        foreach (var it in ViewModel.AssetObjects)
         {
             ImGui.PushID(it.AssetId);
             ImGui.TableNextRow(ImGuiTableRowFlags.None, rowHeight);
@@ -101,6 +92,7 @@ internal sealed class AssetStoreGui
                 DrawAssetFilePopupContent(it);
                 ImGui.EndPopup();
             }
+
             ImGui.PopStyleVar();
 
             ImGui.PopID();
@@ -110,12 +102,12 @@ internal sealed class AssetStoreGui
         ImGui.EndTable();
     }
 
-    private void DrawAssetTypeSelector()
+    private static void DrawAssetTypeSelector()
     {
         ImGui.PushStyleVar(ImGuiStyleVar.FramePadding, new Vector2(8, 6));
         ImGui.PushStyleVar(ImGuiStyleVar.WindowPadding, new Vector2(8, 6));
 
-        string currentLabel = AssetTypeArray[(int)_viewModel.TypeSelection];
+        string currentLabel = AssetTypeArray[(int)ViewModel.TypeSelection];
         ImGui.SetNextItemWidth(ImGui.GetContentRegionAvail().X - 8f);
         if (ImGui.BeginCombo("##assetTypeSelector", currentLabel, ImGuiComboFlags.HeightLargest))
         {
@@ -123,7 +115,7 @@ internal sealed class AssetStoreGui
 
             for (int i = 0; i < AssetTypeArray.Length; i++)
             {
-                bool isSelected = (i == (int)_viewModel.TypeSelection);
+                bool isSelected = (i == (int)ViewModel.TypeSelection);
 
                 if (ImGui.Selectable(AssetTypeArray[i], isSelected, ImGuiSelectableFlags.None, Vector2.Zero))
                     OnSelectTypeChange((EditorAssetSelection)i);
@@ -131,6 +123,7 @@ internal sealed class AssetStoreGui
                 if (isSelected)
                     ImGui.SetItemDefaultFocus();
             }
+
             ImGui.PopStyleVar();
 
             ImGui.EndCombo();
@@ -140,7 +133,7 @@ internal sealed class AssetStoreGui
     }
 
 
-    private void DrawAssetFilePopupContent(AssetObjectViewModel asset)
+    private static void DrawAssetFilePopupContent(AssetObjectViewModel asset)
     {
         //Span<char> buffer = stackalloc char[8];
         var formatter = new NumberSpanFormatter(StringUtils.CharBuffer8);
@@ -175,15 +168,15 @@ internal sealed class AssetStoreGui
             ImGui.EndTable();
         }
 
-        if (_viewModel.AssetFileObjects.Count > 0)
-            DrawFilesTable(formatter, _viewModel);
+        if (ViewModel.AssetFileObjects.Count > 0)
+            DrawFilesTable(formatter, ViewModel);
 
         if (asset.HasActions)
         {
             ImGui.Separator();
             if (ImGui.Button("Reload", new Vector2(72, 28)))
             {
-                _ctx.ExecuteReloadShader(asset);
+                StateCtx.ExecuteReloadShader(asset);
                 ImGui.CloseCurrentPopup();
             }
         }
@@ -192,7 +185,7 @@ internal sealed class AssetStoreGui
         ImGui.PopStyleVar();
         return;
 
-        static void DrawFilesTable(NumberSpanFormatter formatter,AssetStoreViewModel viewModel)
+        static void DrawFilesTable(NumberSpanFormatter formatter, AssetStoreViewModel viewModel)
         {
             DrawSectionHeader("Files");
             if (!ImGui.BeginTable("##asset_store_files_tbl", 4,

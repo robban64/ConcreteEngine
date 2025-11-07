@@ -14,8 +14,6 @@ public sealed class DebugToolsSystem : IDisposable
 {
     private readonly ImGuiController _controller;
 
-    public DevConsoleService DevConsole => _editor.DevConsole;
-
     private readonly EditorService _editor;
 
     private ImFontPtr _imFontPtr;
@@ -33,9 +31,11 @@ public sealed class DebugToolsSystem : IDisposable
 
     public void Update(float delta) => _controller.Update(delta);
 
+    public void AddLog(string? msg) => DevConsoleService.AddLog(msg);
+
     public void Render()
     {
-        _editor.Render();
+        EditorService.Render();
         _controller.Render();
     }
 

@@ -3,46 +3,48 @@ using ConcreteEngine.Editor.Utils;
 
 namespace ConcreteEngine.Editor;
 
-public sealed class DebugConsoleCtx(DevConsoleService devConsole)
+public sealed class DebugConsoleCtx
 {
-    public void AddLog(string? msg) => devConsole.AddLog(msg);
-    public void AddMissingArg(string arg) => devConsole.AddLog($"Argument: {arg} is null or empty");
+    private readonly Action<string?> _addStringLogDel;
+    
+    internal DebugConsoleCtx(Action<string?> addStringLogDel)
+    {
+        _addStringLogDel = addStringLogDel;
+    }
+    public void AddLog(string? msg) => _addStringLogDel(msg);
 }
 
-public sealed class DevConsoleService
+public static class DevConsoleService
 {
     private const int MaxLogCount = 128;
 
-    private readonly DevConsoleGui _consoleGui;
+    internal static readonly List<string> Log = new(MaxLogCount);
 
-    private readonly DebugConsoleCtx _ctx;
+    private static DebugConsoleCtx _consoleCtx;
 
-    private readonly List<string> _log = new(MaxLogCount);
-
-    internal DevConsoleService()
+    static DevConsoleService()
     {
-        _consoleGui = new DevConsoleGui(_log, ExecCommand);
-        _ctx = new DebugConsoleCtx(this);
+        _consoleCtx = new DebugConsoleCtx(AddLog);
     }
 
-    public void Draw(int leftPanelWidth, int rightPanelWidth) =>
-        _consoleGui.DrawConsole(leftPanelWidth, rightPanelWidth);
+    public static void Draw(int leftPanelWidth, int rightPanelWidth) =>
+        ConsoleComponent.DrawConsole(leftPanelWidth, rightPanelWidth);
 
-    public void AddLog(string? msg)
+    public static void AddLog(string? msg)
     {
         if (msg is null) return;
-        _log.Add(msg);
-        _consoleGui.ScrollToBottom();
+        Log.Add(msg);
+        ConsoleComponent.ScrollToBottom();
 
-        if (_log.Count >= MaxLogCount)
-            _log.RemoveRange(_log.Count / 2, _log.Count - (_log.Count / 2));
+        if (Log.Count >= MaxLogCount)
+            Log.RemoveRange(Log.Count / 2, Log.Count - (Log.Count / 2));
     }
 
-    private bool ExecCommand(string commandLine)
+    private static bool ExecCommand(string commandLine)
     {
         if (string.IsNullOrWhiteSpace(commandLine)) return false;
 
-        _log.Add($">> {commandLine}");
+        Log.Add($">> {commandLine}");
         var parts = commandLine.Trim().Split(' ', 4, StringSplitOptions.RemoveEmptyEntries);
         var cmd = parts[0];
         var action = parts.Length > 1 ? parts[1] : null;
@@ -51,7 +53,7 @@ public sealed class DevConsoleService
 
         if (cmd == "clear")
         {
-            _log.Clear();
+            Log.Clear();
             AddLog("[console cleared]");
             return true;
         }
@@ -64,7 +66,7 @@ public sealed class DevConsoleService
 
         try
         {
-            CommandDispatcher.InvokeCommand(_ctx, cmd, action ?? "", arg1, arg2);
+            CommandDispatcher.InvokeCommand(_consoleCtx, cmd, action ?? "", arg1, arg2);
         }
         catch (Exception ex) when (ex is ArgumentException or KeyNotFoundException)
         {
@@ -76,9 +78,9 @@ public sealed class DevConsoleService
     }
 
 
-    private void PrintCommands()
+    private static void PrintCommands()
     {
-        CommandDispatcher.ProcessRegistryRecords(_ctx, static (ctx, command, existsIn) =>
+        CommandDispatcher.ProcessRegistryRecords(_consoleCtx, static (ctx, command, existsIn) =>
         {
             var console = StringUtils.BoolToYesNo(existsIn.Item1);
             var editor = StringUtils.BoolToYesNo(existsIn.Item2);

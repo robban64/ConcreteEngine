@@ -50,14 +50,14 @@ internal sealed class GlShaders : IGraphicsDriverModule
         {
             vertexShader = _gl.CreateShader(ShaderType.VertexShader);
             vertexShader = CompileShader(vertexShader, ShaderType.VertexShader, vertexSource);
-            
+
             fragmentShader = _gl.CreateShader(ShaderType.FragmentShader);
             fragmentShader = CompileShader(fragmentShader, ShaderType.FragmentShader, fragmentSource);
         }
         catch
         {
-            if(vertexShader > 0) _gl.DeleteShader(vertexShader);
-            if(fragmentShader> 0) _gl.DeleteShader(fragmentShader);
+            if (vertexShader > 0) _gl.DeleteShader(vertexShader);
+            if (fragmentShader > 0) _gl.DeleteShader(fragmentShader);
             throw;
         }
 
@@ -78,7 +78,7 @@ internal sealed class GlShaders : IGraphicsDriverModule
             _gl.DeleteShader(vertexShader);
             _gl.DeleteShader(fragmentShader);
         }
-        
+
         return _shaderStore.Add(new GlShaderHandle(handle));
     }
 

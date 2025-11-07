@@ -85,7 +85,9 @@ internal sealed class GfxStoreHub
     public UboStore UboStore { get; } = new(LowCapacity, static i => new UniformBufferId(i + 1));
 
 
-    [MethodImpl(MethodImplOptions.NoInlining), DoesNotReturn, StackTraceHidden]
+    [MethodImpl(MethodImplOptions.NoInlining)]
+    [DoesNotReturn]
+    [StackTraceHidden]
     private static void ThrowInvalidStoreType(ResourceKind kind, Type id, Type? meta = null) =>
         throw new ArgumentException($"Gfx Store {kind} is not: {id.Name}  {meta?.Name}");
 }

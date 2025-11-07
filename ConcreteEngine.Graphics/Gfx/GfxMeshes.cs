@@ -68,8 +68,10 @@ public sealed class GfxMeshes
         var vaoRef = _driver.Meshes.CreateVertexArray();
         var meta = new MeshMeta
         {
-            Kind = props.Kind, ElementSize = props.ElementSize,
-            Primitive = props.Primitive, DrawCount = props.DrawCount
+            Kind = props.Kind,
+            ElementSize = props.ElementSize,
+            Primitive = props.Primitive,
+            DrawCount = props.DrawCount
         };
         return _meshStore.Add(in meta, vaoRef);
     }

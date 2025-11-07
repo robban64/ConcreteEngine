@@ -6,7 +6,7 @@ using System.Runtime.CompilerServices;
 
 namespace ConcreteEngine.Graphics.Error;
 
-public sealed partial class GraphicsException(string message, Exception? inner = null) 
+public sealed partial class GraphicsException(string message, Exception? inner = null)
     : Exception(message, inner)
 {
     // Exceptions
@@ -61,7 +61,7 @@ public sealed partial class GraphicsException(string message, Exception? inner =
     public static GraphicsException LimitExceeded(string capabilityName, int limit) =>
         new($"{capabilityName} limit has been exceeded ({limit}).");
 
-    
+
     public static GraphicsException CapabilityExceeded(string capabilityName, int attempted, int maximum) =>
         new($"{capabilityName} value {attempted} exceeds the maximum supported ({maximum}).");
 

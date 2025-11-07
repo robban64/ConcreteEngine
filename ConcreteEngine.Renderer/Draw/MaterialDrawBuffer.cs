@@ -130,7 +130,9 @@ internal sealed class MaterialDrawBuffer
         Array.Resize(ref _textureSlots, newCap);
     }
 
-    [MethodImpl(MethodImplOptions.NoInlining), DoesNotReturn, StackTraceHidden]
+    [MethodImpl(MethodImplOptions.NoInlining)]
+    [DoesNotReturn]
+    [StackTraceHidden]
     private static void ThrowMaxCapacityExceeded() =>
         throw new OutOfMemoryException("Material Buffer exceeded max limit");
 }

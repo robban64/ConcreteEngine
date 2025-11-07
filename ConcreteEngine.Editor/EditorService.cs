@@ -1,6 +1,9 @@
-using ConcreteEngine.Editor.Definitions;
+#region
+
 using ConcreteEngine.Editor.Gui;
 using ConcreteEngine.Editor.Utils;
+
+#endregion
 
 namespace ConcreteEngine.Editor;
 
@@ -22,7 +25,6 @@ public static class EditorService
         {
             LeftSidebar.Draw(240, offset: GuiTheme.TopbarHeight);
             RightSidebar.Draw(GuiTheme.RightSidebarWidth, offset: GuiTheme.TopbarHeight);
-
         }
 
         DevConsoleService.Draw(240, GuiTheme.RightSidebarWidth);

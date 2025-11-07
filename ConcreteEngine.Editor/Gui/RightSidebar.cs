@@ -17,11 +17,11 @@ internal static class RightSidebar
 
     public static void Draw(int width, int offset)
     {
-        if(StateCtx.ViewState.RightSidebar == RightSidebarMode.Default) return;
-        
+        if (StateCtx.ViewState.RightSidebar == RightSidebarMode.Default) return;
+
         const ImGuiWindowFlags flags =
             ImGuiWindowFlags.NoTitleBar | ImGuiWindowFlags.NoMove | ImGuiWindowFlags.NoResize |
-            ImGuiWindowFlags.NoCollapse ;
+            ImGuiWindowFlags.NoCollapse;
 
         var vp = ImGui.GetMainViewport();
         var vpSize = vp.WorkSize;

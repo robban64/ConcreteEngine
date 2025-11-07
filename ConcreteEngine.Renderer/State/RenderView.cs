@@ -14,15 +14,14 @@ public sealed class RenderView
     private ViewTransformData _override;
 
     private bool _useOverride = false;
-    
-    public ref readonly Matrix4x4 ViewMatrix
-        => ref (_useOverride ? ref _override.ViewMatrix : ref _snapshot.ViewMatrix);
 
-    public ref readonly Matrix4x4 ProjectionMatrix
-        => ref (_useOverride ? ref _override.ProjectionMatrix : ref _snapshot.ProjectionMatrix);
+    public ref readonly Matrix4x4 ViewMatrix => ref _useOverride ? ref _override.ViewMatrix : ref _snapshot.ViewMatrix;
 
-    public ref readonly Matrix4x4 ProjectionViewMatrix
-        => ref (_useOverride ? ref _override.ProjectionViewMatrix : ref _snapshot.ProjectionViewMatrix);
+    public ref readonly Matrix4x4 ProjectionMatrix =>
+        ref _useOverride ? ref _override.ProjectionMatrix : ref _snapshot.ProjectionMatrix;
+
+    public ref readonly Matrix4x4 ProjectionViewMatrix =>
+        ref _useOverride ? ref _override.ProjectionViewMatrix : ref _snapshot.ProjectionViewMatrix;
 
     public ProjectionInfo ProjectionInfo => _snapshot.ProjectionInfo;
     public Vector3 Position => _snapshot.Position;
@@ -30,7 +29,6 @@ public sealed class RenderView
     public Vector3 Right => _snapshot.Right;
     public Vector3 Up => _snapshot.Up;
 
-    
 
     public void GetCurrentData(out Matrix4x4 view, out Matrix4x4 projection, out Matrix4x4 projectionView)
     {
@@ -46,7 +44,7 @@ public sealed class RenderView
         projection = _snapshot.ProjectionMatrix;
         projectionView = _snapshot.ProjectionViewMatrix;
     }
-    
+
     public void SetViewData(in RenderViewSnapshot view)
     {
         _useOverride = false;

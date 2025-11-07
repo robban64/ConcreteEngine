@@ -178,6 +178,6 @@ public sealed class GfxBuffers
         return (stride, count * stride);
     }
 
-    public static ReadOnlySpan<byte> ToByteBuffer<T>(ReadOnlySpan<T> data) where T : unmanaged
-        => MemoryMarshal.AsBytes(data);
+    public static ReadOnlySpan<byte> ToByteBuffer<T>(ReadOnlySpan<T> data) where T : unmanaged =>
+        MemoryMarshal.AsBytes(data);
 }

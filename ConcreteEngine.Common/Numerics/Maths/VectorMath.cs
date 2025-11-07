@@ -9,23 +9,22 @@ namespace ConcreteEngine.Common.Numerics.Maths;
 
 public static class VectorMath
 {
-    
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public static bool DistanceNearlyEqual(in Vector3 a, in Vector3 b, float eps = FloatMath.DefaultEpsilon)
-        => Vector3.DistanceSquared(a, b) < eps * eps;
+    public static bool DistanceNearlyEqual(in Vector3 a, in Vector3 b, float eps = FloatMath.DefaultEpsilon) =>
+        Vector3.DistanceSquared(a, b) < eps * eps;
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public static bool NearlyEqual(Vector2 a, Vector2 b, float eps = FloatMath.DefaultEpsilon)
-        => MathF.Abs(a.X - b.X) < eps && MathF.Abs(a.Y - b.Y) < eps;
+    public static bool NearlyEqual(Vector2 a, Vector2 b, float eps = FloatMath.DefaultEpsilon) =>
+        MathF.Abs(a.X - b.X) < eps && MathF.Abs(a.Y - b.Y) < eps;
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public static bool NearlyEqual(in Vector3 a, in Vector3 b, float eps = FloatMath.DefaultEpsilon)
-        => MathF.Abs(a.X - b.X) < eps && MathF.Abs(a.Y - b.Y) < eps && MathF.Abs(a.Z - b.Z) < eps;
+    public static bool NearlyEqual(in Vector3 a, in Vector3 b, float eps = FloatMath.DefaultEpsilon) =>
+        MathF.Abs(a.X - b.X) < eps && MathF.Abs(a.Y - b.Y) < eps && MathF.Abs(a.Z - b.Z) < eps;
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public static bool NearlyEqual(in Vector4 a, in Vector4 b, float eps = FloatMath.DefaultEpsilon)
-        => MathF.Abs(a.X - b.X) < eps && MathF.Abs(a.Y - b.Y) < eps && MathF.Abs(a.Z - b.Z) < eps &&
-           MathF.Abs(a.W - b.W) < eps;
+    public static bool NearlyEqual(in Vector4 a, in Vector4 b, float eps = FloatMath.DefaultEpsilon) =>
+        MathF.Abs(a.X - b.X) < eps && MathF.Abs(a.Y - b.Y) < eps && MathF.Abs(a.Z - b.Z) < eps &&
+        MathF.Abs(a.W - b.W) < eps;
 
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]

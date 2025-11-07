@@ -48,7 +48,7 @@ public sealed class GfxShaders
         {
             _drivDebug.ToggleDebug(true);
         }
-        
+
         samplers = _driver.GetSamplersFromProgram(newRef);
         var meta = new ShaderMeta(samplers);
         _store.Replace(shaderId, in meta, newRef, out _);

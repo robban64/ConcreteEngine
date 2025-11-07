@@ -29,5 +29,5 @@ public enum EditorAssetSelection
     Shader,
     Texture,
     Model,
-    Material,
+    Material
 }

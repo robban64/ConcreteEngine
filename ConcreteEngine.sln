@@ -2,7 +2,7 @@
 Microsoft Visual Studio Solution File, Format Version 12.00
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ConcreteEngine.Graphics", "ConcreteEngine.Graphics\ConcreteEngine.Graphics.csproj", "{E5E3A6AB-7924-416B-8ECD-3596748176DD}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ConcreteEngine.Core", "ConcreteEngine.Core\ConcreteEngine.Core.csproj", "{F43FF68D-8170-4802-BE9E-DCBD628C6F08}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ConcreteEngine.Engine", "ConcreteEngine.Engine\ConcreteEngine.Engine.csproj", "{F43FF68D-8170-4802-BE9E-DCBD628C6F08}"
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ConcreteEngine.Common", "ConcreteEngine.Common\ConcreteEngine.Common.csproj", "{44B37750-4689-4EAB-BBBD-2EDE1A0C0F39}"
 EndProject

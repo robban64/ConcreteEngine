@@ -1,6 +1,5 @@
 #region
 
-using System.Numerics;
 using System.Runtime.CompilerServices;
 
 #endregion
@@ -15,7 +14,7 @@ public static class FloatMath
     public const float EpsilonRad = Deg2Rad * 0.01f;
     public const float SingularEpsilon = 1e-6f;
     public const float DefaultEpsilon = 1e-5f;
-    
+
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static float Clamp01(float v) => MathF.Max(-1f, MathF.Min(1f, v));
 

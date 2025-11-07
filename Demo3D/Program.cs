@@ -1,7 +1,7 @@
 ﻿#region
 
-using ConcreteEngine.Core.Configuration;
-using ConcreteEngine.Core.Platform;
+using ConcreteEngine.Engine.Configuration;
+using ConcreteEngine.Engine.Platform;
 using ConcreteEngine.Graphics.Gfx.Definitions;
 using Demo3D;
 using Silk.NET.Windowing;

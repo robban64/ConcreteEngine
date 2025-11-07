@@ -1,8 +1,12 @@
+#region
+
 using ConcreteEngine.Common.Diagnostics;
 using ConcreteEngine.Editor.Data;
 using ConcreteEngine.Editor.Definitions;
 using ConcreteEngine.Editor.Gui;
 using ConcreteEngine.Editor.Utils;
+
+#endregion
 
 namespace ConcreteEngine.Editor;
 

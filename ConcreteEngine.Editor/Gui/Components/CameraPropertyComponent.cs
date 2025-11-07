@@ -1,11 +1,13 @@
+#region
+
 using System.Numerics;
-using ConcreteEngine.Common.Diagnostics;
 using ConcreteEngine.Common.Numerics;
-using ConcreteEngine.Common.Numerics.Maths;
 using ConcreteEngine.Editor.Data;
 using ConcreteEngine.Editor.Definitions;
 using ConcreteEngine.Editor.Utils;
 using ImGuiNET;
+
+#endregion
 
 namespace ConcreteEngine.Editor.Gui;
 
@@ -49,7 +51,6 @@ internal static class CameraPropertyComponent
         ref var transform = ref _cameraModel.Transform;
         transform.Scale = TransformState.Scale;
         StateCtx.ExecuteSetCameraTransform(in _cameraModel.Model);
-
     }
 
     private static void OnUpdateRotation()
@@ -58,7 +59,7 @@ internal static class CameraPropertyComponent
         transform.Orientation = YawPitch.FromVector2(TransformState.Orientation);
         StateCtx.ExecuteSetCameraTransform(in _cameraModel.Model);
     }
-    
+
     private static void OnUpdateProjection()
     {
         _cameraModel.Projection = ProjectionState.ToModel();
@@ -68,8 +69,8 @@ internal static class CameraPropertyComponent
 
     public static void Draw()
     {
-        var size = new Vector2(GuiTheme.RightSidebarWidth - WindowPaddingX , 0);
-        if (ImGui.BeginChild("##camera-properties", size, ImGuiChildFlags.AutoResizeY ))
+        var size = new Vector2(GuiTheme.RightSidebarWidth - WindowPaddingX, 0);
+        if (ImGui.BeginChild("##camera-properties", size, ImGuiChildFlags.AutoResizeY))
         {
             DrawInner();
             ImGui.EndChild();
@@ -110,7 +111,7 @@ internal static class CameraPropertyComponent
         ImGui.SameLine();
         ImGui.TextUnformatted(formatter.Format(viewport.Height));
         ImGui.EndGroup();
-        
+
         // Row 
         ImGui.BeginGroup();
         ImGui.TextUnformatted("Aspect Ratio:");
@@ -120,7 +121,7 @@ internal static class CameraPropertyComponent
 
         //
         ImGui.Separator();
-        
+
         // Row 
         ImGui.BeginGroup();
         ImGui.TextUnformatted("Near: ");
@@ -133,18 +134,20 @@ internal static class CameraPropertyComponent
         {
             OnUpdateProjection();
         }
+
         ImGui.EndGroup();
 
         ImGui.Separator();
-        
+
         ImGui.BeginGroup();
-        
+
         ImGui.TextUnformatted("Field of view");
         if (ImGui.SliderFloat("##camera-fov", ref ProjectionState.Fov, StateLimits.MinFov, StateLimits.MaxFov,
                 "%.2f"))
         {
             OnUpdateProjection();
         }
+
         ImGui.EndGroup();
 
 

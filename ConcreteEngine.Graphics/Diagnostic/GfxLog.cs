@@ -1,8 +1,6 @@
 #region
 
-using System.Diagnostics;
 using System.Runtime.CompilerServices;
-using ConcreteEngine.Common;
 using ConcreteEngine.Common.Diagnostics;
 
 #endregion
@@ -80,11 +78,12 @@ public static class GfxLog
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     internal static void LogGfxStore<TId>(TId id, GfxHandle h, LogTopic topic, LogAction action, ushort flags = 0)
-        where TId : unmanaged, IResourceId => Event(LogGfx(id.Value, h.Slot, h.Gen, flags, h.IsValid, topic, action));
+        where TId : unmanaged, IResourceId =>
+        Event(LogGfx(id.Value, h.Slot, h.Gen, flags, h.IsValid, topic, action));
 
     //
-    private static LogEvent LogBk(uint handle, int slot, ushort flags, bool alive, LogTopic topic, LogAction action)
-        => new(handle, slot, alive ? 1 : 0, Flags: flags, Scope: LogScope.Backend, Topic: topic, Action: action);
+    private static LogEvent LogBk(uint handle, int slot, ushort flags, bool alive, LogTopic topic, LogAction action) =>
+        new(handle, slot, alive ? 1 : 0, Flags: flags, Scope: LogScope.Backend, Topic: topic, Action: action);
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     internal static void LogBkStore<THandle>(BkHandle<THandle> handle, int slot, LogTopic topic, LogAction action,
@@ -111,5 +110,4 @@ public static class GfxLog
 
         return false;
     }
-
 }

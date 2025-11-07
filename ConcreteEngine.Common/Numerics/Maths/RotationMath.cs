@@ -1,6 +1,10 @@
+#region
+
 using System.Numerics;
 using System.Runtime.CompilerServices;
 using static ConcreteEngine.Common.Numerics.Maths.FloatMath;
+
+#endregion
 
 namespace ConcreteEngine.Common.Numerics.Maths;
 
@@ -14,15 +18,15 @@ public static class RotationMath
         float pitchRad = (float)Math.Asin(Clamp01(forward.Y));
         float yawRad = (float)Math.Atan2(forward.X, forward.Z);
 
-        float yawDeg = yawRad * FloatMath.Rad2Deg;
-        float pitchDeg = pitchRad * FloatMath.Rad2Deg;
+        float yawDeg = yawRad * Rad2Deg;
+        float pitchDeg = pitchRad * Rad2Deg;
 
         if (pitchDeg > pitchLimit) pitchDeg = pitchLimit;
         else if (pitchDeg < -pitchLimit) pitchDeg = -pitchLimit;
 
         return new YawPitch(yawDeg, pitchDeg);
     }
-    
+
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static void YawPitchToQuaternion(YawPitch orientation, out Quaternion quaternion)
     {
@@ -34,7 +38,7 @@ public static class RotationMath
 
         quaternion = Quaternion.Normalize(Quaternion.Multiply(qy, qx));
     }
-    
+
     public static Quaternion EulerDegreesToQuaternion(in Vector3 eulerDegrees)
     {
         var rx = eulerDegrees.X * Deg2Rad; // pitch

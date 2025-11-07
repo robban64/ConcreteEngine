@@ -1,8 +1,11 @@
+#region
+
 using System.Numerics;
-using ConcreteEngine.Editor.Data;
 using ConcreteEngine.Editor.Definitions;
 using ConcreteEngine.Editor.Utils;
 using ImGuiNET;
+
+#endregion
 
 namespace ConcreteEngine.Editor.Gui;
 
@@ -34,12 +37,12 @@ internal static class Topbar
             ImGui.PushStyleColor(ImGuiCol.Header, GuiTheme.PrimaryColor);
 
             // left
-           DrawModeSelector();
-           
+            DrawModeSelector();
+
             // right
-            if(StateCtx.ViewState.IsEditorState)
+            if (StateCtx.ViewState.IsEditorState)
                 DrawPropertySelector();
-            
+
             ImGui.PopStyleColor(3);
             ImGui.PopStyleVar(1);
         }
@@ -63,13 +66,14 @@ internal static class Topbar
                 StateCtx.SetViewModeState(viewMode);
             }
         }
+
         ImGui.EndChild();
     }
 
     private static void DrawPropertySelector()
     {
         float x = ImGui.GetContentRegionAvail().X;
-        float startPosX = x - (74/2f) - (GuiTheme.TopbarHeight * 5);
+        float startPosX = x - 74 / 2f - GuiTheme.TopbarHeight * 5;
         ImGui.SameLine(startPosX);
 
         if (!ImGui.BeginChild("##editor-property-selector")) return;
@@ -78,7 +82,7 @@ internal static class Topbar
             if (i > 0) ImGui.SameLine();
             var selectorMode = PropertyIndexToEnum(i);
             var selected = selectorMode == StateCtx.ViewState.RightSidebar;
-            
+
             if (ImGui.Selectable(PropertyModes[i], selected, ImGuiSelectableFlags.None,
                     new Vector2(GuiTheme.TopbarHeight, GuiTheme.TopbarHeight)))
             {
@@ -88,7 +92,7 @@ internal static class Topbar
 
         ImGui.EndChild();
     }
-    
+
     private static EditorViewMode ViewModeIndexToEnum(int index)
     {
         return index switch
@@ -98,7 +102,7 @@ internal static class Topbar
             _ => throw new ArgumentOutOfRangeException(nameof(index), index, null)
         };
     }
-    
+
     private static RightSidebarMode PropertyIndexToEnum(int index)
     {
         return index switch

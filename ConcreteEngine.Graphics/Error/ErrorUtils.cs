@@ -21,15 +21,16 @@ internal static class ErrorUtils
         return $"{stage} failed: {first}";
     }
 
-    internal static bool IsSafeError(Exception ex, bool catchGfxError = true) => ex switch
-    {
-        GraphicsException => catchGfxError,
-        ArgumentNullException => true,
-        ArgumentOutOfRangeException => true,
-        ArgumentException => true,
-        FormatException => true,
-        InvalidCastException => true,
-        KeyNotFoundException => true,
-        _ => false
-    };
+    internal static bool IsSafeError(Exception ex, bool catchGfxError = true) =>
+        ex switch
+        {
+            GraphicsException => catchGfxError,
+            ArgumentNullException => true,
+            ArgumentOutOfRangeException => true,
+            ArgumentException => true,
+            FormatException => true,
+            InvalidCastException => true,
+            KeyNotFoundException => true,
+            _ => false
+        };
 }

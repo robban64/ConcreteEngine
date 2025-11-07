@@ -1,5 +1,9 @@
+#region
+
 using System.Numerics;
 using System.Runtime.CompilerServices;
+
+#endregion
 
 namespace ConcreteEngine.Common.Numerics;
 
@@ -10,7 +14,7 @@ public readonly record struct BoundingAxisBox(in Vector3 Center, in Vector3 Exte
 
     public Vector3 Min => Center - Extent;
     public Vector3 Max => Center + Extent;
-    
+
     public void DrainCorners(Span<Vector3> corners)
     {
         var min = Min;
@@ -25,10 +29,10 @@ public readonly record struct BoundingAxisBox(in Vector3 Center, in Vector3 Exte
         corners[7] = new Vector3(min.X, min.Y, min.Z);
     }
 
-    public static void FromBoundingBox(in BoundingBox box, out BoundingAxisBox result)
-        => result = new BoundingAxisBox(box.Center, box.Extent);
-    
-    
+    public static void FromBoundingBox(in BoundingBox box, out BoundingAxisBox result) =>
+        result = new BoundingAxisBox(box.Center, box.Extent);
+
+
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static void Merge(in BoundingAxisBox boxA, in BoundingAxisBox boxB, out BoundingAxisBox result)
     {
@@ -36,7 +40,7 @@ public readonly record struct BoundingAxisBox(in Vector3 Center, in Vector3 Exte
         var min = Vector3.Min(boxA.Min, boxB.Min);
         result = new BoundingAxisBox((min + max) / 2.0f, (max - min) / 2.0f);
     }
-    
+
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static void FromPoints(Span<Vector3> points, out BoundingAxisBox result)
     {
@@ -51,6 +55,4 @@ public readonly record struct BoundingAxisBox(in Vector3 Center, in Vector3 Exte
 
         result = new BoundingAxisBox((min + max) * 0.5f, (max - min) * 0.5f);
     }
-
-
 }

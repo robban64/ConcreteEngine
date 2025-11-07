@@ -1,4 +1,8 @@
+#region
+
 using ConcreteEngine.Common.Numerics;
+
+#endregion
 
 namespace ConcreteEngine.Editor.Data;
 
@@ -36,7 +40,7 @@ public sealed class CameraViewModel
     public long Generation { get; set; } = 0;
 
     private CameraEditorPayload _model;
-    
+
     public ref CameraEditorPayload Model => ref _model;
 
     public ref ViewTransformEditorModel Transform => ref _model.ViewTransform;
@@ -48,5 +52,4 @@ public sealed class CameraViewModel
     {
         _model = model;
     }
-    
 }

@@ -191,7 +191,7 @@ public sealed class GfxFrameBuffers
         if (desc.ColorTexture is { } colorTexture)
         {
             if (desc.Size.Width > config.MaxTextureSize || desc.Size.Height > config.MaxTextureSize)
-                throw new GraphicsException( $"Texture Size exceeds {config.MaxTextureSize}");
+                throw new GraphicsException($"Texture Size exceeds {config.MaxTextureSize}");
 
             if (colorTexture.PixelFormat is TexturePixelFormat.Depth or TexturePixelFormat.Unknown)
                 throw new GraphicsException($"Invalid value for ColorTexture {nameof(desc)}");

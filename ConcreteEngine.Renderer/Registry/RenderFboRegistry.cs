@@ -54,8 +54,7 @@ internal sealed class RenderFboRegistry : IRenderFboRegistry
         RegisterTag<ScreenPassTag>();
     }
 
-    internal void RegisterTag<TTag>() where TTag : unmanaged, IRenderPassTag
-        => TagRegistry.RegisterTag<TTag>();
+    internal void RegisterTag<TTag>() where TTag : unmanaged, IRenderPassTag => TagRegistry.RegisterTag<TTag>();
 
     internal void Register<TTag>(FboVariant variant, RegisterFboEntry entry, Size2D outputSize)
         where TTag : unmanaged, IRenderPassTag
@@ -131,23 +130,22 @@ internal sealed class RenderFboRegistry : IRenderFboRegistry
             throw new ArgumentOutOfRangeException(nameof(variant));
 
         ValidateOutputSize(outputSize, typeof(TTag) == typeof(ShadowPassTag));
-        
+
         var key = TagRegistry.FboKey<TTag>(variant);
         var fbo = GetRenderFbo(key);
         if (fbo == null) ThrowNotFound(key);
         InvalidOpThrower.ThrowIfNot(fbo.IsFixedSize, nameof(fbo.IsFixedSize));
         InvalidOpThrower.ThrowIf(fbo.Size == outputSize, nameof(outputSize));
         fbo.ChangeSizePolicy(RenderFboSizePolicy.Fixed(outputSize));
-        
+
         try
         {
             _gfxFbo.RecreateFrameBuffer(fbo.FboId, outputSize);
         }
-        catch (Exception ex) when(ErrorUtils.IsUserOrDataError(ex))
+        catch (Exception ex) when (ErrorUtils.IsUserOrDataError(ex))
         {
             throw new GraphicsException($"Failed to recreate fbo({variant}): {ex.Message}", ex);
         }
-
     }
 
 
@@ -167,11 +165,10 @@ internal sealed class RenderFboRegistry : IRenderFboRegistry
         {
             _gfxFbo.RecreateSizedFrameBuffer(newSizes.Slice(0, idx));
         }
-        catch (Exception ex) when(ErrorUtils.IsUserOrDataError(ex))
+        catch (Exception ex) when (ErrorUtils.IsUserOrDataError(ex))
         {
             throw new GraphicsException($"Failed to recreate screen fbo: {ex.Message}", ex);
         }
-
     }
 
 
@@ -198,11 +195,13 @@ internal sealed class RenderFboRegistry : IRenderFboRegistry
     }
 
 
-    [DoesNotReturn, StackTraceHidden]
+    [DoesNotReturn]
+    [StackTraceHidden]
     private static void ThrowNotFound(FrameBufferId id) =>
         throw new InvalidOperationException($"FrameBuffer with id: {id} not found");
 
-    [DoesNotReturn, StackTraceHidden]
+    [DoesNotReturn]
+    [StackTraceHidden]
     private static void ThrowNotFound(FboTagKey key) =>
         throw new InvalidOperationException($"FrameBuffer with key: {key} not found");
 }

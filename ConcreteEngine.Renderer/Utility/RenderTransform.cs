@@ -61,7 +61,7 @@ internal static class RenderTransform
             minLs = Vector3.Min(minLs, p);
             maxLs = Vector3.Max(maxLs, p);
         }
-        
+
         // texel snapping
         var size = maxLs - minLs;
         float ext = MathF.Max(size.X, size.Y);

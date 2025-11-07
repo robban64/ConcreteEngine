@@ -1,9 +1,11 @@
+#region
+
 using System.Numerics;
 using ConcreteEngine.Common.Numerics;
-using ConcreteEngine.Common.Numerics.Maths;
+
+#endregion
 
 namespace ConcreteEngine.Editor.Data;
-
 
 public struct TransformEditorModel(in Vector3 translation, in Vector3 scale, in Quaternion rotation)
 {
@@ -12,7 +14,6 @@ public struct TransformEditorModel(in Vector3 translation, in Vector3 scale, in 
     public Vector3 EulerAngles;
     public Quaternion Rotation = rotation;
 }
-
 
 public struct ViewTransformEditorModel(in Vector3 translation, in Vector3 scale, in YawPitch orientation)
 {
@@ -35,8 +36,3 @@ public struct ProjectionEditorModel(float aspectRatio, float fov, float near, fl
     public float Near = near;
     public float Far = far;
 }
-
-
-
-
-

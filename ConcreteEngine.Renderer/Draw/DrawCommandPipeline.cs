@@ -35,7 +35,10 @@ internal sealed class DrawCommandPipeline
         var drawCtx = new DrawStateContext(ctx.Registry, stateContext.FsqMesh);
         var drawCtxPayload = new DrawStateContextPayload
         {
-            Gfx = ctx.Gfx, Registry = ctx.Registry, RenderView = _stateContext.View, Snapshot = _stateContext.Snapshot
+            Gfx = ctx.Gfx,
+            Registry = ctx.Registry,
+            RenderView = _stateContext.View,
+            Snapshot = _stateContext.Snapshot
         };
 
         //

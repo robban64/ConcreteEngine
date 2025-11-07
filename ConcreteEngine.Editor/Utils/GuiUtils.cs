@@ -10,7 +10,6 @@ namespace ConcreteEngine.Editor.Utils;
 
 internal static class GuiUtils
 {
-    
     public static void DrawSectionHeader(string title)
     {
         ImGui.PushStyleColor(ImGuiCol.Text, Color4.LightGray.AsVec4());
@@ -41,7 +40,7 @@ internal static class GuiUtils
         ImGui.SetCursorPosY(ImGui.GetCursorPosY() + yOffset);
         ImGui.TextUnformatted(text);
     }
-    
+
     public static void CenterAlignTextHorizontal(ReadOnlySpan<char> text)
     {
         var columnWidth = ImGui.GetColumnWidth();
@@ -51,20 +50,19 @@ internal static class GuiUtils
         ImGui.SetCursorPosX(ImGui.GetCursorPosX() + offset);
         ImGui.TextUnformatted(text);
     }
-    
+
     public static void CenterAlignText(ReadOnlySpan<char> text, float rowHeight)
     {
         var fontSize = ImGui.GetFontSize();
         var yOffset = (rowHeight - fontSize) * 0.5f;
         ImGui.SetCursorPosY(ImGui.GetCursorPosY() + yOffset);
-        
+
         var columnWidth = ImGui.GetColumnWidth();
         var textWidth = ImGui.CalcTextSize(text).X;
         var offset = (columnWidth - textWidth) * 0.5f;
         ImGui.SetCursorPosX(ImGui.GetCursorPosX() + offset);
 
         ImGui.TextUnformatted(text);
-
     }
 
     public static void RightAlignCellText(string? text)

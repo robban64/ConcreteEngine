@@ -2,16 +2,16 @@
 
 using System.Numerics;
 using ConcreteEngine.Common.Numerics;
-using ConcreteEngine.Core.Assets;
-using ConcreteEngine.Core.Assets.Materials;
-using ConcreteEngine.Core.Assets.Meshes;
-using ConcreteEngine.Core.Assets.Textures;
-using ConcreteEngine.Core.Configuration;
-using ConcreteEngine.Core.Scene;
-using ConcreteEngine.Core.Scene.Modules;
-using ConcreteEngine.Core.Worlds.Entities;
-using ConcreteEngine.Core.Worlds.Render;
-using ConcreteEngine.Core.Worlds.Utility;
+using ConcreteEngine.Engine.Assets;
+using ConcreteEngine.Engine.Assets.Materials;
+using ConcreteEngine.Engine.Assets.Meshes;
+using ConcreteEngine.Engine.Assets.Textures;
+using ConcreteEngine.Engine.Configuration;
+using ConcreteEngine.Engine.Scene;
+using ConcreteEngine.Engine.Scene.Modules;
+using ConcreteEngine.Engine.Worlds.Entities;
+using ConcreteEngine.Engine.Worlds.Render;
+using ConcreteEngine.Engine.Worlds.Utility;
 using ConcreteEngine.Graphics.Gfx.Contracts;
 using ConcreteEngine.Graphics.Gfx.Definitions;
 using ConcreteEngine.Renderer.Descriptors;

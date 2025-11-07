@@ -98,11 +98,11 @@ internal sealed class DrawBuffers
         _gfxBuffers.BindUniformBufferRange(_drawUbo.Id, cursor, _drawUbo.Stride);
     }
 
-    public void UploadMaterialRecord(MaterialId materialId, in MaterialUniformRecord data)
-        => _gfxBuffers.UploadUniformGpuData(_materialUbo.Id, in data, 0);
+    public void UploadMaterialRecord(MaterialId materialId, in MaterialUniformRecord data) =>
+        _gfxBuffers.UploadUniformGpuData(_materialUbo.Id, in data, 0);
 
-    public void UploadMaterial(ReadOnlySpan<MaterialUniformRecord> data)
-        => _gfxBuffers.UploadUniformGpuSpan(_materialUbo.Id, data, _materialUbo.SetUploadCursor(0));
+    public void UploadMaterial(ReadOnlySpan<MaterialUniformRecord> data) =>
+        _gfxBuffers.UploadUniformGpuSpan(_materialUbo.Id, data, _materialUbo.SetUploadCursor(0));
 
     public void UploadDrawObjects(ReadOnlySpan<DrawObjectUniform> data) =>
         _gfxBuffers.UploadUniformGpuSpan(_drawUbo.Id, data, _drawUbo.SetUploadCursor(0));

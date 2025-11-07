@@ -1,5 +1,9 @@
+#region
+
 using ConcreteEngine.Common.Diagnostics;
 using ConcreteEngine.Editor.Metrics;
+
+#endregion
 
 namespace ConcreteEngine.Editor;
 
@@ -33,21 +37,21 @@ public static class MetricsApi
 
     public static void RefreshSceneMetrics()
     {
-        if(!ActiveSceneMetrics) return;
+        if (!ActiveSceneMetrics) return;
         Data.SceneMetrics = PullSceneMetrics?.Invoke() ?? default;
         TextData.UpdateSceneMetrics(in Data.SceneMetrics);
     }
 
     public static void RefreshFrameMetrics()
     {
-        if(!ActiveFrameMetrics) return;
+        if (!ActiveFrameMetrics) return;
         Data.FrameMetrics = PullFrameMetrics?.Invoke() ?? default;
         TextData.UpdateFrameMetrics(in Data.FrameMetrics);
     }
 
     public static void RefreshAssetMetrics()
     {
-        if(!ActiveStoreMetrics) return;
+        if (!ActiveStoreMetrics) return;
         Data.MaterialMetrics = PullMaterialMetrics?.Invoke() ?? default;
         TextData.UpdateMaterialMetrics(in Data.MaterialMetrics);
 
@@ -57,16 +61,15 @@ public static class MetricsApi
 
     public static void RefreshGfxResourceMetrics()
     {
-        if(!ActiveStoreMetrics) return;
+        if (!ActiveStoreMetrics) return;
         FillGfxStoreMetrics?.Invoke(Data);
         TextData.UpdateGfxStoreMetrics(Data.GfxStoreMetrics);
     }
 
     public static void RefreshMemoryMetrics()
     {
-        if(!ActiveMemoryMetrics) return;
+        if (!ActiveMemoryMetrics) return;
         Data.MemoryMetrics = PullMemoryMetrics?.Invoke() ?? default;
         TextData.UpdateMemoryMetrics(Data.MemoryMetrics);
     }
-
 }

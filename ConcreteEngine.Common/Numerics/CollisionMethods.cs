@@ -1,11 +1,14 @@
+#region
+
 using System.Numerics;
 using System.Runtime.CompilerServices;
+
+#endregion
 
 namespace ConcreteEngine.Common.Numerics;
 
 internal sealed class CollisionMethods
 {
-    
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static bool IntersectsBox(in BoundingBox box1, in BoundingBox box2)
     {
@@ -14,7 +17,7 @@ internal sealed class CollisionMethods
         if (box1.Min.Z > box2.Max.Z || box2.Min.Z > box1.Max.Z) return false;
         return true;
     }
-    
+
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static bool BoxInFrontOfPlane(in BoundingBox box, in Plane plane)
     {
@@ -24,7 +27,7 @@ internal sealed class CollisionMethods
                + box.Extent.Z * MathF.Abs(plane.Normal.Z)
                <= -plane.D;
     }
-    
+
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static Vector3 IntersectPlanes(in Plane p1, in Plane p2, in Plane p3)
     {
@@ -39,5 +42,4 @@ internal sealed class CollisionMethods
         var denom = Vector3.Dot(n1, n2xn3);
         return -(p1.D * n2xn3 + p2.D * n3xn1 + p3.D * n1xn2) / denom;
     }
-    
 }

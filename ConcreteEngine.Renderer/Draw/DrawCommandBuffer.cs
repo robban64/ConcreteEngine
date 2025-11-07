@@ -217,7 +217,9 @@ public sealed class DrawCommandBuffer
     }
 
 
-    [MethodImpl(MethodImplOptions.NoInlining), DoesNotReturn, StackTraceHidden]
+    [MethodImpl(MethodImplOptions.NoInlining)]
+    [DoesNotReturn]
+    [StackTraceHidden]
     private static void ThrowMaxCapacityExceeded() =>
         throw new OutOfMemoryException("Command Buffer exceeded max limit");
 }

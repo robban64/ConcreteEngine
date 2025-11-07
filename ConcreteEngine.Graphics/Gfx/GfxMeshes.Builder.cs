@@ -67,9 +67,9 @@ internal sealed class GfxMeshBuilder : IGfxMeshBuilder
         BufferStorage storage, BufferAccess access) where T : unmanaged
     {
         EnsureStarted();
-        if(_vboIdx >= GfxLimits.MaxVboBindings) 
+        if (_vboIdx >= GfxLimits.MaxVboBindings)
             throw GraphicsException.LimitExceeded(nameof(GfxLimits.MaxVboBindings), GfxLimits.MaxVboBindings);
-        
+
         var vboId = _gfxBuffers.CreateVertexBuffer(data, 0, 0, storage, access);
 
         _state.VboIds[_vboIdx] = vboId;
@@ -108,7 +108,7 @@ internal sealed class GfxMeshBuilder : IGfxMeshBuilder
         EnsureStarted();
         InvalidOpThrower.ThrowIfNullOrEmptyCollection(attributes, nameof(attributes));
         InvalidOpThrower.ThrowIfNot(_state.AttribCount == 0, nameof(attributes));
-        if(attributes.Count >= GfxLimits.MaxVertexAttribs) 
+        if (attributes.Count >= GfxLimits.MaxVertexAttribs)
             throw GraphicsException.LimitExceeded(nameof(GfxLimits.MaxVertexAttribs), GfxLimits.MaxVertexAttribs);
 
         _state.Attributes = attributes.ToArray();
@@ -121,7 +121,7 @@ internal sealed class GfxMeshBuilder : IGfxMeshBuilder
         EnsureStarted();
         ArgumentOutOfRangeException.ThrowIfEqual(attributes.Length, 0, nameof(attributes));
         InvalidOpThrower.ThrowIfNot(_state.AttribCount == 0, nameof(attributes));
-        if(attributes.Length >= GfxLimits.MaxVertexAttribs) 
+        if (attributes.Length >= GfxLimits.MaxVertexAttribs)
             throw GraphicsException.LimitExceeded(nameof(GfxLimits.MaxVertexAttribs), GfxLimits.MaxVertexAttribs);
 
         _state.Attributes = attributes.ToArray();
@@ -132,7 +132,7 @@ internal sealed class GfxMeshBuilder : IGfxMeshBuilder
     public void AddAttribute(in VertexAttribute attribute)
     {
         EnsureStarted();
-        if(_state.AttribCount + 1 >= GfxLimits.MaxVertexAttribs) 
+        if (_state.AttribCount + 1 >= GfxLimits.MaxVertexAttribs)
             throw GraphicsException.LimitExceeded(nameof(GfxLimits.MaxVertexAttribs), GfxLimits.MaxVertexAttribs);
 
         if (_state.Attributes.Length == 0 && _state.AttribCount == 0)

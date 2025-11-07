@@ -1,6 +1,5 @@
 namespace ConcreteEngine.Shared.RenderData;
 
-
 public readonly record struct ShadowParams(
     int ShadowMapSize,
     float Distance,

@@ -11,8 +11,7 @@ public readonly record struct MetricHeader(ushort Flags = 0, byte Kind = 0, byte
 {
     public static MetricHeader FromKind(byte kind) => new(Kind: kind);
 
-    public static MetricHeader FromKind<T>(T kind) where T : unmanaged, Enum
-        => new(Kind: Unsafe.As<T, byte>(ref kind));
+    public static MetricHeader FromKind<T>(T kind) where T : unmanaged, Enum => new(Kind: Unsafe.As<T, byte>(ref kind));
 
     public static MetricHeader FromFlags(ushort flags) => new(Flags: flags);
 }

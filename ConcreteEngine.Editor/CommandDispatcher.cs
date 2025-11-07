@@ -14,7 +14,6 @@ public static class CoreCmdNames
     public const string WorldShadow = "world-shadow";
     public const string EntityTransform = "entity-transform";
     public const string CameraTransform = "camera-transform";
-
 }
 
 public static class CommandDispatcher

@@ -1,8 +1,12 @@
+#region
+
 using System.Numerics;
 using ConcreteEngine.Common.Numerics.Maths;
 using ConcreteEngine.Editor.Data;
 using ConcreteEngine.Editor.Utils;
 using ImGuiNET;
+
+#endregion
 
 namespace ConcreteEngine.Editor.Gui;
 
@@ -13,7 +17,6 @@ internal static class EntitiesComponent
         public int ModelId;
         public int MaterialTagKey;
         public TransformDataState Transform;
-        
     }
 
     private const int RowHeight = 32;
@@ -22,7 +25,7 @@ internal static class EntitiesComponent
     private static EntityListViewModel ViewModel => StateCtx.EntityListViewModel;
 
     private static EntityDataState _entityState = default;
-    private static ref TransformDataState TransformState =>  ref _entityState.Transform;
+    private static ref TransformDataState TransformState => ref _entityState.Transform;
 
 
     private static void UpdateStateFrom(EntityViewModel? entity)
@@ -32,7 +35,7 @@ internal static class EntitiesComponent
             _entityState = default;
             return;
         }
-        
+
         _entityState.ModelId = entity.Model.ModelId;
         _entityState.MaterialTagKey = entity.Model.MaterialTagKey;
 

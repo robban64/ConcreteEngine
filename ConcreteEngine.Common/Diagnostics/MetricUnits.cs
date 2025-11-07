@@ -7,5 +7,4 @@ public sealed class MetricUnits
     public const float Centimeter = 0.01f;
     public const float Decimeter = 0.1f;
     public const float Meter = 1.0f;
-
 }

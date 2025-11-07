@@ -1,11 +1,10 @@
 #region
 
 using System.Numerics;
-using ConcreteEngine.Common.Numerics.Maths;
-using ConcreteEngine.Core.Assets.Meshes;
-using ConcreteEngine.Core.Worlds;
-using ConcreteEngine.Core.Worlds.Data;
-using ConcreteEngine.Core.Worlds.Entities;
+using ConcreteEngine.Engine.Assets.Meshes;
+using ConcreteEngine.Engine.Worlds;
+using ConcreteEngine.Engine.Worlds.Data;
+using ConcreteEngine.Engine.Worlds.Entities;
 
 #endregion
 
@@ -74,7 +73,7 @@ public sealed class EntitySpawner(IWorld world, float size = 256f, float margin 
 
         var center = new Vector2(size * 0.5f, size * 0.5f);
         float min = margin, max = size - margin;
-        float maxRadius = (MathF.Min(center.X, center.Y) - margin);
+        float maxRadius = MathF.Min(center.X, center.Y) - margin;
         float tighten = 0.2f + 0.7f * intensity;
 
         for (int i = 0; i < amount; i++)
@@ -136,7 +135,7 @@ public sealed class EntitySpawner(IWorld world, float size = 256f, float margin 
         return (x, z);
     }
 
-    private static float Clamp01(float v) => v < 0f ? 0f : (v > 1f ? 1f : v);
+    private static float Clamp01(float v) => v < 0f ? 0f : v > 1f ? 1f : v;
 
     private static Quaternion Yaw(float radians) => Quaternion.CreateFromAxisAngle(Vector3.UnitY, radians);
 }

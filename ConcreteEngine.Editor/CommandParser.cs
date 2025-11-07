@@ -1,5 +1,9 @@
+#region
+
 using System.Globalization;
 using ConcreteEngine.Editor.Data;
+
+#endregion
 
 namespace ConcreteEngine.Editor;
 
@@ -9,8 +13,8 @@ public static class CommandParser
     {
         ArgumentException.ThrowIfNullOrWhiteSpace(action, nameof(action));
         ArgumentException.ThrowIfNullOrWhiteSpace(arg1, nameof(arg1));
-        
-        if(action != "set") throw new ArgumentException("Unknown action", nameof(action));
+
+        if (action != "set") throw new ArgumentException("Unknown action", nameof(action));
 
         var size = ParseUtils.IntArg(arg1);
         size = ParseUtils.GetShadowSize(size);

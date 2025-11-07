@@ -1,4 +1,8 @@
+#region
+
 using ConcreteEngine.Common.Numerics;
+
+#endregion
 
 namespace ConcreteEngine.Editor.Data;
 
@@ -7,7 +11,7 @@ public enum EditorRequestAction
     Reload,
     Set,
     Create,
-    Delete,
+    Delete
 }
 
 public readonly record struct EditorShadowPayload(int Size, bool Enabled, EditorRequestAction RequestAction);

@@ -1,6 +1,10 @@
+#region
+
 using ConcreteEngine.Editor.Metrics;
 using ImGuiNET;
 using static ConcreteEngine.Editor.Utils.GuiUtils;
+
+#endregion
 
 namespace ConcreteEngine.Editor.Gui.Metrics;
 

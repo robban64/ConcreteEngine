@@ -19,8 +19,8 @@ public readonly ref struct NumberSpanFormatter(Span<char> buffer)
 
         return _buffer.Slice(0, charsWritten);
     }
-    
-    
+
+
     public ReadOnlySpan<char> Format(long value)
     {
         if (!value.TryFormat(_buffer, out int charsWritten))
@@ -28,5 +28,4 @@ public readonly ref struct NumberSpanFormatter(Span<char> buffer)
 
         return _buffer.Slice(0, charsWritten);
     }
-
 }

@@ -9,7 +9,8 @@ namespace ConcreteEngine.Common.Numerics;
 [DataContract]
 public readonly record struct Size3D(
     [property: DataMember(Name = "width")] int Width,
-    [property: DataMember(Name = "height")] int Height,
+    [property: DataMember(Name = "height")]
+    int Height,
     [property: DataMember(Name = "depth")] int Depth
 )
 {

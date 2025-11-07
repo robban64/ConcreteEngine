@@ -29,8 +29,8 @@ public readonly struct DrawTransformPayload
     public DrawTransformPayload(in Matrix4x4 transform) => Transform = transform;
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public static void Fill(in Matrix4x4 model, out DrawTransformPayload dst)
-        => dst = new DrawTransformPayload(in model);
+    public static void Fill(in Matrix4x4 model, out DrawTransformPayload dst) =>
+        dst = new DrawTransformPayload(in model);
 }
 
 [StructLayout(LayoutKind.Sequential)]

@@ -61,7 +61,7 @@ public sealed class RenderEngine
             CommandPipeline = _drawPipeline,
             Gfx = graphics.Gfx,
             Registry = _renderRegistry,
-            PassPipeline = _passPipeline,
+            PassPipeline = _passPipeline
         };
     }
 

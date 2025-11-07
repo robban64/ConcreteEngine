@@ -17,7 +17,6 @@ public readonly struct ViewTransformData(
     public readonly Matrix4x4 ProjectionViewMatrix = projectionViewMatrix;
 }
 
-
 public readonly struct ProjectionInfo(float aspectRatio, float fov, float near, float far)
 {
     public float AspectRatio { get; init; } = aspectRatio;

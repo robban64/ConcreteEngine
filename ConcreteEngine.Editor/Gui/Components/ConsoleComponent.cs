@@ -59,7 +59,6 @@ internal static class ConsoleComponent
         {
             DrawInner();
             ImGui.End();
-
         }
 
         ImGui.PopStyleVar(4);

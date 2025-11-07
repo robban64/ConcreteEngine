@@ -361,27 +361,19 @@ public sealed class GfxCommands
 
 
     // Dont use for now.
-    public void SetUniform(int uniform, int value) =>
-        _shaders.SetUniform(_boundUniforms![uniform], value);
+    public void SetUniform(int uniform, int value) => _shaders.SetUniform(_boundUniforms![uniform], value);
 
-    public void SetUniform(int uniform, uint value) =>
-        _shaders.SetUniform(_boundUniforms![uniform], value);
+    public void SetUniform(int uniform, uint value) => _shaders.SetUniform(_boundUniforms![uniform], value);
 
-    public void SetUniform(int uniform, float value) =>
-        _shaders.SetUniform(_boundUniforms![uniform], value);
+    public void SetUniform(int uniform, float value) => _shaders.SetUniform(_boundUniforms![uniform], value);
 
-    public void SetUniform(int uniform, Vector2 value) =>
-        _shaders.SetUniform(_boundUniforms![uniform], value);
+    public void SetUniform(int uniform, Vector2 value) => _shaders.SetUniform(_boundUniforms![uniform], value);
 
-    public void SetUniform(int uniform, Vector3 value) =>
-        _shaders.SetUniform(_boundUniforms![uniform], value);
+    public void SetUniform(int uniform, Vector3 value) => _shaders.SetUniform(_boundUniforms![uniform], value);
 
-    public void SetUniform(int uniform, Vector4 value) =>
-        _shaders.SetUniform(_boundUniforms![uniform], value);
+    public void SetUniform(int uniform, Vector4 value) => _shaders.SetUniform(_boundUniforms![uniform], value);
 
-    public void SetUniform(int uniform, in Matrix4x4 value) =>
-        _shaders.SetUniform(_boundUniforms![uniform], in value);
+    public void SetUniform(int uniform, in Matrix4x4 value) => _shaders.SetUniform(_boundUniforms![uniform], in value);
 
-    public void SetUniform(int uniform, in Matrix3 value) =>
-        _shaders.SetUniform(_boundUniforms![uniform], in value);
+    public void SetUniform(int uniform, in Matrix3 value) => _shaders.SetUniform(_boundUniforms![uniform], in value);
 }

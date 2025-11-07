@@ -16,6 +16,7 @@ public readonly record struct LogEvent(
 
     public static implicit operator uint(LogEvent log) => log.Id;
 }
+
 public readonly record struct LogFilterWildcard(byte Topic, byte Scope, byte Action, byte Level)
 {
     public LogFilterWildcard(LogTopic Topic, LogScope Scope, LogAction Action, LogLevel Level)
@@ -40,7 +41,7 @@ public readonly record struct LogFilterWildcard
         Mask = mask;
 
     }
-    
+
     public static bool ShouldIgnore(in LogEvent log, LogFilterWildcard[] filter)
     {
         var packed = Pack((byte)log.Topic, (byte)log.Scope, (byte)log.Action, (byte)log.Level);
@@ -50,7 +51,7 @@ public readonly record struct LogFilterWildcard
         }
         return false;
     }
-    
+
     static uint Pack(byte topic, byte scope, byte action, byte level) =>
         (uint)topic | ((uint)scope << 8) | ((uint)action << 16) | ((uint)level << 24);
 

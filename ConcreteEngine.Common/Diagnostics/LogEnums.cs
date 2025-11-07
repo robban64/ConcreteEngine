@@ -1,6 +1,5 @@
 namespace ConcreteEngine.Common.Diagnostics;
 
-
 [Flags]
 public enum LogFilter : ushort
 {
@@ -39,7 +38,7 @@ public enum LogTopic : byte
     Pass = 13,
     CommandList = 14,
     Pipeline = 15,
-    Core = 16,
+    Core = 16
 }
 
 public enum LogScope : byte
@@ -50,7 +49,7 @@ public enum LogScope : byte
     World = 3,
     Renderer = 4,
     Gfx = 5,
-    Backend = 6,
+    Backend = 6
 }
 
 public enum LogAction : byte
@@ -78,5 +77,5 @@ public enum LogAction : byte
     Evict = 20,
     Execute = 21,
     EnqRemove = 22,
-    EnqReplace = 23,
+    EnqReplace = 23
 }

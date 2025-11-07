@@ -9,7 +9,7 @@
 
     <ItemGroup>
       <ProjectReference Include="..\ConcreteEngine.Common\ConcreteEngine.Common.csproj" />
-      <ProjectReference Include="..\ConcreteEngine.Core\ConcreteEngine.Core.csproj" />
+      <ProjectReference Include="..\ConcreteEngine.Engine\ConcreteEngine.Engine.csproj" />
     </ItemGroup>
 
     <ItemGroup>

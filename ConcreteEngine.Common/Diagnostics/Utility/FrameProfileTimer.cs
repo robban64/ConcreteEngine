@@ -35,7 +35,7 @@ public sealed class FrameProfileTimer
 
         if (_frameCounter >= _sampleFrames)
         {
-            meanMs = (_totalTicks / (double)_samples) * 1000.0 / Stopwatch.Frequency;
+            meanMs = _totalTicks / (double)_samples * 1000.0 / Stopwatch.Frequency;
 
             _lastAvgMs = meanMs;
 
@@ -55,7 +55,7 @@ public sealed class FrameProfileTimer
         get
         {
             if (_lastAvgMs <= 0) return "Waiting for data...";
-            var pct = (_lastAvgMs / TargetFrameMs) * 100.0;
+            var pct = _lastAvgMs / TargetFrameMs * 100.0;
             return $"{_lastAvgMs:F3} ms (~{pct:F2}% frame)";
         }
     }

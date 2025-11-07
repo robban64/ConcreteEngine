@@ -23,7 +23,6 @@ public sealed class DebugToolsSystem : IDisposable
         ImGuiFontConfig fontConfDefault = new(fontPath, 14);
 
         _controller = new ImGuiController(gl, window, inputCtx, fontConfDefault);
-
     }
 
 
@@ -61,4 +60,3 @@ public sealed class DebugToolsSystem : IDisposable
         _imFontPtr.Destroy();
     }
 }
-        

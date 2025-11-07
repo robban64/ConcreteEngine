@@ -1,9 +1,13 @@
+#region
+
 using System.Numerics;
 using ConcreteEngine.Editor.Data;
 using ConcreteEngine.Editor.Definitions;
 using ConcreteEngine.Editor.Utils;
 using ImGuiNET;
 using static ConcreteEngine.Editor.Utils.GuiUtils;
+
+#endregion
 
 namespace ConcreteEngine.Editor.Gui;
 
@@ -115,7 +119,7 @@ internal static class AssetsComponent
 
             for (int i = 0; i < AssetTypeArray.Length; i++)
             {
-                bool isSelected = (i == (int)ViewModel.TypeSelection);
+                bool isSelected = i == (int)ViewModel.TypeSelection;
 
                 if (ImGui.Selectable(AssetTypeArray[i], isSelected, ImGuiSelectableFlags.None, Vector2.Zero))
                     OnSelectTypeChange((EditorAssetSelection)i);

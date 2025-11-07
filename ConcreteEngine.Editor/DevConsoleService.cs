@@ -1,16 +1,21 @@
+#region
+
 using ConcreteEngine.Editor.Gui;
 using ConcreteEngine.Editor.Utils;
+
+#endregion
 
 namespace ConcreteEngine.Editor;
 
 public sealed class DebugConsoleCtx
 {
     private readonly Action<string?> _addStringLogDel;
-    
+
     internal DebugConsoleCtx(Action<string?> addStringLogDel)
     {
         _addStringLogDel = addStringLogDel;
     }
+
     public void AddLog(string? msg) => _addStringLogDel(msg);
 }
 
@@ -37,7 +42,7 @@ public static class DevConsoleService
         ConsoleComponent.ScrollToBottom();
 
         if (Log.Count >= MaxLogCount)
-            Log.RemoveRange(Log.Count / 2, Log.Count - (Log.Count / 2));
+            Log.RemoveRange(Log.Count / 2, Log.Count - Log.Count / 2);
     }
 
     private static bool ExecCommand(string commandLine)

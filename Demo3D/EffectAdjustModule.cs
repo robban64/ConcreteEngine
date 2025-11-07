@@ -1,9 +1,9 @@
 #region
 
-using ConcreteEngine.Core.Data;
-using ConcreteEngine.Core.Platform;
-using ConcreteEngine.Core.Scene.Modules;
-using ConcreteEngine.Core.Worlds.Render;
+using ConcreteEngine.Engine.Data;
+using ConcreteEngine.Engine.Platform;
+using ConcreteEngine.Engine.Scene.Modules;
+using ConcreteEngine.Engine.Worlds.Render;
 
 #endregion
 

@@ -1,4 +1,8 @@
+#region
+
 using ConcreteEngine.Editor.Definitions;
+
+#endregion
 
 namespace ConcreteEngine.Editor.Data;
 
@@ -16,8 +20,6 @@ public sealed class AssetStoreViewModel
     }
 }
 
-
-
 public record AssetObjectViewModel(
     int AssetId,
     int ResourceId,
@@ -34,4 +36,3 @@ public sealed record AssetObjectFileViewModel(
     string RelativePath,
     long SizeInBytes,
     string? ContentHash);
-

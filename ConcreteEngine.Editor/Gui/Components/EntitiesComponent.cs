@@ -28,7 +28,7 @@ internal static class EntitiesComponent
     private static EntityDataState _entityState = default;
     private static ref TransformDataState TransformState => ref _entityState.Transform;
 
-
+    //TODO fix
     private static void UpdateStateFrom(EntityViewModel? entity)
     {
         if (entity is null)
@@ -45,21 +45,24 @@ internal static class EntitiesComponent
 
     private static void OnUpdateTranslation(EntityViewModel entity)
     {
-        entity.Transform.Translation = TransformState.Translation;
-        StateCtx.ExecuteSetEntityTransform(entity);
+        TransformState.GetDataModel(in entity.Transform.Rotation, out var model);
+        var payload = new EditorTransformPayload(entity.EntityId, in model);
+        StateCtx.ExecuteSetEntityTransform(in payload);
     }
 
     private static void OnUpdateScale(EntityViewModel entity)
     {
-        entity.Transform.Scale = TransformState.Scale;
-        StateCtx.ExecuteSetEntityTransform(entity);
+        TransformState.GetDataModel(in entity.Transform.Rotation, out var model);
+        var payload = new EditorTransformPayload(entity.EntityId, in model);
+        StateCtx.ExecuteSetEntityTransform(in payload);
     }
 
     private static void OnUpdateRotation(EntityViewModel entity)
     {
-        ref var transform = ref entity.Transform;
-        transform.Rotation = RotationMath.EulerDegreesToQuaternion(in TransformState.EulerAngles);
-        StateCtx.ExecuteSetEntityTransform(entity);
+        var rotation = RotationMath.EulerDegreesToQuaternion(in TransformState.EulerAngles);
+        TransformState.GetDataModel(in rotation, out var model);
+        var payload = new EditorTransformPayload(entity.EntityId, in model);
+        StateCtx.ExecuteSetEntityTransform(in payload);
     }
 
     public static void Draw()

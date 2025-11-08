@@ -128,10 +128,9 @@ internal static class EditorStateContext
             new EditorShaderPayload(viewModel.Name, EditorRequestAction.Reload));
     }
 
-    public static void ExecuteSetEntityTransform(EntityViewModel entity)
+    public static void ExecuteSetEntityTransform(in EditorTransformPayload payload)
     {
         //if (!CanExecute(25)) return;
-        var payload = new EditorTransformPayload(entity.EntityId, in entity.Transform);
         CommandDispatcher.InvokeEditorCommand(CoreCmdNames.EntityTransform, in payload);
     }
 

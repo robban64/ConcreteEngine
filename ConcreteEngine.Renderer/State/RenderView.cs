@@ -11,7 +11,7 @@ namespace ConcreteEngine.Renderer.State;
 public sealed class RenderView
 {
     private RenderViewSnapshot _snapshot;
-    private TransformMatrixData _override;
+    private ViewMatrixData _override;
 
     private bool _useOverride = false;
 
@@ -62,7 +62,7 @@ public sealed class RenderView
 
         var projViewMat = viewMat * projMat;
         
-        _override = new TransformMatrixData(in viewMat, in projMat, in projViewMat);
+        _override = new ViewMatrixData(in viewMat, in projMat, in projViewMat);
         _useOverride = true;
     }
 }

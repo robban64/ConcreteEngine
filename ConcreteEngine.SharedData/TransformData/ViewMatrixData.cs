@@ -6,7 +6,7 @@ using System.Numerics;
 
 namespace ConcreteEngine.Shared.TransformData;
 
-public readonly struct TransformMatrixData(
+public readonly struct ViewMatrixData(
     in Matrix4x4 modelMatrix,
     in Matrix4x4 projectionMatrix,
     in Matrix4x4 projectionViewMatrix

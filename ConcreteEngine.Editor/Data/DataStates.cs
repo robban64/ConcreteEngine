@@ -15,6 +15,11 @@ internal struct TransformDataState
     public Vector3 Scale;
     public Vector3 EulerAngles;
 
+    public readonly void GetDataModel(in Quaternion rotation, out TransformData model)
+    {
+        model = new TransformData(in Translation, in Scale, in rotation);
+    }
+
     public void From(in TransformData model)
     {
         Translation = model.Translation;
@@ -33,6 +38,3 @@ internal struct TransformDataState
         EulerAngles = RotationMath.QuaternionToEulerDegrees(in model.Rotation, in EulerAngles);
     }
 }
-
-
-

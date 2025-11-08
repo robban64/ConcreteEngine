@@ -1,7 +1,7 @@
 #region
 
-using ConcreteEngine.Common.Diagnostics;
 using ConcreteEngine.Editor.Utils;
+using ConcreteEngine.Shared.MetricData;
 
 #endregion
 
@@ -34,7 +34,7 @@ public sealed class MetricReport
         SceneMetrics.ShadowMapSize = $"ShadowMapSize: {m.Param0}";
     }
 
-    internal void UpdateMaterialMetrics(in StoreMetric<CollectionSample> m)
+    internal void UpdateMaterialMetrics(in BasicMetric<CollectionSample> m)
     {
         MaterialMetrics = $"Materials: {m.Sample.Count}({m.Sample.Reserved})";
     }

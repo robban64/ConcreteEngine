@@ -1,7 +1,7 @@
 #region
 
-using ConcreteEngine.Common.Diagnostics;
 using ConcreteEngine.Editor.Metrics;
+using ConcreteEngine.Shared.MetricData;
 
 #endregion
 
@@ -12,7 +12,7 @@ public static class MetricsApi
     // Fetchers
     public static Func<FrameMetric<RenderInfoSample>>? PullFrameMetrics { get; set; }
     public static Func<PairSample>? PullSceneMetrics { get; set; }
-    public static Func<StoreMetric<CollectionSample>>? PullMaterialMetrics { get; set; }
+    public static Func<BasicMetric<CollectionSample>>? PullMaterialMetrics { get; set; }
     public static Func<PairSample>? PullMemoryMetrics { get; set; }
     public static Action<MetricData>? FillGfxStoreMetrics { get; set; }
     public static Action<MetricData>? FillAssetMetrics { get; set; }

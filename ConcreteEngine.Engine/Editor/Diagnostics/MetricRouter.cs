@@ -1,7 +1,6 @@
 #region
 
 using System.Diagnostics;
-using ConcreteEngine.Common.Diagnostics;
 using ConcreteEngine.Editor.Metrics;
 using ConcreteEngine.Engine.Assets;
 using ConcreteEngine.Engine.Assets.Data;
@@ -9,6 +8,7 @@ using ConcreteEngine.Engine.Assets.Materials;
 using ConcreteEngine.Engine.Data;
 using ConcreteEngine.Engine.Worlds;
 using ConcreteEngine.Graphics.Diagnostic;
+using ConcreteEngine.Shared.MetricData;
 
 #endregion
 
@@ -45,11 +45,11 @@ internal static class MetricRouter
     internal static PairSample GetSceneMetrics() =>
         _world is not null ? new(_world.EntityCount, _world.ShadowMapSize) : default;
 
-    internal static StoreMetric<CollectionSample> GetMaterialMetrics()
+    internal static BasicMetric<CollectionSample> GetMaterialMetrics()
     {
         if (Materials is not { } m) return default;
         var sample = new CollectionSample(m.Count, 0, 0, m.FreeSlots);
-        return new StoreMetric<CollectionSample>(sample, default);
+        return new BasicMetric<CollectionSample>(sample, default);
     }
 
     internal static void DrainAssetStoreMetrics(MetricData data)
@@ -75,7 +75,7 @@ internal static class MetricRouter
             var res = result[i];
             ref readonly var metrics = ref span[i];
             var sample = new CollectionSample(metrics.Count, metrics.FileCount, 0);
-            res.Metrics = new StoreMetric<CollectionSample>(sample, default);
+            res.Metrics = new BasicMetric<CollectionSample>(sample, default);
         }
     }
 

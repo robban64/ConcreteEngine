@@ -4,7 +4,7 @@ using System.Diagnostics;
 
 #endregion
 
-namespace ConcreteEngine.Common.Diagnostics.Utility;
+namespace ConcreteEngine.Common.Diagnostics;
 
 public sealed class FrameProfileTimer
 {

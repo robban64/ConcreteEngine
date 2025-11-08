@@ -1,7 +1,6 @@
 #region
 
 using System.Numerics;
-using ConcreteEngine.Common.Numerics;
 using ConcreteEngine.Renderer.Data;
 using ConcreteEngine.Renderer.State;
 using ConcreteEngine.Shared.RenderData;

@@ -1,7 +1,6 @@
 #region
 
 using System.Runtime.CompilerServices;
-using ConcreteEngine.Common.Diagnostics;
 using ConcreteEngine.Common.Numerics;
 using ConcreteEngine.Editor;
 using ConcreteEngine.Editor.Data;
@@ -10,7 +9,6 @@ using ConcreteEngine.Engine.Editor.Data;
 using ConcreteEngine.Engine.Editor.Definitions;
 using ConcreteEngine.Engine.Worlds.Data;
 using ConcreteEngine.Engine.Worlds.Entities;
-using ConcreteEngine.Graphics.Diagnostic;
 using ConcreteEngine.Graphics.Gfx.Contracts;
 using ConcreteEngine.Graphics.Gfx.Resources;
 using ConcreteEngine.Renderer.Data;
@@ -92,10 +90,6 @@ internal static class EngineCommandHandler
         ctx.AddLog(StructStr<RenderBufferMeta>());
         ctx.AddLog(StructStr<UniformBufferMeta>());
 
-        ctx.AddLog(StructStr<StoreMetric<CollectionSample>>());
-        ctx.AddLog(StructStr<GfxResourceMetric<ValueSample>>());
-
-        ctx.AddLog(StructStr<GfxStoreMetricsPayload>());
         ctx.AddLog(StructStr<MaterialParams>());
         ctx.AddLog(StructStr<DrawMaterialMeta>());
         ctx.AddLog(StructStr<DrawMaterialPayload>());
@@ -107,6 +101,11 @@ internal static class EngineCommandHandler
         ctx.AddLog(StructStr<MeshPart>());
         ctx.AddLog(StructStr<DrawEntity>());
         ctx.AddLog(StructStr<MaterialTag>());
+        
+        ctx.AddLog(StructStr<CameraEditorPayload>());
+        ctx.AddLog(StructStr<EditorTransformPayload>());
+        ctx.AddLog(StructStr<MaterialTag>());
+
     }
 
 

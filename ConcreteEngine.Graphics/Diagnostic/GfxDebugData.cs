@@ -1,21 +1,21 @@
 #region
 
-using ConcreteEngine.Common.Diagnostics;
 using ConcreteEngine.Graphics.Gfx.Definitions;
+using ConcreteEngine.Shared.MetricData;
 
 #endregion
 
 namespace ConcreteEngine.Graphics.Diagnostic;
 
 public readonly struct GfxStoreMetricsPayload(
-    in StoreMetric<CollectionSample> fk,
-    in StoreMetric<CollectionSample> bk,
-    in GfxResourceMetric<ValueSample> special,
+    in BasicMetric<CollectionSample> fk,
+    in BasicMetric<CollectionSample> bk,
+    in TargetMetric<ValueSample> special,
     ResourceKind kind)
 {
-    public readonly StoreMetric<CollectionSample> Fk = fk;
-    public readonly StoreMetric<CollectionSample> Bk = bk;
-    public readonly GfxResourceMetric<ValueSample> Special = special;
+    public readonly BasicMetric<CollectionSample> Fk = fk;
+    public readonly BasicMetric<CollectionSample> Bk = bk;
+    public readonly TargetMetric<ValueSample> Special = special;
     public readonly ResourceKind Kind = kind;
 }
 

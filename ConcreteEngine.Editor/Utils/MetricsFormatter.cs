@@ -1,6 +1,6 @@
 #region
 
-using ConcreteEngine.Common.Diagnostics;
+using ConcreteEngine.Shared.MetricData;
 
 #endregion
 
@@ -13,7 +13,7 @@ internal static class MetricsFormatter
 
     public static string FormatBytes(long bytes) => bytes < 1024 ? $"{bytes} B" : $"{bytes / 1024} KB";
 
-    public static string FormatSpecialMetaMetric(in GfxResourceMetric<ValueSample> m)
+    public static string FormatSpecialMetaMetric(in TargetMetric<ValueSample> m)
     {
         var sample = m.Sample;
         return m.Header.Kind switch
@@ -28,7 +28,7 @@ internal static class MetricsFormatter
         };
     }
 
-    private static string FormatTexture(in GfxResourceMetric<ValueSample> m)
+    private static string FormatTexture(in TargetMetric<ValueSample> m)
     {
         var header = m.Header;
 

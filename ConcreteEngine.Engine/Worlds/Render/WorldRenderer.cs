@@ -1,7 +1,6 @@
 #region
 
 using ConcreteEngine.Common;
-using ConcreteEngine.Common.Diagnostics.Utility;
 using ConcreteEngine.Common.Numerics;
 using ConcreteEngine.Engine.Assets;
 using ConcreteEngine.Engine.Assets.Shaders;
@@ -144,7 +143,6 @@ public sealed class WorldRenderer : IWorldRenderer
         ClearMaterialDirty();
     }
 
-    private FrameProfileTimer _frameProfileTimer = new();
 
     private void PrepareRenderView(float alpha, Camera3D camera)
     {

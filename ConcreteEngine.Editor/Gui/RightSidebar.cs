@@ -18,7 +18,9 @@ internal static class RightSidebar
 
     public static void Draw(int width, int offset)
     {
-        if (StateCtx.ViewState.RightSidebar == RightSidebarMode.Default) return;
+        var viewState = StateCtx.ViewState;
+        
+        if (!viewState.IsMetricState && viewState.RightSidebar == RightSidebarMode.Default) return;
 
         const ImGuiWindowFlags flags =
             ImGuiWindowFlags.NoTitleBar | ImGuiWindowFlags.NoMove | ImGuiWindowFlags.NoResize |
@@ -27,8 +29,8 @@ internal static class RightSidebar
         var vp = ImGui.GetMainViewport();
         var vpSize = vp.WorkSize;
 
-        var height = StateCtx.ViewState.IsEmptyViewMode ? 0 : vpSize.Y - offset;
-        height = StateCtx.ViewState.RightSidebar != RightSidebarMode.Default ? height : 0;
+        var height = viewState.IsEmptyViewMode ? 0 : vpSize.Y - offset;
+        height = viewState.RightSidebar != RightSidebarMode.Default ? height : 0;
 
 
         ImGui.SetNextWindowPos(new Vector2(vpSize.X - width, offset));
@@ -49,7 +51,7 @@ internal static class RightSidebar
             {
             }
 
-            switch (StateCtx.ViewState.EditorMode)
+            switch (viewState.EditorMode)
             {
                 case EditorViewMode.Metrics:
                     DrawCpuMetrics();

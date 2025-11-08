@@ -1,6 +1,5 @@
 #region
 
-using ConcreteEngine.Editor.Gui;
 using ConcreteEngine.Editor.Gui.Components;
 using ConcreteEngine.Editor.Utils;
 

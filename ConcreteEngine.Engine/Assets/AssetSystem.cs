@@ -1,7 +1,6 @@
 #region
 
 using ConcreteEngine.Common;
-using ConcreteEngine.Common.Diagnostics;
 using ConcreteEngine.Engine.Assets.Data;
 using ConcreteEngine.Engine.Assets.Descriptors;
 using ConcreteEngine.Engine.Assets.Internal;
@@ -12,6 +11,7 @@ using ConcreteEngine.Engine.Editor.Diagnostics;
 using ConcreteEngine.Engine.Utils;
 using ConcreteEngine.Graphics.Error;
 using ConcreteEngine.Graphics.Gfx;
+using ConcreteEngine.Shared.Diagnostics;
 
 #endregion
 

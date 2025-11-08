@@ -2,10 +2,10 @@
 
 using System.Text.Json;
 using System.Text.Json.Serialization;
-using ConcreteEngine.Common.Diagnostics;
 using ConcreteEngine.Engine.Assets.Descriptors;
 using ConcreteEngine.Engine.Assets.IO;
 using ConcreteEngine.Engine.Editor.Diagnostics;
+using ConcreteEngine.Shared.Diagnostics;
 
 #endregion
 

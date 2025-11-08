@@ -1,4 +1,4 @@
-namespace ConcreteEngine.Shared.MetricData;
+namespace ConcreteEngine.Shared.Diagnostics;
 
 public readonly record struct BasicMetric<TSample>(in TSample Sample, MetricHeader Header) where TSample : unmanaged;
 

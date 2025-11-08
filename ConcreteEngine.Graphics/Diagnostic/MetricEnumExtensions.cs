@@ -1,7 +1,7 @@
 #region
 
-using ConcreteEngine.Common.Diagnostics;
 using ConcreteEngine.Graphics.Gfx.Definitions;
+using ConcreteEngine.Shared.Diagnostics;
 
 #endregion
 

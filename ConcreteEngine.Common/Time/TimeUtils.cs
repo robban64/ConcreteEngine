@@ -5,7 +5,7 @@ using System.Runtime.CompilerServices;
 
 #endregion
 
-namespace ConcreteEngine.Common.Diagnostics;
+namespace ConcreteEngine.Common.Time;
 
 public static class TimeUtils
 {

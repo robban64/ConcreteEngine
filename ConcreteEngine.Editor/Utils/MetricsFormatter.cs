@@ -1,6 +1,6 @@
 #region
 
-using ConcreteEngine.Shared.MetricData;
+using ConcreteEngine.Shared.Diagnostics;
 
 #endregion
 

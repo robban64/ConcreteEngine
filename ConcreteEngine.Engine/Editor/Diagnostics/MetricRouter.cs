@@ -8,7 +8,7 @@ using ConcreteEngine.Engine.Assets.Materials;
 using ConcreteEngine.Engine.Data;
 using ConcreteEngine.Engine.Worlds;
 using ConcreteEngine.Graphics.Diagnostic;
-using ConcreteEngine.Shared.MetricData;
+using ConcreteEngine.Shared.Diagnostics;
 
 #endregion
 

@@ -1,4 +1,4 @@
-namespace ConcreteEngine.Common.Diagnostics;
+namespace ConcreteEngine.Common.Numerics;
 
 public sealed class MetricUnits
 {

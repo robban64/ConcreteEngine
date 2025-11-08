@@ -1,7 +1,7 @@
 #region
 
 using System.Runtime.CompilerServices;
-using ConcreteEngine.Common.Diagnostics;
+using ConcreteEngine.Shared.Diagnostics;
 
 #endregion
 

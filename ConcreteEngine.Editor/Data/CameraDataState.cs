@@ -1,5 +1,4 @@
 using System.Numerics;
-using ConcreteEngine.Common.Diagnostics;
 using ConcreteEngine.Common.Numerics;
 using ConcreteEngine.Common.Numerics.Maths;
 using ConcreteEngine.Shared.TransformData;

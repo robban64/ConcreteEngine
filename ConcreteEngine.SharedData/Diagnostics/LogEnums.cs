@@ -1,4 +1,4 @@
-namespace ConcreteEngine.Common.Diagnostics;
+namespace ConcreteEngine.Shared.Diagnostics;
 
 [Flags]
 public enum LogFilter : ushort

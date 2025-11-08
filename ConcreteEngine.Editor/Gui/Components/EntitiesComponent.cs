@@ -5,6 +5,7 @@ using ConcreteEngine.Common.Numerics.Maths;
 using ConcreteEngine.Editor.Data;
 using ConcreteEngine.Editor.Utils;
 using ConcreteEngine.Editor.ViewModel;
+using ConcreteEngine.Shared.TransformData;
 using ImGuiNET;
 
 #endregion
@@ -15,9 +16,20 @@ internal static class EntitiesComponent
 {
     private struct EntityDataState
     {
+        public readonly int EntityId;
         public int ModelId;
         public int MaterialTagKey;
         public TransformDataState Transform;
+        public readonly TransformData BaseTransform;
+
+        public EntityDataState(int entityId, in EntityDataPayload payload)
+        {
+            EntityId = entityId;
+            ModelId = payload.Model.ModelId;
+            MaterialTagKey = payload.Model.MaterialTagKey;
+            BaseTransform = payload.Transform;
+            Transform.FromStable(in payload.Transform);
+        }
     }
 
     private const int RowHeight = 32;
@@ -25,43 +37,43 @@ internal static class EntitiesComponent
 
     private static EntityListViewModel ViewModel => StateCtx.EntityListViewModel;
 
-    private static EntityDataState _entityState = default;
-    private static ref TransformDataState TransformState => ref _entityState.Transform;
+    private static EntityDataState _selectedState = default;
+    private static ref TransformDataState TransformState => ref _selectedState.Transform;
+    private static ref readonly TransformData BaseTransform => ref _selectedState.BaseTransform;
 
+    
     //TODO fix
     private static void UpdateStateFrom(EntityViewModel? entity)
     {
-        if (entity is null)
+        if (entity is null || EditorApi.FetchEntityData is null)
         {
-            _entityState = default;
+            _selectedState = default;
             return;
         }
-
-        _entityState.ModelId = entity.Model.ModelId;
-        _entityState.MaterialTagKey = entity.Model.MaterialTagKey;
-
-        TransformState.FromStable(in entity.Transform);
+        
+        EditorApi.FetchEntityData(entity.EntityId, out var payload);
+        _selectedState = new EntityDataState(entity.EntityId, in payload);
     }
 
     private static void OnUpdateTranslation(EntityViewModel entity)
     {
-        TransformState.GetDataModel(in entity.Transform.Rotation, out var model);
-        var payload = new EditorTransformPayload(entity.EntityId, in model);
+        TransformState.GetDataModel(in BaseTransform.Rotation, out var data);
+        var payload = new EntityTransformPayload(entity.EntityId, in data);
         StateCtx.ExecuteSetEntityTransform(in payload);
     }
 
     private static void OnUpdateScale(EntityViewModel entity)
     {
-        TransformState.GetDataModel(in entity.Transform.Rotation, out var model);
-        var payload = new EditorTransformPayload(entity.EntityId, in model);
+        TransformState.GetDataModel(in BaseTransform.Rotation, out var data);
+        var payload = new EntityTransformPayload(entity.EntityId, in data);
         StateCtx.ExecuteSetEntityTransform(in payload);
     }
 
     private static void OnUpdateRotation(EntityViewModel entity)
     {
         var rotation = RotationMath.EulerDegreesToQuaternion(in TransformState.EulerAngles);
-        TransformState.GetDataModel(in rotation, out var model);
-        var payload = new EditorTransformPayload(entity.EntityId, in model);
+        TransformState.GetDataModel(in rotation, out var data);
+        var payload = new EntityTransformPayload(entity.EntityId, in data);
         StateCtx.ExecuteSetEntityTransform(in payload);
     }
 
@@ -164,12 +176,12 @@ internal static class EntitiesComponent
     {
         ImGui.SeparatorText("Model");
         ImGui.TextUnformatted("ModelId");
-        if (ImGui.InputInt("##model-id", ref _entityState.ModelId, 0, 0, ImGuiInputTextFlags.None))
+        if (ImGui.InputInt("##model-id", ref _selectedState.ModelId, 0, 0, ImGuiInputTextFlags.None))
         {
         }
 
         ImGui.TextUnformatted("MaterialTagKey");
-        if (ImGui.InputInt("##mat-tag", ref _entityState.MaterialTagKey, 0, 0, ImGuiInputTextFlags.None))
+        if (ImGui.InputInt("##mat-tag", ref _selectedState.MaterialTagKey, 0, 0, ImGuiInputTextFlags.None))
         {
         }
 

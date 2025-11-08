@@ -29,11 +29,16 @@ internal static class EditorStateContext
     {
     }
 
-    internal static EditorViewState PreRender()
+    internal static void PreRender()
     {
         GuiTheme.RightSidebarExpanded = ViewState.IsEditorState;
         MetricsApi.ToggleMetrics(ViewState.IsMetricState);
+        
+        if(!ViewState.IsEditorState) return ;
 
+        var isCamera = ViewState.RightSidebar == RightSidebarMode.Camera;
+        var isEntity = ViewState.LeftSidebar == LeftSidebarMode.Entities;
+        
         if (ViewState.IsEditorState && ViewState.RightSidebar == RightSidebarMode.Camera)
         {
             if (TimeUtils.HasIntervalPassed(_lastFetched, FetchInterval))
@@ -43,7 +48,6 @@ internal static class EditorStateContext
             }
         }
 
-        return ViewState;
     }
 
     public static void SetViewModeState(EditorViewMode mode)
@@ -102,6 +106,7 @@ internal static class EditorStateContext
 
     public static void RefreshCameraData()
     {
+        if(EditorApi.FetchCameraData is null) return;
         if (!EditorApi.FetchCameraData(CameraModel.Generation, out var response))
             return;
 
@@ -128,7 +133,7 @@ internal static class EditorStateContext
             new EditorShaderPayload(viewModel.Name, EditorRequestAction.Reload));
     }
 
-    public static void ExecuteSetEntityTransform(in EditorTransformPayload payload)
+    public static void ExecuteSetEntityTransform(in EntityTransformPayload payload)
     {
         //if (!CanExecute(25)) return;
         CommandDispatcher.InvokeEditorCommand(CoreCmdNames.EntityTransform, in payload);

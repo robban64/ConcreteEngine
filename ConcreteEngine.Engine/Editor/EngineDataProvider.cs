@@ -55,8 +55,29 @@ internal static class EngineDataProvider
                 ? ref _world.Transforms.GetById(it.Entity)
                 : ref defaultTransform;
 
-            viewModel.Entities.Add(EditorObjectMapper.MakeEntityViewModel(it.Entity, in model, in transform));
+            viewModel.Entities.Add(EditorObjectMapper.MakeEntityViewModel(it.Entity));
         }
+    }
+
+    public static bool PullEntityData(int entityId, out EntityDataPayload response)
+    {
+        if (_world is null)
+        {
+            response = default;
+            return false;
+        }
+
+        var entity = new EntityId(entityId);
+        var model = _world.Meshes.GetById(entity);
+        if (!_world.Transforms.TryGetById(entity, out var transform)) transform = default;
+
+        var transformData =
+            new TransformData(in transform.Translation, in transform.Scale, in transform.Rotation);
+
+        var modelData = new EditorEntityModel(model.Model, model.MaterialKey.Value, model.DrawCount);
+
+        response = new EntityDataPayload(entityId, in modelData, in transformData);
+        return true;
     }
 
     public static void PullAssetObjectFiles(AssetObjectViewModel asset, List<AssetObjectFileViewModel> result)

@@ -51,7 +51,7 @@ internal static class EngineCommandHandler
     }
 
 
-    public static CommandResponse OnEntityTransformCmd(in EditorTransformPayload payload)
+    public static CommandResponse OnEntityTransformCmd(in EntityTransformPayload payload)
     {
         ref readonly var transform = ref payload.Transform;
         var cmd = new EntityCommandRecord<TransformData>(WorldCommandAction.EntityTransform, payload.EntityId,
@@ -103,7 +103,7 @@ internal static class EngineCommandHandler
         ctx.AddLog(StructStr<MaterialTag>());
         
         ctx.AddLog(StructStr<CameraEditorPayload>());
-        ctx.AddLog(StructStr<EditorTransformPayload>());
+        ctx.AddLog(StructStr<EntityDataPayload>());
         ctx.AddLog(StructStr<MaterialTag>());
 
     }

@@ -19,7 +19,8 @@ public static class EditorService
 
     public static void Render()
     {
-        var viewState = StateCtx.PreRender();
+        StateCtx.PreRender();
+        var viewState = StateCtx.ViewState;
         Topbar.Draw();
 
         if (!viewState.IsEmptyViewMode)

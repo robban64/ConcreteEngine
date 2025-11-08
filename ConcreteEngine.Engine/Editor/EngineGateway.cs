@@ -169,7 +169,7 @@ internal sealed class EngineGateway : IDisposable
         public static void RegisterCommands()
         {
             // Editor commands
-            RegisterEditorCmd<EditorTransformPayload>(CoreCmdNames.EntityTransform, EditorCommandScope.Editor,
+            RegisterEditorCmd<EntityTransformPayload>(CoreCmdNames.EntityTransform, EditorCommandScope.Editor,
                 EngineCommandHandler.OnEntityTransformCmd);
 
             RegisterEditorCmd<CameraEditorPayload>(CoreCmdNames.CameraTransform, EditorCommandScope.Editor,
@@ -198,6 +198,7 @@ internal sealed class EngineGateway : IDisposable
             EditorApi.FillAssetStoreView = EngineDataProvider.PullAssetStoreData;
             EditorApi.FetchAssetObjectFiles = EngineDataProvider.PullAssetObjectFiles;
             EditorApi.FillEntityView = EngineDataProvider.PullEntityView;
+            EditorApi.FetchEntityData = EngineDataProvider.PullEntityData;
             EditorApi.FetchCameraData = EngineDataProvider.PullCameraView;
         }
 

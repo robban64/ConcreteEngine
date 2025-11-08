@@ -34,6 +34,17 @@ public sealed class EntityStore<T> where T : unmanaged
 
     public ref T GetById(EntityId e) => ref _data[_sparse[e]];
 
+    public bool TryGetById(EntityId e, out T value)
+    {
+        if (e.Id >= _idx)
+        {
+            value = default;
+            return false;
+        }
+        value = _data[_sparse[e]];
+        return true;
+    }
+
     public ref T GetByIndex(int i) => ref _data[i];
 
     public EntityId GetEntityId(int i) => _entities[i];

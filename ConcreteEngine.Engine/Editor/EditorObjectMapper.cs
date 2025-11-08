@@ -16,19 +16,12 @@ namespace ConcreteEngine.Engine.Editor;
 
 internal static class EditorObjectMapper
 {
-    public static EntityViewModel MakeEntityViewModel(EntityId id, in ModelComponent model, in Transform transform)
+    public static EntityViewModel MakeEntityViewModel(EntityId id)
     {
-        var transformData =
-            new TransformData(in transform.Translation, in transform.Scale, in transform.Rotation);
-
-        var modelData = new EntityEditorModel(model.Model, model.MaterialKey.Value, model.DrawCount);
-
         return new EntityViewModel(
             entityId: id,
             name: string.Empty,
-            componentCount: 2,
-            model: in modelData,
-            transform: in transformData);
+            componentCount: 0);
     }
 
     public static AssetObjectFileViewModel MakeAssetObjectFile(AssetFileEntry entry) =>

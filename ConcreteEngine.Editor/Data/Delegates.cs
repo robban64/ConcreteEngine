@@ -10,3 +10,5 @@ public delegate CommandResponse EditorCommandReqDel<TPayload>(in TPayload payloa
 
 // editor view delegates
 public delegate bool FetchCameraDataRequest(long generation, out CameraEditorPayload response);
+
+public delegate bool FetchEntityDataRequest(int entityId, out EntityDataPayload response);

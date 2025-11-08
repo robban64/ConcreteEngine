@@ -104,8 +104,8 @@ public sealed class GameEngine : IDisposable
         RegisterRenderer();
 
         EngineGateway.SetupLogger();
-        _engineGateway.ToggleEngineLogger(true);
-        _engineGateway.ToggleGfxLogger(true);
+        EngineGateway.ToggleEngineLogger(true);
+        EngineGateway.ToggleGfxLogger(true);
     }
 
     private void RegisterRenderer()

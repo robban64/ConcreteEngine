@@ -21,7 +21,7 @@ public static class MetricEnumExtensions
             ResourceKind.UniformBuffer => LogTopic.UniformBuffer,
             ResourceKind.FrameBuffer => LogTopic.FrameBuffer,
             ResourceKind.RenderBuffer => LogTopic.RenderBuffer,
-            ResourceKind.Invalid => throw new ArgumentOutOfRangeException(nameof(kind), "Invalid resource kind"),
+            ResourceKind.Invalid => LogTopic.Unknown,
             _ => throw new ArgumentOutOfRangeException(nameof(kind), kind, null)
         };
     }
@@ -38,7 +38,7 @@ public static class MetricEnumExtensions
             LogTopic.UniformBuffer => ResourceKind.UniformBuffer,
             LogTopic.FrameBuffer => ResourceKind.FrameBuffer,
             LogTopic.RenderBuffer => ResourceKind.RenderBuffer,
-            LogTopic.Unknown => throw new ArgumentOutOfRangeException(nameof(topic), "Unknown log topic"),
+            LogTopic.Unknown => ResourceKind.Invalid,
             _ => throw new ArgumentOutOfRangeException(nameof(topic), topic, null)
         };
     }

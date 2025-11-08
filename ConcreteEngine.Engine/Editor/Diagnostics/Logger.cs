@@ -1,5 +1,6 @@
 #region
 
+using System.Runtime.CompilerServices;
 using ConcreteEngine.Engine.Assets.Data;
 using ConcreteEngine.Engine.Editor.Utils;
 using ConcreteEngine.Shared.Diagnostics;
@@ -16,6 +17,9 @@ public sealed record StringLogEvent(LogScope Scope, string Message, LogLevel Lev
 public static class Logger
 {
     internal static Queue<LogEvent> LogQueue { get; } = new(16);
+    
+    private static readonly List<LogFilterWildcard> IgnoreFilter = new(4);
+
     private static bool _enabled = true;
 
     private static Action<StringLogEvent>? _logStringDel;
@@ -25,6 +29,18 @@ public static class Logger
     internal static void Attach(Action<StringLogEvent> logStringDel)
     {
         _logStringDel = logStringDel;
+    }
+    
+    public static void ToggleLog(bool enabled, LogTopic topic = 0, LogScope scope = 0, LogAction action = 0,
+        LogLevel level = 0)
+    {
+        var rule = new LogFilterWildcard(topic, scope, action, level);
+        var idx = FilterLogIndex(topic, scope, action, level);
+
+        if (enabled && idx >= 0)
+            IgnoreFilter.RemoveAt(idx);
+        else if (!enabled && idx == -1)
+            IgnoreFilter.Add(rule);
     }
 
     public static bool Enabled
@@ -51,6 +67,9 @@ public static class Logger
             else
                 throw new InvalidOperationException("Logger queue overflow");
         }
+        
+        if (FilterLog(in log))
+            return;
 
         LogQueue.Enqueue(log);
     }
@@ -65,6 +84,19 @@ public static class Logger
             Scope: LogScope.Assets,
             Topic: asset.Kind.ToLogTopic(),
             Action: action));
+    
+    
+    private static bool FilterLog(in LogEvent log) => 
+        FilterLogIndex(log.Topic, log.Scope, log.Action, log.Level) >= 0;
+
+
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    private static int FilterLogIndex(LogTopic topic, LogScope scope, LogAction action, LogLevel level)
+    {
+        var packed = LogFilterWildcard.Pack((byte)topic, (byte)scope, (byte)action, (byte)level);
+        return LogFilterWildcard.IndexAt(packed, IgnoreFilter);
+    }
+
     /*
     public static LogEvent LogAssetSystem(LogTopic topic, LogAction action)
     {

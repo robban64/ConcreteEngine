@@ -8,6 +8,7 @@ using ConcreteEngine.Engine.Data;
 using ConcreteEngine.Engine.Editor.Diagnostics;
 using ConcreteEngine.Engine.Worlds;
 using ConcreteEngine.Graphics.Diagnostic;
+using ConcreteEngine.Shared.Diagnostics;
 using Silk.NET.Input;
 using Silk.NET.OpenGL;
 using Silk.NET.Windowing;
@@ -42,12 +43,15 @@ internal sealed class EngineGateway : IDisposable
     public bool HasBindings => HasBoundCommands || HasBoundMetrics;
     public bool Active => Enabled && HasBindings;
     public bool BlockInput() => Enabled && _debugTools.BlockInput();
-    public void ToggleEngineLogger(bool enabled) => Logger.Enabled = enabled;
-    public void ToggleGfxLogger(bool enabled) => GfxLog.Enabled = enabled;
+    public static void ToggleEngineLogger(bool enabled) => Logger.Enabled = enabled;
+    public static void ToggleGfxLogger(bool enabled) => GfxLog.Enabled = enabled;
 
     public static void SetupLogger()
     {
         if (Logger.Enabled && !Logger.IsAttached) Logger.Attach(EditorSetup.ProcessStringLog);
+        
+        GfxLog.ToggleLog(false, LogTopic.Unknown, LogScope.Backend);
+        GfxLog.ToggleLog(false, LogTopic.RenderBuffer, LogScope.Gfx);
     }
 
     public void SetupEditor(EditorEngineQueue editorQueues, World world, AssetSystem assetSystem,

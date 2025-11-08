@@ -49,25 +49,12 @@ public static class GfxLog
         LogLevel level = 0)
     {
         var rule = new LogFilterWildcard(topic, scope, action, level);
+        var idx = FilterLogIndex(topic, scope, action, level);
 
-        if (enabled)
-        {
-            for (var i = 0; i < IgnoreFilter.Count; i++)
-            {
-                if (IgnoreFilter[i] != rule) continue;
-                IgnoreFilter.RemoveAt(i);
-                return;
-            }
-
-            return;
-        }
-
-        foreach (var t in IgnoreFilter)
-        {
-            if (t == rule) return;
-        }
-
-        IgnoreFilter.Add(rule);
+        if (enabled && idx >= 0)
+            IgnoreFilter.RemoveAt(idx);
+        else if (!enabled && idx == -1)
+            IgnoreFilter.Add(rule);
     }
 
 
@@ -96,18 +83,14 @@ public static class GfxLog
         Event(LogBk(handle, h.Slot, flags, h.IsValid, topic, action));
 
 
-    private static bool FilterLog(in LogEvent log)
+    private static bool FilterLog(in LogEvent log) => 
+        FilterLogIndex(log.Topic, log.Scope, log.Action, log.Level) >= 0;
+
+
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    private static int FilterLogIndex(LogTopic topic, LogScope scope, LogAction action, LogLevel level)
     {
-        foreach (var it in IgnoreFilter)
-        {
-            var validKind = it.Topic == 0 || it.Topic == (byte)log.Topic;
-            var validLayer = it.Scope == 0 || it.Scope == (byte)log.Scope;
-            var validAction = it.Action == 0 || it.Action == (byte)log.Action;
-            var validSource = it.Level == 0 || it.Level == (byte)log.Level;
-
-            if (validKind && validLayer && validSource && validAction) return true;
-        }
-
-        return false;
+        var packed = LogFilterWildcard.Pack((byte)topic, (byte)scope, (byte)action, (byte)level);
+        return LogFilterWildcard.IndexAt(packed, IgnoreFilter);
     }
 }

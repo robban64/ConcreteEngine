@@ -4,6 +4,7 @@ using System.Numerics;
 using ConcreteEngine.Common.Numerics;
 using ConcreteEngine.Renderer.Data;
 using ConcreteEngine.Renderer.State;
+using ConcreteEngine.Shared.RenderData;
 
 #endregion
 
@@ -25,31 +26,28 @@ public sealed class WorldRenderParams
 
     internal RenderParamsSnapshot Snapshot => _snapshot;
 
-    public void SetDirectionalLight(Vector3 direction, Color4 diffuse, float intensity, float specular)
+    public void SetDirectionalLight(in DirLightParams param)
     {
-        _dirLight = new DirLightParams(direction, diffuse.AsVec3(), intensity, specular);
+        _dirLight = param;
         _dirty = true;
     }
 
-    public void SetAmbient(Color4 ambient, Color4 ambientGround, float exposure = 0)
+    public void SetAmbient(in AmbientParams param)
     {
-        _ambient = new AmbientParams(ambient.AsVec3(), ambientGround.AsVec3(), exposure);
+        _ambient = param;
         _dirty = true;
     }
 
-    public void SetFog(Color4 color, float density, float heightFalloff, float baseHeight, float scattering,
-        float maxDistance, float heightInfluence = 1f, float strength = 1f)
+    public void SetFog(in FogParams param)
     {
-        _fog = new FogParams(
-            color: color.AsVec3(),
-            density: density,
-            heightFalloff: heightFalloff,
-            baseHeight: baseHeight,
-            scattering: scattering,
-            maxDistance: maxDistance,
-            heightInfluence: heightInfluence,
-            strength: strength);
-
+        _fog = param;
+        _dirty = true;
+    }
+    
+    
+    public void SetPostEffect(in PostEffectParams param)
+    {
+        _postEffect = param;
         _dirty = true;
     }
 
@@ -66,20 +64,14 @@ public sealed class WorldRenderParams
         //var constBias = 1.2f / size;
         //var slopeBias = constBias * 3f;
         _shadow = new ShadowParams(
-            shadowMapSize: size,
-            distance: dist,
-            zPad: 0.5f,
-            constBias: constBias,
-            slopeBias: slopeBias,
-            strength: 1f,
-            pcfRadius: 1f);
+            ShadowMapSize: size,
+            Distance: dist,
+            ZPad: 0.5f,
+            ConstBias: constBias,
+            SlopeBias: slopeBias,
+            Strength: 1f,
+            PcfRadius: 1f);
 
-        _dirty = true;
-    }
-
-    public void SetPostEffect(PostEffectParams effect)
-    {
-        _postEffect = effect;
         _dirty = true;
     }
 
@@ -113,37 +105,37 @@ public sealed class WorldRenderParams
 
     private static DirLightParams MakeDefaultDirLight() =>
         new(
-            direction: new Vector3(-0.35f, -0.95f, 0.25f),
-            diffuse: new Vector3(1.05f, 0.92f, 0.82f),
-            intensity: 1.35f,
-            specular: 0.75f
+            Direction: new Vector3(-0.35f, -0.95f, 0.25f),
+            Diffuse: new Vector3(1.05f, 0.92f, 0.82f),
+            Intensity: 1.35f,
+            Specular: 0.75f
         );
 
     private static AmbientParams MakeDefaultAmbient() =>
         new(
-            ambient: new Vector3(0.34f, 0.38f, 0.44f),
-            ambientGround: new Vector3(0.20f, 0.17f, 0.15f),
-            exposure: 0.26f
+            Ambient: new Vector3(0.34f, 0.38f, 0.44f),
+            AmbientGround: new Vector3(0.20f, 0.17f, 0.15f),
+            Exposure: 0.26f
         );
 
     private static FogParams MakeDefaultFog() =>
         new(
-            color: new Vector3(0.70f, 0.89f, 0.68f),
-            density: 720f,
-            heightFalloff: 5200f,
-            baseHeight: 0f,
-            strength: 1.05f,
-            heightInfluence: 0.85f,
-            scattering: 0.09f,
-            maxDistance: 9500f
+            Color: new Vector3(0.70f, 0.89f, 0.68f),
+            Density: 720f,
+            HeightFalloff: 5200f,
+            BaseHeight: 0f,
+            Strength: 1.05f,
+            HeightInfluence: 0.85f,
+            Scattering: 0.09f,
+            MaxDistance: 9500f
         );
 
 
     private static PostEffectParams MakeDefaultPostEffect() =>
         new(
-            grade: new(-0.10f, 0.80f, 0.805f, 0.70f),
-            whiteBalance: new(-0.10f, 0.25f),
-            bloom: new(0.35f, 0.75f, 8.0f),
-            imageFx: new(0.25f, 0.15f, 0.30f, 0.60f)
+            grade: new PostGradeParams(-0.10f, 0.80f, 0.805f, 0.70f),
+            whiteBalance: new PostWhiteBalanceParams(-0.10f, 0.25f),
+            bloom: new PostBloomParams(0.35f, 0.75f, 8.0f),
+            imageFx: new PostImageFxParams(0.25f, 0.15f, 0.30f, 0.60f)
         );
 }

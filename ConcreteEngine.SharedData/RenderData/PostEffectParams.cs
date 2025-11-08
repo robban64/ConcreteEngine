@@ -1,5 +1,29 @@
 namespace ConcreteEngine.Shared.RenderData;
 
+
+public readonly struct PostEffectParams(
+    in PostGradeParams grade,
+    in PostWhiteBalanceParams whiteBalance,
+    in PostBloomParams bloom,
+    in PostImageFxParams imageFx
+)
+{
+    public readonly PostGradeParams Grade = grade;
+    public readonly PostWhiteBalanceParams WhiteBalance = whiteBalance;
+    public readonly PostBloomParams Bloom = bloom;
+    public readonly PostImageFxParams ImageFx = imageFx;
+
+    public void Deconstruct(out PostGradeParams grade, out PostWhiteBalanceParams whiteBalance,
+        out PostBloomParams bloom, out PostImageFxParams imageFx)
+    {
+        grade = Grade;
+        whiteBalance = WhiteBalance;
+        bloom = Bloom;
+        imageFx = ImageFx;
+    }
+}
+
+
 // -1..+1 > -0.10..+0.10 
 // 0..1 > 0.8–1.2
 // -1..+1 > -0.05..+0.05

@@ -5,7 +5,7 @@ using System.Runtime.CompilerServices;
 
 #endregion
 
-namespace ConcreteEngine.Common.Numerics;
+namespace ConcreteEngine.Common.Numerics.Maths;
 
 internal sealed class CollisionMethods
 {

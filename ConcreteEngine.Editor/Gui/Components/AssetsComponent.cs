@@ -1,15 +1,15 @@
 #region
 
 using System.Numerics;
-using ConcreteEngine.Editor.Data;
 using ConcreteEngine.Editor.Definitions;
 using ConcreteEngine.Editor.Utils;
+using ConcreteEngine.Editor.ViewModel;
 using ImGuiNET;
 using static ConcreteEngine.Editor.Utils.GuiUtils;
 
 #endregion
 
-namespace ConcreteEngine.Editor.Gui;
+namespace ConcreteEngine.Editor.Gui.Components;
 
 internal static class AssetsComponent
 {

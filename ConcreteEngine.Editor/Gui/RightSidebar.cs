@@ -2,6 +2,7 @@
 
 using System.Numerics;
 using ConcreteEngine.Editor.Definitions;
+using ConcreteEngine.Editor.Gui.Components;
 using ConcreteEngine.Editor.Utils;
 using ImGuiNET;
 using static ConcreteEngine.Editor.Utils.GuiUtils;

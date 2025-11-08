@@ -5,7 +5,7 @@ using ImGuiNET;
 
 #endregion
 
-namespace ConcreteEngine.Editor.Gui;
+namespace ConcreteEngine.Editor.Gui.Components;
 
 internal static class ConsoleComponent
 {

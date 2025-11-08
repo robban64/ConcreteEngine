@@ -2,7 +2,7 @@
 
 using System.Numerics;
 using System.Runtime.CompilerServices;
-using static ConcreteEngine.Common.Numerics.CollisionMethods;
+using static ConcreteEngine.Common.Numerics.Maths.CollisionMethods;
 
 #endregion
 

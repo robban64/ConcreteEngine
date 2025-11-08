@@ -1,12 +1,12 @@
 #region
 
 using ConcreteEngine.Common.Numerics;
-using ConcreteEngine.Editor.Data;
 using ConcreteEngine.Engine.Editor.Data;
 using ConcreteEngine.Engine.Worlds.Entities;
 using ConcreteEngine.Engine.Worlds.Render;
 using ConcreteEngine.Engine.Worlds.Render.Batching;
 using ConcreteEngine.Engine.Worlds.View;
+using ConcreteEngine.Shared.TransformData;
 
 #endregion
 
@@ -85,7 +85,7 @@ public sealed class World : IWorld
 
     internal void ProcessCommand(IWorldCommandRecord cmd)
     {
-        if (cmd is EntityCommandRecord<TransformEditorModel> transformCmd)
+        if (cmd is EntityCommandRecord<TransformData> transformCmd)
         {
             ref readonly var transform = ref transformCmd.Data;
             ref var entityTransform = ref Transforms.GetById(new EntityId(transformCmd.EntityId));

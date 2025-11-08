@@ -1,8 +1,8 @@
 #region
 
 using System.Numerics;
-using ConcreteEngine.Renderer.Data;
 using ConcreteEngine.Renderer.Utility;
+using ConcreteEngine.Shared.TransformData;
 
 #endregion
 
@@ -11,11 +11,11 @@ namespace ConcreteEngine.Renderer.State;
 public sealed class RenderView
 {
     private RenderViewSnapshot _snapshot;
-    private ViewTransformData _override;
+    private TransformMatrixData _override;
 
     private bool _useOverride = false;
 
-    public ref readonly Matrix4x4 ViewMatrix => ref _useOverride ? ref _override.ViewMatrix : ref _snapshot.ViewMatrix;
+    public ref readonly Matrix4x4 ViewMatrix => ref _useOverride ? ref _override.ModelMatrix : ref _snapshot.ViewMatrix;
 
     public ref readonly Matrix4x4 ProjectionMatrix =>
         ref _useOverride ? ref _override.ProjectionMatrix : ref _snapshot.ProjectionMatrix;
@@ -23,7 +23,7 @@ public sealed class RenderView
     public ref readonly Matrix4x4 ProjectionViewMatrix =>
         ref _useOverride ? ref _override.ProjectionViewMatrix : ref _snapshot.ProjectionViewMatrix;
 
-    public ProjectionInfo ProjectionInfo => _snapshot.ProjectionInfo;
+    public ProjectionInfoData ProjectionInfo => _snapshot.ProjectionInfo;
     public Vector3 Position => _snapshot.Position;
     public Vector3 Forward => _snapshot.Forward;
     public Vector3 Right => _snapshot.Right;
@@ -34,7 +34,7 @@ public sealed class RenderView
     {
         if (_useOverride)
         {
-            view = _override.ViewMatrix;
+            view = _override.ModelMatrix;
             projection = _override.ProjectionMatrix;
             projectionView = _override.ProjectionViewMatrix;
             return;
@@ -61,7 +61,8 @@ public sealed class RenderView
             shadowMapSize: shadow.ShadowMapSize, shadowDistance: shadow.Distance);
 
         var projViewMat = viewMat * projMat;
-        _override = new ViewTransformData(in viewMat, in projMat, in projViewMat);
+        
+        _override = new TransformMatrixData(in viewMat, in projMat, in projViewMat);
         _useOverride = true;
     }
 }

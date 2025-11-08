@@ -4,11 +4,12 @@ using System.Numerics;
 using ConcreteEngine.Common.Numerics.Maths;
 using ConcreteEngine.Editor.Data;
 using ConcreteEngine.Editor.Utils;
+using ConcreteEngine.Editor.ViewModel;
 using ImGuiNET;
 
 #endregion
 
-namespace ConcreteEngine.Editor.Gui;
+namespace ConcreteEngine.Editor.Gui.Components;
 
 internal static class EntitiesComponent
 {

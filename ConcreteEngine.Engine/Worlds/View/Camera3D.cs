@@ -5,8 +5,8 @@ using ConcreteEngine.Common.Diagnostics;
 using ConcreteEngine.Common.Numerics;
 using ConcreteEngine.Common.Numerics.Maths;
 using ConcreteEngine.Engine.Worlds.Data;
-using ConcreteEngine.Renderer.Data;
 using ConcreteEngine.Renderer.State;
+using ConcreteEngine.Shared.TransformData;
 
 #endregion
 
@@ -183,7 +183,7 @@ public sealed class Camera3D : ICamera
         MatrixMath.CreateModelMatrix(camPos, _scale, camRot, out var viewMatrix);
         Matrix4x4.Invert(viewMatrix, out viewMatrix);
 
-        var projInfo = new ProjectionInfo(_aspectRatio, _fov, _nearPlane, _farPlane);
+        var projInfo = new ProjectionInfoData(_aspectRatio, _fov, _nearPlane, _farPlane);
         viewSnapshot = new RenderViewSnapshot(
             viewMatrix: in viewMatrix,
             projectionMatrix: in _projectionMatrix,

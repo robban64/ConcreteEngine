@@ -1,7 +1,7 @@
 #region
 
 using System.Numerics;
-using ConcreteEngine.Renderer.Data;
+using ConcreteEngine.Shared.TransformData;
 
 #endregion
 
@@ -11,7 +11,7 @@ public readonly struct RenderViewSnapshot(
     in Matrix4x4 viewMatrix,
     in Matrix4x4 projectionMatrix,
     in Matrix4x4 projectionViewMatrix,
-    in ProjectionInfo projectionInfo,
+    in ProjectionInfoData projectionInfo,
     in Vector3 position,
     in Quaternion rotation
 )
@@ -19,7 +19,7 @@ public readonly struct RenderViewSnapshot(
     public readonly Matrix4x4 ViewMatrix = viewMatrix;
     public readonly Matrix4x4 ProjectionMatrix = projectionMatrix;
     public readonly Matrix4x4 ProjectionViewMatrix = projectionViewMatrix;
-    public readonly ProjectionInfo ProjectionInfo = projectionInfo;
+    public readonly ProjectionInfoData ProjectionInfo = projectionInfo;
     public readonly Quaternion Rotation = rotation;
     public readonly Vector3 Position = position;
 

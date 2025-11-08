@@ -13,6 +13,7 @@ using ConcreteEngine.Engine.Worlds.Utility;
 using ConcreteEngine.Renderer.Data;
 using ConcreteEngine.Renderer.Definitions;
 using ConcreteEngine.Renderer.Draw;
+using ConcreteEngine.Shared.TransformData;
 
 #endregion
 
@@ -49,7 +50,7 @@ internal sealed class RenderEntityBus
         _idx = 0;
     }
 
-    public void CollectEntities(in Matrix4x4 viewMat, in ProjectionInfo projInfo)
+    public void CollectEntities(in Matrix4x4 viewMat, in ProjectionInfoData projInfo)
     {
         if (_world is null) return;
 

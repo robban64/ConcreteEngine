@@ -1,12 +1,14 @@
 #region
 
 using ConcreteEngine.Editor.Data;
+using ConcreteEngine.Editor.ViewModel;
 using ConcreteEngine.Engine.Assets.Data;
 using ConcreteEngine.Engine.Assets.Materials;
 using ConcreteEngine.Engine.Assets.Meshes;
 using ConcreteEngine.Engine.Assets.Shaders;
 using ConcreteEngine.Engine.Assets.Textures;
 using ConcreteEngine.Engine.Worlds.Entities;
+using ConcreteEngine.Shared.TransformData;
 
 #endregion
 
@@ -17,7 +19,7 @@ internal static class EditorObjectMapper
     public static EntityViewModel MakeEntityViewModel(EntityId id, in ModelComponent model, in Transform transform)
     {
         var transformData =
-            new TransformEditorModel(in transform.Translation, in transform.Scale, in transform.Rotation);
+            new TransformData(in transform.Translation, in transform.Scale, in transform.Rotation);
 
         var modelData = new EntityEditorModel(model.Model, model.MaterialKey.Value, model.DrawCount);
 

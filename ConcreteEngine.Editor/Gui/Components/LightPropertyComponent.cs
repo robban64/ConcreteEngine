@@ -1,4 +1,4 @@
-namespace ConcreteEngine.Editor.Gui;
+namespace ConcreteEngine.Editor.Gui.Components;
 
 internal sealed class LightPropertyComponent
 {

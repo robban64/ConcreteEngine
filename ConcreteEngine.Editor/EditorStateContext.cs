@@ -4,7 +4,9 @@ using ConcreteEngine.Common.Diagnostics;
 using ConcreteEngine.Editor.Data;
 using ConcreteEngine.Editor.Definitions;
 using ConcreteEngine.Editor.Gui;
+using ConcreteEngine.Editor.Gui.Components;
 using ConcreteEngine.Editor.Utils;
+using ConcreteEngine.Editor.ViewModel;
 
 #endregion
 

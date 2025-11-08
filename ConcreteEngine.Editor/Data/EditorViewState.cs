@@ -6,15 +6,6 @@ using ConcreteEngine.Editor.Definitions;
 
 namespace ConcreteEngine.Editor.Data;
 
-internal readonly record struct EditorViewStateChange(EditorViewState NewState, EditorViewState CurrentState)
-{
-    public bool DidLeftSidebarExitState(LeftSidebarMode mode) =>
-        NewState.LeftSidebar != mode && CurrentState.LeftSidebar == mode;
-
-    public bool DidRightSidebarExitState(RightSidebarMode mode) =>
-        NewState.RightSidebar != mode && CurrentState.RightSidebar == mode;
-}
-
 internal readonly record struct EditorViewState(
     EditorViewMode EditorMode,
     LeftSidebarMode LeftSidebar,

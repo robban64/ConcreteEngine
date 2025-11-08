@@ -1,3 +1,5 @@
+using ConcreteEngine.Shared.RenderData;
+
 namespace ConcreteEngine.Renderer.State;
 
 public sealed class RenderParamsSnapshot

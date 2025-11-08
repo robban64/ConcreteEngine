@@ -14,6 +14,7 @@ using ConcreteEngine.Graphics.Diagnostic;
 using ConcreteEngine.Graphics.Gfx.Contracts;
 using ConcreteEngine.Graphics.Gfx.Resources;
 using ConcreteEngine.Renderer.Data;
+using ConcreteEngine.Shared.TransformData;
 
 #endregion
 
@@ -55,7 +56,7 @@ internal static class EngineCommandHandler
     public static CommandResponse OnEntityTransformCmd(in EditorTransformPayload payload)
     {
         ref readonly var transform = ref payload.Transform;
-        var cmd = new EntityCommandRecord<TransformEditorModel>(WorldCommandAction.EntityTransform, payload.EntityId,
+        var cmd = new EntityCommandRecord<TransformData>(WorldCommandAction.EntityTransform, payload.EntityId,
             in transform);
         CommandQueues.EnqueueMain(cmd);
         return CommandResponse.Ok();

@@ -2,10 +2,12 @@
 
 using ConcreteEngine.Editor.Data;
 using ConcreteEngine.Editor.Definitions;
+using ConcreteEngine.Editor.ViewModel;
 using ConcreteEngine.Engine.Assets;
 using ConcreteEngine.Engine.Assets.Data;
 using ConcreteEngine.Engine.Worlds;
 using ConcreteEngine.Engine.Worlds.Entities;
+using ConcreteEngine.Shared.TransformData;
 
 #endregion
 
@@ -32,8 +34,8 @@ internal static class EngineDataProvider
         }
 
         var camera = _world.Camera;
-        var transform = new ViewTransformEditorModel(camera.Translation, camera.Scale, camera.Orientation);
-        var proj = new ProjectionEditorModel(camera.AspectRatio, camera.Fov, camera.NearPlane, camera.FarPlane);
+        var transform = new ViewTransformData(camera.Translation, camera.Scale, camera.Orientation);
+        var proj = new ProjectionInfoData(camera.AspectRatio, camera.Fov, camera.NearPlane, camera.FarPlane);
         var viewport = camera.Viewport;
         response = new CameraEditorPayload(camera.Generation, in transform, in proj, in viewport);
         return true;

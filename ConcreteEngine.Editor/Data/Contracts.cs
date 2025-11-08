@@ -1,6 +1,7 @@
 #region
 
 using ConcreteEngine.Common.Numerics;
+using ConcreteEngine.Shared.TransformData;
 
 #endregion
 
@@ -18,20 +19,29 @@ public readonly record struct EditorShadowPayload(int Size, bool Enabled, Editor
 
 public readonly record struct EditorShaderPayload(string Name, EditorRequestAction RequestAction);
 
-public readonly struct EditorTransformPayload(int entityId, in TransformEditorModel transform)
+public readonly struct EditorTransformPayload(int entityId, in TransformData transform)
 {
     public readonly int EntityId = entityId;
-    public readonly TransformEditorModel Transform = transform;
+    public readonly TransformData Transform = transform;
 }
 
-public struct CameraEditorPayload(
+public readonly struct CameraEditorPayload(
     long generation,
-    in ViewTransformEditorModel viewTransform,
-    in ProjectionEditorModel projection,
+    in ViewTransformData viewTransform,
+    in ProjectionInfoData projection,
     in Size2D viewport)
 {
-    public long Generation = generation;
-    public ViewTransformEditorModel ViewTransform = viewTransform;
-    public ProjectionEditorModel Projection = projection;
-    public Size2D Viewport = viewport;
+    public readonly long Generation = generation;
+    public readonly ViewTransformData ViewTransform = viewTransform;
+    public readonly ProjectionInfoData Projection = projection;
+    public readonly Size2D Viewport = viewport;
+
+    public void Deconstruct(out long generation, out ViewTransformData viewTransform, out ProjectionInfoData projection,
+        out Size2D viewport)
+    {
+        generation = Generation;
+        viewTransform = ViewTransform;
+        projection = Projection;
+        viewport = Viewport;
+    }
 }

@@ -1,23 +1,19 @@
 #region
 
 using System.Numerics;
-using ConcreteEngine.Common.Numerics;
 using ConcreteEngine.Editor.Data;
 using ConcreteEngine.Editor.Definitions;
 using ConcreteEngine.Editor.Utils;
+using ConcreteEngine.Editor.ViewModel;
 using ImGuiNET;
 
 #endregion
 
-namespace ConcreteEngine.Editor.Gui;
+namespace ConcreteEngine.Editor.Gui.Components;
 
 internal static class CameraPropertyComponent
 {
-    private struct CameraDataState
-    {
-        public CameraTransformDataState Transform;
-        public CameraProjectionState Projection;
-    }
+
 
     private const int WindowPaddingX = 12;
 
@@ -25,45 +21,54 @@ internal static class CameraPropertyComponent
     private static ref CameraTransformDataState TransformState => ref _state.Transform;
     private static ref CameraProjectionState ProjectionState => ref _state.Projection;
 
-    private static CameraViewModel _cameraModel => StateCtx.CameraModel;
+    private static CameraViewModel CameraModel => StateCtx.CameraModel;
 
     public static void Init()
     {
-        TransformState.From(in _cameraModel.Transform);
-        ProjectionState = CameraProjectionState.FromModel(in _cameraModel.Projection);
+        TransformState.From(in CameraModel.Transform);
+        ProjectionState = CameraProjectionState.From(in CameraModel.Projection);
     }
 
     public static void UpdateStateFromViewModel()
     {
-        TransformState.FromStable(in _cameraModel.Transform);
-        ProjectionState = CameraProjectionState.FromModel(in _cameraModel.Projection);
+        TransformState.FromStable(in CameraModel.Transform);
+        ProjectionState = CameraProjectionState.From(in CameraModel.Projection);
     }
 
     private static void OnUpdateTranslation()
     {
-        ref var transform = ref _cameraModel.Transform;
-        transform.Translation = TransformState.Translation;
-        StateCtx.ExecuteSetCameraTransform(in _cameraModel.Model);
+        _state.GetDataModel(CameraModel.Generation, CameraModel.Viewport, out var model);
+        StateCtx.ExecuteSetCameraTransform(in model);
     }
 
     private static void OnUpdateScale()
     {
+        OnUpdateTranslation();
+        /*
         ref var transform = ref _cameraModel.Transform;
+        _cameraModel.Transform = new ViewTransformData(in TransformState.Translation, in TransformState.Scale, in TransformState.);
         transform.Scale = TransformState.Scale;
         StateCtx.ExecuteSetCameraTransform(in _cameraModel.Model);
+        */
     }
 
     private static void OnUpdateRotation()
     {
+        OnUpdateTranslation();
+        /*
         ref var transform = ref _cameraModel.Transform;
         transform.Orientation = YawPitch.FromVector2(TransformState.Orientation);
         StateCtx.ExecuteSetCameraTransform(in _cameraModel.Model);
+        */
     }
 
     private static void OnUpdateProjection()
     {
+        OnUpdateTranslation();
+        /*
         _cameraModel.Projection = ProjectionState.ToModel();
         StateCtx.ExecuteSetCameraTransform(in _cameraModel.Model);
+        */
     }
 
 
@@ -89,7 +94,7 @@ internal static class CameraPropertyComponent
 
     private static void DrawViewport()
     {
-        var viewport = _cameraModel.Viewport;
+        var viewport = CameraModel.Viewport;
         var formatter = new NumberSpanFormatter(StringUtils.CharBuffer8);
         //var width = ImGui.GetContentRegionAvail().X - WindowPaddingX;
 

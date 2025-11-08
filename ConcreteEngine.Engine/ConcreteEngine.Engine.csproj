@@ -20,7 +20,7 @@
         <ProjectReference Include="..\ConcreteEngine.Editor\ConcreteEngine.Editor.csproj" />
         <ProjectReference Include="..\ConcreteEngine.Graphics\ConcreteEngine.Graphics.csproj"/>
         <ProjectReference Include="..\ConcreteEngine.Renderer\ConcreteEngine.Renderer.csproj" />
-        <ProjectReference Include="..\ConcreteEngine.SharedData\ConcreteEngine.SharedData.csproj" />
+        <ProjectReference Include="..\ConcreteEngine.Shared\ConcreteEngine.Shared.csproj" />
     </ItemGroup>
 
     <ItemGroup>

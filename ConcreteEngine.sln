@@ -12,7 +12,7 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ConcreteEngine.Renderer", "
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ConcreteEngine.Editor", "ConcreteEngine.Editor\ConcreteEngine.Editor.csproj", "{F5FEEAB6-E5CC-4415-A47D-AFED2B5C427D}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ConcreteEngine.SharedData", "ConcreteEngine.SharedData\ConcreteEngine.SharedData.csproj", "{37FD02D2-DAA3-4D65-A643-EE0694822701}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ConcreteEngine.Shared", "ConcreteEngine.Shared\ConcreteEngine.Shared.csproj", "{37FD02D2-DAA3-4D65-A643-EE0694822701}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution

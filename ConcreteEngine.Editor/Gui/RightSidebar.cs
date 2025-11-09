@@ -45,7 +45,7 @@ internal static class RightSidebar
 
             if (_focus && !_prevFocus)
             {
-                EditorService.OnFetchUpdateCameraData();
+                EditorService.OnFetchCameraData();
             }
             else if (!_focus && _prevFocus)
             {

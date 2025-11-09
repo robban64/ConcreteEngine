@@ -3,6 +3,7 @@
 using System.Numerics;
 using ConcreteEngine.Common.Numerics.Maths;
 using ConcreteEngine.Editor.Data;
+using ConcreteEngine.Editor.DataState;
 using ConcreteEngine.Editor.Utils;
 using ConcreteEngine.Editor.ViewModel;
 using ConcreteEngine.Shared.TransformData;
@@ -14,24 +15,6 @@ namespace ConcreteEngine.Editor.Gui.Components;
 
 internal static class EntitiesComponent
 {
-    private struct EntityDataState
-    {
-        public readonly int EntityId;
-        public int ModelId;
-        public int MaterialTagKey;
-        public TransformDataState Transform;
-        public readonly TransformData BaseTransform;
-
-        public EntityDataState(int entityId, in EntityDataPayload payload)
-        {
-            EntityId = entityId;
-            ModelId = payload.Model.ModelId;
-            MaterialTagKey = payload.Model.MaterialTagKey;
-            BaseTransform = payload.Transform;
-            Transform.FromStable(in payload.Transform);
-        }
-    }
-
     private const int RowHeight = 32;
     private const int ColumnWidth = 28;
 
@@ -41,6 +24,7 @@ internal static class EntitiesComponent
     private static ref TransformDataState TransformState => ref _selectedState.Transform;
     private static ref readonly TransformData BaseTransform => ref _selectedState.BaseTransform;
 
+    public static void SetEntityDataState(in EntityDataState state) => _selectedState = state;
     
     private static void OnSelectEntity(int entityId)
     {
@@ -53,8 +37,8 @@ internal static class EntitiesComponent
             return;
         }
         
-        EditorService.OnFetchEntityData(entityId, out var payload);
-        _selectedState = new EntityDataState(entityId, in payload);
+        //EditorService.OnFetchEntityData(entityId, out var payload);
+        //_selectedState = new EntityDataState(entityId, in payload);
 
     }
 

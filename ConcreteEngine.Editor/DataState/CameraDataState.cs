@@ -1,9 +1,10 @@
 using System.Numerics;
 using ConcreteEngine.Common.Numerics;
 using ConcreteEngine.Common.Numerics.Maths;
+using ConcreteEngine.Editor.Data;
 using ConcreteEngine.Shared.TransformData;
 
-namespace ConcreteEngine.Editor.Data;
+namespace ConcreteEngine.Editor.DataState;
 
 internal struct CameraDataState
 {

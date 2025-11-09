@@ -13,21 +13,37 @@ namespace ConcreteEngine.Editor;
 
 internal static class EditorStateContext
 {
-    private const long FetchInterval = 1_500;
-
-    public static EditorViewState ViewState { get; private set; }
-
-    public static AssetStoreViewModel AssetViewModel { get; } = new();
-    public static EntityListViewModel EntityListViewModel { get; } = new();
-    public static CameraViewModel CameraModel { get; } = new();
-
     private static long _lastAction = TimeUtils.GetTimestamp();
-
+    public static EditorViewState ViewState { get; private set; }
+    
+    private static IModelState? _leftSidebarState;
+    private static IModelState? _rightSidebarState;
 
     internal static void Init()
     {
     }
 
+    private static void TransitionLeftSidebar<T>(ModelState<T>? to) where T : class
+    {
+        if(_leftSidebarState is null && to is null)
+            throw new ArgumentNullException(nameof(to), $"Both {nameof(_leftSidebarState)} and to cannot be null");
+
+        
+        _leftSidebarState?.InvokeAction(ModelStateAction.Leave);
+        _leftSidebarState = to;
+        to?.InvokeAction(ModelStateAction.Enter);
+    }
+    
+    private static void TransitionRightSidebar<T>(ModelState<T>? to) where T : class
+    {
+        if(_rightSidebarState is null && to is null)
+            throw new ArgumentNullException(nameof(to), $"Both {nameof(_rightSidebarState)} and to cannot be null");
+
+        _rightSidebarState?.InvokeAction(ModelStateAction.Leave);
+        _rightSidebarState = to;
+        to?.InvokeAction(ModelStateAction.Enter);
+    }
+    
     public static void SetViewModeState(EditorViewMode mode)
     {
         if (mode == ViewState.EditorMode) SetState(EditorViewState.MakeNone());
@@ -57,12 +73,14 @@ internal static class EditorStateContext
     private static void OnEditorStateEnter(EditorViewState state, EditorViewState prevState)
     {
         if (state.IsMetricState) throw new InvalidOperationException("Metric state is already in editor state");
+        
         if (prevState.LeftSidebar == LeftSidebarMode.Assets && state.LeftSidebar != LeftSidebarMode.Assets)
             AssetViewModel.ResetState();
 
         switch (state.LeftSidebar)
         {
             case LeftSidebarMode.Assets:
+                TransitionLeftSidebar();
                 EditorService.OnFillAssetStore(EditorAssetSelection.None);
                 break;
             case LeftSidebarMode.Entities:
@@ -75,7 +93,7 @@ internal static class EditorStateContext
         {
             case RightSidebarMode.Default: break;
             case RightSidebarMode.Camera:
-                EditorService.OnFetchUpdateCameraData();
+                EditorService.OnFetchCameraData();
                 break;
             case RightSidebarMode.Light: break;
             case RightSidebarMode.Sky: break;

@@ -1,7 +1,9 @@
 #region
 
+using ConcreteEngine.Common;
 using ConcreteEngine.Common.Time;
 using ConcreteEngine.Editor.Data;
+using ConcreteEngine.Editor.DataState;
 using ConcreteEngine.Editor.Definitions;
 using ConcreteEngine.Editor.Gui;
 using ConcreteEngine.Editor.Gui.Components;
@@ -37,7 +39,7 @@ internal static class EditorService
 
         if (ViewState.RightSidebar == RightSidebarMode.Camera)
         {
-            OnFetchUpdateCameraData();
+            OnFetchCameraData();
             _lastRefresh = TimeUtils.GetTimestamp();
         }
     }
@@ -84,7 +86,7 @@ internal static class EditorService
     {
         if (selection is { } assetSelection)
         {
-            if(assetSelection == StateCtx.AssetViewModel.Selection) return;
+            if (assetSelection == StateCtx.AssetViewModel.Selection) return;
             StateCtx.AssetViewModel.Selection = assetSelection;
         }
 
@@ -99,21 +101,26 @@ internal static class EditorService
     }
 
 
-    public static bool OnFetchUpdateCameraData()
+    internal static bool OnFetchCameraData()
     {
         var gen = StateCtx.CameraModel.Generation;
         var result = OnApiFetch(gen, out var response, EditorApi.FetchCameraData);
         if (!result) return false;
 
         StateCtx.CameraModel.FromDataModel(in response);
-        CameraPropertyComponent.UpdateStateFromViewModel();
         return true;
     }
 
-    internal static bool OnFetchEntityData(int entityId, out EntityDataPayload response)
+    internal static bool OnFetchEntityData(EntityViewModel entity)
     {
-        return OnApiFetch(entityId, out response, EditorApi.FetchEntityData);
+        ArgumentNullException.ThrowIfNull(entity, nameof(entity));
+        if (!OnApiFetch(entity.EntityId, out var response, EditorApi.FetchEntityData)) return false;
+        InvalidOpThrower.ThrowIf(entity.EntityId != response.EntityId);
+        EntitiesComponent.SetEntityDataState(new EntityDataState(in response));
+        return true;
     }
+    
+    
 
     private static bool OnApiFetch<TRequest, TResponse>(TRequest request, out TResponse? response,
         GenericDataRequest<TRequest, TResponse>? apiFetch)

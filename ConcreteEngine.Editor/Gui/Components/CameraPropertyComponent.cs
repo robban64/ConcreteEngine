@@ -2,6 +2,7 @@
 
 using System.Numerics;
 using ConcreteEngine.Editor.Data;
+using ConcreteEngine.Editor.DataState;
 using ConcreteEngine.Editor.Definitions;
 using ConcreteEngine.Editor.Utils;
 using ConcreteEngine.Editor.ViewModel;
@@ -13,8 +14,6 @@ namespace ConcreteEngine.Editor.Gui.Components;
 
 internal static class CameraPropertyComponent
 {
-
-
     private const int WindowPaddingX = 12;
 
     private static CameraDataState _state;
@@ -29,7 +28,7 @@ internal static class CameraPropertyComponent
         ProjectionState = CameraProjectionState.From(in CameraModel.Projection);
     }
 
-    public static void UpdateStateFromViewModel()
+    public static void UpdateStateFromViewModel(bool stable)
     {
         TransformState.FromStable(in CameraModel.Transform);
         ProjectionState = CameraProjectionState.From(in CameraModel.Projection);

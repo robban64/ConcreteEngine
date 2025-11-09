@@ -15,20 +15,12 @@ namespace ConcreteEngine.Graphics.Gfx.Resources;
 internal interface IBackendResourceStore
 {
     ResourceKind Kind { get; }
-
     NativeHandle GetNativeHandle(in GfxHandle handle);
     void Remove(in GfxHandle handle);
-    bool IsValid(in GfxHandle handle);
 }
 
-internal interface IBackendReadResourceStore<out THandle>
-    where THandle : unmanaged, IResourceHandle, IEquatable<THandle>
-{
-    THandle GetUntyped(in GfxHandle handle);
-    //GfxHandle Replace(in GfxHandle handle, THandle value);
-}
 
-internal sealed class BackendResourceStore<TId, THandle> : IBackendResourceStore, IBackendReadResourceStore<THandle>
+internal sealed class BackendResourceStore<TId, THandle> : IBackendResourceStore
     where THandle : unmanaged, IResourceHandle, IEquatable<THandle> where TId : unmanaged, IResourceId
 {
     private int _idx = 0;
@@ -36,7 +28,7 @@ internal sealed class BackendResourceStore<TId, THandle> : IBackendResourceStore
     private readonly Stack<int> _free = new();
 
     public ResourceKind Kind { get; }
-    public GraphicsBackend Backend => GraphicsBackend.OpenGl;
+    //public GraphicsBackend Backend => GraphicsBackend.OpenGl;
 
     public int Count => _idx;
     public int FreeCount => _free.Count;
@@ -54,35 +46,32 @@ internal sealed class BackendResourceStore<TId, THandle> : IBackendResourceStore
 
     public THandle GetUntyped(in GfxHandle handle)
     {
-        Throwers.IsValidGfxHandleOrThrow(handle, Kind);
+        BkThrower.IsValidGfxHandleOrThrow(handle, Kind);
         ref readonly var record = ref _records[handle.Slot];
-        Throwers.IsValidRecordOrThrow(record, handle);
+        BkThrower.IsValidRecordOrThrow(record, handle);
         return record.Handle;
     }
 
-    public bool IsValid(in GfxHandle handle) => _records[handle.Slot].IsValid;
-
-
-    public GfxRefToken<TId> Add(THandle value)
+    public GfxRefToken<TId> Add(THandle handle)
     {
-        Throwers.ThrowOnDefaultHandle(value);
+        BkThrower.ThrowOnDefaultHandle(handle.Value);
         int idx = _free.Count > 0 ? _free.Pop() : Allocate();
-        var newHandle = _records[idx] = new BkHandle<THandle>(value, true);
-        GfxLog.LogBkStore(newHandle, idx, TId.Kind.ToLogTopic(), LogAction.Add);
-        return new GfxRefToken<TId>(new GfxHandle(idx, 1, TId.Kind));
+        var newHandle = _records[idx] = new BkHandle<THandle>(handle, true);
+        GfxLog.LogBkStore(newHandle, idx, Kind.ToLogTopic(), LogAction.Add);
+        return new GfxRefToken<TId>(new GfxHandle(idx, 1, Kind));
     }
 
 
     public void Remove(in GfxHandle handle)
     {
-        Throwers.IsValidGfxHandleOrThrow(handle, Kind);
+        BkThrower.IsValidGfxHandleOrThrow(handle, Kind);
         ArgumentOutOfRangeException.ThrowIfEqual((int)handle.Kind, (int)ResourceKind.Invalid);
         ArgumentOutOfRangeException.ThrowIfEqual(handle.Gen, 0);
 
         var record = _records[handle.Slot];
         _records[handle.Slot] = default;
         _free.Push(handle.Slot);
-        GfxLog.LogBkStore(record, handle.Slot, TId.Kind.ToLogTopic(), LogAction.Remove);
+        GfxLog.LogBkStore(record, handle.Slot, Kind.ToLogTopic(), LogAction.Remove);
     }
 
 /*
@@ -126,39 +115,30 @@ internal sealed class BackendResourceStore<TId, THandle> : IBackendResourceStore
 
         return count;
     }
+}
 
-    private static class Throwers
+internal static class BkThrower
+{
+    [DoesNotReturn, StackTraceHidden, MethodImpl(MethodImplOptions.NoInlining)]
+    public static void ThrowInvalid(string name) => throw new InvalidOperationException(nameof(name));
+
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public static void IsValidGfxHandleOrThrow(GfxHandle handle, ResourceKind kind)
     {
-        [DoesNotReturn]
-        [StackTraceHidden]
-        [MethodImpl(MethodImplOptions.NoInlining)]
-        public static void ThrowInvalid(string name) => throw new InvalidOperationException(nameof(name));
+        var isValid = handle.IsValid && handle.Kind == kind;
+        if (!isValid) ThrowInvalid(nameof(handle));
+    }
 
-        [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public static void IsValidGfxHandleOrThrow(GfxHandle handle, ResourceKind kind)
-        {
-            var isValid = handle.IsValid && handle.Kind == kind;
-            if (!isValid) ThrowInvalid(nameof(handle));
-        }
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public static void IsValidRecordOrThrow(uint handle, GfxHandle gfxHandle)
+    {
+        var isValid = handle > 0 && gfxHandle.IsValid;
+        if (!isValid) ThrowInvalid(nameof(handle));
+    }
 
-        [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public static void IsValidRecordOrThrow(BkHandle<THandle> e, GfxHandle handle)
-        {
-            var isValid = e.IsValid && handle.IsValid;
-            if (!isValid) ThrowInvalid(nameof(e));
-        }
-
-
-        [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public static void IsUniqueHandleOrThrow(uint h1, uint h2)
-        {
-            if (h1 == h2) ThrowInvalid(nameof(h1));
-        }
-
-        [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public static void ThrowOnDefaultHandle(THandle handle)
-        {
-            if (handle.Value == 0) ThrowInvalid(nameof(handle));
-        }
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public static void ThrowOnDefaultHandle(uint handle)
+    {
+        if (handle == 0) ThrowInvalid(nameof(handle));
     }
 }

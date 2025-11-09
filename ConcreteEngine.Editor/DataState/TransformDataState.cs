@@ -7,7 +7,7 @@ using ConcreteEngine.Shared.TransformData;
 
 #endregion
 
-namespace ConcreteEngine.Editor.Data;
+namespace ConcreteEngine.Editor.DataState;
 
 internal struct TransformDataState
 {

@@ -63,10 +63,11 @@ internal static class EditorStateContext
         switch (state.LeftSidebar)
         {
             case LeftSidebarMode.Assets:
-                EditorApi.FillAssetStoreView?.Invoke(AssetViewModel.TypeSelection);
+                EditorService.OnFillAssetStore(EditorAssetSelection.None);
                 break;
             case LeftSidebarMode.Entities:
-                if (EntityListViewModel.Entities.Count == 0) EditorApi.FillEntityView?.Invoke(EntityListViewModel.SelectedEntityId);
+                if (EntityListViewModel.Entities.Count == 0) 
+                    EditorService.OnFillEntities();
                 break;
         }
 

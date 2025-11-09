@@ -21,21 +21,12 @@ internal static class AssetsComponent
 
     private static void OnAssetSelectedChanged(AssetObjectViewModel? asset)
     {
-        ViewModel.AssetFileObjects.Clear();
-        if (asset is null) return;
-        ViewModel.AssetFileObjects = EditorApi.FillAssetObjectFiles?.Invoke(asset.AssetId) ?? [];
+        EditorService.OnFillAssetFiles(asset);
     }
 
     private static void OnSelectTypeChange(EditorAssetSelection selection)
     {
-        if (selection == ViewModel.TypeSelection) return;
-        ViewModel.TypeSelection = selection;
-        ViewModel.AssetObjects.Clear();
-        ViewModel.AssetFileObjects.Clear();
-
-        if (selection == EditorAssetSelection.None) return;
-
-        ViewModel.AssetObjects = EditorApi.FillAssetStoreView?.Invoke(selection) ?? [];
+        EditorService.OnFillAssetStore(selection);
 
     }
 
@@ -113,7 +104,7 @@ internal static class AssetsComponent
         ImGui.PushStyleVar(ImGuiStyleVar.FramePadding, new Vector2(8, 6));
         ImGui.PushStyleVar(ImGuiStyleVar.WindowPadding, new Vector2(8, 6));
 
-        string currentLabel = AssetTypeArray[(int)ViewModel.TypeSelection];
+        string currentLabel = AssetTypeArray[(int)ViewModel.Selection];
         ImGui.SetNextItemWidth(ImGui.GetContentRegionAvail().X - 8f);
         if (ImGui.BeginCombo("##assetTypeSelector", currentLabel, ImGuiComboFlags.HeightLargest))
         {
@@ -121,7 +112,7 @@ internal static class AssetsComponent
 
             for (int i = 0; i < AssetTypeArray.Length; i++)
             {
-                bool isSelected = i == (int)ViewModel.TypeSelection;
+                bool isSelected = i == (int)ViewModel.Selection;
 
                 if (ImGui.Selectable(AssetTypeArray[i], isSelected, ImGuiSelectableFlags.None, Vector2.Zero))
                     OnSelectTypeChange((EditorAssetSelection)i);

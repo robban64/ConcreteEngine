@@ -24,63 +24,39 @@ internal static class EngineDataProvider
         _world = world;
         _assetSystem = assetSystem;
     }
-
-    public static bool PullCameraView(long generation, out CameraEditorPayload response)
+    
+    public static List<EntityViewModel> GetEntityView(int entityId)
     {
-        if (_world is null || _world.Camera.Generation == generation)
-        {
-            response = default;
-            return false;
-        }
+        if (_world is null) return [];
 
-        var camera = _world.Camera;
-        var transform = new ViewTransformData(camera.Translation, camera.Scale, camera.Orientation);
-        var proj = new ProjectionInfoData(camera.AspectRatio, camera.Fov, camera.NearPlane, camera.FarPlane);
-        var viewport = camera.Viewport;
-        response = new CameraEditorPayload(camera.Generation, in transform, in proj, in viewport);
-        return true;
-    }
-
-    public static List<EntityViewModel> PullEntityView(int entityId)
-    {
-        if (_world is null) return;
-
-        Transform defaultTransform = default;
-
+        var result = new List<EntityViewModel>(_world.Meshes.Count);
         foreach (var it in _world.Query<ModelComponent>())
         {
-            ref var model = ref it.Component;
-
-            ref var transform = ref _world.Transforms.Has(it.Entity)
-                ? ref _world.Transforms.GetById(it.Entity)
-                : ref defaultTransform;
-
-            viewModel.Entities.Add(EditorObjectMapper.MakeEntityViewModel(it.Entity));
+            result.Add(EditorObjectMapper.MakeEntityViewModel(it.Entity));
         }
-    }
 
-    public static bool PullEntityData(int entityId, out EntityDataPayload response)
+        return result;
+    }
+    
+    public static List<AssetObjectViewModel> GetAssetStoreData(EditorAssetSelection req)
     {
-        if (_world is null)
+        if (_assetSystem is null || req == EditorAssetSelection.None) return [];
+        var store = _assetSystem.StoreImpl;
+        var type = EditorEnumMapper.AssetSelectionToType(req);
+        var meta = store.GetMetaSnapshot(type);
+
+        var result = new List<AssetObjectViewModel>(meta.Count);
+        foreach (var obj in store.AssetValues)
         {
-            response = default;
-            return false;
+            if (obj.GetType() != type) continue;
+            result.Add(EditorObjectMapper.MakeAssetObjectModel(obj));
         }
 
-        var entity = new EntityId(entityId);
-        var model = _world.Meshes.GetById(entity);
-        if (!_world.Transforms.TryGetById(entity, out var transform)) transform = default;
-
-        var transformData =
-            new TransformData(in transform.Translation, in transform.Scale, in transform.Rotation);
-
-        var modelData = new EditorEntityModel(model.Model, model.MaterialKey.Value, model.DrawCount);
-
-        response = new EntityDataPayload(entityId, in modelData, in transformData);
-        return true;
+        result.Sort(static (a, b) => a.AssetId.CompareTo(b.AssetId));
+        return result;
     }
-
-    public static List<AssetObjectFileViewModel> PullAssetObjectFiles(int assetId)
+    
+    public static List<AssetObjectFileViewModel> GetAssetObjectFiles(int assetId)
     {
         if (_assetSystem is null) return [];
 
@@ -101,22 +77,42 @@ internal static class EngineDataProvider
 
         return result;
     }
-
-    public static List<AssetObjectViewModel> PullAssetStoreData(EditorAssetSelection req)
+    
+    public static bool PullCameraData(long generation, out CameraEditorPayload response)
     {
-        if (_assetSystem is null || req == EditorAssetSelection.None) return [];
-        var store = _assetSystem.StoreImpl;
-        var type = EditorEnumMapper.AssetSelectionToType(req);
-        var meta = store.GetMetaSnapshot(type);
-
-        var result = new List<AssetObjectViewModel>(meta.Count);
-        foreach (var obj in store.AssetValues)
+        if (_world is null || _world.Camera.Generation == generation)
         {
-            if (obj.GetType() != type) continue;
-            result.Add(EditorObjectMapper.MakeAssetObjectModel(obj));
+            response = default;
+            return false;
         }
 
-        result.Sort(static (a, b) => a.AssetId.CompareTo(b.AssetId));
-        return result;
+        var camera = _world.Camera;
+        var transform = new ViewTransformData(camera.Translation, camera.Scale, camera.Orientation);
+        var proj = new ProjectionInfoData(camera.AspectRatio, camera.Fov, camera.NearPlane, camera.FarPlane);
+        var viewport = camera.Viewport;
+        response = new CameraEditorPayload(camera.Generation, in transform, in proj, in viewport);
+        return true;
+    }
+
+
+    public static bool PullEntityData(int entityId, out EntityDataPayload response)
+    {
+        if (_world is null)
+        {
+            response = default;
+            return false;
+        }
+
+        var entity = new EntityId(entityId);
+        var model = _world.Meshes.GetById(entity);
+        if (!_world.Transforms.TryGetById(entity, out var transform)) transform = default;
+
+        var transformData =
+            new TransformData(in transform.Translation, in transform.Scale, in transform.Rotation);
+
+        var modelData = new EditorEntityModel(model.Model, model.MaterialKey.Value, model.DrawCount);
+
+        response = new EntityDataPayload(entityId, in modelData, in transformData);
+        return true;
     }
 }

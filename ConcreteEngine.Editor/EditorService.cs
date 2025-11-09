@@ -6,6 +6,7 @@ using ConcreteEngine.Editor.Definitions;
 using ConcreteEngine.Editor.Gui;
 using ConcreteEngine.Editor.Gui.Components;
 using ConcreteEngine.Editor.Utils;
+using ConcreteEngine.Editor.ViewModel;
 
 #endregion
 
@@ -59,6 +60,45 @@ internal static class EditorService
         DevConsoleService.Draw(240, GuiTheme.RightSidebarWidth);
     }
 
+
+    internal static void OnFillEntities()
+    {
+        var selected = StateCtx.EntityListViewModel.SelectedEntityId;
+        var result = OnApiFill(selected, EditorApi.FillEntityView) ?? [];
+        StateCtx.EntityListViewModel.Entities = result;
+    }
+
+    internal static void OnFillAssetFiles(AssetObjectViewModel? asset)
+    {
+        if (asset is null)
+        {
+            StateCtx.AssetViewModel.AssetFileObjects = [];
+            return;
+        }
+
+        var result = OnApiFill(asset.AssetId, EditorApi.FillAssetObjectFiles) ?? [];
+        StateCtx.AssetViewModel.AssetFileObjects = result;
+    }
+
+    internal static void OnFillAssetStore(EditorAssetSelection? selection = null)
+    {
+        if (selection is { } assetSelection)
+        {
+            if(assetSelection == StateCtx.AssetViewModel.Selection) return;
+            StateCtx.AssetViewModel.Selection = assetSelection;
+        }
+
+        if (StateCtx.AssetViewModel.Selection == EditorAssetSelection.None)
+        {
+            StateCtx.AssetViewModel.ResetState(true);
+            return;
+        }
+
+        var result = OnApiFill(StateCtx.AssetViewModel.Selection, EditorApi.FillAssetStoreView) ?? [];
+        StateCtx.AssetViewModel.AssetObjects = result;
+    }
+
+
     public static bool OnFetchUpdateCameraData()
     {
         var gen = StateCtx.CameraModel.Generation;
@@ -70,7 +110,6 @@ internal static class EditorService
         return true;
     }
 
-
     internal static bool OnFetchEntityData(int entityId, out EntityDataPayload response)
     {
         return OnApiFetch(entityId, out response, EditorApi.FetchEntityData);
@@ -79,23 +118,23 @@ internal static class EditorService
     private static bool OnApiFetch<TRequest, TResponse>(TRequest request, out TResponse? response,
         GenericDataRequest<TRequest, TResponse>? apiFetch)
     {
-        if (!CanFetch(150) || apiFetch is null) return Fail(out response);
+        if (!CanFetch(150) || apiFetch is null) return FailOut(out response);
+        Console.WriteLine($"Api Fetch: {typeof(TResponse).Name}");
         apiFetch(request, out response);
         return true;
     }
-    
-    private static bool OnApiFill<TRequest, TResponse>(TRequest request, out TResponse? response,
-        GenericDataRequest<TRequest, TResponse>? apiFetch)
+
+    private static TResponse? OnApiFill<TRequest, TResponse>(TRequest request,
+        GenericRequest<TRequest, TResponse>? apiFetch)
     {
-        if (!CanFetch(150) || apiFetch is null) return Fail(out response);
-        apiFetch(request, out response);
-        return true;
+        if (!CanFetch(150) || apiFetch is null) return default;
+        Console.WriteLine($"Api Fill: {typeof(TResponse).Name}");
+        return apiFetch(request);
     }
 
     private static bool CanFetch(int ms)
     {
         if (!TimeUtils.HasIntervalPassed(_lastFetched, ms)) return false;
-
         _lastFetched = TimeUtils.GetTimestamp();
         return true;
     }
@@ -112,7 +151,7 @@ internal static class EditorService
         return true;
     }
 
-    private static bool Fail<T>(out T? value)
+    private static bool FailOut<T>(out T? value)
     {
         value = default;
         return false;

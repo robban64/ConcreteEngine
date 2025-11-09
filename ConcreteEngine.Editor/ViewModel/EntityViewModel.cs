@@ -6,13 +6,7 @@ namespace ConcreteEngine.Editor.ViewModel;
 public sealed class EntityListViewModel
 {
     public int SelectedEntityId { get; set; } = 0;
-    public List<EntityViewModel> Entities { get; } = new(128);
-
-    public void ResetState()
-    {
-        SelectedEntityId = 0;
-        Entities.Clear();
-    }
+    public List<EntityViewModel> Entities { get; set; } = [];
 }
 
 public sealed class EntityViewModel(

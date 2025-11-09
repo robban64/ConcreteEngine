@@ -80,31 +80,31 @@ internal static class EngineDataProvider
         return true;
     }
 
-    public static void PullAssetObjectFiles(AssetObjectViewModel asset, List<AssetObjectFileViewModel> result)
+    public static void PullAssetObjectFiles(FillAssetFilePayload payload)
     {
         if (_assetSystem is null) return;
         var store = _assetSystem.StoreImpl;
-        store.TryGetFileIds(new AssetId(asset.AssetId), out var fileIds);
+        store.TryGetFileIds(new AssetId(payload.SelectedModel.AssetId), out var fileIds);
         foreach (var fileId in fileIds)
         {
             store.TryGetFileEntry(fileId, out var entry);
-            result.Add(EditorObjectMapper.MakeAssetObjectFile(entry!));
+            payload.Models.Add(EditorObjectMapper.MakeAssetObjectFile(entry!));
         }
     }
 
-    public static void PullAssetStoreData(EditorAssetSelection selection, List<AssetObjectViewModel> result)
+    public static void PullAssetStoreData(FillAssetsPayload payload)
     {
         if (_assetSystem is null) return;
-        if (selection == EditorAssetSelection.None) return;
+        if (payload.Selection == EditorAssetSelection.None) return;
         var store = _assetSystem.StoreImpl;
-        var type = EditorEnumMapper.AssetSelectionToType(selection);
+        var type = EditorEnumMapper.AssetSelectionToType(payload.Selection);
 
         foreach (var obj in store.AssetValues)
         {
             if (obj.GetType() != type) continue;
-            result.Add(EditorObjectMapper.MakeAssetObjectModel(obj));
+            payload.Models.Add(EditorObjectMapper.MakeAssetObjectModel(obj));
         }
 
-        result.Sort(static (a, b) => a.AssetId.CompareTo(b.AssetId));
+        payload.Models.Sort(static (a, b) => a.AssetId.CompareTo(b.AssetId));
     }
 }

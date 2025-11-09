@@ -42,17 +42,20 @@ internal static class EntitiesComponent
     private static ref readonly TransformData BaseTransform => ref _selectedState.BaseTransform;
 
     
-    //TODO fix
-    private static void UpdateStateFrom(EntityViewModel? entity)
+    private static void OnSelectEntity(int entityId)
     {
-        if (entity is null || EditorApi.FetchEntityData is null)
+        if(entityId == ViewModel.SelectedEntityId) return;
+        ViewModel.SelectedEntityId = entityId;
+
+        if (entityId == 0)
         {
             _selectedState = default;
             return;
         }
         
-        EditorApi.FetchEntityData(entity.EntityId, out var payload);
-        _selectedState = new EntityDataState(entity.EntityId, in payload);
+        EditorService.OnFetchEntityData(entityId, out var payload);
+        _selectedState = new EntityDataState(entityId, in payload);
+
     }
 
     private static void OnUpdateTranslation(EntityViewModel entity)
@@ -135,8 +138,7 @@ internal static class EntitiesComponent
             var bufferStr = formatter.Format(entity.EntityId);
             if (EntitySelectable(bufferStr, selected))
             {
-                ViewModel.SelectedEntityId = entity.EntityId;
-                UpdateStateFrom(entity);
+                OnSelectEntity(entity.EntityId);
 
                 var itemMin = ImGui.GetItemRectMin();
                 var itemMax = ImGui.GetItemRectMax();

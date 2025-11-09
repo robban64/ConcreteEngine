@@ -9,6 +9,10 @@ public delegate void CommandPayloadResolverDel<TPayload>(string action, string? 
 public delegate CommandResponse EditorCommandReqDel<TPayload>(in TPayload payload);
 
 // editor view delegates
+public delegate void GenericFillRequest<in TRequest>(TRequest  request);
+public delegate bool GenericDataRequest<in TRequest, TResponse>(TRequest request, out TResponse? payload);
+public delegate TResponse? GenericRequest<in TRequest, out TResponse>(TRequest request);
+
 public delegate bool FetchCameraDataRequest(long generation, out CameraEditorPayload response);
 
 public delegate bool FetchEntityDataRequest(int entityId, out EntityDataPayload response);

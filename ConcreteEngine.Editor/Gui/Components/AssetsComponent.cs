@@ -1,6 +1,7 @@
 #region
 
 using System.Numerics;
+using ConcreteEngine.Editor.Data;
 using ConcreteEngine.Editor.Definitions;
 using ConcreteEngine.Editor.Utils;
 using ConcreteEngine.Editor.ViewModel;
@@ -22,7 +23,10 @@ internal static class AssetsComponent
     {
         ViewModel.AssetFileObjects.Clear();
         if (asset is null) return;
-        EditorApi.FetchAssetObjectFiles?.Invoke(asset, ViewModel.AssetFileObjects);
+        EditorApi.FillAssetObjectFiles?.Invoke(new FillAssetFilePayload
+        {
+            SelectedModel = asset, Models = ViewModel.AssetFileObjects
+        });
     }
 
     private static void OnSelectTypeChange(EditorAssetSelection selection)
@@ -34,7 +38,10 @@ internal static class AssetsComponent
 
         if (selection == EditorAssetSelection.None) return;
 
-        EditorApi.FillAssetStoreView?.Invoke(selection, ViewModel.AssetObjects);
+        EditorApi.FillAssetStoreView?.Invoke(new FillAssetsPayload
+        {
+            Selection = selection, Models = ViewModel.AssetObjects
+        });
     }
 
     public static void DrawSubHeader()

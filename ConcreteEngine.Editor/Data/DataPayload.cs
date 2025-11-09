@@ -1,25 +1,17 @@
 #region
 
 using ConcreteEngine.Common.Numerics;
+using ConcreteEngine.Editor.Definitions;
 using ConcreteEngine.Shared.TransformData;
 
 #endregion
 
 namespace ConcreteEngine.Editor.Data;
 
-public enum EditorRequestAction
-{
-    Reload,
-    Set,
-    Create,
-    Delete
-}
 
 public readonly record struct EditorShadowPayload(int Size, bool Enabled, EditorRequestAction RequestAction);
 
 public readonly record struct EditorShaderPayload(string Name, EditorRequestAction RequestAction);
-
-
 
 public readonly struct CameraEditorPayload(
     long generation,

@@ -22,32 +22,10 @@ internal static class EditorStateContext
     public static CameraViewModel CameraModel { get; } = new();
 
     private static long _lastAction = TimeUtils.GetTimestamp();
-    private static long _lastFetched = TimeUtils.GetTimestamp();
 
 
     internal static void Init()
     {
-    }
-
-    internal static void PreRender()
-    {
-        GuiTheme.RightSidebarExpanded = ViewState.IsEditorState;
-        MetricsApi.ToggleMetrics(ViewState.IsMetricState);
-        
-        if(!ViewState.IsEditorState) return ;
-
-        var isCamera = ViewState.RightSidebar == RightSidebarMode.Camera;
-        var isEntity = ViewState.LeftSidebar == LeftSidebarMode.Entities;
-        
-        if (ViewState.IsEditorState && ViewState.RightSidebar == RightSidebarMode.Camera)
-        {
-            if (TimeUtils.HasIntervalPassed(_lastFetched, FetchInterval))
-            {
-                RefreshCameraData();
-                _lastFetched = TimeUtils.GetTimestamp();
-            }
-        }
-
     }
 
     public static void SetViewModeState(EditorViewMode mode)
@@ -85,7 +63,10 @@ internal static class EditorStateContext
         switch (state.LeftSidebar)
         {
             case LeftSidebarMode.Assets:
-                EditorApi.FillAssetStoreView?.Invoke(AssetViewModel.TypeSelection, AssetViewModel.AssetObjects);
+                EditorApi.FillAssetStoreView?.Invoke(new FillAssetsPayload
+                {
+                    Selection = AssetViewModel.TypeSelection, Models = AssetViewModel.AssetObjects
+                });
                 break;
             case LeftSidebarMode.Entities:
                 if (EntityListViewModel.Entities.Count == 0) EditorApi.FillEntityView?.Invoke(EntityListViewModel);
@@ -96,22 +77,12 @@ internal static class EditorStateContext
         {
             case RightSidebarMode.Default: break;
             case RightSidebarMode.Camera:
-                RefreshCameraData();
+                EditorService.OnFetchUpdateCameraData();
                 break;
             case RightSidebarMode.Light: break;
             case RightSidebarMode.Sky: break;
             case RightSidebarMode.Terrain: break;
         }
-    }
-
-    public static void RefreshCameraData()
-    {
-        if(EditorApi.FetchCameraData is null) return;
-        if (!EditorApi.FetchCameraData(CameraModel.Generation, out var response))
-            return;
-
-        CameraModel.FromDataModel(in response);
-        CameraPropertyComponent.UpdateStateFromViewModel();
     }
 
     private static bool CanExecute(int ms, bool print = false)

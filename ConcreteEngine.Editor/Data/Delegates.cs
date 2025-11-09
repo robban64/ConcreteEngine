@@ -13,6 +13,8 @@ public delegate void GenericFillRequest<in TRequest>(TRequest  request);
 public delegate bool GenericDataRequest<in TRequest, TResponse>(TRequest request, out TResponse? payload);
 public delegate TResponse? GenericRequest<in TRequest, out TResponse>(TRequest request);
 
+public delegate TReturn DelFunc<in TParams, out TReturn>(TParams param);
+public delegate void DelAction<in TParams1, TParams2>(TParams1 param1, in TParams2 param2);
 public delegate bool FetchCameraDataRequest(long generation, out CameraEditorPayload response);
 
 public delegate bool FetchEntityDataRequest(int entityId, out EntityDataPayload response);

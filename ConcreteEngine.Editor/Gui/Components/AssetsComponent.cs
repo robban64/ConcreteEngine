@@ -23,10 +23,7 @@ internal static class AssetsComponent
     {
         ViewModel.AssetFileObjects.Clear();
         if (asset is null) return;
-        EditorApi.FillAssetObjectFiles?.Invoke(new FillAssetFilePayload
-        {
-            SelectedModel = asset, Models = ViewModel.AssetFileObjects
-        });
+        ViewModel.AssetFileObjects = EditorApi.FillAssetObjectFiles?.Invoke(asset.AssetId) ?? [];
     }
 
     private static void OnSelectTypeChange(EditorAssetSelection selection)
@@ -38,10 +35,8 @@ internal static class AssetsComponent
 
         if (selection == EditorAssetSelection.None) return;
 
-        EditorApi.FillAssetStoreView?.Invoke(new FillAssetsPayload
-        {
-            Selection = selection, Models = ViewModel.AssetObjects
-        });
+        ViewModel.AssetObjects = EditorApi.FillAssetStoreView?.Invoke(selection) ?? [];
+
     }
 
     public static void DrawSubHeader()

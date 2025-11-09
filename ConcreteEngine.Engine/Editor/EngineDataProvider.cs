@@ -41,7 +41,7 @@ internal static class EngineDataProvider
         return true;
     }
 
-    public static void PullEntityView(EntityListViewModel viewModel)
+    public static List<EntityViewModel> PullEntityView(int entityId)
     {
         if (_world is null) return;
 
@@ -80,31 +80,43 @@ internal static class EngineDataProvider
         return true;
     }
 
-    public static void PullAssetObjectFiles(FillAssetFilePayload payload)
+    public static List<AssetObjectFileViewModel> PullAssetObjectFiles(int assetId)
     {
-        if (_assetSystem is null) return;
+        if (_assetSystem is null) return [];
+
+        var assetTypedId = new AssetId(assetId);
         var store = _assetSystem.StoreImpl;
-        store.TryGetFileIds(new AssetId(payload.SelectedModel.AssetId), out var fileIds);
+        store.TryGetFileIds(assetTypedId, out var fileIds);
+
+        if (!store.TryGetByAssetId(assetTypedId, out var asset))
+            return [];
+        
+        var meta = store.GetMetaSnapshot(asset!.GetType());
+        var result = new List<AssetObjectFileViewModel>(meta.Count);
         foreach (var fileId in fileIds)
         {
             store.TryGetFileEntry(fileId, out var entry);
-            payload.Models.Add(EditorObjectMapper.MakeAssetObjectFile(entry!));
+            result.Add(EditorObjectMapper.MakeAssetObjectFile(entry!));
         }
+
+        return result;
     }
 
-    public static void PullAssetStoreData(FillAssetsPayload payload)
+    public static List<AssetObjectViewModel> PullAssetStoreData(EditorAssetSelection req)
     {
-        if (_assetSystem is null) return;
-        if (payload.Selection == EditorAssetSelection.None) return;
+        if (_assetSystem is null || req == EditorAssetSelection.None) return [];
         var store = _assetSystem.StoreImpl;
-        var type = EditorEnumMapper.AssetSelectionToType(payload.Selection);
+        var type = EditorEnumMapper.AssetSelectionToType(req);
+        var meta = store.GetMetaSnapshot(type);
 
+        var result = new List<AssetObjectViewModel>(meta.Count);
         foreach (var obj in store.AssetValues)
         {
             if (obj.GetType() != type) continue;
-            payload.Models.Add(EditorObjectMapper.MakeAssetObjectModel(obj));
+            result.Add(EditorObjectMapper.MakeAssetObjectModel(obj));
         }
 
-        payload.Models.Sort(static (a, b) => a.AssetId.CompareTo(b.AssetId));
+        result.Sort(static (a, b) => a.AssetId.CompareTo(b.AssetId));
+        return result;
     }
 }

@@ -10,11 +10,10 @@ namespace ConcreteEngine.Editor;
 
 public static class EditorApi
 {
+    public static GenericRequest<EditorAssetSelection, List<AssetObjectViewModel>>? FillAssetStoreView { get; set; }
+    public static GenericRequest<int, List<AssetObjectFileViewModel>>? FillAssetObjectFiles { get; set; }
+    public static GenericRequest<int, List<EntityViewModel>>? FillEntityView { get; set; }
 
-    public static GenericFillRequest<FillAssetsPayload>? FillAssetStoreView { get; set; }
-    public static GenericFillRequest<FillAssetFilePayload>? FillAssetObjectFiles { get; set; }
-    public static GenericFillRequest<EntityListViewModel>? FillEntityView { get; set; }
     public static GenericDataRequest<long, CameraEditorPayload>? FetchCameraData { get; set; }
-    public static GenericDataRequest<int,EntityDataPayload>? FetchEntityData { get; set; }
-
+    public static GenericDataRequest<int, EntityDataPayload>? FetchEntityData { get; set; }
 }

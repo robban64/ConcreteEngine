@@ -6,8 +6,8 @@ namespace ConcreteEngine.Editor.ViewModel;
 public sealed class AssetStoreViewModel
 {
     public EditorAssetSelection TypeSelection { get; set; }
-    public List<AssetObjectViewModel> AssetObjects { get; } = new(16);
-    public List<AssetObjectFileViewModel> AssetFileObjects { get; } = new(4);
+    public List<AssetObjectViewModel> AssetObjects { get; set; } = [];
+    public List<AssetObjectFileViewModel> AssetFileObjects { get; set; } = [];
 
     public void ResetState(bool clearTypeSelection = false)
     {

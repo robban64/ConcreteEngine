@@ -101,7 +101,7 @@ internal sealed class AssetStore : IAssetStore
         return false;
     }
 
-    internal bool TryGetByRef(AssetId assetId, Type type, out AssetObject? asset)
+    internal bool TryGetByAssetId(AssetId assetId, out AssetObject? asset)
     {
         if (_assets.TryGetValue(assetId, out var obj))
         {

@@ -9,9 +9,9 @@ namespace ConcreteEngine.Editor;
 
 internal static class EditorModelManager
 {
-    public static ModelState<EntitiesViewModel> EntityModelState { get; private set; } = null!;
-    public static ModelState<AssetStoreViewModel> AssetModelState { get; private set; } = null!;
-    public static ModelState<CameraViewModel> CameraModelState { get; private set; } = null!;
+    public static ModelState<EntitiesViewModel> EntitiesState { get; private set; } = null!;
+    public static ModelState<AssetStoreViewModel> AssetState { get; private set; } = null!;
+    public static ModelState<CameraViewModel> CameraState { get; private set; } = null!;
 
     public static bool HasInit { get; private set; } = false;
 
@@ -21,7 +21,7 @@ internal static class EditorModelManager
 
     public static void SetupModelState()
     {
-        InvalidOpThrower.ThrowIf(HasInit, nameof(EntityModelState));
+        InvalidOpThrower.ThrowIf(HasInit, nameof(EntitiesState));
 
         HasInit = true;
         RegisterEntityState();
@@ -31,7 +31,7 @@ internal static class EditorModelManager
 
     private static void RegisterEntityState()
     {
-        EntityModelState = ModelState<EntitiesViewModel>
+        EntitiesState = ModelState<EntitiesViewModel>
             .CreateBuilder(static () => new EntitiesViewModel())
             .OnEnter(static (ctx, it) => OnFillEntities(ctx))
             .OnLeave(static (ctx, it) => ctx.ResetState())
@@ -51,7 +51,7 @@ internal static class EditorModelManager
 
     private static void RegisterAssetState()
     {
-        AssetModelState = ModelState<AssetStoreViewModel>
+        AssetState = ModelState<AssetStoreViewModel>
             .CreateBuilder(static () => new AssetStoreViewModel())
             .OnEnter(static (ctx, it) => OnFillAssetStore(ctx))
             .OnLeave(static (ctx, it) => ctx.ResetState())
@@ -74,7 +74,7 @@ internal static class EditorModelManager
     
     private static void RegisterCameraState()
     {
-        CameraModelState = ModelState<CameraViewModel>
+        CameraState = ModelState<CameraViewModel>
             .CreateBuilder(static () => new CameraViewModel())
             .OnEnter(FetchCameraDataHandler)
             .OnRefresh(FetchCameraDataHandler)

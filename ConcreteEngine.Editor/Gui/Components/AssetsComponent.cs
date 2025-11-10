@@ -18,7 +18,7 @@ internal static class AssetsComponent
 
     private static int _popupInput = 0;
 
-    private static ModelState<AssetStoreViewModel> Model => ModelManager.AssetModelState;
+    private static ModelState<AssetStoreViewModel> Model => ModelManager.AssetState;
 
     private static AssetStoreViewModel ViewState => Model.State!;
 
@@ -173,7 +173,7 @@ internal static class AssetsComponent
             ImGui.Separator();
             if (ImGui.Button("Reload", new Vector2(72, 28)))
             {
-                ModelManager.AssetModelState.TriggerEvent(EventKey.SelectionAction, asset);
+                ModelManager.AssetState.TriggerEvent(EventKey.SelectionAction, asset);
                 ImGui.CloseCurrentPopup();
             }
         }

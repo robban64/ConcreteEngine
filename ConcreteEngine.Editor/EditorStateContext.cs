@@ -94,10 +94,10 @@ internal static class EditorStateContext
             switch (state.LeftSidebar)
             {
                 case LeftSidebarMode.Assets:
-                    TransitionLeftSidebar(ModelManager.AssetModelState);
+                    TransitionLeftSidebar(ModelManager.AssetState);
                     break;
                 case LeftSidebarMode.Entities:
-                    TransitionLeftSidebar(ModelManager.EntityModelState);
+                    TransitionLeftSidebar(ModelManager.EntitiesState);
                     break;
             }
 
@@ -108,7 +108,7 @@ internal static class EditorStateContext
             {
                 case RightSidebarMode.Default: break;
                 case RightSidebarMode.Camera:
-                    TransitionRightSidebar(ModelManager.CameraModelState);
+                    TransitionRightSidebar(ModelManager.CameraState);
                     break;
                 case RightSidebarMode.Light: break;
                 case RightSidebarMode.Sky: break;

@@ -37,9 +37,9 @@ internal static class EditorService
         if (!ModeState.IsEditorState) return;
         if (!TimeUtils.HasIntervalPassed(_lastRefresh, RefreshInterval)) return;
 
-        if (ModeState.RightSidebar == RightSidebarMode.Camera && ModelManager.CameraModelState.State is not null)
+        if (ModeState.RightSidebar == RightSidebarMode.Camera && ModelManager.CameraState.State is not null)
         {
-            ModelManager.CameraModelState.InvokeAction(TransitionKey.Refresh);
+            ModelManager.CameraState.InvokeAction(TransitionKey.Refresh);
             _lastRefresh = TimeUtils.GetTimestamp();
         }
     }

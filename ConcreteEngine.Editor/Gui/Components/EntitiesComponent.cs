@@ -20,7 +20,7 @@ internal static class EntitiesComponent
     private const int ColumnWidth = 28;
     
     
-    private static ModelState<EntitiesViewModel> Model => ModelManager.EntityModelState;
+    private static ModelState<EntitiesViewModel> Model => ModelManager.EntitiesState;
     private static EntitiesViewModel ViewState => Model.State!;
 
     private static ref readonly EntityDataPayload Data => ref ViewState.Data;

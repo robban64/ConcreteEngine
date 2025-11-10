@@ -12,15 +12,15 @@ namespace ConcreteEngine.Engine.Editor;
 
 internal static class EditorEnumMapper
 {
-    public static Type AssetSelectionToType(EditorAssetSelection selection)
+    public static Type AssetSelectionToType(EditorAssetCategory category)
     {
-        return selection switch
+        return category switch
         {
-            EditorAssetSelection.Shader => typeof(Shader),
-            EditorAssetSelection.Texture => typeof(Texture2D),
-            EditorAssetSelection.Model => typeof(Model),
-            EditorAssetSelection.Material => typeof(MaterialTemplate),
-            _ => throw new ArgumentOutOfRangeException(nameof(selection), selection, null)
+            EditorAssetCategory.Shader => typeof(Shader),
+            EditorAssetCategory.Texture => typeof(Texture2D),
+            EditorAssetCategory.Model => typeof(Model),
+            EditorAssetCategory.Material => typeof(MaterialTemplate),
+            _ => throw new ArgumentOutOfRangeException(nameof(category), category, null)
         };
     }
 }

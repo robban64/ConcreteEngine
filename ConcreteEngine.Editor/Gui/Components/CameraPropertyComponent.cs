@@ -16,60 +16,17 @@ internal static class CameraPropertyComponent
 {
     private const int WindowPaddingX = 12;
 
-    private static CameraDataState _state;
-    private static ref CameraTransformDataState TransformState => ref _state.Transform;
-    private static ref CameraProjectionState ProjectionState => ref _state.Projection;
+    private static ModelState<CameraViewModel> Model => EditorStateManager.CameraModelState;
+    private static CameraViewModel ViewState => Model.State!;
 
-    private static CameraViewModel CameraModel => StateCtx.CameraModel;
+    private static ref readonly CameraEditorPayload Data => ref ViewState.Data;
+    private static ref CameraDataState DataState => ref ViewState.DataState;
 
-    public static void Init()
+    private static void OnUpdateData()
     {
-        TransformState.From(in CameraModel.Transform);
-        ProjectionState = CameraProjectionState.From(in CameraModel.Projection);
+        DataState.Fill(Data.Generation, Data.Viewport, out var payload);
+        Model.TriggerEvent(EventKey.SelectionUpdated, in payload);
     }
-
-    public static void UpdateStateFromViewModel(bool stable)
-    {
-        TransformState.FromStable(in CameraModel.Transform);
-        ProjectionState = CameraProjectionState.From(in CameraModel.Projection);
-    }
-
-    private static void OnUpdateTranslation()
-    {
-        _state.GetDataModel(CameraModel.Generation, CameraModel.Viewport, out var model);
-        StateCtx.ExecuteSetCameraTransform(in model);
-    }
-
-    private static void OnUpdateScale()
-    {
-        OnUpdateTranslation();
-        /*
-        ref var transform = ref _cameraModel.Transform;
-        _cameraModel.Transform = new ViewTransformData(in TransformState.Translation, in TransformState.Scale, in TransformState.);
-        transform.Scale = TransformState.Scale;
-        StateCtx.ExecuteSetCameraTransform(in _cameraModel.Model);
-        */
-    }
-
-    private static void OnUpdateRotation()
-    {
-        OnUpdateTranslation();
-        /*
-        ref var transform = ref _cameraModel.Transform;
-        transform.Orientation = YawPitch.FromVector2(TransformState.Orientation);
-        StateCtx.ExecuteSetCameraTransform(in _cameraModel.Model);
-        */
-    }
-
-    private static void OnUpdateProjection()
-    {
-        OnUpdateTranslation();
-        /*
-        _cameraModel.Projection = ProjectionState.ToModel();
-        StateCtx.ExecuteSetCameraTransform(in _cameraModel.Model);
-        */
-    }
-
 
     public static void Draw()
     {
@@ -93,7 +50,7 @@ internal static class CameraPropertyComponent
 
     private static void DrawViewport()
     {
-        var viewport = CameraModel.Viewport;
+        var viewport = Data.Viewport;
         var formatter = new NumberSpanFormatter(StringUtils.CharBuffer8);
         //var width = ImGui.GetContentRegionAvail().X - WindowPaddingX;
 
@@ -134,9 +91,9 @@ internal static class CameraPropertyComponent
         ImGui.SetCursorPosX(ImGui.GetContentRegionAvail().X - WindowPaddingX * 2 - ImGui.CalcTextSize("Near: ").X);
         ImGui.TextUnformatted("Far: ");
 
-        if (ImGui.InputFloat2("##camera-near-far", ref ProjectionState.NearFar, "%.2f"))
+        if (ImGui.InputFloat2("##camera-near-far", ref DataState.Projection.NearFar, "%.2f"))
         {
-            OnUpdateProjection();
+            OnUpdateData();
         }
 
         ImGui.EndGroup();
@@ -146,10 +103,10 @@ internal static class CameraPropertyComponent
         ImGui.BeginGroup();
 
         ImGui.TextUnformatted("Field of view");
-        if (ImGui.SliderFloat("##camera-fov", ref ProjectionState.Fov, StateLimits.MinFov, StateLimits.MaxFov,
+        if (ImGui.SliderFloat("##camera-fov", ref DataState.Projection.Fov, StateLimits.MinFov, StateLimits.MaxFov,
                 "%.2f"))
         {
-            OnUpdateProjection();
+            OnUpdateData();
         }
 
         ImGui.EndGroup();
@@ -162,23 +119,24 @@ internal static class CameraPropertyComponent
     {
         ImGui.TextUnformatted("Translation");
         ImGui.Separator();
-        if (ImGui.InputFloat3("##camera-translation", ref TransformState.Translation, "%.3f", ImGuiInputTextFlags.None))
+        if (ImGui.InputFloat3("##camera-translation", ref DataState.Transform.Translation, "%.3f",
+                ImGuiInputTextFlags.None))
         {
-            OnUpdateTranslation();
+            OnUpdateData();
         }
 
         ImGui.TextUnformatted("Scale");
         ImGui.Separator();
-        if (ImGui.InputFloat3("##camera-scale", ref TransformState.Scale, "%.3f", ImGuiInputTextFlags.None))
+        if (ImGui.InputFloat3("##camera-scale", ref DataState.Transform.Scale, "%.3f", ImGuiInputTextFlags.None))
         {
-            OnUpdateScale();
+            OnUpdateData();
         }
 
         ImGui.TextUnformatted("Rotation");
         ImGui.Separator();
-        if (ImGui.InputFloat2("##camera-rotation", ref TransformState.Orientation, "%.3f", ImGuiInputTextFlags.None))
+        if (ImGui.InputFloat2("##camera-rotation", ref DataState.Transform.Orientation, "%.3f", ImGuiInputTextFlags.None))
         {
-            OnUpdateRotation();
+            OnUpdateData();
         }
     }
 }

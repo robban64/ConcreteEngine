@@ -76,6 +76,7 @@ public static class InvalidOpThrower
     }
 
 
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static void ThrowIfNull(object? obj, string? param = null, string? message = null)
     {
         if (obj is null) ThrowOperation(param, message);
@@ -98,6 +99,7 @@ public static class InvalidOpThrower
     }
 
 
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static void ThrowIfNotNull(object? obj, string? param = null, string? message = null)
     {
         if (obj is not null) ThrowOperation(param, message);

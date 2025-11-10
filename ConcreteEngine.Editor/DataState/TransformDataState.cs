@@ -15,7 +15,7 @@ internal struct TransformDataState
     public Vector3 Scale;
     public Vector3 EulerAngles;
 
-    public readonly void GetDataModel(in Quaternion rotation, out TransformData model)
+    public readonly void Fill(in Quaternion rotation, out TransformData model)
     {
         model = new TransformData(in Translation, in Scale, in rotation);
     }

@@ -1,117 +1,151 @@
 using ConcreteEngine.Common;
+using ConcreteEngine.Editor.Data;
+using ConcreteEngine.Editor.Definitions;
 
 namespace ConcreteEngine.Editor.ViewModel;
 
-internal interface IModelState
+internal static class ModelCtx<T> where T : class
 {
-    void InvokeAction(ModelStateAction action);
-    void TriggerEvent<TEvent>(string eventName, TEvent eventData);
+    internal static Func<T> Factory { get; set; }
+    internal static Action<T>? StateDestructor { get; set; }
+    internal static StateTransitionDel<T> OnEnter { get; set; }
+    internal static StateTransitionDel<T> OnLeave { get; set; }
+    internal static StateTransitionDel<T>? OnRefresh { get; set; }
+
+    public static T? State { get; private set; }
+
+    public static T CreateState() => State = Factory();
+
+    public static void ResetState()
+    {
+        StateDestructor?.Invoke(State!);
+        State = null;
+    }
 }
 
-internal enum ModelStateAction
+internal sealed class ModelStateDelegateBundle<T>(
+    Func<T> factory,
+    Action<T> stateDestructor,
+    StateTransitionDel<T> onEnter,
+    StateTransitionDel<T> onLeave,
+    StateTransitionDel<T>? onRefresh = null
+) where T : class
 {
-    Enter,
-    Leave,
-    Refresh
+    public Func<T> Factory { get; } = factory;
+    public Action<T> StateDestructor { get; } = stateDestructor;
+    public StateTransitionDel<T> OnEnter { get; } = onEnter;
+    public StateTransitionDel<T> OnLeave { get; } = onLeave;
+    public StateTransitionDel<T>? OnRefresh { get; } = onRefresh;
 }
+
+internal interface IModelState
+{
+    public bool Active { get; }
+    void InvokeAction(TransitionKey action);
+    void TriggerEvent<TEvent>(EventKey eventKey, in TEvent eventData);
+}
+
 internal sealed class ModelState<T> : IModelState where T : class
 {
     private readonly Func<T> _factory;
-    private readonly Action<ViewModelStateCtx, T> _onEnter;
-    private readonly Action<ViewModelStateCtx, T> _onLeave;
-    private readonly Action<ViewModelStateCtx, T>? _onRefresh;
+    private readonly StateTransitionDel<T> _onEnter;
+    private readonly StateTransitionDel<T> _onLeave;
+    private readonly StateTransitionDel<T>? _onRefresh;
 
-    private readonly Dictionary<string, object>? _events;
-
-    private readonly ViewModelStateCtx _ctx;
+    private readonly Dictionary<EventKey, object>? _events;
 
     public T? State { get; private set; }
+    public bool Active { get; private set; }
+
+    public bool IsAlive => State != null;
 
     private ModelState(
         Func<T> factory,
-        Action<ViewModelStateCtx, T> onEnter,
-        Action<ViewModelStateCtx, T> onLeave,
-        Action<ViewModelStateCtx, T>? onRefresh = null,
-        Dictionary<string, object>? events = null)
+        StateTransitionDel<T> onEnter,
+        StateTransitionDel<T> onLeave,
+        StateTransitionDel<T>? onRefresh = null,
+        Dictionary<EventKey, object>? events = null)
     {
         _factory = factory;
         _onEnter = onEnter;
         _onLeave = onLeave;
         _onRefresh = onRefresh;
         _events = events;
-
-        _ctx = new ViewModelStateCtx(this);
     }
-    
-    public void InvokeAction(ModelStateAction action)
+
+    public void ResetState()
+    {
+        Active = false;
+        State = null;
+    }
+
+    public void InvokeAction(TransitionKey action)
     {
         switch (action)
         {
-            case ModelStateAction.Enter: _onEnter(_ctx, State ??= _factory()); break;
-            case ModelStateAction.Leave: _onLeave(_ctx, State!); break;
-            case ModelStateAction.Refresh: _onRefresh!(_ctx, State!); break;
+            case TransitionKey.Enter:
+                InvalidOpThrower.ThrowIf(Active, nameof(Active));
+                Active = true;
+                _onEnter(this, State ??= _factory());
+                break;
+            case TransitionKey.Leave:
+                InvalidOpThrower.ThrowIfNot(Active, nameof(Active));
+                _onLeave(this, State!);
+                Active = false;
+                break;
+            case TransitionKey.Refresh:
+                InvalidOpThrower.ThrowIfNot(Active, nameof(Active));
+                InvalidOpThrower.ThrowIfNull(_onRefresh, nameof(_onRefresh));
+                _onRefresh!(this, State!);
+                break;
             default: throw new ArgumentOutOfRangeException(nameof(action), action, null);
         }
     }
 
-    public void TriggerEvent<TEvent>(string eventName, TEvent eventData)
+    public void TriggerEvent<TEvent>(EventKey eventKey, in TEvent eventData)
     {
         InvalidOpThrower.ThrowIfNull(_events, nameof(_events));
-        if (!_events!.TryGetValue(eventName, out var handler))
-            throw new KeyNotFoundException(eventName);
+        if (!_events!.TryGetValue(eventKey, out var handler))
+            throw new KeyNotFoundException(nameof(eventKey));
 
         if (handler is not EventEntry<TEvent> entry)
             throw new ArgumentException(
-                $"{eventName} was invoked with invalid type: actual {typeof(TEvent).Name}, expected {nameof(entry.EventType.Name)}");
+                $"{eventKey} was invoked with invalid type: actual {typeof(TEvent).Name}, expected {nameof(entry.EventType.Name)}");
 
-        entry.Handler(_ctx, State, eventData);
+        entry.Handler(this, in eventData);
     }
 
     public static ViewModelStateBuilder CreateBuilder(Func<T> factory) => new(factory);
 
-    public sealed class ViewModelStateCtx(ModelState<T> modelState)
-    {
-        public void CreateState()
-        {
-            modelState.State = modelState._factory();
-        }
-
-        public void ResetState()
-        {
-            modelState.State = null;
-        }
-    }
-
     public class ViewModelStateBuilder(Func<T> factory)
     {
-        private Action<ViewModelStateCtx, T>? _onEnter;
-        private Action<ViewModelStateCtx, T>? _onLeave;
-        private Action<ViewModelStateCtx, T>? _onRefresh;
-        private Dictionary<string, object>? _events;
+        private StateTransitionDel<T>? _onEnter;
+        private StateTransitionDel<T>? _onLeave;
+        private StateTransitionDel<T>? _onRefresh;
+        private Dictionary<EventKey, object>? _events;
 
-        public ViewModelStateBuilder OnEnter(Action<ViewModelStateCtx, T> handler)
+        public ViewModelStateBuilder OnEnter(StateTransitionDel<T> handler)
         {
             _onEnter = handler;
             return this;
         }
 
-        public ViewModelStateBuilder OnLeave(Action<ViewModelStateCtx, T> handler)
+        public ViewModelStateBuilder OnLeave(StateTransitionDel<T> handler)
         {
             _onLeave = handler;
             return this;
         }
 
-        public ViewModelStateBuilder OnRefresh(Action<ViewModelStateCtx, T> handler)
+        public ViewModelStateBuilder OnRefresh(StateTransitionDel<T> handler)
         {
             _onRefresh = handler;
             return this;
         }
 
-        public ViewModelStateBuilder RegisterEvent<TEvent>(string eventName,
-            Action<ViewModelStateCtx, T, TEvent> handler)
+        public ViewModelStateBuilder RegisterEvent<TEvent>(EventKey eventKey, StateEventDel<T, TEvent> handler)
         {
-            _events ??= new Dictionary<string, object>();
-            _events.Add(eventName, new EventEntry<TEvent>(handler));
+            _events ??= new Dictionary<EventKey, object>();
+            _events.Add(eventKey, new EventEntry<TEvent>(handler));
             return this;
         }
 
@@ -124,9 +158,8 @@ internal sealed class ModelState<T> : IModelState where T : class
         }
     }
 
-    private sealed record EventEntry<TEvent>(Action<ViewModelStateCtx, T, TEvent> Handler)
+    private sealed record EventEntry<TEvent>(StateEventDel<T, TEvent> Handler)
     {
         public Type EventType { get; } = typeof(TEvent);
     }
-
 }

@@ -25,11 +25,11 @@ internal static class EngineDataProvider
         _assetSystem = assetSystem;
     }
     
-    public static List<EntityViewModel> GetEntityView(int entityId)
+    public static List<EntityRecord> GetEntityView(int entityId)
     {
         if (_world is null) return [];
 
-        var result = new List<EntityViewModel>(_world.Meshes.Count);
+        var result = new List<EntityRecord>(_world.Meshes.Count);
         foreach (var it in _world.Query<ModelComponent>())
         {
             result.Add(EditorObjectMapper.MakeEntityViewModel(it.Entity));
@@ -38,9 +38,9 @@ internal static class EngineDataProvider
         return result;
     }
     
-    public static List<AssetObjectViewModel> GetAssetStoreData(EditorAssetSelection req)
+    public static List<AssetObjectViewModel> GetAssetStoreData(EditorAssetCategory req)
     {
-        if (_assetSystem is null || req == EditorAssetSelection.None) return [];
+        if (_assetSystem is null || req == EditorAssetCategory.None) return [];
         var store = _assetSystem.StoreImpl;
         var type = EditorEnumMapper.AssetSelectionToType(req);
         var meta = store.GetMetaSnapshot(type);

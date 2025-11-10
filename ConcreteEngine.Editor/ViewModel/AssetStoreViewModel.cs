@@ -5,13 +5,13 @@ namespace ConcreteEngine.Editor.ViewModel;
 
 public sealed class AssetStoreViewModel
 {
-    public EditorAssetSelection Selection { get; set; }
+    public EditorAssetCategory Category { get; set; }
     public List<AssetObjectViewModel> AssetObjects { get; set; } = [];
     public List<AssetObjectFileViewModel> AssetFileObjects { get; set; } = [];
 
     public void ResetState(bool clearTypeSelection = false)
     {
-        if (clearTypeSelection) Selection = EditorAssetSelection.None;
+        if (clearTypeSelection) Category = EditorAssetCategory.None;
         AssetObjects.Clear();
         AssetFileObjects.Clear();
     }

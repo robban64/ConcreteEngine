@@ -29,9 +29,9 @@ internal static class EditorStateContext
             throw new ArgumentNullException(nameof(to), $"Both {nameof(_leftSidebarState)} and to cannot be null");
 
         
-        _leftSidebarState?.InvokeAction(ModelStateAction.Leave);
+        _leftSidebarState?.InvokeAction(TransitionKey.Leave);
         _leftSidebarState = to;
-        to?.InvokeAction(ModelStateAction.Enter);
+        to?.InvokeAction(TransitionKey.Enter);
     }
     
     private static void TransitionRightSidebar<T>(ModelState<T>? to) where T : class
@@ -39,9 +39,9 @@ internal static class EditorStateContext
         if(_rightSidebarState is null && to is null)
             throw new ArgumentNullException(nameof(to), $"Both {nameof(_rightSidebarState)} and to cannot be null");
 
-        _rightSidebarState?.InvokeAction(ModelStateAction.Leave);
+        _rightSidebarState?.InvokeAction(TransitionKey.Leave);
         _rightSidebarState = to;
-        to?.InvokeAction(ModelStateAction.Enter);
+        to?.InvokeAction(TransitionKey.Enter);
     }
     
     public static void SetViewModeState(EditorViewMode mode)
@@ -81,10 +81,10 @@ internal static class EditorStateContext
         {
             case LeftSidebarMode.Assets:
                 TransitionLeftSidebar();
-                EditorService.OnFillAssetStore(EditorAssetSelection.None);
+                EditorService.OnFillAssetStore(EditorAssetCategory.None);
                 break;
             case LeftSidebarMode.Entities:
-                if (EntityListViewModel.Entities.Count == 0) 
+                if (EntitiesViewModel.Entities.Count == 0) 
                     EditorService.OnFillEntities();
                 break;
         }

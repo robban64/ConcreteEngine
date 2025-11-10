@@ -14,21 +14,20 @@ namespace ConcreteEngine.Editor.Gui.Components;
 
 internal static class AssetsComponent
 {
-    private static readonly string[] AssetTypeArray = ["None", "Shader", "Texture", "Model", "Material"];
-    private static AssetStoreViewModel ViewModel => StateCtx.AssetViewModel;
+    private static readonly string[] AssetCategoryNames = ["None", "Shader", "Texture", "Model", "Material"];
 
     private static int _popupInput = 0;
 
-    private static void OnAssetSelectedChanged(AssetObjectViewModel? asset)
-    {
-        EditorService.OnFillAssetFiles(asset);
-    }
+    private static ModelState<AssetStoreViewModel> Model => EditorStateManager.AssetModelState;
 
-    private static void OnSelectTypeChange(EditorAssetSelection selection)
-    {
-        EditorService.OnFillAssetStore(selection);
+    private static AssetStoreViewModel ViewState => Model.State!;
 
-    }
+    private static void OnCategoryChanged(EditorAssetCategory category) =>
+        Model.TriggerEvent(EventKey.SelectionChanged, category);
+
+    private static void OnSelectionChanged(AssetObjectViewModel? asset) =>
+        Model.TriggerEvent(EventKey.CategoryChanged, asset);
+
 
     public static void DrawSubHeader()
     {
@@ -55,7 +54,8 @@ internal static class AssetsComponent
         //Span<char> buffer = stackalloc char[8];
         var formatter = new NumberSpanFormatter(StringUtils.CharBuffer16);
 
-        foreach (var it in ViewModel.AssetObjects)
+        var assetObjects = ViewState.AssetObjects;
+        foreach (var it in assetObjects)
         {
             ImGui.PushID(it.AssetId);
             ImGui.TableNextRow(ImGuiTableRowFlags.None, rowHeight);
@@ -75,7 +75,7 @@ internal static class AssetsComponent
             if (ImGui.Button(">", btnSize))
             {
                 if (_popupInput < 1) _popupInput = 1;
-                OnAssetSelectedChanged(it);
+                OnSelectionChanged(it);
 
                 var itemMin = ImGui.GetItemRectMin();
                 var itemMax = ImGui.GetItemRectMax();
@@ -104,18 +104,18 @@ internal static class AssetsComponent
         ImGui.PushStyleVar(ImGuiStyleVar.FramePadding, new Vector2(8, 6));
         ImGui.PushStyleVar(ImGuiStyleVar.WindowPadding, new Vector2(8, 6));
 
-        string currentLabel = AssetTypeArray[(int)ViewModel.Selection];
+        var currentLabel = AssetCategoryNames[(int)ViewState.Category];
         ImGui.SetNextItemWidth(ImGui.GetContentRegionAvail().X - 8f);
         if (ImGui.BeginCombo("##assetTypeSelector", currentLabel, ImGuiComboFlags.HeightLargest))
         {
             ImGui.PushStyleVar(ImGuiStyleVar.ItemSpacing, new Vector2(6, 12));
 
-            for (int i = 0; i < AssetTypeArray.Length; i++)
+            for (var i = 0; i < AssetCategoryNames.Length; i++)
             {
-                bool isSelected = i == (int)ViewModel.Selection;
+                var isSelected = i == (int)ViewState.Category;
 
-                if (ImGui.Selectable(AssetTypeArray[i], isSelected, ImGuiSelectableFlags.None, Vector2.Zero))
-                    OnSelectTypeChange((EditorAssetSelection)i);
+                if (ImGui.Selectable(AssetCategoryNames[i], isSelected, ImGuiSelectableFlags.None, Vector2.Zero))
+                    OnCategoryChanged((EditorAssetCategory)i);
 
                 if (isSelected)
                     ImGui.SetItemDefaultFocus();
@@ -165,8 +165,8 @@ internal static class AssetsComponent
             ImGui.EndTable();
         }
 
-        if (ViewModel.AssetFileObjects.Count > 0)
-            DrawFilesTable(formatter, ViewModel);
+        if (ViewState.AssetFileObjects.Count > 0)
+            DrawFilesTable(formatter, ViewState);
 
         if (asset.HasActions)
         {

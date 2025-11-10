@@ -23,7 +23,7 @@ internal enum RightSidebarMode
     Terrain
 }
 
-public enum EditorAssetSelection
+public enum EditorAssetCategory
 {
     None,
     Shader,

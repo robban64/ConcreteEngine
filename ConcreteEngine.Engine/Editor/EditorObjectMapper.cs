@@ -16,9 +16,9 @@ namespace ConcreteEngine.Engine.Editor;
 
 internal static class EditorObjectMapper
 {
-    public static EntityViewModel MakeEntityViewModel(EntityId id)
+    public static EntityRecord MakeEntityViewModel(EntityId id)
     {
-        return new EntityViewModel(
+        return new EntityRecord(
             entityId: id,
             name: string.Empty,
             componentCount: 0);

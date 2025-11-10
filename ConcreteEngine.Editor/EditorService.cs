@@ -82,7 +82,7 @@ internal static class EditorService
         StateCtx.AssetViewModel.AssetFileObjects = result;
     }
 
-    internal static void OnFillAssetStore(EditorAssetSelection? selection = null)
+    internal static void OnFillAssetStore(EditorAssetCategory? selection = null)
     {
         if (selection is { } assetSelection)
         {
@@ -90,7 +90,7 @@ internal static class EditorService
             StateCtx.AssetViewModel.Selection = assetSelection;
         }
 
-        if (StateCtx.AssetViewModel.Selection == EditorAssetSelection.None)
+        if (StateCtx.AssetViewModel.Selection == EditorAssetCategory.None)
         {
             StateCtx.AssetViewModel.ResetState(true);
             return;
@@ -111,7 +111,7 @@ internal static class EditorService
         return true;
     }
 
-    internal static bool OnFetchEntityData(EntityViewModel entity)
+    internal static bool OnFetchEntityData(EntityRecord entity)
     {
         ArgumentNullException.ThrowIfNull(entity, nameof(entity));
         if (!OnApiFetch(entity.EntityId, out var response, EditorApi.FetchEntityData)) return false;

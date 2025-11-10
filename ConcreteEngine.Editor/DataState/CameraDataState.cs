@@ -11,10 +11,10 @@ internal struct CameraDataState
     public CameraTransformDataState Transform;
     public CameraProjectionState Projection;
 
-    public readonly void GetDataModel(long generation, Size2D viewport, out CameraEditorPayload model)
+    public readonly void Fill(long generation, Size2D viewport, out CameraEditorPayload model)
     {
-        Transform.GetDataModel(out var transform);
-        Projection.GetDataModel(out var projection);
+        Transform.Fill(out var transform);
+        Projection.Fill(out var projection);
         model = new CameraEditorPayload(generation, in transform, in projection, in viewport);
     }
 }
@@ -25,7 +25,7 @@ internal struct CameraProjectionState(float near, float far, float fov, float as
     public float Fov = fov;
     public Vector2 NearFar = new(near, far);
 
-    public readonly void GetDataModel(out ProjectionInfoData projection) =>
+    public readonly void Fill(out ProjectionInfoData projection) =>
         projection = new ProjectionInfoData(AspectRatio, Fov, NearFar.X, NearFar.Y);
 
     public static CameraProjectionState From(in ProjectionInfoData model) =>
@@ -58,7 +58,7 @@ internal struct CameraTransformDataState
             Orientation = model.Orientation.AsVec2();
     }
 
-    public readonly void GetDataModel(out ViewTransformData model)
+    public readonly void Fill(out ViewTransformData model)
     {
         model = new ViewTransformData(in Translation, in Scale, YawPitch.FromVector2(Orientation));
     }

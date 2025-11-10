@@ -4,6 +4,7 @@ using System.Numerics;
 using ConcreteEngine.Common.Numerics;
 using ConcreteEngine.Common.Numerics.Maths;
 using ConcreteEngine.Engine.Worlds.Data;
+using ConcreteEngine.Renderer.Data;
 using ConcreteEngine.Renderer.State;
 using ConcreteEngine.Shared.TransformData;
 
@@ -14,10 +15,18 @@ namespace ConcreteEngine.Engine.Worlds.View;
 // TODO improve
 public sealed class Camera3D : ICamera
 {
-    private static readonly float DirtyThreshold = MetricUnits.Millimeter;
+    private const float MinNearPlane = 0.1f;
+    private const float MaxNearPlane = 4f;
 
-    private bool _dirty = true;
+    private const float MinFarPlane = 5f;
+    private const float MaxFarPlane = 10_000f;
 
+    private const float MinFov = 10;
+    private const float MaxFov = 180;
+
+    private const float DirtyThreshold = MetricUnits.Millimeter;
+
+    private bool _dirty;
 
     private CameraTransformData _prevTick;
     private CameraTransformData _currTick;
@@ -38,7 +47,7 @@ public sealed class Camera3D : ICamera
     private float _nearPlane = 0.1f;
     private float _aspectRatio;
 
-    public long Generation { get; internal set; } = 0;
+    public long Generation { get; private set; } = 0;
 
     public Camera3D()
     {
@@ -60,7 +69,6 @@ public sealed class Camera3D : ICamera
             _dirty = true;
         }
     }
-
 
     public Vector3 Translation
     {
@@ -102,7 +110,7 @@ public sealed class Camera3D : ICamera
         set
         {
             if (FloatMath.NearlyEqual(value, _fov, MetricUnits.Decimeter)) return;
-            _fov = value;
+            _fov = float.Clamp(value, MinFov, MaxFov);
             _dirty = true;
         }
     }
@@ -113,7 +121,8 @@ public sealed class Camera3D : ICamera
         set
         {
             if (FloatMath.NearlyEqual(value, _farPlane, MetricUnits.Decimeter)) return;
-            _farPlane = value;
+            var min = float.Max(value, _nearPlane + 1f);
+            _farPlane = float.Clamp(value, float.Max(min, MinFarPlane), MaxFarPlane);
             _dirty = true;
         }
     }
@@ -124,7 +133,8 @@ public sealed class Camera3D : ICamera
         set
         {
             if (FloatMath.NearlyEqual(value, _nearPlane, MetricUnits.Millimeter)) return;
-            _nearPlane = value;
+            var max = float.Min(value, _farPlane - 1f);
+            _nearPlane = float.Clamp(value, MinNearPlane, float.Min(max, MaxNearPlane));
             _dirty = true;
         }
     }

@@ -40,7 +40,7 @@ internal static class Topbar
             DrawModeSelector();
 
             // right
-            if (StateCtx.ViewState.IsEditorState)
+            if (StateCtx.ModeState.IsEditorState)
                 DrawPropertySelector();
 
             ImGui.PopStyleColor(3);
@@ -58,7 +58,7 @@ internal static class Topbar
         {
             if (i > 0) ImGui.SameLine();
             var viewMode = ViewModeIndexToEnum(i);
-            var selected = viewMode == StateCtx.ViewState.EditorMode;
+            var selected = viewMode == StateCtx.ModeState.EditorMode;
 
             if (ImGui.Selectable(ViewModes[i], selected, ImGuiSelectableFlags.None,
                     new Vector2(SelectorWidth, GuiTheme.TopbarHeight)))
@@ -81,7 +81,7 @@ internal static class Topbar
         {
             if (i > 0) ImGui.SameLine();
             var selectorMode = PropertyIndexToEnum(i);
-            var selected = selectorMode == StateCtx.ViewState.RightSidebar;
+            var selected = selectorMode == StateCtx.ModeState.RightSidebar;
 
             if (ImGui.Selectable(PropertyModes[i], selected, ImGuiSelectableFlags.None,
                     new Vector2(GuiTheme.TopbarHeight, GuiTheme.TopbarHeight)))

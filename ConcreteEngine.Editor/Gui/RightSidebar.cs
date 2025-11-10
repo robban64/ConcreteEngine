@@ -18,7 +18,7 @@ internal static class RightSidebar
 
     public static void Draw(int width, int offset)
     {
-        var viewState = StateCtx.ViewState;
+        var viewState = StateCtx.ModeState;
         
         if (!viewState.IsMetricState && viewState.RightSidebar == RightSidebarMode.Default) return;
 
@@ -42,15 +42,15 @@ internal static class RightSidebar
         if (ImGui.Begin("##RightSidebar", flags))
         {
             _focus = ImGui.IsWindowFocused(ImGuiFocusedFlags.None | ImGuiFocusedFlags.ChildWindows);
-
+/*
             if (_focus && !_prevFocus)
             {
-                EditorService.OnFetchCameraData();
+                EditorService.OnFetchCameraData(EditorStateManager.CameraModelState);
             }
             else if (!_focus && _prevFocus)
             {
             }
-
+*/
             switch (viewState.EditorMode)
             {
                 case EditorViewMode.Metrics:
@@ -71,7 +71,7 @@ internal static class RightSidebar
 
     private static void DrawEditor()
     {
-        switch (StateCtx.ViewState.RightSidebar)
+        switch (StateCtx.ModeState.RightSidebar)
         {
             case RightSidebarMode.Camera:
                 CameraPropertyComponent.Draw();

@@ -21,8 +21,8 @@ internal static class LeftSidebar
 
         var vp = ImGui.GetMainViewport();
 
-        var height = StateCtx.ViewState.IsEmptyViewMode ? 0 : vp.WorkSize.Y - offset;
-        height = StateCtx.ViewState.LeftSidebar != LeftSidebarMode.Default ? height : 0;
+        var height = StateCtx.ModeState.IsEmptyViewMode ? 0 : vp.WorkSize.Y - offset;
+        height = StateCtx.ModeState.LeftSidebar != LeftSidebarMode.Default ? height : 0;
 
         ImGui.SetNextWindowPos(new Vector2(0, offset));
         ImGui.SetNextWindowSize(new Vector2(width, height));
@@ -32,7 +32,7 @@ internal static class LeftSidebar
 
         if (ImGui.Begin("##LeftSidebar", flags))
         {
-            switch (StateCtx.ViewState.EditorMode)
+            switch (StateCtx.ModeState.EditorMode)
             {
                 case EditorViewMode.Metrics: DrawMetrics(); break;
                 case EditorViewMode.Editor: DrawEditor(); break;
@@ -71,7 +71,7 @@ internal static class LeftSidebar
 
             DrawModeSelector();
 
-            if (StateCtx.ViewState.LeftSidebar == LeftSidebarMode.Assets)
+            if (StateCtx.ModeState.LeftSidebar == LeftSidebarMode.Assets)
             {
                 AssetsComponent.DrawSubHeader();
                 AssetsComponent.Draw();
@@ -80,7 +80,7 @@ internal static class LeftSidebar
             ImGui.EndChild();
         }
 
-        if (StateCtx.ViewState.LeftSidebar == LeftSidebarMode.Entities)
+        if (StateCtx.ModeState.LeftSidebar == LeftSidebarMode.Entities)
             EntitiesComponent.Draw();
     }
 

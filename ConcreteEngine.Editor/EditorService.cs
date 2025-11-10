@@ -23,37 +23,40 @@ internal static class EditorService
 
     private static long _lastRefresh = TimeUtils.GetTimestamp();
 
-    private static EditorViewState ViewState => StateCtx.ViewState;
+    private static EditorModeState ModeState => StateCtx.ModeState;
 
 
     static EditorService()
     {
+        EditorStateManager.SetupModelState();
         StateCtx.Init();
-        CameraPropertyComponent.Init();
     }
 
     private static void RefreshData()
     {
-        if (!ViewState.IsEditorState) return;
+        if (!ModeState.IsEditorState) return;
         if (!TimeUtils.HasIntervalPassed(_lastRefresh, RefreshInterval)) return;
 
-        if (ViewState.RightSidebar == RightSidebarMode.Camera)
+        if (ModeState.RightSidebar == RightSidebarMode.Camera && EditorStateManager.CameraModelState.State is not null)
         {
-            OnFetchCameraData();
+            OnFetchCameraData(EditorStateManager.CameraModelState);
             _lastRefresh = TimeUtils.GetTimestamp();
         }
     }
 
     internal static void Render()
     {
-        GuiTheme.RightSidebarExpanded = ViewState.IsEditorState;
-        MetricsApi.ToggleMetrics(ViewState.IsMetricState);
+        StateCtx.CommitState();
+        
+
+        GuiTheme.RightSidebarExpanded = ModeState.IsEditorState;
+        MetricsApi.ToggleMetrics(ModeState.IsMetricState);
 
         RefreshData();
 
         Topbar.Draw();
 
-        if (!StateCtx.ViewState.IsEmptyViewMode)
+        if (!StateCtx.ModeState.IsEmptyViewMode)
         {
             LeftSidebar.Draw(240, offset: GuiTheme.TopbarHeight);
             RightSidebar.Draw(GuiTheme.RightSidebarWidth, offset: GuiTheme.TopbarHeight);
@@ -61,62 +64,73 @@ internal static class EditorService
 
         DevConsoleService.Draw(240, GuiTheme.RightSidebarWidth);
     }
+    
 
-
-    internal static void OnFillEntities()
+    internal static void OnFillAssetFiles(ModelState<AssetStoreViewModel> model, AssetObjectViewModel? asset)
     {
-        var selected = StateCtx.EntityListViewModel.SelectedEntityId;
-        var result = OnApiFill(selected, EditorApi.FillEntityView) ?? [];
-        StateCtx.EntityListViewModel.Entities = result;
-    }
-
-    internal static void OnFillAssetFiles(AssetObjectViewModel? asset)
-    {
+        ArgumentNullException.ThrowIfNull(model.State, nameof(model));
+        
         if (asset is null)
         {
-            StateCtx.AssetViewModel.AssetFileObjects = [];
+            model.State.AssetFileObjects = [];
             return;
         }
 
         var result = OnApiFill(asset.AssetId, EditorApi.FillAssetObjectFiles) ?? [];
-        StateCtx.AssetViewModel.AssetFileObjects = result;
+        model.State.AssetFileObjects = result;
     }
 
-    internal static void OnFillAssetStore(EditorAssetCategory? selection = null)
+    internal static void OnFillAssetStore(ModelState<AssetStoreViewModel> model, EditorAssetCategory? category = null)
     {
-        if (selection is { } assetSelection)
-        {
-            if (assetSelection == StateCtx.AssetViewModel.Selection) return;
-            StateCtx.AssetViewModel.Selection = assetSelection;
-        }
+        ArgumentNullException.ThrowIfNull(model.State, nameof(model));
 
-        if (StateCtx.AssetViewModel.Selection == EditorAssetCategory.None)
+        if (category is { } assetCategory)
         {
-            StateCtx.AssetViewModel.ResetState(true);
+            if (assetCategory == model.State.Category) return;
+            model.State.Category = assetCategory;
+        }
+        
+        var result = OnApiFill(model.State.Category, EditorApi.FillAssetStoreView) ?? [];
+        model.State.AssetObjects = result;
+
+/*
+        if (model.State.Category == EditorAssetCategory.None)
+        {
+            model.State.ResetState(true);
             return;
         }
-
-        var result = OnApiFill(StateCtx.AssetViewModel.Selection, EditorApi.FillAssetStoreView) ?? [];
-        StateCtx.AssetViewModel.AssetObjects = result;
+*/
     }
 
 
-    internal static bool OnFetchCameraData()
+    internal static bool OnFetchCameraData(ModelState<CameraViewModel> model)
     {
-        var gen = StateCtx.CameraModel.Generation;
+        ArgumentNullException.ThrowIfNull(model.State, nameof(model));
+        var gen = model.State.Generation;
         var result = OnApiFetch(gen, out var response, EditorApi.FetchCameraData);
         if (!result) return false;
 
-        StateCtx.CameraModel.FromDataModel(in response);
+        if(gen == 0) model.State.InitData(in response);
+        else model.State.UpdateData(in response);
+        
         return true;
     }
 
-    internal static bool OnFetchEntityData(EntityRecord entity)
+    internal static void OnFillEntities(ModelState<EntitiesViewModel> model)
     {
-        ArgumentNullException.ThrowIfNull(entity, nameof(entity));
+        ArgumentNullException.ThrowIfNull(model.State, nameof(model));
+        var selected = model.State.SelectedEntityId;
+        var result = OnApiFill(selected, EditorApi.FillEntityView) ?? [];
+        model.State.Entities = result;
+    }
+    
+    internal static bool OnFetchEntityData(ModelState<EntitiesViewModel> model, EntityRecord entity)
+    {
+        ArgumentNullException.ThrowIfNull(model.State, nameof(model));
         if (!OnApiFetch(entity.EntityId, out var response, EditorApi.FetchEntityData)) return false;
+        
         InvalidOpThrower.ThrowIf(entity.EntityId != response.EntityId);
-        EntitiesComponent.SetEntityDataState(new EntityDataState(in response));
+        model.State.FromData(in response);
         return true;
     }
     

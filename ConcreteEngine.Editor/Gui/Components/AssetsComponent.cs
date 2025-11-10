@@ -23,10 +23,10 @@ internal static class AssetsComponent
     private static AssetStoreViewModel ViewState => Model.State!;
 
     private static void OnCategoryChanged(EditorAssetCategory category) =>
-        Model.TriggerEvent(EventKey.SelectionChanged, category);
+        Model.TriggerEvent(EventKey.CategoryChanged, category);
 
     private static void OnSelectionChanged(AssetObjectViewModel? asset) =>
-        Model.TriggerEvent(EventKey.CategoryChanged, asset);
+        Model.TriggerEvent(EventKey.SelectionChanged, asset);
 
 
     public static void DrawSubHeader()

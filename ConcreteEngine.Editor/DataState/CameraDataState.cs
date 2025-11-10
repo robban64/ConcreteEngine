@@ -25,8 +25,10 @@ internal struct CameraProjectionState(float near, float far, float fov, float as
     public float Fov = fov;
     public Vector2 NearFar = new(near, far);
 
-    public readonly void Fill(out ProjectionInfoData projection) =>
+    public readonly void Fill(out ProjectionInfoData projection)
+    {
         projection = new ProjectionInfoData(AspectRatio, Fov, NearFar.X, NearFar.Y);
+    }
 
     public static CameraProjectionState From(in ProjectionInfoData model) =>
         new(model.Near, model.Far, model.Fov, model.AspectRatio);

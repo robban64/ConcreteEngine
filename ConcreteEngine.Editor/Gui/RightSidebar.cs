@@ -18,7 +18,7 @@ internal static class RightSidebar
 
     public static void Draw(int width, int offset)
     {
-        var viewState = StateCtx.ModeState;
+        var viewState = StateContext.ModeState;
         
         if (!viewState.IsMetricState && viewState.RightSidebar == RightSidebarMode.Default) return;
 
@@ -71,7 +71,7 @@ internal static class RightSidebar
 
     private static void DrawEditor()
     {
-        switch (StateCtx.ModeState.RightSidebar)
+        switch (StateContext.ModeState.RightSidebar)
         {
             case RightSidebarMode.Camera:
                 CameraPropertyComponent.Draw();

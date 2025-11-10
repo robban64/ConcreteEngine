@@ -20,7 +20,7 @@ internal static class EntitiesComponent
     private const int ColumnWidth = 28;
     
     
-    private static ModelState<EntitiesViewModel> Model => EditorStateManager.EntityModelState;
+    private static ModelState<EntitiesViewModel> Model => ModelManager.EntityModelState;
     private static EntitiesViewModel ViewState => Model.State!;
 
     private static ref readonly EntityDataPayload Data => ref ViewState.Data;
@@ -28,7 +28,7 @@ internal static class EntitiesComponent
 
     private static void OnSelectEntity(EntityRecord entity)
     {
-        if(entity.EntityId == ViewState.SelectedEntityId) return;
+        if(entity.EntityId == ViewState.Data.EntityId) return;
         Model.TriggerEvent(EventKey.SelectionChanged, entity);
     }
 
@@ -98,7 +98,7 @@ internal static class EntitiesComponent
 
         foreach (var entity in ViewState.Entities)
         {
-            var selected = entity.EntityId == ViewState.SelectedEntityId;
+            var selected = entity.EntityId == ViewState.Data.EntityId;
 
             ImGui.PushStyleVar(ImGuiStyleVar.SelectableTextAlign, new Vector2(0.0f, 0.5f));
             ImGui.PushStyleColor(ImGuiCol.HeaderHovered, GuiTheme.SelectedColor);

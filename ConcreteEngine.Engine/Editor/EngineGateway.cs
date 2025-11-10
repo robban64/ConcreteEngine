@@ -195,12 +195,12 @@ internal sealed class EngineGateway : IDisposable
 
         public static void RegisterDataProvider()
         {
-            EditorApi.FillAssetStoreView = EngineDataProvider.GetAssetStoreData;
-            EditorApi.FillAssetObjectFiles = EngineDataProvider.GetAssetObjectFiles;
-            EditorApi.FillEntityView = EngineDataProvider.GetEntityView;
+            EditorApi.FetchAssetStoreData = EngineDataProvider.GetAssetStoreData;
+            EditorApi.FetchAssetObjectFiles = EngineDataProvider.GetAssetObjectFiles;
+            EditorApi.FetchEntityView = EngineDataProvider.GetEntityView;
             
-            EditorApi.FetchEntityData = EngineDataProvider.PullEntityData;
-            EditorApi.FetchCameraData = EngineDataProvider.PullCameraData;
+            EditorApi.UpdateEntityData = EngineDataProvider.SetEntityData;
+            EditorApi.UpdateCameraData = EngineDataProvider.SetCameraData;
         }
 
 

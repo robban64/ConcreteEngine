@@ -1,3 +1,4 @@
+using ConcreteEngine.Common;
 using ConcreteEngine.Common.Numerics;
 using ConcreteEngine.Editor.Data;
 using ConcreteEngine.Editor.DataState;
@@ -7,25 +8,21 @@ namespace ConcreteEngine.Editor.ViewModel;
 
 internal sealed class CameraViewModel
 {
-    public long Generation { get; set; } = 0;
-
     private CameraEditorPayload _data;
     private CameraDataState _state;
-    
-    public ref readonly CameraEditorPayload Data => ref _data;
-    public ref CameraDataState DataState => ref _state;
-    
-    public void InitData(in CameraEditorPayload data)
-    {
-        _data = data;
-        _state.Transform.From(in data.ViewTransform);
-        _state.Projection = CameraProjectionState.From(in data.Projection);
-    }
 
-    public void UpdateData(in CameraEditorPayload data)
+    public ref CameraEditorPayload Data => ref _data;
+    public ref CameraDataState DataState => ref _state;
+
+    public void UpdateState(GenericDataRequest<CameraEditorPayload> requestDel)
     {
-        _data = data;
-        _state.Transform.FromStable(in data.ViewTransform);
-        _state.Projection = CameraProjectionState.From(in data.Projection);
+        requestDel(ref _data);
+        if(_state.Generation == Data.Generation) return;
+
+        _state.Transform.Translation = _data.ViewTransform.Translation;
+        _state.Transform.Scale = _data.ViewTransform.Scale;
+        _state.Transform.Orientation = _data.ViewTransform.Orientation.AsVec2();
+        _state.Projection = CameraProjectionState.From(in _data.Projection);
+        _state.Generation = _data.Generation;
     }
 }

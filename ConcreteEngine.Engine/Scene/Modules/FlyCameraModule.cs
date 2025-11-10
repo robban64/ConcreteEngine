@@ -1,5 +1,6 @@
 #region
 
+using System.Numerics;
 using ConcreteEngine.Common.Numerics;
 using ConcreteEngine.Engine.Data;
 using ConcreteEngine.Engine.Platform;
@@ -29,8 +30,8 @@ public sealed class FlyCameraModule : GameModule
 
         var dt = frameCtx.DeltaTime;
 
-        var speed = BaseSpeed * dt;
-        var rotateSpeed = RotationSpeed * dt;
+        var speed = BaseSpeed;
+        var rotateSpeed = RotationSpeed;
 
         (float yaw, float pitch) = _camera.Orientation;
         var newPos = _camera.Translation;
@@ -51,8 +52,8 @@ public sealed class FlyCameraModule : GameModule
 
         var orientation = new YawPitch(yaw, pitch).WithClampedPitch();
 
-        _camera.Translation = newPos;
-        _camera.Orientation = orientation;
+        _camera.Translation = Vector3.Lerp(_camera.Translation, newPos, dt);
+        _camera.Orientation = YawPitch.Lerp(_camera.Orientation, orientation, dt);
     }
 
 

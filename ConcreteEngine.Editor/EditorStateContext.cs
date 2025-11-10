@@ -14,12 +14,13 @@ namespace ConcreteEngine.Editor;
 
 internal static class EditorStateContext
 {
-    private static long _lastAction = TimeUtils.GetTimestamp();
     public static EditorModeState ModeState { get; private set; }
     public static EditorModeState NextState { get; private set; }
 
     private static IModelState? _leftSidebarState;
     private static IModelState? _rightSidebarState;
+
+    private static long _lastAction = TimeUtils.GetTimestamp();
 
     internal static void Init()
     {
@@ -93,10 +94,10 @@ internal static class EditorStateContext
             switch (state.LeftSidebar)
             {
                 case LeftSidebarMode.Assets:
-                    TransitionLeftSidebar(EditorStateManager.AssetModelState);
+                    TransitionLeftSidebar(ModelManager.AssetModelState);
                     break;
                 case LeftSidebarMode.Entities:
-                    TransitionLeftSidebar(EditorStateManager.EntityModelState);
+                    TransitionLeftSidebar(ModelManager.EntityModelState);
                     break;
             }
 
@@ -107,7 +108,7 @@ internal static class EditorStateContext
             {
                 case RightSidebarMode.Default: break;
                 case RightSidebarMode.Camera:
-                    TransitionRightSidebar(EditorStateManager.CameraModelState);
+                    TransitionRightSidebar(ModelManager.CameraModelState);
                     break;
                 case RightSidebarMode.Light: break;
                 case RightSidebarMode.Sky: break;
@@ -138,22 +139,4 @@ internal static class EditorStateContext
         return true;
     }
 
-    public static void ExecuteReloadShader(AssetObjectViewModel viewModel)
-    {
-        if (!CanExecute(1000, true)) return;
-        CommandDispatcher.InvokeEditorCommand(CoreCmdNames.AssetShader,
-            new EditorShaderPayload(viewModel.Name, EditorRequestAction.Reload));
-    }
-
-    public static void ExecuteSetEntityTransform(in EntityTransformPayload payload)
-    {
-        //if (!CanExecute(25)) return;
-        CommandDispatcher.InvokeEditorCommand(CoreCmdNames.EntityTransform, in payload);
-    }
-
-    public static void ExecuteSetCameraTransform(in CameraEditorPayload payload)
-    {
-        //if (!CanExecute(25)) return;
-        CommandDispatcher.InvokeEditorCommand(CoreCmdNames.CameraTransform, in payload);
-    }
 }

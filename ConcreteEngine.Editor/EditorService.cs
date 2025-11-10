@@ -23,13 +23,13 @@ internal static class EditorService
 
     private static long _lastRefresh = TimeUtils.GetTimestamp();
 
-    private static EditorModeState ModeState => StateCtx.ModeState;
+    private static EditorModeState ModeState => StateContext.ModeState;
 
 
     static EditorService()
     {
-        EditorStateManager.SetupModelState();
-        StateCtx.Init();
+        ModelManager.SetupModelState();
+        StateContext.Init();
     }
 
     private static void RefreshData()
@@ -37,26 +37,26 @@ internal static class EditorService
         if (!ModeState.IsEditorState) return;
         if (!TimeUtils.HasIntervalPassed(_lastRefresh, RefreshInterval)) return;
 
-        if (ModeState.RightSidebar == RightSidebarMode.Camera && EditorStateManager.CameraModelState.State is not null)
+        if (ModeState.RightSidebar == RightSidebarMode.Camera && ModelManager.CameraModelState.State is not null)
         {
-            OnFetchCameraData(EditorStateManager.CameraModelState);
+            ModelManager.CameraModelState.InvokeAction(TransitionKey.Refresh);
             _lastRefresh = TimeUtils.GetTimestamp();
         }
     }
 
     internal static void Render()
     {
-        StateCtx.CommitState();
-        
+        StateContext.CommitState();
 
         GuiTheme.RightSidebarExpanded = ModeState.IsEditorState;
         MetricsApi.ToggleMetrics(ModeState.IsMetricState);
+        StateContext.CommitState();
 
         RefreshData();
 
         Topbar.Draw();
 
-        if (!StateCtx.ModeState.IsEmptyViewMode)
+        if (!StateContext.ModeState.IsEmptyViewMode)
         {
             LeftSidebar.Draw(240, offset: GuiTheme.TopbarHeight);
             RightSidebar.Draw(GuiTheme.RightSidebarWidth, offset: GuiTheme.TopbarHeight);
@@ -64,19 +64,20 @@ internal static class EditorService
 
         DevConsoleService.Draw(240, GuiTheme.RightSidebarWidth);
     }
-    
+
 
     internal static void OnFillAssetFiles(ModelState<AssetStoreViewModel> model, AssetObjectViewModel? asset)
     {
         ArgumentNullException.ThrowIfNull(model.State, nameof(model));
-        
+
         if (asset is null)
         {
             model.State.AssetFileObjects = [];
             return;
         }
 
-        var result = OnApiFill(asset.AssetId, EditorApi.FillAssetObjectFiles) ?? [];
+        var body = new AssetRequestBody(asset.AssetId);
+        var result = OnApiFill(body, EditorApi.FetchAssetObjectFiles) ?? [];
         model.State.AssetFileObjects = result;
     }
 
@@ -89,66 +90,27 @@ internal static class EditorService
             if (assetCategory == model.State.Category) return;
             model.State.Category = assetCategory;
         }
-        
-        var result = OnApiFill(model.State.Category, EditorApi.FillAssetStoreView) ?? [];
+
+        var body = new AssetCategoryRequestBody(model.State.Category);
+        var result = OnApiFill(body, EditorApi.FetchAssetStoreData) ?? [];
         model.State.AssetObjects = result;
-
-/*
-        if (model.State.Category == EditorAssetCategory.None)
-        {
-            model.State.ResetState(true);
-            return;
-        }
-*/
     }
 
 
-    internal static bool OnFetchCameraData(ModelState<CameraViewModel> model)
-    {
-        ArgumentNullException.ThrowIfNull(model.State, nameof(model));
-        var gen = model.State.Generation;
-        var result = OnApiFetch(gen, out var response, EditorApi.FetchCameraData);
-        if (!result) return false;
-
-        if(gen == 0) model.State.InitData(in response);
-        else model.State.UpdateData(in response);
-        
-        return true;
-    }
 
     internal static void OnFillEntities(ModelState<EntitiesViewModel> model)
     {
         ArgumentNullException.ThrowIfNull(model.State, nameof(model));
-        var selected = model.State.SelectedEntityId;
-        var result = OnApiFill(selected, EditorApi.FillEntityView) ?? [];
+        var selected = model.State.Data.EntityId;
+        var body = new EntityRequestBody(selected);
+        var result = OnApiFill(body, EditorApi.FetchEntityView) ?? [];
         model.State.Entities = result;
-    }
-    
-    internal static bool OnFetchEntityData(ModelState<EntitiesViewModel> model, EntityRecord entity)
-    {
-        ArgumentNullException.ThrowIfNull(model.State, nameof(model));
-        if (!OnApiFetch(entity.EntityId, out var response, EditorApi.FetchEntityData)) return false;
-        
-        InvalidOpThrower.ThrowIf(entity.EntityId != response.EntityId);
-        model.State.FromData(in response);
-        return true;
-    }
-    
-    
-
-    private static bool OnApiFetch<TRequest, TResponse>(TRequest request, out TResponse? response,
-        GenericDataRequest<TRequest, TResponse>? apiFetch)
-    {
-        if (!CanFetch(150) || apiFetch is null) return FailOut(out response);
-        Console.WriteLine($"Api Fetch: {typeof(TResponse).Name}");
-        apiFetch(request, out response);
-        return true;
     }
 
     private static TResponse? OnApiFill<TRequest, TResponse>(TRequest request,
-        GenericRequest<TRequest, TResponse>? apiFetch)
+        GenericRequest<TRequest, TResponse>? apiFetch) where TRequest : class where TResponse : class
     {
-        if (!CanFetch(150) || apiFetch is null) return default;
+        if (!CanFetch(150) || apiFetch is null) return null;
         Console.WriteLine($"Api Fill: {typeof(TResponse).Name}");
         return apiFetch(request);
     }
@@ -172,9 +134,5 @@ internal static class EditorService
         return true;
     }
 
-    private static bool FailOut<T>(out T? value)
-    {
-        value = default;
-        return false;
-    }
+
 }

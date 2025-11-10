@@ -16,7 +16,7 @@ internal static class CameraPropertyComponent
 {
     private const int WindowPaddingX = 12;
 
-    private static ModelState<CameraViewModel> Model => EditorStateManager.CameraModelState;
+    private static ModelState<CameraViewModel> Model => ModelManager.CameraModelState;
     private static CameraViewModel ViewState => Model.State!;
 
     private static ref readonly CameraEditorPayload Data => ref ViewState.Data;

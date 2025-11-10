@@ -105,8 +105,7 @@ internal static class EngineCommandHandler
         
         ctx.AddLog(StructStr<CameraEditorPayload>());
         ctx.AddLog(StructStr<EntityDataPayload>());
-        ctx.AddLog(StructStr<MaterialTag>());
-
+        
     }
 
 

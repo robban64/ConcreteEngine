@@ -8,6 +8,7 @@ namespace ConcreteEngine.Editor.DataState;
 
 internal struct CameraDataState
 {
+    public long Generation;
     public CameraTransformDataState Transform;
     public CameraProjectionState Projection;
 

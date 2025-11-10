@@ -25,7 +25,7 @@ internal static class EngineDataProvider
         _assetSystem = assetSystem;
     }
     
-    public static List<EntityRecord> GetEntityView(int entityId)
+    public static List<EntityRecord> GetEntityView(EntityRequestBody body)
     {
         if (_world is null) return [];
 
@@ -38,8 +38,9 @@ internal static class EngineDataProvider
         return result;
     }
     
-    public static List<AssetObjectViewModel> GetAssetStoreData(EditorAssetCategory req)
+    public static List<AssetObjectViewModel> GetAssetStoreData(AssetCategoryRequestBody body)
     {
+        var req = body.Category;
         if (_assetSystem is null || req == EditorAssetCategory.None) return [];
         var store = _assetSystem.StoreImpl;
         var type = EditorEnumMapper.AssetSelectionToType(req);
@@ -56,11 +57,11 @@ internal static class EngineDataProvider
         return result;
     }
     
-    public static List<AssetObjectFileViewModel> GetAssetObjectFiles(int assetId)
+    public static List<AssetObjectFileViewModel> GetAssetObjectFiles(AssetRequestBody body)
     {
         if (_assetSystem is null) return [];
 
-        var assetTypedId = new AssetId(assetId);
+        var assetTypedId = new AssetId(body.AssetId);
         var store = _assetSystem.StoreImpl;
         store.TryGetFileIds(assetTypedId, out var fileIds);
 
@@ -78,41 +79,27 @@ internal static class EngineDataProvider
         return result;
     }
     
-    public static bool PullCameraData(long generation, out CameraEditorPayload response)
+    public static void SetCameraData(ref CameraEditorPayload payload)
     {
-        if (_world is null || _world.Camera.Generation == generation)
-        {
-            response = default;
-            return false;
-        }
-
+        if (_world is null || _world.Camera.Generation == payload.Generation)
+            return;
+        
         var camera = _world.Camera;
-        var transform = new ViewTransformData(camera.Translation, camera.Scale, camera.Orientation);
-        var proj = new ProjectionInfoData(camera.AspectRatio, camera.Fov, camera.NearPlane, camera.FarPlane);
-        var viewport = camera.Viewport;
-        response = new CameraEditorPayload(camera.Generation, in transform, in proj, in viewport);
-        return true;
+        payload.Generation = camera.Generation;
+        payload.ViewTransform = new ViewTransformData(camera.Translation, camera.Scale, camera.Orientation);
+        payload.Projection = new ProjectionInfoData(camera.AspectRatio, camera.Fov, camera.NearPlane, camera.FarPlane);
+        payload.Viewport = camera.Viewport;
     }
 
 
-    public static bool PullEntityData(int entityId, out EntityDataPayload response)
+    public static void SetEntityData(ref EntityDataPayload response)
     {
-        if (_world is null)
-        {
-            response = default;
-            return false;
-        }
-
-        var entity = new EntityId(entityId);
+        if (_world is null) return;
+        var entity = new EntityId(response.EntityId);
         var model = _world.Meshes.GetById(entity);
         if (!_world.Transforms.TryGetById(entity, out var transform)) transform = default;
 
-        var transformData =
-            new TransformData(in transform.Translation, in transform.Scale, in transform.Rotation);
-
-        var modelData = new EditorEntityModel(model.Model, model.MaterialKey.Value, model.DrawCount);
-
-        response = new EntityDataPayload(entityId, in modelData, in transformData);
-        return true;
+        response.Transform = new TransformData(in transform.Translation, in transform.Scale, in transform.Rotation);
+        response.Model = new EditorEntityModel(model.Model, model.MaterialKey.Value, model.DrawCount);
     }
 }

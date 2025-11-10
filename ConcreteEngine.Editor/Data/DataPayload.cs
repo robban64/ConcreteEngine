@@ -8,23 +8,23 @@ using ConcreteEngine.Shared.TransformData;
 
 namespace ConcreteEngine.Editor.Data;
 
-
 public readonly record struct EditorShadowPayload(int Size, bool Enabled, EditorRequestAction RequestAction);
 
-public readonly record struct EditorShaderPayload(string Name, EditorRequestAction RequestAction);
+public sealed record EditorShaderPayload(string Name, EditorRequestAction RequestAction);
 
-public readonly struct CameraEditorPayload(
+public struct CameraEditorPayload(
     long generation,
     in ViewTransformData viewTransform,
     in ProjectionInfoData projection,
     in Size2D viewport)
 {
-    public readonly long Generation = generation;
-    public readonly ViewTransformData ViewTransform = viewTransform;
-    public readonly ProjectionInfoData Projection = projection;
-    public readonly Size2D Viewport = viewport;
+    public long Generation = generation;
+    public ViewTransformData ViewTransform = viewTransform;
+    public ProjectionInfoData Projection = projection;
+    public Size2D Viewport = viewport;
 
-    public void Deconstruct(out long generation, out ViewTransformData viewTransform, out ProjectionInfoData projection,
+    public readonly void Deconstruct(out long generation, out ViewTransformData viewTransform,
+        out ProjectionInfoData projection,
         out Size2D viewport)
     {
         generation = Generation;

@@ -9,14 +9,12 @@ internal struct EntityDataState
     public int ModelId;
     public int MaterialTagKey;
     public TransformDataState Transform;
-    public readonly TransformData BaseTransform;
 
-    public EntityDataState( in EntityDataPayload payload)
+    public EntityDataState(in EntityDataPayload payload)
     {
         EntityId = payload.EntityId;
         ModelId = payload.Model.ModelId;
         MaterialTagKey = payload.Model.MaterialTagKey;
-        BaseTransform = payload.Transform;
-        Transform.FromStable(in payload.Transform);
+        Transform.From(in payload.Transform);
     }
 }

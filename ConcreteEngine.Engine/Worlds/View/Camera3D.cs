@@ -120,9 +120,8 @@ public sealed class Camera3D : ICamera
         get => _farPlane;
         set
         {
-            if (FloatMath.NearlyEqual(value, _farPlane, MetricUnits.Decimeter)) return;
-            var min = float.Max(value, _nearPlane + 1f);
-            _farPlane = float.Clamp(value, float.Max(min, MinFarPlane), MaxFarPlane);
+            if (FloatMath.NearlyEqual(value, _farPlane, MetricUnits.Millimeter)) return;
+            _farPlane = float.Min(float.Max(value, MinFarPlane), MaxFarPlane);
             _dirty = true;
         }
     }
@@ -133,8 +132,7 @@ public sealed class Camera3D : ICamera
         set
         {
             if (FloatMath.NearlyEqual(value, _nearPlane, MetricUnits.Millimeter)) return;
-            var max = float.Min(value, _farPlane - 1f);
-            _nearPlane = float.Clamp(value, MinNearPlane, float.Min(max, MaxNearPlane));
+            _nearPlane = float.Min(float.Max(value, MinNearPlane), MaxNearPlane);
             _dirty = true;
         }
     }

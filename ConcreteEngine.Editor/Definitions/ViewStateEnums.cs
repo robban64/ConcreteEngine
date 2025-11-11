@@ -18,7 +18,7 @@ internal enum RightSidebarMode
 {
     Default,
     Camera,
-    Light,
+    World,
     Sky,
     Terrain
 }

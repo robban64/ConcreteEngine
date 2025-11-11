@@ -1,6 +1,7 @@
 #region
 
 using ConcreteEngine.Editor.Data;
+using ConcreteEngine.Editor.DataState;
 using ConcreteEngine.Editor.Definitions;
 using ConcreteEngine.Editor.ViewModel;
 
@@ -16,4 +17,6 @@ public static class EditorApi
 
     public static GenericDataRequest<CameraEditorPayload>? UpdateCameraData { get; set; }
     public static GenericDataRequest<EntityDataPayload>? UpdateEntityData { get; set; }
+    
+    public static GenericDataRequest<WorldParamState> ? UpdateWorldParams { get; set; }
 }

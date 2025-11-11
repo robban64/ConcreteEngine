@@ -13,7 +13,7 @@ internal static class Topbar
 {
     private const int SelectorWidth = 74;
     private static readonly string[] ViewModes = ["Editor", "Metrics"];
-    private static readonly string[] PropertyModes = ["Camera", "Light", "Sky", "Terrain"];
+    private static readonly string[] PropertyModes = ["Camera", "World", "Sky", "Terrain"];
 
 
     public static void Draw()
@@ -73,7 +73,8 @@ internal static class Topbar
     private static void DrawPropertySelector()
     {
         float x = ImGui.GetContentRegionAvail().X;
-        float startPosX = x - 74 / 2f - GuiTheme.TopbarHeight * 5;
+        var width = GuiTheme.RightSidebarWidth / 4f;
+        float startPosX = x  - width * 4.5f;
         ImGui.SameLine(startPosX);
 
         if (!ImGui.BeginChild("##editor-property-selector")) return;
@@ -84,7 +85,7 @@ internal static class Topbar
             var selected = selectorMode == StateContext.ModeState.RightSidebar;
 
             if (ImGui.Selectable(PropertyModes[i], selected, ImGuiSelectableFlags.None,
-                    new Vector2(GuiTheme.TopbarHeight, GuiTheme.TopbarHeight)))
+                    new Vector2(width, GuiTheme.TopbarHeight)))
             {
                 StateContext.ToggleRightSidebarState(selectorMode);
             }
@@ -108,7 +109,7 @@ internal static class Topbar
         return index switch
         {
             0 => RightSidebarMode.Camera,
-            1 => RightSidebarMode.Light,
+            1 => RightSidebarMode.World,
             2 => RightSidebarMode.Sky,
             3 => RightSidebarMode.Terrain,
             _ => throw new ArgumentOutOfRangeException(nameof(index), index, null)

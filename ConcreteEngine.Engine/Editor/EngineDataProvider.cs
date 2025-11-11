@@ -1,6 +1,7 @@
 #region
 
 using ConcreteEngine.Editor.Data;
+using ConcreteEngine.Editor.DataState;
 using ConcreteEngine.Editor.Definitions;
 using ConcreteEngine.Editor.ViewModel;
 using ConcreteEngine.Engine.Assets;
@@ -101,5 +102,18 @@ internal static class EngineDataProvider
 
         response.Transform = new TransformData(in transform.Translation, in transform.Scale, in transform.Rotation);
         response.Model = new EditorEntityModel(model.Model, model.MaterialKey.Value, model.DrawCount);
+    }
+    
+    
+    public static void SetWorldParams(ref WorldParamState data)
+    {
+        var snapshot = _world!.WorldRenderParams.Snapshot;
+        data.LightState.DirectionalLight = new DirLightState(in snapshot.DirLight);
+        data.LightState.AmbientLight = new AmbientState(in snapshot.Ambient);
+        data.FogState = new FogState(in snapshot.Fog);
+        data.PostState.Grade = new PostGradeState(in snapshot.PostEffects.Grade);
+        data.PostState.WhiteBalance = new PostWhiteBalanceState(snapshot.PostEffects.WhiteBalance);//tiny
+        data.PostState.Bloom = new PostBloomState(in snapshot.PostEffects.Bloom);
+        data.PostState.ImageFx = new PostImageFxState(in snapshot.PostEffects.ImageFx);
     }
 }

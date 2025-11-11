@@ -20,7 +20,7 @@ internal static class AssetsComponent
 
     private static ModelState<AssetStoreViewModel> Model => ModelManager.AssetState;
 
-    private static AssetStoreViewModel ViewState => Model.State!;
+    private static AssetStoreViewModel ViewModel => Model.State!;
 
     private static void OnCategoryChanged(EditorAssetCategory category) =>
         Model.TriggerEvent(EventKey.CategoryChanged, category);
@@ -54,7 +54,7 @@ internal static class AssetsComponent
         //Span<char> buffer = stackalloc char[8];
         var formatter = new NumberSpanFormatter(StringUtils.CharBuffer16);
 
-        var assetObjects = ViewState.AssetObjects;
+        var assetObjects = ViewModel.AssetObjects;
         foreach (var it in assetObjects)
         {
             ImGui.PushID(it.AssetId);
@@ -104,7 +104,7 @@ internal static class AssetsComponent
         ImGui.PushStyleVar(ImGuiStyleVar.FramePadding, new Vector2(8, 6));
         ImGui.PushStyleVar(ImGuiStyleVar.WindowPadding, new Vector2(8, 6));
 
-        var currentLabel = AssetCategoryNames[(int)ViewState.Category];
+        var currentLabel = AssetCategoryNames[(int)ViewModel.Category];
         ImGui.SetNextItemWidth(ImGui.GetContentRegionAvail().X - 8f);
         if (ImGui.BeginCombo("##assetTypeSelector", currentLabel, ImGuiComboFlags.HeightLargest))
         {
@@ -112,7 +112,7 @@ internal static class AssetsComponent
 
             for (var i = 0; i < AssetCategoryNames.Length; i++)
             {
-                var isSelected = i == (int)ViewState.Category;
+                var isSelected = i == (int)ViewModel.Category;
 
                 if (ImGui.Selectable(AssetCategoryNames[i], isSelected, ImGuiSelectableFlags.None, Vector2.Zero))
                     OnCategoryChanged((EditorAssetCategory)i);
@@ -165,8 +165,8 @@ internal static class AssetsComponent
             ImGui.EndTable();
         }
 
-        if (ViewState.AssetFileObjects.Count > 0)
-            DrawFilesTable(formatter, ViewState);
+        if (ViewModel.AssetFileObjects.Count > 0)
+            DrawFilesTable(formatter, ViewModel);
 
         if (asset.HasActions)
         {

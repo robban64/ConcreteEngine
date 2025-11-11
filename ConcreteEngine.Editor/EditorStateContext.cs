@@ -110,7 +110,9 @@ internal static class EditorStateContext
                 case RightSidebarMode.Camera:
                     TransitionRightSidebar(ModelManager.CameraState);
                     break;
-                case RightSidebarMode.Light: break;
+                case RightSidebarMode.World: 
+                    TransitionRightSidebar(ModelManager.WorldRenderState);
+                    break;
                 case RightSidebarMode.Sky: break;
                 case RightSidebarMode.Terrain: break;
             }

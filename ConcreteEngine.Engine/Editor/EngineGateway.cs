@@ -2,6 +2,7 @@
 
 using ConcreteEngine.Editor;
 using ConcreteEngine.Editor.Data;
+using ConcreteEngine.Editor.DataState;
 using ConcreteEngine.Editor.Definitions;
 using ConcreteEngine.Engine.Assets;
 using ConcreteEngine.Engine.Data;
@@ -201,6 +202,9 @@ internal sealed class EngineGateway : IDisposable
             
             EditorApi.UpdateEntityData = EngineDataProvider.SetEntityData;
             EditorApi.UpdateCameraData = EngineDataProvider.SetCameraData;
+
+            EditorApi.UpdateWorldParams = EngineDataProvider.SetWorldParams;
+
         }
 
 

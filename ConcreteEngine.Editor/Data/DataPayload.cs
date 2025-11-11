@@ -2,6 +2,7 @@
 
 using ConcreteEngine.Common.Numerics;
 using ConcreteEngine.Editor.Definitions;
+using ConcreteEngine.Shared.RenderData;
 using ConcreteEngine.Shared.TransformData;
 
 #endregion
@@ -11,6 +12,7 @@ namespace ConcreteEngine.Editor.Data;
 public readonly record struct EditorShadowPayload(int Size, bool Enabled, EditorRequestAction RequestAction);
 
 public sealed record EditorShaderPayload(string Name, EditorRequestAction RequestAction);
+
 
 public struct CameraEditorPayload(
     long generation,

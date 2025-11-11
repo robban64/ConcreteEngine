@@ -76,7 +76,8 @@ internal static class RightSidebar
             case RightSidebarMode.Camera:
                 CameraPropertyComponent.Draw();
                 break;
-            case RightSidebarMode.Light:
+            case RightSidebarMode.World:
+                WorldParamsComponent.Draw();
                 break;
             case RightSidebarMode.Sky:
                 break;

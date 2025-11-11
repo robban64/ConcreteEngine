@@ -21,14 +21,14 @@ internal static class EntitiesComponent
     
     
     private static ModelState<EntitiesViewModel> Model => ModelManager.EntitiesState;
-    private static EntitiesViewModel ViewState => Model.State!;
+    private static EntitiesViewModel ViewModel => Model.State!;
 
-    private static ref readonly EntityDataPayload Data => ref ViewState.Data;
-    private static ref EntityDataState DataState => ref ViewState.DataState;
+    private static ref readonly EntityDataPayload Data => ref ViewModel.Data;
+    private static ref EntityDataState DataState => ref ViewModel.DataState;
 
     private static void OnSelectEntity(EntityRecord entity)
     {
-        if(entity.EntityId == ViewState.Data.EntityId) return;
+        if(entity.EntityId == ViewModel.Data.EntityId) return;
         Model.TriggerEvent(EventKey.SelectionChanged, entity);
     }
 
@@ -96,9 +96,9 @@ internal static class EntitiesComponent
         //Span<char> buffer = stackalloc char[8];
         var formatter = new NumberSpanFormatter(StringUtils.CharBuffer8);
 
-        foreach (var entity in ViewState.Entities)
+        foreach (var entity in ViewModel.Entities)
         {
-            var selected = entity.EntityId == ViewState.Data.EntityId;
+            var selected = entity.EntityId == ViewModel.Data.EntityId;
 
             ImGui.PushStyleVar(ImGuiStyleVar.SelectableTextAlign, new Vector2(0.0f, 0.5f));
             ImGui.PushStyleColor(ImGuiCol.HeaderHovered, GuiTheme.SelectedColor);

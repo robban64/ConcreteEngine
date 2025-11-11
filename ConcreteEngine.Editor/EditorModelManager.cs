@@ -12,6 +12,7 @@ internal static class EditorModelManager
     public static ModelState<EntitiesViewModel> EntitiesState { get; private set; } = null!;
     public static ModelState<AssetStoreViewModel> AssetState { get; private set; } = null!;
     public static ModelState<CameraViewModel> CameraState { get; private set; } = null!;
+    public static ModelState<WorldRenderViewModel> WorldRenderState { get; private set; } = null!;
 
     public static bool HasInit { get; private set; } = false;
 
@@ -27,6 +28,7 @@ internal static class EditorModelManager
         RegisterEntityState();
         RegisterAssetState();
         RegisterCameraState();
+        RegisterWorldRenderState();
     }
 
     private static void RegisterEntityState()
@@ -71,7 +73,7 @@ internal static class EditorModelManager
             CommandDispatcher.InvokeEditorCommand(CoreCmdNames.AssetShader,
                 new EditorShaderPayload(it.Name, EditorRequestAction.Reload));
     }
-    
+
     private static void RegisterCameraState()
     {
         CameraState = ModelState<CameraViewModel>
@@ -87,7 +89,25 @@ internal static class EditorModelManager
         static void FetchCameraDataHandler(ModelState<CameraViewModel> ctx, CameraViewModel it) =>
             it.UpdateState(EditorApi.UpdateCameraData!);
 
-        static void Handler(ModelState<CameraViewModel> ctx, in CameraEditorPayload it)
-            => CommandDispatcher.InvokeEditorCommand(CoreCmdNames.CameraTransform, in it);
+        static void Handler(ModelState<CameraViewModel> ctx, in CameraEditorPayload it) =>
+            CommandDispatcher.InvokeEditorCommand(CoreCmdNames.CameraTransform, in it);
+    }
+
+    private static void RegisterWorldRenderState()
+    {
+        WorldRenderState = ModelState<WorldRenderViewModel>
+            .CreateBuilder(static () => new WorldRenderViewModel())
+            .OnEnter(static (ctx, it) => it.UpdateState(EditorApi.UpdateWorldParams!))
+            .OnLeave(static (ctx, it) => ctx.ResetState())
+            .RegisterEvent<WorldParamSelection>(EventKey.SelectionChanged, SelectionChangeHandler)
+            .Build();
+        return;
+
+        static void SelectionChangeHandler(ModelState<WorldRenderViewModel> ctx, in WorldParamSelection it)
+        {
+            ctx.State!.Selection = it;
+            ctx.State!.UpdateState(EditorApi.UpdateWorldParams!);
+        }
+
     }
 }

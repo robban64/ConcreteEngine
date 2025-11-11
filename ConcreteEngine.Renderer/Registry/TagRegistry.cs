@@ -26,8 +26,7 @@ internal static class TagRegistry
     public static PassTagKey PassKey<TTag>(FboVariant variant) where TTag : class =>
         new(TagIndexOf<TTag>(), variant, RenderPassTag<TTag>.GetPassId(variant));
 
-    public static PassTagKey BindFboPassId<TTag>(FboVariant variant, PassId passId)
-        where TTag : class
+    public static PassTagKey BindFboPassId<TTag>(FboVariant variant, PassId passId) where TTag : class
     {
         RenderPassTag<TTag>.BindFboPassId(variant, passId);
         return PassKey<TTag>(variant);

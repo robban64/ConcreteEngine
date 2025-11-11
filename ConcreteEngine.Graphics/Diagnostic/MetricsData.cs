@@ -19,11 +19,18 @@ public readonly struct GfxStoreMetricsPayload(
     public readonly ResourceKind Kind = kind;
 }
 
-public readonly record struct GfxMetaSpecialMetric(
-    long Value,
-    int ResourceId,
-    ushort Param2 = 0,
-    ResourceKind Kind = 0);
+public readonly struct GfxMetaSpecialMetric(
+    long value,
+    int resourceId,
+    ushort param2 = 0,
+    ResourceKind kind = 0)
+{
+    public readonly long Value  = value;
+    public readonly int ResourceId  = resourceId;
+    public readonly ushort Param2  = param2;
+    public readonly ResourceKind Kind  = kind;
+
+}
 
 /*
 

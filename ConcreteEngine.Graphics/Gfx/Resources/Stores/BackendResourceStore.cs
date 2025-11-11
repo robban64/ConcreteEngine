@@ -28,7 +28,6 @@ internal sealed class BackendResourceStore<TId, THandle> : IBackendResourceStore
     private readonly Stack<int> _free = new();
 
     public ResourceKind Kind { get; }
-    //public GraphicsBackend Backend => GraphicsBackend.OpenGl;
 
     public int Count => _idx;
     public int FreeCount => _free.Count;
@@ -42,14 +41,13 @@ internal sealed class BackendResourceStore<TId, THandle> : IBackendResourceStore
 
     public THandle GetHandle(GfxRefToken<TId> refToken) => _records[refToken.Handle.Slot].Handle;
 
-    public NativeHandle GetNativeHandle(in GfxHandle handle) => NativeHandle.From(GetUntyped(in handle));
-
-    public THandle GetUntyped(in GfxHandle handle)
+    public NativeHandle GetNativeHandle(in GfxHandle handle)
     {
         BkThrower.IsValidGfxHandleOrThrow(handle, Kind);
-        ref readonly var record = ref _records[handle.Slot];
+
+        var record = _records[handle.Slot];
         BkThrower.IsValidRecordOrThrow(record, handle);
-        return record.Handle;
+        return NativeHandle.From(record.Handle);
     }
 
     public GfxRefToken<TId> Add(THandle handle)

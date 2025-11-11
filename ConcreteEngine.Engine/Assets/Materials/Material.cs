@@ -36,12 +36,12 @@ public sealed class Material
 
     public void FillSnapshot(out MaterialParams snapshot) =>
         snapshot = new MaterialParams(
-            Color: State.Color,
-            Specular: State.Specular,
-            Shininess: State.Shininess,
-            UvRepeat: State.UvRepeat,
-            Transparent: State.Transparency,
-            HasNormal: TextureSlots.HasNormalMap,
-            HasAlpha: TextureSlots.HasAlphaMap
+            color: State.Color,
+            specular: State.Specular,
+            shininess: State.Shininess,
+            uvRepeat: State.UvRepeat,
+            transparent: State.Transparency,
+            hasNormal: TextureSlots.HasNormalMap,
+            hasAlpha: TextureSlots.HasAlphaMap
         );
 }

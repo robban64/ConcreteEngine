@@ -12,7 +12,7 @@ using ConcreteEngine.Graphics.Gfx.Resources;
 
 namespace ConcreteEngine.Renderer.Data;
 
-public readonly record struct MaterialParams
+public readonly struct MaterialParams
 {
     private readonly Color4 _color;
 
@@ -38,21 +38,21 @@ public readonly record struct MaterialParams
 
 
     public MaterialParams(
-        in Color4 Color,
-        float Specular,
-        float Shininess,
-        float UvRepeat = 1f,
-        bool Transparent = false,
-        bool HasNormal = false,
-        bool HasAlpha = false)
+        in Color4 color,
+        float specular,
+        float shininess,
+        float uvRepeat = 1f,
+        bool transparent = false,
+        bool hasNormal = false,
+        bool hasAlpha = false)
     {
-        this.Color = Color;
-        this.Specular = Specular;
-        this.Shininess = Shininess;
-        this.UvRepeat = UvRepeat;
-        TransparencyToggle = Transparent ? 1f : 0f;
-        NormalToggle = HasNormal ? 1f : 0f;
-        AlphaToggle = HasAlpha ? 1f : 0f;
+        Color = color;
+        Specular = specular;
+        Shininess = shininess;
+        UvRepeat = uvRepeat;
+        TransparencyToggle = transparent ? 1f : 0f;
+        NormalToggle = hasNormal ? 1f : 0f;
+        AlphaToggle = hasAlpha ? 1f : 0f;
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]

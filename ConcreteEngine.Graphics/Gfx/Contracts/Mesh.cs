@@ -44,14 +44,20 @@ public readonly struct VertexAttribute(
     public readonly bool Normalized = normalized;
 }
 
-public readonly record struct MeshDrawProperties(
-    DrawPrimitive Primitive,
-    DrawMeshKind Kind,
-    DrawElementSize ElementSize,
-    int DrawCount,
-    int InstanceCount = 0
+public readonly struct MeshDrawProperties(
+    DrawPrimitive primitive,
+    DrawMeshKind kind,
+    DrawElementSize elementSize,
+    int drawCount,
+    int instanceCount = 0
 )
 {
+    public DrawPrimitive Primitive { get; init; } = primitive;
+    public DrawMeshKind Kind { get; init; } = kind;
+    public DrawElementSize ElementSize { get; init; } = elementSize;
+    public int DrawCount { get; init; } = drawCount;
+    public int InstanceCount { get; init; } = instanceCount;
+
     public static MeshDrawProperties FromMeta(in MeshMeta meta) =>
         new(meta.Primitive, meta.Kind, meta.ElementSize, meta.DrawCount);
 
@@ -65,4 +71,5 @@ public readonly record struct MeshDrawProperties(
     public static MeshDrawProperties MakeElemental(DrawMeshKind kind = DrawMeshKind.Elements,
         DrawElementSize size = DrawElementSize.UnsignedInt, int drawCount = 0) =>
         new(DrawPrimitive.Triangles, kind, size, drawCount);
+
 }

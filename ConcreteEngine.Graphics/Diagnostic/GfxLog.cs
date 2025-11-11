@@ -64,26 +64,23 @@ public static class GfxLog
             Action: action);
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    internal static void LogGfxStore<TId>(TId id, GfxHandle h, LogTopic topic, LogAction action, ushort flags = 0)
-        where TId : unmanaged, IResourceId =>
-        Event(LogGfx(id.Value, h.Slot, h.Gen, flags, h.IsValid, topic, action));
+    internal static void LogGfxStore(int id, GfxHandle h, LogTopic topic, LogAction action, ushort flags = 0) =>
+        Event(LogGfx(id, h.Slot, h.Gen, flags, h.IsValid, topic, action));
 
     //
     private static LogEvent LogBk(uint handle, int slot, ushort flags, bool alive, LogTopic topic, LogAction action) =>
         new(handle, slot, alive ? 1 : 0, Flags: flags, Scope: LogScope.Backend, Topic: topic, Action: action);
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    internal static void LogBkStore<THandle>(BkHandle<THandle> handle, int slot, LogTopic topic, LogAction action,
-        ushort flags = 0)
-        where THandle : unmanaged, IResourceHandle, IEquatable<THandle> =>
-        Event(LogBk(handle, slot, flags, true, topic, action));
+    internal static void LogBkStore(uint handle, int slot, LogTopic topic, LogAction action, ushort flags = 0) =>
+        Event(LogBk(handle, slot, flags, handle > 0, topic, action));
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     internal static void LogBackend(uint handle, GfxHandle h, LogTopic topic, LogAction action, ushort flags = 0) =>
         Event(LogBk(handle, h.Slot, flags, h.IsValid, topic, action));
 
 
-    private static bool FilterLog(in LogEvent log) => 
+    private static bool FilterLog(in LogEvent log) =>
         FilterLogIndex(log.Topic, log.Scope, log.Action, log.Level) >= 0;
 
 

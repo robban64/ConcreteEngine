@@ -15,9 +15,6 @@ public interface IGfxResourceStore
 {
     ResourceKind ResourceKind { get; }
     int Count { get; }
-    int FreeCount { get; }
-    int Capacity { get; }
-    int GetAliveCount();
 }
 
 internal interface IGfxResourceStore<in TId> : IGfxResourceStore where TId : unmanaged, IResourceId
@@ -80,13 +77,10 @@ internal sealed class GfxResourceStore<TId, TMeta> : IGfxResourceStore<TId>
         return true;
     }
 
-    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public ref readonly TMeta GetMeta(TId id) => ref _meta[id.Value - 1];
 
-    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public GfxRefToken<TId> GetRefHandle(TId id) => GfxRefToken<TId>.From(in _handle[id.Value - 1]);
 
-    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public GfxRefToken<TId> GetRefAndMeta(TId id, out TMeta meta)
     {
         var idx = id.Value - 1;
@@ -108,7 +102,7 @@ internal sealed class GfxResourceStore<TId, TMeta> : IGfxResourceStore<TId>
         _handle[idx] = newRef;
         var newId = _makeResourceId(idx);
 
-        GfxLog.LogGfxStore(newId, newRef, TId.Kind.ToLogTopic(), LogAction.Add);
+        GfxLog.LogGfxStore(newId.Value, newRef, ResourceKind.ToLogTopic(), LogAction.Add);
         return newId;
     }
 
@@ -128,7 +122,7 @@ internal sealed class GfxResourceStore<TId, TMeta> : IGfxResourceStore<TId>
         _handle[idx] = default!;
         _free.Push(idx);
 
-        GfxLog.LogGfxStore(id, handle, TId.Kind.ToLogTopic(), LogAction.Remove);
+        GfxLog.LogGfxStore(id.Value, handle, TId.Kind.ToLogTopic(), LogAction.Remove);
         return handle;
     }
 
@@ -149,7 +143,7 @@ internal sealed class GfxResourceStore<TId, TMeta> : IGfxResourceStore<TId>
 
         var message = new GfxMetaChanged<TMeta>(in newMeta, in oldMeta, newRef.Gen, true, ResourceKind);
         ChangeCallback?.Invoke(id, in message);
-        GfxLog.LogGfxStore(id, newRef, TId.Kind.ToLogTopic(), LogAction.Replace);
+        GfxLog.LogGfxStore(id.Value, newRef, TId.Kind.ToLogTopic(), LogAction.Replace);
         return id;
     }
 

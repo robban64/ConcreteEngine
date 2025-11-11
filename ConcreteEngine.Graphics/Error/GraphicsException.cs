@@ -71,8 +71,8 @@ public sealed partial class GraphicsException(string message, Exception? inner =
     public static GraphicsException CapabilityTooLow<T>(string capabilityName, int attempted, int minimum) =>
         new($"{Label<T>()}: {capabilityName} value {attempted} is below the minimum required ({minimum}).");
 
-    public static GraphicsException InvalidStd140Layout<T>() =>
-        new($"{Label<T>()} contains invalid std layout with size: {Unsafe.SizeOf<T>()}");
+    public static GraphicsException InvalidStd140Layout(int stride) =>
+        new($"Ubo contains invalid std layout with stride: {stride}");
 
     private static string Label<T>(string? name = null)
     {

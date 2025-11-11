@@ -22,11 +22,7 @@ public static class UniformBufferUtils
     private static nint _uboOffsetAlign = 0;
     private static nint _offsetAlign = 16;
 
-    public static nint UboOffsetAlign
-    {
-        [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        get => _uboOffsetAlign;
-    }
+    public static nint UboOffsetAlign => _uboOffsetAlign;
 
 
     internal static void Init(int uniformBufferOffsetAlignment)
@@ -51,8 +47,7 @@ public static class UniformBufferUtils
         return q == 0 ? stride : q * stride;
     }
 
-    [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public static nint GetCapacityForEntities<T>(int entities) where T : unmanaged, IStd140Uniform
+    public static nint GetCapacityForEntities<T>(int entities) where T : unmanaged
     {
         nint blockSize = Unsafe.SizeOf<T>();
         nint uboAlign = _uboOffsetAlign;
@@ -69,24 +64,20 @@ public static class UniformBufferUtils
         return cap;
     }
 
-
-    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static nint AlignUp(nint v, nint a) => a == 0 ? v : (v + (a - 1)) & ~(a - 1);
 
-    public static nint StrideOf<T>() where T : unmanaged, IStd140Uniform => AlignUp(Unsafe.SizeOf<T>(), _offsetAlign);
+    public static nint StrideOf<T>() where T : unmanaged => AlignUp(Unsafe.SizeOf<T>(), _offsetAlign);
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public static bool IsStd140Aligned<T>() where T : unmanaged, IStd140Uniform => Unsafe.SizeOf<T>() % 16 == 0;
+    public static bool IsStd140Aligned<T>() where T : unmanaged => Unsafe.SizeOf<T>() % 16 == 0;
 
 
-    [MethodImpl(MethodImplOptions.NoInlining)]
-    [DoesNotReturn]
-    [StackTraceHidden]
+    [MethodImpl(MethodImplOptions.NoInlining), DoesNotReturn, StackTraceHidden]
     private static void ThrowStd140NotAligned<T>() where T : unmanaged =>
         throw new GraphicsException($"Invalid struct layout: {Unsafe.SizeOf<T>()} bytes for {typeof(T).Name}");
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public static void IsStd140AlignedOrThrow<T>(out nint stride) where T : unmanaged, IStd140Uniform
+    public static void IsStd140AlignedOrThrow<T>(out nint stride) where T : unmanaged
     {
         stride = Unsafe.SizeOf<T>();
         if (stride % 16 != 0) ThrowStd140NotAligned<T>();

@@ -15,14 +15,23 @@ public readonly struct VertexBufferPayload(in VertexBufferDesc descriptor, ReadO
     public readonly ReadOnlyMemory<byte> Data = data;
 }
 
-public readonly record struct VertexBufferDesc(
-    int BindingIdx,
-    int VertexSize, // stride
-    int VertexCount,
-    BufferUsage Usage,
-    BufferStorage Storage,
-    BufferAccess Access
-);
+public readonly struct VertexBufferDesc(
+    int bindingIdx,
+    int vertexSize, // stride
+    int vertexCount,
+    BufferUsage usage,
+    BufferStorage storage,
+    BufferAccess access
+)
+{
+    public readonly int BindingIdx  = bindingIdx;
+    public readonly int VertexSize  = vertexSize;
+    public readonly int VertexCount  = vertexCount;
+    public readonly BufferUsage Usage  = usage;
+    public readonly BufferStorage Storage  = storage;
+    public readonly BufferAccess Access  = access;
+
+}
 
 //IBO
 public readonly struct IndexBufferPayload(in IndexBufferDesc descriptor, ReadOnlyMemory<byte> data)
@@ -31,18 +40,32 @@ public readonly struct IndexBufferPayload(in IndexBufferDesc descriptor, ReadOnl
     public readonly ReadOnlyMemory<byte> Data = data;
 }
 
-public readonly record struct IndexBufferDesc(
-    uint ElementSize,
-    uint ElementCount,
-    BufferUsage Usage,
-    BufferStorage Storage,
-    BufferAccess Access);
-
-public readonly record struct BufferDescriptor(
-    BufferUsage Usage,
-    BufferStorage Storage,
-    BufferAccess Access)
+public readonly struct IndexBufferDesc(
+    uint elementSize,
+    uint elementCount,
+    BufferUsage usage,
+    BufferStorage storage,
+    BufferAccess access)
 {
+    public readonly uint ElementSize  = elementSize;
+    public readonly uint ElementCount  = elementCount;
+    public readonly BufferUsage Usage  = usage;
+    public readonly BufferStorage Storage  = storage;
+    public readonly BufferAccess Access  = access;
+
+}
+
+public readonly struct BufferDescriptor(
+    BufferUsage usage,
+    BufferStorage storage,
+    BufferAccess access)
+{
+    
+    public readonly BufferUsage Usage  = usage;
+    public readonly BufferStorage Storage  = storage;
+    public readonly BufferAccess Access  = access;
+
+    
     public static BufferDescriptor MakeStatic() => new(BufferUsage.StaticDraw, BufferStorage.Static, BufferAccess.None);
 
     public static BufferDescriptor MakeDynamic() =>
@@ -59,4 +82,5 @@ public readonly record struct BufferDescriptor(
     public static BufferDescriptor MakePersistentMapped() =>
         new(BufferUsage.StreamDraw, BufferStorage.Stream,
             BufferAccess.MapRead | BufferAccess.MapWrite | BufferAccess.Persistent | BufferAccess.Coherent);
+
 }

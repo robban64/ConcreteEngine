@@ -16,4 +16,9 @@ public readonly struct GfxFrameInfo(
     public readonly Size2D OutputSize = outputSize;
 }
 
-public readonly record struct GfxFrameResult(int DrawCalls, int TriangleCount);
+public readonly struct GfxFrameResult(int drawCalls, int triangleCount)
+{
+    public int DrawCalls { get; init; } = drawCalls;
+    public int TriangleCount { get; init; } = triangleCount;
+
+}

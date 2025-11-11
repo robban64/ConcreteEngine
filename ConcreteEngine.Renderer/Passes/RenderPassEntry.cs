@@ -70,7 +70,6 @@ public sealed class RenderPassEntry
             afterPassDel(ctx, in _state);
     }
 
-    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     private void ApplyPending()
     {
         if (_pendingState is { } rep)

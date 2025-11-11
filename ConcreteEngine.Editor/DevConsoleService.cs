@@ -44,8 +44,9 @@ public static class DevConsoleService
         if (Log.Count >= MaxLogCount)
             Log.RemoveRange(Log.Count / 2, Log.Count - Log.Count / 2);
     }
+    
 
-    private static bool ExecCommand(string commandLine)
+    internal static bool ExecCommand(string commandLine)
     {
         if (string.IsNullOrWhiteSpace(commandLine)) return false;
 

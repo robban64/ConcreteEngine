@@ -14,8 +14,8 @@ public readonly struct RenderTargetInfo(
     FboAttachmentIds attachments,
     RenderBufferMsaa multiSample)
 {
-    public FrameBufferId FboId { get; init; } = fboId;
-    public Size2D Size { get; init; } = size;
-    public FboAttachmentIds Attachments { get; init; } = attachments;
-    public RenderBufferMsaa MultiSample { get; init; } = multiSample;
+    public readonly FrameBufferId FboId  = fboId;
+    public readonly Size2D Size  = size;
+    public readonly FboAttachmentIds Attachments  = attachments;
+    public readonly RenderBufferMsaa MultiSample  = multiSample;
 }

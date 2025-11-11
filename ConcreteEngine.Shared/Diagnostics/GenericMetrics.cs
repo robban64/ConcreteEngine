@@ -1,16 +1,42 @@
 namespace ConcreteEngine.Shared.Diagnostics;
 
-public readonly record struct BasicMetric<TSample>(in TSample Sample, MetricHeader Header) where TSample : unmanaged;
+public readonly struct BasicMetric<TSample>(in TSample sample, MetricHeader header) where TSample : unmanaged
+{
+    public readonly TSample Sample  = sample;
+    public readonly MetricHeader Header  = header;
 
-public readonly record struct TargetMetric<TSample>(int TargetId, in TSample Sample, MetricHeader Header)
-    where TSample : unmanaged;
+}
 
-public readonly record struct TimeTargetMetric<TSample>(
-    int TargetId,
-    long TimeStamp,
-    in TSample Sample,
-    MetricHeader Header)
-    where TSample : unmanaged;
+public readonly struct TargetMetric<TSample>(int targetId, in TSample sample, MetricHeader header)
+    where TSample : unmanaged
+{
+    public readonly int TargetId  = targetId;
+    public readonly TSample Sample  = sample;
+    public readonly MetricHeader Header  = header;
 
-public readonly record struct FrameMetric<TSample>(long FrameId, long TimeStamp, in TSample Sample, MetricHeader Header)
-    where TSample : unmanaged;
+}
+
+public readonly struct TimeTargetMetric<TSample>(
+    int targetId,
+    long timeStamp,
+    in TSample sample,
+    MetricHeader header)
+    where TSample : unmanaged
+{
+    public readonly int TargetId  = targetId;
+    public readonly long TimeStamp  = timeStamp;
+    public readonly TSample Sample  = sample;
+    public readonly MetricHeader Header  = header;
+
+
+}
+
+public readonly struct FrameMetric<TSample>(long frameId, long timeStamp, in TSample sample, MetricHeader header)
+    where TSample : unmanaged
+{
+    public readonly long FrameId  = frameId;
+    public readonly long TimeStamp  = timeStamp;
+    public readonly TSample Sample  = sample;
+    public readonly MetricHeader Header  = header;
+
+}

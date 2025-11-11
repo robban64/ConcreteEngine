@@ -118,7 +118,7 @@ internal static class ConsoleComponent
             _input = string.Empty;
 
             if (!string.IsNullOrEmpty(text))
-                DevConsoleService.AddLog(text);
+                DevConsoleService.ExecCommand(text);
 
             ImGui.SetKeyboardFocusHere();
             _scrollToBottom = true;

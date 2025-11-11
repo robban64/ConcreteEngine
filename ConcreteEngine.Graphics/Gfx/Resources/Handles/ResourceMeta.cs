@@ -58,7 +58,7 @@ public readonly struct ShaderMeta(int samplerSlots) : IResourceMeta
 }
 
 [StructLayout(LayoutKind.Sequential)]
-public readonly record struct MeshMeta : IResourceMeta
+public readonly struct MeshMeta : IResourceMeta
 {
     public int DrawCount { get; init; }
     public int InstanceCount { get; init; }

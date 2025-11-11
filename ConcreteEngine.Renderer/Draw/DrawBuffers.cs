@@ -113,7 +113,7 @@ internal sealed class DrawBuffers
     public void UploadGlobalUniforms(in RenderFrameInfo frameInfo, in RenderRuntimeParams runtimeParams)
     {
         UploadEngineUniformRecord(in frameInfo, in runtimeParams);
-        UploadLight();
+        //UploadLight();
         if (_paramsSnapshot.IsDirty)
         {
             UploadFrameUniformRecord();
@@ -125,7 +125,7 @@ internal sealed class DrawBuffers
     private static class DataStore
     {
         public static CameraUniformRecord CameraData;
-        public static LightUniformRecord LightData = new(0, default);
+        public static LightUniformRecord LightData = new(0);
         public static DirLightUniformRecord DirLightData;
         public static FrameUniformRecord FrameData;
         public static ShadowUniformRecord ShadowData;
@@ -190,7 +190,7 @@ internal sealed class DrawBuffers
 
     private void UploadLight()
     {
-        _gfxBuffers.UploadUniformGpuData(_lightUbo, in DataStore.LightData, 0);
+        //_gfxBuffers.UploadUniformGpuData(_lightUbo, in DataStore.LightData, 0);
     }
 
     public void UploadShadow(in Matrix4x4 lightViewProjection)

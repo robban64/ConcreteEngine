@@ -44,12 +44,9 @@ internal sealed class RenderUboRegistry
     {
     }
 
-    public void Register<TUbo, TTag>()  where TTag : class where TUbo : unmanaged, IUniformBufferRecord<TTag>
+    public void Register<TUbo, TTag>()  where TTag : class where TUbo : unmanaged
     {
         InvalidOpThrower.ThrowIfCapacityExceed(_uboRegistry, RenderLimits.UboSlots);
-        if (!UniformBufferUtils.IsStd140Aligned<TUbo>())
-            throw new InvalidOperationException($"{typeof(TUbo).Name} is not std140-aligned.");
-
         var newSlot = TagRegistry.RegisterUniformBufferSlot<TTag>();
         InvalidOpThrower.ThrowIfNotNull(_uboRegistry[newSlot]);
 

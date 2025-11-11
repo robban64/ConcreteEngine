@@ -76,10 +76,10 @@ internal sealed class ModelLoaderModule
             vertices: data.Vertices,
             indices: data.Indices,
             properties: new MeshDrawProperties(
-                Kind: DrawMeshKind.Elements,
-                DrawCount: data.Indices.Length,
-                ElementSize: DrawElementSize.UnsignedInt,
-                Primitive: DrawPrimitive.Triangles
+                kind: DrawMeshKind.Elements,
+                drawCount: data.Indices.Length,
+                elementSize: DrawElementSize.UnsignedInt,
+                primitive: DrawPrimitive.Triangles
             )
         );
 

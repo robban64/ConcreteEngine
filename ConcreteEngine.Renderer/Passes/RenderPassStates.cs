@@ -8,62 +8,76 @@ using ConcreteEngine.Graphics.Gfx.Resources;
 
 namespace ConcreteEngine.Renderer.Passes;
 
-public readonly record struct PassMutationState(
-    GfxPassClear? ClearColor = null,
-    GfxPassState? PassState = null,
-    FrameBufferId? TargetFboId = null,
-    ShaderId? ShaderId = null,
-    int? Samples = null,
-    bool? LinearFilter = null
+public readonly struct PassMutationState(
+    GfxPassClear? clearColor = null,
+    GfxPassState? passState = null,
+    FrameBufferId? targetFboId = null,
+    ShaderId? shaderId = null,
+    int? samples = null,
+    bool? linearFilter = null
 )
 {
-    public static PassMutationState MutateTarget(FrameBufferId fboId) => new(TargetFboId: fboId);
+    public GfxPassClear? ClearColor { get; init; } = clearColor;
+    public GfxPassState? PassState { get; init; } = passState;
+    public FrameBufferId? TargetFboId { get; init; } = targetFboId;
+    public ShaderId? ShaderId { get; init; } = shaderId;
+    public int? Samples { get; init; } = samples;
+    public bool? LinearFilter { get; init; } = linearFilter;
+
+    public static PassMutationState MutateTarget(FrameBufferId fboId) => new(targetFboId: fboId);
 }
 
-public readonly record struct RenderPassState(
-    GfxPassClear ClearColor,
-    GfxPassState PassState,
-    ShaderId ShaderId = default,
-    FrameBufferId TargetFboId = default,
-    int Samples = 0,
-    bool LinearFilter = false
+public readonly struct RenderPassState(
+    in GfxPassClear clearColor,
+    GfxPassState passState,
+    ShaderId shaderId = default,
+    FrameBufferId targetFboId = default,
+    int samples = 0,
+    bool linearFilter = false
 )
 {
+    public GfxPassClear ClearColor { get; init; } = clearColor;
+    public GfxPassState PassState { get; init; } = passState;
+    public ShaderId ShaderId { get; init; } = shaderId;
+    public FrameBufferId TargetFboId { get; init; } = targetFboId;
+    public int Samples { get; init; } = samples;
+    public bool LinearFilter { get; init; } = linearFilter;
+
     public RenderPassState FromMutation(in PassMutationState m) =>
-        new(ClearColor: m.ClearColor ?? ClearColor,
-            PassState: m.PassState ?? PassState,
-            TargetFboId: m.TargetFboId ?? TargetFboId,
-            ShaderId: m.ShaderId ?? ShaderId,
-            Samples: m.Samples ?? Samples,
-            LinearFilter: m.LinearFilter ?? LinearFilter
+        new(clearColor: m.ClearColor ?? ClearColor,
+            passState: m.PassState ?? PassState,
+            targetFboId: m.TargetFboId ?? TargetFboId,
+            shaderId: m.ShaderId ?? ShaderId,
+            samples: m.Samples ?? Samples,
+            linearFilter: m.LinearFilter ?? LinearFilter
         );
 
-    public static RenderPassState MakeSceneMsaa(int samples) =>
-        new()
-        {
-            ClearColor = GfxPassClear.MakeColorDepthClear(Color4.CornflowerBlue),
-            PassState = GfxPassState.MakeScene(),
-            Samples = samples
-        };
+    public static RenderPassState MakeSceneMsaa(int samples) => new()
+    {
+        ClearColor = GfxPassClear.MakeColorDepthClear(Color4.CornflowerBlue),
+        PassState = GfxPassState.MakeScene(),
+        Samples = samples
+    };
 
     public static RenderPassState MakeResolve() => new() { PassState = GfxPassState.MakeOff(), LinearFilter = false };
 
-    public static RenderPassState MakePostProcess(ShaderId shaderId) =>
-        new()
-        {
-            ClearColor = GfxPassClear.MakeColorClear(Color4.Black),
-            PassState = GfxPassState.MakePostProcess(),
-            ShaderId = shaderId
-        };
+    public static RenderPassState MakePostProcess(ShaderId shaderId) => new()
+    {
+        ClearColor = GfxPassClear.MakeColorClear(Color4.Black),
+        PassState = GfxPassState.MakePostProcess(),
+        ShaderId = shaderId
+    };
 
-    public static RenderPassState MakeScreen(ShaderId shaderId) =>
-        new()
-        {
-            ClearColor = GfxPassClear.MakeColorClear(Color4.Black),
-            PassState = GfxPassState.MakeScreen(),
-            ShaderId = shaderId
-        };
+    public static RenderPassState MakeScreen(ShaderId shaderId) => new()
+    {
+        ClearColor = GfxPassClear.MakeColorClear(Color4.Black),
+        PassState = GfxPassState.MakeScreen(),
+        ShaderId = shaderId
+    };
 
-    public static RenderPassState MakeShadow() =>
-        new() { ClearColor = GfxPassClear.MakeDepthClear(), PassState = GfxPassState.MakeShadow() };
+    public static RenderPassState MakeShadow() => new()
+    {
+        ClearColor = GfxPassClear.MakeDepthClear(),
+        PassState = GfxPassState.MakeShadow()
+    };
 }

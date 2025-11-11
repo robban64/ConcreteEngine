@@ -108,6 +108,9 @@ internal static class EngineDataProvider
     public static void SetWorldParams(ref WorldParamState data)
     {
         var snapshot = _world!.WorldRenderParams.Snapshot;
+        if(data.Version == snapshot.Version) return;
+
+        data.Version = snapshot.Version;
         data.LightState.DirectionalLight = new DirLightState(in snapshot.DirLight);
         data.LightState.AmbientLight = new AmbientState(in snapshot.Ambient);
         data.FogState = new FogState(in snapshot.Fog);

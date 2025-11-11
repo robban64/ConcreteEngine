@@ -12,6 +12,7 @@ public static class CoreCmdNames
 {
     public const string AssetShader = "asset-shader";
     public const string WorldShadow = "world-shadow";
+    public const string WorldParams = "world-params";
     public const string EntityTransform = "entity-transform";
     public const string CameraTransform = "camera-transform";
 }

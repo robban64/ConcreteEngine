@@ -40,7 +40,8 @@ internal sealed class ModelStateDelegateBundle<T>(
 
 internal interface IModelState
 {
-    public bool Active { get; }
+    bool Active { get; }
+    bool PendingRefresh { get; }
     void InvokeAction(TransitionKey action);
     void TriggerEvent<TEvent>(EventKey eventKey, in TEvent eventData);
 }
@@ -56,8 +57,7 @@ internal sealed class ModelState<T> : IModelState where T : class
 
     public T? State { get; private set; }
     public bool Active { get; private set; }
-
-    public bool IsAlive => State != null;
+    public bool PendingRefresh { get; private set; } = false;
 
     private ModelState(
         Func<T> factory,
@@ -77,6 +77,22 @@ internal sealed class ModelState<T> : IModelState where T : class
     {
         Active = false;
         State = null;
+    }
+
+    public void EnqueueRefreshNextFrame()
+    {
+        InvalidOpThrower.ThrowIfNull(_onRefresh);
+        if (PendingRefresh) return;
+        PendingRefresh = true;
+    }
+
+    public bool TryInvokePendingRefresh()
+    {
+        if (!PendingRefresh) return false;
+        _onRefresh!(this, State!);
+        InvokeAction(TransitionKey.Refresh);
+        PendingRefresh = false;
+        return true;
     }
 
     public void InvokeAction(TransitionKey action)

@@ -42,6 +42,7 @@ internal static class EditorService
             ModelManager.CameraState.InvokeAction(TransitionKey.Refresh);
             _lastRefresh = TimeUtils.GetTimestamp();
         }
+        ModelManager.InvokeRefreshForModels();
     }
 
     internal static void Render()

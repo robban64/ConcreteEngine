@@ -103,6 +103,10 @@ public sealed class World : IWorld
             Camera.NearPlane = data.Projection.Near;
             Camera.Fov = data.Projection.Fov;
         }
+        else if (cmd is WorldParamsCommandRecord worldParamsCmd)
+        {
+            WorldRenderParams.FromEditor(ref worldParamsCmd.Data);
+        }
         else
         {
             throw new InvalidOperationException("Unknown Command");

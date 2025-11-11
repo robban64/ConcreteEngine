@@ -1,4 +1,5 @@
 using System.Numerics;
+using System.Runtime.CompilerServices;
 using ConcreteEngine.Editor.Data;
 using ConcreteEngine.Shared.RenderData;
 
@@ -6,6 +7,7 @@ namespace ConcreteEngine.Editor.DataState;
 
 public struct WorldParamState
 {
+    public long Version;
     public LightState LightState;
     public FogState FogState;
     public PostEffectState PostState;
@@ -23,6 +25,9 @@ public struct DirLightState(in DirLightParams param)
     public Vector3 Diffuse = param.Diffuse;
     public float Intensity = param.Intensity;
     public float Specular = param.Specular;
+
+    public void Fill(out DirLightParams result)
+        => result = Unsafe.As<DirLightState, DirLightParams>(ref this);
 }
 
 public struct AmbientState(in AmbientParams param)
@@ -31,7 +36,6 @@ public struct AmbientState(in AmbientParams param)
     public Vector3 AmbientGround = param.AmbientGround;
     public float Exposure = param.Exposure;
 }
-
 
 public struct FogState(in FogParams param)
 {

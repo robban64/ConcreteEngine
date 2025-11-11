@@ -23,6 +23,11 @@ internal static class WorldParamsComponent
         Model.TriggerEvent(EventKey.SelectionChanged, selection);
     }
 
+    private static void OnSelectionUpdate()
+    {
+        Model.TriggerEvent(EventKey.SelectionUpdated, in DataState);
+    }
+
     public static void Draw()
     {
         ImGui.PushStyleVar(ImGuiStyleVar.WindowPadding, new Vector2(12f, 0));
@@ -64,34 +69,38 @@ internal static class WorldParamsComponent
         ref var ambientLight = ref ViewModel.LightState.AmbientLight;
 
 
+        if (ImGui.Button("Update")) OnSelectionUpdate();
+
         ImGui.SeparatorText("Directional Light");
         ImGui.Dummy(new Vector2(0, 2));
 
         ImGui.TextUnformatted("Direction");
-        ImGui.DragFloat3("##LightDirection", ref dirLight.Direction, 0.01f, -1f, 1f, "%.2f");
-        
+        var update = ImGui.DragFloat3("##LightDirection", ref dirLight.Direction, 0.01f, -1f, 1f, "%.2f");
+
         ImGui.TextUnformatted("Diffuse");
-        ImGui.ColorEdit3("##LightDiffuse", ref dirLight.Diffuse);
-        
+        update |= ImGui.ColorEdit3("##LightDiffuse", ref dirLight.Diffuse);
+
         ImGui.TextUnformatted("Intensity");
-        ImGui.DragFloat("##LightIntensity", ref dirLight.Intensity, 0.01f, 0.0f, 10.0f, "%.3f");
-       
+        update |= ImGui.DragFloat("##LightIntensity", ref dirLight.Intensity, 0.01f, 0.0f, 10.0f, "%.3f");
+
         ImGui.TextUnformatted("Specular");
-        ImGui.DragFloat("##LightSpecular", ref dirLight.Specular, 0.01f, 0.0f, 10.0f, "Spec: %.3f");
+        update |= ImGui.DragFloat("##LightSpecular", ref dirLight.Specular, 0.01f, 0.0f, 10.0f, "Spec: %.3f");
 
         ImGui.Dummy(new Vector2(0, 2));
         ImGui.SeparatorText("Ambient Light");
         ImGui.Dummy(new Vector2(0, 2));
 
         ImGui.TextUnformatted("Ambient");
-        ImGui.ColorEdit3("##LightAmbient", ref ambientLight.Ambient);
-        
-        ImGui.TextUnformatted("Ambient Ground");
-        ImGui.ColorEdit3("##LightAmbientGround", ref ambientLight.AmbientGround);
-        ImGui.TextUnformatted("Exposure");
-        ImGui.DragFloat("##LightExposure", ref ambientLight.Exposure, 0.01f, 0.0f, 10.0f, "Exp: %.3f");
-        
+        update |= ImGui.ColorEdit3("##LightAmbient", ref ambientLight.Ambient);
 
+        ImGui.TextUnformatted("Ambient Ground");
+        update |= ImGui.ColorEdit3("##LightAmbientGround", ref ambientLight.AmbientGround);
+        ImGui.TextUnformatted("Exposure");
+        update |= ImGui.DragFloat("##LightExposure", ref ambientLight.Exposure, 0.01f, 0.0f, 10.0f, "Exp: %.3f");
+
+        if (update)
+        {
+        }
     }
 
     private static void DrawFogState()

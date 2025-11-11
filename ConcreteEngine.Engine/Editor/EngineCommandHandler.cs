@@ -4,6 +4,7 @@ using System.Runtime.CompilerServices;
 using ConcreteEngine.Common.Numerics;
 using ConcreteEngine.Editor;
 using ConcreteEngine.Editor.Data;
+using ConcreteEngine.Editor.DataState;
 using ConcreteEngine.Editor.Definitions;
 using ConcreteEngine.Engine.Assets.Data;
 using ConcreteEngine.Engine.Editor.Data;
@@ -64,6 +65,13 @@ internal static class EngineCommandHandler
     public static CommandResponse OnCameraDataCmd(in CameraEditorPayload payload)
     {
         var cmd = new CameraCommandRecord(WorldCommandAction.Camera, in payload);
+        CommandQueues.EnqueueMain(cmd);
+        return CommandResponse.Ok();
+    }
+    
+    public static CommandResponse OnWorldParamCmd(in WorldParamState payload)
+    {
+        var cmd = new WorldParamsCommandRecord(WorldCommandAction.WorldParams, in payload);
         CommandQueues.EnqueueMain(cmd);
         return CommandResponse.Ok();
     }

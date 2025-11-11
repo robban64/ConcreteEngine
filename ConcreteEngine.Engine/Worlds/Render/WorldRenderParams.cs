@@ -1,6 +1,9 @@
 #region
 
+using System.Diagnostics;
 using System.Numerics;
+using System.Runtime.CompilerServices;
+using ConcreteEngine.Editor.DataState;
 using ConcreteEngine.Renderer.Data;
 using ConcreteEngine.Renderer.State;
 using ConcreteEngine.Shared.RenderData;
@@ -42,8 +45,8 @@ public sealed class WorldRenderParams
         _fog = param;
         _dirty = true;
     }
-    
-    
+
+
     public void SetPostEffect(in PostEffectParams param)
     {
         _postEffect = param;
@@ -71,6 +74,16 @@ public sealed class WorldRenderParams
             strength: 1f,
             pcfRadius: 1f);
 
+        _dirty = true;
+    }
+
+    internal void FromEditor(ref WorldParamState param)
+    {
+        Debug.Assert(param.Version == Version);
+        _ambient = Unsafe.As<AmbientState, AmbientParams>(ref param.LightState.AmbientLight);
+        _dirLight = Unsafe.As<DirLightState, DirLightParams>(ref param.LightState.DirectionalLight);
+        _fog = Unsafe.As<FogState, FogParams>(ref param.FogState);
+        _postEffect = Unsafe.As<PostEffectState, PostEffectParams>(ref param.PostState);
         _dirty = true;
     }
 

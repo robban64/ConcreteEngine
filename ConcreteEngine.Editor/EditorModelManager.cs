@@ -1,5 +1,6 @@
 using ConcreteEngine.Common;
 using ConcreteEngine.Editor.Data;
+using ConcreteEngine.Editor.DataState;
 using ConcreteEngine.Editor.Definitions;
 using ConcreteEngine.Editor.Gui.Components;
 using ConcreteEngine.Editor.ViewModel;
@@ -18,6 +19,14 @@ internal static class EditorModelManager
 
     static EditorModelManager()
     {
+    }
+
+    internal static void InvokeRefreshForModels()
+    {
+        EntitiesState.TryInvokePendingRefresh();
+        AssetState.TryInvokePendingRefresh();
+        CameraState.TryInvokePendingRefresh();
+        WorldRenderState.TryInvokePendingRefresh();
     }
 
     public static void SetupModelState()
@@ -98,8 +107,10 @@ internal static class EditorModelManager
         WorldRenderState = ModelState<WorldRenderViewModel>
             .CreateBuilder(static () => new WorldRenderViewModel())
             .OnEnter(static (ctx, it) => it.UpdateState(EditorApi.UpdateWorldParams!))
+            .OnRefresh(static (ctx, it) => it.UpdateState(EditorApi.UpdateWorldParams!))
             .OnLeave(static (ctx, it) => ctx.ResetState())
             .RegisterEvent<WorldParamSelection>(EventKey.SelectionChanged, SelectionChangeHandler)
+            .RegisterEvent<WorldParamState>(EventKey.SelectionUpdated, SelectionUpdateHandler)
             .Build();
         return;
 
@@ -109,5 +120,10 @@ internal static class EditorModelManager
             ctx.State!.UpdateState(EditorApi.UpdateWorldParams!);
         }
 
+        static void SelectionUpdateHandler(ModelState<WorldRenderViewModel> ctx, in WorldParamState it)
+        {
+            CommandDispatcher.InvokeEditorCommand(CoreCmdNames.WorldParams, in it);
+            ctx.EnqueueRefreshNextFrame();
+        }
     }
 }

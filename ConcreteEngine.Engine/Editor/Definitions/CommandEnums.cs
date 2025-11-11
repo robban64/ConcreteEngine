@@ -26,6 +26,7 @@ internal enum WorldCommandAction : byte
 {
     None,
     Camera,
+    WorldParams,
     EntityModel,
-    EntityTransform
+    EntityTransform,
 }

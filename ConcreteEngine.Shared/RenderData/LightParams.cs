@@ -12,8 +12,6 @@ public readonly struct DirLightParams(Vector3 direction, Vector3 diffuse, float 
     public readonly Vector3 Diffuse  = diffuse;
     public readonly float Intensity  = intensity;
     public readonly float Specular  = specular;
-
-
 }
 
 public readonly struct AmbientParams(Vector3 ambient, Vector3 ambientGround, float exposure)

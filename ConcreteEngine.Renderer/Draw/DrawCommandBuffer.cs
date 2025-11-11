@@ -58,39 +58,12 @@ public sealed class DrawCommandBuffer
         _commandBuffer[idx] = cmd;
         _metaBuffer[idx] = meta;
         _indexBuffer[idx] = new DrawCommandRef(meta, idx);
-        _transformBuffer[idx] = new DrawObjectUniform(in model, in v0, in v1, v2);
-    }
-
-    public void SubmitDrawBatch(in DrawCommandPackage package)
-    {
-        Debug.Assert(package.Draw.Length == package.Meta.Length);
-        Debug.Assert(package.Draw.Length == package.Transform.Length);
-
-        var drawCommands = package.Draw;
-        var drawTransforms = package.Transform;
-        var drawMeta = package.Meta;
-
-        var count = drawCommands.Length;
-        if (count == 0) return;
-
-        EnsureCapacity(count);
-        drawCommands.CopyTo(_commandBuffer.AsSpan(_submitIdx));
-        drawMeta.CopyTo(_metaBuffer.AsSpan(_submitIdx));
-
-        var indices = _indexBuffer.AsSpan(_submitIdx);
-        var transformBuffer = _transformBuffer.AsSpan(_submitIdx);
-
-        var idx = _submitIdx;
-        for (var i = 0; i < count; i++, idx++)
-        {
-            indices[i] = new DrawCommandRef(drawMeta[i], idx);
-
-            ref readonly var transform = ref drawTransforms[i].Transform;
-            MatrixMath.CreateNormalMatrix(in transform, out var normalModel);
-            DrawObjectUniform.Fill(in transform, in normalModel, out transformBuffer[i]);
-        }
-
-        _submitIdx += count;
+        
+        ref var drawUbo = ref _transformBuffer[idx];
+        drawUbo.Model = model;
+        drawUbo.NormalCol0 = v0;
+        drawUbo.NormalCol1 = v1;
+        drawUbo.NormalCol2 = v2;
     }
 
     [MethodImpl(MethodImplOptions.AggressiveOptimization)]

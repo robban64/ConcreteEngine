@@ -56,7 +56,7 @@ public sealed class FrameProfileTimer
         {
             if (_lastAvgMs <= 0) return "Waiting for data...";
             var pct = _lastAvgMs / TargetFrameMs * 100.0;
-            return $"{_lastAvgMs:F3} ms (~{pct:F2}% frame)";
+            return $"{_lastAvgMs:F6} ms (~{pct:F2}% frame)";
         }
     }
 }

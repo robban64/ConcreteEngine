@@ -15,6 +15,8 @@ public sealed class RenderView
 
     private bool _useOverride = false;
 
+    public ref RenderViewSnapshot CameraView => ref _snapshot;
+
     public ref readonly Matrix4x4 ViewMatrix => ref _useOverride ? ref _override.ModelMatrix : ref _snapshot.ViewMatrix;
 
     public ref readonly Matrix4x4 ProjectionMatrix =>
@@ -45,13 +47,7 @@ public sealed class RenderView
         projectionView = _snapshot.ProjectionViewMatrix;
     }
 
-    public void SetViewData(in RenderViewSnapshot view)
-    {
-        _useOverride = false;
-        _snapshot = view;
-    }
-
-    internal void ClearOverride() => _useOverride = false;
+    public void ClearOverride() => _useOverride = false;
 
     internal void ApplyLightViewOverride(Vector3 direction, RenderParamsSnapshot paramsSnapshot)
     {
@@ -60,9 +56,9 @@ public sealed class RenderView
         RenderTransform.CreateDirLightView(direction, in _snapshot, out var viewMat, out var projMat,
             shadowMapSize: shadow.ShadowMapSize, shadowDistance: shadow.Distance);
 
-        var projViewMat = viewMat * projMat;
-        
-        _override = new ViewMatrixData(in viewMat, in projMat, in projViewMat);
+        _override.ModelMatrix = viewMat;
+        _override.ProjectionMatrix = projMat;
+        _override.ProjectionViewMatrix = viewMat * projMat;
         _useOverride = true;
     }
 }

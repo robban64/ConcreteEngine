@@ -99,7 +99,7 @@ public readonly record struct GfxPassStateFunc(
         new(BlendMode.Unset, CullMode.FrontCcw, DepthMode.Lequal, PolygonOffsetLevel.Medium);
 }
 
-public readonly record struct GfxPassClear(Color4 ClearColor, ClearBufferFlag ClearBuffer)
+public readonly record struct GfxPassClear(in Color4 ClearColor, ClearBufferFlag ClearBuffer)
 {
     public static GfxPassClear MakeColorClear(Color4 clearColor) => new(clearColor, ClearBufferFlag.Color);
     public static GfxPassClear MakeColorDepthClear(Color4 clearColor) => new(clearColor, ClearBufferFlag.ColorAndDepth);

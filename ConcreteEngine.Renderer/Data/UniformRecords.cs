@@ -13,24 +13,29 @@ namespace ConcreteEngine.Renderer.Data;
 public interface IUniformBufferRecord<T> : IStd140Uniform where T : class;
 
 public abstract class LightUboTag;
+
 public abstract class EngineUboTag;
+
 public abstract class FrameUboTag;
 
 public abstract class CameraUboTag;
+
 public abstract class DirLightUboTag;
+
 public abstract class ShadowUboTag;
+
 public abstract class MaterialUboTag;
+
 public abstract class DrawUboTag;
 
 public abstract class PostUboTag;
 
-
 [StructLayout(LayoutKind.Sequential)]
 public readonly struct LightDataStruct(
-    Vector4 colorIntensity,
-    Vector4 posRange,
-    Vector4 dirType,
-    Vector4 spotAngles
+    in Vector4 colorIntensity,
+    in Vector4 posRange,
+    in Vector4 dirType,
+    in Vector4 spotAngles
 ) : IStd140Uniform
 {
     public readonly Vector4 ColorIntensity = colorIntensity;
@@ -56,47 +61,47 @@ public readonly struct EngineUniformRecord(
 }
 
 [StructLayout(LayoutKind.Sequential)]
-public readonly struct FrameUniformRecord(
-    Vector4 ambient,
-    Vector4 ambientGround,
-    Vector4 fogColor,
-    Vector4 fogParams0,
-    Vector4 fogParams1
+public struct FrameUniformRecord(
+    in Vector4 ambient,
+    in Vector4 ambientGround,
+    in Vector4 fogColor,
+    in Vector4 fogParams0,
+    in Vector4 fogParams1
 ) : IUniformBufferRecord<FrameUboTag>
 {
-    public readonly Vector4 Ambient = ambient; // xyz = sky ambient, w = exposure
-    public readonly Vector4 AmbientGround = ambientGround; // xyz = ground ambient
-    public readonly Vector4 FogColor = fogColor; // rgb = base fog color, a = in-scattering mix
-    public readonly Vector4 FogParams0 = fogParams0; // x=exp2_k, y=height_k, z=height0, w=globalStrength
-    public readonly Vector4 FogParams1 = fogParams1; // x=expWeight, y=heightWeight, z=maxDistance, w=reserved
+    public Vector4 Ambient = ambient; // xyz = sky ambient, w = exposure
+    public Vector4 AmbientGround = ambientGround; // xyz = ground ambient
+    public Vector4 FogColor = fogColor; // rgb = base fog color, a = in-scattering mix
+    public Vector4 FogParams0 = fogParams0; // x=exp2_k, y=height_k, z=height0, w=globalStrength
+    public Vector4 FogParams1 = fogParams1; // x=expWeight, y=heightWeight, z=maxDistance, w=reserved
 }
 
-public readonly struct CameraUniformRecord(
+public struct CameraUniformRecord(
     in Matrix4x4 viewMat,
     in Matrix4x4 projMat,
     in Matrix4x4 projViewMat,
-    Vector3 cameraPos) : IUniformBufferRecord<CameraUboTag>
+    in Vector3 cameraPos) : IUniformBufferRecord<CameraUboTag>
 {
-    public readonly Matrix4x4 ViewMat = viewMat;
-    public readonly Matrix4x4 ProjMat = projMat;
-    public readonly Matrix4x4 ProjViewMat = projViewMat;
-    public readonly Vector3 CameraPos = cameraPos;
+    public Matrix4x4 ViewMat = viewMat;
+    public Matrix4x4 ProjMat = projMat;
+    public Matrix4x4 ProjViewMat = projViewMat;
+    public Vector3 CameraPos = cameraPos;
     private readonly float _pad0;
 }
 
 [StructLayout(LayoutKind.Sequential)]
-public readonly struct DirLightUniformRecord(
-    Vector4 direction,
-    Vector4 diffuse,
-    Vector4 specular) : IUniformBufferRecord<DirLightUboTag>
+public struct DirLightUniformRecord(
+    in Vector4 direction,
+    in Vector4 diffuse,
+    in Vector4 specular) : IUniformBufferRecord<DirLightUboTag>
 {
-    public readonly Vector4 Direction = direction; // direction, light toward scene
-    public readonly Vector4 Diffuse = diffuse; // rgb=color, a=intensity
-    public readonly Vector4 SpecularIntensity = specular; // x = specular multiplier
+    public Vector4 Direction = direction; // direction, light toward scene
+    public Vector4 Diffuse = diffuse; // rgb=color, a=intensity
+    public Vector4 Specular = specular; // x = specular multiplier
 }
 
 [StructLayout(LayoutKind.Sequential)]
-public readonly struct LightUniformRecord(
+public struct LightUniformRecord(
     int lightCounts,
     LightDataStruct l0,
     LightDataStruct l1 = default,
@@ -108,39 +113,40 @@ public readonly struct LightUniformRecord(
     LightDataStruct l7 = default) : IUniformBufferRecord<LightUboTag>
 {
     // yzw unused/padding
-    public readonly IVec4Std140 LightCounts = new(lightCounts);
+    public IVec4Std140 LightCounts = new(lightCounts);
 
-    public readonly LightDataStruct L0 = l0;
-    public readonly LightDataStruct L1 = l1;
-    public readonly LightDataStruct L2 = l2;
-    public readonly LightDataStruct L3 = l3;
-    public readonly LightDataStruct L4 = l4;
-    public readonly LightDataStruct L5 = l5;
-    public readonly LightDataStruct L6 = l6;
-    public readonly LightDataStruct L7 = l7;
+    public LightDataStruct L0 = l0;
+    public LightDataStruct L1 = l1;
+    public LightDataStruct L2 = l2;
+    public LightDataStruct L3 = l3;
+    public LightDataStruct L4 = l4;
+    public LightDataStruct L5 = l5;
+    public LightDataStruct L6 = l6;
+    public LightDataStruct L7 = l7;
 }
 
 [StructLayout(LayoutKind.Sequential)]
-public readonly struct ShadowUniformRecord(
+public struct ShadowUniformRecord(
     in Matrix4x4 lightViewProj,
     Vector4 shadowParams0,
     Vector4 shadowParams1) : IUniformBufferRecord<ShadowUboTag>
 {
-    public readonly Matrix4x4 LightViewProj = lightViewProj;
-    public readonly Vector4 ShadowParams0 = shadowParams0; // x=1/texW, y=1/texH, z=constBias, w=slopeBias
-    public readonly Vector4 ShadowParams1 = shadowParams1; // x=strength, y=pcfRadius, z=NormalBias,w reserved
+    public Matrix4x4 LightViewProj = lightViewProj;
+    public Vector4 ShadowParams0 = shadowParams0; // x=1/texW, y=1/texH, z=constBias, w=slopeBias
+    public Vector4 ShadowParams1 = shadowParams1; // x=strength, y=pcfRadius, z=NormalBias,w reserved
 }
 
 [StructLayout(LayoutKind.Sequential)]
-public readonly struct MaterialUniformRecord : IUniformBufferRecord<MaterialUboTag>
+public struct MaterialUniformRecord : IUniformBufferRecord<MaterialUboTag>
 {
-    public readonly Vector4 MatColor; // rgb = tint
-    public readonly Vector4 MatParams0; // x = SpecularStrength, y = uvRepeat, z,w reserved
-    public readonly Vector4 MatParams1; // x = Shininess, y = HasNormals z = Transparency, w = HasAlpha
+    public Vector4 MatColor; // rgb = tint
+    public Vector4 MatParams0; // x = SpecularStrength, y = uvRepeat, z,w reserved
+    public Vector4 MatParams1; // x = Shininess, y = HasNormals z = Transparency, w = HasAlpha
 
-    public MaterialUniformRecord(Vector4 matColor,
-        Vector4 matParams0,
-        Vector4 matParams1)
+    public MaterialUniformRecord(
+        in Vector4 matColor,
+        in Vector4 matParams0,
+        in Vector4 matParams1)
     {
         MatColor = matColor;
         MatParams0 = matParams0;
@@ -149,52 +155,25 @@ public readonly struct MaterialUniformRecord : IUniformBufferRecord<MaterialUboT
 
     public MaterialUniformRecord(in MaterialParams mat)
     {
-        var transparency = mat.Transparent ? 1f : 0f;
-        var hasAlpha = mat.HasAlpha ? 1f : 0f;
-        var hasNormals = mat.HasNormal ? 1f : 0f;
-        MatColor = new Vector4(mat.Color.AsVec3(), 1);
-        MatParams0 = new Vector4(mat.Specular, mat.UvRepeat, 1.0f, 1.0f);
-        MatParams1 = new Vector4(mat.Shininess, hasNormals, transparency, hasAlpha);
+        mat.Fill(out var color, out var param1, out var param2);
+        MatColor = color;
+        MatParams0 = param1;
+        MatParams1 = param2;
     }
 }
 
 [StructLayout(LayoutKind.Sequential)]
-public readonly struct DrawObjectUniform : IUniformBufferRecord<DrawUboTag>
+public struct DrawObjectUniform(in Matrix4x4 model, in Vector4 v0, in Vector4 v1, in Vector4 v2)
+    : IUniformBufferRecord<DrawUboTag>
 {
-    public readonly Matrix4x4 Model;
-    public readonly Vector4 NormalCol0;
-    public readonly Vector4 NormalCol1;
-    public readonly Vector4 NormalCol2;
-
-    public DrawObjectUniform(in Matrix4x4 model, in Vector4 v0, in Vector4 v1, in Vector4 v2)
-    {
-        Model = model;
-        NormalCol0 = v0;
-        NormalCol1 = v1;
-        NormalCol2 = v2;
-    }
-
-    public DrawObjectUniform(in Matrix4x4 model, in Matrix3 normal)
-    {
-        Model = model;
-        NormalCol0 = new Vector4(normal.M11, normal.M21, normal.M31, 0f);
-        NormalCol1 = new Vector4(normal.M12, normal.M22, normal.M32, 0f);
-        NormalCol2 = new Vector4(normal.M13, normal.M23, normal.M33, 0f);
-    }
-
-    [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public static void
-        Fill(in Matrix4x4 model, in Vector4 v0, in Vector4 v1, in Vector4 v2, out DrawObjectUniform dst) =>
-        dst = new DrawObjectUniform(in model, in v0, in v1, in v2);
-
-
-    [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public static void Fill(in Matrix4x4 model, in Matrix3 normal, out DrawObjectUniform dst) =>
-        dst = new DrawObjectUniform(in model, in normal);
+    public Matrix4x4 Model = model;
+    public Vector4 NormalCol0 = v0;
+    public Vector4 NormalCol1 = v1;
+    public Vector4 NormalCol2 = v2;
 }
 
 [StructLayout(LayoutKind.Sequential)]
-public readonly struct PostProcessUniform(
+public struct PostProcessUniform(
     Vector4 grade,
     Vector4 whiteBalance,
     Vector4 bloom,
@@ -203,14 +182,14 @@ public readonly struct PostProcessUniform(
 {
     // x = exposureOffset (-0.10..+0.10), y = saturation (0.8..1.2)
     // z = contrast (0.9..1.1),w = warmth (-0.05..+0.05)
-    public readonly Vector4 Grade = grade;
+    public Vector4 Grade = grade;
 
     //x = tint (-0.05..+0.05), y = strength (0..1), z,w = 0
-    public readonly Vector4 WhiteBalance = whiteBalance;
+    public Vector4 WhiteBalance = whiteBalance;
 
     //x = intensity (0..1.5), y = threshold (0.6..0.9), z = radius (px), w = 0
-    public readonly Vector4 Bloom = bloom;
+    public Vector4 Bloom = bloom;
 
     // x = vignetteStrength (0..0.15), y = grainAmount (0..0.01), z = sharpenAmount (0..0.15), w = rolloff (0..0.12)
-    public readonly Vector4 Fx = fx;
+    public Vector4 Fx = fx;
 }

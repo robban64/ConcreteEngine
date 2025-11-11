@@ -2,6 +2,7 @@
 
 using ConcreteEngine.Common;
 using ConcreteEngine.Common.Numerics;
+using ConcreteEngine.Common.Time;
 using ConcreteEngine.Engine.Assets;
 using ConcreteEngine.Engine.Assets.Shaders;
 using ConcreteEngine.Engine.Editor.Data;
@@ -128,7 +129,6 @@ public sealed class WorldRenderer : IWorldRenderer
         _renderEntityBus.CollectEntities(in renderView.ViewMatrix, renderView.ProjectionInfo);
 
         _renderEntityBus.FlushEntities(_renderer.CommandBuffer);
-
         // fill buffers
         _renderer.CollectDrawBuffers();
         _renderer.StartFrame(status);
@@ -139,16 +139,14 @@ public sealed class WorldRenderer : IWorldRenderer
         _renderer.UploadFrameData();
         _renderer.Render();
         _renderer.EndRenderFrame(out frameResult);
-
-        ClearMaterialDirty();
     }
-
 
     private void PrepareRenderView(float alpha, Camera3D camera)
     {
-        camera.GetRenderSnapshot(alpha, out var viewSnapshot);
-        RenderView.SetViewData(in viewSnapshot);
+        RenderView.ClearOverride();
+        camera.WriteSnapshot(alpha, ref RenderView.CameraView);
     }
+
 
     private void SubmitMaterialData()
     {
@@ -157,13 +155,12 @@ public sealed class WorldRenderer : IWorldRenderer
         foreach (var material in matStore.MaterialSpan)
         {
             if (material?.State.IsDirty != true) continue;
+            material.State.ClearDirty();
             isDirty = true;
             _hasUploadedMaterial = false;
         }
 
         if (!isDirty && _hasUploadedMaterial) return;
-
-
         foreach (var material in matStore.MaterialSpan)
         {
             matStore.GetMaterialUploadData(material!, out var payload);
@@ -172,16 +169,7 @@ public sealed class WorldRenderer : IWorldRenderer
 
         _hasUploadedMaterial = true;
     }
-
-    private void ClearMaterialDirty()
-    {
-        var matStore = _assets.MaterialStoreImpl;
-        foreach (var material in matStore.MaterialSpan)
-        {
-            if (material == null || !material.State.IsDirty) continue;
-            material.State.ClearDirty();
-        }
-    }
+    
 
     public void Shutdown()
     {

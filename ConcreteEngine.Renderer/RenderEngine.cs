@@ -96,6 +96,7 @@ public sealed class RenderEngine
     }
 
     //
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public void SubmitMaterialDrawData(in DrawMaterialPayload payload, ReadOnlySpan<TextureSlotInfo> slots) =>
         _drawPipeline.SubmitMaterialDrawData(in payload, slots);
 
@@ -141,6 +142,7 @@ public sealed class RenderEngine
 
     private void ExecutePass(PassId passId)
     {
+        
         var passResult = _passPipeline.ApplyPass();
 
         if (passResult.OpKind == PassOpKind.Resolve)

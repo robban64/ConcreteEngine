@@ -1,5 +1,7 @@
 #region
 
+using System.Runtime.CompilerServices;
+using ConcreteEngine.Common.Time;
 using ConcreteEngine.Graphics.Gfx.Utility;
 using ConcreteEngine.Renderer.Data;
 using ConcreteEngine.Renderer.Passes;
@@ -56,6 +58,7 @@ internal sealed class DrawCommandPipeline
         _drawBuffers.AttachMaterialBuffer(_materialBuffer);
     }
 
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     internal void SubmitMaterialDrawData(in DrawMaterialPayload payload, ReadOnlySpan<TextureSlotInfo> slots) =>
         _materialBuffer.SubmitDrawData(in payload, slots);
 
@@ -83,10 +86,12 @@ internal sealed class DrawCommandPipeline
         _drawBuffers.EnsureDrawBuffers(drawCap, matCap);
     }
 
+    private FrameProfileTimer _timer = new();
     internal void UploadUniformGlobals()
     {
         _drawBuffers.UploadGlobalUniforms(in _stateContext.CurrentFrameInfo, in _stateContext.CurrentRuntimeParams);
         _drawBuffers.UploadCameraView(_stateContext.View);
+
     }
 
     internal void UploadDrawUniformData()

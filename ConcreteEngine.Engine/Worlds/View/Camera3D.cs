@@ -183,22 +183,20 @@ public sealed class Camera3D : ICamera
         CameraTransformData.FromCamera(this, out _currTick);
     }
 
-    internal void GetRenderSnapshot(float alpha, out RenderViewSnapshot viewSnapshot)
+    internal void WriteSnapshot(float alpha, ref RenderViewSnapshot viewSnapshot)
     {
         var camPos = Vector3.Lerp(_prevTick.Translation, _currTick.Translation, alpha);
         var camRot = Quaternion.Slerp(_prevTick.Rotation, _currTick.Rotation, alpha);
         MatrixMath.CreateModelMatrix(camPos, _scale, camRot, out var viewMatrix);
         Matrix4x4.Invert(viewMatrix, out viewMatrix);
 
-        var projInfo = new ProjectionInfoData(_aspectRatio, _fov, _nearPlane, _farPlane);
-        viewSnapshot = new RenderViewSnapshot(
-            viewMatrix: in viewMatrix,
-            projectionMatrix: in _projectionMatrix,
-            projectionViewMatrix: viewMatrix * _projectionMatrix,
-            projectionInfo: in projInfo,
-            position: in camPos,
-            rotation: in camRot
-        );
+        viewSnapshot.ViewMatrix = viewMatrix;
+        viewSnapshot.ProjectionMatrix = _projectionMatrix;
+        viewSnapshot.ProjectionViewMatrix = viewMatrix * _projectionMatrix;
+        viewSnapshot.ProjectionInfo = new ProjectionInfoData(_aspectRatio, _fov, _nearPlane, _farPlane);
+        viewSnapshot.Position = camPos;
+        viewSnapshot.Rotation = camRot;
+
     }
 
     private void Ensure()

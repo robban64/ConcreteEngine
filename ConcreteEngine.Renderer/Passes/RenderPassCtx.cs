@@ -50,8 +50,7 @@ public sealed class RenderPassCtx
         _cmdQueue.SampleTo(key, texSlot.Texture);
     }
 
-    public void MutateStatePass<TTag>(FboVariant variant, in PassMutationState newState)
-        where TTag : class
+    public void MutateStatePass<TTag>(FboVariant variant, in PassMutationState newState) where TTag : class
     {
         var key = TagRegistry.PassKey<TTag>(variant);
         _cmdQueue.EnqueueMutation(key, in newState);

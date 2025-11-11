@@ -34,8 +34,8 @@ public sealed class Material
 
     public bool Attached => Id > 0;
 
-    public MaterialParams Snapshot() =>
-        new(
+    public void FillSnapshot(out MaterialParams snapshot) =>
+        snapshot = new MaterialParams(
             Color: State.Color,
             Specular: State.Specular,
             Shininess: State.Shininess,

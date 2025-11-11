@@ -10,7 +10,6 @@ namespace ConcreteEngine.Engine.Assets.Materials;
 
 public sealed class MaterialState
 {
-    private bool _isDirty;
     private bool _clearDirty = false;
 
     private Color4 _color = Color4.White;
@@ -109,12 +108,12 @@ public sealed class MaterialState
         Transparency = param.Transparent;
         IsDirty = true;
     }
-
+    
     internal void ClearDirty()
     {
-        if (_clearDirty && _isDirty)
+        if (_clearDirty && IsDirty)
         {
-            _isDirty = false;
+            IsDirty = false;
             _clearDirty = false;
             return;
         }

@@ -55,7 +55,7 @@ internal sealed class StoreMetrics<TId, TMeta, THandle>(
 
         var m = GetSpecialMetricDel(gfx.MetaSpan);
         var specialMeta = new TargetMetric<ValueSample>
-            (m.ResourceId, new ValueSample(m.Value, m.Param2), MetricHeader.FromKind(m.Kind));
+            (m.ResourceId, new ValueSample(m.Value, m.Param2), MetricHeader.FromKind((byte)m.Kind));
 
         payload = new GfxStoreMetricsPayload(in _gfxStoreMetrics, in _backendStoreMetrics, in specialMeta, Kind);
     }

@@ -6,7 +6,22 @@ using System.Numerics;
 
 namespace ConcreteEngine.Shared.RenderData;
 
-public readonly record struct DirLightParams(Vector3 Direction, Vector3 Diffuse, float Intensity, float Specular);
+public readonly struct DirLightParams(Vector3 direction, Vector3 diffuse, float intensity, float specular)
+{
+    public readonly Vector3 Direction  = direction;
+    public readonly Vector3 Diffuse  = diffuse;
+    public readonly float Intensity  = intensity;
+    public readonly float Specular  = specular;
 
-public readonly record struct AmbientParams(Vector3 Ambient, Vector3 AmbientGround, float Exposure);
+
+}
+
+public readonly struct AmbientParams(Vector3 ambient, Vector3 ambientGround, float exposure)
+{
+    public readonly Vector3 Ambient  = ambient;
+    public readonly Vector3 AmbientGround  = ambientGround;
+    public readonly float Exposure  = exposure;
+
+
+}
 

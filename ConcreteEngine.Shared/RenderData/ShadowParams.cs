@@ -1,11 +1,21 @@
 namespace ConcreteEngine.Shared.RenderData;
 
-public readonly record struct ShadowParams(
-    int ShadowMapSize,
-    float Distance,
-    float ZPad,
-    float ConstBias,
-    float SlopeBias,
-    float Strength,
-    float PcfRadius
-);
+public readonly struct ShadowParams(
+    int shadowMapSize,
+    float distance,
+    float zPad,
+    float constBias,
+    float slopeBias,
+    float strength,
+    float pcfRadius
+)
+{
+    public readonly int ShadowMapSize  = shadowMapSize;
+    public readonly float Distance  = distance;
+    public readonly float ZPad  = zPad;
+    public readonly float ConstBias  = constBias;
+    public readonly float SlopeBias  = slopeBias;
+    public readonly float Strength  = strength;
+    public readonly float PcfRadius  = pcfRadius;
+
+}

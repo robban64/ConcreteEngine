@@ -60,8 +60,8 @@ public static class GfxLog
 
     private static LogEvent LogGfx(int id, int slot, ushort gen, ushort flags, bool alive, LogTopic topic,
         LogAction action) =>
-        new((uint)id, Param0: slot, Param1: alive ? 1 : 0, Gen: gen, Flags: flags, Scope: LogScope.Gfx, Topic: topic,
-            Action: action);
+        new((uint)id, param0: slot, param1: alive ? 1 : 0, gen: gen, flags: flags, scope: LogScope.Gfx, topic: topic,
+            action: action);
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     internal static void LogGfxStore(int id, GfxHandle h, LogTopic topic, LogAction action, ushort flags = 0) =>
@@ -69,7 +69,7 @@ public static class GfxLog
 
     //
     private static LogEvent LogBk(uint handle, int slot, ushort flags, bool alive, LogTopic topic, LogAction action) =>
-        new(handle, slot, alive ? 1 : 0, Flags: flags, Scope: LogScope.Backend, Topic: topic, Action: action);
+        new(handle, slot, alive ? 1 : 0, flags: flags, scope: LogScope.Backend, topic: topic, action: action);
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     internal static void LogBkStore(uint handle, int slot, LogTopic topic, LogAction action, ushort flags = 0) =>

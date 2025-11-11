@@ -76,14 +76,14 @@ public static class Logger
 
     public static void LogAssetObject(AssetObject asset, LogAction action, bool error = false) =>
         Event(new LogEvent(
-            Id: (uint)asset.RawId.Value,
-            Param0: 0,
-            Param1: asset.IsCoreAsset ? 1 : 0,
-            Gen: (ushort)asset.Generation,
-            Flags: 0,
-            Scope: LogScope.Assets,
-            Topic: asset.Kind.ToLogTopic(),
-            Action: action));
+            id: (uint)asset.RawId.Value,
+            param0: 0,
+            param1: asset.IsCoreAsset ? 1 : 0,
+            gen: (ushort)asset.Generation,
+            flags: 0,
+            scope: LogScope.Assets,
+            topic: asset.Kind.ToLogTopic(),
+            action: action));
     
     
     private static bool FilterLog(in LogEvent log) => 

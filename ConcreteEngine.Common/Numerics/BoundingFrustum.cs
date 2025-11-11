@@ -8,14 +8,14 @@ using static ConcreteEngine.Common.Numerics.Maths.CollisionMethods;
 
 namespace ConcreteEngine.Common.Numerics;
 
-public readonly struct BoundingFrustum
+public struct BoundingFrustum
 {
-    public readonly Plane LeftPlane;
-    public readonly Plane RightPlane;
-    public readonly Plane TopPlane;
-    public readonly Plane BottomPlane;
-    public readonly Plane NearPlane;
-    public readonly Plane FarPlane;
+    public Plane LeftPlane;
+    public Plane RightPlane;
+    public Plane TopPlane;
+    public Plane BottomPlane;
+    public Plane NearPlane;
+    public Plane FarPlane;
 
     public BoundingFrustum(in Matrix4x4 matrix)
     {
@@ -66,16 +66,8 @@ public readonly struct BoundingFrustum
         TopPlane = Plane.Normalize(PlaneFromPoints(corners[0], corners[4], corners[1]));
         BottomPlane = Plane.Normalize(PlaneFromPoints(corners[2], corners[3], corners[6]));
     }
-
-    [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    private static Plane PlaneFromPoints(Vector3 a, Vector3 b, Vector3 c)
-    {
-        var normal = Vector3.Normalize(Vector3.Cross(b - a, c - a));
-        float d = -Vector3.Dot(normal, a);
-        return new Plane(normal, d);
-    }
-
-    public bool ContainsBox(in BoundingBox box)
+    
+    public readonly bool ContainsBox(in BoundingBox box)
     {
         return BoxInFrontOfPlane(in box, in LeftPlane)
                && BoxInFrontOfPlane(in box, in RightPlane)
@@ -85,7 +77,7 @@ public readonly struct BoundingFrustum
                && BoxInFrontOfPlane(in box, in FarPlane);
     }
 
-    public void GetCorners(Span<Vector3> corners)
+    public readonly void GetCorners(Span<Vector3> corners)
     {
         corners[0] = IntersectPlanes(NearPlane, TopPlane, LeftPlane);
         corners[1] = IntersectPlanes(NearPlane, TopPlane, RightPlane);
@@ -96,4 +88,14 @@ public readonly struct BoundingFrustum
         corners[6] = IntersectPlanes(FarPlane, BottomPlane, LeftPlane);
         corners[7] = IntersectPlanes(FarPlane, BottomPlane, RightPlane);
     }
+
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    private static Plane PlaneFromPoints(Vector3 a, Vector3 b, Vector3 c)
+    {
+        var normal = Vector3.Normalize(Vector3.Cross(b - a, c - a));
+        float d = -Vector3.Dot(normal, a);
+        return new Plane(normal, d);
+    }
+
+
 }

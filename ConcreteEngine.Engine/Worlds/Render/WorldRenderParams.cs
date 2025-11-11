@@ -63,13 +63,13 @@ public sealed class WorldRenderParams
         //var constBias = 1.2f / size;
         //var slopeBias = constBias * 3f;
         _shadow = new ShadowParams(
-            ShadowMapSize: size,
-            Distance: dist,
-            ZPad: 0.5f,
-            ConstBias: constBias,
-            SlopeBias: slopeBias,
-            Strength: 1f,
-            PcfRadius: 1f);
+            shadowMapSize: size,
+            distance: dist,
+            zPad: 0.5f,
+            constBias: constBias,
+            slopeBias: slopeBias,
+            strength: 1f,
+            pcfRadius: 1f);
 
         _dirty = true;
     }
@@ -104,17 +104,17 @@ public sealed class WorldRenderParams
 
     private static DirLightParams MakeDefaultDirLight() =>
         new(
-            Direction: new Vector3(-0.35f, -0.95f, 0.25f),
-            Diffuse: new Vector3(1.05f, 0.92f, 0.82f),
-            Intensity: 1.35f,
-            Specular: 0.75f
+            direction: new Vector3(-0.35f, -0.95f, 0.25f),
+            diffuse: new Vector3(1.05f, 0.92f, 0.82f),
+            intensity: 1.35f,
+            specular: 0.75f
         );
 
     private static AmbientParams MakeDefaultAmbient() =>
         new(
-            Ambient: new Vector3(0.34f, 0.38f, 0.44f),
-            AmbientGround: new Vector3(0.20f, 0.17f, 0.15f),
-            Exposure: 0.26f
+            ambient: new Vector3(0.34f, 0.38f, 0.44f),
+            ambientGround: new Vector3(0.20f, 0.17f, 0.15f),
+            exposure: 0.26f
         );
 
     private static FogParams MakeDefaultFog() =>

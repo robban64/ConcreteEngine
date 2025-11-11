@@ -3,21 +3,29 @@ using ConcreteEngine.Common.Numerics.Maths;
 
 namespace ConcreteEngine.Shared.Diagnostics;
 
-public readonly record struct LogEvent(
-    uint Id,
-    int Param0,
-    int Param1 = 0,
-    float FParam0 = 0,
-    ushort Gen = 0,
-    ushort Flags = 0,
-    LogTopic Topic = LogTopic.Unknown,
-    LogScope Scope = LogScope.Unknown,
-    LogAction Action = LogAction.Unknown,
-    LogLevel Level = LogLevel.Info)
+public readonly struct LogEvent(
+    uint id,
+    int param0,
+    int param1 = 0,
+    float fParam0 = 0,
+    ushort gen = 0,
+    ushort flags = 0,
+    LogTopic topic = LogTopic.Unknown,
+    LogScope scope = LogScope.Unknown,
+    LogAction action = LogAction.Unknown,
+    LogLevel level = LogLevel.Info)
 {
-    public long Time { get; } = DateTimeOffset.Now.ToUnixTimeMilliseconds();
-
-    public static implicit operator uint(LogEvent log) => log.Id;
+    public readonly long Time  = DateTimeOffset.Now.ToUnixTimeMilliseconds();
+    public readonly uint Id  = id;
+    public readonly int Param0  = param0;
+    public readonly int Param1  = param1;
+    public readonly float FParam0  = fParam0;
+    public readonly ushort Gen  = gen;
+    public readonly ushort Flags  = flags;
+    public readonly LogTopic Topic  = topic;
+    public readonly LogScope Scope  = scope;
+    public readonly LogAction Action  = action;
+    public readonly LogLevel Level  = level;
 }
 
 public readonly struct LogFilterWildcard

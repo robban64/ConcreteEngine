@@ -41,7 +41,7 @@ public sealed class RenderPassCtx
     public ReadOnlySpan<TextureId> GetPassSources() => _cmdQueue.GetPassSources();
 
     public void SampleTo<TTag>(FboVariant variant, TextureSlot texSlot)
-        where TTag : unmanaged, IRenderPassTag
+        where TTag : class
     {
         Debug.Assert(texSlot.Slot >= 0 && texSlot.Slot < RenderLimits.TextureSlots);
 
@@ -51,7 +51,7 @@ public sealed class RenderPassCtx
     }
 
     public void MutateStatePass<TTag>(FboVariant variant, in PassMutationState newState)
-        where TTag : unmanaged, IRenderPassTag
+        where TTag : class
     {
         var key = TagRegistry.PassKey<TTag>(variant);
         _cmdQueue.EnqueueMutation(key, in newState);

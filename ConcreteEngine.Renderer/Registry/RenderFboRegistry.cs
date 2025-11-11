@@ -20,7 +20,7 @@ namespace ConcreteEngine.Renderer.Registry;
 public interface IRenderFboRegistry
 {
     public void RecreateFixedFrameBuffer<TTag>(FboVariant variant, Size2D outputSize)
-        where TTag : unmanaged, IRenderPassTag;
+        where TTag : class;
 
     void RecreateScreenDependentFbo(Size2D outputSize);
 }
@@ -54,10 +54,9 @@ internal sealed class RenderFboRegistry : IRenderFboRegistry
         RegisterTag<ScreenPassTag>();
     }
 
-    internal void RegisterTag<TTag>() where TTag : unmanaged, IRenderPassTag => TagRegistry.RegisterTag<TTag>();
+    internal void RegisterTag<TTag>() where TTag : class => TagRegistry.RegisterTag<TTag>();
 
-    internal void Register<TTag>(FboVariant variant, RegisterFboEntry entry, Size2D outputSize)
-        where TTag : unmanaged, IRenderPassTag
+    internal void Register<TTag>(FboVariant variant, RegisterFboEntry entry, Size2D outputSize) where TTag : class
     {
         ArgOutOfRangeThrower.ThrowIfSizeTooSmall(outputSize, new Size2D(RenderLimits.MinOutputSize));
         ArgOutOfRangeThrower.ThrowIfSizeTooBig(outputSize, new Size2D(RenderLimits.MaxOutputSize));
@@ -123,8 +122,7 @@ internal sealed class RenderFboRegistry : IRenderFboRegistry
         pendingIds(newSizes);
     }
 
-    public void RecreateFixedFrameBuffer<TTag>(FboVariant variant, Size2D outputSize)
-        where TTag : unmanaged, IRenderPassTag
+    public void RecreateFixedFrameBuffer<TTag>(FboVariant variant, Size2D outputSize) where TTag : class
     {
         if (variant < 0 || variant > RenderLimits.MaxFboVariants)
             throw new ArgumentOutOfRangeException(nameof(variant));

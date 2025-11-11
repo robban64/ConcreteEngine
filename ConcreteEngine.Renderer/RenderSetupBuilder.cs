@@ -44,7 +44,7 @@ public sealed class RenderSetupBuilder
 
 
     public RenderSetupBuilder RegisterFbo<TTag>(FboVariant variant, RegisterFboEntry entry)
-        where TTag : unmanaged, IRenderPassTag
+        where TTag : class
     {
         ArgumentOutOfRangeException.ThrowIfLessThan(variant.Value, 0, nameof(variant));
         ArgumentNullException.ThrowIfNull(entry, nameof(entry));

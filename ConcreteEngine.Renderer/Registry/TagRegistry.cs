@@ -18,34 +18,34 @@ internal static class TagRegistry
     //Pass Tag
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public static int TagIndexOf<TTag>() where TTag : unmanaged, IRenderPassTag => RenderPassTag<TTag>.TagIndex;
+    public static int TagIndexOf<TTag>() where TTag : class => RenderPassTag<TTag>.TagIndex;
 
-    public static FboTagKey FboKey<TTag>(FboVariant variant) where TTag : unmanaged, IRenderPassTag =>
+    public static FboTagKey FboKey<TTag>(FboVariant variant) where TTag : class =>
         new(TagIndexOf<TTag>(), variant);
 
-    public static PassTagKey PassKey<TTag>(FboVariant variant) where TTag : unmanaged, IRenderPassTag =>
+    public static PassTagKey PassKey<TTag>(FboVariant variant) where TTag : class =>
         new(TagIndexOf<TTag>(), variant, RenderPassTag<TTag>.GetPassId(variant));
 
     public static PassTagKey BindFboPassId<TTag>(FboVariant variant, PassId passId)
-        where TTag : unmanaged, IRenderPassTag
+        where TTag : class
     {
         RenderPassTag<TTag>.BindFboPassId(variant, passId);
         return PassKey<TTag>(variant);
     }
 
-    public static void RegisterTag<TTag>() where TTag : unmanaged, IRenderPassTag => RenderPassTag<TTag>.RegisterTag();
+    public static void RegisterTag<TTag>() where TTag : class => RenderPassTag<TTag>.RegisterTag();
 
     //Ubo
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public static UboSlot UniformBufferSlot<TUbo>() where TUbo : unmanaged, IStd140Uniform =>
+    public static UboSlot UniformBufferSlot<TUbo>() where TUbo : class =>
         UniformBufferTag<TUbo>.Slot;
 
-    public static UboSlot RegisterUniformBufferSlot<TUbo>() where TUbo : unmanaged, IStd140Uniform =>
+    public static UboSlot RegisterUniformBufferSlot<TUbo>() where TUbo : class =>
         UniformBufferTag<TUbo>.RegisterSlot();
 
 
     //
-    private static class RenderPassTag<TTag> where TTag : unmanaged, IRenderPassTag
+    private static class RenderPassTag<TTag> where TTag : class
     {
         internal static int TagIndex { get; private set; } = -1;
 
@@ -76,7 +76,7 @@ internal static class TagRegistry
         }
     }
 
-    private static class UniformBufferTag<TUbo> where TUbo : unmanaged, IStd140Uniform
+    private static class UniformBufferTag<TUbo> where TUbo : class
     {
         internal static UboSlot Slot { get; private set; } = new(-1);
 

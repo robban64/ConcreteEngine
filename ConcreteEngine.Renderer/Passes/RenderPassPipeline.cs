@@ -39,7 +39,7 @@ public sealed class RenderPassPipeline
     }
 
     public RenderPassEntry Register<TTag>(FboVariant variant, PassId passId, PassOpKind opKind, RenderPassState initial)
-        where TTag : unmanaged, IRenderPassTag
+        where TTag : class
     {
         var key = TagRegistry.BindFboPassId<TTag>(variant, passId);
 

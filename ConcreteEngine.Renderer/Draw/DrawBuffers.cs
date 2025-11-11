@@ -40,16 +40,16 @@ internal sealed class DrawBuffers
         _paramsSnapshot = ctxPayload.Snapshot;
         var registry = ctxPayload.Registry;
 
-        _drawUbo = registry.GetRenderUbo<DrawObjectUniform>();
-        _materialUbo = registry.GetRenderUbo<MaterialUniformRecord>();
+        _drawUbo = registry.GetRenderUbo<DrawUboTag>();
+        _materialUbo = registry.GetRenderUbo<MaterialUboTag>();
 
-        _engineUbo = registry.GetRenderUbo<EngineUniformRecord>().Id;
-        _frameUbo = registry.GetRenderUbo<FrameUniformRecord>().Id;
-        _cameraUbo = registry.GetRenderUbo<CameraUniformRecord>().Id;
-        _dirLightUbo = registry.GetRenderUbo<DirLightUniformRecord>().Id;
-        _lightUbo = registry.GetRenderUbo<LightUniformRecord>().Id;
-        _shadowUbo = registry.GetRenderUbo<ShadowUniformRecord>().Id;
-        _postUbo = registry.GetRenderUbo<PostProcessUniform>().Id;
+        _engineUbo = registry.GetRenderUbo<EngineUboTag>().Id;
+        _frameUbo = registry.GetRenderUbo<FrameUboTag>().Id;
+        _cameraUbo = registry.GetRenderUbo<CameraUboTag>().Id;
+        _dirLightUbo = registry.GetRenderUbo<DirLightUboTag>().Id;
+        _lightUbo = registry.GetRenderUbo<LightUboTag>().Id;
+        _shadowUbo = registry.GetRenderUbo<ShadowUboTag>().Id;
+        _postUbo = registry.GetRenderUbo<PostUboTag>().Id;
     }
 
     public void AttachMaterialBuffer(MaterialDrawBuffer materialBuffer) => _materialBuffer = materialBuffer;

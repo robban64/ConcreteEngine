@@ -52,8 +52,7 @@ internal sealed class RenderRegistry
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public RenderShader GetRenderShader(ShaderId shaderId) => ShaderRegistry.GetRenderShader(shaderId);
 
-    [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public RenderUbo GetRenderUbo<TUbo>() where TUbo : unmanaged, IStd140Uniform => UboRegistry.GetRenderUbo<TUbo>();
+    public RenderUbo GetRenderUbo<TUbo>() where TUbo : class => UboRegistry.GetRenderUbo<TUbo>();
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public RenderFbo GetRenderFbo(FboTagKey key) => FboRegistry.GetRenderFbo(key)!;

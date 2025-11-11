@@ -10,13 +10,28 @@ using ConcreteEngine.Graphics.Primitives;
 
 namespace ConcreteEngine.Renderer.Data;
 
+public interface IUniformBufferRecord<T> : IStd140Uniform where T : class;
+
+public abstract class LightUboTag;
+public abstract class EngineUboTag;
+public abstract class FrameUboTag;
+
+public abstract class CameraUboTag;
+public abstract class DirLightUboTag;
+public abstract class ShadowUboTag;
+public abstract class MaterialUboTag;
+public abstract class DrawUboTag;
+
+public abstract class PostUboTag;
+
+
 [StructLayout(LayoutKind.Sequential)]
 public readonly struct LightDataStruct(
     Vector4 colorIntensity,
     Vector4 posRange,
     Vector4 dirType,
     Vector4 spotAngles
-)
+) : IStd140Uniform
 {
     public readonly Vector4 ColorIntensity = colorIntensity;
     public readonly Vector4 PosRange = posRange;
@@ -31,7 +46,7 @@ public readonly struct EngineUniformRecord(
     float random,
     Vector2 invResolution,
     Vector2 mouse
-) : IStd140Uniform
+) : IUniformBufferRecord<EngineUboTag>
 {
     // x = seconds since start, y = frame time step, z = per-frame random, w = pad
     public readonly Vector4 EngineParams0 = new(time, deltaTime, random, 0);
@@ -47,7 +62,7 @@ public readonly struct FrameUniformRecord(
     Vector4 fogColor,
     Vector4 fogParams0,
     Vector4 fogParams1
-) : IStd140Uniform
+) : IUniformBufferRecord<FrameUboTag>
 {
     public readonly Vector4 Ambient = ambient; // xyz = sky ambient, w = exposure
     public readonly Vector4 AmbientGround = ambientGround; // xyz = ground ambient
@@ -60,7 +75,7 @@ public readonly struct CameraUniformRecord(
     in Matrix4x4 viewMat,
     in Matrix4x4 projMat,
     in Matrix4x4 projViewMat,
-    Vector3 cameraPos) : IStd140Uniform
+    Vector3 cameraPos) : IUniformBufferRecord<CameraUboTag>
 {
     public readonly Matrix4x4 ViewMat = viewMat;
     public readonly Matrix4x4 ProjMat = projMat;
@@ -73,7 +88,7 @@ public readonly struct CameraUniformRecord(
 public readonly struct DirLightUniformRecord(
     Vector4 direction,
     Vector4 diffuse,
-    Vector4 specular) : IStd140Uniform
+    Vector4 specular) : IUniformBufferRecord<DirLightUboTag>
 {
     public readonly Vector4 Direction = direction; // direction, light toward scene
     public readonly Vector4 Diffuse = diffuse; // rgb=color, a=intensity
@@ -90,7 +105,7 @@ public readonly struct LightUniformRecord(
     LightDataStruct l4 = default,
     LightDataStruct l5 = default,
     LightDataStruct l6 = default,
-    LightDataStruct l7 = default) : IStd140Uniform
+    LightDataStruct l7 = default) : IUniformBufferRecord<LightUboTag>
 {
     // yzw unused/padding
     public readonly IVec4Std140 LightCounts = new(lightCounts);
@@ -109,7 +124,7 @@ public readonly struct LightUniformRecord(
 public readonly struct ShadowUniformRecord(
     in Matrix4x4 lightViewProj,
     Vector4 shadowParams0,
-    Vector4 shadowParams1) : IStd140Uniform
+    Vector4 shadowParams1) : IUniformBufferRecord<ShadowUboTag>
 {
     public readonly Matrix4x4 LightViewProj = lightViewProj;
     public readonly Vector4 ShadowParams0 = shadowParams0; // x=1/texW, y=1/texH, z=constBias, w=slopeBias
@@ -117,7 +132,7 @@ public readonly struct ShadowUniformRecord(
 }
 
 [StructLayout(LayoutKind.Sequential)]
-public readonly struct MaterialUniformRecord : IStd140Uniform
+public readonly struct MaterialUniformRecord : IUniformBufferRecord<MaterialUboTag>
 {
     public readonly Vector4 MatColor; // rgb = tint
     public readonly Vector4 MatParams0; // x = SpecularStrength, y = uvRepeat, z,w reserved
@@ -144,7 +159,7 @@ public readonly struct MaterialUniformRecord : IStd140Uniform
 }
 
 [StructLayout(LayoutKind.Sequential)]
-public readonly struct DrawObjectUniform : IStd140Uniform
+public readonly struct DrawObjectUniform : IUniformBufferRecord<DrawUboTag>
 {
     public readonly Matrix4x4 Model;
     public readonly Vector4 NormalCol0;
@@ -184,7 +199,7 @@ public readonly struct PostProcessUniform(
     Vector4 whiteBalance,
     Vector4 bloom,
     Vector4 fx
-) : IStd140Uniform
+) : IUniformBufferRecord<PostUboTag>
 {
     // x = exposureOffset (-0.10..+0.10), y = saturation (0.8..1.2)
     // z = contrast (0.9..1.1),w = warmth (-0.05..+0.05)

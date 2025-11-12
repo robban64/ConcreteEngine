@@ -52,7 +52,7 @@ public sealed class GfxBuffers
     {
         var (stride, size) = ToStrideAndSize<T>(data.Length);
         if (stride != 1 && stride != 2 && stride != 4)
-            GraphicsException.ThrowInvalidType<T>(typeof(T).Name, "Invalid elemental size");
+            GraphicsException.ThrowInvalidType(typeof(T).Name, "Invalid elemental size");
 
         var meta = new IndexBufferMeta(data.Length, stride, DefaultUsage, storage, access);
         var iboRef = _driverBuffer.CreateIndexBuffer(MemoryMarshal.AsBytes(data),
@@ -87,7 +87,7 @@ public sealed class GfxBuffers
         var vboRef = _vboStore.GetRefAndMeta(vboId, out var meta);
 
         if (meta.Usage == BufferUsage.StaticDraw && meta.ElementCount * meta.Stride > 0)
-            GraphicsException.ThrowInvalidBufferData<VertexBufferId>(nameof(vboId), "Buffer is static");
+            GraphicsException.ThrowInvalidBufferData(nameof(vboId), "Buffer is static");
 
         var (stride, size) = ToStrideAndSize<T>(data.Length);
         _driverBuffer.SetVertexBufferData(vboRef, MemoryMarshal.AsBytes(data), size, usage);
@@ -101,7 +101,7 @@ public sealed class GfxBuffers
         var iboRef = _iboStore.GetRefAndMeta(iboId, out var meta);
 
         if (meta.Usage == BufferUsage.StaticDraw && meta.ElementCount * meta.Stride > 0)
-            GraphicsException.ThrowInvalidBufferData<IndexBufferId>(nameof(iboId), "Buffer is static");
+            GraphicsException.ThrowInvalidBufferData(nameof(iboId), "Buffer is static");
 
         var (stride, size) = ToStrideAndSize<T>(data.Length);
         _driverBuffer.SetIndexBufferData(iboRef, MemoryMarshal.AsBytes(data), size, usage);

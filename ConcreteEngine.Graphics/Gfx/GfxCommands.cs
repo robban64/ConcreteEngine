@@ -131,7 +131,7 @@ public sealed class GfxCommands
 
     public void EndRenderPass()
     {
-        if (_boundFboId == default) GraphicsException.ResourceNotBound<GlFboHandle>(nameof(_boundFboId));
+        if (_boundFboId == default) GraphicsException.ResourceNotBound(nameof(_boundFboId));
 
         BindFramebuffer(default);
         _activeOutputSize = _frameCtx.OutputSize;

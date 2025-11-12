@@ -80,7 +80,7 @@ public sealed class GfxTextures
     public TextureId CreateTexture(in GfxTextureDescriptor desc, in GfxTextureProperties props)
     {
         var textRef = CreateDriverTexture(in desc, in props, out var meta);
-        var textureId = _textureStore.Add(in meta, in textRef);
+        var textureId = _textureStore.Add(in meta, textRef);
         return textureId;
     }
 

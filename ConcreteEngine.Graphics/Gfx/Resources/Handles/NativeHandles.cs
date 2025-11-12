@@ -6,12 +6,7 @@ using System.Runtime.CompilerServices;
 
 namespace ConcreteEngine.Graphics.Gfx.Resources;
 
-internal readonly record struct NativeHandle(uint Value)
-{
-    public static NativeHandle From<THandle>(THandle handle)
-        where THandle : unmanaged, IResourceHandle, IEquatable<THandle> =>
-        new(handle.Value);
-}
+internal readonly record struct NativeHandle(uint Value);
 
 internal interface IResourceHandle
 {

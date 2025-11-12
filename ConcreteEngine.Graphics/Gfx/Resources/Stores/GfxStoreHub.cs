@@ -74,20 +74,16 @@ internal sealed class GfxStoreHub
         }
     }
 
+    public TextureStore TextureStore { get; } = new(LargeCapacity);
+    public ShaderStore ShaderStore { get; } = new(MediumCapacity);
+    public MeshStore MeshStore { get; } = new(MediumCapacity);
+    public VboStore VboStore { get; } = new(MediumCapacity);
+    public IboStore IboStore { get; } = new(MediumCapacity);
+    public FboStore FboStore { get; } = new(LowCapacity);
+    public RboStore RboStore { get; } = new(LowCapacity);
+    public UboStore UboStore { get; } = new(LowCapacity);
 
-    public TextureStore TextureStore { get; } = new(LargeCapacity, static i => new TextureId(i + 1));
-    public ShaderStore ShaderStore { get; } = new(MediumCapacity, static i => new ShaderId(i + 1));
-    public MeshStore MeshStore { get; } = new(MediumCapacity, static i => new MeshId(i + 1));
-    public VboStore VboStore { get; } = new(MediumCapacity, static i => new VertexBufferId(i + 1));
-    public IboStore IboStore { get; } = new(MediumCapacity, static i => new IndexBufferId(i + 1));
-    public FboStore FboStore { get; } = new(LowCapacity, static i => new FrameBufferId(i + 1));
-    public RboStore RboStore { get; } = new(LowCapacity, static i => new RenderBufferId(i + 1));
-    public UboStore UboStore { get; } = new(LowCapacity, static i => new UniformBufferId(i + 1));
-
-
-    [MethodImpl(MethodImplOptions.NoInlining)]
-    [DoesNotReturn]
-    [StackTraceHidden]
+    [MethodImpl(MethodImplOptions.NoInlining), DoesNotReturn, StackTraceHidden]
     private static void ThrowInvalidStoreType(ResourceKind kind, Type id, Type? meta = null) =>
         throw new ArgumentException($"Gfx Store {kind} is not: {id.Name}  {meta?.Name}");
 }

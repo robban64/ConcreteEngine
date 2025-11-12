@@ -170,12 +170,12 @@ internal sealed class RenderFboRegistry : IRenderFboRegistry
     }
 
 
-    private void OnFboChange(FrameBufferId id, in GfxMetaChanged<FrameBufferMeta> message)
+    private void OnFboChange(FrameBufferId id, in FrameBufferMeta newMeta, in FrameBufferMeta oldMeta, GfxMetaChanged message)
     {
         ArgumentOutOfRangeException.ThrowIfLessThan(id.Value, 1, nameof(id));
         var renderFbo = GetRenderFboById(id);
         if (renderFbo is null) ThrowNotFound(id);
-        renderFbo.UpdateFromMeta(in message.NewMeta);
+        renderFbo.UpdateFromMeta(in newMeta);
     }
 
     private static void ValidateOutputSize(Size2D outputSize, bool isShadowMap)
@@ -193,13 +193,11 @@ internal sealed class RenderFboRegistry : IRenderFboRegistry
     }
 
 
-    [DoesNotReturn]
-    [StackTraceHidden]
+    [DoesNotReturn, StackTraceHidden]
     private static void ThrowNotFound(FrameBufferId id) =>
         throw new InvalidOperationException($"FrameBuffer with id: {id} not found");
 
-    [DoesNotReturn]
-    [StackTraceHidden]
+    [DoesNotReturn, StackTraceHidden]
     private static void ThrowNotFound(FboTagKey key) =>
         throw new InvalidOperationException($"FrameBuffer with key: {key} not found");
 }

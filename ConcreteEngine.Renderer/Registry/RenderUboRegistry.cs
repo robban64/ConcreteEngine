@@ -63,10 +63,9 @@ internal sealed class RenderUboRegistry
         return _uboRegistry[slot];
     }
 
-    private void OnUboChange(UniformBufferId id, in GfxMetaChanged<UniformBufferMeta> message)
+    private void OnUboChange(UniformBufferId id, in UniformBufferMeta newMeta, in UniformBufferMeta oldMeta, GfxMetaChanged message)
     {
-        var meta = message.NewMeta;
-        var renderUbo = _uboRegistry[meta.Slot];
-        renderUbo.SetCapacity(meta.Capacity);
+        var renderUbo = _uboRegistry[newMeta.Slot];
+        renderUbo.SetCapacity(newMeta.Capacity);
     }
 }

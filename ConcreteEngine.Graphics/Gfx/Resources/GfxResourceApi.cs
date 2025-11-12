@@ -2,14 +2,15 @@ namespace ConcreteEngine.Graphics.Gfx.Resources;
 
 public sealed class GfxResourceApi
 {
-    private readonly GfxStoreHub _storeHub;
+    private readonly record struct TypePair(Type IdType, Type MetaType);
 
-    private readonly Dictionary<TypePair, Delegate> _receivers = new();
+    private readonly GfxStoreHub _storeHub;
 
     internal GfxResourceApi(GfxStoreHub store)
     {
         _storeHub = store;
     }
+
 
     public ref readonly TMeta GetMeta<TId, TMeta>(TId id)
         where TId : unmanaged, IResourceId where TMeta : unmanaged, IResourceMeta
@@ -20,33 +21,33 @@ public sealed class GfxResourceApi
     public void BindMetaChanged<TId, TMeta>(GfxMetaChangedDel<TId, TMeta> receiver)
         where TId : unmanaged, IResourceId where TMeta : unmanaged, IResourceMeta
     {
-        RegisterCallback(receiver);
+        Gateway.RegisterCallback(typeof(TId), typeof(TMeta), receiver);
         var store = _storeHub.GetStore<TId, TMeta>();
-        store.BindOnChangeCallback(OnStoreChanged);
+        unsafe
+        {
+            store.BindOnChangeCallback(&Gateway.OnStoreChanged);
+        }
     }
 
-    private void OnStoreChanged<TId, TMeta>(TId id, in GfxMetaChanged<TMeta> change)
-        where TId : unmanaged, IResourceId where TMeta : unmanaged, IResourceMeta
+    private static class Gateway
     {
-        if (TryGetCallback<TId, TMeta>(out var callback))
-            ((GfxMetaChangedDel<TId, TMeta>)callback).Invoke(id, in change);
-    }
+        private static readonly Dictionary<TypePair, Delegate> Receivers = new();
+
+        public static void OnStoreChanged<TId, TMeta>(TId id, in TMeta newMeta, in TMeta oldMeta, GfxMetaChanged message)
+            where TId : unmanaged, IResourceId where TMeta : unmanaged, IResourceMeta
+        {
+            if (TryGetCallback(typeof(TId), typeof(TMeta), out var callback))
+                ((GfxMetaChangedDel<TId, TMeta>)callback).Invoke(id, in newMeta, in oldMeta, message);
+        }
 
 
-    private void RegisterCallback<TId, TMeta>(GfxMetaChangedDel<TId, TMeta> callback)
-        where TId : unmanaged, IResourceId where TMeta : unmanaged, IResourceMeta
-    {
-        var key = TypePair.Of<TId, TMeta>();
-        if (!_receivers.TryAdd(key, callback)) throw new InvalidOperationException("Already registered");
-    }
+        public static void RegisterCallback(Type id, Type meta, Delegate callback)
+        {
+            var key = new TypePair(id, meta);
+            if (!Receivers.TryAdd(key, callback)) throw new InvalidOperationException("Already registered");
+        }
 
-    private bool TryGetCallback<TId, TMeta>(out Delegate callback)
-        where TId : unmanaged, IResourceId where TMeta : unmanaged, IResourceMeta =>
-        _receivers.TryGetValue(TypePair.Of<TId, TMeta>(), out callback!);
-
-
-    private readonly record struct TypePair(Type IdType, Type MetaType)
-    {
-        public static TypePair Of<TId, TMeta>() => new(typeof(TId), typeof(TMeta));
+        private static bool TryGetCallback(Type id, Type meta, out Delegate callback) =>
+            Receivers.TryGetValue(new TypePair(id, meta), out callback!);
     }
 }

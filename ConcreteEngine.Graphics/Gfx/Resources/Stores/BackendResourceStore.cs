@@ -19,12 +19,13 @@ internal interface IBackendResourceStore
     void Remove(in GfxHandle handle);
 }
 
-
 internal sealed class BackendResourceStore<TId, THandle> : IBackendResourceStore
     where THandle : unmanaged, IResourceHandle, IEquatable<THandle> where TId : unmanaged, IResourceId
 {
+    private static THandle MakeH(ref uint handle) => Unsafe.As<uint, THandle>(ref handle);
+
     private int _idx = 0;
-    private BkHandle<THandle>[] _records = new BkHandle<THandle>[32];
+    private BkHandle[] _records = new BkHandle[32];
     private readonly Stack<int> _free = new();
 
     public ResourceKind Kind { get; }
@@ -39,7 +40,11 @@ internal sealed class BackendResourceStore<TId, THandle> : IBackendResourceStore
         Kind = kind;
     }
 
-    public THandle GetHandle(GfxRefToken<TId> refToken) => _records[refToken.Handle.Slot].Handle;
+    public THandle GetHandle(GfxRefToken<TId> refToken)
+    {
+        var handle = _records[refToken.Handle.Slot].Handle;
+        return MakeH(ref handle);
+    }
 
     public NativeHandle GetNativeHandle(in GfxHandle handle)
     {
@@ -47,15 +52,15 @@ internal sealed class BackendResourceStore<TId, THandle> : IBackendResourceStore
 
         var record = _records[handle.Slot];
         BkThrower.IsValidRecordOrThrow(record, handle);
-        return NativeHandle.From(record.Handle);
+        return new NativeHandle(record.Handle);
     }
 
     public GfxRefToken<TId> Add(THandle handle)
     {
         BkThrower.ThrowOnDefaultHandle(handle.Value);
-        int idx = _free.Count > 0 ? _free.Pop() : Allocate();
-        var newHandle = _records[idx] = new BkHandle<THandle>(handle, true);
-        GfxLog.LogBkStore(newHandle, idx, Kind.ToLogTopic(), LogAction.Add);
+        var idx = _free.Count > 0 ? _free.Pop() : Allocate();
+        var newHandle = _records[idx] = new BkHandle(handle.Value, true);
+        GfxLog.LogBkStore(newHandle.Handle, idx, Kind.ToLogTopic(), LogAction.Add);
         return new GfxRefToken<TId>(new GfxHandle(idx, 1, Kind));
     }
 

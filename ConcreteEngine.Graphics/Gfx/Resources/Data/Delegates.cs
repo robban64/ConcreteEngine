@@ -6,8 +6,6 @@ using ConcreteEngine.Graphics.Diagnostic;
 
 namespace ConcreteEngine.Graphics.Gfx.Resources;
 
-internal delegate TId MakeResourceIdDel<out TId>(int handle) where TId : unmanaged, IResourceId;
-
 internal delegate GfxMetaSpecialMetric GetSpecialMetric<TMeta>(ReadOnlySpan<TMeta> metas)
     where TMeta : unmanaged, IResourceMeta;
 
@@ -19,5 +17,5 @@ internal delegate BackendResourceStore<TId, THandle> GetBackendStoreDel<TId, THa
 internal delegate GfxResourceStore<TId, TMeta> GetGfxStoreDel<TId, TMeta>()
     where TId : unmanaged, IResourceId where TMeta : unmanaged, IResourceMeta;
 
-public delegate void GfxMetaChangedDel<in TId, TMeta>(TId id, in GfxMetaChanged<TMeta> message)
+public delegate void GfxMetaChangedDel<in TId, TMeta>(TId id, in TMeta newMeta, in TMeta oldMeta, GfxMetaChanged message)
     where TId : unmanaged, IResourceId where TMeta : unmanaged, IResourceMeta;

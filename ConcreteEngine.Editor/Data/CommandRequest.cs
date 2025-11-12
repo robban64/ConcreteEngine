@@ -14,6 +14,11 @@ public readonly ref struct CommandResponse(bool success, string? error)
     public static CommandResponse Fail(string error) => new(false, error);
 }
 
+internal interface ICommandRecord
+{
+}
+
 internal sealed record ConsoleCommandRecord(string Description, bool IsNoOp, ConsoleCommandReqDel ConsoleCmdHandler);
 
-internal sealed record EditorCommandRecord(EditorCommandScope Scope, Type PayloadType, Delegate EditorCmdHandler);
+internal sealed record EditorCommandRecord(EditorCommandScope Scope, Type PayloadType, Delegate EditorCmdHandler)
+    : ICommandRecord;

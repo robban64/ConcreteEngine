@@ -22,7 +22,7 @@ namespace ConcreteEngine.Engine.Editor;
 
 internal static class EngineCommandHandler
 {
-    internal static EditorEngineQueue CommandQueues { get; set; }
+    internal static EditorEngineQueue CommandQueues { get; set; } //EngineCommandRecord queue
 
     public static CommandResponse OnAssetShaderCmd(in EditorShaderPayload shaderPayload)
     {

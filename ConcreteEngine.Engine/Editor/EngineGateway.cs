@@ -50,7 +50,7 @@ internal sealed class EngineGateway : IDisposable
     public static void SetupLogger()
     {
         if (Logger.Enabled && !Logger.IsAttached) Logger.Attach(EditorSetup.ProcessStringLog);
-        
+
         GfxLog.ToggleLog(false, LogTopic.Unknown, LogScope.Backend);
         GfxLog.ToggleLog(false, LogTopic.RenderBuffer, LogScope.Gfx);
     }
@@ -175,7 +175,7 @@ internal sealed class EngineGateway : IDisposable
 
             RegisterEditorCmd<CameraEditorPayload>(CoreCmdNames.CameraTransform, EditorCommandScope.Editor,
                 EngineCommandHandler.OnCameraDataCmd);
-            
+
             RegisterEditorCmd<WorldParamState>(CoreCmdNames.WorldParams, EditorCommandScope.Editor,
                 EngineCommandHandler.OnWorldParamCmd);
 
@@ -198,17 +198,15 @@ internal sealed class EngineGateway : IDisposable
                 EngineCommandHandler.OnStructSizesCmd);
         }
 
-        public static void RegisterDataProvider()
+        public static unsafe void RegisterDataProvider()
         {
             EditorApi.FetchAssetStoreData = EngineDataProvider.GetAssetStoreData;
             EditorApi.FetchAssetObjectFiles = EngineDataProvider.GetAssetObjectFiles;
             EditorApi.FetchEntityView = EngineDataProvider.GetEntityView;
-            
-            EditorApi.UpdateEntityData = EngineDataProvider.SetEntityData;
-            EditorApi.UpdateCameraData = EngineDataProvider.SetCameraData;
 
-            EditorApi.UpdateWorldParams = EngineDataProvider.SetWorldParams;
-
+            EditorApi.UpdateEntityData = new ApiWriteRequest<EntityDataPayload>(&EngineDataProvider.SetEntityData);
+            EditorApi.UpdateCameraData = new ApiWriteRequest<CameraEditorPayload>(&EngineDataProvider.SetCameraData);
+            EditorApi.UpdateWorldParams = new ApiWriteRequest<WorldParamState>(&EngineDataProvider.SetWorldParams);
         }
 
 
@@ -222,22 +220,4 @@ internal sealed class EngineGateway : IDisposable
             MetricsApi.FillGfxStoreMetrics = MetricRouter.DrainGfxStoreMetrics;
         }
     }
-
-
-    /*
-    private static ConsoleCommandReqDel CmdWrapper(ConsoleCommandReqDel del)
-    {
-        return (ctx, req) =>
-        {
-            try
-            {
-                del(ctx, req);
-            }
-            catch (Exception ex) when (ErrorUtils.IsUserOrDataError(ex))
-            {
-                ctx.AddLog(ErrorUtils.ErrorMessageFor(ex));
-            }
-        };
-    }
-*/
 }

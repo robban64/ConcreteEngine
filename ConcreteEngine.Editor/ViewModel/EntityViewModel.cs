@@ -14,16 +14,16 @@ public sealed class EntitiesViewModel
     public ref readonly EntityDataPayload Data => ref _data;
     internal ref EntityDataState DataState => ref _state;
     
-    public void UpdateDataFrom(EntityRecord record, GenericDataRequest<EntityDataPayload> requestDel)
+    public void UpdateDataFrom(EntityRecord record, ApiWriteRequest<EntityDataPayload> api)
     {
         _data.EntityId = record.EntityId;
-        requestDel(ref _data);
+        api.DispatchWrite(ref _data);
         _state = new EntityDataState(in _data);
     }
 
-    public void UpdateData(GenericDataRequest<EntityDataPayload> requestDel)
+    public void UpdateData(ApiWriteRequest<EntityDataPayload> api)
     {
-        requestDel(ref _data);
+        api.DispatchWrite(ref _data);
 
         _state.ModelId = _data.Model.ModelId;
         _state.MaterialTagKey = _data.Model.MaterialTagKey;

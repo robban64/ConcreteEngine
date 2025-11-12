@@ -9,18 +9,15 @@ namespace ConcreteEngine.Editor.ViewModel;
 internal sealed class WorldRenderViewModel
 {
     private WorldParamState _dataState;
-    
+
     public WorldParamSelection Selection { get; set; }
-    
+
     public ref WorldParamState DataState => ref _dataState;
 
     public ref LightState LightState => ref _dataState.LightState;
     public ref FogState FogState => ref _dataState.FogState;
     public ref PostEffectState PostState => ref _dataState.PostState;
 
-    public void UpdateState(GenericDataRequest<WorldParamState> requestDel)
-    {
-        requestDel(ref _dataState);
-    }
-    
-}   
+    public void UpdateState(in ApiWriteRequest<WorldParamState> api) =>
+        api.DispatchWrite(ref _dataState);
+}

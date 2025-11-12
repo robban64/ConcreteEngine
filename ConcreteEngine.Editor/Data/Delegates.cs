@@ -8,16 +8,17 @@ public delegate void ConsoleCommandReqDel(DebugConsoleCtx ctx, string action, st
 public delegate void CommandPayloadResolverDel<TPayload>(string action, string? arg1, string? arg2,
     out TPayload payload);
 
-public delegate CommandResponse EditorCommandReqDel<TPayload>(in TPayload payload);
+public delegate CommandResponse EditorCommandDel<TPayload>(in TPayload payload);
+
+public delegate CommandResponse EditorDataCommandDel<TRequest, TResponse>(in TRequest request, out TResponse response)
+    where TRequest : unmanaged where TResponse : unmanaged;
 
 // Request delegates
-public delegate void GenericDataRequest<TData>(ref TData data) where TData : unmanaged;
 public delegate TResponse? GenericRequest<in TRequest, out TResponse>(TRequest request)
     where TRequest : class where TResponse : class;
 
 // Core Delegates
 
-internal delegate void StateTransitionDel<T>(ModelState<T> ctx, T state) where T : class;
+internal delegate void StateTransitionDel<TModel>(ModelState<TModel> ctx, TModel state) where TModel : class;
 
-internal delegate void StateEventDel<T,TEvent>(ModelState<T> ctx, in TEvent ev) where T : class;
-
+internal delegate void StateEventDel<TModel, TEvent>(ModelState<TModel> ctx, in TEvent ev) where TModel : class;

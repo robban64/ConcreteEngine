@@ -118,7 +118,7 @@ internal sealed class ModelState<T> : IModelState where T : class
         }
     }
 
-    public void TriggerEvent<TEvent>(EventKey eventKey, in TEvent eventData)
+    public unsafe void TriggerEvent<TEvent>(EventKey eventKey, in TEvent eventData)
     {
         InvalidOpThrower.ThrowIfNull(_events, nameof(_events));
         if (!_events!.TryGetValue(eventKey, out var handler))
@@ -126,7 +126,7 @@ internal sealed class ModelState<T> : IModelState where T : class
 
         if (handler is not EventEntry<TEvent> entry)
             throw new ArgumentException(
-                $"{eventKey} was invoked with invalid type: actual {typeof(TEvent).Name}, expected {nameof(entry.EventType.Name)}");
+                $"{eventKey} was invoked with invalid type: actual {typeof(TEvent).Name}, expected {nameof(EventEntry<TEvent>.EventType.Name)}");
 
         entry.Handler(this, in eventData);
     }
@@ -157,8 +157,15 @@ internal sealed class ModelState<T> : IModelState where T : class
             _onRefresh = handler;
             return this;
         }
-
+/*
         public ViewModelStateBuilder RegisterEvent<TEvent>(EventKey eventKey, StateEventDel<T, TEvent> handler)
+        {
+            _events ??= new Dictionary<EventKey, object>();
+            _events.Add(eventKey, new EventEntry<TEvent>(handler));
+            return this;
+        }
+*/
+        public unsafe ViewModelStateBuilder RegisterEvent<TEvent>(EventKey eventKey, delegate*<ModelState<T>, in TEvent, void> handler)
         {
             _events ??= new Dictionary<EventKey, object>();
             _events.Add(eventKey, new EventEntry<TEvent>(handler));
@@ -173,9 +180,11 @@ internal sealed class ModelState<T> : IModelState where T : class
             return new ModelState<T>(factory, _onEnter!, _onLeave!, _onRefresh, _events);
         }
     }
-
-    private sealed record EventEntry<TEvent>(StateEventDel<T, TEvent> Handler)
+    
+    private readonly unsafe struct EventEntry<TEvent>(delegate*<ModelState<T>, in TEvent, void> handler)
     {
-        public Type EventType { get; } = typeof(TEvent);
+        public readonly delegate*<ModelState<T>, in TEvent, void> Handler = handler;
+        public static Type EventType => typeof(TEvent);
     }
+
 }

@@ -1,5 +1,6 @@
 #region
 
+using System.Runtime.InteropServices;
 using ConcreteEngine.Editor.Data;
 using ConcreteEngine.Editor.DataState;
 using ConcreteEngine.Editor.Definitions;
@@ -103,7 +104,6 @@ internal static class EngineDataProvider
         response.Transform = new TransformData(in transform.Translation, in transform.Scale, in transform.Rotation);
         response.Model = new EditorEntityModel(model.Model, model.MaterialKey.Value, model.DrawCount);
     }
-    
     
     public static void SetWorldParams(ref WorldParamState data)
     {

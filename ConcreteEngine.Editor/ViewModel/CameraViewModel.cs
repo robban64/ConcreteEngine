@@ -14,9 +14,9 @@ internal sealed class CameraViewModel
     public ref CameraEditorPayload Data => ref _data;
     public ref CameraDataState DataState => ref _state;
 
-    public void UpdateState(GenericDataRequest<CameraEditorPayload> requestDel)
+    public unsafe void UpdateState(in ApiWriteRequest<CameraEditorPayload> api)
     {
-        requestDel(ref _data);
+        api.DispatchWrite(ref _data);
         if(_state.Generation == Data.Generation) return;
 
         _state.Transform.Translation = _data.ViewTransform.Translation;

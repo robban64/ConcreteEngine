@@ -35,7 +35,7 @@ public static class CommandDispatcher
     public static void RegisterConsoleCmd<TPayload>(string command, string description,
         CommandPayloadResolverDel<TPayload> resolverDel)
     {
-        var editorDel = (EditorCommandReqDel<TPayload>)EditorCmd[command].EditorCmdHandler;
+        var editorDel = (EditorCommandDel<TPayload>)EditorCmd[command].EditorCmdHandler;
         var del = WrapEditorCommand(editorDel, resolverDel);
         if (!ConsoleCmd.TryAdd(command, new ConsoleCommandRecord(description, false, del)))
             throw new InvalidOperationException($"Console Command {command} is already registered");
@@ -44,7 +44,7 @@ public static class CommandDispatcher
     }
 
     public static void RegisterEditorCmd<TPayload>(string command, EditorCommandScope scope,
-        EditorCommandReqDel<TPayload> handler)
+        EditorCommandDel<TPayload> handler)
     {
         if (!EditorCmd.TryAdd(command, new EditorCommandRecord(scope, typeof(TPayload), handler)))
             throw new InvalidOperationException($"Editor Command {command} is already registered");
@@ -75,7 +75,7 @@ public static class CommandDispatcher
                 $"Invalid payload type, expected {record.PayloadType.Name}, got {typeof(TPayload).Name}");
         }
 
-        ((EditorCommandReqDel<TPayload>)record.EditorCmdHandler)(in payload);
+        ((EditorCommandDel<TPayload>)record.EditorCmdHandler)(in payload);
     }
 
     // Commands
@@ -93,7 +93,7 @@ public static class CommandDispatcher
 
 
     // create closure over command
-    private static ConsoleCommandReqDel WrapEditorCommand<TPayload>(EditorCommandReqDel<TPayload> editorDel,
+    private static ConsoleCommandReqDel WrapEditorCommand<TPayload>(EditorCommandDel<TPayload> editorDel,
         CommandPayloadResolverDel<TPayload> resolverDel)
     {
         return (ctx, action, arg1, arg2) =>

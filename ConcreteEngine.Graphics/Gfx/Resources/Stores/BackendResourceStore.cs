@@ -17,6 +17,12 @@ internal interface IBackendResourceStore
     ResourceKind Kind { get; }
     NativeHandle GetNativeHandle(in GfxHandle handle);
     void Remove(in GfxHandle handle);
+
+    int Count { get; }
+    int FreeCount { get; }
+    int Capacity { get; }
+
+    int GetAliveCount();
 }
 
 internal sealed class BackendResourceStore<TId, THandle> : IBackendResourceStore

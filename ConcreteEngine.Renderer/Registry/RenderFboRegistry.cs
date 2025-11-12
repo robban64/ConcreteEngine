@@ -39,10 +39,8 @@ internal sealed class RenderFboRegistry : IRenderFboRegistry
 
     internal RenderFboRegistry(GfxContext gfx)
     {
-        _gfxApi = gfx.ResourceManager.GetGfxApi();
         _gfxFbo = gfx.FrameBuffers;
-
-        _gfxApi.BindMetaChanged<FrameBufferId, FrameBufferMeta>(OnFboChange);
+        _gfxApi = gfx.ResourceManager.GetGfxApi();
     }
 
     internal void BeginRegistration()
@@ -168,15 +166,7 @@ internal sealed class RenderFboRegistry : IRenderFboRegistry
             throw new GraphicsException($"Failed to recreate screen fbo: {ex.Message}", ex);
         }
     }
-
-
-    private void OnFboChange(FrameBufferId id, in FrameBufferMeta newMeta, in FrameBufferMeta oldMeta, GfxMetaChanged message)
-    {
-        ArgumentOutOfRangeException.ThrowIfLessThan(id.Value, 1, nameof(id));
-        var renderFbo = GetRenderFboById(id);
-        if (renderFbo is null) ThrowNotFound(id);
-        renderFbo.UpdateFromMeta(in newMeta);
-    }
+    
 
     private static void ValidateOutputSize(Size2D outputSize, bool isShadowMap)
     {
@@ -194,10 +184,10 @@ internal sealed class RenderFboRegistry : IRenderFboRegistry
 
 
     [DoesNotReturn, StackTraceHidden]
-    private static void ThrowNotFound(FrameBufferId id) =>
+    internal static void ThrowNotFound(FrameBufferId id) =>
         throw new InvalidOperationException($"FrameBuffer with id: {id} not found");
 
     [DoesNotReturn, StackTraceHidden]
-    private static void ThrowNotFound(FboTagKey key) =>
+    internal static void ThrowNotFound(FboTagKey key) =>
         throw new InvalidOperationException($"FrameBuffer with key: {key} not found");
 }

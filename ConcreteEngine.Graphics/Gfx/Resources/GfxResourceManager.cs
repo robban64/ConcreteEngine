@@ -34,30 +34,14 @@ internal sealed class GfxResourceManager : IGfxResourceManager
     private void RegisterMetricsBindings()
     {
         var (gfx, bk) = (GfxStoreHub, BackendStoreHub);
-        GfxMetrics.BindStore(gfx.GetStore<TextureId, TextureMeta>, bk.GetStore<TextureId, GlTextureHandle>,
-            MetaMetricController.GetTextureMetric);
-
-        GfxMetrics.BindStore(gfx.GetStore<ShaderId, ShaderMeta>, bk.GetStore<ShaderId, GlShaderHandle>,
-            MetaMetricController.GetShaderMetric);
-
-        GfxMetrics.BindStore(gfx.GetStore<MeshId, MeshMeta>, bk.GetStore<MeshId, GlMeshHandle>,
-            MetaMetricController.GetMeshMetric);
-
-        GfxMetrics.BindStore(gfx.GetStore<VertexBufferId, VertexBufferMeta>, bk.GetStore<VertexBufferId, GlVboHandle>,
-            MetaMetricController.GetVboMetric);
-
-        GfxMetrics.BindStore(gfx.GetStore<IndexBufferId, IndexBufferMeta>, bk.GetStore<IndexBufferId, GlIboHandle>,
-            MetaMetricController.GetIboMetric);
-
-        GfxMetrics.BindStore(gfx.GetStore<FrameBufferId, FrameBufferMeta>, bk.GetStore<FrameBufferId, GlFboHandle>,
-            MetaMetricController.GetFboMetric);
-
-        GfxMetrics.BindStore(gfx.GetStore<RenderBufferId, RenderBufferMeta>, bk.GetStore<RenderBufferId, GlRboHandle>,
-            MetaMetricController.GetRboMetric);
-
-        GfxMetrics.BindStore(gfx.GetStore<UniformBufferId, UniformBufferMeta>,
-            bk.GetStore<UniformBufferId, GlUboHandle>,
-            MetaMetricController.GetUboMetric);
+        GfxMetrics.BindStore(gfx.GetStore<TextureId, TextureMeta>(), bk.GetStore<TextureId, GlTextureHandle>());
+        GfxMetrics.BindStore(gfx.GetStore<ShaderId, ShaderMeta>(), bk.GetStore<ShaderId, GlShaderHandle>());
+        GfxMetrics.BindStore(gfx.GetStore<MeshId, MeshMeta>(), bk.GetStore<MeshId, GlMeshHandle>());
+        GfxMetrics.BindStore(gfx.GetStore<VertexBufferId, VertexBufferMeta>(), bk.GetStore<VertexBufferId, GlVboHandle>());
+        GfxMetrics.BindStore(gfx.GetStore<IndexBufferId, IndexBufferMeta>(), bk.GetStore<IndexBufferId, GlIboHandle>());
+        GfxMetrics.BindStore(gfx.GetStore<FrameBufferId, FrameBufferMeta>(), bk.GetStore<FrameBufferId, GlFboHandle>());
+        GfxMetrics.BindStore(gfx.GetStore<RenderBufferId, RenderBufferMeta>(), bk.GetStore<RenderBufferId, GlRboHandle>());
+        GfxMetrics.BindStore(gfx.GetStore<UniformBufferId, UniformBufferMeta>(), bk.GetStore<UniformBufferId, GlUboHandle>());
     }
 
 

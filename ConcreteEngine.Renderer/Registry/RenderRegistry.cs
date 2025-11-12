@@ -24,12 +24,23 @@ internal sealed class RenderRegistry
 
     public RenderFboRegistry FboRegistry { get; }
 
+    
 
     public RenderRegistry(GfxContext gfx)
     {
         ShaderRegistry = new RenderShaderRegistry(gfx);
         UboRegistry = new RenderUboRegistry(gfx);
         FboRegistry = new RenderFboRegistry(gfx);
+        SetupGateway(gfx.ResourceManager.GetGfxApi());
+
+    }
+
+    private unsafe void SetupGateway(GfxResourceApi gfxApi)
+    {
+        RenderRegistryGateway.Setup(FboRegistry, UboRegistry);
+        gfxApi.BindMetaChanged<UniformBufferId, UniformBufferMeta>(&RenderRegistryGateway.OnUboChanged);
+        gfxApi.BindMetaChanged<FrameBufferId, FrameBufferMeta>(&RenderRegistryGateway.OnFboChange);
+
     }
 
     public void BeginRegistration(Size2D outputSize)

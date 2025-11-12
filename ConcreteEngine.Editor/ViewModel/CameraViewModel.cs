@@ -8,21 +8,29 @@ namespace ConcreteEngine.Editor.ViewModel;
 
 internal sealed class CameraViewModel
 {
+    public long Generation { get; private set; }
+
     private CameraEditorPayload _data;
     private CameraDataState _state;
 
     public ref CameraEditorPayload Data => ref _data;
     public ref CameraDataState DataState => ref _state;
 
-    public unsafe void UpdateState(in ApiWriteRequest<CameraEditorPayload> api)
+    
+    public void WriteTo(in ApiWriteRequest<CameraEditorPayload> api)
     {
-        api.WriteTo(ref _data);
-        if(_state.Generation == Data.Generation) return;
-
-        _state.Transform.Translation = _data.ViewTransform.Translation;
-        _state.Transform.Scale = _data.ViewTransform.Scale;
-        _state.Transform.Orientation = _data.ViewTransform.Orientation.AsVec2();
+        var engineGen = api.WriteTo(Generation, ref _data);
+        if(Generation == engineGen) return;
+        
+        _state.Transform.From(in _data.ViewTransform);
         _state.Projection = CameraProjectionState.From(in _data.Projection);
-        _state.Generation = _data.Generation;
+        Generation =  engineGen;
+    }
+
+    public void WriteFrom(in ApiWriteRequest<CameraEditorPayload> api)
+    {
+        Generation++;
+        _state.Fill(Generation, _data.Viewport, out _data);
+        api.WriteFrom(_data.Generation, ref _data);
     }
 }

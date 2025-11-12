@@ -8,6 +8,8 @@ namespace ConcreteEngine.Editor.ViewModel;
 
 internal sealed class WorldRenderViewModel
 {
+    public long Version { get; private set; }
+
     private WorldParamState _dataState;
 
     public WorldParamSelection Selection { get; set; }
@@ -19,11 +21,11 @@ internal sealed class WorldRenderViewModel
     public ref PostEffectState PostState => ref _dataState.PostState;
 
     public void WriteTo(in ApiWriteRequest<WorldParamState> api) =>
-        api.WriteTo(ref _dataState);
+        api.WriteTo(Version,ref _dataState);
 
     public void WriteFrom(in ApiWriteRequest<WorldParamState> api)
     {
-        _dataState.Version++;
-        api.WriteFrom(in _dataState);
+        Version++;
+        api.WriteFrom(Version, ref _dataState);
     }
 }

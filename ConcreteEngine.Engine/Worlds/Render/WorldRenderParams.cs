@@ -77,13 +77,12 @@ public sealed class WorldRenderParams
         _dirty = true;
     }
 
-    internal void FromEditor(ref WorldParamState param)
+    internal void FromEditor(in WorldParamsData data)
     {
-        Debug.Assert(param.Version <= Version);
-        _ambient = Unsafe.As<AmbientState, AmbientParams>(ref param.LightState.AmbientLight);
-        _dirLight = Unsafe.As<DirLightState, DirLightParams>(ref param.LightState.DirectionalLight);
-        _fog = Unsafe.As<FogState, FogParams>(ref param.FogState);
-        _postEffect = Unsafe.As<PostEffectState, PostEffectParams>(ref param.PostState);
+        _ambient = data.Ambient;
+        _dirLight = data.DirLight;
+        _fog = data.Fog;
+        _postEffect = data.PostEffect;
         _dirty = true;
     }
 

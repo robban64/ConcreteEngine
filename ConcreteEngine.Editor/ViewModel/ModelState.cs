@@ -90,7 +90,6 @@ internal sealed class ModelState<T> : IModelState where T : class
 
     public void EnqueueRefreshNextFrame()
     {
-        InvalidOpThrower.ThrowIfNull(_onRefresh);
         if (PendingRefresh) return;
         PendingRefresh = true;
     }
@@ -98,6 +97,12 @@ internal sealed class ModelState<T> : IModelState where T : class
     public bool TryInvokePendingRefresh()
     {
         if (!PendingRefresh) return false;
+        if (_onRefresh is null)
+        {
+            PendingRefresh = false;
+            DevConsoleService.AddLog($"OnRefresh is null: Refresh failed for {typeof(T).Name}");
+            return false;
+        }
         _onRefresh!(this, State!);
         InvokeAction(TransitionKey.Refresh);
         PendingRefresh = false;

@@ -40,26 +40,6 @@ internal static class EditorModelManager
         RegisterWorldRenderState();
     }
 
-    private static unsafe void RegisterEntityState()
-    {
-        EntitiesState = ModelState<EntitiesViewModel>
-            .CreateBuilder(static () => new EntitiesViewModel())
-            .OnEnter(static (ctx, it) => OnFillEntities(ctx))
-            .OnLeave(static (ctx, it) => ctx.ResetState())
-            .RegisterEvent<EntityRecord>(EventKey.SelectionChanged, &SelectEntityHandler)
-            .RegisterEvent<EntityTransformPayload>(EventKey.SelectionUpdated,
-                &UpdateEntityHandler)
-            .Build();
-        return;
-
-        static unsafe void SelectEntityHandler(ModelState<EntitiesViewModel> ctx, in EntityRecord it) =>
-            ctx.State!.UpdateDataFrom(it, EditorApi.UpdateEntityData);
-
-        static void UpdateEntityHandler(ModelState<EntitiesViewModel> ctx, in EntityTransformPayload it) =>
-            CommandDispatcher.InvokeEditorCommand(CoreCmdNames.EntityTransform, in it);
-    }
-
-
     private static unsafe void RegisterAssetState()
     {
         AssetState = ModelState<AssetStoreViewModel>
@@ -83,6 +63,33 @@ internal static class EditorModelManager
                 new EditorShaderPayload(it.Name, EditorRequestAction.Reload));
     }
 
+    private static unsafe void RegisterEntityState()
+    {
+        EntitiesState = ModelState<EntitiesViewModel>
+            .CreateBuilder(static () => new EntitiesViewModel())
+            .OnEnter(static (ctx, it) => OnFillEntities(ctx))
+            .OnRefresh(RefreshEntity)
+            .OnLeave(static (ctx, it) => ctx.ResetState())
+            .RegisterEvent<EntityRecord>(EventKey.SelectionChanged, &SelectEntityHandler)
+            .RegisterEvent<EntityRecord>(EventKey.SelectionUpdated,
+                &UpdateEntityHandler)
+            .Build();
+        return;
+
+        static void RefreshEntity(ModelState<EntitiesViewModel> ctx, EntitiesViewModel it) =>
+            ctx.State!.WriteTo( in EditorApi.UpdateEntityData);
+
+        static void SelectEntityHandler(ModelState<EntitiesViewModel> ctx, in EntityRecord it) =>
+            ctx.State!.WriteTo(it, in EditorApi.UpdateEntityData);
+
+        static void UpdateEntityHandler(ModelState<EntitiesViewModel> ctx, in EntityRecord it)
+        {
+            ctx.State!.WriteFrom(  it, in EditorApi.UpdateEntityData);
+            ctx.EnqueueRefreshNextFrame();
+        }
+    }
+
+
     private static unsafe void RegisterCameraState()
     {
         CameraState = ModelState<CameraViewModel>
@@ -90,16 +97,19 @@ internal static class EditorModelManager
             .OnEnter(FetchCameraDataHandler)
             .OnRefresh(FetchCameraDataHandler)
             .OnLeave(static (ctx, it) => ctx.ResetState())
-            .RegisterEvent<CameraEditorPayload>(EventKey.SelectionUpdated, &Handler)
+            .RegisterEvent<CameraEditorPayload>(EventKey.SelectionUpdated, &WriteCameraDataHandler)
             .Build();
 
         return;
 
         static void FetchCameraDataHandler(ModelState<CameraViewModel> ctx, CameraViewModel it) =>
-            it.UpdateState(EditorApi.UpdateCameraData);
+            it.WriteTo(EditorApi.UpdateCameraData);
 
-        static void Handler(ModelState<CameraViewModel> ctx, in CameraEditorPayload it) =>
-            CommandDispatcher.InvokeEditorCommand(CoreCmdNames.CameraTransform, in it);
+        static void WriteCameraDataHandler(ModelState<CameraViewModel> ctx, in CameraEditorPayload it)
+        {
+            ctx.State!.WriteFrom(in EditorApi.UpdateCameraData);
+            ctx.EnqueueRefreshNextFrame();
+        }
     }
 
     private static unsafe void RegisterWorldRenderState()

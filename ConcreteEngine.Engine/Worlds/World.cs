@@ -1,12 +1,14 @@
 #region
 
 using ConcreteEngine.Common.Numerics;
+using ConcreteEngine.Editor.Data;
 using ConcreteEngine.Editor.DataState;
 using ConcreteEngine.Engine.Editor.Data;
 using ConcreteEngine.Engine.Worlds.Entities;
 using ConcreteEngine.Engine.Worlds.Render;
 using ConcreteEngine.Engine.Worlds.Render.Batching;
 using ConcreteEngine.Engine.Worlds.View;
+using ConcreteEngine.Shared.RenderData;
 using ConcreteEngine.Shared.TransformData;
 
 #endregion
@@ -87,8 +89,29 @@ public sealed class World : IWorld
     internal void ProcessActions()
     {
         if (!WorldActionSlot.IsDirty) return;
-        if (WorldActionSlot.TryReadSlot(WorldRenderParams.Version, out WorldParamState param))
-            WorldRenderParams.FromEditor(ref param);
+        if (WorldActionSlot.TryReadSlot(WorldRenderParams.Version, out WorldParamsData worldData))
+            WorldRenderParams.FromEditor(in worldData);
+
+        if (WorldActionSlot.TryReadSlot(Camera.Generation, out CameraEditorPayload cameraData))
+        {
+            ref readonly var data = ref cameraData;
+            Camera.Translation = data.ViewTransform.Translation;
+            Camera.Scale = data.ViewTransform.Scale;
+            Camera.Orientation = data.ViewTransform.Orientation;
+            Camera.FarPlane = data.Projection.Far;
+            Camera.NearPlane = data.Projection.Near;
+            Camera.Fov = data.Projection.Fov;
+        }
+        
+        if (WorldActionSlot.TryReadSlot(0, out EntityDataPayload entityData))
+        {
+            ref readonly var transform = ref entityData.Transform;
+            ref var entityTransform = ref Transforms.GetById(new EntityId(entityData.EntityId));
+            entityTransform.Translation = transform.Translation;
+            entityTransform.Scale = transform.Scale;
+            entityTransform.Rotation = transform.Rotation;
+
+        }
 
         WorldActionSlot.ClearDirty();
     }
@@ -97,21 +120,9 @@ public sealed class World : IWorld
     {
         if (cmd is EntityCommandRecord<TransformData> transformCmd)
         {
-            ref readonly var transform = ref transformCmd.Data;
-            ref var entityTransform = ref Transforms.GetById(new EntityId(transformCmd.EntityId));
-            entityTransform.Translation = transform.Translation;
-            entityTransform.Scale = transform.Scale;
-            entityTransform.Rotation = transform.Rotation;
         }
         else if (cmd is CameraCommandRecord cameraCmd)
         {
-            ref readonly var data = ref cameraCmd.Data;
-            Camera.Translation = data.ViewTransform.Translation;
-            Camera.Scale = data.ViewTransform.Scale;
-            Camera.Orientation = data.ViewTransform.Orientation;
-            Camera.FarPlane = data.Projection.Far;
-            Camera.NearPlane = data.Projection.Near;
-            Camera.Fov = data.Projection.Fov;
         }
         else
         {

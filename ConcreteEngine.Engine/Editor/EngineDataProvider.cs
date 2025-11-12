@@ -2,6 +2,7 @@
 
 using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
+using ConcreteEngine.Editor;
 using ConcreteEngine.Editor.Data;
 using ConcreteEngine.Editor.DataState;
 using ConcreteEngine.Editor.Definitions;
@@ -28,18 +29,17 @@ internal static class EngineDataProvider
         _world = world;
         _assetSystem = assetSystem;
     }
-    
+
     public static List<EntityRecord> GetEntityView(EntityRequestBody body)
     {
         var result = new List<EntityRecord>(_world.Meshes.Count);
         foreach (var it in _world.Query<ModelComponent>())
-        {
             result.Add(EditorObjectMapper.MakeEntityViewModel(it.Entity));
-        }
-
+        
+        result.Sort();
         return result;
     }
-    
+
     public static List<AssetObjectViewModel> GetAssetStoreData(AssetCategoryRequestBody body)
     {
         var req = body.Category;
@@ -58,7 +58,7 @@ internal static class EngineDataProvider
         result.Sort(static (a, b) => a.AssetId.CompareTo(b.AssetId));
         return result;
     }
-    
+
     public static List<AssetObjectFileViewModel> GetAssetObjectFiles(AssetRequestBody body)
     {
         var assetTypedId = new AssetId(body.AssetId);
@@ -67,7 +67,7 @@ internal static class EngineDataProvider
 
         if (!store.TryGetByAssetId(assetTypedId, out var asset))
             return [];
-        
+
         var meta = store.GetMetaSnapshot(asset!.GetType());
         var result = new List<AssetObjectFileViewModel>(meta.Count);
         foreach (var fileId in fileIds)
@@ -78,71 +78,74 @@ internal static class EngineDataProvider
 
         return result;
     }
-    
-    public static void SetCameraData(ref CameraEditorPayload payload)
+
+    public static long SetCameraData(ApiWriteRequestBody<CameraEditorPayload> payload)
     {
-        if (_world.Camera.Generation == payload.Generation)
-            return;
-        
         var camera = _world.Camera;
-        payload.Generation = camera.Generation;
-        payload.ViewTransform = new ViewTransformData(camera.Translation, camera.Scale, camera.Orientation);
-        payload.Projection = new ProjectionInfoData(camera.AspectRatio, camera.Fov, camera.NearPlane, camera.FarPlane);
-        payload.Viewport = camera.Viewport;
+        if (camera.Generation == payload.Version) return camera.Generation;
+
+        payload.Data.Generation = camera.Generation;
+        payload.Data.ViewTransform = new ViewTransformData(camera.Translation, camera.Scale, camera.Orientation);
+        payload.Data.Projection = new ProjectionInfoData(camera.AspectRatio, camera.Fov, camera.NearPlane, camera.FarPlane);
+        payload.Data.Viewport = camera.Viewport;
+        return camera.Generation;
     }
 
-    public static void WriteCameraData(ref readonly CameraEditorPayload payload)
+    public static long WriteCameraData(ApiWriteRequestBody<CameraEditorPayload> payload)
     {
-        if ( _world.Camera.Generation == payload.Generation)
-            return;
-        
+        if (_world.Camera.Generation == payload.Version) return payload.Version;
         var camera = _world.Camera;
+        WorldActionSlot.SetSlot(payload.Version, in payload.Data);
+        return camera.Generation;
     }
 
-    public static void SetEntityData(ref EntityDataPayload response)
+    public static long SetEntityData(ApiWriteRequestBody<EntityDataPayload> response)
     {
-        var entity = new EntityId(response.EntityId);
+        var entity = new EntityId(response.Data.EntityId);
         var model = _world.Meshes.GetById(entity);
         if (!_world.Transforms.TryGetById(entity, out var transform)) transform = default;
 
-        response.Transform = new TransformData(in transform.Translation, in transform.Scale, in transform.Rotation);
-        response.Model = new EditorEntityModel(model.Model, model.MaterialKey.Value, model.DrawCount);
-    }
-    
-    public static void WriteToEntity(ref readonly EntityDataPayload response)
-    {
-        var entity = new EntityId(response.EntityId);
-        var model = _world.Meshes.GetById(entity);
-        if (!_world.Transforms.TryGetById(entity, out var transform)) transform = default;
+        response.Data.Transform = new TransformData(in transform.Translation, in transform.Scale, in transform.Rotation);
+        response.Data.Model = new EditorEntityModel(model.Model, model.MaterialKey.Value, model.DrawCount);
 
-        var transforms = _world.Transforms;
-        ref var t = ref transforms.GetById(new EntityId(response.EntityId));
-        t.Translation = response.Transform.Translation;
-        t.Rotation = response.Transform.Rotation;
-        t.Scale = response.Transform.Scale;
+        return response.Data.EntityId;
     }
-    
-    public static void SetWorldParams(ref WorldParamState data)
+
+    public static long WriteToEntity(ApiWriteRequestBody<EntityDataPayload> response)
+    {
+        WorldActionSlot.SetSlot(response.Version, in response.Data);
+        return response.Data.EntityId;
+    }
+
+    public static long SetWorldParams(ApiWriteRequestBody<WorldParamState> request)
     {
         var snapshot = _world!.WorldRenderParams.Snapshot;
-        if(data.Version == snapshot.Version) return;
+        if (request.Version == snapshot.Version) return request.Version;
 
-        data.Version = snapshot.Version;
+        ref var data = ref request.Data;
         data.LightState.DirectionalLight = new DirLightState(in snapshot.DirLight);
         data.LightState.AmbientLight = new AmbientState(in snapshot.Ambient);
         data.FogState = new FogState(in snapshot.Fog);
         data.PostState.Grade = new PostGradeState(in snapshot.PostEffects.Grade);
-        data.PostState.WhiteBalance = new PostWhiteBalanceState(snapshot.PostEffects.WhiteBalance);//tiny
+        data.PostState.WhiteBalance = new PostWhiteBalanceState(snapshot.PostEffects.WhiteBalance); //tiny
         data.PostState.Bloom = new PostBloomState(in snapshot.PostEffects.Bloom);
         data.PostState.ImageFx = new PostImageFxState(in snapshot.PostEffects.ImageFx);
+
+        return snapshot.Version;
     }
-    
-    public static void WriteWorldParams(in WorldParamState data)
+
+    public static long WriteWorldParams(ApiWriteRequestBody<WorldParamState> request)
     {
-        ref var slot = ref WorldActionSlot.WriteSlot<WorldParamState>(data.Version);
-        slot.Version = data.Version;
-        slot.LightState = data.LightState;
-        slot.FogState =  data.FogState;
-        slot.PostState = data.PostState;
+        var snapshot = _world!.WorldRenderParams.Snapshot;
+        if (request.Version == snapshot.Version) return snapshot.Version;
+
+        ref var data = ref request.Data;
+        ref var slot = ref WorldActionSlot.WriteSlot<WorldParamsData>(request.Version);
+
+        slot.DirLight = Unsafe.As<DirLightState, DirLightParams>(ref data.LightState.DirectionalLight);
+        slot.Ambient = Unsafe.As<AmbientState, AmbientParams>(ref data.LightState.AmbientLight);
+        slot.Fog = Unsafe.As<FogState, FogParams>(ref data.FogState);
+        slot.PostEffect = Unsafe.As<PostEffectState, PostEffectParams>(ref data.PostState);
+        return snapshot.Version;
     }
 }

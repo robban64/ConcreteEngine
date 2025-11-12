@@ -70,16 +70,6 @@ internal static class EngineCommandHandler
         return CommandResponse.Ok();
     }
     
-    public static CommandResponse OnWorldParamCmd(in WorldParamState payload)
-    {
-        ref var slot = ref WorldActionSlot.WriteSlot<WorldParamState>(payload.Version);
-        slot.LightState = payload.LightState;
-        slot.FogState =  payload.FogState;
-        slot.PostState = payload.PostState;
-        return CommandResponse.Ok();
-    }
-
-
     public static void OnStructSizesCmd(DebugConsoleCtx ctx, string action, string? arg1, string? arg2)
     {
         /*

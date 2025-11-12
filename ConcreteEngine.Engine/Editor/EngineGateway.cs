@@ -177,10 +177,6 @@ internal sealed class EngineGateway : IDisposable
             EditorCmd.RegisterEditorCmd<CameraEditorPayload>(CoreCmdNames.CameraTransform, EditorCommandScope.Editor,
                 EngineCommandHandler.OnCameraDataCmd);
 
-            EditorCmd.RegisterEditorCmd<WorldParamState>(CoreCmdNames.WorldParams, EditorCommandScope.Editor,
-                EngineCommandHandler.OnWorldParamCmd);
-
-
             EditorCmd.RegisterEditorCmd<EditorShaderPayload>(CoreCmdNames.AssetShader, EditorCommandScope.Engine,
                 EngineCommandHandler.OnAssetShaderCmd);
 

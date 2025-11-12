@@ -8,9 +8,15 @@ namespace ConcreteEngine.Editor.DataState;
 
 internal struct CameraDataState
 {
-    public long Generation;
     public CameraTransformDataState Transform;
     public CameraProjectionState Projection;
+
+    public void From(ref ViewTransformData model)
+    {
+        Transform.Translation = model.Translation;
+        Transform.Scale = model.Scale;
+        Transform.Orientation = model.Orientation.AsVec2();
+    }
 
     public readonly void Fill(long generation, Size2D viewport, out CameraEditorPayload model)
     {

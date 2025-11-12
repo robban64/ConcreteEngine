@@ -1,5 +1,8 @@
+using System.Runtime.InteropServices;
+
 namespace ConcreteEngine.Shared.RenderData;
 
+[StructLayout(LayoutKind.Sequential)]
 public readonly struct ShadowParams(
     int shadowMapSize,
     float distance,

@@ -34,24 +34,19 @@ internal static class EntitiesComponent
 
     private static void OnUpdateTranslation(EntityRecord entity)
     {
-        DataState.Transform.Fill(in Data.Transform.Rotation, out var data);
-        var payload = new EntityTransformPayload(entity.EntityId, in data);
-        Model.TriggerEvent(EventKey.SelectionUpdated, in payload);
+        Model.TriggerEvent(EventKey.SelectionUpdated, entity);
     }
 
     private static void OnUpdateScale(EntityRecord entity)
     {
-        DataState.Transform.Fill(in Data.Transform.Rotation, out var data);
-        var payload = new EntityTransformPayload(entity.EntityId, in data);
-        Model.TriggerEvent(EventKey.SelectionUpdated, in payload);
+        Model.TriggerEvent(EventKey.SelectionUpdated, entity);
     }
 
     private static void OnUpdateRotation(EntityRecord entity)
     {
-        var rotation = RotationMath.EulerDegreesToQuaternion(in DataState.Transform.EulerAngles);
-        DataState.Transform.Fill(in rotation, out var data);
-        var payload = new EntityTransformPayload(entity.EntityId, in data);
-        Model.TriggerEvent(EventKey.SelectionUpdated, in payload);
+        ref  var transform = ref DataState.Transform;
+        transform.Rotation = RotationMath.EulerDegreesToQuaternion(in transform.EulerAngles);
+        Model.TriggerEvent(EventKey.SelectionUpdated, entity);
     }
 
     public static void Draw()

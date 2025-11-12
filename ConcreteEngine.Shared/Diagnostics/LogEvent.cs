@@ -1,8 +1,10 @@
 using System.Runtime.CompilerServices;
+using System.Runtime.InteropServices;
 using ConcreteEngine.Common.Numerics.Maths;
 
 namespace ConcreteEngine.Shared.Diagnostics;
 
+[StructLayout(LayoutKind.Sequential)]
 public readonly struct LogEvent(
     uint id,
     int param0,

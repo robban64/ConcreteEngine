@@ -1,24 +1,27 @@
 using System.Numerics;
 using System.Runtime.CompilerServices;
+using System.Runtime.InteropServices;
 using ConcreteEngine.Editor.Data;
 using ConcreteEngine.Shared.RenderData;
 
 namespace ConcreteEngine.Editor.DataState;
 
+[StructLayout(LayoutKind.Sequential)]
 public struct WorldParamState
 {
-    public long Version;
     public LightState LightState;
     public FogState FogState;
     public PostEffectState PostState;
 }
 
+[StructLayout(LayoutKind.Sequential)]
 public struct LightState
 {
     public DirLightState DirectionalLight;
     public AmbientState AmbientLight;
 }
 
+[StructLayout(LayoutKind.Sequential)]
 public struct DirLightState(in DirLightParams param)
 {
     public Vector3 Direction = param.Direction;
@@ -30,6 +33,7 @@ public struct DirLightState(in DirLightParams param)
         => result = Unsafe.As<DirLightState, DirLightParams>(ref this);
 }
 
+[StructLayout(LayoutKind.Sequential)]
 public struct AmbientState(in AmbientParams param)
 {
     public Vector3 Ambient = param.Ambient;
@@ -37,6 +41,7 @@ public struct AmbientState(in AmbientParams param)
     public float Exposure = param.Exposure;
 }
 
+[StructLayout(LayoutKind.Sequential)]
 public struct FogState(in FogParams param)
 {
     public Vector3 Color = param.Color;
@@ -49,6 +54,7 @@ public struct FogState(in FogParams param)
     public float Strength = param.Strength;
 }
 
+[StructLayout(LayoutKind.Sequential)]
 public struct PostEffectState
 {
     public PostGradeState Grade;
@@ -57,6 +63,7 @@ public struct PostEffectState
     public PostImageFxState ImageFx;
 }
 
+[StructLayout(LayoutKind.Sequential)]
 public struct PostImageFxState(in PostImageFxParams param)
 {
     public float Vignette = param.Vignette;
@@ -65,6 +72,7 @@ public struct PostImageFxState(in PostImageFxParams param)
     public float Rolloff = param.Rolloff;
 }
 
+[StructLayout(LayoutKind.Sequential)]
 public struct PostBloomState(in PostBloomParams param)
 {
     public float Intensity = param.Intensity;
@@ -72,12 +80,14 @@ public struct PostBloomState(in PostBloomParams param)
     public float Radius = param.Radius;
 }
 
+[StructLayout(LayoutKind.Sequential)]
 public struct PostWhiteBalanceState(PostWhiteBalanceParams param)
 {
     public float Tint = param.Tint;
     public float Strength = param.Strength;
 }
 
+[StructLayout(LayoutKind.Sequential)]
 public struct PostGradeState(in PostGradeParams param)
 {
     public float Exposure = param.Exposure;

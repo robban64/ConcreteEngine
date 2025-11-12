@@ -14,10 +14,11 @@ internal struct TransformDataState
     public Vector3 Translation;
     public Vector3 Scale;
     public Vector3 EulerAngles;
+    public Quaternion Rotation;
 
-    public readonly void Fill(in Quaternion rotation, out TransformData model)
+    public readonly void Fill(out TransformData model)
     {
-        model = new TransformData(in Translation, in Scale, in rotation);
+        model = new TransformData(in Translation, in Scale, in Rotation);
     }
 
     public void From(in TransformData model)
@@ -25,6 +26,7 @@ internal struct TransformDataState
         Translation = model.Translation;
         Scale = model.Scale;
         EulerAngles = RotationMath.QuaternionToEulerDegrees(in model.Rotation, in EulerAngles);
+        Rotation = model.Rotation;
     }
 
     public void FromStable(in TransformData model)
@@ -36,5 +38,6 @@ internal struct TransformDataState
             Scale = model.Scale;
 
         EulerAngles = RotationMath.QuaternionToEulerDegrees(in model.Rotation, in EulerAngles);
+        Rotation  = model.Rotation;
     }
 }

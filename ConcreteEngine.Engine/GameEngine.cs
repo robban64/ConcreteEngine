@@ -194,6 +194,12 @@ public sealed class GameEngine : IDisposable
     {
         _updateInfo.BeginUpdateFrame(dt, _window.WindowSize, _window.OutputSize);
         ref readonly var updateInfo = ref _updateInfo.UpdateTickInfo;
+        
+        if (_stateMachine.Current != EngineStateLevel.Running)
+        {
+            RunSetupStateMachine();
+            return;
+        }
 
         if (_assets.PendingAssetCount > 0)
         {
@@ -206,12 +212,7 @@ public sealed class GameEngine : IDisposable
         if (_editorQueues.DeferredCommandCount > 0)
             _editorQueues.DrainDeferredCommands();
 
-
-        if (_stateMachine.Current != EngineStateLevel.Running)
-        {
-            RunSetupStateMachine();
-            return;
-        }
+        _world?.ProcessActions();
 
         _engineGateway.Update(dt);
 

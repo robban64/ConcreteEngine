@@ -13,9 +13,10 @@ using ConcreteEngine.Shared.Diagnostics;
 using Silk.NET.Input;
 using Silk.NET.OpenGL;
 using Silk.NET.Windowing;
-using static ConcreteEngine.Editor.CommandDispatcher;
 
 #endregion
+
+using EditorCmd = ConcreteEngine.Editor.CommandDispatcher;
 
 namespace ConcreteEngine.Engine.Editor;
 
@@ -170,31 +171,31 @@ internal sealed class EngineGateway : IDisposable
         public static void RegisterCommands()
         {
             // Editor commands
-            RegisterEditorCmd<EntityTransformPayload>(CoreCmdNames.EntityTransform, EditorCommandScope.Editor,
+            EditorCmd.RegisterEditorCmd<EntityTransformPayload>(CoreCmdNames.EntityTransform, EditorCommandScope.Editor,
                 EngineCommandHandler.OnEntityTransformCmd);
 
-            RegisterEditorCmd<CameraEditorPayload>(CoreCmdNames.CameraTransform, EditorCommandScope.Editor,
+            EditorCmd.RegisterEditorCmd<CameraEditorPayload>(CoreCmdNames.CameraTransform, EditorCommandScope.Editor,
                 EngineCommandHandler.OnCameraDataCmd);
 
-            RegisterEditorCmd<WorldParamState>(CoreCmdNames.WorldParams, EditorCommandScope.Editor,
+            EditorCmd.RegisterEditorCmd<WorldParamState>(CoreCmdNames.WorldParams, EditorCommandScope.Editor,
                 EngineCommandHandler.OnWorldParamCmd);
 
 
-            RegisterEditorCmd<EditorShaderPayload>(CoreCmdNames.AssetShader, EditorCommandScope.Engine,
+            EditorCmd.RegisterEditorCmd<EditorShaderPayload>(CoreCmdNames.AssetShader, EditorCommandScope.Engine,
                 EngineCommandHandler.OnAssetShaderCmd);
 
-            RegisterEditorCmd<EditorShadowPayload>(CoreCmdNames.WorldShadow, EditorCommandScope.Engine,
+            EditorCmd.RegisterEditorCmd<EditorShadowPayload>(CoreCmdNames.WorldShadow, EditorCommandScope.Engine,
                 EngineCommandHandler.OnWorldShadowCmd);
 
             // Console commands
-            RegisterConsoleCmd<EditorShaderPayload>(CoreCmdNames.AssetShader, string.Empty,
+            EditorCmd.RegisterConsoleCmd<EditorShaderPayload>(CoreCmdNames.AssetShader, string.Empty,
                 CommandParser.ParseShaderRequest);
 
-            RegisterConsoleCmd<EditorShadowPayload>(CoreCmdNames.WorldShadow, string.Empty,
+            EditorCmd.RegisterConsoleCmd<EditorShadowPayload>(CoreCmdNames.WorldShadow, string.Empty,
                 CommandParser.ParseShadowRequest);
 
             // Misc
-            RegisterNoOpConsoleCmd("inspect-structs", string.Empty,
+            EditorCmd.RegisterNoOpConsoleCmd("inspect-structs", string.Empty,
                 EngineCommandHandler.OnStructSizesCmd);
         }
 
@@ -204,9 +205,12 @@ internal sealed class EngineGateway : IDisposable
             EditorApi.FetchAssetObjectFiles = EngineDataProvider.GetAssetObjectFiles;
             EditorApi.FetchEntityView = EngineDataProvider.GetEntityView;
 
-            EditorApi.UpdateEntityData = new ApiWriteRequest<EntityDataPayload>(&EngineDataProvider.SetEntityData);
-            EditorApi.UpdateCameraData = new ApiWriteRequest<CameraEditorPayload>(&EngineDataProvider.SetCameraData);
-            EditorApi.UpdateWorldParams = new ApiWriteRequest<WorldParamState>(&EngineDataProvider.SetWorldParams);
+            EditorApi.UpdateEntityData = new ApiWriteRequest<EntityDataPayload>(
+                &EngineDataProvider.SetEntityData, &EngineDataProvider.WriteToEntity);
+            EditorApi.UpdateCameraData = new ApiWriteRequest<CameraEditorPayload>(
+                &EngineDataProvider.SetCameraData, &EngineDataProvider.WriteCameraData);
+            EditorApi.UpdateWorldParams = new ApiWriteRequest<WorldParamState>(
+                &EngineDataProvider.SetWorldParams, &EngineDataProvider.WriteWorldParams);
         }
 
 

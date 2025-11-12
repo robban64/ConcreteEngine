@@ -18,6 +18,12 @@ internal sealed class WorldRenderViewModel
     public ref FogState FogState => ref _dataState.FogState;
     public ref PostEffectState PostState => ref _dataState.PostState;
 
-    public void UpdateState(in ApiWriteRequest<WorldParamState> api) =>
-        api.DispatchWrite(ref _dataState);
+    public void WriteTo(in ApiWriteRequest<WorldParamState> api) =>
+        api.WriteTo(ref _dataState);
+
+    public void WriteFrom(in ApiWriteRequest<WorldParamState> api)
+    {
+        _dataState.Version++;
+        api.WriteFrom(in _dataState);
+    }
 }

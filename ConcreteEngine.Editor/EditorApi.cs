@@ -19,12 +19,16 @@ public static class EditorApi
     public static ApiWriteRequest<WorldParamState> UpdateWorldParams;
 }
 
-public readonly unsafe struct ApiWriteRequest<T> where T : unmanaged
+public readonly unsafe struct ApiWriteRequest<T>(
+    delegate*<ref T, void> writeTo,
+    delegate*<in T, void> writeFrom)
+    where T : unmanaged
 {
-    private readonly delegate*<ref T, void> _handler;
-    public ApiWriteRequest(delegate*<ref T, void> handler) => _handler = handler;
-    public void DispatchWrite(ref T data) => _handler(ref data);
+    public void WriteTo(ref T data) => writeTo(ref data);
+    public void WriteFrom(in T data) => writeFrom(in data);
 }
+
+
 
 public readonly unsafe struct ApiFillRequest<TReq, TRes> where TReq : unmanaged where TRes : unmanaged
 {

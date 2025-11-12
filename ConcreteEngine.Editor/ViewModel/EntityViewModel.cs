@@ -17,13 +17,13 @@ public sealed class EntitiesViewModel
     public void UpdateDataFrom(EntityRecord record, ApiWriteRequest<EntityDataPayload> api)
     {
         _data.EntityId = record.EntityId;
-        api.DispatchWrite(ref _data);
+        api.WriteTo(ref _data);
         _state = new EntityDataState(in _data);
     }
 
     public void UpdateData(ApiWriteRequest<EntityDataPayload> api)
     {
-        api.DispatchWrite(ref _data);
+        api.WriteTo(ref _data);
 
         _state.ModelId = _data.Model.ModelId;
         _state.MaterialTagKey = _data.Model.MaterialTagKey;

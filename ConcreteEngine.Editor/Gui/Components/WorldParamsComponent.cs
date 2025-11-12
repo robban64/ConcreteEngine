@@ -13,9 +13,6 @@ internal static class WorldParamsComponent
     private static WorldRenderViewModel ViewModel => Model.State!;
 
     public static ref WorldParamState DataState => ref ViewModel.DataState;
-    public static ref LightState LightState => ref ViewModel.DataState.LightState;
-    public static ref FogState FogState => ref ViewModel.DataState.FogState;
-    public static ref PostEffectState PostState => ref ViewModel.DataState.PostState;
 
     private static void OnSelectionChange(WorldParamSelection selection)
     {
@@ -25,7 +22,7 @@ internal static class WorldParamsComponent
 
     private static void OnSelectionUpdate()
     {
-        Model.TriggerEvent(EventKey.SelectionUpdated, in DataState);
+        Model.TriggerEvent(EventKey.SelectionUpdated);
     }
 
     public static void Draw()

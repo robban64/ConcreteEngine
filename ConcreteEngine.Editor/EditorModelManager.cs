@@ -110,22 +110,22 @@ internal static class EditorModelManager
             .OnRefresh(UpdateData)
             .OnLeave(static (ctx, it) => ctx.ResetState())
             .RegisterEvent<WorldParamSelection>(EventKey.SelectionChanged, &SelectionChangeHandler)
-            .RegisterEvent<WorldParamState>(EventKey.SelectionUpdated, &SelectionUpdateHandler)
+            .RegisterEventNoOp(EventKey.SelectionUpdated, &SelectionUpdateHandler)
             .Build();
         return;
 
         static void UpdateData(ModelState<WorldRenderViewModel> ctx, WorldRenderViewModel it) =>
-            it.UpdateState(in EditorApi.UpdateWorldParams);
+            it.WriteTo(in EditorApi.UpdateWorldParams);
 
         static void SelectionChangeHandler(ModelState<WorldRenderViewModel> ctx, in WorldParamSelection it)
         {
             ctx.State!.Selection = it;
-            ctx.State!.UpdateState(EditorApi.UpdateWorldParams);
+            ctx.State!.WriteTo(in EditorApi.UpdateWorldParams);
         }
 
-        static void SelectionUpdateHandler(ModelState<WorldRenderViewModel> ctx,  in WorldParamState it)
+        static void SelectionUpdateHandler(ModelState<WorldRenderViewModel> ctx, in NoOpEvent it)
         {
-            CommandDispatcher.InvokeEditorCommand(CoreCmdNames.WorldParams, in it);
+            ctx.State!.WriteFrom(in EditorApi.UpdateWorldParams);
             ctx.EnqueueRefreshNextFrame();
         }
     }

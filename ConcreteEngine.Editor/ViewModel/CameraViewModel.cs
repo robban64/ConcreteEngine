@@ -16,7 +16,7 @@ internal sealed class CameraViewModel
 
     public unsafe void UpdateState(in ApiWriteRequest<CameraEditorPayload> api)
     {
-        api.DispatchWrite(ref _data);
+        api.WriteTo(ref _data);
         if(_state.Generation == Data.Generation) return;
 
         _state.Transform.Translation = _data.ViewTransform.Translation;

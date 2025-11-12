@@ -1,5 +1,6 @@
 #region
 
+using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
 using ConcreteEngine.Editor.Data;
 using ConcreteEngine.Editor.DataState;
@@ -9,6 +10,7 @@ using ConcreteEngine.Engine.Assets;
 using ConcreteEngine.Engine.Assets.Data;
 using ConcreteEngine.Engine.Worlds;
 using ConcreteEngine.Engine.Worlds.Entities;
+using ConcreteEngine.Shared.RenderData;
 using ConcreteEngine.Shared.TransformData;
 
 #endregion
@@ -17,8 +19,8 @@ namespace ConcreteEngine.Engine.Editor;
 
 internal static class EngineDataProvider
 {
-    private static World? _world;
-    private static AssetSystem? _assetSystem;
+    private static World _world = null!;
+    private static AssetSystem _assetSystem = null!;
 
 
     internal static void Attach(World world, AssetSystem assetSystem)
@@ -29,8 +31,6 @@ internal static class EngineDataProvider
     
     public static List<EntityRecord> GetEntityView(EntityRequestBody body)
     {
-        if (_world is null) return [];
-
         var result = new List<EntityRecord>(_world.Meshes.Count);
         foreach (var it in _world.Query<ModelComponent>())
         {
@@ -61,8 +61,6 @@ internal static class EngineDataProvider
     
     public static List<AssetObjectFileViewModel> GetAssetObjectFiles(AssetRequestBody body)
     {
-        if (_assetSystem is null) return [];
-
         var assetTypedId = new AssetId(body.AssetId);
         var store = _assetSystem.StoreImpl;
         store.TryGetFileIds(assetTypedId, out var fileIds);
@@ -83,7 +81,7 @@ internal static class EngineDataProvider
     
     public static void SetCameraData(ref CameraEditorPayload payload)
     {
-        if (_world is null || _world.Camera.Generation == payload.Generation)
+        if (_world.Camera.Generation == payload.Generation)
             return;
         
         var camera = _world.Camera;
@@ -93,16 +91,35 @@ internal static class EngineDataProvider
         payload.Viewport = camera.Viewport;
     }
 
+    public static void WriteCameraData(ref readonly CameraEditorPayload payload)
+    {
+        if ( _world.Camera.Generation == payload.Generation)
+            return;
+        
+        var camera = _world.Camera;
+    }
 
     public static void SetEntityData(ref EntityDataPayload response)
     {
-        if (_world is null) return;
         var entity = new EntityId(response.EntityId);
         var model = _world.Meshes.GetById(entity);
         if (!_world.Transforms.TryGetById(entity, out var transform)) transform = default;
 
         response.Transform = new TransformData(in transform.Translation, in transform.Scale, in transform.Rotation);
         response.Model = new EditorEntityModel(model.Model, model.MaterialKey.Value, model.DrawCount);
+    }
+    
+    public static void WriteToEntity(ref readonly EntityDataPayload response)
+    {
+        var entity = new EntityId(response.EntityId);
+        var model = _world.Meshes.GetById(entity);
+        if (!_world.Transforms.TryGetById(entity, out var transform)) transform = default;
+
+        var transforms = _world.Transforms;
+        ref var t = ref transforms.GetById(new EntityId(response.EntityId));
+        t.Translation = response.Transform.Translation;
+        t.Rotation = response.Transform.Rotation;
+        t.Scale = response.Transform.Scale;
     }
     
     public static void SetWorldParams(ref WorldParamState data)
@@ -118,5 +135,14 @@ internal static class EngineDataProvider
         data.PostState.WhiteBalance = new PostWhiteBalanceState(snapshot.PostEffects.WhiteBalance);//tiny
         data.PostState.Bloom = new PostBloomState(in snapshot.PostEffects.Bloom);
         data.PostState.ImageFx = new PostImageFxState(in snapshot.PostEffects.ImageFx);
+    }
+    
+    public static void WriteWorldParams(in WorldParamState data)
+    {
+        ref var slot = ref WorldActionSlot.WriteSlot<WorldParamState>(data.Version);
+        slot.Version = data.Version;
+        slot.LightState = data.LightState;
+        slot.FogState =  data.FogState;
+        slot.PostState = data.PostState;
     }
 }

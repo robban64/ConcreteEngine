@@ -9,6 +9,7 @@ using ConcreteEngine.Editor.Definitions;
 using ConcreteEngine.Engine.Assets.Data;
 using ConcreteEngine.Engine.Editor.Data;
 using ConcreteEngine.Engine.Editor.Definitions;
+using ConcreteEngine.Engine.Worlds;
 using ConcreteEngine.Engine.Worlds.Data;
 using ConcreteEngine.Engine.Worlds.Entities;
 using ConcreteEngine.Graphics.Gfx.Contracts;
@@ -71,8 +72,10 @@ internal static class EngineCommandHandler
     
     public static CommandResponse OnWorldParamCmd(in WorldParamState payload)
     {
-        var cmd = new WorldParamsCommandRecord(WorldCommandAction.WorldParams, in payload);
-        CommandQueues.EnqueueMain(cmd);
+        ref var slot = ref WorldActionSlot.WriteSlot<WorldParamState>(payload.Version);
+        slot.LightState = payload.LightState;
+        slot.FogState =  payload.FogState;
+        slot.PostState = payload.PostState;
         return CommandResponse.Ok();
     }
 

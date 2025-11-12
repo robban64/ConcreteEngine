@@ -1,6 +1,7 @@
 #region
 
 using ConcreteEngine.Common.Numerics;
+using ConcreteEngine.Editor.DataState;
 using ConcreteEngine.Engine.Editor.Data;
 using ConcreteEngine.Engine.Worlds.Entities;
 using ConcreteEngine.Engine.Worlds.Render;
@@ -83,6 +84,15 @@ public sealed class World : IWorld
         Sky.AttachModelRegistry(meshTable);
     }
 
+    internal void ProcessActions()
+    {
+        if (!WorldActionSlot.IsDirty) return;
+        if (WorldActionSlot.TryReadSlot(WorldRenderParams.Version, out WorldParamState param))
+            WorldRenderParams.FromEditor(ref param);
+
+        WorldActionSlot.ClearDirty();
+    }
+
     internal void ProcessCommand(IWorldCommandRecord cmd)
     {
         if (cmd is EntityCommandRecord<TransformData> transformCmd)
@@ -102,10 +112,6 @@ public sealed class World : IWorld
             Camera.FarPlane = data.Projection.Far;
             Camera.NearPlane = data.Projection.Near;
             Camera.Fov = data.Projection.Fov;
-        }
-        else if (cmd is WorldParamsCommandRecord worldParamsCmd)
-        {
-            WorldRenderParams.FromEditor(ref worldParamsCmd.Data);
         }
         else
         {

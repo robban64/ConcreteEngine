@@ -79,7 +79,7 @@ public sealed class WorldRenderParams
 
     internal void FromEditor(ref WorldParamState param)
     {
-        Debug.Assert(param.Version == Version);
+        Debug.Assert(param.Version <= Version);
         _ambient = Unsafe.As<AmbientState, AmbientParams>(ref param.LightState.AmbientLight);
         _dirLight = Unsafe.As<DirLightState, DirLightParams>(ref param.LightState.DirectionalLight);
         _fog = Unsafe.As<FogState, FogParams>(ref param.FogState);

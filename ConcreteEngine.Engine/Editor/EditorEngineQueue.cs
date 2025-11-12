@@ -10,7 +10,7 @@ using ConcreteEngine.Engine.Worlds.Render;
 
 namespace ConcreteEngine.Engine.Editor;
 
-internal delegate void EngineCommandDel<in TCommand>(TCommand command) where TCommand : class, IEngineCommandRecord;
+internal delegate void EngineQueueCommandDel<in TCommand>(TCommand command) where TCommand : class, IEngineCommandRecord;
 
 internal sealed class EditorEngineQueue
 {
@@ -31,7 +31,7 @@ internal sealed class EditorEngineQueue
         RegisterHandler<IWorldCommandRecord>(EngineCommandScope.WorldCommand, world.ProcessCommand);
     }
 
-    private void RegisterHandler<TCommand>(EngineCommandScope commandScope, EngineCommandDel<TCommand> handler)
+    private void RegisterHandler<TCommand>(EngineCommandScope commandScope, EngineQueueCommandDel<TCommand> handler)
         where TCommand : class, IEngineCommandRecord
     {
         _commandHandlers.Add(commandScope, handler);
@@ -95,6 +95,6 @@ internal sealed class EditorEngineQueue
         }
 
         var handler = _commandHandlers[command.Scope];
-        ((EngineCommandDel<TCommand>)handler)(tCommand);
+        ((EngineQueueCommandDel<TCommand>)handler)(tCommand);
     }
 }

@@ -46,6 +46,15 @@ internal interface IModelState
     void TriggerEvent<TEvent>(EventKey eventKey, in TEvent eventData);
 }
 
+public sealed class NoOpEvent
+{
+    public static NoOpEvent Instance { get; } = new NoOpEvent();
+
+    private NoOpEvent()
+    {
+    }
+}
+
 internal sealed class ModelState<T> : IModelState where T : class
 {
     private readonly Func<T> _factory;
@@ -118,6 +127,19 @@ internal sealed class ModelState<T> : IModelState where T : class
         }
     }
 
+    public unsafe void TriggerEvent(EventKey eventKey)
+    {
+        InvalidOpThrower.ThrowIfNull(_events, nameof(_events));
+        if (!_events!.TryGetValue(eventKey, out var handler))
+            throw new KeyNotFoundException(nameof(eventKey));
+
+        if (handler is not EventEntry<NoOpEvent> entry)
+            throw new ArgumentException(
+                $"{eventKey} was invoked with invalid type: actual {nameof(NoOpEvent)}, expected {nameof(EventEntry<NoOpEvent>.EventType.Name)}");
+
+        entry.Handler(this, NoOpEvent.Instance);
+    }
+
     public unsafe void TriggerEvent<TEvent>(EventKey eventKey, in TEvent eventData)
     {
         InvalidOpThrower.ThrowIfNull(_events, nameof(_events));
@@ -157,6 +179,7 @@ internal sealed class ModelState<T> : IModelState where T : class
             _onRefresh = handler;
             return this;
         }
+
 /*
         public ViewModelStateBuilder RegisterEvent<TEvent>(EventKey eventKey, StateEventDel<T, TEvent> handler)
         {
@@ -165,7 +188,14 @@ internal sealed class ModelState<T> : IModelState where T : class
             return this;
         }
 */
-        public unsafe ViewModelStateBuilder RegisterEvent<TEvent>(EventKey eventKey, delegate*<ModelState<T>, in TEvent, void> handler)
+        public unsafe ViewModelStateBuilder RegisterEventNoOp(EventKey eventKey,
+            delegate*<ModelState<T>, in NoOpEvent, void> handler)
+        {
+            return RegisterEvent<NoOpEvent>(eventKey, handler);
+        }
+
+        public unsafe ViewModelStateBuilder RegisterEvent<TEvent>(EventKey eventKey,
+            delegate*<ModelState<T>, in TEvent, void> handler)
         {
             _events ??= new Dictionary<EventKey, object>();
             _events.Add(eventKey, new EventEntry<TEvent>(handler));
@@ -180,11 +210,10 @@ internal sealed class ModelState<T> : IModelState where T : class
             return new ModelState<T>(factory, _onEnter!, _onLeave!, _onRefresh, _events);
         }
     }
-    
-    private readonly unsafe struct EventEntry<TEvent>(delegate*<ModelState<T>, in TEvent, void> handler)
+
+    private sealed unsafe class EventEntry<TEvent>(delegate*<ModelState<T>, in TEvent, void> handler)
     {
         public readonly delegate*<ModelState<T>, in TEvent, void> Handler = handler;
         public static Type EventType => typeof(TEvent);
     }
-
 }

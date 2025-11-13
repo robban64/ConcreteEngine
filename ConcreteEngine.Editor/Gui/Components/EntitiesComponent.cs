@@ -18,45 +18,55 @@ internal static class EntitiesComponent
 {
     private const int RowHeight = 32;
     private const int ColumnWidth = 28;
-    
-    
+
+    private static int _rotationField = -1;
+    private static int _editedField = -1;
+    private static int _selectedIndex = -1;
+
+
     private static ModelState<EntitiesViewModel> Model => ModelManager.EntitiesState;
     private static EntitiesViewModel ViewModel => Model.State!;
 
-    private static ref readonly EntityDataPayload Data => ref ViewModel.Data;
-    private static ref EntityDataState DataState => ref ViewModel.DataState;
-
     private static void OnSelectEntity(EntityRecord entity)
     {
-        if(entity.EntityId == ViewModel.Data.EntityId) return;
+        if (entity.EntityId == ViewModel.Data.EntityId) return;
         Model.TriggerEvent(EventKey.SelectionChanged, entity);
     }
 
-    private static void OnUpdateTranslation(EntityRecord entity)
-    {
-        Model.TriggerEvent(EventKey.SelectionUpdated, entity);
-    }
-
-    private static void OnUpdateScale(EntityRecord entity)
+    private static void OnUpdateTransform(EntityRecord entity)
     {
         Model.TriggerEvent(EventKey.SelectionUpdated, entity);
     }
 
     private static void OnUpdateRotation(EntityRecord entity)
     {
-        ref  var transform = ref DataState.Transform;
+        ref var transform = ref ViewModel.DataState.Transform;
         transform.Rotation = RotationMath.EulerDegreesToQuaternion(in transform.EulerAngles);
         Model.TriggerEvent(EventKey.SelectionUpdated, entity);
     }
 
     public static void Draw()
     {
+        _editedField = -1;
+        _selectedIndex = -1;
+        
         ImGui.SeparatorText("Entities");
 
         if (ImGui.BeginChild("#EntityList"))
         {
             DrawEntityList();
             ImGui.EndChild();
+        }
+        
+        if (_selectedIndex >= 0 && _editedField >= 0)
+        {
+            var entity = ViewModel.Entities[_selectedIndex];
+            if(_editedField == _rotationField)
+                OnUpdateRotation(entity);
+            else
+                OnUpdateTransform(entity);
+            
+            _editedField = -1;
         }
     }
 
@@ -88,12 +98,13 @@ internal static class EntitiesComponent
 
     private static void DrawList()
     {
-        //Span<char> buffer = stackalloc char[8];
         var formatter = new NumberSpanFormatter(StringUtils.CharBuffer8);
 
-        foreach (var entity in ViewModel.Entities)
+        for (var i = 0; i < ViewModel.Entities.Count; i++)
         {
+            var entity = ViewModel.Entities[i];
             var selected = entity.EntityId == ViewModel.Data.EntityId;
+            if (selected) _selectedIndex = i;
 
             ImGui.PushStyleVar(ImGuiStyleVar.SelectableTextAlign, new Vector2(0.0f, 0.5f));
             ImGui.PushStyleColor(ImGuiCol.HeaderHovered, GuiTheme.SelectedColor);
@@ -145,40 +156,40 @@ internal static class EntitiesComponent
 
     private static void DrawAssetFilePopupContent(EntityRecord entity)
     {
+        ref var state = ref ViewModel.DataState;
+        ref var transform = ref state.Transform;
+        var fieldStatus = new ImGuiFieldStatus();
+        
         ImGui.SeparatorText("Model");
         ImGui.TextUnformatted("ModelId");
-        if (ImGui.InputInt("##model-id", ref DataState.ModelId, 0, 0, ImGuiInputTextFlags.None))
-        {
-        }
+        ImGui.InputInt("##model-id", ref state.ModelId, 0, 0, ImGuiInputTextFlags.None);
+        //fieldStatus.NextField();
 
         ImGui.TextUnformatted("MaterialTagKey");
-        if (ImGui.InputInt("##mat-tag", ref DataState.MaterialTagKey, 0, 0, ImGuiInputTextFlags.None))
-        {
-        }
+        ImGui.InputInt("##mat-tag", ref state.MaterialTagKey, 0, 0, ImGuiInputTextFlags.None);
+        //fieldStatus.NextField();
+
 
         ImGui.Dummy(new Vector2(0, 2));
         ImGui.SeparatorText("Transform");
 
         ImGui.TextUnformatted("Translation");
         ImGui.Separator();
-        if (ImGui.InputFloat3("##translation", ref DataState.Transform.Translation, "%.3f", ImGuiInputTextFlags.None))
-        {
-            OnUpdateTranslation(entity);
-        }
+        ImGui.InputFloat3("##translation", ref transform.Translation, "%.3f", ImGuiInputTextFlags.None);
+        fieldStatus.NextField();
 
         ImGui.TextUnformatted("Scale");
         ImGui.Separator();
-        if (ImGui.InputFloat3("##scale", ref DataState.Transform.Scale, "%.3f", ImGuiInputTextFlags.None))
-        {
-            OnUpdateScale(entity);
-        }
+        ImGui.InputFloat3("##scale", ref transform.Scale, "%.3f", ImGuiInputTextFlags.None);
+        fieldStatus.NextField();
 
         ImGui.TextUnformatted("Rotation");
         ImGui.Separator();
-        if (ImGui.InputFloat3("##rotation", ref DataState.Transform.EulerAngles, "%.3f", ImGuiInputTextFlags.None))
-        {
-            OnUpdateRotation(entity);
-        }
+        ImGui.InputFloat3("##rotation", ref transform.EulerAngles, "%.3f", ImGuiInputTextFlags.None);
+        _rotationField = fieldStatus.NextField();
+        
+        if (fieldStatus.HasEdited(out var field)) _editedField = field;
+
     }
 
     private static bool EntitySelectable(ReadOnlySpan<char> str, bool selected)

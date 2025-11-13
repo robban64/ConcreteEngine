@@ -155,6 +155,7 @@ internal sealed class ModelState<T> : IModelState where T : class
             throw new ArgumentException(
                 $"{eventKey} was invoked with invalid type: actual {typeof(TEvent).Name}, expected {nameof(EventEntry<TEvent>.EventType.Name)}");
 
+        DevConsoleService.AddLog("Event triggered: " + typeof(TEvent).Name);
         entry.Handler(this, in eventData);
     }
 

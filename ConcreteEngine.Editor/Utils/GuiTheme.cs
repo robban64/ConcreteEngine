@@ -9,8 +9,12 @@ namespace ConcreteEngine.Editor.Utils;
 
 internal static class GuiTheme
 {
-    public const int RightSidebarCompactWidth = 160;
-    public const int RightSidebarExpandedWidth = 240;
+    public static Vector4 ConsoleBgColor = new Vector4(0.08f, 0.08f, 0.08f, 0.94f);
+    public static Vector4 ConsoleInnerBgColor = new Vector4(0.10f, 0.10f, 0.10f, 0.75f);
+    public static int LeftSidebarWidth = 268;
+    
+    public static int RightSidebarCompactWidth = 160;
+    public static int RightSidebarExpandedWidth = 268;
     public static bool RightSidebarExpanded { get; set; } = false;
     public static int RightSidebarWidth => RightSidebarExpanded ? RightSidebarExpandedWidth : RightSidebarCompactWidth;
 

@@ -22,9 +22,9 @@ internal static class RightSidebar
         
         if (!viewState.IsMetricState && viewState.RightSidebar == RightSidebarMode.Default) return;
 
-        const ImGuiWindowFlags flags =
-            ImGuiWindowFlags.NoTitleBar | ImGuiWindowFlags.NoMove | ImGuiWindowFlags.NoResize |
-            ImGuiWindowFlags.NoCollapse;
+        const ImGuiWindowFlags flags = ImGuiWindowFlags.NoTitleBar | ImGuiWindowFlags.NoMove |
+                                       ImGuiWindowFlags.NoResize | ImGuiWindowFlags.NoCollapse |
+                                       ImGuiWindowFlags.NoBringToFrontOnFocus | ImGuiWindowFlags.NoNavFocus;
 
         var vp = ImGui.GetMainViewport();
         var vpSize = vp.WorkSize;
@@ -36,21 +36,14 @@ internal static class RightSidebar
         ImGui.SetNextWindowPos(new Vector2(vpSize.X - width, offset));
         ImGui.SetNextWindowSize(new Vector2(width, height));
         ImGui.PushStyleVar(ImGuiStyleVar.ItemSpacing, new Vector2(8f, 6f));
-        ImGui.PushStyleVar(ImGuiStyleVar.WindowPadding, new Vector2(12f, 10f));
+        ImGui.PushStyleVar(ImGuiStyleVar.WindowPadding, new Vector2(0, 10f));
         ImGui.SetNextWindowBgAlpha(GuiTheme.PanelOpacity);
 
         if (ImGui.Begin("##RightSidebar", flags))
         {
             _focus = ImGui.IsWindowFocused(ImGuiFocusedFlags.None | ImGuiFocusedFlags.ChildWindows);
-/*
-            if (_focus && !_prevFocus)
-            {
-                EditorService.OnFetchCameraData(EditorStateManager.CameraModelState);
-            }
-            else if (!_focus && _prevFocus)
-            {
-            }
-*/
+
+            ImGui.PushStyleVar(ImGuiStyleVar.WindowPadding, new Vector2(12f, 0));
             switch (viewState.EditorMode)
             {
                 case EditorViewMode.Metrics:
@@ -62,6 +55,7 @@ internal static class RightSidebar
                     DrawEditor();
                     break;
             }
+            ImGui.PopStyleVar();
         }
 
         ImGui.End();

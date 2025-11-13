@@ -72,8 +72,9 @@ internal static class Topbar
 
     private static void DrawPropertySelector()
     {
+        const float width = 268/4.5f;
+
         float x = ImGui.GetContentRegionAvail().X;
-        var width = GuiTheme.RightSidebarWidth / 4f;
         float startPosX = x  - width * 4.5f;
         ImGui.SameLine(startPosX);
 

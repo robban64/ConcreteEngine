@@ -19,40 +19,49 @@ internal static class CameraPropertyComponent
     private static ModelState<CameraViewModel> Model => ModelManager.CameraState;
     private static CameraViewModel ViewModel => Model.State!;
 
-    private static ref readonly CameraEditorPayload Data => ref ViewModel.Data;
-    private static ref CameraDataState DataState => ref ViewModel.DataState;
+    private static int EditedField = -1;
 
     private static void OnUpdateData()
     {
-        DataState.Fill(Data.Generation, Data.Viewport, out var payload);
+        var v = ViewModel;
+        v.DataState.Fill(v.Data.Generation, v.Data.Viewport, out var payload);
         Model.TriggerEvent(EventKey.SelectionUpdated, in payload);
     }
 
     public static void Draw()
     {
+        const ImGuiChildFlags flags = ImGuiChildFlags.AutoResizeY | ImGuiChildFlags.AlwaysUseWindowPadding;
         var size = new Vector2(GuiTheme.RightSidebarWidth - WindowPaddingX, 0);
-        if (ImGui.BeginChild("##camera-properties", size, ImGuiChildFlags.AutoResizeY))
+
+
+        if (!ImGui.BeginChild("##camera-properties", size, flags)) return;
+        DrawInner();
+        ImGui.EndChild();
+
+        if (EditedField >= 0)
         {
-            DrawInner();
-            ImGui.EndChild();
+            OnUpdateData();
+            EditedField = -1;
         }
+        
     }
 
     private static void DrawInner()
     {
         ImGui.SeparatorText("Viewport");
         DrawViewport();
-        ImGui.Dummy(new Vector2(0, 4));
-        ImGui.SeparatorText("Transform");
         ImGui.Dummy(new Vector2(0, 2));
+        ImGui.SeparatorText("Transform");
         DrawTransform();
+        ImGui.Dummy(new Vector2(0, 2));
+        ImGui.SeparatorText("Projection");
+        DrawProjection();
     }
 
     private static void DrawViewport()
     {
-        var viewport = Data.Viewport;
+        var viewport = ViewModel.Data.Viewport;
         var formatter = new NumberSpanFormatter(StringUtils.CharBuffer8);
-        //var width = ImGui.GetContentRegionAvail().X - WindowPaddingX;
 
         ImGui.BeginGroup();
 
@@ -79,64 +88,58 @@ internal static class CameraPropertyComponent
         ImGui.SameLine();
         ImGui.TextUnformatted(formatter.Format(viewport.AspectRatio));
         ImGui.EndGroup();
+        ImGui.EndGroup();
+    }
 
-        //
-        ImGui.Separator();
+    private static void DrawProjection()
+    {
+        ref var proj = ref ViewModel.DataState.Projection;
+        var fieldStatus = new ImGuiFieldStatus();
 
-        // Row 
         ImGui.BeginGroup();
-        ImGui.TextUnformatted("Near: ");
-        ImGui.SameLine();
+        ImGui.TextUnformatted("Near / Far");
 
-        ImGui.SetCursorPosX(ImGui.GetContentRegionAvail().X - WindowPaddingX * 2 - ImGui.CalcTextSize("Near: ").X);
-        ImGui.TextUnformatted("Far: ");
-
-        if (ImGui.InputFloat2("##camera-near-far", ref DataState.Projection.NearFar, "%.2f"))
-        {
-            OnUpdateData();
-        }
+        ImGui.InputFloat2("##camera-near-far", ref proj.NearFar, "%.2f");
+        fieldStatus.NextField();
 
         ImGui.EndGroup();
-
         ImGui.Separator();
-
         ImGui.BeginGroup();
 
         ImGui.TextUnformatted("Field of view");
-        if (ImGui.SliderFloat("##camera-fov", ref DataState.Projection.Fov, StateLimits.MinFov, StateLimits.MaxFov,
-                "%.2f"))
-        {
-            OnUpdateData();
-        }
+        ImGui.SliderFloat("##camera-fov", ref proj.Fov, StateLimits.MinFov, StateLimits.MaxFov, "%.2f");
+        fieldStatus.NextField();
 
+
+        ImGui.PopItemWidth();
         ImGui.EndGroup();
 
-
-        ImGui.EndGroup();
+        if (fieldStatus.HasEdited(out var field)) EditedField = field;
     }
 
     private static void DrawTransform()
     {
+        ref var state = ref ViewModel.DataState.Transform;
+        var fieldStatus = new ImGuiFieldStatus();
+
+        ImGui.BeginGroup();
         ImGui.TextUnformatted("Translation");
         ImGui.Separator();
-        if (ImGui.InputFloat3("##camera-translation", ref DataState.Transform.Translation, "%.3f",
-                ImGuiInputTextFlags.None))
-        {
-            OnUpdateData();
-        }
+        
+        ImGui.InputFloat3("##camera-translation", ref state.Translation, "%.3f");
+        fieldStatus.NextField();
 
         ImGui.TextUnformatted("Scale");
         ImGui.Separator();
-        if (ImGui.InputFloat3("##camera-scale", ref DataState.Transform.Scale, "%.3f", ImGuiInputTextFlags.None))
-        {
-            OnUpdateData();
-        }
+        ImGui.InputFloat3("##camera-scale", ref state.Scale, "%.3f");
+        fieldStatus.NextField();
 
         ImGui.TextUnformatted("Rotation");
         ImGui.Separator();
-        if (ImGui.InputFloat2("##camera-rotation", ref DataState.Transform.Orientation, "%.3f", ImGuiInputTextFlags.None))
-        {
-            OnUpdateData();
-        }
+        ImGui.InputFloat2("##camera-rotation", ref state.Orientation, "%.3f");
+        fieldStatus.NextField();
+        ImGui.EndGroup();
+
+        if (fieldStatus.HasEdited(out var field)) EditedField = field;
     }
 }

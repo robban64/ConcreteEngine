@@ -1,6 +1,7 @@
 #region
 
 using System.Numerics;
+using ConcreteEngine.Editor.Utils;
 using ImGuiNET;
 
 #endregion
@@ -48,8 +49,8 @@ internal static class ConsoleComponent
             new Vector2(MathF.Min(float.Min(maxWCap, centerW), centerW), MathF.Min(maxH, centerH))
         );
 
-        ImGui.PushStyleColor(ImGuiCol.WindowBg, new Vector4(0.08f, 0.08f, 0.08f, 0.94f));
-        ImGui.PushStyleColor(ImGuiCol.Border, new Vector4(0, 0, 0, 0));
+        ImGui.PushStyleColor(ImGuiCol.WindowBg, GuiTheme.ConsoleBgColor);
+        ImGui.PushStyleColor(ImGuiCol.Border, Vector4.Zero);
         ImGui.PushStyleVar(ImGuiStyleVar.WindowPadding, new Vector2(12f, 6f));
         ImGui.PushStyleVar(ImGuiStyleVar.WindowRounding, 2f);
         ImGui.PushStyleVar(ImGuiStyleVar.ChildRounding, 2f);
@@ -73,7 +74,7 @@ internal static class ConsoleComponent
 
         var inputHeight = ImGui.GetFrameHeightWithSpacing() + 8f;
 
-        ImGui.PushStyleColor(ImGuiCol.ChildBg, new Vector4(0.10f, 0.10f, 0.10f, 0.75f));
+        ImGui.PushStyleColor(ImGuiCol.ChildBg, GuiTheme.ConsoleInnerBgColor);
         if (ImGui.BeginChild(
                 "ConsoleLogRegion",
                 new Vector2(0, -inputHeight),

@@ -59,11 +59,11 @@ internal static class EditorService
 
         if (!StateContext.ModeState.IsEmptyViewMode)
         {
-            LeftSidebar.Draw(240, offset: GuiTheme.TopbarHeight);
+            LeftSidebar.Draw(GuiTheme.LeftSidebarWidth, offset: GuiTheme.TopbarHeight);
             RightSidebar.Draw(GuiTheme.RightSidebarWidth, offset: GuiTheme.TopbarHeight);
         }
 
-        DevConsoleService.Draw(240, GuiTheme.RightSidebarWidth);
+        DevConsoleService.Draw(GuiTheme.LeftSidebarWidth, GuiTheme.RightSidebarWidth);
     }
 
 

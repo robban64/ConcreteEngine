@@ -12,10 +12,8 @@ internal interface IStoreMetrics
     ResourceKind Kind { get; }
     string Name { get; }
     string ShortName { get; }
-    ref readonly BasicMetric<CollectionSample> GfxStoreMetrics { get; }
-    ref readonly BasicMetric<CollectionSample> BackendStoreMetrics { get; }
 
-    void GetResult(out GfxStoreMetricsPayload payload);
+    void GetResult(out GfxStoreMetricsPayload data);
 }
 
 internal sealed class StoreMetrics<TMeta>(
@@ -29,28 +27,22 @@ internal sealed class StoreMetrics<TMeta>(
     public string Name { get; } = kind.ToResourceName();
     public string ShortName { get; } = kind.ToShortText();
 
-    private BasicMetric<CollectionSample> _gfxStoreMetrics;
-    private BasicMetric<CollectionSample> _backendStoreMetrics;
+    private GfxStoreMetricsPayload _data;
+    public ref GfxStoreMetricsPayload MetricsData => ref _data;
 
-    public ref readonly BasicMetric<CollectionSample> GfxStoreMetrics => ref _gfxStoreMetrics;
-    public ref readonly BasicMetric<CollectionSample> BackendStoreMetrics => ref _gfxStoreMetrics;
-
-    public void GetResult(out GfxStoreMetricsPayload payload)
+    public void GetResult(out GfxStoreMetricsPayload data)
     {
         var gfx = gfxStore;
         var bk = backendStore;
 
-        var gfxSample = new CollectionSample(gfx.Count, gfx.Capacity, gfx.GetAliveCount(), gfx.FreeCount);
-        var bkSample = new CollectionSample(bk.Count, bk.Capacity, bk.GetAliveCount(), bk.FreeCount);
-
-        _gfxStoreMetrics = new BasicMetric<CollectionSample>(in gfxSample, default);
-        _backendStoreMetrics = new BasicMetric<CollectionSample>(in bkSample, default);
+        _data.Fk = new CollectionSample(gfx.Count, gfx.Capacity, gfx.GetAliveCount(), gfx.FreeCount);
+        _data.Bk = new CollectionSample(bk.Count, bk.Capacity, bk.GetAliveCount(), bk.FreeCount);
 
         var m = GetSpecialMetric();
-        var specialMeta = new TargetMetric<ValueSample>
-            (m.ResourceId, new ValueSample(m.Value, m.Param2), MetricHeader.FromKind((byte)m.Kind));
-
-        payload = new GfxStoreMetricsPayload(in _gfxStoreMetrics, in _backendStoreMetrics, in specialMeta, Kind);
+        _data.SpecialMetric = new TargetMetric(m.ResourceId, MetricHeader.FromKind((byte)m.Kind));
+        _data.SpecialSample = new ValueSample(m.Value, m.Param2);
+        _data.Kind = m.Kind;
+        data = _data;
     }
 
     private GfxMetaSpecialMetric GetSpecialMetric()

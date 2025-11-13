@@ -10,14 +10,14 @@ using Silk.NET.Windowing;
 
 namespace ConcreteEngine.Editor;
 
-public sealed class DebugToolsSystem : IDisposable
+public sealed class EditorPortal : IDisposable
 {
     private readonly ImGuiController _controller;
 
 
     private ImFontPtr _imFontPtr;
 
-    public DebugToolsSystem(GL gl, IWindow window, IInputContext inputCtx)
+    public EditorPortal(GL gl, IWindow window, IInputContext inputCtx)
     {
         var fontPath = Path.Combine(AppContext.BaseDirectory, "Content", "Roboto-Medium.ttf");
         ImGuiFontConfig fontConfDefault = new(fontPath, 14);
@@ -25,7 +25,7 @@ public sealed class DebugToolsSystem : IDisposable
         _controller = new ImGuiController(gl, window, inputCtx, fontConfDefault);
     }
 
-
+ 
     public void Update(float delta) => _controller.Update(delta);
 
     public void AddLog(string? msg) => DevConsoleService.AddLog(msg);

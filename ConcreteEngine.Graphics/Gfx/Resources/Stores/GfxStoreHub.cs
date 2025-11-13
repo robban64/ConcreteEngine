@@ -37,6 +37,15 @@ internal sealed class GfxStoreHub
         ThrowInvalidStoreType(TId.Kind, typeof(TId));
         return null!;
     }
+    
+    internal IGfxMetaResourceStore<TMeta> GetMetaStore<TMeta>(ResourceKind kind) where TMeta : unmanaged, IResourceMeta
+    {
+        var store = GetStore(kind);
+        if (store is IGfxMetaResourceStore<TMeta> typed) return typed;
+
+        ThrowInvalidStoreType(kind, typeof(TMeta));
+        return null!;
+    }
 
     public IGfxResourceStore GetStore(ResourceKind kind)
     {

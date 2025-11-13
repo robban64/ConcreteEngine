@@ -7,12 +7,15 @@ using ConcreteEngine.Shared.Diagnostics;
 
 namespace ConcreteEngine.Editor;
 
+
 public static class MetricsApi
 {
     // Fetchers
-    public static Func<FrameMetric<RenderInfoSample>>? PullFrameMetrics { get; set; }
+    public static unsafe delegate*<out FrameMetric, out RenderInfoSample, void> PullFrameMetrics;
+    
+    //public static Func<FrameMetric<RenderInfoSample>>? PullFrameMetrics { get; set; }
     public static Func<PairSample>? PullSceneMetrics { get; set; }
-    public static Func<BasicMetric<CollectionSample>>? PullMaterialMetrics { get; set; }
+    public static Func<CollectionSample>? PullMaterialMetrics { get; set; }
     public static Func<PairSample>? PullMemoryMetrics { get; set; }
     public static Action<MetricData>? FillGfxStoreMetrics { get; set; }
     public static Action<MetricData>? FillAssetMetrics { get; set; }
@@ -42,11 +45,13 @@ public static class MetricsApi
         TextData.UpdateSceneMetrics(in Data.SceneMetrics);
     }
 
-    public static void RefreshFrameMetrics()
+    public static unsafe void RefreshFrameMetrics()
     {
-        if (!ActiveFrameMetrics) return;
-        Data.FrameMetrics = PullFrameMetrics?.Invoke() ?? default;
-        TextData.UpdateFrameMetrics(in Data.FrameMetrics);
+        if (!ActiveFrameMetrics || PullFrameMetrics == null) return;
+        PullFrameMetrics(out var metric, out var sample);
+        Data.FrameMetrics = metric;
+        Data.FrameRenderInfoSample = sample;
+        TextData.UpdateFrameMetrics(in Data.FrameMetrics, in Data.FrameRenderInfoSample);
     }
 
     public static void RefreshAssetMetrics()

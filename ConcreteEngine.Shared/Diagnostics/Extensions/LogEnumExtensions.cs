@@ -1,4 +1,4 @@
-namespace ConcreteEngine.Shared.Diagnostics;
+namespace ConcreteEngine.Shared.Diagnostics.Extensions;
 
 public static class LogEnumExtensions
 {

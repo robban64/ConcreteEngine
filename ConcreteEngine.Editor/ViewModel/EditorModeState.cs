@@ -4,7 +4,7 @@ using ConcreteEngine.Editor.Definitions;
 
 #endregion
 
-namespace ConcreteEngine.Editor.Data;
+namespace ConcreteEngine.Editor.ViewModel;
 
 internal readonly record struct EditorModeState(
     EditorViewMode EditorMode,

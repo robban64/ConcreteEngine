@@ -4,6 +4,7 @@ using ConcreteEngine.Common.Patterns;
 using ConcreteEngine.Engine.Assets;
 using ConcreteEngine.Engine.Configuration;
 using ConcreteEngine.Engine.Data;
+using ConcreteEngine.Engine.Definitions;
 using ConcreteEngine.Engine.Editor;
 using ConcreteEngine.Engine.Platform;
 using ConcreteEngine.Engine.Scene;

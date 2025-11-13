@@ -13,12 +13,11 @@ internal static class MetricsFormatter
 
     public static string FormatBytes(long bytes) => bytes < 1024 ? $"{bytes} B" : $"{bytes / 1024} KB";
 
-    public static string FormatSpecialMetaMetric(in TargetMetric<ValueSample> m)
+    public static string FormatSpecialMetaMetric(in TargetMetric m, in ValueSample sample)
     {
-        var sample = m.Sample;
         return m.Header.Kind switch
         {
-            1 => FormatTexture(in m),
+            1 => FormatTexture(in m, in sample),
             2 => $"{sample.Value} Smpl",
             3 => $"{FormatCountK(sample.Value)} tri",
             4 or 5 or 6 => FormatBytes(sample.Value),
@@ -28,13 +27,13 @@ internal static class MetricsFormatter
         };
     }
 
-    private static string FormatTexture(in TargetMetric<ValueSample> m)
+    private static string FormatTexture(in TargetMetric m, in ValueSample sample)
     {
         var header = m.Header;
 
         var mip = (header.Flags & 1) != 0;
         var samples = header.Flags >> 1;
-        string res = m.Sample.Value switch
+        var res = sample.Value switch
         {
             < 1024 => "512",
             < 2048 => "1k",

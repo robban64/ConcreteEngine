@@ -22,7 +22,7 @@ namespace ConcreteEngine.Engine.Editor;
 
 internal sealed class EngineGateway : IDisposable
 {
-    private static DebugToolsSystem _debugTools = null!;
+    private static EditorPortal _debugTools = null!;
     private static LogParser _logParser = null!;
 
     public bool HasBoundCommands { get; private set; }
@@ -38,7 +38,7 @@ internal sealed class EngineGateway : IDisposable
         if (_debugTools != null || _logParser != null)
             throw new InvalidOperationException("Debug Tools and Log Parsers is already active.");
 
-        _debugTools = new DebugToolsSystem(gl, window, inputCtx);
+        _debugTools = new EditorPortal(gl, window, inputCtx);
         _logParser = new LogParser();
     }
 
@@ -158,7 +158,7 @@ internal sealed class EngineGateway : IDisposable
 
     private static class EditorSetup
     {
-        public static DebugToolsSystem DebugTools = null!;
+        public static EditorPortal DebugTools = null!;
 
         public static void ProcessStringLog(StringLogEvent log) => DebugTools.AddLog(_logParser.Format(log));
 
@@ -210,9 +210,9 @@ internal sealed class EngineGateway : IDisposable
         }
 
 
-        public static void RegisterMetrics()
+        public static unsafe void RegisterMetrics()
         {
-            MetricsApi.PullFrameMetrics = MetricRouter.GetFrameMetrics;
+            MetricsApi.PullFrameMetrics = &MetricRouter.GetFrameMetrics;
             MetricsApi.PullMaterialMetrics = MetricRouter.GetMaterialMetrics;
             MetricsApi.PullSceneMetrics = MetricRouter.GetSceneMetrics;
             MetricsApi.PullMemoryMetrics = MetricRouter.GetMemoryMetrics;

@@ -7,16 +7,18 @@ using ConcreteEngine.Shared.Diagnostics;
 
 namespace ConcreteEngine.Graphics.Diagnostic;
 
-public readonly struct GfxStoreMetricsPayload(
-    in BasicMetric<CollectionSample> fk,
-    in BasicMetric<CollectionSample> bk,
-    in TargetMetric<ValueSample> special,
+public struct GfxStoreMetricsPayload(
+    in CollectionSample fk,
+    in CollectionSample bk,
+    in TargetMetric specialMetric,
+    in ValueSample specialSample,
     ResourceKind kind)
 {
-    public readonly BasicMetric<CollectionSample> Fk = fk;
-    public readonly BasicMetric<CollectionSample> Bk = bk;
-    public readonly TargetMetric<ValueSample> Special = special;
-    public readonly ResourceKind Kind = kind;
+    public CollectionSample Fk = fk;
+    public CollectionSample Bk = bk;
+    public TargetMetric SpecialMetric = specialMetric;
+    public ValueSample SpecialSample = specialSample;
+    public ResourceKind Kind = kind;
 }
 
 public readonly struct GfxMetaSpecialMetric(

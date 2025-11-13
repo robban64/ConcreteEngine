@@ -31,13 +31,12 @@ internal static class MetricRouter
     }
 
 
-    internal static FrameMetric<RenderInfoSample> GetFrameMetrics()
+    internal static void GetFrameMetrics(out FrameMetric metric, out RenderInfoSample sample)
     {
-        if (_frameInfo is not { } f) return default;
-
-        var gfxInfo = f.GfxResult;
-        var sample = new RenderInfoSample(f.Fps, f.Alpha, 0, gfxInfo.DrawCalls, gfxInfo.TriangleCount);
-        return new FrameMetric<RenderInfoSample>(f.FrameIndex, f.TimeStamp, in sample, default);
+        var f = _frameInfo;
+        var gfxInfo = f!.GfxResult;
+        sample = new RenderInfoSample(f.Fps, f.Alpha, 0, gfxInfo.DrawCalls, gfxInfo.TriangleCount);
+        metric = new FrameMetric(f.FrameIndex, f.TimeStamp, default);
     }
 
     internal static PairSample GetMemoryMetrics() => new((int)GC.GetAllocatedBytesForCurrentThread());
@@ -45,11 +44,10 @@ internal static class MetricRouter
     internal static PairSample GetSceneMetrics() =>
         _world is not null ? new(_world.EntityCount, _world.ShadowMapSize) : default;
 
-    internal static BasicMetric<CollectionSample> GetMaterialMetrics()
+    internal static CollectionSample GetMaterialMetrics()
     {
         if (Materials is not { } m) return default;
-        var sample = new CollectionSample(m.Count, 0, 0, m.FreeSlots);
-        return new BasicMetric<CollectionSample>(sample, default);
+        return new CollectionSample(m.Count, 0, 0, m.FreeSlots);
     }
 
     internal static void DrainAssetStoreMetrics(MetricData data)
@@ -74,8 +72,7 @@ internal static class MetricRouter
         {
             var res = result[i];
             ref readonly var metrics = ref span[i];
-            var sample = new CollectionSample(metrics.Count, metrics.FileCount, 0);
-            res.Metrics = new BasicMetric<CollectionSample>(sample, default);
+            res.Sample = new CollectionSample(metrics.Count, metrics.FileCount, 0);
         }
     }
 
@@ -102,7 +99,8 @@ internal static class MetricRouter
             ref readonly var metrics = ref span[i];
             res.GfxStoreMetrics = metrics.Fk;
             res.BackendStoreMetrics = metrics.Bk;
-            res.SpecialMetric = metrics.Special;
+            res.SpecialMetric = metrics.SpecialMetric;
+            res.SpecialSample = metrics.SpecialSample;
         }
     }
 }

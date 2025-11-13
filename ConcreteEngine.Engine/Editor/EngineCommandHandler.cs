@@ -53,22 +53,6 @@ internal static class EngineCommandHandler
         return CommandResponse.Ok();
     }
 
-
-    public static CommandResponse OnEntityTransformCmd(in EntityTransformPayload payload)
-    {
-        ref readonly var transform = ref payload.Transform;
-        var cmd = new EntityCommandRecord<TransformData>(WorldCommandAction.EntityTransform, payload.EntityId,
-            in transform);
-        CommandQueues.EnqueueMain(cmd);
-        return CommandResponse.Ok();
-    }
-
-    public static CommandResponse OnCameraDataCmd(in CameraEditorPayload payload)
-    {
-        var cmd = new CameraCommandRecord(WorldCommandAction.Camera, in payload);
-        CommandQueues.EnqueueMain(cmd);
-        return CommandResponse.Ok();
-    }
     
     public static void OnStructSizesCmd(DebugConsoleCtx ctx, string action, string? arg1, string? arg2)
     {

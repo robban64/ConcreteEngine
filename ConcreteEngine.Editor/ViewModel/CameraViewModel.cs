@@ -17,9 +17,9 @@ internal sealed class CameraViewModel
     public ref CameraDataState DataState => ref _state;
 
     
-    public void WriteTo(in ApiWriteRequest<CameraEditorPayload> api)
+    public void FillData(in ApiDataRequest<CameraEditorPayload> api)
     {
-        var engineGen = api.WriteTo(Generation, ref _data);
+        var engineGen = api.FillData(Generation, ref _data);
         if(Generation == engineGen) return;
         
         _state.Transform.From(in _data.ViewTransform);
@@ -27,10 +27,10 @@ internal sealed class CameraViewModel
         Generation =  engineGen;
     }
 
-    public void WriteFrom(in ApiWriteRequest<CameraEditorPayload> api)
+    public void WriteData(in ApiDataRequest<CameraEditorPayload> api)
     {
         Generation++;
         _state.Fill(Generation, _data.Viewport, out _data);
-        api.WriteFrom(_data.Generation, ref _data);
+        api.WriteData(_data.Generation, ref _data);
     }
 }

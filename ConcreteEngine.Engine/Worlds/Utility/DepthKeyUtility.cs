@@ -1,6 +1,7 @@
 #region
 
 using System.Numerics;
+using System.Runtime.CompilerServices;
 
 #endregion
 
@@ -8,6 +9,7 @@ namespace ConcreteEngine.Engine.Worlds.Utility;
 
 internal static class DepthKeyUtility
 {
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static ushort MakeDepthKey(
         in Matrix4x4 view,
         in Vector3 worldPos,

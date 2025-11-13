@@ -13,10 +13,13 @@ public readonly record struct ModelId(int Value)
     public static implicit operator int(ModelId id) => id.Value;
 }
 
-public readonly record struct MeshPart(MeshId Mesh, int MaterialSlot, int DrawCount)
+public readonly struct MeshPart(MeshId mesh, int materialSlot, int drawCount)
 {
+    public readonly MeshId Mesh = mesh;
+    public readonly int MaterialSlot = materialSlot;
+    public readonly int DrawCount = drawCount;
     private readonly int _pad; // ensure 16 byte
-};
+}
 
 public readonly ref struct ModelPartView(ReadOnlySpan<MeshPart> parts, ReadOnlySpan<Matrix4x4> locals, RangeU16 ranges)
 {

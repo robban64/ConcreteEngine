@@ -17,30 +17,30 @@ public sealed class EntitiesViewModel
     internal ref EntityDataState DataState => ref _state;
     
 
-    public void WriteTo(EntityRecord entity, in ApiWriteRequest<EntityDataPayload> api)
+    public void FillData(EntityRecord entity, in ApiDataRequest<EntityDataPayload> api)
     {
         _data.EntityId = entity.EntityId;
-        api.WriteTo(entity.EntityId, ref _data);
+        api.FillData(entity.EntityId, ref _data);
         
         _state.ModelId = _data.Model.ModelId;
         _state.MaterialTagKey = _data.Model.MaterialTagKey;
         _state.Transform.From(in _data.Transform);
     }
     
-    public void WriteTo(in ApiWriteRequest<EntityDataPayload> api)
+    public void FillData(in ApiDataRequest<EntityDataPayload> api)
     {
         var idx = SortMethod.BinarySearchInt(Entities, _data.EntityId);
         InvalidOpThrower.ThrowIf(idx < 0, nameof(_data.EntityId));
         var entity = Entities[idx];
-        WriteTo(entity, in api);
+        FillData(entity, in api);
     }
 
     
-    public void WriteFrom(EntityRecord record, in ApiWriteRequest<EntityDataPayload> api)
+    public void WriteData(EntityRecord record, in ApiDataRequest<EntityDataPayload> api)
     {
         record.Generation++;
         UpdateDataFromState(record);
-        api.WriteFrom(record.Generation, ref _data);
+        api.WriteData(record.Generation, ref _data);
     }
 
     private void UpdateDataFromState(EntityRecord record)

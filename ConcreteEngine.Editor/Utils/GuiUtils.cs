@@ -10,6 +10,13 @@ namespace ConcreteEngine.Editor.Utils;
 
 internal static class GuiUtils
 {
+  
+
+    public static (int, int) ItemActivatedAndDeactivatedAfterEdit(int idx)
+    {
+        return  (ImGui.IsItemActive() ? idx : -1, ImGui.IsItemDeactivatedAfterEdit() ? idx : -1);
+    }
+
     public static void DrawSectionHeader(string title)
     {
         ImGui.PushStyleColor(ImGuiCol.Text, Color4.LightGray.AsVec4());

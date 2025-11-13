@@ -171,12 +171,6 @@ internal sealed class EngineGateway : IDisposable
         public static void RegisterCommands()
         {
             // Editor commands
-            EditorCmd.RegisterEditorCmd<EntityTransformPayload>(CoreCmdNames.EntityTransform, EditorCommandScope.Editor,
-                EngineCommandHandler.OnEntityTransformCmd);
-
-            EditorCmd.RegisterEditorCmd<CameraEditorPayload>(CoreCmdNames.CameraTransform, EditorCommandScope.Editor,
-                EngineCommandHandler.OnCameraDataCmd);
-
             EditorCmd.RegisterEditorCmd<EditorShaderPayload>(CoreCmdNames.AssetShader, EditorCommandScope.Engine,
                 EngineCommandHandler.OnAssetShaderCmd);
 
@@ -201,12 +195,12 @@ internal sealed class EngineGateway : IDisposable
             EditorApi.FetchAssetObjectFiles = EngineDataProvider.GetAssetObjectFiles;
             EditorApi.FetchEntityView = EngineDataProvider.GetEntityView;
 
-            EditorApi.UpdateEntityData = new ApiWriteRequest<EntityDataPayload>(
-                &EngineDataProvider.SetEntityData, &EngineDataProvider.WriteToEntity);
-            EditorApi.UpdateCameraData = new ApiWriteRequest<CameraEditorPayload>(
-                &EngineDataProvider.SetCameraData, &EngineDataProvider.WriteCameraData);
-            EditorApi.UpdateWorldParams = new ApiWriteRequest<WorldParamState>(
-                &EngineDataProvider.SetWorldParams, &EngineDataProvider.WriteWorldParams);
+            EditorApi.UpdateEntityData = new ApiDataRequest<EntityDataPayload>(
+                &EngineDataProvider.FillEntityData, &EngineDataProvider.WriteToEntity);
+            EditorApi.UpdateCameraData = new ApiDataRequest<CameraEditorPayload>(
+                &EngineDataProvider.FillCameraData, &EngineDataProvider.WriteCameraData);
+            EditorApi.UpdateWorldParams = new ApiDataRequest<WorldParamState>(
+                &EngineDataProvider.FillWorldParams, &EngineDataProvider.WriteWorldParams);
         }
 
 

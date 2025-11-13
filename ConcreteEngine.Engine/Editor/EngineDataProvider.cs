@@ -79,7 +79,7 @@ internal static class EngineDataProvider
         return result;
     }
 
-    public static long SetCameraData(ApiWriteRequestBody<CameraEditorPayload> payload)
+    public static long FillCameraData(ApiWriteRequestBody<CameraEditorPayload> payload)
     {
         var camera = _world.Camera;
         if (camera.Generation == payload.Version) return camera.Generation;
@@ -99,7 +99,7 @@ internal static class EngineDataProvider
         return camera.Generation;
     }
 
-    public static long SetEntityData(ApiWriteRequestBody<EntityDataPayload> response)
+    public static long FillEntityData(ApiWriteRequestBody<EntityDataPayload> response)
     {
         var entity = new EntityId(response.Data.EntityId);
         var model = _world.Meshes.GetById(entity);
@@ -117,7 +117,7 @@ internal static class EngineDataProvider
         return response.Data.EntityId;
     }
 
-    public static long SetWorldParams(ApiWriteRequestBody<WorldParamState> request)
+    public static long FillWorldParams(ApiWriteRequestBody<WorldParamState> request)
     {
         var snapshot = _world!.WorldRenderParams.Snapshot;
         if (request.Version == snapshot.Version) return request.Version;

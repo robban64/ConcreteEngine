@@ -2,6 +2,7 @@
 
 using System.Runtime.InteropServices;
 using ConcreteEngine.Engine.Worlds.Entities;
+using ConcreteEngine.Renderer.Data;
 using ConcreteEngine.Renderer.Definitions;
 
 #endregion
@@ -13,17 +14,24 @@ public struct DrawEntity(
     EntityId entity,
     ModelId model,
     MaterialTagKey materialKey,
-    int drawCount,
     in Transform transform,
-    DrawCommandId commandId,
-    DrawCommandQueue queue,
-    PassMask passMask,
-    ushort depthKey = 0)
+    DrawCommandMeta  meta)
 {
     public Transform Transform = transform;
     public EntityId Entity = entity;
     public ModelId Model = model;
     public MaterialTagKey MaterialKey = materialKey;
+    public DrawCommandMeta Meta = meta;
+}
+
+[StructLayout(LayoutKind.Sequential)]
+public struct DrawEntityMeta(
+    int drawCount,
+    DrawCommandId commandId,
+    DrawCommandQueue queue,
+    PassMask passMask,
+    ushort depthKey = 0)
+{
     public int DrawCount = drawCount;
     public PassMask PassMask = passMask;
     public ushort DepthKey = depthKey;

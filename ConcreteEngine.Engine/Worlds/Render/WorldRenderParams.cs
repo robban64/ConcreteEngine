@@ -131,14 +131,14 @@ public sealed class WorldRenderParams
 
     private static FogParams MakeDefaultFog() =>
         new(
-            Color: new Vector3(0.70f, 0.89f, 0.68f),
-            Density: 720f,
-            HeightFalloff: 5200f,
-            BaseHeight: 0f,
-            Strength: 1.05f,
-            HeightInfluence: 0.85f,
-            Scattering: 0.09f,
-            MaxDistance: 9500f
+            color: new Vector3(0.70f, 0.89f, 0.68f),
+            density: 720f,
+            heightFalloff: 5200f,
+            baseHeight: 0f,
+            strength: 1.05f,
+            heightInfluence: 0.85f,
+            scattering: 0.09f,
+            maxDistance: 9500f
         );
 
 

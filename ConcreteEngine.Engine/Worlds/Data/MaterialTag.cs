@@ -10,7 +10,12 @@ namespace ConcreteEngine.Engine.Worlds.Data;
 
 public readonly record struct MaterialTagKey(int Value);
 
-public readonly record struct MaterialSlotInfo(MaterialId Material, ushort Slot, bool IsTransparent = false);
+public readonly struct MaterialSlotInfo(MaterialId material, ushort slot, bool isTransparent = false)
+{
+    public readonly MaterialId Material = material;
+    public readonly ushort Slot  = slot;
+    public readonly bool IsTransparent = isTransparent;
+}
 
 [StructLayout(LayoutKind.Sequential)]
 public readonly record struct MaterialTag

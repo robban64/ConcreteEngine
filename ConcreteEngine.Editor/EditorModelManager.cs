@@ -77,14 +77,14 @@ internal static class EditorModelManager
         return;
 
         static void RefreshEntity(ModelState<EntitiesViewModel> ctx, EntitiesViewModel it) =>
-            ctx.State!.WriteTo( in EditorApi.UpdateEntityData);
+            ctx.State!.FillData( in EditorApi.UpdateEntityData);
 
         static void SelectEntityHandler(ModelState<EntitiesViewModel> ctx, in EntityRecord it) =>
-            ctx.State!.WriteTo(it, in EditorApi.UpdateEntityData);
+            ctx.State!.FillData(it, in EditorApi.UpdateEntityData);
 
         static void UpdateEntityHandler(ModelState<EntitiesViewModel> ctx, in EntityRecord it)
         {
-            ctx.State!.WriteFrom(  it, in EditorApi.UpdateEntityData);
+            ctx.State!.WriteData(  it, in EditorApi.UpdateEntityData);
             ctx.EnqueueRefreshNextFrame();
         }
     }
@@ -103,11 +103,11 @@ internal static class EditorModelManager
         return;
 
         static void FetchCameraDataHandler(ModelState<CameraViewModel> ctx, CameraViewModel it) =>
-            it.WriteTo(EditorApi.UpdateCameraData);
+            it.FillData(EditorApi.UpdateCameraData);
 
         static void WriteCameraDataHandler(ModelState<CameraViewModel> ctx, in CameraEditorPayload it)
         {
-            ctx.State!.WriteFrom(in EditorApi.UpdateCameraData);
+            ctx.State!.WriteData(in EditorApi.UpdateCameraData);
             ctx.EnqueueRefreshNextFrame();
         }
     }
@@ -125,17 +125,17 @@ internal static class EditorModelManager
         return;
 
         static void UpdateData(ModelState<WorldRenderViewModel> ctx, WorldRenderViewModel it) =>
-            it.WriteTo(in EditorApi.UpdateWorldParams);
+            it.FillData(in EditorApi.UpdateWorldParams);
 
         static void SelectionChangeHandler(ModelState<WorldRenderViewModel> ctx, in WorldParamSelection it)
         {
             ctx.State!.Selection = it;
-            ctx.State!.WriteTo(in EditorApi.UpdateWorldParams);
+            ctx.State!.FillData(in EditorApi.UpdateWorldParams);
         }
 
         static void SelectionUpdateHandler(ModelState<WorldRenderViewModel> ctx, in NoOpEvent it)
         {
-            ctx.State!.WriteFrom(in EditorApi.UpdateWorldParams);
+            ctx.State!.WriteData(in EditorApi.UpdateWorldParams);
             ctx.EnqueueRefreshNextFrame();
         }
     }

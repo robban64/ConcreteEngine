@@ -9,7 +9,7 @@ using ConcreteEngine.Shared.TransformData;
 
 namespace ConcreteEngine.Editor.Data;
 
-public readonly record struct EditorShadowPayload(int Size, bool Enabled, EditorRequestAction RequestAction);
+public sealed record  EditorShadowPayload(int Size, bool Enabled, EditorRequestAction RequestAction);
 
 public sealed record EditorShaderPayload(string Name, EditorRequestAction RequestAction);
 

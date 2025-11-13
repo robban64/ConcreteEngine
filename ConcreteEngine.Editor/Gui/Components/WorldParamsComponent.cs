@@ -14,6 +14,8 @@ internal static class WorldParamsComponent
 
     public static ref WorldParamState DataState => ref ViewModel.DataState;
 
+    private static int EditedField = -1;
+
     private static void OnSelectionChange(WorldParamSelection selection)
     {
         if (selection == ViewModel.Selection) return;
@@ -27,6 +29,8 @@ internal static class WorldParamsComponent
 
     public static void Draw()
     {
+        EditedField = -1;
+        
         ImGui.PushStyleVar(ImGuiStyleVar.WindowPadding, new Vector2(12f, 0));
         if (ImGui.BeginChild("##right-sidebar-world-header", new Vector2(0),
                 ImGuiChildFlags.AlwaysUseWindowPadding | ImGuiChildFlags.AutoResizeY))
@@ -58,6 +62,13 @@ internal static class WorldParamsComponent
 
             ImGui.EndChild();
         }
+        
+        if (EditedField >= 0)
+        {
+            OnSelectionUpdate();
+            EditedField = -1;
+        }
+
     }
 
     private static void DrawLightState()
@@ -65,83 +76,116 @@ internal static class WorldParamsComponent
         ref var dirLight = ref ViewModel.LightState.DirectionalLight;
         ref var ambientLight = ref ViewModel.LightState.AmbientLight;
 
-
-        if (ImGui.Button("Update")) OnSelectionUpdate();
+        var fieldStatus = new ImGuiDragStatus();
 
         ImGui.SeparatorText("Directional Light");
         ImGui.Dummy(new Vector2(0, 2));
 
         ImGui.TextUnformatted("Direction");
-        var update = ImGui.DragFloat3("##LightDirection", ref dirLight.Direction, 0.01f, -1f, 1f, "%.2f");
+        ImGui.DragFloat3("##LightDirection", ref dirLight.Direction, 0.01f, -1f, 1f, "%.2f");
+        fieldStatus.NextField();
 
         ImGui.TextUnformatted("Diffuse");
-        update |= ImGui.ColorEdit3("##LightDiffuse", ref dirLight.Diffuse);
+        ImGui.ColorEdit3("##LightDiffuse", ref dirLight.Diffuse);
+        fieldStatus.NextField();
 
         ImGui.TextUnformatted("Intensity");
-        update |= ImGui.DragFloat("##LightIntensity", ref dirLight.Intensity, 0.01f, 0.0f, 10.0f, "%.3f");
+        ImGui.DragFloat("##LightIntensity", ref dirLight.Intensity, 0.01f, 0.0f, 10.0f, "%.3f");
+        fieldStatus.NextField();
 
         ImGui.TextUnformatted("Specular");
-        update |= ImGui.DragFloat("##LightSpecular", ref dirLight.Specular, 0.01f, 0.0f, 10.0f, "Spec: %.3f");
+        ImGui.DragFloat("##LightSpecular", ref dirLight.Specular, 0.01f, 0.0f, 10.0f, "Spec: %.3f");
+        fieldStatus.NextField();
 
         ImGui.Dummy(new Vector2(0, 2));
         ImGui.SeparatorText("Ambient Light");
         ImGui.Dummy(new Vector2(0, 2));
 
         ImGui.TextUnformatted("Ambient");
-        update |= ImGui.ColorEdit3("##LightAmbient", ref ambientLight.Ambient);
+        ImGui.ColorEdit3("##LightAmbient", ref ambientLight.Ambient);
+        fieldStatus.NextField();
 
         ImGui.TextUnformatted("Ambient Ground");
-        update |= ImGui.ColorEdit3("##LightAmbientGround", ref ambientLight.AmbientGround);
-        ImGui.TextUnformatted("Exposure");
-        update |= ImGui.DragFloat("##LightExposure", ref ambientLight.Exposure, 0.01f, 0.0f, 10.0f, "Exp: %.3f");
+        ImGui.ColorEdit3("##LightAmbientGround", ref ambientLight.AmbientGround);
+        fieldStatus.NextField();
 
-        if (update)
-        {
-        }
+        ImGui.TextUnformatted("Exposure");
+        ImGui.DragFloat("##LightExposure", ref ambientLight.Exposure, 0.01f, 0.0f, 10.0f, "Exp: %.3f");
+        fieldStatus.NextField();
+
+        //if (fieldStatus.ActiveField >= 0) Console.WriteLine(fieldStatus.ActiveField);
+        if (fieldStatus.HasEdited()) EditedField = fieldStatus.DeactivatedField;
     }
 
     private static void DrawFogState()
     {
-        ref var fog = ref ViewModel.FogState;
+        var fieldStatus = new ImGuiDragStatus();
 
+        ref var fog = ref ViewModel.FogState;
         ImGui.SeparatorText("Fog Details");
         ImGui.ColorEdit3("##FogColor", ref fog.Color);
+        fieldStatus.NextField();
         ImGui.DragFloat("##FogDensity", ref fog.Density, 0.0001f, 0.0001f, 1.0f, "Dens: %.5f");
+        fieldStatus.NextField();
         ImGui.DragFloat("##FogBaseHeight", ref fog.BaseHeight, 0.1f, -1000f, 1000f, "BHeight: %.1f");
+        fieldStatus.NextField();
         ImGui.DragFloat("##FogHeightFalloff", ref fog.HeightFalloff, 0.001f, 0.0f, 10.0f, "HFall: %.3f");
+        fieldStatus.NextField();
         ImGui.DragFloat("##FogHeightInfluence", ref fog.HeightInfluence, 0.001f, 0f, 1f, "HInf: %.3f");
-
+        fieldStatus.NextField();
 
         ImGui.SeparatorText("Fog Optics");
         ImGui.DragFloat("##FogScattering", ref fog.Scattering, 0.001f, 0.0f, 1.0f, "Sct: %.3f");
+        fieldStatus.NextField();
         ImGui.DragFloat("##FogMaxDistance", ref fog.MaxDistance, 1f, 0f, 5000f, "Dist: %.0f");
+        fieldStatus.NextField();
         ImGui.DragFloat("##FogStrength", ref fog.Strength, 0.001f, 0f, 1f, "Str: %.3f");
+        fieldStatus.NextField();
+        
+        if (fieldStatus.HasEdited()) EditedField = fieldStatus.DeactivatedField;
     }
 
     private static void DrawPostEffects()
     {
+        var fieldStatus = new ImGuiDragStatus();
+
         ref var post = ref ViewModel.PostState;
         ImGui.SeparatorText("Grade");
         ImGui.SliderFloat("##GrExposure", ref post.Grade.Exposure, -2f, 2f, "Exp: %.2f");
+        fieldStatus.NextField();
         ImGui.SliderFloat("##GrSaturation", ref post.Grade.Saturation, -1f, 1f, "Sat: %.2f");
+        fieldStatus.NextField();
         ImGui.SliderFloat("##GrContrast", ref post.Grade.Contrast, -1f, 1f, "Con: %.2f");
+        fieldStatus.NextField();
         ImGui.SliderFloat("##GrWarmth", ref post.Grade.Warmth, -1f, 1f, "War: %.2f");
-
+        fieldStatus.NextField();
+        
         ImGui.SeparatorText("White Balance");
         ImGui.SliderFloat("##WbTint", ref post.WhiteBalance.Tint, -1f, 1f, "Tint: %.2f");
+        fieldStatus.NextField();
         ImGui.SliderFloat("##WbStrength", ref post.WhiteBalance.Strength, 0f, 2f, "Str: %.2f");
-
+        fieldStatus.NextField();
+        
         ImGui.SeparatorText("Bloom");
         ImGui.SliderFloat("##BlIntensity", ref post.Bloom.Intensity, 0f, 3f, "Int: %.2f");
+        fieldStatus.NextField();
         ImGui.SliderFloat("##BlThreshold", ref post.Bloom.Threshold, 0f, 1f, "Thr: %.2f");
+        fieldStatus.NextField();
         ImGui.SliderFloat("##BlRadius", ref post.Bloom.Radius, 0f, 10f, "Rad: %.2f");
+        fieldStatus.NextField();
 
 
         ImGui.SeparatorText("Image FX");
         ImGui.SliderFloat("##FxVignette", ref post.ImageFx.Vignette, 0f, 1f, "Vig: %.2f");
+        fieldStatus.NextField();
         ImGui.SliderFloat("##FxGrain", ref post.ImageFx.Grain, 0f, 1f, "Grn: %.2f");
+        fieldStatus.NextField();
         ImGui.SliderFloat("##FxSharpen", ref post.ImageFx.Sharpen, 0f, 1f, "Shr: %.2f");
+        fieldStatus.NextField();
         ImGui.SliderFloat("##FxRolloff", ref post.ImageFx.Rolloff, 0f, 1f, "Rol: %.2f");
+        fieldStatus.NextField();
+        
+        if (fieldStatus.HasEdited()) EditedField = fieldStatus.DeactivatedField;
     }
 
 

@@ -67,18 +67,14 @@ internal sealed class RenderEntityBus
             //if (model.MaterialKey == default) continue;
             //if (model.Model == default) continue;
 
-            var depthKey = DepthKeyUtility.MakeDepthKey(in viewMat, transform.Translation, near, far);
+            var depthKey = DepthKeyUtility.MakeDepthKey(in viewMat, in transform.Translation, near, far);
 
-            _entities[idx++] = new DrawEntity(
-                entity: query.Entity,
-                model: model.Model,
-                materialKey: model.MaterialKey,
-                drawCount: model.DrawCount,
-                transform: in transform,
-                commandId: DrawCommandId.Mesh,
-                queue: DrawCommandQueue.Opaque,
-                passMask: PassMask.Default,
-                depthKey: depthKey);
+            ref var entity = ref _entities[idx++];
+            entity.Entity = query.Entity;
+            entity.Model = model.Model;
+            entity.MaterialKey = model.MaterialKey;
+            entity.Transform = transform;
+            entity.Meta = new DrawCommandMeta(DrawCommandId.Mesh, DrawCommandQueue.Opaque, PassMask.Default, depthKey);
         }
 
         _idx += idx;
@@ -135,7 +131,7 @@ internal sealed class RenderEntityBus
 
             ref var mat0 = ref MemoryMarshal.GetReference(matSpan);
 
-            var baseMeta = new DrawCommandMeta(entity.CommandId, entity.Queue, entity.PassMask, entity.DepthKey);
+            var baseMeta = entity.Meta;
             for (var i = 0; i < locals.Length; i++)
             {
                 ref readonly var part = ref parts[i];
@@ -150,8 +146,7 @@ internal sealed class RenderEntityBus
                 if (tag.IsTransparent(part.MaterialSlot))
                 {
                     var depthKey = (ushort)(ushort.MaxValue - meta.DepthKey);
-                    meta = new DrawCommandMeta(entity.CommandId, DrawCommandQueue.Transparent, entity.PassMask,
-                        depthKey);
+                    meta = new DrawCommandMeta(baseMeta.Id, DrawCommandQueue.Transparent, baseMeta.PassMask, depthKey);
                 }
 
                 buffer.SubmitDraw(cmd, meta, in model, in v0, in v1, in v2);

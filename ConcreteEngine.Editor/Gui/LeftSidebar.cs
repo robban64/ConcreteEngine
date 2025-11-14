@@ -83,19 +83,21 @@ internal static class LeftSidebar
 
     private static void DrawModeSelector()
     {
+        var state = StateContext.ModeState.LeftSidebar;
         ImGui.PushStyleVar(ImGuiStyleVar.FramePadding, new Vector2(12, 4));
 
-        if (ImGui.BeginTabBar("left_panel_tabs", ImGuiTabBarFlags.None))
+        if (ImGui.BeginTabBar("##left_panel_tabs", ImGuiTabBarFlags.None))
         {
             if (ImGui.BeginTabItem("Assets"))
             {
-                StateContext.SetLeftSidebarState(LeftSidebarMode.Assets);
+                if (state != LeftSidebarMode.Assets) StateContext.SetLeftSidebarState(LeftSidebarMode.Assets);
                 ImGui.EndTabItem();
             }
 
             if (ImGui.BeginTabItem("Entities"))
             {
-                StateContext.SetLeftSidebarState(LeftSidebarMode.Entities);
+                if (state != LeftSidebarMode.Entities) StateContext.SetLeftSidebarState(LeftSidebarMode.Entities);
+
                 ImGui.EndTabItem();
             }
 

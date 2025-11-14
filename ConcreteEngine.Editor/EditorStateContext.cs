@@ -25,11 +25,11 @@ internal static class EditorStateContext
     internal static void Init()
     {
     }
-    
-    
+
+
     internal static void CommitState()
     {
-        if(ModeState == NextState) return;
+        if (ModeState == NextState) return;
         var prev = ModeState;
         ModeState = NextState;
         if (ModeState.IsEditorState)
@@ -61,15 +61,15 @@ internal static class EditorStateContext
 
     public static void SetViewModeState(EditorViewMode mode)
     {
-        if (mode == NextState.EditorMode) NextState =(EditorModeState.MakeNone());
-        else if (mode == EditorViewMode.Editor) NextState =(EditorModeState.MakeEditor());
-        else if (mode == EditorViewMode.Metrics) NextState =(EditorModeState.MakeMetrics());
+        if (mode == NextState.EditorMode) NextState = (EditorModeState.MakeNone());
+        else if (mode == EditorViewMode.Editor) NextState = (EditorModeState.MakeEditor());
+        else if (mode == EditorViewMode.Metrics) NextState = (EditorModeState.MakeMetrics());
     }
 
     public static void ToggleRightSidebarState(RightSidebarMode mode)
     {
         var newMode = mode == NextState.RightSidebar ? RightSidebarMode.Default : mode;
-        NextState =(NextState with { RightSidebar = newMode });
+        NextState = (NextState with { RightSidebar = newMode });
     }
 
     public static void SetLeftSidebarState(LeftSidebarMode mode)
@@ -83,7 +83,6 @@ internal static class EditorStateContext
         if (prev.LeftSidebar != state.LeftSidebar)
             TransitionLeft(state);
 
-        // Right sidebar
         if (prev.RightSidebar != state.RightSidebar)
             TransitionRight(state);
 
@@ -93,32 +92,27 @@ internal static class EditorStateContext
         {
             switch (state.LeftSidebar)
             {
-                case LeftSidebarMode.Assets:
-                    TransitionLeftSidebar(ModelManager.AssetState);
-                    break;
-                case LeftSidebarMode.Entities:
-                    TransitionLeftSidebar(ModelManager.EntitiesState);
-                    break;
+                case LeftSidebarMode.Assets: TransitionLeftSidebar(ModelManager.AssetState); break;
+                case LeftSidebarMode.Entities: TransitionLeftSidebar(ModelManager.EntitiesState); break;
+                case LeftSidebarMode.Default:
+                default: break;
             }
-
         }
+
         static void TransitionRight(EditorModeState state)
         {
             switch (state.RightSidebar)
             {
-                case RightSidebarMode.Default: break;
-                case RightSidebarMode.Camera:
-                    TransitionRightSidebar(ModelManager.CameraState);
-                    break;
-                case RightSidebarMode.World: 
-                    TransitionRightSidebar(ModelManager.WorldRenderState);
-                    break;
-                case RightSidebarMode.Sky: break;
-                case RightSidebarMode.Terrain: break;
+                case RightSidebarMode.Camera: TransitionRightSidebar(ModelManager.CameraState); break;
+                case RightSidebarMode.World: TransitionRightSidebar(ModelManager.WorldRenderState); break;
+                case RightSidebarMode.Default:
+                case RightSidebarMode.Sky:
+                case RightSidebarMode.Terrain:
+                default: break;
             }
         }
     }
-    
+
     private static void OnEditorStateLeave(EditorModeState state, EditorModeState nextState)
     {
         _leftSidebarState?.InvokeAction(TransitionKey.Leave);
@@ -140,5 +134,4 @@ internal static class EditorStateContext
         _lastAction = TimeUtils.GetTimestamp();
         return true;
     }
-
 }

@@ -16,9 +16,9 @@ internal static class GuiTheme
     public const int TopbarHeight = 44;
     public const float PanelOpacity = 0.95f;
 
-    public const int LeftSidebarWidth = 268;
+    public const int LeftSidebarWidth = 248;
     public const int RightSidebarCompactWidth = 160;
-    public const int RightSidebarExpandedWidth = 268;
+    public const int RightSidebarExpandedWidth = 248;
 
     public static bool RightSidebarExpanded { get; set; } = false;
     public static int RightSidebarWidth => RightSidebarExpanded ? RightSidebarExpandedWidth : RightSidebarCompactWidth;

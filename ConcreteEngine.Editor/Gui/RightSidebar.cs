@@ -31,7 +31,6 @@ internal static class RightSidebar
         var vpSize = vp.WorkSize;
 
         var height = viewState.IsEmptyViewMode ? 0 : vpSize.Y - offset;
-        height = viewState.RightSidebar != RightSidebarMode.Default ? height : 0;
 
         ImGui.SetNextWindowPos(new Vector2(vpSize.X - width, offset));
         ImGui.SetNextWindowSize(new Vector2(width, height));
@@ -60,11 +59,11 @@ internal static class RightSidebar
     {
         switch (StateContext.ModeState.RightSidebar)
         {
+            case RightSidebarMode.Default:
             case RightSidebarMode.Camera: CameraPropertyComponent.Draw(); break;
             case RightSidebarMode.World: WorldParamsComponent.Draw(); break;
             case RightSidebarMode.Sky: break;
             case RightSidebarMode.Terrain: break;
-            case RightSidebarMode.Default:
             default: break;
         }
     }

@@ -14,6 +14,7 @@ internal static class GuiUtils
 
     public static (int, int) ItemActivatedAndDeactivatedAfterEdit(int idx)
     {
+        
         return  (ImGui.IsItemActive() ? idx : -1, ImGui.IsItemDeactivatedAfterEdit() ? idx : -1);
     }
 
@@ -57,7 +58,7 @@ internal static class GuiUtils
         ImGui.SetCursorPosX(ImGui.GetCursorPosX() + offset);
         ImGui.TextUnformatted(text);
     }
-
+    
     public static void CenterAlignText(ReadOnlySpan<char> text, float rowHeight)
     {
         var fontSize = ImGui.GetFontSize();

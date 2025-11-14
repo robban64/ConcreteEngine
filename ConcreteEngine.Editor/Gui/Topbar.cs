@@ -1,6 +1,7 @@
 #region
 
 using System.Numerics;
+using System.Runtime.CompilerServices;
 using ConcreteEngine.Editor.Definitions;
 using ConcreteEngine.Editor.Utils;
 using ImGuiNET;
@@ -25,16 +26,13 @@ internal static class Topbar
 
         ImGui.SetNextWindowPos(vp.WorkPos);
         ImGui.SetNextWindowSize(new Vector2(vp.Size.X, GuiTheme.TopbarHeight));
-        ImGui.PushStyleVar(ImGuiStyleVar.WindowPadding, new Vector2(0, 0));
         ImGui.SetNextWindowBgAlpha(GuiTheme.PanelOpacity);
+
+        ImGui.PushStyleVar(ImGuiStyleVar.WindowPadding, new Vector2(0, 0));
 
         if (ImGui.Begin("##TopBar", flags))
         {
-            ImGui.SetWindowFontScale(1.06f);
             ImGui.PushStyleVar(ImGuiStyleVar.SelectableTextAlign, new Vector2(0.5f));
-            ImGui.PushStyleColor(ImGuiCol.HeaderHovered, GuiTheme.SelectedColor);
-            ImGui.PushStyleColor(ImGuiCol.HeaderActive, GuiTheme.SelectedColor);
-            ImGui.PushStyleColor(ImGuiCol.Header, GuiTheme.PrimaryColor);
 
             // left
             DrawModeSelector();
@@ -43,7 +41,6 @@ internal static class Topbar
             if (StateContext.ModeState.IsEditorState)
                 DrawPropertySelector();
 
-            ImGui.PopStyleColor(3);
             ImGui.PopStyleVar(1);
         }
 

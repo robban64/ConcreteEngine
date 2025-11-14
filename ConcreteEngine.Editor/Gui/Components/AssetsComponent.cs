@@ -63,10 +63,12 @@ internal static class AssetsComponent
             var bufferStr = formatter.Format(it.AssetId);
 
             ImGui.TableNextColumn();
-            CenterAlignTextVertical(bufferStr, rowHeight);
+            ImGui.AlignTextToFramePadding();
+            ImGui.TextUnformatted(bufferStr);
 
             ImGui.TableNextColumn();
-            CenterAlignTextVertical(it.Name, rowHeight);
+            ImGui.AlignTextToFramePadding();
+            ImGui.TextUnformatted(it.Name);
 
             ImGui.TableNextColumn();
 
@@ -150,13 +152,16 @@ internal static class AssetsComponent
             ImGui.TableNextRow();
             ImGui.TableNextColumn();
             var bufferStr = formatter.Format(asset.ResourceId);
-            CenterAlignTextHorizontal(bufferStr);
+            ImGui.AlignTextToFramePadding();
+            ImGui.TextUnformatted(bufferStr);
 
             ImGui.TableNextColumn();
             bufferStr = formatter.Format(asset.Generation);
-            CenterAlignTextHorizontal(bufferStr);
+            ImGui.AlignTextToFramePadding();
+            ImGui.TextUnformatted(bufferStr);
 
             ImGui.TableNextColumn();
+            ImGui.AlignTextToFramePadding();
             ImGui.TextUnformatted(StringUtils.BoolToYesNo(asset.IsCoreAsset));
 
             ImGui.TableNextColumn();
@@ -201,14 +206,16 @@ internal static class AssetsComponent
 
                 var bufferStr = formatter.Format(it.AssetFileId);
                 ImGui.TableNextColumn();
-                CenterAlignTextHorizontal(bufferStr);
+                ImGui.AlignTextToFramePadding();
+                ImGui.TextUnformatted(bufferStr);
 
                 ImGui.TableNextColumn();
+                ImGui.AlignTextToFramePadding();
                 ImGui.TextUnformatted(it.RelativePath);
 
                 bufferStr = formatter.Format(it.SizeInBytes);
                 ImGui.TableNextColumn();
-                CenterAlignTextHorizontal(bufferStr);
+                ImGui.TextUnformatted(bufferStr);
 
                 ImGui.TableNextColumn();
                 if (it.ContentHash != null)

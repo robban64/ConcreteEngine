@@ -1,5 +1,6 @@
 #region
 
+using System.Numerics;
 using ConcreteEngine.Common;
 using ConcreteEngine.Common.Time;
 using ConcreteEngine.Editor.Data;
@@ -9,6 +10,7 @@ using ConcreteEngine.Editor.Gui;
 using ConcreteEngine.Editor.Gui.Components;
 using ConcreteEngine.Editor.Utils;
 using ConcreteEngine.Editor.ViewModel;
+using ImGuiNET;
 
 #endregion
 
@@ -31,6 +33,31 @@ internal static class EditorService
         ModelManager.SetupModelState();
         StateContext.Init();
     }
+    
+    internal static void Render()
+    {
+        StateContext.CommitState();
+        GuiTheme.RightSidebarExpanded = ModeState.IsEditorState;
+        MetricsApi.ToggleMetrics(ModeState.IsMetricState);
+        
+        RefreshData();
+        
+        GuiTheme.PushTheme();
+
+        Topbar.Draw();
+        if (!StateContext.ModeState.IsEmptyViewMode)
+        {
+            ImGui.PushStyleVar(ImGuiStyleVar.ItemSpacing, new Vector2(8f, 6f));
+            ImGui.PushStyleVar(ImGuiStyleVar.WindowPadding, new Vector2(0, 10f));
+
+            LeftSidebar.Draw(GuiTheme.LeftSidebarWidth, offset: GuiTheme.TopbarHeight);
+            RightSidebar.Draw(GuiTheme.RightSidebarWidth, offset: GuiTheme.TopbarHeight);
+            
+            ImGui.PopStyleVar(2);
+        }
+
+        ConsoleService.Draw(GuiTheme.LeftSidebarWidth, GuiTheme.RightSidebarWidth);
+    }
 
     private static void RefreshData()
     {
@@ -43,27 +70,6 @@ internal static class EditorService
             _lastRefresh = TimeUtils.GetTimestamp();
         }
         ModelManager.InvokeRefreshForModels();
-    }
-
-    internal static void Render()
-    {
-        StateContext.CommitState();
-
-        GuiTheme.RightSidebarExpanded = ModeState.IsEditorState;
-        MetricsApi.ToggleMetrics(ModeState.IsMetricState);
-        StateContext.CommitState();
-
-        RefreshData();
-
-        Topbar.Draw();
-
-        if (!StateContext.ModeState.IsEmptyViewMode)
-        {
-            LeftSidebar.Draw(GuiTheme.LeftSidebarWidth, offset: GuiTheme.TopbarHeight);
-            RightSidebar.Draw(GuiTheme.RightSidebarWidth, offset: GuiTheme.TopbarHeight);
-        }
-
-        DevConsoleService.Draw(GuiTheme.LeftSidebarWidth, GuiTheme.RightSidebarWidth);
     }
 
 
@@ -127,7 +133,7 @@ internal static class EditorService
     {
         if (!TimeUtils.HasIntervalPassed(_lastAction, ms))
         {
-            DevConsoleService.AddLog("Command delay time has not passed");
+            ConsoleService.SendLog("Command delay time has not passed");
             return false;
         }
 

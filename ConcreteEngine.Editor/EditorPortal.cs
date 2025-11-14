@@ -28,7 +28,7 @@ public sealed class EditorPortal : IDisposable
  
     public void Update(float delta) => _controller.Update(delta);
 
-    public void AddLog(string? msg) => DevConsoleService.AddLog(msg);
+    public void AddLog(string? msg) => ConsoleService.SendLog(msg);
 
     public void Render()
     {

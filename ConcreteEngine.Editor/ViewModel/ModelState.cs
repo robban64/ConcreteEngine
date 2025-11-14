@@ -100,7 +100,7 @@ internal sealed class ModelState<T> : IModelState where T : class
         if (_onRefresh is null)
         {
             PendingRefresh = false;
-            DevConsoleService.AddLog($"OnRefresh is null: Refresh failed for {typeof(T).Name}");
+            ConsoleService.SendLog($"OnRefresh is null: Refresh failed for {typeof(T).Name}");
             return false;
         }
         _onRefresh!(this, State!);
@@ -155,7 +155,7 @@ internal sealed class ModelState<T> : IModelState where T : class
             throw new ArgumentException(
                 $"{eventKey} was invoked with invalid type: actual {typeof(TEvent).Name}, expected {nameof(EventEntry<TEvent>.EventType.Name)}");
 
-        DevConsoleService.AddLog("Event triggered: " + typeof(TEvent).Name);
+        ConsoleService.SendLog("Event triggered: " + typeof(TEvent).Name);
         entry.Handler(this, in eventData);
     }
 

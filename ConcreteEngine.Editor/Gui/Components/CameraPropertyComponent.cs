@@ -19,7 +19,7 @@ internal static class CameraPropertyComponent
     private static ModelState<CameraViewModel> Model => ModelManager.CameraState;
     private static CameraViewModel ViewModel => Model.State!;
 
-    private static int EditedField = -1;
+    private static int _editedField = -1;
 
     private static void OnUpdateData()
     {
@@ -33,15 +33,14 @@ internal static class CameraPropertyComponent
         const ImGuiChildFlags flags = ImGuiChildFlags.AutoResizeY | ImGuiChildFlags.AlwaysUseWindowPadding;
         var size = new Vector2(GuiTheme.RightSidebarWidth - WindowPaddingX, 0);
 
-
         if (!ImGui.BeginChild("##camera-properties", size, flags)) return;
         DrawInner();
         ImGui.EndChild();
 
-        if (EditedField >= 0)
+        if (_editedField >= 0)
         {
             OnUpdateData();
-            EditedField = -1;
+            _editedField = -1;
         }
         
     }
@@ -108,13 +107,13 @@ internal static class CameraPropertyComponent
 
         ImGui.TextUnformatted("Field of view");
         ImGui.SliderFloat("##camera-fov", ref proj.Fov, StateLimits.MinFov, StateLimits.MaxFov, "%.2f");
-        fieldStatus.NextField();
+        fieldStatus.NextFieldDrag();
 
 
         ImGui.PopItemWidth();
         ImGui.EndGroup();
 
-        if (fieldStatus.HasEdited(out var field)) EditedField = field;
+        if (fieldStatus.HasEdited(out var field)) _editedField = field;
     }
 
     private static void DrawTransform()
@@ -140,6 +139,6 @@ internal static class CameraPropertyComponent
         fieldStatus.NextField();
         ImGui.EndGroup();
 
-        if (fieldStatus.HasEdited(out var field)) EditedField = field;
+        if (fieldStatus.HasEdited(out var field)) _editedField = field;
     }
 }

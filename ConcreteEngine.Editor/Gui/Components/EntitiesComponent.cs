@@ -75,11 +75,12 @@ internal static class EntitiesComponent
         const ImGuiTableFlags flags = ImGuiTableFlags.NoBordersInBody;
 
         if (!ImGui.BeginTable("##entity_list_tbl", 3, flags)) return;
+        
 
         ImGui.TableSetupColumn("Id", ImGuiTableColumnFlags.WidthFixed, ColumnWidth);
         ImGui.TableSetupColumn("Comp", ImGuiTableColumnFlags.WidthFixed, ColumnWidth);
         ImGui.TableSetupColumn("Transform", ImGuiTableColumnFlags.WidthStretch);
-
+        
         ImGui.TableNextRow(ImGuiTableRowFlags.Headers);
 
         ImGui.TableNextColumn();
@@ -107,9 +108,6 @@ internal static class EntitiesComponent
             if (selected) _selectedIndex = i;
 
             ImGui.PushStyleVar(ImGuiStyleVar.SelectableTextAlign, new Vector2(0.0f, 0.5f));
-            ImGui.PushStyleColor(ImGuiCol.HeaderHovered, GuiTheme.SelectedColor);
-            ImGui.PushStyleColor(ImGuiCol.HeaderActive, GuiTheme.SelectedColor);
-            ImGui.PushStyleColor(ImGuiCol.Header, GuiTheme.PrimaryColor);
 
             ImGui.PushID(entity.EntityId);
             ImGui.TableNextRow();
@@ -148,7 +146,7 @@ internal static class EntitiesComponent
 
             ImGui.PopID();
 
-            ImGui.PopStyleColor(3);
+            ImGui.PopStyleColor(1);
             ImGui.PopStyleVar();
         }
     }

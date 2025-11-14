@@ -26,8 +26,6 @@ internal static class LeftSidebar
 
         ImGui.SetNextWindowPos(new Vector2(0, offset));
         ImGui.SetNextWindowSize(new Vector2(width, height));
-        ImGui.PushStyleVar(ImGuiStyleVar.ItemSpacing, new Vector2(8f, 6f));
-        ImGui.PushStyleVar(ImGuiStyleVar.WindowPadding, new Vector2(0, 10f));
         ImGui.SetNextWindowBgAlpha(GuiTheme.PanelOpacity);
 
         if (ImGui.Begin("##LeftSidebar", flags))
@@ -40,7 +38,6 @@ internal static class LeftSidebar
         }
 
         ImGui.End();
-        ImGui.PopStyleVar(2);
     }
 
     private static void DrawMetrics()
@@ -87,13 +84,6 @@ internal static class LeftSidebar
     private static void DrawModeSelector()
     {
         ImGui.PushStyleVar(ImGuiStyleVar.FramePadding, new Vector2(12, 4));
-        ImGui.PushStyleVar(ImGuiStyleVar.TabRounding, 0.5f);
-        ImGui.PushStyleVar(ImGuiStyleVar.TabBarBorderSize, 1f);
-        ImGui.PushStyleVar(ImGuiStyleVar.TabBorderSize, 1);
-        ImGui.PushStyleColor(ImGuiCol.TabHovered, GuiTheme.Blue1);
-        ImGui.PushStyleColor(ImGuiCol.TabActive, GuiTheme.SelectedColor);
-        ImGui.PushStyleColor(ImGuiCol.Tab, GuiTheme.PrimaryColor);
-
 
         if (ImGui.BeginTabBar("left_panel_tabs", ImGuiTabBarFlags.None))
         {
@@ -112,7 +102,6 @@ internal static class LeftSidebar
             ImGui.EndTabBar();
         }
 
-        ImGui.PopStyleVar(4);
-        ImGui.PopStyleColor(3);
+        ImGui.PopStyleVar(1);
     }
 }

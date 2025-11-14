@@ -1,6 +1,9 @@
 #region
 
 using System.Numerics;
+using System.Runtime.InteropServices;
+using ConcreteEngine.Common.Numerics;
+using ConcreteEngine.Common.Numerics.Maths;
 using ConcreteEngine.Editor.Utils;
 using ImGuiNET;
 
@@ -15,7 +18,41 @@ internal static class ConsoleComponent
 
     private static string _input = string.Empty;
 
+    private static Vector2 _workSize = Vector2.Zero;
+
+    private static Vector2 _position = Vector2.Zero;
+    private static Vector2 _size = Vector2.Zero;
+    private static Vector2 _sizeConstraintMin = Vector2.Zero;
+    private static Vector2 _sizeConstraintMax = Vector2.Zero;
+    
+    private static Vector2 _consoleTextSize = Vector2.Zero;
+
+
     internal static void ScrollToBottom() => _scrollToBottom = true;
+
+    private static void CalculateSize(Vector2 workPos, Vector2 workSize, int leftPanelWidth, int rightPanelWidth)
+    {
+        const float minW = 400f, maxWCap = 980f;
+        const float minH = 160f, maxH = 240f;
+        const float margin = 12f;
+
+        var centerX = workPos.X + leftPanelWidth;
+        var centerY = workPos.Y;
+        var centerW = MathF.Max(0, workSize.X - leftPanelWidth - rightPanelWidth);
+        var centerH = workSize.Y;
+
+        var targetW = float.Clamp(centerW * 0.80f, minW, Math.Min(maxWCap, centerW));
+        var targetH = float.Clamp(centerH * 0.25f, minH, maxH);
+
+        var posX = centerX + MathF.Max(0, (centerW - targetW) * 0.5f);
+        var posY = centerY + centerH - targetH - margin;
+
+
+        _position = new Vector2(posX, posY);
+        _size = new Vector2(targetW, targetH);
+        _sizeConstraintMin = new Vector2(MathF.Min(minW, centerW), minH);
+        _sizeConstraintMax = new Vector2(MathF.Min(float.Min(maxWCap, centerW), centerW), MathF.Min(maxH, centerH));
+    }
 
     internal static void DrawConsole(int leftPanelWidth, int rightPanelWidth)
     {
@@ -25,29 +62,19 @@ internal static class ConsoleComponent
             ImGuiWindowFlags.NoNavFocus | ImGuiWindowFlags.NoTitleBar |
             ImGuiWindowFlags.NoScrollbar | ImGuiWindowFlags.NoScrollWithMouse;
 
+
         var vp = ImGui.GetMainViewport();
+        var workSize = vp.WorkSize;
+        
+        if (!VectorMath.NearlyEqual(workSize, _workSize, MetricUnits.Millimeter))
+        {
+            CalculateSize(vp.WorkPos, workSize, leftPanelWidth, rightPanelWidth);
+            _workSize = workSize;
+        }
 
-        var centerX = vp.WorkPos.X + leftPanelWidth;
-        var centerY = vp.WorkPos.Y;
-        var centerW = MathF.Max(0, vp.WorkSize.X - leftPanelWidth - rightPanelWidth);
-        var centerH = vp.WorkSize.Y;
-
-        const float minW = 400f, maxWCap = 980f;
-        const float minH = 160f, maxH = 240f;
-
-        var targetW = float.Clamp(centerW * 0.80f, minW, Math.Min(maxWCap, centerW));
-        var targetH = float.Clamp(centerH * 0.25f, minH, maxH);
-
-        const float margin = 12f;
-        var posX = centerX + MathF.Max(0, (centerW - targetW) * 0.5f);
-        var posY = centerY + centerH - targetH - margin;
-
-        ImGui.SetNextWindowPos(new Vector2(posX, posY), ImGuiCond.Always);
-        ImGui.SetNextWindowSize(new Vector2(targetW, targetH), ImGuiCond.Always);
-        ImGui.SetNextWindowSizeConstraints(
-            new Vector2(MathF.Min(minW, centerW), minH),
-            new Vector2(MathF.Min(float.Min(maxWCap, centerW), centerW), MathF.Min(maxH, centerH))
-        );
+        ImGui.SetNextWindowPos(_position, ImGuiCond.Always);
+        ImGui.SetNextWindowSize(_size, ImGuiCond.Always);
+        ImGui.SetNextWindowSizeConstraints(_sizeConstraintMin, _sizeConstraintMax);
 
         ImGui.PushStyleColor(ImGuiCol.WindowBg, GuiTheme.ConsoleBgColor);
         ImGui.PushStyleColor(ImGuiCol.Border, Vector4.Zero);
@@ -66,24 +93,29 @@ internal static class ConsoleComponent
         ImGui.PopStyleColor(2);
     }
 
-    private static void DrawInner()
+    private static unsafe void DrawInner()
     {
         ImGui.PushStyleColor(ImGuiCol.Text, 0x99FFFFFF);
         ImGui.SeparatorText("Console");
         ImGui.PopStyleColor();
 
         var inputHeight = ImGui.GetFrameHeightWithSpacing() + 8f;
-
         ImGui.PushStyleColor(ImGuiCol.ChildBg, GuiTheme.ConsoleInnerBgColor);
-        if (ImGui.BeginChild(
-                "ConsoleLogRegion",
-                new Vector2(0, -inputHeight),
-                ImGuiChildFlags.None,
-                ImGuiWindowFlags.HorizontalScrollbar | ImGuiWindowFlags.AlwaysVerticalScrollbar)
-           )
+        
+        if (ImGui.BeginChild("##ConsoleLogRegion", new Vector2(0, -inputHeight), ImGuiChildFlags.None,
+                ImGuiWindowFlags.HorizontalScrollbar | ImGuiWindowFlags.AlwaysVerticalScrollbar))
         {
-            foreach (var line in DevConsoleService.Log)
-                ImGui.TextUnformatted(line);
+            float rowHeight = ImGui.GetFrameHeight();          
+            var clipper = new ImGuiListClipper();
+            var logs = ConsoleService.GetLogs();
+            ImGuiNative.ImGuiListClipper_Begin(&clipper, ConsoleService.LogCount, rowHeight);
+            while (ImGuiNative.ImGuiListClipper_Step(&clipper) != 0)
+            {
+                for (int i = clipper.DisplayStart; i < clipper.DisplayEnd ; i++)
+                    ImGui.TextUnformatted(logs[ConsoleService.GetSlotIndex(i)]);
+
+            }
+            ImGuiNative.ImGuiListClipper_End(&clipper);
 
             if (_justOpened || _scrollToBottom)
             {
@@ -94,7 +126,6 @@ internal static class ConsoleComponent
 
             ImGui.EndChild();
         }
-
 
         ImGui.PopStyleColor();
 
@@ -119,7 +150,7 @@ internal static class ConsoleComponent
             _input = string.Empty;
 
             if (!string.IsNullOrEmpty(text))
-                DevConsoleService.ExecCommand(text);
+                ConsoleService.ExecCommand(text);
 
             ImGui.SetKeyboardFocusHere();
             _scrollToBottom = true;

@@ -18,12 +18,6 @@ internal static class GfxStoreMetricsGui
     {
         ImGui.SeparatorText("Gfx Metrics");
         ImGui.PushStyleVar(ImGuiStyleVar.FramePadding, new Vector2(12, 4));
-        ImGui.PushStyleVar(ImGuiStyleVar.TabRounding, 0.5f);
-        ImGui.PushStyleVar(ImGuiStyleVar.TabBarBorderSize, 1f);
-        ImGui.PushStyleVar(ImGuiStyleVar.TabBorderSize, 1);
-        ImGui.PushStyleColor(ImGuiCol.TabHovered, GuiTheme.Blue1);
-        ImGui.PushStyleColor(ImGuiCol.TabActive, GuiTheme.SelectedColor);
-        ImGui.PushStyleColor(ImGuiCol.Tab, GuiTheme.PrimaryColor);
 
         if (ImGui.BeginTabBar("metrics_tabs", ImGuiTabBarFlags.FittingPolicyScroll))
         {
@@ -42,8 +36,7 @@ internal static class GfxStoreMetricsGui
             ImGui.EndTabBar();
         }
 
-        ImGui.PopStyleVar(4);
-        ImGui.PopStyleColor(3);
+        ImGui.PopStyleVar(1);
     }
 
 

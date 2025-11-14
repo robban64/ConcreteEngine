@@ -11,7 +11,7 @@ internal static class SystemMetricsGui
 
     public static void Draw()
     {
-        const ImGuiChildFlags flags = ImGuiChildFlags.AutoResizeY | ImGuiChildFlags.AlwaysUseWindowPadding;
+        const ImGuiChildFlags flags =  ImGuiChildFlags.AlwaysUseWindowPadding;
         var size = new Vector2(GuiTheme.RightSidebarWidth - WindowPaddingX, 0);
 
         if (!ImGui.BeginChild("##system-metrics-gui", size, flags)) return;

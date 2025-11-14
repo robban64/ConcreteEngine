@@ -28,26 +28,22 @@ internal static class AssetsComponent
     private static void OnSelectionChanged(AssetObjectViewModel? asset) =>
         Model.TriggerEvent(EventKey.SelectionChanged, asset);
 
-
-    public static void DrawSubHeader()
-    {
-        ImGui.SeparatorText("Asset Store");
-        DrawAssetTypeSelector();
-        ImGui.Separator();
-    }
-
     public static void Draw()
     {
         const ImGuiTableFlags flags = ImGuiTableFlags.SizingFixedFit | ImGuiTableFlags.BordersInnerH;
         const int rowHeight = 32;
 
         var btnSize = new Vector2(rowHeight, 22);
+        
+        ImGui.SeparatorText("Asset Store");
+        DrawAssetTypeSelector();
+        ImGui.Separator();
 
         if (!ImGui.BeginTable("##asset_store_object_tbl", 3, flags)) return;
 
         ImGui.TableSetupColumn("Id", ImGuiTableColumnFlags.WidthFixed, 32);
         ImGui.TableSetupColumn("Name", ImGuiTableColumnFlags.WidthStretch);
-        ImGui.TableSetupColumn("", ImGuiTableColumnFlags.WidthFixed, rowHeight);
+        ImGui.TableSetupColumn("##asset-tbl-separator-col", ImGuiTableColumnFlags.WidthFixed, rowHeight);
 
         ImGui.PushStyleVar(ImGuiStyleVar.CellPadding, new Vector2(8, 8));
 
@@ -72,8 +68,6 @@ internal static class AssetsComponent
 
             ImGui.TableNextColumn();
 
-            var itemMinY = ImGui.GetCursorPosY();
-            ImGui.SetCursorPosY(itemMinY + (rowHeight - btnSize.Y) * 0.5f);
             if (ImGui.Button(">", btnSize))
             {
                 if (_popupInput < 1) _popupInput = 1;
@@ -85,14 +79,17 @@ internal static class AssetsComponent
                 ImGui.OpenPopup(bufferStr);
             }
 
-            ImGui.PushStyleVar(ImGuiStyleVar.WindowPadding, new Vector2(12f, 10f));
+            if (ImGui.IsPopupOpen(bufferStr))
+                ImGui.PushStyleVar(ImGuiStyleVar.WindowPadding, new Vector2(12f, 10f));
+
+
             if (ImGui.BeginPopup(bufferStr))
             {
                 DrawAssetFilePopupContent(it);
                 ImGui.EndPopup();
+                ImGui.PopStyleVar();
             }
 
-            ImGui.PopStyleVar();
 
             ImGui.PopID();
         }
@@ -137,11 +134,12 @@ internal static class AssetsComponent
         //Span<char> buffer = stackalloc char[8];
         var formatter = new NumberSpanFormatter(StringUtils.CharBuffer8);
 
-        ImGui.PushStyleVar(ImGuiStyleVar.CellPadding, new Vector2(4, 6));
+        ImGui.PushStyleVar(ImGuiStyleVar.CellPadding, new Vector2(2, 2));
         ImGui.SeparatorText(asset.Name);
 
         if (ImGui.BeginTable("##asset_detail_object_tbl", 4, ImGuiTableFlags.SizingFixedFit | ImGuiTableFlags.Borders))
         {
+            ImGui.PushID(asset.AssetId);
             ImGui.TableSetupColumn(asset.ResourceName, ImGuiTableColumnFlags.WidthFixed, 34);
             ImGui.TableSetupColumn("Gen", ImGuiTableColumnFlags.WidthFixed, 34);
             ImGui.TableSetupColumn("Core", ImGuiTableColumnFlags.WidthFixed);
@@ -166,6 +164,7 @@ internal static class AssetsComponent
 
             ImGui.TableNextColumn();
             ImGui.TextUnformatted(asset.SpecialValue);
+            ImGui.PopID();  
 
             ImGui.EndTable();
         }
@@ -190,8 +189,7 @@ internal static class AssetsComponent
         static void DrawFilesTable(NumberSpanFormatter formatter, AssetStoreViewModel viewModel)
         {
             DrawSectionHeader("Files");
-            if (!ImGui.BeginTable("##asset_store_files_tbl", 4,
-                    ImGuiTableFlags.SizingFixedFit | ImGuiTableFlags.Borders)) return;
+            if (!ImGui.BeginTable("##asset_store_files_tbl", 4, ImGuiTableFlags.Borders)) return;
             ImGui.TableSetupColumn("ID", ImGuiTableColumnFlags.WidthFixed);
             ImGui.TableSetupColumn("Path", ImGuiTableColumnFlags.WidthStretch);
             ImGui.TableSetupColumn("Size", ImGuiTableColumnFlags.WidthFixed);

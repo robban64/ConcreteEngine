@@ -33,16 +33,19 @@ internal static class EditorService
         ModelManager.SetupModelState();
         StateContext.Init();
     }
-    
+
+
     internal static void Render()
     {
         StateContext.CommitState();
         GuiTheme.RightSidebarExpanded = ModeState.IsEditorState;
         MetricsApi.ToggleMetrics(ModeState.IsMetricState);
-        
+
         RefreshData();
         
         GuiTheme.PushTheme();
+
+        CheckHotkeys();
 
         Topbar.Draw();
         if (!StateContext.ModeState.IsEmptyViewMode)
@@ -57,6 +60,17 @@ internal static class EditorService
         }
 
         ConsoleService.Draw(GuiTheme.LeftSidebarWidth, GuiTheme.RightSidebarWidth);
+
+    }
+    
+    private static void CheckHotkeys()
+    {
+        if(ImGui.IsKeyPressed(ImGuiKey._1)) StateContext.ToggleLeftSidebar(LeftSidebarMode.Assets);
+        else if(ImGui.IsKeyPressed(ImGuiKey._2)) StateContext.ToggleLeftSidebar(LeftSidebarMode.Entities);
+        else if(ImGui.IsKeyPressed(ImGuiKey._3)) StateContext.ToggleRightSidebar(RightSidebarMode.Camera);
+        else if(ImGui.IsKeyPressed(ImGuiKey._4)) StateContext.ToggleRightSidebar(RightSidebarMode.World);
+        else if(ImGui.IsKeyPressed(ImGuiKey._5)) StateContext.ToggleRightSidebar(RightSidebarMode.Sky);
+        else if(ImGui.IsKeyPressed(ImGuiKey._6)) StateContext.ToggleRightSidebar(RightSidebarMode.Terrain);
     }
 
     private static void RefreshData()

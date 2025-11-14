@@ -19,7 +19,7 @@ public sealed class EditorPortal : IDisposable
 
     public EditorPortal(GL gl, IWindow window, IInputContext inputCtx)
     {
-        var fontPath = Path.Combine(AppContext.BaseDirectory, "Content", "Roboto-Medium.ttf");
+        var fontPath = Path.Combine(AppContext.BaseDirectory, "Content", "RobotoMono-Medium.ttf");
         ImGuiFontConfig fontConfDefault = new(fontPath, 14);
 
         _controller = new ImGuiController(gl, window, inputCtx, fontConfDefault);

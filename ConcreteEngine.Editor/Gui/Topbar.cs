@@ -13,7 +13,6 @@ namespace ConcreteEngine.Editor.Gui;
 internal static class Topbar
 {
     private const int SelectorWidth = 74;
-    private static readonly string[] ViewModes = ["Editor", "Metrics"];
     private static readonly string[] PropertyModes = ["Camera", "World", "Sky", "Terrain"];
 
 
@@ -51,28 +50,27 @@ internal static class Topbar
     private static void DrawModeSelector()
     {
         if (!ImGui.BeginChild("##editor-view-mode-selector")) return;
-        for (var i = 0; i < ViewModes.Length; i++)
+
+        if (ImGui.Selectable("Metrics", StateContext.ModeState.IsMetricState, ImGuiSelectableFlags.None,
+                new Vector2(SelectorWidth, GuiTheme.TopbarHeight)))
         {
-            if (i > 0) ImGui.SameLine();
-            var viewMode = ViewModeIndexToEnum(i);
-            var selected = viewMode == StateContext.ModeState.EditorMode;
-
-            if (ImGui.Selectable(ViewModes[i], selected, ImGuiSelectableFlags.None,
-                    new Vector2(SelectorWidth, GuiTheme.TopbarHeight)))
-            {
-                StateContext.SetViewModeState(viewMode);
-            }
+            StateContext.SetViewModeState(EditorViewMode.Metrics);
         }
-
+        ImGui.SameLine();
+        if (ImGui.Selectable("Editor", StateContext.ModeState.IsEditorState, ImGuiSelectableFlags.None,
+                new Vector2(SelectorWidth, GuiTheme.TopbarHeight)))
+        {
+            StateContext.SetViewModeState(EditorViewMode.Editor);
+        }
         ImGui.EndChild();
     }
 
     private static void DrawPropertySelector()
     {
-        const float width = 268/4.5f;
+        const float width = 268 / 4.5f;
 
         float x = ImGui.GetContentRegionAvail().X;
-        float startPosX = x  - width * 4.5f;
+        float startPosX = x - width * 4.5f;
         ImGui.SameLine(startPosX);
 
         if (!ImGui.BeginChild("##editor-property-selector")) return;
@@ -85,7 +83,7 @@ internal static class Topbar
             if (ImGui.Selectable(PropertyModes[i], selected, ImGuiSelectableFlags.None,
                     new Vector2(width, GuiTheme.TopbarHeight)))
             {
-                StateContext.ToggleRightSidebarState(selectorMode);
+                StateContext.ToggleRightSidebar(selectorMode);
             }
         }
 

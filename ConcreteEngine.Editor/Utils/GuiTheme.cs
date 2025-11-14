@@ -34,7 +34,7 @@ internal static class GuiTheme
 
     public static void PushTheme()
     {
-        ImGui.PushStyleColor(ImGuiCol.HeaderHovered, SelectedColor);
+        ImGui.PushStyleColor(ImGuiCol.HeaderHovered, Blue1);
         ImGui.PushStyleColor(ImGuiCol.HeaderActive, SelectedColor);
         ImGui.PushStyleColor(ImGuiCol.Header, PrimaryColor);
 

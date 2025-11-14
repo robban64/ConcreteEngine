@@ -51,12 +51,8 @@ internal static class EntitiesComponent
         _selectedIndex = -1;
         
         ImGui.SeparatorText("Entities");
+        DrawEntityList();
 
-        if (ImGui.BeginChild("#EntityList"))
-        {
-            DrawEntityList();
-            ImGui.EndChild();
-        }
         
         if (_selectedIndex >= 0 && _editedField >= 0)
         {
@@ -75,7 +71,6 @@ internal static class EntitiesComponent
         const ImGuiTableFlags flags = ImGuiTableFlags.NoBordersInBody;
 
         if (!ImGui.BeginTable("##entity_list_tbl", 3, flags)) return;
-        
 
         ImGui.TableSetupColumn("Id", ImGuiTableColumnFlags.WidthFixed, ColumnWidth);
         ImGui.TableSetupColumn("Comp", ImGuiTableColumnFlags.WidthFixed, ColumnWidth);
@@ -145,8 +140,6 @@ internal static class EntitiesComponent
 
 
             ImGui.PopID();
-
-            ImGui.PopStyleColor(1);
             ImGui.PopStyleVar();
         }
     }

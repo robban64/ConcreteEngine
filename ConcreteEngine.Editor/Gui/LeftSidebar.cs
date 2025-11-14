@@ -65,42 +65,37 @@ internal static class LeftSidebar
                 ImGuiChildFlags.AlwaysUseWindowPadding | ImGuiChildFlags.AutoResizeY))
         {
             ImGui.PopStyleVar();
-
             DrawModeSelector();
-
-            if (StateContext.ModeState.LeftSidebar == LeftSidebarMode.Assets)
-            {
-                AssetsComponent.DrawSubHeader();
-                AssetsComponent.Draw();
-            }
-
             ImGui.EndChild();
         }
 
-        if (StateContext.ModeState.LeftSidebar == LeftSidebarMode.Entities)
-            EntitiesComponent.Draw();
     }
 
     private static void DrawModeSelector()
     {
         var state = StateContext.ModeState.LeftSidebar;
+        var isAssets = state == LeftSidebarMode.Assets;
+        var isEntities = state == LeftSidebarMode.Entities;
         ImGui.PushStyleVar(ImGuiStyleVar.FramePadding, new Vector2(12, 4));
 
         if (ImGui.BeginTabBar("##left_panel_tabs", ImGuiTabBarFlags.None))
         {
-            if (ImGui.BeginTabItem("Assets"))
+            if(isAssets) ImGui.PushStyleColor(ImGuiCol.Tab, GuiTheme.SelectedColor);
+            if (ImGui.TabItemButton("Assets##asset-tab-btn"))  StateContext.SetLeftSidebarState(LeftSidebarMode.Assets);
+            if(isAssets) ImGui.PopStyleColor();
+
+            if(isEntities) ImGui.PushStyleColor(ImGuiCol.Tab, GuiTheme.SelectedColor);
+            if (ImGui.TabItemButton("Entities##entities-tab-btn")) StateContext.SetLeftSidebarState(LeftSidebarMode.Entities);
+            if(isEntities) ImGui.PopStyleColor();
+            
+            switch (state)
             {
-                if (state != LeftSidebarMode.Assets) StateContext.SetLeftSidebarState(LeftSidebarMode.Assets);
-                ImGui.EndTabItem();
+                case LeftSidebarMode.Assets: AssetsComponent.Draw(); break;
+                case LeftSidebarMode.Entities: EntitiesComponent.Draw(); break;
+                case LeftSidebarMode.Default:
+                default: break;
             }
-
-            if (ImGui.BeginTabItem("Entities"))
-            {
-                if (state != LeftSidebarMode.Entities) StateContext.SetLeftSidebarState(LeftSidebarMode.Entities);
-
-                ImGui.EndTabItem();
-            }
-
+            
             ImGui.EndTabBar();
         }
 

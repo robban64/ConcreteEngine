@@ -24,8 +24,9 @@ internal static class EditorStateContext
 
     internal static void Init()
     {
+        ModeState = EditorModeState.MakeNone();
+        NextState = EditorModeState.MakeEditor();
     }
-
 
     internal static void CommitState()
     {
@@ -66,17 +67,24 @@ internal static class EditorStateContext
         else if (mode == EditorViewMode.Metrics) NextState = (EditorModeState.MakeMetrics());
     }
 
-    public static void ToggleRightSidebarState(RightSidebarMode mode)
+    public static void ToggleRightSidebar(RightSidebarMode mode)
     {
         var newMode = mode == NextState.RightSidebar ? RightSidebarMode.Default : mode;
         NextState = (NextState with { RightSidebar = newMode });
     }
 
+    public static void ToggleLeftSidebar(LeftSidebarMode mode)
+    {
+        var newMode = mode == NextState.LeftSidebar ? LeftSidebarMode.Default : mode;
+        NextState = (NextState with { LeftSidebar = newMode });
+    }
+    
     public static void SetLeftSidebarState(LeftSidebarMode mode)
     {
         if (mode == NextState.LeftSidebar) return;
         NextState = NextState with { LeftSidebar = mode };
     }
+
 
     private static void OnEditorStateEnter(EditorModeState state, EditorModeState prev)
     {

@@ -16,19 +16,29 @@ public sealed record StringLogEvent(LogScope Scope, string Message, LogLevel Lev
 
 public static class Logger
 {
-    internal static Queue<LogEvent> LogQueue { get; } = new(16);
-    
+    private static readonly LogEvent[] LogBuffer = new LogEvent[64];
     private static readonly List<LogFilterWildcard> IgnoreFilter = new(4);
 
+    private static int _idx = 0;
+    
     private static bool _enabled = true;
 
     private static Action<StringLogEvent>? _logStringDel;
-
+    
+    public static int Count => _idx;
+    
     public static bool IsAttached => _logStringDel != null;
 
     internal static void Attach(Action<StringLogEvent> logStringDel)
     {
         _logStringDel = logStringDel;
+    }
+
+    public static ReadOnlySpan<LogEvent> DrainLogs()
+    {
+        var index = _idx;
+        _idx = 0;
+        return LogBuffer.AsSpan(0,index);
     }
     
     public static void ToggleLog(bool enabled, LogTopic topic = 0, LogScope scope = 0, LogAction action = 0,
@@ -49,31 +59,31 @@ public static class Logger
         set
         {
             if (_enabled == value) return;
-            LogQueue.Clear();
+            LogBuffer.AsSpan().Clear();
+            _idx = 0;
             _enabled = value;
         }
+    }
+
+    private static void Event(in LogEvent log)
+    {
+        if (!Enabled) return;
+        if (_idx >= 128)
+        {
+            Console.WriteLine("Log buffer full");
+            return;
+        }
+
+        if (FilterLog(in log))
+            return;
+
+        LogBuffer[_idx++] = log;
     }
 
     public static void LogString(LogScope scope, string message, LogLevel level = LogLevel.Info) =>
         _logStringDel?.Invoke(new StringLogEvent(scope, message, level));
 
-    private static void Event(in LogEvent log)
-    {
-        if (!Enabled) return;
-        if (LogQueue.Count > 100)
-        {
-            if (!IsAttached || !Enabled)
-                LogQueue.Clear();
-            else
-                throw new InvalidOperationException("Logger queue overflow");
-        }
-        
-        if (FilterLog(in log))
-            return;
-
-        LogQueue.Enqueue(log);
-    }
-
+    
     public static void LogAssetObject(AssetObject asset, LogAction action, bool error = false) =>
         Event(new LogEvent(
             id: (uint)asset.RawId.Value,

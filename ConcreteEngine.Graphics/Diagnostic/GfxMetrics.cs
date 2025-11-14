@@ -12,9 +12,10 @@ public static class GfxMetrics
 
     private static readonly IStoreMetrics[] StoreMetrics = new IStoreMetrics[StoreCount];
 
-    //public static bool MetricsEnabled { get; private set; } = true;
 
     public static int StoreCount => Kinds.Length - 1;
+
+    //public static bool MetricsEnabled { get; private set; } = true;
 
     //public static ReadOnlySpan<ResourceKind> GetResourceKinds() => Kinds;
 

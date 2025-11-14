@@ -33,10 +33,6 @@ public static class ConsoleService
     static ConsoleService()
     {
         ConsoleCtx = new ConsoleCtx(SendLog);
-        for (int i = 0; i < 130; i++)
-        {
-            ConsoleCtx.AddLog($"Item: {i} some long other text {i}");
-        }
     }
     
     internal static ReadOnlySpan<string> GetLogs() => LogBuffer.AsSpan(0, _count);

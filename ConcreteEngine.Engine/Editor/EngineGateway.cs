@@ -127,24 +127,20 @@ internal sealed class EngineGateway : IDisposable
         }
     }
 
-    public void DrainLogs(int n = 6)
+    public void DrainLogs()
     {
-        int idx = 0;
-        if (_drainGfxLogs)
+        if (_drainGfxLogs && GfxLog.Count > 0)
         {
-            while (idx < n && GfxLog.LogQueue.Count > 0)
-            {
-                var cmd = GfxLog.LogQueue.Dequeue();
-                _debugTools.AddLog(_logParser.Format(cmd));
-                idx++;
-            }
+            var logs = GfxLog.DrainLogs();
+            foreach (ref readonly var log in logs)
+                _debugTools.AddLog(_logParser.Format(in log));
         }
 
-        while (idx < n && Logger.LogQueue.Count > 0)
+        if (!_drainGfxLogs && Logger.Count > 0)
         {
-            var cmd = Logger.LogQueue.Dequeue();
-            _debugTools.AddLog(_logParser.Format(cmd));
-            idx++;
+            var logs = Logger.DrainLogs();
+            foreach (ref readonly var log in logs)
+                _debugTools.AddLog(_logParser.Format(in log));
         }
 
         _drainGfxLogs = !_drainGfxLogs;

@@ -9,9 +9,10 @@ namespace ConcreteEngine.Graphics.Diagnostic;
 
 public static class GfxLog
 {
-    public static Queue<LogEvent> LogQueue { get; } = new(16);
-
+    private static readonly LogEvent[] LogBuffer = new LogEvent[64];
     private static readonly List<LogFilterWildcard> IgnoreFilter = new(4);
+
+    private static int _idx = 0;
 
     private static bool _enabled = false;
 
@@ -21,27 +22,34 @@ public static class GfxLog
         set
         {
             if (_enabled == value) return;
-            LogQueue.Clear();
+            LogBuffer.AsSpan().Clear();
+            _idx = 0;
             _enabled = value;
         }
     }
 
+    public static int Count => _idx;
+
+    public static ReadOnlySpan<LogEvent> DrainLogs()
+    {
+        var index = _idx;
+        _idx = 0;
+        return LogBuffer.AsSpan(0,index);
+    }
 
     private static void Event(in LogEvent log)
     {
         if (!Enabled) return;
-        if (LogQueue.Count > 100)
+        if (_idx >= 128)
         {
-            if (!Enabled)
-                LogQueue.Clear();
-            else
-                throw new InvalidOperationException("Logger queue overflow");
+            Console.WriteLine("Log buffer full");
+            return;
         }
 
         if (FilterLog(in log))
             return;
 
-        LogQueue.Enqueue(log);
+        LogBuffer[_idx++] = log;
     }
 
 

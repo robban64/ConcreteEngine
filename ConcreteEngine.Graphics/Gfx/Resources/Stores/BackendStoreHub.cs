@@ -25,7 +25,7 @@ internal sealed class BackendStoreHub
 
 
     public void Register<TId, THandle>(BackendResourceStore<TId, THandle> store)
-        where TId : unmanaged, IResourceId where THandle : unmanaged, IResourceHandle, IEquatable<THandle>
+        where TId : unmanaged, IResourceId where THandle : unmanaged, IResourceHandle
     {
         if (!_stores.TryAdd(store.Kind, store))
             throw new InvalidOperationException("Duplicate backend store.");
@@ -40,7 +40,7 @@ internal sealed class BackendStoreHub
     }
 
     public BackendResourceStore<TId, THandle> GetStore<TId, THandle>()
-        where TId : unmanaged, IResourceId where THandle : unmanaged, IResourceHandle, IEquatable<THandle>
+        where TId : unmanaged, IResourceId where THandle : unmanaged, IResourceHandle
     {
         if (!_stores.TryGetValue(TId.Kind, out var s) || s is not BackendResourceStore<TId, THandle> store)
             throw new InvalidOperationException("Missing backend store.");

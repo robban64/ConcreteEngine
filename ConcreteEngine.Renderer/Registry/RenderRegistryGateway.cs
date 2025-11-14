@@ -14,22 +14,24 @@ internal static class RenderRegistryGateway
         _uboRegistry = uboRegistry;
     }
         
-    public static void OnUboChanged(UniformBufferId id, in UniformBufferMeta newMeta, in UniformBufferMeta oldMeta, GfxMetaChanged message)
+    public static void OnUboChanged(in GfxMetaChanged<UniformBufferMeta> message)
     {
+        var id = new UniformBufferId(message.Id);
         InvalidOpThrower.ThrowIfNull(_uboRegistry, nameof(_uboRegistry));
         ArgumentOutOfRangeException.ThrowIfLessThan(id.Value, 1, nameof(id));
             
-        var renderUbo = _uboRegistry.GetBySlot(newMeta.Slot);
-        renderUbo.SetCapacity(newMeta.Capacity);
+        var renderUbo = _uboRegistry.GetBySlot(message.Meta.Slot);
+        renderUbo.SetCapacity(message.Meta.Capacity);
     }
 
         
-    public static void OnFboChange(FrameBufferId id, in FrameBufferMeta newMeta, in FrameBufferMeta oldMeta, GfxMetaChanged message)
+    public static void OnFboChange(in GfxMetaChanged<FrameBufferMeta> message)
     {
+        var id = new FrameBufferId(message.Id);
         InvalidOpThrower.ThrowIfNull(_fboRegistry, nameof(_fboRegistry));
         ArgumentOutOfRangeException.ThrowIfLessThan(id.Value, 1, nameof(id));
         var renderFbo = _fboRegistry.GetRenderFboById(id);
         if (renderFbo is null) RenderFboRegistry.ThrowNotFound(id);
-        renderFbo.UpdateFromMeta(in newMeta);
+        renderFbo.UpdateFromMeta(in message.Meta);
     }
 } 

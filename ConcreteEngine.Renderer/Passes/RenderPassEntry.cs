@@ -18,7 +18,6 @@ public sealed class RenderPassEntry
     public PassTagKey PassKey { get; private set; }
     public PassOpKind PassOp { get; private set; }
 
-
     private RenderPassOp? _applyPassDel;
     private RenderAfterPassOp? _applyAfterPassDel;
     private RenderPassMutate? _applyPassMutateDel;

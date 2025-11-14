@@ -19,20 +19,6 @@ public readonly struct DrawCommand(MeshId meshId, MaterialId materialId, int dra
     private readonly int pad;
 }
 
-//TODO Remove if not used in the future
-[StructLayout(LayoutKind.Sequential)]
-public readonly struct DrawTransformPayload
-{
-    public readonly Matrix4x4 Transform;
-
-    [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public DrawTransformPayload(in Matrix4x4 transform) => Transform = transform;
-
-    [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public static void Fill(in Matrix4x4 model, out DrawTransformPayload dst) =>
-        dst = new DrawTransformPayload(in model);
-}
-
 [StructLayout(LayoutKind.Sequential)]
 public readonly struct DrawCommandMeta(
     DrawCommandId id,
@@ -51,7 +37,7 @@ internal readonly struct DrawCommandRef : IComparable<DrawCommandRef>
 {
     private readonly ulong _sortKey;
     public readonly int Idx; // submit index, stable sort
-
+    
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public DrawCommandRef(DrawCommandMeta meta, int idx)
     {

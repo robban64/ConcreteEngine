@@ -128,7 +128,9 @@ internal sealed class BackendResourceStore<TId, THandle> : IBackendResourceStore
 
 internal static class BkThrower
 {
-    [DoesNotReturn, StackTraceHidden, MethodImpl(MethodImplOptions.NoInlining)]
+    [DoesNotReturn]
+    [StackTraceHidden]
+    [MethodImpl(MethodImplOptions.NoInlining)]
     public static void ThrowInvalid(string name) => throw new InvalidOperationException(nameof(name));
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]

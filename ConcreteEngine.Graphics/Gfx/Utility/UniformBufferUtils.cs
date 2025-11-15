@@ -5,7 +5,6 @@ using System.Diagnostics.CodeAnalysis;
 using System.Runtime.CompilerServices;
 using ConcreteEngine.Graphics.Error;
 using ConcreteEngine.Graphics.Gfx.Definitions;
-using ConcreteEngine.Graphics.Primitives;
 
 #endregion
 
@@ -72,7 +71,9 @@ public static class UniformBufferUtils
     public static bool IsStd140Aligned<T>() where T : unmanaged => Unsafe.SizeOf<T>() % 16 == 0;
 
 
-    [MethodImpl(MethodImplOptions.NoInlining), DoesNotReturn, StackTraceHidden]
+    [MethodImpl(MethodImplOptions.NoInlining)]
+    [DoesNotReturn]
+    [StackTraceHidden]
     private static void ThrowStd140NotAligned<T>() where T : unmanaged =>
         throw new GraphicsException($"Invalid struct layout: {Unsafe.SizeOf<T>()} bytes for {typeof(T).Name}");
 

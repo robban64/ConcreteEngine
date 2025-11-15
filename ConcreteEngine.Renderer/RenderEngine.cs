@@ -142,7 +142,6 @@ public sealed class RenderEngine
 
     private void ExecutePass(PassId passId)
     {
-        
         var passResult = _passPipeline.ApplyPass();
 
         if (passResult.OpKind == PassOpKind.Resolve)

@@ -8,7 +8,6 @@ using ConcreteEngine.Graphics.Gfx.Definitions;
 using ConcreteEngine.Graphics.Gfx.Internal;
 using ConcreteEngine.Graphics.Gfx.Utility;
 using ConcreteEngine.Graphics.OpenGL;
-using ConcreteEngine.Graphics.Primitives;
 
 #endregion
 
@@ -155,7 +154,8 @@ public sealed class GfxBuffers
     {
         //UniformBufferUtils.IsStd140AlignedOrThrow<T>(out nint stride);
         var uboRef = _uboStore.GetRefHandle(uboId);
-        _driverBuffer.UploadUniformBufferData(uboRef, MemoryMarshal.AsBytes(data), offset, Unsafe.SizeOf<T>() * data.Length);
+        _driverBuffer.UploadUniformBufferData(uboRef, MemoryMarshal.AsBytes(data), offset,
+            Unsafe.SizeOf<T>() * data.Length);
     }
 
     public void BindUniformBufferRange(UniformBufferId uboId, nint offset, nint size)

@@ -1,5 +1,9 @@
+#region
+
 using ConcreteEngine.Common;
 using ConcreteEngine.Graphics.Gfx.Resources;
+
+#endregion
 
 namespace ConcreteEngine.Renderer.Registry;
 
@@ -13,18 +17,18 @@ internal static class RenderRegistryGateway
         _fboRegistry = fboRegistry;
         _uboRegistry = uboRegistry;
     }
-        
+
     public static void OnUboChanged(in GfxMetaChanged<UniformBufferMeta> message)
     {
         var id = new UniformBufferId(message.Id);
         InvalidOpThrower.ThrowIfNull(_uboRegistry, nameof(_uboRegistry));
         ArgumentOutOfRangeException.ThrowIfLessThan(id.Value, 1, nameof(id));
-            
+
         var renderUbo = _uboRegistry.GetBySlot(message.Meta.Slot);
         renderUbo.SetCapacity(message.Meta.Capacity);
     }
 
-        
+
     public static void OnFboChange(in GfxMetaChanged<FrameBufferMeta> message)
     {
         var id = new FrameBufferId(message.Id);
@@ -34,4 +38,4 @@ internal static class RenderRegistryGateway
         if (renderFbo is null) RenderFboRegistry.ThrowNotFound(id);
         renderFbo.UpdateFromMeta(in message.Meta);
     }
-} 
+}

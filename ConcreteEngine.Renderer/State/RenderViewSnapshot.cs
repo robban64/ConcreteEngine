@@ -19,9 +19,9 @@ public struct RenderViewSnapshot(
     public Matrix4x4 ViewMatrix = viewMatrix;
     public Matrix4x4 ProjectionMatrix = projectionMatrix;
     public Matrix4x4 ProjectionViewMatrix = projectionViewMatrix;
-    
+
     public ProjectionInfoData ProjectionInfo = projectionInfo;
-    
+
     public Quaternion Rotation = rotation;
     public Vector3 Position = position;
 

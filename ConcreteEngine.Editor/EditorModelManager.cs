@@ -1,10 +1,12 @@
+#region
+
 using ConcreteEngine.Common;
 using ConcreteEngine.Editor.Data;
-using ConcreteEngine.Editor.DataState;
 using ConcreteEngine.Editor.Definitions;
-using ConcreteEngine.Editor.Gui.Components;
 using ConcreteEngine.Editor.ViewModel;
 using static ConcreteEngine.Editor.EditorService;
+
+#endregion
 
 namespace ConcreteEngine.Editor;
 
@@ -77,14 +79,14 @@ internal static class EditorModelManager
         return;
 
         static void RefreshEntity(ModelState<EntitiesViewModel> ctx, EntitiesViewModel it) =>
-            ctx.State!.FillData( in EditorApi.UpdateEntityData);
+            ctx.State!.FillData(in EditorApi.UpdateEntityData);
 
         static void SelectEntityHandler(ModelState<EntitiesViewModel> ctx, in EntityRecord it) =>
             ctx.State!.FillData(it, in EditorApi.UpdateEntityData);
 
         static void UpdateEntityHandler(ModelState<EntitiesViewModel> ctx, in EntityRecord it)
         {
-            ctx.State!.WriteData(  it, in EditorApi.UpdateEntityData);
+            ctx.State!.WriteData(it, in EditorApi.UpdateEntityData);
             ctx.EnqueueRefreshNextFrame();
         }
     }
@@ -96,7 +98,7 @@ internal static class EditorModelManager
             .CreateBuilder(static () => new CameraViewModel())
             .OnEnter(FetchCameraDataHandler)
             .OnRefresh(FetchCameraDataHandler)
-            .OnLeave(static (ctx, it) => {})
+            .OnLeave(static (ctx, it) => { })
             .RegisterEventNoOp(EventKey.SelectionUpdated, WriteCameraDataHandler)
             .Build();
 
@@ -110,8 +112,6 @@ internal static class EditorModelManager
 
         static void FetchCameraDataHandler(ModelState<CameraViewModel> ctx, CameraViewModel it) =>
             it.FillData(EditorApi.UpdateCameraData);
-
-
     }
 
     private static void RegisterWorldRenderState()

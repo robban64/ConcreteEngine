@@ -33,8 +33,8 @@ internal interface IGfxMetaResourceStore<TMeta> : IGfxResourceStore where TMeta 
 
 internal sealed class GfxResourceStore<TId, TMeta> : IGfxResourceStore<TId>, IGfxMetaResourceStore<TMeta>
     where TId : unmanaged, IResourceId where TMeta : unmanaged, IResourceMeta
-{    
-    public unsafe delegate*<in GfxMetaChanged<TMeta>, void> ChangeCallback {get; private set; }
+{
+    public unsafe delegate*<in GfxMetaChanged<TMeta>, void> ChangeCallback { get; private set; }
 
     private static TId MakeId(int idx)
     {

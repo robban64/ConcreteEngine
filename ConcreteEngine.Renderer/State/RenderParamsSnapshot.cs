@@ -1,4 +1,8 @@
+#region
+
 using ConcreteEngine.Shared.RenderData;
+
+#endregion
 
 namespace ConcreteEngine.Renderer.State;
 

@@ -71,5 +71,4 @@ public readonly struct MeshDrawProperties(
     public static MeshDrawProperties MakeElemental(DrawMeshKind kind = DrawMeshKind.Elements,
         DrawElementSize size = DrawElementSize.UnsignedInt, int drawCount = 0) =>
         new(DrawPrimitive.Triangles, kind, size, drawCount);
-
 }

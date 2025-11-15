@@ -1,7 +1,6 @@
 #region
 
 using System.Numerics;
-using ConcreteEngine.Editor.Data;
 using ConcreteEngine.Editor.Definitions;
 using ConcreteEngine.Editor.Utils;
 using ConcreteEngine.Editor.ViewModel;
@@ -34,7 +33,7 @@ internal static class AssetsComponent
         const int rowHeight = 32;
 
         var btnSize = new Vector2(rowHeight, 22);
-        
+
         ImGui.SeparatorText("Asset Store");
         DrawAssetTypeSelector();
         ImGui.Separator();
@@ -164,7 +163,7 @@ internal static class AssetsComponent
 
             ImGui.TableNextColumn();
             ImGui.TextUnformatted(asset.SpecialValue);
-            ImGui.PopID();  
+            ImGui.PopID();
 
             ImGui.EndTable();
         }

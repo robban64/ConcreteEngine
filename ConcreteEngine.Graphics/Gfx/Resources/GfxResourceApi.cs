@@ -22,10 +22,9 @@ public sealed class GfxResourceApi
     public unsafe void BindMetaChanged<TId, TMeta>(delegate*<in GfxMetaChanged<TMeta>, void> receiver)
         where TId : unmanaged, IResourceId where TMeta : unmanaged, IResourceMeta
     {
-        if(!Receivers.Add(typeof(TId))) throw new InvalidOperationException("Already registered");
-           
+        if (!Receivers.Add(typeof(TId))) throw new InvalidOperationException("Already registered");
+
         var store = _storeHub.GetStore<TId, TMeta>();
         store.BindOnChangeCallback(*&receiver);
-
     }
 }

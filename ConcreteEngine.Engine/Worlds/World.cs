@@ -2,7 +2,6 @@
 
 using ConcreteEngine.Common.Numerics;
 using ConcreteEngine.Editor.Data;
-using ConcreteEngine.Editor.DataState;
 using ConcreteEngine.Engine.Editor.Data;
 using ConcreteEngine.Engine.Worlds.Entities;
 using ConcreteEngine.Engine.Worlds.Render;
@@ -102,7 +101,7 @@ public sealed class World : IWorld
             Camera.NearPlane = data.Projection.Near;
             Camera.Fov = data.Projection.Fov;
         }
-        
+
         if (WorldActionSlot.TryReadSlot(0, out EntityDataPayload entityData))
         {
             ref readonly var transform = ref entityData.Transform;
@@ -110,7 +109,6 @@ public sealed class World : IWorld
             entityTransform.Translation = transform.Translation;
             entityTransform.Scale = transform.Scale;
             entityTransform.Rotation = transform.Rotation;
-
         }
 
         WorldActionSlot.ClearDirty();

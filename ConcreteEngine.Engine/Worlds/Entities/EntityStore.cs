@@ -41,6 +41,7 @@ public sealed class EntityStore<T> where T : unmanaged
             value = default;
             return false;
         }
+
         value = _data[_sparse[e]];
         return true;
     }

@@ -2,7 +2,6 @@
 
 using ConcreteEngine.Common;
 using ConcreteEngine.Common.Numerics;
-using ConcreteEngine.Common.Time;
 using ConcreteEngine.Engine.Assets;
 using ConcreteEngine.Engine.Assets.Shaders;
 using ConcreteEngine.Engine.Editor.Data;
@@ -168,7 +167,7 @@ public sealed class WorldRenderer : IWorldRenderer
 
         _hasUploadedMaterial = true;
     }
-    
+
 
     public void Shutdown()
     {

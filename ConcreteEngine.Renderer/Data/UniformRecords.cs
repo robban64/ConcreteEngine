@@ -1,15 +1,12 @@
 #region
 
 using System.Numerics;
-using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
-using ConcreteEngine.Common.Numerics;
 using ConcreteEngine.Graphics.Primitives;
 
 #endregion
 
 namespace ConcreteEngine.Renderer.Data;
-
 
 public abstract class LightUboTag;
 
@@ -50,7 +47,7 @@ public readonly struct EngineUniformRecord(
     float random,
     Vector2 invResolution,
     Vector2 mouse
-) 
+)
 {
     // x = seconds since start, y = frame time step, z = per-frame random, w = pad
     public readonly Vector4 EngineParams0 = new(time, deltaTime, random, 0);
@@ -79,7 +76,7 @@ public struct CameraUniformRecord(
     in Matrix4x4 viewMat,
     in Matrix4x4 projMat,
     in Matrix4x4 projViewMat,
-    in Vector3 cameraPos) 
+    in Vector3 cameraPos)
 {
     public Matrix4x4 ViewMat = viewMat;
     public Matrix4x4 ProjMat = projMat;
@@ -92,7 +89,7 @@ public struct CameraUniformRecord(
 public struct DirLightUniformRecord(
     in Vector4 direction,
     in Vector4 diffuse,
-    in Vector4 specular) 
+    in Vector4 specular)
 {
     public Vector4 Direction = direction; // direction, light toward scene
     public Vector4 Diffuse = diffuse; // rgb=color, a=intensity
@@ -129,7 +126,7 @@ public struct LightUniformRecord(
 public struct ShadowUniformRecord(
     in Matrix4x4 lightViewProj,
     Vector4 shadowParams0,
-    Vector4 shadowParams1) 
+    Vector4 shadowParams1)
 {
     public Matrix4x4 LightViewProj = lightViewProj;
     public Vector4 ShadowParams0 = shadowParams0; // x=1/texW, y=1/texH, z=constBias, w=slopeBias
@@ -137,7 +134,7 @@ public struct ShadowUniformRecord(
 }
 
 [StructLayout(LayoutKind.Sequential)]
-public struct MaterialUniformRecord 
+public struct MaterialUniformRecord
 {
     public Vector4 MatColor; // rgb = tint
     public Vector4 MatParams0; // x = SpecularStrength, y = uvRepeat, z,w reserved

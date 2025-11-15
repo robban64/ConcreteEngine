@@ -67,7 +67,7 @@ internal sealed class MaterialDrawBuffer
         _idx++;
         _slotIdx = slotIdx;
     }
-    
+
     internal ReadOnlySpan<MaterialUniformRecord> DrainDrawMaterialData()
     {
         InvalidOpThrower.ThrowIf(_hasDrained);

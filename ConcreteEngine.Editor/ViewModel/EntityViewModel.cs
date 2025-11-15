@@ -1,8 +1,11 @@
+#region
+
 using ConcreteEngine.Common;
 using ConcreteEngine.Common.Collections;
 using ConcreteEngine.Editor.Data;
 using ConcreteEngine.Editor.DataState;
-using ConcreteEngine.Shared.TransformData;
+
+#endregion
 
 namespace ConcreteEngine.Editor.ViewModel;
 
@@ -15,19 +18,19 @@ public sealed class EntitiesViewModel
 
     public ref readonly EntityDataPayload Data => ref _data;
     internal ref EntityDataState DataState => ref _state;
-    
 
-    public void FillData(EntityRecord entity, in ApiDataRequest<EntityDataPayload> api)
+
+    public void FillData(EntityRecord entity, in ApiDataRefRequest<EntityDataPayload> api)
     {
         _data.EntityId = entity.EntityId;
         api.FillData(entity.EntityId, ref _data);
-        
+
         _state.ModelId = _data.Model.ModelId;
         _state.MaterialTagKey = _data.Model.MaterialTagKey;
         _state.Transform.From(in _data.Transform);
     }
-    
-    public void FillData(in ApiDataRequest<EntityDataPayload> api)
+
+    public void FillData(in ApiDataRefRequest<EntityDataPayload> api)
     {
         var idx = SortMethod.BinarySearchInt(Entities, _data.EntityId);
         InvalidOpThrower.ThrowIf(idx < 0, nameof(_data.EntityId));
@@ -35,8 +38,8 @@ public sealed class EntitiesViewModel
         FillData(entity, in api);
     }
 
-    
-    public void WriteData(EntityRecord record, in ApiDataRequest<EntityDataPayload> api)
+
+    public void WriteData(EntityRecord record, in ApiDataRefRequest<EntityDataPayload> api)
     {
         record.Generation++;
         UpdateDataFromState(record);

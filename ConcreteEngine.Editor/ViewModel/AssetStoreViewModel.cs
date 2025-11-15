@@ -1,7 +1,10 @@
+#region
+
 using ConcreteEngine.Editor.Definitions;
 
-namespace ConcreteEngine.Editor.ViewModel;
+#endregion
 
+namespace ConcreteEngine.Editor.ViewModel;
 
 public sealed class AssetStoreViewModel
 {

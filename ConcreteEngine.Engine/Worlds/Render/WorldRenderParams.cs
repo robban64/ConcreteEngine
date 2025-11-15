@@ -1,9 +1,6 @@
 #region
 
-using System.Diagnostics;
 using System.Numerics;
-using System.Runtime.CompilerServices;
-using ConcreteEngine.Editor.DataState;
 using ConcreteEngine.Renderer.Data;
 using ConcreteEngine.Renderer.State;
 using ConcreteEngine.Shared.RenderData;

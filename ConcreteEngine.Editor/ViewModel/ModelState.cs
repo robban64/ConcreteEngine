@@ -1,6 +1,10 @@
+#region
+
 using ConcreteEngine.Common;
 using ConcreteEngine.Editor.Data;
 using ConcreteEngine.Editor.Definitions;
+
+#endregion
 
 namespace ConcreteEngine.Editor.ViewModel;
 

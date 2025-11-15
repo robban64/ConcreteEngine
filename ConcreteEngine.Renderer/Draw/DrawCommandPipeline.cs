@@ -87,11 +87,11 @@ internal sealed class DrawCommandPipeline
     }
 
     private FrameProfileTimer _timer = new();
+
     internal void UploadUniformGlobals()
     {
         _drawBuffers.UploadGlobalUniforms(in _stateContext.CurrentFrameInfo, in _stateContext.CurrentRuntimeParams);
         _drawBuffers.UploadCameraView(_stateContext.View);
-
     }
 
     internal void UploadDrawUniformData()

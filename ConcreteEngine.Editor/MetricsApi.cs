@@ -7,12 +7,11 @@ using ConcreteEngine.Shared.Diagnostics;
 
 namespace ConcreteEngine.Editor;
 
-
 public static class MetricsApi
 {
     // Fetchers
     public static unsafe delegate*<out FrameMetric, out RenderInfoSample, void> PullFrameMetrics;
-    
+
     //public static Func<FrameMetric<RenderInfoSample>>? PullFrameMetrics { get; set; }
     public static Func<PairSample>? PullSceneMetrics { get; set; }
     public static Func<CollectionSample>? PullMaterialMetrics { get; set; }

@@ -24,13 +24,12 @@ public readonly struct VertexBufferDesc(
     BufferAccess access
 )
 {
-    public readonly int BindingIdx  = bindingIdx;
-    public readonly int VertexSize  = vertexSize;
-    public readonly int VertexCount  = vertexCount;
-    public readonly BufferUsage Usage  = usage;
-    public readonly BufferStorage Storage  = storage;
-    public readonly BufferAccess Access  = access;
-
+    public readonly int BindingIdx = bindingIdx;
+    public readonly int VertexSize = vertexSize;
+    public readonly int VertexCount = vertexCount;
+    public readonly BufferUsage Usage = usage;
+    public readonly BufferStorage Storage = storage;
+    public readonly BufferAccess Access = access;
 }
 
 //IBO
@@ -47,12 +46,11 @@ public readonly struct IndexBufferDesc(
     BufferStorage storage,
     BufferAccess access)
 {
-    public readonly uint ElementSize  = elementSize;
-    public readonly uint ElementCount  = elementCount;
-    public readonly BufferUsage Usage  = usage;
-    public readonly BufferStorage Storage  = storage;
-    public readonly BufferAccess Access  = access;
-
+    public readonly uint ElementSize = elementSize;
+    public readonly uint ElementCount = elementCount;
+    public readonly BufferUsage Usage = usage;
+    public readonly BufferStorage Storage = storage;
+    public readonly BufferAccess Access = access;
 }
 
 public readonly struct BufferDescriptor(
@@ -60,12 +58,11 @@ public readonly struct BufferDescriptor(
     BufferStorage storage,
     BufferAccess access)
 {
-    
-    public readonly BufferUsage Usage  = usage;
-    public readonly BufferStorage Storage  = storage;
-    public readonly BufferAccess Access  = access;
+    public readonly BufferUsage Usage = usage;
+    public readonly BufferStorage Storage = storage;
+    public readonly BufferAccess Access = access;
 
-    
+
     public static BufferDescriptor MakeStatic() => new(BufferUsage.StaticDraw, BufferStorage.Static, BufferAccess.None);
 
     public static BufferDescriptor MakeDynamic() =>
@@ -82,5 +79,4 @@ public readonly struct BufferDescriptor(
     public static BufferDescriptor MakePersistentMapped() =>
         new(BufferUsage.StreamDraw, BufferStorage.Stream,
             BufferAccess.MapRead | BufferAccess.MapWrite | BufferAccess.Persistent | BufferAccess.Coherent);
-
 }

@@ -21,7 +21,7 @@ public static class GfxMetrics
 
     //internal static IStoreMetrics GetStoreMetrics(ResourceKind kind) => StoreMetrics[(int)kind - 1];
 
-    
+
     public static ReadOnlySpan<(string, string)> GetStoreNames()
     {
         var names = new (string, string)[StoreCount];

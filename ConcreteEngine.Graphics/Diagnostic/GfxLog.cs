@@ -34,7 +34,7 @@ public static class GfxLog
     {
         var index = _idx;
         _idx = 0;
-        return LogBuffer.AsSpan(0,index);
+        return LogBuffer.AsSpan(0, index);
     }
 
     private static void Event(in LogEvent log)
@@ -88,8 +88,7 @@ public static class GfxLog
         Event(LogBk(handle, h.Slot, flags, h.IsValid, topic, action));
 
 
-    private static bool FilterLog(in LogEvent log) =>
-        FilterLogIndex(log.Topic, log.Scope, log.Action, log.Level) >= 0;
+    private static bool FilterLog(in LogEvent log) => FilterLogIndex(log.Topic, log.Scope, log.Action, log.Level) >= 0;
 
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]

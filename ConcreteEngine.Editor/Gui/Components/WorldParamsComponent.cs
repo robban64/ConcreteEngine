@@ -1,9 +1,12 @@
+#region
+
 using System.Numerics;
-using ConcreteEngine.Editor.DataState;
 using ConcreteEngine.Editor.Definitions;
 using ConcreteEngine.Editor.Utils;
 using ConcreteEngine.Editor.ViewModel;
 using ImGuiNET;
+
+#endregion
 
 namespace ConcreteEngine.Editor.Gui.Components;
 
@@ -172,7 +175,7 @@ internal static class WorldParamsComponent
 
         ImGui.BeginGroup();
         ImGui.SeparatorText("White Balance");
-        ImGui.SliderFloat("##WbTint", ref post.WhiteBalance.Tint, 0f,1f, "Tint: %.2f");
+        ImGui.SliderFloat("##WbTint", ref post.WhiteBalance.Tint, 0f, 1f, "Tint: %.2f");
         fieldStatus.NextFieldDrag();
         ImGui.SliderFloat("##WbStrength", ref post.WhiteBalance.Strength, -1f, 1f, "Str: %.2f");
         fieldStatus.NextFieldDrag();

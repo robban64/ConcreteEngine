@@ -1,17 +1,13 @@
 #region
 
 using System.Numerics;
-using ConcreteEngine.Common;
 using ConcreteEngine.Common.Time;
 using ConcreteEngine.Editor.Data;
-using ConcreteEngine.Editor.DataState;
 using ConcreteEngine.Editor.Definitions;
 using ConcreteEngine.Editor.Gui;
-using ConcreteEngine.Editor.Gui.Components;
 using ConcreteEngine.Editor.Utils;
 using ConcreteEngine.Editor.ViewModel;
 using ImGuiNET;
-
 
 #endregion
 
@@ -43,12 +39,12 @@ internal static class EditorService
         MetricsApi.ToggleMetrics(ModeState.IsMetricState);
 
         RefreshData();
-        
+
         GuiTheme.PushTheme();
 
-        if(!blockInput)
+        if (!blockInput)
             CheckHotkeys();
-        
+
 
         Topbar.Draw();
         if (!StateContext.ModeState.IsEmptyViewMode)
@@ -58,22 +54,21 @@ internal static class EditorService
 
             LeftSidebar.Draw(GuiTheme.LeftSidebarWidth, offset: GuiTheme.TopbarHeight);
             RightSidebar.Draw(GuiTheme.RightSidebarWidth, offset: GuiTheme.TopbarHeight);
-            
+
             ImGui.PopStyleVar(2);
         }
 
         ConsoleService.Draw(GuiTheme.LeftSidebarWidth, GuiTheme.RightSidebarWidth);
-
     }
-    
+
     private static void CheckHotkeys()
     {
-        if(ImGui.IsKeyPressed(ImGuiKey._1)) StateContext.ToggleLeftSidebar(LeftSidebarMode.Assets);
-        else if(ImGui.IsKeyPressed(ImGuiKey._2)) StateContext.ToggleLeftSidebar(LeftSidebarMode.Entities);
-        else if(ImGui.IsKeyPressed(ImGuiKey._3)) StateContext.ToggleRightSidebar(RightSidebarMode.Camera);
-        else if(ImGui.IsKeyPressed(ImGuiKey._4)) StateContext.ToggleRightSidebar(RightSidebarMode.World);
-        else if(ImGui.IsKeyPressed(ImGuiKey._5)) StateContext.ToggleRightSidebar(RightSidebarMode.Sky);
-        else if(ImGui.IsKeyPressed(ImGuiKey._6)) StateContext.ToggleRightSidebar(RightSidebarMode.Terrain);
+        if (ImGui.IsKeyPressed(ImGuiKey._1)) StateContext.ToggleLeftSidebar(LeftSidebarMode.Assets);
+        else if (ImGui.IsKeyPressed(ImGuiKey._2)) StateContext.ToggleLeftSidebar(LeftSidebarMode.Entities);
+        else if (ImGui.IsKeyPressed(ImGuiKey._3)) StateContext.ToggleRightSidebar(RightSidebarMode.Camera);
+        else if (ImGui.IsKeyPressed(ImGuiKey._4)) StateContext.ToggleRightSidebar(RightSidebarMode.World);
+        else if (ImGui.IsKeyPressed(ImGuiKey._5)) StateContext.ToggleRightSidebar(RightSidebarMode.Sky);
+        else if (ImGui.IsKeyPressed(ImGuiKey._6)) StateContext.ToggleRightSidebar(RightSidebarMode.Terrain);
     }
 
     private static void RefreshData()
@@ -86,6 +81,7 @@ internal static class EditorService
             ModelManager.CameraState.InvokeAction(TransitionKey.Refresh);
             _lastRefresh = TimeUtils.GetTimestamp();
         }
+
         ModelManager.InvokeRefreshForModels();
     }
 
@@ -121,7 +117,6 @@ internal static class EditorService
     }
 
 
-
     internal static void OnFillEntities(ModelState<EntitiesViewModel> model)
     {
         ArgumentNullException.ThrowIfNull(model.State, nameof(model));
@@ -132,7 +127,7 @@ internal static class EditorService
     }
 
     private static TResponse? OnApiFill<TRequest, TResponse>(TRequest request,
-        GenericRequest<TRequest, TResponse>? apiFetch) where TRequest : class where TResponse : class
+        ApiModelRequestDel<TRequest, TResponse>? apiFetch) where TRequest : class where TResponse : class
     {
         if (!CanFetch(150) || apiFetch is null) return null;
         Console.WriteLine($"Api Fill: {typeof(TResponse).Name}");
@@ -157,6 +152,4 @@ internal static class EditorService
         _lastAction = TimeUtils.GetTimestamp();
         return true;
     }
-
-
 }

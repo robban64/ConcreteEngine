@@ -23,7 +23,7 @@ public sealed class EditorPortal : IDisposable
 
         _controller = new ImGuiController(gl, window, inputCtx, fontConfDefault);
     }
- 
+
     public void Update(float delta) => _controller.Update(delta);
 
     public void AddLog(string? msg) => ConsoleService.SendLog(msg);

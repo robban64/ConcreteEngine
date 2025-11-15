@@ -68,7 +68,6 @@ internal static class LeftSidebar
             DrawModeSelector();
             ImGui.EndChild();
         }
-
     }
 
     private static void DrawModeSelector()
@@ -80,14 +79,15 @@ internal static class LeftSidebar
 
         if (ImGui.BeginTabBar("##left_panel_tabs", ImGuiTabBarFlags.None))
         {
-            if(isAssets) ImGui.PushStyleColor(ImGuiCol.Tab, GuiTheme.SelectedColor);
-            if (ImGui.TabItemButton("Assets##asset-tab-btn"))  StateContext.SetLeftSidebarState(LeftSidebarMode.Assets);
-            if(isAssets) ImGui.PopStyleColor();
+            if (isAssets) ImGui.PushStyleColor(ImGuiCol.Tab, GuiTheme.SelectedColor);
+            if (ImGui.TabItemButton("Assets##asset-tab-btn")) StateContext.SetLeftSidebarState(LeftSidebarMode.Assets);
+            if (isAssets) ImGui.PopStyleColor();
 
-            if(isEntities) ImGui.PushStyleColor(ImGuiCol.Tab, GuiTheme.SelectedColor);
-            if (ImGui.TabItemButton("Entities##entities-tab-btn")) StateContext.SetLeftSidebarState(LeftSidebarMode.Entities);
-            if(isEntities) ImGui.PopStyleColor();
-            
+            if (isEntities) ImGui.PushStyleColor(ImGuiCol.Tab, GuiTheme.SelectedColor);
+            if (ImGui.TabItemButton("Entities##entities-tab-btn"))
+                StateContext.SetLeftSidebarState(LeftSidebarMode.Entities);
+            if (isEntities) ImGui.PopStyleColor();
+
             switch (state)
             {
                 case LeftSidebarMode.Assets: AssetsComponent.Draw(); break;
@@ -95,7 +95,7 @@ internal static class LeftSidebar
                 case LeftSidebarMode.Default:
                 default: break;
             }
-            
+
             ImGui.EndTabBar();
         }
 

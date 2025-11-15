@@ -1,6 +1,10 @@
+#region
+
 using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
 using ConcreteEngine.Common.Numerics.Maths;
+
+#endregion
 
 namespace ConcreteEngine.Shared.Diagnostics;
 
@@ -17,17 +21,17 @@ public readonly struct LogEvent(
     LogAction action = LogAction.Unknown,
     LogLevel level = LogLevel.Info)
 {
-    public readonly long Time  = DateTimeOffset.Now.ToUnixTimeMilliseconds();
-    public readonly uint Id  = id;
-    public readonly int Param0  = param0;
-    public readonly int Param1  = param1;
-    public readonly float FParam0  = fParam0;
-    public readonly ushort Gen  = gen;
-    public readonly ushort Flags  = flags;
-    public readonly LogTopic Topic  = topic;
-    public readonly LogScope Scope  = scope;
-    public readonly LogAction Action  = action;
-    public readonly LogLevel Level  = level;
+    public readonly long Time = DateTimeOffset.Now.ToUnixTimeMilliseconds();
+    public readonly uint Id = id;
+    public readonly int Param0 = param0;
+    public readonly int Param1 = param1;
+    public readonly float FParam0 = fParam0;
+    public readonly ushort Gen = gen;
+    public readonly ushort Flags = flags;
+    public readonly LogTopic Topic = topic;
+    public readonly LogScope Scope = scope;
+    public readonly LogAction Action = action;
+    public readonly LogLevel Level = level;
 }
 
 public readonly struct LogFilterWildcard

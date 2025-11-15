@@ -1,4 +1,8 @@
+#region
+
 using System.Runtime.InteropServices;
+
+#endregion
 
 namespace ConcreteEngine.Shared.RenderData;
 
@@ -13,12 +17,11 @@ public readonly struct ShadowParams(
     float pcfRadius
 )
 {
-    public readonly int ShadowMapSize  = shadowMapSize;
-    public readonly float Distance  = distance;
-    public readonly float ZPad  = zPad;
-    public readonly float ConstBias  = constBias;
-    public readonly float SlopeBias  = slopeBias;
-    public readonly float Strength  = strength;
-    public readonly float PcfRadius  = pcfRadius;
-
+    public readonly int ShadowMapSize = shadowMapSize;
+    public readonly float Distance = distance;
+    public readonly float ZPad = zPad;
+    public readonly float ConstBias = constBias;
+    public readonly float SlopeBias = slopeBias;
+    public readonly float Strength = strength;
+    public readonly float PcfRadius = pcfRadius;
 }

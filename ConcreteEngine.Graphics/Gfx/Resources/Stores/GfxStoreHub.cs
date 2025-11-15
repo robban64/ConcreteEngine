@@ -37,7 +37,7 @@ internal sealed class GfxStoreHub
         ThrowInvalidStoreType(TId.Kind, typeof(TId));
         return null!;
     }
-    
+
     internal IGfxMetaResourceStore<TMeta> GetMetaStore<TMeta>(ResourceKind kind) where TMeta : unmanaged, IResourceMeta
     {
         var store = GetStore(kind);
@@ -92,7 +92,9 @@ internal sealed class GfxStoreHub
     public RboStore RboStore { get; } = new(LowCapacity);
     public UboStore UboStore { get; } = new(LowCapacity);
 
-    [MethodImpl(MethodImplOptions.NoInlining), DoesNotReturn, StackTraceHidden]
+    [MethodImpl(MethodImplOptions.NoInlining)]
+    [DoesNotReturn]
+    [StackTraceHidden]
     private static void ThrowInvalidStoreType(ResourceKind kind, Type id, Type? meta = null) =>
         throw new ArgumentException($"Gfx Store {kind} is not: {id.Name}  {meta?.Name}");
 }

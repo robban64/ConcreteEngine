@@ -1,8 +1,11 @@
+#region
+
 using System.Numerics;
 using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
-using ConcreteEngine.Editor.Data;
 using ConcreteEngine.Shared.RenderData;
+
+#endregion
 
 namespace ConcreteEngine.Editor.DataState;
 
@@ -29,8 +32,7 @@ public struct DirLightState(in DirLightParams param)
     public float Intensity = param.Intensity;
     public float Specular = param.Specular;
 
-    public void Fill(out DirLightParams result)
-        => result = Unsafe.As<DirLightState, DirLightParams>(ref this);
+    public void Fill(out DirLightParams result) => result = Unsafe.As<DirLightState, DirLightParams>(ref this);
 }
 
 [StructLayout(LayoutKind.Sequential)]

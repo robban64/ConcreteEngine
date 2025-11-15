@@ -1,5 +1,9 @@
+#region
+
 using System.Numerics;
 using System.Runtime.InteropServices;
+
+#endregion
 
 namespace ConcreteEngine.Shared.RenderData;
 
@@ -23,5 +27,4 @@ public readonly struct FogParams(
     public readonly float MaxDistance = maxDistance;
     public readonly float HeightInfluence = heightInfluence;
     public readonly float Strength = strength;
-
 }

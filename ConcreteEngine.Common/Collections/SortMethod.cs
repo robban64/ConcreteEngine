@@ -19,5 +19,4 @@ public static class SortMethod
 
         return -1;
     }
-
 }

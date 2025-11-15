@@ -1,5 +1,8 @@
+#region
+
 using ConcreteEngine.Editor.Data;
-using ConcreteEngine.Shared.TransformData;
+
+#endregion
 
 namespace ConcreteEngine.Editor.DataState;
 

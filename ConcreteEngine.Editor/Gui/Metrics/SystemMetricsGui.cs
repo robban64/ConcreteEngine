@@ -1,7 +1,11 @@
+#region
+
 using System.Numerics;
 using ConcreteEngine.Editor.Utils;
 using ImGuiNET;
 using static ConcreteEngine.Editor.Utils.GuiUtils;
+
+#endregion
 
 namespace ConcreteEngine.Editor.Gui.Metrics;
 
@@ -11,7 +15,7 @@ internal static class SystemMetricsGui
 
     public static void Draw()
     {
-        const ImGuiChildFlags flags =  ImGuiChildFlags.AlwaysUseWindowPadding;
+        const ImGuiChildFlags flags = ImGuiChildFlags.AlwaysUseWindowPadding;
         var size = new Vector2(GuiTheme.RightSidebarWidth - WindowPaddingX, 0);
 
         if (!ImGui.BeginChild("##system-metrics-gui", size, flags)) return;
@@ -19,10 +23,10 @@ internal static class SystemMetricsGui
         DrawCpuMetrics();
         ImGui.Dummy(new Vector2(0, 6));
         DrawGcMetrics();
-        
-        ImGui.EndChild();
 
+        ImGui.EndChild();
     }
+
     private static void DrawCpuMetrics()
     {
         var data = MetricsApi.TextData;
@@ -41,5 +45,4 @@ internal static class SystemMetricsGui
         ImGui.SeparatorText("GC / Memory");
         TextIfNotNull(data.MemoryMetrics);
     }
-
 }

@@ -1,4 +1,8 @@
+#region
+
 using ImGuiNET;
+
+#endregion
 
 namespace ConcreteEngine.Editor.Utils;
 

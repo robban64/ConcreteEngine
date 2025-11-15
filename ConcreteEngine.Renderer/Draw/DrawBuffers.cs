@@ -208,7 +208,6 @@ internal sealed class DrawBuffers
 
     private void UploadPost()
     {
-        
         _paramsSnapshot.PostEffects
             .Deconstruct(out var g, out var wb, out var b, out var fx);
 

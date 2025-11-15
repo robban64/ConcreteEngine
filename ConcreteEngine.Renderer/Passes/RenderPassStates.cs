@@ -52,32 +52,32 @@ public readonly struct RenderPassState(
             linearFilter: m.LinearFilter ?? LinearFilter
         );
 
-    public static RenderPassState MakeSceneMsaa(int samples) => new()
-    {
-        ClearColor = GfxPassClear.MakeColorDepthClear(Color4.CornflowerBlue),
-        PassState = GfxPassState.MakeScene(),
-        Samples = samples
-    };
+    public static RenderPassState MakeSceneMsaa(int samples) =>
+        new()
+        {
+            ClearColor = GfxPassClear.MakeColorDepthClear(Color4.CornflowerBlue),
+            PassState = GfxPassState.MakeScene(),
+            Samples = samples
+        };
 
     public static RenderPassState MakeResolve() => new() { PassState = GfxPassState.MakeOff(), LinearFilter = false };
 
-    public static RenderPassState MakePostProcess(ShaderId shaderId) => new()
-    {
-        ClearColor = GfxPassClear.MakeColorClear(Color4.Black),
-        PassState = GfxPassState.MakePostProcess(),
-        ShaderId = shaderId
-    };
+    public static RenderPassState MakePostProcess(ShaderId shaderId) =>
+        new()
+        {
+            ClearColor = GfxPassClear.MakeColorClear(Color4.Black),
+            PassState = GfxPassState.MakePostProcess(),
+            ShaderId = shaderId
+        };
 
-    public static RenderPassState MakeScreen(ShaderId shaderId) => new()
-    {
-        ClearColor = GfxPassClear.MakeColorClear(Color4.Black),
-        PassState = GfxPassState.MakeScreen(),
-        ShaderId = shaderId
-    };
+    public static RenderPassState MakeScreen(ShaderId shaderId) =>
+        new()
+        {
+            ClearColor = GfxPassClear.MakeColorClear(Color4.Black),
+            PassState = GfxPassState.MakeScreen(),
+            ShaderId = shaderId
+        };
 
-    public static RenderPassState MakeShadow() => new()
-    {
-        ClearColor = GfxPassClear.MakeDepthClear(),
-        PassState = GfxPassState.MakeShadow()
-    };
+    public static RenderPassState MakeShadow() =>
+        new() { ClearColor = GfxPassClear.MakeDepthClear(), PassState = GfxPassState.MakeShadow() };
 }

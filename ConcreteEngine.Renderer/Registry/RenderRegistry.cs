@@ -5,7 +5,6 @@ using ConcreteEngine.Common;
 using ConcreteEngine.Common.Numerics;
 using ConcreteEngine.Graphics.Gfx;
 using ConcreteEngine.Graphics.Gfx.Resources;
-using ConcreteEngine.Graphics.Primitives;
 using ConcreteEngine.Renderer.Passes;
 
 #endregion
@@ -24,7 +23,6 @@ internal sealed class RenderRegistry
 
     public RenderFboRegistry FboRegistry { get; }
 
-    
 
     public RenderRegistry(GfxContext gfx)
     {
@@ -32,7 +30,6 @@ internal sealed class RenderRegistry
         UboRegistry = new RenderUboRegistry(gfx);
         FboRegistry = new RenderFboRegistry(gfx);
         SetupGateway(gfx.ResourceManager.GetGfxApi());
-
     }
 
     private unsafe void SetupGateway(GfxResourceApi gfxApi)
@@ -40,7 +37,6 @@ internal sealed class RenderRegistry
         RenderRegistryGateway.Setup(FboRegistry, UboRegistry);
         gfxApi.BindMetaChanged<UniformBufferId, UniformBufferMeta>(&RenderRegistryGateway.OnUboChanged);
         gfxApi.BindMetaChanged<FrameBufferId, FrameBufferMeta>(&RenderRegistryGateway.OnFboChange);
-
     }
 
     public void BeginRegistration(Size2D outputSize)

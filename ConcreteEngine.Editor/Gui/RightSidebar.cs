@@ -7,7 +7,6 @@ using ConcreteEngine.Editor.Gui.Components;
 using ConcreteEngine.Editor.Gui.Metrics;
 using ConcreteEngine.Editor.Utils;
 using ImGuiNET;
-using static ConcreteEngine.Editor.Utils.GuiUtils;
 
 #endregion
 
@@ -68,5 +67,4 @@ internal static class RightSidebar
             default: break;
         }
     }
-
 }

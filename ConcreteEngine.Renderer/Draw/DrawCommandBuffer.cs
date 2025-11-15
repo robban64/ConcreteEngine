@@ -5,7 +5,6 @@ using System.Diagnostics.CodeAnalysis;
 using System.Numerics;
 using System.Runtime.CompilerServices;
 using ConcreteEngine.Common.Collections;
-using ConcreteEngine.Common.Numerics.Maths;
 using ConcreteEngine.Renderer.Data;
 using ConcreteEngine.Renderer.Passes;
 using static ConcreteEngine.Renderer.Data.RenderLimits;
@@ -58,7 +57,7 @@ public sealed class DrawCommandBuffer
         _commandBuffer[idx] = cmd;
         _metaBuffer[idx] = meta;
         _indexBuffer[idx] = new DrawCommandRef(meta, idx);
-        
+
         ref var drawUbo = ref _transformBuffer[idx];
         drawUbo.Model = model;
         drawUbo.NormalCol0 = v0;

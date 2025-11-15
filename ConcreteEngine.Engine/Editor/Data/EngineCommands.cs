@@ -39,14 +39,12 @@ internal sealed class AssetCommandRecord(string name, AssetCommandAction action,
     public AssetKind Kind { get; init; } = kind;
 }
 
-internal sealed class FboCommandRecord(FboCommandAction action, Size2D size) 
+internal sealed class FboCommandRecord(FboCommandAction action, Size2D size)
     : EngineCommandRecord(EngineCommandScope.RenderCommand)
 {
     public FboCommandAction Action { get; init; } = action;
     public Size2D Size { get; init; } = size;
 }
-
-
 
 internal sealed class EntityCommandRecord<TData>(WorldCommandAction action, int entityId, in TData data)
     : EngineCommandRecord(EngineCommandScope.WorldCommand), IWorldCommandRecord where TData : unmanaged
@@ -55,7 +53,6 @@ internal sealed class EntityCommandRecord<TData>(WorldCommandAction action, int 
     public ref readonly TData Data => ref _data;
     public WorldCommandAction Action { get; init; } = action;
     public int EntityId { get; init; } = entityId;
-
 }
 
 internal sealed class CameraCommandRecord(WorldCommandAction action, in CameraEditorPayload data)
@@ -69,8 +66,7 @@ internal sealed class CameraCommandRecord(WorldCommandAction action, in CameraEd
 internal sealed class WorldParamsCommandRecord(WorldCommandAction action, in WorldParamState data)
     : EngineCommandRecord(EngineCommandScope.WorldCommand), IWorldCommandRecord
 {
-    private  WorldParamState _data = data;
+    private WorldParamState _data = data;
     public ref WorldParamState Data => ref _data;
     public WorldCommandAction Action { get; init; } = action;
-
 }

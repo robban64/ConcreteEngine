@@ -4,7 +4,6 @@ using System.Numerics;
 using ConcreteEngine.Common.Numerics;
 using ConcreteEngine.Common.Numerics.Maths;
 using ConcreteEngine.Engine.Worlds.Data;
-using ConcreteEngine.Renderer.Data;
 using ConcreteEngine.Renderer.State;
 using ConcreteEngine.Shared.TransformData;
 
@@ -196,7 +195,6 @@ public sealed class Camera3D : ICamera
         viewSnapshot.ProjectionInfo = new ProjectionInfoData(_aspectRatio, _fov, _nearPlane, _farPlane);
         viewSnapshot.Position = camPos;
         viewSnapshot.Rotation = camRot;
-
     }
 
     private void Ensure()

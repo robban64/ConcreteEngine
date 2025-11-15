@@ -1,8 +1,6 @@
 #region
 
 using System.Runtime.CompilerServices;
-using System.Runtime.InteropServices;
-using ConcreteEngine.Editor;
 using ConcreteEngine.Editor.Data;
 using ConcreteEngine.Editor.DataState;
 using ConcreteEngine.Editor.Definitions;
@@ -35,7 +33,7 @@ internal static class EngineDataProvider
         var result = new List<EntityRecord>(_world.Meshes.Count);
         foreach (var it in _world.Query<ModelComponent>())
             result.Add(EditorObjectMapper.MakeEntityViewModel(it.Entity));
-        
+
         result.Sort();
         return result;
     }
@@ -86,7 +84,8 @@ internal static class EngineDataProvider
 
         payload.Data.Generation = camera.Generation;
         payload.Data.ViewTransform = new ViewTransformData(camera.Translation, camera.Scale, camera.Orientation);
-        payload.Data.Projection = new ProjectionInfoData(camera.AspectRatio, camera.Fov, camera.NearPlane, camera.FarPlane);
+        payload.Data.Projection =
+            new ProjectionInfoData(camera.AspectRatio, camera.Fov, camera.NearPlane, camera.FarPlane);
         payload.Data.Viewport = camera.Viewport;
         return camera.Generation;
     }
@@ -105,7 +104,8 @@ internal static class EngineDataProvider
         var model = _world.Meshes.GetById(entity);
         if (!_world.Transforms.TryGetById(entity, out var transform)) transform = default;
 
-        response.Data.Transform = new TransformData(in transform.Translation, in transform.Scale, in transform.Rotation);
+        response.Data.Transform =
+            new TransformData(in transform.Translation, in transform.Scale, in transform.Rotation);
         response.Data.Model = new EditorEntityModel(model.Model, model.MaterialKey.Value, model.DrawCount);
 
         return response.Data.EntityId;

@@ -3,8 +3,6 @@
 using ConcreteEngine.Common;
 using ConcreteEngine.Graphics.Gfx;
 using ConcreteEngine.Graphics.Gfx.Resources;
-using ConcreteEngine.Graphics.Gfx.Utility;
-using ConcreteEngine.Graphics.Primitives;
 using ConcreteEngine.Renderer.Data;
 
 #endregion
@@ -23,17 +21,16 @@ internal sealed class RenderUboRegistry
     {
         _gfxApi = gfx.ResourceManager.GetGfxApi();
         _gfxBuffers = gfx.Buffers;
-
     }
 
     public void BeginRegistration()
     {
         Register<EngineUniformRecord, EngineUboTag>();
-        Register<FrameUniformRecord,FrameUboTag>();
-        Register<CameraUniformRecord,CameraUboTag>();
-        Register<DirLightUniformRecord,DirLightUboTag>();
-        Register<LightUniformRecord,LightUboTag>();
-        Register<ShadowUniformRecord,ShadowUboTag>();
+        Register<FrameUniformRecord, FrameUboTag>();
+        Register<CameraUniformRecord, CameraUboTag>();
+        Register<DirLightUniformRecord, DirLightUboTag>();
+        Register<LightUniformRecord, LightUboTag>();
+        Register<ShadowUniformRecord, ShadowUboTag>();
         Register<MaterialUniformRecord, MaterialUboTag>();
         Register<DrawObjectUniform, DrawUboTag>();
         Register<PostProcessUniform, PostUboTag>();
@@ -43,7 +40,7 @@ internal sealed class RenderUboRegistry
     {
     }
 
-    public void Register<TUbo, TTag>()  where TTag : class where TUbo : unmanaged
+    public void Register<TUbo, TTag>() where TTag : class where TUbo : unmanaged
     {
         InvalidOpThrower.ThrowIfCapacityExceed(_uboRegistry, RenderLimits.UboSlots);
         var newSlot = TagRegistry.RegisterUniformBufferSlot<TTag>();
@@ -64,5 +61,4 @@ internal sealed class RenderUboRegistry
 
 
     internal RenderUbo GetBySlot(UboSlot slot) => _uboRegistry[slot];
-
 }

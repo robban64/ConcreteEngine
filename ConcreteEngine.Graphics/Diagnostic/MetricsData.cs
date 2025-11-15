@@ -27,11 +27,10 @@ public readonly struct GfxMetaSpecialMetric(
     ushort param2 = 0,
     ResourceKind kind = 0)
 {
-    public readonly long Value  = value;
-    public readonly int ResourceId  = resourceId;
-    public readonly ushort Param2  = param2;
-    public readonly ResourceKind Kind  = kind;
-
+    public readonly long Value = value;
+    public readonly int ResourceId = resourceId;
+    public readonly ushort Param2 = param2;
+    public readonly ResourceKind Kind = kind;
 }
 
 /*

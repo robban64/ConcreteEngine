@@ -103,9 +103,10 @@ public sealed class MaterialStore : IMaterialStore
     {
         var shader = ResolveShader(material);
         var pipeline = material.State.Pipeline;
-        
+
         material.FillSnapshot(out var snapshot);
-        data = new DrawMaterialPayload(new DrawMaterialMeta(material.Id, shader, pipeline.PassState, pipeline.PassFunctions), in snapshot);
+        data = new DrawMaterialPayload(
+            new DrawMaterialMeta(material.Id, shader, pipeline.PassState, pipeline.PassFunctions), in snapshot);
     }
 
     private void FillTextureInfo(Material material)

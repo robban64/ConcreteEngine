@@ -15,7 +15,7 @@ public struct DrawEntity(
     ModelId model,
     MaterialTagKey materialKey,
     in Transform transform,
-    DrawCommandMeta  meta)
+    DrawCommandMeta meta)
 {
     public Transform Transform = transform;
     public EntityId Entity = entity;

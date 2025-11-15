@@ -6,4 +6,3 @@ public readonly struct EditorEntityModel(int modelId, int materialTagKey, int dr
     public readonly int MaterialTagKey = materialTagKey;
     public readonly int DrawCount = drawCount;
 }
-

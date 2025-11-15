@@ -1,7 +1,10 @@
+#region
+
 using System.Runtime.InteropServices;
 
-namespace ConcreteEngine.Shared.RenderData;
+#endregion
 
+namespace ConcreteEngine.Shared.RenderData;
 
 [StructLayout(LayoutKind.Sequential)]
 public readonly struct PostEffectParams(
@@ -33,11 +36,10 @@ public readonly struct PostEffectParams(
 [StructLayout(LayoutKind.Sequential)]
 public readonly struct PostImageFxParams(float vignette, float grain, float sharpen, float rolloff)
 {
-    public readonly float Vignette  = vignette;
-    public readonly float Grain  = grain;
-    public readonly float Sharpen  = sharpen;
-    public readonly float Rolloff  = rolloff;
-
+    public readonly float Vignette = vignette;
+    public readonly float Grain = grain;
+    public readonly float Sharpen = sharpen;
+    public readonly float Rolloff = rolloff;
 }
 
 // 0..1 
@@ -45,28 +47,25 @@ public readonly struct PostImageFxParams(float vignette, float grain, float shar
 [StructLayout(LayoutKind.Sequential)]
 public readonly struct PostBloomParams(float intensity, float threshold, float radius)
 {
-    public readonly float Intensity  = intensity;
-    public readonly float Threshold  = threshold;
-    public readonly float Radius  = radius;
-
+    public readonly float Intensity = intensity;
+    public readonly float Threshold = threshold;
+    public readonly float Radius = radius;
 }
 
 // 0..1 > 0.9–1.1 // -1..+1 > -0.05..+0.05
 [StructLayout(LayoutKind.Sequential)]
 public readonly struct PostWhiteBalanceParams(float tint, float strength)
 {
-    public readonly float Tint  = tint;
-    public readonly float Strength  = strength;
-
+    public readonly float Tint = tint;
+    public readonly float Strength = strength;
 }
 
 // 0..1 > 0..0.15 // 0..1 > 0..0.01 // 0..1 > 0..0.15 // 0..1 > 0..0.12
 [StructLayout(LayoutKind.Sequential)]
 public readonly struct PostGradeParams(float exposure, float saturation, float contrast, float warmth)
 {
-    public readonly float Exposure  = exposure;
-    public readonly float Saturation  = saturation;
-    public readonly float Contrast  = contrast;
-    public readonly float Warmth  = warmth;
-
+    public readonly float Exposure = exposure;
+    public readonly float Saturation = saturation;
+    public readonly float Contrast = contrast;
+    public readonly float Warmth = warmth;
 }

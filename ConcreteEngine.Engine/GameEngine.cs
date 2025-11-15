@@ -195,7 +195,7 @@ public sealed class GameEngine : IDisposable
     {
         _updateInfo.BeginUpdateFrame(dt, _window.WindowSize, _window.OutputSize);
         ref readonly var updateInfo = ref _updateInfo.UpdateTickInfo;
-        
+
         if (_stateMachine.Current != EngineStateLevel.Running)
         {
             RunSetupStateMachine();

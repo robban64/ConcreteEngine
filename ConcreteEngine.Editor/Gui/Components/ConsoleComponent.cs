@@ -1,7 +1,6 @@
 #region
 
 using System.Numerics;
-using System.Runtime.InteropServices;
 using ConcreteEngine.Common.Numerics;
 using ConcreteEngine.Common.Numerics.Maths;
 using ConcreteEngine.Editor.Utils;
@@ -24,7 +23,7 @@ internal static class ConsoleComponent
     private static Vector2 _size = Vector2.Zero;
     private static Vector2 _sizeConstraintMin = Vector2.Zero;
     private static Vector2 _sizeConstraintMax = Vector2.Zero;
-    
+
     private static Vector2 _consoleTextSize = Vector2.Zero;
 
 
@@ -65,7 +64,7 @@ internal static class ConsoleComponent
 
         var vp = ImGui.GetMainViewport();
         var workSize = vp.WorkSize;
-        
+
         if (!VectorMath.NearlyEqual(workSize, _workSize, MetricUnits.Millimeter))
         {
             CalculateSize(vp.WorkPos, workSize, leftPanelWidth, rightPanelWidth);
@@ -101,20 +100,20 @@ internal static class ConsoleComponent
 
         var inputHeight = ImGui.GetFrameHeightWithSpacing() + 8f;
         ImGui.PushStyleColor(ImGuiCol.ChildBg, GuiTheme.ConsoleInnerBgColor);
-        
+
         if (ImGui.BeginChild("##ConsoleLogRegion", new Vector2(0, -inputHeight), ImGuiChildFlags.None,
                 ImGuiWindowFlags.HorizontalScrollbar | ImGuiWindowFlags.AlwaysVerticalScrollbar))
         {
-            float rowHeight = ImGui.GetFrameHeight();          
+            float rowHeight = ImGui.GetFrameHeight();
             var clipper = new ImGuiListClipper();
             var logs = ConsoleService.GetLogs();
             ImGuiNative.ImGuiListClipper_Begin(&clipper, ConsoleService.LogCount, rowHeight);
             while (ImGuiNative.ImGuiListClipper_Step(&clipper) != 0)
             {
-                for (int i = clipper.DisplayStart; i < clipper.DisplayEnd ; i++)
+                for (int i = clipper.DisplayStart; i < clipper.DisplayEnd; i++)
                     ImGui.TextUnformatted(logs[ConsoleService.GetSlotIndex(i)]);
-
             }
+
             ImGuiNative.ImGuiListClipper_End(&clipper);
 
             if (_justOpened || _scrollToBottom)

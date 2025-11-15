@@ -1,8 +1,6 @@
 #region
 
 using System.Numerics;
-using ConcreteEngine.Editor.Data;
-using ConcreteEngine.Editor.DataState;
 using ConcreteEngine.Editor.Definitions;
 using ConcreteEngine.Editor.Utils;
 using ConcreteEngine.Editor.ViewModel;
@@ -40,7 +38,6 @@ internal static class CameraPropertyComponent
             OnUpdateData();
             _editedField = -1;
         }
-        
     }
 
     private static void DrawInner()
@@ -122,7 +119,7 @@ internal static class CameraPropertyComponent
         ImGui.BeginGroup();
         ImGui.TextUnformatted("Translation");
         ImGui.Separator();
-        
+
         ImGui.InputFloat3("##camera-translation", ref state.Translation, "%.3f");
         fieldStatus.NextField();
 

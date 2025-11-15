@@ -13,7 +13,7 @@ public readonly record struct MaterialTagKey(int Value);
 public readonly struct MaterialSlotInfo(MaterialId material, ushort slot, bool isTransparent = false)
 {
     public readonly MaterialId Material = material;
-    public readonly ushort Slot  = slot;
+    public readonly ushort Slot = slot;
     public readonly bool IsTransparent = isTransparent;
 }
 

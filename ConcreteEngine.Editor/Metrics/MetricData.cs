@@ -10,7 +10,7 @@ public sealed class MetricData
 {
     public FrameMetric FrameMetrics;
     public RenderInfoSample FrameRenderInfoSample;
-    
+
     public PairSample SceneMetrics;
     public PairSample MemoryMetrics;
     public CollectionSample MaterialMetrics;

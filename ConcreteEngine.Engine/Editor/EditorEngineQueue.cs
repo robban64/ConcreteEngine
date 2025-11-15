@@ -10,7 +10,8 @@ using ConcreteEngine.Engine.Worlds.Render;
 
 namespace ConcreteEngine.Engine.Editor;
 
-internal delegate void EngineQueueCommandDel<in TCommand>(TCommand command) where TCommand : class, IEngineCommandRecord;
+internal delegate void EngineQueueCommandDel<in TCommand>(TCommand command)
+    where TCommand : class, IEngineCommandRecord;
 
 internal sealed class EditorEngineQueue
 {

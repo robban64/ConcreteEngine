@@ -25,21 +25,21 @@ public static class ConsoleService
     private const int MaxLogCount = 128;
 
     private static readonly string[] LogBuffer = new string[MaxLogCount];
-    private static int _head = 0; 
-    private static int _count = 0;    
-    
+    private static int _head = 0;
+    private static int _count = 0;
+
     private static readonly ConsoleCtx ConsoleCtx;
-    
+
     static ConsoleService()
     {
         ConsoleCtx = new ConsoleCtx(SendLog);
     }
-    
+
     internal static ReadOnlySpan<string> GetLogs() => LogBuffer.AsSpan(0, _count);
 
     public static int LogCount => _count;
 
-    
+
     public static void Draw(int leftPanelWidth, int rightPanelWidth) =>
         ConsoleComponent.DrawConsole(leftPanelWidth, rightPanelWidth);
 
@@ -49,7 +49,7 @@ public static class ConsoleService
         AppendLog(msg);
         ConsoleComponent.ScrollToBottom();
     }
-    
+
 
     internal static bool ExecCommand(string commandLine)
     {
@@ -87,7 +87,7 @@ public static class ConsoleService
 
         return true;
     }
-    
+
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static int GetSlotIndex(int idx)
     {

@@ -4,18 +4,15 @@ using System.Runtime.CompilerServices;
 using ConcreteEngine.Common.Numerics;
 using ConcreteEngine.Editor;
 using ConcreteEngine.Editor.Data;
-using ConcreteEngine.Editor.DataState;
 using ConcreteEngine.Editor.Definitions;
 using ConcreteEngine.Engine.Assets.Data;
 using ConcreteEngine.Engine.Editor.Data;
 using ConcreteEngine.Engine.Editor.Definitions;
-using ConcreteEngine.Engine.Worlds;
 using ConcreteEngine.Engine.Worlds.Data;
 using ConcreteEngine.Engine.Worlds.Entities;
 using ConcreteEngine.Graphics.Gfx.Contracts;
 using ConcreteEngine.Graphics.Gfx.Resources;
 using ConcreteEngine.Renderer.Data;
-using ConcreteEngine.Shared.TransformData;
 
 #endregion
 
@@ -53,7 +50,7 @@ internal static class EngineCommandHandler
         return CommandResponse.Ok();
     }
 
-    
+
     public static void OnStructSizesCmd(ConsoleCtx ctx, string action, string? arg1, string? arg2)
     {
         /*
@@ -87,10 +84,9 @@ internal static class EngineCommandHandler
         ctx.AddLog(StructStr<MeshPart>());
         ctx.AddLog(StructStr<DrawEntity>());
         ctx.AddLog(StructStr<MaterialTag>());
-        
+
         ctx.AddLog(StructStr<CameraEditorPayload>());
         ctx.AddLog(StructStr<EntityDataPayload>());
-        
     }
 
 

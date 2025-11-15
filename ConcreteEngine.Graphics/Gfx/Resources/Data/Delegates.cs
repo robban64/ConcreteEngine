@@ -1,6 +1,5 @@
 #region
 
-
 #endregion
 
 namespace ConcreteEngine.Graphics.Gfx.Resources;

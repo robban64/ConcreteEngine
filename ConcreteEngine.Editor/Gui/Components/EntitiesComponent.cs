@@ -2,12 +2,9 @@
 
 using System.Numerics;
 using ConcreteEngine.Common.Numerics.Maths;
-using ConcreteEngine.Editor.Data;
-using ConcreteEngine.Editor.DataState;
 using ConcreteEngine.Editor.Definitions;
 using ConcreteEngine.Editor.Utils;
 using ConcreteEngine.Editor.ViewModel;
-using ConcreteEngine.Shared.TransformData;
 using ImGuiNET;
 
 #endregion
@@ -49,19 +46,19 @@ internal static class EntitiesComponent
     {
         _editedField = -1;
         _selectedIndex = -1;
-        
+
         ImGui.SeparatorText("Entities");
         DrawEntityList();
 
-        
+
         if (_selectedIndex >= 0 && _editedField >= 0)
         {
             var entity = ViewModel.Entities[_selectedIndex];
-            if(_editedField == _rotationField)
+            if (_editedField == _rotationField)
                 OnUpdateRotation(entity);
             else
                 OnUpdateTransform(entity);
-            
+
             _editedField = -1;
         }
     }
@@ -75,7 +72,7 @@ internal static class EntitiesComponent
         ImGui.TableSetupColumn("Id", ImGuiTableColumnFlags.WidthFixed, ColumnWidth);
         ImGui.TableSetupColumn("Comp", ImGuiTableColumnFlags.WidthFixed, ColumnWidth);
         ImGui.TableSetupColumn("Transform", ImGuiTableColumnFlags.WidthStretch);
-        
+
         ImGui.TableNextRow(ImGuiTableRowFlags.Headers);
 
         ImGui.TableNextColumn();
@@ -150,7 +147,7 @@ internal static class EntitiesComponent
         ref var state = ref ViewModel.DataState;
         ref var transform = ref state.Transform;
         var fieldStatus = new ImGuiFieldStatus();
-        
+
         ImGui.SeparatorText("Model");
         ImGui.TextUnformatted("ModelId");
         ImGui.InputInt("##model-id", ref state.ModelId, 0, 0, ImGuiInputTextFlags.None);
@@ -178,9 +175,8 @@ internal static class EntitiesComponent
         ImGui.Separator();
         ImGui.InputFloat3("##rotation", ref transform.EulerAngles, "%.3f", ImGuiInputTextFlags.None);
         _rotationField = fieldStatus.NextField();
-        
-        if (fieldStatus.HasEdited(out var field)) _editedField = field;
 
+        if (fieldStatus.HasEdited(out var field)) _editedField = field;
     }
 
     private static bool EntitySelectable(ReadOnlySpan<char> str, bool selected)

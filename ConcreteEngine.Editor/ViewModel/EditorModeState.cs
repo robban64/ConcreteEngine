@@ -21,5 +21,5 @@ internal readonly record struct EditorModeState(
         new(EditorViewMode.Metrics, LeftSidebarMode.Default, RightSidebarMode.Default);
 
     public static EditorModeState MakeEditor() =>
-        new(EditorViewMode.Editor, LeftSidebarMode.Entities, RightSidebarMode.Default);
+        new(EditorViewMode.Editor, LeftSidebarMode.Default, RightSidebarMode.Default);
 }

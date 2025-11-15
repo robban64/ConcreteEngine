@@ -1,5 +1,7 @@
 #region
 
+#region
+
 using ConcreteEngine.Editor;
 using ConcreteEngine.Editor.Data;
 using ConcreteEngine.Editor.DataState;
@@ -17,6 +19,8 @@ using Silk.NET.Windowing;
 #endregion
 
 using EditorCmd = ConcreteEngine.Editor.CommandDispatcher;
+
+#endregion
 
 namespace ConcreteEngine.Engine.Editor;
 
@@ -191,11 +195,11 @@ internal sealed class EngineGateway : IDisposable
             EditorApi.FetchAssetObjectFiles = EngineDataProvider.GetAssetObjectFiles;
             EditorApi.FetchEntityView = EngineDataProvider.GetEntityView;
 
-            EditorApi.UpdateEntityData = new ApiDataRequest<EntityDataPayload>(
+            EditorApi.UpdateEntityData = new ApiDataRefRequest<EntityDataPayload>(
                 &EngineDataProvider.FillEntityData, &EngineDataProvider.WriteToEntity);
-            EditorApi.UpdateCameraData = new ApiDataRequest<CameraEditorPayload>(
+            EditorApi.UpdateCameraData = new ApiDataRefRequest<CameraEditorPayload>(
                 &EngineDataProvider.FillCameraData, &EngineDataProvider.WriteCameraData);
-            EditorApi.UpdateWorldParams = new ApiDataRequest<WorldParamState>(
+            EditorApi.UpdateWorldParams = new ApiDataRefRequest<WorldParamState>(
                 &EngineDataProvider.FillWorldParams, &EngineDataProvider.WriteWorldParams);
         }
 

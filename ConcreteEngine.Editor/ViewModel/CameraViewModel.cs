@@ -1,8 +1,9 @@
-using ConcreteEngine.Common;
-using ConcreteEngine.Common.Numerics;
+#region
+
 using ConcreteEngine.Editor.Data;
 using ConcreteEngine.Editor.DataState;
-using ConcreteEngine.Shared.TransformData;
+
+#endregion
 
 namespace ConcreteEngine.Editor.ViewModel;
 
@@ -16,18 +17,18 @@ internal sealed class CameraViewModel
     public ref CameraEditorPayload Data => ref _data;
     public ref CameraDataState DataState => ref _state;
 
-    
-    public void FillData(in ApiDataRequest<CameraEditorPayload> api)
+
+    public void FillData(in ApiDataRefRequest<CameraEditorPayload> api)
     {
         var engineGen = api.FillData(Generation, ref _data);
-        if(Generation == engineGen) return;
-        
+        if (Generation == engineGen) return;
+
         _state.Transform.From(in _data.ViewTransform);
         _state.Projection = CameraProjectionState.From(in _data.Projection);
-        Generation =  engineGen;
+        Generation = engineGen;
     }
 
-    public void WriteData(in ApiDataRequest<CameraEditorPayload> api)
+    public void WriteData(in ApiDataRefRequest<CameraEditorPayload> api)
     {
         Generation++;
         _state.Fill(Generation, _data.Viewport, out _data);

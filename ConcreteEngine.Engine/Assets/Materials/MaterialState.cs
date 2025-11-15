@@ -108,7 +108,7 @@ public sealed class MaterialState
         Transparency = param.Transparent;
         IsDirty = true;
     }
-    
+
     internal void ClearDirty()
     {
         if (_clearDirty && IsDirty)

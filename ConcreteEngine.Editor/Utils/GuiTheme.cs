@@ -12,7 +12,7 @@ internal static class GuiTheme
 {
     public static Vector4 ConsoleBgColor = new(0.08f, 0.08f, 0.08f, 0.94f);
     public static Vector4 ConsoleInnerBgColor = new(0.10f, 0.10f, 0.10f, 0.75f);
-    
+
     public const int TopbarHeight = 44;
     public const float PanelOpacity = 0.95f;
 
@@ -45,7 +45,7 @@ internal static class GuiTheme
         ImGui.PushStyleColor(ImGuiCol.TabActive, SelectedColor);
         ImGui.PushStyleColor(ImGuiCol.Tab, PrimaryColor);
     }
-    
+
     public static void PopTheme()
     {
         ImGui.PopStyleColor(6);

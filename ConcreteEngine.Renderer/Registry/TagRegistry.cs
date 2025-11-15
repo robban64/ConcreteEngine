@@ -2,7 +2,6 @@
 
 using System.Runtime.CompilerServices;
 using ConcreteEngine.Graphics.Gfx.Resources;
-using ConcreteEngine.Graphics.Primitives;
 using ConcreteEngine.Renderer.Passes;
 using static ConcreteEngine.Renderer.Data.RenderLimits;
 
@@ -20,8 +19,7 @@ internal static class TagRegistry
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static int TagIndexOf<TTag>() where TTag : class => RenderPassTag<TTag>.TagIndex;
 
-    public static FboTagKey FboKey<TTag>(FboVariant variant) where TTag : class =>
-        new(TagIndexOf<TTag>(), variant);
+    public static FboTagKey FboKey<TTag>(FboVariant variant) where TTag : class => new(TagIndexOf<TTag>(), variant);
 
     public static PassTagKey PassKey<TTag>(FboVariant variant) where TTag : class =>
         new(TagIndexOf<TTag>(), variant, RenderPassTag<TTag>.GetPassId(variant));
@@ -36,11 +34,9 @@ internal static class TagRegistry
 
     //Ubo
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public static UboSlot UniformBufferSlot<TUbo>() where TUbo : class =>
-        UniformBufferTag<TUbo>.Slot;
+    public static UboSlot UniformBufferSlot<TUbo>() where TUbo : class => UniformBufferTag<TUbo>.Slot;
 
-    public static UboSlot RegisterUniformBufferSlot<TUbo>() where TUbo : class =>
-        UniformBufferTag<TUbo>.RegisterSlot();
+    public static UboSlot RegisterUniformBufferSlot<TUbo>() where TUbo : class => UniformBufferTag<TUbo>.RegisterSlot();
 
 
     //

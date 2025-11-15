@@ -166,7 +166,7 @@ internal sealed class RenderFboRegistry : IRenderFboRegistry
             throw new GraphicsException($"Failed to recreate screen fbo: {ex.Message}", ex);
         }
     }
-    
+
 
     private static void ValidateOutputSize(Size2D outputSize, bool isShadowMap)
     {
@@ -183,11 +183,13 @@ internal sealed class RenderFboRegistry : IRenderFboRegistry
     }
 
 
-    [DoesNotReturn, StackTraceHidden]
+    [DoesNotReturn]
+    [StackTraceHidden]
     internal static void ThrowNotFound(FrameBufferId id) =>
         throw new InvalidOperationException($"FrameBuffer with id: {id} not found");
 
-    [DoesNotReturn, StackTraceHidden]
+    [DoesNotReturn]
+    [StackTraceHidden]
     internal static void ThrowNotFound(FboTagKey key) =>
         throw new InvalidOperationException($"FrameBuffer with key: {key} not found");
 }

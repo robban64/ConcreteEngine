@@ -1,11 +1,7 @@
 #region
 
-using ConcreteEngine.Common;
 using ConcreteEngine.Common.Time;
-using ConcreteEngine.Editor.Data;
 using ConcreteEngine.Editor.Definitions;
-using ConcreteEngine.Editor.Gui.Components;
-using ConcreteEngine.Editor.Utils;
 using ConcreteEngine.Editor.ViewModel;
 
 #endregion
@@ -62,23 +58,23 @@ internal static class EditorStateContext
 
     public static void SetViewModeState(EditorViewMode mode)
     {
-        if (mode == NextState.EditorMode) NextState = (EditorModeState.MakeNone());
-        else if (mode == EditorViewMode.Editor) NextState = (EditorModeState.MakeEditor());
-        else if (mode == EditorViewMode.Metrics) NextState = (EditorModeState.MakeMetrics());
+        if (mode == NextState.EditorMode) NextState = EditorModeState.MakeNone();
+        else if (mode == EditorViewMode.Editor) NextState = EditorModeState.MakeEditor();
+        else if (mode == EditorViewMode.Metrics) NextState = EditorModeState.MakeMetrics();
     }
 
     public static void ToggleRightSidebar(RightSidebarMode mode)
     {
         var newMode = mode == NextState.RightSidebar ? RightSidebarMode.Default : mode;
-        NextState = (NextState with { RightSidebar = newMode });
+        NextState = NextState with { RightSidebar = newMode };
     }
 
     public static void ToggleLeftSidebar(LeftSidebarMode mode)
     {
         var newMode = mode == NextState.LeftSidebar ? LeftSidebarMode.Default : mode;
-        NextState = (NextState with { LeftSidebar = newMode });
+        NextState = NextState with { LeftSidebar = newMode };
     }
-    
+
     public static void SetLeftSidebarState(LeftSidebarMode mode)
     {
         if (mode == NextState.LeftSidebar) return;

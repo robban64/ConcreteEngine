@@ -1,8 +1,10 @@
-using System.Numerics;
+#region
+
 using ConcreteEngine.Editor.Data;
 using ConcreteEngine.Editor.DataState;
 using ConcreteEngine.Editor.Definitions;
-using ConcreteEngine.Shared.RenderData;
+
+#endregion
 
 namespace ConcreteEngine.Editor.ViewModel;
 
@@ -20,10 +22,9 @@ internal sealed class WorldRenderViewModel
     public ref FogState FogState => ref _dataState.FogState;
     public ref PostEffectState PostState => ref _dataState.PostState;
 
-    public void FillData(in ApiDataRequest<WorldParamState> api) =>
-        api.FillData(Version,ref _dataState);
+    public void FillData(in ApiDataRefRequest<WorldParamState> api) => api.FillData(Version, ref _dataState);
 
-    public void WriteData(in ApiDataRequest<WorldParamState> api)
+    public void WriteData(in ApiDataRefRequest<WorldParamState> api)
     {
         Version++;
         api.WriteData(Version, ref _dataState);

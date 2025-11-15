@@ -1,6 +1,17 @@
+#region
+
 using ConcreteEngine.Editor.ViewModel;
 
+#endregion
+
 namespace ConcreteEngine.Editor.Data;
+
+// State Delegates
+internal delegate void StateTransitionDel<TModel>(ModelState<TModel> ctx, TModel state) where TModel : class;
+
+internal delegate void StateEmptyEventDel<TModel>(ModelState<TModel> ctx) where TModel : class;
+
+internal delegate void StateEventDel<TModel, TEvent>(ModelState<TModel> ctx, in TEvent ev) where TModel : class;
 
 // command delegates
 public delegate void ConsoleCommandReqDel(ConsoleCtx ctx, string action, string? arg1, string? arg2);
@@ -14,12 +25,23 @@ public delegate CommandResponse EditorDataCommandDel<TRequest, TResponse>(in TRe
     where TRequest : unmanaged where TResponse : unmanaged;
 
 // Request delegates
-public delegate TResponse? GenericRequest<in TRequest, out TResponse>(TRequest request)
+public delegate TResponse? ApiModelRequestDel<in TRequest, out TResponse>(TRequest request)
     where TRequest : class where TResponse : class;
 
-// Core Delegates
+public delegate long ApiDataRequestDel<TRequest>(long version, in TRequest request, out TRequest response)
+    where TRequest : unmanaged;
 
-internal delegate void StateTransitionDel<TModel>(ModelState<TModel> ctx, TModel state) where TModel : class;
+public readonly unsafe struct ApiDataRefRequest<T>(
+    delegate*<ApiWriteRequestBody<T>, long> fillData,
+    delegate*<ApiWriteRequestBody<T>, long> writeData)
+    where T : unmanaged
+{
+    public long FillData(long version, ref T data) => fillData(new ApiWriteRequestBody<T>(version, ref data));
+    public long WriteData(long version, ref T data) => writeData(new ApiWriteRequestBody<T>(version, ref data));
+}
 
-internal delegate void StateEmptyEventDel<TModel>(ModelState<TModel> ctx) where TModel : class;
-internal delegate void StateEventDel<TModel, TEvent>(ModelState<TModel> ctx, in TEvent ev) where TModel : class;
+public ref struct ApiWriteRequestBody<TReq>(long version, ref TReq data) where TReq : unmanaged
+{
+    public readonly long Version = version;
+    public ref TReq Data = ref data;
+}

@@ -1,7 +1,6 @@
 #region
 
 using System.Numerics;
-using System.Runtime.CompilerServices;
 using ConcreteEngine.Editor.Definitions;
 using ConcreteEngine.Editor.Utils;
 using ImGuiNET;
@@ -56,12 +55,14 @@ internal static class Topbar
         {
             StateContext.SetViewModeState(EditorViewMode.Metrics);
         }
+
         ImGui.SameLine();
         if (ImGui.Selectable("Editor", StateContext.ModeState.IsEditorState, ImGuiSelectableFlags.None,
                 new Vector2(SelectorWidth, GuiTheme.TopbarHeight)))
         {
             StateContext.SetViewModeState(EditorViewMode.Editor);
         }
+
         ImGui.EndChild();
     }
 

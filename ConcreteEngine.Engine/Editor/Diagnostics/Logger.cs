@@ -20,13 +20,13 @@ public static class Logger
     private static readonly List<LogFilterWildcard> IgnoreFilter = new(4);
 
     private static int _idx = 0;
-    
+
     private static bool _enabled = true;
 
     private static Action<StringLogEvent>? _logStringDel;
-    
+
     public static int Count => _idx;
-    
+
     public static bool IsAttached => _logStringDel != null;
 
     internal static void Attach(Action<StringLogEvent> logStringDel)
@@ -38,9 +38,9 @@ public static class Logger
     {
         var index = _idx;
         _idx = 0;
-        return LogBuffer.AsSpan(0,index);
+        return LogBuffer.AsSpan(0, index);
     }
-    
+
     public static void ToggleLog(bool enabled, LogTopic topic = 0, LogScope scope = 0, LogAction action = 0,
         LogLevel level = 0)
     {
@@ -83,7 +83,7 @@ public static class Logger
     public static void LogString(LogScope scope, string message, LogLevel level = LogLevel.Info) =>
         _logStringDel?.Invoke(new StringLogEvent(scope, message, level));
 
-    
+
     public static void LogAssetObject(AssetObject asset, LogAction action, bool error = false) =>
         Event(new LogEvent(
             id: (uint)asset.RawId.Value,
@@ -94,10 +94,9 @@ public static class Logger
             scope: LogScope.Assets,
             topic: asset.Kind.ToLogTopic(),
             action: action));
-    
-    
-    private static bool FilterLog(in LogEvent log) => 
-        FilterLogIndex(log.Topic, log.Scope, log.Action, log.Level) >= 0;
+
+
+    private static bool FilterLog(in LogEvent log) => FilterLogIndex(log.Topic, log.Scope, log.Action, log.Level) >= 0;
 
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]

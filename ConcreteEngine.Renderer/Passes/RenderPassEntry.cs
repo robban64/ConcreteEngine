@@ -1,6 +1,5 @@
 #region
 
-using System.Runtime.CompilerServices;
 using ConcreteEngine.Renderer.Definitions;
 
 #endregion

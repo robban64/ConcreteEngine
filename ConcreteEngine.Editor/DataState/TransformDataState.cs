@@ -38,6 +38,6 @@ internal struct TransformDataState
             Scale = model.Scale;
 
         EulerAngles = RotationMath.QuaternionToEulerDegrees(in model.Rotation, in EulerAngles);
-        Rotation  = model.Rotation;
+        Rotation = model.Rotation;
     }
 }

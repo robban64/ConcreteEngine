@@ -66,7 +66,7 @@ public struct BoundingFrustum
         TopPlane = Plane.Normalize(PlaneFromPoints(corners[0], corners[4], corners[1]));
         BottomPlane = Plane.Normalize(PlaneFromPoints(corners[2], corners[3], corners[6]));
     }
-    
+
     public readonly bool ContainsBox(in BoundingBox box)
     {
         return BoxInFrontOfPlane(in box, in LeftPlane)
@@ -96,6 +96,4 @@ public struct BoundingFrustum
         float d = -Vector3.Dot(normal, a);
         return new Plane(normal, d);
     }
-
-
 }

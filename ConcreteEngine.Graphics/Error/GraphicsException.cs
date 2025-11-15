@@ -1,7 +1,5 @@
 #region
 
-using System.Runtime.CompilerServices;
-
 #endregion
 
 namespace ConcreteEngine.Graphics.Error;
@@ -18,18 +16,15 @@ public sealed partial class GraphicsException(string message, Exception? inner =
     public static GraphicsException ResourceIsDisposed(string? name = null) => new($"{name} is disposed.");
     public static GraphicsException ResourceIsDisposed(int id) => new($"{id} is disposed.");
 
-    public static GraphicsException ResourceNotFound(object name) =>
-        new($"{name} was not found.");
+    public static GraphicsException ResourceNotFound(object name) => new($"{name} was not found.");
 
     public static GraphicsException ResourceNotFound(int id) => new($"{id} was not found.");
 
-    public static GraphicsException ResourceAlreadyExists(object name) =>
-        new($"{name} already exists.");
+    public static GraphicsException ResourceAlreadyExists(object name) => new($"{name} already exists.");
 
     public static GraphicsException ResourceAlreadyExists(int id) => new($"{id} already exists.");
 
-    public static GraphicsException DuplicatedResource(object name) =>
-        new($"Duplicated  in {name}");
+    public static GraphicsException DuplicatedResource(object name) => new($"Duplicated  in {name}");
 
 
     public static GraphicsException MissingHandle(string? name = null) =>
@@ -69,5 +64,4 @@ public sealed partial class GraphicsException(string message, Exception? inner =
 
     public static GraphicsException InvalidStd140Layout(int stride) =>
         new($"Ubo contains invalid std layout with stride: {stride}");
-
 }

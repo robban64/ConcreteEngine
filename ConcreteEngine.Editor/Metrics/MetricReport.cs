@@ -51,10 +51,10 @@ public sealed class MetricReport
     {
         var formatter = new NumberSpanFormatter(StringUtils.CharBuffer16);
         var strBuffer = formatter.Format(m.Value);
-        
+
         if (!SceneMetrics.EntityCount.AsSpan().EndsWith(strBuffer))
             SceneMetrics.EntityCount = $"Entities: {strBuffer.ToString()}";
-        
+
         strBuffer = formatter.Format(m.Param0);
         if (!SceneMetrics.ShadowMapSize.AsSpan().EndsWith(strBuffer))
             SceneMetrics.ShadowMapSize = $"ShadowMapSize: {strBuffer.ToString()}";

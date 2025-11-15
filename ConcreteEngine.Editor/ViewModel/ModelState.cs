@@ -103,6 +103,7 @@ internal sealed class ModelState<T> : IModelState where T : class
             ConsoleService.SendLog($"OnRefresh is null: Refresh failed for {typeof(T).Name}");
             return false;
         }
+
         _onRefresh!(this, State!);
         InvokeAction(TransitionKey.Refresh);
         PendingRefresh = false;
@@ -132,31 +133,39 @@ internal sealed class ModelState<T> : IModelState where T : class
         }
     }
 
-    public unsafe void TriggerEvent(EventKey eventKey)
+    public void TriggerEvent(EventKey eventKey)
     {
         InvalidOpThrower.ThrowIfNull(_events, nameof(_events));
         if (!_events!.TryGetValue(eventKey, out var handler))
             throw new KeyNotFoundException(nameof(eventKey));
 
-        if (handler is not EventEntry<NoOpEvent> entry)
-            throw new ArgumentException(
-                $"{eventKey} was invoked with invalid type: actual {nameof(NoOpEvent)}, expected {nameof(EventEntry<NoOpEvent>.EventType.Name)}");
+        if (handler is StateEmptyEventDel<T> del)
+        {
+            ConsoleService.SendLog($"Event triggered: {eventKey} for {typeof(T).Name}");
+            del(this);
+            return;
+        }
 
-        entry.Handler(this, NoOpEvent.Instance);
+        throw new ArgumentException(
+            $"{eventKey} was invoked with invalid type: actual {handler.GetType().Name}, expected {typeof(StateEmptyEventDel<T>).Name}");
     }
 
-    public unsafe void TriggerEvent<TEvent>(EventKey eventKey, in TEvent eventData)
+    public void TriggerEvent<TEvent>(EventKey eventKey, in TEvent eventData)
     {
         InvalidOpThrower.ThrowIfNull(_events, nameof(_events));
         if (!_events!.TryGetValue(eventKey, out var handler))
             throw new KeyNotFoundException(nameof(eventKey));
 
-        if (handler is not EventEntry<TEvent> entry)
-            throw new ArgumentException(
-                $"{eventKey} was invoked with invalid type: actual {typeof(TEvent).Name}, expected {nameof(EventEntry<TEvent>.EventType.Name)}");
 
-        ConsoleService.SendLog("Event triggered: " + typeof(TEvent).Name);
-        entry.Handler(this, in eventData);
+        if (handler is StateEventDel<T, TEvent> del)
+        {
+            ConsoleService.SendLog($"Event triggered: {eventKey} for {typeof(T).Name} with {typeof(TEvent).Name}");
+            del(this, in eventData);
+            return;
+        }
+
+        throw new ArgumentException(
+            $"{eventKey} was invoked with invalid type: actual {handler.GetType().Name}, expected {typeof(StateEventDel<T, TEvent>).Name}");
     }
 
     public static ViewModelStateBuilder CreateBuilder(Func<T> factory) => new(factory);
@@ -194,17 +203,17 @@ internal sealed class ModelState<T> : IModelState where T : class
             return this;
         }
 */
-        public unsafe ViewModelStateBuilder RegisterEventNoOp(EventKey eventKey,
-            delegate*<ModelState<T>, in NoOpEvent, void> handler)
-        {
-            return RegisterEvent<NoOpEvent>(eventKey, handler);
-        }
-
-        public unsafe ViewModelStateBuilder RegisterEvent<TEvent>(EventKey eventKey,
-            delegate*<ModelState<T>, in TEvent, void> handler)
+        public ViewModelStateBuilder RegisterEventNoOp(EventKey eventKey, StateEmptyEventDel<T> handler)
         {
             _events ??= new Dictionary<EventKey, object>();
-            _events.Add(eventKey, new EventEntry<TEvent>(handler));
+            _events.Add(eventKey, handler);
+            return this;
+        }
+
+        public ViewModelStateBuilder RegisterEvent<TEvent>(EventKey eventKey, StateEventDel<T, TEvent> handler)
+        {
+            _events ??= new Dictionary<EventKey, object>();
+            _events.Add(eventKey, handler);
             return this;
         }
 
@@ -215,11 +224,5 @@ internal sealed class ModelState<T> : IModelState where T : class
             InvalidOpThrower.ThrowIfNull(_onLeave, nameof(_onLeave));
             return new ModelState<T>(factory, _onEnter!, _onLeave!, _onRefresh, _events);
         }
-    }
-
-    private sealed unsafe class EventEntry<TEvent>(delegate*<ModelState<T>, in TEvent, void> handler)
-    {
-        public readonly delegate*<ModelState<T>, in TEvent, void> Handler = handler;
-        public static Type EventType => typeof(TEvent);
     }
 }

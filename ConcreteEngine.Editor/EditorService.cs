@@ -12,6 +12,7 @@ using ConcreteEngine.Editor.Utils;
 using ConcreteEngine.Editor.ViewModel;
 using ImGuiNET;
 
+
 #endregion
 
 namespace ConcreteEngine.Editor;
@@ -35,7 +36,7 @@ internal static class EditorService
     }
 
 
-    internal static void Render()
+    internal static void Render(bool blockInput)
     {
         StateContext.CommitState();
         GuiTheme.RightSidebarExpanded = ModeState.IsEditorState;
@@ -45,7 +46,9 @@ internal static class EditorService
         
         GuiTheme.PushTheme();
 
-        CheckHotkeys();
+        if(!blockInput)
+            CheckHotkeys();
+        
 
         Topbar.Draw();
         if (!StateContext.ModeState.IsEmptyViewMode)

@@ -23,9 +23,7 @@ internal static class CameraPropertyComponent
 
     private static void OnUpdateData()
     {
-        var v = ViewModel;
-        v.DataState.Fill(v.Data.Generation, v.Data.Viewport, out var payload);
-        Model.TriggerEvent(EventKey.SelectionUpdated, in payload);
+        Model.TriggerEvent(EventKey.SelectionUpdated);
     }
 
     public static void Draw()

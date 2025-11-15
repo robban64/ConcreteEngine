@@ -39,6 +39,7 @@ internal static class RightSidebar
         if (ImGui.Begin("##RightSidebar", flags))
         {
             _focus = ImGui.IsWindowFocused(ImGuiFocusedFlags.None | ImGuiFocusedFlags.ChildWindows);
+            //if(_focus &&  !_prevFocus) EditorModelManager.CameraState.TriggerEvent(EventKey.SelectionUpdated);
 
             ImGui.PushStyleVar(ImGuiStyleVar.WindowPadding, new Vector2(12f, 0));
             switch (viewState.EditorMode)

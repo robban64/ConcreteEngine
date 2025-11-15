@@ -21,4 +21,5 @@ public delegate TResponse? GenericRequest<in TRequest, out TResponse>(TRequest r
 
 internal delegate void StateTransitionDel<TModel>(ModelState<TModel> ctx, TModel state) where TModel : class;
 
+internal delegate void StateEmptyEventDel<TModel>(ModelState<TModel> ctx) where TModel : class;
 internal delegate void StateEventDel<TModel, TEvent>(ModelState<TModel> ctx, in TEvent ev) where TModel : class;

@@ -14,17 +14,15 @@ public sealed class EditorPortal : IDisposable
 {
     private readonly ImGuiController _controller;
 
-
     private ImFontPtr _imFontPtr;
 
     public EditorPortal(GL gl, IWindow window, IInputContext inputCtx)
     {
-        var fontPath = Path.Combine(AppContext.BaseDirectory, "Content", "RobotoMono-Medium.ttf");
+        var fontPath = Path.Combine(AppContext.BaseDirectory, "Content", "Roboto-Medium.ttf");
         ImGuiFontConfig fontConfDefault = new(fontPath, 14);
 
         _controller = new ImGuiController(gl, window, inputCtx, fontConfDefault);
     }
-
  
     public void Update(float delta) => _controller.Update(delta);
 
@@ -32,7 +30,7 @@ public sealed class EditorPortal : IDisposable
 
     public void Render()
     {
-        EditorService.Render();
+        EditorService.Render(BlockInput());
         _controller.Render();
     }
 

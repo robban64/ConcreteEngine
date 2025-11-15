@@ -7,9 +7,12 @@ layout(location = 1) in vec2 aTexCoord;
 @import ubo:DrawUniform
 
 out vec2 TexCoord;
+out vec3 FragPos;
 
 void main() {
-    vec4 worldPos = uModel * vec4(aPos, 1.0);
     TexCoord = aTexCoord;
+
+    vec4 worldPos = uModel * vec4(aPos, 1.0);
+    FragPos = worldPos.xyz;
     gl_Position = uProjViewMat * worldPos;
 }

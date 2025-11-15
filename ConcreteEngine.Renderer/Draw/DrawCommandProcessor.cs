@@ -126,7 +126,7 @@ internal sealed class DrawCommandProcessor
             case DrawCommandResolver.Highlight:
                 var shader = _ctx.CoreShaders.HighlightShader;
                 _gfxCmd.UseShader(shader, _ctx.GetUniformLocations(shader));
-                _gfxCmd.SetUniform(0, Color4.Orange.WithAlpha(0.6f));
+                _gfxCmd.SetUniform(0, Color4.FromRgba(46, 163, 242));
                 foreach (var slot in texSlots)
                 {
                     if(slot.SlotKind == TextureSlotKind.Albedo) _gfxCmd.BindTexture(slot.Texture, 0);
@@ -137,7 +137,10 @@ internal sealed class DrawCommandProcessor
 
         _buffers.BindMaterialObject(cmd.MaterialId);
         BindPassState(in materialMeta);
-        _gfxCmd.ApplyState(GfxPassState.Disable(GfxStateFlags.DepthWrite | GfxStateFlags.DepthTest | GfxStateFlags.Cull));
+        
+        _gfxCmd.ApplyState(GfxPassState.Enable(GfxStateFlags.Blend));
+        _gfxCmd.ApplyStateFunctions(GfxPassStateFunc.MakeDefault() with{ Blend = BlendMode.Alpha, Cull = CullMode.BackCcw});
+        _gfxCmd.ApplyState(GfxPassState.Disable(GfxStateFlags.DepthWrite | GfxStateFlags.DepthTest ));
 
         _ctx.ResetCachedMaterial();
         

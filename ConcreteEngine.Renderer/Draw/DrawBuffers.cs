@@ -154,12 +154,16 @@ internal sealed class DrawBuffers
     private void UploadEngineUniformRecord(in RenderFrameInfo frameInfo, in RenderRuntimeParams runtimeParams)
     {
         var outputSize = frameInfo.OutputSize;
+        var invRes = new Vector2(1.0f / outputSize.Width, 1.0f / outputSize.Height);
+
+        var mousePos = runtimeParams.MousePos;
+        mousePos = new Vector2(mousePos.X / outputSize.Width, 1.0f - (mousePos.Y / outputSize.Height));
         var data = new EngineUniformRecord(
             deltaTime: frameInfo.DeltaTime,
-            invResolution: new Vector2(1.0f / outputSize.Width, 1.0f / outputSize.Height),
+            invResolution: invRes,
             time: runtimeParams.Time,
-            mouse: runtimeParams.MousePos,
-            random: runtimeParams.RndSeed
+            mouse: mousePos,
+            random: runtimeParams.DefaultRandom
         );
 
         _gfxBuffers.UploadUniformGpuData(_engineUbo, in data, 0);

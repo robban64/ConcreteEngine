@@ -20,6 +20,9 @@ public sealed class RenderShader : IComparable<ShaderId>
     
     public int GetUniform(string uniformName) => _uniforms![uniformName];
     public int GetUniformByIndex(int idx) => _sparse![idx];
+    
+    public ReadOnlySpan<int> GetUniforms() => _sparse;
+
 
     internal RenderShader(ShaderId id, ShaderMeta meta)
     {

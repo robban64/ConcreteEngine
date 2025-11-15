@@ -79,7 +79,7 @@ public sealed class EntityStore<T> where T : unmanaged
     public Span<T> AsSpan() => _data.AsSpan(0, _idx);
 
     public EntityEnumerator<T> GetEnumerator() => new(this);
-
+/*
     public EntityEnumerator<T, T2> Query<T2>(EntityStore<T2> r2)
         where T2 : unmanaged =>
         new(this, r2);
@@ -89,7 +89,7 @@ public sealed class EntityStore<T> where T : unmanaged
         where T2 : unmanaged
         where T3 : unmanaged =>
         new(this, r2, r3);
-
+*/
 
     private static int BinarySearchEntity<T2>(ReadOnlySpan<EntityId> collection, EntityId entity)
     {

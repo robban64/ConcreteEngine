@@ -89,10 +89,11 @@ internal sealed class GlShaders : IGraphicsDriverModule
         UseShader(shaderRef);
         _gl.GetProgram(handle, ProgramPropertyARB.ActiveUniforms, out var uniformsLength);
         var uniforms = new List<(string, int)>(uniformsLength);
-        for (uint uniformIndex = 0; uniformIndex < uniformsLength; uniformIndex++)
+        for (int i = 0; i < uniformsLength; i++)
         {
-            var uniformName = _gl.GetActiveUniform(handle, uniformIndex, out _, out var type);
+            var uniformName = _gl.GetActiveUniform(handle, (uint)i, out _, out var type);
             var uniformLocation = _gl.GetUniformLocation(handle, uniformName);
+            if (IsSamplerUniform(type)) continue;
             if (uniformLocation >= 0)
             {
                 uniforms.Add((uniformName, uniformLocation));
@@ -112,10 +113,8 @@ internal sealed class GlShaders : IGraphicsDriverModule
         for (uint idx = 0; idx < uniformsLength; idx++)
         {
             var uniformName = _gl.GetActiveUniform(handle, idx, out _, out var type);
-            var uniformLocation = _gl.GetUniformLocation(handle, uniformName);
-            if (type == UniformType.Sampler2D ||
-                type == UniformType.SamplerCube ||
-                type == UniformType.IntSampler2D)
+            //var uniformLocation = _gl.GetUniformLocation(handle, uniformName);
+            if (IsSamplerUniform(type))
             {
                 samplers++;
             }
@@ -150,6 +149,8 @@ internal sealed class GlShaders : IGraphicsDriverModule
         return shader;
     }
 
+    private static bool IsSamplerUniform(UniformType type) => type is UniformType.Sampler2D or UniformType.SamplerCube
+        or UniformType.IntSampler2D or UniformType.Sampler2DShadow or UniformType.Sampler2DMultisample;
 
     public void SetUniform(int uniform, int value) => _gl.ProgramUniform1(_activeProg.Value, uniform, value);
     public void SetUniform(int uniform, uint value) => _gl.ProgramUniform1(_activeProg.Value, uniform, value);
@@ -158,8 +159,11 @@ internal sealed class GlShaders : IGraphicsDriverModule
     public void SetUniform(int uniform, Vector2 value) =>
         _gl.ProgramUniform2(_activeProg.Value, uniform, value.X, value.Y);
 
-    public void SetUniform(int uniform, in Vector3 value) => _gl.ProgramUniform3(_activeProg.Value, uniform, value);
+    public void SetUniform(int uniform, Vector3 value) => _gl.ProgramUniform3(_activeProg.Value, uniform, value);
     public void SetUniform(int uniform, in Vector4 value) => _gl.ProgramUniform4(_activeProg.Value, uniform, value);
+
+    public void SetUniform(int uniform, in Color4 value) =>
+        _gl.ProgramUniform4(_activeProg.Value, uniform, value.AsVec4());
 
     public unsafe void SetUniform(int uniform, in Matrix4x4 value)
     {

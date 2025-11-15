@@ -147,6 +147,7 @@ internal static class GlEnumExtensions
             DepthMode.Lequal => DepthFunction.Lequal,
             DepthMode.Less => DepthFunction.Less,
             DepthMode.Equal => DepthFunction.Equal,
+            DepthMode.Greater => DepthFunction.Greater,
             _ => throw new ArgumentOutOfRangeException(nameof(preset), preset, null)
         };
     }

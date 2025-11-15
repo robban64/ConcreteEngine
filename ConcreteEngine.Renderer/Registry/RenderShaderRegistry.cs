@@ -48,7 +48,6 @@ internal sealed class RenderShaderRegistry : IRenderShaderRegistry
 
         _shaderRegistry = new RenderShader[shaders.Length];
         _count = shaders.Length;
-        //var uniforms = _gfxShaders.GetUniformList(shaderId);
 
         foreach (var shaderId in shaders)
         {

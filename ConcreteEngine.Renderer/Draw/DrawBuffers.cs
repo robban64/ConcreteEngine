@@ -85,6 +85,13 @@ internal sealed class DrawBuffers
         return ReadOnlySpan<TextureSlotInfo>.Empty;
     }
 
+    public ReadOnlySpan<TextureSlotInfo> ResolveMaterialNoCache(MaterialId materialId,
+        out DrawMaterialMeta materialMeta)
+    {
+        return _materialBuffer.GetMetaAndSlots(materialId, out materialMeta);
+    }
+
+
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public void BindMaterialObject(MaterialId matId)
     {

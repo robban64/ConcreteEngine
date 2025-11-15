@@ -370,7 +370,9 @@ public sealed class GfxCommands
 
     public void SetUniform(int uniform, Vector3 value) => _shaders.SetUniform(_boundUniforms![uniform], value);
 
-    public void SetUniform(int uniform, Vector4 value) => _shaders.SetUniform(_boundUniforms![uniform], value);
+    public void SetUniform(int uniform, in Vector4 value) => _shaders.SetUniform(_boundUniforms![uniform], in value);
+
+    public void SetUniform(int uniform, in Color4 value) => _shaders.SetUniform(_boundUniforms![uniform], in value);
 
     public void SetUniform(int uniform, in Matrix4x4 value) => _shaders.SetUniform(_boundUniforms![uniform], in value);
 

@@ -62,22 +62,28 @@ internal sealed class RenderEntityBus
         var idx = _idx;
         foreach (var query in _world.Query<ModelComponent, Transform>())
         {
+            //Debug.Assert(model.Model != default && model.MaterialKey != default);
             ref var model = ref query.Component1;
             ref var transform = ref query.Component2;
 
-            Debug.Assert(model.Model != default && model.MaterialKey != default);
+            ref var entity = ref _entities[idx++];
+
 
             var depthKey = DepthKeyUtility.MakeDepthKey(in viewMat, in transform.Translation, near, far);
 
-            ref var entity = ref _entities[idx++];
-            var resolver = entity.Entity != selected ? DrawCommandResolver.None : DrawCommandResolver.Effect;
+            var meta = new DrawCommandMeta(DrawCommandId.Mesh, DrawCommandQueue.Opaque, DrawCommandResolver.None,
+                PassMask.Default, depthKey);
+
+            if (query.Entity == selected)
+            {
+                meta = new DrawCommandMeta(meta.Id, DrawCommandQueue.Overlay, DrawCommandResolver.Highlight);
+            }
 
             entity.Entity = query.Entity;
             entity.Model = model.Model;
             entity.MaterialKey = model.MaterialKey;
             entity.Transform = transform;
-            entity.Meta = new DrawCommandMeta(DrawCommandId.Mesh, DrawCommandQueue.Opaque, resolver,
-                PassMask.Default, depthKey);
+            entity.Meta = meta;
         }
 
         _idx += idx;
@@ -146,7 +152,7 @@ internal sealed class RenderEntityBus
 
                 var cmd = new DrawCommand(part.Mesh, mat, part.DrawCount);
                 var meta = baseMeta;
-                if (tag.IsTransparent(part.MaterialSlot))
+                if (meta.Resolver == DrawCommandResolver.None && tag.IsTransparent(part.MaterialSlot))
                 {
                     var depthKey = (ushort)(ushort.MaxValue - meta.DepthKey);
                     meta = new DrawCommandMeta(baseMeta.Id, DrawCommandQueue.Transparent, baseMeta.Resolver,

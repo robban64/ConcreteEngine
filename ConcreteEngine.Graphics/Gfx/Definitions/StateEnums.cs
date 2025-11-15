@@ -5,7 +5,8 @@ public enum BlendMode : byte
     Unset = 0,
     Alpha = 1,
     PremultipliedAlpha = 2,
-    Additive = 3
+    Additive = 3,
+    OneZero = 4
 }
 
 public enum ClearBufferFlag : byte
@@ -32,7 +33,8 @@ public enum DepthMode : byte
     None = 1,
     Lequal = 2,
     Less = 3,
-    Equal = 4
+    Equal = 4,
+    Greater = 5
 }
 
 public enum PolygonOffsetLevel : byte

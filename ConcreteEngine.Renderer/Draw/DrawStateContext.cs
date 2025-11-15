@@ -31,8 +31,6 @@ internal sealed class DrawStateContext
 
     public MeshId FsqMesh { get; }
 
-    public ref readonly RenderCoreShaders CoreShaders => ref _shaderRegistry.CoreShaders;
-
     public GfxPassState PassState;
     public GfxPassStateFunc PassStateFunc;
 
@@ -47,6 +45,12 @@ internal sealed class DrawStateContext
         DepthTexture = depthFbo.Attachments.DepthTextureId;
         _shaderRegistry = registry.ShaderRegistry;
     }
+
+    public ref readonly RenderCoreShaders CoreShaders => ref _shaderRegistry.CoreShaders;
+
+    public ReadOnlySpan<int> GetUniformLocations(ShaderId shader) =>
+        _shaderRegistry.GetRenderShader(shader).GetUniforms();
+
 
     public bool IsMain => PassMode == PassStateMode.Main;
     public bool IsDepth => PassMode == PassStateMode.Depth;

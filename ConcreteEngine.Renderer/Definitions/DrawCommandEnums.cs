@@ -29,7 +29,8 @@ public enum DrawCommandQueue : byte
 public enum DrawCommandResolver : byte
 {
     None = 0,
-    Effect = 1
+    Wireframe = 1,
+    Highlight = 2,
 }
 
 [Flags]

@@ -34,11 +34,10 @@ public readonly record struct Color4(float R, float G, float B, float A = 1f)
     public static Color4 FromNormalized(float r, float g, float b, float a = 1f) =>
         new(ClampNorm(r), ClampNorm(g), ClampNorm(b), ClampNorm(a));
 
-    public static Color4 FromVector4(Vector4 v) => FromNormalized(v.X, v.Y, v.Z, v.W);
-    public static Color4 FromVector3(Vector3 v, float a = 1f) => FromNormalized(v.X, v.Y, v.Z, a);
+    public static Color4 FromVector4(in Vector4 v) => FromNormalized(v.X, v.Y, v.Z, v.W);
+    public static Color4 FromVector3(in Vector3 v, float a = 1f) => FromNormalized(v.X, v.Y, v.Z, a);
 
-    public static Color4 FromRgba(byte r, byte g, byte b, byte a = 255) =>
-        new(r / 255f, g / 255f, b / 255f, a / 255f);
+    public static Color4 FromRgba(byte r, byte g, byte b, byte a = 255) => new(r / 255f, g / 255f, b / 255f, a / 255f);
 
     public static Color4 Lerp(Color4 from, Color4 to, float t)
     {

@@ -5,7 +5,6 @@ using System.Diagnostics.CodeAnalysis;
 using System.Numerics;
 using System.Runtime.CompilerServices;
 using ConcreteEngine.Common.Collections;
-using ConcreteEngine.Common.Numerics.Maths;
 using ConcreteEngine.Renderer.Data;
 using ConcreteEngine.Renderer.Passes;
 using static ConcreteEngine.Renderer.Data.RenderLimits;
@@ -58,39 +57,12 @@ public sealed class DrawCommandBuffer
         _commandBuffer[idx] = cmd;
         _metaBuffer[idx] = meta;
         _indexBuffer[idx] = new DrawCommandRef(meta, idx);
-        _transformBuffer[idx] = new DrawObjectUniform(in model, in v0, in v1, v2);
-    }
 
-    public void SubmitDrawBatch(in DrawCommandPackage package)
-    {
-        Debug.Assert(package.Draw.Length == package.Meta.Length);
-        Debug.Assert(package.Draw.Length == package.Transform.Length);
-
-        var drawCommands = package.Draw;
-        var drawTransforms = package.Transform;
-        var drawMeta = package.Meta;
-
-        var count = drawCommands.Length;
-        if (count == 0) return;
-
-        EnsureCapacity(count);
-        drawCommands.CopyTo(_commandBuffer.AsSpan(_submitIdx));
-        drawMeta.CopyTo(_metaBuffer.AsSpan(_submitIdx));
-
-        var indices = _indexBuffer.AsSpan(_submitIdx);
-        var transformBuffer = _transformBuffer.AsSpan(_submitIdx);
-
-        var idx = _submitIdx;
-        for (var i = 0; i < count; i++, idx++)
-        {
-            indices[i] = new DrawCommandRef(drawMeta[i], idx);
-
-            ref readonly var transform = ref drawTransforms[i].Transform;
-            MatrixMath.CreateNormalMatrix(in transform, out var normalModel);
-            DrawObjectUniform.Fill(in transform, in normalModel, out transformBuffer[i]);
-        }
-
-        _submitIdx += count;
+        ref var drawUbo = ref _transformBuffer[idx];
+        drawUbo.Model = model;
+        drawUbo.NormalCol0 = v0;
+        drawUbo.NormalCol1 = v1;
+        drawUbo.NormalCol2 = v2;
     }
 
     [MethodImpl(MethodImplOptions.AggressiveOptimization)]
@@ -120,7 +92,6 @@ public sealed class DrawCommandBuffer
             }
         }
 
-        // memset/vectorized clear
         _passRanges.AsSpan().Clear();
 
         // Count pass ranges
@@ -217,7 +188,9 @@ public sealed class DrawCommandBuffer
     }
 
 
-    [MethodImpl(MethodImplOptions.NoInlining), DoesNotReturn, StackTraceHidden]
+    [MethodImpl(MethodImplOptions.NoInlining)]
+    [DoesNotReturn]
+    [StackTraceHidden]
     private static void ThrowMaxCapacityExceeded() =>
         throw new OutOfMemoryException("Command Buffer exceeded max limit");
 }

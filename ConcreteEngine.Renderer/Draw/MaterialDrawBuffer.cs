@@ -55,7 +55,7 @@ internal sealed class MaterialDrawBuffer
         EnsureCapacity(index + 1);
         EnsureTextureSlotCapacity(slots.Length);
 
-        _buffer[index] = new MaterialUniformRecord(in payload.MatParams);
+        payload.MatParams.WriteTo(ref _buffer[index]);
         _metas[index] = payload.Meta;
 
         var slotIdx = _slotIdx;
@@ -67,26 +67,6 @@ internal sealed class MaterialDrawBuffer
         _idx++;
         _slotIdx = slotIdx;
     }
-    /*
-     public void SubmitDrawData(in DrawMaterialPayload payload, ReadOnlySpan<TextureSlotInfo> slots)
-       {
-           ArgumentOutOfRangeException.ThrowIfGreaterThan(slots.Length, TextureSlots);
-           EnsureCapacity(1);
-           EnsureTextureSlotCapacity(slots.Length);
-
-           _buffer[_idx] = new MaterialUniformRecord(in payload.MatParams);
-           _metas[_idx] = payload.Meta;
-
-           var slotIdx = _slotIdx;
-           for (var i = 0; i < slots.Length; i++, slotIdx++)
-               _textureSlots[slotIdx] = slots[i];
-
-           _slotRanges[_idx] = new RangeU16((ushort)_slotIdx, (ushort)slots.Length);
-
-           _idx++;
-           _slotIdx = slotIdx;
-       }
-     */
 
     internal ReadOnlySpan<MaterialUniformRecord> DrainDrawMaterialData()
     {
@@ -130,7 +110,9 @@ internal sealed class MaterialDrawBuffer
         Array.Resize(ref _textureSlots, newCap);
     }
 
-    [MethodImpl(MethodImplOptions.NoInlining), DoesNotReturn, StackTraceHidden]
+    [MethodImpl(MethodImplOptions.NoInlining)]
+    [DoesNotReturn]
+    [StackTraceHidden]
     private static void ThrowMaxCapacityExceeded() =>
         throw new OutOfMemoryException("Material Buffer exceeded max limit");
 }

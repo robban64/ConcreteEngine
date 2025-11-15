@@ -1,6 +1,5 @@
 #region
 
-using System.Numerics;
 using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
 using ConcreteEngine.Graphics.Gfx.Resources;
@@ -17,20 +16,6 @@ public readonly struct DrawCommand(MeshId meshId, MaterialId materialId, int dra
     public readonly MaterialId MaterialId = materialId;
     public readonly int DrawCount = drawCount;
     private readonly int pad;
-}
-
-//TODO Remove if not used in the future
-[StructLayout(LayoutKind.Sequential)]
-public readonly struct DrawTransformPayload
-{
-    public readonly Matrix4x4 Transform;
-
-    [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public DrawTransformPayload(in Matrix4x4 transform) => Transform = transform;
-
-    [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public static void Fill(in Matrix4x4 model, out DrawTransformPayload dst)
-        => dst = new DrawTransformPayload(in model);
 }
 
 [StructLayout(LayoutKind.Sequential)]

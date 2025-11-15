@@ -1,47 +1,43 @@
 #region
 
-using System.Runtime.CompilerServices;
-
 #endregion
 
 namespace ConcreteEngine.Graphics.Error;
 
-public sealed partial class GraphicsException(string message) : InvalidOperationException(message)
+public sealed partial class GraphicsException(string message, Exception? inner = null)
+    : Exception(message, inner)
 {
     // Exceptions
-    public static GraphicsException ResourceIsNull<T>(string? name = null) => new($"{Label<T>(name)} is null.");
+    public static GraphicsException ResourceIsNull(string? name = null) => new($"{name} is null.");
 
-    public static GraphicsException ResourceNotBound<T>(string? name = null) =>
-        new($"{Label<T>(name)} is not bound to the pipeline.");
+    public static GraphicsException ResourceNotBound(string? name = null) =>
+        new($"{name} is not bound to the pipeline.");
 
-    public static GraphicsException ResourceIsDisposed<T>(string? name = null) => new($"{Label<T>(name)} is disposed.");
+    public static GraphicsException ResourceIsDisposed(string? name = null) => new($"{name} is disposed.");
     public static GraphicsException ResourceIsDisposed(int id) => new($"{id} is disposed.");
 
-    public static GraphicsException ResourceNotFound<T>(object name) =>
-        new($"{Label<T>(name.ToString())} was not found.");
+    public static GraphicsException ResourceNotFound(object name) => new($"{name} was not found.");
 
     public static GraphicsException ResourceNotFound(int id) => new($"{id} was not found.");
 
-    public static GraphicsException ResourceAlreadyExists<T>(object name) =>
-        new($"{Label<T>(name.ToString())} already exists.");
+    public static GraphicsException ResourceAlreadyExists(object name) => new($"{name} already exists.");
 
     public static GraphicsException ResourceAlreadyExists(int id) => new($"{id} already exists.");
 
-    public static GraphicsException DuplicatedResource<T>(object name) =>
-        new($"Duplicated  in {Label<T>(name.ToString())}");
+    public static GraphicsException DuplicatedResource(object name) => new($"Duplicated  in {name}");
 
 
-    public static GraphicsException MissingHandle<T>(string? name = null) =>
-        new($"{Label<T>(name)} has no valid GPU handle (was it created?).");
+    public static GraphicsException MissingHandle(string? name = null) =>
+        new($"{name} has no valid GPU handle (was it created?).");
 
-    public static GraphicsException InvalidBufferData<T>(string? name, string reason) =>
-        new($"{Label<T>(name)} invalid buffer data: {reason}");
+    public static GraphicsException InvalidBufferData(string? name, string reason) =>
+        new($"{name} invalid buffer data: {reason}");
 
 
     public static GraphicsException InvalidState(string description) => new($"Invalid graphics state: {description}");
 
-    public static GraphicsException InvalidType<T>(string? name, object other) =>
-        new($"Expected type: {Label<T>(name)}. Actual type: {other.GetType().Name}");
+    public static GraphicsException InvalidType(string? name, object other) =>
+        new($"Expected type: {name}. Actual type: {other.GetType().Name}");
 
 
     public static GraphicsException ShaderLinkFailed(string shaderName, string log) =>
@@ -57,18 +53,15 @@ public sealed partial class GraphicsException(string message) : InvalidOperation
     public static GraphicsException UnsupportedFeature(string feature) =>
         new($"The feature '{feature}' is not supported (yet).");
 
-    public static GraphicsException CapabilityExceeded<T>(string capabilityName, int attempted, int maximum) =>
-        new($"{Label<T>()}: {capabilityName} value {attempted} exceeds the maximum supported ({maximum}).");
+    public static GraphicsException LimitExceeded(string capabilityName, int limit) =>
+        new($"{capabilityName} limit has been exceeded ({limit}).");
 
-    public static GraphicsException CapabilityTooLow<T>(string capabilityName, int attempted, int minimum) =>
-        new($"{Label<T>()}: {capabilityName} value {attempted} is below the minimum required ({minimum}).");
+    public static GraphicsException CapabilityExceeded(string capabilityName, int attempted, int maximum) =>
+        new($"{capabilityName} value {attempted} exceeds the maximum supported ({maximum}).");
 
-    public static GraphicsException InvalidStd140Layout<T>() =>
-        new($"{Label<T>()} contains invalid std layout with size: {Unsafe.SizeOf<T>()}");
+    public static GraphicsException CapabilityTooLow(string capabilityName, int attempted, int minimum) =>
+        new($"{capabilityName} value {attempted} is below the minimum required ({minimum}).");
 
-    private static string Label<T>(string? name = null)
-    {
-        var s = typeof(T).Name;
-        return string.IsNullOrWhiteSpace(name) ? s : $"{s} '{name}'";
-    }
+    public static GraphicsException InvalidStd140Layout(int stride) =>
+        new($"Ubo contains invalid std layout with stride: {stride}");
 }

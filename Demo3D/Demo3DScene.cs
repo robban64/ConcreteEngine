@@ -2,15 +2,16 @@
 
 using System.Numerics;
 using ConcreteEngine.Common.Numerics;
-using ConcreteEngine.Core.Assets;
-using ConcreteEngine.Core.Assets.Materials;
-using ConcreteEngine.Core.Assets.Meshes;
-using ConcreteEngine.Core.Assets.Textures;
-using ConcreteEngine.Core.Configuration;
-using ConcreteEngine.Core.Scene;
-using ConcreteEngine.Core.Worlds.Entities;
-using ConcreteEngine.Core.Worlds.Render;
-using ConcreteEngine.Core.Worlds.Utility;
+using ConcreteEngine.Engine.Assets;
+using ConcreteEngine.Engine.Assets.Materials;
+using ConcreteEngine.Engine.Assets.Meshes;
+using ConcreteEngine.Engine.Assets.Textures;
+using ConcreteEngine.Engine.Configuration;
+using ConcreteEngine.Engine.Scene;
+using ConcreteEngine.Engine.Scene.Modules;
+using ConcreteEngine.Engine.Worlds.Entities;
+using ConcreteEngine.Engine.Worlds.Render;
+using ConcreteEngine.Engine.Worlds.Utility;
 using ConcreteEngine.Graphics.Gfx.Contracts;
 using ConcreteEngine.Graphics.Gfx.Definitions;
 using ConcreteEngine.Renderer.Descriptors;
@@ -25,7 +26,7 @@ public sealed class Demo3DScene : GameScene
 
     public override void Initialize()
     {
-        var renderer = Context.GetSystem<IRenderingSystem>();
+        var renderer = Context.GetSystem<IWorldRenderer>();
         var assets = Context.GetSystem<IAssetSystem>();
         var (store, materialStore) = (assets.Store, assets.MaterialStore);
 
@@ -38,7 +39,7 @@ public sealed class Demo3DScene : GameScene
         skyboxMaterial.State.Pipeline = new MaterialPipelineState(
             GfxPassState.Disable(GfxStateFlags.DepthWrite),
             GfxPassStateFunc.MakeSky());
-        
+
         Context.World.Sky.SetSkyMaterial(skyboxMaterial.Id);
 
         // Terrain
@@ -66,11 +67,14 @@ public sealed class Demo3DScene : GameScene
         leaf2Mat.State.Color = new Color4(0.55f, 0.85f, 0.45f);
         leaf2Mat.State.Shininess = 0f;
         leaf2Mat.State.Specular = 0f;
-        
 
-        var leafState = GfxPassState.Set(GfxStateFlags.DepthTest | GfxStateFlags.DepthWrite  | GfxStateFlags.PolygonOffset, disable: GfxStateFlags.Cull);
-        var leafFunc = new GfxPassStateFunc(Depth: DepthMode.Lequal, Cull: CullMode.FrontCcw, PolygonOffset: PolygonOffsetLevel.Slope);
-        var leafPipelineState = new MaterialPipelineState(leafState,leafFunc);
+
+        var leafState =
+            GfxPassState.Set(GfxStateFlags.DepthTest | GfxStateFlags.DepthWrite | GfxStateFlags.PolygonOffset,
+                disable: GfxStateFlags.Cull);
+        var leafFunc = new GfxPassStateFunc(Depth: DepthMode.Lequal, Cull: CullMode.FrontCcw,
+            PolygonOffset: PolygonOffsetLevel.Slope);
+        var leafPipelineState = new MaterialPipelineState(leafState, leafFunc);
 
         leaf1Mat.State.Pipeline = leafPipelineState;
         leaf2Mat.State.Pipeline = leafPipelineState;
@@ -144,14 +148,6 @@ public sealed class Demo3DScene : GameScene
 
     protected override void ConfigureRenderer(IGameSceneRenderBuilder builder)
     {
-        /*
-        var assetStore = Context.GetSystem<IAssetSystem>().Store;
-        var screenShader = assetStore.GetByName<Shader>("Screen");
-        var compositeShader = assetStore.GetByName<Shader>("Composite");
-        var presentShader = assetStore.GetByName<Shader>("Present");
-        var colorFilterShader = assetStore.GetByName<Shader>("ColorFilter");
-         */
-
         builder.RegisterRender3D(new RenderTargetDescriptor());
     }
 

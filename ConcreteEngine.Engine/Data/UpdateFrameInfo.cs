@@ -1,0 +1,32 @@
+#region
+
+using ConcreteEngine.Common.Numerics;
+
+#endregion
+
+namespace ConcreteEngine.Engine.Data;
+
+public readonly record struct UpdateTickInfo(
+    long UpdateIndex,
+    int GameTick,
+    float DeltaTime)
+{
+    public float Fps => DeltaTime > 0 ? 1.0f / DeltaTime : 0.0f;
+}
+
+public sealed class UpdateFrameInfo
+{
+    private UpdateTickInfo _updateTickInfo;
+
+    public ref readonly UpdateTickInfo UpdateTickInfo => ref _updateTickInfo;
+
+    internal void BeginUpdateFrame(float deltaTime, Size2D viewport, Size2D outputSize)
+    {
+        _updateTickInfo = _updateTickInfo with { UpdateIndex = _updateTickInfo.UpdateIndex + 1, DeltaTime = deltaTime };
+    }
+
+    internal void UpdateTick(int tick)
+    {
+        _updateTickInfo = _updateTickInfo with { GameTick = tick };
+    }
+}

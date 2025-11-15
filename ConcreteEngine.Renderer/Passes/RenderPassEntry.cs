@@ -1,6 +1,5 @@
 #region
 
-using System.Runtime.CompilerServices;
 using ConcreteEngine.Renderer.Definitions;
 
 #endregion
@@ -17,7 +16,6 @@ public sealed class RenderPassEntry
 {
     public PassTagKey PassKey { get; private set; }
     public PassOpKind PassOp { get; private set; }
-
 
     private RenderPassOp? _applyPassDel;
     private RenderAfterPassOp? _applyAfterPassDel;
@@ -70,7 +68,6 @@ public sealed class RenderPassEntry
             afterPassDel(ctx, in _state);
     }
 
-    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     private void ApplyPending()
     {
         if (_pendingState is { } rep)

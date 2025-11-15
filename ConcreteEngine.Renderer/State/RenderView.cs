@@ -1,9 +1,8 @@
 #region
 
 using System.Numerics;
-using ConcreteEngine.Common.Numerics.Maths;
-using ConcreteEngine.Renderer.Data;
 using ConcreteEngine.Renderer.Utility;
+using ConcreteEngine.Shared.TransformData;
 
 #endregion
 
@@ -12,20 +11,21 @@ namespace ConcreteEngine.Renderer.State;
 public sealed class RenderView
 {
     private RenderViewSnapshot _snapshot;
-    private ViewProjectionData _override;
+    private ViewMatrixData _override;
 
     private bool _useOverride = false;
-    
-    public ref readonly Matrix4x4 ViewMatrix
-        => ref (_useOverride ? ref _override.ViewMatrix : ref _snapshot.ViewMatrix);
 
-    public ref readonly Matrix4x4 ProjectionMatrix
-        => ref (_useOverride ? ref _override.ProjectionMatrix : ref _snapshot.ProjectionMatrix);
+    public ref RenderViewSnapshot CameraView => ref _snapshot;
 
-    public ref readonly Matrix4x4 ProjectionViewMatrix
-        => ref (_useOverride ? ref _override.ProjectionViewMatrix : ref _snapshot.ProjectionViewMatrix);
+    public ref readonly Matrix4x4 ViewMatrix => ref _useOverride ? ref _override.ModelMatrix : ref _snapshot.ViewMatrix;
 
-    public ProjectionInfo ProjectionInfo => _snapshot.ProjectionInfo;
+    public ref readonly Matrix4x4 ProjectionMatrix =>
+        ref _useOverride ? ref _override.ProjectionMatrix : ref _snapshot.ProjectionMatrix;
+
+    public ref readonly Matrix4x4 ProjectionViewMatrix =>
+        ref _useOverride ? ref _override.ProjectionViewMatrix : ref _snapshot.ProjectionViewMatrix;
+
+    public ProjectionInfoData ProjectionInfo => _snapshot.ProjectionInfo;
     public Vector3 Position => _snapshot.Position;
     public Vector3 Forward => _snapshot.Forward;
     public Vector3 Right => _snapshot.Right;
@@ -36,7 +36,7 @@ public sealed class RenderView
     {
         if (_useOverride)
         {
-            view = _override.ViewMatrix;
+            view = _override.ModelMatrix;
             projection = _override.ProjectionMatrix;
             projectionView = _override.ProjectionViewMatrix;
             return;
@@ -46,14 +46,8 @@ public sealed class RenderView
         projection = _snapshot.ProjectionMatrix;
         projectionView = _snapshot.ProjectionViewMatrix;
     }
-    
-    public void SetViewData(in RenderViewSnapshot view)
-    {
-        _useOverride = false;
-        _snapshot = view;
-    }
 
-    internal void ClearOverride() => _useOverride = false;
+    public void ClearOverride() => _useOverride = false;
 
     internal void ApplyLightViewOverride(Vector3 direction, RenderParamsSnapshot paramsSnapshot)
     {
@@ -62,8 +56,9 @@ public sealed class RenderView
         RenderTransform.CreateDirLightView(direction, in _snapshot, out var viewMat, out var projMat,
             shadowMapSize: shadow.ShadowMapSize, shadowDistance: shadow.Distance);
 
-        var projViewMat = viewMat * projMat;
-        _override = new ViewProjectionData(in viewMat, in projMat, in projViewMat);
+        _override.ModelMatrix = viewMat;
+        _override.ProjectionMatrix = projMat;
+        _override.ProjectionViewMatrix = viewMat * projMat;
         _useOverride = true;
     }
 }

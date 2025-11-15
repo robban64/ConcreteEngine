@@ -77,7 +77,7 @@ public sealed class GraphicsRuntime : IGraphicsRuntime
             Shaders = _shaders,
             Textures = _textures,
             FrameBuffers = _frameBuffers,
-            Commands = _cmd,
+            Commands = _cmd
         };
 
         _isInitialized = true;

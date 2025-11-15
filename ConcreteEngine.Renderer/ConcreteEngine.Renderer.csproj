@@ -4,6 +4,7 @@
         <TargetFramework>net9.0</TargetFramework>
         <ImplicitUsings>enable</ImplicitUsings>
         <Nullable>enable</Nullable>
+        <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
     </PropertyGroup>
 
     <ItemGroup>
@@ -13,6 +14,7 @@
     <ItemGroup>
       <ProjectReference Include="..\ConcreteEngine.Common\ConcreteEngine.Common.csproj" />
       <ProjectReference Include="..\ConcreteEngine.Graphics\ConcreteEngine.Graphics.csproj" />
+      <ProjectReference Include="..\ConcreteEngine.Shared\ConcreteEngine.Shared.csproj" />
     </ItemGroup>
 
 </Project>

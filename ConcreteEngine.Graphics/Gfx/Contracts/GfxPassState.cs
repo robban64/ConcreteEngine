@@ -33,11 +33,9 @@ public readonly record struct GfxPassState(GfxStateFlags Enabled, GfxStateFlags 
 
     public static GfxPassState Disable(GfxStateFlags flags) => new(0, flags);
 
-    public static GfxPassState Set(GfxStateFlags enable, GfxStateFlags disable) =>
-        new(enable, enable | disable);
+    public static GfxPassState Set(GfxStateFlags enable, GfxStateFlags disable) => new(enable, enable | disable);
 
-    public static GfxPassState Patch(GfxStateFlags defined, GfxStateFlags enabled) =>
-        new(enabled, defined);
+    public static GfxPassState Patch(GfxStateFlags defined, GfxStateFlags enabled) => new(enabled, defined);
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static GfxStateFlags Merge(GfxStateFlags current, GfxPassState patch)
@@ -56,7 +54,8 @@ public readonly record struct GfxPassState(GfxStateFlags Enabled, GfxStateFlags 
     public static GfxPassState MakeShadow() =>
         new(
             Enabled: DepthTest | DepthWrite | Cull | FramebufferSrgb | PolygonOffset,
-            Defined: DepthTest | DepthWrite | Cull | Blend | Scissor | FramebufferSrgb | ColorMask | PolygonOffset | SampleAlphaCoverage
+            Defined: DepthTest | DepthWrite | Cull | Blend | Scissor | FramebufferSrgb | ColorMask | PolygonOffset |
+                     SampleAlphaCoverage
         );
 
     public static GfxPassState MakeLighting() =>
@@ -100,7 +99,7 @@ public readonly record struct GfxPassStateFunc(
         new(BlendMode.Unset, CullMode.FrontCcw, DepthMode.Lequal, PolygonOffsetLevel.Medium);
 }
 
-public readonly record struct GfxPassClear(Color4 ClearColor, ClearBufferFlag ClearBuffer)
+public readonly record struct GfxPassClear(in Color4 ClearColor, ClearBufferFlag ClearBuffer)
 {
     public static GfxPassClear MakeColorClear(Color4 clearColor) => new(clearColor, ClearBufferFlag.Color);
     public static GfxPassClear MakeColorDepthClear(Color4 clearColor) => new(clearColor, ClearBufferFlag.ColorAndDepth);

@@ -15,6 +15,7 @@
 
     <ItemGroup>
         <ProjectReference Include="..\ConcreteEngine.Common\ConcreteEngine.Common.csproj"/>
+        <ProjectReference Include="..\ConcreteEngine.Shared\ConcreteEngine.Shared.csproj" />
     </ItemGroup>
 
 </Project>

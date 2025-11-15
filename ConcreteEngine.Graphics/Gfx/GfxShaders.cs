@@ -10,6 +10,7 @@ namespace ConcreteEngine.Graphics.Gfx;
 public sealed class GfxShaders
 {
     private readonly GfxResourceDisposer _disposer;
+    private readonly IDriverDebugger _drivDebug;
 
     private readonly ShaderStore _store;
     private readonly GlShaders _driver;
@@ -19,6 +20,7 @@ public sealed class GfxShaders
         _store = context.Resources.GfxStoreHub.ShaderStore;
         _driver = context.Driver.Shaders;
         _disposer = context.Disposer;
+        _drivDebug = context.Driver.Debugger;
     }
 
     public ShaderId CreateShader(string vs, string fs, out int samplers)
@@ -29,16 +31,28 @@ public sealed class GfxShaders
         return _store.Add(in meta, programRef);
     }
 
-    public ShaderId RecreateShader(ShaderId shaderId, string vs, string fs, out int samplers)
+    public void RecreateShader(ShaderId shaderId, string vs, string fs, out int samplers)
     {
         ArgumentOutOfRangeException.ThrowIfLessThanOrEqual(shaderId.Value, 0, nameof(shaderId));
-        var oldRef = _store.GetRefAndMeta(shaderId, out _);
-        _disposer.EnqueueReplace(oldRef);
+        ArgumentException.ThrowIfNullOrEmpty(vs, nameof(shaderId));
+        ArgumentException.ThrowIfNullOrEmpty(vs, nameof(shaderId));
 
-        var programRef = _driver.CreateShader(vs, fs);
-        samplers = _driver.GetSamplersFromProgram(programRef);
+        _drivDebug.ToggleDebug(false);
+        GfxRefToken<ShaderId> oldRef = default, newRef = default;
+        try
+        {
+            oldRef = _store.GetRefAndMeta(shaderId, out _);
+            newRef = _driver.CreateShader(vs, fs);
+        }
+        finally
+        {
+            _drivDebug.ToggleDebug(true);
+        }
+
+        samplers = _driver.GetSamplersFromProgram(newRef);
         var meta = new ShaderMeta(samplers);
-        return _store.Replace(shaderId, in meta, programRef, out _);
+        _store.Replace(shaderId, in meta, newRef, out _);
+        _disposer.EnqueueReplace(oldRef);
     }
 
     public List<(string, int)> GetUniformList(ShaderId shaderId)

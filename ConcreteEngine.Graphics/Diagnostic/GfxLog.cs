@@ -1,9 +1,7 @@
 #region
 
-using System.Diagnostics;
 using System.Runtime.CompilerServices;
-using ConcreteEngine.Common;
-using ConcreteEngine.Common.Diagnostics;
+using ConcreteEngine.Shared.Diagnostics;
 
 #endregion
 
@@ -11,9 +9,10 @@ namespace ConcreteEngine.Graphics.Diagnostic;
 
 public static class GfxLog
 {
-    public static Queue<LogEvent> LogQueue { get; } = new(16);
-
+    private static readonly LogEvent[] LogBuffer = new LogEvent[64];
     private static readonly List<LogFilterWildcard> IgnoreFilter = new(4);
+
+    private static int _idx = 0;
 
     private static bool _enabled = false;
 
@@ -23,26 +22,34 @@ public static class GfxLog
         set
         {
             if (_enabled == value) return;
-            LogQueue.Clear();
+            LogBuffer.AsSpan().Clear();
+            _idx = 0;
             _enabled = value;
         }
     }
 
+    public static int Count => _idx;
+
+    public static ReadOnlySpan<LogEvent> DrainLogs()
+    {
+        var index = _idx;
+        _idx = 0;
+        return LogBuffer.AsSpan(0, index);
+    }
 
     private static void Event(in LogEvent log)
     {
         if (!Enabled) return;
-        if (LogQueue.Count > 100)
+        if (_idx >= 128)
         {
-            InvalidOpThrower.ThrowIf(LogQueue.Count > 512);
-            Debug.Assert(false);
+            Console.WriteLine("Log buffer full");
             return;
         }
 
         if (FilterLog(in log))
             return;
 
-        LogQueue.Enqueue(log);
+        LogBuffer[_idx++] = log;
     }
 
 
@@ -50,74 +57,44 @@ public static class GfxLog
         LogLevel level = 0)
     {
         var rule = new LogFilterWildcard(topic, scope, action, level);
+        var idx = FilterLogIndex(topic, scope, action, level);
 
-        if (enabled)
-        {
-            for (var i = 0; i < IgnoreFilter.Count; i++)
-            {
-                if (IgnoreFilter[i] != rule) continue;
-                IgnoreFilter.RemoveAt(i);
-                return;
-            }
-
-            return;
-        }
-
-        foreach (var t in IgnoreFilter)
-        {
-            if (t == rule) return;
-        }
-
-        IgnoreFilter.Add(rule);
+        if (enabled && idx >= 0)
+            IgnoreFilter.RemoveAt(idx);
+        else if (!enabled && idx == -1)
+            IgnoreFilter.Add(rule);
     }
 
 
     private static LogEvent LogGfx(int id, int slot, ushort gen, ushort flags, bool alive, LogTopic topic,
         LogAction action) =>
-        new((uint)id, Param0: slot, Param1: alive ? 1 : 0, Gen: gen, Flags: flags, Scope: LogScope.Gfx, Topic: topic,
-            Action: action);
+        new((uint)id, param0: slot, param1: alive ? 1 : 0, gen: gen, flags: flags, scope: LogScope.Gfx, topic: topic,
+            action: action);
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    internal static void LogGfxStore<TId>(TId id, GfxHandle h, LogTopic topic, LogAction action, ushort flags = 0)
-        where TId : unmanaged, IResourceId => Event(LogGfx(id.Value, h.Slot, h.Gen, flags, h.IsValid, topic, action));
+    internal static void LogGfxStore(int id, GfxHandle h, LogTopic topic, LogAction action, ushort flags = 0) =>
+        Event(LogGfx(id, h.Slot, h.Gen, flags, h.IsValid, topic, action));
 
     //
-    private static LogEvent LogBk(uint handle, int slot, ushort flags, bool alive, LogTopic topic, LogAction action)
-        => new(handle, slot, alive ? 1 : 0, Flags: flags, Scope: LogScope.Backend, Topic: topic, Action: action);
+    private static LogEvent LogBk(uint handle, int slot, ushort flags, bool alive, LogTopic topic, LogAction action) =>
+        new(handle, slot, alive ? 1 : 0, flags: flags, scope: LogScope.Backend, topic: topic, action: action);
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    internal static void LogBkStore<THandle>(BkHandle<THandle> handle, int slot, LogTopic topic, LogAction action,
-        ushort flags = 0)
-        where THandle : unmanaged, IResourceHandle, IEquatable<THandle> =>
-        Event(LogBk(handle, (int)slot, flags, true, topic, action));
+    internal static void LogBkStore(uint handle, int slot, LogTopic topic, LogAction action, ushort flags = 0) =>
+        Event(LogBk(handle, slot, flags, handle > 0, topic, action));
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     internal static void LogBackend(uint handle, GfxHandle h, LogTopic topic, LogAction action, ushort flags = 0) =>
         Event(LogBk(handle, h.Slot, flags, h.IsValid, topic, action));
 
 
-    private static bool FilterLog(in LogEvent log)
+    private static bool FilterLog(in LogEvent log) => FilterLogIndex(log.Topic, log.Scope, log.Action, log.Level) >= 0;
+
+
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    private static int FilterLogIndex(LogTopic topic, LogScope scope, LogAction action, LogLevel level)
     {
-        foreach (var it in IgnoreFilter)
-        {
-            var validKind = it.Topic == 0 || it.Topic == (byte)log.Topic;
-            var validLayer = it.Scope == 0 || it.Scope == (byte)log.Scope;
-            var validAction = it.Action == 0 || it.Action == (byte)log.Action;
-            var validSource = it.Level == 0 || it.Level == (byte)log.Level;
-
-            if (validKind && validLayer && validSource && validAction) return true;
-        }
-
-        return false;
+        var packed = LogFilterWildcard.Pack((byte)topic, (byte)scope, (byte)action, (byte)level);
+        return LogFilterWildcard.IndexAt(packed, IgnoreFilter);
     }
-
-/*
-    public static LogEvent MakeResourceDispose(in DeleteResourceCommand cmd)
-    {
-        var handle = (int)cmd.BackendHandle.Value;
-        var h = cmd.Handle;
-        return new LogEvent(handle, h.Slot, h.Gen, h.Kind, GfxLogLayer.Backend, GfxLogSource.Resource,
-            GfxLogAction.Dispose);
-    }
-*/
 }

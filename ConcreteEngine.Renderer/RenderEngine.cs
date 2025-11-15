@@ -61,7 +61,7 @@ public sealed class RenderEngine
             CommandPipeline = _drawPipeline,
             Gfx = graphics.Gfx,
             Registry = _renderRegistry,
-            PassPipeline = _passPipeline,
+            PassPipeline = _passPipeline
         };
     }
 
@@ -96,6 +96,7 @@ public sealed class RenderEngine
     }
 
     //
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public void SubmitMaterialDrawData(in DrawMaterialPayload payload, ReadOnlySpan<TextureSlotInfo> slots) =>
         _drawPipeline.SubmitMaterialDrawData(in payload, slots);
 

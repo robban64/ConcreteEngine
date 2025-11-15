@@ -1,6 +1,7 @@
 #region
 
 using ConcreteEngine.Common.Numerics;
+using ConcreteEngine.Graphics.Error;
 using ConcreteEngine.Graphics.Gfx.Contracts;
 using ConcreteEngine.Graphics.Gfx.Definitions;
 using ConcreteEngine.Graphics.Gfx.Internal;
@@ -190,24 +191,22 @@ public sealed class GfxFrameBuffers
         if (desc.ColorTexture is { } colorTexture)
         {
             if (desc.Size.Width > config.MaxTextureSize || desc.Size.Height > config.MaxTextureSize)
-                throw new ArgumentOutOfRangeException(nameof(desc.Size),
-                    $"Texture Size exceeds {config.MaxTextureSize}");
+                throw new GraphicsException($"Texture Size exceeds {config.MaxTextureSize}");
 
             if (colorTexture.PixelFormat is TexturePixelFormat.Depth or TexturePixelFormat.Unknown)
-                throw new InvalidOperationException($"Invalid value for ColorTexture {nameof(desc)}");
+                throw new GraphicsException($"Invalid value for ColorTexture {nameof(desc)}");
 
             if (desc.Multisample != RenderBufferMsaa.None && colorTexture.TexturePreset != TexturePreset.None)
-                throw new InvalidOperationException($"Multisample require None for {nameof(TexturePreset)}");
+                throw new GraphicsException($"Multisample require None for {nameof(TexturePreset)}");
         }
 
         if (desc.DepthTexture is { } depthTexture)
         {
             if (desc.Size.Width > config.MaxDepthTextureSize || desc.Size.Height > config.MaxDepthTextureSize)
-                throw new ArgumentOutOfRangeException(nameof(desc.Size),
-                    $"DepthTexture Size exceeds {config.MaxDepthTextureSize}");
+                throw new GraphicsException($"DepthTexture Size exceeds {config.MaxDepthTextureSize}");
 
             if (depthTexture.PixelFormat is not TexturePixelFormat.Depth)
-                throw new InvalidOperationException($"Invalid value for DepthTexture {nameof(desc)}");
+                throw new GraphicsException($"Invalid value for DepthTexture {nameof(desc)}");
         }
     }
 }

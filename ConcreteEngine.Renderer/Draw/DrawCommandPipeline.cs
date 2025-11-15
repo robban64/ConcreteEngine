@@ -1,5 +1,7 @@
 #region
 
+using System.Runtime.CompilerServices;
+using ConcreteEngine.Common.Time;
 using ConcreteEngine.Graphics.Gfx.Utility;
 using ConcreteEngine.Renderer.Data;
 using ConcreteEngine.Renderer.Passes;
@@ -35,7 +37,10 @@ internal sealed class DrawCommandPipeline
         var drawCtx = new DrawStateContext(ctx.Registry, stateContext.FsqMesh);
         var drawCtxPayload = new DrawStateContextPayload
         {
-            Gfx = ctx.Gfx, Registry = ctx.Registry, RenderView = _stateContext.View, Snapshot = _stateContext.Snapshot
+            Gfx = ctx.Gfx,
+            Registry = ctx.Registry,
+            RenderView = _stateContext.View,
+            Snapshot = _stateContext.Snapshot
         };
 
         //
@@ -53,6 +58,7 @@ internal sealed class DrawCommandPipeline
         _drawBuffers.AttachMaterialBuffer(_materialBuffer);
     }
 
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     internal void SubmitMaterialDrawData(in DrawMaterialPayload payload, ReadOnlySpan<TextureSlotInfo> slots) =>
         _materialBuffer.SubmitDrawData(in payload, slots);
 
@@ -79,6 +85,8 @@ internal sealed class DrawCommandPipeline
 
         _drawBuffers.EnsureDrawBuffers(drawCap, matCap);
     }
+
+    private FrameProfileTimer _timer = new();
 
     internal void UploadUniformGlobals()
     {

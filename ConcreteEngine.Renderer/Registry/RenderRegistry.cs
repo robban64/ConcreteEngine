@@ -5,7 +5,6 @@ using ConcreteEngine.Common;
 using ConcreteEngine.Common.Numerics;
 using ConcreteEngine.Graphics.Gfx;
 using ConcreteEngine.Graphics.Gfx.Resources;
-using ConcreteEngine.Graphics.Primitives;
 using ConcreteEngine.Renderer.Passes;
 
 #endregion
@@ -30,6 +29,14 @@ internal sealed class RenderRegistry
         ShaderRegistry = new RenderShaderRegistry(gfx);
         UboRegistry = new RenderUboRegistry(gfx);
         FboRegistry = new RenderFboRegistry(gfx);
+        SetupGateway(gfx.ResourceManager.GetGfxApi());
+    }
+
+    private unsafe void SetupGateway(GfxResourceApi gfxApi)
+    {
+        RenderRegistryGateway.Setup(FboRegistry, UboRegistry);
+        gfxApi.BindMetaChanged<UniformBufferId, UniformBufferMeta>(&RenderRegistryGateway.OnUboChanged);
+        gfxApi.BindMetaChanged<FrameBufferId, FrameBufferMeta>(&RenderRegistryGateway.OnFboChange);
     }
 
     public void BeginRegistration(Size2D outputSize)
@@ -52,8 +59,7 @@ internal sealed class RenderRegistry
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public RenderShader GetRenderShader(ShaderId shaderId) => ShaderRegistry.GetRenderShader(shaderId);
 
-    [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public RenderUbo GetRenderUbo<TUbo>() where TUbo : unmanaged, IStd140Uniform => UboRegistry.GetRenderUbo<TUbo>();
+    public RenderUbo GetRenderUbo<TUbo>() where TUbo : class => UboRegistry.GetRenderUbo<TUbo>();
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public RenderFbo GetRenderFbo(FboTagKey key) => FboRegistry.GetRenderFbo(key)!;

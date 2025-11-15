@@ -1,6 +1,7 @@
 #region
 
 using System.Numerics;
+using System.Runtime.CompilerServices;
 
 #endregion
 
@@ -8,6 +9,25 @@ namespace ConcreteEngine.Common.Numerics.Maths;
 
 public static class VectorMath
 {
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public static bool DistanceNearlyEqual(in Vector3 a, in Vector3 b, float eps = FloatMath.DefaultEpsilon) =>
+        Vector3.DistanceSquared(a, b) < eps * eps;
+
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public static bool NearlyEqual(Vector2 a, Vector2 b, float eps = FloatMath.DefaultEpsilon) =>
+        MathF.Abs(a.X - b.X) < eps && MathF.Abs(a.Y - b.Y) < eps;
+
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public static bool NearlyEqual(in Vector3 a, in Vector3 b, float eps = FloatMath.DefaultEpsilon) =>
+        MathF.Abs(a.X - b.X) < eps && MathF.Abs(a.Y - b.Y) < eps && MathF.Abs(a.Z - b.Z) < eps;
+
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public static bool NearlyEqual(in Vector4 a, in Vector4 b, float eps = FloatMath.DefaultEpsilon) =>
+        MathF.Abs(a.X - b.X) < eps && MathF.Abs(a.Y - b.Y) < eps && MathF.Abs(a.Z - b.Z) < eps &&
+        MathF.Abs(a.W - b.W) < eps;
+
+
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static float BarryCentric(Vector3 p1, Vector3 p2, Vector3 p3, Vector2 pos)
     {
         float det = (p2.Z - p3.Z) * (p1.X - p3.X) + (p3.X - p2.X) * (p1.Z - p3.Z);

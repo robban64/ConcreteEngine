@@ -9,8 +9,9 @@ namespace ConcreteEngine.Common.Numerics;
 
 [DataContract]
 public readonly record struct Size2D(
-    [property: DataMember(Name = "x")] int Width,
-    [property: DataMember(Name = "y")] int Height
+    [property: DataMember(Name = "width")] int Width,
+    [property: DataMember(Name = "height")]
+    int Height
 )
 {
     public Size2D(int size) : this(size, size)

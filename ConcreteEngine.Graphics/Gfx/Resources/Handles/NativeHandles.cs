@@ -1,18 +1,10 @@
 #region
 
-using System.Runtime.CompilerServices;
-
 #endregion
 
 namespace ConcreteEngine.Graphics.Gfx.Resources;
 
-internal readonly record struct NativeHandle(uint Value)
-{
-    [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public static NativeHandle From<THandle>(THandle handle)
-        where THandle : unmanaged, IResourceHandle, IEquatable<THandle> =>
-        new(handle.Value);
-}
+internal readonly record struct NativeHandle(uint Value);
 
 internal interface IResourceHandle
 {

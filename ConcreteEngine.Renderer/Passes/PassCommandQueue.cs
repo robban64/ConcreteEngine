@@ -54,16 +54,7 @@ internal sealed class PassCommandQueue
         }
     }
 
-/*
-    public IReadOnlyList<TextureId> GetPassSources()
-    {
-        return _textureSlots;
-    }
-*/
-    public ReadOnlySpan<TextureId> GetPassSources()
-    {
-        return _textureSlots.AsSpan(0, int.Max(_maxTexSlot, 1));
-    }
+    public ReadOnlySpan<TextureId> GetPassSources() => _textureSlots.AsSpan(0, int.Max(_maxTexSlot, 1));
 
     internal void Prepare()
     {

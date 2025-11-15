@@ -1,7 +1,7 @@
 #region
 
-using ConcreteEngine.Common.Diagnostics;
 using ConcreteEngine.Graphics.Gfx.Definitions;
+using ConcreteEngine.Shared.Diagnostics;
 
 #endregion
 
@@ -12,51 +12,60 @@ internal interface IStoreMetrics
     ResourceKind Kind { get; }
     string Name { get; }
     string ShortName { get; }
-    ref readonly StoreMetric<CollectionSample> GfxStoreMetrics { get; }
-    ref readonly StoreMetric<CollectionSample> BackendStoreMetrics { get; }
 
-    void GetResult(out GfxStoreMetricsPayload payload);
+    void GetResult(out GfxStoreMetricsPayload data);
 }
 
-internal sealed class StoreMetrics<TId, TMeta, THandle>(
+internal sealed class StoreMetrics<TMeta>(
     ResourceKind kind,
-    GetGfxStoreDel<TId, TMeta> getGfxStore,
-    GetBackendStoreDel<TId, THandle> getBackendStore,
-    GetSpecialMetric<TMeta> getSpecialMetricDel) : IStoreMetrics
-    where TId : unmanaged, IResourceId
-    where TMeta : unmanaged, IResourceMeta
-    where THandle : unmanaged, IResourceHandle, IEquatable<THandle>
+    IGfxMetaResourceStore<TMeta> gfxStore,
+    IBackendResourceStore backendStore)
+    : IStoreMetrics where TMeta : unmanaged, IResourceMeta
 
 {
-    private GetGfxStoreDel<TId, TMeta> GetGfxStore { get; } = getGfxStore;
-    private GetBackendStoreDel<TId, THandle> GetBackendStore { get; } = getBackendStore;
-    private GetSpecialMetric<TMeta> GetSpecialMetricDel { get; } = getSpecialMetricDel;
-
     public ResourceKind Kind { get; } = kind;
     public string Name { get; } = kind.ToResourceName();
     public string ShortName { get; } = kind.ToShortText();
 
-    private StoreMetric<CollectionSample> _gfxStoreMetrics;
-    private StoreMetric<CollectionSample> _backendStoreMetrics;
+    private GfxStoreMetricsPayload _data;
+    public ref GfxStoreMetricsPayload MetricsData => ref _data;
 
-    public ref readonly StoreMetric<CollectionSample> GfxStoreMetrics => ref _gfxStoreMetrics;
-    public ref readonly StoreMetric<CollectionSample> BackendStoreMetrics => ref _gfxStoreMetrics;
-
-    public void GetResult(out GfxStoreMetricsPayload payload)
+    public void GetResult(out GfxStoreMetricsPayload data)
     {
-        var gfx = GetGfxStore();
-        var bk = GetBackendStore();
+        var gfx = gfxStore;
+        var bk = backendStore;
 
-        var gfxSample = new CollectionSample(gfx.Count, gfx.Capacity, gfx.GetAliveCount(), gfx.FreeCount);
-        var bkSample = new CollectionSample(bk.Count, bk.Capacity, bk.GetAliveCount(), bk.FreeCount);
+        _data.Fk = new CollectionSample(gfx.Count, gfx.Capacity, gfx.GetAliveCount(), gfx.FreeCount);
+        _data.Bk = new CollectionSample(bk.Count, bk.Capacity, bk.GetAliveCount(), bk.FreeCount);
 
-        _gfxStoreMetrics = new StoreMetric<CollectionSample>(in gfxSample, default);
-        _backendStoreMetrics = new StoreMetric<CollectionSample>(in bkSample, default);
+        var m = GetSpecialMetric();
+        _data.SpecialMetric = new TargetMetric(m.ResourceId, MetricHeader.FromKind((byte)m.Kind));
+        _data.SpecialSample = new ValueSample(m.Value, m.Param2);
+        _data.Kind = m.Kind;
+        data = _data;
+    }
 
-        var m = GetSpecialMetricDel(gfx.MetaSpan);
-        var specialMeta = new GfxResourceMetric<ValueSample>
-            (m.ResourceId, new ValueSample(m.Value, m.Param2), MetricHeader.FromKind(m.Kind));
-
-        payload = new GfxStoreMetricsPayload(in _gfxStoreMetrics, in _backendStoreMetrics, in specialMeta, Kind);
+    private GfxMetaSpecialMetric GetSpecialMetric()
+    {
+        return Kind switch
+        {
+            ResourceKind.Texture => MetaMetricController.GetTextureMetric(((IGfxMetaResourceStore<TextureMeta>)gfxStore)
+                .MetaSpan),
+            ResourceKind.Shader => MetaMetricController.GetShaderMetric(((IGfxMetaResourceStore<ShaderMeta>)gfxStore)
+                .MetaSpan),
+            ResourceKind.Mesh => MetaMetricController.GetMeshMetric(
+                ((IGfxMetaResourceStore<MeshMeta>)gfxStore).MetaSpan),
+            ResourceKind.VertexBuffer => MetaMetricController.GetVboMetric(
+                ((IGfxMetaResourceStore<VertexBufferMeta>)gfxStore).MetaSpan),
+            ResourceKind.IndexBuffer => MetaMetricController.GetIboMetric(
+                ((IGfxMetaResourceStore<IndexBufferMeta>)gfxStore).MetaSpan),
+            ResourceKind.UniformBuffer => MetaMetricController.GetUboMetric(
+                ((IGfxMetaResourceStore<UniformBufferMeta>)gfxStore).MetaSpan),
+            ResourceKind.FrameBuffer => MetaMetricController.GetFboMetric(
+                ((IGfxMetaResourceStore<FrameBufferMeta>)gfxStore).MetaSpan),
+            ResourceKind.RenderBuffer => MetaMetricController.GetRboMetric(
+                ((IGfxMetaResourceStore<RenderBufferMeta>)gfxStore).MetaSpan),
+            _ => throw new ArgumentOutOfRangeException()
+        };
     }
 }

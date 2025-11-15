@@ -3,7 +3,6 @@
 using System.Diagnostics;
 using System.Numerics;
 using System.Runtime.CompilerServices;
-using ConcreteEngine.Common.Diagnostics.Utility;
 using ConcreteEngine.Common.Numerics;
 using ConcreteEngine.Graphics.Error;
 using ConcreteEngine.Graphics.Gfx.Contracts;
@@ -132,7 +131,7 @@ public sealed class GfxCommands
 
     public void EndRenderPass()
     {
-        if (_boundFboId == default) GraphicsException.ResourceNotBound<GlFboHandle>(nameof(_boundFboId));
+        if (_boundFboId == default) GraphicsException.ResourceNotBound(nameof(_boundFboId));
 
         BindFramebuffer(default);
         _activeOutputSize = _frameCtx.OutputSize;
@@ -362,27 +361,19 @@ public sealed class GfxCommands
 
 
     // Dont use for now.
-    public void SetUniform(int uniform, int value) =>
-        _shaders.SetUniform(_boundUniforms![uniform], value);
+    public void SetUniform(int uniform, int value) => _shaders.SetUniform(_boundUniforms![uniform], value);
 
-    public void SetUniform(int uniform, uint value) =>
-        _shaders.SetUniform(_boundUniforms![uniform], value);
+    public void SetUniform(int uniform, uint value) => _shaders.SetUniform(_boundUniforms![uniform], value);
 
-    public void SetUniform(int uniform, float value) =>
-        _shaders.SetUniform(_boundUniforms![uniform], value);
+    public void SetUniform(int uniform, float value) => _shaders.SetUniform(_boundUniforms![uniform], value);
 
-    public void SetUniform(int uniform, Vector2 value) =>
-        _shaders.SetUniform(_boundUniforms![uniform], value);
+    public void SetUniform(int uniform, Vector2 value) => _shaders.SetUniform(_boundUniforms![uniform], value);
 
-    public void SetUniform(int uniform, Vector3 value) =>
-        _shaders.SetUniform(_boundUniforms![uniform], value);
+    public void SetUniform(int uniform, Vector3 value) => _shaders.SetUniform(_boundUniforms![uniform], value);
 
-    public void SetUniform(int uniform, Vector4 value) =>
-        _shaders.SetUniform(_boundUniforms![uniform], value);
+    public void SetUniform(int uniform, Vector4 value) => _shaders.SetUniform(_boundUniforms![uniform], value);
 
-    public void SetUniform(int uniform, in Matrix4x4 value) =>
-        _shaders.SetUniform(_boundUniforms![uniform], in value);
+    public void SetUniform(int uniform, in Matrix4x4 value) => _shaders.SetUniform(_boundUniforms![uniform], in value);
 
-    public void SetUniform(int uniform, in Matrix3 value) =>
-        _shaders.SetUniform(_boundUniforms![uniform], in value);
+    public void SetUniform(int uniform, in Matrix3 value) => _shaders.SetUniform(_boundUniforms![uniform], in value);
 }

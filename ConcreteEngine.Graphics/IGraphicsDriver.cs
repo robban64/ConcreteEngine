@@ -14,7 +14,7 @@ internal interface IGraphicsDriver
     DeviceCapabilities Capabilities { get; }
     void EndFrame();
 
-    GlDebugger Debugger { get; }
+    IDriverDebugger Debugger { get; }
     GlDisposer Disposer { get; }
     GlBuffers Buffers { get; }
     GlTextures Textures { get; }

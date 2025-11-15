@@ -6,7 +6,7 @@ using ConcreteEngine.Graphics.Gfx.Resources;
 
 namespace ConcreteEngine.Renderer.Data;
 
-public readonly record struct RenderCoreShaders
+public readonly struct RenderCoreShaders
 {
     public ShaderId DepthShader { get; init; }
     public ShaderId CompositeShader { get; init; }

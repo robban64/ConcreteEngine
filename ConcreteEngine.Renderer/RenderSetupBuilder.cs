@@ -44,7 +44,7 @@ public sealed class RenderSetupBuilder
 
 
     public RenderSetupBuilder RegisterFbo<TTag>(FboVariant variant, RegisterFboEntry entry)
-        where TTag : unmanaged, IRenderPassTag
+        where TTag : class
     {
         ArgumentOutOfRangeException.ThrowIfLessThan(variant.Value, 0, nameof(variant));
         ArgumentNullException.ThrowIfNull(entry, nameof(entry));
@@ -52,8 +52,8 @@ public sealed class RenderSetupBuilder
         Ctx.FboSetup.Add((variant, entry, Action));
         return this;
 
-        void Action(FboVariant v, RegisterFboEntry e)
-            => EngineCtx.Registry.FboRegistry.Register<TTag>(v, e, Ctx.OutputSize);
+        void Action(FboVariant v, RegisterFboEntry e) =>
+            EngineCtx.Registry.FboRegistry.Register<TTag>(v, e, Ctx.OutputSize);
     }
 
     public RenderSetupBuilder RegisterShader(int shaderCount, Action<Span<ShaderId>> provider)

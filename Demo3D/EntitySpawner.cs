@@ -1,12 +1,10 @@
 #region
 
 using System.Numerics;
-using ConcreteEngine.Common.Numerics.Maths;
-using ConcreteEngine.Core.Assets.Meshes;
-using ConcreteEngine.Core.Worlds;
-using ConcreteEngine.Core.Worlds.Data;
-using ConcreteEngine.Core.Worlds.Entities;
-using ConcreteEngine.Renderer.Data;
+using ConcreteEngine.Engine.Assets.Meshes;
+using ConcreteEngine.Engine.Worlds;
+using ConcreteEngine.Engine.Worlds.Data;
+using ConcreteEngine.Engine.Worlds.Entities;
 
 #endregion
 
@@ -14,7 +12,7 @@ namespace Demo3D;
 
 public readonly record struct ScenePlacement(ModelBaseDrawInfo ModelInfo, MaterialTag Mat, float Offset = 0f);
 
-public sealed class EntitySpawner(World world, float size = 256f, float margin = 4f)
+public sealed class EntitySpawner(IWorld world, float size = 256f, float margin = 4f)
 {
     private EntityId CreateOnTerrain(ScenePlacement sp, Vector3 p, Vector3? s = null, Quaternion? r = null)
     {
@@ -49,8 +47,8 @@ public sealed class EntitySpawner(World world, float size = 256f, float margin =
         {
             var (rx, rz) = RandXz(rng);
             float bias = 0.6f * intensity;
-            float x = MathHelper.Lerp(rx, xPrev, bias);
-            float z = MathHelper.Lerp(rz, zPrev, bias);
+            float x = float.Lerp(rx, xPrev, bias);
+            float z = float.Lerp(rz, zPrev, bias);
 
             float s = 0.9f + (float)rng.NextDouble() * 0.4f;
             var scale = new Vector3(s);
@@ -75,7 +73,7 @@ public sealed class EntitySpawner(World world, float size = 256f, float margin =
 
         var center = new Vector2(size * 0.5f, size * 0.5f);
         float min = margin, max = size - margin;
-        float maxRadius = (MathF.Min(center.X, center.Y) - margin);
+        float maxRadius = MathF.Min(center.X, center.Y) - margin;
         float tighten = 0.2f + 0.7f * intensity;
 
         for (int i = 0; i < amount; i++)
@@ -83,8 +81,8 @@ public sealed class EntitySpawner(World world, float size = 256f, float margin =
             float a = (float)(rng.NextDouble() * MathF.Tau);
             float t = (float)rng.NextDouble();
             float r = MathF.Pow(t, 1f / (0.0001f + tighten)) * maxRadius;
-            float x = MathHelper.Clamp(center.X + MathF.Cos(a) * r, min, max);
-            float z = MathHelper.Clamp(center.Y + MathF.Sin(a) * r, min, max);
+            float x = float.Clamp(center.X + MathF.Cos(a) * r, min, max);
+            float z = float.Clamp(center.Y + MathF.Sin(a) * r, min, max);
 
             float tScale = 0.9f + (float)rng.NextDouble() * 0.3f;
             var scale = new Vector3(tScale, tScale * 1.3f, tScale);
@@ -109,7 +107,7 @@ public sealed class EntitySpawner(World world, float size = 256f, float margin =
         float min = margin, max = size - margin;
 
         float rCenter = 65f;
-        float halfBand = MathHelper.Lerp(25f, 8f, intensity);
+        float halfBand = float.Lerp(25f, 8f, intensity);
         float rMin = rCenter - halfBand;
         float rMax = rCenter + halfBand;
 
@@ -117,8 +115,8 @@ public sealed class EntitySpawner(World world, float size = 256f, float margin =
         {
             float a = (float)(rng.NextDouble() * MathF.Tau);
             float r = rMin + (float)rng.NextDouble() * (rMax - rMin);
-            float x = MathHelper.Clamp(c.X + MathF.Cos(a) * r, min, max);
-            float z = MathHelper.Clamp(c.Y + MathF.Sin(a) * r, min, max);
+            float x = float.Clamp(c.X + MathF.Cos(a) * r, min, max);
+            float z = float.Clamp(c.Y + MathF.Sin(a) * r, min, max);
 
             float s = 0.95f + (float)rng.NextDouble() * 0.3f;
             var scale = new Vector3(s);
@@ -132,12 +130,12 @@ public sealed class EntitySpawner(World world, float size = 256f, float margin =
     private (float x, float z) RandXz(Random rng)
     {
         float max = size - margin;
-        float x = MathHelper.Lerp(margin, max, (float)rng.NextDouble());
-        float z = MathHelper.Lerp(margin, max, (float)rng.NextDouble());
+        float x = float.Lerp(margin, max, (float)rng.NextDouble());
+        float z = float.Lerp(margin, max, (float)rng.NextDouble());
         return (x, z);
     }
 
-    private static float Clamp01(float v) => v < 0f ? 0f : (v > 1f ? 1f : v);
+    private static float Clamp01(float v) => v < 0f ? 0f : v > 1f ? 1f : v;
 
     private static Quaternion Yaw(float radians) => Quaternion.CreateFromAxisAngle(Vector3.UnitY, radians);
 }

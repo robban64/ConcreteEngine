@@ -1,0 +1,59 @@
+#region
+
+using ConcreteEngine.Engine.Assets.Data;
+using ConcreteEngine.Engine.Assets.Descriptors;
+using ConcreteEngine.Engine.Assets.Internal;
+
+#endregion
+
+namespace ConcreteEngine.Engine.Assets.Textures;
+
+internal sealed class TextureLoaderModule(AssetGfxUploader uploader)
+{
+    private TextureLoader _loader = new();
+
+    public Texture2D LoadTexture2D(AssetId id, TextureDescriptor manifest, bool isCoreAsset,
+        out AssetFileSpec[] fileSpecs)
+    {
+        var payload = _loader.LoadTexture(manifest);
+        uploader.UploadTexture(payload, out var info);
+        fileSpecs = [payload.FileSpec];
+
+        var texture = new Texture2D
+        {
+            RawId = id,
+            Name = manifest.Name,
+            ResourceId = info.TextureId,
+            Width = info.Width,
+            Height = info.Height,
+            IsCoreAsset = isCoreAsset
+        };
+
+        if (payload.Data is { } tData)
+            texture.SetPixelData(tData);
+
+        return texture;
+    }
+
+    public CubeMap LoadCubeMap(AssetId id, CubeMapDescriptor manifest, bool isCoreAsset, out AssetFileSpec[] fileSpecs)
+    {
+        var payload = _loader.LoadCubeMap(manifest);
+        uploader.UploadCubeMap(payload, out var info);
+        fileSpecs = payload.FaceFiles;
+
+        return new CubeMap
+        {
+            RawId = id,
+            Name = manifest.Name,
+            ResourceId = info.TextureId,
+            Size = info.Size,
+            IsCoreAsset = isCoreAsset
+        };
+    }
+
+
+    public void Unload()
+    {
+        _loader = null!;
+    }
+}

@@ -11,8 +11,7 @@ namespace ConcreteEngine.Common.Numerics;
 
 [StructLayout(LayoutKind.Sequential)]
 [DataContract]
-public readonly struct Vector2I(int x, int y)
-    : IEquatable<Vector2I>, IComparable<Vector2I>
+public readonly struct Vector2I(int x, int y) : IEquatable<Vector2I>, IComparable<Vector2I>
 {
     [DataMember(Name = "x")] public readonly int X = x;
     [DataMember(Name = "y")] public readonly int Y = y;

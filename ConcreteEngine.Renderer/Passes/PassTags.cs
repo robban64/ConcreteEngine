@@ -1,13 +1,11 @@
 namespace ConcreteEngine.Renderer.Passes;
 
-public interface IRenderPassTag;
+public abstract class ScenePassTag;
 
-public readonly struct ScenePassTag : IRenderPassTag;
+public abstract class ShadowPassTag;
 
-public readonly struct ShadowPassTag : IRenderPassTag;
+public abstract class LightPassTag;
 
-public readonly struct LightPassTag : IRenderPassTag;
+public abstract class PostPassTag;
 
-public readonly struct PostPassTag : IRenderPassTag;
-
-public readonly struct ScreenPassTag : IRenderPassTag;
+public abstract class ScreenPassTag;

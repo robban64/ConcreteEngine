@@ -67,11 +67,12 @@ internal sealed class DrawStateContext
         return true;
     }
 
-    public ShaderId ResolveShaderPolicy(ShaderId cmdShader) => PassMode switch
-    {
-        PassStateMode.Main => cmdShader,
-        PassStateMode.Post => cmdShader,
-        PassStateMode.Depth => CoreShaders.DepthShader,
-        _ => throw new ArgumentOutOfRangeException()
-    };
+    public ShaderId ResolveShaderPolicy(ShaderId cmdShader) =>
+        PassMode switch
+        {
+            PassStateMode.Main => cmdShader,
+            PassStateMode.Post => cmdShader,
+            PassStateMode.Depth => CoreShaders.DepthShader,
+            _ => throw new ArgumentOutOfRangeException()
+        };
 }

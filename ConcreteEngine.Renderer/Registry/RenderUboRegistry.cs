@@ -3,8 +3,6 @@
 using ConcreteEngine.Common;
 using ConcreteEngine.Graphics.Gfx;
 using ConcreteEngine.Graphics.Gfx.Resources;
-using ConcreteEngine.Graphics.Gfx.Utility;
-using ConcreteEngine.Graphics.Primitives;
 using ConcreteEngine.Renderer.Data;
 
 #endregion
@@ -23,34 +21,29 @@ internal sealed class RenderUboRegistry
     {
         _gfxApi = gfx.ResourceManager.GetGfxApi();
         _gfxBuffers = gfx.Buffers;
-
-        _gfxApi.BindMetaChanged<UniformBufferId, UniformBufferMeta>(OnUboChange);
     }
 
     public void BeginRegistration()
     {
-        Register<EngineUniformRecord>();
-        Register<FrameUniformRecord>();
-        Register<CameraUniformRecord>();
-        Register<DirLightUniformRecord>();
-        Register<LightUniformRecord>();
-        Register<ShadowUniformRecord>();
-        Register<MaterialUniformRecord>();
-        Register<DrawObjectUniform>();
-        Register<PostProcessUniform>();
+        Register<EngineUniformRecord, EngineUboTag>();
+        Register<FrameUniformRecord, FrameUboTag>();
+        Register<CameraUniformRecord, CameraUboTag>();
+        Register<DirLightUniformRecord, DirLightUboTag>();
+        Register<LightUniformRecord, LightUboTag>();
+        Register<ShadowUniformRecord, ShadowUboTag>();
+        Register<MaterialUniformRecord, MaterialUboTag>();
+        Register<DrawObjectUniform, DrawUboTag>();
+        Register<PostProcessUniform, PostUboTag>();
     }
 
     public void FinishRegistration()
     {
     }
 
-    public void Register<TUbo>() where TUbo : unmanaged, IStd140Uniform
+    public void Register<TUbo, TTag>() where TTag : class where TUbo : unmanaged
     {
         InvalidOpThrower.ThrowIfCapacityExceed(_uboRegistry, RenderLimits.UboSlots);
-        if (!UniformBufferUtils.IsStd140Aligned<TUbo>())
-            throw new InvalidOperationException($"{typeof(TUbo).Name} is not std140-aligned.");
-
-        var newSlot = TagRegistry.RegisterUniformBufferSlot<TUbo>();
+        var newSlot = TagRegistry.RegisterUniformBufferSlot<TTag>();
         InvalidOpThrower.ThrowIfNotNull(_uboRegistry[newSlot]);
 
         var uboId = _gfxBuffers.CreateUniformBuffer<TUbo>(newSlot);
@@ -60,16 +53,12 @@ internal sealed class RenderUboRegistry
         _uboCount++;
     }
 
-    public RenderUbo GetRenderUbo<TUbo>() where TUbo : unmanaged, IStd140Uniform
+    public RenderUbo GetRenderUbo<TUbo>() where TUbo : class
     {
         var slot = TagRegistry.UniformBufferSlot<TUbo>();
         return _uboRegistry[slot];
     }
 
-    private void OnUboChange(UniformBufferId id, in GfxMetaChanged<UniformBufferMeta> message)
-    {
-        var meta = message.NewMeta;
-        var renderUbo = _uboRegistry[meta.Slot];
-        renderUbo.SetCapacity(meta.Capacity);
-    }
+
+    internal RenderUbo GetBySlot(UboSlot slot) => _uboRegistry[slot];
 }

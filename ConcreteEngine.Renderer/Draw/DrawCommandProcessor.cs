@@ -58,7 +58,6 @@ internal sealed class DrawCommandProcessor
         }
 
         _gfxCmd.BindTexture(GfxTextures.FallbackTextures.AlphaMaskId, 1);
-
     }
 
     private void BindTextureSlots(ReadOnlySpan<TextureSlotInfo> slots)
@@ -84,7 +83,7 @@ internal sealed class DrawCommandProcessor
                 BindDepthTextureSlots(texSlots);
                 break;
         }
-            
+
         _buffers.BindMaterialObject(materialId);
 
         if (materialMeta.PassState != default)

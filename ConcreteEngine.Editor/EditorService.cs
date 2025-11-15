@@ -60,6 +60,13 @@ internal static class EditorService
 
     private static void CheckHotkeys()
     {
+        if (ImGui.IsKeyPressed(ImGuiKey.C))
+        {
+            var selected = EditorModelManager.EntitiesState.State?.GetSelectedEntity();
+            if (selected is not null) Console.WriteLine(selected.EntityId + " " + selected.ComponentCount);
+            else Console.WriteLine("No selected");
+        }
+
         if (ImGui.IsKeyPressed(ImGuiKey._1)) StateContext.ToggleLeftSidebar(LeftSidebarMode.Assets);
         else if (ImGui.IsKeyPressed(ImGuiKey._2)) StateContext.ToggleLeftSidebar(LeftSidebarMode.Entities);
         else if (ImGui.IsKeyPressed(ImGuiKey._3)) StateContext.ToggleRightSidebar(RightSidebarMode.Camera);

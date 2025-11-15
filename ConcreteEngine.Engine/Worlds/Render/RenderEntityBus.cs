@@ -56,6 +56,8 @@ internal sealed class RenderEntityBus
 
         EnsureCapacity(DrawCount);
 
+        var selected = WorldActionSlot.SelectedEntityId;
+
         float near = projInfo.Near, far = projInfo.Far;
         var idx = _idx;
         foreach (var query in _world.Query<ModelComponent, Transform>())
@@ -64,17 +66,18 @@ internal sealed class RenderEntityBus
             ref var transform = ref query.Component2;
 
             Debug.Assert(model.Model != default && model.MaterialKey != default);
-            //if (model.MaterialKey == default) continue;
-            //if (model.Model == default) continue;
 
             var depthKey = DepthKeyUtility.MakeDepthKey(in viewMat, in transform.Translation, near, far);
 
             ref var entity = ref _entities[idx++];
+            var resolver = entity.Entity != selected ? DrawCommandResolver.None : DrawCommandResolver.Effect;
+
             entity.Entity = query.Entity;
             entity.Model = model.Model;
             entity.MaterialKey = model.MaterialKey;
             entity.Transform = transform;
-            entity.Meta = new DrawCommandMeta(DrawCommandId.Mesh, DrawCommandQueue.Opaque, PassMask.Default, depthKey);
+            entity.Meta = new DrawCommandMeta(DrawCommandId.Mesh, DrawCommandQueue.Opaque, resolver,
+                PassMask.Default, depthKey);
         }
 
         _idx += idx;
@@ -146,7 +149,8 @@ internal sealed class RenderEntityBus
                 if (tag.IsTransparent(part.MaterialSlot))
                 {
                     var depthKey = (ushort)(ushort.MaxValue - meta.DepthKey);
-                    meta = new DrawCommandMeta(baseMeta.Id, DrawCommandQueue.Transparent, baseMeta.PassMask, depthKey);
+                    meta = new DrawCommandMeta(baseMeta.Id, DrawCommandQueue.Transparent, baseMeta.Resolver,
+                        baseMeta.PassMask, depthKey);
                 }
 
                 buffer.SubmitDraw(cmd, meta, in model, in v0, in v1, in v2);
@@ -165,7 +169,7 @@ internal sealed class RenderEntityBus
         {
             var sky = _world.Sky;
             CreateTransformMatrices(sky.Transform, out var model, out var v0, out var v1, out var v2);
-            var meta = new DrawCommandMeta(DrawCommandId.Skybox, DrawCommandQueue.Skybox, PassMask.Main, 0);
+            var meta = new DrawCommandMeta(DrawCommandId.Skybox, DrawCommandQueue.Skybox, passMask: PassMask.Main);
             var cmd = new DrawCommand(sky.Mesh, sky.Material);
             buffer.SubmitDraw(cmd, meta, in model, in v0, in v1, in v2);
         }

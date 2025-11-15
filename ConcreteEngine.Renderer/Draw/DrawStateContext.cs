@@ -23,13 +23,15 @@ internal sealed class DrawStateContextPayload
 
 internal sealed class DrawStateContext
 {
+    private readonly RenderShaderRegistry _shaderRegistry;
+
     public TextureId DepthTexture { get; private set; }
     public PassStateMode PassMode { get; private set; }
     public MaterialId PrevMaterial { get; private set; } = new(-1);
 
     public MeshId FsqMesh { get; }
 
-    public readonly RenderCoreShaders CoreShaders;
+    public ref readonly RenderCoreShaders CoreShaders => ref _shaderRegistry.CoreShaders;
 
     public GfxPassState PassState;
     public GfxPassStateFunc PassStateFunc;
@@ -39,11 +41,11 @@ internal sealed class DrawStateContext
 
     internal DrawStateContext(RenderRegistry registry, MeshId fsqMesh)
     {
-        FsqMesh = fsqMesh;
         var depthFbo = registry.GetRenderFbo(TagRegistry.FboKey<ShadowPassTag>(FboVariant.Default));
+
+        FsqMesh = fsqMesh;
         DepthTexture = depthFbo.Attachments.DepthTextureId;
-        // DepthTexture = GfxTextures.FallbackTextures.AlphaMaskId;
-        CoreShaders = registry.ShaderRegistry.CoreShaders;
+        _shaderRegistry = registry.ShaderRegistry;
     }
 
     public bool IsMain => PassMode == PassStateMode.Main;
@@ -58,6 +60,11 @@ internal sealed class DrawStateContext
     {
         PrevMaterial = default;
         PassMode = PassStateMode.Main;
+    }
+
+    public void ResetCachedMaterial()
+    {
+        PrevMaterial = default;
     }
 
     public bool ResolveMaterialBind(MaterialId material)

@@ -54,6 +54,7 @@ internal sealed class RenderRegistry
     {
         UboRegistry.FinishRegistration();
         FboRegistry.FinishRegistration();
+        ShaderRegistry.FinishRegistration();
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]

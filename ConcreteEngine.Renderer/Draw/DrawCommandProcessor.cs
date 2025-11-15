@@ -1,5 +1,6 @@
 #region
 
+using ConcreteEngine.Common.Numerics;
 using ConcreteEngine.Graphics.Gfx;
 using ConcreteEngine.Graphics.Gfx.Resources;
 using ConcreteEngine.Renderer.Data;
@@ -38,12 +39,11 @@ internal sealed class DrawCommandProcessor
         _ctx.ResetMaterialState();
         if (_ctx.IsDepth)
         {
-            UseShader(_ctx.CoreShaders.DepthShader);
+            _gfxCmd.UseShader(_ctx.CoreShaders.DepthShader);
             _gfxCmd.UnbindAllTextures();
         }
     }
 
-    private void UseShader(ShaderId shaderId) => _gfxCmd.UseShader(shaderId);
 
     private void BindDepthTextureSlots(ReadOnlySpan<TextureSlotInfo> slots)
     {
@@ -76,7 +76,7 @@ internal sealed class DrawCommandProcessor
         switch (_ctx.PassMode)
         {
             case PassStateMode.Main:
-                UseShader(materialMeta.ShaderId);
+                _gfxCmd.UseShader(materialMeta.ShaderId);
                 BindTextureSlots(texSlots);
                 break;
             case PassStateMode.Depth:
@@ -107,11 +107,29 @@ internal sealed class DrawCommandProcessor
         }
     }
 
-    public void DrawMesh(DrawCommand cmd, int submitIndex)
+    private int[] a = [8];
+    private void ApplyResolvedOverride(DrawCommand cmd, DrawCommandTicket ticket)
     {
-        if (_ctx.PrevMaterial != cmd.MaterialId) BindMaterial(cmd.MaterialId);
+        _ctx.ResetCachedMaterial();
+        
+        switch (ticket.Resolver)
+        {
+            case DrawCommandResolver.Effect:
+                _gfxCmd.UseShader(_ctx.CoreShaders.HighlightShader, a);
+                _gfxCmd.SetUniform(0, Color4.Orange.WithAlpha(0.5f).AsVec4());
+                _gfxCmd.BindTexture(GfxTextures.FallbackTextures.AlbedoId, 0);
+                break;
+        }
+    }
 
-        _buffers.BindDrawObject(submitIndex);
+    public void DrawMesh(DrawCommand cmd, DrawCommandTicket ticket)
+    {
+        if (ticket.Resolver != DrawCommandResolver.None)
+            ApplyResolvedOverride(cmd, ticket);
+        else if ( _ctx.PrevMaterial != cmd.MaterialId)
+            BindMaterial(cmd.MaterialId);
+        
+        _buffers.BindDrawObject(ticket.SubmitIdx);
         _gfxCmd.BindMesh(cmd.MeshId);
         _gfxCmd.DrawBoundMesh(cmd.MeshId, cmd.DrawCount);
     }

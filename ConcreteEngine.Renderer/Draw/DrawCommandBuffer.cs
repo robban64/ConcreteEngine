@@ -114,12 +114,13 @@ public sealed class DrawCommandBuffer
         for (var i = 0; i < _submitIdx; i++)
         {
             ref readonly var mi = ref indices[i];
-            var mask = (uint)metas[mi.Idx].PassMask;
+            var meta = metas[mi.Idx];
+            var mask = (uint)meta.PassMask;
             while (mask != 0)
             {
                 var p = BitOperations.TrailingZeroCount(mask);
                 var w = heads[p]++;
-                _drawTickets[w] = new DrawCommandTicket(mi.Idx /*, (byte)p*/);
+                _drawTickets[w] = new DrawCommandTicket(mi.Idx, (byte)p, meta.Resolver);
                 mask &= mask - 1;
             }
         }
@@ -139,8 +140,8 @@ public sealed class DrawCommandBuffer
         ReadOnlySpan<DrawCommand> commands = _commandBuffer.AsSpan();
         for (var i = pass.Start; i < end; i++)
         {
-            var idx = _drawTickets[i].SubmitIdx;
-            cmd.DrawMesh(commands[idx], idx);
+            var ticket = _drawTickets[i];
+            cmd.DrawMesh(commands[ticket.SubmitIdx], ticket);
         }
     }
 

@@ -1,5 +1,6 @@
 #region
 
+using ConcreteEngine.Common;
 using ConcreteEngine.Graphics.Gfx;
 using ConcreteEngine.Graphics.Gfx.Resources;
 
@@ -12,23 +13,36 @@ public sealed class RenderShader : IComparable<ShaderId>
     public ShaderId Id { get; }
     public int SamplerSlots { get; }
 
+    private Dictionary<string, int>? _uniforms = null;
+    private int[]? _sparse = null;
+    
+    public bool HasPlainUniforms => _uniforms is not null;
+    
+    public int GetUniform(string uniformName) => _uniforms![uniformName];
+    public int GetUniformByIndex(int idx) => _sparse![idx];
+
     internal RenderShader(ShaderId id, ShaderMeta meta)
     {
+        ArgumentOutOfRangeException.ThrowIfLessThanOrEqual(id.Value, 0, nameof(id));
         Id = id;
         SamplerSlots = meta.SamplerSlots;
     }
 
-    public Dictionary<string, int> CreateNewUniformDict(GfxShaders gfx)
+    public void UsePlainUniforms(GfxShaders gfx)
     {
+        InvalidOpThrower.ThrowIfNotNull(_uniforms, nameof(_uniforms));
+        InvalidOpThrower.ThrowIfNotNull(_sparse, nameof(_sparse));
+        
         var uniformPairs = gfx.GetUniformList(Id);
-        var uniforms = new Dictionary<string, int>(uniformPairs.Count);
+        _uniforms = new Dictionary<string, int>(uniformPairs.Count);
+        _sparse = new int[uniformPairs.Count];
 
-        foreach (var (uniform, location) in uniformPairs)
+        for (int i = 0; i < uniformPairs.Count; i++)
         {
-            uniforms.Add(uniform, location);
+            (string uniform, int location) = uniformPairs[i];
+            _uniforms.Add(uniform, location);
+            _sparse[i] = location;
         }
-
-        return uniforms;
     }
 
     public int CompareTo(ShaderId other) => Id.Value.CompareTo(other.Value);

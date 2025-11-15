@@ -22,6 +22,7 @@ public readonly struct DrawCommand(MeshId meshId, MaterialId materialId, int dra
 public readonly struct DrawCommandMeta(
     DrawCommandId id,
     DrawCommandQueue queue,
+    DrawCommandResolver resolver = DrawCommandResolver.None,
     PassMask passMask = PassMask.Default,
     ushort depthKey = 0)
 {
@@ -29,6 +30,7 @@ public readonly struct DrawCommandMeta(
     public readonly ushort DepthKey = depthKey;
     public readonly DrawCommandId Id = id;
     public readonly DrawCommandQueue Queue = queue;
+    public readonly DrawCommandResolver Resolver = resolver;
 }
 
 [StructLayout(LayoutKind.Sequential)]
@@ -50,7 +52,12 @@ internal readonly struct DrawCommandRef : IComparable<DrawCommandRef>
     public int CompareTo(DrawCommandRef other) => _sortKey.CompareTo(other._sortKey);
 }
 
-internal readonly record struct DrawCommandTicket(int SubmitIdx /*, byte PassId*/);
+internal readonly struct DrawCommandTicket(int submitIdx, byte passId, DrawCommandResolver resolver)
+{
+    public readonly int SubmitIdx  = submitIdx;
+    public readonly byte PassId  = passId;
+    public readonly DrawCommandResolver Resolver  = resolver;
+}
 
 internal readonly struct DrawPassRange(int start, int count)
 {

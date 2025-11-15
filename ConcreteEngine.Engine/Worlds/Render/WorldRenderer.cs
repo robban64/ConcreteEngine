@@ -185,17 +185,7 @@ public sealed class WorldRenderer : IWorldRenderer
         var shaderCount = _assets.Store.GetMetaSnapshot<Shader>().Count;
 
         builder.RegisterShader(shaderCount, ExtractShaderIds).RegisterCoreShaders(GetCoreShaders);
-
-        builder.RegisterShader(shaderCount,
-                (span) => _assets.Store.ExtractSpan<Shader, ShaderId>(span, static shader => shader.ResourceId))
-            .RegisterCoreShaders(() => new RenderCoreShaders
-            {
-                DepthShader = _assets.Store.GetByName<Shader>("Depth").ResourceId,
-                ColorFilterShader = _assets.Store.GetByName<Shader>("ColorFilter").ResourceId,
-                CompositeShader = _assets.Store.GetByName<Shader>("Composite").ResourceId,
-                PresentShader = _assets.Store.GetByName<Shader>("Present").ResourceId
-            });
-
+        
         builder.RegisterFbo<ShadowPassTag>(FboVariant.Default,
             new RegisterFboEntry().AttachDepthTexture(GfxFboDepthTextureDesc.Default())
                 .UseFixedSize(new Size2D(2048, 2048)));
@@ -229,7 +219,8 @@ public sealed class WorldRenderer : IWorldRenderer
                 DepthShader = _assets.Store.GetByName<Shader>("Depth").ResourceId,
                 ColorFilterShader = _assets.Store.GetByName<Shader>("ColorFilter").ResourceId,
                 CompositeShader = _assets.Store.GetByName<Shader>("Composite").ResourceId,
-                PresentShader = _assets.Store.GetByName<Shader>("Present").ResourceId
+                PresentShader = _assets.Store.GetByName<Shader>("Present").ResourceId,
+                HighlightShader = _assets.Store.GetByName<Shader>("Highlight").ResourceId
             };
     }
 }

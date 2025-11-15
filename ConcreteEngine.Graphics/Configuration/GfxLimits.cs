@@ -9,5 +9,7 @@ public static class GfxLimits
     public const int MaxVboBindings = 4;
     public const int MaxVertexAttribs = 8;
 
+    public const int MaxPlainUniforms = 8;
+
     public const int StoreLimit = 10_000;
 }

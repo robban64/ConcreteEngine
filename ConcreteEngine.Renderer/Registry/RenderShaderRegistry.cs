@@ -20,8 +20,9 @@ internal sealed class RenderShaderRegistry : IRenderShaderRegistry
     private readonly GfxShaders _gfxShaders;
     private readonly GfxResourceApi _gfxApi;
 
+    private int _count = 0;
+
     private RenderShader[] _shaderRegistry = Array.Empty<RenderShader>();
-    private int _shaderCount = 0;
 
     private RenderCoreShaders _coreShaders;
 
@@ -35,12 +36,18 @@ internal sealed class RenderShaderRegistry : IRenderShaderRegistry
 
     public RenderShader GetRenderShader(ShaderId shaderId) => _shaderRegistry[shaderId - 1];
 
+    public void FinishRegistration()
+    {
+        var highlightShader = GetRenderShader(CoreShaders.HighlightShader);
+        highlightShader.UsePlainUniforms(_gfxShaders);
+    }
+
     public void RegisterCollection(Span<ShaderId> shaders)
     {
-        InvalidOpThrower.ThrowIf(_shaderCount > 0, nameof(_shaderCount));
+        InvalidOpThrower.ThrowIf(_count > 0, nameof(_count));
 
         _shaderRegistry = new RenderShader[shaders.Length];
-        _shaderCount = shaders.Length;
+        _count = shaders.Length;
         //var uniforms = _gfxShaders.GetUniformList(shaderId);
 
         foreach (var shaderId in shaders)
@@ -55,10 +62,10 @@ internal sealed class RenderShaderRegistry : IRenderShaderRegistry
 
     public void RegisterCollection(IReadOnlyList<ShaderId> shaders)
     {
-        InvalidOpThrower.ThrowIf(_shaderCount > 0, nameof(_shaderCount));
+        InvalidOpThrower.ThrowIf(_count > 0, nameof(_count));
 
         _shaderRegistry = new RenderShader[shaders.Count];
-        _shaderCount = shaders.Count;
+        _count = shaders.Count;
         //var uniforms = _gfxShaders.GetUniformList(shaderId);
 
         foreach (var shaderId in shaders)
@@ -74,7 +81,7 @@ internal sealed class RenderShaderRegistry : IRenderShaderRegistry
 
     public void RegisterCoreShader(in RenderCoreShaders shaders)
     {
-        InvalidOpThrower.ThrowIf(_shaderCount == 0, nameof(_shaderCount));
+        InvalidOpThrower.ThrowIf(_count == 0, nameof(_count));
         _coreShaders = shaders;
     }
 }

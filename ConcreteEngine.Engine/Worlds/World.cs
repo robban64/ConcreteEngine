@@ -87,6 +87,10 @@ public sealed class World : IWorld
 
     internal void ProcessActions()
     {
+        if (WorldActionSlot.SelectedEntityId > 0)
+        {
+            var model = Meshes.GetById(WorldActionSlot.SelectedEntityId);
+        }
         if (!WorldActionSlot.IsDirty) return;
         if (WorldActionSlot.TryReadSlot(WorldRenderParams.Version, out WorldParamsData worldData))
             WorldRenderParams.FromEditor(in worldData);

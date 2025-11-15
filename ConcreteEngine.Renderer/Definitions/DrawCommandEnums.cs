@@ -26,6 +26,12 @@ public enum DrawCommandQueue : byte
     Overlay = 100
 }
 
+public enum DrawCommandResolver : byte
+{
+    None = 0,
+    Effect = 1
+}
+
 [Flags]
 public enum DrawCommandFlags : byte
 {

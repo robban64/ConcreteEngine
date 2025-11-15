@@ -104,6 +104,8 @@ internal static class EngineDataProvider
         var model = _world.Meshes.GetById(entity);
         if (!_world.Transforms.TryGetById(entity, out var transform)) transform = default;
 
+        WorldActionSlot.SelectedEntityId = new EntityId(response.Data.EntityId);
+
         response.Data.Transform =
             new TransformData(in transform.Translation, in transform.Scale, in transform.Rotation);
         response.Data.Model = new EditorEntityModel(model.Model, model.MaterialKey.Value, model.DrawCount);
@@ -113,6 +115,7 @@ internal static class EngineDataProvider
 
     public static long WriteToEntity(ApiWriteRequestBody<EntityDataPayload> response)
     {
+        WorldActionSlot.SelectedEntityId = new EntityId(response.Data.EntityId);
         WorldActionSlot.SetSlot(response.Version, in response.Data);
         return response.Data.EntityId;
     }
@@ -127,7 +130,7 @@ internal static class EngineDataProvider
         data.LightState.AmbientLight = new AmbientState(in snapshot.Ambient);
         data.FogState = new FogState(in snapshot.Fog);
         data.PostState.Grade = new PostGradeState(in snapshot.PostEffects.Grade);
-        data.PostState.WhiteBalance = new PostWhiteBalanceState(snapshot.PostEffects.WhiteBalance); //tiny
+        data.PostState.WhiteBalance = new PostWhiteBalanceState(snapshot.PostEffects.WhiteBalance);
         data.PostState.Bloom = new PostBloomState(in snapshot.PostEffects.Bloom);
         data.PostState.ImageFx = new PostImageFxState(in snapshot.PostEffects.ImageFx);
 

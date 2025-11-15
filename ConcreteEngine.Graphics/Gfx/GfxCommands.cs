@@ -44,7 +44,7 @@ public sealed class GfxCommands
     private MeshMeta _boundMeshMeta;
 
     private ShaderId _boundShaderId;
-    private int[]? _boundUniforms = Array.Empty<int>();
+    private readonly int[] _boundUniforms = new int[GfxLimits.MaxPlainUniforms];
 
     //
     private Size2D _activeOutputSize;
@@ -168,21 +168,6 @@ public sealed class GfxCommands
             _states.ClearBuffer(passClear.ClearBuffer);
     }
 
-    /*
-          public void ApplyState(in GfxPassState cmdState)
-       {
-           _activeState = cmdState;
-           if (cmdState.Scissor is { } scissor) _states.ToggleScissorTest(scissor);
-           if (cmdState.Cull is { } cull) _states.ToggleCullFace(cull);
-           if (cmdState.DepthTest is { } depthTest) _states.ToggleDepthTest(depthTest);
-           if (cmdState.DepthWrite is { } depthWrite) _states.ToggleDepthMask(depthWrite);
-           if (cmdState.Blend is { } blend) _states.ToggleBlendState(blend);
-           if (cmdState.FramebufferSrgb is { } srgb) _states.ToggleFrameBufferSrgb(srgb);
-           if (cmdState.ColorMask is { } colorMask) _states.ColorMask(colorMask);
-           if (cmdState.PolygonOffset is { } polygonOffset) _states.TogglePolygonOffset(polygonOffset);
-       }
-     */
-
     public void ApplyState(GfxPassState state)
     {
         var d = state.Defined;
@@ -293,6 +278,20 @@ public sealed class GfxCommands
 
     public void UnbindAllTextures() => _states.UnbindAllTextures();
 
+    public void UseShader(ShaderId id, ReadOnlySpan<int> uniforms)
+    {
+        ArgumentOutOfRangeException.ThrowIfLessThanOrEqual(id.Value, 0);
+        ArgumentOutOfRangeException.ThrowIfGreaterThan(uniforms.Length, GfxLimits.MaxPlainUniforms);
+        if (_boundShaderId == id) return;
+        
+        var handle = _shaderStore.GetRefHandle(id);
+        _shaders.UseShader(handle);
+        _boundShaderId = id;
+
+        uniforms.CopyTo(_boundUniforms.AsSpan());
+    }
+
+
     public void UseShader(ShaderId id)
     {
         if (_boundShaderId == id) return;
@@ -300,7 +299,7 @@ public sealed class GfxCommands
         if (id == default)
         {
             _boundShaderId = default;
-            _boundUniforms = null;
+            _boundUniforms.AsSpan().Clear();
             _shaders.UnbindShader();
             return;
         }

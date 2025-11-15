@@ -11,7 +11,8 @@ internal static class CoreShaderManifest
             ["Terrain"] = TerrainManifest,
             ["Skybox"] = SkyboxManifest,
             ["Model"] = ModelManifest,
-            ["Depth"] = DepthManifest
+            ["Depth"] = DepthManifest,
+            ["Highlight"] = HighlightManifest
         };
 
     private static ShaderDescriptor[] ManifestRecords =>
@@ -22,7 +23,8 @@ internal static class CoreShaderManifest
         TerrainManifest,
         SkyboxManifest,
         ModelManifest,
-        DepthManifest
+        DepthManifest,
+        HighlightManifest
     ];
 
     public static ShaderManifest GetManifest => new() { Records = ManifestRecords };
@@ -41,4 +43,7 @@ internal static class CoreShaderManifest
     public static ShaderDescriptor ModelManifest => new("Model", "model.vert.glsl", "model.frag.glsl");
 
     public static ShaderDescriptor DepthManifest => new("Depth", "depth.vert.glsl", "depth.frag.glsl");
+    
+    public static ShaderDescriptor HighlightManifest => new("Highlight", "highlight.vert.glsl", "highlight.frag.glsl");
+
 }

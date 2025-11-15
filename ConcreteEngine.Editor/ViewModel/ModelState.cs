@@ -47,7 +47,7 @@ internal interface IModelState
     bool Active { get; }
     bool PendingRefresh { get; }
     void InvokeAction(TransitionKey action);
-    void TriggerEvent<TEvent>(EventKey eventKey, in TEvent eventData);
+    void TriggerEvent<TEvent>(EventKey eventKey,  TEvent eventData);
 }
 
 public sealed class NoOpEvent
@@ -154,7 +154,7 @@ internal sealed class ModelState<T> : IModelState where T : class
             $"{eventKey} was invoked with invalid type: actual {handler.GetType().Name}, expected {typeof(StateEmptyEventDel<T>).Name}");
     }
 
-    public void TriggerEvent<TEvent>(EventKey eventKey, in TEvent eventData)
+    public void TriggerEvent<TEvent>(EventKey eventKey,  TEvent eventData)
     {
         InvalidOpThrower.ThrowIfNull(_events, nameof(_events));
         if (!_events!.TryGetValue(eventKey, out var handler))
@@ -164,7 +164,7 @@ internal sealed class ModelState<T> : IModelState where T : class
         if (handler is StateEventDel<T, TEvent> del)
         {
             ConsoleService.SendLog($"Event triggered: {eventKey} for {typeof(T).Name} with {typeof(TEvent).Name}");
-            del(this, in eventData);
+            del(this,  eventData);
             return;
         }
 
@@ -198,15 +198,7 @@ internal sealed class ModelState<T> : IModelState where T : class
             _onRefresh = handler;
             return this;
         }
-
-/*
-        public ViewModelStateBuilder RegisterEvent<TEvent>(EventKey eventKey, StateEventDel<T, TEvent> handler)
-        {
-            _events ??= new Dictionary<EventKey, object>();
-            _events.Add(eventKey, new EventEntry<TEvent>(handler));
-            return this;
-        }
-*/
+        
         public ViewModelStateBuilder RegisterEventNoOp(EventKey eventKey, StateEmptyEventDel<T> handler)
         {
             _events ??= new Dictionary<EventKey, object>();

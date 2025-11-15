@@ -1,5 +1,6 @@
 #region
 
+using ConcreteEngine.Editor.Data;
 using ConcreteEngine.Editor.Definitions;
 
 #endregion
@@ -11,6 +12,30 @@ public sealed class AssetStoreViewModel
     public EditorAssetCategory Category { get; set; }
     public List<AssetObjectViewModel> AssetObjects { get; set; } = [];
     public List<AssetObjectFileViewModel> AssetFileObjects { get; set; } = [];
+
+    public void FillView(EditorAssetCategory? category,
+        ApiModelRequestDel<AssetCategoryRequestBody, List<AssetObjectViewModel>> api)
+    {
+        if (category is { } assetCategory)
+        {
+            if (assetCategory == Category) return;
+            Category = assetCategory;
+        }
+
+        AssetObjects = api(new AssetCategoryRequestBody(Category)) ?? [];
+    }
+
+    public void FillAssetFileView(AssetObjectViewModel? asset,
+        ApiModelRequestDel<AssetRequestBody, List<AssetObjectFileViewModel>> api)
+    {
+        if (asset is null)
+        {
+            AssetFileObjects = [];
+            return;
+        }
+
+        AssetFileObjects = api(new AssetRequestBody(asset.AssetId)) ?? [];
+    }
 
     public void ResetState(bool clearTypeSelection = false)
     {

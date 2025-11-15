@@ -61,9 +61,9 @@ public static class CommandDispatcher
     }
 
     public static void RegisterEditorDataCmd<TReq, TRes>(string command, EditorCommandScope scope,
-        EditorDataCommandDel<TReq, TRes> handler) where TReq : unmanaged where TRes : unmanaged
+        EditorDataCommandDel<TReq> handler) where TReq : unmanaged
     {
-        if (!EditorCmd.TryAdd(command, new EditorDataEditorCommand<TReq, TRes>(scope, handler)))
+        if (!EditorCmd.TryAdd(command, new EditorDataEditorCommand<TReq>(scope, handler)))
             throw new InvalidOperationException($"Editor Command {command} is already registered");
 
         RegisteredCommands.Add(command);
@@ -80,17 +80,16 @@ public static class CommandDispatcher
         }
     }
 
-    internal static void ExecuteDataCommand<TReq, TRes>(string cmd, in TReq request, out TRes response)
-        where TReq : unmanaged where TRes : unmanaged
+    internal static void ExecuteDataCommand<TReq>(string cmd, in TReq request, out TReq response) where TReq : unmanaged
     {
-        ArgumentException.ThrowIfNullOrWhiteSpace(cmd, nameof(cmd));
+        ArgumentException.ThrowIfNullOrWhiteSpace(cmd);
 
         if (!EditorCmd.TryGetValue(cmd, out var record))
             throw new KeyNotFoundException($"Unknown command: {cmd}");
 
-        if (record is not EditorDataEditorCommand<TReq, TRes> tRecord)
+        if (record is not EditorDataEditorCommand<TReq> tRecord)
         {
-            var name = typeof(EditorDataEditorCommand<TReq, TRes>).Name;
+            var name = typeof(EditorDataEditorCommand<TReq>).Name;
             throw new ArgumentException($"Invalid payload type, expected {name}, got {record.GetType().Name}");
         }
 
@@ -99,7 +98,7 @@ public static class CommandDispatcher
 
     internal static void InvokeEditorCommand<TPayload>(string cmd, in TPayload payload)
     {
-        ArgumentException.ThrowIfNullOrWhiteSpace(cmd, nameof(cmd));
+        ArgumentException.ThrowIfNullOrWhiteSpace(cmd);
 
         if (!EditorCmd.TryGetValue(cmd, out var record))
             throw new KeyNotFoundException($"Unknown command: {cmd}");

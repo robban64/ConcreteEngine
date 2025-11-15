@@ -18,6 +18,18 @@ public sealed class EntitiesViewModel
 
     public ref readonly EntityDataPayload Data => ref _data;
     internal ref EntityDataState DataState => ref _state;
+    
+    public EntityRecord? GetSelectedEntity()
+    {
+        if(_data.EntityId <= 0  || Entities.Count == 0) return null;
+        var index = SortMethod.BinarySearchInt(Entities, _data.EntityId);
+        return index < 0 ? null : Entities[index];
+    }
+
+    public void FillView(ApiModelRequestDel<EntityRequestBody, List<EntityRecord>> api)
+    {
+        Entities = api(new EntityRequestBody(_data.EntityId)) ?? [];
+    }
 
 
     public void FillData(EntityRecord entity, in ApiDataRefRequest<EntityDataPayload> api)

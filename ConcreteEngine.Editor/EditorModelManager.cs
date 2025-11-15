@@ -46,22 +46,19 @@ internal static class EditorModelManager
     {
         AssetState = ModelState<AssetStoreViewModel>
             .CreateBuilder(static () => new AssetStoreViewModel())
-            .OnEnter(static (ctx, it) => OnFillAssetStore(ctx))
+            .OnEnter(static (ctx, it) => ctx.State!.FillView(it.Category, EditorApi.FetchAssetStoreData))
             .OnLeave(static (ctx, it) => ctx.ResetState())
-            .RegisterEvent<EditorAssetCategory>(EventKey.CategoryChanged, SelectAssetHandler)
-            .RegisterEvent<AssetObjectViewModel>(EventKey.SelectionChanged, FillAssetFilesHandler)
+            .RegisterEvent<EditorAssetCategory>(EventKey.CategoryChanged,
+                static (ctx, it) => ctx.State!.FillView(it, EditorApi.FetchAssetStoreData))
+            .RegisterEvent<AssetObjectViewModel>(EventKey.SelectionChanged,
+                static (ctx, it) => ctx.State!.FillAssetFileView(it, EditorApi.FetchAssetObjectFiles))
             .RegisterEvent<AssetObjectViewModel>(EventKey.SelectionAction, ReloadShaderHandler)
             .Build();
         return;
 
-        static void SelectAssetHandler(ModelState<AssetStoreViewModel> ctx, in EditorAssetCategory it) =>
-            OnFillAssetStore(ctx, it);
 
-        static void FillAssetFilesHandler(ModelState<AssetStoreViewModel> ctx, in AssetObjectViewModel? it) =>
-            OnFillAssetFiles(ctx, it);
-
-        static void ReloadShaderHandler(ModelState<AssetStoreViewModel> ctx, in AssetObjectViewModel it) =>
-            CommandDispatcher.InvokeEditorCommand(CoreCmdNames.AssetShader,
+        static void ReloadShaderHandler(ModelState<AssetStoreViewModel> ctx, AssetObjectViewModel it) =>
+            CommandDispatcher.InvokeEditorCommand(CoreCmdNames.AssetShader, 
                 new EditorShaderPayload(it.Name, EditorRequestAction.Reload));
     }
 
@@ -69,22 +66,23 @@ internal static class EditorModelManager
     {
         EntitiesState = ModelState<EntitiesViewModel>
             .CreateBuilder(static () => new EntitiesViewModel())
-            .OnEnter(static (ctx, it) => OnFillEntities(ctx))
+            .OnEnter(static (ctx, it) => it.FillView(EditorApi.FetchEntityView))
             .OnRefresh(RefreshEntity)
             .OnLeave(static (ctx, it) => ctx.ResetState())
             .RegisterEvent<EntityRecord>(EventKey.SelectionChanged, SelectEntityHandler)
-            .RegisterEvent<EntityRecord>(EventKey.SelectionUpdated,
-                UpdateEntityHandler)
+            .RegisterEvent<EntityRecord>(EventKey.SelectionUpdated, UpdateEntityHandler)
             .Build();
         return;
+        
+        
 
         static void RefreshEntity(ModelState<EntitiesViewModel> ctx, EntitiesViewModel it) =>
             ctx.State!.FillData(in EditorApi.UpdateEntityData);
 
-        static void SelectEntityHandler(ModelState<EntitiesViewModel> ctx, in EntityRecord it) =>
+        static void SelectEntityHandler(ModelState<EntitiesViewModel> ctx, EntityRecord it) =>
             ctx.State!.FillData(it, in EditorApi.UpdateEntityData);
 
-        static void UpdateEntityHandler(ModelState<EntitiesViewModel> ctx, in EntityRecord it)
+        static void UpdateEntityHandler(ModelState<EntitiesViewModel> ctx, EntityRecord it)
         {
             ctx.State!.WriteData(it, in EditorApi.UpdateEntityData);
             ctx.EnqueueRefreshNextFrame();
@@ -129,7 +127,7 @@ internal static class EditorModelManager
         static void UpdateData(ModelState<WorldRenderViewModel> ctx, WorldRenderViewModel it) =>
             it.FillData(in EditorApi.UpdateWorldParams);
 
-        static void SelectionChangeHandler(ModelState<WorldRenderViewModel> ctx, in WorldParamSelection it)
+        static void SelectionChangeHandler(ModelState<WorldRenderViewModel> ctx, WorldParamSelection it)
         {
             ctx.State!.Selection = it;
             ctx.State!.FillData(in EditorApi.UpdateWorldParams);

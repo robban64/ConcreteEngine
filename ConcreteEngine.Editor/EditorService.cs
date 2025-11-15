@@ -17,9 +17,6 @@ internal static class EditorService
 {
     private const long RefreshInterval = 1_500;
 
-    private static long _lastAction = TimeUtils.GetTimestamp();
-    private static long _lastFetched = TimeUtils.GetTimestamp();
-
     private static long _lastRefresh = TimeUtils.GetTimestamp();
 
     private static EditorModeState ModeState => StateContext.ModeState;
@@ -85,54 +82,17 @@ internal static class EditorService
         ModelManager.InvokeRefreshForModels();
     }
 
+/*
+     private static long _lastAction = TimeUtils.GetTimestamp();
+     private static long _lastFetched = TimeUtils.GetTimestamp();
 
-    internal static void OnFillAssetFiles(ModelState<AssetStoreViewModel> model, AssetObjectViewModel? asset)
-    {
-        ArgumentNullException.ThrowIfNull(model.State, nameof(model));
-
-        if (asset is null)
-        {
-            model.State.AssetFileObjects = [];
-            return;
-        }
-
-        var body = new AssetRequestBody(asset.AssetId);
-        var result = OnApiFill(body, EditorApi.FetchAssetObjectFiles) ?? [];
-        model.State.AssetFileObjects = result;
-    }
-
-    internal static void OnFillAssetStore(ModelState<AssetStoreViewModel> model, EditorAssetCategory? category = null)
-    {
-        ArgumentNullException.ThrowIfNull(model.State, nameof(model));
-
-        if (category is { } assetCategory)
-        {
-            if (assetCategory == model.State.Category) return;
-            model.State.Category = assetCategory;
-        }
-
-        var body = new AssetCategoryRequestBody(model.State.Category);
-        var result = OnApiFill(body, EditorApi.FetchAssetStoreData) ?? [];
-        model.State.AssetObjects = result;
-    }
-
-
-    internal static void OnFillEntities(ModelState<EntitiesViewModel> model)
-    {
-        ArgumentNullException.ThrowIfNull(model.State, nameof(model));
-        var selected = model.State.Data.EntityId;
-        var body = new EntityRequestBody(selected);
-        var result = OnApiFill(body, EditorApi.FetchEntityView) ?? [];
-        model.State.Entities = result;
-    }
-
-    private static TResponse? OnApiFill<TRequest, TResponse>(TRequest request,
-        ApiModelRequestDel<TRequest, TResponse>? apiFetch) where TRequest : class where TResponse : class
-    {
-        if (!CanFetch(150) || apiFetch is null) return null;
-        Console.WriteLine($"Api Fill: {typeof(TResponse).Name}");
-        return apiFetch(request);
-    }
+     private static TResponse? OnApiFill<TRequest, TResponse>(TRequest request,
+       ApiModelRequestDel<TRequest, TResponse>? apiFetch) where TRequest : class where TResponse : class
+   {
+       if (!CanFetch(150) || apiFetch is null) return null;
+       Console.WriteLine($"Api Fill: {typeof(TResponse).Name}");
+       return apiFetch(request);
+   }
 
     private static bool CanFetch(int ms)
     {
@@ -152,4 +112,5 @@ internal static class EditorService
         _lastAction = TimeUtils.GetTimestamp();
         return true;
     }
+    */
 }

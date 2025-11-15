@@ -11,7 +11,7 @@ internal delegate void StateTransitionDel<TModel>(ModelState<TModel> ctx, TModel
 
 internal delegate void StateEmptyEventDel<TModel>(ModelState<TModel> ctx) where TModel : class;
 
-internal delegate void StateEventDel<TModel, TEvent>(ModelState<TModel> ctx, in TEvent ev) where TModel : class;
+internal delegate void StateEventDel<TModel, in TEvent>(ModelState<TModel> ctx,  TEvent ev) where TModel : class;
 
 // command delegates
 public delegate void ConsoleCommandReqDel(ConsoleCtx ctx, string action, string? arg1, string? arg2);
@@ -21,8 +21,8 @@ public delegate void CommandPayloadResolverDel<TPayload>(string action, string? 
 
 public delegate CommandResponse EditorCommandDel<TPayload>(in TPayload payload);
 
-public delegate CommandResponse EditorDataCommandDel<TRequest, TResponse>(in TRequest request, out TResponse response)
-    where TRequest : unmanaged where TResponse : unmanaged;
+public delegate CommandResponse EditorDataCommandDel<TRequest>(in TRequest request, out TRequest response)
+    where TRequest : unmanaged;
 
 // Request delegates
 public delegate TResponse? ApiModelRequestDel<in TRequest, out TResponse>(TRequest request)

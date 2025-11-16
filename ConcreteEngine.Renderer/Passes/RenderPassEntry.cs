@@ -16,6 +16,7 @@ public sealed class RenderPassEntry
 {
     public PassTagKey PassKey { get; private set; }
     public PassOpKind PassOp { get; private set; }
+    public PassTagKey? DependsOn { get; }
 
     private RenderPassOp? _applyPassDel;
     private RenderAfterPassOp? _applyAfterPassDel;
@@ -27,11 +28,12 @@ public sealed class RenderPassEntry
     private PassMutationState? _pendingState = null;
 
 
-    internal RenderPassEntry(PassTagKey passKey, PassOpKind passOp, RenderPassState initial)
+    internal RenderPassEntry(PassTagKey passKey, PassOpKind passOp, RenderPassState initial, PassTagKey? dependsOn = null)
     {
         PassKey = passKey;
         _defaultState = initial;
         PassOp = passOp;
+        DependsOn = dependsOn;
         _state = initial;
     }
 

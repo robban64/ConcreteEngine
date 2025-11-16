@@ -1,6 +1,7 @@
 #region
 
 using System.Diagnostics;
+using ConcreteEngine.Common;
 using ConcreteEngine.Common.Numerics;
 using ConcreteEngine.Renderer.Definitions;
 using ConcreteEngine.Renderer.Registry;
@@ -37,6 +38,28 @@ public sealed class RenderPassPipeline
         _cmdQueue = new PassCommandQueue();
         _ctx = new RenderPassCtx(ctx.CommandPipeline.DrawStateOps, _cmdQueue);
     }
+
+
+    public RenderPassEntry RegisterContinue<TTag>(FboVariant variant, PassId passId, PassOpKind opKind,
+        RenderPassState initial)
+        where TTag : class
+    {
+        var existingKey = TagRegistry.PassKey<TTag>(variant);
+        InvalidOpThrower.ThrowIf(existingKey.Pass == passId);
+
+        var newKey = existingKey with { Pass = passId };
+
+        foreach (var e in _entries)
+        {
+            if (e.PassKey.Pass == passId || e.PassKey == newKey)
+                throw new InvalidOperationException("Duplicated passes");
+        }
+
+        var entry = new RenderPassEntry(newKey, opKind, initial);
+        _entries.Add(entry);
+        return entry;
+    }
+
 
     public RenderPassEntry Register<TTag>(FboVariant variant, PassId passId, PassOpKind opKind, RenderPassState initial)
         where TTag : class
@@ -78,6 +101,9 @@ public sealed class RenderPassPipeline
         var skipPass = false;
 
         var key = new FboTagKey(pass.PassKey.TagIndex, pass.PassKey.Variant);
+        if (pass.DependsOn is { } dependKey)
+            key = new FboTagKey(dependKey.TagIndex, pass.PassKey.Variant);
+
         if (_renderRegistry.TryGetRenderFbo(key, out var fbo))
             _ctx.AttachPass(fbo!, pass.PassKey);
         else if (pass.PassOp == PassOpKind.Screen)

@@ -50,6 +50,14 @@ public readonly record struct GfxPassState(GfxStateFlags Enabled, GfxStateFlags 
             Defined: DepthTest | DepthWrite | Cull | Blend | Scissor | FramebufferSrgb | ColorMask |
                      PolygonOffset | SampleAlphaCoverage
         );
+    
+    public static GfxPassState MakeSceneEffect() =>
+        new(
+            Enabled: Blend | Cull | FramebufferSrgb | ColorMask | SampleAlphaCoverage,
+            Defined: DepthTest | DepthWrite | Cull | Blend | Scissor | FramebufferSrgb | ColorMask |
+                     PolygonOffset | SampleAlphaCoverage
+        );
+    
 
     public static GfxPassState MakeShadow() =>
         new(
@@ -97,6 +105,7 @@ public readonly record struct GfxPassStateFunc(
 
     public static GfxPassStateFunc MakeDepth() =>
         new(BlendMode.Unset, CullMode.FrontCcw, DepthMode.Lequal, PolygonOffsetLevel.Medium);
+    
 }
 
 public readonly record struct GfxPassClear(in Color4 ClearColor, ClearBufferFlag ClearBuffer)

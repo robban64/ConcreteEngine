@@ -13,9 +13,6 @@ namespace ConcreteEngine.Renderer.Registry;
 
 internal sealed class RenderRegistry
 {
-    internal readonly record struct RegistrationData(bool Enabled, Size2D OutputSize);
-
-    private RegistrationData _registrationData;
 
     public RenderShaderRegistry ShaderRegistry { get; }
 
@@ -41,7 +38,6 @@ internal sealed class RenderRegistry
 
     public void BeginRegistration(Size2D outputSize)
     {
-        InvalidOpThrower.ThrowIf(_registrationData.Enabled);
         ArgumentOutOfRangeException.ThrowIfLessThanOrEqual(outputSize.Width, 1, nameof(outputSize));
         ArgumentOutOfRangeException.ThrowIfLessThanOrEqual(outputSize.Height, 1, nameof(outputSize));
 

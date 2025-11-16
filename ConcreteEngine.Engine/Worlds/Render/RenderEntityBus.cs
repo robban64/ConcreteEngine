@@ -76,7 +76,8 @@ internal sealed class RenderEntityBus
 
             if (query.Entity == selected)
             {
-                meta = new DrawCommandMeta(meta.Id, DrawCommandQueue.Overlay, DrawCommandResolver.Highlight);
+                meta = new DrawCommandMeta(meta.Id, DrawCommandQueue.Overlay, DrawCommandResolver.Highlight,
+                    PassMask.Effect | PassMask.DepthPre);
             }
 
             entity.Entity = query.Entity;

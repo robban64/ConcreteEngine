@@ -67,6 +67,13 @@ public sealed class DrawStateOps
         _gfxCmd.BeginRenderPass(fboId, in passClear, states);
         _ctx.PassState = states;
     }
+    
+    public void ContinueFromRenderPass(FrameBufferId fboId, GfxPassState states)
+    {
+        _gfxCmd.BindFramebuffer(fboId);
+        _gfxCmd.ApplyState(states);
+        _ctx.PassState = states;
+    }
 
     public void EndRenderPass() => _gfxCmd.EndRenderPass();
 

@@ -80,4 +80,12 @@ public readonly struct RenderPassState(
 
     public static RenderPassState MakeShadow() =>
         new() { ClearColor = GfxPassClear.MakeDepthClear(), PassState = GfxPassState.MakeShadow() };
+
+    public static RenderPassState MakeSceneEffect(int samples) =>
+        new()
+        {
+            ClearColor = GfxPassClear.MakeDepthClear(),
+            PassState = GfxPassState.MakeSceneEffect(),
+            Samples = samples
+        };
 }

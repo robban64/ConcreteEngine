@@ -144,6 +144,23 @@ public sealed class RenderEngine
     {
         var passResult = _passPipeline.ApplyPass();
 
+        switch (passResult.OpKind)
+        {
+            case PassOpKind.Draw:
+                _drawPipeline.ExecuteDrawPass(passId, true);
+                break;
+            case PassOpKind.DrawEffect:
+                _drawPipeline.ExecuteDrawPass(passId, false);
+                break;
+            case PassOpKind.Resolve: 
+                _passPipeline.ApplyAfterPass();
+                return;
+            
+
+
+        }
+        _passPipeline.ApplyAfterPass();
+        /*
         if (passResult.OpKind == PassOpKind.Resolve)
         {
             _passPipeline.ApplyAfterPass();
@@ -156,6 +173,7 @@ public sealed class RenderEngine
         }
 
         _passPipeline.ApplyAfterPass();
+        */
     }
 
     public void EndRenderFrame(out GfxFrameResult frameResult)

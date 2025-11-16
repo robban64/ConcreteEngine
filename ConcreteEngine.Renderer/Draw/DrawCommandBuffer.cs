@@ -6,6 +6,7 @@ using System.Numerics;
 using System.Runtime.CompilerServices;
 using ConcreteEngine.Common.Collections;
 using ConcreteEngine.Renderer.Data;
+using ConcreteEngine.Renderer.Definitions;
 using ConcreteEngine.Renderer.Passes;
 using static ConcreteEngine.Renderer.Data.RenderLimits;
 
@@ -133,15 +134,26 @@ public sealed class DrawCommandBuffer
     }
 
 
-    internal void DispatchDrawPass(PassId passId, DrawCommandProcessor cmd)
+    internal void DispatchDrawPass(PassId passId, bool defaultDraw, DrawCommandProcessor cmd)
     {
         var pass = _passRanges[passId];
         var end = pass.Start + pass.Count;
         ReadOnlySpan<DrawCommand> commands = _commandBuffer.AsSpan();
+
+        if (defaultDraw)
+        {
+            for (var i = pass.Start; i < end; i++)
+            {
+                var ticket = _drawTickets[i];
+                cmd.DrawMesh(commands[ticket.SubmitIdx], ticket);
+            }
+            return;
+        }
+        
         for (var i = pass.Start; i < end; i++)
         {
             var ticket = _drawTickets[i];
-            cmd.DrawMesh(commands[ticket.SubmitIdx], ticket);
+            cmd.DrawSpecialResolveMesh(commands[ticket.SubmitIdx], ticket);
         }
     }
 

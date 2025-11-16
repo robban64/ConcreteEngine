@@ -24,10 +24,17 @@ public enum GfxStateFlags : ushort
     SampleAlphaCoverage = 1 << 8
 }
 
-public readonly record struct GfxPassState(GfxStateFlags Enabled, GfxStateFlags Defined)
+public readonly struct GfxPassState(GfxStateFlags enabled, GfxStateFlags defined)
 {
+    public readonly GfxStateFlags Enabled = enabled;
+    public readonly GfxStateFlags Defined  = defined;
+    
+    public bool IsEmpty => Enabled == 0 && Defined == 0;
+
     public bool IsSet(GfxStateFlags flag) => (Defined & flag) != 0;
     public bool IsEnabled(GfxStateFlags flag) => (Enabled & flag) != 0;
+    
+    public GfxPassState Filter(GfxStateFlags flags) => new(Enabled & flags, Defined & flags);
 
     public static GfxPassState Enable(GfxStateFlags flags) => new(flags, flags);
 
@@ -44,50 +51,60 @@ public readonly record struct GfxPassState(GfxStateFlags Enabled, GfxStateFlags 
         return (current & ~d) | (patch.Enabled & d);
     }
 
+    public static GfxPassState PatchWith(GfxPassState baseState, GfxPassState patch)
+    {
+        var baseEnabled = baseState.Enabled & baseState.Defined;
+        var patchEnabled = patch.Enabled & patch.Defined;
+
+        var defined = baseState.Defined | patch.Defined;
+        var enabled = Merge(baseEnabled, patch) | patchEnabled;
+        return new GfxPassState(enabled, defined);
+    }
+
     public static GfxPassState MakeScene() =>
         new(
-            Enabled: DepthTest | DepthWrite | Cull | FramebufferSrgb | ColorMask | SampleAlphaCoverage,
-            Defined: DepthTest | DepthWrite | Cull | Blend | Scissor | FramebufferSrgb | ColorMask |
+            enabled: DepthTest | DepthWrite | Cull | FramebufferSrgb | ColorMask | SampleAlphaCoverage,
+            defined: DepthTest | DepthWrite | Cull | Blend | Scissor | FramebufferSrgb | ColorMask |
                      PolygonOffset | SampleAlphaCoverage
         );
     
     public static GfxPassState MakeSceneEffect() =>
         new(
-            Enabled: Blend | Cull | FramebufferSrgb | ColorMask | SampleAlphaCoverage,
-            Defined: DepthTest | DepthWrite | Cull | Blend | Scissor | FramebufferSrgb | ColorMask |
+            enabled: Blend | Cull | FramebufferSrgb | ColorMask | SampleAlphaCoverage,
+            defined: DepthTest | DepthWrite | Cull | Blend | Scissor | FramebufferSrgb | ColorMask |
                      PolygonOffset | SampleAlphaCoverage
         );
     
 
     public static GfxPassState MakeShadow() =>
         new(
-            Enabled: DepthTest | DepthWrite | Cull | FramebufferSrgb | PolygonOffset,
-            Defined: DepthTest | DepthWrite | Cull | Blend | Scissor | FramebufferSrgb | ColorMask | PolygonOffset |
+            enabled: DepthTest | DepthWrite | Cull | FramebufferSrgb | PolygonOffset,
+            defined: DepthTest | DepthWrite | Cull | Blend | Scissor | FramebufferSrgb | ColorMask | PolygonOffset |
                      SampleAlphaCoverage
         );
 
     public static GfxPassState MakeLighting() =>
         new(
-            Enabled: DepthTest | DepthWrite | Cull | Blend | FramebufferSrgb | PolygonOffset,
-            Defined: DepthTest | DepthWrite | Cull | Blend | Scissor | FramebufferSrgb | ColorMask | PolygonOffset
+            enabled: DepthTest | DepthWrite | Cull | Blend | FramebufferSrgb | PolygonOffset,
+            defined: DepthTest | DepthWrite | Cull | Blend | Scissor | FramebufferSrgb | ColorMask | PolygonOffset
         );
 
     public static GfxPassState MakePostProcess() =>
         new(
-            Enabled: FramebufferSrgb | ColorMask,
-            Defined: DepthTest | DepthWrite | Cull | Blend | Scissor | FramebufferSrgb | ColorMask | PolygonOffset
+            enabled: FramebufferSrgb | ColorMask,
+            defined: DepthTest | DepthWrite | Cull | Blend | Scissor | FramebufferSrgb | ColorMask | PolygonOffset
         );
 
     public static GfxPassState MakeScreen() =>
         new(
-            Enabled: ColorMask,
-            Defined: DepthTest | DepthWrite | Cull | Blend | Scissor | FramebufferSrgb | ColorMask | PolygonOffset
+            enabled: ColorMask,
+            defined: DepthTest | DepthWrite | Cull | Blend | Scissor | FramebufferSrgb | ColorMask | PolygonOffset
         );
 
     public static GfxPassState MakeOff() =>
         new(
-            Enabled: ColorMask,
-            Defined: DepthTest | DepthWrite | Cull | Blend | Scissor | FramebufferSrgb | ColorMask | PolygonOffset
+            enabled: ColorMask,
+            defined: DepthTest | DepthWrite | Cull | Blend | Scissor | FramebufferSrgb | ColorMask | PolygonOffset
         );
 }
 
@@ -108,10 +125,14 @@ public readonly record struct GfxPassStateFunc(
     
 }
 
-public readonly record struct GfxPassClear(in Color4 ClearColor, ClearBufferFlag ClearBuffer)
+public readonly struct GfxPassClear(in Color4 clearColor, ClearBufferFlag clearBuffer)
 {
-    public static GfxPassClear MakeColorClear(Color4 clearColor) => new(clearColor, ClearBufferFlag.Color);
-    public static GfxPassClear MakeColorDepthClear(Color4 clearColor) => new(clearColor, ClearBufferFlag.ColorAndDepth);
+    public readonly Color4 ClearColor = clearColor;
+    public readonly ClearBufferFlag ClearBuffer  = clearBuffer;
+
+    public static GfxPassClear MakeColorClear(Color4 clearColor) => new(in clearColor, ClearBufferFlag.Color);
+    public static GfxPassClear MakeColorDepthClear(Color4 clearColor) => new(in clearColor, ClearBufferFlag.ColorAndDepth);
     public static GfxPassClear MakeDepthClear() => new(Color4.Black, ClearBufferFlag.Depth);
     public static GfxPassClear MakeNoClear() => new(Color4.Black, ClearBufferFlag.None);
+
 }

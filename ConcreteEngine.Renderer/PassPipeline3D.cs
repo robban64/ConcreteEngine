@@ -21,7 +21,7 @@ internal static class PassPipeline3D
             {
                 ctx.Ops.ActivateDepthMode(); // Note!
 
-                ctx.Ops.BeginRenderPass(ctx.Target.FboId, state.ClearColor, state.PassState);
+                ctx.Ops.BeginRenderPass(ctx.Target.FboId, in state.ClearColor, state.PassState);
                 ctx.Ops.ApplyStateFunctions(GfxPassStateFunc.MakeDepth());
                 return PassAction.DrawPassResult();
             }).OnPassEnd(static (RenderPassCtx ctx, in RenderPassState state) =>
@@ -36,7 +36,7 @@ internal static class PassPipeline3D
                 RenderPassState.MakeSceneMsaa(4))
             .OnPassBegin(static (RenderPassCtx ctx, in RenderPassState state) =>
             {
-                ctx.Ops.BeginRenderPass(ctx.Target.FboId, state.ClearColor, state.PassState);
+                ctx.Ops.BeginRenderPass(ctx.Target.FboId, in state.ClearColor, state.PassState);
                 ctx.Ops.ApplyStateFunctions(GfxPassStateFunc.MakeDefault());
                 return PassAction.DrawPassResult();
             });
@@ -47,16 +47,12 @@ internal static class PassPipeline3D
             .OnPassBegin(static (RenderPassCtx ctx, in RenderPassState state) =>
             {
                 ctx.Ops.ContinueFromRenderPass(ctx.Target.FboId, state.PassState);
-                ctx.Ops.ApplyStateFunctions(GfxPassStateFunc.MakeDefault() with
-                {
-                    Blend = BlendMode.Alpha, Cull = CullMode.BackCcw
-                });
-
+ 
                 ctx.MutateStatePass<ScenePassTag>(
                     FboVariant.Secondary,
                     PassMutationState.MutateTarget(ctx.Target.FboId)
                 );
-                return PassAction.DrawPassResult();
+                return PassAction.DrawEffectPassResult();
             });
 
         // Pass 2: resolve to scene FBO
@@ -64,7 +60,6 @@ internal static class PassPipeline3D
                 RenderPassState.MakeResolve())
             .OnPassBegin(static (RenderPassCtx ctx, in RenderPassState state) =>
             {
-                ctx.Ops.ToggleStates(GfxPassState.Disable(GfxStateFlags.FramebufferSrgb));
                 ctx.Ops.Blit(state.TargetFboId, ctx.Target.FboId, state.LinearFilter);
                 return PassAction.ResolveTargetResult();
             }).OnPassEnd(static (RenderPassCtx ctx, in RenderPassState state) =>
@@ -82,7 +77,7 @@ internal static class PassPipeline3D
             .OnPassBegin(static (RenderPassCtx ctx, in RenderPassState state) =>
             {
                 var sources = ctx.GetPassSources();
-                ctx.Ops.BeginRenderPass(ctx.Target.FboId, state.ClearColor, state.PassState);
+                ctx.Ops.BeginRenderPass(ctx.Target.FboId, in state.ClearColor, state.PassState);
                 ctx.Ops.DrawFullscreenQuad(state.ShaderId, sources);
                 return PassAction.FsqPassResult();
             }).OnPassEnd(static (RenderPassCtx ctx, in RenderPassState state) =>
@@ -99,7 +94,7 @@ internal static class PassPipeline3D
             .OnPassBegin(static (RenderPassCtx ctx, in RenderPassState state) =>
             {
                 var sources = ctx.GetPassSources();
-                ctx.Ops.BeginRenderPass(ctx.Target.FboId, state.ClearColor, state.PassState);
+                ctx.Ops.BeginRenderPass(ctx.Target.FboId, in state.ClearColor, state.PassState);
                 ctx.Ops.DrawFullscreenQuad(state.ShaderId, sources);
                 return PassAction.FsqPassResult();
             }).OnPassEnd(static (RenderPassCtx ctx, in RenderPassState state) =>
@@ -117,7 +112,7 @@ internal static class PassPipeline3D
             {
                 var sources = ctx.GetPassSources();
 
-                ctx.Ops.BeginScreenPass(state.ClearColor, state.PassState);
+                ctx.Ops.BeginScreenPass(in state.ClearColor, state.PassState);
                 ctx.Ops.DrawFullscreenQuad(state.ShaderId, sources);
                 return PassAction.ScreenPassResult();
             });

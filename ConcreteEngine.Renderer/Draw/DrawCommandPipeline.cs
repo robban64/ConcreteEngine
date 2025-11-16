@@ -103,10 +103,10 @@ internal sealed class DrawCommandPipeline
         _drawBuffers.UploadDrawObjects(_commandBuffer.DrainTransformQueue());
     }
 
-    internal void ExecuteDrawPass(PassId passId)
+    internal void ExecuteDrawPass(PassId passId, bool defaultDraw)
     {
         _drawBuffers.ResetCursor();
         _drawCmdProc.PrepareDrawPass();
-        _commandBuffer.DispatchDrawPass(passId, _drawCmdProc);
+        _commandBuffer.DispatchDrawPass(passId, defaultDraw, _drawCmdProc);
     }
 }

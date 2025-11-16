@@ -19,9 +19,10 @@ public enum PassMask : ushort
 public enum PassOpKind : byte
 {
     Draw = 0,
-    Resolve = 1,
-    Fsq = 2,
-    Screen = 3
+    DrawEffect = 1,
+    Resolve = 2,
+    Fsq = 3,
+    Screen = 4
 }
 
 internal enum PreparePassActionKind : byte

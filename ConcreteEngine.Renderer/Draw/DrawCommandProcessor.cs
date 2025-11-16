@@ -1,5 +1,6 @@
 #region
 
+using System.Diagnostics;
 using ConcreteEngine.Common;
 using ConcreteEngine.Common.Numerics;
 using ConcreteEngine.Graphics.Gfx;
@@ -15,6 +16,8 @@ namespace ConcreteEngine.Renderer.Draw;
 
 internal sealed class DrawCommandProcessor
 {
+    private readonly Color4 _highlightColor = Color4.FromRgba(46, 163, 242);
+
     private readonly GfxCommands _gfxCmd;
 
     private readonly DrawBuffers _buffers;
@@ -37,6 +40,7 @@ internal sealed class DrawCommandProcessor
 
     public void Prepare() => _ctx.ResetState();
 
+
     public void PrepareDrawPass()
     {
         _ctx.ResetMaterialState();
@@ -44,6 +48,53 @@ internal sealed class DrawCommandProcessor
         {
             _gfxCmd.UseShader(_ctx.CoreShaders.DepthShader);
             _gfxCmd.UnbindAllTextures();
+        }
+    }
+
+    public void DrawMesh(DrawCommand cmd, DrawCommandTicket ticket)
+    {
+        if (_ctx.PrevMaterial != cmd.MaterialId)
+        {
+            var texSlots = _buffers.ResolveMaterial(cmd.MaterialId, out var materialMeta);
+
+            if (!materialMeta.PassState.IsEmpty) BindPassState(in materialMeta);
+
+            switch (_ctx.PassMode)
+            {
+                case PassStateMode.Main:
+                    _gfxCmd.UseShader(materialMeta.ShaderId);
+                    BindTextureSlots(texSlots);
+                    break;
+                case PassStateMode.Depth:
+                    BindDepthTextureSlots(texSlots);
+                    break;
+            }
+        }
+
+        _buffers.BindDrawObject(ticket.SubmitIdx);
+        _gfxCmd.BindMesh(cmd.MeshId);
+        _gfxCmd.DrawBoundMesh(cmd.MeshId, cmd.DrawCount);
+    }
+
+
+    public void DrawSpecialResolveMesh(DrawCommand cmd, DrawCommandTicket ticket)
+    {
+        if (!_ctx.IsDepth)
+        {
+            BindAndResolvedOverride(cmd, ticket);
+        }
+
+        _buffers.BindDrawObject(ticket.SubmitIdx);
+        _gfxCmd.BindMesh(cmd.MeshId);
+        _gfxCmd.DrawBoundMesh(cmd.MeshId, cmd.DrawCount);
+    }
+
+    private void BindTextureSlots(ReadOnlySpan<TextureSlotInfo> slots)
+    {
+        for (var i = 0; i < slots.Length; i++)
+        {
+            var value = slots[i];
+            _gfxCmd.BindTexture(value.SlotKind != TextureSlotKind.Shadowmap ? value.Texture : _ctx.DepthTexture, i);
         }
     }
 
@@ -63,22 +114,13 @@ internal sealed class DrawCommandProcessor
         _gfxCmd.BindTexture(GfxTextures.FallbackTextures.AlphaMaskId, 1);
     }
 
-    private void BindTextureSlots(ReadOnlySpan<TextureSlotInfo> slots)
-    {
-        for (var i = 0; i < slots.Length; i++)
-        {
-            var value = slots[i];
-            _gfxCmd.BindTexture(value.SlotKind != TextureSlotKind.Shadowmap ? value.Texture : _ctx.DepthTexture, i);
-        }
-    }
-
     private void BindPassState(in DrawMaterialMeta materialMeta)
     {
-        if (materialMeta.PassState != default)
+        if (!materialMeta.PassState.IsEmpty)
         {
             _gfxCmd.ApplyState(_ctx.OverridePassState = materialMeta.PassState);
         }
-        else if (_ctx.OverridePassState != default)
+        else if (!_ctx.OverridePassState.IsEmpty)
         {
             _ctx.OverridePassState = default;
             _gfxCmd.ApplyState(_ctx.PassState);
@@ -95,66 +137,47 @@ internal sealed class DrawCommandProcessor
         }
     }
 
-    private void BindMaterial(MaterialId materialId)
+    // allow for more flexible state management later on
+    private void BindAndResolvedOverride(DrawCommand cmd, DrawCommandTicket ticket)
     {
-        var texSlots = _buffers.ResolveMaterial(materialId, out var materialMeta);
+        const GfxStateFlags allowMaterialOverride = GfxStateFlags.Cull | GfxStateFlags.PolygonOffset;
 
-        switch (_ctx.PassMode)
+        Debug.Assert(ticket.Resolver == DrawCommandResolver.Highlight);
+
+        var texSlots = _buffers.ResolveMaterial(cmd.MaterialId, out var materialMeta);
+
+        var shader = _ctx.CoreShaders.HighlightShader;
+        _gfxCmd.UseShader(shader, _ctx.GetUniformLocations(shader));
+        _gfxCmd.SetUniform(0, in _highlightColor);
+        foreach (var slot in texSlots)
         {
-            case PassStateMode.Main:
-                _gfxCmd.UseShader(materialMeta.ShaderId);
-                BindTextureSlots(texSlots);
-                break;
-            case PassStateMode.Depth:
-                BindDepthTextureSlots(texSlots);
-                break;
+            if (slot.SlotKind == TextureSlotKind.Albedo) _gfxCmd.BindTexture(slot.Texture, 0);
+            else if (slot.SlotKind == TextureSlotKind.Mask) _gfxCmd.BindTexture(slot.Texture, 1);
         }
 
-        _buffers.BindMaterialObject(materialId);
-        BindPassState(in materialMeta);
-    }
-
-    private void ApplyResolvedOverride(DrawCommand cmd, DrawCommandTicket ticket)
-    {
-        var texSlots = _buffers.ResolveMaterialNoCache(cmd.MaterialId, out var materialMeta);
-        
-        switch (ticket.Resolver)
+        if (materialMeta.PassState.IsEmpty)
         {
-            case DrawCommandResolver.Wireframe:
-                InvalidOpThrower.ThrowIf(true, "Not supported resolver");
-                break;
-            case DrawCommandResolver.Highlight:
-                var shader = _ctx.CoreShaders.HighlightShader;
-                _gfxCmd.UseShader(shader, _ctx.GetUniformLocations(shader));
-                _gfxCmd.SetUniform(0, Color4.FromRgba(46, 163, 242));
-                foreach (var slot in texSlots)
-                {
-                    if(slot.SlotKind == TextureSlotKind.Albedo) _gfxCmd.BindTexture(slot.Texture, 0);
-                    if(slot.SlotKind == TextureSlotKind.Mask) _gfxCmd.BindTexture(slot.Texture, 1);
-                }
-                break;
+            _ctx.OverridePassState = default;
+        }
+        else
+        {
+            var filtered = materialMeta.PassState.Filter(allowMaterialOverride);
+            _ctx.OverridePassState = GfxPassState.PatchWith(_ctx.PassState, filtered);
         }
 
-        _buffers.BindMaterialObject(cmd.MaterialId);
-        BindPassState(in materialMeta);
-        
-        _gfxCmd.ApplyState(GfxPassState.Enable(GfxStateFlags.Blend));
-        _gfxCmd.ApplyStateFunctions(GfxPassStateFunc.MakeDefault() with{ Blend = BlendMode.Alpha, Cull = CullMode.BackCcw});
-        _gfxCmd.ApplyState(GfxPassState.Disable(GfxStateFlags.DepthWrite | GfxStateFlags.DepthTest ));
-
-        _ctx.ResetCachedMaterial();
-        
-    }
-
-    public void DrawMesh(DrawCommand cmd, DrawCommandTicket ticket)
-    {
-        if (!_ctx.IsDepth && ticket.Resolver != DrawCommandResolver.None)
-            ApplyResolvedOverride(cmd, ticket);
-        else if ( _ctx.PrevMaterial != cmd.MaterialId)
-            BindMaterial(cmd.MaterialId);
-        
-        _buffers.BindDrawObject(ticket.SubmitIdx);
-        _gfxCmd.BindMesh(cmd.MeshId);
-        _gfxCmd.DrawBoundMesh(cmd.MeshId, cmd.DrawCount);
+        if (materialMeta.PassStateFunc == default)
+        {
+            _ctx.OverridePassStateFunc = default;
+        }
+        else if (_ctx.OverridePassStateFunc != materialMeta.PassStateFunc)
+        {
+            var f = _ctx.PassStateFunc;
+            var m = materialMeta.PassStateFunc;
+            _ctx.OverridePassStateFunc = f with
+            {
+                PolygonOffset = m.PolygonOffset == PolygonOffsetLevel.Unset ? f.PolygonOffset : m.PolygonOffset,
+                Cull = m.Cull == CullMode.Unset ? f.Cull : m.Cull
+            };
+        }
     }
 }

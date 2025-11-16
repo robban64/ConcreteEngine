@@ -17,8 +17,8 @@ internal sealed class PassCommandQueue
 
     internal PassCommandQueue()
     {
-        _sourceQueue = new PriorityQueue<TextureId, PassTextureSlotKey>(new PassTextureSlotKeyComp());
-        _mutationQueue = new PriorityQueue<PassMutationState, PassTagKey>(new PassTagKeyComp());
+        _sourceQueue = new PriorityQueue<TextureId, PassTextureSlotKey>(4, new PassTextureSlotKeyComp());
+        _mutationQueue = new PriorityQueue<PassMutationState, PassTagKey>(4, new PassTagKeyComp());
     }
 
     public void SampleTo(PassTextureSlotKey texKey, TextureId textureId)
@@ -43,13 +43,14 @@ internal sealed class PassCommandQueue
     public void DequeuePassSources(RenderPassEntry entry)
     {
         var tagIndex = entry.PassKey.TagIndex;
-        _textureSlots.AsSpan().Clear();
+        var slots = _textureSlots.AsSpan();
+        slots.Clear();
         _maxTexSlot = 0;
 
         while (_sourceQueue.TryPeek(out _, out var k) && k.TagIndex == tagIndex)
         {
             _sourceQueue.TryDequeue(out var id, out k);
-            _textureSlots[k.TextureSlot] = id;
+            slots[k.TextureSlot] = id;
             _maxTexSlot = int.Max(_maxTexSlot, k.TextureSlot);
         }
     }

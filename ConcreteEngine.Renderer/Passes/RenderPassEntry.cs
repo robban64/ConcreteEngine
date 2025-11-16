@@ -6,7 +6,7 @@ using ConcreteEngine.Renderer.Definitions;
 
 namespace ConcreteEngine.Renderer.Passes;
 
-public delegate PassMutationState RenderPassMutate(RenderPassState currentState);
+public delegate PassMutationState RenderPassMutate(in RenderPassState currentState);
 
 public delegate PassAction RenderPassOp(RenderPassCtx ctx, in RenderPassState state);
 
@@ -82,7 +82,7 @@ public sealed class RenderPassEntry
 
         if (_applyPassMutateDel is { } mut)
         {
-            var mutationState = mut(_state);
+            var mutationState = mut(in _state);
             _state = _state.FromMutation(in mutationState);
             _applyPassMutateDel = null;
         }

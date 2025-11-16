@@ -19,18 +19,35 @@ public readonly struct DrawCommand(MeshId meshId, MaterialId materialId, int dra
 }
 
 [StructLayout(LayoutKind.Sequential)]
-public readonly struct DrawCommandMeta(
-    DrawCommandId id,
-    DrawCommandQueue queue,
-    DrawCommandResolver resolver = DrawCommandResolver.None,
-    PassMask passMask = PassMask.Default,
-    ushort depthKey = 0)
+public readonly struct DrawCommandMeta
 {
-    public readonly PassMask PassMask = passMask;
-    public readonly ushort DepthKey = depthKey;
-    public readonly DrawCommandId Id = id;
-    public readonly DrawCommandQueue Queue = queue;
-    public readonly DrawCommandResolver Resolver = resolver;
+    public readonly PassMask PassMask;
+    public readonly ushort DepthKey;
+    public readonly DrawCommandId Id;
+    public readonly DrawCommandQueue Queue;
+    public readonly DrawCommandResolver Resolver;
+
+    public DrawCommandMeta(DrawCommandId id,
+        DrawCommandQueue queue,
+        DrawCommandResolver resolver = DrawCommandResolver.None,
+        PassMask passMask = PassMask.Default,
+        ushort depthKey = 0)
+    {
+        PassMask = passMask;
+        DepthKey = depthKey;
+        Id = id;
+        Queue = queue;
+        Resolver = resolver;
+    }
+    
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public DrawCommandMeta WithResolvePass(DrawCommandResolver resolver, PassMask passMask) 
+        => new (Id, Queue, resolver, passMask, DepthKey);
+    
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public DrawCommandMeta WithTransparency(DrawCommandQueue queue, ushort depthKey) 
+        => new (Id, queue, Resolver, PassMask, depthKey);
+
 }
 
 [StructLayout(LayoutKind.Sequential)]

@@ -76,8 +76,7 @@ internal sealed class RenderEntityBus
 
             if (query.Entity == selected)
             {
-                meta = new DrawCommandMeta(meta.Id, DrawCommandQueue.Overlay, DrawCommandResolver.Highlight,
-                    PassMask.Effect | PassMask.DepthPre);
+                meta = meta.WithResolvePass(DrawCommandResolver.Highlight, PassMask.Effect | PassMask.DepthPre);
             }
 
             entity.Entity = query.Entity;
@@ -132,10 +131,6 @@ internal sealed class RenderEntityBus
             Matrix4x4 model;
             Vector4 v0, v1, v2;
 
-            modelView = _meshTable.GetPartsRefView(entity.Model);
-            _materialTable.ResolveSubmitMaterial(entity.MaterialKey, out tag);
-            matSpan = tag.AsReadOnlySpan();
-
             var parts = modelView.Parts;
             var locals = modelView.Locals;
 
@@ -153,11 +148,10 @@ internal sealed class RenderEntityBus
 
                 var cmd = new DrawCommand(part.Mesh, mat, part.DrawCount);
                 var meta = baseMeta;
-                if (meta.Resolver == DrawCommandResolver.None && tag.IsTransparent(part.MaterialSlot))
+                if (tag.IsTransparent(part.MaterialSlot))
                 {
                     var depthKey = (ushort)(ushort.MaxValue - meta.DepthKey);
-                    meta = new DrawCommandMeta(baseMeta.Id, DrawCommandQueue.Transparent, baseMeta.Resolver,
-                        baseMeta.PassMask, depthKey);
+                    meta = meta.WithTransparency(DrawCommandQueue.Transparent, depthKey);
                 }
 
                 buffer.SubmitDraw(cmd, meta, in model, in v0, in v1, in v2);

@@ -121,11 +121,13 @@ public sealed class GfxCommands
         ApplyState(states);
         Clear(in passClear);
 
+        /*
         if (meta.Attachments.DepthTextureId != default)
         {
             _frameBuffers.SetDrawReadBuffer(_fboStore.GetRefHandle(fboId), false);
         }
-
+        */
+        
         _activeOutputSize = meta.Size;
     }
 
@@ -145,24 +147,23 @@ public sealed class GfxCommands
         Debug.Assert(fromId != default);
         Debug.Assert(fromId != toId, "READ and DRAW FBO must differ for resolve.");
 
-        ref readonly var fromFbo = ref _fboStore.GetMeta(fromId);
-        var fromHandle = _fboStore.GetRefHandle(fromId);
-        var srcSize = fromFbo.Size;
+        var fromHandle = _fboStore.GetRefAndMeta(fromId, out var fromFboMeta);
+        var srcSize = fromFboMeta.Size;
 
-        if (!_fboStore.TryGetRef(toId, out var toHandle, out var toFbo))
+        if (!_fboStore.TryGetRef(toId, out var toHandle, out var toFboMeta))
         {
             _frameBuffers.BlitDefault(fromHandle, srcSize, _activeOutputSize, false);
             return;
         }
 
-        _frameBuffers.Blit(fromHandle, toHandle, srcSize, toFbo.Size, linear);
+        _frameBuffers.Blit(fromHandle, toHandle, srcSize, toFboMeta.Size, linear);
     }
 
 
     public void Clear(in GfxPassClear passClear)
     {
         if (passClear.ClearBuffer is ClearBufferFlag.Color or ClearBufferFlag.ColorAndDepth)
-            _states.ClearColor(passClear.ClearColor);
+            _states.ClearColor(in passClear.ClearColor);
 
         if (passClear.ClearBuffer is not ClearBufferFlag.None)
             _states.ClearBuffer(passClear.ClearBuffer);
@@ -283,7 +284,7 @@ public sealed class GfxCommands
         ArgumentOutOfRangeException.ThrowIfLessThanOrEqual(id.Value, 0);
         ArgumentOutOfRangeException.ThrowIfGreaterThan(uniforms.Length, GfxLimits.MaxPlainUniforms);
         if (_boundShaderId == id) return;
-        
+
         var handle = _shaderStore.GetRefHandle(id);
         _shaders.UseShader(handle);
         _boundShaderId = id;

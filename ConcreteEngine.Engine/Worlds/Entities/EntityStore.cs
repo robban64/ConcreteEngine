@@ -70,7 +70,7 @@ public sealed class EntityStore<T> where T : unmanaged
         return ref _data[_idx++];
     }
 
-    internal void Cleanup()
+    internal void EndTick()
     {
         IsDirty = false;
     }

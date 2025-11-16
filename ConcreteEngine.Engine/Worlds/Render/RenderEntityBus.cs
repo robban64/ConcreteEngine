@@ -54,13 +54,14 @@ internal sealed class RenderEntityBus
     {
         if (_world is null) return;
 
-        EnsureCapacity(DrawCount);
-
+        var worldEntities = _world.Entities;
         var selected = WorldActionSlot.SelectedEntityId;
 
         float near = projInfo.Near, far = projInfo.Far;
+
         var idx = _idx;
-        foreach (var query in _world.Query<ModelComponent, Transform>())
+        EnsureCapacity(DrawCount);
+        foreach (var query in worldEntities.Query<ModelComponent, Transform>())
         {
             //Debug.Assert(model.Model != default && model.MaterialKey != default);
             ref var model = ref query.Component1;

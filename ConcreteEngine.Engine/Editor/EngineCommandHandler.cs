@@ -13,6 +13,7 @@ using ConcreteEngine.Engine.Worlds.Entities;
 using ConcreteEngine.Graphics.Gfx.Contracts;
 using ConcreteEngine.Graphics.Gfx.Resources;
 using ConcreteEngine.Renderer.Data;
+using ConcreteEngine.Renderer.Passes;
 
 #endregion
 
@@ -77,16 +78,18 @@ internal static class EngineCommandHandler
         ctx.AddLog(StructStr<DrawMaterialMeta>());
         ctx.AddLog(StructStr<DrawMaterialPayload>());
 
-        ctx.AddLog(StructStr<GfxPassState>());
+        ctx.AddLog(StructStr<RenderPassState>());
+
+        ctx.AddLog(StructStr<CameraEditorPayload>());
+        ctx.AddLog(StructStr<EntityDataPayload>());
 
         ctx.AddLog(StructStr<Transform>());
+        ctx.AddLog(StructStr<ModelComponent>());
 
         ctx.AddLog(StructStr<MeshPart>());
         ctx.AddLog(StructStr<DrawEntity>());
         ctx.AddLog(StructStr<MaterialTag>());
 
-        ctx.AddLog(StructStr<CameraEditorPayload>());
-        ctx.AddLog(StructStr<EntityDataPayload>());
     }
 
 

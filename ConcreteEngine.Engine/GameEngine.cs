@@ -227,10 +227,12 @@ public sealed class GameEngine : IDisposable
 
     private void GameTickUpdate(int tick)
     {
-        _world.UpdateTick(_window.WindowSize);
+        _world.StartTick(_window.WindowSize);
+        
         _updateInfo.UpdateTick(tick);
         _inputSystem.Update(!_engineGateway.BlockInput());
         _sceneManager.Current?.UpdateTick(tick);
+        
         _world.EndTick();
     }
 

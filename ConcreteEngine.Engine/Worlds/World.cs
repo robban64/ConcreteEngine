@@ -16,9 +16,10 @@ namespace ConcreteEngine.Engine.Worlds;
 
 public interface IWorld
 {
-    public int EntityCount { get; }
+    int EntityCount { get; }
 
-    public Camera3D Camera { get; }
+    Camera3D Camera { get; }
+    WorldEntities Entities { get; }
 
     WorldRenderParams WorldRenderParams { get; }
     WorldSkybox Sky { get; }
@@ -26,23 +27,14 @@ public interface IWorld
 
     IMeshTable MeshTable { get; }
     IMaterialTable EntityMaterials { get; }
-
-
-    EntityId Create();
-    EntityStore<Transform> Transforms { get; }
-    EntityStore<ModelComponent> Meshes { get; }
-    EntityStore<Transform2D> Transforms2D { get; }
-    EntityStore<SpriteComponent> Sprites { get; }
-
-    EntityEnumerator<T1> Query<T1>() where T1 : unmanaged;
-    EntityEnumerator<T1, T2> Query<T1, T2>() where T1 : unmanaged where T2 : unmanaged;
-    EntityEnumerator<T1, T2, T3> Query<T1, T2, T3>() where T1 : unmanaged where T2 : unmanaged where T3 : unmanaged;
 }
 
 public sealed class World : IWorld
 {
-    public EntityId Create() => new(_idIdx++);
-    private int _idIdx = 1;
+    public Camera3D Camera { get; }
+    public WorldRenderParams WorldRenderParams { get; }
+
+    public WorldEntities Entities { get; }
 
     private WorldSkybox _sky = null!;
     private WorldTerrain _terrain = null!;
@@ -50,18 +42,12 @@ public sealed class World : IWorld
     private MeshTable _meshTable = null!;
     private MaterialTable _materialTable = null!;
 
-    public Camera3D Camera { get; }
-    public WorldRenderParams WorldRenderParams { get; }
 
     internal World()
     {
         Camera = new Camera3D();
         WorldRenderParams = new WorldRenderParams();
-
-        Transforms2D = GenericStores<Transform2D>.CreateStore();
-        Transforms = GenericStores<Transform>.CreateStore();
-        Meshes = GenericStores<ModelComponent>.CreateStore();
-        Sprites = GenericStores<SpriteComponent>.CreateStore();
+        Entities = new WorldEntities();
     }
 
     public WorldSkybox Sky => _sky;
@@ -70,7 +56,7 @@ public sealed class World : IWorld
     public IMeshTable MeshTable => _meshTable;
     public IMaterialTable EntityMaterials => _materialTable;
 
-    public int EntityCount => _idIdx;
+    public int EntityCount => Entities.EntityCount;
     public int ShadowMapSize => WorldRenderParams.Snapshot.Shadows.ShadowMapSize;
 
     internal void AttachRender(BatcherRegistry batchers, MeshTable meshTable, MaterialTable materialTable)
@@ -87,10 +73,13 @@ public sealed class World : IWorld
 
     internal void ProcessActions()
     {
+        var entities = Entities;
+
         if (WorldActionSlot.SelectedEntityId > 0)
         {
-            var model = Meshes.GetById(WorldActionSlot.SelectedEntityId);
+            //var model = entities.Meshes.GetById(WorldActionSlot.SelectedEntityId);
         }
+
         if (!WorldActionSlot.IsDirty) return;
         if (WorldActionSlot.TryReadSlot(WorldRenderParams.Version, out WorldParamsData worldData))
             WorldRenderParams.FromEditor(in worldData);
@@ -109,7 +98,7 @@ public sealed class World : IWorld
         if (WorldActionSlot.TryReadSlot(0, out EntityDataPayload entityData))
         {
             ref readonly var transform = ref entityData.Transform;
-            ref var entityTransform = ref Transforms.GetById(new EntityId(entityData.EntityId));
+            ref var entityTransform = ref entities.Transforms.GetById(new EntityId(entityData.EntityId));
             entityTransform.Translation = transform.Translation;
             entityTransform.Scale = transform.Scale;
             entityTransform.Rotation = transform.Rotation;
@@ -132,50 +121,14 @@ public sealed class World : IWorld
         }
     }
 
-    internal void UpdateTick(Size2D viewSize)
+    internal void StartTick(Size2D viewSize)
     {
-        if (Camera.Viewport != viewSize) Camera.Viewport = viewSize;
+        Camera.Viewport = viewSize;
     }
 
     internal void EndTick()
     {
+        Entities.EndTick();
         Camera.EndTick();
-        Cleanup();
-    }
-
-    private void Cleanup()
-    {
-        Transforms.Cleanup();
-        Transforms2D.Cleanup();
-        Sprites.Cleanup();
-        Meshes.Cleanup();
-    }
-
-    public EntityStore<Transform> Transforms { get; }
-    public EntityStore<ModelComponent> Meshes { get; }
-    public EntityStore<Transform2D> Transforms2D { get; }
-    public EntityStore<SpriteComponent> Sprites { get; }
-
-
-    public EntityEnumerator<T1> Query<T1>() where T1 : unmanaged => new(GenericStores<T1>.Store);
-
-    public EntityEnumerator<T1, T2> Query<T1, T2>() where T1 : unmanaged where T2 : unmanaged =>
-        new(GenericStores<T1>.Store, GenericStores<T2>.Store);
-
-    public EntityEnumerator<T1, T2, T3> Query<T1, T2, T3>()
-        where T1 : unmanaged where T2 : unmanaged where T3 : unmanaged =>
-        new(GenericStores<T1>.Store, GenericStores<T2>.Store, GenericStores<T3>.Store);
-
-
-    private static class GenericStores<T> where T : unmanaged
-    {
-        public static EntityStore<T> Store { get; private set; } = null!;
-
-        public static EntityStore<T> CreateStore()
-        {
-            var store = new EntityStore<T>();
-            Store = store;
-            return store;
-        }
     }
 }

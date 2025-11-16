@@ -64,11 +64,11 @@ internal sealed class DrawStateContext
     {
         PrevMaterial = default;
         PassMode = PassStateMode.Main;
-    }
-
-    public void ResetCachedMaterial()
-    {
-        PrevMaterial = default;
+        
+        PassState = default;
+        PassStateFunc = default;
+        OverridePassState = default;
+        OverridePassStateFunc = default;
     }
 
     public bool ResolveMaterialBind(MaterialId material)

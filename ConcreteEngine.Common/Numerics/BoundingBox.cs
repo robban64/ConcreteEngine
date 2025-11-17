@@ -1,6 +1,7 @@
 #region
 
 using System.Numerics;
+using System.Runtime.CompilerServices;
 
 #endregion
 
@@ -32,6 +33,12 @@ public readonly record struct BoundingBox(in Vector3 Min, in Vector3 Max)
         corners[6] = new Vector3(Max.X, Min.Y, Min.Z);
         corners[7] = new Vector3(Min.X, Min.Y, Min.Z);
     }
+
+
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public static void Merge(in BoundingBox boxA, in BoundingBox boxB, out BoundingBox result) =>
+        result = new BoundingBox(Vector3.Max(boxA.Max, boxB.Max), Vector3.Min(boxA.Min, boxB.Min));
+
 
     public static void FromPoints(Span<Vector3> points, out BoundingBox result)
     {

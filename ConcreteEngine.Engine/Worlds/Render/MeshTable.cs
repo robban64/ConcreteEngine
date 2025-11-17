@@ -15,12 +15,14 @@ namespace ConcreteEngine.Engine.Worlds.Render;
 
 public interface IMeshTable
 {
-    ModelId CreateModel(MeshId mesh, int materialSlot, int drawCount);
+    ModelId CreateModel(MeshId mesh, int materialSlot, int drawCount, in BoundingBox bounds);
 }
 
 internal sealed class MeshTable : IMeshTable
 {
     private const int DefaultCapacity = 128;
+
+    private BoundingBox[] _boundingBoxes = new BoundingBox[DefaultCapacity];
 
     private MeshPart[] _parts = new MeshPart[DefaultCapacity];
     private Matrix4x4[] _localTransforms = new Matrix4x4[DefaultCapacity];
@@ -37,9 +39,11 @@ internal sealed class MeshTable : IMeshTable
         return new ModelPartView(parts, locals, range);
     }
 
-    public ModelId CreateModel(MeshId mesh, int materialSlot, int drawCount)
+    public ModelId CreateModel(MeshId mesh, int materialSlot, int drawCount, in BoundingBox bounds)
     {
         EnsureCapacity(_partIdx + 1, _modelIdx + 1);
+
+        _boundingBoxes[_modelIdx] = bounds;
 
         _parts[_partIdx] = new MeshPart(mesh, materialSlot, drawCount);
         _localTransforms[_partIdx] = Matrix4x4.Identity;
@@ -66,6 +70,7 @@ internal sealed class MeshTable : IMeshTable
         {
             var model = models[i];
             model.AttachToRenderer(new ModelId(++_modelIdx));
+            _boundingBoxes[i] = model.Bounds;
             _partRanges[i] = new RangeU16((ushort)idx, (ushort)model.MeshParts.Length);
             foreach (var part in model.MeshParts)
             {

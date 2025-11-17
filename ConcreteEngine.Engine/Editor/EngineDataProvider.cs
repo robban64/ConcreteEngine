@@ -30,7 +30,7 @@ internal static class EngineDataProvider
 
     public static List<EntityRecord> GetEntityView(EntityRequestBody body)
     {
-        var result = new List<EntityRecord>(_world.Entities.Meshes.Count);
+        var result = new List<EntityRecord>(_world.Entities.Models.Count);
         foreach (var it in _world.Entities.Query<ModelComponent>())
             result.Add(EditorObjectMapper.MakeEntityViewModel(it.Entity));
 
@@ -101,7 +101,7 @@ internal static class EngineDataProvider
     public static long FillEntityData(ApiWriteRequestBody<EntityDataPayload> response)
     {
         var entity = new EntityId(response.Data.EntityId);
-        var model = _world.Entities.Meshes.GetById(entity);
+        var model = _world.Entities.Models.GetById(entity);
         if (!_world.Entities.Transforms.TryGetById(entity, out var transform)) transform = default;
 
         WorldActionSlot.SelectedEntityId = new EntityId(response.Data.EntityId);

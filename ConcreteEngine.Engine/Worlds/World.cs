@@ -67,6 +67,7 @@ public sealed class World : IWorld
         _terrain = new WorldTerrain(batchers.Get<TerrainBatcher>());
         _sky = new WorldSkybox();
 
+        Entities.AttachRender(meshTable, materialTable);
         Terrain.AttachModelRegistry(meshTable);
         Sky.AttachModelRegistry(meshTable);
     }

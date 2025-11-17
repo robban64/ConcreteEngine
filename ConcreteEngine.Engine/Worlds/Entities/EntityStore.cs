@@ -51,7 +51,7 @@ public sealed class EntityStore<T> where T : unmanaged
     public EntityId GetEntityId(int i) => _entities[i];
 
 
-    public ref T Add(EntityId e, T value)
+    public ref T Add(EntityId e, in T value)
     {
         if (_idx >= _data.Length)
         {

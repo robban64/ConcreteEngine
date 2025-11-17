@@ -3,7 +3,9 @@
 using System.Numerics;
 using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
+using ConcreteEngine.Common;
 using ConcreteEngine.Common.Collections;
+using ConcreteEngine.Common.Numerics;
 using ConcreteEngine.Common.Numerics.Extensions;
 using ConcreteEngine.Graphics.Primitives;
 using Silk.NET.Assimp;
@@ -34,7 +36,10 @@ internal sealed class MeshImporter
     private Vertex3D[] _verts = new Vertex3D[2048];
     private uint[] _indices = new uint[2048];
 
-    private readonly List<MeshPartImportResult> _resultInfo = new(4);
+    private readonly MeshImportResult[] _parts = new MeshImportResult[8];
+    private readonly Matrix4x4[] _partTransforms = new Matrix4x4[8];
+
+    private ModelImportResult _result = new();
 
     private readonly Func<MeshImportData, MeshCreationInfo> _onProcess;
 
@@ -46,8 +51,7 @@ internal sealed class MeshImporter
 
     public void ClearCache()
     {
-        _resultInfo.Clear();
-        _resultInfo.TrimExcess();
+        _result = null!;
 
         Array.Resize(ref _verts, 0);
         Array.Resize(ref _indices, 0);
@@ -56,7 +60,8 @@ internal sealed class MeshImporter
         _assimp = null;
     }
 
-    public unsafe MeshPartImportResult[] ImportMesh(string path)
+    public unsafe ModelImportResult ImportMesh(string path, out Span<MeshImportResult> parts,
+        out Span<Matrix4x4> partTransforms)
     {
         if (_assimp == null)
             _assimp = Assimp.GetApi();
@@ -69,14 +74,34 @@ internal sealed class MeshImporter
             throw new InvalidOperationException(error);
         }
 
-        _resultInfo.Clear();
+        _result.PartNames.Clear();
+        TraverseNode(scene->MRootNode, scene, 0, Matrix4x4.Identity, _parts, _partTransforms, _result.PartNames);
+        _result.Parts = _result.PartNames.Count;
 
-        TraverseNode(scene->MRootNode, Matrix4x4.Identity, scene);
+        InvalidOpThrower.ThrowIf(_result.Parts > _parts.Length, nameof(_result.Parts));
+        InvalidOpThrower.ThrowIf(_result.Parts != _result.PartNames.Count, nameof(_result.Parts));
 
-        return _resultInfo.ToArray();
+        parts = _parts.AsSpan(0, _result.Parts);
+        partTransforms = _partTransforms.AsSpan(0, _result.Parts);
+
+        BoundingBox bounds = default;
+        for (var i = 0; i < _result.Parts; i++)
+        {
+            if (i == 0)
+            {
+                bounds = parts[i].Bounds;
+                continue;
+            }
+
+            BoundingBox.Merge(in bounds, in parts[i].Bounds, out bounds);
+        }
+
+        _result.Bounds = bounds;
+        return _result;
     }
 
-    private unsafe void TraverseNode(AssimpNode* node, Matrix4x4 parent, AssimpScene* scene)
+    private unsafe void TraverseNode(AssimpNode* node, AssimpScene* scene, int index, in Matrix4x4 parent,
+        Span<MeshImportResult> parts, Span<Matrix4x4> partTransforms, List<string> names)
     {
         var current = node->MTransformation * parent;
         for (var i = 0; i < node->MNumMeshes; i++)
@@ -85,18 +110,22 @@ internal sealed class MeshImporter
             var mesh = scene->MMeshes[meshIndex];
             var meshData = LoadMeshData(mesh);
 
-            _resultInfo.Add(new MeshPartImportResult(
-                mesh->MName.AsString,
-                (int)scene->MMeshes[i]->MMaterialIndex,
-                meshData,
-                current
-            ));
+            BoundingBox.FromPoints(new Span<Vector3>(mesh->MVertices, (int)mesh->MNumVertices), out var box);
+
+            ref var it = ref parts[index + i];
+            it.MaterialSlot = (int)scene->MMeshes[i]->MMaterialIndex;
+            it.CreationInfo = meshData;
+            it.Bounds = box;
+            partTransforms[i] = current;
+            names.Add(mesh->MName.AsString);
         }
+
+        var idx = index + (int)node->MNumMeshes;
 
         // Process children
         for (uint i = 0; i < node->MNumChildren; i++)
         {
-            TraverseNode(node->MChildren[i], current, scene);
+            TraverseNode(node->MChildren[i], scene, idx, in current, parts, partTransforms, names);
         }
     }
 
@@ -132,6 +161,9 @@ internal sealed class MeshImporter
 
         var vRes = _verts.AsSpan(0, vertexCount);
         var iRes = _indices.AsSpan(0, indexCount);
+
+        BoundingBox.FromPoints(new Span<Vector3>(mesh->MVertices, (int)mesh->MNumVertices), out var box);
+
         return _onProcess(new MeshImportData(vRes, iRes));
     }
 
@@ -150,16 +182,9 @@ internal sealed class MeshImporter
         }
     }
 
-    private unsafe void ComputeBBox(AssimpMesh* mesh, out Vector3 min, out Vector3 max)
+    private unsafe void ComputeBBox(AssimpMesh* mesh, out BoundingBox box)
     {
-        min = new Vector3(float.PositiveInfinity);
-        max = new Vector3(float.NegativeInfinity);
-        for (uint i = 0; i < mesh->MNumVertices; i++)
-        {
-            var p = mesh->MVertices[i];
-            min = Vector3.Min(min, p);
-            max = Vector3.Max(max, p);
-        }
+        BoundingBox.FromPoints(new Span<Vector3>(mesh->MVertices, (int)mesh->MNumVertices), out box);
     }
 
     // cm->0.01f, mm->0.001f, m->1f

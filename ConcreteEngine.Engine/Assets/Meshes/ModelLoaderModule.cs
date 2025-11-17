@@ -1,6 +1,7 @@
 #region
 
 using System.Numerics;
+using ConcreteEngine.Common;
 using ConcreteEngine.Engine.Assets.Data;
 using ConcreteEngine.Engine.Assets.Descriptors;
 using ConcreteEngine.Engine.Assets.Internal;
@@ -39,18 +40,19 @@ internal sealed class ModelLoaderModule
     {
         var refId = AssetRef<Model>.Make(assetId);
 
-        _loader.LoadMesh(manifest, out fileSpecs, out var meshesInfo);
+        fileSpecs = _loader.LoadMesh(manifest, out var parts, out var partTransforms, out var modelResult);
 
-        var meshParts = new ModelMesh[meshesInfo.Length];
+        var meshParts = new ModelMesh[modelResult.Parts];
         var drawCount = 0;
-        for (int i = 0; i < meshesInfo.Length; i++)
+        for (int i = 0; i < meshParts.Length; i++)
         {
-            var info = meshesInfo[i];
-            var meshInfo = info.Info;
-            meshParts[i] = new ModelMesh(refId, info.Name, meshInfo.MeshId, info.MaterialSlot,
-                meshInfo.DrawCount, info.Transform);
+            ref readonly var info = ref parts[i];
 
-            drawCount += info.Info.DrawCount;
+            var meshInfo = info.CreationInfo;
+            meshParts[i] = new ModelMesh(refId, modelResult.PartNames[i], meshInfo.MeshId, info.MaterialSlot,
+                meshInfo.DrawCount, in partTransforms[i]);
+
+            drawCount += info.CreationInfo.DrawCount;
         }
 
         return new Model
@@ -59,7 +61,8 @@ internal sealed class ModelLoaderModule
             Name = manifest.Name,
             MeshParts = meshParts,
             DrawCount = drawCount,
-            IsCoreAsset = isCoreAsset
+            IsCoreAsset = isCoreAsset,
+            Bounds = modelResult.Bounds
         };
     }
 

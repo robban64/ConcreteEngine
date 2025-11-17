@@ -131,7 +131,7 @@ public sealed class Demo3DScene : GameScene
             var mesh = store.GetByName<Model>("Cube");
             var entityId = World.Entities.Create();
             var mat = World.EntityMaterials.Add(rockMat1Tag);
-            World.Entities.Meshes.Add(entityId, new ModelComponent(mesh.ModelId, mesh.DrawCount, mat));
+            World.Entities.Models.Add(entityId, new ModelComponent(mesh.ModelId, mesh.DrawCount, mat));
             World.Entities.Transforms.Add(entityId,
                 new Transform(new Vector3(half, worldTerrain.GetSmoothHeight(half, half) + 1f, half),
                     Vector3.One, Quaternion.Identity));

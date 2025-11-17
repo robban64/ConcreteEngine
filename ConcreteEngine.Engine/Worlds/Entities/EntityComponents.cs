@@ -9,7 +9,7 @@ using ConcreteEngine.Renderer.Data;
 
 namespace ConcreteEngine.Engine.Worlds.Entities;
 
-public struct Transform(Vector3 translation, Vector3 scale, Quaternion rotation)
+public struct Transform(in Vector3 translation, in Vector3 scale, in Quaternion rotation)
 {
     public Vector3 Translation = translation;
     public Vector3 Scale = scale;
@@ -24,6 +24,12 @@ public struct ModelComponent(ModelId model, int drawCount, MaterialTagKey materi
     private int _pad;
 }
 
+public struct BoxComponent(in BoundingBox box)
+{
+    public BoundingBox Box = box;
+}
+
+/*
 public struct Transform2D(Vector2 position, Vector2 scale, float rotation)
 {
     public Vector2 Position = position;
@@ -39,3 +45,4 @@ public struct SpriteComponent(int spriteId, MaterialId materialId, bool isStatic
     public MaterialId MaterialId = materialId;
     public bool IsStatic = isStatic;
 }
+*/

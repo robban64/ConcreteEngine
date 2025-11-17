@@ -2,6 +2,7 @@
 
 using System.Diagnostics;
 using System.Numerics;
+using ConcreteEngine.Common.Numerics;
 using ConcreteEngine.Common.Numerics.Maths;
 using ConcreteEngine.Engine.Assets.Data;
 using ConcreteEngine.Engine.Assets.Textures;
@@ -73,6 +74,8 @@ public sealed class WorldTerrain
         _terrain.BuildBatch();
 
         Debug.Assert(_terrain.MeshId > 0);
-        Model = _meshTable.CreateModel(_terrain.MeshId, 0, _terrain.DrawCount);
+        
+        var bounds = new BoundingBox(Vector3.Zero, new Vector3(_terrain.Dimension, TerrainHeight, _terrain.Dimension));
+        Model = _meshTable.CreateModel(_terrain.MeshId, 0, _terrain.DrawCount, in bounds);
     }
 }

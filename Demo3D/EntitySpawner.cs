@@ -26,7 +26,7 @@ public sealed class EntitySpawner(IWorld world, float size = 256f, float margin 
     {
         var entityId = world.Entities.Create();
         var key = world.EntityMaterials.Add(sp.Mat);
-        world.Entities.Meshes.Add(entityId, new ModelComponent(sp.ModelInfo.Model, sp.ModelInfo.DrawCount, key));
+        world.Entities.Models.Add(entityId, new ModelComponent(sp.ModelInfo.Model, sp.ModelInfo.DrawCount, key));
         world.Entities.Transforms.Add(entityId, transform);
 
         return entityId;

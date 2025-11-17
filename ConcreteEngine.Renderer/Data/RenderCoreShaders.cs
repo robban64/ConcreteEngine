@@ -13,4 +13,5 @@ public readonly struct RenderCoreShaders
     public required ShaderId ColorFilterShader { get; init; }
     public required ShaderId PresentShader { get; init; }
     public required ShaderId HighlightShader { get; init; }
+    public required ShaderId BoundingBoxShader { get; init; }
 }

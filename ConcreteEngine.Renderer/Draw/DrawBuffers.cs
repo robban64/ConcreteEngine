@@ -2,6 +2,7 @@
 
 using System.Numerics;
 using System.Runtime.CompilerServices;
+using ConcreteEngine.Common.Numerics.Maths;
 using ConcreteEngine.Graphics.Gfx;
 using ConcreteEngine.Graphics.Gfx.Resources;
 using ConcreteEngine.Renderer.Data;
@@ -153,13 +154,11 @@ internal sealed class DrawBuffers
         var outputSize = frameInfo.OutputSize;
         var invRes = new Vector2(1.0f / outputSize.Width, 1.0f / outputSize.Height);
 
-        var mousePos = runtimeParams.MousePos;
-        mousePos = new Vector2(mousePos.X / outputSize.Width, 1.0f - (mousePos.Y / outputSize.Height));
         var data = new EngineUniformRecord(
             deltaTime: frameInfo.DeltaTime,
             invResolution: invRes,
             time: runtimeParams.Time,
-            mouse: mousePos,
+            mouse: CoordinateMath.ToUvCoords(runtimeParams.MousePos, outputSize),
             random: runtimeParams.DefaultRandom
         );
 

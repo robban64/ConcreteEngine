@@ -4,12 +4,15 @@ using ConcreteEngine.Common;
 using ConcreteEngine.Common.Numerics;
 using ConcreteEngine.Common.Time;
 using ConcreteEngine.Engine.Assets;
+using ConcreteEngine.Engine.Assets.Meshes;
 using ConcreteEngine.Engine.Assets.Shaders;
 using ConcreteEngine.Engine.Editor.Data;
 using ConcreteEngine.Engine.Editor.Definitions;
 using ConcreteEngine.Engine.Platform;
 using ConcreteEngine.Engine.Utils;
+using ConcreteEngine.Engine.Worlds.Data;
 using ConcreteEngine.Engine.Worlds.Render.Batching;
+using ConcreteEngine.Engine.Worlds.Utility;
 using ConcreteEngine.Engine.Worlds.View;
 using ConcreteEngine.Graphics;
 using ConcreteEngine.Graphics.Gfx;
@@ -82,6 +85,11 @@ public sealed class WorldRenderer : IWorldRenderer
         _meshTable.Setup(_assets);
         _renderEntityBus.AttachWorld(world);
         world.AttachRender(Batchers, _meshTable, _materialTable);
+
+        _renderEntityBus.CubeId = _assets.StoreImpl.GetByName<Model>("Cube").ModelId;
+
+        var mat = _assets.MaterialStoreImpl.CreateMaterial("EmptyMat", "EmptyMat1");
+        _renderEntityBus.EmptyMaterialKey = _materialTable.Add(MaterialTagBuilder.BuildOne(mat.Id, true));
 
         PrepareRenderView(1, world.Camera);
     }
@@ -221,7 +229,8 @@ public sealed class WorldRenderer : IWorldRenderer
                 ColorFilterShader = _assets.Store.GetByName<Shader>("ColorFilter").ResourceId,
                 CompositeShader = _assets.Store.GetByName<Shader>("Composite").ResourceId,
                 PresentShader = _assets.Store.GetByName<Shader>("Present").ResourceId,
-                HighlightShader = _assets.Store.GetByName<Shader>("Highlight").ResourceId
+                HighlightShader = _assets.Store.GetByName<Shader>("Highlight").ResourceId,
+                BoundingBoxShader = _assets.Store.GetByName<Shader>("BoundingBox").ResourceId,
             };
     }
 }

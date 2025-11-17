@@ -5,6 +5,7 @@ using ConcreteEngine.Engine.Assets.Data;
 using ConcreteEngine.Engine.Assets.Descriptors;
 using ConcreteEngine.Engine.Assets.Shaders;
 using ConcreteEngine.Engine.Assets.Textures;
+using ConcreteEngine.Graphics.Gfx;
 using ConcreteEngine.Graphics.Gfx.Definitions;
 using ConcreteEngine.Renderer.Definitions;
 
@@ -25,6 +26,7 @@ internal sealed class MaterialLoader
     {
         _profiles = new Dictionary<MaterialProfile, MatProfileInfo>
         {
+            [MaterialProfile.None] = new("Model"),
             [MaterialProfile.StaticModel] = new("Model",
                 new ProfileSlot(TextureSlotKind.Albedo),
                 new ProfileSlot(TextureSlotKind.Normal),
@@ -100,6 +102,10 @@ internal sealed class MaterialLoader
 
     private AssetTextureSlot[] CreateSlots(MaterialDescriptor record, IAssetStore store)
     {
+        if (record.TextureSlots.Length == 0)
+        {
+            return [new AssetTextureSlot(default, TextureSlotKind.Albedo)];
+        }
         var slotInfo = new AssetTextureSlot[record.TextureSlots.Length];
         for (int i = 0; i < slotInfo.Length; i++)
         {

@@ -127,6 +127,14 @@ public sealed class MaterialStore : IMaterialStore
 
     private TextureId ResolveTextureId(AssetTextureSlot assetSlot)
     {
+        if (assetSlot.IsFallback)
+        {
+            var texId = GfxTextures.FallbackTextures.AlbedoId;
+            if (assetSlot.SlotKind == TextureSlotKind.Normal) texId = GfxTextures.FallbackTextures.NormalId;
+            return texId;
+        }
+        
+        
         if (assetSlot.SlotKind == TextureSlotKind.Shadowmap) return default;
 
         if (!assetSlot.Asset.IsValid)

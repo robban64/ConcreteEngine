@@ -20,4 +20,4 @@ public readonly record struct Ray(in Vector3 Position, in Vector3 Direction)
     }
 
     public static Ray FromTwoPoints(in Vector3 p1, in Vector3 p2) => new(in p1, Vector3.Normalize(p2 - p1));
-}
+}   

@@ -38,8 +38,9 @@ internal sealed class RenderShaderRegistry : IRenderShaderRegistry
 
     public void FinishRegistration()
     {
-        var highlightShader = GetRenderShader(CoreShaders.HighlightShader);
-        highlightShader.UsePlainUniforms(_gfxShaders);
+        GetRenderShader(CoreShaders.HighlightShader).UsePlainUniforms(_gfxShaders);
+        GetRenderShader(CoreShaders.BoundingBoxShader).UsePlainUniforms(_gfxShaders);
+
     }
 
     public void RegisterCollection(Span<ShaderId> shaders)

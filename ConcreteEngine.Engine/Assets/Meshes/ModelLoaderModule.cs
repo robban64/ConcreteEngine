@@ -50,7 +50,7 @@ internal sealed class ModelLoaderModule
 
             var meshInfo = part.CreationInfo;
             meshParts[i] = new ModelMesh(refId, modelResult.PartNames[i], meshInfo.MeshId, part.MaterialSlot,
-                meshInfo.DrawCount, in modelResult.PartTransforms[i]);
+                meshInfo.DrawCount, in modelResult.PartTransforms[i], in part.Bounds);
 
             drawCount += part.CreationInfo.DrawCount;
         }

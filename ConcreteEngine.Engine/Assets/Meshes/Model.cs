@@ -47,11 +47,15 @@ public sealed record ModelMesh(
     MeshId ResourceId,
     int MaterialSlot,
     int DrawCount,
-    in Matrix4x4 Transform)
+    in Matrix4x4 Transform,
+    in BoundingBox Bounds)
 {
+    private readonly BoundingBox _bounds = Bounds;
     private readonly Matrix4x4 _transform = Transform;
 
     public ref readonly Matrix4x4 Transform => ref _transform;
+    public ref readonly BoundingBox Bounds => ref _bounds;
+
 }
 
 public sealed record RecordObject(string SomeName, in Matrix4x4 Matrix)

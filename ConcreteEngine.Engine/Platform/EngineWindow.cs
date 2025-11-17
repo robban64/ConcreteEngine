@@ -35,7 +35,7 @@ internal sealed class EngineWindow : IEngineWindow
 
     public Vector2I Position
     {
-        get => _window.Position.ToVector2I();
+        get => _window.Position.ToVec2Int();
         set => _window.Position = new Vector2D<int>(value.X, value.Y);
     }
 

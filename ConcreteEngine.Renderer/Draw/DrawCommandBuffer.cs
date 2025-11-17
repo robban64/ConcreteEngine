@@ -137,24 +137,20 @@ public sealed class DrawCommandBuffer
     internal void DispatchDrawPass(PassId passId, bool defaultDraw, DrawCommandProcessor cmd)
     {
         var pass = _passRanges[passId];
-        var end = pass.Start + pass.Count;
-        ReadOnlySpan<DrawCommand> commands = _commandBuffer.AsSpan();
+
+        var tickets = _drawTickets.AsSpan(pass.Start, pass.Count);
+        var commands = _commandBuffer.AsSpan();
 
         if (defaultDraw)
         {
-            for (var i = pass.Start; i < end; i++)
-            {
-                var ticket = _drawTickets[i];
+            foreach (var ticket in tickets)
                 cmd.DrawMesh(commands[ticket.SubmitIdx], ticket);
-            }
+
             return;
         }
         
-        for (var i = pass.Start; i < end; i++)
-        {
-            var ticket = _drawTickets[i];
+        foreach (var ticket in tickets)
             cmd.DrawSpecialResolveMesh(commands[ticket.SubmitIdx], ticket);
-        }
     }
 
     public void Reset()

@@ -15,18 +15,19 @@ public readonly record struct BoundingAxisBox(in Vector3 Center, in Vector3 Exte
     public Vector3 Min => Center - Extent;
     public Vector3 Max => Center + Extent;
 
-    public void DrainCorners(Span<Vector3> corners)
+    public void FillCorners(Span<Vector3> corners)
     {
         var min = Min;
         var max = Max;
-        corners[0] = new Vector3(min.X, max.Y, max.Z);
-        corners[1] = new Vector3(max.X, max.Y, max.Z);
-        corners[2] = new Vector3(max.X, min.Y, max.Z);
-        corners[3] = new Vector3(min.X, min.Y, max.Z);
-        corners[4] = new Vector3(min.X, max.Y, min.Z);
-        corners[5] = new Vector3(max.X, max.Y, min.Z);
-        corners[6] = new Vector3(max.X, min.Y, min.Z);
-        corners[7] = new Vector3(min.X, min.Y, min.Z);
+        corners[0] = new Vector3(min.X, min.Y, min.Z);
+        corners[1] = new Vector3(max.X, min.Y, min.Z);
+        corners[2] = new Vector3(max.X, max.Y, min.Z);
+        corners[3] = new Vector3(min.X, max.Y, min.Z);
+
+        corners[4] = new Vector3(min.X, min.Y, max.Z);
+        corners[5] = new Vector3(max.X, min.Y, max.Z);
+        corners[6] = new Vector3(max.X, max.Y, max.Z);
+        corners[7] = new Vector3(min.X, max.Y, max.Z);
     }
 
     public static void FromBoundingBox(in BoundingBox box, out BoundingAxisBox result) =>

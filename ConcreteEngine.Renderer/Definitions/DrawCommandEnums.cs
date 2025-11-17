@@ -22,9 +22,9 @@ public enum DrawCommandQueue : byte
     Opaque = 30,
     Skybox = 40,
     Transparent = 50,
-    Additive = 60
-    //Overlay = 100,
-    //OverlayTransparent = 110
+    Additive = 60,
+    Overlay = 100,
+    OverlayTransparent = 110
 }
 
 public enum DrawCommandResolver : byte
@@ -32,6 +32,7 @@ public enum DrawCommandResolver : byte
     None = 0,
     Wireframe = 1,
     Highlight = 2,
+    BoundingVolume = 3,
 }
 
 [Flags]

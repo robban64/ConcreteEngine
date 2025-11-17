@@ -6,10 +6,13 @@ using System.Numerics;
 using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
 using ConcreteEngine.Common.Collections;
+using ConcreteEngine.Common.Numerics;
 using ConcreteEngine.Common.Numerics.Maths;
 using ConcreteEngine.Engine.Worlds.Data;
 using ConcreteEngine.Engine.Worlds.Entities;
 using ConcreteEngine.Engine.Worlds.Utility;
+using ConcreteEngine.Graphics.Gfx;
+using ConcreteEngine.Graphics.Gfx.Resources;
 using ConcreteEngine.Renderer.Data;
 using ConcreteEngine.Renderer.Definitions;
 using ConcreteEngine.Renderer.Draw;
@@ -32,6 +35,9 @@ internal sealed class RenderEntityBus
     private readonly MeshTable _meshTable;
     private readonly MaterialTable _materialTable;
 
+    public ModelId CubeId { get; set; }
+    public MaterialTagKey EmptyMaterialKey { get; set; }
+
     internal RenderEntityBus(MeshTable meshTable, MaterialTable materialTable)
     {
         _meshTable = meshTable;
@@ -50,6 +56,8 @@ internal sealed class RenderEntityBus
         _idx = 0;
     }
 
+    private bool hasRunEntities = false;
+
     public void CollectEntities(in Matrix4x4 viewMat, in ProjectionInfoData projInfo)
     {
         if (_world is null) return;
@@ -59,16 +67,14 @@ internal sealed class RenderEntityBus
 
         float near = projInfo.Near, far = projInfo.Far;
 
-        var idx = _idx;
-        EnsureCapacity(DrawCount);
+        EnsureCapacity(DrawCount * 2);
         foreach (var query in worldEntities.Query<ModelComponent, Transform>())
         {
             //Debug.Assert(model.Model != default && model.MaterialKey != default);
             ref var model = ref query.Component1;
             ref var transform = ref query.Component2;
 
-            ref var entity = ref _entities[idx++];
-
+            ref var entity = ref _entities[_idx++];
 
             var depthKey = DepthKeyUtility.MakeDepthKey(in viewMat, in transform.Translation, near, far);
 
@@ -87,14 +93,48 @@ internal sealed class RenderEntityBus
             entity.Meta = meta;
         }
 
-        _idx += idx;
+        if (hasRunEntities)
+        {
+            _idx *= 2;
+            return;
+        }
+
+        var idx = _idx;
+        Span<Vector3> corners = stackalloc Vector3[8];
+        foreach (ref readonly var entity in _entities.AsSpan(0, idx))
+        {
+            ref var boxEntity = ref _entities[_idx++];
+            ref readonly var bounds = ref _meshTable.GetModelBounds(entity.Model);
+            ref readonly var transform = ref entity.Transform;
+
+            MatrixMath.CreateModelMatrix(in transform.Translation, in transform.Scale,
+                in transform.Rotation, out var world);
+            
+            bounds.FillCorners(corners);
+
+            for (var i = 0; i < corners.Length; i++)
+            {
+                corners[i] = Vector3.Transform(corners[i], world);
+            }
+
+            BoundingAxisBox.FromPoints(corners, out var axisBounds);
+
+            boxEntity.Entity = entity.Entity;
+            boxEntity.Model = CubeId;
+            boxEntity.MaterialKey = EmptyMaterialKey;
+            boxEntity.Transform = new Transform(axisBounds.Center, axisBounds.Extent, in transform.Rotation);
+            boxEntity.Meta = new DrawCommandMeta(DrawCommandId.Mesh, DrawCommandQueue.OverlayTransparent,
+                DrawCommandResolver.BoundingVolume, PassMask.Effect);
+        }
+
+        hasRunEntities = true;
     }
 
     public void FlushEntities(DrawCommandBuffer buffer)
     {
         if (_world is null) return;
 
-        buffer.EnsureBufferCapacity(_world.EntityCount + 64);
+        buffer.EnsureBufferCapacity(_world.EntityCount * 2 + 64);
 
         FlushWorldEntities(buffer);
 

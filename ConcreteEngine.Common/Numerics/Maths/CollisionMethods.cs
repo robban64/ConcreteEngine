@@ -17,6 +17,43 @@ internal sealed class CollisionMethods
         if (box1.Min.Z > box2.Max.Z || box2.Min.Z > box1.Max.Z) return false;
         return true;
     }
+    
+    
+    public static bool IntersectBox(in Ray ray, in BoundingBox box, out float t)
+    {
+        var dirfrac = new Vector3
+        {
+            X = 1.0f / ray.Direction.X,
+            Y = 1.0f / ray.Direction.Y,
+            Z = 1.0f / ray.Direction.Z
+        };
+        float t1 = (box.Min.X - ray.Position.X) * dirfrac.X;
+        float t2 = (box.Max.X - ray.Position.X) * dirfrac.X;
+        float t3 = (box.Min.Y - ray.Position.Y) * dirfrac.Y;
+        float t4 = (box.Max.Y - ray.Position.Y) * dirfrac.Y;
+        float t5 = (box.Min.Z - ray.Position.Z) * dirfrac.Z;
+        float t6 = (box.Max.Z - ray.Position.Z) * dirfrac.Z;
+
+        float tmin = Math.Max(Math.Max(Math.Min(t1, t2), Math.Min(t3, t4)), Math.Min(t5, t6));
+        float tmax = Math.Min(Math.Min(Math.Max(t1, t2), Math.Max(t3, t4)), Math.Max(t5, t6));
+
+        // behind
+        if (tmax < 0)
+        {
+            t = tmax;
+            return false;
+        }
+
+        // miss
+        if (tmin > tmax)
+        {
+            t = tmax;
+            return false;
+        }
+
+        t = tmin;
+        return true;
+    }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static bool BoxInFrontOfPlane(in BoundingBox box, in Plane plane)

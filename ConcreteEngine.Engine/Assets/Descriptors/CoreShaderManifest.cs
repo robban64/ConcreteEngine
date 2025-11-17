@@ -2,6 +2,21 @@ namespace ConcreteEngine.Engine.Assets.Descriptors;
 
 internal static class CoreShaderManifest
 {
+    
+    private static ShaderDescriptor[] ManifestRecords =>
+    [
+        CompositeManifest,
+        PresentManifest,
+        ColorFilterManifest,
+        TerrainManifest,
+        SkyboxManifest,
+        ModelManifest,
+        DepthManifest,
+        HighlightManifest,
+        BoundingManifest
+    ];
+    
+    /*
     public static Dictionary<string, ShaderDescriptor> GetManifestDict =>
         new()
         {
@@ -12,20 +27,10 @@ internal static class CoreShaderManifest
             ["Skybox"] = SkyboxManifest,
             ["Model"] = ModelManifest,
             ["Depth"] = DepthManifest,
-            ["Highlight"] = HighlightManifest
+            ["Highlight"] = HighlightManifest,
+            ["BoundingBox"] = BoundingManifest
         };
-
-    private static ShaderDescriptor[] ManifestRecords =>
-    [
-        CompositeManifest,
-        PresentManifest,
-        ColorFilterManifest,
-        TerrainManifest,
-        SkyboxManifest,
-        ModelManifest,
-        DepthManifest,
-        HighlightManifest
-    ];
+*/
 
     public static ShaderManifest GetManifest => new() { Records = ManifestRecords };
 
@@ -44,6 +49,7 @@ internal static class CoreShaderManifest
 
     public static ShaderDescriptor DepthManifest => new("Depth", "depth.vert.glsl", "depth.frag.glsl");
     
-    public static ShaderDescriptor HighlightManifest => new("Highlight", "highlight.vert.glsl", "highlight.frag.glsl");
+    public static ShaderDescriptor HighlightManifest => new("Highlight", "model-plain.vert.glsl", "highlight.frag.glsl");
+    public static ShaderDescriptor BoundingManifest => new("BoundingBox", "model-plain.vert.glsl", "bounding-box.frag.glsl");
 
 }

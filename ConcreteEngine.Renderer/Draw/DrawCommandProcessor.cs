@@ -63,10 +63,10 @@ internal sealed class DrawCommandProcessor
             {
                 case PassStateMode.Main:
                     _gfxCmd.UseShader(materialMeta.ShaderId);
-                    BindTextureSlots(texSlots);
+                    if (texSlots.Length > 0) BindTextureSlots(texSlots);
                     break;
                 case PassStateMode.Depth:
-                    BindDepthTextureSlots(texSlots);
+                    if (texSlots.Length > 0) BindDepthTextureSlots(texSlots);
                     break;
             }
         }
@@ -142,13 +142,22 @@ internal sealed class DrawCommandProcessor
     {
         const GfxStateFlags allowMaterialOverride = GfxStateFlags.Cull | GfxStateFlags.PolygonOffset;
 
-        Debug.Assert(ticket.Resolver == DrawCommandResolver.Highlight);
+        Debug.Assert(ticket.Resolver is DrawCommandResolver.Highlight or DrawCommandResolver.BoundingVolume);
 
         var texSlots = _buffers.ResolveMaterial(cmd.MaterialId, out var materialMeta);
 
-        var shader = _ctx.CoreShaders.HighlightShader;
+        var shader =  _ctx.CoreShaders.HighlightShader;
+        var color = _highlightColor;
+        if (ticket.Resolver == DrawCommandResolver.BoundingVolume)
+        {
+            shader = _ctx.CoreShaders.BoundingBoxShader;
+            color = Color4.Green;
+        }
+        
         _gfxCmd.UseShader(shader, _ctx.GetUniformLocations(shader));
-        _gfxCmd.SetUniform(0, in _highlightColor);
+        _gfxCmd.SetUniform(0, in color);
+
+        
         foreach (var slot in texSlots)
         {
             if (slot.SlotKind == TextureSlotKind.Albedo) _gfxCmd.BindTexture(slot.Texture, 0);

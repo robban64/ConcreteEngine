@@ -12,4 +12,8 @@ public readonly record struct AssetTextureSlot(
     TextureSlotKind SlotKind,
     TextureKind TextureKind = TextureKind.Texture2D
     //bool Srgb
-);
+)
+{
+    public bool IsFallback => !Asset.IsValid;
+
+}

@@ -21,9 +21,10 @@ public readonly struct MeshPart(MeshId mesh, int materialSlot, int drawCount)
     private readonly int _pad; // ensure 16 byte
 }
 
-public readonly ref struct ModelPartView(ReadOnlySpan<MeshPart> parts, ReadOnlySpan<Matrix4x4> locals, RangeU16 ranges)
+public readonly ref struct ModelPartView(ReadOnlySpan<MeshPart> parts, ReadOnlySpan<Matrix4x4> locals, ReadOnlySpan<BoundingBox> bounds, RangeU16 ranges)
 {
     public readonly ReadOnlySpan<MeshPart> Parts = parts;
     public readonly ReadOnlySpan<Matrix4x4> Locals = locals;
+    public readonly ReadOnlySpan<BoundingBox> Bounds = bounds;
     public readonly RangeU16 Range = ranges;
 }

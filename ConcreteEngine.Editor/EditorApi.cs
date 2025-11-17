@@ -25,7 +25,7 @@ public static class EditorApi
 
     public static ApiSimpleDataRequestDel<EditorMouseSelectPayload> SendClickRequest;
 
-    public static ApiDataRefRequest<CameraEditorPayload> UpdateCameraData;
-    public static ApiDataRefRequest<EntityDataPayload> UpdateEntityData;
-    public static ApiDataRefRequest<WorldParamState> UpdateWorldParams;
+    public static ApiDataRefRequest<CameraEditorPayload> FillCameraData;
+    public static ApiDataRefRequest<EntityDataPayload> FillEntityData;
+    public static ApiDataRefRequest<WorldParamState> FillWorldParams;
 }

@@ -24,6 +24,9 @@ public interface IWorld
     WorldRenderParams WorldRenderParams { get; }
     WorldSkybox Sky { get; }
     WorldTerrain Terrain { get; }
+    
+    WorldRaycaster Raycast { get; }
+     
 
     IMeshTable MeshTable { get; }
     IMaterialTable EntityMaterials { get; }
@@ -35,6 +38,7 @@ public sealed class World : IWorld
     public WorldRenderParams WorldRenderParams { get; }
 
     public WorldEntities Entities { get; }
+    public WorldRaycaster Raycast { get; } 
 
     private WorldSkybox _sky = null!;
     private WorldTerrain _terrain = null!;
@@ -48,6 +52,7 @@ public sealed class World : IWorld
         Camera = new Camera3D();
         WorldRenderParams = new WorldRenderParams();
         Entities = new WorldEntities();
+        Raycast = new WorldRaycaster(Camera, Entities);
     }
 
     public WorldSkybox Sky => _sky;

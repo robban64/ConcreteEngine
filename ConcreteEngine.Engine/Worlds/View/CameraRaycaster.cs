@@ -9,6 +9,8 @@ public sealed class CameraRaycaster
     private Matrix4x4 _invViewProjection;
     private Size2D _viewport;
 
+    internal long Generation { get; private set; }
+
     public Ray CreateRayFrom(Vector2 screenCoord)
     {
         var ndc = CoordinateMath.ToNdcCoords(screenCoord, _viewport);
@@ -17,8 +19,9 @@ public sealed class CameraRaycaster
         return Ray.FromTwoPoints(in p1, in p2);
     }
 
-    internal void UpdateTick(Size2D viewport, in Matrix4x4 view, in Matrix4x4 projection)
+    internal void UpdateFromCamera(long generation, Size2D viewport, in Matrix4x4 view, in Matrix4x4 projection)
     {
+        Generation = generation;
         _viewport = viewport;
         Matrix4x4.Invert(view, out var invView);
         Matrix4x4.Invert(projection, out var invProjection);

@@ -48,13 +48,13 @@ public sealed class Camera3D : ICamera
 
     public long Generation { get; private set; } = 0;
 
-    public CameraRaycaster Raycaster { get; }
+    private CameraRaycaster _raycaster;
 
     public Camera3D()
     {
         Ensure();
         _dirty = true;
-        Raycaster = new CameraRaycaster();
+        _raycaster = new CameraRaycaster();
     }
 
     public Vector3 Right => Vector3.Normalize(Vector3.Transform(Vector3.UnitX, _rotation));
@@ -178,13 +178,22 @@ public sealed class Camera3D : ICamera
         }
     }
 
+    public CameraRaycaster Raycaster
+    {
+        get
+        {
+            if(_raycaster.Generation != Generation)
+                _raycaster.UpdateFromCamera(Generation, _viewportSize, in _viewMatrix, in _projectionMatrix);
+            
+            return _raycaster;
+        }
+    }
+
     internal void EndTick()
     {
         Ensure();
         _prevTick = _currTick;
         CameraTransformData.FromCamera(this, out _currTick);
-        
-        Raycaster.UpdateTick(_viewportSize, in _viewMatrix, in _projectionMatrix);
     }
 
     internal void WriteSnapshot(float alpha, ref RenderViewSnapshot viewSnapshot)

@@ -85,38 +85,9 @@ internal static class EngineDataProvider
 
     public static void OnEditorClick(in EditorMouseSelectPayload request, out EditorMouseSelectPayload response)
     {
-        var entities = _world.Entities;
-        response = default;
+        var entity = _world.Raycast.GetEntityByCameraRay(request.MousePosition, out var distance);
+        response = new EditorMouseSelectPayload(entity.Id, request.MousePosition);
 
-        var ray = _world.Camera.Raycaster.CreateRayFrom(request.MousePosition);
-
-        Span<Vector3> corners = stackalloc Vector3[8];
-
-        Matrix4x4 world = default;
-        BoundingAxisBox axisBounds = default;
-        BoundingBox finalBounds = default;
-        foreach (var it in _world.Entities.Query<Transform, BoxComponent>())
-        {
-            ref readonly var transform = ref it.Component1;
-            ref readonly var bounds = ref it.Component2;
-
-            MatrixMath.CreateModelMatrix(in transform.Translation, in transform.Scale,
-                in transform.Rotation, out world);
-
-            bounds.Box.FillCorners(corners);
-
-            for (var i = 0; i < corners.Length; i++)
-                corners[i] = Vector3.Transform(corners[i], world);
-
-            BoundingAxisBox.FromPoints(corners, out axisBounds);
-            BoundingBox.FromAxisBox(in axisBounds, out finalBounds);
-            if (ray.IntersectsWith(in finalBounds, out var distance))
-            {
-                response = new EditorMouseSelectPayload(it.Entity.Id, response.MousePosition);
-                Console.WriteLine(distance);
-                return;
-            }
-        }
     }
 
     public static long FillCameraData(ApiWriteRequestBody<CameraEditorPayload> payload)

@@ -37,8 +37,8 @@ internal static class EditorModelManager
         RegisterCameraState();
         RegisterWorldRenderState();
 
-        ModelManager.CameraState.InvokeAction(TransitionKey.Enter);
-        ModelManager.EntitiesState.InvokeAction(TransitionKey.Enter);
+        CameraState.InvokeAction(TransitionKey.Enter);
+        EntitiesState.InvokeAction(TransitionKey.Enter);
     }
 
     private static void RegisterAssetState()
@@ -65,46 +65,59 @@ internal static class EditorModelManager
     {
         EntitiesState = ModelState<EntitiesViewModel>
             .CreateBuilder(static () => new EntitiesViewModel())
-            .OnEnter(static (ctx, it) => it.FillView(EditorApi.FetchEntityView))
-            .OnRefresh(RefreshEntityState)
-            .OnLeave(LeaveEntityState)
-            .RegisterEvent<EntityRecord?>(EventKey.SelectionChanged, SelectEntityHandler)
+            .OnEnter(static (ctx, it) => FillEntityData(ctx, it.GetSelectedEntity()))
+            .OnRefresh(static (ctx, it) => FillEntityData(ctx, it.GetSelectedEntity()))
+            .OnLeave(static (ctx, _) => FillEntityData(ctx, null))
+            .RegisterEvent<EntityRecord?>(EventKey.SelectionChanged, FillEntityData)
             .RegisterEvent<EntityRecord>(EventKey.SelectionUpdated, UpdateEntityHandler)
             .RegisterEvent<EditorMouseSelectPayload>(EventKey.MouseClick, ClickHandler)
             .KeepAlive()
             .Build();
 
         return;
-        
+
+        static void FillEntityData(ModelState<EntitiesViewModel> ctx, EntityRecord? it)
+        {
+            var model = ctx.State!;
+            if (model.Entities.Count == 0)
+            {
+                model.ClearDataState();
+                model.FillView(EditorApi.FetchEntityView);
+                return;
+            }
+
+            model.FillData(it, in EditorApi.FillEntityData);
+        }
 
         static void ClickHandler(ModelState<EntitiesViewModel> ctx, EditorMouseSelectPayload payload)
         {
             EditorApi.SendClickRequest(in payload, out var response);
-            if (response.EntityId == 0) return;
+            var state = ctx.State!;
 
-            var entity = response.EntityId == ctx.State!.Data.EntityId ? null : ctx.State.GetEntity(response.EntityId);
-            ctx.TriggerEvent(EventKey.SelectionChanged, entity);
-        }
+            if (response.EntityId == 0)
+            {
+                if(state.Data.EntityId > 0)
+                    state.FillData(null, in EditorApi.FillEntityData);
+                
+                state.ClearDataState();
+            }
+            else if (response.EntityId == state.Data.EntityId)
+            {
+                state.FillData(state.GetSelectedEntity(), in EditorApi.FillEntityData);
+            }
+            else
+            {
+                if(state.Entities.Count == 0)
+                    state.FillView(EditorApi.FetchEntityView);
+                
+                ctx.TriggerEvent(EventKey.SelectionChanged, state.GetEntity(response.EntityId));
+            }
 
-        static void LeaveEntityState(ModelState<EntitiesViewModel> ctx, EntitiesViewModel it)
-            => it.FillData(null, in EditorApi.UpdateEntityData);
-
-        static void RefreshEntityState(ModelState<EntitiesViewModel> ctx, EntitiesViewModel it)
-        {
-            ctx.State!.FillData(in EditorApi.UpdateEntityData);
-        }
-
-        static void SelectEntityHandler(ModelState<EntitiesViewModel> ctx, EntityRecord? it)
-        {
-            if (ctx.State!.Entities.Count == 0)
-                ctx.State!.FillView( EditorApi.FetchEntityView);
-
-            ctx.State!.FillData(it, in EditorApi.UpdateEntityData);
         }
 
         static void UpdateEntityHandler(ModelState<EntitiesViewModel> ctx, EntityRecord it)
         {
-            ctx.State!.WriteData(it, in EditorApi.UpdateEntityData);
+            ctx.State!.WriteData(it, in EditorApi.FillEntityData);
             ctx.EnqueueRefreshNextFrame();
         }
     }
@@ -124,12 +137,12 @@ internal static class EditorModelManager
 
         static void WriteCameraDataHandler(ModelState<CameraViewModel> ctx)
         {
-            ctx.State!.WriteData(in EditorApi.UpdateCameraData);
+            ctx.State!.WriteData(in EditorApi.FillCameraData);
             ctx.EnqueueRefreshNextFrame();
         }
 
         static void FetchCameraDataHandler(ModelState<CameraViewModel> ctx, CameraViewModel it) =>
-            it.FillData(EditorApi.UpdateCameraData);
+            it.FillData(EditorApi.FillCameraData);
     }
 
     private static void RegisterWorldRenderState()
@@ -145,17 +158,17 @@ internal static class EditorModelManager
         return;
 
         static void UpdateData(ModelState<WorldRenderViewModel> ctx, WorldRenderViewModel it) =>
-            it.FillData(in EditorApi.UpdateWorldParams);
+            it.FillData(in EditorApi.FillWorldParams);
 
         static void SelectionChangeHandler(ModelState<WorldRenderViewModel> ctx, WorldParamSelection it)
         {
             ctx.State!.Selection = it;
-            ctx.State!.FillData(in EditorApi.UpdateWorldParams);
+            ctx.State!.FillData(in EditorApi.FillWorldParams);
         }
 
         static void SelectionUpdateHandler(ModelState<WorldRenderViewModel> ctx)
         {
-            ctx.State!.WriteData(in EditorApi.UpdateWorldParams);
+            ctx.State!.WriteData(in EditorApi.FillWorldParams);
             ctx.EnqueueRefreshNextFrame();
         }
     }

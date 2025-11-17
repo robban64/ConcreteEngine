@@ -198,15 +198,16 @@ internal sealed class EngineGateway : IDisposable
             EditorApi.FetchAssetStoreData = EngineDataProvider.GetAssetStoreData;
             EditorApi.FetchAssetObjectFiles = EngineDataProvider.GetAssetObjectFiles;
             EditorApi.FetchEntityView = EngineDataProvider.GetEntityView;
-
+            
             EditorApi.SendClickRequest = EngineDataProvider.OnEditorClick;
 
-            EditorApi.UpdateEntityData = new ApiDataRefRequest<EntityDataPayload>(
+            EditorApi.FillEntityData = new ApiDataRefRequest<EntityDataPayload>(
                 &EngineDataProvider.FillEntityData, &EngineDataProvider.WriteToEntity);
-            EditorApi.UpdateCameraData = new ApiDataRefRequest<CameraEditorPayload>(
+            EditorApi.FillCameraData = new ApiDataRefRequest<CameraEditorPayload>(
                 &EngineDataProvider.FillCameraData, &EngineDataProvider.WriteCameraData);
-            EditorApi.UpdateWorldParams = new ApiDataRefRequest<WorldParamState>(
+            EditorApi.FillWorldParams = new ApiDataRefRequest<WorldParamState>(
                 &EngineDataProvider.FillWorldParams, &EngineDataProvider.WriteWorldParams);
+            
         }
 
 

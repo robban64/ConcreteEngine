@@ -33,7 +33,7 @@ public sealed class EntitiesViewModel
         return index < 0 ? null : Entities[index];
     }
 
-    public void ClearState()
+    public void ClearDataState()
     {
         _data = default;
         _state = default;

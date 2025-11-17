@@ -22,15 +22,29 @@ internal static class EditorService
     private static EditorModeState ModeState => StateContext.ModeState;
 
 
-    static EditorService()
+    private static bool IsMouseOverEditor()
     {
-        ModelManager.SetupModelState();
-        StateContext.Init();
+        var io = ImGui.GetIO();
+        if (io.WantCaptureMouse || ImGui.IsWindowHovered(ImGuiHoveredFlags.RootAndChildWindows))
+            return true;
+
+        return false;
     }
 
+    private static void ProcessInput()
+    {
+        if (IsMouseOverEditor()) return;
+        if (ImGui.IsMouseClicked(ImGuiMouseButton.Left))
+        {
+            ModelManager.EntitiesState.TriggerEvent(EventKey.MouseClick,
+                new EditorMouseSelectPayload(0, ImGui.GetMousePos()));
+        }
+    }
 
     internal static void Render(bool blockInput)
     {
+        if (!blockInput) ProcessInput();
+
         StateContext.CommitState();
         GuiTheme.RightSidebarExpanded = ModeState.IsEditorState;
         MetricsApi.ToggleMetrics(ModeState.IsMetricState);

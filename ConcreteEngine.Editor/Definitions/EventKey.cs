@@ -12,9 +12,11 @@ internal enum EventKey
     EditorStarted,
     EditorStopped,
 
-    SelectionChanged,
     CategoryChanged,
 
+    SelectionChanged,
     SelectionUpdated,
-    SelectionAction
+    SelectionAction,
+    
+    MouseClick
 }

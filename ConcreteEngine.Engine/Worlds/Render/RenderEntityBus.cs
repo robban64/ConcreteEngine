@@ -67,7 +67,7 @@ internal sealed class RenderEntityBus
 
         float near = projInfo.Near, far = projInfo.Far;
 
-        EnsureCapacity(DrawCount * 2);
+        EnsureCapacity(DrawCount);
         foreach (var query in worldEntities.Query<ModelComponent, Transform>())
         {
             //Debug.Assert(model.Model != default && model.MaterialKey != default);
@@ -93,6 +93,7 @@ internal sealed class RenderEntityBus
             entity.Meta = meta;
         }
 
+        return;
         if (hasRunEntities)
         {
             _idx *= 2;
@@ -104,13 +105,13 @@ internal sealed class RenderEntityBus
         foreach (ref readonly var entity in _entities.AsSpan(0, idx))
         {
             ref var boxEntity = ref _entities[_idx++];
-            ref readonly var bounds = ref _meshTable.GetModelBounds(entity.Model);
+            ref readonly var bounds = ref _world.Entities.BoundingBoxes.GetById(entity.Entity);
             ref readonly var transform = ref entity.Transform;
 
             MatrixMath.CreateModelMatrix(in transform.Translation, in transform.Scale,
                 in transform.Rotation, out var world);
             
-            bounds.FillCorners(corners);
+            bounds.Box.FillCorners(corners);
 
             for (var i = 0; i < corners.Length; i++)
             {
@@ -134,7 +135,7 @@ internal sealed class RenderEntityBus
     {
         if (_world is null) return;
 
-        buffer.EnsureBufferCapacity(_world.EntityCount * 2 + 64);
+        buffer.EnsureBufferCapacity(_world.EntityCount + 64);
 
         FlushWorldEntities(buffer);
 

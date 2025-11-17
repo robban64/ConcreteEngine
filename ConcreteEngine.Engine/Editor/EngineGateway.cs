@@ -26,12 +26,12 @@ namespace ConcreteEngine.Engine.Editor;
 
 internal sealed class EngineGateway : IDisposable
 {
-    private static EditorPortal _debugTools = null!;
+    private static EditorPortal _editor = null!;
     private static LogParser _logParser = null!;
 
-    public bool HasBoundCommands { get; private set; }
+    public bool HasBoundEditor { get; private set; }
     public bool HasBoundMetrics { get; private set; }
-    public bool Enabled { get; private set; } = true;
+    public bool Enabled { get; private set; } = false;
 
     private int _ticker = 0, _mediumTicker = 0, _slowTicker = 0;
 
@@ -39,16 +39,16 @@ internal sealed class EngineGateway : IDisposable
 
     internal EngineGateway(GL gl, IWindow window, IInputContext inputCtx)
     {
-        if (_debugTools != null || _logParser != null)
+        if (_editor != null || _logParser != null)
             throw new InvalidOperationException("Debug Tools and Log Parsers is already active.");
 
-        _debugTools = new EditorPortal(gl, window, inputCtx);
+        _editor = new EditorPortal(gl, window, inputCtx);
         _logParser = new LogParser();
     }
 
-    public bool HasBindings => HasBoundCommands || HasBoundMetrics;
+    public bool HasBindings => HasBoundEditor || HasBoundMetrics;
     public bool Active => Enabled && HasBindings;
-    public bool BlockInput() => Enabled && _debugTools.BlockInput();
+    public bool BlockInput() => Enabled && _editor.BlockInput();
     public static void ToggleEngineLogger(bool enabled) => Logger.Enabled = enabled;
     public static void ToggleGfxLogger(bool enabled) => GfxLog.Enabled = enabled;
 
@@ -63,36 +63,40 @@ internal sealed class EngineGateway : IDisposable
     public void SetupEditor(EditorEngineQueue editorQueues, World world, AssetSystem assetSystem,
         RenderEngineFrameInfo frameInfo)
     {
-        ArgumentNullException.ThrowIfNull(world, nameof(world));
-        ArgumentNullException.ThrowIfNull(assetSystem, nameof(assetSystem));
-        ArgumentNullException.ThrowIfNull(frameInfo, nameof(frameInfo));
-
-        if (!Enabled) return;
-        if (HasBoundCommands) throw new InvalidOperationException(nameof(HasBoundCommands));
+        ArgumentNullException.ThrowIfNull(world);
+        ArgumentNullException.ThrowIfNull(assetSystem);
+        ArgumentNullException.ThrowIfNull(frameInfo);
+        
+        if (Enabled) throw new InvalidOperationException(nameof(Enabled));
+        if (HasBoundEditor) throw new InvalidOperationException(nameof(HasBoundEditor));
         if (HasBoundMetrics) throw new InvalidOperationException(nameof(HasBoundMetrics));
-        HasBoundCommands = true;
+
+        Enabled = true;
+        HasBoundEditor = true;
         HasBoundMetrics = true;
 
-        EditorSetup.DebugTools = _debugTools!;
+        EditorSetup.DebugTools = _editor!;
         EditorSetup.AttachEditor(world, assetSystem, frameInfo);
         EditorSetup.RegisterDataProvider();
         EditorSetup.RegisterCommands();
         EditorSetup.RegisterMetrics();
 
         EngineCommandHandler.CommandQueues = editorQueues;
+
+        _editor.Initialize();
     }
 
 
-    public void Update(float delta)
+    public void UpdateEditor(float delta)
     {
-        if (!Enabled) return;
-        _debugTools.Update(delta);
+        if (!Enabled || !HasBoundEditor) return;
+        _editor.Update(delta);
     }
 
     public void RenderMetricsUi()
     {
-        if (!Enabled) return;
-        _debugTools.Render();
+        if (!Enabled || !HasBoundEditor) return;
+        _editor.Render();
     }
 
     public void RefreshMetrics(bool force = false)
@@ -137,14 +141,14 @@ internal sealed class EngineGateway : IDisposable
         {
             var logs = GfxLog.DrainLogs();
             foreach (ref readonly var log in logs)
-                _debugTools.AddLog(_logParser.Format(in log));
+                _editor.AddLog(_logParser.Format(in log));
         }
 
         if (!_drainGfxLogs && Logger.Count > 0)
         {
             var logs = Logger.DrainLogs();
             foreach (ref readonly var log in logs)
-                _debugTools.AddLog(_logParser.Format(in log));
+                _editor.AddLog(_logParser.Format(in log));
         }
 
         _drainGfxLogs = !_drainGfxLogs;
@@ -153,7 +157,7 @@ internal sealed class EngineGateway : IDisposable
     public void Dispose()
     {
         Enabled = false;
-        _debugTools.Dispose();
+        _editor.Dispose();
     }
 
     private static class EditorSetup
@@ -194,6 +198,8 @@ internal sealed class EngineGateway : IDisposable
             EditorApi.FetchAssetStoreData = EngineDataProvider.GetAssetStoreData;
             EditorApi.FetchAssetObjectFiles = EngineDataProvider.GetAssetObjectFiles;
             EditorApi.FetchEntityView = EngineDataProvider.GetEntityView;
+
+            EditorApi.SendClickRequest = EngineDataProvider.OnEditorClick;
 
             EditorApi.UpdateEntityData = new ApiDataRefRequest<EntityDataPayload>(
                 &EngineDataProvider.FillEntityData, &EngineDataProvider.WriteToEntity);

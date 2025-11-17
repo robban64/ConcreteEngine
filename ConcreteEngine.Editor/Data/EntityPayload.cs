@@ -12,9 +12,3 @@ public struct EntityDataPayload(int entityId, in EditorEntityModel model, in Tra
     public EditorEntityModel Model = model;
     public TransformData Transform = transform;
 }
-
-public readonly struct EntityTransformPayload(int entityId, in TransformData transform)
-{
-    public readonly int EntityId = entityId;
-    public readonly TransformData Transform = transform;
-}

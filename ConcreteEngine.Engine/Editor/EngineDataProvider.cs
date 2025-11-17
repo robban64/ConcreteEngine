@@ -1,12 +1,18 @@
 #region
 
+using System.Diagnostics;
+using System.Numerics;
 using System.Runtime.CompilerServices;
+using ConcreteEngine.Common.Numerics;
+using ConcreteEngine.Common.Numerics.Maths;
+using ConcreteEngine.Editor;
 using ConcreteEngine.Editor.Data;
 using ConcreteEngine.Editor.DataState;
 using ConcreteEngine.Editor.Definitions;
 using ConcreteEngine.Editor.ViewModel;
 using ConcreteEngine.Engine.Assets;
 using ConcreteEngine.Engine.Assets.Data;
+using ConcreteEngine.Engine.Platform;
 using ConcreteEngine.Engine.Worlds;
 using ConcreteEngine.Engine.Worlds.Entities;
 using ConcreteEngine.Shared.RenderData;
@@ -77,6 +83,42 @@ internal static class EngineDataProvider
         return result;
     }
 
+    public static void OnEditorClick(in EditorMouseSelectPayload request, out EditorMouseSelectPayload response)
+    {
+        var entities = _world.Entities;
+        response = default;
+
+        var ray = _world.Camera.Raycaster.CreateRayFrom(request.MousePosition);
+
+        Span<Vector3> corners = stackalloc Vector3[8];
+
+        Matrix4x4 world = default;
+        BoundingAxisBox axisBounds = default;
+        BoundingBox finalBounds = default;
+        foreach (var it in _world.Entities.Query<Transform, BoxComponent>())
+        {
+            ref readonly var transform = ref it.Component1;
+            ref readonly var bounds = ref it.Component2;
+
+            MatrixMath.CreateModelMatrix(in transform.Translation, in transform.Scale,
+                in transform.Rotation, out world);
+
+            bounds.Box.FillCorners(corners);
+
+            for (var i = 0; i < corners.Length; i++)
+                corners[i] = Vector3.Transform(corners[i], world);
+
+            BoundingAxisBox.FromPoints(corners, out axisBounds);
+            BoundingBox.FromAxisBox(in axisBounds, out finalBounds);
+            if (ray.IntersectsWith(in finalBounds, out var distance))
+            {
+                response = new EditorMouseSelectPayload(it.Entity.Id, response.MousePosition);
+                Console.WriteLine(distance);
+                return;
+            }
+        }
+    }
+
     public static long FillCameraData(ApiWriteRequestBody<CameraEditorPayload> payload)
     {
         var camera = _world.Camera;
@@ -100,6 +142,12 @@ internal static class EngineDataProvider
 
     public static long FillEntityData(ApiWriteRequestBody<EntityDataPayload> response)
     {
+        if (response.Data.EntityId == 0)
+        {
+            WorldActionSlot.SelectedEntityId = new EntityId(0);
+            return 0;
+        }
+
         var entity = new EntityId(response.Data.EntityId);
         var model = _world.Entities.Models.GetById(entity);
         if (!_world.Entities.Transforms.TryGetById(entity, out var transform)) transform = default;

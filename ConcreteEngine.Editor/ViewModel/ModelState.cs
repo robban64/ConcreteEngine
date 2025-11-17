@@ -47,7 +47,7 @@ internal interface IModelState
     bool Active { get; }
     bool PendingRefresh { get; }
     void InvokeAction(TransitionKey action);
-    void TriggerEvent<TEvent>(EventKey eventKey,  TEvent eventData);
+    void TriggerEvent<TEvent>(EventKey eventKey, TEvent eventData);
 }
 
 public sealed class NoOpEvent
@@ -72,35 +72,45 @@ internal sealed class ModelState<T> : IModelState where T : class
     public bool Active { get; private set; }
     public bool PendingRefresh { get; private set; } = false;
 
+    public bool KeepAlive { get; }
+
     private ModelState(
         Func<T> factory,
         StateTransitionDel<T> onEnter,
         StateTransitionDel<T> onLeave,
         StateTransitionDel<T>? onRefresh = null,
-        Dictionary<EventKey, object>? events = null)
+        Dictionary<EventKey, object>? events = null,
+        bool keepAlive = false)
     {
         _factory = factory;
         _onEnter = onEnter;
         _onLeave = onLeave;
+        KeepAlive = keepAlive;
         _onRefresh = onRefresh;
         _events = events;
+        
+        if(KeepAlive) State = _factory();
     }
 
     public void ResetState()
     {
         Active = false;
-        State = null;
+        if(!KeepAlive)
+            State = null;
     }
+
 
     public void EnqueueRefreshNextFrame()
     {
+        if (!Active) return;
+
         if (PendingRefresh) return;
         PendingRefresh = true;
     }
 
     public bool TryInvokePendingRefresh()
     {
-        if (!PendingRefresh) return false;
+        if (!PendingRefresh || !Active) return false;
         if (_onRefresh is null)
         {
             PendingRefresh = false;
@@ -119,17 +129,17 @@ internal sealed class ModelState<T> : IModelState where T : class
         switch (action)
         {
             case TransitionKey.Enter:
-                InvalidOpThrower.ThrowIf(Active, nameof(Active));
+                InvalidOpThrower.ThrowIf(!KeepAlive && Active, nameof(Active));
                 Active = true;
                 _onEnter(this, State ??= _factory());
                 break;
             case TransitionKey.Leave:
-                InvalidOpThrower.ThrowIfNot(Active, nameof(Active));
+                InvalidOpThrower.ThrowIf(!KeepAlive && !Active, nameof(Active));
                 _onLeave(this, State!);
                 Active = false;
                 break;
             case TransitionKey.Refresh:
-                InvalidOpThrower.ThrowIfNot(Active, nameof(Active));
+                InvalidOpThrower.ThrowIf(!KeepAlive && !Active, nameof(Active));
                 InvalidOpThrower.ThrowIfNull(_onRefresh, nameof(_onRefresh));
                 _onRefresh!(this, State!);
                 break;
@@ -154,7 +164,7 @@ internal sealed class ModelState<T> : IModelState where T : class
             $"{eventKey} was invoked with invalid type: actual {handler.GetType().Name}, expected {typeof(StateEmptyEventDel<T>).Name}");
     }
 
-    public void TriggerEvent<TEvent>(EventKey eventKey,  TEvent eventData)
+    public void TriggerEvent<TEvent>(EventKey eventKey, TEvent eventData)
     {
         InvalidOpThrower.ThrowIfNull(_events, nameof(_events));
         if (!_events!.TryGetValue(eventKey, out var handler))
@@ -164,7 +174,7 @@ internal sealed class ModelState<T> : IModelState where T : class
         if (handler is StateEventDel<T, TEvent> del)
         {
             ConsoleService.SendLog($"Event triggered: {eventKey} for {typeof(T).Name} with {typeof(TEvent).Name}");
-            del(this,  eventData);
+            del(this, eventData);
             return;
         }
 
@@ -180,6 +190,8 @@ internal sealed class ModelState<T> : IModelState where T : class
         private StateTransitionDel<T>? _onLeave;
         private StateTransitionDel<T>? _onRefresh;
         private Dictionary<EventKey, object>? _events;
+
+        private bool _keepAlive = false;
 
         public ViewModelStateBuilder OnEnter(StateTransitionDel<T> handler)
         {
@@ -198,8 +210,8 @@ internal sealed class ModelState<T> : IModelState where T : class
             _onRefresh = handler;
             return this;
         }
-        
-        public ViewModelStateBuilder RegisterEventNoOp(EventKey eventKey, StateEmptyEventDel<T> handler)
+
+        public ViewModelStateBuilder RegisterEmptyEvent(EventKey eventKey, StateEmptyEventDel<T> handler)
         {
             _events ??= new Dictionary<EventKey, object>();
             _events.Add(eventKey, handler);
@@ -213,12 +225,18 @@ internal sealed class ModelState<T> : IModelState where T : class
             return this;
         }
 
+        public ViewModelStateBuilder KeepAlive()
+        {
+            _keepAlive = true;
+            return this;
+        }
+
         public ModelState<T> Build()
         {
             InvalidOpThrower.ThrowIfNull(factory, nameof(factory));
             InvalidOpThrower.ThrowIfNull(_onEnter, nameof(_onEnter));
             InvalidOpThrower.ThrowIfNull(_onLeave, nameof(_onLeave));
-            return new ModelState<T>(factory, _onEnter!, _onLeave!, _onRefresh, _events);
+            return new ModelState<T>(factory, _onEnter!, _onLeave!, _onRefresh, _events, _keepAlive);
         }
     }
 }

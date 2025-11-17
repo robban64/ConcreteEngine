@@ -7,7 +7,7 @@ using System.Runtime.CompilerServices;
 
 namespace ConcreteEngine.Common.Numerics.Maths;
 
-internal sealed class CollisionMethods
+public sealed class CollisionMethods
 {
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static bool IntersectsBox(in BoundingBox box1, in BoundingBox box2)
@@ -19,7 +19,7 @@ internal sealed class CollisionMethods
     }
     
     
-    public static bool IntersectBox(in Ray ray, in BoundingBox box, out float t)
+    public static bool RayIntersectsBox(in Ray ray, in BoundingBox box, out float t)
     {
         var dirfrac = new Vector3
         {

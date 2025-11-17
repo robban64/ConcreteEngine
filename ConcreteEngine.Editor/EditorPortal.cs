@@ -1,5 +1,6 @@
 #region
 
+using ConcreteEngine.Common;
 using ImGuiNET;
 using Silk.NET.Input;
 using Silk.NET.OpenGL;
@@ -16,6 +17,8 @@ public sealed class EditorPortal : IDisposable
 
     private ImFontPtr _imFontPtr;
 
+    public bool Initialized { get; private set; } = false;
+
     public EditorPortal(GL gl, IWindow window, IInputContext inputCtx)
     {
         var fontPath = Path.Combine(AppContext.BaseDirectory, "Content", "Roboto-Medium.ttf");
@@ -24,34 +27,71 @@ public sealed class EditorPortal : IDisposable
         _controller = new ImGuiController(gl, window, inputCtx, fontConfDefault);
     }
 
-    public void Update(float delta) => _controller.Update(delta);
+    public void Initialize()
+    {
+        InvalidOpThrower.ThrowIf(Initialized, nameof(Initialized));
+        ModelManager.SetupModelState();
+        StateContext.Init();
+        Initialized = true;
+    }
 
     public void AddLog(string? msg) => ConsoleService.SendLog(msg);
 
+
+    public void Update(float delta)
+    {
+        if (!Initialized) return;
+        _controller.Update(delta);
+        EditorService.Render(BlockInput());
+        ImGui.Render();
+    }
+
     public void Render()
     {
-        EditorService.Render(BlockInput());
+        if (!Initialized) return;
         _controller.Render();
     }
+
+    //TODO proper input
 
     public bool BlockInput()
     {
         var io = ImGui.GetIO();
 
-        var blockKeyboard = io.WantTextInput || ImGui.IsAnyItemActive() || ImGui.IsAnyItemFocused();
+        var blockKeyboard = io.WantTextInput || io.WantCaptureKeyboard || ImGui.IsAnyItemActive() ||
+                            ImGui.IsAnyItemFocused();
 
-        var anyMouseDown = io.MouseDown[0] || io.MouseDown[1] || io.MouseDown[2] || io.MouseDown[3] || io.MouseDown[4];
-
+        //var anyMouseDown = io.MouseDown[0] || io.MouseDown[1] || io.MouseDown[2] || io.MouseDown[3] || io.MouseDown[4];
         var overUi = ImGui.IsAnyItemHovered() || ImGui.IsAnyItemActive() ||
                      ImGui.IsWindowHovered(ImGuiHoveredFlags.AnyWindow);
 
-        var blockMouse = anyMouseDown && overUi;
+        var blockMouse = ImGui.IsAnyMouseDown() && overUi;
 
         if (ImGui.IsPopupOpen(null, ImGuiPopupFlags.AnyPopupId))
             blockMouse |= ImGui.IsWindowHovered(ImGuiHoveredFlags.AnyWindow);
 
         return blockKeyboard || blockMouse;
     }
+
+    /*
+    public bool BlockInput()
+    {
+        var io = ImGui.GetIO();
+
+        var blockKeyboard = io.WantCaptureKeyboard || io.WantTextInput || ImGui.IsAnyItemActive() ||
+                            ImGui.IsAnyItemFocused();
+
+        if (io.WantCaptureMouse)
+            return blockKeyboard || true;
+
+        var anyMouseDown = io.MouseDown[0] || io.MouseDown[1] || io.MouseDown[2];
+        var mouseOverAnyWindow = ImGui.IsWindowHovered(ImGuiHoveredFlags.AnyWindow);
+
+        var blockMouse = anyMouseDown && mouseOverAnyWindow;
+
+        return blockKeyboard || blockMouse;
+    }
+    */
 
     public void Dispose()
     {

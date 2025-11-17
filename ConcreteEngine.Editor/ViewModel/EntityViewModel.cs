@@ -18,12 +18,25 @@ public sealed class EntitiesViewModel
 
     public ref readonly EntityDataPayload Data => ref _data;
     internal ref EntityDataState DataState => ref _state;
-    
+
     public EntityRecord? GetSelectedEntity()
     {
-        if(_data.EntityId <= 0  || Entities.Count == 0) return null;
+        if (_data.EntityId <= 0 || Entities.Count == 0) return null;
         var index = SortMethod.BinarySearchInt(Entities, _data.EntityId);
         return index < 0 ? null : Entities[index];
+    }
+
+    public EntityRecord? GetEntity(int entityId)
+    {
+        if (Entities.Count == 0) return null;
+        var index = SortMethod.BinarySearchInt(Entities, entityId);
+        return index < 0 ? null : Entities[index];
+    }
+
+    public void ClearState()
+    {
+        _data = default;
+        _state = default;
     }
 
     public void FillView(ApiModelRequestDel<EntityRequestBody, List<EntityRecord>> api)
@@ -32,10 +45,17 @@ public sealed class EntitiesViewModel
     }
 
 
-    public void FillData(EntityRecord entity, in ApiDataRefRequest<EntityDataPayload> api)
+    public void FillData(EntityRecord? entity, in ApiDataRefRequest<EntityDataPayload> api)
     {
-        _data.EntityId = entity.EntityId;
-        api.FillData(entity.EntityId, ref _data);
+        _data.EntityId = entity?.EntityId ?? 0;
+        api.FillData(_data.EntityId, ref _data);
+
+        if (entity is null)
+        {
+            _state = default;
+            _data = default;
+            return;
+        }
 
         _state.ModelId = _data.Model.ModelId;
         _state.MaterialTagKey = _data.Model.MaterialTagKey;
@@ -44,6 +64,12 @@ public sealed class EntitiesViewModel
 
     public void FillData(in ApiDataRefRequest<EntityDataPayload> api)
     {
+        if (_data.EntityId == 0)
+        {
+            FillData(null, in api);
+            return;
+        }
+
         var idx = SortMethod.BinarySearchInt(Entities, _data.EntityId);
         InvalidOpThrower.ThrowIf(idx < 0, nameof(_data.EntityId));
         var entity = Entities[idx];

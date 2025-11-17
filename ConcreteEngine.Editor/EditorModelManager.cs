@@ -19,10 +19,6 @@ internal static class EditorModelManager
 
     public static bool HasInit { get; private set; } = false;
 
-    static EditorModelManager()
-    {
-    }
-
     internal static void InvokeRefreshForModels()
     {
         EntitiesState.TryInvokePendingRefresh();
@@ -40,6 +36,9 @@ internal static class EditorModelManager
         RegisterAssetState();
         RegisterCameraState();
         RegisterWorldRenderState();
+
+        ModelManager.CameraState.InvokeAction(TransitionKey.Enter);
+        ModelManager.EntitiesState.InvokeAction(TransitionKey.Enter);
     }
 
     private static void RegisterAssetState()
@@ -58,7 +57,7 @@ internal static class EditorModelManager
 
 
         static void ReloadShaderHandler(ModelState<AssetStoreViewModel> ctx, AssetObjectViewModel it) =>
-            CommandDispatcher.InvokeEditorCommand(CoreCmdNames.AssetShader, 
+            CommandDispatcher.InvokeEditorCommand(CoreCmdNames.AssetShader,
                 new EditorShaderPayload(it.Name, EditorRequestAction.Reload));
     }
 
@@ -67,20 +66,41 @@ internal static class EditorModelManager
         EntitiesState = ModelState<EntitiesViewModel>
             .CreateBuilder(static () => new EntitiesViewModel())
             .OnEnter(static (ctx, it) => it.FillView(EditorApi.FetchEntityView))
-            .OnRefresh(RefreshEntity)
-            .OnLeave(static (ctx, it) => ctx.ResetState())
-            .RegisterEvent<EntityRecord>(EventKey.SelectionChanged, SelectEntityHandler)
+            .OnRefresh(RefreshEntityState)
+            .OnLeave(LeaveEntityState)
+            .RegisterEvent<EntityRecord?>(EventKey.SelectionChanged, SelectEntityHandler)
             .RegisterEvent<EntityRecord>(EventKey.SelectionUpdated, UpdateEntityHandler)
+            .RegisterEvent<EditorMouseSelectPayload>(EventKey.MouseClick, ClickHandler)
+            .KeepAlive()
             .Build();
+
         return;
         
-        
 
-        static void RefreshEntity(ModelState<EntitiesViewModel> ctx, EntitiesViewModel it) =>
+        static void ClickHandler(ModelState<EntitiesViewModel> ctx, EditorMouseSelectPayload payload)
+        {
+            EditorApi.SendClickRequest(in payload, out var response);
+            if (response.EntityId == 0) return;
+
+            var entity = response.EntityId == ctx.State!.Data.EntityId ? null : ctx.State.GetEntity(response.EntityId);
+            ctx.TriggerEvent(EventKey.SelectionChanged, entity);
+        }
+
+        static void LeaveEntityState(ModelState<EntitiesViewModel> ctx, EntitiesViewModel it)
+            => it.FillData(null, in EditorApi.UpdateEntityData);
+
+        static void RefreshEntityState(ModelState<EntitiesViewModel> ctx, EntitiesViewModel it)
+        {
             ctx.State!.FillData(in EditorApi.UpdateEntityData);
+        }
 
-        static void SelectEntityHandler(ModelState<EntitiesViewModel> ctx, EntityRecord it) =>
+        static void SelectEntityHandler(ModelState<EntitiesViewModel> ctx, EntityRecord? it)
+        {
+            if (ctx.State!.Entities.Count == 0)
+                ctx.State!.FillView( EditorApi.FetchEntityView);
+
             ctx.State!.FillData(it, in EditorApi.UpdateEntityData);
+        }
 
         static void UpdateEntityHandler(ModelState<EntitiesViewModel> ctx, EntityRecord it)
         {
@@ -89,7 +109,6 @@ internal static class EditorModelManager
         }
     }
 
-
     private static void RegisterCameraState()
     {
         CameraState = ModelState<CameraViewModel>
@@ -97,7 +116,8 @@ internal static class EditorModelManager
             .OnEnter(FetchCameraDataHandler)
             .OnRefresh(FetchCameraDataHandler)
             .OnLeave(static (ctx, it) => { })
-            .RegisterEventNoOp(EventKey.SelectionUpdated, WriteCameraDataHandler)
+            .RegisterEmptyEvent(EventKey.SelectionUpdated, WriteCameraDataHandler)
+            .KeepAlive()
             .Build();
 
         return;
@@ -120,7 +140,7 @@ internal static class EditorModelManager
             .OnRefresh(UpdateData)
             .OnLeave(static (ctx, it) => ctx.ResetState())
             .RegisterEvent<WorldParamSelection>(EventKey.SelectionChanged, SelectionChangeHandler)
-            .RegisterEventNoOp(EventKey.SelectionUpdated, SelectionUpdateHandler)
+            .RegisterEmptyEvent(EventKey.SelectionUpdated, SelectionUpdateHandler)
             .Build();
         return;
 

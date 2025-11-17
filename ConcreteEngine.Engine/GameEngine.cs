@@ -215,7 +215,7 @@ public sealed class GameEngine : IDisposable
 
         _world?.ProcessActions();
 
-        _engineGateway.Update(dt);
+        _engineGateway.UpdateEditor(dt);
 
         _timeHub.AdvanceTick(dt);
 

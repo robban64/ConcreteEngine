@@ -112,18 +112,18 @@ public sealed class Demo3DScene : GameScene
 
         _spawner.PlaceTreesBasic(20,
         [
-            new ScenePlacement(treeMesh.ToBaseDrawInfo(), treeMatTag),
-            new ScenePlacement(treeMesh1.ToBaseDrawInfo(), birchMatTag),
-            new ScenePlacement(treeMesh2.ToBaseDrawInfo(), birchMatTag)
+            new ScenePlacement(treeMesh.ToBaseDrawInfo(),treeMesh.Bounds, treeMatTag),
+            new ScenePlacement(treeMesh1.ToBaseDrawInfo(),treeMesh1.Bounds, birchMatTag),
+            new ScenePlacement(treeMesh2.ToBaseDrawInfo(),treeMesh2.Bounds, birchMatTag)
         ]);
 
         _spawner.PlaceGroundRocksBasic(90,
             [
-                new ScenePlacement(rockMesh.ToBaseDrawInfo(), rockMat1Tag, 0.5f),
-                new ScenePlacement(rock2Mesh.ToBaseDrawInfo(), rockMat2Tag, 0.6f)
+                new ScenePlacement(rockMesh.ToBaseDrawInfo(),rockMesh.Bounds, rockMat1Tag, 0.5f),
+                new ScenePlacement(rock2Mesh.ToBaseDrawInfo(),rock2Mesh.Bounds, rockMat2Tag, 0.6f)
             ],
             intensity: 0.5f);
-        _spawner.PlacePropsRingBasic(12, [new ScenePlacement(boatMesh.ToBaseDrawInfo(), boatMatTag)]);
+        _spawner.PlacePropsRingBasic(12, [new ScenePlacement(boatMesh.ToBaseDrawInfo(), boatMesh.Bounds, boatMatTag)]);
 
         float half = 256 / 2f;
 

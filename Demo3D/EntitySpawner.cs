@@ -1,6 +1,7 @@
 #region
 
 using System.Numerics;
+using ConcreteEngine.Common.Numerics;
 using ConcreteEngine.Engine.Assets.Meshes;
 using ConcreteEngine.Engine.Worlds;
 using ConcreteEngine.Engine.Worlds.Data;
@@ -10,7 +11,7 @@ using ConcreteEngine.Engine.Worlds.Entities;
 
 namespace Demo3D;
 
-public readonly record struct ScenePlacement(ModelBaseDrawInfo ModelInfo, MaterialTag Mat, float Offset = 0f);
+public readonly record struct ScenePlacement(ModelBaseDrawInfo ModelInfo, in BoundingBox Bounds, MaterialTag Mat, float Offset = 0f);
 
 public sealed class EntitySpawner(IWorld world, float size = 256f, float margin = 4f)
 {
@@ -28,6 +29,7 @@ public sealed class EntitySpawner(IWorld world, float size = 256f, float margin 
         var key = world.EntityMaterials.Add(sp.Mat);
         world.Entities.Models.Add(entityId, new ModelComponent(sp.ModelInfo.Model, sp.ModelInfo.DrawCount, key));
         world.Entities.Transforms.Add(entityId, transform);
+        world.Entities.BoundingBoxes.Add(entityId, new BoxComponent(sp.Bounds));
 
         return entityId;
     }

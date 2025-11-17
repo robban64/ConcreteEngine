@@ -1,5 +1,6 @@
 #region
 
+using System.Diagnostics;
 using System.Diagnostics.CodeAnalysis;
 using ConcreteEngine.Common;
 using ConcreteEngine.Engine.Assets.Descriptors;

@@ -41,10 +41,20 @@ internal struct MeshPartImportResult(
     public MeshCreationInfo CreationInfo = creationInfo;
     public BoundingBox Bounds = bounds;
 }
-
+/*
 internal sealed class ModelImportResult
 {
     public List<string> PartNames { get; } = new(4);
     public int Parts { get; set; }
     public BoundingBox Bounds { get; set; } 
+}*/
+
+internal readonly ref struct ModelImportResult(ReadOnlySpan<string> partNames, ReadOnlySpan<MeshPartImportResult> parts, ReadOnlySpan<Matrix4x4> partTransforms,  BoundingBox bounds)
+{
+    public readonly ReadOnlySpan<string> PartNames  = partNames;
+    public readonly ReadOnlySpan<MeshPartImportResult> Parts  = parts;
+    public readonly ReadOnlySpan<Matrix4x4> PartTransforms = partTransforms;
+    public readonly BoundingBox Bounds  =  bounds;
+    
+    public int Count =>  PartNames.Length;
 }

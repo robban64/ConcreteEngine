@@ -40,19 +40,19 @@ internal sealed class ModelLoaderModule
     {
         var refId = AssetRef<Model>.Make(assetId);
 
-        fileSpecs = _loader.LoadMesh(manifest, out var parts, out var partTransforms, out var modelResult);
+        fileSpecs = _loader.LoadMesh(manifest, out var modelResult);
 
-        var meshParts = new ModelMesh[modelResult.Parts];
+        var meshParts = new ModelMesh[modelResult.Count];
         var drawCount = 0;
         for (int i = 0; i < meshParts.Length; i++)
         {
-            ref readonly var info = ref parts[i];
+            ref readonly var part = ref modelResult.Parts[i];
 
-            var meshInfo = info.CreationInfo;
-            meshParts[i] = new ModelMesh(refId, modelResult.PartNames[i], meshInfo.MeshId, info.MaterialSlot,
-                meshInfo.DrawCount, in partTransforms[i]);
+            var meshInfo = part.CreationInfo;
+            meshParts[i] = new ModelMesh(refId, modelResult.PartNames[i], meshInfo.MeshId, part.MaterialSlot,
+                meshInfo.DrawCount, in modelResult.PartTransforms[i]);
 
-            drawCount += info.CreationInfo.DrawCount;
+            drawCount += part.CreationInfo.DrawCount;
         }
 
         return new Model
@@ -86,6 +86,6 @@ internal sealed class ModelLoaderModule
             )
         );
 
-        return _uploader.UploadMesh(payload);
+        return _uploader.UploadMesh(in payload);
     }
 }

@@ -38,8 +38,8 @@ internal sealed class MeshImporter
 
     private readonly MeshPartImportResult[] _parts = new MeshPartImportResult[8];
     private readonly Matrix4x4[] _partTransforms = new Matrix4x4[8];
+    private readonly List<string> _names = new(8);
 
-    private ModelImportResult _result = new();
 
     private readonly Func<MeshImportData, MeshCreationInfo> _onProcess;
 
@@ -51,8 +51,9 @@ internal sealed class MeshImporter
 
     public void ClearCache()
     {
-        _result = null!;
 
+        _names.Clear();
+        
         Array.Resize(ref _verts, 0);
         Array.Resize(ref _indices, 0);
 
@@ -60,8 +61,7 @@ internal sealed class MeshImporter
         _assimp = null;
     }
 
-    public unsafe ModelImportResult ImportMesh(string path, out Span<MeshPartImportResult> parts,
-        out Span<Matrix4x4> partTransforms)
+    public unsafe ModelImportResult ImportMesh(string path)
     {
         if (_assimp == null)
             _assimp = Assimp.GetApi();
@@ -73,19 +73,21 @@ internal sealed class MeshImporter
             var error = _assimp.GetErrorStringS();
             throw new InvalidOperationException(error);
         }
+        
+        //cleanup
+        _names.Clear();
+        
+        TraverseNode(scene->MRootNode, scene, 0, Matrix4x4.Identity);
 
-        _result.PartNames.Clear();
-        TraverseNode(scene->MRootNode, scene, 0, Matrix4x4.Identity, _parts, _partTransforms, _result.PartNames);
-        _result.Parts = _result.PartNames.Count;
+        var count = _names.Count;
+        InvalidOpThrower.ThrowIf(count > _parts.Length, nameof(_parts));
+        InvalidOpThrower.ThrowIf(count > _partTransforms.Length, nameof(_partTransforms));
 
-        InvalidOpThrower.ThrowIf(_result.Parts > _parts.Length, nameof(_result.Parts));
-        InvalidOpThrower.ThrowIf(_result.Parts != _result.PartNames.Count, nameof(_result.Parts));
-
-        parts = _parts.AsSpan(0, _result.Parts);
-        partTransforms = _partTransforms.AsSpan(0, _result.Parts);
+        var parts = _parts.AsSpan(0, count);
+        var partTransforms = _partTransforms.AsSpan(0, count);
 
         BoundingBox bounds = default;
-        for (var i = 0; i < _result.Parts; i++)
+        for (var i = 0; i < count; i++)
         {
             if (i == 0)
             {
@@ -96,12 +98,10 @@ internal sealed class MeshImporter
             BoundingBox.Merge(in bounds, in parts[i].Bounds, out bounds);
         }
 
-        _result.Bounds = bounds;
-        return _result;
+        return new ModelImportResult(CollectionsMarshal.AsSpan(_names), parts, partTransforms, bounds);
     }
 
-    private unsafe void TraverseNode(AssimpNode* node, AssimpScene* scene, int index, in Matrix4x4 parent,
-        Span<MeshPartImportResult> parts, Span<Matrix4x4> partTransforms, List<string> names)
+    private unsafe void TraverseNode(AssimpNode* node, AssimpScene* scene, int index, in Matrix4x4 parent)
     {
         var current = node->MTransformation * parent;
         for (var i = 0; i < node->MNumMeshes; i++)
@@ -112,12 +112,12 @@ internal sealed class MeshImporter
 
             BoundingBox.FromPoints(new Span<Vector3>(mesh->MVertices, (int)mesh->MNumVertices), out var box);
 
-            ref var it = ref parts[index + i];
+            ref var it = ref _parts[index + i];
             it.MaterialSlot = (int)scene->MMeshes[i]->MMaterialIndex;
             it.CreationInfo = meshData;
             it.Bounds = box;
-            partTransforms[i] = current;
-            names.Add(mesh->MName.AsString);
+            _partTransforms[i] = current;
+            _names.Add(mesh->MName.AsString);
         }
 
         var idx = index + (int)node->MNumMeshes;
@@ -125,7 +125,7 @@ internal sealed class MeshImporter
         // Process children
         for (uint i = 0; i < node->MNumChildren; i++)
         {
-            TraverseNode(node->MChildren[i], scene, idx, in current, parts, partTransforms, names);
+            TraverseNode(node->MChildren[i], scene, idx, in current);
         }
     }
 
@@ -143,9 +143,9 @@ internal sealed class MeshImporter
         {
             ref var v = ref Unsafe.Add(ref v0, i);
             v.Position = mesh->MVertices[i];
-            v.Normal = mesh->MNormals != null ? mesh->MNormals[i] : default;
-            v.Tangent = mesh->MTangents != null ? mesh->MTangents[i] : default;
-            v.TexCoords = mesh->MTextureCoords[0] != null ? v.TexCoords = mesh->MTextureCoords[0][i].ToVec2() : default;
+            v.Normal = mesh->MNormals[i];
+            v.Tangent = mesh->MTangents[i];
+            v.TexCoords = v.TexCoords = mesh->MTextureCoords[0][i].ToVec2();
         }
 
         var indices = _indices.AsSpan(0, indexCount);

@@ -19,14 +19,14 @@ internal sealed class MeshLoader
         _meshImporter = new MeshImporter(onProcess);
     }
 
-    public AssetFileSpec[] LoadMesh(MeshDescriptor record, out Span<MeshPartImportResult> parts, out Span<Matrix4x4> partTransforms, out ModelImportResult modelResult)
+    public AssetFileSpec[] LoadMesh(MeshDescriptor record, out ModelImportResult modelResult)
     {
         var path = AssetPaths.GetMeshPath(record.Filename);
 
         var fi = new FileInfo(path);
         if (!fi.Exists) throw new FileNotFoundException("File not found.", path);
 
-        modelResult = _meshImporter.ImportMesh(path, out parts, out partTransforms);
+        modelResult = _meshImporter.ImportMesh(path);
 
         return
         [

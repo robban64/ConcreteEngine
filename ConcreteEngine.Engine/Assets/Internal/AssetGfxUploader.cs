@@ -24,12 +24,12 @@ internal sealed class AssetGfxUploader
         _shaders = gfx.Shaders;
     }
 
-    public MeshCreationInfo UploadMesh(MeshUploadPayload payload)
+    public MeshCreationInfo UploadMesh(in MeshUploadPayload payload)
     {
         var vSpan = payload.Vertices;
         var iSpan = payload.Indices;
 
-        var builder = _meshes.StartUploadBuilder(payload.Properties);
+        var builder = _meshes.StartUploadBuilder(in payload.Properties);
         builder.UploadVertices(vSpan, BufferUsage.StaticDraw, BufferStorage.Static, BufferAccess.None);
         builder.UploadIndices(iSpan, BufferUsage.StaticDraw, BufferStorage.Static, BufferAccess.None);
         builder.SetAttributeSpan(payload.Attributes);

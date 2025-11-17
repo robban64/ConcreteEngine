@@ -36,7 +36,7 @@ internal sealed class MeshImporter
     private Vertex3D[] _verts = new Vertex3D[2048];
     private uint[] _indices = new uint[2048];
 
-    private readonly MeshImportResult[] _parts = new MeshImportResult[8];
+    private readonly MeshPartImportResult[] _parts = new MeshPartImportResult[8];
     private readonly Matrix4x4[] _partTransforms = new Matrix4x4[8];
 
     private ModelImportResult _result = new();
@@ -60,7 +60,7 @@ internal sealed class MeshImporter
         _assimp = null;
     }
 
-    public unsafe ModelImportResult ImportMesh(string path, out Span<MeshImportResult> parts,
+    public unsafe ModelImportResult ImportMesh(string path, out Span<MeshPartImportResult> parts,
         out Span<Matrix4x4> partTransforms)
     {
         if (_assimp == null)
@@ -101,7 +101,7 @@ internal sealed class MeshImporter
     }
 
     private unsafe void TraverseNode(AssimpNode* node, AssimpScene* scene, int index, in Matrix4x4 parent,
-        Span<MeshImportResult> parts, Span<Matrix4x4> partTransforms, List<string> names)
+        Span<MeshPartImportResult> parts, Span<Matrix4x4> partTransforms, List<string> names)
     {
         var current = node->MTransformation * parent;
         for (var i = 0; i < node->MNumMeshes; i++)

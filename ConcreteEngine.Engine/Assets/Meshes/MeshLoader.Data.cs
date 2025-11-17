@@ -32,7 +32,7 @@ internal readonly ref struct MeshUploadPayload(
 
 internal readonly record struct MeshCreationInfo(MeshId MeshId, int DrawCount);
 
-internal struct MeshImportResult(
+internal struct MeshPartImportResult(
     int materialSlot,
     MeshCreationInfo creationInfo,
     in BoundingBox bounds)
@@ -47,15 +47,4 @@ internal sealed class ModelImportResult
     public List<string> PartNames { get; } = new(4);
     public int Parts { get; set; }
     public BoundingBox Bounds { get; set; } 
-}
-
-internal sealed record MeshPartImportResult(
-    string Name,
-    int MaterialSlot,
-    MeshCreationInfo Info,
-    in BoundingBox Box,
-    in Matrix4x4 Transform)
-{
-    private readonly Matrix4x4 _transform = Transform;
-    public ref readonly Matrix4x4 Transform => ref _transform;
 }

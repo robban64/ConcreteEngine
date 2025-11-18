@@ -1,6 +1,8 @@
 #region
 
 using System.Numerics;
+using ConcreteEngine.Common.Numerics;
+using ConcreteEngine.Common.Numerics.Maths;
 using ConcreteEngine.Common.Time;
 using ConcreteEngine.Editor.Data;
 using ConcreteEngine.Editor.Definitions;
@@ -21,7 +23,8 @@ internal static class EditorService
 
     private static EditorModeState ModeState => StateContext.ModeState;
 
-
+    private static Vector2 _prevMousePos;
+    
     private static bool IsMouseOverEditor()
     {
         var io = ImGui.GetIO();
@@ -31,19 +34,36 @@ internal static class EditorService
         return false;
     }
 
-    private static void ProcessInput()
+    private static void UpdateEditorInput(float delta)
     {
-        if (IsMouseOverEditor()) return;
-        if (ImGui.IsMouseClicked(ImGuiMouseButton.Left))
+        var mousePos = ImGui.GetMousePos();
+        var mouseDelta = mousePos - _prevMousePos;
+
+        var entityModel = ModelManager.EntitiesState;
+        var entityState = entityModel.State;
+        if (ImGui.IsMouseDragging(ImGuiMouseButton.Left) && entityState!.Data.EntityId > 0)
         {
-            ModelManager.EntitiesState.TriggerEvent(EventKey.MouseClick,
-                new EditorMouseSelectPayload(0, ImGui.GetMousePos()));
+            var d = Vector2.Abs(mouseDelta);
+            if (d.X > 0 || d.Y > 0)
+            {
+                ref var data = ref entityState.DataState;
+                data.Transform.Translation.X += mouseDelta.X * delta;
+                data.Transform.Translation.Z += mouseDelta.Y * delta;
+                entityState.WriteData(in EditorApi.EntityApi);
+            }
         }
+        else if (ImGui.IsMouseClicked(ImGuiMouseButton.Left))
+        {
+            entityModel.TriggerEvent(EventKey.MouseClick, new EditorMouseSelectPayload(0, mousePos));
+        }
+
+
+        _prevMousePos = mousePos;
     }
 
-    internal static void Render(bool blockInput)
+    internal static void Render(float delta, bool blockInput)
     {
-        if (!blockInput) ProcessInput();
+        if (!blockInput && !IsMouseOverEditor()) UpdateEditorInput(delta);
 
         StateContext.CommitState();
         GuiTheme.RightSidebarExpanded = ModeState.IsEditorState;
@@ -74,13 +94,6 @@ internal static class EditorService
 
     private static void CheckHotkeys()
     {
-        if (ImGui.IsKeyPressed(ImGuiKey.C))
-        {
-            var selected = EditorModelManager.EntitiesState.State?.GetSelectedEntity();
-            if (selected is not null) Console.WriteLine(selected.EntityId + " " + selected.ComponentCount);
-            else Console.WriteLine("No selected");
-        }
-
         if (ImGui.IsKeyPressed(ImGuiKey._1)) StateContext.ToggleLeftSidebar(LeftSidebarMode.Assets);
         else if (ImGui.IsKeyPressed(ImGuiKey._2)) StateContext.ToggleLeftSidebar(LeftSidebarMode.Entities);
         else if (ImGui.IsKeyPressed(ImGuiKey._3)) StateContext.ToggleRightSidebar(RightSidebarMode.Camera);

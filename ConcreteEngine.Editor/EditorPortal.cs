@@ -15,8 +15,6 @@ public sealed class EditorPortal : IDisposable
 {
     private readonly ImGuiController _controller;
 
-    private ImFontPtr _imFontPtr;
-
     public bool Initialized { get; private set; } = false;
 
     public EditorPortal(GL gl, IWindow window, IInputContext inputCtx)
@@ -42,7 +40,7 @@ public sealed class EditorPortal : IDisposable
     {
         if (!Initialized) return;
         _controller.Update(delta);
-        EditorService.Render(BlockInput());
+        EditorService.Render(delta, BlockInput());
         ImGui.Render();
     }
 
@@ -54,6 +52,7 @@ public sealed class EditorPortal : IDisposable
 
     //TODO proper input
 
+ 
     public bool BlockInput()
     {
         var io = ImGui.GetIO();
@@ -95,6 +94,5 @@ public sealed class EditorPortal : IDisposable
 
     public void Dispose()
     {
-        _imFontPtr.Destroy();
     }
 }

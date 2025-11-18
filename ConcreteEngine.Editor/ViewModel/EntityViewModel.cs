@@ -12,32 +12,42 @@ namespace ConcreteEngine.Editor.ViewModel;
 public sealed class EntitiesViewModel
 {
     public List<EntityRecord> Entities { get; set; } = [];
+    
+    public EntityRecord? SelectedEntity { get; private set; }
 
     private EntityDataPayload _data;
     private EntityDataState _state;
 
-    public ref readonly EntityDataPayload Data => ref _data;
+    public ref EntityDataPayload Data => ref _data;
     internal ref EntityDataState DataState => ref _state;
 
-    public EntityRecord? GetSelectedEntity()
-    {
-        if (_data.EntityId <= 0 || Entities.Count == 0) return null;
-        var index = SortMethod.BinarySearchInt(Entities, _data.EntityId);
-        return index < 0 ? null : Entities[index];
-    }
 
-    public EntityRecord? GetEntity(int entityId)
+    public EntityRecord? FindEntity(int entityId)
     {
         if (Entities.Count == 0) return null;
+        
+        if(entityId < Entities.Count && Entities[entityId].EntityId == entityId) 
+            return Entities[entityId];
+        
         var index = SortMethod.BinarySearchInt(Entities, entityId);
         return index < 0 ? null : Entities[index];
     }
 
-    public void ClearDataState()
+    public void SetSelectedEntity(int entityId)
     {
-        _data = default;
-        _state = default;
+        if (entityId == 0)
+        {
+            SelectedEntity = null;
+            RefreshData();
+            return;
+        }
+        
+        if(SelectedEntity?.EntityId == entityId) return;
+        
+        SelectedEntity = FindEntity(entityId);
+        RefreshData();
     }
+
 
     public void FillView(ApiModelRequestDel<EntityRequestBody, List<EntityRecord>> api)
     {
@@ -45,51 +55,35 @@ public sealed class EntitiesViewModel
     }
 
 
-    public void FillData(EntityRecord? entity, in ApiDataRefRequest<EntityDataPayload> api)
+    public void FillData(in ApiDataRefRequest<EntityDataPayload> api)
     {
-        _data.EntityId = entity?.EntityId ?? 0;
         api.FillData(_data.EntityId, ref _data);
-
-        if (entity is null)
-        {
-            _state = default;
-            _data = default;
-            return;
-        }
-
         _state.ModelId = _data.Model.ModelId;
         _state.MaterialTagKey = _data.Model.MaterialTagKey;
         _state.Transform.From(in _data.Transform);
     }
 
-    public void FillData(in ApiDataRefRequest<EntityDataPayload> api)
+    public void WriteData(in ApiDataRefRequest<EntityDataPayload> api)
     {
-        if (_data.EntityId == 0)
+        RefreshData();
+        var currentGen = SelectedEntity?.Generation ?? 0;
+        var responseGen = api.WriteData(currentGen, ref _data);
+    }
+    
+    private void RefreshData()
+    {
+        if (SelectedEntity is null)
         {
-            FillData(null, in api);
+            _state = default;
+            _data = default;
             return;
         }
-
-        var idx = SortMethod.BinarySearchInt(Entities, _data.EntityId);
-        InvalidOpThrower.ThrowIf(idx < 0, nameof(_data.EntityId));
-        var entity = Entities[idx];
-        FillData(entity, in api);
-    }
-
-
-    public void WriteData(EntityRecord record, in ApiDataRefRequest<EntityDataPayload> api)
-    {
-        record.Generation++;
-        UpdateDataFromState(record);
-        api.WriteData(record.Generation, ref _data);
-    }
-
-    private void UpdateDataFromState(EntityRecord record)
-    {
+        
         _state.Transform.Fill(out var transform);
-        _data.EntityId = record.EntityId;
+        _data.EntityId = SelectedEntity.EntityId;
         _data.Transform = transform;
     }
+
 }
 
 public sealed class EntityRecord(

@@ -103,8 +103,6 @@ internal sealed class ModelState<T> : IModelState where T : class
     public void EnqueueRefreshNextFrame()
     {
         if (!Active) return;
-
-        if (PendingRefresh) return;
         PendingRefresh = true;
     }
 

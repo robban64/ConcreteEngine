@@ -201,11 +201,11 @@ internal sealed class EngineGateway : IDisposable
             
             EditorApi.SendClickRequest = EngineDataProvider.OnEditorClick;
 
-            EditorApi.FillEntityData = new ApiDataRefRequest<EntityDataPayload>(
+            EditorApi.EntityApi = new ApiDataRefRequest<EntityDataPayload>(
                 &EngineDataProvider.FillEntityData, &EngineDataProvider.WriteToEntity);
-            EditorApi.FillCameraData = new ApiDataRefRequest<CameraEditorPayload>(
+            EditorApi.CameraApi = new ApiDataRefRequest<CameraEditorPayload>(
                 &EngineDataProvider.FillCameraData, &EngineDataProvider.WriteCameraData);
-            EditorApi.FillWorldParams = new ApiDataRefRequest<WorldParamState>(
+            EditorApi.WorldParamsApi = new ApiDataRefRequest<WorldParamState>(
                 &EngineDataProvider.FillWorldParams, &EngineDataProvider.WriteWorldParams);
             
         }

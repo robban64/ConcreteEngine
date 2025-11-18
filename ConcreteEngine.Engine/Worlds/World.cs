@@ -40,8 +40,8 @@ public sealed class World : IWorld
     public WorldEntities Entities { get; }
     public WorldRaycaster Raycast { get; } 
 
-    private WorldSkybox _sky = null!;
-    private WorldTerrain _terrain = null!;
+    private readonly WorldSkybox _sky;
+    private readonly WorldTerrain _terrain;
 
     private MeshTable _meshTable = null!;
     private MaterialTable _materialTable = null!;
@@ -52,7 +52,10 @@ public sealed class World : IWorld
         Camera = new Camera3D();
         WorldRenderParams = new WorldRenderParams();
         Entities = new WorldEntities();
-        Raycast = new WorldRaycaster(Camera, Entities);
+        _sky = new WorldSkybox();
+        _terrain = new WorldTerrain();
+
+        Raycast = new WorldRaycaster(Camera, Entities, _terrain);
     }
 
     public WorldSkybox Sky => _sky;
@@ -69,8 +72,7 @@ public sealed class World : IWorld
         _meshTable = meshTable;
         _materialTable = materialTable;
 
-        _terrain = new WorldTerrain(batchers.Get<TerrainBatcher>());
-        _sky = new WorldSkybox();
+        _terrain.Terrain = batchers.Get<TerrainBatcher>();
 
         Entities.AttachRender(meshTable, materialTable);
         Terrain.AttachModelRegistry(meshTable);

@@ -28,7 +28,7 @@ public delegate CommandResponse EditorDataCommandDel<TRequest>(in TRequest reque
 public delegate TResponse? ApiModelRequestDel<in TRequest, out TResponse>(TRequest request)
     where TRequest : class where TResponse : class;
 
-public delegate void ApiSimpleDataRequestDel<TRequest>(in TRequest request, out TRequest response)
+public delegate void ApiDataRequest<TRequest>(in TRequest request, out TRequest response)
     where TRequest : unmanaged;
 
 public delegate long ApiDataRequestDel<TRequest>(long version, in TRequest request, out TRequest response)

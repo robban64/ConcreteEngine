@@ -70,7 +70,7 @@ internal static class EditorModelManager
             .OnLeave(static (ctx, _) => ctx.TriggerEvent<EntityRecord?>(EventKey.SelectionChanged, null))
             .RegisterEvent<EntityRecord?>(EventKey.SelectionChanged, OnEntitySelected)
             .RegisterEvent<EntityRecord>(EventKey.SelectionUpdated, OnEntityUpdated)
-            .RegisterEvent<EditorMouseSelectPayload>(EventKey.MouseClick, OnClickEvent)
+            .RegisterEvent<EditorWorldMouseData>(EventKey.MouseClick, OnClickEvent)
             .KeepAlive()
             .Build();
 
@@ -104,7 +104,7 @@ internal static class EditorModelManager
             ctx.EnqueueRefreshNextFrame();
         }
 
-        static void OnClickEvent(ModelState<EntitiesViewModel> ctx, EditorMouseSelectPayload payload)
+        static void OnClickEvent(ModelState<EntitiesViewModel> ctx, EditorWorldMouseData payload)
         {
             EditorApi.SendClickRequest(in payload, out var response);
             var state = ctx.State!;

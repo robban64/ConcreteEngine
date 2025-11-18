@@ -83,11 +83,22 @@ internal static class EngineDataProvider
         return result;
     }
 
-    public static void OnEditorClick(in EditorMouseSelectPayload request, out EditorMouseSelectPayload response)
+    public static void OnEditorClick(in EditorWorldMouseData request, out EditorWorldMouseData response)
     {
-        var entity = _world.Raycast.GetEntityByCameraRay(request.MousePosition, out var distance);
-        response = new EditorMouseSelectPayload(entity.Id, request.MousePosition);
-
+        var raycaster = _world.Raycast;
+        switch (request.Action)
+        {
+            case EditorWorldMouseAction.GetEntity:
+                var entity = raycaster.GetEntityByCameraRay(request.MousePosition, out var transform, out var distance);
+                response = request with { EntityId = entity, HitBox = request.HitBox };
+                break;
+            case EditorWorldMouseAction.TerrainLocation:
+                raycaster.GetPointOnTerrain(request.MousePosition, out var worldCoords);
+                response = request with { WorldPosition = worldCoords };
+                break;
+            default:
+                throw new ArgumentOutOfRangeException();
+        }
     }
 
     public static long FillCameraData(ApiWriteRequestBody<CameraEditorPayload> payload)

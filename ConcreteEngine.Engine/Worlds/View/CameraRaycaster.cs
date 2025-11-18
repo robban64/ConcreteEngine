@@ -11,12 +11,12 @@ public sealed class CameraRaycaster
 
     internal long Generation { get; private set; }
 
-    public Ray CreateRayFrom(Vector2 screenCoord)
+    public void CreateRayFrom(Vector2 screenCoord, out Ray ray)
     {
         var ndc = CoordinateMath.ToNdcCoords(screenCoord, _viewport);
         UnProject(new Vector3(ndc, -1.0f), in _invViewProjection, out var p1); // near
         UnProject(new Vector3(ndc, 1.0f), in _invViewProjection, out var p2); // far
-        return Ray.FromTwoPoints(in p1, in p2);
+        Ray.FromTwoPoints(in p1, in p2, out ray);
     }
 
     internal void UpdateFromCamera(long generation, Size2D viewport, in Matrix4x4 view, in Matrix4x4 projection)

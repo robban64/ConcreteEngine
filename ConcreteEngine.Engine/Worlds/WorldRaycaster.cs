@@ -11,16 +11,25 @@ public sealed class WorldRaycaster
 {
     private readonly Camera3D _camera;
     private readonly WorldEntities _entities;
+    private readonly WorldTerrain _terrain;
 
-    internal WorldRaycaster(Camera3D camera, WorldEntities entities)
+    internal WorldRaycaster(Camera3D camera, WorldEntities entities, WorldTerrain terrain)
     {
         _camera = camera;
         _entities = entities;
+        _terrain = terrain;
     }
 
-    public EntityId GetEntityByCameraRay(Vector2 screenCoords, out float distance)
+    public bool GetPointOnTerrain(Vector2 screenCoords, out Vector3 worldCoords)
     {
-        var ray = _camera.Raycaster.CreateRayFrom(screenCoords);
+        _camera.Raycaster.CreateRayFrom(screenCoords, out var ray);
+        worldCoords = _terrain.GetPointOnTerrainPlane(in ray);
+        return true;
+    }
+
+    public EntityId GetEntityByCameraRay(Vector2 screenCoords, out BoundingBox entityBounds, out float distance)
+    {
+        _camera.Raycaster.CreateRayFrom(screenCoords, out var ray);
 
         Span<Vector3> corners = stackalloc Vector3[8];
 
@@ -47,10 +56,12 @@ public sealed class WorldRaycaster
             BoundingBox.FromAxisBox(in axisBounds, out finalBounds);
             if (ray.IntersectsWith(in finalBounds, out distance))
             {
+                entityBounds = finalBounds;
                 return it.Entity;
             }
         }
-
+        
+        entityBounds = default;
         return default;
     }
 }

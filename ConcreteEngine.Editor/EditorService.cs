@@ -24,7 +24,7 @@ internal static class EditorService
     private static EditorModeState ModeState => StateContext.ModeState;
 
     private static Vector2 _prevMousePos;
-    
+
     private static bool IsMouseOverEditor()
     {
         var io = ImGui.GetIO();
@@ -46,15 +46,21 @@ internal static class EditorService
             var d = Vector2.Abs(mouseDelta);
             if (d.X > 0 || d.Y > 0)
             {
-                ref var data = ref entityState.DataState;
-                data.Transform.Translation.X += mouseDelta.X * delta;
-                data.Transform.Translation.Z += mouseDelta.Y * delta;
-                entityState.WriteData(in EditorApi.EntityApi);
+                var payload = new EditorWorldMouseData(EditorWorldMouseAction.TerrainLocation,  mousePos);
+                EditorApi.SendClickRequest(in payload, out payload);
+                if (payload.WorldPosition != default)
+                {
+                    ref var transform = ref entityState.DataState.Transform;
+                    transform.Translation = payload.WorldPosition;
+                    entityModel.State!.WriteData(in EditorApi.EntityApi);
+                } 
             }
+
         }
         else if (ImGui.IsMouseClicked(ImGuiMouseButton.Left))
         {
-            entityModel.TriggerEvent(EventKey.MouseClick, new EditorMouseSelectPayload(0, mousePos));
+            entityModel.TriggerEvent(EventKey.MouseClick, new EditorWorldMouseData
+                { Action = EditorWorldMouseAction.GetEntity, EntityId = 0, MousePosition = mousePos });
         }
 
 

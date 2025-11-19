@@ -116,7 +116,6 @@ internal sealed class ModelState<T> : IModelState where T : class
             return false;
         }
 
-        _onRefresh!(this, State!);
         InvokeAction(TransitionKey.Refresh);
         PendingRefresh = false;
         return true;

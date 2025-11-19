@@ -70,7 +70,6 @@ internal static class EditorModelManager
             .OnLeave(static (ctx, _) => ctx.TriggerEvent<EntityRecord?>(EventKey.SelectionChanged, null))
             .RegisterEvent<EntityRecord?>(EventKey.SelectionChanged, OnEntitySelected)
             .RegisterEvent<EntityRecord>(EventKey.SelectionUpdated, OnEntityUpdated)
-            .RegisterEvent<EditorWorldMouseData>(EventKey.MouseSelectEntity, OnClickEvent)
             .KeepAlive()
             .Build();
 
@@ -85,8 +84,8 @@ internal static class EditorModelManager
                 return;
             }
 
-          //  if (state.Data.EntityId == 0)
-                //state.SetSelectedEntity(0);
+            //  if (state.Data.EntityId == 0)
+            //state.SetSelectedEntity(0);
 
             state.FillData(in EditorApi.EntityApi);
         }
@@ -102,27 +101,6 @@ internal static class EditorModelManager
             ctx.State!.SetSelectedEntity(it.EntityId);
             ctx.State!.WriteData(in EditorApi.EntityApi);
             ctx.EnqueueRefreshNextFrame();
-        }
-
-        static void OnClickEvent(ModelState<EntitiesViewModel> ctx, EditorWorldMouseData payload)
-        {
-            EditorApi.SendClickRequest(in payload, out var response);
-            var state = ctx.State!;
-
-            if (response.EntityId == 0)
-            {
-                if (state.SelectedEntity is null) return;
-                state.SetSelectedEntity(0);
-                ctx.EnqueueRefreshNextFrame();
-            }
-            else if (response.EntityId == state.Data.EntityId)
-            {
-                //state.FillData(state.GetSelectedEntity(), in EditorApi.FillEntityData);
-            }
-            else
-            {
-                ctx.TriggerEvent(EventKey.SelectionChanged, state.FindEntity(response.EntityId));
-            }
         }
 
  

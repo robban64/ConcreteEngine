@@ -33,6 +33,8 @@ public sealed class EditorPortal : IDisposable
         Initialized = true;
     }
 
+    public bool BlockInput() => EditorInput.BlockInput();
+
     public void AddLog(string? msg) => ConsoleService.SendLog(msg);
 
 
@@ -40,7 +42,7 @@ public sealed class EditorPortal : IDisposable
     {
         if (!Initialized) return;
         _controller.Update(delta);
-        EditorService.Render(delta, BlockInput());
+        EditorService.Render(delta, EditorInput.BlockInput());
         ImGui.Render();
     }
 
@@ -50,47 +52,6 @@ public sealed class EditorPortal : IDisposable
         _controller.Render();
     }
 
-    //TODO proper input
-
- 
-    public bool BlockInput()
-    {
-        var io = ImGui.GetIO();
-
-        var blockKeyboard = io.WantTextInput || io.WantCaptureKeyboard || ImGui.IsAnyItemActive() ||
-                            ImGui.IsAnyItemFocused();
-
-        //var anyMouseDown = io.MouseDown[0] || io.MouseDown[1] || io.MouseDown[2] || io.MouseDown[3] || io.MouseDown[4];
-        var overUi = ImGui.IsAnyItemHovered() || ImGui.IsAnyItemActive() ||
-                     ImGui.IsWindowHovered(ImGuiHoveredFlags.AnyWindow);
-
-        var blockMouse = ImGui.IsAnyMouseDown() && overUi;
-
-        if (ImGui.IsPopupOpen(null, ImGuiPopupFlags.AnyPopupId))
-            blockMouse |= ImGui.IsWindowHovered(ImGuiHoveredFlags.AnyWindow);
-
-        return blockKeyboard || blockMouse;
-    }
-
-    /*
-    public bool BlockInput()
-    {
-        var io = ImGui.GetIO();
-
-        var blockKeyboard = io.WantCaptureKeyboard || io.WantTextInput || ImGui.IsAnyItemActive() ||
-                            ImGui.IsAnyItemFocused();
-
-        if (io.WantCaptureMouse)
-            return blockKeyboard || true;
-
-        var anyMouseDown = io.MouseDown[0] || io.MouseDown[1] || io.MouseDown[2];
-        var mouseOverAnyWindow = ImGui.IsWindowHovered(ImGuiHoveredFlags.AnyWindow);
-
-        var blockMouse = anyMouseDown && mouseOverAnyWindow;
-
-        return blockKeyboard || blockMouse;
-    }
-    */
 
     public void Dispose()
     {

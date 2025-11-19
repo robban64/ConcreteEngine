@@ -24,7 +24,7 @@ public sealed class EntitiesViewModel
 
     public EntityRecord? FindEntity(int entityId)
     {
-        if (Entities.Count == 0) return null;
+        if (Entities.Count == 0 || entityId == 0) return null;
         
         if(entityId < Entities.Count && Entities[entityId].EntityId == entityId) 
             return Entities[entityId];

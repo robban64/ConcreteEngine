@@ -89,8 +89,8 @@ public sealed class WorldTerrain
         float maxHeight = Terrain.MaxHeight;
         var size = Terrain.Dimension;
 
-        var n = new Vector3(0, 1, 0); 
-        var p0 = new Vector3(0, 0, 0); 
+        var n = Vector3.UnitY; 
+        Vector3 p0 = default; 
 
         var numerator = Vector3.Dot(p0 - ray.Position, n); 
         var denominator = Vector3.Dot(ray.Direction, n); 

@@ -122,15 +122,13 @@ internal static class EngineDataProvider
     {
         switch (request.Action)
         {
-            case EditorMouseAction.MouseSelectEntity:
-                var entityId = _interactionController.OnClick(request.MousePosition, out var bounds, out var distance);
-                response = request with { EntityId = entityId, HitBox = bounds };
-                break;
-            case EditorMouseAction.MouseDragEntityTerrain:
-                _interactionController.OnDragEntity(request.MousePosition);
+            case EditorMouseAction.SelectEntity:
                 response = request;
-                //var worldCoords = raycaster.GetPointOnTerrain(request.MousePosition, out var tHit);
-                //response = request with { WorldPosition = worldCoords, Ray = tHit};
+                response.EntityId = _interactionController.OnClick(request.MousePosition, out _, out _);
+                break;
+            case EditorMouseAction.DragEntityOverTerrain:
+                response = request;
+                response.EntityId = _interactionController.OnDragEntity(request.MousePosition);
                 break;
             default:
                 throw new ArgumentOutOfRangeException();

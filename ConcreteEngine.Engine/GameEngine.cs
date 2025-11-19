@@ -151,7 +151,7 @@ public sealed class GameEngine : IDisposable
         _worldRenderer.ExecuteFrame(out var gfxFrameResult);
         _renderFrameInfo.EndRenderFrame(gfxFrameResult);
 
-        _engineGateway.RenderMetricsUi();
+        _engineGateway.RenderEditor(in frameInfo);
     }
 
 /*

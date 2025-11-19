@@ -18,6 +18,4 @@ internal enum EventKey
     SelectionUpdated,
     SelectionAction,
     
-    MouseSelectEntity,
-    MouseDragEntityTerrain,
 }

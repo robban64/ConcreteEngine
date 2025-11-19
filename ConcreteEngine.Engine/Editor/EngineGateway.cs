@@ -1,6 +1,7 @@
 #region
 
 using ConcreteEngine.Engine.Editor.Controller;
+using ConcreteEngine.Renderer.State;
 
 #region
 
@@ -107,9 +108,10 @@ internal sealed class EngineGateway : IDisposable
         _editor.Update(delta);
     }
 
-    public void RenderMetricsUi()
+    public void RenderEditor(in RenderFrameInfo frameInfo)
     {
         if (!Enabled || !HasBoundEditor) return;
+        _apiContext.OnRenderFrame(in frameInfo);
         _editor.Render();
     }
 
@@ -207,7 +209,7 @@ internal sealed class EngineGateway : IDisposable
             EditorApi.FetchAssetObjectFiles = EngineDataProvider.GetAssetObjectFiles;
             EditorApi.FetchEntityView = EngineDataProvider.GetEntityView;
             
-            EditorApi.SendClickRequest = EngineDataProvider.OnEditorClick;
+            EditorApi.SendEditorMouseRequest = EngineDataProvider.OnEditorClick;
 
             EditorApi.EntityApi = new ApiDataRefRequest<EntityDataPayload>(
                 &EngineDataProvider.FillEntityData, &EngineDataProvider.WriteToEntity);

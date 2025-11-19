@@ -25,6 +25,10 @@ internal static class EditorService
 
     private static Vector2 _prevMousePos;
 
+    private static bool _wasDragging = false;
+    private static float _dragPlaneHeight;
+    private static Vector3 _dragOffset;
+
     private static bool IsMouseOverEditor()
     {
         var io = ImGui.GetIO();
@@ -34,35 +38,58 @@ internal static class EditorService
         return false;
     }
 
+    private static Vector3 GetRayPlaneIntersection(Ray ray, float planeY)
+    {
+        // Plane normal is Up (0,1,0)
+        float denom = ray.Direction.Y;
+
+        // Prevent divide by zero (ray parallel to plane)
+        if (Math.Abs(denom) < 1e-6f) return Vector3.Zero;
+
+        // t = (PlaneY - RayOriginY) / RayDirY
+        float t = (planeY - ray.Position.Y) / denom;
+
+        // Check if intersection is behind camera
+        if (t < 0) return Vector3.Zero;
+
+        return ray.Position + ray.Direction * t;
+    }
+
     private static void UpdateEditorInput(float delta)
     {
         var mousePos = ImGui.GetMousePos();
         var mouseDelta = mousePos - _prevMousePos;
+        var deltaAbs = Vector2.Abs(mouseDelta);
+
+        var isDragging = ImGui.IsMouseDragging(ImGuiMouseButton.Left);
+        var isClick = ImGui.IsMouseClicked(ImGuiMouseButton.Left);
+        var isReleased = ImGui.IsMouseReleased(ImGuiMouseButton.Left);
 
         var entityModel = ModelManager.EntitiesState;
-        var entityState = entityModel.State;
-        if (ImGui.IsMouseDragging(ImGuiMouseButton.Left) && entityState!.Data.EntityId > 0)
-        {
-            var d = Vector2.Abs(mouseDelta);
-            if (d.X > 0 || d.Y > 0)
-            {
-                var payload = new EditorWorldMouseData(EditorWorldMouseAction.TerrainLocation,  mousePos);
-                EditorApi.SendClickRequest(in payload, out payload);
-                if (payload.WorldPosition != default)
-                {
-                    ref var transform = ref entityState.DataState.Transform;
-                    transform.Translation = payload.WorldPosition;
-                    entityModel.State!.WriteData(in EditorApi.EntityApi);
-                } 
-            }
+        var entityState = entityModel.State!;
 
-        }
-        else if (ImGui.IsMouseClicked(ImGuiMouseButton.Left))
+        var selectedEntity = entityState.SelectedEntity;
+
+        var request = new EditorWorldMouseData { MousePosition = mousePos, };
+
+        if (isClick)
         {
-            entityModel.TriggerEvent(EventKey.MouseClick, new EditorWorldMouseData
-                { Action = EditorWorldMouseAction.GetEntity, EntityId = 0, MousePosition = mousePos });
+            request.Action = EditorMouseAction.MouseSelectEntity;
+            entityModel.TriggerEvent(EventKey.MouseSelectEntity, request);
+            return;
         }
 
+        if (isReleased)
+        {
+            
+        }
+
+        var hasDelta = deltaAbs.X > 0 || deltaAbs.Y > 0;
+        if (isDragging)
+        {
+            request.Action = EditorMouseAction.MouseDragEntityTerrain;
+            EditorApi.SendClickRequest(in request, out request);
+        }
 
         _prevMousePos = mousePos;
     }

@@ -70,7 +70,7 @@ internal static class EditorModelManager
             .OnLeave(static (ctx, _) => ctx.TriggerEvent<EntityRecord?>(EventKey.SelectionChanged, null))
             .RegisterEvent<EntityRecord?>(EventKey.SelectionChanged, OnEntitySelected)
             .RegisterEvent<EntityRecord>(EventKey.SelectionUpdated, OnEntityUpdated)
-            .RegisterEvent<EditorWorldMouseData>(EventKey.MouseClick, OnClickEvent)
+            .RegisterEvent<EditorWorldMouseData>(EventKey.MouseSelectEntity, OnClickEvent)
             .KeepAlive()
             .Build();
 

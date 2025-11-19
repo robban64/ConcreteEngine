@@ -89,6 +89,9 @@ internal static class EngineCommandHandler
         ctx.AddLog(StructStr<MeshPart>());
         ctx.AddLog(StructStr<DrawEntity>());
         ctx.AddLog(StructStr<MaterialTag>());
+        ctx.AddLog(StructStr<EditorWorldMouseData>());
+
+        
 
     }
 

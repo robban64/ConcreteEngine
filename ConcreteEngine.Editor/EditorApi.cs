@@ -11,31 +11,29 @@ using ConcreteEngine.Editor.ViewModel;
 
 namespace ConcreteEngine.Editor;
 
-public enum EditorWorldMouseAction
+public enum EditorMouseAction : byte
 {
-    GetEntity,
-    TerrainLocation
+    None,
+    MouseSelectEntity,
+    MouseDragEntityTerrain
 }
 
-public readonly struct EditorWorldMouseData(
-    EditorWorldMouseAction action,
-    Vector2 mousePosition,
-    int entityId = 0,
-    in BoundingBox hitBox = default,
-    in Vector3 worldPosition = default)
+public struct EditorWorldMouseData(EditorMouseAction action, Vector2 mousePosition)
 {
-    public BoundingBox HitBox { get; init; } = hitBox;
-    public Vector3 WorldPosition { get; init; } = worldPosition;
-    public Vector2 MousePosition { get; init; } = mousePosition;
-    public int EntityId { get; init; } = entityId;
-    public EditorWorldMouseAction Action { get; init; } = action;
-
-    public void Deconstruct(out int entityId, out Vector3 worldPosition, out Vector2 mousePosition,
-        out EditorWorldMouseAction action)
+    public Ray Ray;
+    public BoundingBox HitBox;
+    public Vector3 WorldPosition;
+    public Vector2 MousePosition = mousePosition;
+    public int EntityId;
+    public EditorMouseAction Action = action;
+    
+    public void Deconstruct(out Ray ray, out BoundingBox hitBox, out Vector3 worldPosition, out Vector2 mousePosition, out int entityId, out EditorMouseAction action)
     {
-        entityId = EntityId;
+        ray = Ray;
+        hitBox = HitBox;
         worldPosition = WorldPosition;
         mousePosition = MousePosition;
+        entityId = EntityId;
         action = Action;
     }
 }

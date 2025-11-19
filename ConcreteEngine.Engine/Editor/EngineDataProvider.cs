@@ -12,6 +12,7 @@ using ConcreteEngine.Editor.Definitions;
 using ConcreteEngine.Editor.ViewModel;
 using ConcreteEngine.Engine.Assets;
 using ConcreteEngine.Engine.Assets.Data;
+using ConcreteEngine.Engine.Editor.Controller;
 using ConcreteEngine.Engine.Platform;
 using ConcreteEngine.Engine.Worlds;
 using ConcreteEngine.Engine.Worlds.Entities;
@@ -26,23 +27,22 @@ internal static class EngineDataProvider
 {
     private static World _world = null!;
     private static AssetSystem _assetSystem = null!;
+    private static EntityApiController _entityController = null!;
+    private static WorldApiController _worldController = null!;
+    private static InteractionController _interactionController = null;
 
 
-    internal static void Attach(World world, AssetSystem assetSystem)
+    internal static void Attach(World world, AssetSystem assetSystem,
+        EntityApiController entityController, WorldApiController worldController, InteractionController interactionController)
     {
         _world = world;
         _assetSystem = assetSystem;
+        _entityController = entityController;
+        _worldController = worldController;
+        _interactionController = interactionController;
     }
 
-    public static List<EntityRecord> GetEntityView(EntityRequestBody body)
-    {
-        var result = new List<EntityRecord>(_world.Entities.Models.Count);
-        foreach (var it in _world.Entities.Query<ModelComponent>())
-            result.Add(EditorObjectMapper.MakeEntityViewModel(it.Entity));
 
-        result.Sort();
-        return result;
-    }
 
     public static List<AssetObjectViewModel> GetAssetStoreData(AssetCategoryRequestBody body)
     {
@@ -82,103 +82,58 @@ internal static class EngineDataProvider
 
         return result;
     }
-
-    public static void OnEditorClick(in EditorWorldMouseData request, out EditorWorldMouseData response)
+    
+    public static List<EntityRecord> GetEntityView(EntityRequestBody body)
     {
-        var raycaster = _world.Raycast;
-        switch (request.Action)
-        {
-            case EditorWorldMouseAction.GetEntity:
-                var entity = raycaster.GetEntityByCameraRay(request.MousePosition, out var transform, out var distance);
-                response = request with { EntityId = entity, HitBox = request.HitBox };
-                break;
-            case EditorWorldMouseAction.TerrainLocation:
-                raycaster.GetPointOnTerrain(request.MousePosition, out var worldCoords);
-                response = request with { WorldPosition = worldCoords };
-                break;
-            default:
-                throw new ArgumentOutOfRangeException();
-        }
+        return _entityController.GetEntityList();
     }
-
-    public static long FillCameraData(ApiWriteRequestBody<CameraEditorPayload> payload)
-    {
-        var camera = _world.Camera;
-        if (camera.Generation == payload.Version) return camera.Generation;
-
-        payload.Data.Generation = camera.Generation;
-        payload.Data.ViewTransform = new ViewTransformData(camera.Translation, camera.Scale, camera.Orientation);
-        payload.Data.Projection =
-            new ProjectionInfoData(camera.AspectRatio, camera.Fov, camera.NearPlane, camera.FarPlane);
-        payload.Data.Viewport = camera.Viewport;
-        return camera.Generation;
-    }
-
-    public static long WriteCameraData(ApiWriteRequestBody<CameraEditorPayload> payload)
-    {
-        if (_world.Camera.Generation == payload.Version) return payload.Version;
-        var camera = _world.Camera;
-        WorldActionSlot.SetSlot(payload.Version, in payload.Data);
-        return camera.Generation;
-    }
-
     public static long FillEntityData(ApiWriteRequestBody<EntityDataPayload> response)
     {
-        if (response.Data.EntityId == 0)
-        {
-            WorldActionSlot.SelectedEntityId = new EntityId(0);
-            return 0;
-        }
-
-        var entity = new EntityId(response.Data.EntityId);
-        var model = _world.Entities.Models.GetById(entity);
-        if (!_world.Entities.Transforms.TryGetById(entity, out var transform)) transform = default;
-
-        WorldActionSlot.SelectedEntityId = new EntityId(response.Data.EntityId);
-
-        response.Data.Transform =
-            new TransformData(in transform.Translation, in transform.Scale, in transform.Rotation);
-        response.Data.Model = new EditorEntityModel(model.Model, model.MaterialKey.Value, model.DrawCount);
-
-        return response.Data.EntityId;
+        return _entityController.FillEntityData(ref response.Data);
     }
 
     public static long WriteToEntity(ApiWriteRequestBody<EntityDataPayload> response)
     {
-        WorldActionSlot.SelectedEntityId = new EntityId(response.Data.EntityId);
-        WorldActionSlot.SetSlot(response.Version, in response.Data);
-        return response.Data.EntityId;
+        return _entityController.WriteToEntity(response.Version, ref response.Data);
     }
+
+    public static long FillCameraData(ApiWriteRequestBody<CameraEditorPayload> payload)
+    {
+        return _worldController.FillCameraData(payload.Version, ref payload.Data);
+    }
+
+    public static long WriteCameraData(ApiWriteRequestBody<CameraEditorPayload> payload)
+    {
+        return _worldController.WriteCameraData(payload.Version, ref payload.Data);
+    }
+
 
     public static long FillWorldParams(ApiWriteRequestBody<WorldParamState> request)
     {
-        var snapshot = _world!.WorldRenderParams.Snapshot;
-        if (request.Version == snapshot.Version) return request.Version;
-
-        ref var data = ref request.Data;
-        data.LightState.DirectionalLight = new DirLightState(in snapshot.DirLight);
-        data.LightState.AmbientLight = new AmbientState(in snapshot.Ambient);
-        data.FogState = new FogState(in snapshot.Fog);
-        data.PostState.Grade = new PostGradeState(in snapshot.PostEffects.Grade);
-        data.PostState.WhiteBalance = new PostWhiteBalanceState(snapshot.PostEffects.WhiteBalance);
-        data.PostState.Bloom = new PostBloomState(in snapshot.PostEffects.Bloom);
-        data.PostState.ImageFx = new PostImageFxState(in snapshot.PostEffects.ImageFx);
-
-        return snapshot.Version;
+        return _worldController.FillWorldParams(request.Version, ref request.Data);
     }
 
     public static long WriteWorldParams(ApiWriteRequestBody<WorldParamState> request)
     {
-        var snapshot = _world!.WorldRenderParams.Snapshot;
-        if (request.Version == snapshot.Version) return snapshot.Version;
-
-        ref var data = ref request.Data;
-        ref var slot = ref WorldActionSlot.WriteSlot<WorldParamsData>(request.Version);
-
-        slot.DirLight = Unsafe.As<DirLightState, DirLightParams>(ref data.LightState.DirectionalLight);
-        slot.Ambient = Unsafe.As<AmbientState, AmbientParams>(ref data.LightState.AmbientLight);
-        slot.Fog = Unsafe.As<FogState, FogParams>(ref data.FogState);
-        slot.PostEffect = Unsafe.As<PostEffectState, PostEffectParams>(ref data.PostState);
-        return snapshot.Version;
+        return _worldController.WriteWorldParams(request.Version, ref request.Data);
+    }
+    
+    public static void OnEditorClick(in EditorWorldMouseData request, out EditorWorldMouseData response)
+    {
+        switch (request.Action)
+        {
+            case EditorMouseAction.MouseSelectEntity:
+                var entityId = _interactionController.OnClick(request.MousePosition, out var bounds, out var distance);
+                response = request with { EntityId = entityId, HitBox = bounds };
+                break;
+            case EditorMouseAction.MouseDragEntityTerrain:
+                _interactionController.OnDragEntity(request.MousePosition);
+                response = request;
+                //var worldCoords = raycaster.GetPointOnTerrain(request.MousePosition, out var tHit);
+                //response = request with { WorldPosition = worldCoords, Ray = tHit};
+                break;
+            default:
+                throw new ArgumentOutOfRangeException();
+        }
     }
 }

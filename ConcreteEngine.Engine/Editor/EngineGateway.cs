@@ -1,5 +1,7 @@
 #region
 
+using ConcreteEngine.Engine.Editor.Controller;
+
 #region
 
 using ConcreteEngine.Editor;
@@ -28,6 +30,11 @@ internal sealed class EngineGateway : IDisposable
 {
     private static EditorPortal _editor = null!;
     private static LogParser _logParser = null!;
+
+    private ApiContext _apiContext = null!;
+    private EntityApiController _entityController = null!;
+    private WorldApiController _worldController = null!;
+    private InteractionController _interactionController = null!;
 
     public bool HasBoundEditor { get; private set; }
     public bool HasBoundMetrics { get; private set; }
@@ -75,8 +82,15 @@ internal sealed class EngineGateway : IDisposable
         HasBoundEditor = true;
         HasBoundMetrics = true;
 
-        EditorSetup.DebugTools = _editor!;
-        EditorSetup.AttachEditor(world, assetSystem, frameInfo);
+        _apiContext = new ApiContext(world, assetSystem);
+        _entityController = new EntityApiController(_apiContext);
+        _worldController = new WorldApiController(_apiContext);
+        _interactionController = new InteractionController(_apiContext);
+        
+        EditorSetup.Editor = _editor!;
+        MetricRouter.Attach(world, assetSystem, frameInfo);
+        EngineDataProvider.Attach(world, assetSystem, _entityController, _worldController, _interactionController);
+
         EditorSetup.RegisterDataProvider();
         EditorSetup.RegisterCommands();
         EditorSetup.RegisterMetrics();
@@ -162,15 +176,9 @@ internal sealed class EngineGateway : IDisposable
 
     private static class EditorSetup
     {
-        public static EditorPortal DebugTools = null!;
+        public static EditorPortal Editor = null!;
 
-        public static void ProcessStringLog(StringLogEvent log) => DebugTools.AddLog(_logParser.Format(log));
-
-        public static void AttachEditor(World world, AssetSystem assetSystem, RenderEngineFrameInfo frameInfo)
-        {
-            MetricRouter.Attach(world, assetSystem, frameInfo);
-            EngineDataProvider.Attach(world, assetSystem);
-        }
+        public static void ProcessStringLog(StringLogEvent log) => Editor.AddLog(_logParser.Format(log));
 
         public static void RegisterCommands()
         {

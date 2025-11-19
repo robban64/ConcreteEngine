@@ -20,11 +20,10 @@ public sealed class WorldRaycaster
         _terrain = terrain;
     }
 
-    public bool GetPointOnTerrain(Vector2 screenCoords, out Vector3 worldCoords)
+    public Vector3 GetPointOnTerrain(Vector2 screenCoords, out Ray ray)
     {
-        _camera.Raycaster.CreateRayFrom(screenCoords, out var ray);
-        worldCoords = _terrain.GetPointOnTerrainPlane(in ray);
-        return true;
+        _camera.Raycaster.CreateRayFrom(screenCoords, out ray);
+        return _terrain.GetPointOnTerrainPlane(in ray);
     }
 
     public EntityId GetEntityByCameraRay(Vector2 screenCoords, out BoundingBox entityBounds, out float distance)
@@ -60,7 +59,7 @@ public sealed class WorldRaycaster
                 return it.Entity;
             }
         }
-        
+
         entityBounds = default;
         return default;
     }

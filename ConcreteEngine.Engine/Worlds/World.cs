@@ -7,6 +7,7 @@ using ConcreteEngine.Engine.Worlds.Entities;
 using ConcreteEngine.Engine.Worlds.Render;
 using ConcreteEngine.Engine.Worlds.Render.Batching;
 using ConcreteEngine.Engine.Worlds.View;
+using ConcreteEngine.Graphics.Gfx;
 using ConcreteEngine.Shared.RenderData;
 using ConcreteEngine.Shared.TransformData;
 
@@ -37,11 +38,14 @@ public sealed class World : IWorld
     public Camera3D Camera { get; }
     public WorldRenderParams WorldRenderParams { get; }
 
-    public WorldEntities Entities { get; }
     public WorldRaycaster Raycast { get; } 
 
+    private readonly BatcherRegistry _batchers;
+
+    private readonly WorldEntities _entities;
     private readonly WorldSkybox _sky;
     private readonly WorldTerrain _terrain;
+    private readonly WorldParticles _particles;
 
     private MeshTable _meshTable = null!;
     private MaterialTable _materialTable = null!;
@@ -51,15 +55,21 @@ public sealed class World : IWorld
     {
         Camera = new Camera3D();
         WorldRenderParams = new WorldRenderParams();
-        Entities = new WorldEntities();
+        
+        _batchers = new BatcherRegistry();
+        
+        _entities = new WorldEntities();
         _sky = new WorldSkybox();
         _terrain = new WorldTerrain();
+        _particles = new WorldParticles();
 
         Raycast = new WorldRaycaster(Camera, Entities, _terrain);
     }
 
     public WorldSkybox Sky => _sky;
     public WorldTerrain Terrain => _terrain;
+    public WorldEntities Entities => _entities;
+
 
     public IMeshTable MeshTable => _meshTable;
     public IMaterialTable EntityMaterials => _materialTable;
@@ -67,16 +77,18 @@ public sealed class World : IWorld
     public int EntityCount => Entities.EntityCount;
     public int ShadowMapSize => WorldRenderParams.Snapshot.Shadows.ShadowMapSize;
 
-    internal void AttachRender(BatcherRegistry batchers, MeshTable meshTable, MaterialTable materialTable)
+    
+
+    internal void AttachRender(GfxContext gfx, MeshTable meshTable, MaterialTable materialTable)
     {
         _meshTable = meshTable;
         _materialTable = materialTable;
 
-        _terrain.Terrain = batchers.Get<TerrainBatcher>();
+        Entities.AttachRender(_meshTable, _materialTable);
+        Sky.AttachRenderer(_meshTable);
+        Terrain.AttachRenderer(_batchers.Register(new TerrainBatcher(gfx)),_meshTable, _materialTable);
+        _particles.AttachRenderer(_batchers.Register(new ParticleBatcher(gfx)),_meshTable, _materialTable);
 
-        Entities.AttachRender(meshTable, materialTable);
-        Terrain.AttachModelRegistry(meshTable);
-        Sky.AttachModelRegistry(meshTable);
     }
 
     internal void ProcessActions()

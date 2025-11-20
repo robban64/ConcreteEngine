@@ -33,18 +33,17 @@ namespace ConcreteEngine.Engine.Worlds.Render;
 public interface IWorldRenderer : IGameEngineSystem
 {
     WorldRenderParams WorldRenderParams { get; }
-    BatcherRegistry Batchers { get; }
 }
 
 public sealed class WorldRenderer : IWorldRenderer
 {
-    public BatcherRegistry Batchers { get; }
     public WorldRenderParams WorldRenderParams { get; }
 
     private readonly EngineWindow _window;
     private readonly GraphicsRuntime _graphics;
     private readonly RenderEngine _renderer;
     private readonly AssetSystem _assets;
+
 
     private readonly MeshTable _meshTable;
     private readonly MaterialTable _materialTable;
@@ -66,7 +65,6 @@ public sealed class WorldRenderer : IWorldRenderer
         _graphics = graphics;
         _eventBus = eventBus;
         WorldRenderParams = worldRenderParams;
-        Batchers = new BatcherRegistry();
 
         PrimitiveMeshes.CreatePrimitives(graphics.Gfx.Meshes);
         InvalidOpThrower.ThrowIf(PrimitiveMeshes.FsqQuad == 0 || PrimitiveMeshes.SkyboxCube == 0);
@@ -84,7 +82,7 @@ public sealed class WorldRenderer : IWorldRenderer
         ArgumentNullException.ThrowIfNull(world);
         _meshTable.Setup(_assets);
         _renderEntityBus.AttachWorld(world);
-        world.AttachRender(Batchers, _meshTable, _materialTable);
+        world.AttachRender(_graphics.Gfx ,_meshTable, _materialTable);
 
         _renderEntityBus.CubeId = _assets.StoreImpl.GetByName<Model>("Cube").ModelId;
 
@@ -183,9 +181,8 @@ public sealed class WorldRenderer : IWorldRenderer
     }
 
 
-    internal RenderSetupBuilder Initialize(Action<GfxContext, BatcherRegistry> batcherSetup)
+    internal RenderSetupBuilder Initialize()
     {
-        batcherSetup(_graphics.Gfx, Batchers);
         return _renderer.StartBuilder(_window.OutputSize);
     }
 

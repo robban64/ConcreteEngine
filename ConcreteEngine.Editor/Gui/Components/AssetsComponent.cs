@@ -21,8 +21,12 @@ internal static class AssetsComponent
 
     private static AssetStoreViewModel ViewModel => Model.State!;
 
-    private static void OnCategoryChanged(EditorAssetCategory category) =>
-        Model.TriggerEvent(EventKey.CategoryChanged, category);
+    private static void OnCategoryChanged(EditorAssetCategory category)
+    {
+        if(category == ViewModel.Category) return;
+        ViewModel.Category = category;
+        Model.TriggerEvent(EventKey.CategoryChanged);
+    }
 
     private static void OnSelectionChanged(AssetObjectViewModel? asset) =>
         Model.TriggerEvent(EventKey.SelectionChanged, asset);

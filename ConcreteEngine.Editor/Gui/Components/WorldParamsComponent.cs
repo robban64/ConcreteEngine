@@ -21,7 +21,8 @@ internal static class WorldParamsComponent
     private static void OnSelectionChange(WorldParamSelection selection)
     {
         if (selection == ViewModel.Selection) return;
-        Model.TriggerEvent(EventKey.SelectionChanged, selection);
+        ViewModel.Selection = selection;
+        Model.TriggerEvent(EventKey.SelectionChanged);
     }
 
     private static void OnSelectionUpdate() => Model.TriggerEvent(EventKey.SelectionUpdated);

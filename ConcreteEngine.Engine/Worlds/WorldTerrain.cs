@@ -26,22 +26,27 @@ public sealed class WorldTerrain
     public ModelId Model { get; private set; }
 
     public MaterialId Material { get; private set; }
-    internal TerrainBatcher Terrain { get; set; }
+    internal TerrainBatcher Terrain { get; private set; }
 
     private AssetRef<Texture2D> _heightmap;
+    
+    private MaterialTable _materialTable;
     private IMeshTable _meshTable;
 
 
     internal WorldTerrain()
     {
     }
-
+    
     public bool IsActive => _heightmap.IsValid && Terrain.TextureRef.IsValid && Material > 0;
-
-    internal void AttachModelRegistry(IMeshTable meshTable) => _meshTable = meshTable;
-
     public void SetMaterial(MaterialId materialId) => Material = materialId;
 
+    internal void AttachRenderer(TerrainBatcher batcher, MeshTable meshTable, MaterialTable materialTable)
+    {
+        Terrain = batcher;
+        _meshTable = meshTable;
+        _materialTable = materialTable;
+    }
 
     public void CreateTerrainMesh(Texture2D heightmap)
     {

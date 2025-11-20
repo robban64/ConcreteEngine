@@ -8,55 +8,12 @@ using ConcreteEngine.Editor.Definitions;
 
 namespace ConcreteEngine.Editor.ViewModel;
 
-internal static class ModelCtx<T> where T : class
-{
-    internal static Func<T> Factory { get; set; }
-    internal static Action<T>? StateDestructor { get; set; }
-    internal static StateTransitionDel<T> OnEnter { get; set; }
-    internal static StateTransitionDel<T> OnLeave { get; set; }
-    internal static StateTransitionDel<T>? OnRefresh { get; set; }
-
-    public static T? State { get; private set; }
-
-    public static T CreateState() => State = Factory();
-
-    public static void ResetState()
-    {
-        StateDestructor?.Invoke(State!);
-        State = null;
-    }
-}
-
-internal sealed class ModelStateDelegateBundle<T>(
-    Func<T> factory,
-    Action<T> stateDestructor,
-    StateTransitionDel<T> onEnter,
-    StateTransitionDel<T> onLeave,
-    StateTransitionDel<T>? onRefresh = null
-) where T : class
-{
-    public Func<T> Factory { get; } = factory;
-    public Action<T> StateDestructor { get; } = stateDestructor;
-    public StateTransitionDel<T> OnEnter { get; } = onEnter;
-    public StateTransitionDel<T> OnLeave { get; } = onLeave;
-    public StateTransitionDel<T>? OnRefresh { get; } = onRefresh;
-}
-
 internal interface IModelState
 {
     bool Active { get; }
     bool PendingRefresh { get; }
     void InvokeAction(TransitionKey action);
     void TriggerEvent<TEvent>(EventKey eventKey, TEvent eventData);
-}
-
-public sealed class NoOpEvent
-{
-    public static NoOpEvent Instance { get; } = new NoOpEvent();
-
-    private NoOpEvent()
-    {
-    }
 }
 
 internal sealed class ModelState<T> : IModelState where T : class
@@ -208,7 +165,7 @@ internal sealed class ModelState<T> : IModelState where T : class
             return this;
         }
 
-        public ViewModelStateBuilder RegisterEmptyEvent(EventKey eventKey, StateEmptyEventDel<T> handler)
+        public ViewModelStateBuilder RegisterEvent(EventKey eventKey, StateEmptyEventDel<T> handler)
         {
             _events ??= new Dictionary<EventKey, object>();
             _events.Add(eventKey, handler);

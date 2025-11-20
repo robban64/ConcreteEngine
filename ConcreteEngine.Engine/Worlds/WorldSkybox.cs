@@ -25,7 +25,7 @@ public sealed class WorldSkybox
     {
     }
 
-    internal void AttachModelRegistry(IMeshTable meshTable)
+    internal void AttachRenderer(IMeshTable meshTable)
     {
         Mesh = PrimitiveMeshes.SkyboxCube;
         Model = meshTable.CreateModel(PrimitiveMeshes.SkyboxCube, 0, 0, default);

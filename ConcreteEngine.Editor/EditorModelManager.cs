@@ -47,8 +47,8 @@ internal static class EditorModelManager
             .CreateBuilder(static () => new AssetStoreViewModel())
             .OnEnter(static (ctx, it) => ctx.State!.FillView(it.Category, EditorApi.FetchAssetStoreData))
             .OnLeave(static (ctx, it) => ctx.ResetState())
-            .RegisterEvent<EditorAssetCategory>(EventKey.CategoryChanged,
-                static (ctx, it) => ctx.State!.FillView(it, EditorApi.FetchAssetStoreData))
+            .RegisterEvent(EventKey.CategoryChanged,
+                static (ctx) => ctx.State!.FillView(null, EditorApi.FetchAssetStoreData))
             .RegisterEvent<AssetObjectViewModel>(EventKey.SelectionChanged,
                 static (ctx, it) => ctx.State!.FillAssetFileView(it, EditorApi.FetchAssetObjectFiles))
             .RegisterEvent<AssetObjectViewModel>(EventKey.SelectionAction, ReloadShaderHandler)
@@ -83,10 +83,6 @@ internal static class EditorModelManager
                 state.FillView(EditorApi.FetchEntityView);
                 return;
             }
-
-            //  if (state.Data.EntityId == 0)
-            //state.SetSelectedEntity(0);
-
             state.FillData(in EditorApi.EntityApi);
         }
         
@@ -113,7 +109,7 @@ internal static class EditorModelManager
             .OnEnter(FetchCameraDataHandler)
             .OnRefresh(FetchCameraDataHandler)
             .OnLeave(static (ctx, it) => { })
-            .RegisterEmptyEvent(EventKey.SelectionUpdated, WriteCameraDataHandler)
+            .RegisterEvent(EventKey.SelectionUpdated, WriteCameraDataHandler)
             .KeepAlive()
             .Build();
 
@@ -136,17 +132,16 @@ internal static class EditorModelManager
             .OnEnter(UpdateData)
             .OnRefresh(UpdateData)
             .OnLeave(static (ctx, it) => ctx.ResetState())
-            .RegisterEvent<WorldParamSelection>(EventKey.SelectionChanged, SelectionChangeHandler)
-            .RegisterEmptyEvent(EventKey.SelectionUpdated, SelectionUpdateHandler)
+            .RegisterEvent(EventKey.SelectionChanged, SelectionChangeHandler)
+            .RegisterEvent(EventKey.SelectionUpdated, SelectionUpdateHandler)
             .Build();
         return;
 
         static void UpdateData(ModelState<WorldRenderViewModel> ctx, WorldRenderViewModel it) =>
             it.FillData(in EditorApi.WorldParamsApi);
 
-        static void SelectionChangeHandler(ModelState<WorldRenderViewModel> ctx, WorldParamSelection it)
+        static void SelectionChangeHandler(ModelState<WorldRenderViewModel> ctx)
         {
-            ctx.State!.Selection = it;
             ctx.State!.FillData(in EditorApi.WorldParamsApi);
         }
 

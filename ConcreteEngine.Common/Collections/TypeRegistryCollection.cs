@@ -19,9 +19,15 @@ public sealed class TypeRegistryCollection<TValue>(int capacity = 16)
         _registry.Add(typeof(TKey), value);
     }
 
-    public bool TryGet<TKey>(out TValue value) where TKey : notnull
+    public bool TryGet<T>(out T result) where T : class
     {
-        return _registry.TryGetValue(typeof(TKey), out value);
+        if (_registry.TryGetValue(typeof(TValue), out TValue value) && value is T tValue)
+        {
+            result = tValue;
+            return true;
+        }
+        result = null;
+        return false;
     }
 
 

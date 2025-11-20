@@ -16,17 +16,9 @@ using ConcreteEngine.Graphics.Primitives;
 
 namespace ConcreteEngine.Engine.Worlds.Render.Batching;
 
-public readonly struct TerrainBatchResult(MeshId meshId, int drawCount)
-{
-    public readonly MeshId MeshId = meshId;
-    public readonly int DrawCount = drawCount;
-}
-
-public sealed class TerrainBatcher : RenderBatcher<TerrainBatchResult>
+public sealed class TerrainBatcher : RenderBatcher
 {
     public AssetRef<Texture2D> TextureRef { get; private set; }
-    public ModelId ModelId { get; private set; }
-    public MeshId MeshId { get; private set; }
     public int MaxHeight { get; private set; }
     public int Step { get; private set; }
     public int Dimension { get; private set; }
@@ -35,7 +27,6 @@ public sealed class TerrainBatcher : RenderBatcher<TerrainBatchResult>
     public int DrawCount { get; private set; }
 
     private float[] _heights;
-
     private uint[] _indices;
     private Vertex3D[] _vertices;
 
@@ -73,7 +64,7 @@ public sealed class TerrainBatcher : RenderBatcher<TerrainBatchResult>
         BuildHeightMap(data, width, maxHeight);
     }
 
-    public override TerrainBatchResult BuildBatch()
+    public override void BuildBatch()
     {
         int vertexRowCount = (Dimension - 1) / Step + 1;
         VertexCount = vertexRowCount * vertexRowCount;
@@ -84,7 +75,6 @@ public sealed class TerrainBatcher : RenderBatcher<TerrainBatchResult>
         GenerateMesh();
 
         MeshId.IsValidOrThrow();
-        return new TerrainBatchResult(MeshId, DrawCount);
     }
 
 

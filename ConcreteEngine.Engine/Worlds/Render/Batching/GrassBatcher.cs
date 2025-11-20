@@ -17,9 +17,8 @@ public readonly struct GrassBatcherResult(MeshId meshId, int drawCount, int inst
     public readonly int DrawCount = drawCount;
 }
 
-internal sealed class GrassBatcher : RenderBatcher<GrassBatcherResult>
+internal sealed class GrassBatcher : RenderBatcher
 {
-    public MeshId MeshId { get; private set; }
     public int GrassCount { get; set; }
 
     internal GrassBatcher(GfxContext gfx) : base(gfx)
@@ -42,10 +41,9 @@ internal sealed class GrassBatcher : RenderBatcher<GrassBatcherResult>
         //builder.UploadVertices();
     }
 
-    public override GrassBatcherResult BuildBatch()
+    public override void BuildBatch()
     {
         CreateMesh();
-        return default;
     }
 
     public override void Dispose()

@@ -111,8 +111,7 @@ public sealed class GameEngine : IDisposable
 
     private void RegisterRenderer()
     {
-        var builder = _worldRenderer.Initialize((gfx, batchers) => { batchers.Register(new TerrainBatcher(gfx)); });
-
+        var builder = _worldRenderer.Initialize();
         _worldRenderer.SetupRenderer(builder);
     }
 

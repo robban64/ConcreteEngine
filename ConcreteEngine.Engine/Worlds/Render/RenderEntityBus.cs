@@ -78,7 +78,7 @@ internal sealed class RenderEntityBus
 
             var depthKey = DepthKeyUtility.MakeDepthKey(in viewMat, in transform.Translation, near, far);
 
-            var meta = new DrawCommandMeta(DrawCommandId.Mesh, DrawCommandQueue.Opaque, DrawCommandResolver.None,
+            var meta = new DrawCommandMeta(DrawCommandId.Model, DrawCommandQueue.Opaque, DrawCommandResolver.None,
                 PassMask.Default, depthKey);
 
             if (query.Entity == selected)
@@ -124,7 +124,7 @@ internal sealed class RenderEntityBus
             boxEntity.Model = CubeId;
             boxEntity.MaterialKey = EmptyMaterialKey;
             boxEntity.Transform = new Transform(axisBounds.Center, axisBounds.Extent, in transform.Rotation);
-            boxEntity.Meta = new DrawCommandMeta(DrawCommandId.Mesh, DrawCommandQueue.OverlayTransparent,
+            boxEntity.Meta = new DrawCommandMeta(DrawCommandId.Model, DrawCommandQueue.OverlayTransparent,
                 DrawCommandResolver.BoundingVolume, PassMask.Effect);
         }
 
@@ -211,9 +211,10 @@ internal sealed class RenderEntityBus
         if (ActiveSkyCount > 0)
         {
             var sky = _world.Sky;
-            CreateTransformMatrices(sky.Transform, out var model, out var v0, out var v1, out var v2);
             var meta = new DrawCommandMeta(DrawCommandId.Skybox, DrawCommandQueue.Skybox, passMask: PassMask.Main);
             var cmd = new DrawCommand(sky.Mesh, sky.Material);
+            
+            CreateTransformMatrices(in sky.Transform, out var model, out var v0, out var v1, out var v2);
             buffer.SubmitDraw(cmd, meta, in model, in v0, in v1, in v2);
         }
 
@@ -222,10 +223,23 @@ internal sealed class RenderEntityBus
             var terrain = _world.Terrain;
             var view = _meshTable.GetPartsRefView(terrain.Model);
 
-            CreateTransformMatrices(terrain.Transform, out var model, out var v0, out var v1, out var v2);
             var meta = new DrawCommandMeta(DrawCommandId.Terrain, DrawCommandQueue.Terrain);
             var cmd = new DrawCommand(view.Parts[0].Mesh, terrain.Material);
+            
+            CreateTransformMatrices(in terrain.Transform, out var model, out var v0, out var v1, out var v2);
             buffer.SubmitDraw(cmd, meta, in model, in v0, in v1, in v2);
+        }
+
+        if (_world.Particles.IsActive)
+        {
+            var particles = _world.Particles;
+            var transform = new Transform(new Vector3(130,10,100), Vector3.One, Quaternion.Identity);
+            var meta = new DrawCommandMeta(DrawCommandId.Particle, DrawCommandQueue.Additive, passMask: PassMask.Main);
+            var cmd = new DrawCommand(particles.Mesh, particles.Material);
+            
+            CreateTransformMatrices(in transform, out var model, out var v0, out var v1, out var v2);
+            buffer.SubmitDraw(cmd, meta, in model, in v0, in v1, in v2);
+
         }
     }
 

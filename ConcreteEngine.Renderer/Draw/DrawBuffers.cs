@@ -143,7 +143,9 @@ internal sealed class DrawBuffers
         data.ViewMat = view.ViewMatrix;
         data.ProjMat = view.ProjectionMatrix;
         data.ProjViewMat = view.ProjectionViewMatrix;
-        data.CameraPos = view.Position;
+        data.CameraPos = view.Position.AsVector4();
+        data.CameraUp = view.Up.AsVector4();
+        data.CameraRight = view.Right.AsVector4();
 
         _gfxBuffers.UploadUniformGpuData(_cameraUbo, in data, 0);
     }

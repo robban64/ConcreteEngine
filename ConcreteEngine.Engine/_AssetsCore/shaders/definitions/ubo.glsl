@@ -20,6 +20,8 @@ uniform CameraUniform {
     mat4 uProjMat;
     mat4 uProjViewMat;
     vec4 uCameraPos;
+    vec4 uCameraUp;
+    vec4 uCameraRight;
 };
 
 uniform DirLightUniform {

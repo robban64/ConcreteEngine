@@ -351,7 +351,7 @@ public sealed class GfxCommands
                 break;
             case DrawMeshKind.Invalid:
             default:
-                GraphicsException.ThrowUnsupportedFeature(nameof(meta.Kind));
+                GraphicsException.ThrowUnsupportedFeature(meta.Kind.ToString());
                 return;
         }
 

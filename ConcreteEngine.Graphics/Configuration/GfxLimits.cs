@@ -7,7 +7,7 @@ public static class GfxLimits
     public const int TextureSlots = 16;
 
     public const int MaxVboBindings = 4;
-    public const int MaxVertexAttribs = 8;
+    public const int MaxVertexAttribs = 16;
 
     public const int MaxPlainUniforms = 8;
 

@@ -72,17 +72,21 @@ public struct FrameUniformRecord(
     public Vector4 FogParams1 = fogParams1; // x=expWeight, y=heightWeight, z=maxDistance, w=reserved
 }
 
+[StructLayout(LayoutKind.Sequential)]
 public struct CameraUniformRecord(
     in Matrix4x4 viewMat,
     in Matrix4x4 projMat,
     in Matrix4x4 projViewMat,
-    in Vector3 cameraPos)
+    in Vector4 cameraPos,
+    in Vector4 cameraUp,
+    in Vector4 cameraRight)
 {
     public Matrix4x4 ViewMat = viewMat;
     public Matrix4x4 ProjMat = projMat;
     public Matrix4x4 ProjViewMat = projViewMat;
-    public Vector3 CameraPos = cameraPos;
-    private readonly float _pad0;
+    public Vector4 CameraPos = cameraPos;
+    public Vector4 CameraUp = cameraUp;
+    public Vector4 CameraRight = cameraRight;
 }
 
 [StructLayout(LayoutKind.Sequential)]

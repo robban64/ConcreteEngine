@@ -27,13 +27,14 @@ internal sealed class MaterialLoader
         _profiles = new Dictionary<MaterialProfile, MatProfileInfo>
         {
             [MaterialProfile.None] = new("Model"),
+            [MaterialProfile.Particle]  = new("Particle", new ProfileSlot(TextureSlotKind.Albedo)),
+            [MaterialProfile.Sky] = new("Skybox", new ProfileSlot(TextureSlotKind.Albedo, TextureKind.CubeMap)),
             [MaterialProfile.StaticModel] = new("Model",
                 new ProfileSlot(TextureSlotKind.Albedo),
                 new ProfileSlot(TextureSlotKind.Normal),
                 new ProfileSlot(TextureSlotKind.Mask),
                 new ProfileSlot(TextureSlotKind.Shadowmap)
             ),
-            [MaterialProfile.Sky] = new("Skybox", new ProfileSlot(TextureSlotKind.Albedo, TextureKind.CubeMap)),
             [MaterialProfile.Terrain] = new("Terrain",
                 new ProfileSlot(TextureSlotKind.Environment),
                 new ProfileSlot(TextureSlotKind.Environment),

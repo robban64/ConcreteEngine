@@ -7,12 +7,15 @@ namespace ConcreteEngine.Renderer.Definitions;
 public enum DrawCommandId : byte
 {
     Invalid,
+    Model,
+    Terrain,
+    Skybox,
+    Particle
+    /*
     Tilemap,
     Sprite,
     Light,
-    Mesh,
-    Terrain,
-    Skybox
+*/
 }
 
 public enum DrawCommandQueue : byte

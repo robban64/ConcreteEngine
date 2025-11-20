@@ -31,19 +31,11 @@ public sealed class GfxMeshes
         _iboStore = context.Resources.GfxStoreHub.IboStore;
     }
 
-    public MeshLayout GetMeshData(MeshId meshId, out MeshMeta meta)
+    public MeshLayout GetMeshDetails(MeshId meshId, out MeshMeta meta)
     {
         var meshRef = _meshStore.GetRefAndMeta(meshId, out meta);
         return _meshAttributes[meshId];
     }
-
-    public MeshLayout GetAttachedData(MeshId meshId, out MeshMeta meta)
-    {
-        var meshRef = _meshStore.GetRefAndMeta(meshId, out meta);
-        var attached = _meshAttributes[meshId];
-        return _meshAttributes[meshId];
-    }
-
 
     public IGfxMeshBuilder StartUploadBuilder(in MeshDrawProperties props)
     {
@@ -71,7 +63,8 @@ public sealed class GfxMeshes
             Kind = props.Kind,
             ElementSize = props.ElementSize,
             Primitive = props.Primitive,
-            DrawCount = props.DrawCount
+            DrawCount = props.DrawCount,
+            InstanceCount = props.InstanceCount
         };
         return _meshStore.Add(in meta, vaoRef);
     }

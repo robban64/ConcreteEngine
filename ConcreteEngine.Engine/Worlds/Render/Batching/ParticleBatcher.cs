@@ -1,9 +1,13 @@
 #region
 
 using System.Numerics;
+using System.Runtime.InteropServices;
+using ConcreteEngine.Common;
+using ConcreteEngine.Common.Numerics;
 using ConcreteEngine.Graphics.Gfx;
 using ConcreteEngine.Graphics.Gfx.Contracts;
 using ConcreteEngine.Graphics.Gfx.Definitions;
+using ConcreteEngine.Engine.Worlds.Data;
 using ConcreteEngine.Graphics.Gfx.Resources;
 using ConcreteEngine.Graphics.Gfx.Utility;
 using ConcreteEngine.Graphics.Primitives;
@@ -12,11 +16,24 @@ using ConcreteEngine.Graphics.Primitives;
 
 namespace ConcreteEngine.Engine.Worlds.Render.Batching;
 
+
 public sealed class ParticleBatcher : RenderBatcher
 {
-    public int ParticleCount { get; set; }
+    public const int DefaultCapacity = 128;
+    private ParticleInstanceData[] _particleData = Array.Empty<ParticleInstanceData>();
+    
+    private VertexBufferId _particleVbo = default;
+
     internal ParticleBatcher(GfxContext gfx) : base(gfx)
     {
+    }
+
+    internal int Capacity => _particleData.Length;
+    internal Span<ParticleInstanceData> GetBufferSpan() => _particleData;
+
+    internal void UploadGpuData()
+    {
+        Gfx.Buffers.UploadVertexBuffer<ParticleInstanceData>(_particleVbo, _particleData, 0);
     }
 
     private void GenerateMesh()
@@ -26,25 +43,52 @@ public sealed class ParticleBatcher : RenderBatcher
             new Vertex2D(-0.5f, -0.5f, 0f, 0f), new Vertex2D(0.5f, -0.5f, 1f, 0f),
             new Vertex2D(-0.5f, 0.5f, 0f, 1f), new Vertex2D(0.5f, 0.5f, 1f, 1f)
         };
-        
-        var props = MeshDrawProperties.MakeInstance(drawCount: 4, instances: ParticleCount);
+
+        _particleData = new ParticleInstanceData[DefaultCapacity];
+        var rnd = Random.Shared;
+        for (int i = 0; i < _particleData.Length; i++)
+        {
+            ref var particle = ref _particleData[i];
+            particle.Position = new Vector4(120 + i * 0.5f, 10, 100 + i * 0.5f, rnd.Next(1, 2));
+            particle.Color = Color4.Red.AsVec4();
+        }
+
+        var props = MeshDrawProperties.MakeInstance(DrawPrimitive.TriangleStrip, drawCount: 4,
+            instances: DefaultCapacity);
         var builder = Gfx.Meshes.StartUploadBuilder(in props);
-        builder.UploadVertices(vertices, BufferUsage.DynamicDraw, BufferStorage.Dynamic,
+
+        builder.UploadVertices(vertices, BufferUsage.StaticDraw, BufferStorage.Static,
             BufferAccess.MapWrite);
 
-        var attribBuilder = new VertexAttributeMaker<Vertex2D>();
-        builder.AddAttribute(attribBuilder.Make<Vector2>(0, 0));
-        builder.AddAttribute(attribBuilder.Make<Vector2>(1, 0));
-        
+        builder.UploadVertices<ParticleInstanceData>(
+            _particleData,
+            BufferUsage.DynamicDraw,
+            BufferStorage.Dynamic,
+            BufferAccess.MapWrite,
+            divisor: 2);
+
+        var vertexBuilder = new VertexAttributeMaker<Vertex2D>();
+        builder.AddAttribute(vertexBuilder.Make<Vector2>(0, 0));
+        builder.AddAttribute(vertexBuilder.Make<Vector2>(1, 0));
+
+        var particleBuilder = new VertexAttributeMaker<ParticleInstanceData>();
+        builder.AddAttribute(particleBuilder.Make<Vector4>(2, 1));
+        builder.AddAttribute(particleBuilder.Make<Vector4>(3, 1));
+
+
         MeshId = Gfx.Meshes.FinishUploadBuilder(out _);
+        var details = Gfx.Meshes.GetMeshDetails(MeshId, out var meta);
+        VboIds = details.VboIds.ToArray();
+        _particleVbo = VboIds[1];
     }
 
     public override void BuildBatch()
     {
-        throw new NotImplementedException();
+        GenerateMesh();
     }
 
     public override void Dispose()
     {
+        Gfx.Disposer.EnqueueRemoval(MeshId);
     }
 }

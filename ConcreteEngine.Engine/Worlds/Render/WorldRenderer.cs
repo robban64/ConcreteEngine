@@ -44,11 +44,10 @@ public sealed class WorldRenderer : IWorldRenderer
     private readonly RenderEngine _renderer;
     private readonly AssetSystem _assets;
 
-
     private readonly MeshTable _meshTable;
     private readonly MaterialTable _materialTable;
     private readonly RenderEntityBus _renderEntityBus;
-
+    
     private readonly EngineEventBus _eventBus;
 
     private bool _hasUploadedMaterial = false;
@@ -228,6 +227,7 @@ public sealed class WorldRenderer : IWorldRenderer
                 PresentShader = _assets.Store.GetByName<Shader>("Present").ResourceId,
                 HighlightShader = _assets.Store.GetByName<Shader>("Highlight").ResourceId,
                 BoundingBoxShader = _assets.Store.GetByName<Shader>("BoundingBox").ResourceId,
+                ParticleShader =  _assets.Store.GetByName<Shader>("Particle").ResourceId,
             };
     }
 }

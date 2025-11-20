@@ -52,6 +52,23 @@ public sealed class Demo3DScene : GameScene
         var worldTerrain = Context.World.Terrain;
         worldTerrain.CreateTerrainMesh(heightmap);
         worldTerrain.SetMaterial(terrainMat.Id);
+        
+        var particleMat = assets.MaterialStore.CreateMaterial("ParticleMat", "ParticleMat1");
+        particleMat.State.Transparency = true;
+        particleMat.State.Color = new Color4(0.55f, 0.85f, 0.45f);
+        particleMat.State.Shininess = 0f;
+        particleMat.State.Specular = 0f;
+
+        particleMat.State.Pipeline = new MaterialPipelineState
+        {
+            PassState = GfxPassState.Set(GfxStateFlags.Blend, GfxStateFlags.Cull),
+            PassFunctions = new GfxPassStateFunc(BlendMode.Alpha)
+        };
+        var worldParticles = Context.World.Particles;
+        worldParticles.CreateParticleMesh();
+        worldParticles.SetMaterial(particleMat.Id);
+
+        
 
         // Trees
         var treeMat = materialStore.CreateMaterial("TreeBarkMat", "TreeMat1");
@@ -67,6 +84,7 @@ public sealed class Demo3DScene : GameScene
         leaf2Mat.State.Color = new Color4(0.55f, 0.85f, 0.45f);
         leaf2Mat.State.Shininess = 0f;
         leaf2Mat.State.Specular = 0f;
+
 
 
         var leafState =

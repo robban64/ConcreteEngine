@@ -35,8 +35,6 @@ internal sealed class GrassBatcher : RenderBatcher
             new(-0.5f, -0.5f), new(0.5f, -0.5f), new(-0.5f, 0.5f), new(0.5f, 0.5f)
         };
 
-        var props = MeshDrawProperties.MakeInstance(4, GrassCount);
-        var builder = Gfx.Meshes.StartUploadBuilder(in props);
         //builder.UploadVertices();
         //builder.UploadVertices();
     }

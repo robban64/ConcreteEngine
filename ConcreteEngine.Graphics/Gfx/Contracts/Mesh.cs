@@ -62,10 +62,10 @@ public readonly struct MeshDrawProperties(
         new(meta.Primitive, meta.Kind, meta.ElementSize, meta.DrawCount);
 
     public static MeshDrawProperties MakeArray(int drawCount = 0) =>
-        new(DrawPrimitive.Triangles, DrawMeshKind.Invalid, DrawElementSize.Invalid, drawCount);
+        new(DrawPrimitive.Triangles, DrawMeshKind.Arrays, DrawElementSize.Invalid, drawCount);
 
-    public static MeshDrawProperties MakeInstance(int drawCount, int instances) =>
-        new(DrawPrimitive.Triangles, DrawMeshKind.Invalid, DrawElementSize.Invalid, drawCount, instances);
+    public static MeshDrawProperties MakeInstance(DrawPrimitive primitive, int drawCount, int instances) =>
+        new(primitive, DrawMeshKind.ArraysInstanced, DrawElementSize.Invalid, drawCount, instanceCount: instances);
 
 
     public static MeshDrawProperties MakeElemental(DrawMeshKind kind = DrawMeshKind.Elements,

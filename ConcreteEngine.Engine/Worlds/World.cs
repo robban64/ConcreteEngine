@@ -25,6 +25,7 @@ public interface IWorld
     WorldRenderParams WorldRenderParams { get; }
     WorldSkybox Sky { get; }
     WorldTerrain Terrain { get; }
+    WorldParticles Particles { get; }
     
     WorldRaycaster Raycast { get; }
      
@@ -69,6 +70,7 @@ public sealed class World : IWorld
     public WorldSkybox Sky => _sky;
     public WorldTerrain Terrain => _terrain;
     public WorldEntities Entities => _entities;
+    public WorldParticles Particles => _particles;
 
 
     public IMeshTable MeshTable => _meshTable;
@@ -150,5 +152,10 @@ public sealed class World : IWorld
     {
         Entities.EndTick();
         Camera.EndTick();
+    }
+    
+    internal void OnPreRender(float alpha)
+    {
+        _particles?.PreRenderProcess(alpha);
     }
 }

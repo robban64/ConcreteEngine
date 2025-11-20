@@ -13,7 +13,7 @@ namespace ConcreteEngine.Graphics.Gfx;
 public interface IGfxMeshBuilder
 {
     void UploadVertices<T>(ReadOnlySpan<T> data, BufferUsage usage,
-        BufferStorage storage, BufferAccess access) where T : unmanaged;
+        BufferStorage storage, BufferAccess access, byte divisor = 0) where T : unmanaged;
 
     void UploadIndices<T>(ReadOnlySpan<T> data, BufferUsage usage,
         BufferStorage storage, BufferAccess access) where T : unmanaged;
@@ -31,7 +31,6 @@ internal sealed class GfxMeshBuilder : IGfxMeshBuilder
     private GfxBuffers _gfxBuffers = null!;
     private Phase _phase;
 
-    private int _vboIdx = 0;
 
     internal GfxMeshBuilder(GfxMeshes gfxMeshes, GfxBuffers gfxBuffers, in MeshDrawProperties props)
     {
@@ -64,17 +63,17 @@ internal sealed class GfxMeshBuilder : IGfxMeshBuilder
 
 
     public void UploadVertices<T>(ReadOnlySpan<T> data, BufferUsage usage,
-        BufferStorage storage, BufferAccess access) where T : unmanaged
+        BufferStorage storage, BufferAccess access, byte divisor=0) where T : unmanaged
     {
         EnsureStarted();
-        if (_vboIdx >= GfxLimits.MaxVboBindings)
+        if (_state.VboCount >= GfxLimits.MaxVboBindings)
             throw GraphicsException.LimitExceeded(nameof(GfxLimits.MaxVboBindings), GfxLimits.MaxVboBindings);
 
-        var vboId = _gfxBuffers.CreateVertexBuffer(data, 0, 0, storage, access);
+        var vboId = _gfxBuffers.CreateVertexBuffer(data, divisor, 0, storage, access);
 
-        _state.VboIds[_vboIdx] = vboId;
-        _gfxMeshes.AttachVertexBuffer(_state.MeshId, vboId, _vboIdx);
-        _vboIdx++;
+        _state.VboIds[_state.VboCount] = vboId;
+        _gfxMeshes.AttachVertexBuffer(_state.MeshId, vboId, _state.VboCount);
+        _state.VboCount++;
         if (_phase < Phase.BuffersUploading) _phase = Phase.BuffersUploading;
     }
 
@@ -135,14 +134,10 @@ internal sealed class GfxMeshBuilder : IGfxMeshBuilder
         if (_state.AttribCount + 1 >= GfxLimits.MaxVertexAttribs)
             throw GraphicsException.LimitExceeded(nameof(GfxLimits.MaxVertexAttribs), GfxLimits.MaxVertexAttribs);
 
-        if (_state.Attributes.Length == 0 && _state.AttribCount == 0)
-            _state.Attributes = new VertexAttribute[4];
+        _state.EnsureAttributes(_state.AttribCount);
 
         var stateAttributes = _state.Attributes;
         stateAttributes[_state.AttribCount++] = attribute;
-
-        if (_state.AttribCount >= _state.Attributes.Length)
-            Array.Resize(ref stateAttributes, GfxLimits.MaxVertexAttribs);
 
         if (_phase < Phase.AttributesSet) _phase = Phase.AttributesSet;
     }
@@ -161,13 +156,29 @@ internal sealed class GfxMeshBuilder : IGfxMeshBuilder
 
 internal sealed class MeshBuildState
 {
+    private VertexAttribute[] _attributes = Array.Empty<VertexAttribute>();
+    
     public int AttribCount { get; set; }
     public int VboCount { get; set; }
     public MeshId MeshId { get; set; }
     public IndexBufferId IboId { get; set; }
+
     public VertexBufferId[] VboIds { get; set; } = new VertexBufferId[4];
-    public VertexAttribute[] Attributes { get; set; } = Array.Empty<VertexAttribute>();
+
+    public VertexAttribute[] Attributes
+    {
+        get => _attributes;
+        set => _attributes = value;
+    }
+
     public MeshDrawProperties DrawProperties { get; set; } = MeshDrawProperties.MakeArray();
+
+    public void EnsureAttributes(int count)
+    {
+        if(_attributes.Length == 0) _attributes = new VertexAttribute[4];
+        if(count == 4) Array.Resize(ref _attributes, 8);
+        if(count == 8) Array.Resize(ref _attributes, 16);
+    }
 
     public MeshLayout Compile()
     {

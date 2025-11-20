@@ -13,7 +13,8 @@ internal static class CoreShaderManifest
         ModelManifest,
         DepthManifest,
         HighlightManifest,
-        BoundingManifest
+        BoundingManifest,
+        ParticleManifest
     ];
     
     /*
@@ -51,5 +52,7 @@ internal static class CoreShaderManifest
     
     public static ShaderDescriptor HighlightManifest => new("Highlight", "model-plain.vert.glsl", "highlight.frag.glsl");
     public static ShaderDescriptor BoundingManifest => new("BoundingBox", "model-plain.vert.glsl", "bounding-box.frag.glsl");
+
+    public static ShaderDescriptor ParticleManifest => new("Particle", "particle.vert.glsl", "particle.frag.glsl");
 
 }

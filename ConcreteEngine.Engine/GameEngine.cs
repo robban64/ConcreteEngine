@@ -153,43 +153,6 @@ public sealed class GameEngine : IDisposable
         _engineGateway.RenderEditor(in frameInfo);
     }
 
-/*
-    private void ProcessPendingQueue(long frameIndex)
-    {
-    }
-
-    private void ProcessCommandQueue()
-    {
-        while (EngineCommandHandler.TryDequeueCommand(out var cmd))
-        {
-            try
-            {
-                ProcessRequest(cmd);
-                Logger.LogString(LogScope.Engine, $"Command invoked: {cmd}");
-            }
-            catch (Exception ex)
-            {
-                var msg = $"Error while processing command {cmd}";
-                var level = ErrorUtils.IsUserOrDataError(ex) ? LogLevel.Warn : LogLevel.Critical;
-                Logger.LogString(LogScope.Engine, msg, level);
-                Logger.LogString(LogScope.Engine, ex.Message, level);
-
-                if (!ErrorUtils.IsUserOrDataError(ex) && ex is not InvalidOperationException { InnerException: null })
-                    throw;
-            }
-        }
-    }
-
-    void ProcessRequest(EngineCommandRecord cmd)
-    {
-        if (cmd.Scope == EngineCommandScope.AssetCommand && cmd is AssetCommandRecord assetCmd)
-            _assets.EnqueueReloadAsset(assetCmd.Name);
-        else if (cmd.Scope == EngineCommandScope.RenderCommand && cmd is FboCommandRecord fboCmd)
-            _worldRenderer.RecreateFrameBuffer(fboCmd);
-    }*/
-
-    private int _idx = 0;
-
     internal void Update(float dt)
     {
         _updateInfo.BeginUpdateFrame(dt, _window.WindowSize, _window.OutputSize);
@@ -224,7 +187,7 @@ public sealed class GameEngine : IDisposable
         UpdateSceneTransitionIfNeeded();
     }
 
-    private void GameTickUpdate(int tick)
+    private void GameTickUpdate(int tick, float tickDt)
     {
         _world.StartTick(_window.WindowSize);
         
@@ -235,7 +198,7 @@ public sealed class GameEngine : IDisposable
         _world.EndTick();
     }
 
-    private void DebugTickUpdate(int tick)
+    private void DebugTickUpdate(int tick, float tickDt)
     {
     }
 

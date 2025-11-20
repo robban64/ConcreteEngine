@@ -38,18 +38,14 @@ public sealed class EditorPortal : IDisposable
     public void AddLog(string? msg) => ConsoleService.SendLog(msg);
 
 
-    public void Update(float delta)
+    public void Render(float delta)
     {
         if (!Initialized) return;
         _controller.Update(delta);
         EditorService.Render(delta, EditorInput.BlockInput());
         ImGui.Render();
-    }
-
-    public void Render()
-    {
-        if (!Initialized) return;
         _controller.Render();
+        ImGui.EndFrame();
     }
 
 

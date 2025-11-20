@@ -19,19 +19,22 @@ public sealed class FlyCameraModule : GameModule
     private Camera3D _camera = null!;
     private IEngineInputSource _input = null!;
 
+    private Vector3 _prevTranslation = default;
+
     public override void Initialize()
     {
         _input = Context.GetSystem<IInputSystem>().InputSource;
+        _camera = Context.World.Camera;
+        _prevTranslation = _camera.Translation;
     }
 
+    
     public override void Update(in UpdateTickInfo frameCtx)
     {
-        _camera = Context.World.Camera;
-
         var dt = frameCtx.DeltaTime;
 
-        var speed = BaseSpeed;
-        var rotateSpeed = RotationSpeed;
+        var speed = BaseSpeed * dt;
+        var rotateSpeed = RotationSpeed * dt;
 
         (float yaw, float pitch) = _camera.Orientation;
         var newPos = _camera.Translation;
@@ -51,9 +54,8 @@ public sealed class FlyCameraModule : GameModule
             pitch -= rotateSpeed;
 
         var orientation = new YawPitch(yaw, pitch).WithClampedPitch();
-
-        _camera.Translation = Vector3.Lerp(_camera.Translation, newPos, dt);
-        _camera.Orientation = YawPitch.Lerp(_camera.Orientation, orientation, dt);
+        _camera.Translation = newPos;
+        _camera.Orientation = orientation;
     }
 
 

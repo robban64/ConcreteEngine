@@ -13,12 +13,16 @@ internal sealed class EngineTimeHub
     public DebounceTicker? DebounceTicker { get; set; } = null;
     public RenderTickScheduler RenderTicker { get; } = new();
 
-    public float Alpha => _gameTickScheduler.Alpha;
+
 
     public EngineTimeHub(UpdateTickDelegate onGameTick, UpdateTickDelegate onUpdateLogTick)
     {
         _gameTickScheduler = new GameTickScheduler(onGameTick, onUpdateLogTick);
     }
 
+    public float Alpha => _gameTickScheduler.Alpha;
+    public float FixedDeltaTime => _gameTickScheduler.FixedDeltaTime;
+
+    
     public void AdvanceTick(float dt) => _gameTickScheduler.Advance(dt);
 }

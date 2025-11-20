@@ -102,17 +102,13 @@ internal sealed class EngineGateway : IDisposable
     }
 
 
-    public void UpdateEditor(float delta)
-    {
-        if (!Enabled || !HasBoundEditor) return;
-        _editor.Update(delta);
-    }
+
 
     public void RenderEditor(in RenderFrameInfo frameInfo)
     {
         if (!Enabled || !HasBoundEditor) return;
         _apiContext.OnRenderFrame(in frameInfo);
-        _editor.Render();
+        _editor.Render(frameInfo.DeltaTime);
     }
 
     public void RefreshMetrics(bool force = false)
@@ -123,7 +119,6 @@ internal sealed class EngineGateway : IDisposable
             MetricsApi.RefreshFrameMetrics();
             MetricsApi.RefreshAssetMetrics();
             MetricsApi.RefreshGfxResourceMetrics();
-
             MetricsApi.RefreshSceneMetrics();
             MetricsApi.RefreshMemoryMetrics();
             return;

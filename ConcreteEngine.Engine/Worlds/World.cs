@@ -90,10 +90,45 @@ public sealed class World : IWorld
         Sky.AttachRenderer(_meshTable);
         Terrain.AttachRenderer(_batchers.Register(new TerrainBatcher(gfx)),_meshTable, _materialTable);
         _particles.AttachRenderer(_batchers.Register(new ParticleBatcher(gfx)),_meshTable, _materialTable);
-
+    }
+    
+    internal void StartUpdate(Size2D viewSize, float dt)
+    {
+        Camera.Viewport = viewSize;
+    }
+    
+    internal void StartTick(float fixedDt)
+    {
+        ProcessActions();
+        _particles?.Simulate(fixedDt);
     }
 
-    internal void ProcessActions()
+    internal void EndTick()
+    {
+        Entities.EndTick();
+        Camera.EndTick();
+    }
+    
+    internal void OnPreRender(float alpha)
+    {
+        _particles?.PreRenderProcess(alpha);
+    }
+
+    internal void ProcessCommand(IWorldCommandRecord cmd)
+    {
+        if (cmd is EntityCommandRecord<TransformData> transformCmd)
+        {
+        }
+        else if (cmd is CameraCommandRecord cameraCmd)
+        {
+        }
+        else
+        {
+            throw new InvalidOperationException("Unknown Command");
+        }
+    }
+    
+    private void ProcessActions()
     {
         var entities = Entities;
 
@@ -129,33 +164,7 @@ public sealed class World : IWorld
         WorldActionSlot.ClearDirty();
     }
 
-    internal void ProcessCommand(IWorldCommandRecord cmd)
-    {
-        if (cmd is EntityCommandRecord<TransformData> transformCmd)
-        {
-        }
-        else if (cmd is CameraCommandRecord cameraCmd)
-        {
-        }
-        else
-        {
-            throw new InvalidOperationException("Unknown Command");
-        }
-    }
 
-    internal void StartTick(Size2D viewSize)
-    {
-        Camera.Viewport = viewSize;
-    }
 
-    internal void EndTick()
-    {
-        Entities.EndTick();
-        Camera.EndTick();
-    }
-    
-    internal void OnPreRender(float alpha)
-    {
-        _particles?.PreRenderProcess(alpha);
-    }
+  
 }

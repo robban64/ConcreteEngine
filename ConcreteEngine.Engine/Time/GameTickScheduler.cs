@@ -35,7 +35,7 @@ internal sealed class GameTickScheduler
     }
 
     public float Alpha => _alpha;
-    public float TickDeltaTime => GameTickDeltaTime;
+    public float FixedDeltaTime => GameTickDeltaTime;
 
     public void Advance(float deltaTime)
     {
@@ -51,11 +51,9 @@ internal sealed class GameTickScheduler
             tickCounter++;
         }
 
-        tickCounter = 0;
-        while (tickCounter < MaxTicksPerFrame && _diagnosticTicker.TryDequeueTick(out t))
+        while (_diagnosticTicker.TryDequeueTick(out t))
         {
             _onUpdateLogTick(t, DiagnosticTickDeltaTime);
-            tickCounter++;
         }
 
         _alpha = _gameTicker.Alpha;

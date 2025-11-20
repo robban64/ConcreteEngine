@@ -155,14 +155,17 @@ public sealed class GameEngine : IDisposable
 
     internal void Update(float dt)
     {
-        _updateInfo.BeginUpdateFrame(dt, _window.WindowSize, _window.OutputSize);
+        var outputSize = _window.OutputSize;
+        _updateInfo.BeginUpdateFrame(dt, _window.WindowSize, outputSize);
         ref readonly var updateInfo = ref _updateInfo.UpdateTickInfo;
+        
+        _inputSystem.Update(!_engineGateway.BlockInput());
 
         if (_stateMachine.Current != EngineStateLevel.Running)
         {
             RunSetupStateMachine();
             return;
-        }
+        }   
 
         if (_assets.PendingAssetCount > 0)
         {
@@ -174,28 +177,31 @@ public sealed class GameEngine : IDisposable
 
         if (_editorQueues.DeferredCommandCount > 0)
             _editorQueues.DrainDeferredCommands();
-
-        _world?.ProcessActions();
-
-        _engineGateway.UpdateEditor(dt);
-
+        
         _timeHub.AdvanceTick(dt);
 
+        _world?.StartUpdate(outputSize,dt);
+        _sceneManager.Current?.Update(in updateInfo);
 
-        _sceneManager.Current?.Update(in updateInfo, _window.OutputSize);
-
-        UpdateSceneTransitionIfNeeded();
     }
 
-    private void GameTickUpdate(int tick, float tickDt)
+    private void GameTickUpdate(int tick, float fixedDt)
     {
-        _world.StartTick(_window.WindowSize);
+        _updateInfo.UpdateTick(tick, fixedDt);
+
+        if (_sceneManager.Current == null)
+        {
+            UpdateSceneTransitionIfNeeded();
+            return;
+        }
+
+        _world.StartTick(fixedDt);
         
-        _updateInfo.UpdateTick(tick);
-        _inputSystem.Update(!_engineGateway.BlockInput());
-        _sceneManager.Current?.UpdateTick(tick);
+        _sceneManager.Current.UpdateTick(tick);
         
         _world.EndTick();
+        
+        UpdateSceneTransitionIfNeeded();
     }
 
     private void DebugTickUpdate(int tick, float tickDt)

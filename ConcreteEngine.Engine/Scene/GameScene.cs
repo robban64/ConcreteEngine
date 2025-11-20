@@ -23,7 +23,7 @@ public abstract class GameScene
     {
     }
 
-    internal void Update(in UpdateTickInfo frameCtx, Size2D output)
+    internal void Update(in UpdateTickInfo frameCtx)
     {
         Context.Modules.Update(in frameCtx);
     }

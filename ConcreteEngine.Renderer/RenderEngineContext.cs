@@ -1,0 +1,39 @@
+#region
+
+using ConcreteEngine.Graphics.Gfx;
+using ConcreteEngine.Graphics.Gfx.Resources;
+using ConcreteEngine.Renderer.Draw;
+using ConcreteEngine.Renderer.Passes;
+using ConcreteEngine.Renderer.Registry;
+using ConcreteEngine.Renderer.State;
+
+#endregion
+
+namespace ConcreteEngine.Renderer;
+
+internal sealed class RenderStateContext
+{
+    private RenderFrameInfo _frameInfo;
+    private RenderRuntimeParams _frameParams;
+    public ref readonly RenderFrameInfo CurrentFrameInfo => ref _frameInfo;
+    public ref readonly RenderRuntimeParams CurrentRuntimeParams => ref _frameParams;
+
+    public MeshId FsqMesh { get; init; }
+
+    public required RenderParamsSnapshot Snapshot { get; init; }
+    public required RenderView View { get; init; }
+
+    public void SetCurrentFrameInfo(in RenderFrameInfo frameInfo, in RenderRuntimeParams frameParams)
+    {
+        _frameInfo = frameInfo;
+        _frameParams = frameParams;
+    }
+}
+
+internal sealed class RenderEngineContext
+{
+    public required GfxContext Gfx { get; init; }
+    public required RenderRegistry Registry { get; init; }
+    public required DrawCommandPipeline CommandPipeline { get; init; }
+    public required RenderPassPipeline PassPipeline { get; init; }
+}

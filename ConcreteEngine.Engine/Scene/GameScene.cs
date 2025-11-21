@@ -1,0 +1,55 @@
+#region
+
+using ConcreteEngine.Common.Numerics;
+using ConcreteEngine.Engine.Configuration;
+using ConcreteEngine.Engine.Data;
+using ConcreteEngine.Engine.Worlds;
+using ConcreteEngine.Engine.Worlds.View;
+
+#endregion
+
+namespace ConcreteEngine.Engine.Scene;
+
+//TODO rework
+public abstract class GameScene
+{
+    protected GameSceneContext Context { get; private set; } = null!;
+
+    protected IWorld World => Context.World;
+    protected Camera3D Camera => World.Camera;
+
+
+    protected GameScene()
+    {
+    }
+
+    internal void Update(in UpdateTickInfo frameCtx)
+    {
+        Context.Modules.Update(in frameCtx);
+    }
+
+    internal void UpdateTick(int tick, float fixedDt)
+    {
+        Context.Modules.GameTickUpdate(tick, fixedDt);
+    }
+
+    internal void AttachContext(GameSceneContext context) => Context = context;
+
+    internal void Build(GameSceneConfigBuilder builder)
+    {
+        ConfigureRenderer(builder);
+        ConfigureModules(builder);
+    }
+
+    internal void InitializeInternal()
+    {
+        Initialize();
+    }
+
+    protected abstract void ConfigureModules(IGameSceneModuleBuilder builder);
+    protected abstract void ConfigureRenderer(IGameSceneRenderBuilder builder);
+
+
+    public abstract void Initialize();
+    public abstract void Unload();
+}

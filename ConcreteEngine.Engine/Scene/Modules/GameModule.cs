@@ -17,7 +17,7 @@ public abstract class GameModule
 
     public abstract void Initialize();
 
-    public virtual void UpdateTick(int tick)
+    public virtual void UpdateTick(int tick, float fixedDt)
     {
     }
 

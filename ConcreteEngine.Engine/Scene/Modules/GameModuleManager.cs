@@ -31,13 +31,13 @@ public sealed class ModuleManager : IModuleManager
         throw new InvalidOperationException($"Module {typeof(T).Name} is not registered.");
     }
 
-    internal void GameTickUpdate(int tick)
+    internal void GameTickUpdate(int tick, float fixedDt)
     {
         if (_modules.Count == 0) return;
 
         foreach (var module in _modules)
         {
-            module.UpdateTick(tick);
+            module.UpdateTick(tick,fixedDt);
         }
     }
 

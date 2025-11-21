@@ -198,7 +198,7 @@ public sealed class GameEngine : IDisposable
 
         _world.StartTick(fixedDt, _renderFrameInfo.Time);
         
-        _sceneManager.Current.UpdateTick(tick);
+        _sceneManager.Current.UpdateTick(tick, fixedDt);
         
         _world.EndTick();
         

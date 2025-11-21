@@ -28,9 +28,9 @@ public abstract class GameScene
         Context.Modules.Update(in frameCtx);
     }
 
-    internal void UpdateTick(int tick)
+    internal void UpdateTick(int tick, float fixedDt)
     {
-        Context.Modules.GameTickUpdate(tick);
+        Context.Modules.GameTickUpdate(tick, fixedDt);
     }
 
     internal void AttachContext(GameSceneContext context) => Context = context;

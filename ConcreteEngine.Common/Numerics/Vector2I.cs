@@ -20,13 +20,10 @@ public readonly struct Vector2I(int x, int y) : IEquatable<Vector2I>, IComparabl
     public static Vector2I UnitX => new(1, 0);
     public static Vector2I UnitY => new(0, 1);
 
-    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public Vector2 ToVector2() => new(X, Y);
 
-    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static Vector2I From(Vector2 v) => new((int)v.X, (int)v.Y);
 
-    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static Vector2I From((int x, int y) t) => new(t.x, t.y);
 
     public (int x, int y) ToTuple() => (X, Y);
@@ -59,35 +56,31 @@ public readonly struct Vector2I(int x, int y) : IEquatable<Vector2I>, IComparabl
 
     // helpers
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public static Vector2I Min(in Vector2I a, in Vector2I b)
+    public static Vector2I Min(Vector2I a, Vector2I b)
     {
         return new Vector2I(a.X < b.X ? a.X : b.X, a.Y < b.Y ? a.Y : b.Y);
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public static Vector2I Max(in Vector2I a, in Vector2I b)
+    public static Vector2I Max(Vector2I a, Vector2I b)
     {
         return new Vector2I(a.X > b.X ? a.X : b.X, a.Y > b.Y ? a.Y : b.Y);
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public static Vector2I Clamp(in Vector2I v, in Vector2I min, in Vector2I max) => Max(min, Min(v, max));
+    public static Vector2I Clamp(Vector2I v, Vector2I min, Vector2I max) => Max(min, Min(v, max));
 
-    [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public static Vector2I Abs(in Vector2I v)
+    public static Vector2I Abs(Vector2I v)
     {
         int ax = v.X < 0 ? -v.X : v.X;
         int ay = v.Y < 0 ? -v.Y : v.Y;
         return new Vector2I(ax, ay);
     }
 
-    [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public static int Dot(in Vector2I a, in Vector2I b) => a.X * b.X + a.Y * b.Y;
+    public static int Dot(Vector2I a, Vector2I b) => a.X * b.X + a.Y * b.Y;
 
-    [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public static int PerpDot(in Vector2I a, in Vector2I b) => a.X * b.Y - a.Y * b.X;
+    public static int PerpDot(Vector2I a, Vector2I b) => a.X * b.Y - a.Y * b.X;
 
-    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public int Manhattan()
     {
         int ax = X < 0 ? -X : X;
@@ -95,27 +88,23 @@ public readonly struct Vector2I(int x, int y) : IEquatable<Vector2I>, IComparabl
         return ax + ay;
     }
 
-    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public float Length() => MathF.Sqrt(X * X + Y * Y);
 
     public float LengthSquared() => X * X + Y * Y;
 
     public Vector2I Scaled(float k) => new((int)MathF.Round(X * k), (int)MathF.Round(Y * k));
 
-    public static Vector2I Lerp(in Vector2I a, in Vector2I b, float t)
+    public static Vector2I Lerp(Vector2I a, Vector2I b, float t)
     {
         float ix = a.X + (b.X - a.X) * t;
         float iy = a.Y + (b.Y - a.Y) * t;
         return new Vector2I((int)MathF.Round(ix), (int)MathF.Round(iy));
     }
 
-    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public Vector2I PerpendicularCW() => new(Y, -X);
 
-    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public Vector2I PerpendicularCCW() => new(-Y, X);
 
-    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public bool TryCopyTo(Span<int> dst)
     {
         if (dst.Length < 2) return false;
@@ -124,7 +113,6 @@ public readonly struct Vector2I(int x, int y) : IEquatable<Vector2I>, IComparabl
         return true;
     }
 
-    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public void CopyTo(Span<int> dst)
     {
         dst[0] = X;

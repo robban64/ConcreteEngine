@@ -13,53 +13,73 @@ namespace ConcreteEngine.Engine.Scene.Modules;
 
 public sealed class FlyCameraModule : GameModule
 {
-    private const float BaseSpeed = 90;
-    private const float RotationSpeed = 33f;
+    private const float BaseSpeed = 65f;
+    private const float RotationSpeed = 65f;
 
     private Camera3D _camera = null!;
     private IEngineInputSource _input = null!;
 
-    private Vector3 _prevTranslation = default;
-
+    private Vector3 _currentVelocity;
+    private YawPitch _targetOrientation;
+    
     public override void Initialize()
     {
         _input = Context.GetSystem<IInputSystem>().InputSource;
         _camera = Context.World.Camera;
-        _prevTranslation = _camera.Translation;
     }
 
     
     public override void Update(in UpdateTickInfo frameCtx)
     {
-        var dt = frameCtx.DeltaTime;
-
-        var speed = BaseSpeed * dt;
-        var rotateSpeed = RotationSpeed * dt;
-
-        (float yaw, float pitch) = _camera.Orientation;
-        var newPos = _camera.Translation;
-
-        if (_input.IsKeyDown(Key.W))
-            newPos += _camera.Forward * speed;
-        if (_input.IsKeyDown(Key.S))
-            newPos += _camera.Forward * -speed;
-
-        if (_input.IsKeyDown(Key.A))
-            yaw += rotateSpeed;
-        if (_input.IsKeyDown(Key.D))
-            yaw -= rotateSpeed;
-        if (_input.IsKeyDown(Key.Q))
-            pitch += rotateSpeed;
-        if (_input.IsKeyDown(Key.E))
-            pitch -= rotateSpeed;
-
-        var orientation = new YawPitch(yaw, pitch).WithClampedPitch();
-        _camera.Translation = newPos;
-        _camera.Orientation = orientation;
     }
 
 
-    public override void UpdateTick(int tick)
+    public override void UpdateTick(int tick, float fixedDt)
     {
+        MovementController(fixedDt, BaseSpeed);
+        RotateController(fixedDt, RotationSpeed);
+
+    }
+    
+    private void MovementController(float dt, float speed)
+    {
+        float acceleration = 8.0f;
+        float friction = 8.0f;
+
+        Vector3 targetVelocity = default;
+        
+        if (_input.IsKeyDown(Key.W))
+            targetVelocity += _camera.Forward;
+        if (_input.IsKeyDown(Key.S))
+            targetVelocity -= _camera.Forward;
+        
+        if (targetVelocity.LengthSquared() > 0)
+            targetVelocity = Vector3.Normalize(targetVelocity) * speed;
+
+        float t = 1.0f - MathF.Exp(-acceleration * dt);
+        if (targetVelocity == Vector3.Zero) t = 1.0f - MathF.Exp(-friction * dt);
+        _currentVelocity = Vector3.Lerp(_currentVelocity, targetVelocity, t);
+        _camera.Translation += _currentVelocity * dt;
+
+    }
+
+    private void RotateController(float dt, float rotateSpeed)
+    {
+        var speed = rotateSpeed * dt;
+        
+        var orientation = _targetOrientation;
+        if (_input.IsKeyDown(Key.A))
+            orientation = orientation.AddYaw(speed);
+        if (_input.IsKeyDown(Key.D))
+            orientation = orientation.AddYaw(-speed);
+        if (_input.IsKeyDown(Key.Q))
+            orientation = orientation.AddPitch(speed);
+        if (_input.IsKeyDown(Key.E))
+            orientation = orientation.AddPitch(-speed);
+
+        float t = 1.0f - MathF.Exp(-10 * dt);
+
+        _targetOrientation = orientation.WithClampedPitch();
+        _camera.Orientation = YawPitch.Lerp(_camera.Orientation, _targetOrientation, t);
     }
 }

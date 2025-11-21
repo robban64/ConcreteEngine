@@ -14,7 +14,7 @@ internal sealed class MeshLoader
 {
     private readonly MeshImporter _meshImporter;
 
-    public MeshLoader(Func<MeshImportData, MeshCreationInfo> onProcess)
+    public MeshLoader(Action<MeshImportData> onProcess)
     {
         _meshImporter = new MeshImporter(onProcess);
     }

@@ -23,12 +23,14 @@ internal sealed class MeshTable : IMeshTable
     private const int DefaultCapacity = 128;
 
     private BoundingBox[] _modelBoxes = new BoundingBox[DefaultCapacity];
-
     private RangeU16[] _partRanges = new RangeU16[DefaultCapacity];
 
-    private MeshPart[] _parts = new MeshPart[DefaultCapacity];
+    private MeshPart[] _meshParts = new MeshPart[DefaultCapacity];
     private BoundingBox[] _partBoxes = new  BoundingBox[DefaultCapacity];
-    private Matrix4x4[] _localTransforms = new Matrix4x4[DefaultCapacity];
+    private Matrix4x4[] _partTransforms = new Matrix4x4[DefaultCapacity];
+    
+    private RangeU16[] _boneRanges = new RangeU16[DefaultCapacity];
+    private Matrix4x4[] _boneTransforms = new Matrix4x4[DefaultCapacity];
 
     private int _partIdx = 0;
     private int _modelIdx = 0;
@@ -38,8 +40,8 @@ internal sealed class MeshTable : IMeshTable
     public ModelPartView GetPartsRefView(ModelId id)
     {
         var range = _partRanges[id - 1];
-        var parts = _parts.AsSpan(range.Offset, range.Length);
-        var locals = _localTransforms.AsSpan(range.Offset, range.Length);
+        var parts = _meshParts.AsSpan(range.Offset, range.Length);
+        var locals = _partTransforms.AsSpan(range.Offset, range.Length);
         var boxes = _partBoxes.AsSpan(range.Offset, range.Length);
 
         return new ModelPartView(parts, locals, boxes, range);
@@ -51,8 +53,8 @@ internal sealed class MeshTable : IMeshTable
 
         _modelBoxes[_modelIdx] = bounds;
 
-        _parts[_partIdx] = new MeshPart(mesh, materialSlot, drawCount);
-        _localTransforms[_partIdx] = Matrix4x4.Identity;
+        _meshParts[_partIdx] = new MeshPart(mesh, materialSlot, drawCount);
+        _partTransforms[_partIdx] = Matrix4x4.Identity;
         _partRanges[_modelIdx] = new RangeU16((ushort)_partIdx, 1);
 
         _partIdx++;
@@ -80,8 +82,8 @@ internal sealed class MeshTable : IMeshTable
             _partRanges[i] = new RangeU16((ushort)idx, (ushort)model.MeshParts.Length);
             foreach (var part in model.MeshParts)
             {
-                _parts[idx] = new MeshPart(part.ResourceId, part.MaterialSlot, part.DrawCount);
-                _localTransforms[idx] = part.Transform;
+                _meshParts[idx] = new MeshPart(part.ResourceId, part.MaterialSlot, part.DrawCount);
+                _partTransforms[idx] = part.Transform;
                 _partBoxes[idx] = part.Bounds;
                 idx++;
             }
@@ -92,13 +94,13 @@ internal sealed class MeshTable : IMeshTable
 
     private void EnsureCapacity(int cap, int rangeCap)
     {
-        Debug.Assert(_parts.Length == _localTransforms.Length);
+        Debug.Assert(_meshParts.Length == _partTransforms.Length);
 
-        if (_parts.Length < cap)
+        if (_meshParts.Length < cap)
         {
-            var newCap = ArrayUtility.CapacityGrowthToFit(_parts.Length, Math.Max(cap, 64));
-            Array.Resize(ref _parts, newCap);
-            Array.Resize(ref _localTransforms, newCap);
+            var newCap = ArrayUtility.CapacityGrowthToFit(_meshParts.Length, Math.Max(cap, 64));
+            Array.Resize(ref _meshParts, newCap);
+            Array.Resize(ref _partTransforms, newCap);
             Array.Resize(ref _partBoxes, newCap);
         }
 

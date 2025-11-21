@@ -18,7 +18,6 @@ public sealed class MaterialTable : IMaterialTable
 {
     private int _keyIdx = 0;
     private MaterialTag[] _table = new MaterialTag[64];
-    private readonly List<MaterialTag> _tempTable = new(4);
     private readonly Dictionary<MaterialTag, MaterialTagKey> _byTag = new(64);
 
 

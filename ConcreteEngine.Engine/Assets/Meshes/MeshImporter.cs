@@ -41,9 +41,9 @@ internal sealed class MeshImporter
     private readonly List<string> _names = new(8);
 
 
-    private readonly Func<MeshImportData, MeshCreationInfo> _onProcess;
+    private readonly Action<MeshImportData> _onProcess;
 
-    internal MeshImporter(Func<MeshImportData, MeshCreationInfo> onProcess)
+    internal MeshImporter(Action<MeshImportData> onProcess)
     {
         _onProcess = onProcess;
     }
@@ -158,13 +158,15 @@ internal sealed class MeshImporter
             indices[idx++] = face.MIndices[2];
         }
 
+        BoundingBox.FromPoints(new Span<Vector3>(mesh->MVertices, (int)mesh->MNumVertices), out var box);
 
         var vRes = _verts.AsSpan(0, vertexCount);
         var iRes = _indices.AsSpan(0, indexCount);
 
-        BoundingBox.FromPoints(new Span<Vector3>(mesh->MVertices, (int)mesh->MNumVertices), out var box);
-
-        return _onProcess(new MeshImportData(vRes, iRes));
+        var info = new MeshCreationInfo();
+        var result = new MeshImportData(vRes, iRes, ref info);
+        _onProcess(result);
+        return info;
     }
 
     private void EnsureCapacity(int vertexCount, int indexCount)

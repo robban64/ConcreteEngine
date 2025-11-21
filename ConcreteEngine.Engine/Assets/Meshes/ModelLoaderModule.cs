@@ -72,7 +72,7 @@ internal sealed class ModelLoaderModule
         _loader = null!;
     }
 
-    private MeshCreationInfo OnProcess(MeshImportData data)
+    private void OnProcess(MeshImportData data)
     {
         var payload = new MeshUploadPayload(
             attributes: DefaultAttribs,
@@ -86,6 +86,6 @@ internal sealed class ModelLoaderModule
             )
         );
 
-        return _uploader.UploadMesh(in payload);
+        data.Result = _uploader.UploadMesh(in payload);
     }
 }

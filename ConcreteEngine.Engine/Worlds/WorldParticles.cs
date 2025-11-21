@@ -34,15 +34,13 @@ public sealed class WorldParticles
     internal WorldParticles()
     {
         _particleDef.StartColor = new Vector4(1.0f, 0.9f, 0.7f, 0.6f);
-        _particleDef.EndColor = new  Vector4(1.0f, 0.9f, 0.6f, 0.0f);
-        _particleDef.Gravity = new Vector3(0f, -0.2f, 0f);
-        _particleDef.LifeMinMax = new Vector2(4f, 18f);
-        _particleDef.SizeStartEnd = new Vector2(0.08f, 0.2f);
-        _particleDef.SpeedMinMax = new Vector2(0.02f, 0.08f);
+        _particleDef.EndColor = new  Vector4(1.0f, 0.9f, 0.6f, 0.05f);
+        _particleDef.Gravity = new Vector3(0.001f, -0.1f, 0.001f);
+        _particleDef.LifeMinMax = new Vector2(6f, 10f);
+        _particleDef.SizeStartEnd = new Vector2(0.05f, 0.15f);
+        _particleDef.SpeedMinMax = new Vector2(0.02f, 0.11f);
 
-
-        Translation = new Vector3(125, 6, 125);
-        StartArea = new Vector3(25, 1, 25);
+        StartArea = new Vector3(10, 1, 10);
         Direction = new Vector3(0, 1, 0);
     }
 
@@ -77,6 +75,8 @@ public sealed class WorldParticles
             _lastSampleTranslation = cameraPos;
             _translationTicker = 0;
         }
+        
+        if(_lastSampleTranslation == default && cameraPos == default) return;
         
         Translation = Vector3.Lerp(_lastSampleTranslation, cameraPos, float.Min(_translationTicker, 1f));
 

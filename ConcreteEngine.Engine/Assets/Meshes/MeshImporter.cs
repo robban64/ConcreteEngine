@@ -320,8 +320,11 @@ internal sealed class MeshImporter
     {
         Debug.Assert(_verticesSkinned.Length == _skinningData.Length);
         if (_verticesSkinned.Length >= vertexCount) return;
-        Array.Resize(ref _verticesSkinned, vertexCount);
-        Array.Resize(ref _skinningData, vertexCount);
+        
+        var cap = ArrayUtility.CapacityGrowthPow2(int.Max(vertexCount, 8));
+        Array.Resize(ref _verticesSkinned, cap);
+        Array.Resize(ref _skinningData, cap);
+        
         FillDefaultSkinningData();
     }
 
@@ -340,10 +343,6 @@ internal sealed class MeshImporter
         _skinningData.AsSpan().Fill(skinData);
     }
 
-    private unsafe void ComputeBBox(AssimpMesh* mesh, out BoundingBox box)
-    {
-        BoundingBox.FromPoints(new Span<Vector3>(mesh->MVertices, (int)mesh->MNumVertices), out box);
-    }
 
     // cm->0.01f, mm->0.001f, m->1f
     private static float DecideScale(Vector3 bboxMin, Vector3 bboxMax, float unitScale)

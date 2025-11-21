@@ -9,6 +9,31 @@ using ConcreteEngine.Graphics.Gfx.Internal;
 
 namespace ConcreteEngine.Graphics.Gfx.Utility;
 
+
+public struct VertexAttributeMaker
+{
+    private int _offset;
+
+    public VertexAttribute Make<TComponent>(
+        byte location,
+        byte binding = 0,
+        VertexFormat vertexFormat = VertexFormat.Float,
+        bool norm = false) where TComponent : unmanaged
+    {
+        var stride = Unsafe.SizeOf<TComponent>();
+        var scalar = vertexFormat.SizeInBytes();
+
+        if (stride % scalar != 0)
+            throw new ArgumentException("Component size must be a multiple.", nameof(TComponent));
+
+        var componentCount = stride / scalar;
+
+        var attribOffset = _offset;
+        _offset += stride;
+        return new VertexAttribute(location, binding, componentCount, attribOffset);
+    }
+}
+
 public struct VertexAttributeMaker<TElement> where TElement : unmanaged
 {
     public readonly int ElementSize => Unsafe.SizeOf<TElement>();

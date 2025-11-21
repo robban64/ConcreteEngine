@@ -82,16 +82,10 @@ public readonly struct Vector2I(int x, int y) : IEquatable<Vector2I>, IComparabl
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public static int Dot(in Vector2I a, in Vector2I b)
-    {
-        return a.X * b.X + a.Y * b.Y;
-    }
+    public static int Dot(in Vector2I a, in Vector2I b) => a.X * b.X + a.Y * b.Y;
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public static int PerpDot(in Vector2I a, in Vector2I b)
-    {
-        return a.X * b.Y - a.Y * b.X;
-    }
+    public static int PerpDot(in Vector2I a, in Vector2I b) => a.X * b.Y - a.Y * b.X;
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public int Manhattan()
@@ -104,16 +98,10 @@ public readonly struct Vector2I(int x, int y) : IEquatable<Vector2I>, IComparabl
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public float Length() => MathF.Sqrt(X * X + Y * Y);
 
-    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public float LengthSquared() => X * X + Y * Y;
 
-    [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public Vector2I Scaled(float k)
-    {
-        return new Vector2I((int)MathF.Round(X * k), (int)MathF.Round(Y * k));
-    }
+    public Vector2I Scaled(float k) => new((int)MathF.Round(X * k), (int)MathF.Round(Y * k));
 
-    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static Vector2I Lerp(in Vector2I a, in Vector2I b, float t)
     {
         float ix = a.X + (b.X - a.X) * t;

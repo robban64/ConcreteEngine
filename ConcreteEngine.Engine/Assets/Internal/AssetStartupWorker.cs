@@ -1,6 +1,5 @@
 #region
 
-using System.Diagnostics;
 using System.Diagnostics.CodeAnalysis;
 using ConcreteEngine.Common;
 using ConcreteEngine.Engine.Assets.Descriptors;
@@ -11,7 +10,7 @@ namespace ConcreteEngine.Engine.Assets.Internal;
 
 internal sealed class AssetStartupWorker
 {
-    internal enum ProcessStepOrder
+    private enum ProcessStepOrder
     {
         NotStarted,
         Shaders,
@@ -96,6 +95,7 @@ internal sealed class AssetStartupWorker
         return _processOrder == ProcessStepOrder.Finished;
     }
 
+    
     public bool Execute()
     {
         switch (_processOrder)

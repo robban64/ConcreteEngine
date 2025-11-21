@@ -15,15 +15,19 @@ namespace ConcreteEngine.Engine.Assets.Meshes;
 public sealed class Model : AssetObject, IComparable<Model>
 {
     public ModelId ModelId { get; private set; } = default;
-    public required ModelMesh[] MeshParts { get; init; }
     public required int DrawCount { get; init; }
     public required BoundingBox Bounds { get; init; }
 
+    public required ModelMesh[] MeshParts { get; init; }
+    public required ModelAnimation? Animation { get; init; }
+
+    //
     public AssetRef<Model> RefId => new(RawId);
     public override AssetKind Kind => AssetKind.Model;
     public override AssetCategory Category => AssetCategory.Graphic;
     public ResourceKind GfxResourceKind => ResourceKind.Mesh;
 
+    //
     public ModelBaseDrawInfo ToBaseDrawInfo() => new(ModelId, MeshParts.Length, DrawCount);
 
     internal void AttachToRenderer(ModelId modelId)
@@ -37,6 +41,19 @@ public sealed class Model : AssetObject, IComparable<Model>
     {
         return other is null ? 1 : RawId.Value.CompareTo(other.RawId.Value);
     }
+}
+
+public class ModelAnimation(
+    Dictionary<string, int> boneMapping,
+    Matrix4x4[] boneTransforms,
+    in Matrix4x4 inverseRootTransform)
+{
+    private readonly Dictionary<string, int> _boneMapping = boneMapping;
+    private readonly Matrix4x4[] _boneTransforms = boneTransforms;
+    private readonly Matrix4x4 _inverseRootTransform = inverseRootTransform;
+
+    public ref readonly Matrix4x4 InverseRootTransform => ref _inverseRootTransform;
+    public ReadOnlySpan<Matrix4x4> GetBoneTransformSpan() => _boneTransforms;
 }
 
 public readonly record struct ModelBaseDrawInfo(ModelId Model, int PartCount, int DrawCount);

@@ -4,7 +4,7 @@ using ConcreteEngine.Common;
 using ConcreteEngine.Common.Numerics;
 using ConcreteEngine.Common.Time;
 using ConcreteEngine.Engine.Assets;
-using ConcreteEngine.Engine.Assets.Meshes;
+using ConcreteEngine.Engine.Assets.Models;
 using ConcreteEngine.Engine.Assets.Shaders;
 using ConcreteEngine.Engine.Editor.Data;
 using ConcreteEngine.Engine.Editor.Definitions;

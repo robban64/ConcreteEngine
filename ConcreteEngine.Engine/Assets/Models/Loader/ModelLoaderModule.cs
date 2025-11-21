@@ -1,18 +1,12 @@
 #region
 
-using System.Numerics;
-using ConcreteEngine.Common;
 using ConcreteEngine.Engine.Assets.Data;
 using ConcreteEngine.Engine.Assets.Descriptors;
 using ConcreteEngine.Engine.Assets.Internal;
-using ConcreteEngine.Graphics.Gfx.Contracts;
-using ConcreteEngine.Graphics.Gfx.Definitions;
-using ConcreteEngine.Graphics.Gfx.Utility;
-using ConcreteEngine.Graphics.Primitives;
 
 #endregion
 
-namespace ConcreteEngine.Engine.Assets.Meshes;
+namespace ConcreteEngine.Engine.Assets.Models.Loader;
 
 internal sealed class ModelLoaderModule
 {

@@ -4,11 +4,12 @@ using System.Numerics;
 using ConcreteEngine.Common.Numerics;
 using ConcreteEngine.Engine.Assets;
 using ConcreteEngine.Engine.Assets.Materials;
-using ConcreteEngine.Engine.Assets.Meshes;
+using ConcreteEngine.Engine.Assets.Models;
 using ConcreteEngine.Engine.Assets.Textures;
 using ConcreteEngine.Engine.Configuration;
 using ConcreteEngine.Engine.Scene;
 using ConcreteEngine.Engine.Scene.Modules;
+using ConcreteEngine.Engine.Worlds;
 using ConcreteEngine.Engine.Worlds.Entities;
 using ConcreteEngine.Engine.Worlds.Render;
 using ConcreteEngine.Engine.Worlds.Utility;
@@ -23,6 +24,7 @@ namespace Demo3D;
 public sealed class Demo3DScene : GameScene
 {
     private EntitySpawner _spawner;
+
 
     public override void Initialize()
     {
@@ -63,12 +65,23 @@ public sealed class Demo3DScene : GameScene
         {
             PassState = GfxPassState.Set(GfxStateFlags.Blend,
                 GfxStateFlags.DepthWrite | GfxStateFlags.SampleAlphaCoverage),
-            
+
             PassFunctions = new GfxPassStateFunc(BlendMode.Alpha)
         };
         var worldParticles = Context.World.Particles;
         worldParticles.CreateParticleMesh();
         worldParticles.SetMaterial(particleMat.Id);
+
+        var worldEntities = Context.World.Entities;
+        var soliderModel = assets.Store.GetByName<Model>("Solider");
+        var soliderMat = materialStore.CreateMaterial("SoliderMat", "SoliderMat1");
+
+        var soliderEntity = worldEntities.Create();
+        var soliderMatKey = Context.World.EntityMaterials.Add(MaterialTagBuilder.BuildOne(soliderMat.Id));
+        worldEntities.Models.Add(soliderEntity,
+            new ModelComponent(soliderModel.ModelId, soliderModel.DrawCount, soliderMatKey));
+        worldEntities.Transforms.Add(soliderEntity, Transform.Baseline with { Translation = new Vector3(120, 6, 120) });
+        worldEntities.BoundingBoxes.Add(soliderEntity, new BoxComponent(soliderModel.Bounds));
 
 
         // Trees
@@ -128,7 +141,7 @@ public sealed class Demo3DScene : GameScene
         var rockMat2Tag = MaterialTagBuilder.BuildOne(rockMat2.Id);
         var boatMatTag = MaterialTagBuilder.BuildOne(boatMat.Id);
 
-        _spawner.PlaceTreesBasic(20,
+        _spawner.PlaceTreesBasic(2,
         [
             new ScenePlacement(treeMesh.ToBaseDrawInfo(), treeMesh.Bounds, treeMatTag),
             new ScenePlacement(treeMesh1.ToBaseDrawInfo(), treeMesh1.Bounds, birchMatTag),

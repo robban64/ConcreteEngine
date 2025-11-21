@@ -17,7 +17,7 @@ using AssimpNode = Silk.NET.Assimp.Node;
 
 #endregion
 
-namespace ConcreteEngine.Engine.Assets.Meshes;
+namespace ConcreteEngine.Engine.Assets.Models.Loader;
 
 internal sealed class MeshImporter
 {
@@ -66,6 +66,7 @@ internal sealed class MeshImporter
     {
         _uploadMesh = uploadMesh;
         _uploadAnimatedMesh = uploadAnimatedMesh;
+        FillDefaultSkinningData();
     }
 
 
@@ -245,13 +246,21 @@ internal sealed class MeshImporter
             Debug.Assert(vertices.Length == skinned.Length);
             Debug.Assert(vertices.Length == result.Length);
 
-            for (int i = 0; i < vertices.Length; i++)
+            for (var i = 0; i < result.Length; i++)
             {
                 ref readonly var vertex = ref vertices[i];
                 ref readonly var skinnedVertex = ref skinned[i];
-                Unsafe.Write(Unsafe.AsPointer(ref result[i].Position), vertex);
-                result[i].BoneIndices = skinnedVertex.BoneIndices;
-                result[i].BoneWeights = skinnedVertex.BoneWeights;
+                ref var it = ref result[i];
+                Unsafe.Write(Unsafe.AsPointer(ref it.Position), vertex);
+                it.BoneIndices = skinnedVertex.BoneIndices;
+                it.BoneWeights = skinnedVertex.BoneWeights;
+                
+                /*
+                it.Position = vertex.Position;
+                it.TexCoords = vertex.TexCoords;
+                it.Normal = vertex.Normal;
+                it.Tangent = vertex.Tangent;
+                */
             }
         }
     }
@@ -279,7 +288,7 @@ internal sealed class MeshImporter
                 {
                     InvalidOpThrower.ThrowIf(_boneTransforms.Length >= MaxBoneTransformCapacity,
                         nameof(_boneTransforms.Length));
-                    
+
                     Array.Resize(ref _boneTransforms, MaxBoneTransformCapacity);
                 }
 
@@ -320,11 +329,11 @@ internal sealed class MeshImporter
     {
         Debug.Assert(_verticesSkinned.Length == _skinningData.Length);
         if (_verticesSkinned.Length >= vertexCount) return;
-        
+
         var cap = ArrayUtility.CapacityGrowthPow2(int.Max(vertexCount, 8));
         Array.Resize(ref _verticesSkinned, cap);
         Array.Resize(ref _skinningData, cap);
-        
+
         FillDefaultSkinningData();
     }
 

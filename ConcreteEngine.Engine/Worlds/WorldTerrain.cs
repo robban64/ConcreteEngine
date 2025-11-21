@@ -57,7 +57,7 @@ public sealed class WorldTerrain
         Debug.Assert(Terrain.MeshId > 0);
 
         var bounds = new BoundingBox(Vector3.Zero, new Vector3(Terrain.Dimension, TerrainHeight, Terrain.Dimension));
-        Model = _meshTable.CreateModel(Terrain.MeshId, 0, Terrain.DrawCount, in bounds);
+        Model = _meshTable.CreateSimpleModel(Terrain.MeshId, 0, Terrain.DrawCount, in bounds);
     }
 
     public float GetHeight(int x, int z) => Terrain.GetHeight(x, z);

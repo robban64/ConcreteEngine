@@ -1,15 +1,13 @@
 #region
 
-using System.Numerics;
 using ConcreteEngine.Common.Numerics;
 using ConcreteEngine.Engine.Assets.Data;
-using ConcreteEngine.Engine.Assets.Descriptors;
 using ConcreteEngine.Engine.Assets.IO;
 using ConcreteEngine.Graphics.Primitives;
 
 #endregion
 
-namespace ConcreteEngine.Engine.Assets.Meshes;
+namespace ConcreteEngine.Engine.Assets.Models.Loader;
 
 internal sealed class MeshLoader
 {

@@ -60,7 +60,7 @@ public sealed class WorldParticles
     public void CreateParticleMesh()
     {
         _batcher.BuildBatch();
-        _meshTable.CreateModel(_batcher.MeshId, 0, 4, default);
+        _meshTable.CreateSimpleModel(_batcher.MeshId, 0, 4, default);
 
         _particles = new ParticleStateData[_batcher.Capacity];
     }

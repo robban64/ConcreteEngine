@@ -1,7 +1,6 @@
 #region
 
 using ConcreteEngine.Engine.Assets.Data;
-using ConcreteEngine.Engine.Assets.Meshes;
 
 #endregion
 

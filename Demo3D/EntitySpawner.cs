@@ -2,7 +2,8 @@
 
 using System.Numerics;
 using ConcreteEngine.Common.Numerics;
-using ConcreteEngine.Engine.Assets.Meshes;
+using ConcreteEngine.Common.Numerics.Maths;
+using ConcreteEngine.Engine.Assets.Models;
 using ConcreteEngine.Engine.Worlds;
 using ConcreteEngine.Engine.Worlds.Data;
 using ConcreteEngine.Engine.Worlds.Entities;
@@ -41,22 +42,22 @@ public sealed class EntitySpawner(IWorld world, float size = 256f, float margin 
         int? seed = null)
     {
         if (amount <= 0 || variants.Length == 0) return;
-        var rng = new Random(seed ?? 123456);
+        var rng = new FastRandom((uint)(seed ?? 123456));
         intensity = Clamp01(intensity);
-        var (xPrev, zPrev) = RandXz(rng);
+        var (xPrev, zPrev) = RandXz(ref rng);
 
         for (int i = 0; i < amount; i++)
         {
-            var (rx, rz) = RandXz(rng);
+            var (rx, rz) = RandXz(ref rng);
             float bias = 0.6f * intensity;
             float x = float.Lerp(rx, xPrev, bias);
             float z = float.Lerp(rz, zPrev, bias);
 
-            float s = 0.9f + (float)rng.NextDouble() * 0.4f;
+            float s = 0.9f + (float)rng.NextFloat() * 0.4f;
             var scale = new Vector3(s);
-            var rot = Yaw((float)(rng.NextDouble() * MathF.Tau));
+            var rot = Yaw((float)(rng.NextFloat() * MathF.Tau));
 
-            var sp = variants[rng.Next(variants.Length)];
+            var sp = variants[Random.Shared.Next(variants.Length)];
             CreateOnTerrain(sp, new Vector3(x, sp.Offset, z), scale, rot);
             xPrev = x;
             zPrev = z;
@@ -129,11 +130,11 @@ public sealed class EntitySpawner(IWorld world, float size = 256f, float margin 
         }
     }
 
-    private (float x, float z) RandXz(Random rng)
+    private (float x, float z) RandXz(ref FastRandom rng)
     {
         float max = size - margin;
-        float x = float.Lerp(margin, max, (float)rng.NextDouble());
-        float z = float.Lerp(margin, max, (float)rng.NextDouble());
+        float x = float.Lerp(margin, max, (float)rng.NextFloat());
+        float z = float.Lerp(margin, max, (float)rng.NextFloat());
         return (x, z);
     }
 

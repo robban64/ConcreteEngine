@@ -6,13 +6,11 @@ using System.Numerics;
 using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
 using ConcreteEngine.Common.Numerics;
-using ConcreteEngine.Graphics.Gfx.Contracts;
 using ConcreteEngine.Graphics.Gfx.Resources;
-using ConcreteEngine.Graphics.Primitives;
 
 #endregion
 
-namespace ConcreteEngine.Engine.Assets.Meshes;
+namespace ConcreteEngine.Engine.Assets.Models.Loader;
 
 internal readonly record struct MeshCreationInfo(MeshId MeshId, int DrawCount);
 

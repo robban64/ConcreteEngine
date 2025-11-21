@@ -21,8 +21,6 @@ public sealed class WorldTerrain
     private const int TerrainHeight = 12;
     private const int TerrainStep = 1;
 
-    public readonly Transform Transform = new(Vector3.Zero, Vector3.One, Quaternion.Identity);
-
     public ModelId Model { get; private set; }
 
     public MaterialId Material { get; private set; }

@@ -25,7 +25,8 @@ public enum DrawCommandQueue : byte
     Opaque = 30,
     Skybox = 40,
     Transparent = 50,
-    Additive = 60,
+    Particles = 60,
+    Additive = 80,
     Overlay = 100,
     OverlayTransparent = 110
 }

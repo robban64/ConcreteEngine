@@ -10,5 +10,9 @@ layout(binding = 0) uniform sampler2D uTexture;
 
 void main()
 {
-    FragColor = texture(uTexture, TexCoord) * ParticleColor;
+    vec4 baseTex = texture(uTexture, TexCoord); 
+    if (baseTex.a < 0.5)
+        discard;
+
+    FragColor = baseTex * ParticleColor;
 }

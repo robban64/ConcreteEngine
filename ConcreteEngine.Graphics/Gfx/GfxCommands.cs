@@ -328,7 +328,7 @@ public sealed class GfxCommands
     }
 
 
-    public void DrawBoundMesh(MeshId id, int drawCount, int instanceCount = 0)
+    public void DrawMesh(MeshId id, int drawCount, int instanceCount = 0)
     {
         Debug.Assert(_boundMeshId > 0);
 

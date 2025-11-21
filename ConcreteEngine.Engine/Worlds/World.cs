@@ -2,6 +2,7 @@
 
 using ConcreteEngine.Common.Numerics;
 using ConcreteEngine.Editor.Data;
+using ConcreteEngine.Engine.Data;
 using ConcreteEngine.Engine.Editor.Data;
 using ConcreteEngine.Engine.Worlds.Entities;
 using ConcreteEngine.Engine.Worlds.Render;
@@ -97,10 +98,10 @@ public sealed class World : IWorld
         Camera.Viewport = viewSize;
     }
     
-    internal void StartTick(float fixedDt)
+    internal void StartTick(float fixedDt, float totalTime)
     {
         ProcessActions();
-        _particles?.Simulate(fixedDt);
+        _particles.Simulate(fixedDt, totalTime, Camera.Translation);
     }
 
     internal void EndTick()
@@ -111,7 +112,7 @@ public sealed class World : IWorld
     
     internal void OnPreRender(float alpha)
     {
-        _particles?.PreRenderProcess(alpha);
+        _particles?.ProcessAndUpload(alpha);
     }
 
     internal void ProcessCommand(IWorldCommandRecord cmd)

@@ -110,7 +110,7 @@ internal sealed class RenderEntityBus
 
             MatrixMath.CreateModelMatrix(in transform.Translation, in transform.Scale,
                 in transform.Rotation, out var world);
-            
+
             bounds.Box.FillCorners(corners);
 
             for (var i = 0; i < corners.Length; i++)
@@ -213,7 +213,7 @@ internal sealed class RenderEntityBus
             var sky = _world.Sky;
             var meta = new DrawCommandMeta(DrawCommandId.Skybox, DrawCommandQueue.Skybox, passMask: PassMask.Main);
             var cmd = new DrawCommand(sky.Mesh, sky.Material);
-            
+
             CreateTransformMatrices(in sky.Transform, out var model, out var v0, out var v1, out var v2);
             buffer.SubmitDraw(cmd, meta, in model, in v0, in v1, in v2);
         }
@@ -225,21 +225,22 @@ internal sealed class RenderEntityBus
 
             var meta = new DrawCommandMeta(DrawCommandId.Terrain, DrawCommandQueue.Terrain);
             var cmd = new DrawCommand(view.Parts[0].Mesh, terrain.Material);
-            
-            CreateTransformMatrices(in terrain.Transform, out var model, out var v0, out var v1, out var v2);
+
+            CreateTransformMatrices(in Transform.Baseline, out var model, out var v0, out var v1, out var v2);
             buffer.SubmitDraw(cmd, meta, in model, in v0, in v1, in v2);
         }
+
+        //Blend = On, SampleAlphaCoverage = Off, DepthWrite = Off
+        // Or
+        //Blend = Off, SampleAlphaCoverage = On, DepthWrite = Off
 
         if (_world.Particles.IsActive)
         {
             var particles = _world.Particles;
-            var transform = new Transform(new Vector3(130,10,100), Vector3.One, Quaternion.Identity);
-            var meta = new DrawCommandMeta(DrawCommandId.Particle, DrawCommandQueue.Additive, passMask: PassMask.Main);
-            var cmd = new DrawCommand(particles.Mesh, particles.Material);
-            
-            CreateTransformMatrices(in transform, out var model, out var v0, out var v1, out var v2);
-            buffer.SubmitDraw(cmd, meta, in model, in v0, in v1, in v2);
 
+            var cmd = new DrawCommand(particles.Mesh, particles.Material, instanceCount: particles.ParticleCount);
+            var meta = new DrawCommandMeta(DrawCommandId.Particle, DrawCommandQueue.Particles, passMask: PassMask.Main);
+            buffer.SubmitNonTransformDraw(cmd, meta);
         }
     }
 

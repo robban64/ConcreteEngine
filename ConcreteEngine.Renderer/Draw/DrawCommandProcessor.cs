@@ -73,7 +73,7 @@ internal sealed class DrawCommandProcessor
 
         _buffers.BindDrawObject(ticket.SubmitIdx);
         _gfxCmd.BindMesh(cmd.MeshId);
-        _gfxCmd.DrawBoundMesh(cmd.MeshId, cmd.DrawCount);
+        _gfxCmd.DrawMesh(cmd.MeshId, cmd.DrawCount);
     }
 
 
@@ -86,7 +86,7 @@ internal sealed class DrawCommandProcessor
 
         _buffers.BindDrawObject(ticket.SubmitIdx);
         _gfxCmd.BindMesh(cmd.MeshId);
-        _gfxCmd.DrawBoundMesh(cmd.MeshId, cmd.DrawCount);
+        _gfxCmd.DrawMesh(cmd.MeshId, cmd.DrawCount);
     }
 
     private void BindTextureSlots(ReadOnlySpan<TextureSlotInfo> slots)

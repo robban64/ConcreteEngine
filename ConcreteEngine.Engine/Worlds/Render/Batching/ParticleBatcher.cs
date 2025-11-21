@@ -19,7 +19,7 @@ namespace ConcreteEngine.Engine.Worlds.Render.Batching;
 
 public sealed class ParticleBatcher : RenderBatcher
 {
-    public const int DefaultCapacity = 128;
+    public const int DefaultCapacity = 256;
     private ParticleInstanceData[] _particleData = Array.Empty<ParticleInstanceData>();
     
     private VertexBufferId _particleVbo = default;
@@ -45,13 +45,6 @@ public sealed class ParticleBatcher : RenderBatcher
         };
 
         _particleData = new ParticleInstanceData[DefaultCapacity];
-        var rnd = Random.Shared;
-        for (int i = 0; i < _particleData.Length; i++)
-        {
-            ref var particle = ref _particleData[i];
-            particle.Position = new Vector4(120 + i * 0.5f, 10, 100 + i * 0.5f, rnd.Next(1, 2));
-            particle.Color = Color4.Red.AsVec4();
-        }
 
         var props = MeshDrawProperties.MakeInstance(DrawPrimitive.TriangleStrip, drawCount: 4,
             instances: DefaultCapacity);

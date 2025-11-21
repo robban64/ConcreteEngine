@@ -146,6 +146,7 @@ public sealed class GameEngine : IDisposable
         if (_timeHub.RenderTicker.TryProcessLoggers(dt))
             _engineGateway.DrainLogs();
 
+        _world.OnPreRender(alpha);
         _worldRenderer.PreRender(beginStatus, in frameInfo, in runtimeParams, _world.Camera);
         _worldRenderer.ExecuteFrame(out var gfxFrameResult);
         _renderFrameInfo.EndRenderFrame(gfxFrameResult);
@@ -195,7 +196,7 @@ public sealed class GameEngine : IDisposable
             return;
         }
 
-        _world.StartTick(fixedDt);
+        _world.StartTick(fixedDt, _renderFrameInfo.Time);
         
         _sceneManager.Current.UpdateTick(tick);
         

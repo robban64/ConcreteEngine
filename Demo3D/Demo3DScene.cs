@@ -52,7 +52,7 @@ public sealed class Demo3DScene : GameScene
         var worldTerrain = Context.World.Terrain;
         worldTerrain.CreateTerrainMesh(heightmap);
         worldTerrain.SetMaterial(terrainMat.Id);
-        
+
         var particleMat = assets.MaterialStore.CreateMaterial("ParticleMat", "ParticleMat1");
         particleMat.State.Transparency = true;
         particleMat.State.Color = new Color4(0.55f, 0.85f, 0.45f);
@@ -61,14 +61,15 @@ public sealed class Demo3DScene : GameScene
 
         particleMat.State.Pipeline = new MaterialPipelineState
         {
-            PassState = GfxPassState.Set(GfxStateFlags.Blend, GfxStateFlags.Cull),
+            PassState = GfxPassState.Set(GfxStateFlags.Blend,
+                GfxStateFlags.DepthWrite | GfxStateFlags.SampleAlphaCoverage),
+            
             PassFunctions = new GfxPassStateFunc(BlendMode.Alpha)
         };
         var worldParticles = Context.World.Particles;
         worldParticles.CreateParticleMesh();
         worldParticles.SetMaterial(particleMat.Id);
 
-        
 
         // Trees
         var treeMat = materialStore.CreateMaterial("TreeBarkMat", "TreeMat1");
@@ -84,7 +85,6 @@ public sealed class Demo3DScene : GameScene
         leaf2Mat.State.Color = new Color4(0.55f, 0.85f, 0.45f);
         leaf2Mat.State.Shininess = 0f;
         leaf2Mat.State.Specular = 0f;
-
 
 
         var leafState =
@@ -130,15 +130,15 @@ public sealed class Demo3DScene : GameScene
 
         _spawner.PlaceTreesBasic(20,
         [
-            new ScenePlacement(treeMesh.ToBaseDrawInfo(),treeMesh.Bounds, treeMatTag),
-            new ScenePlacement(treeMesh1.ToBaseDrawInfo(),treeMesh1.Bounds, birchMatTag),
-            new ScenePlacement(treeMesh2.ToBaseDrawInfo(),treeMesh2.Bounds, birchMatTag)
+            new ScenePlacement(treeMesh.ToBaseDrawInfo(), treeMesh.Bounds, treeMatTag),
+            new ScenePlacement(treeMesh1.ToBaseDrawInfo(), treeMesh1.Bounds, birchMatTag),
+            new ScenePlacement(treeMesh2.ToBaseDrawInfo(), treeMesh2.Bounds, birchMatTag)
         ]);
 
         _spawner.PlaceGroundRocksBasic(90,
             [
-                new ScenePlacement(rockMesh.ToBaseDrawInfo(),rockMesh.Bounds, rockMat1Tag, 0.5f),
-                new ScenePlacement(rock2Mesh.ToBaseDrawInfo(),rock2Mesh.Bounds, rockMat2Tag, 0.6f)
+                new ScenePlacement(rockMesh.ToBaseDrawInfo(), rockMesh.Bounds, rockMat1Tag, 0.5f),
+                new ScenePlacement(rock2Mesh.ToBaseDrawInfo(), rock2Mesh.Bounds, rockMat2Tag, 0.6f)
             ],
             intensity: 0.5f);
         _spawner.PlacePropsRingBasic(12, [new ScenePlacement(boatMesh.ToBaseDrawInfo(), boatMesh.Bounds, boatMatTag)]);

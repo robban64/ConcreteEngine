@@ -46,6 +46,16 @@ public sealed class DrawCommandBuffer
     {
     }
 
+    public void SubmitNonTransformDraw(DrawCommand cmd, DrawCommandMeta meta)
+    {
+        var idx = _submitIdx++;
+        _commandBuffer[idx] = cmd;
+        _metaBuffer[idx] = meta;
+        _indexBuffer[idx] = new DrawCommandRef(meta, idx);
+        _transformBuffer[idx] = default; // could leave it empty
+    }
+
+
     public void SubmitDraw(
         DrawCommand cmd,
         DrawCommandMeta meta,
@@ -148,7 +158,7 @@ public sealed class DrawCommandBuffer
 
             return;
         }
-        
+
         foreach (var ticket in tickets)
             cmd.DrawSpecialResolveMesh(commands[ticket.SubmitIdx], ticket);
     }

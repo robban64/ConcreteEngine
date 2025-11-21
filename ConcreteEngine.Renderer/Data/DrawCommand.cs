@@ -10,12 +10,12 @@ using ConcreteEngine.Renderer.Definitions;
 namespace ConcreteEngine.Renderer.Data;
 
 [StructLayout(LayoutKind.Sequential)]
-public readonly struct DrawCommand(MeshId meshId, MaterialId materialId, int drawCount = 0)
+public readonly struct DrawCommand(MeshId meshId, MaterialId materialId, int drawCount = 0, int instanceCount = 0)
 {
     public readonly MeshId MeshId = meshId;
     public readonly MaterialId MaterialId = materialId;
     public readonly int DrawCount = drawCount;
-    private readonly int pad;
+    public readonly int InstanceCount = instanceCount;
 }
 
 [StructLayout(LayoutKind.Sequential)]

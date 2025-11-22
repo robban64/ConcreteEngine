@@ -23,6 +23,9 @@ internal sealed class MeshTable : IMeshTable
     private const int DefaultBufferCap = 128;
     private const int DefaultModelCap = 32;
     private const int DefaultAnimationCap = 16;
+    
+    private int _modelIdx = 0;
+    private ModelId CreateModelId() => new (++_modelIdx);
 
     private BoundingBox[] _modelBoxes = new BoundingBox[DefaultModelCap];
     private RangeU16[] _modelPartRanges = new RangeU16[DefaultModelCap];
@@ -38,7 +41,6 @@ internal sealed class MeshTable : IMeshTable
     private int _partIdx = 0;
     private int _boneRangeIdx = 0;
 
-    private int _modelIdx = 0;
 
     public ref readonly BoundingBox GetModelBounds(ModelId id) => ref _modelBoxes[id - 1];
 
@@ -92,7 +94,7 @@ internal sealed class MeshTable : IMeshTable
         for (var i = 0; i < models.Count; i++)
         {
             var model = models[i];
-            model.AttachToRenderer(new ModelId(++_modelIdx));
+            model.AttachToRenderer(CreateModelId());
             _modelBoxes[i] = model.Bounds;
             _modelPartRanges[i] = new RangeU16(idx, model.MeshParts.Length);
             foreach (var part in model.MeshParts)
@@ -120,7 +122,7 @@ internal sealed class MeshTable : IMeshTable
             
             modelBones.CopyTo(boneRangeSpan);
             _modelBoneInvTransform[i] = model.Animation.InverseRootTransform;
-            _modelPartRanges[i] = new RangeU16(idx, modelBones.Length);
+            _modelBoneRanges[i] = new RangeU16(idx, modelBones.Length);
             idx +=  modelBones.Length;
         }
 

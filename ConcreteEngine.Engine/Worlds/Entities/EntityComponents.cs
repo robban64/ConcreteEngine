@@ -18,12 +18,12 @@ public struct Transform(in Vector3 translation, in Vector3 scale, in Quaternion 
     public Quaternion Rotation = rotation;
 }
 
-public struct ModelComponent(ModelId model, int drawCount, MaterialTagKey materialTagKey)
+public struct ModelComponent(ModelId model, int drawCount, MaterialTagKey materialTagKey, bool animated = false)
 {
     public ModelId Model = model;
     public MaterialTagKey MaterialKey = materialTagKey;
     public int DrawCount = drawCount;
-    private int _pad;
+    public bool Animated = animated;
 }
 
 public struct BoxComponent(in BoundingBox box)

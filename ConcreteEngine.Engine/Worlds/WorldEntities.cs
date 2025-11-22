@@ -42,8 +42,7 @@ public sealed class WorldEntities
         Models.Add(entityId, new ModelComponent(model, drawCount, matKey));
         Transforms.Add(entityId, in transform);
         BoundingBoxes.Add(entityId, new BoxComponent(in boundingBox));
-
-        return Create();
+        return entityId;
     }
 
 

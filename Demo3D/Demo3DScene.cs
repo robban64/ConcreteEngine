@@ -73,15 +73,28 @@ public sealed class Demo3DScene : GameScene
         worldParticles.SetMaterial(particleMat.Id);
 
         var worldEntities = Context.World.Entities;
-        var soliderModel = assets.Store.GetByName<Model>("Solider");
+        var worldMaterials = Context.World.EntityMaterials;
         var soliderMat = materialStore.CreateMaterial("SoliderMat", "SoliderMat1");
 
-        var soliderEntity = worldEntities.Create();
-        var soliderMatKey = Context.World.EntityMaterials.Add(MaterialTagBuilder.BuildOne(soliderMat.Id));
-        worldEntities.Models.Add(soliderEntity,
-            new ModelComponent(soliderModel.ModelId, soliderModel.DrawCount, soliderMatKey));
-        worldEntities.Transforms.Add(soliderEntity, Transform.Baseline with { Translation = new Vector3(120, 6, 120) });
-        worldEntities.BoundingBoxes.Add(soliderEntity, new BoxComponent(soliderModel.Bounds));
+        {
+            var soliderModel = assets.Store.GetByName<Model>("Solider");
+            var soliderMatKey = worldMaterials.Add(MaterialTagBuilder.BuildOne(soliderMat.Id));
+            var soliderEntity = worldEntities.Create();
+            worldEntities.Models.Add(soliderEntity,
+                new ModelComponent(soliderModel.ModelId, soliderModel.DrawCount, soliderMatKey, true));
+            worldEntities.Transforms.Add(soliderEntity, Transform.Baseline with { Translation = new Vector3(120, 6, 120) });
+            worldEntities.BoundingBoxes.Add(soliderEntity, new BoxComponent(soliderModel.Bounds));
+        }
+        
+        {
+            var knight = assets.Store.GetByName<Model>("Knight");
+            var knightEntity = worldEntities.Create();
+            var soliderMatKey = worldMaterials.Add(MaterialTagBuilder.Start(soliderMat.Id).WithSlot(soliderMat.Id).Build());
+            worldEntities.Models.Add(knightEntity,
+                new ModelComponent(knight.ModelId, knight.DrawCount, soliderMatKey, true));
+            worldEntities.Transforms.Add(knightEntity, Transform.Baseline with { Translation = new Vector3(120, 6, 120) });
+            worldEntities.BoundingBoxes.Add(knightEntity, new BoxComponent(knight.Bounds));
+        }
 
 
         // Trees

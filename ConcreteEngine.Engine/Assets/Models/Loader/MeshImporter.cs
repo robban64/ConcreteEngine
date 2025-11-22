@@ -156,6 +156,7 @@ internal sealed class MeshImporter
             ref var it = ref _parts[index + i];
             it.MaterialSlot = (int)scene->MMeshes[i]->MMaterialIndex;
             it.CreationInfo = meshData;
+
             it.Bounds = box;
             _partTransforms[i] = current;
             _meshNames.Add(mesh->MName.AsString);
@@ -191,25 +192,25 @@ internal sealed class MeshImporter
         var vRes = _vertices.AsSpan(0, vertexCount);
         var iRes = _indices.AsSpan(0, indexCount);
 
-        WriteVertices(mesh, vRes);
         WriteIndices(mesh, iRes);
-
         var info = new MeshCreationInfo();
 
         if (!isAnimated)
         {
+            WriteVertices(mesh, vRes);
             _uploadMesh(new MeshUploadData<Vertex3D>(vRes, iRes, ref info));
             return info;
         }
-
-        _boneCount = ProcessAnimatedMesh(mesh);
+        
 
         var verticesSkinnedRes = _verticesSkinned.AsSpan(0, vertexCount);
         var skinnedData = _skinningData.AsSpan(0, vertexCount);
 
-        WriteVerticesSkinned(verticesSkinnedRes, vRes, skinnedData);
+        ProcessAnimatedMesh(mesh);
+        WriteVerticesSkinned(mesh, verticesSkinnedRes, skinnedData);
 
         _uploadAnimatedMesh(new MeshUploadData<Vertex3DSkinned>(verticesSkinnedRes, iRes, ref info));
+        Console.WriteLine(info);
 
         return info;
 
@@ -218,7 +219,7 @@ internal sealed class MeshImporter
         {
             ref var v0 = ref MemoryMarshal.GetReference(vertices);
             var count = mesh->MNumVertices;
-            for (uint i = 0; i < count; i++)
+            for (int i = 0; i < count; i++)
             {
                 ref var v = ref Unsafe.Add(ref v0, i);
                 v.Position = mesh->MVertices[i];
@@ -231,7 +232,7 @@ internal sealed class MeshImporter
         static void WriteIndices(AssimpMesh* mesh, Span<uint> indices)
         {
             var idx = 0;
-            for (uint i = 0; i < mesh->MNumFaces; i++)
+            for (int i = 0; i < mesh->MNumFaces; i++)
             {
                 var face = mesh->MFaces[i];
                 indices[idx++] = face.MIndices[0];
@@ -240,35 +241,47 @@ internal sealed class MeshImporter
             }
         }
 
-        static void WriteVerticesSkinned(Span<Vertex3DSkinned> result, ReadOnlySpan<Vertex3D> vertices,
-            ReadOnlySpan<SkinningData> skinned)
+        static void WriteVerticesSkinned(AssimpMesh* mesh, Span<Vertex3DSkinned> result, ReadOnlySpan<SkinningData> skinned)
         {
-            Debug.Assert(vertices.Length == skinned.Length);
-            Debug.Assert(vertices.Length == result.Length);
-
-            for (var i = 0; i < result.Length; i++)
+            Debug.Assert(result.Length == skinned.Length);
+            
+            var count = mesh->MNumVertices;
+            for (int i = 0; i < count; i++)
             {
-                ref readonly var vertex = ref vertices[i];
                 ref readonly var skinnedVertex = ref skinned[i];
-                ref var it = ref result[i];
-                Unsafe.Write(Unsafe.AsPointer(ref it.Position), vertex);
-                it.BoneIndices = skinnedVertex.BoneIndices;
-                it.BoneWeights = skinnedVertex.BoneWeights;
-                
-                /*
-                it.Position = vertex.Position;
-                it.TexCoords = vertex.TexCoords;
-                it.Normal = vertex.Normal;
-                it.Tangent = vertex.Tangent;
-                */
+                ref var v = ref result[i];
+                v.Position = mesh->MVertices[i];
+                v.Normal = mesh->MNormals[i];
+                v.Tangent = mesh->MTangents[i];
+                v.TexCoords = mesh->MTextureCoords[0][i].ToVec2();
+                v.BoneIndices = skinnedVertex.BoneIndices;
+                v.BoneWeights = skinnedVertex.BoneWeights;
+
             }
+            /*
+        for (var i = 0; i < result.Length; i++)
+        {
+            ref readonly var skinnedVertex = ref skinned[i];
+            ref var it = ref result[i];
+
+            Unsafe.Write(Unsafe.AsPointer(ref it.Position), vertex);
+            it.BoneIndices = skinnedVertex.BoneIndices;
+            it.BoneWeights = skinnedVertex.BoneWeights;
+
+
+            it.Position = vertex.Position;
+            it.TexCoords = vertex.TexCoords;
+            it.Normal = vertex.Normal;
+            it.Tangent = vertex.Tangent;
+           
+            }
+             */
         }
     }
 
-    private unsafe int ProcessAnimatedMesh(AssimpMesh* mesh)
+    private unsafe void ProcessAnimatedMesh(AssimpMesh* mesh)
     {
         var skinningData = _skinningData.AsSpan(0, (int)mesh->MNumVertices);
-        int boneCount = 0;
         for (int i = 0; i < mesh->MNumBones; i++)
         {
             var boneIndex = 0;
@@ -282,7 +295,7 @@ internal sealed class MeshImporter
             }
             else
             {
-                boneIndex = boneCount++;
+                boneIndex = _boneCount++;
                 _boneTransforms[boneIndex] = bone->MOffsetMatrix;
                 if (_boneTransforms.Length < boneIndex)
                 {
@@ -307,7 +320,6 @@ internal sealed class MeshImporter
             }
         }
 
-        return boneCount;
     }
 
     private void EnsureCapacity(int vertexCount, int indexCount)

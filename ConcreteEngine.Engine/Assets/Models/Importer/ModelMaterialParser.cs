@@ -17,7 +17,7 @@ using AssimpTexture = Silk.NET.Assimp.Texture;
 
 namespace ConcreteEngine.Engine.Assets.Models.Importer;
 
-internal class ModelMaterialEmbeddedEntry
+internal  class ModelMaterialEmbeddedEntry
 {
     public string? Name { get; set; }
     public Color4 Color { get; set; }
@@ -25,7 +25,7 @@ internal class ModelMaterialEmbeddedEntry
     public Dictionary<string, ModelEmbeddedTextureEntry> EmbeddedTextures { get; } = new();
 }
 
-internal sealed class ModelEmbeddedTextureEntry
+internal sealed  class ModelEmbeddedTextureEntry
 {
     public required string Name { get; set; }
     public required int Width { get; set; }
@@ -40,7 +40,7 @@ internal sealed class ModelMaterialParser
     private bool isActive = false;
 
 
-    internal unsafe void ProcessSceneMaterials(AssimpScene* scene)
+    internal unsafe ModelMaterialEmbeddedEntry[] ProcessSceneMaterials(AssimpScene* scene)
     {
         InvalidOpThrower.ThrowIf(isActive, nameof(isActive));
         isActive = true;
@@ -53,10 +53,8 @@ internal sealed class ModelMaterialParser
             ProcessMaterial(scene, aMaterial, entries[i]);
         }
 
-        foreach (var entry in entries)
-            Console.WriteLine(entry);
-
         isActive = false;
+        return entries;
     }
 
 

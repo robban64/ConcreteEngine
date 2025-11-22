@@ -37,10 +37,10 @@ internal sealed class TextureLoader(AssetGfxUploader uploader)
         );
 
         var fileSpec = new AssetFileSpec(
-            Storage: AssetStorageKind.Embedded,
-            LogicalName: record.Name,
-            RelativePath: record.Filename,
-            SizeBytes: data.Length);
+            storage: AssetStorageKind.Embedded,
+            logicalName: record.Name,
+            relativePath: record.Filename,
+            sizeBytes: data.Length);
 
         var meta = new TextureUploadMeta(desc, props);
 
@@ -85,10 +85,10 @@ internal sealed class TextureLoader(AssetGfxUploader uploader)
         );
 
         var fileSpec = new AssetFileSpec(
-            Storage: AssetStorageKind.FileSystem,
-            LogicalName: record.Name,
-            RelativePath: record.Filename,
-            SizeBytes: fi.Length);
+            storage: AssetStorageKind.FileSystem,
+            logicalName: record.Name,
+            relativePath: record.Filename,
+            sizeBytes: fi.Length);
 
         var meta = new TextureUploadMeta(desc, props);
         uploader.UploadTexture(image.Data, meta, out var info);
@@ -123,10 +123,10 @@ internal sealed class TextureLoader(AssetGfxUploader uploader)
             faceData[i] = image.Data;
 
             faceFiles[i] = new AssetFileSpec(
-                Storage: AssetStorageKind.FileSystem,
-                LogicalName: record.Name,
-                RelativePath: record.Textures[i],
-                SizeBytes: fi.Length);
+                storage: AssetStorageKind.FileSystem,
+                logicalName: record.Name,
+                relativePath: record.Textures[i],
+                sizeBytes: fi.Length);
         }
 
         var desc = new GfxTextureDescriptor(

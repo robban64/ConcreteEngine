@@ -6,7 +6,7 @@ using System.Security.Cryptography;
 
 namespace ConcreteEngine.Engine.Assets.IO;
 
-internal sealed class FileUtility
+internal static class FileUtility
 {
     public static string ComputeSha256Hex(string path)
     {

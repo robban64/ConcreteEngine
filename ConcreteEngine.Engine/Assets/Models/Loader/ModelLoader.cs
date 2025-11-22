@@ -19,6 +19,7 @@ internal sealed class ModelLoader
         public required ModelMesh[] MeshParts { get; init; }
         public required int DrawCount { get; init; }
         public required BoundingBox Bounds { get; init; }
+        public required ModelMaterialEmbeddedEntry[] MaterialEntries { get; init; }
     }
 
     private readonly ModelImporter _modelImporter;
@@ -35,7 +36,7 @@ internal sealed class ModelLoader
         var fi = new FileInfo(path);
         if (!fi.Exists) throw new FileNotFoundException("File not found.", path);
 
-        _modelImporter.ImportMesh(path, out var modelResult, out var animationRes);
+        var materialEntries = _modelImporter.ImportMesh(path, out var modelResult, out var animationRes);
 
         var drawCount = 0;
         var meshParts = new ModelMesh[modelResult.Count];
@@ -59,19 +60,15 @@ internal sealed class ModelLoader
         }
 
 
-        fileSpec =
-        [
-            new AssetFileSpec(
-                Storage: AssetStorageKind.FileSystem,
-                LogicalName: name,
-                RelativePath: fileName,
-                SizeBytes: fi.Length
-            )
-        ];
+        fileSpec = [new AssetFileSpec(AssetStorageKind.FileSystem, name, fileName, fi.Length)];
 
         return new ModelLoaderResult
         {
-            Animation = animation, MeshParts = meshParts, DrawCount = drawCount, Bounds = modelResult.Bounds
+            Animation = animation,
+            MeshParts = meshParts,
+            DrawCount = drawCount,
+            Bounds = modelResult.Bounds,
+            MaterialEntries = materialEntries
         };
     }
 

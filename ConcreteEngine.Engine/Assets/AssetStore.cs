@@ -258,7 +258,7 @@ internal sealed class AssetStore : IAssetStore
             ref readonly var spec = ref fileSpecs[i];
             var fileId = new AssetFileId(_assetFileId++);
             fileIds[i] = fileId;
-            _files.Add(fileId, new AssetFileEntry(fileId, in spec));
+            _files.Add(fileId, new AssetFileEntry(fileId, spec));
         }
 
         _bindings.Add(assetId, fileIds);
@@ -271,7 +271,7 @@ internal sealed class AssetStore : IAssetStore
         {
             ref readonly var spec = ref fileSpecs[i];
             var file = prevFiles[i];
-            _files[file.Id] = new AssetFileEntry(file.Id, in spec);
+            _files[file.Id] = new AssetFileEntry(file.Id, spec);
         }
     }
 

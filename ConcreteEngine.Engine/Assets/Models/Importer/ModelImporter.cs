@@ -57,7 +57,7 @@ internal sealed class ModelImporter
     }
 
 
-    public unsafe void ImportMesh(string path, out ModelImportResult result, out AnimationImportResult animationResult)
+    public unsafe ModelMaterialEmbeddedEntry[] ImportMesh(string path, out ModelImportResult result, out AnimationImportResult animationResult)
     {
         if (_assimp == null)
             _assimp = Assimp.GetApi();
@@ -81,28 +81,31 @@ internal sealed class ModelImporter
 
 
         int meshCount = ProcessScene(scene);
+        
+        var materials = Array.Empty<ModelMaterialEmbeddedEntry>();
+        if(scene->MNumMaterials > 0)
+            materials = _materialParser.ProcessSceneMaterials(scene);
+
 
         var parts = _parts.AsSpan(0, meshCount);
         var partTransforms = _partTransforms.AsSpan(0, meshCount);
 
         ModelImportUtils.CalculateBoundingBox(meshCount, parts, out _modelBounds);
         MatrixMath.InvertAffine(in scene->MRootNode->MTransformation, out _invRootTransform);
-
+        
         result = new ModelImportResult(CollectionsMarshal.AsSpan(_meshNames), parts, partTransforms, ref _modelBounds);
+        animationResult = default;
 
         if (_boneCount > 0)
         {
-            _materialParser.ProcessSceneMaterials(scene);
-
             animationResult = new AnimationImportResult(
                 _boneTransforms.AsSpan(0, meshCount),
                 ref _invRootTransform,
                 _boneMapping.AsReadOnly());
-
-            return;
         }
 
-        animationResult = default;
+        return materials;
+
     }
 
     private unsafe int ProcessScene(AssimpScene* scene)

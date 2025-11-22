@@ -74,12 +74,15 @@ public sealed class Demo3DScene : GameScene
 
         var worldEntities = Context.World.Entities;
         var worldMaterials = Context.World.EntityMaterials;
-        var soliderMat = materialStore.CreateMaterial("SoliderMat", "SoliderMat1");
+        var soliderMat = materialStore.CreateMaterial("Material_1", "Warior1");
 
         {
-            var soliderModel = assets.Store.GetByName<Model>("Solider");
+            var soliderModel = assets.Store.GetByName<Model>("Warrior");
             var soliderMatKey = worldMaterials.Add(MaterialTagBuilder.BuildOne(soliderMat.Id));
             var soliderEntity = worldEntities.Create();
+            soliderMat.State.Shininess = 22;
+            soliderMat.State.Specular = 0.18f;
+
             worldEntities.Models.Add(soliderEntity,
                 new ModelComponent(soliderModel.ModelId, soliderModel.DrawCount, soliderMatKey, true));
             worldEntities.Transforms.Add(soliderEntity, Transform.Baseline with { Translation = new Vector3(120, 6, 120) });

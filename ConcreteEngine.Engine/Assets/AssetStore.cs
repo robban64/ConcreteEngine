@@ -1,8 +1,10 @@
 #region
 
 using ConcreteEngine.Common;
+using ConcreteEngine.Common.Time;
 using ConcreteEngine.Engine.Assets.Data;
 using ConcreteEngine.Engine.Assets.Descriptors;
+using ConcreteEngine.Engine.Assets.Materials;
 
 #endregion
 
@@ -230,6 +232,62 @@ internal sealed class AssetStore : IAssetStore
         return asset;
     }
 
+    internal TAsset RegisterWithEmbedded<TAsset, TDesc, TEmbedded>(
+        TDesc descriptor,
+        bool isCoreAsset,
+        AssetWithEmbeddedDel<TAsset, TDesc, TEmbedded> factory,
+        out TEmbedded[] embedded)
+        where TAsset : AssetObject
+        where TDesc : class, IAssetDescriptor
+        where TEmbedded : class, IAssetEmbeddedDescriptor
+    {
+        var id = MakeAssetId();
+        var asset = factory(id, descriptor, isCoreAsset, out var fileSpecs, out embedded);
+        ArgumentNullException.ThrowIfNull(fileSpecs);
+        ArgumentNullException.ThrowIfNull(embedded);
+
+        RegisterInternal(id, asset, fileSpecs);
+        return asset;
+    }
+
+    internal TAsset RegisterEmbedded<TAsset, TEmbedded>(
+        TEmbedded embedded,
+        EmbeddedAssembleDel<TAsset, TEmbedded> factory)
+        where TAsset : AssetObject where TEmbedded : class, IAssetEmbeddedDescriptor
+    {
+        ArgumentNullException.ThrowIfNull(embedded);
+        ArgumentNullException.ThrowIfNull(embedded.FileSpec);
+        ArgumentOutOfRangeException.ThrowIfZero(embedded.FileSpec.Length);
+
+        var id = MakeAssetId();
+        var asset = factory(id, embedded, this);
+        
+        if (_names.ContainsKey(new AssetKey(typeof(TAsset), embedded.Name)))
+        {
+            var original = embedded.Name;
+            for (int i = 0; i < 100; i++)
+            {
+                var newName = $"{original}_{i}";
+                if (!_names.ContainsKey(new AssetKey(typeof(TAsset), newName)))
+                {
+                    embedded.AssetName = newName;
+                    break;
+                }
+            }
+        }
+        
+        if(string.IsNullOrEmpty(embedded.AssetName))
+            embedded.AssetName = embedded.Name;
+        
+        asset.IsEmbedded = true;
+        asset.Name = embedded.AssetName;
+        
+        if(typeof(TAsset) == typeof(MaterialTemplate)) Console.WriteLine(asset.Name);
+
+        RegisterInternal(id, asset, embedded.FileSpec);
+        return asset;
+    }
+
     private void RegisterInternal<TAsset>(AssetId id, TAsset asset, ReadOnlySpan<AssetFileSpec> fileSpecs)
         where TAsset : AssetObject
     {
@@ -239,7 +297,7 @@ internal sealed class AssetStore : IAssetStore
 
         if (!_assets.TryAdd(id, asset))
             throw new InvalidOperationException($"Asset '{asset.Name}' is already registered by id.");
-
+        
         if (!_names.TryAdd(new AssetKey(typeof(TAsset), asset.Name), id))
             throw new InvalidOperationException($"Asset '{asset.Name}' is already registered by type/name.");
 

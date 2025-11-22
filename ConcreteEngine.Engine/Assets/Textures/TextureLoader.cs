@@ -14,33 +14,34 @@ namespace ConcreteEngine.Engine.Assets.Textures;
 
 internal sealed class TextureLoader(AssetGfxUploader uploader)
 {
-    public TextureImportResult LoadEmbeddedTexture(byte[] data, int width, int height, TextureDescriptor record)
+    public TextureImportResult LoadEmbeddedTexture(TextureEmbeddedDescriptor descriptor)
     {
-        var image = ImageResult.FromMemory(data, GetColorComponent(record.PixelFormat));
+        ArgumentNullException.ThrowIfNull(descriptor);
+        ArgumentNullException.ThrowIfNull(descriptor.PixelData);
+        ArgumentOutOfRangeException.ThrowIfLessThan(descriptor.PixelData.Length, 4);
+
+        var image = ImageResult.FromMemory(descriptor.PixelData, GetColorComponent(descriptor.PixelFormat));
         ValidateImageResult(image);
 
-        ArgumentOutOfRangeException.ThrowIfNotEqual(image.Width, width, nameof(image.Width));
-        ArgumentOutOfRangeException.ThrowIfNotEqual(image.Width, height, nameof(image.Width));
+        if (descriptor.Width != descriptor.PixelData.Length && descriptor.Height != 0)
+        {
+            ArgumentOutOfRangeException.ThrowIfNotEqual(image.Width, descriptor.Width, nameof(image.Width));
+            ArgumentOutOfRangeException.ThrowIfNotEqual(image.Width, descriptor.Height, nameof(image.Width));
+        }
 
 
         var desc = new GfxTextureDescriptor(
             width: image.Width,
             height: image.Height,
             kind: TextureKind.Texture2D,
-            format: record.PixelFormat
+            format: descriptor.PixelFormat
         );
 
         var props = new GfxTextureProperties(
-            preset: record.Preset,
-            anisotropy: record.Anisotropy,
-            lodBias: record.LodBias
+            preset: TexturePreset.LinearMipmapRepeat,
+            anisotropy: TextureAnisotropy.X4,
+            lodBias: 0
         );
-
-        var fileSpec = new AssetFileSpec(
-            storage: AssetStorageKind.Embedded,
-            logicalName: record.Name,
-            relativePath: record.Filename,
-            sizeBytes: data.Length);
 
         var meta = new TextureUploadMeta(desc, props);
 
@@ -49,7 +50,7 @@ internal sealed class TextureLoader(AssetGfxUploader uploader)
         return new TextureImportResult
         {
             Data = null,
-            FileSpec = fileSpec,
+            FileSpec = null!,
             CreationInfo = info,
             TextureDesc = desc,
             TextureProps = props

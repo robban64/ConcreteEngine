@@ -9,6 +9,7 @@ using ConcreteEngine.Common.Collections;
 using ConcreteEngine.Common.Numerics;
 using ConcreteEngine.Common.Numerics.Extensions;
 using ConcreteEngine.Common.Numerics.Maths;
+using ConcreteEngine.Engine.Assets.Descriptors;
 using ConcreteEngine.Engine.Assets.Internal;
 using ConcreteEngine.Engine.Assets.Models.Loader;
 using ConcreteEngine.Graphics.Primitives;
@@ -57,7 +58,7 @@ internal sealed class ModelImporter
     }
 
 
-    public unsafe ModelMaterialEmbeddedEntry[] ImportMesh(string path, out ModelImportResult result, out AnimationImportResult animationResult)
+    public unsafe ModelMaterialEmbeddedDescriptor[] ImportMesh(string path, out ModelImportResult result, out AnimationImportResult animationResult)
     {
         if (_assimp == null)
             _assimp = Assimp.GetApi();
@@ -82,7 +83,7 @@ internal sealed class ModelImporter
 
         int meshCount = ProcessScene(scene);
         
-        var materials = Array.Empty<ModelMaterialEmbeddedEntry>();
+        var materials = Array.Empty<ModelMaterialEmbeddedDescriptor>();
         if(scene->MNumMaterials > 0)
             materials = _materialParser.ProcessSceneMaterials(scene);
 

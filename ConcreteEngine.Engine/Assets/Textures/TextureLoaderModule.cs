@@ -16,6 +16,23 @@ internal sealed class TextureLoaderModule
     {
         _loader = new TextureLoader(uploader);
     }
+    
+    public Texture2D LoadEmbeddedTexture(AssetId id, TextureEmbeddedDescriptor descriptor, IAssetStore assetStore)
+    {
+        var result = _loader.LoadEmbeddedTexture(descriptor);
+
+        var texture = new Texture2D
+        {
+            RawId = id,
+            Name = descriptor.Name,
+            ResourceId = result.CreationInfo.TextureId,
+            Width = result.CreationInfo.Width,
+            Height = result.CreationInfo.Height,
+            IsCoreAsset = false
+        };
+
+        return texture;
+    }
 
     public Texture2D LoadTexture2D(AssetId id, TextureDescriptor manifest, bool isCoreAsset,
         out AssetFileSpec[] fileSpecs)

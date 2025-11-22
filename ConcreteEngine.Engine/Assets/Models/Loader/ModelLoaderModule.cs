@@ -17,18 +17,25 @@ internal sealed class ModelLoaderModule
         _loader = new ModelLoader(uploader);
     }
 
-    public Model LoadModel(AssetId assetId, MeshDescriptor manifest, bool isCoreAsset, out AssetFileSpec[] fileSpecs)
+    public Model LoadModel(
+        AssetId assetId, 
+        MeshDescriptor manifest, 
+        bool isCoreAsset, 
+        out AssetFileSpec[] fileSpecs,
+        out ModelMaterialEmbeddedDescriptor[] embedded)
     {
         var refId = AssetRef<Model>.Make(assetId);
 
-        var result  = _loader.LoadMesh(refId, manifest.Name, manifest.Filename, out fileSpecs);
-
+        var result = _loader.LoadMesh(refId, manifest.Name, manifest.Filename, out fileSpecs);
+        
+        embedded = result.MaterialEntries;
+        
         return new Model
         {
             RawId = assetId,
             Name = manifest.Name,
             MeshParts = result.MeshParts,
-            Animation =  result.Animation,
+            Animation = result.Animation,
             DrawCount = result.DrawCount,
             IsCoreAsset = isCoreAsset,
             Bounds = result.Bounds
@@ -40,5 +47,4 @@ internal sealed class ModelLoaderModule
         _loader.ClearCache();
         _loader = null!;
     }
-
 }

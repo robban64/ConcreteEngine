@@ -2,6 +2,7 @@
 
 using ConcreteEngine.Common.Numerics;
 using ConcreteEngine.Engine.Assets.Data;
+using ConcreteEngine.Engine.Assets.Descriptors;
 using ConcreteEngine.Engine.Assets.Internal;
 using ConcreteEngine.Engine.Assets.IO;
 using ConcreteEngine.Engine.Assets.Models.Importer;
@@ -19,7 +20,7 @@ internal sealed class ModelLoader
         public required ModelMesh[] MeshParts { get; init; }
         public required int DrawCount { get; init; }
         public required BoundingBox Bounds { get; init; }
-        public required ModelMaterialEmbeddedEntry[] MaterialEntries { get; init; }
+        public required ModelMaterialEmbeddedDescriptor[] MaterialEntries { get; init; }
     }
 
     private readonly ModelImporter _modelImporter;
@@ -61,6 +62,15 @@ internal sealed class ModelLoader
 
 
         fileSpec = [new AssetFileSpec(AssetStorageKind.FileSystem, name, fileName, fi.Length)];
+
+        foreach (var mat in materialEntries)
+        {
+            mat.FileSpec = [new AssetFileSpec(AssetStorageKind.Embedded, mat.Name, fileName, 0)];
+            foreach (var tex in mat.EmbeddedTextures.Values)
+            {
+                tex.FileSpec = [new AssetFileSpec(AssetStorageKind.Embedded, tex.Name, fileName, tex.PixelData.Length)];
+            }
+        }
 
         return new ModelLoaderResult
         {

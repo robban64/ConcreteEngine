@@ -31,8 +31,10 @@ internal sealed class AssetLoader
     private AssetFileAssembleDel<Shader, ShaderDescriptor>? _loadShaderDel;
     private AssetFileAssembleDel<Texture2D, TextureDescriptor>? _loadTextureDel;
     private AssetFileAssembleDel<CubeMap, CubeMapDescriptor>? _loadCubeMapDel;
-    private AssetFileAssembleDel<Model, MeshDescriptor>? _loadMeshDel;
+    private AssetWithEmbeddedDel<Model, MeshDescriptor, ModelMaterialEmbeddedDescriptor>? _loadMeshDel;
 
+
+    
     public bool IsActive { get; private set; }
 
     public Shader LoadShader(ShaderDescriptor manifest, bool isCoreAsset) =>
@@ -47,15 +49,32 @@ internal sealed class AssetLoader
     public Model LoadMesh(MeshDescriptor manifest, bool isCoreAsset)
     {
         if (manifest.LoadMode == AssetLoadingMode.MemoryOnly)
-        {
             return null!;
+
+        var model = _store!.RegisterWithEmbedded(manifest, isCoreAsset, _loadMeshDel!, out var embedded);
+        if (embedded.Length == 0) return model;
+        
+        foreach (var material in embedded)
+        {
+            foreach (var texture in material.EmbeddedTextures!.Values)
+            {
+                _store.RegisterEmbedded(texture,_textureLoader!.LoadEmbeddedTexture);
+                texture.PixelData = null!;
+            }
         }
 
-        return _store!.RegisterWithFiles(manifest, isCoreAsset, _loadMeshDel!);
+        LoadEmbeddedMaterial(embedded);
+
+        return model;
     }
 
-    public List<MaterialTemplate> LoadAllMaterials(MaterialManifest manifest) =>
-        _materialLoader!.LoadMaterials(_store!, manifest.Records)!;
+    public void LoadAllMaterials(MaterialManifest manifest) =>
+        _materialLoader!.LoadMaterials(_store!, manifest.Records);
+
+    public void LoadEmbeddedMaterial(ModelMaterialEmbeddedDescriptor[] descriptors) =>
+        _materialLoader!.LoadEmbeddedMaterials(_store!, descriptors);
+
+
 
     public void ReloadShader(Shader shader)
     {

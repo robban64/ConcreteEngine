@@ -38,6 +38,8 @@ public sealed class MaterialState
         Specular = desc.Specular ?? Specular;
         UvRepeat = desc.UvRepeat ?? UvRepeat;
     }
+    
+    internal MaterialState(){}
 
     public MaterialPipelineState Pipeline
     {

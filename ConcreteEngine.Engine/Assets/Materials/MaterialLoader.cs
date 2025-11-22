@@ -27,7 +27,7 @@ internal sealed class MaterialLoader
         _profiles = new Dictionary<MaterialProfile, MatProfileInfo>
         {
             [MaterialProfile.None] = new("Model"),
-            [MaterialProfile.Particle]  = new("Particle", new ProfileSlot(TextureSlotKind.Albedo)),
+            [MaterialProfile.Particle] = new("Particle", new ProfileSlot(TextureSlotKind.Albedo)),
             [MaterialProfile.Sky] = new("Skybox", new ProfileSlot(TextureSlotKind.Albedo, TextureKind.CubeMap)),
             [MaterialProfile.StaticModel] = new("Model",
                 new ProfileSlot(TextureSlotKind.Albedo),
@@ -68,6 +68,58 @@ internal sealed class MaterialLoader
         return result;
     }
 
+    public void LoadEmbeddedMaterials(AssetStore store, ModelMaterialEmbeddedDescriptor[] descriptors)
+    {
+        ArgumentNullException.ThrowIfNull(descriptors);
+
+        if (descriptors.Length == 0)
+        {
+            Debug.Assert(false);
+            return;
+        }
+
+        EmbeddedAssembleDel<MaterialTemplate, ModelMaterialEmbeddedDescriptor> factory = CreateEmbeddedTemplate;
+
+        foreach (var it in descriptors)
+        {
+            store.RegisterEmbedded(it, factory);
+        }
+    }
+
+    private MaterialTemplate CreateEmbeddedTemplate(AssetId assetId, ModelMaterialEmbeddedDescriptor record,
+        IAssetStore store)
+    {
+        AssetTextureSlot[] slots =
+        [
+            new (default, TextureSlotKind.Albedo),
+            new (default, TextureSlotKind.Normal),
+            new (default, TextureSlotKind.Mask),
+            new (default, TextureSlotKind.Shadowmap),
+            
+        ];
+        int idx = 0;
+        foreach (var it in record.EmbeddedTextures.Values)
+        {
+            if(it.SlotKind == TextureSlotKind.Albedo)
+                slots[0] = slots[0].WithAssetId(store.GetByName<Texture2D>(it.AssetName).RawId);
+            
+            if(it.SlotKind == TextureSlotKind.Normal)
+                slots[1] = slots[1].WithAssetId(store.GetByName<Texture2D>(it.AssetName).RawId);
+        }
+        
+        var matParams = new MaterialState();
+        return new MaterialTemplate(slots)
+        {
+            RawId = assetId,
+            Name = record.AssetName,
+            ShaderRef = store.GetByName<Shader>("Model").RefId,
+            Params = matParams,
+            IsCoreAsset = false
+        };
+
+    }
+
+
     private MaterialTemplate CreateTemplate(AssetId assetId, MaterialDescriptor record, IAssetStore store)
     {
         var slots = Array.Empty<AssetTextureSlot>();
@@ -107,6 +159,7 @@ internal sealed class MaterialLoader
         {
             return [new AssetTextureSlot(default, TextureSlotKind.Albedo)];
         }
+
         var slotInfo = new AssetTextureSlot[record.TextureSlots.Length];
         for (int i = 0; i < slotInfo.Length; i++)
         {

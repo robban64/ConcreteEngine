@@ -3,6 +3,8 @@ using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
 using ConcreteEngine.Common;
 using ConcreteEngine.Common.Numerics;
+using ConcreteEngine.Engine.Assets.Data;
+using ConcreteEngine.Engine.Assets.Descriptors;
 using ConcreteEngine.Engine.Assets.Internal;
 using ConcreteEngine.Engine.Assets.Textures;
 using ConcreteEngine.Graphics.Gfx.Definitions;
@@ -17,49 +19,33 @@ using AssimpTexture = Silk.NET.Assimp.Texture;
 
 namespace ConcreteEngine.Engine.Assets.Models.Importer;
 
-internal  class ModelMaterialEmbeddedEntry
-{
-    public string? Name { get; set; }
-    public Color4 Color { get; set; }
-
-    public Dictionary<string, ModelEmbeddedTextureEntry> EmbeddedTextures { get; } = new();
-}
-
-internal sealed  class ModelEmbeddedTextureEntry
-{
-    public required string Name { get; set; }
-    public required int Width { get; set; }
-    public required int Height { get; set; }
-    public required TextureSlotKind SlotKind { get; init; }
-    public required TexturePixelFormat PixelFormat { get; init; }
-    public required byte[] PixelData { get; set; } = Array.Empty<byte>();
-}
-
 internal sealed class ModelMaterialParser
 {
     private bool isActive = false;
 
-
-    internal unsafe ModelMaterialEmbeddedEntry[] ProcessSceneMaterials(AssimpScene* scene)
+    internal unsafe ModelMaterialEmbeddedDescriptor[] ProcessSceneMaterials(AssimpScene* scene)
     {
         InvalidOpThrower.ThrowIf(isActive, nameof(isActive));
         isActive = true;
 
-        var entries = new ModelMaterialEmbeddedEntry[scene->MNumMaterials];
+        var entries = new List<ModelMaterialEmbeddedDescriptor>();
         for (int i = 0; i < scene->MNumMaterials; i++)
         {
             var aMaterial = scene->MMaterials[i];
-            entries[i] = new ModelMaterialEmbeddedEntry();
-            ProcessMaterial(scene, aMaterial, entries[i]);
+            var entry = new ModelMaterialEmbeddedDescriptor();
+            if (ProcessMaterial(scene, aMaterial, entry)) 
+                entries.Add(entry);
         }
 
         isActive = false;
-        return entries;
+        return entries.ToArray();
     }
 
-
-    private unsafe void ProcessMaterial(AssimpScene* scene, AssimpMaterial* material, ModelMaterialEmbeddedEntry entry)
+    private static unsafe bool ProcessMaterial(AssimpScene* scene, AssimpMaterial* material,
+        ModelMaterialEmbeddedDescriptor descriptor)
     {
+        bool hasName = false;
+        bool hasTexture = false;
         for (int i = 0; i < material->MNumProperties; i++)
         {
             var prop = material->MProperties[i];
@@ -67,34 +53,40 @@ internal sealed class ModelMaterialParser
 
             if (key == "?mat.name")
             {
-                ProcessName(prop, entry);
+                if (ProcessName(prop, descriptor)) hasName = true;
             }
             else if (key == "$tex.file")
             {
-                ProcessTexture(scene, prop, entry);
+                if (ProcessTexture(scene, prop, descriptor)) hasTexture = true;
             }
             else if (key == "$clr.diffuse")
             {
-                ProcessParams(prop, entry);
+                ProcessParams(prop, descriptor);
             }
         }
+
+        return hasTexture && hasName;
     }
 
-    private unsafe void ProcessName(MaterialProperty* prop, ModelMaterialEmbeddedEntry entry)
+    private static unsafe bool ProcessName(MaterialProperty* prop, ModelMaterialEmbeddedDescriptor descriptor)
     {
-        if (entry.Name != null) throw new ArgumentException(nameof(entry.Name));
+        if (descriptor.Name != null) throw new ArgumentException(nameof(descriptor.Name));
 
         var matName = ParsePropertyString(prop);
-        entry.Name = matName;
+        if (string.IsNullOrWhiteSpace(matName)) return false;
+        descriptor.Name = matName;
+
+        return true;
     }
 
-    private unsafe void ProcessTexture(AssimpScene* scene, MaterialProperty* prop, ModelMaterialEmbeddedEntry entry)
+    private static unsafe bool ProcessTexture(AssimpScene* scene, MaterialProperty* prop,
+        ModelMaterialEmbeddedDescriptor descriptor)
     {
-        if (prop->MIndex != 0) return;
+        if (prop->MIndex != 0) return false;
 
         var type = (TextureType)prop->MSemantic;
         var texturePath = ParsePropertyString(prop);
-        if (string.IsNullOrWhiteSpace(texturePath)) return;
+        if (string.IsNullOrWhiteSpace(texturePath)) return false;
 
         if (!texturePath.StartsWith("*") || texturePath.Length < 2)
             throw new InvalidOperationException($"Invalid texture path {texturePath}");
@@ -116,54 +108,72 @@ internal sealed class ModelMaterialParser
                 kind = TextureSlotKind.Normal;
                 format = TexturePixelFormat.Rgba;
                 break;
-            default: return;
+            default: return false;
         }
 
         var texture = scene->MTextures[textureIndex];
-        LoadTextureData(texture, entry, kind, format);
+        return LoadTextureData(texture, descriptor, kind, format);
     }
 
 
-    private unsafe void LoadTextureData(AssimpTexture* texture, ModelMaterialEmbeddedEntry entry, TextureSlotKind kind,
+    private static unsafe bool LoadTextureData(AssimpTexture* texture, ModelMaterialEmbeddedDescriptor descriptor,
+        TextureSlotKind kind,
         TexturePixelFormat format)
     {
         string textureName = texture->MFilename.AsString;
         if (string.IsNullOrEmpty(textureName))
         {
             Console.WriteLine("Invalid texture name");
-            return;
+            return false;
         }
 
-        if (entry.EmbeddedTextures.ContainsKey(textureName))
+        if (descriptor.EmbeddedTextures.ContainsKey(textureName))
         {
             throw new ArgumentException($"Duplicated texture names {textureName}",
-                nameof(entry.EmbeddedTextures));
+                nameof(descriptor.EmbeddedTextures));
         }
 
         int width = (int)texture->MWidth, height = (int)texture->MHeight;
+        var length = 0;
 
-        var length = width * height * 4;
+        // Compressed mode (PNG, JPG)
+        // width = file size in bytes
+        if (height == 0)
+        {
+            length = width;
+        }
+        // raw mode (BGRA8888)
+        // standard: width height and 4 bytes per pixel
+        else
+        {
+            length = width * height * 4;
+        }
+
+        InvalidOpThrower.ThrowIf(length < 4, nameof(length));
+
         var ptr = (byte*)texture->PcData;
         var span = new ReadOnlySpan<byte>(ptr, length);
 
         byte[] buffer = new byte[length];
         span.CopyTo(buffer);
 
-        var textureEntry = new ModelEmbeddedTextureEntry
+        var textureEntry = new TextureEmbeddedDescriptor
         {
             Name = textureName,
             Width = width,
             Height = height,
             PixelFormat = format,
             SlotKind = kind,
-            PixelData = buffer
+            PixelData = buffer,
         };
 
-        entry.EmbeddedTextures.Add(textureName, textureEntry);
+        descriptor.EmbeddedTextures.Add(textureName, textureEntry);
+
+        return true;
     }
 
 
-    private unsafe void ProcessParams(MaterialProperty* prop, ModelMaterialEmbeddedEntry entry)
+    private static unsafe void ProcessParams(MaterialProperty* prop, ModelMaterialEmbeddedDescriptor descriptor)
     {
         var length = (int)prop->MDataLength;
         if (length == 0) return;
@@ -176,12 +186,12 @@ internal sealed class ModelMaterialParser
         if (length == 16)
         {
             var res = MemoryMarshal.Read<Vector4>(span);
-            entry.Color = Color4.FromVector4(in res);
+            descriptor.Color = Color4.FromVector4(in res);
         }
         else if (length == 12)
         {
             var res = MemoryMarshal.Read<Vector3>(span);
-            entry.Color = Color4.FromVector3(in res);
+            descriptor.Color = Color4.FromVector3(in res);
         }
     }
 

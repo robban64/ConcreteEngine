@@ -20,7 +20,7 @@ public sealed class MaterialManifest : IAssetCatalog
 
 public sealed class MaterialDescriptor : IAssetDescriptor
 {
-    public AssetKind Kind => AssetKind.Material;
+    public AssetKind Kind => AssetKind.MaterialTemplate;
 
     public required string Name { get; init; }
     public string? Shader { get; init; }

@@ -35,9 +35,9 @@ public sealed class WorldParticles
     {
         _particleDef.StartColor = new Vector4(1.0f, 0.9f, 0.7f, 0.6f);
         _particleDef.EndColor = new  Vector4(1.0f, 0.9f, 0.6f, 0.05f);
-        _particleDef.Gravity = new Vector3(0.001f, -0.1f, 0.001f);
+        _particleDef.Gravity = new Vector3(0.001f, -0.2f, 0.001f);
         _particleDef.LifeMinMax = new Vector2(6f, 10f);
-        _particleDef.SizeStartEnd = new Vector2(0.05f, 0.15f);
+        _particleDef.SizeStartEnd = new Vector2(0.05f, 0.18f);
         _particleDef.SpeedMinMax = new Vector2(0.02f, 0.11f);
 
         StartArea = new Vector3(10, 1, 10);

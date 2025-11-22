@@ -12,7 +12,11 @@ using ConcreteEngine.Graphics.Gfx.Resources;
 
 namespace ConcreteEngine.Engine.Assets.Models.Loader;
 
-internal readonly record struct MeshCreationInfo(MeshId MeshId, int DrawCount);
+internal readonly struct MeshCreationInfo(MeshId meshId, int drawCount)
+{
+    public readonly MeshId MeshId = meshId;
+    public readonly int DrawCount = drawCount;
+}
 
 internal struct MeshPartImportResult(
     int materialSlot,
@@ -60,29 +64,4 @@ internal ref struct AnimationImportResult(
     public ReadOnlySpan<Matrix4x4> BoneTransforms  = boneTransforms;
     public ref Matrix4x4 InvRootTransform  = ref invRootTransform;
     public readonly ReadOnlyDictionary<string, int>? BoneMapping  = boneMapping; // index to bone transform
-}
-
-[StructLayout(LayoutKind.Sequential)]
-internal struct SkinningData
-{
-    public Int4 BoneIndices;
-    public Vector4 BoneWeights;
-
-    public int GetVertexId(int idx)
-    {
-        Debug.Assert(idx < 4);
-        ref var i0 = ref Unsafe.AsRef(ref BoneIndices.X);
-        return Unsafe.Add(ref i0, idx);
-    }
-
-    public void Set(int idx, int vertexIndex, float boneWeight)
-    {
-        Debug.Assert(idx < 4);
-
-        ref var i0 = ref Unsafe.AsRef(ref BoneIndices.X);
-        Unsafe.Add(ref i0, idx) = vertexIndex;
-
-        ref var w0 = ref Unsafe.AsRef(ref BoneWeights.X);
-        Unsafe.Add(ref w0, idx) = boneWeight;
-    }
 }

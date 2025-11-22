@@ -56,17 +56,17 @@ internal sealed class AssetGfxUploader
         data.Result = new MeshCreationInfo(meshId, meta.DrawCount);
     }
     
-    public void UploadTexture(in TexturePayload payload, out TextureCreationInfo info)
+    public void UploadTexture(ReadOnlySpan<byte> data, in TextureUploadMeta meta, out TextureCreationInfo info)
     {
-        var desc = payload.TextureDesc;
-        var textureId = _textures.BuildTexture(in desc, payload.TextureProps, payload.Data);
+        var desc = meta.TextureDesc;
+        var textureId = _textures.BuildTexture(in desc, meta.TextureProps, data);
         info = new TextureCreationInfo(textureId, desc.Width, desc.Height, desc.Format);
     }
 
-    public void UploadCubeMap(in CubeMapPayload payload, out CubeMapCreationInfo info)
+    public void UploadCubeMap(ReadOnlyMemory<byte>[] data, in TextureUploadMeta meta, out CubeMapCreationInfo info)
     {
-        var desc = payload.TextureDesc;
-        var textureId = _textures.BuildCubeMap(in desc, payload.TextureProps, payload.FaceData);
+        var desc = meta.TextureDesc;
+        var textureId = _textures.BuildCubeMap(in desc, meta.TextureProps, data);
         info = new CubeMapCreationInfo(textureId, desc.Width, desc.Format);
     }
 

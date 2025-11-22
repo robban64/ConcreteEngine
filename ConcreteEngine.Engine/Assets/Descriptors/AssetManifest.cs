@@ -52,8 +52,8 @@ public sealed record TextureDescriptor(
     TexturePreset Preset = TexturePreset.LinearClamp,
     TexturePixelFormat PixelFormat = TexturePixelFormat.SrgbAlpha,
     TextureAnisotropy Anisotropy = TextureAnisotropy.Off,
-    bool InMemory = false,
     float LodBias = 0,
+    bool InMemory = false,
     AssetLoadingMode LoadMode = AssetLoadingMode.Processed)
     : IAssetDescriptor
 {

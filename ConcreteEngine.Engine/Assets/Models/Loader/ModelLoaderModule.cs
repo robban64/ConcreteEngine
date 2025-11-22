@@ -10,11 +10,11 @@ namespace ConcreteEngine.Engine.Assets.Models.Loader;
 
 internal sealed class ModelLoaderModule
 {
-    private MeshLoader _loader;
+    private ModelLoader _loader;
 
     public ModelLoaderModule(AssetGfxUploader uploader)
     {
-        _loader = new MeshLoader(uploader.UploadMesh, uploader.UploadMesh);
+        _loader = new ModelLoader(uploader);
     }
 
     public Model LoadModel(AssetId assetId, MeshDescriptor manifest, bool isCoreAsset, out AssetFileSpec[] fileSpecs)

@@ -2,14 +2,16 @@
 
 using ConcreteEngine.Common.Numerics;
 using ConcreteEngine.Engine.Assets.Data;
+using ConcreteEngine.Engine.Assets.Internal;
 using ConcreteEngine.Engine.Assets.IO;
+using ConcreteEngine.Engine.Assets.Models.Importer;
 using ConcreteEngine.Graphics.Primitives;
 
 #endregion
 
 namespace ConcreteEngine.Engine.Assets.Models.Loader;
 
-internal sealed class MeshLoader
+internal sealed class ModelLoader
 {
     public class ModelLoaderResult
     {
@@ -19,13 +21,11 @@ internal sealed class MeshLoader
         public required BoundingBox Bounds { get; init; }
     }
 
-    private readonly MeshImporter _meshImporter;
+    private readonly ModelImporter _modelImporter;
 
-    public MeshLoader(
-        Action<MeshUploadData<Vertex3D>> uploadMesh,
-        Action<MeshUploadData<Vertex3DSkinned>> uploadAnimatedMesh)
+    public ModelLoader(AssetGfxUploader uploader)
     {
-        _meshImporter = new MeshImporter(uploadMesh, uploadAnimatedMesh);
+        _modelImporter = new ModelImporter(uploader);
     }
 
     public ModelLoaderResult LoadMesh(AssetRef<Model> refId, string name, string fileName, out AssetFileSpec[] fileSpec)
@@ -35,7 +35,7 @@ internal sealed class MeshLoader
         var fi = new FileInfo(path);
         if (!fi.Exists) throw new FileNotFoundException("File not found.", path);
 
-        _meshImporter.ImportMesh(path, out var modelResult, out var animationRes);
+        _modelImporter.ImportMesh(path, out var modelResult, out var animationRes);
 
         var drawCount = 0;
         var meshParts = new ModelMesh[modelResult.Count];
@@ -78,6 +78,6 @@ internal sealed class MeshLoader
 
     public void ClearCache()
     {
-        _meshImporter.ClearCache();
+        _modelImporter.ClearCache();
     }
 }

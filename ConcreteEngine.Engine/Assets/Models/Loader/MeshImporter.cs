@@ -9,6 +9,7 @@ using ConcreteEngine.Common.Collections;
 using ConcreteEngine.Common.Numerics;
 using ConcreteEngine.Common.Numerics.Extensions;
 using ConcreteEngine.Common.Numerics.Maths;
+using ConcreteEngine.Graphics.Gfx.Resources;
 using ConcreteEngine.Graphics.Primitives;
 using Silk.NET.Assimp;
 using AssimpMesh = Silk.NET.Assimp.Mesh;
@@ -54,6 +55,8 @@ internal sealed class MeshImporter
     private readonly MeshPartImportResult[] _parts = new MeshPartImportResult[MaxParts];
     private readonly Matrix4x4[] _partTransforms = new Matrix4x4[MaxParts];
     private readonly List<string> _meshNames = new(MaxParts);
+
+    private readonly Dictionary<int, MeshCreationInfo> _meshIndexToIdMap = new(7);
 
     private Matrix4x4 _invRootTransform;
     private BoundingBox _modelBounds;
@@ -103,10 +106,15 @@ internal sealed class MeshImporter
         //cleanup
         _meshNames.Clear();
         _boneMapping.Clear();
+        _meshIndexToIdMap.Clear();
         _boneCount = 0;
 
+        //_parts.AsSpan().Clear();
+        //_partTransforms.AsSpan().Clear();
+
         // Load meshes
-        TraverseNode(scene->MRootNode, scene, 0, Matrix4x4.Identity);
+        int traverseIndex = 0;
+        TraverseNode(scene->MRootNode, scene, ref traverseIndex, Matrix4x4.Identity);
 
         var count = _meshNames.Count;
         InvalidOpThrower.ThrowIf(count > _parts.Length, nameof(_parts));
@@ -133,44 +141,45 @@ internal sealed class MeshImporter
         animationResult = default;
     }
 
-    private void CalculateBoundingBox(int count, Span<MeshPartImportResult> parts, out BoundingBox bounds)
-    {
-        bounds = parts[0].Bounds;
-        for (var i = 1; i < count; i++)
-        {
-            BoundingBox.Merge(in bounds, in parts[i].Bounds, out bounds);
-        }
-    }
 
-    private unsafe void TraverseNode(AssimpNode* node, AssimpScene* scene, int index, in Matrix4x4 parent)
+    private unsafe void TraverseNode(AssimpNode* node, AssimpScene* scene, ref int traverseIndex, in Matrix4x4 parent)
     {
         var current = node->MTransformation * parent;
         for (var i = 0; i < node->MNumMeshes; i++)
         {
-            var meshIndex = node->MMeshes[i];
-            var mesh = scene->MMeshes[meshIndex];
-            var meshData = LoadMeshData(mesh);
+            var meshIndex = (int)node->MMeshes[i];
+            MeshCreationInfo info;
 
+            if (_meshIndexToIdMap.TryGetValue(meshIndex, out var existingInfo))
+            {
+                info = existingInfo;
+            }
+            else
+            {
+                var m = scene->MMeshes[meshIndex];
+                info = LoadMeshData(m);
+                _meshIndexToIdMap.Add(meshIndex, info);
+                _meshNames.Add(m->MName.AsString);
+
+                if (_boneCount > 0)
+                    FillDefaultSkinningData((int)m->MNumVertices);
+            }
+
+            var mesh = scene->MMeshes[meshIndex];
             BoundingBox.FromPoints(new Span<Vector3>(mesh->MVertices, (int)mesh->MNumVertices), out var box);
 
-            ref var it = ref _parts[index + i];
+            ref var it = ref _parts[traverseIndex];
             it.MaterialSlot = (int)scene->MMeshes[i]->MMaterialIndex;
-            it.CreationInfo = meshData;
-
+            it.CreationInfo = info;
             it.Bounds = box;
-            _partTransforms[i] = current;
-            _meshNames.Add(mesh->MName.AsString);
-
-            if (_boneCount > 0)
-                FillDefaultSkinningData((int)mesh->MNumVertices);
+            _partTransforms[traverseIndex] = current;
+            traverseIndex++;
         }
-
-        var idx = index + (int)node->MNumMeshes;
 
         // Process children
         for (uint i = 0; i < node->MNumChildren; i++)
         {
-            TraverseNode(node->MChildren[i], scene, idx, in current);
+            TraverseNode(node->MChildren[i], scene, ref traverseIndex, in current);
         }
     }
 
@@ -201,7 +210,7 @@ internal sealed class MeshImporter
             _uploadMesh(new MeshUploadData<Vertex3D>(vRes, iRes, ref info));
             return info;
         }
-        
+
 
         var verticesSkinnedRes = _verticesSkinned.AsSpan(0, vertexCount);
         var skinnedData = _skinningData.AsSpan(0, vertexCount);
@@ -210,7 +219,6 @@ internal sealed class MeshImporter
         WriteVerticesSkinned(mesh, verticesSkinnedRes, skinnedData);
 
         _uploadAnimatedMesh(new MeshUploadData<Vertex3DSkinned>(verticesSkinnedRes, iRes, ref info));
-        Console.WriteLine(info);
 
         return info;
 
@@ -241,10 +249,11 @@ internal sealed class MeshImporter
             }
         }
 
-        static void WriteVerticesSkinned(AssimpMesh* mesh, Span<Vertex3DSkinned> result, ReadOnlySpan<SkinningData> skinned)
+        static void WriteVerticesSkinned(AssimpMesh* mesh, Span<Vertex3DSkinned> result,
+            ReadOnlySpan<SkinningData> skinned)
         {
             Debug.Assert(result.Length == skinned.Length);
-            
+
             var count = mesh->MNumVertices;
             for (int i = 0; i < count; i++)
             {
@@ -256,7 +265,6 @@ internal sealed class MeshImporter
                 v.TexCoords = mesh->MTextureCoords[0][i].ToVec2();
                 v.BoneIndices = skinnedVertex.BoneIndices;
                 v.BoneWeights = skinnedVertex.BoneWeights;
-
             }
             /*
         for (var i = 0; i < result.Length; i++)
@@ -273,7 +281,7 @@ internal sealed class MeshImporter
             it.TexCoords = vertex.TexCoords;
             it.Normal = vertex.Normal;
             it.Tangent = vertex.Tangent;
-           
+
             }
              */
         }
@@ -319,7 +327,6 @@ internal sealed class MeshImporter
                 }
             }
         }
-
     }
 
     private void EnsureCapacity(int vertexCount, int indexCount)
@@ -364,11 +371,17 @@ internal sealed class MeshImporter
         _skinningData.AsSpan().Fill(skinData);
     }
 
+    private static void CalculateBoundingBox(int count, Span<MeshPartImportResult> parts, out BoundingBox bounds)
+    {
+        bounds = parts[0].Bounds;
+        for (var i = 1; i < count; i++)
+            BoundingBox.Merge(in bounds, in parts[i].Bounds, out bounds);
+    }
 
     // cm->0.01f, mm->0.001f, m->1f
-    private static float DecideScale(Vector3 bboxMin, Vector3 bboxMax, float unitScale)
+    private static float DecideScale(in BoundingBox bounds, float unitScale)
     {
-        var size = bboxMax - bboxMin;
+        var size = bounds.Max - bounds.Min;
         var maxDim = MathF.Max(size.X, MathF.Max(size.Y, size.Z));
         return unitScale * (maxDim > 100f ? 0.01f : maxDim < 0.01f ? 0.001f : 1f);
     }

@@ -157,7 +157,7 @@ public sealed class Demo3DScene : GameScene
         var rockMat2Tag = MaterialTagBuilder.BuildOne(rockMat2.Id);
         var boatMatTag = MaterialTagBuilder.BuildOne(boatMat.Id);
 
-        _spawner.PlaceTreesBasic(2,
+        _spawner.PlaceTreesBasic(14,
         [
             new ScenePlacement(treeMesh.ToBaseDrawInfo(), treeMesh.Bounds, treeMatTag),
             new ScenePlacement(treeMesh1.ToBaseDrawInfo(), treeMesh1.Bounds, birchMatTag),
@@ -170,7 +170,7 @@ public sealed class Demo3DScene : GameScene
                 new ScenePlacement(rock2Mesh.ToBaseDrawInfo(), rock2Mesh.Bounds, rockMat2Tag, 0.6f)
             ],
             intensity: 0.5f);
-        _spawner.PlacePropsRingBasic(12, [new ScenePlacement(boatMesh.ToBaseDrawInfo(), boatMesh.Bounds, boatMatTag)]);
+        _spawner.PlacePropsRingBasic(22, [new ScenePlacement(boatMesh.ToBaseDrawInfo(), boatMesh.Bounds, boatMatTag)]);
 
         float half = 256 / 2f;
 

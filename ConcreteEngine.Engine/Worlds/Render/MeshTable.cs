@@ -34,6 +34,7 @@ internal sealed class MeshTable : IMeshTable
     private BoundingBox[] _partBoxes = new  BoundingBox[DefaultBufferCap];
     private Matrix4x4[] _partTransforms = new Matrix4x4[DefaultBufferCap];
     
+    private ModelId[] _animationByModel = new ModelId[DefaultAnimationCap];
     private Matrix4x4[] _modelBoneInvTransform = new Matrix4x4[DefaultAnimationCap];
     private RangeU16[] _modelBoneRanges = new RangeU16[DefaultAnimationCap];
     private Matrix4x4[] _boneTransforms = new Matrix4x4[DefaultBufferCap];
@@ -58,11 +59,11 @@ internal sealed class MeshTable : IMeshTable
     {
         EnsureCapacity(_partIdx + 1, _modelIdx + 1);
 
-        _modelBoxes[_modelIdx] = bounds;
 
         _meshParts[_partIdx] = new MeshPart(mesh, materialSlot, drawCount);
         _partTransforms[_partIdx] = Matrix4x4.Identity;
         _modelPartRanges[_modelIdx] = new RangeU16(_partIdx, 1);
+        _modelBoxes[_modelIdx] = bounds;
 
         _partIdx++;
         return new ModelId(++_modelIdx);
@@ -121,8 +122,9 @@ internal sealed class MeshTable : IMeshTable
             var boneRangeSpan = _boneTransforms.AsSpan(idx, modelBones.Length);
             
             modelBones.CopyTo(boneRangeSpan);
-            _modelBoneInvTransform[i] = model.Animation.InverseRootTransform;
-            _modelBoneRanges[i] = new RangeU16(idx, modelBones.Length);
+            _modelBoneInvTransform[idx] = model.Animation.InverseRootTransform;
+            _animationByModel[idx] = model.ModelId;
+            _modelBoneRanges[idx] = new RangeU16(idx, modelBones.Length);
             idx +=  modelBones.Length;
         }
 
@@ -135,6 +137,8 @@ internal sealed class MeshTable : IMeshTable
     private void EnsureCapacity(int cap, int rangeCap)
     {
         Debug.Assert(_meshParts.Length == _partTransforms.Length);
+        if(_meshParts.Length != _partTransforms.Length ||  _meshParts.Length != _partBoxes.Length)
+            throw new InvalidOperationException("Mismatch size for model tables");
 
         if (_meshParts.Length < cap)
         {
@@ -154,16 +158,23 @@ internal sealed class MeshTable : IMeshTable
 
     private void EnsureAnimatedCapacity(int cap, int rangeCap)
     {
+        if(_animationByModel.Length != _modelBoneInvTransform.Length ||  _animationByModel.Length != _modelBoneRanges.Length)
+            throw new InvalidOperationException("Mismatch size for model animation tables");
+        
         if (_boneTransforms.Length < cap)
         {
             var newCap = ArrayUtility.CapacityGrowthToFit(_boneTransforms.Length, Math.Max(cap, 64));
             Array.Resize(ref _boneTransforms, newCap);
-        }
 
+        }
+        
         if (_modelBoneRanges.Length < rangeCap)
         {
             var newCap = ArrayUtility.CapacityGrowthToFit(_modelBoneRanges.Length, Math.Max(cap, 64));
             Array.Resize(ref _modelBoneRanges, newCap);
+            Array.Resize(ref _animationByModel, newCap);
+            Array.Resize(ref _modelBoneInvTransform, newCap);
         }
+
     }
 }

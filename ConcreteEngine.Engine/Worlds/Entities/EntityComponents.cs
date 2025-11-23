@@ -26,6 +26,13 @@ public struct ModelComponent(ModelId model, int drawCount, MaterialTagKey materi
     public bool Animated = animated;
 }
 
+public struct AnimationComponent(ModelId model, int drawCount, MaterialTagKey materialTagKey, bool animated = false)
+{
+    public int Animation;
+    public int Bones;
+    public float AnimationTime;
+}
+
 public struct BoxComponent(in BoundingBox box)
 {
     public BoundingBox Box = box;

@@ -143,18 +143,20 @@ internal sealed class RenderEntityBus
         var prevModel = new ModelId(-1);
         var prevMatKey = new MaterialTagKey(-1);
 
-        var entitySpan = _entities.AsSpan(0, _idx);
 
         // stack space for nested loop
         Matrix4x4 world = default;
         Matrix4x4 model = default;
         Matrix3X4 normal = default;
+        
+        MaterialTag tag = default;
+        ModelPartView modelView = default;
+        ReadOnlySpan<MaterialId> matSpan = default;
+
+        var entitySpan = _entities.AsSpan(0, _idx);
 
         foreach (ref var entity in entitySpan)
         {
-            MaterialTag tag = default;
-            ModelPartView modelView = default;
-            ReadOnlySpan<MaterialId> matSpan = default;
 
             if (entity.Model != prevModel)
             {
@@ -184,7 +186,6 @@ internal sealed class RenderEntityBus
 
             var baseMeta = entity.Meta;
             int len = int.Min(locals.Length, parts.Length);
-
             for (var i = 0; i < len; i++)
             {
                 ref readonly var part = ref parts[i];

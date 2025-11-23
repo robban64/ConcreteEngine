@@ -4,6 +4,7 @@ using System.Diagnostics;
 using System.Diagnostics.CodeAnalysis;
 using System.Numerics;
 using System.Runtime.CompilerServices;
+using System.Runtime.InteropServices;
 using ConcreteEngine.Common.Collections;
 using ConcreteEngine.Common.Numerics;
 using ConcreteEngine.Common.Time;
@@ -15,7 +16,6 @@ using static ConcreteEngine.Renderer.Data.RenderLimits;
 #endregion
 
 namespace ConcreteEngine.Renderer.Draw;
-
 
 public sealed class DrawCommandBuffer
 {
@@ -83,7 +83,27 @@ public sealed class DrawCommandBuffer
         drawUbo.Model = model;
         drawUbo.Normal = normal;
     }
+    
 
+    
+    public void SubmitDraw(
+        DrawCommand cmd,
+        DrawCommandMeta meta,
+        ref readonly DrawObjectUniform drawUniform)
+    {
+        var idx = _submitIdx++;
+        if ((uint)idx >= (uint)_commandBuffer.Length || (uint)idx >= (uint)_metaBuffer.Length)
+        {
+            throw new IndexOutOfRangeException();
+        }
+
+        _commandBuffer[idx] = cmd;
+        _metaBuffer[idx] = meta;
+        _indexBuffer[idx] = new DrawCommandRef(meta, idx);
+        ref var data = ref Unsafe.AsRef(ref _transformBuffer[idx]);
+        data = drawUniform;
+    }
+/*
 
     public void SubmitDraw(
         DrawCommand cmd,
@@ -110,7 +130,7 @@ public sealed class DrawCommandBuffer
         drawUbo.Normal.V1 = v1;
         drawUbo.Normal.V2 = v2;
     }
-
+*/
 
     public void ReadyDrawCommands()
     {

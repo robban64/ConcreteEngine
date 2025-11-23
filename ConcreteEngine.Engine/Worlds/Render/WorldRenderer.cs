@@ -112,7 +112,7 @@ public sealed class WorldRenderer : IWorldRenderer
                 throw new ArgumentOutOfRangeException(nameof(req.Action));
         }
     }
-
+    private FrameProfileTimer _timer = new FrameProfileTimer();
     internal void PreRender(
         BeginFrameStatus status,
         in RenderFrameInfo frameInfo,
@@ -132,8 +132,10 @@ public sealed class WorldRenderer : IWorldRenderer
 
         var renderView = RenderView;
         _renderEntityBus.CollectEntities(in renderView.ViewMatrix, renderView.ProjectionInfo);
-        
+        _timer.Begin();
+
         _renderEntityBus.FlushEntities(_renderer.CommandBuffer);
+        _timer.EndPrint();
 
         // fill buffers
         _renderer.CollectDrawBuffers();

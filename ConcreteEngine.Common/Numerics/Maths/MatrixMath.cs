@@ -11,70 +11,32 @@ namespace ConcreteEngine.Common.Numerics.Maths;
 
 public static class MatrixMath
 {
+    /*
     [MethodImpl(MethodImplOptions.AggressiveInlining | MethodImplOptions.AggressiveOptimization)]
-    public static Matrix4x4 MultiplyAffine(in Matrix4x4 a, in Matrix4x4 b)
+    public static void MultiplyAffine(in Matrix4x4 a, ref Matrix4x4 b)
     {
         // 3x3
-        float r11 = a.M11 * b.M11 + a.M12 * b.M21 + a.M13 * b.M31;
-        float r12 = a.M11 * b.M12 + a.M12 * b.M22 + a.M13 * b.M32;
-        float r13 = a.M11 * b.M13 + a.M12 * b.M23 + a.M13 * b.M33;
+        b.M11 = a.M11 * b.M11 + a.M12 * b.M21 + a.M13 * b.M31;
+        b.M12 = a.M11 * b.M12 + a.M12 * b.M22 + a.M13 * b.M32;
+        b.M13 = a.M11 * b.M13 + a.M12 * b.M23 + a.M13 * b.M33;
+        b.M14 = 0f;
 
-        float r21 = a.M21 * b.M11 + a.M22 * b.M21 + a.M23 * b.M31;
-        float r22 = a.M21 * b.M12 + a.M22 * b.M22 + a.M23 * b.M32;
-        float r23 = a.M21 * b.M13 + a.M22 * b.M23 + a.M23 * b.M33;
+        b.M21 = a.M21 * b.M11 + a.M22 * b.M21 + a.M23 * b.M31;
+        b.M22 = a.M21 * b.M12 + a.M22 * b.M22 + a.M23 * b.M32;
+        b.M23 = a.M21 * b.M13 + a.M22 * b.M23 + a.M23 * b.M33;
+        b.M24 = 0f;
 
-        float r31 = a.M31 * b.M11 + a.M32 * b.M21 + a.M33 * b.M31;
-        float r32 = a.M31 * b.M12 + a.M32 * b.M22 + a.M33 * b.M32;
-        float r33 = a.M31 * b.M13 + a.M32 * b.M23 + a.M33 * b.M33;
-
+        b.M31 = a.M31 * b.M11 + a.M32 * b.M21 + a.M33 * b.M31;
+        b.M32 = a.M31 * b.M12 + a.M32 * b.M22 + a.M33 * b.M32;
+        b.M33 = a.M31 * b.M13 + a.M32 * b.M23 + a.M33 * b.M33;
+        b.M34 = 0f;
         // translation
-        float tx = a.M11 * b.M41 + a.M12 * b.M42 + a.M13 * b.M43 + a.M41;
-        float ty = a.M21 * b.M41 + a.M22 * b.M42 + a.M23 * b.M43 + a.M42;
-        float tz = a.M31 * b.M41 + a.M32 * b.M42 + a.M33 * b.M43 + a.M43;
-
-        return new Matrix4x4(
-            r11, r12, r13, 0f,
-            r21, r22, r23, 0f,
-            r31, r32, r33, 0f,
-            tx, ty, tz, 1f);
+        b.M31 = a.M11 * b.M41 + a.M12 * b.M42 + a.M13 * b.M43 + a.M41;
+        b.M32 = a.M21 * b.M41 + a.M22 * b.M42 + a.M23 * b.M43 + a.M42;
+        b.M33 = a.M31 * b.M41 + a.M32 * b.M42 + a.M33 * b.M43 + a.M43;
+        b.M34 = 1f;
     }
-
-    [MethodImpl(MethodImplOptions.AggressiveInlining | MethodImplOptions.AggressiveOptimization)]
-    public static Matrix4x4 CreateModelMatrix(in Vector3 transform, in Vector3 scale, in Quaternion rotation)
-    {
-        float x = rotation.X, y = rotation.Y, z = rotation.Z, w = rotation.W;
-        float xx = x + x, yy = y + y, zz = z + z;
-        float xy = x * yy, xz = x * zz, yz = y * zz;
-        float wx = w * xx, wy = w * yy, wz = w * zz;
-        float x2 = x * xx, y2 = y * yy, z2 = z * zz;
-
-        float r11 = 1f - (y2 + z2), r22 = 1f - (x2 + z2), r33 = 1f - (x2 + y2);
-        float r12 = xy + wz, r13 = xz - wy, r21 = xy - wz;
-        float r23 = yz + wx, r31 = xz + wy, r32 = yz - wx;
-
-        Matrix4x4 mat = default;
-        mat.M11 = r11 * scale.X;
-        mat.M12 = r12 * scale.Y;
-        mat.M13 = r13 * scale.Z;
-        mat.M14 = 0f;
-
-        mat.M21 = r21 * scale.X;
-        mat.M22 = r22 * scale.Y;
-        mat.M23 = r23 * scale.Z;
-        mat.M24 = 0f;
-
-        mat.M31 = r31 * scale.X;
-        mat.M32 = r32 * scale.Y;
-        mat.M33 = r33 * scale.Z;
-        mat.M34 = 0f;
-
-        mat.M41 = transform.X;
-        mat.M42 = transform.Y;
-        mat.M43 = transform.Z;
-        mat.M44 = 1f;
-        return mat;
-    }
-
+*/
     [MethodImpl(MethodImplOptions.AggressiveInlining | MethodImplOptions.AggressiveOptimization)]
     public static void MultiplyAffine(in Matrix4x4 a, in Matrix4x4 b, out Matrix4x4 r)
     {
@@ -138,6 +100,8 @@ public static class MatrixMath
         mat.M44 = 1f;
     }
 
+    /*
+
     [MethodImpl(MethodImplOptions.AggressiveInlining | MethodImplOptions.AggressiveOptimization)]
     public static void CreateModelMatrix(in Vector3 translation, float scale, in Quaternion rotation, out Matrix4x4 mat)
     {
@@ -199,7 +163,7 @@ public static class MatrixMath
         v1 = new Vector4(C12 * s, C22 * s, C32 * s, 0f);
         v2 = new Vector4(C13 * s, C23 * s, C33 * s, 0f);
     }
-
+*/
     [MethodImpl(MethodImplOptions.AggressiveInlining | MethodImplOptions.AggressiveOptimization)]
     public static void CreateNormalMatrix(in Matrix4x4 m, out Matrix3X4 n)
     {

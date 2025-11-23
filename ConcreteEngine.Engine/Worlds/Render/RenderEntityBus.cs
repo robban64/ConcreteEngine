@@ -144,20 +144,18 @@ internal sealed class RenderEntityBus
         var prevMatKey = new MaterialTagKey(-1);
 
 
-        // stack space for nested loop
-        Matrix4x4 world = default;
-        Matrix4x4 model = default;
-        Matrix3X4 normal = default;
-        
-        MaterialTag tag = default;
+
+        MaterialTag materialTag = default;
         ModelPartView modelView = default;
         ReadOnlySpan<MaterialId> matSpan = default;
+        
+        // stack space for nested loop
+        DrawObjectUniform drawData = default;
 
         var entitySpan = _entities.AsSpan(0, _idx);
 
         foreach (ref var entity in entitySpan)
         {
-
             if (entity.Model != prevModel)
             {
                 modelView = _meshTable.GetPartsRefView(entity.Model);
@@ -166,18 +164,14 @@ internal sealed class RenderEntityBus
 
             if (entity.MaterialKey != prevMatKey)
             {
-                _materialTable.ResolveSubmitMaterial(entity.MaterialKey, out tag);
-                matSpan = tag.AsReadOnlySpan();
+                _materialTable.ResolveSubmitMaterial(entity.MaterialKey, out materialTag);
+                matSpan = materialTag.AsReadOnlySpan();
                 prevMatKey = entity.MaterialKey;
             }
 
-            MatrixMath.CreateModelMatrix(
-                in entity.Transform.Translation,
-                in entity.Transform.Scale,
-                in entity.Transform.Rotation,
-                out world
-            );
-
+            Matrix4x4 world = default;
+            ref var worldRef = ref Unsafe.AsRef(ref world);
+            CreateMatrixFromTransform(in entity.Transform, ref worldRef);
 
             var parts = modelView.Parts;
             var locals = modelView.Locals;
@@ -189,26 +183,34 @@ internal sealed class RenderEntityBus
             for (var i = 0; i < len; i++)
             {
                 ref readonly var part = ref parts[i];
-                ref readonly var local = ref locals[i];
+
+                ref var draw = ref Unsafe.AsRef(ref drawData);
+                ApplyTransform(ref draw, in locals[i], in world);
+
+                var meta = BuildMeta(ref Unsafe.AsRef(ref materialTag), part.MaterialSlot, baseMeta);
                 ref var mat = ref Unsafe.Add(ref mat0, part.MaterialSlot);
-
-                MatrixMath.MultiplyAffine(in local, in world, out model);
-                MatrixMath.CreateNormalMatrix(in model, out normal);
-
-                var meta = baseMeta;
-                if (tag.IsTransparent(part.MaterialSlot))
-                {
-                    var depthKey = (ushort)(ushort.MaxValue - meta.DepthKey);
-                    meta = meta.WithTransparency(DrawCommandQueue.Transparent, depthKey);
-                }
-
                 var cmd = new DrawCommand(part.Mesh, mat, part.DrawCount);
-                buffer.SubmitDraw(cmd, meta, in model, in normal);
+                buffer.SubmitDraw(cmd, meta, ref draw);
             }
 
             prevMatKey = entity.MaterialKey;
             prevModel = entity.Model;
         }
+    }
+
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    static void ApplyTransform(ref DrawObjectUniform data, in Matrix4x4 local, in Matrix4x4 world)
+    {
+        MatrixMath.MultiplyAffine(in local, in world, out data.Model);
+        MatrixMath.CreateNormalMatrix(in data.Model, out data.Normal);
+    }
+
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    private static DrawCommandMeta BuildMeta(ref MaterialTag tag, int slot, DrawCommandMeta meta)
+    {
+        if (!tag.IsTransparent(slot)) return meta;
+        var depthKey = (ushort)(ushort.MaxValue - meta.DepthKey);
+        return meta.WithTransparency(DrawCommandQueue.Transparent, depthKey);
     }
 
     private void FlushWorldEntities(DrawCommandBuffer buffer)
@@ -251,7 +253,6 @@ internal sealed class RenderEntityBus
         }
     }
 
-    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     private static void CreateTransformMatrices(in Transform transform, out Matrix4x4 model, out Matrix3X4 normal)
     {
         MatrixMath.CreateModelMatrix(
@@ -281,4 +282,39 @@ internal sealed class RenderEntityBus
     [StackTraceHidden]
     private static void ThrowMaxCapacityExceeded() =>
         throw new OutOfMemoryException("Entity Buffer exceeded max limit");
+
+
+    [MethodImpl(MethodImplOptions.AggressiveInlining | MethodImplOptions.AggressiveOptimization)]
+    private static void CreateMatrixFromTransform(ref readonly Transform transform, ref Matrix4x4 mat)
+    {
+        float x = transform.Rotation.X, y = transform.Rotation.Y, z = transform.Rotation.Z, w = transform.Rotation.W;
+        float xx = x + x, yy = y + y, zz = z + z;
+        float xy = x * yy, xz = x * zz, yz = y * zz;
+        float wx = w * xx, wy = w * yy, wz = w * zz;
+        float x2 = x * xx, y2 = y * yy, z2 = z * zz;
+
+        float r11 = 1f - (y2 + z2), r22 = 1f - (x2 + z2), r33 = 1f - (x2 + y2);
+        float r12 = xy + wz, r13 = xz - wy, r21 = xy - wz;
+        float r23 = yz + wx, r31 = xz + wy, r32 = yz - wx;
+
+        mat.M11 = r11 * transform.Scale.X;
+        mat.M12 = r12 * transform.Scale.Y;
+        mat.M13 = r13 * transform.Scale.Z;
+        mat.M14 = 0f;
+
+        mat.M21 = r21 * transform.Scale.X;
+        mat.M22 = r22 * transform.Scale.Y;
+        mat.M23 = r23 * transform.Scale.Z;
+        mat.M24 = 0f;
+
+        mat.M31 = r31 * transform.Scale.X;
+        mat.M32 = r32 * transform.Scale.Y;
+        mat.M33 = r33 * transform.Scale.Z;
+        mat.M34 = 0f;
+
+        mat.M41 = transform.Translation.X;
+        mat.M42 = transform.Translation.Y;
+        mat.M43 = transform.Translation.Z;
+        mat.M44 = 1f;
+    }
 }

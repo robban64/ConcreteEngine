@@ -8,6 +8,7 @@ using System.Runtime.InteropServices;
 using ConcreteEngine.Common.Collections;
 using ConcreteEngine.Common.Numerics;
 using ConcreteEngine.Common.Numerics.Maths;
+using ConcreteEngine.Common.Time;
 using ConcreteEngine.Engine.Worlds.Data;
 using ConcreteEngine.Engine.Worlds.Entities;
 using ConcreteEngine.Engine.Worlds.Utility;
@@ -139,16 +140,22 @@ internal sealed class RenderEntityBus
 
         FlushWorldEntities(buffer);
 
-        ModelPartView modelView = default; // ref struct
         var prevModel = new ModelId(-1);
         var prevMatKey = new MaterialTagKey(-1);
 
         var entitySpan = _entities.AsSpan(0, _idx);
-        ReadOnlySpan<MaterialId> matSpan = default;
-        MaterialTag tag = default;
+
+        // stack space for nested loop
+        Matrix4x4 world = default;
+        Matrix4x4 model = default;
+        Matrix3X4 normal = default;
 
         foreach (ref var entity in entitySpan)
         {
+            MaterialTag tag = default;
+            ModelPartView modelView = default;
+            ReadOnlySpan<MaterialId> matSpan = default;
+
             if (entity.Model != prevModel)
             {
                 modelView = _meshTable.GetPartsRefView(entity.Model);
@@ -163,15 +170,12 @@ internal sealed class RenderEntityBus
             }
 
             MatrixMath.CreateModelMatrix(
-                entity.Transform.Translation,
-                entity.Transform.Scale,
-                entity.Transform.Rotation,
-                out var world
+                in entity.Transform.Translation,
+                in entity.Transform.Scale,
+                in entity.Transform.Rotation,
+                out world
             );
 
-            // stack space for nested loop
-            Matrix4x4 model;
-            Vector4 v0, v1, v2;
 
             var parts = modelView.Parts;
             var locals = modelView.Locals;
@@ -179,16 +183,17 @@ internal sealed class RenderEntityBus
             ref var mat0 = ref MemoryMarshal.GetReference(matSpan);
 
             var baseMeta = entity.Meta;
-            for (var i = 0; i < locals.Length; i++)
+            int len = int.Min(locals.Length, parts.Length);
+
+            for (var i = 0; i < len; i++)
             {
                 ref readonly var part = ref parts[i];
                 ref readonly var local = ref locals[i];
-                ref readonly var mat = ref Unsafe.Add(ref mat0, part.MaterialSlot);
+                ref var mat = ref Unsafe.Add(ref mat0, part.MaterialSlot);
 
                 MatrixMath.MultiplyAffine(in local, in world, out model);
-                MatrixMath.CreateNormalMatrix(in model, out v0, out v1, out v2);
+                MatrixMath.CreateNormalMatrix(in model, out normal);
 
-                var cmd = new DrawCommand(part.Mesh, mat, part.DrawCount);
                 var meta = baseMeta;
                 if (tag.IsTransparent(part.MaterialSlot))
                 {
@@ -196,7 +201,8 @@ internal sealed class RenderEntityBus
                     meta = meta.WithTransparency(DrawCommandQueue.Transparent, depthKey);
                 }
 
-                buffer.SubmitDraw(cmd, meta, in model, in v0, in v1, in v2);
+                var cmd = new DrawCommand(part.Mesh, mat, part.DrawCount);
+                buffer.SubmitDraw(cmd, meta, in model, in normal);
             }
 
             prevMatKey = entity.MaterialKey;
@@ -214,8 +220,8 @@ internal sealed class RenderEntityBus
             var meta = new DrawCommandMeta(DrawCommandId.Skybox, DrawCommandQueue.Skybox, passMask: PassMask.Main);
             var cmd = new DrawCommand(sky.Mesh, sky.Material);
 
-            CreateTransformMatrices(in sky.Transform, out var model, out var v0, out var v1, out var v2);
-            buffer.SubmitDraw(cmd, meta, in model, in v0, in v1, in v2);
+            CreateTransformMatrices(in sky.Transform, out var model, out var normal);
+            buffer.SubmitDraw(cmd, meta, in model, in normal);
         }
 
         if (ActiveTerrainCount > 0)
@@ -226,8 +232,8 @@ internal sealed class RenderEntityBus
             var meta = new DrawCommandMeta(DrawCommandId.Terrain, DrawCommandQueue.Terrain);
             var cmd = new DrawCommand(view.Parts[0].Mesh, terrain.Material);
 
-            CreateTransformMatrices(in Transform.Baseline, out var model, out var v0, out var v1, out var v2);
-            buffer.SubmitDraw(cmd, meta, in model, in v0, in v1, in v2);
+            CreateTransformMatrices(in Transform.Baseline, out var model, out var normal);
+            buffer.SubmitDraw(cmd, meta, in model, in normal);
         }
 
         //Blend = On, SampleAlphaCoverage = Off, DepthWrite = Off
@@ -245,8 +251,7 @@ internal sealed class RenderEntityBus
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    private static void CreateTransformMatrices(in Transform transform, out Matrix4x4 model, out Vector4 v0,
-        out Vector4 v1, out Vector4 v2)
+    private static void CreateTransformMatrices(in Transform transform, out Matrix4x4 model, out Matrix3X4 normal)
     {
         MatrixMath.CreateModelMatrix(
             transform.Translation,
@@ -255,7 +260,7 @@ internal sealed class RenderEntityBus
             out model
         );
 
-        MatrixMath.CreateNormalMatrix(in model, out v0, out v1, out v2);
+        MatrixMath.CreateNormalMatrix(in model, out normal);
     }
 
 

@@ -17,7 +17,7 @@ public sealed class EntityStore<T> where T : unmanaged
 
     public bool IsDirty { get; set; }
 
-    public EntityStore(int initialCapacity = 128)
+    public EntityStore(int initialCapacity = 256)
     {
         _sparse = new int[initialCapacity];
         _data = new T[initialCapacity];
@@ -53,12 +53,19 @@ public sealed class EntityStore<T> where T : unmanaged
 
     public ref T Add(EntityId e, in T value)
     {
-        if (_idx >= _data.Length)
+        Debug.Assert(_data.Length == _entities.Length);
+        Debug.Assert(_sparse.Length >= e.Id);
+
+        if (_data.Length < _idx)
         {
-            Debug.Assert(_data.Length == _entities.Length);
             var newSize = ArrayUtility.CapacityGrowthPow2(Math.Max(_idx, 32));
             Array.Resize(ref _data, newSize);
             Array.Resize(ref _entities, newSize);
+        }
+
+        if (_sparse.Length < e.Id)
+        {
+            var newSize = ArrayUtility.CapacityGrowthPow2(Math.Max(e.Id, 32));
             Array.Resize(ref _sparse, newSize);
         }
 

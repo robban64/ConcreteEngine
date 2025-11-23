@@ -2,6 +2,7 @@
 
 using System.Numerics;
 using System.Runtime.InteropServices;
+using ConcreteEngine.Common.Numerics;
 using ConcreteEngine.Graphics.Primitives;
 
 #endregion
@@ -164,12 +165,22 @@ public struct MaterialUniformRecord
 }
 
 [StructLayout(LayoutKind.Sequential)]
-public struct DrawObjectUniform(in Matrix4x4 model, in Vector4 v0, in Vector4 v1, in Vector4 v2)
+public struct DrawObjectUniform
 {
-    public Matrix4x4 Model = model;
-    public Vector4 NormalCol0 = v0;
-    public Vector4 NormalCol1 = v1;
-    public Vector4 NormalCol2 = v2;
+    public Matrix4x4 Model;
+    public Matrix3X4 Normal;
+    
+    public DrawObjectUniform()
+    {
+    }
+
+    public DrawObjectUniform(in Matrix4x4 model, in Vector4 v0, in Vector4 v1, in Vector4 v2)
+    {
+        Model = model;
+        Normal.V0 = v0;
+        Normal.V1 = v1;
+        Normal.V2 = v2;
+    }
 }
 
 [StructLayout(LayoutKind.Sequential)]

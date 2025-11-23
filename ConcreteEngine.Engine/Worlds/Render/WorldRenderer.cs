@@ -132,7 +132,9 @@ public sealed class WorldRenderer : IWorldRenderer
 
         var renderView = RenderView;
         _renderEntityBus.CollectEntities(in renderView.ViewMatrix, renderView.ProjectionInfo);
+        
         _renderEntityBus.FlushEntities(_renderer.CommandBuffer);
+
         // fill buffers
         _renderer.CollectDrawBuffers();
         _renderer.StartFrame(status);

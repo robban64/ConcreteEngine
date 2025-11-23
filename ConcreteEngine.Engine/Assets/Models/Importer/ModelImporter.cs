@@ -42,7 +42,7 @@ internal sealed class ModelImporter
     private readonly Dictionary<string, int> _boneMapping = new(8);
     private readonly Dictionary<int, MeshCreationInfo> _meshIndexToIdMap = new(8);
     
-    private readonly ModelMaterialParser _materialParser = new();
+    private readonly ModelMaterialImporter _materialImporter = new();
 
     private Matrix4x4 _invRootTransform;
     private BoundingBox _modelBounds;
@@ -85,7 +85,7 @@ internal sealed class ModelImporter
         
         var materials = Array.Empty<ModelMaterialEmbeddedDescriptor>();
         if(scene->MNumMaterials > 0)
-            materials = _materialParser.ProcessSceneMaterials(scene);
+            materials = _materialImporter.ProcessSceneMaterials(scene);
 
 
         var parts = _parts.AsSpan(0, meshCount);

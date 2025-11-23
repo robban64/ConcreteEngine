@@ -49,7 +49,7 @@ internal sealed class DrawCommandPipeline
         _drawStateOps = new DrawStateOps(drawCtx, drawCtxPayload, _drawBuffers);
 
         //
-        _commandBuffer = new DrawCommandBuffer(_drawCmdProc, _drawBuffers);
+        _commandBuffer = new DrawCommandBuffer();
         _materialBuffer = new MaterialDrawBuffer();
 
         //

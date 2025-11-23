@@ -8,7 +8,7 @@ using System.Runtime.InteropServices;
 
 namespace ConcreteEngine.Common.Numerics;
 
-[StructLayout(LayoutKind.Sequential, Pack = 4)]
+[StructLayout(LayoutKind.Sequential)]
 public readonly struct Matrix3
 {
     public readonly float M11, M12, M13;
@@ -32,7 +32,6 @@ public readonly struct Matrix3
         M33 = m.M33;
     }
 
-    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public Matrix3(float m11, float m12, float m13,
         float m21, float m22, float m23,
         float m31, float m32, float m33)
@@ -48,7 +47,6 @@ public readonly struct Matrix3
         M33 = m33;
     }
 
-    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public void CopyTo(Span<float> span)
     {
         span[0] = M11;

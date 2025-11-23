@@ -5,6 +5,8 @@ using System.Diagnostics.CodeAnalysis;
 using System.Numerics;
 using System.Runtime.CompilerServices;
 using ConcreteEngine.Common.Collections;
+using ConcreteEngine.Common.Numerics;
+using ConcreteEngine.Common.Time;
 using ConcreteEngine.Renderer.Data;
 using ConcreteEngine.Renderer.Definitions;
 using ConcreteEngine.Renderer.Passes;
@@ -14,7 +16,6 @@ using static ConcreteEngine.Renderer.Data.RenderLimits;
 
 namespace ConcreteEngine.Renderer.Draw;
 
-//internal delegate void DrawCommandDispatchDel(DrawCommand cmd, int idx);
 
 public sealed class DrawCommandBuffer
 {
@@ -29,7 +30,7 @@ public sealed class DrawCommandBuffer
 
     public int Count => _submitIdx;
 
-    internal DrawCommandBuffer(DrawCommandProcessor cmdDraw, DrawBuffers drawBuffers)
+    internal DrawCommandBuffer()
     {
         _commandBuffer = new DrawCommand[DefaultCommandBuffCapacity];
         _transformBuffer = new DrawObjectUniform[DefaultCommandBuffCapacity];
@@ -49,10 +50,38 @@ public sealed class DrawCommandBuffer
     public void SubmitNonTransformDraw(DrawCommand cmd, DrawCommandMeta meta)
     {
         var idx = _submitIdx++;
+        if ((uint)idx >= (uint)_commandBuffer.Length || (uint)idx >= (uint)_metaBuffer.Length ||
+            (uint)idx >= (uint)_indexBuffer.Length || (uint)idx >= (uint)_transformBuffer.Length)
+        {
+            throw new IndexOutOfRangeException();
+        }
+
         _commandBuffer[idx] = cmd;
         _metaBuffer[idx] = meta;
         _indexBuffer[idx] = new DrawCommandRef(meta, idx);
-        _transformBuffer[idx] = default; // could leave it empty
+        _transformBuffer[idx] = default;
+    }
+
+    public void SubmitDraw(
+        DrawCommand cmd,
+        DrawCommandMeta meta,
+        in Matrix4x4 model,
+        in Matrix3X4 normal)
+    {
+        var idx = _submitIdx++;
+        if ((uint)idx >= (uint)_commandBuffer.Length || (uint)idx >= (uint)_metaBuffer.Length ||
+            (uint)idx >= (uint)_indexBuffer.Length || (uint)idx >= (uint)_transformBuffer.Length)
+        {
+            throw new IndexOutOfRangeException();
+        }
+
+        _commandBuffer[idx] = cmd;
+        _metaBuffer[idx] = meta;
+        _indexBuffer[idx] = new DrawCommandRef(meta, idx);
+
+        ref var drawUbo = ref _transformBuffer[idx];
+        drawUbo.Model = model;
+        drawUbo.Normal = normal;
     }
 
 
@@ -65,18 +94,24 @@ public sealed class DrawCommandBuffer
         in Vector4 v2)
     {
         var idx = _submitIdx++;
+        if ((uint)idx >= (uint)_commandBuffer.Length || (uint)idx >= (uint)_metaBuffer.Length ||
+            (uint)idx >= (uint)_indexBuffer.Length || (uint)idx >= (uint)_transformBuffer.Length)
+        {
+            throw new IndexOutOfRangeException();
+        }
+
         _commandBuffer[idx] = cmd;
         _metaBuffer[idx] = meta;
         _indexBuffer[idx] = new DrawCommandRef(meta, idx);
 
         ref var drawUbo = ref _transformBuffer[idx];
         drawUbo.Model = model;
-        drawUbo.NormalCol0 = v0;
-        drawUbo.NormalCol1 = v1;
-        drawUbo.NormalCol2 = v2;
+        drawUbo.Normal.V0 = v0;
+        drawUbo.Normal.V1 = v1;
+        drawUbo.Normal.V2 = v2;
     }
 
-    [MethodImpl(MethodImplOptions.AggressiveOptimization)]
+
     public void ReadyDrawCommands()
     {
         if (_submitIdx <= 1)
@@ -85,13 +120,20 @@ public sealed class DrawCommandBuffer
             return;
         }
 
-        var indices = _indexBuffer.AsSpan(0, _submitIdx);
-        indices.Sort();
+        var len = _submitIdx;
+        var metas = _metaBuffer;
+        var indices = _indexBuffer;
+
+        if ((uint)len >= (uint)metas.Length || (uint)len >= (uint)indices.Length)
+        {
+            throw new IndexOutOfRangeException();
+        }
+
+        indices.AsSpan(0, len).Sort();
 
         // Count pass tickets
         Span<int> counts = stackalloc int[PassSlots];
-        var metas = _metaBuffer.AsSpan(0, _submitIdx);
-        for (var i = 0; i < _submitIdx; i++)
+        for (var i = 0; i < len; i++)
         {
             ref readonly var index = ref indices[i];
             var mask = (uint)metas[index.Idx].PassMask;
@@ -122,7 +164,7 @@ public sealed class DrawCommandBuffer
             heads[p] = _passRanges[p].Start;
 
         // fill tickets in sorted order
-        for (var i = 0; i < _submitIdx; i++)
+        for (var i = 0; i < len; i++)
         {
             ref readonly var mi = ref indices[i];
             var meta = metas[mi.Idx];

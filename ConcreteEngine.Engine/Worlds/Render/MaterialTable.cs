@@ -55,7 +55,7 @@ public sealed class MaterialTable : IMaterialTable
     private void EnsureCapacity(int n)
     {
         var newSize = _keyIdx + n;
-        if (newSize >= _table.Length)
+        if (_table.Length < newSize)
             Array.Resize(ref _table, ArrayUtility.CapacityGrowthLinear(_keyIdx, newSize, 32));
     }
 

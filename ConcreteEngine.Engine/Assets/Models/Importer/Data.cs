@@ -6,7 +6,6 @@ using ConcreteEngine.Common.Numerics;
 
 namespace ConcreteEngine.Engine.Assets.Models.Importer;
 
-
 [StructLayout(LayoutKind.Sequential)]
 internal struct SkinningData
 {
@@ -15,14 +14,17 @@ internal struct SkinningData
 
     public int GetVertexId(int idx)
     {
-        Debug.Assert(idx < 4);
+        if (idx < 0 || idx >= 4)
+            throw new ArgumentOutOfRangeException(nameof(idx));
+
         ref var i0 = ref Unsafe.AsRef(ref BoneIndices.X);
         return Unsafe.Add(ref i0, idx);
     }
 
     public void Set(int idx, int vertexIndex, float boneWeight)
     {
-        Debug.Assert(idx < 4);
+        if (idx < 0 || idx >= 4)
+            throw new ArgumentOutOfRangeException(nameof(idx));
 
         ref var i0 = ref Unsafe.AsRef(ref BoneIndices.X);
         Unsafe.Add(ref i0, idx) = vertexIndex;

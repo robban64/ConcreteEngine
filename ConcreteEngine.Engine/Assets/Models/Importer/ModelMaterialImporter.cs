@@ -19,7 +19,7 @@ using AssimpTexture = Silk.NET.Assimp.Texture;
 
 namespace ConcreteEngine.Engine.Assets.Models.Importer;
 
-internal sealed class ModelMaterialParser
+internal sealed class ModelMaterialImporter
 {
     private bool isActive = false;
 

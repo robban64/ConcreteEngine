@@ -14,7 +14,6 @@ internal static unsafe class VertexDataWriter
     {
         ArgumentOutOfRangeException.ThrowIfLessThan(vertices.Length, (int)mesh->MNumVertices, nameof(vertices.Length));
 
-        ref var v0 = ref MemoryMarshal.GetReference(vertices);
         var count = mesh->MNumVertices;
         for (int i = 0; i < count; i++)
         {
@@ -46,6 +45,9 @@ internal static unsafe class VertexDataWriter
         ArgumentOutOfRangeException.ThrowIfNotEqual(result.Length, skinned.Length, nameof(result.Length));
 
         var count = mesh->MNumVertices;
+        if (count > result.Length || count > skinned.Length)
+            throw new IndexOutOfRangeException();
+        
         for (int i = 0; i < count; i++)
         {
             ref readonly var skinnedVertex = ref skinned[i];

@@ -98,20 +98,5 @@ public sealed class EntityStore<T> where T : unmanaged
         new(this, r2, r3);
 */
 
-    private static int BinarySearchEntity<T2>(ReadOnlySpan<EntityId> collection, EntityId entity)
-    {
-        var id = entity.Id;
 
-        int lo = 0, hi = collection.Length - 1;
-        while (lo <= hi)
-        {
-            int mid = lo + (hi - lo) / 2;
-            int midKey = collection[mid].Id;
-            if (midKey == id) return mid;
-            if (midKey < id) lo = mid + 1;
-            else hi = mid - 1;
-        }
-
-        return -1;
-    }
 }

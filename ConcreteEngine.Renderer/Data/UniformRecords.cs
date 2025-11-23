@@ -1,6 +1,7 @@
 #region
 
 using System.Numerics;
+using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
 using ConcreteEngine.Common.Numerics;
 using ConcreteEngine.Graphics.Primitives;
@@ -24,6 +25,8 @@ public abstract class ShadowUboTag;
 public abstract class MaterialUboTag;
 
 public abstract class DrawUboTag;
+
+public abstract class DrawAnimationUboTag;
 
 public abstract class PostUboTag;
 
@@ -130,8 +133,8 @@ public struct LightUniformRecord(
 [StructLayout(LayoutKind.Sequential)]
 public struct ShadowUniformRecord(
     in Matrix4x4 lightViewProj,
-    Vector4 shadowParams0,
-    Vector4 shadowParams1)
+    in Vector4 shadowParams0,
+    in Vector4 shadowParams1)
 {
     public Matrix4x4 LightViewProj = lightViewProj;
     public Vector4 ShadowParams0 = shadowParams0; // x=1/texW, y=1/texH, z=constBias, w=slopeBias
@@ -169,26 +172,39 @@ public struct DrawObjectUniform
 {
     public Matrix4x4 Model;
     public Matrix3X4 Normal;
-    
-    public DrawObjectUniform()
-    {
-    }
+}
 
-    public DrawObjectUniform(in Matrix4x4 model, in Vector4 v0, in Vector4 v1, in Vector4 v2)
+[StructLayout(LayoutKind.Sequential)]
+public unsafe struct DrawAnimationUniform
+{
+    public const int MaxBones = 64;
+    public const int Mat4Components = 16;
+    public const int TotalComponents = Mat4Components * MaxBones;
+
+    public fixed float Weights[TotalComponents];
+
+    public void Set(Span<Matrix4x4> matrices)
     {
-        Model = model;
-        Normal.V0 = v0;
-        Normal.V1 = v1;
-        Normal.V2 = v2;
+        fixed (float* p = Weights)
+        {
+            int sourceCount = matrices.Length * Mat4Components;
+            if (sourceCount > TotalComponents)
+            {
+                sourceCount = TotalComponents;
+            }
+            var destinationSpan = new Span<float>(p, sourceCount);
+            ReadOnlySpan<float> sourceSpan = MemoryMarshal.Cast<Matrix4x4, float>(matrices);
+            sourceSpan.Slice(0, sourceCount).CopyTo(destinationSpan);
+        }
     }
 }
 
 [StructLayout(LayoutKind.Sequential)]
 public struct PostProcessUniform(
-    Vector4 grade,
-    Vector4 whiteBalance,
-    Vector4 bloom,
-    Vector4 fx
+    in Vector4 grade,
+    in Vector4 whiteBalance,
+    in Vector4 bloom,
+    in Vector4 fx
 )
 {
     // x = exposureOffset (-0.10..+0.10), y = saturation (0.8..1.2)

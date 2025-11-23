@@ -55,6 +55,11 @@ uniform DrawUniform {
     vec4 uNormalCol2;
 };
 
+uniform DrawAnimationUniform {
+    mat4 jointTransforms[64];
+};
+
+
 uniform PostUniform {
     vec4 uGrade;
     vec4 uWhiteBalance;

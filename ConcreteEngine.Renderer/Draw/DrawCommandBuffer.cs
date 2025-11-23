@@ -26,6 +26,7 @@ public sealed class DrawCommandBuffer
     private DrawCommandTicket[] _drawTickets;
     private readonly DrawPassRange[] _passRanges;
 
+    private DrawCommandProcessor _processor = null!;
     private int _submitIdx = 0;
 
     public int Count => _submitIdx;
@@ -43,8 +44,14 @@ public sealed class DrawCommandBuffer
         _submitIdx = 0;
     }
 
-    internal void Initialize()
+    internal void Initialize(DrawCommandProcessor cmd)
     {
+        _processor = cmd;
+    }
+
+    public void SubmitAnimationData(ReadOnlySpan<Matrix4x4> boneData, ReadOnlySpan<RangeU16> ranges)
+    {
+        _processor.SubmitAnimationData(boneData, ranges);
     }
 
     public void SubmitNonTransformDraw(DrawCommand cmd, DrawCommandMeta meta)
@@ -83,9 +90,8 @@ public sealed class DrawCommandBuffer
         drawUbo.Model = model;
         drawUbo.Normal = normal;
     }
-    
 
-    
+
     public void SubmitDraw(
         DrawCommand cmd,
         DrawCommandMeta meta,
@@ -93,9 +99,7 @@ public sealed class DrawCommandBuffer
     {
         var idx = _submitIdx++;
         if ((uint)idx >= (uint)_commandBuffer.Length || (uint)idx >= (uint)_metaBuffer.Length)
-        {
             throw new IndexOutOfRangeException();
-        }
 
         _commandBuffer[idx] = cmd;
         _metaBuffer[idx] = meta;
@@ -103,34 +107,7 @@ public sealed class DrawCommandBuffer
         ref var data = ref Unsafe.AsRef(ref _transformBuffer[idx]);
         data = drawUniform;
     }
-/*
 
-    public void SubmitDraw(
-        DrawCommand cmd,
-        DrawCommandMeta meta,
-        in Matrix4x4 model,
-        in Vector4 v0,
-        in Vector4 v1,
-        in Vector4 v2)
-    {
-        var idx = _submitIdx++;
-        if ((uint)idx >= (uint)_commandBuffer.Length || (uint)idx >= (uint)_metaBuffer.Length ||
-            (uint)idx >= (uint)_indexBuffer.Length || (uint)idx >= (uint)_transformBuffer.Length)
-        {
-            throw new IndexOutOfRangeException();
-        }
-
-        _commandBuffer[idx] = cmd;
-        _metaBuffer[idx] = meta;
-        _indexBuffer[idx] = new DrawCommandRef(meta, idx);
-
-        ref var drawUbo = ref _transformBuffer[idx];
-        drawUbo.Model = model;
-        drawUbo.Normal.V0 = v0;
-        drawUbo.Normal.V1 = v1;
-        drawUbo.Normal.V2 = v2;
-    }
-*/
 
     public void ReadyDrawCommands()
     {
@@ -206,8 +183,9 @@ public sealed class DrawCommandBuffer
     }
 
 
-    internal void DispatchDrawPass(PassId passId, bool defaultDraw, DrawCommandProcessor cmd)
+    internal void DispatchDrawPass(PassId passId, bool defaultDraw)
     {
+        var processor = _processor!;
         var pass = _passRanges[passId];
 
         var tickets = _drawTickets.AsSpan(pass.Start, pass.Count);
@@ -216,13 +194,13 @@ public sealed class DrawCommandBuffer
         if (defaultDraw)
         {
             foreach (var ticket in tickets)
-                cmd.DrawMesh(commands[ticket.SubmitIdx], ticket);
+                processor.DrawMesh(commands[ticket.SubmitIdx], ticket);
 
             return;
         }
 
         foreach (var ticket in tickets)
-            cmd.DrawSpecialResolveMesh(commands[ticket.SubmitIdx], ticket);
+            processor.DrawSpecialResolveMesh(commands[ticket.SubmitIdx], ticket);
     }
 
     public void Reset()

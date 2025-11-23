@@ -2,9 +2,11 @@
 
 using System.Numerics;
 using System.Runtime.CompilerServices;
+using ConcreteEngine.Common.Numerics;
 using ConcreteEngine.Common.Numerics.Maths;
 using ConcreteEngine.Graphics.Gfx;
 using ConcreteEngine.Graphics.Gfx.Resources;
+using ConcreteEngine.Graphics.Gfx.Utility;
 using ConcreteEngine.Renderer.Data;
 using ConcreteEngine.Renderer.Registry;
 using ConcreteEngine.Renderer.State;
@@ -25,8 +27,10 @@ internal sealed class DrawBuffers
     private readonly UniformBufferId _dirLightUbo;
     private readonly UniformBufferId _postUbo;
 
+
     private readonly RenderUbo _drawUbo;
     private readonly RenderUbo _materialUbo;
+    private readonly RenderUbo _animationUbo;
 
     private MaterialDrawBuffer _materialBuffer = null!;
     private readonly DrawStateContext _ctx;
@@ -44,6 +48,8 @@ internal sealed class DrawBuffers
 
         _drawUbo = registry.GetRenderUbo<DrawUboTag>();
         _materialUbo = registry.GetRenderUbo<MaterialUboTag>();
+
+        _animationUbo = registry.GetRenderUbo<DrawAnimationUboTag>();
 
         _engineUbo = registry.GetRenderUbo<EngineUboTag>().Id;
         _frameUbo = registry.GetRenderUbo<FrameUboTag>().Id;
@@ -104,6 +110,12 @@ internal sealed class DrawBuffers
         _gfxBuffers.BindUniformBufferRange(_drawUbo.Id, cursor, _drawUbo.Stride);
     }
 
+    public void BindAnimation(int submitIndex)
+    {
+        var cursor = _animationUbo.SetDrawCursor(submitIndex);
+        _gfxBuffers.BindUniformBufferRange(_animationUbo.Id, cursor, _animationUbo.Stride);
+    }
+
     public void UploadMaterialRecord(MaterialId materialId, in MaterialUniformRecord data) =>
         _gfxBuffers.UploadUniformGpuData(_materialUbo.Id, in data, 0);
 
@@ -113,6 +125,24 @@ internal sealed class DrawBuffers
     public void UploadDrawObjects(ReadOnlySpan<DrawObjectUniform> data) =>
         _gfxBuffers.UploadUniformGpuSpan(_drawUbo.Id, data, _drawUbo.SetUploadCursor(0));
 
+    public void UploadAnimationData(ReadOnlySpan<Matrix4x4> boneData, ReadOnlySpan<RangeU16> ranges)
+    {
+        var uploadSize = boneData.Length * sizeof(float) * 16;
+        if (uploadSize > _animationUbo.Capacity)
+        {
+            var requestedCapacity = uploadSize + sizeof(float) * 16;
+            nint newSize = UniformBufferUtils.NextCapacity(_animationUbo.Capacity, requestedCapacity);
+            _animationUbo.SetCapacity(newSize);
+            _gfxBuffers.SetUniformBufferCapacity(_animationUbo.Id, newSize);
+        }
+
+        for (int i = 0; i < ranges.Length; i++)
+        {
+            var range = ranges[i];
+            var data = ranges.Slice(range.Offset, range.Length);
+            _gfxBuffers.UploadUniformGpuSpan(_animationUbo.Id, data, _animationUbo.NextDrawCursor());
+        }
+    }
 
     // Globals //
     public void UploadGlobalUniforms(in RenderFrameInfo frameInfo, in RenderRuntimeParams runtimeParams)
@@ -135,6 +165,8 @@ internal sealed class DrawBuffers
         public static FrameUniformRecord FrameData;
         public static ShadowUniformRecord ShadowData;
         public static PostProcessUniform PostData;
+
+        public static DrawAnimationUniform AnimationData;
     }
 
     public void UploadCameraView(RenderView view)

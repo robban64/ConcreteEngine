@@ -85,8 +85,15 @@ public sealed class Demo3DScene : GameScene
 
             worldEntities.Models.Add(soliderEntity,
                 new ModelComponent(soliderModel.ModelId, soliderModel.DrawCount, soliderMatKey, true));
-            worldEntities.Transforms.Add(soliderEntity, Transform.Baseline with { Translation = new Vector3(120, 6, 120) });
+            worldEntities.Transforms.Add(soliderEntity, TransformComponent.Baseline with { Translation = new Vector3(125, 6, 120) });
             worldEntities.BoundingBoxes.Add(soliderEntity, new BoxComponent(soliderModel.Bounds));
+
+            var animationComponent = new AnimationComponent(soliderModel.ModelId, 4, 1, 1);
+            animationComponent.Slot = Context.World.MeshTable.GetAnimationSlot(soliderModel.ModelId);
+            worldEntities.Animations.Add(soliderEntity, animationComponent);
+            
+
+
         }
         
         {
@@ -95,8 +102,12 @@ public sealed class Demo3DScene : GameScene
             var soliderMatKey = worldMaterials.Add(MaterialTagBuilder.Start(soliderMat.Id).WithSlot(soliderMat.Id).Build());
             worldEntities.Models.Add(knightEntity,
                 new ModelComponent(knight.ModelId, knight.DrawCount, soliderMatKey, true));
-            worldEntities.Transforms.Add(knightEntity, Transform.Baseline with { Translation = new Vector3(120, 6, 120) });
+            worldEntities.Transforms.Add(knightEntity, TransformComponent.Baseline with { Translation = new Vector3(120, 6, 120) });
             worldEntities.BoundingBoxes.Add(knightEntity, new BoxComponent(knight.Bounds));
+            
+            var animationComponent = new AnimationComponent(knight.ModelId, 4, 1, 1);
+            animationComponent.Slot = Context.World.MeshTable.GetAnimationSlot(knight.ModelId);
+            worldEntities.Animations.Add(knightEntity, animationComponent);
         }
 
 
@@ -180,7 +191,7 @@ public sealed class Demo3DScene : GameScene
             var mat = World.EntityMaterials.Add(rockMat1Tag);
             World.Entities.Models.Add(entityId, new ModelComponent(mesh.ModelId, mesh.DrawCount, mat));
             World.Entities.Transforms.Add(entityId,
-                new Transform(new Vector3(half, worldTerrain.GetSmoothHeight(half, half) + 1f, half),
+                new TransformComponent(new Vector3(half, worldTerrain.GetSmoothHeight(half, half) + 1f, half),
                     Vector3.One, Quaternion.Identity));
         }
 

@@ -38,7 +38,7 @@ public sealed class WorldRaycaster
 
         distance = 0;
 
-        foreach (var it in _entities.Query<Transform, BoxComponent>())
+        foreach (var it in _entities.Query<TransformComponent, BoxComponent>())
         {
             ref readonly var transform = ref it.Component1;
             ref readonly var bounds = ref it.Component2;

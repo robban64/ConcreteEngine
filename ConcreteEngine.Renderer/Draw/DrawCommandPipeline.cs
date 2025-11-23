@@ -53,7 +53,7 @@ internal sealed class DrawCommandPipeline
         _materialBuffer = new MaterialDrawBuffer();
 
         //
-        _commandBuffer.Initialize();
+        _commandBuffer.Initialize(_drawCmdProc);
         _drawCmdProc.Initialize();
         _drawBuffers.AttachMaterialBuffer(_materialBuffer);
     }
@@ -107,6 +107,6 @@ internal sealed class DrawCommandPipeline
     {
         _drawBuffers.ResetCursor();
         _drawCmdProc.PrepareDrawPass();
-        _commandBuffer.DispatchDrawPass(passId, defaultDraw, _drawCmdProc);
+        _commandBuffer.DispatchDrawPass(passId, defaultDraw);
     }
 }

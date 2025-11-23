@@ -2,6 +2,7 @@
 
 using System.Diagnostics;
 using System.Numerics;
+using System.Runtime.CompilerServices;
 using ConcreteEngine.Common.Collections;
 using ConcreteEngine.Common.Numerics;
 using ConcreteEngine.Engine.Assets;
@@ -16,6 +17,7 @@ namespace ConcreteEngine.Engine.Worlds.Render;
 public interface IMeshTable
 {
     ModelId CreateSimpleModel(MeshId mesh, int materialSlot, int drawCount, in BoundingBox bounds);
+    int GetAnimationSlot(ModelId modelId);
 }
 
 internal sealed class MeshTable : IMeshTable
@@ -34,13 +36,13 @@ internal sealed class MeshTable : IMeshTable
     private BoundingBox[] _partBoxes = new  BoundingBox[DefaultBufferCap];
     private Matrix4x4[] _partTransforms = new Matrix4x4[DefaultBufferCap];
     
-    private ModelId[] _animationByModel = new ModelId[DefaultAnimationCap];
+    private int[] _animationByModel = new int[DefaultAnimationCap];
     private Matrix4x4[] _modelBoneInvTransform = new Matrix4x4[DefaultAnimationCap];
     private RangeU16[] _modelBoneRanges = new RangeU16[DefaultAnimationCap];
     private Matrix4x4[] _boneTransforms = new Matrix4x4[DefaultBufferCap];
 
     private int _partIdx = 0;
-    private int _boneRangeIdx = 0;
+    private int _animationIdx = 0;
 
 
     public ref readonly BoundingBox GetModelBounds(ModelId id) => ref _modelBoxes[id - 1];
@@ -54,6 +56,34 @@ internal sealed class MeshTable : IMeshTable
 
         return new ModelPartView(parts, locals, boxes, range);
     }
+    
+    
+    public int GetAnimationSlot(ModelId modelId) => SortMethod.BinarySearchDataInt(_animationByModel, modelId.Value);
+
+    public ref readonly Matrix4x4 GetAnimationInverseTransform(int slot)
+    {
+        ArgumentOutOfRangeException.ThrowIfGreaterThanOrEqual(slot, _modelBoneInvTransform.Length);
+        ArgumentOutOfRangeException.ThrowIfNegative(slot);
+        
+        return ref _modelBoneInvTransform[slot];
+    }
+
+    public AnimationView GetBoneRefView(int slot)
+    {
+        var range = _modelBoneRanges[slot];
+        var boneTransforms = _boneTransforms.AsSpan(range.Offset, range.Length);
+        return new AnimationView(boneTransforms, ref _modelBoneInvTransform[slot], range);
+    }
+    
+    public AnimationBonePayload GetBoneUploadPayload()
+    {
+        var ranges = _modelBoneRanges.AsSpan(0, _animationIdx);
+        var last = ranges[^1];
+        var boneTransforms = _boneTransforms.AsSpan(0, last.Offset+last.Length);
+        return new AnimationBonePayload(boneTransforms, ranges);
+    }
+
+
 
     public ModelId CreateSimpleModel(MeshId mesh, int materialSlot, int drawCount, in BoundingBox bounds)
     {
@@ -112,7 +142,7 @@ internal sealed class MeshTable : IMeshTable
 
         EnsureAnimatedCapacity(totalBones, animatedModels);
 
-        idx = _boneRangeIdx;
+        idx = _animationIdx;
         for (var i = 0; i < models.Count; i++)
         {
             var model = models[i];
@@ -128,33 +158,9 @@ internal sealed class MeshTable : IMeshTable
             idx +=  modelBones.Length;
         }
 
-        _boneRangeIdx = idx;
+        _animationIdx = idx;
 
     }
-/*
-    // [188 17 - 188 54]     
-   IL_0149: ldarg.1      // buffer
-   IL_014a: callvirt     instance valuetype           [ConcreteEngine.Renderer]ConcreteEngine.Renderer.Data.DrawObjectUniform& [ConcreteEngine.Renderer]ConcreteEngine.Renderer.Draw.DrawCommandBuffer::Writer()
-   IL_014f: stloc.s      writer
-
-   // [189 17 - 189 85]
-   IL_0151: ldloca.s     locals
-   IL_0153: ldloc.s      i
-   IL_0155: call         instance !0/*valuetype      [System.Numerics.Vectors]System.Numerics.Matrix4x4* /& modreq ([System.Runtime]System.Runtime.InteropServices.InAttribute) valuetype [System.Runtime]System.ReadOnlySpan`1<valuetype [System.Numerics.Vectors]System.Numerics.Matrix4x4>::get_Item(int32)
-   IL_015a: ldloca.s     world
-   IL_015c: ldloc.s      writer
-   IL_015e: ldflda       valuetype          [System.Numerics.Vectors]System.Numerics.Matrix4x4 [ConcreteEngine.Renderer]ConcreteEngine.Renderer.Data.DrawObjectUniform::Model
-   IL_0163: call         void                  [ConcreteEngine.Common]ConcreteEngine.Common.Numerics.Maths.MatrixMath::MultiplyAffine(valuetype [System.Numerics.Vectors]System.Numerics.Matrix4x4&, valuetype [System.Numerics.Vectors]System.Numerics.Matrix4x4&, valuetype [System.Numerics.Vectors]System.Numerics.Matrix4x4&)
-
-   // [190 17 - 190 83]
-   IL_0168: ldloc.s      writer
-   IL_016a: ldflda       valuetype         [System.Numerics.Vectors]System.Numerics.Matrix4x4 [ConcreteEngine.Renderer]ConcreteEngine.Renderer.Data.DrawObjectUniform::Model
-   IL_016f: ldloc.s      writer
-   IL_0171: ldflda       valuetype             ncreteEngine.Common]ConcreteEngine.Common.Numerics.Matrix3X4 [ConcreteEngine.Renderer]ConcreteEngine.Renderer.Data.DrawObjectUniform::Normal
-   IL_0176: call         void                  ncreteEngine.Common]ConcreteEngine.Common.Numerics.Maths.MatrixMath::CreateNormalMatrix(valuetype [System.Numerics.Vectors]System.Numerics.Matrix4x4&, valuetype [ConcreteEngine.Common]ConcreteEngine.Common.Numerics.Matrix3X4&)
-
- */
-
 
     private void EnsureCapacity(int cap, int rangeCap)
     {
@@ -187,7 +193,6 @@ internal sealed class MeshTable : IMeshTable
         {
             var newCap = ArrayUtility.CapacityGrowthToFit(_boneTransforms.Length, Math.Max(cap, 64));
             Array.Resize(ref _boneTransforms, newCap);
-
         }
         
         if (_modelBoneRanges.Length < rangeCap)

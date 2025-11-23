@@ -83,7 +83,7 @@ internal static class EngineCommandHandler
         ctx.AddLog(StructStr<CameraEditorPayload>());
         ctx.AddLog(StructStr<EntityDataPayload>());
 
-        ctx.AddLog(StructStr<Transform>());
+        ctx.AddLog(StructStr<TransformComponent>());
         ctx.AddLog(StructStr<ModelComponent>());
 
         ctx.AddLog(StructStr<MeshPart>());

@@ -14,10 +14,10 @@ public struct DrawEntity(
     EntityId entity,
     ModelId model,
     MaterialTagKey materialKey,
-    in Transform transform,
+    in TransformComponent transform,
     DrawCommandMeta meta)
 {
-    public Transform Transform = transform;
+    public TransformComponent Transform = transform;
     public EntityId Entity = entity;
     public ModelId Model = model;
     public MaterialTagKey MaterialKey = materialKey;

@@ -56,45 +56,10 @@ internal sealed class RenderEntityBus
     {
         _idx = 0;
     }
-
+/*
     private bool hasRunEntities = false;
-
-    public void CollectEntities(in Matrix4x4 viewMat, in ProjectionInfoData projInfo)
+    private void DrawBounds()
     {
-        if (_world is null) return;
-
-        var worldEntities = _world.Entities;
-        var selected = WorldActionSlot.SelectedEntityId;
-
-        float near = projInfo.Near, far = projInfo.Far;
-
-        EnsureCapacity(DrawCount);
-        foreach (var query in worldEntities.Query<ModelComponent, Transform>())
-        {
-            //Debug.Assert(model.Model != default && model.MaterialKey != default);
-            ref var model = ref query.Component1;
-            ref var transform = ref query.Component2;
-
-            ref var entity = ref _entities[_idx++];
-
-            var depthKey = DepthKeyUtility.MakeDepthKey(in viewMat, in transform.Translation, near, far);
-
-            var meta = new DrawCommandMeta(DrawCommandId.Model, DrawCommandQueue.Opaque, DrawCommandResolver.None,
-                PassMask.Default, depthKey);
-
-            if (query.Entity == selected)
-            {
-                meta = meta.WithResolvePass(DrawCommandResolver.Highlight, PassMask.Effect | PassMask.DepthPre);
-            }
-
-            entity.Entity = query.Entity;
-            entity.Model = model.Model;
-            entity.MaterialKey = model.MaterialKey;
-            entity.Transform = transform;
-            entity.Meta = meta;
-        }
-
-        return;
         if (hasRunEntities)
         {
             _idx *= 2;
@@ -131,6 +96,62 @@ internal sealed class RenderEntityBus
 
         hasRunEntities = true;
     }
+*/
+    public void CollectEntities(in Matrix4x4 viewMat, in ProjectionInfoData projInfo)
+    {
+        if (_world is null) return;
+
+        var worldEntities = _world.Entities;
+        var selected = WorldActionSlot.SelectedEntityId;
+
+        float near = projInfo.Near, far = projInfo.Far;
+
+        EnsureCapacity(DrawCount);
+
+        var idxCollect = 0;
+        foreach (var query in worldEntities.Query<ModelComponent, TransformComponent>())
+        {
+            //Debug.Assert(model.Model != default && model.MaterialKey != default);
+            ref var model = ref query.Component1;
+            ref var transform = ref query.Component2;
+
+            ref var entity = ref _entities[idxCollect++];
+
+            var depthKey = DepthKeyUtility.MakeDepthKey(in viewMat, in transform.Translation, near, far);
+
+            var meta = new DrawCommandMeta(DrawCommandId.Model, DrawCommandQueue.Opaque, DrawCommandResolver.None,
+                PassMask.Default, depthKey);
+
+            if (query.Entity == selected)
+            {
+                meta = meta.WithResolvePass(DrawCommandResolver.Highlight, PassMask.Effect | PassMask.DepthPre);
+            }
+
+            entity.Entity = query.Entity;
+            entity.Model = model.Model;
+            entity.MaterialKey = model.MaterialKey;
+            entity.Transform = transform;
+            entity.Meta = meta;
+        }
+        _idx = idxCollect;
+    }
+
+    public void ProcessAnimations(DrawCommandBuffer buffer)
+    {
+        var worldEntities = _world!.Entities;
+
+        var submitView = _meshTable.GetBoneUploadPayload();
+        buffer.SubmitAnimationData(submitView.BoneTransforms, submitView.Range);
+
+        var idxAnimation = 0;
+        var span = worldEntities.Models.AsEntitySpan();
+        foreach (var query in worldEntities.Query<AnimationComponent>())
+        {
+            var entityId = query.Entity;
+            ref var animation = ref query.Component;
+            var view = _meshTable.GetAnimationInverseTransform(animation.Slot);
+        }
+    }
 
     public void FlushEntities(DrawCommandBuffer buffer)
     {
@@ -143,12 +164,10 @@ internal sealed class RenderEntityBus
         var prevModel = new ModelId(-1);
         var prevMatKey = new MaterialTagKey(-1);
 
-
-
         MaterialTag materialTag = default;
         ModelPartView modelView = default;
         ReadOnlySpan<MaterialId> matSpan = default;
-        
+
         // stack space for nested loop
         DrawObjectUniform drawData = default;
 
@@ -235,7 +254,7 @@ internal sealed class RenderEntityBus
             var meta = new DrawCommandMeta(DrawCommandId.Terrain, DrawCommandQueue.Terrain);
             var cmd = new DrawCommand(view.Parts[0].Mesh, terrain.Material);
 
-            CreateTransformMatrices(in Transform.Baseline, out var model, out var normal);
+            CreateTransformMatrices(in TransformComponent.Baseline, out var model, out var normal);
             buffer.SubmitDraw(cmd, meta, in model, in normal);
         }
 
@@ -253,7 +272,7 @@ internal sealed class RenderEntityBus
         }
     }
 
-    private static void CreateTransformMatrices(in Transform transform, out Matrix4x4 model, out Matrix3X4 normal)
+    private static void CreateTransformMatrices(in TransformComponent transform, out Matrix4x4 model, out Matrix3X4 normal)
     {
         MatrixMath.CreateModelMatrix(
             transform.Translation,
@@ -285,7 +304,7 @@ internal sealed class RenderEntityBus
 
 
     [MethodImpl(MethodImplOptions.AggressiveInlining | MethodImplOptions.AggressiveOptimization)]
-    private static void CreateMatrixFromTransform(ref readonly Transform transform, ref Matrix4x4 mat)
+    private static void CreateMatrixFromTransform(ref readonly TransformComponent transform, ref Matrix4x4 mat)
     {
         float x = transform.Rotation.X, y = transform.Rotation.Y, z = transform.Rotation.Z, w = transform.Rotation.W;
         float xx = x + x, yy = y + y, zz = z + z;

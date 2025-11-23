@@ -1,21 +1,29 @@
 #region
 
 using System.Numerics;
+using System.Runtime.CompilerServices;
 using ConcreteEngine.Common.Numerics;
 using ConcreteEngine.Engine.Worlds.Data;
 using ConcreteEngine.Renderer.Data;
+using ConcreteEngine.Shared.TransformData;
 
 #endregion
 
 namespace ConcreteEngine.Engine.Worlds.Entities;
 
-public struct Transform(in Vector3 translation, in Vector3 scale, in Quaternion rotation)
+public struct TransformComponent(in Vector3 translation, in Vector3 scale, in Quaternion rotation)
 {
-    public static readonly Transform Baseline = new (default, Vector3.One, Quaternion.Identity);
-    
+    public static readonly TransformComponent Baseline = new(default, Vector3.One, Quaternion.Identity);
+
     public Vector3 Translation = translation;
     public Vector3 Scale = scale;
     public Quaternion Rotation = rotation;
+
+    internal static ref TransformData AsData(ref TransformComponent component) =>
+        ref Unsafe.As<TransformComponent, TransformData>(ref component);
+    
+    internal static ref TransformComponent FromData(ref TransformData data) =>
+        ref Unsafe.As<TransformData, TransformComponent>(ref data);
 }
 
 public struct ModelComponent(ModelId model, int drawCount, MaterialTagKey materialTagKey, bool animated = false)
@@ -26,11 +34,13 @@ public struct ModelComponent(ModelId model, int drawCount, MaterialTagKey materi
     public bool Animated = animated;
 }
 
-public struct AnimationComponent(ModelId model, int drawCount, MaterialTagKey materialTagKey, bool animated = false)
+public struct AnimationComponent(ModelId model, int bones, int animation, float animationTime)
 {
-    public int Animation;
-    public int Bones;
-    public float AnimationTime;
+    public ModelId Model = model;
+    public int Slot;
+    public int Bones = bones;
+    public int Animation = animation;
+    public float AnimationTime = animationTime;
 }
 
 public struct BoxComponent(in BoundingBox box)

@@ -30,6 +30,7 @@ internal sealed class ModelLoaderModule
         
         embedded = result.MaterialEntries;
         
+        result.Animation?.ModelName = manifest.Name;
         return new Model
         {
             RawId = assetId,

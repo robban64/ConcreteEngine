@@ -144,6 +144,22 @@ internal sealed class DrawBuffers
             _gfxBuffers.UploadUniformGpuSpan(_animationUbo.Id, data, _animationUbo.NextDrawCursor());
         }
     }
+    
+    public void UploadSingleAnimation(ReadOnlySpan<Matrix4x4> boneData)
+    {
+        ArgumentOutOfRangeException.ThrowIfGreaterThan(boneData.Length, 64);
+
+        if (!_animationUbo.HasNextCapacity())
+        {
+            int newCap = int.Max((int)_animationUbo.Stride, (int)_animationUbo.Capacity * 4);
+            nint newSize = UniformBufferUtils.NextCapacity(_animationUbo.Capacity, newCap);
+            _animationUbo.SetCapacity(newSize);
+            _gfxBuffers.SetUniformBufferCapacity(_animationUbo.Id, newSize);
+        }
+        
+        _gfxBuffers.UploadUniformGpuSpan(_animationUbo.Id, boneData, _animationUbo.NextDrawCursor());
+    }
+
 
     // Globals //
     public void UploadGlobalUniforms(in RenderFrameInfo frameInfo, in RenderRuntimeParams runtimeParams)

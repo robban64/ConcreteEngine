@@ -18,7 +18,7 @@ namespace ConcreteEngine.Engine.Worlds.Render;
 public interface IMeshTable
 {
     ModelId CreateSimpleModel(MeshId mesh, int materialSlot, int drawCount, in BoundingBox bounds);
-    int GetAnimationSlot(ModelId modelId);
+    //int GetAnimationSlot(ModelId modelId);
 }
 
 internal sealed class MeshTable : IMeshTable
@@ -37,16 +37,19 @@ internal sealed class MeshTable : IMeshTable
     private BoundingBox[] _partBoxes = new BoundingBox[DefaultBufferCap];
     private Matrix4x4[] _partTransforms = new Matrix4x4[DefaultBufferCap];
 
-    private int[] _animationByModel = new int[DefaultAnimationCap];
+    /*private int[] _animationByModel = new int[DefaultAnimationCap];
     private Matrix4x4[] _modelBoneInvTransform = new Matrix4x4[DefaultAnimationCap];
     private RangeU16[] _modelBoneRanges = new RangeU16[DefaultAnimationCap];
     private Matrix4x4[] _boneTransforms = new Matrix4x4[DefaultBufferCap];
 
-    private readonly List<ModelAnimation> _modelAnimations = new(32);
-
-    private int _partIdx = 0;
+*/
+    
+    private readonly Dictionary<ModelId, ModelAnimation> _modelAnimations = new(32);
     private int _animationIdx = 0;
 
+    private int _partIdx = 0;
+
+    public ModelAnimation GetAnimationFor(ModelId id) => _modelAnimations[id];
 
     public ref readonly BoundingBox GetModelBounds(ModelId id) => ref _modelBoxes[id - 1];
 
@@ -67,7 +70,7 @@ internal sealed class MeshTable : IMeshTable
         return new ModelPartView(parts, locals, boxes, range);
     }
 
-
+/*
     public int GetAnimationSlot(ModelId modelId) => SortMethod.BinarySearchDataInt(_animationByModel, modelId.Value);
 
     public ModelAnimationView GetModelAnimationView(int slot)
@@ -94,7 +97,7 @@ internal sealed class MeshTable : IMeshTable
         var boneTransforms = _boneTransforms.AsSpan(0, last.Offset + last.Length);
         return new AnimationBonePayload(boneTransforms, ranges);
     }
-
+*/
 
     public ModelId CreateSimpleModel(MeshId mesh, int materialSlot, int drawCount, in BoundingBox bounds)
     {
@@ -147,10 +150,16 @@ internal sealed class MeshTable : IMeshTable
                 idx++;
             }
         }
-
         _partIdx = idx;
 
-        if (animatedModels == 0) return;
+        foreach (var model in models)
+        {
+            if(model.Animation is null) continue;
+            _modelAnimations.Add(model.ModelId, model.Animation);
+        }
+
+
+       /* if (animatedModels == 0) return;
 
         EnsureAnimatedCapacity(totalBones, animatedModels);
 
@@ -172,7 +181,7 @@ internal sealed class MeshTable : IMeshTable
             idx += modelBones.Length;
         }
 
-        _animationIdx = idx;
+        _animationIdx = idx;*/
     }
 
     private void EnsureCapacity(int cap, int rangeCap)
@@ -195,7 +204,7 @@ internal sealed class MeshTable : IMeshTable
             Array.Resize(ref _modelBoxes, newCap);
         }
     }
-
+/*
     private void EnsureAnimatedCapacity(int cap, int rangeCap)
     {
         if (_animationByModel.Length != _modelBoneInvTransform.Length ||
@@ -216,4 +225,5 @@ internal sealed class MeshTable : IMeshTable
             Array.Resize(ref _modelBoneInvTransform, newCap);
         }
     }
+    */
 }

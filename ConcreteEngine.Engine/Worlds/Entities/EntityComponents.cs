@@ -43,11 +43,9 @@ public struct ModelComponent(ModelId model, int drawCount, MaterialTagKey materi
     public bool Animated = animated;
 }
 
-public struct AnimationComponent(ModelId model, int bones, int animation, float animationTime)
+public struct AnimationComponent(ModelId model, int animation, float animationTime)
 {
     public ModelId Model = model;
-    public int Slot;
-    public int Bones = bones;
     public int Animation = animation;
     public float AnimationTime = animationTime;
 }

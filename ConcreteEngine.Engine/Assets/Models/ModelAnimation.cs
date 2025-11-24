@@ -5,13 +5,13 @@ namespace ConcreteEngine.Engine.Assets.Models;
 
 public sealed class ModelAnimation
 {
-    
     private readonly ModelAnimationData[] _animations;
     private readonly int[] _parentIndices;
     private readonly Dictionary<int, string> _boneMapping;
     private readonly Matrix4x4[] _boneTransforms;
     private readonly Matrix4x4 _inverseRootTransform;
     
+    public string ModelName { get; internal set; } = string.Empty;
 
     internal ModelAnimation(
         IReadOnlyDictionary<string, int> boneMapping,

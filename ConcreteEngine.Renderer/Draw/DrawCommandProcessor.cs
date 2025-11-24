@@ -51,6 +51,9 @@ internal sealed class DrawCommandProcessor
             _gfxCmd.UnbindAllTextures();
         }
     }
+    
+    public void SubmitSingleAnimation(ReadOnlySpan<Matrix4x4> boneData) =>
+        _buffers.UploadSingleAnimation(boneData);
 
     public void SubmitAnimationData(ReadOnlySpan<Matrix4x4> boneData, ReadOnlySpan<RangeU16> ranges) =>
         _buffers.UploadAnimationData(boneData, ranges);

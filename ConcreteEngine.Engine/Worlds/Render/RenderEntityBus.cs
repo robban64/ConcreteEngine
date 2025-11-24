@@ -142,40 +142,25 @@ internal sealed class RenderEntityBus
     public void ProcessAnimations(DrawCommandBuffer buffer)
     {
         /*
+            var submitView = _meshTable.GetBoneUploadPayload();
+         */
+        
         var worldEntities = _world!.Entities;
 
-        var submitView = _meshTable.GetBoneUploadPayload();
-        buffer.SubmitAnimationData(submitView.BoneTransforms, submitView.Range);
 
         // var idxAnimation = 0;
-        var span = worldEntities.Models.AsEntitySpan();
         foreach (var query in worldEntities.Query<AnimationComponent>())
         {
-            var entityId = query.Entity;
-            ref var animationComponent = ref query.Component;
-            var view = _meshTable.GetModelAnimationView(animationComponent.Slot);
-            var modelAnimation = view.Animations;
+            ref var modelComponent = ref query.Component;
 
-            var boneMapping = modelAnimation.GetBoneMapping();
-            var animation = modelAnimation.AnimationDataSpan[0];
-
+            var animation = _meshTable.GetAnimationFor(modelComponent.Model);
+            buffer.SubmitSingleAnimation(animation.GetBoneTransformSpan());
+            
             Matrix4x4 global = Matrix4x4.Identity;
             Matrix4x4 final = default;
 
-            foreach (var (key, value) in boneMapping)
-            {
-                if (!animation.BoneTransformData.TryGetValue(key, out var transforms)) continue;
-                Matrix4x4 model = default;
-                for (int i = 0; i < transforms.Length; i++)
-                {
-                    ref readonly var t = ref transforms[i];
-                    MatrixMath.CreateModelMatrix(in t.Translation, in t.Scale, in t.Rotation, out model);
-                    MatrixMath.MultiplyAffine(in global, in model, out global);
-                }
-
-                MatrixMath.MultiplyAffine(in global, in view.InvTransform, out final);
-            }
-        }*/
+          
+        }
     }
 
     public void FlushEntities(DrawCommandBuffer buffer)

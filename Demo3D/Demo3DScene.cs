@@ -77,7 +77,7 @@ public sealed class Demo3DScene : GameScene
         var soliderMat = materialStore.CreateMaterial("Material_1", "Warior1");
 
         {
-            var soliderModel = assets.Store.GetByName<Model>("SoliderOld");
+            var soliderModel = assets.Store.GetByName<Model>("Warrior");
             var soliderMatKey = worldMaterials.Add(MaterialTagBuilder.BuildOne(soliderMat.Id));
             var soliderEntity = worldEntities.Create();
             soliderMat.State.Shininess = 22;
@@ -88,8 +88,8 @@ public sealed class Demo3DScene : GameScene
             worldEntities.Transforms.Add(soliderEntity, TransformComponent.Baseline with { Translation = new Vector3(125, 6, 120) });
             worldEntities.BoundingBoxes.Add(soliderEntity, new BoxComponent(soliderModel.Bounds));
 
-            var animationComponent = new AnimationComponent(soliderModel.ModelId, 4, 1, 1);
-            animationComponent.Slot = Context.World.MeshTable.GetAnimationSlot(soliderModel.ModelId);
+            var animationComponent = new AnimationComponent(soliderModel.ModelId, 1, 1);
+            //animationComponent.Slot = Context.World.MeshTable.GetAnimationSlot(soliderModel.ModelId);
             worldEntities.Animations.Add(soliderEntity, animationComponent);
         }
         

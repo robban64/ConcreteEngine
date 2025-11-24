@@ -21,10 +21,10 @@ public sealed class EntitySpawner(IWorld world, float size = 256f, float margin 
         var height = world.Terrain.GetSmoothHeight(p.X, p.Z) + p.Y;
         var scale = s.GetValueOrDefault(Vector3.One);
         var rotation = r.GetValueOrDefault(Quaternion.Identity);
-        return CreateModelEntity(sp, new TransformComponent(p with { Y = height }, scale, rotation));
+        return CreateModelEntity(sp, new Transform(p with { Y = height }, scale, rotation));
     }
 
-    private EntityId CreateModelEntity(ScenePlacement sp, TransformComponent transform)
+    private EntityId CreateModelEntity(ScenePlacement sp, Transform transform)
     {
         var entityId = world.Entities.Create();
         var key = world.EntityMaterials.Add(sp.Mat);

@@ -11,7 +11,7 @@ internal sealed class InteractionController(ApiContext apiContext)
 
     private DragEntityState _dragState;
 
-    private ref TransformComponent GetTransform(EntityId e) =>
+    private ref Transform GetTransform(EntityId e) =>
         ref apiContext.World.Entities.Transforms.GetById(_selectedEntityId);
 
     private ref BoxComponent GetBounds(EntityId e) =>

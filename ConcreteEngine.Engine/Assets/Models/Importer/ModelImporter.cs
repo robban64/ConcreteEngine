@@ -52,6 +52,7 @@ internal sealed class ModelImporter
     private BoundingBox _modelBounds;
 
     private int _boneCount = 0;
+    private bool _hasValidAnimation = false;
 
     private AssetGfxUploader _gfxUploader;
 
@@ -85,6 +86,7 @@ internal sealed class ModelImporter
         _parentIndices.Clear();
 
         _boneCount = 0;
+        _hasValidAnimation = false;
         _modelBounds = default;
         _invRootTransform = Matrix4x4.Identity;
         //
@@ -92,11 +94,13 @@ internal sealed class ModelImporter
         animationResult = default;
         
         // Load the model
-        int meshCount = ProcessSceneMeshes(scene);
-
-        if (_boneByName.Count > 0)
+        var meshCount = ProcessSceneMeshes(scene);
+        _hasValidAnimation = HasAnimationChannels(scene);
+        
+        if (_hasValidAnimation)
         {
             var animationData = ProcessSceneAnimations(scene);
+            MatrixMath.InvertAffine(in scene->MRootNode->MTransformation, out _invRootTransform);
             animationResult = new AnimationImportResult(
                 _boneByName,
                 CollectionsMarshal.AsSpan(animationData),
@@ -106,21 +110,19 @@ internal sealed class ModelImporter
             );
         }
 
-
-
         var parts = _parts.AsSpan(0, meshCount);
         var partTransforms = _partTransforms.AsSpan(0, meshCount);
 
         ModelImportUtils.CalculateBoundingBox(meshCount, parts, out _modelBounds);
-        MatrixMath.InvertAffine(in scene->MRootNode->MTransformation, out _invRootTransform);
 
         result = new ModelImportResult(CollectionsMarshal.AsSpan(_meshNames), parts, partTransforms, ref _modelBounds);
 
         var materials = Array.Empty<ModelMaterialEmbeddedDescriptor>();
+        
         if (scene->MNumMaterials > 0)
             materials = _materialImporter.ProcessSceneMaterials(scene);
 
-        if (_boneByName.Count > 0)
+        if (_hasValidAnimation)
         {
             foreach (var mat in materials)
             {
@@ -142,6 +144,30 @@ internal sealed class ModelImporter
         InvalidOpThrower.ThrowIf(count > _partTransforms.Length, nameof(_partTransforms));
 
         return count;
+    }
+    
+    private unsafe bool HasAnimationChannels(AssimpScene* scene)
+    {
+        if (_boneByName.Count == 0) return false;
+        
+        for (uint i = 0; i < scene->MNumAnimations; i++)
+        {
+            var anim = scene->MAnimations[i];
+            //string animName = anim->MName.AsString;
+            int validChannels = 0;
+
+            for (uint c = 0; c < anim->MNumChannels; c++)
+            {
+                var channel = anim->MChannels[c];
+                // valid channel
+                if (_boneByName.ContainsKey(channel->MNodeName.AsString)) 
+                    validChannels++;
+            }
+            
+            if(validChannels > 0) return true;
+        }
+
+        return false;
     }
     
     private unsafe List<ModelAnimationData> ProcessSceneAnimations(AssimpScene* scene)
@@ -167,11 +193,9 @@ internal sealed class ModelImporter
 
         EnsureCapacity(vertexCount, indexCount);
 
-        bool isAnimated = false;
-        if (mesh->MNumBones > 0 && mesh->MNumAnimMeshes > 0)
+        if (_hasValidAnimation)
         {
-            //EnsureSkinnedCapacity(vertexCount);
-            isAnimated = true;
+            EnsureSkinnedCapacity(vertexCount);
         }
 
         var vRes = _vertices.AsSpan(0, vertexCount);
@@ -180,7 +204,7 @@ internal sealed class ModelImporter
         VertexDataWriter.WriteIndices(mesh, iRes);
         var info = new MeshCreationInfo();
 
-        if (!isAnimated)
+        if (!_hasValidAnimation)
         {
             VertexDataWriter.WriteVertices(mesh, vRes);
             _gfxUploader.UploadMesh(new MeshUploadData<Vertex3D>(vRes, iRes, ref info));

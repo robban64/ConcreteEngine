@@ -2,6 +2,7 @@
 
 using System.Numerics;
 using System.Runtime.CompilerServices;
+using System.Runtime.InteropServices;
 using ConcreteEngine.Common.Numerics;
 using ConcreteEngine.Common.Numerics.Maths;
 using ConcreteEngine.Graphics.Gfx;
@@ -17,6 +18,18 @@ namespace ConcreteEngine.Renderer.Draw;
 
 internal sealed class DrawBuffers
 {
+    private static class DataStore
+    {
+        public static CameraUniformRecord CameraData;
+        //public static LightUniformRecord LightData;
+        public static DirLightUniformRecord DirLightData;
+        public static FrameUniformRecord FrameData;
+        public static ShadowUniformRecord ShadowData;
+        public static PostProcessUniform PostData;
+        public static DrawAnimationUniform AnimationData;
+    }
+    
+    
     private readonly GfxBuffers _gfxBuffers;
 
     private readonly UniformBufferId _engineUbo;
@@ -36,6 +49,8 @@ internal sealed class DrawBuffers
     private readonly DrawStateContext _ctx;
 
     private readonly RenderParamsSnapshot _paramsSnapshot;
+
+    private bool _hasUploadLight = false;
 
 
     internal DrawBuffers(DrawStateContext ctx, DrawStateContextPayload ctxPayload)
@@ -148,7 +163,7 @@ internal sealed class DrawBuffers
     public void UploadSingleAnimation(ReadOnlySpan<Matrix4x4> boneData)
     {
         ArgumentOutOfRangeException.ThrowIfGreaterThan(boneData.Length, 64);
-
+/*
         if (!_animationUbo.HasNextCapacity())
         {
             int newCap = int.Max((int)_animationUbo.Stride, (int)_animationUbo.Capacity * 4);
@@ -156,8 +171,16 @@ internal sealed class DrawBuffers
             _animationUbo.SetCapacity(newSize);
             _gfxBuffers.SetUniformBufferCapacity(_animationUbo.Id, newSize);
         }
+*/     
+        //_animationUbo.NextDrawCursor()
         
-        _gfxBuffers.UploadUniformGpuSpan(_animationUbo.Id, boneData, _animationUbo.NextDrawCursor());
+       // _gfxBuffers.UploadUniformBytes(_animationUbo.Id, MemoryMarshal.AsBytes(boneData),(int)_animationUbo.Stride, 0);
+        //var cursor = _animationUbo.SetDrawCursor(0);
+        ref var data = ref Unsafe.AsRef(ref DataStore.AnimationData);
+        data.Set(boneData);
+        
+        _gfxBuffers.UploadUniformGpuData(_animationUbo.Id, in data, 0);
+        _gfxBuffers.BindUniformBufferRange(_animationUbo.Id, 0, _animationUbo.Stride);
     }
 
 
@@ -165,7 +188,12 @@ internal sealed class DrawBuffers
     public void UploadGlobalUniforms(in RenderFrameInfo frameInfo, in RenderRuntimeParams runtimeParams)
     {
         UploadEngineUniformRecord(in frameInfo, in runtimeParams);
-        //UploadLight();
+        if (!_hasUploadLight)
+        {
+            UploadLight();
+            _hasUploadLight = true;
+        }
+        
         if (_paramsSnapshot.IsDirty)
         {
             UploadFrameUniformRecord();
@@ -174,17 +202,7 @@ internal sealed class DrawBuffers
         }
     }
 
-    private static class DataStore
-    {
-        public static CameraUniformRecord CameraData;
-        public static LightUniformRecord LightData = new(0);
-        public static DirLightUniformRecord DirLightData;
-        public static FrameUniformRecord FrameData;
-        public static ShadowUniformRecord ShadowData;
-        public static PostProcessUniform PostData;
 
-        public static DrawAnimationUniform AnimationData;
-    }
 
     public void UploadCameraView(RenderView view)
     {
@@ -248,7 +266,7 @@ internal sealed class DrawBuffers
 
     private void UploadLight()
     {
-        //_gfxBuffers.UploadUniformGpuData(_lightUbo, in DataStore.LightData, 0);
+        _gfxBuffers.UploadUniformGpuData<LightUniformRecord>(_lightUbo, default, 0);
     }
 
     public void UploadShadow(in Matrix4x4 lightViewProjection)

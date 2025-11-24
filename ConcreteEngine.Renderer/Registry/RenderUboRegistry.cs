@@ -1,5 +1,6 @@
 #region
 
+using System.Runtime.CompilerServices;
 using ConcreteEngine.Common;
 using ConcreteEngine.Graphics.Gfx;
 using ConcreteEngine.Graphics.Gfx.Resources;
@@ -35,6 +36,7 @@ internal sealed class RenderUboRegistry
         Register<DrawObjectUniform, DrawUboTag>();
         Register<DrawAnimationUniform, DrawAnimationUboTag>();
         Register<PostProcessUniform, PostUboTag>();
+        
     }
 
     public void FinishRegistration()

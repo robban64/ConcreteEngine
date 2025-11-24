@@ -282,8 +282,6 @@ internal sealed class AssetStore : IAssetStore
         asset.IsEmbedded = true;
         asset.Name = embedded.AssetName;
         
-        if(typeof(TAsset) == typeof(MaterialTemplate)) Console.WriteLine(asset.Name);
-
         RegisterInternal(id, asset, embedded.FileSpec);
         return asset;
     }

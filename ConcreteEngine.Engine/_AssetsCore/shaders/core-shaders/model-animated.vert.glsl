@@ -24,6 +24,7 @@ mat3 getNormalMatrix() {
 }
 
 void main() {
+
     vec4 skinnedPos = vec4(0.0);
     skinnedPos += jointTransforms[aJointIndices[0]] * vec4(aPos, 1.0) * aWeights[0];
     skinnedPos += jointTransforms[aJointIndices[1]] * vec4(aPos, 1.0) * aWeights[1];

@@ -84,8 +84,8 @@ public sealed class Demo3DScene : GameScene
             soliderMat.State.Specular = 0.18f;
 
             worldEntities.Models.Add(soliderEntity,
-                new ModelComponent(soliderModel.ModelId, soliderModel.DrawCount, soliderMatKey, true));
-            worldEntities.Transforms.Add(soliderEntity, TransformComponent.Baseline with { Translation = new Vector3(125, 6, 120) });
+                new ModelComponent(soliderModel.ModelId, soliderModel.DrawCount, soliderMatKey));
+            worldEntities.Transforms.Add(soliderEntity, Transform.Baseline with { Translation = new Vector3(125, 6, 120) });
             worldEntities.BoundingBoxes.Add(soliderEntity, new BoxComponent(soliderModel.Bounds));
 
             var animationComponent = new AnimationComponent(soliderModel.ModelId, 1, 1);
@@ -98,8 +98,8 @@ public sealed class Demo3DScene : GameScene
             var knightEntity = worldEntities.Create();
             var soliderMatKey = worldMaterials.Add(MaterialTagBuilder.Start(soliderMat.Id).WithSlot(soliderMat.Id).Build());
             worldEntities.Models.Add(knightEntity,
-                new ModelComponent(knight.ModelId, knight.DrawCount, soliderMatKey, true));
-            worldEntities.Transforms.Add(knightEntity, TransformComponent.Baseline with { Translation = new Vector3(120, 6, 120) });
+                new ModelComponent(knight.ModelId, knight.DrawCount, soliderMatKey));
+            worldEntities.Transforms.Add(knightEntity, Transform.Baseline with { Translation = new Vector3(120, 6, 120) });
             worldEntities.BoundingBoxes.Add(knightEntity, new BoxComponent(knight.Bounds));
             
             //var animationComponent = new AnimationComponent(knight.ModelId, 4, 1, 1);

@@ -106,19 +106,19 @@ public struct DirLightUniformRecord(
 
 [StructLayout(LayoutKind.Sequential)]
 public struct LightUniformRecord(
-    int lightCounts
-    /*LightDataStruct l0,
-    LightDataStruct l1 = default,
-    LightDataStruct l2 = default,
-    LightDataStruct l3 = default,
-    LightDataStruct l4 = default,
-    LightDataStruct l5 = default,
-    LightDataStruct l6 = default,
-    LightDataStruct l7 = default*/)
+    int lightCounts,
+    in LightDataStruct l0,
+    in LightDataStruct l1 = default,
+    in LightDataStruct l2 = default,
+    in LightDataStruct l3 = default,
+    in LightDataStruct l4 = default,
+    in LightDataStruct l5 = default,
+    in LightDataStruct l6 = default,
+    in LightDataStruct l7 = default)
 {
     // yzw unused/padding
     public IVec4Std140 LightCounts = new(lightCounts);
-/*
+
     public LightDataStruct L0 = l0;
     public LightDataStruct L1 = l1;
     public LightDataStruct L2 = l2;
@@ -127,7 +127,6 @@ public struct LightUniformRecord(
     public LightDataStruct L5 = l5;
     public LightDataStruct L6 = l6;
     public LightDataStruct L7 = l7;
-*/
 }
 
 [StructLayout(LayoutKind.Sequential)]
@@ -183,7 +182,7 @@ public unsafe struct DrawAnimationUniform
 
     public fixed float Weights[TotalComponents];
 
-    public void Set(Span<Matrix4x4> matrices)
+    public void Set(ReadOnlySpan<Matrix4x4> matrices)
     {
         fixed (float* p = Weights)
         {
@@ -193,7 +192,7 @@ public unsafe struct DrawAnimationUniform
                 sourceCount = TotalComponents;
             }
             var destinationSpan = new Span<float>(p, sourceCount);
-            ReadOnlySpan<float> sourceSpan = MemoryMarshal.Cast<Matrix4x4, float>(matrices);
+            var sourceSpan = MemoryMarshal.Cast<Matrix4x4, float>(matrices);
             sourceSpan.Slice(0, sourceCount).CopyTo(destinationSpan);
         }
     }

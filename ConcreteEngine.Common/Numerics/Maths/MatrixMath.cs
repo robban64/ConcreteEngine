@@ -11,7 +11,7 @@ namespace ConcreteEngine.Common.Numerics.Maths;
 
 public static class MatrixMath
 {
-    /*
+    
     [MethodImpl(MethodImplOptions.AggressiveInlining | MethodImplOptions.AggressiveOptimization)]
     public static void MultiplyAffine(in Matrix4x4 a, ref Matrix4x4 b)
     {
@@ -36,7 +36,7 @@ public static class MatrixMath
         b.M33 = a.M31 * b.M41 + a.M32 * b.M42 + a.M33 * b.M43 + a.M43;
         b.M34 = 1f;
     }
-*/
+
     [MethodImpl(MethodImplOptions.AggressiveInlining | MethodImplOptions.AggressiveOptimization)]
     public static void MultiplyAffine(in Matrix4x4 a, in Matrix4x4 b, out Matrix4x4 r)
     {

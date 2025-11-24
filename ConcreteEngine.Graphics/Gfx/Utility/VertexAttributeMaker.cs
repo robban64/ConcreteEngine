@@ -30,7 +30,7 @@ public struct VertexAttributeMaker
 
         var attribOffset = _offset;
         _offset += stride;
-        return new VertexAttribute(location, binding, componentCount, attribOffset);
+        return new VertexAttribute(location, binding, componentCount, attribOffset, vertexFormat);
     }
 }
 
@@ -64,6 +64,6 @@ public struct VertexAttributeMaker<TElement> where TElement : unmanaged
 
         var attribOffset = Offset;
         Offset += stride;
-        return new VertexAttribute(location, binding, componentCount, attribOffset);
+        return new VertexAttribute(location, binding, componentCount, attribOffset, vertexFormat);
     }
 }

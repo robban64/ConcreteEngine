@@ -95,7 +95,7 @@ internal sealed class AssetGfxUploader
         
         if (isAnimated)
         {
-            attribs[4] = attribBuilder.Make<Int4>(4);
+            attribs[4] = attribBuilder.Make<Int4>(4, vertexFormat: VertexFormat.Integer);
             attribs[5] = attribBuilder.Make<Vector4>(5);
         }
     }

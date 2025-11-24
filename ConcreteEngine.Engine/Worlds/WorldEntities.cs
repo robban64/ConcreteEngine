@@ -14,14 +14,14 @@ public sealed class WorldEntities
     private MaterialTable _materialTable = null!;
 
     public EntityStore<ModelComponent> Models { get; }
-    public EntityStore<TransformComponent> Transforms { get; }
+    public EntityStore<Transform> Transforms { get; }
     public EntityStore<BoxComponent> BoundingBoxes { get; }
     public EntityStore<AnimationComponent> Animations { get; }
 
     internal WorldEntities()
     {
         Models = GenericStores<ModelComponent>.CreateStore();
-        Transforms = GenericStores<TransformComponent>.CreateStore();
+        Transforms = GenericStores<Transform>.CreateStore();
         BoundingBoxes = GenericStores<BoxComponent>.CreateStore();
         Animations = GenericStores<AnimationComponent>.CreateStore();
     }
@@ -36,7 +36,7 @@ public sealed class WorldEntities
     }
 
 
-    public EntityId CreateModelEntity(ModelId model, int drawCount, MaterialTag materialTag, in TransformComponent transform,
+    public EntityId CreateModelEntity(ModelId model, int drawCount, MaterialTag materialTag, in Transform transform,
         in BoundingBox boundingBox)
     {
         var entityId = Create();

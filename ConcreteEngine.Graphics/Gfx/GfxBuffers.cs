@@ -157,6 +157,13 @@ public sealed class GfxBuffers
         _driverBuffer.UploadUniformBufferData(uboRef, MemoryMarshal.AsBytes(data), offset,
             Unsafe.SizeOf<T>() * data.Length);
     }
+    
+    public void UploadUniformBytes(UniformBufferId uboId, ReadOnlySpan<byte> data, int stride, nint offset)
+    {
+        //UniformBufferUtils.IsStd140AlignedOrThrow<T>(out nint stride);
+        var uboRef = _uboStore.GetRefHandle(uboId);
+        _driverBuffer.UploadUniformBufferData(uboRef, MemoryMarshal.AsBytes(data), offset, stride * data.Length);
+    }
 
     public void BindUniformBufferRange(UniformBufferId uboId, nint offset, nint size)
     {

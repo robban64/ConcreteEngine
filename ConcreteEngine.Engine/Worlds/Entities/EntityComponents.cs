@@ -1,5 +1,6 @@
 #region
 
+using System.Diagnostics.CodeAnalysis;
 using System.Numerics;
 using System.Runtime.CompilerServices;
 using ConcreteEngine.Common.Numerics;
@@ -14,16 +15,24 @@ namespace ConcreteEngine.Engine.Worlds.Entities;
 public struct TransformComponent(in Vector3 translation, in Vector3 scale, in Quaternion rotation)
 {
     public static readonly TransformComponent Baseline = new(default, Vector3.One, Quaternion.Identity);
-
+    
     public Vector3 Translation = translation;
     public Vector3 Scale = scale;
     public Quaternion Rotation = rotation;
-
+    
     internal static ref TransformData AsData(ref TransformComponent component) =>
         ref Unsafe.As<TransformComponent, TransformData>(ref component);
-    
+
     internal static ref TransformComponent FromData(ref TransformData data) =>
-        ref Unsafe.As<TransformData, TransformComponent>(ref data);
+        ref Unsafe.As<TransformData, TransformComponent>(ref data); 
+
+    /*
+    public TransformData Data = new(in translation, in scale, in rotation);
+
+    [UnscopedRef] public ref Vector3 Translation => ref Data.Translation;
+    [UnscopedRef] public ref Vector3 Scale => ref Data.Scale;
+    [UnscopedRef] public ref Quaternion Rotation => ref Data.Rotation;
+    */
 }
 
 public struct ModelComponent(ModelId model, int drawCount, MaterialTagKey materialTagKey, bool animated = false)

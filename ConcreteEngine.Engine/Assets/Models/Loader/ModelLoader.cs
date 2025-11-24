@@ -56,8 +56,21 @@ internal sealed class ModelLoader
         ModelAnimation? animation = null;
         if (animationRes.BoneTransforms.Length > 0 && animationRes.BoneMapping?.Count > 0)
         {
-            animation = new ModelAnimation(animationRes.BoneMapping.ToDictionary(),
-                animationRes.BoneTransforms.ToArray(), in animationRes.InvRootTransform);
+            /*
+            foreach (var it in animationRes.Animations)
+            {
+                Console.WriteLine($"{it.Name}: {it.Duration} - {it.TicksPerSecond}");
+                foreach (var (key, value) in it.BoneTransformData)
+                {
+                    Console.WriteLine($"{key}");
+                }
+            }
+            */
+            animation = new ModelAnimation(
+                animationRes.BoneMapping.ToDictionary(),
+                animationRes.Animations,
+                animationRes.BoneTransforms.ToArray(), 
+                in animationRes.InvRootTransform);
         }
 
 

@@ -77,7 +77,7 @@ public sealed class Demo3DScene : GameScene
         var soliderMat = materialStore.CreateMaterial("Material_1", "Warior1");
 
         {
-            var soliderModel = assets.Store.GetByName<Model>("Warrior");
+            var soliderModel = assets.Store.GetByName<Model>("SoliderOld");
             var soliderMatKey = worldMaterials.Add(MaterialTagBuilder.BuildOne(soliderMat.Id));
             var soliderEntity = worldEntities.Create();
             soliderMat.State.Shininess = 22;
@@ -91,9 +91,6 @@ public sealed class Demo3DScene : GameScene
             var animationComponent = new AnimationComponent(soliderModel.ModelId, 4, 1, 1);
             animationComponent.Slot = Context.World.MeshTable.GetAnimationSlot(soliderModel.ModelId);
             worldEntities.Animations.Add(soliderEntity, animationComponent);
-            
-
-
         }
         
         {
@@ -105,9 +102,9 @@ public sealed class Demo3DScene : GameScene
             worldEntities.Transforms.Add(knightEntity, TransformComponent.Baseline with { Translation = new Vector3(120, 6, 120) });
             worldEntities.BoundingBoxes.Add(knightEntity, new BoxComponent(knight.Bounds));
             
-            var animationComponent = new AnimationComponent(knight.ModelId, 4, 1, 1);
-            animationComponent.Slot = Context.World.MeshTable.GetAnimationSlot(knight.ModelId);
-            worldEntities.Animations.Add(knightEntity, animationComponent);
+            //var animationComponent = new AnimationComponent(knight.ModelId, 4, 1, 1);
+           // animationComponent.Slot = Context.World.MeshTable.GetAnimationSlot(knight.ModelId);
+            //worldEntities.Animations.Add(knightEntity, animationComponent);
         }
 
 
@@ -184,7 +181,7 @@ public sealed class Demo3DScene : GameScene
         _spawner.PlacePropsRingBasic(22, [new ScenePlacement(boatMesh.ToBaseDrawInfo(), boatMesh.Bounds, boatMatTag)]);
 
         float half = 256 / 2f;
-
+/*
         {
             var mesh = store.GetByName<Model>("Cube");
             var entityId = World.Entities.Create();
@@ -194,7 +191,7 @@ public sealed class Demo3DScene : GameScene
                 new TransformComponent(new Vector3(half, worldTerrain.GetSmoothHeight(half, half) + 1f, half),
                     Vector3.One, Quaternion.Identity));
         }
-
+*/
         Camera.Translation = new Vector3(half - 30, worldTerrain.GetSmoothHeight(half - 30, half + 30) + 4f, half + 30);
     }
 

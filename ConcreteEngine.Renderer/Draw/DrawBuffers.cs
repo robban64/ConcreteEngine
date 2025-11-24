@@ -66,6 +66,7 @@ internal sealed class DrawBuffers
     {
         _drawUbo.ResetCursor();
         _materialUbo.ResetCursor();
+        _animationUbo.ResetCursor();
     }
 
     public void EnsureDrawBuffers(nint drawCapacity, nint materialCapacity)
@@ -139,7 +140,7 @@ internal sealed class DrawBuffers
         for (int i = 0; i < ranges.Length; i++)
         {
             var range = ranges[i];
-            var data = ranges.Slice(range.Offset, range.Length);
+            var data = boneData.Slice(range.Offset, range.Length);
             _gfxBuffers.UploadUniformGpuSpan(_animationUbo.Id, data, _animationUbo.NextDrawCursor());
         }
     }

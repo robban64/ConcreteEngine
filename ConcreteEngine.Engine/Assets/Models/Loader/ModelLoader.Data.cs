@@ -28,7 +28,6 @@ internal struct MeshPartImportResult(
     public BoundingBox Bounds = bounds;
 }
 
-
 internal ref struct MeshUploadData<TVertex>(
     ReadOnlySpan<TVertex> vertices,
     ReadOnlySpan<uint> indices,
@@ -39,29 +38,29 @@ internal ref struct MeshUploadData<TVertex>(
     public ref MeshCreationInfo Result = ref result;
 }
 
-
 internal ref struct ModelImportResult(
     ReadOnlySpan<string> partNames,
     ReadOnlySpan<MeshPartImportResult> parts,
     ReadOnlySpan<Matrix4x4> partTransforms,
-    ref readonly BoundingBox bounds)
+    ref  BoundingBox bounds)
 {
-    public readonly ReadOnlySpan<string> PartNames = partNames;
-    public readonly ReadOnlySpan<MeshPartImportResult> Parts = parts;
-    public readonly ReadOnlySpan<Matrix4x4> PartTransforms = partTransforms;
-    public ref readonly BoundingBox Bounds = ref bounds;
+    public ReadOnlySpan<string> PartNames = partNames;
+    public ReadOnlySpan<MeshPartImportResult> Parts = parts;
+    public ReadOnlySpan<Matrix4x4> PartTransforms = partTransforms;
+    public ref  BoundingBox Bounds = ref bounds;
 
     public int Count => PartNames.Length;
 }
 
-
-internal ref struct AnimationImportResult(
+internal readonly ref struct AnimationImportResult(
     ReadOnlySpan<Matrix4x4> boneTransforms,
     ref Matrix4x4 invRootTransform,
-    ReadOnlyDictionary<string, int>? boneMapping
+    ReadOnlyDictionary<string, int>? boneMapping,
+    List<ModelAnimationData> animations
 )
 {
-    public ReadOnlySpan<Matrix4x4> BoneTransforms  = boneTransforms;
-    public ref Matrix4x4 InvRootTransform  = ref invRootTransform;
-    public readonly ReadOnlyDictionary<string, int>? BoneMapping  = boneMapping; // index to bone transform
+    public readonly ReadOnlySpan<Matrix4x4> BoneTransforms = boneTransforms;
+    public readonly ref Matrix4x4 InvRootTransform = ref invRootTransform;
+    public readonly List<ModelAnimationData> Animations = animations;
+    public readonly ReadOnlyDictionary<string, int>? BoneMapping = boneMapping; // index to bone transform
 }

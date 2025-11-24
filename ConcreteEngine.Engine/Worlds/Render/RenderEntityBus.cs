@@ -49,13 +49,15 @@ internal sealed class RenderEntityBus
     private int ActiveTerrainCount => _world?.Terrain.IsActive ?? false ? 1 : 0;
     public int DrawCount => (_world?.EntityCount ?? 0) + ActiveSkyCount + ActiveTerrainCount;
 
-    internal void AttachWorld(World world) => _world = world;
     internal bool IsAttached => _world is not null;
+
+    internal void AttachWorld(World world) => _world = world;
 
     public void Reset()
     {
         _idx = 0;
     }
+
 /*
     private bool hasRunEntities = false;
     private void DrawBounds()
@@ -133,6 +135,7 @@ internal sealed class RenderEntityBus
             entity.Transform = transform;
             entity.Meta = meta;
         }
+
         _idx = idxCollect;
     }
 
@@ -143,13 +146,34 @@ internal sealed class RenderEntityBus
         var submitView = _meshTable.GetBoneUploadPayload();
         buffer.SubmitAnimationData(submitView.BoneTransforms, submitView.Range);
 
-        var idxAnimation = 0;
+        // var idxAnimation = 0;
         var span = worldEntities.Models.AsEntitySpan();
         foreach (var query in worldEntities.Query<AnimationComponent>())
         {
             var entityId = query.Entity;
-            ref var animation = ref query.Component;
-            var view = _meshTable.GetAnimationInverseTransform(animation.Slot);
+            ref var animationComponent = ref query.Component;
+            var view = _meshTable.GetModelAnimationView(animationComponent.Slot);
+            var modelAnimation = view.Animations;
+
+            var boneMapping = modelAnimation.GetBoneMapping();
+            var animation = modelAnimation.AnimationDataSpan[0];
+
+            Matrix4x4 global = Matrix4x4.Identity;
+            Matrix4x4 final = default;
+
+            foreach (var (key, value) in boneMapping)
+            {
+                if (!animation.BoneTransformData.TryGetValue(key, out var transforms)) continue;
+                Matrix4x4 model = default;
+                for (int i = 0; i < transforms.Length; i++)
+                {
+                    ref readonly var t = ref transforms[i];
+                    MatrixMath.CreateModelMatrix(in t.Translation, in t.Scale, in t.Rotation, out model);
+                    MatrixMath.MultiplyAffine(in global, in model, out global);
+                }
+
+                MatrixMath.MultiplyAffine(in global, in view.InvTransform, out final);
+            }
         }
     }
 
@@ -160,6 +184,9 @@ internal sealed class RenderEntityBus
         buffer.EnsureBufferCapacity(_world.EntityCount + 64);
 
         FlushWorldEntities(buffer);
+
+        ProcessAnimations(buffer);
+
 
         var prevModel = new ModelId(-1);
         var prevMatKey = new MaterialTagKey(-1);
@@ -272,7 +299,8 @@ internal sealed class RenderEntityBus
         }
     }
 
-    private static void CreateTransformMatrices(in TransformComponent transform, out Matrix4x4 model, out Matrix3X4 normal)
+    private static void CreateTransformMatrices(in TransformComponent transform, out Matrix4x4 model,
+        out Matrix3X4 normal)
     {
         MatrixMath.CreateModelMatrix(
             transform.Translation,

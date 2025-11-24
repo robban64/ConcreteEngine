@@ -141,6 +141,7 @@ internal sealed class RenderEntityBus
 
     public void ProcessAnimations(DrawCommandBuffer buffer)
     {
+        /*
         var worldEntities = _world!.Entities;
 
         var submitView = _meshTable.GetBoneUploadPayload();
@@ -174,7 +175,7 @@ internal sealed class RenderEntityBus
 
                 MatrixMath.MultiplyAffine(in global, in view.InvTransform, out final);
             }
-        }
+        }*/
     }
 
     public void FlushEntities(DrawCommandBuffer buffer)

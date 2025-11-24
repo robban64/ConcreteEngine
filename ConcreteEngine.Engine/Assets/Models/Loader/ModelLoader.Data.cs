@@ -42,25 +42,27 @@ internal ref struct ModelImportResult(
     ReadOnlySpan<string> partNames,
     ReadOnlySpan<MeshPartImportResult> parts,
     ReadOnlySpan<Matrix4x4> partTransforms,
-    ref  BoundingBox bounds)
+    ref BoundingBox bounds)
 {
     public ReadOnlySpan<string> PartNames = partNames;
     public ReadOnlySpan<MeshPartImportResult> Parts = parts;
     public ReadOnlySpan<Matrix4x4> PartTransforms = partTransforms;
-    public ref  BoundingBox Bounds = ref bounds;
+    public ref BoundingBox Bounds = ref bounds;
 
     public int Count => PartNames.Length;
 }
 
 internal readonly ref struct AnimationImportResult(
+    IReadOnlyDictionary<string, int> boneMapping,
+    ReadOnlySpan<ModelAnimationData> animations,
+    ReadOnlySpan<int> parentIndices,
     ReadOnlySpan<Matrix4x4> boneTransforms,
-    ref Matrix4x4 invRootTransform,
-    ReadOnlyDictionary<string, int>? boneMapping,
-    List<ModelAnimationData> animations
+    ref Matrix4x4 invRootTransform
 )
 {
+    public readonly IReadOnlyDictionary<string, int> BoneMapping = boneMapping;
+    public readonly ReadOnlySpan<ModelAnimationData> Animations = animations;
+    public readonly ReadOnlySpan<int> ParentIndices = parentIndices;
     public readonly ReadOnlySpan<Matrix4x4> BoneTransforms = boneTransforms;
     public readonly ref Matrix4x4 InvRootTransform = ref invRootTransform;
-    public readonly List<ModelAnimationData> Animations = animations;
-    public readonly ReadOnlyDictionary<string, int>? BoneMapping = boneMapping; // index to bone transform
 }

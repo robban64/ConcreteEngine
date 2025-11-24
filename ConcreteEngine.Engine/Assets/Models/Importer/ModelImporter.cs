@@ -39,8 +39,12 @@ internal sealed class ModelImporter
     private readonly Matrix4x4[] _partTransforms = new Matrix4x4[MaxParts];
 
     private readonly List<string> _meshNames = new(MaxParts);
-    private readonly Dictionary<string, int> _boneMapping = new(8);
     private readonly Dictionary<int, MeshCreationInfo> _meshIndexToIdMap = new(8);
+
+    private readonly Dictionary<string, int> _boneByName = new(8);
+
+    //private readonly Dictionary<int, string> _boneByIndex = new(8);
+    private readonly List<int> _parentIndices = new(8);
 
     private readonly ModelMaterialImporter _materialImporter = new();
 
@@ -74,12 +78,16 @@ internal sealed class ModelImporter
 
         //cleanup
         _meshNames.Clear();
-        _boneMapping.Clear();
         _meshIndexToIdMap.Clear();
+
+        _boneByName.Clear();
+        //_boneByIndex.Clear();
+        _parentIndices.Clear();
+
         _boneCount = 0;
         _modelBounds = default;
         _invRootTransform = Matrix4x4.Identity;
-
+        //
 
         int meshCount = ProcessScene(scene);
 
@@ -100,11 +108,18 @@ internal sealed class ModelImporter
         if (scene->MNumAnimations > 0 && _boneCount > 0)
         {
             var animationData = ImportAnimations(scene);
+
+            foreach (var indices in _parentIndices)
+            {
+                Console.WriteLine(indices);
+            }
+
             animationResult = new AnimationImportResult(
+                _boneByName,
+                CollectionsMarshal.AsSpan(animationData),
+                CollectionsMarshal.AsSpan(_parentIndices),
                 _boneTransforms.AsSpan(0, meshCount),
-                ref _invRootTransform,
-                _boneMapping.AsReadOnly(),
-                animationData
+                ref _invRootTransform
             );
         }
 
@@ -123,8 +138,8 @@ internal sealed class ModelImporter
 
         return count;
     }
-    
-    
+
+
     private unsafe MeshCreationInfo LoadMeshData(AssimpMesh* mesh)
     {
         var vertexCount = (int)mesh->MNumVertices;
@@ -167,12 +182,11 @@ internal sealed class ModelImporter
 
     private unsafe void TraverseNode(AssimpNode* node, AssimpScene* scene, ref int traverseIndex, in Matrix4x4 parent)
     {
-
         MeshCreationInfo info;
         BoundingBox box;
-        
+
         var current = node->MTransformation * parent;
-        
+
         for (var i = 0; i < node->MNumMeshes; i++)
         {
             var meshIndex = (int)node->MMeshes[i];
@@ -187,12 +201,19 @@ internal sealed class ModelImporter
                 if (_boneCount > 0)
                     FillDefaultSkinningData((int)m->MNumVertices);
             }
+
             var mesh = scene->MMeshes[meshIndex];
+            var name = mesh->MName;
 
             if (mesh->MNumBones > 0)
             {
-                _boneMapping.TryAdd(mesh->MName.AsString, traverseIndex);
-                Console.WriteLine(mesh->MName.AsString + " : " + traverseIndex);
+                if (_boneByName.TryGetValue(node->MParent->MName, out var parentIndex))
+                {
+                    _parentIndices.Add(parentIndex);
+                }
+
+                _boneByName.TryAdd(name, traverseIndex);
+                Console.WriteLine(name + " : " + traverseIndex);
             }
 
 
@@ -212,25 +233,25 @@ internal sealed class ModelImporter
     }
 
 
-
     private unsafe void ProcessBoneData(AssimpMesh* mesh)
     {
         var skinningData = _skinningData.AsSpan(0, (int)mesh->MNumVertices);
-        for (int i = 0; i < mesh->MNumBones; i++)
+        for (var i = 0; i < mesh->MNumBones; i++)
         {
             var boneIndex = 0;
-
             ref var bone = ref mesh->MBones[i];
             var name = bone->MName.AsString;
 
-            if (_boneMapping.TryGetValue(name, out int value))
+            if (_boneByName.TryGetValue(name, out var value))
             {
                 boneIndex = value;
             }
             else
             {
                 boneIndex = _boneCount++;
+                _boneByName.Add(name, boneIndex);
                 _boneTransforms[boneIndex] = bone->MOffsetMatrix;
+
                 if (_boneTransforms.Length < boneIndex)
                 {
                     InvalidOpThrower.ThrowIf(_boneTransforms.Length >= MaxBoneTransformCapacity,
@@ -238,13 +259,9 @@ internal sealed class ModelImporter
 
                     Array.Resize(ref _boneTransforms, MaxBoneTransformCapacity);
                 }
-
-                _boneMapping.Add(name, boneIndex);
             }
-            
 
-
-            for (int j = 0; j < 4; j++)
+            for (var j = 0; j < 4; j++)
             {
                 var weight = bone->MWeights[j];
                 ref var data = ref skinningData[(int)weight.MVertexId];
@@ -279,7 +296,7 @@ internal sealed class ModelImporter
                 var channel = aiAnim->MChannels[c];
                 var boneName = channel->MNodeName.AsString;
 
-                if (!_boneMapping.TryGetValue(boneName, out var index))
+                if (!_boneByName.TryGetValue(boneName, out var index))
                 {
                     continue;
                 }
@@ -336,7 +353,7 @@ internal sealed class ModelImporter
     {
         _meshNames.Clear();
         _meshIndexToIdMap.Clear();
-        _boneMapping.Clear();
+        _boneByName.Clear();
 
         _vertices = null!;
         _indices = null!;

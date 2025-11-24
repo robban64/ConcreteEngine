@@ -67,8 +67,9 @@ internal sealed class ModelLoader
             }
             */
             animation = new ModelAnimation(
-                animationRes.BoneMapping.ToDictionary(),
+                animationRes.BoneMapping,
                 animationRes.Animations,
+                animationRes.ParentIndices,
                 animationRes.BoneTransforms.ToArray(), 
                 in animationRes.InvRootTransform);
         }

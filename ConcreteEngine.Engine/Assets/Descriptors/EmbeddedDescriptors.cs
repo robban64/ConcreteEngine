@@ -23,6 +23,8 @@ internal sealed class ModelMaterialEmbeddedDescriptor : IAssetEmbeddedDescriptor
 {
     public string Name { get; set; }
     public string AssetName { get; set; }
+    
+    public bool IsAnimated { get; set; }
 
     public Color4 Color { get; set; }
 

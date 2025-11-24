@@ -8,7 +8,6 @@ public sealed class ModelAnimationData(string name, float duration, float ticksP
     public float Duration { get; set; } = duration;
     public float TicksPerSecond { get; set; } = ticksPerSecond;
     public Dictionary<int, BoneTrack> BoneTracksMap { get; } = [];
-
 }
 
 public sealed class BoneTrack

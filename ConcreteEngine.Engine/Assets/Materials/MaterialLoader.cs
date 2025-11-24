@@ -106,13 +106,15 @@ internal sealed class MaterialLoader
             if(it.SlotKind == TextureSlotKind.Normal)
                 slots[1] = slots[1].WithAssetId(store.GetByName<Texture2D>(it.AssetName).RawId);
         }
-        
+
+        var shaderName = record.IsAnimated ? "ModelAnimated" : "Model";
+
         var matParams = new MaterialState();
         return new MaterialTemplate(slots)
         {
             RawId = assetId,
             Name = record.AssetName,
-            ShaderRef = store.GetByName<Shader>("Model").RefId,
+            ShaderRef = store.GetByName<Shader>(shaderName).RefId,
             Params = matParams,
             IsCoreAsset = false
         };

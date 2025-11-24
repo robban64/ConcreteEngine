@@ -139,27 +139,48 @@ internal sealed class RenderEntityBus
         _idx = idxCollect;
     }
 
+    private Matrix4x4[] _animationGlobals = new Matrix4x4[64];
+    private Matrix4x4[] _animationFinal = new Matrix4x4[64];
+
     public void ProcessAnimations(DrawCommandBuffer buffer)
     {
-        /*
-            var submitView = _meshTable.GetBoneUploadPayload();
-         */
-        
+        //var submitView = _meshTable.GetBoneUploadPayload();
         var worldEntities = _world!.Entities;
-
 
         // var idxAnimation = 0;
         foreach (var query in worldEntities.Query<AnimationComponent>())
         {
-            ref var modelComponent = ref query.Component;
+            ref var component = ref query.Component;
 
-            var animation = _meshTable.GetAnimationFor(modelComponent.Model);
-            buffer.SubmitSingleAnimation(animation.GetBoneTransformSpan());
+            var modelAnimation = _meshTable.GetAnimationFor(component.Model);
+            var animation = modelAnimation.AnimationDataSpan[0];
+            var parentIndices = modelAnimation.ParentIndices;
             
-            Matrix4x4 global = Matrix4x4.Identity;
-            Matrix4x4 final = default;
+            ref readonly var invMatrix = ref modelAnimation.InverseRootTransform;
+            var boneByIndex = animation.BoneTracksMap;
+            var boneCount = boneByIndex.Count;
 
-          
+            var globals = _animationGlobals;
+            var finals = _animationFinal;
+
+            for (int i = 0; i < boneCount; i++)
+            {
+                var track = boneByIndex[i];
+                var t = track.Translations[int.Min(i, track.Translations.Length-1)];
+                var s = track.Scales[int.Min(i, track.Scales.Length-1)];
+                var r = track.Rotations[int.Min(i, track.Rotations.Length-1)];
+                MatrixMath.CreateModelMatrix(in t, in s, in r, out var local);
+                
+                int p = parentIndices[i];
+                if (p >= 0) 
+                    MatrixMath.MultiplyAffine(in local, in globals[p], out globals[i]);
+                else
+                    globals[i] = local;
+                
+                MatrixMath.MultiplyAffine(in invMatrix, in _animationGlobals[i]  , out finals[i]);
+            }
+
+            buffer.SubmitSingleAnimation(finals);
         }
     }
 

@@ -106,9 +106,6 @@ internal sealed class ModelImporter
             );
         }
 
-        var materials = Array.Empty<ModelMaterialEmbeddedDescriptor>();
-        if (scene->MNumMaterials > 0)
-            materials = _materialImporter.ProcessSceneMaterials(scene);
 
 
         var parts = _parts.AsSpan(0, meshCount);
@@ -118,6 +115,18 @@ internal sealed class ModelImporter
         MatrixMath.InvertAffine(in scene->MRootNode->MTransformation, out _invRootTransform);
 
         result = new ModelImportResult(CollectionsMarshal.AsSpan(_meshNames), parts, partTransforms, ref _modelBounds);
+
+        var materials = Array.Empty<ModelMaterialEmbeddedDescriptor>();
+        if (scene->MNumMaterials > 0)
+            materials = _materialImporter.ProcessSceneMaterials(scene);
+
+        if (_boneByName.Count > 0)
+        {
+            foreach (var mat in materials)
+            {
+                mat.IsAnimated = true;
+            }
+        }
 
         return materials;
     }
@@ -280,30 +289,20 @@ internal sealed class ModelImporter
     {
         var nodeName = node->MName.AsString;
 
-        // Check: Is this current node a Bone? (Did we find it in Step 1?)
-        if (_boneByName.TryGetValue(nodeName, out int myBoneIndex))
+        if (_boneByName.TryGetValue(nodeName, out int boneIndex))
         {
-            // Check: Who is my parent?
             if (node->MParent != null)
             {
                 var parentName = node->MParent->MName.AsString;
 
-                // Is my parent ALSO a bone?
                 if (_boneByName.TryGetValue(parentName, out int parentBoneIndex))
-                {
-                    // Link them!
-                    _parentIndices[myBoneIndex] = parentBoneIndex;
-                }
+                    _parentIndices[boneIndex] = parentBoneIndex;
                 else
-                {
-                    // My parent exists (e.g., "RootNode"), but it's not a Bone used by the mesh.
-                    // So I am a root bone.
-                    _parentIndices[myBoneIndex] = -1;
-                }
+                    _parentIndices[boneIndex] = -1;
             }
         }
 
-        // Recursion: Check children
+        //  check children
         for (uint i = 0; i < node->MNumChildren; i++)
         {
             BuildSkeletonHierarchy(node->MChildren[i]);

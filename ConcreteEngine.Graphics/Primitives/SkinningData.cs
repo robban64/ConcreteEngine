@@ -1,13 +1,12 @@
-using System.Diagnostics;
 using System.Numerics;
 using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
 using ConcreteEngine.Common.Numerics;
 
-namespace ConcreteEngine.Engine.Assets.Models.Importer;
+namespace ConcreteEngine.Graphics.Primitives;
 
 [StructLayout(LayoutKind.Sequential)]
-internal struct SkinningData
+public struct SkinningData
 {
     public Int4 BoneIndices;
     public Vector4 BoneWeights;

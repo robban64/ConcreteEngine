@@ -2,7 +2,7 @@ using Silk.NET.Assimp;
 
 namespace ConcreteEngine.Engine.Assets.Models.Importer;
 
-internal static class ModelImportConstants
+internal static class Constants
 {
     internal const PostProcessSteps AssimpFlags =
         PostProcessSteps.Triangulate |

@@ -1,16 +1,48 @@
-using System.Diagnostics;
-using System.Runtime.CompilerServices;
-using System.Runtime.InteropServices;
+using System.Numerics;
+using ConcreteEngine.Common;
+using ConcreteEngine.Common.Collections;
 using ConcreteEngine.Common.Numerics.Extensions;
+using ConcreteEngine.Engine.Assets.Internal;
 using ConcreteEngine.Engine.Assets.Models.Loader;
 using ConcreteEngine.Graphics.Primitives;
+using static ConcreteEngine.Engine.Assets.Models.Importer.Constants;
 using AssimpMesh = Silk.NET.Assimp.Mesh;
+using AssimpScene = Silk.NET.Assimp.Scene;
+using AssimpNode = Silk.NET.Assimp.Node;
+using AssimpMaterial = Silk.NET.Assimp.Material;
 
 namespace ConcreteEngine.Engine.Assets.Models.Importer;
 
-internal static unsafe class VertexDataWriter
+internal sealed class MeshProcessor(ModelImportDataStore dataStore)
 {
-    internal static void WriteVertices(AssimpMesh* mesh, Span<Vertex3D> vertices)
+    
+    public unsafe MeshCreationInfo LoadAndUploadMesh(AssimpMesh* mesh, AssetGfxUploader gfxUploader, bool isAnimated)
+    {
+        var vertexCount = (int)mesh->MNumVertices;
+        var indexCount = (int)(mesh->MNumFaces * 3);
+
+        var info = new MeshCreationInfo();
+
+        if (!isAnimated)
+        {
+            var writer = dataStore.WriteVertex(vertexCount, indexCount);
+            WriteIndices(mesh, writer.Indices);
+            WriteVertices(mesh, writer.Vertices);
+            gfxUploader.UploadMesh(dataStore.GetUploadData(vertexCount, indexCount, ref info));
+        }
+        else
+        {
+            var writer = dataStore.WriteVertexSkinned(vertexCount, indexCount);
+            WriteIndices(mesh, writer.Indices);
+            WriteVerticesSkinned(mesh, writer.Vertices, writer.Skinned);
+            gfxUploader.UploadMesh(dataStore.GetSkinnedUploadData(vertexCount, indexCount, ref info));
+        }
+
+        return info;
+    }
+
+    
+    private static unsafe void WriteVertices(AssimpMesh* mesh, Span<Vertex3D> vertices)
     {
         ArgumentOutOfRangeException.ThrowIfLessThan(vertices.Length, (int)mesh->MNumVertices, nameof(vertices.Length));
 
@@ -25,7 +57,7 @@ internal static unsafe class VertexDataWriter
         }
     }
 
-    internal static void WriteIndices(AssimpMesh* mesh, Span<uint> indices)
+    private static unsafe void WriteIndices(AssimpMesh* mesh, Span<uint> indices)
     {
         ArgumentOutOfRangeException.ThrowIfLessThan(indices.Length, (int)mesh->MNumFaces, nameof(indices.Length));
 
@@ -39,7 +71,7 @@ internal static unsafe class VertexDataWriter
         }
     }
 
-    internal static void WriteVerticesSkinned(AssimpMesh* mesh, Span<Vertex3DSkinned> result,
+    private static unsafe void WriteVerticesSkinned(AssimpMesh* mesh, Span<Vertex3DSkinned> result,
         ReadOnlySpan<SkinningData> skinned)
     {
         ArgumentOutOfRangeException.ThrowIfNotEqual(result.Length, skinned.Length, nameof(result.Length));

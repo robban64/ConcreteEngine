@@ -6,7 +6,7 @@ namespace ConcreteEngine.Engine.Assets.Models.Importer;
 internal static class ModelImportUtils
 {
     
-    public static void CalculateBoundingBox(int count, Span<MeshPartImportResult> parts, out BoundingBox bounds)
+    public static void CalculateBoundingBox(int count, ReadOnlySpan<MeshPartImportResult> parts, out BoundingBox bounds)
     {
         bounds = parts[0].Bounds;
         for (var i = 1; i < count; i++)

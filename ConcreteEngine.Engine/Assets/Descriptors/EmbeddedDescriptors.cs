@@ -12,6 +12,7 @@ namespace ConcreteEngine.Engine.Assets.Descriptors;
 //TODO Some guid fingerprint
 internal interface IAssetEmbeddedDescriptor
 {
+    Guid GId { get; }
     string EmbeddedName { get; set; }
     string AssetName { get; set; }
     AssetKind Kind { get; }
@@ -21,6 +22,7 @@ internal interface IAssetEmbeddedDescriptor
 
 internal sealed class ModelMaterialEmbeddedDescriptor : IAssetEmbeddedDescriptor
 {
+    public required Guid GId { get; init; }
     public string EmbeddedName { get; set; }
     public string AssetName { get; set; }
 
@@ -30,7 +32,7 @@ internal sealed class ModelMaterialEmbeddedDescriptor : IAssetEmbeddedDescriptor
 
     public AssetFileSpec[] FileSpec { get; set; } = Array.Empty<AssetFileSpec>();
 
-    public Dictionary<string, TextureEmbeddedDescriptor> EmbeddedTextures { get; } = [];
+    public Dictionary<string, Guid> EmbeddedTextures { get; } = [];
 
     public AssetKind Kind => AssetKind.EmbeddedMaterial;
     public Type AssetType => typeof(MaterialTemplate);
@@ -38,9 +40,10 @@ internal sealed class ModelMaterialEmbeddedDescriptor : IAssetEmbeddedDescriptor
 
 internal sealed class TextureEmbeddedDescriptor : IAssetEmbeddedDescriptor
 {
+    public required Guid GId { get; init; }
     public required string EmbeddedName { get; set; }
-    public required int Index { get; init; }
     public string AssetName { get; set; }
+    public int Index { get; set; } = -1;
 
     public required int Width { get; set; }
     public required int Height { get; set; }

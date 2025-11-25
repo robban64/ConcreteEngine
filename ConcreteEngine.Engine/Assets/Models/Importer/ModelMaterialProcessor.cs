@@ -19,30 +19,29 @@ using AssimpTexture = Silk.NET.Assimp.Texture;
 
 namespace ConcreteEngine.Engine.Assets.Models.Importer;
 
-internal sealed class ModelMaterialImporter
+internal sealed class ModelMaterialProcessor(ModelImportState state)
 {
     private bool isActive = false;
-    
-    private Dictionary<string, TextureEmbeddedDescriptor> _embeddedTextures = new(4);
 
-    internal unsafe ModelMaterialEmbeddedDescriptor[] ProcessSceneMaterials(AssimpScene* scene)
+    private HashSet<string> _processedTextures = new(4);
+
+    internal unsafe void ProcessSceneMaterials(AssimpScene* scene)
     {
         InvalidOpThrower.ThrowIf(isActive, nameof(isActive));
-        _embeddedTextures.Clear();
+        _processedTextures.Clear();
         isActive = true;
 
-        var entries = new List<ModelMaterialEmbeddedDescriptor>();
         for (int i = 0; i < scene->MNumMaterials; i++)
         {
             var aMaterial = scene->MMaterials[i];
-            var entry = new ModelMaterialEmbeddedDescriptor();
-            if (ProcessMaterial(scene, aMaterial, entry)) 
-                entries.Add(entry);
+            var entry = new ModelMaterialEmbeddedDescriptor { GId = Guid.NewGuid() };
+            if (ProcessMaterial(scene, aMaterial, entry))
+                state.AppendMaterial(entry);
         }
 
         isActive = false;
-        return entries.ToArray();
     }
+
 
     private unsafe bool ProcessMaterial(AssimpScene* scene, AssimpMaterial* material,
         ModelMaterialEmbeddedDescriptor descriptor)
@@ -82,7 +81,7 @@ internal sealed class ModelMaterialImporter
         return true;
     }
 
-    private  unsafe bool ProcessTexture(AssimpScene* scene, MaterialProperty* prop,
+    private unsafe bool ProcessTexture(AssimpScene* scene, MaterialProperty* prop,
         ModelMaterialEmbeddedDescriptor descriptor)
     {
         if (prop->MIndex != 0) return false;
@@ -120,7 +119,7 @@ internal sealed class ModelMaterialImporter
 
 
     private unsafe bool LoadTextureData(
-        AssimpTexture* texture, 
+        AssimpTexture* texture,
         ModelMaterialEmbeddedDescriptor descriptor,
         TextureSlotKind kind,
         TexturePixelFormat format)
@@ -138,7 +137,13 @@ internal sealed class ModelMaterialImporter
                 nameof(descriptor.EmbeddedTextures));
         }
 
-        if (_embeddedTextures.ContainsKey(textureName)) return true;
+        if (_processedTextures.Contains(textureName))
+        {
+            var existingTexture = state.FindTextureByName(textureName);
+            InvalidOpThrower.ThrowIfNull(existingTexture, nameof(existingTexture));
+            descriptor.EmbeddedTextures.Add(existingTexture!.EmbeddedName,  existingTexture.GId);
+            return true;
+        }
 
         int width = (int)texture->MWidth, height = (int)texture->MHeight;
         var length = 0;
@@ -166,16 +171,16 @@ internal sealed class ModelMaterialImporter
 
         var textureEntry = new TextureEmbeddedDescriptor
         {
+            GId = Guid.NewGuid(),
             EmbeddedName = textureName,
             Width = width,
             Height = height,
             PixelFormat = format,
             SlotKind = kind,
             PixelData = buffer,
-            Index = _embeddedTextures.Count
         };
-        _embeddedTextures.Add(textureName, textureEntry);
-        descriptor.EmbeddedTextures.Add(textureName, textureEntry);
+        state.AppendTexture(textureEntry);
+        descriptor.EmbeddedTextures.Add(textureName, textureEntry.GId);
 
         return true;
     }

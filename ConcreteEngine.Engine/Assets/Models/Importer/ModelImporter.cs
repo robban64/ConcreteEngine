@@ -14,7 +14,7 @@ using ConcreteEngine.Engine.Assets.Internal;
 using ConcreteEngine.Engine.Assets.Models.Loader;
 using ConcreteEngine.Graphics.Primitives;
 using Silk.NET.Assimp;
-using static ConcreteEngine.Engine.Assets.Models.Importer.ModelImportConstants;
+using static ConcreteEngine.Engine.Assets.Models.Importer.Constants;
 using AssimpMesh = Silk.NET.Assimp.Mesh;
 using AssimpScene = Silk.NET.Assimp.Scene;
 using AssimpNode = Silk.NET.Assimp.Node;
@@ -28,48 +28,32 @@ internal sealed class ModelImporter
 {
     private Assimp? _assimp;
 
-    private uint[] _indices = new uint[DefaultCapacity];
-    private Vertex3D[] _vertices = new Vertex3D[DefaultCapacity];
-    private Vertex3DSkinned[] _verticesSkinned = new Vertex3DSkinned[DefaultCapacity];
+    private readonly AssetGfxUploader _gfxUploader;
+    private readonly ModelImportDataStore _dataStore;
+    private readonly ModelImportState _state;
 
-    private Matrix4x4[] _boneTransforms = new Matrix4x4[DefaultBoneTransformsCapacity];
-    private SkinningData[] _skinningData = new SkinningData[DefaultCapacity];
+    private readonly MeshProcessor _meshProcessor;
+    private readonly ModelMaterialProcessor _materialProcessor;
+    private readonly ModelAnimationProcessor _animationProcessor;
 
-    private readonly MeshPartImportResult[] _parts = new MeshPartImportResult[MaxParts];
-    private readonly Matrix4x4[] _partTransforms = new Matrix4x4[MaxParts];
-
-    private readonly List<string> _meshNames = new(MaxParts);
-    private readonly Dictionary<int, MeshCreationInfo> _meshIndexToIdMap = new(8);
-
-    private readonly Dictionary<string, int> _boneByName = new(8);
-
-    //private readonly Dictionary<int, string> _boneByIndex = new(8);
-    private readonly List<int> _parentIndices = new(8);
-
-    private readonly ModelMaterialImporter _materialImporter = new();
-
-    private Matrix4x4 _invRootTransform;
-    private BoundingBox _modelBounds;
-
-    private int _boneCount = 0;
-    private bool _hasValidAnimation = false;
-
-    private AssetGfxUploader _gfxUploader;
-
-    internal ModelImporter(AssetGfxUploader gfxUploader)
+    internal ModelImporter(AssetGfxUploader gfxUploader, ModelImportDataStore dataStore, ModelImportState state)
     {
         _gfxUploader = gfxUploader;
-        FillDefaultSkinningData();
+        _dataStore = dataStore;
+        _state = state;
+        _meshProcessor = new MeshProcessor(_dataStore);
+        _materialProcessor = new ModelMaterialProcessor(_state);
+        _animationProcessor = new ModelAnimationProcessor(_dataStore, _state);
     }
 
 
-    public unsafe ModelMaterialEmbeddedDescriptor[] ImportMesh(string path, out ModelImportResult result,
-        out AnimationImportResult animationResult)
+    public unsafe bool ImportMesh(string path)
     {
         if (_assimp == null)
             _assimp = Assimp.GetApi();
 
         var scene = _assimp.ImportFile(path, (uint)AssimpFlags);
+        //_assimp.FreeScene();
 
         if (scene == null || scene->MFlags == Assimp.SceneFlagsIncomplete || scene->MRootNode == null)
         {
@@ -78,6 +62,7 @@ internal sealed class ModelImporter
         }
 
         //cleanup
+        /*
         _meshNames.Clear();
         _meshIndexToIdMap.Clear();
 
@@ -89,144 +74,60 @@ internal sealed class ModelImporter
         _hasValidAnimation = false;
         _modelBounds = default;
         _invRootTransform = Matrix4x4.Identity;
+        */
         //
 
-        animationResult = default;
-        
         // Load the model
-        var meshCount = ProcessSceneMeshes(scene);
-        _hasValidAnimation = HasAnimationChannels(scene);
-        
-        if (_hasValidAnimation)
+         ProcessSceneMeshes(scene);
+        var isAnimated = _animationProcessor.HasAnimationChannels(scene);
+
+        if (isAnimated)
         {
-            var animationData = ProcessSceneAnimations(scene);
-            MatrixMath.InvertAffine(in scene->MRootNode->MTransformation, out _invRootTransform);
-            animationResult = new AnimationImportResult(
-                _boneByName,
-                CollectionsMarshal.AsSpan(animationData),
-                CollectionsMarshal.AsSpan(_parentIndices),
-                _boneTransforms.AsSpan(0, _boneByName.Count),
-                ref _invRootTransform
-            );
+            _animationProcessor.ProcessSceneAnimations(scene);
+            MatrixMath.InvertAffine(in scene->MRootNode->MTransformation, out _dataStore.InvRootTransform);
+            /* animationResult = new AnimationImportResult(
+                 _boneByName,
+                 CollectionsMarshal.AsSpan(animationData),
+                 CollectionsMarshal.AsSpan(_parentIndices),
+                 _boneTransforms.AsSpan(0, _boneByName.Count),
+                 ref _invRootTransform
+             );*/
         }
 
-        var parts = _parts.AsSpan(0, meshCount);
-        var partTransforms = _partTransforms.AsSpan(0, meshCount);
+        ModelImportUtils.CalculateBoundingBox(_state.MeshCount, _dataStore.GetParts(_state.MeshCount),
+            out _dataStore.ModelBounds);
 
-        ModelImportUtils.CalculateBoundingBox(meshCount, parts, out _modelBounds);
 
-        result = new ModelImportResult(CollectionsMarshal.AsSpan(_meshNames), parts, partTransforms, ref _modelBounds);
-
-        var materials = Array.Empty<ModelMaterialEmbeddedDescriptor>();
-        
         if (scene->MNumMaterials > 0)
-            materials = _materialImporter.ProcessSceneMaterials(scene);
+            _materialProcessor.ProcessSceneMaterials(scene);
 
-        if (_hasValidAnimation)
+        /*
+        if (isAnimated)
         {
             foreach (var mat in materials)
             {
                 mat.IsAnimated = true;
             }
         }
+        */
 
-        return materials;
+        return true;
     }
 
-    private unsafe int ProcessSceneMeshes(AssimpScene* scene)
+    private unsafe void ProcessSceneMeshes(AssimpScene* scene)
     {
         // Load meshes
         int startIdx = 0;
         TraverseNode(scene->MRootNode, scene, ref startIdx, Matrix4x4.Identity);
 
-        var count = _meshNames.Count;
-        InvalidOpThrower.ThrowIf(count > _parts.Length, nameof(_parts));
-        InvalidOpThrower.ThrowIf(count > _partTransforms.Length, nameof(_partTransforms));
-
-        return count;
-    }
-    
-    private unsafe bool HasAnimationChannels(AssimpScene* scene)
-    {
-        if (_boneByName.Count == 0) return false;
-        
-        for (uint i = 0; i < scene->MNumAnimations; i++)
-        {
-            var anim = scene->MAnimations[i];
-            //string animName = anim->MName.AsString;
-            int validChannels = 0;
-
-            for (uint c = 0; c < anim->MNumChannels; c++)
-            {
-                var channel = anim->MChannels[c];
-                // valid channel
-                if (_boneByName.ContainsKey(channel->MNodeName.AsString)) 
-                    validChannels++;
-            }
-            
-            if(validChannels > 0) return true;
-        }
-
-        return false;
-    }
-    
-    private unsafe List<ModelAnimationData> ProcessSceneAnimations(AssimpScene* scene)
-    {
-        if (_boneByName.Count > 0)
-        {
-            Span<int> defaultData  = stackalloc int[_boneByName.Count];
-            defaultData.Fill(-1);
-            
-            _parentIndices.AddRange(defaultData);
-            CollectionsMarshal.AsSpan(_parentIndices).Fill(-1);
-            BuildSkeletonHierarchy(scene->MRootNode);
-        }
-
-        return ImportAnimations(scene);
-    }
-
-
-    private unsafe MeshCreationInfo LoadMeshData(AssimpMesh* mesh)
-    {
-        var vertexCount = (int)mesh->MNumVertices;
-        var indexCount = (int)(mesh->MNumFaces * 3);
-
-        EnsureCapacity(vertexCount, indexCount);
-
-        if (_hasValidAnimation)
-        {
-            EnsureSkinnedCapacity(vertexCount);
-        }
-
-        var vRes = _vertices.AsSpan(0, vertexCount);
-        var iRes = _indices.AsSpan(0, indexCount);
-
-        VertexDataWriter.WriteIndices(mesh, iRes);
-        var info = new MeshCreationInfo();
-
-        if (!_hasValidAnimation)
-        {
-            VertexDataWriter.WriteVertices(mesh, vRes);
-            _gfxUploader.UploadMesh(new MeshUploadData<Vertex3D>(vRes, iRes, ref info));
-            return info;
-        }
-
-
-        var verticesSkinnedRes = _verticesSkinned.AsSpan(0, vertexCount);
-        var skinnedData = _skinningData.AsSpan(0, vertexCount);
-
-        VertexDataWriter.WriteVerticesSkinned(mesh, verticesSkinnedRes, skinnedData);
-
-        _gfxUploader.UploadMesh(new MeshUploadData<Vertex3DSkinned>(verticesSkinnedRes, iRes, ref info));
-
-        return info;
+        //InvalidOpThrower.ThrowIf(count > _parts.Length, nameof(_parts));
+        //InvalidOpThrower.ThrowIf(count > _partTransforms.Length, nameof(_partTransforms));
     }
 
 
     private unsafe void TraverseNode(AssimpNode* node, AssimpScene* scene, ref int traverseIndex, in Matrix4x4 parent)
     {
         MeshCreationInfo info;
-        BoundingBox box;
 
         var current = node->MTransformation * parent;
 
@@ -234,32 +135,34 @@ internal sealed class ModelImporter
         {
             var meshIndex = (int)node->MMeshes[i];
 
-            if (!_meshIndexToIdMap.TryGetValue(meshIndex, out info))
+            if (!_state.HasProcessedMeshIndex(meshIndex, out info))
             {
                 var m = scene->MMeshes[meshIndex];
 
                 if (m->MNumBones > 0)
                 {
-                    FillDefaultSkinningData((int)m->MNumVertices);
-                    ProcessBoneData(m);
+                    _animationProcessor.ProcessBoneData(m);
                 }
-                
-                info = LoadMeshData(m);
-                _meshIndexToIdMap.Add(meshIndex, info);
-                _meshNames.Add(m->MName.AsString);
 
+                info = _meshProcessor.LoadAndUploadMesh(m, _gfxUploader, false);
+                _state.AppendMeshInfo(m->MName.AsString, meshIndex, info);
             }
 
             var mesh = scene->MMeshes[meshIndex];
+            var slot = (int)scene->MMeshes[i]->MMaterialIndex;
+            var vertexCount = (int)mesh->MNumVertices;
 
-            BoundingBox.FromPoints(new Span<Vector3>(mesh->MVertices, (int)mesh->MNumVertices), out box);
+            var writer = _dataStore.WriteMeshParts();
+            BoundingBox.FromPoints(new Span<Vector3>(mesh->MVertices, vertexCount), out var bounds);
+            writer.Fill(traverseIndex, slot, info, in bounds, ref current);
+            traverseIndex++;
 
-            ref var it = ref _parts[traverseIndex];
+            /*
+            ref var it = ref writer.Parts[traverseIndex];
             it.MaterialSlot = (int)scene->MMeshes[i]->MMaterialIndex;
             it.CreationInfo = info;
-            it.Bounds = box;
-            _partTransforms[traverseIndex] = current;
-            traverseIndex++;
+            writer.PartTransforms[traverseIndex] = current;
+            */
         }
 
         // Process children
@@ -267,200 +170,9 @@ internal sealed class ModelImporter
             TraverseNode(node->MChildren[i], scene, ref traverseIndex, in current);
     }
 
-
-    private unsafe void ProcessBoneData(AssimpMesh* mesh)
-    {
-        var skinningData = _skinningData.AsSpan(0, (int)mesh->MNumVertices);
-        for (var i = 0; i < mesh->MNumBones; i++)
-        {
-            var boneIndex = 0;
-            ref var bone = ref mesh->MBones[i];
-            var name = bone->MName.AsString;
-
-            if (_boneByName.TryGetValue(name, out var value))
-            {
-                boneIndex = value;
-            }
-            else
-            {
-                boneIndex = _boneCount++;
-                _boneByName.Add(name, boneIndex);
-                _boneTransforms[boneIndex] = bone->MOffsetMatrix;
-
-                if (_boneTransforms.Length < boneIndex)
-                {
-                    InvalidOpThrower.ThrowIf(_boneTransforms.Length >= MaxBoneTransformCapacity,
-                        nameof(_boneTransforms.Length));
-
-                    Array.Resize(ref _boneTransforms, MaxBoneTransformCapacity);
-                }
-            }
-
-            for (var j = 0; j < 4; j++)
-            {
-                var weight = bone->MWeights[j];
-                ref var data = ref skinningData[(int)weight.MVertexId];
-                if (data.GetVertexId(j) < 0)
-                {
-                    data.Set(j, boneIndex, weight.MWeight);
-                    break;
-                }
-            }
-        }
-    }
-    
-    private unsafe void BuildSkeletonHierarchy(AssimpNode* node)
-    {
-        var nodeName = node->MName.AsString;
-
-        if (_boneByName.TryGetValue(nodeName, out int boneIndex))
-        {
-            if (node->MParent != null)
-            {
-                var parentName = node->MParent->MName.AsString;
-
-                if (_boneByName.TryGetValue(parentName, out int parentBoneIndex))
-                    _parentIndices[boneIndex] = parentBoneIndex;
-                else
-                    _parentIndices[boneIndex] = -1;
-            }
-        }
-
-        //  check children
-        for (uint i = 0; i < node->MNumChildren; i++)
-        {
-            BuildSkeletonHierarchy(node->MChildren[i]);
-        }
-    }
-
-    private unsafe List<ModelAnimationData> ImportAnimations(AssimpScene* scene)
-    {
-        if (scene->MNumAnimations == 0) return [];
-
-        var animationLength = (int)scene->MNumAnimations;
-        var animations = new List<ModelAnimationData>(animationLength);
-
-        for (uint i = 0; i < animationLength; i++)
-        {
-            var aiAnim = scene->MAnimations[i];
-
-            var name = aiAnim->MName.AsString;
-            var duration = (float)aiAnim->MDuration;
-            var ticksPerSecond = (float)(aiAnim->MTicksPerSecond != 0 ? aiAnim->MTicksPerSecond : 25.0f);
-
-            var animationData = new ModelAnimationData(name, duration, ticksPerSecond);
-
-            for (uint c = 0; c < aiAnim->MNumChannels; c++)
-            {
-                var channel = aiAnim->MChannels[c];
-                var boneName = channel->MNodeName.AsString;
-
-                if (!_boneByName.TryGetValue(boneName, out var index))
-                {
-                    continue;
-                }
-
-                var boneTrack = new BoneTrack();
-
-                // Position
-                var posKeys = channel->MPositionKeys;
-                var posCount = (int)channel->MNumPositionKeys;
-
-                boneTrack.TranslationTimes = new float[posCount];
-                boneTrack.Translations = new Vector3[posCount];
-                for (var k = 0; k < posCount; k++)
-                {
-                    boneTrack.TranslationTimes[k] = (float)posKeys[k].MTime;
-                    boneTrack.Translations[k] = posKeys[k].MValue;
-                }
-
-                // Rotations
-                var rotKeys = channel->MRotationKeys;
-                var rotCount = (int)channel->MNumRotationKeys;
-                boneTrack.RotationTimes = new float[rotCount];
-                boneTrack.Rotations = new Quaternion[rotCount];
-
-                for (var k = 0; k < rotCount; k++)
-                {
-                    boneTrack.RotationTimes[k] = (float)rotKeys[k].MTime;
-                    boneTrack.Rotations[k] = rotKeys[k].MValue;
-                }
-
-                // Scales
-                var scaleKeys = channel->MScalingKeys;
-                var scaleCount = (int)channel->MNumScalingKeys;
-                boneTrack.ScaleTimes = new float[rotCount];
-                boneTrack.Scales = new Vector3[rotCount];
-
-                for (var k = 0; k < scaleCount; k++)
-                {
-                    boneTrack.ScaleTimes[k] = (float)scaleKeys[k].MTime;
-                    boneTrack.Scales[k] = scaleKeys[k].MValue;
-                }
-
-                animationData.BoneTracksMap.Add(index, boneTrack);
-            }
-
-            animations.Add(animationData);
-        }
-
-        return animations;
-    }
-
-
     internal void ClearCache()
     {
-        _meshNames.Clear();
-        _meshIndexToIdMap.Clear();
-        _boneByName.Clear();
-
-        _vertices = null!;
-        _indices = null!;
-        _skinningData = null!;
-        _verticesSkinned = null!;
-        _boneTransforms = null!;
-        _gfxUploader = null!;
-
         _assimp?.Dispose();
         _assimp = null;
-    }
-
-    private void EnsureCapacity(int vertexCount, int indexCount)
-    {
-        if (_vertices.Length < vertexCount)
-        {
-            var cap = ArrayUtility.CapacityGrowthPow2(int.Max(vertexCount, 8));
-            Array.Resize(ref _vertices, cap);
-        }
-
-        if (_indices.Length < indexCount)
-        {
-            var cap = ArrayUtility.CapacityGrowthPow2(int.Max(indexCount, 8));
-            Array.Resize(ref _indices, cap);
-        }
-    }
-
-    private void EnsureSkinnedCapacity(int vertexCount)
-    {
-        Debug.Assert(_verticesSkinned.Length == _skinningData.Length);
-        if (_verticesSkinned.Length >= vertexCount) return;
-
-        var cap = ArrayUtility.CapacityGrowthPow2(int.Max(vertexCount, 8));
-        Array.Resize(ref _verticesSkinned, cap);
-        Array.Resize(ref _skinningData, cap);
-    }
-
-    private void FillDefaultSkinningData(int? vertexCount = null)
-    {
-        var skinData = new SkinningData { BoneWeights = default, BoneIndices = new Int4(-1, -1, -1, -1) };
-        if (vertexCount is { } count)
-        {
-            ArgumentOutOfRangeException.ThrowIfZero(count);
-            EnsureSkinnedCapacity(count);
-            _skinningData.AsSpan(0, count).Fill(skinData);
-            return;
-        }
-
-        _skinningData.AsSpan().Fill(skinData);
     }
 }

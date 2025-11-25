@@ -21,13 +21,3 @@ public sealed class BoneTrack
     public float[] ScaleTimes { get; internal set; }
     public Vector3[] Scales { get; internal set; }
 }
-
-public struct BoneTransform
-{
-    public Vector3 Translation;
-    public float TranslationTimes;
-    public Vector3 Scale;
-    public float ScaleTimes;
-    public Quaternion Rotation;
-    public float RotationTimes;
-}

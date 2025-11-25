@@ -1,5 +1,6 @@
 #region
 
+using ConcreteEngine.Common;
 using ConcreteEngine.Common.Numerics;
 using ConcreteEngine.Engine.Assets.Data;
 using ConcreteEngine.Engine.Assets.Descriptors;
@@ -14,20 +15,15 @@ namespace ConcreteEngine.Engine.Assets.Models.Loader;
 
 internal sealed class ModelLoader
 {
-    public class ModelLoaderResult
-    {
-        public required ModelAnimation? Animation { get; init; }
-        public required ModelMesh[] MeshParts { get; init; }
-        public required int DrawCount { get; init; }
-        public required BoundingBox Bounds { get; init; }
-        public required ModelMaterialEmbeddedDescriptor[] MaterialEntries { get; init; }
-    }
+    private ModelImporter _modelImporter;
+    private ModelImportDataStore _dataStore;
+    private ModelImportState _state;
 
-    private readonly ModelImporter _modelImporter;
-
-    public ModelLoader(AssetGfxUploader uploader)
+    public ModelLoader(AssetGfxUploader uploader, ModelImportState state)
     {
-        _modelImporter = new ModelImporter(uploader);
+        _state = state;
+        _dataStore = new ModelImportDataStore();
+        _modelImporter = new ModelImporter(uploader, _dataStore, _state);
     }
 
     public ModelLoaderResult LoadMesh(AssetRef<Model> refId, string name, string fileName, out AssetFileSpec[] fileSpec)
@@ -37,68 +33,52 @@ internal sealed class ModelLoader
         var fi = new FileInfo(path);
         if (!fi.Exists) throw new FileNotFoundException("File not found.", path);
 
-        var materialEntries = _modelImporter.ImportMesh(path, out var modelResult, out var animationRes);
+        _state.Start(name, fileName);
+        _dataStore.Clear();
+       _modelImporter.ImportMesh(path);
+       
+       InvalidOpThrower.ThrowIf(_state.MeshCount == 0);
 
         var drawCount = 0;
-        var meshParts = new ModelMesh[modelResult.Count];
+        var meshParts = new ModelMesh[_state.MeshCount];
+        var meshData = _dataStore.GetMeshDataResult(meshParts.Length);
         for (int i = 0; i < meshParts.Length; i++)
         {
-            ref readonly var part = ref modelResult.Parts[i];
-
+            ref readonly var part = ref meshData.Parts[i];
             var meshInfo = part.CreationInfo;
-            meshParts[i] = new ModelMesh(refId, modelResult.PartNames[i], meshInfo.MeshId, part.MaterialSlot,
-                meshInfo.DrawCount, in modelResult.PartTransforms[i], in part.Bounds);
+            var partName = _state.GetMeshName(i);
+            meshParts[i] = new ModelMesh(refId, partName, meshInfo.MeshId, part.MaterialSlot,
+                meshInfo.DrawCount, in meshData.PartTransforms[i], in part.Bounds);
 
             drawCount += meshInfo.DrawCount;
         }
 
 
         ModelAnimation? animation = null;
-        if (animationRes.BoneTransforms.Length > 0 && animationRes.BoneMapping?.Count > 0)
+        if (_state.IsAnimated)
         {
+            _state.GetAnimationResult(out var boneMapping, out var animations, out var parentIndices);
+            ref readonly var invTransform = ref _dataStore.GetAnimationDataResult(_state.BoneCount, out var boneTransforms);
             animation = new ModelAnimation(
-                animationRes.BoneMapping,
-                animationRes.Animations,
-                animationRes.ParentIndices,
-                animationRes.BoneTransforms,
-                in animationRes.InvRootTransform);
+                boneMapping,
+                animations,
+                parentIndices,
+                boneTransforms,
+                in invTransform);
         }
-
-
+        
         fileSpec = [new AssetFileSpec(AssetStorageKind.FileSystem, name, fileName, fi.Length)];
-
-        for (var i = 0; i < materialEntries.Length; i++)
-        {
-            var mat = materialEntries[i];
-            mat.AssetName = $"{name}::Materials/{i}";
-            mat.FileSpec =
-            [
-                new AssetFileSpec(AssetStorageKind.Embedded, mat.EmbeddedName, fileName, 0, source: fileName)
-            ];
-            foreach (var tex in mat.EmbeddedTextures.Values)
-            {
-                tex.AssetName = $"{name}::Textures/{tex.Index}";
-                tex.FileSpec =
-                [
-                    new AssetFileSpec(AssetStorageKind.Embedded, tex.AssetName, tex.EmbeddedName, tex.PixelData.Length,
-                        source: fileName)
-                ];
-            }
-        }
-
-        return new ModelLoaderResult
-        {
-            Animation = animation,
-            MeshParts = meshParts,
-            DrawCount = drawCount,
-            Bounds = modelResult.Bounds,
-            MaterialEntries = materialEntries
-        };
+        return _state.BuildResult(meshParts, animation, drawCount, in meshData.Bounds);
     }
 
 
-    public void ClearCache()
+    public void Teardown()
     {
-        _modelImporter.ClearCache();
+        _modelImporter.Teardown();
+        _dataStore.Teardown();
+
+        _modelImporter = null!;
+        _dataStore = null!;
+        _state = null!;
     }
 }

@@ -31,13 +31,27 @@ internal sealed class ModelMaterialProcessor(ModelImportState state)
         _processedTextures.Clear();
         isActive = true;
 
-        for (int i = 0; i < scene->MNumMaterials; i++)
+        for (var i = 0; i < scene->MNumMaterials; i++)
         {
             var aMaterial = scene->MMaterials[i];
-            var entry = new ModelMaterialEmbeddedDescriptor { GId = Guid.NewGuid() };
-            if (ProcessMaterial(scene, aMaterial, entry))
-                state.AppendMaterial(entry);
+            var mat = new ModelMaterialEmbeddedDescriptor { GId = Guid.NewGuid() };
+            if (!ProcessMaterial(scene, aMaterial, mat)) continue;
+
+            if (string.IsNullOrWhiteSpace(mat.EmbeddedName))
+                throw new InvalidOperationException(nameof(mat.EmbeddedName));
+
+            var assetName = state.ToEmbeddedAssetName("Materials", i);
+            mat.AssetName = assetName;
+            mat.IsAnimated = state.IsAnimated;
+            mat.FileSpec =
+            [
+                new AssetFileSpec(AssetStorageKind.Embedded, assetName, mat.EmbeddedName, 0,
+                    source: state.Filename)
+            ];
+
+            state.AppendMaterial(mat);
         }
+
 
         isActive = false;
     }
@@ -46,9 +60,9 @@ internal sealed class ModelMaterialProcessor(ModelImportState state)
     private unsafe bool ProcessMaterial(AssimpScene* scene, AssimpMaterial* material,
         ModelMaterialEmbeddedDescriptor descriptor)
     {
-        bool hasName = false;
-        bool hasTexture = false;
-        for (int i = 0; i < material->MNumProperties; i++)
+        var hasName = false;
+        var hasTexture = false;
+        for (var i = 0; i < material->MNumProperties; i++)
         {
             var prop = material->MProperties[i];
             var key = prop->MKey.AsString;
@@ -124,7 +138,7 @@ internal sealed class ModelMaterialProcessor(ModelImportState state)
         TextureSlotKind kind,
         TexturePixelFormat format)
     {
-        string textureName = texture->MFilename.AsString;
+        var textureName = texture->MFilename.AsString;
         if (string.IsNullOrEmpty(textureName))
         {
             Console.WriteLine("Invalid texture name");
@@ -141,7 +155,7 @@ internal sealed class ModelMaterialProcessor(ModelImportState state)
         {
             var existingTexture = state.FindTextureByName(textureName);
             InvalidOpThrower.ThrowIfNull(existingTexture, nameof(existingTexture));
-            descriptor.EmbeddedTextures.Add(existingTexture!.EmbeddedName,  existingTexture.GId);
+            descriptor.EmbeddedTextures.Add(existingTexture!.EmbeddedName, existingTexture.GId);
             return true;
         }
 
@@ -166,18 +180,27 @@ internal sealed class ModelMaterialProcessor(ModelImportState state)
         var ptr = (byte*)texture->PcData;
         var span = new ReadOnlySpan<byte>(ptr, length);
 
-        byte[] buffer = new byte[length];
+        var buffer = new byte[length];
         span.CopyTo(buffer);
 
+        var assetName = state.ToEmbeddedAssetName("Textures", _processedTextures.Count);
+        _processedTextures.Add(assetName);
         var textureEntry = new TextureEmbeddedDescriptor
         {
             GId = Guid.NewGuid(),
+            AssetName = assetName,
             EmbeddedName = textureName,
             Width = width,
             Height = height,
             PixelFormat = format,
             SlotKind = kind,
             PixelData = buffer,
+            Index = _processedTextures.Count,
+            FileSpec =
+            [
+                new AssetFileSpec(AssetStorageKind.Embedded, assetName, textureName, buffer.Length,
+                    source: state.Filename)
+            ]
         };
         state.AppendTexture(textureEntry);
         descriptor.EmbeddedTextures.Add(textureName, textureEntry.GId);
@@ -213,8 +236,8 @@ internal sealed class ModelMaterialProcessor(ModelImportState state)
         if (prop->MType != PropertyTypeInfo.String) return "";
 
         // 4-byte integer followed by the string
-        int length = *(int*)prop->MData;
-        byte* stringStart = prop->MData + 4;
+        var length = *(int*)prop->MData;
+        var stringStart = prop->MData + 4;
 
         if (length > 0 && length < prop->MDataLength)
         {

@@ -57,9 +57,8 @@ internal sealed class ModelAnimationProcessor(ModelImportDataStore dataStore, Mo
 
     public unsafe void ProcessBoneData(AssimpMesh* mesh)
     {
-        dataStore.WriteBones().FillDefaultSkinningData();
-
         var writer = dataStore.WriteBones((int)mesh->MNumVertices);
+        writer.FillDefaultSkinningData();
         for (var i = 0; i < mesh->MNumBones; i++)
         {
             var boneIndex = 0;
@@ -75,15 +74,8 @@ internal sealed class ModelAnimationProcessor(ModelImportDataStore dataStore, Mo
                 boneIndex = state.BoneCount;
                 state.AppendBone(name, boneIndex);
                 writer.BoneTransforms[boneIndex] = bone->MOffsetMatrix;
-                /*
-                if (_boneTransforms.Length < boneIndex)
-                {
-                    InvalidOpThrower.ThrowIf(_boneTransforms.Length >= MaxBoneTransformCapacity,
-                        nameof(_boneTransforms.Length));
+                InvalidOpThrower.ThrowIf(writer.MaxBones > BoneTransformsCapacity, nameof(BoneTransformsCapacity));
 
-                    Array.Resize(ref _boneTransforms, MaxBoneTransformCapacity);
-                }
-                */
             }
 
             for (var j = 0; j < 4; j++)

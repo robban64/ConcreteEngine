@@ -38,18 +38,14 @@ internal ref struct MeshUploadData<TVertex>(
     public ref MeshCreationInfo Result = ref result;
 }
 
-internal ref struct ModelImportResult(
-    ReadOnlySpan<string> partNames,
+internal readonly ref struct ModelImportResult(
     ReadOnlySpan<MeshPartImportResult> parts,
     ReadOnlySpan<Matrix4x4> partTransforms,
-    ref BoundingBox bounds)
+    in BoundingBox bounds)
 {
-    public ReadOnlySpan<string> PartNames = partNames;
-    public ReadOnlySpan<MeshPartImportResult> Parts = parts;
-    public ReadOnlySpan<Matrix4x4> PartTransforms = partTransforms;
-    public ref BoundingBox Bounds = ref bounds;
-
-    public int Count => PartNames.Length;
+    public readonly ReadOnlySpan<MeshPartImportResult> Parts = parts;
+    public readonly ReadOnlySpan<Matrix4x4> PartTransforms = partTransforms;
+    public readonly ref readonly BoundingBox Bounds = ref bounds;
 }
 
 internal readonly ref struct AnimationImportResult(

@@ -68,15 +68,9 @@ internal sealed class MaterialLoader
         return result;
     }
 
-    public void LoadEmbeddedMaterials(AssetStore store, ModelMaterialEmbeddedDescriptor[] descriptors)
+    public void LoadEmbeddedMaterials(AssetStore store, ReadOnlySpan<ModelMaterialEmbeddedDescriptor> descriptors)
     {
-        ArgumentNullException.ThrowIfNull(descriptors);
-
-        if (descriptors.Length == 0)
-        {
-            Debug.Assert(false);
-            return;
-        }
+        ArgumentOutOfRangeException.ThrowIfZero(descriptors.Length);
 
         EmbeddedAssembleDel<MaterialTemplate, ModelMaterialEmbeddedDescriptor> factory = CreateEmbeddedTemplate;
 
@@ -87,7 +81,7 @@ internal sealed class MaterialLoader
     }
 
     private MaterialTemplate CreateEmbeddedTemplate(AssetId assetId, ModelMaterialEmbeddedDescriptor record,
-        IAssetStore store)
+        AssetStore store)
     {
         AssetTextureSlot[] slots =
         [
@@ -98,13 +92,16 @@ internal sealed class MaterialLoader
             
         ];
         int idx = 0;
-        foreach (var it in record.EmbeddedTextures.Values)
+        foreach (var gid in record.EmbeddedTextures.Values)
         {
-            if(it.SlotKind == TextureSlotKind.Albedo)
-                slots[0] = slots[0].WithAssetId(store.GetByName<Texture2D>(it.AssetName).RawId);
+            if(!store.TryGetByEmbeddedGid<Texture2D>(gid, out var texture))
+                throw new ArgumentException($"Embedded texture {gid} not found");
             
-            if(it.SlotKind == TextureSlotKind.Normal)
-                slots[1] = slots[1].WithAssetId(store.GetByName<Texture2D>(it.AssetName).RawId);
+            if(texture.SlotKind == TextureSlotKind.Albedo)
+                slots[0] = slots[0].WithAssetId(texture.RawId);
+            
+            if(texture.SlotKind == TextureSlotKind.Normal)
+                slots[1] = slots[1].WithAssetId(texture.RawId);
         }
 
         var shaderName = record.IsAnimated ? "ModelAnimated" : "Model";
@@ -122,7 +119,7 @@ internal sealed class MaterialLoader
     }
 
 
-    private MaterialTemplate CreateTemplate(AssetId assetId, MaterialDescriptor record, IAssetStore store)
+    private MaterialTemplate CreateTemplate(AssetId assetId, MaterialDescriptor record, AssetStore store)
     {
         var slots = Array.Empty<AssetTextureSlot>();
 
@@ -155,7 +152,7 @@ internal sealed class MaterialLoader
         };
     }
 
-    private AssetTextureSlot[] CreateSlots(MaterialDescriptor record, IAssetStore store)
+    private AssetTextureSlot[] CreateSlots(MaterialDescriptor record, AssetStore store)
     {
         if (record.TextureSlots.Length == 0)
         {

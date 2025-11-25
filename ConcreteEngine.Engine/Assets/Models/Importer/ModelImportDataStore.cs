@@ -14,18 +14,18 @@ internal sealed class ModelImportDataStore
     private Vertex3D[] _vertices = new Vertex3D[DefaultCapacity];
     private Vertex3DSkinned[] _verticesSkinned = new Vertex3DSkinned[DefaultCapacity];
 
-    private Matrix4x4[] _boneTransforms = new Matrix4x4[DefaultBoneTransformsCapacity];
+    private Matrix4x4[] _boneTransforms = new Matrix4x4[BoneTransformsCapacity];
     private SkinningData[] _skinningData = new SkinningData[DefaultCapacity];
 
     private MeshPartImportResult[] _parts = new MeshPartImportResult[MaxParts];
     private Matrix4x4[] _partTransforms = new Matrix4x4[MaxParts];
-    
+
     private BoundingBox _modelBounds;
     private Matrix4x4 _invRootTransform;
 
     public ref BoundingBox ModelBounds => ref _modelBounds;
     public ref Matrix4x4 InvRootTransform => ref _invRootTransform;
-    public ReadOnlySpan<MeshPartImportResult> GetParts(int length) => _parts.AsSpan(0,length);
+    public ReadOnlySpan<MeshPartImportResult> GetParts(int length) => _parts.AsSpan(0, length);
 
     /*
     public ModelImportResult GetModelImportResult(int meshCount)
@@ -34,7 +34,7 @@ internal sealed class ModelImportDataStore
         var partTransforms = _partTransforms.AsSpan(0, meshCount);
         return new ModelImportResult(_parts.AsSpan(0,meshCount), _partTransforms, ref _modelBounds);
     }
-    
+
     public AnimationImportResult GetAnimationImportData(int meshCount)
     {
         var parts = _parts.AsSpan(0, meshCount);
@@ -42,6 +42,16 @@ internal sealed class ModelImportDataStore
         return new AnimationImportResult(_parts.AsSpan(0,meshCount), _partTransforms, ref _modelBounds);
     }
 */
+    public ModelImportResult GetMeshDataResult(int length)
+    {
+        return new ModelImportResult(_parts.AsSpan(0, length), _partTransforms.AsSpan(0, length), in _modelBounds);
+    }
+
+    public ref readonly Matrix4x4 GetAnimationDataResult(int length, out ReadOnlySpan<Matrix4x4> boneTransforms)
+    {
+        boneTransforms = _boneTransforms.AsSpan(0, length);
+        return ref _invRootTransform;
+    }
 
     public VertexWriterImporter WriteVertex(int vertexCount, int indexCount)
     {
@@ -57,17 +67,17 @@ internal sealed class ModelImportDataStore
             _skinningData.AsSpan(0, vertexCount),
             _indices.AsSpan(0, indexCount));
     }
-    
+
     public MeshPartWriter WriteMeshParts() => new(_parts, _partTransforms);
 
 
-    public BoneWriterImporter WriteBones(int? vertexCount = null)
+    public BoneWriterImporter WriteBones(int vertexCount)
     {
-        int vCount  = vertexCount ?? _skinningData.Length;
-        ArgumentOutOfRangeException.ThrowIfGreaterThan(vCount, _skinningData.Length);
+        EnsureCapacity(skinnedCount: vertexCount);
+        ArgumentOutOfRangeException.ThrowIfGreaterThan(vertexCount, _skinningData.Length);
 
         return new BoneWriterImporter(
-            _skinningData.AsSpan(0, vCount),
+            _skinningData.AsSpan(0, vertexCount),
             _boneTransforms.AsSpan());
     }
 
@@ -97,11 +107,11 @@ internal sealed class ModelImportDataStore
         );
     }
 
-    public void EnsureCapacity(int indexCount, int? vertexCount = null, int? skinnedCount = null)
+    public void EnsureCapacity(int?  indexCount = null, int? vertexCount = null, int? skinnedCount = null)
     {
-        if ((uint)indexCount > _indices.Length)
+        if (indexCount is { } iCount && (uint)indexCount > _indices.Length)
         {
-            var cap = ArrayUtility.CapacityGrowthPow2(int.Max(indexCount, 64));
+            var cap = ArrayUtility.CapacityGrowthPow2(int.Max(iCount, 64));
             Array.Resize(ref _indices, cap);
         }
 
@@ -111,16 +121,14 @@ internal sealed class ModelImportDataStore
             Array.Resize(ref _vertices, cap);
         }
 
-        if (vertexCount is { } skinCount && (uint)skinCount > _verticesSkinned.Length)
+        if (skinnedCount is { } skinCount && (uint)skinCount > _verticesSkinned.Length)
         {
             InvalidOpThrower.ThrowIf(_skinningData.Length != _verticesSkinned.Length);
-            
             var cap = ArrayUtility.CapacityGrowthPow2(int.Max(skinCount, 64));
             Array.Resize(ref _verticesSkinned, cap);
             Array.Resize(ref _skinningData, cap);
         }
     }
-    
 
 
     public void Clear()
@@ -131,7 +139,7 @@ internal sealed class ModelImportDataStore
         _invRootTransform = Matrix4x4.Identity;
     }
 
-    public void Unload()
+    public void Teardown()
     {
         _indices = null!;
         _vertices = null!;

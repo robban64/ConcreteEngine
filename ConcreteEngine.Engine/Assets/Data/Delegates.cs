@@ -6,10 +6,10 @@ using ConcreteEngine.Engine.Assets.Descriptors;
 
 namespace ConcreteEngine.Engine.Assets.Data;
 
-internal delegate TAsset AssetAssembleDel<out TAsset, in TDesc>(AssetId id, TDesc manifest, IAssetStore store)
+internal delegate TAsset AssetAssembleDel<out TAsset, in TDesc>(AssetId id, TDesc manifest, AssetStore store)
     where TAsset : AssetObject where TDesc : class, IAssetDescriptor;
 
-internal delegate TAsset EmbeddedAssembleDel<out TAsset, in TEmbedded>(AssetId id, TEmbedded manifest, IAssetStore store)
+internal delegate TAsset EmbeddedAssembleDel<out TAsset, in TEmbedded>(AssetId id, TEmbedded manifest, AssetStore store)
     where TAsset : AssetObject where TEmbedded : class, IAssetEmbeddedDescriptor;
 
 
@@ -20,14 +20,13 @@ internal delegate TAsset AssetFileAssembleDel<out TAsset, in TDesc>(
     out AssetFileSpec[] fileSpecs
 ) where TAsset : AssetObject where TDesc : class, IAssetDescriptor;
 
-internal delegate TAsset AssetWithEmbeddedDel<out TAsset, in TDesc, TEmbedded>(
+internal delegate TAsset AssetWithEmbeddedDel<out TAsset, in TDesc>(
     AssetId id,
     TDesc manifest,
     bool isCoreAsset,
-    //Action<IAssetEmbeddedDescriptor> processEmbedded,
-    out AssetFileSpec[] fileSpecs,
-    out TEmbedded[] embedded
-) where TAsset : AssetObject where TDesc : class, IAssetDescriptor where TEmbedded : class, IAssetEmbeddedDescriptor;
+    Action<ReadOnlySpan<IAssetEmbeddedDescriptor>> uploadEmbedded,
+    out AssetFileSpec[] fileSpecs
+) where TAsset : AssetObject where TDesc : class, IAssetDescriptor;
 
 
 

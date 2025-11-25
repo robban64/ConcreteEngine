@@ -40,13 +40,12 @@ internal ref struct BoneWriterImporter(Span<SkinningData> skinningData, Span<Mat
 {
     public Span<SkinningData> SkinningData = skinningData;
     public Span<Matrix4x4> BoneTransforms = boneTransforms;
-
+    
     public int MaxBones => BoneTransforms.Length;
 
-    public void FillDefaultSkinningData(int? vertexCount = null)
+    public void FillDefaultSkinningData()
     {
-        var count = vertexCount ?? SkinningData.Length;
         var skinData = new SkinningData { BoneWeights = default, BoneIndices = new Int4(-1, -1, -1, -1) };
-        SkinningData.Slice(0, count).Fill(skinData);
+        SkinningData.Fill(skinData);
     }
 }

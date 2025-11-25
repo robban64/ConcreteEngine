@@ -38,13 +38,14 @@ internal sealed class AssetStore : IAssetStore
     private AssetId MakeAssetId() => new(++_assetId);
     private AssetFileId MakeAssetFileId() => new(++_assetFileId);
 
-
     private readonly Dictionary<AssetId, AssetObject> _assets = new(32);
     private readonly Dictionary<AssetFileId, AssetFileEntry> _files = new(32);
     private readonly Dictionary<AssetId, AssetFileId[]> _bindings = new(32);
     private readonly Dictionary<AssetKey, AssetId> _names = new(32);
 
     private readonly Dictionary<Type, AssetTypeMeta> _typeMeta = new(8);
+
+    private readonly Dictionary<Guid, AssetId> _byEmbedded = new(8);
 
     public int Count => _assetId;
     public int FileCount => _files.Count;
@@ -135,6 +136,16 @@ internal sealed class AssetStore : IAssetStore
         if (!_names.TryGetValue(new AssetKey(type, name), out var id)) return false;
         if (!_assets.TryGetValue(id, out var objT)) return false;
         asset = objT;
+        return true;
+    }
+
+    internal bool TryGetByEmbeddedGid<TAsset>(Guid gid, out TAsset asset) where TAsset : AssetObject
+    {
+        asset = null!;
+        if (!_byEmbedded.TryGetValue(gid, out var assetId)) return false;
+        if(!_assets.TryGetValue(assetId, out var obj) || obj is not TAsset tAsset) return false;
+
+        asset = tAsset;
         return true;
     }
 
@@ -234,19 +245,19 @@ internal sealed class AssetStore : IAssetStore
         return asset;
     }
 
-    internal TAsset RegisterWithEmbedded<TAsset, TDesc, TEmbedded>(
+
+    
+    internal TAsset RegisterWithEmbedded<TAsset, TDesc>(
         TDesc descriptor,
         bool isCoreAsset,
-        AssetWithEmbeddedDel<TAsset, TDesc, TEmbedded> factory,
-        out TEmbedded[] embedded)
+        AssetWithEmbeddedDel<TAsset, TDesc> factory,
+        Action<ReadOnlySpan<IAssetEmbeddedDescriptor>> enqueueEmbedded)
         where TAsset : AssetObject
         where TDesc : class, IAssetDescriptor
-        where TEmbedded : class, IAssetEmbeddedDescriptor
     {
         var id = MakeAssetId();
-        var asset = factory(id, descriptor, isCoreAsset, out var fileSpecs, out embedded);
+        var asset = factory(id, descriptor, isCoreAsset, enqueueEmbedded, out var fileSpecs);
         ArgumentNullException.ThrowIfNull(fileSpecs);
-        ArgumentNullException.ThrowIfNull(embedded);
 
         RegisterInternal(id, asset, fileSpecs);
         return asset;
@@ -261,8 +272,12 @@ internal sealed class AssetStore : IAssetStore
         ArgumentNullException.ThrowIfNull(embedded.FileSpec);
         ArgumentOutOfRangeException.ThrowIfZero(embedded.FileSpec.Length);
 
+        if(_byEmbedded.ContainsKey(embedded.GId))
+            throw new InvalidOperationException($"Embedded resource is already registered. {embedded.GId}");
+        
         var id = MakeAssetId();
         var asset = factory(id, embedded, this);
+        _byEmbedded.Add(embedded.GId, id);
         asset.Name = embedded.AssetName;
         asset.IsEmbedded = true;
         RegisterInternal(id, asset, embedded.FileSpec);

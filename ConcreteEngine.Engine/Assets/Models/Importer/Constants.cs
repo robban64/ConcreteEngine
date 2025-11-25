@@ -17,7 +17,6 @@ internal static class Constants
     
     
     internal const int DefaultCapacity = 8192;
-    internal const int DefaultBoneTransformsCapacity = 64;
-    internal const int MaxBoneTransformCapacity = 128;
+    internal const int BoneTransformsCapacity = 64;
     internal const int MaxParts = 8;
 }

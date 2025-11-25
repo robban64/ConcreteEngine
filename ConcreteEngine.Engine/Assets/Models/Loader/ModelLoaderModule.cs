@@ -3,6 +3,7 @@
 using ConcreteEngine.Engine.Assets.Data;
 using ConcreteEngine.Engine.Assets.Descriptors;
 using ConcreteEngine.Engine.Assets.Internal;
+using ConcreteEngine.Engine.Assets.Models.Importer;
 
 #endregion
 
@@ -11,26 +12,29 @@ namespace ConcreteEngine.Engine.Assets.Models.Loader;
 internal sealed class ModelLoaderModule
 {
     private ModelLoader _loader;
+    private ModelImportState _state;
 
     public ModelLoaderModule(AssetGfxUploader uploader)
     {
-        _loader = new ModelLoader(uploader);
+        _state = new ModelImportState();
+        _loader = new ModelLoader(uploader, _state);
     }
 
     public Model LoadModel(
         AssetId assetId, 
         MeshDescriptor manifest, 
         bool isCoreAsset, 
-        out AssetFileSpec[] fileSpecs,
-        out ModelMaterialEmbeddedDescriptor[] embedded)
+        Action<ReadOnlySpan<IAssetEmbeddedDescriptor>> uploadEmbedded,
+        out AssetFileSpec[] fileSpecs)
     {
         var refId = AssetRef<Model>.Make(assetId);
 
         var result = _loader.LoadMesh(refId, manifest.Name, manifest.Filename, out fileSpecs);
-        
-        embedded = result.MaterialEntries;
+        uploadEmbedded(result.EmbeddedTextures);
+        uploadEmbedded(result.EmbeddedMaterials);
         
         result.Animation?.ModelName = manifest.Name;
+        
         return new Model
         {
             RawId = assetId,
@@ -43,9 +47,12 @@ internal sealed class ModelLoaderModule
         };
     }
 
-    public void Unload()
+    public void Teardown()
     {
-        _loader.ClearCache();
+        _state.Clear();
+        _loader.Teardown();
+        _state = null!;
         _loader = null!;
+        
     }
 }

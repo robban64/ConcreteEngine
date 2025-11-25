@@ -5,6 +5,8 @@ using ConcreteEngine.Common.Time;
 using ConcreteEngine.Engine.Assets.Data;
 using ConcreteEngine.Engine.Assets.Descriptors;
 using ConcreteEngine.Engine.Assets.Materials;
+using ConcreteEngine.Engine.Editor.Diagnostics;
+using ConcreteEngine.Shared.Diagnostics;
 
 #endregion
 
@@ -261,29 +263,12 @@ internal sealed class AssetStore : IAssetStore
 
         var id = MakeAssetId();
         var asset = factory(id, embedded, this);
-        
-        if (_names.ContainsKey(new AssetKey(typeof(TAsset), embedded.Name)))
-        {
-            var original = embedded.Name;
-            for (int i = 0; i < 100; i++)
-            {
-                var newName = $"{original}_{i}";
-                if (!_names.ContainsKey(new AssetKey(typeof(TAsset), newName)))
-                {
-                    embedded.AssetName = newName;
-                    break;
-                }
-            }
-        }
-        
-        if(string.IsNullOrEmpty(embedded.AssetName))
-            embedded.AssetName = embedded.Name;
-        
-        asset.IsEmbedded = true;
         asset.Name = embedded.AssetName;
-        
+        asset.IsEmbedded = true;
         RegisterInternal(id, asset, embedded.FileSpec);
+        Logger.LogString(LogScope.Assets, $"{asset.Name} - Embedded {typeof(TAsset).Name} loaded");
         return asset;
+
     }
 
     private void RegisterInternal<TAsset>(AssetId id, TAsset asset, ReadOnlySpan<AssetFileSpec> fileSpecs)

@@ -24,7 +24,7 @@ internal sealed class TextureLoaderModule
         var texture = new Texture2D
         {
             RawId = id,
-            Name = descriptor.Name,
+            Name = descriptor.EmbeddedName,
             ResourceId = result.CreationInfo.TextureId,
             Width = result.CreationInfo.Width,
             Height = result.CreationInfo.Height,

@@ -9,37 +9,37 @@ using ConcreteEngine.Renderer.Definitions;
 namespace ConcreteEngine.Engine.Assets.Descriptors;
 
 
+//TODO Some guid fingerprint
 internal interface IAssetEmbeddedDescriptor
 {
-    string Name { get; set; }
+    string EmbeddedName { get; set; }
     string AssetName { get; set; }
     AssetKind Kind { get; }
     Type AssetType { get; }
     AssetFileSpec[] FileSpec { get; }
-
 }
 
 internal sealed class ModelMaterialEmbeddedDescriptor : IAssetEmbeddedDescriptor
 {
-    public string Name { get; set; }
+    public string EmbeddedName { get; set; }
     public string AssetName { get; set; }
-    
+
     public bool IsAnimated { get; set; }
 
     public Color4 Color { get; set; }
 
-    public AssetFileSpec[] FileSpec { get; set; }
+    public AssetFileSpec[] FileSpec { get; set; } = Array.Empty<AssetFileSpec>();
 
     public Dictionary<string, TextureEmbeddedDescriptor> EmbeddedTextures { get; } = [];
-    
+
     public AssetKind Kind => AssetKind.EmbeddedMaterial;
     public Type AssetType => typeof(MaterialTemplate);
-
 }
 
 internal sealed class TextureEmbeddedDescriptor : IAssetEmbeddedDescriptor
 {
-    public required string Name { get; set; }
+    public required string EmbeddedName { get; set; }
+    public required int Index { get; init; }
     public string AssetName { get; set; }
 
     public required int Width { get; set; }
@@ -54,5 +54,4 @@ internal sealed class TextureEmbeddedDescriptor : IAssetEmbeddedDescriptor
     public Type AssetType => typeof(Texture2D);
 
     public AssetKind Kind => AssetKind.Texture2D;
-
 }

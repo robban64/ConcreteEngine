@@ -56,29 +56,33 @@ internal sealed class ModelLoader
         ModelAnimation? animation = null;
         if (animationRes.BoneTransforms.Length > 0 && animationRes.BoneMapping?.Count > 0)
         {
-            Console.WriteLine("Model Name: " + name);
-            foreach (var it in animationRes.Animations)
-            {
-                Console.WriteLine($"{it.Name}: {it.Duration} - {it.TicksPerSecond}");
-            }
-
             animation = new ModelAnimation(
                 animationRes.BoneMapping,
                 animationRes.Animations,
                 animationRes.ParentIndices,
-                animationRes.BoneTransforms, 
+                animationRes.BoneTransforms,
                 in animationRes.InvRootTransform);
         }
 
 
         fileSpec = [new AssetFileSpec(AssetStorageKind.FileSystem, name, fileName, fi.Length)];
 
-        foreach (var mat in materialEntries)
+        for (var i = 0; i < materialEntries.Length; i++)
         {
-            mat.FileSpec = [new AssetFileSpec(AssetStorageKind.Embedded, mat.Name, fileName, 0)];
+            var mat = materialEntries[i];
+            mat.AssetName = $"{name}::Materials/{i}";
+            mat.FileSpec =
+            [
+                new AssetFileSpec(AssetStorageKind.Embedded, mat.EmbeddedName, fileName, 0, source: fileName)
+            ];
             foreach (var tex in mat.EmbeddedTextures.Values)
             {
-                tex.FileSpec = [new AssetFileSpec(AssetStorageKind.Embedded, tex.Name, fileName, tex.PixelData.Length)];
+                tex.AssetName = $"{name}::Textures/{tex.Index}";
+                tex.FileSpec =
+                [
+                    new AssetFileSpec(AssetStorageKind.Embedded, tex.AssetName, tex.EmbeddedName, tex.PixelData.Length,
+                        source: fileName)
+                ];
             }
         }
 

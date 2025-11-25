@@ -22,10 +22,13 @@ namespace ConcreteEngine.Engine.Assets.Models.Importer;
 internal sealed class ModelMaterialImporter
 {
     private bool isActive = false;
+    
+    private Dictionary<string, TextureEmbeddedDescriptor> _embeddedTextures = new(4);
 
     internal unsafe ModelMaterialEmbeddedDescriptor[] ProcessSceneMaterials(AssimpScene* scene)
     {
         InvalidOpThrower.ThrowIf(isActive, nameof(isActive));
+        _embeddedTextures.Clear();
         isActive = true;
 
         var entries = new List<ModelMaterialEmbeddedDescriptor>();
@@ -41,7 +44,7 @@ internal sealed class ModelMaterialImporter
         return entries.ToArray();
     }
 
-    private static unsafe bool ProcessMaterial(AssimpScene* scene, AssimpMaterial* material,
+    private unsafe bool ProcessMaterial(AssimpScene* scene, AssimpMaterial* material,
         ModelMaterialEmbeddedDescriptor descriptor)
     {
         bool hasName = false;
@@ -68,18 +71,18 @@ internal sealed class ModelMaterialImporter
         return hasTexture && hasName;
     }
 
-    private static unsafe bool ProcessName(MaterialProperty* prop, ModelMaterialEmbeddedDescriptor descriptor)
+    private unsafe bool ProcessName(MaterialProperty* prop, ModelMaterialEmbeddedDescriptor descriptor)
     {
-        if (descriptor.Name != null) throw new ArgumentException(nameof(descriptor.Name));
+        if (descriptor.EmbeddedName != null) throw new ArgumentException(nameof(descriptor.EmbeddedName));
 
         var matName = ParsePropertyString(prop);
         if (string.IsNullOrWhiteSpace(matName)) return false;
-        descriptor.Name = matName;
+        descriptor.EmbeddedName = matName;
 
         return true;
     }
 
-    private static unsafe bool ProcessTexture(AssimpScene* scene, MaterialProperty* prop,
+    private  unsafe bool ProcessTexture(AssimpScene* scene, MaterialProperty* prop,
         ModelMaterialEmbeddedDescriptor descriptor)
     {
         if (prop->MIndex != 0) return false;
@@ -116,7 +119,9 @@ internal sealed class ModelMaterialImporter
     }
 
 
-    private static unsafe bool LoadTextureData(AssimpTexture* texture, ModelMaterialEmbeddedDescriptor descriptor,
+    private unsafe bool LoadTextureData(
+        AssimpTexture* texture, 
+        ModelMaterialEmbeddedDescriptor descriptor,
         TextureSlotKind kind,
         TexturePixelFormat format)
     {
@@ -132,6 +137,8 @@ internal sealed class ModelMaterialImporter
             throw new ArgumentException($"Duplicated texture names {textureName}",
                 nameof(descriptor.EmbeddedTextures));
         }
+
+        if (_embeddedTextures.ContainsKey(textureName)) return true;
 
         int width = (int)texture->MWidth, height = (int)texture->MHeight;
         var length = 0;
@@ -159,14 +166,15 @@ internal sealed class ModelMaterialImporter
 
         var textureEntry = new TextureEmbeddedDescriptor
         {
-            Name = textureName,
+            EmbeddedName = textureName,
             Width = width,
             Height = height,
             PixelFormat = format,
             SlotKind = kind,
             PixelData = buffer,
+            Index = _embeddedTextures.Count
         };
-
+        _embeddedTextures.Add(textureName, textureEntry);
         descriptor.EmbeddedTextures.Add(textureName, textureEntry);
 
         return true;

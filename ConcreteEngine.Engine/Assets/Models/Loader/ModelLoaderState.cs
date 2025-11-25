@@ -21,11 +21,11 @@ internal ref struct ModelLoaderResult(int drawCount, in BoundingBox bounds)
     public required ModelMesh[] MeshParts { get; init; }
 
     // Descriptors
-    public required ReadOnlySpan<ModelMaterialEmbeddedDescriptor> EmbeddedMaterials { get; init; }
+    public required ReadOnlySpan<MaterialEmbeddedDescriptor> EmbeddedMaterials { get; init; }
     public required ReadOnlySpan<TextureEmbeddedDescriptor> EmbeddedTextures { get; init; }
 }
 
-internal sealed class ModelImportState
+internal sealed class ModelLoaderState
 {
     // Mesh
     private readonly List<string> _meshNames = new(MaxParts);
@@ -38,7 +38,7 @@ internal sealed class ModelImportState
 
     // Material/Textures
     private readonly List<TextureEmbeddedDescriptor> _embeddedTextures = new(4);
-    private readonly List<ModelMaterialEmbeddedDescriptor> _embeddedMaterials = new(4);
+    private readonly List<MaterialEmbeddedDescriptor> _embeddedMaterials = new(4);
 
     public string Name { get; private set; }
     public string Filename { get; private set; }
@@ -134,7 +134,7 @@ internal sealed class ModelImportState
     }
 
 
-    public void AppendMaterial(ModelMaterialEmbeddedDescriptor descriptor) => _embeddedMaterials.Add(descriptor);
+    public void AppendMaterial(MaterialEmbeddedDescriptor descriptor) => _embeddedMaterials.Add(descriptor);
 
     public void AppendTexture(TextureEmbeddedDescriptor descriptor)
     {

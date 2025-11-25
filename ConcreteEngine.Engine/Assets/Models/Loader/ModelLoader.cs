@@ -17,9 +17,9 @@ internal sealed class ModelLoader
 {
     private ModelImporter _modelImporter;
     private ModelImportDataStore _dataStore;
-    private ModelImportState _state;
+    private ModelLoaderState _state;
 
-    public ModelLoader(AssetGfxUploader uploader, ModelImportState state)
+    public ModelLoader(AssetGfxUploader uploader, ModelLoaderState state)
     {
         _state = state;
         _dataStore = new ModelImportDataStore();

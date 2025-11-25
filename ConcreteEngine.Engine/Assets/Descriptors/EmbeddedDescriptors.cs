@@ -4,10 +4,11 @@ using ConcreteEngine.Engine.Assets.Data;
 using ConcreteEngine.Engine.Assets.Materials;
 using ConcreteEngine.Engine.Assets.Textures;
 using ConcreteEngine.Graphics.Gfx.Definitions;
+using ConcreteEngine.Renderer.Data;
 using ConcreteEngine.Renderer.Definitions;
+using ConcreteEngine.Shared.RenderData;
 
 namespace ConcreteEngine.Engine.Assets.Descriptors;
-
 
 internal interface IAssetEmbeddedDescriptor
 {
@@ -19,17 +20,17 @@ internal interface IAssetEmbeddedDescriptor
     AssetFileSpec[] FileSpec { get; }
 }
 
-internal sealed class ModelMaterialEmbeddedDescriptor : IAssetEmbeddedDescriptor
+internal sealed class MaterialEmbeddedDescriptor : IAssetEmbeddedDescriptor
 {
+    public MaterialImportParams Params;
+
     public required Guid GId { get; init; }
     public string EmbeddedName { get; set; }
     public string AssetName { get; set; }
 
     public bool IsAnimated { get; set; }
 
-    public Color4 Color { get; set; }
-
-    public  AssetFileSpec[] FileSpec { get; set; } = Array.Empty<AssetFileSpec>();
+    public AssetFileSpec[] FileSpec { get; set; } = Array.Empty<AssetFileSpec>();
 
     public Dictionary<string, Guid> EmbeddedTextures { get; } = [];
 

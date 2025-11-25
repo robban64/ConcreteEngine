@@ -74,7 +74,7 @@ internal static class EngineCommandHandler
         ctx.AddLog(StructStr<RenderBufferMeta>());
         ctx.AddLog(StructStr<UniformBufferMeta>());
 
-        ctx.AddLog(StructStr<MaterialParams>());
+        ctx.AddLog(StructStr<MaterialParamSnapshot>());
         ctx.AddLog(StructStr<DrawMaterialMeta>());
         ctx.AddLog(StructStr<DrawMaterialPayload>());
 

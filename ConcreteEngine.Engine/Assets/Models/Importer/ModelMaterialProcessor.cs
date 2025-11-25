@@ -19,7 +19,7 @@ using AssimpTexture = Silk.NET.Assimp.Texture;
 
 namespace ConcreteEngine.Engine.Assets.Models.Importer;
 
-internal sealed class ModelMaterialProcessor(ModelImportState state)
+internal sealed class ModelMaterialProcessor(ModelLoaderState state)
 {
     private bool isActive = false;
 
@@ -34,7 +34,7 @@ internal sealed class ModelMaterialProcessor(ModelImportState state)
         for (var i = 0; i < scene->MNumMaterials; i++)
         {
             var aMaterial = scene->MMaterials[i];
-            var mat = new ModelMaterialEmbeddedDescriptor { GId = Guid.NewGuid() };
+            var mat = new MaterialEmbeddedDescriptor { GId = Guid.NewGuid() };
             if (!ProcessMaterial(scene, aMaterial, mat)) continue;
 
             if (string.IsNullOrWhiteSpace(mat.EmbeddedName))
@@ -52,39 +52,59 @@ internal sealed class ModelMaterialProcessor(ModelImportState state)
             state.AppendMaterial(mat);
         }
 
-
         isActive = false;
     }
 
 
     private unsafe bool ProcessMaterial(AssimpScene* scene, AssimpMaterial* material,
-        ModelMaterialEmbeddedDescriptor descriptor)
+        MaterialEmbeddedDescriptor descriptor)
     {
         var hasName = false;
         var hasTexture = false;
+
+        ref var resultParams = ref descriptor.Params;
         for (var i = 0; i < material->MNumProperties; i++)
         {
             var prop = material->MProperties[i];
             var key = prop->MKey.AsString;
-
-            if (key == "?mat.name")
+            switch (key)
             {
-                if (ProcessName(prop, descriptor)) hasName = true;
-            }
-            else if (key == "$tex.file")
-            {
-                if (ProcessTexture(scene, prop, descriptor)) hasTexture = true;
-            }
-            else if (key == "$clr.diffuse")
-            {
-                ProcessParams(prop, descriptor);
+                case "?mat.name":
+                    if (ProcessName(prop, descriptor)) hasName = true;
+                    break;
+                case "$tex.file":
+                    if (ProcessTexture(scene, prop, descriptor)) hasTexture = true;
+                    break;
+                case "$mat.opacity":
+                    ProcessFloatParam(prop, out resultParams.Opacity);
+                    resultParams.HasOpacity = true;
+                    break;
+                case "$mat.shininess":
+                    ProcessFloatParam(prop, out resultParams.Shininess);
+                    resultParams.HasShininess = true;
+                    break;
+                case "$mat.shinpercent":
+                    ProcessFloatParam(prop, out resultParams.SpecularFactor);
+                    resultParams.HasSpecularFactor = true;
+                    break;
+                case "$clr.specular": 
+                    ProcessVec3Or4Param(prop, out resultParams.Specular);
+                    resultParams.HasSpecular = true;
+                    break;
+                case "$clr.diffuse":
+                    ProcessVec3Or4Param(prop, out var diffuse);
+                    resultParams.Color = Color4.FromVector4(in diffuse);
+                    resultParams.HasColor = true;
+                    break;
+                //case "$clr.emissive":  ProcessParams(prop, out descriptor.EmissiveColor); break;
+                //case "$clr.ambient":   ProcessParams(prop, out descriptor.AmbientColor); break;
             }
         }
 
         return hasTexture && hasName;
     }
 
-    private unsafe bool ProcessName(MaterialProperty* prop, ModelMaterialEmbeddedDescriptor descriptor)
+    private unsafe bool ProcessName(MaterialProperty* prop, MaterialEmbeddedDescriptor descriptor)
     {
         if (descriptor.EmbeddedName != null) throw new ArgumentException(nameof(descriptor.EmbeddedName));
 
@@ -96,7 +116,7 @@ internal sealed class ModelMaterialProcessor(ModelImportState state)
     }
 
     private unsafe bool ProcessTexture(AssimpScene* scene, MaterialProperty* prop,
-        ModelMaterialEmbeddedDescriptor descriptor)
+        MaterialEmbeddedDescriptor descriptor)
     {
         if (prop->MIndex != 0) return false;
 
@@ -134,7 +154,7 @@ internal sealed class ModelMaterialProcessor(ModelImportState state)
 
     private unsafe bool LoadTextureData(
         AssimpTexture* texture,
-        ModelMaterialEmbeddedDescriptor descriptor,
+        MaterialEmbeddedDescriptor descriptor,
         TextureSlotKind kind,
         TexturePixelFormat format)
     {
@@ -208,9 +228,19 @@ internal sealed class ModelMaterialProcessor(ModelImportState state)
         return true;
     }
 
-
-    private static unsafe void ProcessParams(MaterialProperty* prop, ModelMaterialEmbeddedDescriptor descriptor)
+    private static unsafe void ProcessFloatParam(MaterialProperty* prop, out float value)
     {
+        value = 0f;
+        if (prop == null || prop->MData == null || prop->MDataLength < sizeof(float))
+            return;
+
+        value = MemoryMarshal.Read<float>(new ReadOnlySpan<byte>(prop->MData, (int)prop->MDataLength));
+    }
+
+    private static unsafe void ProcessVec3Or4Param(MaterialProperty* prop, out Vector4 data)
+    {
+        data = default;
+
         var length = (int)prop->MDataLength;
         if (length == 0) return;
 
@@ -221,13 +251,12 @@ internal sealed class ModelMaterialProcessor(ModelImportState state)
 
         if (length == 16)
         {
-            var res = MemoryMarshal.Read<Vector4>(span);
-            descriptor.Color = Color4.FromVector4(in res);
+            data = MemoryMarshal.Read<Vector4>(span);
         }
         else if (length == 12)
         {
             var res = MemoryMarshal.Read<Vector3>(span);
-            descriptor.Color = Color4.FromVector3(in res);
+            data = res.AsVector4();
         }
     }
 

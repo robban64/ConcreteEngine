@@ -30,13 +30,13 @@ internal sealed class ModelImporter
 
     private readonly AssetGfxUploader _gfxUploader;
     private readonly ModelImportDataStore _dataStore;
-    private readonly ModelImportState _state;
+    private readonly ModelLoaderState _state;
 
     private readonly MeshProcessor _meshProcessor;
     private readonly ModelMaterialProcessor _materialProcessor;
     private readonly ModelAnimationProcessor _animationProcessor;
 
-    internal ModelImporter(AssetGfxUploader gfxUploader, ModelImportDataStore dataStore, ModelImportState state)
+    internal ModelImporter(AssetGfxUploader gfxUploader, ModelImportDataStore dataStore, ModelLoaderState state)
     {
         _gfxUploader = gfxUploader;
         _dataStore = dataStore;
@@ -52,9 +52,7 @@ internal sealed class ModelImporter
         if (_assimp == null)
             _assimp = Assimp.GetApi();
 
-
         var scene = _assimp.ImportFile(path, (uint)AssimpFlags);
-        
 
         if (scene == null || scene->MFlags == Assimp.SceneFlagsIncomplete || scene->MRootNode == null)
         {

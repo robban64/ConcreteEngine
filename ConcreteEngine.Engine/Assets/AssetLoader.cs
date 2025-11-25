@@ -35,7 +35,7 @@ internal sealed class AssetLoader
     private AssetWithEmbeddedDel<Model, MeshDescriptor>? _loadMeshDel;
 
     private List<TextureEmbeddedDescriptor> _embeddedTextures;
-    private List<ModelMaterialEmbeddedDescriptor> _embeddedMaterials;
+    private List<MaterialEmbeddedDescriptor> _embeddedMaterials;
 
     private Action<ReadOnlySpan<IAssetEmbeddedDescriptor>>? _enqueueDel;
 
@@ -65,7 +65,7 @@ internal sealed class AssetLoader
     public void LoadAllMaterials(MaterialManifest manifest) =>
         _materialLoader!.LoadMaterials(_store!, manifest.Records);
 
-    private void LoadEmbeddedMaterial(ReadOnlySpan<ModelMaterialEmbeddedDescriptor> materials) =>
+    private void LoadEmbeddedMaterial(ReadOnlySpan<MaterialEmbeddedDescriptor> materials) =>
         _materialLoader!.LoadEmbeddedMaterials(_store!, materials);
     
     private void EnqueueEmbedded(ReadOnlySpan<IAssetEmbeddedDescriptor> embedded)
@@ -79,7 +79,7 @@ internal sealed class AssetLoader
             ArgumentNullException.ThrowIfNull(it.EmbeddedName);
 
             if (it is TextureEmbeddedDescriptor tex) _embeddedTextures.Add(tex);
-            if (it is ModelMaterialEmbeddedDescriptor mat) _embeddedMaterials.Add(mat);
+            if (it is MaterialEmbeddedDescriptor mat) _embeddedMaterials.Add(mat);
         }
     }
 
@@ -125,7 +125,7 @@ internal sealed class AssetLoader
         _materialLoader ??= new MaterialLoader();
 
         _embeddedTextures = new List<TextureEmbeddedDescriptor>(4);
-        _embeddedMaterials = new List<ModelMaterialEmbeddedDescriptor>(4);
+        _embeddedMaterials = new List<MaterialEmbeddedDescriptor>(4);
 
         _loadShaderDel ??= _shaderLoader.LoadShader;
         _loadTextureDel ??= _textureLoader.LoadTexture2D;

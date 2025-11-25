@@ -157,7 +157,7 @@ public struct MaterialUniformRecord
         MatParams1 = matParams1;
     }
 
-    public MaterialUniformRecord(in MaterialParams mat)
+    public MaterialUniformRecord(in MaterialParamSnapshot mat)
     {
         mat.Fill(out var color, out var param1, out var param2);
         MatColor = color;

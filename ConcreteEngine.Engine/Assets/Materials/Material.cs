@@ -9,7 +9,6 @@ using ConcreteEngine.Renderer.Data;
 
 namespace ConcreteEngine.Engine.Assets.Materials;
 
-public readonly record struct MaterialPipelineState(GfxPassState PassState, GfxPassStateFunc PassFunctions);
 
 public sealed class Material
 {
@@ -34,8 +33,8 @@ public sealed class Material
 
     public bool Attached => Id > 0;
 
-    public void FillSnapshot(out MaterialParams snapshot) =>
-        snapshot = new MaterialParams(
+    public void FillSnapshot(out MaterialParamSnapshot snapshot) =>
+        snapshot = new MaterialParamSnapshot(
             color: State.Color,
             specular: State.Specular,
             shininess: State.Shininess,

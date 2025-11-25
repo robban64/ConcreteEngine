@@ -12,11 +12,11 @@ namespace ConcreteEngine.Engine.Assets.Models.Loader;
 internal sealed class ModelLoaderModule
 {
     private ModelLoader _loader;
-    private ModelImportState _state;
+    private ModelLoaderState _state;
 
     public ModelLoaderModule(AssetGfxUploader uploader)
     {
-        _state = new ModelImportState();
+        _state = new ModelLoaderState();
         _loader = new ModelLoader(uploader, _state);
     }
 

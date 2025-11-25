@@ -12,15 +12,6 @@ public sealed class MaterialState
 {
     private bool _clearDirty = false;
 
-    private Color4 _color = Color4.White;
-    private float _shininess = 12f;
-    private float _specular = 0.12f;
-    private float _uvRepeat = 1f;
-
-    private bool _transparency = false;
-    private MaterialPipelineState _pipeline;
-
-
     internal bool IsDirty { get; set; }
 
     internal MaterialState(MaterialState param)
@@ -38,76 +29,81 @@ public sealed class MaterialState
         Specular = desc.Specular ?? Specular;
         UvRepeat = desc.UvRepeat ?? UvRepeat;
     }
-    
-    internal MaterialState(){}
+
+    internal MaterialState(in MaterialImportParams param)
+    {
+        Color = param.HasColor ? param.Color : Color;
+        Shininess = param.HasShininess ? param.Shininess : Shininess;
+        Specular = param.HasSpecularFactor ? param.SpecularFactor : Specular;
+    }
 
     public MaterialPipelineState Pipeline
     {
-        get => _pipeline;
+        get;
         set
         {
-            _pipeline = value;
+            field = value;
             IsDirty = true;
         }
     }
 
     public Color4 Color
     {
-        get => _color;
+        get;
         set
         {
-            _color = value;
+            field = value;
             IsDirty = true;
         }
-    }
+    } = Color4.White;
 
     public float Shininess
     {
-        get => _shininess;
+        get;
         set
         {
-            _shininess = value;
+            field = value;
             IsDirty = true;
         }
-    }
+    } = 12f;
 
     public float Specular
     {
-        get => _specular;
+        get;
         set
         {
-            _specular = value;
+            field = value;
             IsDirty = true;
         }
-    }
+    } = 0.12f;
 
     public float UvRepeat
     {
-        get => _uvRepeat;
+        get;
         set
         {
-            _uvRepeat = value;
+            field = value;
             IsDirty = true;
         }
-    }
+    } = 1f;
 
     public bool Transparency
     {
-        get => _transparency;
+        get;
         set
         {
-            _transparency = value;
+            field = value;
             IsDirty = true;
         }
-    }
+    } = false;
 
-    internal void Set(in MaterialParams param)
+    internal void Set(in MaterialParamSnapshot param)
     {
         Color = param.Color;
         Specular = param.Specular;
         Shininess = param.Shininess;
         UvRepeat = param.UvRepeat;
-        Transparency = param.Transparent;
+        Transparency = param.IsTransparent;
         IsDirty = true;
     }
 

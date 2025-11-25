@@ -13,7 +13,7 @@ using static ConcreteEngine.Engine.Assets.Models.Importer.Constants;
 
 namespace ConcreteEngine.Engine.Assets.Models.Importer;
 
-internal sealed class ModelAnimationProcessor(ModelImportDataStore dataStore, ModelImportState state)
+internal sealed class ModelAnimationProcessor(ModelImportDataStore dataStore, ModelLoaderState state)
 {
     public unsafe bool HasAnimationChannels(AssimpScene* scene)
     {

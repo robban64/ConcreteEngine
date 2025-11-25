@@ -68,11 +68,11 @@ internal sealed class MaterialLoader
         return result;
     }
 
-    public void LoadEmbeddedMaterials(AssetStore store, ReadOnlySpan<ModelMaterialEmbeddedDescriptor> descriptors)
+    public void LoadEmbeddedMaterials(AssetStore store, ReadOnlySpan<MaterialEmbeddedDescriptor> descriptors)
     {
         ArgumentOutOfRangeException.ThrowIfZero(descriptors.Length);
 
-        EmbeddedAssembleDel<MaterialTemplate, ModelMaterialEmbeddedDescriptor> factory = CreateEmbeddedTemplate;
+        EmbeddedAssembleDel<MaterialTemplate, MaterialEmbeddedDescriptor> factory = CreateEmbeddedTemplate;
 
         foreach (var it in descriptors)
         {
@@ -80,7 +80,7 @@ internal sealed class MaterialLoader
         }
     }
 
-    private MaterialTemplate CreateEmbeddedTemplate(AssetId assetId, ModelMaterialEmbeddedDescriptor record,
+    private MaterialTemplate CreateEmbeddedTemplate(AssetId assetId, MaterialEmbeddedDescriptor record,
         AssetStore store)
     {
         AssetTextureSlot[] slots =
@@ -106,7 +106,7 @@ internal sealed class MaterialLoader
 
         var shaderName = record.IsAnimated ? "ModelAnimated" : "Model";
 
-        var matParams = new MaterialState();
+        var matParams = new MaterialState(in record.Params);
         return new MaterialTemplate(slots)
         {
             RawId = assetId,

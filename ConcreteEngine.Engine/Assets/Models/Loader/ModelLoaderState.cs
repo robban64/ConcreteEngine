@@ -4,7 +4,7 @@ using System.Runtime.InteropServices;
 using ConcreteEngine.Common;
 using ConcreteEngine.Common.Numerics;
 using ConcreteEngine.Engine.Assets.Descriptors;
-using static ConcreteEngine.Engine.Assets.Models.Importer.Constants;
+using static ConcreteEngine.Engine.Assets.Models.ImportProcessors.ImportConstants;
 
 #endregion
 
@@ -42,6 +42,9 @@ internal sealed class ModelLoaderState
     public string Name { get; private set; }
     public string Filename { get; private set; }
 
+    public bool MightBeAnimated { get; set; }
+    public bool HasAnimationChannels { get; set; }
+
     public string ToEmbeddedAssetName(string type, int index)
     {
         ArgumentOutOfRangeException.ThrowIfNegative(index);
@@ -55,19 +58,14 @@ internal sealed class ModelLoaderState
     public int BoneCount => _boneByName.Count;
     public int MeshCount => _meshNames.Count;
     public bool HasEmbeddedData => _embeddedMaterials.Count > 0;
-    public bool IsAnimated => _boneByName.Count > 0 && _animations.Count > 0 && _parentIndices.Count > 0;
+
+    public bool IsAnimated =>
+        HasAnimationChannels || _boneByName.Count > 0 && _animations.Count > 0 && _parentIndices.Count > 0;
 
 
     public void Start(string name, string filename)
     {
-        _meshNames.Clear();
-        _meshIndexToIdMap.Clear();
-        _parentIndices.Clear();
-        _animations.Clear();
-        _boneByName.Clear();
-        _embeddedTextures.Clear();
-        _embeddedMaterials.Clear();
-
+        Clear();
         Name = name;
         Filename = filename;
     }
@@ -160,5 +158,11 @@ internal sealed class ModelLoaderState
         _boneByName.Clear();
         _embeddedTextures.Clear();
         _embeddedMaterials.Clear();
+
+        HasAnimationChannels = false;
+        MightBeAnimated = false;
+
+        Name = string.Empty;
+        Filename = string.Empty;
     }
 }

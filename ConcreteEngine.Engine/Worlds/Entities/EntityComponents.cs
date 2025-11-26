@@ -12,7 +12,7 @@ namespace ConcreteEngine.Engine.Worlds.Entities;
 
 public struct Transform(in Vector3 translation, in Vector3 scale, in Quaternion rotation)
 {
-    public static readonly Transform Baseline = new(default, Vector3.One, Quaternion.Identity);
+    public static readonly Transform Identity = new(default, Vector3.One, Quaternion.Identity);
 
     public Vector3 Translation = translation;
     public Vector3 Scale = scale;

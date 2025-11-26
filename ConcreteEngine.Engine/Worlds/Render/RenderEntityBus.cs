@@ -147,7 +147,7 @@ internal sealed class RenderEntityBus
         var globals = _animationGlobals;
         var finals = _animationFinal;
 
-        t += deltaTime;
+        t += deltaTime * 10;
         // var idxAnimation = 0;
         foreach (var query in worldEntities.Query<AnimationComponent>())
         {
@@ -160,7 +160,8 @@ internal sealed class RenderEntityBus
             ref readonly var invMatrix = ref modelAnimation.InverseRootTransform;
             var boneByIndex = animation.BoneTracksMap;
             var boneCount = boneByIndex.Count;
-            var boneTransforms = modelAnimation.GetBoneTransformSpan();
+            var boneTransforms = modelAnimation.BoneTransforms;
+            var nodeTransforms = modelAnimation.NodeTransforms;
 
             if ((uint)boneCount > globals.Length || (uint)boneCount > finals.Length ||
                 (uint)boneCount > parentIndices.Length)
@@ -174,38 +175,30 @@ internal sealed class RenderEntityBus
             {
                 if (!boneByIndex.TryGetValue(i, out var track))
                 {
-                    poseTransform = Transform.Baseline;
+                    local = nodeTransforms[i];
                 }
                 else
                 {
                     poseTransform.Translation = LerpVector(track.Translations, track.TranslationTimes, t, default);
                     poseTransform.Scale = LerpVector(track.Scales, track.ScaleTimes, t, Vector3.One);
                     poseTransform.Rotation = LerpQuaternion(track.Rotations, track.RotationTimes, t);
+                    WriteTransformMatrix(in poseTransform, ref local);
                 }
-
-/*
-                Console.WriteLine("Translation");
-                Console.WriteLine(poseTransform.Translation.ToString());
-                Console.WriteLine("Scale");
-                Console.WriteLine(poseTransform.Scale.ToString());
-                Console.WriteLine("Rotation");
-                Console.WriteLine(poseTransform.Rotation.ToString());
-*/
-                WriteTransformMatrix(in poseTransform, ref local);
 
                 int p = parentIndices[i];
                 if (p >= 0)
-                    MatrixMath.MultiplyAffine(in local, in globals[p], out globals[i]);
+                    MatrixMath.MultiplyAffine(in globals[p], in local, out globals[i]);
                 else
-                    globals[i] = local;
+                {
+                    //local.Translation = Vector3.Zero; 
+                    MatrixMath.MultiplyAffine(in local, in modelAnimation.SkeletonRootOffset, out globals[i]);
+                }
 
                 finals[i] = boneTransforms[i] * globals[i] * invMatrix;
             }
 
             buffer.SubmitSingleAnimation(finals);
         }
-        //MatrixMath.MultiplyAffine(in invMatrix, in globals[i], out finals[i]);
-        //MatrixMath.MultiplyAffine(in finals[i], in boneTransforms[i], out finals[i]);
 
         static Vector3 LerpVector(Vector3[] values, float[] times, float time, Vector3 fallback)
         {
@@ -286,9 +279,12 @@ internal sealed class RenderEntityBus
 
                 ref var draw = ref Unsafe.AsRef(ref drawData);
                 ApplyTransform(ref draw, in locals[i], in world);
-
-                var meta = BuildMeta(ref Unsafe.AsRef(ref materialTag), part.MaterialSlot, baseMeta);
+                
+                
                 ref var mat = ref Unsafe.Add(ref mat0, part.MaterialSlot);
+                
+                var meta = BuildMeta(ref Unsafe.AsRef(ref materialTag), part.MaterialSlot, baseMeta);
+                
                 var cmd = new DrawCommand(part.Mesh, mat, part.DrawCount);
                 buffer.SubmitDraw(cmd, meta, ref draw);
             }
@@ -335,7 +331,7 @@ internal sealed class RenderEntityBus
             var meta = new DrawCommandMeta(DrawCommandId.Terrain, DrawCommandQueue.Terrain);
             var cmd = new DrawCommand(view.Parts[0].Mesh, terrain.Material);
 
-            CreateTransformMatrices(in Transform.Baseline, out var model, out var normal);
+            CreateTransformMatrices(in Transform.Identity, out var model, out var normal);
             buffer.SubmitDraw(cmd, meta, in model, in normal);
         }
 

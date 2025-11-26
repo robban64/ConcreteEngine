@@ -77,7 +77,7 @@ public sealed class Demo3DScene : GameScene
 
         {
             
-            var soliderModel = assets.Store.GetByName<Model>("Warrior");
+            var soliderModel = assets.Store.GetByName<Model>("Cesium_Man");
             
             
             //Warrior::Materials/0
@@ -90,12 +90,9 @@ public sealed class Demo3DScene : GameScene
 
             worldEntities.Models.Add(soliderEntity,
                 new ModelComponent(soliderModel.ModelId, soliderModel.DrawCount, soliderMatKey));
-            worldEntities.Transforms.Add(soliderEntity, Transform.Baseline with { Translation = new Vector3(125, 6, 120) });
+            worldEntities.Transforms.Add(soliderEntity, Transform.Identity with { Translation = new Vector3(120, 120, 6) });
             worldEntities.BoundingBoxes.Add(soliderEntity, new BoxComponent(soliderModel.Bounds));
 
-            var animationComponent = new AnimationComponent(soliderModel.ModelId, 1, 1);
-            //animationComponent.Slot = Context.World.MeshTable.GetAnimationSlot(soliderModel.ModelId);
-            worldEntities.Animations.Add(soliderEntity, animationComponent);
         }
         
         {
@@ -105,7 +102,8 @@ public sealed class Demo3DScene : GameScene
             var soliderMatKey = worldMaterials.Add(MaterialTagBuilder.Start(soliderMat.Id).WithSlot(soliderMat.Id).Build());
             worldEntities.Models.Add(knightEntity,
                 new ModelComponent(knight.ModelId, knight.DrawCount, soliderMatKey));
-            worldEntities.Transforms.Add(knightEntity, Transform.Baseline with { Translation = new Vector3(120, 6, 120) });
+
+            worldEntities.Transforms.Add(knightEntity, Transform.Identity with { Translation = new Vector3(120, 6, 120) });
             worldEntities.BoundingBoxes.Add(knightEntity, new BoxComponent(knight.Bounds));
             
             //var animationComponent = new AnimationComponent(knight.ModelId, 4, 1, 1);

@@ -8,7 +8,7 @@ using AssimpMaterial = Silk.NET.Assimp.Material;
 
 #endregion
 
-namespace ConcreteEngine.Engine.Assets.Models.Importer;
+namespace ConcreteEngine.Engine.Assets.Models.ImportProcessors;
 
 internal static class ModelImportUtils
 {

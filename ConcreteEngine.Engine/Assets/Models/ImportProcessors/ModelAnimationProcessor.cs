@@ -2,15 +2,18 @@
 
 using System.Numerics;
 using ConcreteEngine.Common;
+using ConcreteEngine.Common.Numerics;
 using ConcreteEngine.Engine.Assets.Models.Loader;
+using ConcreteEngine.Graphics.Primitives;
+using Silk.NET.Assimp;
 using AssimpMesh = Silk.NET.Assimp.Mesh;
 using AssimpScene = Silk.NET.Assimp.Scene;
 using AssimpNode = Silk.NET.Assimp.Node;
-using static ConcreteEngine.Engine.Assets.Models.Importer.Constants;
+using static ConcreteEngine.Engine.Assets.Models.ImportProcessors.ImportConstants;
 
 #endregion
 
-namespace ConcreteEngine.Engine.Assets.Models.Importer;
+namespace ConcreteEngine.Engine.Assets.Models.ImportProcessors;
 
 internal sealed class ModelAnimationProcessor(ModelImportDataStore dataStore, ModelLoaderState state)
 {
@@ -54,10 +57,49 @@ internal sealed class ModelAnimationProcessor(ModelImportDataStore dataStore, Mo
     }
 
 
-    public unsafe void ProcessBoneData(AssimpMesh* mesh)
+
+    private static unsafe void WriteWeightAndIndices(Bone* bone, int boneIndex, Span<SkinningData> skinningData)
     {
-        var writer = dataStore.WriteBones((int)mesh->MNumVertices);
-        writer.FillDefaultSkinningData();
+        for (uint j = 0; j < bone->MNumWeights; j++)
+        {
+            var weight = bone->MWeights[j];
+
+            if (weight.MVertexId >= skinningData.Length) continue;
+
+            ref var data = ref skinningData[(int)weight.MVertexId];
+            if (data.BoneIndices.X < 0)
+            {
+                data.BoneIndices.X = boneIndex;
+                data.BoneWeights.X = weight.MWeight;
+            }
+            else if (data.BoneIndices.Y < 0)
+            {
+                data.BoneIndices.Y = boneIndex;
+                data.BoneWeights.Y = weight.MWeight;
+            }
+            else if (data.BoneIndices.Z < 0)
+            {
+                data.BoneIndices.Z = boneIndex;
+                data.BoneWeights.Z = weight.MWeight;
+            }
+            else if (data.BoneIndices.W < 0)
+            {
+                data.BoneIndices.W = boneIndex;
+                data.BoneWeights.W = weight.MWeight;
+            }
+        }
+    }
+
+    public unsafe void ProcessBoneData(AssimpMesh* mesh, in Matrix4x4 parent)
+    {
+        var vertexCount = (int)mesh->MNumVertices;
+        var boneCount = (int)mesh->MNumBones;
+        ArgumentOutOfRangeException.ThrowIfGreaterThan(boneCount, BoneTransformsCapacity);
+
+        dataStore.WriteSkinningData(vertexCount, out var skinningData, out var boneTransforms);
+        FillDefaultSkinningData(skinningData);
+        var slicedSkinned = skinningData.Slice(0, vertexCount);
+
         for (var i = 0; i < mesh->MNumBones; i++)
         {
             var boneIndex = 0;
@@ -67,38 +109,60 @@ internal sealed class ModelAnimationProcessor(ModelImportDataStore dataStore, Mo
             if (state.TryGetBoneIndex(name, out var value))
             {
                 boneIndex = value;
+                InvalidOpThrower.ThrowIf(boneIndex > BoneTransformsCapacity, nameof(BoneTransformsCapacity));
             }
             else
             {
                 boneIndex = state.BoneCount;
+                InvalidOpThrower.ThrowIf(boneIndex > BoneTransformsCapacity, nameof(BoneTransformsCapacity));
+
                 state.AppendBone(name, boneIndex);
-                writer.BoneTransforms[boneIndex] = bone->MOffsetMatrix;
-                InvalidOpThrower.ThrowIf(writer.MaxBones > BoneTransformsCapacity, nameof(BoneTransformsCapacity));
+                boneTransforms[boneIndex] = parent * bone->MOffsetMatrix;
             }
 
+            WriteWeightAndIndices(bone, boneIndex, slicedSkinned);
+            /*
             for (var j = 0; j < 4; j++)
             {
                 var weight = bone->MWeights[j];
-                ref var data = ref writer.SkinningData[(int)weight.MVertexId];
+                ref var data = ref slicedSkinned[(int)weight.MVertexId];
                 if (data.GetVertexId(j) < 0)
                 {
                     data.Set(j, boneIndex, weight.MWeight);
                     break;
                 }
-            }
+            }*/
         }
+        
+        // sanitize
+        SanitizeSkinningData(vertexCount, slicedSkinned);
     }
+    
+
 
     public unsafe void BuildSkeletonHierarchy(AssimpNode* node)
     {
         var nodeName = node->MName.AsString;
-
+        
         if (state.TryGetBoneIndex(nodeName, out int boneIndex))
         {
             if (node->MParent != null)
             {
                 var parentName = node->MParent->MName.AsString;
                 state.UpdateBoneParentIndexOrDefault(parentName, boneIndex);
+            }
+
+            if ( boneIndex == 0)
+            {
+                var offset = Matrix4x4.Identity;
+                var current = node->MParent;
+                while (current != null)
+                {
+                    offset = offset * current->MTransformation; 
+                    current = current->MParent;
+                }
+
+                dataStore.SkeletonRootOffset = offset;
             }
         }
 
@@ -175,6 +239,24 @@ internal sealed class ModelAnimationProcessor(ModelImportDataStore dataStore, Mo
             }
 
             state.AppendAnimation(animationData);
+        }
+    }
+    
+    private static void FillDefaultSkinningData(Span<SkinningData> skinningData)
+    {
+        var skinData = new SkinningData { BoneWeights = default, BoneIndices = new Int4(-1, -1, -1, -1) };
+        skinningData.Fill(skinData);
+    }
+
+    private static void SanitizeSkinningData(int  vertexCount, Span<SkinningData> skinningData)
+    {
+        for (int i = 0; i < vertexCount; i++)
+        {
+            ref var data = ref skinningData[i];
+            if (data.BoneIndices.X < 0) data.BoneIndices.X = 0;
+            if (data.BoneIndices.Y < 0) data.BoneIndices.Y = 0;
+            if (data.BoneIndices.Z < 0) data.BoneIndices.Z = 0;
+            if (data.BoneIndices.W < 0) data.BoneIndices.W = 0;
         }
     }
 }

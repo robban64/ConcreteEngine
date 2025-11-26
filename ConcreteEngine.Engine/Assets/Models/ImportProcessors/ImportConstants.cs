@@ -4,9 +4,9 @@ using Silk.NET.Assimp;
 
 #endregion
 
-namespace ConcreteEngine.Engine.Assets.Models.Importer;
+namespace ConcreteEngine.Engine.Assets.Models.ImportProcessors;
 
-internal static class Constants
+internal static class ImportConstants
 {
     internal const PostProcessSteps AssimpFlags =
         PostProcessSteps.Triangulate |

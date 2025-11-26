@@ -4,7 +4,7 @@ using ConcreteEngine.Common;
 using ConcreteEngine.Engine.Assets.Data;
 using ConcreteEngine.Engine.Assets.Internal;
 using ConcreteEngine.Engine.Assets.IO;
-using ConcreteEngine.Engine.Assets.Models.Importer;
+using ConcreteEngine.Engine.Assets.Models.ImportProcessors;
 
 #endregion
 
@@ -55,13 +55,15 @@ internal sealed class ModelLoader
         if (_state.IsAnimated)
         {
             _state.GetAnimationResult(out var boneMapping, out var animations, out var parentIndices);
-            var boneTransforms = _dataStore.GetBoneDataResult(_state.BoneCount, out var invRootTransform);
             animation = new ModelAnimation(
                 boneMapping,
                 animations,
                 parentIndices,
-                boneTransforms,
-                in invRootTransform);
+                _dataStore.BoneTransforms,
+                _dataStore.NodeTransforms,
+                in _dataStore.InvRootTransform,
+                in _dataStore.SkeletonRootOffset);
+
         }
 
         fileSpec = [new AssetFileSpec(AssetStorageKind.FileSystem, name, fileName, fi.Length)];

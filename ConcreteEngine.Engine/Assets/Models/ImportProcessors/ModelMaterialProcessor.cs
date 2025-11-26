@@ -18,7 +18,7 @@ using AssimpTexture = Silk.NET.Assimp.Texture;
 
 #endregion
 
-namespace ConcreteEngine.Engine.Assets.Models.Importer;
+namespace ConcreteEngine.Engine.Assets.Models.ImportProcessors;
 
 internal sealed class ModelMaterialProcessor(ModelLoaderState state)
 {

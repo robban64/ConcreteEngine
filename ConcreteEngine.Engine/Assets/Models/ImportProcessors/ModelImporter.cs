@@ -6,13 +6,13 @@ using ConcreteEngine.Common.Numerics.Maths;
 using ConcreteEngine.Engine.Assets.Internal;
 using ConcreteEngine.Engine.Assets.Models.Loader;
 using Silk.NET.Assimp;
-using static ConcreteEngine.Engine.Assets.Models.Importer.Constants;
+using static ConcreteEngine.Engine.Assets.Models.ImportProcessors.ImportConstants;
 using AssimpScene = Silk.NET.Assimp.Scene;
 using AssimpNode = Silk.NET.Assimp.Node;
 
 #endregion
 
-namespace ConcreteEngine.Engine.Assets.Models.Importer;
+namespace ConcreteEngine.Engine.Assets.Models.ImportProcessors;
 
 internal sealed class ModelImporter
 {
@@ -65,15 +65,19 @@ internal sealed class ModelImporter
 
     private unsafe void ProcessScene(AssimpScene* scene)
     {
+        _state.MightBeAnimated = scene->MNumAnimations > 0 || scene->MNumSkeletons > 0;
+        
+        MatrixMath.InvertAffine(in scene->MRootNode->MTransformation, out _dataStore.InvRootTransform);        
+        MatrixMath.MultiplyAffine(in _dataStore.InvRootTransform, Matrix4x4.CreateRotationX(-MathF.PI / 2), out _dataStore.InvRootTransform);
+        
         int startIdx = 0;
         TraverseNode(scene->MRootNode, scene, ref startIdx, Matrix4x4.Identity);
 
-        var isAnimated = _animationProcessor.HasAnimationChannels(scene);
+        _state.HasAnimationChannels = _animationProcessor.HasAnimationChannels(scene);
 
-        if (isAnimated)
+        if (_state.HasAnimationChannels)
         {
             _animationProcessor.ProcessSceneAnimations(scene);
-            MatrixMath.InvertAffine(in scene->MRootNode->MTransformation, out _dataStore.InvRootTransform);
         }
 
         ModelImportUtils.CalculateBoundingBox(_state.MeshCount, _dataStore.GetParts(_state.MeshCount),
@@ -82,13 +86,14 @@ internal sealed class ModelImporter
 
         if (scene->MNumMaterials > 0)
             _materialProcessor.ProcessSceneMaterials(scene);
+
     }
 
 
     private unsafe void TraverseNode(AssimpNode* node, AssimpScene* scene, ref int traverseIndex, in Matrix4x4 parent)
     {
-        MeshCreationInfo info;
         var current = node->MTransformation * parent;
+        MeshCreationInfo info;
 
         for (var i = 0; i < node->MNumMeshes; i++)
         {
@@ -100,10 +105,10 @@ internal sealed class ModelImporter
 
                 if (m->MNumBones > 0)
                 {
-                    _animationProcessor.ProcessBoneData(m);
+                    _animationProcessor.ProcessBoneData(m, in parent);
                 }
 
-                info = _meshProcessor.LoadAndUploadMesh(m, _gfxUploader, false);
+                info = _meshProcessor.LoadAndUploadMesh(m, _gfxUploader, _state.MightBeAnimated, in parent);
                 _state.AppendMeshInfo(m->MName.AsString, meshIndex, info);
             }
 
@@ -113,9 +118,13 @@ internal sealed class ModelImporter
 
             var writer = _dataStore.WriteMeshParts();
             BoundingBox.FromPoints(new Span<Vector3>(mesh->MVertices, vertexCount), out var bounds);
+            
             writer.Fill(traverseIndex, slot, info, in bounds, ref current);
             traverseIndex++;
         }
+
+        if(_state.TryGetBoneIndex(node->MName.AsString, out int index)) 
+            _dataStore.NodeTransforms[index] = current;
 
         // Process children
         for (var i = 0; i < node->MNumChildren; i++)

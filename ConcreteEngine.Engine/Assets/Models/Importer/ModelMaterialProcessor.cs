@@ -6,6 +6,7 @@ using ConcreteEngine.Common.Numerics;
 using ConcreteEngine.Engine.Assets.Data;
 using ConcreteEngine.Engine.Assets.Descriptors;
 using ConcreteEngine.Engine.Assets.Internal;
+using ConcreteEngine.Engine.Assets.Models.Loader;
 using ConcreteEngine.Engine.Assets.Textures;
 using ConcreteEngine.Graphics.Gfx.Definitions;
 using ConcreteEngine.Renderer.Definitions;

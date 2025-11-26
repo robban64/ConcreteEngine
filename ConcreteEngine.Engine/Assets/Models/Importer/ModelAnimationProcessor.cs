@@ -4,6 +4,7 @@ using System.Runtime.InteropServices;
 using ConcreteEngine.Common;
 using ConcreteEngine.Common.Collections;
 using ConcreteEngine.Common.Numerics;
+using ConcreteEngine.Engine.Assets.Models.Loader;
 using ConcreteEngine.Graphics.Primitives;
 using AssimpMesh = Silk.NET.Assimp.Mesh;
 using AssimpScene = Silk.NET.Assimp.Scene;

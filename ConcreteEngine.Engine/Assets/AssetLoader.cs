@@ -34,8 +34,8 @@ internal sealed class AssetLoader
     private AssetFileAssembleDel<CubeMap, CubeMapDescriptor>? _loadCubeMapDel;
     private AssetWithEmbeddedDel<Model, MeshDescriptor>? _loadMeshDel;
 
-    private List<TextureEmbeddedDescriptor> _embeddedTextures;
-    private List<MaterialEmbeddedDescriptor> _embeddedMaterials;
+    private List<TextureEmbeddedDescriptor>? _embeddedTextures;
+    private List<MaterialEmbeddedDescriptor>? _embeddedMaterials;
 
     private Action<ReadOnlySpan<IAssetEmbeddedDescriptor>>? _enqueueDel;
 
@@ -53,9 +53,6 @@ internal sealed class AssetLoader
 
     public Model LoadMesh(MeshDescriptor manifest, bool isCoreAsset)
     {
-        if (manifest.LoadMode == AssetLoadingMode.MemoryOnly)
-            return null!;
-
         var model = _store!.RegisterWithEmbedded(manifest, isCoreAsset, _loadMeshDel!, _enqueueDel!);
         if (_embeddedTextures.Count == 0 && _embeddedMaterials.Count == 0) return model;
         ProcessEmbedded();
@@ -75,8 +72,9 @@ internal sealed class AssetLoader
 
         foreach (var it in embedded)
         {
-            ArgumentNullException.ThrowIfNull(it);
-            ArgumentNullException.ThrowIfNull(it.EmbeddedName);
+            InvalidOpThrower.ThrowIfNull(it);
+            InvalidOpThrower.ThrowIf(it.GId == Guid.Empty);
+            InvalidOpThrower.ThrowIfNull(it.EmbeddedName);
 
             if (it is TextureEmbeddedDescriptor tex) _embeddedTextures.Add(tex);
             if (it is MaterialEmbeddedDescriptor mat) _embeddedMaterials.Add(mat);
@@ -181,6 +179,7 @@ internal sealed class AssetLoader
         _gfxUploader = null;
 
         IsActive = false;
+        
 
         Logger.LogString(LogScope.Assets, "Asset Loader - Closed");
     }

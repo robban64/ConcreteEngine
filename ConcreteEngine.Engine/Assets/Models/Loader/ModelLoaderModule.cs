@@ -47,12 +47,17 @@ internal sealed class ModelLoaderModule
         };
     }
 
+    public void Clear()
+    {
+        _state.Clear();
+        _loader.Teardown();
+    }
+    
     public void Teardown()
     {
         _state.Clear();
         _loader.Teardown();
         _state = null!;
         _loader = null!;
-        
     }
 }

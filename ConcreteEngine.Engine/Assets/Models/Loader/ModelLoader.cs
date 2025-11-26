@@ -35,9 +35,9 @@ internal sealed class ModelLoader
 
         _state.Start(name, fileName);
         _dataStore.Clear();
-       _modelImporter.ImportMesh(path);
-       
-       InvalidOpThrower.ThrowIf(_state.MeshCount == 0);
+        _modelImporter.ImportMesh(path);
+
+        InvalidOpThrower.ThrowIf(_state.MeshCount == 0);
 
         var drawCount = 0;
         var meshParts = new ModelMesh[_state.MeshCount];
@@ -58,15 +58,15 @@ internal sealed class ModelLoader
         if (_state.IsAnimated)
         {
             _state.GetAnimationResult(out var boneMapping, out var animations, out var parentIndices);
-            ref readonly var invTransform = ref _dataStore.GetAnimationDataResult(_state.BoneCount, out var boneTransforms);
+            var boneTransforms = _dataStore.GetBoneDataResult(_state.BoneCount, out var invRootTransform);
             animation = new ModelAnimation(
                 boneMapping,
                 animations,
                 parentIndices,
                 boneTransforms,
-                in invTransform);
+                in invRootTransform);
         }
-        
+
         fileSpec = [new AssetFileSpec(AssetStorageKind.FileSystem, name, fileName, fi.Length)];
         return _state.BuildResult(meshParts, animation, drawCount, in meshData.Bounds);
     }

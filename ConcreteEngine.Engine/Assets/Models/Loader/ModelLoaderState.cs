@@ -2,15 +2,9 @@ using System.Runtime.InteropServices;
 using ConcreteEngine.Common;
 using ConcreteEngine.Common.Numerics;
 using ConcreteEngine.Engine.Assets.Descriptors;
-using ConcreteEngine.Engine.Assets.Models.Loader;
-using Silk.NET.Assimp;
 using static ConcreteEngine.Engine.Assets.Models.Importer.Constants;
-using AssimpMesh = Silk.NET.Assimp.Mesh;
-using AssimpScene = Silk.NET.Assimp.Scene;
-using AssimpNode = Silk.NET.Assimp.Node;
-using AssimpMaterial = Silk.NET.Assimp.Material;
 
-namespace ConcreteEngine.Engine.Assets.Models.Importer;
+namespace ConcreteEngine.Engine.Assets.Models.Loader;
 
 internal ref struct ModelLoaderResult(int drawCount, in BoundingBox bounds)
 {
@@ -18,6 +12,7 @@ internal ref struct ModelLoaderResult(int drawCount, in BoundingBox bounds)
     public ref readonly BoundingBox Bounds = ref bounds;
 
     public required ModelAnimation? Animation { get; init; }
+    
     public required ModelMesh[] MeshParts { get; init; }
 
     // Descriptors

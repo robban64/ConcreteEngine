@@ -27,30 +27,15 @@ internal sealed class ModelImportDataStore
     public ref Matrix4x4 InvRootTransform => ref _invRootTransform;
     public ReadOnlySpan<MeshPartImportResult> GetParts(int length) => _parts.AsSpan(0, length);
 
-    /*
-    public ModelImportResult GetModelImportResult(int meshCount)
-    {
-        var parts = _parts.AsSpan(0, meshCount);
-        var partTransforms = _partTransforms.AsSpan(0, meshCount);
-        return new ModelImportResult(_parts.AsSpan(0,meshCount), _partTransforms, ref _modelBounds);
-    }
-
-    public AnimationImportResult GetAnimationImportData(int meshCount)
-    {
-        var parts = _parts.AsSpan(0, meshCount);
-        var partTransforms = _partTransforms.AsSpan(0, meshCount);
-        return new AnimationImportResult(_parts.AsSpan(0,meshCount), _partTransforms, ref _modelBounds);
-    }
-*/
     public ModelImportResult GetMeshDataResult(int length)
     {
         return new ModelImportResult(_parts.AsSpan(0, length), _partTransforms.AsSpan(0, length), in _modelBounds);
     }
 
-    public ref readonly Matrix4x4 GetAnimationDataResult(int length, out ReadOnlySpan<Matrix4x4> boneTransforms)
+    public ReadOnlySpan<Matrix4x4> GetBoneDataResult(int length, out Matrix4x4 invRootTransform)
     {
-        boneTransforms = _boneTransforms.AsSpan(0, length);
-        return ref _invRootTransform;
+        invRootTransform = _invRootTransform;
+        return _boneTransforms.AsSpan(0, length);
     }
 
     public VertexWriterImporter WriteVertex(int vertexCount, int indexCount)

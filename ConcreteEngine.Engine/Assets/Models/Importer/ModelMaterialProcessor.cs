@@ -1,22 +1,22 @@
+#region
+
 using System.Numerics;
 using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
+using System.Text;
 using ConcreteEngine.Common;
 using ConcreteEngine.Common.Numerics;
 using ConcreteEngine.Engine.Assets.Data;
 using ConcreteEngine.Engine.Assets.Descriptors;
-using ConcreteEngine.Engine.Assets.Internal;
 using ConcreteEngine.Engine.Assets.Models.Loader;
-using ConcreteEngine.Engine.Assets.Textures;
 using ConcreteEngine.Graphics.Gfx.Definitions;
 using ConcreteEngine.Renderer.Definitions;
 using Silk.NET.Assimp;
-using StbImageSharp;
-using AssimpMesh = Silk.NET.Assimp.Mesh;
 using AssimpScene = Silk.NET.Assimp.Scene;
-using AssimpNode = Silk.NET.Assimp.Node;
 using AssimpMaterial = Silk.NET.Assimp.Material;
 using AssimpTexture = Silk.NET.Assimp.Texture;
+
+#endregion
 
 namespace ConcreteEngine.Engine.Assets.Models.Importer;
 
@@ -88,7 +88,7 @@ internal sealed class ModelMaterialProcessor(ModelLoaderState state)
                     ProcessFloatParam(prop, out resultParams.SpecularFactor);
                     resultParams.HasSpecularFactor = true;
                     break;
-                case "$clr.specular": 
+                case "$clr.specular":
                     ProcessVec3Or4Param(prop, out resultParams.Specular);
                     resultParams.HasSpecular = true;
                     break;
@@ -271,7 +271,7 @@ internal sealed class ModelMaterialProcessor(ModelLoaderState state)
 
         if (length > 0 && length < prop->MDataLength)
         {
-            return System.Text.Encoding.UTF8.GetString(stringStart, length);
+            return Encoding.UTF8.GetString(stringStart, length);
         }
 
         return "";

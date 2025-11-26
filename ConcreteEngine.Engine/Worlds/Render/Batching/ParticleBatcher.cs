@@ -1,13 +1,10 @@
 #region
 
 using System.Numerics;
-using System.Runtime.InteropServices;
-using ConcreteEngine.Common;
-using ConcreteEngine.Common.Numerics;
+using ConcreteEngine.Engine.Worlds.Data;
 using ConcreteEngine.Graphics.Gfx;
 using ConcreteEngine.Graphics.Gfx.Contracts;
 using ConcreteEngine.Graphics.Gfx.Definitions;
-using ConcreteEngine.Engine.Worlds.Data;
 using ConcreteEngine.Graphics.Gfx.Resources;
 using ConcreteEngine.Graphics.Gfx.Utility;
 using ConcreteEngine.Graphics.Primitives;
@@ -16,12 +13,11 @@ using ConcreteEngine.Graphics.Primitives;
 
 namespace ConcreteEngine.Engine.Worlds.Render.Batching;
 
-
 public sealed class ParticleBatcher : RenderBatcher
 {
     public const int DefaultCapacity = 64;
     private ParticleInstanceData[] _particleData = Array.Empty<ParticleInstanceData>();
-    
+
     private VertexBufferId _particleVbo = default;
 
     internal ParticleBatcher(GfxContext gfx) : base(gfx)

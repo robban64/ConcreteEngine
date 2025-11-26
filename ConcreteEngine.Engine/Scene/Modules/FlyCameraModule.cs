@@ -21,14 +21,14 @@ public sealed class FlyCameraModule : GameModule
 
     private Vector3 _currentVelocity;
     private YawPitch _targetOrientation;
-    
+
     public override void Initialize()
     {
         _input = Context.GetSystem<IInputSystem>().InputSource;
         _camera = Context.World.Camera;
     }
 
-    
+
     public override void Update(in UpdateTickInfo frameCtx)
     {
     }
@@ -38,21 +38,20 @@ public sealed class FlyCameraModule : GameModule
     {
         MovementController(fixedDt, BaseSpeed);
         RotateController(fixedDt, RotationSpeed);
-
     }
-    
+
     private void MovementController(float dt, float speed)
     {
         float acceleration = 8.0f;
         float friction = 8.0f;
 
         Vector3 targetVelocity = default;
-        
+
         if (_input.IsKeyDown(Key.W))
             targetVelocity += _camera.Forward;
         if (_input.IsKeyDown(Key.S))
             targetVelocity -= _camera.Forward;
-        
+
         if (targetVelocity.LengthSquared() > 0)
             targetVelocity = Vector3.Normalize(targetVelocity) * speed;
 
@@ -60,13 +59,12 @@ public sealed class FlyCameraModule : GameModule
         if (targetVelocity == Vector3.Zero) t = 1.0f - MathF.Exp(-friction * dt);
         _currentVelocity = Vector3.Lerp(_currentVelocity, targetVelocity, t);
         _camera.Translation += _currentVelocity * dt;
-
     }
 
     private void RotateController(float dt, float rotateSpeed)
     {
         var speed = rotateSpeed * dt;
-        
+
         var orientation = _targetOrientation;
         if (_input.IsKeyDown(Key.A))
             orientation = orientation.AddYaw(speed);

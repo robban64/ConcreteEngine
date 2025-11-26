@@ -2,7 +2,7 @@ namespace ConcreteEngine.Engine.Assets.Data;
 
 public sealed record AssetFileEntry
 {
-    internal AssetFileEntry(AssetFileId id,  AssetFileSpec spec)
+    internal AssetFileEntry(AssetFileId id, AssetFileSpec spec)
     {
         Id = id;
         Storage = spec.Storage;
@@ -13,13 +13,13 @@ public sealed record AssetFileEntry
         Source = spec.Source;
     }
 
-    public AssetFileId Id { get;  }
-    public AssetStorageKind Storage { get;  }
-    public string LogicalName { get;  }
-    public string RelativePath { get;  }
-    public long SizeBytes { get;  }
-    public string? ContentHash { get;  }
-    public string? Source { get;  }
+    public AssetFileId Id { get; }
+    public AssetStorageKind Storage { get; }
+    public string LogicalName { get; }
+    public string RelativePath { get; }
+    public long SizeBytes { get; }
+    public string? ContentHash { get; }
+    public string? Source { get; }
 }
 
 internal sealed class AssetFileSpec(

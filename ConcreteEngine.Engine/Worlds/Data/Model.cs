@@ -35,7 +35,7 @@ public readonly ref struct ModelPartView(
 }
 
 public readonly ref struct ModelAnimationView(
-    ModelAnimation  animations,
+    ModelAnimation animations,
     ReadOnlySpan<Matrix4x4> boneTransforms,
     ref Matrix4x4 invTransform,
     RangeU16 range)

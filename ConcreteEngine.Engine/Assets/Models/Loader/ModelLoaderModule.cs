@@ -3,7 +3,6 @@
 using ConcreteEngine.Engine.Assets.Data;
 using ConcreteEngine.Engine.Assets.Descriptors;
 using ConcreteEngine.Engine.Assets.Internal;
-using ConcreteEngine.Engine.Assets.Models.Importer;
 
 #endregion
 
@@ -21,9 +20,9 @@ internal sealed class ModelLoaderModule
     }
 
     public Model LoadModel(
-        AssetId assetId, 
-        MeshDescriptor manifest, 
-        bool isCoreAsset, 
+        AssetId assetId,
+        MeshDescriptor manifest,
+        bool isCoreAsset,
         Action<ReadOnlySpan<IAssetEmbeddedDescriptor>> uploadEmbedded,
         out AssetFileSpec[] fileSpecs)
     {
@@ -32,9 +31,9 @@ internal sealed class ModelLoaderModule
         var result = _loader.LoadMesh(refId, manifest.Name, manifest.Filename, out fileSpecs);
         uploadEmbedded(result.EmbeddedTextures);
         uploadEmbedded(result.EmbeddedMaterials);
-        
+
         result.Animation?.ModelName = manifest.Name;
-        
+
         return new Model
         {
             RawId = assetId,
@@ -52,7 +51,7 @@ internal sealed class ModelLoaderModule
         _state.Clear();
         _loader.Teardown();
     }
-    
+
     public void Teardown()
     {
         _state.Clear();

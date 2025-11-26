@@ -1,11 +1,9 @@
 #region
 
-using System.Diagnostics.CodeAnalysis;
 using System.Numerics;
 using System.Runtime.CompilerServices;
 using ConcreteEngine.Common.Numerics;
 using ConcreteEngine.Engine.Worlds.Data;
-using ConcreteEngine.Renderer.Data;
 using ConcreteEngine.Shared.TransformData;
 
 #endregion
@@ -15,16 +13,16 @@ namespace ConcreteEngine.Engine.Worlds.Entities;
 public struct Transform(in Vector3 translation, in Vector3 scale, in Quaternion rotation)
 {
     public static readonly Transform Baseline = new(default, Vector3.One, Quaternion.Identity);
-    
+
     public Vector3 Translation = translation;
     public Vector3 Scale = scale;
     public Quaternion Rotation = rotation;
-    
+
     internal static ref TransformData AsData(ref Transform component) =>
         ref Unsafe.As<Transform, TransformData>(ref component);
 
     internal static ref Transform FromData(ref TransformData data) =>
-        ref Unsafe.As<TransformData, Transform>(ref data); 
+        ref Unsafe.As<TransformData, Transform>(ref data);
 
     /*
     public TransformData Data = new(in translation, in scale, in rotation);

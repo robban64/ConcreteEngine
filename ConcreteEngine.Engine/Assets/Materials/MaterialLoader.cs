@@ -5,7 +5,6 @@ using ConcreteEngine.Engine.Assets.Data;
 using ConcreteEngine.Engine.Assets.Descriptors;
 using ConcreteEngine.Engine.Assets.Shaders;
 using ConcreteEngine.Engine.Assets.Textures;
-using ConcreteEngine.Graphics.Gfx;
 using ConcreteEngine.Graphics.Gfx.Definitions;
 using ConcreteEngine.Renderer.Definitions;
 
@@ -85,22 +84,21 @@ internal sealed class MaterialLoader
     {
         AssetTextureSlot[] slots =
         [
-            new (default, TextureSlotKind.Albedo),
-            new (default, TextureSlotKind.Normal),
-            new (default, TextureSlotKind.Mask),
-            new (default, TextureSlotKind.Shadowmap),
-            
+            new(default, TextureSlotKind.Albedo),
+            new(default, TextureSlotKind.Normal),
+            new(default, TextureSlotKind.Mask),
+            new(default, TextureSlotKind.Shadowmap),
         ];
         int idx = 0;
         foreach (var gid in record.EmbeddedTextures.Values)
         {
-            if(!store.TryGetByEmbeddedGid<Texture2D>(gid, out var texture))
+            if (!store.TryGetByEmbeddedGid<Texture2D>(gid, out var texture))
                 throw new ArgumentException($"Embedded texture {gid} not found");
-            
-            if(texture.SlotKind == TextureSlotKind.Albedo)
+
+            if (texture.SlotKind == TextureSlotKind.Albedo)
                 slots[0] = slots[0].WithAssetId(texture.RawId);
-            
-            if(texture.SlotKind == TextureSlotKind.Normal)
+
+            if (texture.SlotKind == TextureSlotKind.Normal)
                 slots[1] = slots[1].WithAssetId(texture.RawId);
         }
 
@@ -115,7 +113,6 @@ internal sealed class MaterialLoader
             Params = matParams,
             IsCoreAsset = false
         };
-
     }
 
 

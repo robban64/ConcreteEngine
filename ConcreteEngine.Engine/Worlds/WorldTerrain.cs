@@ -7,7 +7,6 @@ using ConcreteEngine.Common.Numerics.Maths;
 using ConcreteEngine.Engine.Assets.Data;
 using ConcreteEngine.Engine.Assets.Textures;
 using ConcreteEngine.Engine.Worlds.Data;
-using ConcreteEngine.Engine.Worlds.Entities;
 using ConcreteEngine.Engine.Worlds.Render;
 using ConcreteEngine.Engine.Worlds.Render.Batching;
 using ConcreteEngine.Renderer.Data;
@@ -27,7 +26,7 @@ public sealed class WorldTerrain
     internal TerrainBatcher Terrain { get; private set; }
 
     private AssetRef<Texture2D> _heightmap;
-    
+
     private MaterialTable _materialTable;
     private IMeshTable _meshTable;
 
@@ -35,7 +34,7 @@ public sealed class WorldTerrain
     internal WorldTerrain()
     {
     }
-    
+
     public bool IsActive => _heightmap.IsValid && Terrain.TextureRef.IsValid && Material > 0;
     public void SetMaterial(MaterialId materialId) => Material = materialId;
 
@@ -92,28 +91,27 @@ public sealed class WorldTerrain
         float maxHeight = Terrain.MaxHeight;
         var size = Terrain.Dimension;
 
-        var n = Vector3.UnitY; 
-        Vector3 p0 = default; 
+        var n = Vector3.UnitY;
+        Vector3 p0 = default;
 
-        var numerator = Vector3.Dot(p0 - ray.Position, n); 
-        var denominator = Vector3.Dot(ray.Direction, n); 
-    
+        var numerator = Vector3.Dot(p0 - ray.Position, n);
+        var denominator = Vector3.Dot(ray.Direction, n);
+
         if (Math.Abs(denominator) < 1e-6f)
-            return Vector3.Zero; 
+            return Vector3.Zero;
 
         var t = numerator / denominator;
         if (t < 0) return Vector3.Zero;
         var pointOnPlane = ray.GetPointOnRay(t);
-        
+
         if (pointOnPlane.X < 0 || pointOnPlane.Z < 0 || pointOnPlane.X > size || pointOnPlane.Z > size)
             return Vector3.Zero;
-    
+
         var terrainHeight = GetSmoothHeight(pointOnPlane.X, pointOnPlane.Z);
-    
+
         if (Math.Abs(pointOnPlane.Y - terrainHeight) > maxHeight)
-            return Vector3.Zero; 
-    
+            return Vector3.Zero;
+
         return pointOnPlane with { Y = terrainHeight };
     }
-
 }

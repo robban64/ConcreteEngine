@@ -10,7 +10,6 @@ using ConcreteEngine.Engine.Editor.Data;
 using ConcreteEngine.Engine.Editor.Definitions;
 using ConcreteEngine.Engine.Worlds.Data;
 using ConcreteEngine.Engine.Worlds.Entities;
-using ConcreteEngine.Graphics.Gfx.Contracts;
 using ConcreteEngine.Graphics.Gfx.Resources;
 using ConcreteEngine.Renderer.Data;
 using ConcreteEngine.Renderer.Passes;
@@ -89,7 +88,6 @@ internal static class EngineCommandHandler
         ctx.AddLog(StructStr<MeshPart>());
         ctx.AddLog(StructStr<DrawEntity>());
         ctx.AddLog(StructStr<MaterialTag>());
-
     }
 
 

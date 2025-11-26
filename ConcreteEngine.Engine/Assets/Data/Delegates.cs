@@ -12,7 +12,6 @@ internal delegate TAsset AssetAssembleDel<out TAsset, in TDesc>(AssetId id, TDes
 internal delegate TAsset EmbeddedAssembleDel<out TAsset, in TEmbedded>(AssetId id, TEmbedded manifest, AssetStore store)
     where TAsset : AssetObject where TEmbedded : class, IAssetEmbeddedDescriptor;
 
-
 internal delegate TAsset AssetFileAssembleDel<out TAsset, in TDesc>(
     AssetId id,
     TDesc manifest,
@@ -27,9 +26,6 @@ internal delegate TAsset AssetWithEmbeddedDel<out TAsset, in TDesc>(
     Action<ReadOnlySpan<IAssetEmbeddedDescriptor>> uploadEmbedded,
     out AssetFileSpec[] fileSpecs
 ) where TAsset : AssetObject where TDesc : class, IAssetDescriptor;
-
-
-
 
 internal delegate void AssetFileReloadDel<in TAsset>(
     TAsset asset,

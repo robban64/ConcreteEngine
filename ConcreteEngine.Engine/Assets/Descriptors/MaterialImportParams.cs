@@ -1,5 +1,9 @@
+#region
+
 using System.Numerics;
 using ConcreteEngine.Common.Numerics;
+
+#endregion
 
 namespace ConcreteEngine.Engine.Assets.Descriptors;
 
@@ -16,6 +20,7 @@ internal struct MaterialImportParams
     public bool HasOpacity;
     public bool HasSpecularFactor;
     public bool HasSpecular;
+
     public bool HasShininess;
     //public bool HasUvRepeat;
 }

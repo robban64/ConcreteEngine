@@ -1,10 +1,8 @@
 #region
 
 using ConcreteEngine.Common;
-using ConcreteEngine.Common.Time;
 using ConcreteEngine.Engine.Assets.Data;
 using ConcreteEngine.Engine.Assets.Descriptors;
-using ConcreteEngine.Engine.Assets.Materials;
 using ConcreteEngine.Engine.Editor.Diagnostics;
 using ConcreteEngine.Shared.Diagnostics;
 
@@ -143,7 +141,7 @@ internal sealed class AssetStore : IAssetStore
     {
         asset = null!;
         if (!_byEmbedded.TryGetValue(gid, out var assetId)) return false;
-        if(!_assets.TryGetValue(assetId, out var obj) || obj is not TAsset tAsset) return false;
+        if (!_assets.TryGetValue(assetId, out var obj) || obj is not TAsset tAsset) return false;
 
         asset = tAsset;
         return true;
@@ -246,7 +244,6 @@ internal sealed class AssetStore : IAssetStore
     }
 
 
-    
     internal TAsset RegisterWithEmbedded<TAsset, TDesc>(
         TDesc descriptor,
         bool isCoreAsset,
@@ -272,9 +269,9 @@ internal sealed class AssetStore : IAssetStore
         ArgumentNullException.ThrowIfNull(embedded.FileSpec);
         ArgumentOutOfRangeException.ThrowIfZero(embedded.FileSpec.Length);
 
-        if(_byEmbedded.ContainsKey(embedded.GId))
+        if (_byEmbedded.ContainsKey(embedded.GId))
             throw new InvalidOperationException($"Embedded resource is already registered. {embedded.GId}");
-        
+
         var id = MakeAssetId();
         var asset = factory(id, embedded, this);
         _byEmbedded.Add(embedded.GId, id);
@@ -283,7 +280,6 @@ internal sealed class AssetStore : IAssetStore
         RegisterInternal(id, asset, embedded.FileSpec);
         Logger.LogString(LogScope.Assets, $"{asset.Name} - Embedded {typeof(TAsset).Name} loaded");
         return asset;
-
     }
 
     private void RegisterInternal<TAsset>(AssetId id, TAsset asset, ReadOnlySpan<AssetFileSpec> fileSpecs)
@@ -295,7 +291,7 @@ internal sealed class AssetStore : IAssetStore
 
         if (!_assets.TryAdd(id, asset))
             throw new InvalidOperationException($"Asset '{asset.Name}' is already registered by id.");
-        
+
         if (!_names.TryAdd(new AssetKey(typeof(TAsset), asset.Name), id))
             throw new InvalidOperationException($"Asset '{asset.Name}' is already registered by type/name.");
 

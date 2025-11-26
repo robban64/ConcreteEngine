@@ -1,9 +1,6 @@
 #region
 
-using System.Diagnostics;
 using System.Numerics;
-using System.Runtime.CompilerServices;
-using System.Runtime.InteropServices;
 using ConcreteEngine.Common.Collections;
 using ConcreteEngine.Common.Numerics;
 using ConcreteEngine.Engine.Assets;
@@ -43,7 +40,7 @@ internal sealed class MeshTable : IMeshTable
     private Matrix4x4[] _boneTransforms = new Matrix4x4[DefaultBufferCap];
 
 */
-    
+
     private readonly Dictionary<ModelId, ModelAnimation> _modelAnimations = new(32);
     private int _animationIdx = 0;
 
@@ -62,7 +59,7 @@ internal sealed class MeshTable : IMeshTable
         var range = _modelPartRanges[index];
         if ((uint)(range.Length + range.Offset) > (uint)_meshParts.Length)
             throw new IndexOutOfRangeException();
-        
+
         var parts = _meshParts.AsSpan(range.Offset, range.Length);
         var locals = _partTransforms.AsSpan(range.Offset, range.Length);
         var boxes = _partBoxes.AsSpan(range.Offset, range.Length);
@@ -91,7 +88,7 @@ internal sealed class MeshTable : IMeshTable
     {
         if (_animationIdx > _modelBoneRanges.Length)
             throw new IndexOutOfRangeException();
-                
+
         var ranges = _modelBoneRanges.AsSpan(0, _animationIdx);
         var last = ranges[^1];
         var boneTransforms = _boneTransforms.AsSpan(0, last.Offset + last.Length);
@@ -150,38 +147,39 @@ internal sealed class MeshTable : IMeshTable
                 idx++;
             }
         }
+
         _partIdx = idx;
 
         foreach (var model in models)
         {
-            if(model.Animation is null) continue;
+            if (model.Animation is null) continue;
             _modelAnimations.Add(model.ModelId, model.Animation);
         }
 
 
-       /* if (animatedModels == 0) return;
+        /* if (animatedModels == 0) return;
 
-        EnsureAnimatedCapacity(totalBones, animatedModels);
+         EnsureAnimatedCapacity(totalBones, animatedModels);
 
-        idx = _animationIdx;
-        for (var i = 0; i < models.Count; i++)
-        {
-            var model = models[i];
-            if (model.Animation is null) continue;
+         idx = _animationIdx;
+         for (var i = 0; i < models.Count; i++)
+         {
+             var model = models[i];
+             if (model.Animation is null) continue;
 
-            _modelAnimations.Add(model.Animation);
+             _modelAnimations.Add(model.Animation);
 
-            var modelBones = model.Animation.GetBoneTransformSpan();
-            var boneRangeSpan = _boneTransforms.AsSpan(idx, modelBones.Length);
+             var modelBones = model.Animation.GetBoneTransformSpan();
+             var boneRangeSpan = _boneTransforms.AsSpan(idx, modelBones.Length);
 
-            modelBones.CopyTo(boneRangeSpan);
-            _modelBoneInvTransform[idx] = model.Animation.InverseRootTransform;
-            _animationByModel[idx] = model.ModelId;
-            _modelBoneRanges[idx] = new RangeU16(idx, modelBones.Length);
-            idx += modelBones.Length;
-        }
+             modelBones.CopyTo(boneRangeSpan);
+             _modelBoneInvTransform[idx] = model.Animation.InverseRootTransform;
+             _animationByModel[idx] = model.ModelId;
+             _modelBoneRanges[idx] = new RangeU16(idx, modelBones.Length);
+             idx += modelBones.Length;
+         }
 
-        _animationIdx = idx;*/
+         _animationIdx = idx;*/
     }
 
     private void EnsureCapacity(int cap, int rangeCap)

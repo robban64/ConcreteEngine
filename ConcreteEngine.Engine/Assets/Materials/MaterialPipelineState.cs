@@ -1,4 +1,8 @@
+#region
+
 using ConcreteEngine.Graphics.Gfx.Contracts;
+
+#endregion
 
 namespace ConcreteEngine.Engine.Assets.Materials;
 

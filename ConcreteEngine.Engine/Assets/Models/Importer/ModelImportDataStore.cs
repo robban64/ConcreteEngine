@@ -1,3 +1,5 @@
+#region
+
 using System.Numerics;
 using ConcreteEngine.Common;
 using ConcreteEngine.Common.Collections;
@@ -5,6 +7,8 @@ using ConcreteEngine.Common.Numerics;
 using ConcreteEngine.Engine.Assets.Models.Loader;
 using ConcreteEngine.Graphics.Primitives;
 using static ConcreteEngine.Engine.Assets.Models.Importer.Constants;
+
+#endregion
 
 namespace ConcreteEngine.Engine.Assets.Models.Importer;
 
@@ -92,7 +96,7 @@ internal sealed class ModelImportDataStore
         );
     }
 
-    public void EnsureCapacity(int?  indexCount = null, int? vertexCount = null, int? skinnedCount = null)
+    public void EnsureCapacity(int? indexCount = null, int? vertexCount = null, int? skinnedCount = null)
     {
         if (indexCount is { } iCount && (uint)indexCount > _indices.Length)
         {

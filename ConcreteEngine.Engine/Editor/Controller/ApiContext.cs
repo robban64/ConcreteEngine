@@ -1,6 +1,10 @@
+#region
+
 using ConcreteEngine.Engine.Assets;
 using ConcreteEngine.Engine.Worlds;
 using ConcreteEngine.Renderer.State;
+
+#endregion
 
 namespace ConcreteEngine.Engine.Editor.Controller;
 
@@ -21,6 +25,6 @@ internal sealed class ApiContext
 
     public void OnRenderFrame(in RenderFrameInfo renderFrameInfo)
     {
-        _frameInfo =  renderFrameInfo;
+        _frameInfo = renderFrameInfo;
     }
 }

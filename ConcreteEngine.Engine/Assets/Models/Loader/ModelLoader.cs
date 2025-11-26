@@ -1,13 +1,10 @@
 #region
 
 using ConcreteEngine.Common;
-using ConcreteEngine.Common.Numerics;
 using ConcreteEngine.Engine.Assets.Data;
-using ConcreteEngine.Engine.Assets.Descriptors;
 using ConcreteEngine.Engine.Assets.Internal;
 using ConcreteEngine.Engine.Assets.IO;
 using ConcreteEngine.Engine.Assets.Models.Importer;
-using ConcreteEngine.Graphics.Primitives;
 
 #endregion
 

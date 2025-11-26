@@ -1,21 +1,17 @@
-using System.Numerics;
-using ConcreteEngine.Common;
-using ConcreteEngine.Common.Collections;
+#region
+
 using ConcreteEngine.Common.Numerics.Extensions;
 using ConcreteEngine.Engine.Assets.Internal;
 using ConcreteEngine.Engine.Assets.Models.Loader;
 using ConcreteEngine.Graphics.Primitives;
-using static ConcreteEngine.Engine.Assets.Models.Importer.Constants;
 using AssimpMesh = Silk.NET.Assimp.Mesh;
-using AssimpScene = Silk.NET.Assimp.Scene;
-using AssimpNode = Silk.NET.Assimp.Node;
-using AssimpMaterial = Silk.NET.Assimp.Material;
+
+#endregion
 
 namespace ConcreteEngine.Engine.Assets.Models.Importer;
 
 internal sealed class MeshProcessor(ModelImportDataStore dataStore)
 {
-    
     public unsafe MeshCreationInfo LoadAndUploadMesh(AssimpMesh* mesh, AssetGfxUploader gfxUploader, bool isAnimated)
     {
         var vertexCount = (int)mesh->MNumVertices;
@@ -41,7 +37,7 @@ internal sealed class MeshProcessor(ModelImportDataStore dataStore)
         return info;
     }
 
-    
+
     private static unsafe void WriteVertices(AssimpMesh* mesh, Span<Vertex3D> vertices)
     {
         ArgumentOutOfRangeException.ThrowIfLessThan(vertices.Length, (int)mesh->MNumVertices, nameof(vertices.Length));
@@ -79,7 +75,7 @@ internal sealed class MeshProcessor(ModelImportDataStore dataStore)
         var count = mesh->MNumVertices;
         if (count > result.Length || count > skinned.Length)
             throw new IndexOutOfRangeException();
-        
+
         for (int i = 0; i < count; i++)
         {
             ref readonly var skinnedVertex = ref skinned[i];

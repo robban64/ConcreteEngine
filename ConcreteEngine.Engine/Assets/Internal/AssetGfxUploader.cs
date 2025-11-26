@@ -34,12 +34,12 @@ internal sealed class AssetGfxUploader
         var vSpan = data.Vertices;
         var iSpan = data.Indices;
 
-        var properties =  MeshDrawProperties.MakeElemental(drawCount: iSpan.Length);
-        
+        var properties = MeshDrawProperties.MakeElemental(drawCount: iSpan.Length);
+
         var builder = _meshes.StartUploadBuilder(in properties);
         builder.UploadVertices(vSpan, BufferUsage.StaticDraw, BufferStorage.Static, BufferAccess.None);
         builder.UploadIndices(iSpan, BufferUsage.StaticDraw, BufferStorage.Static, BufferAccess.None);
-        
+
         Span<VertexAttribute> attribs = stackalloc VertexAttribute[6];
         if (typeof(T) == typeof(Vertex3DSkinned))
         {
@@ -49,13 +49,13 @@ internal sealed class AssetGfxUploader
         else
         {
             FillAttributes(attribs, isAnimated: false);
-            builder.SetAttributeSpan(attribs.Slice(0,4));
+            builder.SetAttributeSpan(attribs.Slice(0, 4));
         }
-        
+
         var meshId = _meshes.FinishUploadBuilder(out var meta);
         data.Result = new MeshCreationInfo(meshId, meta.DrawCount);
     }
-    
+
     public void UploadTexture(ReadOnlySpan<byte> data, in TextureUploadMeta meta, out TextureCreationInfo info)
     {
         var desc = meta.TextureDesc;
@@ -82,7 +82,7 @@ internal sealed class AssetGfxUploader
         info = new ShaderCreationInfo(shaderId, samplers);
     }
 
-    
+
     private static void FillAttributes(Span<VertexAttribute> attribs, bool isAnimated)
     {
         ArgumentOutOfRangeException.ThrowIfNotEqual(attribs.Length, 6, nameof(attribs));
@@ -92,7 +92,7 @@ internal sealed class AssetGfxUploader
         attribs[1] = attribBuilder.Make<Vector2>(1);
         attribs[2] = attribBuilder.Make<Vector3>(2);
         attribs[3] = attribBuilder.Make<Vector3>(3);
-        
+
         if (isAnimated)
         {
             attribs[4] = attribBuilder.Make<Int4>(4, vertexFormat: VertexFormat.Integer);

@@ -1,8 +1,12 @@
+#region
+
 using System.Runtime.InteropServices;
 using ConcreteEngine.Common;
 using ConcreteEngine.Common.Numerics;
 using ConcreteEngine.Engine.Assets.Descriptors;
 using static ConcreteEngine.Engine.Assets.Models.Importer.Constants;
+
+#endregion
 
 namespace ConcreteEngine.Engine.Assets.Models.Loader;
 
@@ -12,7 +16,7 @@ internal ref struct ModelLoaderResult(int drawCount, in BoundingBox bounds)
     public ref readonly BoundingBox Bounds = ref bounds;
 
     public required ModelAnimation? Animation { get; init; }
-    
+
     public required ModelMesh[] MeshParts { get; init; }
 
     // Descriptors

@@ -1,4 +1,8 @@
+#region
+
 using Silk.NET.Assimp;
+
+#endregion
 
 namespace ConcreteEngine.Engine.Assets.Models.Importer;
 
@@ -14,8 +18,8 @@ internal static class Constants
         PostProcessSteps.OptimizeMeshes |
         PostProcessSteps.FlipUVs |
         PostProcessSteps.LimitBoneWeights;
-    
-    
+
+
     internal const int DefaultCapacity = 8192;
     internal const int BoneTransformsCapacity = 64;
     internal const int MaxParts = 8;

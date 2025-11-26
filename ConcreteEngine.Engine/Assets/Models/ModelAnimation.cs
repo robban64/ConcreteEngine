@@ -1,5 +1,8 @@
+#region
+
 using System.Numerics;
-using System.Runtime.InteropServices;
+
+#endregion
 
 namespace ConcreteEngine.Engine.Assets.Models;
 
@@ -10,7 +13,7 @@ public sealed class ModelAnimation
     private readonly Dictionary<int, string> _boneMapping;
     private readonly Matrix4x4[] _boneTransforms;
     private readonly Matrix4x4 _inverseRootTransform;
-    
+
     public string ModelName { get; internal set; } = string.Empty;
 
     internal ModelAnimation(

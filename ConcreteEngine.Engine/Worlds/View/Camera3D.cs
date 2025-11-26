@@ -182,9 +182,9 @@ public sealed class Camera3D : ICamera
     {
         get
         {
-            if(_raycaster.Generation != Generation)
+            if (_raycaster.Generation != Generation)
                 _raycaster.UpdateFromCamera(Generation, _viewportSize, in _viewMatrix, in _projectionMatrix);
-            
+
             return _raycaster;
         }
     }

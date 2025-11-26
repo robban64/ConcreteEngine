@@ -64,7 +64,7 @@ internal sealed class AssetLoader
 
     private void LoadEmbeddedMaterial(ReadOnlySpan<MaterialEmbeddedDescriptor> materials) =>
         _materialLoader!.LoadEmbeddedMaterials(_store!, materials);
-    
+
     private void EnqueueEmbedded(ReadOnlySpan<IAssetEmbeddedDescriptor> embedded)
     {
         InvalidOpThrower.ThrowIfNull(_embeddedTextures);
@@ -85,7 +85,7 @@ internal sealed class AssetLoader
     {
         if (_embeddedTextures.Count > 0)
         {
-            EmbeddedAssembleDel<Texture2D,TextureEmbeddedDescriptor> del = _textureLoader!.LoadEmbeddedTexture;
+            EmbeddedAssembleDel<Texture2D, TextureEmbeddedDescriptor> del = _textureLoader!.LoadEmbeddedTexture;
             foreach (var it in _embeddedTextures)
             {
                 _store!.RegisterEmbedded(it, del);
@@ -96,7 +96,7 @@ internal sealed class AssetLoader
         {
             LoadEmbeddedMaterial(CollectionsMarshal.AsSpan(_embeddedMaterials));
         }
-        
+
         _embeddedMaterials.Clear();
         _embeddedTextures.Clear();
     }
@@ -161,7 +161,7 @@ internal sealed class AssetLoader
         _loadCubeMapDel = null;
         _loadMeshDel = null;
         _enqueueDel = null!;
-        
+
         _embeddedTextures.Clear();
         _embeddedMaterials.Clear();
         _embeddedTextures = null!;
@@ -179,7 +179,7 @@ internal sealed class AssetLoader
         _gfxUploader = null;
 
         IsActive = false;
-        
+
 
         Logger.LogString(LogScope.Assets, "Asset Loader - Closed");
     }

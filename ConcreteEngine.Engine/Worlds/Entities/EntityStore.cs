@@ -97,6 +97,4 @@ public sealed class EntityStore<T> where T : unmanaged
         where T3 : unmanaged =>
         new(this, r2, r3);
 */
-
-
 }

@@ -1,12 +1,12 @@
-using System.Collections.ObjectModel;
-using ConcreteEngine.Common.Numerics;
+#region
+
 using ConcreteEngine.Engine.Assets.Data;
 using ConcreteEngine.Engine.Assets.Materials;
 using ConcreteEngine.Engine.Assets.Textures;
 using ConcreteEngine.Graphics.Gfx.Definitions;
-using ConcreteEngine.Renderer.Data;
 using ConcreteEngine.Renderer.Definitions;
-using ConcreteEngine.Shared.RenderData;
+
+#endregion
 
 namespace ConcreteEngine.Engine.Assets.Descriptors;
 

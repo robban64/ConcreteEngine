@@ -24,7 +24,7 @@ public sealed class MaterialTable : IMaterialTable
     public void PushTemporary(in MaterialTag tag)
     {
     }
-    
+
 
     public MaterialTagKey Add(in MaterialTag tag)
     {

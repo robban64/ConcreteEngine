@@ -12,7 +12,7 @@ internal sealed class GameTickScheduler
 {
     private const int GameTicksPerSecond = 60;
     private const int MaxTicksPerFrame = 6;
-    
+
     private const float GameTickDeltaTime = 1f / GameTicksPerSecond;
     private const float DiagnosticTickDeltaTime = 0.5f;
 

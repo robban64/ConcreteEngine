@@ -6,7 +6,7 @@ public abstract class AssetObject : IComparable<AssetObject>
     public string Name { get; internal set; } = null!;
     public required bool IsCoreAsset { get; init; }
     public int Generation { get; private set; }
-    
+
     public bool IsEmbedded { get; internal set; } = false;
 
     public abstract AssetKind Kind { get; }

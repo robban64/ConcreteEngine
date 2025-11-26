@@ -14,13 +14,12 @@ public readonly struct AssetTextureSlot(
     TexturePixelFormat pixelFormat = TexturePixelFormat.SrgbAlpha
 )
 {
-    public readonly AssetId Asset  = asset;
-    public readonly TextureSlotKind SlotKind  = slotKind;
-    public readonly TextureKind TextureKind  = textureKind;
-    public readonly TexturePixelFormat PixelFormat  = pixelFormat;
+    public readonly AssetId Asset = asset;
+    public readonly TextureSlotKind SlotKind = slotKind;
+    public readonly TextureKind TextureKind = textureKind;
+    public readonly TexturePixelFormat PixelFormat = pixelFormat;
 
     public bool IsFallback => !Asset.IsValid;
-    
-    public AssetTextureSlot WithAssetId(AssetId assetId) => new(assetId, SlotKind, TextureKind, PixelFormat);
 
+    public AssetTextureSlot WithAssetId(AssetId assetId) => new(assetId, SlotKind, TextureKind, PixelFormat);
 }

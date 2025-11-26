@@ -13,9 +13,9 @@ namespace ConcreteEngine.Engine.Data;
 public sealed class RenderEngineFrameInfo
 {
     private const int RandomSeed = 9999;
-    
-    private Random rnd =  new Random(RandomSeed);
-    
+
+    private Random rnd = new Random(RandomSeed);
+
     public long FrameIndex { get; private set; } = -1;
     public long TimeStamp { get; private set; } = -1;
     public float Alpha { get; private set; } = 0;
@@ -54,7 +54,8 @@ public sealed class RenderEngineFrameInfo
         OutputSize = window.OutputSize;
 
         _renderFrameInfo = frameInfo = new RenderFrameInfo(FrameIndex, dt, Alpha, OutputSize);
-        runtimeParams = new RenderRuntimeParams(window.WindowSize, input.MousePosition, Time, RandomSeed, rnd.NextSingle());
+        runtimeParams =
+            new RenderRuntimeParams(window.WindowSize, input.MousePosition, Time, RandomSeed, rnd.NextSingle());
 
         var status = BeginFrameStatus.None;
         if (PrevOutputSize != OutputSize) status = BeginFrameStatus.Resize;

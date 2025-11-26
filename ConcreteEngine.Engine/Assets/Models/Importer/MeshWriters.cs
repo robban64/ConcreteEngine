@@ -1,7 +1,11 @@
+#region
+
 using System.Numerics;
 using ConcreteEngine.Common.Numerics;
 using ConcreteEngine.Engine.Assets.Models.Loader;
 using ConcreteEngine.Graphics.Primitives;
+
+#endregion
 
 namespace ConcreteEngine.Engine.Assets.Models.Importer;
 
@@ -26,7 +30,8 @@ internal ref struct MeshPartWriter(Span<MeshPartImportResult> parts, Span<Matrix
     public Span<MeshPartImportResult> Parts = parts;
     public Span<Matrix4x4> PartTransforms = partTransforms;
 
-    public void Fill(int index, int materialSlot, MeshCreationInfo creationInfo, in BoundingBox bounds, ref Matrix4x4 partTransform)
+    public void Fill(int index, int materialSlot, MeshCreationInfo creationInfo, in BoundingBox bounds,
+        ref Matrix4x4 partTransform)
     {
         ref var it = ref Parts[index];
         it.MaterialSlot = materialSlot;
@@ -40,7 +45,7 @@ internal ref struct BoneWriterImporter(Span<SkinningData> skinningData, Span<Mat
 {
     public Span<SkinningData> SkinningData = skinningData;
     public Span<Matrix4x4> BoneTransforms = boneTransforms;
-    
+
     public int MaxBones => BoneTransforms.Length;
 
     public void FillDefaultSkinningData()

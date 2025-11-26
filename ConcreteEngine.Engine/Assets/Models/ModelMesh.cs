@@ -1,10 +1,13 @@
+#region
+
 using System.Numerics;
 using ConcreteEngine.Common.Numerics;
 using ConcreteEngine.Engine.Assets.Data;
 using ConcreteEngine.Graphics.Gfx.Resources;
 
-namespace ConcreteEngine.Engine.Assets.Models;
+#endregion
 
+namespace ConcreteEngine.Engine.Assets.Models;
 
 public sealed class ModelMesh(
     AssetRef<Model> assetRef,
@@ -20,7 +23,7 @@ public sealed class ModelMesh(
 
     public ref readonly Matrix4x4 Transform => ref _transform;
     public ref readonly BoundingBox Bounds => ref _bounds;
-    
+
     public AssetRef<Model> AssetRef { get; init; } = assetRef;
     public string MeshName { get; init; } = meshName;
     public MeshId ResourceId { get; init; } = resourceId;

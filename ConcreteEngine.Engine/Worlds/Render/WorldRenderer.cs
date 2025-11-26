@@ -10,12 +10,9 @@ using ConcreteEngine.Engine.Editor.Data;
 using ConcreteEngine.Engine.Editor.Definitions;
 using ConcreteEngine.Engine.Platform;
 using ConcreteEngine.Engine.Utils;
-using ConcreteEngine.Engine.Worlds.Data;
-using ConcreteEngine.Engine.Worlds.Render.Batching;
 using ConcreteEngine.Engine.Worlds.Utility;
 using ConcreteEngine.Engine.Worlds.View;
 using ConcreteEngine.Graphics;
-using ConcreteEngine.Graphics.Gfx;
 using ConcreteEngine.Graphics.Gfx.Contracts;
 using ConcreteEngine.Graphics.Gfx.Definitions;
 using ConcreteEngine.Graphics.Gfx.Resources;
@@ -47,7 +44,7 @@ public sealed class WorldRenderer : IWorldRenderer
     private readonly MeshTable _meshTable;
     private readonly MaterialTable _materialTable;
     private readonly RenderEntityBus _renderEntityBus;
-    
+
     private readonly EngineEventBus _eventBus;
 
     private bool _hasUploadedMaterial = false;
@@ -81,7 +78,7 @@ public sealed class WorldRenderer : IWorldRenderer
         ArgumentNullException.ThrowIfNull(world);
         _meshTable.Setup(_assets);
         _renderEntityBus.AttachWorld(world);
-        world.AttachRender(_graphics.Gfx ,_meshTable, _materialTable);
+        world.AttachRender(_graphics.Gfx, _meshTable, _materialTable);
 
         _renderEntityBus.CubeId = _assets.StoreImpl.GetByName<Model>("Cube").ModelId;
 
@@ -112,7 +109,9 @@ public sealed class WorldRenderer : IWorldRenderer
                 throw new ArgumentOutOfRangeException(nameof(req.Action));
         }
     }
+
     private FrameProfileTimer _timer = new FrameProfileTimer();
+
     internal void PreRender(
         BeginFrameStatus status,
         in RenderFrameInfo frameInfo,
@@ -133,7 +132,7 @@ public sealed class WorldRenderer : IWorldRenderer
         var renderView = RenderView;
         _renderEntityBus.CollectEntities(in renderView.ViewMatrix, renderView.ProjectionInfo);
         _timer.Begin();
-        _renderEntityBus.ProcessAnimations(frameInfo.DeltaTime,_renderer.CommandBuffer);
+        _renderEntityBus.ProcessAnimations(frameInfo.DeltaTime, _renderer.CommandBuffer);
         _timer.EndPrint();
 
         _renderEntityBus.FlushEntities(_renderer.CommandBuffer);
@@ -195,7 +194,7 @@ public sealed class WorldRenderer : IWorldRenderer
         var shaderCount = _assets.Store.GetMetaSnapshot<Shader>().Count;
 
         builder.RegisterShader(shaderCount, ExtractShaderIds).RegisterCoreShaders(GetCoreShaders);
-        
+
         builder.RegisterFbo<ShadowPassTag>(FboVariant.Default,
             new RegisterFboEntry().AttachDepthTexture(GfxFboDepthTextureDesc.Default())
                 .UseFixedSize(new Size2D(2048, 2048)));
@@ -232,7 +231,7 @@ public sealed class WorldRenderer : IWorldRenderer
                 PresentShader = _assets.Store.GetByName<Shader>("Present").ResourceId,
                 HighlightShader = _assets.Store.GetByName<Shader>("Highlight").ResourceId,
                 BoundingBoxShader = _assets.Store.GetByName<Shader>("BoundingBox").ResourceId,
-                ParticleShader =  _assets.Store.GetByName<Shader>("Particle").ResourceId,
+                ParticleShader = _assets.Store.GetByName<Shader>("Particle").ResourceId,
             };
     }
 }

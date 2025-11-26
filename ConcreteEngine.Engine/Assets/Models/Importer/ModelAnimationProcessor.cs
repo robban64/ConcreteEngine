@@ -1,16 +1,14 @@
-using System.Diagnostics;
+#region
+
 using System.Numerics;
-using System.Runtime.InteropServices;
 using ConcreteEngine.Common;
-using ConcreteEngine.Common.Collections;
-using ConcreteEngine.Common.Numerics;
 using ConcreteEngine.Engine.Assets.Models.Loader;
-using ConcreteEngine.Graphics.Primitives;
 using AssimpMesh = Silk.NET.Assimp.Mesh;
 using AssimpScene = Silk.NET.Assimp.Scene;
 using AssimpNode = Silk.NET.Assimp.Node;
-using AssimpMaterial = Silk.NET.Assimp.Material;
 using static ConcreteEngine.Engine.Assets.Models.Importer.Constants;
+
+#endregion
 
 namespace ConcreteEngine.Engine.Assets.Models.Importer;
 
@@ -39,14 +37,14 @@ internal sealed class ModelAnimationProcessor(ModelImportDataStore dataStore, Mo
 
         return false;
     }
-    
+
     public unsafe void ProcessSceneAnimations(AssimpScene* scene)
     {
         if (state.BoneCount > 0)
         {
             Span<int> defaultData = stackalloc int[state.BoneCount];
             defaultData.Fill(-1);
-            
+
             state.PrepareAnimationState((int)scene->MNumAnimations, defaultData);
 
             BuildSkeletonHierarchy(scene->MRootNode);
@@ -76,7 +74,6 @@ internal sealed class ModelAnimationProcessor(ModelImportDataStore dataStore, Mo
                 state.AppendBone(name, boneIndex);
                 writer.BoneTransforms[boneIndex] = bone->MOffsetMatrix;
                 InvalidOpThrower.ThrowIf(writer.MaxBones > BoneTransformsCapacity, nameof(BoneTransformsCapacity));
-
             }
 
             for (var j = 0; j < 4; j++)

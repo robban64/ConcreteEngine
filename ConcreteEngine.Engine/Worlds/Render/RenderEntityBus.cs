@@ -1,19 +1,14 @@
 #region
 
-using System.Diagnostics;
-using System.Diagnostics.CodeAnalysis;
 using System.Numerics;
 using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
 using ConcreteEngine.Common.Collections;
 using ConcreteEngine.Common.Numerics;
 using ConcreteEngine.Common.Numerics.Maths;
-using ConcreteEngine.Common.Time;
 using ConcreteEngine.Engine.Worlds.Data;
 using ConcreteEngine.Engine.Worlds.Entities;
 using ConcreteEngine.Engine.Worlds.Utility;
-using ConcreteEngine.Graphics.Gfx;
-using ConcreteEngine.Graphics.Gfx.Resources;
 using ConcreteEngine.Renderer.Data;
 using ConcreteEngine.Renderer.Definitions;
 using ConcreteEngine.Renderer.Draw;
@@ -142,7 +137,7 @@ internal sealed class RenderEntityBus
     private readonly Matrix4x4[] _animationGlobals = new Matrix4x4[64];
     private readonly Matrix4x4[] _animationFinal = new Matrix4x4[64];
 
-    
+
     float t = 0;
 
     public void ProcessAnimations(float deltaTime, DrawCommandBuffer buffer)
@@ -187,6 +182,7 @@ internal sealed class RenderEntityBus
                     poseTransform.Scale = LerpVector(track.Scales, track.ScaleTimes, t, Vector3.One);
                     poseTransform.Rotation = LerpQuaternion(track.Rotations, track.RotationTimes, t);
                 }
+
 /*
                 Console.WriteLine("Translation");
                 Console.WriteLine(poseTransform.Translation.ToString());

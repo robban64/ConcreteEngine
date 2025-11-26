@@ -95,7 +95,7 @@ internal sealed class AssetStartupWorker
         return _processOrder == ProcessStepOrder.Finished;
     }
 
-    
+
     public bool Execute()
     {
         switch (_processOrder)

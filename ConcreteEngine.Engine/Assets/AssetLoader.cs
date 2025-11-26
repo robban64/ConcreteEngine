@@ -53,9 +53,14 @@ internal sealed class AssetLoader
 
     public Model LoadMesh(MeshDescriptor manifest, bool isCoreAsset)
     {
+        InvalidOpThrower.ThrowIfAnyNull(_meshLoader, _loadMeshDel, _enqueueDel);
+        
         var model = _store!.RegisterWithEmbedded(manifest, isCoreAsset, _loadMeshDel!, _enqueueDel!);
-        if (_embeddedTextures.Count == 0 && _embeddedMaterials.Count == 0) return model;
-        ProcessEmbedded();
+        if (_embeddedTextures!.Count > 0 || _embeddedMaterials!.Count > 0)
+        {
+            ProcessEmbedded();
+        }
+        _meshLoader!.ClearState();
         return model;
     }
 

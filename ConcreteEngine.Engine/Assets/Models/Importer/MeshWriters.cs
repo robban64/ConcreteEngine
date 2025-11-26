@@ -9,13 +9,13 @@ using ConcreteEngine.Graphics.Primitives;
 
 namespace ConcreteEngine.Engine.Assets.Models.Importer;
 
-internal ref struct VertexWriterImporter(Span<Vertex3D> vertices, Span<uint> indices)
+internal ref struct MeshVertexWriter(Span<Vertex3D> vertices, Span<uint> indices)
 {
     public Span<Vertex3D> Vertices = vertices;
     public Span<uint> Indices = indices;
 }
 
-internal ref struct VertexSkinnedWriterImporter(
+internal ref struct MeshSkinnedVertexWriter(
     Span<Vertex3DSkinned> vertices,
     Span<SkinningData> skinned,
     Span<uint> indices)
@@ -41,7 +41,7 @@ internal ref struct MeshPartWriter(Span<MeshPartImportResult> parts, Span<Matrix
     }
 }
 
-internal ref struct BoneWriterImporter(Span<SkinningData> skinningData, Span<Matrix4x4> boneTransforms)
+internal ref struct MeshBoneWriter(Span<SkinningData> skinningData, Span<Matrix4x4> boneTransforms)
 {
     public Span<SkinningData> SkinningData = skinningData;
     public Span<Matrix4x4> BoneTransforms = boneTransforms;

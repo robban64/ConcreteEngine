@@ -42,16 +42,16 @@ internal sealed class ModelImportDataStore
         return _boneTransforms.AsSpan(0, length);
     }
 
-    public VertexWriterImporter WriteVertex(int vertexCount, int indexCount)
+    public MeshVertexWriter WriteVertex(int vertexCount, int indexCount)
     {
         EnsureCapacity(indexCount, vertexCount: vertexCount);
-        return new VertexWriterImporter(_vertices.AsSpan(0, vertexCount), _indices.AsSpan(0, indexCount));
+        return new MeshVertexWriter(_vertices.AsSpan(0, vertexCount), _indices.AsSpan(0, indexCount));
     }
 
-    public VertexSkinnedWriterImporter WriteVertexSkinned(int vertexCount, int indexCount)
+    public MeshSkinnedVertexWriter WriteVertexSkinned(int vertexCount, int indexCount)
     {
         EnsureCapacity(indexCount, skinnedCount: vertexCount);
-        return new VertexSkinnedWriterImporter(
+        return new MeshSkinnedVertexWriter(
             _verticesSkinned.AsSpan(0, vertexCount),
             _skinningData.AsSpan(0, vertexCount),
             _indices.AsSpan(0, indexCount));
@@ -60,12 +60,12 @@ internal sealed class ModelImportDataStore
     public MeshPartWriter WriteMeshParts() => new(_parts, _partTransforms);
 
 
-    public BoneWriterImporter WriteBones(int vertexCount)
+    public MeshBoneWriter WriteBones(int vertexCount)
     {
         EnsureCapacity(skinnedCount: vertexCount);
         ArgumentOutOfRangeException.ThrowIfGreaterThan(vertexCount, _skinningData.Length);
 
-        return new BoneWriterImporter(
+        return new MeshBoneWriter(
             _skinningData.AsSpan(0, vertexCount),
             _boneTransforms.AsSpan());
     }

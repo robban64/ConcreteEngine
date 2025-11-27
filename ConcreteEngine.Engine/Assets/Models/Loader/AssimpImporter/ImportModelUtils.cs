@@ -20,6 +20,8 @@ internal static class ImportModelUtils
         PostProcessSteps.FlipUVs |
         PostProcessSteps.LimitBoneWeights;
 
+    //internal const int MaxImageBufferCapacity = 1024 * 1024 * 20;
+    //internal const int ImageBufferCapacity = 1024 * 1024 * 4;
 
     internal const int VertexCapacity = 64_000;
     internal const int IndicesCapacity = 128_000;

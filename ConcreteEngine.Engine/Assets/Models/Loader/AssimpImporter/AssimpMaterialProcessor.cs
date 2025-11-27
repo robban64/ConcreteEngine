@@ -199,7 +199,7 @@ internal sealed class AssimpMaterialProcessor(ModelLoaderState state)
 
         var ptr = (byte*)texture->PcData;
         var span = new ReadOnlySpan<byte>(ptr, length);
-
+        
         var buffer = new byte[length];
         span.CopyTo(buffer);
 

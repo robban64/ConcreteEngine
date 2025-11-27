@@ -1,6 +1,10 @@
 #region
 
 using System.Numerics;
+using System.Runtime.CompilerServices;
+using System.Runtime.InteropServices;
+using ConcreteEngine.Common;
+using ConcreteEngine.Common.Numerics.Maths;
 using ConcreteEngine.Graphics.Primitives;
 using Silk.NET.Assimp;
 using AssimpMesh = Silk.NET.Assimp.Mesh;
@@ -17,19 +21,17 @@ internal sealed class AssimpAnimationProcessor(ModelLoaderDataTable dataTable, M
 
     public unsafe void ProcessSceneAnimations(AssimpScene* scene)
     {
-        if (state.BoneCount > 0)
-        {
-            Span<int> defaultData = stackalloc int[state.BoneCount];
-            defaultData.Fill(-1);
+        InvalidOpThrower.ThrowIf(state.BoneCount == 0);
+        
+        Span<int> defaultData = stackalloc int[state.BoneCount];
+        defaultData.Fill(-1);
+        state.PrepareAnimationState((int)scene->MNumAnimations, defaultData);
 
-            state.PrepareAnimationState((int)scene->MNumAnimations, defaultData);
-
-            BuildSkeletonHierarchy(scene->MRootNode);
-        }
-
+        BuildSkeletonHierarchy(scene->MRootNode);
         ProcessAnimations(scene);
     }
 
+    
     public unsafe void BuildSkeletonHierarchy(AssimpNode* node)
     {
         var nodeName = node->MName.AsString;
@@ -48,7 +50,7 @@ internal sealed class AssimpAnimationProcessor(ModelLoaderDataTable dataTable, M
                 var current = node->MParent;
                 while (current != null)
                 {
-                    offset = current->MTransformation * offset;
+                    MatrixMath.MultiplyAffine(in current->MTransformation, in offset, out offset);
                     current = current->MParent;
                 }
 
@@ -106,11 +108,11 @@ internal sealed class AssimpAnimationProcessor(ModelLoaderDataTable dataTable, M
                 var rotCount = (int)channel->MNumRotationKeys;
                 boneTrack.RotationTimes = new float[rotCount];
                 boneTrack.Rotations = new Quaternion[rotCount];
-
+                
                 for (var k = 0; k < rotCount; k++)
                 {
                     boneTrack.RotationTimes[k] = (float)rotKeys[k].MTime;
-                    boneTrack.Rotations[k] = Quaternion.Normalize(rotKeys[k].MValue.AsQuaternion);
+                    boneTrack.Rotations[k] = rotKeys[k].MValue.AsQuaternion;
                 }
 
                 // Scales

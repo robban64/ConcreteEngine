@@ -44,7 +44,7 @@ internal sealed class ModelAssimpImporter
     public unsafe bool ImportMesh(string path)
     {
         _assimp ??= Assimp.GetApi();
-        
+
         var scene = _assimp.ImportFile(path, (uint)AssimpFlags);
 
         if (scene == null || scene->MFlags == Assimp.SceneFlagsIncomplete || scene->MRootNode == null)
@@ -76,7 +76,7 @@ internal sealed class ModelAssimpImporter
         int startIdx = 0;
         TraverseSceneNodes(scene->MRootNode, scene, ref startIdx, Matrix4x4.Identity);
 
-        if (_state.HasAnimationChannels)
+        if (_state.HasAnimationChannels && _state.BoneCount > 0)
         {
             _animationProcessor.ProcessSceneAnimations(scene);
         }
@@ -103,14 +103,14 @@ internal sealed class ModelAssimpImporter
             var vertexCount = (int)mesh->MNumVertices;
 
             if (!_state.HasProcessedMeshIndex(meshIndex, out info))
+            {
                 info = _meshProcessor.ProcessAndUploadMeshes(mesh, meshIndex, _gfxUploader, out bounds);
+                _dataTable.WriteMeshParts().Fill(meshIndex, slot, info, in bounds, in local);
 
-
+            }
+            //var writer = _dataTable.WriteMeshParts();
+            //writer.Fill(traverseIndex, slot, info, in bounds, in local);
             //BoundingBox.FromPoints(new Span<Vector3>(mesh->MVertices, vertexCount), out var bounds);
-            //var bb = new BoundingBox(mesh->MAABB.Min.ToSystem(), mesh->MAABB.Max.ToSystem());
-
-            var writer = _dataTable.WriteMeshParts();
-            writer.Fill(traverseIndex, slot, info, in bounds, in local);
 
             traverseIndex++;
         }

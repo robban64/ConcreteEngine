@@ -30,36 +30,6 @@ internal sealed class AssimpMeshProcessor(ModelLoaderDataTable dataTable, ModelL
         return info;
     }
 
-    public unsafe void BuildSkeletonHierarchy(AssimpNode* node)
-    {
-        var nodeName = node->MName.AsString;
-
-        if (state.TryGetBoneIndex(nodeName, out int boneIndex))
-        {
-            if (node->MParent != null)
-            {
-                var parentName = node->MParent->MName.AsString;
-                state.UpdateBoneParentIndexOrDefault(parentName, boneIndex);
-            }
-
-            if (boneIndex == 0)
-            {
-                var offset = Matrix4x4.Identity;
-                var current = node->MParent;
-                while (current != null)
-                {
-                    MatrixMath.MultiplyAffine(in current->MTransformation, in offset, out offset);
-                    current = current->MParent;
-                }
-
-                dataTable.SkeletonRootOffset = offset;
-            }
-        }
-
-        //  check children
-        for (uint i = 0; i < node->MNumChildren; i++)
-            BuildSkeletonHierarchy(node->MChildren[i]);
-    }
 
 
     private unsafe MeshCreationInfo LoadAndUploadMesh(AssimpMesh* mesh, AssetGfxUploader gfxUploader, bool isAnimated,

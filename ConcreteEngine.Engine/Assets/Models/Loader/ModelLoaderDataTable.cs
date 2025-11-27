@@ -58,6 +58,7 @@ internal sealed class ModelLoaderDataTable
     private MeshPartImportResult[] _parts = new MeshPartImportResult[MaxParts];
     private Matrix4x4[] _partTransforms = new Matrix4x4[MaxParts];
 
+
     public BoundingBox ModelBounds;
     public Matrix4x4 InvRootTransform;
     public Matrix4x4 SkeletonRootOffset;

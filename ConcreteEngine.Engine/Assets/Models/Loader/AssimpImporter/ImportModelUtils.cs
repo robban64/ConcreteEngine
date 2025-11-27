@@ -21,7 +21,8 @@ internal static class ImportModelUtils
         PostProcessSteps.LimitBoneWeights;
 
 
-    internal const int DefaultCapacity = 8192;
+    internal const int VertexCapacity = 64_000;
+    internal const int IndicesCapacity = 128_000;
     internal const int BoneTransformsCapacity = 64;
     internal const int MaxParts = 6;
 

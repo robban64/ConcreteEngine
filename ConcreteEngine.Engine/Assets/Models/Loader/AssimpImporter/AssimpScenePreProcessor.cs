@@ -15,11 +15,14 @@ internal sealed class AssimpScenePreProcessor(ModelLoaderState state)
     internal unsafe void PreProcessSceneGraph(Assimp assimp, AssimpScene* scene, ModelLoaderDataTable dataTable)
     {
         if (_nodeMap.Count > 0) throw new InvalidOperationException(nameof(_nodeMap));
-        
+
         state.MightBeAnimated = scene->MNumAnimations > 0 || scene->MNumSkeletons > 0;
 
-        Matrix4x4.Invert(scene->MRootNode->MTransformation, out var invRoot);
-        dataTable.InvRootTransform = Matrix4x4.Transpose(invRoot);
+        assimp!.Matrix4Inverse(&scene->MRootNode->MTransformation);
+        assimp!.TransposeMatrix4(&scene->MRootNode->MTransformation);
+        dataTable.InvRootTransform = scene->MRootNode->MTransformation;
+        //Matrix4x4.Invert(scene->MRootNode->MTransformation, out var invRoot);
+        //dataTable.InvRootTransform = Matrix4x4.Transpose(invRoot);
 
         ProcessNodes(assimp, scene->MRootNode);
         IterateMeshes(assimp, scene);
@@ -52,6 +55,7 @@ internal sealed class AssimpScenePreProcessor(ModelLoaderState state)
         }
 
         return;
+
         void RegisterBoneRecursive(string name)
         {
             if (state.TryGetBoneIndex(name, out _)) return;
@@ -66,7 +70,7 @@ internal sealed class AssimpScenePreProcessor(ModelLoaderState state)
             state.AppendBone(name, idx);
         }
     }
-    
+
     private unsafe bool HasAnimationChannels(AssimpScene* scene)
     {
         if (state.BoneCount == 0) return false;

@@ -46,13 +46,14 @@ internal ref struct MeshPartWriter(Span<MeshPartImportResult> parts, Span<Matrix
 
 internal sealed class ModelLoaderDataTable
 {
-    private uint[] _indices = new uint[DefaultCapacity];
-    private Vertex3D[] _vertices = new Vertex3D[DefaultCapacity];
-    private Vertex3DSkinned[] _verticesSkinned = new Vertex3DSkinned[DefaultCapacity];
+    private uint[] _indices = new uint[IndicesCapacity];
+    private Vertex3D[] _vertices = new Vertex3D[VertexCapacity];
+    private Vertex3DSkinned[] _verticesSkinned = new Vertex3DSkinned[VertexCapacity];
+
+    private SkinningData[] _skinningData = new SkinningData[VertexCapacity];
 
     private Matrix4x4[] _boneTransforms = new Matrix4x4[BoneTransformsCapacity];
     private Matrix4x4[] _nodeTransform = new Matrix4x4[BoneTransformsCapacity];
-    private SkinningData[] _skinningData = new SkinningData[DefaultCapacity];
 
     private MeshPartImportResult[] _parts = new MeshPartImportResult[MaxParts];
     private Matrix4x4[] _partTransforms = new Matrix4x4[MaxParts];
@@ -146,14 +147,16 @@ internal sealed class ModelLoaderDataTable
     {
         if (indexCount is { } iCount && (uint)indexCount > _indices.Length)
         {
-            var cap = ArrayUtility.CapacityGrowthPow2(int.Max(iCount, 64));
+            var cap = ArrayUtility.CapacityGrowthAlign(int.Max(iCount, 64));
             Array.Resize(ref _indices, cap);
+            Console.WriteLine("triggered indicies " + cap);
         }
 
         if (vertexCount is { } vCount && (uint)vCount > _vertices.Length)
         {
             var cap = ArrayUtility.CapacityGrowthPow2(int.Max(vCount, 64));
             Array.Resize(ref _vertices, cap);
+            Console.WriteLine("triggered verts " + cap);
         }
 
         if (skinnedCount is { } skinCount && (uint)skinCount > _verticesSkinned.Length)
@@ -162,19 +165,19 @@ internal sealed class ModelLoaderDataTable
             var cap = ArrayUtility.CapacityGrowthPow2(int.Max(skinCount, 64));
             Array.Resize(ref _verticesSkinned, cap);
             Array.Resize(ref _skinningData, cap);
+            Console.WriteLine("triggered skinn " + cap);
         }
     }
 
-    public void FillDefaultSkinningData()
+    public void FillDefaultSkinningData(int vertexCount)
     {
         var skinData = new SkinningData { BoneWeights = default, BoneIndices = new Int4(-1, -1, -1, -1) };
-        _skinningData.AsSpan().Fill(skinData);
+        _skinningData.AsSpan(0, int.Max(vertexCount, _skinningData.Length)).Fill(skinData);
     }
 
 
     public void Clear()
     {
-        FillDefaultSkinningData();
         _parts.AsSpan().Clear();
         _partTransforms.AsSpan().Clear();
         _nodeTransform.AsSpan().Fill(Matrix4x4.Identity);

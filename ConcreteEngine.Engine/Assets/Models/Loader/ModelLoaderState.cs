@@ -45,6 +45,14 @@ internal sealed class ModelLoaderState
     public bool MightBeAnimated { get; set; }
     public bool HasAnimationChannels { get; set; }
 
+
+    public int BoneCount => _boneByName.Count;
+    public int MeshCount => _meshNames.Count;
+    public bool HasEmbeddedData => _embeddedMaterials.Count > 0;
+
+    public bool IsAnimated =>
+        HasAnimationChannels || _boneByName.Count > 0 && _animations.Count > 0 && _parentIndices.Count > 0;
+
     public string ToEmbeddedAssetName(string type, int index)
     {
         ArgumentOutOfRangeException.ThrowIfNegative(index);
@@ -54,13 +62,6 @@ internal sealed class ModelLoaderState
 
         return $"{Name}::{type}/{index}";
     }
-
-    public int BoneCount => _boneByName.Count;
-    public int MeshCount => _meshNames.Count;
-    public bool HasEmbeddedData => _embeddedMaterials.Count > 0;
-
-    public bool IsAnimated =>
-        HasAnimationChannels || _boneByName.Count > 0 && _animations.Count > 0 && _parentIndices.Count > 0;
 
 
     public string GetBoneName(int i)

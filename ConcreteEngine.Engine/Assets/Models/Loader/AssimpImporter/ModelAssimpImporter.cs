@@ -2,8 +2,10 @@
 
 using System.Numerics;
 using ConcreteEngine.Common.Numerics;
+using ConcreteEngine.Common.Numerics.Maths;
 using ConcreteEngine.Engine.Assets.Internal;
 using Silk.NET.Assimp;
+using Silk.NET.Maths;
 using static ConcreteEngine.Engine.Assets.Models.Loader.AssimpImporter.ImportModelUtils;
 using AssimpMesh = Silk.NET.Assimp.Mesh;
 using AssimpScene = Silk.NET.Assimp.Scene;
@@ -41,9 +43,8 @@ internal sealed class ModelAssimpImporter
 
     public unsafe bool ImportMesh(string path)
     {
-        if (_assimp == null)
-            _assimp = Assimp.GetApi();
-
+        _assimp ??= Assimp.GetApi();
+        
         var scene = _assimp.ImportFile(path, (uint)AssimpFlags);
 
         if (scene == null || scene->MFlags == Assimp.SceneFlagsIncomplete || scene->MRootNode == null)
@@ -89,10 +90,10 @@ internal sealed class ModelAssimpImporter
         in Matrix4x4 parent)
     {
         var nodeTransform = node->MTransformation;
-        var local = nodeTransform * parent;
+        MatrixMath.MultiplyAffine(in nodeTransform, in parent, out var local);
 
         MeshCreationInfo info;
-
+        BoundingBox bounds = default;
         for (var i = 0; i < node->MNumMeshes; i++)
         {
             var meshIndex = (int)node->MMeshes[i];
@@ -102,10 +103,11 @@ internal sealed class ModelAssimpImporter
             var vertexCount = (int)mesh->MNumVertices;
 
             if (!_state.HasProcessedMeshIndex(meshIndex, out info))
-                _meshProcessor.ProcessAndUploadMeshes(mesh, meshIndex, _gfxUploader, out info);
+                info = _meshProcessor.ProcessAndUploadMeshes(mesh, meshIndex, _gfxUploader, out bounds);
 
 
-            BoundingBox.FromPoints(new Span<Vector3>(mesh->MVertices, vertexCount), out var bounds);
+            //BoundingBox.FromPoints(new Span<Vector3>(mesh->MVertices, vertexCount), out var bounds);
+            //var bb = new BoundingBox(mesh->MAABB.Min.ToSystem(), mesh->MAABB.Max.ToSystem());
 
             var writer = _dataTable.WriteMeshParts();
             writer.Fill(traverseIndex, slot, info, in bounds, in local);
@@ -131,6 +133,7 @@ internal sealed class ModelAssimpImporter
 
     internal void Teardown()
     {
+        _scenePreProcessor.Clear();
         _assimp?.Dispose();
         _assimp = null;
     }

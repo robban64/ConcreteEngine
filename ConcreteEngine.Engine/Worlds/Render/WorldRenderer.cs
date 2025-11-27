@@ -110,7 +110,6 @@ public sealed class WorldRenderer : IWorldRenderer
         }
     }
 
-    private FrameProfileTimer _timer = new FrameProfileTimer();
 
     internal void PreRender(
         BeginFrameStatus status,
@@ -131,9 +130,7 @@ public sealed class WorldRenderer : IWorldRenderer
 
         var renderView = RenderView;
         _renderEntityBus.CollectEntities(in renderView.ViewMatrix, renderView.ProjectionInfo);
-        _timer.Begin();
         _renderEntityBus.ProcessAnimations(frameInfo.DeltaTime, _renderer.CommandBuffer);
-        _timer.EndPrint();
 
         _renderEntityBus.FlushEntities(_renderer.CommandBuffer);
 

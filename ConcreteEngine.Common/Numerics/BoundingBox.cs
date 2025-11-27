@@ -16,6 +16,11 @@ public readonly record struct BoundingBox(in Vector3 Min, in Vector3 Max)
 
     public Vector3 Extent => (Max - Min) / 2f;
 
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public BoundingBox FromPoint(Vector3 point, out BoundingBox bounds) =>
+        bounds = new BoundingBox(Vector3.Min(Min, point), Vector3.Max(Max, point));
+
+
     public void Deconstruct(out Vector3 min, out Vector3 max)
     {
         min = Min;

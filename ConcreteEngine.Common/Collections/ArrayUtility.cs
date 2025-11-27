@@ -8,7 +8,30 @@ namespace ConcreteEngine.Common.Collections;
 
 public static class ArrayUtility
 {
-    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public static int CapacityGrowthSafe(int currentCapacity, int requiredSize, int largeThreshold = 64 * 1024)
+    {
+        if (currentCapacity >= requiredSize) return currentCapacity;
+    
+        int newCapacity = currentCapacity == 0 ? 4 : currentCapacity * 2;
+        if ((uint)newCapacity < (uint)requiredSize) 
+        {
+            newCapacity = requiredSize;
+        }
+
+        if (currentCapacity >= largeThreshold)
+        {
+            int growth = Math.Max(requiredSize - currentCapacity, largeThreshold);
+            newCapacity = currentCapacity + growth;
+        }
+        
+        return (newCapacity + 63) & ~63;
+    }
+    
+    public static int CapacityGrowthAlign(int required, int alignment = 4096)
+    {
+        return (required + (alignment - 1)) & ~(alignment - 1);
+    }
+
     public static int CapacityGrowthToFit(int current, int required)
     {
         var newSize = current;
@@ -16,7 +39,6 @@ public static class ArrayUtility
         return newSize;
     }
 
-    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static int CapacityGrowthPow2(int v)
     {
         v--;
@@ -29,7 +51,6 @@ public static class ArrayUtility
         return Math.Max(v, 4);
     }
 
-    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static int CapacityGrowthLinear(int current, int required, int step = 16)
     {
         ArgumentOutOfRangeException.ThrowIfNegativeOrZero(step);

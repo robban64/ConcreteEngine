@@ -31,9 +31,9 @@ internal sealed class ModelLoaderState
     private readonly Dictionary<int, MeshCreationInfo> _meshIndexToIdMap = new(8);
 
     //Animation
-    private readonly List<int> _parentIndices = new(8);
+    public readonly List<int> _parentIndices = new(8);
     private readonly List<ModelAnimationData> _animations = new(8);
-    private readonly Dictionary<string, int> _boneByName = new(8);
+    public readonly Dictionary<string, int> _boneByName = new(8);
 
     // Material/Textures
     private readonly List<TextureEmbeddedDescriptor> _embeddedTextures = new(4);
@@ -63,6 +63,15 @@ internal sealed class ModelLoaderState
         HasAnimationChannels || _boneByName.Count > 0 && _animations.Count > 0 && _parentIndices.Count > 0;
 
 
+    public string GetBoneName(int i)
+    {
+        foreach (var kv in _boneByName)
+        {
+            if(kv.Value == i) return kv.Key;
+        }
+
+        return $"Not found for {i}";
+    }
     public void Start(string name, string filename)
     {
         Clear();

@@ -76,9 +76,12 @@ internal sealed class ModelImporter
             Console.WriteLine("asd");
         }
 
-        var rawRoot = scene->MRootNode->MTransformation;
-        var fixedRoot = Matrix4x4.Transpose(rawRoot);
-        Matrix4x4.Invert(fixedRoot, out _dataStore.InvRootTransform);
+        //_dataStore.InvRootTransform = Matrix4x4.Identity;
+        Matrix4x4.Invert(scene->MRootNode->MTransformation, out var invRoot);
+        _dataStore.InvRootTransform = Matrix4x4.Transpose(invRoot);
+
+        MutateSceneTransform(scene);
+
         //MatrixMath.InvertAffine(in scene->MRootNode->MTransformation, out _dataStore.InvRootTransform);
 
         //MutateSceneTransform(scene);
@@ -91,8 +94,49 @@ internal sealed class ModelImporter
         _state.HasAnimationChannels = _animationProcessor.HasAnimationChannels(scene);
 
         if (_state.HasAnimationChannels)
+        {
             _animationProcessor.ProcessSceneAnimations(scene);
 
+            for (int i = 0; i < 5; i++)
+            {
+                var local = _dataStore.NodeTransforms[i];
+                if (!Matrix4x4.Decompose(local, out Vector3 scale, out Quaternion rotation, out Vector3 translation))
+                {
+                    Console.WriteLine($"Bone {i} failed to decompose");
+                }
+
+
+                Console.WriteLine($"Bone {i}:");
+                Console.WriteLine($"  Translation: {translation}");
+                Console.WriteLine($"  Rotation: {rotation}");
+                Console.WriteLine($"  Scale: {scale}");
+                
+                var test1 = Matrix4x4.CreateScale(scale) *
+                            Matrix4x4.CreateFromQuaternion(rotation) *
+                            Matrix4x4.CreateTranslation(translation);
+
+// Order 2: Translation * Rotation * Scale
+                var test2 = Matrix4x4.CreateTranslation(translation) *
+                            Matrix4x4.CreateFromQuaternion(rotation) *
+                            Matrix4x4.CreateScale(scale);
+
+// Order 3: Rotation * Scale * Translation
+                var test3 = Matrix4x4.CreateFromQuaternion(rotation) *
+                            Matrix4x4.CreateScale(scale) *
+                            Matrix4x4.CreateTranslation(translation);
+
+// Compare
+                Console.WriteLine("Difference test1: " + (test1 - local).GetMaxElementAbs());
+                Console.WriteLine("Difference test2: " + (test2 - local).GetMaxElementAbs());
+                Console.WriteLine("Difference test3: " + (test3 - local).GetMaxElementAbs());
+            }
+        
+            for (int v = 0; v < Math.Min(5, 200); v++)
+            {
+                var sw = _dataStore.SkinningData[v];
+                Console.WriteLine($"Vertex {v} bone indices = {sw.BoneIndices.X},{sw.BoneIndices.Y},{sw.BoneIndices.Z},{sw.BoneIndices.W} weights = {sw.BoneWeights}");
+            }        
+        }
         // irrelevant
         ImportUtils.CalculateBoundingBox(_state.MeshCount, _dataStore.GetParts(_state.MeshCount),
             out _dataStore.ModelBounds);
@@ -109,7 +153,6 @@ internal sealed class ModelImporter
 
     private unsafe void RegisterAllBones(AssimpScene* scene)
     {
-        // 1. Iterate all meshes to find the "Leaf" bones (ones with weights)
         for (uint m = 0; m < scene->MNumMeshes; m++)
         {
             var mesh = scene->MMeshes[m];
@@ -151,8 +194,7 @@ internal sealed class ModelImporter
                 for (int b = 0; b < mesh->MNumBones; b++)
                 {
                     var bone = mesh->MBones[b];
-                    //FixAssimpMatrix(&bone->MOffsetMatrix);
-                    //_assimp!.TransposeMatrix4(&bone->MOffsetMatrix);
+                    _assimp!.TransposeMatrix4(&bone->MOffsetMatrix);
                 }
             }
         }
@@ -162,8 +204,7 @@ internal sealed class ModelImporter
             for (int i = 0; i < currentNode->MNumChildren; i++)
             {
                 var node = currentNode->MChildren[i];
-                //FixAssimpMatrix(&node->MTransformation);
-                //_assimp!.TransposeMatrix4(&node->MTransformation);
+                _assimp!.TransposeMatrix4(&node->MTransformation);
                 TraverseTranspose(node);
             }
         }
@@ -173,7 +214,8 @@ internal sealed class ModelImporter
 
     private unsafe void TraverseNode(AssimpNode* node, AssimpScene* scene, ref int traverseIndex, in Matrix4x4 parent)
     {
-        var nodeTransform = Matrix4x4.Transpose(node->MTransformation);
+        var nodeTransform = ImportUtils.SanitizeAssimpMatrix(node->MTransformation);
+       // var local = parent * nodeTransform;
         var local = nodeTransform * parent;
 
         MeshCreationInfo info;
@@ -187,9 +229,7 @@ internal sealed class ModelImporter
                 var m = scene->MMeshes[meshIndex];
 
                 if (m->MNumBones > 0)
-                {
-                    _animationProcessor.ProcessBoneData(m, in local);
-                }
+                    _animationProcessor.ProcessBoneData(m);
 
                 info = _meshProcessor.LoadAndUploadMesh(m, _gfxUploader, _state.MightBeAnimated);
                 _state.AppendMeshInfo(m->MName.AsString, meshIndex, info);
@@ -211,6 +251,7 @@ internal sealed class ModelImporter
         // Process children
         for (var i = 0; i < node->MNumChildren; i++)
             TraverseNode(node->MChildren[i], scene, ref traverseIndex, in local);
+        
 
         if (_state.TryGetBoneIndex(node->MName.AsString, out int index))
         {
@@ -220,11 +261,6 @@ internal sealed class ModelImporter
         else if (node->MNumMeshes > 0)
         {
             /*
-            if (node->MName.AsString.Contains("Cesium_Man"))
-            {
-                Console.WriteLine("asd");
-            }
-
             Console.WriteLine($"Missed Node: {node->MName.AsString}");
             */
         }

@@ -168,7 +168,7 @@ internal sealed class ModelImportDataStore
         _boneTransforms.AsSpan().Fill(Matrix4x4.Identity);
         
         ModelBounds = default;
-        InvRootTransform = Matrix4x4.Identity;
+        //InvRootTransform = Matrix4x4.Identity;
         SkeletonRootOffset = Matrix4x4.Identity;
     }
 

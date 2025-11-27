@@ -14,39 +14,50 @@ namespace ConcreteEngine.Engine.Assets.Models.ImportProcessors;
 
 internal static class ImportUtils
 {
-    public static Matrix4x4 TransposeAssimpMatrix(in Matrix4x4 mat)
+    public static float GetMaxElementAbs(this Matrix4x4 m)
     {
-        return new Matrix4x4(
-            mat.M11, mat.M12, mat.M13, 0f, // Row 1: Rotation X, Clear Translation X slot
-            mat.M21, mat.M22, mat.M23, 0f, // Row 2: Rotation Y, Clear Translation Y slot
-            mat.M31, mat.M32, mat.M33, 0f, // Row 3: Rotation Z, Clear Translation Z slot
-            mat.M14, mat.M24, mat.M34, 1f  // Row 4: Move Tx, Ty, Tz here.
-        );
+        float max = float.MinValue;
+        for (int i = 0; i < 4; i++)
+        {
+            for (int j = 0; j < 4; j++)
+            {
+                var v = m.GetElement(i,j);
+                if (v > max) max = v;
+            }
+        }
+        return max;
+
     }
+  
 
     public static Matrix4x4 SanitizeAssimpMatrix(Matrix4x4 mat)
     {
+        /*
         var fixedMat = new Matrix4x4(
-            mat.M11, mat.M12, mat.M13, 0f,
-            mat.M21, mat.M22, mat.M23, 0f,
-            mat.M31, mat.M32, mat.M33, 0f,
-            mat.M14, mat.M24, mat.M34, 1f 
+            mat.M11, mat.M12, mat.M13, 0f, // Row 1: Rotation X
+            mat.M21, mat.M22, mat.M23, 0f, // Row 2: Rotation Y
+            mat.M31, mat.M32, mat.M33, 0f, // Row 3: Rotation Z
+            mat.M14, mat.M24, mat.M34, 1f // Row 4: Translation 
         );
-        if (Matrix4x4.Decompose(fixedMat, out Vector3 scale, out Quaternion rot, out Vector3 trans))
+
+        if (Matrix4x4.Decompose(fixedMat, out var scale, out var rot, out var trans))
         {
-            return Matrix4x4.CreateScale(scale) * Matrix4x4.CreateFromQuaternion(rot) * Matrix4x4.CreateTranslation(trans);
+            return Matrix4x4.CreateScale(scale) * Matrix4x4.CreateFromQuaternion(rot) *
+                   Matrix4x4.CreateTranslation(trans);
         }
 
         return fixedMat;
+        */
+        return mat;
     }
-    
-    public static Vector3 TransformZupToYup(in Vector3 v) => new(v.X,v.Z,-v.Y);
+
+    public static Vector3 TransformZupToYup(in Vector3 v) => new(v.X, v.Z, -v.Y);
 
     // Vector3 from Y-up to Z-up
-    public static Vector3 TransformYupToZup(in Vector3 v) => new( v.X, -v.Z, v.Y);
+    public static Vector3 TransformYupToZup(in Vector3 v) => new(v.X, -v.Z, v.Y);
 
     // 90 degrees around X-axis (Z-up to Y-up)
-    public static readonly Matrix4x4 ZupToYup = new (
+    public static readonly Matrix4x4 ZupToYup = new(
         1, 0, 0, 0,
         0, 0, 1, 0,
         0, -1, 0, 0,
@@ -54,7 +65,7 @@ internal static class ImportUtils
     );
 
     // -90 degrees around X-axis (Y-up to Z-up)
-    public static readonly Matrix4x4 YupToZup = new (
+    public static readonly Matrix4x4 YupToZup = new(
         1, 0, 0, 0,
         0, 0, -1, 0,
         0, 1, 0, 0,
@@ -64,7 +75,7 @@ internal static class ImportUtils
     //  90-degree rotation around X
     public static readonly Quaternion ZupToYupRotation =
         Quaternion.CreateFromAxisAngle(Vector3.UnitX, FloatMath.ToRadians(90));
-    
+
     public static void CalculateBoundingBox(int count, ReadOnlySpan<MeshPartImportResult> parts, out BoundingBox bounds)
     {
         bounds = parts[0].Bounds;

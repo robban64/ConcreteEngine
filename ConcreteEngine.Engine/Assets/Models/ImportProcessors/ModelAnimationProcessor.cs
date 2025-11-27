@@ -58,12 +58,13 @@ internal sealed class ModelAnimationProcessor(ModelImportDataStore dataStore, Mo
     }
     
 
-    public unsafe void ProcessBoneData(AssimpMesh* mesh, in Matrix4x4 global)
+    public unsafe void ProcessBoneData(AssimpMesh* mesh)
     {
         int vertexCount = (int)mesh->MNumVertices, boneCount = (int)mesh->MNumBones;
         ArgumentOutOfRangeException.ThrowIfGreaterThan(boneCount, BoneTransformsCapacity);
 
-        dataStore.WriteSkinningData(vertexCount, out var skinningData, out var boneTransforms); //ensure capacity for skinningData
+        //ensure capacity for skinningData
+        dataStore.WriteSkinningData(vertexCount, out var skinningData, out var boneTransforms); 
         dataStore.FillDefaultSkinningData();
         var slicedSkinned = skinningData.Slice(0, vertexCount);
 
@@ -74,17 +75,14 @@ internal sealed class ModelAnimationProcessor(ModelImportDataStore dataStore, Mo
 
             if (state.TryGetBoneIndex(name, out var boneIndex))
             {
-                var offsetMat = Matrix4x4.Transpose(bone->MOffsetMatrix);
-                boneTransforms[boneIndex] = offsetMat;
+                boneTransforms[boneIndex] = ImportUtils.SanitizeAssimpMatrix(bone->MOffsetMatrix);
                 WriteWeightAndIndices(bone, boneIndex, slicedSkinned);
             }
             else
             {
                 throw new InvalidOperationException();
             }
-
         }
-        
         // sanitize
         SanitizeSkinningData(vertexCount, slicedSkinned);
     }
@@ -110,11 +108,11 @@ internal sealed class ModelAnimationProcessor(ModelImportDataStore dataStore, Mo
                 var current = node->MParent;
                 while (current != null)
                 {
-                    offset *= current->MTransformation; 
+                    offset = current->MTransformation * offset;
                     current = current->MParent;
                 }
 
-                dataStore.SkeletonRootOffset = offset;
+                dataStore.SkeletonRootOffset = ImportUtils.SanitizeAssimpMatrix(offset);
             }
         }
 
@@ -172,7 +170,7 @@ internal sealed class ModelAnimationProcessor(ModelImportDataStore dataStore, Mo
                 for (var k = 0; k < rotCount; k++)
                 {
                     boneTrack.RotationTimes[k] = (float)rotKeys[k].MTime;
-                    boneTrack.Rotations[k] = rotKeys[k].MValue;
+                    boneTrack.Rotations[k] = Quaternion.Normalize(rotKeys[k].MValue.AsQuaternion);
                 }
 
                 // Scales

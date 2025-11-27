@@ -44,10 +44,9 @@ internal sealed class RenderEntityBus
     {
         _meshTable = meshTable;
         _materialTable = materialTable;
-        
+
         _animationGlobals.AsSpan().Fill(Matrix4x4.Identity);
         _animationFinal.AsSpan().Fill(Matrix4x4.Identity);
-
     }
 
     private int ActiveSkyCount => _world?.Sky.IsActive ?? false ? 1 : 0;
@@ -147,16 +146,17 @@ internal sealed class RenderEntityBus
 
 
     float t = 0;
+    private int btx = 0;
 
     public void ProcessAnimations(float deltaTime, DrawCommandBuffer buffer)
     {
         //var submitView = _meshTable.GetBoneUploadPayload();
-        
+
         var worldEntities = _world!.Entities;
         var globals = _animationGlobals;
         var finals = _animationFinal;
 
-        t += deltaTime * 10;
+        t += deltaTime * 100;
         // var idxAnimation = 0;
         foreach (var query in worldEntities.Query<AnimationComponent>())
         {
@@ -182,47 +182,46 @@ internal sealed class RenderEntityBus
 
             Transform poseTransform = default;
             Matrix4x4 local = default;
+
+
             for (int i = 0; i < boneCount; i++)
             {
-                /*
-                   if (!boneByIndex.TryGetValue(i, out var track))
-                   {
-                       local = nodeTransforms[i];
-                   }
-                   else
-                   {
-
-                       poseTransform.Translation = LerpVector(track.Translations, track.TranslationTimes, t, default);
-                       poseTransform.Scale = LerpVector(track.Scales, track.ScaleTimes, t, Vector3.One);
-                       poseTransform.Rotation = LerpQuaternion(track.Rotations, track.RotationTimes, t);
-                       WriteTransformMatrix(in poseTransform, ref local);
-                   }
-                   int p = parentIndices[i];
-                   if (p >= 0)
-                       MatrixMath.MultiplyAffine(in local, in globals[p], out globals[i]);
-                   else
-                   {
-                       globals[i] = local;
-                   }
-                    finals[i] = boneTransforms[i] * globals[i] * invMatrix;
-                   finals[i] = boneTransforms[i] * nodeTransforms[i] * invMatrix;
-                   MatrixMath.MultiplyAffine(in boneTransforms[i], in globals[i], out finals[i]);
-
-     */
-
-                local = nodeTransforms[i];
-
-                int p = parentIndices[i];
-                if (p >= 0)
+                if (!boneByIndex.TryGetValue(i, out var track))
                 {
-                    MatrixMath.MultiplyAffine(in local, in globals[p], out globals[i]);
+                    local = nodeTransforms[i];
                 }
                 else
                 {
-                    // Root Bone
-                    globals[i] = local;
+                    
+                    poseTransform.Translation = LerpVector(track.Translations, track.TranslationTimes, t, default);
+                    poseTransform.Scale = LerpVector(track.Scales, track.ScaleTimes, t, Vector3.One);
+                    poseTransform.Rotation = LerpQuaternion(track.Rotations, track.RotationTimes, t);
+                    local =
+                        Matrix4x4.CreateFromQuaternion(poseTransform.Rotation) *
+                        Matrix4x4.CreateTranslation(poseTransform.Translation);
+                    //mat = Matrix4x4.CreateScale(scale) * Matrix4x4.CreateFromQuaternion(rotation) * Matrix4x4.CreateTranslation(translation);
+
+
+                    /*
+                        poseTransform.Translation = LerpVector(track.Translations, track.TranslationTimes, t, default);
+                       poseTransform.Scale = LerpVector(track.Scales, track.ScaleTimes, t, Vector3.One);
+                       poseTransform.Rotation = LerpQuaternion(track.Rotations, track.RotationTimes, t);
+                       WriteTransformMatrix(in poseTransform, ref local);
+
+                     */
                 }
-                finals[i] = boneTransforms[i] * globals[i] * Matrix4x4.Identity;
+
+                int p = parentIndices[i];
+                if (p >= 0)
+                    globals[i] = local * globals[p];
+                else
+                    globals[i] = local;
+
+                finals[i] =  boneTransforms[i] * globals[i] * invMatrix;
+                
+                //MatrixMath.MultiplyAffine(in local, in globals[p], out globals[i]);
+                //MatrixMath.MultiplyAffine(in boneTransforms[i], in globals[i], out finals[i]);
+
             }
 
             buffer.SubmitSingleAnimation(finals);
@@ -292,7 +291,9 @@ internal sealed class RenderEntityBus
 
             Matrix4x4 world = default;
             ref var worldRef = ref Unsafe.AsRef(ref world);
-            WriteTransformMatrix(in entity.Transform, ref worldRef);
+            //WriteTransformMatrix(in entity.Transform, ref worldRef);
+            CreateModelMatrix(in entity.Transform.Translation, in entity.Transform.Scale, in entity.Transform.Rotation,
+                out worldRef);
 
             var parts = modelView.Parts;
             var locals = modelView.Locals;
@@ -334,10 +335,12 @@ internal sealed class RenderEntityBus
         }
         else
         {
-            MatrixMath.MultiplyAffine(in local, in world, out data.Model);
+            data.Model = local * world;
+            //MatrixMath.MultiplyAffine(in local, in world, out data.Model);
             MatrixMath.CreateNormalMatrix(in data.Model, out data.Normal);
         }
     }
+
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     private static DrawCommandMeta BuildMeta(ref MaterialTag tag, int slot, DrawCommandMeta meta)
@@ -413,6 +416,20 @@ internal sealed class RenderEntityBus
 
         Array.Resize(ref _entities, newCap);
         Array.Resize(ref _byEntityId, newCap);
+    }
+
+    [MethodImpl(MethodImplOptions.AggressiveInlining | MethodImplOptions.AggressiveOptimization)]
+    public static void CreateModelMatrix(in Vector3 translation, in Vector3 scale, in Quaternion rotation,
+        out Matrix4x4 mat)
+    {
+        //mat = Matrix4x4.CreateScale(scale) * Matrix4x4.CreateFromQuaternion(rotation) * Matrix4x4.CreateTranslation(translation);
+        var rot = Matrix4x4.CreateFromQuaternion(rotation);
+        var scl = Matrix4x4.CreateScale(scale);
+        mat = Matrix4x4.Multiply(rot, scl);
+        mat.M41 = translation.X;
+        mat.M42 = translation.Y;
+        mat.M43 = translation.Z;
+        mat.M44 = 1f;
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining | MethodImplOptions.AggressiveOptimization)]

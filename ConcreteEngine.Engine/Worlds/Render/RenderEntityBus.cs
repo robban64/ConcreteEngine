@@ -182,7 +182,7 @@ internal sealed class RenderEntityBus
 
             Transform poseTransform = default;
             Matrix4x4 local = default;
-
+            Matrix4x4 final = default;
 
             for (int i = 0; i < boneCount; i++)
             {
@@ -192,23 +192,12 @@ internal sealed class RenderEntityBus
                 }
                 else
                 {
-                    
                     poseTransform.Translation = LerpVector(track.Translations, track.TranslationTimes, t, default);
                     poseTransform.Scale = LerpVector(track.Scales, track.ScaleTimes, t, Vector3.One);
                     poseTransform.Rotation = LerpQuaternion(track.Rotations, track.RotationTimes, t);
-                    local =
-                        Matrix4x4.CreateFromQuaternion(poseTransform.Rotation) *
-                        Matrix4x4.CreateTranslation(poseTransform.Translation);
+                    local = Matrix4x4.CreateFromQuaternion(poseTransform.Rotation) *
+                            Matrix4x4.CreateTranslation(poseTransform.Translation);
                     //mat = Matrix4x4.CreateScale(scale) * Matrix4x4.CreateFromQuaternion(rotation) * Matrix4x4.CreateTranslation(translation);
-
-
-                    /*
-                        poseTransform.Translation = LerpVector(track.Translations, track.TranslationTimes, t, default);
-                       poseTransform.Scale = LerpVector(track.Scales, track.ScaleTimes, t, Vector3.One);
-                       poseTransform.Rotation = LerpQuaternion(track.Rotations, track.RotationTimes, t);
-                       WriteTransformMatrix(in poseTransform, ref local);
-
-                     */
                 }
 
                 int p = parentIndices[i];
@@ -217,11 +206,9 @@ internal sealed class RenderEntityBus
                 else
                     globals[i] = local;
 
-                finals[i] =  boneTransforms[i] * globals[i] * invMatrix;
-                
-                //MatrixMath.MultiplyAffine(in local, in globals[p], out globals[i]);
-                //MatrixMath.MultiplyAffine(in boneTransforms[i], in globals[i], out finals[i]);
-
+                //finals[i] = boneTransforms[i] * globals[i] * invMatrix;
+                MatrixMath.MultiplyAffine(in boneTransforms[i], in globals[i], out final);
+                MatrixMath.MultiplyAffine(in final, in invMatrix, out finals[i]);
             }
 
             buffer.SubmitSingleAnimation(finals);
@@ -290,10 +277,9 @@ internal sealed class RenderEntityBus
             }
 
             Matrix4x4 world = default;
-            ref var worldRef = ref Unsafe.AsRef(ref world);
-            //WriteTransformMatrix(in entity.Transform, ref worldRef);
-            CreateModelMatrix(in entity.Transform.Translation, in entity.Transform.Scale, in entity.Transform.Rotation,
-                out worldRef);
+            //ref var worldRef = ref Unsafe.AsRef(ref world);
+            MatrixMath.CreateModelMatrix(in entity.Transform.Translation, in entity.Transform.Scale,
+                in entity.Transform.Rotation, out world);
 
             var parts = modelView.Parts;
             var locals = modelView.Locals;
@@ -335,8 +321,7 @@ internal sealed class RenderEntityBus
         }
         else
         {
-            data.Model = local * world;
-            //MatrixMath.MultiplyAffine(in local, in world, out data.Model);
+            MatrixMath.MultiplyAffine(in local, in world, out data.Model);
             MatrixMath.CreateNormalMatrix(in data.Model, out data.Normal);
         }
     }
@@ -394,9 +379,9 @@ internal sealed class RenderEntityBus
         out Matrix3X4 normal)
     {
         MatrixMath.CreateModelMatrix(
-            transform.Translation,
-            transform.Scale,
-            transform.Rotation,
+            in transform.Translation,
+            in transform.Scale,
+            in transform.Rotation,
             out model
         );
 
@@ -418,51 +403,4 @@ internal sealed class RenderEntityBus
         Array.Resize(ref _byEntityId, newCap);
     }
 
-    [MethodImpl(MethodImplOptions.AggressiveInlining | MethodImplOptions.AggressiveOptimization)]
-    public static void CreateModelMatrix(in Vector3 translation, in Vector3 scale, in Quaternion rotation,
-        out Matrix4x4 mat)
-    {
-        //mat = Matrix4x4.CreateScale(scale) * Matrix4x4.CreateFromQuaternion(rotation) * Matrix4x4.CreateTranslation(translation);
-        var rot = Matrix4x4.CreateFromQuaternion(rotation);
-        var scl = Matrix4x4.CreateScale(scale);
-        mat = Matrix4x4.Multiply(rot, scl);
-        mat.M41 = translation.X;
-        mat.M42 = translation.Y;
-        mat.M43 = translation.Z;
-        mat.M44 = 1f;
-    }
-
-    [MethodImpl(MethodImplOptions.AggressiveInlining | MethodImplOptions.AggressiveOptimization)]
-    private static void WriteTransformMatrix(ref readonly Transform transform, ref Matrix4x4 mat)
-    {
-        float x = transform.Rotation.X, y = transform.Rotation.Y, z = transform.Rotation.Z, w = transform.Rotation.W;
-        float xx = x + x, yy = y + y, zz = z + z;
-        float xy = x * yy, xz = x * zz, yz = y * zz;
-        float wx = w * xx, wy = w * yy, wz = w * zz;
-        float x2 = x * xx, y2 = y * yy, z2 = z * zz;
-
-        float r11 = 1f - (y2 + z2), r22 = 1f - (x2 + z2), r33 = 1f - (x2 + y2);
-        float r12 = xy + wz, r13 = xz - wy, r21 = xy - wz;
-        float r23 = yz + wx, r31 = xz + wy, r32 = yz - wx;
-
-        mat.M11 = r11 * transform.Scale.X;
-        mat.M12 = r12 * transform.Scale.Y;
-        mat.M13 = r13 * transform.Scale.Z;
-        mat.M14 = 0f;
-
-        mat.M21 = r21 * transform.Scale.X;
-        mat.M22 = r22 * transform.Scale.Y;
-        mat.M23 = r23 * transform.Scale.Z;
-        mat.M24 = 0f;
-
-        mat.M31 = r31 * transform.Scale.X;
-        mat.M32 = r32 * transform.Scale.Y;
-        mat.M33 = r33 * transform.Scale.Z;
-        mat.M34 = 0f;
-
-        mat.M41 = transform.Translation.X;
-        mat.M42 = transform.Translation.Y;
-        mat.M43 = transform.Translation.Z;
-        mat.M44 = 1f;
-    }
 }

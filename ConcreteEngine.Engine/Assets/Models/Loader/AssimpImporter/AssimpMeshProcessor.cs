@@ -1,19 +1,17 @@
 #region
 
-using System.Numerics;
-using ConcreteEngine.Common.Numerics;
 using ConcreteEngine.Common.Numerics.Extensions;
-using ConcreteEngine.Common.Numerics.Maths;
 using ConcreteEngine.Engine.Assets.Internal;
-using ConcreteEngine.Engine.Assets.Models.Loader;
 using ConcreteEngine.Graphics.Primitives;
 using AssimpMesh = Silk.NET.Assimp.Mesh;
+using AssimpScene = Silk.NET.Assimp.Scene;
+using AssimpNode = Silk.NET.Assimp.Node;
 
 #endregion
 
-namespace ConcreteEngine.Engine.Assets.Models.ImportProcessors;
+namespace ConcreteEngine.Engine.Assets.Models.Loader.AssimpImporter;
 
-internal sealed class MeshProcessor(ModelImportDataStore dataStore)
+internal sealed class AssimpMeshProcessor(ModelLoaderDataTable dataTable)
 {
     public unsafe MeshCreationInfo LoadAndUploadMesh(AssimpMesh* mesh, AssetGfxUploader gfxUploader, bool isAnimated)
     {
@@ -24,17 +22,17 @@ internal sealed class MeshProcessor(ModelImportDataStore dataStore)
 
         if (!isAnimated)
         {
-            var writer = dataStore.WriteVertex(vertexCount, indexCount);
+            var writer = dataTable.WriteVertex(vertexCount, indexCount);
             WriteIndices(mesh, writer.Indices);
             WriteVertices(mesh, writer.Vertices);
-            gfxUploader.UploadMesh(dataStore.GetUploadData(vertexCount, indexCount, ref info));
+            gfxUploader.UploadMesh(dataTable.GetUploadData(vertexCount, indexCount, ref info));
         }
         else
         {
-            var writer = dataStore.WriteVertexSkinned(vertexCount, indexCount);
+            var writer = dataTable.WriteVertexSkinned(vertexCount, indexCount);
             WriteIndices(mesh, writer.Indices);
             WriteVerticesSkinned(mesh, writer.Vertices, writer.Skinned);
-            gfxUploader.UploadMesh(dataStore.GetSkinnedUploadData(vertexCount, indexCount, ref info));
+            gfxUploader.UploadMesh(dataTable.GetSkinnedUploadData(vertexCount, indexCount, ref info));
         }
 
         return info;
@@ -70,7 +68,8 @@ internal sealed class MeshProcessor(ModelImportDataStore dataStore)
         }
     }
 
-    private static unsafe void WriteVerticesSkinned(AssimpMesh* mesh, Span<Vertex3DSkinned> result, ReadOnlySpan<SkinningData> skinned)
+    private static unsafe void WriteVerticesSkinned(AssimpMesh* mesh, Span<Vertex3DSkinned> result,
+        ReadOnlySpan<SkinningData> skinned)
     {
         ArgumentOutOfRangeException.ThrowIfNotEqual(result.Length, skinned.Length, nameof(result.Length));
 
@@ -83,14 +82,12 @@ internal sealed class MeshProcessor(ModelImportDataStore dataStore)
             ref readonly var skinnedVertex = ref skinned[i];
             ref var v = ref result[i];
 
-            v.Position = mesh->MVertices[i];//ImportUtils.TransformZupToYup(mesh->MVertices[i]);
-            v.Normal = mesh->MNormals[i];//ImportUtils.TransformZupToYup(mesh->MNormals[i]);
+            v.Position = mesh->MVertices[i];
+            v.Normal = mesh->MNormals[i];
             v.Tangent = mesh->MTangents[i];
             v.TexCoords = mesh->MTextureCoords[0][i].ToVec2();
             v.BoneIndices = skinnedVertex.BoneIndices;
             v.BoneWeights = skinnedVertex.BoneWeights;
         }
     }
-
-
 }

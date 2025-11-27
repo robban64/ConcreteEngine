@@ -1,22 +1,18 @@
 #region
 
 using System.Numerics;
-using ConcreteEngine.Common;
-using ConcreteEngine.Common.Numerics;
-using ConcreteEngine.Common.Numerics.Maths;
-using ConcreteEngine.Engine.Assets.Models.Loader;
 using ConcreteEngine.Graphics.Primitives;
 using Silk.NET.Assimp;
 using AssimpMesh = Silk.NET.Assimp.Mesh;
 using AssimpScene = Silk.NET.Assimp.Scene;
 using AssimpNode = Silk.NET.Assimp.Node;
-using static ConcreteEngine.Engine.Assets.Models.ImportProcessors.ImportConstants;
+using static ConcreteEngine.Engine.Assets.Models.Loader.AssimpImporter.ImportModelUtils;
 
 #endregion
 
-namespace ConcreteEngine.Engine.Assets.Models.ImportProcessors;
+namespace ConcreteEngine.Engine.Assets.Models.Loader.AssimpImporter;
 
-internal sealed class ModelAnimationProcessor(ModelImportDataStore dataStore, ModelLoaderState state)
+internal sealed class AssimpAnimationProcessor(ModelLoaderDataTable dataTable, ModelLoaderState state)
 {
     public unsafe bool HasAnimationChannels(AssimpScene* scene)
     {
@@ -56,7 +52,7 @@ internal sealed class ModelAnimationProcessor(ModelImportDataStore dataStore, Mo
 
         ProcessAnimations(scene);
     }
-    
+
 
     public unsafe void ProcessBoneData(AssimpMesh* mesh)
     {
@@ -64,8 +60,8 @@ internal sealed class ModelAnimationProcessor(ModelImportDataStore dataStore, Mo
         ArgumentOutOfRangeException.ThrowIfGreaterThan(boneCount, BoneTransformsCapacity);
 
         //ensure capacity for skinningData
-        dataStore.WriteSkinningData(vertexCount, out var skinningData, out var boneTransforms); 
-        dataStore.FillDefaultSkinningData();
+        dataTable.WriteSkinningData(vertexCount, out var skinningData, out var boneTransforms);
+        dataTable.FillDefaultSkinningData();
         var slicedSkinned = skinningData.Slice(0, vertexCount);
 
         for (var i = 0; i < mesh->MNumBones; i++)
@@ -75,7 +71,7 @@ internal sealed class ModelAnimationProcessor(ModelImportDataStore dataStore, Mo
 
             if (state.TryGetBoneIndex(name, out var boneIndex))
             {
-                boneTransforms[boneIndex] = ImportUtils.SanitizeAssimpMatrix(bone->MOffsetMatrix);
+                boneTransforms[boneIndex] = bone->MOffsetMatrix;
                 WriteWeightAndIndices(bone, boneIndex, slicedSkinned);
             }
             else
@@ -83,17 +79,16 @@ internal sealed class ModelAnimationProcessor(ModelImportDataStore dataStore, Mo
                 throw new InvalidOperationException();
             }
         }
+
         // sanitize
         SanitizeSkinningData(vertexCount, slicedSkinned);
     }
-    
-
 
 
     public unsafe void BuildSkeletonHierarchy(AssimpNode* node)
     {
         var nodeName = node->MName.AsString;
-        
+
         if (state.TryGetBoneIndex(nodeName, out int boneIndex))
         {
             if (node->MParent != null)
@@ -102,7 +97,7 @@ internal sealed class ModelAnimationProcessor(ModelImportDataStore dataStore, Mo
                 state.UpdateBoneParentIndexOrDefault(parentName, boneIndex);
             }
 
-            if ( boneIndex == 0)
+            if (boneIndex == 0)
             {
                 var offset = Matrix4x4.Identity;
                 var current = node->MParent;
@@ -112,7 +107,7 @@ internal sealed class ModelAnimationProcessor(ModelImportDataStore dataStore, Mo
                     current = current->MParent;
                 }
 
-                dataStore.SkeletonRootOffset = ImportUtils.SanitizeAssimpMatrix(offset);
+                dataTable.SkeletonRootOffset = offset;
             }
         }
 
@@ -191,8 +186,8 @@ internal sealed class ModelAnimationProcessor(ModelImportDataStore dataStore, Mo
             state.AppendAnimation(animationData);
         }
     }
-    
-    
+
+
     private static unsafe void WriteWeightAndIndices(Bone* bone, int boneIndex, Span<SkinningData> skinningData)
     {
         /*
@@ -235,9 +230,9 @@ for (var j = 0; j < 4; j++)
             }
         }
     }
-    
 
-    private static void SanitizeSkinningData(int  vertexCount, Span<SkinningData> skinningData)
+
+    private static void SanitizeSkinningData(int vertexCount, Span<SkinningData> skinningData)
     {
         for (int i = 0; i < vertexCount; i++)
         {

@@ -2,40 +2,39 @@
 
 using System.Numerics;
 using ConcreteEngine.Common.Numerics;
-using ConcreteEngine.Common.Numerics.Maths;
 using ConcreteEngine.Engine.Assets.Internal;
-using ConcreteEngine.Engine.Assets.Models.Loader;
 using Silk.NET.Assimp;
-using static ConcreteEngine.Engine.Assets.Models.ImportProcessors.ImportConstants;
+using static ConcreteEngine.Engine.Assets.Models.Loader.AssimpImporter.ImportModelUtils;
+using AssimpMesh = Silk.NET.Assimp.Mesh;
 using AssimpScene = Silk.NET.Assimp.Scene;
 using AssimpNode = Silk.NET.Assimp.Node;
 
 #endregion
 
-namespace ConcreteEngine.Engine.Assets.Models.ImportProcessors;
+namespace ConcreteEngine.Engine.Assets.Models.Loader.AssimpImporter;
 
-internal sealed class ModelImporter
+internal sealed class ModelAssimpImporter
 {
     private Assimp? _assimp;
 
     private readonly AssetGfxUploader _gfxUploader;
-    private readonly ModelImportDataStore _dataStore;
+    private readonly ModelLoaderDataTable _dataTable;
     private readonly ModelLoaderState _state;
 
-    private readonly MeshProcessor _meshProcessor;
-    private readonly ModelMaterialProcessor _materialProcessor;
-    private readonly ModelAnimationProcessor _animationProcessor;
+    private readonly AssimpMeshProcessor _meshProcessor;
+    private readonly AssimpMaterialProcessor _materialProcessor;
+    private readonly AssimpAnimationProcessor _animationProcessor;
 
     private readonly Dictionary<string, IntPtr> _nodeMap = new(16);
 
-    internal ModelImporter(AssetGfxUploader gfxUploader, ModelImportDataStore dataStore, ModelLoaderState state)
+    internal ModelAssimpImporter(AssetGfxUploader gfxUploader, ModelLoaderDataTable dataTable, ModelLoaderState state)
     {
         _gfxUploader = gfxUploader;
-        _dataStore = dataStore;
+        _dataTable = dataTable;
         _state = state;
-        _meshProcessor = new MeshProcessor(_dataStore);
-        _materialProcessor = new ModelMaterialProcessor(_state);
-        _animationProcessor = new ModelAnimationProcessor(_dataStore, _state);
+        _meshProcessor = new AssimpMeshProcessor(_dataTable);
+        _materialProcessor = new AssimpMaterialProcessor(_state);
+        _animationProcessor = new AssimpAnimationProcessor(_dataTable, _state);
     }
 
 
@@ -71,20 +70,11 @@ internal sealed class ModelImporter
     private unsafe void ProcessScene(AssimpScene* scene)
     {
         _state.MightBeAnimated = scene->MNumAnimations > 0 || scene->MNumSkeletons > 0;
-        if (_state.MightBeAnimated)
-        {
-            Console.WriteLine("asd");
-        }
 
-        //_dataStore.InvRootTransform = Matrix4x4.Identity;
         Matrix4x4.Invert(scene->MRootNode->MTransformation, out var invRoot);
-        _dataStore.InvRootTransform = Matrix4x4.Transpose(invRoot);
+        _dataTable.InvRootTransform = Matrix4x4.Transpose(invRoot);
 
-        MutateSceneTransform(scene);
-
-        //MatrixMath.InvertAffine(in scene->MRootNode->MTransformation, out _dataStore.InvRootTransform);
-
-        //MutateSceneTransform(scene);
+        PreProcessScene(scene);
         MapNodes(scene->MRootNode);
         RegisterAllBones(scene);
 
@@ -96,50 +86,9 @@ internal sealed class ModelImporter
         if (_state.HasAnimationChannels)
         {
             _animationProcessor.ProcessSceneAnimations(scene);
-
-            for (int i = 0; i < 5; i++)
-            {
-                var local = _dataStore.NodeTransforms[i];
-                if (!Matrix4x4.Decompose(local, out Vector3 scale, out Quaternion rotation, out Vector3 translation))
-                {
-                    Console.WriteLine($"Bone {i} failed to decompose");
-                }
-
-
-                Console.WriteLine($"Bone {i}:");
-                Console.WriteLine($"  Translation: {translation}");
-                Console.WriteLine($"  Rotation: {rotation}");
-                Console.WriteLine($"  Scale: {scale}");
-                
-                var test1 = Matrix4x4.CreateScale(scale) *
-                            Matrix4x4.CreateFromQuaternion(rotation) *
-                            Matrix4x4.CreateTranslation(translation);
-
-// Order 2: Translation * Rotation * Scale
-                var test2 = Matrix4x4.CreateTranslation(translation) *
-                            Matrix4x4.CreateFromQuaternion(rotation) *
-                            Matrix4x4.CreateScale(scale);
-
-// Order 3: Rotation * Scale * Translation
-                var test3 = Matrix4x4.CreateFromQuaternion(rotation) *
-                            Matrix4x4.CreateScale(scale) *
-                            Matrix4x4.CreateTranslation(translation);
-
-// Compare
-                Console.WriteLine("Difference test1: " + (test1 - local).GetMaxElementAbs());
-                Console.WriteLine("Difference test2: " + (test2 - local).GetMaxElementAbs());
-                Console.WriteLine("Difference test3: " + (test3 - local).GetMaxElementAbs());
-            }
-        
-            for (int v = 0; v < Math.Min(5, 200); v++)
-            {
-                var sw = _dataStore.SkinningData[v];
-                Console.WriteLine($"Vertex {v} bone indices = {sw.BoneIndices.X},{sw.BoneIndices.Y},{sw.BoneIndices.Z},{sw.BoneIndices.W} weights = {sw.BoneWeights}");
-            }        
         }
-        // irrelevant
-        ImportUtils.CalculateBoundingBox(_state.MeshCount, _dataStore.GetParts(_state.MeshCount),
-            out _dataStore.ModelBounds);
+
+        _dataTable.CalculateBoundingBox(_state.MeshCount);
 
         if (scene->MNumMaterials > 0) _materialProcessor.ProcessSceneMaterials(scene);
     }
@@ -180,7 +129,7 @@ internal sealed class ModelImporter
         }
     }
 
-    private unsafe void MutateSceneTransform(AssimpScene* scene)
+    private unsafe void PreProcessScene(AssimpScene* scene)
     {
         TraverseTranspose(scene->MRootNode);
         TransposeBones();
@@ -208,14 +157,11 @@ internal sealed class ModelImporter
                 TraverseTranspose(node);
             }
         }
-        
-
     }
 
     private unsafe void TraverseNode(AssimpNode* node, AssimpScene* scene, ref int traverseIndex, in Matrix4x4 parent)
     {
-        var nodeTransform = ImportUtils.SanitizeAssimpMatrix(node->MTransformation);
-       // var local = parent * nodeTransform;
+        var nodeTransform = node->MTransformation;
         var local = nodeTransform * parent;
 
         MeshCreationInfo info;
@@ -239,7 +185,7 @@ internal sealed class ModelImporter
             var slot = (int)scene->MMeshes[i]->MMaterialIndex;
             var vertexCount = (int)mesh->MNumVertices;
 
-            var writer = _dataStore.WriteMeshParts();
+            var writer = _dataTable.WriteMeshParts();
             BoundingBox.FromPoints(new Span<Vector3>(mesh->MVertices, vertexCount), out var bounds);
 
             writer.Fill(traverseIndex, slot, info, in bounds, in local);
@@ -251,18 +197,14 @@ internal sealed class ModelImporter
         // Process children
         for (var i = 0; i < node->MNumChildren; i++)
             TraverseNode(node->MChildren[i], scene, ref traverseIndex, in local);
-        
+
 
         if (_state.TryGetBoneIndex(node->MName.AsString, out int index))
         {
-            //Console.WriteLine($"Matched {node->MName.AsString} -> Index {index}");
-            _dataStore.NodeTransforms[index] = nodeTransform;
+            _dataTable.NodeTransforms[index] = nodeTransform;
         }
         else if (node->MNumMeshes > 0)
         {
-            /*
-            Console.WriteLine($"Missed Node: {node->MName.AsString}");
-            */
         }
     }
 

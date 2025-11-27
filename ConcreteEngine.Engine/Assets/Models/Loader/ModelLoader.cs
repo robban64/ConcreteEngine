@@ -4,7 +4,7 @@ using ConcreteEngine.Common;
 using ConcreteEngine.Engine.Assets.Data;
 using ConcreteEngine.Engine.Assets.Internal;
 using ConcreteEngine.Engine.Assets.IO;
-using ConcreteEngine.Engine.Assets.Models.ImportProcessors;
+using ConcreteEngine.Engine.Assets.Models.Loader.AssimpImporter;
 
 #endregion
 
@@ -12,15 +12,15 @@ namespace ConcreteEngine.Engine.Assets.Models.Loader;
 
 internal sealed class ModelLoader
 {
-    private ModelImporter _modelImporter;
-    private ModelImportDataStore _dataStore;
+    private AssimpImporter.ModelAssimpImporter _modelAssimpImporter;
+    private ModelLoaderDataTable _dataTable;
     private ModelLoaderState _state;
 
     public ModelLoader(AssetGfxUploader uploader, ModelLoaderState state)
     {
         _state = state;
-        _dataStore = new ModelImportDataStore();
-        _modelImporter = new ModelImporter(uploader, _dataStore, _state);
+        _dataTable = new ModelLoaderDataTable();
+        _modelAssimpImporter = new AssimpImporter.ModelAssimpImporter(uploader, _dataTable, _state);
     }
 
     public ModelLoaderResult LoadMesh(AssetRef<Model> refId, string name, string fileName, out AssetFileSpec[] fileSpec)
@@ -31,14 +31,14 @@ internal sealed class ModelLoader
         if (!fi.Exists) throw new FileNotFoundException("File not found.", path);
 
         _state.Start(name, fileName);
-        _dataStore.Clear();
-        _modelImporter.ImportMesh(path);
+        _dataTable.Clear();
+        _modelAssimpImporter.ImportMesh(path);
 
         InvalidOpThrower.ThrowIf(_state.MeshCount == 0);
 
         var drawCount = 0;
         var meshParts = new ModelMesh[_state.MeshCount];
-        var meshData = _dataStore.GetMeshDataResult(meshParts.Length);
+        var meshData = _dataTable.GetMeshDataResult(meshParts.Length);
         for (int i = 0; i < meshParts.Length; i++)
         {
             ref readonly var part = ref meshData.Parts[i];
@@ -59,11 +59,10 @@ internal sealed class ModelLoader
                 boneMapping,
                 animations,
                 parentIndices,
-                _dataStore.BoneTransforms,
-                _dataStore.NodeTransforms,
-                in _dataStore.InvRootTransform,
-                in _dataStore.SkeletonRootOffset);
-
+                _dataTable.BoneTransforms,
+                _dataTable.NodeTransforms,
+                in _dataTable.InvRootTransform,
+                in _dataTable.SkeletonRootOffset);
         }
 
         fileSpec = [new AssetFileSpec(AssetStorageKind.FileSystem, name, fileName, fi.Length)];
@@ -73,11 +72,11 @@ internal sealed class ModelLoader
 
     public void Teardown()
     {
-        _modelImporter.Teardown();
-        _dataStore.Teardown();
+        _modelAssimpImporter.Teardown();
+        _dataTable.Teardown();
 
-        _modelImporter = null!;
-        _dataStore = null!;
+        _modelAssimpImporter = null!;
+        _dataTable = null!;
         _state = null!;
     }
 }

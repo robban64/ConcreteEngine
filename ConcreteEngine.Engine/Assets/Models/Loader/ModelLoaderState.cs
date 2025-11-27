@@ -4,7 +4,7 @@ using System.Runtime.InteropServices;
 using ConcreteEngine.Common;
 using ConcreteEngine.Common.Numerics;
 using ConcreteEngine.Engine.Assets.Descriptors;
-using static ConcreteEngine.Engine.Assets.Models.ImportProcessors.ImportConstants;
+using static ConcreteEngine.Engine.Assets.Models.Loader.AssimpImporter.ImportModelUtils;
 
 #endregion
 
@@ -67,11 +67,12 @@ internal sealed class ModelLoaderState
     {
         foreach (var kv in _boneByName)
         {
-            if(kv.Value == i) return kv.Key;
+            if (kv.Value == i) return kv.Key;
         }
 
         return $"Not found for {i}";
     }
+
     public void Start(string name, string filename)
     {
         Clear();
@@ -173,6 +174,5 @@ internal sealed class ModelLoaderState
 
         Name = string.Empty;
         Filename = string.Empty;
-        
     }
 }

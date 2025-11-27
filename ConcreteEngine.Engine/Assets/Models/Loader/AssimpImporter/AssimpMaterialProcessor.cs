@@ -8,7 +8,6 @@ using ConcreteEngine.Common;
 using ConcreteEngine.Common.Numerics;
 using ConcreteEngine.Engine.Assets.Data;
 using ConcreteEngine.Engine.Assets.Descriptors;
-using ConcreteEngine.Engine.Assets.Models.Loader;
 using ConcreteEngine.Graphics.Gfx.Definitions;
 using ConcreteEngine.Renderer.Definitions;
 using Silk.NET.Assimp;
@@ -18,9 +17,9 @@ using AssimpTexture = Silk.NET.Assimp.Texture;
 
 #endregion
 
-namespace ConcreteEngine.Engine.Assets.Models.ImportProcessors;
+namespace ConcreteEngine.Engine.Assets.Models.Loader.AssimpImporter;
 
-internal sealed class ModelMaterialProcessor(ModelLoaderState state)
+internal sealed class AssimpMaterialProcessor(ModelLoaderState state)
 {
     private bool isActive = false;
 

@@ -3,6 +3,7 @@
 using System.Numerics;
 using ConcreteEngine.Common;
 using ConcreteEngine.Common.Numerics;
+using ConcreteEngine.Common.Numerics.Maths;
 using ConcreteEngine.Engine.Assets.Models.Loader;
 using ConcreteEngine.Graphics.Primitives;
 using Silk.NET.Assimp;
@@ -55,89 +56,40 @@ internal sealed class ModelAnimationProcessor(ModelImportDataStore dataStore, Mo
 
         ProcessAnimations(scene);
     }
+    
 
-
-
-    private static unsafe void WriteWeightAndIndices(Bone* bone, int boneIndex, Span<SkinningData> skinningData)
+    public unsafe void ProcessBoneData(AssimpMesh* mesh, in Matrix4x4 global)
     {
-        for (uint j = 0; j < bone->MNumWeights; j++)
-        {
-            var weight = bone->MWeights[j];
-
-            if (weight.MVertexId >= skinningData.Length) continue;
-
-            ref var data = ref skinningData[(int)weight.MVertexId];
-            if (data.BoneIndices.X < 0)
-            {
-                data.BoneIndices.X = boneIndex;
-                data.BoneWeights.X = weight.MWeight;
-            }
-            else if (data.BoneIndices.Y < 0)
-            {
-                data.BoneIndices.Y = boneIndex;
-                data.BoneWeights.Y = weight.MWeight;
-            }
-            else if (data.BoneIndices.Z < 0)
-            {
-                data.BoneIndices.Z = boneIndex;
-                data.BoneWeights.Z = weight.MWeight;
-            }
-            else if (data.BoneIndices.W < 0)
-            {
-                data.BoneIndices.W = boneIndex;
-                data.BoneWeights.W = weight.MWeight;
-            }
-        }
-    }
-
-    public unsafe void ProcessBoneData(AssimpMesh* mesh, in Matrix4x4 parent)
-    {
-        var vertexCount = (int)mesh->MNumVertices;
-        var boneCount = (int)mesh->MNumBones;
+        int vertexCount = (int)mesh->MNumVertices, boneCount = (int)mesh->MNumBones;
         ArgumentOutOfRangeException.ThrowIfGreaterThan(boneCount, BoneTransformsCapacity);
 
-        dataStore.WriteSkinningData(vertexCount, out var skinningData, out var boneTransforms);
-        FillDefaultSkinningData(skinningData);
+        dataStore.WriteSkinningData(vertexCount, out var skinningData, out var boneTransforms); //ensure capacity for skinningData
+        dataStore.FillDefaultSkinningData();
         var slicedSkinned = skinningData.Slice(0, vertexCount);
 
         for (var i = 0; i < mesh->MNumBones; i++)
         {
-            var boneIndex = 0;
             ref var bone = ref mesh->MBones[i];
             var name = bone->MName.AsString;
 
-            if (state.TryGetBoneIndex(name, out var value))
+            if (state.TryGetBoneIndex(name, out var boneIndex))
             {
-                boneIndex = value;
-                InvalidOpThrower.ThrowIf(boneIndex > BoneTransformsCapacity, nameof(BoneTransformsCapacity));
+                var offsetMat = Matrix4x4.Transpose(bone->MOffsetMatrix);
+                boneTransforms[boneIndex] = offsetMat;
+                WriteWeightAndIndices(bone, boneIndex, slicedSkinned);
             }
             else
             {
-                boneIndex = state.BoneCount;
-                InvalidOpThrower.ThrowIf(boneIndex > BoneTransformsCapacity, nameof(BoneTransformsCapacity));
-
-                state.AppendBone(name, boneIndex);
-                boneTransforms[boneIndex] = parent * bone->MOffsetMatrix;
+                throw new InvalidOperationException();
             }
 
-            WriteWeightAndIndices(bone, boneIndex, slicedSkinned);
-            /*
-            for (var j = 0; j < 4; j++)
-            {
-                var weight = bone->MWeights[j];
-                ref var data = ref slicedSkinned[(int)weight.MVertexId];
-                if (data.GetVertexId(j) < 0)
-                {
-                    data.Set(j, boneIndex, weight.MWeight);
-                    break;
-                }
-            }*/
         }
         
         // sanitize
         SanitizeSkinningData(vertexCount, slicedSkinned);
     }
     
+
 
 
     public unsafe void BuildSkeletonHierarchy(AssimpNode* node)
@@ -158,7 +110,7 @@ internal sealed class ModelAnimationProcessor(ModelImportDataStore dataStore, Mo
                 var current = node->MParent;
                 while (current != null)
                 {
-                    offset = offset * current->MTransformation; 
+                    offset *= current->MTransformation; 
                     current = current->MParent;
                 }
 
@@ -242,11 +194,50 @@ internal sealed class ModelAnimationProcessor(ModelImportDataStore dataStore, Mo
         }
     }
     
-    private static void FillDefaultSkinningData(Span<SkinningData> skinningData)
+    
+    private static unsafe void WriteWeightAndIndices(Bone* bone, int boneIndex, Span<SkinningData> skinningData)
     {
-        var skinData = new SkinningData { BoneWeights = default, BoneIndices = new Int4(-1, -1, -1, -1) };
-        skinningData.Fill(skinData);
+        /*
+for (var j = 0; j < 4; j++)
+{
+    var weight = bone->MWeights[j];
+    ref var data = ref slicedSkinned[(int)weight.MVertexId];
+    if (data.GetVertexId(j) < 0)
+    {
+        data.Set(j, boneIndex, weight.MWeight);
+        break;
     }
+}*/
+        for (uint j = 0; j < bone->MNumWeights; j++)
+        {
+            var weight = bone->MWeights[j];
+
+            if (weight.MVertexId >= skinningData.Length) continue;
+
+            ref var data = ref skinningData[(int)weight.MVertexId];
+            if (data.BoneIndices.X < 0)
+            {
+                data.BoneIndices.X = boneIndex;
+                data.BoneWeights.X = weight.MWeight;
+            }
+            else if (data.BoneIndices.Y < 0)
+            {
+                data.BoneIndices.Y = boneIndex;
+                data.BoneWeights.Y = weight.MWeight;
+            }
+            else if (data.BoneIndices.Z < 0)
+            {
+                data.BoneIndices.Z = boneIndex;
+                data.BoneWeights.Z = weight.MWeight;
+            }
+            else if (data.BoneIndices.W < 0)
+            {
+                data.BoneIndices.W = boneIndex;
+                data.BoneWeights.W = weight.MWeight;
+            }
+        }
+    }
+    
 
     private static void SanitizeSkinningData(int  vertexCount, Span<SkinningData> skinningData)
     {

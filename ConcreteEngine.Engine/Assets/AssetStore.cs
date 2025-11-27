@@ -279,6 +279,7 @@ internal sealed class AssetStore : IAssetStore
         asset.IsEmbedded = true;
         RegisterInternal(id, asset, embedded.FileSpec);
         Logger.LogString(LogScope.Assets, $"{asset.Name} - Embedded {typeof(TAsset).Name} loaded");
+        Console.WriteLine( $"{asset.Name} - Embedded {embedded.FileSpec[0].Source} loaded");
         return asset;
     }
 

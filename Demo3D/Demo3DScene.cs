@@ -77,22 +77,45 @@ public sealed class Demo3DScene : GameScene
 
         {
             
-            var soliderModel = assets.Store.GetByName<Model>("Cesium_Man");
-            
+            var soliderModel = assets.Store.GetByName<Model>("Warrior");
             
             //Warrior::Materials/0
             //Something is off with this dude, temp texture
-            var warriorMat = materialStore.Get("Knight::Materials/0");
+            var warriorMat = materialStore.Get("Warrior::Materials/0");
             var soliderMatKey = worldMaterials.Add(MaterialTagBuilder.BuildOne(warriorMat.Id));
             var soliderEntity = worldEntities.Create();
-            warriorMat.State.Shininess = 22;
-            warriorMat.State.Specular = 0.18f;
 
             worldEntities.Models.Add(soliderEntity,
                 new ModelComponent(soliderModel.ModelId, soliderModel.DrawCount, soliderMatKey));
-            worldEntities.Transforms.Add(soliderEntity, Transform.Identity with { Translation = new Vector3(120, 120, 6) });
+            worldEntities.Transforms.Add(soliderEntity, Transform.Identity with { Translation = new Vector3(115, 6,120) });
             worldEntities.BoundingBoxes.Add(soliderEntity, new BoxComponent(soliderModel.Bounds));
+            
+            var animationComponent = new AnimationComponent(soliderModel.ModelId, 1, 4);
+            worldEntities.Animations.Add(soliderEntity, animationComponent);
+            // animationComponent.Slot = Context.World.MeshTable.GetAnimationSlot(knight.ModelId);
 
+        }
+        
+        
+        {
+            
+            var model = assets.Store.GetByName<Model>("Cesium_Man");
+            var mat = materialStore.CreateMaterial("EmptyAnimated", "CesiumMat");
+            
+            //Warrior::Materials/0
+            //Something is off with this dude, temp texture
+            //var warriorMat = materialStore.Get("Warrior::Materials/0");
+            var matKey = worldMaterials.Add(MaterialTagBuilder.BuildOne(mat.Id));
+            var entity = worldEntities.Create();
+
+            worldEntities.Models.Add(entity,
+                new ModelComponent(model.ModelId, model.DrawCount, matKey));
+            worldEntities.Transforms.Add(entity, Transform.Identity with { Translation = new Vector3(120, 6,120) });
+            worldEntities.BoundingBoxes.Add(entity, new BoxComponent(model.Bounds));
+            
+            var animationComponent = new AnimationComponent(model.ModelId, 1, 4);
+            worldEntities.Animations.Add(entity, animationComponent);
+            // animationComponent.Slot = Context.World.MeshTable.GetAnimationSlot(knight.ModelId);
         }
         
         {

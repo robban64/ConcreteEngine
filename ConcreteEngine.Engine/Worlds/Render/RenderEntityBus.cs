@@ -3,6 +3,7 @@
 using System.Numerics;
 using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
+using ConcreteEngine.Common;
 using ConcreteEngine.Common.Collections;
 using ConcreteEngine.Common.Numerics;
 using ConcreteEngine.Common.Numerics.Maths;
@@ -25,6 +26,7 @@ internal sealed class RenderEntityBus
 
     private int _idx = 0;
     private DrawEntity[] _entities = new DrawEntity[DefaultCapacity];
+    private int[] _byEntityId = new int[DefaultCapacity];
 
     private World? _world;
 
@@ -34,10 +36,18 @@ internal sealed class RenderEntityBus
     public ModelId CubeId { get; set; }
     public MaterialTagKey EmptyMaterialKey { get; set; }
 
+    //temp
+    private readonly Matrix4x4[] _animationGlobals = new Matrix4x4[64];
+    private readonly Matrix4x4[] _animationFinal = new Matrix4x4[64];
+
     internal RenderEntityBus(MeshTable meshTable, MaterialTable materialTable)
     {
         _meshTable = meshTable;
         _materialTable = materialTable;
+        
+        _animationGlobals.AsSpan().Fill(Matrix4x4.Identity);
+        _animationFinal.AsSpan().Fill(Matrix4x4.Identity);
+
     }
 
     private int ActiveSkyCount => _world?.Sky.IsActive ?? false ? 1 : 0;
@@ -112,7 +122,8 @@ internal sealed class RenderEntityBus
             ref var model = ref query.Component1;
             ref var transform = ref query.Component2;
 
-            ref var entity = ref _entities[idxCollect++];
+            ref var entity = ref _entities[idxCollect];
+            _byEntityId[entity.Entity] = idxCollect++;
 
             var depthKey = DepthKeyUtility.MakeDepthKey(in viewMat, in transform.Translation, near, far);
 
@@ -134,15 +145,13 @@ internal sealed class RenderEntityBus
         _idx = idxCollect;
     }
 
-    private readonly Matrix4x4[] _animationGlobals = new Matrix4x4[64];
-    private readonly Matrix4x4[] _animationFinal = new Matrix4x4[64];
-
 
     float t = 0;
 
     public void ProcessAnimations(float deltaTime, DrawCommandBuffer buffer)
     {
         //var submitView = _meshTable.GetBoneUploadPayload();
+        
         var worldEntities = _world!.Entities;
         var globals = _animationGlobals;
         var finals = _animationFinal;
@@ -167,34 +176,53 @@ internal sealed class RenderEntityBus
                 (uint)boneCount > parentIndices.Length)
                 throw new IndexOutOfRangeException();
 
-            globals.AsSpan().Clear();
+            globals.AsSpan().Fill(Matrix4x4.Identity);
+
+            _entities[_byEntityId[query.Entity]].IsAnimated = true;
 
             Transform poseTransform = default;
             Matrix4x4 local = default;
             for (int i = 0; i < boneCount; i++)
             {
-                if (!boneByIndex.TryGetValue(i, out var track))
-                {
-                    local = nodeTransforms[i];
-                }
-                else
-                {
-                    poseTransform.Translation = LerpVector(track.Translations, track.TranslationTimes, t, default);
-                    poseTransform.Scale = LerpVector(track.Scales, track.ScaleTimes, t, Vector3.One);
-                    poseTransform.Rotation = LerpQuaternion(track.Rotations, track.RotationTimes, t);
-                    WriteTransformMatrix(in poseTransform, ref local);
-                }
+                /*
+                   if (!boneByIndex.TryGetValue(i, out var track))
+                   {
+                       local = nodeTransforms[i];
+                   }
+                   else
+                   {
+
+                       poseTransform.Translation = LerpVector(track.Translations, track.TranslationTimes, t, default);
+                       poseTransform.Scale = LerpVector(track.Scales, track.ScaleTimes, t, Vector3.One);
+                       poseTransform.Rotation = LerpQuaternion(track.Rotations, track.RotationTimes, t);
+                       WriteTransformMatrix(in poseTransform, ref local);
+                   }
+                   int p = parentIndices[i];
+                   if (p >= 0)
+                       MatrixMath.MultiplyAffine(in local, in globals[p], out globals[i]);
+                   else
+                   {
+                       globals[i] = local;
+                   }
+                    finals[i] = boneTransforms[i] * globals[i] * invMatrix;
+                   finals[i] = boneTransforms[i] * nodeTransforms[i] * invMatrix;
+                   MatrixMath.MultiplyAffine(in boneTransforms[i], in globals[i], out finals[i]);
+
+     */
+
+                local = nodeTransforms[i];
 
                 int p = parentIndices[i];
                 if (p >= 0)
-                    MatrixMath.MultiplyAffine(in globals[p], in local, out globals[i]);
+                {
+                    MatrixMath.MultiplyAffine(in local, in globals[p], out globals[i]);
+                }
                 else
                 {
-                    //local.Translation = Vector3.Zero; 
-                    MatrixMath.MultiplyAffine(in local, in modelAnimation.SkeletonRootOffset, out globals[i]);
+                    // Root Bone
+                    globals[i] = local;
                 }
-
-                finals[i] = boneTransforms[i] * globals[i] * invMatrix;
+                finals[i] = boneTransforms[i] * globals[i] * Matrix4x4.Identity;
             }
 
             buffer.SubmitSingleAnimation(finals);
@@ -271,20 +299,21 @@ internal sealed class RenderEntityBus
 
             ref var mat0 = ref MemoryMarshal.GetReference(matSpan);
 
+
             var baseMeta = entity.Meta;
+            var isAnimated = entity.IsAnimated;
             int len = int.Min(locals.Length, parts.Length);
             for (var i = 0; i < len; i++)
             {
                 ref readonly var part = ref parts[i];
 
                 ref var draw = ref Unsafe.AsRef(ref drawData);
-                ApplyTransform(ref draw, in locals[i], in world);
-                
-                
+                ApplyTransform(ref draw, in locals[i], in world, isAnimated);
+
                 ref var mat = ref Unsafe.Add(ref mat0, part.MaterialSlot);
-                
+
                 var meta = BuildMeta(ref Unsafe.AsRef(ref materialTag), part.MaterialSlot, baseMeta);
-                
+
                 var cmd = new DrawCommand(part.Mesh, mat, part.DrawCount);
                 buffer.SubmitDraw(cmd, meta, ref draw);
             }
@@ -295,10 +324,19 @@ internal sealed class RenderEntityBus
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    static void ApplyTransform(ref DrawObjectUniform data, in Matrix4x4 local, in Matrix4x4 world)
+    private static void ApplyTransform(ref DrawObjectUniform data, in Matrix4x4 local, in Matrix4x4 world,
+        bool isAnimated)
     {
-        MatrixMath.MultiplyAffine(in local, in world, out data.Model);
-        MatrixMath.CreateNormalMatrix(in data.Model, out data.Normal);
+        if (isAnimated)
+        {
+            data.Model = world;
+            MatrixMath.CreateNormalMatrix(in data.Model, out data.Normal);
+        }
+        else
+        {
+            MatrixMath.MultiplyAffine(in local, in world, out data.Model);
+            MatrixMath.CreateNormalMatrix(in data.Model, out data.Normal);
+        }
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
@@ -365,6 +403,8 @@ internal sealed class RenderEntityBus
 
     private void EnsureCapacity(int amount)
     {
+        InvalidOpThrower.ThrowIf(_byEntityId.Length != _entities.Length);
+
         if (_entities.Length >= amount) return;
         var newCap = ArrayUtility.CapacityGrowthToFit(amount, Math.Max(amount, 4));
 
@@ -372,6 +412,7 @@ internal sealed class RenderEntityBus
             throw new OutOfMemoryException("Entity Buffer exceeded max limit");
 
         Array.Resize(ref _entities, newCap);
+        Array.Resize(ref _byEntityId, newCap);
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining | MethodImplOptions.AggressiveOptimization)]

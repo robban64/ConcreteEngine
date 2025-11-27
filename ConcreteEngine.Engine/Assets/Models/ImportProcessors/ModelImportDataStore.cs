@@ -35,7 +35,7 @@ internal ref struct MeshPartWriter(Span<MeshPartImportResult> parts, Span<Matrix
     public Span<Matrix4x4> PartTransforms = partTransforms;
 
     public void Fill(int index, int materialSlot, MeshCreationInfo creationInfo, in BoundingBox bounds,
-        ref Matrix4x4 partTransform)
+        in Matrix4x4 partTransform)
     {
         ref var it = ref Parts[index];
         it.MaterialSlot = materialSlot;
@@ -152,12 +152,21 @@ internal sealed class ModelImportDataStore
         }
     }
 
+    public void FillDefaultSkinningData()
+    {
+        var skinData = new SkinningData { BoneWeights = default, BoneIndices = new Int4(-1, -1, -1, -1) };
+        _skinningData.AsSpan().Fill(skinData);
+    }
+
 
     public void Clear()
     {
+        FillDefaultSkinningData();
+        _parts.AsSpan().Clear();
+        _partTransforms.AsSpan().Clear();
         _nodeTransform.AsSpan().Fill(Matrix4x4.Identity);
         _boneTransforms.AsSpan().Fill(Matrix4x4.Identity);
-        _skinningData.AsSpan().Clear();
+        
         ModelBounds = default;
         InvRootTransform = Matrix4x4.Identity;
         SkeletonRootOffset = Matrix4x4.Identity;

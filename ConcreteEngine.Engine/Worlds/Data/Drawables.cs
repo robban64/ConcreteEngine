@@ -15,13 +15,15 @@ public struct DrawEntity(
     ModelId model,
     MaterialTagKey materialKey,
     in Transform transform,
-    DrawCommandMeta meta)
+    DrawCommandMeta meta,
+    bool isAnimated)
 {
     public Transform Transform = transform;
     public EntityId Entity = entity;
     public ModelId Model = model;
     public MaterialTagKey MaterialKey = materialKey;
     public DrawCommandMeta Meta = meta;
+    public bool IsAnimated = isAnimated;
 }
 
 [StructLayout(LayoutKind.Sequential)]

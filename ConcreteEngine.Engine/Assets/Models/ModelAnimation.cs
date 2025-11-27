@@ -9,8 +9,10 @@ namespace ConcreteEngine.Engine.Assets.Models;
 public sealed class ModelAnimation
 {
     private readonly ModelAnimationData[] _animations;
-    private readonly int[] _parentIndices;
+    
     private readonly Dictionary<int, string> _boneMapping;
+    
+    private readonly int[] _parentIndices;
     private readonly Matrix4x4[] _boneTransforms;
     private readonly Matrix4x4[] _nodeTransforms;
     private readonly Matrix4x4 _inverseRootTransform;
@@ -41,11 +43,11 @@ public sealed class ModelAnimation
         }
     }
 
-    public ReadOnlySpan<int> ParentIndices => _parentIndices;
 
     public ref readonly Matrix4x4 InverseRootTransform => ref _inverseRootTransform;
     public ref readonly Matrix4x4 SkeletonRootOffset => ref _skeletonRootOffset;
 
+    public ReadOnlySpan<int> ParentIndices => _parentIndices;
     public ReadOnlySpan<Matrix4x4> BoneTransforms => _boneTransforms;
     public ReadOnlySpan<Matrix4x4> NodeTransforms => _nodeTransforms;
 

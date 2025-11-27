@@ -164,5 +164,6 @@ internal sealed class ModelLoaderState
 
         Name = string.Empty;
         Filename = string.Empty;
+        
     }
 }

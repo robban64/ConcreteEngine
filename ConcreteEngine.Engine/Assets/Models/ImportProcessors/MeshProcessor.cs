@@ -3,6 +3,7 @@
 using System.Numerics;
 using ConcreteEngine.Common.Numerics;
 using ConcreteEngine.Common.Numerics.Extensions;
+using ConcreteEngine.Common.Numerics.Maths;
 using ConcreteEngine.Engine.Assets.Internal;
 using ConcreteEngine.Engine.Assets.Models.Loader;
 using ConcreteEngine.Graphics.Primitives;
@@ -14,7 +15,7 @@ namespace ConcreteEngine.Engine.Assets.Models.ImportProcessors;
 
 internal sealed class MeshProcessor(ModelImportDataStore dataStore)
 {
-    public unsafe MeshCreationInfo LoadAndUploadMesh(AssimpMesh* mesh, AssetGfxUploader gfxUploader, bool isAnimated, in Matrix4x4 parent)
+    public unsafe MeshCreationInfo LoadAndUploadMesh(AssimpMesh* mesh, AssetGfxUploader gfxUploader, bool isAnimated)
     {
         var vertexCount = (int)mesh->MNumVertices;
         var indexCount = (int)(mesh->MNumFaces * 3);
@@ -32,7 +33,7 @@ internal sealed class MeshProcessor(ModelImportDataStore dataStore)
         {
             var writer = dataStore.WriteVertexSkinned(vertexCount, indexCount);
             WriteIndices(mesh, writer.Indices);
-            WriteVerticesSkinned(mesh,  in parent, writer.Vertices, writer.Skinned);
+            WriteVerticesSkinned(mesh, writer.Vertices, writer.Skinned);
             gfxUploader.UploadMesh(dataStore.GetSkinnedUploadData(vertexCount, indexCount, ref info));
         }
 
@@ -69,28 +70,27 @@ internal sealed class MeshProcessor(ModelImportDataStore dataStore)
         }
     }
 
-    private static unsafe void WriteVerticesSkinned(AssimpMesh* mesh, in Matrix4x4 globalTransform, Span<Vertex3DSkinned> result,
-        ReadOnlySpan<SkinningData> skinned)
+    private static unsafe void WriteVerticesSkinned(AssimpMesh* mesh, Span<Vertex3DSkinned> result, ReadOnlySpan<SkinningData> skinned)
     {
         ArgumentOutOfRangeException.ThrowIfNotEqual(result.Length, skinned.Length, nameof(result.Length));
 
         var count = mesh->MNumVertices;
         if (count > result.Length || count > skinned.Length)
             throw new IndexOutOfRangeException();
-        var rotationX = Matrix4x4.CreateRotationX(-MathF.PI / 2);
-        var rotationMatrix = new Matrix3(in globalTransform);
-        
+
         for (int i = 0; i < count; i++)
         {
             ref readonly var skinnedVertex = ref skinned[i];
             ref var v = ref result[i];
 
-            v.Position = Vector3.Transform(mesh->MVertices[i], rotationX);
-            v.Normal = mesh->MNormals[i];
+            v.Position = mesh->MVertices[i];//ImportUtils.TransformZupToYup(mesh->MVertices[i]);
+            v.Normal = mesh->MNormals[i];//ImportUtils.TransformZupToYup(mesh->MNormals[i]);
             v.Tangent = mesh->MTangents[i];
             v.TexCoords = mesh->MTextureCoords[0][i].ToVec2();
             v.BoneIndices = skinnedVertex.BoneIndices;
             v.BoneWeights = skinnedVertex.BoneWeights;
         }
     }
+
+
 }

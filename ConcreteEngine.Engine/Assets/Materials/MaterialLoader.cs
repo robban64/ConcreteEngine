@@ -34,6 +34,12 @@ internal sealed class MaterialLoader
                 new ProfileSlot(TextureSlotKind.Mask),
                 new ProfileSlot(TextureSlotKind.Shadowmap)
             ),
+            [MaterialProfile.AnimatedModel] = new("ModelAnimated",
+                new ProfileSlot(TextureSlotKind.Albedo),
+                new ProfileSlot(TextureSlotKind.Normal),
+                new ProfileSlot(TextureSlotKind.Mask),
+                new ProfileSlot(TextureSlotKind.Shadowmap)
+            ),
             [MaterialProfile.Terrain] = new("Terrain",
                 new ProfileSlot(TextureSlotKind.Environment),
                 new ProfileSlot(TextureSlotKind.Environment),

@@ -12,7 +12,7 @@ namespace ConcreteEngine.Engine.Assets.Models.Loader;
 
 internal sealed class ModelLoader
 {
-    private AssimpImporter.ModelAssimpImporter _modelAssimpImporter;
+    private ModelAssimpImporter _modelAssimpImporter;
     private ModelLoaderDataTable _dataTable;
     private ModelLoaderState _state;
 
@@ -20,7 +20,7 @@ internal sealed class ModelLoader
     {
         _state = state;
         _dataTable = new ModelLoaderDataTable();
-        _modelAssimpImporter = new AssimpImporter.ModelAssimpImporter(uploader, _dataTable, _state);
+        _modelAssimpImporter = new ModelAssimpImporter(uploader, _dataTable, _state);
     }
 
     public ModelLoaderResult LoadMesh(AssetRef<Model> refId, string name, string fileName, out AssetFileSpec[] fileSpec)
@@ -72,11 +72,16 @@ internal sealed class ModelLoader
 
     public void Teardown()
     {
-        _modelAssimpImporter.Teardown();
         _dataTable.Teardown();
-
-        _modelAssimpImporter = null!;
         _dataTable = null!;
+
+        _state.Clear();
         _state = null!;
+        
+        _modelAssimpImporter.Teardown();
+        _modelAssimpImporter = null!;
+        
+        Console.WriteLine("Teardown complete.");
+
     }
 }

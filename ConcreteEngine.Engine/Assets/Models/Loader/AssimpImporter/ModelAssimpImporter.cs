@@ -25,16 +25,17 @@ internal sealed class ModelAssimpImporter
     private readonly AssimpMaterialProcessor _materialProcessor;
     private readonly AssimpAnimationProcessor _animationProcessor;
 
-    private readonly Dictionary<string, IntPtr> _nodeMap = new(16);
+    private readonly AssimpScenePreProcessor _scenePreProcessor;
 
     internal ModelAssimpImporter(AssetGfxUploader gfxUploader, ModelLoaderDataTable dataTable, ModelLoaderState state)
     {
         _gfxUploader = gfxUploader;
         _dataTable = dataTable;
         _state = state;
-        _meshProcessor = new AssimpMeshProcessor(_dataTable);
+        _meshProcessor = new AssimpMeshProcessor(_dataTable, state);
         _materialProcessor = new AssimpMaterialProcessor(_state);
         _animationProcessor = new AssimpAnimationProcessor(_dataTable, _state);
+        _scenePreProcessor = new AssimpScenePreProcessor(_state);
     }
 
 
@@ -51,7 +52,7 @@ internal sealed class ModelAssimpImporter
             throw new InvalidOperationException(error);
         }
 
-        _nodeMap.Clear();
+        _scenePreProcessor.Clear();
 
         try
         {
@@ -60,7 +61,7 @@ internal sealed class ModelAssimpImporter
         }
         finally
         {
-            _nodeMap.Clear();
+            _scenePreProcessor.Clear();
             _assimp.ReleaseImport(scene);
         }
 
@@ -69,19 +70,10 @@ internal sealed class ModelAssimpImporter
 
     private unsafe void ProcessScene(AssimpScene* scene)
     {
-        _state.MightBeAnimated = scene->MNumAnimations > 0 || scene->MNumSkeletons > 0;
-
-        Matrix4x4.Invert(scene->MRootNode->MTransformation, out var invRoot);
-        _dataTable.InvRootTransform = Matrix4x4.Transpose(invRoot);
-
-        PreProcessScene(scene);
-        MapNodes(scene->MRootNode);
-        RegisterAllBones(scene);
+        _scenePreProcessor.PreProcessSceneGraph(_assimp!, scene, _dataTable);
 
         int startIdx = 0;
-        TraverseNode(scene->MRootNode, scene, ref startIdx, Matrix4x4.Identity);
-
-        _state.HasAnimationChannels = _animationProcessor.HasAnimationChannels(scene);
+        TraverseSceneNodes(scene->MRootNode, scene, ref startIdx, Matrix4x4.Identity);
 
         if (_state.HasAnimationChannels)
         {
@@ -93,73 +85,8 @@ internal sealed class ModelAssimpImporter
         if (scene->MNumMaterials > 0) _materialProcessor.ProcessSceneMaterials(scene);
     }
 
-    private unsafe void MapNodes(AssimpNode* node)
-    {
-        _nodeMap[node->MName.AsString] = (IntPtr)node;
-        for (int i = 0; i < node->MNumChildren; i++)
-            MapNodes(node->MChildren[i]);
-    }
-
-    private unsafe void RegisterAllBones(AssimpScene* scene)
-    {
-        for (uint m = 0; m < scene->MNumMeshes; m++)
-        {
-            var mesh = scene->MMeshes[m];
-            for (uint b = 0; b < mesh->MNumBones; b++)
-            {
-                var boneName = mesh->MBones[b]->MName.AsString;
-                RegisterBoneRecursive(boneName);
-            }
-        }
-
-        return;
-
-        void RegisterBoneRecursive(string name)
-        {
-            if (_state.TryGetBoneIndex(name, out _)) return;
-            if (_nodeMap.TryGetValue(name, out IntPtr nodePtr))
-            {
-                var node = (AssimpNode*)nodePtr;
-                if (node->MParent != null)
-                    RegisterBoneRecursive(node->MParent->MName.AsString);
-            }
-
-            int idx = _state.BoneCount;
-            _state.AppendBone(name, idx);
-        }
-    }
-
-    private unsafe void PreProcessScene(AssimpScene* scene)
-    {
-        TraverseTranspose(scene->MRootNode);
-        TransposeBones();
-        return;
-
-        void TransposeBones()
-        {
-            for (int j = 0; j < scene->MNumMeshes; j++)
-            {
-                var mesh = scene->MMeshes[j];
-                for (int b = 0; b < mesh->MNumBones; b++)
-                {
-                    var bone = mesh->MBones[b];
-                    _assimp!.TransposeMatrix4(&bone->MOffsetMatrix);
-                }
-            }
-        }
-
-        void TraverseTranspose(AssimpNode* currentNode)
-        {
-            for (int i = 0; i < currentNode->MNumChildren; i++)
-            {
-                var node = currentNode->MChildren[i];
-                _assimp!.TransposeMatrix4(&node->MTransformation);
-                TraverseTranspose(node);
-            }
-        }
-    }
-
-    private unsafe void TraverseNode(AssimpNode* node, AssimpScene* scene, ref int traverseIndex, in Matrix4x4 parent)
+    private unsafe void TraverseSceneNodes(AssimpNode* node, AssimpScene* scene, ref int traverseIndex,
+        in Matrix4x4 parent)
     {
         var nodeTransform = node->MTransformation;
         var local = nodeTransform * parent;
@@ -170,24 +97,17 @@ internal sealed class ModelAssimpImporter
         {
             var meshIndex = (int)node->MMeshes[i];
 
-            if (!_state.HasProcessedMeshIndex(meshIndex, out info))
-            {
-                var m = scene->MMeshes[meshIndex];
-
-                if (m->MNumBones > 0)
-                    _animationProcessor.ProcessBoneData(m);
-
-                info = _meshProcessor.LoadAndUploadMesh(m, _gfxUploader, _state.MightBeAnimated);
-                _state.AppendMeshInfo(m->MName.AsString, meshIndex, info);
-            }
-
             var mesh = scene->MMeshes[meshIndex];
             var slot = (int)scene->MMeshes[i]->MMaterialIndex;
             var vertexCount = (int)mesh->MNumVertices;
 
-            var writer = _dataTable.WriteMeshParts();
+            if (!_state.HasProcessedMeshIndex(meshIndex, out info))
+                _meshProcessor.ProcessAndUploadMeshes(mesh, meshIndex, _gfxUploader, out info);
+
+
             BoundingBox.FromPoints(new Span<Vector3>(mesh->MVertices, vertexCount), out var bounds);
 
+            var writer = _dataTable.WriteMeshParts();
             writer.Fill(traverseIndex, slot, info, in bounds, in local);
 
             traverseIndex++;
@@ -196,7 +116,7 @@ internal sealed class ModelAssimpImporter
 
         // Process children
         for (var i = 0; i < node->MNumChildren; i++)
-            TraverseNode(node->MChildren[i], scene, ref traverseIndex, in local);
+            TraverseSceneNodes(node->MChildren[i], scene, ref traverseIndex, in local);
 
 
         if (_state.TryGetBoneIndex(node->MName.AsString, out int index))

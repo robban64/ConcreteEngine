@@ -157,7 +157,6 @@ internal sealed class RenderEntityBus
         var finals = _animationFinal;
 
         t += deltaTime * 100;
-        // var idxAnimation = 0;
         foreach (var query in worldEntities.Query<AnimationComponent>())
         {
             ref var component = ref query.Component;
@@ -180,41 +179,42 @@ internal sealed class RenderEntityBus
 
             _entities[_byEntityId[query.Entity]].IsAnimated = true;
 
-            Transform poseTransform = default;
-            Matrix4x4 local = default;
-            Matrix4x4 final = default;
-
+            Matrix4x4 tempMat = default;
             for (int i = 0; i < boneCount; i++)
             {
                 if (!boneByIndex.TryGetValue(i, out var track))
                 {
-                    local = nodeTransforms[i];
+                    tempMat = nodeTransforms[i];
                 }
                 else
                 {
-                    poseTransform.Translation = LerpVector(track.Translations, track.TranslationTimes, t, default);
-                    poseTransform.Scale = LerpVector(track.Scales, track.ScaleTimes, t, Vector3.One);
-                    poseTransform.Rotation = LerpQuaternion(track.Rotations, track.RotationTimes, t);
-                    local = Matrix4x4.CreateFromQuaternion(poseTransform.Rotation) *
-                            Matrix4x4.CreateTranslation(poseTransform.Translation);
-                    //mat = Matrix4x4.CreateScale(scale) * Matrix4x4.CreateFromQuaternion(rotation) * Matrix4x4.CreateTranslation(translation);
+                    var pos = LerpVector(track.Translations, track.TranslationTimes, t, default);
+                    var rot = LerpQuaternion(track.Rotations, track.RotationTimes, t);
+                    MatrixMath.CreateModelMatrix(in pos, Vector3.One, in rot, out tempMat);
+                    //poseTransform.Scale = LerpVector(track.Scales, track.ScaleTimes, t, Vector3.One);
+                    //local = Matrix4x4.CreateFromQuaternion(poseTransform.Rotation) *Matrix4x4.CreateTranslation(poseTransform.Translation);
                 }
+
+                ref var finalRef = ref Unsafe.AsRef(ref finals[i]);
+                ref var globalRef = ref Unsafe.AsRef(ref globals[i]);
 
                 int p = parentIndices[i];
                 if (p >= 0)
-                    globals[i] = local * globals[p];
+                    globalRef = tempMat * globals[p];
                 else
-                    globals[i] = local;
+                    globalRef = tempMat;
 
-                //finals[i] = boneTransforms[i] * globals[i] * invMatrix;
-                MatrixMath.MultiplyAffine(in boneTransforms[i], in globals[i], out final);
-                MatrixMath.MultiplyAffine(in final, in invMatrix, out finals[i]);
+
+                MatrixMath.MultiplyAffine(in boneTransforms[i], in globalRef, out tempMat);
+                MatrixMath.WriteMultiplyAffine(ref finalRef, in tempMat, in invMatrix);
+                // Matrix4x4 a = finals[i] = boneTransforms[i] * globals[i] * invMatrix;
+                //MatrixMath.MultiplyAffine(in tempMat, in invMatrix, out finals[i]);
             }
 
             buffer.SubmitSingleAnimation(finals);
         }
 
-        static Vector3 LerpVector(Vector3[] values, float[] times, float time, Vector3 fallback)
+        static Vector3 LerpVector(ReadOnlySpan<Vector3> values, float[] times, float time, Vector3 fallback)
         {
             if (times.Length == 0) return fallback;
             if (times.Length == 1 || time <= times[0]) return values[0];
@@ -227,7 +227,7 @@ internal sealed class RenderEntityBus
             return Vector3.Lerp(values[i], values[i + 1], f);
         }
 
-        static Quaternion LerpQuaternion(Quaternion[] values, float[] times, float time)
+        static Quaternion LerpQuaternion(ReadOnlySpan<Quaternion> values, float[] times, float time)
         {
             if (times.Length == 0) return Quaternion.Identity;
             if (times.Length == 1 || time <= times[0]) return values[0];
@@ -277,15 +277,13 @@ internal sealed class RenderEntityBus
             }
 
             Matrix4x4 world = default;
-            //ref var worldRef = ref Unsafe.AsRef(ref world);
             MatrixMath.CreateModelMatrix(in entity.Transform.Translation, in entity.Transform.Scale,
                 in entity.Transform.Rotation, out world);
 
-            var parts = modelView.Parts;
-            var locals = modelView.Locals;
-
             ref var mat0 = ref MemoryMarshal.GetReference(matSpan);
 
+            var parts = modelView.Parts;
+            var locals = modelView.Locals;
 
             var baseMeta = entity.Meta;
             var isAnimated = entity.IsAnimated;
@@ -295,13 +293,11 @@ internal sealed class RenderEntityBus
                 ref readonly var part = ref parts[i];
 
                 ref var draw = ref Unsafe.AsRef(ref drawData);
-                ApplyTransform(ref draw, in locals[i], in world, isAnimated);
-
                 ref var mat = ref Unsafe.Add(ref mat0, part.MaterialSlot);
-
                 var meta = BuildMeta(ref Unsafe.AsRef(ref materialTag), part.MaterialSlot, baseMeta);
-
                 var cmd = new DrawCommand(part.Mesh, mat, part.DrawCount);
+
+                ApplyTransform(ref draw, in locals[i], in world, isAnimated);
                 buffer.SubmitDraw(cmd, meta, ref draw);
             }
 
@@ -402,5 +398,4 @@ internal sealed class RenderEntityBus
         Array.Resize(ref _entities, newCap);
         Array.Resize(ref _byEntityId, newCap);
     }
-
 }

@@ -11,7 +11,7 @@ namespace ConcreteEngine.Common.Numerics.Maths;
 
 public static class MatrixMath
 {
-    [MethodImpl(MethodImplOptions.AggressiveInlining | MethodImplOptions.AggressiveOptimization)]
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static void MultiplyAffine(in Matrix4x4 a, in Matrix4x4 b, out Matrix4x4 r)
     {
         // 3x3
@@ -29,9 +29,8 @@ public static class MatrixMath
         float r32 = a.M31 * b.M12 + a.M32 * b.M22 + a.M33 * b.M32;
         float r33 = a.M31 * b.M13 + a.M32 * b.M23 + a.M33 * b.M33;
 
-        // 2. Translation Part (Row 4)
-        // Standard Row-Major: (Translation A * Rotation B) + Translation B
-        // We treat A.M4x as a row vector and multiply by the 3x3 part of B
+        // row-Major: (Translation A * Rotation B) + Translation B
+        // A.M4x as a row vector and multiply by the 3x3 part of B
         float tx = a.M41 * b.M11 + a.M42 * b.M21 + a.M43 * b.M31 + b.M41;
         float ty = a.M41 * b.M12 + a.M42 * b.M22 + a.M43 * b.M32 + b.M42;
         float tz = a.M41 * b.M13 + a.M42 * b.M23 + a.M43 * b.M33 + b.M43;
@@ -41,14 +40,62 @@ public static class MatrixMath
             r21, r22, r23, 0f,
             r31, r32, r33, 0f,
             tx, ty, tz, 1f);
-        
     }
 
-    [MethodImpl(MethodImplOptions.AggressiveInlining | MethodImplOptions.AggressiveOptimization)]
-    public static void CreateModelMatrix(in Vector3 transform, in Vector3 scale, in Quaternion rotation,
-        out Matrix4x4 mat)
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public static void WriteMultiplyAffine(ref Matrix4x4 dest, in Matrix4x4 a, in Matrix4x4 b)
     {
-        float x = rotation.X, y = rotation.Y, z = rotation.Z, w = rotation.W;
+        dest.M11 = a.M11 * b.M11 + a.M12 * b.M21 + a.M13 * b.M31;
+        dest.M12 = a.M11 * b.M12 + a.M12 * b.M22 + a.M13 * b.M32;
+        dest.M13 = a.M11 * b.M13 + a.M12 * b.M23 + a.M13 * b.M33;
+
+        dest.M21 = a.M21 * b.M11 + a.M22 * b.M21 + a.M23 * b.M31;
+        dest.M22 = a.M21 * b.M12 + a.M22 * b.M22 + a.M23 * b.M32;
+        dest.M23 = a.M21 * b.M13 + a.M22 * b.M23 + a.M23 * b.M33;
+
+        dest.M31 = a.M31 * b.M11 + a.M32 * b.M21 + a.M33 * b.M31;
+        dest.M32 = a.M31 * b.M12 + a.M32 * b.M22 + a.M33 * b.M32;
+        dest.M33 = a.M31 * b.M13 + a.M32 * b.M23 + a.M33 * b.M33;
+
+        dest.M41 = a.M41 * b.M11 + a.M42 * b.M21 + a.M43 * b.M31 + b.M41;
+        dest.M42 = a.M41 * b.M12 + a.M42 * b.M22 + a.M43 * b.M32 + b.M42;
+        dest.M43 = a.M41 * b.M13 + a.M42 * b.M23 + a.M43 * b.M33 + b.M43;
+    }
+
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public static void WriteTransform(ref Matrix4x4 dest, in Vector3 t, in Vector3 s, in Quaternion r)
+    {
+        float x = r.X, y = r.Y, z = r.Z, w = r.W;
+        float xx = x * x, yy = y * y, zz = z * z;
+        float xy = x * y, xz = x * z, yz = y * z;
+        float wx = w * x, wy = w * y, wz = w * z;
+
+        dest.M11 = (1f - 2f * (yy + zz)) * s.X;
+        dest.M12 = (2f * (xy + wz)) * s.X;
+        dest.M13 = (2f * (xz - wy)) * s.X;
+        dest.M14 = 0f;
+
+        dest.M21 = (2f * (xy - wz)) * s.Y;
+        dest.M22 = (1f - 2f * (xx + zz)) * s.Y;
+        dest.M23 = (2f * (yz + wx)) * s.Y;
+        dest.M24 = 0f;
+
+        dest.M31 = (2f * (xz + wy)) * s.Z;
+        dest.M32 = (2f * (yz - wx)) * s.Z;
+        dest.M33 = (1f - 2f * (xx + yy)) * s.Z;
+        dest.M34 = 0f;
+
+        dest.M41 = t.X;
+        dest.M42 = t.Y;
+        dest.M43 = t.Z;
+        dest.M44 = 1f;
+    }
+
+
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public static void CreateModelMatrix(in Vector3 t, in Vector3 s, in Quaternion r, out Matrix4x4 mat)
+    {
+        float x = r.X, y = r.Y, z = r.Z, w = r.W;
         float xx = x + x, yy = y + y, zz = z + z;
         float xy = x * yy, xz = x * zz, yz = y * zz;
         float wx = w * xx, wy = w * yy, wz = w * zz;
@@ -58,28 +105,32 @@ public static class MatrixMath
         float r12 = xy + wz, r13 = xz - wy, r21 = xy - wz;
         float r23 = yz + wx, r31 = xz + wy, r32 = yz - wx;
 
-        mat.M11 = r11 * scale.X;
-        mat.M12 = r12 * scale.Y;
-        mat.M13 = r13 * scale.Z;
+        // row 1 - local X Axis (Right)
+        mat.M11 = r11 * s.X;
+        mat.M12 = r12 * s.X;
+        mat.M13 = r13 * s.X;
         mat.M14 = 0f;
 
-        mat.M21 = r21 * scale.X;
-        mat.M22 = r22 * scale.Y;
-        mat.M23 = r23 * scale.Z;
+        // row 2 corresponds - Local Y Axis (Up)
+        mat.M21 = r21 * s.Y;
+        mat.M22 = r22 * s.Y;
+        mat.M23 = r23 * s.Y;
         mat.M24 = 0f;
 
-        mat.M31 = r31 * scale.X;
-        mat.M32 = r32 * scale.Y;
-        mat.M33 = r33 * scale.Z;
+        // row 3 corresponds - Local Z Axis (Forward)
+        mat.M31 = r31 * s.Z;
+        mat.M32 = r32 * s.Z;
+        mat.M33 = r33 * s.Z;
         mat.M34 = 0f;
 
-        mat.M41 = transform.X;
-        mat.M42 = transform.Y;
-        mat.M43 = transform.Z;
+        mat.M41 = t.X;
+        mat.M42 = t.Y;
+        mat.M43 = t.Z;
         mat.M44 = 1f;
     }
 
-    [MethodImpl(MethodImplOptions.AggressiveInlining | MethodImplOptions.AggressiveOptimization)]
+
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static void CreateNormalMatrix(in Matrix4x4 m, out Matrix3X4 n)
     {
         float a = m.M11, b = m.M12, c = m.M13;
@@ -112,9 +163,9 @@ public static class MatrixMath
         n.V1 = new Vector4(C12 * s, C22 * s, C32 * s, 0f);
         n.V2 = new Vector4(C13 * s, C23 * s, C33 * s, 0f);
     }
+/*
 
-
-    [MethodImpl(MethodImplOptions.AggressiveInlining | MethodImplOptions.AggressiveOptimization)]
+    [MethodImpl(MethodImplOptions.AggressiveInlining )]
     public static bool InvertAffine(in Matrix4x4 m, out Matrix4x4 inv)
     {
         float a = m.M11, b = m.M12, c = m.M13;
@@ -151,5 +202,5 @@ public static class MatrixMath
 
         return true;
     }
-
+    */
 }

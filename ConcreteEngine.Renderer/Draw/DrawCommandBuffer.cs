@@ -100,7 +100,7 @@ public sealed class DrawCommandBuffer
     public void SubmitDraw(
         DrawCommand cmd,
         DrawCommandMeta meta,
-        ref readonly DrawObjectUniform drawUniform)
+        ref DrawObjectUniform drawUniform)
     {
         var idx = _submitIdx++;
         if ((uint)idx >= (uint)_commandBuffer.Length || (uint)idx >= (uint)_metaBuffer.Length)

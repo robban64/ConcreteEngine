@@ -86,7 +86,6 @@ internal sealed class DrawCommandPipeline
         _drawBuffers.EnsureDrawBuffers(drawCap, matCap);
     }
 
-    private FrameProfileTimer _timer = new();
 
     internal void UploadUniformGlobals()
     {

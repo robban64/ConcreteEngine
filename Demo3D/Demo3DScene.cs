@@ -89,29 +89,25 @@ public sealed class Demo3DScene : GameScene
             // animationComponent.Slot = Context.World.MeshTable.GetAnimationSlot(knight.ModelId);
         }
 
+        var cesiumModel = assets.Store.GetByName<Model>("Cesium_Man");
+        var cesiumMat = materialStore.CreateMaterial("EmptyAnimated", "CesiumMat");
+        var cesiumMatKey = worldMaterials.Add(MaterialTagBuilder.BuildOne(cesiumMat.Id));
 
-        {
-            var model = assets.Store.GetByName<Model>("Cesium_Man");
-            var mat = materialStore.CreateMaterial("EmptyAnimated", "CesiumMat");
-
-            //Warrior::Materials/0
-            //Something is off with this dude, temp texture
-            //var warriorMat = materialStore.Get("Warrior::Materials/0");
-            var matKey = worldMaterials.Add(MaterialTagBuilder.BuildOne(mat.Id));
+        for(int i = 0; i < 20; i++){
             var entity = worldEntities.Create();
 
             worldEntities.Models.Add(entity,
-                new ModelComponent(model.ModelId, model.DrawCount, matKey));
+                new ModelComponent(cesiumModel.ModelId, cesiumModel.DrawCount, cesiumMatKey));
             worldEntities.Transforms.Add(entity,
                 Transform.Identity with
                 {
-                    Translation = new Vector3(125, 6, 125),
-                    Rotation = Quaternion.CreateFromYawPitchRoll(0, FloatMath.ToRadians(90), 0),
+                    Translation = new Vector3(100 + i *4, 6, 100 + i*4),
+                    Rotation = Quaternion.CreateFromYawPitchRoll(0, 0, 0),
                     Scale = new Vector3(2)
                 });
-            worldEntities.BoundingBoxes.Add(entity, new BoxComponent(model.Bounds));
+            worldEntities.BoundingBoxes.Add(entity, new BoxComponent(cesiumModel.Bounds));
 
-            var animationComponent = new AnimationComponent(model.ModelId, 1, 4);
+            var animationComponent = new AnimationComponent(cesiumModel.ModelId, 1, 4);
             worldEntities.Animations.Add(entity, animationComponent);
             // animationComponent.Slot = Context.World.MeshTable.GetAnimationSlot(knight.ModelId);
         }
@@ -130,7 +126,7 @@ public sealed class Demo3DScene : GameScene
                 {
                     Translation = new Vector3(120, 6, 120),
                     Rotation = Quaternion.CreateFromYawPitchRoll(0, FloatMath.ToRadians(90), 0),
-                    Scale = new Vector3(2)
+                    Scale = new Vector3(1)
                 });
             worldEntities.BoundingBoxes.Add(knightEntity, new BoxComponent(knight.Bounds));
 

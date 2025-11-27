@@ -171,6 +171,7 @@ public struct DrawObjectUniform
 {
     public Matrix4x4 Model;
     public Matrix3X4 Normal;
+    private Vector4 _pad;
 }
 
 [StructLayout(LayoutKind.Sequential)]

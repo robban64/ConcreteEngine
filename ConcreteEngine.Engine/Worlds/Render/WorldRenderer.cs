@@ -109,7 +109,6 @@ public sealed class WorldRenderer : IWorldRenderer
                 throw new ArgumentOutOfRangeException(nameof(req.Action));
         }
     }
-    private FrameProfileTimer _timer = new();
 
     internal void PreRender(
         BeginFrameStatus status,
@@ -132,9 +131,7 @@ public sealed class WorldRenderer : IWorldRenderer
         // Upload materials
         SubmitMaterialData();
 
-        _timer.Begin();
         _renderEntityBus.CollectEntities(frameInfo.DeltaTime, _renderer.CommandBuffer);
-        _timer.EndPrint();
 
         _renderEntityBus.FlushEntities(_renderer.CommandBuffer);
 

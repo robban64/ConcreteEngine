@@ -23,11 +23,11 @@ namespace ConcreteEngine.Engine.Worlds.Render;
 
 internal sealed class RenderEntityBus
 {
-    private const int DefaultCapacity = 128;
+    private const int DefaultCapacity = 512;
     private const int MaxCapacity = 10_000;
 
     private int _idx = 0;
-    private int[] _byEntityId = new int[DefaultCapacity];
+    private int[] _byEntityId = new int[DefaultCapacity]; //sparse
     private DrawEntity[] _entities = new DrawEntity[DefaultCapacity];
     private DrawEntityData[] _entityData = new DrawEntityData[DefaultCapacity];
 
@@ -59,14 +59,20 @@ internal sealed class RenderEntityBus
     {
         _idx = 0;
     }
-    private FrameProfileTimer _timer = new();
 
-    public void CollectEntities(float deltaTime,  DrawCommandBuffer buffer)
+    private readonly FrameProfileTimer _timer = new();
+
+    public void CollectEntities(float deltaTime, DrawCommandBuffer buffer)
     {
         if (_world is null) return;
 
         EnsureCapacity(DrawCount);
+
         CollectModelEntities();
+        _timer.Begin();
+        ProcessCollectedEntities();
+        CalculateDepthKey();
+        _timer.EndPrint();
 
         var ctx = new RenderFrameContext
         {
@@ -80,41 +86,76 @@ internal sealed class RenderEntityBus
         var worldEntities = _world!.Entities;
         var selected = WorldActionSlot.SelectedEntityId;
         
-        var projInfo = RenderDataSlot.ProjectionInfo;
-        var viewMatrix = RenderDataSlot.ViewData.ViewMatrix;
-        float near = projInfo.Near, far = projInfo.Far;
-
         var idxCollect = 0;
-        foreach (var query in worldEntities.Query<ModelComponent, Transform>())
+        foreach (var query in worldEntities.Query<ModelComponent>())
         {
             //Debug.Assert(model.Model != default && model.MaterialKey != default);
-            ref var model = ref query.Component1;
-            ref var transform = ref query.Component2;
-
+            ref readonly var model = ref query.Component;
             ref var entity = ref _entities[idxCollect];
-            ref var entityData = ref _entityData[idxCollect];
-            entityData.Transform = transform;
-            entityData.Bounds = worldEntities.BoundingBoxes.GetById(query.Entity).Box;
-
             _byEntityId[entity.Entity] = idxCollect++;
 
-            var depthKey = DepthKeyUtility.MakeDepthKey(in viewMatrix,  transform.Translation, near, far);
-
             var meta = new DrawEntityCommandMeta(DrawCommandId.Model, DrawCommandQueue.Opaque, DrawCommandResolver.None,
-                PassMask.Default, depthKey);
+                PassMask.Default, 0);
 
             if (query.Entity == selected)
             {
-                meta = meta.WithResolvePass(DrawCommandResolver.Highlight, PassMask.Effect | PassMask.DepthPre);
+                entity.IsSelected = true;
+                meta = meta with
+                {
+                    PassMask = PassMask.Effect | PassMask.DepthPre, Resolver = DrawCommandResolver.BoundingVolume
+                };
             }
 
+            entity.Model = model.Model;
+            entity.PartLength = (byte)_meshTable.GetPartLengthFor(model.Model);
+            entity.IsSelected = selected == query.Entity;
             entity.Entity = query.Entity;
             entity.Model = model.Model;
             entity.MaterialKey = model.MaterialKey;
             entity.CommandMeta = meta;
         }
-        _idx = idxCollect;
 
+        _idx = idxCollect;
+    }
+
+    private void ProcessCollectedEntities()
+    {
+        var worldEntities = _world!.Entities;
+
+        var boundsView = _meshTable.GetModelBoundSpan();
+        
+        var idx = 0;
+        ref var d0 = ref MemoryMarshal.GetReference(_entityData);
+        foreach (var query in worldEntities.Query<Transform>())
+        {
+            ref var transform = ref query.Component;
+
+            ref var entity = ref _entities[idx];
+            ref var entityData = ref Unsafe.Add(ref d0, idx);
+            entityData.Transform = transform;
+            boundsView.WriteModelBoundingBox(entity.Model, out entityData.Bounds);
+            idx++;
+        }
+    }
+
+    private void CalculateDepthKey()
+    {
+        var projInfo = RenderDataSlot.ProjectionInfo;
+        var viewMatrix = RenderDataSlot.ViewData.ViewMatrix;
+        float near = projInfo.Near, far = projInfo.Far;
+
+        var len = _idx;
+
+        if ((uint)len > _entities.Length || (uint)len > _entityData.Length)
+            throw new IndexOutOfRangeException();
+
+        for (var i = 0; i < len; i++)
+        {
+            ref var entity = ref _entities[i];
+            ref readonly var entityData = ref _entityData[i];
+            var depthKey = DepthKeyUtility.MakeDepthKey(in viewMatrix, entityData.Transform.Translation, near, far);
+            entity.CommandMeta = entity.CommandMeta with { DepthKey = depthKey };
+        }
     }
 
     public void FlushEntities(DrawCommandBuffer buffer)
@@ -136,9 +177,13 @@ internal sealed class RenderEntityBus
         DrawObjectUniform drawData = default;
 
         var entitySpan = _entities.AsSpan(0, _idx);
+        var dataSpan = _entityData.AsSpan(0, _idx);
 
-        foreach (ref var entity in entitySpan)
+        for (var i = 0; i < _idx; i++)
         {
+            ref readonly var entity = ref entitySpan[i];
+            ref readonly var entityData = ref dataSpan[i];
+
             if (entity.Model != prevModel)
             {
                 modelView = _meshTable.GetPartsRefView(entity.Model);
@@ -152,28 +197,29 @@ internal sealed class RenderEntityBus
                 prevMatKey = entity.MaterialKey;
             }
 
+
             Matrix4x4 world = default;
-            MatrixMath.CreateModelMatrix(in entity.Transform.Translation, in entity.Transform.Scale,
-                in entity.Transform.Rotation, out world);
+            MatrixMath.CreateModelMatrix(in entityData.Transform.Translation, in entityData.Transform.Scale,
+                in entityData.Transform.Rotation, out world);
 
             ref var mat0 = ref MemoryMarshal.GetReference(matSpan);
 
             var parts = modelView.Parts;
             var locals = modelView.Locals;
 
-            var baseMeta = entity.Meta;
+            var baseMeta = entity.CommandMeta;
             var isAnimated = entity.IsAnimated;
-            int len = int.Min(locals.Length, parts.Length);
-            for (var i = 0; i < len; i++)
+            var len = int.Min(locals.Length, parts.Length);
+            for (var partIdx = 0; partIdx < len; partIdx++)
             {
-                ref readonly var part = ref parts[i];
+                ref readonly var part = ref parts[partIdx];
 
                 ref var draw = ref Unsafe.AsRef(ref drawData);
                 ref var mat = ref Unsafe.Add(ref mat0, part.MaterialSlot);
                 var meta = BuildMeta(ref Unsafe.AsRef(ref materialTag), part.MaterialSlot, baseMeta);
                 var cmd = new DrawCommand(part.Mesh, mat, part.DrawCount);
 
-                ApplyTransform(ref draw, in locals[i], in world, isAnimated);
+                ApplyTransform(ref draw, in locals[partIdx], in world, isAnimated);
                 buffer.SubmitDraw(cmd, meta, ref draw);
             }
 
@@ -200,12 +246,13 @@ internal sealed class RenderEntityBus
 
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    private static DrawEntityCommandMeta BuildMeta(ref MaterialTag tag, int slot, DrawEntityCommandMeta meta)
+    private static DrawCommandMeta BuildMeta(ref MaterialTag tag, int slot, DrawEntityCommandMeta m)
     {
-        if (!tag.IsTransparent(slot)) return meta;
-        var depthKey = (ushort)(ushort.MaxValue - meta.DepthKey);
-        
-        return meta.WithTransparency(DrawCommandQueue.Transparent, depthKey);
+        if (!tag.IsTransparent(slot))
+            return new DrawCommandMeta(m.CommandId, m.Queue, m.Resolver, m.PassMask, m.DepthKey);
+
+        var depthKey = (ushort)(ushort.MaxValue - m.DepthKey);
+        return new DrawCommandMeta(m.CommandId, DrawCommandQueue.Transparent, m.Resolver, m.PassMask, depthKey);
     }
 
     private void FlushWorldEntities(DrawCommandBuffer buffer)

@@ -38,34 +38,35 @@ public struct DrawEntityData
 [StructLayout(LayoutKind.Sequential)]
 public struct DrawEntity
 {
+    public DrawEntityCommandMeta CommandMeta;
     public EntityId Entity;
     public ModelId Model;
     public MaterialTagKey MaterialKey;
-    // process meta (these will be reworked later)
     public byte PartLength;
     public bool IsAnimated;
     public bool IsSelected;
-    // renderer meta
-    public DrawEntityCommandMeta CommandMeta;
 }
-// not the actual meta to be uploaded (but contains the base)
-// maybe make readonly as it is 2 ushort + 3 byte enums
+
 [StructLayout(LayoutKind.Sequential)]
-public struct DrawEntityCommandMeta
+public readonly struct DrawEntityCommandMeta(
+    DrawCommandId commandId,
+    DrawCommandQueue queue,
+    DrawCommandResolver resolver,
+    PassMask passMask,
+    ushort depthKey)
 {
-    public PassMask PassMask;
-    public ushort DepthKey;
-    public DrawCommandId CommandId;
-    public DrawCommandQueue Queue;
-    public DrawCommandResolver Resolver;
-    /*
-        
-    [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public DrawCommandMeta WithResolvePass(DrawCommandResolver resolver, PassMask passMask) 
-        => new (Id, Queue, resolver, passMask, DepthKey);
-    
-    [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public DrawCommandMeta WithTransparency(DrawCommandQueue queue, ushort depthKey) 
-        => new (Id, queue, Resolver, PassMask, depthKey);
-*/
+    public DrawCommandId CommandId { get; init; } = commandId;
+    public DrawCommandQueue Queue { get; init;} = queue;
+    public DrawCommandResolver Resolver { get; init;} = resolver;
+    public PassMask PassMask { get; init;} = passMask;
+    public ushort DepthKey { get;init; } = depthKey;
+
+    public void Deconstruct(out DrawCommandId commandId, out DrawCommandQueue queue, out DrawCommandResolver resolver, out PassMask passMask, out ushort depthKey)
+    {
+        commandId = CommandId;
+        queue = Queue;
+        resolver = Resolver;
+        passMask = PassMask;
+        depthKey = DepthKey;
+    }
 }

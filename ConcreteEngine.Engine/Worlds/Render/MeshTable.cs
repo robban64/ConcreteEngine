@@ -47,9 +47,19 @@ internal sealed class MeshTable : IMeshTable
 
     private int _partIdx = 0;
 
+    
     public ModelAnimation GetAnimationFor(ModelId id) => _modelAnimations[id];
 
-    public ref readonly BoundingBox GetModelBounds(ModelId id) => ref _modelBoxes[id - 1];
+    public ModelBoundsView GetModelBoundSpan() => new (_modelBoxes.AsSpan());
+
+    public ushort GetPartLengthFor(ModelId id)
+    {
+        var index = id - 1;
+        if ((uint)index > (uint)_modelPartRanges.Length)
+            throw new ArgumentOutOfRangeException(nameof(id));
+
+        return _modelPartRanges[index].Length;
+    }
 
     public ModelPartView GetPartsRefView(ModelId id)
     {

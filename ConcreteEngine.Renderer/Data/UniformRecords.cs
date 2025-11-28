@@ -182,7 +182,7 @@ public unsafe struct DrawAnimationUniform
     public const int TotalComponents = Mat4Components * MaxBones;
 
     public fixed float Weights[TotalComponents];
-
+    
     public void Set(ReadOnlySpan<Matrix4x4> matrices)
     {
         fixed (float* p = Weights)

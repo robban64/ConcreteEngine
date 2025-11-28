@@ -181,7 +181,6 @@ internal sealed class AssimpMaterialProcessor(ModelLoaderState state)
 
         int width = (int)texture->MWidth, height = (int)texture->MHeight;
         var length = 0;
-
         // Compressed mode (PNG, JPG)
         // width = file size in bytes
         if (height == 0)

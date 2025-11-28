@@ -11,6 +11,10 @@ public sealed class ModelAnimationData(string name, float duration, float ticksP
     public string Name { get; set; } = name;
     public float Duration { get; set; } = duration;
     public float TicksPerSecond { get; set; } = ticksPerSecond;
+    
+    // public float[] TranslationTimes { get; internal set; }
+    // public Vector3[] Translations { get; internal set; }
+    // ...
     public Dictionary<int, BoneTrack> BoneTracksMap { get; } = [];
 }
 

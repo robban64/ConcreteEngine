@@ -10,7 +10,7 @@ public sealed class ModelAnimation
 {
     private readonly ModelAnimationData[] _animations;
 
-    private readonly Dictionary<int, string> _boneMapping;
+    private readonly Dictionary<int, string> _boneMapping; 
 
     private readonly int[] _parentIndices;
     private readonly Matrix4x4[] _boneTransforms;

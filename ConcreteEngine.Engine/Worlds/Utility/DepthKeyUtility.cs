@@ -12,7 +12,7 @@ internal static class DepthKeyUtility
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static ushort MakeDepthKey(
         in Matrix4x4 view,
-        in Vector3 worldPos,
+         Vector3 worldPos,
         float near,
         float far)
     {

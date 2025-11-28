@@ -109,7 +109,7 @@ public sealed class WorldRenderer : IWorldRenderer
                 throw new ArgumentOutOfRangeException(nameof(req.Action));
         }
     }
-
+    private FrameProfileTimer _timer = new();
 
     internal void PreRender(
         BeginFrameStatus status,
@@ -120,17 +120,21 @@ public sealed class WorldRenderer : IWorldRenderer
         _renderEntityBus.Reset();
 
         WorldRenderParams.Commit();
-
+        
         PrepareRenderView(frameInfo.Alpha, camera);
+        RenderDataSlot.FrameInfo = frameInfo;
+        RenderDataSlot.ProjectionInfo = camera.ProjectionInfo;
+        RenderDataSlot.ViewData = RenderView.CameraView;
 
+        
         _renderer.PrepareFrame(in frameInfo, in runtimeParams);
 
         // Upload materials
         SubmitMaterialData();
 
-        var renderView = RenderView;
-        _renderEntityBus.CollectEntities(in renderView.ViewMatrix, renderView.ProjectionInfo);
-        _renderEntityBus.ProcessAnimations(frameInfo.DeltaTime, _renderer.CommandBuffer);
+        _timer.Begin();
+        _renderEntityBus.CollectEntities(frameInfo.DeltaTime, _renderer.CommandBuffer);
+        _timer.EndPrint();
 
         _renderEntityBus.FlushEntities(_renderer.CommandBuffer);
 

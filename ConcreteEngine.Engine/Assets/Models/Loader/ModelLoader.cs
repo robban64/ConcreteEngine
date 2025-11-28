@@ -25,7 +25,6 @@ internal sealed class ModelLoader
         _modelAssimpImporter = new ModelAssimpImporter(uploader, _dataTable, _state);
     }
 
-    private List<long> values = new(16);
     public ModelLoaderResult LoadMesh(AssetRef<Model> refId, string name, string fileName, out AssetFileSpec[] fileSpec)
     {
         var path = AssetPaths.GetMeshPath(fileName);
@@ -37,19 +36,8 @@ internal sealed class ModelLoader
         _dataTable.Clear();
         
         //
-        var sb = Stopwatch.StartNew();
         _modelAssimpImporter.ImportMesh(path);
-        
-        sb.Stop();
-        values.Add(sb.ElapsedTicks);
-        Console.WriteLine($"{sb.ElapsedTicks} for {name}");
         //
-
-        if (values.Count >= 11)
-        {
-            double mean = values.Sum() / (double)values.Count;
-            Console.WriteLine($"Mean time {mean}");
-        }
         
         InvalidOpThrower.ThrowIf(_state.MeshCount == 0);
 

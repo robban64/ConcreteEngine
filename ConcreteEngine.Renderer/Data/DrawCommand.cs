@@ -39,14 +39,6 @@ public readonly struct DrawCommandMeta
         Queue = queue;
         Resolver = resolver;
     }
-    
-    [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public DrawCommandMeta WithResolvePass(DrawCommandResolver resolver, PassMask passMask) 
-        => new (Id, Queue, resolver, passMask, DepthKey);
-    
-    [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public DrawCommandMeta WithTransparency(DrawCommandQueue queue, ushort depthKey) 
-        => new (Id, queue, Resolver, PassMask, depthKey);
 
 }
 

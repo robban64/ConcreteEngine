@@ -7,8 +7,10 @@ using ConcreteEngine.Common;
 using ConcreteEngine.Common.Collections;
 using ConcreteEngine.Common.Numerics;
 using ConcreteEngine.Common.Numerics.Maths;
+using ConcreteEngine.Common.Time;
 using ConcreteEngine.Engine.Worlds.Data;
 using ConcreteEngine.Engine.Worlds.Entities;
+using ConcreteEngine.Engine.Worlds.Render.Data;
 using ConcreteEngine.Engine.Worlds.Utility;
 using ConcreteEngine.Renderer.Data;
 using ConcreteEngine.Renderer.Definitions;
@@ -25,35 +27,31 @@ internal sealed class RenderEntityBus
     private const int MaxCapacity = 10_000;
 
     private int _idx = 0;
-    private DrawEntity[] _entities = new DrawEntity[DefaultCapacity];
     private int[] _byEntityId = new int[DefaultCapacity];
+    private DrawEntity[] _entities = new DrawEntity[DefaultCapacity];
+    private DrawEntityData[] _entityData = new DrawEntityData[DefaultCapacity];
 
     private World? _world;
 
     private readonly MeshTable _meshTable;
     private readonly MaterialTable _materialTable;
 
+    private readonly AnimatorProcessor _animatorProcessor;
+
     public ModelId CubeId { get; set; }
     public MaterialTagKey EmptyMaterialKey { get; set; }
-
-    //temp
-    private readonly Matrix4x4[] _animationGlobals = new Matrix4x4[64];
-    private readonly Matrix4x4[] _animationFinal = new Matrix4x4[64];
 
     internal RenderEntityBus(MeshTable meshTable, MaterialTable materialTable)
     {
         _meshTable = meshTable;
         _materialTable = materialTable;
-
-        _animationGlobals.AsSpan().Fill(Matrix4x4.Identity);
-        _animationFinal.AsSpan().Fill(Matrix4x4.Identity);
+        _animatorProcessor = new AnimatorProcessor(_meshTable);
     }
 
     private int ActiveSkyCount => _world?.Sky.IsActive ?? false ? 1 : 0;
     private int ActiveTerrainCount => _world?.Terrain.IsActive ?? false ? 1 : 0;
     public int DrawCount => (_world?.EntityCount ?? 0) + ActiveSkyCount + ActiveTerrainCount;
 
-    internal bool IsAttached => _world is not null;
 
     internal void AttachWorld(World world) => _world = world;
 
@@ -61,58 +59,30 @@ internal sealed class RenderEntityBus
     {
         _idx = 0;
     }
+    private FrameProfileTimer _timer = new();
 
-/*
-    private bool hasRunEntities = false;
-    private void DrawBounds()
-    {
-        if (hasRunEntities)
-        {
-            _idx *= 2;
-            return;
-        }
-
-        var idx = _idx;
-        Span<Vector3> corners = stackalloc Vector3[8];
-        foreach (ref readonly var entity in _entities.AsSpan(0, idx))
-        {
-            ref var boxEntity = ref _entities[_idx++];
-            ref readonly var bounds = ref _world.Entities.BoundingBoxes.GetById(entity.Entity);
-            ref readonly var transform = ref entity.Transform;
-
-            MatrixMath.CreateModelMatrix(in transform.Translation, in transform.Scale,
-                in transform.Rotation, out var world);
-
-            bounds.Box.FillCorners(corners);
-
-            for (var i = 0; i < corners.Length; i++)
-            {
-                corners[i] = Vector3.Transform(corners[i], world);
-            }
-
-            BoundingAxisBox.FromPoints(corners, out var axisBounds);
-
-            boxEntity.Entity = entity.Entity;
-            boxEntity.Model = CubeId;
-            boxEntity.MaterialKey = EmptyMaterialKey;
-            boxEntity.Transform = new Transform(axisBounds.Center, axisBounds.Extent, in transform.Rotation);
-            boxEntity.Meta = new DrawCommandMeta(DrawCommandId.Model, DrawCommandQueue.OverlayTransparent,
-                DrawCommandResolver.BoundingVolume, PassMask.Effect);
-        }
-
-        hasRunEntities = true;
-    }
-*/
-    public void CollectEntities(in Matrix4x4 viewMat, in ProjectionInfoData projInfo)
+    public void CollectEntities(float deltaTime,  DrawCommandBuffer buffer)
     {
         if (_world is null) return;
 
-        var worldEntities = _world.Entities;
-        var selected = WorldActionSlot.SelectedEntityId;
-
-        float near = projInfo.Near, far = projInfo.Far;
-
         EnsureCapacity(DrawCount);
+        CollectModelEntities();
+
+        var ctx = new RenderFrameContext
+        {
+            EntitySpan = _entities.AsSpan(0, _idx), EntityByIdSpan = _byEntityId.AsSpan(),
+        };
+        _animatorProcessor.ProcessAnimations(deltaTime, _world.Entities, buffer, ctx);
+    }
+
+    private void CollectModelEntities()
+    {
+        var worldEntities = _world!.Entities;
+        var selected = WorldActionSlot.SelectedEntityId;
+        
+        var projInfo = RenderDataSlot.ProjectionInfo;
+        var viewMatrix = RenderDataSlot.ViewData.ViewMatrix;
+        float near = projInfo.Near, far = projInfo.Far;
 
         var idxCollect = 0;
         foreach (var query in worldEntities.Query<ModelComponent, Transform>())
@@ -122,11 +92,15 @@ internal sealed class RenderEntityBus
             ref var transform = ref query.Component2;
 
             ref var entity = ref _entities[idxCollect];
+            ref var entityData = ref _entityData[idxCollect];
+            entityData.Transform = transform;
+            entityData.Bounds = worldEntities.BoundingBoxes.GetById(query.Entity).Box;
+
             _byEntityId[entity.Entity] = idxCollect++;
 
-            var depthKey = DepthKeyUtility.MakeDepthKey(in viewMat, in transform.Translation, near, far);
+            var depthKey = DepthKeyUtility.MakeDepthKey(in viewMatrix,  transform.Translation, near, far);
 
-            var meta = new DrawCommandMeta(DrawCommandId.Model, DrawCommandQueue.Opaque, DrawCommandResolver.None,
+            var meta = new DrawEntityCommandMeta(DrawCommandId.Model, DrawCommandQueue.Opaque, DrawCommandResolver.None,
                 PassMask.Default, depthKey);
 
             if (query.Entity == selected)
@@ -137,108 +111,10 @@ internal sealed class RenderEntityBus
             entity.Entity = query.Entity;
             entity.Model = model.Model;
             entity.MaterialKey = model.MaterialKey;
-            entity.Transform = transform;
-            entity.Meta = meta;
+            entity.CommandMeta = meta;
         }
-
         _idx = idxCollect;
-    }
 
-
-    float t = 0;
-    private int btx = 0;
-
-    public void ProcessAnimations(float deltaTime, DrawCommandBuffer buffer)
-    {
-        //var submitView = _meshTable.GetBoneUploadPayload();
-
-        var worldEntities = _world!.Entities;
-        var globals = _animationGlobals;
-        var finals = _animationFinal;
-
-        t += deltaTime * 100;
-        foreach (var query in worldEntities.Query<AnimationComponent>())
-        {
-            ref var component = ref query.Component;
-
-            var modelAnimation = _meshTable.GetAnimationFor(component.Model);
-            var animation = modelAnimation.AnimationDataSpan[0];
-            var parentIndices = modelAnimation.ParentIndices;
-
-            ref readonly var invMatrix = ref modelAnimation.InverseRootTransform;
-            var boneByIndex = animation.BoneTracksMap;
-            var boneCount = boneByIndex.Count;
-            var boneTransforms = modelAnimation.BoneTransforms;
-            var nodeTransforms = modelAnimation.NodeTransforms;
-
-            if ((uint)boneCount > globals.Length || (uint)boneCount > finals.Length ||
-                (uint)boneCount > parentIndices.Length)
-                throw new IndexOutOfRangeException();
-
-            globals.AsSpan().Fill(Matrix4x4.Identity);
-
-            _entities[_byEntityId[query.Entity]].IsAnimated = true;
-
-            Matrix4x4 tempMat = default;
-            for (int i = 0; i < boneCount; i++)
-            {
-                if (!boneByIndex.TryGetValue(i, out var track))
-                {
-                    tempMat = nodeTransforms[i];
-                }
-                else
-                {
-                    var pos = LerpVector(track.Translations, track.TranslationTimes, t, default);
-                    var rot = LerpQuaternion(track.Rotations, track.RotationTimes, t);
-                    MatrixMath.CreateModelMatrix(in pos, Vector3.One, in rot, out tempMat);
-                    //poseTransform.Scale = LerpVector(track.Scales, track.ScaleTimes, t, Vector3.One);
-                    //local = Matrix4x4.CreateFromQuaternion(poseTransform.Rotation) *Matrix4x4.CreateTranslation(poseTransform.Translation);
-                }
-
-                ref var finalRef = ref Unsafe.AsRef(ref finals[i]);
-                ref var globalRef = ref Unsafe.AsRef(ref globals[i]);
-
-                int p = parentIndices[i];
-                if (p >= 0)
-                    globalRef = tempMat * globals[p];
-                else
-                    globalRef = tempMat;
-
-
-                MatrixMath.MultiplyAffine(in boneTransforms[i], in globalRef, out tempMat);
-                MatrixMath.WriteMultiplyAffine(ref finalRef, in tempMat, in invMatrix);
-                // Matrix4x4 a = finals[i] = boneTransforms[i] * globals[i] * invMatrix;
-                //MatrixMath.MultiplyAffine(in tempMat, in invMatrix, out finals[i]);
-            }
-
-            buffer.SubmitSingleAnimation(finals);
-        }
-
-        static Vector3 LerpVector(ReadOnlySpan<Vector3> values, float[] times, float time, Vector3 fallback)
-        {
-            if (times.Length == 0) return fallback;
-            if (times.Length == 1 || time <= times[0]) return values[0];
-            if (time >= times[^1]) return values[^1];
-
-            var i = 0;
-            while (i < times.Length - 1 && time >= times[i + 1]) i++;
-
-            var f = (time - times[i]) / (times[i + 1] - times[i]);
-            return Vector3.Lerp(values[i], values[i + 1], f);
-        }
-
-        static Quaternion LerpQuaternion(ReadOnlySpan<Quaternion> values, float[] times, float time)
-        {
-            if (times.Length == 0) return Quaternion.Identity;
-            if (times.Length == 1 || time <= times[0]) return values[0];
-            if (time >= times[^1]) return values[^1];
-
-            var i = 0;
-            while (i < times.Length - 1 && time >= times[i + 1]) i++;
-
-            var f = (time - times[i]) / (times[i + 1] - times[i]);
-            return Quaternion.Slerp(values[i], values[i + 1], f);
-        }
     }
 
     public void FlushEntities(DrawCommandBuffer buffer)
@@ -324,10 +200,11 @@ internal sealed class RenderEntityBus
 
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    private static DrawCommandMeta BuildMeta(ref MaterialTag tag, int slot, DrawCommandMeta meta)
+    private static DrawEntityCommandMeta BuildMeta(ref MaterialTag tag, int slot, DrawEntityCommandMeta meta)
     {
         if (!tag.IsTransparent(slot)) return meta;
         var depthKey = (ushort)(ushort.MaxValue - meta.DepthKey);
+        
         return meta.WithTransparency(DrawCommandQueue.Transparent, depthKey);
     }
 
@@ -388,14 +265,16 @@ internal sealed class RenderEntityBus
     private void EnsureCapacity(int amount)
     {
         InvalidOpThrower.ThrowIf(_byEntityId.Length != _entities.Length);
+        InvalidOpThrower.ThrowIf(_byEntityId.Length != _entityData.Length);
 
         if (_entities.Length >= amount) return;
-        var newCap = ArrayUtility.CapacityGrowthToFit(amount, Math.Max(amount, 4));
-
+        var newCap = ArrayUtility.CapacityGrowthSafe(_entities.Length, amount);
         if (newCap > MaxCapacity)
             throw new OutOfMemoryException("Entity Buffer exceeded max limit");
 
         Array.Resize(ref _entities, newCap);
+        Array.Resize(ref _entityData, newCap);
         Array.Resize(ref _byEntityId, newCap);
+        Console.WriteLine($"Entity buffer resize: {newCap}");
     }
 }

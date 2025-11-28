@@ -7,12 +7,7 @@ using ConcreteEngine.Graphics.Gfx.Resources;
 
 #endregion
 
-namespace ConcreteEngine.Engine.Worlds.Data;
-
-public readonly record struct ModelId(int Value)
-{
-    public static implicit operator int(ModelId id) => id.Value;
-}
+namespace ConcreteEngine.Engine.Worlds.Render.Data;
 
 public readonly struct MeshPart(MeshId mesh, int materialSlot, int drawCount)
 {

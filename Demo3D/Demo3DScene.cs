@@ -74,7 +74,6 @@ public sealed class Demo3DScene : GameScene
 
         var worldEntities = Context.World.Entities;
         var worldMaterials = Context.World.EntityMaterials;
-
         {
             var warriorModel = assets.Store.GetByName<Model>("Warrior");
             var warriorMat = materialStore.Get("Warrior::Materials/0");
@@ -84,11 +83,15 @@ public sealed class Demo3DScene : GameScene
             worldEntities.Models.Add(warriorEntity,
                 new ModelComponent(warriorModel.ModelId, warriorModel.DrawCount, warriorMatKey));
             worldEntities.Transforms.Add(warriorEntity,
-                Transform.Identity with { Translation = new Vector3(115, 6, 120), Scale = new Vector3(2) });
+                Transform.Identity with { Translation = new Vector3(115, 6, 120), Scale = new Vector3(2)});
             worldEntities.BoundingBoxes.Add(warriorEntity, new BoxComponent(warriorModel.Bounds));
+            var animationComponent = new AnimationComponent(warriorModel.ModelId);
+            worldEntities.Animations.Add(warriorEntity, animationComponent);
+
             // animationComponent.Slot = Context.World.MeshTable.GetAnimationSlot(knight.ModelId);
         }
 
+           
         var cesiumModel = assets.Store.GetByName<Model>("Cesium_Man");
         var cesiumMat = materialStore.CreateMaterial("EmptyAnimated", "CesiumMat");
         var cesiumMatKey = worldMaterials.Add(MaterialTagBuilder.BuildOne(cesiumMat.Id));
@@ -107,10 +110,11 @@ public sealed class Demo3DScene : GameScene
                 });
             worldEntities.BoundingBoxes.Add(entity, new BoxComponent(cesiumModel.Bounds));
 
-            var animationComponent = new AnimationComponent(cesiumModel.ModelId, 1, 4);
+            var animationComponent = new AnimationComponent(cesiumModel.ModelId);
             worldEntities.Animations.Add(entity, animationComponent);
             // animationComponent.Slot = Context.World.MeshTable.GetAnimationSlot(knight.ModelId);
         }
+       
 
         {
             var knight = assets.Store.GetByName<Model>("Knight");
@@ -124,9 +128,9 @@ public sealed class Demo3DScene : GameScene
             worldEntities.Transforms.Add(knightEntity,
                 Transform.Identity with
                 {
-                    Translation = new Vector3(120, 6, 120),
+                    Translation = new Vector3(110, 6, 125),
                     Rotation = Quaternion.CreateFromYawPitchRoll(0, FloatMath.ToRadians(90), 0),
-                    Scale = new Vector3(1)
+                    Scale = new Vector3(2)
                 });
             worldEntities.BoundingBoxes.Add(knightEntity, new BoxComponent(knight.Bounds));
 

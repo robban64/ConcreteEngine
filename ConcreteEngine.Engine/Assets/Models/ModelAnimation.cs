@@ -8,7 +8,7 @@ namespace ConcreteEngine.Engine.Assets.Models;
 
 public sealed class ModelAnimation
 {
-    private readonly ModelAnimationData[] _animations;
+    private readonly AnimationClip[] _clips;
 
     private readonly Dictionary<int, string> _boneMapping; 
 
@@ -22,14 +22,14 @@ public sealed class ModelAnimation
 
     internal ModelAnimation(
         IReadOnlyDictionary<string, int> boneMapping,
-        ReadOnlySpan<ModelAnimationData> animations,
+        ReadOnlySpan<AnimationClip> clips,
         ReadOnlySpan<int> parentIndices,
         ReadOnlySpan<Matrix4x4> boneTransforms,
         ReadOnlySpan<Matrix4x4> nodeTransforms,
         in Matrix4x4 inverseRootTransform,
         in Matrix4x4 skeletonRootOffset)
     {
-        _animations = animations.ToArray();
+        _clips = clips.ToArray();
         _parentIndices = parentIndices.ToArray();
         _boneTransforms = boneTransforms.ToArray();
         _nodeTransforms = nodeTransforms.ToArray();
@@ -50,8 +50,7 @@ public sealed class ModelAnimation
     public ReadOnlySpan<int> ParentIndices => _parentIndices;
     public ReadOnlySpan<Matrix4x4> BoneTransforms => _boneTransforms;
     public ReadOnlySpan<Matrix4x4> NodeTransforms => _nodeTransforms;
-
-    internal ReadOnlySpan<ModelAnimationData> AnimationDataSpan => _animations;
+    internal ReadOnlySpan<AnimationClip> ClipDataSpan => _clips;
     internal Dictionary<int, string> BoneIndexByName() => _boneMapping;
 
     public int BoneCount => _boneTransforms.Length;

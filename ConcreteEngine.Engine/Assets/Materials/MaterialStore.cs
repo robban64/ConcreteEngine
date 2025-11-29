@@ -159,7 +159,7 @@ public sealed class MaterialStore : IMaterialStore
         var len = _materials.Length;
         if (_idx >= len)
         {
-            var newCap = ArrayUtility.CapacityGrowthLinear(len, len * 2, step: 32);
+            var newCap = Arrays.CapacityGrowthLinear(len, len * 2, step: 32);
 
             if (newCap > RenderLimits.MaxMaterialCount)
                 throw new InvalidOperationException("Material limit exceeded");

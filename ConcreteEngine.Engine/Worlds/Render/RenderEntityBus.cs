@@ -11,6 +11,7 @@ using ConcreteEngine.Common.Time;
 using ConcreteEngine.Engine.Worlds.Data;
 using ConcreteEngine.Engine.Worlds.Entities;
 using ConcreteEngine.Engine.Worlds.Render.Data;
+using ConcreteEngine.Engine.Worlds.Tables;
 using ConcreteEngine.Engine.Worlds.Utility;
 using ConcreteEngine.Renderer.Data;
 using ConcreteEngine.Renderer.Definitions;
@@ -35,17 +36,19 @@ internal sealed class RenderEntityBus
 
     private readonly MeshTable _meshTable;
     private readonly MaterialTable _materialTable;
+    private readonly AnimationTable _animationTable;
 
     private readonly AnimatorProcessor _animatorProcessor;
 
     public ModelId CubeId { get; set; }
     public MaterialTagKey EmptyMaterialKey { get; set; }
 
-    internal RenderEntityBus(MeshTable meshTable, MaterialTable materialTable)
+    internal RenderEntityBus(MeshTable meshTable, MaterialTable materialTable, AnimationTable animationTable)
     {
         _meshTable = meshTable;
         _materialTable = materialTable;
-        _animatorProcessor = new AnimatorProcessor(_meshTable);
+        _animationTable = animationTable;
+        _animatorProcessor = new AnimatorProcessor(_meshTable, _animationTable);
     }
 
     private int ActiveSkyCount => _world?.Sky.IsActive ?? false ? 1 : 0;
@@ -316,7 +319,7 @@ internal sealed class RenderEntityBus
         InvalidOpThrower.ThrowIf(_byEntityId.Length != _entityData.Length);
 
         if (_entities.Length >= amount) return;
-        var newCap = ArrayUtility.CapacityGrowthSafe(_entities.Length, amount);
+        var newCap = Arrays.CapacityGrowthSafe(_entities.Length, amount);
         if (newCap > MaxCapacity)
             throw new OutOfMemoryException("Entity Buffer exceeded max limit");
 

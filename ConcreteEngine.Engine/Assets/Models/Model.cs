@@ -15,6 +15,7 @@ public readonly record struct ModelBaseDrawInfo(ModelId Model, int PartCount, in
 public sealed class Model : AssetObject, IComparable<Model>
 {
     public ModelId ModelId { get; private set; }
+    public AnimationId AnimationId {get; private set;}
     public required int DrawCount { get; init; }
     public required BoundingBox Bounds { get; init; }
 
@@ -30,11 +31,19 @@ public sealed class Model : AssetObject, IComparable<Model>
     //
     public ModelBaseDrawInfo ToBaseDrawInfo() => new(ModelId, MeshParts.Length, DrawCount);
 
-    internal void AttachToRenderer(ModelId modelId)
+    internal void AttachModel(ModelId modelId)
     {
         ArgumentOutOfRangeException.ThrowIfLessThanOrEqual(modelId.Value, 0, nameof(modelId));
         InvalidOpThrower.ThrowIf(ModelId.Value > 0, nameof(ModelId));
         ModelId = modelId;
+    }
+
+    public void AttachAnimation(AnimationId animationId)
+    {
+        ArgumentOutOfRangeException.ThrowIfLessThanOrEqual(animationId.Value, 0, nameof(animationId));
+        InvalidOpThrower.ThrowIf(AnimationId.Value > 0, nameof(ModelId));
+        InvalidOpThrower.ThrowIfNull(Animation);
+        AnimationId = animationId;
     }
 
     public int CompareTo(Model? other)

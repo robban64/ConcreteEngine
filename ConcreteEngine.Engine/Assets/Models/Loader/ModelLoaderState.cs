@@ -32,7 +32,7 @@ internal sealed class ModelLoaderState
 
     //Animation
     public readonly List<int> _parentIndices = new(8);
-    private readonly List<ModelAnimationData> _animations = new(8);
+    private readonly List<AnimationClip> _animations = new(8);
     public readonly Dictionary<string, int> _boneByName = new(8);
 
     // Material/Textures
@@ -110,7 +110,7 @@ internal sealed class ModelLoaderState
 
 
     public void GetAnimationResult(out IReadOnlyDictionary<string, int> boneMapping,
-        out ReadOnlySpan<ModelAnimationData> animations, out ReadOnlySpan<int> parentIndices)
+        out ReadOnlySpan<AnimationClip> animations, out ReadOnlySpan<int> parentIndices)
     {
         ArgumentOutOfRangeException.ThrowIfZero(_boneByName.Count);
         ArgumentOutOfRangeException.ThrowIfZero(_parentIndices.Count);
@@ -131,7 +131,7 @@ internal sealed class ModelLoaderState
 
     public bool TryGetBoneIndex(string boneName, out int index) => _boneByName.TryGetValue(boneName, out index);
     public void AppendBone(string boneName, int index) => _boneByName.Add(boneName, index);
-    public void AppendAnimation(ModelAnimationData animation) => _animations.Add(animation);
+    public void AppendAnimation(AnimationClip animation) => _animations.Add(animation);
 
     public void UpdateBoneParentIndexOrDefault(string parentName, int boneIndex)
     {

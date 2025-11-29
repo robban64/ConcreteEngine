@@ -59,7 +59,7 @@ public sealed class EntityStore<T> where T : unmanaged
 
         if (_data.Length < _idx)
         {
-            var newSize = ArrayUtility.CapacityGrowthSafe(_data.Length, _idx, 2048);
+            var newSize = Arrays.CapacityGrowthSafe(_data.Length, _idx, 2048);
             Array.Resize(ref _data, newSize);
             Array.Resize(ref _entities, newSize);
             Console.WriteLine("EntityStore entities resize");
@@ -67,7 +67,7 @@ public sealed class EntityStore<T> where T : unmanaged
 
         if (_sparse.Length < e.Id)
         {
-            var newSize = ArrayUtility.CapacityGrowthSafe(e.Id, _idx, 2048);
+            var newSize = Arrays.CapacityGrowthSafe(e.Id, _idx, 2048);
             Array.Resize(ref _sparse, newSize);
             Console.WriteLine("EntityStore sparse resize");
         }

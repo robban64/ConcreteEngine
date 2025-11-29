@@ -6,14 +6,19 @@ using System.Runtime.CompilerServices;
 
 namespace ConcreteEngine.Common.Collections;
 
-public static class ArrayUtility
+public static class Arrays
 {
-    public static int CapacityGrowthSafe(int currentCapacity, int requiredSize, int largeThreshold = 64 * 1024)
+    public const int TableSmallThreshold = 4_096;
+    public const int TableDefaultThreshold = 8_192;
+    public const int BufferThreshold = 64 * 1024;
+
+    public static int CapacityGrowthSafe(int currentCapacity, int requiredSize,
+        int largeThreshold = TableDefaultThreshold)
     {
         if (currentCapacity >= requiredSize) return currentCapacity;
-    
+
         int newCapacity = currentCapacity == 0 ? 4 : currentCapacity * 2;
-        if ((uint)newCapacity < (uint)requiredSize) 
+        if ((uint)newCapacity < (uint)requiredSize)
         {
             newCapacity = requiredSize;
         }
@@ -23,10 +28,10 @@ public static class ArrayUtility
             int growth = Math.Max(requiredSize - currentCapacity, largeThreshold);
             newCapacity = currentCapacity + growth;
         }
-        
+
         return (newCapacity + 63) & ~63;
     }
-    
+
     public static int CapacityGrowthAlign(int required, int alignment = 4096)
     {
         return (required + (alignment - 1)) & ~(alignment - 1);

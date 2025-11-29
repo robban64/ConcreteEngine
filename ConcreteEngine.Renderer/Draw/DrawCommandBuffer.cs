@@ -217,7 +217,7 @@ public sealed class DrawCommandBuffer
     {
         if (_commandBuffer.Length >= size) return;
         
-        var newCap = ArrayUtility.CapacityGrowthSafe(_commandBuffer.Length, Math.Max(size, 64));
+        var newCap = Arrays.CapacityGrowthSafe(_commandBuffer.Length, size);
 
         if (newCap > MaxCommandBuffCapacity)
             ThrowMaxCapacityExceeded();
@@ -234,7 +234,7 @@ public sealed class DrawCommandBuffer
     private void EnsureTicketsCapacity(int total)
     {
         if (_drawTickets.Length >= total) return;
-        var newSize = ArrayUtility.CapacityGrowthLinear(_drawTickets.Length, total, step: PassSlots);
+        var newSize = Arrays.CapacityGrowthLinear(_drawTickets.Length, total, step: PassSlots);
         _drawTickets = new DrawCommandTicket[newSize];
         
         Console.WriteLine("DrawTickets buffer resize");

@@ -4,6 +4,7 @@ using System.Runtime.InteropServices;
 using ConcreteEngine.Common.Numerics;
 using ConcreteEngine.Common.Numerics.Maths;
 using ConcreteEngine.Engine.Worlds.Entities;
+using ConcreteEngine.Engine.Worlds.Tables;
 using ConcreteEngine.Renderer.Data;
 using ConcreteEngine.Renderer.Draw;
 
@@ -16,12 +17,13 @@ internal sealed class AnimatorProcessor
 
     //private readonly WorldEntities _entities;
     private readonly MeshTable _meshTable;
+    private readonly AnimationTable _animationTable;
 
 
-    public AnimatorProcessor(MeshTable meshTable)
+    public AnimatorProcessor(MeshTable meshTable, AnimationTable animationTable)
     {
         _meshTable = meshTable;
-
+        _animationTable = animationTable;
     }
 
 
@@ -41,17 +43,18 @@ internal sealed class AnimatorProcessor
         foreach (var query in entities.Query<AnimationComponent>())
         {
             ref var component = ref query.Component;
+
+            var view = _animationTable.GetModelAnimationView(component.Animation);
             
             var modelAnimation = _meshTable.GetAnimationFor(component.Model);
-            var animation = modelAnimation.AnimationDataSpan[component.ClipIndex];
-
+            var animation = modelAnimation.ClipDataSpan[component.ClipIndex];
             component.Duration = animation.Duration;
             component.Speed = animation.TicksPerSecond;
             float time = component.AdvanceTime(deltaTime);
 
             var boneByIndex = animation.BoneTracksMap;
-            var boneTransforms = modelAnimation.BoneTransforms;
-            var nodeTransforms = modelAnimation.NodeTransforms;
+            var boneTransforms = view.BoneTransforms;
+            var nodeTransforms = view.NodeTransforms;
             var parentIndices = modelAnimation.ParentIndices;
 
             var finalWriter = new AnimationUniformWriter(ref finalResult)

@@ -148,14 +148,14 @@ internal sealed class ModelLoaderDataTable
     {
         if (indexCount is { } iCount && (uint)indexCount > _indices.Length)
         {
-            var cap = ArrayUtility.CapacityGrowthAlign(int.Max(iCount, 64));
+            var cap = Arrays.CapacityGrowthAlign(int.Max(iCount, 64));
             Array.Resize(ref _indices, cap);
             Console.WriteLine("triggered indicies " + cap);
         }
 
         if (vertexCount is { } vCount && (uint)vCount > _vertices.Length)
         {
-            var cap = ArrayUtility.CapacityGrowthPow2(int.Max(vCount, 64));
+            var cap = Arrays.CapacityGrowthPow2(int.Max(vCount, 64));
             Array.Resize(ref _vertices, cap);
             Console.WriteLine("triggered verts " + cap);
         }
@@ -163,7 +163,7 @@ internal sealed class ModelLoaderDataTable
         if (skinnedCount is { } skinCount && (uint)skinCount > _verticesSkinned.Length)
         {
             InvalidOpThrower.ThrowIf(_skinningData.Length != _verticesSkinned.Length);
-            var cap = ArrayUtility.CapacityGrowthPow2(int.Max(skinCount, 64));
+            var cap = Arrays.CapacityGrowthPow2(int.Max(skinCount, 64));
             Array.Resize(ref _verticesSkinned, cap);
             Array.Resize(ref _skinningData, cap);
             Console.WriteLine("triggered skinn " + cap);

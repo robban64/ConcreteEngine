@@ -77,7 +77,7 @@ internal sealed class AssimpAnimationProcessor(ModelLoaderDataTable dataTable, M
             var duration = (float)aiAnim->MDuration;
             var ticksPerSecond = (float)(aiAnim->MTicksPerSecond != 0 ? aiAnim->MTicksPerSecond : 25.0f);
 
-            var animationData = new ModelAnimationData(name, duration, ticksPerSecond);
+            var animationData = new AnimationClip(name, duration, ticksPerSecond);
 
             for (uint c = 0; c < aiAnim->MNumChannels; c++)
             {
@@ -89,7 +89,7 @@ internal sealed class AssimpAnimationProcessor(ModelLoaderDataTable dataTable, M
                     continue;
                 }
 
-                var boneTrack = new BoneTrack();
+                var boneTrack = new BoneClipTrack();
 
                 // Position
                 var posKeys = channel->MPositionKeys;

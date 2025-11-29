@@ -10,6 +10,7 @@ using ConcreteEngine.Engine.Editor.Data;
 using ConcreteEngine.Engine.Editor.Definitions;
 using ConcreteEngine.Engine.Platform;
 using ConcreteEngine.Engine.Utils;
+using ConcreteEngine.Engine.Worlds.Tables;
 using ConcreteEngine.Engine.Worlds.Utility;
 using ConcreteEngine.Engine.Worlds.View;
 using ConcreteEngine.Graphics;
@@ -43,6 +44,8 @@ public sealed class WorldRenderer : IWorldRenderer
 
     private readonly MeshTable _meshTable;
     private readonly MaterialTable _materialTable;
+    private readonly AnimationTable _animationTable;
+    
     private readonly RenderEntityBus _renderEntityBus;
 
     private readonly EngineEventBus _eventBus;
@@ -69,7 +72,8 @@ public sealed class WorldRenderer : IWorldRenderer
 
         _meshTable = new MeshTable();
         _materialTable = new MaterialTable();
-        _renderEntityBus = new RenderEntityBus(_meshTable, _materialTable);
+        _animationTable = new AnimationTable();
+        _renderEntityBus = new RenderEntityBus(_meshTable, _materialTable, _animationTable);
     }
 
 
@@ -77,6 +81,7 @@ public sealed class WorldRenderer : IWorldRenderer
     {
         ArgumentNullException.ThrowIfNull(world);
         _meshTable.Setup(_assets);
+        _animationTable.Setup(_assets);
         _renderEntityBus.AttachWorld(world);
         world.AttachRender(_graphics.Gfx, _meshTable, _materialTable);
 

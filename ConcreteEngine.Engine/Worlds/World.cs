@@ -6,6 +6,7 @@ using ConcreteEngine.Engine.Editor.Data;
 using ConcreteEngine.Engine.Worlds.Entities;
 using ConcreteEngine.Engine.Worlds.Render;
 using ConcreteEngine.Engine.Worlds.Render.Batching;
+using ConcreteEngine.Engine.Worlds.Tables;
 using ConcreteEngine.Engine.Worlds.View;
 using ConcreteEngine.Graphics.Gfx;
 using ConcreteEngine.Shared.RenderData;

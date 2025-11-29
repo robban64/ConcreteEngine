@@ -40,9 +40,10 @@ public struct ModelComponent(ModelId model, int drawCount, MaterialTagKey materi
     public int DrawCount = drawCount;
 }
 
-public struct AnimationComponent(ModelId model)
+public struct AnimationComponent(ModelId model, AnimationId animation)
 {
     public ModelId Model = model;
+    public AnimationId Animation = animation;
     public int ClipIndex = 0;
     public float Time = 0f;
     public float Speed = 1f;

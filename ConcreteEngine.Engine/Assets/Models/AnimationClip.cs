@@ -6,7 +6,7 @@ using System.Numerics;
 
 namespace ConcreteEngine.Engine.Assets.Models;
 
-public sealed class ModelAnimationData(string name, float duration, float ticksPerSecond)
+public sealed class AnimationClip(string name, float duration, float ticksPerSecond)
 {
     public string Name { get; set; } = name;
     public float Duration { get; set; } = duration;
@@ -15,10 +15,10 @@ public sealed class ModelAnimationData(string name, float duration, float ticksP
     // public float[] TranslationTimes { get; internal set; }
     // public Vector3[] Translations { get; internal set; }
     // ...
-    public Dictionary<int, BoneTrack> BoneTracksMap { get; } = [];
+    public Dictionary<int, BoneClipTrack> BoneTracksMap { get; } = [];
 }
 
-public sealed class BoneTrack
+public sealed class BoneClipTrack
 {
     public float[] TranslationTimes { get; internal set; }
     public Vector3[] Translations { get; internal set; }

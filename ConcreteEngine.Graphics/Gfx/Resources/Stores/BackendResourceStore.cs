@@ -103,7 +103,7 @@ internal sealed class BackendResourceStore<TId, THandle> : IBackendResourceStore
         var len = _records.Length;
         if (_idx == len)
         {
-            var newCap = ArrayUtility.CapacityGrowthLinear(len, len * 2, step: 32);
+            var newCap = Arrays.CapacityGrowthLinear(len, len * 2, step: 32);
             Console.WriteLine("Backend store resize");
             
             if (newCap > GfxLimits.StoreLimit)

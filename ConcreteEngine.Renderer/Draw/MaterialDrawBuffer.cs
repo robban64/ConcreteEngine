@@ -88,7 +88,7 @@ internal sealed class MaterialDrawBuffer
     private void EnsureCapacity(int amount)
     {
         if (_metas.Length > amount) return;
-        var newCap = ArrayUtility.CapacityGrowthSafe(_metas.Length, amount, MaxTextureSlotBuffCapacity);
+        var newCap = Arrays.CapacityGrowthSafe(_metas.Length, amount, MaxTextureSlotBuffCapacity);
 
         if (newCap > MaxMaterialBufferCapacity)
             ThrowMaxCapacityExceeded();
@@ -102,7 +102,7 @@ internal sealed class MaterialDrawBuffer
     private void EnsureTextureSlotCapacity(int amount)
     {
         if (_textureSlots.Length > amount) return;
-        var newCap = ArrayUtility.CapacityGrowthSafe(_textureSlots.Length, amount, MaxTextureSlotBuffCapacity);
+        var newCap = Arrays.CapacityGrowthSafe(_textureSlots.Length, amount, MaxTextureSlotBuffCapacity);
         if (newCap > MaxTextureSlotBuffCapacity)
             ThrowMaxCapacityExceeded();
 

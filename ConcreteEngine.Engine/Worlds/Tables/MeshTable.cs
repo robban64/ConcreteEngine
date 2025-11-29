@@ -11,7 +11,7 @@ using ConcreteEngine.Graphics.Gfx.Resources;
 
 #endregion
 
-namespace ConcreteEngine.Engine.Worlds.Render;
+namespace ConcreteEngine.Engine.Worlds.Tables;
 
 public interface IMeshTable
 {
@@ -21,9 +21,8 @@ public interface IMeshTable
 
 internal sealed class MeshTable : IMeshTable
 {
-    private const int DefaultBufferCap = 128;
-    private const int DefaultModelCap = 32;
-    private const int DefaultAnimationCap = 16;
+    private const int DefaultPartCap = 128;
+    private const int DefaultModelCap = 64;
 
     private int _modelIdx = 0;
     private ModelId CreateModelId() => new(++_modelIdx);
@@ -31,26 +30,20 @@ internal sealed class MeshTable : IMeshTable
     private BoundingBox[] _modelBoxes = new BoundingBox[DefaultModelCap];
     private RangeU16[] _modelPartRanges = new RangeU16[DefaultModelCap];
 
-    private MeshPart[] _meshParts = new MeshPart[DefaultBufferCap];
-    private BoundingBox[] _partBoxes = new BoundingBox[DefaultBufferCap];
-    private Matrix4x4[] _partTransforms = new Matrix4x4[DefaultBufferCap];
+    private MeshPart[] _meshParts = new MeshPart[DefaultPartCap];
+    private BoundingBox[] _partBoxes = new BoundingBox[DefaultPartCap];
+    private Matrix4x4[] _partTransforms = new Matrix4x4[DefaultPartCap];
 
-    /*private int[] _animationByModel = new int[DefaultAnimationCap];
-    private Matrix4x4[] _modelBoneInvTransform = new Matrix4x4[DefaultAnimationCap];
-    private RangeU16[] _modelBoneRanges = new RangeU16[DefaultAnimationCap];
-    private Matrix4x4[] _boneTransforms = new Matrix4x4[DefaultBufferCap];
-
-*/
 
     private readonly Dictionary<ModelId, ModelAnimation> _modelAnimations = new(32);
     private int _animationIdx = 0;
 
     private int _partIdx = 0;
 
-    
+
     public ModelAnimation GetAnimationFor(ModelId id) => _modelAnimations[id];
 
-    public ModelBoundsView GetModelBoundSpan() => new (_modelBoxes.AsSpan());
+    public ModelBoundsView GetModelBoundSpan() => new(_modelBoxes.AsSpan());
 
     public ushort GetPartLengthFor(ModelId id)
     {
@@ -128,16 +121,7 @@ internal sealed class MeshTable : IMeshTable
         models.Sort();
 
         int totalParts = 0;
-        int animatedModels = 0, totalBones = 0;
-        foreach (var model in models)
-        {
-            totalParts += model.MeshParts.Length;
-            if (model.Animation is not null)
-            {
-                animatedModels++;
-                totalBones += model.Animation.BoneCount;
-            }
-        }
+        foreach (var model in models) totalParts += model.MeshParts.Length;
 
         if (totalParts == 0) return;
 
@@ -147,7 +131,7 @@ internal sealed class MeshTable : IMeshTable
         for (var i = 0; i < models.Count; i++)
         {
             var model = models[i];
-            model.AttachToRenderer(CreateModelId());
+            model.AttachModel(CreateModelId());
             _modelBoxes[i] = model.Bounds;
             _modelPartRanges[i] = new RangeU16(idx, model.MeshParts.Length);
             foreach (var part in model.MeshParts)
@@ -200,43 +184,21 @@ internal sealed class MeshTable : IMeshTable
 
         if (_meshParts.Length < cap)
         {
-            var newCap = ArrayUtility.CapacityGrowthSafe(_meshParts.Length, cap);
+            var newCap = Arrays.CapacityGrowthSafe(_meshParts.Length, cap);
             Array.Resize(ref _meshParts, newCap);
             Array.Resize(ref _partTransforms, newCap);
             Array.Resize(ref _partBoxes, newCap);
             Console.WriteLine("_meshParts resize");
-
+            
         }
 
         if (_modelPartRanges.Length < rangeCap)
         {
-            var newCap = ArrayUtility.CapacityGrowthSafe(_modelPartRanges.Length, rangeCap);
+            var newCap = Arrays.CapacityGrowthSafe(_modelPartRanges.Length, rangeCap, Arrays.TableSmallThreshold);
             Array.Resize(ref _modelPartRanges, newCap);
             Array.Resize(ref _modelBoxes, newCap);
             Console.WriteLine("_modelPartRanges resize");
-
         }
     }
-/*
-    private void EnsureAnimatedCapacity(int cap, int rangeCap)
-    {
-        if (_animationByModel.Length != _modelBoneInvTransform.Length ||
-            _animationByModel.Length != _modelBoneRanges.Length)
-            throw new InvalidOperationException("Mismatch size for model animation tables");
 
-        if (_boneTransforms.Length < cap)
-        {
-            var newCap = ArrayUtility.CapacityGrowthToFit(_boneTransforms.Length, Math.Max(cap, 64));
-            Array.Resize(ref _boneTransforms, newCap);
-        }
-
-        if (_modelBoneRanges.Length < rangeCap)
-        {
-            var newCap = ArrayUtility.CapacityGrowthToFit(_modelBoneRanges.Length, Math.Max(cap, 64));
-            Array.Resize(ref _modelBoneRanges, newCap);
-            Array.Resize(ref _animationByModel, newCap);
-            Array.Resize(ref _modelBoneInvTransform, newCap);
-        }
-    }
-    */
 }

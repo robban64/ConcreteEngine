@@ -86,7 +86,7 @@ public sealed class Demo3DScene : GameScene
             worldEntities.Transforms.Add(warriorEntity,
                 Transform.Identity with { Translation = new Vector3(115, 6, 120), Scale = new Vector3(2)});
             worldEntities.BoundingBoxes.Add(warriorEntity, new BoxComponent(warriorModel.Bounds));
-            var animationComponent = new AnimationComponent(warriorModel.ModelId);
+            var animationComponent = new AnimationComponent(warriorModel.ModelId, warriorModel.AnimationId);
             worldEntities.Animations.Add(warriorEntity, animationComponent);
 
             // animationComponent.Slot = Context.World.MeshTable.GetAnimationSlot(knight.ModelId);
@@ -111,7 +111,7 @@ public sealed class Demo3DScene : GameScene
                 });
             worldEntities.BoundingBoxes.Add(entity, new BoxComponent(cesiumModel.Bounds));
 
-            var animationComponent = new AnimationComponent(cesiumModel.ModelId);
+            var animationComponent = new AnimationComponent(cesiumModel.ModelId, cesiumModel.AnimationId);
             worldEntities.Animations.Add(entity, animationComponent);
             // animationComponent.Slot = Context.World.MeshTable.GetAnimationSlot(knight.ModelId);
         }

@@ -46,14 +46,14 @@ internal readonly ref struct ModelImportResult(
 
 internal readonly ref struct AnimationImportResult(
     IReadOnlyDictionary<string, int> boneMapping,
-    ReadOnlySpan<ModelAnimationData> animations,
+    ReadOnlySpan<AnimationClip> animations,
     ReadOnlySpan<int> parentIndices,
     ReadOnlySpan<Matrix4x4> boneTransforms,
     ref Matrix4x4 invRootTransform
 )
 {
     public readonly IReadOnlyDictionary<string, int> BoneMapping = boneMapping;
-    public readonly ReadOnlySpan<ModelAnimationData> Animations = animations;
+    public readonly ReadOnlySpan<AnimationClip> Animations = animations;
     public readonly ReadOnlySpan<int> ParentIndices = parentIndices;
     public readonly ReadOnlySpan<Matrix4x4> BoneTransforms = boneTransforms;
     public readonly ref Matrix4x4 InvRootTransform = ref invRootTransform;

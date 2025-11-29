@@ -21,7 +21,7 @@ public interface IAssetStore
     AssetTypeMetaSnapshot GetMetaSnapshot<TAsset>() where TAsset : AssetObject;
 
     void ExtractList<TAsset, TData>(List<TData> list, Func<TAsset, TData> transform)
-        where TAsset : AssetObject;
+        where TAsset : AssetObject where TData : class;
 
     void ExtractSpan<TAsset, TData>(Span<TData> span, Func<TAsset, TData> transform)
         where TAsset : AssetObject where TData : unmanaged;
@@ -148,11 +148,16 @@ internal sealed class AssetStore : IAssetStore
     }
 
     public void ExtractList<TAsset, TData>(List<TData> list, Func<TAsset, TData> transform)
-        where TAsset : AssetObject
+        where TAsset : AssetObject where TData : class
     {
         foreach (var asset in _assets.Values)
         {
-            if (asset is TAsset typedAsset) list.Add(transform(typedAsset));
+            if (asset is TAsset typedAsset)
+            {
+                var it = transform(typedAsset);
+                if(it is null) continue;
+                list.Add(it);
+            }
         }
     }
 

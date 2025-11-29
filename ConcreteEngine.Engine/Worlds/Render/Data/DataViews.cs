@@ -37,13 +37,15 @@ internal readonly ref struct ModelPartView(
 }
 
 internal readonly ref struct ModelAnimationView(
-    ModelAnimation animations,
+    ReadOnlySpan<AnimationClip> clips,
     ReadOnlySpan<Matrix4x4> boneTransforms,
+    ReadOnlySpan<Matrix4x4> nodeTransforms,
     ref Matrix4x4 invTransform,
     RangeU16 range)
 {
-    public readonly ModelAnimation Animations = animations;
+    public readonly ReadOnlySpan<AnimationClip> Clips = clips;
     public readonly ReadOnlySpan<Matrix4x4> BoneTransforms = boneTransforms;
+    public readonly ReadOnlySpan<Matrix4x4> NodeTransforms  = nodeTransforms;
     public readonly ref Matrix4x4 InvTransform = ref invTransform;
     public readonly RangeU16 Range = range;
 }

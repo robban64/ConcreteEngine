@@ -69,23 +69,23 @@ internal sealed class RenderEntityBus
         EnsureCapacity(DrawCount);
 
         CollectModelEntities();
-        _timer.Begin();
         ProcessCollectedEntities();
         CalculateDepthKey();
-        _timer.EndPrint();
 
         var ctx = new RenderFrameContext
         {
             EntitySpan = _entities.AsSpan(0, _idx), EntityByIdSpan = _byEntityId.AsSpan(),
         };
+        _timer.Begin();
         _animatorProcessor.ProcessAnimations(deltaTime, _world.Entities, buffer, ctx);
+        _timer.EndPrint();
     }
 
     private void CollectModelEntities()
     {
         var worldEntities = _world!.Entities;
         var selected = WorldActionSlot.SelectedEntityId;
-        
+
         var idxCollect = 0;
         foreach (var query in worldEntities.Query<ModelComponent>())
         {
@@ -106,13 +106,13 @@ internal sealed class RenderEntityBus
                 };
             }
 
-            entity.Model = model.Model;
             entity.PartLength = (byte)_meshTable.GetPartLengthFor(model.Model);
             entity.IsSelected = selected == query.Entity;
             entity.Entity = query.Entity;
             entity.Model = model.Model;
             entity.MaterialKey = model.MaterialKey;
             entity.CommandMeta = meta;
+            entity.AnimatedSlot = -1;
         }
 
         _idx = idxCollect;
@@ -123,7 +123,7 @@ internal sealed class RenderEntityBus
         var worldEntities = _world!.Entities;
 
         var boundsView = _meshTable.GetModelBoundSpan();
-        
+
         var idx = 0;
         ref var d0 = ref MemoryMarshal.GetReference(_entityData);
         foreach (var query in worldEntities.Query<Transform>())
@@ -208,7 +208,7 @@ internal sealed class RenderEntityBus
             var locals = modelView.Locals;
 
             var baseMeta = entity.CommandMeta;
-            var isAnimated = entity.IsAnimated;
+            var animatedSlot = entity.AnimatedSlot;
             var len = int.Min(locals.Length, parts.Length);
             for (var partIdx = 0; partIdx < len; partIdx++)
             {
@@ -217,9 +217,10 @@ internal sealed class RenderEntityBus
                 ref var draw = ref Unsafe.AsRef(ref drawData);
                 ref var mat = ref Unsafe.Add(ref mat0, part.MaterialSlot);
                 var meta = BuildMeta(ref Unsafe.AsRef(ref materialTag), part.MaterialSlot, baseMeta);
-                var cmd = new DrawCommand(part.Mesh, mat, part.DrawCount);
+                var cmd = new DrawCommand(part.Mesh, mat, drawCount: part.DrawCount,
+                    animationSlot: animatedSlot >= 0 ? animatedSlot : (short)-1);
 
-                ApplyTransform(ref draw, in locals[partIdx], in world, isAnimated);
+                ApplyTransform(ref draw, in locals[partIdx], in world, animatedSlot >= 0);
                 buffer.SubmitDraw(cmd, meta, ref draw);
             }
 

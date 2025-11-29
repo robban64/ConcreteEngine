@@ -1,5 +1,7 @@
 using System.Numerics;
 using System.Runtime.CompilerServices;
+using System.Runtime.InteropServices;
+using ConcreteEngine.Common.Numerics;
 using ConcreteEngine.Common.Numerics.Maths;
 using ConcreteEngine.Engine.Worlds.Entities;
 using ConcreteEngine.Renderer.Data;
@@ -7,11 +9,10 @@ using ConcreteEngine.Renderer.Draw;
 
 namespace ConcreteEngine.Engine.Worlds.Render;
 
-
 internal sealed class AnimatorProcessor
 {
     //private readonly Matrix4x4[] _animationGlobals = new Matrix4x4[64];
-    private readonly Matrix4x4[] _animationFinal = new Matrix4x4[64];
+   // private readonly Matrix4x4[] _animationFinal = new Matrix4x4[64];
 
     //private readonly WorldEntities _entities;
     private readonly MeshTable _meshTable;
@@ -20,82 +21,93 @@ internal sealed class AnimatorProcessor
     public AnimatorProcessor(MeshTable meshTable)
     {
         _meshTable = meshTable;
-        
-        //_animationGlobals.AsSpan().Fill(Matrix4x4.Identity);
-        _animationFinal.AsSpan().Fill(Matrix4x4.Identity);
+
     }
 
 
-    public void ProcessAnimations(float deltaTime, WorldEntities entities, DrawCommandBuffer buffer, RenderFrameContext ctx)
+    [SkipLocalsInit]
+    public void ProcessAnimations(float deltaTime, WorldEntities entities, DrawCommandBuffer buffer,
+        RenderFrameContext ctx)
     {
         //var submitView = _meshTable.GetBoneUploadPayload();
-        var finals = _animationFinal;
-        
-        Span<Matrix4x4> globals =  stackalloc Matrix4x4[64];
-        int animationIdx = 0;
+        DrawAnimationUniform finalResult;
+        Span<Matrix4x4> globals = stackalloc Matrix4x4[64];
+
+        globals.Fill(Matrix4x4.Identity);
+        new AnimationUniformWriter(ref finalResult).FillIdentity(new Range32(0, 64));
+
+        int uboIndex = 0;
+        int idx = 0;
         foreach (var query in entities.Query<AnimationComponent>())
         {
             ref var component = ref query.Component;
             
             var modelAnimation = _meshTable.GetAnimationFor(component.Model);
             var animation = modelAnimation.AnimationDataSpan[component.ClipIndex];
+
             component.Duration = animation.Duration;
             component.Speed = animation.TicksPerSecond;
             float time = component.AdvanceTime(deltaTime);
 
-            globals.Fill(Matrix4x4.Identity);
-            ctx.GetByEntityId(query.Entity).IsAnimated = true;
-
-            ref readonly var invMatrix = ref modelAnimation.InverseRootTransform;
             var boneByIndex = animation.BoneTracksMap;
-            var boneCount = boneByIndex.Count;
             var boneTransforms = modelAnimation.BoneTransforms;
             var nodeTransforms = modelAnimation.NodeTransforms;
             var parentIndices = modelAnimation.ParentIndices;
 
-            if ((uint)boneCount > globals.Length || (uint)boneCount > finals.Length ||
-                (uint)boneCount > parentIndices.Length)
-                throw new IndexOutOfRangeException();
-
-
-            Matrix4x4 tempMat = default;
-            for (int i = 0; i < boneCount; i++)
+            var finalWriter = new AnimationUniformWriter(ref finalResult)
             {
+                Slot = ref uboIndex
+            };
+
+            int boneLength = parentIndices.Length;
+
+            if ((uint)boneLength > globals.Length || (uint)boneLength > finalWriter.Matrices.Length)
+            {
+                throw new IndexOutOfRangeException();
+            }
+
+            //ref var g0 = ref MemoryMarshal.GetReference(globals);
+            var invMatrix = modelAnimation.InverseRootTransform;
+            for (int i = 0; i < boneLength; i++)
+            {
+                Matrix4x4 workingMat;
                 if (!boneByIndex.TryGetValue(i, out var track))
                 {
-                    tempMat = nodeTransforms[i];
+                    workingMat = nodeTransforms[i];
                 }
                 else
                 {
                     var pos = LerpVector(track.Translations, track.TranslationTimes, time, default);
                     var rot = LerpQuaternion(track.Rotations, track.RotationTimes, time);
-                    MatrixMath.CreateModelMatrix(in pos, Vector3.One, in rot, out tempMat);
+                    MatrixMath.CreateModelMatrix(in pos, Vector3.One, in rot, out workingMat);
                     //poseTransform.Scale = LerpVector(track.Scales, track.ScaleTimes, t, Vector3.One);
                     //local = Matrix4x4.CreateFromQuaternion(poseTransform.Rotation) *Matrix4x4.CreateTranslation(poseTransform.Translation);
                 }
 
-                ref var finalRef = ref Unsafe.AsRef(ref finals[i]);
-                ref var globalRef = ref Unsafe.AsRef(ref globals[i]);
+                var finals = finalWriter.Matrices;
+                ref var currentGlobal = ref globals[i];
 
                 int p = parentIndices[i];
                 if (p >= 0)
-                    MatrixMath.MultiplyAffine(in tempMat, in globals[p], out  globalRef);
+                    MatrixMath.WriteMultiplyAffine(ref currentGlobal, in workingMat, in globals[p]);
                 else
-                    globalRef = tempMat;
+                    currentGlobal = workingMat;
 
-                MatrixMath.MultiplyAffine(in boneTransforms[i], in globalRef, out tempMat);
-                MatrixMath.WriteMultiplyAffine(ref finalRef, in tempMat, in invMatrix);
-                // Matrix4x4 a = finals[i] = boneTransforms[i] * globals[i] * invMatrix;
-                //MatrixMath.MultiplyAffine(in tempMat, in invMatrix, out finals[i]);
+                MatrixMath.WriteMultiplyAffine(ref workingMat, in boneTransforms[i], in currentGlobal);
+                MatrixMath.WriteMultiplyAffine(ref finals[i], in workingMat, in invMatrix);
+                //finals[i] = boneTransforms[i] * globals[i] * invMatrix;
             }
 
-            buffer.SubmitSingleAnimation(finals);
-        }
+            int noneBoneLength = 64 - boneLength;
+            finalWriter.FillIdentity(new Range32(boneLength, noneBoneLength));
+            ctx.GetByEntityId(query.Entity).AnimatedSlot = (short)finalWriter.Slot;
 
-       
+            buffer.SubmitSingleAnimation(finalWriter);
+            idx++;
+        }
     }
-    
-    private static Vector3 LerpVector(ReadOnlySpan<Vector3> values, float[] times, float time, Vector3 fallback)
+
+    private static Vector3 LerpVector(ReadOnlySpan<Vector3> values, ReadOnlySpan<float> times, float time, Vector3 fallback)
     {
         if (times.Length == 0) return fallback;
         if (times.Length == 1 || time <= times[0]) return values[0];
@@ -108,7 +120,7 @@ internal sealed class AnimatorProcessor
         return Vector3.Lerp(values[i], values[i + 1], f);
     }
 
-    private static Quaternion LerpQuaternion(ReadOnlySpan<Quaternion> values, float[] times, float time)
+    private static Quaternion LerpQuaternion(ReadOnlySpan<Quaternion> values, ReadOnlySpan<float> times, float time)
     {
         if (times.Length == 0) return Quaternion.Identity;
         if (times.Length == 1 || time <= times[0]) return values[0];

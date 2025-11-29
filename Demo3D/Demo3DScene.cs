@@ -79,7 +79,8 @@ public sealed class Demo3DScene : GameScene
             var warriorMat = materialStore.Get("Warrior::Materials/0");
             var warriorMatKey = worldMaterials.Add(MaterialTagBuilder.BuildOne(warriorMat.Id));
             var warriorEntity = worldEntities.Create();
-
+            warriorMat.State.Shininess = 2f;
+            warriorMat.State.Specular = 0.05f;
             worldEntities.Models.Add(warriorEntity,
                 new ModelComponent(warriorModel.ModelId, warriorModel.DrawCount, warriorMatKey));
             worldEntities.Transforms.Add(warriorEntity,
@@ -119,6 +120,9 @@ public sealed class Demo3DScene : GameScene
         {
             var knight = assets.Store.GetByName<Model>("Knight");
             var knightMat = materialStore.Get("Knight::Materials/0");
+            knightMat.State.Shininess = 2f;
+            knightMat.State.Specular = 0.05f;
+
             var knightEntity = worldEntities.Create();
             var knightMatKey =
                 worldMaterials.Add(MaterialTagBuilder.Start(knightMat.Id).WithSlot(knightMat.Id).Build());

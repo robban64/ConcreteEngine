@@ -42,8 +42,8 @@ public struct DrawEntity
     public EntityId Entity;
     public ModelId Model;
     public MaterialTagKey MaterialKey;
+    public short AnimatedSlot;
     public byte PartLength;
-    public bool IsAnimated;
     public bool IsSelected;
 }
 

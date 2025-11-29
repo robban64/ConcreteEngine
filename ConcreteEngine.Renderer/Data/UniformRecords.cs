@@ -182,21 +182,6 @@ public unsafe struct DrawAnimationUniform
     public const int TotalComponents = Mat4Components * MaxBones;
 
     public fixed float Weights[TotalComponents];
-    
-    public void Set(ReadOnlySpan<Matrix4x4> matrices)
-    {
-        fixed (float* p = Weights)
-        {
-            int sourceCount = matrices.Length * Mat4Components;
-            if (sourceCount > TotalComponents)
-            {
-                sourceCount = TotalComponents;
-            }
-            var destinationSpan = new Span<float>(p, sourceCount);
-            var sourceSpan = MemoryMarshal.Cast<Matrix4x4, float>(matrices);
-            sourceSpan.Slice(0, sourceCount).CopyTo(destinationSpan);
-        }
-    }
 }
 
 [StructLayout(LayoutKind.Sequential)]

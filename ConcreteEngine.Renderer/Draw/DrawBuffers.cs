@@ -21,6 +21,7 @@ internal sealed class DrawBuffers
     private static class DataStore
     {
         public static CameraUniformRecord CameraData;
+
         //public static LightUniformRecord LightData;
         public static DirLightUniformRecord DirLightData;
         public static FrameUniformRecord FrameData;
@@ -28,8 +29,8 @@ internal sealed class DrawBuffers
         public static PostProcessUniform PostData;
         public static DrawAnimationUniform AnimationData;
     }
-    
-    
+
+
     private readonly GfxBuffers _gfxBuffers;
 
     private readonly UniformBufferId _engineUbo;
@@ -73,6 +74,9 @@ internal sealed class DrawBuffers
         _lightUbo = registry.GetRenderUbo<LightUboTag>().Id;
         _shadowUbo = registry.GetRenderUbo<ShadowUboTag>().Id;
         _postUbo = registry.GetRenderUbo<PostUboTag>().Id;
+
+        _animationUbo.SetCapacity(_animationUbo.Stride * 40);
+        _gfxBuffers.SetUniformBufferCapacity(_animationUbo.Id, _animationUbo.Capacity);
     }
 
     public void AttachMaterialBuffer(MaterialDrawBuffer materialBuffer) => _materialBuffer = materialBuffer;
@@ -82,6 +86,7 @@ internal sealed class DrawBuffers
         _drawUbo.ResetCursor();
         _materialUbo.ResetCursor();
         _animationUbo.ResetCursor();
+        animationIdx = 0;
     }
 
     public void EnsureDrawBuffers(nint drawCapacity, nint materialCapacity)
@@ -159,28 +164,13 @@ internal sealed class DrawBuffers
             _gfxBuffers.UploadUniformGpuSpan(_animationUbo.Id, data, _animationUbo.NextDrawCursor());
         }
     }
-    
-    public void UploadSingleAnimation(ReadOnlySpan<Matrix4x4> boneData)
+
+    private int animationIdx = 0;
+    public void UploadSingleAnimation(AnimationUniformWriter writer)
     {
-        ArgumentOutOfRangeException.ThrowIfGreaterThan(boneData.Length, 64);
-/*
-        if (!_animationUbo.HasNextCapacity())
-        {
-            int newCap = int.Max((int)_animationUbo.Stride, (int)_animationUbo.Capacity * 4);
-            nint newSize = UniformBufferUtils.NextCapacity(_animationUbo.Capacity, newCap);
-            _animationUbo.SetCapacity(newSize);
-            _gfxBuffers.SetUniformBufferCapacity(_animationUbo.Id, newSize);
-        }
-*/     
-        //_animationUbo.NextDrawCursor()
-        
-       // _gfxBuffers.UploadUniformBytes(_animationUbo.Id, MemoryMarshal.AsBytes(boneData),(int)_animationUbo.Stride, 0);
-        //var cursor = _animationUbo.SetDrawCursor(0);
-        ref var data = ref Unsafe.AsRef(ref DataStore.AnimationData);
-        data.Set(boneData);
-        
-        _gfxBuffers.UploadUniformGpuData(_animationUbo.Id, in data, 0);
-        _gfxBuffers.BindUniformBufferRange(_animationUbo.Id, 0, _animationUbo.Stride);
+        _gfxBuffers.UploadUniformGpuData(_animationUbo.Id, in writer.Data, _animationUbo.NextDrawCursor());
+        writer.Slot = animationIdx;
+        animationIdx++;
     }
 
 
@@ -193,7 +183,7 @@ internal sealed class DrawBuffers
             UploadLight();
             _hasUploadLight = true;
         }
-        
+
         if (_paramsSnapshot.IsDirty)
         {
             UploadFrameUniformRecord();
@@ -201,7 +191,6 @@ internal sealed class DrawBuffers
             UploadPost();
         }
     }
-
 
 
     public void UploadCameraView(RenderView view)

@@ -52,8 +52,8 @@ internal sealed class DrawCommandProcessor
         }
     }
     
-    public void SubmitSingleAnimation(ReadOnlySpan<Matrix4x4> boneData) =>
-        _buffers.UploadSingleAnimation(boneData);
+    public void SubmitSingleAnimation(AnimationUniformWriter writer) =>
+        _buffers.UploadSingleAnimation(writer);
 
     public void SubmitAnimationData(ReadOnlySpan<Matrix4x4> boneData, ReadOnlySpan<RangeU16> ranges) =>
         _buffers.UploadAnimationData(boneData, ranges);
@@ -78,6 +78,7 @@ internal sealed class DrawCommandProcessor
             }
         }
 
+        if(cmd.AnimationSlot >= 0) _buffers.BindAnimation(cmd.AnimationSlot);
         _buffers.BindDrawObject(ticket.SubmitIdx);
         _gfxCmd.BindMesh(cmd.MeshId);
         _gfxCmd.DrawMesh(cmd.MeshId, cmd.DrawCount);

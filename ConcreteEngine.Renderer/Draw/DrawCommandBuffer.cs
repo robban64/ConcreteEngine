@@ -54,9 +54,9 @@ public sealed class DrawCommandBuffer
         _processor.SubmitAnimationData(boneData, ranges);
     }
     
-    public void SubmitSingleAnimation(ReadOnlySpan<Matrix4x4> boneData)
+    public void SubmitSingleAnimation(AnimationUniformWriter writer)
     {
-        _processor.SubmitSingleAnimation(boneData);
+        _processor.SubmitSingleAnimation(writer);
     }
 
     public void SubmitNonTransformDraw(DrawCommand cmd, DrawCommandMeta meta)

@@ -56,7 +56,10 @@ public sealed class MaterialTable : IMaterialTable
     {
         var newSize = _keyIdx + n;
         if (_table.Length < newSize)
+        {
+            Console.WriteLine("Resize material table");
             Array.Resize(ref _table, ArrayUtility.CapacityGrowthLinear(_keyIdx, newSize, 32));
+        }
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]

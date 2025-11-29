@@ -216,7 +216,8 @@ public sealed class DrawCommandBuffer
     public void EnsureBufferCapacity(int size)
     {
         if (_commandBuffer.Length >= size) return;
-        var newCap = ArrayUtility.CapacityGrowthPow2(Math.Max(size, 64));
+        
+        var newCap = ArrayUtility.CapacityGrowthSafe(_commandBuffer.Length, Math.Max(size, 64));
 
         if (newCap > MaxCommandBuffCapacity)
             ThrowMaxCapacityExceeded();
@@ -225,30 +226,19 @@ public sealed class DrawCommandBuffer
         Array.Resize(ref _transformBuffer, newCap);
         Array.Resize(ref _metaBuffer, newCap);
         Array.Resize(ref _indexBuffer, newCap);
+        
+        Console.WriteLine("Command buffer resize");
     }
 
-    [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    private void EnsureCapacity(int amount)
-    {
-        var idx = _submitIdx + amount;
-        if (_commandBuffer.Length >= idx) return;
-        var newCap = ArrayUtility.CapacityGrowthPow2(Math.Max(idx, 64));
 
-        if (newCap > MaxCommandBuffCapacity)
-            ThrowMaxCapacityExceeded();
-
-        Array.Resize(ref _commandBuffer, newCap);
-        Array.Resize(ref _transformBuffer, newCap);
-        Array.Resize(ref _metaBuffer, newCap);
-        Array.Resize(ref _indexBuffer, newCap);
-    }
-
-    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     private void EnsureTicketsCapacity(int total)
     {
         if (_drawTickets.Length >= total) return;
         var newSize = ArrayUtility.CapacityGrowthLinear(_drawTickets.Length, total, step: PassSlots);
         _drawTickets = new DrawCommandTicket[newSize];
+        
+        Console.WriteLine("DrawTickets buffer resize");
+
     }
 
 

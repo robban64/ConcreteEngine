@@ -15,12 +15,14 @@ public static class RenderLimits
 
     public const int MaxFboVariants = 4;
 
-    public const int DefaultCommandBuffCapacity = 128;
-    public const int MaxCommandBuffCapacity = 10_000;
+    public const int DefaultCommandBuffCapacity = 512;
 
-    public const int DefaultMaterialBufferCapacity = 32;
+    public const int DefaultMaterialBufferCapacity = 512;
     public const int MaxMaterialCount = 1024;
-    public const int MaxMaterialBufferCapacity = 1024;
+    public const int MaxMaterialBufferCapacity = 2048;
+    
+    public const int MaxCommandBuffCapacity = 20_480;
+    public const int MaxTextureSlotBuffCapacity = 20_480;
 
 
     public const int MaxSpriteBatchSize = 1024;

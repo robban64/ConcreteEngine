@@ -200,17 +200,21 @@ internal sealed class MeshTable : IMeshTable
 
         if (_meshParts.Length < cap)
         {
-            var newCap = ArrayUtility.CapacityGrowthToFit(_meshParts.Length, Math.Max(cap, 64));
+            var newCap = ArrayUtility.CapacityGrowthSafe(_meshParts.Length, cap);
             Array.Resize(ref _meshParts, newCap);
             Array.Resize(ref _partTransforms, newCap);
             Array.Resize(ref _partBoxes, newCap);
+            Console.WriteLine("_meshParts resize");
+
         }
 
         if (_modelPartRanges.Length < rangeCap)
         {
-            var newCap = ArrayUtility.CapacityGrowthToFit(_modelPartRanges.Length, Math.Max(cap, 64));
+            var newCap = ArrayUtility.CapacityGrowthSafe(_modelPartRanges.Length, rangeCap);
             Array.Resize(ref _modelPartRanges, newCap);
             Array.Resize(ref _modelBoxes, newCap);
+            Console.WriteLine("_modelPartRanges resize");
+
         }
     }
 /*

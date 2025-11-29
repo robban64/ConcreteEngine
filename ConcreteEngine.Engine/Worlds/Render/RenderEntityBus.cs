@@ -66,7 +66,7 @@ internal sealed class RenderEntityBus
     {
         if (_world is null) return;
 
-        EnsureCapacity(DrawCount);
+        EnsureFullCapacity(DrawCount);
 
         CollectModelEntities();
         ProcessCollectedEntities();
@@ -310,7 +310,7 @@ internal sealed class RenderEntityBus
     }
 
 
-    private void EnsureCapacity(int amount)
+    private void EnsureFullCapacity(int amount)
     {
         InvalidOpThrower.ThrowIf(_byEntityId.Length != _entities.Length);
         InvalidOpThrower.ThrowIf(_byEntityId.Length != _entityData.Length);

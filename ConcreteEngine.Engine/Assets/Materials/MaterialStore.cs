@@ -31,11 +31,9 @@ public sealed class MaterialStore : IMaterialStore
 
     private readonly AssetStore _assetStore;
 
-    private Material?[] _materials = new Material[16];
-
-    private readonly Stack<MaterialId> _free = new();
-
-    private readonly Dictionary<string, MaterialId> _materialDict = new(8);
+    private Material?[] _materials = new Material[128];
+    private readonly Stack<MaterialId> _free = [];
+    private readonly Dictionary<string, MaterialId> _materialDict = new(128);
 
     public int Count => _idx;
     public int FreeSlots => _free.Count;
@@ -166,6 +164,7 @@ public sealed class MaterialStore : IMaterialStore
             if (newCap > RenderLimits.MaxMaterialCount)
                 throw new InvalidOperationException("Material limit exceeded");
 
+            Console.WriteLine("Material store resized");
             Array.Resize(ref _materials, newCap);
         }
 

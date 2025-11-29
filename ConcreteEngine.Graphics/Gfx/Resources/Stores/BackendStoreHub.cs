@@ -1,6 +1,7 @@
 #region
 
 using ConcreteEngine.Graphics.Gfx.Definitions;
+using static ConcreteEngine.Graphics.GfxLimits;
 
 #endregion
 
@@ -50,13 +51,13 @@ internal sealed class BackendStoreHub
 
     private void RegisterBackendStores()
     {
-        Register(new BackendResourceStore<TextureId, GlTextureHandle>(ResourceKind.Texture));
-        Register(new BackendResourceStore<ShaderId, GlShaderHandle>(ResourceKind.Shader));
-        Register(new BackendResourceStore<MeshId, GlMeshHandle>(ResourceKind.Mesh));
-        Register(new BackendResourceStore<VertexBufferId, GlVboHandle>(ResourceKind.VertexBuffer));
-        Register(new BackendResourceStore<IndexBufferId, GlIboHandle>(ResourceKind.IndexBuffer));
-        Register(new BackendResourceStore<FrameBufferId, GlFboHandle>(ResourceKind.FrameBuffer));
-        Register(new BackendResourceStore<RenderBufferId, GlRboHandle>(ResourceKind.RenderBuffer));
-        Register(new BackendResourceStore<UniformBufferId, GlUboHandle>(ResourceKind.UniformBuffer));
+        Register(new BackendResourceStore<TextureId, GlTextureHandle>(LargeCapacity));
+        Register(new BackendResourceStore<ShaderId, GlShaderHandle>(MediumCapacity));
+        Register(new BackendResourceStore<MeshId, GlMeshHandle>(LargeCapacity));
+        Register(new BackendResourceStore<VertexBufferId, GlVboHandle>(LargeCapacity));
+        Register(new BackendResourceStore<IndexBufferId, GlIboHandle>(LargeCapacity));
+        Register(new BackendResourceStore<FrameBufferId, GlFboHandle>(LowCapacity));
+        Register(new BackendResourceStore<RenderBufferId, GlRboHandle>(LowCapacity));
+        Register(new BackendResourceStore<UniformBufferId, GlUboHandle>(LowCapacity));
     }
 }

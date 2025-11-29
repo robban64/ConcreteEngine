@@ -2,6 +2,7 @@
 
 using System.Diagnostics;
 using ConcreteEngine.Common.Collections;
+using ConcreteEngine.Engine.Editor.Diagnostics;
 
 #endregion
 
@@ -58,15 +59,17 @@ public sealed class EntityStore<T> where T : unmanaged
 
         if (_data.Length < _idx)
         {
-            var newSize = ArrayUtility.CapacityGrowthPow2(Math.Max(_idx, 32));
+            var newSize = ArrayUtility.CapacityGrowthSafe(_data.Length, _idx, 2048);
             Array.Resize(ref _data, newSize);
             Array.Resize(ref _entities, newSize);
+            Console.WriteLine("EntityStore entities resize");
         }
 
         if (_sparse.Length < e.Id)
         {
-            var newSize = ArrayUtility.CapacityGrowthPow2(Math.Max(e.Id, 32));
+            var newSize = ArrayUtility.CapacityGrowthSafe(e.Id, _idx, 2048);
             Array.Resize(ref _sparse, newSize);
+            Console.WriteLine("EntityStore sparse resize");
         }
 
         IsDirty = true;

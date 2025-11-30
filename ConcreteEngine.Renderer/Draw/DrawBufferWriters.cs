@@ -34,3 +34,30 @@ public ref struct AnimationUniformWriter(ref DrawAnimationUniform data)
         get => ref Matrices[index];
     }
 }
+
+/*
+public ref struct AnimationUniformWriter(Span<DrawAnimationUniform> data)
+{
+    public Span<DrawAnimationUniform> Data = data;
+
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public void FillIdentity(int index, Range32 range) =>
+        GetMatrices(index).Slice(range.Offset, range.Length).Fill(Matrix4x4.Identity);
+
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public Span<Matrix4x4> GetMatrices(int index)
+    {
+        unsafe
+        {
+            ref float start = ref Unsafe.AsRef(ref Data[index].Weights[0]);
+            var floatSpan = MemoryMarshal.CreateSpan(ref start, DrawAnimationUniform.TotalComponents);
+            return MemoryMarshal.Cast<float, Matrix4x4>(floatSpan);
+        }
+    }
+
+    public ref Matrix4x4 this[int index, int matrixIdx]
+    {
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        get => ref GetMatrices(index)[matrixIdx];
+    }
+}*/

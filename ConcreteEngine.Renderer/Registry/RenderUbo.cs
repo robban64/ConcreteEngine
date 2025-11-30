@@ -88,9 +88,9 @@ public sealed class RenderUbo
         return _drawCursor;
     }
 
-    public nint GetCapacityFor(int expectedRecords)
+    public nint GetCapacityFor(int records)
     {
-        nint required = Stride * Math.Max(1, expectedRecords);
+        nint required = Stride * Math.Max(1, records);
         if (required <= Capacity) return 0;
         return UniformBufferUtils.NextCapacity(Capacity, required);
     }

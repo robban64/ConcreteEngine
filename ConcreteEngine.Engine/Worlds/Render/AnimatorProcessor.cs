@@ -27,18 +27,17 @@ internal sealed class AnimatorProcessor
         _animationTable = animationTable;
     }
 
+    private DrawAnimationUniform[] _buffer = new  DrawAnimationUniform[32];
 
     [SkipLocalsInit]
     public void ProcessAnimations(float deltaTime, WorldEntities entities, DrawCommandBuffer buffer,
         RenderFrameContext ctx)
     {
-        DrawAnimationUniform finalResult;
         Span<Matrix4x4> globals = stackalloc Matrix4x4[64];
         globals.Fill(Matrix4x4.Identity);
 
-        new AnimationUniformWriter(ref finalResult).FillIdentity(new Range32(0, 64));
+       // new AnimationUniformWriter(ref finalResult).FillIdentity(new Range32(0, 64));
 
-        int uboIndex = 0;
         int idx = 0;
         foreach (var query in entities.Query<AnimationComponent>())
         {
@@ -48,15 +47,18 @@ internal sealed class AnimatorProcessor
             var view = _animationTable.GetModelAnimationView(component.Animation);
             int boneLength = view.ParentIndices.Length;
 
-            var finalWriter = new AnimationUniformWriter(ref finalResult) { Slot = ref uboIndex };
 
             var clipTrack = view.GetClip(0);
+            var finalWriter = new AnimationUniformWriter(ref _buffer[idx]);
+            var finals = finalWriter.Matrices;
 
-            if ((uint)boneLength > globals.Length || (uint)boneLength > finalWriter.Matrices.Length ||
+            if ((uint)boneLength > globals.Length || (uint)boneLength > finals.Length ||
                 (uint)boneLength > clipTrack.Length)
             {
                 throw new IndexOutOfRangeException();
             }
+
+            Matrix4x4 result = default;
 
             for (int i = 0; i < boneLength; i++)
             {
@@ -71,23 +73,22 @@ internal sealed class AnimatorProcessor
                     MatrixMath.WriteMultiplyAffine(ref globals[i], in local, in globals[p]);
                 else
                     globals[i] = local;
-            }
-
-            Matrix4x4 result;
-            for (int i = 0; i < boneLength; i++)
-            {
-                result = view.BoneTransforms[i] * globals[i];
-                MatrixMath.WriteMultiplyAffine(ref finalWriter.Matrices[i], in result, in view.InvTransform);
+                
+                MatrixMath.WriteMultiplyAffine(ref result, in view.BoneTransforms[i], in globals[i]);
+                MatrixMath.MultiplyAffine(in result, in view.InvTransform, out finals[i]);
+                //MatrixMath.WriteMultiplyAffine(ref finals[i], in result, in view.InvTransform);
+                //result = view.BoneTransforms[i] * globals[i];
+                //MatrixMath.WriteMultiplyAffine(ref finals[i], in result, in view.InvTransform);
                 //finals[i] = boneTransforms[i] * globals[i] * invMatrix;
             }
 
             int noneBoneLength = 64 - boneLength;
             finalWriter.FillIdentity(new Range32(boneLength, noneBoneLength));
-            ctx.GetByEntityId(query.Entity).AnimatedSlot = (short)finalWriter.Slot;
-
-            buffer.SubmitSingleAnimation(finalWriter);
+            ctx.GetByEntityId(query.Entity).AnimatedSlot = (short)idx;
             idx++;
         }
+        
+        buffer.SubmitAnimationData(_buffer.AsSpan(0, idx));
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]

@@ -86,7 +86,6 @@ internal sealed class DrawBuffers
         _drawUbo.ResetCursor();
         _materialUbo.ResetCursor();
         _animationUbo.ResetCursor();
-        animationIdx = 0;
     }
 
     public void EnsureDrawBuffers(nint drawCapacity, nint materialCapacity)
@@ -146,33 +145,18 @@ internal sealed class DrawBuffers
     public void UploadDrawObjects(ReadOnlySpan<DrawObjectUniform> data) =>
         _gfxBuffers.UploadUniformGpuSpan(_drawUbo.Id, data, _drawUbo.SetUploadCursor(0));
 
-    public void UploadAnimationData(ReadOnlySpan<Matrix4x4> boneData, ReadOnlySpan<RangeU16> ranges)
+    public void UploadAnimationData(ReadOnlySpan<DrawAnimationUniform> boneData)
     {
-        var uploadSize = boneData.Length * sizeof(float) * 16;
+        var uploadSize = _animationUbo.GetCapacityFor(boneData.Length);
         if (uploadSize > _animationUbo.Capacity)
         {
-            var requestedCapacity = uploadSize + sizeof(float) * 16;
-            nint newSize = UniformBufferUtils.NextCapacity(_animationUbo.Capacity, requestedCapacity);
-            _animationUbo.SetCapacity(newSize);
-            _gfxBuffers.SetUniformBufferCapacity(_animationUbo.Id, newSize);
+            _animationUbo.SetCapacity(uploadSize);
+            _gfxBuffers.SetUniformBufferCapacity(_animationUbo.Id, uploadSize);
         }
 
-        for (int i = 0; i < ranges.Length; i++)
-        {
-            var range = ranges[i];
-            var data = boneData.Slice(range.Offset, range.Length);
-            _gfxBuffers.UploadUniformGpuSpan(_animationUbo.Id, data, _animationUbo.NextDrawCursor());
-        }
-    }
+        _gfxBuffers.UploadUniformGpuSpan(_animationUbo.Id, boneData, 0);
 
-    private int animationIdx = 0;
-    public void UploadSingleAnimation(AnimationUniformWriter writer)
-    {
-        _gfxBuffers.UploadUniformGpuData(_animationUbo.Id, in writer.Data, _animationUbo.NextDrawCursor());
-        writer.Slot = animationIdx;
-        animationIdx++;
     }
-
 
     // Globals //
     public void UploadGlobalUniforms(in RenderFrameInfo frameInfo, in RenderRuntimeParams runtimeParams)

@@ -51,12 +51,9 @@ internal sealed class DrawCommandProcessor
             _gfxCmd.UnbindAllTextures();
         }
     }
-    
-    public void SubmitSingleAnimation(AnimationUniformWriter writer) =>
-        _buffers.UploadSingleAnimation(writer);
 
-    public void SubmitAnimationData(ReadOnlySpan<Matrix4x4> boneData, ReadOnlySpan<RangeU16> ranges) =>
-        _buffers.UploadAnimationData(boneData, ranges);
+    public void SubmitAnimationData(ReadOnlySpan<DrawAnimationUniform> boneData) =>
+        _buffers.UploadAnimationData(boneData);
 
     public void DrawMesh(DrawCommand cmd, DrawCommandTicket ticket)
     {

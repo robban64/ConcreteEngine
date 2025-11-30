@@ -79,6 +79,8 @@ public sealed class Demo3DScene : GameScene
             var warriorMat = materialStore.Get("Warrior::Materials/0");
             var warriorMatKey = worldMaterials.Add(MaterialTagBuilder.BuildOne(warriorMat.Id));
             var warriorEntity = worldEntities.Create();
+            var clip = warriorModel.Animation![0];
+
             warriorMat.State.Shininess = 2f;
             warriorMat.State.Specular = 0.05f;
             worldEntities.Models.Add(warriorEntity,
@@ -87,6 +89,8 @@ public sealed class Demo3DScene : GameScene
                 Transform.Identity with { Translation = new Vector3(115, 6, 120), Scale = new Vector3(2)});
             worldEntities.BoundingBoxes.Add(warriorEntity, new BoxComponent(warriorModel.Bounds));
             var animationComponent = new AnimationComponent(warriorModel.ModelId, warriorModel.AnimationId);
+            animationComponent.Duration = clip.Duration;
+            animationComponent.Speed = clip.TicksPerSecond;
             worldEntities.Animations.Add(warriorEntity, animationComponent);
 
             // animationComponent.Slot = Context.World.MeshTable.GetAnimationSlot(knight.ModelId);
@@ -96,6 +100,7 @@ public sealed class Demo3DScene : GameScene
         var cesiumModel = assets.Store.GetByName<Model>("Cesium_Man");
         var cesiumMat = materialStore.CreateMaterial("EmptyAnimated", "CesiumMat");
         var cesiumMatKey = worldMaterials.Add(MaterialTagBuilder.BuildOne(cesiumMat.Id));
+        var cesiumClip = cesiumModel.Animation![0];
 
         for(int i = 0; i < 20; i++){
             var entity = worldEntities.Create();
@@ -112,6 +117,8 @@ public sealed class Demo3DScene : GameScene
             worldEntities.BoundingBoxes.Add(entity, new BoxComponent(cesiumModel.Bounds));
 
             var animationComponent = new AnimationComponent(cesiumModel.ModelId, cesiumModel.AnimationId);
+            animationComponent.Duration = cesiumClip.Duration;
+            animationComponent.Speed = cesiumClip.TicksPerSecond;
             worldEntities.Animations.Add(entity, animationComponent);
             // animationComponent.Slot = Context.World.MeshTable.GetAnimationSlot(knight.ModelId);
         }

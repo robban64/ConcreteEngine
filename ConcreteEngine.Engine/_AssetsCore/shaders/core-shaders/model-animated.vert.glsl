@@ -26,10 +26,10 @@ mat3 getNormalMatrix() {
 void main() {
 
     vec4 skinnedPos = vec4(0.0);
-    skinnedPos += jointTransforms[aJointIndices[0]] * vec4(aPos, 1.0) * aWeights[0];
-    skinnedPos += jointTransforms[aJointIndices[1]] * vec4(aPos, 1.0) * aWeights[1];
-    skinnedPos += jointTransforms[aJointIndices[2]] * vec4(aPos, 1.0) * aWeights[2];
-    skinnedPos += jointTransforms[aJointIndices[3]] * vec4(aPos, 1.0) * aWeights[3];
+    skinnedPos += uJointTransforms[aJointIndices[0]] * vec4(aPos, 1.0) * aWeights[0];
+    skinnedPos += uJointTransforms[aJointIndices[1]] * vec4(aPos, 1.0) * aWeights[1];
+    skinnedPos += uJointTransforms[aJointIndices[2]] * vec4(aPos, 1.0) * aWeights[2];
+    skinnedPos += uJointTransforms[aJointIndices[3]] * vec4(aPos, 1.0) * aWeights[3];
 
     vec4 worldPos = uModel * skinnedPos;
 

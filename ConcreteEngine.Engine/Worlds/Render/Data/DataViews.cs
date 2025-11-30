@@ -48,7 +48,7 @@ internal readonly ref struct ModelAnimationView(
     public readonly ReadOnlySpan<int> ParentIndices = parentIndices;
     public readonly ref Matrix4x4 InvTransform = ref invTransform;
     
-    public ReadOnlySpan<BoneTrack> GetClip(int clip) => clips[clip - 1];
+    public ReadOnlySpan<BoneTrack> GetClip(int clip) => clips[clip];
 }
 
 internal readonly ref struct AnimationBonePayload(ReadOnlySpan<Matrix4x4> boneTransforms, ReadOnlySpan<RangeU16> ranges)

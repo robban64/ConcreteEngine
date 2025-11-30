@@ -114,9 +114,14 @@ internal sealed class AnimationTable
             {
                 var animationClip = modelClips[c];
                 clips[c] = new BoneTrack[animation.DefinedBoneCount];
-                foreach (var (boneIdx, track) in animationClip.Tracks)
+                for (int t = 0; t < animation.DefinedBoneCount; t++)
                 {
-                    clips[c][boneIdx] = new BoneTrack(track.Translations, track.TranslationTimes, track.Rotations,
+                    if (!animationClip.Tracks.TryGetValue(t, out var track))
+                    {
+                        clips[c][t] = new BoneTrack();
+                        continue;
+                    }
+                    clips[c][t] = new BoneTrack(track.Translations, track.TranslationTimes, track.Rotations,
                         track.RotationTimes, track.Scales, track.ScaleTimes);
                 }
             }
@@ -175,6 +180,8 @@ internal sealed class AnimationTable
 
             Array.Resize(ref _idxToModel, newCap);
             Array.Resize(ref _modelBoneInvTransform, newCap);
+            Array.Resize(ref _clips, newCap);
+
             Console.WriteLine("animation clips resize");
         }
     }

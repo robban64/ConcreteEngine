@@ -54,4 +54,6 @@ public sealed class ModelAnimation
     internal Dictionary<int, string> BoneIndexByName() => _boneMapping;
 
     public int DefinedBoneCount => _boneTransforms.Length;
+    
+    public AnimationClip this[int index] => _clips[index];
 }

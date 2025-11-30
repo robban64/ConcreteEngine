@@ -57,7 +57,7 @@ uniform DrawUniform {
 };
 
 uniform DrawAnimationUniform {
-    mat4 jointTransforms[64];
+    mat4 uJointTransforms[64];
 };
 
 

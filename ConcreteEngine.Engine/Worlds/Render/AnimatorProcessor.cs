@@ -4,6 +4,7 @@ using System.Runtime.InteropServices;
 using ConcreteEngine.Common.Numerics;
 using ConcreteEngine.Common.Numerics.Maths;
 using ConcreteEngine.Engine.Worlds.Entities;
+using ConcreteEngine.Engine.Worlds.Render.Data;
 using ConcreteEngine.Engine.Worlds.Tables;
 using ConcreteEngine.Renderer.Data;
 using ConcreteEngine.Renderer.Draw;
@@ -13,7 +14,7 @@ namespace ConcreteEngine.Engine.Worlds.Render;
 internal sealed class AnimatorProcessor
 {
     //private readonly Matrix4x4[] _animationGlobals = new Matrix4x4[64];
-   // private readonly Matrix4x4[] _animationFinal = new Matrix4x4[64];
+    // private readonly Matrix4x4[] _animationFinal = new Matrix4x4[64];
 
     //private readonly WorldEntities _entities;
     private readonly MeshTable _meshTable;
@@ -31,11 +32,10 @@ internal sealed class AnimatorProcessor
     public void ProcessAnimations(float deltaTime, WorldEntities entities, DrawCommandBuffer buffer,
         RenderFrameContext ctx)
     {
-        //var submitView = _meshTable.GetBoneUploadPayload();
         DrawAnimationUniform finalResult;
         Span<Matrix4x4> globals = stackalloc Matrix4x4[64];
-
         globals.Fill(Matrix4x4.Identity);
+
         new AnimationUniformWriter(ref finalResult).FillIdentity(new Range32(0, 64));
 
         int uboIndex = 0;
@@ -43,61 +43,41 @@ internal sealed class AnimatorProcessor
         foreach (var query in entities.Query<AnimationComponent>())
         {
             ref var component = ref query.Component;
-
-            //var view = _animationTable.GetModelAnimationView(component.Animation);
-            
-            var modelAnimation = _meshTable.GetAnimationFor(component.Model);
-            var animation = modelAnimation.ClipDataSpan[component.ClipIndex];
-            component.Duration = animation.Duration;
-            component.Speed = animation.TicksPerSecond;
             float time = component.AdvanceTime(deltaTime);
 
-            var boneByIndex = animation.Tracks;
-            var boneTransforms = modelAnimation.BoneTransforms;
-            var nodeTransforms = modelAnimation.NodeTransforms;
-            var parentIndices = modelAnimation.ParentIndices;
+            var view = _animationTable.GetModelAnimationView(component.Animation);
+            int boneLength = view.ParentIndices.Length;
 
-            var finalWriter = new AnimationUniformWriter(ref finalResult)
-            {
-                Slot = ref uboIndex
-            };
+            var finalWriter = new AnimationUniformWriter(ref finalResult) { Slot = ref uboIndex };
 
-            int boneLength = parentIndices.Length;
+            var clipTrack = view.GetClip(0);
 
-            if ((uint)boneLength > globals.Length || (uint)boneLength > finalWriter.Matrices.Length)
+            if ((uint)boneLength > globals.Length || (uint)boneLength > finalWriter.Matrices.Length ||
+                (uint)boneLength > clipTrack.Length)
             {
                 throw new IndexOutOfRangeException();
             }
 
-            //ref var g0 = ref MemoryMarshal.GetReference(globals);
-            var invMatrix = modelAnimation.InverseRootTransform;
             for (int i = 0; i < boneLength; i++)
             {
-                Matrix4x4 workingMat;
-                if (!boneByIndex.TryGetValue(i, out var track))
-                {
-                    workingMat = nodeTransforms[i];
-                }
-                else 
-                {
-                    var pos = LerpVector(track.Translations, track.TranslationTimes, time, default);
-                    var rot = LerpQuaternion(track.Rotations, track.RotationTimes, time);
-                    MatrixMath.CreateModelMatrix(in pos, Vector3.One, in rot, out workingMat);
-                    //poseTransform.Scale = LerpVector(track.Scales, track.ScaleTimes, t, Vector3.One);
-                    //local = Matrix4x4.CreateFromQuaternion(poseTransform.Rotation) *Matrix4x4.CreateTranslation(poseTransform.Translation);
-                }
+                ref readonly var track = ref clipTrack[i];
+                
+                 var local = track.IsEmpty
+                    ? view.NodeTransforms[i]
+                    : SampleKeyFrame(track.Translations, track.Rotations, time);
 
-                var finals = finalWriter.Matrices;
-                ref var currentGlobal = ref globals[i];
-
-                int p = parentIndices[i];
+                int p = view.ParentIndices[i];
                 if (p >= 0)
-                    MatrixMath.WriteMultiplyAffine(ref currentGlobal, in workingMat, in globals[p]);
+                    MatrixMath.WriteMultiplyAffine(ref globals[i], in local, in globals[p]);
                 else
-                    currentGlobal = workingMat;
+                    globals[i] = local;
+            }
 
-                MatrixMath.WriteMultiplyAffine(ref workingMat, in boneTransforms[i], in currentGlobal);
-                MatrixMath.WriteMultiplyAffine(ref finals[i], in workingMat, in invMatrix);
+            Matrix4x4 result;
+            for (int i = 0; i < boneLength; i++)
+            {
+                result = view.BoneTransforms[i] * globals[i];
+                MatrixMath.WriteMultiplyAffine(ref finalWriter.Matrices[i], in result, in view.InvTransform);
                 //finals[i] = boneTransforms[i] * globals[i] * invMatrix;
             }
 
@@ -110,29 +90,57 @@ internal sealed class AnimatorProcessor
         }
     }
 
-    private static Vector3 LerpVector(ReadOnlySpan<Vector3> values, ReadOnlySpan<float> times, float time, Vector3 fallback)
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    private static Matrix4x4 SampleKeyFrame(ReadOnlySpan<Vector3Key> pos, ReadOnlySpan<QuaternionKey> rot, float time)
     {
-        if (times.Length == 0) return fallback;
-        if (times.Length == 1 || time <= times[0]) return values[0];
-        if (time >= times[^1]) return values[^1];
+        var translation = pos.Length == 1 ? pos[0].Value : SampleVector(pos, time);
+        var rotation = rot.Length == 1 ? rot[0].Value : SampleQuaternion(rot, time);
 
-        var i = 0;
-        while (i < times.Length - 1 && time >= times[i + 1]) i++;
+        MatrixMath.CreateModelMatrix(in translation, Vector3.One, in rotation, out var localMatrix);
+        return localMatrix;
 
-        var f = (time - times[i]) / (times[i + 1] - times[i]);
-        return Vector3.Lerp(values[i], values[i + 1], f);
+        static Vector3 SampleVector(ReadOnlySpan<Vector3Key> values, float time)
+        {
+            int index = FindIndex(values, time);
+            ref readonly var k1 = ref values[index];
+            ref readonly var k2 = ref values[index + 1];
+
+            float factor = (time - k1.Time) / (k2.Time - k1.Time);
+            return Vector3.Lerp(k1.Value, k2.Value, factor);
+        }
+
+        static Quaternion SampleQuaternion(ReadOnlySpan<QuaternionKey> values, float time)
+        {
+            int index = FindIndex(values, time);
+            ref readonly var k1 = ref values[index];
+            ref readonly var k2 = ref values[index + 1];
+
+            float factor = (time - k1.Time) / (k2.Time - k1.Time);
+            return Quaternion.Slerp(k1.Value, k2.Value, factor);
+        }
     }
 
-    private static Quaternion LerpQuaternion(ReadOnlySpan<Quaternion> values, ReadOnlySpan<float> times, float time)
+
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    private static int FindIndex<T>(ReadOnlySpan<T> keys, float time) where T : struct, IKeyFrame
     {
-        if (times.Length == 0) return Quaternion.Identity;
-        if (times.Length == 1 || time <= times[0]) return values[0];
-        if (time >= times[^1]) return values[^1];
+        if (time >= keys[^1].Time) return keys.Length - 2;
+        if (time <= keys[0].Time) return 0;
 
-        var i = 0;
-        while (i < times.Length - 1 && time >= times[i + 1]) i++;
+        int low = 0;
+        int high = keys.Length - 1;
 
-        var f = (time - times[i]) / (times[i + 1] - times[i]);
-        return Quaternion.Slerp(values[i], values[i + 1], f);
+        while (low <= high)
+        {
+            int mid = (low + high) >> 1;
+
+            if (keys[mid].Time < time)
+                low = mid + 1;
+            else
+                high = mid - 1;
+        }
+
+        int idx = high;
+        return int.Clamp(idx, 0, keys.Length - 2);
     }
 }

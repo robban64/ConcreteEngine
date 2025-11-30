@@ -1,9 +1,13 @@
+#region
+
 using System.Runtime.CompilerServices;
 using ConcreteEngine.Editor.Data;
 using ConcreteEngine.Editor.DataState;
 using ConcreteEngine.Engine.Worlds;
 using ConcreteEngine.Shared.RenderData;
 using ConcreteEngine.Shared.TransformData;
+
+#endregion
 
 namespace ConcreteEngine.Engine.Editor.Controller;
 
@@ -21,8 +25,8 @@ internal sealed class WorldApiController(ApiContext ctx)
         data.Viewport = camera.Viewport;
         return camera.Generation;
     }
-    
-    
+
+
     public long WriteCameraData(long version, ref CameraEditorPayload data)
     {
         var camera = ctx.World.Camera;
@@ -31,7 +35,7 @@ internal sealed class WorldApiController(ApiContext ctx)
         WorldActionSlot.SetSlot(version, in data);
         return camera.Generation;
     }
-    
+
     public long FillWorldParams(long version, ref WorldParamState data)
     {
         var snapshot = ctx.World.WorldRenderParams.Snapshot;
@@ -61,5 +65,4 @@ internal sealed class WorldApiController(ApiContext ctx)
         slot.PostEffect = Unsafe.As<PostEffectState, PostEffectParams>(ref data.PostState);
         return snapshot.Version;
     }
-
 }

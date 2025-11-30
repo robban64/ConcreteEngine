@@ -34,16 +34,16 @@ internal sealed class ShaderLoader
         var fragResult = _shaderImporter.ImportShader(fragPath);
 
         var vertFileSpec = new AssetFileSpec(
-            Storage: AssetStorageKind.FileSystem,
-            LogicalName: record.Name,
-            RelativePath: record.VertexFilename,
-            SizeBytes: vertInfo.Length);
+            storage: AssetStorageKind.FileSystem,
+            logicalName: record.Name,
+            relativePath: record.VertexFilename,
+            sizeBytes: vertInfo.Length);
 
         var fragFileSpec = new AssetFileSpec(
-            Storage: AssetStorageKind.FileSystem,
-            LogicalName: record.Name,
-            RelativePath: record.FragmentFilename,
-            SizeBytes: fragInfo.Length);
+            storage: AssetStorageKind.FileSystem,
+            logicalName: record.Name,
+            relativePath: record.FragmentFilename,
+            sizeBytes: fragInfo.Length);
 
 
         return new ShaderPayload(vertResult, fragResult, in vertFileSpec, in fragFileSpec);

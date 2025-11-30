@@ -2,11 +2,11 @@
 
 using ConcreteEngine.Common.Numerics;
 using ConcreteEngine.Editor.Data;
-using ConcreteEngine.Engine.Data;
 using ConcreteEngine.Engine.Editor.Data;
 using ConcreteEngine.Engine.Worlds.Entities;
 using ConcreteEngine.Engine.Worlds.Render;
 using ConcreteEngine.Engine.Worlds.Render.Batching;
+using ConcreteEngine.Engine.Worlds.Render.Tables;
 using ConcreteEngine.Engine.Worlds.View;
 using ConcreteEngine.Graphics.Gfx;
 using ConcreteEngine.Shared.RenderData;
@@ -27,9 +27,9 @@ public interface IWorld
     WorldSkybox Sky { get; }
     WorldTerrain Terrain { get; }
     WorldParticles Particles { get; }
-    
+
     WorldRaycaster Raycast { get; }
-     
+
 
     IMeshTable MeshTable { get; }
     IMaterialTable EntityMaterials { get; }
@@ -40,7 +40,7 @@ public sealed class World : IWorld
     public Camera3D Camera { get; }
     public WorldRenderParams WorldRenderParams { get; }
 
-    public WorldRaycaster Raycast { get; } 
+    public WorldRaycaster Raycast { get; }
 
     private readonly BatcherRegistry _batchers;
 
@@ -57,9 +57,9 @@ public sealed class World : IWorld
     {
         Camera = new Camera3D();
         WorldRenderParams = new WorldRenderParams();
-        
+
         _batchers = new BatcherRegistry();
-        
+
         _entities = new WorldEntities();
         _sky = new WorldSkybox();
         _terrain = new WorldTerrain();
@@ -80,7 +80,6 @@ public sealed class World : IWorld
     public int EntityCount => Entities.EntityCount;
     public int ShadowMapSize => WorldRenderParams.Snapshot.Shadows.ShadowMapSize;
 
-    
 
     internal void AttachRender(GfxContext gfx, MeshTable meshTable, MaterialTable materialTable)
     {
@@ -89,15 +88,15 @@ public sealed class World : IWorld
 
         Entities.AttachRender(_meshTable, _materialTable);
         Sky.AttachRenderer(_meshTable);
-        Terrain.AttachRenderer(_batchers.Register(new TerrainBatcher(gfx)),_meshTable, _materialTable);
-        _particles.AttachRenderer(_batchers.Register(new ParticleBatcher(gfx)),_meshTable, _materialTable);
+        Terrain.AttachRenderer(_batchers.Register(new TerrainBatcher(gfx)), _meshTable, _materialTable);
+        _particles.AttachRenderer(_batchers.Register(new ParticleBatcher(gfx)), _meshTable, _materialTable);
     }
-    
+
     internal void StartUpdate(Size2D viewSize, float dt)
     {
         Camera.Viewport = viewSize;
     }
-    
+
     internal void StartTick(float fixedDt, float totalTime)
     {
         ProcessActions();
@@ -109,7 +108,7 @@ public sealed class World : IWorld
         Entities.EndTick();
         Camera.EndTick();
     }
-    
+
     internal void OnPreRender(float alpha)
     {
         _particles?.ProcessAndUpload(alpha);
@@ -128,7 +127,7 @@ public sealed class World : IWorld
             throw new InvalidOperationException("Unknown Command");
         }
     }
-    
+
     private void ProcessActions()
     {
         var entities = Entities;
@@ -164,8 +163,4 @@ public sealed class World : IWorld
 
         WorldActionSlot.ClearDirty();
     }
-
-
-
-  
 }

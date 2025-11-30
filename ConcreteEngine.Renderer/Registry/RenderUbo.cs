@@ -38,6 +38,8 @@ public sealed class RenderUbo
         _drawCursor = 0;
     }
 
+    public bool HasNextCapacity() => _uploadCursor + Stride < Capacity;
+
     public void SetCapacity(nint capacity)
     {
         ArgumentOutOfRangeException.ThrowIfLessThan(capacity, Stride, nameof(capacity));
@@ -48,8 +50,7 @@ public sealed class RenderUbo
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public nint NextUploadCursor()
     {
-        bool overflow = _uploadCursor + Stride > Capacity;
-        Debug.Assert(!overflow, "UboRing overflow. Increase capacity.");
+        InvalidOpThrower.ThrowIfNot(HasNextCapacity());
 
         var offset = _uploadCursor;
         _uploadCursor += Stride;
@@ -87,9 +88,9 @@ public sealed class RenderUbo
         return _drawCursor;
     }
 
-    public nint GetCapacityFor(int expectedRecords)
+    public nint GetCapacityFor(int records)
     {
-        nint required = Stride * Math.Max(1, expectedRecords);
+        nint required = Stride * Math.Max(1, records);
         if (required <= Capacity) return 0;
         return UniformBufferUtils.NextCapacity(Capacity, required);
     }

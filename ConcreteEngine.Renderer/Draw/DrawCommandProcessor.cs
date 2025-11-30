@@ -1,12 +1,11 @@
 #region
 
 using System.Diagnostics;
-using ConcreteEngine.Common;
+using System.Numerics;
 using ConcreteEngine.Common.Numerics;
 using ConcreteEngine.Graphics.Gfx;
 using ConcreteEngine.Graphics.Gfx.Contracts;
 using ConcreteEngine.Graphics.Gfx.Definitions;
-using ConcreteEngine.Graphics.Gfx.Resources;
 using ConcreteEngine.Renderer.Data;
 using ConcreteEngine.Renderer.Definitions;
 
@@ -51,6 +50,9 @@ internal sealed class DrawCommandProcessor
         }
     }
 
+    public void SubmitAnimationData(ReadOnlySpan<Matrix4x4> boneData) =>
+        _buffers.UploadAnimationData(boneData);
+
     public void DrawMesh(DrawCommand cmd, DrawCommandTicket ticket)
     {
         if (_ctx.PrevMaterial != cmd.MaterialId)
@@ -71,6 +73,7 @@ internal sealed class DrawCommandProcessor
             }
         }
 
+        if (cmd.AnimationSlot >= 0) _buffers.BindAnimation(cmd.AnimationSlot);
         _buffers.BindDrawObject(ticket.SubmitIdx);
         _gfxCmd.BindMesh(cmd.MeshId);
         _gfxCmd.DrawMesh(cmd.MeshId, cmd.DrawCount);
@@ -146,18 +149,18 @@ internal sealed class DrawCommandProcessor
 
         var texSlots = _buffers.ResolveMaterial(cmd.MaterialId, out var materialMeta);
 
-        var shader =  _ctx.CoreShaders.HighlightShader;
+        var shader = _ctx.CoreShaders.HighlightShader;
         var color = _highlightColor;
         if (ticket.Resolver == DrawCommandResolver.BoundingVolume)
         {
             shader = _ctx.CoreShaders.BoundingBoxShader;
             color = Color4.Green;
         }
-        
+
         _gfxCmd.UseShader(shader, _ctx.GetUniformLocations(shader));
         _gfxCmd.SetUniform(0, in color);
 
-        
+
         foreach (var slot in texSlots)
         {
             if (slot.SlotKind == TextureSlotKind.Albedo) _gfxCmd.BindTexture(slot.Texture, 0);

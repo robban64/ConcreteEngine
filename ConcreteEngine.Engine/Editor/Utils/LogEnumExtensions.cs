@@ -18,7 +18,7 @@ internal static class LogEnumExtensions
             AssetKind.Model => LogTopic.Mesh,
             AssetKind.Texture2D => LogTopic.Texture,
             AssetKind.TextureCubeMap => LogTopic.Texture,
-            AssetKind.Material => LogTopic.Material,
+            AssetKind.MaterialTemplate => LogTopic.Material,
             _ => throw new ArgumentOutOfRangeException(nameof(kind), kind, null)
         };
     }

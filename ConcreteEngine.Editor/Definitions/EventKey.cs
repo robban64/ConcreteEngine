@@ -17,5 +17,4 @@ internal enum EventKey
     SelectionChanged,
     SelectionUpdated,
     SelectionAction,
-    
 }

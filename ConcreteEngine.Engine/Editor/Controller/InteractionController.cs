@@ -1,7 +1,11 @@
+#region
+
 using System.Numerics;
 using ConcreteEngine.Common.Numerics;
 using ConcreteEngine.Engine.Worlds;
 using ConcreteEngine.Engine.Worlds.Entities;
+
+#endregion
 
 namespace ConcreteEngine.Engine.Editor.Controller;
 
@@ -58,28 +62,28 @@ internal sealed class InteractionController(ApiContext apiContext)
     private void OnDragUpdate(Vector2 mousePosition)
     {
         if (_selectedEntityId == default) return;
-        
+
         var world = apiContext.World;
         world.Camera.Raycaster.CreateRayFrom(mousePosition, out var ray);
-        
+
         var hit = GetRayPlaneIntersectPoint(in ray, _dragState.DragStart.Y);
-        if(hit == default) return;
+        if (hit == default) return;
 
         float denom = ray.Direction.Y;
         if (Math.Abs(denom) < 1e-6f) return;
-        
+
         float t = (_dragState.DragStart.Y - ray.Position.Y) / denom;
         if (t < 0) return;
-        
+
         ref var transform = ref GetTransform(_selectedEntityId);
         ref readonly var bounds = ref GetBounds(_selectedEntityId);
 
         var newPoint = ray.GetPointOnRay(t);
         var tHeight = world.Terrain.GetSmoothHeight(newPoint.X, newPoint.Z);
-        
-        newPoint.Y = tHeight  - bounds.Box.Min.Y;
+
+        newPoint.Y = tHeight - bounds.Box.Min.Y;
         transform.Translation = newPoint;
-        
+
         _dragState.IsDragging = true;
         _dragState.WasDragging = true;
     }

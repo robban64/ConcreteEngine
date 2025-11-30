@@ -1,5 +1,8 @@
+#region
+
 using System.Numerics;
-using ConcreteEngine.Common.Numerics;
+
+#endregion
 
 namespace ConcreteEngine.Editor.Data;
 
@@ -11,11 +14,9 @@ public enum EditorMouseAction : byte
     StopDragEntity
 }
 
-
 public struct EditorWorldMouseData
 {
     public Vector2 MousePosition;
     public int EntityId;
     public EditorMouseAction Action;
-    
 }

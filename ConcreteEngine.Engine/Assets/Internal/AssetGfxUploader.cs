@@ -2,7 +2,7 @@
 
 using System.Numerics;
 using ConcreteEngine.Common.Numerics;
-using ConcreteEngine.Engine.Assets.Meshes;
+using ConcreteEngine.Engine.Assets.Models.Loader;
 using ConcreteEngine.Engine.Assets.Shaders;
 using ConcreteEngine.Engine.Assets.Textures;
 using ConcreteEngine.Graphics.Gfx;
@@ -34,12 +34,12 @@ internal sealed class AssetGfxUploader
         var vSpan = data.Vertices;
         var iSpan = data.Indices;
 
-        var properties =  MeshDrawProperties.MakeElemental(drawCount: iSpan.Length);
-        
+        var properties = MeshDrawProperties.MakeElemental(drawCount: iSpan.Length);
+
         var builder = _meshes.StartUploadBuilder(in properties);
         builder.UploadVertices(vSpan, BufferUsage.StaticDraw, BufferStorage.Static, BufferAccess.None);
         builder.UploadIndices(iSpan, BufferUsage.StaticDraw, BufferStorage.Static, BufferAccess.None);
-        
+
         Span<VertexAttribute> attribs = stackalloc VertexAttribute[6];
         if (typeof(T) == typeof(Vertex3DSkinned))
         {
@@ -49,24 +49,24 @@ internal sealed class AssetGfxUploader
         else
         {
             FillAttributes(attribs, isAnimated: false);
-            builder.SetAttributeSpan(attribs.Slice(0,4));
+            builder.SetAttributeSpan(attribs.Slice(0, 4));
         }
-        
+
         var meshId = _meshes.FinishUploadBuilder(out var meta);
         data.Result = new MeshCreationInfo(meshId, meta.DrawCount);
     }
-    
-    public void UploadTexture(in TexturePayload payload, out TextureCreationInfo info)
+
+    public void UploadTexture(ReadOnlySpan<byte> data, in TextureUploadMeta meta, out TextureCreationInfo info)
     {
-        var desc = payload.TextureDesc;
-        var textureId = _textures.BuildTexture(in desc, payload.TextureProps, payload.Data);
+        var desc = meta.TextureDesc;
+        var textureId = _textures.BuildTexture(in desc, meta.TextureProps, data);
         info = new TextureCreationInfo(textureId, desc.Width, desc.Height, desc.Format);
     }
 
-    public void UploadCubeMap(in CubeMapPayload payload, out CubeMapCreationInfo info)
+    public void UploadCubeMap(ReadOnlyMemory<byte>[] data, in TextureUploadMeta meta, out CubeMapCreationInfo info)
     {
-        var desc = payload.TextureDesc;
-        var textureId = _textures.BuildCubeMap(in desc, payload.TextureProps, payload.FaceData);
+        var desc = meta.TextureDesc;
+        var textureId = _textures.BuildCubeMap(in desc, meta.TextureProps, data);
         info = new CubeMapCreationInfo(textureId, desc.Width, desc.Format);
     }
 
@@ -82,7 +82,7 @@ internal sealed class AssetGfxUploader
         info = new ShaderCreationInfo(shaderId, samplers);
     }
 
-    
+
     private static void FillAttributes(Span<VertexAttribute> attribs, bool isAnimated)
     {
         ArgumentOutOfRangeException.ThrowIfNotEqual(attribs.Length, 6, nameof(attribs));
@@ -92,10 +92,10 @@ internal sealed class AssetGfxUploader
         attribs[1] = attribBuilder.Make<Vector2>(1);
         attribs[2] = attribBuilder.Make<Vector3>(2);
         attribs[3] = attribBuilder.Make<Vector3>(3);
-        
+
         if (isAnimated)
         {
-            attribs[4] = attribBuilder.Make<Int4>(4);
+            attribs[4] = attribBuilder.Make<Int4>(4, vertexFormat: VertexFormat.Integer);
             attribs[5] = attribBuilder.Make<Vector4>(5);
         }
     }

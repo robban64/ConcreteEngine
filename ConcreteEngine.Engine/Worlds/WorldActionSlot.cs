@@ -1,11 +1,15 @@
+#region
+
 using ConcreteEngine.Engine.Worlds.Entities;
+
+#endregion
 
 namespace ConcreteEngine.Engine.Worlds;
 
 internal static class WorldActionSlot
 {
     public static EntityId SelectedEntityId;
-    
+
     public static bool IsDirty { get; private set; }
 
     public static bool TryReadSlot<T>(long gen, out T data)

@@ -2,8 +2,7 @@ namespace ConcreteEngine.Common.Collections;
 
 public static class SortMethod
 {
-    public static int BinarySearchDataInt<TData>(ReadOnlySpan<TData> collection, int value)
-        where TData : unmanaged, IComparable<int>
+    public static int BinarySearchDataInt(ReadOnlySpan<int> collection, int value)
     {
         int lo = 0;
         int hi = collection.Length - 1;
@@ -11,7 +10,7 @@ public static class SortMethod
         while (lo <= hi)
         {
             int mid = lo + ((hi - lo) >> 1);
-            int cmp = collection[mid].CompareTo(value);
+            int cmp = value.CompareTo(collection[mid]);
 
             if (cmp == 0) return mid;
             if (cmp < 0) lo = mid + 1;

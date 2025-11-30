@@ -31,7 +31,7 @@ internal sealed class BackendResourceStore<TId, THandle> : IBackendResourceStore
     private static THandle MakeHandle(ref uint handle) => Unsafe.As<uint, THandle>(ref handle);
 
     private int _idx = 0;
-    private BkHandle[] _records = new BkHandle[32];
+    private BkHandle[] _records;
     private readonly Stack<int> _free = new();
 
     public ResourceKind Kind { get; }
@@ -40,10 +40,10 @@ internal sealed class BackendResourceStore<TId, THandle> : IBackendResourceStore
     public int FreeCount => _free.Count;
     public int Capacity => _records.Length;
 
-    public BackendResourceStore(ResourceKind kind)
+    public BackendResourceStore(int capacity)
     {
-        ArgumentOutOfRangeException.ThrowIfEqual((int)kind, (int)ResourceKind.Invalid);
-        Kind = kind;
+        Kind = TId.Kind;
+        _records = new BkHandle[capacity];
     }
 
     public THandle GetHandle(GfxRefToken<TId> refToken)
@@ -103,7 +103,9 @@ internal sealed class BackendResourceStore<TId, THandle> : IBackendResourceStore
         var len = _records.Length;
         if (_idx == len)
         {
-            var newCap = ArrayUtility.CapacityGrowthLinear(len, len * 2, step: 32);
+            var newCap = Arrays.CapacityGrowthLinear(len, len * 2, step: 32);
+            Console.WriteLine("Backend store resize");
+
             if (newCap > GfxLimits.StoreLimit)
                 throw new InvalidOperationException("Store limit exceeded");
 

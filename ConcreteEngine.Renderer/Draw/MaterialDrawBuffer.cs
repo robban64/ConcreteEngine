@@ -15,8 +15,7 @@ namespace ConcreteEngine.Renderer.Draw;
 
 internal sealed class MaterialDrawBuffer
 {
-    private const int MaxTextureSlotCapacity = MaxMaterialBufferCapacity * TextureSlots;
-    private const int DefaultTextureSlotCapacity = DefaultMaterialBufferCapacity * TextureSlots;
+    private const int DefaultTextureSlotCapacity = DefaultMaterialBufferCapacity * 4;
 
     private RangeU16[] _slotRanges = new RangeU16[DefaultMaterialBufferCapacity];
     private TextureSlotInfo[] _textureSlots = new TextureSlotInfo[DefaultTextureSlotCapacity];
@@ -89,11 +88,12 @@ internal sealed class MaterialDrawBuffer
     private void EnsureCapacity(int amount)
     {
         if (_metas.Length > amount) return;
-        var newCap = ArrayUtility.CapacityGrowthToFit(_metas.Length, Math.Max(amount, 32));
+        var newCap = Arrays.CapacityGrowthSafe(_metas.Length, amount, MaxTextureSlotBuffCapacity);
 
         if (newCap > MaxMaterialBufferCapacity)
             ThrowMaxCapacityExceeded();
 
+        Console.WriteLine($"{nameof(MaterialDrawBuffer)} TextureSlots resize");
         Array.Resize(ref _metas, newCap);
         Array.Resize(ref _buffer, newCap);
         Array.Resize(ref _slotRanges, newCap);
@@ -102,11 +102,11 @@ internal sealed class MaterialDrawBuffer
     private void EnsureTextureSlotCapacity(int amount)
     {
         if (_textureSlots.Length > amount) return;
-        var newCap = ArrayUtility.CapacityGrowthToFit(_textureSlots.Length, Math.Max(amount, 32));
-
-        if (newCap > MaxTextureSlotCapacity)
+        var newCap = Arrays.CapacityGrowthSafe(_textureSlots.Length, amount, MaxTextureSlotBuffCapacity);
+        if (newCap > MaxTextureSlotBuffCapacity)
             ThrowMaxCapacityExceeded();
 
+        Console.WriteLine($"{nameof(MaterialDrawBuffer)} TextureSlots resize");
         Array.Resize(ref _textureSlots, newCap);
     }
 

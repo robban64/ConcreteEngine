@@ -1,7 +1,6 @@
 #region
 
 using System.Runtime.CompilerServices;
-using ConcreteEngine.Common.Time;
 using ConcreteEngine.Graphics.Gfx.Utility;
 using ConcreteEngine.Renderer.Data;
 using ConcreteEngine.Renderer.Passes;
@@ -49,11 +48,11 @@ internal sealed class DrawCommandPipeline
         _drawStateOps = new DrawStateOps(drawCtx, drawCtxPayload, _drawBuffers);
 
         //
-        _commandBuffer = new DrawCommandBuffer(_drawCmdProc, _drawBuffers);
+        _commandBuffer = new DrawCommandBuffer();
         _materialBuffer = new MaterialDrawBuffer();
 
         //
-        _commandBuffer.Initialize();
+        _commandBuffer.Initialize(_drawCmdProc);
         _drawCmdProc.Initialize();
         _drawBuffers.AttachMaterialBuffer(_materialBuffer);
     }
@@ -86,7 +85,6 @@ internal sealed class DrawCommandPipeline
         _drawBuffers.EnsureDrawBuffers(drawCap, matCap);
     }
 
-    private FrameProfileTimer _timer = new();
 
     internal void UploadUniformGlobals()
     {
@@ -100,13 +98,20 @@ internal sealed class DrawCommandPipeline
         if (materialPayload.Length > 0)
             _drawBuffers.UploadMaterial(materialPayload);
 
-        _drawBuffers.UploadDrawObjects(_commandBuffer.DrainTransformQueue());
+
+        var transformPayload = _commandBuffer.DrainTransformBuffer();
+        if (transformPayload.Length > 0)
+            _drawBuffers.UploadDrawObjects(transformPayload);
+
+        var animationPayload = _commandBuffer.DrainBoneTransformBuffer();
+        if (animationPayload.Length > 0)
+            _drawBuffers.UploadAnimationData(animationPayload);
     }
 
     internal void ExecuteDrawPass(PassId passId, bool defaultDraw)
     {
         _drawBuffers.ResetCursor();
         _drawCmdProc.PrepareDrawPass();
-        _commandBuffer.DispatchDrawPass(passId, defaultDraw, _drawCmdProc);
+        _commandBuffer.DispatchDrawPass(passId, defaultDraw);
     }
 }

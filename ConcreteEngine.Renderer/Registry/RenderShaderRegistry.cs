@@ -40,7 +40,6 @@ internal sealed class RenderShaderRegistry : IRenderShaderRegistry
     {
         GetRenderShader(CoreShaders.HighlightShader).UsePlainUniforms(_gfxShaders);
         GetRenderShader(CoreShaders.BoundingBoxShader).UsePlainUniforms(_gfxShaders);
-
     }
 
     public void RegisterCollection(Span<ShaderId> shaders)

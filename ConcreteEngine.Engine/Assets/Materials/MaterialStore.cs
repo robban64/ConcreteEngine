@@ -26,16 +26,16 @@ public interface IMaterialStore
 
 public sealed class MaterialStore : IMaterialStore
 {
+    private const int DefaultCapacity = 128;
+
     private static int _idx = 0;
     private static MaterialId NextId() => new(++_idx);
 
     private readonly AssetStore _assetStore;
 
-    private Material?[] _materials = new Material[16];
-
-    private readonly Stack<MaterialId> _free = new();
-
-    private readonly Dictionary<string, MaterialId> _materialDict = new(8);
+    private Material?[] _materials = new Material[DefaultCapacity];
+    private readonly Dictionary<string, MaterialId> _materialDict = new(DefaultCapacity);
+    private readonly Stack<MaterialId> _free = [];
 
     public int Count => _idx;
     public int FreeSlots => _free.Count;
@@ -133,8 +133,8 @@ public sealed class MaterialStore : IMaterialStore
             if (assetSlot.SlotKind == TextureSlotKind.Normal) texId = GfxTextures.FallbackTextures.NormalId;
             return texId;
         }
-        
-        
+
+
         if (assetSlot.SlotKind == TextureSlotKind.Shadowmap) return default;
 
         if (!assetSlot.Asset.IsValid)
@@ -161,11 +161,12 @@ public sealed class MaterialStore : IMaterialStore
         var len = _materials.Length;
         if (_idx >= len)
         {
-            var newCap = ArrayUtility.CapacityGrowthLinear(len, len * 2, step: 32);
+            var newCap = Arrays.CapacityGrowthLinear(len, len * 2, step: 32);
 
             if (newCap > RenderLimits.MaxMaterialCount)
                 throw new InvalidOperationException("Material limit exceeded");
 
+            Console.WriteLine("Material store resized");
             Array.Resize(ref _materials, newCap);
         }
 

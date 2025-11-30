@@ -1,6 +1,7 @@
 #region
 
 using ConcreteEngine.Graphics.Gfx.Contracts;
+using ConcreteEngine.Graphics.Gfx.Definitions;
 using ConcreteEngine.Graphics.OpenGL.Utilities;
 using Silk.NET.OpenGL;
 
@@ -65,7 +66,19 @@ internal sealed class GlMeshes : IGraphicsDriverModule
     private void AddVertexAttribute(GlMeshHandle vao, in VertexAttribute a)
     {
         var primitive = a.Format.ToGlEnum();
-        _gl.VertexArrayAttribFormat(vao, a.Location, a.Components, primitive, a.Normalized, (uint)a.Offset);
+
+        switch (a.Format)
+        {
+            case VertexFormat.Float:
+                _gl.VertexArrayAttribFormat(vao, a.Location, a.Components, primitive, a.Normalized, (uint)a.Offset);
+                break;
+            case VertexFormat.Integer:
+                _gl.VertexArrayAttribIFormat(vao, a.Location, a.Components, primitive, (uint)a.Offset);
+                break;
+            default:
+                throw new ArgumentOutOfRangeException(nameof(a.Format), a.Format, null);
+        }
+
         _gl.VertexArrayAttribBinding(vao, a.Location, a.Binding);
         _gl.EnableVertexArrayAttrib(vao, a.Location);
     }

@@ -4,7 +4,6 @@ using ConcreteEngine.Common;
 using ConcreteEngine.Editor.Data;
 using ConcreteEngine.Editor.Definitions;
 using ConcreteEngine.Editor.ViewModel;
-using static ConcreteEngine.Editor.EditorService;
 
 #endregion
 
@@ -83,23 +82,22 @@ internal static class EditorModelManager
                 state.FillView(EditorApi.FetchEntityView);
                 return;
             }
+
             state.FillData(in EditorApi.EntityApi);
         }
-        
+
         static void OnEntitySelected(ModelState<EntitiesViewModel> ctx, EntityRecord? it)
         {
             ctx.State!.SetSelectedEntity(it?.EntityId ?? 0);
             ctx.EnqueueRefreshNextFrame();
         }
-        
+
         static void OnEntityUpdated(ModelState<EntitiesViewModel> ctx, EntityRecord it)
         {
             ctx.State!.SetSelectedEntity(it.EntityId);
             ctx.State!.WriteData(in EditorApi.EntityApi);
             ctx.EnqueueRefreshNextFrame();
         }
-
- 
     }
 
     private static void RegisterCameraState()

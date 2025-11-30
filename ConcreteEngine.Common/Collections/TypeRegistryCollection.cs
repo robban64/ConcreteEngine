@@ -26,6 +26,7 @@ public sealed class TypeRegistryCollection<TValue>(int capacity = 16)
             result = tValue;
             return true;
         }
+
         result = null;
         return false;
     }

@@ -64,7 +64,7 @@ internal sealed class DrawStateContext
     {
         PrevMaterial = default;
         PassMode = PassStateMode.Main;
-        
+
         PassState = default;
         PassStateFunc = default;
         OverridePassState = default;

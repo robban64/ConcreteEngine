@@ -127,7 +127,7 @@ public sealed class AssetSystem : IAssetSystem
                 case AssetKind.Model:
                 case AssetKind.Texture2D:
                 case AssetKind.TextureCubeMap:
-                case AssetKind.Material:
+                case AssetKind.MaterialTemplate:
                 case AssetKind.Unknown:
                 default:
                     throw new ArgumentException($"{req.Kind} is invalid for recreate", nameof(req.Kind));

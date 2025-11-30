@@ -1,7 +1,8 @@
 #region
 
-using ConcreteEngine.Engine.Editor.Controller;
-using ConcreteEngine.Renderer.State;
+#region
+
+#region
 
 #region
 
@@ -21,7 +22,13 @@ using Silk.NET.Windowing;
 
 #endregion
 
+using ConcreteEngine.Engine.Editor.Controller;
+using ConcreteEngine.Renderer.State;
 using EditorCmd = ConcreteEngine.Editor.CommandDispatcher;
+
+#endregion
+
+#endregion
 
 #endregion
 
@@ -74,7 +81,7 @@ internal sealed class EngineGateway : IDisposable
         ArgumentNullException.ThrowIfNull(world);
         ArgumentNullException.ThrowIfNull(assetSystem);
         ArgumentNullException.ThrowIfNull(frameInfo);
-        
+
         if (Enabled) throw new InvalidOperationException(nameof(Enabled));
         if (HasBoundEditor) throw new InvalidOperationException(nameof(HasBoundEditor));
         if (HasBoundMetrics) throw new InvalidOperationException(nameof(HasBoundMetrics));
@@ -87,7 +94,7 @@ internal sealed class EngineGateway : IDisposable
         _entityController = new EntityApiController(_apiContext);
         _worldController = new WorldApiController(_apiContext);
         _interactionController = new InteractionController(_apiContext);
-        
+
         EditorSetup.Editor = _editor!;
         MetricRouter.Attach(world, assetSystem, frameInfo);
         EngineDataProvider.Attach(world, assetSystem, _entityController, _worldController, _interactionController);
@@ -100,8 +107,6 @@ internal sealed class EngineGateway : IDisposable
 
         _editor.Initialize();
     }
-
-
 
 
     public void RenderEditor(in RenderFrameInfo frameInfo)
@@ -203,7 +208,7 @@ internal sealed class EngineGateway : IDisposable
             EditorApi.FetchAssetStoreData = EngineDataProvider.GetAssetStoreData;
             EditorApi.FetchAssetObjectFiles = EngineDataProvider.GetAssetObjectFiles;
             EditorApi.FetchEntityView = EngineDataProvider.GetEntityView;
-            
+
             EditorApi.SendEditorMouseRequest = EngineDataProvider.OnEditorClick;
 
             EditorApi.EntityApi = new ApiDataRefRequest<EntityDataPayload>(
@@ -212,7 +217,6 @@ internal sealed class EngineGateway : IDisposable
                 &EngineDataProvider.FillCameraData, &EngineDataProvider.WriteCameraData);
             EditorApi.WorldParamsApi = new ApiDataRefRequest<WorldParamState>(
                 &EngineDataProvider.FillWorldParams, &EngineDataProvider.WriteWorldParams);
-            
         }
 
 

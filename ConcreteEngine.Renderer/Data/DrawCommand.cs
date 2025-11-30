@@ -10,12 +10,18 @@ using ConcreteEngine.Renderer.Definitions;
 namespace ConcreteEngine.Renderer.Data;
 
 [StructLayout(LayoutKind.Sequential)]
-public readonly struct DrawCommand(MeshId meshId, MaterialId materialId, int drawCount = 0, int instanceCount = 0)
+public readonly struct DrawCommand(
+    MeshId meshId,
+    MaterialId materialId,
+    int drawCount = 0,
+    int instanceCount = 0,
+    short animationSlot = 0)
 {
     public readonly MeshId MeshId = meshId;
     public readonly MaterialId MaterialId = materialId;
     public readonly int DrawCount = drawCount;
     public readonly int InstanceCount = instanceCount;
+    public readonly short AnimationSlot = animationSlot;
 }
 
 [StructLayout(LayoutKind.Sequential)]
@@ -39,15 +45,6 @@ public readonly struct DrawCommandMeta
         Queue = queue;
         Resolver = resolver;
     }
-    
-    [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public DrawCommandMeta WithResolvePass(DrawCommandResolver resolver, PassMask passMask) 
-        => new (Id, Queue, resolver, passMask, DepthKey);
-    
-    [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public DrawCommandMeta WithTransparency(DrawCommandQueue queue, ushort depthKey) 
-        => new (Id, queue, Resolver, PassMask, depthKey);
-
 }
 
 [StructLayout(LayoutKind.Sequential)]
@@ -71,9 +68,9 @@ internal readonly struct DrawCommandRef : IComparable<DrawCommandRef>
 
 internal readonly struct DrawCommandTicket(int submitIdx, byte passId, DrawCommandResolver resolver)
 {
-    public readonly int SubmitIdx  = submitIdx;
-    public readonly byte PassId  = passId;
-    public readonly DrawCommandResolver Resolver  = resolver;
+    public readonly int SubmitIdx = submitIdx;
+    public readonly byte PassId = passId;
+    public readonly DrawCommandResolver Resolver = resolver;
 }
 
 internal readonly struct DrawPassRange(int start, int count)

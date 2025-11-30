@@ -19,7 +19,7 @@ public interface IAssetStore
     AssetTypeMetaSnapshot GetMetaSnapshot<TAsset>() where TAsset : AssetObject;
 
     void ExtractList<TAsset, TData>(List<TData> list, Func<TAsset, TData> transform)
-        where TAsset : AssetObject;
+        where TAsset : AssetObject where TData : class;
 
     void ExtractSpan<TAsset, TData>(Span<TData> span, Func<TAsset, TData> transform)
         where TAsset : AssetObject where TData : unmanaged;
@@ -29,18 +29,21 @@ public interface IAssetStore
 
 internal sealed class AssetStore : IAssetStore
 {
+    private const int DefaultCap = 256;
+
     private int _assetId = 0;
     private int _assetFileId = 0;
     private AssetId MakeAssetId() => new(++_assetId);
     private AssetFileId MakeAssetFileId() => new(++_assetFileId);
 
-
-    private readonly Dictionary<AssetId, AssetObject> _assets = new(32);
-    private readonly Dictionary<AssetFileId, AssetFileEntry> _files = new(32);
-    private readonly Dictionary<AssetId, AssetFileId[]> _bindings = new(32);
-    private readonly Dictionary<AssetKey, AssetId> _names = new(32);
+    private readonly Dictionary<AssetId, AssetObject> _assets = new(DefaultCap);
+    private readonly Dictionary<AssetFileId, AssetFileEntry> _files = new(DefaultCap);
+    private readonly Dictionary<AssetId, AssetFileId[]> _bindings = new(DefaultCap);
+    private readonly Dictionary<AssetKey, AssetId> _names = new(DefaultCap);
 
     private readonly Dictionary<Type, AssetTypeMeta> _typeMeta = new(8);
+
+    private readonly Dictionary<Guid, AssetId> _byEmbedded = new(8);
 
     public int Count => _assetId;
     public int FileCount => _files.Count;
@@ -134,12 +137,27 @@ internal sealed class AssetStore : IAssetStore
         return true;
     }
 
+    internal bool TryGetByEmbeddedGid<TAsset>(Guid gid, out TAsset asset) where TAsset : AssetObject
+    {
+        asset = null!;
+        if (!_byEmbedded.TryGetValue(gid, out var assetId)) return false;
+        if (!_assets.TryGetValue(assetId, out var obj) || obj is not TAsset tAsset) return false;
+
+        asset = tAsset;
+        return true;
+    }
+
     public void ExtractList<TAsset, TData>(List<TData> list, Func<TAsset, TData> transform)
-        where TAsset : AssetObject
+        where TAsset : AssetObject where TData : class
     {
         foreach (var asset in _assets.Values)
         {
-            if (asset is TAsset typedAsset) list.Add(transform(typedAsset));
+            if (asset is TAsset typedAsset)
+            {
+                var it = transform(typedAsset);
+                if (it is null) continue;
+                list.Add(it);
+            }
         }
     }
 
@@ -230,6 +248,46 @@ internal sealed class AssetStore : IAssetStore
         return asset;
     }
 
+
+    internal TAsset RegisterWithEmbedded<TAsset, TDesc>(
+        TDesc descriptor,
+        bool isCoreAsset,
+        AssetWithEmbeddedDel<TAsset, TDesc> factory,
+        Action<ReadOnlySpan<IAssetEmbeddedDescriptor>> enqueueEmbedded)
+        where TAsset : AssetObject
+        where TDesc : class, IAssetDescriptor
+    {
+        var id = MakeAssetId();
+        var asset = factory(id, descriptor, isCoreAsset, enqueueEmbedded, out var fileSpecs);
+        ArgumentNullException.ThrowIfNull(fileSpecs);
+
+        RegisterInternal(id, asset, fileSpecs);
+        return asset;
+    }
+
+    internal TAsset RegisterEmbedded<TAsset, TEmbedded>(
+        TEmbedded embedded,
+        EmbeddedAssembleDel<TAsset, TEmbedded> factory)
+        where TAsset : AssetObject where TEmbedded : class, IAssetEmbeddedDescriptor
+    {
+        ArgumentNullException.ThrowIfNull(embedded);
+        ArgumentNullException.ThrowIfNull(embedded.FileSpec);
+        ArgumentOutOfRangeException.ThrowIfZero(embedded.FileSpec.Length);
+
+        if (_byEmbedded.ContainsKey(embedded.GId))
+            throw new InvalidOperationException($"Embedded resource is already registered. {embedded.GId}");
+
+        var id = MakeAssetId();
+        var asset = factory(id, embedded, this);
+        _byEmbedded.Add(embedded.GId, id);
+        asset.Name = embedded.AssetName;
+        asset.IsEmbedded = true;
+        RegisterInternal(id, asset, embedded.FileSpec);
+        //Logger.LogString(LogScope.Assets, $"{asset.Name} - Embedded {typeof(TAsset).Name} loaded");
+        //Console.WriteLine( $"{asset.Name} - Embedded {embedded.FileSpec[0].Source} loaded");
+        return asset;
+    }
+
     private void RegisterInternal<TAsset>(AssetId id, TAsset asset, ReadOnlySpan<AssetFileSpec> fileSpecs)
         where TAsset : AssetObject
     {
@@ -258,7 +316,7 @@ internal sealed class AssetStore : IAssetStore
             ref readonly var spec = ref fileSpecs[i];
             var fileId = new AssetFileId(_assetFileId++);
             fileIds[i] = fileId;
-            _files.Add(fileId, new AssetFileEntry(fileId, in spec));
+            _files.Add(fileId, new AssetFileEntry(fileId, spec));
         }
 
         _bindings.Add(assetId, fileIds);
@@ -271,7 +329,7 @@ internal sealed class AssetStore : IAssetStore
         {
             ref readonly var spec = ref fileSpecs[i];
             var file = prevFiles[i];
-            _files[file.Id] = new AssetFileEntry(file.Id, in spec);
+            _files[file.Id] = new AssetFileEntry(file.Id, spec);
         }
     }
 

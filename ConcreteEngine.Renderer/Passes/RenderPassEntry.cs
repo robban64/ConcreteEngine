@@ -28,7 +28,8 @@ public sealed class RenderPassEntry
     private PassMutationState? _pendingState = null;
 
 
-    internal RenderPassEntry(PassTagKey passKey, PassOpKind passOp, RenderPassState initial, PassTagKey? dependsOn = null)
+    internal RenderPassEntry(PassTagKey passKey, PassOpKind passOp, RenderPassState initial,
+        PassTagKey? dependsOn = null)
     {
         PassKey = passKey;
         _defaultState = initial;

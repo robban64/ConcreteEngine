@@ -33,6 +33,7 @@ internal sealed class RenderUboRegistry
         Register<ShadowUniformRecord, ShadowUboTag>();
         Register<MaterialUniformRecord, MaterialUboTag>();
         Register<DrawObjectUniform, DrawUboTag>();
+        Register<DrawAnimationUniform, DrawAnimationUboTag>();
         Register<PostProcessUniform, PostUboTag>();
     }
 

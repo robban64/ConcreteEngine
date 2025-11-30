@@ -1,6 +1,5 @@
 #region
 
-using ConcreteEngine.Common;
 using ConcreteEngine.Common.Collections;
 using ConcreteEngine.Editor.Data;
 using ConcreteEngine.Editor.DataState;
@@ -12,7 +11,7 @@ namespace ConcreteEngine.Editor.ViewModel;
 public sealed class EntitiesViewModel
 {
     public List<EntityRecord> Entities { get; set; } = [];
-    
+
     public EntityRecord? SelectedEntity { get; private set; }
 
     private EntityDataPayload _data;
@@ -25,10 +24,10 @@ public sealed class EntitiesViewModel
     public EntityRecord? FindEntity(int entityId)
     {
         if (Entities.Count == 0 || entityId == 0) return null;
-        
-        if(entityId < Entities.Count && Entities[entityId].EntityId == entityId) 
+
+        if (entityId < Entities.Count && Entities[entityId].EntityId == entityId)
             return Entities[entityId];
-        
+
         var index = SortMethod.BinarySearchInt(Entities, entityId);
         return index < 0 ? null : Entities[index];
     }
@@ -41,9 +40,9 @@ public sealed class EntitiesViewModel
             RefreshData();
             return;
         }
-        
-        if(SelectedEntity?.EntityId == entityId) return;
-        
+
+        if (SelectedEntity?.EntityId == entityId) return;
+
         SelectedEntity = FindEntity(entityId);
         RefreshData();
     }
@@ -69,7 +68,7 @@ public sealed class EntitiesViewModel
         var currentGen = SelectedEntity?.Generation ?? 0;
         var responseGen = api.WriteData(currentGen, ref _data);
     }
-    
+
     private void RefreshData()
     {
         if (SelectedEntity is null)
@@ -78,12 +77,11 @@ public sealed class EntitiesViewModel
             _data = default;
             return;
         }
-        
+
         _state.Transform.Fill(out var transform);
         _data.EntityId = SelectedEntity.EntityId;
         _data.Transform = transform;
     }
-
 }
 
 public sealed class EntityRecord(

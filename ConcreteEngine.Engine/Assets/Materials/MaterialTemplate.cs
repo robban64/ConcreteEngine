@@ -9,7 +9,7 @@ namespace ConcreteEngine.Engine.Assets.Materials;
 
 public sealed class MaterialTemplate : AssetObject
 {
-    public override AssetKind Kind => AssetKind.Material;
+    public override AssetKind Kind => AssetKind.MaterialTemplate;
     public override AssetCategory Category => AssetCategory.Renderer;
 
     public required AssetRef<Shader> ShaderRef { get; init; }

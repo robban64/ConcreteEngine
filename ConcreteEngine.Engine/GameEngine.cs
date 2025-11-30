@@ -13,7 +13,6 @@ using ConcreteEngine.Engine.Time;
 using ConcreteEngine.Engine.Time.Tickers;
 using ConcreteEngine.Engine.Worlds;
 using ConcreteEngine.Engine.Worlds.Render;
-using ConcreteEngine.Engine.Worlds.Render.Batching;
 using ConcreteEngine.Graphics;
 using ConcreteEngine.Renderer.State;
 using Silk.NET.OpenGL;
@@ -159,14 +158,14 @@ public sealed class GameEngine : IDisposable
         var outputSize = _window.OutputSize;
         _updateInfo.BeginUpdateFrame(dt, _window.WindowSize, outputSize);
         ref readonly var updateInfo = ref _updateInfo.UpdateTickInfo;
-        
+
         _inputSystem.Update(!_engineGateway.BlockInput());
 
         if (_stateMachine.Current != EngineStateLevel.Running)
         {
             RunSetupStateMachine();
             return;
-        }   
+        }
 
         if (_assets.PendingAssetCount > 0)
         {
@@ -178,12 +177,11 @@ public sealed class GameEngine : IDisposable
 
         if (_editorQueues.DeferredCommandCount > 0)
             _editorQueues.DrainDeferredCommands();
-        
+
         _timeHub.AdvanceTick(dt);
 
-        _world?.StartUpdate(outputSize,dt);
+        _world?.StartUpdate(outputSize, dt);
         _sceneManager.Current?.Update(in updateInfo);
-
     }
 
     private void GameTickUpdate(int tick, float fixedDt)
@@ -197,11 +195,11 @@ public sealed class GameEngine : IDisposable
         }
 
         _world.StartTick(fixedDt, _renderFrameInfo.Time);
-        
+
         _sceneManager.Current.UpdateTick(tick, fixedDt);
-        
+
         _world.EndTick();
-        
+
         UpdateSceneTransitionIfNeeded();
     }
 

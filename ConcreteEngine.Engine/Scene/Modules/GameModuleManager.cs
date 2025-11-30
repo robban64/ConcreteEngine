@@ -37,7 +37,7 @@ public sealed class ModuleManager : IModuleManager
 
         foreach (var module in _modules)
         {
-            module.UpdateTick(tick,fixedDt);
+            module.UpdateTick(tick, fixedDt);
         }
     }
 

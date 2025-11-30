@@ -26,7 +26,12 @@ public readonly struct RenderFrameInfo(long frameIndex, float deltaTime, float a
     public GfxFrameInfo ToGfxFrameInfo() => new(FrameIndex, DeltaTime, OutputSize);
 }
 
-public readonly struct RenderRuntimeParams(Size2D screenSize, Vector2 mousePos, float time, int rndSeed, float defaultRandom)
+public readonly struct RenderRuntimeParams(
+    Size2D screenSize,
+    Vector2 mousePos,
+    float time,
+    int rndSeed,
+    float defaultRandom)
 {
     public Size2D ScreenSize { get; init; } = screenSize;
     public Vector2 MousePos { get; init; } = mousePos;

@@ -2,6 +2,7 @@
 
 using System.Numerics;
 using System.Runtime.InteropServices;
+using ConcreteEngine.Common.Numerics;
 using ConcreteEngine.Graphics.Primitives;
 
 #endregion
@@ -23,6 +24,8 @@ public abstract class ShadowUboTag;
 public abstract class MaterialUboTag;
 
 public abstract class DrawUboTag;
+
+public abstract class DrawAnimationUboTag;
 
 public abstract class PostUboTag;
 
@@ -102,19 +105,19 @@ public struct DirLightUniformRecord(
 
 [StructLayout(LayoutKind.Sequential)]
 public struct LightUniformRecord(
-    int lightCounts
-    /*LightDataStruct l0,
-    LightDataStruct l1 = default,
-    LightDataStruct l2 = default,
-    LightDataStruct l3 = default,
-    LightDataStruct l4 = default,
-    LightDataStruct l5 = default,
-    LightDataStruct l6 = default,
-    LightDataStruct l7 = default*/)
+    int lightCounts,
+    in LightDataStruct l0,
+    in LightDataStruct l1 = default,
+    in LightDataStruct l2 = default,
+    in LightDataStruct l3 = default,
+    in LightDataStruct l4 = default,
+    in LightDataStruct l5 = default,
+    in LightDataStruct l6 = default,
+    in LightDataStruct l7 = default)
 {
     // yzw unused/padding
     public IVec4Std140 LightCounts = new(lightCounts);
-/*
+
     public LightDataStruct L0 = l0;
     public LightDataStruct L1 = l1;
     public LightDataStruct L2 = l2;
@@ -123,14 +126,13 @@ public struct LightUniformRecord(
     public LightDataStruct L5 = l5;
     public LightDataStruct L6 = l6;
     public LightDataStruct L7 = l7;
-*/
 }
 
 [StructLayout(LayoutKind.Sequential)]
 public struct ShadowUniformRecord(
     in Matrix4x4 lightViewProj,
-    Vector4 shadowParams0,
-    Vector4 shadowParams1)
+    in Vector4 shadowParams0,
+    in Vector4 shadowParams1)
 {
     public Matrix4x4 LightViewProj = lightViewProj;
     public Vector4 ShadowParams0 = shadowParams0; // x=1/texW, y=1/texH, z=constBias, w=slopeBias
@@ -154,7 +156,7 @@ public struct MaterialUniformRecord
         MatParams1 = matParams1;
     }
 
-    public MaterialUniformRecord(in MaterialParams mat)
+    public MaterialUniformRecord(in MaterialParamSnapshot mat)
     {
         mat.Fill(out var color, out var param1, out var param2);
         MatColor = color;
@@ -164,20 +166,29 @@ public struct MaterialUniformRecord
 }
 
 [StructLayout(LayoutKind.Sequential)]
-public struct DrawObjectUniform(in Matrix4x4 model, in Vector4 v0, in Vector4 v1, in Vector4 v2)
+public struct DrawObjectUniform
 {
-    public Matrix4x4 Model = model;
-    public Vector4 NormalCol0 = v0;
-    public Vector4 NormalCol1 = v1;
-    public Vector4 NormalCol2 = v2;
+    public Matrix4x4 Model;
+    public Matrix3X4 Normal;
+    private Vector4 _pad;
+}
+
+[StructLayout(LayoutKind.Sequential)]
+public unsafe struct DrawAnimationUniform
+{
+    public const int MaxBones = 64;
+    public const int Mat4Components = 16;
+    public const int TotalComponents = Mat4Components * MaxBones;
+
+    public fixed float Weights[TotalComponents];
 }
 
 [StructLayout(LayoutKind.Sequential)]
 public struct PostProcessUniform(
-    Vector4 grade,
-    Vector4 whiteBalance,
-    Vector4 bloom,
-    Vector4 fx
+    in Vector4 grade,
+    in Vector4 whiteBalance,
+    in Vector4 bloom,
+    in Vector4 fx
 )
 {
     // x = exposureOffset (-0.10..+0.10), y = saturation (0.8..1.2)

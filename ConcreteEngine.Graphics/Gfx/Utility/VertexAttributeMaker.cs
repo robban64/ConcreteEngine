@@ -9,7 +9,6 @@ using ConcreteEngine.Graphics.Gfx.Internal;
 
 namespace ConcreteEngine.Graphics.Gfx.Utility;
 
-
 public struct VertexAttributeMaker
 {
     private int _offset;
@@ -30,7 +29,7 @@ public struct VertexAttributeMaker
 
         var attribOffset = _offset;
         _offset += stride;
-        return new VertexAttribute(location, binding, componentCount, attribOffset);
+        return new VertexAttribute(location, binding, componentCount, attribOffset, vertexFormat);
     }
 }
 
@@ -64,6 +63,6 @@ public struct VertexAttributeMaker<TElement> where TElement : unmanaged
 
         var attribOffset = Offset;
         Offset += stride;
-        return new VertexAttribute(location, binding, componentCount, attribOffset);
+        return new VertexAttribute(location, binding, componentCount, attribOffset, vertexFormat);
     }
 }

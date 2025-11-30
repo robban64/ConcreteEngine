@@ -1,7 +1,11 @@
+#region
+
 using ConcreteEngine.Common.Numerics;
 using ConcreteEngine.Engine.Worlds.Data;
 using ConcreteEngine.Engine.Worlds.Entities;
-using ConcreteEngine.Engine.Worlds.Render;
+using ConcreteEngine.Engine.Worlds.Render.Tables;
+
+#endregion
 
 namespace ConcreteEngine.Engine.Worlds;
 
@@ -16,12 +20,14 @@ public sealed class WorldEntities
     public EntityStore<ModelComponent> Models { get; }
     public EntityStore<Transform> Transforms { get; }
     public EntityStore<BoxComponent> BoundingBoxes { get; }
+    public EntityStore<AnimationComponent> Animations { get; }
 
     internal WorldEntities()
     {
         Models = GenericStores<ModelComponent>.CreateStore();
         Transforms = GenericStores<Transform>.CreateStore();
         BoundingBoxes = GenericStores<BoxComponent>.CreateStore();
+        Animations = GenericStores<AnimationComponent>.CreateStore();
     }
 
     public int EntityCount => _idIdx;
@@ -42,8 +48,7 @@ public sealed class WorldEntities
         Models.Add(entityId, new ModelComponent(model, drawCount, matKey));
         Transforms.Add(entityId, in transform);
         BoundingBoxes.Add(entityId, new BoxComponent(in boundingBox));
-
-        return Create();
+        return entityId;
     }
 
 

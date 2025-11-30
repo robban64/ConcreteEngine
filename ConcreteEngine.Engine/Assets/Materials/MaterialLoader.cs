@@ -5,7 +5,6 @@ using ConcreteEngine.Engine.Assets.Data;
 using ConcreteEngine.Engine.Assets.Descriptors;
 using ConcreteEngine.Engine.Assets.Shaders;
 using ConcreteEngine.Engine.Assets.Textures;
-using ConcreteEngine.Graphics.Gfx;
 using ConcreteEngine.Graphics.Gfx.Definitions;
 using ConcreteEngine.Renderer.Definitions;
 
@@ -27,9 +26,15 @@ internal sealed class MaterialLoader
         _profiles = new Dictionary<MaterialProfile, MatProfileInfo>
         {
             [MaterialProfile.None] = new("Model"),
-            [MaterialProfile.Particle]  = new("Particle", new ProfileSlot(TextureSlotKind.Albedo)),
+            [MaterialProfile.Particle] = new("Particle", new ProfileSlot(TextureSlotKind.Albedo)),
             [MaterialProfile.Sky] = new("Skybox", new ProfileSlot(TextureSlotKind.Albedo, TextureKind.CubeMap)),
             [MaterialProfile.StaticModel] = new("Model",
+                new ProfileSlot(TextureSlotKind.Albedo),
+                new ProfileSlot(TextureSlotKind.Normal),
+                new ProfileSlot(TextureSlotKind.Mask),
+                new ProfileSlot(TextureSlotKind.Shadowmap)
+            ),
+            [MaterialProfile.AnimatedModel] = new("ModelAnimated",
                 new ProfileSlot(TextureSlotKind.Albedo),
                 new ProfileSlot(TextureSlotKind.Normal),
                 new ProfileSlot(TextureSlotKind.Mask),
@@ -68,7 +73,56 @@ internal sealed class MaterialLoader
         return result;
     }
 
-    private MaterialTemplate CreateTemplate(AssetId assetId, MaterialDescriptor record, IAssetStore store)
+    public void LoadEmbeddedMaterials(AssetStore store, ReadOnlySpan<MaterialEmbeddedDescriptor> descriptors)
+    {
+        ArgumentOutOfRangeException.ThrowIfZero(descriptors.Length);
+
+        EmbeddedAssembleDel<MaterialTemplate, MaterialEmbeddedDescriptor> factory = CreateEmbeddedTemplate;
+
+        foreach (var it in descriptors)
+        {
+            store.RegisterEmbedded(it, factory);
+        }
+    }
+
+    private MaterialTemplate CreateEmbeddedTemplate(AssetId assetId, MaterialEmbeddedDescriptor record,
+        AssetStore store)
+    {
+        AssetTextureSlot[] slots =
+        [
+            new(default, TextureSlotKind.Albedo),
+            new(default, TextureSlotKind.Normal),
+            new(default, TextureSlotKind.Mask),
+            new(default, TextureSlotKind.Shadowmap),
+        ];
+        int idx = 0;
+        foreach (var gid in record.EmbeddedTextures.Values)
+        {
+            if (!store.TryGetByEmbeddedGid<Texture2D>(gid, out var texture))
+                throw new ArgumentException($"Embedded texture {gid} not found");
+
+            if (texture.SlotKind == TextureSlotKind.Albedo)
+                slots[0] = slots[0].WithAssetId(texture.RawId);
+
+            if (texture.SlotKind == TextureSlotKind.Normal)
+                slots[1] = slots[1].WithAssetId(texture.RawId);
+        }
+
+        var shaderName = record.IsAnimated ? "ModelAnimated" : "Model";
+
+        var matParams = new MaterialState(in record.Params);
+        return new MaterialTemplate(slots)
+        {
+            RawId = assetId,
+            Name = record.AssetName,
+            ShaderRef = store.GetByName<Shader>(shaderName).RefId,
+            Params = matParams,
+            IsCoreAsset = false
+        };
+    }
+
+
+    private MaterialTemplate CreateTemplate(AssetId assetId, MaterialDescriptor record, AssetStore store)
     {
         var slots = Array.Empty<AssetTextureSlot>();
 
@@ -101,12 +155,13 @@ internal sealed class MaterialLoader
         };
     }
 
-    private AssetTextureSlot[] CreateSlots(MaterialDescriptor record, IAssetStore store)
+    private AssetTextureSlot[] CreateSlots(MaterialDescriptor record, AssetStore store)
     {
         if (record.TextureSlots.Length == 0)
         {
             return [new AssetTextureSlot(default, TextureSlotKind.Albedo)];
         }
+
         var slotInfo = new AssetTextureSlot[record.TextureSlots.Length];
         for (int i = 0; i < slotInfo.Length; i++)
         {

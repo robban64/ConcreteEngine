@@ -7,7 +7,7 @@ using ConcreteEngine.Renderer.Data;
 
 #endregion
 
-namespace ConcreteEngine.Engine.Worlds.Render;
+namespace ConcreteEngine.Engine.Worlds.Render.Tables;
 
 public interface IMaterialTable
 {
@@ -24,7 +24,7 @@ public sealed class MaterialTable : IMaterialTable
     public void PushTemporary(in MaterialTag tag)
     {
     }
-    
+
 
     public MaterialTagKey Add(in MaterialTag tag)
     {
@@ -55,8 +55,11 @@ public sealed class MaterialTable : IMaterialTable
     private void EnsureCapacity(int n)
     {
         var newSize = _keyIdx + n;
-        if (newSize >= _table.Length)
-            Array.Resize(ref _table, ArrayUtility.CapacityGrowthLinear(_keyIdx, newSize, 32));
+        if (_table.Length < newSize)
+        {
+            Console.WriteLine("Resize material table");
+            Array.Resize(ref _table, Arrays.CapacityGrowthLinear(_keyIdx, newSize, 32));
+        }
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]

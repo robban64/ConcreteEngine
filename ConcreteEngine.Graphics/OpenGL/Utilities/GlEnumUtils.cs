@@ -194,13 +194,14 @@ internal static class GlEnumExtensions
         };
     }
 
-    public static VertexAttribType ToGlEnum(this VertexFormat value)
+    public static GLEnum ToGlEnum(this VertexFormat value)
     {
         return value switch
         {
-            VertexFormat.Float => VertexAttribType.Float,
-            VertexFormat.UByte => VertexAttribType.UnsignedByte,
-            VertexFormat.UShort => VertexAttribType.UnsignedShort,
+            VertexFormat.Float => GLEnum.Float,
+            VertexFormat.Integer => GLEnum.Int,
+            VertexFormat.UByte => GLEnum.UnsignedByte,
+            VertexFormat.UShort => GLEnum.UnsignedShort,
             _ => throw new ArgumentOutOfRangeException(nameof(value), value, null)
         };
     }

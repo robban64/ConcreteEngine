@@ -2,6 +2,7 @@
 
 using System.Numerics;
 using System.Runtime.CompilerServices;
+using System.Runtime.InteropServices;
 using ConcreteEngine.Common.Numerics.Maths;
 using ConcreteEngine.Graphics.Gfx;
 using ConcreteEngine.Graphics.Gfx.Resources;
@@ -15,6 +16,19 @@ namespace ConcreteEngine.Renderer.Draw;
 
 internal sealed class DrawBuffers
 {
+    private static class DataStore
+    {
+        public static CameraUniformRecord CameraData;
+
+        //public static LightUniformRecord LightData;
+        public static DirLightUniformRecord DirLightData;
+        public static FrameUniformRecord FrameData;
+        public static ShadowUniformRecord ShadowData;
+        public static PostProcessUniform PostData;
+        public static DrawAnimationUniform AnimationData;
+    }
+
+
     private readonly GfxBuffers _gfxBuffers;
 
     private readonly UniformBufferId _engineUbo;
@@ -25,13 +39,17 @@ internal sealed class DrawBuffers
     private readonly UniformBufferId _dirLightUbo;
     private readonly UniformBufferId _postUbo;
 
+
     private readonly RenderUbo _drawUbo;
     private readonly RenderUbo _materialUbo;
+    private readonly RenderUbo _animationUbo;
 
     private MaterialDrawBuffer _materialBuffer = null!;
     private readonly DrawStateContext _ctx;
 
     private readonly RenderParamsSnapshot _paramsSnapshot;
+
+    private bool _hasUploadLight = false;
 
 
     internal DrawBuffers(DrawStateContext ctx, DrawStateContextPayload ctxPayload)
@@ -45,6 +63,8 @@ internal sealed class DrawBuffers
         _drawUbo = registry.GetRenderUbo<DrawUboTag>();
         _materialUbo = registry.GetRenderUbo<MaterialUboTag>();
 
+        _animationUbo = registry.GetRenderUbo<DrawAnimationUboTag>();
+
         _engineUbo = registry.GetRenderUbo<EngineUboTag>().Id;
         _frameUbo = registry.GetRenderUbo<FrameUboTag>().Id;
         _cameraUbo = registry.GetRenderUbo<CameraUboTag>().Id;
@@ -52,6 +72,9 @@ internal sealed class DrawBuffers
         _lightUbo = registry.GetRenderUbo<LightUboTag>().Id;
         _shadowUbo = registry.GetRenderUbo<ShadowUboTag>().Id;
         _postUbo = registry.GetRenderUbo<PostUboTag>().Id;
+
+        _animationUbo.SetCapacity(_animationUbo.Stride * 64);
+        _gfxBuffers.SetUniformBufferCapacity(_animationUbo.Id, _animationUbo.Capacity);
     }
 
     public void AttachMaterialBuffer(MaterialDrawBuffer materialBuffer) => _materialBuffer = materialBuffer;
@@ -60,6 +83,7 @@ internal sealed class DrawBuffers
     {
         _drawUbo.ResetCursor();
         _materialUbo.ResetCursor();
+        _animationUbo.ResetCursor();
     }
 
     public void EnsureDrawBuffers(nint drawCapacity, nint materialCapacity)
@@ -104,6 +128,12 @@ internal sealed class DrawBuffers
         _gfxBuffers.BindUniformBufferRange(_drawUbo.Id, cursor, _drawUbo.Stride);
     }
 
+    public void BindAnimation(int submitIndex)
+    {
+        var cursor = _animationUbo.SetDrawCursor(submitIndex);
+        _gfxBuffers.BindUniformBufferRange(_animationUbo.Id, cursor, _animationUbo.Stride);
+    }
+
     public void UploadMaterialRecord(MaterialId materialId, in MaterialUniformRecord data) =>
         _gfxBuffers.UploadUniformGpuData(_materialUbo.Id, in data, 0);
 
@@ -113,12 +143,31 @@ internal sealed class DrawBuffers
     public void UploadDrawObjects(ReadOnlySpan<DrawObjectUniform> data) =>
         _gfxBuffers.UploadUniformGpuSpan(_drawUbo.Id, data, _drawUbo.SetUploadCursor(0));
 
+    public void UploadAnimationData(ReadOnlySpan<Matrix4x4> boneData)
+    {
+        var uploadSize = _animationUbo.GetCapacityFor(boneData.Length);
+        if (uploadSize > _animationUbo.Capacity)
+        {
+            _animationUbo.SetCapacity(uploadSize);
+            _gfxBuffers.SetUniformBufferCapacity(_animationUbo.Id, uploadSize);
+        }
+
+        _gfxBuffers.UploadUniformBytes(_animationUbo.Id, MemoryMarshal.AsBytes(boneData), Unsafe.SizeOf<Matrix4x4>(),
+            boneData.Length, 0);
+
+        //_gfxBuffers.UploadUniformGpuSpan(_animationUbo.Id, boneData, 0);
+    }
 
     // Globals //
     public void UploadGlobalUniforms(in RenderFrameInfo frameInfo, in RenderRuntimeParams runtimeParams)
     {
         UploadEngineUniformRecord(in frameInfo, in runtimeParams);
-        //UploadLight();
+        if (!_hasUploadLight)
+        {
+            UploadLight();
+            _hasUploadLight = true;
+        }
+
         if (_paramsSnapshot.IsDirty)
         {
             UploadFrameUniformRecord();
@@ -127,15 +176,6 @@ internal sealed class DrawBuffers
         }
     }
 
-    private static class DataStore
-    {
-        public static CameraUniformRecord CameraData;
-        public static LightUniformRecord LightData = new(0);
-        public static DirLightUniformRecord DirLightData;
-        public static FrameUniformRecord FrameData;
-        public static ShadowUniformRecord ShadowData;
-        public static PostProcessUniform PostData;
-    }
 
     public void UploadCameraView(RenderView view)
     {
@@ -199,7 +239,7 @@ internal sealed class DrawBuffers
 
     private void UploadLight()
     {
-        //_gfxBuffers.UploadUniformGpuData(_lightUbo, in DataStore.LightData, 0);
+        _gfxBuffers.UploadUniformGpuData<LightUniformRecord>(_lightUbo, default, 0);
     }
 
     public void UploadShadow(in Matrix4x4 lightViewProjection)

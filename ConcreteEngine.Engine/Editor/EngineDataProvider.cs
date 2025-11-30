@@ -1,11 +1,5 @@
 #region
 
-using System.Diagnostics;
-using System.Numerics;
-using System.Runtime.CompilerServices;
-using ConcreteEngine.Common.Numerics;
-using ConcreteEngine.Common.Numerics.Maths;
-using ConcreteEngine.Editor;
 using ConcreteEngine.Editor.Data;
 using ConcreteEngine.Editor.DataState;
 using ConcreteEngine.Editor.Definitions;
@@ -13,11 +7,7 @@ using ConcreteEngine.Editor.ViewModel;
 using ConcreteEngine.Engine.Assets;
 using ConcreteEngine.Engine.Assets.Data;
 using ConcreteEngine.Engine.Editor.Controller;
-using ConcreteEngine.Engine.Platform;
 using ConcreteEngine.Engine.Worlds;
-using ConcreteEngine.Engine.Worlds.Entities;
-using ConcreteEngine.Shared.RenderData;
-using ConcreteEngine.Shared.TransformData;
 
 #endregion
 
@@ -33,7 +23,8 @@ internal static class EngineDataProvider
 
 
     internal static void Attach(World world, AssetSystem assetSystem,
-        EntityApiController entityController, WorldApiController worldController, InteractionController interactionController)
+        EntityApiController entityController, WorldApiController worldController,
+        InteractionController interactionController)
     {
         _world = world;
         _assetSystem = assetSystem;
@@ -41,7 +32,6 @@ internal static class EngineDataProvider
         _worldController = worldController;
         _interactionController = interactionController;
     }
-
 
 
     public static List<AssetObjectViewModel> GetAssetStoreData(AssetCategoryRequestBody body)
@@ -82,11 +72,12 @@ internal static class EngineDataProvider
 
         return result;
     }
-    
+
     public static List<EntityRecord> GetEntityView(EntityRequestBody body)
     {
         return _entityController.GetEntityList();
     }
+
     public static long FillEntityData(ApiWriteRequestBody<EntityDataPayload> response)
     {
         return _entityController.FillEntityData(ref response.Data);
@@ -117,7 +108,7 @@ internal static class EngineDataProvider
     {
         return _worldController.WriteWorldParams(request.Version, ref request.Data);
     }
-    
+
     public static void OnEditorClick(in EditorWorldMouseData request, out EditorWorldMouseData response)
     {
         switch (request.Action)

@@ -22,9 +22,4 @@ public readonly record struct AssetRef<TAsset>(AssetId Id) where TAsset : AssetO
     public static AssetRef<TAsset> Make(AssetId id) => new(id);
 }
 
-// Needed?
-public readonly record struct AssetFileRef<TAsset>(AssetFileId Value) where TAsset : AssetObject
-{
-    public static explicit operator AssetFileRef<TAsset>(AssetFileId id) => new(id);
-    public static implicit operator AssetFileId(AssetFileRef<TAsset> typed) => typed.Value;
-}
+public readonly record struct ReservedAsset(AssetId Asset, AssetKind Kind, long ReservedAt);

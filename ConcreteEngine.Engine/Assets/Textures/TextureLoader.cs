@@ -2,6 +2,7 @@
 
 using ConcreteEngine.Engine.Assets.Data;
 using ConcreteEngine.Engine.Assets.Descriptors;
+using ConcreteEngine.Engine.Assets.Internal;
 using ConcreteEngine.Engine.Assets.IO;
 using ConcreteEngine.Graphics.Gfx.Contracts;
 using ConcreteEngine.Graphics.Gfx.Definitions;
@@ -11,9 +12,52 @@ using StbImageSharp;
 
 namespace ConcreteEngine.Engine.Assets.Textures;
 
-internal sealed class TextureLoader
+internal sealed class TextureLoader(AssetGfxUploader uploader)
 {
-    public TexturePayload LoadTexture(TextureDescriptor record)
+    public TextureImportResult LoadEmbeddedTexture(TextureEmbeddedDescriptor descriptor)
+    {
+        ArgumentNullException.ThrowIfNull(descriptor);
+        ArgumentNullException.ThrowIfNull(descriptor.PixelData);
+        ArgumentOutOfRangeException.ThrowIfLessThan(descriptor.PixelData.Length, 4);
+
+        var image = ImageResult.FromMemory(descriptor.PixelData, GetColorComponent(descriptor.PixelFormat));
+        ValidateImageResult(image);
+
+        if (descriptor.Width != descriptor.PixelData.Length && descriptor.Height != 0)
+        {
+            ArgumentOutOfRangeException.ThrowIfNotEqual(image.Width, descriptor.Width, nameof(image.Width));
+            ArgumentOutOfRangeException.ThrowIfNotEqual(image.Width, descriptor.Height, nameof(image.Width));
+        }
+
+
+        var desc = new GfxTextureDescriptor(
+            width: image.Width,
+            height: image.Height,
+            kind: TextureKind.Texture2D,
+            format: descriptor.PixelFormat
+        );
+
+        var props = new GfxTextureProperties(
+            preset: TexturePreset.LinearMipmapRepeat,
+            anisotropy: TextureAnisotropy.X4,
+            lodBias: 0
+        );
+
+        var meta = new TextureUploadMeta(desc, props);
+
+        uploader.UploadTexture(image.Data, meta, out var info);
+
+        return new TextureImportResult
+        {
+            Data = null,
+            FileSpec = null!,
+            CreationInfo = info,
+            TextureDesc = desc,
+            TextureProps = props
+        };
+    }
+
+    public TextureImportResult LoadTexture(TextureDescriptor record)
     {
         //StbImage.stbi_set_flip_vertically_on_load(1);
 
@@ -24,16 +68,8 @@ internal sealed class TextureLoader
 
         using var stream = File.OpenRead(path);
 
-        var colorComponent = record.PixelFormat switch
-        {
-            TexturePixelFormat.Rgb => ColorComponents.RedGreenBlueAlpha,
-            TexturePixelFormat.Rgba => ColorComponents.RedGreenBlueAlpha,
-            TexturePixelFormat.SrgbAlpha => ColorComponents.RedGreenBlueAlpha,
-            TexturePixelFormat.Depth => ColorComponents.Grey,
-            TexturePixelFormat.Red => ColorComponents.Grey,
-            _ => throw new ArgumentOutOfRangeException()
-        };
-        var image = ImageResult.FromStream(stream, colorComponent);
+
+        var image = ImageResult.FromStream(stream, GetColorComponent(record.PixelFormat));
         ValidateImageResult(image);
 
         var desc = new GfxTextureDescriptor(
@@ -50,16 +86,25 @@ internal sealed class TextureLoader
         );
 
         var fileSpec = new AssetFileSpec(
-            Storage: AssetStorageKind.FileSystem,
-            LogicalName: record.Name,
-            RelativePath: record.Filename,
-            SizeBytes: fi.Length);
+            storage: AssetStorageKind.FileSystem,
+            logicalName: record.Name,
+            relativePath: record.Filename,
+            sizeBytes: fi.Length);
 
-        //info = AssetProcessInfo.MakeDone<TextureManifestRecord>();
-        return new TexturePayload(image.Data, desc, props, in fileSpec);
+        var meta = new TextureUploadMeta(desc, props);
+        uploader.UploadTexture(image.Data, meta, out var info);
+
+        return new TextureImportResult
+        {
+            Data = record.InMemory ? image.Data : null,
+            FileSpec = fileSpec,
+            CreationInfo = info,
+            TextureDesc = desc,
+            TextureProps = props
+        };
     }
 
-    public CubeMapPayload LoadCubeMap(CubeMapDescriptor record)
+    public CubeMapImportResult LoadCubeMap(CubeMapDescriptor record)
     {
         ArgumentOutOfRangeException.ThrowIfNotEqual(record.Textures.Length, 6);
 
@@ -79,10 +124,10 @@ internal sealed class TextureLoader
             faceData[i] = image.Data;
 
             faceFiles[i] = new AssetFileSpec(
-                Storage: AssetStorageKind.FileSystem,
-                LogicalName: record.Name,
-                RelativePath: record.Textures[i],
-                SizeBytes: fi.Length);
+                storage: AssetStorageKind.FileSystem,
+                logicalName: record.Name,
+                relativePath: record.Textures[i],
+                sizeBytes: fi.Length);
         }
 
         var desc = new GfxTextureDescriptor(
@@ -96,7 +141,28 @@ internal sealed class TextureLoader
             anisotropy: TextureAnisotropy.Off,
             lodBias: 0);
 
-        return new CubeMapPayload(faceData, faceFiles, desc, props);
+
+        var payload = new TextureUploadMeta(desc, props);
+        uploader.UploadCubeMap(faceData, payload, out var info);
+
+
+        return new CubeMapImportResult
+        {
+            FaceFiles = faceFiles, CreationInfo = info, TextureDesc = desc, TextureProps = props
+        };
+    }
+
+    private static ColorComponents GetColorComponent(TexturePixelFormat format)
+    {
+        return format switch
+        {
+            TexturePixelFormat.Rgb => ColorComponents.RedGreenBlueAlpha,
+            TexturePixelFormat.Rgba => ColorComponents.RedGreenBlueAlpha,
+            TexturePixelFormat.SrgbAlpha => ColorComponents.RedGreenBlueAlpha,
+            TexturePixelFormat.Depth => ColorComponents.Grey,
+            TexturePixelFormat.Red => ColorComponents.Grey,
+            _ => throw new ArgumentOutOfRangeException()
+        };
     }
 
     private static void ValidateImageResult(ImageResult result)

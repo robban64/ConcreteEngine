@@ -17,7 +17,7 @@ public sealed class EntityStore<T> where T : unmanaged
 
     public bool IsDirty { get; set; }
 
-    public EntityStore(int initialCapacity = 128)
+    public EntityStore(int initialCapacity = 256)
     {
         _sparse = new int[initialCapacity];
         _data = new T[initialCapacity];
@@ -53,13 +53,22 @@ public sealed class EntityStore<T> where T : unmanaged
 
     public ref T Add(EntityId e, in T value)
     {
-        if (_idx >= _data.Length)
+        Debug.Assert(_data.Length == _entities.Length);
+        Debug.Assert(_sparse.Length >= e.Id);
+
+        if (_data.Length < _idx)
         {
-            Debug.Assert(_data.Length == _entities.Length);
-            var newSize = ArrayUtility.CapacityGrowthPow2(Math.Max(_idx, 32));
+            var newSize = Arrays.CapacityGrowthSafe(_data.Length, _idx, 2048);
             Array.Resize(ref _data, newSize);
             Array.Resize(ref _entities, newSize);
+            Console.WriteLine("EntityStore entities resize");
+        }
+
+        if (_sparse.Length < e.Id)
+        {
+            var newSize = Arrays.CapacityGrowthSafe(e.Id, _idx, 2048);
             Array.Resize(ref _sparse, newSize);
+            Console.WriteLine("EntityStore sparse resize");
         }
 
         IsDirty = true;
@@ -90,21 +99,4 @@ public sealed class EntityStore<T> where T : unmanaged
         where T3 : unmanaged =>
         new(this, r2, r3);
 */
-
-    private static int BinarySearchEntity<T2>(ReadOnlySpan<EntityId> collection, EntityId entity)
-    {
-        var id = entity.Id;
-
-        int lo = 0, hi = collection.Length - 1;
-        while (lo <= hi)
-        {
-            int mid = lo + (hi - lo) / 2;
-            int midKey = collection[mid].Id;
-            if (midKey == id) return mid;
-            if (midKey < id) lo = mid + 1;
-            else hi = mid - 1;
-        }
-
-        return -1;
-    }
 }

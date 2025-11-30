@@ -7,12 +7,19 @@ using ConcreteEngine.Renderer.Definitions;
 
 namespace ConcreteEngine.Engine.Assets.Data;
 
-public readonly record struct AssetTextureSlot(
-    AssetId Asset,
-    TextureSlotKind SlotKind,
-    TextureKind TextureKind = TextureKind.Texture2D,
-    TexturePixelFormat PixelFormat = TexturePixelFormat.SrgbAlpha
+public readonly struct AssetTextureSlot(
+    AssetId asset,
+    TextureSlotKind slotKind,
+    TextureKind textureKind = TextureKind.Texture2D,
+    TexturePixelFormat pixelFormat = TexturePixelFormat.SrgbAlpha
 )
 {
+    public readonly AssetId Asset = asset;
+    public readonly TextureSlotKind SlotKind = slotKind;
+    public readonly TextureKind TextureKind = textureKind;
+    public readonly TexturePixelFormat PixelFormat = pixelFormat;
+
     public bool IsFallback => !Asset.IsValid;
+
+    public AssetTextureSlot WithAssetId(AssetId assetId) => new(assetId, SlotKind, TextureKind, PixelFormat);
 }

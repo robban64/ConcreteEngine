@@ -2,20 +2,17 @@
 
 using ConcreteEngine.Common;
 using ConcreteEngine.Common.Numerics;
-using ConcreteEngine.Common.Time;
 using ConcreteEngine.Engine.Assets;
-using ConcreteEngine.Engine.Assets.Meshes;
+using ConcreteEngine.Engine.Assets.Models;
 using ConcreteEngine.Engine.Assets.Shaders;
 using ConcreteEngine.Engine.Editor.Data;
 using ConcreteEngine.Engine.Editor.Definitions;
 using ConcreteEngine.Engine.Platform;
 using ConcreteEngine.Engine.Utils;
-using ConcreteEngine.Engine.Worlds.Data;
-using ConcreteEngine.Engine.Worlds.Render.Batching;
+using ConcreteEngine.Engine.Worlds.Render.Tables;
 using ConcreteEngine.Engine.Worlds.Utility;
 using ConcreteEngine.Engine.Worlds.View;
 using ConcreteEngine.Graphics;
-using ConcreteEngine.Graphics.Gfx;
 using ConcreteEngine.Graphics.Gfx.Contracts;
 using ConcreteEngine.Graphics.Gfx.Definitions;
 using ConcreteEngine.Graphics.Gfx.Resources;
@@ -46,8 +43,10 @@ public sealed class WorldRenderer : IWorldRenderer
 
     private readonly MeshTable _meshTable;
     private readonly MaterialTable _materialTable;
+    private readonly AnimationTable _animationTable;
+
     private readonly RenderEntityBus _renderEntityBus;
-    
+
     private readonly EngineEventBus _eventBus;
 
     private bool _hasUploadedMaterial = false;
@@ -72,7 +71,8 @@ public sealed class WorldRenderer : IWorldRenderer
 
         _meshTable = new MeshTable();
         _materialTable = new MaterialTable();
-        _renderEntityBus = new RenderEntityBus(_meshTable, _materialTable);
+        _animationTable = new AnimationTable();
+        _renderEntityBus = new RenderEntityBus(_meshTable, _materialTable, _animationTable);
     }
 
 
@@ -80,8 +80,9 @@ public sealed class WorldRenderer : IWorldRenderer
     {
         ArgumentNullException.ThrowIfNull(world);
         _meshTable.Setup(_assets);
+        _animationTable.Setup(_assets);
         _renderEntityBus.AttachWorld(world);
-        world.AttachRender(_graphics.Gfx ,_meshTable, _materialTable);
+        world.AttachRender(_graphics.Gfx, _meshTable, _materialTable);
 
         _renderEntityBus.CubeId = _assets.StoreImpl.GetByName<Model>("Cube").ModelId;
 
@@ -113,6 +114,7 @@ public sealed class WorldRenderer : IWorldRenderer
         }
     }
 
+
     internal void PreRender(
         BeginFrameStatus status,
         in RenderFrameInfo frameInfo,
@@ -124,14 +126,18 @@ public sealed class WorldRenderer : IWorldRenderer
         WorldRenderParams.Commit();
 
         PrepareRenderView(frameInfo.Alpha, camera);
+        RenderDataSlot.FrameInfo = frameInfo;
+        RenderDataSlot.ProjectionInfo = RenderView.ProjectionInfo;
+        RenderDataSlot.ViewData = RenderView.CameraView;
+
 
         _renderer.PrepareFrame(in frameInfo, in runtimeParams);
 
         // Upload materials
         SubmitMaterialData();
 
-        var renderView = RenderView;
-        _renderEntityBus.CollectEntities(in renderView.ViewMatrix, renderView.ProjectionInfo);
+        _renderEntityBus.CollectEntities(frameInfo.DeltaTime, _renderer.CommandBuffer);
+
         _renderEntityBus.FlushEntities(_renderer.CommandBuffer);
         // fill buffers
         _renderer.CollectDrawBuffers();
@@ -190,7 +196,7 @@ public sealed class WorldRenderer : IWorldRenderer
         var shaderCount = _assets.Store.GetMetaSnapshot<Shader>().Count;
 
         builder.RegisterShader(shaderCount, ExtractShaderIds).RegisterCoreShaders(GetCoreShaders);
-        
+
         builder.RegisterFbo<ShadowPassTag>(FboVariant.Default,
             new RegisterFboEntry().AttachDepthTexture(GfxFboDepthTextureDesc.Default())
                 .UseFixedSize(new Size2D(2048, 2048)));
@@ -227,7 +233,7 @@ public sealed class WorldRenderer : IWorldRenderer
                 PresentShader = _assets.Store.GetByName<Shader>("Present").ResourceId,
                 HighlightShader = _assets.Store.GetByName<Shader>("Highlight").ResourceId,
                 BoundingBoxShader = _assets.Store.GetByName<Shader>("BoundingBox").ResourceId,
-                ParticleShader =  _assets.Store.GetByName<Shader>("Particle").ResourceId,
+                ParticleShader = _assets.Store.GetByName<Shader>("Particle").ResourceId,
             };
     }
 }

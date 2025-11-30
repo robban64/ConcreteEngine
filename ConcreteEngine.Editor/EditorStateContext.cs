@@ -68,7 +68,7 @@ internal static class EditorStateContext
         var newMode = mode == NextState.RightSidebar ? RightSidebarMode.Default : mode;
         NextState = NextState with { RightSidebar = newMode };
     }
-    
+
     public static void SetRightSidebarState(RightSidebarMode mode)
     {
         if (mode == NextState.RightSidebar) return;

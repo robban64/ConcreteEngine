@@ -27,13 +27,13 @@ public enum GfxStateFlags : ushort
 public readonly struct GfxPassState(GfxStateFlags enabled, GfxStateFlags defined)
 {
     public readonly GfxStateFlags Enabled = enabled;
-    public readonly GfxStateFlags Defined  = defined;
-    
+    public readonly GfxStateFlags Defined = defined;
+
     public bool IsEmpty => Enabled == 0 && Defined == 0;
 
     public bool IsSet(GfxStateFlags flag) => (Defined & flag) != 0;
     public bool IsEnabled(GfxStateFlags flag) => (Enabled & flag) != 0;
-    
+
     public GfxPassState Filter(GfxStateFlags flags) => new(Enabled & flags, Defined & flags);
 
     public static GfxPassState Enable(GfxStateFlags flags) => new(flags, flags);
@@ -67,14 +67,14 @@ public readonly struct GfxPassState(GfxStateFlags enabled, GfxStateFlags defined
             defined: DepthTest | DepthWrite | Cull | Blend | Scissor | FramebufferSrgb | ColorMask |
                      PolygonOffset | SampleAlphaCoverage
         );
-    
+
     public static GfxPassState MakeSceneEffect() =>
         new(
             enabled: Blend | Cull | FramebufferSrgb | ColorMask | SampleAlphaCoverage,
             defined: DepthTest | DepthWrite | Cull | Blend | Scissor | FramebufferSrgb | ColorMask |
                      PolygonOffset | SampleAlphaCoverage
         );
-    
+
 
     public static GfxPassState MakeShadow() =>
         new(
@@ -122,17 +122,18 @@ public readonly record struct GfxPassStateFunc(
 
     public static GfxPassStateFunc MakeDepth() =>
         new(BlendMode.Unset, CullMode.FrontCcw, DepthMode.Lequal, PolygonOffsetLevel.Medium);
-    
 }
 
 public readonly struct GfxPassClear(in Color4 clearColor, ClearBufferFlag clearBuffer)
 {
     public readonly Color4 ClearColor = clearColor;
-    public readonly ClearBufferFlag ClearBuffer  = clearBuffer;
+    public readonly ClearBufferFlag ClearBuffer = clearBuffer;
 
     public static GfxPassClear MakeColorClear(Color4 clearColor) => new(in clearColor, ClearBufferFlag.Color);
-    public static GfxPassClear MakeColorDepthClear(Color4 clearColor) => new(in clearColor, ClearBufferFlag.ColorAndDepth);
+
+    public static GfxPassClear MakeColorDepthClear(Color4 clearColor) =>
+        new(in clearColor, ClearBufferFlag.ColorAndDepth);
+
     public static GfxPassClear MakeDepthClear() => new(Color4.Black, ClearBufferFlag.Depth);
     public static GfxPassClear MakeNoClear() => new(Color4.Black, ClearBufferFlag.None);
-
 }

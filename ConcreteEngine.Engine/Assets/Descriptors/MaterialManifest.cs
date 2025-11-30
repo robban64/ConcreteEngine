@@ -18,12 +18,13 @@ public sealed class MaterialManifest : IAssetCatalog
     IReadOnlyList<IAssetDescriptor> IAssetCatalog.Records => Records;
 }
 
-public sealed record MaterialDescriptor(
-    string Name,
-    string? Shader = null,
-    AssetLoadingMode LoadMode = AssetLoadingMode.Processed) : IAssetDescriptor
+public sealed class MaterialDescriptor : IAssetDescriptor
 {
-    public AssetKind Kind => AssetKind.Material;
+    public AssetKind Kind => AssetKind.MaterialTemplate;
+
+    public required string Name { get; init; }
+    public string? Shader { get; init; }
+    public AssetLoadingMode LoadMode { get; init; } = AssetLoadingMode.Processed;
 
     public bool DepthWrite { get; init; } = true;
     public bool ReceiveShadows { get; init; } = true;
@@ -35,21 +36,25 @@ public sealed record MaterialDescriptor(
     public MaterialParamsDesc Parameters { get; init; } = new();
     public TextureSlot[] TextureSlots { get; init; } = Array.Empty<TextureSlot>();
 
-    public sealed record TextureSlotBinds(bool AlphaMask = false, bool Normals = false, bool Shadows = false);
+    //public record struct TextureSlotBinds(bool AlphaMask = false, bool Normals = false, bool Shadows = false);
 
-    public sealed record TextureSlot(
-        string Name,
-        int Slot,
-        [property: JsonPropertyName("slotKind")]
-        TextureSlotKind SlotKind,
-        [property: JsonPropertyName("textureKind")]
-        TextureKind TextureKind = TextureKind.Texture2D,
-        bool Internal = true,
-        bool Srgb = true);
+    public sealed class TextureSlot
+    {
+        public string Name { get; init; }
+        public int Slot { get; init; }
 
-    public sealed record MaterialParamsDesc(
-        Color4? Color = null,
-        float? Shininess = null,
-        float? Specular = null,
-        float? UvRepeat = null);
+        [JsonPropertyName("slotKind")] public TextureSlotKind SlotKind { get; init; }
+
+        [JsonPropertyName("textureKind")] public TextureKind TextureKind { get; init; } = TextureKind.Texture2D;
+
+        public bool Srgb { get; init; } = true;
+    }
+
+    public sealed class MaterialParamsDesc
+    {
+        public Color4? Color { get; init; }
+        public float? Shininess { get; init; }
+        public float? Specular { get; init; }
+        public float? UvRepeat { get; init; }
+    }
 }

@@ -60,6 +60,7 @@ public sealed class Camera3D : ICamera
     public Vector3 Right => Vector3.Normalize(Vector3.Transform(Vector3.UnitX, _rotation));
     public Vector3 Up => Vector3.Normalize(Vector3.Transform(Vector3.UnitY, _rotation));
     public Vector3 Forward => Vector3.Normalize(Vector3.Transform(-Vector3.UnitZ, _rotation));
+    public ProjectionInfoData ProjectionInfo => new(_aspectRatio, _fov, _nearPlane, _farPlane);
 
     public YawPitch Orientation
     {
@@ -182,9 +183,9 @@ public sealed class Camera3D : ICamera
     {
         get
         {
-            if(_raycaster.Generation != Generation)
+            if (_raycaster.Generation != Generation)
                 _raycaster.UpdateFromCamera(Generation, _viewportSize, in _viewMatrix, in _projectionMatrix);
-            
+
             return _raycaster;
         }
     }
@@ -206,7 +207,7 @@ public sealed class Camera3D : ICamera
         viewSnapshot.ViewMatrix = viewMatrix;
         viewSnapshot.ProjectionMatrix = _projectionMatrix;
         viewSnapshot.ProjectionViewMatrix = viewMatrix * _projectionMatrix;
-        viewSnapshot.ProjectionInfo = new ProjectionInfoData(_aspectRatio, _fov, _nearPlane, _farPlane);
+        viewSnapshot.ProjectionInfo = ProjectionInfo;
         viewSnapshot.Position = camPos;
         viewSnapshot.Rotation = camRot;
     }

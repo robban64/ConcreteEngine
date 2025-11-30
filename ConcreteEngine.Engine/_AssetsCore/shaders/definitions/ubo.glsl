@@ -53,7 +53,13 @@ uniform DrawUniform {
     vec4 uNormalCol0;
     vec4 uNormalCol1;
     vec4 uNormalCol2;
+    vec4 _paddingCol3;
 };
+
+uniform DrawAnimationUniform {
+    mat4 uJointTransforms[64];
+};
+
 
 uniform PostUniform {
     vec4 uGrade;

@@ -1,0 +1,26 @@
+#region
+
+using System.Numerics;
+using ConcreteEngine.Common.Numerics;
+
+#endregion
+
+namespace ConcreteEngine.Engine.Assets.Descriptors;
+
+internal struct MaterialImportParams
+{
+    public Color4 Color;
+    public Vector4 Specular;
+    public float Opacity;
+    public float SpecularFactor;
+    public float Shininess;
+    //public float UvRepeat;
+
+    public bool HasColor;
+    public bool HasOpacity;
+    public bool HasSpecularFactor;
+    public bool HasSpecular;
+
+    public bool HasShininess;
+    //public bool HasUvRepeat;
+}

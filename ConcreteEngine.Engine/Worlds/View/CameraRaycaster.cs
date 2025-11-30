@@ -1,6 +1,10 @@
+#region
+
 using System.Numerics;
 using ConcreteEngine.Common.Numerics;
 using ConcreteEngine.Common.Numerics.Maths;
+
+#endregion
 
 namespace ConcreteEngine.Engine.Worlds.View;
 

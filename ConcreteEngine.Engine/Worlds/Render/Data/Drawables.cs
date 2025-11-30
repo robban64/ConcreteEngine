@@ -1,14 +1,15 @@
 #region
 
+using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
 using ConcreteEngine.Common.Numerics;
+using ConcreteEngine.Engine.Worlds.Data;
 using ConcreteEngine.Engine.Worlds.Entities;
-using ConcreteEngine.Renderer.Data;
 using ConcreteEngine.Renderer.Definitions;
 
 #endregion
 
-namespace ConcreteEngine.Engine.Worlds.Data;
+namespace ConcreteEngine.Engine.Worlds.Render.Data;
 /*
 [StructLayout(LayoutKind.Sequential)]
 public struct DrawEntity(
@@ -45,6 +46,7 @@ public struct DrawEntity
     public short AnimatedSlot;
     public byte PartLength;
     public bool IsSelected;
+    
 }
 
 [StructLayout(LayoutKind.Sequential)]

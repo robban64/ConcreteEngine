@@ -5,7 +5,7 @@ using ConcreteEngine.Common.Numerics;
 using ConcreteEngine.Common.Numerics.Maths;
 using ConcreteEngine.Engine.Worlds.Entities;
 using ConcreteEngine.Engine.Worlds.Render.Data;
-using ConcreteEngine.Engine.Worlds.Tables;
+using ConcreteEngine.Engine.Worlds.Render.Tables;
 using ConcreteEngine.Renderer.Data;
 using ConcreteEngine.Renderer.Draw;
 
@@ -13,30 +13,23 @@ namespace ConcreteEngine.Engine.Worlds.Render;
 
 internal sealed class AnimatorProcessor
 {
-    //private readonly Matrix4x4[] _animationGlobals = new Matrix4x4[64];
-    // private readonly Matrix4x4[] _animationFinal = new Matrix4x4[64];
+    public const int BoneCap = AnimationTable.BoneCap;
 
-    //private readonly WorldEntities _entities;
-    private readonly MeshTable _meshTable;
     private readonly AnimationTable _animationTable;
+    private readonly Matrix4x4[] _buffer = new Matrix4x4[64 * 64]; // move later
 
-
-    public AnimatorProcessor(MeshTable meshTable, AnimationTable animationTable)
+    public AnimatorProcessor(AnimationTable animationTable)
     {
-        _meshTable = meshTable;
         _animationTable = animationTable;
     }
 
-    private Matrix4x4[] _buffer = new  Matrix4x4[64*64];
 
     [SkipLocalsInit]
     public void ProcessAnimations(float deltaTime, WorldEntities entities, DrawCommandBuffer buffer,
         RenderFrameContext ctx)
     {
-        Span<Matrix4x4> globals = stackalloc Matrix4x4[64];
+        Span<Matrix4x4> globals = stackalloc Matrix4x4[BoneCap];
         globals.Fill(Matrix4x4.Identity);
-
-       // new AnimationUniformWriter(ref finalResult).FillIdentity(new Range32(0, 64));
 
         int idx = 0;
         foreach (var query in entities.Query<AnimationComponent>())
@@ -46,24 +39,24 @@ internal sealed class AnimatorProcessor
 
             var view = _animationTable.GetModelAnimationView(component.Animation);
             int boneLength = view.ParentIndices.Length;
-
-
             var clipTrack = view.GetClip(0);
 
             if ((uint)boneLength > globals.Length ||
+                (uint)boneLength > view.BoneTransforms.Length ||
+                (uint)boneLength > view.NodeTransforms.Length ||
+                (uint)boneLength > view.ParentIndices.Length ||
                 (uint)boneLength > clipTrack.Length)
             {
                 throw new IndexOutOfRangeException();
             }
 
-
-            var finals = _buffer.AsSpan(idx * 64, 64);
-            Matrix4x4 local ;
+            var finals = _buffer.AsSpan(idx * BoneCap, BoneCap);
+            Matrix4x4 result = default;
             for (int i = 0; i < boneLength; i++)
             {
                 ref readonly var track = ref clipTrack[i];
-                
-                  local = track.IsEmpty
+
+                var local = track.IsEmpty
                     ? view.NodeTransforms[i]
                     : SampleKeyFrame(track.Translations, track.Rotations, time);
 
@@ -72,19 +65,23 @@ internal sealed class AnimatorProcessor
                     MatrixMath.WriteMultiplyAffine(ref globals[i], in local, in globals[p]);
                 else
                     globals[i] = local;
-                
-                MatrixMath.WriteMultiplyAffine(ref local, in view.BoneTransforms[i], in globals[i]);
-                MatrixMath.WriteMultiplyAffine(ref finals[i], in local, in view.InvTransform);
+
+                MatrixMath.WriteMultiplyAffine(ref result, in view.BoneTransforms[i], in globals[i]);
+                MatrixMath.WriteMultiplyAffine(ref finals[i], in result, in view.InvTransform);
                 //finals[i] = boneTransforms[i] * globals[i] * invMatrix;
             }
 
-            int noneBoneLength = 64 - boneLength;
-            finals.Slice(boneLength, noneBoneLength).Fill(Matrix4x4.Identity);
-            ctx.GetByEntityId(query.Entity).AnimatedSlot = (short)idx;
+            ref var drawEntity = ref ctx.GetByEntityId(query.Entity);
+            if (drawEntity.AnimatedSlot == -1)
+            {
+                int noneBoneLength = BoneCap - boneLength;
+                finals.Slice(boneLength, noneBoneLength).Fill(Matrix4x4.Identity);
+                drawEntity.AnimatedSlot = (short)idx;
+            }
             idx++;
         }
 
-        buffer.SubmitAnimationData(_buffer.AsSpan(0, idx*64));
+        buffer.SubmitAnimationData(_buffer.AsSpan(0, idx * BoneCap));
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]

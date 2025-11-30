@@ -11,7 +11,7 @@ using ConcreteEngine.Common.Time;
 using ConcreteEngine.Engine.Worlds.Data;
 using ConcreteEngine.Engine.Worlds.Entities;
 using ConcreteEngine.Engine.Worlds.Render.Data;
-using ConcreteEngine.Engine.Worlds.Tables;
+using ConcreteEngine.Engine.Worlds.Render.Tables;
 using ConcreteEngine.Engine.Worlds.Utility;
 using ConcreteEngine.Renderer.Data;
 using ConcreteEngine.Renderer.Definitions;
@@ -48,7 +48,7 @@ internal sealed class RenderEntityBus
         _meshTable = meshTable;
         _materialTable = materialTable;
         _animationTable = animationTable;
-        _animatorProcessor = new AnimatorProcessor(_meshTable, _animationTable);
+        _animatorProcessor = new AnimatorProcessor(_animationTable);
     }
 
     private int ActiveSkyCount => _world?.Sky.IsActive ?? false ? 1 : 0;
@@ -70,81 +70,82 @@ internal sealed class RenderEntityBus
         if (_world is null) return;
 
         EnsureFullCapacity(DrawCount);
-
+        _timer.Begin();
         CollectModelEntities();
         ProcessCollectedEntities();
         CalculateDepthKey();
+        _timer.EndPrint();
 
         var ctx = new RenderFrameContext
         {
             EntitySpan = _entities.AsSpan(0, _idx), EntityByIdSpan = _byEntityId.AsSpan(),
         };
-        _timer.Begin();
         _animatorProcessor.ProcessAnimations(deltaTime, _world.Entities, buffer, ctx);
-        _timer.EndPrint();
     }
 
     private void CollectModelEntities()
     {
+        if (_entityData.Length == 0 || _entities.Length == 0) return;
+
         var worldEntities = _world!.Entities;
-        var selected = WorldActionSlot.SelectedEntityId;
 
-        var idxCollect = 0;
-        foreach (var query in worldEntities.Query<ModelComponent>())
-        {
-            //Debug.Assert(model.Model != default && model.MaterialKey != default);
-            ref readonly var model = ref query.Component;
-            ref var entity = ref _entities[idxCollect];
-            _byEntityId[entity.Entity] = idxCollect++;
-
-            var meta = new DrawEntityCommandMeta(DrawCommandId.Model, DrawCommandQueue.Opaque, DrawCommandResolver.None,
-                PassMask.Default, 0);
-
-            if (query.Entity == selected)
-            {
-                entity.IsSelected = true;
-                meta = meta with
-                {
-                    PassMask = PassMask.Effect | PassMask.DepthPre, Resolver = DrawCommandResolver.BoundingVolume
-                };
-            }
-
-            entity.PartLength = (byte)_meshTable.GetPartLengthFor(model.Model);
-            entity.IsSelected = selected == query.Entity;
-            entity.Entity = query.Entity;
-            entity.Model = model.Model;
-            entity.MaterialKey = model.MaterialKey;
-            entity.CommandMeta = meta;
-            entity.AnimatedSlot = -1;
-        }
-
-        _idx = idxCollect;
-    }
-
-    private void ProcessCollectedEntities()
-    {
-        var worldEntities = _world!.Entities;
+        var len = worldEntities.EntityCount;
+        if ((uint)len > _entities.Length || (uint)len > _entityData.Length || (uint)len > _byEntityId.Length)
+            throw new IndexOutOfRangeException();
 
         var boundsView = _meshTable.GetModelBoundSpan();
 
         var idx = 0;
-        ref var d0 = ref MemoryMarshal.GetReference(_entityData);
-        foreach (var query in worldEntities.Query<Transform>())
+        foreach (var query in worldEntities.Query<ModelComponent, Transform>())
         {
-            ref var transform = ref query.Component;
+            //Debug.Assert(model.Model != default && model.MaterialKey != default);
+            ref readonly var model = ref query.Component1;
+            ref readonly var transform = ref query.Component2;
 
             ref var entity = ref _entities[idx];
-            ref var entityData = ref Unsafe.Add(ref d0, idx);
+            ref var entityData = ref _entityData[idx];
+
+            _byEntityId[entity.Entity] = idx;
+
+            entity.PartLength = (byte)_meshTable.GetPartLengthFor(model.Model);
+            entity.IsSelected = false;
+            entity.Entity = query.Entity;
+            entity.Model = model.Model;
+            entity.MaterialKey = model.MaterialKey;
+            entity.CommandMeta = new DrawEntityCommandMeta(DrawCommandId.Model, DrawCommandQueue.Opaque,
+                DrawCommandResolver.None, PassMask.Default, 0);
+            entity.AnimatedSlot = -1;
+
             entityData.Transform = transform;
             boundsView.WriteModelBoundingBox(entity.Model, out entityData.Bounds);
+
             idx++;
+        }
+
+        _idx = idx;
+    }
+
+    private void ProcessCollectedEntities()
+    {
+        var selected = WorldActionSlot.SelectedEntityId;
+        if (selected > 0)
+        {
+            var idx = _byEntityId[selected];
+            ref var entity = ref _entities[idx];
+            entity.IsSelected = true;
+            entity.CommandMeta = entity.CommandMeta with
+            {
+                PassMask = PassMask.Effect | PassMask.DepthPre, Resolver = DrawCommandResolver.Highlight
+            };
         }
     }
 
     private void CalculateDepthKey()
     {
+        if (_entityData.Length == 0 || _entities.Length == 0) return;
+
         var projInfo = RenderDataSlot.ProjectionInfo;
-        var viewMatrix = RenderDataSlot.ViewData.ViewMatrix;
+        var view = DepthKeyUtility.ExtractView(RenderDataSlot.ViewData.ViewMatrix);
         float near = projInfo.Near, far = projInfo.Far;
 
         var len = _idx;
@@ -156,7 +157,7 @@ internal sealed class RenderEntityBus
         {
             ref var entity = ref _entities[i];
             ref readonly var entityData = ref _entityData[i];
-            var depthKey = DepthKeyUtility.MakeDepthKey(in viewMatrix, entityData.Transform.Translation, near, far);
+            var depthKey = DepthKeyUtility.MakeDepthKey(in view, entityData.Transform.Translation, near, far);
             entity.CommandMeta = entity.CommandMeta with { DepthKey = depthKey };
         }
     }

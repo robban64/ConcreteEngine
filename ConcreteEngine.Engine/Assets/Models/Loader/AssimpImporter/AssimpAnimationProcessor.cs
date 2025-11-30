@@ -89,7 +89,7 @@ internal sealed class AssimpAnimationProcessor(ModelLoaderDataTable dataTable, M
                     continue;
                 }
 
-                var boneTrack = new BoneClipTrack();
+                var boneTrack = new AnimationClip.Track();
 
                 // Position
                 var posKeys = channel->MPositionKeys;

@@ -11,7 +11,7 @@ using ConcreteEngine.Graphics.Gfx.Resources;
 
 #endregion
 
-namespace ConcreteEngine.Engine.Worlds.Tables;
+namespace ConcreteEngine.Engine.Worlds.Render.Tables;
 
 public interface IMeshTable
 {

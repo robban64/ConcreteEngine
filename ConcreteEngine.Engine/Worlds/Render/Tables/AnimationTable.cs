@@ -1,12 +1,11 @@
 using System.Numerics;
 using ConcreteEngine.Common.Collections;
-using ConcreteEngine.Common.Numerics;
 using ConcreteEngine.Engine.Assets;
 using ConcreteEngine.Engine.Assets.Models;
 using ConcreteEngine.Engine.Worlds.Data;
 using ConcreteEngine.Engine.Worlds.Render.Data;
 
-namespace ConcreteEngine.Engine.Worlds.Tables;
+namespace ConcreteEngine.Engine.Worlds.Render.Tables;
 
 public unsafe struct AnimationClipData
 {
@@ -22,10 +21,9 @@ internal sealed class AnimationTable
     private const int DefaultAnimatedModelCap = 64;
     private const int DefaultBoneBufferCap = 64 * DefaultAnimatedModelCap;
 
-    private static AnimationId MakeId() => new (++_idx);
-    private static int _idx = 0;
+    private AnimationId MakeId() => new (++_idx);
+    private int _idx = 0;
 
-    //private RangeU16[] _modelBoneRanges = new RangeU16[DefaultClipCap];
     private int[] _idxToModel = new int[DefaultAnimatedModelCap];
     private BoneTrack[][][] _clips = new BoneTrack[DefaultAnimatedModelCap][][];
     private Matrix4x4[] _modelBoneInvTransform = new Matrix4x4[DefaultAnimatedModelCap];
@@ -33,9 +31,6 @@ internal sealed class AnimationTable
     private int[] _parentIndices = new int[DefaultBoneBufferCap];
     private Matrix4x4[] _boneTransforms = new Matrix4x4[DefaultBoneBufferCap];
     private Matrix4x4[] _nodeTransforms = new Matrix4x4[DefaultBoneBufferCap];
-
-    // private RangeU16[] _clipTrackRanges = new RangeU16[DefaultClipCap];
-    //private BoneClipTrack[] _clipBoneTrack = new BoneClipTrack[DefaultBoneBufferCap];
 
     public int TotalBones { get; private set; }
     public int TotalClips { get; private set; }

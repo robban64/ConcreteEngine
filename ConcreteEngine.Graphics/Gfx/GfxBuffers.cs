@@ -2,6 +2,7 @@
 
 using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
+using ConcreteEngine.Common;
 using ConcreteEngine.Graphics.Error;
 using ConcreteEngine.Graphics.Gfx.Contracts;
 using ConcreteEngine.Graphics.Gfx.Definitions;
@@ -116,9 +117,15 @@ public sealed class GfxBuffers
         if (meta.Capacity == capacity) return;
         var newMeta = UniformBufferMeta.MakeResizeCopy(in meta, capacity);
         _uboStore.ReplaceMeta(uboId, in newMeta, out _);
-
         _driverBuffer.ResizeUniformBuffer(refToken, capacity, BufferUsage.DynamicDraw);
     }
+
+    public void ClearUniformBufferData(UniformBufferId uboId)
+    {
+        var refToken = _uboStore.GetRefAndMeta(uboId, out var meta);
+        _driverBuffer.ResizeUniformBuffer(refToken, meta.Capacity, BufferUsage.DynamicDraw);
+    }
+
 
     public void UploadVertexBuffer<T>(VertexBufferId vboId, ReadOnlySpan<T> data, int offsetElements)
         where T : unmanaged
@@ -152,17 +159,24 @@ public sealed class GfxBuffers
 
     public void UploadUniformGpuSpan<T>(UniformBufferId uboId, ReadOnlySpan<T> data, nint offset) where T : unmanaged
     {
-        //UniformBufferUtils.IsStd140AlignedOrThrow<T>(out nint stride);
-        var uboRef = _uboStore.GetRefHandle(uboId);
-        _driverBuffer.UploadUniformBufferData(uboRef, MemoryMarshal.AsBytes(data), offset,
-            Unsafe.SizeOf<T>() * data.Length);
+        UniformBufferUtils.IsStd140AlignedOrThrow<T>(out nint stride);
+        var uboRef = _uboStore.GetRefAndMeta(uboId, out var meta);
+        var len = stride * data.Length;
+
+        if (stride != meta.Stride)
+            GraphicsException.ThrowInvalidBufferData(nameof(T), $"Invalid stride {stride},  expected {meta.Stride}");
+
+        if ((offset + len) > meta.Capacity)
+            GraphicsException.ThrowCapabilityExceeded(nameof(T), (int)len, (int)meta.Capacity);
+
+        _driverBuffer.UploadUniformBufferData(uboRef, MemoryMarshal.AsBytes(data), offset, len);
     }
-    
-    public void UploadUniformBytes(UniformBufferId uboId, ReadOnlySpan<byte> data, int stride, nint offset)
+
+    public void UploadUniformBytes(UniformBufferId uboId, ReadOnlySpan<byte> data, int stride, int length, nint offset)
     {
         //UniformBufferUtils.IsStd140AlignedOrThrow<T>(out nint stride);
         var uboRef = _uboStore.GetRefHandle(uboId);
-        _driverBuffer.UploadUniformBufferData(uboRef, MemoryMarshal.AsBytes(data), offset, stride * data.Length);
+        _driverBuffer.UploadUniformBufferData(uboRef, MemoryMarshal.AsBytes(data), offset, stride * length);
     }
 
     public void BindUniformBufferRange(UniformBufferId uboId, nint offset, nint size)

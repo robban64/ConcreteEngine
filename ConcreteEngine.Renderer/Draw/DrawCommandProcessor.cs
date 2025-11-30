@@ -52,7 +52,7 @@ internal sealed class DrawCommandProcessor
         }
     }
 
-    public void SubmitAnimationData(ReadOnlySpan<DrawAnimationUniform> boneData) =>
+    public void SubmitAnimationData(ReadOnlySpan<Matrix4x4> boneData) =>
         _buffers.UploadAnimationData(boneData);
 
     public void DrawMesh(DrawCommand cmd, DrawCommandTicket ticket)

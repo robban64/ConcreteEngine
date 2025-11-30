@@ -48,18 +48,22 @@ public static class MatrixMath
         dest.M11 = a.M11 * b.M11 + a.M12 * b.M21 + a.M13 * b.M31;
         dest.M12 = a.M11 * b.M12 + a.M12 * b.M22 + a.M13 * b.M32;
         dest.M13 = a.M11 * b.M13 + a.M12 * b.M23 + a.M13 * b.M33;
+        dest.M14 = 0f;
 
         dest.M21 = a.M21 * b.M11 + a.M22 * b.M21 + a.M23 * b.M31;
         dest.M22 = a.M21 * b.M12 + a.M22 * b.M22 + a.M23 * b.M32;
         dest.M23 = a.M21 * b.M13 + a.M22 * b.M23 + a.M23 * b.M33;
+        dest.M24 = 0f;
 
         dest.M31 = a.M31 * b.M11 + a.M32 * b.M21 + a.M33 * b.M31;
         dest.M32 = a.M31 * b.M12 + a.M32 * b.M22 + a.M33 * b.M32;
         dest.M33 = a.M31 * b.M13 + a.M32 * b.M23 + a.M33 * b.M33;
+        dest.M34 = 0f;
 
         dest.M41 = a.M41 * b.M11 + a.M42 * b.M21 + a.M43 * b.M31 + b.M41;
         dest.M42 = a.M41 * b.M12 + a.M42 * b.M22 + a.M43 * b.M32 + b.M42;
         dest.M43 = a.M41 * b.M13 + a.M42 * b.M23 + a.M43 * b.M33 + b.M43;
+        dest.M44 = 1f;
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]

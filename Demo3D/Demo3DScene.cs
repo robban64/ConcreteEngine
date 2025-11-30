@@ -102,7 +102,7 @@ public sealed class Demo3DScene : GameScene
         var cesiumMatKey = worldMaterials.Add(MaterialTagBuilder.BuildOne(cesiumMat.Id));
         var cesiumClip = cesiumModel.Animation![0];
 
-        for(int i = 0; i < 20; i++){
+        for(int i = 0; i < 60; i++){
             var entity = worldEntities.Create();
 
             worldEntities.Models.Add(entity,

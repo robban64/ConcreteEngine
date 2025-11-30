@@ -49,7 +49,7 @@ public sealed class DrawCommandBuffer
         _processor = cmd;
     }
 
-    public void SubmitAnimationData(ReadOnlySpan<DrawAnimationUniform> boneData)
+    public void SubmitAnimationData(ReadOnlySpan<Matrix4x4> boneData)
     {
         _processor.SubmitAnimationData(boneData);
     }

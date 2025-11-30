@@ -75,7 +75,7 @@ internal sealed class DrawBuffers
         _shadowUbo = registry.GetRenderUbo<ShadowUboTag>().Id;
         _postUbo = registry.GetRenderUbo<PostUboTag>().Id;
 
-        _animationUbo.SetCapacity(_animationUbo.Stride * 40);
+        _animationUbo.SetCapacity(_animationUbo.Stride * 64);
         _gfxBuffers.SetUniformBufferCapacity(_animationUbo.Id, _animationUbo.Capacity);
     }
 
@@ -145,7 +145,7 @@ internal sealed class DrawBuffers
     public void UploadDrawObjects(ReadOnlySpan<DrawObjectUniform> data) =>
         _gfxBuffers.UploadUniformGpuSpan(_drawUbo.Id, data, _drawUbo.SetUploadCursor(0));
 
-    public void UploadAnimationData(ReadOnlySpan<DrawAnimationUniform> boneData)
+    public void UploadAnimationData(ReadOnlySpan<Matrix4x4> boneData)
     {
         var uploadSize = _animationUbo.GetCapacityFor(boneData.Length);
         if (uploadSize > _animationUbo.Capacity)
@@ -154,7 +154,9 @@ internal sealed class DrawBuffers
             _gfxBuffers.SetUniformBufferCapacity(_animationUbo.Id, uploadSize);
         }
 
-        _gfxBuffers.UploadUniformGpuSpan(_animationUbo.Id, boneData, 0);
+        _gfxBuffers.UploadUniformBytes(_animationUbo.Id, MemoryMarshal.AsBytes(boneData),Unsafe.SizeOf<Matrix4x4>(), boneData.Length, 0);
+
+        //_gfxBuffers.UploadUniformGpuSpan(_animationUbo.Id, boneData, 0);
 
     }
 

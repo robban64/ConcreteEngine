@@ -4,6 +4,8 @@
 
 #region
 
+#region
+
 using ConcreteEngine.Editor;
 using ConcreteEngine.Editor.Data;
 using ConcreteEngine.Editor.DataState;
@@ -23,6 +25,8 @@ using Silk.NET.Windowing;
 using ConcreteEngine.Engine.Editor.Controller;
 using ConcreteEngine.Renderer.State;
 using EditorCmd = ConcreteEngine.Editor.CommandDispatcher;
+
+#endregion
 
 #endregion
 

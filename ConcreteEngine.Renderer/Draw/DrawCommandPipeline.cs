@@ -1,7 +1,6 @@
 #region
 
 using System.Runtime.CompilerServices;
-using ConcreteEngine.Common.Time;
 using ConcreteEngine.Graphics.Gfx.Utility;
 using ConcreteEngine.Renderer.Data;
 using ConcreteEngine.Renderer.Passes;
@@ -101,13 +100,12 @@ internal sealed class DrawCommandPipeline
 
 
         var transformPayload = _commandBuffer.DrainTransformBuffer();
-        if(transformPayload.Length > 0)
+        if (transformPayload.Length > 0)
             _drawBuffers.UploadDrawObjects(transformPayload);
-        
-        var animationPayload = _commandBuffer.DrainBoneTransformBuffer();
-        if(animationPayload.Length > 0)
-            _drawBuffers.UploadAnimationData(animationPayload);
 
+        var animationPayload = _commandBuffer.DrainBoneTransformBuffer();
+        if (animationPayload.Length > 0)
+            _drawBuffers.UploadAnimationData(animationPayload);
     }
 
     internal void ExecuteDrawPass(PassId passId, bool defaultDraw)

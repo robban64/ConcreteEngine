@@ -48,11 +48,11 @@ public struct AnimationComponent(ModelId model, AnimationId animation)
     public float Time = 0f;
     public float Speed = 1f;
     public float Duration = 1f;
-    
+
     public float AdvanceTime(float deltaTime)
     {
         Time += deltaTime * Speed;
-        if(Time > Duration)
+        if (Time > Duration)
             Time = 0;
 
         return Time;

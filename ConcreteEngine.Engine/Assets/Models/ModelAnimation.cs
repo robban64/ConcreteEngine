@@ -52,6 +52,6 @@ public sealed class ModelAnimation
     public ReadOnlySpan<Matrix4x4> NodeTransformSpan => _nodeTransforms;
     internal ReadOnlySpan<AnimationClip> ClipDataSpan => _clips;
     public int DefinedBoneCount => _boneOffsetMatrix.Length;
-    
+
     public AnimationClip this[int index] => _clips[index];
 }

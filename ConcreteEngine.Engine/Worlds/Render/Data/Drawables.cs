@@ -1,6 +1,5 @@
 #region
 
-using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
 using ConcreteEngine.Common.Numerics;
 using ConcreteEngine.Engine.Worlds.Data;
@@ -46,7 +45,6 @@ public struct DrawEntity
     public short AnimatedSlot;
     public byte PartLength;
     public bool IsSelected;
-    
 }
 
 [StructLayout(LayoutKind.Sequential)]
@@ -58,12 +56,13 @@ public readonly struct DrawEntityCommandMeta(
     ushort depthKey)
 {
     public DrawCommandId CommandId { get; init; } = commandId;
-    public DrawCommandQueue Queue { get; init;} = queue;
-    public DrawCommandResolver Resolver { get; init;} = resolver;
-    public PassMask PassMask { get; init;} = passMask;
-    public ushort DepthKey { get;init; } = depthKey;
+    public DrawCommandQueue Queue { get; init; } = queue;
+    public DrawCommandResolver Resolver { get; init; } = resolver;
+    public PassMask PassMask { get; init; } = passMask;
+    public ushort DepthKey { get; init; } = depthKey;
 
-    public void Deconstruct(out DrawCommandId commandId, out DrawCommandQueue queue, out DrawCommandResolver resolver, out PassMask passMask, out ushort depthKey)
+    public void Deconstruct(out DrawCommandId commandId, out DrawCommandQueue queue, out DrawCommandResolver resolver,
+        out PassMask passMask, out ushort depthKey)
     {
         commandId = CommandId;
         queue = Queue;

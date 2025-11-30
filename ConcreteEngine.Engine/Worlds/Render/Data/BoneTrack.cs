@@ -1,5 +1,9 @@
+#region
+
 using System.Numerics;
 using System.Runtime.CompilerServices;
+
+#endregion
 
 namespace ConcreteEngine.Engine.Worlds.Render.Data;
 

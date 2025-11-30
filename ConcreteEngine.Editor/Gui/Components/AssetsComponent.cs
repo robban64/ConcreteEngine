@@ -23,7 +23,7 @@ internal static class AssetsComponent
 
     private static void OnCategoryChanged(EditorAssetCategory category)
     {
-        if(category == ViewModel.Category) return;
+        if (category == ViewModel.Category) return;
         ViewModel.Category = category;
         Model.TriggerEvent(EventKey.CategoryChanged);
     }

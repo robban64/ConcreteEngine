@@ -1,8 +1,6 @@
 #region
 
-using System.Diagnostics;
 using ConcreteEngine.Common;
-using ConcreteEngine.Common.Time;
 using ConcreteEngine.Engine.Assets.Data;
 using ConcreteEngine.Engine.Assets.Internal;
 using ConcreteEngine.Engine.Assets.IO;
@@ -34,11 +32,11 @@ internal sealed class ModelLoader
 
         _state.Start(name, fileName);
         _dataTable.Clear();
-        
+
         //
         _modelAssimpImporter.ImportMesh(path);
         //
-        
+
         InvalidOpThrower.ThrowIf(_state.MeshCount == 0);
 
         var drawCount = 0;
@@ -82,11 +80,10 @@ internal sealed class ModelLoader
 
         _state.Clear();
         _state = null!;
-        
+
         _modelAssimpImporter.Teardown();
         _modelAssimpImporter = null!;
-        
-        Console.WriteLine("Teardown complete.");
 
+        Console.WriteLine("Teardown complete.");
     }
 }

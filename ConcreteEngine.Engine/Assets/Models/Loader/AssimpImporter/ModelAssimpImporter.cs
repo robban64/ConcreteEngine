@@ -5,9 +5,7 @@ using ConcreteEngine.Common.Numerics;
 using ConcreteEngine.Common.Numerics.Maths;
 using ConcreteEngine.Engine.Assets.Internal;
 using Silk.NET.Assimp;
-using Silk.NET.Maths;
 using static ConcreteEngine.Engine.Assets.Models.Loader.AssimpImporter.ImportModelUtils;
-using AssimpMesh = Silk.NET.Assimp.Mesh;
 using AssimpScene = Silk.NET.Assimp.Scene;
 using AssimpNode = Silk.NET.Assimp.Node;
 
@@ -106,7 +104,6 @@ internal sealed class ModelAssimpImporter
             {
                 info = _meshProcessor.ProcessAndUploadMeshes(mesh, meshIndex, _gfxUploader, out bounds);
                 _dataTable.WriteMeshParts().Fill(meshIndex, slot, info, in bounds, in local);
-
             }
             //var writer = _dataTable.WriteMeshParts();
             //writer.Fill(traverseIndex, slot, info, in bounds, in local);

@@ -1,5 +1,9 @@
+#region
+
 using System.Numerics;
 using System.Runtime.CompilerServices;
+
+#endregion
 
 namespace ConcreteEngine.Common.Numerics.Maths;
 
@@ -12,7 +16,7 @@ public struct FastRandom
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public float RandomFloat(float min, float max) => min + NextFloat() * (max - min);
-    
+
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public float RandomFloat(Vector2 minMax) => minMax.X + NextFloat() * (minMax.Y - minMax.X);
 

@@ -1,7 +1,6 @@
 #region
 
 using System.Runtime.CompilerServices;
-using ConcreteEngine.Common;
 using ConcreteEngine.Common.Numerics;
 using ConcreteEngine.Graphics.Gfx;
 using ConcreteEngine.Graphics.Gfx.Resources;
@@ -13,7 +12,6 @@ namespace ConcreteEngine.Renderer.Registry;
 
 internal sealed class RenderRegistry
 {
-
     public RenderShaderRegistry ShaderRegistry { get; }
 
     public RenderUboRegistry UboRegistry { get; }

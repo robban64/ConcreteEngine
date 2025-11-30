@@ -2,7 +2,6 @@
 
 using System.Numerics;
 using ConcreteEngine.Common.Numerics;
-using ConcreteEngine.Engine.Assets.Models;
 using ConcreteEngine.Engine.Worlds.Data;
 using ConcreteEngine.Graphics.Gfx.Resources;
 
@@ -44,12 +43,11 @@ internal readonly ref struct ModelAnimationView(
     ref Matrix4x4 invTransform)
 {
     public readonly ReadOnlySpan<Matrix4x4> BoneOffsetMatrixSpan = boneOffsetMatrixSpan;
-    public readonly ReadOnlySpan<Matrix4x4> NodeTransformSpan  = nodeTransformSpan;
+    public readonly ReadOnlySpan<Matrix4x4> NodeTransformSpan = nodeTransformSpan;
     public readonly ReadOnlySpan<int> ParentIndexSpan = parentIndexSpan;
     public readonly ref Matrix4x4 InvTransform = ref invTransform;
-    
+
     public int BoneLength => ParentIndexSpan.Length;
 
     public ReadOnlySpan<BoneTrack> GetClip(int clip) => clips[clip];
-
 }

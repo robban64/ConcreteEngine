@@ -45,14 +45,14 @@ internal sealed class ModelState<T> : IModelState where T : class
         KeepAlive = keepAlive;
         _onRefresh = onRefresh;
         _events = events;
-        
-        if(KeepAlive) State = _factory();
+
+        if (KeepAlive) State = _factory();
     }
 
     public void ResetState()
     {
         Active = false;
-        if(!KeepAlive)
+        if (!KeepAlive)
             State = null;
     }
 

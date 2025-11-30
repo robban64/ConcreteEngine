@@ -152,13 +152,11 @@ public sealed class RenderEngine
             case PassOpKind.DrawEffect:
                 _drawPipeline.ExecuteDrawPass(passId, false);
                 break;
-            case PassOpKind.Resolve: 
+            case PassOpKind.Resolve:
                 _passPipeline.ApplyAfterPass();
                 return;
-            
-
-
         }
+
         _passPipeline.ApplyAfterPass();
         /*
         if (passResult.OpKind == PassOpKind.Resolve)

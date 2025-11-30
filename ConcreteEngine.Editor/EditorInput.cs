@@ -1,7 +1,11 @@
+#region
+
 using System.Numerics;
 using ConcreteEngine.Editor.Data;
 using ConcreteEngine.Editor.Definitions;
 using ImGuiNET;
+
+#endregion
 
 namespace ConcreteEngine.Editor;
 
@@ -11,7 +15,7 @@ internal static class EditorInput
 
     private static bool _isDragging;
     private static bool _wasDragging;
-    
+
 
     public static bool BlockInput()
     {
@@ -46,11 +50,11 @@ internal static class EditorInput
     {
         CheckHotkeys();
     }
-    
+
     private static void CheckHotkeys()
     {
-        if(ImGui.IsItemFocused()) return;
-        
+        if (ImGui.IsItemFocused()) return;
+
         if (ImGui.IsKeyDown(ImGuiKey._1)) StateContext.SetLeftSidebarState(LeftSidebarMode.Assets);
         else if (ImGui.IsKeyDown(ImGuiKey._2)) StateContext.SetLeftSidebarState(LeftSidebarMode.Entities);
         else if (ImGui.IsKeyDown(ImGuiKey._3)) StateContext.SetRightSidebarState(RightSidebarMode.Camera);
@@ -58,7 +62,6 @@ internal static class EditorInput
         else if (ImGui.IsKeyDown(ImGuiKey._5)) StateContext.SetRightSidebarState(RightSidebarMode.Sky);
         else if (ImGui.IsKeyDown(ImGuiKey._6)) StateContext.SetRightSidebarState(RightSidebarMode.Terrain);
     }
-
 
 
     public static void UpdateMouse(float delta)

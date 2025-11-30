@@ -1,3 +1,5 @@
+#region
+
 using System.Numerics;
 using ConcreteEngine.Common.Collections;
 using ConcreteEngine.Engine.Assets;
@@ -6,8 +8,9 @@ using ConcreteEngine.Engine.Worlds.Data;
 using ConcreteEngine.Engine.Worlds.Render.Data;
 using ConcreteEngine.Renderer.Data;
 
-namespace ConcreteEngine.Engine.Worlds.Render.Tables;
+#endregion
 
+namespace ConcreteEngine.Engine.Worlds.Render.Tables;
 
 internal sealed class AnimationTable
 {

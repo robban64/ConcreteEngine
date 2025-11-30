@@ -105,7 +105,7 @@ internal sealed class BackendResourceStore<TId, THandle> : IBackendResourceStore
         {
             var newCap = Arrays.CapacityGrowthLinear(len, len * 2, step: 32);
             Console.WriteLine("Backend store resize");
-            
+
             if (newCap > GfxLimits.StoreLimit)
                 throw new InvalidOperationException("Store limit exceeded");
 

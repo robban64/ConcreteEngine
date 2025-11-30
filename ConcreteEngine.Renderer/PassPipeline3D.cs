@@ -1,7 +1,6 @@
 #region
 
 using ConcreteEngine.Graphics.Gfx.Contracts;
-using ConcreteEngine.Graphics.Gfx.Definitions;
 using ConcreteEngine.Renderer.Data;
 using ConcreteEngine.Renderer.Definitions;
 using ConcreteEngine.Renderer.Passes;
@@ -47,7 +46,7 @@ internal static class PassPipeline3D
             .OnPassBegin(static (RenderPassCtx ctx, in RenderPassState state) =>
             {
                 ctx.Ops.ContinueFromRenderPass(ctx.Target.FboId, state.PassState);
- 
+
                 ctx.MutateStatePass<ScenePassTag>(
                     FboVariant.Secondary,
                     PassMutationState.MutateTarget(ctx.Target.FboId)

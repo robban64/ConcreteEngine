@@ -127,7 +127,7 @@ public sealed class GfxCommands
             _frameBuffers.SetDrawReadBuffer(_fboStore.GetRefHandle(fboId), false);
         }
         */
-        
+
         _activeOutputSize = meta.Size;
     }
 

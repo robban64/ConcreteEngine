@@ -1,10 +1,7 @@
 #region
 
 using System.Numerics;
-using ConcreteEngine.Common.Numerics;
-using ConcreteEngine.Common.Numerics.Maths;
 using ConcreteEngine.Common.Time;
-using ConcreteEngine.Editor.Data;
 using ConcreteEngine.Editor.Definitions;
 using ConcreteEngine.Editor.Gui;
 using ConcreteEngine.Editor.Utils;

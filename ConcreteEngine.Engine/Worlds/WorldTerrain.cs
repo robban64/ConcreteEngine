@@ -7,7 +7,6 @@ using ConcreteEngine.Common.Numerics.Maths;
 using ConcreteEngine.Engine.Assets.Data;
 using ConcreteEngine.Engine.Assets.Textures;
 using ConcreteEngine.Engine.Worlds.Data;
-using ConcreteEngine.Engine.Worlds.Render;
 using ConcreteEngine.Engine.Worlds.Render.Batching;
 using ConcreteEngine.Engine.Worlds.Render.Tables;
 using ConcreteEngine.Renderer.Data;

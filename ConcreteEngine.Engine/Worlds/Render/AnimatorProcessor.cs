@@ -1,13 +1,15 @@
+#region
+
 using System.Numerics;
 using System.Runtime.CompilerServices;
-using System.Runtime.InteropServices;
-using ConcreteEngine.Common.Numerics;
 using ConcreteEngine.Common.Numerics.Maths;
 using ConcreteEngine.Engine.Worlds.Entities;
 using ConcreteEngine.Engine.Worlds.Render.Data;
 using ConcreteEngine.Engine.Worlds.Render.Tables;
 using ConcreteEngine.Renderer.Data;
 using ConcreteEngine.Renderer.Draw;
+
+#endregion
 
 namespace ConcreteEngine.Engine.Worlds.Render;
 
@@ -76,6 +78,7 @@ internal sealed class AnimatorProcessor
                 finals.Slice(boneLength, noneBoneLength).Fill(Matrix4x4.Identity);
                 drawEntity.AnimatedSlot = (short)idx;
             }
+
             idx++;
         }
     }

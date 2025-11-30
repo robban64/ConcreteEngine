@@ -189,7 +189,6 @@ internal sealed class MeshTable : IMeshTable
             Array.Resize(ref _partTransforms, newCap);
             Array.Resize(ref _partBoxes, newCap);
             Console.WriteLine("_meshParts resize");
-            
         }
 
         if (_modelPartRanges.Length < rangeCap)
@@ -200,5 +199,4 @@ internal sealed class MeshTable : IMeshTable
             Console.WriteLine("_modelPartRanges resize");
         }
     }
-
 }

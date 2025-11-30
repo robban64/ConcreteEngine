@@ -17,8 +17,8 @@ public sealed class CollisionMethods
         if (box1.Min.Z > box2.Max.Z || box2.Min.Z > box1.Max.Z) return false;
         return true;
     }
-    
-    
+
+
     public static bool RayIntersectsBox(in Ray ray, in BoundingBox box, out float t)
     {
         var dirfrac = new Vector3

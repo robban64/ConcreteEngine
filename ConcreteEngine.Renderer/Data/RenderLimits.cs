@@ -3,7 +3,7 @@ namespace ConcreteEngine.Renderer.Data;
 public static class RenderLimits
 {
     public const int BoneCapacity = 64;
-    
+
     public const int MinOutputSize = 16;
     public const int MaxOutputSize = 8192;
 
@@ -20,10 +20,10 @@ public static class RenderLimits
     public const int DefaultBoneBufferCap = BoneCapacity * 64;
     public const int DefaultCommandBuffCapacity = 512;
     public const int DefaultMaterialBufferCapacity = 512;
-    
+
     public const int MaxMaterialCount = 1024;
     public const int MaxMaterialBufferCapacity = 2048;
-    
+
     public const int MaxCommandBuffCapacity = 20_480;
     public const int MaxTextureSlotBuffCapacity = 20_480;
 

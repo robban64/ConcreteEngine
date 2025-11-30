@@ -11,9 +11,9 @@ public sealed class AnimationClip(string name, float duration, float ticksPerSec
     public string Name { get; set; } = name;
     public float Duration { get; set; } = duration;
     public float TicksPerSecond { get; set; } = ticksPerSecond;
-    
+
     public Dictionary<int, Track> Tracks { get; } = [];
-    
+
     public sealed class Track
     {
         public float[] PositionTimes { get; internal set; }
@@ -26,4 +26,3 @@ public sealed class AnimationClip(string name, float duration, float ticksPerSec
         public Vector3[] Scales { get; internal set; }
     }
 }
-

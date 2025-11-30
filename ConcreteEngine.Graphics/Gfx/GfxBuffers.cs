@@ -2,7 +2,6 @@
 
 using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
-using ConcreteEngine.Common;
 using ConcreteEngine.Graphics.Error;
 using ConcreteEngine.Graphics.Gfx.Contracts;
 using ConcreteEngine.Graphics.Gfx.Definitions;

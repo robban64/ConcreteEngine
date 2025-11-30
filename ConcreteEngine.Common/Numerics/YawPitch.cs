@@ -16,13 +16,13 @@ public readonly record struct YawPitch(float Yaw, float Pitch)
 
     public Vector2 AsVec2() => new(Yaw, Pitch);
     public (float, float) AsTuple() => (Yaw, Pitch);
-    
-    public YawPitch AddYaw(float yaw) => this with { Yaw = Yaw + yaw }; 
-    public YawPitch AddPitch(float pitch) => this with { Pitch = Pitch + pitch }; 
+
+    public YawPitch AddYaw(float yaw) => this with { Yaw = Yaw + yaw };
+    public YawPitch AddPitch(float pitch) => this with { Pitch = Pitch + pitch };
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static YawPitch operator +(YawPitch a, YawPitch b) => new(a.Yaw + b.Yaw, a.Pitch + b.Pitch);
-    
+
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static YawPitch operator +(YawPitch a, float b) => new(a.Yaw + b, a.Pitch + b);
 
@@ -38,7 +38,6 @@ public readonly record struct YawPitch(float Yaw, float Pitch)
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static YawPitch operator *(float k, YawPitch v) => new(v.Yaw * k, v.Pitch * k);
 
-    
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public void ToQuaternion(out Quaternion quaternion) => RotationMath.YawPitchToQuaternion(this, out quaternion);

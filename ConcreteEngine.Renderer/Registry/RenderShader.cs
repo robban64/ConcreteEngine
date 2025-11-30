@@ -15,12 +15,12 @@ public sealed class RenderShader : IComparable<ShaderId>
 
     private Dictionary<string, int>? _uniforms = null;
     private int[]? _sparse = null;
-    
+
     public bool HasPlainUniforms => _uniforms is not null;
-    
+
     public int GetUniform(string uniformName) => _uniforms![uniformName];
     public int GetUniformByIndex(int idx) => _sparse![idx];
-    
+
     public ReadOnlySpan<int> GetUniforms() => _sparse;
 
 
@@ -35,7 +35,7 @@ public sealed class RenderShader : IComparable<ShaderId>
     {
         InvalidOpThrower.ThrowIfNotNull(_uniforms, nameof(_uniforms));
         InvalidOpThrower.ThrowIfNotNull(_sparse, nameof(_sparse));
-        
+
         var uniformPairs = gfx.GetUniformList(Id);
         _uniforms = new Dictionary<string, int>(uniformPairs.Count);
         _sparse = new int[uniformPairs.Count];

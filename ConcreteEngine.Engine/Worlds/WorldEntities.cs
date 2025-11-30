@@ -3,7 +3,6 @@
 using ConcreteEngine.Common.Numerics;
 using ConcreteEngine.Engine.Worlds.Data;
 using ConcreteEngine.Engine.Worlds.Entities;
-using ConcreteEngine.Engine.Worlds.Render;
 using ConcreteEngine.Engine.Worlds.Render.Tables;
 
 #endregion

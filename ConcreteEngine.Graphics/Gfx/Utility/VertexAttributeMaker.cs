@@ -9,7 +9,6 @@ using ConcreteEngine.Graphics.Gfx.Internal;
 
 namespace ConcreteEngine.Graphics.Gfx.Utility;
 
-
 public struct VertexAttributeMaker
 {
     private int _offset;

@@ -2,7 +2,6 @@
 
 using System.Diagnostics;
 using ConcreteEngine.Common.Collections;
-using ConcreteEngine.Engine.Editor.Diagnostics;
 
 #endregion
 

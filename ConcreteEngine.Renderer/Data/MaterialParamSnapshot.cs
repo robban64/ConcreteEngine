@@ -1,11 +1,14 @@
+#region
+
 using System.Numerics;
 using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
 using ConcreteEngine.Common.Numerics;
 using ConcreteEngine.Shared.RenderData;
 
-namespace ConcreteEngine.Renderer.Data;
+#endregion
 
+namespace ConcreteEngine.Renderer.Data;
 
 [StructLayout(LayoutKind.Sequential)]
 public readonly struct MaterialParamSnapshot

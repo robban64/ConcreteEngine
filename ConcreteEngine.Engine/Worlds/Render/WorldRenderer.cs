@@ -2,7 +2,6 @@
 
 using ConcreteEngine.Common;
 using ConcreteEngine.Common.Numerics;
-using ConcreteEngine.Common.Time;
 using ConcreteEngine.Engine.Assets;
 using ConcreteEngine.Engine.Assets.Models;
 using ConcreteEngine.Engine.Assets.Shaders;
@@ -45,7 +44,7 @@ public sealed class WorldRenderer : IWorldRenderer
     private readonly MeshTable _meshTable;
     private readonly MaterialTable _materialTable;
     private readonly AnimationTable _animationTable;
-    
+
     private readonly RenderEntityBus _renderEntityBus;
 
     private readonly EngineEventBus _eventBus;
@@ -125,13 +124,13 @@ public sealed class WorldRenderer : IWorldRenderer
         _renderEntityBus.Reset();
 
         WorldRenderParams.Commit();
-        
+
         PrepareRenderView(frameInfo.Alpha, camera);
         RenderDataSlot.FrameInfo = frameInfo;
         RenderDataSlot.ProjectionInfo = RenderView.ProjectionInfo;
         RenderDataSlot.ViewData = RenderView.CameraView;
 
-        
+
         _renderer.PrepareFrame(in frameInfo, in runtimeParams);
 
         // Upload materials

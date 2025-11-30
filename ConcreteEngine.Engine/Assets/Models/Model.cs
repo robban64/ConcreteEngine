@@ -15,7 +15,7 @@ public readonly record struct ModelBaseDrawInfo(ModelId Model, int PartCount, in
 public sealed class Model : AssetObject, IComparable<Model>
 {
     public ModelId ModelId { get; private set; }
-    public AnimationId AnimationId {get; private set;}
+    public AnimationId AnimationId { get; private set; }
     public required int DrawCount { get; init; }
     public required BoundingBox Bounds { get; init; }
 

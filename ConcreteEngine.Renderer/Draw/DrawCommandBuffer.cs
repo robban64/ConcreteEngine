@@ -4,12 +4,9 @@ using System.Diagnostics;
 using System.Diagnostics.CodeAnalysis;
 using System.Numerics;
 using System.Runtime.CompilerServices;
-using System.Runtime.InteropServices;
 using ConcreteEngine.Common.Collections;
 using ConcreteEngine.Common.Numerics;
-using ConcreteEngine.Common.Time;
 using ConcreteEngine.Renderer.Data;
-using ConcreteEngine.Renderer.Definitions;
 using ConcreteEngine.Renderer.Passes;
 using static ConcreteEngine.Renderer.Data.RenderLimits;
 
@@ -27,7 +24,7 @@ public sealed class DrawCommandBuffer
     private readonly DrawPassRange[] _passRanges;
 
     private Matrix4x4[] _boneTransformBuffer;
-    
+
     private DrawCommandProcessor _processor = null!;
     private int _submitIdx = 0;
     private int _skeletonIdx = 0;
@@ -61,16 +58,16 @@ public sealed class DrawCommandBuffer
         _skeletonIdx++;
         return span;
     }
-    
+
     public void UploadBoneSpan(Span<Matrix4x4> finals)
     {
         var span = _boneTransformBuffer.AsSpan(_skeletonIdx * BoneCapacity, BoneCapacity);
         finals.CopyTo(span);
         _skeletonIdx++;
     }
-    
+
     public ref DrawObjectUniform Writer => ref _transformBuffer[_submitIdx];
-    
+
     public int Submit(DrawCommand cmd, DrawCommandMeta meta)
     {
         var idx = _submitIdx++;
@@ -85,7 +82,7 @@ public sealed class DrawCommandBuffer
         _indexBuffer[idx] = new DrawCommandRef(meta, idx);
         return idx;
     }
-    
+
     public void SubmitEmptyTransform(DrawCommand cmd, DrawCommandMeta meta)
     {
         var idx = Submit(cmd, meta);
@@ -188,7 +185,7 @@ public sealed class DrawCommandBuffer
         if (_transformBuffer.Length == 0) return ReadOnlySpan<DrawObjectUniform>.Empty;
         return _transformBuffer.AsSpan(0, _submitIdx);
     }
-    
+
     internal ReadOnlySpan<Matrix4x4> DrainBoneTransformBuffer()
     {
         if (_boneTransformBuffer.Length == 0) return ReadOnlySpan<Matrix4x4>.Empty;
@@ -225,7 +222,7 @@ public sealed class DrawCommandBuffer
     public void EnsureBufferCapacity(int size)
     {
         if (_commandBuffer.Length >= size) return;
-        
+
         var newCap = Arrays.CapacityGrowthSafe(_commandBuffer.Length, size);
 
         if (newCap > MaxCommandBuffCapacity)
@@ -235,7 +232,7 @@ public sealed class DrawCommandBuffer
         Array.Resize(ref _transformBuffer, newCap);
         Array.Resize(ref _metaBuffer, newCap);
         Array.Resize(ref _indexBuffer, newCap);
-        
+
         Console.WriteLine("Command buffer resize");
     }
 
@@ -255,8 +252,6 @@ public sealed class DrawCommandBuffer
         _drawTickets = new DrawCommandTicket[newSize];
         Console.WriteLine("DrawTickets buffer resize");
     }
-    
-
 
 
     [MethodImpl(MethodImplOptions.NoInlining)]

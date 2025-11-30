@@ -3,8 +3,6 @@
 using ConcreteEngine.Common;
 using ConcreteEngine.Engine.Assets.Data;
 using ConcreteEngine.Engine.Assets.Descriptors;
-using ConcreteEngine.Engine.Editor.Diagnostics;
-using ConcreteEngine.Shared.Diagnostics;
 
 #endregion
 
@@ -32,7 +30,7 @@ public interface IAssetStore
 internal sealed class AssetStore : IAssetStore
 {
     private const int DefaultCap = 256;
-    
+
     private int _assetId = 0;
     private int _assetFileId = 0;
     private AssetId MakeAssetId() => new(++_assetId);
@@ -157,7 +155,7 @@ internal sealed class AssetStore : IAssetStore
             if (asset is TAsset typedAsset)
             {
                 var it = transform(typedAsset);
-                if(it is null) continue;
+                if (it is null) continue;
                 list.Add(it);
             }
         }

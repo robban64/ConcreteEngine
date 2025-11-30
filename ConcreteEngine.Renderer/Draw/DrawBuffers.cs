@@ -3,11 +3,9 @@
 using System.Numerics;
 using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
-using ConcreteEngine.Common.Numerics;
 using ConcreteEngine.Common.Numerics.Maths;
 using ConcreteEngine.Graphics.Gfx;
 using ConcreteEngine.Graphics.Gfx.Resources;
-using ConcreteEngine.Graphics.Gfx.Utility;
 using ConcreteEngine.Renderer.Data;
 using ConcreteEngine.Renderer.Registry;
 using ConcreteEngine.Renderer.State;
@@ -154,10 +152,10 @@ internal sealed class DrawBuffers
             _gfxBuffers.SetUniformBufferCapacity(_animationUbo.Id, uploadSize);
         }
 
-        _gfxBuffers.UploadUniformBytes(_animationUbo.Id, MemoryMarshal.AsBytes(boneData),Unsafe.SizeOf<Matrix4x4>(), boneData.Length, 0);
+        _gfxBuffers.UploadUniformBytes(_animationUbo.Id, MemoryMarshal.AsBytes(boneData), Unsafe.SizeOf<Matrix4x4>(),
+            boneData.Length, 0);
 
         //_gfxBuffers.UploadUniformGpuSpan(_animationUbo.Id, boneData, 0);
-
     }
 
     // Globals //

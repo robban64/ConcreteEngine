@@ -1,17 +1,12 @@
 #region
 
-using System.Numerics;
-using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
-using System.Runtime.Serialization;
-using ConcreteEngine.Common.Numerics;
 using ConcreteEngine.Graphics.Gfx.Contracts;
 using ConcreteEngine.Graphics.Gfx.Resources;
 
 #endregion
 
 namespace ConcreteEngine.Renderer.Data;
-
 
 [StructLayout(LayoutKind.Sequential)]
 public readonly struct DrawMaterialMeta(

@@ -5,13 +5,10 @@ using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
 using ConcreteEngine.Common.Numerics;
 using ConcreteEngine.Common.Numerics.Extensions;
-using ConcreteEngine.Common.Numerics.Maths;
 using ConcreteEngine.Engine.Assets.Internal;
 using ConcreteEngine.Graphics.Primitives;
 using Silk.NET.Assimp;
 using AssimpMesh = Silk.NET.Assimp.Mesh;
-using AssimpScene = Silk.NET.Assimp.Scene;
-using AssimpNode = Silk.NET.Assimp.Node;
 
 #endregion
 
@@ -29,7 +26,6 @@ internal sealed class AssimpMeshProcessor(ModelLoaderDataTable dataTable, ModelL
         state.AppendMeshInfo(mesh->MName.AsString, meshIndex, info);
         return info;
     }
-
 
 
     private unsafe MeshCreationInfo LoadAndUploadMesh(AssimpMesh* mesh, AssetGfxUploader gfxUploader, bool isAnimated,
@@ -149,7 +145,7 @@ internal sealed class AssimpMeshProcessor(ModelLoaderDataTable dataTable, ModelL
             v.BoneIndices = skinnedVertex.BoneIndices;
             v.BoneWeights = skinnedVertex.BoneWeights;
 
-            bounds.FromPoint(v.Position,out bounds);
+            bounds.FromPoint(v.Position, out bounds);
         }
     }
 

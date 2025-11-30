@@ -3,7 +3,6 @@
 using System.Numerics;
 using ConcreteEngine.Common.Numerics.Maths;
 using ConcreteEngine.Engine.Worlds.Data;
-using ConcreteEngine.Engine.Worlds.Render;
 using ConcreteEngine.Engine.Worlds.Render.Batching;
 using ConcreteEngine.Engine.Worlds.Render.Tables;
 using ConcreteEngine.Graphics.Gfx.Resources;

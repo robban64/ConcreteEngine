@@ -63,7 +63,7 @@ internal sealed class GfxMeshBuilder : IGfxMeshBuilder
 
 
     public void UploadVertices<T>(ReadOnlySpan<T> data, BufferUsage usage,
-        BufferStorage storage, BufferAccess access, byte divisor=0) where T : unmanaged
+        BufferStorage storage, BufferAccess access, byte divisor = 0) where T : unmanaged
     {
         EnsureStarted();
         if (_state.VboCount >= GfxLimits.MaxVboBindings)
@@ -157,7 +157,7 @@ internal sealed class GfxMeshBuilder : IGfxMeshBuilder
 internal sealed class MeshBuildState
 {
     private VertexAttribute[] _attributes = Array.Empty<VertexAttribute>();
-    
+
     public int AttribCount { get; set; }
     public int VboCount { get; set; }
     public MeshId MeshId { get; set; }
@@ -175,9 +175,9 @@ internal sealed class MeshBuildState
 
     public void EnsureAttributes(int count)
     {
-        if(_attributes.Length == 0) _attributes = new VertexAttribute[4];
-        if(count == 4) Array.Resize(ref _attributes, 8);
-        if(count == 8) Array.Resize(ref _attributes, 16);
+        if (_attributes.Length == 0) _attributes = new VertexAttribute[4];
+        if (count == 4) Array.Resize(ref _attributes, 8);
+        if (count == 8) Array.Resize(ref _attributes, 16);
     }
 
     public MeshLayout Compile()

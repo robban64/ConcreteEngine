@@ -11,7 +11,7 @@ internal delegate void StateTransitionDel<TModel>(ModelState<TModel> ctx, TModel
 
 internal delegate void StateEmptyEventDel<TModel>(ModelState<TModel> ctx) where TModel : class;
 
-internal delegate void StateEventDel<TModel, in TEvent>(ModelState<TModel> ctx,  TEvent ev) where TModel : class;
+internal delegate void StateEventDel<TModel, in TEvent>(ModelState<TModel> ctx, TEvent ev) where TModel : class;
 
 // command delegates
 public delegate void ConsoleCommandReqDel(ConsoleCtx ctx, string action, string? arg1, string? arg2);

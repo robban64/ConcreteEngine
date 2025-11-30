@@ -25,11 +25,11 @@ public sealed class FrameProfileTimer
     {
         return End(out _);
     }
-    
+
     public bool EndPrint()
     {
         var res = End(out _);
-        if(res) Console.WriteLine(ResultString);
+        if (res) Console.WriteLine(ResultString);
         return res;
     }
 

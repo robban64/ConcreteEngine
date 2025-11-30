@@ -1,16 +1,10 @@
 #region
 
 using System.Numerics;
-using System.Runtime.CompilerServices;
-using System.Runtime.InteropServices;
 using ConcreteEngine.Common;
 using ConcreteEngine.Common.Numerics.Maths;
-using ConcreteEngine.Graphics.Primitives;
-using Silk.NET.Assimp;
-using AssimpMesh = Silk.NET.Assimp.Mesh;
 using AssimpScene = Silk.NET.Assimp.Scene;
 using AssimpNode = Silk.NET.Assimp.Node;
-using static ConcreteEngine.Engine.Assets.Models.Loader.AssimpImporter.ImportModelUtils;
 
 #endregion
 
@@ -18,11 +12,10 @@ namespace ConcreteEngine.Engine.Assets.Models.Loader.AssimpImporter;
 
 internal sealed class AssimpAnimationProcessor(ModelLoaderDataTable dataTable, ModelLoaderState state)
 {
-
     public unsafe void ProcessSceneAnimations(AssimpScene* scene)
     {
         InvalidOpThrower.ThrowIf(state.BoneCount == 0);
-        
+
         Span<int> defaultData = stackalloc int[state.BoneCount];
         defaultData.Fill(-1);
         state.PrepareAnimationState((int)scene->MNumAnimations, defaultData);
@@ -31,7 +24,7 @@ internal sealed class AssimpAnimationProcessor(ModelLoaderDataTable dataTable, M
         ProcessAnimations(scene);
     }
 
-    
+
     public unsafe void BuildSkeletonHierarchy(AssimpNode* node)
     {
         var nodeName = node->MName.AsString;
@@ -108,7 +101,7 @@ internal sealed class AssimpAnimationProcessor(ModelLoaderDataTable dataTable, M
                 var rotCount = (int)channel->MNumRotationKeys;
                 boneTrack.RotationTimes = new float[rotCount];
                 boneTrack.Rotations = new Quaternion[rotCount];
-                
+
                 for (var k = 0; k < rotCount; k++)
                 {
                     boneTrack.RotationTimes[k] = (float)rotKeys[k].MTime;
@@ -133,5 +126,4 @@ internal sealed class AssimpAnimationProcessor(ModelLoaderDataTable dataTable, M
             state.AppendAnimation(animationData);
         }
     }
-
 }

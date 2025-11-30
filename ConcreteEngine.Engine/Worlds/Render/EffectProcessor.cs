@@ -2,7 +2,6 @@ namespace ConcreteEngine.Engine.Worlds.Render;
 
 internal sealed class EffectProcessor
 {
-    
 /*
     private bool hasRunEntities = false;
     private void DrawBounds()

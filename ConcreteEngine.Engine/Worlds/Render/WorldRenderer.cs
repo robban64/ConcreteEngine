@@ -115,6 +115,7 @@ public sealed class WorldRenderer : IWorldRenderer
         }
     }
 
+
     internal void PreRender(
         BeginFrameStatus status,
         in RenderFrameInfo frameInfo,
@@ -139,7 +140,6 @@ public sealed class WorldRenderer : IWorldRenderer
         _renderEntityBus.CollectEntities(frameInfo.DeltaTime, _renderer.CommandBuffer);
 
         _renderEntityBus.FlushEntities(_renderer.CommandBuffer);
-
         // fill buffers
         _renderer.CollectDrawBuffers();
         _renderer.StartFrame(status);

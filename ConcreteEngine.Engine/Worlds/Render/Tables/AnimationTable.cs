@@ -4,24 +4,17 @@ using ConcreteEngine.Engine.Assets;
 using ConcreteEngine.Engine.Assets.Models;
 using ConcreteEngine.Engine.Worlds.Data;
 using ConcreteEngine.Engine.Worlds.Render.Data;
+using ConcreteEngine.Renderer.Data;
 
 namespace ConcreteEngine.Engine.Worlds.Render.Tables;
 
-public unsafe struct AnimationClipData
-{
-    public float Duration;
-    public float TicksPerSecond;
-    public fixed ushort BoneTrack[64];
-}
 
 internal sealed class AnimationTable
 {
-    public const int BoneCap = 64;
-
     private const int DefaultAnimatedModelCap = 64;
-    private const int DefaultBoneBufferCap = 64 * DefaultAnimatedModelCap;
+    private const int DefaultBoneBufferCap = 64 * RenderLimits.BoneCapacity;
 
-    private AnimationId MakeId() => new (++_idx);
+    private AnimationId MakeId() => new(++_idx);
     private int _idx = 0;
 
     private int[] _idxToModel = new int[DefaultAnimatedModelCap];
@@ -29,8 +22,8 @@ internal sealed class AnimationTable
     private Matrix4x4[] _modelBoneInvTransform = new Matrix4x4[DefaultAnimatedModelCap];
 
     private int[] _parentIndices = new int[DefaultBoneBufferCap];
-    private Matrix4x4[] _boneTransforms = new Matrix4x4[DefaultBoneBufferCap];
-    private Matrix4x4[] _nodeTransforms = new Matrix4x4[DefaultBoneBufferCap];
+    private Matrix4x4[] _boneOffsetMatrix = new Matrix4x4[DefaultBoneBufferCap];
+    private Matrix4x4[] _nodeTransform = new Matrix4x4[DefaultBoneBufferCap];
 
     public int TotalBones { get; private set; }
     public int TotalClips { get; private set; }
@@ -39,21 +32,23 @@ internal sealed class AnimationTable
     {
         ArgumentOutOfRangeException.ThrowIfNegativeOrZero(animation.Value);
 
+        const int boneCap = RenderLimits.BoneCapacity;
+
         var index = animation - 1;
         if (index == -1 || (uint)index > _clips.Length || (uint)index > _modelBoneInvTransform.Length)
             throw new IndexOutOfRangeException();
 
-        var startOffset = index * BoneCap;
+        var startOffset = index * boneCap;
 
-        if ((uint)(startOffset + BoneCap) > (uint)_boneTransforms.Length ||
-            (uint)(startOffset + BoneCap) > (uint)_nodeTransforms.Length)
+        if ((uint)(startOffset + boneCap) > (uint)_boneOffsetMatrix.Length ||
+            (uint)(startOffset + boneCap) > (uint)_nodeTransform.Length)
         {
             throw new IndexOutOfRangeException();
         }
 
-        var boneTransforms = _boneTransforms.AsSpan(startOffset, BoneCap);
-        var nodes = _nodeTransforms.AsSpan(startOffset, BoneCap);
-        var indices = _parentIndices.AsSpan(startOffset, BoneCap);
+        var boneTransforms = _boneOffsetMatrix.AsSpan(startOffset, boneCap);
+        var nodes = _nodeTransform.AsSpan(startOffset, boneCap);
+        var indices = _parentIndices.AsSpan(startOffset, boneCap);
         var clip = _clips[index];
         return new ModelAnimationView(clip, boneTransforms, nodes, indices, ref _modelBoneInvTransform[index]);
     }
@@ -69,7 +64,7 @@ internal sealed class AnimationTable
         int totalBones = 0, totalClips = 0, modelHighId = -1;
         foreach (var model in models)
         {
-            totalBones += model.Animation!.BoneTransforms.Length;
+            totalBones += model.Animation!.BoneOffsetMatrixSpan.Length;
             totalClips += model.Animation.ClipDataSpan.Length;
             modelHighId = int.Max(modelHighId, model.ModelId);
         }
@@ -86,22 +81,22 @@ internal sealed class AnimationTable
         {
             var model = models[i];
             var animation = model.Animation!;
-            var modelBones = animation.BoneTransforms;
+            var modelBones = animation.BoneOffsetMatrixSpan;
             var modelClips = animation.ClipDataSpan;
 
             var animationId = MakeId();
             model.AttachAnimation(animationId);
 
-            var tableBones = _boneTransforms.AsSpan(boneOffset, modelBones.Length);
-            var tableNodes = _nodeTransforms.AsSpan(boneOffset, modelBones.Length);
+            var tableBones = _boneOffsetMatrix.AsSpan(boneOffset, modelBones.Length);
+            var tableNodes = _nodeTransform.AsSpan(boneOffset, modelBones.Length);
             var tableIndices = _parentIndices.AsSpan(boneOffset, modelBones.Length);
             _idxToModel[i] = model.ModelId;
             _modelBoneInvTransform[i] = model.Animation!.InverseRootTransform;
 
             //_modelBoneRanges[i] = new RangeU16(boneOffset, modelBones.Length);
             modelBones.CopyTo(tableBones);
-            animation.NodeTransforms.CopyTo(tableNodes);
-            animation.ParentIndices.CopyTo(tableIndices);
+            animation.NodeTransformSpan.CopyTo(tableNodes);
+            animation.ParentIndexSpan.CopyTo(tableIndices);
 
             var clips = new BoneTrack[modelClips.Length][];
 
@@ -116,14 +111,15 @@ internal sealed class AnimationTable
                         clips[c][t] = new BoneTrack();
                         continue;
                     }
-                    clips[c][t] = new BoneTrack(track.Translations, track.TranslationTimes, track.Rotations,
+
+                    clips[c][t] = new BoneTrack(track.Positions, track.PositionTimes, track.Rotations,
                         track.RotationTimes, track.Scales, track.ScaleTimes);
                 }
             }
 
             _clips[i] = clips;
 
-            boneOffset += BoneCap;
+            boneOffset += RenderLimits.BoneCapacity;
 
             /*
             var animationClip = model.Animation!.ClipDataSpan;
@@ -155,14 +151,14 @@ internal sealed class AnimationTable
         if (_idxToModel.Length != _modelBoneInvTransform.Length)
             throw new InvalidOperationException("Mismatch size for model animation tables");
 
-        if (_boneTransforms.Length != _nodeTransforms.Length)
+        if (_boneOffsetMatrix.Length != _nodeTransform.Length)
             throw new InvalidOperationException("Mismatch size between bone and node in animation tables");
 
-        if (_boneTransforms.Length < boneCap)
+        if (_boneOffsetMatrix.Length < boneCap)
         {
-            var newCap = Arrays.CapacityGrowthSafe(_boneTransforms.Length, boneCap);
-            Array.Resize(ref _boneTransforms, newCap);
-            Array.Resize(ref _nodeTransforms, newCap);
+            var newCap = Arrays.CapacityGrowthSafe(_boneOffsetMatrix.Length, boneCap);
+            Array.Resize(ref _boneOffsetMatrix, newCap);
+            Array.Resize(ref _nodeTransform, newCap);
             Array.Resize(ref _parentIndices, newCap);
 
             Console.WriteLine("animation bones resize");

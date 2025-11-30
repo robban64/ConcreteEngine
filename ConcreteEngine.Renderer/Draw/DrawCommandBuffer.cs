@@ -26,8 +26,11 @@ public sealed class DrawCommandBuffer
     private DrawCommandTicket[] _drawTickets;
     private readonly DrawPassRange[] _passRanges;
 
+    private Matrix4x4[] _boneTransformBuffer;
+    
     private DrawCommandProcessor _processor = null!;
     private int _submitIdx = 0;
+    private int _skeletonIdx = 0;
 
     public int Count => _submitIdx;
 
@@ -41,6 +44,8 @@ public sealed class DrawCommandBuffer
 
         _passRanges = new DrawPassRange[PassSlots];
 
+        _boneTransformBuffer = new Matrix4x4[DefaultBoneBufferCap];
+
         _submitIdx = 0;
     }
 
@@ -49,12 +54,24 @@ public sealed class DrawCommandBuffer
         _processor = cmd;
     }
 
-    public void SubmitAnimationData(ReadOnlySpan<Matrix4x4> boneData)
+    public Span<Matrix4x4> WriteBoneSpan()
     {
-        _processor.SubmitAnimationData(boneData);
+        var span = _boneTransformBuffer.AsSpan(_skeletonIdx * BoneCapacity, BoneCapacity);
+        //finals.CopyTo(span);
+        _skeletonIdx++;
+        return span;
     }
-
-    public void SubmitNonTransformDraw(DrawCommand cmd, DrawCommandMeta meta)
+    
+    public void UploadBoneSpan(Span<Matrix4x4> finals)
+    {
+        var span = _boneTransformBuffer.AsSpan(_skeletonIdx * BoneCapacity, BoneCapacity);
+        finals.CopyTo(span);
+        _skeletonIdx++;
+    }
+    
+    public ref DrawObjectUniform Writer => ref _transformBuffer[_submitIdx];
+    
+    public int Submit(DrawCommand cmd, DrawCommandMeta meta)
     {
         var idx = _submitIdx++;
         if ((uint)idx >= (uint)_commandBuffer.Length || (uint)idx >= (uint)_metaBuffer.Length ||
@@ -66,6 +83,12 @@ public sealed class DrawCommandBuffer
         _commandBuffer[idx] = cmd;
         _metaBuffer[idx] = meta;
         _indexBuffer[idx] = new DrawCommandRef(meta, idx);
+        return idx;
+    }
+    
+    public void SubmitEmptyTransform(DrawCommand cmd, DrawCommandMeta meta)
+    {
+        var idx = Submit(cmd, meta);
         _transformBuffer[idx] = default;
     }
 
@@ -75,17 +98,7 @@ public sealed class DrawCommandBuffer
         in Matrix4x4 model,
         in Matrix3X4 normal)
     {
-        var idx = _submitIdx++;
-        if ((uint)idx >= (uint)_commandBuffer.Length || (uint)idx >= (uint)_metaBuffer.Length ||
-            (uint)idx >= (uint)_indexBuffer.Length || (uint)idx >= (uint)_transformBuffer.Length)
-        {
-            throw new IndexOutOfRangeException();
-        }
-
-        _commandBuffer[idx] = cmd;
-        _metaBuffer[idx] = meta;
-        _indexBuffer[idx] = new DrawCommandRef(meta, idx);
-
+        var idx = Submit(cmd, meta);
         ref var drawUbo = ref _transformBuffer[idx];
         drawUbo.Model = model;
         drawUbo.Normal = normal;
@@ -97,19 +110,13 @@ public sealed class DrawCommandBuffer
         DrawCommandMeta meta,
         ref DrawObjectUniform drawUniform)
     {
-        var idx = _submitIdx++;
-        if ((uint)idx >= (uint)_commandBuffer.Length || (uint)idx >= (uint)_metaBuffer.Length)
-            throw new IndexOutOfRangeException();
-
-        _commandBuffer[idx] = cmd;
-        _metaBuffer[idx] = meta;
-        _indexBuffer[idx] = new DrawCommandRef(meta, idx);
+        var idx = Submit(cmd, meta);
         ref var data = ref Unsafe.AsRef(ref _transformBuffer[idx]);
         data = drawUniform;
     }
 
 
-    public void ReadyDrawCommands()
+    internal void ReadyDrawCommands()
     {
         if (_submitIdx <= 1)
         {
@@ -176,10 +183,16 @@ public sealed class DrawCommandBuffer
         }
     }
 
-    public ReadOnlySpan<DrawObjectUniform> DrainTransformQueue()
+    internal ReadOnlySpan<DrawObjectUniform> DrainTransformBuffer()
     {
         if (_transformBuffer.Length == 0) return ReadOnlySpan<DrawObjectUniform>.Empty;
         return _transformBuffer.AsSpan(0, _submitIdx);
+    }
+    
+    internal ReadOnlySpan<Matrix4x4> DrainBoneTransformBuffer()
+    {
+        if (_boneTransformBuffer.Length == 0) return ReadOnlySpan<Matrix4x4>.Empty;
+        return _boneTransformBuffer.AsSpan(0, _skeletonIdx * BoneCapacity);
     }
 
 
@@ -203,9 +216,10 @@ public sealed class DrawCommandBuffer
             processor.DrawSpecialResolveMesh(commands[ticket.SubmitIdx], ticket);
     }
 
-    public void Reset()
+    internal void Reset()
     {
         _submitIdx = 0;
+        _skeletonIdx = 0;
     }
 
     public void EnsureBufferCapacity(int size)
@@ -225,16 +239,24 @@ public sealed class DrawCommandBuffer
         Console.WriteLine("Command buffer resize");
     }
 
+    public void EnsureBoneBuffer(int index)
+    {
+        var len = index * BoneCapacity;
+        if (_boneTransformBuffer.Length >= len) return;
+        var newSize = Arrays.CapacityGrowthSafe(_boneTransformBuffer.Length, len);
+        Array.Resize(ref _boneTransformBuffer, newSize);
+        Console.WriteLine("BoneBuffer buffer resize");
+    }
 
     private void EnsureTicketsCapacity(int total)
     {
         if (_drawTickets.Length >= total) return;
         var newSize = Arrays.CapacityGrowthLinear(_drawTickets.Length, total, step: PassSlots);
         _drawTickets = new DrawCommandTicket[newSize];
-        
         Console.WriteLine("DrawTickets buffer resize");
-
     }
+    
+
 
 
     [MethodImpl(MethodImplOptions.NoInlining)]

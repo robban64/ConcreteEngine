@@ -31,15 +31,17 @@ public interface IAssetStore
 
 internal sealed class AssetStore : IAssetStore
 {
+    private const int DefaultCap = 256;
+    
     private int _assetId = 0;
     private int _assetFileId = 0;
     private AssetId MakeAssetId() => new(++_assetId);
     private AssetFileId MakeAssetFileId() => new(++_assetFileId);
 
-    private readonly Dictionary<AssetId, AssetObject> _assets = new(32);
-    private readonly Dictionary<AssetFileId, AssetFileEntry> _files = new(32);
-    private readonly Dictionary<AssetId, AssetFileId[]> _bindings = new(32);
-    private readonly Dictionary<AssetKey, AssetId> _names = new(32);
+    private readonly Dictionary<AssetId, AssetObject> _assets = new(DefaultCap);
+    private readonly Dictionary<AssetFileId, AssetFileEntry> _files = new(DefaultCap);
+    private readonly Dictionary<AssetId, AssetFileId[]> _bindings = new(DefaultCap);
+    private readonly Dictionary<AssetKey, AssetId> _names = new(DefaultCap);
 
     private readonly Dictionary<Type, AssetTypeMeta> _typeMeta = new(8);
 

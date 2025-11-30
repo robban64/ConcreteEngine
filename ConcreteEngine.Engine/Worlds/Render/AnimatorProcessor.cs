@@ -13,10 +13,7 @@ namespace ConcreteEngine.Engine.Worlds.Render;
 
 internal sealed class AnimatorProcessor
 {
-    public const int BoneCap = AnimationTable.BoneCap;
-
     private readonly AnimationTable _animationTable;
-    private readonly Matrix4x4[] _buffer = new Matrix4x4[64 * 64]; // move later
 
     public AnimatorProcessor(AnimationTable animationTable)
     {
@@ -28,45 +25,46 @@ internal sealed class AnimatorProcessor
     public void ProcessAnimations(float deltaTime, WorldEntities entities, DrawCommandBuffer buffer,
         RenderFrameContext ctx)
     {
-        Span<Matrix4x4> globals = stackalloc Matrix4x4[BoneCap];
+        const int boneCap = RenderLimits.BoneCapacity;
+        Span<Matrix4x4> globals = stackalloc Matrix4x4[boneCap];
         globals.Fill(Matrix4x4.Identity);
 
-        int idx = 0;
+        var idx = 0;
         foreach (var query in entities.Query<AnimationComponent>())
         {
             ref var component = ref query.Component;
-            float time = component.AdvanceTime(deltaTime);
+            var time = component.AdvanceTime(deltaTime);
 
             var view = _animationTable.GetModelAnimationView(component.Animation);
-            int boneLength = view.ParentIndices.Length;
+            var boneLength = view.BoneLength;
             var clipTrack = view.GetClip(0);
 
             if ((uint)boneLength > globals.Length ||
-                (uint)boneLength > view.BoneTransforms.Length ||
-                (uint)boneLength > view.NodeTransforms.Length ||
-                (uint)boneLength > view.ParentIndices.Length ||
+                (uint)boneLength > view.BoneOffsetMatrixSpan.Length ||
+                (uint)boneLength > view.NodeTransformSpan.Length ||
+                (uint)boneLength > view.ParentIndexSpan.Length ||
                 (uint)boneLength > clipTrack.Length)
             {
                 throw new IndexOutOfRangeException();
             }
 
-            var finals = _buffer.AsSpan(idx * BoneCap, BoneCap);
+            var finals = buffer.WriteBoneSpan();
             Matrix4x4 result = default;
-            for (int i = 0; i < boneLength; i++)
+            for (var i = 0; i < boneLength; i++)
             {
                 ref readonly var track = ref clipTrack[i];
 
                 var local = track.IsEmpty
-                    ? view.NodeTransforms[i]
-                    : SampleKeyFrame(track.Translations, track.Rotations, time);
+                    ? view.NodeTransformSpan[i]
+                    : SampleKeyFrame(track.Positions, track.Rotations, time);
 
-                int p = view.ParentIndices[i];
+                var p = view.ParentIndexSpan[i];
                 if (p >= 0)
                     MatrixMath.WriteMultiplyAffine(ref globals[i], in local, in globals[p]);
                 else
                     globals[i] = local;
 
-                MatrixMath.WriteMultiplyAffine(ref result, in view.BoneTransforms[i], in globals[i]);
+                MatrixMath.WriteMultiplyAffine(ref result, in view.BoneOffsetMatrixSpan[i], in globals[i]);
                 MatrixMath.WriteMultiplyAffine(ref finals[i], in result, in view.InvTransform);
                 //finals[i] = boneTransforms[i] * globals[i] * invMatrix;
             }
@@ -74,18 +72,16 @@ internal sealed class AnimatorProcessor
             ref var drawEntity = ref ctx.GetByEntityId(query.Entity);
             if (drawEntity.AnimatedSlot == -1)
             {
-                int noneBoneLength = BoneCap - boneLength;
+                int noneBoneLength = boneCap - boneLength;
                 finals.Slice(boneLength, noneBoneLength).Fill(Matrix4x4.Identity);
                 drawEntity.AnimatedSlot = (short)idx;
             }
             idx++;
         }
-
-        buffer.SubmitAnimationData(_buffer.AsSpan(0, idx * BoneCap));
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    private static Matrix4x4 SampleKeyFrame(ReadOnlySpan<Vector3Key> pos, ReadOnlySpan<QuaternionKey> rot, float time)
+    private static Matrix4x4 SampleKeyFrame(ReadOnlySpan<KeyFrameVec3> pos, ReadOnlySpan<KeyFrameQuat> rot, float time)
     {
         var translation = pos.Length == 1 ? pos[0].Value : SampleVector(pos, time);
         var rotation = rot.Length == 1 ? rot[0].Value : SampleQuaternion(rot, time);
@@ -93,7 +89,7 @@ internal sealed class AnimatorProcessor
         MatrixMath.CreateModelMatrix(in translation, Vector3.One, in rotation, out var localMatrix);
         return localMatrix;
 
-        static Vector3 SampleVector(ReadOnlySpan<Vector3Key> values, float time)
+        static Vector3 SampleVector(ReadOnlySpan<KeyFrameVec3> values, float time)
         {
             int index = FindIndex(values, time);
             ref readonly var k1 = ref values[index];
@@ -103,7 +99,7 @@ internal sealed class AnimatorProcessor
             return Vector3.Lerp(k1.Value, k2.Value, factor);
         }
 
-        static Quaternion SampleQuaternion(ReadOnlySpan<QuaternionKey> values, float time)
+        static Quaternion SampleQuaternion(ReadOnlySpan<KeyFrameQuat> values, float time)
         {
             int index = FindIndex(values, time);
             ref readonly var k1 = ref values[index];

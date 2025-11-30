@@ -52,7 +52,7 @@ internal sealed class ModelLoaderDataTable
 
     private SkinningData[] _skinningData = new SkinningData[VertexCapacity];
 
-    private Matrix4x4[] _boneTransforms = new Matrix4x4[BoneTransformsCapacity];
+    private Matrix4x4[] _boneOffsetMatrix = new Matrix4x4[BoneTransformsCapacity];
     private Matrix4x4[] _nodeTransform = new Matrix4x4[BoneTransformsCapacity];
 
     private MeshPartImportResult[] _parts = new MeshPartImportResult[MaxParts];
@@ -64,7 +64,7 @@ internal sealed class ModelLoaderDataTable
     public Matrix4x4 SkeletonRootOffset;
 
     public Span<Matrix4x4> NodeTransforms => _nodeTransform;
-    public Span<Matrix4x4> BoneTransforms => _boneTransforms;
+    public Span<Matrix4x4> BoneOffsetMatrix => _boneOffsetMatrix;
 
     public ModelImportResult GetMeshDataResult(int meshCount)
     {
@@ -111,7 +111,7 @@ internal sealed class ModelLoaderDataTable
         ArgumentOutOfRangeException.ThrowIfGreaterThan(vertexCount, _skinningData.Length);
 
         skinningData = _skinningData.AsSpan();
-        boneTransforms = _boneTransforms.AsSpan();
+        boneTransforms = _boneOffsetMatrix.AsSpan();
     }
 
 
@@ -182,7 +182,7 @@ internal sealed class ModelLoaderDataTable
         _parts.AsSpan().Clear();
         _partTransforms.AsSpan().Clear();
         _nodeTransform.AsSpan().Fill(Matrix4x4.Identity);
-        _boneTransforms.AsSpan().Fill(Matrix4x4.Identity);
+        _boneOffsetMatrix.AsSpan().Fill(Matrix4x4.Identity);
 
         ModelBounds = default;
         InvRootTransform = Matrix4x4.Identity;
@@ -195,7 +195,7 @@ internal sealed class ModelLoaderDataTable
         _vertices = null!;
         _verticesSkinned = null!;
         _nodeTransform = null!;
-        _boneTransforms = null!;
+        _boneOffsetMatrix = null!;
         _skinningData = null!;
         _parts = null!;
         _partTransforms = null!;

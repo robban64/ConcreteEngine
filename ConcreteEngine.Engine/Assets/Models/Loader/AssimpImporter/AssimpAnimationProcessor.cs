@@ -95,12 +95,12 @@ internal sealed class AssimpAnimationProcessor(ModelLoaderDataTable dataTable, M
                 var posKeys = channel->MPositionKeys;
                 var posCount = (int)channel->MNumPositionKeys;
 
-                boneTrack.TranslationTimes = new float[posCount];
-                boneTrack.Translations = new Vector3[posCount];
+                boneTrack.PositionTimes = new float[posCount];
+                boneTrack.Positions = new Vector3[posCount];
                 for (var k = 0; k < posCount; k++)
                 {
-                    boneTrack.TranslationTimes[k] = (float)posKeys[k].MTime;
-                    boneTrack.Translations[k] = posKeys[k].MValue;
+                    boneTrack.PositionTimes[k] = (float)posKeys[k].MTime;
+                    boneTrack.Positions[k] = posKeys[k].MValue;
                 }
 
                 // Rotations

@@ -38,21 +38,18 @@ internal readonly ref struct ModelPartView(
 
 internal readonly ref struct ModelAnimationView(
     BoneTrack[][] clips,
-    ReadOnlySpan<Matrix4x4> boneTransforms,
-    ReadOnlySpan<Matrix4x4> nodeTransforms,
-    ReadOnlySpan<int> parentIndices,
+    ReadOnlySpan<Matrix4x4> boneOffsetMatrixSpan,
+    ReadOnlySpan<Matrix4x4> nodeTransformSpan,
+    ReadOnlySpan<int> parentIndexSpan,
     ref Matrix4x4 invTransform)
 {
-    public readonly ReadOnlySpan<Matrix4x4> BoneTransforms = boneTransforms;
-    public readonly ReadOnlySpan<Matrix4x4> NodeTransforms  = nodeTransforms;
-    public readonly ReadOnlySpan<int> ParentIndices = parentIndices;
+    public readonly ReadOnlySpan<Matrix4x4> BoneOffsetMatrixSpan = boneOffsetMatrixSpan;
+    public readonly ReadOnlySpan<Matrix4x4> NodeTransformSpan  = nodeTransformSpan;
+    public readonly ReadOnlySpan<int> ParentIndexSpan = parentIndexSpan;
     public readonly ref Matrix4x4 InvTransform = ref invTransform;
     
-    public ReadOnlySpan<BoneTrack> GetClip(int clip) => clips[clip];
-}
+    public int BoneLength => ParentIndexSpan.Length;
 
-internal readonly ref struct AnimationBonePayload(ReadOnlySpan<Matrix4x4> boneTransforms, ReadOnlySpan<RangeU16> ranges)
-{
-    public readonly ReadOnlySpan<Matrix4x4> BoneTransforms = boneTransforms;
-    public readonly ReadOnlySpan<RangeU16> Range = ranges;
+    public ReadOnlySpan<BoneTrack> GetClip(int clip) => clips[clip];
+
 }

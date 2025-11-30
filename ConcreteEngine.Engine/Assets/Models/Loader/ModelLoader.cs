@@ -64,7 +64,7 @@ internal sealed class ModelLoader
                 boneMapping,
                 animations,
                 parentIndices,
-                _dataTable.BoneTransforms,
+                _dataTable.BoneOffsetMatrix,
                 _dataTable.NodeTransforms,
                 in _dataTable.InvRootTransform,
                 in _dataTable.SkeletonRootOffset);

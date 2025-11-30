@@ -16,8 +16,8 @@ public sealed class AnimationClip(string name, float duration, float ticksPerSec
     
     public sealed class Track
     {
-        public float[] TranslationTimes { get; internal set; }
-        public Vector3[] Translations { get; internal set; }
+        public float[] PositionTimes { get; internal set; }
+        public Vector3[] Positions { get; internal set; }
 
         public float[] RotationTimes { get; internal set; }
         public Quaternion[] Rotations { get; internal set; }

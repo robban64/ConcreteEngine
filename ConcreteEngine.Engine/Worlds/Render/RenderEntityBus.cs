@@ -65,8 +65,11 @@ internal sealed class RenderEntityBus
     public void CollectEntities(float deltaTime, DrawCommandBuffer buffer)
     {
         if (_world is null) return;
-
+        
         EnsureFullCapacity(DrawCount);
+        buffer.EnsureBufferCapacity(_world.EntityCount + 64);
+        buffer.EnsureBoneBuffer(_world.Entities.Animations.Count);
+
         CollectModelEntities();
 
         var entities = _entities.AsSpan(0, _idx);
@@ -76,7 +79,6 @@ internal sealed class RenderEntityBus
 
         ProcessCollectedEntities();
         CalculateDepthKey();
-
         _animatorProcessor.ProcessAnimations(deltaTime, _world.Entities, buffer, ctx);
     }
 
@@ -161,10 +163,8 @@ internal sealed class RenderEntityBus
 
     public void FlushEntities(DrawCommandBuffer buffer)
     {
-        if (_world is null) return;
-
-        buffer.EnsureBufferCapacity(_world.EntityCount + 64);
-
+        if (_world is null || _entities.Length == 0 || _entityData.Length == 0) return;
+        
         FlushWorldEntities(buffer);
 
         var prevModel = new ModelId(-1);
@@ -175,15 +175,17 @@ internal sealed class RenderEntityBus
         ReadOnlySpan<MaterialId> matSpan = default;
 
         // stack space for nested loop
-        DrawObjectUniform drawData = default;
 
-        var entitySpan = _entities.AsSpan(0, _idx);
-        var dataSpan = _entityData.AsSpan(0, _idx);
 
-        for (var i = 0; i < _idx; i++)
+        var len = _idx;
+        
+        if ((uint)len > _entities.Length || (uint)len > _entityData.Length) 
+            throw new IndexOutOfRangeException();
+
+        for (var i = 0; i < len; i++)
         {
-            ref readonly var entity = ref entitySpan[i];
-            ref readonly var entityData = ref dataSpan[i];
+            ref readonly var entity = ref _entities[i];
+            ref readonly var entityData = ref _entityData[i];
 
             if (entity.Model != prevModel)
             {
@@ -199,9 +201,8 @@ internal sealed class RenderEntityBus
             }
 
 
-            Matrix4x4 world = default;
-            MatrixMath.CreateModelMatrix(in entityData.Transform.Translation, in entityData.Transform.Scale,
-                in entityData.Transform.Rotation, out world);
+            MatrixMath.CreateModelMatrix( entityData.Transform.Translation,  entityData.Transform.Scale,
+                 entityData.Transform.Rotation, out var world);
 
             ref var mat0 = ref MemoryMarshal.GetReference(matSpan);
 
@@ -211,19 +212,19 @@ internal sealed class RenderEntityBus
             var baseMeta = entity.CommandMeta;
             var isAnimated = entity.AnimatedSlot >= 0;
             var animatedSlot = isAnimated ? entity.AnimatedSlot : (short)-1;
-            var len = int.Min(locals.Length, parts.Length);
-            for (var partIdx = 0; partIdx < len; partIdx++)
+            var localLen = int.Min(locals.Length, parts.Length);
+            for (var partIdx = 0; partIdx < localLen; partIdx++)
             {
                 ref readonly var part = ref parts[partIdx];
 
-                ref var draw = ref Unsafe.AsRef(ref drawData);
                 ref var mat = ref Unsafe.Add(ref mat0, part.MaterialSlot);
 
                 var isTransparent = materialTag.IsTransparent(part.MaterialSlot);
                 var meta = BuildMeta(isTransparent, baseMeta);
                 var cmd = new DrawCommand(part.Mesh, mat, drawCount: part.DrawCount, animationSlot: animatedSlot);
-                ApplyTransform(ref draw, in locals[partIdx], in world, isAnimated);
-                buffer.SubmitDraw(cmd, meta, ref draw);
+                
+                ApplyTransform(ref buffer.Writer, in locals[partIdx], in world, isAnimated);
+                buffer.Submit(cmd, meta);
             }
 
             prevMatKey = entity.MaterialKey;
@@ -242,7 +243,7 @@ internal sealed class RenderEntityBus
         }
         else
         {
-            MatrixMath.MultiplyAffine(in local, in world, out data.Model);
+            MatrixMath.WriteMultiplyAffine(ref data.Model,in local, in world);
             MatrixMath.CreateNormalMatrix(in data.Model, out data.Normal);
         }
     }
@@ -294,7 +295,7 @@ internal sealed class RenderEntityBus
 
             var cmd = new DrawCommand(particles.Mesh, particles.Material, instanceCount: particles.ParticleCount);
             var meta = new DrawCommandMeta(DrawCommandId.Particle, DrawCommandQueue.Particles, passMask: PassMask.Main);
-            buffer.SubmitNonTransformDraw(cmd, meta);
+            buffer.SubmitEmptyTransform(cmd, meta);
         }
     }
 

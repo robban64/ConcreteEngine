@@ -99,7 +99,15 @@ internal sealed class DrawCommandPipeline
         if (materialPayload.Length > 0)
             _drawBuffers.UploadMaterial(materialPayload);
 
-        _drawBuffers.UploadDrawObjects(_commandBuffer.DrainTransformQueue());
+
+        var transformPayload = _commandBuffer.DrainTransformBuffer();
+        if(transformPayload.Length > 0)
+            _drawBuffers.UploadDrawObjects(transformPayload);
+        
+        var animationPayload = _commandBuffer.DrainBoneTransformBuffer();
+        if(animationPayload.Length > 0)
+            _drawBuffers.UploadAnimationData(animationPayload);
+
     }
 
     internal void ExecuteDrawPass(PassId passId, bool defaultDraw)

@@ -26,14 +26,16 @@ public interface IMaterialStore
 
 public sealed class MaterialStore : IMaterialStore
 {
+    private const int DefaultCapacity = 128;
+    
     private static int _idx = 0;
     private static MaterialId NextId() => new(++_idx);
 
     private readonly AssetStore _assetStore;
 
-    private Material?[] _materials = new Material[128];
+    private Material?[] _materials = new Material[DefaultCapacity];
+    private readonly Dictionary<string, MaterialId> _materialDict = new(DefaultCapacity);
     private readonly Stack<MaterialId> _free = [];
-    private readonly Dictionary<string, MaterialId> _materialDict = new(128);
 
     public int Count => _idx;
     public int FreeSlots => _free.Count;

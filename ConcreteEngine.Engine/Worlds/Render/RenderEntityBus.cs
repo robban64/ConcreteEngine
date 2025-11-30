@@ -55,7 +55,6 @@ internal sealed class RenderEntityBus
     private int ActiveTerrainCount => _world?.Terrain.IsActive ?? false ? 1 : 0;
     public int DrawCount => (_world?.EntityCount ?? 0) + ActiveSkyCount + ActiveTerrainCount;
 
-
     internal void AttachWorld(World world) => _world = world;
 
     public void Reset()
@@ -63,23 +62,21 @@ internal sealed class RenderEntityBus
         _idx = 0;
     }
 
-    private readonly FrameProfileTimer _timer = new();
-
     public void CollectEntities(float deltaTime, DrawCommandBuffer buffer)
     {
         if (_world is null) return;
 
         EnsureFullCapacity(DrawCount);
-        _timer.Begin();
         CollectModelEntities();
+
+        var entities = _entities.AsSpan(0, _idx);
+        var entitiesData = _entityData.AsSpan(0, _idx);
+        var byEntityId = _byEntityId.AsSpan(0, _idx);
+        var ctx = new RenderFrameContext(entities, entitiesData, byEntityId);
+
         ProcessCollectedEntities();
         CalculateDepthKey();
-        _timer.EndPrint();
 
-        var ctx = new RenderFrameContext
-        {
-            EntitySpan = _entities.AsSpan(0, _idx), EntityByIdSpan = _byEntityId.AsSpan(),
-        };
         _animatorProcessor.ProcessAnimations(deltaTime, _world.Entities, buffer, ctx);
     }
 
@@ -212,7 +209,8 @@ internal sealed class RenderEntityBus
             var locals = modelView.Locals;
 
             var baseMeta = entity.CommandMeta;
-            var animatedSlot = entity.AnimatedSlot;
+            var isAnimated = entity.AnimatedSlot >= 0;
+            var animatedSlot = isAnimated ? entity.AnimatedSlot : (short)-1;
             var len = int.Min(locals.Length, parts.Length);
             for (var partIdx = 0; partIdx < len; partIdx++)
             {
@@ -220,11 +218,11 @@ internal sealed class RenderEntityBus
 
                 ref var draw = ref Unsafe.AsRef(ref drawData);
                 ref var mat = ref Unsafe.Add(ref mat0, part.MaterialSlot);
-                var meta = BuildMeta(ref Unsafe.AsRef(ref materialTag), part.MaterialSlot, baseMeta);
-                var cmd = new DrawCommand(part.Mesh, mat, drawCount: part.DrawCount,
-                    animationSlot: animatedSlot >= 0 ? animatedSlot : (short)-1);
 
-                ApplyTransform(ref draw, in locals[partIdx], in world, animatedSlot >= 0);
+                var isTransparent = materialTag.IsTransparent(part.MaterialSlot);
+                var meta = BuildMeta(isTransparent, baseMeta);
+                var cmd = new DrawCommand(part.Mesh, mat, drawCount: part.DrawCount, animationSlot: animatedSlot);
+                ApplyTransform(ref draw, in locals[partIdx], in world, isAnimated);
                 buffer.SubmitDraw(cmd, meta, ref draw);
             }
 
@@ -251,9 +249,9 @@ internal sealed class RenderEntityBus
 
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    private static DrawCommandMeta BuildMeta(ref MaterialTag tag, int slot, DrawEntityCommandMeta m)
+    private static DrawCommandMeta BuildMeta(bool isTransparent, DrawEntityCommandMeta m)
     {
-        if (!tag.IsTransparent(slot))
+        if (!isTransparent)
             return new DrawCommandMeta(m.CommandId, m.Queue, m.Resolver, m.PassMask, m.DepthKey);
 
         var depthKey = (ushort)(ushort.MaxValue - m.DepthKey);

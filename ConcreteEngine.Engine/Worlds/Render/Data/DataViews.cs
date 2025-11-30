@@ -37,17 +37,18 @@ internal readonly ref struct ModelPartView(
 }
 
 internal readonly ref struct ModelAnimationView(
-    ReadOnlySpan<AnimationClip> clips,
+    BoneTrack[][] clips,
     ReadOnlySpan<Matrix4x4> boneTransforms,
     ReadOnlySpan<Matrix4x4> nodeTransforms,
-    ref Matrix4x4 invTransform,
-    RangeU16 range)
+    ReadOnlySpan<int> parentIndices,
+    ref Matrix4x4 invTransform)
 {
-    public readonly ReadOnlySpan<AnimationClip> Clips = clips;
     public readonly ReadOnlySpan<Matrix4x4> BoneTransforms = boneTransforms;
     public readonly ReadOnlySpan<Matrix4x4> NodeTransforms  = nodeTransforms;
+    public readonly ReadOnlySpan<int> ParentIndices = parentIndices;
     public readonly ref Matrix4x4 InvTransform = ref invTransform;
-    public readonly RangeU16 Range = range;
+    
+    public ReadOnlySpan<BoneTrack> GetClip(int clip) => clips[clip - 1];
 }
 
 internal readonly ref struct AnimationBonePayload(ReadOnlySpan<Matrix4x4> boneTransforms, ReadOnlySpan<RangeU16> ranges)

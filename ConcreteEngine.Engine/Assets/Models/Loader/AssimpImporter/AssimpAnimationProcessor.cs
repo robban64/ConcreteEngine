@@ -127,7 +127,7 @@ internal sealed class AssimpAnimationProcessor(ModelLoaderDataTable dataTable, M
                     boneTrack.Scales[k] = scaleKeys[k].MValue;
                 }
 
-                animationData.BoneTracksMap.Add(index, boneTrack);
+                animationData.Tracks.Add(index, boneTrack);
             }
 
             state.AppendAnimation(animationData);

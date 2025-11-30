@@ -23,7 +23,7 @@ internal sealed class AssimpMaterialProcessor(ModelLoaderState state)
 {
     private bool isActive = false;
 
-    private HashSet<string> _processedTextures = new(4);
+    private readonly HashSet<string> _processedTextures = new(4);
 
     internal unsafe void ProcessSceneMaterials(AssimpScene* scene)
     {

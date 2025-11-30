@@ -44,7 +44,7 @@ internal sealed class AnimatorProcessor
         {
             ref var component = ref query.Component;
 
-            var view = _animationTable.GetModelAnimationView(component.Animation);
+            //var view = _animationTable.GetModelAnimationView(component.Animation);
             
             var modelAnimation = _meshTable.GetAnimationFor(component.Model);
             var animation = modelAnimation.ClipDataSpan[component.ClipIndex];
@@ -52,9 +52,9 @@ internal sealed class AnimatorProcessor
             component.Speed = animation.TicksPerSecond;
             float time = component.AdvanceTime(deltaTime);
 
-            var boneByIndex = animation.BoneTracksMap;
-            var boneTransforms = view.BoneTransforms;
-            var nodeTransforms = view.NodeTransforms;
+            var boneByIndex = animation.Tracks;
+            var boneTransforms = modelAnimation.BoneTransforms;
+            var nodeTransforms = modelAnimation.NodeTransforms;
             var parentIndices = modelAnimation.ParentIndices;
 
             var finalWriter = new AnimationUniformWriter(ref finalResult)
@@ -78,7 +78,7 @@ internal sealed class AnimatorProcessor
                 {
                     workingMat = nodeTransforms[i];
                 }
-                else
+                else 
                 {
                     var pos = LerpVector(track.Translations, track.TranslationTimes, time, default);
                     var rot = LerpQuaternion(track.Rotations, track.RotationTimes, time);

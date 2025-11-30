@@ -127,7 +127,7 @@ public sealed class WorldRenderer : IWorldRenderer
         
         PrepareRenderView(frameInfo.Alpha, camera);
         RenderDataSlot.FrameInfo = frameInfo;
-        RenderDataSlot.ProjectionInfo = camera.ProjectionInfo;
+        RenderDataSlot.ProjectionInfo = RenderView.ProjectionInfo;
         RenderDataSlot.ViewData = RenderView.CameraView;
 
         

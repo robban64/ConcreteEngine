@@ -12,10 +12,7 @@ public sealed class AnimationClip(string name, float duration, float ticksPerSec
     public float Duration { get; set; } = duration;
     public float TicksPerSecond { get; set; } = ticksPerSecond;
     
-    // public float[] TranslationTimes { get; internal set; }
-    // public Vector3[] Translations { get; internal set; }
-    // ...
-    public Dictionary<int, BoneClipTrack> BoneTracksMap { get; } = [];
+    public Dictionary<int, BoneClipTrack> Tracks { get; } = [];
 }
 
 public sealed class BoneClipTrack

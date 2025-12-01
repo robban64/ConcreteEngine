@@ -1,7 +1,23 @@
+using ConcreteEngine.Renderer.Definitions;
+
 namespace ConcreteEngine.Engine.Worlds.Render;
 
-internal sealed class EffectProcessor
+internal static class EffectProcessor
 {
+    internal static void Execute(DrawEntityContext ctx)
+    {
+        var selected = WorldActionSlot.SelectedEntityId;
+        if (selected > 0)
+        {
+            var idx = ctx.EntityByIdSpan[selected];
+            ref var entity = ref ctx.EntitySpan[idx];
+            entity.IsSelected = true;
+            entity.CommandMeta = entity.CommandMeta with
+            {
+                PassMask = PassMask.Effect | PassMask.DepthPre, Resolver = DrawCommandResolver.Highlight
+            };
+        }
+    }
 /*
     private bool hasRunEntities = false;
     private void DrawBounds()

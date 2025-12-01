@@ -10,6 +10,7 @@ using ConcreteEngine.Engine.Editor.Definitions;
 using ConcreteEngine.Engine.Platform;
 using ConcreteEngine.Engine.Utils;
 using ConcreteEngine.Engine.Worlds.Render.Tables;
+using ConcreteEngine.Engine.Worlds.Tables;
 using ConcreteEngine.Engine.Worlds.Utility;
 using ConcreteEngine.Engine.Worlds.View;
 using ConcreteEngine.Graphics;
@@ -137,8 +138,6 @@ public sealed class WorldRenderer : IWorldRenderer
         SubmitMaterialData();
 
         _renderEntityBus.CollectEntities(frameInfo.DeltaTime, _renderer.CommandBuffer);
-
-        _renderEntityBus.FlushEntities(_renderer.CommandBuffer);
         // fill buffers
         _renderer.CollectDrawBuffers();
         _renderer.StartFrame(status);

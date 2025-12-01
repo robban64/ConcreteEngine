@@ -15,9 +15,6 @@ internal sealed class InteractionController(ApiContext apiContext)
 
     private DragEntityState _dragState;
 
-    private ref Transform GetTransform(EntityId e) =>
-        ref apiContext.World.Entities.Transforms.GetById(_selectedEntityId);
-
     private ref BoxComponent GetBounds(EntityId e) =>
         ref apiContext.World.Entities.BoundingBoxes.GetById(_selectedEntityId);
 
@@ -75,7 +72,7 @@ internal sealed class InteractionController(ApiContext apiContext)
         float t = (_dragState.DragStart.Y - ray.Position.Y) / denom;
         if (t < 0) return;
 
-        ref var transform = ref GetTransform(_selectedEntityId);
+        ref var transform = ref world.Entities.Core.GetTransformById(_selectedEntityId);
         ref readonly var bounds = ref GetBounds(_selectedEntityId);
 
         var newPoint = ray.GetPointOnRay(t);

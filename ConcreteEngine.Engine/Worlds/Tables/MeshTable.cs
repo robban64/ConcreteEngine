@@ -11,7 +11,7 @@ using ConcreteEngine.Graphics.Gfx.Resources;
 
 #endregion
 
-namespace ConcreteEngine.Engine.Worlds.Render.Tables;
+namespace ConcreteEngine.Engine.Worlds.Tables;
 
 public interface IMeshTable
 {
@@ -36,14 +36,13 @@ internal sealed class MeshTable : IMeshTable
 
 
     private readonly Dictionary<ModelId, ModelAnimation> _modelAnimations = new(32);
-    private int _animationIdx = 0;
 
     private int _partIdx = 0;
 
 
     public ModelAnimation GetAnimationFor(ModelId id) => _modelAnimations[id];
 
-    public ModelBoundsView GetModelBoundSpan() => new(_modelBoxes.AsSpan());
+    public ModelBoundsView GetModelBoundSpan() => new(_modelBoxes);
 
     public ushort GetPartLengthFor(ModelId id)
     {
@@ -70,35 +69,6 @@ internal sealed class MeshTable : IMeshTable
 
         return new ModelPartView(parts, locals, boxes, range);
     }
-
-/*
-    public int GetAnimationSlot(ModelId modelId) => SortMethod.BinarySearchDataInt(_animationByModel, modelId.Value);
-
-    public ModelAnimationView GetModelAnimationView(int slot)
-    {
-        if ((uint)slot > (uint)_modelBoneRanges.Length || (uint)slot > (uint)_modelBoneRanges.Length)
-            throw new ArgumentOutOfRangeException(nameof(slot));
-
-        var range = _modelBoneRanges[slot];
-        if ((uint)(range.Offset + range.Length) > (uint)_boneTransforms.Length)
-            throw new IndexOutOfRangeException();
-
-        var boneTransforms = _boneTransforms.AsSpan(range.Offset, range.Length);
-        var animations = _modelAnimations[slot];
-        return new ModelAnimationView(animations, boneTransforms, ref _modelBoneInvTransform[slot], range);
-    }
-
-    public AnimationBonePayload GetBoneUploadPayload()
-    {
-        if (_animationIdx > _modelBoneRanges.Length)
-            throw new IndexOutOfRangeException();
-
-        var ranges = _modelBoneRanges.AsSpan(0, _animationIdx);
-        var last = ranges[^1];
-        var boneTransforms = _boneTransforms.AsSpan(0, last.Offset + last.Length);
-        return new AnimationBonePayload(boneTransforms, ranges);
-    }
-*/
 
     public ModelId CreateSimpleModel(MeshId mesh, int materialSlot, int drawCount, in BoundingBox bounds)
     {
@@ -150,31 +120,6 @@ internal sealed class MeshTable : IMeshTable
             if (model.Animation is null) continue;
             _modelAnimations.Add(model.ModelId, model.Animation);
         }
-
-
-        /* if (animatedModels == 0) return;
-
-         EnsureAnimatedCapacity(totalBones, animatedModels);
-
-         idx = _animationIdx;
-         for (var i = 0; i < models.Count; i++)
-         {
-             var model = models[i];
-             if (model.Animation is null) continue;
-
-             _modelAnimations.Add(model.Animation);
-
-             var modelBones = model.Animation.GetBoneTransformSpan();
-             var boneRangeSpan = _boneTransforms.AsSpan(idx, modelBones.Length);
-
-             modelBones.CopyTo(boneRangeSpan);
-             _modelBoneInvTransform[idx] = model.Animation.InverseRootTransform;
-             _animationByModel[idx] = model.ModelId;
-             _modelBoneRanges[idx] = new RangeU16(idx, modelBones.Length);
-             idx += modelBones.Length;
-         }
-
-         _animationIdx = idx;*/
     }
 
     private void EnsureCapacity(int cap, int rangeCap)

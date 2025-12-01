@@ -22,24 +22,26 @@ internal sealed class AnimatorProcessor
         _animationTable = animationTable;
     }
 
-
     [SkipLocalsInit]
-    public void ProcessAnimations(float deltaTime, WorldEntities entities, DrawCommandBuffer buffer,
-        RenderFrameContext ctx)
+    public void Execute(float deltaTime, DrawCommandBuffer buffer, DrawEntityContext ctx)
     {
         const int boneCap = RenderLimits.BoneCapacity;
         Span<Matrix4x4> globals = stackalloc Matrix4x4[boneCap];
         globals.Fill(Matrix4x4.Identity);
 
+        var tableData = _animationTable.GetDataView();
+        var uploader = buffer.GetSkinningUploaderCtx();
+
         var idx = 0;
-        foreach (var query in entities.Query<AnimationComponent>())
+        foreach (var query in WorldEntities.Query<AnimationComponent>())
         {
             ref var component = ref query.Component;
             var time = component.AdvanceTime(deltaTime);
 
-            var view = _animationTable.GetModelAnimationView(component.Animation);
-            var boneLength = view.BoneLength;
+            var view = tableData.GetModelView(component.Animation, out var invTransform);
             var clipTrack = view.GetClip(0);
+
+            var boneLength = view.BoneLength;
 
             if ((uint)boneLength > globals.Length ||
                 (uint)boneLength > view.BoneOffsetMatrixSpan.Length ||
@@ -50,7 +52,7 @@ internal sealed class AnimatorProcessor
                 throw new IndexOutOfRangeException();
             }
 
-            var finals = buffer.WriteBoneSpan();
+            var finals = uploader.WriteBoneSpan();
             Matrix4x4 result = default;
             for (var i = 0; i < boneLength; i++)
             {
@@ -67,7 +69,7 @@ internal sealed class AnimatorProcessor
                     globals[i] = local;
 
                 MatrixMath.WriteMultiplyAffine(ref result, in view.BoneOffsetMatrixSpan[i], in globals[i]);
-                MatrixMath.WriteMultiplyAffine(ref finals[i], in result, in view.InvTransform);
+                MatrixMath.WriteMultiplyAffine(ref finals[i], in result, in invTransform);
                 //finals[i] = boneTransforms[i] * globals[i] * invMatrix;
             }
 

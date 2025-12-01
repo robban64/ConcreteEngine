@@ -28,7 +28,7 @@ public sealed class EntitiesViewModel
         if (entityId < Entities.Count && Entities[entityId].EntityId == entityId)
             return Entities[entityId];
 
-        var index = SortMethod.BinarySearchInt(Entities, entityId);
+        var index = SortMethod.BinarySearch(Entities, entityId);
         return index < 0 ? null : Entities[index];
     }
 

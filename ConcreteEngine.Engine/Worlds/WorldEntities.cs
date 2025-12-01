@@ -1,9 +1,12 @@
 #region
 
+using System.Runtime.CompilerServices;
 using ConcreteEngine.Common.Numerics;
 using ConcreteEngine.Engine.Worlds.Data;
 using ConcreteEngine.Engine.Worlds.Entities;
+using ConcreteEngine.Engine.Worlds.Render;
 using ConcreteEngine.Engine.Worlds.Render.Tables;
+using ConcreteEngine.Engine.Worlds.Tables;
 
 #endregion
 
@@ -11,27 +14,24 @@ namespace ConcreteEngine.Engine.Worlds;
 
 public sealed class WorldEntities
 {
-    public EntityId Create() => new(_idIdx++);
-    private int _idIdx = 1;
-
     private MeshTable _meshTable = null!;
     private MaterialTable _materialTable = null!;
 
-    public EntityStore<ModelComponent> Models { get; }
-    public EntityStore<Transform> Transforms { get; }
-    public EntityStore<BoxComponent> BoundingBoxes { get; }
-    public EntityStore<AnimationComponent> Animations { get; }
+    internal EntityCoreStore Core { get; }
+    internal EntityStore<BoxComponent> BoundingBoxes { get; }
+    internal EntityStore<AnimationComponent> Animations { get; }
+
+    private readonly List<IEntityStore> _storeList;
 
     internal WorldEntities()
     {
-        Models = GenericStores<ModelComponent>.CreateStore();
-        Transforms = GenericStores<Transform>.CreateStore();
+        Core = new EntityCoreStore();
         BoundingBoxes = GenericStores<BoxComponent>.CreateStore();
         Animations = GenericStores<AnimationComponent>.CreateStore();
+        _storeList = [BoundingBoxes,  Animations];
     }
 
-    public int EntityCount => _idIdx;
-
+    public int EntityCount => Core.Count;
 
     internal void AttachRender(MeshTable meshTable, MaterialTable materialTable)
     {
@@ -39,42 +39,32 @@ public sealed class WorldEntities
         _materialTable = materialTable;
     }
 
-
-    public EntityId CreateModelEntity(ModelId model, int drawCount, MaterialTag materialTag, in Transform transform,
+    public EntityId CreateModelEntity(ModelId model, int drawCount, MaterialTag tag, in Transform transform,
         in BoundingBox boundingBox)
     {
-        var entityId = Create();
-        var matKey = _materialTable.Add(materialTag);
-        Models.Add(entityId, new ModelComponent(model, drawCount, matKey));
-        Transforms.Add(entityId, in transform);
+        var matKey = _materialTable.Add(tag);
+        var entityId = Core.AddEntity(new ModelComponent(model, drawCount, matKey), in transform);
         BoundingBoxes.Add(entityId, new BoxComponent(in boundingBox));
         return entityId;
+    }
+
+    public void AddComponent<T>(EntityId entityId, in T component) where T : unmanaged
+    {
+        GenericStores<T>.Store.Add(entityId, component);
     }
 
 
     internal void EndTick()
     {
-        Transforms.EndTick();
-        Models.EndTick();
-
-        //Transforms2D.EndTick();
-        //Sprites.EndTick();
+        foreach (var store in _storeList)
+            store.EndTick();
     }
-
-
-    public EntityEnumerator<T1> Query<T1>() where T1 : unmanaged => new(GenericStores<T1>.Store);
-
-    public EntityEnumerator<T1, T2> Query<T1, T2>() where T1 : unmanaged where T2 : unmanaged =>
-        new(GenericStores<T1>.Store, GenericStores<T2>.Store);
-
-    public EntityEnumerator<T1, T2, T3> Query<T1, T2, T3>()
-        where T1 : unmanaged where T2 : unmanaged where T3 : unmanaged =>
-        new(GenericStores<T1>.Store, GenericStores<T2>.Store, GenericStores<T3>.Store);
-
-
+    
+    internal static EntityEnumerator<T1> Query<T1>() where T1 : unmanaged => new(GenericStores<T1>.Store);
+        
     private static class GenericStores<T> where T : unmanaged
     {
-        public static EntityStore<T> Store { get; private set; } = null!;
+        public static EntityStore<T> Store = null!;
 
         public static EntityStore<T> CreateStore()
         {
@@ -83,4 +73,14 @@ public sealed class WorldEntities
             return store;
         }
     }
+    
+/*
+    internal EntityEnumerator<T1, T2> Query<T1, T2>() where T1 : unmanaged where T2 : unmanaged =>
+        new(GenericStores<T1>.Store, GenericStores<T2>.Store);
+
+    internal EntityEnumerator<T1, T2, T3> Query<T1, T2, T3>()
+        where T1 : unmanaged where T2 : unmanaged where T3 : unmanaged =>
+        new(GenericStores<T1>.Store, GenericStores<T2>.Store, GenericStores<T3>.Store);
+        */
 }
+

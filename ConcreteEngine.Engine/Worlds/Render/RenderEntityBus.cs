@@ -7,10 +7,12 @@ using ConcreteEngine.Common;
 using ConcreteEngine.Common.Collections;
 using ConcreteEngine.Common.Numerics;
 using ConcreteEngine.Common.Numerics.Maths;
+using ConcreteEngine.Common.Time;
 using ConcreteEngine.Engine.Worlds.Data;
 using ConcreteEngine.Engine.Worlds.Entities;
 using ConcreteEngine.Engine.Worlds.Render.Data;
 using ConcreteEngine.Engine.Worlds.Render.Tables;
+using ConcreteEngine.Engine.Worlds.Tables;
 using ConcreteEngine.Engine.Worlds.Utility;
 using ConcreteEngine.Renderer.Data;
 using ConcreteEngine.Renderer.Definitions;
@@ -26,6 +28,7 @@ internal sealed class RenderEntityBus
     private const int MaxCapacity = 10_000;
 
     private int _idx = 0;
+    private int _prevIdx = 0;
     private int[] _byEntityId = new int[DefaultCapacity]; //sparse
     private DrawEntity[] _entities = new DrawEntity[DefaultCapacity];
     private DrawEntityData[] _entityData = new DrawEntityData[DefaultCapacity];
@@ -57,9 +60,11 @@ internal sealed class RenderEntityBus
 
     public void Reset()
     {
+        _prevIdx = _idx;
         _idx = 0;
     }
 
+    private FrameProfileTimer _timer = new();
     public void CollectEntities(float deltaTime, DrawCommandBuffer buffer)
     {
         if (_world is null) return;
@@ -68,16 +73,19 @@ internal sealed class RenderEntityBus
         buffer.EnsureBufferCapacity(_world.EntityCount + 64);
         buffer.EnsureBoneBuffer(_world.Entities.Animations.Count);
 
+        _timer.Begin();
         CollectModelEntities();
 
-        var entities = _entities.AsSpan(0, _idx);
-        var entitiesData = _entityData.AsSpan(0, _idx);
-        var byEntityId = _byEntityId.AsSpan(0, _idx);
-        var ctx = new RenderFrameContext(entities, entitiesData, byEntityId);
+        var ctx = new DrawEntityContext(_idx, _entities, _entityData, _byEntityId);
+        
+        _animatorProcessor.Execute(deltaTime, buffer, ctx);
+        SpatialProcessor.Execute(ctx);
+        EffectProcessor.Execute(ctx);
 
-        ProcessCollectedEntities();
-        CalculateDepthKey();
-        _animatorProcessor.ProcessAnimations(deltaTime, _world.Entities, buffer, ctx);
+        _timer.EndPrint();
+
+        FlushEntities(buffer);
+
     }
 
     private void CollectModelEntities()
@@ -86,78 +94,38 @@ internal sealed class RenderEntityBus
 
         var worldEntities = _world!.Entities;
 
-        var len = worldEntities.EntityCount;
-        if ((uint)len > _entities.Length || (uint)len > _entityData.Length || (uint)len > _byEntityId.Length)
-            throw new IndexOutOfRangeException();
-
+        var view = worldEntities.Core.GetCoreView();
         var boundsView = _meshTable.GetModelBoundSpan();
 
-        var idx = 0;
-        foreach (var query in worldEntities.Query<ModelComponent, Transform>())
+        var len = view.Count;
+        if ((uint)len > _entities.Length || (uint)len > _entityData.Length ||
+            (uint)len > _byEntityId.Length || (uint)len > view.Models.Length ||
+            (uint)len > view.Transforms.Length || (uint)len > view.EntityId.Length)
         {
-            //Debug.Assert(model.Model != default && model.MaterialKey != default);
-            ref readonly var model = ref query.Component1;
-            ref readonly var transform = ref query.Component2;
+            throw new IndexOutOfRangeException();
+        }
+        
+        var idx = 0;
+        for (int i = 0; i < len; i++)
+        {
+            var entityId = view.EntityId[i];
+            ref readonly var model = ref view.Models[i];
+            ref readonly var transform = ref view.Transforms[i];
 
             ref var entity = ref _entities[idx];
-            ref var entityData = ref _entityData[idx];
+            ref var entityData = ref _entityData[i];
 
-            _byEntityId[entity.Entity] = idx;
+            _byEntityId[entityId] = idx;
 
-            entity.PartLength = (byte)_meshTable.GetPartLengthFor(model.Model);
-            entity.IsSelected = false;
-            entity.Entity = query.Entity;
-            entity.Model = model.Model;
-            entity.MaterialKey = model.MaterialKey;
-            entity.CommandMeta = new DrawEntityCommandMeta(DrawCommandId.Model, DrawCommandQueue.Opaque,
-                DrawCommandResolver.None, PassMask.Default, 0);
-            entity.AnimatedSlot = -1;
-
+            entity = new DrawEntity(entityId, model.Model, model.MaterialKey);
             entityData.Transform = transform;
-            boundsView.WriteModelBoundingBox(entity.Model, out entityData.Bounds);
-
+            boundsView.WriteModelBoundingBox(view.Models[i].Model, ref entityData.Bounds);
             idx++;
         }
 
         _idx = idx;
     }
-
-    private void ProcessCollectedEntities()
-    {
-        var selected = WorldActionSlot.SelectedEntityId;
-        if (selected > 0)
-        {
-            var idx = _byEntityId[selected];
-            ref var entity = ref _entities[idx];
-            entity.IsSelected = true;
-            entity.CommandMeta = entity.CommandMeta with
-            {
-                PassMask = PassMask.Effect | PassMask.DepthPre, Resolver = DrawCommandResolver.Highlight
-            };
-        }
-    }
-
-    private void CalculateDepthKey()
-    {
-        if (_entityData.Length == 0 || _entities.Length == 0) return;
-
-        var projInfo = RenderDataSlot.ProjectionInfo;
-        var view = DepthKeyUtility.ExtractView(RenderDataSlot.ViewData.ViewMatrix);
-        float near = projInfo.Near, far = projInfo.Far;
-
-        var len = _idx;
-
-        if ((uint)len > _entities.Length || (uint)len > _entityData.Length)
-            throw new IndexOutOfRangeException();
-
-        for (var i = 0; i < len; i++)
-        {
-            ref var entity = ref _entities[i];
-            ref readonly var entityData = ref _entityData[i];
-            var depthKey = DepthKeyUtility.MakeDepthKey(in view, entityData.Transform.Translation, near, far);
-            entity.CommandMeta = entity.CommandMeta with { DepthKey = depthKey };
-        }
-    }
+    
 
     public void FlushEntities(DrawCommandBuffer buffer)
     {
@@ -179,6 +147,8 @@ internal sealed class RenderEntityBus
 
         if ((uint)len > _entities.Length || (uint)len > _entityData.Length)
             throw new IndexOutOfRangeException();
+
+        var bufferContext = buffer.GetDrawUploaderCtx();
 
         for (var i = 0; i < len; i++)
         {
@@ -221,8 +191,8 @@ internal sealed class RenderEntityBus
                 var meta = BuildMeta(isTransparent, baseMeta);
                 var cmd = new DrawCommand(part.Mesh, mat, drawCount: part.DrawCount, animationSlot: animatedSlot);
 
-                ApplyTransform(ref buffer.Writer, in locals[partIdx], in world, isAnimated);
-                buffer.Submit(cmd, meta);
+                ref var modelTransform = ref bufferContext.UploadDrawAndWrite(cmd, meta);
+                ApplyTransform(ref modelTransform, in locals[partIdx], in world, isAnimated);
             }
 
             prevMatKey = entity.MaterialKey;
@@ -293,7 +263,7 @@ internal sealed class RenderEntityBus
 
             var cmd = new DrawCommand(particles.Mesh, particles.Material, instanceCount: particles.ParticleCount);
             var meta = new DrawCommandMeta(DrawCommandId.Particle, DrawCommandQueue.Particles, passMask: PassMask.Main);
-            buffer.SubmitEmptyTransform(cmd, meta);
+            buffer.SubmitDrawIdentity(cmd, meta);
         }
     }
 

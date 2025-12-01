@@ -26,13 +26,8 @@ public sealed class EntitySpawner(IWorld world, float size = 256f, float margin 
 
     private EntityId CreateModelEntity(ScenePlacement sp, Transform transform)
     {
-        var entityId = world.Entities.Create();
-        var key = world.EntityMaterials.Add(sp.Mat);
-        world.Entities.Models.Add(entityId, new ModelComponent(sp.ModelInfo.Model, sp.ModelInfo.DrawCount, key));
-        world.Entities.Transforms.Add(entityId, transform);
-        world.Entities.BoundingBoxes.Add(entityId, new BoxComponent(sp.Bounds));
-
-        return entityId;
+        var m = sp.ModelInfo;
+        return world.Entities.CreateModelEntity(m.Model, m.DrawCount, sp.Mat, in transform, sp.Bounds);
     }
 
     public void PlaceGroundRocksBasic(

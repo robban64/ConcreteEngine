@@ -1,7 +1,9 @@
 #region
 
+using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
 using ConcreteEngine.Common.Numerics;
+using ConcreteEngine.Engine.Assets.Models;
 using ConcreteEngine.Engine.Worlds.Data;
 using ConcreteEngine.Engine.Worlds.Entities;
 using ConcreteEngine.Renderer.Definitions;
@@ -33,6 +35,12 @@ public struct DrawEntityData
 {
     public Transform Transform;
     public BoundingBox Bounds;
+
+    public DrawEntityData(in Transform transform, in BoundingBox bounds)
+    {
+        Transform = transform;
+        Bounds = bounds;
+    }
 }
 
 [StructLayout(LayoutKind.Sequential)]
@@ -43,8 +51,24 @@ public struct DrawEntity
     public ModelId Model;
     public MaterialTagKey MaterialKey;
     public short AnimatedSlot;
-    public byte PartLength;
     public bool IsSelected;
+    
+    public DrawEntity(){}
+
+    public DrawEntity(EntityId entity, ModelId model, MaterialTagKey materialKey)
+    {
+        Entity = entity;
+        Model = model;
+        MaterialKey = materialKey;
+        CommandMeta = new DrawEntityCommandMeta(DrawCommandId.Model, DrawCommandQueue.Opaque,
+            DrawCommandResolver.None, PassMask.Default, 0);
+        IsSelected = false;
+        AnimatedSlot = -1;
+    }
+
+    public static DrawEntity Identity => new() { AnimatedSlot = -1 };
+    
+    public void WithDepthKey(ushort depthKey) => CommandMeta = CommandMeta with { DepthKey = depthKey };
 }
 
 [StructLayout(LayoutKind.Sequential)]

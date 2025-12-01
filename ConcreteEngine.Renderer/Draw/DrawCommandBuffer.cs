@@ -51,28 +51,19 @@ public sealed class DrawCommandBuffer
         _processor = cmd;
     }
 
-    public Span<Matrix4x4> WriteBoneSpan()
-    {
-        var span = _boneTransformBuffer.AsSpan(_skeletonIdx * BoneCapacity, BoneCapacity);
-        //finals.CopyTo(span);
-        _skeletonIdx++;
-        return span;
-    }
+    public DrawCommandUploader GetDrawUploaderCtx() => new(this, _transformBuffer);
 
-    public void UploadBoneSpan(Span<Matrix4x4> finals)
-    {
-        var span = _boneTransformBuffer.AsSpan(_skeletonIdx * BoneCapacity, BoneCapacity);
-        finals.CopyTo(span);
-        _skeletonIdx++;
-    }
+    public SkinningBufferUploader GetSkinningUploaderCtx() => new(this, _boneTransformBuffer);
 
-    public ref DrawObjectUniform Writer => ref _transformBuffer[_submitIdx];
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    internal int IncrementSkinningIndex() => _skeletonIdx++;
 
-    public int Submit(DrawCommand cmd, DrawCommandMeta meta)
+
+    internal int Submit(DrawCommand cmd, DrawCommandMeta meta)
     {
         var idx = _submitIdx++;
         if ((uint)idx >= (uint)_commandBuffer.Length || (uint)idx >= (uint)_metaBuffer.Length ||
-            (uint)idx >= (uint)_indexBuffer.Length || (uint)idx >= (uint)_transformBuffer.Length)
+            (uint)idx >= (uint)_indexBuffer.Length)
         {
             throw new IndexOutOfRangeException();
         }
@@ -83,10 +74,11 @@ public sealed class DrawCommandBuffer
         return idx;
     }
 
-    public void SubmitEmptyTransform(DrawCommand cmd, DrawCommandMeta meta)
+    public void SubmitDrawIdentity(DrawCommand cmd, DrawCommandMeta meta)
     {
         var idx = Submit(cmd, meta);
-        _transformBuffer[idx] = default;
+        _transformBuffer[idx].Model = Matrix4x4.Identity;
+        _transformBuffer[idx].Normal = default;
     }
 
     public void SubmitDraw(

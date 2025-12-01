@@ -21,8 +21,7 @@ public struct Transform(in Vector3 translation, in Vector3 scale, in Quaternion 
     internal static ref TransformData AsData(ref Transform component) =>
         ref Unsafe.As<Transform, TransformData>(ref component);
 
-    internal static ref Transform FromData(ref TransformData data) =>
-        ref Unsafe.As<TransformData, Transform>(ref data);
+    internal static ref Transform FromData(ref TransformData data) => ref Unsafe.As<TransformData, Transform>(ref data);
 
     /*
     public TransformData Data = new(in translation, in scale, in rotation);
@@ -62,6 +61,7 @@ public struct AnimationComponent(ModelId model, AnimationId animation)
 public struct BoxComponent(in BoundingBox box)
 {
     public BoundingBox Box = box;
+    public static implicit operator BoundingBox(BoxComponent c) => c.Box;
 }
 
 /*

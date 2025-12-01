@@ -7,6 +7,7 @@ using ConcreteEngine.Engine.Worlds.Entities;
 using ConcreteEngine.Engine.Worlds.Render;
 using ConcreteEngine.Engine.Worlds.Render.Batching;
 using ConcreteEngine.Engine.Worlds.Render.Tables;
+using ConcreteEngine.Engine.Worlds.Tables;
 using ConcreteEngine.Engine.Worlds.View;
 using ConcreteEngine.Graphics.Gfx;
 using ConcreteEngine.Shared.RenderData;
@@ -155,7 +156,7 @@ public sealed class World : IWorld
         if (WorldActionSlot.TryReadSlot(0, out EntityDataPayload entityData))
         {
             ref readonly var transform = ref entityData.Transform;
-            ref var entityTransform = ref entities.Transforms.GetById(new EntityId(entityData.EntityId));
+            ref var entityTransform = ref entities.Core.GetTransformById(new EntityId(entityData.EntityId));
             entityTransform.Translation = transform.Translation;
             entityTransform.Scale = transform.Scale;
             entityTransform.Rotation = transform.Rotation;

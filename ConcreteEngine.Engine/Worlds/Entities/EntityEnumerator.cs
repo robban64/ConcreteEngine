@@ -1,6 +1,6 @@
 namespace ConcreteEngine.Engine.Worlds.Entities;
 
-public struct EntityEnumerator<T1>(EntityStore<T1> r)
+internal struct EntityEnumerator<T1>(EntityStore<T1> r)
     where T1 : unmanaged
 {
     private int _i = -1;
@@ -22,7 +22,7 @@ public struct EntityEnumerator<T1>(EntityStore<T1> r)
     }
 }
 
-public struct EntityEnumerator<T1, T2>(EntityStore<T1> r1, EntityStore<T2> r2)
+internal struct EntityEnumerator<T1, T2>(EntityStore<T1> r1, EntityStore<T2> r2)
     where T1 : unmanaged where T2 : unmanaged
 {
     private int _i = -1;
@@ -45,7 +45,7 @@ public struct EntityEnumerator<T1, T2>(EntityStore<T1> r1, EntityStore<T2> r2)
     }
 }
 
-public struct EntityEnumerator<T1, T2, T3>(EntityStore<T1> r1, EntityStore<T2> r2, EntityStore<T3> r3)
+internal struct EntityEnumerator<T1, T2, T3>(EntityStore<T1> r1, EntityStore<T2> r2, EntityStore<T3> r3)
     where T1 : unmanaged where T2 : unmanaged where T3 : unmanaged
 {
     private int _i = -1;

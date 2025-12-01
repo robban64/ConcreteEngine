@@ -2,7 +2,7 @@ namespace ConcreteEngine.Common.Collections;
 
 public static class SortMethod
 {
-    public static int BinarySearchDataInt(ReadOnlySpan<int> collection, int value)
+    public static int BinarySearch(ReadOnlySpan<int> collection, int value)
     {
         int lo = 0;
         int hi = collection.Length - 1;
@@ -20,7 +20,7 @@ public static class SortMethod
         return -1;
     }
 
-    public static int BinarySearchInt<TObj>(List<TObj> collection, int value) where TObj : IComparable<int>
+    public static int BinarySearch<TObj>(List<TObj> collection, int value) where TObj : IComparable<int>
     {
         int lo = 0;
         int hi = collection.Count - 1;

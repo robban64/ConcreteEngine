@@ -30,7 +30,13 @@ internal sealed class AnimationTable
 
     public int TotalBones { get; private set; }
     public int TotalClips { get; private set; }
+    
+    public AnimationDataView GetDataView()
+    {
+        return new AnimationDataView(_clips, _boneOffsetMatrix, _nodeTransform, _parentIndices, _modelBoneInvTransform);
+    }
 
+/*
     public ModelAnimationView GetModelAnimationView(AnimationId animation)
     {
         ArgumentOutOfRangeException.ThrowIfNegativeOrZero(animation.Value);
@@ -54,7 +60,7 @@ internal sealed class AnimationTable
         var indices = _parentIndices.AsSpan(startOffset, boneCap);
         var clip = _clips[index];
         return new ModelAnimationView(clip, boneTransforms, nodes, indices, ref _modelBoneInvTransform[index]);
-    }
+    }*/
 
     internal void Setup(AssetSystem assets)
     {
@@ -124,27 +130,6 @@ internal sealed class AnimationTable
 
             boneOffset += RenderLimits.BoneCapacity;
 
-            /*
-            var animationClip = model.Animation!.ClipDataSpan;
-            var tableClips = _clips.AsSpan(clipTrackOffset, animationClip.Length);
-            _clipRanges[i] = new RangeU16(clipTrackOffset, animationClip.Length);
-            animationClip.CopyTo(tableClips);
-
-            clipTrackOffset += animationClip.Length;*/
-
-
-            /*
-            var animationClip = model.Animation!.ClipDataSpan;
-            var tableClip = _clipBoneTrack.AsSpan(clipTrackOffset, animationClip.Length);
-            _clipRanges[i] = new RangeU16(clipTrackOffset, animationClip.Length);
-            clipTrackOffset += animationClip.Length;
-
-            int localClipIdx = 0;
-            foreach (var clip in animationClip)
-            {
-                _clipTrackRanges[i+localClipIdx] = new RangeU16()
-                tableClip[localClipIdx++]
-            }*/
         }
     }
 

@@ -1,38 +1,55 @@
 #region
 
 using System.Diagnostics;
+using System.Runtime.CompilerServices;
 using ConcreteEngine.Common.Collections;
 
 #endregion
 
 namespace ConcreteEngine.Engine.Worlds.Entities;
 
-public sealed class EntityStore<T> where T : unmanaged
+internal interface IEntityStore
 {
-    private int[] _sparse;
+    int Count { get; }
+    bool IsDirty { get; }
+    void Remove(EntityId id);
+    void EndTick();
+}
+
+internal sealed class EntityStore<T> : IEntityStore where T : unmanaged
+{
     private T[] _data;
     private EntityId[] _entities;
 
+    //private Stack<int> _free = [];
+
     private int _idx = 0;
 
-    public bool IsDirty { get; set; }
 
     public EntityStore(int initialCapacity = 256)
     {
-        _sparse = new int[initialCapacity];
         _data = new T[initialCapacity];
         _entities = new EntityId[initialCapacity];
     }
 
     public int Count => _idx;
+    public bool IsDirty { get; internal set; }
+
+    public Span<EntityId> AsEntitySpan() => _entities.AsSpan(0, _idx);
+    public Span<T> AsSpan() => _data.AsSpan(0, _idx);
+
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    private int FindIndex(EntityId e) => EntityUtility.BinarySearchEntity(_entities, e);
 
     public bool Has(EntityId e)
     {
-        var index = _sparse[e];
+        var index = FindIndex(e);
         return (uint)index < (uint)_idx && _entities[index] == e;
     }
 
-    public ref T GetById(EntityId e) => ref _data[_sparse[e]];
+    public ref T GetById(EntityId e) => ref _data[FindIndex(e)];
+    public ref T GetByIndex(int i) => ref _data[i];
+    public EntityId GetEntityId(int i) => _entities[i];
 
     public bool TryGetById(EntityId e, out T value)
     {
@@ -42,52 +59,54 @@ public sealed class EntityStore<T> where T : unmanaged
             return false;
         }
 
-        value = _data[_sparse[e]];
+        value = _data[FindIndex(e)];
         return true;
     }
 
-    public ref T GetByIndex(int i) => ref _data[i];
-
-    public EntityId GetEntityId(int i) => _entities[i];
-
-
-    public ref T Add(EntityId e, in T value)
+    public void Add(EntityId e, T value)
     {
-        Debug.Assert(_data.Length == _entities.Length);
-        Debug.Assert(_sparse.Length >= e.Id);
-
-        if (_data.Length < _idx)
-        {
-            var newSize = Arrays.CapacityGrowthSafe(_data.Length, _idx, 2048);
-            Array.Resize(ref _data, newSize);
-            Array.Resize(ref _entities, newSize);
-            Console.WriteLine("EntityStore entities resize");
-        }
-
-        if (_sparse.Length < e.Id)
-        {
-            var newSize = Arrays.CapacityGrowthSafe(e.Id, _idx, 2048);
-            Array.Resize(ref _sparse, newSize);
-            Console.WriteLine("EntityStore sparse resize");
-        }
-
-        IsDirty = true;
-
-        _sparse[e] = _idx;
+        EnsureCapacity(1);
         _entities[_idx] = e;
         _data[_idx] = value;
-        return ref _data[_idx++];
+        IsDirty = true;
+        _idx++;
     }
 
-    internal void EndTick()
+    //TODO
+    public void Remove(EntityId e)
+    {
+        ArgumentOutOfRangeException.ThrowIfNegativeOrZero(e.Id, nameof(e));
+        ArgumentOutOfRangeException.ThrowIfGreaterThan(e.Id, _idx, nameof(e));
+
+        var idx = e - 1;
+        _entities[idx] = default;
+        _data[idx] = default;
+        //_free.Push(idx);
+    }
+
+    public void EndTick()
     {
         IsDirty = false;
     }
+    
+    private void EnsureCapacity(int amount)
+    {
+        var len = _idx + amount;
+        if (_entities.Length >= len) return;
 
-    public Span<EntityId> AsEntitySpan() => _entities.AsSpan(0, _idx);
-    public Span<T> AsSpan() => _data.AsSpan(0, _idx);
+        if (_data.Length != _entities.Length )
+        {
+            throw new InvalidOperationException();
+        }
 
-    public EntityEnumerator<T> GetEnumerator() => new(this);
+        var newSize = Arrays.CapacityGrowthSafe(_entities.Length, len);
+        Array.Resize(ref _entities, newSize);
+        Array.Resize(ref _data, newSize);
+        Console.WriteLine($"EntityStore: {nameof(T)} resize");
+    }
+
+
+   // public EntityEnumerator<T> GetEnumerator() => new(this);
 /*
     public EntityEnumerator<T, T2> Query<T2>(EntityStore<T2> r2)
         where T2 : unmanaged =>

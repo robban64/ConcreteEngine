@@ -74,55 +74,51 @@ public sealed class Demo3DScene : GameScene
 
         var worldEntities = Context.World.Entities;
         var worldMaterials = Context.World.EntityMaterials;
-        {
+        for(int i = 0; i < 4; i++){
             var warriorModel = assets.Store.GetByName<Model>("Warrior");
             var warriorMat = materialStore.Get("Warrior::Materials/0");
-            var warriorMatKey = worldMaterials.Add(MaterialTagBuilder.BuildOne(warriorMat.Id));
-            var warriorEntity = worldEntities.Create();
+            var warriorMatKey = (MaterialTagBuilder.BuildOne(warriorMat.Id));
             var clip = warriorModel.Animation![0];
 
             warriorMat.State.Shininess = 2f;
             warriorMat.State.Specular = 0.05f;
-            worldEntities.Models.Add(warriorEntity,
-                new ModelComponent(warriorModel.ModelId, warriorModel.DrawCount, warriorMatKey));
-            worldEntities.Transforms.Add(warriorEntity,
-                Transform.Identity with { Translation = new Vector3(115, 6, 120), Scale = new Vector3(2)});
-            worldEntities.BoundingBoxes.Add(warriorEntity, new BoxComponent(warriorModel.Bounds));
-            var animationComponent = new AnimationComponent(warriorModel.ModelId, warriorModel.AnimationId);
-            animationComponent.Duration = clip.Duration;
-            animationComponent.Speed = clip.TicksPerSecond;
-            worldEntities.Animations.Add(warriorEntity, animationComponent);
+
+            var transform = Transform.Identity with { Translation = new Vector3(115, 6, 115 + i *5), Scale = new Vector3(2) };
+            var entity = worldEntities.CreateModelEntity(warriorModel.ModelId, warriorModel.DrawCount, warriorMatKey,
+                in transform, warriorModel.Bounds);
+            var animationComponent = new AnimationComponent(warriorModel.ModelId, warriorModel.AnimationId)
+            {
+                Duration = clip.Duration, Speed = clip.TicksPerSecond
+            };
+            worldEntities.AddComponent(entity, animationComponent);
 
             // animationComponent.Slot = Context.World.MeshTable.GetAnimationSlot(knight.ModelId);
         }
 
-           
+
         var cesiumModel = assets.Store.GetByName<Model>("Cesium_Man");
         var cesiumMat = materialStore.CreateMaterial("EmptyAnimated", "CesiumMat");
-        var cesiumMatKey = worldMaterials.Add(MaterialTagBuilder.BuildOne(cesiumMat.Id));
+        var cesiumMatKey = (MaterialTagBuilder.BuildOne(cesiumMat.Id));
         var cesiumClip = cesiumModel.Animation![0];
 
-        for(int i = 0; i < 4; i++){
-            var entity = worldEntities.Create();
+        for (int i = 0; i < 28; i++)
+        {
+            var transform = Transform.Identity with
+            {
+                Translation = new Vector3(100 + i * 4, 6, 100 + i * 4),
+                Rotation = Quaternion.CreateFromYawPitchRoll(0, 0, 0),
+                Scale = new Vector3(2)
+            };
+            var entity = worldEntities.CreateModelEntity(cesiumModel.ModelId, cesiumModel.DrawCount, cesiumMatKey,
+                in transform, cesiumModel.Bounds);
 
-            worldEntities.Models.Add(entity,
-                new ModelComponent(cesiumModel.ModelId, cesiumModel.DrawCount, cesiumMatKey));
-            worldEntities.Transforms.Add(entity,
-                Transform.Identity with
-                {
-                    Translation = new Vector3(100 + i *4, 6, 100 + i*4),
-                    Rotation = Quaternion.CreateFromYawPitchRoll(0, 0, 0),
-                    Scale = new Vector3(2)
-                });
-            worldEntities.BoundingBoxes.Add(entity, new BoxComponent(cesiumModel.Bounds));
-
-            var animationComponent = new AnimationComponent(cesiumModel.ModelId, cesiumModel.AnimationId);
-            animationComponent.Duration = cesiumClip.Duration;
-            animationComponent.Speed = cesiumClip.TicksPerSecond;
-            worldEntities.Animations.Add(entity, animationComponent);
-            // animationComponent.Slot = Context.World.MeshTable.GetAnimationSlot(knight.ModelId);
+            var animationComponent = new AnimationComponent(cesiumModel.ModelId, cesiumModel.AnimationId)
+            {
+                Duration = cesiumClip.Duration, Speed = cesiumClip.TicksPerSecond
+            };
+            worldEntities.AddComponent(entity, animationComponent);
         }
-       
+
 
         {
             var knight = assets.Store.GetByName<Model>("Knight");
@@ -130,21 +126,18 @@ public sealed class Demo3DScene : GameScene
             knightMat.State.Shininess = 2f;
             knightMat.State.Specular = 0.05f;
 
-            var knightEntity = worldEntities.Create();
+            var transform = Transform.Identity with
+            {
+                Translation = new Vector3(110, 6, 125),
+                Rotation = Quaternion.CreateFromYawPitchRoll(0, FloatMath.ToRadians(90), 0),
+                Scale = new Vector3(2)
+            };
+
             var knightMatKey =
-                worldMaterials.Add(MaterialTagBuilder.Start(knightMat.Id).WithSlot(knightMat.Id).Build());
-            worldEntities.Models.Add(knightEntity,
-                new ModelComponent(knight.ModelId, knight.DrawCount, knightMatKey));
-
-            worldEntities.Transforms.Add(knightEntity,
-                Transform.Identity with
-                {
-                    Translation = new Vector3(110, 6, 125),
-                    Rotation = Quaternion.CreateFromYawPitchRoll(0, FloatMath.ToRadians(90), 0),
-                    Scale = new Vector3(2)
-                });
-            worldEntities.BoundingBoxes.Add(knightEntity, new BoxComponent(knight.Bounds));
-
+                (MaterialTagBuilder.Start(knightMat.Id).WithSlot(knightMat.Id).Build());
+            
+            var entity = worldEntities.CreateModelEntity(knight.ModelId, knight.DrawCount, knightMatKey,
+                in transform, knight.Bounds);
             //var animationComponent = new AnimationComponent(knight.ModelId, 4, 1, 1);
             // animationComponent.Slot = Context.World.MeshTable.GetAnimationSlot(knight.ModelId);
             //worldEntities.Animations.Add(knightEntity, animationComponent);

@@ -4,6 +4,7 @@ using System.Numerics;
 using System.Runtime.CompilerServices;
 using ConcreteEngine.Common.Numerics.Maths;
 using ConcreteEngine.Engine.Worlds.Entities;
+using ConcreteEngine.Engine.Worlds.Entities.Components;
 using ConcreteEngine.Engine.Worlds.Render.Data;
 using ConcreteEngine.Engine.Worlds.Render.Tables;
 using ConcreteEngine.Renderer.Data;
@@ -13,23 +14,17 @@ using ConcreteEngine.Renderer.Draw;
 
 namespace ConcreteEngine.Engine.Worlds.Render;
 
-internal sealed class AnimatorProcessor
+internal static class AnimatorProcessor
 {
-    private readonly AnimationTable _animationTable;
-
-    public AnimatorProcessor(AnimationTable animationTable)
-    {
-        _animationTable = animationTable;
-    }
 
     [SkipLocalsInit]
-    public void Execute(float deltaTime, DrawCommandBuffer buffer, DrawEntityContext ctx)
+    public static void Execute(float deltaTime, AnimationTable animationTable, DrawCommandBuffer buffer, DrawEntityContext ctx)
     {
         const int boneCap = RenderLimits.BoneCapacity;
         Span<Matrix4x4> globals = stackalloc Matrix4x4[boneCap];
         globals.Fill(Matrix4x4.Identity);
 
-        var tableData = _animationTable.GetDataView();
+        var tableData = animationTable.GetDataView();
         var uploader = buffer.GetSkinningUploaderCtx();
 
         var idx = 0;
@@ -41,20 +36,15 @@ internal sealed class AnimatorProcessor
             var view = tableData.GetModelView(component.Animation, out var invTransform);
             var clipTrack = view.GetClip(0);
 
-            var boneLength = view.BoneLength;
-
-            if ((uint)boneLength > globals.Length ||
-                (uint)boneLength > view.BoneOffsetMatrixSpan.Length ||
-                (uint)boneLength > view.NodeTransformSpan.Length ||
-                (uint)boneLength > view.ParentIndexSpan.Length ||
-                (uint)boneLength > clipTrack.Length)
+            var len = view.BoneOffsetMatrixSpan.Length;
+            if ((uint)len > boneCap) 
             {
-                throw new IndexOutOfRangeException();
+                throw new IndexOutOfRangeException("BoneCount exceeds capacity.");
             }
 
             var finals = uploader.WriteBoneSpan();
             Matrix4x4 result = default;
-            for (var i = 0; i < boneLength; i++)
+            for (var i = 0; i < len; i++)
             {
                 ref readonly var track = ref clipTrack[i];
 
@@ -76,8 +66,8 @@ internal sealed class AnimatorProcessor
             ref var drawEntity = ref ctx.GetByEntityId(query.Entity);
             if (drawEntity.AnimatedSlot == -1)
             {
-                int noneBoneLength = boneCap - boneLength;
-                finals.Slice(boneLength, noneBoneLength).Fill(Matrix4x4.Identity);
+                int noneBoneLength = boneCap - len;
+                finals.Slice(len, noneBoneLength).Fill(Matrix4x4.Identity);
                 drawEntity.AnimatedSlot = (short)idx;
             }
 

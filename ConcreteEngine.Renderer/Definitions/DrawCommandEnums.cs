@@ -10,13 +10,7 @@ public enum DrawCommandId : byte
     Model,
     Terrain,
     Skybox,
-
     Particle
-    /*
-    Tilemap,
-    Sprite,
-    Light,
-*/
 }
 
 public enum DrawCommandQueue : byte

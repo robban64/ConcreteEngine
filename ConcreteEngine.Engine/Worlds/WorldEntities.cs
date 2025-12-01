@@ -4,6 +4,7 @@ using System.Runtime.CompilerServices;
 using ConcreteEngine.Common.Numerics;
 using ConcreteEngine.Engine.Worlds.Data;
 using ConcreteEngine.Engine.Worlds.Entities;
+using ConcreteEngine.Engine.Worlds.Entities.Components;
 using ConcreteEngine.Engine.Worlds.Render;
 using ConcreteEngine.Engine.Worlds.Render.Tables;
 using ConcreteEngine.Engine.Worlds.Tables;
@@ -18,17 +19,22 @@ public sealed class WorldEntities
     private MaterialTable _materialTable = null!;
 
     internal EntityCoreStore Core { get; }
-    internal EntityStore<BoxComponent> BoundingBoxes { get; }
+
+    internal EntityStore<ModelComponent> Models { get; }
     internal EntityStore<AnimationComponent> Animations { get; }
+    internal EntityStore<ParticleComponent> Particles { get; }
+    internal EntityStore<BoxComponent> BoundingBoxes { get; }
 
     private readonly List<IEntityStore> _storeList;
 
     internal WorldEntities()
     {
         Core = new EntityCoreStore();
-        BoundingBoxes = GenericStores<BoxComponent>.CreateStore();
+        Models = GenericStores<ModelComponent>.CreateStore();
         Animations = GenericStores<AnimationComponent>.CreateStore();
-        _storeList = [BoundingBoxes,  Animations];
+        Particles = GenericStores<ParticleComponent>.CreateStore();
+        BoundingBoxes = GenericStores<BoxComponent>.CreateStore();
+        _storeList = [Models, Animations, Particles, BoundingBoxes];
     }
 
     public int EntityCount => Core.Count;
@@ -39,11 +45,18 @@ public sealed class WorldEntities
         _materialTable = materialTable;
     }
 
-    public EntityId CreateModelEntity(ModelId model, int drawCount, MaterialTag tag, in Transform transform,
+    private EntityId CreateCoreEntity(int id, RenderSourceType sourceType, in MaterialTag matTag,
+        in Transform transform)
+    {
+        var matKey = _materialTable.Add(in matTag);
+        return Core.AddEntity(new RenderSourceComponent(id, matKey, sourceType), in transform);
+    }
+
+    public EntityId CreateModelEntity(ModelId model, int drawCount, in MaterialTag tag, in Transform transform,
         in BoundingBox boundingBox)
     {
-        var matKey = _materialTable.Add(tag);
-        var entityId = Core.AddEntity(new ModelComponent(model, drawCount, matKey), in transform);
+        var entityId = CreateCoreEntity(model, RenderSourceType.ModelAsset, in tag, in transform);
+        Models.Add(entityId, new ModelComponent(model, drawCount));
         BoundingBoxes.Add(entityId, new BoxComponent(in boundingBox));
         return entityId;
     }
@@ -53,15 +66,15 @@ public sealed class WorldEntities
         GenericStores<T>.Store.Add(entityId, component);
     }
 
-
     internal void EndTick()
     {
         foreach (var store in _storeList)
             store.EndTick();
     }
-    
+
+    internal static EntityStore<T> GetStore<T>() where T : unmanaged => GenericStores<T>.Store;
     internal static EntityEnumerator<T1> Query<T1>() where T1 : unmanaged => new(GenericStores<T1>.Store);
-        
+
     private static class GenericStores<T> where T : unmanaged
     {
         public static EntityStore<T> Store = null!;
@@ -73,7 +86,7 @@ public sealed class WorldEntities
             return store;
         }
     }
-    
+
 /*
     internal EntityEnumerator<T1, T2> Query<T1, T2>() where T1 : unmanaged where T2 : unmanaged =>
         new(GenericStores<T1>.Store, GenericStores<T2>.Store);
@@ -83,4 +96,3 @@ public sealed class WorldEntities
         new(GenericStores<T1>.Store, GenericStores<T2>.Store, GenericStores<T3>.Store);
         */
 }
-

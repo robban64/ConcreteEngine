@@ -46,6 +46,14 @@ internal sealed class EntityStore<T> : IEntityStore where T : unmanaged
         var index = FindIndex(e);
         return (uint)index < (uint)_idx && _entities[index] == e;
     }
+    
+    public T GetByIdOrDefault(EntityId e)
+    {
+        var index = FindIndex(e);
+        if (index >= 0 && index < _data.Length) return _data[index];
+        return default;
+    }
+
 
     public ref T GetById(EntityId e) => ref _data[FindIndex(e)];
     public ref T GetByIndex(int i) => ref _data[i];
@@ -53,13 +61,14 @@ internal sealed class EntityStore<T> : IEntityStore where T : unmanaged
 
     public bool TryGetById(EntityId e, out T value)
     {
-        if (e.Id >= _idx)
+        var id = FindIndex(e);
+        if (id >= _idx || id < 0)
         {
             value = default;
             return false;
         }
 
-        value = _data[FindIndex(e)];
+        value = _data[id];
         return true;
     }
 

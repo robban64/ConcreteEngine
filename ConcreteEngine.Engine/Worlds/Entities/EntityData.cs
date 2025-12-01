@@ -1,20 +1,22 @@
+using ConcreteEngine.Engine.Worlds.Entities.Components;
+
 namespace ConcreteEngine.Engine.Worlds.Entities;
 
 public readonly ref struct EntitiesCoreView(
     ReadOnlySpan<EntityId> entityId,
-    ReadOnlySpan<ModelComponent> models,
+    ReadOnlySpan<RenderSourceComponent> sources,
     ReadOnlySpan<Transform> transforms)
 {
     public ReadOnlySpan<EntityId> EntityId { get; } = entityId;
-    public ReadOnlySpan<ModelComponent> Models { get; } = models;
+    public ReadOnlySpan<RenderSourceComponent> Sources { get; } = sources;
     public ReadOnlySpan<Transform> Transforms { get; } = transforms;
     
     public int Count => EntityId.Length;
 }
 
-public ref struct EntityView(EntityId entityId, ref ModelComponent model, ref Transform transform)
+public ref struct EntityView(EntityId entityId, ref RenderSourceComponent model, ref Transform transform)
 {
     public readonly EntityId EntityId = entityId;
-    public ref ModelComponent Model = ref model;
+    public ref RenderSourceComponent Source = ref model;
     public ref Transform Transform = ref transform;
 }

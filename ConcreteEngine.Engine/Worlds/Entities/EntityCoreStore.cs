@@ -1,5 +1,6 @@
 using System.Diagnostics;
 using ConcreteEngine.Common.Collections;
+using ConcreteEngine.Engine.Worlds.Entities.Components;
 
 namespace ConcreteEngine.Engine.Worlds.Entities;
 
@@ -13,7 +14,7 @@ public sealed class EntityCoreStore
 
     private int[] _sparse = new int[DefaultCapacity];
     private EntityId[] _entities = new EntityId[DefaultCapacity];
-    private ModelComponent[] _models = new ModelComponent[DefaultCapacity];
+    private RenderSourceComponent[] _sources = new RenderSourceComponent[DefaultCapacity];
     private Transform[] _transforms = new Transform[DefaultCapacity];
 
     private Stack<int> _free = [];
@@ -25,16 +26,16 @@ public sealed class EntityCoreStore
     {
     }
 
-    public EntityView GetEntityView(EntityId e) => new(e, ref _models[_sparse[e]], ref _transforms[_sparse[e]]);
-    public ref ModelComponent GetModelById(EntityId e) => ref _models[_sparse[e]];
+    public EntityView GetEntityView(EntityId e) => new(e, ref _sources[_sparse[e]], ref _transforms[_sparse[e]]);
+    public ref RenderSourceComponent GetModelById(EntityId e) => ref _sources[_sparse[e]];
     public ref Transform GetTransformById(EntityId e) => ref _transforms[_sparse[e]];
 
     public Span<EntityId> GetEntitySpan() => _entities.AsSpan(0, _idx);
-    public Span<ModelComponent> GetModelSpan() => _models.AsSpan(0, _idx);
+    public Span<RenderSourceComponent> GetModelSpan() => _sources.AsSpan(0, _idx);
     public Span<Transform> GetTransformSpan() => _transforms.AsSpan(0, _idx);
 
     public EntitiesCoreView GetCoreView() =>
-        new(_entities.AsSpan(0, _idx), _models.AsSpan(0, _idx), _transforms.AsSpan(0, _idx));
+        new(_entities.AsSpan(0, _idx), _sources.AsSpan(0, _idx), _transforms.AsSpan(0, _idx));
 
     public bool Has(EntityId e)
     {
@@ -42,7 +43,7 @@ public sealed class EntityCoreStore
         return (uint)index < (uint)_idx && _entities[index] == e;
     }
 
-    public EntityId AddEntity(ModelComponent model, in Transform transform)
+    public EntityId AddEntity(RenderSourceComponent model, in Transform transform)
     {
         //var idx = _free.Count > 0 ? _free.Pop() : Create();
         var idx = _idx;
@@ -51,7 +52,7 @@ public sealed class EntityCoreStore
 
         _sparse[e - 1] = idx;
         _entities[idx] = e;
-        _models[idx] = model;
+        _sources[idx] = model;
         _transforms[idx] = transform;
 
         IsDirty = true;
@@ -75,7 +76,7 @@ public sealed class EntityCoreStore
         var len = _idx + amount;
         if (_entities.Length >= len) return;
 
-        if (_models.Length != _entities.Length || _transforms.Length != _entities.Length ||
+        if (_sources.Length != _entities.Length || _transforms.Length != _entities.Length ||
             _sparse.Length != _entities.Length)
         {
             throw new InvalidOperationException();
@@ -84,7 +85,7 @@ public sealed class EntityCoreStore
         var newSize = Arrays.CapacityGrowthSafe(_entities.Length, len);
         Array.Resize(ref _entities, newSize);
         Array.Resize(ref _sparse, newSize);
-        Array.Resize(ref _models, newSize);
+        Array.Resize(ref _sources, newSize);
         Array.Resize(ref _transforms, newSize);
         Console.WriteLine("EntityCoreStore resize");
     }

@@ -10,6 +10,7 @@ using ConcreteEngine.Common.Numerics.Maths;
 using ConcreteEngine.Common.Time;
 using ConcreteEngine.Engine.Worlds.Data;
 using ConcreteEngine.Engine.Worlds.Entities;
+using ConcreteEngine.Engine.Worlds.Entities.Components;
 using ConcreteEngine.Engine.Worlds.Render.Data;
 using ConcreteEngine.Engine.Worlds.Render.Tables;
 using ConcreteEngine.Engine.Worlds.Tables;
@@ -39,8 +40,6 @@ internal sealed class RenderEntityBus
     private readonly MaterialTable _materialTable;
     private readonly AnimationTable _animationTable;
 
-    private readonly AnimatorProcessor _animatorProcessor;
-
     public ModelId CubeId { get; set; }
     public MaterialTagKey EmptyMaterialKey { get; set; }
 
@@ -49,7 +48,6 @@ internal sealed class RenderEntityBus
         _meshTable = meshTable;
         _materialTable = materialTable;
         _animationTable = animationTable;
-        _animatorProcessor = new AnimatorProcessor(_animationTable);
     }
 
     private int ActiveSkyCount => _world?.Sky.IsActive ?? false ? 1 : 0;
@@ -65,6 +63,7 @@ internal sealed class RenderEntityBus
     }
 
     private FrameProfileTimer _timer = new();
+
     public void CollectEntities(float deltaTime, DrawCommandBuffer buffer)
     {
         if (_world is null) return;
@@ -77,55 +76,58 @@ internal sealed class RenderEntityBus
         CollectModelEntities();
 
         var ctx = new DrawEntityContext(_idx, _entities, _entityData, _byEntityId);
-        
-        _animatorProcessor.Execute(deltaTime, buffer, ctx);
+
+        AnimatorProcessor.Execute(deltaTime, _animationTable, buffer, ctx);
         SpatialProcessor.Execute(ctx);
         EffectProcessor.Execute(ctx);
 
         _timer.EndPrint();
 
         FlushEntities(buffer);
-
     }
 
     private void CollectModelEntities()
     {
         if (_entityData.Length == 0 || _entities.Length == 0) return;
-
         var worldEntities = _world!.Entities;
-
         var view = worldEntities.Core.GetCoreView();
-        var boundsView = _meshTable.GetModelBoundSpan();
 
-        var len = view.Count;
-        if ((uint)len > _entities.Length || (uint)len > _entityData.Length ||
-            (uint)len > _byEntityId.Length || (uint)len > view.Models.Length ||
-            (uint)len > view.Transforms.Length || (uint)len > view.EntityId.Length)
-        {
+        if (_entities.Length != _entityData.Length || _entities.Length != _byEntityId.Length)
+            throw new InvalidOperationException();
+
+        if (view.EntityId.Length != view.Transforms.Length || view.EntityId.Length != view.Sources.Length)
+            throw new InvalidOperationException();
+
+        var len = view.EntityId.Length;
+        if ((uint)len > _entities.Length || (uint)len > view.Transforms.Length)
             throw new IndexOutOfRangeException();
-        }
-        
+
         var idx = 0;
+
         for (int i = 0; i < len; i++)
         {
-            var entityId = view.EntityId[i];
-            ref readonly var model = ref view.Models[i];
-            ref readonly var transform = ref view.Transforms[i];
-
+            var entityId = view.EntityId[idx];
+            ref readonly var source = ref view.Sources[idx];
+            ref readonly var transform = ref view.Transforms[idx];
             ref var entity = ref _entities[idx];
-            ref var entityData = ref _entityData[i];
+            ref var entityData = ref _entityData[idx];
 
-            _byEntityId[entityId] = idx;
-
-            entity = new DrawEntity(entityId, model.Model, model.MaterialKey);
+            entity = new DrawEntity(entityId, source);
             entityData.Transform = transform;
-            boundsView.WriteModelBoundingBox(view.Models[i].Model, ref entityData.Bounds);
+            _byEntityId[entityId] = idx;
             idx++;
+        }
+
+        foreach (var query in WorldEntities.Query<BoxComponent>())
+        {
+            var index = _byEntityId[query.Entity];
+            if ((uint)index < _entityData.Length)
+                _entityData[index].Bounds = query.Component;
         }
 
         _idx = idx;
     }
-    
+
 
     public void FlushEntities(DrawCommandBuffer buffer)
     {
@@ -155,17 +157,19 @@ internal sealed class RenderEntityBus
             ref readonly var entity = ref _entities[i];
             ref readonly var entityData = ref _entityData[i];
 
-            if (entity.Model != prevModel)
+            //Temp
+            var model = new ModelId(entity.Source.Id);
+            if (model != prevModel)
             {
-                modelView = _meshTable.GetPartsRefView(entity.Model);
-                prevModel = entity.Model;
+                modelView = _meshTable.GetPartsRefView(model);
+                prevModel = model;
             }
 
-            if (entity.MaterialKey != prevMatKey)
+            if (entity.Source.MaterialKey != prevMatKey)
             {
-                _materialTable.ResolveSubmitMaterial(entity.MaterialKey, out materialTag);
+                _materialTable.ResolveSubmitMaterial(entity.Source.MaterialKey, out materialTag);
                 matSpan = materialTag.AsReadOnlySpan();
-                prevMatKey = entity.MaterialKey;
+                prevMatKey = entity.Source.MaterialKey;
             }
 
 
@@ -195,8 +199,8 @@ internal sealed class RenderEntityBus
                 ApplyTransform(ref modelTransform, in locals[partIdx], in world, isAnimated);
             }
 
-            prevMatKey = entity.MaterialKey;
-            prevModel = entity.Model;
+            prevMatKey = entity.Source.MaterialKey;
+            prevModel = model;
         }
     }
 

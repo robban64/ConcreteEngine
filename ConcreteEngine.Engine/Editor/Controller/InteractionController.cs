@@ -4,6 +4,7 @@ using System.Numerics;
 using ConcreteEngine.Common.Numerics;
 using ConcreteEngine.Engine.Worlds;
 using ConcreteEngine.Engine.Worlds.Entities;
+using ConcreteEngine.Engine.Worlds.Entities.Components;
 
 #endregion
 

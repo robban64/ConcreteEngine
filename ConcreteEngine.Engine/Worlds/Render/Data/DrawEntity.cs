@@ -6,35 +6,24 @@ using ConcreteEngine.Common.Numerics;
 using ConcreteEngine.Engine.Assets.Models;
 using ConcreteEngine.Engine.Worlds.Data;
 using ConcreteEngine.Engine.Worlds.Entities;
+using ConcreteEngine.Engine.Worlds.Entities.Components;
 using ConcreteEngine.Renderer.Definitions;
 
 #endregion
 
 namespace ConcreteEngine.Engine.Worlds.Render.Data;
-/*
-[StructLayout(LayoutKind.Sequential)]
-public struct DrawEntity(
-    EntityId entity,
-    ModelId model,
-    MaterialTagKey materialKey,
-    in Transform transform,
-    DrawCommandMeta meta,
-    bool isAnimated)
-{
-    public Transform Transform = transform;
-    public EntityId Entity = entity;
-    public ModelId Model = model;
-    public MaterialTagKey MaterialKey = materialKey;
-    public DrawCommandMeta Meta = meta;
-    public bool IsAnimated = isAnimated;
-}
-*/
 
 [StructLayout(LayoutKind.Sequential)]
 public struct DrawEntityData
 {
     public Transform Transform;
     public BoundingBox Bounds;
+
+    public void Fill(in Transform transform, in BoxComponent box)
+    {
+        Transform = transform;
+        Bounds = box;
+    } 
 
     public DrawEntityData(in Transform transform, in BoundingBox bounds)
     {
@@ -47,19 +36,21 @@ public struct DrawEntityData
 public struct DrawEntity
 {
     public DrawEntityCommandMeta CommandMeta;
+    public DrawEntitySource Source;
     public EntityId Entity;
-    public ModelId Model;
-    public MaterialTagKey MaterialKey;
+    public int DrawCount;
+    public int InstanceCount;
     public short AnimatedSlot;
     public bool IsSelected;
-    
-    public DrawEntity(){}
 
-    public DrawEntity(EntityId entity, ModelId model, MaterialTagKey materialKey)
+    public DrawEntity()
+    {
+    }
+
+    public DrawEntity(EntityId entity, DrawEntitySource source)
     {
         Entity = entity;
-        Model = model;
-        MaterialKey = materialKey;
+        Source = source;
         CommandMeta = new DrawEntityCommandMeta(DrawCommandId.Model, DrawCommandQueue.Opaque,
             DrawCommandResolver.None, PassMask.Default, 0);
         IsSelected = false;
@@ -67,9 +58,11 @@ public struct DrawEntity
     }
 
     public static DrawEntity Identity => new() { AnimatedSlot = -1 };
-    
+
     public void WithDepthKey(ushort depthKey) => CommandMeta = CommandMeta with { DepthKey = depthKey };
 }
+
+
 
 [StructLayout(LayoutKind.Sequential)]
 public readonly struct DrawEntityCommandMeta(

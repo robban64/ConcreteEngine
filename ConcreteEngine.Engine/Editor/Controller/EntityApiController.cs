@@ -5,6 +5,7 @@ using ConcreteEngine.Editor.Data;
 using ConcreteEngine.Editor.ViewModel;
 using ConcreteEngine.Engine.Worlds;
 using ConcreteEngine.Engine.Worlds.Entities;
+using ConcreteEngine.Engine.Worlds.Entities.Components;
 using ConcreteEngine.Shared.TransformData;
 
 #endregion
@@ -42,8 +43,8 @@ internal sealed class EntityApiController(ApiContext apiContext)
 
         WorldActionSlot.SelectedEntityId = new EntityId(data.EntityId);
 
-        data.Transform = Transform.AsData(ref view.Transform);
-        data.Model = new EditorEntityModel(view.Model.Model, view.Model.MaterialKey.Value, view.Model.DrawCount);
+        data.Transform = Transform.UnsafeAs(ref view.Transform);
+        data.Model = new EditorEntityModel(view.Source.Id, view.Source.MaterialKey.Value, 0);
         data.Bounds = bounds.Box;
 
         return data.EntityId;

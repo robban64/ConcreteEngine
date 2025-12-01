@@ -10,6 +10,7 @@ using ConcreteEngine.Engine.Editor.Data;
 using ConcreteEngine.Engine.Editor.Definitions;
 using ConcreteEngine.Engine.Worlds.Data;
 using ConcreteEngine.Engine.Worlds.Entities;
+using ConcreteEngine.Engine.Worlds.Entities.Components;
 using ConcreteEngine.Engine.Worlds.Render.Data;
 using ConcreteEngine.Graphics.Gfx.Resources;
 using ConcreteEngine.Renderer.Data;
@@ -83,12 +84,16 @@ internal static class EngineCommandHandler
         ctx.AddLog(StructStr<CameraEditorPayload>());
         ctx.AddLog(StructStr<EntityDataPayload>());
 
-        ctx.AddLog(StructStr<Transform>());
-        ctx.AddLog(StructStr<ModelComponent>());
 
         ctx.AddLog(StructStr<MeshPart>());
-        ctx.AddLog(StructStr<DrawEntity>());
         ctx.AddLog(StructStr<MaterialTag>());
+        
+        ctx.AddLog(StructStr<Transform>());
+        ctx.AddLog(StructStr<ModelComponent>());
+        ctx.AddLog(StructStr<DrawEntity>());
+        ctx.AddLog(StructStr<DrawEntityData>());
+        ctx.AddLog(StructStr<DrawEntityData>());
+
     }
 
 

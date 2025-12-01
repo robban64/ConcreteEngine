@@ -13,6 +13,4 @@ internal static class RenderDataSlot
     public static RenderFrameInfo FrameInfo;
     public static ProjectionInfoData ProjectionInfo;
     public static RenderViewSnapshot ViewData;
-
-    public static Matrix4x4 ViewMatrix => ViewData.ViewMatrix;
 }

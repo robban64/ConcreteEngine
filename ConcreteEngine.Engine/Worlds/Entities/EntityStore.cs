@@ -19,6 +19,7 @@ internal interface IEntityStore
 internal sealed class EntityStore<T> : IEntityStore where T : unmanaged
 {
     private T[] _data;
+    private int[] _indices;
     private EntityId[] _entities;
 
     //private Stack<int> _free = [];
@@ -30,13 +31,19 @@ internal sealed class EntityStore<T> : IEntityStore where T : unmanaged
     {
         _data = new T[initialCapacity];
         _entities = new EntityId[initialCapacity];
+        _indices = new int[initialCapacity];
+
+        _indices.AsSpan().Fill(-1);
     }
 
     public int Count => _idx;
     public bool IsDirty { get; internal set; }
 
-    public Span<EntityId> AsEntitySpan() => _entities.AsSpan(0, _idx);
-    public Span<T> AsSpan() => _data.AsSpan(0, _idx);
+
+    public Span<EntityId> GetEntitySpan() => _entities.AsSpan(0, _idx);
+    public Span<T> GetComponentSpan() => _data.AsSpan(0, _idx);
+    public Span<int> GetIndexSpan() => _indices.AsSpan(0, _idx);
+
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     private int FindIndex(EntityId e) => EntityUtility.BinarySearchEntity(_entities, e);
@@ -46,7 +53,7 @@ internal sealed class EntityStore<T> : IEntityStore where T : unmanaged
         var index = FindIndex(e);
         return (uint)index < (uint)_idx && _entities[index] == e;
     }
-    
+
     public T GetByIdOrDefault(EntityId e)
     {
         var index = FindIndex(e);
@@ -54,6 +61,11 @@ internal sealed class EntityStore<T> : IEntityStore where T : unmanaged
         return default;
     }
 
+    public T GetByIndexOrDefault(int index)
+    {
+        if (index >= 0 && index < _data.Length) return _data[index];
+        return default;
+    }
 
     public ref T GetById(EntityId e) => ref _data[FindIndex(e)];
     public ref T GetByIndex(int i) => ref _data[i];
@@ -72,11 +84,15 @@ internal sealed class EntityStore<T> : IEntityStore where T : unmanaged
         return true;
     }
 
-    public void Add(EntityId e, T value)
+    public void Add(EntityId e, int index, T value)
     {
+        ArgumentOutOfRangeException.ThrowIfNegativeOrZero(e.Id, nameof(e));
+        ArgumentOutOfRangeException.ThrowIfNegative(index);
+
         EnsureCapacity(1);
         _entities[_idx] = e;
         _data[_idx] = value;
+        _indices[_idx] = index;
         IsDirty = true;
         _idx++;
     }
@@ -97,25 +113,31 @@ internal sealed class EntityStore<T> : IEntityStore where T : unmanaged
     {
         IsDirty = false;
     }
-    
+
     private void EnsureCapacity(int amount)
     {
         var len = _idx + amount;
         if (_entities.Length >= len) return;
 
-        if (_data.Length != _entities.Length )
+        if (_data.Length != _entities.Length)
         {
             throw new InvalidOperationException();
         }
 
+        var prevLen = _indices.Length;
+
         var newSize = Arrays.CapacityGrowthSafe(_entities.Length, len);
         Array.Resize(ref _entities, newSize);
         Array.Resize(ref _data, newSize);
+        Array.Resize(ref _indices, newSize);
+
+        _indices.AsSpan(prevLen).Fill(-1);
+
         Console.WriteLine($"EntityStore: {nameof(T)} resize");
     }
 
 
-   // public EntityEnumerator<T> GetEnumerator() => new(this);
+    // public EntityEnumerator<T> GetEnumerator() => new(this);
 /*
     public EntityEnumerator<T, T2> Query<T2>(EntityStore<T2> r2)
         where T2 : unmanaged =>

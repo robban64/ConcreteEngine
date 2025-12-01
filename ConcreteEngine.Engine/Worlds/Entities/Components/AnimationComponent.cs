@@ -1,7 +1,9 @@
+using System.Runtime.InteropServices;
 using ConcreteEngine.Engine.Worlds.Data;
 
 namespace ConcreteEngine.Engine.Worlds.Entities.Components;
 
+[StructLayout(LayoutKind.Sequential)]
 public struct AnimationComponent(ModelId model, AnimationId animation)
 {
     public ModelId Model = model;

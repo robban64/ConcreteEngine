@@ -12,10 +12,8 @@ internal static class EffectProcessor
             var idx = ctx.EntityByIdSpan[selected];
             ref var entity = ref ctx.EntitySpan[idx];
             entity.IsSelected = true;
-            entity.CommandMeta = entity.CommandMeta with
-            {
-                PassMask = PassMask.Effect | PassMask.DepthPre, Resolver = DrawCommandResolver.Highlight
-            };
+            entity.Meta.PassMask = PassMask.Effect | PassMask.DepthPre;
+            entity.Meta.Resolver = DrawCommandResolver.Highlight;
         }
     }
 /*

@@ -63,12 +63,12 @@ internal static class AnimatorProcessor
                 //finals[i] = boneTransforms[i] * globals[i] * invMatrix;
             }
 
-            ref var drawEntity = ref ctx.GetByEntityId(query.Entity);
-            if (drawEntity.AnimatedSlot == -1)
+            ref var entitySource = ref ctx.GetByEntityId(query.Entity);
+            if (entitySource.Source.AnimatedSlot == 0)
             {
                 int noneBoneLength = boneCap - len;
                 finals.Slice(len, noneBoneLength).Fill(Matrix4x4.Identity);
-                drawEntity.AnimatedSlot = (short)idx;
+                entitySource.SetAnimationSlot((ushort)(idx + 1));
             }
 
             idx++;

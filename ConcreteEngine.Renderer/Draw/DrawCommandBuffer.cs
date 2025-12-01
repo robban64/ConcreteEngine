@@ -26,6 +26,7 @@ public sealed class DrawCommandBuffer
     private Matrix4x4[] _boneTransformBuffer;
 
     private DrawCommandProcessor _processor = null!;
+
     private int _submitIdx = 0;
     private int _skeletonIdx = 0;
 
@@ -51,8 +52,7 @@ public sealed class DrawCommandBuffer
         _processor = cmd;
     }
 
-    public DrawCommandUploader GetDrawUploaderCtx() => new(this, _transformBuffer);
-
+    public DrawCommandUploader GetDrawUploaderCtx() => new(_submitIdx, this, _transformBuffer);
     public SkinningBufferUploader GetSkinningUploaderCtx() => new(this, _boneTransformBuffer);
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
@@ -62,8 +62,7 @@ public sealed class DrawCommandBuffer
     internal int Submit(DrawCommand cmd, DrawCommandMeta meta)
     {
         var idx = _submitIdx++;
-        if ((uint)idx >= (uint)_commandBuffer.Length || (uint)idx >= (uint)_metaBuffer.Length ||
-            (uint)idx >= (uint)_indexBuffer.Length)
+        if ((uint)idx >= _commandBuffer.Length)
         {
             throw new IndexOutOfRangeException();
         }
@@ -174,13 +173,19 @@ public sealed class DrawCommandBuffer
 
     internal ReadOnlySpan<DrawObjectUniform> DrainTransformBuffer()
     {
+        var len = _submitIdx;
         if (_transformBuffer.Length == 0) return ReadOnlySpan<DrawObjectUniform>.Empty;
+        if ((uint)len > _transformBuffer.Length) throw new IndexOutOfRangeException();
+
         return _transformBuffer.AsSpan(0, _submitIdx);
     }
 
     internal ReadOnlySpan<Matrix4x4> DrainBoneTransformBuffer()
     {
+        var len = _skeletonIdx * BoneCapacity;
         if (_boneTransformBuffer.Length == 0) return ReadOnlySpan<Matrix4x4>.Empty;
+        if ((uint)len > _boneTransformBuffer.Length) throw new IndexOutOfRangeException();
+
         return _boneTransformBuffer.AsSpan(0, _skeletonIdx * BoneCapacity);
     }
 

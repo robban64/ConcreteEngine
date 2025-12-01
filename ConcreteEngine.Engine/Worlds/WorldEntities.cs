@@ -20,24 +20,22 @@ public sealed class WorldEntities
 
     internal EntityCoreStore Core { get; }
 
-    internal EntityStore<ModelComponent> Models { get; }
+    internal EntityStore<RenderSourceComponent> Models { get; }
     internal EntityStore<AnimationComponent> Animations { get; }
     internal EntityStore<ParticleComponent> Particles { get; }
-    internal EntityStore<BoxComponent> BoundingBoxes { get; }
 
     private readonly List<IEntityStore> _storeList;
 
     internal WorldEntities()
     {
         Core = new EntityCoreStore();
-        Models = GenericStores<ModelComponent>.CreateStore();
+        Models = GenericStores<RenderSourceComponent>.CreateStore();
         Animations = GenericStores<AnimationComponent>.CreateStore();
         Particles = GenericStores<ParticleComponent>.CreateStore();
-        BoundingBoxes = GenericStores<BoxComponent>.CreateStore();
-        _storeList = [Models, Animations, Particles, BoundingBoxes];
+        _storeList = [Models, Animations, Particles];
     }
 
-    public int EntityCount => Core.Count;
+    public int EntityCount => Core.EntityCount;
 
     internal void AttachRender(MeshTable meshTable, MaterialTable materialTable)
     {
@@ -45,25 +43,24 @@ public sealed class WorldEntities
         _materialTable = materialTable;
     }
 
-    private EntityId CreateCoreEntity(int id, RenderSourceType sourceType, in MaterialTag matTag,
-        in Transform transform)
+    private EntityId CreateCoreEntity(ModelId id, int draw, in MaterialTag matTag, in Transform tran,
+        in BoundingBox box, out int index, out MaterialTagKey matKey)
     {
-        var matKey = _materialTable.Add(in matTag);
-        return Core.AddEntity(new RenderSourceComponent(id, matKey, sourceType), in transform);
+        matKey = _materialTable.Add(in matTag);
+        return Core.AddEntity(new RenderSourceComponent(id, draw, matKey), in tran, in box, out index);
     }
 
-    public EntityId CreateModelEntity(ModelId model, int drawCount, in MaterialTag tag, in Transform transform,
-        in BoundingBox boundingBox)
+    public EntityId CreateModelEntity(ModelId id, int draw, in MaterialTag mat, in Transform tran, in BoundingBox box)
     {
-        var entityId = CreateCoreEntity(model, RenderSourceType.ModelAsset, in tag, in transform);
-        Models.Add(entityId, new ModelComponent(model, drawCount));
-        BoundingBoxes.Add(entityId, new BoxComponent(in boundingBox));
+        var entityId = CreateCoreEntity(id, draw, in mat, in tran, in box, out var index, out var matKey);
+        Models.Add(entityId, index, new RenderSourceComponent(id, draw, matKey));
         return entityId;
     }
 
     public void AddComponent<T>(EntityId entityId, in T component) where T : unmanaged
     {
-        GenericStores<T>.Store.Add(entityId, component);
+        ArgumentOutOfRangeException.ThrowIfNegativeOrZero(entityId.Id, nameof(entityId));
+        GenericStores<T>.Store.Add(entityId, Core.GetIndexByEntity(entityId), component);
     }
 
     internal void EndTick()

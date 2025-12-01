@@ -51,7 +51,7 @@ public sealed class WorldRaycaster
             MatrixMath.CreateModelMatrix(in transform.Translation, in transform.Scale,
                 in transform.Rotation, out world);
 
-            bounds.Box.FillCorners(corners);
+            bounds.Bounds.FillCorners(corners);
 
             for (var c = 0; c < corners.Length; c++)
                 corners[c] = Vector3.Transform(corners[c], world);

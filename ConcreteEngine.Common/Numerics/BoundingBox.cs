@@ -2,11 +2,13 @@
 
 using System.Numerics;
 using System.Runtime.CompilerServices;
+using System.Runtime.InteropServices;
 
 #endregion
 
 namespace ConcreteEngine.Common.Numerics;
 
+[StructLayout(LayoutKind.Sequential)]
 public readonly record struct BoundingBox(in Vector3 Min, in Vector3 Max)
 {
     public readonly Vector3 Min = Min;

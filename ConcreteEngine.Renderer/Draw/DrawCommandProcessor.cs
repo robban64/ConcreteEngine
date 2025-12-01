@@ -50,8 +50,6 @@ internal sealed class DrawCommandProcessor
         }
     }
 
-    public void SubmitAnimationData(ReadOnlySpan<Matrix4x4> boneData) =>
-        _buffers.UploadAnimationData(boneData);
 
     public void DrawMesh(DrawCommand cmd, DrawCommandTicket ticket)
     {
@@ -73,7 +71,8 @@ internal sealed class DrawCommandProcessor
             }
         }
 
-        if (cmd.AnimationSlot >= 0) _buffers.BindAnimation(cmd.AnimationSlot);
+        if (cmd.AnimationSlot > 0) _buffers.BindAnimation(cmd.AnimationSlot - 1);
+
         _buffers.BindDrawObject(ticket.SubmitIdx);
         _gfxCmd.BindMesh(cmd.MeshId);
         _gfxCmd.DrawMesh(cmd.MeshId, cmd.DrawCount);

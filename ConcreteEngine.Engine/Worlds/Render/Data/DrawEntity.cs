@@ -14,77 +14,72 @@ using ConcreteEngine.Renderer.Definitions;
 namespace ConcreteEngine.Engine.Worlds.Render.Data;
 
 [StructLayout(LayoutKind.Sequential)]
-public struct DrawEntityData
+public struct DrawEntityData(in Transform transform, in BoundingBox bounds)
 {
-    public Transform Transform;
-    public BoundingBox Bounds;
-
-    public void Fill(in Transform transform, in BoxComponent box)
-    {
-        Transform = transform;
-        Bounds = box;
-    } 
-
-    public DrawEntityData(in Transform transform, in BoundingBox bounds)
-    {
-        Transform = transform;
-        Bounds = bounds;
-    }
+    public Transform Transform = transform;
+    public BoundingBox Bounds = bounds;
 }
 
 [StructLayout(LayoutKind.Sequential)]
 public struct DrawEntity
 {
-    public DrawEntityCommandMeta CommandMeta;
-    public DrawEntitySource Source;
     public EntityId Entity;
-    public int DrawCount;
-    public int InstanceCount;
-    public short AnimatedSlot;
-    public bool IsSelected;
-
-    public DrawEntity()
-    {
-    }
+    public DrawEntityMeta Meta; 
+    public DrawEntitySource Source;
+    public bool IsSelected; 
 
     public DrawEntity(EntityId entity, DrawEntitySource source)
     {
         Entity = entity;
         Source = source;
-        CommandMeta = new DrawEntityCommandMeta(DrawCommandId.Model, DrawCommandQueue.Opaque,
+        Meta = new DrawEntityMeta(DrawCommandId.Model, DrawCommandQueue.Opaque,
             DrawCommandResolver.None, PassMask.Default, 0);
         IsSelected = false;
-        AnimatedSlot = -1;
+    }
+    
+    public readonly DrawEntityMeta FillOut(out ModelId model, out MaterialTagKey materialKey, out ushort animatedSlot)
+    {
+        model = Source.Model;
+        materialKey = Source.MaterialKey;
+        animatedSlot = Source.AnimatedSlot;
+        return Meta;
     }
 
-    public static DrawEntity Identity => new() { AnimatedSlot = -1 };
+    public static DrawEntity Identity => default;
 
-    public void WithDepthKey(ushort depthKey) => CommandMeta = CommandMeta with { DepthKey = depthKey };
+    public void WithDepthKey(ushort depthKey) => Meta.DepthKey = depthKey;
+
+    public void SetAnimationSlot(ushort animationSlot) => Source.AnimatedSlot = animationSlot;
 }
 
+[StructLayout(LayoutKind.Sequential)]
+public struct DrawEntitySource(
+    ModelId model,
+    MaterialTagKey materialKey,
+    int drawCount = 0,
+    int instanceCount = 0,
+    ushort animatedSlot = 0)
+{
+    public ModelId Model  = model;
+    public MaterialTagKey MaterialKey  = materialKey;
+    public int DrawCount  = drawCount;
+    public int InstanceCount  = instanceCount;
+    public ushort AnimatedSlot  = animatedSlot;
 
+
+}
 
 [StructLayout(LayoutKind.Sequential)]
-public readonly struct DrawEntityCommandMeta(
+public struct DrawEntityMeta(
     DrawCommandId commandId,
     DrawCommandQueue queue,
     DrawCommandResolver resolver,
     PassMask passMask,
     ushort depthKey)
 {
-    public DrawCommandId CommandId { get; init; } = commandId;
-    public DrawCommandQueue Queue { get; init; } = queue;
-    public DrawCommandResolver Resolver { get; init; } = resolver;
-    public PassMask PassMask { get; init; } = passMask;
-    public ushort DepthKey { get; init; } = depthKey;
-
-    public void Deconstruct(out DrawCommandId commandId, out DrawCommandQueue queue, out DrawCommandResolver resolver,
-        out PassMask passMask, out ushort depthKey)
-    {
-        commandId = CommandId;
-        queue = Queue;
-        resolver = Resolver;
-        passMask = PassMask;
-        depthKey = DepthKey;
-    }
+    public DrawCommandId CommandId  = commandId;
+    public DrawCommandQueue Queue  = queue;
+    public DrawCommandResolver Resolver  = resolver;
+    public PassMask PassMask  = passMask;
+    public ushort DepthKey  = depthKey;
 }

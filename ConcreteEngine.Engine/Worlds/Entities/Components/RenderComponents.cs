@@ -3,25 +3,16 @@ using ConcreteEngine.Graphics.Gfx.Resources;
 
 namespace ConcreteEngine.Engine.Worlds.Entities.Components;
 
-
-public struct RenderSourceComponent(int id, MaterialTagKey materialTagKey, RenderSourceType sourceType)
-{
-    public int Id = id;
-    public MaterialTagKey MaterialKey = materialTagKey;
-    public RenderSourceType SourceType = sourceType;
-}
-
-
-public struct ModelComponent(ModelId model, int drawCount) : IRenderSourceComponent
+public struct RenderSourceComponent(ModelId model, int drawCount, MaterialTagKey materialTagKey) 
 {
     public ModelId Model = model;
+    public MaterialTagKey MaterialKey = materialTagKey;
     public int DrawCount = drawCount;
-    public static RenderSourceType SourceType => RenderSourceType.ModelAsset;
 }
 
-public struct ParticleComponent(MeshId mesh, int instanceCount) : IRenderSourceComponent
+public struct ParticleComponent(MeshId mesh, int instanceCount, MaterialTagKey materialTagKey) 
 {
-    public MeshId Mesh = mesh;
-    public int InstanceCount = instanceCount;
-    public static RenderSourceType SourceType => RenderSourceType.DynamicMesh;
+    public MeshId Mesh  = mesh;
+    public MaterialTagKey MaterialTagKey  = materialTagKey;
+    public int InstanceCount  = instanceCount;
 }

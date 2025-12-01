@@ -17,7 +17,7 @@ internal sealed class InteractionController(ApiContext apiContext)
     private DragEntityState _dragState;
 
     private ref BoxComponent GetBounds(EntityId e) =>
-        ref apiContext.World.Entities.BoundingBoxes.GetById(_selectedEntityId);
+        ref apiContext.World.Entities.Core.GetBoundsById(_selectedEntityId);
 
 
     public EntityId OnClick(Vector2 mousePosition, out BoundingBox bounds, out float distance)
@@ -79,7 +79,7 @@ internal sealed class InteractionController(ApiContext apiContext)
         var newPoint = ray.GetPointOnRay(t);
         var tHeight = world.Terrain.GetSmoothHeight(newPoint.X, newPoint.Z);
 
-        newPoint.Y = tHeight - bounds.Box.Min.Y;
+        newPoint.Y = tHeight - bounds.Bounds.Min.Y;
         transform.Translation = newPoint;
 
         _dragState.IsDragging = true;
@@ -110,7 +110,7 @@ internal sealed class InteractionController(ApiContext apiContext)
         var newPoint = ray.GetPointOnRay(t);
         var tHeight = world.Terrain.GetSmoothHeight(newPoint.X, newPoint.Z);
 
-        newPoint.Y = tHeight - bounds.Box.Min.Y;
+        newPoint.Y = tHeight - bounds.Bounds.Min.Y;
         return newPoint;
     }
 

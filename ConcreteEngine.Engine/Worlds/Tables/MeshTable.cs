@@ -35,14 +35,11 @@ internal sealed class MeshTable : IMeshTable
     private Matrix4x4[] _partTransforms = new Matrix4x4[DefaultPartCap];
 
 
-    private readonly Dictionary<ModelId, ModelAnimation> _modelAnimations = new(32);
-
     private int _partIdx = 0;
 
-
-    public ModelAnimation GetAnimationFor(ModelId id) => _modelAnimations[id];
-
+    
     public ModelBoundsView GetModelBoundSpan() => new(_modelBoxes);
+
 
     public ushort GetPartLengthFor(ModelId id)
     {
@@ -53,21 +50,45 @@ internal sealed class MeshTable : IMeshTable
         return _modelPartRanges[index].Length;
     }
 
-    public ModelPartView GetPartsRefView(ModelId id)
+    public ReadOnlySpan<Matrix4x4> GetPartTransforms(ModelId id)
     {
         var index = id - 1;
-        if ((uint)index > (uint)_modelPartRanges.Length)
+        if ((uint)index >= _modelPartRanges.Length)
             throw new ArgumentOutOfRangeException(nameof(id));
 
         var range = _modelPartRanges[index];
-        if ((uint)(range.Length + range.Offset) > (uint)_meshParts.Length)
+        return _partTransforms.AsSpan(range.Offset, range.Length);
+    }
+    
+    public ReadOnlySpan<MeshPart> GetMeshParts(ModelId id)
+    {
+        var index = id - 1;
+        if ((uint)index >= _modelPartRanges.Length)
+            throw new ArgumentOutOfRangeException(nameof(id));
+
+        var range = _modelPartRanges[index];
+        if ((uint)(range.Length + range.Offset) > _meshParts.Length)
+            throw new IndexOutOfRangeException();
+        
+        return _meshParts.AsSpan(range.Offset, range.Length);
+    }
+
+
+    public ModelPartView GetPartsRefView(ModelId id)
+    {
+        var index = id - 1;
+        if ((uint)index >= _modelPartRanges.Length)
+            throw new ArgumentOutOfRangeException(nameof(id));
+
+        var range = _modelPartRanges[index];
+        if ((uint)(range.Length + range.Offset) > _meshParts.Length)
             throw new IndexOutOfRangeException();
 
         var parts = _meshParts.AsSpan(range.Offset, range.Length);
         var locals = _partTransforms.AsSpan(range.Offset, range.Length);
         var boxes = _partBoxes.AsSpan(range.Offset, range.Length);
 
-        return new ModelPartView(parts, locals, boxes, range);
+        return new ModelPartView(parts, locals, boxes);
     }
 
     public ModelId CreateSimpleModel(MeshId mesh, int materialSlot, int drawCount, in BoundingBox bounds)
@@ -114,12 +135,6 @@ internal sealed class MeshTable : IMeshTable
         }
 
         _partIdx = idx;
-
-        foreach (var model in models)
-        {
-            if (model.Animation is null) continue;
-            _modelAnimations.Add(model.ModelId, model.Animation);
-        }
     }
 
     private void EnsureCapacity(int cap, int rangeCap)

@@ -13,23 +13,29 @@ namespace ConcreteEngine.Renderer.Draw;
 public readonly ref struct DrawCommandUploader
 {
     private readonly DrawObjectUniform[] _transformBuffer;
+    private readonly int _idx;
     private readonly DrawCommandBuffer _cmdBuffer;
 
     internal DrawCommandUploader(
+        int idx,
         DrawCommandBuffer cmdBuffer,
         DrawObjectUniform[] transformBuffer)
     {
+        _idx = idx;
         _cmdBuffer = cmdBuffer;
         _transformBuffer = transformBuffer;
     }
 
-    public ref DrawObjectUniform UploadDrawAndWrite(DrawCommand cmd, DrawCommandMeta meta)
+    public int UploadDrawCommand(DrawCommand cmd, DrawCommandMeta meta)
     {
-        var idx = _cmdBuffer.Submit(cmd, meta);
-        if ((uint)idx >= (uint)_transformBuffer.Length)
-            throw new IndexOutOfRangeException();
-
-        return ref _transformBuffer[idx];
+        return _cmdBuffer.Submit(cmd, meta);
+    }
+    
+    public ref DrawObjectUniform WriteBuffer(int idx)
+    {
+        var index = _idx + idx;
+        if ((uint)index >= _transformBuffer.Length) throw new IndexOutOfRangeException();
+        return ref _transformBuffer[index];
     }
 }
 

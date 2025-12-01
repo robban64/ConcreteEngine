@@ -75,7 +75,7 @@ public sealed class Demo3DScene : GameScene
 
         var worldEntities = Context.World.Entities;
         var worldMaterials = Context.World.EntityMaterials;
-        for(int i = 0; i < 4; i++){
+        for(int i = 0; i < 2; i++){
             var warriorModel = assets.Store.GetByName<Model>("Warrior");
             var warriorMat = materialStore.Get("Warrior::Materials/0");
             var warriorMatKey = (MaterialTagBuilder.BuildOne(warriorMat.Id));
@@ -102,7 +102,7 @@ public sealed class Demo3DScene : GameScene
         var cesiumMatKey = (MaterialTagBuilder.BuildOne(cesiumMat.Id));
         var cesiumClip = cesiumModel.Animation![0];
 
-        for (int i = 0; i < 28; i++)
+        for (int i = 0; i < 8; i++)
         {
             var transform = Transform.Identity with
             {
@@ -215,7 +215,7 @@ public sealed class Demo3DScene : GameScene
                 new ScenePlacement(rock2Mesh.ToBaseDrawInfo(), rock2Mesh.Bounds, rockMat2Tag, 0.6f)
             ],
             intensity: 0.5f);
-        _spawner.PlacePropsRingBasic(22, [new ScenePlacement(boatMesh.ToBaseDrawInfo(), boatMesh.Bounds, boatMatTag)]);
+        _spawner.PlacePropsRingBasic(55, [new ScenePlacement(boatMesh.ToBaseDrawInfo(), boatMesh.Bounds, boatMatTag)]);
 
         float half = 256 / 2f;
 /*

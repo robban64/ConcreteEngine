@@ -39,13 +39,12 @@ internal sealed class EntityApiController(ApiContext apiContext)
 
         var entity = new EntityId(data.EntityId);
         var view = entities.Core.GetEntityView(entity);
-        if (!entities.BoundingBoxes.TryGetById(entity, out var bounds)) bounds = default;
 
         WorldActionSlot.SelectedEntityId = new EntityId(data.EntityId);
 
         data.Transform = Transform.UnsafeAs(ref view.Transform);
-        data.Model = new EditorEntityModel(view.Source.Id, view.Source.MaterialKey.Value, 0);
-        data.Bounds = bounds.Box;
+        data.Model = new EditorEntityModel(view.Source.Model, view.Source.MaterialKey.Value, view.Source.DrawCount);
+        data.Bounds = view.Box;
 
         return data.EntityId;
     }

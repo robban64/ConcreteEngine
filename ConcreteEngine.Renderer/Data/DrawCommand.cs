@@ -15,13 +15,13 @@ public readonly struct DrawCommand(
     MaterialId materialId,
     int drawCount = 0,
     int instanceCount = 0,
-    short animationSlot = 0)
+    ushort animationSlot = 0)
 {
     public readonly MeshId MeshId = meshId;
     public readonly MaterialId MaterialId = materialId;
     public readonly int DrawCount = drawCount;
     public readonly int InstanceCount = instanceCount;
-    public readonly short AnimationSlot = animationSlot;
+    public readonly ushort AnimationSlot = animationSlot;
 }
 
 [StructLayout(LayoutKind.Sequential)]

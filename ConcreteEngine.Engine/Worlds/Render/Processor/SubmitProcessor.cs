@@ -1,10 +1,9 @@
 using System.Numerics;
 using System.Runtime.CompilerServices;
 using ConcreteEngine.Common.Numerics.Maths;
-using ConcreteEngine.Engine.Worlds.Data;
 using ConcreteEngine.Renderer.Data;
 
-namespace ConcreteEngine.Engine.Worlds.Render;
+namespace ConcreteEngine.Engine.Worlds.Render.Processor;
 
 internal static class SubmitProcessor
 {

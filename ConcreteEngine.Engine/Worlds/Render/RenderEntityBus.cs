@@ -13,6 +13,7 @@ using ConcreteEngine.Engine.Worlds.Data;
 using ConcreteEngine.Engine.Worlds.Entities;
 using ConcreteEngine.Engine.Worlds.Entities.Components;
 using ConcreteEngine.Engine.Worlds.Render.Data;
+using ConcreteEngine.Engine.Worlds.Render.Processor;
 using ConcreteEngine.Engine.Worlds.Tables;
 using ConcreteEngine.Engine.Worlds.Utility;
 using ConcreteEngine.Renderer.Data;
@@ -109,8 +110,8 @@ internal sealed class RenderEntityBus
         var idx = 0;
         foreach (var query in worldEntities.CoreQuery())
         {
-            DrawEntityCollector.CollectEntity(idx, query.Entity,  in query.Source);
-            DrawEntityCollector.CollectEntityData(idx, in query.Transform, in query.Box);
+            DrawEntityProcessor.CollectEntity(idx, query.Entity,  in query.Source);
+            DrawEntityProcessor.CollectEntityData(idx, in query.Transform, in query.Box);
             idx++;
         }
         _idx = idx;

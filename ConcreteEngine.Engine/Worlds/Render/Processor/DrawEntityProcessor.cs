@@ -1,13 +1,11 @@
 using ConcreteEngine.Engine.Worlds.Entities;
 using ConcreteEngine.Engine.Worlds.Entities.Components;
 using ConcreteEngine.Engine.Worlds.Render.Data;
-using ConcreteEngine.Renderer.Definitions;
 
-namespace ConcreteEngine.Engine.Worlds.Render;
+namespace ConcreteEngine.Engine.Worlds.Render.Processor;
 
-internal static class DrawEntityCollector
+internal static class DrawEntityProcessor
 {
-
     internal static void CollectEntity(int i, EntityId entityId, in RenderSourceComponent source)
     {
         ref var entity = ref DrawEntityStore.Entities[i];

@@ -1,4 +1,9 @@
+using ConcreteEngine.Engine.Worlds.Entities.Components;
+
 namespace ConcreteEngine.Engine.Worlds.Entities;
+
+
+
 
 internal struct EntityEnumerator<T1>(EntityStore<T1> r)
     where T1 : unmanaged
@@ -21,7 +26,7 @@ internal struct EntityEnumerator<T1>(EntityStore<T1> r)
         return this;
     }
 }
-
+/*
 internal struct EntityEnumerator<T1, T2>(EntityStore<T1> r1, EntityStore<T2> r2)
     where T1 : unmanaged where T2 : unmanaged
 {
@@ -67,4 +72,4 @@ internal struct EntityEnumerator<T1, T2, T3>(EntityStore<T1> r1, EntityStore<T2>
         _i = -1;
         return this;
     }
-}
+}*/

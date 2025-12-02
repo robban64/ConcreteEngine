@@ -27,8 +27,9 @@ internal sealed class EntityStore<T> : IEntityStore where T : unmanaged
     private int _idx = 0;
 
 
-    public EntityStore(int initialCapacity = 256)
+    public EntityStore(int initialCapacity)
     {
+        ArgumentOutOfRangeException.ThrowIfLessThan(initialCapacity, 32);
         _data = new T[initialCapacity];
         _entities = new EntityId[initialCapacity];
         _indices = new int[initialCapacity];
@@ -133,7 +134,7 @@ internal sealed class EntityStore<T> : IEntityStore where T : unmanaged
 
         _indices.AsSpan(prevLen).Fill(-1);
 
-        Console.WriteLine($"EntityStore: {nameof(T)} resize");
+        Console.WriteLine($"EntityStore: {typeof(T).Name} resize");
     }
 
 

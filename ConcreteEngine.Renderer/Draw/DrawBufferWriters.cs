@@ -26,11 +26,22 @@ public readonly ref struct DrawCommandUploader
         _transformBuffer = transformBuffer;
     }
 
-    public int UploadDrawCommand(DrawCommand cmd, DrawCommandMeta meta)
+    public int SubmitDraw(DrawCommand cmd, DrawCommandMeta meta)
     {
         return _cmdBuffer.Submit(cmd, meta);
     }
-    
+
+    public int SubmitDrawAndTransform(DrawCommand cmd, DrawCommandMeta meta, in Matrix4x4 model, in Matrix3X4 normal)
+    {
+        return _cmdBuffer.SubmitDraw(cmd, meta, in model, in normal);
+    }
+
+    public int SubmitDrawIdentity(DrawCommand cmd, DrawCommandMeta meta)
+    {
+        return _cmdBuffer.SubmitDrawIdentity(cmd, meta);
+    }
+
+
     public ref DrawObjectUniform WriteBuffer(int idx)
     {
         var index = _idx + idx;
@@ -58,8 +69,6 @@ public readonly ref struct SkinningBufferUploader
         return _boneTransforms.AsSpan(index * RenderLimits.BoneCapacity, RenderLimits.BoneCapacity);
     }
 }
-
-
 
 public ref struct AnimationUniformWriter(ref DrawAnimationUniform data)
 {

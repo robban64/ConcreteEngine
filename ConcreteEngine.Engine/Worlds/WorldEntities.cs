@@ -6,7 +6,6 @@ using ConcreteEngine.Engine.Worlds.Data;
 using ConcreteEngine.Engine.Worlds.Entities;
 using ConcreteEngine.Engine.Worlds.Entities.Components;
 using ConcreteEngine.Engine.Worlds.Render;
-using ConcreteEngine.Engine.Worlds.Render.Tables;
 using ConcreteEngine.Engine.Worlds.Tables;
 
 #endregion
@@ -18,7 +17,8 @@ public sealed class WorldEntities
     private MeshTable _meshTable = null!;
     private MaterialTable _materialTable = null!;
 
-    internal EntityCoreStore Core { get; }
+    private static EntityCoreStore _coreStore = null!;
+    internal EntityCoreStore Core => _coreStore;
 
     internal EntityStore<RenderSourceComponent> Models { get; }
     internal EntityStore<AnimationComponent> Animations { get; }
@@ -28,14 +28,14 @@ public sealed class WorldEntities
 
     internal WorldEntities()
     {
-        Core = new EntityCoreStore();
-        Models = GenericStores<RenderSourceComponent>.CreateStore();
-        Animations = GenericStores<AnimationComponent>.CreateStore();
-        Particles = GenericStores<ParticleComponent>.CreateStore();
+        _coreStore = new EntityCoreStore(1024);
+        Models = GenericStores<RenderSourceComponent>.CreateStore(1024);
+        Animations = GenericStores<AnimationComponent>.CreateStore(64);
+        Particles = GenericStores<ParticleComponent>.CreateStore(64);
         _storeList = [Models, Animations, Particles];
     }
 
-    public int EntityCount => Core.EntityCount;
+    public int EntityCount => Core.Count;
 
     internal void AttachRender(MeshTable meshTable, MaterialTable materialTable)
     {
@@ -69,16 +69,19 @@ public sealed class WorldEntities
             store.EndTick();
     }
 
+    internal EntityCoreEnumerator CoreQuery()  => new(_coreStore);
+
+
     internal static EntityStore<T> GetStore<T>() where T : unmanaged => GenericStores<T>.Store;
     internal static EntityEnumerator<T1> Query<T1>() where T1 : unmanaged => new(GenericStores<T1>.Store);
-
+    
     private static class GenericStores<T> where T : unmanaged
     {
         public static EntityStore<T> Store = null!;
 
-        public static EntityStore<T> CreateStore()
+        public static EntityStore<T> CreateStore(int cap)
         {
-            var store = new EntityStore<T>();
+            var store = new EntityStore<T>(cap);
             Store = store;
             return store;
         }

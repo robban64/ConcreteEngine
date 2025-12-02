@@ -7,7 +7,7 @@ using ConcreteEngine.Renderer.Data;
 
 #endregion
 
-namespace ConcreteEngine.Engine.Worlds.Render.Tables;
+namespace ConcreteEngine.Engine.Worlds.Tables;
 
 public interface IMaterialTable
 {

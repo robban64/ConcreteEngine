@@ -17,7 +17,7 @@ internal sealed class InteractionController(ApiContext apiContext)
     private DragEntityState _dragState;
 
     private ref BoxComponent GetBounds(EntityId e) =>
-        ref apiContext.World.Entities.Core.GetBoundsById(_selectedEntityId);
+        ref apiContext.World.Entities.Core.GetBoxById(_selectedEntityId);
 
 
     public EntityId OnClick(Vector2 mousePosition, out BoundingBox bounds, out float distance)

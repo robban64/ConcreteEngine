@@ -16,6 +16,8 @@ namespace ConcreteEngine.Renderer.Draw;
 
 public sealed class DrawCommandBuffer
 {
+    private const int DefaultTicketCapacity = 1024;
+    
     private DrawCommand[] _commandBuffer;
     private DrawObjectUniform[] _transformBuffer;
     private DrawCommandMeta[] _metaBuffer;
@@ -38,7 +40,7 @@ public sealed class DrawCommandBuffer
         _transformBuffer = new DrawObjectUniform[DefaultCommandBuffCapacity];
         _metaBuffer = new DrawCommandMeta[DefaultCommandBuffCapacity];
         _indexBuffer = new DrawCommandRef[DefaultCommandBuffCapacity];
-        _drawTickets = new DrawCommandTicket[DefaultCommandBuffCapacity];
+        _drawTickets = new DrawCommandTicket[DefaultTicketCapacity];
 
         _passRanges = new DrawPassRange[PassSlots];
 
@@ -73,14 +75,15 @@ public sealed class DrawCommandBuffer
         return idx;
     }
 
-    public void SubmitDrawIdentity(DrawCommand cmd, DrawCommandMeta meta)
+    public int SubmitDrawIdentity(DrawCommand cmd, DrawCommandMeta meta)
     {
         var idx = Submit(cmd, meta);
         _transformBuffer[idx].Model = Matrix4x4.Identity;
         _transformBuffer[idx].Normal = default;
+        return idx;
     }
 
-    public void SubmitDraw(
+    public int SubmitDraw(
         DrawCommand cmd,
         DrawCommandMeta meta,
         in Matrix4x4 model,
@@ -90,10 +93,11 @@ public sealed class DrawCommandBuffer
         ref var drawUbo = ref _transformBuffer[idx];
         drawUbo.Model = model;
         drawUbo.Normal = normal;
+        return idx;
     }
 
 
-    public void SubmitDraw(
+    public int SubmitDraw(
         DrawCommand cmd,
         DrawCommandMeta meta,
         ref DrawObjectUniform drawUniform)
@@ -101,6 +105,7 @@ public sealed class DrawCommandBuffer
         var idx = Submit(cmd, meta);
         ref var data = ref Unsafe.AsRef(ref _transformBuffer[idx]);
         data = drawUniform;
+        return idx;
     }
 
 

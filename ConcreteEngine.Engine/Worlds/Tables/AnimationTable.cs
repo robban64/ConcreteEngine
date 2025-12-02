@@ -10,7 +10,7 @@ using ConcreteEngine.Renderer.Data;
 
 #endregion
 
-namespace ConcreteEngine.Engine.Worlds.Render.Tables;
+namespace ConcreteEngine.Engine.Worlds.Tables;
 
 internal sealed class AnimationTable
 {
@@ -30,13 +30,11 @@ internal sealed class AnimationTable
 
     public int TotalBones { get; private set; }
     public int TotalClips { get; private set; }
-    
-    public AnimationDataView GetDataView()
-    {
-        return new AnimationDataView(_clips, _boneOffsetMatrix, _nodeTransform, _parentIndices, _modelBoneInvTransform);
-    }
 
-/*
+    public AnimationDataView GetDataView() =>
+        new(_clips, _boneOffsetMatrix, _nodeTransform, _parentIndices, _modelBoneInvTransform);
+
+    /*
     public ModelAnimationView GetModelAnimationView(AnimationId animation)
     {
         ArgumentOutOfRangeException.ThrowIfNegativeOrZero(animation.Value);
@@ -129,7 +127,6 @@ internal sealed class AnimationTable
             _clips[i] = clips;
 
             boneOffset += RenderLimits.BoneCapacity;
-
         }
     }
 

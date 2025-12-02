@@ -1,10 +1,11 @@
+using ConcreteEngine.Engine.Worlds.Render.Data;
 using ConcreteEngine.Renderer.Definitions;
 
 namespace ConcreteEngine.Engine.Worlds.Render;
 
 internal static class EffectProcessor
 {
-    internal static void Execute(DrawEntityContext ctx)
+    internal static void Execute(ref DrawEntityContext ctx)
     {
         var selected = WorldActionSlot.SelectedEntityId;
         if (selected > 0)

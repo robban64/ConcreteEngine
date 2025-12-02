@@ -1,15 +1,16 @@
+using ConcreteEngine.Engine.Worlds.Render.Data;
 using ConcreteEngine.Engine.Worlds.Utility;
 
 namespace ConcreteEngine.Engine.Worlds.Render;
 
 internal static class SpatialProcessor
 {
-    internal static void Execute( DrawEntityContext ctx)
+    internal static void Execute(ref DrawEntityContext ctx)
     {
         if (ctx.EntitySpan.Length == 0 || ctx.EntityDataSpan.Length == 0) return;
-        
-        var projInfo = RenderDataSlot.ProjectionInfo;
-        var view = DepthKeyUtility.ExtractView(RenderDataSlot.ViewData.ViewMatrix);
+
+        var projInfo = DrawEntityStore.ProjectionInfo;
+        var view = DepthKeyUtility.ExtractView(DrawEntityStore.ViewData.ViewMatrix);
         float near = projInfo.Near, far = projInfo.Far;
 
         var len = ctx.Count;
@@ -24,6 +25,5 @@ internal static class SpatialProcessor
             var depthKey = DepthKeyUtility.MakeDepthKey(in view, in translation, near, far);
             entity.WithDepthKey(depthKey);
         }
-
     }
 }

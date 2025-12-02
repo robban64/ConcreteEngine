@@ -6,7 +6,7 @@ using ConcreteEngine.Common.Numerics.Maths;
 using ConcreteEngine.Engine.Worlds.Entities;
 using ConcreteEngine.Engine.Worlds.Entities.Components;
 using ConcreteEngine.Engine.Worlds.Render.Data;
-using ConcreteEngine.Engine.Worlds.Render.Tables;
+using ConcreteEngine.Engine.Worlds.Tables;
 using ConcreteEngine.Renderer.Data;
 using ConcreteEngine.Renderer.Draw;
 
@@ -18,20 +18,22 @@ internal static class AnimatorProcessor
 {
 
     [SkipLocalsInit]
-    public static void Execute(float deltaTime, AnimationTable animationTable, DrawCommandBuffer buffer, DrawEntityContext ctx)
+    public static void Execute( ref DrawEntityContext ctx)
     {
         const int boneCap = RenderLimits.BoneCapacity;
         Span<Matrix4x4> globals = stackalloc Matrix4x4[boneCap];
         globals.Fill(Matrix4x4.Identity);
 
-        var tableData = animationTable.GetDataView();
-        var uploader = buffer.GetSkinningUploaderCtx();
+        var tableData = RenderDataContext.GetAnimationDataView();
+        var uploader = RenderDataContext.GetSkinningUploaderCtx();
 
+        var dt = DrawEntityStore.FrameInfo.DeltaTime;
+        
         var idx = 0;
         foreach (var query in WorldEntities.Query<AnimationComponent>())
         {
             ref var component = ref query.Component;
-            var time = component.AdvanceTime(deltaTime);
+            var time = component.AdvanceTime(dt);
 
             var view = tableData.GetModelView(component.Animation, out var invTransform);
             var clipTrack = view.GetClip(0);

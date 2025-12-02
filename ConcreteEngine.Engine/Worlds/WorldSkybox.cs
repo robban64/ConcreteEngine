@@ -5,7 +5,6 @@ using ConcreteEngine.Engine.Utils;
 using ConcreteEngine.Engine.Worlds.Data;
 using ConcreteEngine.Engine.Worlds.Entities;
 using ConcreteEngine.Engine.Worlds.Entities.Components;
-using ConcreteEngine.Engine.Worlds.Render.Tables;
 using ConcreteEngine.Engine.Worlds.Tables;
 using ConcreteEngine.Graphics.Gfx.Resources;
 using ConcreteEngine.Renderer.Data;

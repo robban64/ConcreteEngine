@@ -9,7 +9,6 @@ using ConcreteEngine.Engine.Editor.Data;
 using ConcreteEngine.Engine.Editor.Definitions;
 using ConcreteEngine.Engine.Platform;
 using ConcreteEngine.Engine.Utils;
-using ConcreteEngine.Engine.Worlds.Render.Tables;
 using ConcreteEngine.Engine.Worlds.Tables;
 using ConcreteEngine.Engine.Worlds.Utility;
 using ConcreteEngine.Engine.Worlds.View;
@@ -91,6 +90,8 @@ public sealed class WorldRenderer : IWorldRenderer
         _renderEntityBus.EmptyMaterialKey = _materialTable.Add(MaterialTagBuilder.BuildOne(mat.Id, true));
 
         PrepareRenderView(1, world.Camera);
+        
+        RenderDataContext.Attach(_renderer.CommandBuffer, _animationTable, _meshTable, world.Entities);
     }
 
     internal void RenderEmptyFrame(in RenderFrameInfo frameInfo) => _renderer.RenderEmptyFrame(in frameInfo);
@@ -127,9 +128,9 @@ public sealed class WorldRenderer : IWorldRenderer
         WorldRenderParams.Commit();
 
         PrepareRenderView(frameInfo.Alpha, camera);
-        RenderDataSlot.FrameInfo = frameInfo;
-        RenderDataSlot.ProjectionInfo = RenderView.ProjectionInfo;
-        RenderDataSlot.ViewData = RenderView.CameraView;
+        DrawEntityStore.FrameInfo = frameInfo;
+        DrawEntityStore.ProjectionInfo = RenderView.ProjectionInfo;
+        DrawEntityStore.ViewData = RenderView.CameraView;
 
 
         _renderer.PrepareFrame(in frameInfo, in runtimeParams);
@@ -137,7 +138,7 @@ public sealed class WorldRenderer : IWorldRenderer
         // Upload materials
         SubmitMaterialData();
 
-        _renderEntityBus.CollectEntities(frameInfo.DeltaTime, _renderer.CommandBuffer);
+        _renderEntityBus.Start();
         // fill buffers
         _renderer.CollectDrawBuffers();
         _renderer.StartFrame(status);

@@ -13,7 +13,6 @@ using ConcreteEngine.Engine.Worlds.Data;
 using ConcreteEngine.Engine.Worlds.Entities;
 using ConcreteEngine.Engine.Worlds.Entities.Components;
 using ConcreteEngine.Engine.Worlds.Render.Data;
-using ConcreteEngine.Engine.Worlds.Render.Tables;
 using ConcreteEngine.Engine.Worlds.Tables;
 using ConcreteEngine.Engine.Worlds.Utility;
 using ConcreteEngine.Renderer.Data;
@@ -26,14 +25,8 @@ namespace ConcreteEngine.Engine.Worlds.Render;
 
 internal sealed class RenderEntityBus
 {
-    private const int DefaultCapacity = 512;
-    private const int MaxCapacity = 10_000;
-
     private int _idx = 0;
     private int _prevIdx = 0;
-    private int[] _byEntityId = new int[DefaultCapacity]; //sparse
-    private DrawEntity[] _entities = new DrawEntity[DefaultCapacity];
-    private DrawEntityData[] _entityData = new DrawEntityData[DefaultCapacity];
 
     private World? _world;
 
@@ -65,115 +58,87 @@ internal sealed class RenderEntityBus
 
     private FrameProfileTimer _timer = new();
 
-    public void CollectEntities(float deltaTime, DrawCommandBuffer buffer)
+    public void Start()
     {
         if (_world is null) return;
 
-        EnsureFullCapacity(DrawCount);
-        buffer.EnsureBufferCapacity(_world.EntityCount + 64);
-        buffer.EnsureBoneBuffer(_world.Entities.Animations.Count);
+        Validate();
+
+        DrawEntityStore.EnsureDrawEntityData(DrawCount);
+        RenderDataContext.EnsureBuffer(_world.EntityCount + 64, _world.Entities.Animations.Count);
 
         CollectEntities();
 
-        var ctx = new DrawEntityContext(_idx, _entities, _entityData, _byEntityId);
+        var ctx = new DrawEntityContext(_idx);
 
-        AnimatorProcessor.Execute(deltaTime, _animationTable, buffer, ctx);
-        SpatialProcessor.Execute(ctx);
-        EffectProcessor.Execute(ctx);
+        AnimatorProcessor.Execute(ref ctx);
+        SpatialProcessor.Execute(ref ctx);
+        EffectProcessor.Execute(ref ctx);
 
-        FlushWorldEntities(buffer);
-        UploadTransform(buffer);
-        SubmitDrawCommands(buffer);
+        FlushWorldEntities();
+        _timer.Begin();
+        UploadTransform();
+        SubmitDrawCommands();
+        _timer.EndPrint();
+
     }
 
-    private void CollectEntities()
+    private void Validate()
     {
-        if (_entityData.Length == 0 || _entities.Length == 0) return;
+        DrawEntityStore.GetDrawArrays(out var entities, out var entitiesData, out var byEntityId);
+
+        if (entitiesData.Length == 0 || entities.Length == 0) return;
         var worldEntities = _world!.Entities;
         var view = worldEntities.Core.GetCoreView();
 
-        if (_entities.Length != _entityData.Length || _entities.Length != _byEntityId.Length)
+        if (entities.Length != entitiesData.Length || entities.Length != byEntityId.Length)
             throw new InvalidOperationException();
 
         if (view.EntityId.Length != view.Transforms.Length || view.EntityId.Length != view.Sources.Length)
             throw new InvalidOperationException();
 
         var len = view.EntityId.Length;
-        if ((uint)len > _entities.Length || (uint)len > view.Transforms.Length)
+        if ((uint)len > entities.Length || (uint)len > view.Transforms.Length)
             throw new IndexOutOfRangeException();
 
-        var idx = 0;
-        for (int i = 0; i < len; i++, idx++)
-        {
-            var entityId = view.EntityId[i];
-            ref readonly var source = ref view.Sources[i];
-            ref var entity = ref _entities[i];
-            entity = new DrawEntity(entityId, new DrawEntitySource(source.Model, source.MaterialKey, source.DrawCount));
-            _byEntityId[entityId] = i;
-        }
-
-        for (int i = 0; i < len; i++)
-        {
-            ref var entityData = ref _entityData[i];
-            entityData.Transform = view.GetTransform(i);
-            entityData.Bounds = view.GetBox(i).Bounds;
-        }
-
-        _idx = idx;
     }
 
-
-    private void UploadTransform(DrawCommandBuffer buffer)
+    private void CollectEntities()
     {
+        var worldEntities = _world!.Entities;
+        var idx = 0;
+        foreach (var query in worldEntities.CoreQuery())
+        {
+            DrawEntityCollector.CollectEntity(idx, query.Entity,  in query.Source);
+            DrawEntityCollector.CollectEntityData(idx, in query.Transform, in query.Box);
+            idx++;
+        }
+        _idx = idx;
+    }
+    
+    private void UploadTransform()
+    {
+        var entitiesData = DrawEntityStore.EntityData.AsSpan(0, _idx);
+        var entities = DrawEntityStore.Entities.AsSpan(0, _idx);
+
         var len = _idx;
         var writeIdx = 0;
 
-        if ((uint)len > _entities.Length || (uint)len > _entityData.Length)
+        if ((uint)len > entities.Length || (uint)len > entitiesData.Length)
             throw new IndexOutOfRangeException();
-
-        var prevModel = new ModelId(-1);
-        ReadOnlySpan<Matrix4x4> locals = default;
-
-        var bufferContext = buffer.GetDrawUploaderCtx();
-
+        
         for (var i = 0; i < len; i++)
         {
-            ref readonly var transform = ref _entityData[i].Transform;
-            var source = _entities[i].Source;
-            var model = source.Model;
-
-            if (model != prevModel)
-                locals = _meshTable.GetPartTransforms(model);
-
-            MatrixMath.CreateModelMatrix(transform.Translation, transform.Scale, transform.Rotation, out var world);
-
-            var isAnimated = source.AnimatedSlot > 0;
-            foreach (ref readonly var local in locals)
-            {
-                ref var modelTransform = ref bufferContext.WriteBuffer(writeIdx++);
-                ApplyTransform(ref modelTransform, in local, in world, isAnimated);
-            }
-
-            prevModel = model;
-        }
-
-        return;
-
-        [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        static void ApplyTransform(ref DrawObjectUniform data, in Matrix4x4 locals, in Matrix4x4 world, bool isAnimated)
-        {
-            if(isAnimated)
-                data.Model = world;
-            else 
-                MatrixMath.WriteMultiplyAffine(ref data.Model, in locals, in world);
-            
-            MatrixMath.CreateNormalMatrix(in data.Model, out data.Normal);
+            writeIdx = SubmitProcessor.ExecuteSubmitTransform(i, writeIdx);
         }
     }
 
-    private void SubmitDrawCommands(DrawCommandBuffer buffer)
+
+    private void SubmitDrawCommands()
     {
-        if (_world is null || _entities.Length == 0 || _entityData.Length == 0) return;
+        var entities = DrawEntityStore.Entities;
+
+        if (_world is null || entities.Length == 0) return;
 
         var prevModel = new ModelId(-1);
         var prevMatKey = new MaterialTagKey(-1);
@@ -184,14 +149,14 @@ internal sealed class RenderEntityBus
 
         var len = _idx;
 
-        if ((uint)len > _entities.Length || (uint)len > _entityData.Length)
+        if ((uint)len > entities.Length)
             throw new IndexOutOfRangeException();
 
-        var bufferContext = buffer.GetDrawUploaderCtx();
+        var bufferContext = RenderDataContext.GetDrawUploaderCtx();
 
         for (var i = 0; i < len; i++)
         {
-            ref readonly var entity = ref _entities[i];
+            ref readonly var entity = ref entities[i];
             var baseMeta = entity.FillOut(out var model, out var materialKey, out var animatedSlot);
 
             if (model != prevModel)
@@ -215,7 +180,7 @@ internal sealed class RenderEntityBus
                 var isTransparent = materialTag.IsTransparent(part.MaterialSlot);
                 var meta = BuildMeta(isTransparent, baseMeta);
                 var cmd = new DrawCommand(part.Mesh, mat, drawCount: part.DrawCount, animationSlot: animatedSlot);
-                bufferContext.UploadDrawCommand(cmd, meta);
+                bufferContext.SubmitDraw(cmd, meta);
             }
 
             prevModel = model;
@@ -234,10 +199,11 @@ internal sealed class RenderEntityBus
     }
 
 
-    private void FlushWorldEntities(DrawCommandBuffer buffer)
+    private void FlushWorldEntities()
     {
         if (_world is null) return;
 
+        var uploader = RenderDataContext.GetDrawUploaderCtx();
         if (ActiveSkyCount > 0)
         {
             var sky = _world.Sky;
@@ -245,7 +211,7 @@ internal sealed class RenderEntityBus
             var cmd = new DrawCommand(sky.Mesh, sky.Material);
 
             CreateTransformMatrices(in sky.Transform, out var model, out var normal);
-            buffer.SubmitDraw(cmd, meta, in model, in normal);
+            uploader.SubmitDrawAndTransform(cmd, meta, in model, in normal);
         }
 
         if (ActiveTerrainCount > 0)
@@ -257,7 +223,7 @@ internal sealed class RenderEntityBus
             var cmd = new DrawCommand(view.Parts[0].Mesh, terrain.Material);
 
             CreateTransformMatrices(in Transform.Identity, out var model, out var normal);
-            buffer.SubmitDraw(cmd, meta, in model, in normal);
+            uploader.SubmitDrawAndTransform(cmd, meta, in model, in normal);
         }
 
         //Blend = On, SampleAlphaCoverage = Off, DepthWrite = Off
@@ -270,7 +236,7 @@ internal sealed class RenderEntityBus
 
             var cmd = new DrawCommand(particles.Mesh, particles.Material, instanceCount: particles.ParticleCount);
             var meta = new DrawCommandMeta(DrawCommandId.Particle, DrawCommandQueue.Particles, passMask: PassMask.Main);
-            buffer.SubmitDrawIdentity(cmd, meta);
+            uploader.SubmitDrawIdentity(cmd, meta);
         }
     }
 
@@ -285,23 +251,6 @@ internal sealed class RenderEntityBus
         );
 
         MatrixMath.CreateNormalMatrix(in model, out normal);
-    }
-
-
-    private void EnsureFullCapacity(int amount)
-    {
-        InvalidOpThrower.ThrowIf(_byEntityId.Length != _entities.Length);
-        InvalidOpThrower.ThrowIf(_byEntityId.Length != _entityData.Length);
-
-        if (_entities.Length >= amount) return;
-        var newCap = Arrays.CapacityGrowthSafe(_entities.Length, amount);
-        if (newCap > MaxCapacity)
-            throw new OutOfMemoryException("Entity Buffer exceeded max limit");
-
-        Array.Resize(ref _entities, newCap);
-        Array.Resize(ref _entityData, newCap);
-        Array.Resize(ref _byEntityId, newCap);
-        Console.WriteLine($"Entity buffer resize: {newCap}");
     }
 
 

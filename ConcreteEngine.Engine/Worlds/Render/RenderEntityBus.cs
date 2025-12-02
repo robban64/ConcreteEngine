@@ -82,10 +82,7 @@ internal sealed class RenderEntityBus
         EffectProcessor.Execute(ctx);
 
         FlushWorldEntities(buffer);
-        _timer.Begin();
         UploadTransform(buffer);
-        _timer.EndPrint();
-
         SubmitDrawCommands(buffer);
     }
 

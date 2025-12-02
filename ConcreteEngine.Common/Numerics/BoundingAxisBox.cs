@@ -7,15 +7,15 @@ using System.Runtime.CompilerServices;
 
 namespace ConcreteEngine.Common.Numerics;
 
-public readonly record struct BoundingAxisBox(in Vector3 Center, in Vector3 Extent)
+public record struct BoundingAxisBox(in Vector3 Center, in Vector3 Extent)
 {
-    public readonly Vector3 Center = Center;
-    public readonly Vector3 Extent = Extent;
+    public Vector3 Center = Center;
+    public Vector3 Extent = Extent;
 
-    public Vector3 Min => Center - Extent;
-    public Vector3 Max => Center + Extent;
+    public readonly Vector3 Min => Center - Extent;
+    public readonly Vector3 Max => Center + Extent;
 
-    public void FillCorners(Span<Vector3> corners)
+    public readonly void FillCorners(Span<Vector3> corners)
     {
         var min = Min;
         var max = Max;

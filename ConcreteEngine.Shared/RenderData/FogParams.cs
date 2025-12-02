@@ -8,7 +8,7 @@ using System.Runtime.InteropServices;
 namespace ConcreteEngine.Shared.RenderData;
 
 [StructLayout(LayoutKind.Sequential)]
-public readonly struct FogParams(
+public struct FogParams(
     Vector3 color,
     float density,
     float heightFalloff,
@@ -19,12 +19,12 @@ public readonly struct FogParams(
     float strength
 )
 {
-    public readonly Vector3 Color = color;
-    public readonly float Density = density;
-    public readonly float HeightFalloff = heightFalloff;
-    public readonly float BaseHeight = baseHeight;
-    public readonly float Scattering = scattering;
-    public readonly float MaxDistance = maxDistance;
-    public readonly float HeightInfluence = heightInfluence;
-    public readonly float Strength = strength;
+    public  Vector3 Color = color;
+    public  float Density = density;
+    public  float HeightFalloff = heightFalloff;
+    public  float BaseHeight = baseHeight;
+    public  float Scattering = scattering;
+    public  float MaxDistance = maxDistance;
+    public  float HeightInfluence = heightInfluence;
+    public  float Strength = strength;
 }

@@ -67,17 +67,17 @@ public sealed class FlyCameraModule : GameModule
 
         var orientation = _targetOrientation;
         if (_input.IsKeyDown(Key.A))
-            orientation = orientation.AddYaw(speed);
+            orientation.Yaw += speed;
         if (_input.IsKeyDown(Key.D))
-            orientation = orientation.AddYaw(-speed);
+            orientation.Yaw += (-speed);
         if (_input.IsKeyDown(Key.Q))
-            orientation = orientation.AddPitch(speed);
+            orientation.Pitch += (speed);
         if (_input.IsKeyDown(Key.E))
-            orientation = orientation.AddPitch(-speed);
+            orientation.Pitch += (-speed);
 
         float t = 1.0f - MathF.Exp(-10 * dt);
-
-        _targetOrientation = orientation.WithClampedPitch();
+        orientation.WithClampedPitch();
+        _targetOrientation = orientation;
         _camera.Orientation = YawPitch.Lerp(_camera.Orientation, _targetOrientation, t);
     }
 }

@@ -27,8 +27,8 @@ public sealed class Camera3D : ICamera
 
     private bool _dirty;
 
-    private CameraTransformData _prevTick;
-    private CameraTransformData _currTick;
+    private TransformData _prevTick;
+    private TransformData _currTick;
 
     private YawPitch _orientation;
 
@@ -194,7 +194,10 @@ public sealed class Camera3D : ICamera
     {
         Ensure();
         _prevTick = _currTick;
-        CameraTransformData.FromCamera(this, out _currTick);
+        
+        _currTick.Translation = _translation;
+        _currTick.Scale = _scale;
+        _currTick.Rotation = _rotation;
     }
 
     internal void WriteSnapshot(float alpha, ref RenderViewSnapshot viewSnapshot)

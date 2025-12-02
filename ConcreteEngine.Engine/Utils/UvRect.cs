@@ -8,7 +8,7 @@ using Silk.NET.Maths;
 
 namespace ConcreteEngine.Engine.Utils;
 
-public readonly record struct UvRect(float U0, float V0, float U1, float V1)
+public struct UvRect(float U0, float V0, float U1, float V1)
 {
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static UvRect GetInsetUv(Rectangle<int> sourcePxRect, Vector2 invTexSize)

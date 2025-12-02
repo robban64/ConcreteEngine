@@ -7,17 +7,17 @@ using System.Runtime.InteropServices;
 namespace ConcreteEngine.Shared.RenderData;
 
 [StructLayout(LayoutKind.Sequential)]
-public readonly struct PostEffectParams(
+public struct PostEffectParams(
     in PostGradeParams grade,
     in PostWhiteBalanceParams whiteBalance,
     in PostBloomParams bloom,
     in PostImageFxParams imageFx
 )
 {
-    public readonly PostGradeParams Grade = grade;
-    public readonly PostWhiteBalanceParams WhiteBalance = whiteBalance;
-    public readonly PostBloomParams Bloom = bloom;
-    public readonly PostImageFxParams ImageFx = imageFx;
+    public PostGradeParams Grade = grade;
+    public PostWhiteBalanceParams WhiteBalance = whiteBalance;
+    public PostBloomParams Bloom = bloom;
+    public PostImageFxParams ImageFx = imageFx;
 
     public void Deconstruct(out PostGradeParams grade, out PostWhiteBalanceParams whiteBalance,
         out PostBloomParams bloom, out PostImageFxParams imageFx)

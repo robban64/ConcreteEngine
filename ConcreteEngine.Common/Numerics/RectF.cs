@@ -6,20 +6,20 @@ using System.Numerics;
 
 namespace ConcreteEngine.Common.Numerics;
 
-public readonly struct RectF(float left, float top, float width, float height)
+public struct RectF(float left, float top, float width, float height)
 {
-    public readonly float Left = left;
-    public readonly float Top = top;
-    public readonly float Width = width;
-    public readonly float Height = height;
+    public float Left = left;
+    public float Top = top;
+    public float Width = width;
+    public float Height = height;
 
-    public float Right => Left + Width;
+    public readonly float Right => Left + Width;
 
-    public float Bottom => Top + Height;
+    public readonly float Bottom => Top + Height;
 
     public RectF(Vector4 vec) : this(vec.X, vec.Y, vec.Z, vec.W)
     {
     }
 
-    public bool Contains(Vector2 point) => point.X >= Left && point.X <= Right && point.Y >= Top && point.Y <= Bottom;
+    public readonly bool Contains(Vector2 point) => point.X >= Left && point.X <= Right && point.Y >= Top && point.Y <= Bottom;
 }

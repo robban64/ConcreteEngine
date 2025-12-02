@@ -9,27 +9,29 @@ using System.Runtime.InteropServices;
 namespace ConcreteEngine.Common.Numerics;
 
 [StructLayout(LayoutKind.Sequential)]
-public readonly record struct BoundingBox(in Vector3 Min, in Vector3 Max)
+public record struct BoundingBox(in Vector3 Min, in Vector3 Max)
 {
-    public readonly Vector3 Min = Min;
-    public readonly Vector3 Max = Max;
+    public Vector3 Min = Min;
+    public Vector3 Max = Max;
 
-    public Vector3 Center => (Min + Max) / 2f;
+    public readonly Vector3 Center => (Min + Max) / 2f;
 
-    public Vector3 Extent => (Max - Min) / 2f;
+    public readonly Vector3 Extent => (Max - Min) / 2f;
+    
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public void FromPoint(Vector3 point)
+    {
+        Min = Vector3.Min(Min, point);
+        Max = Vector3.Max(Max, point);
+    }
 
+    /*
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public BoundingBox FromPoint(Vector3 point, out BoundingBox bounds) =>
         bounds = new BoundingBox(Vector3.Min(Min, point), Vector3.Max(Max, point));
+*/
 
-
-    public void Deconstruct(out Vector3 min, out Vector3 max)
-    {
-        min = Min;
-        max = Max;
-    }
-
-    public void FillCorners(Span<Vector3> corners)
+    public readonly void FillCorners(Span<Vector3> corners)
     {
         ref readonly var min = ref Min;
         ref readonly var max = ref Max;

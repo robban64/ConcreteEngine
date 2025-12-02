@@ -96,15 +96,14 @@ internal sealed class AssimpMeshProcessor(ModelLoaderDataTable dataTable, ModelL
 
         bounds = new BoundingBox(new Vector3(float.MaxValue), new Vector3(float.MinValue));
 
-        ref var v0 = ref MemoryMarshal.GetReference(vertices);
         for (int i = 0; i < count; i++)
         {
-            ref var v = ref Unsafe.Add(ref v0, i);
+            ref var v = ref vertices[i];
             v.Position = mesh->MVertices[i];
             v.Normal = mesh->MNormals[i];
             v.Tangent = mesh->MTangents[i];
             v.TexCoords = mesh->MTextureCoords[0][i].ToVec2();
-            bounds.FromPoint(v.Position, out bounds);
+            bounds.FromPoint(v.Position);
         }
     }
 
@@ -133,11 +132,10 @@ internal sealed class AssimpMeshProcessor(ModelLoaderDataTable dataTable, ModelL
 
         bounds = new BoundingBox(new Vector3(float.MaxValue), new Vector3(float.MinValue));
 
-        ref var v0 = ref MemoryMarshal.GetReference(result);
         for (int i = 0; i < count; i++)
         {
             ref readonly var skinnedVertex = ref skinned[i];
-            ref var v = ref Unsafe.Add(ref v0, i);
+            ref var v = ref result[i];
             v.Position = mesh->MVertices[i];
             v.Normal = mesh->MNormals[i];
             v.Tangent = mesh->MTangents[i];
@@ -145,7 +143,7 @@ internal sealed class AssimpMeshProcessor(ModelLoaderDataTable dataTable, ModelL
             v.BoneIndices = skinnedVertex.BoneIndices;
             v.BoneWeights = skinnedVertex.BoneWeights;
 
-            bounds.FromPoint(v.Position, out bounds);
+            bounds.FromPoint(v.Position);
         }
     }
 

@@ -9,16 +9,15 @@ using System.Runtime.InteropServices;
 namespace ConcreteEngine.Common.Numerics;
 
 [StructLayout(LayoutKind.Sequential)]
-public readonly struct Matrix3
+public struct Matrix3
 {
-    public readonly float M11, M12, M13;
-    public readonly float M21, M22, M23;
-    public readonly float M31, M32, M33;
+    public float M11, M12, M13;
+    public float M21, M22, M23;
+    public float M31, M32, M33;
 
     public static Matrix3 Identity => new(1, 0, 0, 0, 1, 0, 0, 0, 1);
 
 
-    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public Matrix3(in Matrix4x4 m)
     {
         M11 = m.M11;
@@ -47,7 +46,7 @@ public readonly struct Matrix3
         M33 = m33;
     }
 
-    public void CopyTo(Span<float> span)
+    public readonly void CopyTo(Span<float> span)
     {
         span[0] = M11;
         span[1] = M12;

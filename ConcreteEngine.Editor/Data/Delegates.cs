@@ -31,7 +31,7 @@ public delegate TResponse? ApiModelRequestDel<in TRequest, out TResponse>(TReque
 public delegate void ApiDataRequest<TRequest>(in TRequest request, out TRequest response)
     where TRequest : unmanaged;
 
-public delegate void ApiRefRequestDel<TRequest>(ref TRequest request) where TRequest : unmanaged;
+public delegate void ApiWriteDataRequest<TRequest>(ref TRequest request) where TRequest : unmanaged;
 
 public readonly unsafe struct ApiDataRefRequest<T>(
     delegate*<ApiWriteRequestBody<T>, long> fillData,

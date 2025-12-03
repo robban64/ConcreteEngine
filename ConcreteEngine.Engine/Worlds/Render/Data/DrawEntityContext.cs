@@ -6,16 +6,18 @@ using ConcreteEngine.Engine.Worlds.Entities;
 
 namespace ConcreteEngine.Engine.Worlds.Render.Data;
 
-internal ref struct DrawEntityContext(int count)
+using Store = ConcreteEngine.Engine.Worlds.Render.DrawEntityStore;
+
+internal readonly ref struct DrawEntityContext(int count)
 {
-    public readonly Span<DrawEntity> EntitySpan => DrawEntityStore.Entities.AsSpan(0, count);
-    public readonly Span<DrawEntityData> EntityDataSpan => DrawEntityStore.EntityData.AsSpan(0, count);
-    public readonly Span<int> EntityByIdSpan => DrawEntityStore.ByEntityId.AsSpan(0, count);
+    public Span<DrawEntity> EntitySpan => Store.Entities.AsSpan(0, count);
+    public Span<DrawEntityData> EntityDataSpan => Store.EntityData.AsSpan(0, count);
+    public Span<int> EntityByIdSpan => Store.ByEntityId.AsSpan(0, count);
 
-    public readonly int Count => EntitySpan.Length;
+    public int Count => EntitySpan.Length;
 
-    public ref DrawEntity GetByEntityId(EntityId entityId) => ref EntitySpan[EntityByIdSpan[entityId]];
-    public readonly DrawEntityWriter GetWriter(int id) => new(ref EntitySpan[id], ref EntityDataSpan[id]);
+    public ref DrawEntity GetByEntityId(EntityId entityId) => ref Store.Entities[Store.ByEntityId[entityId]];
+    public DrawEntityWriter GetEntityView(int id) => new(ref EntitySpan[id], ref EntityDataSpan[id]);
 }
 
 internal ref struct DrawEntityWriter(ref DrawEntity drawEntity, ref DrawEntityData drawEntityData)

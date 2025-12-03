@@ -25,6 +25,8 @@ public struct RenderViewSnapshot(
     public Quaternion Rotation = rotation;
     public Vector3 Position = position;
 
+    public readonly void ExtractView(out Matrix4x4 viewMatrix) => viewMatrix = ViewMatrix;
+
     public readonly Vector3 Right => Vector3.Normalize(Vector3.Transform(Vector3.UnitX, Rotation));
     public readonly Vector3 Up => Vector3.Normalize(Vector3.Transform(Vector3.UnitY, Rotation));
     public readonly Vector3 Forward => Vector3.Normalize(Vector3.Transform(-Vector3.UnitZ, Rotation));

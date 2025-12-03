@@ -90,8 +90,8 @@ public sealed class WorldRenderer : IWorldRenderer
         _renderEntityBus.EmptyMaterialKey = _materialTable.Add(MaterialTagBuilder.BuildOne(mat.Id, true));
 
         PrepareRenderView(1, world.Camera);
-        
-        RenderDataContext.Attach(_renderer.CommandBuffer, _animationTable, _meshTable, world.Entities);
+
+        DrawDataProvider.Attach(_renderer.CommandBuffer, _animationTable, _meshTable, _materialTable, world.Entities);
     }
 
     internal void RenderEmptyFrame(in RenderFrameInfo frameInfo) => _renderer.RenderEmptyFrame(in frameInfo);
@@ -128,9 +128,9 @@ public sealed class WorldRenderer : IWorldRenderer
         WorldRenderParams.Commit();
 
         PrepareRenderView(frameInfo.Alpha, camera);
-        DrawEntityStore.FrameInfo = frameInfo;
-        DrawEntityStore.ProjectionInfo = RenderView.ProjectionInfo;
-        DrawEntityStore.ViewData = RenderView.CameraView;
+        DrawDataProvider.FrameInfo = frameInfo;
+        DrawDataProvider.ProjectionInfo = RenderView.ProjectionInfo;
+        DrawDataProvider.ViewData = RenderView.CameraView;
 
 
         _renderer.PrepareFrame(in frameInfo, in runtimeParams);

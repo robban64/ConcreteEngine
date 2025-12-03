@@ -2,7 +2,9 @@
 
 using System.Numerics;
 using System.Runtime.CompilerServices;
+using System.Runtime.InteropServices;
 using ConcreteEngine.Common.Numerics.Maths;
+using ConcreteEngine.Engine.Worlds.Entities;
 using ConcreteEngine.Engine.Worlds.Entities.Components;
 using ConcreteEngine.Engine.Worlds.Render.Data;
 using ConcreteEngine.Renderer.Data;
@@ -11,68 +13,79 @@ using ConcreteEngine.Renderer.Data;
 
 namespace ConcreteEngine.Engine.Worlds.Render.Processor;
 
-internal static class AnimatorProcessor
+internal static class DrawAnimatorProcessor
 {
+    public static void Execute()
+    {
+        ProcessAnimatedEntities();
+        ProcessAnimation();
+    }
 
     [SkipLocalsInit]
-    public static void Execute( ref DrawEntityContext ctx)
+    public static void ProcessAnimation()
     {
         const int boneCap = RenderLimits.BoneCapacity;
         Span<Matrix4x4> globals = stackalloc Matrix4x4[boneCap];
         globals.Fill(Matrix4x4.Identity);
 
-        var tableData = RenderDataContext.GetAnimationDataView();
-        var uploader = RenderDataContext.GetSkinningUploaderCtx();
+        var uploader = DrawDataProvider.GetSkinningUploaderCtx();
+        var animationView = DrawDataProvider.GetAnimationDataView();
+        var dt = DrawDataProvider.DeltaTime;
 
-        var dt = DrawEntityStore.FrameInfo.DeltaTime;
-        
-        var idx = 0;
         foreach (var query in WorldEntities.Query<AnimationComponent>())
         {
             ref var component = ref query.Component;
+            var view = animationView.GetModelView(component.Animation, out var invTransform);
+
             var time = component.AdvanceTime(dt);
 
-            var view = tableData.GetModelView(component.Animation, out var invTransform);
-            var clipTrack = view.GetClip(0);
-
-            var len = view.BoneOffsetMatrixSpan.Length;
-            if ((uint)len > boneCap) 
-            {
+            var len = view.BoneLength;
+            if ((uint)len > boneCap)
                 throw new IndexOutOfRangeException("BoneCount exceeds capacity.");
-            }
 
             var finals = uploader.WriteBoneSpan();
+            var clip = view.GetClip(0);
+
             Matrix4x4 result = default;
             for (var i = 0; i < len; i++)
             {
-                ref readonly var track = ref clipTrack[i];
-
-                var local = track.IsEmpty
-                    ? view.NodeTransformSpan[i]
-                    : SampleKeyFrame(track.Positions, track.Rotations, time);
-
-                var p = view.ParentIndexSpan[i];
-                if (p >= 0)
-                    MatrixMath.WriteMultiplyAffine(ref globals[i], in local, in globals[p]);
-                else
-                    globals[i] = local;
+                ProcessClip(i, time, clip, globals, view.NodeTransformSpan, view.ParentIndexSpan);
 
                 MatrixMath.WriteMultiplyAffine(ref result, in view.BoneOffsetMatrixSpan[i], in globals[i]);
                 MatrixMath.WriteMultiplyAffine(ref finals[i], in result, in invTransform);
-                //finals[i] = boneTransforms[i] * globals[i] * invMatrix;
             }
+        }
 
-            ref var entitySource = ref ctx.GetByEntityId(query.Entity);
-            if (entitySource.Source.AnimatedSlot == 0)
-            {
-                int noneBoneLength = boneCap - len;
-                finals.Slice(len, noneBoneLength).Fill(Matrix4x4.Identity);
-                entitySource.SetAnimationSlot((ushort)(idx + 1));
-            }
+        return;
 
-            idx++;
+        static void ProcessClip(int i, float time, ReadOnlySpan<BoneTrack> clip, Span<Matrix4x4> globals,
+            ReadOnlySpan<Matrix4x4> nodeTransformSpan, ReadOnlySpan<int> parentIndexSpan)
+        {
+            ref readonly var track = ref clip[i];
+
+            var local = track.IsEmpty
+                ? nodeTransformSpan[i]
+                : SampleKeyFrame(track.Positions, track.Rotations, time);
+
+            var p = parentIndexSpan[i];
+            if (p >= 0)
+                MatrixMath.WriteMultiplyAffine(ref globals[i], in local, in globals[p]);
+            else
+                globals[i] = local;
         }
     }
+
+    public static void ProcessAnimatedEntities()
+    {
+        var span = WorldEntities.GetStore<AnimationComponent>().GetEntitySpan();
+        for (var i = 0; i < span.Length; i++)
+        {
+            var entity = span[i];
+            ref var entitySource = ref DrawEntityStore.GetEntityById(entity);
+            entitySource.SetAnimationSlot(i + 1);
+        }
+    }
+
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     private static Matrix4x4 SampleKeyFrame(ReadOnlySpan<KeyFrameVec3> pos, ReadOnlySpan<KeyFrameQuat> rot, float time)

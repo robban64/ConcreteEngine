@@ -4,6 +4,7 @@ using System.Numerics;
 using ConcreteEngine.Common;
 using ConcreteEngine.Common.Collections;
 using ConcreteEngine.Engine.Worlds.Data;
+using ConcreteEngine.Engine.Worlds.Entities;
 using ConcreteEngine.Engine.Worlds.Render.Data;
 using ConcreteEngine.Engine.Worlds.Tables;
 using ConcreteEngine.Renderer.Draw;
@@ -18,18 +19,14 @@ internal static class DrawEntityStore
 {
     public const int DefaultCapacity = 512;
     public const int MaxCapacity = 1024 * 10;
-
-    //....
-    public static RenderFrameInfo FrameInfo;
-    public static ProjectionInfoData ProjectionInfo;
-    public static RenderViewSnapshot ViewData;
-    //....
-
+    
     //...
     public static int[] ByEntityId = new int[DefaultCapacity];
     public static DrawEntity[] Entities = new DrawEntity[DefaultCapacity];
     public static DrawEntityData[] EntityData = new DrawEntityData[DefaultCapacity];
     //...
+
+    public static ref DrawEntity GetEntityById(EntityId entityId) => ref Entities[ByEntityId[entityId]];
 
     public static void GetDrawArrays(out DrawEntity[] entities, out DrawEntityData[] entityData, out int[] byEntityId)
     {
@@ -55,36 +52,61 @@ internal static class DrawEntityStore
     }
 }
 
-internal static class RenderDataContext
+internal static class DrawDataProvider
 {
-    private static class Storage
+    //....
+    public static RenderFrameInfo FrameInfo;
+    public static ProjectionInfoData ProjectionInfo;
+    public static RenderViewSnapshot ViewData;
+    //....
+
+    public static float DeltaTime => FrameInfo.DeltaTime;
+    
+    private static class ManagedStorage
     {
         public static DrawCommandBuffer CmdBuffer = null!;
         public static AnimationTable AnimationTable = null!;
         public static MeshTable MeshTable = null!;
+        public static MaterialTable MaterialTable = null!;
         public static WorldEntities WorldEntities = null!;
     }
 
     internal static void EnsureBuffer(int entityCap, int skinningCap)
     {
-        Storage.CmdBuffer.EnsureBufferCapacity(entityCap);
-        Storage.CmdBuffer.EnsureBoneBuffer(entityCap);
+        ManagedStorage.CmdBuffer.EnsureBufferCapacity(entityCap);
+        ManagedStorage.CmdBuffer.EnsureBoneBuffer(entityCap);
     }
 
-    internal static DrawCommandUploader GetDrawUploaderCtx() => Storage.CmdBuffer.GetDrawUploaderCtx();
-    internal static SkinningBufferUploader GetSkinningUploaderCtx() => Storage.CmdBuffer.GetSkinningUploaderCtx();
+    internal static DrawCommandUploader GetDrawUploaderCtx() 
+        => ManagedStorage.CmdBuffer.GetDrawUploaderCtx();
 
-    internal static AnimationDataView GetAnimationDataView() => Storage.AnimationTable.GetDataView();
-    internal static ReadOnlySpan<Matrix4x4> GetPartTransforms(ModelId id) => Storage.MeshTable.GetPartTransforms(id);
-    internal static ReadOnlySpan<MeshPart> GetMeshParts(ModelId id) => Storage.MeshTable.GetMeshParts(id);
-    internal static ModelPartView GetPartsRefView(ModelId id) => Storage.MeshTable.GetPartsRefView(id);
+    internal static SkinningBufferUploader GetSkinningUploaderCtx() =>
+        ManagedStorage.CmdBuffer.GetSkinningUploaderCtx();
 
+    internal static void ResolveMaterial(MaterialTagKey key, out MaterialTag tag) =>
+        ManagedStorage.MaterialTable.ResolveSubmitMaterial(key, out tag);
+
+    internal static AnimationDataView GetAnimationDataView() 
+        => ManagedStorage.AnimationTable.GetDataView();
+
+    internal static ReadOnlySpan<Matrix4x4> GetPartTransforms(ModelId id) =>
+        ManagedStorage.MeshTable.GetPartTransforms(id);
+
+    internal static ReadOnlySpan<MeshPart> GetMeshParts(ModelId id) 
+        => ManagedStorage.MeshTable.GetMeshParts(id);
+    
+    internal static ModelPartView GetPartsRefView(ModelId id) 
+        => ManagedStorage.MeshTable.GetPartsRefView(id);
+
+    
     internal static void Attach(DrawCommandBuffer cmdBuffer, AnimationTable animationTable, MeshTable meshTable,
+        MaterialTable materialTable,
         WorldEntities worldEntities)
     {
-        Storage.CmdBuffer = cmdBuffer;
-        Storage.AnimationTable = animationTable;
-        Storage.MeshTable = meshTable;
-        Storage.WorldEntities = worldEntities;
+        ManagedStorage.CmdBuffer = cmdBuffer;
+        ManagedStorage.AnimationTable = animationTable;
+        ManagedStorage.MeshTable = meshTable;
+        ManagedStorage.MaterialTable = materialTable;
+        ManagedStorage.WorldEntities = worldEntities;
     }
 }

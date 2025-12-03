@@ -17,7 +17,6 @@ public sealed class WorldEntities
     private MeshTable _meshTable = null!;
     private MaterialTable _materialTable = null!;
 
-    private static EntityCoreStore _coreStore = null!;
     internal EntityCoreStore Core => _coreStore;
 
     internal EntityStore<RenderSourceComponent> Models { get; }
@@ -69,7 +68,8 @@ public sealed class WorldEntities
             store.EndTick();
     }
 
-    internal EntityCoreEnumerator CoreQuery()  => new(_coreStore);
+    private static EntityCoreStore _coreStore = null!;
+    internal static EntityCoreEnumerator CoreQuery()  => new(_coreStore);
 
 
     internal static EntityStore<T> GetStore<T>() where T : unmanaged => GenericStores<T>.Store;

@@ -3,9 +3,9 @@ using ConcreteEngine.Renderer.Definitions;
 
 namespace ConcreteEngine.Engine.Worlds.Render.Processor;
 
-internal static class EffectProcessor
+internal static class DrawEffectProcessor
 {
-    internal static void Execute(ref DrawEntityContext ctx)
+    internal static void Execute(DrawEntityContext ctx)
     {
         var selected = WorldActionSlot.SelectedEntityId;
         if (selected > 0)

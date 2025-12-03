@@ -161,7 +161,7 @@ internal sealed class AssetStore : IAssetStore
         }
     }
 
-    public void DrainSpan<TAsset, TData>(Span<TData> span, Action<TAsset, Span<TData>> transform)
+    public void FillSpan<TAsset, TData>(Span<TData> span, Action<TAsset, Span<TData>> transform)
         where TAsset : AssetObject where TData : unmanaged
     {
         foreach (var asset in _assets.Values)

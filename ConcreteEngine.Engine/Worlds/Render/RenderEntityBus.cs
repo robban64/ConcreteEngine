@@ -31,18 +31,11 @@ internal sealed class RenderEntityBus
 
     private World? _world;
 
-    private readonly MeshTable _meshTable;
-    private readonly MaterialTable _materialTable;
-    private readonly AnimationTable _animationTable;
-
     public ModelId CubeId { get; set; }
     public MaterialTagKey EmptyMaterialKey { get; set; }
 
-    internal RenderEntityBus(MeshTable meshTable, MaterialTable materialTable, AnimationTable animationTable)
+    internal RenderEntityBus()
     {
-        _meshTable = meshTable;
-        _materialTable = materialTable;
-        _animationTable = animationTable;
     }
 
     private int ActiveSkyCount => _world?.Sky.IsActive ?? false ? 1 : 0;
@@ -66,22 +59,20 @@ internal sealed class RenderEntityBus
         Validate();
 
         DrawEntityStore.EnsureDrawEntityData(DrawCount);
-        RenderDataContext.EnsureBuffer(_world.EntityCount + 64, _world.Entities.Animations.Count);
+        DrawDataProvider.EnsureBuffer(_world.EntityCount + 64, _world.Entities.Animations.Count);
 
         CollectEntities();
 
-        var ctx = new DrawEntityContext(_idx);
+        DrawAnimatorProcessor.Execute();
 
-        AnimatorProcessor.Execute(ref ctx);
-        SpatialProcessor.Execute(ref ctx);
-        EffectProcessor.Execute(ref ctx);
+        var ctx = new DrawEntityContext(_idx);
+        DrawSpatialProcessor.Execute(ctx);
+        DrawEffectProcessor.Execute( ctx);
 
         FlushWorldEntities();
-        _timer.Begin();
+        
         UploadTransform();
-        SubmitDrawCommands();
-        _timer.EndPrint();
-
+        UploadDrawCommands();
     }
 
     private void Validate()
@@ -101,17 +92,15 @@ internal sealed class RenderEntityBus
         var len = view.EntityId.Length;
         if ((uint)len > entities.Length || (uint)len > view.Transforms.Length)
             throw new IndexOutOfRangeException();
-
     }
 
     private void CollectEntities()
     {
-        var worldEntities = _world!.Entities;
         var idx = 0;
-        foreach (var query in worldEntities.CoreQuery())
+        foreach (var query in WorldEntities.CoreQuery())
         {
-            DrawEntityProcessor.CollectEntity(idx, query.Entity,  in query.Source);
-            DrawEntityProcessor.CollectEntityData(idx, in query.Transform, in query.Box);
+            DrawEntityCollector.CollectEntity(idx, query.Entity, in query.Source);  
+            DrawEntityCollector.CollectEntityData(idx, in query.Transform, in query.Box); 
             idx++;
         }
         _idx = idx;
@@ -127,84 +116,44 @@ internal sealed class RenderEntityBus
 
         if ((uint)len > entities.Length || (uint)len > entitiesData.Length)
             throw new IndexOutOfRangeException();
-        
+
         for (var i = 0; i < len; i++)
         {
-            writeIdx = SubmitProcessor.ExecuteSubmitTransform(i, writeIdx);
+            writeIdx = DrawCommandProcessor.ExecuteSubmitTransform(i, writeIdx);
         }
     }
 
-
-    private void SubmitDrawCommands()
+    private void UploadDrawCommands()
     {
         var entities = DrawEntityStore.Entities;
-
-        if (_world is null || entities.Length == 0) return;
-
-        var prevModel = new ModelId(-1);
-        var prevMatKey = new MaterialTagKey(-1);
-
-        MaterialTag materialTag = default;
-        ReadOnlySpan<MaterialId> matSpan = default;
-        ReadOnlySpan<MeshPart> parts = default;
 
         var len = _idx;
 
         if ((uint)len > entities.Length)
             throw new IndexOutOfRangeException();
 
-        var bufferContext = RenderDataContext.GetDrawUploaderCtx();
+        MaterialTag materialTag = default;
+        var prevMatKey = new MaterialTagKey(-1);
 
         for (var i = 0; i < len; i++)
         {
             ref readonly var entity = ref entities[i];
-            var baseMeta = entity.FillOut(out var model, out var materialKey, out var animatedSlot);
-
-            if (model != prevModel)
+            var matKey = entity.Source.MaterialKey;
+            if (matKey != prevMatKey)
             {
-                parts = _meshTable.GetMeshParts(model);
+                DrawDataProvider.ResolveMaterial(matKey, out materialTag);
+                prevMatKey = matKey;
             }
 
-            if (materialKey != prevMatKey)
-            {
-                _materialTable.ResolveSubmitMaterial(materialKey, out materialTag);
-                matSpan = materialTag.AsReadOnlySpan();
-            }
-
-            ref var mat0 = ref MemoryMarshal.GetReference(matSpan);
-            for (var p = 0; p < parts.Length; p++)
-            {
-                ref readonly var part = ref parts[p];
-
-                ref var mat = ref Unsafe.Add(ref mat0, part.MaterialSlot);
-
-                var isTransparent = materialTag.IsTransparent(part.MaterialSlot);
-                var meta = BuildMeta(isTransparent, baseMeta);
-                var cmd = new DrawCommand(part.Mesh, mat, drawCount: part.DrawCount, animationSlot: animatedSlot);
-                bufferContext.SubmitDraw(cmd, meta);
-            }
-
-            prevModel = model;
-            prevMatKey = materialKey;
-        }
-
-        [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        static DrawCommandMeta BuildMeta(bool isTransparent, DrawEntityMeta m)
-        {
-            if (!isTransparent)
-                return new DrawCommandMeta(m.CommandId, m.Queue, m.Resolver, m.PassMask, m.DepthKey);
-
-            var depthKey = (ushort)(ushort.MaxValue - m.DepthKey);
-            return new DrawCommandMeta(m.CommandId, DrawCommandQueue.Transparent, m.Resolver, m.PassMask, depthKey);
+            DrawCommandProcessor.ExecuteSubmitCommand(i, in entity,  in materialTag);
         }
     }
-
 
     private void FlushWorldEntities()
     {
         if (_world is null) return;
 
-        var uploader = RenderDataContext.GetDrawUploaderCtx();
+        var uploader = DrawDataProvider.GetDrawUploaderCtx();
         if (ActiveSkyCount > 0)
         {
             var sky = _world.Sky;
@@ -218,7 +167,7 @@ internal sealed class RenderEntityBus
         if (ActiveTerrainCount > 0)
         {
             var terrain = _world.Terrain;
-            var view = _meshTable.GetPartsRefView(terrain.Model);
+            var view = DrawDataProvider.GetPartsRefView(terrain.Model);
 
             var meta = new DrawCommandMeta(DrawCommandId.Terrain, DrawCommandQueue.Terrain);
             var cmd = new DrawCommand(view.Parts[0].Mesh, terrain.Material);
@@ -253,76 +202,4 @@ internal sealed class RenderEntityBus
 
         MatrixMath.CreateNormalMatrix(in model, out normal);
     }
-
-
-    /*
-    public void FlushEntities(DrawCommandBuffer buffer)
-    {
-        if (_world is null || _entities.Length == 0 || _entityData.Length == 0) return;
-
-        FlushWorldEntities(buffer);
-
-        var prevModel = new ModelId(-1);
-        var prevMatKey = new MaterialTagKey(-1);
-
-        MaterialTag materialTag = default;
-        ModelPartView modelView = default;
-        ReadOnlySpan<MaterialId> matSpan = default;
-
-        var len = _idx;
-
-        if ((uint)len > _entities.Length || (uint)len > _entityData.Length)
-            throw new IndexOutOfRangeException();
-
-        var bufferContext = buffer.GetDrawUploaderCtx();
-
-        for (var i = 0; i < len; i++)
-        {
-            ref readonly var entity = ref _entities[i];
-            ref readonly var entityData = ref _entityData[i];
-
-            if (entity.Source.Model != prevModel)
-            {
-                modelView = _meshTable.GetPartsRefView(entity.Source.Model);
-                prevModel = entity.Source.Model;
-            }
-
-            if (entity.Source.MaterialKey != prevMatKey)
-            {
-                _materialTable.ResolveSubmitMaterial(entity.Source.MaterialKey, out materialTag);
-                matSpan = materialTag.AsReadOnlySpan();
-                prevMatKey = entity.Source.MaterialKey;
-            }
-
-            MatrixMath.CreateModelMatrix(entityData.Transform.Translation, entityData.Transform.Scale,
-                entityData.Transform.Rotation, out var world);
-
-            ref var mat0 = ref MemoryMarshal.GetReference(matSpan);
-
-            var parts = modelView.Parts;
-            var locals = modelView.Locals;
-
-            var baseMeta = entity.Meta;
-            var isAnimated = entity.Source.AnimatedSlot > 0;
-            var animatedSlot = entity.Source.AnimatedSlot > 0 ? entity.Source.AnimatedSlot : (ushort)0;
-            var localLen = int.Min(locals.Length, parts.Length);
-            for (var partIdx = 0; partIdx < localLen; partIdx++)
-            {
-                ref readonly var part = ref parts[partIdx];
-
-                ref var mat = ref Unsafe.Add(ref mat0, part.MaterialSlot);
-
-                var isTransparent = materialTag.IsTransparent(part.MaterialSlot);
-                var meta = BuildMeta(isTransparent, baseMeta);
-                var cmd = new DrawCommand(part.Mesh, mat, drawCount: part.DrawCount, animationSlot: animatedSlot);
-
-                ref var modelTransform = ref bufferContext.UploadDrawAndWrite(cmd, meta);
-                ApplyTransform(ref modelTransform, in locals[partIdx], in world, isAnimated);
-            }
-
-            prevMatKey = entity.Source.MaterialKey;
-            prevModel = entity.Source.Model;
-        }
-    }
-*/
 }

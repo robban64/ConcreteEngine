@@ -10,7 +10,7 @@ namespace ConcreteEngine.Engine.Worlds.Utility;
 internal static class DepthKeyUtility
 {
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public static Vector4 ExtractView(in Matrix4x4 v) => new(v.M13, v.M23, v.M33, v.M43);
+    public static Vector4 ExtractView(in Matrix4x4 v, out Vector4 r) => r = new Vector4(v.M13, v.M23, v.M33, v.M43);
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static ushort MakeDepthKey(

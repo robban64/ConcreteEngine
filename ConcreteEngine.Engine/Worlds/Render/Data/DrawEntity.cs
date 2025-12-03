@@ -36,20 +36,10 @@ public struct DrawEntity
             DrawCommandResolver.None, PassMask.Default, 0);
         IsSelected = false;
     }
-    
-    public readonly DrawEntityMeta FillOut(out ModelId model, out MaterialTagKey materialKey, out ushort animatedSlot)
-    {
-        model = Source.Model;
-        materialKey = Source.MaterialKey;
-        animatedSlot = Source.AnimatedSlot;
-        return Meta;
-    }
-
-    public static DrawEntity Identity => default;
 
     public void WithDepthKey(ushort depthKey) => Meta.DepthKey = depthKey;
 
-    public void SetAnimationSlot(ushort animationSlot) => Source.AnimatedSlot = animationSlot;
+    public void SetAnimationSlot(int animationSlot) => Source.AnimatedSlot = (ushort)animationSlot;
 }
 
 [StructLayout(LayoutKind.Sequential)]

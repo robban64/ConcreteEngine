@@ -26,8 +26,8 @@ namespace ConcreteEngine.Engine.Worlds.Render;
 
 internal sealed class RenderEntityBus
 {
-    private int _idx = 0;
-    private int _prevIdx = 0;
+    private static int _idx = 0;
+    private static int _prevIdx = 0;
 
     private World? _world;
 
@@ -37,18 +37,18 @@ internal sealed class RenderEntityBus
     internal RenderEntityBus()
     {
     }
+    
+    public void Reset()
+    {
+        _prevIdx = _idx;
+        _idx = 0;
+    }
 
     private int ActiveSkyCount => _world?.Sky.IsActive ?? false ? 1 : 0;
     private int ActiveTerrainCount => _world?.Terrain.IsActive ?? false ? 1 : 0;
     public int DrawCount => (_world?.EntityCount ?? 0) + ActiveSkyCount + ActiveTerrainCount;
 
     internal void AttachWorld(World world) => _world = world;
-
-    public void Reset()
-    {
-        _prevIdx = _idx;
-        _idx = 0;
-    }
 
     private FrameProfileTimer _timer = new();
 
@@ -60,17 +60,13 @@ internal sealed class RenderEntityBus
 
         DrawEntityStore.EnsureDrawEntityData(DrawCount);
         DrawDataProvider.EnsureBuffer(_world.EntityCount + 64, _world.Entities.Animations.Count);
-
+        
         CollectEntities();
-
-        DrawAnimatorProcessor.Execute();
-
-        var ctx = new DrawEntityContext(_idx);
-        DrawSpatialProcessor.Execute(ctx);
-        DrawEffectProcessor.Execute( ctx);
-
+        
+        TagCollectedEntities();
         FlushWorldEntities();
         
+        DrawAnimatorProcessor.ExecuteAndUpload();
         UploadTransform();
         UploadDrawCommands();
     }
@@ -94,19 +90,26 @@ internal sealed class RenderEntityBus
             throw new IndexOutOfRangeException();
     }
 
-    private void CollectEntities()
+    private static void CollectEntities()
     {
         var idx = 0;
         foreach (var query in WorldEntities.CoreQuery())
         {
-            DrawEntityCollector.CollectEntity(idx, query.Entity, in query.Source);  
-            DrawEntityCollector.CollectEntityData(idx, in query.Transform, in query.Box); 
+            DrawEntityCollector.CollectEntity(idx, query.Entity, in query.Source);
+            DrawEntityCollector.CollectEntityData(idx, in query.Transform, in query.Box);
             idx++;
         }
         _idx = idx;
     }
     
-    private void UploadTransform()
+    private static void TagCollectedEntities()
+    {
+        DrawEffectProcessor.TagEffectResolvers();
+        DrawAnimatorProcessor.TagAnimationSlots();
+        DrawSpatialProcessor.TagDepthKeys(_idx);
+    }
+
+    private static void UploadTransform()
     {
         var entitiesData = DrawEntityStore.EntityData.AsSpan(0, _idx);
         var entities = DrawEntityStore.Entities.AsSpan(0, _idx);
@@ -123,7 +126,7 @@ internal sealed class RenderEntityBus
         }
     }
 
-    private void UploadDrawCommands()
+    private static void UploadDrawCommands()
     {
         var entities = DrawEntityStore.Entities;
 
@@ -145,7 +148,7 @@ internal sealed class RenderEntityBus
                 prevMatKey = matKey;
             }
 
-            DrawCommandProcessor.ExecuteSubmitCommand(i, in entity,  in materialTag);
+            DrawCommandProcessor.ExecuteSubmitCommand(i, in entity, in materialTag);
         }
     }
 
@@ -183,7 +186,6 @@ internal sealed class RenderEntityBus
         if (_world.Particles.IsActive)
         {
             var particles = _world.Particles;
-
             var cmd = new DrawCommand(particles.Mesh, particles.Material, instanceCount: particles.ParticleCount);
             var meta = new DrawCommandMeta(DrawCommandId.Particle, DrawCommandQueue.Particles, passMask: PassMask.Main);
             uploader.SubmitDrawIdentity(cmd, meta);

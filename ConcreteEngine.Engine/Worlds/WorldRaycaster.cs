@@ -45,7 +45,8 @@ public sealed class WorldRaycaster
         var core = _entities.Core;
         foreach (var it in WorldEntities.Query<BoxComponent>())
         {
-            ref readonly var transform = ref core.GetTransformById(it.Entity);
+            var entity = it.Entity;
+            ref readonly var transform = ref core.GetTransformById(entity);
             ref readonly var bounds = ref it.Component;
 
             MatrixMath.CreateModelMatrix(in transform.Translation, in transform.Scale,
@@ -61,7 +62,7 @@ public sealed class WorldRaycaster
             if (ray.IntersectsWith(in finalBounds, out distance))
             {
                 entityBounds = finalBounds;
-                return it.Entity;
+                return entity;
             }
         }
 

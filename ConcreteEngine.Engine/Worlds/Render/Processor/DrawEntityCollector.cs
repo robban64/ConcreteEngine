@@ -6,6 +6,7 @@ namespace ConcreteEngine.Engine.Worlds.Render.Processor;
 
 internal static class DrawEntityCollector
 {
+
     internal static void CollectEntity(int idx, EntityId entityId, in RenderSourceComponent source)
     {
         ref var entity = ref DrawEntityStore.Entities[idx];
@@ -19,4 +20,7 @@ internal static class DrawEntityCollector
         entityData.Transform = transform;
         entityData.Bounds = box.Bounds;
     }
+    
+
+
 }

@@ -5,13 +5,13 @@ namespace ConcreteEngine.Engine.Worlds.Render.Processor;
 
 internal static class DrawEffectProcessor
 {
-    internal static void Execute(DrawEntityContext ctx)
+    internal static void TagEffectResolvers()
     {
         var selected = WorldActionSlot.SelectedEntityId;
         if (selected > 0)
         {
-            var idx = ctx.EntityByIdSpan[selected];
-            ref var entity = ref ctx.EntitySpan[idx];
+            var idx = DrawEntityStore.ByEntityId[selected];
+            ref var entity = ref DrawEntityStore.Entities[idx];
             entity.IsSelected = true;
             entity.Meta.PassMask = PassMask.Effect | PassMask.DepthPre;
             entity.Meta.Resolver = DrawCommandResolver.Highlight;

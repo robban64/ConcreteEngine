@@ -15,14 +15,19 @@ namespace ConcreteEngine.Engine.Worlds.Render.Processor;
 
 internal static class DrawAnimatorProcessor
 {
-    public static void Execute()
+    
+    internal static void TagAnimationSlots()
     {
-        ProcessAnimatedEntities();
-        ProcessAnimation();
+        var span = WorldEntities.GetStore<AnimationComponent>().GetEntitySpan();
+        for (var i = 0; i < span.Length; i++)
+        {
+            ref var entitySource = ref DrawEntityStore.GetEntityById(span[i]);
+            entitySource.SetAnimationSlot(i + 1);
+        }
     }
-
+    
     [SkipLocalsInit]
-    public static void ProcessAnimation()
+    public static void ExecuteAndUpload()
     {
         const int boneCap = RenderLimits.BoneCapacity;
         Span<Matrix4x4> globals = stackalloc Matrix4x4[boneCap];
@@ -72,17 +77,6 @@ internal static class DrawAnimatorProcessor
                 MatrixMath.WriteMultiplyAffine(ref globals[i], in local, in globals[p]);
             else
                 globals[i] = local;
-        }
-    }
-
-    public static void ProcessAnimatedEntities()
-    {
-        var span = WorldEntities.GetStore<AnimationComponent>().GetEntitySpan();
-        for (var i = 0; i < span.Length; i++)
-        {
-            var entity = span[i];
-            ref var entitySource = ref DrawEntityStore.GetEntityById(entity);
-            entitySource.SetAnimationSlot(i + 1);
         }
     }
 

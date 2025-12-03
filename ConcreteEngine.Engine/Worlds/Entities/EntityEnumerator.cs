@@ -5,18 +5,18 @@ namespace ConcreteEngine.Engine.Worlds.Entities;
 
 
 
-internal struct EntityEnumerator<T1>(EntityStore<T1> r)
+internal ref struct EntityEnumerator<T1>(EntityStore<T1> r)
     where T1 : unmanaged
 {
     private int _i = -1;
 
     public bool MoveNext() => ++_i < r.Count;
-    public Item Current => new Item(r.GetEntityId(_i), _i, r);
+    public Item Current => new Item(_i, r);
 
-    public readonly ref struct Item(EntityId e, int idx, EntityStore<T1> r)
+    public readonly ref struct Item(int idx, EntityStore<T1> r)
     {
-        public readonly EntityId Entity = e;
         public readonly int Index = idx;
+        public EntityId Entity => r.GetEntityId(Index);
         public ref T1 Component => ref r.GetByIndex(Index);
     }
 

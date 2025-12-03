@@ -25,6 +25,9 @@ internal sealed class EntityStore<T> : IEntityStore where T : unmanaged
     //private Stack<int> _free = [];
 
     private int _idx = 0;
+    
+    public int Low {get; private set;} 
+    public int High {get; private set;}
 
 
     public EntityStore(int initialCapacity)
@@ -49,11 +52,20 @@ internal sealed class EntityStore<T> : IEntityStore where T : unmanaged
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     private int FindIndex(EntityId e) => EntityUtility.BinarySearchEntity(_entities, e);
 
+    
     public bool Has(EntityId e)
     {
         var index = FindIndex(e);
         return (uint)index < (uint)_idx && _entities[index] == e;
     }
+    
+    public bool Has(EntityId e, int coreIndex)
+    {
+        if(coreIndex < Low || coreIndex > High) return false;
+        var index = FindIndex(e);
+        return (uint)index < (uint)_idx && _entities[index] == e;
+    }
+
 
     public T GetByIdOrDefault(EntityId e)
     {
@@ -90,12 +102,16 @@ internal sealed class EntityStore<T> : IEntityStore where T : unmanaged
         ArgumentOutOfRangeException.ThrowIfNegativeOrZero(e.Id, nameof(e));
         ArgumentOutOfRangeException.ThrowIfNegative(index);
 
+        Low = _idx == 0 ? index :int.Min(Low, index);
+        High = int.Max(High, index);
+        
         EnsureCapacity(1);
         _entities[_idx] = e;
         _data[_idx] = value;
         _indices[_idx] = index;
         IsDirty = true;
         _idx++;
+        
     }
 
     //TODO

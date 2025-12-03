@@ -72,7 +72,8 @@ public sealed class WorldRenderer : IWorldRenderer
         _meshTable = new MeshTable();
         _materialTable = new MaterialTable();
         _animationTable = new AnimationTable();
-        _renderEntityBus = new RenderEntityBus(_meshTable, _materialTable, _animationTable);
+        
+        _renderEntityBus = new RenderEntityBus();
     }
 
 

@@ -17,7 +17,7 @@ namespace ConcreteEngine.Renderer.Draw;
 public sealed class DrawCommandBuffer
 {
     private const int DefaultTicketCapacity = 1024;
-    
+
     private DrawCommand[] _commandBuffer;
     private DrawObjectUniform[] _transformBuffer;
     private DrawCommandMeta[] _metaBuffer;
@@ -29,10 +29,12 @@ public sealed class DrawCommandBuffer
 
     private DrawCommandProcessor _processor = null!;
 
-    private int _submitIdx = 0;
+    private int _submitCmdIdx = 0;
+    private int _submitTransformIdx = 0;
+
     private int _skeletonIdx = 0;
 
-    public int Count => _submitIdx;
+    public int Count => _submitCmdIdx;
 
     internal DrawCommandBuffer()
     {
@@ -46,7 +48,7 @@ public sealed class DrawCommandBuffer
 
         _boneTransformBuffer = new Matrix4x4[DefaultBoneBufferCap];
 
-        _submitIdx = 0;
+        _submitCmdIdx = 0;
     }
 
     internal void Initialize(DrawCommandProcessor cmd)
@@ -54,16 +56,18 @@ public sealed class DrawCommandBuffer
         _processor = cmd;
     }
 
-    public DrawCommandUploader GetDrawUploaderCtx() => new(_submitIdx, this, _transformBuffer);
+    public DrawCommandUploader GetDrawUploaderCtx() => new(_submitTransformIdx, this, _transformBuffer);
     public SkinningBufferUploader GetSkinningUploaderCtx() => new(this, _boneTransformBuffer);
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     internal int IncrementSkinningIndex() => _skeletonIdx++;
 
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    internal int IncrementTransformIndex() => _submitTransformIdx++;
 
-    internal int Submit(DrawCommand cmd, DrawCommandMeta meta)
+    internal int Submit(in DrawCommand cmd, DrawCommandMeta meta)
     {
-        var idx = _submitIdx++;
+        var idx = _submitCmdIdx++;
         if ((uint)idx >= _commandBuffer.Length)
         {
             throw new IndexOutOfRangeException();
@@ -80,6 +84,7 @@ public sealed class DrawCommandBuffer
         var idx = Submit(cmd, meta);
         _transformBuffer[idx].Model = Matrix4x4.Identity;
         _transformBuffer[idx].Normal = default;
+        _submitTransformIdx++;
         return idx;
     }
 
@@ -93,6 +98,7 @@ public sealed class DrawCommandBuffer
         ref var drawUbo = ref _transformBuffer[idx];
         drawUbo.Model = model;
         drawUbo.Normal = normal;
+        _submitTransformIdx++;
         return idx;
     }
 
@@ -105,19 +111,26 @@ public sealed class DrawCommandBuffer
         var idx = Submit(cmd, meta);
         ref var data = ref Unsafe.AsRef(ref _transformBuffer[idx]);
         data = drawUniform;
+        _submitTransformIdx++;
         return idx;
     }
 
 
     internal void ReadyDrawCommands()
     {
-        if (_submitIdx <= 1)
+        if (_submitCmdIdx <= 1)
         {
             _passRanges.AsSpan().Clear();
             return;
         }
 
-        var len = _submitIdx;
+        if (_submitTransformIdx != _submitCmdIdx)
+        {
+            throw new InvalidOperationException(
+                $"Submitted commands and transform don't match in length: cmd={_submitCmdIdx} - transform={_submitTransformIdx}");
+        }
+
+        var len = _submitCmdIdx;
         var metas = _metaBuffer;
         var indices = _indexBuffer;
 
@@ -178,11 +191,11 @@ public sealed class DrawCommandBuffer
 
     internal ReadOnlySpan<DrawObjectUniform> DrainTransformBuffer()
     {
-        var len = _submitIdx;
+        var len = _submitCmdIdx;
         if (_transformBuffer.Length == 0) return ReadOnlySpan<DrawObjectUniform>.Empty;
         if ((uint)len > _transformBuffer.Length) throw new IndexOutOfRangeException();
 
-        return _transformBuffer.AsSpan(0, _submitIdx);
+        return _transformBuffer.AsSpan(0, _submitCmdIdx);
     }
 
     internal ReadOnlySpan<Matrix4x4> DrainBoneTransformBuffer()
@@ -217,7 +230,8 @@ public sealed class DrawCommandBuffer
 
     internal void Reset()
     {
-        _submitIdx = 0;
+        _submitCmdIdx = 0;
+        _submitTransformIdx = 0;
         _skeletonIdx = 0;
     }
 

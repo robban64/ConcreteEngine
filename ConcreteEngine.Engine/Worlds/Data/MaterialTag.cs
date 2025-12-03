@@ -31,12 +31,11 @@ public readonly record struct MaterialTag
     
     
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public bool FillMaterialMeta(int slot, out MaterialId materialId)
+    public bool GetTagMeta(int slot, out MaterialId materialId)
     {
         materialId = Unsafe.Add(ref Unsafe.AsRef(in Slot0), slot);
         return (TransparencyMask & (1 << slot)) != 0;
     }
-
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public bool IsTransparent(int slot) => (TransparencyMask & (1 << slot)) != 0;

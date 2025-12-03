@@ -37,7 +37,7 @@ internal sealed class RenderEntityBus
     internal RenderEntityBus()
     {
     }
-    
+
     public void Reset()
     {
         _prevIdx = _idx;
@@ -50,7 +50,6 @@ internal sealed class RenderEntityBus
 
     internal void AttachWorld(World world) => _world = world;
 
-    private FrameProfileTimer _timer = new();
 
     public void Start()
     {
@@ -60,24 +59,24 @@ internal sealed class RenderEntityBus
 
         DrawEntityStore.EnsureDrawEntityData(DrawCount);
         DrawDataProvider.EnsureBuffer(_world.EntityCount + 64, _world.Entities.Animations.Count);
-        
+
         CollectEntities();
-        
+
         TagCollectedEntities();
         FlushWorldEntities();
-        
+
         DrawAnimatorProcessor.ExecuteAndUpload();
-        UploadTransform();
         UploadDrawCommands();
+        UploadTransform();
     }
 
-    private void Validate()
+    private static void Validate()
     {
         DrawEntityStore.GetDrawArrays(out var entities, out var entitiesData, out var byEntityId);
 
         if (entitiesData.Length == 0 || entities.Length == 0) return;
-        var worldEntities = _world!.Entities;
-        var view = worldEntities.Core.GetCoreView();
+
+        var view = WorldEntities.GetCoreStore().GetCoreView();
 
         if (entities.Length != entitiesData.Length || entities.Length != byEntityId.Length)
             throw new InvalidOperationException();
@@ -99,9 +98,10 @@ internal sealed class RenderEntityBus
             DrawEntityCollector.CollectEntityData(idx, in query.Transform, in query.Box);
             idx++;
         }
+
         _idx = idx;
     }
-    
+
     private static void TagCollectedEntities()
     {
         DrawEffectProcessor.TagEffectResolvers();
@@ -115,16 +115,16 @@ internal sealed class RenderEntityBus
         var entities = DrawEntityStore.Entities.AsSpan(0, _idx);
 
         var len = _idx;
-        var writeIdx = 0;
 
         if ((uint)len > entities.Length || (uint)len > entitiesData.Length)
             throw new IndexOutOfRangeException();
 
         for (var i = 0; i < len; i++)
         {
-            writeIdx = DrawCommandProcessor.ExecuteSubmitTransform(i, writeIdx);
+            DrawCommandProcessor.ExecuteSubmitTransform(i);
         }
     }
+
 
     private static void UploadDrawCommands()
     {

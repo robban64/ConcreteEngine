@@ -26,7 +26,8 @@ public readonly ref struct DrawCommandUploader
         _transformBuffer = transformBuffer;
     }
 
-    public int SubmitDraw(DrawCommand cmd, DrawCommandMeta meta)
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public int SubmitDraw(in DrawCommand cmd,  DrawCommandMeta meta)
     {
         return _cmdBuffer.Submit(cmd, meta);
     }
@@ -42,9 +43,9 @@ public readonly ref struct DrawCommandUploader
     }
 
 
-    public ref DrawObjectUniform WriteBuffer(int idx)
+    public ref DrawObjectUniform GetWriter()
     {
-        var index = _idx + idx;
+        var index = _cmdBuffer.IncrementTransformIndex();
         if ((uint)index >= _transformBuffer.Length) throw new IndexOutOfRangeException();
         return ref _transformBuffer[index];
     }
@@ -63,13 +64,13 @@ public readonly ref struct SkinningBufferUploader
         _boneTransforms = boneTransforms;
     }
 
-    public Span<Matrix4x4> WriteBoneSpan()
+    public Span<Matrix4x4> GetWriter()
     {
         var index = _cmdBuffer.IncrementSkinningIndex();
         return _boneTransforms.AsSpan(index * RenderLimits.BoneCapacity, RenderLimits.BoneCapacity);
     }
 }
-
+/*
 public ref struct AnimationUniformWriter(ref DrawAnimationUniform data)
 {
     public ref DrawAnimationUniform Data = ref data;
@@ -98,3 +99,4 @@ public ref struct AnimationUniformWriter(ref DrawAnimationUniform data)
         get => ref Matrices[index];
     }
 }
+*/

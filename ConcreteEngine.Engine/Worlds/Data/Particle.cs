@@ -20,12 +20,11 @@ internal struct ParticleStateData
     public Vector3 Position;
     public Vector3 PrevPosition;
     public Vector3 OriginalSpawnPos;
-
     public Vector3 Velocity;
     public float Life;
     public float MaxLife;
 }
-
+[StructLayout(LayoutKind.Sequential)]
 public struct ParticleDefinition
 {
     public Vector4 StartColor;

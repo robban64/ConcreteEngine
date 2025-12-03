@@ -2,6 +2,7 @@
 
 using System.Numerics;
 using ConcreteEngine.Common.Numerics.Maths;
+using ConcreteEngine.Common.Time;
 using ConcreteEngine.Engine.Worlds.Data;
 using ConcreteEngine.Engine.Worlds.Render.Batching;
 using ConcreteEngine.Engine.Worlds.Tables;
@@ -22,7 +23,7 @@ public sealed class WorldParticles
     private MaterialTable _materialTable;
     private IMeshTable _meshTable;
 
-    private ParticleStateData[] _particles = Array.Empty<ParticleStateData>();
+    private ParticleStateData[] _particles = [];
 
     private float _translationTicker;
     private Vector3 _lastSampleTranslation;
@@ -121,11 +122,13 @@ public sealed class WorldParticles
             particle.Life -= fixedDt;
         }
     }
+    private FrameProfileTimer _timer = new();
 
     public void ProcessAndUpload(float alpha)
     {
         const float peakAlpha = 0.4f;
 
+        _timer.Begin();
         var startColor = _particleDef.StartColor;
         var endColor = _particleDef.EndColor;
 
@@ -150,5 +153,6 @@ public sealed class WorldParticles
         }
 
         _batcher.UploadGpuData();
+        _timer.EndPrint();
     }
 }

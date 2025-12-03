@@ -48,7 +48,7 @@ internal static class DrawAnimatorProcessor
             if ((uint)len > boneCap)
                 throw new IndexOutOfRangeException("BoneCount exceeds capacity.");
 
-            var finals = uploader.WriteBoneSpan();
+            var finals = uploader.GetWriter();
             var clip = view.GetClip(0);
 
             Matrix4x4 result = default;

@@ -12,7 +12,37 @@ namespace ConcreteEngine.Engine.Worlds.Render.Processor;
 
 internal static class DrawCommandProcessor
 {
-    public static int ExecuteSubmitTransform(int idx, int writeIdx)
+    public static void ExecuteSubmitCommand(int idx, in DrawEntity entity, in MaterialTag materialTag)
+    {
+        var parts = DrawDataProvider.GetMeshParts(entity.Source.Model);
+        var writer = DrawDataProvider.GetDrawUploaderCtx();
+
+        foreach (ref readonly var part in parts)
+        {
+            var isTransparent = materialTag.GetTagMeta(part.MaterialSlot, out var materialId);
+
+            var cmd = new DrawCommand(part.Mesh, materialId, drawCount: part.DrawCount,
+                animationSlot: entity.Source.AnimatedSlot);
+
+            var meta = BuildMeta(isTransparent, entity.Meta);
+
+            writer.SubmitDraw(in cmd, meta);
+        }
+
+        return;
+
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        static DrawCommandMeta BuildMeta(bool isTransparent, DrawEntityMeta m)
+        {
+            if (!isTransparent)
+                return m.ToCommandMeta();
+
+            var depthKey = (ushort)(ushort.MaxValue - m.DepthKey);
+            return new DrawCommandMeta(m.CommandId, DrawCommandQueue.Transparent, m.Resolver, m.PassMask, depthKey);
+        }
+    }
+
+    public static void ExecuteSubmitTransform(int idx)
     {
         ref readonly var transform = ref DrawEntityStore.EntityData[idx].Transform;
         var source = DrawEntityStore.Entities[idx].Source;
@@ -26,11 +56,11 @@ internal static class DrawCommandProcessor
         var isAnimated = source.AnimatedSlot > 0;
         foreach (ref readonly var local in locals)
         {
-            ref var modelTransform = ref writer.WriteBuffer(writeIdx++);
+            ref var modelTransform = ref writer.GetWriter();
             WriteTransformUniform(ref modelTransform, in local, in world, isAnimated);
         }
 
-        return writeIdx;
+        return;
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         static void WriteTransformUniform(ref DrawObjectUniform data, in Matrix4x4 locals, in Matrix4x4 world,
@@ -42,35 +72,6 @@ internal static class DrawCommandProcessor
                 MatrixMath.WriteMultiplyAffine(ref data.Model, in locals, in world);
 
             MatrixMath.CreateNormalMatrix(in data.Model, out data.Normal);
-        }
-    }
-
-    public static void ExecuteSubmitCommand(int idx, in DrawEntity entity, in MaterialTag materialTag)
-    {
-        var parts = DrawDataProvider.GetMeshParts(entity.Source.Model);
-        var writer = DrawDataProvider.GetDrawUploaderCtx();
-
-        for (var p = 0; p < parts.Length; p++)
-        {
-            ref readonly var part = ref parts[p];
-            var isTransparent = materialTag.FillMaterialMeta(part.MaterialSlot, out var materialId);
-
-            var cmd = new DrawCommand(part.Mesh, materialId, drawCount: part.DrawCount,
-                animationSlot: entity.Source.AnimatedSlot);
-
-            writer.SubmitDraw(cmd, BuildMeta(isTransparent, entity.Meta));
-        }
-
-        return;
-
-        [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        static DrawCommandMeta BuildMeta(bool isTransparent, DrawEntityMeta m)
-        {
-            if (!isTransparent)
-                return new DrawCommandMeta(m.CommandId, m.Queue, m.Resolver, m.PassMask, m.DepthKey);
-
-            var depthKey = (ushort)(ushort.MaxValue - m.DepthKey);
-            return new DrawCommandMeta(m.CommandId, DrawCommandQueue.Transparent, m.Resolver, m.PassMask, depthKey);
         }
     }
 }

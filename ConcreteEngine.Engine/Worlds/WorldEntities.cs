@@ -69,6 +69,7 @@ public sealed class WorldEntities
     }
 
     private static EntityCoreStore _coreStore = null!;
+    internal static EntityCoreStore GetCoreStore() => _coreStore;
     internal static EntityCoreEnumerator CoreQuery()  => new(_coreStore);
 
 

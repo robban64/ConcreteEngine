@@ -16,7 +16,7 @@ namespace ConcreteEngine.Engine.Worlds.Render.Batching;
 public sealed class ParticleBatcher : RenderBatcher
 {
     public const int DefaultCapacity = 64;
-    private ParticleInstanceData[] _particleData = Array.Empty<ParticleInstanceData>();
+    private ParticleInstanceData[] _particleData = [];
 
     private VertexBufferId _particleVbo = default;
 
@@ -49,7 +49,7 @@ public sealed class ParticleBatcher : RenderBatcher
         builder.UploadVertices(vertices, BufferUsage.StaticDraw, BufferStorage.Static,
             BufferAccess.MapWrite);
 
-        builder.UploadVertices<ParticleInstanceData>(
+        builder.UploadVertices(
             _particleData,
             BufferUsage.DynamicDraw,
             BufferStorage.Dynamic,

@@ -2,7 +2,7 @@
 
 #endregion
 
-namespace ConcreteEngine.Engine.Worlds.Render.Batching;
+namespace ConcreteEngine.Engine.Worlds.MeshGeneration;
 /*
 internal sealed class TilemapChunkMesh : IDisposable
 {

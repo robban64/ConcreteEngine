@@ -33,29 +33,37 @@ public sealed class GfxBuffers
 
     //BufferStorage.Dynamic, BufferAccess.MapWrite
     public VertexBufferId CreateVertexBuffer<T>(ReadOnlySpan<T> data, byte divisor, uint offset, BufferStorage storage,
-        BufferAccess access)
-        where T : unmanaged
+        BufferAccess access, int defaultComponentCap = 0) where T : unmanaged
     {
-        //float -> stride = 4; Vector3 -> stride = 12
-        var (stride, size) = ToStrideAndSize<T>(data.Length);
-        var meta = new VertexBufferMeta(stride, data.Length, offset, divisor, DefaultUsage, storage, access);
-        var vboRef = _driverBuffer.CreateVertexBuffer(MemoryMarshal.AsBytes(data),
-            new GfxBufferDataDesc(size, storage, access));
+        var stride = Unsafe.SizeOf<T>();
+        var componentCount = data.Length;
+        if (componentCount == 0 && defaultComponentCap > 0) componentCount = defaultComponentCap;
+        var size = (uint)stride * (uint)componentCount;
+
+        var meta = new VertexBufferMeta(stride, componentCount, offset, divisor, DefaultUsage, storage, access);
+        
+        var payload = data.Length > 0  ? MemoryMarshal.AsBytes(data) : ReadOnlySpan<byte>.Empty;
+        var vboRef = _driverBuffer.CreateVertexBuffer(payload, new GfxBufferDataDesc(size, storage, access));
 
         return _vboStore.Add(meta, vboRef);
     }
 
     //BufferStorage.Static, BufferAccess.None
-    public IndexBufferId CreateIndexBuffer<T>(ReadOnlySpan<T> data, BufferStorage storage, BufferAccess access)
-        where T : unmanaged
+    public IndexBufferId CreateIndexBuffer<T>(ReadOnlySpan<T> data, BufferStorage storage, BufferAccess access,
+        int defaultComponentCap = 0) where T : unmanaged
     {
-        var (stride, size) = ToStrideAndSize<T>(data.Length);
+        var stride = Unsafe.SizeOf<T>();
+        var componentCount = data.Length;
+        if (componentCount == 0 && defaultComponentCap > 0) componentCount = defaultComponentCap;
+        var size = (uint)stride * (uint)componentCount;
+
         if (stride != 1 && stride != 2 && stride != 4)
             GraphicsException.ThrowInvalidType(typeof(T).Name, "Invalid elemental size");
 
-        var meta = new IndexBufferMeta(data.Length, stride, DefaultUsage, storage, access);
+        var meta = new IndexBufferMeta(componentCount, stride, DefaultUsage, storage, access);
         var iboRef = _driverBuffer.CreateIndexBuffer(MemoryMarshal.AsBytes(data),
             new GfxBufferDataDesc(size, storage, access));
+
         return _iboStore.Add(meta, iboRef);
     }
 
@@ -68,9 +76,10 @@ public sealed class GfxBuffers
         if (!UniformBufferUtils.IsStd140Aligned<T>())
             throw GraphicsException.InvalidStd140Layout(Unsafe.SizeOf<T>());
 
-        var blockSize = (nint)Unsafe.SizeOf<T>();
-        var stride = UniformBufferUtils.AlignUp(blockSize, UniformBufferUtils.UboOffsetAlign);
-        var meta = new UniformBufferMeta(slot, (int)stride, stride, BufferUsage.DynamicDraw, BufferStorage.Dynamic,
+        var blockSize = Unsafe.SizeOf<T>();
+        var stride = (uint)UniformBufferUtils.AlignUp(blockSize, UniformBufferUtils.UboOffsetAlign);
+        var meta = new UniformBufferMeta(slot, (int)stride, (nint)stride, BufferUsage.DynamicDraw,
+            BufferStorage.Dynamic,
             BufferAccess.MapWrite);
 
         var uboRef = _driverBuffer.CreateUniformBuffer(slot, new GfxBufferDataDesc(stride, storage, access));
@@ -184,13 +193,13 @@ public sealed class GfxBuffers
         _driverBuffer.BindUniformBufferRange(uboRef, meta.Slot, offset, size);
     }
 
-    public static (nint Offset, nint Size) ToSizeAndOffset<T>(int offsetElements, int count) where T : unmanaged
+    public (nint Offset, nint Size) ToSizeAndOffset<T>(int offsetElements, int count) where T : unmanaged
     {
         var stride = (nint)Unsafe.SizeOf<T>();
         return (offsetElements * stride, count * stride);
     }
 
-    public static (int Stride, nint Size) ToStrideAndSize<T>(int count) where T : unmanaged
+    public (int Stride, nint Size) ToStrideAndSize<T>(int count) where T : unmanaged
     {
         var stride = Unsafe.SizeOf<T>();
         return (stride, count * stride);

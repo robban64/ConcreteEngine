@@ -7,6 +7,7 @@ using ConcreteEngine.Engine.Worlds.Entities;
 using ConcreteEngine.Engine.Worlds.Entities.Components;
 using ConcreteEngine.Engine.Worlds.Render;
 using ConcreteEngine.Engine.Worlds.Tables;
+using ConcreteEngine.Graphics.Gfx.Resources;
 
 #endregion
 
@@ -19,7 +20,6 @@ public sealed class WorldEntities
 
     internal EntityCoreStore Core => _coreStore;
 
-    internal EntityStore<RenderSourceComponent> Models { get; }
     internal EntityStore<AnimationComponent> Animations { get; }
     internal EntityStore<ParticleComponent> Particles { get; }
 
@@ -28,10 +28,9 @@ public sealed class WorldEntities
     internal WorldEntities()
     {
         _coreStore = new EntityCoreStore(1024);
-        Models = GenericStores<RenderSourceComponent>.CreateStore(1024);
         Animations = GenericStores<AnimationComponent>.CreateStore(64);
         Particles = GenericStores<ParticleComponent>.CreateStore(64);
-        _storeList = [Models, Animations, Particles];
+        _storeList = [Animations, Particles];
     }
 
     public int EntityCount => Core.Count;
@@ -52,8 +51,15 @@ public sealed class WorldEntities
     public EntityId CreateModelEntity(ModelId id, int draw, in MaterialTag mat, in Transform tran, in BoundingBox box)
     {
         var entityId = CreateCoreEntity(id, draw, in mat, in tran, in box, out var index, out var matKey);
-        Models.Add(entityId, index, new RenderSourceComponent(id, draw, matKey));
         return entityId;
+    }
+    
+    public EntityId CreateParticleEntity(MeshId mesh, ParticleComponent component)
+    {
+        var source = new RenderSourceComponent(ModelId.Ignore, 4, MaterialTagKey.Ignore, RenderSourceKind.Particle);
+        var entity = Core.AddEntity(source, Transform.Identity, default, out var index);
+        Particles.Add(entity, index,component);
+        return entity;
     }
 
     public void AddComponent<T>(EntityId entityId, in T component) where T : unmanaged

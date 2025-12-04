@@ -11,9 +11,11 @@ using ConcreteEngine.Engine.Configuration;
 using ConcreteEngine.Engine.Scene;
 using ConcreteEngine.Engine.Scene.Modules;
 using ConcreteEngine.Engine.Worlds;
+using ConcreteEngine.Engine.Worlds.Data;
 using ConcreteEngine.Engine.Worlds.Entities;
 using ConcreteEngine.Engine.Worlds.Entities.Components;
 using ConcreteEngine.Engine.Worlds.Render;
+using ConcreteEngine.Engine.Worlds.Tables;
 using ConcreteEngine.Engine.Worlds.Utility;
 using ConcreteEngine.Graphics.Gfx.Contracts;
 using ConcreteEngine.Graphics.Gfx.Definitions;
@@ -25,28 +27,26 @@ namespace Demo3D;
 
 public sealed class Demo3DScene : GameScene
 {
-    private EntitySpawner _spawner;
+    private EntitySpawner _spawner = null!;
 
-
-    public override void Initialize()
+    protected override void ConfigureModules(IGameSceneModuleBuilder builder)
     {
-        var renderer = Context.GetSystem<IWorldRenderer>();
-        var assets = Context.GetSystem<IAssetSystem>();
-        var (store, materialStore) = (assets.Store, assets.MaterialStore);
+        builder.RegisterModule<FlyCameraModule>(0);
+        builder.RegisterModule<EffectAdjustModule>(1);
+    }
 
-        // Scene globals
-        var rb = renderer.WorldRenderParams;
-        rb.SetShadowDefault(2048, 120f);
+    protected override void ConfigureRenderer(IGameSceneRenderBuilder builder)
+    {
+        builder.RegisterRender3D(new RenderTargetDescriptor());
+    }
 
-        // Skybox
-        var skyboxMaterial = materialStore.CreateMaterial("SkyboxMat", "SkyboxMat1");
-        skyboxMaterial.State.Pipeline = new MaterialPipelineState(
-            GfxPassState.Disable(GfxStateFlags.DepthWrite),
-            GfxPassStateFunc.MakeSky());
+    public override void Unload()
+    {
+    }
 
-        Context.World.Sky.SetSkyMaterial(skyboxMaterial.Id);
 
-        // Terrain
+    private void CreateTerrain(IAssetSystem assets)
+    {
         var heightmap = assets.Store.GetByName<Texture2D>("Heightmap");
         var terrainMat = assets.MaterialStore.CreateMaterial("TerrainMat", "TerrainMat1");
         terrainMat.State.UvRepeat = 14;
@@ -56,7 +56,20 @@ public sealed class Demo3DScene : GameScene
         var worldTerrain = Context.World.Terrain;
         worldTerrain.CreateTerrainMesh(heightmap);
         worldTerrain.SetMaterial(terrainMat.Id);
+    }
 
+    private void CreateSky(IAssetSystem assets)
+    {
+        var skyboxMaterial = assets.MaterialStore.CreateMaterial("SkyboxMat", "SkyboxMat1");
+        skyboxMaterial.State.Pipeline = new MaterialPipelineState(
+            GfxPassState.Disable(GfxStateFlags.DepthWrite),
+            GfxPassStateFunc.MakeSky());
+
+        Context.World.Sky.SetSkyMaterial(skyboxMaterial.Id);
+    }
+
+    private void CreateParticles(IAssetSystem assets)
+    {
         var particleMat = assets.MaterialStore.CreateMaterial("ParticleMat", "ParticleMat1");
         particleMat.State.Transparency = true;
         particleMat.State.Color = new Color4(0.55f, 0.85f, 0.45f);
@@ -70,21 +83,47 @@ public sealed class Demo3DScene : GameScene
             PassFunctions = new GfxPassStateFunc(BlendMode.Alpha)
         };
         var worldParticles = Context.World.Particles;
-        worldParticles.CreateParticleMesh();
-        worldParticles.SetMaterial(particleMat.Id);
+        {
+            var emitter = worldParticles.CreateEmitter(1024, ParticleDefinition.MakeDefault());
+            worldParticles.SetMaterial(particleMat.Id);
+            emitter.MaterialId = particleMat.Id;
 
+            var component = new ParticleComponent(emitter.MeshId, emitter.EmitterHandle, emitter.MaterialId,
+                emitter.ParticleCount);
+            Context.World.Entities.CreateParticleEntity(emitter.MeshId, component);
+        }
+        
+        {
+            var emitter = worldParticles.CreateEmitter(1024, ParticleDefinition.MakeDefault());
+            worldParticles.SetMaterial(particleMat.Id);
+            emitter.MaterialId = particleMat.Id;
+
+            var component = new ParticleComponent(emitter.MeshId, emitter.EmitterHandle, emitter.MaterialId,
+                emitter.ParticleCount);
+            Context.World.Entities.CreateParticleEntity(emitter.MeshId, component);
+        }
+
+    }
+
+    private void CreateAnimatedEntities(IAssetSystem assets)
+    {
         var worldEntities = Context.World.Entities;
         var worldMaterials = Context.World.EntityMaterials;
-        for(int i = 0; i < 2; i++){
+
+        for (int i = 0; i < 2; i++)
+        {
             var warriorModel = assets.Store.GetByName<Model>("Warrior");
-            var warriorMat = materialStore.Get("Warrior::Materials/0");
+            var warriorMat = assets.MaterialStore.Get("Warrior::Materials/0");
             var warriorMatKey = (MaterialTagBuilder.BuildOne(warriorMat.Id));
             var clip = warriorModel.Animation![0];
 
             warriorMat.State.Shininess = 2f;
             warriorMat.State.Specular = 0.05f;
 
-            var transform = Transform.Identity with { Translation = new Vector3(115, 6, 115 + i *5), Scale = new Vector3(2) };
+            var transform = Transform.Identity with
+            {
+                Translation = new Vector3(115, 6, 115 + i * 5), Scale = new Vector3(2)
+            };
             var entity = worldEntities.CreateModelEntity(warriorModel.ModelId, warriorModel.DrawCount, warriorMatKey,
                 in transform, warriorModel.Bounds);
             var animationComponent = new AnimationComponent(warriorModel.ModelId, warriorModel.AnimationId)
@@ -98,7 +137,7 @@ public sealed class Demo3DScene : GameScene
 
 
         var cesiumModel = assets.Store.GetByName<Model>("Cesium_Man");
-        var cesiumMat = materialStore.CreateMaterial("EmptyAnimated", "CesiumMat");
+        var cesiumMat = assets.MaterialStore.CreateMaterial("EmptyAnimated", "CesiumMat");
         var cesiumMatKey = (MaterialTagBuilder.BuildOne(cesiumMat.Id));
         var cesiumClip = cesiumModel.Animation![0];
 
@@ -123,7 +162,7 @@ public sealed class Demo3DScene : GameScene
 
         {
             var knight = assets.Store.GetByName<Model>("Knight");
-            var knightMat = materialStore.Get("Knight::Materials/0");
+            var knightMat = assets.MaterialStore.Get("Knight::Materials/0");
             knightMat.State.Shininess = 2f;
             knightMat.State.Specular = 0.05f;
 
@@ -136,14 +175,18 @@ public sealed class Demo3DScene : GameScene
 
             var knightMatKey =
                 (MaterialTagBuilder.Start(knightMat.Id).WithSlot(knightMat.Id).Build());
-            
+
             var entity = worldEntities.CreateModelEntity(knight.ModelId, knight.DrawCount, knightMatKey,
                 in transform, knight.Bounds);
             //var animationComponent = new AnimationComponent(knight.ModelId, 4, 1, 1);
             // animationComponent.Slot = Context.World.MeshTable.GetAnimationSlot(knight.ModelId);
             //worldEntities.Animations.Add(knightEntity, animationComponent);
         }
+    }
 
+    private void CreateSpawner(IAssetSystem assets)
+    {
+        var (store, materialStore) = (assets.Store, assets.MaterialStore);
 
         // Trees
         var treeMat = materialStore.CreateMaterial("TreeBarkMat", "TreeMat1");
@@ -217,7 +260,6 @@ public sealed class Demo3DScene : GameScene
             intensity: 0.5f);
         _spawner.PlacePropsRingBasic(256, [new ScenePlacement(boatMesh.ToBaseDrawInfo(), boatMesh.Bounds, boatMatTag)]);
 
-        float half = 256 / 2f;
 /*
         {
             var mesh = store.GetByName<Model>("Cube");
@@ -229,21 +271,33 @@ public sealed class Demo3DScene : GameScene
                     Vector3.One, Quaternion.Identity));
         }
 */
+    }
+
+    public override void Initialize()
+    {
+        var renderer = Context.GetSystem<IWorldRenderer>();
+        var assets = Context.GetSystem<IAssetSystem>();
+
+        // Scene globals
+        var rb = renderer.WorldRenderParams;
+        rb.SetShadowDefault(2048, 120f);
+
+
+        // Terrain
+        CreateTerrain(assets);
+
+        // Skybox
+        CreateSky(assets);
+
+        // Particle
+        CreateParticles(assets);
+
+        CreateAnimatedEntities(assets);
+
+        CreateSpawner(assets);
+
+        float half = 256 / 2f;
+        var worldTerrain = Context.World.Terrain;
         Camera.Translation = new Vector3(half - 30, worldTerrain.GetSmoothHeight(half - 30, half + 30) + 4f, half + 30);
-    }
-
-    protected override void ConfigureModules(IGameSceneModuleBuilder builder)
-    {
-        builder.RegisterModule<FlyCameraModule>(0);
-        builder.RegisterModule<EffectAdjustModule>(1);
-    }
-
-    protected override void ConfigureRenderer(IGameSceneRenderBuilder builder)
-    {
-        builder.RegisterRender3D(new RenderTargetDescriptor());
-    }
-
-    public override void Unload()
-    {
     }
 }

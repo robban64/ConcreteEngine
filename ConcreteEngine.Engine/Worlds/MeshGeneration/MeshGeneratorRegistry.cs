@@ -4,9 +4,9 @@ using ConcreteEngine.Common.Collections;
 
 #endregion
 
-namespace ConcreteEngine.Engine.Worlds.Render.Batching;
+namespace ConcreteEngine.Engine.Worlds.MeshGeneration;
 
-public sealed class BatcherRegistry
+public sealed class MeshGeneratorRegistry
 {
     private readonly TypeRegistryCollection<IRenderBatcher> _batches = new(4);
 

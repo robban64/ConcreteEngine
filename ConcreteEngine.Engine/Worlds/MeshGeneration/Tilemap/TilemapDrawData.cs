@@ -4,7 +4,7 @@ using ConcreteEngine.Graphics.Gfx.Resources;
 
 #endregion
 
-namespace ConcreteEngine.Engine.Worlds.Render.Batching;
+namespace ConcreteEngine.Engine.Worlds.MeshGeneration;
 
 public readonly struct TileDrawItem(ushort textureIndex)
 {

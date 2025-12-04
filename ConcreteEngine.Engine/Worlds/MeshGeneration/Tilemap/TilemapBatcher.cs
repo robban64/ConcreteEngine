@@ -2,7 +2,7 @@
 
 #endregion
 
-namespace ConcreteEngine.Engine.Worlds.Render.Batching;
+namespace ConcreteEngine.Engine.Worlds.MeshGeneration;
 /*
 public class TilemapBatcher : RenderBatcher<TilemapBatchResult>
 {

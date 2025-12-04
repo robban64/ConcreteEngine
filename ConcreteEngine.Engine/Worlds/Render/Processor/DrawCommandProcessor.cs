@@ -5,6 +5,7 @@ using ConcreteEngine.Common.Numerics.Maths;
 using ConcreteEngine.Engine.Worlds.Data;
 using ConcreteEngine.Engine.Worlds.Entities.Components;
 using ConcreteEngine.Engine.Worlds.Render.Data;
+using ConcreteEngine.Graphics.Gfx.Resources;
 using ConcreteEngine.Renderer.Data;
 using ConcreteEngine.Renderer.Definitions;
 
@@ -12,6 +13,17 @@ namespace ConcreteEngine.Engine.Worlds.Render.Processor;
 
 internal static class DrawCommandProcessor
 {
+    public static void ExecuteGeneratedCommand(int idx, in DrawEntity entity)
+    {
+        var writer = DrawDataProvider.GetDrawUploaderCtx();
+        var mesh = new MeshId(entity.Source.Model);
+        var material = new MaterialId(entity.Source.MaterialKey.Value);
+        var cmd = new DrawCommand(mesh, material, entity.Source.DrawCount, entity.Source.InstanceCount);
+        var meta = new DrawCommandMeta(DrawCommandId.Particle, DrawCommandQueue.Particles, passMask: PassMask.Main);
+        writer.SubmitDrawIdentity(cmd, meta);
+    }
+
+
     public static void ExecuteSubmitCommand(int idx, in DrawEntity entity, in MaterialTag materialTag)
     {
         var parts = DrawDataProvider.GetMeshParts(entity.Source.Model);
@@ -24,7 +36,7 @@ internal static class DrawCommandProcessor
             var cmd = new DrawCommand(part.Mesh, materialId, drawCount: part.DrawCount,
                 animationSlot: entity.Source.AnimatedSlot);
 
-            var meta = BuildMeta(isTransparent, entity.Meta);
+            var meta = BuildMeta(entity.Meta, isTransparent);
 
             writer.SubmitDraw(in cmd, meta);
         }
@@ -32,26 +44,23 @@ internal static class DrawCommandProcessor
         return;
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        static DrawCommandMeta BuildMeta(bool isTransparent, DrawEntityMeta m)
+        static DrawCommandMeta BuildMeta(DrawEntityMeta m, bool isTransparent)
         {
             if (!isTransparent)
                 return m.ToCommandMeta();
 
             var depthKey = (ushort)(ushort.MaxValue - m.DepthKey);
-            return new DrawCommandMeta(m.CommandId, DrawCommandQueue.Transparent, m.Resolver, m.PassMask, depthKey);
+            var queue = m.Queue >= DrawCommandQueue.Transparent ? m.Queue : DrawCommandQueue.Transparent;
+            return new DrawCommandMeta(m.CommandId, queue, m.Resolver, m.PassMask, depthKey);
         }
     }
 
-    public static void ExecuteSubmitTransform(int idx)
+    public static void ExecuteSubmitTransform(int idx, in Transform transform, in DrawEntitySource source)
     {
-        ref readonly var transform = ref DrawEntityStore.EntityData[idx].Transform;
-        var source = DrawEntityStore.Entities[idx].Source;
-        var model = source.Model;
-
-        var locals = DrawDataProvider.GetPartTransforms(model);
+        var locals = DrawDataProvider.GetPartTransforms(source.Model);
         var writer = DrawDataProvider.GetDrawUploaderCtx();
 
-        MatrixMath.CreateModelMatrix(transform.Translation, transform.Scale, transform.Rotation, out var world);
+        MatrixMath.CreateModelMatrix(transform.Translation,transform.Scale,transform.Rotation, out var world);
 
         var isAnimated = source.AnimatedSlot > 0;
         foreach (ref readonly var local in locals)

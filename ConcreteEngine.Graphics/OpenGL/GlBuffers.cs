@@ -126,14 +126,14 @@ internal sealed class GlBuffers : IGraphicsDriverModule
 
         if (desc.Storage == BufferStorage.Static)
         {
-            if (nullData || data.IsEmpty) _gl.NamedBufferStorage(buffer, (nuint)desc.Size, (void*)0, mask);
-            else _gl.NamedBufferStorage(buffer, (nuint)desc.Size, data, mask);
+            if (nullData || data.IsEmpty) _gl.NamedBufferStorage(buffer, desc.Size, (void*)0, mask);
+            else _gl.NamedBufferStorage(buffer, desc.Size, data, mask);
         }
         else
         {
             var usage = desc.Storage.ToBufferUsage();
-            if (nullData || data.IsEmpty) _gl.NamedBufferData(buffer, (nuint)desc.Size, (void*)0, usage.ToGlEnum());
-            else _gl.NamedBufferData(buffer, (nuint)desc.Size, data, usage.ToGlEnum());
+            if (nullData || data.IsEmpty) _gl.NamedBufferData(buffer, desc.Size, (void*)0, usage.ToGlEnum());
+            else _gl.NamedBufferData(buffer, desc.Size, data, usage.ToGlEnum());
         }
 
         return new NativeHandle(buffer);

@@ -27,7 +27,7 @@ internal static class DrawAnimatorProcessor
     }
     
     [SkipLocalsInit]
-    public static void ExecuteAndUpload()
+    public static void Execute()
     {
         const int boneCap = RenderLimits.BoneCapacity;
         Span<Matrix4x4> globals = stackalloc Matrix4x4[boneCap];

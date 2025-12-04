@@ -7,7 +7,7 @@ using ConcreteEngine.Graphics.Gfx.Resources;
 
 #endregion
 
-namespace ConcreteEngine.Engine.Worlds.Render.Batching;
+namespace ConcreteEngine.Engine.Worlds.MeshGeneration;
 
 public readonly struct GrassBatcherResult(MeshId meshId, int drawCount, int instanceCount)
 {
@@ -16,14 +16,16 @@ public readonly struct GrassBatcherResult(MeshId meshId, int drawCount, int inst
     public readonly int DrawCount = drawCount;
 }
 
-internal sealed class GrassBatcher : RenderBatcher
+internal sealed class GrassMeshGenerator : MeshGenerator
 {
     public int GrassCount { get; set; }
 
-    internal GrassBatcher(GfxContext gfx) : base(gfx)
+    internal GrassMeshGenerator(GfxContext gfx) : base(gfx)
     {
     }
 
+    public MeshId MeshId { get; private set; }
+    public IndexBufferId IboId { get; private set; }
 
     private void CreateMesh()
     {
@@ -37,12 +39,7 @@ internal sealed class GrassBatcher : RenderBatcher
         //builder.UploadVertices();
         //builder.UploadVertices();
     }
-
-    public override void BuildBatch()
-    {
-        CreateMesh();
-    }
-
+    
     public override void Dispose()
     {
         Gfx.Disposer.EnqueueRemoval(MeshId);

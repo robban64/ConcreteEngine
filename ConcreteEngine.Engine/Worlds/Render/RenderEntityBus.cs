@@ -49,6 +49,7 @@ internal sealed class RenderEntityBus
     public int DrawCount => (_world?.EntityCount ?? 0) + ActiveSkyCount + ActiveTerrainCount;
 
     internal void AttachWorld(World world) => _world = world;
+    private FrameProfileTimer _timer = new();
 
 
     public void Start()
@@ -61,11 +62,12 @@ internal sealed class RenderEntityBus
         DrawDataProvider.EnsureBuffer(_world.EntityCount + 64, _world.Entities.Animations.Count);
 
         CollectEntities();
-
         TagCollectedEntities();
         FlushWorldEntities();
-
-        DrawAnimatorProcessor.ExecuteAndUpload();
+        _timer.Begin();
+        ParticleProcessor.Execute(_world.Particles);
+        _timer.EndPrint();
+        DrawAnimatorProcessor.Execute();
         UploadDrawCommands();
         UploadTransform();
     }
@@ -89,6 +91,7 @@ internal sealed class RenderEntityBus
             throw new IndexOutOfRangeException();
     }
 
+
     private static void CollectEntities()
     {
         var idx = 0;
@@ -111,8 +114,8 @@ internal sealed class RenderEntityBus
 
     private static void UploadTransform()
     {
-        var entitiesData = DrawEntityStore.EntityData.AsSpan(0, _idx);
-        var entities = DrawEntityStore.Entities.AsSpan(0, _idx);
+        var entitiesData = DrawEntityStore.EntityData;
+        var entities = DrawEntityStore.Entities;
 
         var len = _idx;
 
@@ -121,7 +124,9 @@ internal sealed class RenderEntityBus
 
         for (var i = 0; i < len; i++)
         {
-            DrawCommandProcessor.ExecuteSubmitTransform(i);
+            var source = entities[i].Source;
+            if (source.Kind == RenderSourceKind.Particle) continue;
+            DrawCommandProcessor.ExecuteSubmitTransform(i, in entitiesData[i].Transform, in source);
         }
     }
 
@@ -141,6 +146,12 @@ internal sealed class RenderEntityBus
         for (var i = 0; i < len; i++)
         {
             ref readonly var entity = ref entities[i];
+            if (entity.Source.Kind != RenderSourceKind.Model)
+            {
+                DrawCommandProcessor.ExecuteGeneratedCommand(i, in entity);
+                continue;
+            }
+
             var matKey = entity.Source.MaterialKey;
             if (matKey != prevMatKey)
             {
@@ -182,14 +193,14 @@ internal sealed class RenderEntityBus
         //Blend = On, SampleAlphaCoverage = Off, DepthWrite = Off
         // Or
         //Blend = Off, SampleAlphaCoverage = On, DepthWrite = Off
-
+/*
         if (_world.Particles.IsActive)
         {
             var particles = _world.Particles;
             var cmd = new DrawCommand(particles.Mesh, particles.Material, instanceCount: particles.ParticleCount);
             var meta = new DrawCommandMeta(DrawCommandId.Particle, DrawCommandQueue.Particles, passMask: PassMask.Main);
             uploader.SubmitDrawIdentity(cmd, meta);
-        }
+        }*/
     }
 
     private static void CreateTransformMatrices(in Transform transform, out Matrix4x4 model,

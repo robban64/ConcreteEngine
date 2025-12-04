@@ -129,17 +129,16 @@ public sealed class WorldRenderer : IWorldRenderer
         WorldRenderParams.Commit();
 
         PrepareRenderView(frameInfo.Alpha, camera);
-        DrawDataProvider.FrameInfo = frameInfo;
-        DrawDataProvider.ProjectionInfo = RenderView.ProjectionInfo;
-        DrawDataProvider.ViewData = RenderView.CameraView;
-
 
         _renderer.PrepareFrame(in frameInfo, in runtimeParams);
 
         // Upload materials
         SubmitMaterialData();
 
+        // Upload draw commands
+        FillDrawData(in frameInfo);
         _renderEntityBus.Start();
+        
         // fill buffers
         _renderer.CollectDrawBuffers();
         _renderer.StartFrame(status);
@@ -156,6 +155,13 @@ public sealed class WorldRenderer : IWorldRenderer
     {
         RenderView.ClearOverride();
         camera.WriteSnapshot(alpha, ref RenderView.CameraView);
+    }
+
+    private void FillDrawData(in RenderFrameInfo frameInfo)
+    {
+        DrawDataProvider.FrameInfo = frameInfo;
+        DrawDataProvider.ProjectionInfo = RenderView.ProjectionInfo;
+        DrawDataProvider.ViewData = RenderView.CameraView;
     }
 
 

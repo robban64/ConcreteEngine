@@ -12,6 +12,10 @@ internal static class WorldActionSlot
 
     public static bool IsDirty { get; private set; }
 
+    public static bool HasPendingSlot<T>(long gen) => gen <= ValueSlot<T>.Generation;
+    
+    public static ref readonly T ReadSlot<T>() => ref ValueSlot<T>.Data; 
+
     public static bool TryReadSlot<T>(long gen, out T data)
     {
         data = ValueSlot<T>.Data;

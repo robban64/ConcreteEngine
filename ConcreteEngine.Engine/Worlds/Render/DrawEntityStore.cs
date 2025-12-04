@@ -1,6 +1,7 @@
 #region
 
 using System.Numerics;
+using System.Runtime.CompilerServices;
 using ConcreteEngine.Common;
 using ConcreteEngine.Common.Collections;
 using ConcreteEngine.Engine.Worlds.Data;
@@ -24,6 +25,9 @@ internal static class DrawEntityStore
     public static int[] ByEntityId = new int[DefaultCapacity];
     public static DrawEntity[] Entities = new DrawEntity[DefaultCapacity];
     public static DrawEntityData[] EntityData = new DrawEntityData[DefaultCapacity];
+    
+    //public static DrawSpecialEntity[] SpecialEntities = new DrawSpecialEntity[DefaultCapacity];
+
     //...
 
     public static ref DrawEntity GetEntityById(EntityId entityId) => ref Entities[ByEntityId[entityId]];
@@ -68,7 +72,6 @@ internal static class DrawDataProvider
         public static AnimationTable AnimationTable = null!;
         public static MeshTable MeshTable = null!;
         public static MaterialTable MaterialTable = null!;
-        public static WorldEntities WorldEntities = null!;
     }
 
     internal static void EnsureBuffer(int entityCap, int skinningCap)
@@ -83,6 +86,7 @@ internal static class DrawDataProvider
     internal static SkinningBufferUploader GetSkinningUploaderCtx() =>
         ManagedStorage.CmdBuffer.GetSkinningUploaderCtx();
 
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     internal static void ResolveMaterial(MaterialTagKey key, out MaterialTag tag) =>
         ManagedStorage.MaterialTable.ResolveSubmitMaterial(key, out tag);
 
@@ -107,6 +111,5 @@ internal static class DrawDataProvider
         ManagedStorage.AnimationTable = animationTable;
         ManagedStorage.MeshTable = meshTable;
         ManagedStorage.MaterialTable = materialTable;
-        ManagedStorage.WorldEntities = worldEntities;
     }
 }

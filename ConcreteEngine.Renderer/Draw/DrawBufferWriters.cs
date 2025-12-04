@@ -13,36 +13,25 @@ namespace ConcreteEngine.Renderer.Draw;
 public readonly ref struct DrawCommandUploader
 {
     private readonly DrawObjectUniform[] _transformBuffer;
-    private readonly int _idx;
     private readonly DrawCommandBuffer _cmdBuffer;
 
     internal DrawCommandUploader(
-        int idx,
         DrawCommandBuffer cmdBuffer,
         DrawObjectUniform[] transformBuffer)
     {
-        _idx = idx;
         _cmdBuffer = cmdBuffer;
         _transformBuffer = transformBuffer;
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public int SubmitDraw(in DrawCommand cmd,  DrawCommandMeta meta)
-    {
-        return _cmdBuffer.Submit(cmd, meta);
-    }
+    public int SubmitDraw(in DrawCommand cmd, DrawCommandMeta meta) => _cmdBuffer.Submit(in cmd, meta);
 
-    public int SubmitDrawAndTransform(DrawCommand cmd, DrawCommandMeta meta, in Matrix4x4 model, in Matrix3X4 normal)
-    {
-        return _cmdBuffer.SubmitDraw(cmd, meta, in model, in normal);
-    }
+    public int SubmitDrawAndTransform(DrawCommand cmd, DrawCommandMeta meta, in Matrix4x4 model, in Matrix3X4 normal) =>
+        _cmdBuffer.SubmitDraw(cmd, meta, in model, in normal);
 
-    public int SubmitDrawIdentity(DrawCommand cmd, DrawCommandMeta meta)
-    {
-        return _cmdBuffer.SubmitDrawIdentity(cmd, meta);
-    }
+    public int SubmitDrawIdentity(DrawCommand cmd, DrawCommandMeta meta) => _cmdBuffer.SubmitDrawIdentity(cmd, meta);
 
-
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public ref DrawObjectUniform GetWriter()
     {
         var index = _cmdBuffer.IncrementTransformIndex();
@@ -64,6 +53,7 @@ public readonly ref struct SkinningBufferUploader
         _boneTransforms = boneTransforms;
     }
 
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public Span<Matrix4x4> GetWriter()
     {
         var index = _cmdBuffer.IncrementSkinningIndex();

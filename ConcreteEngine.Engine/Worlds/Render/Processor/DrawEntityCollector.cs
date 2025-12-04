@@ -1,3 +1,4 @@
+using ConcreteEngine.Engine.Worlds.Data;
 using ConcreteEngine.Engine.Worlds.Entities;
 using ConcreteEngine.Engine.Worlds.Entities.Components;
 using ConcreteEngine.Engine.Worlds.Render.Data;
@@ -10,7 +11,7 @@ internal static class DrawEntityCollector
     internal static void CollectEntity(int idx, EntityId entityId, in RenderSourceComponent source)
     {
         ref var entity = ref DrawEntityStore.Entities[idx];
-        entity = new DrawEntity(entityId, new DrawEntitySource(source.Model, source.MaterialKey, source.DrawCount));
+        entity = new DrawEntity(entityId, new DrawEntitySource(source.Model, source.MaterialKey,source.Kind, source.DrawCount));
         DrawEntityStore.ByEntityId[entityId] = idx;
     }
 
@@ -20,7 +21,5 @@ internal static class DrawEntityCollector
         entityData.Transform = transform;
         entityData.Bounds = box.Bounds;
     }
-    
-
 
 }

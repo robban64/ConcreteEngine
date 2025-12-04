@@ -13,9 +13,9 @@ using ConcreteEngine.Graphics.Primitives;
 
 #endregion
 
-namespace ConcreteEngine.Engine.Worlds.Render.Batching;
+namespace ConcreteEngine.Engine.Worlds.MeshGeneration;
 
-public sealed class TerrainBatcher : RenderBatcher
+public sealed class TerrainMeshGenerator : MeshGenerator
 {
     public AssetRef<Texture2D> TextureRef { get; private set; }
     public int MaxHeight { get; private set; }
@@ -30,7 +30,12 @@ public sealed class TerrainBatcher : RenderBatcher
     private Vertex3D[] _vertices;
 
 
-    internal TerrainBatcher(GfxContext gfx) : base(gfx)
+    public MeshId MeshId { get; private set; }
+    public VertexBufferId VboId { get; private set; }
+    public IndexBufferId IboId { get; private set; }
+
+    
+    internal TerrainMeshGenerator(GfxContext gfx) : base(gfx)
     {
     }
 
@@ -63,7 +68,7 @@ public sealed class TerrainBatcher : RenderBatcher
         BuildHeightMap(data, width, maxHeight);
     }
 
-    public override void BuildBatch()
+    public void BuildBatch()
     {
         int vertexRowCount = (Dimension - 1) / Step + 1;
         VertexCount = vertexRowCount * vertexRowCount;

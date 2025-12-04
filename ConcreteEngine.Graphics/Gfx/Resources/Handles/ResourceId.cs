@@ -73,18 +73,21 @@ public readonly record struct UniformBufferId(int Value) : IResourceId
 
 public static class ResourceIdExtensions
 {
-    [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public static bool IsValid<T>(this T t) where T : unmanaged, IResourceId => t.Value > 0;
-
-    [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public static void DebugValidate<T>(this T t) where T : unmanaged, IResourceId
+    extension<T>(T t) where T : unmanaged, IResourceId
     {
-        Debug.Assert(IsValid(t), $"ResourceId {t.Value} is not valid");
-    }
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public bool IsValid() => t.Value > 0;
 
-    public static void IsValidOrThrow<T>(this T t) where T : unmanaged, IResourceId
-    {
-        if (!IsValid(t))
-            throw new GraphicsException($"ResourceId {t.Value} is not valid");
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public void DebugValidate()
+        {
+            Debug.Assert(IsValid(t), $"ResourceId {t.Value} is not valid");
+        }
+
+        public void IsValidOrThrow()
+        {
+            if (!IsValid(t))
+                throw new GraphicsException($"ResourceId {t.Value} is not valid");
+        }
     }
 }

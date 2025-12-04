@@ -4,8 +4,9 @@ using ConcreteEngine.Common.Numerics;
 using ConcreteEngine.Editor.Data;
 using ConcreteEngine.Engine.Editor.Data;
 using ConcreteEngine.Engine.Worlds.Entities;
+using ConcreteEngine.Engine.Worlds.Entities.Components;
+using ConcreteEngine.Engine.Worlds.MeshGeneration;
 using ConcreteEngine.Engine.Worlds.Render;
-using ConcreteEngine.Engine.Worlds.Render.Batching;
 using ConcreteEngine.Engine.Worlds.Tables;
 using ConcreteEngine.Engine.Worlds.View;
 using ConcreteEngine.Graphics.Gfx;
@@ -42,7 +43,7 @@ public sealed class World : IWorld
 
     public WorldRaycaster Raycast { get; }
 
-    private readonly BatcherRegistry _batchers;
+    private readonly MeshGeneratorRegistry _meshGenerators;
 
     private readonly WorldEntities _entities;
     private readonly WorldSkybox _sky;
@@ -58,7 +59,7 @@ public sealed class World : IWorld
         Camera = new Camera3D();
         WorldRenderParams = new WorldRenderParams();
 
-        _batchers = new BatcherRegistry();
+        _meshGenerators = new MeshGeneratorRegistry();
 
         _entities = new WorldEntities();
         _sky = new WorldSkybox();
@@ -88,8 +89,8 @@ public sealed class World : IWorld
 
         Entities.AttachRender(_meshTable, _materialTable);
         Sky.AttachRenderer(_meshTable);
-        Terrain.AttachRenderer(_batchers.Register(new TerrainBatcher(gfx)), _meshTable, _materialTable);
-        _particles.AttachRenderer(_batchers.Register(new ParticleBatcher(gfx)), _meshTable, _materialTable);
+        Terrain.AttachRenderer(_meshGenerators.Register(new TerrainMeshGenerator(gfx)), _meshTable, _materialTable);
+        _particles.AttachRenderer(_meshGenerators.Register(new ParticleMeshGenerator(gfx)), _materialTable);
     }
 
     internal void StartUpdate(Size2D viewSize, float dt)
@@ -100,7 +101,7 @@ public sealed class World : IWorld
     internal void StartTick(float fixedDt, float totalTime)
     {
         ProcessActions();
-        _particles.Simulate(fixedDt, totalTime, Camera.Translation);
+        _particles.SimulateEmitters(fixedDt, totalTime, Camera.Translation);
     }
 
     internal void EndTick()
@@ -111,7 +112,6 @@ public sealed class World : IWorld
 
     internal void OnPreRender(float alpha)
     {
-        _particles?.ProcessAndUpload(alpha);
     }
 
     internal void ProcessCommand(IWorldCommandRecord cmd)
@@ -138,12 +138,14 @@ public sealed class World : IWorld
         }
 
         if (!WorldActionSlot.IsDirty) return;
-        if (WorldActionSlot.TryReadSlot(WorldRenderParams.Version, out WorldParamsData worldData))
-            WorldRenderParams.FromEditor(in worldData);
 
-        if (WorldActionSlot.TryReadSlot(Camera.Generation, out CameraEditorPayload cameraData))
+        if (WorldActionSlot.HasPendingSlot<WorldParamsData>(WorldRenderParams.Version))
+            WorldRenderParams.FromEditor(in WorldActionSlot.ReadSlot<WorldParamsData>());
+
+
+        if (WorldActionSlot.HasPendingSlot<CameraEditorPayload>(Camera.Generation))
         {
-            ref readonly var data = ref cameraData;
+            ref readonly var data = ref WorldActionSlot.ReadSlot<CameraEditorPayload>();
             Camera.Translation = data.ViewTransform.Translation;
             Camera.Scale = data.ViewTransform.Scale;
             Camera.Orientation = data.ViewTransform.Orientation;
@@ -152,13 +154,12 @@ public sealed class World : IWorld
             Camera.Fov = data.Projection.Fov;
         }
 
-        if (WorldActionSlot.TryReadSlot(0, out EntityDataPayload entityData))
+        if (WorldActionSlot.HasPendingSlot<EntityDataPayload>(0))
         {
-            ref readonly var transform = ref entityData.Transform;
+            Console.WriteLine("Entity transform updated");
+            ref readonly var entityData = ref WorldActionSlot.ReadSlot<EntityDataPayload>();
             ref var entityTransform = ref entities.Core.GetTransformById(new EntityId(entityData.EntityId));
-            entityTransform.Translation = transform.Translation;
-            entityTransform.Scale = transform.Scale;
-            entityTransform.Rotation = transform.Rotation;
+            entityTransform = entityData.Transform;
         }
 
         WorldActionSlot.ClearDirty();

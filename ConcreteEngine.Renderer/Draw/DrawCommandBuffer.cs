@@ -56,7 +56,7 @@ public sealed class DrawCommandBuffer
         _processor = cmd;
     }
 
-    public DrawCommandUploader GetDrawUploaderCtx() => new(_submitTransformIdx, this, _transformBuffer);
+    public DrawCommandUploader GetDrawUploaderCtx() => new(this, _transformBuffer);
     public SkinningBufferUploader GetSkinningUploaderCtx() => new(this, _boneTransformBuffer);
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
@@ -81,7 +81,7 @@ public sealed class DrawCommandBuffer
 
     public int SubmitDrawIdentity(DrawCommand cmd, DrawCommandMeta meta)
     {
-        var idx = Submit(cmd, meta);
+        var idx = Submit(in cmd, meta);
         _transformBuffer[idx].Model = Matrix4x4.Identity;
         _transformBuffer[idx].Normal = default;
         _submitTransformIdx++;
@@ -94,7 +94,7 @@ public sealed class DrawCommandBuffer
         in Matrix4x4 model,
         in Matrix3X4 normal)
     {
-        var idx = Submit(cmd, meta);
+        var idx = Submit(in cmd, meta);
         ref var drawUbo = ref _transformBuffer[idx];
         drawUbo.Model = model;
         drawUbo.Normal = normal;
@@ -108,7 +108,7 @@ public sealed class DrawCommandBuffer
         DrawCommandMeta meta,
         ref DrawObjectUniform drawUniform)
     {
-        var idx = Submit(cmd, meta);
+        var idx = Submit(in cmd, meta);
         ref var data = ref Unsafe.AsRef(ref _transformBuffer[idx]);
         data = drawUniform;
         _submitTransformIdx++;

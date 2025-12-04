@@ -2,17 +2,11 @@
 
 using System.Numerics;
 using System.Runtime.InteropServices;
+using ConcreteEngine.Graphics.Gfx.Resources;
 
 #endregion
 
 namespace ConcreteEngine.Engine.Worlds.Data;
-
-[StructLayout(LayoutKind.Sequential)]
-internal struct ParticleInstanceData
-{
-    public Vector4 PositionSize;
-    public Vector4 Color;
-}
 
 [StructLayout(LayoutKind.Sequential)]
 internal struct ParticleStateData
@@ -24,6 +18,17 @@ internal struct ParticleStateData
     public float Life;
     public float MaxLife;
 }
+
+[StructLayout(LayoutKind.Sequential)]
+public struct ParticleEmitterState
+{
+    public Vector3 LastSampleTranslation;
+    public Vector3 Translation;
+    public Vector3 StartArea;
+    public Vector3 Direction;
+    public float Spread;
+}
+
 [StructLayout(LayoutKind.Sequential)]
 public struct ParticleDefinition
 {
@@ -35,4 +40,14 @@ public struct ParticleDefinition
     public Vector2 SpeedMinMax;
     public Vector2 SizeStartEnd;
     public Vector2 LifeMinMax;
+
+    public static ParticleDefinition MakeDefault() => new()
+    {
+        StartColor = new Vector4(1.0f, 0.9f, 0.7f, 0.6f),
+        EndColor = new Vector4(1.0f, 0.9f, 0.6f, 0.05f),
+        Gravity = new Vector3(0.001f, -0.2f, 0.001f),
+        LifeMinMax = new Vector2(6f, 10f),
+        SizeStartEnd = new Vector2(0.05f, 0.18f),
+        SpeedMinMax = new Vector2(0.02f, 0.11f),
+    };
 }

@@ -1,21 +1,30 @@
 using System.Runtime.InteropServices;
 using ConcreteEngine.Engine.Worlds.Data;
 using ConcreteEngine.Graphics.Gfx.Resources;
+using ConcreteEngine.Renderer.Data;
 
 namespace ConcreteEngine.Engine.Worlds.Entities.Components;
 
+public enum RenderSourceKind
+{
+    Model,
+    Particle,
+}
+
 [StructLayout(LayoutKind.Sequential)]
-public struct RenderSourceComponent(ModelId model, int drawCount, MaterialTagKey materialTagKey) 
+public struct RenderSourceComponent(ModelId model, int drawCount, MaterialTagKey materialTagKey, RenderSourceKind kind =  RenderSourceKind.Model)
 {
     public ModelId Model = model;
     public MaterialTagKey MaterialKey = materialTagKey;
     public int DrawCount = drawCount;
+    public RenderSourceKind  Kind = kind;
 }
 
 [StructLayout(LayoutKind.Sequential)]
-public struct ParticleComponent(MeshId mesh, int instanceCount, MaterialTagKey materialTagKey) 
+public struct ParticleComponent(MeshId mesh, int emitter, MaterialId material, int instanceCount)
 {
-    public MeshId Mesh  = mesh;
-    public MaterialTagKey MaterialTagKey  = materialTagKey;
-    public int InstanceCount  = instanceCount;
+    public MeshId Mesh = mesh;
+    public int Emitter = emitter;
+    public MaterialId Material = material;
+    public int InstanceCount = instanceCount;
 }

@@ -8,7 +8,10 @@ using ConcreteEngine.Renderer.Data;
 
 namespace ConcreteEngine.Engine.Worlds.Data;
 
-public readonly record struct MaterialTagKey(int Value);
+public readonly record struct MaterialTagKey(int Value)
+{
+    public static MaterialTagKey Ignore => new (-1);
+}
 
 public readonly struct MaterialSlotInfo(MaterialId material, ushort slot, bool isTransparent = false)
 {

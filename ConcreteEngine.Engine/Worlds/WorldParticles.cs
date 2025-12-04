@@ -1,10 +1,14 @@
 #region
 
+using System.Buffers;
 using System.Numerics;
+using System.Runtime.CompilerServices;
+using System.Runtime.InteropServices;
+using ConcreteEngine.Common.Collections;
 using ConcreteEngine.Common.Numerics.Maths;
 using ConcreteEngine.Common.Time;
 using ConcreteEngine.Engine.Worlds.Data;
-using ConcreteEngine.Engine.Worlds.Render.Batching;
+using ConcreteEngine.Engine.Worlds.MeshGeneration;
 using ConcreteEngine.Engine.Worlds.Tables;
 using ConcreteEngine.Graphics.Gfx.Resources;
 using ConcreteEngine.Renderer.Data;
@@ -13,64 +17,123 @@ using ConcreteEngine.Renderer.Data;
 
 namespace ConcreteEngine.Engine.Worlds;
 
+public sealed class ParticleEmitter : IComparable<int>, IComparable<ParticleEmitter>
+{
+    //public const int MinBufferSize = 64;
+    public int EmitterHandle { get; }
+
+    public int ParticleCount { get; set; }
+
+    public MeshId MeshId { get; set; }
+    public MaterialId MaterialId { get; set; }
+
+    public ParticleEmitterState State;
+    public ParticleDefinition Definition;
+
+    internal ParticleStateData[] Particles;
+
+    public ParticleEmitter(int handle, int particleCount, in ParticleDefinition def)
+    {
+        ArgumentOutOfRangeException.ThrowIfLessThan(particleCount, 16);
+        EmitterHandle = handle;
+        ParticleCount = particleCount;
+        Definition = def;
+        Particles = new ParticleStateData[particleCount];
+    }
+
+    public int CompareTo(ParticleEmitter? other)
+    {
+        if (ReferenceEquals(this, other)) return 0;
+        return other is null ? 1 : EmitterHandle.CompareTo(other.EmitterHandle);
+    }
+
+    public int CompareTo(int other) => EmitterHandle.CompareTo(other);
+}
+
 public sealed class WorldParticles
 {
     // public ModelId Model { get; private set; }
-    public MeshId Mesh => _batcher.MeshId;
     public MaterialId Material { get; private set; }
 
-    private ParticleBatcher _batcher;
+    private ParticleMeshGenerator _particleGenerator;
     private MaterialTable _materialTable;
-    private IMeshTable _meshTable;
 
-    private ParticleStateData[] _particles = [];
-
-    private float _translationTicker;
-    private Vector3 _lastSampleTranslation;
-    public Vector3 Translation { get; set; }
-    private Vector3 StartArea { get; set; }
-    private Vector3 Direction { get; set; }
-
-    private ParticleDefinition _particleDef;
+    private readonly List<ParticleEmitter> _emitters = new(4);
+    private int _handleHigh = 0;
 
     internal WorldParticles()
     {
-        _particleDef.StartColor = new Vector4(1.0f, 0.9f, 0.7f, 0.6f);
-        _particleDef.EndColor = new Vector4(1.0f, 0.9f, 0.6f, 0.05f);
-        _particleDef.Gravity = new Vector3(0.001f, -0.2f, 0.001f);
-        _particleDef.LifeMinMax = new Vector2(6f, 10f);
-        _particleDef.SizeStartEnd = new Vector2(0.05f, 0.18f);
-        _particleDef.SpeedMinMax = new Vector2(0.02f, 0.11f);
-
-        StartArea = new Vector3(10, 1, 10);
-        Direction = new Vector3(0, 1, 0);
     }
 
-    public int ParticleCount => _particles.Length;
-    public bool IsActive => Mesh > 0 && Material > 0;
-
-    public void SetMaterial(MaterialId materialId) => Material = materialId;
-
-
-    internal void AttachRenderer(ParticleBatcher batcher, MeshTable meshTable, MaterialTable materialTable)
+    internal void AttachRenderer(ParticleMeshGenerator meshGenerator, MaterialTable materialTable)
     {
-        _batcher = batcher;
-        _meshTable = meshTable;
+        _particleGenerator = meshGenerator;
         _materialTable = materialTable;
     }
 
-    public void CreateParticleMesh()
-    {
-        _batcher.BuildBatch();
-        _meshTable.CreateSimpleModel(_batcher.MeshId, 0, 4, default);
+    public void SetMaterial(MaterialId materialId) => Material = materialId;
 
-        _particles = new ParticleStateData[_batcher.Capacity];
+    internal ParticleEmitter GetEmitter(int emitterHandle)
+    {
+        if (emitterHandle > _handleHigh) throw new IndexOutOfRangeException();
+
+        if (emitterHandle < _emitters.Count)
+        {
+            var found = _emitters[emitterHandle];
+            if (found.EmitterHandle == emitterHandle)
+                return found;
+        }
+
+        var index = SortMethod.BinarySearch(_emitters, emitterHandle);
+        if (index < 0)
+            throw new InvalidOperationException($"Missing emitter handle {emitterHandle}");
+
+        return _emitters[index];
+    }
+
+    public ParticleEmitter CreateEmitter(int particleCount, ParticleDefinition definition)
+    {
+        var slotHandle = _particleGenerator.CreateParticleMesh(particleCount, out var mesh);
+        var emitter = new ParticleEmitter(slotHandle, particleCount, in definition)
+        {
+            MeshId = mesh,
+            MaterialId = Material
+        };
+        _emitters.Add(emitter);
+        _handleHigh = int.Max(_handleHigh, slotHandle);
+        return emitter;
+    }
+
+    internal ParticleMeshWriter GetMeshWriterFor(ParticleEmitter emitter)
+    {
+        ArgumentNullException.ThrowIfNull(emitter);
+        return _particleGenerator.GetWriteBuffer(emitter.EmitterHandle, emitter.ParticleCount);
     }
 
 
-    public void Simulate(float fixedDt, float totalTime, Vector3 cameraPos)
+    private FrameProfileTimer _timer = new();
+
+    internal void SimulateEmitters(float fixedDt, float totalTime, Vector3 cameraPos)
+    {
+        _timer.Begin();
+        foreach (var emitter in _emitters)
+        {
+            Simulate(emitter, fixedDt, totalTime, cameraPos);
+        }
+
+        if (_timer.End())
+        {
+            Console.WriteLine("Simulate: " + _timer.ResultString);
+        }
+    }
+
+    private float _translationTicker = 1;
+    private Vector3 _lastSampleTranslation = default;
+
+    private void Simulate(ParticleEmitter emitter, float fixedDt, float totalTime, Vector3 cameraPos)
     {
         const float spread = 0.2f;
+
         _translationTicker += fixedDt;
         if (_translationTicker >= 1)
         {
@@ -80,38 +143,35 @@ public sealed class WorldParticles
 
         if (_lastSampleTranslation == default && cameraPos == default) return;
 
-        Translation = Vector3.Lerp(_lastSampleTranslation, cameraPos, float.Min(_translationTicker, 1f));
+        ref var def = ref emitter.Definition;
+        ref var state = ref emitter.State;
+        state.Translation = Vector3.Lerp(_lastSampleTranslation, cameraPos, float.Min(_translationTicker, 1f));
 
-        var rng = new FastRandom((uint)Environment.TickCount);
 
-        var startArea = StartArea;
-        var direction = Direction;
-        var startPos = Translation;
+        var particles = emitter.Particles;
+        var startArea = emitter.State.StartArea;
+        var direction = emitter.State.Direction;
+        var startPos = emitter.State.Translation;
 
-        var gravityStep = _particleDef.Gravity * fixedDt;
-        var particles = _particles.AsSpan();
+        var gravityStep = def.Gravity * fixedDt;
 
-        foreach (ref var particle in particles)
+        var len = particles.Length;
+        for (var i = 0; i < len; i++)
         {
+            ref var particle = ref particles[i];
             if (particle.Life < 0)
             {
-                var offset = new Vector3(
-                    rng.RandomFloat(-startArea.X, startArea.X),
-                    rng.RandomFloat(-startArea.Y, startArea.Y),
-                    rng.RandomFloat(-startArea.Z, startArea.Z));
-
-                particle.Position = startPos + offset;
-                particle.PrevPosition = particle.Position;
-                particle.OriginalSpawnPos = particle.Position;
-                particle.MaxLife = rng.RandomFloat(_particleDef.LifeMinMax);
-                particle.Life = particle.MaxLife;
-
-                var rngDir = new Vector3(rng.RandomFloat(-1f, 1f), rng.RandomFloat(-1f, 1f), rng.RandomFloat(-1f, 1f));
-                rngDir = Vector3.Normalize(rngDir);
-                particle.Velocity = Vector3.Normalize(direction + (rngDir * spread));
+                ProcessDeadParticle(ref particle, startArea, direction, startPos, in def);
                 continue;
             }
 
+            ProcessParticle(ref particle, gravityStep, totalTime, fixedDt);
+        }
+
+        return;
+
+        static void ProcessParticle(ref ParticleStateData particle, Vector3 gravityStep, float totalTime, float fixedDt)
+        {
             var waveX = MathF.Sin(totalTime * 0.5f + particle.OriginalSpawnPos.Y);
             var waveZ = MathF.Cos(totalTime * 0.3f + particle.OriginalSpawnPos.X);
             var turbulence = new Vector3(waveX, 0, waveZ) * 0.1f;
@@ -121,38 +181,26 @@ public sealed class WorldParticles
             particle.Position += (particle.Velocity + turbulence) * fixedDt;
             particle.Life -= fixedDt;
         }
-    }
-    private FrameProfileTimer _timer = new();
 
-    public void ProcessAndUpload(float alpha)
-    {
-        const float peakAlpha = 0.4f;
-
-        _timer.Begin();
-        var startColor = _particleDef.StartColor;
-        var endColor = _particleDef.EndColor;
-
-        var startEndSize = _particleDef.SizeStartEnd;
-
-        var particles = _particles.AsSpan();
-        var gpuParticles = _batcher.GetBufferSpan();
-        for (var i = 0; i < particles.Length; i++)
+        static void ProcessDeadParticle(ref ParticleStateData particle, Vector3 startArea, Vector3 direction,
+            Vector3 startPos, in ParticleDefinition def)
         {
-            ref var particle = ref particles[i];
-            ref var gpuData = ref gpuParticles[i];
+            var rng = new FastRandom((uint)Environment.TickCount);
 
-            var lifeRatio = 1f - (particle.Life / particle.MaxLife);
+            var offset = new Vector3(
+                rng.RandomFloat(-startArea.X, startArea.X),
+                rng.RandomFloat(-startArea.Y, startArea.Y),
+                rng.RandomFloat(-startArea.Z, startArea.Z));
 
-            var newPos = Vector3.Lerp(particle.PrevPosition, particle.Position, alpha);
-            var newSize = float.Lerp(startEndSize.X, startEndSize.Y, lifeRatio);
-            gpuData.PositionSize = new Vector4(newPos, newSize);
+            particle.Position = startPos + offset;
+            particle.PrevPosition = particle.Position;
+            particle.OriginalSpawnPos = particle.Position;
+            particle.MaxLife = rng.RandomFloat(def.LifeMinMax);
+            particle.Life = particle.MaxLife;
 
-            float fadeCurve = 4.0f * lifeRatio * (1.0f - lifeRatio);
-            gpuData.Color = Vector4.Lerp(startColor, endColor, lifeRatio);
-            gpuData.Color.W = peakAlpha * fadeCurve; //;
+            var rngDir = new Vector3(rng.RandomFloat(-1f, 1f), rng.RandomFloat(-1f, 1f), rng.RandomFloat(-1f, 1f));
+            rngDir = Vector3.Normalize(rngDir);
+            particle.Velocity = Vector3.Normalize(direction + (rngDir * spread));
         }
-
-        _batcher.UploadGpuData();
-        _timer.EndPrint();
     }
 }

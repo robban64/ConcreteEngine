@@ -8,7 +8,6 @@ namespace ConcreteEngine.Common.Time;
 
 public sealed class FrameProfileTimer
 {
-    private const double TargetFrameMs = 16.6667; // 60 FPS 
 
     private long _totalTicks;
     private int _samples;
@@ -16,9 +15,15 @@ public sealed class FrameProfileTimer
     private double _lastAvgMs;
 
     private readonly int _sampleFrames;
+    private readonly double _targetFrameMs;
     private readonly Stopwatch _sw = new();
 
-    public FrameProfileTimer(int sampleFrames = 60) => _sampleFrames = sampleFrames;
+    public FrameProfileTimer(int sampleFrames = 60, double targetFrameMs = 16.6667)
+    {
+        _sampleFrames = sampleFrames;
+        _targetFrameMs = targetFrameMs;
+    }
+
     public void Begin() => _sw.Restart();
 
     public bool End()
@@ -63,7 +68,7 @@ public sealed class FrameProfileTimer
         get
         {
             if (_lastAvgMs <= 0) return "Waiting for data...";
-            var pct = _lastAvgMs / TargetFrameMs * 100.0;
+            var pct = _lastAvgMs / _targetFrameMs * 100.0;
             return $"{_lastAvgMs:F6} ms (~{pct:F2}% frame)";
         }
     }

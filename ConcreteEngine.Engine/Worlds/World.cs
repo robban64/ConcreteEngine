@@ -3,6 +3,7 @@
 using ConcreteEngine.Common.Numerics;
 using ConcreteEngine.Editor.Data;
 using ConcreteEngine.Engine.Editor.Data;
+using ConcreteEngine.Engine.Time;
 using ConcreteEngine.Engine.Worlds.Entities;
 using ConcreteEngine.Engine.Worlds.Entities.Components;
 using ConcreteEngine.Engine.Worlds.MeshGeneration;
@@ -101,13 +102,17 @@ public sealed class World : IWorld
     internal void StartTick(float fixedDt, float totalTime)
     {
         ProcessActions();
-        _particles.SimulateEmitters(fixedDt, totalTime, Camera.Translation);
     }
 
     internal void EndTick()
     {
         Entities.EndTick();
         Camera.EndTick();
+    }
+
+    internal void OnSimulationTick(UpdateTickerArgs args)
+    {
+        _particles.SimulateEmitters(args.FixedDt, args.Alpha);
     }
 
     internal void OnPreRender(float alpha)

@@ -94,13 +94,40 @@ public sealed class Demo3DScene : GameScene
         }
         
         {
-            var emitter = worldParticles.CreateEmitter(1024, ParticleDefinition.MakeDefault());
+            var def = new ParticleDefinition
+            {
+                StartColor = new Vector4(1.0f, 0.8f, 0.2f, 1.0f), 
+                EndColor   = new Vector4(0.5f, 0.0f, 0.0f, 0.0f), 
+                Gravity = new Vector3(0, -3.0f, 0),
+                SpeedMinMax = new Vector2(4.0f, 7.0f),
+                SizeStartEnd = new Vector2(0.5f, 0.1f),
+                LifeMinMax = new Vector2(1.0f, 2.5f)
+            };
+            var state = new ParticleEmitterState
+            {
+                Translation = new Vector3(120, 8, 120),
+                StartArea = new Vector3(0.2f, 0.0f, 0.2f),
+                Direction = new Vector3(0, 1, 0),
+                Spread = 0.3f 
+            };
             worldParticles.SetMaterial(particleMat.Id);
+
+            var emitter = worldParticles.CreateEmitter(1024,  def);
+            emitter.State = state;
             emitter.MaterialId = particleMat.Id;
 
             var component = new ParticleComponent(emitter.MeshId, emitter.EmitterHandle, emitter.MaterialId,
                 emitter.ParticleCount);
             Context.World.Entities.CreateParticleEntity(emitter.MeshId, component);
+            
+            var emitter2 = worldParticles.CreateEmitter(1024,  def);
+            emitter2.State = state with{Translation = new Vector3(110,8,110)};
+            emitter2.MaterialId = particleMat.Id;
+
+            var component2 = new ParticleComponent(emitter2.MeshId, emitter2.EmitterHandle, emitter2.MaterialId,
+                emitter2.ParticleCount);
+            Context.World.Entities.CreateParticleEntity(emitter2.MeshId, component2);
+
         }
 
     }
@@ -141,7 +168,7 @@ public sealed class Demo3DScene : GameScene
         var cesiumMatKey = (MaterialTagBuilder.BuildOne(cesiumMat.Id));
         var cesiumClip = cesiumModel.Animation![0];
 
-        for (int i = 0; i < 12; i++)
+        for (int i = 0; i < 2; i++)
         {
             var transform = Transform.Identity with
             {

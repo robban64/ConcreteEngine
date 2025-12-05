@@ -12,17 +12,14 @@ namespace ConcreteEngine.Engine.Worlds.Data;
 internal struct ParticleStateData
 {
     public Vector3 Position;
-    public Vector3 PrevPosition;
-    public Vector3 OriginalSpawnPos;
-    public Vector3 Velocity;
     public float Life;
+    public Vector3 Velocity;
     public float MaxLife;
 }
 
 [StructLayout(LayoutKind.Sequential)]
 public struct ParticleEmitterState
 {
-    public Vector3 LastSampleTranslation;
     public Vector3 Translation;
     public Vector3 StartArea;
     public Vector3 Direction;
@@ -32,14 +29,19 @@ public struct ParticleEmitterState
 [StructLayout(LayoutKind.Sequential)]
 public struct ParticleDefinition
 {
+    // Visuals
     public Vector4 StartColor;
     public Vector4 EndColor;
-
-    public Vector3 Gravity;
-
-    public Vector2 SpeedMinMax;
     public Vector2 SizeStartEnd;
+
+    // Physics
+    public Vector3 Gravity;     
+    public float Drag;          
+    
+    // Spawn Parameters
+    public Vector2 SpeedMinMax;
     public Vector2 LifeMinMax;
+
 
     public static ParticleDefinition MakeDefault() => new()
     {
@@ -51,3 +53,4 @@ public struct ParticleDefinition
         SpeedMinMax = new Vector2(0.02f, 0.11f),
     };
 }
+

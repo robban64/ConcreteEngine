@@ -17,13 +17,19 @@ using ConcreteEngine.Graphics.Primitives;
 
 namespace ConcreteEngine.Engine.Worlds.MeshGeneration;
 
-internal readonly ref struct ParticleMeshWriter(int slot, ParticleInstanceData[] particles, Action<int, int> uploadGpu)
+internal readonly ref struct ParticleMeshWriter(
+    int slot,
+    int particleCount,
+    ParticleInstanceData[] particles,
+    Action<int, int> uploadGpu)
 {
     private readonly Action<int, int> _uploadGpuDel = uploadGpu;
+    private readonly ParticleInstanceData[] _particles = particles;
 
     public readonly int Slot = slot;
-    public readonly ParticleInstanceData[] Particles = particles;
-    public void UploadGpuData(int particleCount) => _uploadGpuDel(Slot, particleCount);
+    public readonly int ParticleCount = particleCount;
+    public Span<ParticleInstanceData> Particles => _particles.AsSpan(0, ParticleCount);
+    public void UploadGpuData() => _uploadGpuDel(Slot, ParticleCount);
 }
 
 public sealed class ParticleMeshGenerator : MeshGenerator
@@ -32,8 +38,8 @@ public sealed class ParticleMeshGenerator : MeshGenerator
     public const int DefaultParticleCap = 1024 * 10;
     public const int MaxParticleInstanceCap = 16_384;
     public const int MaxMeshHandleCap = 128;
-    
-    private readonly struct ParticleMeshHandle(MeshId meshId,VertexBufferId vboInstanceId)
+
+    private readonly struct ParticleMeshHandle(MeshId meshId, VertexBufferId vboInstanceId)
     {
         public readonly MeshId MeshId = meshId;
         public readonly VertexBufferId VboInstanceId = vboInstanceId;
@@ -63,7 +69,7 @@ public sealed class ParticleMeshGenerator : MeshGenerator
     internal ParticleMeshWriter GetWriteBuffer(int slot, int particleCount)
     {
         EnsureCapacity(particleCount);
-        return new ParticleMeshWriter(slot, _particleData, _uploadGpuDel);
+        return new ParticleMeshWriter(slot, particleCount, _particleData, _uploadGpuDel);
     }
 
     private ref ParticleMeshHandle GetHandle(int slot)

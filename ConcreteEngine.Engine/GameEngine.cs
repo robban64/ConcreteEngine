@@ -39,7 +39,7 @@ public sealed class GameEngine : IDisposable
     private readonly ModuleManager _modules;
     private readonly SceneManager _sceneManager;
 
-    private readonly UpdateFrameInfo _updateInfo;
+    private readonly EngineTickerInfo _updateInfo;
     private readonly RenderEngineFrameInfo _renderFrameInfo;
 
     private readonly EngineTimeHub _timeHub;
@@ -67,7 +67,7 @@ public sealed class GameEngine : IDisposable
         _modules = new ModuleManager();
 
         // time
-        _timeHub = new EngineTimeHub(GameTickUpdate, DebugTickUpdate);
+        _timeHub = new EngineTimeHub(GameTickUpdate, SimulationTickUpdate, DebugTickUpdate);
 
         // systems
 
@@ -86,7 +86,7 @@ public sealed class GameEngine : IDisposable
             new EngineGateway(gfxBundle.Config.DriverContext, engineWindow.PlatformWindow, internalInput);
         _editorQueues = new EditorEngineQueue(_world, _worldRenderer, _assets);
 
-        _updateInfo = new UpdateFrameInfo();
+        _updateInfo = new EngineTickerInfo();
         _renderFrameInfo = new RenderEngineFrameInfo(_window.OutputSize);
     }
 
@@ -184,9 +184,9 @@ public sealed class GameEngine : IDisposable
         _sceneManager.Current?.Update(in updateInfo);
     }
 
-    private void GameTickUpdate(int tick, float fixedDt)
+    private void GameTickUpdate(UpdateTickerArgs args)
     {
-        _updateInfo.UpdateTick(tick, fixedDt);
+        _updateInfo.UpdateTick(args.Tick, args.FixedDt);
 
         if (_sceneManager.Current == null)
         {
@@ -194,16 +194,21 @@ public sealed class GameEngine : IDisposable
             return;
         }
 
-        _world.StartTick(fixedDt, _renderFrameInfo.Time);
+        _world.StartTick(args.FixedDt, _renderFrameInfo.Time);
 
-        _sceneManager.Current.UpdateTick(tick, fixedDt);
+        _sceneManager.Current.UpdateTick(args.Tick, args.FixedDt);
 
         _world.EndTick();
 
         UpdateSceneTransitionIfNeeded();
     }
 
-    private void DebugTickUpdate(int tick, float tickDt)
+    private void SimulationTickUpdate(UpdateTickerArgs args)
+    {
+        _world.OnSimulationTick(args);
+    }
+
+    private void DebugTickUpdate(UpdateTickerArgs args)
     {
     }
 
@@ -238,7 +243,6 @@ public sealed class GameEngine : IDisposable
             return;
 
         _worldRenderer.AttachWorld(_world);
-        _engineGateway.SetupEditor(_editorQueues, _world, _assets, _renderFrameInfo);
 
         var sceneContext = new GameSceneContext(_coreSystems, _world) { Modules = _modules };
         var builder = new GameSceneConfigBuilder(_modules);
@@ -250,6 +254,8 @@ public sealed class GameEngine : IDisposable
         });
 
         _modules.Load(new GameModuleContext(sceneContext));
+        
+        _engineGateway.SetupEditor(_editorQueues, _world, _assets, _renderFrameInfo);
     }
 
     internal void Close()

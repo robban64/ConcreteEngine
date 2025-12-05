@@ -33,8 +33,7 @@ internal static class DrawCommandProcessor
         {
             var isTransparent = materialTag.GetTagMeta(part.MaterialSlot, out var materialId);
 
-            var cmd = new DrawCommand(part.Mesh, materialId, drawCount: part.DrawCount,
-                animationSlot: entity.Source.AnimatedSlot);
+            var cmd = new DrawCommand(part.Mesh, materialId, part.DrawCount, entity.Source.InstanceCount, entity.Source.AnimatedSlot);
 
             var meta = BuildMeta(entity.Meta, isTransparent);
 

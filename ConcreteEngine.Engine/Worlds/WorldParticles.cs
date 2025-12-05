@@ -19,7 +19,6 @@ namespace ConcreteEngine.Engine.Worlds;
 
 public sealed class ParticleEmitter : IComparable<int>, IComparable<ParticleEmitter>
 {
-    //public const int MinBufferSize = 64;
     public int EmitterHandle { get; }
 
     public int ParticleCount { get; set; }
@@ -31,6 +30,8 @@ public sealed class ParticleEmitter : IComparable<int>, IComparable<ParticleEmit
     public ParticleDefinition Definition;
 
     internal ParticleStateData[] Particles;
+    
+    internal ReadOnlySpan<ParticleStateData> ParticlesSpan => Particles.AsSpan(0, ParticleCount);
 
     public ParticleEmitter(int handle, int particleCount, in ParticleDefinition def)
     {
@@ -39,6 +40,16 @@ public sealed class ParticleEmitter : IComparable<int>, IComparable<ParticleEmit
         ParticleCount = particleCount;
         Definition = def;
         Particles = new ParticleStateData[particleCount];
+        
+        var rng = new FastRandom((uint)DateTime.Now.Ticks); // Seed doesn't matter much here
+
+        for (int i = 0; i < Particles.Length; i++)
+        {
+            ref var p = ref Particles[i];
+            float randomMaxLife = rng.RandomFloat(Definition.LifeMinMax.X, Definition.LifeMinMax.Y);
+            p.MaxLife = randomMaxLife;
+            p.Life = rng.RandomFloat(0, randomMaxLife);
+        }
     }
 
     public int CompareTo(ParticleEmitter? other)
@@ -55,6 +66,8 @@ public sealed class WorldParticles
     // public ModelId Model { get; private set; }
     public MaterialId Material { get; private set; }
 
+    public float ParticleAlpha { get; private set; }
+    public float ParticleDelta { get; private set; }
     private ParticleMeshGenerator _particleGenerator;
     private MaterialTable _materialTable;
 
@@ -111,96 +124,76 @@ public sealed class WorldParticles
     }
 
 
-    private FrameProfileTimer _timer = new();
+    private FrameProfileTimer _timer = new(40, 25);
 
-    internal void SimulateEmitters(float fixedDt, float totalTime, Vector3 cameraPos)
+    internal void SimulateEmitters(float fixedDt, float alpha)
     {
+        ParticleAlpha = alpha;
+        ParticleDelta = fixedDt;
         _timer.Begin();
         foreach (var emitter in _emitters)
         {
-            Simulate(emitter, fixedDt, totalTime, cameraPos);
+            Simulate(emitter, fixedDt);
         }
 
-        if (_timer.End())
-        {
-            Console.WriteLine("Simulate: " + _timer.ResultString);
-        }
+        _timer.EndPrint();
     }
 
-    private float _translationTicker = 1;
-    private Vector3 _lastSampleTranslation = default;
 
-    private void Simulate(ParticleEmitter emitter, float fixedDt, float totalTime, Vector3 cameraPos)
+    private void Simulate(ParticleEmitter emitter, float fixedDt)
     {
-        const float spread = 0.2f;
-
-        _translationTicker += fixedDt;
-        if (_translationTicker >= 1)
-        {
-            _lastSampleTranslation = cameraPos;
-            _translationTicker = 0;
-        }
-
-        if (_lastSampleTranslation == default && cameraPos == default) return;
-
-        ref var def = ref emitter.Definition;
-        ref var state = ref emitter.State;
-        state.Translation = Vector3.Lerp(_lastSampleTranslation, cameraPos, float.Min(_translationTicker, 1f));
-
-
-        var particles = emitter.Particles;
-        var startArea = emitter.State.StartArea;
-        var direction = emitter.State.Direction;
-        var startPos = emitter.State.Translation;
+        var particles = emitter.Particles; 
+        ref readonly var state = ref emitter.State;      
+        ref readonly var def = ref emitter.Definition;   
 
         var gravityStep = def.Gravity * fixedDt;
+        var seed = (uint)((uint)Environment.TickCount * 1000) + (uint)emitter.EmitterHandle;
+        var rng = new FastRandom(seed); 
 
-        var len = particles.Length;
-        for (var i = 0; i < len; i++)
+        int len = particles.Length;
+        for (int i = 0; i < len; i++)
         {
-            ref var particle = ref particles[i];
-            if (particle.Life < 0)
+            ref var p = ref particles[i]; 
+            if (p.Life <= 0)
             {
-                ProcessDeadParticle(ref particle, startArea, direction, startPos, in def);
+                RespawnParticle(ref p, ref rng, in state, in def);
                 continue;
             }
+            ProcessParticle(ref p, gravityStep, fixedDt);
 
-            ProcessParticle(ref particle, gravityStep, totalTime, fixedDt);
         }
+
 
         return;
 
-        static void ProcessParticle(ref ParticleStateData particle, Vector3 gravityStep, float totalTime, float fixedDt)
+        static void ProcessParticle(ref ParticleStateData p, Vector3 gravityStep, float fixedDt)
         {
-            var waveX = MathF.Sin(totalTime * 0.5f + particle.OriginalSpawnPos.Y);
-            var waveZ = MathF.Cos(totalTime * 0.3f + particle.OriginalSpawnPos.X);
-            var turbulence = new Vector3(waveX, 0, waveZ) * 0.1f;
+            p.Life -= fixedDt;
+            p.Velocity += gravityStep;
+            p.Position += p.Velocity * fixedDt;
 
-            particle.PrevPosition = particle.Position;
-            particle.Velocity += gravityStep;
-            particle.Position += (particle.Velocity + turbulence) * fixedDt;
-            particle.Life -= fixedDt;
         }
 
-        static void ProcessDeadParticle(ref ParticleStateData particle, Vector3 startArea, Vector3 direction,
-            Vector3 startPos, in ParticleDefinition def)
+        static void RespawnParticle(ref ParticleStateData p, ref FastRandom rng, in ParticleEmitterState state,
+            in ParticleDefinition def)
         {
-            var rng = new FastRandom((uint)Environment.TickCount);
+            var rx = rng.RandomFloat(-state.Spread, state.Spread);
+            var ry = rng.RandomFloat(-state.Spread, state.Spread);
+            var rz = rng.RandomFloat(-state.Spread, state.Spread);
 
-            var offset = new Vector3(
-                rng.RandomFloat(-startArea.X, startArea.X),
-                rng.RandomFloat(-startArea.Y, startArea.Y),
-                rng.RandomFloat(-startArea.Z, startArea.Z));
+            p.Position = state.Translation + new Vector3(rx, ry, rz);
 
-            particle.Position = startPos + offset;
-            particle.PrevPosition = particle.Position;
-            particle.OriginalSpawnPos = particle.Position;
-            particle.MaxLife = rng.RandomFloat(def.LifeMinMax);
-            particle.Life = particle.MaxLife;
+            var randDir = new Vector3(rng.RandomFloat(-1, 1), rng.RandomFloat(-1, 1), rng.RandomFloat(-1, 1));
 
-            var rngDir = new Vector3(rng.RandomFloat(-1f, 1f), rng.RandomFloat(-1f, 1f), rng.RandomFloat(-1f, 1f));
-            rngDir = Vector3.Normalize(rngDir);
-            particle.Velocity = Vector3.Normalize(direction + (rngDir * spread));
+            var finalDir = (state.Direction + (randDir * 0.5f));
+            if (finalDir != Vector3.Zero) finalDir = Vector3.Normalize(finalDir);
+
+            var speed = rng.RandomFloat(def.SpeedMinMax.X, def.SpeedMinMax.Y);
+            p.Velocity = finalDir * speed;
+
+            p.MaxLife = rng.RandomFloat(def.LifeMinMax.X, def.LifeMinMax.Y);
+            p.Life = p.MaxLife;
+
         }
     }
 }

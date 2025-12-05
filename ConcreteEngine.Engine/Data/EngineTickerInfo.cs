@@ -15,7 +15,7 @@ public readonly record struct UpdateTickInfo(
     public float Fps => DeltaTime > 0 ? 1.0f / DeltaTime : 0.0f;
 }
 
-public sealed class UpdateFrameInfo
+public sealed class EngineTickerInfo
 {
     private UpdateTickInfo _updateTickInfo;
 

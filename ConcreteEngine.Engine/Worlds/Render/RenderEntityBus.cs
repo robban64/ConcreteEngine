@@ -64,9 +64,7 @@ internal sealed class RenderEntityBus
         CollectEntities();
         TagCollectedEntities();
         FlushWorldEntities();
-        _timer.Begin();
         ParticleProcessor.Execute(_world.Particles);
-        _timer.EndPrint();
         DrawAnimatorProcessor.Execute();
         UploadDrawCommands();
         UploadTransform();

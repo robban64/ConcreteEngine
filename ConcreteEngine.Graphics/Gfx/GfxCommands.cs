@@ -346,7 +346,7 @@ public sealed class GfxCommands
                 break;
             case DrawMeshKind.ArraysInstanced:
                 var drawInstances = instanceCount > 0 ? instanceCount : meta.InstanceCount;
-                Debug.Assert(drawCount == 0 || drawInstances > meta.InstanceCount);
+                Debug.Assert( drawInstances > 0);
                 _states.DrawInstanced(meta.Primitive, meta.ElementSize, count, drawInstances);
                 break;
             case DrawMeshKind.Invalid:

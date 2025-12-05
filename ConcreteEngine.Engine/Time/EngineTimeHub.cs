@@ -14,9 +14,10 @@ internal sealed class EngineTimeHub
     public RenderTickScheduler RenderTicker { get; } = new();
 
 
-    public EngineTimeHub(UpdateTickDelegate onGameTick, UpdateTickDelegate onUpdateLogTick)
+    public EngineTimeHub(UpdateTickDelegate onGameTick, UpdateTickDelegate onSimulationTick,
+        UpdateTickDelegate onUpdateLogTick)
     {
-        _gameTickScheduler = new GameTickScheduler(onGameTick, onUpdateLogTick);
+        _gameTickScheduler = new GameTickScheduler(onGameTick, onSimulationTick, onUpdateLogTick);
     }
 
     public float Alpha => _gameTickScheduler.Alpha;

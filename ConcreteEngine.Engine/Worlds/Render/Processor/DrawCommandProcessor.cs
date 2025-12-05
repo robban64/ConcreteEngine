@@ -19,8 +19,7 @@ internal static class DrawCommandProcessor
         var mesh = new MeshId(entity.Source.Model);
         var material = new MaterialId(entity.Source.MaterialKey.Value);
         var cmd = new DrawCommand(mesh, material, entity.Source.DrawCount, entity.Source.InstanceCount);
-        var meta = new DrawCommandMeta(DrawCommandId.Particle, DrawCommandQueue.Particles, passMask: PassMask.Main);
-        writer.SubmitDrawIdentity(cmd, meta);
+        writer.SubmitDrawIdentity(cmd, entity.Meta.ToCommandMeta());
     }
 
 
@@ -33,7 +32,8 @@ internal static class DrawCommandProcessor
         {
             var isTransparent = materialTag.GetTagMeta(part.MaterialSlot, out var materialId);
 
-            var cmd = new DrawCommand(part.Mesh, materialId, part.DrawCount, entity.Source.InstanceCount, entity.Source.AnimatedSlot);
+            var cmd = new DrawCommand(part.Mesh, materialId, part.DrawCount, entity.Source.InstanceCount,
+                entity.Meta.AnimatedSlot);
 
             var meta = BuildMeta(entity.Meta, isTransparent);
 
@@ -54,14 +54,15 @@ internal static class DrawCommandProcessor
         }
     }
 
-    public static void ExecuteSubmitTransform(int idx, in Transform transform, in DrawEntitySource source)
+    public static void ExecuteSubmitTransform(int idx, in DrawEntity entity, in DrawEntityData entityData)
     {
-        var locals = DrawDataProvider.GetPartTransforms(source.Model);
+        var locals = DrawDataProvider.GetPartTransforms(entity.Source.Model);
         var writer = DrawDataProvider.GetDrawUploaderCtx();
 
-        MatrixMath.CreateModelMatrix(transform.Translation,transform.Scale,transform.Rotation, out var world);
+        MatrixMath.CreateModelMatrix(entityData.Transform.Translation, entityData.Transform.Scale,
+            entityData.Transform.Rotation, out var world);
 
-        var isAnimated = source.AnimatedSlot > 0;
+        var isAnimated = entity.Meta.AnimatedSlot > 0;
         foreach (ref readonly var local in locals)
         {
             ref var modelTransform = ref writer.GetWriter();
@@ -77,7 +78,7 @@ internal static class DrawCommandProcessor
             if (isAnimated)
                 data.Model = world;
             else
-                MatrixMath.WriteMultiplyAffine(ref data.Model, in locals, in world);
+                MatrixMath.MultiplyAffine(in locals, in world, out data.Model);
 
             MatrixMath.CreateNormalMatrix(in data.Model, out data.Normal);
         }

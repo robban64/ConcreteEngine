@@ -43,16 +43,16 @@ public sealed class WorldRaycaster
         distance = 0;
 
         var core = _entities.Core;
-        foreach (var it in WorldEntities.Query<BoxComponent>())
+        foreach (var query in _entities.CoreQuery())
         {
-            var entity = it.Entity;
+            var entity = query.Entity;
             ref readonly var transform = ref core.GetTransformById(entity);
-            ref readonly var bounds = ref it.Component;
+            ref readonly var box = ref query.Box;
 
             MatrixMath.CreateModelMatrix(in transform.Translation, in transform.Scale,
                 in transform.Rotation, out world);
 
-            bounds.Bounds.FillCorners(corners);
+            box.Bounds.FillCorners(corners);
 
             for (var c = 0; c < corners.Length; c++)
                 corners[c] = Vector3.Transform(corners[c], world);

@@ -21,10 +21,8 @@ public struct RenderSourceComponent(ModelId model, int drawCount, MaterialTagKey
 }
 
 [StructLayout(LayoutKind.Sequential)]
-public struct ParticleComponent(MeshId mesh, int emitter, MaterialId material, int instanceCount)
+public struct ParticleComponent(int emitterHandle, MaterialId material)
 {
-    public MeshId Mesh = mesh;
-    public int Emitter = emitter;
+    public int EmitterHandle = emitterHandle;
     public MaterialId Material = material;
-    public int InstanceCount = instanceCount;
 }

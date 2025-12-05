@@ -1,20 +1,28 @@
+using ConcreteEngine.Engine.Worlds.Entities.Components;
 using ConcreteEngine.Engine.Worlds.Render.Data;
 using ConcreteEngine.Renderer.Definitions;
 
 namespace ConcreteEngine.Engine.Worlds.Render.Processor;
 
-internal static class DrawEffectProcessor
+internal static class DrawTagResolver
 {
-    internal static void TagEffectResolvers()
+    internal static void TagEffectResolvers(DrawEntityContext ctx)
     {
+        foreach (var query in DrawDataProvider.WorldEntities.Query<AnimationComponent>())
+        {
+            ref var entity = ref ctx.GetByEntityId(query.Entity);
+            entity.SetAnimationSlot(query.Index + 1);
+        }
+        
         var selected = WorldActionSlot.SelectedEntityId;
         if (selected > 0)
         {
-            var idx = DrawEntityStore.ByEntityId[selected];
-            ref var entity = ref DrawEntityStore.Entities[idx];
-            entity.IsSelected = true;
+            var idx = ctx.ByEntityIdSpan[selected];
+            ref var entity = ref ctx.EntitySpan[idx];
             entity.Meta.PassMask = PassMask.Effect | PassMask.DepthPre;
-            entity.Meta.Resolver = DrawCommandResolver.Highlight;
+            entity.Meta.Resolver = entity.Meta.AnimatedSlot == 0
+                ? DrawCommandResolver.Highlight
+                : DrawCommandResolver.HighlightAnimated;
         }
     }
 /*

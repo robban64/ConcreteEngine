@@ -6,6 +6,7 @@ using ConcreteEngine.Common.Numerics;
 using ConcreteEngine.Graphics.Gfx;
 using ConcreteEngine.Graphics.Gfx.Contracts;
 using ConcreteEngine.Graphics.Gfx.Definitions;
+using ConcreteEngine.Graphics.Gfx.Resources;
 using ConcreteEngine.Renderer.Data;
 using ConcreteEngine.Renderer.Definitions;
 
@@ -144,21 +145,33 @@ internal sealed class DrawCommandProcessor
     {
         const GfxStateFlags allowMaterialOverride = GfxStateFlags.Cull | GfxStateFlags.PolygonOffset;
 
-        Debug.Assert(ticket.Resolver is DrawCommandResolver.Highlight or DrawCommandResolver.BoundingVolume);
+        Debug.Assert(ticket.Resolver is  DrawCommandResolver.Highlight or DrawCommandResolver.HighlightAnimated or DrawCommandResolver.BoundingVolume);
 
         var texSlots = _buffers.ResolveMaterial(cmd.MaterialId, out var materialMeta);
-
-        var shader = _ctx.CoreShaders.HighlightShader;
-        var color = _highlightColor;
-        if (ticket.Resolver == DrawCommandResolver.BoundingVolume)
+        ref readonly var shaders = ref _ctx.CoreShaders;
+        ShaderId shader = default;
+        Color4 color = default;
+        switch (ticket.Resolver)
         {
-            shader = _ctx.CoreShaders.BoundingBoxShader;
-            color = Color4.Green;
-        }
+            case DrawCommandResolver.Highlight:
+            case DrawCommandResolver.HighlightAnimated:
+                shader = ticket.Resolver == DrawCommandResolver.Highlight
+                    ? shaders.HighlightShader
+                    : shaders.HighlightAnimatedShader;
+
+                color = _highlightColor;
+                break;
+            case DrawCommandResolver.BoundingVolume:
+                shader = shaders.BoundingBoxShader;
+                color = Color4.Green;
+                break;
+            case DrawCommandResolver.Wireframe:
+            default:
+                throw new NotSupportedException();
+        };
 
         _gfxCmd.UseShader(shader, _ctx.GetUniformLocations(shader));
         _gfxCmd.SetUniform(0, in color);
-
 
         foreach (var slot in texSlots)
         {

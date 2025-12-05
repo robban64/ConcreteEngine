@@ -27,8 +27,8 @@ public readonly struct DrawCommand(
 [StructLayout(LayoutKind.Sequential)]
 public readonly struct DrawCommandMeta
 {
-    public readonly PassMask PassMask;
     public readonly ushort DepthKey;
+    public readonly PassMask PassMask;
     public readonly DrawCommandId Id;
     public readonly DrawCommandQueue Queue;
     public readonly DrawCommandResolver Resolver;

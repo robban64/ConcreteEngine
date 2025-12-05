@@ -5,9 +5,12 @@ using System.Numerics;
 using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
 using ConcreteEngine.Common.Collections;
+using ConcreteEngine.Common.Numerics;
 using ConcreteEngine.Common.Numerics.Maths;
 using ConcreteEngine.Common.Time;
 using ConcreteEngine.Engine.Worlds.Data;
+using ConcreteEngine.Engine.Worlds.Entities;
+using ConcreteEngine.Engine.Worlds.Entities.Components;
 using ConcreteEngine.Engine.Worlds.MeshGeneration;
 using ConcreteEngine.Engine.Worlds.Tables;
 using ConcreteEngine.Graphics.Gfx.Resources;
@@ -28,9 +31,10 @@ public sealed class ParticleEmitter : IComparable<int>, IComparable<ParticleEmit
 
     public ParticleEmitterState State;
     public ParticleDefinition Definition;
+    public BoundingBox LocalBounds;
 
     internal ParticleStateData[] Particles;
-    
+
     internal ReadOnlySpan<ParticleStateData> ParticlesSpan => Particles.AsSpan(0, ParticleCount);
 
     public ParticleEmitter(int handle, int particleCount, in ParticleDefinition def)
@@ -40,8 +44,9 @@ public sealed class ParticleEmitter : IComparable<int>, IComparable<ParticleEmit
         ParticleCount = particleCount;
         Definition = def;
         Particles = new ParticleStateData[particleCount];
-        
-        var rng = new FastRandom((uint)DateTime.Now.Ticks); // Seed doesn't matter much here
+
+        NewSeed();
+        var rng = new FastRandom(State.Seed);
 
         for (int i = 0; i < Particles.Length; i++)
         {
@@ -50,6 +55,22 @@ public sealed class ParticleEmitter : IComparable<int>, IComparable<ParticleEmit
             p.MaxLife = randomMaxLife;
             p.Life = rng.RandomFloat(0, randomMaxLife);
         }
+    }
+
+    internal void NewSeed()
+    {
+        if (State.Seed == 0) State.Seed = (uint)Environment.TickCount + (uint)EmitterHandle;
+    }
+
+    internal void UpdateLocalBounds(out BoundingBox bounds)
+    {
+        var distance = Definition.LifeMinMax.Y * Definition.LifeMinMax.Y;
+        var extents = new Vector3(State.Spread + distance);
+        var min = -extents;
+        var gravityOffset = 0.5f * Definition.Gravity * (Definition.LifeMinMax.Y * Definition.LifeMinMax.Y);
+        LocalBounds.Min = Vector3.Min(min, min + gravityOffset);
+        LocalBounds.Max = Vector3.Max(extents, extents + gravityOffset);
+        bounds = LocalBounds;
     }
 
     public int CompareTo(ParticleEmitter? other)
@@ -104,7 +125,7 @@ public sealed class WorldParticles
         return _emitters[index];
     }
 
-    public ParticleEmitter CreateEmitter(int particleCount, ParticleDefinition definition)
+    public ParticleEmitter CreateEmitter(int particleCount, in ParticleDefinition definition)
     {
         var slotHandle = _particleGenerator.CreateParticleMesh(particleCount, out var mesh);
         var emitter = new ParticleEmitter(slotHandle, particleCount, in definition)
@@ -126,74 +147,97 @@ public sealed class WorldParticles
 
     private FrameProfileTimer _timer = new(40, 25);
 
-    internal void SimulateEmitters(float fixedDt, float alpha)
+    public void UpdateSimulate(WorldEntities entities, float fixedDt, float alpha)
     {
         ParticleAlpha = alpha;
         ParticleDelta = fixedDt;
-        _timer.Begin();
-        foreach (var emitter in _emitters)
-        {
-            Simulate(emitter, fixedDt);
-        }
-
-        _timer.EndPrint();
+        SimulateEmitters(fixedDt);
+        UpdateEntities(entities);
     }
 
-
-    private void Simulate(ParticleEmitter emitter, float fixedDt)
+    
+    private void UpdateEntities(WorldEntities entities)
     {
-        var particles = emitter.Particles; 
-        ref readonly var state = ref emitter.State;      
-        ref readonly var def = ref emitter.Definition;   
+        BoundingBox currBox = default;
+        int prevHandle = -1;
+
+        var core = entities.Core;
+        foreach (var query in entities.Query<ParticleComponent>())
+        {
+            var handle = query.Component.EmitterHandle;
+            ref var box = ref core.GetBoxById(query.Entity);
+            if (prevHandle != handle)
+            {
+                var emitter = GetEmitter(query.Component.EmitterHandle);
+                emitter.UpdateLocalBounds(out currBox);
+                prevHandle = emitter.EmitterHandle;
+            }
+
+            box.Bounds = currBox;
+        }
+    }
+    
+    private void SimulateEmitters(float fixedDt)
+    {
+        foreach (var emitter in _emitters)
+        {
+            if (emitter.State.Seed == 0) emitter.NewSeed();
+            Simulate(emitter, fixedDt);
+        }
+    }
+
+    private static void Simulate(ParticleEmitter emitter, float fixedDt)
+    {
+        ref var state = ref emitter.State;
+        ref readonly var def = ref emitter.Definition;
 
         var gravityStep = def.Gravity * fixedDt;
-        var seed = (uint)((uint)Environment.TickCount * 1000) + (uint)emitter.EmitterHandle;
-        var rng = new FastRandom(seed); 
+        var speedMinMax = def.SpeedMinMax;
+        var lifeMinMax = def.LifeMinMax;
 
-        int len = particles.Length;
-        for (int i = 0; i < len; i++)
+        var particles = emitter.Particles;
+        var len = particles.Length;
+
+        for (var i = 0; i < len; i++)
         {
-            ref var p = ref particles[i]; 
+            ref var p = ref particles[i];
             if (p.Life <= 0)
             {
-                RespawnParticle(ref p, ref rng, in state, in def);
+                RespawnParticle(ref p, ref state, speedMinMax, lifeMinMax);
                 continue;
             }
-            ProcessParticle(ref p, gravityStep, fixedDt);
 
-        }
-
-
-        return;
-
-        static void ProcessParticle(ref ParticleStateData p, Vector3 gravityStep, float fixedDt)
-        {
             p.Life -= fixedDt;
             p.Velocity += gravityStep;
             p.Position += p.Velocity * fixedDt;
-
         }
 
-        static void RespawnParticle(ref ParticleStateData p, ref FastRandom rng, in ParticleEmitterState state,
-            in ParticleDefinition def)
+        return;
+
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        static void RespawnParticle(ref ParticleStateData p, ref ParticleEmitterState state, Vector2 speedMinMax,
+            Vector2 lifeMinMax)
         {
-            var rx = rng.RandomFloat(-state.Spread, state.Spread);
-            var ry = rng.RandomFloat(-state.Spread, state.Spread);
-            var rz = rng.RandomFloat(-state.Spread, state.Spread);
+            var rng = new FastRandom(state.NextSeed());
 
-            p.Position = state.Translation + new Vector3(rx, ry, rz);
+            var spread = new Vector2(-state.Spread, state.Spread);
+            var rndMinMax = new Vector2(-1, 1);
 
-            var randDir = new Vector3(rng.RandomFloat(-1, 1), rng.RandomFloat(-1, 1), rng.RandomFloat(-1, 1));
+            p.Position = state.Translation + new Vector3(
+                rng.RandomFloat(spread),
+                rng.RandomFloat(spread),
+                rng.RandomFloat(spread));
 
-            var finalDir = (state.Direction + (randDir * 0.5f));
-            if (finalDir != Vector3.Zero) finalDir = Vector3.Normalize(finalDir);
+            var randDir = new Vector3(
+                rng.RandomFloat(rndMinMax),
+                rng.RandomFloat(rndMinMax),
+                rng.RandomFloat(rndMinMax));
 
-            var speed = rng.RandomFloat(def.SpeedMinMax.X, def.SpeedMinMax.Y);
-            p.Velocity = finalDir * speed;
+            var speed = rng.RandomFloat(speedMinMax);
+            p.Velocity = Vector3.Normalize(state.Direction + randDir * 0.5f) * speed;
 
-            p.MaxLife = rng.RandomFloat(def.LifeMinMax.X, def.LifeMinMax.Y);
+            p.MaxLife = rng.RandomFloat(lifeMinMax);
             p.Life = p.MaxLife;
-
         }
     }
 }

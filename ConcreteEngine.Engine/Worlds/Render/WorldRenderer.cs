@@ -137,7 +137,7 @@ public sealed class WorldRenderer : IWorldRenderer
 
         // Upload draw commands
         FillDrawData(in frameInfo);
-        _renderEntityBus.Start();
+        _renderEntityBus.Execute();
         
         // fill buffers
         _renderer.CollectDrawBuffers();
@@ -239,6 +239,7 @@ public sealed class WorldRenderer : IWorldRenderer
                 CompositeShader = _assets.Store.GetByName<Shader>("Composite").ResourceId,
                 PresentShader = _assets.Store.GetByName<Shader>("Present").ResourceId,
                 HighlightShader = _assets.Store.GetByName<Shader>("Highlight").ResourceId,
+                HighlightAnimatedShader =_assets.Store.GetByName<Shader>("HighlightAnimated").ResourceId,
                 BoundingBoxShader = _assets.Store.GetByName<Shader>("BoundingBox").ResourceId,
                 ParticleShader = _assets.Store.GetByName<Shader>("Particle").ResourceId,
             };

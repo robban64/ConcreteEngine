@@ -1,6 +1,7 @@
 #region
 
 using System.Numerics;
+using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
 using ConcreteEngine.Graphics.Gfx.Resources;
 
@@ -22,8 +23,12 @@ public struct ParticleEmitterState
 {
     public Vector3 Translation;
     public Vector3 StartArea;
-    public Vector3 Direction;
     public float Spread;
+    public Vector3 Direction;
+    public uint Seed;
+    
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public uint NextSeed() => Seed++;
 }
 
 [StructLayout(LayoutKind.Sequential)]

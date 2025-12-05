@@ -4,12 +4,13 @@ using System.Numerics;
 using System.Runtime.CompilerServices;
 using ConcreteEngine.Common.Numerics;
 using ConcreteEngine.Engine.Worlds.Data;
+using ConcreteEngine.Engine.Worlds.Render.Data;
 using ConcreteEngine.Graphics.Gfx.Resources;
 using ConcreteEngine.Renderer.Data;
 
 #endregion
 
-namespace ConcreteEngine.Engine.Worlds.Render.Data;
+namespace ConcreteEngine.Engine.Worlds.Tables;
 
 public readonly struct MeshPart(MeshId mesh, int materialSlot, int drawCount)
 {

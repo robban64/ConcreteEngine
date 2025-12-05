@@ -1,3 +1,4 @@
+using ConcreteEngine.Common.Numerics;
 using ConcreteEngine.Engine.Worlds.Entities.Components;
 
 namespace ConcreteEngine.Engine.Worlds.Entities;
@@ -21,6 +22,7 @@ internal ref struct EntityCoreEnumerator(EntityCoreStore r)
         public ref RenderSourceComponent Source => ref r.GetSourceByIndex(Index);
         public ref Transform Transform => ref r.GetTransformByIndex(Index);
         public ref BoxComponent Box => ref r.GetBoxByIndex(Index);
+
     }
 }
 

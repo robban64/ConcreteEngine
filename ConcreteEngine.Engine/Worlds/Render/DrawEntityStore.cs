@@ -16,46 +16,6 @@ using ConcreteEngine.Shared.TransformData;
 
 namespace ConcreteEngine.Engine.Worlds.Render;
 
-internal static class DrawEntityStore
-{
-    public const int DefaultCapacity = 512;
-    public const int MaxCapacity = 1024 * 10;
-    
-    //...
-    public static int[] ByEntityId = new int[DefaultCapacity];
-    public static DrawEntity[] Entities = new DrawEntity[DefaultCapacity];
-    public static DrawEntityData[] EntityData = new DrawEntityData[DefaultCapacity];
-    
-    //public static DrawSpecialEntity[] SpecialEntities = new DrawSpecialEntity[DefaultCapacity];
-
-    //...
-
-    public static ref DrawEntity GetEntityById(EntityId entityId) => ref Entities[ByEntityId[entityId]];
-
-    public static void GetDrawArrays(out DrawEntity[] entities, out DrawEntityData[] entityData, out int[] byEntityId)
-    {
-        entities = Entities;
-        entityData = EntityData;
-        byEntityId = ByEntityId;
-    }
-
-    public static void EnsureDrawEntityData(int amount)
-    {
-        InvalidOpThrower.ThrowIf(ByEntityId.Length != Entities.Length);
-        InvalidOpThrower.ThrowIf(ByEntityId.Length != EntityData.Length);
-
-        if (Entities.Length >= amount) return;
-        var newCap = Arrays.CapacityGrowthSafe(Entities.Length, amount);
-        if (newCap > MaxCapacity)
-            throw new OutOfMemoryException("Entity Buffer exceeded max limit");
-
-        Array.Resize(ref Entities, newCap);
-        Array.Resize(ref EntityData, newCap);
-        Array.Resize(ref ByEntityId, newCap);
-        Console.WriteLine($"Entity buffer resize: {newCap}");
-    }
-}
-
 internal static class DrawDataProvider
 {
     //....
@@ -79,6 +39,8 @@ internal static class DrawDataProvider
         ManagedStorage.CmdBuffer.EnsureBufferCapacity(entityCap);
         ManagedStorage.CmdBuffer.EnsureBoneBuffer(entityCap);
     }
+    
+    internal static WorldEntities WorldEntities = null!;
 
     internal static DrawCommandUploader GetDrawUploaderCtx() 
         => ManagedStorage.CmdBuffer.GetDrawUploaderCtx();
@@ -111,5 +73,6 @@ internal static class DrawDataProvider
         ManagedStorage.AnimationTable = animationTable;
         ManagedStorage.MeshTable = meshTable;
         ManagedStorage.MaterialTable = materialTable;
+        WorldEntities = worldEntities;
     }
 }

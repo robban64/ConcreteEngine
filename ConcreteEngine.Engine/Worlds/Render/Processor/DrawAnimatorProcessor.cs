@@ -8,6 +8,7 @@ using ConcreteEngine.Engine.Worlds.Entities;
 using ConcreteEngine.Engine.Worlds.Entities.Components;
 using ConcreteEngine.Engine.Worlds.Render.Data;
 using ConcreteEngine.Renderer.Data;
+using ConcreteEngine.Renderer.Definitions;
 
 #endregion
 
@@ -15,16 +16,6 @@ namespace ConcreteEngine.Engine.Worlds.Render.Processor;
 
 internal static class DrawAnimatorProcessor
 {
-    
-    internal static void TagAnimationSlots()
-    {
-        var span = WorldEntities.GetStore<AnimationComponent>().GetEntitySpan();
-        for (var i = 0; i < span.Length; i++)
-        {
-            ref var entitySource = ref DrawEntityStore.GetEntityById(span[i]);
-            entitySource.SetAnimationSlot(i + 1);
-        }
-    }
     
     [SkipLocalsInit]
     public static void Execute()
@@ -37,7 +28,7 @@ internal static class DrawAnimatorProcessor
         var animationView = DrawDataProvider.GetAnimationDataView();
         var dt = DrawDataProvider.DeltaTime;
 
-        foreach (var query in WorldEntities.Query<AnimationComponent>())
+        foreach (var query in DrawDataProvider.WorldEntities.Query<AnimationComponent>())
         {
             ref var component = ref query.Component;
             var view = animationView.GetModelView(component.Animation, out var invTransform);

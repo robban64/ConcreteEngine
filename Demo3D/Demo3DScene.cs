@@ -88,16 +88,15 @@ public sealed class Demo3DScene : GameScene
             worldParticles.SetMaterial(particleMat.Id);
             emitter.MaterialId = particleMat.Id;
 
-            var component = new ParticleComponent(emitter.MeshId, emitter.EmitterHandle, emitter.MaterialId,
-                emitter.ParticleCount);
+            var component = new ParticleComponent( emitter.EmitterHandle, emitter.MaterialId);
             Context.World.Entities.CreateParticleEntity(emitter.MeshId, component);
         }
-        
+
         {
             var def = new ParticleDefinition
             {
-                StartColor = new Vector4(1.0f, 0.8f, 0.2f, 1.0f), 
-                EndColor   = new Vector4(0.5f, 0.0f, 0.0f, 0.0f), 
+                StartColor = new Vector4(1.0f, 0.8f, 0.2f, 1.0f),
+                EndColor = new Vector4(0.5f, 0.0f, 0.0f, 0.0f),
                 Gravity = new Vector3(0, -3.0f, 0),
                 SpeedMinMax = new Vector2(4.0f, 7.0f),
                 SizeStartEnd = new Vector2(0.5f, 0.1f),
@@ -108,28 +107,24 @@ public sealed class Demo3DScene : GameScene
                 Translation = new Vector3(120, 8, 120),
                 StartArea = new Vector3(0.2f, 0.0f, 0.2f),
                 Direction = new Vector3(0, 1, 0),
-                Spread = 0.3f 
+                Spread = 0.3f
             };
             worldParticles.SetMaterial(particleMat.Id);
 
-            var emitter = worldParticles.CreateEmitter(1024,  def);
+            var emitter = worldParticles.CreateEmitter(1024, new ParticleDefinition());
             emitter.State = state;
             emitter.MaterialId = particleMat.Id;
 
-            var component = new ParticleComponent(emitter.MeshId, emitter.EmitterHandle, emitter.MaterialId,
-                emitter.ParticleCount);
+            var component = new ParticleComponent(emitter.EmitterHandle, emitter.MaterialId);
             Context.World.Entities.CreateParticleEntity(emitter.MeshId, component);
-            
-            var emitter2 = worldParticles.CreateEmitter(1024,  def);
-            emitter2.State = state with{Translation = new Vector3(110,8,110)};
+
+            var emitter2 = worldParticles.CreateEmitter(1024, in def);
+            emitter2.State = state with { Translation = new Vector3(110, 8, 110) };
             emitter2.MaterialId = particleMat.Id;
 
-            var component2 = new ParticleComponent(emitter2.MeshId, emitter2.EmitterHandle, emitter2.MaterialId,
-                emitter2.ParticleCount);
+            var component2 = new ParticleComponent(emitter2.EmitterHandle, emitter2.MaterialId);
             Context.World.Entities.CreateParticleEntity(emitter2.MeshId, component2);
-
         }
-
     }
 
     private void CreateAnimatedEntities(IAssetSystem assets)
@@ -158,8 +153,6 @@ public sealed class Demo3DScene : GameScene
                 Duration = clip.Duration, Speed = clip.TicksPerSecond
             };
             worldEntities.AddComponent(entity, animationComponent);
-
-            // animationComponent.Slot = Context.World.MeshTable.GetAnimationSlot(knight.ModelId);
         }
 
 
@@ -168,7 +161,7 @@ public sealed class Demo3DScene : GameScene
         var cesiumMatKey = (MaterialTagBuilder.BuildOne(cesiumMat.Id));
         var cesiumClip = cesiumModel.Animation![0];
 
-        for (int i = 0; i < 2; i++)
+        for (int i = 0; i < 16; i++)
         {
             var transform = Transform.Identity with
             {

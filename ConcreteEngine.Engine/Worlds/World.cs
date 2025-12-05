@@ -112,7 +112,7 @@ public sealed class World : IWorld
 
     internal void OnSimulationTick(UpdateTickerArgs args)
     {
-        _particles.SimulateEmitters(args.FixedDt, args.Alpha);
+        _particles.UpdateSimulate(_entities, args.FixedDt, args.Alpha);
     }
 
     internal void OnPreRender(float alpha)

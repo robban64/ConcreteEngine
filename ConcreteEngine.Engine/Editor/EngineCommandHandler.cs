@@ -12,6 +12,7 @@ using ConcreteEngine.Engine.Worlds.Data;
 using ConcreteEngine.Engine.Worlds.Entities;
 using ConcreteEngine.Engine.Worlds.Entities.Components;
 using ConcreteEngine.Engine.Worlds.Render.Data;
+using ConcreteEngine.Engine.Worlds.Tables;
 using ConcreteEngine.Graphics.Gfx.Resources;
 using ConcreteEngine.Renderer.Data;
 using ConcreteEngine.Renderer.Passes;
@@ -65,7 +66,7 @@ internal static class EngineCommandHandler
         ctx.AddLog(StructStr<DrawObjectUniform>());
         ctx.AddLog(StructStr<RecreateRequest>());
         ctx.AddLog(StructStr<GfxDebugLog>());
-        */
+
 
         ctx.AddLog(StructStr<TextureMeta>());
         ctx.AddLog(StructStr<MeshMeta>());
@@ -83,7 +84,7 @@ internal static class EngineCommandHandler
 
         ctx.AddLog(StructStr<CameraEditorPayload>());
         ctx.AddLog(StructStr<EntityDataPayload>());
-
+        */
 
         ctx.AddLog(StructStr<MeshPart>());
         ctx.AddLog(StructStr<MaterialTag>());
@@ -92,7 +93,8 @@ internal static class EngineCommandHandler
         ctx.AddLog(StructStr<RenderSourceComponent>());
         ctx.AddLog(StructStr<DrawEntity>());
         ctx.AddLog(StructStr<DrawEntityData>());
-        ctx.AddLog(StructStr<DrawEntityData>());
+        ctx.AddLog(StructStr<DrawEntityMeta>());
+        ctx.AddLog(StructStr<DrawEntitySource>());
 
     }
 

@@ -1,4 +1,5 @@
 using System.Numerics;
+using System.Runtime.CompilerServices;
 using ConcreteEngine.Common.Numerics.Maths;
 using ConcreteEngine.Engine.Worlds.Data;
 using ConcreteEngine.Engine.Worlds.Entities.Components;
@@ -11,21 +12,15 @@ namespace ConcreteEngine.Engine.Worlds.Render.Processor;
 
 internal static class ParticleProcessor
 {
-    internal static void Execute(WorldParticles worldParticles)
+    internal static void Execute(DrawEntityContext ctx,WorldParticles worldParticles)
     {
-        var alpha = worldParticles.ParticleAlpha;
-        var dt = worldParticles.ParticleDelta;
-        
-        ParticleDefinition def = default;
-        int prevEmitterHandle = -1;
-
-        foreach (var query in WorldEntities.Query<ParticleComponent>())
+        foreach (var query in DrawDataProvider.WorldEntities.Query<ParticleComponent>())
         {
-            ref var entity = ref DrawEntityStore.GetEntityById(query.Entity);
+            ref var entity = ref ctx.GetByEntityId(query.Entity);
             ref var component = ref query.Component;
 
-            var emitter = worldParticles.GetEmitter(component.Emitter);
-            
+            var emitter = worldParticles.GetEmitter(component.EmitterHandle);
+
             entity.Meta.Queue = DrawCommandQueue.Particles;
             entity.Meta.PassMask = PassMask.Main;
             entity.Meta.CommandId = DrawCommandId.Particle;
@@ -33,51 +28,40 @@ internal static class ParticleProcessor
             entity.Source.Model = new ModelId(emitter.MeshId);
             entity.Source.MaterialKey = new MaterialTagKey(emitter.MaterialId);
 
-            if (prevEmitterHandle != emitter.EmitterHandle)
-            {
-                def = emitter.Definition;
-                prevEmitterHandle = emitter.EmitterHandle;
-            }
-            
-            var writer = worldParticles.GetMeshWriterFor(emitter);
-            ProcessAll(writer, emitter.ParticlesSpan, def, dt, alpha);
-
+            ProcessEmitter(worldParticles, emitter);
         }
     }
 
-    private static void ProcessAll(ParticleMeshWriter writer, ReadOnlySpan<ParticleStateData> particles, ParticleDefinition def, float dt, float alpha)
+    private static void ProcessEmitter(WorldParticles worldParticles, ParticleEmitter emitter)
     {
+        var writer = worldParticles.GetMeshWriterFor(emitter);
+
+        var particles = emitter.Particles;
         var gpuParticles = writer.Particles;
         var len = particles.Length;
+        var def = emitter.Definition;
+
+        float timeOffset = worldParticles.ParticleDelta * worldParticles.ParticleAlpha;
 
         if ((uint)len > particles.Length || (uint)len > gpuParticles.Length)
             throw new IndexOutOfRangeException();
 
         for (var i = 0; i < len; i++)
         {
-            ref readonly var particle = ref particles[i];
+            ref readonly var p = ref particles[i];
             ref var gpuData = ref gpuParticles[i];
-            Process(ref gpuData, in particle, in def, dt, alpha);
+
+            var t = 1f - p.Life / p.MaxLife;
+
+            var newSize = float.Lerp(def.SizeStartEnd.X, def.SizeStartEnd.Y, t);
+            gpuData.PositionSize = new Vector4(p.Position + p.Velocity * timeOffset, newSize);
+
+            const float peakAlpha = 1.0f;
+            var fadeFactor = 4.0f * t * (1.0f - t) * peakAlpha;
+            gpuData.Color = Vector4.Lerp(def.StartColor, def.EndColor, t) with { W = fadeFactor };
         }
 
         writer.UploadGpuData();
-
     }
-    
-    private static void Process(ref ParticleInstanceData gpuData, in ParticleStateData particle, in ParticleDefinition def, float fixedDt, float alpha)
-    {
-        const float peakAlpha = 1.0f;
-        var t = 1f - particle.Life / particle.MaxLife;
 
-        var timeOffset = fixedDt * alpha; 
-        var newPos = particle.Position + particle.Velocity * timeOffset;
-            
-        var fadeFactor = 4.0f * t * (1.0f - t);
-        gpuData.Color = Vector4.Lerp(def.StartColor, def.EndColor, t);
-        gpuData.Color.W *= peakAlpha * fadeFactor;
-            
-        var newSize = float.Lerp(def.SizeStartEnd.X, def.SizeStartEnd.Y, t);
-        gpuData.PositionSize = new Vector4(newPos, newSize);
-
-    }
 }

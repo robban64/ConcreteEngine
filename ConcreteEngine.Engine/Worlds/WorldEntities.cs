@@ -73,14 +73,18 @@ public sealed class WorldEntities
         foreach (var store in _storeList)
             store.EndTick();
     }
+    
+    internal EntityEnumerator<T> Query<T>() where T : unmanaged => new(GenericStores<T>.Store);
+
+    internal EntityCoreEnumerator CoreQuery()  => new(_coreStore);
 
     private static EntityCoreStore _coreStore = null!;
-    internal static EntityCoreStore GetCoreStore() => _coreStore;
-    internal static EntityCoreEnumerator CoreQuery()  => new(_coreStore);
+    //internal static EntityCoreStore GetCoreStore() => _coreStore;
+   // internal static EntityCoreEnumerator CoreQuery()  => new(_coreStore);
 
 
-    internal static EntityStore<T> GetStore<T>() where T : unmanaged => GenericStores<T>.Store;
-    internal static EntityEnumerator<T1> Query<T1>() where T1 : unmanaged => new(GenericStores<T1>.Store);
+   // internal static EntityStore<T> GetStore<T>() where T : unmanaged => GenericStores<T>.Store;
+    //internal static EntityEnumerator<T1> Query<T1>() where T1 : unmanaged => new(GenericStores<T1>.Store);
     
     private static class GenericStores<T> where T : unmanaged
     {

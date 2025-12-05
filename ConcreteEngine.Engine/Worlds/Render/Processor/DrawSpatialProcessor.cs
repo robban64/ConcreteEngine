@@ -7,10 +7,10 @@ namespace ConcreteEngine.Engine.Worlds.Render.Processor;
 
 internal static class DrawSpatialProcessor
 {
-    internal static void TagDepthKeys(int count)
+    internal static void TagDepthKeys(DrawEntityContext ctx)
     {
-        var entities = DrawEntityStore.Entities;
-        var dataEntities = DrawEntityStore.EntityData;
+        var entities = ctx.EntitySpan;
+        var dataEntities = ctx.EntityDataSpan;
 
         if (entities.Length == 0 || dataEntities.Length == 0) return;
 
@@ -19,10 +19,11 @@ internal static class DrawSpatialProcessor
         DepthKeyUtility.ExtractView(in viewMat, out var view);
         float near = projInfo.Near, far = projInfo.Far;
 
-        if ((uint)count > entities.Length || (uint)count > dataEntities.Length)
+        var len = ctx.Count;
+        if ((uint)len > entities.Length || (uint)len > dataEntities.Length)
             throw new IndexOutOfRangeException();
 
-        for (var i = 0; i < count; i++)
+        for (var i = 0; i < len; i++)
         {
             ref var entity = ref entities[i];
             ref readonly var entityData = ref dataEntities[i];

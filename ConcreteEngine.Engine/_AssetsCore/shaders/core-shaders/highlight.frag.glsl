@@ -1,7 +1,12 @@
 #version 420 core
 
-in vec2 TexCoord;
-in vec3 FragPos;
+in VS_OUT {
+    vec3 FragPos;
+    vec2 TexCoord;
+    vec3 N_world;
+    vec3 T_world;
+    vec3 B_world;
+} fs_in;
 
 out vec4 FragColor;
 
@@ -16,7 +21,7 @@ uniform vec4 uHighlightColor;
 void main()
 {    
     float uvRepeat = uMatParams0.y;
-    vec2 uv = TexCoord * uvRepeat;
+    vec2 uv = fs_in.TexCoord * uvRepeat;
 
     vec4 baseTex = texture(uTexture, uv);
     float a = baseTex.a;
@@ -52,7 +57,7 @@ void main()
     float lineThickness = 0.05;
     float lineIntensity = 0.5;
 
-    float scrollOffset = FragPos.y * lineDensity + uTime * scrollSpeed;
+    float scrollOffset = fs_in.FragPos.y * lineDensity + uTime * scrollSpeed;
     float scanLine = mod(scrollOffset, 1.0);
     float line = smoothstep(0.0, lineThickness, scanLine) - smoothstep(lineThickness, lineThickness + 0.02, scanLine);
     finalColor.rgb += vec3(0.5, 0.7, 1.0) * line * lineIntensity;

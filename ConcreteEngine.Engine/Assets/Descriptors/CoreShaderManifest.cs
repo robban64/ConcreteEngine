@@ -14,7 +14,6 @@ internal static class CoreShaderManifest
 
         BoundingManifest,
         HighlightManifest,
-        HighlightAnimatedManifest,
 
         CompositeManifest,
         PresentManifest,
@@ -54,12 +53,10 @@ internal static class CoreShaderManifest
 
 
     public static ShaderDescriptor BoundingManifest =>
-        new("BoundingBox", "model.vert.glsl", "bounding-box.frag.glsl");
+        new("BoundingBox", "model-plain.vert.glsl", "bounding-box.frag.glsl");
 
     public static ShaderDescriptor HighlightManifest =>
-        new("Highlight", "model.vert.glsl", "highlight.frag.glsl");
-    public static ShaderDescriptor HighlightAnimatedManifest =>
-        new("HighlightAnimated", "model-animated.vert.glsl", "highlight.frag.glsl");
+        new("Highlight", "model-plain.vert.glsl", "highlight.frag.glsl");
 
 
     public static ShaderDescriptor CompositeManifest => new("Composite", "screen.vert.glsl", "composite.frag.glsl");

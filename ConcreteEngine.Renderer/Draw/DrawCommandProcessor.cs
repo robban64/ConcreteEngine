@@ -149,29 +149,30 @@ internal sealed class DrawCommandProcessor
 
         var texSlots = _buffers.ResolveMaterial(cmd.MaterialId, out var materialMeta);
         ref readonly var shaders = ref _ctx.CoreShaders;
-        ShaderId shader = default;
-        Color4 color = default;
+        
+        
         switch (ticket.Resolver)
         {
             case DrawCommandResolver.Highlight:
+                _gfxCmd.UseShader(shaders.HighlightShader, _ctx.GetUniformLocations(shaders.HighlightShader));
+                _gfxCmd.SetUniform(0, 0);
+                _gfxCmd.SetUniform(1, in _highlightColor);
+                break;
             case DrawCommandResolver.HighlightAnimated:
-                shader = ticket.Resolver == DrawCommandResolver.Highlight
-                    ? shaders.HighlightShader
-                    : shaders.HighlightAnimatedShader;
-
-                color = _highlightColor;
+                _buffers.BindAnimation(cmd.AnimationSlot - 1);
+                _gfxCmd.UseShader(shaders.HighlightShader, _ctx.GetUniformLocations(shaders.HighlightShader));
+                _gfxCmd.SetUniform(0, 1);
+                _gfxCmd.SetUniform(1, in _highlightColor);
                 break;
             case DrawCommandResolver.BoundingVolume:
-                shader = shaders.BoundingBoxShader;
-                color = Color4.Green;
+                _gfxCmd.UseShader(shaders.BoundingBoxShader, _ctx.GetUniformLocations(shaders.BoundingBoxShader));
+                _gfxCmd.SetUniform(0, Color4.Green);
                 break;
             case DrawCommandResolver.Wireframe:
             default:
                 throw new NotSupportedException();
         };
 
-        _gfxCmd.UseShader(shader, _ctx.GetUniformLocations(shader));
-        _gfxCmd.SetUniform(0, in color);
 
         foreach (var slot in texSlots)
         {

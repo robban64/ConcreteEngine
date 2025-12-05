@@ -3,6 +3,7 @@
 using ConcreteEngine.Common.Collections;
 using ConcreteEngine.Editor.Data;
 using ConcreteEngine.Editor.DataState;
+using ConcreteEngine.Editor.Utils;
 
 #endregion
 
@@ -84,15 +85,33 @@ public sealed class EntitiesViewModel
     }
 }
 
-public sealed class EntityRecord(
-    int entityId,
-    string name,
-    int componentCount) : IComparable<EntityRecord>, IComparable<int>
+public sealed class EntityRecord : IComparable<EntityRecord>, IComparable<int>
 {
-    public int EntityId { get; } = entityId;
-    public string Name { get; } = name;
-    public int ComponentCount { get; } = componentCount;
+    public int EntityId { get; }
+    public string Name { get; }
+    public int Model { get; }
+    public int[] Materials { get; }
+    public int ComponentCount { get; }
     public long Generation { get; internal set; } = 0;
+
+    public string ModelText { get; private set; }
+    public string MaterialText { get; private set; }
+
+    public EntityRecord(int entityId,
+        string name,
+        int model,
+        int[] materials,
+        int componentCount)
+    {
+        EntityId = entityId;
+        Model = model;
+        Name = name;
+        Materials = materials;
+        ComponentCount = componentCount;
+
+        ModelText = model.ToString();
+        MaterialText = materials.Length == 0 ? string.Empty : string.Join(",", materials);
+    }
 
     public int CompareTo(EntityRecord? other) => other is null ? 1 : EntityId.CompareTo(other.EntityId);
     public int CompareTo(int other) => EntityId.CompareTo(other);

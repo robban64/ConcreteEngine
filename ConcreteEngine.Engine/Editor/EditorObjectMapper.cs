@@ -14,13 +14,6 @@ namespace ConcreteEngine.Engine.Editor;
 
 internal static class EditorObjectMapper
 {
-    public static EntityRecord MakeEntityViewModel(EntityId id)
-    {
-        return new EntityRecord(
-            entityId: id,
-            name: string.Empty,
-            componentCount: 0);
-    }
 
     public static AssetObjectFileViewModel MakeAssetObjectFile(AssetFileEntry entry) =>
         new(entry.Id.Value, entry.RelativePath, entry.SizeBytes, entry.ContentHash);

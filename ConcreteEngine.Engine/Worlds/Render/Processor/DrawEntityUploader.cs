@@ -11,7 +11,7 @@ using ConcreteEngine.Renderer.Definitions;
 
 namespace ConcreteEngine.Engine.Worlds.Render.Processor;
 
-internal static class DrawCommandProcessor
+internal static class DrawEntityUploader
 {
     public static void ExecuteGeneratedCommand(int idx, in DrawEntity entity)
     {

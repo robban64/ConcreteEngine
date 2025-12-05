@@ -7,7 +7,7 @@ using ConcreteEngine.Renderer.Definitions;
 
 namespace ConcreteEngine.Engine.Worlds.Render.Processor;
 
-internal static class WorldProcessor
+internal static class DrawWorldProcessor
 {
 
     internal static void SubmitDrawTerrain(WorldTerrain terrain)

@@ -20,12 +20,6 @@ public sealed class MaterialTable : IMaterialTable
     private MaterialTag[] _table = new MaterialTag[64];
     private readonly Dictionary<MaterialTag, MaterialTagKey> _byTag = new(64);
 
-
-    public void PushTemporary(in MaterialTag tag)
-    {
-    }
-
-
     public MaterialTagKey Add(in MaterialTag tag)
     {
         ArgumentOutOfRangeException.ThrowIfLessThanOrEqual(tag.Slot0, 0);
@@ -33,15 +27,6 @@ public sealed class MaterialTable : IMaterialTable
         return AddTag(tag);
     }
 
-/*
-    public MaterialTagKey AddSpan(ReadOnlySpan<MaterialId> s)
-    {
-        ArgumentOutOfRangeException.ThrowIfLessThan(s.Length, 8, nameof(s));
-        EnsureCapacity(1);
-        var tag = new MaterialTag(s[0], s[1], s[2], s[3], s[4], s[5]);
-        return AddTag(tag);
-    }
-*/
     private MaterialTagKey AddTag(MaterialTag tag)
     {
         if (_byTag.TryGetValue(tag, out var key)) return key;
@@ -62,6 +47,19 @@ public sealed class MaterialTable : IMaterialTable
         }
     }
 
+    public bool TryResolveSubmitMaterial(MaterialTagKey key, out MaterialTag tag)
+    {
+        var index = key.Value - 1;
+        if ((uint)index >= _table.Length)
+        {
+            tag = default;
+            return false;
+        }
+        tag = _table[key.Value - 1];   
+        return true;
+    }
+
+    
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public void ResolveSubmitMaterial(MaterialTagKey key, out MaterialTag tag) => tag = _table[key.Value - 1];
 

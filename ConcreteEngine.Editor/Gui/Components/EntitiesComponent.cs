@@ -67,11 +67,12 @@ internal static class EntitiesComponent
     {
         const ImGuiTableFlags flags = ImGuiTableFlags.NoBordersInBody;
 
-        if (!ImGui.BeginTable("##entity_list_tbl", 3, flags)) return;
+        if (!ImGui.BeginTable("##entity_list_tbl", 4, flags)) return;
 
         ImGui.TableSetupColumn("Id", ImGuiTableColumnFlags.WidthFixed, ColumnWidth);
-        ImGui.TableSetupColumn("Comp", ImGuiTableColumnFlags.WidthFixed, ColumnWidth);
-        ImGui.TableSetupColumn("Transform", ImGuiTableColumnFlags.WidthStretch);
+        ImGui.TableSetupColumn("Name", ImGuiTableColumnFlags.WidthStretch);
+        ImGui.TableSetupColumn("Model", ImGuiTableColumnFlags.WidthFixed, ColumnWidth);
+        ImGui.TableSetupColumn("Material", ImGuiTableColumnFlags.WidthFixed, ColumnWidth);
 
         ImGui.TableNextRow(ImGuiTableRowFlags.Headers);
 
@@ -79,10 +80,13 @@ internal static class EntitiesComponent
         GuiUtils.CenterAlignTextHorizontal("Id");
 
         ImGui.TableNextColumn();
-        GuiUtils.CenterAlignTextHorizontal("Comp");
+        GuiUtils.CenterAlignTextHorizontal("Name");
 
         ImGui.TableNextColumn();
-        GuiUtils.CenterAlignTextHorizontal("Transform");
+        GuiUtils.CenterAlignTextHorizontal("Model");
+
+        ImGui.TableNextColumn();
+        GuiUtils.CenterAlignTextHorizontal("Material");
 
         DrawList();
 
@@ -117,11 +121,13 @@ internal static class EntitiesComponent
             }
 
             ImGui.TableNextColumn();
-            bufferStr = formatter.Format(entity.ComponentCount);
-            GuiUtils.CenterAlignText(bufferStr, RowHeight);
+            GuiUtils.CenterAlignText(entity.Name, RowHeight);
 
             ImGui.TableNextColumn();
-            GuiUtils.CenterAlignText("text", RowHeight);
+            GuiUtils.CenterAlignText(formatter.Format(entity.Model), RowHeight);
+
+            ImGui.TableNextColumn();
+            GuiUtils.CenterAlignText(entity.MaterialText, RowHeight);
 
             bufferStr = formatter.Format(entity.EntityId);
 

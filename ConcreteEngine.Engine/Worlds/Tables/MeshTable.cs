@@ -90,6 +90,21 @@ internal sealed class MeshTable : IMeshTable
 
         return new ModelPartView(parts, locals, boxes);
     }
+    
+    public bool TryGetMeshParts(ModelId id, out ReadOnlySpan<MeshPart> result)
+    {
+        var index = id - 1;
+        result = ReadOnlySpan<MeshPart>.Empty;
+        if ((uint)index >= _modelPartRanges.Length)
+            return false;
+
+        var range = _modelPartRanges[index];
+        if ((uint)(range.Length + range.Offset) > _meshParts.Length)
+            return false;
+
+        result = _meshParts.AsSpan(range.Offset, range.Length);
+        return true;
+    }
 
     public ModelId CreateSimpleModel(MeshId mesh, int materialSlot, int drawCount, in BoundingBox bounds)
     {

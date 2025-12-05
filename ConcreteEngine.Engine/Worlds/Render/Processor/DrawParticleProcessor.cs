@@ -10,7 +10,7 @@ using ConcreteEngine.Renderer.Definitions;
 
 namespace ConcreteEngine.Engine.Worlds.Render.Processor;
 
-internal static class ParticleProcessor
+internal static class DrawParticleProcessor
 {
     internal static void Execute(DrawEntityContext ctx,WorldParticles worldParticles)
     {

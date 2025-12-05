@@ -78,6 +78,10 @@ public sealed class World : IWorld
 
     public IMeshTable MeshTable => _meshTable;
     public IMaterialTable EntityMaterials => _materialTable;
+    
+    internal MeshTable GetMeshTableImpl() => _meshTable;
+
+    internal MaterialTable GetMaterialTableImpl() => _materialTable;
 
     public int EntityCount => Entities.EntityCount;
     public int ShadowMapSize => WorldRenderParams.Snapshot.Shadows.ShadowMapSize;

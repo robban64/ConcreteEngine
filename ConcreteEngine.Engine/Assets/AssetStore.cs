@@ -152,14 +152,14 @@ internal sealed class AssetStore : IAssetStore
     {
         foreach (var asset in _assets.Values)
         {
-            if (asset is TAsset typedAsset)
-            {
-                var it = transform(typedAsset);
-                if (it is null) continue;
-                list.Add(it);
-            }
+            if (asset is not TAsset typedAsset) continue;
+            var it = transform(typedAsset);
+            // ReSharper disable once ConditionIsAlwaysTrueOrFalseAccordingToNullableAPIContract
+            if (it is null) continue;
+            list.Add(it);
         }
     }
+ 
 
     public void FillSpan<TAsset, TData>(Span<TData> span, Action<TAsset, Span<TData>> transform)
         where TAsset : AssetObject where TData : unmanaged

@@ -79,7 +79,7 @@ internal sealed class RenderEntityBus
         
         SubmitWorldObjects();
 
-        ParticleProcessor.Execute(MakeContext(), _world.Particles);
+        DrawParticleProcessor.Execute(MakeContext(), _world.Particles);
         DrawAnimatorProcessor.Execute();
 
         UploadDrawCommands(MakeContext());
@@ -123,8 +123,8 @@ internal sealed class RenderEntityBus
 
     private void SubmitWorldObjects()
     {
-        WorldProcessor.SubmitDrawTerrain(_world!.Terrain);
-        WorldProcessor.SubmitDrawSkybox(_world!.Sky);
+        DrawWorldProcessor.SubmitDrawTerrain(_world!.Terrain);
+        DrawWorldProcessor.SubmitDrawSkybox(_world!.Sky);
     }
 
     private static void TagCollectedEntities(DrawEntityContext ctx)
@@ -147,7 +147,7 @@ internal sealed class RenderEntityBus
         {
             ref readonly var entity = ref entities[i];
             if (entity.Meta.CommandId == DrawCommandId.Particle) continue;
-            DrawCommandProcessor.ExecuteSubmitTransform(i, in entity, in entitiesData[i]);
+            DrawEntityUploader.ExecuteSubmitTransform(i, in entity, in entitiesData[i]);
         }
     }
 
@@ -169,7 +169,7 @@ internal sealed class RenderEntityBus
             ref readonly var entity = ref entities[i];
             if (entity.Meta.CommandId != DrawCommandId.Model)
             {
-                DrawCommandProcessor.ExecuteGeneratedCommand(i, in entity);
+                DrawEntityUploader.ExecuteGeneratedCommand(i, in entity);
                 continue;
             }
 
@@ -180,7 +180,7 @@ internal sealed class RenderEntityBus
                 prevMatKey = matKey;
             }
 
-            DrawCommandProcessor.ExecuteSubmitCommand(i, in entity, in materialTag);
+            DrawEntityUploader.ExecuteSubmitCommand(i, in entity, in materialTag);
         }
     }
 

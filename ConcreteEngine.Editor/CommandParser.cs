@@ -12,8 +12,8 @@ public static class CommandParser
 {
     public static void ParseShadowRequest(string action, string? arg1, string? arg2, out EditorShadowPayload payload)
     {
-        ArgumentException.ThrowIfNullOrWhiteSpace(action, nameof(action));
-        ArgumentException.ThrowIfNullOrWhiteSpace(arg1, nameof(arg1));
+        ArgumentException.ThrowIfNullOrWhiteSpace(action);
+        ArgumentException.ThrowIfNullOrWhiteSpace(arg1);
 
         if (action != "set") throw new ArgumentException("Unknown action", nameof(action));
 
@@ -28,8 +28,8 @@ public static class CommandParser
 
     public static void ParseShaderRequest(string action, string? arg1, string? arg2, out EditorShaderPayload payload)
     {
-        ArgumentException.ThrowIfNullOrWhiteSpace(action, nameof(action));
-        ArgumentException.ThrowIfNullOrWhiteSpace(arg1, nameof(arg1));
+        ArgumentException.ThrowIfNullOrWhiteSpace(action);
+        ArgumentException.ThrowIfNullOrWhiteSpace(arg1);
 
         payload = action switch
         {

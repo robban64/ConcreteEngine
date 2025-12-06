@@ -6,9 +6,15 @@ using System.Diagnostics;
 
 namespace ConcreteEngine.Common.Time;
 
+public static class StaticProfileTimer
+{
+    private static readonly FrameProfileTimer Timer = new();
+    public static void Start() => Timer.Begin();
+    public static void End() => Timer.EndPrint();
+}
+
 public sealed class FrameProfileTimer
 {
-
     private long _totalTicks;
     private int _samples;
     private int _frameCounter;

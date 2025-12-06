@@ -117,8 +117,8 @@ public static class CommandDispatcher
     internal static void InvokeCommand(ConsoleCtx ctx, string cmd, string action, string? arg1,
         string? arg2 = null)
     {
-        ArgumentNullException.ThrowIfNull(ctx, nameof(ctx));
-        ArgumentException.ThrowIfNullOrWhiteSpace(cmd, nameof(cmd));
+        ArgumentNullException.ThrowIfNull(ctx);
+        ArgumentException.ThrowIfNullOrWhiteSpace(cmd);
 
         if (!ConsoleCmd.TryGetValue(cmd, out var record))
             throw new KeyNotFoundException($"Unknown command: {cmd}");

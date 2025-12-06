@@ -12,5 +12,6 @@ public struct WorldParamsData
     public DirLightParams DirLight;
     public AmbientParams Ambient;
     public FogParams Fog;
+    public ShadowParams Shadow;
     public PostEffectParams PostEffect;
 }

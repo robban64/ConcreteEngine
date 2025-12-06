@@ -160,7 +160,6 @@ internal sealed class AssetStore : IAssetStore
         }
     }
  
-
     public void FillSpan<TAsset, TData>(Span<TData> span, Action<TAsset, Span<TData>> transform)
         where TAsset : AssetObject where TData : unmanaged
     {
@@ -243,7 +242,7 @@ internal sealed class AssetStore : IAssetStore
     {
         var id = MakeAssetId();
         var asset = factory(id, descriptor, isCoreAsset, out var fileSpecs);
-        ArgumentNullException.ThrowIfNull(fileSpecs, nameof(fileSpecs));
+        ArgumentNullException.ThrowIfNull(fileSpecs);
         RegisterInternal(id, asset, fileSpecs);
         return asset;
     }
@@ -291,7 +290,7 @@ internal sealed class AssetStore : IAssetStore
     private void RegisterInternal<TAsset>(AssetId id, TAsset asset, ReadOnlySpan<AssetFileSpec> fileSpecs)
         where TAsset : AssetObject
     {
-        ArgumentNullException.ThrowIfNull(asset, nameof(asset));
+        ArgumentNullException.ThrowIfNull(asset);
         ArgumentOutOfRangeException.ThrowIfLessThanOrEqual(id.Value, 0);
         ArgumentOutOfRangeException.ThrowIfNotEqual(asset.RawId.Value, id.Value);
 

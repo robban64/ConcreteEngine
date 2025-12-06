@@ -2,8 +2,9 @@
 
 using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
+using ConcreteEngine.Editor.Components.Data;
+using ConcreteEngine.Editor.Components.State;
 using ConcreteEngine.Editor.Data;
-using ConcreteEngine.Editor.ViewModel;
 using ConcreteEngine.Engine.Worlds;
 using ConcreteEngine.Engine.Worlds.Data;
 using ConcreteEngine.Engine.Worlds.Entities;
@@ -49,32 +50,36 @@ internal sealed class EntityApiController(ApiContext apiContext)
         return result;
     }
 
-    public long FillEntityData(ref EntityDataPayload data)
+    public void ProcessEntityRequest(ref EditorDataRequest<EntityDataState> request)
     {
         var entities = Entities;
 
-        if (data.EntityId == 0)
+        if (request.EditorData.EntityId == 0)
         {
             WorldActionSlot.SelectedEntityId = new EntityId(0);
-            return 0;
+            request.EditorData = default;
+            request.ResponseStatus = EditorDataRequestStatus.Overwrite;
+            return;
         }
 
-        var entity = new EntityId(data.EntityId);
+        var entity = new EntityId(request.EditorData.EntityId);
+
+        WorldActionSlot.SelectedEntityId =  entity;
+
+        if (request.WriteRequest)
+        {
+            WorldActionSlot.SetSlot(0, in request.EditorData);
+            request.ResponseStatus = EditorDataRequestStatus.Success;
+            return;
+        }
+        
         var view = entities.Core.GetEntityView(entity);
-
-        WorldActionSlot.SelectedEntityId = new EntityId(data.EntityId);
-
-        data.Transform = Transform.UnsafeAs(ref view.Transform);
-        data.Model = new EditorEntityModel(view.Source.Model, view.Source.MaterialKey.Value, view.Source.DrawCount);
-        data.Bounds = view.Box;
-
-        return data.EntityId;
-    }
-
-    public long WriteToEntity(long version, ref EntityDataPayload data)
-    {
-        WorldActionSlot.SelectedEntityId = new EntityId(data.EntityId);
-        WorldActionSlot.SetSlot(version, in data);
-        return data.EntityId;
+        ref var data = ref request.EditorData;
+        data.EntityId = entity;
+        data.MaterialTagKey = view.Source.MaterialKey.Value;
+        data.ModelId = view.Source.Model;
+        data.SetTransform(Transform.UnsafeAs(ref view.Transform));
+        data.Bounds = view.Box.Bounds;
+        request.ResponseStatus = EditorDataRequestStatus.Success;
     }
 }

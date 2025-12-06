@@ -1,6 +1,7 @@
 #region
 
 using ConcreteEngine.Common.Numerics;
+using ConcreteEngine.Editor.Components.Data;
 using ConcreteEngine.Editor.Data;
 using ConcreteEngine.Engine.Editor.Data;
 using ConcreteEngine.Engine.Time;
@@ -78,7 +79,7 @@ public sealed class World : IWorld
 
     public IMeshTable MeshTable => _meshTable;
     public IMaterialTable EntityMaterials => _materialTable;
-    
+
     internal MeshTable GetMeshTableImpl() => _meshTable;
 
     internal MaterialTable GetMaterialTableImpl() => _materialTable;
@@ -125,16 +126,6 @@ public sealed class World : IWorld
 
     internal void ProcessCommand(IWorldCommandRecord cmd)
     {
-        if (cmd is EntityCommandRecord<TransformData> transformCmd)
-        {
-        }
-        else if (cmd is CameraCommandRecord cameraCmd)
-        {
-        }
-        else
-        {
-            throw new InvalidOperationException("Unknown Command");
-        }
     }
 
     private void ProcessActions()
@@ -152,23 +143,18 @@ public sealed class World : IWorld
             WorldRenderParams.FromEditor(in WorldActionSlot.ReadSlot<WorldParamsData>());
 
 
-        if (WorldActionSlot.HasPendingSlot<CameraEditorPayload>(Camera.Generation))
+        if (WorldActionSlot.HasPendingSlot<CameraDataState>(Camera.Generation))
         {
-            ref readonly var data = ref WorldActionSlot.ReadSlot<CameraEditorPayload>();
-            Camera.Translation = data.ViewTransform.Translation;
-            Camera.Scale = data.ViewTransform.Scale;
-            Camera.Orientation = data.ViewTransform.Orientation;
-            Camera.FarPlane = data.Projection.Far;
-            Camera.NearPlane = data.Projection.Near;
-            Camera.Fov = data.Projection.Fov;
+            Camera.FromEditor(in WorldActionSlot.ReadSlot<CameraDataState>());
         }
 
-        if (WorldActionSlot.HasPendingSlot<EntityDataPayload>(0))
+        if (WorldActionSlot.HasPendingSlot<EntityDataState>(0))
         {
             Console.WriteLine("Entity transform updated");
-            ref readonly var entityData = ref WorldActionSlot.ReadSlot<EntityDataPayload>();
-            ref var entityTransform = ref entities.Core.GetTransformById(new EntityId(entityData.EntityId));
-            entityTransform = entityData.Transform;
+            ref readonly var entityData = ref WorldActionSlot.ReadSlot<EntityDataState>();
+            var view = entities.Core.GetEntityView(new EntityId(entityData.EntityId));
+            view.Transform = entityData.GetTransform();
+            view.Box.Bounds = entityData.Bounds;
         }
 
         WorldActionSlot.ClearDirty();

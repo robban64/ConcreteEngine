@@ -3,7 +3,6 @@
 using ConcreteEngine.Common.Numerics;
 using ConcreteEngine.Common.Time;
 using ConcreteEngine.Editor.Data;
-using ConcreteEngine.Editor.DataState;
 using ConcreteEngine.Engine.Assets.Data;
 using ConcreteEngine.Engine.Editor.Definitions;
 
@@ -53,20 +52,4 @@ internal sealed class EntityCommandRecord<TData>(WorldCommandAction action, int 
     public ref readonly TData Data => ref _data;
     public WorldCommandAction Action { get; init; } = action;
     public int EntityId { get; init; } = entityId;
-}
-
-internal sealed class CameraCommandRecord(WorldCommandAction action, in CameraEditorPayload data)
-    : EngineCommandRecord(EngineCommandScope.WorldCommand), IWorldCommandRecord
-{
-    private readonly CameraEditorPayload _data = data;
-    public ref readonly CameraEditorPayload Data => ref _data;
-    public WorldCommandAction Action { get; init; } = action;
-}
-
-internal sealed class WorldParamsCommandRecord(WorldCommandAction action, in WorldParamState data)
-    : EngineCommandRecord(EngineCommandScope.WorldCommand), IWorldCommandRecord
-{
-    private WorldParamState _data = data;
-    public ref WorldParamState Data => ref _data;
-    public WorldCommandAction Action { get; init; } = action;
 }

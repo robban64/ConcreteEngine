@@ -80,7 +80,17 @@ public sealed class WorldRenderParams
         _dirLight = data.DirLight;
         _fog = data.Fog;
         _postEffect = data.PostEffect;
+        _shadow = data.Shadow;
         _dirty = true;
+    }
+
+    internal void FillEditorData(out WorldParamsData data)
+    {
+        data.DirLight = _dirLight;
+        data.Ambient = _ambient;
+        data.Fog = _fog;
+        data.PostEffect = _postEffect;
+        data.Shadow = _shadow;
     }
 
     internal RenderParamsSnapshot Commit()

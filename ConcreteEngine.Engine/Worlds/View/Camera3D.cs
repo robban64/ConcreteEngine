@@ -3,6 +3,7 @@
 using System.Numerics;
 using ConcreteEngine.Common.Numerics;
 using ConcreteEngine.Common.Numerics.Maths;
+using ConcreteEngine.Editor.Components.Data;
 using ConcreteEngine.Engine.Worlds.Data;
 using ConcreteEngine.Renderer.State;
 using ConcreteEngine.Shared.TransformData;
@@ -48,7 +49,7 @@ public sealed class Camera3D : ICamera
 
     public long Generation { get; private set; } = 0;
 
-    private CameraRaycaster _raycaster;
+    private readonly CameraRaycaster _raycaster;
 
     public Camera3D()
     {
@@ -213,6 +214,23 @@ public sealed class Camera3D : ICamera
         viewSnapshot.ProjectionInfo = ProjectionInfo;
         viewSnapshot.Position = camPos;
         viewSnapshot.Rotation = camRot;
+    }
+
+    internal void FillEditorData(out CameraDataState data)
+    {
+        data.Transform = new ViewTransformData(_translation, _scale, _orientation);
+        data.Projection = new ProjectionInfoData(_aspectRatio, _fov, _nearPlane, _farPlane);
+        data.Viewport = _viewportSize;
+    }
+
+    internal void FromEditor(in CameraDataState data)
+    {
+        Translation = data.Transform.Translation;
+        Scale = data.Transform.Scale;
+        Orientation = data.Transform.Orientation;
+        FarPlane = data.Projection.Far;
+        NearPlane = data.Projection.Near;
+        Fov = data.Projection.Fov;
     }
 
     private void Ensure()

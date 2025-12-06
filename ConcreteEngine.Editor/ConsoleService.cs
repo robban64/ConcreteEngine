@@ -1,7 +1,7 @@
 #region
 
 using System.Runtime.CompilerServices;
-using ConcreteEngine.Editor.Gui.Components;
+using ConcreteEngine.Editor.Components;
 using ConcreteEngine.Editor.Utils;
 
 #endregion

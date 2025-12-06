@@ -4,11 +4,12 @@
 
 #region
 
+using ConcreteEngine.Editor.Components.Data;
+
 #region
 
 using ConcreteEngine.Editor;
 using ConcreteEngine.Editor.Data;
-using ConcreteEngine.Editor.DataState;
 using ConcreteEngine.Editor.Definitions;
 using ConcreteEngine.Engine.Assets;
 using ConcreteEngine.Engine.Data;
@@ -24,6 +25,7 @@ using Silk.NET.Windowing;
 
 using ConcreteEngine.Engine.Editor.Controller;
 using ConcreteEngine.Renderer.State;
+using ConcreteEngine.Shared.RenderData;
 using EditorCmd = ConcreteEngine.Editor.CommandDispatcher;
 
 #endregion
@@ -205,18 +207,16 @@ internal sealed class EngineGateway : IDisposable
 
         public static unsafe void RegisterDataProvider()
         {
-            EditorApi.FetchAssetStoreData = EngineDataProvider.GetAssetStoreData;
-            EditorApi.FetchAssetObjectFiles = EngineDataProvider.GetAssetObjectFiles;
-            EditorApi.FetchEntityView = EngineDataProvider.GetEntityView;
+            EditorApi.FetchAssetDetailed = EngineDataProvider.GetAssetObjectFiles;
+
+            EditorApi.FetchAssets = EngineDataProvider.GetAssets;
+            EditorApi.FetchEntities = EngineDataProvider.GetEntities;
 
             EditorApi.SendEditorMouseRequest = EngineDataProvider.OnEditorClick;
 
-            EditorApi.EntityApi = new ApiDataRefRequest<EntityDataPayload>(
-                &EngineDataProvider.FillEntityData, &EngineDataProvider.WriteToEntity);
-            EditorApi.CameraApi = new ApiDataRefRequest<CameraEditorPayload>(
-                &EngineDataProvider.FillCameraData, &EngineDataProvider.WriteCameraData);
-            EditorApi.WorldParamsApi = new ApiDataRefRequest<WorldParamState>(
-                &EngineDataProvider.FillWorldParams, &EngineDataProvider.WriteWorldParams);
+            EditorApi.EntityApi = EngineDataProvider.OnEntityRequest;
+            EditorApi.CameraApi = EngineDataProvider.OnCameraRequest;
+            EditorApi.WorldParamsApi = EngineDataProvider.OnWorldParamsRequest;
         }
 
 

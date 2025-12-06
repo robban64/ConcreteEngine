@@ -1,13 +1,14 @@
 #region
 
+using ConcreteEngine.Editor.Components.Data;
+using ConcreteEngine.Editor.Components.State;
 using ConcreteEngine.Editor.Data;
-using ConcreteEngine.Editor.DataState;
 using ConcreteEngine.Editor.Definitions;
-using ConcreteEngine.Editor.ViewModel;
 using ConcreteEngine.Engine.Assets;
 using ConcreteEngine.Engine.Assets.Data;
 using ConcreteEngine.Engine.Editor.Controller;
 using ConcreteEngine.Engine.Worlds;
+using ConcreteEngine.Shared.RenderData;
 
 #endregion
 
@@ -34,7 +35,7 @@ internal static class EngineDataProvider
     }
 
 
-    public static List<AssetObjectViewModel> GetAssetStoreData(AssetCategoryRequestBody body)
+    public static List<AssetObjectViewModel> GetAssets(AssetCategoryRequestBody body)
     {
         var req = body.Category;
         if (_assetSystem is null || req == EditorAssetCategory.None) return [];
@@ -73,40 +74,24 @@ internal static class EngineDataProvider
         return result;
     }
 
-    public static List<EntityRecord> GetEntityView(EntityRequestBody body)
+    public static List<EntityRecord> GetEntities(EntityRequestBody body)
     {
         return _entityController.GetEntityList();
     }
 
-    public static long FillEntityData(ApiWriteRequestBody<EntityDataPayload> response)
+    public static void OnEntityRequest(ref EditorDataRequest<EntityDataState> request)
     {
-        return _entityController.FillEntityData(ref response.Data);
+         _entityController.ProcessEntityRequest(ref request);
     }
 
-    public static long WriteToEntity(ApiWriteRequestBody<EntityDataPayload> response)
+    public static void OnCameraRequest(ref EditorDataRequest<CameraDataState> request)
     {
-        return _entityController.WriteToEntity(response.Version, ref response.Data);
+        _worldController.ProcessCameraRequest(ref request);
     }
 
-    public static long FillCameraData(ApiWriteRequestBody<CameraEditorPayload> payload)
+    public static void OnWorldParamsRequest(ref EditorDataRequest<WorldParamsData> request)
     {
-        return _worldController.FillCameraData(payload.Version, ref payload.Data);
-    }
-
-    public static long WriteCameraData(ApiWriteRequestBody<CameraEditorPayload> payload)
-    {
-        return _worldController.WriteCameraData(payload.Version, ref payload.Data);
-    }
-
-
-    public static long FillWorldParams(ApiWriteRequestBody<WorldParamState> request)
-    {
-        return _worldController.FillWorldParams(request.Version, ref request.Data);
-    }
-
-    public static long WriteWorldParams(ApiWriteRequestBody<WorldParamState> request)
-    {
-        return _worldController.WriteWorldParams(request.Version, ref request.Data);
+         _worldController.ProcessWorldParamsRequest(ref request);
     }
 
     public static void OnEditorClick(in EditorWorldMouseData request, out EditorWorldMouseData response)

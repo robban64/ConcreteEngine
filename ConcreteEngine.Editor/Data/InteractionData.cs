@@ -1,18 +1,12 @@
 #region
 
 using System.Numerics;
+using ConcreteEngine.Editor.Definitions;
 
 #endregion
 
 namespace ConcreteEngine.Editor.Data;
 
-public enum EditorMouseAction : byte
-{
-    None,
-    SelectEntity,
-    DragEntityOverTerrain,
-    StopDragEntity
-}
 
 public struct EditorWorldMouseData
 {

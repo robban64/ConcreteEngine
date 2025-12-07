@@ -18,4 +18,5 @@ public struct EntityDataState
 
     public void SetTransform(in TransformData transform) => Transform.From(in transform);
     public readonly TransformData GetTransform() => Transform.AsTransformData();
+    
 }

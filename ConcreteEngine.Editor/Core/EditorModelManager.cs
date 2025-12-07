@@ -45,17 +45,19 @@ internal static class EditorModelManager
 
     private static void RegisterAssetState()
     {
+
         AssetStateContext = ModelStateContext<AssetState>
             .CreateBuilder(static () => new AssetState())
-            .OnEnter(static (ctx, it) => it.Refresh())
+            .OnEnter(static (ctx, it) => {})
             .OnLeave(static (ctx, it) => ctx.ResetState())
-            .RegisterEvent(EventKey.CategoryChanged, static (ctx) => ctx.State!.Refresh())
-            .RegisterEvent<EditorAssetResource>(EventKey.SelectionChanged,
-                static (ctx, it) => ctx.State!.GetFileAssets(it, EditorApi.FetchAssetDetailed))
+            .RegisterEvent(EventKey.CategoryChanged, static (ctx) => {})
+            .RegisterEvent<EditorAssetResource>(EventKey.SelectionChanged, FetchAssetDetailed)
             .RegisterEvent<EditorAssetResource>(EventKey.SelectionAction, ReloadShaderHandler)
             .Build();
         return;
-
+        
+        static void FetchAssetDetailed(ModelStateContext<AssetState> ctx, EditorAssetResource it)
+            => ctx.State!.SetFileAssets(EditorApi.FetchAssetDetailed(new EditorFetchHeader(it.Id)));
 
         static void ReloadShaderHandler(ModelStateContext<AssetState> ctx, EditorAssetResource it) =>
             CommandDispatcher.InvokeEditorCommand(CoreCmdNames.AssetShader,

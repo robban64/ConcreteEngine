@@ -25,11 +25,7 @@ public delegate CommandResponse EditorDataCommandDel<TRequest>(in TRequest reque
     where TRequest : unmanaged;
 
 // Request delegates
-public delegate TResponse? ApiEditorFullRequestDel<in TRequest, out TResponse>(EditorFetchHeader header, TRequest request)
-    where TRequest : class where TResponse : class;
-
-public delegate void ApiEditorRequestDel<in TRequest>(EditorFetchHeader header, TRequest request)
-    where TRequest : class;
+public delegate TResponse ApiEditorRequestDel< out TResponse>(EditorFetchHeader header) where TResponse : class;
 
 public delegate void ApiDataRequest<TRequest>(in TRequest request, out TRequest response)
     where TRequest : unmanaged;

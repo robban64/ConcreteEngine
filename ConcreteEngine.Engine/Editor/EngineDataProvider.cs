@@ -51,43 +51,25 @@ internal static class EngineDataProvider
         
         return result;
     }
-/*
 
-    public static void GetAssets(EditorFetchHeader header, List<EditorAssetResource> request)
-    {
-        var req = header.EditorId.ItemType;
-        if (_assetSystem is null || req == EditorItemType.None) return;
-        var store = _assetSystem.StoreImpl;
-
-        var type = req.ToAssetType();
-        var meta = store.GetMetaSnapshot(type);
-        var result = new List<EditorAssetResource>(meta.Count);
-        foreach (var obj in store.AssetValues)
-        {
-            if (obj.GetType() != type) continue;
-            result.Add(EditorObjectMapper.MakeAssetObjectModel(obj));
-        }
-        return result;
-    }
-    */
-
-    public static void GetAssetObjectFiles(EditorFetchHeader header, List<EditorFileAssetModel> list)
+    public static EditorFileAssetModel[] GetAssetObjectFiles(EditorFetchHeader header)
     {
         var assetTypedId = new AssetId(header.EditorId);
         var store = _assetSystem.StoreImpl;
         store.TryGetFileIds(assetTypedId, out var fileIds);
 
         if (!store.TryGetByAssetId(assetTypedId, out var asset))
-            return;
+            return [];
 
-        var meta = store.GetMetaSnapshot(asset!.GetType());
-        list.Clear();
-        list.EnsureCapacity(meta.Count);
-        foreach (var fileId in fileIds)
+        //var meta = store.GetMetaSnapshot(asset!.GetType());
+        var result = new EditorFileAssetModel[fileIds.Length];
+        for (var i = 0; i < fileIds.Length; i++)
         {
+            var fileId = fileIds[i];
             store.TryGetFileEntry(fileId, out var entry);
-            list.Add(EditorObjectMapper.MakeAssetObjectFile(entry!));
+            result[i] = EditorObjectMapper.MakeAssetObjectFile(entry!);
         }
+        return result;
     }
 
     public static List<EditorEntityResource> CreateEntityList() => _entityController.CreateEntityList();

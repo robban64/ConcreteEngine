@@ -202,7 +202,7 @@ internal static class AssetsComponent
             ImGui.EndTable();
         }
 
-        if (State.FileAssets.Count > 0)
+        if (State.FileAssets.Length > 0)
             DrawFilesTable(formatter, State);
 
         if (asset.HasActions)

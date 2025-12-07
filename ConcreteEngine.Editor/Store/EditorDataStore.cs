@@ -1,4 +1,6 @@
 using ConcreteEngine.Editor.Components.Data;
+using ConcreteEngine.Editor.Definitions;
+using ConcreteEngine.Shared.Input;
 
 // ReSharper disable StaticMemberInGenericType
 
@@ -21,7 +23,18 @@ public sealed class EditorDataState<T> where T : unmanaged
 public static class EditorDataStore
 {
     
+    public static class Table
+    {
+        public static MouseDataState MouseState;
+        public static EditorMouseAction MouseAction;
+        
+        public static EntityDataState SelectedEntityState;
+    }
     
+    public static class State
+    {
+        public static EntityDataState SelectedEntityState; 
+    }
     
     public static bool HasPendingSlot<T>(long gen, out long editorGen) where T : unmanaged
     {

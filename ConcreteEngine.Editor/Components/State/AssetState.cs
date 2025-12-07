@@ -11,8 +11,9 @@ namespace ConcreteEngine.Editor.Components.State;
 
 internal sealed class AssetState
 {
-    public EditorAssetCategory Category { get; set; }
-    public List<EditorFileAssetModel> FileAssets { get; set; } = [];
+    public EditorAssetCategory Category { get; private set; }
+    
+    public EditorFileAssetModel[] FileAssets { get; private set; } = [];
 
     public ReadOnlySpan<EditorAssetResource> GetAssetSpan()
     {
@@ -20,29 +21,13 @@ internal sealed class AssetState
         return EditorManagedStore.GetAssetSpanByCategory(Category);
     }
 
-    public void Refresh() => SetCategory(Category);
+    public void SetCategory(EditorAssetCategory? category) => Category = category ?? Category;
 
-    public void SetCategory(EditorAssetCategory? category)
-    {
-        if (category is not { } assetCategory) return;
-        if (assetCategory == Category) return;
-        Category = assetCategory;
-    }
-
-    public void GetFileAssets(EditorAssetResource? asset, ApiEditorRequestDel<List<EditorFileAssetModel>> api)
-    {
-        if (asset is null)
-        {
-            FileAssets.Clear();
-            return;
-        }
-
-        api(new EditorFetchHeader(asset.Id), FileAssets);
-    }
+    public void SetFileAssets(EditorFileAssetModel[] fileAssets) => FileAssets = fileAssets;
 
     public void ResetState(bool clearTypeSelection = false)
     {
         if (clearTypeSelection) Category = EditorAssetCategory.None;
-        FileAssets.Clear();
+        FileAssets = [];
     }
 }

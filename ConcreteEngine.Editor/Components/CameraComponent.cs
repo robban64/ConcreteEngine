@@ -12,7 +12,7 @@ using ImGuiNET;
 
 namespace ConcreteEngine.Editor.Components;
 
-internal static class CameraPropertyComponent
+internal static class CameraComponent
 {
     private const int WindowPaddingX = 12;
 
@@ -21,10 +21,6 @@ internal static class CameraPropertyComponent
 
     private static int _editedField = -1;
 
-    private static void OnUpdateData()
-    {
-        Context.TriggerEvent(EventKey.SelectionUpdated);
-    }
 
     public static void Draw()
     {
@@ -37,7 +33,7 @@ internal static class CameraPropertyComponent
 
         if (_editedField >= 0)
         {
-            OnUpdateData();
+            State.TriggerWrite();
             _editedField = -1;
         }
     }
@@ -56,7 +52,7 @@ internal static class CameraPropertyComponent
 
     private static void DrawViewport()
     {
-        var viewport = State.Data.Viewport;
+        var viewport = State.DataState.Viewport;
         var formatter = new NumberSpanFormatter(StringUtils.CharBuffer8);
 
         ImGui.BeginGroup();

@@ -3,7 +3,6 @@
 using System.Numerics;
 using ConcreteEngine.Editor.Components.State;
 using ConcreteEngine.Editor.Core;
-using ConcreteEngine.Editor.Data;
 using ConcreteEngine.Editor.Definitions;
 using ConcreteEngine.Editor.Store.Resources;
 using ConcreteEngine.Editor.Utils;

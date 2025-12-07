@@ -1,11 +1,13 @@
 #region
 
 using ConcreteEngine.Common;
+using ConcreteEngine.Editor.Components.Data;
 using ConcreteEngine.Editor.Components.State;
 using ConcreteEngine.Editor.Data;
 using ConcreteEngine.Editor.Definitions;
 using ConcreteEngine.Editor.Store;
 using ConcreteEngine.Editor.Store.Resources;
+using ConcreteEngine.Shared.Rendering;
 
 #endregion
 
@@ -33,7 +35,7 @@ internal static class EditorModelManager
         InvalidOpThrower.ThrowIf(HasInit, nameof(EntitiesStateContext));
 
         HasInit = true;
-        
+
         RegisterEntityState();
         RegisterAssetState();
         RegisterCameraState();
@@ -45,17 +47,16 @@ internal static class EditorModelManager
 
     private static void RegisterAssetState()
     {
-
         AssetStateContext = ModelStateContext<AssetState>
             .CreateBuilder(static () => new AssetState())
-            .OnEnter(static (ctx, it) => {})
+            .OnEnter(static (ctx, it) => { })
             .OnLeave(static (ctx, it) => ctx.ResetState())
-            .RegisterEvent(EventKey.CategoryChanged, static (ctx) => {})
+            .RegisterEvent(EventKey.CategoryChanged, static (ctx) => { })
             .RegisterEvent<EditorAssetResource>(EventKey.SelectionChanged, FetchAssetDetailed)
             .RegisterEvent<EditorAssetResource>(EventKey.SelectionAction, ReloadShaderHandler)
             .Build();
         return;
-        
+
         static void FetchAssetDetailed(ModelStateContext<AssetState> ctx, EditorAssetResource it)
             => ctx.State!.SetFileAssets(EditorApi.FetchAssetDetailed(new EditorFetchHeader(it.Id)));
 
@@ -68,8 +69,8 @@ internal static class EditorModelManager
     {
         EntitiesStateContext = ModelStateContext<EntitiesViewModel>
             .CreateBuilder(static () => new EntitiesViewModel())
-            .OnEnter(static (ctx, it)=>{})
-            .OnRefresh(static (ctx, it)=>{})
+            .OnEnter(static (ctx, it) => { })
+            .OnRefresh(static (ctx, it) => { })
             .OnLeave(static (ctx, _) => ctx.TriggerEvent<EditorEntityResource?>(EventKey.SelectionChanged, null))
             .RegisterEvent<EditorEntityResource?>(EventKey.SelectionChanged, OnEntitySelected)
             .RegisterEvent<EditorEntityResource>(EventKey.SelectionUpdated, OnEntityUpdated)
@@ -80,15 +81,17 @@ internal static class EditorModelManager
 
         static void OnEntitySelected(ModelStateContext<EntitiesViewModel> ctx, EditorEntityResource? it)
         {
-            ctx.State!.SetSelectedEntity(it?.Id ?? EditorId.Empty);
-            ctx.EnqueueRefreshNextFrame();
+            //ctx.State!.SetSelectedEntity(it?.Id ?? EditorId.Empty);
+            //ctx.EnqueueRefreshNextFrame();
         }
 
         static void OnEntityUpdated(ModelStateContext<EntitiesViewModel> ctx, EditorEntityResource it)
         {
+            /*
             ctx.State!.SetSelectedEntity(it.Id);
             ctx.State!.Dispatch(EditorApi.EntityApi, true);
             ctx.EnqueueRefreshNextFrame();
+            */
         }
     }
 
@@ -96,49 +99,23 @@ internal static class EditorModelManager
     {
         CameraStateContext = ModelStateContext<CameraState>
             .CreateBuilder(static () => new CameraState())
-            .OnEnter(FetchCameraDataHandler)
-            .OnRefresh(FetchCameraDataHandler)
+            .OnEnter(static (ctx, it) => EditorDataStore.Slot<CameraDataState>.State.RequestData())
+            .OnRefresh(static (ctx, it) => { })
             .OnLeave(static (ctx, it) => { })
-            .RegisterEvent(EventKey.SelectionUpdated, WriteCameraDataHandler)
+            .RegisterEvent(EventKey.SelectionUpdated, static (ctx) => { })
             .KeepAlive()
             .Build();
-
-        return;
-
-        static void WriteCameraDataHandler(ModelStateContext<CameraState> ctx)
-        {
-            ctx.State!.Dispatch(EditorApi.CameraApi, true);
-            ctx.EnqueueRefreshNextFrame();
-        }
-
-        static void FetchCameraDataHandler(ModelStateContext<CameraState> ctx, CameraState it) =>
-            it.Dispatch(EditorApi.CameraApi, false);
     }
 
     private static void RegisterWorldRenderState()
     {
         WorldRenderStateContext = ModelStateContext<WorldParamState>
             .CreateBuilder(static () => new WorldParamState())
-            .OnEnter(UpdateData)
-            .OnRefresh(UpdateData)
+            .OnEnter(static (ctx,it) => EditorDataStore.Slot<WorldParamsData>.State.RequestData())
+            .OnRefresh(static (ctx,it) => {})
             .OnLeave(static (ctx, it) => ctx.ResetState())
-            .RegisterEvent(EventKey.SelectionChanged, SelectionChangeHandler)
-            .RegisterEvent(EventKey.SelectionUpdated, SelectionUpdateHandler)
             .Build();
         return;
 
-        static void UpdateData(ModelStateContext<WorldParamState> ctx, WorldParamState it) =>
-            it.Dispatch(EditorApi.WorldParamsApi, false);
-
-        static void SelectionChangeHandler(ModelStateContext<WorldParamState> ctx)
-        {
-            ctx.State!.Dispatch(EditorApi.WorldParamsApi, false);
-        }
-
-        static void SelectionUpdateHandler(ModelStateContext<WorldParamState> ctx)
-        {
-            ctx.State!.Dispatch(EditorApi.WorldParamsApi, true);
-            //ctx.EnqueueRefreshNextFrame();
-        }
     }
 }

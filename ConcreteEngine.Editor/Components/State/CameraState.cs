@@ -1,8 +1,7 @@
 #region
 
-using System.Diagnostics;
 using ConcreteEngine.Editor.Components.Data;
-using ConcreteEngine.Editor.Data;
+using ConcreteEngine.Editor.Store;
 
 #endregion
 
@@ -10,28 +9,11 @@ namespace ConcreteEngine.Editor.Components.State;
 
 internal sealed class CameraState
 {
-    private long _generation;
-    private CameraDataState _data;
-    private CameraDataState _state;
+    public ref CameraDataState DataState => ref EditorDataStore.Slot<CameraDataState>.Data;
 
-    public ref readonly CameraDataState Data => ref _data;
-    public ref CameraDataState DataState => ref _state;
-    public long Generation => _generation;
-
-    public void Dispatch(ApiRefRequest<CameraDataState> api, bool isWriteRequest)
+    public void TriggerWrite()
     {
-        if (isWriteRequest)
-        {
-            var request = new EditorDataRequest<CameraDataState>(ref _generation, ref _state, isWriteRequest);
-            api(ref request);
-            if (request.HasNewData) _data = _state;
-        }
-        else
-        {
-            var request = new EditorDataRequest<CameraDataState>(ref _generation, ref _data, isWriteRequest);
-            api(ref request);
-            if (request.HasNewData) _state = _data;
-        }
+        EditorDataStore.Slot<CameraDataState>.State.IsDirty = true;
     }
 
 }

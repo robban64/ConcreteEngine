@@ -2,11 +2,7 @@
 
 using System.Numerics;
 using System.Runtime.CompilerServices;
-using ConcreteEngine.Common;
-using ConcreteEngine.Common.Collections;
 using ConcreteEngine.Engine.Worlds.Data;
-using ConcreteEngine.Engine.Worlds.Entities;
-using ConcreteEngine.Engine.Worlds.Render.Data;
 using ConcreteEngine.Engine.Worlds.Tables;
 using ConcreteEngine.Renderer.Draw;
 using ConcreteEngine.Renderer.State;

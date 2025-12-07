@@ -1,5 +1,3 @@
-using ConcreteEngine.Engine.Worlds.Entities.Components;
-
 namespace ConcreteEngine.Engine.Worlds.Data;
 
 public readonly record struct ModelId(int Value)

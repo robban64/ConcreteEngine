@@ -10,7 +10,7 @@ namespace ConcreteEngine.Engine.Worlds.Data;
 
 public readonly record struct MaterialTagKey(int Value)
 {
-    public static MaterialTagKey Ignore => new (-1);
+    public static MaterialTagKey Ignore => new(-1);
 }
 
 public readonly struct MaterialSlotInfo(MaterialId material, ushort slot, bool isTransparent = false)
@@ -24,17 +24,17 @@ public readonly struct MaterialSlotInfo(MaterialId material, ushort slot, bool i
 public readonly record struct MaterialTag
 {
     public readonly MaterialId Slot0;
-    public MaterialId Slot1 { get; init; }
-    public MaterialId Slot2 { get; init; }
-    public MaterialId Slot3 { get; init; }
-    public MaterialId Slot4 { get; init; }
-    public MaterialId Slot5 { get; init; }
-    public byte EndIndex { get; init; }
-    public byte TransparencyMask { get; init; }
-    
-    
+    public readonly MaterialId Slot1;
+    public readonly MaterialId Slot2;
+    public readonly MaterialId Slot3;
+    public readonly MaterialId Slot4;
+    public readonly MaterialId Slot5;
+    public readonly byte EndIndex;
+    public readonly byte TransparencyMask;
+
+
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public bool GetTagMeta(int slot, out MaterialId materialId)
+    public bool ResolveSlot(int slot, out MaterialId materialId)
     {
         materialId = Unsafe.Add(ref Unsafe.AsRef(in Slot0), slot);
         return (TransparencyMask & (1 << slot)) != 0;
@@ -47,7 +47,7 @@ public readonly record struct MaterialTag
     public ReadOnlySpan<MaterialId> AsReadOnlySpan() =>
         MemoryMarshal.CreateReadOnlySpan(ref Unsafe.AsRef(in Slot0), EndIndex);
 
-    
+
     public MaterialTag(MaterialId slot0, MaterialId slot1 = default, MaterialId slot2 = default,
         MaterialId slot3 = default, MaterialId slot4 = default,
         MaterialId slot5 = default, byte transparencyMask = 0)

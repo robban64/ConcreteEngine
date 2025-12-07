@@ -1,10 +1,6 @@
 using System.Numerics;
-using System.Runtime.CompilerServices;
-using ConcreteEngine.Common.Numerics.Maths;
 using ConcreteEngine.Engine.Worlds.Data;
 using ConcreteEngine.Engine.Worlds.Entities.Components;
-using ConcreteEngine.Engine.Worlds.MeshGeneration;
-using ConcreteEngine.Engine.Worlds.MeshGeneration.MeshData;
 using ConcreteEngine.Engine.Worlds.Render.Data;
 using ConcreteEngine.Renderer.Definitions;
 

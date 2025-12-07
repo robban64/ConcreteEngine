@@ -1,9 +1,7 @@
 using System.Numerics;
 using System.Runtime.CompilerServices;
-using System.Runtime.InteropServices;
 using ConcreteEngine.Common.Numerics.Maths;
 using ConcreteEngine.Engine.Worlds.Data;
-using ConcreteEngine.Engine.Worlds.Entities.Components;
 using ConcreteEngine.Engine.Worlds.Render.Data;
 using ConcreteEngine.Graphics.Gfx.Resources;
 using ConcreteEngine.Renderer.Data;
@@ -30,7 +28,7 @@ internal static class DrawEntityUploader
 
         foreach (ref readonly var part in parts)
         {
-            var isTransparent = materialTag.GetTagMeta(part.MaterialSlot, out var materialId);
+            var isTransparent = materialTag.ResolveSlot(part.MaterialSlot, out var materialId);
 
             var cmd = new DrawCommand(part.Mesh, materialId, part.DrawCount, entity.Source.InstanceCount,
                 entity.Meta.AnimatedSlot);

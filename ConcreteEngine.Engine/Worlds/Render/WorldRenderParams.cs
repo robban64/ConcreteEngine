@@ -74,7 +74,7 @@ public sealed class WorldRenderParams
         _dirty = true;
     }
 
-    internal void FromEditor(in WorldParamsData data)
+    internal void SetFromData(in WorldParamsData data)
     {
         _ambient = data.Ambient;
         _dirLight = data.DirLight;
@@ -84,7 +84,7 @@ public sealed class WorldRenderParams
         _dirty = true;
     }
 
-    internal void FillEditorData(out WorldParamsData data)
+    internal void FillData(out WorldParamsData data)
     {
         data.DirLight = _dirLight;
         data.Ambient = _ambient;

@@ -4,8 +4,6 @@
 
 #region
 
-using ConcreteEngine.Editor.Components.Data;
-
 #region
 
 using ConcreteEngine.Editor;
@@ -24,6 +22,7 @@ using Silk.NET.Windowing;
 #endregion
 
 using ConcreteEngine.Engine.Editor.Controller;
+using ConcreteEngine.Engine.Time;
 using ConcreteEngine.Renderer.State;
 using EditorCmd = ConcreteEngine.Editor.CommandDispatcher;
 
@@ -98,7 +97,8 @@ internal sealed class EngineGateway : IDisposable
 
         EditorSetup.Editor = _editor!;
         MetricRouter.Attach(world, assetSystem, frameInfo);
-        EngineDataProvider.Attach(world, assetSystem, _entityController, _worldController, _interactionController);
+        EngineResourceProvider.Attach(assetSystem, _entityController, _interactionController);
+        EngineDataBridge.Attach(_entityController, _worldController, _interactionController);
 
         EditorSetup.RegisterDataProvider();
         EditorSetup.RegisterCommands();
@@ -113,13 +113,20 @@ internal sealed class EngineGateway : IDisposable
     public void RenderEditor(in RenderFrameInfo frameInfo)
     {
         if (!Enabled || !HasBoundEditor) return;
+        EngineDataBridge.ProcessEditorDataSlot();
         _apiContext.OnRenderFrame(in frameInfo);
         _editor.Render(frameInfo.DeltaTime);
     }
 
-    public void RefreshMetrics(bool force = false)
+    public void UpdateDiagnostics(UpdateTickArgs args)
     {
         if (!Enabled) return;
+        DrainLogs();
+        RefreshMetrics();
+    }
+
+    private void RefreshMetrics(bool force = false)
+    {
         if (force)
         {
             MetricsApi.RefreshFrameMetrics();
@@ -130,29 +137,26 @@ internal sealed class EngineGateway : IDisposable
             return;
         }
 
-        if (_ticker++ >= 4)
+        MetricsApi.RefreshFrameMetrics();
+
+        switch (_ticker++)
         {
-            MetricsApi.RefreshFrameMetrics();
-            _ticker = 0;
+            case 0: MetricsApi.RefreshSceneMetrics(); break;
+            case 2: MetricsApi.RefreshGfxResourceMetrics(); break;
+            case >= 4:
+                MetricsApi.RefreshAssetMetrics();
+                _ticker = 0;
+                break;
         }
-
-        switch (_mediumTicker)
-        {
-            case 5: MetricsApi.RefreshSceneMetrics(); break;
-            case 10: MetricsApi.RefreshGfxResourceMetrics(); break;
-            case 15: MetricsApi.RefreshAssetMetrics(); break;
-        }
-
-        if (_mediumTicker++ >= 15) _mediumTicker = 0;
-
-        if (_slowTicker++ >= 30)
+        
+        if (_slowTicker++ >= 8)
         {
             _slowTicker = 0;
             MetricsApi.RefreshMemoryMetrics();
         }
     }
 
-    public void DrainLogs()
+    private void DrainLogs()
     {
         if (_drainGfxLogs && GfxLog.Count > 0)
         {
@@ -204,22 +208,14 @@ internal sealed class EngineGateway : IDisposable
                 EngineCommandHandler.OnStructSizesCmd);
         }
 
-        public static unsafe void RegisterDataProvider()
+        public static void RegisterDataProvider()
         {
-            EditorApi.FetchAssetDetailed = EngineDataProvider.GetAssetObjectFiles;
+            EditorApi.FetchAssetDetailed = EngineResourceProvider.GetAssetObjectFiles;
 
-            //EditorApi.FetchAssets = EngineDataProvider.GetAssets;
-            //            EditorApi.FetchEntities = EngineDataProvider.GetEntities;
+            EditorApi.LoadAssetResources = EngineResourceProvider.CreateEditorAssets;
+            EditorApi.LoadEntityResources = EngineResourceProvider.CreateEntityList;
 
-            EditorApi.LoadAssetResources = EngineDataProvider.CreateEditorAssets;
-            EditorApi.LoadEntityResources = EngineDataProvider.CreateEntityList;
-
-
-            EditorApi.SendEditorMouseRequest = EngineDataProvider.OnEditorClick;
-
-            EditorApi.EntityApi = EngineDataProvider.OnEntityRequest;
-            EditorApi.CameraApi = EngineDataProvider.OnCameraRequest;
-            EditorApi.WorldParamsApi = EngineDataProvider.OnWorldParamsRequest;
+            EditorApi.SendEditorMouseRequest = EngineResourceProvider.OnEditorClick;
         }
 
 

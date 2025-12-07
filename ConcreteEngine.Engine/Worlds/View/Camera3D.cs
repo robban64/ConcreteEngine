@@ -4,7 +4,6 @@ using System.Numerics;
 using ConcreteEngine.Common.Numerics;
 using ConcreteEngine.Common.Numerics.Maths;
 using ConcreteEngine.Editor.Components.Data;
-using ConcreteEngine.Engine.Worlds.Data;
 using ConcreteEngine.Renderer.State;
 using ConcreteEngine.Shared.World;
 
@@ -216,14 +215,14 @@ public sealed class Camera3D : ICamera
         viewSnapshot.Rotation = camRot;
     }
 
-    internal void FillEditorData(out CameraDataState data)
+    internal void FillData(out CameraDataState data)
     {
-        data.Transform = new ViewTransformData(_translation, _scale, _orientation);
+        data.Transform = new ViewTransformData(in _translation, in _scale, _orientation);
         data.Projection = new ProjectionInfoData(_aspectRatio, _fov, _nearPlane, _farPlane);
         data.Viewport = _viewportSize;
     }
 
-    internal void FromEditor(in CameraDataState data)
+    internal void SetFromData(in CameraDataState data)
     {
         Translation = data.Transform.Translation;
         Scale = data.Transform.Scale;

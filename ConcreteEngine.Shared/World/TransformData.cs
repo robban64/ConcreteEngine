@@ -14,7 +14,7 @@ public struct TransformData(in Vector3 translation, in Vector3 scale, in Quatern
     public Quaternion Rotation = rotation;
 }
 
-public struct ViewTransformData(in Vector3 translation, in Vector3 scale, in YawPitch orientation)
+public struct ViewTransformData(in Vector3 translation, in Vector3 scale, YawPitch orientation)
 {
     public Vector3 Translation = translation;
     public Vector3 Scale = scale;

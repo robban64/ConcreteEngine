@@ -1,24 +1,11 @@
 #region
 
-using System.Diagnostics;
-using System.Numerics;
-using System.Runtime.CompilerServices;
-using System.Runtime.InteropServices;
 using ConcreteEngine.Common;
 using ConcreteEngine.Common.Collections;
-using ConcreteEngine.Common.Numerics;
-using ConcreteEngine.Common.Numerics.Maths;
-using ConcreteEngine.Common.Time;
 using ConcreteEngine.Engine.Worlds.Data;
-using ConcreteEngine.Engine.Worlds.Entities;
-using ConcreteEngine.Engine.Worlds.Entities.Components;
 using ConcreteEngine.Engine.Worlds.Render.Data;
 using ConcreteEngine.Engine.Worlds.Render.Processor;
-using ConcreteEngine.Engine.Worlds.Tables;
-using ConcreteEngine.Engine.Worlds.Utility;
-using ConcreteEngine.Renderer.Data;
 using ConcreteEngine.Renderer.Definitions;
-using ConcreteEngine.Renderer.Draw;
 
 #endregion
 

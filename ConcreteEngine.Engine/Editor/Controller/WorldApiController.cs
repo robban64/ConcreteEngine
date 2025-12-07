@@ -1,10 +1,7 @@
 #region
 
-using System.Runtime.CompilerServices;
 using ConcreteEngine.Editor.Components.Data;
-using ConcreteEngine.Editor.Data;
 using ConcreteEngine.Engine.Worlds;
-using ConcreteEngine.Engine.Worlds.View;
 using ConcreteEngine.Shared.Rendering;
 
 #endregion
@@ -13,37 +10,17 @@ namespace ConcreteEngine.Engine.Editor.Controller;
 
 internal sealed class WorldApiController(ApiContext ctx)
 {
-    public void ProcessCameraRequest(ref EditorDataRequest<CameraDataState> request)
-    {
-        var camera = ctx.World.Camera;
-        if (request.WriteRequest && request.Generation >= camera.Generation)
-        {
-            request.Generation = camera.Generation + 1;
-            WorldActionSlot.SetSlot(request.Generation, in request.EditorData);
-            request.ResponseStatus = EditorDataRequestStatus.Success;
-            return;
-        }
+    public long CameraGeneration => ctx.World.Camera.Generation;
+    public long WorldParamGeneration => ctx.World.WorldRenderParams.Version;
 
-        ref var data = ref request.EditorData;
-        request.Generation = camera.Generation;
-        request.ResponseStatus = !request.WriteRequest ? EditorDataRequestStatus.Success : EditorDataRequestStatus.Overwrite;
-        camera.FillEditorData(out data);
-    }
+    private World World => ctx.World;
 
-    public void ProcessWorldParamsRequest(ref EditorDataRequest<WorldParamsData> request)
-    {
-        var renderParams = ctx.World.WorldRenderParams;
-        if (request.WriteRequest && request.Generation >= renderParams.Version)
-        {
-            request.Generation = renderParams.Version + 1;
-            WorldActionSlot.SetSlot(request.Generation, in request.EditorData);
-            request.ResponseStatus = EditorDataRequestStatus.Success;
-            return;
-        }
+    public void ApplyCameraState(in CameraDataState data) => World.Camera.SetFromData(in data);
 
-        ref var data = ref request.EditorData;
-        renderParams.FillEditorData(out data);
-        request.Generation = renderParams.Version;
-        request.ResponseStatus = !request.WriteRequest ? EditorDataRequestStatus.Success : EditorDataRequestStatus.Overwrite;
-    }
+    public void WriteCameraState(out CameraDataState data) => World.Camera.FillData(out data);
+
+    public void ApplyWorldRenderParams(in WorldParamsData data) => World.WorldRenderParams.SetFromData(in data);
+
+    public void WriteWorldRenderParams(out WorldParamsData data) => World.WorldRenderParams.FillData(out data);
+
 }

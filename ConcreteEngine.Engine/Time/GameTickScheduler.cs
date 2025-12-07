@@ -1,6 +1,5 @@
 #region
 
-using ConcreteEngine.Engine.Data;
 using ConcreteEngine.Engine.Time.Tickers;
 
 #endregion
@@ -11,7 +10,6 @@ namespace ConcreteEngine.Engine.Time;
 internal sealed class GameTickScheduler
 {
     private const int MaxTicksPerFrame = 6;
-
     private const int GameTicksPerSecond = 60;
     private const int SimulationTickPerSecond = 20;
 
@@ -19,7 +17,7 @@ internal sealed class GameTickScheduler
     private const float GameTickDeltaTime = 1f / GameTicksPerSecond;
     private const float SimulationDeltaTime = 1f / SimulationTickPerSecond;
 
-    private const float DiagnosticTickDeltaTime = 0.5f;
+    private const float DiagnosticTickDeltaTime = 4f; 
 
     private readonly FrameTickTimer _gameTicker = new(GameTickDeltaTime);
     private readonly FrameTickTimer _simulationTicker = new(SimulationDeltaTime);
@@ -29,17 +27,17 @@ internal sealed class GameTickScheduler
 
     private readonly UpdateTickDelegate _onGameTick;
     private readonly UpdateTickDelegate _onSimulationTick;
-    private readonly UpdateTickDelegate _onUpdateLogTick;
+    private readonly UpdateTickDelegate _onLogTick;
 
     private float _alpha;
     private float _speed = 1f;
 
 
-    internal GameTickScheduler(UpdateTickDelegate onGameTick, UpdateTickDelegate onSimulationTick, UpdateTickDelegate onUpdateLogTick)
+    internal GameTickScheduler(UpdateTickDelegate onGameTick, UpdateTickDelegate onSimulationTick, UpdateTickDelegate onLogTick)
     {
         _onGameTick = onGameTick;
         _onSimulationTick = onSimulationTick;
-        _onUpdateLogTick = onUpdateLogTick;
+        _onLogTick = onLogTick;
     }
 
     public float Alpha => _alpha;
@@ -56,18 +54,18 @@ internal sealed class GameTickScheduler
         int t, tickCounter = 0;
         while (tickCounter < MaxTicksPerFrame && _gameTicker.TryDequeueTick(out t))
         {
-            _onGameTick(new UpdateTickerArgs(t, GameTickDeltaTime, _gameTicker.Alpha));
+            _onGameTick(new UpdateTickArgs(t, GameTickDeltaTime, _gameTicker.Alpha));
             tickCounter++;
         }
 
         while (_simulationTicker.TryDequeueTick(out var t1))
         {
-            _onSimulationTick(new UpdateTickerArgs(t1, SimulationDeltaTime, _simulationTicker.Alpha));
+            _onSimulationTick(new UpdateTickArgs(t1, SimulationDeltaTime, _simulationTicker.Alpha));
         }
 
         while (_diagnosticTicker.TryDequeueTick(out var t2))
         {
-            _onUpdateLogTick(new UpdateTickerArgs(t2, DiagnosticTickDeltaTime, _diagnosticTicker.Alpha));
+            _onLogTick(new UpdateTickArgs(t2, DiagnosticTickDeltaTime, _diagnosticTicker.Alpha));
         }
 
         _alpha = _gameTicker.Alpha;

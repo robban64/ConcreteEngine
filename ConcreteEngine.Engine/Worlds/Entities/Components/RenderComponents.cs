@@ -1,6 +1,5 @@
 using System.Runtime.InteropServices;
 using ConcreteEngine.Engine.Worlds.Data;
-using ConcreteEngine.Graphics.Gfx.Resources;
 using ConcreteEngine.Renderer.Data;
 
 namespace ConcreteEngine.Engine.Worlds.Entities.Components;

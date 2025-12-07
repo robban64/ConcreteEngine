@@ -1,6 +1,5 @@
 #region
 
-using ConcreteEngine.Common.Numerics;
 using ConcreteEngine.Editor.Definitions;
 
 #endregion

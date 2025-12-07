@@ -23,10 +23,10 @@ internal static class WorldParamsComponent
     {
         if (selection == State.Selection) return;
         State.Selection = selection;
-        Context.TriggerEvent(EventKey.SelectionChanged);
+        //Context.TriggerEvent(EventKey.SelectionChanged);
     }
 
-    private static void OnSelectionUpdate() => Context.TriggerEvent(EventKey.SelectionUpdated);
+    private static void OnSelectionUpdate() => State.TriggerChange();
 
     public static void Draw()
     {

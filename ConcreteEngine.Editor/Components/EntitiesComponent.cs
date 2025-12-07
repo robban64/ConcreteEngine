@@ -2,7 +2,6 @@
 
 using System.Numerics;
 using ConcreteEngine.Common.Numerics.Maths;
-using ConcreteEngine.Common.Time;
 using ConcreteEngine.Editor.Components.Data;
 using ConcreteEngine.Editor.Components.State;
 using ConcreteEngine.Editor.Core;
@@ -31,21 +30,28 @@ internal static class EntitiesComponent
 
     private static ReadOnlySpan<EditorEntityResource> EntitySpan => EditorManagedStore.EntityResourceSpan;
 
+    private static ref EntityDataState DataState => ref EditorDataStore.StateSlot.SelectedEntityState;
+
     private static void OnSelectEntity(EditorEntityResource entity)
     {
-        if (entity.Id == State.Data.EntityId) return;
+        State.SetSelectedEntity(entity.Id);
+        return;
         Context.TriggerEvent(EventKey.SelectionChanged, entity);
     }
 
     private static void OnUpdateTransform(EditorEntityResource entity)
     {
+        State.MakeDirty();
+        return;
         Context.TriggerEvent(EventKey.SelectionUpdated, entity);
     }
 
     private static void OnUpdateRotation(EditorEntityResource entity)
     {
-        ref var transform = ref State.DataState.Transform;
+        ref var transform = ref DataState.Transform;
         transform.Rotation = RotationMath.EulerDegreesToQuaternion(in transform.EulerAngles);
+        State.MakeDirty();
+        return;
         Context.TriggerEvent(EventKey.SelectionUpdated, entity);
     }
 
@@ -71,7 +77,8 @@ internal static class EntitiesComponent
 
     private static void DrawEntityList()
     {
-        const ImGuiTableFlags flags = ImGuiTableFlags.PadOuterX | ImGuiTableFlags.NoBordersInBody | ImGuiTableFlags.ScrollY;
+        const ImGuiTableFlags flags = ImGuiTableFlags.PadOuterX | ImGuiTableFlags.NoBordersInBody |
+                                      ImGuiTableFlags.ScrollY;
         ImGui.PushStyleVar(ImGuiStyleVar.CellPadding, new Vector2(12, 0));
 
         if (!ImGui.BeginTable("##entity_list_tbl", 4, flags)) return;
@@ -117,13 +124,12 @@ internal static class EntitiesComponent
         }
 
         ImGuiNative.ImGuiListClipper_End(&clipper);
-
     }
 
     private static void DrawListItem(int i, NumberSpanFormatter formatter)
     {
         var entity = EntitySpan[i];
-        var selected = entity.Id == State.Data.EntityId;
+        var selected = entity.Id == State.SelectedEntity?.Id;
         if (selected) _selectedIndex = i;
 
         ImGui.PushStyleVar(ImGuiStyleVar.SelectableTextAlign, new Vector2(0.0f, 0.5f));
@@ -144,7 +150,7 @@ internal static class EntitiesComponent
         }
 
         ImGui.TableNextColumn();
-        GuiUtils.CenterAlignText(entity.Name,RowHeight);
+        GuiUtils.CenterAlignText(entity.Name, RowHeight);
 
         ImGui.TableNextColumn();
         GuiUtils.CenterAlignText(formatter.Format(entity.Model), RowHeight);
@@ -172,17 +178,19 @@ internal static class EntitiesComponent
 
     private static void DrawAssetFilePopupContent(EditorEntityResource entity)
     {
-        ref var state = ref State.DataState;
+        ref var state = ref DataState;
         ref var transform = ref state.Transform;
         var fieldStatus = new ImGuiFieldStatus();
+        int modelId = 0;
+        int materialId = 0;
 
         ImGui.SeparatorText("Model");
         ImGui.TextUnformatted("ModelId");
-        ImGui.InputInt("##model-id", ref state.ModelId, 0, 0, ImGuiInputTextFlags.None);
+        ImGui.InputInt("##model-id", ref modelId, 0, 0, ImGuiInputTextFlags.None);
         //fieldStatus.NextField();
 
-        ImGui.TextUnformatted("MaterialTagKey");
-        ImGui.InputInt("##mat-tag", ref state.MaterialTagKey, 0, 0, ImGuiInputTextFlags.None);
+        ImGui.TextUnformatted("Material");
+        ImGui.InputInt("##mat-id", ref materialId, 0, 0, ImGuiInputTextFlags.None);
         //fieldStatus.NextField();
 
 

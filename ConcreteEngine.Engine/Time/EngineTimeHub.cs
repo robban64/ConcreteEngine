@@ -1,6 +1,5 @@
 #region
 
-using ConcreteEngine.Engine.Data;
 using ConcreteEngine.Engine.Time.Tickers;
 
 #endregion
@@ -15,9 +14,9 @@ internal sealed class EngineTimeHub
 
 
     public EngineTimeHub(UpdateTickDelegate onGameTick, UpdateTickDelegate onSimulationTick,
-        UpdateTickDelegate onUpdateLogTick)
+        UpdateTickDelegate onLogTick)
     {
-        _gameTickScheduler = new GameTickScheduler(onGameTick, onSimulationTick, onUpdateLogTick);
+        _gameTickScheduler = new GameTickScheduler(onGameTick, onSimulationTick, onLogTick);
     }
 
     public float Alpha => _gameTickScheduler.Alpha;

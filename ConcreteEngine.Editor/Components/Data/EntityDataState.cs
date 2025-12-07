@@ -1,7 +1,7 @@
 #region
 
 using ConcreteEngine.Common.Numerics;
-using ConcreteEngine.Editor.Data;
+using ConcreteEngine.Editor.Store;
 using ConcreteEngine.Shared.World;
 
 #endregion
@@ -11,12 +11,14 @@ namespace ConcreteEngine.Editor.Components.Data;
 public struct EntityDataState
 {
     public int EntityId;
-    public int ModelId;
-    public int MaterialTagKey;
-    internal TransformDataState Transform;
+    public TransformStable Transform;
     public BoundingBox Bounds;
+}
 
-    public void SetTransform(in TransformData transform) => Transform.From(in transform);
-    public readonly TransformData GetTransform() => Transform.AsTransformData();
-    
+public struct EntitySelectionState
+{
+    public EditorId EntityId;
+    public bool IsSelected;
+    public bool IsDirty;
+    public bool IsRequesting;
 }

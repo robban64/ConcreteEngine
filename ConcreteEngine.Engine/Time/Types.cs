@@ -1,8 +1,8 @@
 namespace ConcreteEngine.Engine.Time;
 
-internal delegate void UpdateTickDelegate(UpdateTickerArgs args);
+internal delegate void UpdateTickDelegate(UpdateTickArgs args);
 
-internal readonly struct UpdateTickerArgs(int tick, float fixedDt, float alpha)
+internal readonly struct UpdateTickArgs(int tick, float fixedDt, float alpha)
 {
     public readonly int Tick  = tick;
     public readonly float FixedDt = fixedDt;

@@ -2,7 +2,6 @@
 
 using ConcreteEngine.Common.Numerics;
 using ConcreteEngine.Common.Time;
-using ConcreteEngine.Editor.Data;
 using ConcreteEngine.Engine.Assets.Data;
 using ConcreteEngine.Engine.Editor.Definitions;
 

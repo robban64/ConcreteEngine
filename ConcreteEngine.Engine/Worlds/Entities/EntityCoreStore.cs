@@ -1,5 +1,3 @@
-using System.Diagnostics;
-using System.Numerics;
 using System.Runtime.CompilerServices;
 using ConcreteEngine.Common.Collections;
 using ConcreteEngine.Common.Numerics;
@@ -52,17 +50,19 @@ internal sealed class EntityCoreStore
     internal ref Transform GetTransformByIndex(int idx) => ref _transforms[idx];
     internal ref BoxComponent GetBoxByIndex(int idx) => ref _boxes[idx];
 
-
     public Span<EntityId> GetEntitySpan() => _entities.AsSpan(0, _idx);
 
+    public EntityCoreWriter GetEntityWriter(EntityId e)
+    {
+        var idx = GetIndexByEntity(e);
+        if ((uint)idx >= _entities.Length) throw new IndexOutOfRangeException();
+        return new EntityCoreWriter(e, ref _sources[idx], ref _transforms[idx], ref _boxes[idx]);
+    }
+    
     public EntityView GetEntityView(EntityId e)
     {
-        ArgumentOutOfRangeException.ThrowIfNegativeOrZero(e.Id, nameof(e));
-        ArgumentOutOfRangeException.ThrowIfGreaterThanOrEqual(e.Id, _sparse.Length, nameof(e));
-
-        var idx = GetSparseIndex(e);
+        var idx = GetIndexByEntity(e);
         if ((uint)idx >= _entities.Length) throw new IndexOutOfRangeException();
-
         return new EntityView(e, ref _sources[idx], ref _transforms[idx], ref _boxes[idx]);
     }
     
@@ -72,6 +72,8 @@ internal sealed class EntityCoreStore
     internal int GetIndexByEntity(EntityId e)
     {
         ArgumentOutOfRangeException.ThrowIfNegativeOrZero(e.Id, nameof(e));
+        ArgumentOutOfRangeException.ThrowIfGreaterThanOrEqual(e.Id, _sparse.Length, nameof(e));
+
         return GetSparseIndex(e);
     }
 

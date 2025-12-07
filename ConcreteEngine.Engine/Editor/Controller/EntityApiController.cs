@@ -1,17 +1,13 @@
 #region
 
-using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
 using ConcreteEngine.Editor.Components.Data;
-using ConcreteEngine.Editor.Components.State;
 using ConcreteEngine.Editor.Data;
 using ConcreteEngine.Editor.Store;
 using ConcreteEngine.Editor.Store.Resources;
 using ConcreteEngine.Engine.Worlds;
-using ConcreteEngine.Engine.Worlds.Data;
 using ConcreteEngine.Engine.Worlds.Entities;
 using ConcreteEngine.Engine.Worlds.Entities.Components;
-using ConcreteEngine.Engine.Worlds.Render.Data;
 using ConcreteEngine.Renderer.Data;
 
 #endregion
@@ -56,39 +52,29 @@ internal sealed class EntityApiController(ApiContext apiContext)
         }
 
         return result;
-
     }
-
-    public void ProcessEntityRequest(ref EditorDataRequest<EntityDataState> request)
+    
+    public void WriteSelectedEntity(EntityId entity , ref EntityDataState data)
     {
-        var entities = Entities;
-
-        if (request.EditorData.EntityId == 0)
+        if (entity == 0)
         {
             WorldActionSlot.SelectedEntityId = new EntityId(0);
-            request.EditorData = default;
-            request.ResponseStatus = EditorDataRequestStatus.Overwrite;
             return;
         }
-
-        var entity = new EntityId(request.EditorData.EntityId);
 
         WorldActionSlot.SelectedEntityId =  entity;
-
-        if (request.WriteRequest)
-        {
-            WorldActionSlot.SetSlot(0, in request.EditorData);
-            request.ResponseStatus = EditorDataRequestStatus.Success;
-            return;
-        }
         
-        var view = entities.Core.GetEntityView(entity);
-        ref var data = ref request.EditorData;
+        var view = Entities.Core.GetEntityView(entity);
         data.EntityId = entity;
-        data.MaterialTagKey = view.Source.MaterialKey.Value;
-        data.ModelId = view.Source.Model;
-        data.SetTransform(Transform.UnsafeAs(ref view.Transform));
+        data.Transform.From(in Transform.UnsafeAs(ref view.Transform));
         data.Bounds = view.Box.Bounds;
-        request.ResponseStatus = EditorDataRequestStatus.Success;
+    }
+
+
+    public void ApplySelectedEntity(EntityId entity, in EntityDataState data)
+    {
+        var writer = Entities.Core.GetEntityWriter(entity);
+        writer.Box.Bounds = data.Bounds;
+        data.Transform.FillData(out Transform.UnsafeAs(ref writer.Transform));
     }
 }

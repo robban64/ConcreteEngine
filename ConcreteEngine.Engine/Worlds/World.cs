@@ -2,11 +2,9 @@
 
 using ConcreteEngine.Common.Numerics;
 using ConcreteEngine.Editor.Components.Data;
-using ConcreteEngine.Editor.Data;
 using ConcreteEngine.Engine.Editor.Data;
 using ConcreteEngine.Engine.Time;
 using ConcreteEngine.Engine.Worlds.Entities;
-using ConcreteEngine.Engine.Worlds.Entities.Components;
 using ConcreteEngine.Engine.Worlds.MeshGeneration;
 using ConcreteEngine.Engine.Worlds.Render;
 using ConcreteEngine.Engine.Worlds.Tables;
@@ -114,7 +112,7 @@ public sealed class World : IWorld
         Camera.EndTick();
     }
 
-    internal void OnSimulationTick(UpdateTickerArgs args)
+    internal void OnSimulationTick(UpdateTickArgs args)
     {
         _particles.UpdateSimulate(_entities, args.FixedDt, args.Alpha);
     }
@@ -130,32 +128,5 @@ public sealed class World : IWorld
     private void ProcessActions()
     {
         var entities = Entities;
-
-        if (WorldActionSlot.SelectedEntityId > 0)
-        {
-            //var model = entities.Meshes.GetById(WorldActionSlot.SelectedEntityId);
-        }
-
-        if (!WorldActionSlot.IsDirty) return;
-
-        if (WorldActionSlot.HasPendingSlot<WorldParamsData>(WorldRenderParams.Version))
-            WorldRenderParams.FromEditor(in WorldActionSlot.ReadSlot<WorldParamsData>());
-
-
-        if (WorldActionSlot.HasPendingSlot<CameraDataState>(Camera.Generation))
-        {
-            Camera.FromEditor(in WorldActionSlot.ReadSlot<CameraDataState>());
-        }
-
-        if (WorldActionSlot.HasPendingSlot<EntityDataState>(0))
-        {
-            Console.WriteLine("Entity transform updated");
-            ref readonly var entityData = ref WorldActionSlot.ReadSlot<EntityDataState>();
-            var view = entities.Core.GetEntityView(new EntityId(entityData.EntityId));
-            view.Transform = entityData.GetTransform();
-            view.Box.Bounds = entityData.Bounds;
-        }
-
-        WorldActionSlot.ClearDirty();
     }
 }

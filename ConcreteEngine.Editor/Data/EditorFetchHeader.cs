@@ -1,7 +1,5 @@
 #region
 
-using ConcreteEngine.Editor.Components.Data;
-using ConcreteEngine.Editor.Definitions;
 using ConcreteEngine.Editor.Store;
 
 #endregion

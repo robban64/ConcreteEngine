@@ -3,35 +3,31 @@
 using System.Numerics;
 using ConcreteEngine.Common.Numerics;
 using ConcreteEngine.Common.Numerics.Maths;
-using ConcreteEngine.Shared.World;
 
 #endregion
 
-namespace ConcreteEngine.Editor.Components.Data;
+namespace ConcreteEngine.Shared.World;
 
-internal struct TransformDataState
+public struct TransformStable
 {
     public Vector3 Translation;
     public Vector3 Scale;
-    public Vector3 EulerAngles;
     public Quaternion Rotation;
-    
-    public readonly TransformData AsTransformData()
+    public Vector3 EulerAngles;
+ 
+    public readonly void FillData(out TransformData model)
     {
-        return new TransformData(in Translation, in Scale, in Rotation);
-    }
-
-    public readonly void Fill(out TransformData model)
-    {
-        model = new TransformData(in Translation, in Scale, in Rotation);
+        model.Translation = Translation;
+        model.Scale = Scale;
+        model.Rotation = Rotation;
     }
 
     public void From(in TransformData model)
     {
         Translation = model.Translation;
         Scale = model.Scale;
-        EulerAngles = RotationMath.QuaternionToEulerDegrees(in model.Rotation, in EulerAngles);
         Rotation = model.Rotation;
+        EulerAngles = RotationMath.QuaternionToEulerDegrees(in model.Rotation, in EulerAngles);
     }
 
     public void FromStable(in TransformData model)

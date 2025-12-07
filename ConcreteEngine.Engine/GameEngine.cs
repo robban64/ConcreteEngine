@@ -67,7 +67,7 @@ public sealed class GameEngine : IDisposable
         _modules = new ModuleManager();
 
         // time
-        _timeHub = new EngineTimeHub(GameTickUpdate, SimulationTickUpdate, DebugTickUpdate);
+        _timeHub = new EngineTimeHub(GameTickUpdate, SimulationTickUpdate, LogTickUpdate);
 
         // systems
 
@@ -139,11 +139,6 @@ public sealed class GameEngine : IDisposable
             beginStatus = BeginFrameStatus.Resize;
         }
 
-        if (_timeHub.RenderTicker.TryProcessMetrics(dt))
-            _engineGateway.RefreshMetrics();
-
-        if (_timeHub.RenderTicker.TryProcessLoggers(dt))
-            _engineGateway.DrainLogs();
 
         _world.OnPreRender(alpha);
         _worldRenderer.PreRender(beginStatus, in frameInfo, in runtimeParams, _world.Camera);
@@ -184,7 +179,7 @@ public sealed class GameEngine : IDisposable
         _sceneManager.Current?.Update(in updateInfo);
     }
 
-    private void GameTickUpdate(UpdateTickerArgs args)
+    private void GameTickUpdate(UpdateTickArgs args)
     {
         _updateInfo.UpdateTick(args.Tick, args.FixedDt);
 
@@ -203,13 +198,14 @@ public sealed class GameEngine : IDisposable
         UpdateSceneTransitionIfNeeded();
     }
 
-    private void SimulationTickUpdate(UpdateTickerArgs args)
+    private void SimulationTickUpdate(UpdateTickArgs args)
     {
         _world.OnSimulationTick(args);
     }
 
-    private void DebugTickUpdate(UpdateTickerArgs args)
+    private void LogTickUpdate(UpdateTickArgs args)
     {
+        _engineGateway.UpdateDiagnostics(args);
     }
 
     private void RunSetupStateMachine()

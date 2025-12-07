@@ -1,10 +1,7 @@
 #region
 
 using System.Numerics;
-using System.Runtime.InteropServices;
 using ConcreteEngine.Common.Collections;
-using ConcreteEngine.Engine.Editor.Diagnostics;
-using ConcreteEngine.Engine.Worlds.Data;
 using ConcreteEngine.Engine.Worlds.MeshGeneration.MeshData;
 using ConcreteEngine.Graphics.Gfx;
 using ConcreteEngine.Graphics.Gfx.Contracts;

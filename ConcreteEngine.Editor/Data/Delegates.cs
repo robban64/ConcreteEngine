@@ -29,5 +29,4 @@ public delegate TResponse ApiEditorRequestDel< out TResponse>(EditorFetchHeader 
 
 public delegate void ApiDataRequest<TRequest>(in TRequest request, out TRequest response)
     where TRequest : unmanaged;
-
-public delegate void ApiRefRequest<TRequest>(ref EditorDataRequest<TRequest> request) where TRequest : unmanaged;
+    

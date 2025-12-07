@@ -1,6 +1,5 @@
 #region
 
-using System.Diagnostics;
 using System.Runtime.CompilerServices;
 using ConcreteEngine.Common.Collections;
 

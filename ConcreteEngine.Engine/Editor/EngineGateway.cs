@@ -209,8 +209,12 @@ internal sealed class EngineGateway : IDisposable
         {
             EditorApi.FetchAssetDetailed = EngineDataProvider.GetAssetObjectFiles;
 
-            EditorApi.FetchAssets = EngineDataProvider.GetAssets;
-            EditorApi.FetchEntities = EngineDataProvider.GetEntities;
+            //EditorApi.FetchAssets = EngineDataProvider.GetAssets;
+            //            EditorApi.FetchEntities = EngineDataProvider.GetEntities;
+
+            EditorApi.LoadAssetResources = EngineDataProvider.CreateEditorAssets;
+            EditorApi.LoadEntityResources = EngineDataProvider.CreateEntityList;
+
 
             EditorApi.SendEditorMouseRequest = EngineDataProvider.OnEditorClick;
 

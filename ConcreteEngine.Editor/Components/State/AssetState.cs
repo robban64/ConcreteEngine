@@ -2,6 +2,8 @@
 
 using ConcreteEngine.Editor.Data;
 using ConcreteEngine.Editor.Definitions;
+using ConcreteEngine.Editor.Store;
+using ConcreteEngine.Editor.Store.Resources;
 
 #endregion
 
@@ -10,54 +12,37 @@ namespace ConcreteEngine.Editor.Components.State;
 internal sealed class AssetState
 {
     public EditorAssetCategory Category { get; set; }
-    public List<AssetObjectViewModel> AssetObjects { get; set; } = [];
-    public List<AssetObjectFileViewModel> AssetFileObjects { get; set; } = [];
+    public List<EditorFileAssetModel> FileAssets { get; set; } = [];
 
-    public void FillView(EditorAssetCategory? category,
-        ApiModelRequestDel<AssetCategoryRequestBody, List<AssetObjectViewModel>> api)
+    public ReadOnlySpan<EditorAssetResource> GetAssetSpan()
     {
-        if (category is { } assetCategory)
-        {
-            if (assetCategory == Category) return;
-            Category = assetCategory;
-        }
-
-        AssetObjects = api(new AssetCategoryRequestBody(Category)) ?? [];
+        if (Category == EditorAssetCategory.None) return ReadOnlySpan<EditorAssetResource>.Empty;
+        return EditorManagedStore.GetAssetSpanByCategory(Category);
     }
 
-    public void FillAssetFileView(AssetObjectViewModel? asset,
-        ApiModelRequestDel<AssetRequestBody, List<AssetObjectFileViewModel>> api)
+    public void Refresh() => SetCategory(Category);
+
+    public void SetCategory(EditorAssetCategory? category)
+    {
+        if (category is not { } assetCategory) return;
+        if (assetCategory == Category) return;
+        Category = assetCategory;
+    }
+
+    public void GetFileAssets(EditorAssetResource? asset, ApiEditorRequestDel<List<EditorFileAssetModel>> api)
     {
         if (asset is null)
         {
-            AssetFileObjects = [];
+            FileAssets.Clear();
             return;
         }
 
-        AssetFileObjects = api(new AssetRequestBody(asset.AssetId)) ?? [];
+        api(new EditorFetchHeader(asset.Id), FileAssets);
     }
 
     public void ResetState(bool clearTypeSelection = false)
     {
         if (clearTypeSelection) Category = EditorAssetCategory.None;
-        AssetObjects.Clear();
-        AssetFileObjects.Clear();
+        FileAssets.Clear();
     }
 }
-
-public record AssetObjectViewModel(
-    int AssetId,
-    int ResourceId,
-    string ResourceName,
-    string Name,
-    bool IsCoreAsset,
-    int Generation,
-    string SpecialName,
-    string SpecialValue,
-    bool HasActions);
-
-public sealed record AssetObjectFileViewModel(
-    int AssetFileId,
-    string RelativePath,
-    long SizeInBytes,
-    string? ContentHash);

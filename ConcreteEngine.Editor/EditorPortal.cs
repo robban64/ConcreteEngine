@@ -1,7 +1,9 @@
 #region
 
 using ConcreteEngine.Common;
+using ConcreteEngine.Editor.Components.Data;
 using ConcreteEngine.Editor.Core;
+using ConcreteEngine.Editor.Store;
 using ImGuiNET;
 using Silk.NET.Input;
 using Silk.NET.OpenGL;
@@ -20,6 +22,7 @@ public sealed class EditorPortal : IDisposable
 
     public EditorPortal(GL gl, IWindow window, IInputContext inputCtx)
     {
+        var d = EditorDataStore.CameraData;
         var fontPath = Path.Combine(AppContext.BaseDirectory, "Content", "Roboto-Medium.ttf");
         ImGuiFontConfig fontConfDefault = new(fontPath, 14);
 
@@ -29,6 +32,7 @@ public sealed class EditorPortal : IDisposable
     public void Initialize()
     {
         InvalidOpThrower.ThrowIf(Initialized, nameof(Initialized));
+        EditorManagedStore.InitFillStore();
         ModelManager.SetupModelState();
         StateContext.Init();
         Initialized = true;
@@ -38,7 +42,7 @@ public sealed class EditorPortal : IDisposable
 
     public void AddLog(string? msg) => ConsoleService.SendLog(msg);
 
-
+    
     public void Render(float delta)
     {
         if (!Initialized) return;

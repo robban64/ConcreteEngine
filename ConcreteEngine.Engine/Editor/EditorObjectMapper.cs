@@ -1,6 +1,10 @@
 #region
 
+using ConcreteEngine.Editor.Components.Data;
 using ConcreteEngine.Editor.Components.State;
+using ConcreteEngine.Editor.Data;
+using ConcreteEngine.Editor.Store;
+using ConcreteEngine.Editor.Store.Resources;
 using ConcreteEngine.Engine.Assets.Data;
 using ConcreteEngine.Engine.Assets.Materials;
 using ConcreteEngine.Engine.Assets.Models;
@@ -14,11 +18,15 @@ namespace ConcreteEngine.Engine.Editor;
 
 internal static class EditorObjectMapper
 {
+    public static EditorFileAssetModel MakeAssetObjectFile(AssetFileEntry entry) => new()
+    {
+        AssetFileId = entry.Id.Value,
+        RelativePath = entry.RelativePath,
+        SizeInBytes = entry.SizeBytes,
+        ContentHash = entry.ContentHash
+    };
 
-    public static AssetObjectFileViewModel MakeAssetObjectFile(AssetFileEntry entry) =>
-        new(entry.Id.Value, entry.RelativePath, entry.SizeBytes, entry.ContentHash);
-
-    public static AssetObjectViewModel MakeAssetObjectModel(AssetObject obj)
+    public static EditorAssetResource MakeAssetObjectModel(AssetObject obj)
     {
         var resourceId = 0;
         string resourceName = "", specialName = "", specialValue = "";
@@ -55,15 +63,18 @@ internal static class EditorObjectMapper
                 break;
         }
 
-
-        return new AssetObjectViewModel(obj.RawId,
-            resourceId,
-            resourceName,
-            obj.Name,
-            obj.IsCoreAsset,
-            obj.Generation,
-            specialName,
-            specialValue,
-            hasActions);
+        return new EditorAssetResource
+        {
+            Id = new EditorId(obj.RawId.Value, obj.Kind.ToEditorEnum()),
+            Name = obj.Name,
+            AssetCategory =  obj.Kind.ToEditorCategory(),
+            ResourceId = resourceId,
+            ResourceName = resourceName,
+            SpecialName = specialName,
+            SpecialValue = specialValue,
+            HasActions = hasActions,
+            IsCoreAsset = obj.IsCoreAsset,
+            Generation = obj.Generation,
+        };
     }
 }

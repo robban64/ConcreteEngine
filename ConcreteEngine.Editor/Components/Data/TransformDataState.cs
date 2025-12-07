@@ -21,7 +21,6 @@ internal struct TransformDataState
         return new TransformData(in Translation, in Scale, in Rotation);
     }
 
-
     public readonly void Fill(out TransformData model)
     {
         model = new TransformData(in Translation, in Scale, in Rotation);

@@ -23,11 +23,3 @@ internal enum RightSidebarMode
     Terrain
 }
 
-public enum EditorAssetCategory
-{
-    None,
-    Shader,
-    Texture,
-    Model,
-    Material
-}

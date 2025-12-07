@@ -3,9 +3,12 @@
 using System.Numerics;
 using ConcreteEngine.Common.Numerics.Maths;
 using ConcreteEngine.Common.Time;
+using ConcreteEngine.Editor.Components.Data;
 using ConcreteEngine.Editor.Components.State;
 using ConcreteEngine.Editor.Core;
 using ConcreteEngine.Editor.Definitions;
+using ConcreteEngine.Editor.Store;
+using ConcreteEngine.Editor.Store.Resources;
 using ConcreteEngine.Editor.Utils;
 using ImGuiNET;
 
@@ -26,18 +29,20 @@ internal static class EntitiesComponent
     private static ModelStateContext<EntitiesViewModel> Context => ModelManager.EntitiesStateContext;
     private static EntitiesViewModel State => Context.State!;
 
-    private static void OnSelectEntity(EntityRecord entity)
+    private static ReadOnlySpan<EditorEntityResource> EntitySpan => EditorManagedStore.EntityResourceSpan;
+
+    private static void OnSelectEntity(EditorEntityResource entity)
     {
-        if (entity.EntityId == State.Data.EntityId) return;
+        if (entity.Id == State.Data.EntityId) return;
         Context.TriggerEvent(EventKey.SelectionChanged, entity);
     }
 
-    private static void OnUpdateTransform(EntityRecord entity)
+    private static void OnUpdateTransform(EditorEntityResource entity)
     {
         Context.TriggerEvent(EventKey.SelectionUpdated, entity);
     }
 
-    private static void OnUpdateRotation(EntityRecord entity)
+    private static void OnUpdateRotation(EditorEntityResource entity)
     {
         ref var transform = ref State.DataState.Transform;
         transform.Rotation = RotationMath.EulerDegreesToQuaternion(in transform.EulerAngles);
@@ -54,7 +59,7 @@ internal static class EntitiesComponent
 
         if (_selectedIndex >= 0 && _editedField >= 0)
         {
-            var entity = State.Entities[_selectedIndex];
+            var entity = EntitySpan[_selectedIndex];
             if (_editedField == _rotationField)
                 OnUpdateRotation(entity);
             else
@@ -103,7 +108,7 @@ internal static class EntitiesComponent
 
         var rowHeight = ImGui.GetFrameHeight();
         var clipper = new ImGuiListClipper();
-        ImGuiNative.ImGuiListClipper_Begin(&clipper, State.Entities.Count, rowHeight);
+        ImGuiNative.ImGuiListClipper_Begin(&clipper, EntitySpan.Length, rowHeight);
 
         while (ImGuiNative.ImGuiListClipper_Step(&clipper) != 0)
         {
@@ -117,17 +122,17 @@ internal static class EntitiesComponent
 
     private static void DrawListItem(int i, NumberSpanFormatter formatter)
     {
-        var entity = State.Entities[i];
-        var selected = entity.EntityId == State.Data.EntityId;
+        var entity = EntitySpan[i];
+        var selected = entity.Id == State.Data.EntityId;
         if (selected) _selectedIndex = i;
 
         ImGui.PushStyleVar(ImGuiStyleVar.SelectableTextAlign, new Vector2(0.0f, 0.5f));
 
-        ImGui.PushID(entity.EntityId);
+        ImGui.PushID(entity.Id);
         ImGui.TableNextRow();
 
         ImGui.TableNextColumn();
-        var bufferStr = formatter.Format(entity.EntityId);
+        var bufferStr = formatter.Format(entity.Id);
         if (EntitySelectable(bufferStr, selected))
         {
             OnSelectEntity(entity);
@@ -145,9 +150,9 @@ internal static class EntitiesComponent
         GuiUtils.CenterAlignText(formatter.Format(entity.Model), RowHeight);
 
         ImGui.TableNextColumn();
-        GuiUtils.CenterAlignText(entity.MaterialText, RowHeight);
+        GuiUtils.CenterAlignText(formatter.Format(entity.Material), RowHeight);
 
-        bufferStr = formatter.Format(entity.EntityId);
+        bufferStr = formatter.Format(entity.Id);
 
         ImGui.PushStyleVar(ImGuiStyleVar.WindowPadding, new Vector2(12, 10));
         ImGui.SetNextWindowSize(new Vector2(250, 0));
@@ -165,7 +170,7 @@ internal static class EntitiesComponent
     }
 
 
-    private static void DrawAssetFilePopupContent(EntityRecord entity)
+    private static void DrawAssetFilePopupContent(EditorEntityResource entity)
     {
         ref var state = ref State.DataState;
         ref var transform = ref state.Transform;

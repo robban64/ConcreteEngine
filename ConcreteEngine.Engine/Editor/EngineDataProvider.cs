@@ -4,6 +4,7 @@ using ConcreteEngine.Editor.Components.Data;
 using ConcreteEngine.Editor.Components.State;
 using ConcreteEngine.Editor.Data;
 using ConcreteEngine.Editor.Definitions;
+using ConcreteEngine.Editor.Store.Resources;
 using ConcreteEngine.Engine.Assets;
 using ConcreteEngine.Engine.Assets.Data;
 using ConcreteEngine.Engine.Editor.Controller;
@@ -20,7 +21,7 @@ internal static class EngineDataProvider
     private static AssetSystem _assetSystem = null!;
     private static EntityApiController _entityController = null!;
     private static WorldApiController _worldController = null!;
-    private static InteractionController _interactionController = null;
+    private static InteractionController _interactionController = null!;
 
 
     internal static void Attach(World world, AssetSystem assetSystem,
@@ -34,54 +35,66 @@ internal static class EngineDataProvider
         _interactionController = interactionController;
     }
 
-
-    public static List<AssetObjectViewModel> GetAssets(AssetCategoryRequestBody body)
+    private static bool _hasInitAssets = false;
+    public static List<EditorAssetResource> CreateEditorAssets()
     {
-        var req = body.Category;
-        if (_assetSystem is null || req == EditorAssetCategory.None) return [];
+        if (_assetSystem is null) throw new InvalidOperationException("EngineDataProvider is not initialized.");
+        if(_hasInitAssets) throw new InvalidOperationException("CreateEditorAssets has already been executed.");
+        
         var store = _assetSystem.StoreImpl;
-        var type = EditorEnumMapper.AssetSelectionToType(req);
-        var meta = store.GetMetaSnapshot(type);
+        var result = new List<EditorAssetResource>(store.Count);
+        foreach (var obj in store.AssetValues)
+            result.Add(EditorObjectMapper.MakeAssetObjectModel(obj));
+        
 
-        var result = new List<AssetObjectViewModel>(meta.Count);
+        _hasInitAssets = true;
+        
+        return result;
+    }
+/*
+
+    public static void GetAssets(EditorFetchHeader header, List<EditorAssetResource> request)
+    {
+        var req = header.EditorId.ItemType;
+        if (_assetSystem is null || req == EditorItemType.None) return;
+        var store = _assetSystem.StoreImpl;
+
+        var type = req.ToAssetType();
+        var meta = store.GetMetaSnapshot(type);
+        var result = new List<EditorAssetResource>(meta.Count);
         foreach (var obj in store.AssetValues)
         {
             if (obj.GetType() != type) continue;
             result.Add(EditorObjectMapper.MakeAssetObjectModel(obj));
         }
-
-        result.Sort(static (a, b) => a.AssetId.CompareTo(b.AssetId));
         return result;
     }
+    */
 
-    public static List<AssetObjectFileViewModel> GetAssetObjectFiles(AssetRequestBody body)
+    public static void GetAssetObjectFiles(EditorFetchHeader header, List<EditorFileAssetModel> list)
     {
-        var assetTypedId = new AssetId(body.AssetId);
+        var assetTypedId = new AssetId(header.EditorId);
         var store = _assetSystem.StoreImpl;
         store.TryGetFileIds(assetTypedId, out var fileIds);
 
         if (!store.TryGetByAssetId(assetTypedId, out var asset))
-            return [];
+            return;
 
         var meta = store.GetMetaSnapshot(asset!.GetType());
-        var result = new List<AssetObjectFileViewModel>(meta.Count);
+        list.Clear();
+        list.EnsureCapacity(meta.Count);
         foreach (var fileId in fileIds)
         {
             store.TryGetFileEntry(fileId, out var entry);
-            result.Add(EditorObjectMapper.MakeAssetObjectFile(entry!));
+            list.Add(EditorObjectMapper.MakeAssetObjectFile(entry!));
         }
-
-        return result;
     }
 
-    public static List<EntityRecord> GetEntities(EntityRequestBody body)
-    {
-        return _entityController.GetEntityList();
-    }
+    public static List<EditorEntityResource> CreateEntityList() => _entityController.CreateEntityList();
 
     public static void OnEntityRequest(ref EditorDataRequest<EntityDataState> request)
     {
-         _entityController.ProcessEntityRequest(ref request);
+        _entityController.ProcessEntityRequest(ref request);
     }
 
     public static void OnCameraRequest(ref EditorDataRequest<CameraDataState> request)
@@ -91,7 +104,7 @@ internal static class EngineDataProvider
 
     public static void OnWorldParamsRequest(ref EditorDataRequest<WorldParamsData> request)
     {
-         _worldController.ProcessWorldParamsRequest(ref request);
+        _worldController.ProcessWorldParamsRequest(ref request);
     }
 
     public static void OnEditorClick(in EditorWorldMouseData request, out EditorWorldMouseData response)

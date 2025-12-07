@@ -4,20 +4,21 @@ using System.Diagnostics.CodeAnalysis;
 using ConcreteEngine.Editor.Components.Data;
 using ConcreteEngine.Editor.Components.State;
 using ConcreteEngine.Editor.Data;
+using ConcreteEngine.Editor.Store.Resources;
 using ConcreteEngine.Shared.RenderData;
 
 #endregion
 
 namespace ConcreteEngine.Editor;
 
-[SuppressMessage("Usage", "CA2211:Non-constant fields should not be visible")]
 public static class EditorApi
 {
-    public static ApiModelRequestDel<AssetCategoryRequestBody, List<AssetObjectViewModel>> FetchAssets = null!;
-    public static ApiModelRequestDel<AssetRequestBody, List<AssetObjectFileViewModel>> FetchAssetDetailed = null!;
+    public static Func<List<EditorAssetResource>> LoadAssetResources = null!;
+    public static Func<List<EditorEntityResource>> LoadEntityResources = null!;
 
-    public static ApiModelRequestDel<EntityRequestBody, List<EntityRecord>> FetchEntities = null!;
-
+    public static ApiEditorRequestDel<List<EditorFileAssetModel>> FetchAssetDetailed = null!;
+    //public static ApiEditorRequestDel<EditorAssetResource> FetchAssets = null!;
+    //public static ApiEditorRequestDel<EditorEntityResource> FetchEntities = null!;
 
     public static ApiDataRequest<EditorWorldMouseData> SendEditorMouseRequest = null!;
 

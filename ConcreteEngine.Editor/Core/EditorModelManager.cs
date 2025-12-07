@@ -4,6 +4,8 @@ using ConcreteEngine.Common;
 using ConcreteEngine.Editor.Components.State;
 using ConcreteEngine.Editor.Data;
 using ConcreteEngine.Editor.Definitions;
+using ConcreteEngine.Editor.Store;
+using ConcreteEngine.Editor.Store.Resources;
 
 #endregion
 
@@ -31,6 +33,7 @@ internal static class EditorModelManager
         InvalidOpThrower.ThrowIf(HasInit, nameof(EntitiesStateContext));
 
         HasInit = true;
+        
         RegisterEntityState();
         RegisterAssetState();
         RegisterCameraState();
@@ -44,18 +47,17 @@ internal static class EditorModelManager
     {
         AssetStateContext = ModelStateContext<AssetState>
             .CreateBuilder(static () => new AssetState())
-            .OnEnter(static (ctx, it) => ctx.State!.FillView(it.Category, EditorApi.FetchAssets))
+            .OnEnter(static (ctx, it) => it.Refresh())
             .OnLeave(static (ctx, it) => ctx.ResetState())
-            .RegisterEvent(EventKey.CategoryChanged,
-                static (ctx) => ctx.State!.FillView(null, EditorApi.FetchAssets))
-            .RegisterEvent<AssetObjectViewModel>(EventKey.SelectionChanged,
-                static (ctx, it) => ctx.State!.FillAssetFileView(it, EditorApi.FetchAssetDetailed))
-            .RegisterEvent<AssetObjectViewModel>(EventKey.SelectionAction, ReloadShaderHandler)
+            .RegisterEvent(EventKey.CategoryChanged, static (ctx) => ctx.State!.Refresh())
+            .RegisterEvent<EditorAssetResource>(EventKey.SelectionChanged,
+                static (ctx, it) => ctx.State!.GetFileAssets(it, EditorApi.FetchAssetDetailed))
+            .RegisterEvent<EditorAssetResource>(EventKey.SelectionAction, ReloadShaderHandler)
             .Build();
         return;
 
 
-        static void ReloadShaderHandler(ModelStateContext<AssetState> ctx, AssetObjectViewModel it) =>
+        static void ReloadShaderHandler(ModelStateContext<AssetState> ctx, EditorAssetResource it) =>
             CommandDispatcher.InvokeEditorCommand(CoreCmdNames.AssetShader,
                 new EditorShaderPayload(it.Name, EditorRequestAction.Reload));
     }
@@ -64,37 +66,25 @@ internal static class EditorModelManager
     {
         EntitiesStateContext = ModelStateContext<EntitiesViewModel>
             .CreateBuilder(static () => new EntitiesViewModel())
-            .OnEnter(RefreshEntityState)
-            .OnRefresh(RefreshEntityState)
-            .OnLeave(static (ctx, _) => ctx.TriggerEvent<EntityRecord?>(EventKey.SelectionChanged, null))
-            .RegisterEvent<EntityRecord?>(EventKey.SelectionChanged, OnEntitySelected)
-            .RegisterEvent<EntityRecord>(EventKey.SelectionUpdated, OnEntityUpdated)
+            .OnEnter(static (ctx, it)=>{})
+            .OnRefresh(static (ctx, it)=>{})
+            .OnLeave(static (ctx, _) => ctx.TriggerEvent<EditorEntityResource?>(EventKey.SelectionChanged, null))
+            .RegisterEvent<EditorEntityResource?>(EventKey.SelectionChanged, OnEntitySelected)
+            .RegisterEvent<EditorEntityResource>(EventKey.SelectionUpdated, OnEntityUpdated)
             .KeepAlive()
             .Build();
 
         return;
 
-        static void RefreshEntityState(ModelStateContext<EntitiesViewModel> ctx, EntitiesViewModel state)
+        static void OnEntitySelected(ModelStateContext<EntitiesViewModel> ctx, EditorEntityResource? it)
         {
-            if (state.Entities.Count == 0)
-            {
-                state.SetSelectedEntity(0);
-                state.FillView(EditorApi.FetchEntities);
-                return;
-            }
-
-            state.Dispatch(EditorApi.EntityApi, false);
-        }
-
-        static void OnEntitySelected(ModelStateContext<EntitiesViewModel> ctx, EntityRecord? it)
-        {
-            ctx.State!.SetSelectedEntity(it?.EntityId ?? 0);
+            ctx.State!.SetSelectedEntity(it?.Id ?? EditorId.Empty);
             ctx.EnqueueRefreshNextFrame();
         }
 
-        static void OnEntityUpdated(ModelStateContext<EntitiesViewModel> ctx, EntityRecord it)
+        static void OnEntityUpdated(ModelStateContext<EntitiesViewModel> ctx, EditorEntityResource it)
         {
-            ctx.State!.SetSelectedEntity(it.EntityId);
+            ctx.State!.SetSelectedEntity(it.Id);
             ctx.State!.Dispatch(EditorApi.EntityApi, true);
             ctx.EnqueueRefreshNextFrame();
         }

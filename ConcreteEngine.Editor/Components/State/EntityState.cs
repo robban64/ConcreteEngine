@@ -3,6 +3,8 @@
 using ConcreteEngine.Common.Collections;
 using ConcreteEngine.Editor.Components.Data;
 using ConcreteEngine.Editor.Data;
+using ConcreteEngine.Editor.Store;
+using ConcreteEngine.Editor.Store.Resources;
 
 #endregion
 
@@ -10,9 +12,7 @@ namespace ConcreteEngine.Editor.Components.State;
 
 internal sealed class EntitiesViewModel
 {
-    public List<EntityRecord> Entities { get; set; } = [];
-
-    public EntityRecord? SelectedEntity { get; private set; }
+    public EditorEntityResource? SelectedEntity { get; private set; }
 
     private long _generation;
 
@@ -25,18 +25,15 @@ internal sealed class EntitiesViewModel
     public long Generation => _generation;
 
 
-    public EntityRecord? FindEntity(int entityId)
+    public EditorEntityResource? FindEntity(int entityId)
     {
-        if (Entities.Count == 0 || entityId == 0) return null;
-
-        if (entityId < Entities.Count && Entities[entityId].EntityId == entityId)
-            return Entities[entityId];
-
-        var index = SortMethod.BinarySearch(Entities, entityId);
-        return index < 0 ? null : Entities[index];
+        if (!EditorManagedStore.TryGet<EditorEntityResource>((entityId, EditorItemType.Entity), out var entity))
+            return null;
+        
+        return entity;
     }
 
-    public void SetSelectedEntity(int entityId)
+    public void SetSelectedEntity(EditorId entityId)
     {
         if (entityId == 0)
         {
@@ -45,16 +42,10 @@ internal sealed class EntitiesViewModel
             return;
         }
 
-        if (SelectedEntity?.EntityId == entityId) return;
+        if (SelectedEntity?.Id == entityId) return;
 
         SelectedEntity = FindEntity(entityId);
         RefreshData();
-    }
-
-
-    public void FillView(ApiModelRequestDel<EntityRequestBody, List<EntityRecord>> api)
-    {
-        Entities = api(new EntityRequestBody(_data.EntityId)) ?? [];
     }
 
     public void Dispatch(ApiRefRequest<EntityDataState> api, bool isWriteRequest)
@@ -84,38 +75,6 @@ internal sealed class EntitiesViewModel
         }
 
         _data = _state;
-        _data.EntityId = SelectedEntity.EntityId;
+        _data.EntityId = SelectedEntity.Id;
     }
-}
-
-public sealed class EntityRecord : IComparable<EntityRecord>, IComparable<int>
-{
-    public int EntityId { get; }
-    public string Name { get; }
-    public int Model { get; }
-    public int[] Materials { get; }
-    public int ComponentCount { get; }
-    public long Generation { get; internal set; } = 0;
-
-    public string ModelText { get; private set; }
-    public string MaterialText { get; private set; }
-
-    public EntityRecord(int entityId,
-        string name,
-        int model,
-        int[] materials,
-        int componentCount)
-    {
-        EntityId = entityId;
-        Model = model;
-        Name = name;
-        Materials = materials;
-        ComponentCount = componentCount;
-
-        ModelText = model.ToString();
-        MaterialText = materials.Length == 0 ? string.Empty : string.Join(",", materials);
-    }
-
-    public int CompareTo(EntityRecord? other) => other is null ? 1 : EntityId.CompareTo(other.EntityId);
-    public int CompareTo(int other) => EntityId.CompareTo(other);
 }

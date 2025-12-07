@@ -5,6 +5,8 @@ using System.Runtime.InteropServices;
 using ConcreteEngine.Editor.Components.Data;
 using ConcreteEngine.Editor.Components.State;
 using ConcreteEngine.Editor.Data;
+using ConcreteEngine.Editor.Store;
+using ConcreteEngine.Editor.Store.Resources;
 using ConcreteEngine.Engine.Worlds;
 using ConcreteEngine.Engine.Worlds.Data;
 using ConcreteEngine.Engine.Worlds.Entities;
@@ -24,30 +26,38 @@ internal sealed class EntityApiController(ApiContext apiContext)
 
     //private Dictionary<ModelId, string> _modelToName = new(16);
 
-    public List<EntityRecord> GetEntityList()
+    public List<EditorEntityResource> CreateEntityList()
     {
         var entities = Entities;
-        var result = new List<EntityRecord>(entities.EntityCount);
+        var result = new List<EditorEntityResource>(entities.EntityCount);
         var matTable = apiContext.World.GetMaterialTableImpl();
-        var store = apiContext.AssetSystem.StoreImpl;
 
         foreach (var query in entities.CoreQuery())
         {
-            var sourceName = SourceNames[(int)query.Source.Kind];
-            int[] materials = [];
-            if (matTable.TryResolveSubmitMaterial(query.Source.MaterialKey, out var tag))
-                materials = MemoryMarshal.Cast<MaterialId, int>(tag.AsReadOnlySpan()).ToArray();
+            ref readonly var source = ref query.Source;
+            var item = new EditorEntityResource
+            {
+                Id = new EditorId(query.Entity, EditorItemType.Entity),
+                Generation = 0,
+                Name = string.Empty,
+                DisplayName = SourceNames[(int)source.Kind],
+                Model = source.Model,
+            };
             
-            result.Add(new EntityRecord(
-                entityId: query.Entity,
-                model: query.Source.Model,
-                name: sourceName,
-                materials: materials,
-                componentCount: 0)
-            );
+            if (matTable.TryResolveSubmitMaterial(source.MaterialKey, out var tag))
+            {
+                var materialIds = tag.AsReadOnlySpan();
+                if (materialIds.Length == 1) 
+                    item.Material = materialIds[0];
+                else if(materialIds.Length > 1)
+                    MemoryMarshal.Cast<MaterialId, int>(tag.AsReadOnlySpan()).ToArray();
+            }
+           
+            result.Add(item);
         }
 
         return result;
+
     }
 
     public void ProcessEntityRequest(ref EditorDataRequest<EntityDataState> request)

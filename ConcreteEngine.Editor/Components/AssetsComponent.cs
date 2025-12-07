@@ -3,7 +3,9 @@
 using System.Numerics;
 using ConcreteEngine.Editor.Components.State;
 using ConcreteEngine.Editor.Core;
+using ConcreteEngine.Editor.Data;
 using ConcreteEngine.Editor.Definitions;
+using ConcreteEngine.Editor.Store.Resources;
 using ConcreteEngine.Editor.Utils;
 using ImGuiNET;
 using static ConcreteEngine.Editor.Utils.GuiUtils;
@@ -28,11 +30,11 @@ internal static class AssetsComponent
     private static void OnCategoryChanged(EditorAssetCategory category)
     {
         if (category == State.Category) return;
-        State.Category = category;
+        State.SetCategory(category);
         Model.TriggerEvent(EventKey.CategoryChanged);
     }
 
-    private static void OnSelectionChanged(AssetObjectViewModel? asset) =>
+    private static void OnSelectionChanged(EditorAssetResource? asset) =>
         Model.TriggerEvent(EventKey.SelectionChanged, asset);
 
     public static unsafe void Draw()
@@ -67,13 +69,15 @@ internal static class AssetsComponent
         //Span<char> buffer = stackalloc char[8];
         var formatter = new NumberSpanFormatter(StringUtils.CharBuffer16);
 
+        var assetSpan = State.GetAssetSpan();
+
         var rowHeight = ImGui.GetFrameHeight() + 8;
         var clipper = new ImGuiListClipper();
-        ImGuiNative.ImGuiListClipper_Begin(&clipper, State.AssetObjects.Count, rowHeight);
+        ImGuiNative.ImGuiListClipper_Begin(&clipper, assetSpan.Length, rowHeight);
         while (ImGuiNative.ImGuiListClipper_Step(&clipper) != 0)
         {
             for (int i = clipper.DisplayStart; i < clipper.DisplayEnd; i++)
-                DrawListItem(i, formatter);
+                DrawListItem(i, assetSpan, formatter);
         }
 
         ImGuiNative.ImGuiListClipper_End(&clipper);
@@ -83,13 +87,13 @@ internal static class AssetsComponent
         ImGui.EndTable();
     }
 
-    private static void DrawListItem(int i, NumberSpanFormatter formatter)
+    private static void DrawListItem(int i,  ReadOnlySpan<EditorAssetResource> assets, NumberSpanFormatter formatter)
     {
-        var it = State.AssetObjects[i];
-        ImGui.PushID(it.AssetId);
+        var it = assets[i];
+        ImGui.PushID(it.Id.Identifier);
         ImGui.TableNextRow(ImGuiTableRowFlags.None, RowHeight);
 
-        var bufferStr = formatter.Format(it.AssetId);
+        var bufferStr = formatter.Format(it.Id.Identifier);
 
         ImGui.TableNextColumn();
         ImGui.AlignTextToFramePadding();
@@ -158,7 +162,7 @@ internal static class AssetsComponent
     }
 
 
-    private static void DrawAssetFilePopupContent(AssetObjectViewModel asset)
+    private static void DrawAssetFilePopupContent(EditorAssetResource asset)
     {
         //Span<char> buffer = stackalloc char[8];
         var formatter = new NumberSpanFormatter(StringUtils.CharBuffer8);
@@ -168,7 +172,7 @@ internal static class AssetsComponent
 
         if (ImGui.BeginTable("##asset_detail_object_tbl", 4, ImGuiTableFlags.SizingFixedFit | ImGuiTableFlags.Borders))
         {
-            ImGui.PushID(asset.AssetId);
+            ImGui.PushID(asset.Id);
             ImGui.TableSetupColumn(asset.ResourceName, ImGuiTableColumnFlags.WidthFixed, 34);
             ImGui.TableSetupColumn("Gen", ImGuiTableColumnFlags.WidthFixed, 34);
             ImGui.TableSetupColumn("Core", ImGuiTableColumnFlags.WidthFixed);
@@ -198,7 +202,7 @@ internal static class AssetsComponent
             ImGui.EndTable();
         }
 
-        if (State.AssetFileObjects.Count > 0)
+        if (State.FileAssets.Count > 0)
             DrawFilesTable(formatter, State);
 
         if (asset.HasActions)
@@ -226,7 +230,7 @@ internal static class AssetsComponent
 
             ImGui.TableHeadersRow();
 
-            foreach (var it in viewModel.AssetFileObjects)
+            foreach (var it in viewModel.FileAssets)
             {
                 ImGui.TableNextRow();
                 ImGui.PushID(it.AssetFileId);

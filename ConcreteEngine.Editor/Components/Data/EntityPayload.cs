@@ -1,11 +1,8 @@
 #region
 
-using ConcreteEngine.Common.Numerics;
-using ConcreteEngine.Shared.TransformData;
-
 #endregion
 
-namespace ConcreteEngine.Editor.Data;
+namespace ConcreteEngine.Editor.Components.Data;
 /*
 public struct EntityDataPayload(
     int entityId,

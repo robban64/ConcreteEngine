@@ -3,6 +3,7 @@
 using System.Numerics;
 using ConcreteEngine.Editor.Data;
 using ConcreteEngine.Editor.Definitions;
+using ConcreteEngine.Editor.Store;
 using ImGuiNET;
 
 #endregion
@@ -107,17 +108,12 @@ internal static class EditorInput
         };
         EditorApi.SendEditorMouseRequest(in payload, out payload);
 
-        if (selectedEntity?.EntityId == payload.EntityId) return;
+        if (selectedEntity?.Id.Identifier == payload.EntityId) return;
         if (payload.EntityId == 0 && selectedEntity != null)
         {
-            entityState.SetSelectedEntity(0);
-            entityModel.EnqueueRefreshNextFrame();
+            entityState.SetSelectedEntity(EditorId.Empty);
+            //entityModel.EnqueueRefreshNextFrame();
             return;
-        }
-
-        if (entityState.Entities.Count == 0)
-        {
-            entityModel.InvokeAction(TransitionKey.Refresh);
         }
 
         entityModel.TriggerEvent(EventKey.SelectionChanged, entityState.FindEntity(payload.EntityId));
@@ -139,8 +135,8 @@ internal static class EditorInput
         EditorApi.SendEditorMouseRequest(in payload, out payload);
         if (payload.EntityId == 0)
         {
-            entityState.SetSelectedEntity(0);
-            entityModel.EnqueueRefreshNextFrame();
+            entityState.SetSelectedEntity(EditorId.Empty);
+            //entityModel.EnqueueRefreshNextFrame();
         }
     }
 }

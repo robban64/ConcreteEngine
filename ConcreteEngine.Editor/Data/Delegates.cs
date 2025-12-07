@@ -25,25 +25,13 @@ public delegate CommandResponse EditorDataCommandDel<TRequest>(in TRequest reque
     where TRequest : unmanaged;
 
 // Request delegates
-public delegate TResponse? ApiModelRequestDel<in TRequest, out TResponse>(TRequest request)
+public delegate TResponse? ApiEditorFullRequestDel<in TRequest, out TResponse>(EditorFetchHeader header, TRequest request)
     where TRequest : class where TResponse : class;
+
+public delegate void ApiEditorRequestDel<in TRequest>(EditorFetchHeader header, TRequest request)
+    where TRequest : class;
 
 public delegate void ApiDataRequest<TRequest>(in TRequest request, out TRequest response)
     where TRequest : unmanaged;
 
 public delegate void ApiRefRequest<TRequest>(ref EditorDataRequest<TRequest> request) where TRequest : unmanaged;
-/*
-public readonly unsafe struct ApiDataRefRequest<T>(
-    delegate*<ApiWriteRequestBody<T>, long> fillData,
-    delegate*<ApiWriteRequestBody<T>, long> writeData)
-    where T : unmanaged
-{
-    public long FillData(long version, ref T data) => fillData(new ApiWriteRequestBody<T>(version, ref data));
-    public long WriteData(long version, ref T data) => writeData(new ApiWriteRequestBody<T>(version, ref data));
-}*/
-
-public ref struct ApiWriteRequestBody<TReq>(long version, ref TReq data) where TReq : unmanaged
-{
-    public readonly long Version = version;
-    public ref TReq Data = ref data;
-}

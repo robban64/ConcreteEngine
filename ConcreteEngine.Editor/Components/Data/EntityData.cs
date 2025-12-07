@@ -1,4 +1,4 @@
-namespace ConcreteEngine.Editor.Data;
+namespace ConcreteEngine.Editor.Components.Data;
 
 public readonly struct EditorEntityModel(int modelId, int materialTagKey, int drawCount)
 {

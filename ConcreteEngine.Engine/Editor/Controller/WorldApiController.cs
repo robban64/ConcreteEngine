@@ -1,6 +1,6 @@
 #region
 
-using ConcreteEngine.Editor.Components.Data;
+using ConcreteEngine.Editor.Data;
 using ConcreteEngine.Engine.Worlds;
 using ConcreteEngine.Shared.Rendering;
 

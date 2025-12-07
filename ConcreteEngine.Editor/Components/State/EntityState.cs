@@ -1,6 +1,5 @@
 #region
 
-using ConcreteEngine.Editor.Components.Data;
 using ConcreteEngine.Editor.Data;
 using ConcreteEngine.Editor.Store;
 using ConcreteEngine.Editor.Store.Resources;
@@ -23,7 +22,7 @@ internal sealed class EntitiesViewModel
 
     public void MakeDirty()
     {
-        EditorDataStore.Input.EntitySelection.IsDirty = true;
+        EditorDataStore.Input.EditorSelection.IsDirty = true;
     }
 
     public void SetSelectedEntity(EditorId entityId)
@@ -34,13 +33,13 @@ internal sealed class EntitiesViewModel
             EditorManagedStore.TryGet<EditorEntityResource>((entityId, EditorItemType.Entity), out var entity))
         {
             SelectedEntity = entity;
-            EditorDataStore.Input.EntitySelection.EntityId = entityId;
-            EditorDataStore.Input.EntitySelection.IsRequesting = true;
+            EditorDataStore.Input.EditorSelection.Id = entityId;
+            EditorDataStore.Input.EditorSelection.IsRequesting = true;
             return;
         }
 
         SelectedEntity = null;
-        EditorDataStore.Input.EntitySelection.EntityId = EditorId.Empty;
+        EditorDataStore.Input.EditorSelection.Id = EditorId.Empty;
 
         //EditorDataStore.Slot<EntityDataState>.State.Reset(0);
     }

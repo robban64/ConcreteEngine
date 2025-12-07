@@ -17,7 +17,7 @@ internal sealed class GameTickScheduler
     private const float GameTickDeltaTime = 1f / GameTicksPerSecond;
     private const float SimulationDeltaTime = 1f / SimulationTickPerSecond;
 
-    private const float DiagnosticTickDeltaTime = 4f; 
+    private const float DiagnosticTickDeltaTime = 1f; 
 
     private readonly FrameTickTimer _gameTicker = new(GameTickDeltaTime);
     private readonly FrameTickTimer _simulationTicker = new(SimulationDeltaTime);

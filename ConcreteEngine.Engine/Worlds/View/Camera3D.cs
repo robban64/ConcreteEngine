@@ -3,7 +3,7 @@
 using System.Numerics;
 using ConcreteEngine.Common.Numerics;
 using ConcreteEngine.Common.Numerics.Maths;
-using ConcreteEngine.Editor.Components.Data;
+using ConcreteEngine.Editor.Data;
 using ConcreteEngine.Renderer.State;
 using ConcreteEngine.Shared.World;
 

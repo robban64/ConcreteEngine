@@ -6,7 +6,7 @@ using ConcreteEngine.Shared.World;
 
 #endregion
 
-namespace ConcreteEngine.Editor.Components.Data;
+namespace ConcreteEngine.Editor.Data;
 
 public struct CameraDataState
 {

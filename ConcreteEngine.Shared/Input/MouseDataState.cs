@@ -11,4 +11,10 @@ public struct MouseDataState
     public bool LeftDown;
     public bool RightDown;
     public bool MiddleDown;
+
+    public void SetPosition(Vector2 position, Vector2 delta)
+    {
+        Position = position;
+        Delta = delta;
+    }
 }

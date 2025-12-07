@@ -26,7 +26,3 @@ public delegate CommandResponse EditorDataCommandDel<TRequest>(in TRequest reque
 
 // Request delegates
 public delegate TResponse ApiEditorRequestDel< out TResponse>(EditorFetchHeader header) where TResponse : class;
-
-public delegate void ApiDataRequest<TRequest>(in TRequest request, out TRequest response)
-    where TRequest : unmanaged;
-    

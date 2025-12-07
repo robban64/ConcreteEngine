@@ -12,42 +12,38 @@ namespace ConcreteEngine.Engine.Editor.Controller;
 
 internal sealed class InteractionController(ApiContext apiContext)
 {
-    private EntityId _selectedEntityId;
 
     private DragEntityState _dragState;
 
     private ref BoxComponent GetBounds(EntityId e) =>
-        ref apiContext.World.Entities.Core.GetBoxById(_selectedEntityId);
+        ref apiContext.World.Entities.Core.GetBoxById(e);
 
 
     public EntityId OnClick(Vector2 mousePosition, out BoundingBox bounds, out float distance)
     {
         var raycaster = apiContext.World.Raycast;
-        var entityId = raycaster.GetEntityByCameraRay(mousePosition, out bounds, out distance);
-        if (entityId == default) return default;
+        var entity = raycaster.GetEntityByCameraRay(mousePosition, out bounds, out distance);
+        if (entity == default) return default;
 
-        return _selectedEntityId = WorldActionSlot.SelectedEntityId = entityId;
+        return entity;
     }
 
-    public EntityId OnDragEntity(Vector2 mousePosition)
+    public EntityId OnDragEntity(EntityId entity, Vector2 mousePosition)
     {
-        if (_selectedEntityId == default) return default;
-
         if (!_dragState.IsDragging && !_dragState.WasDragging)
-            OnDragStart(mousePosition);
+            OnDragStart(entity, mousePosition);
         else if (!_dragState.IsDragging && _dragState.WasDragging)
             OnDragEnd(mousePosition);
         else if (_dragState.IsDragging)
-            OnDragUpdate(mousePosition);
+            OnDragUpdate(entity, mousePosition);
         else
             OnDragEnd(mousePosition);
 
-        return _selectedEntityId;
+        return entity;
     }
 
-    private void OnDragStart(Vector2 mousePosition)
+    private void OnDragStart(EntityId entity, Vector2 mousePosition)
     {
-        if (_selectedEntityId == default) return;
         var world = apiContext.World;
 
         var pointOnTerrain = world.Raycast.GetPointOnTerrain(mousePosition, out _);
@@ -57,10 +53,8 @@ internal sealed class InteractionController(ApiContext apiContext)
         _dragState.WasDragging = false;
     }
 
-    private void OnDragUpdate(Vector2 mousePosition)
+    private void OnDragUpdate(EntityId entity, Vector2 mousePosition)
     {
-        if (_selectedEntityId == default) return;
-
         var world = apiContext.World;
         world.Camera.Raycaster.CreateRayFrom(mousePosition, out var ray);
 
@@ -73,8 +67,8 @@ internal sealed class InteractionController(ApiContext apiContext)
         float t = (_dragState.DragStart.Y - ray.Position.Y) / denom;
         if (t < 0) return;
 
-        ref var transform = ref world.Entities.Core.GetTransformById(_selectedEntityId);
-        ref readonly var bounds = ref GetBounds(_selectedEntityId);
+        ref var transform = ref world.Entities.Core.GetTransformById(entity);
+        ref readonly var bounds = ref GetBounds(entity);
 
         var newPoint = ray.GetPointOnRay(t);
         var tHeight = world.Terrain.GetSmoothHeight(newPoint.X, newPoint.Z);
@@ -91,7 +85,7 @@ internal sealed class InteractionController(ApiContext apiContext)
         _dragState = default;
     }
 
-    private Vector3 DragEntityTerrain(Vector2 mousePosition)
+    private Vector3 DragEntityTerrain(EntityId entity,Vector2 mousePosition)
     {
         var world = apiContext.World;
         world.Camera.Raycaster.CreateRayFrom(mousePosition, out var ray);
@@ -105,7 +99,7 @@ internal sealed class InteractionController(ApiContext apiContext)
         float t = (_dragState.DragStart.Y - ray.Position.Y) / denom;
         if (t < 0) return default;
 
-        ref readonly var bounds = ref GetBounds(_selectedEntityId);
+        ref readonly var bounds = ref GetBounds(entity);
 
         var newPoint = ray.GetPointOnRay(t);
         var tHeight = world.Terrain.GetSmoothHeight(newPoint.X, newPoint.Z);

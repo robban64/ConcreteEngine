@@ -68,75 +68,55 @@ internal static class EditorInput
     public static void UpdateMouse(float delta)
     {
         var mousePos = ImGui.GetMousePos();
-        var mouseDelta = mousePos - _prevMousePos;
-        var deltaAbs = Vector2.Abs(mouseDelta);
+        var deltaAbs = Vector2.Abs(mousePos - _prevMousePos);
 
         _isDragging = ImGui.IsMouseDragging(ImGuiMouseButton.Left);
         var isClick = ImGui.IsMouseClicked(ImGuiMouseButton.Left);
         var isReleased = ImGui.IsMouseReleased(ImGuiMouseButton.Left);
 
-        var entityModel = ModelManager.EntitiesStateContext;
-        var entityState = entityModel.State!;
-
+        EditorDataStore.Input.MouseState.SetPosition(mousePos, deltaAbs);
 
         if (isReleased && !_wasDragging)
         {
-            HandleClick(mousePos);
+            HandleClick();
         }
         else if (_isDragging)
         {
             if (!_wasDragging)
-                HandleClick(mousePos);
+                HandleClick();
 
-            HandleDrag(mousePos, deltaAbs);
+            HandleDrag(deltaAbs);
         }
 
         _wasDragging = _isDragging;
         _prevMousePos = mousePos;
     }
 
-    private static void HandleClick(Vector2 mousePos)
+    private static void HandleClick()
     {
-        var entityModel = ModelManager.EntitiesStateContext;
-        var entityState = entityModel.State!;
-        var selectedEntity = entityState.SelectedEntity;
+        ref var state = ref EditorDataStore.Input.EditorSelection;
+        state.Action = EditorMouseAction.RaycastSelect;
+        state.RefreshTime();
+    }
 
-        var payload = new EditorWorldMouseData
+    private static void HandleDrag(Vector2 deltaAbs)
+    {
+        ref var state = ref EditorDataStore.Input.EditorSelection;
+        if (state.Id < 1)
         {
-            MousePosition = mousePos,
-            Action = EditorMouseAction.SelectEntity
-        };
-        EditorApi.SendEditorMouseRequest(in payload, out payload);
-
-        if (selectedEntity?.Id.Identifier == payload.EntityId) return;
-        if (payload.EntityId == 0 && selectedEntity != null)
-        {
-            entityState.SetSelectedEntity(EditorId.Empty);
-            //entityModel.EnqueueRefreshNextFrame();
+            state.Action = EditorMouseAction.None;
+            state.RefreshTime();
             return;
         }
 
-        entityModel.TriggerEvent(EventKey.SelectionChanged, entityState.FindEntity(payload.EntityId));
-    }
-
-    private static void HandleDrag(Vector2 mousePos, Vector2 deltaAbs)
-    {
-        var entityModel = ModelManager.EntitiesStateContext;
-        var entityState = entityModel.State!;
-
         var hasDelta = deltaAbs.X > 0 || deltaAbs.Y > 0;
-        if (entityState.SelectedEntity == null || !hasDelta) return;
-
-        var payload = new EditorWorldMouseData
+        if (!hasDelta)
         {
-            MousePosition = mousePos,
-            Action = EditorMouseAction.DragEntityOverTerrain
-        };
-        EditorApi.SendEditorMouseRequest(in payload, out payload);
-        if (payload.EntityId == 0)
-        {
-            entityState.SetSelectedEntity(EditorId.Empty);
-            //entityModel.EnqueueRefreshNextFrame();
+            state.RefreshTime();
+            return;
         }
+
+        state.Action = EditorMouseAction.RaycastDragTerrain;
+        state.RefreshTime();
     }
 }

@@ -1,7 +1,6 @@
 #region
 
 using System.Runtime.InteropServices;
-using ConcreteEngine.Editor.Components.Data;
 using ConcreteEngine.Editor.Data;
 using ConcreteEngine.Editor.Store;
 using ConcreteEngine.Editor.Store.Resources;
@@ -58,11 +57,11 @@ internal sealed class EntityApiController(ApiContext apiContext)
     {
         if (entity == 0)
         {
-            WorldActionSlot.SelectedEntityId = new EntityId(0);
+            WorldInteractive.SelectedEntityId = new EntityId(0);
             return;
         }
 
-        WorldActionSlot.SelectedEntityId =  entity;
+        WorldInteractive.SelectedEntityId =  entity;
         
         var view = Entities.Core.GetEntityView(entity);
         data.EntityId = entity;

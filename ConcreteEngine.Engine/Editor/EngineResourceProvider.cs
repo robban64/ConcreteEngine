@@ -1,12 +1,13 @@
 #region
 
-using ConcreteEngine.Editor.Components.Data;
 using ConcreteEngine.Editor.Data;
 using ConcreteEngine.Editor.Definitions;
 using ConcreteEngine.Editor.Store.Resources;
 using ConcreteEngine.Engine.Assets;
 using ConcreteEngine.Engine.Assets.Data;
 using ConcreteEngine.Engine.Editor.Controller;
+using ConcreteEngine.Engine.Editor.Diagnostics;
+using ConcreteEngine.Shared.Diagnostics;
 
 #endregion
 
@@ -27,12 +28,10 @@ internal static class EngineResourceProvider
         _interactionController = interactionController;
     }
 
-    private static bool _hasInitAssets = false;
 
     public static List<EditorAssetResource> CreateEditorAssets()
     {
         if (_assetSystem is null) throw new InvalidOperationException("EngineDataProvider is not initialized.");
-        if (_hasInitAssets) throw new InvalidOperationException("CreateEditorAssets has already been executed.");
 
         var store = _assetSystem.StoreImpl;
         var result = new List<EditorAssetResource>(store.Count);
@@ -40,8 +39,7 @@ internal static class EngineResourceProvider
             result.Add(EditorObjectMapper.MakeAssetObjectModel(obj));
 
 
-        _hasInitAssets = true;
-
+        Logger.LogString(LogScope.Engine, $"Editor asset loaded - {result.Count}");
         return result;
     }
 
@@ -66,22 +64,10 @@ internal static class EngineResourceProvider
         return result;
     }
 
-    public static List<EditorEntityResource> CreateEntityList() => _entityController.CreateEntityList();
-
-    public static void OnEditorClick(in EditorWorldMouseData request, out EditorWorldMouseData response)
+    public static List<EditorEntityResource> CreateEntityList()
     {
-        switch (request.Action)
-        {
-            case EditorMouseAction.SelectEntity:
-                response = request;
-                response.EntityId = _interactionController.OnClick(request.MousePosition, out _, out _);
-                break;
-            case EditorMouseAction.DragEntityOverTerrain:
-                response = request;
-                response.EntityId = _interactionController.OnDragEntity(request.MousePosition);
-                break;
-            default:
-                throw new ArgumentOutOfRangeException();
-        }
+        var entities = _entityController.CreateEntityList();
+        Logger.LogString(LogScope.Engine, $"Editor entities loaded - {entities.Count}");
+        return entities;
     }
 }

@@ -2,9 +2,9 @@
 
 using System.Numerics;
 using ConcreteEngine.Common.Numerics.Maths;
-using ConcreteEngine.Editor.Components.Data;
 using ConcreteEngine.Editor.Components.State;
 using ConcreteEngine.Editor.Core;
+using ConcreteEngine.Editor.Data;
 using ConcreteEngine.Editor.Definitions;
 using ConcreteEngine.Editor.Store;
 using ConcreteEngine.Editor.Store.Resources;
@@ -30,7 +30,7 @@ internal static class EntitiesComponent
 
     private static ReadOnlySpan<EditorEntityResource> EntitySpan => EditorManagedStore.EntityResourceSpan;
 
-    private static ref EntityDataState DataState => ref EditorDataStore.StateSlot.SelectedEntityState;
+    private static ref EntityDataState DataState => ref EditorDataStore.StateSlot.EntityState;
 
     private static void OnSelectEntity(EditorEntityResource entity)
     {

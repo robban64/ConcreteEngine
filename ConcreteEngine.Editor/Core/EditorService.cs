@@ -4,6 +4,7 @@ using System.Numerics;
 using ConcreteEngine.Common.Time;
 using ConcreteEngine.Editor.Definitions;
 using ConcreteEngine.Editor.Layout;
+using ConcreteEngine.Editor.Store;
 using ConcreteEngine.Editor.Utils;
 using ImGuiNET;
 
@@ -19,9 +20,21 @@ internal static class EditorService
 
     private static EditorModeState ModeState => StateContext.ModeState;
 
+    private static void PrepareFrame()
+    {
+        ref var selection = ref EditorDataStore.Input.EditorSelection;
+        var prevSelection = selection.Id;
+        EditorDataStore.Input.EditorSelection.ClearFrame();
+        selection.Id = EditorDataStore.StateSlot.SelectedId;
+        
+        if(prevSelection == selection.Id) return;
+        selection.IsRequesting = true;
+    }
 
     internal static void Render(float delta, bool blockInput)
     {
+        PrepareFrame();
+
         if (!blockInput)
         {
             if (!EditorInput.IsMouseOverEditor())

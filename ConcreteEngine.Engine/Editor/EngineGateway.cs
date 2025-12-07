@@ -142,14 +142,14 @@ internal sealed class EngineGateway : IDisposable
         switch (_ticker++)
         {
             case 0: MetricsApi.RefreshSceneMetrics(); break;
-            case 2: MetricsApi.RefreshGfxResourceMetrics(); break;
-            case >= 4:
+            case 4: MetricsApi.RefreshGfxResourceMetrics(); break;
+            case >= 8:
                 MetricsApi.RefreshAssetMetrics();
                 _ticker = 0;
                 break;
         }
         
-        if (_slowTicker++ >= 8)
+        if (_slowTicker++ >= 16)
         {
             _slowTicker = 0;
             MetricsApi.RefreshMemoryMetrics();
@@ -215,7 +215,6 @@ internal sealed class EngineGateway : IDisposable
             EditorApi.LoadAssetResources = EngineResourceProvider.CreateEditorAssets;
             EditorApi.LoadEntityResources = EngineResourceProvider.CreateEntityList;
 
-            EditorApi.SendEditorMouseRequest = EngineResourceProvider.OnEditorClick;
         }
 
 

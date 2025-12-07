@@ -14,7 +14,7 @@ internal static class DrawTagResolver
             entity.SetAnimationSlot(query.Index + 1);
         }
         
-        var selected = WorldActionSlot.SelectedEntityId;
+        var selected = WorldInteractive.SelectedEntityId;
         if (selected > 0)
         {
             var idx = ctx.ByEntityIdSpan[selected];

@@ -1,7 +1,6 @@
 #region
 
 using ConcreteEngine.Common.Numerics;
-using ConcreteEngine.Editor.Components.Data;
 using ConcreteEngine.Engine.Editor.Data;
 using ConcreteEngine.Engine.Time;
 using ConcreteEngine.Engine.Worlds.Entities;

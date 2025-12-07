@@ -6,7 +6,7 @@ using ConcreteEngine.Common.Numerics.Maths;
 using ConcreteEngine.Editor.Components.Data;
 using ConcreteEngine.Engine.Worlds.Data;
 using ConcreteEngine.Renderer.State;
-using ConcreteEngine.Shared.TransformData;
+using ConcreteEngine.Shared.World;
 
 #endregion
 

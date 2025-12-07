@@ -2,7 +2,6 @@
 
 using ConcreteEngine.Common.Numerics;
 using ConcreteEngine.Editor.Definitions;
-using ConcreteEngine.Shared.TransformData;
 
 #endregion
 

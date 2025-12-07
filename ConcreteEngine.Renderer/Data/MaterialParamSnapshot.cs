@@ -4,7 +4,7 @@ using System.Numerics;
 using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
 using ConcreteEngine.Common.Numerics;
-using ConcreteEngine.Shared.RenderData;
+using ConcreteEngine.Shared.Rendering;
 
 #endregion
 

@@ -12,8 +12,7 @@ using ConcreteEngine.Engine.Worlds.Render;
 using ConcreteEngine.Engine.Worlds.Tables;
 using ConcreteEngine.Engine.Worlds.View;
 using ConcreteEngine.Graphics.Gfx;
-using ConcreteEngine.Shared.RenderData;
-using ConcreteEngine.Shared.TransformData;
+using ConcreteEngine.Shared.Rendering;
 
 #endregion
 

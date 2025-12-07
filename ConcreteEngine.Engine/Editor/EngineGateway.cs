@@ -25,7 +25,6 @@ using Silk.NET.Windowing;
 
 using ConcreteEngine.Engine.Editor.Controller;
 using ConcreteEngine.Renderer.State;
-using ConcreteEngine.Shared.RenderData;
 using EditorCmd = ConcreteEngine.Editor.CommandDispatcher;
 
 #endregion

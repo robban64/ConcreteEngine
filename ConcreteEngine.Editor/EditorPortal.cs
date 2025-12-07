@@ -22,7 +22,6 @@ public sealed class EditorPortal : IDisposable
 
     public EditorPortal(GL gl, IWindow window, IInputContext inputCtx)
     {
-        var d = EditorDataStore.CameraData;
         var fontPath = Path.Combine(AppContext.BaseDirectory, "Content", "Roboto-Medium.ttf");
         ImGuiFontConfig fontConfDefault = new(fontPath, 14);
 

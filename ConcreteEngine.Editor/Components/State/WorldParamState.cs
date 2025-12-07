@@ -2,7 +2,7 @@
 
 using ConcreteEngine.Editor.Data;
 using ConcreteEngine.Editor.Definitions;
-using ConcreteEngine.Shared.RenderData;
+using ConcreteEngine.Shared.Rendering;
 
 #endregion
 

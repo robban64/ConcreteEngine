@@ -5,7 +5,7 @@ using ConcreteEngine.Common.Numerics;
 
 #endregion
 
-namespace ConcreteEngine.Shared.TransformData;
+namespace ConcreteEngine.Shared.World;
 
 public struct TransformData(in Vector3 translation, in Vector3 scale, in Quaternion rotation)
 {

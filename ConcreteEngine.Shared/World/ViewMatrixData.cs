@@ -4,7 +4,7 @@ using System.Numerics;
 
 #endregion
 
-namespace ConcreteEngine.Shared.TransformData;
+namespace ConcreteEngine.Shared.World;
 
 public struct ViewMatrixData(
     in Matrix4x4 modelMatrix,

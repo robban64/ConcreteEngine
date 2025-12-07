@@ -5,7 +5,7 @@ using System.Runtime.InteropServices;
 
 #endregion
 
-namespace ConcreteEngine.Shared.RenderData;
+namespace ConcreteEngine.Shared.Rendering;
 
 [StructLayout(LayoutKind.Sequential)]
 public struct DirLightParams(Vector3 direction, Vector3 diffuse, float intensity, float specular)

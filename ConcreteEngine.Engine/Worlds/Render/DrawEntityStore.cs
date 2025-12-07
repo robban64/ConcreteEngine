@@ -10,7 +10,7 @@ using ConcreteEngine.Engine.Worlds.Render.Data;
 using ConcreteEngine.Engine.Worlds.Tables;
 using ConcreteEngine.Renderer.Draw;
 using ConcreteEngine.Renderer.State;
-using ConcreteEngine.Shared.TransformData;
+using ConcreteEngine.Shared.World;
 
 #endregion
 

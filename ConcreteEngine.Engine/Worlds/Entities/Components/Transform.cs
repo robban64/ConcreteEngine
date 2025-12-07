@@ -1,6 +1,6 @@
 using System.Numerics;
 using System.Runtime.CompilerServices;
-using ConcreteEngine.Shared.TransformData;
+using ConcreteEngine.Shared.World;
 
 namespace ConcreteEngine.Engine.Worlds.Entities.Components;
 

@@ -9,7 +9,7 @@ using ConcreteEngine.Engine.Assets;
 using ConcreteEngine.Engine.Assets.Data;
 using ConcreteEngine.Engine.Editor.Controller;
 using ConcreteEngine.Engine.Worlds;
-using ConcreteEngine.Shared.RenderData;
+using ConcreteEngine.Shared.Rendering;
 
 #endregion
 

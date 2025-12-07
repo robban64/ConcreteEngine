@@ -5,7 +5,7 @@ using ConcreteEngine.Common.Numerics;
 
 #endregion
 
-namespace ConcreteEngine.Shared.RenderData;
+namespace ConcreteEngine.Shared.Rendering;
 
 [StructLayout(LayoutKind.Sequential)]
 public struct MaterialParameters

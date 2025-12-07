@@ -2,7 +2,7 @@
 
 using System.Numerics;
 using ConcreteEngine.Renderer.Utility;
-using ConcreteEngine.Shared.TransformData;
+using ConcreteEngine.Shared.World;
 
 #endregion
 

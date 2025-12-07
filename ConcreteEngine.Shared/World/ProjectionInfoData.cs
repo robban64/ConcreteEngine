@@ -1,4 +1,4 @@
-namespace ConcreteEngine.Shared.TransformData;
+namespace ConcreteEngine.Shared.World;
 
 public struct ProjectionInfoData(float aspectRatio, float fov, float near, float far)
 {

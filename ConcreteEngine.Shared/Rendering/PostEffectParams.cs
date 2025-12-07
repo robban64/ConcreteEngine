@@ -4,7 +4,7 @@ using System.Runtime.InteropServices;
 
 #endregion
 
-namespace ConcreteEngine.Shared.RenderData;
+namespace ConcreteEngine.Shared.Rendering;
 
 [StructLayout(LayoutKind.Sequential)]
 public struct PostEffectParams(

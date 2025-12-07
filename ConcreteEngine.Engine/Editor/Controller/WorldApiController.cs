@@ -5,8 +5,7 @@ using ConcreteEngine.Editor.Components.Data;
 using ConcreteEngine.Editor.Data;
 using ConcreteEngine.Engine.Worlds;
 using ConcreteEngine.Engine.Worlds.View;
-using ConcreteEngine.Shared.RenderData;
-using ConcreteEngine.Shared.TransformData;
+using ConcreteEngine.Shared.Rendering;
 
 #endregion
 

@@ -1,8 +1,11 @@
 namespace ConcreteEngine.Graphics;
 
-public readonly record struct OpenGlVersion(int Major, int Minor)
+public readonly struct OpenGlVersion(int major, int minor)
 {
     public int Version => Major * 100 + Minor * 10;
+    public readonly int Major = major;
+    public readonly int Minor = minor;
+
 }
 
 public sealed record DeviceCapabilities

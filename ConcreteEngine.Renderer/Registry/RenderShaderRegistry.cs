@@ -22,7 +22,7 @@ internal sealed class RenderShaderRegistry : IRenderShaderRegistry
 
     private int _count = 0;
 
-    private RenderShader[] _shaderRegistry = Array.Empty<RenderShader>();
+    private RenderShader[] _shaderRegistry = [];
 
     private RenderCoreShaders _coreShaders;
 

@@ -7,5 +7,6 @@ internal enum EngineStateLevel : byte
     LoadingAssets = 2,
     InitializeSystem = 3,
     LoadScenes = 4,
-    Running = 5
+    LoadEditor = 5,
+    Running = 6
 }

@@ -46,7 +46,7 @@ internal sealed class GfxMeshBuilder : IGfxMeshBuilder
         _phase = Phase.Started;
     }
 
-    public MeshLayout Finish()
+    public MeshLayout Finish( )
     {
         InvalidOpThrower.ThrowIfNot(_state.MeshId.IsValid());
         EnsureStarted();
@@ -59,7 +59,6 @@ internal sealed class GfxMeshBuilder : IGfxMeshBuilder
 
         _gfxMeshes = null!;
         _gfxBuffers = null!;
-
         return result;
     }
 
@@ -173,7 +172,7 @@ internal sealed class GfxMeshBuilder : IGfxMeshBuilder
 
 internal sealed class MeshBuildState
 {
-    private VertexAttribute[] _attributes = Array.Empty<VertexAttribute>();
+    private VertexAttribute[] _attributes = [];
 
     public int AttribCount { get; set; }
     public int VboCount { get; set; }

@@ -18,6 +18,6 @@ public readonly struct GfxFrameInfo(
 
 public readonly struct GfxFrameResult(int drawCalls, int triangleCount)
 {
-    public int DrawCalls { get; init; } = drawCalls;
-    public int TriangleCount { get; init; } = triangleCount;
+    public readonly int DrawCalls = drawCalls;
+    public readonly int TriangleCount  = triangleCount;
 }

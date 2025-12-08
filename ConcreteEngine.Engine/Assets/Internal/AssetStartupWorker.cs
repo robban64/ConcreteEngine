@@ -2,7 +2,11 @@
 
 using System.Diagnostics.CodeAnalysis;
 using ConcreteEngine.Common;
+using ConcreteEngine.Engine.Assets.Data;
 using ConcreteEngine.Engine.Assets.Descriptors;
+using ConcreteEngine.Engine.Assets.Models;
+using ConcreteEngine.Engine.Assets.Shaders;
+using ConcreteEngine.Engine.Assets.Textures;
 
 #endregion
 
@@ -21,10 +25,13 @@ internal sealed class AssetStartupWorker
         Finished
     }
 
-    private Action<ShaderDescriptor, bool> _loadShaderFunc = null!;
-    private Action<TextureDescriptor, bool> _loadTextureFunc = null!;
-    private Action<CubeMapDescriptor, bool> _loadCubeMapFunc = null!;
-    private Action<MeshDescriptor, bool> _loadMeshFunc = null!;
+    private delegate TAsset AssetLoadModuleDel<out TAsset, in TDesc>(TDesc desc, bool isCore)
+        where TAsset : AssetObject where TDesc : class, IAssetDescriptor;
+
+    private AssetLoadModuleDel<Shader, ShaderDescriptor> _loadShaderFunc = null!;
+    private AssetLoadModuleDel<Texture2D,TextureDescriptor> _loadTextureFunc = null!;
+    private AssetLoadModuleDel<CubeMap,CubeMapDescriptor> _loadCubeMapFunc = null!;
+    private AssetLoadModuleDel<Model,MeshDescriptor> _loadMeshFunc = null!;
     private Action<MaterialManifest> _loadMaterialFunc = null!;
 
     private readonly AssetLoader _loader;
@@ -38,9 +45,9 @@ internal sealed class AssetStartupWorker
 
     public AssetStartupWorker(AssetLoader loader, AssetConfigLoader configLoader, AssetManifest manifest)
     {
-        ArgumentNullException.ThrowIfNull(loader, nameof(loader));
-        ArgumentNullException.ThrowIfNull(configLoader, nameof(configLoader));
-        ArgumentNullException.ThrowIfNull(manifest, nameof(manifest));
+        ArgumentNullException.ThrowIfNull(loader);
+        ArgumentNullException.ThrowIfNull(configLoader);
+        ArgumentNullException.ThrowIfNull(manifest);
 
         _loader = loader;
         _configLoader = configLoader;
@@ -102,17 +109,16 @@ internal sealed class AssetStartupWorker
         {
             case ProcessStepOrder.NotStarted:
             case ProcessStepOrder.Shaders:
-                ProcessManifestStep<ShaderManifest, ShaderDescriptor>(_loadShaderFunc,
-                    CoreShaderManifest.GetManifest.Records);
+                ProcessManifestStep(_loadShaderFunc, CoreShaderManifest.GetManifest.Records);
                 break;
             case ProcessStepOrder.Textures:
-                ProcessManifestStep<TextureManifest, TextureDescriptor>(_loadTextureFunc);
+                ProcessManifestStep(_loadTextureFunc);
                 break;
             case ProcessStepOrder.CubeMaps:
-                ProcessManifestStep<CubeMapManifest, CubeMapDescriptor>(_loadCubeMapFunc);
+                ProcessManifestStep(_loadCubeMapFunc);
                 break;
             case ProcessStepOrder.Meshes:
-                ProcessManifestStep<MeshManifest, MeshDescriptor>(_loadMeshFunc);
+                ProcessManifestStep(_loadMeshFunc);
                 break;
             case ProcessStepOrder.Materials:
                 ProcessEntireManifest(_loadMaterialFunc);
@@ -129,13 +135,12 @@ internal sealed class AssetStartupWorker
 
     private T CurrentManifest<T>() where T : class, IAssetCatalog => (T)_currentManifest!;
 
-    private IReadOnlyList<TDesc> CurrentRecords<TCatalog, TDesc>()
-        where TCatalog : class, IAssetCatalog where TDesc : class, IAssetDescriptor =>
-        (IReadOnlyList<TDesc>)CurrentManifest<TCatalog>().Records;
+    private IReadOnlyList<TDesc> CurrentRecords<TDesc>() where TDesc : class, IAssetDescriptor =>
+        (IReadOnlyList<TDesc>)_currentManifest!.Records;
 
 
-    private void ProcessManifestStep<TCatalog, TDesc>(Action<TDesc, bool> onStartStep, TDesc[]? coreManifest = null)
-        where TCatalog : class, IAssetCatalog where TDesc : class, IAssetDescriptor
+    private void ProcessManifestStep<TAsset, TDesc>(AssetLoadModuleDel<TAsset, TDesc> onStartStep, TDesc[]? coreManifest = null)
+        where TAsset : AssetObject where TDesc : class, IAssetDescriptor
     {
         if (_idx == 0) _currentManifest = NextManifest();
         var coreLength = coreManifest?.Length ?? 0;
@@ -145,14 +150,14 @@ internal sealed class AssetStartupWorker
             return;
         }
 
-        var records = CurrentRecords<TCatalog, TDesc>();
+        var records = CurrentRecords<TDesc>();
         if (records.Count == 0)
         {
             NextStepOrder();
             return;
         }
 
-        onStartStep(CurrentRecords<TCatalog, TDesc>()[_idx++], false);
+        onStartStep(CurrentRecords<TDesc>()[_idx++], false);
         if (_idx < _currentManifest!.Count + coreLength) return;
         NextStepOrder();
     }

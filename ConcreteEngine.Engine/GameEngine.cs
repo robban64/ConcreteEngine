@@ -1,5 +1,6 @@
 #region
 
+using System.Diagnostics;
 using ConcreteEngine.Common.Patterns;
 using ConcreteEngine.Engine.Assets;
 using ConcreteEngine.Engine.Configuration;
@@ -11,6 +12,7 @@ using ConcreteEngine.Engine.Scene;
 using ConcreteEngine.Engine.Scene.Modules;
 using ConcreteEngine.Engine.Time;
 using ConcreteEngine.Engine.Time.Tickers;
+using ConcreteEngine.Engine.Utils;
 using ConcreteEngine.Engine.Worlds;
 using ConcreteEngine.Engine.Worlds.Render;
 using ConcreteEngine.Graphics;
@@ -48,7 +50,7 @@ public sealed class GameEngine : IDisposable
 
     private bool _isDisposed = false;
 
-    private LinearStateMachine<EngineStateLevel> _stateMachine;
+    private EngineSetupStepper _setupStepper = new(7);
 
     internal GameEngine(
         EngineWindow engineWindow,
@@ -79,7 +81,6 @@ public sealed class GameEngine : IDisposable
         _coreSystems = new EngineCoreSystem(_worldRenderer, _inputSystem, _assets);
 
 
-        _stateMachine = new LinearStateMachine<EngineStateLevel>(Enum.GetValues<EngineStateLevel>());
 
         var internalInput = input.InputContext;
         _engineGateway =
@@ -116,7 +117,7 @@ public sealed class GameEngine : IDisposable
 
     internal void Render(float dt)
     {
-        var alpha = _timeHub.Alpha;
+        var alpha = EngineTime.GameTime.Alpha;
 
         var frameStatus = _renderFrameInfo.BeginRenderFrame(dt, alpha, _window, _inputSystem.InputSource,
             out var frameInfo, out var runtimeParams);
@@ -145,18 +146,20 @@ public sealed class GameEngine : IDisposable
         _worldRenderer.ExecuteFrame(out var gfxFrameResult);
         _renderFrameInfo.EndRenderFrame(gfxFrameResult);
 
-        _engineGateway.RenderEditor(in frameInfo);
+        if (_engineGateway.Active)
+            _engineGateway.RenderEditor(in frameInfo);
     }
 
     internal void Update(float dt)
     {
         var outputSize = _window.OutputSize;
         _updateInfo.BeginUpdateFrame(dt, _window.WindowSize, outputSize);
-        ref readonly var updateInfo = ref _updateInfo.UpdateTickInfo;
+        var updateInfo = _updateInfo.UpdateTickInfo;
 
-        _inputSystem.Update(!_engineGateway.BlockInput());
+        if (_engineGateway.Active)
+            _inputSystem.Update(!_engineGateway.BlockInput());
 
-        if (_stateMachine.Current != EngineStateLevel.Running)
+        if (_setupStepper.Current != EngineStateLevel.Running)
         {
             RunSetupStateMachine();
             return;
@@ -176,26 +179,18 @@ public sealed class GameEngine : IDisposable
         _timeHub.AdvanceTick(dt);
 
         _world?.StartUpdate(outputSize, dt);
-        _sceneManager.Current?.Update(in updateInfo);
+        _sceneManager.Current?.Update(updateInfo);
     }
 
     private void GameTickUpdate(UpdateTickArgs args)
     {
         _updateInfo.UpdateTick(args.Tick, args.FixedDt);
 
-        if (_sceneManager.Current == null)
-        {
-            UpdateSceneTransitionIfNeeded();
-            return;
-        }
-
         _world.StartTick(args.FixedDt, _renderFrameInfo.Time);
 
-        _sceneManager.Current.UpdateTick(args.Tick, args.FixedDt);
+        _sceneManager.Current?.UpdateTick(args.Tick, args.FixedDt);
 
         _world.EndTick();
-
-        UpdateSceneTransitionIfNeeded();
     }
 
     private void SimulationTickUpdate(UpdateTickArgs args)
@@ -205,30 +200,37 @@ public sealed class GameEngine : IDisposable
 
     private void LogTickUpdate(UpdateTickArgs args)
     {
-        _engineGateway.UpdateDiagnostics(args);
+        if (_engineGateway.Active)
+            _engineGateway.UpdateDiagnostics(args);
     }
 
     private void RunSetupStateMachine()
     {
-        switch (_stateMachine.Current)
+        switch (_setupStepper.Current)
         {
             case EngineStateLevel.NotStarted:
-                _stateMachine.Next();
+                _setupStepper.Next();
                 break;
             case EngineStateLevel.LoadingGraphics:
                 StartAssetLoader();
-                _stateMachine.Next();
+                _setupStepper.Next();
                 break;
             case EngineStateLevel.LoadingAssets:
-                _stateMachine.Next(_assets.ProcessLoader(8));
+                _setupStepper.Next(_assets.ProcessLoader(8));
                 break;
             case EngineStateLevel.InitializeSystem:
                 InitializeSystems();
-                _stateMachine.Next();
+                _setupStepper.Next();
                 break;
             case EngineStateLevel.LoadScenes:
                 _sceneManager.QueueSwitch(0);
-                _stateMachine.Next();
+                UpdateSceneTransitionIfNeeded();
+                _setupStepper.Next();
+                break;
+            case EngineStateLevel.LoadEditor:
+                if (_sceneManager.Current == null) throw new InvalidOperationException();
+                _engineGateway.SetupEditor(_editorQueues, _world, _assets, _renderFrameInfo);
+                _setupStepper.Next();
                 break;
         }
     }
@@ -250,8 +252,6 @@ public sealed class GameEngine : IDisposable
         });
 
         _modules.Load(new GameModuleContext(sceneContext));
-        
-        _engineGateway.SetupEditor(_editorQueues, _world, _assets, _renderFrameInfo);
     }
 
     internal void Close()

@@ -11,18 +11,8 @@ using ConcreteEngine.Graphics.OpenGL;
 
 namespace ConcreteEngine.Graphics;
 
-public interface IGraphicsRuntime : IDisposable
-{
-    public GfxContext Gfx { get; }
 
-    void Initialize<T>(IGfxStartupConfig<T> config) where T : class;
-    void BeginFrame(in GfxFrameInfo frameCtx);
-    void EndFrame(out GfxFrameResult result);
-
-    void Shutdown();
-}
-
-public sealed class GraphicsRuntime : IGraphicsRuntime
+public sealed class GraphicsRuntime
 {
     private static bool _isInitialized = false;
 
@@ -38,14 +28,12 @@ public sealed class GraphicsRuntime : IGraphicsRuntime
     private GfxFrameBuffers _frameBuffers = null!;
     private GfxCommands _cmd = null!;
 
-
-    private GfxContext _gfxContext = null!;
+    public GfxContext Gfx { get; private set; } = null!;
 
     public GraphicsRuntime()
     {
     }
 
-    public GfxContext Gfx => _gfxContext;
 
     public void Initialize<T>(IGfxStartupConfig<T> config) where T : class
     {
@@ -68,7 +56,7 @@ public sealed class GraphicsRuntime : IGraphicsRuntime
         _frameBuffers = new GfxFrameBuffers(gfxCtxInternal, _textures);
         _cmd = new GfxCommands(gfxCtxInternal);
 
-        _gfxContext = new GfxContext
+        Gfx = new GfxContext
         {
             ResourceManager = _resources,
             Disposer = _disposer,
@@ -94,14 +82,14 @@ public sealed class GraphicsRuntime : IGraphicsRuntime
 
     public void BeginFrame(in GfxFrameInfo frameCtx)
     {
-        _gfxContext.Commands.BeginFrame(in frameCtx);
+        Gfx.Commands.BeginFrame(in frameCtx);
     }
 
     public void EndFrame(out GfxFrameResult result)
     {
         if (_disposer.PendingCount > 0) _disposer.DrainDisposeQueue(_driver);
 
-        _gfxContext.Commands.EndFrame(out result);
+        Gfx.Commands.EndFrame(out result);
     }
 
     public void Shutdown()

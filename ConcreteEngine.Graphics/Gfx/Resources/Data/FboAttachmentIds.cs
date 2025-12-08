@@ -1,8 +1,14 @@
 namespace ConcreteEngine.Graphics.Gfx.Resources;
 
-public readonly record struct FboAttachmentIds(
-    TextureId ColorTextureId,
-    TextureId DepthTextureId,
-    RenderBufferId ColorRenderBufferId,
-    RenderBufferId DepthRenderBufferId
-);
+public struct FboAttachmentIds(
+    TextureId colorTextureId,
+    TextureId depthTextureId,
+    RenderBufferId colorRenderBufferId,
+    RenderBufferId depthRenderBufferId
+)
+{
+    public TextureId ColorTextureId = colorTextureId;
+    public TextureId DepthTextureId = depthTextureId;
+    public RenderBufferId ColorRenderBufferId = colorRenderBufferId;
+    public RenderBufferId DepthRenderBufferId = depthRenderBufferId;
+}

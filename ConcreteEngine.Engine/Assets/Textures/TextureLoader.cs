@@ -61,7 +61,7 @@ internal sealed class TextureLoader(AssetGfxUploader uploader)
     {
         //StbImage.stbi_set_flip_vertically_on_load(1);
 
-        var path = AssetPaths.GetTexturePath(record.Filename);
+        var path = Path.Combine(AssetPaths.TexturePath,record.Filename);
 
         var fi = new FileInfo(path);
         if (!fi.Exists) throw new FileNotFoundException("File not found.", path);
@@ -113,7 +113,8 @@ internal sealed class TextureLoader(AssetGfxUploader uploader)
 
         for (int i = 0; i < 6; i++)
         {
-            var path = AssetPaths.GetCubeMapPath(record.Textures[i]);
+            var path = Path.Combine(AssetPaths.CubeMapPath, record.Textures[i]);
+
             var fi = new FileInfo(path);
             if (!fi.Exists) throw new FileNotFoundException("File not found.", path);
 

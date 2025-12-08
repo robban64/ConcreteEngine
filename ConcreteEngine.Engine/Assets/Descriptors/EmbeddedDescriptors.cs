@@ -30,7 +30,7 @@ internal sealed class MaterialEmbeddedDescriptor : IAssetEmbeddedDescriptor
 
     public bool IsAnimated { get; set; }
 
-    public AssetFileSpec[] FileSpec { get; set; } = Array.Empty<AssetFileSpec>();
+    public AssetFileSpec[] FileSpec { get; set; } = [];
 
     public Dictionary<string, Guid> EmbeddedTextures { get; } = [];
 
@@ -49,9 +49,9 @@ internal sealed class TextureEmbeddedDescriptor : IAssetEmbeddedDescriptor
     public required int Height { get; set; }
     public required TextureSlotKind SlotKind { get; init; } = TextureSlotKind.Albedo;
     public required TexturePixelFormat PixelFormat { get; init; }
-    public required byte[] PixelData { get; set; } = Array.Empty<byte>();
+    public required byte[] PixelData { get; set; } = [];
 
-    public required AssetFileSpec[] FileSpec { get; set; } = Array.Empty<AssetFileSpec>();
+    public required AssetFileSpec[] FileSpec { get; set; } = [];
 
 
     public Type AssetType => typeof(Texture2D);

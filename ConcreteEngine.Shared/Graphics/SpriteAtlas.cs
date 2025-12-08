@@ -6,7 +6,7 @@ using Silk.NET.Maths;
 
 #endregion
 
-namespace ConcreteEngine.Engine.Utils;
+namespace ConcreteEngine.Shared.Graphics;
 
 public sealed class SpriteAtlas
 {

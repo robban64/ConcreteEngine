@@ -115,13 +115,13 @@ public sealed class TerrainMeshGenerator : MeshGenerator
 
         var props = MeshDrawProperties.MakeElemental(drawCount: drawCount);
         var builder = Gfx.Meshes.StartUploadBuilder(in props);
-        builder.UploadVertices<Vertex3D>(_vertices, BufferUsage.DynamicDraw, BufferStorage.Dynamic,
+        builder.UploadVertices(_vertices, BufferUsage.DynamicDraw, BufferStorage.Dynamic,
             BufferAccess.MapWrite);
 
-        builder.UploadIndices<uint>(_indices, BufferUsage.DynamicDraw, BufferStorage.Dynamic,
+        builder.UploadIndices(_indices, BufferUsage.DynamicDraw, BufferStorage.Dynamic,
             BufferAccess.MapWrite);
 
-        var attribBuilder = new VertexAttributeMaker<Vertex3D>();
+        var attribBuilder = new VertexAttributeMaker();
         builder.AddAttribute(attribBuilder.Make<Vector3>(0));
         builder.AddAttribute(attribBuilder.Make<Vector2>(1));
         builder.AddAttribute(attribBuilder.Make<Vector3>(2));

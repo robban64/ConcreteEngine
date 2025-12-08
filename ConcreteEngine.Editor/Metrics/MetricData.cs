@@ -15,8 +15,8 @@ public sealed class MetricData
     public PairSample MemoryMetrics;
     public CollectionSample MaterialMetrics;
 
-    public DebugGfxStoreMetrics[] GfxStoreMetrics { get; set; } = Array.Empty<DebugGfxStoreMetrics>();
-    public DebugAssetStoreMetrics[] AssetMetrics { get; set; } = Array.Empty<DebugAssetStoreMetrics>();
+    public DebugGfxStoreMetrics[] GfxStoreMetrics { get; set; } = [];
+    public DebugAssetStoreMetrics[] AssetMetrics { get; set; } = [];
 }
 
 public sealed class DebugGfxStoreMetrics(string name, string shortName, byte resourceKind)

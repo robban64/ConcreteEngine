@@ -25,7 +25,7 @@ internal sealed class ModelLoader
 
     public ModelLoaderResult LoadMesh(AssetRef<Model> refId, string name, string fileName, out AssetFileSpec[] fileSpec)
     {
-        var path = AssetPaths.GetMeshPath(fileName);
+        var path = Path.Combine(AssetPaths.MeshPath, fileName);
 
         var fi = new FileInfo(path);
         if (!fi.Exists) throw new FileNotFoundException("File not found.", path);

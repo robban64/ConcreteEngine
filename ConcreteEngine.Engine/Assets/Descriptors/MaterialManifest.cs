@@ -11,14 +11,14 @@ using ConcreteEngine.Renderer.Definitions;
 
 namespace ConcreteEngine.Engine.Assets.Descriptors;
 
-public sealed class MaterialManifest : IAssetCatalog
+internal sealed class MaterialManifest : IAssetCatalog
 {
     public required MaterialDescriptor[] Records { get; init; }
     public int Count => Records.Length;
     IReadOnlyList<IAssetDescriptor> IAssetCatalog.Records => Records;
 }
 
-public sealed class MaterialDescriptor : IAssetDescriptor
+internal sealed class MaterialDescriptor : IAssetDescriptor
 {
     public AssetKind Kind => AssetKind.MaterialTemplate;
 
@@ -31,10 +31,10 @@ public sealed class MaterialDescriptor : IAssetDescriptor
     public bool CastShadows { get; init; } = true;
 
     public MaterialProfile Profile { get; init; } = MaterialProfile.None;
-    public string?[] ProfileSlots { get; init; } = Array.Empty<string?>();
+    public string?[] ProfileSlots { get; init; } = [];
 
     public MaterialParamsDesc Parameters { get; init; } = new();
-    public TextureSlot[] TextureSlots { get; init; } = Array.Empty<TextureSlot>();
+    public TextureSlot[] TextureSlots { get; init; } = [];
 
     //public record struct TextureSlotBinds(bool AlphaMask = false, bool Normals = false, bool Shadows = false);
 

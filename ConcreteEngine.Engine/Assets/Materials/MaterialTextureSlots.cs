@@ -18,7 +18,7 @@ public sealed class MaterialTextureSlots
 
 
     private readonly AssetTextureSlot[] _assetSlots;
-    internal TextureSlotInfo[] CacheSlots { get; set; } = Array.Empty<TextureSlotInfo>();
+    internal TextureSlotInfo[] CacheSlots { get; set; } = [];
 
     public MaterialTextureSlots(ReadOnlySpan<AssetTextureSlot> slots)
     {

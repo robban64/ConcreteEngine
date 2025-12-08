@@ -9,8 +9,10 @@ namespace ConcreteEngine.Engine.Assets.Shaders;
 
 internal record struct ShaderCreationInfo(ShaderId ShaderId, int Samplers);
 
-internal sealed record ShaderPayload(
-    string Vs,
-    string Fs,
-    in AssetFileSpec VertexFileSpec,
-    in AssetFileSpec FragmentFileSpec);
+internal readonly ref struct ShaderPayload( string vs, string fs, AssetFileSpec vertSpec, AssetFileSpec fragSpec)
+{
+    public string Vs { get;  } = vs;
+    public string Fs { get;  } = fs;
+    public AssetFileSpec VertexFileSpec { get;  } = vertSpec;
+    public AssetFileSpec FragmentFileSpec { get;  } = fragSpec;
+}

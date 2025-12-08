@@ -46,14 +46,11 @@ internal sealed class ShaderLoader
             sizeBytes: fragInfo.Length);
 
 
-        return new ShaderPayload(vertResult, fragResult, in vertFileSpec, in fragFileSpec);
+        return new ShaderPayload(vertResult, fragResult, vertFileSpec, fragFileSpec);
     }
 
     public void ClearCache()
     {
-        //_vertexShaderCache.Clear();
-        //_vertexShaderCache = null!;
-
         _shaderImporter.ClearCache();
     }
 

@@ -12,7 +12,7 @@ public sealed class MemoryDataBuffer
 
     public const int MinSize = 1024;
 
-    private byte[] _buffer = Array.Empty<byte>();
+    private byte[] _buffer = [];
     private int _idx = 0;
 
     public int Count => _idx;
@@ -59,7 +59,7 @@ public sealed class MemoryDataBuffer
     public void ClearData()
     {
         _idx = 0;
-        _buffer = Array.Empty<byte>();
+        _buffer = new byte[] { };
     }
 
     private void EnsureCapacity(int capacity)

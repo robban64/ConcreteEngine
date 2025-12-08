@@ -3,6 +3,7 @@
 using System.Numerics;
 using ConcreteEngine.Engine.Utils;
 using ConcreteEngine.Graphics.Gfx.Resources;
+using ConcreteEngine.Shared.Graphics;
 
 #endregion
 

@@ -30,16 +30,16 @@ internal readonly struct TextureUploadMeta(GfxTextureDescriptor textureDesc, Gfx
     public readonly GfxTextureProperties TextureProps = textureProps;
 }
 
-internal sealed class TextureImportResult
+internal ref struct  TextureImportResult
 {
-    public byte[]? Data { get; init; } = null;
+    public byte[]? Data { get; init; }
     public required AssetFileSpec FileSpec { get; init; }
     public required TextureCreationInfo CreationInfo { get; init; }
     public required GfxTextureDescriptor TextureDesc { get; init; }
     public required GfxTextureProperties TextureProps { get; init; }
 }
 
-internal sealed class CubeMapImportResult
+internal ref struct CubeMapImportResult
 {
     public required AssetFileSpec[] FaceFiles { get; init; }
     public required CubeMapCreationInfo CreationInfo { get; init; }

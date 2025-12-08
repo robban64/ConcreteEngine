@@ -35,10 +35,10 @@ internal sealed class AssetConfigLoader
     {
         Logger.LogString(LogScope.Assets, "Loading Asset Manifest...");
 
-        if (!Directory.Exists(AssetPaths.AssetFolder))
-            throw new DirectoryNotFoundException($"Asset '{AssetPaths.AssetFolder}' directory not found.");
+        if (!Directory.Exists(AssetPaths.AssetRoot))
+            throw new DirectoryNotFoundException($"Asset '{AssetPaths.AssetRoot}' directory not found.");
 
-        var path = AssetPaths.GetManifestPath();
+        var path = Path.Combine(AssetPaths.AssetRoot, AssetPaths.ManifestFilename);
 
         if (!File.Exists(path))
             throw new FileNotFoundException($"Manifest '{path}' not found.");
@@ -56,7 +56,7 @@ internal sealed class AssetConfigLoader
     {
         ArgumentNullException.ThrowIfNull(filename, nameof(filename));
 
-        var path = AssetPaths.GetAssetSubPath(filename);
+        var path = Path.Combine(AssetPaths.AssetRoot, filename);
 
         if (!File.Exists(path))
             throw new FileNotFoundException($"Resource manifest {typeof(T).Name} with path {path} does not exists.");

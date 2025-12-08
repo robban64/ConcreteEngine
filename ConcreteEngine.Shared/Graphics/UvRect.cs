@@ -6,7 +6,7 @@ using Silk.NET.Maths;
 
 #endregion
 
-namespace ConcreteEngine.Engine.Utils;
+namespace ConcreteEngine.Shared.Graphics;
 
 public struct UvRect(float U0, float V0, float U1, float V1)
 {

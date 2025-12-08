@@ -22,7 +22,7 @@ public abstract class GameScene
     {
     }
 
-    internal void Update(in UpdateTickInfo frameCtx)
+    internal void Update(UpdateTickInfo frameCtx)
     {
         Context.Modules.Update(in frameCtx);
     }

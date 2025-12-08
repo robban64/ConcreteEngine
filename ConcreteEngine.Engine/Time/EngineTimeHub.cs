@@ -6,21 +6,14 @@ using ConcreteEngine.Engine.Time.Tickers;
 
 namespace ConcreteEngine.Engine.Time;
 
-internal sealed class EngineTimeHub
+internal sealed class EngineTimeHub(
+    UpdateTickDelegate onGameTick,
+    UpdateTickDelegate onSimulationTick,
+    UpdateTickDelegate onLogTick)
 {
-    private readonly GameTickScheduler _gameTickScheduler;
+    
+    private readonly GameTickScheduler _gameTickScheduler = new(onGameTick, onSimulationTick, onLogTick);
     public DebounceTicker? DebounceTicker { get; set; } = null;
-    public RenderTickScheduler RenderTicker { get; } = new();
-
-
-    public EngineTimeHub(UpdateTickDelegate onGameTick, UpdateTickDelegate onSimulationTick,
-        UpdateTickDelegate onLogTick)
-    {
-        _gameTickScheduler = new GameTickScheduler(onGameTick, onSimulationTick, onLogTick);
-    }
-
-    public float Alpha => _gameTickScheduler.Alpha;
-    public float FixedDeltaTime => _gameTickScheduler.FixedDeltaTime;
 
 
     public void AdvanceTick(float dt) => _gameTickScheduler.Advance(dt);

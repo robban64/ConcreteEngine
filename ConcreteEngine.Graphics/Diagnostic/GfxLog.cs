@@ -19,7 +19,7 @@ public static class GfxLog
 
     public static bool TryDrainLog(out LogEvent log) => Logs.TryDequeue(out log);
 
-    private static void Event(in LogEvent log)
+    internal static void Event(in LogEvent log)
     {
         if (!Enabled) return;
         if (Logs.Count >= MaxQueueCapacity)

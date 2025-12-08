@@ -182,8 +182,10 @@ internal sealed class GfxResourceStore<TId, TMeta> : IGfxResourceStore<TId>, IGf
         var len = _meta.Length;
         if (_idx == len)
         {
-            var newCap = Arrays.CapacityGrowthLinear(len, len * 2, step: 32);
-            Console.WriteLine("GfxStore resize");
+            var newCap = Arrays.CapacityGrowthSafe(len, len + 1);
+            GfxLog.Event(new LogEvent(0, 0, newCap, 0, 0, 0, LogTopic.ArrayBuffer, LogScope.Gfx, LogAction.Resize,
+                LogLevel.Warn));
+
             if (newCap > GfxLimits.StoreLimit)
                 throw new InvalidOperationException("Store limit exceeded");
 

@@ -4,9 +4,11 @@ using System.Numerics;
 using ConcreteEngine.Common.Collections;
 using ConcreteEngine.Engine.Assets;
 using ConcreteEngine.Engine.Assets.Models;
+using ConcreteEngine.Engine.Editor.Diagnostics;
 using ConcreteEngine.Engine.Worlds.Data;
 using ConcreteEngine.Engine.Worlds.Render.Data;
 using ConcreteEngine.Renderer.Data;
+using ConcreteEngine.Shared.Diagnostics;
 
 #endregion
 
@@ -146,7 +148,7 @@ internal sealed class AnimationTable
             Array.Resize(ref _nodeTransform, newCap);
             Array.Resize(ref _parentIndices, newCap);
 
-            Console.WriteLine("animation bones resize");
+            Logger.LogString(LogScope.World,$"Animation table bone buffer resize {newCap}", LogLevel.Warn);
         }
 
         if (_modelBoneInvTransform.Length < animationCap)
@@ -157,8 +159,7 @@ internal sealed class AnimationTable
             Array.Resize(ref _idxToModel, newCap);
             Array.Resize(ref _modelBoneInvTransform, newCap);
             Array.Resize(ref _clips, newCap);
-
-            Console.WriteLine("animation clips resize");
+            Logger.LogString(LogScope.World,$"Animation table clip resize {newCap}", LogLevel.Warn);
         }
     }
 }

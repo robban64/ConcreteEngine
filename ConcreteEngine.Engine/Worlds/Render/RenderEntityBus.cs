@@ -2,10 +2,12 @@
 
 using ConcreteEngine.Common;
 using ConcreteEngine.Common.Collections;
+using ConcreteEngine.Engine.Editor.Diagnostics;
 using ConcreteEngine.Engine.Worlds.Data;
 using ConcreteEngine.Engine.Worlds.Render.Data;
 using ConcreteEngine.Engine.Worlds.Render.Processor;
 using ConcreteEngine.Renderer.Definitions;
+using ConcreteEngine.Shared.Diagnostics;
 
 #endregion
 
@@ -16,7 +18,7 @@ internal sealed class RenderEntityBus
     private static int _idx = 0;
     private static int _prevIdx = 0;
 
-    public const int DefaultCapacity = 1024;
+    public const int DefaultCapacity = 512;
     public const int MaxCapacity = 1024 * 50;
 
     //...
@@ -55,15 +57,15 @@ internal sealed class RenderEntityBus
     {
         if (_world is null) return;
 
-        Validate();
-
         EnsureDrawEntityData(DrawCount);
         DrawDataProvider.EnsureBuffer(_world.EntityCount + 64, _world.Entities.Animations.Count);
+
+        Validate();
 
         // start
         CollectEntities();
         TagCollectedEntities(MakeContext());
-        
+
         SubmitWorldObjects();
 
         DrawParticleProcessor.Execute(MakeContext(), _world.Particles);
@@ -76,7 +78,8 @@ internal sealed class RenderEntityBus
 
     private void Validate()
     {
-        if (_entityData.Length == 0 || _entities.Length == 0) return;
+        if (_entityData.Length == 0 || _entities.Length == 0) 
+            throw new InvalidOperationException();
 
         var view = WorldEntities.Core.GetCoreView();
 
@@ -101,7 +104,7 @@ internal sealed class RenderEntityBus
             DrawEntityCollector.CollectEntity(idx, ctx, query.Entity, in query.Source);
             ref var entityData = ref ctx.EntityDataSpan[idx];
             entityData.Transform = query.Transform;
-            entityData.Bounds =  query.Box.Bounds;
+            entityData.Bounds = query.Box.Bounds;
             idx++;
         }
 
@@ -185,6 +188,6 @@ internal sealed class RenderEntityBus
         Array.Resize(ref _entities, newCap);
         Array.Resize(ref _entityData, newCap);
         Array.Resize(ref _byEntityId, newCap);
-        Console.WriteLine($"Entity buffer resize: {newCap}");
+        Logger.LogString(LogScope.World, $"Entity buffer resize {newCap}", LogLevel.Warn);
     }
 }

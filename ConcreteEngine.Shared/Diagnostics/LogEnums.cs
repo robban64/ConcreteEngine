@@ -38,7 +38,8 @@ public enum LogTopic : byte
     Pass = 13,
     CommandList = 14,
     Pipeline = 15,
-    Core = 16
+    Core = 16,
+    ArrayBuffer = 17
 }
 
 public enum LogScope : byte

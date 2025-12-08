@@ -37,6 +37,7 @@ public static class LogEnumExtensions
             LogTopic.Pass => "Pass",
             LogTopic.CommandList => "CommandList",
             LogTopic.Pipeline => "Pipeline",
+            LogTopic.ArrayBuffer => "ArrayBuffer",
             _ => "Unknown"
         };
     }

@@ -39,6 +39,8 @@ public sealed class EngineWindowHost
     {
         _options = options;
         _backend = backend;
+        _options.VSync = false;
+        _options.FramesPerSecond = 144;
     }
 
     public void Run(GameEngineBuilder builder)

@@ -40,6 +40,17 @@ public record struct YawPitch(float Yaw, float Pitch)
     public static YawPitch Lerp(YawPitch a, YawPitch b, float dt) =>
         new(float.Lerp(a.Yaw, b.Yaw, dt), float.Lerp(a.Pitch, b.Pitch, dt));
 
+    public static YawPitch LerpFixed(YawPitch a, YawPitch b, float t)
+    {
+        float yawDelta = b.Yaw - a.Yaw;
+        if (yawDelta > 180f) yawDelta -= 360f;
+        if (yawDelta < -180f) yawDelta += 360f;
+
+        float yaw = a.Yaw + yawDelta * t;
+        float pitch = float.Lerp(a.Pitch, b.Pitch, t);
+
+        return new YawPitch(yaw, pitch);
+    }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static bool NearlyEqual(YawPitch a, YawPitch b, float eps = FloatMath.EpsilonRad) =>

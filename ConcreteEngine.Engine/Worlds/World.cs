@@ -9,6 +9,7 @@ using ConcreteEngine.Engine.Worlds.Render;
 using ConcreteEngine.Engine.Worlds.Tables;
 using ConcreteEngine.Engine.Worlds.View;
 using ConcreteEngine.Graphics.Gfx;
+using ConcreteEngine.Renderer.State;
 using ConcreteEngine.Shared.Rendering;
 
 #endregion
@@ -38,7 +39,6 @@ public sealed class World : IWorld
 {
     public Camera3D Camera { get; }
     public WorldRenderParams WorldRenderParams { get; }
-
     public WorldRaycaster Raycast { get; }
 
     private readonly MeshGeneratorRegistry _meshGenerators;
@@ -105,10 +105,10 @@ public sealed class World : IWorld
         ProcessActions();
     }
 
-    internal void EndTick()
+    internal void EndTick(RenderCamera renderCamera)
     {
         Entities.EndTick();
-        Camera.EndTick();
+        Camera.EndTick(WorldRenderParams.Snapshot, renderCamera);
     }
 
     internal void OnSimulationTick(UpdateTickArgs args)

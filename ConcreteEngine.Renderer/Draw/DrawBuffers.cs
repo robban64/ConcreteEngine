@@ -177,15 +177,30 @@ internal sealed class DrawBuffers
     }
 
 
-    public void UploadCameraView(RenderView view)
+    public void UploadCameraView(RenderCamera camera)
     {
         ref var data = ref DataStore.CameraData;
-        data.ViewMat = view.ViewMatrix;
-        data.ProjMat = view.ProjectionMatrix;
-        data.ProjViewMat = view.ProjectionViewMatrix;
-        data.CameraPos = view.Position.AsVector4();
-        data.CameraUp = view.Up.AsVector4();
-        data.CameraRight = view.Right.AsVector4();
+        if (!camera.UseLightViewOverride)
+        {
+            ref var view = ref camera.RenderView;
+            data.ViewMat = view.ViewMatrix;
+            data.ProjMat = view.ProjectionMatrix;
+            data.ProjViewMat = view.ProjectionViewMatrix;
+            data.CameraPos = view.Transform.Translation.AsVector4();
+            data.CameraUp = view.Up.AsVector4();
+            data.CameraRight = view.Right.AsVector4();
+        }
+        else
+        {
+            ref var view = ref camera.LightSpace;
+            data.ViewMat = view.LightViewMatrix;
+            data.ProjMat = view.LightProjectionMatrix;
+            data.ProjViewMat = view.LightSpaceMatrix;
+            data.CameraPos = camera.RenderView.Transform.Translation.AsVector4();
+            data.CameraUp = view.Up.AsVector4();
+            data.CameraRight = view.Right.AsVector4();
+
+        }
 
         _gfxBuffers.UploadUniformGpuData(_cameraUbo, in data, 0);
     }

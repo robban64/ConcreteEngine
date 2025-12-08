@@ -21,7 +21,7 @@ internal sealed class RenderStateContext
     public MeshId FsqMesh { get; init; }
 
     public required RenderParamsSnapshot Snapshot { get; init; }
-    public required RenderView View { get; init; }
+    public required RenderCamera Camera { get; init; }
 
     public void SetCurrentFrameInfo(in RenderFrameInfo frameInfo, in RenderRuntimeParams frameParams)
     {

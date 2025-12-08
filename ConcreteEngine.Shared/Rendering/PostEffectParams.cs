@@ -19,7 +19,7 @@ public struct PostEffectParams(
     public PostBloomParams Bloom = bloom;
     public PostImageFxParams ImageFx = imageFx;
 
-    public void Deconstruct(out PostGradeParams grade, out PostWhiteBalanceParams whiteBalance,
+    public readonly void Deconstruct(out PostGradeParams grade, out PostWhiteBalanceParams whiteBalance,
         out PostBloomParams bloom, out PostImageFxParams imageFx)
     {
         grade = Grade;

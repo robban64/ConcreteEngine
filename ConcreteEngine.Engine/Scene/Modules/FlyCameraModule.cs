@@ -42,8 +42,8 @@ public sealed class FlyCameraModule : GameModule
 
     private void MovementController(float dt, float speed)
     {
-        float acceleration = 8.0f;
-        float friction = 8.0f;
+        float acceleration = 12.0f;
+        float friction = 12.0f;
 
         Vector3 targetVelocity = default;
 

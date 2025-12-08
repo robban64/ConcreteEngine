@@ -16,8 +16,8 @@ internal static class DrawDataProvider
 {
     //....
     public static RenderFrameInfo FrameInfo;
-    public static ProjectionInfoData ProjectionInfo;
-    public static RenderViewSnapshot ViewData;
+    public static ProjectionInfo ProjectionInfo;
+    public static RenderViewSnapshot RenderView;
     //....
 
     public static float DeltaTime => FrameInfo.DeltaTime;

@@ -8,6 +8,7 @@ using ConcreteEngine.Engine.Assets.Shaders;
 using ConcreteEngine.Engine.Editor.Data;
 using ConcreteEngine.Engine.Editor.Definitions;
 using ConcreteEngine.Engine.Platform;
+using ConcreteEngine.Engine.Time;
 using ConcreteEngine.Engine.Utils;
 using ConcreteEngine.Engine.Worlds.Tables;
 using ConcreteEngine.Engine.Worlds.Utility;
@@ -52,7 +53,7 @@ public sealed class WorldRenderer : IWorldRenderer
     private bool _hasUploadedMaterial = false;
 
     internal RenderEngine RenderEngine => _renderer;
-    internal RenderView RenderView => _renderer.RenderView;
+    internal RenderCamera RenderCamera => _renderer.RenderCamera;
 
     internal WorldRenderer(EngineWindow window, GraphicsRuntime graphics, AssetSystem assets,
         EngineEventBus eventBus, WorldRenderParams worldRenderParams)
@@ -90,7 +91,7 @@ public sealed class WorldRenderer : IWorldRenderer
         var mat = _assets.MaterialStoreImpl.CreateMaterial("EmptyMat", "EmptyMat1");
         _renderEntityBus.EmptyMaterialKey = _materialTable.Add(MaterialTagBuilder.BuildOne(mat.Id, true));
 
-        PrepareRenderView(1, world.Camera);
+       // PrepareRenderView(1, world.Camera);
 
         DrawDataProvider.Attach(_renderer.CommandBuffer, _animationTable, _meshTable, _materialTable, world.Entities);
     }
@@ -128,7 +129,7 @@ public sealed class WorldRenderer : IWorldRenderer
 
         WorldRenderParams.Commit();
 
-        PrepareRenderView(frameInfo.Alpha, camera);
+        PrepareRenderView(in frameInfo, camera);
 
         _renderer.PrepareFrame(in frameInfo, in runtimeParams);
 
@@ -136,7 +137,6 @@ public sealed class WorldRenderer : IWorldRenderer
         SubmitMaterialData();
 
         // Upload draw commands
-        FillDrawData(in frameInfo);
         _renderEntityBus.Execute();
         
         // fill buffers
@@ -151,19 +151,14 @@ public sealed class WorldRenderer : IWorldRenderer
         _renderer.EndRenderFrame(out frameResult);
     }
 
-    private void PrepareRenderView(float alpha, Camera3D camera)
+    private void PrepareRenderView(in RenderFrameInfo frameInfo, Camera3D camera)
     {
-        RenderView.ClearOverride();
-        camera.WriteSnapshot(alpha, ref RenderView.CameraView);
-    }
-
-    private void FillDrawData(in RenderFrameInfo frameInfo)
-    {
+        camera.WriteSnapshot(EngineTime.GameTime.Alpha, ref RenderCamera.RenderView);
         DrawDataProvider.FrameInfo = frameInfo;
-        DrawDataProvider.ProjectionInfo = RenderView.ProjectionInfo;
-        DrawDataProvider.ViewData = RenderView.CameraView;
-    }
+        DrawDataProvider.ProjectionInfo = RenderCamera.RenderView.ProjectionInfo;
+        DrawDataProvider.RenderView = RenderCamera.RenderView;
 
+    }
 
     private void SubmitMaterialData()
     {

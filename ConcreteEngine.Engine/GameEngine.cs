@@ -77,7 +77,7 @@ public sealed class GameEngine : IDisposable
         _assets = new AssetSystem();
 
         _world = new World();
-        _worldRenderer = new WorldRenderer(engineWindow, _graphics, _assets, _eventBus, _world.WorldRenderParams);
+        _worldRenderer = new WorldRenderer(engineWindow, _graphics, _assets, _eventBus!, _world.WorldRenderParams);
         _coreSystems = new EngineCoreSystem(_worldRenderer, _inputSystem, _assets);
 
 
@@ -190,7 +190,7 @@ public sealed class GameEngine : IDisposable
 
         _sceneManager.Current?.UpdateTick(args.Tick, args.FixedDt);
 
-        _world.EndTick();
+        _world.EndTick(_worldRenderer.RenderCamera);
     }
 
     private void SimulationTickUpdate(UpdateTickArgs args)

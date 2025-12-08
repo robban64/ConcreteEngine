@@ -31,7 +31,7 @@ public sealed class RenderEngine
     private readonly DrawCommandPipeline _drawPipeline;
     private readonly RenderPassPipeline _passPipeline;
 
-    private readonly RenderView _renderView;
+    private readonly RenderCamera _renderCamera;
 
     private RenderEngineContext EngineContext { get; }
     private readonly RenderStateContext _stateContext;
@@ -42,19 +42,19 @@ public sealed class RenderEngine
     public IRenderFboRegistry FboRegistry => _renderRegistry.FboRegistry;
 
     public int PassCount => _passPipeline.PassCount;
-    public RenderView RenderView => _renderView;
+    public RenderCamera RenderCamera => _renderCamera;
 
     public RenderEngine(GraphicsRuntime graphics, RenderParamsSnapshot paramsSnapshot, MeshId fsqMesh)
     {
         _graphics = graphics;
 
-        _renderView = new RenderView();
+        _renderCamera = new RenderCamera();
 
         _renderRegistry = new RenderRegistry(graphics.Gfx);
         _drawPipeline = new DrawCommandPipeline();
         _passPipeline = new RenderPassPipeline();
 
-        _stateContext = new RenderStateContext { View = _renderView, Snapshot = paramsSnapshot, FsqMesh = fsqMesh };
+        _stateContext = new RenderStateContext { Camera = _renderCamera, Snapshot = paramsSnapshot, FsqMesh = fsqMesh };
 
         EngineContext = new RenderEngineContext
         {

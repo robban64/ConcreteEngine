@@ -10,11 +10,11 @@ namespace ConcreteEngine.Editor.Data;
 
 public struct CameraDataState
 {
-    public ViewTransformData Transform;
-    public ProjectionInfoData Projection;
+    public ViewTransform Transform;
+    public ProjectionInfo Projection;
     public Size2D Viewport;
 
-    public void SetStableViewData(in ViewTransformData model)
+    public void SetStableViewData(in ViewTransform model)
     {
         if (!VectorMath.DistanceNearlyEqual(in Transform.Translation, in model.Translation, MetricUnits.Millimeter))
             Transform.Translation = model.Translation;
@@ -26,7 +26,7 @@ public struct CameraDataState
             Transform.Orientation = model.Orientation;
     }
 
-    public readonly void Deconstruct(out ViewTransformData transform, out ProjectionInfoData projection,
+    public readonly void Deconstruct(out ViewTransform transform, out ProjectionInfo projection,
         out Size2D viewport)
     {
         transform = Transform;

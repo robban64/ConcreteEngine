@@ -12,8 +12,8 @@ internal static class DrawSpatialProcessor
 
         if (entities.Length == 0 || dataEntities.Length == 0) return;
 
-        var projInfo = DrawDataProvider.ProjectionInfo;
-        DrawDataProvider.ViewData.ExtractView(out var viewMat);
+        var projInfo = DrawDataProvider.RenderView.ProjectionInfo;
+        DrawDataProvider.RenderView.ExtractView(out var viewMat);
         DepthKeyUtility.ExtractView(in viewMat, out var view);
         float near = projInfo.Near, far = projInfo.Far;
 

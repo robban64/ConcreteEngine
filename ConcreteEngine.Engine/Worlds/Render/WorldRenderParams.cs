@@ -65,9 +65,9 @@ public sealed class WorldRenderParams
         _shadow = new ShadowParams(
             shadowMapSize: size,
             distance: dist,
-            zPad: 0.5f,
-            constBias: constBias,
-            slopeBias: slopeBias,
+            zPad: 100.0f,
+            constBias: 0.002f,
+            slopeBias: 2.0f,
             strength: 1f,
             pcfRadius: 1f);
 

@@ -56,19 +56,32 @@ internal static class EngineDataBridge
 
         if (selection.Action == EditorMouseAction.RaycastDragTerrain)
         {
-            /*
             if (!selection.Id.IsValid)
             {
                 EditorData.State.SelectedId = EditorId.Empty;
+                EditorData.State.EntityState = default;
                 return;
-            }*/
-            var entityId = new  EntityId(selection.Id);
-            
-            if (!_interactions.IsDragging)
-                entityId = _interactions.OnClick(mouse.Position, out _, out _);
+            }
 
-            EditorData.State.SelectedId = AsEditorId(entityId);
-            if(!entityId.IsValid) return;
+            var entityId = new EntityId(selection.Id);
+            if (!_interactions.IsDragging)
+            {
+                var clickEntity = _interactions.OnClick(mouse.Position, out _, out _);
+                EditorData.State.SelectedId = AsEditorId(clickEntity);
+
+                if (!clickEntity.IsValid)
+                {
+                    EditorData.State.EntityState = default;
+                    return;
+                }
+
+                if (clickEntity != entityId) return;
+            }
+            else
+            {
+                EditorData.State.SelectedId = AsEditorId(entityId);
+                if (!entityId.IsValid) return;
+            }
 
             _interactions.OnDragEntity(entityId, mouse.Position);
         }
@@ -122,6 +135,7 @@ internal static class EngineDataBridge
         if (editorState.IsDirty)
         {
             _entities.ApplySelectedEntity(entityId, in data);
+            EditorData.State.SelectedId = editorState.Id;
         }
     }
 }

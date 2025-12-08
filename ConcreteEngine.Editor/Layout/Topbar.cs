@@ -2,6 +2,7 @@
 
 using System.Numerics;
 using ConcreteEngine.Editor.Definitions;
+using ConcreteEngine.Editor.Store;
 using ConcreteEngine.Editor.Utils;
 using ImGuiNET;
 
@@ -13,7 +14,9 @@ internal static class Topbar
 {
     private const int SelectorWidth = 74;
     private static readonly string[] PropertyModes = ["Camera", "World", "Sky", "Terrain"];
+    private static readonly string[] MouseActionNames = ["None", "RaySelect", "RayDrag"];
 
+    private static string GetActiveAction() => MouseActionNames[(int)EditorDataStore.Input.EditorSelection.Action];
 
     public static void Draw()
     {
@@ -34,7 +37,15 @@ internal static class Topbar
 
             // left
             DrawModeSelector();
-
+            /*
+            ImGui.SameLine();
+            GuiUtils.CenterAlignText(GetActiveAction(), GuiTheme.TopbarHeight);
+            ImGui.SameLine();
+            var selected = new NumberSpanFormatter(StringUtils.CharBuffer8)
+                .Format(EditorDataStore.Input.EditorSelection.Id.Identifier);
+            GuiUtils.CenterAlignText(selected, GuiTheme.TopbarHeight);
+            ImGui.SameLine();
+*/
             // right
             if (StateContext.ModeState.IsEditorState)
                 DrawPropertySelector();

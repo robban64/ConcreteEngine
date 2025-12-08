@@ -16,30 +16,24 @@ public sealed record StringLogEvent(LogScope Scope, string Message, LogLevel Lev
 
 public static class Logger
 {
-    private static readonly LogEvent[] LogBuffer = new LogEvent[64];
+    public const int MaxQueueCapacity = 256;
+    private static readonly Queue<LogEvent> Logs = new(128);
     private static readonly List<LogFilterWildcard> IgnoreFilter = new(4);
-
-    private static int _idx = 0;
-
-    private static bool _enabled = true;
 
     private static Action<StringLogEvent>? _logStringDel;
 
-    public static int Count => _idx;
+    public static bool Enabled { get; set; }
 
+    public static int Count => Logs.Count;
     public static bool IsAttached => _logStringDel != null;
 
     internal static void Attach(Action<StringLogEvent> logStringDel)
     {
         _logStringDel = logStringDel;
     }
+    
+    public static bool TryDrainLog(out LogEvent log) => Logs.TryDequeue(out log);
 
-    public static ReadOnlySpan<LogEvent> DrainLogs()
-    {
-        var index = _idx;
-        _idx = 0;
-        return LogBuffer.AsSpan(0, index);
-    }
 
     public static void ToggleLog(bool enabled, LogTopic topic = 0, LogScope scope = 0, LogAction action = 0,
         LogLevel level = 0)
@@ -53,22 +47,11 @@ public static class Logger
             IgnoreFilter.Add(rule);
     }
 
-    public static bool Enabled
-    {
-        get => _enabled;
-        set
-        {
-            if (_enabled == value) return;
-            LogBuffer.AsSpan().Clear();
-            _idx = 0;
-            _enabled = value;
-        }
-    }
 
     private static void Event(in LogEvent log)
     {
         if (!Enabled) return;
-        if (_idx >= 128)
+        if (Logs.Count >= MaxQueueCapacity)
         {
             Console.WriteLine("Log buffer full");
             return;
@@ -77,7 +60,7 @@ public static class Logger
         if (FilterLog(in log))
             return;
 
-        LogBuffer[_idx++] = log;
+        Logs.Enqueue(log);
     }
 
     public static void LogString(LogScope scope, string message, LogLevel level = LogLevel.Info) =>

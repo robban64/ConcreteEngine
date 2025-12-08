@@ -150,7 +150,8 @@ internal static class EntitiesComponent
         }
 
         ImGui.TableNextColumn();
-        GuiUtils.CenterAlignText(entity.Name, RowHeight);
+        var name = entity.Name.Length > 0 ? entity.Name : entity.DisplayName;
+        GuiUtils.CenterAlignText(name, RowHeight);
 
         ImGui.TableNextColumn();
         GuiUtils.CenterAlignText(formatter.Format(entity.Model), RowHeight);

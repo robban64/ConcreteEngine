@@ -36,6 +36,7 @@ namespace ConcreteEngine.Engine.Editor;
 
 internal sealed class EngineGateway : IDisposable
 {
+    private const int DefaultLogDrain = 4;
     private static EditorPortal _editor = null!;
     private static LogParser _logParser = null!;
 
@@ -48,9 +49,8 @@ internal sealed class EngineGateway : IDisposable
     public bool HasBoundMetrics { get; private set; }
     public bool Enabled { get; private set; } = false;
 
-    private int _ticker = 0, _mediumTicker = 0, _slowTicker = 0;
+    private int _ticker = 0, _slowTicker = 0;
 
-    private bool _drainGfxLogs;
 
     internal EngineGateway(GL gl, IWindow window, IInputContext inputCtx)
     {
@@ -148,7 +148,7 @@ internal sealed class EngineGateway : IDisposable
                 _ticker = 0;
                 break;
         }
-        
+
         if (_slowTicker++ >= 16)
         {
             _slowTicker = 0;
@@ -158,21 +158,13 @@ internal sealed class EngineGateway : IDisposable
 
     private void DrainLogs()
     {
-        if (_drainGfxLogs && GfxLog.Count > 0)
-        {
-            var logs = GfxLog.DrainLogs();
-            foreach (ref readonly var log in logs)
-                _editor.AddLog(_logParser.Format(in log));
-        }
+        var gfxLogLeft = DefaultLogDrain;
+        var engineLogLeft = DefaultLogDrain;
+        while (GfxLog.TryDrainLog(out var log) && gfxLogLeft-- > 0)
+            _editor.AddLog(_logParser.Format(in log));
 
-        if (!_drainGfxLogs && Logger.Count > 0)
-        {
-            var logs = Logger.DrainLogs();
-            foreach (ref readonly var log in logs)
-                _editor.AddLog(_logParser.Format(in log));
-        }
-
-        _drainGfxLogs = !_drainGfxLogs;
+        while (Logger.TryDrainLog(out var log) && engineLogLeft-- > 0)
+            _editor.AddLog(_logParser.Format(in log));
     }
 
     public void Dispose()
@@ -214,7 +206,6 @@ internal sealed class EngineGateway : IDisposable
 
             EditorApi.LoadAssetResources = EngineResourceProvider.CreateEditorAssets;
             EditorApi.LoadEntityResources = EngineResourceProvider.CreateEntityList;
-
         }
 
 

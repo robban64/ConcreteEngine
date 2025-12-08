@@ -30,7 +30,7 @@ internal static class EntitiesComponent
 
     private static ReadOnlySpan<EditorEntityResource> EntitySpan => EditorManagedStore.EntityResourceSpan;
 
-    private static ref EntityDataState DataState => ref EditorDataStore.StateSlot.EntityState;
+    private static ref EntityDataState DataState => ref EditorDataStore.State.EntityState;
 
     private static void OnSelectEntity(EditorEntityResource entity)
     {
@@ -129,7 +129,7 @@ internal static class EntitiesComponent
     private static void DrawListItem(int i, NumberSpanFormatter formatter)
     {
         var entity = EntitySpan[i];
-        var selected = entity.Id == State.SelectedEntity?.Id;
+        var selected = entity.Id == EditorDataStore.State.SelectedId;
         if (selected) _selectedIndex = i;
 
         ImGui.PushStyleVar(ImGuiStyleVar.SelectableTextAlign, new Vector2(0.0f, 0.5f));
@@ -164,7 +164,7 @@ internal static class EntitiesComponent
         ImGui.SetNextWindowSize(new Vector2(250, 0));
         if (ImGui.BeginPopup(bufferStr, ImGuiWindowFlags.NoResize))
         {
-            DrawAssetFilePopupContent(entity);
+            DrawAssetFilePopupContent();
             ImGui.EndPopup();
         }
 
@@ -176,7 +176,7 @@ internal static class EntitiesComponent
     }
 
 
-    private static void DrawAssetFilePopupContent(EditorEntityResource entity)
+    private static void DrawAssetFilePopupContent()
     {
         ref var state = ref DataState;
         ref var transform = ref state.Transform;

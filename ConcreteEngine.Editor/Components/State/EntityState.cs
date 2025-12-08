@@ -10,7 +10,15 @@ namespace ConcreteEngine.Editor.Components.State;
 
 internal sealed class EntitiesViewModel
 {
-    public EditorEntityResource? SelectedEntity { get; private set; }
+    private EditorEntityResource? _selectedEntity = null;
+    public EditorEntityResource? GetSelectedEntity()
+    {
+        var editorId = EditorDataStore.State.SelectedId;
+        if (!editorId.IsValid || editorId.ItemType != EditorItemType.Entity) return null;
+        if(_selectedEntity?.Id != editorId)
+            _selectedEntity = FindEntity(editorId);
+        return _selectedEntity;
+    }
 
     public EditorEntityResource? FindEntity(int entityId)
     {
@@ -27,20 +35,17 @@ internal sealed class EntitiesViewModel
 
     public void SetSelectedEntity(EditorId entityId)
     {
-        if (SelectedEntity?.Id == entityId) return;
+        if (EditorDataStore.State.SelectedId == entityId) return;
 
-        if (entityId > 0 &&
-            EditorManagedStore.TryGet<EditorEntityResource>((entityId, EditorItemType.Entity), out var entity))
+        ref var selection = ref EditorDataStore.Input.EditorSelection;
+        if (entityId > 0)
         {
-            SelectedEntity = entity;
-            EditorDataStore.Input.EditorSelection.Id = entityId;
-            EditorDataStore.Input.EditorSelection.IsRequesting = true;
+            selection.Id = entityId;
+            selection.IsRequesting = true;
             return;
         }
 
-        SelectedEntity = null;
-        EditorDataStore.Input.EditorSelection.Id = EditorId.Empty;
-
-        //EditorDataStore.Slot<EntityDataState>.State.Reset(0);
+        selection.Id = EditorId.Empty;
+        selection.IsDirty  = true;
     }
 }

@@ -98,7 +98,7 @@ internal static class EditorModelManager
     {
         CameraStateContext = ModelStateContext<CameraState>
             .CreateBuilder(static () => new CameraState())
-            .OnEnter(static (ctx, it) => EditorDataStore.Slot<CameraDataState>.State.RequestData())
+            .OnEnter(static (ctx, it) => EditorDataStore.Slot<CameraDataState>.SlotState.RequestData())
             .OnRefresh(static (ctx, it) => { })
             .OnLeave(static (ctx, it) => { })
             .RegisterEvent(EventKey.SelectionUpdated, static (ctx) => { })
@@ -110,7 +110,7 @@ internal static class EditorModelManager
     {
         WorldRenderStateContext = ModelStateContext<WorldParamState>
             .CreateBuilder(static () => new WorldParamState())
-            .OnEnter(static (ctx,it) => EditorDataStore.Slot<WorldParamsData>.State.RequestData())
+            .OnEnter(static (ctx,it) => EditorDataStore.Slot<WorldParamsData>.SlotState.RequestData())
             .OnRefresh(static (ctx,it) => {})
             .OnLeave(static (ctx, it) => ctx.ResetState())
             .Build();

@@ -37,32 +37,25 @@ internal sealed class EntityApiController(ApiContext apiContext)
                 DisplayName = SourceNames[(int)source.Kind],
                 Model = source.Model,
             };
-            
+
             if (matTable.TryResolveSubmitMaterial(source.MaterialKey, out var tag))
             {
                 var materialIds = tag.AsReadOnlySpan();
-                if (materialIds.Length == 1) 
+                if (materialIds.Length == 1)
                     item.Material = materialIds[0];
-                else if(materialIds.Length > 1)
+                else if (materialIds.Length > 1)
                     MemoryMarshal.Cast<MaterialId, int>(tag.AsReadOnlySpan()).ToArray();
             }
-           
+
             result.Add(item);
         }
 
         return result;
     }
-    
-    public void WriteSelectedEntity(EntityId entity , ref EntityDataState data)
-    {
-        if (entity == 0)
-        {
-            WorldInteractive.SelectedEntityId = new EntityId(0);
-            return;
-        }
 
-        WorldInteractive.SelectedEntityId =  entity;
-        
+    public void WriteSelectedEntity(EntityId entity, ref EntityDataState data)
+    {
+        if (entity == 0) return;
         var view = Entities.Core.GetEntityView(entity);
         data.EntityId = entity;
         data.Transform.From(in Transform.UnsafeAs(ref view.Transform));

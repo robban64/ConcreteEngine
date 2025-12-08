@@ -16,6 +16,6 @@ internal sealed class WorldParamState
 
     public void TriggerChange()
     {
-        EditorDataStore.Slot<WorldParamsData>.State.IsDirty = true;
+        EditorDataStore.Slot<WorldParamsData>.SlotState.IsDirty = true;
     }
 }

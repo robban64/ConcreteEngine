@@ -16,8 +16,8 @@ internal sealed class RenderEntityBus
     private static int _idx = 0;
     private static int _prevIdx = 0;
 
-    public const int DefaultCapacity = 512;
-    public const int MaxCapacity = 1024 * 10;
+    public const int DefaultCapacity = 1024;
+    public const int MaxCapacity = 1024 * 50;
 
     //...
     private int[] _byEntityId = new int[DefaultCapacity];

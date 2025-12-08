@@ -13,7 +13,7 @@ internal sealed class CameraState
 
     public void TriggerWrite()
     {
-        EditorDataStore.Slot<CameraDataState>.State.IsDirty = true;
+        EditorDataStore.Slot<CameraDataState>.SlotState.IsDirty = true;
     }
 
 }

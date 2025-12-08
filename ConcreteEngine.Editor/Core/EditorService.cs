@@ -7,6 +7,7 @@ using ConcreteEngine.Editor.Layout;
 using ConcreteEngine.Editor.Store;
 using ConcreteEngine.Editor.Utils;
 using ImGuiNET;
+using DataStore = ConcreteEngine.Editor.Store.EditorDataStore;
 
 #endregion
 
@@ -22,13 +23,13 @@ internal static class EditorService
 
     private static void PrepareFrame()
     {
-        ref var selection = ref EditorDataStore.Input.EditorSelection;
-        var prevSelection = selection.Id;
-        EditorDataStore.Input.EditorSelection.ClearFrame();
-        selection.Id = EditorDataStore.StateSlot.SelectedId;
-        
-        if(prevSelection == selection.Id) return;
-        selection.IsRequesting = true;
+        var prevSelection = DataStore.Input.EditorSelection.Id;
+        var newSelection = DataStore.State.SelectedId;
+        DataStore.Input.EditorSelection.ClearFrame();
+        DataStore.Input.EditorSelection.Id = DataStore.State.SelectedId;
+
+        if (prevSelection == newSelection) return;
+        DataStore.Input.EditorSelection.IsRequesting = true;
     }
 
     internal static void Render(float delta, bool blockInput)

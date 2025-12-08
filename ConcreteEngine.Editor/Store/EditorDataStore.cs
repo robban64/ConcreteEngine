@@ -14,7 +14,7 @@ public static class EditorDataStore
         public static EditorSelectionState EditorSelection;
     }
     
-    public static class StateSlot
+    public static class State
     {
         public static EditorId SelectedId;
         public static EntityDataState EntityState; 
@@ -23,6 +23,6 @@ public static class EditorDataStore
     public static class Slot<T> where T : unmanaged
     {
         public static T Data;
-        public static EditorSlotState State;
+        public static EditorSlotState SlotState;
     }
 }

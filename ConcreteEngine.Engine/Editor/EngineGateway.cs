@@ -142,8 +142,8 @@ internal sealed class EngineGateway : IDisposable
         switch (_ticker++)
         {
             case 0: MetricsApi.RefreshSceneMetrics(); break;
-            case 4: MetricsApi.RefreshGfxResourceMetrics(); break;
-            case >= 8:
+            case 5: MetricsApi.RefreshGfxResourceMetrics(); break;
+            case >= 10:
                 MetricsApi.RefreshAssetMetrics();
                 _ticker = 0;
                 break;

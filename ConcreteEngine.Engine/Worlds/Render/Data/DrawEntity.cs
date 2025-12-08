@@ -14,14 +14,14 @@ using ConcreteEngine.Renderer.Definitions;
 namespace ConcreteEngine.Engine.Worlds.Render.Data;
 
 [StructLayout(LayoutKind.Sequential)]
-public struct DrawEntityData(in Transform transform, in BoundingBox bounds)
+internal struct DrawEntityData(in Transform transform, in BoundingBox bounds)
 {
     public Transform Transform = transform;
     public BoundingBox Bounds = bounds;
 }
 
 [StructLayout(LayoutKind.Sequential)]
-public struct DrawEntity
+internal struct DrawEntity
 {
     public DrawEntitySource Source;
     public DrawEntityMeta Meta;
@@ -41,7 +41,7 @@ public struct DrawEntity
 }
 
 [StructLayout(LayoutKind.Sequential)]
-public struct DrawEntitySource(ModelId model, MaterialTagKey materialKey, int drawCount)
+internal struct DrawEntitySource(ModelId model, MaterialTagKey materialKey, int drawCount)
 {
     public ModelId Model = model;
     public MaterialTagKey MaterialKey = materialKey;
@@ -50,7 +50,7 @@ public struct DrawEntitySource(ModelId model, MaterialTagKey materialKey, int dr
 }
 
 [StructLayout(LayoutKind.Sequential)]
-public struct DrawEntityMeta(
+internal struct DrawEntityMeta(
     DrawCommandId commandId,
     DrawCommandQueue queue,
     PassMask passMask)

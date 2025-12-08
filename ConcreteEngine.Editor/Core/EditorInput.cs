@@ -74,7 +74,19 @@ internal static class EditorInput
         var isClick = ImGui.IsMouseClicked(ImGuiMouseButton.Left);
         var isReleased = ImGui.IsMouseReleased(ImGuiMouseButton.Left);
 
+        if (ImGui.IsMouseClicked(ImGuiMouseButton.Right))
+        {
+            ref var selection = ref EditorDataStore.Input.EditorSelection;
+            selection.Id = EditorId.Empty;
+            selection.Action = EditorMouseAction.None;
+            selection.IsRequesting = false;
+            selection.RefreshTime();
+            selection.IsDirty = true;
+            return;
+        }
+
         EditorDataStore.Input.MouseState.SetPosition(mousePos, deltaAbs);
+        
 
         if (isReleased && !_wasDragging)
         {
@@ -102,13 +114,7 @@ internal static class EditorInput
     private static void HandleDrag(Vector2 deltaAbs)
     {
         ref var state = ref EditorDataStore.Input.EditorSelection;
-        if (state.Id < 1)
-        {
-            state.Action = EditorMouseAction.None;
-            state.RefreshTime();
-            return;
-        }
-
+        var action = state.Id.IsValid ? EditorMouseAction.RaycastDragTerrain : EditorMouseAction.None;
         var hasDelta = deltaAbs.X > 0 || deltaAbs.Y > 0;
         if (!hasDelta)
         {
@@ -116,7 +122,7 @@ internal static class EditorInput
             return;
         }
 
-        state.Action = EditorMouseAction.RaycastDragTerrain;
+        state.Action = action;
         state.RefreshTime();
     }
 }

@@ -2,9 +2,11 @@
 
 using System.Numerics;
 using ConcreteEngine.Common.Numerics;
+using ConcreteEngine.Engine.Editor.Diagnostics;
 using ConcreteEngine.Engine.Worlds;
 using ConcreteEngine.Engine.Worlds.Entities;
 using ConcreteEngine.Engine.Worlds.Entities.Components;
+using ConcreteEngine.Shared.Diagnostics;
 
 #endregion
 
@@ -13,7 +15,10 @@ namespace ConcreteEngine.Engine.Editor.Controller;
 internal sealed class InteractionController(ApiContext apiContext)
 {
 
+    private WorldRaycaster Raycaster => apiContext.World.Raycast;
     private DragEntityState _dragState;
+    
+    public bool IsDragging => _dragState.IsDragging;
 
     private ref BoxComponent GetBounds(EntityId e) =>
         ref apiContext.World.Entities.Core.GetBoxById(e);
@@ -21,28 +26,25 @@ internal sealed class InteractionController(ApiContext apiContext)
 
     public EntityId OnClick(Vector2 mousePosition, out BoundingBox bounds, out float distance)
     {
-        var raycaster = apiContext.World.Raycast;
-        var entity = raycaster.GetEntityByCameraRay(mousePosition, out bounds, out distance);
+        var entity = Raycaster.GetEntityByCameraRay(mousePosition, out bounds, out distance);
         if (entity == default) return default;
 
         return entity;
     }
 
-    public EntityId OnDragEntity(EntityId entity, Vector2 mousePosition)
+    public void OnDragEntity(EntityId entity, Vector2 mousePosition)
     {
         if (!_dragState.IsDragging && !_dragState.WasDragging)
-            OnDragStart(entity, mousePosition);
+            OnDragStart(mousePosition);
         else if (!_dragState.IsDragging && _dragState.WasDragging)
             OnDragEnd(mousePosition);
         else if (_dragState.IsDragging)
             OnDragUpdate(entity, mousePosition);
         else
             OnDragEnd(mousePosition);
-
-        return entity;
     }
 
-    private void OnDragStart(EntityId entity, Vector2 mousePosition)
+    private void OnDragStart( Vector2 mousePosition)
     {
         var world = apiContext.World;
 

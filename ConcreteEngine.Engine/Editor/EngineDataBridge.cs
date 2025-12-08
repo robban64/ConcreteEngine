@@ -2,6 +2,7 @@ using ConcreteEngine.Editor.Data;
 using ConcreteEngine.Editor.Definitions;
 using ConcreteEngine.Editor.Store;
 using ConcreteEngine.Engine.Editor.Controller;
+using ConcreteEngine.Engine.Worlds;
 using ConcreteEngine.Engine.Worlds.Entities;
 using ConcreteEngine.Shared.Rendering;
 using EditorData = ConcreteEngine.Editor.Store.EditorDataStore;
@@ -14,6 +15,7 @@ internal static class EngineDataBridge
     private static WorldApiController _world = null!;
     private static InteractionController _interactions = null!;
 
+    private static EditorId AsEditorId(EntityId entity) => new(entity, EditorItemType.Entity);
 
     internal static void Attach(EntityApiController entityController, WorldApiController worldController,
         InteractionController interactionController)
@@ -25,15 +27,19 @@ internal static class EngineDataBridge
 
     public static void ProcessEditorDataSlot()
     {
-        ProcessInteractivity();
         ProcessCamera();
         ProcessWorldParams();
-        ProcessEntities();
+        if (EditorData.Input.EditorSelection.Action == EditorMouseAction.None)
+            ProcessEntities();
+        else
+            ProcessInteractivity();
+        WorldInteractive.SelectedEntityId = new EntityId(EditorData.State.SelectedId);
     }
 
     private static void ProcessInteractivity()
     {
         ref readonly var selection = ref EditorData.Input.EditorSelection;
+
         ref readonly var mouse = ref EditorData.Input.MouseState;
 
         if (selection.Action == EditorMouseAction.RaycastSelect)
@@ -41,23 +47,36 @@ internal static class EngineDataBridge
             var entityId = _interactions.OnClick(mouse.Position, out _, out _);
             if (!entityId.IsValid)
             {
-                if (selection.Id > 0) EditorData.StateSlot.SelectedId = EditorId.Empty;
+                if (selection.Id > 0) EditorData.State.SelectedId = EditorId.Empty;
                 return;
             }
-            EditorData.StateSlot.SelectedId = new EditorId(entityId, EditorItemType.Entity);
+
+            EditorData.State.SelectedId = AsEditorId(entityId);
         }
 
         if (selection.Action == EditorMouseAction.RaycastDragTerrain)
         {
-            var currentId = EditorData.StateSlot.SelectedId;
-            if(currentId.IsValid)
-                _interactions.OnDragEntity(new EntityId(currentId), mouse.Position);
+            /*
+            if (!selection.Id.IsValid)
+            {
+                EditorData.State.SelectedId = EditorId.Empty;
+                return;
+            }*/
+            var entityId = new  EntityId(selection.Id);
+            
+            if (!_interactions.IsDragging)
+                entityId = _interactions.OnClick(mouse.Position, out _, out _);
+
+            EditorData.State.SelectedId = AsEditorId(entityId);
+            if(!entityId.IsValid) return;
+
+            _interactions.OnDragEntity(entityId, mouse.Position);
         }
     }
 
     private static void ProcessCamera()
     {
-        ref var slot = ref EditorData.Slot<CameraDataState>.State;
+        ref var slot = ref EditorData.Slot<CameraDataState>.SlotState;
         ref var data = ref EditorData.Slot<CameraDataState>.Data;
         if (_world.CameraGeneration > slot.Generation || slot.IsRequesting)
             _world.WriteCameraState(out data);
@@ -69,7 +88,7 @@ internal static class EngineDataBridge
 
     public static void ProcessWorldParams()
     {
-        ref var slot = ref EditorData.Slot<WorldParamsData>.State;
+        ref var slot = ref EditorData.Slot<WorldParamsData>.SlotState;
         ref var data = ref EditorData.Slot<WorldParamsData>.Data;
         if (_world.WorldParamGeneration > slot.Generation || slot.IsRequesting)
             _world.WriteWorldRenderParams(out data);
@@ -79,26 +98,30 @@ internal static class EngineDataBridge
         slot.Reset(_world.WorldParamGeneration);
     }
 
-    public static void ProcessEntities()
+    private static void ProcessEntities()
     {
         ref var editorState = ref EditorData.Input.EditorSelection;
-        ref var data = ref EditorData.StateSlot.EntityState;
+        ref var data = ref EditorData.State.EntityState;
 
         var entityId = new EntityId(editorState.Id);
+
+        if (editorState.IsDirty && !editorState.Id.IsValid)
+        {
+            data = default;
+            EditorData.State.SelectedId = EditorId.Empty;
+            return;
+        }
 
         if (entityId != data.EntityId || editorState.IsRequesting)
         {
             _entities.WriteSelectedEntity(entityId, ref data);
-            editorState.IsRequesting = false;
+            EditorData.State.SelectedId = editorState.Id;
             return;
         }
 
         if (editorState.IsDirty)
         {
             _entities.ApplySelectedEntity(entityId, in data);
-            editorState.IsDirty = false;
-            return;
         }
     }
-
 }

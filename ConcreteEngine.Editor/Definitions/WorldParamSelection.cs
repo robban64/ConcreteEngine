@@ -4,5 +4,6 @@ public enum WorldParamSelection
 {
     Light,
     Fog,
-    PostEffect
+    Post,
+    Shadow
 }

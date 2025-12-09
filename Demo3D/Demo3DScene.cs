@@ -297,8 +297,6 @@ public sealed class Demo3DScene : GameScene
 
         // Scene globals
         var rb = renderer.WorldRenderParams;
-        rb.SetShadowDefault(2048, 120f);
-
 
         // Terrain
         CreateTerrain(assets);

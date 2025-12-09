@@ -54,7 +54,7 @@ internal sealed class AssetConfigLoader
 
     public T LoadAssetCatalog<T>(string filename) where T : class, IAssetCatalog
     {
-        ArgumentNullException.ThrowIfNull(filename, nameof(filename));
+        ArgumentNullException.ThrowIfNull(filename);
 
         var path = Path.Combine(AssetPaths.AssetRoot, filename);
 

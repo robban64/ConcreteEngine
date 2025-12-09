@@ -1,6 +1,7 @@
 #region
 
 using System.Numerics;
+using ConcreteEngine.Common.Numerics.Maths;
 using ConcreteEngine.Renderer.Data;
 using ConcreteEngine.Renderer.State;
 using ConcreteEngine.Shared.Rendering;
@@ -12,18 +13,22 @@ namespace ConcreteEngine.Engine.Worlds.Render;
 public sealed class WorldRenderParams
 {
     private bool _dirty = true;
-    private bool _clearSnapshotDirtyNext = false;
+    private bool _clearSnapshotDirtyNext;
+    
     private readonly RenderParamsSnapshot _snapshot = new();
 
     private AmbientParams _ambient = MakeDefaultAmbient();
     private FogParams _fog = MakeDefaultFog();
     private DirLightParams _dirLight = MakeDefaultDirLight();
-    private ShadowParams _shadow;
+    private ShadowParams _shadow = MakeDefaultShadow(4096);
     private PostEffectParams _postEffect = MakeDefaultPostEffect();
 
-    public long Version { get; private set; } = 0;
+    public long Version { get; private set; }
+    public bool PendingShadowSize { get; private set; } = true;
 
     internal RenderParamsSnapshot Snapshot => _snapshot;
+
+    internal int ShadowMapSize => _shadow.ShadowMapSize;
 
     public void SetDirectionalLight(in DirLightParams param)
     {
@@ -50,40 +55,26 @@ public sealed class WorldRenderParams
         _dirty = true;
     }
 
-    public void SetShadowDefault(int size, float? distance = null)
+    public void SetShadow(in ShadowParams param)
     {
-        ArgumentOutOfRangeException.ThrowIfLessThan(size, RenderLimits.MinShadowMapSize);
-        ArgumentOutOfRangeException.ThrowIfGreaterThan(size, RenderLimits.MaxShadowMapSize);
-
-        if (distance is not { } dist)
-            dist = _shadow.Distance > 1 ? _shadow.Distance : 120f;
-
-        //slopeBias
-        // 2k-map = 0.0025 - 0.0035
-        // 4k-map = 0.0015f-0.0025f
-
-        //constBias
-        // 4k-map =  0.0003 to 0.0005
-        // 2k-map = 0.0001 to 0.0002
-        _shadow = new ShadowParams(
-            shadowMapSize: size,
-            distance: dist,
-            zPad: 100.0f,
-            constBias: 0.002f,
-            slopeBias: 0.0005f,
-            strength: 1f,
-            pcfRadius: 1f);
-
-        _dirty = true;
+        var shadowSize = param.ShadowMapSize;
+        ArgumentOutOfRangeException.ThrowIfLessThan(shadowSize, RenderLimits.MinShadowMapSize);
+        ArgumentOutOfRangeException.ThrowIfGreaterThan(shadowSize, RenderLimits.MaxShadowMapSize);
+        ArgumentOutOfRangeException.ThrowIfZero(IntMath.IsPowerOfTwo(shadowSize) ? 1 : 0);
+        
+        if (_shadow.ShadowMapSize != param.ShadowMapSize)
+            PendingShadowSize = true;
+        
+        _shadow = param;
     }
 
     internal void SetFromData(in WorldParamsData data)
     {
+        SetShadow(in data.Shadow);
         _ambient = data.Ambient;
         _dirLight = data.DirLight;
         _fog = data.Fog;
         _postEffect = data.PostEffect;
-        _shadow = data.Shadow;
         _dirty = true;
     }
 
@@ -122,6 +113,38 @@ public sealed class WorldRenderParams
 
         _dirty = false;
         return _snapshot;
+    }
+
+    internal void ClearPending() => PendingShadowSize = false;
+
+    private static ShadowParams MakeDefaultShadow(int size)
+    {
+        ArgumentOutOfRangeException.ThrowIfLessThan(size, RenderLimits.MinShadowMapSize);
+        ArgumentOutOfRangeException.ThrowIfGreaterThan(size, RenderLimits.MaxShadowMapSize);
+
+
+        //constBias
+        // 4k-map =  0.0003 to 0.0005
+        // 2k-map = 0.0001 to 0.0002
+        
+        //slopeBias
+        // 2k-map = 0.0025 - 0.0035
+        // 4k-map = 0.0015f-0.0025f
+
+        (int distance, float constBias, float slopeBias) = size switch
+        {
+            2048 => (80, 0.0002f, 0.003f),
+            4096 => (120, 0.0004f, 0.002f),
+            _ => (80, 0.0002f, 0.003f)
+        };
+        return new ShadowParams(
+            shadowMapSize: size,
+            distance: distance,
+            zPad: 20.0f,
+            constBias: constBias,
+            slopeBias: slopeBias,
+            strength: 1f,
+            pcfRadius: 1f);
     }
 
     private static DirLightParams MakeDefaultDirLight() =>

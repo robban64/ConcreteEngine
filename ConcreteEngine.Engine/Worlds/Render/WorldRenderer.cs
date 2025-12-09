@@ -110,7 +110,7 @@ public sealed class WorldRenderer : IWorldRenderer
                 break;
             case FboCommandAction.RecreateShadowFbo:
                 _renderer.FboRegistry.RecreateFixedFrameBuffer<ShadowPassTag>(FboVariant.Default, req.Size);
-                WorldRenderParams.SetShadowDefault(req.Size.Width);
+                WorldRenderParams.SetShadow(WorldRenderParams.Snapshot.Shadows with{ ShadowMapSize = req.Size.Width});
                 break;
             case FboCommandAction.None:
             default:
@@ -141,6 +141,16 @@ public sealed class WorldRenderer : IWorldRenderer
         
         // fill buffers
         _renderer.CollectDrawBuffers();
+
+        if (WorldRenderParams.PendingShadowSize)
+        {
+            var newSize = WorldRenderParams.ShadowMapSize;
+            _renderer.FboRegistry.RecreateFixedFrameBuffer<ShadowPassTag>(FboVariant.Default, new Size2D(newSize));
+            status = BeginFrameStatus.None;
+            
+            WorldRenderParams.ClearPending();
+        }
+        
         _renderer.StartFrame(status);
     }
 
@@ -150,6 +160,7 @@ public sealed class WorldRenderer : IWorldRenderer
         _renderer.Render();
         _renderer.EndRenderFrame(out frameResult);
     }
+
 
     private void PrepareRenderView(in RenderFrameInfo frameInfo, Camera3D camera)
     {

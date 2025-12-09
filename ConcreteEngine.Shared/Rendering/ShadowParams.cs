@@ -7,21 +7,21 @@ using System.Runtime.InteropServices;
 namespace ConcreteEngine.Shared.Rendering;
 
 [StructLayout(LayoutKind.Sequential)]
-public readonly struct ShadowParams(
+public struct ShadowParams(
     int shadowMapSize,
     float distance,
     float zPad,
     float constBias,
     float slopeBias,
     float strength,
-    float pcfRadius
-)
+    float pcfRadius)
 {
-    public readonly int ShadowMapSize = shadowMapSize;
-    public readonly float Distance = distance;
-    public readonly float ZPad = zPad;
-    public readonly float ConstBias = constBias;
-    public readonly float SlopeBias = slopeBias;
-    public readonly float Strength = strength;
-    public readonly float PcfRadius = pcfRadius;
+    
+    public int ShadowMapSize = shadowMapSize;
+    public float Distance = distance;
+    public float ZPad = zPad;
+    public float ConstBias = constBias;
+    public float SlopeBias = slopeBias;
+    public float Strength = strength;
+    public float PcfRadius = pcfRadius;
 }

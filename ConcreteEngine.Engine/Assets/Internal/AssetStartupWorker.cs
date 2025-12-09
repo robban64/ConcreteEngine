@@ -38,10 +38,10 @@ internal sealed class AssetStartupWorker
     private readonly AssetConfigLoader _configLoader;
     private readonly AssetManifest _manifest;
 
-    private int _idx = 0;
     private IAssetCatalog? _currentManifest;
     private ProcessStepOrder _processOrder = ProcessStepOrder.NotStarted;
 
+    private int _idx;
 
     public AssetStartupWorker(AssetLoader loader, AssetConfigLoader configLoader, AssetManifest manifest)
     {
@@ -86,8 +86,6 @@ internal sealed class AssetStartupWorker
     {
         if (_processOrder == ProcessStepOrder.NotStarted)
             throw new InvalidOperationException("Asset loader has not started.");
-
-        var order = (int)_processOrder;
 
         var processSingle = _processOrder is
             ProcessStepOrder.Shaders or

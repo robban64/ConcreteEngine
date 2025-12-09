@@ -75,17 +75,17 @@ public static class MatrixMath
         float wx = w * x, wy = w * y, wz = w * z;
 
         dest.M11 = (1f - 2f * (yy + zz)) * s.X;
-        dest.M12 = (2f * (xy + wz)) * s.X;
-        dest.M13 = (2f * (xz - wy)) * s.X;
+        dest.M12 = 2f * (xy + wz) * s.X;
+        dest.M13 = 2f * (xz - wy) * s.X;
         dest.M14 = 0f;
 
-        dest.M21 = (2f * (xy - wz)) * s.Y;
+        dest.M21 = 2f * (xy - wz) * s.Y;
         dest.M22 = (1f - 2f * (xx + zz)) * s.Y;
-        dest.M23 = (2f * (yz + wx)) * s.Y;
+        dest.M23 = 2f * (yz + wx) * s.Y;
         dest.M24 = 0f;
 
-        dest.M31 = (2f * (xz + wy)) * s.Z;
-        dest.M32 = (2f * (yz - wx)) * s.Z;
+        dest.M31 = 2f * (xz + wy) * s.Z;
+        dest.M32 = 2f * (yz - wx) * s.Z;
         dest.M33 = (1f - 2f * (xx + yy)) * s.Z;
         dest.M34 = 0f;
 

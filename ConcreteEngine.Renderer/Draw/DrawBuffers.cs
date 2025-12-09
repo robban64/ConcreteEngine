@@ -25,7 +25,6 @@ internal sealed class DrawBuffers
         public static FrameUniformRecord FrameData;
         public static ShadowUniformRecord ShadowData;
         public static PostProcessUniform PostData;
-        public static DrawAnimationUniform AnimationData;
     }
 
 
@@ -242,7 +241,7 @@ internal sealed class DrawBuffers
 
     private void UploadDirLight()
     {
-        ref readonly var dirLight = ref _paramsSnapshot.DirLight;
+        ref readonly var dirLight = ref _paramsSnapshot.SunLight;
 
         ref var data = ref DataStore.DirLightData;
         data.Direction = dirLight.Direction.AsVector4();
@@ -276,11 +275,10 @@ internal sealed class DrawBuffers
             .Deconstruct(out var g, out var wb, out var b, out var fx);
 
         ref var data = ref DataStore.PostData;
-        data.Grade = new Vector4(g.Exposure * 0.10f, 0.8f + g.Saturation * 0.4f, 0.9f + g.Contrast * 0.2f,
-            g.Warmth * 0.05f);
-        data.WhiteBalance = new Vector4(wb.Tint * 0.05f, wb.Strength, 0f, 0f);
-        data.Bloom = new Vector4(b.Intensity * 1.5f, 0.6f + b.Threshold * 0.3f, b.Radius, 0f);
-        data.Fx = new Vector4(fx.Vignette * 0.15f, fx.Grain * 0.01f, fx.Sharpen * 0.15f, fx.Rolloff * 0.12f);
+        data.Grade = new Vector4(g.Exposure, g.Saturation, g.Contrast , g.Warmth);
+        data.WhiteBalance = new Vector4(wb.Tint , wb.Strength, 0f, 0f);
+        data.Bloom = new Vector4(b.Intensity ,  b.Threshold , b.Radius, 0f);
+        data.Fx = new Vector4(fx.Vignette , fx.Grain , fx.Sharpen , fx.Rolloff );
         _gfxBuffers.UploadUniformGpuData(_postUbo, in data, 0);
     }
 }

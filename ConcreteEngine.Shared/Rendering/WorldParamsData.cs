@@ -9,7 +9,7 @@ namespace ConcreteEngine.Shared.Rendering;
 [StructLayout(LayoutKind.Sequential)]
 public struct WorldParamsData
 {
-    public DirLightParams DirLight;
+    public SunLightParams SunLight;
     public AmbientParams Ambient;
     public FogParams Fog;
     public ShadowParams Shadow;

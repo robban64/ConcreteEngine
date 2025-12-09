@@ -103,6 +103,13 @@ internal static class EngineDataBridge
     {
         ref var slot = ref EditorData.Slot<WorldParamsData>.SlotState;
         ref var data = ref EditorData.Slot<WorldParamsData>.Data;
+
+        if (slot.RequestInFrames > 0)
+        {
+            slot.RequestInFrames--;
+            if (slot.RequestInFrames == 0) slot.IsRequesting = true;
+        }
+        
         if (_world.WorldParamGeneration > slot.Generation || slot.IsRequesting)
             _world.WriteWorldRenderParams(out data);
         else if (slot.IsDirty)

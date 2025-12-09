@@ -3,6 +3,7 @@ namespace ConcreteEngine.Editor.Data;
 public struct EditorSlotState
 {
     public long Generation;
+    public int RequestInFrames;
     public bool IsDirty;
     public bool IsRequesting;
 

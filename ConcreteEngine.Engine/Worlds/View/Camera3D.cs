@@ -179,7 +179,7 @@ public sealed class Camera3D
     internal void EndTick(RenderParamsSnapshot renderParams, RenderCamera renderCamera)
     {
 
-        var lightDir = renderParams.DirLight.Direction;
+        var lightDir = renderParams.SunLight.Direction;
         ref readonly var shadows = ref renderParams.Shadows;
         ref var lightSpace = ref renderCamera.LightSpace;
         var near = _projInfo.Near;

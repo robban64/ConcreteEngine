@@ -8,7 +8,7 @@ using System.Runtime.InteropServices;
 namespace ConcreteEngine.Shared.Rendering;
 
 [StructLayout(LayoutKind.Sequential)]
-public struct DirLightParams(Vector3 direction, Vector3 diffuse, float intensity, float specular)
+public struct SunLightParams(Vector3 direction, Vector3 diffuse, float intensity, float specular)
 {
     public  Vector3 Direction = direction;
     public  Vector3 Diffuse = diffuse;

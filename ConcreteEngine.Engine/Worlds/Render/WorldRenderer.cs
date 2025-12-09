@@ -73,7 +73,7 @@ public sealed class WorldRenderer : IWorldRenderer
         _meshTable = new MeshTable();
         _materialTable = new MaterialTable();
         _animationTable = new AnimationTable();
-        
+
         _renderEntityBus = new RenderEntityBus();
     }
 
@@ -91,7 +91,7 @@ public sealed class WorldRenderer : IWorldRenderer
         var mat = _assets.MaterialStoreImpl.CreateMaterial("EmptyMat", "EmptyMat1");
         _renderEntityBus.EmptyMaterialKey = _materialTable.Add(MaterialTagBuilder.BuildOne(mat.Id, true));
 
-       // PrepareRenderView(1, world.Camera);
+        // PrepareRenderView(1, world.Camera);
 
         DrawDataProvider.Attach(_renderer.CommandBuffer, _animationTable, _meshTable, _materialTable, world.Entities);
     }
@@ -110,7 +110,7 @@ public sealed class WorldRenderer : IWorldRenderer
                 break;
             case FboCommandAction.RecreateShadowFbo:
                 _renderer.FboRegistry.RecreateFixedFrameBuffer<ShadowPassTag>(FboVariant.Default, req.Size);
-                WorldRenderParams.SetShadow(WorldRenderParams.Snapshot.Shadows with{ ShadowMapSize = req.Size.Width});
+                WorldRenderParams.SetShadow(req.Size.Width);
                 break;
             case FboCommandAction.None:
             default:
@@ -138,19 +138,10 @@ public sealed class WorldRenderer : IWorldRenderer
 
         // Upload draw commands
         _renderEntityBus.Execute();
-        
+
         // fill buffers
         _renderer.CollectDrawBuffers();
 
-        if (WorldRenderParams.PendingShadowSize)
-        {
-            var newSize = WorldRenderParams.ShadowMapSize;
-            _renderer.FboRegistry.RecreateFixedFrameBuffer<ShadowPassTag>(FboVariant.Default, new Size2D(newSize));
-            status = BeginFrameStatus.None;
-            
-            WorldRenderParams.ClearPending();
-        }
-        
         _renderer.StartFrame(status);
     }
 
@@ -168,7 +159,6 @@ public sealed class WorldRenderer : IWorldRenderer
         DrawDataProvider.FrameInfo = frameInfo;
         DrawDataProvider.ProjectionInfo = RenderCamera.RenderView.ProjectionInfo;
         DrawDataProvider.RenderView = RenderCamera.RenderView;
-
     }
 
     private void SubmitMaterialData()
@@ -212,15 +202,14 @@ public sealed class WorldRenderer : IWorldRenderer
 
         builder.RegisterFbo<ShadowPassTag>(FboVariant.Default,
             new RegisterFboEntry().AttachDepthTexture(GfxFboDepthTextureDesc.Default())
-                .UseFixedSize(new Size2D(2048, 2048)));
+                .UseFixedSize(new Size2D(WorldRenderParams.ShadowMapSize)));
 
         builder.RegisterFbo<ScenePassTag>(FboVariant.Default,
             new RegisterFboEntry().AttachColorTexture(GfxFboColorTextureDesc.Off(), RenderBufferMsaa.X4)
                 .AttachDepthStencilBuffer());
 
         builder.RegisterFbo<ScenePassTag>(FboVariant.Secondary,
-            new RegisterFboEntry()
-                .AttachColorTexture(GfxFboColorTextureDesc.DefaultMip())
+            new RegisterFboEntry().AttachColorTexture(GfxFboColorTextureDesc.DefaultMip())
                 .AttachDepthStencilBuffer());
 
         builder.RegisterFbo<PostPassTag>(FboVariant.Default,

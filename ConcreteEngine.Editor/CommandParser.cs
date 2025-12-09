@@ -10,7 +10,7 @@ namespace ConcreteEngine.Editor;
 
 public static class CommandParser
 {
-    public static void ParseShadowRequest(string action, string? arg1, string? arg2, out EditorShadowPayload payload)
+    public static void ParseShadowRequest(string action, string? arg1, string? arg2, out EditorShadowCommand command)
     {
         ArgumentException.ThrowIfNullOrWhiteSpace(action);
         ArgumentException.ThrowIfNullOrWhiteSpace(arg1);
@@ -23,17 +23,17 @@ public static class CommandParser
         if (size <= 0)
             throw new ArgumentException("Supported are 1,2,4,8 (1024, 2048, 4096, 8192)");
 
-        payload = new EditorShadowPayload(size, true, EditorRequestAction.Set);
+        command = new EditorShadowCommand(size, true, EditorRequestAction.Set);
     }
 
-    public static void ParseShaderRequest(string action, string? arg1, string? arg2, out EditorShaderPayload payload)
+    public static void ParseShaderRequest(string action, string? arg1, string? arg2, out EditorShaderCommand command)
     {
         ArgumentException.ThrowIfNullOrWhiteSpace(action);
         ArgumentException.ThrowIfNullOrWhiteSpace(arg1);
 
-        payload = action switch
+        command = action switch
         {
-            "reload" => new EditorShaderPayload(arg1, EditorRequestAction.Reload),
+            "reload" => new EditorShaderCommand(arg1, EditorRequestAction.Reload),
             _ => throw new ArgumentException("Unknown action", nameof(action))
         };
     }

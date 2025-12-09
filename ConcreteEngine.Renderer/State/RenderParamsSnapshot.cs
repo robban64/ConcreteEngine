@@ -13,13 +13,13 @@ public sealed class RenderParamsSnapshot
 
     private AmbientParams _ambient;
     private FogParams _fog;
-    private DirLightParams _dirLight;
+    private SunLightParams _sunLight;
     private ShadowParams _shadows;
     private PostEffectParams _postEffect;
 
     public ref readonly AmbientParams Ambient => ref _ambient;
     public ref readonly FogParams Fog => ref _fog;
-    public ref readonly DirLightParams DirLight => ref _dirLight;
+    public ref readonly SunLightParams SunLight => ref _sunLight;
     public ref readonly ShadowParams Shadows => ref _shadows;
     public ref readonly PostEffectParams PostEffects => ref _postEffect;
 
@@ -27,7 +27,7 @@ public sealed class RenderParamsSnapshot
         long version,
         in AmbientParams ambient,
         in FogParams fog,
-        in DirLightParams dirLight,
+        in SunLightParams sunLight,
         in ShadowParams shadows,
         in PostEffectParams postEffect)
     {
@@ -36,7 +36,7 @@ public sealed class RenderParamsSnapshot
         Version = version;
         _ambient = ambient;
         _fog = fog;
-        _dirLight = dirLight;
+        _sunLight = sunLight;
         _shadows = shadows;
         _postEffect = postEffect;
     }

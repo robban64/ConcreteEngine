@@ -29,7 +29,6 @@ public sealed class Demo3DScene : GameScene
     protected override void ConfigureModules(IGameSceneModuleBuilder builder)
     {
         builder.RegisterModule<FlyCameraModule>(0);
-        builder.RegisterModule<EffectAdjustModule>(1);
     }
 
     protected override void ConfigureRenderer(IGameSceneRenderBuilder builder)

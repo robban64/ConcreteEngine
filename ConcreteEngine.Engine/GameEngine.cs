@@ -152,6 +152,8 @@ public sealed class GameEngine : IDisposable
 
     internal void Update(float dt)
     {
+        _timeHub.AdvanceTick(dt);
+
         var outputSize = _window.OutputSize;
         _updateInfo.BeginUpdateFrame(dt, _window.WindowSize, outputSize);
         var updateInfo = _updateInfo.UpdateTickInfo;
@@ -166,19 +168,16 @@ public sealed class GameEngine : IDisposable
         }
 
         if (_assets.PendingAssetCount > 0)
-        {
             _assets.ProcessPendingQueue(updateInfo.UpdateIndex);
-        }
 
         if (_editorQueues.MainCommandCount > 0)
             _editorQueues.DrainMainCommands();
 
         if (_editorQueues.DeferredCommandCount > 0)
             _editorQueues.DrainDeferredCommands();
-
-        _timeHub.AdvanceTick(dt);
-
+        
         _world?.StartUpdate(outputSize, dt);
+        
         _sceneManager.Current?.Update(updateInfo);
     }
 

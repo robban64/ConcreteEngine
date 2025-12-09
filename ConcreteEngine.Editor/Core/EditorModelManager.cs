@@ -61,7 +61,7 @@ internal static class EditorModelManager
 
         static void ReloadShaderHandler(ModelStateContext<AssetState> ctx, EditorAssetResource it) =>
             CommandDispatcher.InvokeEditorCommand(CoreCmdNames.AssetShader,
-                new EditorShaderPayload(it.Name, EditorRequestAction.Reload));
+                new EditorShaderCommand(it.Name, EditorRequestAction.Reload));
     }
 
     private static void RegisterEntityState()
@@ -111,10 +111,14 @@ internal static class EditorModelManager
         WorldRenderStateContext = ModelStateContext<WorldParamState>
             .CreateBuilder(static () => new WorldParamState())
             .OnEnter(static (ctx,it) => EditorDataStore.Slot<WorldParamsData>.SlotState.RequestData())
-            .OnRefresh(static (ctx,it) => {})
+            .OnRefresh(static (ctx,it) => EditorDataStore.Slot<WorldParamsData>.SlotState.RequestData())
             .OnLeave(static (ctx, it) => ctx.ResetState())
+            .RegisterEvent<EditorShadowCommand>(EventKey.WorldActionInvoke, SetShadowSize)
             .Build();
         return;
+        
+        static void SetShadowSize(ModelStateContext<WorldParamState> ctx, EditorShadowCommand evt) =>
+            CommandDispatcher.InvokeEditorCommand(CoreCmdNames.WorldShadow, evt);
 
     }
 }

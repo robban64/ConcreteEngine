@@ -6,6 +6,11 @@ using ConcreteEngine.Editor.Definitions;
 
 namespace ConcreteEngine.Editor.Data;
 
-public sealed record EditorShadowPayload(int Size, bool Enabled, EditorRequestAction RequestAction);
+public interface ICommandPayload
+{
+    EditorRequestAction RequestAction { get; }
+}
 
-public sealed record EditorShaderPayload(string Name, EditorRequestAction RequestAction);
+public sealed record EditorShadowCommand(int Size, bool Enabled, EditorRequestAction RequestAction) : ICommandPayload;
+
+public sealed record EditorShaderCommand(string Name, EditorRequestAction RequestAction)  : ICommandPayload;

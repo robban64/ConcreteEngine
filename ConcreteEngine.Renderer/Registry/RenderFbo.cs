@@ -14,7 +14,7 @@ using ConcreteEngine.Renderer.Passes;
 
 namespace ConcreteEngine.Renderer.Registry;
 
-public delegate Size2D CalcFboOutputDel(Size2D outputSize, Vector2 ratio);
+public delegate Size2D FboSizePolicyDel(Size2D outputSize, Vector2 ratio);
 
 public sealed class RenderFbo : IComparable<RenderFbo>
 {
@@ -79,11 +79,11 @@ public sealed class RenderFbo : IComparable<RenderFbo>
 public sealed class RenderFboSizePolicy
 {
     public FboResizeMode Mode { get; }
-    private readonly CalcFboOutputDel? _calc;
+    private readonly FboSizePolicyDel? _calc;
     private readonly Vector2 _ratio;
     private readonly Size2D _fixed;
 
-    private RenderFboSizePolicy(FboResizeMode mode, CalcFboOutputDel? calc, Vector2 ratio, Size2D fixedSize)
+    private RenderFboSizePolicy(FboResizeMode mode, FboSizePolicyDel? calc, Vector2 ratio, Size2D fixedSize)
     {
         Mode = mode;
         _calc = calc;
@@ -106,8 +106,8 @@ public sealed class RenderFboSizePolicy
     public static RenderFboSizePolicy Default() => new(FboResizeMode.Default, null, Vector2.One, default);
     public static RenderFboSizePolicy Fixed(Size2D size) => new(FboResizeMode.Fixed, null, Vector2.One, size);
 
-    public static RenderFboSizePolicy Calculated(CalcFboOutputDel calcFboOutput, Vector2 ratio) =>
-        new(FboResizeMode.Calculated, calcFboOutput, ratio, default);
+    public static RenderFboSizePolicy Calculated(FboSizePolicyDel fboSizePolicy, Vector2 ratio) =>
+        new(FboResizeMode.Calculated, fboSizePolicy, ratio, default);
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public Size2D Calculate(Size2D outputSize)

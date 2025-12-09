@@ -16,15 +16,11 @@ internal static class WorldParamsComponent
     private static ModelStateContext<WorldParamState> Context => ModelManager.WorldRenderStateContext;
     private static WorldParamState State => Context.State!;
 
-
     private static int _editedField = -1;
 
-    private static void OnSelectionChange(WorldParamSelection selection)
-    {
-        if (selection == State.Selection) return;
-        State.Selection = selection;
-        //Context.TriggerEvent(EventKey.SelectionChanged);
-    }
+    private static void OnSelectionChange(WorldParamSelection selection) => State.SetSelection(selection);
+
+    private static void OnUpdateShadowSize(int size) => State.SetShadowSize(size);
 
     private static void OnSelectionUpdate() => State.TriggerChange();
 
@@ -71,10 +67,75 @@ internal static class WorldParamsComponent
             _editedField = -1;
         }
     }
+    
+    
+    private static void DrawShadow()
+    {
+        var fieldStatus = new ImGuiFieldStatus();
+
+        ref var shadow = ref State.DataState.Shadow;
+        int size = shadow.ShadowMapSize;
+        
+        ImGui.BeginGroup();
+        ImGui.SeparatorText("Shadow Map Size");
+        ImGui.TextUnformatted(new NumberSpanFormatter(StringUtils.CharBuffer8).Format(size));
+        
+        ImGui.PushStyleVar(ImGuiStyleVar.FramePadding, new Vector2(8, 6));
+        ImGui.PushStyleVar(ImGuiStyleVar.WindowPadding, new Vector2(8, 6));
+        if (ImGui.BeginCombo("##shMapSize", "Set Size", ImGuiComboFlags.HeightLargest))
+        {
+            ImGui.PushStyleVar(ImGuiStyleVar.ItemSpacing, new Vector2(6, 12));
+
+            if (ImGui.Selectable("1024", size == 1024, 0, default)) OnUpdateShadowSize(1024);
+            else if (ImGui.Selectable("2048", size == 2048, 0, default)) OnUpdateShadowSize(2048);
+            else if (ImGui.Selectable("4096", size == 4096, 0, default)) OnUpdateShadowSize(4096);
+            else if (ImGui.Selectable("8192", size == 8192, 0, default)) OnUpdateShadowSize(8192);
+
+
+            ImGui.PopStyleVar();
+            ImGui.EndCombo();
+        }
+        ImGui.PopStyleVar(2);
+
+        ImGui.EndGroup();
+
+        ImGui.Dummy(new Vector2(0, 2));
+
+        ImGui.BeginGroup();
+        ImGui.SeparatorText("Shadow Setting");
+
+        ImGui.TextUnformatted("Distance");
+        ImGui.SliderFloat("##ShDist", ref shadow.Distance, 10f, 200f, "%.2f");
+        fieldStatus.NextFieldDrag();
+
+        ImGui.TextUnformatted("ZPad");
+        ImGui.SliderFloat("##ShZPad", ref shadow.ZPad, 1f, 200f, "%.2f");
+        fieldStatus.NextFieldDrag();
+
+        ImGui.TextUnformatted("ConstBias");
+        ImGui.SliderFloat("##ShConstBias", ref shadow.ConstBias, 0.0001f, 0.001f, "%.5f");
+        fieldStatus.NextFieldDrag();
+
+        ImGui.TextUnformatted("SlopeBias");
+        ImGui.SliderFloat("##ShSlopeBias", ref shadow.SlopeBias, 0.001f, 0.01f, "%.4f");
+        fieldStatus.NextFieldDrag();
+
+        ImGui.TextUnformatted("Strength");
+        ImGui.SliderFloat("##ShStrength", ref shadow.Strength, 0f, 1f, "%.2f");
+        fieldStatus.NextFieldDrag();
+
+        ImGui.TextUnformatted("PcfRadius");
+        ImGui.SliderFloat("##ShPcfRadius", ref shadow.PcfRadius, 0.5f, 4f, "%.2f");
+        fieldStatus.NextFieldDrag();
+
+        ImGui.EndGroup();
+
+        if (fieldStatus.HasEdited(out var field)) _editedField = field;
+    }
 
     private static void DrawLightState()
     {
-        ref var dirLight = ref State.DataState.DirLight;
+        ref var dirLight = ref State.DataState.SunLight;
         ref var ambientLight = ref State.DataState.Ambient;
 
         var fieldStatus = new ImGuiFieldStatus();
@@ -112,7 +173,6 @@ internal static class WorldParamsComponent
         ImGui.DragFloat("##LightExposure", ref ambientLight.Exposure, 0.01f, 0.0f, 2.0f, "Exp: %.3f");
         fieldStatus.NextFieldDrag();
 
-        //if (fieldStatus.ActiveField >= 0) Console.WriteLine(fieldStatus.ActiveField);
         if (fieldStatus.HasEdited(out var field)) _editedField = field;
     }
 
@@ -163,11 +223,11 @@ internal static class WorldParamsComponent
         ref var post = ref State.DataState.PostEffect;
         ImGui.BeginGroup();
         ImGui.SeparatorText("Grade");
-        ImGui.SliderFloat("##GrExposure", ref post.Grade.Exposure, 0f, 1f, "Exp: %.2f");
+        ImGui.SliderFloat("##GrExposure", ref post.Grade.Exposure, 0.5f, 2f, "Exp: %.2f");
         fieldStatus.NextFieldDrag();
-        ImGui.SliderFloat("##GrSaturation", ref post.Grade.Saturation, 0f, 1f, "Sat: %.2f");
+        ImGui.SliderFloat("##GrSaturation", ref post.Grade.Saturation, 0f, 1.5f, "Sat: %.2f");
         fieldStatus.NextFieldDrag();
-        ImGui.SliderFloat("##GrContrast", ref post.Grade.Contrast, 0f, 1f, "Con: %.2f");
+        ImGui.SliderFloat("##GrContrast", ref post.Grade.Contrast, 0f, 1.5f, "Con: %.2f");
         fieldStatus.NextFieldDrag();
         ImGui.SliderFloat("##GrWarmth", ref post.Grade.Warmth, 0f, 1f, "War: %.2f");
         fieldStatus.NextFieldDrag();
@@ -187,9 +247,9 @@ internal static class WorldParamsComponent
 
         ImGui.BeginGroup();
         ImGui.SeparatorText("Bloom");
-        ImGui.SliderFloat("##BlIntensity", ref post.Bloom.Intensity, 0f, 1f, "Int: %.2f");
+        ImGui.SliderFloat("##BlIntensity", ref post.Bloom.Intensity, 0f, 2f, "Int: %.2f");
         fieldStatus.NextFieldDrag();
-        ImGui.SliderFloat("##BlThreshold", ref post.Bloom.Threshold, 0f, 1f, "Thr: %.2f");
+        ImGui.SliderFloat("##BlThreshold", ref post.Bloom.Threshold, 0f, 2f, "Thr: %.2f");
         fieldStatus.NextFieldDrag();
         ImGui.SliderFloat("##BlRadius", ref post.Bloom.Radius, 0f, 10f, "Rad: %.2f");
         fieldStatus.NextFieldDrag();
@@ -199,76 +259,19 @@ internal static class WorldParamsComponent
 
         ImGui.BeginGroup();
         ImGui.SeparatorText("Image FX");
-        ImGui.SliderFloat("##FxVignette", ref post.ImageFx.Vignette, -1f, 1f, "Vig: %.2f");
+        ImGui.SliderFloat("##FxVignette", ref post.ImageFx.Vignette, 0f, 0.5f, "Vig: %.2f");
         fieldStatus.NextFieldDrag();
-        ImGui.SliderFloat("##FxGrain", ref post.ImageFx.Grain, 0f, 1f, "Grn: %.2f");
+        ImGui.SliderFloat("##FxGrain", ref post.ImageFx.Grain, 0f, 0.5f, "Grn: %.2f");
         fieldStatus.NextFieldDrag();
-        ImGui.SliderFloat("##FxSharpen", ref post.ImageFx.Sharpen, -1f, 1f, "Shr: %.2f");
+        ImGui.SliderFloat("##FxSharpen", ref post.ImageFx.Sharpen, 0f, 0.5f, "Shr: %.2f");
         fieldStatus.NextFieldDrag();
-        ImGui.SliderFloat("##FxRolloff", ref post.ImageFx.Rolloff, 0f, 1f, "Rol: %.2f");
+        ImGui.SliderFloat("##FxRolloff", ref post.ImageFx.Rolloff, 0f, 0.5f, "Rol: %.2f");
         fieldStatus.NextFieldDrag();
         ImGui.EndGroup();
 
         if (fieldStatus.HasEdited(out var field)) _editedField = field;
     }
-    
-      private static void DrawShadow()
-    {
-        var fieldStatus = new ImGuiFieldStatus();
 
-        ref var shadow = ref State.DataState.Shadow;
-        ImGui.BeginGroup();
-        ImGui.SeparatorText("Shadow Map Size");
-        ImGui.TextUnformatted(new NumberSpanFormatter(StringUtils.CharBuffer8).Format(shadow.ShadowMapSize));
-        if (ImGui.BeginCombo("##shMapSize", "Set Size", ImGuiComboFlags.HeightLargest))
-        {
-            ImGui.PushStyleVar(ImGuiStyleVar.ItemSpacing, new Vector2(6, 12));
-
-            if (ImGui.Selectable("1024", false, ImGuiSelectableFlags.None, Vector2.Zero)){}
-            if (ImGui.Selectable("2048", false, ImGuiSelectableFlags.None, Vector2.Zero)){}
-            if (ImGui.Selectable("4096", false, ImGuiSelectableFlags.None, Vector2.Zero)){}
-            if (ImGui.Selectable("8192", false, ImGuiSelectableFlags.None, Vector2.Zero)){}
-
-            ImGui.PopStyleVar();
-
-            ImGui.EndCombo();
-        }
-
-        ImGui.EndGroup();
-        
-        ImGui.Dummy(new Vector2(0, 2));
-
-        ImGui.BeginGroup();
-        ImGui.SeparatorText("Shadow Setting");
-
-        ImGui.TextUnformatted("Distance");
-        ImGui.SliderFloat("##ShDist", ref shadow.Distance, 10f, 200f, "%.2f");
-        fieldStatus.NextFieldDrag();
-        
-        ImGui.TextUnformatted("ZPad");
-        ImGui.SliderFloat("##ShZPad", ref shadow.ZPad, 1f, 200f, "%.2f");
-        fieldStatus.NextFieldDrag();
-        
-        ImGui.TextUnformatted("ConstBias");
-        ImGui.SliderFloat("##ShConstBias", ref shadow.ConstBias, 0.0001f, 0.001f, "%.2f");
-        fieldStatus.NextFieldDrag();
-        
-        ImGui.TextUnformatted("SlopeBias");
-        ImGui.SliderFloat("##ShSlopeBias", ref shadow.SlopeBias, 0.001f, 0.01f, "%.2f");
-        fieldStatus.NextFieldDrag();
-        
-        ImGui.TextUnformatted("Strength");
-        ImGui.SliderFloat("##ShStrength", ref shadow.Strength, 0f, 1f, "%.2f");
-        fieldStatus.NextFieldDrag();
-        
-        ImGui.TextUnformatted("PcfRadius");
-        ImGui.SliderFloat("##ShPcfRadius", ref shadow.PcfRadius, 0.5f, 4f, "%.2f");
-        fieldStatus.NextFieldDrag();
-        
-        ImGui.EndGroup();
-
-        if (fieldStatus.HasEdited(out var field)) _editedField = field;
-    }
 
 
     private static void DrawSelector()

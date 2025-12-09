@@ -21,31 +21,31 @@ internal static class EngineCommandHandler
 {
     internal static EditorEngineQueue CommandQueues { get; set; } //EngineCommandRecord queue
 
-    public static CommandResponse OnAssetShaderCmd(in EditorShaderPayload shaderPayload)
+    public static CommandResponse OnAssetShaderCmd(in EditorShaderCommand shaderCommand)
     {
-        ArgumentException.ThrowIfNullOrWhiteSpace(shaderPayload.Name);
-        switch (shaderPayload.RequestAction)
+        ArgumentException.ThrowIfNullOrWhiteSpace(shaderCommand.Name);
+        switch (shaderCommand.RequestAction)
         {
             case EditorRequestAction.Reload:
             {
-                CommandQueues.EnqueueDeferred(new AssetCommandRecord(shaderPayload.Name, AssetCommandAction.ReloadAsset,
+                CommandQueues.EnqueueDeferred(new AssetCommandRecord(shaderCommand.Name, AssetCommandAction.ReloadAsset,
                     AssetKind.Shader));
                 break;
             }
             default:
-                throw new ArgumentException("Unknown RequestAction", nameof(shaderPayload.RequestAction));
+                throw new ArgumentException("Unknown RequestAction", nameof(shaderCommand.RequestAction));
         }
 
         return CommandResponse.Ok();
     }
 
-    public static CommandResponse OnWorldShadowCmd(in EditorShadowPayload payload)
+    public static CommandResponse OnWorldShadowCmd(in EditorShadowCommand command)
     {
-        if (payload.Size <= 0)
-            throw new ArgumentException("Supported shadow map size are (1024, 2048, 4096, 8192)", nameof(payload.Size));
+        if (command.Size <= 0)
+            throw new ArgumentException("Supported shadow map size are (1024, 2048, 4096, 8192)", nameof(command.Size));
 
         CommandQueues.EnqueueDeferred(
-            new FboCommandRecord(FboCommandAction.RecreateShadowFbo, new Size2D(payload.Size)));
+            new FboCommandRecord(FboCommandAction.RecreateShadowFbo, new Size2D(command.Size)));
         return CommandResponse.Ok();
     }
 

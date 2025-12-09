@@ -41,9 +41,9 @@ public sealed class RegisterFboEntry
         return this;
     }
 
-    public RegisterFboEntry UseCalculatedSize(CalcFboOutputDel calcDel, Vector2 ratio)
+    public RegisterFboEntry UseCalculatedSize(FboSizePolicyDel del, Vector2 ratio)
     {
-        FboSizePolicy = RenderFboSizePolicy.Calculated(calcDel, ratio);
+        FboSizePolicy = RenderFboSizePolicy.Calculated(del, ratio);
         return this;
     }
 

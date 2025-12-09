@@ -265,7 +265,7 @@ internal sealed class DrawBuffers
         ref var data = ref DataStore.ShadowData;
         data.LightViewProj = lightViewProjection;
         data.ShadowParams0 = new Vector4(size, size, shadow.ConstBias, shadow.SlopeBias);
-        data.ShadowParams1 = new Vector4(shadow.Strength, shadow.PcfRadius, 0.03f, 0.0f);
+        data.ShadowParams1 = new Vector4(shadow.Strength, shadow.PcfRadius, 0.03f, shadow.Distance);
 
         _gfxBuffers.UploadUniformGpuData(_shadowUbo, in data, 0);
     }

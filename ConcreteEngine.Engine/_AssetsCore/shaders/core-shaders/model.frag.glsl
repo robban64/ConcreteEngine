@@ -28,12 +28,11 @@ layout(binding = 2) uniform sampler2D uAlpha;
 layout(binding = 3) uniform sampler2DShadow uShadowMap;
 
 const vec2 offsets[4] = vec2[](
-    vec2( 0.0,  0.0),
-    vec2( 1.0,  0.0),
-    vec2(-1.0,  0.0),
-    vec2( 0.0,  1.0)
+    vec2(-0.5, -0.5),
+    vec2( 0.5, -0.5),
+    vec2(-0.5,  0.5),
+    vec2( 0.5,  0.5)
 );
-
 
 float saturate(float x) {
     return clamp(x, 0.0, 1.0);
@@ -104,21 +103,21 @@ float sampleShadowMap(vec4 lightSpacePos, vec3 N, vec3 L)
     vec3 p = lightSpacePos.xyz / lightSpacePos.w;
     p = p * 0.5 + 0.5;
 
-    if (p.x <= 0.0 || p.x >= 1.0 || p.y <= 0.0 || p.y >= 1.0) return 1.0;
-    if (p.z >= 1.0) return 1.0;
-
-    float ndl  = max(dot(N, L), 0.0);
+    if (p.x < 0.0 || p.x > 1.0 || p.y < 0.0 || p.y > 1.0 || p.z > 1.0) 
+        return 1.0;
+        
+    float ndl  = clamp(dot(N, L), 0.0, 1.0);
     float bias = max(uShadowParams0.z, uShadowParams0.w * (1.0 - ndl));
-    float ref  = clamp(p.z - bias, 0.0, 1.0);
-
-    vec2 texel = uShadowParams0.xy;
-    float vis = 0.0;
-    for (int i = 0; i < 4; ++i) {
-        vec2 uv = p.xy + offsets[i] * texel;
-        uv = clamp(uv, vec2(0.001), vec2(0.999));
-        vis += texture(uShadowMap, vec3(uv, ref));
+    float depthToCompare = p.z - bias;
+    
+    float shadowSum = 0.0;
+    vec2 texelSize = uShadowParams0.xy;
+    for (int i = 0; i < 4; ++i) 
+    {
+        shadowSum += texture(uShadowMap, vec3(p.xy + offsets[i] * texelSize, depthToCompare));
     }
-    return vis * 0.25; // raw
+    
+    return shadowSum * 0.25;
 }
 
 
@@ -127,13 +126,12 @@ float halfLambert(float ndl) {
     x = max(x, 0.0);
     return x * x;
 }
-
 void main()
 {
     float uvRepeat = uMatParams0.y;
     vec2 uv = fs_in.TexCoord * uvRepeat;
 
-    // Albedo
+    //  Albedo and Alpha 
     vec4 baseTex = texture(uTexture, uv);
     float a = baseTex.a;
     if (uMatParams1.w > 0.5) {
@@ -146,76 +144,75 @@ void main()
 
     vec3 baseColor = baseTex.rgb * uMatColor.rgb;
 
-    // Positions
-    vec3 P = fs_in.FragPos;
-    vec3 V = normalize(uCameraPos.xyz - P);
+    //  Geometric Normal
+    vec3 N_geo = normalize(fs_in.N_world);
 
+    // Visual Normal 
+    vec3 N_vis = N_geo; 
 
-    vec3 N;
     if (uMatParams1.y > 0.5) {
-        // Use TBN and normal map
-        vec3 Nw = normalize(fs_in.N_world);
+        //(Gram-Schmidt)
         vec3 Tw = normalize(fs_in.T_world);
-        Tw = normalize(Tw - Nw * dot(Tw, Nw));
+        Tw = normalize(Tw - N_geo * dot(Tw, N_geo));
         vec3 Bw = normalize(fs_in.B_world);
-        mat3 TBN = mat3(Tw, Bw, Nw);
+        mat3 TBN = mat3(Tw, Bw, N_geo);
+        
         vec3 nTex = texture(uNormalTex, fs_in.TexCoord).rgb * 2.0 - 1.0;
-        N = normalize(TBN * nTex);
-    } else {
-        N = normalize(fs_in.N_world);
+        N_vis = normalize(TBN * nTex);
     }
 
+    // Positions & Vectors
+    vec3 P = fs_in.FragPos;
+    vec3 V = normalize(uCameraPos.xyz - P);
 
     // Directional light (sun)
     vec3 Ld = normalize(-uLightDirection.xyz);
     vec3 LiD = uLightDiffuse.rgb * uLightDiffuse.a;
 
-    // Diffuse (Half-Lambert)
-    float ndl = dot(N, Ld);
+    //  4. Lighting Calculations (Use N_vis) 
+    float ndl = dot(N_vis, Ld);
     float diffTerm = halfLambert(ndl);
     vec3 diffuse = baseColor * diffTerm;
 
-    // Specular (Blinn-Phong)
     float shininess = uMatParams1.x;
     float specularStrength = uMatParams0.x;
-    float specD = blinnPhongSpec(N, V, Ld, shininess);
+    float specD = blinnPhongSpec(N_vis, V, Ld, shininess);
     vec3 specular = vec3(specularStrength) * specD * uLightSpecularIntensity.x;
 
-    // Shadow
-    float vis = sampleShadowMap(uLightViewProj * vec4(P, 1.0), N, Ld);
+    // Shadow Calculation (Use N_geo) 
+    float vis = sampleShadowMap(uLightViewProj * vec4(P, 1.0), N_geo, Ld);
+    
     float dirShadow = mix(1.0, max(vis, 0.2), uShadowParams1.x);
-
     float dirShadowSpec = max(dirShadow, 0.25);
 
-    // Compose direct (dir light)
     vec3 direct = diffuse * LiD * dirShadow + specular * LiD * dirShadowSpec;
 
-    // Point/spot lights (no shadows here)
+    //  Point Lights (Use N_vis) 
     int lightCount = clamp(uLightCounts.x, 0, MAX_LIGHTS);
     for (int i = 0; i < lightCount; ++i) {
         vec3 Lp, LiP; float atten;
         evalPunctual(uLights[i], P, Lp, atten, LiP);
 
-        float ndlp = dot(N, Lp);
+        // Point lights react to bumps
+        float ndlp = dot(N_vis, Lp); 
         float diffP = halfLambert(ndlp);
         if (diffP <= 0.0) continue;
 
         vec3 diffuseP = baseColor * diffP;
-        float specP = blinnPhongSpec(N, V, Lp, shininess);
+        float specP = blinnPhongSpec(N_vis, V, Lp, shininess);
         vec3 specularP = vec3(specularStrength) * specP * uLightSpecularIntensity.x;
 
         direct += (diffuseP + specularP) * LiP * atten;
     }
 
-    // Ambient
-    float up = clamp(N.y * 0.5 + 0.5, 0.0, 1.0);
+    //   Ambient (Use N_vis) 
+    float up = clamp(N_vis.y * 0.5 + 0.5, 0.0, 1.0);
     vec3 ambient = mix(uAmbientGround.rgb, uAmbient.rgb, up) * baseColor;
 
-    // Exposure (ambient.w as exposure-1)
+    // Exposure & Fog
     float exposure = max(uAmbient.w, 0.0) + 1.0;
     vec3 litColor = (ambient + direct) * exposure;
 
-    // Fog
     float viewDist = length(uCameraPos.xyz - P);
     float fogF = computeFogFactor(P, viewDist);
     vec3 fogColor = computeFogColor(LiD, 1.0);

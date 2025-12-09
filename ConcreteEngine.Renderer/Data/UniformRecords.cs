@@ -60,83 +60,56 @@ public readonly struct EngineUniformRecord(
 }
 
 [StructLayout(LayoutKind.Sequential)]
-public struct FrameUniformRecord(
-    in Vector4 ambient,
-    in Vector4 ambientGround,
-    in Vector4 fogColor,
-    in Vector4 fogParams0,
-    in Vector4 fogParams1
-)
+public struct FrameUniformRecord
 {
-    public Vector4 Ambient = ambient; // xyz = sky ambient, w = exposure
-    public Vector4 AmbientGround = ambientGround; // xyz = ground ambient
-    public Vector4 FogColor = fogColor; // rgb = base fog color, a = in-scattering mix
-    public Vector4 FogParams0 = fogParams0; // x=exp2_k, y=height_k, z=height0, w=globalStrength
-    public Vector4 FogParams1 = fogParams1; // x=expWeight, y=heightWeight, z=maxDistance, w=reserved
+    public Vector4 Ambient; // xyz = sky ambient, w = exposure
+    public Vector4 AmbientGround; // xyz = ground ambient
+    public Vector4 FogColor; // rgb = base fog color, a = in-scattering mix
+    public Vector4 FogParams0; // x=exp2_k, y=height_k, z=height0, w=globalStrength
+    public Vector4 FogParams1; // x=expWeight, y=heightWeight, z=maxDistance, w=reserved
 }
 
 [StructLayout(LayoutKind.Sequential)]
-public struct CameraUniformRecord(
-    in Matrix4x4 viewMat,
-    in Matrix4x4 projMat,
-    in Matrix4x4 projViewMat,
-    in Vector4 cameraPos,
-    in Vector4 cameraUp,
-    in Vector4 cameraRight)
+public struct CameraUniformRecord
 {
-    public Matrix4x4 ViewMat = viewMat;
-    public Matrix4x4 ProjMat = projMat;
-    public Matrix4x4 ProjViewMat = projViewMat;
-    public Vector4 CameraPos = cameraPos;
-    public Vector4 CameraUp = cameraUp;
-    public Vector4 CameraRight = cameraRight;
+    public Matrix4x4 ViewMat;
+    public Matrix4x4 ProjMat;
+    public Matrix4x4 ProjViewMat;
+    public Vector4 CameraPos;
+    public Vector4 CameraUp;
+    public Vector4 CameraRight;
 }
 
 [StructLayout(LayoutKind.Sequential)]
-public struct DirLightUniformRecord(
-    in Vector4 direction,
-    in Vector4 diffuse,
-    in Vector4 specular)
+public struct DirLightUniformRecord
 {
-    public Vector4 Direction = direction; // direction, light toward scene
-    public Vector4 Diffuse = diffuse; // rgb=color, a=intensity
-    public Vector4 Specular = specular; // x = specular multiplier
+    public Vector4 Direction; // direction, light toward scene
+    public Vector4 Diffuse; // rgb=color, a=intensity
+    public Vector4 Specular; // x = specular multiplier
 }
 
 [StructLayout(LayoutKind.Sequential)]
-public struct LightUniformRecord(
-    int lightCounts,
-    in LightDataStruct l0,
-    in LightDataStruct l1 = default,
-    in LightDataStruct l2 = default,
-    in LightDataStruct l3 = default,
-    in LightDataStruct l4 = default,
-    in LightDataStruct l5 = default,
-    in LightDataStruct l6 = default,
-    in LightDataStruct l7 = default)
+public struct LightUniformRecord
 {
     // yzw unused/padding
-    public IVec4Std140 LightCounts = new(lightCounts);
+    public IVec4Std140 LightCounts;
 
-    public LightDataStruct L0 = l0;
-    public LightDataStruct L1 = l1;
-    public LightDataStruct L2 = l2;
-    public LightDataStruct L3 = l3;
-    public LightDataStruct L4 = l4;
-    public LightDataStruct L5 = l5;
-    public LightDataStruct L6 = l6;
-    public LightDataStruct L7 = l7;
+    public LightDataStruct L0;
+    public LightDataStruct L1;
+    public LightDataStruct L2;
+    public LightDataStruct L3;
+    public LightDataStruct L4;
+    public LightDataStruct L5;
+    public LightDataStruct L6;
+    public LightDataStruct L7;
 }
 
 [StructLayout(LayoutKind.Sequential)]
-public struct ShadowUniformRecord(
-    in Matrix4x4 lightViewProj,
-    in Vector4 shadowParams0,
-    in Vector4 shadowParams1)
+public struct ShadowUniformRecord
 {
-    public Matrix4x4 LightViewProj = lightViewProj;
-    public Vector4 ShadowParams0 = shadowParams0; // x=1/texW, y=1/texH, z=constBias, w=slopeBias
-    public Vector4 ShadowParams1 = shadowParams1; // x=strength, y=pcfRadius, z=NormalBias,w reserved
+    public Matrix4x4 LightViewProj;
+    public Vector4 ShadowParams0; // x=1/texW, y=1/texH, z=constBias, w=slopeBias
+    public Vector4 ShadowParams1; // x=strength, y=pcfRadius, z=NormalBias, w=MaxDistance
 }
 
 [StructLayout(LayoutKind.Sequential)]
@@ -145,24 +118,6 @@ public struct MaterialUniformRecord
     public Vector4 MatColor; // rgb = tint
     public Vector4 MatParams0; // x = SpecularStrength, y = uvRepeat, z,w reserved
     public Vector4 MatParams1; // x = Shininess, y = HasNormals z = Transparency, w = HasAlpha
-
-    public MaterialUniformRecord(
-        in Vector4 matColor,
-        in Vector4 matParams0,
-        in Vector4 matParams1)
-    {
-        MatColor = matColor;
-        MatParams0 = matParams0;
-        MatParams1 = matParams1;
-    }
-
-    public MaterialUniformRecord(in MaterialParamSnapshot mat)
-    {
-        mat.Fill(out var color, out var param1, out var param2);
-        MatColor = color;
-        MatParams0 = param1;
-        MatParams1 = param2;
-    }
 }
 
 [StructLayout(LayoutKind.Sequential)]
@@ -184,23 +139,18 @@ public unsafe struct DrawAnimationUniform
 }
 
 [StructLayout(LayoutKind.Sequential)]
-public struct PostProcessUniform(
-    in Vector4 grade,
-    in Vector4 whiteBalance,
-    in Vector4 bloom,
-    in Vector4 fx
-)
+public struct PostProcessUniform
 {
     // x = exposureOffset (-0.10..+0.10), y = saturation (0.8..1.2)
     // z = contrast (0.9..1.1),w = warmth (-0.05..+0.05)
-    public Vector4 Grade = grade;
+    public Vector4 Grade;
 
     //x = tint (-0.05..+0.05), y = strength (0..1), z,w = 0
-    public Vector4 WhiteBalance = whiteBalance;
+    public Vector4 WhiteBalance;
 
     //x = intensity (0..1.5), y = threshold (0.6..0.9), z = radius (px), w = 0
-    public Vector4 Bloom = bloom;
+    public Vector4 Bloom;
 
     // x = vignetteStrength (0..0.15), y = grainAmount (0..0.01), z = sharpenAmount (0..0.15), w = rolloff (0..0.12)
-    public Vector4 Fx = fx;
+    public Vector4 Fx;
 }

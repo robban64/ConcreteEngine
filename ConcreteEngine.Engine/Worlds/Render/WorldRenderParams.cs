@@ -58,16 +58,19 @@ public sealed class WorldRenderParams
         if (distance is not { } dist)
             dist = _shadow.Distance > 1 ? _shadow.Distance : 120f;
 
-        var constBias = 0.8f / size;
-        var slopeBias = constBias * 6f;
-        //var constBias = 1.2f / size;
-        //var slopeBias = constBias * 3f;
+        //slopeBias
+        // 2k-map = 0.0025 - 0.0035
+        // 4k-map = 0.0015f-0.0025f
+
+        //constBias
+        // 4k-map =  0.0003 to 0.0005
+        // 2k-map = 0.0001 to 0.0002
         _shadow = new ShadowParams(
             shadowMapSize: size,
             distance: dist,
             zPad: 100.0f,
             constBias: 0.002f,
-            slopeBias: 2.0f,
+            slopeBias: 0.0005f,
             strength: 1f,
             pcfRadius: 1f);
 

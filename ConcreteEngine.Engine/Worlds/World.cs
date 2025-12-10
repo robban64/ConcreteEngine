@@ -48,7 +48,7 @@ public sealed class World : IWorld
 
     private MeshTable _meshTable = null!;
     private MaterialTable _materialTable = null!;
-
+    private AnimationTable _animationTable = null!;
 
     internal World()
     {
@@ -75,17 +75,20 @@ public sealed class World : IWorld
     public IMaterialTable EntityMaterials => _materialTable;
 
     internal MeshTable GetMeshTableImpl() => _meshTable;
-
     internal MaterialTable GetMaterialTableImpl() => _materialTable;
+    
+    internal AnimationTable GetAnimationTableImpl() => _animationTable;
+
 
     public int EntityCount => Entities.EntityCount;
     public int ShadowMapSize => WorldRenderParams.Snapshot.Shadows.ShadowMapSize;
 
 
-    internal void AttachRender(GfxContext gfx, MeshTable meshTable, MaterialTable materialTable)
+    internal void AttachRender(GfxContext gfx, MeshTable meshTable, MaterialTable materialTable, AnimationTable animationTable)
     {
         _meshTable = meshTable;
         _materialTable = materialTable;
+        _animationTable =  animationTable;
 
         Entities.AttachRender(_meshTable, _materialTable);
         Sky.AttachRenderer(_meshTable);

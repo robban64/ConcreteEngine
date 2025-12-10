@@ -7,3 +7,10 @@ public enum WorldParamSelection
     Post,
     Shadow
 }
+
+public enum WorldObjectSelection
+{
+    None,
+    Particle,
+    Animation
+}

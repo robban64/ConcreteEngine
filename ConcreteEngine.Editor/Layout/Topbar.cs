@@ -37,15 +37,7 @@ internal static class Topbar
 
             // left
             DrawModeSelector();
-            /*
-            ImGui.SameLine();
-            GuiUtils.CenterAlignText(GetActiveAction(), GuiTheme.TopbarHeight);
-            ImGui.SameLine();
-            var selected = new NumberSpanFormatter(StringUtils.CharBuffer8)
-                .Format(EditorDataStore.Input.EditorSelection.Id.Identifier);
-            GuiUtils.CenterAlignText(selected, GuiTheme.TopbarHeight);
-            ImGui.SameLine();
-*/
+
             // right
             if (StateContext.ModeState.IsEditorState)
                 DrawPropertySelector();
@@ -102,15 +94,6 @@ internal static class Topbar
         ImGui.EndChild();
     }
 
-    private static EditorViewMode ViewModeIndexToEnum(int index)
-    {
-        return index switch
-        {
-            0 => EditorViewMode.Editor,
-            1 => EditorViewMode.Metrics,
-            _ => throw new ArgumentOutOfRangeException(nameof(index), index, null)
-        };
-    }
 
     private static RightSidebarMode PropertyIndexToEnum(int index)
     {

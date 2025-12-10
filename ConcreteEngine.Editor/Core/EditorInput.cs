@@ -79,8 +79,8 @@ internal static class EditorInput
             selection.Id = EditorId.Empty;
             selection.Action = EditorMouseAction.None;
             selection.IsRequesting = false;
-            selection.RefreshTime();
             selection.IsDirty = true;
+            selection.RefreshTime();
             return;
         }
 

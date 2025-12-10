@@ -3,8 +3,12 @@ using ConcreteEngine.Editor.Data;
 using ConcreteEngine.Editor.Definitions;
 using ConcreteEngine.Editor.Store;
 using ConcreteEngine.Engine.Editor.Controller;
+using ConcreteEngine.Engine.Time;
 using ConcreteEngine.Engine.Worlds;
 using ConcreteEngine.Engine.Worlds.Entities;
+using ConcreteEngine.Graphics;
+using ConcreteEngine.Renderer.State;
+using ConcreteEngine.Shared.Diagnostics;
 using ConcreteEngine.Shared.Rendering;
 using EditorData = ConcreteEngine.Editor.Store.EditorDataStore;
 
@@ -29,14 +33,31 @@ internal static class EngineDataBridge
 
     public static void ProcessEditorDataSlot()
     {
+        var editorState = EditorData.Input.EditorSelection;
+        var action = editorState.Action;
+
         ProcessCamera();
         ProcessWorldParams();
-        if (EditorData.Input.EditorSelection.Action == EditorMouseAction.None)
-            ProcessEntities();
-        else
-            ProcessInteractivity();
+        ProcessParticle();
 
-        WorldInteractive.SelectedEntityId = new EntityId(EditorData.State.SelectedId);
+        if (editorState.IsDirty && !editorState.Id.IsValid)
+        {
+            EditorData.State.SelectedId = EditorId.Empty;
+            return;
+        }
+
+        if (action == EditorMouseAction.None) ProcessEntities();
+        else ProcessInteractivity();
+
+
+        WorldInteractive.SelectedEntityId = new EntityId(editorState.Id);
+    }
+
+    public static void WriteFrameMetrics(in RenderFrameInfo frameInfo, in GfxFrameResult frameResult)
+    {
+        EditorData.MetricState.FrameSample =
+            new RenderInfoSample(frameInfo.Fps, frameInfo.Alpha, frameResult.DrawCalls, frameResult.TriangleCount);
+        EditorData.MetricState.FrameMetrics = new FrameMetric(frameInfo.FrameIndex, EngineTime.Timestamp, default);
     }
 
 
@@ -53,6 +74,17 @@ internal static class EngineDataBridge
             _world.ApplyCameraState(in data);
 
         slot.Reset(camGen);
+    }
+
+    private static void ProcessParticle()
+    {
+        var slot = EditorData.Slot<ParticleDataState>.SlotState;
+        ref var data = ref EditorData.Slot<ParticleDataState>.Data;
+        if(data.EmitterHandle == 0) return;
+        if (slot.IsDirty)
+            _world.ApplyEmitterState(in data);
+        else if (slot.IsRequesting)
+            _world.WriteEmitterState(ref data);
     }
 
     public static void ProcessWorldParams()
@@ -81,13 +113,6 @@ internal static class EngineDataBridge
         ref var data = ref EditorData.State.EntityState;
 
         var entityId = new EntityId(editorState.Id);
-
-        if (editorState.IsDirty && !editorState.Id.IsValid)
-        {
-            data = default;
-            EditorData.State.SelectedId = EditorId.Empty;
-            return;
-        }
 
         if (entityId != data.EntityId || editorState.IsRequesting)
         {

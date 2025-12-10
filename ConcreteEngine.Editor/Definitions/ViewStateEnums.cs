@@ -11,15 +11,17 @@ internal enum LeftSidebarMode
 {
     Default,
     Assets,
-    Entities
+    Entities,
+    Objects
 }
 
 internal enum RightSidebarMode
 {
     Default,
+    Property,
     Camera,
     World,
     Sky,
-    Terrain
+    Terrain,
 }
 

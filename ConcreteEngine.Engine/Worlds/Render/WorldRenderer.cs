@@ -81,7 +81,7 @@ public sealed class WorldRenderer : IWorldRenderer
         _meshTable.Setup(_assets);
         _animationTable.Setup(_assets);
         _renderEntityBus.AttachWorld(world);
-        world.AttachRender(_graphics.Gfx, _meshTable, _materialTable);
+        world.AttachRender(_graphics.Gfx, _meshTable, _materialTable, _animationTable);
 
         _renderEntityBus.CubeId = _assets.StoreImpl.GetByName<Model>("Cube").ModelId;
 

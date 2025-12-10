@@ -8,11 +8,10 @@ using ConcreteEngine.Common.Numerics;
 namespace ConcreteEngine.Shared.Diagnostics;
 
 // Scoped samples
-public readonly struct RenderInfoSample(float fps, float alpha, int passes, int draws, int tris)
+public readonly struct RenderInfoSample(float fps, float alpha, int draws, int tris)
 {
     public readonly float Fps = fps;
     public readonly float Alpha = alpha;
-    public readonly int Passes = passes;
     public readonly int Draws = draws;
     public readonly int Tris = tris;
 }

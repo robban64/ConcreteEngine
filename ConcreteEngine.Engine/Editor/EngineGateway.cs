@@ -94,7 +94,7 @@ internal sealed class EngineGateway : IDisposable
 
         EditorSetup.Editor = _editor!;
         MetricRouter.Attach(world, assetSystem);
-        EngineResourceProvider.Attach(assetSystem, _entityController, _interactionController);
+        EngineResourceProvider.Attach(assetSystem, _entityController, _interactionController, _worldController);
         EngineDataBridge.Attach(_entityController, _worldController, _interactionController);
 
         EditorSetup.RegisterDataProvider();
@@ -117,8 +117,9 @@ internal sealed class EngineGateway : IDisposable
     {
         if (!Enabled || !HasBoundEditor) return;
 
-        MetricRouter.UpdateRenderInfo(in frameInfo, in frameResult);
+        EngineDataBridge.ProcessEditorDataSlot();
         _editor.Render(frameInfo.DeltaTime);
+        EngineDataBridge.WriteFrameMetrics(in frameInfo, in frameResult);
     }
 
     public void UpdateDiagnostics(float dt)
@@ -206,15 +207,16 @@ internal sealed class EngineGateway : IDisposable
         public static void RegisterDataProvider()
         {
             EditorApi.FetchAssetDetailed = EngineResourceProvider.GetAssetObjectFiles;
-
             EditorApi.LoadAssetResources = EngineResourceProvider.CreateEditorAssets;
             EditorApi.LoadEntityResources = EngineResourceProvider.CreateEntityList;
+
+            EditorApi.LoadParticleResources = EngineResourceProvider.GetParticleResources;
+            EditorApi.LoadAnimationResources = EngineResourceProvider.GetAnimationResources;
         }
 
 
         public static unsafe void RegisterMetrics()
         {
-            MetricsApi.PullFrameMetrics = &MetricRouter.GetFrameMetrics;
             MetricsApi.PullMaterialMetrics = MetricRouter.GetMaterialMetrics;
             MetricsApi.PullSceneMetrics = MetricRouter.GetSceneMetrics;
             MetricsApi.PullMemoryMetrics = MetricRouter.GetMemoryMetrics;

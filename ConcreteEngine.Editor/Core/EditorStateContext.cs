@@ -104,6 +104,7 @@ internal static class EditorStateContext
             {
                 case LeftSidebarMode.Assets: TransitionLeftSidebar(ModelManager.AssetStateContext); break;
                 case LeftSidebarMode.Entities: TransitionLeftSidebar(ModelManager.EntitiesStateContext); break;
+                case LeftSidebarMode.Objects: TransitionLeftSidebar(ModelManager.WorldObjectStateContext); break;
                 case LeftSidebarMode.Default:
                 default: break;
             }
@@ -113,11 +114,14 @@ internal static class EditorStateContext
         {
             switch (state.RightSidebar)
             {
+                case RightSidebarMode.Property: 
+                    
+                    break;
                 case RightSidebarMode.Camera: TransitionRightSidebar(ModelManager.CameraStateContext); break;
                 case RightSidebarMode.World: TransitionRightSidebar(ModelManager.WorldRenderStateContext); break;
-                case RightSidebarMode.Default:
                 case RightSidebarMode.Sky:
                 case RightSidebarMode.Terrain:
+                case RightSidebarMode.Default:
                 default: break;
             }
         }

@@ -33,7 +33,6 @@ public sealed class MetricReport
         if (!FrameMetrics.Alpha.AsSpan().EndsWith(strBuffer))
             FrameMetrics.Alpha = $"Alpha: {strBuffer.ToString()} ms";
 
-
         strBuffer = formatter.Format(sample.Draws);
         if (!FrameMetrics.DrawCalls.AsSpan().EndsWith(strBuffer))
             FrameMetrics.DrawCalls = $"Draws: {strBuffer.ToString()}";
@@ -41,10 +40,6 @@ public sealed class MetricReport
         strBuffer = formatter.Format(sample.Tris);
         if (!FrameMetrics.TriangleCount.AsSpan().EndsWith(strBuffer))
             FrameMetrics.TriangleCount = $"Tris: {strBuffer.ToString()}";
-
-        strBuffer = formatter.Format(sample.Passes);
-        if (!FrameMetrics.Passes.AsSpan().EndsWith(strBuffer))
-            FrameMetrics.Passes = $"Passes: {strBuffer.ToString()}";
     }
 
     internal void UpdateSceneMetrics(in PairSample m)

@@ -167,14 +167,13 @@ public sealed class GameEngine : IDisposable
 
     private void UpdateTick(float dt)
     {
-        _engineGateway.UpdateEditorData();
+        //_engineGateway.UpdateEditorData();
 
         _world.StartTick(_window.OutputSize, dt, EngineTime.Time);
 
         _sceneManager.Current?.UpdateTick(dt);
 
         _world.EndTick(_worldRenderer.RenderCamera);
-
     }
 
 

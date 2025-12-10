@@ -1,6 +1,7 @@
 #region
 
 using ConcreteEngine.Editor.Metrics;
+using ConcreteEngine.Editor.Store;
 using ConcreteEngine.Shared.Diagnostics;
 
 #endregion
@@ -9,10 +10,6 @@ namespace ConcreteEngine.Editor;
 
 public static class MetricsApi
 {
-    // Fetchers
-    public static unsafe delegate*<out FrameMetric, out RenderInfoSample, void> PullFrameMetrics;
-
-    //public static Func<FrameMetric<RenderInfoSample>>? PullFrameMetrics { get; set; }
     public static Func<PairSample>? PullSceneMetrics { get; set; }
     public static Func<CollectionSample>? PullMaterialMetrics { get; set; }
     public static Func<PairSample>? PullMemoryMetrics { get; set; }
@@ -44,13 +41,11 @@ public static class MetricsApi
         TextData.UpdateSceneMetrics(in Data.SceneMetrics);
     }
 
-    public static unsafe void RefreshFrameMetrics()
+    public static void RefreshFrameMetrics()
     {
-        if (!ActiveFrameMetrics || PullFrameMetrics == null) return;
-        PullFrameMetrics(out var metric, out var sample);
-        Data.FrameMetrics = metric;
-        Data.FrameRenderInfoSample = sample;
-        TextData.UpdateFrameMetrics(in Data.FrameMetrics, in Data.FrameRenderInfoSample);
+        if (!ActiveFrameMetrics) return;
+        TextData.UpdateFrameMetrics(in EditorDataStore.MetricState.FrameMetrics,
+            in EditorDataStore.MetricState.FrameSample);
     }
 
     public static void RefreshAssetMetrics()

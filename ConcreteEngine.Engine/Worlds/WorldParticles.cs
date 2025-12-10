@@ -2,6 +2,7 @@
 
 using System.Numerics;
 using System.Runtime.CompilerServices;
+using System.Runtime.InteropServices;
 using ConcreteEngine.Common.Collections;
 using ConcreteEngine.Common.Numerics;
 using ConcreteEngine.Common.Numerics.Maths;
@@ -9,75 +10,16 @@ using ConcreteEngine.Common.Time;
 using ConcreteEngine.Engine.Worlds.Data;
 using ConcreteEngine.Engine.Worlds.Entities.Components;
 using ConcreteEngine.Engine.Worlds.MeshGeneration;
+using ConcreteEngine.Engine.Worlds.Objects;
 using ConcreteEngine.Engine.Worlds.Tables;
 using ConcreteEngine.Graphics.Gfx.Resources;
 using ConcreteEngine.Renderer.Data;
+using ConcreteEngine.Shared.World;
+using Microsoft.VisualBasic;
 
 #endregion
 
 namespace ConcreteEngine.Engine.Worlds;
-
-public sealed class ParticleEmitter : IComparable<int>, IComparable<ParticleEmitter>
-{
-    public int EmitterHandle { get; }
-
-    public int ParticleCount { get; set; }
-
-    public MeshId MeshId { get; set; }
-    public MaterialId MaterialId { get; set; }
-
-    public ParticleEmitterState State;
-    public ParticleDefinition Definition;
-    public BoundingBox LocalBounds;
-
-    internal ParticleStateData[] Particles;
-
-    internal ReadOnlySpan<ParticleStateData> ParticlesSpan => Particles.AsSpan(0, ParticleCount);
-
-    public ParticleEmitter(int handle, int particleCount, in ParticleDefinition def)
-    {
-        ArgumentOutOfRangeException.ThrowIfLessThan(particleCount, 16);
-        EmitterHandle = handle;
-        ParticleCount = particleCount;
-        Definition = def;
-        Particles = new ParticleStateData[particleCount];
-
-        NewSeed();
-        var rng = new FastRandom(State.Seed);
-
-        for (int i = 0; i < Particles.Length; i++)
-        {
-            ref var p = ref Particles[i];
-            float randomMaxLife = rng.RandomFloat(Definition.LifeMinMax.X, Definition.LifeMinMax.Y);
-            p.MaxLife = randomMaxLife;
-            p.Life = rng.RandomFloat(0, randomMaxLife);
-        }
-    }
-
-    internal void NewSeed()
-    {
-        if (State.Seed == 0) State.Seed = (uint)Environment.TickCount + (uint)EmitterHandle;
-    }
-
-    internal void UpdateLocalBounds(out BoundingBox bounds)
-    {
-        var distance = Definition.LifeMinMax.Y * Definition.LifeMinMax.Y;
-        var extents = new Vector3(State.Spread + distance);
-        var min = -extents;
-        var gravityOffset = 0.5f * Definition.Gravity * (Definition.LifeMinMax.Y * Definition.LifeMinMax.Y);
-        LocalBounds.Min = Vector3.Min(min, min + gravityOffset);
-        LocalBounds.Max = Vector3.Max(extents, extents + gravityOffset);
-        bounds = LocalBounds;
-    }
-
-    public int CompareTo(ParticleEmitter? other)
-    {
-        if (ReferenceEquals(this, other)) return 0;
-        return other is null ? 1 : EmitterHandle.CompareTo(other.EmitterHandle);
-    }
-
-    public int CompareTo(int other) => EmitterHandle.CompareTo(other);
-}
 
 public sealed class WorldParticles
 {
@@ -89,6 +31,8 @@ public sealed class WorldParticles
 
     private readonly List<ParticleEmitter> _emitters = new(4);
     private int _handleHigh = 0;
+
+    internal ReadOnlySpan<ParticleEmitter> EmitterSpan => CollectionsMarshal.AsSpan(_emitters);
 
     internal WorldParticles()
     {
@@ -120,10 +64,10 @@ public sealed class WorldParticles
         return _emitters[index];
     }
 
-    public ParticleEmitter CreateEmitter(int particleCount, in ParticleDefinition definition)
+    public ParticleEmitter CreateEmitter(string name, int particleCount, in ParticleDefinition definition)
     {
         var slotHandle = _particleGenerator.CreateParticleMesh(particleCount, out var mesh);
-        var emitter = new ParticleEmitter(slotHandle, particleCount, in definition)
+        var emitter = new ParticleEmitter(name, slotHandle, particleCount, in definition)
         {
             MeshId = mesh,
             MaterialId = Material

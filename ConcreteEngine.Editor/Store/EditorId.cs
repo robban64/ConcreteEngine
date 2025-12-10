@@ -15,6 +15,9 @@ public enum EditorItemType : byte
     Entity,
     Component,
     Material,
+    
+    Particle,
+    Animation
 }
 
 public readonly record struct EditorId(int Identifier, EditorItemType ItemType)

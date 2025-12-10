@@ -23,26 +23,10 @@ internal static class MetricRouter
 
     private static MaterialStore? Materials => _assetSystem?.MaterialStoreImpl;
 
-    private static RenderFrameInfo _frameInfo;
-    private static GfxFrameResult _frameResult;
-
     internal static void Attach(World world, AssetSystem assetSystem)
     {
         _world = world;
         _assetSystem = assetSystem;
-    }
-
-    internal static void UpdateRenderInfo(in RenderFrameInfo frameInfo, in GfxFrameResult frameResult)
-    {
-        _frameInfo = frameInfo;
-        _frameResult = frameResult;
-    }
-
-
-    internal static void GetFrameMetrics(out FrameMetric metric, out RenderInfoSample sample)
-    {
-        sample = new RenderInfoSample(_frameInfo.Fps, _frameInfo.Alpha, 0, _frameResult.DrawCalls, _frameResult.TriangleCount);
-        metric = new FrameMetric(_frameInfo.FrameIndex, EngineTime.Timestamp, default);
     }
 
     internal static PairSample GetMemoryMetrics() => new((int)GC.GetAllocatedBytesForCurrentThread());

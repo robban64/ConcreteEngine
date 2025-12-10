@@ -15,6 +15,18 @@ internal static class GuiUtils
         return (ImGui.IsItemActive() ? idx : -1, ImGui.IsItemDeactivatedAfterEdit() ? idx : -1);
     }
 
+    public static bool ColumnSelectable(ReadOnlySpan<char> str, bool selected, int colWidth, int colHeight)
+    {
+        const ImGuiSelectableFlags flags = ImGuiSelectableFlags.SpanAllColumns | ImGuiSelectableFlags.AllowDoubleClick;
+
+        var textWidth = ImGui.CalcTextSize(str).X;
+        var offset = (colWidth - textWidth) * 0.5f;
+        ImGui.SetCursorPosX(ImGui.GetCursorPosX() + offset);
+
+        return ImGui.Selectable(str, selected, flags, new Vector2(0, colHeight));
+    }
+
+    
     public static void DrawSectionHeader(string title)
     {
         ImGui.PushStyleColor(ImGuiCol.Text, Color4.LightGray.AsVec4());

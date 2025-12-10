@@ -22,7 +22,7 @@ internal sealed class AnimationTable
     private AnimationId MakeId() => new(++_idx);
     private int _idx = 0;
 
-    private int[] _idxToModel = new int[DefaultAnimatedModelCap];
+    private ModelId[] _idxToModel = new ModelId[DefaultAnimatedModelCap];
     private BoneTrack[][][] _clips = new BoneTrack[DefaultAnimatedModelCap][][];
     private Matrix4x4[] _modelBoneInvTransform = new Matrix4x4[DefaultAnimatedModelCap];
 
@@ -33,34 +33,11 @@ internal sealed class AnimationTable
     public int TotalBones { get; private set; }
     public int TotalClips { get; private set; }
 
+    
+    public ReadOnlySpan<ModelId> ModelIdSpan => _idxToModel;
+    
     public AnimationDataView GetDataView() =>
         new(_clips, _boneOffsetMatrix, _nodeTransform, _parentIndices, _modelBoneInvTransform);
-
-    /*
-    public ModelAnimationView GetModelAnimationView(AnimationId animation)
-    {
-        ArgumentOutOfRangeException.ThrowIfNegativeOrZero(animation.Value);
-
-        const int boneCap = RenderLimits.BoneCapacity;
-
-        var index = animation - 1;
-        if (index == -1 || (uint)index > _clips.Length || (uint)index > _modelBoneInvTransform.Length)
-            throw new IndexOutOfRangeException();
-
-        var startOffset = index * boneCap;
-
-        if ((uint)(startOffset + boneCap) > (uint)_boneOffsetMatrix.Length ||
-            (uint)(startOffset + boneCap) > (uint)_nodeTransform.Length)
-        {
-            throw new IndexOutOfRangeException();
-        }
-
-        var boneTransforms = _boneOffsetMatrix.AsSpan(startOffset, boneCap);
-        var nodes = _nodeTransform.AsSpan(startOffset, boneCap);
-        var indices = _parentIndices.AsSpan(startOffset, boneCap);
-        var clip = _clips[index];
-        return new ModelAnimationView(clip, boneTransforms, nodes, indices, ref _modelBoneInvTransform[index]);
-    }*/
 
     internal void Setup(AssetSystem assets)
     {

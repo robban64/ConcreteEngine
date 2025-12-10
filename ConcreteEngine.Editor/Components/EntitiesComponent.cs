@@ -32,27 +32,16 @@ internal static class EntitiesComponent
 
     private static ref EntityDataState DataState => ref EditorDataStore.State.EntityState;
 
-    private static void OnSelectEntity(EditorEntityResource entity)
-    {
-        State.SetSelectedEntity(entity.Id);
-        return;
-        Context.TriggerEvent(EventKey.SelectionChanged, entity);
-    }
-
-    private static void OnUpdateTransform(EditorEntityResource entity)
+    private static void OnUpdateTransform()
     {
         State.MakeDirty();
-        return;
-        Context.TriggerEvent(EventKey.SelectionUpdated, entity);
     }
 
-    private static void OnUpdateRotation(EditorEntityResource entity)
+    private static void OnUpdateRotation()
     {
         ref var transform = ref DataState.Transform;
         transform.Rotation = RotationMath.EulerDegreesToQuaternion(in transform.EulerAngles);
         State.MakeDirty();
-        return;
-        Context.TriggerEvent(EventKey.SelectionUpdated, entity);
     }
 
     public static void Draw()
@@ -65,11 +54,11 @@ internal static class EntitiesComponent
 
         if (_selectedIndex >= 0 && _editedField >= 0)
         {
-            var entity = EntitySpan[_selectedIndex];
+            //var entity = EntitySpan[_selectedIndex];
             if (_editedField == _rotationField)
-                OnUpdateRotation(entity);
+                OnUpdateRotation();
             else
-                OnUpdateTransform(entity);
+                OnUpdateTransform();
 
             _editedField = -1;
         }
@@ -141,7 +130,7 @@ internal static class EntitiesComponent
         var bufferStr = formatter.Format(entity.Id);
         if (EntitySelectable(bufferStr, selected))
         {
-            OnSelectEntity(entity);
+            State.SetSelectedEntity(entity.Id);
 
             var itemMin = ImGui.GetItemRectMin();
             var itemMax = ImGui.GetItemRectMax();

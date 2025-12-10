@@ -16,15 +16,17 @@ internal static class EngineResourceProvider
 {
     private static AssetSystem _assetSystem = null!;
     private static EntityApiController _entityController = null!;
+    private static WorldApiController _worldApiController = null!;
     private static InteractionController _interactionController = null!;
 
 
     internal static void Attach(AssetSystem assetSystem, EntityApiController entityController,
-        InteractionController interactionController)
+        InteractionController interactionController, WorldApiController worldApiController)
     {
         _assetSystem = assetSystem;
         _entityController = entityController;
         _interactionController = interactionController;
+        _worldApiController = worldApiController;
     }
 
 
@@ -68,5 +70,15 @@ internal static class EngineResourceProvider
         var entities = _entityController.CreateEntityList();
         Logger.LogString(LogScope.Engine, $"Editor entities loaded - {entities.Count}");
         return entities;
+    }
+
+    public static List<EditorParticleResource> GetParticleResources()
+    {
+        return _worldApiController.GetEditorEmitter();
+    }
+
+    public static List<EditorAnimationResource> GetAnimationResources()
+    {
+        return _worldApiController.GetEditorAnimations();
     }
 }

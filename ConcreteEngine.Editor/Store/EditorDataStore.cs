@@ -1,5 +1,7 @@
 using ConcreteEngine.Editor.Data;
+using ConcreteEngine.Shared.Diagnostics;
 using ConcreteEngine.Shared.Input;
+using ConcreteEngine.Shared.World;
 
 // ReSharper disable StaticMemberInGenericType
 
@@ -16,12 +18,18 @@ public static class EditorDataStore
     public static class State
     {
         public static EditorId SelectedId;
-        public static EntityDataState EntityState; 
+        public static EntityDataState EntityState;
     }
-
+    
     public static class Slot<T> where T : unmanaged
     {
         public static T Data;
         public static EditorSlotState SlotState;
+    }
+    
+    public static class MetricState
+    {
+        public static RenderInfoSample FrameSample;
+        public static FrameMetric FrameMetrics;
     }
 }

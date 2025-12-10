@@ -71,10 +71,11 @@ public sealed class ParticleMeshGenerator : MeshGenerator
 
     private ref ParticleMeshHandle GetHandle(int slot)
     {
-        if ((uint)slot >= _handles.Length)
+        var idx = slot - 1;
+        if ((uint)idx >= _handles.Length)
             throw new IndexOutOfRangeException();
 
-        return ref _handles[slot];
+        return ref _handles[idx];
     }
 
     internal void UploadGpuData(int slot, int particleCount)
@@ -145,7 +146,7 @@ public sealed class ParticleMeshGenerator : MeshGenerator
 
         var slot = MakeSlot();
         _handles[slot] = new ParticleMeshHandle(mesh, details.VboIds[1]);
-        return slot;
+        return slot + 1;
     }
 
     private void EnsureCapacity(int capacity)

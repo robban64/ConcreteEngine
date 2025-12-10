@@ -17,6 +17,7 @@ using ConcreteEngine.Engine.Worlds.Utility;
 using ConcreteEngine.Graphics.Gfx.Contracts;
 using ConcreteEngine.Graphics.Gfx.Definitions;
 using ConcreteEngine.Renderer.Descriptors;
+using ConcreteEngine.Shared.World;
 
 #endregion
 
@@ -79,6 +80,7 @@ public sealed class Demo3DScene : GameScene
             PassFunctions = new GfxPassStateFunc(BlendMode.Alpha)
         };
         var worldParticles = Context.World.Particles;
+        /*
         {
             var emitter = worldParticles.CreateEmitter(1024, ParticleDefinition.MakeDefault());
             worldParticles.SetMaterial(particleMat.Id);
@@ -87,7 +89,7 @@ public sealed class Demo3DScene : GameScene
             var component = new ParticleComponent( emitter.EmitterHandle, emitter.MaterialId);
             Context.World.Entities.CreateParticleEntity(emitter.MeshId, component);
         }
-
+*/
         {
             var def = new ParticleDefinition
             {
@@ -107,14 +109,14 @@ public sealed class Demo3DScene : GameScene
             };
             worldParticles.SetMaterial(particleMat.Id);
 
-            var emitter = worldParticles.CreateEmitter(1024, new ParticleDefinition());
+            var emitter = worldParticles.CreateEmitter("Emitter1", 1024, new ParticleDefinition());
             emitter.State = state;
             emitter.MaterialId = particleMat.Id;
 
             var component = new ParticleComponent(emitter.EmitterHandle, emitter.MaterialId);
             Context.World.Entities.CreateParticleEntity(emitter.MeshId, component);
 
-            var emitter2 = worldParticles.CreateEmitter(1024, in def);
+            var emitter2 = worldParticles.CreateEmitter("Emitter2", 1024, in def);
             emitter2.State = state with { Translation = new Vector3(110, 8, 110) };
             emitter2.MaterialId = particleMat.Id;
 

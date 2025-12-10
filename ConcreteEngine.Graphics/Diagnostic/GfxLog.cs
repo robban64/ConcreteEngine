@@ -28,7 +28,7 @@ public static class GfxLog
             return;
         }
 
-        if (FilterLog(in log))
+        if (IgnoreFilter.Count > 0 && FilterLog(in log))
             return;
 
         Logs.Enqueue(log);

@@ -1,6 +1,5 @@
 #region
 
-using System.Numerics;
 using System.Runtime.InteropServices;
 
 #endregion

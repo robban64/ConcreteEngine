@@ -1,16 +1,14 @@
 #region
 
 using ConcreteEngine.Common.Numerics;
+using ConcreteEngine.Common.Time;
 using ConcreteEngine.Engine.Editor.Data;
-using ConcreteEngine.Engine.Time;
-using ConcreteEngine.Engine.Worlds.Entities;
 using ConcreteEngine.Engine.Worlds.MeshGeneration;
 using ConcreteEngine.Engine.Worlds.Render;
 using ConcreteEngine.Engine.Worlds.Tables;
 using ConcreteEngine.Engine.Worlds.View;
 using ConcreteEngine.Graphics.Gfx;
 using ConcreteEngine.Renderer.State;
-using ConcreteEngine.Shared.Rendering;
 
 #endregion
 

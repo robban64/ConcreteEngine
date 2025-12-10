@@ -2,11 +2,9 @@
 
 using System.Numerics;
 using ConcreteEngine.Common.Numerics;
-using ConcreteEngine.Engine.Editor.Diagnostics;
 using ConcreteEngine.Engine.Worlds;
 using ConcreteEngine.Engine.Worlds.Entities;
 using ConcreteEngine.Engine.Worlds.Entities.Components;
-using ConcreteEngine.Shared.Diagnostics;
 
 #endregion
 

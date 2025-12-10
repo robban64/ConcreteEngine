@@ -29,10 +29,6 @@ public record struct YawPitch(float Yaw, float Pitch)
     public static YawPitch operator *(float k, YawPitch v) => new(v.Yaw * k, v.Pitch * k);
 
 
-    public readonly void ToQuaternion(out Quaternion quaternion) => RotationMath.YawPitchToQuaternion(this, out quaternion);
-
-    public static YawPitch FromQuaternion(in Quaternion quaternion) => RotationMath.QuaternionToYawPitch(in quaternion);
-
     public static YawPitch FromVector2(Vector2 vector) => new(vector.X, vector.Y);
 
 

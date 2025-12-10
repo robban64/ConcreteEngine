@@ -2,8 +2,6 @@
 
 using System.Runtime.CompilerServices;
 using ConcreteEngine.Common;
-using ConcreteEngine.Common.Numerics;
-using ConcreteEngine.Common.Time;
 using ConcreteEngine.Engine.Assets;
 using ConcreteEngine.Engine.Assets.Models;
 using ConcreteEngine.Engine.Assets.Shaders;
@@ -16,13 +14,10 @@ using ConcreteEngine.Engine.Worlds.Tables;
 using ConcreteEngine.Engine.Worlds.Utility;
 using ConcreteEngine.Engine.Worlds.View;
 using ConcreteEngine.Graphics;
-using ConcreteEngine.Graphics.Gfx.Contracts;
-using ConcreteEngine.Graphics.Gfx.Definitions;
 using ConcreteEngine.Graphics.Gfx.Resources;
 using ConcreteEngine.Renderer;
 using ConcreteEngine.Renderer.Data;
 using ConcreteEngine.Renderer.Definitions;
-using ConcreteEngine.Renderer.Descriptors;
 using ConcreteEngine.Renderer.Passes;
 using ConcreteEngine.Renderer.State;
 

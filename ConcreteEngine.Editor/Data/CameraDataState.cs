@@ -1,7 +1,6 @@
 #region
 
 using ConcreteEngine.Common.Numerics;
-using ConcreteEngine.Common.Numerics.Maths;
 using ConcreteEngine.Shared.World;
 
 #endregion

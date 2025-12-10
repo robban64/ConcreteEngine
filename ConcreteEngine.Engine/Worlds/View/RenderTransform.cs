@@ -4,7 +4,6 @@ using System.Numerics;
 using System.Runtime.CompilerServices;
 using ConcreteEngine.Renderer.State;
 using ConcreteEngine.Shared.Rendering;
-using ConcreteEngine.Shared.World;
 
 #endregion
 
@@ -14,9 +13,10 @@ internal static class RenderTransform
 {
     public static void CreateLightView(
         ref LightView view,
-        Span<Vector3> corners,
-        Vector3 lightDirection,
-        in ShadowParams shadowParams)
+        in ShadowParams shadowParams,
+         Vector3 lightDirection,
+        Span<Vector3> corners
+    )
     {
         var dir = Vector3.Normalize(lightDirection);
         var worldUp = MathF.Abs(Vector3.Dot(dir, Vector3.UnitY)) > 0.99f ? Vector3.UnitX : Vector3.UnitY;
@@ -32,7 +32,7 @@ internal static class RenderTransform
         float radius = MathF.Sqrt(farthestDistSqr);
         float diameter = radius * 2.0f;
 
-        var shadowRotation = Matrix4x4.CreateLookAt(Vector3.Zero, -dir, worldUp);
+        var shadowRotation = Matrix4x4.CreateLookAt(default, -dir, worldUp);
         Vector3 centerLs = Vector3.Transform(center, shadowRotation);
 
         float texelSize = diameter / (float)shadowParams.ShadowMapSize;
@@ -72,12 +72,11 @@ internal static class RenderTransform
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     internal static void FillFrustumCorners(
-        Span<Vector3> corners,
         in Matrix4x4 viewMat,
         in Matrix4x4 projMat,
-        Vector3 pos,
-        float near,
-        float far)
+         Vector3 pos,
+        Vector2 nearFar,
+        Span<Vector3> corners)
     {
         var tanY = 1f / projMat.M22;
         var tanX = 1f / projMat.M11;
@@ -87,11 +86,11 @@ internal static class RenderTransform
         var forward = -new Vector3(viewMat.M13, viewMat.M23, viewMat.M33);
 
         // extents at near/far
-        float nx = near * tanX, ny = near * tanY;
-        float fx = far * tanX, fy = far * tanY;
+        float nx = nearFar.X * tanX, ny = nearFar.X * tanY;
+        float fx = nearFar.Y * tanX, fy = nearFar.Y * tanY;
 
-        var nc = pos + forward * near;
-        var fc = pos + forward * far;
+        var nc = pos + forward * nearFar.X;
+        var fc = pos + forward * nearFar.Y;
 
         // NearPlane plane
         corners[0] = nc + up * ny - right * nx; // NT-L
@@ -109,7 +108,7 @@ internal static class RenderTransform
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     private static Vector3 GetFrustumCenter(Span<Vector3> corners)
     {
-        var s = Vector3.Zero;
+        Vector3 s = default;
         foreach (var c in corners) s += c;
         return s / corners.Length;
     }

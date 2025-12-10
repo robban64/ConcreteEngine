@@ -10,7 +10,6 @@ using ConcreteEngine.Editor;
 using ConcreteEngine.Editor.Data;
 using ConcreteEngine.Editor.Definitions;
 using ConcreteEngine.Engine.Assets;
-using ConcreteEngine.Engine.Data;
 using ConcreteEngine.Engine.Editor.Diagnostics;
 using ConcreteEngine.Engine.Worlds;
 using ConcreteEngine.Graphics.Diagnostic;
@@ -21,9 +20,8 @@ using Silk.NET.Windowing;
 
 #endregion
 
-using ConcreteEngine.Common.Time;
 using ConcreteEngine.Engine.Editor.Controller;
-using ConcreteEngine.Engine.Time;
+using ConcreteEngine.Graphics;
 using ConcreteEngine.Renderer.State;
 using EditorCmd = ConcreteEngine.Editor.CommandDispatcher;
 
@@ -70,18 +68,16 @@ internal sealed class EngineGateway : IDisposable
 
     public static void SetupLogger()
     {
-        if (Logger.Enabled && !Logger.IsAttached) Logger.Attach(EditorSetup.ProcessStringLog);
+        if (Logger.Enabled) Logger.Attach(EditorSetup.ProcessStringLog);
 
         GfxLog.ToggleLog(false, LogTopic.Unknown, LogScope.Backend);
         GfxLog.ToggleLog(false, LogTopic.RenderBuffer, LogScope.Gfx);
     }
 
-    public void SetupEditor(EditorEngineQueue editorQueues, World world, AssetSystem assetSystem,
-        RenderEngineFrameInfo frameInfo)
+    public void SetupEditor(EditorEngineQueue editorQueues, World world, AssetSystem assetSystem)
     {
         ArgumentNullException.ThrowIfNull(world);
         ArgumentNullException.ThrowIfNull(assetSystem);
-        ArgumentNullException.ThrowIfNull(frameInfo);
 
         if (Enabled) throw new InvalidOperationException(nameof(Enabled));
         if (HasBoundEditor) throw new InvalidOperationException(nameof(HasBoundEditor));
@@ -97,7 +93,7 @@ internal sealed class EngineGateway : IDisposable
         _interactionController = new InteractionController(_apiContext);
 
         EditorSetup.Editor = _editor!;
-        MetricRouter.Attach(world, assetSystem, frameInfo);
+        MetricRouter.Attach(world, assetSystem);
         EngineResourceProvider.Attach(assetSystem, _entityController, _interactionController);
         EngineDataBridge.Attach(_entityController, _worldController, _interactionController);
 
@@ -117,11 +113,11 @@ internal sealed class EngineGateway : IDisposable
     }
 
 
-    public void RenderEditor(in RenderFrameInfo frameInfo)
+    public void RenderEditor(in RenderFrameInfo frameInfo, in GfxFrameResult frameResult)
     {
         if (!Enabled || !HasBoundEditor) return;
 
-        _apiContext.OnRenderFrame(in frameInfo);
+        MetricRouter.UpdateRenderInfo(in frameInfo, in frameResult);
         _editor.Render(frameInfo.DeltaTime);
     }
 

@@ -3,10 +3,8 @@ using ConcreteEngine.Engine.Assets;
 using ConcreteEngine.Engine.Assets.Shaders;
 using ConcreteEngine.Graphics.Gfx.Contracts;
 using ConcreteEngine.Graphics.Gfx.Definitions;
-using ConcreteEngine.Graphics.Gfx.Resources;
 using ConcreteEngine.Renderer;
 using ConcreteEngine.Renderer.Data;
-using ConcreteEngine.Renderer.Definitions;
 using ConcreteEngine.Renderer.Descriptors;
 using ConcreteEngine.Renderer.Passes;
 

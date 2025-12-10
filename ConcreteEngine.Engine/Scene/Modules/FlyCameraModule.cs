@@ -2,7 +2,6 @@
 
 using System.Numerics;
 using ConcreteEngine.Common.Numerics;
-using ConcreteEngine.Engine.Data;
 using ConcreteEngine.Engine.Platform;
 using ConcreteEngine.Engine.Worlds.View;
 using Silk.NET.Input;

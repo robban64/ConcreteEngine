@@ -5,9 +5,11 @@ using ConcreteEngine.Editor.Metrics;
 using ConcreteEngine.Engine.Assets;
 using ConcreteEngine.Engine.Assets.Data;
 using ConcreteEngine.Engine.Assets.Materials;
-using ConcreteEngine.Engine.Data;
+using ConcreteEngine.Engine.Time;
 using ConcreteEngine.Engine.Worlds;
+using ConcreteEngine.Graphics;
 using ConcreteEngine.Graphics.Diagnostic;
+using ConcreteEngine.Renderer.State;
 using ConcreteEngine.Shared.Diagnostics;
 
 #endregion
@@ -18,25 +20,29 @@ internal static class MetricRouter
 {
     private static World? _world;
     private static AssetSystem? _assetSystem;
-    private static RenderEngineFrameInfo? _frameInfo;
 
     private static MaterialStore? Materials => _assetSystem?.MaterialStoreImpl;
 
+    private static RenderFrameInfo _frameInfo;
+    private static GfxFrameResult _frameResult;
 
-    internal static void Attach(World world, AssetSystem assetSystem, RenderEngineFrameInfo frameInfo)
+    internal static void Attach(World world, AssetSystem assetSystem)
     {
         _world = world;
         _assetSystem = assetSystem;
+    }
+
+    internal static void UpdateRenderInfo(in RenderFrameInfo frameInfo, in GfxFrameResult frameResult)
+    {
         _frameInfo = frameInfo;
+        _frameResult = frameResult;
     }
 
 
     internal static void GetFrameMetrics(out FrameMetric metric, out RenderInfoSample sample)
     {
-        var f = _frameInfo;
-        var gfxInfo = f!.GfxResult;
-        sample = new RenderInfoSample(f.Fps, f.Alpha, 0, gfxInfo.DrawCalls, gfxInfo.TriangleCount);
-        metric = new FrameMetric(f.FrameIndex, f.TimeStamp, default);
+        sample = new RenderInfoSample(_frameInfo.Fps, _frameInfo.Alpha, 0, _frameResult.DrawCalls, _frameResult.TriangleCount);
+        metric = new FrameMetric(_frameInfo.FrameIndex, EngineTime.Timestamp, default);
     }
 
     internal static PairSample GetMemoryMetrics() => new((int)GC.GetAllocatedBytesForCurrentThread());

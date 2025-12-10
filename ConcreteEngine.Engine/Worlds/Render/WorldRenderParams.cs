@@ -1,7 +1,5 @@
 #region
 
-using System.Numerics;
-using ConcreteEngine.Common;
 using ConcreteEngine.Common.Numerics.Maths;
 using ConcreteEngine.Engine.Worlds.Utility;
 using ConcreteEngine.Renderer.Data;

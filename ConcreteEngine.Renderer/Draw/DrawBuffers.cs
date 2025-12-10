@@ -215,7 +215,7 @@ internal sealed class DrawBuffers
             invResolution: invRes,
             time: runtimeParams.Time,
             mouse: CoordinateMath.ToUvCoords(runtimeParams.MousePos, outputSize),
-            random: runtimeParams.DefaultRandom
+            random: runtimeParams.Rng
         );
 
         _gfxBuffers.UploadUniformGpuData(_engineUbo, in data, 0);

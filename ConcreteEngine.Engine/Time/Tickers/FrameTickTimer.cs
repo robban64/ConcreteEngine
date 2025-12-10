@@ -2,24 +2,21 @@
 
 #endregion
 
+using System.Runtime.CompilerServices;
+
 namespace ConcreteEngine.Engine.Time.Tickers;
 
-internal sealed class FrameTickTimer(float tickDt)
+internal struct FrameTickTimer(float tickDt)
 {
     private int _tickIndex = 0;
     private float _accumulator = 0f;
 
-    public float Alpha => tickDt > 0f ? _accumulator / tickDt : 0f;
+    //public float Alpha => tickDt > 0f ? _accumulator / tickDt : 0f;
 
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public void Accumulate(float dt) => _accumulator += dt;
 
-    public int DrainAllTicks()
-    {
-        int n = 0;
-        while (TryDequeueTick(out _)) n++;
-        return n;
-    }
-
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public bool TryDequeueTick(out int tickIndex)
     {
         if (_accumulator < tickDt)
@@ -32,4 +29,14 @@ internal sealed class FrameTickTimer(float tickDt)
         tickIndex = _tickIndex++;
         return true;
     }
+    
+    /*
+    public int DrainAllTicks()
+    {
+        int n = 0;
+        while (TryDequeueTick(out _)) n++;
+        return n;
+    }
+    */
+
 }

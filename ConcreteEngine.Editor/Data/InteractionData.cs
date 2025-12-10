@@ -1,6 +1,5 @@
 #region
 
-using System.Numerics;
 using ConcreteEngine.Common.Time;
 using ConcreteEngine.Editor.Definitions;
 using ConcreteEngine.Editor.Store;

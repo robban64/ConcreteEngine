@@ -28,7 +28,7 @@ public sealed class Camera3D
 
     private Matrix4x4 _viewMatrix = Matrix4x4.Identity;
     private Matrix4x4 _projectionMatrix = Matrix4x4.Identity;
-    private Matrix4x4 _projectionViewMatrix = Matrix4x4.Identity;
+    //private Matrix4x4 _projectionViewMatrix = Matrix4x4.Identity;
 
     private ViewTransform _transform;
     private ViewTransform _prevTransform;
@@ -148,26 +148,30 @@ public sealed class Camera3D
     internal void EndTick(RenderParamsSnapshot renderParams, RenderCamera renderCamera)
     {
         Ensure();
+
+        ref var view = ref _viewMatrix;
+        ref var proj = ref _projectionMatrix;
         
-        var lightDir = renderParams.SunLight.Direction;
         ref readonly var shadows = ref renderParams.Shadows;
         ref var lightSpace = ref renderCamera.LightSpace;
-        var near = _projInfo.Near;
-        var far = MathF.Min(_projInfo.Far, near + shadows.Distance);
+        var nearFar = new Vector2(_projInfo.Near, MathF.Min(_projInfo.Far, _projInfo.Near + shadows.Distance));
 
+        
         Span<Vector3> corners = stackalloc Vector3[8];
-        RenderTransform.FillFrustumCorners(corners, in _viewMatrix, in _projectionMatrix,
-            _transform.Translation, near, far);
+        RenderTransform.FillFrustumCorners(in view, in proj,  _transform.Translation, nearFar, corners);
 
-        RenderTransform.CreateLightView(ref lightSpace, corners, lightDir, in shadows);
+        RenderTransform.CreateLightView(ref lightSpace, in shadows,  renderParams.SunLight.Direction, corners);
     }
 
     internal void WriteSnapshot(float alpha, ref RenderViewSnapshot viewSnapshot)
     {
-        var camPos = Vector3.Lerp(_prevTransform.Translation, _transform.Translation, alpha);
-        var camOrientation = YawPitch.LerpFixed(_prevTransform.Orientation, _transform.Orientation, alpha);  
-        camOrientation.ToQuaternion(out var camRot);
-        MatrixMath.CreateModelMatrix(in camPos, Vector3.One, in camRot, out var viewMatrix);
+        ref var prevTransform = ref _prevTransform;
+        ref var transform = ref _transform;
+        
+        var camPos = Vector3.Lerp(prevTransform.Translation, transform.Translation, alpha);
+        var camOri = YawPitch.LerpFixed(prevTransform.Orientation, transform.Orientation, alpha); 
+        
+        MatrixMath.CreateFixedSizeModelMatrix(in camPos, RotationMath.YawPitchToQuaternion(camOri), out var viewMatrix);
         Matrix4x4.Invert(viewMatrix, out viewMatrix);
 
         ref readonly var projMat = ref _projectionMatrix;
@@ -175,24 +179,22 @@ public sealed class Camera3D
         viewSnapshot.ProjectionMatrix = projMat;
         viewSnapshot.ProjectionViewMatrix = viewMatrix * projMat;
         viewSnapshot.ProjectionInfo = _projInfo;
-        viewSnapshot.Transform = _transform;
+        viewSnapshot.Transform = transform;
     }
 
     internal void Ensure()
     {
         if (!_dirty) return;
         _dirty = false;
-        
 
-        _transform.Orientation.ToQuaternion(out var rot);
+        ref var transform = ref _transform;
+        ref var projInfo = ref _projInfo;
 
-        MatrixMath.CreateFixedSizeModelMatrix(_transform.Translation, in rot, out var viewModel);
+        MatrixMath.CreateFixedSizeModelMatrix(transform.Translation, RotationMath.YawPitchToQuaternion(transform.Orientation), out var viewModel);
         Matrix4x4.Invert(viewModel, out _viewMatrix);
 
-        var fov = FloatMath.ToRadians(_projInfo.Fov / 2f);
-        _projectionMatrix =
-            Matrix4x4.CreatePerspectiveFieldOfView(fov, _projInfo.AspectRatio, _projInfo.Near, _projInfo.Far);
-        _projectionViewMatrix = _viewMatrix * _projectionMatrix;
+        var fov = FloatMath.ToRadians(projInfo.Fov / 2f);
+        _projectionMatrix = Matrix4x4.CreatePerspectiveFieldOfView(fov, projInfo.AspectRatio, projInfo.Near, projInfo.Far);
 
         Generation++;
     }
@@ -208,7 +210,6 @@ public sealed class Camera3D
     {
         _transform = data.Transform;
         _prevTransform = data.Transform;
-        
         _projInfo = data.Projection;
         _dirty = true;
     }

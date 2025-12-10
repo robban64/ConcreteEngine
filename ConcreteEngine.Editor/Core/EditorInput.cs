@@ -1,7 +1,6 @@
 #region
 
 using System.Numerics;
-using ConcreteEngine.Editor.Data;
 using ConcreteEngine.Editor.Definitions;
 using ConcreteEngine.Editor.Store;
 using ImGuiNET;

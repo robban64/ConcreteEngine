@@ -1,7 +1,6 @@
 #region
 
 using ConcreteEngine.Engine.Configuration;
-using ConcreteEngine.Engine.Data;
 using ConcreteEngine.Engine.Worlds;
 using ConcreteEngine.Engine.Worlds.View;
 

@@ -22,14 +22,9 @@ public abstract class GameScene
     {
     }
 
-    internal void Update(UpdateTickInfo frameCtx)
+    internal void UpdateTick(float deltaTime)
     {
-        Context.Modules.Update(in frameCtx);
-    }
-
-    internal void UpdateTick(int tick, float fixedDt)
-    {
-        Context.Modules.GameTickUpdate(tick, fixedDt);
+        Context.Modules.GameTickUpdate(deltaTime);
     }
 
     internal void AttachContext(GameSceneContext context) => Context = context;

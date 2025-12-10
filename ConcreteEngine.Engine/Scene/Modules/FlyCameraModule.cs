@@ -28,16 +28,10 @@ public sealed class FlyCameraModule : GameModule
         _camera = Context.World.Camera;
     }
 
-
-    public override void Update(in UpdateTickInfo frameCtx)
+    public override void UpdateTick(float dt)
     {
-    }
-
-
-    public override void UpdateTick(int tick, float fixedDt)
-    {
-        MovementController(fixedDt, BaseSpeed);
-        RotateController(fixedDt, RotationSpeed);
+        MovementController(dt, BaseSpeed);
+        RotateController(dt, RotationSpeed);
     }
 
     private void MovementController(float dt, float speed)
@@ -59,11 +53,12 @@ public sealed class FlyCameraModule : GameModule
         if (targetVelocity == Vector3.Zero) t = 1.0f - MathF.Exp(-friction * dt);
         _currentVelocity = Vector3.Lerp(_currentVelocity, targetVelocity, t);
         _camera.Translation += _currentVelocity * dt;
+      
     }
 
-    private void RotateController(float dt, float rotateSpeed)
+    private void RotateController(float fixedDt, float rotateSpeed)
     {
-        var speed = rotateSpeed * dt;
+        var speed = rotateSpeed * fixedDt;
 
         var orientation = _targetOrientation;
         if (_input.IsKeyDown(Key.A))
@@ -75,9 +70,9 @@ public sealed class FlyCameraModule : GameModule
         if (_input.IsKeyDown(Key.E))
             orientation.Pitch += (-speed);
 
-        float t = 1.0f - MathF.Exp(-10 * dt);
+        float t = 1.0f - MathF.Exp(-25 * fixedDt);
         orientation.WithClampedPitch();
         _targetOrientation = orientation;
-        _camera.Orientation = YawPitch.Lerp(_camera.Orientation, _targetOrientation, t);
+        _camera.Orientation = YawPitch.LerpFixed(_camera.Orientation, _targetOrientation, t);
     }
 }

@@ -40,6 +40,7 @@ public sealed class EngineWindowHost
         _options = options;
         _backend = backend;
         _options.VSync = false;
+        _options.UpdatesPerSecond = 60;
         _options.FramesPerSecond = 144;
     }
 

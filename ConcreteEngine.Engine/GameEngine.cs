@@ -69,7 +69,7 @@ public sealed class GameEngine : IDisposable
         _modules = new ModuleManager();
 
         // time
-        _timeHub = new EngineTimeHub(GameTickUpdate, SimulationTickUpdate, LogTickUpdate);
+        _timeHub = new EngineTimeHub(UpdateTick, SimulationTickUpdate, LogTickUpdate);
 
         // systems
 
@@ -79,8 +79,6 @@ public sealed class GameEngine : IDisposable
         _world = new World();
         _worldRenderer = new WorldRenderer(engineWindow, _graphics, _assets, _eventBus!, _world.WorldRenderParams);
         _coreSystems = new EngineCoreSystem(_worldRenderer, _inputSystem, _assets);
-
-
 
         var internalInput = input.InputContext;
         _engineGateway =
@@ -117,12 +115,13 @@ public sealed class GameEngine : IDisposable
 
     internal void Render(float dt)
     {
-        var alpha = EngineTime.GameTime.Alpha;
+        float alpha = EngineTime.GameAlpha = _timeHub.GetGameAlpha();
+        EngineTime.SimulationAlpha = _timeHub.GetSimulationAlpha();
 
         var frameStatus = _renderFrameInfo.BeginRenderFrame(dt, alpha, _window, _inputSystem.InputSource,
             out var frameInfo, out var runtimeParams);
 
-        if (_sceneManager.Current is not { } scene)
+        if (_sceneManager.Current is null)
         {
             _worldRenderer.RenderEmptyFrame(in frameInfo);
             return;
@@ -141,26 +140,20 @@ public sealed class GameEngine : IDisposable
         }
 
 
-        _world.OnPreRender(alpha);
+        _world.StartRenderFrame(alpha);
         _worldRenderer.PreRender(beginStatus, in frameInfo, in runtimeParams, _world.Camera);
         _worldRenderer.ExecuteFrame(out var gfxFrameResult);
         _renderFrameInfo.EndRenderFrame(gfxFrameResult);
 
         if (_engineGateway.Active)
             _engineGateway.RenderEditor(in frameInfo);
+        
     }
 
     internal void Update(float dt)
     {
-        _timeHub.AdvanceTick(dt);
-
-        var outputSize = _window.OutputSize;
-        _updateInfo.BeginUpdateFrame(dt, _window.WindowSize, outputSize);
+        _updateInfo.BeginUpdateFrame(dt, _window.WindowSize);
         var updateInfo = _updateInfo.UpdateTickInfo;
-
-        if (_engineGateway.Active)
-            _inputSystem.Update(!_engineGateway.BlockInput());
-
         if (_setupStepper.Current != EngineStateLevel.Running)
         {
             RunSetupStateMachine();
@@ -176,31 +169,34 @@ public sealed class GameEngine : IDisposable
         if (_editorQueues.DeferredCommandCount > 0)
             _editorQueues.DrainDeferredCommands();
         
-        _world?.StartUpdate(outputSize, dt);
-        
-        _sceneManager.Current?.Update(updateInfo);
+        if (_engineGateway.Active)
+            _inputSystem.Update(!_engineGateway.BlockInput());
+
+        _timeHub.Advance(dt);
     }
 
-    private void GameTickUpdate(UpdateTickArgs args)
+    private void UpdateTick(float dt)
     {
-        _updateInfo.UpdateTick(args.Tick, args.FixedDt);
+        _engineGateway.UpdateEditorData();
 
-        _world.StartTick(args.FixedDt, _renderFrameInfo.Time);
+        _world.StartTick(_window.OutputSize, dt, _renderFrameInfo.Time);
 
-        _sceneManager.Current?.UpdateTick(args.Tick, args.FixedDt);
+        _sceneManager.Current?.UpdateTick(dt);
 
         _world.EndTick(_worldRenderer.RenderCamera);
+
     }
 
-    private void SimulationTickUpdate(UpdateTickArgs args)
+
+    private void SimulationTickUpdate(float dt)
     {
-        _world.OnSimulationTick(args);
+        _world.OnSimulationTick(dt);
     }
 
-    private void LogTickUpdate(UpdateTickArgs args)
+    private void LogTickUpdate(float dt)
     {
         if (_engineGateway.Active)
-            _engineGateway.UpdateDiagnostics(args);
+            _engineGateway.UpdateDiagnostics(dt);
     }
 
     private void RunSetupStateMachine()

@@ -17,14 +17,9 @@ public abstract class GameModule
 
     public abstract void Initialize();
 
-    public virtual void UpdateTick(int tick, float fixedDt)
+    public virtual void UpdateTick(float deltaTime)
     {
     }
-
-    public virtual void Update(in UpdateTickInfo frameCtx)
-    {
-    }
-
     public virtual void OnSceneReady()
     {
     }

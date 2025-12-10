@@ -95,14 +95,11 @@ public sealed class World : IWorld
         _particles.AttachRenderer(_meshGenerators.Register(new ParticleMeshGenerator(gfx)), _materialTable);
     }
 
-    internal void StartUpdate(Size2D viewSize, float dt)
+    internal void StartTick(Size2D viewSize, float fixedDt, float totalTime)
     {
         Camera.Viewport = viewSize;
-    }
-
-    internal void StartTick(float fixedDt, float totalTime)
-    {
         ProcessActions();
+        Camera.StartTick();
     }
 
     internal void EndTick(RenderCamera renderCamera)
@@ -111,12 +108,12 @@ public sealed class World : IWorld
         Camera.EndTick(WorldRenderParams.Snapshot, renderCamera);
     }
 
-    internal void OnSimulationTick(UpdateTickArgs args)
+    internal void OnSimulationTick(float fixedDt)
     {
-        _particles.UpdateSimulate(_entities, args.FixedDt, args.Alpha);
+        _particles.UpdateSimulate(_entities, fixedDt);
     }
 
-    internal void OnPreRender(float alpha)
+    internal void StartRenderFrame(float alpha)
     {
     }
 

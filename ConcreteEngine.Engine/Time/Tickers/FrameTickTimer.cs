@@ -13,8 +13,6 @@ internal sealed class FrameTickTimer(float tickDt)
 
     public void Accumulate(float dt) => _accumulator += dt;
 
-    public UpdateTickArgs ToArgs() => new(_tickIndex, tickDt, _accumulator);
-
     public int DrainAllTicks()
     {
         int n = 0;

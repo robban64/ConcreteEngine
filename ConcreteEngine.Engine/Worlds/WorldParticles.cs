@@ -84,8 +84,6 @@ public sealed class WorldParticles
     // public ModelId Model { get; private set; }
     public MaterialId Material { get; private set; }
 
-    public float ParticleAlpha { get; private set; }
-    public float ParticleDelta { get; private set; }
     private ParticleMeshGenerator _particleGenerator;
     private MaterialTable _materialTable;
 
@@ -144,10 +142,8 @@ public sealed class WorldParticles
 
     private FrameProfileTimer _timer = new(40, 25);
 
-    public void UpdateSimulate(WorldEntities entities, float fixedDt, float alpha)
+    public void UpdateSimulate(WorldEntities entities, float fixedDt)
     {
-        ParticleAlpha = alpha;
-        ParticleDelta = fixedDt;
         SimulateEmitters(fixedDt);
         UpdateEntities(entities);
     }

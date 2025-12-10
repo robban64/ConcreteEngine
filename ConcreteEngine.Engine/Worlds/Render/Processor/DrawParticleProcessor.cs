@@ -1,4 +1,5 @@
 using System.Numerics;
+using ConcreteEngine.Engine.Time;
 using ConcreteEngine.Engine.Worlds.Data;
 using ConcreteEngine.Engine.Worlds.Entities.Components;
 using ConcreteEngine.Engine.Worlds.Render.Data;
@@ -37,7 +38,7 @@ internal static class DrawParticleProcessor
         var len = particles.Length;
         var def = emitter.Definition;
 
-        float timeOffset = worldParticles.ParticleDelta * worldParticles.ParticleAlpha;
+        float timeOffset = EngineTime.SimulationDeltaTime * EngineTime.SimulationAlpha;
 
         if ((uint)len > particles.Length || (uint)len > gpuParticles.Length)
             throw new IndexOutOfRangeException();

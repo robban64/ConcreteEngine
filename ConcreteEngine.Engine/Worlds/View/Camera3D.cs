@@ -23,20 +23,21 @@ public sealed class Camera3D
     private const float MinFov = 10;
     private const float MaxFov = 180;
 
-    private const float DirtyThreshold = MetricUnits.Millimeter;
+    private const float DirtyThreshold = MetricUnits.Micrometer;
 
-    private bool _dirty;
-
-    private ViewTransform _prevTransform;
-    private ViewTransform _transform = new(Vector3.Zero, Vector3.One, default);
 
     private Matrix4x4 _viewMatrix = Matrix4x4.Identity;
     private Matrix4x4 _projectionMatrix = Matrix4x4.Identity;
     private Matrix4x4 _projectionViewMatrix = Matrix4x4.Identity;
 
+    private ViewTransform _transform;
+    private ViewTransform _prevTransform;
+
+
     private ProjectionInfo _projInfo = new(70, 0.1f, 500);
 
     private Size2D _viewportSize;
+    private bool _dirty;
 
 
     public long Generation { get; private set; } = 0;
@@ -73,17 +74,6 @@ public sealed class Camera3D
         {
             if (VectorMath.DistanceNearlyEqual(in value, in _transform.Translation, DirtyThreshold)) return;
             _transform.Translation = value;
-            _dirty = true;
-        }
-    }
-
-    public Vector3 Scale
-    {
-        get => _transform.Scale;
-        set
-        {
-            if (VectorMath.DistanceNearlyEqual(in value, in _transform.Scale, DirtyThreshold)) return;
-            _transform.Scale = value;
             _dirty = true;
         }
     }
@@ -137,33 +127,6 @@ public sealed class Camera3D
     public float AspectRatio => _projInfo.AspectRatio;
 
 
-    public Matrix4x4 ViewMatrix
-    {
-        get
-        {
-            Ensure();
-            return _viewMatrix;
-        }
-    }
-
-    public Matrix4x4 ProjectionMatrix
-    {
-        get
-        {
-            Ensure();
-            return _projectionMatrix;
-        }
-    }
-
-    public Matrix4x4 ProjectionViewMatrix
-    {
-        get
-        {
-            Ensure();
-            return _projectionViewMatrix;
-        }
-    }
-
     public CameraRaycaster Raycaster
     {
         get
@@ -175,12 +138,17 @@ public sealed class Camera3D
         }
     }
 
+    public void StartTick()
+    {
+        _prevTransform = _transform;
+
+    }
 
     // before frame start
     internal void EndTick(RenderParamsSnapshot renderParams, RenderCamera renderCamera)
     {
         Ensure();
-
+        
         var lightDir = renderParams.SunLight.Direction;
         ref readonly var shadows = ref renderParams.Shadows;
         ref var lightSpace = ref renderCamera.LightSpace;
@@ -197,9 +165,9 @@ public sealed class Camera3D
     internal void WriteSnapshot(float alpha, ref RenderViewSnapshot viewSnapshot)
     {
         var camPos = Vector3.Lerp(_prevTransform.Translation, _transform.Translation, alpha);
-        var camOrientation = YawPitch.Lerp(_prevTransform.Orientation, _transform.Orientation, alpha);
+        var camOrientation = YawPitch.LerpFixed(_prevTransform.Orientation, _transform.Orientation, alpha);  
         camOrientation.ToQuaternion(out var camRot);
-        MatrixMath.CreateFixedSizeModelMatrix(in camPos, in camRot, out var viewMatrix);
+        MatrixMath.CreateModelMatrix(in camPos, Vector3.One, in camRot, out var viewMatrix);
         Matrix4x4.Invert(viewMatrix, out viewMatrix);
 
         ref readonly var projMat = ref _projectionMatrix;
@@ -210,12 +178,11 @@ public sealed class Camera3D
         viewSnapshot.Transform = _transform;
     }
 
-    private void Ensure()
+    internal void Ensure()
     {
         if (!_dirty) return;
         _dirty = false;
-
-        _prevTransform = _transform;
+        
 
         _transform.Orientation.ToQuaternion(out var rot);
 
@@ -240,6 +207,8 @@ public sealed class Camera3D
     internal void SetFromData(in CameraDataState data)
     {
         _transform = data.Transform;
+        _prevTransform = data.Transform;
+        
         _projInfo = data.Projection;
         _dirty = true;
     }

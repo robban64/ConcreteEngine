@@ -120,15 +120,10 @@ internal static class CameraComponent
         var fieldStatus = new ImGuiFieldStatus();
 
         ImGui.BeginGroup();
-        ImGui.TextUnformatted("Translation");
+        ImGui.TextUnformatted("Transform");
         ImGui.Separator();
 
         ImGui.InputFloat3("##camera-translation", ref state.Translation, "%.3f");
-        fieldStatus.NextField();
-
-        ImGui.TextUnformatted("Scale");
-        ImGui.Separator();
-        ImGui.InputFloat3("##camera-scale", ref state.Scale, "%.3f");
         fieldStatus.NextField();
 
         ImGui.TextUnformatted("Rotation");

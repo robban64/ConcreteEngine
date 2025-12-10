@@ -158,10 +158,9 @@ public sealed class WorldRenderer : IWorldRenderer
     private void PrepareRenderView(in RenderFrameInfo frameInfo, Camera3D camera)
     {
         ref var view = ref Unsafe.AsRef(ref RenderCamera.RenderView);
-        camera.WriteSnapshot(EngineTime.GameTime.Alpha, ref view);
+        camera.WriteSnapshot(EngineTime.GameAlpha, ref view);
         DrawDataProvider.FrameInfo = frameInfo;
         DrawDataProvider.RenderView = view;
-
     }
 
     private void SubmitMaterialData()
@@ -202,26 +201,7 @@ public sealed class WorldRenderer : IWorldRenderer
         var shaderCount = _assets.Store.GetMetaSnapshot<Shader>().Count;
 
         builder.RegisterShader(shaderCount, ExtractShaderIds).RegisterCoreShaders(GetCoreShaders);
-
-        builder.RegisterFbo<ShadowPassTag>(FboVariant.Default,
-            new RegisterFboEntry().AttachDepthTexture(GfxFboDepthTextureDesc.Default())
-                .UseFixedSize(new Size2D(WorldRenderParams.ShadowMapSize)));
-
-        builder.RegisterFbo<ScenePassTag>(FboVariant.Default,
-            new RegisterFboEntry().AttachColorTexture(GfxFboColorTextureDesc.Off(), RenderBufferMsaa.X4)
-                .AttachDepthStencilBuffer());
-
-        builder.RegisterFbo<ScenePassTag>(FboVariant.Secondary,
-            new RegisterFboEntry().AttachColorTexture(GfxFboColorTextureDesc.DefaultMip())
-                .AttachDepthStencilBuffer());
-
-        builder.RegisterFbo<PostPassTag>(FboVariant.Default,
-            new RegisterFboEntry().AttachColorTexture(GfxFboColorTextureDesc.Default()));
-
-        builder.RegisterFbo<PostPassTag>(FboVariant.Secondary,
-            new RegisterFboEntry().AttachColorTexture(GfxFboColorTextureDesc.Default()));
-
-
+        WorldRenderSetup.RegisterFrameBuffers(builder, WorldRenderParams);
         builder.SetupPassPipeline(RenderPipelineVersion.Default3D);
         _renderer.ApplyBuilder(builder);
         return;
@@ -229,16 +209,6 @@ public sealed class WorldRenderer : IWorldRenderer
         void ExtractShaderIds(Span<ShaderId> span) =>
             _assets.Store.ExtractSpan<Shader, ShaderId>(span, static shader => shader.ResourceId);
 
-        RenderCoreShaders GetCoreShaders() =>
-            new()
-            {
-                DepthShader = _assets.Store.GetByName<Shader>("Depth").ResourceId,
-                ColorFilterShader = _assets.Store.GetByName<Shader>("ColorFilter").ResourceId,
-                CompositeShader = _assets.Store.GetByName<Shader>("Composite").ResourceId,
-                PresentShader = _assets.Store.GetByName<Shader>("Present").ResourceId,
-                HighlightShader = _assets.Store.GetByName<Shader>("Highlight").ResourceId,
-                BoundingBoxShader = _assets.Store.GetByName<Shader>("BoundingBox").ResourceId,
-                ParticleShader = _assets.Store.GetByName<Shader>("Particle").ResourceId,
-            };
+        RenderCoreShaders GetCoreShaders() => WorldRenderSetup.GetCoreShaders(_assets.Store);
     }
 }

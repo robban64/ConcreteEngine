@@ -110,17 +110,22 @@ internal sealed class EngineGateway : IDisposable
         _editor.Initialize();
     }
 
+    public void UpdateEditorData()
+    {
+        if (!Enabled || !HasBoundEditor) return;
+        EngineDataBridge.ProcessEditorDataSlot();
+    }
+
 
     public void RenderEditor(in RenderFrameInfo frameInfo)
     {
         if (!Enabled || !HasBoundEditor) return;
-        EngineDataBridge.ProcessEditorDataSlot();
 
         _apiContext.OnRenderFrame(in frameInfo);
         _editor.Render(frameInfo.DeltaTime);
     }
 
-    public void UpdateDiagnostics(UpdateTickArgs args)
+    public void UpdateDiagnostics(float dt)
     {
         if (!Enabled) return;
         DrainLogs();

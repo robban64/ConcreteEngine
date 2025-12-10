@@ -40,6 +40,7 @@ public record struct YawPitch(float Yaw, float Pitch)
     public static YawPitch Lerp(YawPitch a, YawPitch b, float dt) =>
         new(float.Lerp(a.Yaw, b.Yaw, dt), float.Lerp(a.Pitch, b.Pitch, dt));
 
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static YawPitch LerpFixed(YawPitch a, YawPitch b, float t)
     {
         float yawDelta = b.Yaw - a.Yaw;

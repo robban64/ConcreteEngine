@@ -6,14 +6,7 @@ using ConcreteEngine.Common.Numerics;
 
 namespace ConcreteEngine.Engine.Data;
 
-public readonly record struct UpdateTickInfo(
-    long UpdateIndex,
-    int GameTick,
-    float DeltaTime,
-    float FixedDeltaTime)
-{
-    public float Fps => DeltaTime > 0 ? 1.0f / DeltaTime : 0.0f;
-}
+public readonly record struct UpdateTickInfo(long UpdateIndex, float DeltaTime);
 
 public sealed class EngineTickerInfo
 {
@@ -21,17 +14,8 @@ public sealed class EngineTickerInfo
 
     public ref readonly UpdateTickInfo UpdateTickInfo => ref _updateTickInfo;
 
-    internal void BeginUpdateFrame(float deltaTime, Size2D viewport, Size2D outputSize)
+    internal void BeginUpdateFrame(float deltaTime, Size2D viewport)
     {
-        _updateTickInfo = _updateTickInfo with
-        {
-            UpdateIndex = _updateTickInfo.UpdateIndex + 1,
-            DeltaTime = deltaTime,
-        };
-    }
-
-    internal void UpdateTick(int tick, float fixedDeltaTime)
-    {
-        _updateTickInfo = _updateTickInfo with { GameTick = tick, FixedDeltaTime = fixedDeltaTime };
+        _updateTickInfo = new UpdateTickInfo(UpdateIndex: _updateTickInfo.UpdateIndex + 1, DeltaTime: deltaTime);
     }
 }

@@ -1,6 +1,10 @@
+#region
+
 using ConcreteEngine.Engine.Worlds.Entities.Components;
 using ConcreteEngine.Engine.Worlds.Render.Data;
 using ConcreteEngine.Renderer.Definitions;
+
+#endregion
 
 namespace ConcreteEngine.Engine.Worlds.Render.Processor;
 
@@ -13,7 +17,7 @@ internal static class DrawTagResolver
             ref var entity = ref ctx.GetByEntityId(query.Entity);
             entity.SetAnimationSlot(query.Index + 1);
         }
-        
+
         var selected = WorldInteractive.SelectedEntityId;
         if (selected > 0)
         {

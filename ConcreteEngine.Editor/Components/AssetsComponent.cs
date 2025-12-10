@@ -16,7 +16,7 @@ namespace ConcreteEngine.Editor.Components;
 internal static class AssetsComponent
 {
     private const int RowHeight = 32;
-    private static readonly Vector2 BtnSize = new (RowHeight, 22);
+    private static readonly Vector2 BtnSize = new(RowHeight, 22);
 
     private static readonly string[] AssetCategoryNames = ["None", "Shader", "Texture", "Model", "Material"];
 
@@ -38,7 +38,8 @@ internal static class AssetsComponent
 
     public static unsafe void Draw()
     {
-        const ImGuiTableFlags flags = ImGuiTableFlags.PadOuterX | ImGuiTableFlags.NoBordersInBody | ImGuiTableFlags.ScrollY;
+        const ImGuiTableFlags flags = ImGuiTableFlags.PadOuterX | ImGuiTableFlags.NoBordersInBody |
+                                      ImGuiTableFlags.ScrollY;
 
         ImGui.SeparatorText("Asset Store");
         DrawAssetTypeSelector();
@@ -86,7 +87,7 @@ internal static class AssetsComponent
         ImGui.EndTable();
     }
 
-    private static void DrawListItem(int i,  ReadOnlySpan<EditorAssetResource> assets, NumberSpanFormatter formatter)
+    private static void DrawListItem(int i, ReadOnlySpan<EditorAssetResource> assets, NumberSpanFormatter formatter)
     {
         var it = assets[i];
         ImGui.PushID(it.Id.Identifier);

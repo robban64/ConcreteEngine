@@ -39,7 +39,7 @@ internal sealed class GrassMeshGenerator : MeshGenerator
         //builder.UploadVertices();
         //builder.UploadVertices();
     }
-    
+
     public override void Dispose()
     {
         Gfx.Disposer.EnqueueRemoval(MeshId);

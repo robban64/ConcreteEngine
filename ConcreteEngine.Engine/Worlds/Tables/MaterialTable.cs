@@ -55,11 +55,12 @@ public sealed class MaterialTable : IMaterialTable
             tag = default;
             return false;
         }
-        tag = _table[key.Value - 1];   
+
+        tag = _table[key.Value - 1];
         return true;
     }
 
-    
+
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public void ResolveSubmitMaterial(MaterialTagKey key, out MaterialTag tag) => tag = _table[key.Value - 1];
 

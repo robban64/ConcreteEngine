@@ -1,3 +1,5 @@
+#region
+
 using System.Numerics;
 using ConcreteEngine.Editor.Core;
 using ConcreteEngine.Editor.Data;
@@ -7,12 +9,14 @@ using ConcreteEngine.Editor.Store.Resources;
 using ConcreteEngine.Editor.Utils;
 using ImGuiNET;
 
+#endregion
+
 namespace ConcreteEngine.Editor.Components;
 
 internal class ObjectComponentState
 {
     public WorldObjectSelection Selection { get; private set; }
-    public EditorId SelectedResource {get; private set;}
+    public EditorId SelectedResource { get; private set; }
     private static ModelStateContext<ObjectComponentState> Context => ModelManager.WorldObjectStateContext;
 
     public List<EditorParticleResource> Particles = [];
@@ -38,12 +42,11 @@ internal class ObjectComponentState
         EditorDataStore.Slot<ParticleDataState>.Data = default;
         EditorDataStore.Slot<ParticleDataState>.SlotState = default;
     }
-    
+
     public void OnSelectAnimation(EditorAnimationResource resource)
     {
         SelectedResource = resource.Id;
     }
-
 }
 
 internal static class ObjectComponent
@@ -62,7 +65,7 @@ internal static class ObjectComponent
         var slotHandle = EditorDataStore.Slot<ParticleDataState>.Data.EmitterHandle;
         if (slotHandle == 0 && State.SelectedResource != 0)
             State.OnDeselectParticle();
-            
+
         _editedField = -1;
 
         ImGui.Dummy(new Vector2(0, 2));
@@ -143,7 +146,7 @@ internal static class ObjectComponent
             ImGui.TableNextColumn();
             if (GuiUtils.ColumnSelectable(formatter.Format(it.Id), selected, ColumnWidth, RowHeight))
             {
-                if(selected)
+                if (selected)
                     State.OnDeselectParticle();
                 else
                     State.OnSelectParticle(it);
@@ -151,7 +154,7 @@ internal static class ObjectComponent
 
             ImGui.TableNextColumn();
             GuiUtils.CenterAlignText(formatter.Format(it.MeshId), RowHeight);
-            
+
             ImGui.TableNextColumn();
             GuiUtils.CenterAlignText(it.Name, RowHeight);
 
@@ -162,7 +165,7 @@ internal static class ObjectComponent
 
     private static void DrawAnimationList()
     {
-         const ImGuiTableFlags flags = ImGuiTableFlags.PadOuterX | ImGuiTableFlags.NoBordersInBody |
+        const ImGuiTableFlags flags = ImGuiTableFlags.PadOuterX | ImGuiTableFlags.NoBordersInBody |
                                       ImGuiTableFlags.ScrollY;
 
         var formatter = new NumberSpanFormatter(StringUtils.CharBuffer8);
@@ -186,7 +189,7 @@ internal static class ObjectComponent
 
         ImGui.TableNextColumn();
         GuiUtils.CenterAlignTextHorizontal("Name");
-        
+
         ImGui.TableNextColumn();
         GuiUtils.CenterAlignTextHorizontal("Clips");
 
@@ -217,7 +220,7 @@ internal static class ObjectComponent
 
             ImGui.TableNextColumn();
             GuiUtils.CenterAlignText(formatter.Format(it.ModelId), RowHeight);
-            
+
             ImGui.TableNextColumn();
             GuiUtils.CenterAlignText(it.Name, RowHeight);
 

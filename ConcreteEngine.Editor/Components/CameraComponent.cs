@@ -97,6 +97,7 @@ internal static class CameraComponent
             proj.Near = nearFar.X;
             proj.Far = nearFar.Y;
         }
+
         fieldStatus.NextField();
 
         ImGui.EndGroup();
@@ -133,6 +134,7 @@ internal static class CameraComponent
         {
             state.Orientation = YawPitch.FromVector2(orientation);
         }
+
         fieldStatus.NextField();
         ImGui.EndGroup();
 

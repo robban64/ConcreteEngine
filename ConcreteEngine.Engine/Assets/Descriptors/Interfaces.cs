@@ -12,7 +12,6 @@ internal interface IAssetCatalog
     [JsonIgnore] int Count { get; }
 
     [JsonIgnore] IReadOnlyList<IAssetDescriptor> Records { get; }
-    
 }
 
 internal interface IAssetDescriptor

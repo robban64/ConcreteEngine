@@ -40,7 +40,7 @@ public sealed class EditorPortal : IDisposable
 
     public void AddLog(string? msg) => ConsoleService.SendLog(msg);
 
-    
+
     public void Render(float delta)
     {
         if (!Initialized) return;

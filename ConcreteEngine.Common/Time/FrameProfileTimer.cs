@@ -9,7 +9,7 @@ namespace ConcreteEngine.Common.Time;
 public static class StaticProfileTimer
 {
     public static readonly FrameProfileTimer TickTimer = new();
-    public static readonly FrameProfileTimer RenderTimer = new(144, (1.0 / 144.0) * 1000);
+    public static readonly FrameProfileTimer RenderTimer = new(144, 1.0 / 144.0 * 1000);
 }
 
 public sealed class FrameProfileTimer

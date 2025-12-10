@@ -29,9 +29,9 @@ internal sealed class AssetStartupWorker
         where TAsset : AssetObject where TDesc : class, IAssetDescriptor;
 
     private AssetLoadModuleDel<Shader, ShaderDescriptor> _loadShaderFunc = null!;
-    private AssetLoadModuleDel<Texture2D,TextureDescriptor> _loadTextureFunc = null!;
-    private AssetLoadModuleDel<CubeMap,CubeMapDescriptor> _loadCubeMapFunc = null!;
-    private AssetLoadModuleDel<Model,MeshDescriptor> _loadMeshFunc = null!;
+    private AssetLoadModuleDel<Texture2D, TextureDescriptor> _loadTextureFunc = null!;
+    private AssetLoadModuleDel<CubeMap, CubeMapDescriptor> _loadCubeMapFunc = null!;
+    private AssetLoadModuleDel<Model, MeshDescriptor> _loadMeshFunc = null!;
     private Action<MaterialManifest> _loadMaterialFunc = null!;
 
     private readonly AssetLoader _loader;
@@ -137,7 +137,8 @@ internal sealed class AssetStartupWorker
         (IReadOnlyList<TDesc>)_currentManifest!.Records;
 
 
-    private void ProcessManifestStep<TAsset, TDesc>(AssetLoadModuleDel<TAsset, TDesc> onStartStep, TDesc[]? coreManifest = null)
+    private void ProcessManifestStep<TAsset, TDesc>(AssetLoadModuleDel<TAsset, TDesc> onStartStep,
+        TDesc[]? coreManifest = null)
         where TAsset : AssetObject where TDesc : class, IAssetDescriptor
     {
         if (_idx == 0) _currentManifest = NextManifest();

@@ -1,3 +1,5 @@
+#region
+
 using System.Numerics;
 using System.Runtime.CompilerServices;
 using ConcreteEngine.Common.Numerics.Maths;
@@ -6,6 +8,8 @@ using ConcreteEngine.Engine.Worlds.Render.Data;
 using ConcreteEngine.Graphics.Gfx.Resources;
 using ConcreteEngine.Renderer.Data;
 using ConcreteEngine.Renderer.Definitions;
+
+#endregion
 
 namespace ConcreteEngine.Engine.Worlds.Render.Processor;
 

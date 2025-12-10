@@ -13,7 +13,6 @@ namespace ConcreteEngine.Engine.Worlds.Render.Processor;
 
 internal static class DrawAnimatorProcessor
 {
-    
     [SkipLocalsInit]
     public static void Execute()
     {

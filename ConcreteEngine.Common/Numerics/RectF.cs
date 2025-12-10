@@ -17,7 +17,7 @@ public struct RectF
 
     public readonly float Bottom => Top + Height;
 
-    
+
     public RectF(float left, float top, float width, float height)
     {
         Left = left;
@@ -25,7 +25,7 @@ public struct RectF
         Width = width;
         Height = height;
     }
-    
+
     public RectF(Vector4 vec)
     {
         Left = vec.X;

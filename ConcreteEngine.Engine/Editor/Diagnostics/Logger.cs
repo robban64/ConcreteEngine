@@ -31,7 +31,7 @@ public static class Logger
     {
         _logStringDel = logStringDel;
     }
-    
+
     public static bool TryDrainLog(out LogEvent log) => Logs.TryDequeue(out log);
 
 

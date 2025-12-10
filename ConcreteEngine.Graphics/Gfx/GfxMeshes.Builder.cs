@@ -12,7 +12,8 @@ namespace ConcreteEngine.Graphics.Gfx;
 
 public interface IGfxMeshBuilder
 {
-    void UploadVerticesEmpty<T>(int componentCapacity, BufferUsage usage, BufferStorage storage, BufferAccess access, byte divisor = 0) where T : unmanaged;
+    void UploadVerticesEmpty<T>(int componentCapacity, BufferUsage usage, BufferStorage storage, BufferAccess access,
+        byte divisor = 0) where T : unmanaged;
 
     void UploadVertices<T>(ReadOnlySpan<T> data, BufferUsage usage,
         BufferStorage storage, BufferAccess access, byte divisor = 0) where T : unmanaged;
@@ -46,7 +47,7 @@ internal sealed class GfxMeshBuilder : IGfxMeshBuilder
         _phase = Phase.Started;
     }
 
-    public MeshLayout Finish( )
+    public MeshLayout Finish()
     {
         InvalidOpThrower.ThrowIfNot(_state.MeshId.IsValid());
         EnsureStarted();
@@ -63,13 +64,15 @@ internal sealed class GfxMeshBuilder : IGfxMeshBuilder
     }
 
 
-    public void UploadVerticesEmpty<T>(int componentCapacity, BufferUsage usage, BufferStorage storage, BufferAccess access, byte divisor = 0) where T : unmanaged
+    public void UploadVerticesEmpty<T>(int componentCapacity, BufferUsage usage, BufferStorage storage,
+        BufferAccess access, byte divisor = 0) where T : unmanaged
     {
         EnsureStarted();
         if (_state.VboCount >= GfxLimits.MaxVboBindings)
             throw GraphicsException.LimitExceeded(nameof(GfxLimits.MaxVboBindings), GfxLimits.MaxVboBindings);
 
-        var vboId = _gfxBuffers.CreateVertexBuffer(ReadOnlySpan<T>.Empty, divisor, 0, storage, access, componentCapacity);
+        var vboId = _gfxBuffers.CreateVertexBuffer(ReadOnlySpan<T>.Empty, divisor, 0, storage, access,
+            componentCapacity);
         AttachVboInternal(vboId);
     }
 
@@ -90,7 +93,6 @@ internal sealed class GfxMeshBuilder : IGfxMeshBuilder
         _gfxMeshes.AttachVertexBuffer(_state.MeshId, vboId, _state.VboCount);
         _state.VboCount++;
         if (_phase < Phase.BuffersUploading) _phase = Phase.BuffersUploading;
-
     }
 
 

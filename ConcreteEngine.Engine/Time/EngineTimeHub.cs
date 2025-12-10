@@ -23,11 +23,11 @@ internal sealed class EngineTimeHub
     private FrameTickTimer _updateTicker = new(GameTickDeltaTime);
     private FrameTickTimer _simulationTicker = new(SimulationDeltaTime);
     private FrameTickTimer _diagnosticTicker = new(DiagnosticTickDeltaTime);
-    
+
     private double _lastUpdateFinishTime;
 
     private DebounceTicker _debounceResize;
-    
+
     private readonly UpdateTickDelegate _onStepTick;
     private readonly UpdateTickDelegate _onSimulationTick;
     private readonly UpdateTickDelegate _onLogTick;
@@ -44,22 +44,22 @@ internal sealed class EngineTimeHub
         EngineTime.GameTickDeltaTime = GameTickDeltaTime;
         EngineTime.SimulationDeltaTime = SimulationDeltaTime;
         EngineTime.DiagnosticTickDeltaTime = DiagnosticTickDeltaTime;
-        
+
         _lastUpdateFinishTime = _sw.Elapsed.TotalSeconds;
     }
-    
+
     public void UpdateFrame(float deltaTime)
     {
         EngineTime.FrameIndex++;
         EngineTime.Timestamp = TimeUtils.GetFastTimestamp();
         EngineTime.DeltaTime = deltaTime;
         EngineTime.Time += deltaTime;
-        
+
         double now = _sw.Elapsed.TotalSeconds;
         EngineTime.GameAlpha = GetGameAlpha(now);
         EngineTime.SimulationAlpha = GetSimulationAlpha(now);
     }
-    
+
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public void Accumulate(float deltaTime)
@@ -87,7 +87,7 @@ internal sealed class EngineTimeHub
         _lastUpdateFinishTime = _sw.Elapsed.TotalSeconds;
     }
 
-    
+
     public void BeginDebounceResize(int ticks)
     {
         if (_debounceResize.TicksLeft == 0)
@@ -97,13 +97,13 @@ internal sealed class EngineTimeHub
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public bool TryTriggerDebounceResize() => _debounceResize.TicksLeft > 0 && _debounceResize.Tick();
 
-    
+
     public float GetGameAlpha(double now)
     {
         var alpha = (float)((now - _lastUpdateFinishTime) / GameTickDeltaTime);
         return float.Clamp(alpha, 0f, 1f);
     }
-    
+
     public float GetSimulationAlpha(double now)
     {
         var alpha = (float)((now - _lastUpdateFinishTime) / SimulationDeltaTime);

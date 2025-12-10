@@ -1,3 +1,5 @@
+#region
+
 using System.Runtime.CompilerServices;
 using ConcreteEngine.Editor.Data;
 using ConcreteEngine.Editor.Definitions;
@@ -11,6 +13,8 @@ using ConcreteEngine.Renderer.State;
 using ConcreteEngine.Shared.Diagnostics;
 using ConcreteEngine.Shared.Rendering;
 using EditorData = ConcreteEngine.Editor.Store.EditorDataStore;
+
+#endregion
 
 namespace ConcreteEngine.Engine.Editor;
 
@@ -33,7 +37,7 @@ internal static class EngineDataBridge
 
     public static void ProcessEditorDataSlot()
     {
-        var editorState = EditorData.Input.EditorSelection;
+        var editorState = EditorDataStore.Input.EditorSelection;
         var action = editorState.Action;
 
         ProcessCamera();
@@ -42,7 +46,7 @@ internal static class EngineDataBridge
 
         if (editorState.IsDirty && !editorState.Id.IsValid)
         {
-            EditorData.State.SelectedId = EditorId.Empty;
+            EditorDataStore.State.SelectedId = EditorId.Empty;
             return;
         }
 
@@ -55,9 +59,9 @@ internal static class EngineDataBridge
 
     public static void WriteFrameMetrics(in RenderFrameInfo frameInfo, in GfxFrameResult frameResult)
     {
-        EditorData.MetricState.FrameSample =
+        EditorDataStore.MetricState.FrameSample =
             new RenderInfoSample(frameInfo.Fps, frameInfo.Alpha, frameResult.DrawCalls, frameResult.TriangleCount);
-        EditorData.MetricState.FrameMetrics = new FrameMetric(frameInfo.FrameIndex, EngineTime.Timestamp, default);
+        EditorDataStore.MetricState.FrameMetrics = new FrameMetric(frameInfo.FrameIndex, EngineTime.Timestamp, default);
     }
 
 
@@ -66,8 +70,8 @@ internal static class EngineDataBridge
     {
         var camGen = _world.CameraGeneration;
 
-        ref var slot = ref EditorData.Slot<CameraDataState>.SlotState;
-        ref var data = ref EditorData.Slot<CameraDataState>.Data;
+        ref var slot = ref EditorDataStore.Slot<CameraDataState>.SlotState;
+        ref var data = ref EditorDataStore.Slot<CameraDataState>.Data;
         if (camGen > slot.Generation || slot.IsRequesting)
             _world.WriteCameraState(out data);
         else if (slot.IsDirty)
@@ -78,9 +82,9 @@ internal static class EngineDataBridge
 
     private static void ProcessParticle()
     {
-        var slot = EditorData.Slot<ParticleDataState>.SlotState;
-        ref var data = ref EditorData.Slot<ParticleDataState>.Data;
-        if(data.EmitterHandle == 0) return;
+        var slot = EditorDataStore.Slot<ParticleDataState>.SlotState;
+        ref var data = ref EditorDataStore.Slot<ParticleDataState>.Data;
+        if (data.EmitterHandle == 0) return;
         if (slot.IsDirty)
             _world.ApplyEmitterState(in data);
         else if (slot.IsRequesting)
@@ -90,8 +94,8 @@ internal static class EngineDataBridge
     public static void ProcessWorldParams()
     {
         var gen = _world.WorldParamGeneration;
-        ref var slot = ref EditorData.Slot<WorldParamsData>.SlotState;
-        ref var data = ref EditorData.Slot<WorldParamsData>.Data;
+        ref var slot = ref EditorDataStore.Slot<WorldParamsData>.SlotState;
+        ref var data = ref EditorDataStore.Slot<WorldParamsData>.Data;
 
         if (slot.RequestInFrames > 0)
         {
@@ -109,48 +113,48 @@ internal static class EngineDataBridge
 
     private static void ProcessEntities()
     {
-        ref var editorState = ref EditorData.Input.EditorSelection;
-        ref var data = ref EditorData.State.EntityState;
+        ref var editorState = ref EditorDataStore.Input.EditorSelection;
+        ref var data = ref EditorDataStore.State.EntityState;
 
         var entityId = new EntityId(editorState.Id);
 
         if (entityId != data.EntityId || editorState.IsRequesting)
         {
             _entities.WriteSelectedEntity(entityId, ref data);
-            EditorData.State.SelectedId = editorState.Id;
+            EditorDataStore.State.SelectedId = editorState.Id;
             return;
         }
 
         if (editorState.IsDirty)
         {
             _entities.ApplySelectedEntity(entityId, in data);
-            EditorData.State.SelectedId = editorState.Id;
+            EditorDataStore.State.SelectedId = editorState.Id;
         }
     }
 
     private static void ProcessInteractivity()
     {
-        ref readonly var selection = ref EditorData.Input.EditorSelection;
-        ref readonly var mouse = ref EditorData.Input.MouseState;
+        ref readonly var selection = ref EditorDataStore.Input.EditorSelection;
+        ref readonly var mouse = ref EditorDataStore.Input.MouseState;
 
         if (selection.Action == EditorMouseAction.RaycastSelect)
         {
             var entityId = _interactions.OnClick(mouse.Position, out _, out _);
             if (!entityId.IsValid)
             {
-                if (selection.Id > 0) EditorData.State.SelectedId = EditorId.Empty;
+                if (selection.Id > 0) EditorDataStore.State.SelectedId = EditorId.Empty;
                 return;
             }
 
-            EditorData.State.SelectedId = AsEditorId(entityId);
+            EditorDataStore.State.SelectedId = AsEditorId(entityId);
         }
 
         if (selection.Action == EditorMouseAction.RaycastDragTerrain)
         {
             if (!selection.Id.IsValid)
             {
-                EditorData.State.SelectedId = EditorId.Empty;
-                EditorData.State.EntityState = default;
+                EditorDataStore.State.SelectedId = EditorId.Empty;
+                EditorDataStore.State.EntityState = default;
                 return;
             }
 
@@ -158,11 +162,11 @@ internal static class EngineDataBridge
             if (!_interactions.IsDragging)
             {
                 var clickEntity = _interactions.OnClick(mouse.Position, out _, out _);
-                EditorData.State.SelectedId = AsEditorId(clickEntity);
+                EditorDataStore.State.SelectedId = AsEditorId(clickEntity);
 
                 if (!clickEntity.IsValid)
                 {
-                    EditorData.State.EntityState = default;
+                    EditorDataStore.State.EntityState = default;
                     return;
                 }
 
@@ -170,7 +174,7 @@ internal static class EngineDataBridge
             }
             else
             {
-                EditorData.State.SelectedId = AsEditorId(entityId);
+                EditorDataStore.State.SelectedId = AsEditorId(entityId);
                 if (!entityId.IsValid) return;
             }
 

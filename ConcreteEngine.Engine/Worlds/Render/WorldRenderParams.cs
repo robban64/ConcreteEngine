@@ -61,7 +61,6 @@ public sealed class WorldRenderParams
         ArgumentOutOfRangeException.ThrowIfZero(IntMath.IsPowerOfTwo(size) ? 1 : 0);
 
         _shadow = WorldParamUtils.MakeSizedShadow(size);
-
     }
 
     internal void SetFromData(in WorldParamsData data)
@@ -69,7 +68,7 @@ public sealed class WorldRenderParams
         int size = _shadow.ShadowMapSize;
         _shadow = data.Shadow;
         _shadow.ShadowMapSize = size;
-        
+
         _ambient = data.Ambient;
         _sunLight = data.SunLight;
         _fog = data.Fog;
@@ -113,5 +112,4 @@ public sealed class WorldRenderParams
         _dirty = false;
         return _snapshot;
     }
-
 }

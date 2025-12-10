@@ -8,9 +8,9 @@ namespace ConcreteEngine.Graphics.Gfx.Contracts;
 
 public readonly struct GfxBufferDataDesc(uint size, BufferStorage storage, BufferAccess access)
 {
-    public readonly uint Size  = size;
-    public readonly BufferStorage Storage  = storage;
-    public readonly BufferAccess Access= access;
+    public readonly uint Size = size;
+    public readonly BufferStorage Storage = storage;
+    public readonly BufferAccess Access = access;
 }
 
 //VBO

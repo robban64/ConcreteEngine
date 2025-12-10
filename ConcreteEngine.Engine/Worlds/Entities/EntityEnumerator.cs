@@ -1,8 +1,5 @@
 namespace ConcreteEngine.Engine.Worlds.Entities;
 
-
-
-
 internal ref struct EntityEnumerator<T1>(EntityStore<T1> r)
     where T1 : unmanaged
 {

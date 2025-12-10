@@ -27,7 +27,7 @@ public static class RotationMath
         return new YawPitch(yawDeg, pitchDeg);
     }
 
-    
+
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static Quaternion YawPitchToQuaternion(YawPitch orientation)
     {

@@ -16,7 +16,6 @@ public struct ShadowParams(
     float strength,
     float pcfRadius)
 {
-    
     public int ShadowMapSize = shadowMapSize;
     public float Distance = distance;
     public float ZPad = zPad;

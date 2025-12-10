@@ -1,5 +1,9 @@
+#region
+
 using System.Runtime.InteropServices;
 using ConcreteEngine.Engine.Worlds.Data;
+
+#endregion
 
 namespace ConcreteEngine.Engine.Worlds.Entities.Components;
 

@@ -1,4 +1,8 @@
+#region
+
 using ConcreteEngine.Engine.Worlds.Entities.Components;
+
+#endregion
 
 namespace ConcreteEngine.Engine.Worlds.Entities;
 

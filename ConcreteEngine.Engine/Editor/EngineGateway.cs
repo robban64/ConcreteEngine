@@ -6,6 +6,8 @@
 
 #region
 
+#region
+
 using ConcreteEngine.Editor;
 using ConcreteEngine.Editor.Data;
 using ConcreteEngine.Editor.Definitions;
@@ -24,6 +26,8 @@ using ConcreteEngine.Engine.Editor.Controller;
 using ConcreteEngine.Graphics;
 using ConcreteEngine.Renderer.State;
 using EditorCmd = ConcreteEngine.Editor.CommandDispatcher;
+
+#endregion
 
 #endregion
 

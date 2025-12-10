@@ -2,8 +2,6 @@
 
 using ConcreteEngine.Engine.Assets;
 using ConcreteEngine.Engine.Worlds;
-using ConcreteEngine.Graphics;
-using ConcreteEngine.Renderer.State;
 
 #endregion
 
@@ -19,6 +17,4 @@ internal sealed class ApiContext
         World = world;
         AssetSystem = assetSystem;
     }
-
-
 }

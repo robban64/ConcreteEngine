@@ -33,9 +33,9 @@ internal sealed class AnimationTable
     public int TotalBones { get; private set; }
     public int TotalClips { get; private set; }
 
-    
+
     public ReadOnlySpan<ModelId> ModelIdSpan => _idxToModel;
-    
+
     public AnimationDataView GetDataView() =>
         new(_clips, _boneOffsetMatrix, _nodeTransform, _parentIndices, _modelBoneInvTransform);
 
@@ -125,7 +125,7 @@ internal sealed class AnimationTable
             Array.Resize(ref _nodeTransform, newCap);
             Array.Resize(ref _parentIndices, newCap);
 
-            Logger.LogString(LogScope.World,$"Animation table bone buffer resize {newCap}", LogLevel.Warn);
+            Logger.LogString(LogScope.World, $"Animation table bone buffer resize {newCap}", LogLevel.Warn);
         }
 
         if (_modelBoneInvTransform.Length < animationCap)
@@ -136,7 +136,7 @@ internal sealed class AnimationTable
             Array.Resize(ref _idxToModel, newCap);
             Array.Resize(ref _modelBoneInvTransform, newCap);
             Array.Resize(ref _clips, newCap);
-            Logger.LogString(LogScope.World,$"Animation table clip resize {newCap}", LogLevel.Warn);
+            Logger.LogString(LogScope.World, $"Animation table clip resize {newCap}", LogLevel.Warn);
         }
     }
 }

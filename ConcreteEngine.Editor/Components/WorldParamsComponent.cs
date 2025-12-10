@@ -67,19 +67,19 @@ internal static class WorldParamsComponent
             _editedField = -1;
         }
     }
-    
-    
+
+
     private static void DrawShadow()
     {
         var fieldStatus = new ImGuiFieldStatus();
 
         ref var shadow = ref State.DataState.Shadow;
         int size = shadow.ShadowMapSize;
-        
+
         ImGui.BeginGroup();
         ImGui.SeparatorText("Shadow Map Size");
         ImGui.TextUnformatted(new NumberSpanFormatter(StringUtils.CharBuffer8).Format(size));
-        
+
         ImGui.PushStyleVar(ImGuiStyleVar.FramePadding, new Vector2(8, 6));
         ImGui.PushStyleVar(ImGuiStyleVar.WindowPadding, new Vector2(8, 6));
         if (ImGui.BeginCombo("##shMapSize", "Set Size", ImGuiComboFlags.HeightLargest))
@@ -95,6 +95,7 @@ internal static class WorldParamsComponent
             ImGui.PopStyleVar();
             ImGui.EndCombo();
         }
+
         ImGui.PopStyleVar(2);
 
         ImGui.EndGroup();
@@ -271,7 +272,6 @@ internal static class WorldParamsComponent
 
         if (fieldStatus.HasEdited(out var field)) _editedField = field;
     }
-
 
 
     private static void DrawSelector()

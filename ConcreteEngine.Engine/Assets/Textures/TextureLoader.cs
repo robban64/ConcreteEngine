@@ -61,7 +61,7 @@ internal sealed class TextureLoader(AssetGfxUploader uploader)
     {
         //StbImage.stbi_set_flip_vertically_on_load(1);
 
-        var path = Path.Combine(AssetPaths.TexturePath,record.Filename);
+        var path = Path.Combine(AssetPaths.TexturePath, record.Filename);
 
         var fi = new FileInfo(path);
         if (!fi.Exists) throw new FileNotFoundException("File not found.", path);

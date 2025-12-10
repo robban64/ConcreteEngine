@@ -52,7 +52,6 @@ public sealed class FlyCameraModule : GameModule
         if (targetVelocity == Vector3.Zero) t = 1.0f - MathF.Exp(-friction * dt);
         _currentVelocity = Vector3.Lerp(_currentVelocity, targetVelocity, t);
         _camera.Translation += _currentVelocity * dt;
-      
     }
 
     private void RotateController(float fixedDt, float rotateSpeed)
@@ -63,11 +62,11 @@ public sealed class FlyCameraModule : GameModule
         if (_input.IsKeyDown(Key.A))
             orientation.Yaw += speed;
         if (_input.IsKeyDown(Key.D))
-            orientation.Yaw += (-speed);
+            orientation.Yaw += -speed;
         if (_input.IsKeyDown(Key.Q))
-            orientation.Pitch += (speed);
+            orientation.Pitch += speed;
         if (_input.IsKeyDown(Key.E))
-            orientation.Pitch += (-speed);
+            orientation.Pitch += -speed;
 
         float t = 1.0f - MathF.Exp(-25 * fixedDt);
         orientation.WithClampedPitch();

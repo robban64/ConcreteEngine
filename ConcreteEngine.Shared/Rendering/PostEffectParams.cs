@@ -58,7 +58,6 @@ public struct PostWhiteBalanceParams(float tint, float strength)
 {
     public float Tint = tint;
     public float Strength = strength;
-    
 }
 
 // 0..1 > 0..0.15 // 0..1 > 0..0.01 // 0..1 > 0..0.15 // 0..1 > 0..0.12

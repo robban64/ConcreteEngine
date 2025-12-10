@@ -198,7 +198,6 @@ internal sealed class DrawBuffers
             data.CameraPos = camera.RenderView.Transform.Translation.AsVector4();
             data.CameraUp = view.Up.AsVector4();
             data.CameraRight = view.Right.AsVector4();
-
         }
 
         _gfxBuffers.UploadUniformGpuData(_cameraUbo, in data, 0);
@@ -275,10 +274,10 @@ internal sealed class DrawBuffers
             .Deconstruct(out var g, out var wb, out var b, out var fx);
 
         ref var data = ref DataStore.PostData;
-        data.Grade = new Vector4(g.Exposure, g.Saturation, g.Contrast , g.Warmth);
-        data.WhiteBalance = new Vector4(wb.Tint , wb.Strength, 0f, 0f);
-        data.Bloom = new Vector4(b.Intensity ,  b.Threshold , b.Radius, 0f);
-        data.Fx = new Vector4(fx.Vignette , fx.Grain , fx.Sharpen , fx.Rolloff );
+        data.Grade = new Vector4(g.Exposure, g.Saturation, g.Contrast, g.Warmth);
+        data.WhiteBalance = new Vector4(wb.Tint, wb.Strength, 0f, 0f);
+        data.Bloom = new Vector4(b.Intensity, b.Threshold, b.Radius, 0f);
+        data.Fx = new Vector4(fx.Vignette, fx.Grain, fx.Sharpen, fx.Rolloff);
         _gfxBuffers.UploadUniformGpuData(_postUbo, in data, 0);
     }
 }

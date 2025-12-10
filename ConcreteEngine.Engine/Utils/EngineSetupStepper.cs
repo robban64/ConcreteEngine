@@ -1,4 +1,8 @@
+#region
+
 using ConcreteEngine.Engine.Definitions;
+
+#endregion
 
 namespace ConcreteEngine.Engine.Utils;
 

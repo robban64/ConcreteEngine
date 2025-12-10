@@ -10,11 +10,12 @@ namespace ConcreteEngine.Editor.Components.State;
 internal sealed class EntitiesViewModel
 {
     private EditorEntityResource? _selectedEntity = null;
+
     public EditorEntityResource? GetSelectedEntity()
     {
         var editorId = EditorDataStore.State.SelectedId;
         if (!editorId.IsValid || editorId.ItemType != EditorItemType.Entity) return null;
-        if(_selectedEntity?.Id != editorId)
+        if (_selectedEntity?.Id != editorId)
             _selectedEntity = FindEntity(editorId);
         return _selectedEntity;
     }
@@ -45,6 +46,6 @@ internal sealed class EntitiesViewModel
         }
 
         selection.Id = EditorId.Empty;
-        selection.IsDirty  = true;
+        selection.IsDirty = true;
     }
 }

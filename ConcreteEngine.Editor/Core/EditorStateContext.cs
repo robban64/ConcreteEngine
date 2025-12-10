@@ -114,8 +114,8 @@ internal static class EditorStateContext
         {
             switch (state.RightSidebar)
             {
-                case RightSidebarMode.Property: 
-                    
+                case RightSidebarMode.Property:
+
                     break;
                 case RightSidebarMode.Camera: TransitionRightSidebar(ModelManager.CameraStateContext); break;
                 case RightSidebarMode.World: TransitionRightSidebar(ModelManager.WorldRenderStateContext); break;

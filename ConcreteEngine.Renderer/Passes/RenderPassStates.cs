@@ -57,8 +57,9 @@ public readonly struct RenderPassState(
         new(clearColor: GfxPassClear.MakeColorDepthClear(Color4.CornflowerBlue), passState: GfxPassState.MakeScene(),
             samples: samples);
 
-    public static RenderPassState MakeResolve() => new(clearColor: GfxPassClear.MakeNoClear(),
-        passState: GfxPassState.MakeOff(), linearFilter: true);
+    public static RenderPassState MakeResolve() =>
+        new(clearColor: GfxPassClear.MakeNoClear(),
+            passState: GfxPassState.MakeOff(), linearFilter: true);
 
     public static RenderPassState MakePostProcess(ShaderId shaderId) =>
         new(clearColor: GfxPassClear.MakeColorClear(Color4.Black), passState: GfxPassState.MakePostProcess(),

@@ -18,6 +18,7 @@ public abstract class GameModule
     public virtual void UpdateTick(float deltaTime)
     {
     }
+
     public virtual void OnSceneReady()
     {
     }

@@ -80,7 +80,6 @@ public sealed class GameEngine : IDisposable
         _engineGateway =
             new EngineGateway(gfxBundle.Config.DriverContext, engineWindow.PlatformWindow, internalInput);
         _editorQueues = new EditorEngineQueue(_world, _worldRenderer, _assets);
-
     }
 
 
@@ -112,7 +111,7 @@ public sealed class GameEngine : IDisposable
         _timeHub.UpdateFrame(dt);
         float alpha = EngineTime.GameAlpha;
         var mousePos = _inputSystem.InputSourceImpl.MousePosition;
-        
+
         _window.OnFrameStart(out var outputSize, out var windowSize);
         var frameInfo = new RenderFrameInfo(EngineTime.FrameIndex, dt, EngineTime.GameAlpha, outputSize);
         var runtimeParams = new RenderRuntimeParams(windowSize, mousePos, EngineTime.Time, _rng.NextFloat());
@@ -122,9 +121,9 @@ public sealed class GameEngine : IDisposable
             _worldRenderer.RenderEmptyFrame(in frameInfo);
             return;
         }
-        
+
         var beginStatus = _window.UpdateCheckResized() ? BeginFrameStatus.Resize : BeginFrameStatus.None;
-        
+
         if (EngineTime.FrameIndex > 1 && beginStatus == BeginFrameStatus.Resize)
             _timeHub.BeginDebounceResize(30);
 
@@ -137,7 +136,6 @@ public sealed class GameEngine : IDisposable
 
         if (_engineGateway.Active)
             _engineGateway.RenderEditor(in frameInfo, in gfxFrameResult);
-        
     }
 
     internal void Update(float dt)
@@ -157,7 +155,7 @@ public sealed class GameEngine : IDisposable
 
         if (_editorQueues.DeferredCommandCount > 0)
             _editorQueues.DrainDeferredCommands();
-        
+
         if (_engineGateway.Active)
             _inputSystem.Update(!_engineGateway.BlockInput());
 

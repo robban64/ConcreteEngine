@@ -1,7 +1,10 @@
+#region
+
 using ConcreteEngine.Editor.Data;
 using ConcreteEngine.Shared.Diagnostics;
 using ConcreteEngine.Shared.Input;
-using ConcreteEngine.Shared.World;
+
+#endregion
 
 // ReSharper disable StaticMemberInGenericType
 
@@ -14,19 +17,19 @@ public static class EditorDataStore
         public static MouseDataState MouseState;
         public static EditorSelectionState EditorSelection;
     }
-    
+
     public static class State
     {
         public static EditorId SelectedId;
         public static EntityDataState EntityState;
     }
-    
+
     public static class Slot<T> where T : unmanaged
     {
         public static T Data;
         public static EditorSlotState SlotState;
     }
-    
+
     public static class MetricState
     {
         public static RenderInfoSample FrameSample;

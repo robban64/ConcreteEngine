@@ -8,10 +8,10 @@ namespace ConcreteEngine.Graphics.Gfx.Contracts;
 
 public readonly struct GfxTextureBorder(byte r, byte g, byte b, byte a, bool enabled)
 {
-    public readonly byte R  = r;
-    public readonly byte G  = g;
-    public readonly byte B  = b;
-    public readonly byte A  = a;
+    public readonly byte R = r;
+    public readonly byte G = g;
+    public readonly byte B = b;
+    public readonly byte A = a;
     public readonly bool Enabled = enabled;
 
     public static GfxTextureBorder Off => new(0, 0, 0, 0, false);

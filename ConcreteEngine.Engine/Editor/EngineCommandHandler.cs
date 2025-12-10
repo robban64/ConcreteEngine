@@ -84,14 +84,13 @@ internal static class EngineCommandHandler
 
         ctx.AddLog(StructStr<MeshPart>());
         ctx.AddLog(StructStr<MaterialTag>());
-        
+
         ctx.AddLog(StructStr<Transform>());
         ctx.AddLog(StructStr<RenderSourceComponent>());
         ctx.AddLog(StructStr<DrawEntity>());
         ctx.AddLog(StructStr<DrawEntityData>());
         ctx.AddLog(StructStr<DrawEntityMeta>());
         ctx.AddLog(StructStr<DrawEntitySource>());
-
     }
 
 

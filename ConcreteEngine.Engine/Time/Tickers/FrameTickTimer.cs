@@ -2,7 +2,11 @@
 
 #endregion
 
+#region
+
 using System.Runtime.CompilerServices;
+
+#endregion
 
 namespace ConcreteEngine.Engine.Time.Tickers;
 
@@ -29,7 +33,7 @@ internal struct FrameTickTimer(float tickDt)
         tickIndex = _tickIndex++;
         return true;
     }
-    
+
     /*
     public int DrainAllTicks()
     {
@@ -38,5 +42,4 @@ internal struct FrameTickTimer(float tickDt)
         return n;
     }
     */
-
 }

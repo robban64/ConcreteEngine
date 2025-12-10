@@ -34,7 +34,7 @@ public sealed class TerrainMeshGenerator : MeshGenerator
     public VertexBufferId VboId { get; private set; }
     public IndexBufferId IboId { get; private set; }
 
-    
+
     internal TerrainMeshGenerator(GfxContext gfx) : base(gfx)
     {
     }

@@ -10,7 +10,6 @@ using ConcreteEngine.Engine.Assets.Textures;
 using ConcreteEngine.Engine.Configuration;
 using ConcreteEngine.Engine.Scene;
 using ConcreteEngine.Engine.Scene.Modules;
-using ConcreteEngine.Engine.Worlds.Data;
 using ConcreteEngine.Engine.Worlds.Entities.Components;
 using ConcreteEngine.Engine.Worlds.Render;
 using ConcreteEngine.Engine.Worlds.Utility;
@@ -134,7 +133,7 @@ public sealed class Demo3DScene : GameScene
         {
             var warriorModel = assets.Store.GetByName<Model>("Warrior");
             var warriorMat = assets.MaterialStore.Get("Warrior::Materials/0");
-            var warriorMatKey = (MaterialTagBuilder.BuildOne(warriorMat.Id));
+            var warriorMatKey = MaterialTagBuilder.BuildOne(warriorMat.Id);
             var clip = warriorModel.Animation![0];
 
             warriorMat.State.Shininess = 2f;
@@ -156,7 +155,7 @@ public sealed class Demo3DScene : GameScene
 
         var cesiumModel = assets.Store.GetByName<Model>("Cesium_Man");
         var cesiumMat = assets.MaterialStore.CreateMaterial("EmptyAnimated", "CesiumMat");
-        var cesiumMatKey = (MaterialTagBuilder.BuildOne(cesiumMat.Id));
+        var cesiumMatKey = MaterialTagBuilder.BuildOne(cesiumMat.Id);
         var cesiumClip = cesiumModel.Animation![0];
 
         for (int i = 0; i < 16; i++)
@@ -192,7 +191,7 @@ public sealed class Demo3DScene : GameScene
             };
 
             var knightMatKey =
-                (MaterialTagBuilder.Start(knightMat.Id).WithSlot(knightMat.Id).Build());
+                MaterialTagBuilder.Start(knightMat.Id).WithSlot(knightMat.Id).Build();
 
             var entity = worldEntities.CreateModelEntity(knight.ModelId, knight.DrawCount, knightMatKey,
                 in transform, knight.Bounds);

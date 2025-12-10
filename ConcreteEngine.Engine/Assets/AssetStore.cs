@@ -159,7 +159,7 @@ internal sealed class AssetStore : IAssetStore
             list.Add(it);
         }
     }
- 
+
     public void FillSpan<TAsset, TData>(Span<TData> span, Action<TAsset, Span<TData>> transform)
         where TAsset : AssetObject where TData : unmanaged
     {

@@ -46,7 +46,7 @@ public static class GfxLog
         else if (!enabled && idx == -1)
             IgnoreFilter.Add(rule);
     }
-    
+
     private static bool FilterLog(in LogEvent log) => FilterLogIndex(log.Topic, log.Scope, log.Action, log.Level) >= 0;
 
 
@@ -56,7 +56,7 @@ public static class GfxLog
         var packed = LogFilterWildcard.Pack((byte)topic, (byte)scope, (byte)action, (byte)level);
         return LogFilterWildcard.IndexAt(packed, IgnoreFilter);
     }
-    
+
     // Utilities
 
 
@@ -80,6 +80,4 @@ public static class GfxLog
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     internal static void LogBackend(uint handle, GfxHandle h, LogTopic topic, LogAction action, ushort flags = 0) =>
         Event(LogBk(handle, h.Slot, flags, h.IsValid, topic, action));
-
-
 }

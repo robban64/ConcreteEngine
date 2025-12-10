@@ -23,9 +23,7 @@ public sealed class CollisionMethods
     {
         var dirfrac = new Vector3
         {
-            X = 1.0f / ray.Direction.X,
-            Y = 1.0f / ray.Direction.Y,
-            Z = 1.0f / ray.Direction.Z
+            X = 1.0f / ray.Direction.X, Y = 1.0f / ray.Direction.Y, Z = 1.0f / ray.Direction.Z
         };
         float t1 = (box.Min.X - ray.Position.X) * dirfrac.X;
         float t2 = (box.Max.X - ray.Position.X) * dirfrac.X;

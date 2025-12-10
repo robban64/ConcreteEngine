@@ -57,7 +57,7 @@ internal readonly ref struct AnimationDataView(
         var endOffset = startOffset + boneCap;
 
         if ((uint)index > clips.Length || (uint)index > modelBoneInvTransform.Length ||
-           (uint)endOffset > boneOffsetMatrix.Length || nodeTransform.Length != boneOffsetMatrix.Length)
+            (uint)endOffset > boneOffsetMatrix.Length || nodeTransform.Length != boneOffsetMatrix.Length)
         {
             throw new IndexOutOfRangeException();
         }

@@ -14,7 +14,7 @@ internal static class RenderTransform
     public static void CreateLightView(
         ref LightView view,
         in ShadowParams shadowParams,
-         Vector3 lightDirection,
+        Vector3 lightDirection,
         Span<Vector3> corners
     )
     {
@@ -44,7 +44,7 @@ internal static class RenderTransform
         Matrix4x4.Invert(shadowRotation, out var invShadowRotation);
         Vector3 snappedCenterWorld = Vector3.Transform(snappedCenterLs, invShadowRotation);
 
-        var eye = snappedCenterWorld - (dir * shadowParams.Distance * 0.5f);
+        var eye = snappedCenterWorld - dir * shadowParams.Distance * 0.5f;
         view.LightViewMatrix = Matrix4x4.CreateLookAt(eye, snappedCenterWorld, worldUp);
 
         float minZ = float.MaxValue;
@@ -74,7 +74,7 @@ internal static class RenderTransform
     internal static void FillFrustumCorners(
         in Matrix4x4 viewMat,
         in Matrix4x4 projMat,
-         Vector3 pos,
+        Vector3 pos,
         Vector2 nearFar,
         Span<Vector3> corners)
     {

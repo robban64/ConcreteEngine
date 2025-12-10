@@ -15,5 +15,4 @@ internal sealed class CameraState
     {
         EditorDataStore.Slot<CameraDataState>.SlotState.IsDirty = true;
     }
-
 }

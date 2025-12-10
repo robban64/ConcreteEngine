@@ -11,7 +11,6 @@ using ConcreteEngine.Graphics.OpenGL;
 
 namespace ConcreteEngine.Graphics;
 
-
 public sealed class GraphicsRuntime
 {
     private static bool _isInitialized = false;

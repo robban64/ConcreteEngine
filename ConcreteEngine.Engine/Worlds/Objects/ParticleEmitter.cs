@@ -1,3 +1,5 @@
+#region
+
 using System.Numerics;
 using ConcreteEngine.Common.Numerics;
 using ConcreteEngine.Common.Numerics.Maths;
@@ -6,13 +8,15 @@ using ConcreteEngine.Graphics.Gfx.Resources;
 using ConcreteEngine.Renderer.Data;
 using ConcreteEngine.Shared.World;
 
+#endregion
+
 namespace ConcreteEngine.Engine.Worlds.Objects;
 
 public sealed class ParticleEmitter : IComparable<int>, IComparable<ParticleEmitter>
 {
     public readonly int EmitterHandle;
     public string EmitterName;
-    
+
     public int ParticleCount;
     public MeshId MeshId;
     public MaterialId MaterialId;

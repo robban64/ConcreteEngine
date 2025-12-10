@@ -12,10 +12,8 @@ using ConcreteEngine.Engine.Worlds.Entities.Components;
 using ConcreteEngine.Engine.Worlds.MeshGeneration;
 using ConcreteEngine.Engine.Worlds.Objects;
 using ConcreteEngine.Engine.Worlds.Tables;
-using ConcreteEngine.Graphics.Gfx.Resources;
 using ConcreteEngine.Renderer.Data;
 using ConcreteEngine.Shared.World;
-using Microsoft.VisualBasic;
 
 #endregion
 
@@ -69,8 +67,7 @@ public sealed class WorldParticles
         var slotHandle = _particleGenerator.CreateParticleMesh(particleCount, out var mesh);
         var emitter = new ParticleEmitter(name, slotHandle, particleCount, in definition)
         {
-            MeshId = mesh,
-            MaterialId = Material
+            MeshId = mesh, MaterialId = Material
         };
         _emitters.Add(emitter);
         _handleHigh = int.Max(_handleHigh, slotHandle);
@@ -92,7 +89,7 @@ public sealed class WorldParticles
         UpdateEntities(entities);
     }
 
-    
+
     private void UpdateEntities(WorldEntities entities)
     {
         BoundingBox currBox = default;
@@ -113,7 +110,7 @@ public sealed class WorldParticles
             box.Bounds = currBox;
         }
     }
-    
+
     private void SimulateEmitters(float fixedDt)
     {
         foreach (var emitter in _emitters)

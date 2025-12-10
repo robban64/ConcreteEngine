@@ -5,9 +5,7 @@ using ConcreteEngine.Editor.Store;
 using ConcreteEngine.Editor.Store.Resources;
 using ConcreteEngine.Engine.Assets.Models;
 using ConcreteEngine.Engine.Worlds;
-using ConcreteEngine.Engine.Worlds.Data;
 using ConcreteEngine.Shared.Rendering;
-using ConcreteEngine.Shared.World;
 
 #endregion
 
@@ -35,7 +33,7 @@ internal sealed class WorldApiController(ApiContext ctx)
         data.Definition = emitter.Definition;
         data.EmitterState = emitter.State;
     }
-    
+
     public void ApplyEmitterState(in ParticleDataState data)
     {
         var emitter = World.Particles.GetEmitter(data.EmitterHandle);

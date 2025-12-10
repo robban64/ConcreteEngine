@@ -12,14 +12,12 @@ namespace ConcreteEngine.Engine.Editor.Controller;
 
 internal sealed class InteractionController(ApiContext apiContext)
 {
-
     private WorldRaycaster Raycaster => apiContext.World.Raycast;
     private DragEntityState _dragState;
-    
+
     public bool IsDragging => _dragState.IsDragging;
 
-    private ref BoxComponent GetBounds(EntityId e) =>
-        ref apiContext.World.Entities.Core.GetBoxById(e);
+    private ref BoxComponent GetBounds(EntityId e) => ref apiContext.World.Entities.Core.GetBoxById(e);
 
 
     public EntityId OnClick(Vector2 mousePosition, out BoundingBox bounds, out float distance)
@@ -42,7 +40,7 @@ internal sealed class InteractionController(ApiContext apiContext)
             OnDragEnd(mousePosition);
     }
 
-    private void OnDragStart( Vector2 mousePosition)
+    private void OnDragStart(Vector2 mousePosition)
     {
         var world = apiContext.World;
 
@@ -85,7 +83,7 @@ internal sealed class InteractionController(ApiContext apiContext)
         _dragState = default;
     }
 
-    private Vector3 DragEntityTerrain(EntityId entity,Vector2 mousePosition)
+    private Vector3 DragEntityTerrain(EntityId entity, Vector2 mousePosition)
     {
         var world = apiContext.World;
         world.Camera.Raycaster.CreateRayFrom(mousePosition, out var ray);

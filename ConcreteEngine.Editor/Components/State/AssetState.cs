@@ -11,7 +11,7 @@ namespace ConcreteEngine.Editor.Components.State;
 internal sealed class AssetState
 {
     public EditorAssetCategory Category { get; private set; }
-    
+
     public EditorFileAssetModel[] FileAssets { get; private set; } = [];
 
     public ReadOnlySpan<EditorAssetResource> GetAssetSpan()

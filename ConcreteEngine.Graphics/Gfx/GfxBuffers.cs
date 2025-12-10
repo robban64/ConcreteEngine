@@ -41,8 +41,8 @@ public sealed class GfxBuffers
         var size = (uint)stride * (uint)componentCount;
 
         var meta = new VertexBufferMeta(stride, componentCount, offset, divisor, DefaultUsage, storage, access);
-        
-        var payload = data.Length > 0  ? MemoryMarshal.AsBytes(data) : ReadOnlySpan<byte>.Empty;
+
+        var payload = data.Length > 0 ? MemoryMarshal.AsBytes(data) : ReadOnlySpan<byte>.Empty;
         var vboRef = _driverBuffer.CreateVertexBuffer(payload, new GfxBufferDataDesc(size, storage, access));
 
         return _vboStore.Add(meta, vboRef);
@@ -174,7 +174,7 @@ public sealed class GfxBuffers
         if (stride != meta.Stride)
             GraphicsException.ThrowInvalidBufferData(nameof(T), $"Invalid stride {stride},  expected {meta.Stride}");
 
-        if ((offset + len) > meta.Capacity)
+        if (offset + len > meta.Capacity)
             GraphicsException.ThrowCapabilityExceeded(nameof(T), (int)len, (int)meta.Capacity);
 
         _driverBuffer.UploadUniformBufferData(uboRef, MemoryMarshal.AsBytes(data), offset, len);

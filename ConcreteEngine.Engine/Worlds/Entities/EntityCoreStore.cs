@@ -1,7 +1,11 @@
+#region
+
 using System.Runtime.CompilerServices;
 using ConcreteEngine.Common.Collections;
 using ConcreteEngine.Common.Numerics;
 using ConcreteEngine.Engine.Worlds.Entities.Components;
+
+#endregion
 
 namespace ConcreteEngine.Engine.Worlds.Entities;
 
@@ -42,7 +46,7 @@ internal sealed class EntityCoreStore
     public ref Transform GetTransformById(EntityId e) => ref _transforms[GetSparseIndex(e)];
     public ref BoxComponent GetBoxById(EntityId e) => ref _boxes[GetSparseIndex(e)];
 
-    
+
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     internal EntityId GetEntityByIndex(int idx) => _entities[idx];
 
@@ -58,14 +62,14 @@ internal sealed class EntityCoreStore
         if ((uint)idx >= _entities.Length) throw new IndexOutOfRangeException();
         return new EntityCoreWriter(e, ref _sources[idx], ref _transforms[idx], ref _boxes[idx]);
     }
-    
+
     public EntityView GetEntityView(EntityId e)
     {
         var idx = GetIndexByEntity(e);
         if ((uint)idx >= _entities.Length) throw new IndexOutOfRangeException();
         return new EntityView(e, ref _sources[idx], ref _transforms[idx], ref _boxes[idx]);
     }
-    
+
     public EntitiesCoreView GetCoreView() =>
         new(_entities.AsSpan(0, _idx), _sources.AsSpan(0, _idx), _transforms.AsSpan(0, _idx), _boxes.AsSpan(0, _idx));
 

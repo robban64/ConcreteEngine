@@ -12,7 +12,7 @@ public sealed class MeshLayout(
     VertexBufferId[] vboIds,
     VertexAttribute[] attributes)
 {
-    public readonly MeshId MeshId  = meshId;
+    public readonly MeshId MeshId = meshId;
     public readonly IndexBufferId IboId = iboId;
     public readonly VertexBufferId[] VboIds = vboIds;
     public readonly VertexAttribute[] Attributes = attributes;

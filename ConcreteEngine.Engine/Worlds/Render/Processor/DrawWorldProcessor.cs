@@ -1,3 +1,5 @@
+#region
+
 using System.Numerics;
 using ConcreteEngine.Common.Numerics;
 using ConcreteEngine.Common.Numerics.Maths;
@@ -5,11 +7,12 @@ using ConcreteEngine.Engine.Worlds.Entities.Components;
 using ConcreteEngine.Renderer.Data;
 using ConcreteEngine.Renderer.Definitions;
 
+#endregion
+
 namespace ConcreteEngine.Engine.Worlds.Render.Processor;
 
 internal static class DrawWorldProcessor
 {
-
     internal static void SubmitDrawTerrain(WorldTerrain terrain)
     {
         var uploader = DrawDataProvider.GetDrawUploaderCtx();
@@ -20,9 +23,8 @@ internal static class DrawWorldProcessor
 
         CreateTransformMatrices(in Transform.Identity, out var model, out var normal);
         uploader.SubmitDrawAndTransform(cmd, meta, in model, in normal);
-
     }
-    
+
     internal static void SubmitDrawSkybox(WorldSkybox sky)
     {
         var uploader = DrawDataProvider.GetDrawUploaderCtx();

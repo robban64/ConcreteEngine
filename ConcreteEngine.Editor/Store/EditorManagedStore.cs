@@ -1,7 +1,11 @@
+#region
+
 using System.Runtime.InteropServices;
 using ConcreteEngine.Common.Numerics;
 using ConcreteEngine.Editor.Definitions;
 using ConcreteEngine.Editor.Store.Resources;
+
+#endregion
 
 namespace ConcreteEngine.Editor.Store;
 
@@ -68,6 +72,7 @@ internal static class EditorManagedStore
                 prevCategory = category;
                 startIndex = i;
             }
+
             AssetRanges[(int)prevCategory] = (startIndex, assetSpan.Length - startIndex);
         }
     }

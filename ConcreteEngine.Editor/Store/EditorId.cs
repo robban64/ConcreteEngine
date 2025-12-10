@@ -4,7 +4,7 @@ public enum EditorItemType : byte
 {
     None = 0,
     Unspecified = 1,
-    
+
     // Assets
     Texture,
     Shader,
@@ -15,7 +15,7 @@ public enum EditorItemType : byte
     Entity,
     Component,
     Material,
-    
+
     Particle,
     Animation
 }
@@ -23,11 +23,11 @@ public enum EditorItemType : byte
 public readonly record struct EditorId(int Identifier, EditorItemType ItemType)
 {
     public static EditorId Empty => new(0, EditorItemType.None);
-    
+
     public bool IsValid => Identifier > 0 && ItemType != EditorItemType.None;
-    
+
     public static implicit operator int(EditorId id) => id.Identifier;
-    public static implicit operator EditorId((int, EditorItemType) it) => new (it.Item1, it.Item2);
+    public static implicit operator EditorId((int, EditorItemType) it) => new(it.Item1, it.Item2);
 
     public int CompareTo(EditorId other)
     {

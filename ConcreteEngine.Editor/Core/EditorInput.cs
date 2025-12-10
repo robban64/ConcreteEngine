@@ -85,7 +85,7 @@ internal static class EditorInput
         }
 
         EditorDataStore.Input.MouseState.SetPosition(mousePos, deltaAbs);
-        
+
 
         if (isReleased && !_wasDragging)
         {

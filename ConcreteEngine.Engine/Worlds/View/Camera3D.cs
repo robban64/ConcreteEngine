@@ -100,7 +100,7 @@ public sealed class Camera3D
             _dirty = true;
         }
     }
-    
+
 
     public float FarPlane
     {
@@ -141,7 +141,6 @@ public sealed class Camera3D
     public void StartTick()
     {
         _prevTransform = _transform;
-
     }
 
     // before frame start
@@ -151,26 +150,26 @@ public sealed class Camera3D
 
         ref var view = ref _viewMatrix;
         ref var proj = ref _projectionMatrix;
-        
+
         ref readonly var shadows = ref renderParams.Shadows;
         ref var lightSpace = ref renderCamera.LightSpace;
         var nearFar = new Vector2(_projInfo.Near, MathF.Min(_projInfo.Far, _projInfo.Near + shadows.Distance));
 
-        
-        Span<Vector3> corners = stackalloc Vector3[8];
-        RenderTransform.FillFrustumCorners(in view, in proj,  _transform.Translation, nearFar, corners);
 
-        RenderTransform.CreateLightView(ref lightSpace, in shadows,  renderParams.SunLight.Direction, corners);
+        Span<Vector3> corners = stackalloc Vector3[8];
+        RenderTransform.FillFrustumCorners(in view, in proj, _transform.Translation, nearFar, corners);
+
+        RenderTransform.CreateLightView(ref lightSpace, in shadows, renderParams.SunLight.Direction, corners);
     }
 
     internal void WriteSnapshot(float alpha, ref RenderViewSnapshot viewSnapshot)
     {
         ref var prevTransform = ref _prevTransform;
         ref var transform = ref _transform;
-        
+
         var camPos = Vector3.Lerp(prevTransform.Translation, transform.Translation, alpha);
-        var camOri = YawPitch.LerpFixed(prevTransform.Orientation, transform.Orientation, alpha); 
-        
+        var camOri = YawPitch.LerpFixed(prevTransform.Orientation, transform.Orientation, alpha);
+
         MatrixMath.CreateFixedSizeModelMatrix(in camPos, RotationMath.YawPitchToQuaternion(camOri), out var viewMatrix);
         Matrix4x4.Invert(viewMatrix, out viewMatrix);
 
@@ -190,11 +189,13 @@ public sealed class Camera3D
         ref var transform = ref _transform;
         ref var projInfo = ref _projInfo;
 
-        MatrixMath.CreateFixedSizeModelMatrix(transform.Translation, RotationMath.YawPitchToQuaternion(transform.Orientation), out var viewModel);
+        MatrixMath.CreateFixedSizeModelMatrix(transform.Translation,
+            RotationMath.YawPitchToQuaternion(transform.Orientation), out var viewModel);
         Matrix4x4.Invert(viewModel, out _viewMatrix);
 
         var fov = FloatMath.ToRadians(projInfo.Fov / 2f);
-        _projectionMatrix = Matrix4x4.CreatePerspectiveFieldOfView(fov, projInfo.AspectRatio, projInfo.Near, projInfo.Far);
+        _projectionMatrix =
+            Matrix4x4.CreatePerspectiveFieldOfView(fov, projInfo.AspectRatio, projInfo.Near, projInfo.Far);
 
         Generation++;
     }

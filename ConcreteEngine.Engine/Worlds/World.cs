@@ -1,7 +1,6 @@
 #region
 
 using ConcreteEngine.Common.Numerics;
-using ConcreteEngine.Common.Time;
 using ConcreteEngine.Engine.Editor.Data;
 using ConcreteEngine.Engine.Worlds.MeshGeneration;
 using ConcreteEngine.Engine.Worlds.Render;
@@ -76,7 +75,7 @@ public sealed class World : IWorld
 
     internal MeshTable GetMeshTableImpl() => _meshTable;
     internal MaterialTable GetMaterialTableImpl() => _materialTable;
-    
+
     internal AnimationTable GetAnimationTableImpl() => _animationTable;
 
 
@@ -84,11 +83,12 @@ public sealed class World : IWorld
     public int ShadowMapSize => WorldRenderParams.Snapshot.Shadows.ShadowMapSize;
 
 
-    internal void AttachRender(GfxContext gfx, MeshTable meshTable, MaterialTable materialTable, AnimationTable animationTable)
+    internal void AttachRender(GfxContext gfx, MeshTable meshTable, MaterialTable materialTable,
+        AnimationTable animationTable)
     {
         _meshTable = meshTable;
         _materialTable = materialTable;
-        _animationTable =  animationTable;
+        _animationTable = animationTable;
 
         Entities.AttachRender(_meshTable, _materialTable);
         Sky.AttachRenderer(_meshTable);

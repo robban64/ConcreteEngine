@@ -149,8 +149,9 @@ internal sealed class GlShaders : IGraphicsDriverModule
         return shader;
     }
 
-    private static bool IsSamplerUniform(UniformType type) => type is UniformType.Sampler2D or UniformType.SamplerCube
-        or UniformType.IntSampler2D or UniformType.Sampler2DShadow or UniformType.Sampler2DMultisample;
+    private static bool IsSamplerUniform(UniformType type) =>
+        type is UniformType.Sampler2D or UniformType.SamplerCube
+            or UniformType.IntSampler2D or UniformType.Sampler2DShadow or UniformType.Sampler2DMultisample;
 
     public void SetUniform(int uniform, int value) => _gl.ProgramUniform1(_activeProg.Value, uniform, value);
     public void SetUniform(int uniform, uint value) => _gl.ProgramUniform1(_activeProg.Value, uniform, value);

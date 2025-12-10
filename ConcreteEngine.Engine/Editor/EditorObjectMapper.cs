@@ -14,13 +14,14 @@ namespace ConcreteEngine.Engine.Editor;
 
 internal static class EditorObjectMapper
 {
-    public static EditorFileAssetModel MakeAssetObjectFile(AssetFileEntry entry) => new()
-    {
-        AssetFileId = entry.Id.Value,
-        RelativePath = entry.RelativePath,
-        SizeInBytes = entry.SizeBytes,
-        ContentHash = entry.ContentHash
-    };
+    public static EditorFileAssetModel MakeAssetObjectFile(AssetFileEntry entry) =>
+        new()
+        {
+            AssetFileId = entry.Id.Value,
+            RelativePath = entry.RelativePath,
+            SizeInBytes = entry.SizeBytes,
+            ContentHash = entry.ContentHash
+        };
 
     public static EditorAssetResource MakeAssetObjectModel(AssetObject obj)
     {
@@ -63,7 +64,7 @@ internal static class EditorObjectMapper
         {
             Id = new EditorId(obj.RawId.Value, obj.Kind.ToEditorEnum()),
             Name = obj.Name,
-            AssetCategory =  obj.Kind.ToEditorCategory(),
+            AssetCategory = obj.Kind.ToEditorCategory(),
             ResourceId = resourceId,
             ResourceName = resourceName,
             SpecialName = specialName,

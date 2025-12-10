@@ -26,7 +26,7 @@ internal static class GuiUtils
         return ImGui.Selectable(str, selected, flags, new Vector2(0, colHeight));
     }
 
-    
+
     public static void DrawSectionHeader(string title)
     {
         ImGui.PushStyleColor(ImGuiCol.Text, Color4.LightGray.AsVec4());

@@ -17,7 +17,7 @@ public record struct BoundingBox(in Vector3 Min, in Vector3 Max)
     public readonly Vector3 Center => (Min + Max) / 2f;
 
     public readonly Vector3 Extent => (Max - Min) / 2f;
-    
+
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public void FromPoint(Vector3 point)
     {

@@ -1,3 +1,5 @@
+#region
+
 using ConcreteEngine.Common.Numerics;
 using ConcreteEngine.Engine.Assets;
 using ConcreteEngine.Engine.Assets.Shaders;
@@ -7,6 +9,8 @@ using ConcreteEngine.Renderer;
 using ConcreteEngine.Renderer.Data;
 using ConcreteEngine.Renderer.Descriptors;
 using ConcreteEngine.Renderer.Passes;
+
+#endregion
 
 namespace ConcreteEngine.Engine.Worlds.Render;
 
@@ -33,14 +37,15 @@ internal static class WorldRenderSetup
             new RegisterFboEntry().AttachColorTexture(GfxFboColorTextureDesc.Default()));
     }
 
-    internal static RenderCoreShaders GetCoreShaders(IAssetStore store) => new()
-    {
-        DepthShader = store.GetByName<Shader>("Depth").ResourceId,
-        ColorFilterShader = store.GetByName<Shader>("ColorFilter").ResourceId,
-        CompositeShader = store.GetByName<Shader>("Composite").ResourceId,
-        PresentShader = store.GetByName<Shader>("Present").ResourceId,
-        HighlightShader = store.GetByName<Shader>("Highlight").ResourceId,
-        BoundingBoxShader = store.GetByName<Shader>("BoundingBox").ResourceId,
-        ParticleShader = store.GetByName<Shader>("Particle").ResourceId,
-    };
+    internal static RenderCoreShaders GetCoreShaders(IAssetStore store) =>
+        new()
+        {
+            DepthShader = store.GetByName<Shader>("Depth").ResourceId,
+            ColorFilterShader = store.GetByName<Shader>("ColorFilter").ResourceId,
+            CompositeShader = store.GetByName<Shader>("Composite").ResourceId,
+            PresentShader = store.GetByName<Shader>("Present").ResourceId,
+            HighlightShader = store.GetByName<Shader>("Highlight").ResourceId,
+            BoundingBoxShader = store.GetByName<Shader>("BoundingBox").ResourceId,
+            ParticleShader = store.GetByName<Shader>("Particle").ResourceId,
+        };
 }

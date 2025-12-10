@@ -24,7 +24,8 @@ internal sealed class ShaderImporter
         _sb.Clear();
 
         ImportUboDefs(Path.Combine(AssetPaths.AssetCoreRoot, AssetPaths.ShaderFolder, "definitions", "ubo.glsl"));
-        ImportStructDefs(Path.Combine(AssetPaths.AssetCoreRoot, AssetPaths.ShaderFolder, "definitions", "structs.glsl"));
+        ImportStructDefs(Path.Combine(AssetPaths.AssetCoreRoot, AssetPaths.ShaderFolder, "definitions",
+            "structs.glsl"));
         _sb.Clear();
     }
 

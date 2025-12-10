@@ -24,4 +24,3 @@ internal enum RightSidebarMode
     Sky,
     Terrain,
 }
-

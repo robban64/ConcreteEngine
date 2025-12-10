@@ -13,7 +13,11 @@ using ConcreteEngine.Engine.Worlds.Entities.Components;
 
 namespace Demo3D;
 
-public readonly record struct ScenePlacement(ModelBaseDrawInfo ModelInfo, in BoundingBox Bounds, MaterialTag Mat, float Offset = 0f);
+public readonly record struct ScenePlacement(
+    ModelBaseDrawInfo ModelInfo,
+    in BoundingBox Bounds,
+    MaterialTag Mat,
+    float Offset = 0f);
 
 public sealed class EntitySpawner(IWorld world, float size = 256f, float margin = 4f)
 {

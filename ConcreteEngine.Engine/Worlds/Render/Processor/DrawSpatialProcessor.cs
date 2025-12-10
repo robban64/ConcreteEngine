@@ -1,5 +1,9 @@
+#region
+
 using ConcreteEngine.Engine.Worlds.Render.Data;
 using ConcreteEngine.Engine.Worlds.Utility;
+
+#endregion
 
 namespace ConcreteEngine.Engine.Worlds.Render.Processor;
 

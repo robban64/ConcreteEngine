@@ -51,12 +51,12 @@ public sealed class WorldEntities
         var entityId = CreateCoreEntity(id, draw, in mat, in tran, in box, out var index, out var matKey);
         return entityId;
     }
-    
+
     public EntityId CreateParticleEntity(MeshId mesh, ParticleComponent component)
     {
         var source = new RenderSourceComponent(ModelId.Ignore, 4, MaterialTagKey.Ignore, RenderSourceKind.Particle);
         var entity = Core.AddEntity(source, Transform.Identity, default, out var index);
-        Particles.Add(entity, index,component);
+        Particles.Add(entity, index, component);
         return entity;
     }
 
@@ -71,19 +71,19 @@ public sealed class WorldEntities
         foreach (var store in _storeList)
             store.EndTick();
     }
-    
+
     internal EntityEnumerator<T> Query<T>() where T : unmanaged => new(GenericStores<T>.Store);
 
-    internal EntityCoreEnumerator CoreQuery()  => new(_coreStore);
+    internal EntityCoreEnumerator CoreQuery() => new(_coreStore);
 
     private static EntityCoreStore _coreStore = null!;
     //internal static EntityCoreStore GetCoreStore() => _coreStore;
-   // internal static EntityCoreEnumerator CoreQuery()  => new(_coreStore);
+    // internal static EntityCoreEnumerator CoreQuery()  => new(_coreStore);
 
 
-   // internal static EntityStore<T> GetStore<T>() where T : unmanaged => GenericStores<T>.Store;
+    // internal static EntityStore<T> GetStore<T>() where T : unmanaged => GenericStores<T>.Store;
     //internal static EntityEnumerator<T1> Query<T1>() where T1 : unmanaged => new(GenericStores<T1>.Store);
-    
+
     private static class GenericStores<T> where T : unmanaged
     {
         public static EntityStore<T> Store = null!;

@@ -2,7 +2,6 @@
 
 using ConcreteEngine.Common;
 using ConcreteEngine.Common.Collections;
-using ConcreteEngine.Common.Time;
 using ConcreteEngine.Engine.Editor.Diagnostics;
 using ConcreteEngine.Engine.Worlds.Data;
 using ConcreteEngine.Engine.Worlds.Render.Data;
@@ -79,7 +78,7 @@ internal sealed class RenderEntityBus
 
     private void Validate()
     {
-        if (_entityData.Length == 0 || _entities.Length == 0) 
+        if (_entityData.Length == 0 || _entities.Length == 0)
             throw new InvalidOperationException();
 
         var view = WorldEntities.Core.GetCoreView();

@@ -22,9 +22,8 @@ public struct RenderViewSnapshot(
     public ProjectionInfo ProjectionInfo = projectionInfo;
 
     public readonly void ExtractView(out Matrix4x4 viewMatrix) => viewMatrix = ViewMatrix;
-    
+
     public readonly Vector3 Right => new(ViewMatrix.M11, ViewMatrix.M21, ViewMatrix.M31);
     public readonly Vector3 Up => new Vector3(ViewMatrix.M12, ViewMatrix.M22, ViewMatrix.M32);
     public readonly Vector3 Forward => -new Vector3(ViewMatrix.M13, ViewMatrix.M23, ViewMatrix.M33);
-
 }

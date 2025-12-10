@@ -12,8 +12,8 @@ public record struct Ray(in Vector3 Position, in Vector3 Direction)
     public Vector3 Position = Position;
     public Vector3 Direction = Direction;
 
-    public readonly bool IntersectsWith(in BoundingBox bounds, out float distance)
-        => CollisionMethods.RayIntersectsBox(in this, in bounds, out distance);
+    public readonly bool IntersectsWith(in BoundingBox bounds, out float distance) =>
+        CollisionMethods.RayIntersectsBox(in this, in bounds, out distance);
 
 
     public readonly Vector3 GetPointOnRay(float distance) => Position + Direction * distance;

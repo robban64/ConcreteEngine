@@ -1,4 +1,8 @@
+#region
+
 using ConcreteEngine.Editor.Definitions;
+
+#endregion
 
 namespace ConcreteEngine.Editor.Store.Resources;
 
@@ -20,5 +24,4 @@ public sealed class EditorFileAssetModel
     public required string RelativePath { get; init; }
     public required long SizeInBytes { get; init; }
     public string? ContentHash { get; init; }
-
 }

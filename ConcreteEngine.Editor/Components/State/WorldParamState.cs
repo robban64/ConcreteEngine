@@ -27,11 +27,10 @@ internal sealed class WorldParamState
 
     public void SetShadowSize(int size)
     {
-        if(size == DataState.Shadow.ShadowMapSize) return;
+        if (size == DataState.Shadow.ShadowMapSize) return;
         var payload = new EditorShadowCommand(size, true, EditorRequestAction.Set);
         ModelManager.WorldRenderStateContext.TriggerEvent(EventKey.WorldActionInvoke, payload);
-        
+
         EditorDataStore.Slot<WorldParamsData>.SlotState.RequestInFrames = 4;
     }
-
 }

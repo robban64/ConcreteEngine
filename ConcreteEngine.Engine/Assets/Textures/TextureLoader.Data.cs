@@ -30,7 +30,7 @@ internal readonly struct TextureUploadMeta(GfxTextureDescriptor textureDesc, Gfx
     public readonly GfxTextureProperties TextureProps = textureProps;
 }
 
-internal ref struct  TextureImportResult
+internal ref struct TextureImportResult
 {
     public byte[]? Data { get; init; }
     public required AssetFileSpec FileSpec { get; init; }

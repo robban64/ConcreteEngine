@@ -35,7 +35,7 @@ internal sealed class MeshTable : IMeshTable
 
     private int _partIdx = 0;
 
-    
+
     public ModelBoundsView GetModelBoundSpan() => new(_modelBoxes);
 
 
@@ -57,7 +57,7 @@ internal sealed class MeshTable : IMeshTable
         var range = _modelPartRanges[index];
         return _partTransforms.AsSpan(range.Offset, range.Length);
     }
-    
+
     public ReadOnlySpan<MeshPart> GetMeshParts(ModelId id)
     {
         var index = id - 1;
@@ -67,7 +67,7 @@ internal sealed class MeshTable : IMeshTable
         var range = _modelPartRanges[index];
         if ((uint)(range.Length + range.Offset) > _meshParts.Length)
             throw new IndexOutOfRangeException();
-        
+
         return _meshParts.AsSpan(range.Offset, range.Length);
     }
 
@@ -88,7 +88,7 @@ internal sealed class MeshTable : IMeshTable
 
         return new ModelPartView(parts, locals, boxes);
     }
-    
+
     public bool TryGetMeshParts(ModelId id, out ReadOnlySpan<MeshPart> result)
     {
         var index = id - 1;

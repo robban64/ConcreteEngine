@@ -143,12 +143,13 @@ internal sealed class DrawCommandProcessor
     {
         const GfxStateFlags allowMaterialOverride = GfxStateFlags.Cull | GfxStateFlags.PolygonOffset;
 
-        Debug.Assert(ticket.Resolver is  DrawCommandResolver.Highlight or DrawCommandResolver.HighlightAnimated or DrawCommandResolver.BoundingVolume);
+        Debug.Assert(ticket.Resolver is DrawCommandResolver.Highlight or DrawCommandResolver.HighlightAnimated
+            or DrawCommandResolver.BoundingVolume);
 
         var texSlots = _buffers.ResolveMaterial(cmd.MaterialId, out var materialMeta);
         ref readonly var shaders = ref _ctx.CoreShaders;
-        
-        
+
+
         switch (ticket.Resolver)
         {
             case DrawCommandResolver.Highlight:
@@ -169,7 +170,9 @@ internal sealed class DrawCommandProcessor
             case DrawCommandResolver.Wireframe:
             default:
                 throw new NotSupportedException();
-        };
+        }
+
+        ;
 
 
         foreach (var slot in texSlots)

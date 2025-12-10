@@ -23,8 +23,8 @@ internal static class LeftSidebar
 
         var height = StateContext.ModeState.IsEmptyViewMode ? 0 : vp.WorkSize.Y - offset;
         height = StateContext.ModeState.LeftSidebar != LeftSidebarMode.Default ? height : 0;
-        
-        
+
+
         ImGui.SetNextWindowPos(new Vector2(0, offset));
         ImGui.SetNextWindowSize(new Vector2(width, height));
         ImGui.SetNextWindowBgAlpha(GuiTheme.PanelOpacity);
@@ -90,7 +90,7 @@ internal static class LeftSidebar
             if (ImGui.TabItemButton("Entity##entities-tab-btn"))
                 StateContext.SetLeftSidebarState(LeftSidebarMode.Entities);
             if (isEntities) ImGui.PopStyleColor();
-            
+
             if (isObjects) ImGui.PushStyleColor(ImGuiCol.Tab, GuiTheme.SelectedColor);
             if (ImGui.TabItemButton("Object##objects-tab-btn"))
                 StateContext.SetLeftSidebarState(LeftSidebarMode.Objects);

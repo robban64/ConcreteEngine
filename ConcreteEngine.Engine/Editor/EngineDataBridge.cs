@@ -1,3 +1,5 @@
+using System.Runtime.CompilerServices;
+using ConcreteEngine.Common.Time;
 using ConcreteEngine.Editor.Data;
 using ConcreteEngine.Editor.Definitions;
 using ConcreteEngine.Editor.Store;
@@ -15,6 +17,7 @@ internal static class EngineDataBridge
     private static WorldApiController _world = null!;
     private static InteractionController _interactions = null!;
 
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     private static EditorId AsEditorId(EntityId entity) => new(entity, EditorItemType.Entity);
 
     internal static void Attach(EntityApiController entityController, WorldApiController worldController,
@@ -33,13 +36,77 @@ internal static class EngineDataBridge
             ProcessEntities();
         else
             ProcessInteractivity();
+
         WorldInteractive.SelectedEntityId = new EntityId(EditorData.State.SelectedId);
+    }
+
+
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    private static void ProcessCamera()
+    {
+        var camGen = _world.CameraGeneration;
+
+        ref var slot = ref EditorData.Slot<CameraDataState>.SlotState;
+        ref var data = ref EditorData.Slot<CameraDataState>.Data;
+        if (camGen > slot.Generation || slot.IsRequesting)
+            _world.WriteCameraState(out data);
+        else if (slot.IsDirty)
+            _world.ApplyCameraState(in data);
+
+        slot.Reset(camGen);
+    }
+
+    public static void ProcessWorldParams()
+    {
+        var gen = _world.WorldParamGeneration;
+        ref var slot = ref EditorData.Slot<WorldParamsData>.SlotState;
+        ref var data = ref EditorData.Slot<WorldParamsData>.Data;
+
+        if (slot.RequestInFrames > 0)
+        {
+            slot.RequestInFrames--;
+            if (slot.RequestInFrames == 0) slot.IsRequesting = true;
+        }
+
+        if (gen > slot.Generation || slot.IsRequesting)
+            _world.WriteWorldRenderParams(out data);
+        else if (slot.IsDirty)
+            _world.ApplyWorldRenderParams(in data);
+
+        slot.Reset(gen);
+    }
+
+    private static void ProcessEntities()
+    {
+        ref var editorState = ref EditorData.Input.EditorSelection;
+        ref var data = ref EditorData.State.EntityState;
+
+        var entityId = new EntityId(editorState.Id);
+
+        if (editorState.IsDirty && !editorState.Id.IsValid)
+        {
+            data = default;
+            EditorData.State.SelectedId = EditorId.Empty;
+            return;
+        }
+
+        if (entityId != data.EntityId || editorState.IsRequesting)
+        {
+            _entities.WriteSelectedEntity(entityId, ref data);
+            EditorData.State.SelectedId = editorState.Id;
+            return;
+        }
+
+        if (editorState.IsDirty)
+        {
+            _entities.ApplySelectedEntity(entityId, in data);
+            EditorData.State.SelectedId = editorState.Id;
+        }
     }
 
     private static void ProcessInteractivity()
     {
         ref readonly var selection = ref EditorData.Input.EditorSelection;
-
         ref readonly var mouse = ref EditorData.Input.MouseState;
 
         if (selection.Action == EditorMouseAction.RaycastSelect)
@@ -84,65 +151,6 @@ internal static class EngineDataBridge
             }
 
             _interactions.OnDragEntity(entityId, mouse.Position);
-        }
-    }
-
-    private static void ProcessCamera()
-    {
-        ref var slot = ref EditorData.Slot<CameraDataState>.SlotState;
-        ref var data = ref EditorData.Slot<CameraDataState>.Data;
-        if (_world.CameraGeneration > slot.Generation || slot.IsRequesting)
-            _world.WriteCameraState(out data);
-        else if (slot.IsDirty)
-            _world.ApplyCameraState(in data);
-
-        slot.Reset(_world.CameraGeneration);
-    }
-
-    public static void ProcessWorldParams()
-    {
-        ref var slot = ref EditorData.Slot<WorldParamsData>.SlotState;
-        ref var data = ref EditorData.Slot<WorldParamsData>.Data;
-
-        if (slot.RequestInFrames > 0)
-        {
-            slot.RequestInFrames--;
-            if (slot.RequestInFrames == 0) slot.IsRequesting = true;
-        }
-        
-        if (_world.WorldParamGeneration > slot.Generation || slot.IsRequesting)
-            _world.WriteWorldRenderParams(out data);
-        else if (slot.IsDirty)
-            _world.ApplyWorldRenderParams(in data);
-
-        slot.Reset(_world.WorldParamGeneration);
-    }
-
-    private static void ProcessEntities()
-    {
-        ref var editorState = ref EditorData.Input.EditorSelection;
-        ref var data = ref EditorData.State.EntityState;
-
-        var entityId = new EntityId(editorState.Id);
-
-        if (editorState.IsDirty && !editorState.Id.IsValid)
-        {
-            data = default;
-            EditorData.State.SelectedId = EditorId.Empty;
-            return;
-        }
-
-        if (entityId != data.EntityId || editorState.IsRequesting)
-        {
-            _entities.WriteSelectedEntity(entityId, ref data);
-            EditorData.State.SelectedId = editorState.Id;
-            return;
-        }
-
-        if (editorState.IsDirty)
-        {
-            _entities.ApplySelectedEntity(entityId, in data);
-            EditorData.State.SelectedId = editorState.Id;
         }
     }
 }

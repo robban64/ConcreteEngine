@@ -1,3 +1,5 @@
+using System.Runtime.CompilerServices;
+
 namespace ConcreteEngine.Editor.Data;
 
 public struct EditorSlotState
@@ -9,6 +11,7 @@ public struct EditorSlotState
 
     public void RequestData() => IsRequesting = true;
 
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public void Reset(long generation)
     {
         Generation = generation;

@@ -8,9 +8,8 @@ namespace ConcreteEngine.Common.Time;
 
 public static class StaticProfileTimer
 {
-    private static readonly FrameProfileTimer Timer = new();
-    public static void Start() => Timer.Begin();
-    public static void End() => Timer.EndPrint();
+    public static readonly FrameProfileTimer TickTimer = new();
+    public static readonly FrameProfileTimer RenderTimer = new(144, (1.0 / 144.0) * 1000);
 }
 
 public sealed class FrameProfileTimer

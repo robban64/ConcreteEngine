@@ -1,7 +1,9 @@
 #region
 
+using System.Runtime.CompilerServices;
 using ConcreteEngine.Common;
 using ConcreteEngine.Common.Numerics;
+using ConcreteEngine.Common.Time;
 using ConcreteEngine.Engine.Assets;
 using ConcreteEngine.Engine.Assets.Models;
 using ConcreteEngine.Engine.Assets.Shaders;
@@ -155,10 +157,11 @@ public sealed class WorldRenderer : IWorldRenderer
 
     private void PrepareRenderView(in RenderFrameInfo frameInfo, Camera3D camera)
     {
-        camera.WriteSnapshot(EngineTime.GameTime.Alpha, ref RenderCamera.RenderView);
+        ref var view = ref Unsafe.AsRef(ref RenderCamera.RenderView);
+        camera.WriteSnapshot(EngineTime.GameTime.Alpha, ref view);
         DrawDataProvider.FrameInfo = frameInfo;
-        DrawDataProvider.ProjectionInfo = RenderCamera.RenderView.ProjectionInfo;
-        DrawDataProvider.RenderView = RenderCamera.RenderView;
+        DrawDataProvider.RenderView = view;
+
     }
 
     private void SubmitMaterialData()

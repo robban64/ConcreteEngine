@@ -94,7 +94,6 @@ public static class MatrixMath
         dest.M43 = t.Z;
         dest.M44 = 1f;
     }
-   
 
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
@@ -134,6 +133,42 @@ public static class MatrixMath
         mat.M44 = 1f;
     }
 
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public static void CreateFixedSizeModelMatrix(in Vector3 t, in Quaternion r, out Matrix4x4 mat)
+    {
+        float x = r.X, y = r.Y, z = r.Z, w = r.W;
+        float xx = x + x, yy = y + y, zz = z + z;
+        float xy = x * yy, xz = x * zz, yz = y * zz;
+        float wx = w * xx, wy = w * yy, wz = w * zz;
+        float x2 = x * xx, y2 = y * yy, z2 = z * zz;
+
+        float r11 = 1f - (y2 + z2), r22 = 1f - (x2 + z2), r33 = 1f - (x2 + y2);
+        float r12 = xy + wz, r13 = xz - wy, r21 = xy - wz;
+        float r23 = yz + wx, r31 = xz + wy, r32 = yz - wx;
+
+        // row 1 - local X Axis (Right)
+        mat.M11 = r11;
+        mat.M12 = r12;
+        mat.M13 = r13;
+        mat.M14 = 0f;
+
+        // row 2 corresponds - Local Y Axis (Up)
+        mat.M21 = r21;
+        mat.M22 = r22;
+        mat.M23 = r23;
+        mat.M24 = 0f;
+
+        // row 3 corresponds - Local Z Axis (Forward)
+        mat.M31 = r31;
+        mat.M32 = r32;
+        mat.M33 = r33;
+        mat.M34 = 0f;
+
+        mat.M41 = t.X;
+        mat.M42 = t.Y;
+        mat.M43 = t.Z;
+        mat.M44 = 1f;
+    }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static void CreateNormalMatrix(in Matrix4x4 m, out Matrix3X4 n)

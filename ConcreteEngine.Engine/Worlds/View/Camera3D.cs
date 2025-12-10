@@ -110,6 +110,7 @@ public sealed class Camera3D
             _dirty = true;
         }
     }
+    
 
     public float FarPlane
     {
@@ -178,48 +179,47 @@ public sealed class Camera3D
     // before frame start
     internal void EndTick(RenderParamsSnapshot renderParams, RenderCamera renderCamera)
     {
+        Ensure();
 
         var lightDir = renderParams.SunLight.Direction;
         ref readonly var shadows = ref renderParams.Shadows;
         ref var lightSpace = ref renderCamera.LightSpace;
         var near = _projInfo.Near;
         var far = MathF.Min(_projInfo.Far, near + shadows.Distance);
-        
+
         Span<Vector3> corners = stackalloc Vector3[8];
         RenderTransform.FillFrustumCorners(corners, in _viewMatrix, in _projectionMatrix,
             _transform.Translation, near, far);
 
         RenderTransform.CreateLightView(ref lightSpace, corners, lightDir, in shadows);
-
-        _prevTransform = _transform;
-        Ensure();
-
     }
 
     internal void WriteSnapshot(float alpha, ref RenderViewSnapshot viewSnapshot)
     {
-        Ensure();
-
         var camPos = Vector3.Lerp(_prevTransform.Translation, _transform.Translation, alpha);
         var camOrientation = YawPitch.Lerp(_prevTransform.Orientation, _transform.Orientation, alpha);
         camOrientation.ToQuaternion(out var camRot);
-        MatrixMath.CreateModelMatrix(in camPos, in _transform.Scale, in camRot, out var viewMatrix);
+        MatrixMath.CreateFixedSizeModelMatrix(in camPos, in camRot, out var viewMatrix);
         Matrix4x4.Invert(viewMatrix, out viewMatrix);
 
+        ref readonly var projMat = ref _projectionMatrix;
         viewSnapshot.ViewMatrix = viewMatrix;
-        viewSnapshot.ProjectionMatrix = _projectionMatrix;
-        viewSnapshot.ProjectionViewMatrix = viewMatrix * _projectionMatrix;
+        viewSnapshot.ProjectionMatrix = projMat;
+        viewSnapshot.ProjectionViewMatrix = viewMatrix * projMat;
         viewSnapshot.ProjectionInfo = _projInfo;
         viewSnapshot.Transform = _transform;
     }
+
     private void Ensure()
     {
         if (!_dirty) return;
         _dirty = false;
 
+        _prevTransform = _transform;
+
         _transform.Orientation.ToQuaternion(out var rot);
 
-        MatrixMath.CreateModelMatrix(in _transform.Translation, in _transform.Scale, in rot, out var viewModel);
+        MatrixMath.CreateFixedSizeModelMatrix(_transform.Translation, in rot, out var viewModel);
         Matrix4x4.Invert(viewModel, out _viewMatrix);
 
         var fov = FloatMath.ToRadians(_projInfo.Fov / 2f);
@@ -239,11 +239,8 @@ public sealed class Camera3D
 
     internal void SetFromData(in CameraDataState data)
     {
-        Translation = data.Transform.Translation;
-        Scale = data.Transform.Scale;
-        Orientation = data.Transform.Orientation;
+        _transform = data.Transform;
         _projInfo = data.Projection;
+        _dirty = true;
     }
-
-
 }

@@ -14,7 +14,7 @@ internal sealed class WorldApiController(ApiContext ctx)
     public long WorldParamGeneration => ctx.World.WorldRenderParams.Version;
 
     private World World => ctx.World;
-
+    
     public void ApplyCameraState(in CameraDataState data) => World.Camera.SetFromData(in data);
 
     public void WriteCameraState(out CameraDataState data) => World.Camera.FillData(out data);

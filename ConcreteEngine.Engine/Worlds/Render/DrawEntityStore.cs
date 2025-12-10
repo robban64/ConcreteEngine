@@ -16,12 +16,11 @@ internal static class DrawDataProvider
 {
     //....
     public static RenderFrameInfo FrameInfo;
-    public static ProjectionInfo ProjectionInfo;
     public static RenderViewSnapshot RenderView;
     //....
 
     public static float DeltaTime => FrameInfo.DeltaTime;
-    
+
     private static class ManagedStorage
     {
         public static DrawCommandBuffer CmdBuffer = null!;
@@ -35,10 +34,10 @@ internal static class DrawDataProvider
         ManagedStorage.CmdBuffer.EnsureBufferCapacity(entityCap);
         ManagedStorage.CmdBuffer.EnsureBoneBuffer(entityCap);
     }
-    
+
     internal static WorldEntities WorldEntities = null!;
 
-    internal static DrawCommandUploader GetDrawUploaderCtx() 
+    internal static DrawCommandUploader GetDrawUploaderCtx()
         => ManagedStorage.CmdBuffer.GetDrawUploaderCtx();
 
     internal static SkinningBufferUploader GetSkinningUploaderCtx() =>
@@ -48,19 +47,19 @@ internal static class DrawDataProvider
     internal static void ResolveMaterial(MaterialTagKey key, out MaterialTag tag) =>
         ManagedStorage.MaterialTable.ResolveSubmitMaterial(key, out tag);
 
-    internal static AnimationDataView GetAnimationDataView() 
+    internal static AnimationDataView GetAnimationDataView()
         => ManagedStorage.AnimationTable.GetDataView();
 
     internal static ReadOnlySpan<Matrix4x4> GetPartTransforms(ModelId id) =>
         ManagedStorage.MeshTable.GetPartTransforms(id);
 
-    internal static ReadOnlySpan<MeshPart> GetMeshParts(ModelId id) 
+    internal static ReadOnlySpan<MeshPart> GetMeshParts(ModelId id)
         => ManagedStorage.MeshTable.GetMeshParts(id);
-    
-    internal static ModelPartView GetPartsRefView(ModelId id) 
+
+    internal static ModelPartView GetPartsRefView(ModelId id)
         => ManagedStorage.MeshTable.GetPartsRefView(id);
 
-    
+
     internal static void Attach(DrawCommandBuffer cmdBuffer, AnimationTable animationTable, MeshTable meshTable,
         MaterialTable materialTable,
         WorldEntities worldEntities)

@@ -21,6 +21,7 @@ using Silk.NET.Windowing;
 
 #endregion
 
+using ConcreteEngine.Common.Time;
 using ConcreteEngine.Engine.Editor.Controller;
 using ConcreteEngine.Engine.Time;
 using ConcreteEngine.Renderer.State;
@@ -114,6 +115,7 @@ internal sealed class EngineGateway : IDisposable
     {
         if (!Enabled || !HasBoundEditor) return;
         EngineDataBridge.ProcessEditorDataSlot();
+
         _apiContext.OnRenderFrame(in frameInfo);
         _editor.Render(frameInfo.DeltaTime);
     }

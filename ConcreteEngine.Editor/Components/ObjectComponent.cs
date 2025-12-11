@@ -32,15 +32,15 @@ internal class ObjectComponentState
     public void OnSelectParticle(EditorParticleResource resource)
     {
         SelectedResource = resource.Id;
-        EditorDataStore.Slot<ParticleDataState>.Data.EmitterHandle = resource.Id;
-        EditorDataStore.Slot<ParticleDataState>.SlotState.IsRequesting = true;
+        EditorDataStore.Slot<EditorParticleState>.Data.EmitterHandle = resource.Id;
+        EditorDataStore.Slot<EditorParticleState>.SlotState.IsRequesting = true;
     }
 
     public void OnDeselectParticle()
     {
         SelectedResource = EditorId.Empty;
-        EditorDataStore.Slot<ParticleDataState>.Data = default;
-        EditorDataStore.Slot<ParticleDataState>.SlotState = default;
+        EditorDataStore.Slot<EditorParticleState>.Data = default;
+        EditorDataStore.Slot<EditorParticleState>.SlotState = default;
     }
 
     public void OnSelectAnimation(EditorAnimationResource resource)
@@ -62,7 +62,7 @@ internal static class ObjectComponent
 
     public static void Draw()
     {
-        var slotHandle = EditorDataStore.Slot<ParticleDataState>.Data.EmitterHandle;
+        var slotHandle = EditorDataStore.Slot<EditorParticleState>.Data.EmitterHandle;
         if (slotHandle == 0 && State.SelectedResource != 0)
             State.OnDeselectParticle();
 

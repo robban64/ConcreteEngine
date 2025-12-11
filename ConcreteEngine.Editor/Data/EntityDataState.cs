@@ -9,7 +9,6 @@ namespace ConcreteEngine.Editor.Data;
 
 public struct EntityDataState
 {
-    public int EntityId;
     public TransformStable Transform;
     public BoundingBox Bounds;
 }

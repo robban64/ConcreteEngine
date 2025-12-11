@@ -26,7 +26,7 @@ internal sealed class WorldApiController(ApiContext ctx)
 
     public void WriteWorldRenderParams(out WorldParamsData data) => World.WorldRenderParams.FillData(out data);
 
-    public void WriteEmitterState(ref ParticleDataState data)
+    public void WriteEmitterState(ref EditorParticleState data)
     {
         var emitter = World.Particles.GetEmitter(data.EmitterHandle);
         data.EmitterHandle = emitter.EmitterHandle;
@@ -34,7 +34,7 @@ internal sealed class WorldApiController(ApiContext ctx)
         data.EmitterState = emitter.State;
     }
 
-    public void ApplyEmitterState(in ParticleDataState data)
+    public void ApplyEmitterState(in EditorParticleState data)
     {
         var emitter = World.Particles.GetEmitter(data.EmitterHandle);
         emitter.Definition = data.Definition;

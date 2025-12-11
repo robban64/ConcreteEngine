@@ -1,13 +1,13 @@
 namespace ConcreteEngine.Editor.Definitions;
 
-internal enum EditorViewMode
+internal enum EditorViewMode : byte
 {
     None,
     Editor,
     Metrics
 }
 
-internal enum LeftSidebarMode
+internal enum LeftSidebarMode : byte
 {
     Default,
     Assets,
@@ -15,7 +15,7 @@ internal enum LeftSidebarMode
     Objects
 }
 
-internal enum RightSidebarMode
+internal enum RightSidebarMode : byte
 {
     Default,
     Property,

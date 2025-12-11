@@ -95,31 +95,35 @@ internal static class EditorModelManager
 
     private static void RegisterEntityState()
     {
+
         EntitiesStateContext = ModelStateContext<EntitiesViewModel>
             .CreateBuilder(static () => new EntitiesViewModel())
             .OnEnter(static (ctx, it) => { })
-            .OnRefresh(static (ctx, it) => { })
+            .OnRefresh(OnEntityRefresh)
             .OnLeave(static (ctx, _) => ctx.TriggerEvent<EditorEntityResource?>(EventKey.SelectionChanged, null))
             .RegisterEvent<EditorEntityResource?>(EventKey.SelectionChanged, OnEntitySelected)
-            .RegisterEvent<EditorEntityResource>(EventKey.SelectionUpdated, OnEntityUpdated)
             .KeepAlive()
             .Build();
 
         return;
 
-        static void OnEntitySelected(ModelStateContext<EntitiesViewModel> ctx, EditorEntityResource? it)
+        static void OnEntityRefresh(ModelStateContext<EntitiesViewModel> ctx, EntitiesViewModel it)
         {
-            //ctx.State!.SetSelectedEntity(it?.Id ?? EditorId.Empty);
-            //ctx.EnqueueRefreshNextFrame();
+            if (EditorDataStore.State.SelectedEntity.IsValid)
+                StateContext.SetRightSidebarState(RightSidebarMode.Property);
+
+            it.Refresh();
         }
 
-        static void OnEntityUpdated(ModelStateContext<EntitiesViewModel> ctx, EditorEntityResource it)
+        static void OnEntitySelected(ModelStateContext<EntitiesViewModel> ctx, EditorEntityResource? it)
         {
-            /*
-            ctx.State!.SetSelectedEntity(it.Id);
-            ctx.State!.Dispatch(EditorApi.EntityApi, true);
-            ctx.EnqueueRefreshNextFrame();
-            */
+            var id = it?.Id ?? EditorId.Empty;
+            ctx.State!.SetSelectedEntity(id);
+            if (id.IsValid)
+            {
+                StateContext.SetLeftSidebarState(LeftSidebarMode.Entities);
+                StateContext.SetRightSidebarState(RightSidebarMode.Property);
+            }
         }
     }
 

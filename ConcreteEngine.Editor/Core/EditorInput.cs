@@ -75,12 +75,7 @@ internal static class EditorInput
 
         if (ImGui.IsMouseClicked(ImGuiMouseButton.Right))
         {
-            ref var selection = ref EditorDataStore.Input.EditorSelection;
-            selection.Id = EditorId.Empty;
-            selection.Action = EditorMouseAction.None;
-            selection.IsRequesting = false;
-            selection.IsDirty = true;
-            selection.RefreshTime();
+            EditorService.ClearSelection();
             return;
         }
 
@@ -105,23 +100,17 @@ internal static class EditorInput
 
     private static void HandleClick()
     {
-        ref var state = ref EditorDataStore.Input.EditorSelection;
-        state.Action = EditorMouseAction.RaycastSelect;
-        state.RefreshTime();
+        EditorDataStore.Input.EditorSelection.Action = EditorMouseAction.RaycastSelect;
     }
 
     private static void HandleDrag(Vector2 deltaAbs)
     {
-        ref var state = ref EditorDataStore.Input.EditorSelection;
+        var state = EditorDataStore.Input.EditorSelection;
         var action = state.Id.IsValid ? EditorMouseAction.RaycastDragTerrain : EditorMouseAction.None;
         var hasDelta = deltaAbs.X > 0 || deltaAbs.Y > 0;
-        if (!hasDelta)
-        {
-            state.RefreshTime();
-            return;
-        }
+        if (!hasDelta) return;
 
-        state.Action = action;
-        state.RefreshTime();
+
+        EditorDataStore.Input.EditorSelection.Action = action;
     }
 }

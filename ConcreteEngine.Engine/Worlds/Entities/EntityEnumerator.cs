@@ -11,6 +11,7 @@ internal ref struct EntityEnumerator<T1>(EntityStore<T1> r)
     public readonly ref struct Item(int idx, EntityStore<T1> r)
     {
         public readonly int Index = idx;
+        public int CoreIndex => r.GetCoreIndex(Index);
         public EntityId Entity => r.GetEntityId(Index);
         public ref T1 Component => ref r.GetByIndex(Index);
     }

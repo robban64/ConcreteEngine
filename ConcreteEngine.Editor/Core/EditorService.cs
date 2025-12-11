@@ -2,8 +2,10 @@
 
 using System.Numerics;
 using ConcreteEngine.Common.Time;
+using ConcreteEngine.Editor.Components;
 using ConcreteEngine.Editor.Definitions;
 using ConcreteEngine.Editor.Layout;
+using ConcreteEngine.Editor.Store;
 using ConcreteEngine.Editor.Utils;
 using ImGuiNET;
 using DataStore = ConcreteEngine.Editor.Store.EditorDataStore;
@@ -14,26 +16,32 @@ namespace ConcreteEngine.Editor.Core;
 
 internal static class EditorService
 {
-    private const long RefreshInterval = 1_500;
-
-    private static long _lastRefresh = TimeUtils.GetTimestamp();
-
     private static EditorModeState ModeState => StateContext.ModeState;
 
     private static void PrepareFrame()
     {
         var prevSelection = DataStore.Input.EditorSelection.Id;
-        var newSelection = DataStore.State.SelectedId;
+        var newSelection = DataStore.State.SelectedEntity;
         DataStore.Input.EditorSelection.ClearFrame();
-        DataStore.Input.EditorSelection.Id = DataStore.State.SelectedId;
+        DataStore.Input.EditorSelection.Id = DataStore.State.SelectedEntity;
 
         if (prevSelection == newSelection) return;
         DataStore.Input.EditorSelection.IsRequesting = true;
     }
 
+    public static void ClearSelection()
+    {
+        ref var selection = ref DataStore.Input.EditorSelection;
+        selection.Id = EditorId.Empty;
+        selection.Action = EditorMouseAction.None;
+        selection.IsRequesting = false;
+        selection.IsDirty = true;
+    }
+
     internal static void Render(float delta, bool blockInput)
     {
         PrepareFrame();
+        var modeState = ModeState;
 
         if (!blockInput)
         {
@@ -44,8 +52,8 @@ internal static class EditorService
         }
 
         StateContext.CommitState();
-        GuiTheme.RightSidebarExpanded = ModeState.IsEditorState;
-        MetricsApi.ToggleMetrics(ModeState.IsMetricState);
+        GuiTheme.RightSidebarExpanded = modeState.IsEditorState;
+        MetricsApi.ToggleMetrics(modeState.IsMetricState);
 
         RefreshData();
 
@@ -53,11 +61,11 @@ internal static class EditorService
 
 
         Topbar.Draw();
-        if (!StateContext.ModeState.IsEmptyViewMode)
+        if (!modeState.IsEmptyViewMode)
         {
             ImGui.PushStyleVar(ImGuiStyleVar.ItemSpacing, new Vector2(8f, 6f));
             ImGui.PushStyleVar(ImGuiStyleVar.WindowPadding, new Vector2(0, 10f));
-
+            
             LeftSidebar.Draw(GuiTheme.LeftSidebarWidth, offset: GuiTheme.TopbarHeight);
             RightSidebar.Draw(GuiTheme.RightSidebarWidth, offset: GuiTheme.TopbarHeight);
 
@@ -70,15 +78,13 @@ internal static class EditorService
 
     private static void RefreshData()
     {
-        if (!ModeState.IsEditorState) return;
-        if (!TimeUtils.HasIntervalPassed(_lastRefresh, RefreshInterval)) return;
+        var modeState = ModeState;
 
-        if (ModeState.RightSidebar == RightSidebarMode.Camera && ModelManager.CameraStateContext.State is not null)
-        {
-            ModelManager.CameraStateContext.InvokeAction(TransitionKey.Refresh);
-            _lastRefresh = TimeUtils.GetTimestamp();
-        }
-
+        if (!modeState.IsEditorState) return;
+        
+        if(modeState.IsEntityState && DataStore.State.SelectedEntity.IsValid)
+            ModelManager.EntitiesStateContext.EnqueueRefreshNextFrame();
+        
         ModelManager.InvokeRefreshForModels();
     }
 

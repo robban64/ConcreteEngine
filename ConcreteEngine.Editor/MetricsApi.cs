@@ -10,47 +10,47 @@ namespace ConcreteEngine.Editor;
 
 public static class MetricsApi
 {
-    public static Func<PairSample>? PullSceneMetrics { get; set; }
-    public static Func<CollectionSample>? PullMaterialMetrics { get; set; }
-    public static Func<PairSample>? PullMemoryMetrics { get; set; }
-    public static Action<MetricData>? FillGfxStoreMetrics { get; set; }
-    public static Action<MetricData>? FillAssetMetrics { get; set; }
+    public static Func<PairSample>? PullSceneMetrics;
+    public static Func<CollectionSample>? PullMaterialMetrics;
+    public static Func<PairSample>? PullMemoryMetrics;
+    public static Action<MetricData>? FillGfxStoreMetrics;
+    public static Action<MetricData>? FillAssetMetrics;
 
 
     // State
-    public static MetricData Data { get; } = new();
-    public static MetricReport TextData { get; } = new();
+    public static readonly MetricData Data  = new();
+    public static readonly MetricReport TextData  = new();
 
-    public static bool ActiveSceneMetrics { get; private set; } = true;
-    public static bool ActiveFrameMetrics { get; private set; } = true;
-    public static bool ActiveStoreMetrics { get; private set; } = true;
-    public static bool ActiveMemoryMetrics { get; private set; } = true;
+    private static bool _activeSceneMetrics  = true;
+    private static bool _activeFrameMetrics  = true;
+    private static bool _activeStoreMetrics  = true;
+    private static bool _activeMemoryMetrics  = true;
 
     public static void ToggleMetrics(bool value)
     {
-        ActiveSceneMetrics = value;
-        ActiveFrameMetrics = value;
-        ActiveStoreMetrics = value;
-        ActiveMemoryMetrics = value;
+        _activeSceneMetrics = value;
+        _activeFrameMetrics = value;
+        _activeStoreMetrics = value;
+        _activeMemoryMetrics = value;
     }
 
     public static void RefreshSceneMetrics()
     {
-        if (!ActiveSceneMetrics) return;
+        if (!_activeSceneMetrics) return;
         Data.SceneMetrics = PullSceneMetrics?.Invoke() ?? default;
         TextData.UpdateSceneMetrics(in Data.SceneMetrics);
     }
 
     public static void RefreshFrameMetrics()
     {
-        if (!ActiveFrameMetrics) return;
+        if (!_activeFrameMetrics) return;
         TextData.UpdateFrameMetrics(in EditorDataStore.MetricState.FrameMetrics,
             in EditorDataStore.MetricState.FrameSample);
     }
 
     public static void RefreshAssetMetrics()
     {
-        if (!ActiveStoreMetrics) return;
+        if (!_activeStoreMetrics) return;
         Data.MaterialMetrics = PullMaterialMetrics?.Invoke() ?? default;
         TextData.UpdateMaterialMetrics(in Data.MaterialMetrics);
 
@@ -60,14 +60,14 @@ public static class MetricsApi
 
     public static void RefreshGfxResourceMetrics()
     {
-        if (!ActiveStoreMetrics) return;
+        if (!_activeStoreMetrics) return;
         FillGfxStoreMetrics?.Invoke(Data);
         TextData.UpdateGfxStoreMetrics(Data.GfxStoreMetrics);
     }
 
     public static void RefreshMemoryMetrics()
     {
-        if (!ActiveMemoryMetrics) return;
+        if (!_activeMemoryMetrics) return;
         Data.MemoryMetrics = PullMemoryMetrics?.Invoke() ?? default;
         TextData.UpdateMemoryMetrics(Data.MemoryMetrics);
     }

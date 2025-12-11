@@ -10,7 +10,6 @@ namespace ConcreteEngine.Editor.Data;
 
 public struct EditorSelectionState
 {
-    public long LastUpdate;
     public EditorId Id;
     public EditorMouseAction Action;
     public bool IsRequesting;
@@ -23,6 +22,4 @@ public struct EditorSelectionState
         IsRequesting = false;
         IsDirty = false;
     }
-
-    internal void RefreshTime() => LastUpdate = TimeUtils.GetFastTimestamp();
 }

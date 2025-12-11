@@ -16,12 +16,19 @@ public static class EditorDataStore
     {
         public static MouseDataState MouseState;
         public static EditorSelectionState EditorSelection;
+
+        internal static void Reset()
+        {
+            MouseState = default;
+            EditorSelection = default;
+        }
     }
 
     public static class State
     {
-        public static EditorId SelectedId;
+        public static EditorId SelectedEntity;
         public static EntityDataState EntityState;
+        public static EditorParticleState ParticleState;
     }
 
     public static class Slot<T> where T : unmanaged

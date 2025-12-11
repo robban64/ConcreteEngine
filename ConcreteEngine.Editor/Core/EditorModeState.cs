@@ -14,6 +14,7 @@ internal readonly record struct EditorModeState(
     public bool IsEmptyViewMode => EditorMode == EditorViewMode.None;
     public bool IsMetricState => EditorMode == EditorViewMode.Metrics;
     public bool IsEditorState => EditorMode == EditorViewMode.Editor;
+    public bool IsEntityState => IsEditorState && LeftSidebar == LeftSidebarMode.Entities;
 
     public static EditorModeState MakeNone() => default;
 

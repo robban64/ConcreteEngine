@@ -6,7 +6,7 @@ using ConcreteEngine.Shared.World;
 
 namespace ConcreteEngine.Editor.Data;
 
-public struct ParticleDataState
+public struct EditorParticleState
 {
     public ParticleDefinition Definition;
     public ParticleEmitterState EmitterState;

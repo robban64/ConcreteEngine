@@ -35,9 +35,7 @@ internal sealed class MeshTable : IMeshTable
 
     private int _partIdx = 0;
 
-
     public ModelBoundsView GetModelBoundSpan() => new(_modelBoxes);
-
 
     public ushort GetPartLengthFor(ModelId id)
     {

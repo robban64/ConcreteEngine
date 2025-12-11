@@ -20,7 +20,7 @@ internal interface IEntityStore
 internal sealed class EntityStore<T> : IEntityStore where T : unmanaged
 {
     private T[] _data;
-    private int[] _indices;
+    private int[] _coreIndices;
     private EntityId[] _entities;
 
     //private Stack<int> _free = [];
@@ -36,9 +36,9 @@ internal sealed class EntityStore<T> : IEntityStore where T : unmanaged
         ArgumentOutOfRangeException.ThrowIfLessThan(initialCapacity, 32);
         _data = new T[initialCapacity];
         _entities = new EntityId[initialCapacity];
-        _indices = new int[initialCapacity];
+        _coreIndices = new int[initialCapacity];
 
-        _indices.AsSpan().Fill(-1);
+        _coreIndices.AsSpan().Fill(-1);
     }
 
     public int Count => _idx;
@@ -47,8 +47,7 @@ internal sealed class EntityStore<T> : IEntityStore where T : unmanaged
 
     public Span<EntityId> GetEntitySpan() => _entities.AsSpan(0, _idx);
     public Span<T> GetComponentSpan() => _data.AsSpan(0, _idx);
-    public Span<int> GetIndexSpan() => _indices.AsSpan(0, _idx);
-
+    public Span<int> GetCoreIndexSpan() => _coreIndices.AsSpan(0, _idx);
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     private int FindIndex(EntityId e) => EntityUtility.BinarySearchEntity(_entities, e);
@@ -81,9 +80,11 @@ internal sealed class EntityStore<T> : IEntityStore where T : unmanaged
         return default;
     }
 
+    
     public ref T GetById(EntityId e) => ref _data[FindIndex(e)];
     public ref T GetByIndex(int i) => ref _data[i];
     public EntityId GetEntityId(int i) => _entities[i];
+    public int GetCoreIndex(int i) =>  _coreIndices[i];
 
     public bool TryGetById(EntityId e, out T value)
     {
@@ -109,7 +110,7 @@ internal sealed class EntityStore<T> : IEntityStore where T : unmanaged
         EnsureCapacity(1);
         _entities[_idx] = e;
         _data[_idx] = value;
-        _indices[_idx] = index;
+        _coreIndices[_idx] = index;
         IsDirty = true;
         _idx++;
     }
@@ -141,14 +142,14 @@ internal sealed class EntityStore<T> : IEntityStore where T : unmanaged
             throw new InvalidOperationException();
         }
 
-        var prevLen = _indices.Length;
+        var prevLen = _coreIndices.Length;
 
         var newSize = Arrays.CapacityGrowthSafe(_entities.Length, len);
         Array.Resize(ref _entities, newSize);
         Array.Resize(ref _data, newSize);
-        Array.Resize(ref _indices, newSize);
+        Array.Resize(ref _coreIndices, newSize);
 
-        _indices.AsSpan(prevLen).Fill(-1);
+        _coreIndices.AsSpan(prevLen).Fill(-1);
 
         Logger.LogString(LogScope.World, $"EntityStore: {typeof(T).Name} resized {newSize}", LogLevel.Warn);
     }

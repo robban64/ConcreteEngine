@@ -76,7 +76,6 @@ internal static class LeftSidebar
         var state = StateContext.ModeState.LeftSidebar;
         var isAssets = state == LeftSidebarMode.Assets;
         var isEntities = state == LeftSidebarMode.Entities;
-        var isObjects = state == LeftSidebarMode.Objects;
 
         ImGui.PushStyleVar(ImGuiStyleVar.FramePadding, new Vector2(12, 4));
 
@@ -90,18 +89,18 @@ internal static class LeftSidebar
             if (ImGui.TabItemButton("Entity##entities-tab-btn"))
                 StateContext.SetLeftSidebarState(LeftSidebarMode.Entities);
             if (isEntities) ImGui.PopStyleColor();
-
+/*
             if (isObjects) ImGui.PushStyleColor(ImGuiCol.Tab, GuiTheme.SelectedColor);
             if (ImGui.TabItemButton("Object##objects-tab-btn"))
                 StateContext.SetLeftSidebarState(LeftSidebarMode.Objects);
             if (isObjects) ImGui.PopStyleColor();
-
+*/
 
             switch (state)
             {
                 case LeftSidebarMode.Assets: AssetsComponent.Draw(); break;
                 case LeftSidebarMode.Entities: EntitiesComponent.Draw(); break;
-                case LeftSidebarMode.Objects: ObjectComponent.Draw(); break;
+                //case LeftSidebarMode.Objects: ObjectComponent.Draw(); break;
                 case LeftSidebarMode.Default:
                 default: break;
             }

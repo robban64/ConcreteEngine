@@ -49,6 +49,7 @@ internal static class EditorModelManager
 
     private static void RegisterWorldObjectState()
     {
+        /*
         WorldObjectStateContext = ModelStateContext<ObjectComponentState>
             .CreateBuilder(static () => new ObjectComponentState())
             .OnEnter(static (ctx, it) => { })
@@ -68,6 +69,7 @@ internal static class EditorModelManager
                     state.Animations = EditorApi.LoadAnimationResources();
             })
             .Build();
+            */
     }
 
 

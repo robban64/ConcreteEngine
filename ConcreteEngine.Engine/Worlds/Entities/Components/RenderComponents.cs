@@ -8,7 +8,7 @@ using ConcreteEngine.Renderer.Data;
 
 namespace ConcreteEngine.Engine.Worlds.Entities.Components;
 
-public enum RenderSourceKind
+public enum RenderSourceKind : byte
 {
     Model,
     Particle,

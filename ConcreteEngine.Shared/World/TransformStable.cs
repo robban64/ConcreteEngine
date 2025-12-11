@@ -15,13 +15,6 @@ public struct TransformStable
     public Quaternion Rotation;
     public Vector3 EulerAngles;
 
-    public readonly void FillData(out TransformData model)
-    {
-        model.Translation = Translation;
-        model.Scale = Scale;
-        model.Rotation = Rotation;
-    }
-
     public void From(in TransformData model)
     {
         Translation = model.Translation;

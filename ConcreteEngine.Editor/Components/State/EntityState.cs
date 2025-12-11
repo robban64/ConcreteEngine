@@ -1,5 +1,6 @@
 #region
 
+using ConcreteEngine.Editor.Definitions;
 using ConcreteEngine.Editor.Store;
 using ConcreteEngine.Editor.Store.Resources;
 
@@ -10,6 +11,8 @@ namespace ConcreteEngine.Editor.Components.State;
 internal sealed class EntitiesViewModel
 {
     private EditorEntityResource? _selectedEntity = null;
+    
+    public bool HasSelectedEntity => _selectedEntity != null;
 
     public EditorEntityResource? GetSelectedEntity()
     {
@@ -42,6 +45,8 @@ internal sealed class EntitiesViewModel
         {
             selection.Id = entityId;
             selection.IsRequesting = true;
+            
+            StateContext.SetRightSidebarState(RightSidebarMode.Property);
             return;
         }
 

@@ -164,6 +164,59 @@ internal static class EntitiesComponent
         ImGui.PopStyleVar();
     }
 
+    public static void DrawProperties()
+    {
+        if(!EditorDataStore.State.SelectedId.IsValid) return;
+        ImGui.PushID(EditorDataStore.State.SelectedId);
+        if (ImGui.BeginChild("##right-sidebar-properties", new Vector2(0, 0),
+                ImGuiChildFlags.AlwaysAutoResize | ImGuiChildFlags.AlwaysUseWindowPadding))
+        {
+            DrawPropertyContent();
+            ImGui.EndChild();
+        }
+        ImGui.PopID();
+    }
+
+    private static void DrawPropertyContent()
+    {
+        ref var state = ref DataState;
+        ref var transform = ref state.Transform;
+        var fieldStatus = new ImGuiFieldStatus();
+        int modelId = 0;
+        int materialId = 0;
+
+        ImGui.SeparatorText("Model");
+        ImGui.TextUnformatted("ModelId");
+        ImGui.InputInt("##model-id", ref modelId, 0, 0, ImGuiInputTextFlags.None);
+        //fieldStatus.NextField();
+
+        ImGui.TextUnformatted("Material");
+        ImGui.InputInt("##mat-id", ref materialId, 0, 0, ImGuiInputTextFlags.None);
+        //fieldStatus.NextField();
+
+
+        ImGui.Dummy(new Vector2(0, 2));
+        ImGui.SeparatorText("Transform");
+
+        ImGui.TextUnformatted("Translation");
+        ImGui.Separator();
+        ImGui.InputFloat3("##translation", ref transform.Translation, "%.3f", ImGuiInputTextFlags.None);
+        fieldStatus.NextField();
+
+        ImGui.TextUnformatted("Scale");
+        ImGui.Separator();
+        ImGui.InputFloat3("##scale", ref transform.Scale, "%.3f", ImGuiInputTextFlags.None);
+        fieldStatus.NextField();
+
+        ImGui.TextUnformatted("Rotation");
+        ImGui.Separator();
+        ImGui.InputFloat3("##rotation", ref transform.EulerAngles, "%.3f", ImGuiInputTextFlags.None);
+        _rotationField = fieldStatus.NextField();
+
+        if (fieldStatus.HasEdited(out var field)) _editedField = field;
+
+    }
+
 
     private static void DrawAssetFilePopupContent()
     {

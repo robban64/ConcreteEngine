@@ -13,8 +13,8 @@ public struct Transform(in Vector3 translation, in Vector3 scale, in Quaternion 
     public static readonly Transform Identity = new(default, Vector3.One, Quaternion.Identity);
 
     public Vector3 Translation = translation;
-    public Vector3 Scale = scale;
     public Quaternion Rotation = rotation;
+    public Vector3 Scale = scale;
 
     public static implicit operator TransformData(Transform t) => new(in t.Translation, in t.Scale, in t.Rotation);
     public static implicit operator Transform(TransformData d) => new(in d.Translation, in d.Scale, in d.Rotation);

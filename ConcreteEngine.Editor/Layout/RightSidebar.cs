@@ -14,8 +14,6 @@ namespace ConcreteEngine.Editor.Layout;
 
 internal static class RightSidebar
 {
-    private static bool _focus = false;
-    private static bool _prevFocus = false;
 
     public static void Draw(int width, int offset)
     {
@@ -37,7 +35,7 @@ internal static class RightSidebar
 
         if (ImGui.Begin("##RightSidebar", flags))
         {
-            _focus = ImGui.IsWindowFocused(ImGuiFocusedFlags.None | ImGuiFocusedFlags.ChildWindows);
+            //_focus = ImGui.IsWindowFocused(ImGuiFocusedFlags.None | ImGuiFocusedFlags.ChildWindows);
             //if(_focus &&  !_prevFocus) EditorModelManager.CameraState.TriggerEvent(EventKey.SelectionUpdated);
 
             ImGui.PushStyleVar(ImGuiStyleVar.WindowPadding, new Vector2(12f, 0));
@@ -51,7 +49,6 @@ internal static class RightSidebar
         }
 
         ImGui.End();
-        _prevFocus = _focus;
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
@@ -64,7 +61,7 @@ internal static class RightSidebar
             case RightSidebarMode.World: WorldParamsComponent.Draw(); break;
             case RightSidebarMode.Sky: break;
             case RightSidebarMode.Terrain: break;
-            default: break;
+            case RightSidebarMode.Property: EntitiesComponent.DrawProperties(); break;
         }
     }
 }

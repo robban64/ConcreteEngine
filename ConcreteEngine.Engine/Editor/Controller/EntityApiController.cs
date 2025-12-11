@@ -29,22 +29,30 @@ internal sealed class EntityApiController(ApiContext apiContext)
         foreach (var query in entities.CoreQuery())
         {
             ref readonly var source = ref query.Source;
+            var entity = query.Entity;
+            var isAnimated = entities.Animations.Has(entity);
             var item = new EditorEntityResource
             {
-                Id = new EditorId(query.Entity, EditorItemType.Entity),
+                Id = new EditorId(entity, EditorItemType.Entity),
                 Generation = 0,
                 Name = string.Empty,
-                DisplayName = SourceNames[(int)source.Kind],
-                Model = source.Model,
+                DisplayName = !isAnimated ? SourceNames[(int)source.Kind] : "Animated",
+                Model = new EditorId(source.Model, EditorItemType.Model),
             };
 
             if (matTable.TryResolveSubmitMaterial(source.MaterialKey, out var tag))
             {
                 var materialIds = tag.AsReadOnlySpan();
                 if (materialIds.Length == 1)
-                    item.Material = materialIds[0];
+                    item.Material = new EditorId(materialIds[0], EditorItemType.Material);
                 else if (materialIds.Length > 1)
-                    MemoryMarshal.Cast<MaterialId, int>(tag.AsReadOnlySpan()).ToArray();
+                {
+                    var res = new EditorId[materialIds.Length];
+                    for (var i = 0; i < materialIds.Length; i++)
+                        res[i] = new EditorId(materialIds[i], EditorItemType.Material);
+
+                    item.Materials = res;
+                }
             }
 
             result.Add(item);
@@ -67,6 +75,9 @@ internal sealed class EntityApiController(ApiContext apiContext)
     {
         var writer = Entities.Core.GetEntityWriter(entity);
         writer.Box.Bounds = data.Bounds;
-        data.Transform.FillData(out Transform.UnsafeAs(ref writer.Transform));
+        writer.Transform.Translation = data.Transform.Translation;
+        writer.Transform.Rotation = data.Transform.Rotation;
+        writer.Transform.Scale = data.Transform.Scale;
+
     }
 }

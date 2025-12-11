@@ -9,7 +9,7 @@ using ConcreteEngine.Editor.Store.Resources;
 
 namespace ConcreteEngine.Editor.Components.State;
 
-internal sealed class EntitiesViewModel
+internal sealed class EntityViewState
 {
     private int _rotationField = -1;
     private int _editedField = -1;
@@ -21,15 +21,8 @@ internal sealed class EntitiesViewModel
         if (EditorDataStore.Input.EditorSelection.Id == entityId) return;
 
         ref var selection = ref EditorDataStore.Input.EditorSelection;
-        if (entityId > 0)
-        {
-            selection.Id = entityId;
-            selection.IsRequesting = true;
-            return;
-        }
-
-        selection.Id = EditorId.Empty;
-        selection.IsDirty = true;
+        selection.Id = entityId.IsValid ? entityId : EditorId.Empty;
+        selection.IsRequesting = true;
     }
 
     public void UpdateTransform(int field, int rotationField)
@@ -37,23 +30,17 @@ internal sealed class EntitiesViewModel
         _prevEditField = _editedField;
         _editedField = field;
         _rotationField = rotationField;
-        EditorDataStore.Input.EditorSelection.IsDirty = true;
     }
 
     public void Refresh()
     {
-        if (_editedField > -1)
-        {
-            ref var transform = ref EditorDataStore.State.EntityState.Transform;
-            if (_rotationField != -1)
-                transform.Rotation = RotationMath.EulerDegreesToQuaternion(in transform.EulerAngles);
+        if (_editedField < 0) return;
+        
+        ref var transform = ref EditorDataStore.State.EntityState.Transform;
+        if (_rotationField != -1)
+            transform.Rotation = RotationMath.EulerDegreesToQuaternion(in transform.EulerAngles);
 
-            EditorDataStore.Input.EditorSelection.IsDirty = true;
-        }
-        else if (EditorDataStore.State.SelectedEntity.IsValid)
-        {
-            EditorDataStore.Input.EditorSelection.IsRequesting = true;
-        }
+        EditorDataStore.Input.EditorSelection.IsDirty = true;
     }
 
     public void BeforeDraw()

@@ -19,7 +19,7 @@ internal static class EntitiesComponent
     private const int RowHeight = 32;
     private const int ColumnWidth = 36;
     
-    private static EntitiesViewModel State => ModelManager.EntitiesStateContext.State!;
+    private static EntityViewState State => ModelManager.EntitiesStateContext.State!;
 
 
     private static ReadOnlySpan<EditorEntityResource> EntitySpan => EditorManagedStore.EntityResourceSpan;

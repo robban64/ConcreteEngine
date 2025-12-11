@@ -29,7 +29,8 @@ internal sealed class ModelStateContext<T> : IModelState where T : class
     public bool Active { get; private set; }
     public bool PendingRefresh { get; private set; } = false;
 
-    public bool KeepAlive { get; }
+    private readonly bool _keepAlive;
+    private readonly bool _alwaysActive;
 
     private ModelStateContext(
         Func<T> factory,
@@ -37,22 +38,30 @@ internal sealed class ModelStateContext<T> : IModelState where T : class
         StateTransitionDel<T> onLeave,
         StateTransitionDel<T>? onRefresh = null,
         Dictionary<EventKey, object>? events = null,
-        bool keepAlive = false)
+        bool keepAlive = false,
+        bool alwaysActive = false)
     {
         _factory = factory;
         _onEnter = onEnter;
         _onLeave = onLeave;
-        KeepAlive = keepAlive;
         _onRefresh = onRefresh;
         _events = events;
+        _keepAlive = keepAlive;
+        _alwaysActive = alwaysActive;
 
-        if (KeepAlive) State = _factory();
+        if (_keepAlive) State = _factory();
+
+        if (_alwaysActive)
+        {
+            Active = true;
+            InvokeAction(TransitionKey.Enter);
+        }
     }
 
     public void ResetState()
     {
-        Active = false;
-        if (!KeepAlive)
+        Active = _alwaysActive;
+        if (!_keepAlive)
             State = null;
     }
 
@@ -83,17 +92,17 @@ internal sealed class ModelStateContext<T> : IModelState where T : class
         switch (action)
         {
             case TransitionKey.Enter:
-                InvalidOpThrower.ThrowIf(!KeepAlive && Active, nameof(Active));
+                InvalidOpThrower.ThrowIf(!_keepAlive && Active, nameof(Active));
                 Active = true;
                 _onEnter(this, State ??= _factory());
                 break;
             case TransitionKey.Leave:
-                InvalidOpThrower.ThrowIf(!KeepAlive && !Active, nameof(Active));
+                InvalidOpThrower.ThrowIf(!_keepAlive && !Active, nameof(Active));
                 _onLeave(this, State!);
                 Active = false;
                 break;
             case TransitionKey.Refresh:
-                InvalidOpThrower.ThrowIf(!KeepAlive && !Active, nameof(Active));
+                InvalidOpThrower.ThrowIf(!_keepAlive && !Active, nameof(Active));
                 InvalidOpThrower.ThrowIfNull(_onRefresh, nameof(_onRefresh));
                 _onRefresh!(this, State!);
                 break;
@@ -145,7 +154,8 @@ internal sealed class ModelStateContext<T> : IModelState where T : class
         private StateTransitionDel<T>? _onRefresh;
         private Dictionary<EventKey, object>? _events;
 
-        private bool _keepAlive = false;
+        private bool _keepAlive;
+        private bool _alwaysActive;
 
         public ViewModelStateBuilder OnEnter(StateTransitionDel<T> handler)
         {
@@ -185,12 +195,19 @@ internal sealed class ModelStateContext<T> : IModelState where T : class
             return this;
         }
 
+        public ViewModelStateBuilder AlwaysActive()
+        {
+            _alwaysActive = true;
+            return this;
+        }
+
         public ModelStateContext<T> Build()
         {
             InvalidOpThrower.ThrowIfNull(factory, nameof(factory));
             InvalidOpThrower.ThrowIfNull(_onEnter, nameof(_onEnter));
             InvalidOpThrower.ThrowIfNull(_onLeave, nameof(_onLeave));
-            return new ModelStateContext<T>(factory, _onEnter!, _onLeave!, _onRefresh, _events, _keepAlive);
+            return new ModelStateContext<T>(factory, _onEnter!, _onLeave!, _onRefresh, _events, _keepAlive,
+                _alwaysActive);
         }
     }
 }

@@ -111,14 +111,8 @@ internal static class EngineDataBridge
             activeId = new EntityId(EditorData.State.SelectedEntity);
             _entities.LoadToEditor(activeId, ref state);
         }
-        else if (input.IsDirty)
+        else if (input.IsDirty && pendingId.IsValid)
         {
-            if (!pendingId.IsValid)
-            {
-                EditorData.State.SelectedEntity = EditorId.Empty;
-                return default;
-            }
-            
             _entities.SaveToEngine(pendingId, in state);
             EditorData.State.SelectedEntity = input.Id;
         }

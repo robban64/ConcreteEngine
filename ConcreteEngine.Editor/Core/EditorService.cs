@@ -20,13 +20,15 @@ internal static class EditorService
 
     private static void PrepareFrame()
     {
-        var prevSelection = DataStore.Input.EditorSelection.Id;
         var newSelection = DataStore.State.SelectedEntity;
         DataStore.Input.EditorSelection.ClearFrame();
-        DataStore.Input.EditorSelection.Id = DataStore.State.SelectedEntity;
-
-        if (prevSelection == newSelection) return;
-        DataStore.Input.EditorSelection.IsRequesting = true;
+        DataStore.Input.EditorSelection.Id = newSelection;
+        
+        if (!ModeState.IsEntityState && newSelection.IsValid)
+        {
+            StateContext.SetLeftSidebarState(LeftSidebarMode.Entities);
+            StateContext.SetRightSidebarState(RightSidebarMode.Property);
+        }
     }
 
     public static void ClearSelection()

@@ -15,7 +15,7 @@ namespace ConcreteEngine.Editor.Core;
 
 internal static class EditorModelManager
 {
-    public static ModelStateContext<EntitiesViewModel> EntitiesStateContext { get; private set; } = null!;
+    public static ModelStateContext<EntityViewState> EntitiesStateContext { get; private set; } = null!;
     public static ModelStateContext<AssetState> AssetStateContext { get; private set; } = null!;
     public static ModelStateContext<CameraState> CameraStateContext { get; private set; } = null!;
     public static ModelStateContext<WorldParamState> WorldRenderStateContext { get; private set; } = null!;
@@ -95,35 +95,27 @@ internal static class EditorModelManager
 
     private static void RegisterEntityState()
     {
-
-        EntitiesStateContext = ModelStateContext<EntitiesViewModel>
-            .CreateBuilder(static () => new EntitiesViewModel())
+        EntitiesStateContext = ModelStateContext<EntityViewState>
+            .CreateBuilder(static () => new EntityViewState())
             .OnEnter(static (ctx, it) => { })
-            .OnRefresh(OnEntityRefresh)
+            .OnRefresh(static (ctx, it) => it.Refresh())
             .OnLeave(static (ctx, _) => ctx.TriggerEvent<EditorEntityResource?>(EventKey.SelectionChanged, null))
             .RegisterEvent<EditorEntityResource?>(EventKey.SelectionChanged, OnEntitySelected)
             .KeepAlive()
+            .AlwaysActive()
             .Build();
 
         return;
 
-        static void OnEntityRefresh(ModelStateContext<EntitiesViewModel> ctx, EntitiesViewModel it)
-        {
-            if (EditorDataStore.State.SelectedEntity.IsValid)
-                StateContext.SetRightSidebarState(RightSidebarMode.Property);
-
-            it.Refresh();
-        }
-
-        static void OnEntitySelected(ModelStateContext<EntitiesViewModel> ctx, EditorEntityResource? it)
+        static void OnEntitySelected(ModelStateContext<EntityViewState> ctx, EditorEntityResource? it)
         {
             var id = it?.Id ?? EditorId.Empty;
             ctx.State!.SetSelectedEntity(id);
-            if (id.IsValid)
-            {
-                StateContext.SetLeftSidebarState(LeftSidebarMode.Entities);
-                StateContext.SetRightSidebarState(RightSidebarMode.Property);
-            }
+
+            if (!id.IsValid) return;
+            StateContext.SetLeftSidebarState(LeftSidebarMode.Entities);
+            StateContext.SetRightSidebarState(RightSidebarMode.Property);
+
         }
     }
 

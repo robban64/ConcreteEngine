@@ -1,49 +1,68 @@
 #region
 
+using ConcreteEngine.Editor.Bridge;
 using ConcreteEngine.Editor.Data;
 using ConcreteEngine.Editor.Store;
 using ConcreteEngine.Editor.Store.Resources;
 using ConcreteEngine.Engine.Assets.Models;
 using ConcreteEngine.Engine.Worlds;
+using ConcreteEngine.Engine.Worlds.Render;
+using ConcreteEngine.Engine.Worlds.View;
 using ConcreteEngine.Shared.Rendering;
 
 #endregion
 
 namespace ConcreteEngine.Engine.Editor.Controller;
 
-internal sealed class WorldApiController(ApiContext ctx)
+internal sealed class WorldApiController(ApiContext ctx) : IEngineWorldController
 {
-    public long CameraGeneration => ctx.World.Camera.Generation;
-    public long WorldParamGeneration => ctx.World.WorldRenderParams.Version;
+    private readonly World _world = ctx.World;
+    private readonly Camera3D _camera = ctx.World.Camera;
+    private readonly WorldRenderParams _renderParams = ctx.World.WorldRenderParams;
 
-    private World World => ctx.World;
-
-    public void ApplyCameraState(in CameraDataState data) => World.Camera.SetFromData(in data);
-
-    public void WriteCameraState(out CameraDataState data) => World.Camera.FillData(out data);
-
-    public void ApplyWorldRenderParams(in WorldParamsData data) => World.WorldRenderParams.SetFromData(in data);
-
-    public void WriteWorldRenderParams(out WorldParamsData data) => World.WorldRenderParams.FillData(out data);
-
-    public void WriteEmitterState(ref EditorParticleState data)
+    public void CommitCamera(EditorSlot<EditorCameraState> slot)
     {
-        var emitter = World.Particles.GetEmitter(data.EmitterHandle);
-        data.EmitterHandle = new EditorId(emitter.EmitterHandle, EditorItemType.ParticleEmitter);
-        data.Definition = emitter.Definition;
-        data.EmitterState = emitter.State;
+        if (slot.Gen != _camera.Generation)
+        {
+            _camera.FillData(out slot.State);
+            slot.Gen = _camera.Generation;
+            return;
+        }
+        _camera.SetFromData(in slot.State);
+    }
+    
+
+    public void FetchCamera(EditorSlot<EditorCameraState> slot)
+    {
+        if(slot.Gen == _camera.Generation) return;
+        _camera.FillData(out slot.State);
+        slot.Gen = _camera.Generation;
     }
 
-    public void ApplyEmitterState(in EditorParticleState data)
+    public void CommitWorldRenderParams(EditorSlot<WorldParamsData> slot)
     {
-        var emitter = World.Particles.GetEmitter(data.EmitterHandle);
-        emitter.Definition = data.Definition;
-        emitter.State = data.EmitterState;
+        if (slot.Gen != _renderParams.Generation)
+        {
+            _renderParams.FillData(out slot.State);
+            slot.Gen = _renderParams.Generation;
+            return;
+        }
+        _renderParams.SetFromData(in slot.State);
     }
+    
+    public void FetchWorldRenderParams(EditorSlot<WorldParamsData> slot)
+    {
+        if(slot.Gen == _renderParams.Generation) return;
+        _renderParams.FillData(out slot.State);
+        slot.Gen = _renderParams.Generation;
+    }
+
+
+
 
     public List<EditorParticleResource> GetEditorEmitter()
     {
-        var span = World.Particles.EmitterSpan;
+        var span = _world.Particles.EmitterSpan;
         List<EditorParticleResource> emitters = new(span.Length);
         foreach (var it in span)
         {
@@ -60,7 +79,7 @@ internal sealed class WorldApiController(ApiContext ctx)
 
     public List<EditorAnimationResource> GetEditorAnimations()
     {
-        var span = World.GetAnimationTableImpl().ModelIdSpan;
+        var span = _world.GetAnimationTableImpl().ModelIdSpan;
         List<EditorAnimationResource> list = new(span.Length);
         ctx.AssetSystem.StoreImpl.ExtractList<Model, EditorAnimationResource>(list, static (it) =>
         {

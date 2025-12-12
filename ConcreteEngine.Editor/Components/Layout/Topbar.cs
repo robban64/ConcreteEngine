@@ -13,7 +13,7 @@ namespace ConcreteEngine.Editor.Components.Layout;
 internal static class Topbar
 {
     private const int SelectorWidth = 74;
-    private static readonly string[] PropertyModes = ["Camera", "World", "Sky", "Terrain"];
+    private static readonly string[] PropertyModes = ["Entity", "Camera", "World", "Sky", "Terrain"];
     private static readonly string[] MouseActionNames = ["None", "RaySelect", "RayDrag"];
 
     public static void Draw()
@@ -76,9 +76,13 @@ internal static class Topbar
         ImGui.SameLine(startPosX);
 
         if (!ImGui.BeginChild("##editor-property-selector")) return;
+
+        int idx = 0;
         for (var i = 0; i < PropertyModes.Length; i++)
         {
-            if (i > 0) ImGui.SameLine();
+            if(i == 0 && !EditorDataStore.SelectedEntity.IsValid) continue;
+            
+            if (idx++ > 0) ImGui.SameLine();
             var selectorMode = PropertyIndexToEnum(i);
             var selected = selectorMode == StateContext.ModeState.RightSidebar;
 
@@ -97,10 +101,11 @@ internal static class Topbar
     {
         return index switch
         {
-            0 => RightSidebarMode.Camera,
-            1 => RightSidebarMode.World,
-            2 => RightSidebarMode.Sky,
-            3 => RightSidebarMode.Terrain,
+            0 => RightSidebarMode.Property,
+            1 => RightSidebarMode.Camera,
+            2 => RightSidebarMode.World,
+            3 => RightSidebarMode.Sky,
+            4 => RightSidebarMode.Terrain,
             _ => throw new ArgumentOutOfRangeException(nameof(index), index, null)
         };
     }

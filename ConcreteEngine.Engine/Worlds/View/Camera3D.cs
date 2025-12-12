@@ -200,18 +200,18 @@ public sealed class Camera3D
         Generation++;
     }
 
-    internal void FillData(out CameraDataState data)
+    internal void FillData(out EditorCameraState state)
     {
-        data.Transform = _transform;
-        data.Projection = _projInfo;
-        data.Viewport = _viewportSize;
+        state.Transform = _transform;
+        state.Projection = _projInfo;
+        state.Viewport = _viewportSize;
     }
 
-    internal void SetFromData(in CameraDataState data)
+    internal void SetFromData(in EditorCameraState state)
     {
-        _transform = data.Transform;
-        _prevTransform = data.Transform;
-        _projInfo = data.Projection;
+        _transform = state.Transform;
+        _prevTransform = state.Transform;
+        _projInfo = state.Projection;
         _dirty = true;
     }
 }

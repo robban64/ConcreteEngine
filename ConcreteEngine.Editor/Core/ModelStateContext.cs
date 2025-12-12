@@ -1,5 +1,6 @@
 #region
 
+using System.Runtime.CompilerServices;
 using ConcreteEngine.Common;
 using ConcreteEngine.Editor.Data;
 using ConcreteEngine.Editor.Definitions;
@@ -66,6 +67,7 @@ internal sealed class ModelStateContext<T> : IModelState where T : class
     }
 
 
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public void EnqueueRefreshNextFrame()
     {
         if (!Active) return;

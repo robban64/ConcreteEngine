@@ -8,7 +8,7 @@ namespace ConcreteEngine.Renderer.State;
 
 public sealed class RenderParamsSnapshot
 {
-    public long Version { get; private set; }
+    public long Generation { get; private set; }
     public bool IsDirty { get; private set; } = true;
 
     private AmbientParams _ambient;
@@ -33,7 +33,7 @@ public sealed class RenderParamsSnapshot
     {
         IsDirty = true;
 
-        Version = version;
+        Generation = version;
         _ambient = ambient;
         _fog = fog;
         _sunLight = sunLight;

@@ -18,7 +18,10 @@ namespace ConcreteEngine.Editor.Core;
 
 internal static class EditorService
 {
+    private const int RefreshInterval = 4;
+
     private static EditorModeState ModeState => StateContext.ModeState;
+    private static SimpleFrameTicker _refreshTicker = new(RefreshInterval);
 
     public static void Initialize()
     {
@@ -31,10 +34,15 @@ internal static class EditorService
     {
         var entity = DataStore.SelectedEntity;
 
-        if (ModeState.IsEntityState || !entity.IsValid) return;
-        StateContext.SetLeftSidebarState(LeftSidebarMode.Entities);
-        StateContext.SetRightSidebarState(RightSidebarMode.Property);
-
+        if (!ModeState.IsEntityState && entity.IsValid)
+        {
+            StateContext.SetLeftSidebarState(LeftSidebarMode.Entities);
+            StateContext.SetRightSidebarState(RightSidebarMode.Property);
+        }
+        else if (ModeState.RightSidebar == RightSidebarMode.Property && !entity.IsValid)
+        {
+            StateContext.SetRightSidebarState(RightSidebarMode.Camera);
+        }
     }
 
     private static void ProcessInput(float delta)
@@ -67,7 +75,7 @@ internal static class EditorService
         {
             ImGui.PushStyleVar(ImGuiStyleVar.ItemSpacing, new Vector2(8f, 6f));
             ImGui.PushStyleVar(ImGuiStyleVar.WindowPadding, new Vector2(0, 10f));
-            
+
             LeftSidebar.Draw(GuiTheme.LeftSidebarWidth, offset: GuiTheme.TopbarHeight);
             RightSidebar.Draw(GuiTheme.RightSidebarWidth, offset: GuiTheme.TopbarHeight);
 
@@ -81,45 +89,20 @@ internal static class EditorService
     {
         var modeState = ModeState;
 
+        if (!_refreshTicker.Tick()) return;
         if (!modeState.IsEditorState) return;
-        
+
+        switch (modeState.RightSidebar)
+        {
+            case RightSidebarMode.Camera: ModelManager.CameraStateContext.EnqueueRefreshNextFrame(); break;
+            case RightSidebarMode.World: ModelManager.WorldRenderStateContext.EnqueueRefreshNextFrame(); break;
+        }
+
+        ModelManager.InvokeRefreshForModels();
+
         /*
         if(modeState.IsEntityState && DataStore.State.SelectedEntity.IsValid)
             ModelManager.EntitiesStateContext.EnqueueRefreshNextFrame();
             */
-        
-        ModelManager.InvokeRefreshForModels();
     }
-
-/*
-     private static long _lastAction = TimeUtils.GetTimestamp();
-     private static long _lastFetched = TimeUtils.GetTimestamp();
-
-     private static TResponse? OnApiFill<TRequest, TResponse>(TRequest request,
-       ApiModelRequestDel<TRequest, TResponse>? apiFetch) where TRequest : class where TResponse : class
-   {
-       if (!CanFetch(150) || apiFetch is null) return null;
-       Console.WriteLine($"Api Fill: {typeof(TResponse).Name}");
-       return apiFetch(request);
-   }
-
-    private static bool CanFetch(int ms)
-    {
-        if (!TimeUtils.HasIntervalPassed(_lastFetched, ms)) return false;
-        _lastFetched = TimeUtils.GetTimestamp();
-        return true;
-    }
-
-    private static bool CanExecute(int ms)
-    {
-        if (!TimeUtils.HasIntervalPassed(_lastAction, ms))
-        {
-            ConsoleService.SendLog("Command delay time has not passed");
-            return false;
-        }
-
-        _lastAction = TimeUtils.GetTimestamp();
-        return true;
-    }
-    */
 }

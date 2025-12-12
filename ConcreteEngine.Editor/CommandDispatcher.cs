@@ -6,7 +6,7 @@ using ConcreteEngine.Editor.Utils;
 
 #endregion
 
-namespace ConcreteEngine.Editor.Bridge;
+namespace ConcreteEngine.Editor;
 
 public static class CoreCmdNames
 {

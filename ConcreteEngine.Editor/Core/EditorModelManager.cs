@@ -20,7 +20,6 @@ internal static class EditorModelManager
     public static ModelStateContext<AssetState> AssetStateContext { get; private set; } = null!;
     public static ModelStateContext<CameraState> CameraStateContext { get; private set; } = null!;
     public static ModelStateContext<WorldParamState> WorldRenderStateContext { get; private set; } = null!;
-    public static ModelStateContext<ObjectComponentState> WorldObjectStateContext { get; private set; } = null!;
 
     public static bool HasInit { get; private set; } = false;
 
@@ -44,7 +43,6 @@ internal static class EditorModelManager
         RegisterWorldRenderState();
         RegisterWorldObjectState();
 
-        CameraStateContext.InvokeAction(TransitionKey.Enter);
         EntitiesStateContext.InvokeAction(TransitionKey.Enter);
     }
 
@@ -99,7 +97,7 @@ internal static class EditorModelManager
         EntitiesStateContext = ModelStateContext<EntityViewState>
             .CreateBuilder(static () => new EntityViewState())
             .OnEnter(static (ctx, it) => { })
-            .OnRefresh(static (ctx, it) => {})
+            .OnRefresh(static (ctx, it) => { })
             .OnLeave(static (ctx, _) => ctx.TriggerEvent<EditorEntityResource?>(EventKey.SelectionChanged, null))
             .RegisterEvent<EditorEntityResource?>(EventKey.SelectionChanged, OnEntitySelected)
             .KeepAlive()
@@ -116,7 +114,6 @@ internal static class EditorModelManager
             if (!id.IsValid) return;
             StateContext.SetLeftSidebarState(LeftSidebarMode.Entities);
             StateContext.SetRightSidebarState(RightSidebarMode.Property);
-
         }
     }
 
@@ -124,11 +121,10 @@ internal static class EditorModelManager
     {
         CameraStateContext = ModelStateContext<CameraState>
             .CreateBuilder(static () => new CameraState())
-            .OnEnter(static (ctx, it) => EditorDataStore.Slot<CameraDataState>.SlotState.RequestData())
-            .OnRefresh(static (ctx, it) => { })
+            .OnEnter(static (ctx, it) => EngineController.FetchCamera())
+            .OnRefresh(static (ctx, it) => EngineController.FetchCamera())
             .OnLeave(static (ctx, it) => { })
             .RegisterEvent(EventKey.SelectionUpdated, static (ctx) => { })
-            .KeepAlive()
             .Build();
     }
 
@@ -136,8 +132,8 @@ internal static class EditorModelManager
     {
         WorldRenderStateContext = ModelStateContext<WorldParamState>
             .CreateBuilder(static () => new WorldParamState())
-            .OnEnter(static (ctx, it) => EditorDataStore.Slot<WorldParamsData>.SlotState.RequestData())
-            .OnRefresh(static (ctx, it) => EditorDataStore.Slot<WorldParamsData>.SlotState.RequestData())
+            .OnEnter(static (ctx, it) => EngineController.FetchWorldParams())
+            .OnRefresh(static (ctx, it) => EngineController.FetchWorldParams())
             .OnLeave(static (ctx, it) => ctx.ResetState())
             .RegisterEvent<EditorShadowCommand>(EventKey.WorldActionInvoke, SetShadowSize)
             .Build();

@@ -4,7 +4,9 @@ using System.Numerics;
 using ConcreteEngine.Common.Numerics;
 using ConcreteEngine.Editor.Components.State;
 using ConcreteEngine.Editor.Core;
+using ConcreteEngine.Editor.Data;
 using ConcreteEngine.Editor.Definitions;
+using ConcreteEngine.Editor.Store;
 using ConcreteEngine.Editor.Utils;
 using ImGuiNET;
 
@@ -17,10 +19,6 @@ internal static class CameraComponent
     private const int WindowPaddingX = 12;
 
     private static ModelStateContext<CameraState> Context => ModelManager.CameraStateContext;
-    private static CameraState State => Context.State!;
-
-    private static int _editedField = -1;
-
 
     public static void Draw()
     {
@@ -28,31 +26,31 @@ internal static class CameraComponent
         var size = new Vector2(GuiTheme.RightSidebarWidth - WindowPaddingX, 0);
 
         if (!ImGui.BeginChild("##camera-properties", size, flags)) return;
-        DrawInner();
+        var hasChange = DrawInner();
         ImGui.EndChild();
-
-        if (_editedField >= 0)
-        {
-            State.TriggerWrite();
-            _editedField = -1;
-        }
+        
+        if (hasChange) EngineController.CommitCamera();
     }
 
-    private static void DrawInner()
+    private static bool DrawInner()
     {
+        ref var state = ref EditorDataStore.Slot<EditorCameraState>.State;
+
         ImGui.SeparatorText("Viewport");
-        DrawViewport();
+        DrawViewport(ref state);
         ImGui.Dummy(new Vector2(0, 2));
         ImGui.SeparatorText("Transform");
-        DrawTransform();
+        var hasChangeTransform = DrawTransform(ref state);
         ImGui.Dummy(new Vector2(0, 2));
         ImGui.SeparatorText("Projection");
-        DrawProjection();
+        var hasChangeProjection = DrawProjection(ref state);
+
+        return hasChangeTransform || hasChangeProjection;
     }
 
-    private static void DrawViewport()
+    private static void DrawViewport(ref EditorCameraState state)
     {
-        var viewport = State.DataState.Viewport;
+        var viewport = state.Viewport;
         var formatter = new NumberSpanFormatter(StringUtils.CharBuffer8);
 
         ImGui.BeginGroup();
@@ -83,19 +81,18 @@ internal static class CameraComponent
         ImGui.EndGroup();
     }
 
-    private static void DrawProjection()
+    private static bool DrawProjection(ref EditorCameraState state)
     {
-        ref var proj = ref State.DataState.Projection;
         var fieldStatus = new ImGuiFieldStatus();
 
         ImGui.BeginGroup();
         ImGui.TextUnformatted("Near / Far");
 
-        Vector2 nearFar = new Vector2(proj.Near, proj.Far);
+        Vector2 nearFar = new Vector2(state.Projection.Near, state.Projection.Far);
         if (ImGui.InputFloat2("##camera-near-far", ref nearFar, "%.2f"))
         {
-            proj.Near = nearFar.X;
-            proj.Far = nearFar.Y;
+            state.Projection.Near = nearFar.X;
+            state.Projection.Far = nearFar.Y;
         }
 
         fieldStatus.NextField();
@@ -105,39 +102,38 @@ internal static class CameraComponent
         ImGui.BeginGroup();
 
         ImGui.TextUnformatted("Field of view");
-        ImGui.SliderFloat("##camera-fov", ref proj.Fov, StateLimits.MinFov, StateLimits.MaxFov, "%.2f");
+        ImGui.SliderFloat("##camera-fov", ref state.Projection.Fov, StateLimits.MinFov, StateLimits.MaxFov, "%.2f");
         fieldStatus.NextFieldDrag();
 
 
         ImGui.PopItemWidth();
         ImGui.EndGroup();
 
-        if (fieldStatus.HasEdited(out var field)) _editedField = field;
+        return fieldStatus.HasEdited(out _);
     }
 
-    private static void DrawTransform()
+    private static bool DrawTransform(ref EditorCameraState state)
     {
-        ref var state = ref State.DataState.Transform;
         var fieldStatus = new ImGuiFieldStatus();
 
         ImGui.BeginGroup();
         ImGui.TextUnformatted("Transform");
         ImGui.Separator();
 
-        ImGui.InputFloat3("##camera-translation", ref state.Translation, "%.3f");
+        ImGui.InputFloat3("##camera-translation", ref state.Transform.Translation, "%.3f");
         fieldStatus.NextField();
 
         ImGui.TextUnformatted("Rotation");
         ImGui.Separator();
-        var orientation = state.Orientation.AsVec2();
+        var orientation = state.Transform.Orientation.AsVec2();
         if (ImGui.InputFloat2("##camera-rotation", ref orientation, "%.3f"))
         {
-            state.Orientation = YawPitch.FromVector2(orientation);
+            state.Transform.Orientation = YawPitch.FromVector2(orientation);
         }
 
         fieldStatus.NextField();
         ImGui.EndGroup();
 
-        if (fieldStatus.HasEdited(out var field)) _editedField = field;
+        return fieldStatus.HasEdited(out _);
     }
 }

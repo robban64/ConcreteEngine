@@ -9,10 +9,5 @@ namespace ConcreteEngine.Editor.Components.State;
 
 internal sealed class CameraState
 {
-    public ref CameraDataState DataState => ref EditorDataStore.Slot<CameraDataState>.Data;
 
-    public void TriggerWrite()
-    {
-        EditorDataStore.Slot<CameraDataState>.SlotState.IsDirty = true;
-    }
 }

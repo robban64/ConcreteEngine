@@ -7,7 +7,7 @@ using ConcreteEngine.Shared.World;
 
 namespace ConcreteEngine.Editor.Data;
 
-public struct CameraDataState
+public struct EditorCameraState
 {
     public ViewTransform Transform;
     public ProjectionInfo Projection;

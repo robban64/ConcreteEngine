@@ -15,3 +15,12 @@ public struct WorldParamsData
     public ShadowParams Shadow;
     public PostEffectParams PostEffect;
 }
+
+public ref struct WorldParamsView
+{
+    public ref SunLightParams SunLight;
+    public ref AmbientParams Ambient;
+    public ref FogParams Fog;
+    public ref ShadowParams Shadow;
+    public ref PostEffectParams PostEffect;
+}

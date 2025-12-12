@@ -14,15 +14,16 @@ namespace ConcreteEngine.Editor.Store;
 
 public static class EditorDataStore
 {
-    public static EditorId SelectedEntity;
-    public static EditorEntityState EntityState;
-    public static EditorParticleState ParticleState;
-    public static EditorAnimationState AnimationState;
+    internal static EditorId SelectedEntity;
+    internal static EditorEntityState EntityState;
+    internal static EditorParticleState ParticleState;
+    internal static EditorAnimationState AnimationState;
 
-    public static class Slot<T> where T : unmanaged
+    internal static class Slot<T> where T : unmanaged
     {
-        public static T Data;
-        public static EditorSlotState SlotState;
+        public static T State;
+        public static long Generation;
+        public static EditorSlot<T> GetView() => new (ref State, ref Generation);
     }
 
     public static class MetricState

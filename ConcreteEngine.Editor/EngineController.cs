@@ -1,11 +1,17 @@
+using ConcreteEngine.Editor.Bridge;
 using ConcreteEngine.Editor.Data;
 using ConcreteEngine.Editor.Store;
 using ConcreteEngine.Editor.Store.Resources;
+using ConcreteEngine.Shared.Rendering;
 
-namespace ConcreteEngine.Editor.Bridge;
+namespace ConcreteEngine.Editor;
 
-internal static class EngineController
+public static class EngineController
 {
+    public static IEngineWorldController WorldController = null!;
+    public static IEngineInteractionController InteractionController = null!;
+    public static IEngineEntityController EntityController = null!;
+
     private static EditorId SelectedEntity => EditorDataStore.SelectedEntity;
     private static EditorId ComponentRef => EditorDataStore.EntityState.ComponentRef;
 
@@ -17,23 +23,23 @@ internal static class EngineController
             ConsoleService.SendLog("Invalid selected entity");
             return;
         }
-        
-        if (SelectedEntity.IsValid)
-            EditorApi.EntityController.DeselectEntity(SelectedEntity);
 
-        EditorApi.EntityController.SelectEntity(entity, out EditorDataStore.EntityState);
+        if (SelectedEntity.IsValid)
+            EntityController.DeselectEntity(SelectedEntity);
+
+        EntityController.SelectEntity(entity, out EditorDataStore.EntityState);
         EditorDataStore.SelectedEntity = entity;
-        
+
         var entityObj = EditorManagedStore.Get<EditorEntityResource>(entity);
-        
-        if(entityObj == null)
+
+        if (entityObj == null)
             throw new InvalidOperationException($"Entity {entity} not found");
 
         switch (entityObj.ComponentRef.ItemType)
         {
-            case EditorItemType.Particle: 
+            case EditorItemType.Particle:
                 EditorDataStore.EntityState.ComponentRef = entityObj.ComponentRef;
-                FetchParticle(); 
+                FetchParticle();
                 break;
             case EditorItemType.Animation:
                 EditorDataStore.EntityState.ComponentRef = entityObj.ComponentRef;
@@ -41,8 +47,6 @@ internal static class EngineController
                 break;
             default: EditorDataStore.EntityState.ComponentRef = EditorId.Empty; break;
         }
-        
-        ConsoleService.SendLog("Selected entity: " + entity);
     }
 
     internal static void DeSelectEntity()
@@ -50,11 +54,10 @@ internal static class EngineController
         var entity = SelectedEntity;
         if (!entity.IsValid) return;
 
-        EditorApi.EntityController.DeselectEntity(entity);
+        EntityController.DeselectEntity(entity);
         EditorDataStore.EntityState = default;
         EditorDataStore.SelectedEntity = EditorId.Empty;
         EditorDataStore.EntityState.ComponentRef = EditorId.Empty;
-
     }
 
     internal static void CommitEntity()
@@ -66,7 +69,7 @@ internal static class EngineController
             return;
         }
 
-        EditorApi.EntityController.Commit(entity, in EditorDataStore.EntityState);
+        EntityController.Commit(entity, in EditorDataStore.EntityState);
     }
 
     internal static void RefreshEntity()
@@ -78,35 +81,54 @@ internal static class EngineController
             return;
         }
 
-        EditorApi.EntityController.Fetch(entity, ref EditorDataStore.EntityState);
+        EntityController.Fetch(entity, ref EditorDataStore.EntityState);
     }
 
     internal static void FetchAnimation()
     {
         var entity = SelectedEntity;
-        if(!entity.IsValid || !ComponentRef.IsValid) return;
-        EditorApi.EntityController.FetchAnimation(entity, ref EditorDataStore.AnimationState);
+        if (!entity.IsValid || !ComponentRef.IsValid) return;
+        EntityController.FetchAnimation(entity, ref EditorDataStore.AnimationState);
     }
 
     internal static void CommitAnimation()
     {
         var entity = SelectedEntity;
-        if(!entity.IsValid || !ComponentRef.IsValid) return;
-        EditorApi.EntityController.CommitAnimation(entity, in EditorDataStore.AnimationState);
+        if (!entity.IsValid || !ComponentRef.IsValid) return;
+        EntityController.CommitAnimation(entity, in EditorDataStore.AnimationState);
     }
 
     internal static void FetchParticle()
     {
         var entity = SelectedEntity;
-        if(!entity.IsValid || !ComponentRef.IsValid) return;
-        EditorApi.EntityController.FetchParticle(entity, ref EditorDataStore.ParticleState);
+        if (!entity.IsValid || !ComponentRef.IsValid) return;
+        EntityController.FetchParticle(entity, ref EditorDataStore.ParticleState);
     }
 
     internal static void CommitParticle()
     {
         var entity = SelectedEntity;
-        if(!entity.IsValid || !ComponentRef.IsValid) return;
-        EditorApi.EntityController.CommitParticle(entity, in EditorDataStore.ParticleState);
+        if (!entity.IsValid || !ComponentRef.IsValid) return;
+        EntityController.CommitParticle(entity, in EditorDataStore.ParticleState);
     }
 
+    internal static void CommitCamera()
+    {
+        WorldController.CommitCamera(EditorDataStore.Slot<EditorCameraState>.GetView());
+    }
+
+    internal static void FetchCamera()
+    {
+        WorldController.FetchCamera(EditorDataStore.Slot<EditorCameraState>.GetView());
+    }
+
+    internal static void CommitWorldParams()
+    {
+        WorldController.CommitWorldRenderParams(EditorDataStore.Slot<WorldParamsData>.GetView());
+    }
+
+    internal static void FetchWorldParams()
+    {
+        WorldController.FetchWorldRenderParams(EditorDataStore.Slot<WorldParamsData>.GetView());
+    }
 }

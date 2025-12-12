@@ -11,8 +11,7 @@ internal enum LeftSidebarMode : byte
 {
     Default,
     Assets,
-    Entities,
-    Objects
+    Entities
 }
 
 internal enum RightSidebarMode : byte

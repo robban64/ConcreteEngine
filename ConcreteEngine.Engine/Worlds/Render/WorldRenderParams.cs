@@ -23,7 +23,7 @@ public sealed class WorldRenderParams
     private ShadowParams _shadow = WorldParamUtils.MakeSizedShadow(4096);
     private PostEffectParams _postEffect = WorldParamUtils.MakeDefaultPostEffect();
 
-    public long Version { get; private set; }
+    public long Generation { get; private set; }
 
     internal RenderParamsSnapshot Snapshot => _snapshot;
 
@@ -99,10 +99,10 @@ public sealed class WorldRenderParams
             return _snapshot;
         }
 
-        Version++;
+        Generation++;
 
         _snapshot.Update(
-            version: Version,
+            version: Generation,
             ambient: in _ambient,
             fog: in _fog,
             sunLight: in _sunLight,

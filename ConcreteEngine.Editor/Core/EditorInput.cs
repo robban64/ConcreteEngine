@@ -134,7 +134,7 @@ internal static class EditorInput
 
     private static bool HandleClick(Vector2 mousePos)
     {
-        var entity = EditorApi.InteractionController.Raycast(mousePos);
+        var entity = EngineController.InteractionController.Raycast(mousePos);
         if (!entity.IsValid)
         {
             if (EditorDataStore.SelectedEntity.IsValid)
@@ -149,7 +149,7 @@ internal static class EditorInput
 
     private static bool HandleDragStart(Vector2 mousePos)
     {
-        var pointOnTerrain = EditorApi.InteractionController.RaycastTerrain(mousePos);
+        var pointOnTerrain = EngineController.InteractionController.RaycastTerrain(mousePos);
         if (pointOnTerrain == default) return false;
         _dragStart = pointOnTerrain;
         return true;
@@ -158,7 +158,7 @@ internal static class EditorInput
     private static void HandleDrag(Vector2 mousePos)
     {
         var entity = EditorDataStore.SelectedEntity;
-        var newPos = EditorApi.InteractionController.RaycastEntityOnTerrain(entity, mousePos, _dragStart);
+        var newPos = EngineController.InteractionController.RaycastEntityOnTerrain(entity, mousePos, _dragStart);
         if (newPos == default) return;
         EditorDataStore.EntityState.Transform.Translation = newPos;
         EngineController.CommitEntity();

@@ -27,7 +27,7 @@ using ConcreteEngine.Editor.Utils;
 using ConcreteEngine.Engine.Editor.Controller;
 using ConcreteEngine.Graphics;
 using ConcreteEngine.Renderer.State;
-using EditorCmd = ConcreteEngine.Editor.Bridge.CommandDispatcher;
+using EditorCmd = ConcreteEngine.Editor.CommandDispatcher;
 
 #endregion
 
@@ -103,9 +103,10 @@ internal sealed class EngineGateway : IDisposable
         EngineResourceProvider.Attach(assetSystem, _entityController, _interactionController, _worldController);
         EngineDataBridge.Attach(_entityController, _worldController, _interactionController);
 
-        EditorApi.EntityController = _entityController;
-        EditorApi.InteractionController = _interactionController;
-        
+        EngineController.EntityController = _entityController;
+        EngineController.InteractionController = _interactionController;
+        EngineController.WorldController = _worldController;
+
         EditorSetup.RegisterDataProvider();
         EditorSetup.RegisterCommands();
         EditorSetup.RegisterMetrics();

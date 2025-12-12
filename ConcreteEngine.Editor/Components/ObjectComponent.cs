@@ -13,41 +13,7 @@ using ImGuiNET;
 
 namespace ConcreteEngine.Editor.Components;
 
-internal class ObjectComponentState
-{
-    public WorldObjectSelection Selection { get; private set; }
-    public EditorId SelectedResource { get; private set; }
-    private static ModelStateContext<ObjectComponentState> Context => ModelManager.WorldObjectStateContext;
-
-    public List<EditorParticleResource> Particles = [];
-    public List<EditorAnimationResource> Animations = [];
-
-    public void OnSelectionChange(WorldObjectSelection selection)
-    {
-        if (selection == Selection) return;
-        Selection = selection;
-        Context.TriggerEvent(EventKey.CategoryChanged);
-    }
-
-    public void OnSelectParticle(EditorParticleResource resource)
-    {
-        SelectedResource = resource.Id;
-        EditorDataStore.Slot<EditorParticleState>.Data.EmitterHandle = resource.Id;
-        EditorDataStore.Slot<EditorParticleState>.SlotState.IsRequesting = true;
-    }
-
-    public void OnDeselectParticle()
-    {
-        SelectedResource = EditorId.Empty;
-        EditorDataStore.Slot<EditorParticleState>.Data = default;
-        EditorDataStore.Slot<EditorParticleState>.SlotState = default;
-    }
-
-    public void OnSelectAnimation(EditorAnimationResource resource)
-    {
-        SelectedResource = resource.Id;
-    }
-}
+/*
 
 internal static class ObjectComponent
 {
@@ -259,4 +225,4 @@ internal static class ObjectComponent
 
         ImGui.PopStyleVar(2);
     }
-}
+}*/

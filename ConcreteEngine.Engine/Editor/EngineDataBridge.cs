@@ -38,10 +38,10 @@ internal static class EngineDataBridge
 
     public static void ProcessEditorDataSlot()
     {
+        /*
         ProcessCamera();
         ProcessWorldParams();
-        //ProcessParticle();
-        //WorldInteractive.SelectedEntityId = ProcessEntities();
+        */
     }
 
     public static void WriteFrameMetrics(in RenderFrameInfo frameInfo, in GfxFrameResult frameResult)
@@ -53,14 +53,14 @@ internal static class EngineDataBridge
         */
     }
 
-
+/*
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     private static void ProcessCamera()
     {
         var camGen = _world.CameraGeneration;
 
-        ref var slot = ref EditorData.Slot<CameraDataState>.SlotState;
-        ref var data = ref EditorData.Slot<CameraDataState>.Data;
+        ref var slot = ref EditorData.Slot<EditorCameraState>.SlotState;
+        ref var data = ref EditorData.Slot<EditorCameraState>.Data;
         if (camGen > slot.Generation || slot.IsRequesting)
             _world.WriteCameraState(out data);
         else if (slot.IsDirty)
@@ -68,7 +68,7 @@ internal static class EngineDataBridge
 
         slot.Reset(camGen);
     }
-/*
+
     private static void ProcessParticle()
     {
         var slot = EditorData.Slot<EditorParticleState>.SlotState;
@@ -79,7 +79,7 @@ internal static class EngineDataBridge
         else if (slot.IsRequesting)
             _world.WriteEmitterState(ref data);
     }
-*/
+
     private static void ProcessWorldParams()
     {
         var gen = _world.WorldParamGeneration;
@@ -99,6 +99,7 @@ internal static class EngineDataBridge
 
         slot.Reset(gen);
     }
+    */
 /*
     private static EntityId ProcessEntities()
     {

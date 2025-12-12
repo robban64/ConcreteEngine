@@ -3,8 +3,11 @@
 using System.Numerics;
 using ConcreteEngine.Editor.Components.State;
 using ConcreteEngine.Editor.Core;
+using ConcreteEngine.Editor.Data;
 using ConcreteEngine.Editor.Definitions;
+using ConcreteEngine.Editor.Store;
 using ConcreteEngine.Editor.Utils;
+using ConcreteEngine.Shared.Rendering;
 using ImGuiNET;
 
 #endregion
@@ -14,15 +17,21 @@ namespace ConcreteEngine.Editor.Components;
 internal static class WorldParamsComponent
 {
     private static ModelStateContext<WorldParamState> Context => ModelManager.WorldRenderStateContext;
-    private static WorldParamState State => Context.State!;
 
     private static int _editedField = -1;
 
-    private static void OnSelectionChange(WorldParamSelection selection) => State.SetSelection(selection);
+    private static WorldParamSelection _selection;
 
-    private static void OnUpdateShadowSize(int size) => State.SetShadowSize(size);
+    private static void OnUpdateShadowSize(int size)
+    {
+        var existingSize = EditorDataStore.Slot<WorldParamsData>.State.Shadow.ShadowMapSize;
+        if (size == existingSize) return;
+        var payload = new EditorShadowCommand(size, true, EditorRequestAction.Set);
+        ModelManager.WorldRenderStateContext.TriggerEvent(EventKey.WorldActionInvoke, payload);
+    }
 
-    private static void OnSelectionUpdate() => State.TriggerChange();
+    private static void OnSelectionChange(WorldParamSelection selection) => _selection = selection;
+
 
     public static void Draw()
     {
@@ -48,7 +57,7 @@ internal static class WorldParamsComponent
         {
             ImGui.PopStyleVar();
 
-            switch (State.Selection)
+            switch (_selection)
             {
                 case WorldParamSelection.Light: DrawLightState(); break;
                 case WorldParamSelection.Fog: DrawFogState(); break;
@@ -63,7 +72,7 @@ internal static class WorldParamsComponent
 
         if (_editedField >= 0)
         {
-            OnSelectionUpdate();
+            EngineController.CommitWorldParams();
             _editedField = -1;
         }
     }
@@ -73,7 +82,7 @@ internal static class WorldParamsComponent
     {
         var fieldStatus = new ImGuiFieldStatus();
 
-        ref var shadow = ref State.DataState.Shadow;
+        ref var shadow = ref EditorDataStore.Slot<WorldParamsData>.State.Shadow;
         int size = shadow.ShadowMapSize;
 
         ImGui.BeginGroup();
@@ -136,8 +145,8 @@ internal static class WorldParamsComponent
 
     private static void DrawLightState()
     {
-        ref var dirLight = ref State.DataState.SunLight;
-        ref var ambientLight = ref State.DataState.Ambient;
+        ref var dirLight = ref EditorDataStore.Slot<WorldParamsData>.State.SunLight;
+        ref var ambientLight = ref EditorDataStore.Slot<WorldParamsData>.State.Ambient;
 
         var fieldStatus = new ImGuiFieldStatus();
 
@@ -181,7 +190,7 @@ internal static class WorldParamsComponent
     {
         var fieldStatus = new ImGuiFieldStatus();
 
-        ref var fog = ref State.DataState.Fog;
+        ref var fog = ref EditorDataStore.Slot<WorldParamsData>.State.Fog;
         ImGui.SeparatorText("Fog Details");
         ImGui.ColorEdit3("##FogColor", ref fog.Color);
         fieldStatus.NextFieldDrag();
@@ -221,7 +230,7 @@ internal static class WorldParamsComponent
     {
         var fieldStatus = new ImGuiFieldStatus();
 
-        ref var post = ref State.DataState.PostEffect;
+        ref var post = ref EditorDataStore.Slot<WorldParamsData>.State.PostEffect;
         ImGui.BeginGroup();
         ImGui.SeparatorText("Grade");
         ImGui.SliderFloat("##GrExposure", ref post.Grade.Exposure, 0.5f, 2f, "Exp: %.2f");

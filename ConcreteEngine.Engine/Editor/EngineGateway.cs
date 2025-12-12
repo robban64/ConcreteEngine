@@ -41,7 +41,7 @@ namespace ConcreteEngine.Engine.Editor;
 
 internal sealed class EngineGateway : IDisposable
 {
-    private const int DefaultLogDrain = 4;
+    private const int DefaultLogDrain = 12;
     private static EditorPortal _editor = null!;
     private static LogParser _logParser = null!;
 

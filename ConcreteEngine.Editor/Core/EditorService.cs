@@ -47,7 +47,7 @@ internal static class EditorService
         if (!EditorInput.IsMouseOverEditor())
             EditorInput.UpdateMouse(delta);
 
-        EditorInput.UpdateKeybinding();
+        EditorInput.CheckHotkeys();
     }
 
 

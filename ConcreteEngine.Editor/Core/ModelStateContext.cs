@@ -8,14 +8,12 @@ using ConcreteEngine.Editor.Definitions;
 
 namespace ConcreteEngine.Editor.Core;
 
-
-
 internal sealed class ModelStateContext
 {
     private readonly Action<ModelStateContext> _onEnter;
     private readonly Action<ModelStateContext> _onLeave;
     private readonly Action<ModelStateContext>? _onRefresh;
-    
+
     private readonly Dictionary<EventKey, object>? _events;
 
     public bool Active { get; private set; }
@@ -37,18 +35,18 @@ internal sealed class ModelStateContext
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public void EnqueueRefreshNextFrame()
     {
-        if(!Active) return;
+        if (!Active) return;
         PendingRefresh = true;
     }
 
     public void TryInvokePendingRefresh()
     {
-        if (!PendingRefresh || !Active) return ;
+        if (!PendingRefresh || !Active) return;
         if (_onRefresh is null)
         {
             PendingRefresh = false;
             ConsoleService.SendLog($"OnRefresh is null");
-            return ;
+            return;
         }
 
         InvokeAction(TransitionKey.Refresh);
@@ -64,16 +62,17 @@ internal sealed class ModelStateContext
                 _onEnter(this);
                 break;
             case TransitionKey.Leave:
-                _onLeave(this); 
+                _onLeave(this);
                 Active = false;
                 break;
             case TransitionKey.Refresh:
                 InvalidOpThrower.ThrowIfNull(_onRefresh, nameof(_onRefresh));
-                _onRefresh!(this); 
+                _onRefresh!(this);
                 break;
             default: throw new ArgumentOutOfRangeException(nameof(action), action, null);
         }
     }
+
     public void TriggerEvent(EventKey eventKey)
     {
         InvalidOpThrower.ThrowIfNull(_events, nameof(_events));
@@ -155,7 +154,7 @@ internal sealed class ModelStateContext
         {
             InvalidOpThrower.ThrowIfNull(_onEnter, nameof(_onEnter));
             InvalidOpThrower.ThrowIfNull(_onLeave, nameof(_onLeave));
-            return new ModelStateContext( _onEnter!, _onLeave!, _onRefresh, _events);
+            return new ModelStateContext(_onEnter!, _onLeave!, _onRefresh, _events);
         }
     }
 }

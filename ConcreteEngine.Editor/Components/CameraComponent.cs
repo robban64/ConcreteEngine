@@ -24,7 +24,7 @@ internal static class CameraComponent
         if (!ImGui.BeginChild("##camera-properties", size, flags)) return;
         var hasChange = DrawInner();
         ImGui.EndChild();
-        
+
         if (hasChange) EngineController.CommitCamera();
     }
 

@@ -1,8 +1,10 @@
+#region
+
 using ConcreteEngine.Editor.Definitions;
 
+#endregion
+
 namespace ConcreteEngine.Editor.Store;
-
-
 
 public readonly record struct EditorId(int Identifier, EditorItemType ItemType)
 {

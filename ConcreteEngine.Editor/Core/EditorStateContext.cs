@@ -35,7 +35,7 @@ internal static class EditorStateContext
     }
 
 
-    private static void TransitionLeftSidebar(ModelStateContext? to) 
+    private static void TransitionLeftSidebar(ModelStateContext? to)
     {
         if (_leftSidebarState is null && to is null)
             throw new ArgumentNullException(nameof(to), $"Both {nameof(_leftSidebarState)} and to cannot be null");
@@ -45,7 +45,7 @@ internal static class EditorStateContext
         to?.InvokeAction(TransitionKey.Enter);
     }
 
-    private static void TransitionRightSidebar(ModelStateContext? to) 
+    private static void TransitionRightSidebar(ModelStateContext? to)
     {
         if (_rightSidebarState is null && to is null)
             throw new ArgumentNullException(nameof(to), $"Both {nameof(_rightSidebarState)} and to cannot be null");

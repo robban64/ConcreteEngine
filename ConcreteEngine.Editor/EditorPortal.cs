@@ -19,6 +19,8 @@ public sealed class EditorPortal : IDisposable
     public bool Initialized { get; private set; } = false;
     private static float _accumScrollY = 0f;
     private static float _accumScrollX = 0f;
+    private static float _scrollY = 0f;
+    private static float _scrollX = 0f;
     private static bool _blockInput = false;
 
     public EditorPortal(GL gl, IWindow window, IInputContext inputCtx)
@@ -27,14 +29,9 @@ public sealed class EditorPortal : IDisposable
         ImGuiFontConfig fontConfDefault = new(fontPath, 14);
 
         _controller = new ImGuiController(gl, window, inputCtx, fontConfDefault);
-        inputCtx.Mice[0].Scroll += OnMouseScroll;
+        inputCtx.Mice[0].Scroll += EditorInput.OnMouseScroll;
     }
 
-    private static void OnMouseScroll(IMouse mouse, ScrollWheel delta)
-    {
-        _accumScrollY += delta.Y;
-        _accumScrollX += delta.X;
-    }
 
     public void Initialize()
     {
@@ -53,18 +50,11 @@ public sealed class EditorPortal : IDisposable
         if (!Initialized) return;
         _controller.Update(delta);
         _blockInput = EditorInput.BlockInput();
-
-        var io = ImGui.GetIO();
-        io.MouseWheelH = _accumScrollX;
-        io.MouseWheel = _accumScrollY;
-
+        EditorInput.UpdateScroll(delta);
         EditorService.Render(delta, _blockInput);
         ImGui.Render();
         _controller.Render();
         ImGui.EndFrame();
-
-        _accumScrollX = 0;
-        _accumScrollY = 0;
     }
 
 

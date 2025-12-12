@@ -17,8 +17,7 @@ public enum EditorItemType : byte
     Particle,
     Animation,
     MaterialKey,
-    
+
     AnimationKey,
     ParticleEmitter,
-
 }

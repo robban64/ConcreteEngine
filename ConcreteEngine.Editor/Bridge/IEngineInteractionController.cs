@@ -1,5 +1,9 @@
+#region
+
 using System.Numerics;
 using ConcreteEngine.Editor.Store;
+
+#endregion
 
 namespace ConcreteEngine.Editor.Bridge;
 

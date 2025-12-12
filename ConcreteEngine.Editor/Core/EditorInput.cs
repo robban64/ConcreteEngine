@@ -5,6 +5,7 @@ using ConcreteEngine.Editor.Definitions;
 using ConcreteEngine.Editor.Store;
 using ConcreteEngine.Editor.Store.Resources;
 using ImGuiNET;
+using Silk.NET.Input;
 
 #endregion
 
@@ -25,13 +26,25 @@ internal static class EditorInput
 
     private static DragState _dragState;
     private static bool _wasDragging;
-    private static bool _stopDragging;
 
+    private static float _accumScrollY = 0f;
+    private static float _accumScrollX = 0f;
+    private static float _scrollY = 0f;
+    private static float _scrollX = 0f;
+
+    private const float ScrollSpeed = 12f;
+    private const float SmoothFactor = 0.15f;
+
+    internal static void OnMouseScroll(IMouse mouse, ScrollWheel delta)
+    {
+        _accumScrollY += delta.Y;
+        _accumScrollX += delta.X;
+    }
 
     public static bool BlockInput()
     {
         var io = ImGui.GetIO();
-        
+
         var blockKeyboard = io.WantTextInput || io.WantCaptureKeyboard || ImGui.IsAnyItemActive() ||
                             ImGui.IsAnyItemFocused();
 
@@ -46,6 +59,23 @@ internal static class EditorInput
         return blockKeyboard || blockMouse;
     }
 
+    public static void UpdateScroll(float delta)
+    {
+        var io = ImGui.GetIO();
+
+        var speed = ScrollSpeed * delta;
+        _scrollY += (_accumScrollY - _scrollY) * SmoothFactor;
+        _scrollX += (_accumScrollX - _scrollX) * SmoothFactor;
+
+        io.AddMouseWheelEvent(_scrollX * speed, _scrollY * speed);
+
+        if (Math.Abs(_accumScrollY - _scrollY) < 0.01f) _scrollY = _accumScrollY;
+        if (Math.Abs(_accumScrollX - _scrollX) < 0.01f) _scrollX = _accumScrollX;
+
+        _accumScrollY = 0;
+        _accumScrollX = 0;
+    }
+
 
     public static bool IsMouseOverEditor()
     {
@@ -56,12 +86,8 @@ internal static class EditorInput
         return false;
     }
 
-    public static void UpdateKeybinding()
-    {
-        CheckHotkeys();
-    }
 
-    private static void CheckHotkeys()
+    public static void CheckHotkeys()
     {
         if (ImGui.IsItemFocused()) return;
 
@@ -81,7 +107,7 @@ internal static class EditorInput
         var isLeftClick = ImGui.IsMouseClicked(ImGuiMouseButton.Left);
         var isRightClick = ImGui.IsMouseClicked(ImGuiMouseButton.Right);
         var isDragging = ImGui.IsMouseDragging(ImGuiMouseButton.Left);
-        
+
         if (isRightClick)
         {
             EngineController.DeSelectEntity();
@@ -93,12 +119,12 @@ internal static class EditorInput
             HandleClick(mousePos);
             return;
         }
-        
+
         switch (_dragState)
         {
             case DragState.None:
                 var startDrag = !_wasDragging && isDragging;
-                if (startDrag && HandleClick(mousePos)) 
+                if (startDrag && HandleClick(mousePos))
                     _dragState = DragState.DragStart;
                 break;
             case DragState.DragStart:
@@ -126,7 +152,7 @@ internal static class EditorInput
                 _dragStart = default;
                 break;
         }
-        
+
         _wasDragging = isDragging;
         _prevMousePos = mousePos;
     }

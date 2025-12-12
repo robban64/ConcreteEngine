@@ -101,7 +101,7 @@ internal static class EditorModelManager
 
         return;
 
-        static void OnEntitySelected( EditorEntityResource? it)
+        static void OnEntitySelected(EditorEntityResource? it)
         {
             var entity = it?.Id ?? EditorId.Empty;
             if (EditorDataStore.SelectedEntity == entity) return;
@@ -132,12 +132,12 @@ internal static class EditorModelManager
             .CreateBuilder()
             .OnEnter(static (ctx) => EngineController.FetchWorldParams())
             .OnRefresh(static (ctx) => EngineController.FetchWorldParams())
-            .OnLeave(static (ctx) => {})
+            .OnLeave(static (ctx) => { })
             .RegisterEvent<EditorShadowCommand>(EventKey.WorldActionInvoke, SetShadowSize)
             .Build();
         return;
 
-        static void SetShadowSize( EditorShadowCommand evt) =>
+        static void SetShadowSize(EditorShadowCommand evt) =>
             CommandDispatcher.InvokeEditorCommand(CoreCmdNames.WorldShadow, evt);
     }
 }

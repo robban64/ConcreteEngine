@@ -18,13 +18,13 @@ public static class MetricsApi
 
 
     // State
-    public static readonly MetricData Data  = new();
-    public static readonly MetricReport TextData  = new();
+    public static readonly MetricData Data = new();
+    public static readonly MetricReport TextData = new();
 
-    private static bool _activeSceneMetrics  = true;
-    private static bool _activeFrameMetrics  = true;
-    private static bool _activeStoreMetrics  = true;
-    private static bool _activeMemoryMetrics  = true;
+    private static bool _activeSceneMetrics = true;
+    private static bool _activeFrameMetrics = true;
+    private static bool _activeStoreMetrics = true;
+    private static bool _activeMemoryMetrics = true;
 
     public static void ToggleMetrics(bool value)
     {

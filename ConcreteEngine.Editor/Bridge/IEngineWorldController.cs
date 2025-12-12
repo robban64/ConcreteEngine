@@ -1,5 +1,9 @@
+#region
+
 using ConcreteEngine.Editor.Data;
 using ConcreteEngine.Shared.Rendering;
+
+#endregion
 
 namespace ConcreteEngine.Editor.Bridge;
 

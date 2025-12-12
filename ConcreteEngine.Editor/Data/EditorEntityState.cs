@@ -29,7 +29,7 @@ public struct EditorAnimationState
     public EditorId Animation;
     public int Clip;
     public int ClipCount;
-    public float Time ;
+    public float Time;
     public float Speed;
     public float Duration;
 }

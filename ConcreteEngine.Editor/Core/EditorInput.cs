@@ -4,6 +4,7 @@ using System.Numerics;
 using ConcreteEngine.Editor.Bridge;
 using ConcreteEngine.Editor.Definitions;
 using ConcreteEngine.Editor.Store;
+using ConcreteEngine.Editor.Store.Resources;
 using ImGuiNET;
 
 #endregion
@@ -138,12 +139,13 @@ internal static class EditorInput
         if (!entity.IsValid)
         {
             if (EditorDataStore.SelectedEntity.IsValid)
-                EngineController.DeSelectEntity();
+                ModelManager.EntitiesStateContext.TriggerEvent<EditorEntityResource?>(EventKey.SelectionChanged, null);
 
             return false;
         }
 
-        EngineController.SelectEntity(entity);
+        var resource = EditorManagedStore.Get<EditorEntityResource>(entity);
+        ModelManager.EntitiesStateContext.TriggerEvent(EventKey.SelectionChanged, resource);
         return true;
     }
 

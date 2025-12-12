@@ -6,6 +6,7 @@ using ConcreteEngine.Editor.Bridge;
 using ConcreteEngine.Editor.Components.State;
 using ConcreteEngine.Editor.Core;
 using ConcreteEngine.Editor.Data;
+using ConcreteEngine.Editor.Definitions;
 using ConcreteEngine.Editor.Store;
 using ConcreteEngine.Editor.Store.Resources;
 using ConcreteEngine.Editor.Utils;
@@ -20,7 +21,7 @@ internal static class EntitiesComponent
     private const int RowHeight = 32;
     private const int ColumnWidth = 36;
     
-    private static EntityViewState State => ModelManager.EntitiesStateContext.State!;
+    private static ModelStateContext<EntityViewState> Context => ModelManager.EntitiesStateContext;
 
 
     private static ReadOnlySpan<EditorEntityResource> EntitySpan => EditorManagedStore.EntityResourceSpan;
@@ -28,7 +29,6 @@ internal static class EntitiesComponent
 
     public static void Draw()
     {
-        State.BeforeDraw();
         ImGui.SeparatorText("Entities");
         DrawEntityList();
     }
@@ -95,7 +95,7 @@ internal static class EntitiesComponent
         ImGui.TableNextColumn();
         var bufferStr = formatter.Format(entity.Id);
         if (EntitySelectable(bufferStr, selected))
-            State.SetSelectedEntity(entity.Id);
+            Context.TriggerEvent(EventKey.SelectionChanged, entity);
 
         ImGui.TableNextColumn();
         var name = entity.Name.Length > 0 ? entity.Name : entity.DisplayName;
@@ -137,9 +137,6 @@ internal static class EntitiesComponent
         ref var state = ref EditorDataStore.EntityState;
         ref var transform = ref state.Transform;
         var fieldStatus = new ImGuiFieldStatus();
-        int modelId = 0;
-        int materialId = 0;
-        var formatter = new NumberSpanFormatter(StringUtils.CharBuffer8);
 
         ImGui.SeparatorText("Entity Component");
         ImGui.TextUnformatted("Model:");
@@ -168,7 +165,13 @@ internal static class EntitiesComponent
         ImGui.InputFloat3("##ent-prop-rotation", ref transform.EulerAngles, "%.3f", ImGuiInputTextFlags.None);
         var rotationField = fieldStatus.NextField();
 
-        if (fieldStatus.HasEdited(out var field)) State.UpdateTransform(field, rotationField);
+        if (fieldStatus.HasEdited(out  _))
+        {
+            if (rotationField != -1)
+                EditorDataStore.EntityState.Transform.ApplyRotationFromEuler();
+        
+            EngineController.CommitEntity();
+        }
     }
     
     private static void DrawAnimationProperties()
@@ -213,7 +216,7 @@ internal static class EntitiesComponent
         ImGui.InputFloat("##ent-time", ref state.Time);
         fieldStatus.NextField();
 
-        if (fieldStatus.HasEdited(out var field))
+        if (fieldStatus.HasEdited(out _))
         {
             EngineController.CommitAnimation();
         }
@@ -288,7 +291,7 @@ internal static class EntitiesComponent
         fieldStatus.NextField();
         
 
-        if (fieldStatus.HasEdited(out var field))
+        if (fieldStatus.HasEdited(out _))
         {
             EngineController.CommitParticle();
         }

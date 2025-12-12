@@ -12,9 +12,7 @@ namespace ConcreteEngine.Editor.Components.Layout;
 
 internal static class Topbar
 {
-    private const int SelectorWidth = 74;
     private static readonly string[] PropertyModes = ["Entity", "Camera", "World", "Sky", "Terrain"];
-    private static readonly string[] MouseActionNames = ["None", "RaySelect", "RayDrag"];
 
     public static void Draw()
     {
@@ -49,17 +47,18 @@ internal static class Topbar
 
     private static void DrawModeSelector()
     {
+        const int selectorWidth = 74;
         if (!ImGui.BeginChild("##editor-view-mode-selector")) return;
 
         if (ImGui.Selectable("Metrics", StateContext.ModeState.IsMetricState, ImGuiSelectableFlags.None,
-                new Vector2(SelectorWidth, GuiTheme.TopbarHeight)))
+                new Vector2(selectorWidth, GuiTheme.TopbarHeight)))
         {
             StateContext.SetViewModeState(EditorViewMode.Metrics);
         }
 
         ImGui.SameLine();
         if (ImGui.Selectable("Editor", StateContext.ModeState.IsEditorState, ImGuiSelectableFlags.None,
-                new Vector2(SelectorWidth, GuiTheme.TopbarHeight)))
+                new Vector2(selectorWidth, GuiTheme.TopbarHeight)))
         {
             StateContext.SetViewModeState(EditorViewMode.Editor);
         }
@@ -69,19 +68,24 @@ internal static class Topbar
 
     private static void DrawPropertySelector()
     {
-        const float width = 268 / 4.5f;
+        const float width = 64;
+        var validEntity = EditorDataStore.SelectedEntity.IsValid;
+        var count = validEntity ? PropertyModes.Length : PropertyModes.Length - 1;
 
-        float x = ImGui.GetContentRegionAvail().X;
-        float startPosX = x - width * 4.5f;
+        var totalRightWidth = width * count;
+        var spacing = ImGui.GetStyle().ItemSpacing.X;
+        totalRightWidth += spacing * (count - 1);
+        var startPosX = ImGui.GetWindowWidth() - totalRightWidth - ImGui.GetStyle().WindowPadding.X;
+
         ImGui.SameLine(startPosX);
 
-        if (!ImGui.BeginChild("##editor-property-selector")) return;
+        if (!ImGui.BeginChild("##editor-property-selector", new Vector2(0, GuiTheme.TopbarHeight)))
+            return;
 
         int idx = 0;
         for (var i = 0; i < PropertyModes.Length; i++)
         {
-            if(i == 0 && !EditorDataStore.SelectedEntity.IsValid) continue;
-            
+            if (i == 0 && !validEntity) continue;
             if (idx++ > 0) ImGui.SameLine();
             var selectorMode = PropertyIndexToEnum(i);
             var selected = selectorMode == StateContext.ModeState.RightSidebar;

@@ -108,10 +108,14 @@ internal static class EditorModelManager
 
         static void OnEntitySelected(ModelStateContext<EntityViewState> ctx, EditorEntityResource? it)
         {
-            var id = it?.Id ?? EditorId.Empty;
-            ctx.State!.SetSelectedEntity(id);
+            var entity = it?.Id ?? EditorId.Empty;
+            if (EditorDataStore.SelectedEntity == entity) return;
+            if(entity.IsValid)
+                EngineController.SelectEntity(entity);
+            else
+                EngineController.DeSelectEntity();
 
-            if (!id.IsValid) return;
+            if (!entity.IsValid) return;
             StateContext.SetLeftSidebarState(LeftSidebarMode.Entities);
             StateContext.SetRightSidebarState(RightSidebarMode.Property);
         }

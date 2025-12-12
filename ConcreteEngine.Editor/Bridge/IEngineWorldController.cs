@@ -1,5 +1,4 @@
 using ConcreteEngine.Editor.Data;
-using ConcreteEngine.Editor.Store;
 using ConcreteEngine.Shared.Rendering;
 
 namespace ConcreteEngine.Editor.Bridge;

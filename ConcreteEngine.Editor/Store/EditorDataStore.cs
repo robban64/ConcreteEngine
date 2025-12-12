@@ -1,10 +1,7 @@
 #region
 
-using ConcreteEngine.Editor.Bridge;
 using ConcreteEngine.Editor.Data;
-using ConcreteEngine.Editor.Store.Resources;
 using ConcreteEngine.Shared.Diagnostics;
-using ConcreteEngine.Shared.Input;
 
 #endregion
 

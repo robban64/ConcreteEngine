@@ -1,27 +1,8 @@
+using ConcreteEngine.Editor.Definitions;
+
 namespace ConcreteEngine.Editor.Store;
 
-public enum EditorItemType : byte
-{
-    None = 0,
-    Unspecified = 1,
 
-    // Assets
-    Texture,
-    Shader,
-    Model,
-    MaterialTemplate,
-    Material,
-
-    // World
-    Entity,
-    Particle,
-    Animation,
-    MaterialKey,
-    
-    AnimationKey,
-    ParticleEmitter,
-
-}
 
 public readonly record struct EditorId(int Identifier, EditorItemType ItemType)
 {

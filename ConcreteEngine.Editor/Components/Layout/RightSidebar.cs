@@ -13,12 +13,11 @@ namespace ConcreteEngine.Editor.Components.Layout;
 
 internal static class RightSidebar
 {
-
     public static void Draw(int width, int offset)
     {
         const ImGuiWindowFlags flags = ImGuiWindowFlags.NoTitleBar | ImGuiWindowFlags.NoMove |
-                                       ImGuiWindowFlags.NoResize | ImGuiWindowFlags.NoCollapse |
-                                       ImGuiWindowFlags.NoBringToFrontOnFocus | ImGuiWindowFlags.NoNavFocus;
+                                       ImGuiWindowFlags.NoBringToFrontOnFocus | ImGuiWindowFlags.NoNavFocus |
+                                       ImGuiWindowFlags.NoCollapse;
 
         var viewState = StateContext.ModeState;
         if (!viewState.IsMetricState && viewState.RightSidebar == RightSidebarMode.Default) return;
@@ -32,12 +31,10 @@ internal static class RightSidebar
         ImGui.SetNextWindowSize(new Vector2(width, height));
         ImGui.SetNextWindowBgAlpha(GuiTheme.PanelOpacity);
 
+        ImGui.PushStyleVar(ImGuiStyleVar.WindowPadding, new Vector2(6f, 4f));
+
         if (ImGui.Begin("##RightSidebar", flags))
         {
-            //_focus = ImGui.IsWindowFocused(ImGuiFocusedFlags.None | ImGuiFocusedFlags.ChildWindows);
-            //if(_focus &&  !_prevFocus) EditorModelManager.CameraState.TriggerEvent(EventKey.SelectionUpdated);
-
-            ImGui.PushStyleVar(ImGuiStyleVar.WindowPadding, new Vector2(12f, 0));
             switch (viewState.EditorMode)
             {
                 case EditorViewMode.Metrics: SystemMetricsGui.Draw(); break;

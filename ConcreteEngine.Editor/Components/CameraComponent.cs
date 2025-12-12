@@ -2,8 +2,6 @@
 
 using System.Numerics;
 using ConcreteEngine.Common.Numerics;
-using ConcreteEngine.Editor.Components.State;
-using ConcreteEngine.Editor.Core;
 using ConcreteEngine.Editor.Data;
 using ConcreteEngine.Editor.Definitions;
 using ConcreteEngine.Editor.Store;
@@ -17,8 +15,6 @@ namespace ConcreteEngine.Editor.Components;
 internal static class CameraComponent
 {
     private const int WindowPaddingX = 12;
-
-    private static ModelStateContext<CameraState> Context => ModelManager.CameraStateContext;
 
     public static void Draw()
     {

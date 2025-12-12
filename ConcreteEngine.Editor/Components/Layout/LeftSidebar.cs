@@ -1,7 +1,7 @@
 #region
 
 using System.Numerics;
-using ConcreteEngine.Editor.Bridge;
+using ConcreteEngine.Common.Time;
 using ConcreteEngine.Editor.Definitions;
 using ConcreteEngine.Editor.Metrics;
 using ConcreteEngine.Editor.Utils;
@@ -63,7 +63,7 @@ internal static class LeftSidebar
     {
         var state = StateContext.ModeState.LeftSidebar;
         var height = state == LeftSidebarMode.Default ? 24 : 0;
-        if (ImGui.BeginChild("##left-sidebar-editor-header", new Vector2(0, height)))
+        if (ImGui.BeginChild("##left-sidebar-editor-header", new Vector2(0, height), ImGuiChildFlags.None))
         {
             ImGui.PopStyleVar();
             DrawModeSelector();

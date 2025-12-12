@@ -1,6 +1,4 @@
-using System.Numerics;
 using ConcreteEngine.Editor.Data;
-using ConcreteEngine.Editor.Definitions;
 using ConcreteEngine.Editor.Store;
 
 namespace ConcreteEngine.Editor.Bridge;

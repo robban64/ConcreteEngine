@@ -2,7 +2,6 @@
 
 using System.Runtime.InteropServices;
 using ConcreteEngine.Common.Numerics;
-using ConcreteEngine.Editor.Bridge;
 using ConcreteEngine.Editor.Definitions;
 using ConcreteEngine.Editor.Store.Resources;
 

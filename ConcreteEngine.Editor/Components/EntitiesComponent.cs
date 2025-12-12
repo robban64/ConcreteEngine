@@ -1,11 +1,8 @@
 #region
 
 using System.Numerics;
-using ConcreteEngine.Common.Numerics.Maths;
-using ConcreteEngine.Editor.Bridge;
-using ConcreteEngine.Editor.Components.State;
+using ConcreteEngine.Common.Time;
 using ConcreteEngine.Editor.Core;
-using ConcreteEngine.Editor.Data;
 using ConcreteEngine.Editor.Definitions;
 using ConcreteEngine.Editor.Store;
 using ConcreteEngine.Editor.Store.Resources;
@@ -20,12 +17,10 @@ internal static class EntitiesComponent
 {
     private const int RowHeight = 32;
     private const int ColumnWidth = 36;
-    
-    private static ModelStateContext<EntityViewState> Context => ModelManager.EntitiesStateContext;
 
+    private static ModelStateContext Context => ModelManager.EntitiesStateContext;
 
     private static ReadOnlySpan<EditorEntityResource> EntitySpan => EditorManagedStore.EntityResourceSpan;
-
 
     public static void Draw()
     {
@@ -33,6 +28,7 @@ internal static class EntitiesComponent
         DrawEntityList();
     }
 
+    private static SimpleFrameTicker _frameTicker = new(8);
 
     private static void DrawEntityList()
     {
@@ -111,8 +107,11 @@ internal static class EntitiesComponent
     public static void DrawProperties()
     {
         if (!EditorDataStore.SelectedEntity.IsValid) return;
-        if (ImGui.BeginChild("##right-sidebar-properties", new Vector2(0, 0),
-                ImGuiChildFlags.AlwaysAutoResize | ImGuiChildFlags.AlwaysUseWindowPadding))
+
+        float childHeight = ImGui.GetContentRegionAvail().Y - 2;
+        if (ImGui.BeginChild("##right-sidebar-properties", new Vector2(0, childHeight),
+                ImGuiChildFlags.AlwaysUseWindowPadding, ImGuiWindowFlags.AlwaysVerticalScrollbar | 
+                                                        ImGuiWindowFlags.NoBringToFrontOnFocus))
         {
             DrawCoreProperties();
             var componentRef = EditorDataStore.EntityState.ComponentRef;
@@ -121,13 +120,14 @@ internal static class EntitiesComponent
                 ImGui.EndChild();
                 return;
             }
-            ImGui.Dummy(new Vector2(0,4));
-            
-            if(componentRef.ItemType == EditorItemType.Animation)
+
+            ImGui.Dummy(new Vector2(0, 4));
+
+            if (componentRef.ItemType == EditorItemType.Animation)
                 DrawAnimationProperties();
             else if (componentRef.ItemType == EditorItemType.Particle)
                 DrawParticleProperties();
-            
+
             ImGui.EndChild();
         }
     }
@@ -165,15 +165,15 @@ internal static class EntitiesComponent
         ImGui.InputFloat3("##ent-prop-rotation", ref transform.EulerAngles, "%.3f", ImGuiInputTextFlags.None);
         var rotationField = fieldStatus.NextField();
 
-        if (fieldStatus.HasEdited(out  _))
+        if (fieldStatus.HasEdited(out _))
         {
             if (rotationField != -1)
                 EditorDataStore.EntityState.Transform.ApplyRotationFromEuler();
-        
+
             EngineController.CommitEntity();
         }
     }
-    
+
     private static void DrawAnimationProperties()
     {
         ref var state = ref EditorDataStore.AnimationState;
@@ -198,7 +198,7 @@ internal static class EntitiesComponent
         ImGui.Separator();
         if (ImGui.InputInt("##ani-prop-clip", ref state.Clip, 1))
             state.Clip = int.Clamp(state.Clip, 0, state.ClipCount - 1);
-        
+
         fieldStatus.NextField();
 
         ImGui.TextUnformatted("Speed");
@@ -221,7 +221,7 @@ internal static class EntitiesComponent
             EngineController.CommitAnimation();
         }
     }
-    
+
     private static void DrawParticleProperties()
     {
         ref var particle = ref EditorDataStore.ParticleState;
@@ -234,10 +234,10 @@ internal static class EntitiesComponent
         ImGui.TextUnformatted("ID:");
         ImGui.SameLine();
         ImGui.TextUnformatted(formatter.Format(EditorDataStore.ParticleState.EmitterHandle));
-        
+
         //DEF
         ImGui.SeparatorText("Definition");
-        
+
         ImGui.BeginGroup();
         ImGui.TextUnformatted("Start Color");
         ImGui.ColorEdit4("##start-color", ref particle.Definition.StartColor);
@@ -252,7 +252,7 @@ internal static class EntitiesComponent
         fieldStatus.NextField();
 
         ImGui.Separator();
-        
+
         ImGui.TextUnformatted("Gravity");
         ImGui.InputFloat3("##gravity", ref particle.Definition.Gravity);
         fieldStatus.NextField();
@@ -262,7 +262,7 @@ internal static class EntitiesComponent
         fieldStatus.NextField();
 
         ImGui.Separator();
-        
+
         ImGui.TextUnformatted("Speed Min / Max");
         ImGui.InputFloat2("##speed-min-max", ref particle.Definition.SpeedMinMax);
         fieldStatus.NextField();
@@ -271,7 +271,7 @@ internal static class EntitiesComponent
         ImGui.InputFloat2("##life-min-max", ref particle.Definition.LifeMinMax);
         fieldStatus.NextField();
         ImGui.EndGroup();
-        
+
         //STATE
         ImGui.BeginGroup();
         ImGui.TextUnformatted("Translation");
@@ -281,15 +281,15 @@ internal static class EntitiesComponent
         ImGui.TextUnformatted("Start Area");
         ImGui.InputFloat3("##start-area", ref particle.EmitterState.StartArea);
         fieldStatus.NextField();
-        
+
         ImGui.TextUnformatted("Direction");
-        ImGui.InputFloat3("##start-area", ref particle.EmitterState.Direction);
+        ImGui.InputFloat3("##direction", ref particle.EmitterState.Direction);
         fieldStatus.NextField();
 
         ImGui.TextUnformatted("Spread");
         ImGui.InputFloat("##spread", ref particle.EmitterState.Spread);
         fieldStatus.NextField();
-        
+
 
         if (fieldStatus.HasEdited(out _))
         {

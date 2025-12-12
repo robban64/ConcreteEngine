@@ -2,12 +2,9 @@
 
 using System.Numerics;
 using ConcreteEngine.Common.Time;
-using ConcreteEngine.Editor.Bridge;
-using ConcreteEngine.Editor.Components;
 using ConcreteEngine.Editor.Components.Layout;
 using ConcreteEngine.Editor.Definitions;
 using ConcreteEngine.Editor.Store;
-using ConcreteEngine.Editor.Store.Resources;
 using ConcreteEngine.Editor.Utils;
 using ImGuiNET;
 using DataStore = ConcreteEngine.Editor.Store.EditorDataStore;
@@ -53,6 +50,7 @@ internal static class EditorService
         EditorInput.UpdateKeybinding();
     }
 
+
     internal static void Render(float delta, bool blockInput)
     {
         PrepareFrame();
@@ -64,6 +62,7 @@ internal static class EditorService
         MetricsApi.ToggleMetrics(ModeState.IsMetricState);
 
         RefreshData();
+
         Draw();
     }
 

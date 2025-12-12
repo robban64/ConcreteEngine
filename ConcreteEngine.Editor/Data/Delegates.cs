@@ -1,17 +1,8 @@
 #region
 
-using ConcreteEngine.Editor.Core;
-
 #endregion
 
 namespace ConcreteEngine.Editor.Data;
-
-// State Delegates
-internal delegate void StateTransitionDel<TModel>(ModelStateContext<TModel> ctx, TModel state) where TModel : class;
-
-internal delegate void StateEmptyEventDel<TModel>(ModelStateContext<TModel> ctx) where TModel : class;
-
-internal delegate void StateEventDel<TModel, in TEvent>(ModelStateContext<TModel> ctx, TEvent ev) where TModel : class;
 
 // command delegates
 public delegate void ConsoleCommandReqDel(ConsoleCtx ctx, string action, string? arg1, string? arg2);

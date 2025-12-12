@@ -1,7 +1,6 @@
 #region
 
 using System.Numerics;
-using ConcreteEngine.Editor.Bridge;
 using ConcreteEngine.Editor.Definitions;
 using ConcreteEngine.Editor.Store;
 using ConcreteEngine.Editor.Store.Resources;
@@ -32,11 +31,10 @@ internal static class EditorInput
     public static bool BlockInput()
     {
         var io = ImGui.GetIO();
-
+        
         var blockKeyboard = io.WantTextInput || io.WantCaptureKeyboard || ImGui.IsAnyItemActive() ||
                             ImGui.IsAnyItemFocused();
 
-        //var anyMouseDown = io.MouseDown[0] || io.MouseDown[1] || io.MouseDown[2] || io.MouseDown[3] || io.MouseDown[4];
         var overUi = ImGui.IsAnyItemHovered() || ImGui.IsAnyItemActive() ||
                      ImGui.IsWindowHovered(ImGuiHoveredFlags.AnyWindow);
 

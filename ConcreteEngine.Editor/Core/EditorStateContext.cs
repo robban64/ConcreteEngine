@@ -12,8 +12,8 @@ internal static class EditorStateContext
     public static EditorModeState ModeState { get; private set; }
     public static EditorModeState NextState { get; private set; }
 
-    private static IModelState? _leftSidebarState;
-    private static IModelState? _rightSidebarState;
+    private static ModelStateContext? _leftSidebarState;
+    private static ModelStateContext? _rightSidebarState;
 
     private static long _lastAction = TimeUtils.GetTimestamp();
 
@@ -35,7 +35,7 @@ internal static class EditorStateContext
     }
 
 
-    private static void TransitionLeftSidebar<T>(ModelStateContext<T>? to) where T : class
+    private static void TransitionLeftSidebar(ModelStateContext? to) 
     {
         if (_leftSidebarState is null && to is null)
             throw new ArgumentNullException(nameof(to), $"Both {nameof(_leftSidebarState)} and to cannot be null");
@@ -45,7 +45,7 @@ internal static class EditorStateContext
         to?.InvokeAction(TransitionKey.Enter);
     }
 
-    private static void TransitionRightSidebar<T>(ModelStateContext<T>? to) where T : class
+    private static void TransitionRightSidebar(ModelStateContext? to) 
     {
         if (_rightSidebarState is null && to is null)
             throw new ArgumentNullException(nameof(to), $"Both {nameof(_rightSidebarState)} and to cannot be null");

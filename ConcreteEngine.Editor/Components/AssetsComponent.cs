@@ -1,9 +1,9 @@
 #region
 
 using System.Numerics;
-using ConcreteEngine.Editor.Components.State;
 using ConcreteEngine.Editor.Core;
 using ConcreteEngine.Editor.Definitions;
+using ConcreteEngine.Editor.Store;
 using ConcreteEngine.Editor.Store.Resources;
 using ConcreteEngine.Editor.Utils;
 using ImGuiNET;
@@ -20,29 +20,38 @@ internal static class AssetsComponent
 
     private static readonly string[] AssetCategoryNames = ["None", "Shader", "Texture", "Model", "Material"];
 
+    public static EditorFileAssetModel[] FileAssets = [];
+
+    private static EditorAssetCategory _category;
     private static int _popupInput = 0;
 
-    private static ModelStateContext<AssetState> Model => ModelManager.AssetStateContext;
+    private static ModelStateContext Context => ModelManager.AssetStateContext;
 
-    private static AssetState State => Model.State!;
+    public static void ResetState(bool clearTypeSelection = false)
+    {
+        if (clearTypeSelection) _category = EditorAssetCategory.None;
+        FileAssets = [];
+    }
 
     private static void OnCategoryChanged(EditorAssetCategory category)
     {
-        if (category == State.Category) return;
-        State.SetCategory(category);
-        Model.TriggerEvent(EventKey.CategoryChanged);
+        if (category == _category) return;
+        _category = category;
+        Context.TriggerEvent(EventKey.CategoryChanged);
     }
 
     private static void OnSelectionChanged(EditorAssetResource? asset) =>
-        Model.TriggerEvent(EventKey.SelectionChanged, asset);
+        Context.TriggerEvent(EventKey.SelectionChanged, asset);
 
-    public static unsafe void Draw()
+    public static void Draw()
     {
         const ImGuiTableFlags flags = ImGuiTableFlags.PadOuterX | ImGuiTableFlags.NoBordersInBody |
                                       ImGuiTableFlags.ScrollY;
 
         ImGui.SeparatorText("Asset Store");
         DrawAssetTypeSelector();
+
+        if (_category == EditorAssetCategory.None) return;
         ImGui.PushStyleVar(ImGuiStyleVar.CellPadding, new Vector2(12, 0));
         if (!ImGui.BeginTable("##asset_store_object_tbl", 3, flags)) return;
 
@@ -65,31 +74,36 @@ internal static class AssetsComponent
 
         ImGui.PushStyleVar(ImGuiStyleVar.CellPadding, new Vector2(0, 8));
 
+        DrawList();
 
-        //Span<char> buffer = stackalloc char[8];
-        var formatter = new NumberSpanFormatter(StringUtils.CharBuffer16);
+        ImGui.PopStyleVar(2);
+        ImGui.EndTable();
+    }
 
-        var assetSpan = State.GetAssetSpan();
+    private static unsafe void DrawList()
+    {
+        var assetSpan = EditorManagedStore.GetAssetSpanByCategory(_category);
 
         var rowHeight = ImGui.GetFrameHeight() + 8;
         var clipper = new ImGuiListClipper();
         ImGuiNative.ImGuiListClipper_Begin(&clipper, assetSpan.Length, rowHeight);
         while (ImGuiNative.ImGuiListClipper_Step(&clipper) != 0)
         {
-            for (int i = clipper.DisplayStart; i < clipper.DisplayEnd; i++)
-                DrawListItem(i, assetSpan, formatter);
+            int start = clipper.DisplayStart, len = clipper.DisplayEnd;
+            if ((uint)start > len || (uint)len > assetSpan.Length)
+                throw new IndexOutOfRangeException();
+
+            for (int i = start; i < len; i++)
+                DrawListItem(assetSpan[i]);
         }
 
         ImGuiNative.ImGuiListClipper_End(&clipper);
-
-
-        ImGui.PopStyleVar(2);
-        ImGui.EndTable();
     }
 
-    private static void DrawListItem(int i, ReadOnlySpan<EditorAssetResource> assets, NumberSpanFormatter formatter)
+    private static void DrawListItem(EditorAssetResource it)
     {
-        var it = assets[i];
+        var formatter = new NumberSpanFormatter(StringUtils.CharBuffer8);
+
         ImGui.PushID(it.Id.Identifier);
         ImGui.TableNextRow(ImGuiTableRowFlags.None, RowHeight);
 
@@ -133,20 +147,30 @@ internal static class AssetsComponent
 
     private static void DrawAssetTypeSelector()
     {
+        var category = _category;
+        var categoryNames = AssetCategoryNames.AsSpan();
+
         ImGui.PushStyleVar(ImGuiStyleVar.FramePadding, new Vector2(8, 6));
         ImGui.PushStyleVar(ImGuiStyleVar.WindowPadding, new Vector2(8, 6));
 
-        var currentLabel = AssetCategoryNames[(int)State.Category];
+        var currentLabel = categoryNames[(int)category];
         ImGui.SetNextItemWidth(ImGui.GetContentRegionAvail().X - 8f);
         if (ImGui.BeginCombo("##assetTypeSelector", currentLabel, ImGuiComboFlags.HeightLargest))
         {
+            DrawCombo(categoryNames);
+        }
+
+        ImGui.PopStyleVar(2);
+
+        static void DrawCombo(ReadOnlySpan<string> categoryNames)
+        {
             ImGui.PushStyleVar(ImGuiStyleVar.ItemSpacing, new Vector2(6, 12));
 
-            for (var i = 0; i < AssetCategoryNames.Length; i++)
+            for (var i = 0; i < categoryNames.Length; i++)
             {
-                var isSelected = i == (int)State.Category;
+                var isSelected = i == (int)_category;
 
-                if (ImGui.Selectable(AssetCategoryNames[i], isSelected, ImGuiSelectableFlags.None, Vector2.Zero))
+                if (ImGui.Selectable(categoryNames[i], isSelected, ImGuiSelectableFlags.None, Vector2.Zero))
                     OnCategoryChanged((EditorAssetCategory)i);
 
                 if (isSelected)
@@ -157,8 +181,6 @@ internal static class AssetsComponent
 
             ImGui.EndCombo();
         }
-
-        ImGui.PopStyleVar(2);
     }
 
 
@@ -202,8 +224,8 @@ internal static class AssetsComponent
             ImGui.EndTable();
         }
 
-        if (State.FileAssets.Length > 0)
-            DrawFilesTable(formatter, State);
+        if (FileAssets.Length > 0)
+            DrawFilesTable(formatter);
 
         if (asset.HasActions)
         {
@@ -219,7 +241,7 @@ internal static class AssetsComponent
         ImGui.PopStyleVar();
         return;
 
-        static void DrawFilesTable(NumberSpanFormatter formatter, AssetState viewModel)
+        static void DrawFilesTable(NumberSpanFormatter formatter)
         {
             DrawSectionHeader("Files");
             if (!ImGui.BeginTable("##asset_store_files_tbl", 4, ImGuiTableFlags.Borders)) return;
@@ -230,7 +252,8 @@ internal static class AssetsComponent
 
             ImGui.TableHeadersRow();
 
-            foreach (var it in viewModel.FileAssets)
+
+            foreach (var it in FileAssets)
             {
                 ImGui.TableNextRow();
                 ImGui.PushID(it.AssetFileId);

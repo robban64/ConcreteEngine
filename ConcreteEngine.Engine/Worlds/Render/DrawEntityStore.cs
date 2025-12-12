@@ -3,6 +3,7 @@
 using System.Numerics;
 using System.Runtime.CompilerServices;
 using ConcreteEngine.Engine.Worlds.Data;
+using ConcreteEngine.Engine.Worlds.Render.Data;
 using ConcreteEngine.Engine.Worlds.Tables;
 using ConcreteEngine.Renderer.Draw;
 using ConcreteEngine.Renderer.State;
@@ -14,11 +15,14 @@ namespace ConcreteEngine.Engine.Worlds.Render;
 internal static class DrawDataProvider
 {
     //....
-    public static RenderFrameInfo FrameInfo;
-    public static RenderViewSnapshot RenderView;
+    internal static RenderFrameInfo FrameInfo;
+    internal static RenderViewSnapshot RenderView;
     //....
 
-    public static float DeltaTime => FrameInfo.DeltaTime;
+    internal static float DeltaTime => FrameInfo.DeltaTime;
+
+    internal static RenderCameraRefView GetCameraRefView() =>
+        new(ref RenderView.ViewMatrix, ref RenderView.ProjectionInfo);
 
     private static class ManagedStorage
     {

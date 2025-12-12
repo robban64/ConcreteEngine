@@ -20,16 +20,15 @@ internal static class DrawAnimatorProcessor
         Span<Matrix4x4> globals = stackalloc Matrix4x4[boneCap];
         globals.Fill(Matrix4x4.Identity);
 
-        var uploader = DrawDataProvider.GetSkinningUploaderCtx();
         var animationView = DrawDataProvider.GetAnimationDataView();
-        var dt = DrawDataProvider.DeltaTime;
+        var uploader = DrawDataProvider.GetSkinningUploaderCtx();
 
+
+        AnimationComponent component;
         foreach (var query in DrawDataProvider.WorldEntities.Query<AnimationComponent>())
         {
-            ref var component = ref query.Component;
+            component = query.Component;
             var view = animationView.GetModelView(component.Animation, out var invTransform);
-
-            var time = component.AdvanceTime(dt);
 
             var len = view.BoneLength;
             if ((uint)len > boneCap)
@@ -41,8 +40,7 @@ internal static class DrawAnimatorProcessor
             Matrix4x4 result = default;
             for (var i = 0; i < len; i++)
             {
-                ProcessClip(i, time, clip, globals, view.NodeTransformSpan, view.ParentIndexSpan);
-
+                ProcessClip(i, component.Time, clip, globals, view.NodeTransformSpan, view.ParentIndexSpan);
                 MatrixMath.WriteMultiplyAffine(ref result, in view.BoneOffsetMatrixSpan[i], in globals[i]);
                 MatrixMath.WriteMultiplyAffine(ref finals[i], in result, in invTransform);
             }

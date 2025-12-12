@@ -145,10 +145,9 @@ public sealed class Demo3DScene : GameScene
             };
             var entity = worldEntities.CreateModelEntity(warriorModel.ModelId, warriorModel.DrawCount, warriorMatKey,
                 in transform, warriorModel.Bounds);
-            var animationComponent = new AnimationComponent(warriorModel.ModelId, warriorModel.AnimationId)
-            {
-                Duration = clip.Duration, Speed = clip.TicksPerSecond
-            };
+            var animationComponent =
+                new AnimationComponent(warriorModel.AnimationId, clip.TicksPerSecond, clip.Duration);
+ 
             worldEntities.AddComponent(entity, animationComponent);
         }
 
@@ -169,10 +168,9 @@ public sealed class Demo3DScene : GameScene
             var entity = worldEntities.CreateModelEntity(cesiumModel.ModelId, cesiumModel.DrawCount, cesiumMatKey,
                 in transform, cesiumModel.Bounds);
 
-            var animationComponent = new AnimationComponent(cesiumModel.ModelId, cesiumModel.AnimationId)
-            {
-                Duration = cesiumClip.Duration, Speed = cesiumClip.TicksPerSecond
-            };
+            var animationComponent =
+                new AnimationComponent(cesiumModel.AnimationId, cesiumClip.TicksPerSecond, cesiumClip.Duration);
+
             worldEntities.AddComponent(entity, animationComponent);
         }
 

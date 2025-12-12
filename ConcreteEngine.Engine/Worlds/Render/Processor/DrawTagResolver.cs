@@ -12,15 +12,23 @@ internal static class DrawTagResolver
 {
     internal static void TagEffectResolvers(DrawEntityContext ctx)
     {
+        var worldEntities = DrawDataProvider.WorldEntities;
+        foreach (var resolved in worldEntities.ResolvedEntitySpan)
+        {
+            ref var entity = ref ctx.GetByEntityId(resolved.Entity);
+            entity.Meta.PassMask = PassMask.Effect | PassMask.DepthPre;
+            entity.Meta.Resolver = resolved.CommandResolver;
+        }
+
+        var dt = DrawDataProvider.DeltaTime;
         foreach (var query in DrawDataProvider.WorldEntities.Query<AnimationComponent>())
         {
             ref var entity = ref ctx.GetByEntityId(query.Entity);
+            ref var component = ref query.Component;
+            
+            component.AdvanceTime(dt);
             entity.SetAnimationSlot(query.Index + 1);
-            if (entity.Meta.Resolver == DrawCommandResolver.Highlight)
-                entity.Meta.Resolver = DrawCommandResolver.HighlightAnimated;
         }
-        
-        
     }
 /*
     private bool hasRunEntities = false;

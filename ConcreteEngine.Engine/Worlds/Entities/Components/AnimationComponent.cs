@@ -1,5 +1,6 @@
 #region
 
+using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
 using ConcreteEngine.Engine.Worlds.Data;
 
@@ -8,15 +9,24 @@ using ConcreteEngine.Engine.Worlds.Data;
 namespace ConcreteEngine.Engine.Worlds.Entities.Components;
 
 [StructLayout(LayoutKind.Sequential)]
-public struct AnimationComponent(ModelId model, AnimationId animation)
+public struct AnimationComponent
 {
-    public ModelId Model = model;
-    public AnimationId Animation = animation;
-    public int Clip = 0;
-    public float Time = 0f;
-    public float Speed = 1f;
-    public float Duration = 1f;
+    public float Time;
+    public float Duration;
+    public float Speed ;
+    public AnimationId Animation;
+    public short Clip;
+    
+    public AnimationComponent(AnimationId animation, float speed , float duration)
+    {
+        Animation = animation;
+        Clip = 0;     
+        Speed = speed;  
+        Duration = duration;
+        Time = 0f;
+    }
 
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public float AdvanceTime(float deltaTime)
     {
         Time += deltaTime * Speed;

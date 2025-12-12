@@ -20,7 +20,7 @@ public enum RenderResolver : byte
     None = 0,
     Wireframe = 1,
     Highlight = 2,
-    BoundingVolume = 2,
+    BoundingVolume = 3,
 }
 
 [StructLayout(LayoutKind.Sequential)]
@@ -28,14 +28,12 @@ public struct RenderSourceComponent(
     ModelId model,
     int drawCount,
     MaterialTagKey materialTagKey,
-    RenderSourceKind kind = RenderSourceKind.Model,
-    RenderResolver resolver = RenderResolver.None)
+    RenderSourceKind kind = RenderSourceKind.Model)
 {
     public ModelId Model = model;
     public MaterialTagKey MaterialKey = materialTagKey;
     public int DrawCount = drawCount;
     public RenderSourceKind Kind = kind;
-    public RenderResolver Resolver = resolver;
 }
 
 [StructLayout(LayoutKind.Sequential)]

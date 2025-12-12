@@ -9,8 +9,9 @@ namespace ConcreteEngine.Engine.Assets.Models;
 public sealed class AnimationClip(string name, float duration, float ticksPerSecond)
 {
     public string Name { get; set; } = name;
-    public float Duration { get; set; } = duration;
-    public float TicksPerSecond { get; set; } = ticksPerSecond;
+    
+    public readonly float Duration = duration;
+    public readonly float TicksPerSecond = ticksPerSecond;
 
     public Dictionary<int, Track> Tracks { get; } = [];
 

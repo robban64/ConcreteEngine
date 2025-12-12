@@ -4,6 +4,7 @@ using System.Diagnostics;
 using System.Diagnostics.CodeAnalysis;
 using System.Numerics;
 using System.Runtime.CompilerServices;
+using System.Runtime.InteropServices;
 using ConcreteEngine.Common.Collections;
 using ConcreteEngine.Common.Numerics;
 using ConcreteEngine.Renderer.Data;
@@ -75,7 +76,7 @@ public sealed class DrawCommandBuffer
 
         _commandBuffer[idx] = cmd;
         _metaBuffer[idx] = meta;
-        _indexBuffer[idx] = new DrawCommandRef(meta, idx);
+        _indexBuffer[idx] = new DrawCommandRef(meta, idx, meta.AnimationSlot);
         return idx;
     }
 
@@ -134,7 +135,7 @@ public sealed class DrawCommandBuffer
         var metas = _metaBuffer;
         var indices = _indexBuffer;
 
-        if ((uint)len >= (uint)metas.Length || (uint)len >= (uint)indices.Length)
+        if ((uint)len > metas.Length || (uint)len > indices.Length)
         {
             throw new IndexOutOfRangeException();
         }
@@ -183,7 +184,7 @@ public sealed class DrawCommandBuffer
             {
                 var p = BitOperations.TrailingZeroCount(mask);
                 var w = heads[p]++;
-                _drawTickets[w] = new DrawCommandTicket(mi.Idx, (byte)p, meta.Resolver);
+                _drawTickets[w] = new DrawCommandTicket(mi.Idx, meta.AnimationSlot, (byte)p, meta.Resolver);
                 mask &= mask - 1;
             }
         }
@@ -214,18 +215,18 @@ public sealed class DrawCommandBuffer
         var pass = _passRanges[passId];
 
         var tickets = _drawTickets.AsSpan(pass.Start, pass.Count);
-        var commands = _commandBuffer.AsSpan();
 
         if (defaultDraw)
         {
+            ref var c0 = ref MemoryMarshal.GetReference(_commandBuffer);
             foreach (var ticket in tickets)
-                processor.DrawMesh(commands[ticket.SubmitIdx], ticket);
+                processor.DrawMesh(Unsafe.Add(ref c0, ticket.SubmitIdx), ticket);
 
             return;
         }
 
         foreach (var ticket in tickets)
-            processor.DrawSpecialResolveMesh(commands[ticket.SubmitIdx], ticket);
+            processor.DrawSpecialResolveMesh(_commandBuffer[ticket.SubmitIdx], ticket);
     }
 
     internal void Reset()

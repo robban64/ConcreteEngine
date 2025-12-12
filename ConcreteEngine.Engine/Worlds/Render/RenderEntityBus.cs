@@ -6,6 +6,7 @@ using ConcreteEngine.Common;
 using ConcreteEngine.Common.Collections;
 using ConcreteEngine.Common.Time;
 using ConcreteEngine.Engine.Editor.Diagnostics;
+using ConcreteEngine.Engine.Time;
 using ConcreteEngine.Engine.Worlds.Data;
 using ConcreteEngine.Engine.Worlds.Entities;
 using ConcreteEngine.Engine.Worlds.Entities.Components;
@@ -37,8 +38,17 @@ internal sealed class RenderEntityBus
     public ModelId CubeId { get; set; }
     public MaterialTagKey EmptyMaterialKey { get; set; }
 
+    public static readonly FrameProfiler RenderProfiler = new(144, 144*10);
+
     internal RenderEntityBus()
     {
+        RenderProfiler.Register("Collect");
+        RenderProfiler.Register("Tag");
+        RenderProfiler.Register("Particle");
+        RenderProfiler.Register("Animator");
+        RenderProfiler.Register("DrawCommands");
+        RenderProfiler.Register("Transforms");
+
     }
 
     public void Reset()
@@ -68,17 +78,33 @@ internal sealed class RenderEntityBus
         Validate();
 
         // start
+        RenderProfiler.Begin(0);
         CollectEntities();
+        RenderProfiler.End();
 
+        RenderProfiler.Begin(1);
         TagCollectedEntities(MakeContext());
-
+        RenderProfiler.End();
+        
         SubmitWorldObjects();
-
+        
+        RenderProfiler.Begin(2);
         DrawParticleProcessor.Execute(MakeContext(), _world.Particles);
+        RenderProfiler.End();
+        
+        RenderProfiler.Begin(3);
         DrawAnimatorProcessor.Execute();
+        RenderProfiler.End();
 
-        UploadDrawCommands(MakeContext());
-        UploadTransform(MakeContext());
+        RenderProfiler.Begin(4);
+        DrawCommandUploader.UploadDrawCommands(MakeContext());
+        RenderProfiler.End();
+        
+        RenderProfiler.Begin(5);
+        DrawTransformUploader.UploadTransform(MakeContext());
+        if(RenderProfiler.End())
+            RenderProfiler.PrintTotal();
+        
         // end
     }
 
@@ -107,19 +133,20 @@ internal sealed class RenderEntityBus
         var idx = 0;
         foreach (var query in DrawDataProvider.WorldEntities.CoreQuery())
         {
-            ref var entityData = ref _entityData[query.Index];
-            entityData.Transform = query.Transform;
-            entityData.Bounds = query.Box;
-            _byEntityId[query.Entity] = idx;
-            idx++;
+            var entityId = query.Entity;
+            ref var drawEntity = ref _entities[query.Index];
+            DrawEntityCollector.CollectEntity(ref drawEntity, entityId, in query.Source);
+            _byEntityId[entityId] = idx++;
         }
-
         _idx = idx;
 
         foreach (var query in DrawDataProvider.WorldEntities.CoreQuery())
         {
-            DrawEntityCollector.CollectEntity(ref _entities[query.Index], query.Entity, in query.Source);
+            ref var entityData = ref _entityData[query.Index];
+            entityData.Transform = query.Transform;
+            entityData.Bounds = query.Box;
         }
+
     }
 
     private void SubmitWorldObjects()
@@ -132,57 +159,6 @@ internal sealed class RenderEntityBus
     {
         DrawTagResolver.TagEffectResolvers(ctx);
         DrawSpatialProcessor.TagDepthKeys(ctx);
-    }
-
-    private static void UploadTransform(DrawEntityContext ctx)
-    {
-        var entitiesData = ctx.EntityDataSpan;
-        var entities = ctx.EntitySpan;
-
-        var len = _idx;
-
-        if ((uint)len > entities.Length || (uint)len > entitiesData.Length)
-            throw new IndexOutOfRangeException();
-
-        for (var i = 0; i < len; i++)
-        {
-            ref readonly var entity = ref entities[i];
-            if (entity.Meta.CommandId == DrawCommandId.Particle) continue;
-            DrawEntityUploader.ExecuteSubmitTransform(i, in entity, in entitiesData[i]);
-        }
-    }
-
-
-    private static void UploadDrawCommands(DrawEntityContext ctx)
-    {
-        var entities = ctx.EntitySpan;
-
-        var len = _idx;
-
-        if ((uint)len > entities.Length)
-            throw new IndexOutOfRangeException();
-
-        MaterialTag materialTag = default;
-        var prevMatKey = new MaterialTagKey(-1);
-
-        for (var i = 0; i < len; i++)
-        {
-            ref readonly var entity = ref entities[i];
-            if (entity.Meta.CommandId != DrawCommandId.Model)
-            {
-                DrawEntityUploader.ExecuteGeneratedCommand(i, in entity);
-                continue;
-            }
-
-            var matKey = entity.Source.MaterialKey;
-            if (matKey != prevMatKey)
-            {
-                DrawDataProvider.ResolveMaterial(matKey, out materialTag);
-                prevMatKey = matKey;
-            }
-
-            DrawEntityUploader.ExecuteSubmitCommand(i, in entity, in materialTag);
-        }
     }
 
 

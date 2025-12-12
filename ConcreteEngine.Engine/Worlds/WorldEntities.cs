@@ -17,11 +17,11 @@ public sealed class WorldEntities
     private MaterialTable _materialTable = null!;
 
     internal EntityCoreStore Core => _coreStore;
-
     internal EntityStore<AnimationComponent> Animations { get; }
     internal EntityStore<ParticleComponent> Particles { get; }
 
     private readonly List<IEntityStore> _storeList;
+    private readonly EntityRenderResolver _renderResolver;
 
     internal WorldEntities()
     {
@@ -29,14 +29,38 @@ public sealed class WorldEntities
         Animations = GenericStores<AnimationComponent>.CreateStore(64);
         Particles = GenericStores<ParticleComponent>.CreateStore(64);
         _storeList = [Animations, Particles];
+        
+        _renderResolver =  new EntityRenderResolver();
     }
 
     public int EntityCount => Core.Count;
+
+    internal ReadOnlySpan<EntityResolverEntry> ResolvedEntitySpan => _renderResolver.Entities;
 
     internal void AttachRender(MeshTable meshTable, MaterialTable materialTable)
     {
         _meshTable = meshTable;
         _materialTable = materialTable;
+    }
+    
+    public void AddComponent<T>(EntityId entityId, in T component) where T : unmanaged
+    {
+        ArgumentOutOfRangeException.ThrowIfNegativeOrZero(entityId.Id, nameof(entityId));
+        GenericStores<T>.Store.Add(entityId, Core.GetIndexByEntity(entityId), component);
+    }
+
+    internal void ApplyRenderResolverFor(EntityId entityId, RenderResolver resolver)
+    {
+        var isAnimated = Animations.Has(entityId);
+        _renderResolver.AddResolver(entityId, resolver, isAnimated);
+    }
+    
+    internal void RemoveRenderResolverFor(EntityId entityId) => _renderResolver.RemoveResolver(entityId);
+
+    internal void EndTick()
+    {
+        foreach (var store in _storeList)
+            store.EndTick();
     }
 
     private EntityId CreateCoreEntity(ModelId id, int draw, in MaterialTag matTag, in Transform tran,
@@ -59,30 +83,13 @@ public sealed class WorldEntities
         Particles.Add(entity, index, component);
         return entity;
     }
-
-    public void AddComponent<T>(EntityId entityId, in T component) where T : unmanaged
-    {
-        ArgumentOutOfRangeException.ThrowIfNegativeOrZero(entityId.Id, nameof(entityId));
-        GenericStores<T>.Store.Add(entityId, Core.GetIndexByEntity(entityId), component);
-    }
-
-    internal void EndTick()
-    {
-        foreach (var store in _storeList)
-            store.EndTick();
-    }
+ 
 
     internal EntityEnumerator<T> Query<T>() where T : unmanaged => new(GenericStores<T>.Store);
 
     internal EntityCoreEnumerator CoreQuery() => new(_coreStore);
 
     private static EntityCoreStore _coreStore = null!;
-    //internal static EntityCoreStore GetCoreStore() => _coreStore;
-    // internal static EntityCoreEnumerator CoreQuery()  => new(_coreStore);
-
-
-    // internal static EntityStore<T> GetStore<T>() where T : unmanaged => GenericStores<T>.Store;
-    //internal static EntityEnumerator<T1> Query<T1>() where T1 : unmanaged => new(GenericStores<T1>.Store);
 
     private static class GenericStores<T> where T : unmanaged
     {

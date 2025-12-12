@@ -94,7 +94,7 @@ internal sealed class WorldApiController(ApiContext ctx) : IEngineWorldControlle
                 {
                     DisplayName = c.Name,
                     Duration = c.Duration,
-                    TicksPerSecond = c.TicksPerSecond,
+                    TicksPerSecond = (float)c.TicksPerSecond,
                     TrackCount = c.Tracks.Count
                 };
             }

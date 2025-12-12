@@ -70,7 +70,7 @@ internal sealed class DrawCommandProcessor
             }
         }
 
-        if (cmd.AnimationSlot > 0) _buffers.BindAnimation(cmd.AnimationSlot - 1);
+        if (ticket.AnimationSlot > 0) _buffers.BindAnimation(ticket.AnimationSlot - 1);
 
         _buffers.BindDrawObject(ticket.SubmitIdx);
         _gfxCmd.BindMesh(cmd.MeshId);
@@ -158,7 +158,7 @@ internal sealed class DrawCommandProcessor
                 _gfxCmd.SetUniform(1, in _highlightColor);
                 break;
             case DrawCommandResolver.HighlightAnimated:
-                _buffers.BindAnimation(cmd.AnimationSlot - 1);
+                _buffers.BindAnimation(ticket.AnimationSlot - 1);
                 _gfxCmd.UseShader(shaders.HighlightShader, _ctx.GetUniformLocations(shaders.HighlightShader));
                 _gfxCmd.SetUniform(0, 1);
                 _gfxCmd.SetUniform(1, in _highlightColor);
@@ -171,9 +171,6 @@ internal sealed class DrawCommandProcessor
             default:
                 throw new NotSupportedException();
         }
-
-        ;
-
 
         foreach (var slot in texSlots)
         {

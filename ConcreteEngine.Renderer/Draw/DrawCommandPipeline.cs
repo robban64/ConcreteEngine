@@ -1,6 +1,7 @@
 #region
 
 using System.Runtime.CompilerServices;
+using ConcreteEngine.Common.Time;
 using ConcreteEngine.Graphics.Gfx.Utility;
 using ConcreteEngine.Renderer.Data;
 using ConcreteEngine.Renderer.Passes;
@@ -112,5 +113,6 @@ internal sealed class DrawCommandPipeline
         _drawBuffers.ResetCursor();
         _drawCmdProc.PrepareDrawPass();
         _commandBuffer.DispatchDrawPass(passId, defaultDraw);
+
     }
 }

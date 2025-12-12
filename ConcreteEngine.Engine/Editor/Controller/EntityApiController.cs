@@ -76,8 +76,8 @@ internal sealed class EntityApiController : IEngineEntityController
     public void SelectEntity(EditorId entity, out EditorEntityState state)
     {
         var entityId = _cachedEntity = new EntityId(entity.Identifier);
+        Entities.ApplyRenderResolverFor(entityId, RenderResolver.Highlight);
         var view = Entities.Core.GetEntityView(entityId);
-        view.Source.Resolver = RenderResolver.Highlight;
 
         state = new EditorEntityState(in Transform.UnsafeAs(ref view.Transform), in view.Box.Bounds)
         {
@@ -96,8 +96,7 @@ internal sealed class EntityApiController : IEngineEntityController
     public void DeselectEntity(EditorId entity)
     {
         var entityId = new EntityId(entity.Identifier);
-        var view = Entities.Core.GetEntityView(entityId);
-        view.Source.Resolver = RenderResolver.None;
+        Entities.RemoveRenderResolverFor(entityId);
         _cachedEntity = default;
     }
 
@@ -129,7 +128,7 @@ internal sealed class EntityApiController : IEngineEntityController
         state.Clip = component.Clip;
         state.ClipCount = clipCount;
         state.Time = component.Time;
-        state.Speed = component.Speed;
+        state.Speed = (float)component.Speed;
         state.Duration = component.Duration;
     }
 
@@ -137,7 +136,7 @@ internal sealed class EntityApiController : IEngineEntityController
     {
         var entityId = new EntityId(entity.Identifier);
         ref var component = ref Entities.Animations.GetById(entityId);
-        component.Clip = state.Clip;
+        component.Clip = (short)state.Clip;
         component.Time = state.Time;
         component.Speed = state.Speed;
         component.Duration = state.Duration;

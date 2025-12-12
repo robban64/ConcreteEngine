@@ -87,7 +87,6 @@ internal static class EngineCommandHandler
         ctx.AddLog(StructStr<MaterialTag>());
 
         ctx.AddLog(StructStr<Transform>());
-        ctx.AddLog(StructStr<RenderSourceComponent>());
         ctx.AddLog(StructStr<DrawEntity>());
         ctx.AddLog(StructStr<DrawEntityData>());
         ctx.AddLog(StructStr<DrawEntityMeta>());
@@ -95,6 +94,11 @@ internal static class EngineCommandHandler
         
         ctx.AddLog(StructStr<DrawCommand>());
         ctx.AddLog(StructStr<DrawCommandMeta>());
+
+        
+        ctx.AddLog(StructStr<RenderSourceComponent>());
+        ctx.AddLog(StructStr<AnimationComponent>());
+
 
     }
 

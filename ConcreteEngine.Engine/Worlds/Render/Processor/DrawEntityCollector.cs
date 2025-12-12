@@ -18,15 +18,10 @@ internal static class DrawEntityCollector
         entity.Entity = entityId;
         entity.Source = new DrawEntitySource(source.Model, source.MaterialKey, source.DrawCount);
         entity.Meta = new DrawEntityMeta(DrawCommandId.Model, DrawCommandQueue.Opaque, PassMask.Default);
-
-        if (source.Resolver == RenderResolver.Highlight)
-        {
-            entity.Meta.PassMask = PassMask.Effect | PassMask.DepthPre;
-            entity.Meta.Resolver = DrawCommandResolver.Highlight;
-        }
-
         if (source.Kind == RenderSourceKind.Particle)
             entity.Meta = new DrawEntityMeta(DrawCommandId.Particle, DrawCommandQueue.Particles, PassMask.Main);
 
     }
+    
+
 }

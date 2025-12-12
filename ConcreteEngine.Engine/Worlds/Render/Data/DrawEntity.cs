@@ -55,5 +55,6 @@ internal struct DrawEntityMeta(
     public DrawCommandResolver Resolver;
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public readonly DrawCommandMeta ToCommandMeta() => new(CommandId, Queue, Resolver, PassMask, DepthKey);
+    public readonly DrawCommandMeta ToCommandMeta() =>
+        new(CommandId, Queue, Resolver, PassMask, DepthKey, AnimatedSlot);
 }

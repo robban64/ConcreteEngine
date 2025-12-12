@@ -6,7 +6,7 @@ using ConcreteEngine.Shared.Diagnostics;
 
 #endregion
 
-namespace ConcreteEngine.Editor;
+namespace ConcreteEngine.Editor.Bridge;
 
 public static class MetricsApi
 {

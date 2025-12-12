@@ -8,15 +8,13 @@ using ImGuiNET;
 
 #endregion
 
-namespace ConcreteEngine.Editor.Layout;
+namespace ConcreteEngine.Editor.Components.Layout;
 
 internal static class Topbar
 {
     private const int SelectorWidth = 74;
     private static readonly string[] PropertyModes = ["Camera", "World", "Sky", "Terrain"];
     private static readonly string[] MouseActionNames = ["None", "RaySelect", "RayDrag"];
-
-    private static string GetActiveAction() => MouseActionNames[(int)EditorDataStore.Input.EditorSelection.Action];
 
     public static void Draw()
     {

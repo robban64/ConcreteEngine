@@ -17,7 +17,7 @@ internal static class EditorStateContext
 
     private static long _lastAction = TimeUtils.GetTimestamp();
 
-    internal static void Init()
+    internal static void Initialize()
     {
         ModeState = EditorModeState.MakeNone();
         NextState = EditorModeState.MakeEditor();

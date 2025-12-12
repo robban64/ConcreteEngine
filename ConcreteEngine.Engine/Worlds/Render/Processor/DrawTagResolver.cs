@@ -16,18 +16,11 @@ internal static class DrawTagResolver
         {
             ref var entity = ref ctx.GetByEntityId(query.Entity);
             entity.SetAnimationSlot(query.Index + 1);
+            if (entity.Meta.Resolver == DrawCommandResolver.Highlight)
+                entity.Meta.Resolver = DrawCommandResolver.HighlightAnimated;
         }
-
-        var selected = WorldInteractive.SelectedEntityId;
-        if (selected > 0)
-        {
-            var idx = ctx.ByEntityIdSpan[selected];
-            ref var entity = ref ctx.EntitySpan[idx];
-            entity.Meta.PassMask = PassMask.Effect | PassMask.DepthPre;
-            entity.Meta.Resolver = entity.Meta.AnimatedSlot == 0
-                ? DrawCommandResolver.Highlight
-                : DrawCommandResolver.HighlightAnimated;
-        }
+        
+        
     }
 /*
     private bool hasRunEntities = false;

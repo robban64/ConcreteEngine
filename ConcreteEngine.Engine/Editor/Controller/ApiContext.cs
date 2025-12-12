@@ -7,14 +7,8 @@ using ConcreteEngine.Engine.Worlds;
 
 namespace ConcreteEngine.Engine.Editor.Controller;
 
-internal sealed class ApiContext
+internal sealed class ApiContext(World world, AssetSystem assetSystem)
 {
-    public World World { get; }
-    public AssetSystem AssetSystem { get; }
-
-    public ApiContext(World world, AssetSystem assetSystem)
-    {
-        World = world;
-        AssetSystem = assetSystem;
-    }
+    public readonly World World = world;
+    public readonly AssetSystem AssetSystem = assetSystem;
 }

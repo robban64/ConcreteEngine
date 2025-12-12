@@ -40,14 +40,16 @@ internal static class EngineDataBridge
         ProcessCamera();
         ProcessWorldParams();
         ProcessParticle();
-        WorldInteractive.SelectedEntityId = ProcessEntities();
+        //WorldInteractive.SelectedEntityId = ProcessEntities();
     }
 
     public static void WriteFrameMetrics(in RenderFrameInfo frameInfo, in GfxFrameResult frameResult)
     {
+        /*
         EditorData.MetricState.FrameSample =
             new RenderInfoSample(frameInfo.Fps, frameInfo.Alpha, frameResult.DrawCalls, frameResult.TriangleCount);
         EditorData.MetricState.FrameMetrics = new FrameMetric(frameInfo.FrameIndex, EngineTime.Timestamp, default);
+        */
     }
 
 
@@ -96,7 +98,7 @@ internal static class EngineDataBridge
 
         slot.Reset(gen);
     }
-
+/*
     private static EntityId ProcessEntities()
     {
         var input = EditorData.Input.EditorSelection;
@@ -173,4 +175,5 @@ internal static class EngineDataBridge
             _interactions.OnDragEntity(entityId, mouse.Position);
         }
     }
+    */
 }

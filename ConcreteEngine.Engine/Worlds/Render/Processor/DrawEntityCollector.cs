@@ -1,5 +1,6 @@
 #region
 
+using System.Runtime.CompilerServices;
 using ConcreteEngine.Engine.Worlds.Entities;
 using ConcreteEngine.Engine.Worlds.Entities.Components;
 using ConcreteEngine.Engine.Worlds.Render.Data;
@@ -11,14 +12,21 @@ namespace ConcreteEngine.Engine.Worlds.Render.Processor;
 
 internal static class DrawEntityCollector
 {
-    internal static void CollectEntity(int idx, DrawEntityContext ctx, EntityId entityId,
-        in RenderSourceComponent source)
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    internal static void CollectEntity(ref DrawEntity entity, EntityId entityId, in RenderSourceComponent source)
     {
-        ref var entity = ref ctx.EntitySpan[idx];
-        entity = new DrawEntity(entityId, new DrawEntitySource(source.Model, source.MaterialKey, source.DrawCount));
+        entity.Entity = entityId;
+        entity.Source = new DrawEntitySource(source.Model, source.MaterialKey, source.DrawCount);
+        entity.Meta = new DrawEntityMeta(DrawCommandId.Model, DrawCommandQueue.Opaque, PassMask.Default);
+
+        if (source.Resolver == RenderResolver.Highlight)
+        {
+            entity.Meta.PassMask = PassMask.Effect | PassMask.DepthPre;
+            entity.Meta.Resolver = DrawCommandResolver.Highlight;
+        }
+
         if (source.Kind == RenderSourceKind.Particle)
             entity.Meta = new DrawEntityMeta(DrawCommandId.Particle, DrawCommandQueue.Particles, PassMask.Main);
 
-        ctx.ByEntityIdSpan[entityId] = idx;
     }
 }

@@ -1,9 +1,14 @@
 #region
 
+using System.Runtime.CompilerServices;
+using System.Runtime.InteropServices;
 using ConcreteEngine.Common;
 using ConcreteEngine.Common.Collections;
+using ConcreteEngine.Common.Time;
 using ConcreteEngine.Engine.Editor.Diagnostics;
 using ConcreteEngine.Engine.Worlds.Data;
+using ConcreteEngine.Engine.Worlds.Entities;
+using ConcreteEngine.Engine.Worlds.Entities.Components;
 using ConcreteEngine.Engine.Worlds.Render.Data;
 using ConcreteEngine.Engine.Worlds.Render.Processor;
 using ConcreteEngine.Renderer.Definitions;
@@ -63,7 +68,10 @@ internal sealed class RenderEntityBus
         Validate();
 
         // start
+        StaticProfileTimer.RenderTimer.Begin();
         CollectEntities();
+        StaticProfileTimer.RenderTimer.EndPrint();
+
         TagCollectedEntities(MakeContext());
 
         SubmitWorldObjects();
@@ -97,18 +105,23 @@ internal sealed class RenderEntityBus
 
     private void CollectEntities()
     {
+        //var ctx = new DrawEntityContext(_entities.Length, _entities, _entityData, _byEntityId);
         var idx = 0;
-        var ctx = new DrawEntityContext(_entities.Length, _entities, _entityData, _byEntityId);
-        foreach (var query in WorldEntities.CoreQuery())
+        foreach (var query in DrawDataProvider.WorldEntities.CoreQuery())
         {
-            DrawEntityCollector.CollectEntity(idx, ctx, query.Entity, in query.Source);
-            ref var entityData = ref ctx.EntityDataSpan[idx];
+            ref var entityData = ref _entityData[query.Index];
             entityData.Transform = query.Transform;
-            entityData.Bounds = query.Box.Bounds;
+            entityData.Bounds = query.Box;
+            _byEntityId[query.Entity] = idx;
             idx++;
         }
 
         _idx = idx;
+
+        foreach (var query in DrawDataProvider.WorldEntities.CoreQuery())
+        {
+            DrawEntityCollector.CollectEntity(ref _entities[query.Index], query.Entity, in query.Source);
+        }
     }
 
     private void SubmitWorldObjects()

@@ -2,7 +2,6 @@
 
 using System.Numerics;
 using System.Runtime.CompilerServices;
-using ConcreteEngine.Editor.Components;
 using ConcreteEngine.Editor.Definitions;
 using ConcreteEngine.Editor.Metrics;
 using ConcreteEngine.Editor.Utils;
@@ -10,7 +9,7 @@ using ImGuiNET;
 
 #endregion
 
-namespace ConcreteEngine.Editor.Layout;
+namespace ConcreteEngine.Editor.Components.Layout;
 
 internal static class RightSidebar
 {

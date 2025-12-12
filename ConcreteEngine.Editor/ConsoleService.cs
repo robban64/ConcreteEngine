@@ -1,6 +1,7 @@
 #region
 
 using System.Runtime.CompilerServices;
+using ConcreteEngine.Editor.Bridge;
 using ConcreteEngine.Editor.Components;
 using ConcreteEngine.Editor.Utils;
 

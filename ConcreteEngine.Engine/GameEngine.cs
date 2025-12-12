@@ -42,9 +42,9 @@ public sealed class GameEngine : IDisposable
     private readonly EngineGateway _engineGateway;
     private readonly EditorEngineQueue _editorQueues;
 
-    private FastRandom _rng = new FastRandom(12323);
+    private FastRandom _rng = new (12323);
 
-    private bool _isDisposed = false;
+    private bool _isDisposed;
 
     private EngineSetupStepper _setupStepper = new(7);
 

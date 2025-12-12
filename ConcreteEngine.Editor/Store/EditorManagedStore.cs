@@ -2,6 +2,7 @@
 
 using System.Runtime.InteropServices;
 using ConcreteEngine.Common.Numerics;
+using ConcreteEngine.Editor.Bridge;
 using ConcreteEngine.Editor.Definitions;
 using ConcreteEngine.Editor.Store.Resources;
 
@@ -36,7 +37,7 @@ internal static class EditorManagedStore
         return AssetResourceSpan.Slice(range.Offset, range.Length);
     }
 
-    public static void InitFillStore()
+    public static void Initialize()
     {
         var assets = EditorApi.LoadAssetResources();
         var entities = EditorApi.LoadEntityResources();

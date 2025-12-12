@@ -1,7 +1,7 @@
 #region
 
 using System.Numerics;
-using ConcreteEngine.Editor.Components;
+using ConcreteEngine.Editor.Bridge;
 using ConcreteEngine.Editor.Definitions;
 using ConcreteEngine.Editor.Metrics;
 using ConcreteEngine.Editor.Utils;
@@ -9,7 +9,7 @@ using ImGuiNET;
 
 #endregion
 
-namespace ConcreteEngine.Editor.Layout;
+namespace ConcreteEngine.Editor.Components.Layout;
 
 internal static class LeftSidebar
 {

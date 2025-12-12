@@ -1,6 +1,7 @@
 #region
 
 using ConcreteEngine.Common.Numerics.Maths;
+using ConcreteEngine.Editor.Bridge;
 using ConcreteEngine.Editor.Definitions;
 using ConcreteEngine.Editor.Store;
 using ConcreteEngine.Editor.Store.Resources;
@@ -18,29 +19,29 @@ internal sealed class EntityViewState
 
     public void SetSelectedEntity(EditorId entityId)
     {
-        if (EditorDataStore.Input.EditorSelection.Id == entityId) return;
+        if (EditorDataStore.State.SelectedEntity == entityId) return;
 
-        ref var selection = ref EditorDataStore.Input.EditorSelection;
-        selection.Id = entityId.IsValid ? entityId : EditorId.Empty;
-        selection.IsRequesting = true;
+        if(entityId.IsValid)
+            EngineController.SelectEntity(entityId);
+        else
+            EngineController.DeSelectEntity();
+        
     }
 
     public void UpdateTransform(int field, int rotationField)
     {
+        var entityId = EditorDataStore.State.SelectedEntity;
+        if(!entityId.IsValid || field < 0) return;
+
         _prevEditField = _editedField;
         _editedField = field;
         _rotationField = rotationField;
-    }
-
-    public void Refresh()
-    {
-        if (_editedField < 0) return;
         
-        ref var transform = ref EditorDataStore.State.EntityState.Transform;
-        if (_rotationField != -1)
-            transform.Rotation = RotationMath.EulerDegreesToQuaternion(in transform.EulerAngles);
+        if (rotationField != -1)
+            EditorDataStore.State.EntityState.Transform.ApplyRotationFromEuler();
+        
+        EngineController.CommitEntity();
 
-        EditorDataStore.Input.EditorSelection.IsDirty = true;
     }
 
     public void BeforeDraw()

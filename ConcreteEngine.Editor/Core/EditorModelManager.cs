@@ -1,6 +1,7 @@
 #region
 
 using ConcreteEngine.Common;
+using ConcreteEngine.Editor.Bridge;
 using ConcreteEngine.Editor.Components;
 using ConcreteEngine.Editor.Components.State;
 using ConcreteEngine.Editor.Data;
@@ -31,7 +32,7 @@ internal static class EditorModelManager
         WorldRenderStateContext.TryInvokePendingRefresh();
     }
 
-    public static void SetupModelState()
+    public static void Initialize()
     {
         InvalidOpThrower.ThrowIf(HasInit, nameof(EntitiesStateContext));
 
@@ -98,7 +99,7 @@ internal static class EditorModelManager
         EntitiesStateContext = ModelStateContext<EntityViewState>
             .CreateBuilder(static () => new EntityViewState())
             .OnEnter(static (ctx, it) => { })
-            .OnRefresh(static (ctx, it) => it.Refresh())
+            .OnRefresh(static (ctx, it) => {})
             .OnLeave(static (ctx, _) => ctx.TriggerEvent<EditorEntityResource?>(EventKey.SelectionChanged, null))
             .RegisterEvent<EditorEntityResource?>(EventKey.SelectionChanged, OnEntitySelected)
             .KeepAlive()

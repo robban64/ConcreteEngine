@@ -55,7 +55,7 @@ public sealed class WorldEntities
     public EntityId CreateParticleEntity(MeshId mesh, ParticleComponent component)
     {
         var source = new RenderSourceComponent(ModelId.Ignore, 4, MaterialTagKey.Ignore, RenderSourceKind.Particle);
-        var entity = Core.AddEntity(source, Transform.Identity, default, out var index);
+        var entity = Core.AddEntity(source, Transform.Identity, BoundingBox.Identity, out var index);
         Particles.Add(entity, index, component);
         return entity;
     }

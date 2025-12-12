@@ -27,14 +27,6 @@ internal struct DrawEntity
     public DrawEntityMeta Meta;
     public EntityId Entity;
 
-    public DrawEntity(EntityId entity, DrawEntitySource source)
-    {
-        Entity = entity;
-        Source = source;
-        Meta = new DrawEntityMeta(DrawCommandId.Model, DrawCommandQueue.Opaque, PassMask.Default);
-    }
-
-
     public void WithDepthKey(ushort depthKey) => Meta.DepthKey = depthKey;
 
     public void SetAnimationSlot(int animationSlot) => Meta.AnimatedSlot = (ushort)animationSlot;

@@ -1,6 +1,7 @@
 #region
 
 using System.Numerics;
+using ConcreteEngine.Editor.Bridge;
 using ConcreteEngine.Editor.Definitions;
 using ConcreteEngine.Editor.Store;
 using ImGuiNET;
@@ -11,10 +12,20 @@ namespace ConcreteEngine.Editor.Core;
 
 internal static class EditorInput
 {
-    private static Vector2 _prevMousePos;
+    private enum DragState : byte
+    {
+        None = 0,
+        DragStart = 1,
+        Dragging = 2,
+        DragEnd = 3,
+    }
 
-    private static bool _isDragging;
+    private static Vector2 _prevMousePos;
+    private static Vector3 _dragStart;
+
+    private static DragState _dragState;
     private static bool _wasDragging;
+    private static bool _stopDragging;
 
 
     public static bool BlockInput()
@@ -68,49 +79,81 @@ internal static class EditorInput
     {
         var mousePos = ImGui.GetMousePos();
         var deltaAbs = Vector2.Abs(mousePos - _prevMousePos);
-
-        _isDragging = ImGui.IsMouseDragging(ImGuiMouseButton.Left);
-        var isClick = ImGui.IsMouseClicked(ImGuiMouseButton.Left);
-        var isReleased = ImGui.IsMouseReleased(ImGuiMouseButton.Left);
-
-        if (ImGui.IsMouseClicked(ImGuiMouseButton.Right))
+        var isRightClick = ImGui.IsMouseClicked(ImGuiMouseButton.Right);
+        var isDragging = ImGui.IsMouseDragging(ImGuiMouseButton.Left);
+        
+        if (isRightClick)
         {
-            EditorService.ClearSelection();
+            EngineController.DeSelectEntity();
             return;
         }
-
-        EditorDataStore.Input.MouseState.SetPosition(mousePos, deltaAbs);
-
-
-        if (isReleased && !_wasDragging)
+        
+        switch (_dragState)
         {
-            HandleClick();
+            case DragState.None:
+                var startDrag = !_wasDragging && isDragging;
+                if (startDrag && HandleClick(mousePos)) 
+                    _dragState = DragState.DragStart;
+                break;
+            case DragState.DragStart:
+                _dragState = isDragging ? DragState.Dragging : DragState.None;
+                break;
+            case DragState.Dragging:
+                _dragState = isDragging ? DragState.Dragging : DragState.DragEnd;
+                break;
+            case DragState.DragEnd:
+                _dragState = DragState.None;
+                break;
         }
-        else if (_isDragging)
+
+        switch (_dragState)
         {
-            if (!_wasDragging)
-                HandleClick();
-
-            HandleDrag(deltaAbs);
+            case DragState.None: break;
+            case DragState.DragStart:
+                if (!HandleDragStart(mousePos)) _dragState = DragState.None;
+                else HandleDrag(mousePos);
+                break;
+            case DragState.Dragging:
+                if (deltaAbs.X > 0 || deltaAbs.Y > 0) HandleDrag(mousePos);
+                break;
+            case DragState.DragEnd:
+                _dragStart = default;
+                break;
         }
-
-        _wasDragging = _isDragging;
+        
+        _wasDragging = isDragging;
         _prevMousePos = mousePos;
     }
 
-    private static void HandleClick()
+    private static bool HandleClick(Vector2 mousePos)
     {
-        EditorDataStore.Input.EditorSelection.Action = EditorMouseAction.RaycastSelect;
+        var entity = EditorApi.InteractionController.Raycast(mousePos);
+        if (!entity.IsValid)
+        {
+            if (EditorDataStore.State.SelectedEntity.IsValid)
+                EngineController.DeSelectEntity();
+
+            return false;
+        }
+
+        EngineController.SelectEntity(entity);
+        return true;
     }
 
-    private static void HandleDrag(Vector2 deltaAbs)
+    private static bool HandleDragStart(Vector2 mousePos)
     {
-        var state = EditorDataStore.Input.EditorSelection;
-        var action = state.Id.IsValid ? EditorMouseAction.RaycastDragTerrain : EditorMouseAction.None;
-        var hasDelta = deltaAbs.X > 0 || deltaAbs.Y > 0;
-        if (!hasDelta) return;
+        var pointOnTerrain = EditorApi.InteractionController.RaycastTerrain(mousePos);
+        if (pointOnTerrain == default) return false;
+        _dragStart = pointOnTerrain;
+        return true;
+    }
 
-
-        EditorDataStore.Input.EditorSelection.Action = action;
+    private static void HandleDrag(Vector2 mousePos)
+    {
+        var entity = EditorDataStore.State.SelectedEntity;
+        var newPos = EditorApi.InteractionController.RaycastEntityOnTerrain(entity, mousePos, _dragStart);
+        if (newPos == default) return;
+        EditorDataStore.State.EntityState.Transform.Translation = newPos;
+        EngineController.CommitEntity();
     }
 }

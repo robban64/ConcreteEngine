@@ -6,7 +6,7 @@ using ConcreteEngine.Editor.Utils;
 
 #endregion
 
-namespace ConcreteEngine.Editor;
+namespace ConcreteEngine.Editor.Bridge;
 
 public static class CoreCmdNames
 {
@@ -19,9 +19,9 @@ public static class CoreCmdNames
 
 public static class CommandDispatcher
 {
-    private static readonly Dictionary<string, ConsoleCommandRecord> ConsoleCmd = new(8);
-    private static readonly Dictionary<string, IEditorCommand> EditorCmd = new(8);
-    private static readonly HashSet<string> RegisteredCommands = new(8);
+    private static readonly Dictionary<string, ConsoleCommandRecord> ConsoleCmd = new(16);
+    private static readonly Dictionary<string, IEditorCommand> EditorCmd = new(16);
+    private static readonly HashSet<string> RegisteredCommands = new(16);
 
 
     public static void RegisterNoOpConsoleCmd(string command, string description, ConsoleCommandReqDel del)

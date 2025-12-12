@@ -30,9 +30,7 @@ public sealed class EditorPortal : IDisposable
     public void Initialize()
     {
         InvalidOpThrower.ThrowIf(Initialized, nameof(Initialized));
-        EditorManagedStore.InitFillStore();
-        ModelManager.SetupModelState();
-        StateContext.Init();
+        EditorService.Initialize();
         Initialized = true;
     }
 

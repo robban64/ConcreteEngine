@@ -2,9 +2,10 @@
 
 using System.Numerics;
 using ConcreteEngine.Common.Time;
+using ConcreteEngine.Editor.Bridge;
 using ConcreteEngine.Editor.Components;
+using ConcreteEngine.Editor.Components.Layout;
 using ConcreteEngine.Editor.Definitions;
-using ConcreteEngine.Editor.Layout;
 using ConcreteEngine.Editor.Store;
 using ConcreteEngine.Editor.Utils;
 using ImGuiNET;
@@ -18,11 +19,16 @@ internal static class EditorService
 {
     private static EditorModeState ModeState => StateContext.ModeState;
 
+    public static void Initialize()
+    {
+        EditorManagedStore.Initialize();
+        ModelManager.Initialize();
+        StateContext.Initialize();
+    }
+
     private static void PrepareFrame()
     {
         var newSelection = DataStore.State.SelectedEntity;
-        DataStore.Input.EditorSelection.ClearFrame();
-        DataStore.Input.EditorSelection.Id = newSelection;
         
         if (!ModeState.IsEntityState && newSelection.IsValid)
         {
@@ -31,39 +37,33 @@ internal static class EditorService
         }
     }
 
-    public static void ClearSelection()
+    private static void ProcessInput(float delta)
     {
-        ref var selection = ref DataStore.Input.EditorSelection;
-        selection.Id = EditorId.Empty;
-        selection.Action = EditorMouseAction.None;
-        selection.IsRequesting = false;
-        selection.IsDirty = true;
+        if (!EditorInput.IsMouseOverEditor())
+            EditorInput.UpdateMouse(delta);
+
+        EditorInput.UpdateKeybinding();
     }
 
     internal static void Render(float delta, bool blockInput)
     {
         PrepareFrame();
-        var modeState = ModeState;
 
-        if (!blockInput)
-        {
-            if (!EditorInput.IsMouseOverEditor())
-                EditorInput.UpdateMouse(delta);
-
-            EditorInput.UpdateKeybinding();
-        }
+        if (!blockInput) ProcessInput(delta);
 
         StateContext.CommitState();
-        GuiTheme.RightSidebarExpanded = modeState.IsEditorState;
-        MetricsApi.ToggleMetrics(modeState.IsMetricState);
+        GuiTheme.RightSidebarExpanded = ModeState.IsEditorState;
+        MetricsApi.ToggleMetrics(ModeState.IsMetricState);
 
         RefreshData();
+        Draw();
+    }
 
+    private static void Draw()
+    {
         GuiTheme.PushTheme();
-
-
         Topbar.Draw();
-        if (!modeState.IsEmptyViewMode)
+        if (!ModeState.IsEmptyViewMode)
         {
             ImGui.PushStyleVar(ImGuiStyleVar.ItemSpacing, new Vector2(8f, 6f));
             ImGui.PushStyleVar(ImGuiStyleVar.WindowPadding, new Vector2(0, 10f));
@@ -77,15 +77,16 @@ internal static class EditorService
         ConsoleService.Draw(GuiTheme.LeftSidebarWidth, GuiTheme.RightSidebarWidth);
     }
 
-
     private static void RefreshData()
     {
         var modeState = ModeState;
 
         if (!modeState.IsEditorState) return;
         
+        /*
         if(modeState.IsEntityState && DataStore.State.SelectedEntity.IsValid)
             ModelManager.EntitiesStateContext.EnqueueRefreshNextFrame();
+            */
         
         ModelManager.InvokeRefreshForModels();
     }

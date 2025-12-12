@@ -22,10 +22,12 @@ using Silk.NET.Windowing;
 
 #endregion
 
+using ConcreteEngine.Editor.Bridge;
+using ConcreteEngine.Editor.Utils;
 using ConcreteEngine.Engine.Editor.Controller;
 using ConcreteEngine.Graphics;
 using ConcreteEngine.Renderer.State;
-using EditorCmd = ConcreteEngine.Editor.CommandDispatcher;
+using EditorCmd = ConcreteEngine.Editor.Bridge.CommandDispatcher;
 
 #endregion
 
@@ -101,6 +103,9 @@ internal sealed class EngineGateway : IDisposable
         EngineResourceProvider.Attach(assetSystem, _entityController, _interactionController, _worldController);
         EngineDataBridge.Attach(_entityController, _worldController, _interactionController);
 
+        EditorApi.EntityController = _entityController;
+        EditorApi.InteractionController = _interactionController;
+        
         EditorSetup.RegisterDataProvider();
         EditorSetup.RegisterCommands();
         EditorSetup.RegisterMetrics();

@@ -6,7 +6,7 @@ using ConcreteEngine.Editor.Definitions;
 
 #endregion
 
-namespace ConcreteEngine.Editor;
+namespace ConcreteEngine.Editor.Utils;
 
 public static class CommandParser
 {

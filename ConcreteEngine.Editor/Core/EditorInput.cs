@@ -79,12 +79,19 @@ internal static class EditorInput
     {
         var mousePos = ImGui.GetMousePos();
         var deltaAbs = Vector2.Abs(mousePos - _prevMousePos);
+        var isLeftClick = ImGui.IsMouseClicked(ImGuiMouseButton.Left);
         var isRightClick = ImGui.IsMouseClicked(ImGuiMouseButton.Right);
         var isDragging = ImGui.IsMouseDragging(ImGuiMouseButton.Left);
         
         if (isRightClick)
         {
             EngineController.DeSelectEntity();
+            return;
+        }
+
+        if (isLeftClick && !isDragging)
+        {
+            HandleClick(mousePos);
             return;
         }
         
@@ -130,7 +137,7 @@ internal static class EditorInput
         var entity = EditorApi.InteractionController.Raycast(mousePos);
         if (!entity.IsValid)
         {
-            if (EditorDataStore.State.SelectedEntity.IsValid)
+            if (EditorDataStore.SelectedEntity.IsValid)
                 EngineController.DeSelectEntity();
 
             return false;
@@ -150,10 +157,10 @@ internal static class EditorInput
 
     private static void HandleDrag(Vector2 mousePos)
     {
-        var entity = EditorDataStore.State.SelectedEntity;
+        var entity = EditorDataStore.SelectedEntity;
         var newPos = EditorApi.InteractionController.RaycastEntityOnTerrain(entity, mousePos, _dragStart);
         if (newPos == default) return;
-        EditorDataStore.State.EntityState.Transform.Translation = newPos;
+        EditorDataStore.EntityState.Transform.Translation = newPos;
         EngineController.CommitEntity();
     }
 }

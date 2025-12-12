@@ -35,14 +35,3 @@ internal readonly ref struct EntityView(
     public readonly ref BoxComponent Box = ref box;
 }
 
-internal ref struct EntityCoreWriter(
-    EntityId entityId,
-    ref RenderSourceComponent source,
-    ref Transform transform,
-    ref BoxComponent box)
-{
-    public readonly EntityId EntityId = entityId;
-    public ref RenderSourceComponent Source = ref source;
-    public ref Transform Transform = ref transform;
-    public ref BoxComponent Box = ref box;
-}

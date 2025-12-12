@@ -7,6 +7,7 @@ using ConcreteEngine.Editor.Components;
 using ConcreteEngine.Editor.Components.Layout;
 using ConcreteEngine.Editor.Definitions;
 using ConcreteEngine.Editor.Store;
+using ConcreteEngine.Editor.Store.Resources;
 using ConcreteEngine.Editor.Utils;
 using ImGuiNET;
 using DataStore = ConcreteEngine.Editor.Store.EditorDataStore;
@@ -28,13 +29,12 @@ internal static class EditorService
 
     private static void PrepareFrame()
     {
-        var newSelection = DataStore.State.SelectedEntity;
-        
-        if (!ModeState.IsEntityState && newSelection.IsValid)
-        {
-            StateContext.SetLeftSidebarState(LeftSidebarMode.Entities);
-            StateContext.SetRightSidebarState(RightSidebarMode.Property);
-        }
+        var entity = DataStore.SelectedEntity;
+
+        if (ModeState.IsEntityState || !entity.IsValid) return;
+        StateContext.SetLeftSidebarState(LeftSidebarMode.Entities);
+        StateContext.SetRightSidebarState(RightSidebarMode.Property);
+
     }
 
     private static void ProcessInput(float delta)

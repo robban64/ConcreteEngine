@@ -39,6 +39,13 @@ internal sealed class AnimationTable
     public AnimationDataView GetDataView() =>
         new(_clips, _boneOffsetMatrix, _nodeTransform, _parentIndices, _modelBoneInvTransform);
 
+    public int GetClipCount(AnimationId animation)
+    {
+        int index = animation - 1;
+        if ((uint)index >= (uint)_clips.Length) throw new IndexOutOfRangeException();
+        return _clips[index].Length;
+    }
+
     internal void Setup(AssetSystem assets)
     {
         _idx = 0;

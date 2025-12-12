@@ -12,6 +12,7 @@ using ConcreteEngine.Engine.Worlds.Data;
 using ConcreteEngine.Engine.Worlds.Entities.Components;
 using ConcreteEngine.Engine.Worlds.Render.Data;
 using ConcreteEngine.Engine.Worlds.Tables;
+using ConcreteEngine.Renderer.Data;
 
 #endregion
 
@@ -91,6 +92,10 @@ internal static class EngineCommandHandler
         ctx.AddLog(StructStr<DrawEntityData>());
         ctx.AddLog(StructStr<DrawEntityMeta>());
         ctx.AddLog(StructStr<DrawEntitySource>());
+        
+        ctx.AddLog(StructStr<DrawCommand>());
+        ctx.AddLog(StructStr<DrawCommandMeta>());
+
     }
 
 

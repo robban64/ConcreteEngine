@@ -56,13 +56,6 @@ internal sealed class EntityCoreStore
 
     public Span<EntityId> GetEntitySpan() => _entities.AsSpan(0, _idx);
 
-    public EntityCoreWriter GetEntityWriter(EntityId e)
-    {
-        var idx = GetIndexByEntity(e);
-        if ((uint)idx >= _entities.Length) throw new IndexOutOfRangeException();
-        return new EntityCoreWriter(e, ref _sources[idx], ref _transforms[idx], ref _boxes[idx]);
-    }
-
     public EntityView GetEntityView(EntityId e)
     {
         var idx = GetIndexByEntity(e);

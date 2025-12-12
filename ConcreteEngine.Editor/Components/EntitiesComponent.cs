@@ -2,6 +2,7 @@
 
 using System.Numerics;
 using ConcreteEngine.Common.Numerics.Maths;
+using ConcreteEngine.Editor.Bridge;
 using ConcreteEngine.Editor.Components.State;
 using ConcreteEngine.Editor.Core;
 using ConcreteEngine.Editor.Data;
@@ -83,7 +84,7 @@ internal static class EntitiesComponent
     private static void DrawListItem(int i, NumberSpanFormatter formatter)
     {
         var entity = EntitySpan[i];
-        var selected = entity.Id == EditorDataStore.State.SelectedEntity;
+        var selected = entity.Id == EditorDataStore.SelectedEntity;
         //if (selected) _selectedIndex = i;
 
         ImGui.PushStyleVar(ImGuiStyleVar.SelectableTextAlign, new Vector2(0.0f, 0.5f));
@@ -109,94 +110,190 @@ internal static class EntitiesComponent
 
     public static void DrawProperties()
     {
-        if (!EditorDataStore.State.SelectedEntity.IsValid) return;
+        if (!EditorDataStore.SelectedEntity.IsValid) return;
         if (ImGui.BeginChild("##right-sidebar-properties", new Vector2(0, 0),
                 ImGuiChildFlags.AlwaysAutoResize | ImGuiChildFlags.AlwaysUseWindowPadding))
         {
-            DrawPropertyContent();
+            DrawCoreProperties();
+            var componentRef = EditorDataStore.EntityState.ComponentRef;
+            if (!componentRef.IsValid)
+            {
+                ImGui.EndChild();
+                return;
+            }
+            ImGui.Dummy(new Vector2(0,4));
+            
+            if(componentRef.ItemType == EditorItemType.Animation)
+                DrawAnimationProperties();
+            else if (componentRef.ItemType == EditorItemType.Particle)
+                DrawParticleProperties();
+            
             ImGui.EndChild();
         }
     }
 
-    private static void DrawPropertyContent()
+    private static void DrawCoreProperties()
     {
-        ref var state = ref EditorDataStore.State.EntityState;
+        ref var state = ref EditorDataStore.EntityState;
         ref var transform = ref state.Transform;
         var fieldStatus = new ImGuiFieldStatus();
         int modelId = 0;
         int materialId = 0;
+        var formatter = new NumberSpanFormatter(StringUtils.CharBuffer8);
 
-        ImGui.SeparatorText("Model");
-        ImGui.TextUnformatted("ModelId");
-        ImGui.InputInt("ent-prop##model-id", ref modelId, 0, 0, ImGuiInputTextFlags.None);
-        //fieldStatus.NextField();
+        ImGui.SeparatorText("Entity Component");
+        ImGui.TextUnformatted("Model:");
+        ImGui.SameLine();
+        ImGui.TextUnformatted("0");
 
-        ImGui.TextUnformatted("Material");
-        ImGui.InputInt("ent-prop##mat-id", ref materialId, 0, 0, ImGuiInputTextFlags.None);
-        //fieldStatus.NextField();
-
+        ImGui.TextUnformatted("Material:");
+        ImGui.SameLine();
+        ImGui.TextUnformatted("0");
 
         ImGui.Dummy(new Vector2(0, 2));
         ImGui.SeparatorText("Transform");
 
         ImGui.TextUnformatted("Translation");
         ImGui.Separator();
-        ImGui.InputFloat3("ent-prop##translation", ref transform.Translation, "%.3f", ImGuiInputTextFlags.None);
+        ImGui.InputFloat3("##ent-prop-translation", ref transform.Translation, "%.3f", ImGuiInputTextFlags.None);
         fieldStatus.NextField();
 
         ImGui.TextUnformatted("Scale");
         ImGui.Separator();
-        ImGui.InputFloat3("ent-prop##scale", ref transform.Scale, "%.3f", ImGuiInputTextFlags.None);
+        ImGui.InputFloat3("##ent-prop-scale", ref transform.Scale, "%.3f", ImGuiInputTextFlags.None);
         fieldStatus.NextField();
 
         ImGui.TextUnformatted("Rotation");
         ImGui.Separator();
-        ImGui.InputFloat3("ent-prop##rotation", ref transform.EulerAngles, "%.3f", ImGuiInputTextFlags.None);
+        ImGui.InputFloat3("##ent-prop-rotation", ref transform.EulerAngles, "%.3f", ImGuiInputTextFlags.None);
         var rotationField = fieldStatus.NextField();
 
         if (fieldStatus.HasEdited(out var field)) State.UpdateTransform(field, rotationField);
     }
-
-/*
-    private static void DrawAssetFilePopupContent()
+    
+    private static void DrawAnimationProperties()
     {
-        ref var state = ref DataState;
-        ref var transform = ref state.Transform;
+        ref var state = ref EditorDataStore.AnimationState;
         var fieldStatus = new ImGuiFieldStatus();
-        int modelId = 0;
-        int materialId = 0;
 
-        ImGui.SeparatorText("Model");
-        ImGui.TextUnformatted("ModelId");
-        ImGui.InputInt("##model-id", ref modelId, 0, 0, ImGuiInputTextFlags.None);
-        //fieldStatus.NextField();
+        var formatter = new NumberSpanFormatter(StringUtils.CharBuffer8);
+        ImGui.SeparatorText("Animation Component");
 
-        ImGui.TextUnformatted("Material");
-        ImGui.InputInt("##mat-id", ref materialId, 0, 0, ImGuiInputTextFlags.None);
-        //fieldStatus.NextField();
+        ImGui.TextUnformatted("ID:");
+        ImGui.SameLine();
+        ImGui.TextUnformatted(formatter.Format(state.Animation));
 
+        ImGui.TextUnformatted("Model:");
+        ImGui.SameLine();
+        ImGui.TextUnformatted(formatter.Format(state.Model));
 
         ImGui.Dummy(new Vector2(0, 2));
-        ImGui.SeparatorText("Transform");
 
-        ImGui.TextUnformatted("Translation");
+        ImGui.TextUnformatted("Clip - Length: ");
+        ImGui.SameLine();
+        ImGui.TextUnformatted(formatter.Format(state.ClipCount));
         ImGui.Separator();
-        ImGui.InputFloat3("##translation", ref transform.Translation, "%.3f", ImGuiInputTextFlags.None);
+        if (ImGui.InputInt("##ani-prop-clip", ref state.Clip, 1))
+            state.Clip = int.Clamp(state.Clip, 0, state.ClipCount - 1);
+        
         fieldStatus.NextField();
 
-        ImGui.TextUnformatted("Scale");
+        ImGui.TextUnformatted("Speed");
         ImGui.Separator();
-        ImGui.InputFloat3("##scale", ref transform.Scale, "%.3f", ImGuiInputTextFlags.None);
+        ImGui.InputFloat("##ani-speed", ref state.Speed);
         fieldStatus.NextField();
 
-        ImGui.TextUnformatted("Rotation");
+        ImGui.TextUnformatted("Duration");
         ImGui.Separator();
-        ImGui.InputFloat3("##rotation", ref transform.EulerAngles, "%.3f", ImGuiInputTextFlags.None);
-        _rotationField = fieldStatus.NextField();
+        ImGui.InputFloat("##ent-dura", ref state.Duration);
+        fieldStatus.NextField();
 
-        if (fieldStatus.HasEdited(out var field)) _editedField = field;
+        ImGui.TextUnformatted("Time");
+        ImGui.Separator();
+        ImGui.InputFloat("##ent-time", ref state.Time);
+        fieldStatus.NextField();
+
+        if (fieldStatus.HasEdited(out var field))
+        {
+            EngineController.CommitAnimation();
+        }
     }
-*/
+    
+    private static void DrawParticleProperties()
+    {
+        ref var particle = ref EditorDataStore.ParticleState;
+
+        var fieldStatus = new ImGuiFieldStatus();
+
+        var formatter = new NumberSpanFormatter(StringUtils.CharBuffer8);
+        ImGui.SeparatorText("Animation Component");
+
+        ImGui.TextUnformatted("ID:");
+        ImGui.SameLine();
+        ImGui.TextUnformatted(formatter.Format(EditorDataStore.ParticleState.EmitterHandle));
+        
+        //DEF
+        ImGui.SeparatorText("Definition");
+        
+        ImGui.BeginGroup();
+        ImGui.TextUnformatted("Start Color");
+        ImGui.ColorEdit4("##start-color", ref particle.Definition.StartColor);
+        fieldStatus.NextFieldDrag();
+
+        ImGui.TextUnformatted("End Color");
+        ImGui.ColorEdit4("##end-color", ref particle.Definition.EndColor);
+        fieldStatus.NextFieldDrag();
+
+        ImGui.TextUnformatted("Size Start / End");
+        ImGui.InputFloat2("##size-start-end", ref particle.Definition.SizeStartEnd);
+        fieldStatus.NextField();
+
+        ImGui.Separator();
+        
+        ImGui.TextUnformatted("Gravity");
+        ImGui.InputFloat3("##gravity", ref particle.Definition.Gravity);
+        fieldStatus.NextField();
+
+        ImGui.TextUnformatted("Drag");
+        ImGui.InputFloat("##drag", ref particle.Definition.Drag);
+        fieldStatus.NextField();
+
+        ImGui.Separator();
+        
+        ImGui.TextUnformatted("Speed Min / Max");
+        ImGui.InputFloat2("##speed-min-max", ref particle.Definition.SpeedMinMax);
+        fieldStatus.NextField();
+
+        ImGui.TextUnformatted("Life Min / Max");
+        ImGui.InputFloat2("##life-min-max", ref particle.Definition.LifeMinMax);
+        fieldStatus.NextField();
+        ImGui.EndGroup();
+        
+        //STATE
+        ImGui.BeginGroup();
+        ImGui.TextUnformatted("Translation");
+        ImGui.InputFloat3("##translation", ref particle.EmitterState.Translation);
+        fieldStatus.NextField();
+
+        ImGui.TextUnformatted("Start Area");
+        ImGui.InputFloat3("##start-area", ref particle.EmitterState.StartArea);
+        fieldStatus.NextField();
+        
+        ImGui.TextUnformatted("Direction");
+        ImGui.InputFloat3("##start-area", ref particle.EmitterState.Direction);
+        fieldStatus.NextField();
+
+        ImGui.TextUnformatted("Spread");
+        ImGui.InputFloat("##spread", ref particle.EmitterState.Spread);
+        fieldStatus.NextField();
+        
+
+        if (fieldStatus.HasEdited(out var field))
+        {
+            EngineController.CommitParticle();
+        }
+    }
+
     private static bool EntitySelectable(ReadOnlySpan<char> str, bool selected)
     {
         const ImGuiSelectableFlags flags = ImGuiSelectableFlags.SpanAllColumns | ImGuiSelectableFlags.AllowDoubleClick;

@@ -68,9 +68,7 @@ internal sealed class RenderEntityBus
         Validate();
 
         // start
-        StaticProfileTimer.RenderTimer.Begin();
         CollectEntities();
-        StaticProfileTimer.RenderTimer.EndPrint();
 
         TagCollectedEntities(MakeContext());
 

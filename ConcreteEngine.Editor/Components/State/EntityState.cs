@@ -19,7 +19,7 @@ internal sealed class EntityViewState
 
     public void SetSelectedEntity(EditorId entityId)
     {
-        if (EditorDataStore.State.SelectedEntity == entityId) return;
+        if (EditorDataStore.SelectedEntity == entityId) return;
 
         if(entityId.IsValid)
             EngineController.SelectEntity(entityId);
@@ -30,7 +30,7 @@ internal sealed class EntityViewState
 
     public void UpdateTransform(int field, int rotationField)
     {
-        var entityId = EditorDataStore.State.SelectedEntity;
+        var entityId = EditorDataStore.SelectedEntity;
         if(!entityId.IsValid || field < 0) return;
 
         _prevEditField = _editedField;
@@ -38,7 +38,7 @@ internal sealed class EntityViewState
         _rotationField = rotationField;
         
         if (rotationField != -1)
-            EditorDataStore.State.EntityState.Transform.ApplyRotationFromEuler();
+            EditorDataStore.EntityState.Transform.ApplyRotationFromEuler();
         
         EngineController.CommitEntity();
 

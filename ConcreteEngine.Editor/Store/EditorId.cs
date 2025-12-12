@@ -10,14 +10,17 @@ public enum EditorItemType : byte
     Shader,
     Model,
     MaterialTemplate,
+    Material,
 
     // World
     Entity,
-    Component,
-    Material,
-
     Particle,
-    Animation
+    Animation,
+    MaterialKey,
+    
+    AnimationKey,
+    ParticleEmitter,
+
 }
 
 public readonly record struct EditorId(int Identifier, EditorItemType ItemType)

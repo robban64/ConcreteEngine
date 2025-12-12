@@ -1,6 +1,7 @@
 #region
 
 using System.Runtime.CompilerServices;
+using ConcreteEngine.Common.Time;
 using ConcreteEngine.Editor.Data;
 using ConcreteEngine.Editor.Definitions;
 using ConcreteEngine.Editor.Store;
@@ -39,7 +40,7 @@ internal static class EngineDataBridge
     {
         ProcessCamera();
         ProcessWorldParams();
-        ProcessParticle();
+        //ProcessParticle();
         //WorldInteractive.SelectedEntityId = ProcessEntities();
     }
 
@@ -67,7 +68,7 @@ internal static class EngineDataBridge
 
         slot.Reset(camGen);
     }
-
+/*
     private static void ProcessParticle()
     {
         var slot = EditorData.Slot<EditorParticleState>.SlotState;
@@ -78,7 +79,7 @@ internal static class EngineDataBridge
         else if (slot.IsRequesting)
             _world.WriteEmitterState(ref data);
     }
-
+*/
     private static void ProcessWorldParams()
     {
         var gen = _world.WorldParamGeneration;

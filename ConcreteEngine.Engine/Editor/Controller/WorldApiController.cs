@@ -29,7 +29,7 @@ internal sealed class WorldApiController(ApiContext ctx)
     public void WriteEmitterState(ref EditorParticleState data)
     {
         var emitter = World.Particles.GetEmitter(data.EmitterHandle);
-        data.EmitterHandle = emitter.EmitterHandle;
+        data.EmitterHandle = new EditorId(emitter.EmitterHandle, EditorItemType.ParticleEmitter);
         data.Definition = emitter.Definition;
         data.EmitterState = emitter.State;
     }

@@ -50,7 +50,7 @@ internal sealed class EntityStore<T> : IEntityStore where T : unmanaged
     public Span<int> GetCoreIndexSpan() => _coreIndices.AsSpan(0, _idx);
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    private int FindIndex(EntityId e) => EntityUtility.BinarySearchEntity(_entities, e);
+    private int FindIndex(EntityId e) => EntityUtility.BinarySearchEntity(GetEntitySpan(), e);
 
 
     public bool Has(EntityId e)
@@ -66,26 +66,7 @@ internal sealed class EntityStore<T> : IEntityStore where T : unmanaged
         return (uint)index < (uint)_idx && _entities[index] == e;
     }
 
-
-    public T GetByIdOrDefault(EntityId e)
-    {
-        var index = FindIndex(e);
-        if (index >= 0 && index < _data.Length) return _data[index];
-        return default;
-    }
-
-    public T GetByIndexOrDefault(int index)
-    {
-        if (index >= 0 && index < _data.Length) return _data[index];
-        return default;
-    }
-
     
-    public ref T GetById(EntityId e) => ref _data[FindIndex(e)];
-    public ref T GetByIndex(int i) => ref _data[i];
-    public EntityId GetEntityId(int i) => _entities[i];
-    public int GetCoreIndex(int i) =>  _coreIndices[i];
-
     public bool TryGetById(EntityId e, out T value)
     {
         var id = FindIndex(e);
@@ -98,6 +79,25 @@ internal sealed class EntityStore<T> : IEntityStore where T : unmanaged
         value = _data[id];
         return true;
     }
+
+    public T GetByIdOrDefault(EntityId e)
+    {
+        var index = FindIndex(e);
+        if (index >= 0 && index < _data.Length) return _data[index];
+        return default;
+    }
+    
+    public ref T GetById(EntityId e) => ref _data[FindIndex(e)];
+    public ref T GetByIndex(int i) => ref _data[i];
+    public EntityId GetEntityId(int i) => _entities[i];
+    public int GetCoreIndex(int i) =>  _coreIndices[i];
+
+    public T GetByIndexOrDefault(int index)
+    {
+        if (index >= 0 && index < _data.Length) return _data[index];
+        return default;
+    }
+
 
     public void Add(EntityId e, int index, T value)
     {

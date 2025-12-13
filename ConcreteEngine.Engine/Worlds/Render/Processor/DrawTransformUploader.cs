@@ -18,33 +18,32 @@ internal static class DrawTransformUploader
 {
     public static void UploadTransform(DrawEntityContext ctx)
     {
-        var entitiesData = ctx.EntityDataSpan;
+        var transformSpan = DrawDataProvider.WorldEntities.Core.GetTransformSpan();
         var entities = ctx.EntitySpan;
 
         var len = entities.Length;
-
-        if (len != entitiesData.Length) throw new IndexOutOfRangeException();
-
+        if ((uint)len > transformSpan.Length) throw new IndexOutOfRangeException();
+        
         Transform transform;
         for (var i = 0; i < len; i++)
         {
             ref readonly var entity = ref entities[i];
+            if(entity.Source.Model <= 0) continue;
             var isAnimated = entity.Meta.AnimatedSlot > 0;
-            
-            transform = entitiesData[i].Transform;
+
+            transform = transformSpan[i];
 
             ExecuteSubmitTransform(in transform, entity.Source.Model, isAnimated);
         }
     }
-    
 
-    private static void ExecuteSubmitTransform(in Transform transform, ModelId model, bool isAnimated)
+
+    private static void ExecuteSubmitTransform(in Transform t, ModelId model, bool isAnimated)
     {
-        var locals = DrawDataProvider.GetPartTransforms(model);
+        MatrixMath.CreateModelMatrix(in t.Translation, in t.Scale, in t.Rotation, out var world);
+        
         var writer = DrawDataProvider.GetDrawUploaderCtx();
-
-        MatrixMath.CreateModelMatrix(in transform.Translation, in transform.Scale,in  transform.Rotation, out var world);
-
+        var locals = DrawDataProvider.GetPartTransforms(model);
         foreach (ref readonly var local in locals)
         {
             ref var modelTransform = ref writer.GetWriter();

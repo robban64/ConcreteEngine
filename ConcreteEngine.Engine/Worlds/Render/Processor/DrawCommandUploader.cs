@@ -41,7 +41,10 @@ internal static class DrawCommandUploader
 
 
     private static void ExecuteGeneratedCommand(in DrawEntity entity)
-    {
+    { 
+        ArgumentOutOfRangeException.ThrowIfLessThan(entity.Source.MaterialKey.Value,1);
+        ArgumentOutOfRangeException.ThrowIfLessThan(entity.Source.Model,1);
+
         var writer = DrawDataProvider.GetDrawUploaderCtx();
         var mesh = new MeshId(entity.Source.Model);
         var material = new MaterialId(entity.Source.MaterialKey.Value);

@@ -14,24 +14,33 @@ namespace ConcreteEngine.Engine.Worlds.Render.Processor;
 
 internal static class DrawParticleProcessor
 {
+    private static readonly List<ParticleEmitter> Emitters = [];
+
     internal static void Execute(DrawEntityContext ctx, WorldParticles worldParticles)
     {
+        Emitters.Clear();
+        Emitters.EnsureCapacity(DrawDataProvider.WorldEntities.Particles.Count);
+
+        
         foreach (var query in DrawDataProvider.WorldEntities.Query<ParticleComponent>())
         {
-            ref var entity = ref ctx.GetByEntityId(query.Entity);
-            ref var component = ref query.Component;
+            ref var drawEntity = ref ctx.GetByEntityId(query.Entity);
+            var component = query.Component;
 
             var emitter = worldParticles.GetEmitter(component.EmitterHandle);
 
-            entity.Meta.Queue = DrawCommandQueue.Particles;
-            entity.Meta.PassMask = PassMask.Main;
-            entity.Meta.CommandId = DrawCommandId.Particle;
-            entity.Source.InstanceCount = emitter.ParticleCount;
-            entity.Source.Model = new ModelId(emitter.MeshId);
-            entity.Source.MaterialKey = new MaterialTagKey(emitter.MaterialId);
+            drawEntity.Meta.Queue = DrawCommandQueue.Particles;
+            drawEntity.Meta.PassMask = PassMask.Main;
+            drawEntity.Meta.CommandId = DrawCommandId.Particle;
+            drawEntity.Source.InstanceCount = emitter.ParticleCount;
+            drawEntity.Source.Model = new ModelId(emitter.MeshId);
+            drawEntity.Source.MaterialKey = new MaterialTagKey(emitter.MaterialId);
 
-            ProcessEmitter(worldParticles, emitter);
+            Emitters.Add(emitter);
         }
+
+        foreach (var emitter in Emitters)
+            ProcessEmitter(worldParticles, emitter);
     }
 
     private static void ProcessEmitter(WorldParticles worldParticles, ParticleEmitter emitter)

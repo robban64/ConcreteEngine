@@ -23,29 +23,20 @@ public readonly struct DrawCommand(
 }
 
 [StructLayout(LayoutKind.Sequential)]
-public readonly struct DrawCommandMeta
+public readonly struct DrawCommandMeta(
+    DrawCommandId id,
+    DrawCommandQueue queue,
+    DrawCommandResolver resolver = DrawCommandResolver.None,
+    PassMask passMask = PassMask.Default,
+    ushort depthKey = 0,
+    ushort animationSlot = 0)
 {
-    public readonly ushort AnimationSlot;
-    public readonly ushort DepthKey;
-    public readonly PassMask PassMask;
-    public readonly DrawCommandId Id;
-    public readonly DrawCommandQueue Queue;
-    public readonly DrawCommandResolver Resolver;
-
-    public DrawCommandMeta(DrawCommandId id,
-        DrawCommandQueue queue,
-        DrawCommandResolver resolver = DrawCommandResolver.None,
-        PassMask passMask = PassMask.Default,
-        ushort depthKey = 0,
-        ushort animationSlot = 0)
-    {
-        AnimationSlot = animationSlot;
-        PassMask = passMask;
-        DepthKey = depthKey;
-        Id = id;
-        Queue = queue;
-        Resolver = resolver;
-    }
+    public readonly ushort AnimationSlot = animationSlot;
+    public readonly ushort DepthKey = depthKey;
+    public readonly PassMask PassMask = passMask;
+    public readonly DrawCommandId Id = id;
+    public readonly DrawCommandQueue Queue = queue;
+    public readonly DrawCommandResolver Resolver = resolver;
 }
 
 [StructLayout(LayoutKind.Sequential)]

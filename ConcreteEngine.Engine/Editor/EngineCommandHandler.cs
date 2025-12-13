@@ -88,7 +88,6 @@ internal static class EngineCommandHandler
 
         ctx.AddLog(StructStr<Transform>());
         ctx.AddLog(StructStr<DrawEntity>());
-        ctx.AddLog(StructStr<DrawEntityData>());
         ctx.AddLog(StructStr<DrawEntityMeta>());
         ctx.AddLog(StructStr<DrawEntitySource>());
         

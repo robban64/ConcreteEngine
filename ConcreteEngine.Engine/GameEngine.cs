@@ -131,7 +131,7 @@ public sealed class GameEngine : IDisposable
 
 
         _world.StartRenderFrame(alpha);
-        _worldRenderer.PreRender(beginStatus, in frameInfo, in runtimeParams, _world.Camera);
+        _worldRenderer.PreRender(beginStatus,  frameInfo,  runtimeParams, _world.Camera);
         _worldRenderer.ExecuteFrame(out var gfxFrameResult);
 
         if (_engineGateway.Active)

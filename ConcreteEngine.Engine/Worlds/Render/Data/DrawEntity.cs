@@ -14,13 +14,6 @@ using ConcreteEngine.Renderer.Definitions;
 namespace ConcreteEngine.Engine.Worlds.Render.Data;
 
 [StructLayout(LayoutKind.Sequential)]
-internal struct DrawEntityData(in Transform transform, in BoundingBox bounds)
-{
-    public Transform Transform = transform;
-    public BoundingBox Bounds = bounds;
-}
-
-[StructLayout(LayoutKind.Sequential)]
 internal struct DrawEntity
 {
     public DrawEntitySource Source;

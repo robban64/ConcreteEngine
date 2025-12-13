@@ -21,24 +21,25 @@ namespace ConcreteEngine.Engine.Worlds.Render;
 
 internal sealed class RenderEntityBus
 {
-    private static int _idx = 0;
-    private static int _prevIdx = 0;
+    private static int _idx;
+    private static int _prevIdx;
+
+    private static int _visibleIdx;
 
     public const int DefaultCapacity = 512;
     public const int MaxCapacity = 1024 * 50;
 
     //...
     private int[] _byEntityId = new int[DefaultCapacity];
+    private int[] _visibleIndices = new int[DefaultCapacity];
     private DrawEntity[] _entities = new DrawEntity[DefaultCapacity];
-    private DrawEntityData[] _entityData = new DrawEntityData[DefaultCapacity];
     //...
 
     private World? _world;
+    public ModelId CubeId;
+    public MaterialTagKey EmptyMaterialKey;
 
-    public ModelId CubeId { get; set; }
-    public MaterialTagKey EmptyMaterialKey { get; set; }
-
-    public static readonly FrameProfiler RenderProfiler = new(144, 144*10);
+    public static readonly FrameProfiler RenderProfiler = new(144, 144 * 10);
 
     internal RenderEntityBus()
     {
@@ -48,32 +49,33 @@ internal sealed class RenderEntityBus
         RenderProfiler.Register("Animator");
         RenderProfiler.Register("DrawCommands");
         RenderProfiler.Register("Transforms");
-
     }
+
+
+    private WorldEntities WorldEntities => _world!.Entities;
+
+    internal void AttachWorld(World world) => _world = world;
+
+    private DrawEntityContext MakeContext() => new(_idx, _visibleIdx, _entities, _byEntityId, _visibleIndices);
 
     public void Reset()
     {
         _prevIdx = _idx;
         _idx = 0;
+        _visibleIdx = 0;
     }
-
-    private WorldEntities WorldEntities => _world!.Entities;
-
-    private int ActiveSkyCount => _world?.Sky.IsActive ?? false ? 1 : 0;
-    private int ActiveTerrainCount => _world?.Terrain.IsActive ?? false ? 1 : 0;
-    public int DrawCount => (_world?.EntityCount ?? 0) + ActiveSkyCount + ActiveTerrainCount;
-
-    internal void AttachWorld(World world) => _world = world;
-
-    private DrawEntityContext MakeContext() => new(_idx, _entities, _entityData, _byEntityId);
-
 
     public void Execute()
     {
+        const int extraEntities = 64;
+        const int extraAnimations = 8;
         if (_world is null) return;
 
-        EnsureDrawEntityData(DrawCount);
-        DrawDataProvider.EnsureBuffer(_world.EntityCount + 64, _world.Entities.Animations.Count);
+        var entityCount = WorldEntities.EntityCount;
+        var ensureLen = entityCount + extraEntities;
+        var animationLen = WorldEntities.Animations.Count + extraAnimations;
+        EnsureDrawEntityData(ensureLen);
+        DrawDataProvider.EnsureBuffer(ensureLen, animationLen);
 
         Validate();
 
@@ -83,15 +85,16 @@ internal sealed class RenderEntityBus
         RenderProfiler.End();
 
         RenderProfiler.Begin(1);
-        TagCollectedEntities(MakeContext());
+        TagCollectedEntities();
         RenderProfiler.End();
-        
+
         SubmitWorldObjects();
+
         
         RenderProfiler.Begin(2);
         DrawParticleProcessor.Execute(MakeContext(), _world.Particles);
         RenderProfiler.End();
-        
+
         RenderProfiler.Begin(3);
         DrawAnimatorProcessor.Execute();
         RenderProfiler.End();
@@ -99,23 +102,23 @@ internal sealed class RenderEntityBus
         RenderProfiler.Begin(4);
         DrawCommandUploader.UploadDrawCommands(MakeContext());
         RenderProfiler.End();
-        
+
         RenderProfiler.Begin(5);
         DrawTransformUploader.UploadTransform(MakeContext());
-        if(RenderProfiler.End())
+        if (RenderProfiler.End())
             RenderProfiler.PrintTotal();
-        
+
         // end
     }
 
     private void Validate()
     {
-        if (_entityData.Length == 0 || _entities.Length == 0)
+        if (_visibleIndices.Length == 0 || _entities.Length == 0)
             throw new InvalidOperationException();
 
         var view = WorldEntities.Core.GetCoreView();
 
-        if (_entities.Length != _entityData.Length || _entities.Length != _byEntityId.Length)
+        if (_entities.Length != _visibleIndices.Length || _entities.Length != _byEntityId.Length)
             throw new InvalidOperationException();
 
         if (view.EntityId.Length != view.Transforms.Length || view.EntityId.Length != view.Sources.Length)
@@ -126,27 +129,32 @@ internal sealed class RenderEntityBus
             throw new IndexOutOfRangeException();
     }
 
+    //var ctx = new DrawEntityContext(_entities.Length, _entities, _entityData, _byEntityId);
 
     private void CollectEntities()
     {
-        //var ctx = new DrawEntityContext(_entities.Length, _entities, _entityData, _byEntityId);
         var idx = 0;
         foreach (var query in DrawDataProvider.WorldEntities.CoreQuery())
         {
             var entityId = query.Entity;
             ref var drawEntity = ref _entities[query.Index];
             DrawEntityCollector.CollectEntity(ref drawEntity, entityId, in query.Source);
-            _byEntityId[entityId] = idx++;
+            _byEntityId[entityId] = query.Index;
+            idx++;
         }
+
         _idx = idx;
+    }
 
-        foreach (var query in DrawDataProvider.WorldEntities.CoreQuery())
-        {
-            ref var entityData = ref _entityData[query.Index];
-            entityData.Transform = query.Transform;
-            entityData.Bounds = query.Box;
-        }
+    private void TagCollectedEntities()
+    {
+        if(_idx == 0) return;
+        if((uint)_idx > _entities.Length || _entities.Length != _byEntityId.Length)
+            throw  new IndexOutOfRangeException();
 
+        var ctx = MakeContext();
+        DrawSpatialProcessor.TagDepthKeys(ctx);
+        DrawTagResolver.TagEffectResolvers(ctx);
     }
 
     private void SubmitWorldObjects()
@@ -155,17 +163,10 @@ internal sealed class RenderEntityBus
         DrawWorldProcessor.SubmitDrawSkybox(_world!.Sky);
     }
 
-    private static void TagCollectedEntities(DrawEntityContext ctx)
-    {
-        DrawTagResolver.TagEffectResolvers(ctx);
-        DrawSpatialProcessor.TagDepthKeys(ctx);
-    }
-
-
     public void EnsureDrawEntityData(int amount)
     {
         InvalidOpThrower.ThrowIf(_byEntityId.Length != _entities.Length);
-        InvalidOpThrower.ThrowIf(_byEntityId.Length != _entityData.Length);
+        InvalidOpThrower.ThrowIf(_byEntityId.Length != _visibleIndices.Length);
 
         if (_entities.Length >= amount) return;
         var newCap = Arrays.CapacityGrowthSafe(_entities.Length, amount);
@@ -173,7 +174,7 @@ internal sealed class RenderEntityBus
             throw new OutOfMemoryException("Entity Buffer exceeded max limit");
 
         Array.Resize(ref _entities, newCap);
-        Array.Resize(ref _entityData, newCap);
+        Array.Resize(ref _visibleIndices, newCap);
         Array.Resize(ref _byEntityId, newCap);
         Logger.LogString(LogScope.World, $"Entity buffer resize {newCap}", LogLevel.Warn);
     }

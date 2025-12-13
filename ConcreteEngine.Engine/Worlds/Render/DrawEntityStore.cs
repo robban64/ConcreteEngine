@@ -2,6 +2,7 @@
 
 using System.Numerics;
 using System.Runtime.CompilerServices;
+using ConcreteEngine.Common.Numerics;
 using ConcreteEngine.Engine.Worlds.Data;
 using ConcreteEngine.Engine.Worlds.Render.Data;
 using ConcreteEngine.Engine.Worlds.Tables;
@@ -14,9 +15,11 @@ namespace ConcreteEngine.Engine.Worlds.Render;
 
 internal static class DrawDataProvider
 {
+
     //....
     internal static RenderFrameInfo FrameInfo;
     internal static RenderViewSnapshot RenderView;
+    internal static BoundingFrustum Frustum;
     //....
 
     internal static float DeltaTime => FrameInfo.DeltaTime;

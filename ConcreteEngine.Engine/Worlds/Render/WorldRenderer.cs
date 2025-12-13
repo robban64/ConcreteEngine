@@ -118,8 +118,8 @@ public sealed class WorldRenderer : IWorldRenderer
 
     internal void PreRender(
         BeginFrameStatus status,
-        in RenderFrameInfo frameInfo,
-        in RenderRuntimeParams runtimeParams,
+        RenderFrameInfo frameInfo,
+        RenderRuntimeParams runtimeParams,
         Camera3D camera)
     {
         _renderEntityBus.Reset();
@@ -152,10 +152,10 @@ public sealed class WorldRenderer : IWorldRenderer
 
     private void PrepareRenderView(in RenderFrameInfo frameInfo, Camera3D camera)
     {
-        ref var view = ref Unsafe.AsRef(ref RenderCamera.RenderView);
-        camera.WriteSnapshot(EngineTime.GameAlpha, ref view);
+        camera.WriteSnapshot(EngineTime.GameAlpha, ref RenderCamera.RenderView);
         DrawDataProvider.FrameInfo = frameInfo;
-        DrawDataProvider.RenderView = view;
+        DrawDataProvider.RenderView = RenderCamera.RenderView;
+        DrawDataProvider.Frustum = camera.Frustum;
     }
 
     private void SubmitMaterialData()

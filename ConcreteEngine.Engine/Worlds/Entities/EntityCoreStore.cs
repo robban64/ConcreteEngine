@@ -55,6 +55,8 @@ internal sealed class EntityCoreStore
     internal ref BoxComponent GetBoxByIndex(int idx) => ref _boxes[idx];
 
     public Span<EntityId> GetEntitySpan() => _entities.AsSpan(0, _idx);
+    public Span<Transform> GetTransformSpan() => _transforms.AsSpan(0, _idx);
+    public Span<BoxComponent> GetBoxSpan() => _boxes.AsSpan(0, _idx);
 
     public EntityView GetEntityView(EntityId e)
     {

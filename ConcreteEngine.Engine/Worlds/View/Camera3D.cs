@@ -25,14 +25,14 @@ public sealed class Camera3D
 
     private const float DirtyThreshold = MetricUnits.Micrometer;
 
+    private BoundingFrustum _frustum;
 
     private Matrix4x4 _viewMatrix = Matrix4x4.Identity;
     private Matrix4x4 _projectionMatrix = Matrix4x4.Identity;
-    //private Matrix4x4 _projectionViewMatrix = Matrix4x4.Identity;
+    //rivate Matrix4x4 _projectionViewMatrix = Matrix4x4.Identity;
 
     private ViewTransform _transform;
     private ViewTransform _prevTransform;
-
 
     private ProjectionInfo _projInfo = new(70, 0.1f, 500);
 
@@ -55,6 +55,7 @@ public sealed class Camera3D
     public Vector3 Up => new Vector3(_viewMatrix.M12, _viewMatrix.M22, _viewMatrix.M32);
     public Vector3 Forward => -new Vector3(_viewMatrix.M13, _viewMatrix.M23, _viewMatrix.M33);
 
+    internal ref BoundingFrustum Frustum => ref _frustum;
 
     public YawPitch Orientation
     {
@@ -137,6 +138,7 @@ public sealed class Camera3D
             return _raycaster;
         }
     }
+    
 
     public void StartTick()
     {
@@ -161,24 +163,23 @@ public sealed class Camera3D
 
         RenderTransform.CreateLightView(ref lightSpace, in shadows, renderParams.SunLight.Direction, corners);
     }
+    
 
     internal void WriteSnapshot(float alpha, ref RenderViewSnapshot viewSnapshot)
     {
-        ref var prevTransform = ref _prevTransform;
-        ref var transform = ref _transform;
-
-        var camPos = Vector3.Lerp(prevTransform.Translation, transform.Translation, alpha);
-        var camOri = YawPitch.LerpFixed(prevTransform.Orientation, transform.Orientation, alpha);
+        var camPos = Vector3.Lerp(_prevTransform.Translation, _transform.Translation, alpha);
+        var camOri = YawPitch.LerpFixed(_prevTransform.Orientation, _transform.Orientation, alpha);
 
         MatrixMath.CreateFixedSizeModelMatrix(in camPos, RotationMath.YawPitchToQuaternion(camOri), out var viewMatrix);
         Matrix4x4.Invert(viewMatrix, out viewMatrix);
 
-        ref readonly var projMat = ref _projectionMatrix;
         viewSnapshot.ViewMatrix = viewMatrix;
-        viewSnapshot.ProjectionMatrix = projMat;
-        viewSnapshot.ProjectionViewMatrix = viewMatrix * projMat;
+        viewSnapshot.ProjectionMatrix = _projectionMatrix;
+        viewSnapshot.ProjectionViewMatrix = viewMatrix * _projectionMatrix;
         viewSnapshot.ProjectionInfo = _projInfo;
-        viewSnapshot.Transform = transform;
+        viewSnapshot.Transform = _transform;
+
+        _frustum = new BoundingFrustum(in viewSnapshot.ProjectionViewMatrix);
     }
 
     internal void Ensure()
@@ -197,6 +198,7 @@ public sealed class Camera3D
         _projectionMatrix =
             Matrix4x4.CreatePerspectiveFieldOfView(fov, projInfo.AspectRatio, projInfo.Near, projInfo.Far);
 
+        
         Generation++;
     }
 

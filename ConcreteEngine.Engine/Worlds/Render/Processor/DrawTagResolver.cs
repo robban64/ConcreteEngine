@@ -1,5 +1,6 @@
 #region
 
+using ConcreteEngine.Engine.Worlds.Data;
 using ConcreteEngine.Engine.Worlds.Entities.Components;
 using ConcreteEngine.Engine.Worlds.Render.Data;
 using ConcreteEngine.Renderer.Definitions;
@@ -25,7 +26,7 @@ internal static class DrawTagResolver
         {
             ref var entity = ref ctx.GetByEntityId(query.Entity);
             ref var component = ref query.Component;
-            
+
             component.AdvanceTime(dt);
             entity.SetAnimationSlot(query.Index + 1);
         }

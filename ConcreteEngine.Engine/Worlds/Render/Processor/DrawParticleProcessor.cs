@@ -20,7 +20,6 @@ internal static class DrawParticleProcessor
     {
         Emitters.Clear();
         Emitters.EnsureCapacity(DrawDataProvider.WorldEntities.Particles.Count);
-
         
         foreach (var query in DrawDataProvider.WorldEntities.Query<ParticleComponent>())
         {

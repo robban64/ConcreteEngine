@@ -49,6 +49,7 @@ internal sealed class RenderEntityBus
         RenderProfiler.Register("Animator");
         RenderProfiler.Register("DrawCommands");
         RenderProfiler.Register("Transforms");
+        RenderProfiler.Enabled = false;
     }
 
 
@@ -90,7 +91,7 @@ internal sealed class RenderEntityBus
 
         SubmitWorldObjects();
 
-        
+
         RenderProfiler.Begin(2);
         DrawParticleProcessor.Execute(MakeContext(), _world.Particles);
         RenderProfiler.End();
@@ -148,12 +149,20 @@ internal sealed class RenderEntityBus
 
     private void TagCollectedEntities()
     {
-        if(_idx == 0) return;
-        if((uint)_idx > _entities.Length || _entities.Length != _byEntityId.Length)
-            throw  new IndexOutOfRangeException();
+        if (_idx == 0) return;
+        if(_entities.Length != _byEntityId.Length || _visibleIndices.Length != _entities.Length)
+            throw new IndexOutOfRangeException();
+
+        if ((uint)_idx > _entities.Length)
+            throw new IndexOutOfRangeException();
+
+        _visibleIdx = DrawSpatialProcessor.CullEntities(_visibleIndices);
 
         var ctx = MakeContext();
+        StaticProfileTimer.RenderTimer.Begin();
         DrawSpatialProcessor.TagDepthKeys(ctx);
+        StaticProfileTimer.RenderTimer.EndPrint();
+
         DrawTagResolver.TagEffectResolvers(ctx);
     }
 

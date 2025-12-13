@@ -1,5 +1,6 @@
 #region
 
+using ConcreteEngine.Common.Collections;
 using ConcreteEngine.Engine.Worlds.Data;
 using ConcreteEngine.Engine.Worlds.Entities.Components;
 using ConcreteEngine.Engine.Worlds.Render.Data;
@@ -14,21 +15,25 @@ internal static class DrawTagResolver
     internal static void TagEffectResolvers(DrawEntityContext ctx)
     {
         var worldEntities = DrawDataProvider.WorldEntities;
+        var dt = DrawDataProvider.DeltaTime;
+
         foreach (var resolved in worldEntities.ResolvedEntitySpan)
         {
-            ref var entity = ref ctx.GetByEntityId(resolved.Entity);
-            entity.Meta.PassMask = PassMask.Effect | PassMask.DepthPre;
-            entity.Meta.Resolver = resolved.CommandResolver;
+            ref var drawEntity = ref ctx.GetByEntityId(resolved.Entity);
+            drawEntity.Meta.PassMask = PassMask.Effect | PassMask.DepthPre;
+            drawEntity.Meta.Resolver = resolved.CommandResolver;
         }
 
-        var dt = DrawDataProvider.DeltaTime;
         foreach (var query in DrawDataProvider.WorldEntities.Query<AnimationComponent>())
         {
-            ref var entity = ref ctx.GetByEntityId(query.Entity);
+            var entityId = query.Entity;
             ref var component = ref query.Component;
-
             component.AdvanceTime(dt);
-            entity.SetAnimationSlot(query.Index + 1);
+
+            var index = ctx.ByEntityIdSpan[entityId];
+            if(index == -1) continue;
+            ref var drawEntity = ref ctx.EntitySpan[index];
+            drawEntity.SetAnimationSlot(query.Index + 1);
         }
     }
 /*

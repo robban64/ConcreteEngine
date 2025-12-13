@@ -23,9 +23,11 @@ internal static class DrawParticleProcessor
         
         foreach (var query in DrawDataProvider.WorldEntities.Query<ParticleComponent>())
         {
-            ref var drawEntity = ref ctx.GetByEntityId(query.Entity);
+            var index = ctx.ByEntityIdSpan[query.Entity];
+            if(index == -1) continue;
+            ref var drawEntity = ref ctx.EntitySpan[index];
+            
             var component = query.Component;
-
             var emitter = worldParticles.GetEmitter(component.EmitterHandle);
 
             drawEntity.Meta.Queue = DrawCommandQueue.Particles;

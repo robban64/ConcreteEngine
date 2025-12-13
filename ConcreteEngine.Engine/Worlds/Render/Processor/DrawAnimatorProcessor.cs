@@ -14,7 +14,7 @@ namespace ConcreteEngine.Engine.Worlds.Render.Processor;
 internal static class DrawAnimatorProcessor
 {
     [SkipLocalsInit]
-    public static void Execute()
+    public static void Execute(DrawEntityContext ctx)
     {
         const int boneCap = RenderLimits.BoneCapacity;
         Span<Matrix4x4> globals = stackalloc Matrix4x4[boneCap];
@@ -23,11 +23,10 @@ internal static class DrawAnimatorProcessor
         var animationView = DrawDataProvider.GetAnimationDataView();
         var uploader = DrawDataProvider.GetSkinningUploaderCtx();
 
-
-        AnimationComponent component;
         foreach (var query in DrawDataProvider.WorldEntities.Query<AnimationComponent>())
         {
-            component = query.Component;
+            ref readonly var component = ref query.Component;
+            if(!ctx.IsVisible(query.Entity)) continue;
             var view = animationView.GetModelView(component.Animation, out var invTransform);
 
             var len = view.BoneLength;

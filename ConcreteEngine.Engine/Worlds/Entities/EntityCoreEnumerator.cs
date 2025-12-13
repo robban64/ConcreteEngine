@@ -21,9 +21,9 @@ internal ref struct EntityCoreEnumerator(EntityCoreStore r)
     internal readonly ref struct EntityCoreQuery(int idx, EntityCoreStore r)
     {
         public readonly int Index = idx;
-        public EntityId Entity => r.GetEntityByIndex(Index);
-        public ref RenderSourceComponent Source => ref r.GetSourceByIndex(Index);
-        public ref Transform Transform => ref r.GetTransformByIndex(Index);
-        public ref BoxComponent Box => ref r.GetBoxByIndex(Index);
+        public readonly EntityId Entity = new(idx + 1);
+        public ref RenderSourceComponent Source => ref r.GetSourceById(Entity);
+        public ref Transform Transform => ref r.GetTransformById(Entity);
+        public ref BoxComponent Box => ref r.GetBoxById(Entity);
     }
 }

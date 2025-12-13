@@ -46,7 +46,7 @@ public sealed class WorldEntities
     public void AddComponent<T>(EntityId entityId, in T component) where T : unmanaged
     {
         ArgumentOutOfRangeException.ThrowIfNegativeOrZero(entityId.Id, nameof(entityId));
-        GenericStores<T>.Store.Add(entityId, Core.GetIndexByEntity(entityId), component);
+        GenericStores<T>.Store.Add(entityId, entityId - 1, component);
     }
 
     internal void ApplyRenderResolverFor(EntityId entityId, RenderResolver resolver)

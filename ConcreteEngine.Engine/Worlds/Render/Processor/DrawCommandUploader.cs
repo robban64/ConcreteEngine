@@ -12,16 +12,12 @@ internal static class DrawCommandUploader
 {
     public static void UploadDrawCommands(DrawEntityContext ctx)
     {
-        var entities = ctx.EntitySpan;
-
-        var len = entities.Length;
-
         MaterialTag materialTag = default;
         var prevMatKey = new MaterialTagKey(-1);
 
-        for (var i = 0; i < len; i++)
+        foreach (var it in ctx)
         {
-            ref readonly var entity = ref entities[i];
+            ref readonly var entity = ref it.DrawEntity;
             if (entity.Meta.CommandId != DrawCommandId.Model)
             {
                 ExecuteGeneratedCommand(in entity);
@@ -37,6 +33,7 @@ internal static class DrawCommandUploader
 
             ExecuteSubmitCommand(in entity, in materialTag);
         }
+
     }
 
 

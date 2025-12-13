@@ -3,6 +3,7 @@
 using System.Numerics;
 using System.Runtime.CompilerServices;
 using ConcreteEngine.Common.Numerics;
+using ConcreteEngine.Engine.Worlds.Entities;
 using ConcreteEngine.Engine.Worlds.Entities.Components;
 using ConcreteEngine.Engine.Worlds.Render.Data;
 using ConcreteEngine.Engine.Worlds.Utility;
@@ -13,44 +14,43 @@ namespace ConcreteEngine.Engine.Worlds.Render.Processor;
 
 internal static class DrawSpatialProcessor
 {
+    internal static int CullEntities(Span<EntityId> entityIndices, Span<int> byEntityId)
+    {
+        var count = 0;
+        BoundingBox worldBounds;
+        ref readonly var frustum = ref DrawDataProvider.Frustum;
+        foreach (var query in DrawDataProvider.WorldEntities.CoreQuery())
+        {
+            ref readonly var transform = ref query.Transform;
+            ref readonly var bounds = ref query.Box.Bounds;
+            GetWorldBounds(in bounds, in transform, out worldBounds);
+            if (!frustum.IntersectsBox(in worldBounds)) continue;
+
+            byEntityId[query.Entity] = count;
+            entityIndices[count++] = query.Entity;
+        }
+
+        return count;
+    }
+
     internal static void TagDepthKeys(DrawEntityContext ctx)
     {
         var view = DrawDataProvider.GetCameraRefView();
         var viewDepth = DepthKeyUtility.ExtractDepthVector(in view.ViewMatrix);
         var nearFar = new Vector2(view.ProjectionInfo.Near, view.ProjectionInfo.Far);
 
-        var transformSpan = DrawDataProvider.WorldEntities.Core.GetTransformSpan();
-        if ((uint)ctx.VisibleCount > transformSpan.Length)
-            throw new IndexOutOfRangeException();
+        var coreEntities = DrawDataProvider.WorldEntities.Core.GetCoreView();
 
         Vector3 worldPos;
-        foreach (var query in ctx)
+        foreach (var it in ctx)
         {
-            ref var entity = ref query.DrawEntity;
-            worldPos = transformSpan[query.Index].Translation;
+            ref var entity = ref it.DrawEntity;
+            worldPos = coreEntities.GetTransform(entity.Entity).Translation;
             var depthKey = DepthKeyUtility.MakeDepthKey(in viewDepth, worldPos, nearFar);
             entity.WithDepthKey(depthKey);
-
         }
     }
 
-    internal static int CullEntities(Span<int> visibleIndices)
-    {
-        var count = 0;
-        BoundingBox worldBounds;
-        foreach (var query in DrawDataProvider.WorldEntities.CoreQuery())
-        {
-            ref readonly var transform = ref query.Transform;
-            ref readonly var bounds =  ref query.Box.Bounds;
-            GetWorldBounds(in bounds, in transform, out worldBounds);
-            if (DrawDataProvider.Frustum.IntersectsBox(in worldBounds))
-            {
-                visibleIndices[count++] = query.Index;
-            }
-        }
-
-        return count;
-    }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     private static void GetWorldBounds(

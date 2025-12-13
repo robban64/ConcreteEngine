@@ -1,8 +1,11 @@
+using System.Runtime.CompilerServices;
+
 namespace ConcreteEngine.Common.Collections;
 
 public static class SortMethod
 {
-    public static int BinarySearch(ReadOnlySpan<int> collection, int value)
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public static int BinarySearchInt(ReadOnlySpan<int> collection, int value)
     {
         int lo = 0;
         int hi = collection.Length - 1;

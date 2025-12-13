@@ -15,7 +15,6 @@ internal sealed class EntityCoreStore
     private EntityId Create() => new(++_idx);
     private int _idx = 0;
 
-    private int[] _sparse;
     private EntityId[] _entities;
     private RenderSourceComponent[] _sources;
     private Transform[] _transforms;
@@ -32,7 +31,6 @@ internal sealed class EntityCoreStore
     internal EntityCoreStore(int initialCapacity)
     {
         ArgumentOutOfRangeException.ThrowIfLessThan(initialCapacity, 32);
-        _sparse = new int[initialCapacity];
         _entities = new EntityId[initialCapacity];
         _sources = new RenderSourceComponent[initialCapacity];
         _transforms = new Transform[initialCapacity];
@@ -40,19 +38,13 @@ internal sealed class EntityCoreStore
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    private int GetSparseIndex(EntityId e) => _sparse[e - 1];
-
-    public ref RenderSourceComponent GetSourceById(EntityId e) => ref _sources[GetSparseIndex(e)];
-    public ref Transform GetTransformById(EntityId e) => ref _transforms[GetSparseIndex(e)];
-    public ref BoxComponent GetBoxById(EntityId e) => ref _boxes[GetSparseIndex(e)];
-
-
+    public ref RenderSourceComponent GetSourceById(EntityId e) => ref _sources[e - 1];
+    
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    internal EntityId GetEntityByIndex(int idx) => _entities[idx];
-
-    internal ref RenderSourceComponent GetSourceByIndex(int idx) => ref _sources[idx];
-    internal ref Transform GetTransformByIndex(int idx) => ref _transforms[idx];
-    internal ref BoxComponent GetBoxByIndex(int idx) => ref _boxes[idx];
+    public ref Transform GetTransformById(EntityId e) => ref _transforms[e - 1];
+    
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public ref BoxComponent GetBoxById(EntityId e) => ref _boxes[e - 1];
 
     public Span<EntityId> GetEntitySpan() => _entities.AsSpan(0, _idx);
     public Span<Transform> GetTransformSpan() => _transforms.AsSpan(0, _idx);
@@ -60,7 +52,7 @@ internal sealed class EntityCoreStore
 
     public EntityView GetEntityView(EntityId e)
     {
-        var idx = GetIndexByEntity(e);
+        var idx = e - 1;
         if ((uint)idx >= _entities.Length) throw new IndexOutOfRangeException();
         return new EntityView(e, ref _sources[idx], ref _transforms[idx], ref _boxes[idx]);
     }
@@ -68,20 +60,7 @@ internal sealed class EntityCoreStore
     public EntitiesCoreView GetCoreView() =>
         new(_entities.AsSpan(0, _idx), _sources.AsSpan(0, _idx), _transforms.AsSpan(0, _idx), _boxes.AsSpan(0, _idx));
 
-    internal int GetIndexByEntity(EntityId e)
-    {
-        ArgumentOutOfRangeException.ThrowIfNegativeOrZero(e.Id, nameof(e));
-        ArgumentOutOfRangeException.ThrowIfGreaterThanOrEqual(e.Id, _sparse.Length, nameof(e));
 
-        return GetSparseIndex(e);
-    }
-
-    public bool Has(EntityId e)
-    {
-        ArgumentOutOfRangeException.ThrowIfNegativeOrZero(e.Id, nameof(e));
-        var index = GetSparseIndex(e);
-        return (uint)index < (uint)_idx && _entities[index] == e;
-    }
 
     public EntityId AddEntity(RenderSourceComponent renderSource, in Transform transform, in BoundingBox bounds,
         out int index)
@@ -91,11 +70,10 @@ internal sealed class EntityCoreStore
         var e = Create();
         EnsureCapacity(1);
 
-        _sparse[e - 1] = index;
         _entities[index] = e;
         _sources[index] = renderSource;
         _transforms[index] = transform;
-        _boxes[index] = new BoxComponent(in bounds);
+        _boxes[index] = bounds;
 
         IsDirty = true;
         return e;
@@ -105,7 +83,6 @@ internal sealed class EntityCoreStore
     {
         ArgumentOutOfRangeException.ThrowIfNegativeOrZero(e.Id, nameof(e));
         ArgumentOutOfRangeException.ThrowIfGreaterThan(e.Id, _idx, nameof(e));
-        var idx = GetSparseIndex(e);
     }
 
     internal void EndTick()
@@ -118,15 +95,13 @@ internal sealed class EntityCoreStore
         var len = _idx + amount;
         if (_entities.Length >= len) return;
 
-        if (_sources.Length != _entities.Length || _transforms.Length != _entities.Length ||
-            _sparse.Length != _entities.Length)
+        if (_sources.Length != _entities.Length || _transforms.Length != _entities.Length )
         {
             throw new InvalidOperationException();
         }
 
         var newSize = Arrays.CapacityGrowthSafe(_entities.Length, len);
         Array.Resize(ref _entities, newSize);
-        Array.Resize(ref _sparse, newSize);
         Array.Resize(ref _sources, newSize);
         Array.Resize(ref _transforms, newSize);
         Array.Resize(ref _boxes, newSize);

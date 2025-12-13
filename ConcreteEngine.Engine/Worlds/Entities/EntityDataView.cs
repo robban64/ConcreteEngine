@@ -1,5 +1,6 @@
 #region
 
+using System.Runtime.CompilerServices;
 using ConcreteEngine.Engine.Worlds.Entities.Components;
 
 #endregion
@@ -17,8 +18,14 @@ internal readonly ref struct EntitiesCoreView(
     public readonly ReadOnlySpan<Transform> Transforms = transforms;
     public readonly ReadOnlySpan<BoxComponent> Boxes = boxes;
 
-    public ref readonly Transform GetTransform(int index) => ref Transforms[index];
-    public ref readonly BoxComponent GetBox(int index) => ref Boxes[index];
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public ref readonly RenderSourceComponent GetSource(EntityId entity) => ref Sources[entity-1];
+
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public ref readonly Transform GetTransform(EntityId entity) => ref Transforms[entity-1];
+    
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public ref readonly BoxComponent GetBox(EntityId entity) => ref Boxes[entity-1];
 
     public int Count => EntityId.Length;
 }

@@ -158,9 +158,6 @@ public sealed class Camera3D
         Span<Vector3> corners = stackalloc Vector3[8];
         RenderTransform.FillFrustumCorners(in _viewMatrix, in _projectionMatrix, translation, nearFar, corners);
         RenderTransform.CreateLightView(ref renderCamera.LightSpace, in shadows, lightDir, corners);
-
-        _frustum = new BoundingFrustum(in _projectionViewMatrix);
-
     }
     
 
@@ -173,6 +170,8 @@ public sealed class Camera3D
         Matrix4x4.Invert(viewMatrix, out viewMatrix);
 
         var projViewMat = viewMatrix * _projectionMatrix;
+        _frustum = new BoundingFrustum(in _projectionViewMatrix);
+
         
         viewSnapshot.ViewMatrix = viewMatrix;
         viewSnapshot.ProjectionMatrix = _projectionMatrix;

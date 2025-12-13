@@ -12,6 +12,21 @@ namespace ConcreteEngine.Engine.Worlds.Render.Processor;
 
 internal static class DrawEntityCollector
 {
+    public static void CollectEntities(DrawEntityContext ctx)
+    {
+        var view  = DrawDataProvider.WorldEntities.Core.GetCoreView();
+        var len = ctx.EntitySpan.Length;
+        for (var i = 0; i < len; i++)
+        {
+            var entityId = ctx.EntityIndices[i];
+            ref var drawEntity = ref ctx.EntitySpan[i];
+            ref readonly var source = ref view.GetSource(entityId);
+            drawEntity.Entity = entityId;
+            CollectEntity(ref drawEntity, entityId, in source);
+
+        }
+    }
+    
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     internal static void CollectEntity(ref DrawEntity entity, EntityId entityId, in RenderSourceComponent source)
     {

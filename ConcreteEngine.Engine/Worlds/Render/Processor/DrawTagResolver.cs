@@ -19,11 +19,14 @@ internal static class DrawTagResolver
 
         foreach (var resolved in worldEntities.ResolvedEntitySpan)
         {
-            ref var drawEntity = ref ctx.GetByEntityId(resolved.Entity);
+            var index = ctx.ByEntityIdSpan[resolved.Entity];
+            if(index == -1) continue;
+            ref var drawEntity = ref ctx.EntitySpan[index];
             drawEntity.Meta.PassMask = PassMask.Effect | PassMask.DepthPre;
             drawEntity.Meta.Resolver = resolved.CommandResolver;
         }
 
+        int slot = 1;
         foreach (var query in DrawDataProvider.WorldEntities.Query<AnimationComponent>())
         {
             var entityId = query.Entity;
@@ -33,7 +36,7 @@ internal static class DrawTagResolver
             var index = ctx.ByEntityIdSpan[entityId];
             if(index == -1) continue;
             ref var drawEntity = ref ctx.EntitySpan[index];
-            drawEntity.SetAnimationSlot(query.Index + 1);
+            drawEntity.SetAnimationSlot(slot++);
         }
     }
 /*

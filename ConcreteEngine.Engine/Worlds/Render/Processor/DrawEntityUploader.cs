@@ -8,7 +8,7 @@ using ConcreteEngine.Renderer.Definitions;
 
 namespace ConcreteEngine.Engine.Worlds.Render.Processor;
 
-internal static class DrawCommandUploader
+internal static class DrawEntityUploader
 {
     public static void UploadDrawCommands(DrawEntityContext ctx)
     {
@@ -18,6 +18,7 @@ internal static class DrawCommandUploader
         foreach (var it in ctx)
         {
             ref readonly var entity = ref it.DrawEntity;
+            //Temp solution
             if (entity.Meta.CommandId != DrawCommandId.Model)
             {
                 ExecuteGeneratedCommand(in entity);
@@ -33,7 +34,6 @@ internal static class DrawCommandUploader
 
             ExecuteSubmitCommand(in entity, in materialTag);
         }
-
     }
 
 

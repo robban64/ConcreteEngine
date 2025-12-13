@@ -81,31 +81,32 @@ internal sealed class RenderEntityBus
     {
         Ensure();
         Validate();
+
         StaticProfileTimer.RenderTimer.Begin();
 
         // start
-        var len = _idx = DrawSpatialProcessor.CullEntities(_entityIndices, _byEntityId);
+        SubmitWorldObjects();
 
+        var len = _idx = DrawSpatialProcessor.CullEntities(_entityIndices, _byEntityId);
         if (len == 0) return;
         if ((uint)len > _entities.Length) throw new IndexOutOfRangeException();
 
-        CollectEntities();
-        TagCollectedEntities();
-
-        SubmitWorldObjects();
-
         var ctx = new DrawEntityContext(_entities.AsSpan(0, len),_entityIndices.AsSpan(0, len), _byEntityId);
+
+        DrawEntityCollector.CollectEntities(ctx);
+        
+        DrawSpatialProcessor.TagDepthKeys(ctx);
+        DrawTagResolver.TagEffectResolvers(ctx);
 
         DrawParticleProcessor.Execute(ctx, _world.Particles);
         DrawAnimatorProcessor.Execute(ctx);
 
-        ctx = new DrawEntityContext(_entities.AsSpan(0, len),_entityIndices.AsSpan(0, len), _byEntityId);
-
-        DrawCommandUploader.UploadDrawCommands(ctx);
+        DrawEntityUploader.UploadDrawCommands(ctx);
         DrawTransformUploader.UploadTransform(ctx);
+        
+        StaticProfileTimer.RenderTimer.EndPrint();
 
         // end
-        StaticProfileTimer.RenderTimer.EndPrint();
     }
 
     private void Validate()
@@ -158,8 +159,6 @@ internal sealed class RenderEntityBus
 
         var ctx = new DrawEntityContext(_entities.AsSpan(0, len), _entityIndices, _byEntityId);
 
-        DrawSpatialProcessor.TagDepthKeys(ctx);
-        DrawTagResolver.TagEffectResolvers(ctx);
     }
 
     private void SubmitWorldObjects()

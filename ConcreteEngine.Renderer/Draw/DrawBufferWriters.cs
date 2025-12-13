@@ -11,7 +11,7 @@ namespace ConcreteEngine.Renderer.Draw;
 
 public readonly ref struct DrawCommandUploader
 {
-    private readonly DrawObjectUniform[] _transformBuffer;
+    private readonly Span<DrawObjectUniform> _transformBuffer;
     private readonly DrawCommandBuffer _cmdBuffer;
 
     internal DrawCommandUploader(

@@ -9,6 +9,7 @@ using ConcreteEngine.Engine.Worlds.Render.Data;
 using ConcreteEngine.Graphics.Gfx.Resources;
 using ConcreteEngine.Renderer.Data;
 using ConcreteEngine.Renderer.Definitions;
+using ConcreteEngine.Renderer.Draw;
 
 #endregion
 
@@ -19,40 +20,32 @@ internal static class DrawTransformUploader
     public static void UploadTransform(DrawEntityContext ctx)
     {
         var view = DrawDataProvider.WorldEntities.Core.GetCoreView();
-        
-        Transform transform;
+        var writer = DrawDataProvider.GetDrawUploaderCtx();
+
         foreach (var it in ctx)
         {
             ref readonly var entity = ref it.DrawEntity;
-            if(entity.Source.Model <= 0) continue;
-            var isAnimated = entity.Meta.AnimatedSlot > 0;
+            var animatedSlot = entity.Meta.AnimatedSlot;
+            if (entity.Source.Model <= 0) continue;
 
-            transform = view.GetTransform(entity.Entity);
+            ref readonly var t = ref view.GetTransform(entity.Entity);
 
-            ExecuteSubmitTransform(in transform, entity.Source.Model, isAnimated);
-        }
+            MatrixMath.CreateModelMatrix(in t.Translation, in t.Scale, in t.Rotation, out var world);
+            var locals = DrawDataProvider.GetPartTransforms(entity.Source.Model);
+            foreach (ref readonly var local in locals)
+            {
+                ref var modelTransform = ref writer.GetWriter();
+                WriteTransformUniform(ref modelTransform, in local, in world, animatedSlot);
+            }
 
-    }
-
-
-    private static void ExecuteSubmitTransform(in Transform t, ModelId model, bool isAnimated)
-    {
-        MatrixMath.CreateModelMatrix(in t.Translation, in t.Scale, in t.Rotation, out var world);
-        
-        var writer = DrawDataProvider.GetDrawUploaderCtx();
-        var locals = DrawDataProvider.GetPartTransforms(model);
-        foreach (ref readonly var local in locals)
-        {
-            ref var modelTransform = ref writer.GetWriter();
-            WriteTransformUniform(ref modelTransform, in local, in world, isAnimated);
         }
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     private static void WriteTransformUniform(ref DrawObjectUniform data, in Matrix4x4 locals, in Matrix4x4 world,
-        bool isAnimated)
+        ushort animationSlot)
     {
-        if (isAnimated)
+        if (animationSlot > 0)
             data.Model = world;
         else
             MatrixMath.MultiplyAffine(in locals, in world, out data.Model);

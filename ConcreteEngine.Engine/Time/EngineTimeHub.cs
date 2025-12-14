@@ -84,23 +84,19 @@ internal sealed class EngineTimeHub
     }
 
 
-    public void BeginDebounceResize(int ticks)
-    {
-        if (_debounceResize.TicksLeft == 0)
-            _debounceResize.Debounce(ticks);
-    }
+    public void Debounce(int ticks) => _debounceResize.Debounce(ticks);
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public bool TryTriggerDebounceResize() => _debounceResize.TicksLeft > 0 && _debounceResize.Tick();
 
 
-    public float GetGameAlpha(double now)
+    private float GetGameAlpha(double now)
     {
         var alpha = (float)((now - _lastUpdateFinishTime) / GameTickDeltaTime);
         return float.Clamp(alpha, 0f, 1f);
     }
 
-    public float GetSimulationAlpha(double now)
+    private float GetSimulationAlpha(double now)
     {
         var alpha = (float)((now - _lastUpdateFinishTime) / SimulationDeltaTime);
         return float.Clamp(alpha, 0f, 1f);

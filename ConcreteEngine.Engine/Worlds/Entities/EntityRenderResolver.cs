@@ -1,3 +1,4 @@
+using System.Runtime.InteropServices;
 using ConcreteEngine.Common;
 using ConcreteEngine.Common.Collections;
 using ConcreteEngine.Engine.Worlds.Entities.Components;
@@ -29,57 +30,35 @@ internal readonly struct EntityResolverEntry : IComparable<EntityResolverEntry>
 
 internal sealed class EntityRenderResolver
 {
-    private EntityResolverEntry[] _resolvedEntities = new EntityResolverEntry[16];
-    private readonly Stack<int> _free = new(4);
+    private readonly List<EntityResolverEntry> _resolvedEntities = new (16);
 
-    private int _idx;
-
-    public ReadOnlySpan<EntityResolverEntry> Entities => _resolvedEntities.AsSpan(0, _idx);
+    internal ReadOnlySpan<EntityResolverEntry> Entities => CollectionsMarshal.AsSpan(_resolvedEntities);
 
     public void AddResolver(EntityId entity, RenderResolver resolver)
     {
         ArgumentOutOfRangeException.ThrowIfNegativeOrZero(entity.Id, nameof(entity));
         ArgumentOutOfRangeException.ThrowIfNegativeOrZero((int)resolver, nameof(resolver));
 
-        var index = _free.Count > 0 ? _free.Pop() : _idx++;
-        _resolvedEntities[index] = new EntityResolverEntry(entity, resolver);
+        _resolvedEntities.Add(new EntityResolverEntry(entity, resolver));
     }
 
     public void RemoveResolver(EntityId entity)
     {
         ArgumentOutOfRangeException.ThrowIfNegativeOrZero(entity.Id, nameof(entity));
 
+        var entities = Entities;
+        
         int foundIndex = -1;
-        for (int i = 0; i < _idx; i++)
+        for (int i = 0; i < entities.Length; i++)
         {
-            var entry = _resolvedEntities[i];
+            var entry = entities[i];
             if (entry.Entity != entity) continue;
             foundIndex = i;
             break;
         }
 
         InvalidOpThrower.ThrowIf(foundIndex == -1, "Entity not found");
-
-        _resolvedEntities[foundIndex] = default;
-        _free.Push(foundIndex);
-    }
-    
-    private int Allocate(int n)
-    {
-        var len = _resolvedEntities.Length;
-        var count = _idx + n;
-        if (_idx >= len)
-        {
-            var newCap = Arrays.CapacityGrowthSafe(len, count);
-            Console.WriteLine("Entity Resolver store resize");
-
-            if (newCap > GfxLimits.StoreLimit)
-                throw new InvalidOperationException("Store limit exceeded");
-
-            Array.Resize(ref _resolvedEntities, newCap);
-        }
-
-        return _idx++;
+        _resolvedEntities.RemoveAt(foundIndex);
     }
 
 }

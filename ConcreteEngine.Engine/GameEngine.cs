@@ -128,8 +128,9 @@ public sealed class GameEngine : IDisposable
         }
 
         var beginStatus = _window.UpdateCheckResized() ? BeginFrameStatus.Resize : BeginFrameStatus.None;
-        if (EngineTime.FrameIndex > 1 && beginStatus == BeginFrameStatus.Resize) _timeHub.BeginDebounceResize(30);
-        if (!_timeHub.TryTriggerDebounceResize()) beginStatus = BeginFrameStatus.None;
+        if (EngineTime.FrameIndex > 1 && beginStatus == BeginFrameStatus.Resize) 
+            _timeHub.Debounce(int.Min(60, (int)frameInfo.Fps));
+        beginStatus = _timeHub.TryTriggerDebounceResize() ? BeginFrameStatus.Resize : BeginFrameStatus.None;
 
 
         WorldRenderer.PreRender(beginStatus, frameInfo, runtimeParams);
@@ -137,7 +138,6 @@ public sealed class GameEngine : IDisposable
 
         if (_engineGateway.Active)
             _engineGateway.RenderEditor(in frameInfo, _gfxFrameResult);
-
     }
 
     internal void Update(float dt)

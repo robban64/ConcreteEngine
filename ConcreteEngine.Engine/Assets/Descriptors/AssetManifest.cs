@@ -1,10 +1,5 @@
-#region
-
-using System.Text.Json.Serialization;
 using ConcreteEngine.Engine.Assets.Data;
 using ConcreteEngine.Graphics.Gfx.Definitions;
-
-#endregion
 
 namespace ConcreteEngine.Engine.Assets.Descriptors;
 
@@ -21,7 +16,7 @@ internal sealed class AssetResourceLayout
     public required string Mesh { get; init; }
     public required string Material { get; init; }
 
-    public string? CubeMaps { get; init;} 
+    public string? CubeMaps { get; init; }
 }
 
 internal sealed class ShaderManifest : IAssetCatalog
@@ -32,14 +27,14 @@ internal sealed class ShaderManifest : IAssetCatalog
     IReadOnlyList<IAssetDescriptor> IAssetCatalog.Records => Records;
 }
 
-internal sealed class ShaderDescriptor: IAssetDescriptor
+internal sealed class ShaderDescriptor : IAssetDescriptor
 {
     public required string Name { get; init; }
-    public required string VertexFilename { get; init;}
-    public required string FragmentFilename { get;init; }
-    
+    public required string VertexFilename { get; init; }
+    public required string FragmentFilename { get; init; }
+
     public AssetKind Kind => AssetKind.Shader;
-    public AssetLoadingMode LoadMode { get; }  = AssetLoadingMode.Processed;
+    public AssetLoadingMode LoadMode { get; } = AssetLoadingMode.Processed;
 }
 
 internal sealed class TextureManifest : IAssetCatalog
@@ -54,14 +49,14 @@ internal sealed class TextureDescriptor : IAssetDescriptor
 {
     public required string Name { get; init; }
     public required string Filename { get; init; }
-    public TexturePreset Preset { get; init;} = TexturePreset.LinearClamp;
-    public TexturePixelFormat PixelFormat { get; init;} = TexturePixelFormat.SrgbAlpha;
-    public TextureAnisotropy Anisotropy { get; init;} = TextureAnisotropy.Off;
-    public float LodBias { get; init;}
+    public TexturePreset Preset { get; init; } = TexturePreset.LinearClamp;
+    public TexturePixelFormat PixelFormat { get; init; } = TexturePixelFormat.SrgbAlpha;
+    public TextureAnisotropy Anisotropy { get; init; } = TextureAnisotropy.Off;
+    public float LodBias { get; init; }
     public bool InMemory { get; init; }
-    
+
     public AssetKind Kind => AssetKind.Texture2D;
-    public AssetLoadingMode LoadMode { get; init;}  = AssetLoadingMode.Processed;
+    public AssetLoadingMode LoadMode { get; init; } = AssetLoadingMode.Processed;
 }
 
 internal sealed class CubeMapManifest : IAssetCatalog
@@ -79,8 +74,8 @@ internal sealed class CubeMapDescriptor : IAssetDescriptor
     public required int Height { get; init; }
     public TexturePreset Preset { get; init; }
     public TexturePixelFormat PixelFormat { get; } = TexturePixelFormat.Rgba;
-    public AssetLoadingMode LoadMode { get; } =  AssetLoadingMode.Processed;
-    
+    public AssetLoadingMode LoadMode { get; } = AssetLoadingMode.Processed;
+
     public AssetKind Kind => AssetKind.TextureCubeMap;
 }
 
@@ -91,11 +86,10 @@ internal sealed class MeshManifest : IAssetCatalog
     IReadOnlyList<IAssetDescriptor> IAssetCatalog.Records => Records;
 }
 
-internal sealed class MeshDescriptor: IAssetDescriptor
+internal sealed class MeshDescriptor : IAssetDescriptor
 {
     public required string Name { get; init; }
     public required string Filename { get; init; }
-    public AssetLoadingMode LoadMode { get; } =  AssetLoadingMode.Processed;
+    public AssetLoadingMode LoadMode { get; } = AssetLoadingMode.Processed;
     public AssetKind Kind => AssetKind.Model;
-
 }

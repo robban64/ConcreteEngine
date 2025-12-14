@@ -1,11 +1,7 @@
-#region
-
 using System.Runtime.CompilerServices;
 using ConcreteEngine.Common.Collections;
 using ConcreteEngine.Engine.Worlds.Data;
 using ConcreteEngine.Renderer.Data;
-
-#endregion
 
 namespace ConcreteEngine.Engine.Worlds.Tables;
 

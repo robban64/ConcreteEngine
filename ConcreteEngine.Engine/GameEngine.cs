@@ -1,5 +1,3 @@
-#region
-
 using ConcreteEngine.Common.Time;
 using ConcreteEngine.Engine.Assets;
 using ConcreteEngine.Engine.Configuration;
@@ -15,8 +13,6 @@ using ConcreteEngine.Engine.Worlds.Render;
 using ConcreteEngine.Graphics;
 using ConcreteEngine.Renderer.State;
 using Silk.NET.OpenGL;
-
-#endregion
 
 namespace ConcreteEngine.Engine;
 

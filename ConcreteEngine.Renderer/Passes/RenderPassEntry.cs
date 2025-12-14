@@ -1,8 +1,4 @@
-#region
-
 using ConcreteEngine.Renderer.Definitions;
-
-#endregion
 
 namespace ConcreteEngine.Renderer.Passes;
 

@@ -1,12 +1,8 @@
-﻿#region
-
-using ConcreteEngine.Engine.Configuration;
+﻿using ConcreteEngine.Engine.Configuration;
 using ConcreteEngine.Engine.Platform;
 using ConcreteEngine.Graphics.Gfx.Definitions;
 using Demo3D;
 using Silk.NET.Windowing;
-
-#endregion
 
 var builder = new GameEngineBuilder()
     .RegisterScene<Demo3DScene>();

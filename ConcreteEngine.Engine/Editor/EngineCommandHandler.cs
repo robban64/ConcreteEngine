@@ -1,5 +1,3 @@
-#region
-
 using System.Runtime.CompilerServices;
 using ConcreteEngine.Common.Numerics;
 using ConcreteEngine.Editor;
@@ -14,8 +12,6 @@ using ConcreteEngine.Engine.Worlds.Render.Data;
 using ConcreteEngine.Engine.Worlds.Tables;
 using ConcreteEngine.Renderer.Data;
 
-#endregion
-
 namespace ConcreteEngine.Engine.Editor;
 
 internal static class EngineCommandHandler
@@ -28,11 +24,12 @@ internal static class EngineCommandHandler
         switch (shaderCommand.RequestAction)
         {
             case EditorRequestAction.Reload:
-            {
-                CommandQueues.EnqueueDeferred(new AssetCommandRecord(shaderCommand.Name, AssetCommandAction.ReloadAsset,
-                    AssetKind.Shader));
-                break;
-            }
+                {
+                    CommandQueues.EnqueueDeferred(new AssetCommandRecord(shaderCommand.Name,
+                        AssetCommandAction.ReloadAsset,
+                        AssetKind.Shader));
+                    break;
+                }
             default:
                 throw new ArgumentException("Unknown RequestAction", nameof(shaderCommand.RequestAction));
         }

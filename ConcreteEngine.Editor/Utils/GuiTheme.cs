@@ -1,10 +1,6 @@
-#region
-
 using System.Numerics;
 using ConcreteEngine.Common.Numerics;
 using ImGuiNET;
-
-#endregion
 
 namespace ConcreteEngine.Editor.Utils;
 

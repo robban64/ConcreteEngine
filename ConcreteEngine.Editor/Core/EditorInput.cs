@@ -1,13 +1,9 @@
-#region
-
 using System.Numerics;
 using ConcreteEngine.Editor.Definitions;
 using ConcreteEngine.Editor.Store;
 using ConcreteEngine.Editor.Store.Resources;
 using ImGuiNET;
 using Silk.NET.Input;
-
-#endregion
 
 namespace ConcreteEngine.Editor.Core;
 

@@ -1,12 +1,7 @@
-#region
-
-using System.Diagnostics;
 using System.Text.Json;
 using ConcreteEngine.Engine.Assets.Descriptors;
 using ConcreteEngine.Engine.Editor.Diagnostics;
 using ConcreteEngine.Shared.Diagnostics;
-
-#endregion
 
 namespace ConcreteEngine.Engine.Assets.Internal;
 

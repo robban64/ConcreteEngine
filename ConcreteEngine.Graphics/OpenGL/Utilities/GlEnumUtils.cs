@@ -1,11 +1,7 @@
-#region
-
 using System.Runtime.CompilerServices;
 using ConcreteEngine.Graphics.Gfx.Definitions;
 using ConcreteEngine.Graphics.Gfx.Internal;
 using Silk.NET.OpenGL;
-
-#endregion
 
 namespace ConcreteEngine.Graphics.OpenGL.Utilities;
 

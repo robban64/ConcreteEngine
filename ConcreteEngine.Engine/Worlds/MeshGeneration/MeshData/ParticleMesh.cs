@@ -1,9 +1,5 @@
-#region
-
 using System.Numerics;
 using System.Runtime.InteropServices;
-
-#endregion
 
 namespace ConcreteEngine.Engine.Worlds.MeshGeneration.MeshData;
 

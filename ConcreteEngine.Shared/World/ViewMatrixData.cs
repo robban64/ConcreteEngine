@@ -1,8 +1,4 @@
-#region
-
 using System.Numerics;
-
-#endregion
 
 namespace ConcreteEngine.Shared.World;
 

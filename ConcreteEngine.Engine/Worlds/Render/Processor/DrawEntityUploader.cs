@@ -1,13 +1,9 @@
-#region
-
 using System.Runtime.CompilerServices;
 using ConcreteEngine.Engine.Worlds.Data;
 using ConcreteEngine.Engine.Worlds.Render.Data;
 using ConcreteEngine.Graphics.Gfx.Resources;
 using ConcreteEngine.Renderer.Data;
 using ConcreteEngine.Renderer.Definitions;
-
-#endregion
 
 namespace ConcreteEngine.Engine.Worlds.Render.Processor;
 

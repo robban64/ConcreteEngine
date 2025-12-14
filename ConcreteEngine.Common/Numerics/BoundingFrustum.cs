@@ -1,10 +1,6 @@
-#region
-
 using System.Numerics;
 using System.Runtime.CompilerServices;
 using static ConcreteEngine.Common.Numerics.Maths.CollisionMethods;
-
-#endregion
 
 namespace ConcreteEngine.Common.Numerics;
 

@@ -1,9 +1,5 @@
-#region
-
 using ConcreteEngine.Graphics.Gfx.Definitions;
 using static ConcreteEngine.Graphics.GfxLimits;
-
-#endregion
 
 namespace ConcreteEngine.Graphics.Gfx.Resources;
 

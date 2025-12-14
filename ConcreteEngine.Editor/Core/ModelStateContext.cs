@@ -1,10 +1,6 @@
-#region
-
 using System.Runtime.CompilerServices;
 using ConcreteEngine.Common;
 using ConcreteEngine.Editor.Definitions;
-
-#endregion
 
 namespace ConcreteEngine.Editor.Core;
 

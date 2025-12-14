@@ -1,7 +1,3 @@
-#region
-
-#endregion
-
 namespace ConcreteEngine.Engine.Scene.Modules;
 
 public abstract class GameModule

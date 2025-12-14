@@ -1,11 +1,7 @@
-#region
-
 using System.Numerics;
 using System.Runtime.CompilerServices;
 using ConcreteEngine.Common.Numerics;
 using ConcreteEngine.Renderer.Data;
-
-#endregion
 
 namespace ConcreteEngine.Renderer.Draw;
 

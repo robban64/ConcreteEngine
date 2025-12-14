@@ -1,13 +1,9 @@
-#region
-
 using ConcreteEngine.Common;
 using ConcreteEngine.Graphics.Error;
 using ConcreteEngine.Graphics.Gfx;
 using ConcreteEngine.Graphics.Gfx.Internal;
 using ConcreteEngine.Graphics.Gfx.Utility;
 using ConcreteEngine.Graphics.OpenGL;
-
-#endregion
 
 namespace ConcreteEngine.Graphics;
 

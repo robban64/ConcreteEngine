@@ -1,9 +1,5 @@
-#region
-
 using ConcreteEngine.Graphics.Gfx.Resources;
 using ConcreteEngine.Renderer.Data;
-
-#endregion
 
 namespace ConcreteEngine.Renderer.Passes;
 

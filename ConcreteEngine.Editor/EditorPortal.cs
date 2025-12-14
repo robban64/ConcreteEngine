@@ -1,5 +1,3 @@
-#region
-
 using ConcreteEngine.Common;
 using ConcreteEngine.Editor.Core;
 using ImGuiNET;
@@ -7,8 +5,6 @@ using Silk.NET.Input;
 using Silk.NET.OpenGL;
 using Silk.NET.OpenGL.Extensions.ImGui;
 using Silk.NET.Windowing;
-
-#endregion
 
 namespace ConcreteEngine.Editor;
 

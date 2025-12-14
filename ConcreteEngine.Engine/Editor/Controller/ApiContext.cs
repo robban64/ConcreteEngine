@@ -1,9 +1,5 @@
-#region
-
 using ConcreteEngine.Engine.Assets;
 using ConcreteEngine.Engine.Worlds;
-
-#endregion
 
 namespace ConcreteEngine.Engine.Editor.Controller;
 

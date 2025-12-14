@@ -1,8 +1,4 @@
-#region
-
 using ConcreteEngine.Editor.Store;
-
-#endregion
 
 namespace ConcreteEngine.Editor.Data;
 

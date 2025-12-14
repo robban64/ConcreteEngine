@@ -1,9 +1,5 @@
-#region
-
 using ConcreteEngine.Common.Time;
 using ConcreteEngine.Editor.Definitions;
-
-#endregion
 
 namespace ConcreteEngine.Editor.Core;
 

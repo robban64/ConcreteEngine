@@ -1,5 +1,3 @@
-#region
-
 using System.Diagnostics;
 using System.Diagnostics.CodeAnalysis;
 using System.Numerics;
@@ -10,8 +8,6 @@ using ConcreteEngine.Common.Numerics;
 using ConcreteEngine.Renderer.Data;
 using ConcreteEngine.Renderer.Passes;
 using static ConcreteEngine.Renderer.Data.RenderLimits;
-
-#endregion
 
 namespace ConcreteEngine.Renderer.Draw;
 

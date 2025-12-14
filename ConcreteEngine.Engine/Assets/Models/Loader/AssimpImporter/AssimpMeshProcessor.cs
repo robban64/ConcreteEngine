@@ -1,5 +1,3 @@
-#region
-
 using System.Numerics;
 using ConcreteEngine.Common.Numerics;
 using ConcreteEngine.Common.Numerics.Extensions;
@@ -7,8 +5,6 @@ using ConcreteEngine.Engine.Assets.Internal;
 using ConcreteEngine.Graphics.Primitives;
 using Silk.NET.Assimp;
 using AssimpMesh = Silk.NET.Assimp.Mesh;
-
-#endregion
 
 namespace ConcreteEngine.Engine.Assets.Models.Loader.AssimpImporter;
 

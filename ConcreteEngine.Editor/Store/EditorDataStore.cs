@@ -1,8 +1,4 @@
-#region
-
 using ConcreteEngine.Editor.Data;
-
-#endregion
 
 // ReSharper disable StaticMemberInGenericType
 

@@ -1,5 +1,3 @@
-#region
-
 using ConcreteEngine.Common;
 using ConcreteEngine.Common.Collections;
 using ConcreteEngine.Engine.Assets.Data;
@@ -12,14 +10,12 @@ using ConcreteEngine.Renderer.Data;
 using ConcreteEngine.Renderer.Definitions;
 using ConcreteEngine.Shared.Diagnostics;
 
-#endregion
-
 namespace ConcreteEngine.Engine.Assets.Materials;
 
 public interface IMaterialStore
 {
-    public int Count { get; }
-    public int FreeSlots { get; }
+    int Count { get; }
+    int FreeSlots { get; }
 
     Material Get(MaterialId materialId);
     Material Get(string name);

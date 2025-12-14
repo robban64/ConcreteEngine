@@ -1,11 +1,7 @@
-#region
-
 using System.Numerics;
 using ConcreteEngine.Editor.Utils;
 using ImGuiNET;
 using static ConcreteEngine.Editor.Utils.GuiUtils;
-
-#endregion
 
 namespace ConcreteEngine.Editor.Metrics;
 

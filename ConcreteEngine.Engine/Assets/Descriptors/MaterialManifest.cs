@@ -1,13 +1,9 @@
-#region
-
 using System.Text.Json.Serialization;
 using ConcreteEngine.Common.Numerics;
 using ConcreteEngine.Engine.Assets.Data;
 using ConcreteEngine.Engine.Assets.Materials;
 using ConcreteEngine.Graphics.Gfx.Definitions;
 using ConcreteEngine.Renderer.Definitions;
-
-#endregion
 
 namespace ConcreteEngine.Engine.Assets.Descriptors;
 

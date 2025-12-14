@@ -1,10 +1,6 @@
-#region
-
 using System.Runtime.InteropServices;
 using ConcreteEngine.Graphics.Gfx.Contracts;
 using ConcreteEngine.Graphics.Gfx.Resources;
-
-#endregion
 
 namespace ConcreteEngine.Renderer.Data;
 

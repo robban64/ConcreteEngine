@@ -1,12 +1,8 @@
-#region
-
 using System.Numerics;
 using ConcreteEngine.Common.Numerics;
 using ConcreteEngine.Engine.Platform;
 using ConcreteEngine.Engine.Worlds.View;
 using Silk.NET.Input;
-
-#endregion
 
 namespace ConcreteEngine.Engine.Scene.Modules;
 

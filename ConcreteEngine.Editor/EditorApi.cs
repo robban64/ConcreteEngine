@@ -1,9 +1,5 @@
-#region
-
 using ConcreteEngine.Editor.Data;
 using ConcreteEngine.Editor.Store.Resources;
-
-#endregion
 
 namespace ConcreteEngine.Editor;
 

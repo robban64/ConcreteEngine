@@ -1,11 +1,7 @@
-#region
-
 using ConcreteEngine.Graphics.Gfx.Contracts;
 using ConcreteEngine.Renderer.Data;
 using ConcreteEngine.Renderer.Definitions;
 using ConcreteEngine.Renderer.Passes;
-
-#endregion
 
 namespace ConcreteEngine.Renderer;
 

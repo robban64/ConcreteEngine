@@ -1,8 +1,4 @@
-#region
-
 using ConcreteEngine.Graphics.OpenGL;
-
-#endregion
 
 namespace ConcreteEngine.Graphics;
 

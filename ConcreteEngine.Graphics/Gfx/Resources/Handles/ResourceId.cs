@@ -1,11 +1,7 @@
-#region
-
 using System.Diagnostics;
 using System.Runtime.CompilerServices;
 using ConcreteEngine.Graphics.Error;
 using ConcreteEngine.Graphics.Gfx.Definitions;
-
-#endregion
 
 namespace ConcreteEngine.Graphics.Gfx.Resources;
 

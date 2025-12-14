@@ -1,9 +1,5 @@
-#region
-
 using System.Text.Json.Serialization;
 using ConcreteEngine.Engine.Assets.Data;
-
-#endregion
 
 namespace ConcreteEngine.Engine.Assets.Descriptors;
 
@@ -23,7 +19,7 @@ internal interface IAssetDescriptor
 
 internal interface IAssetData
 {
-    public AssetId AssetId { get; }
-    public string Name { get; }
-    public AssetKind Kind { get; }
+    AssetId AssetId { get; }
+    string Name { get; }
+    AssetKind Kind { get; }
 }

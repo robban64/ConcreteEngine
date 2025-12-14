@@ -1,11 +1,7 @@
-#region
-
 using System.Diagnostics;
 using System.Runtime.CompilerServices;
 using ConcreteEngine.Common.Time;
 using ConcreteEngine.Engine.Time.Tickers;
-
-#endregion
 
 namespace ConcreteEngine.Engine.Time;
 

@@ -1,8 +1,4 @@
-#region
-
 using ConcreteEngine.Graphics.Gfx;
-
-#endregion
 
 namespace ConcreteEngine.Engine.Worlds.MeshGeneration;
 

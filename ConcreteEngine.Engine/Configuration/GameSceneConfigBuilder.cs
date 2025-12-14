@@ -1,9 +1,5 @@
-#region
-
 using ConcreteEngine.Engine.Scene.Modules;
 using ConcreteEngine.Renderer.Descriptors;
-
-#endregion
 
 namespace ConcreteEngine.Engine.Configuration;
 

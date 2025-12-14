@@ -1,9 +1,5 @@
-#region
-
 using ConcreteEngine.Editor.Metrics;
 using ConcreteEngine.Shared.Diagnostics;
-
-#endregion
 
 namespace ConcreteEngine.Editor;
 

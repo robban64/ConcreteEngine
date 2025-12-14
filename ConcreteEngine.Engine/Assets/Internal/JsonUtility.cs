@@ -1,10 +1,6 @@
-#region
-
 using System.Numerics;
 using System.Text.Json;
 using System.Text.Json.Serialization;
-
-#endregion
 
 namespace ConcreteEngine.Engine.Assets.Internal;
 

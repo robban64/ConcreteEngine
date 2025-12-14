@@ -1,9 +1,5 @@
-#region
-
 using System.Runtime.CompilerServices;
 using ConcreteEngine.Engine.Worlds.Entities.Components;
-
-#endregion
 
 namespace ConcreteEngine.Engine.Worlds.Entities;
 

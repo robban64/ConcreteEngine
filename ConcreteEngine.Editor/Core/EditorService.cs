@@ -1,5 +1,3 @@
-#region
-
 using System.Numerics;
 using ConcreteEngine.Common.Time;
 using ConcreteEngine.Editor.Components.Layout;
@@ -8,8 +6,6 @@ using ConcreteEngine.Editor.Store;
 using ConcreteEngine.Editor.Utils;
 using ImGuiNET;
 using DataStore = ConcreteEngine.Editor.Store.EditorDataStore;
-
-#endregion
 
 namespace ConcreteEngine.Editor.Core;
 

@@ -1,7 +1,3 @@
-#region
-
-#endregion
-
 namespace ConcreteEngine.Graphics.Error;
 
 public sealed partial class GraphicsException(string message, Exception? inner = null)

@@ -1,13 +1,9 @@
-#region
-
 using ConcreteEngine.Graphics.Gfx;
 using ConcreteEngine.Graphics.Gfx.Resources;
 using ConcreteEngine.Renderer.Draw;
 using ConcreteEngine.Renderer.Passes;
 using ConcreteEngine.Renderer.Registry;
 using ConcreteEngine.Renderer.State;
-
-#endregion
 
 namespace ConcreteEngine.Renderer;
 

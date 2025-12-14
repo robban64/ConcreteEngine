@@ -1,10 +1,6 @@
-#region
-
 using System.Numerics;
 using System.Runtime.InteropServices;
 using ConcreteEngine.Common.Numerics;
-
-#endregion
 
 namespace ConcreteEngine.Graphics.Primitives;
 

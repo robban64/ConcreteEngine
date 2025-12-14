@@ -1,8 +1,4 @@
-#region
-
 using System.Security.Cryptography;
-
-#endregion
 
 namespace ConcreteEngine.Engine.Assets.Internal;
 

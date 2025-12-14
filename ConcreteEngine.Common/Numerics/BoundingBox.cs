@@ -1,10 +1,6 @@
-#region
-
 using System.Numerics;
 using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
-
-#endregion
 
 namespace ConcreteEngine.Common.Numerics;
 

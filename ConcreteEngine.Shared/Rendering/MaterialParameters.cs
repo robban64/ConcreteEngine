@@ -1,9 +1,5 @@
-#region
-
 using System.Runtime.InteropServices;
 using ConcreteEngine.Common.Numerics;
-
-#endregion
 
 namespace ConcreteEngine.Shared.Rendering;
 

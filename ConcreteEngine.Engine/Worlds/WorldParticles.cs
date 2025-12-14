@@ -1,5 +1,3 @@
-#region
-
 using System.Numerics;
 using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
@@ -13,8 +11,6 @@ using ConcreteEngine.Engine.Worlds.Objects;
 using ConcreteEngine.Engine.Worlds.Tables;
 using ConcreteEngine.Renderer.Data;
 using ConcreteEngine.Shared.World;
-
-#endregion
 
 namespace ConcreteEngine.Engine.Worlds;
 

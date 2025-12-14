@@ -1,12 +1,8 @@
-#region
-
 using System.Numerics;
 using System.Runtime.CompilerServices;
 using ConcreteEngine.Engine.Worlds.Data;
 using ConcreteEngine.Engine.Worlds.Tables;
 using ConcreteEngine.Renderer.Draw;
-
-#endregion
 
 namespace ConcreteEngine.Engine.Worlds.Render;
 

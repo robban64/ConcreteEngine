@@ -1,13 +1,5 @@
-#region
-
-#endregion
-
-#region
-
 using ConcreteEngine.Engine.Scene.Modules;
 using ConcreteEngine.Engine.Worlds;
-
-#endregion
 
 namespace ConcreteEngine.Engine;
 

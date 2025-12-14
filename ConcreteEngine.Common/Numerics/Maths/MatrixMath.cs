@@ -1,9 +1,5 @@
-#region
-
 using System.Numerics;
 using System.Runtime.CompilerServices;
-
-#endregion
 
 // ReSharper disable InconsistentNaming
 

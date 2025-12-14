@@ -1,11 +1,7 @@
-#region
-
 using System.Runtime.CompilerServices;
 using ConcreteEngine.Common.Numerics;
 using ConcreteEngine.Graphics.Gfx.Definitions;
 using static ConcreteEngine.Graphics.Gfx.Contracts.GfxStateFlags;
-
-#endregion
 
 namespace ConcreteEngine.Graphics.Gfx.Contracts;
 

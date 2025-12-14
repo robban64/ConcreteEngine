@@ -1,5 +1,3 @@
-#region
-
 using System.Runtime.InteropServices;
 using ConcreteEngine.Common;
 using ConcreteEngine.Engine.Assets.Data;
@@ -12,8 +10,6 @@ using ConcreteEngine.Engine.Assets.Shaders;
 using ConcreteEngine.Engine.Assets.Textures;
 using ConcreteEngine.Engine.Editor.Diagnostics;
 using ConcreteEngine.Shared.Diagnostics;
-
-#endregion
 
 namespace ConcreteEngine.Engine.Assets;
 

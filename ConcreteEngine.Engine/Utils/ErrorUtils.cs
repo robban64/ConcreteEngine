@@ -1,8 +1,4 @@
-#region
-
 using ConcreteEngine.Graphics.Error;
-
-#endregion
 
 namespace ConcreteEngine.Engine.Utils;
 

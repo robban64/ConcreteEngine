@@ -1,8 +1,4 @@
-#region
-
 using Silk.NET.OpenGL;
-
-#endregion
 
 namespace ConcreteEngine.Graphics.OpenGL.Utilities;
 

@@ -1,5 +1,3 @@
-#region
-
 using System.Diagnostics;
 using System.Numerics;
 using ConcreteEngine.Common.Numerics;
@@ -10,8 +8,6 @@ using ConcreteEngine.Engine.Worlds.Data;
 using ConcreteEngine.Engine.Worlds.MeshGeneration;
 using ConcreteEngine.Engine.Worlds.Tables;
 using ConcreteEngine.Renderer.Data;
-
-#endregion
 
 namespace ConcreteEngine.Engine.Worlds;
 

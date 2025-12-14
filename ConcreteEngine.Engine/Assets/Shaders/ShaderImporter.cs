@@ -1,9 +1,5 @@
-#region
-
 using System.Text;
 using ConcreteEngine.Engine.Assets.Internal;
-
-#endregion
 
 namespace ConcreteEngine.Engine.Assets.Shaders;
 

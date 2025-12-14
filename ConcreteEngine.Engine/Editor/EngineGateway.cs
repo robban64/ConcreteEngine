@@ -1,5 +1,3 @@
-#region
-
 using ConcreteEngine.Editor;
 using ConcreteEngine.Editor.Data;
 using ConcreteEngine.Editor.Definitions;
@@ -17,8 +15,6 @@ using Silk.NET.Input;
 using Silk.NET.OpenGL;
 using Silk.NET.Windowing;
 using EditorCmd = ConcreteEngine.Editor.CommandDispatcher;
-
-#endregion
 
 namespace ConcreteEngine.Engine.Editor;
 

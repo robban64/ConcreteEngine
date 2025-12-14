@@ -1,10 +1,6 @@
-#region
-
 using System.Globalization;
 using ConcreteEngine.Editor.Data;
 using ConcreteEngine.Editor.Definitions;
-
-#endregion
 
 namespace ConcreteEngine.Editor.Utils;
 

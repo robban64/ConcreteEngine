@@ -1,8 +1,4 @@
-#region
-
 using System.Runtime.InteropServices;
-
-#endregion
 
 namespace ConcreteEngine.Engine.Worlds.Data;
 

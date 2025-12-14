@@ -1,8 +1,4 @@
-#region
-
 using ConcreteEngine.Engine.Worlds;
-
-#endregion
 
 namespace ConcreteEngine.Engine.Scene.Editor;
 

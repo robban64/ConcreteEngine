@@ -1,12 +1,8 @@
-#region
-
 using System.Numerics;
 using ConcreteEngine.Editor.Definitions;
 using ConcreteEngine.Editor.Store;
 using ConcreteEngine.Editor.Utils;
 using ImGuiNET;
-
-#endregion
 
 namespace ConcreteEngine.Editor.Components.Layout;
 

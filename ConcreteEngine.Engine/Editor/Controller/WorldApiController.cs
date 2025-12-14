@@ -1,5 +1,3 @@
-#region
-
 using ConcreteEngine.Editor.Bridge;
 using ConcreteEngine.Editor.Data;
 using ConcreteEngine.Editor.Definitions;
@@ -10,8 +8,6 @@ using ConcreteEngine.Engine.Worlds;
 using ConcreteEngine.Engine.Worlds.Render;
 using ConcreteEngine.Engine.Worlds.View;
 using ConcreteEngine.Shared.Rendering;
-
-#endregion
 
 namespace ConcreteEngine.Engine.Editor.Controller;
 

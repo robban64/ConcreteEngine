@@ -1,12 +1,4 @@
-#region
-
-#endregion
-
-#region
-
 using System.Runtime.CompilerServices;
-
-#endregion
 
 namespace ConcreteEngine.Engine.Time.Tickers;
 

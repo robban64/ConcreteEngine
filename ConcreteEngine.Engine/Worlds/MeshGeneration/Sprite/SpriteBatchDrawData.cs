@@ -1,10 +1,6 @@
-#region
-
 using System.Numerics;
 using ConcreteEngine.Graphics.Gfx.Resources;
 using ConcreteEngine.Shared.Graphics;
-
-#endregion
 
 namespace ConcreteEngine.Engine.Worlds.MeshGeneration;
 

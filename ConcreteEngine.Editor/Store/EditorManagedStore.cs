@@ -1,11 +1,7 @@
-#region
-
 using System.Runtime.InteropServices;
 using ConcreteEngine.Common.Numerics;
 using ConcreteEngine.Editor.Definitions;
 using ConcreteEngine.Editor.Store.Resources;
-
-#endregion
 
 namespace ConcreteEngine.Editor.Store;
 

@@ -1,10 +1,6 @@
-#region
-
 using ConcreteEngine.Engine.Configuration;
 using ConcreteEngine.Engine.Scene.Modules;
 using ConcreteEngine.Renderer.Descriptors;
-
-#endregion
 
 namespace ConcreteEngine.Engine.Scene;
 

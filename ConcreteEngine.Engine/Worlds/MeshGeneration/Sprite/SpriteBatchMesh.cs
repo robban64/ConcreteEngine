@@ -1,7 +1,3 @@
-#region
-
-#endregion
-
 namespace ConcreteEngine.Engine.Worlds.MeshGeneration;
 
 /*

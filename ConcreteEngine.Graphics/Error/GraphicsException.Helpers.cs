@@ -1,10 +1,6 @@
-#region
-
 using System.Diagnostics;
 using System.Diagnostics.CodeAnalysis;
 using System.Runtime.CompilerServices;
-
-#endregion
 
 namespace ConcreteEngine.Graphics.Error;
 

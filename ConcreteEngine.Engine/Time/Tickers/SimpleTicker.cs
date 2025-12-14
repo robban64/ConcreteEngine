@@ -1,7 +1,3 @@
-#region
-
-#endregion
-
 namespace ConcreteEngine.Engine.Time.Tickers;
 
 public struct SimpleTicker(int fps, int ticksPerSec)

@@ -1,5 +1,3 @@
-#region
-
 using ConcreteEngine.Engine.Configuration;
 using ConcreteEngine.Graphics;
 using ConcreteEngine.Graphics.Error;
@@ -7,8 +5,6 @@ using ConcreteEngine.Graphics.Gfx.Definitions;
 using Silk.NET.Input;
 using Silk.NET.OpenGL;
 using Silk.NET.Windowing;
-
-#endregion
 
 namespace ConcreteEngine.Engine.Platform;
 

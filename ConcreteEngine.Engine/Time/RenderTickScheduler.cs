@@ -1,7 +1,3 @@
-#region
-
-#endregion
-
 namespace ConcreteEngine.Engine.Time;
 
 internal sealed class RenderTickScheduler

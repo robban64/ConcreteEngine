@@ -1,5 +1,3 @@
-#region
-
 using ConcreteEngine.Common.Numerics;
 using ConcreteEngine.Engine.Assets;
 using ConcreteEngine.Engine.Assets.Models;
@@ -12,8 +10,6 @@ using ConcreteEngine.Engine.Worlds.Utility;
 using ConcreteEngine.Engine.Worlds.View;
 using ConcreteEngine.Graphics;
 using ConcreteEngine.Graphics.Gfx;
-
-#endregion
 
 namespace ConcreteEngine.Engine.Worlds;
 

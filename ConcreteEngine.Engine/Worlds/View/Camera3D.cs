@@ -1,13 +1,9 @@
-#region
-
 using System.Numerics;
 using ConcreteEngine.Common.Numerics;
 using ConcreteEngine.Common.Numerics.Maths;
 using ConcreteEngine.Editor.Data;
 using ConcreteEngine.Renderer.State;
 using ConcreteEngine.Shared.World;
-
-#endregion
 
 namespace ConcreteEngine.Engine.Worlds.View;
 

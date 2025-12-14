@@ -1,13 +1,9 @@
-#region
-
 using ConcreteEngine.Engine.Assets.Data;
 using ConcreteEngine.Engine.Assets.Descriptors;
 using ConcreteEngine.Engine.Assets.Internal;
 using ConcreteEngine.Graphics.Gfx.Contracts;
 using ConcreteEngine.Graphics.Gfx.Definitions;
 using StbImageSharp;
-
-#endregion
 
 namespace ConcreteEngine.Engine.Assets.Textures;
 

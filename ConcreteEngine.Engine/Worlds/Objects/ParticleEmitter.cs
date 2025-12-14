@@ -1,5 +1,3 @@
-#region
-
 using System.Numerics;
 using ConcreteEngine.Common.Numerics;
 using ConcreteEngine.Common.Time;
@@ -7,8 +5,6 @@ using ConcreteEngine.Engine.Worlds.Data;
 using ConcreteEngine.Graphics.Gfx.Resources;
 using ConcreteEngine.Renderer.Data;
 using ConcreteEngine.Shared.World;
-
-#endregion
 
 namespace ConcreteEngine.Engine.Worlds.Objects;
 

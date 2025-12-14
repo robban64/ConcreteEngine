@@ -1,11 +1,7 @@
-#region
-
 using ConcreteEngine.Engine.Platform;
 using ConcreteEngine.Engine.Scene;
 using ConcreteEngine.Graphics;
 using Silk.NET.OpenGL;
-
-#endregion
 
 namespace ConcreteEngine.Engine.Configuration;
 

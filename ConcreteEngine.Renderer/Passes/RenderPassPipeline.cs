@@ -1,12 +1,8 @@
-#region
-
 using System.Diagnostics;
 using ConcreteEngine.Common;
 using ConcreteEngine.Common.Numerics;
 using ConcreteEngine.Renderer.Definitions;
 using ConcreteEngine.Renderer.Registry;
-
-#endregion
 
 namespace ConcreteEngine.Renderer.Passes;
 

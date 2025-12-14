@@ -1,5 +1,3 @@
-#region
-
 using ConcreteEngine.Common.Numerics;
 using ConcreteEngine.Engine.Assets;
 using ConcreteEngine.Engine.Assets.Shaders;
@@ -9,8 +7,6 @@ using ConcreteEngine.Renderer;
 using ConcreteEngine.Renderer.Data;
 using ConcreteEngine.Renderer.Descriptors;
 using ConcreteEngine.Renderer.Passes;
-
-#endregion
 
 namespace ConcreteEngine.Engine.Worlds.Render;
 

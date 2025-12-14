@@ -1,11 +1,7 @@
-#region
-
 using ConcreteEngine.Common;
 using ConcreteEngine.Engine.Assets.Data;
 using ConcreteEngine.Engine.Assets.Internal;
 using ConcreteEngine.Engine.Assets.Models.Loader.AssimpImporter;
-
-#endregion
 
 namespace ConcreteEngine.Engine.Assets.Models.Loader;
 

@@ -1,8 +1,4 @@
-#region
-
 using System.Diagnostics;
-
-#endregion
 
 namespace ConcreteEngine.Common.Time;
 

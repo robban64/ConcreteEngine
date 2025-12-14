@@ -1,11 +1,7 @@
-#region
-
 using System.Security.Cryptography;
 using System.Text;
 using ConcreteEngine.Engine.Assets.Data;
 using ConcreteEngine.Engine.Assets.Descriptors;
-
-#endregion
 
 namespace ConcreteEngine.Engine.Assets.Shaders;
 

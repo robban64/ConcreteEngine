@@ -1,8 +1,4 @@
-#region
-
 using ConcreteEngine.Graphics.Gfx.Definitions;
-
-#endregion
 
 namespace ConcreteEngine.Graphics.Gfx.Contracts;
 

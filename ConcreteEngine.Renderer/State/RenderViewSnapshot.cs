@@ -1,9 +1,5 @@
-#region
-
 using System.Numerics;
 using ConcreteEngine.Shared.World;
-
-#endregion
 
 namespace ConcreteEngine.Renderer.State;
 

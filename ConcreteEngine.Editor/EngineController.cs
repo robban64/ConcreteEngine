@@ -1,13 +1,9 @@
-#region
-
 using ConcreteEngine.Editor.Bridge;
 using ConcreteEngine.Editor.Data;
 using ConcreteEngine.Editor.Definitions;
 using ConcreteEngine.Editor.Store;
 using ConcreteEngine.Editor.Store.Resources;
 using ConcreteEngine.Shared.Rendering;
-
-#endregion
 
 namespace ConcreteEngine.Editor;
 

@@ -1,8 +1,4 @@
-#region
-
 using ConcreteEngine.Engine.Assets.Data;
-
-#endregion
 
 namespace ConcreteEngine.Engine.Assets;
 

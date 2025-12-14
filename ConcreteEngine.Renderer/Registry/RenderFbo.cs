@@ -1,5 +1,3 @@
-#region
-
 using System.Numerics;
 using System.Runtime.CompilerServices;
 using ConcreteEngine.Common;
@@ -9,8 +7,6 @@ using ConcreteEngine.Graphics.Gfx.Resources;
 using ConcreteEngine.Renderer.Data;
 using ConcreteEngine.Renderer.Definitions;
 using ConcreteEngine.Renderer.Passes;
-
-#endregion
 
 namespace ConcreteEngine.Renderer.Registry;
 

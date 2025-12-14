@@ -1,9 +1,5 @@
-#region
-
 using System.Runtime.CompilerServices;
 using ConcreteEngine.Shared.Diagnostics;
-
-#endregion
 
 namespace ConcreteEngine.Graphics.Diagnostic;
 

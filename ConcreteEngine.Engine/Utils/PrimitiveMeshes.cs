@@ -1,5 +1,3 @@
-#region
-
 using System.Diagnostics.CodeAnalysis;
 using System.Numerics;
 using ConcreteEngine.Common;
@@ -9,8 +7,6 @@ using ConcreteEngine.Graphics.Gfx.Definitions;
 using ConcreteEngine.Graphics.Gfx.Resources;
 using ConcreteEngine.Graphics.Gfx.Utility;
 using ConcreteEngine.Graphics.Primitives;
-
-#endregion
 
 namespace ConcreteEngine.Engine.Utils;
 

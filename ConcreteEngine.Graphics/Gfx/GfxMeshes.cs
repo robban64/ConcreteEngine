@@ -1,10 +1,6 @@
-#region
-
 using ConcreteEngine.Common;
 using ConcreteEngine.Graphics.Gfx.Contracts;
 using ConcreteEngine.Graphics.Gfx.Internal;
-
-#endregion
 
 namespace ConcreteEngine.Graphics.Gfx;
 

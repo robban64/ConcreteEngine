@@ -10,7 +10,8 @@ internal static class AssetPaths
     public const string CubeMapFolder = "cubemaps";
     public const string MeshFolder = "meshes";
 
-    public static readonly string AssetRoot = Path.Combine(AppContext.BaseDirectory, "assets");
+    public const string AssetRoot = "assets";
+
     public static readonly string AssetCoreRoot = Path.Combine(AppContext.BaseDirectory, "_AssetsCore");
 
 

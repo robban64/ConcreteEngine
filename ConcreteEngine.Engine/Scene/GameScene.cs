@@ -1,10 +1,6 @@
-#region
-
 using ConcreteEngine.Engine.Configuration;
 using ConcreteEngine.Engine.Worlds;
 using ConcreteEngine.Engine.Worlds.View;
-
-#endregion
 
 namespace ConcreteEngine.Engine.Scene;
 

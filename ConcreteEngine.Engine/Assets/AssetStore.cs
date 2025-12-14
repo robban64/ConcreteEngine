@@ -1,10 +1,6 @@
-#region
-
 using ConcreteEngine.Common;
 using ConcreteEngine.Engine.Assets.Data;
 using ConcreteEngine.Engine.Assets.Descriptors;
-
-#endregion
 
 namespace ConcreteEngine.Engine.Assets;
 

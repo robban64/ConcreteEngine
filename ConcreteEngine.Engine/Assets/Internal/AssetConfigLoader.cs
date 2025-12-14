@@ -18,13 +18,13 @@ internal sealed class AssetConfigLoader
         if (!File.Exists(path))
         {
             Logger.LogString(LogScope.Assets, "Loading Default Graphic Settings...");
-            return new EngineGraphicSettings();
+            return GraphicSettings = new EngineGraphicSettings();
         }
 
         Logger.LogString(LogScope.Assets, "Loading Custom Graphic Settings...");
         var options = JsonUtility.DefaultJsonOptions;
         GraphicSettings = JsonSerializer.Deserialize<EngineGraphicSettings>(File.ReadAllText(path), options) ??
-                          throw new InvalidDataException("Invalid manifest.");
+                          throw new InvalidDataException("Invalid Graphic Settings.");
 
         GraphicSettings.Validate();
         return GraphicSettings;

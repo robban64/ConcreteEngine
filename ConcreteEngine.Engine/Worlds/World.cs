@@ -41,8 +41,6 @@ public sealed class World
         _assets = assets;
         _camera = new Camera3D();
 
-        _worldRenderParams = new WorldRenderParams(AssetConfigLoader.GraphicSettings);
-        _worldRenderParams.EndTick();
 
         _meshGenerator = new MeshGeneratorRegistry();
 
@@ -58,6 +56,9 @@ public sealed class World
         _particles = new WorldParticles();
 
         _raycast = new WorldRaycaster(Camera, Entities, _terrain, _drawEntities);
+
+        _worldRenderParams = new WorldRenderParams(AssetConfigLoader.GraphicSettings);
+        _worldRenderParams.EndTick();
 
         _worldRenderer = new WorldRenderer(engineWindow, graphics, assets, _worldRenderParams, _drawEntities, _camera);
     }

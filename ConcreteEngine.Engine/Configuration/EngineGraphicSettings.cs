@@ -1,3 +1,5 @@
+using ConcreteEngine.Graphics.Gfx.Definitions;
+
 namespace ConcreteEngine.Engine.Configuration;
 
 public enum EngineGraphicsLevel : byte
@@ -19,5 +21,32 @@ public sealed class EngineGraphicSettings
     {
         if (UpdateFps > RenderFps || UpdateFps < 20 || RenderFps < 20 || UpdateFps > 200 || RenderFps > 300)
             throw new InvalidOperationException();
+    }
+
+    public TextureAnisotropy GetClampedAnisotropy(TextureAnisotropy anisotropy)
+    {
+        
+        TextureAnisotropy max;
+        if (anisotropy == TextureAnisotropy.Off) return TextureAnisotropy.Off;
+        if (anisotropy == TextureAnisotropy.Default)
+        {
+            if (TextureQuality == EngineGraphicsLevel.Low) return TextureAnisotropy.X2;
+            return TextureAnisotropy.X4;
+        }
+
+        switch (TextureQuality)
+        {
+            case EngineGraphicsLevel.Low:
+                return TextureAnisotropy.X2;
+            case EngineGraphicsLevel.Medium:
+                return  (int)anisotropy <= (int)TextureAnisotropy.X4 ? anisotropy : TextureAnisotropy.X4;
+            case EngineGraphicsLevel.High:
+                return anisotropy;
+            default:
+                throw new ArgumentOutOfRangeException(nameof(TextureQuality));
+        }
+
+
+        return (TextureAnisotropy)int.Min((int)anisotropy, (int)max);
     }
 }

@@ -24,6 +24,8 @@ internal sealed class TextureLoader(AssetGfxUploader uploader)
             ArgumentOutOfRangeException.ThrowIfNotEqual(image.Width, descriptor.Height, nameof(image.Width));
         }
 
+        var settings = AssetConfigLoader.GraphicSettings;
+
 
         var desc = new GfxTextureDescriptor(
             width: image.Width,
@@ -34,7 +36,7 @@ internal sealed class TextureLoader(AssetGfxUploader uploader)
 
         var props = new GfxTextureProperties(
             preset: TexturePreset.LinearMipmapRepeat,
-            anisotropy: TextureAnisotropy.X4,
+            anisotropy: settings.GetClampedAnisotropy(TextureAnisotropy.X4),
             lodBias: 0
         );
 
@@ -76,9 +78,11 @@ internal sealed class TextureLoader(AssetGfxUploader uploader)
 
         var props = new GfxTextureProperties(
             preset: record.Preset,
-            anisotropy: record.Anisotropy,
+            anisotropy: AssetConfigLoader.GraphicSettings.GetClampedAnisotropy(record.Anisotropy),
             lodBias: record.LodBias
         );
+        
+        //Console.WriteLine(props.Anisotropy.ToString());
 
         var fileSpec = new AssetFileSpec(
             storage: AssetStorageKind.FileSystem,
@@ -147,6 +151,7 @@ internal sealed class TextureLoader(AssetGfxUploader uploader)
             FaceFiles = faceFiles, CreationInfo = info, TextureDesc = desc, TextureProps = props
         };
     }
+
 
     private static ColorComponents GetColorComponent(TexturePixelFormat format)
     {

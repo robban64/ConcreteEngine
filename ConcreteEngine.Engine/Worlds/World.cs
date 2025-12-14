@@ -13,26 +13,7 @@ using ConcreteEngine.Graphics.Gfx;
 
 namespace ConcreteEngine.Engine.Worlds;
 
-public interface IWorld
-{
-    int EntityCount { get; }
-
-    Camera3D Camera { get; }
-    WorldEntities Entities { get; }
-
-    WorldRenderParams WorldRenderParams { get; }
-    WorldSkybox Sky { get; }
-    WorldTerrain Terrain { get; }
-    WorldParticles Particles { get; }
-
-    WorldRaycaster Raycast { get; }
-
-
-    IMeshTable MeshTable { get; }
-    IMaterialTable EntityMaterials { get; }
-}
-
-public sealed class World : IWorld
+public sealed class World
 {
     private readonly AssetSystem _assets;
 
@@ -68,7 +49,7 @@ public sealed class World : IWorld
         _materialTable = new MaterialTable();
         _animationTable = new AnimationTable();
 
-        _drawEntities = new DrawEntityAssembler();
+        _drawEntities = new DrawEntityAssembler(this);
 
         _entities = new WorldEntities();
         _sky = new WorldSkybox();
@@ -95,10 +76,9 @@ public sealed class World : IWorld
     public IMeshTable MeshTable => _meshTable;
     public IMaterialTable EntityMaterials => _materialTable;
 
-    internal MeshTable GetMeshTableImpl() => _meshTable;
-    internal MaterialTable GetMaterialTableImpl() => _materialTable;
-
-    internal AnimationTable GetAnimationTableImpl() => _animationTable;
+    internal MeshTable MeshTableImpl => _meshTable;
+    internal MaterialTable MaterialTableImpl => _materialTable;
+    internal AnimationTable AnimationTableImpl => _animationTable;
 
 
     public int EntityCount => Entities.EntityCount;
@@ -108,7 +88,6 @@ public sealed class World : IWorld
     {
         _meshTable.Setup(_assets);
         _animationTable.Setup(_assets);
-        _drawEntities.AttachWorld(this);
 
         Terrain.AttachRenderer(_meshGenerator.Register(new TerrainMeshGenerator(gfx)), _meshTable, _materialTable);
         _particles.AttachRenderer(_meshGenerator.Register(new ParticleMeshGenerator(gfx)), _materialTable);
@@ -120,8 +99,6 @@ public sealed class World : IWorld
         var mat = assets.MaterialStoreImpl.CreateMaterial("EmptyMat", "EmptyMat1");
         _drawEntities.EmptyMaterialKey = _materialTable.Add(MaterialTagBuilder.BuildOne(mat.Id, true));
 
-        DrawDataProvider.Attach(_worldRenderer.RenderEngine.CommandBuffer, _animationTable, _meshTable, _materialTable,
-            _entities);
     }
 
     internal void StartTick(Size2D viewSize)

@@ -6,12 +6,14 @@ namespace ConcreteEngine.Engine.Worlds.Render.Processor;
 
 internal static class DrawEntityCulling
 {
-    internal static int CullEntities(EntityId[] entityIndices, int[] byEntityId, Camera3D camera)
+    internal static int CullEntities(EntityId[] entityIndices, int[] byEntityId, World world)
     {
-        var renderView = camera.RenderView;
+        var renderView = world.Camera.RenderView;
+        var entities = world.Entities;
+        
         var count = 0;
         BoundingBox worldBounds;
-        foreach (var query in DrawDataProvider.WorldEntities.CoreQuery())
+        foreach (var query in entities.CoreQuery())
         {
             RenderTransform.GetWorldBounds(in query.Box.Bounds, in query.Transform, out worldBounds);
             if (!renderView.Frustum.IntersectsBox(in worldBounds)) continue;

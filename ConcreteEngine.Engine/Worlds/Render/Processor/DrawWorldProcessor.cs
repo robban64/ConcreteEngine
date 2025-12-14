@@ -2,17 +2,24 @@ using System.Numerics;
 using ConcreteEngine.Common.Numerics;
 using ConcreteEngine.Common.Numerics.Maths;
 using ConcreteEngine.Engine.Worlds.Entities.Components;
+using ConcreteEngine.Engine.Worlds.Tables;
 using ConcreteEngine.Renderer.Data;
 using ConcreteEngine.Renderer.Definitions;
+using ConcreteEngine.Renderer.Draw;
 
 namespace ConcreteEngine.Engine.Worlds.Render.Processor;
 
 internal static class DrawWorldProcessor
 {
-    internal static void SubmitDrawTerrain(WorldTerrain terrain)
+    internal static void SubmitWorldObjects(World world, DrawCommandUploader uploader)
     {
-        var uploader = DrawDataProvider.GetDrawUploaderCtx();
-        var view = DrawDataProvider.GetPartsRefView(terrain.Model);
+        SubmitDrawTerrain(uploader, world.MeshTableImpl, world.Terrain);
+        SubmitDrawSkybox(uploader, world.Sky);
+    }
+
+    private static void SubmitDrawTerrain(DrawCommandUploader uploader, MeshTable meshTable, WorldTerrain terrain)
+    {
+        var view = meshTable.GetPartsRefView(terrain.Model);
 
         var meta = new DrawCommandMeta(DrawCommandId.Terrain, DrawCommandQueue.Terrain);
         var cmd = new DrawCommand(view.Parts[0].Mesh, terrain.Material);
@@ -21,9 +28,8 @@ internal static class DrawWorldProcessor
         uploader.SubmitDrawAndTransform(cmd, meta, in model, in normal);
     }
 
-    internal static void SubmitDrawSkybox(WorldSkybox sky)
+    private static void SubmitDrawSkybox(DrawCommandUploader uploader, WorldSkybox sky)
     {
-        var uploader = DrawDataProvider.GetDrawUploaderCtx();
         var meta = new DrawCommandMeta(DrawCommandId.Skybox, DrawCommandQueue.Skybox, passMask: PassMask.Main);
         var cmd = new DrawCommand(sky.Mesh, sky.Material);
 

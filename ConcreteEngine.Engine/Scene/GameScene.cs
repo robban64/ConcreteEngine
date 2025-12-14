@@ -9,7 +9,7 @@ public abstract class GameScene
 {
     protected GameSceneContext Context { get; private set; } = null!;
 
-    protected IWorld World => Context.World;
+    protected World World => Context.World;
     protected Camera3D Camera => World.Camera;
 
 

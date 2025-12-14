@@ -1,5 +1,6 @@
 using System.Runtime.CompilerServices;
 using ConcreteEngine.Engine.Worlds.Entities;
+using ConcreteEngine.Engine.Worlds.Tables;
 
 namespace ConcreteEngine.Engine.Worlds.Render.Data;
 
@@ -31,10 +32,12 @@ internal ref struct DrawEntityView(int idx, ref DrawEntity entity)
 }
 
 internal ref struct DrawEntityContext(
+    WorldEntities worldEntities,
     Span<DrawEntity> drawEntities,
     Span<EntityId> entityIndices,
     Span<int> byEntityId)
 {
+    public readonly WorldEntities WorldEntities  = worldEntities;
     public Span<DrawEntity> EntitySpan = drawEntities;
     public Span<EntityId> EntityIndices = entityIndices;
     public Span<int> ByEntityIdSpan = byEntityId;

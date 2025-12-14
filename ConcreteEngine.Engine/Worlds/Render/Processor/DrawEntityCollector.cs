@@ -10,9 +10,9 @@ internal static class DrawEntityCollector
 {
     public static EntityId CollectEntities(DrawEntityContext ctx)
     {
-        var view = DrawDataProvider.WorldEntities.Core.GetCoreView();
         var len = ctx.EntitySpan.Length;
-        int _highEntityId = 0;
+        var view = ctx.WorldEntities.Core.GetCoreView();
+        int highEntityId = 0;
 
         for (var i = 0; i < len; i++)
         {
@@ -20,15 +20,15 @@ internal static class DrawEntityCollector
             ref var drawEntity = ref ctx.EntitySpan[i];
             ref readonly var source = ref view.GetSource(entityId);
             drawEntity.Entity = entityId;
-            _highEntityId = int.Max(_highEntityId, entityId);
+            highEntityId = int.Max(highEntityId, entityId);
             CollectEntity(ref drawEntity, entityId, in source);
         }
 
-        return new EntityId(_highEntityId);
+        return new EntityId(highEntityId);
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    internal static void CollectEntity(ref DrawEntity entity, EntityId entityId, in RenderSourceComponent source)
+    private static void CollectEntity(ref DrawEntity entity, EntityId entityId, in RenderSourceComponent source)
     {
         entity.Entity = entityId;
         entity.Source = new DrawEntitySource(source.Model, source.MaterialKey, source.DrawCount);

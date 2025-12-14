@@ -1,4 +1,5 @@
 using ConcreteEngine.Common;
+using ConcreteEngine.Common.Time;
 using ConcreteEngine.Engine.Assets;
 using ConcreteEngine.Engine.Assets.Shaders;
 using ConcreteEngine.Engine.Editor.Data;
@@ -90,7 +91,7 @@ public sealed class WorldRenderer
         SubmitMaterialData();
 
         // Upload draw commands
-        _drawEntities.Execute();
+        _drawEntities.Execute(RenderEngine.CommandBuffer);
 
         // fill buffers
         _renderer.CollectDrawBuffers();

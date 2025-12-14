@@ -8,8 +8,6 @@
         <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
         <LangVersion>default</LangVersion>
 
-        
-
         <NoWarn>$(NoWarn);CS0168;CS0219</NoWarn>
     </PropertyGroup>
 </Project>

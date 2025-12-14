@@ -3,23 +3,22 @@ using System.Runtime.CompilerServices;
 using ConcreteEngine.Common.Numerics.Maths;
 using ConcreteEngine.Engine.Worlds.Entities.Components;
 using ConcreteEngine.Engine.Worlds.Render.Data;
+using ConcreteEngine.Engine.Worlds.Tables;
 using ConcreteEngine.Renderer.Data;
+using ConcreteEngine.Renderer.Draw;
 
 namespace ConcreteEngine.Engine.Worlds.Render.Processor;
 
 internal static class DrawAnimatorProcessor
 {
     [SkipLocalsInit]
-    public static void Execute(DrawEntityContext ctx)
+    public static void Execute(DrawEntityContext ctx, SkinningBufferUploader uploader, AnimationDataView animationView)
     {
         const int boneCap = RenderLimits.BoneCapacity;
         Span<Matrix4x4> globals = stackalloc Matrix4x4[boneCap];
         globals.Fill(Matrix4x4.Identity);
 
-        var animationView = DrawDataProvider.GetAnimationDataView();
-        var uploader = DrawDataProvider.GetSkinningUploaderCtx();
-
-        foreach (var query in DrawDataProvider.WorldEntities.Query<AnimationComponent>())
+        foreach (var query in ctx.WorldEntities.Query<AnimationComponent>())
         {
             ref readonly var component = ref query.Component;
             if (!ctx.IsVisible(query.Entity)) continue;

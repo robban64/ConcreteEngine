@@ -6,6 +6,7 @@ using ConcreteEngine.Engine.Worlds.Data;
 using ConcreteEngine.Engine.Worlds.Entities;
 using ConcreteEngine.Engine.Worlds.Render.Data;
 using ConcreteEngine.Engine.Worlds.Render.Processor;
+using ConcreteEngine.Renderer.Draw;
 using ConcreteEngine.Shared.Diagnostics;
 
 namespace ConcreteEngine.Engine.Worlds.Render;
@@ -17,7 +18,6 @@ internal sealed class DrawEntityAssembler
 
     private static int _idx;
     private static int _prevIdx;
-
     private EntityId _highEntityId;
 
     //...
@@ -26,16 +26,18 @@ internal sealed class DrawEntityAssembler
     private DrawEntity[] _entities = new DrawEntity[DefaultCapacity];
     //...
 
-    private World _world = null!;
+    private readonly World _world;
     public ModelId CubeId;
     public MaterialTagKey EmptyMaterialKey;
 
-    public static readonly FrameProfiler RenderProfiler = new(144, 144 * 10);
+    //private static readonly FrameProfiler RenderProfiler = new(144, 144 * 10);
 
     public ReadOnlySpan<EntityId> VisibleEntities => _entityIndices.AsSpan(0, _idx);
 
-    internal DrawEntityAssembler()
+    internal DrawEntityAssembler(World world)
     {
+        _world = world;
+        /*
         RenderProfiler.Register("Collect");
         RenderProfiler.Register("Tag");
         RenderProfiler.Register("Particle");
@@ -43,12 +45,8 @@ internal sealed class DrawEntityAssembler
         RenderProfiler.Register("DrawCommands");
         RenderProfiler.Register("Transforms");
         RenderProfiler.Enabled = false;
+        */
     }
-
-
-    private WorldEntities WorldEntities => _world.Entities;
-
-    internal void AttachWorld(World world) => _world = world;
 
 
     public void Reset()
@@ -61,66 +59,66 @@ internal sealed class DrawEntityAssembler
         _highEntityId = default;
     }
 
-    private void Ensure()
+    private void Ensure(DrawCommandBuffer commandBuffer)
     {
         const int extraEntities = 64;
         const int extraAnimations = 8;
 
-        var entityCount = WorldEntities.EntityCount;
-        var ensureLen = entityCount + extraEntities;
-        var animationLen = WorldEntities.Animations.Count + extraAnimations;
-        EnsureDrawEntityData(ensureLen);
-        DrawDataProvider.EnsureBuffer(ensureLen, animationLen);
+        var entityLen = _world.EntityCount + extraEntities;
+        var animationLen = _world.Entities.Animations.Count + extraAnimations;
+        
+        EnsureDrawEntityData(entityLen);
+        commandBuffer.EnsureBufferCapacity(entityLen);
+        commandBuffer.EnsureBoneBuffer(animationLen);
     }
 
-    public void Execute()
+    public void Execute(DrawCommandBuffer commandBuffer)
     {
-        Ensure();
+        Ensure(commandBuffer);
         Validate();
 
         // start
-        SubmitWorldObjects();
+        DrawWorldProcessor.SubmitWorldObjects(_world, commandBuffer.GetDrawUploaderCtx());
 
-        var len = _idx = DrawEntityCulling.CullEntities(_entityIndices, _byEntityId, _world.Camera);
+        var entities = _world.Entities;
+        var ecsLen = entities.EntityCount;
+
+        var len = _idx = DrawEntityCulling.CullEntities(_entityIndices, _byEntityId, _world);
 
         if (len == 0) return;
-        if ((uint)len > _entities.Length || (uint)len > _entityIndices.Length || (uint)len > _byEntityId.Length)
+        if ((uint)len > _entities.Length || (uint)len > _entityIndices.Length || (uint)ecsLen > _byEntityId.Length)
             throw new IndexOutOfRangeException();
 
-        var ctx = new DrawEntityContext(_entities.AsSpan(0, len), _entityIndices.AsSpan(0, len), _byEntityId);
+        var ctx = new DrawEntityContext(_world.Entities, _entities.AsSpan(0, len), _entityIndices.AsSpan(0, len), _byEntityId.AsSpan(0, ecsLen));
 
         _highEntityId = DrawEntityCollector.CollectEntities(ctx);
         DrawTagResolver.TagEffectResolvers(ctx);
-        DrawTagResolver.TagDepthKeys(ctx, _world.Camera);
-        DrawParticleProcessor.TagParticles(ctx, _world.Particles);
+        DrawTagResolver.TagDepthKeys(_world.Camera, ctx);
+        DrawParticleProcessor.TagParticles(_world.Particles, ctx);
 
-        DrawEntityUploader.UploadDrawCommands(ctx);
+        DrawEntityUploader.UploadDrawCommands(_world, ctx, commandBuffer.GetDrawUploaderCtx());
 
-        ExecuteProcessors(len);
+        ExecuteProcessors(len, ecsLen, commandBuffer);
 
         // end
     }
 
-    private void ExecuteProcessors(int len)
+    private void ExecuteProcessors(int len, int ecsLen, DrawCommandBuffer commandBuffer)
     {
-        var ctx = new DrawEntityContext(_entities.AsSpan(0, len), _entityIndices.AsSpan(0, len), _byEntityId);
-        DrawTransformUploader.UploadTransform(ctx);
-        DrawAnimatorProcessor.Execute(ctx);
+        var animationTable = _world.AnimationTableImpl;
+        var ctx = new DrawEntityContext(_world.Entities, _entities.AsSpan(0, len), _entityIndices.AsSpan(0, len), _byEntityId.AsSpan(0, ecsLen));
+        DrawTransformUploader.UploadTransform(ctx,commandBuffer.GetDrawUploaderCtx(), _world.MeshTableImpl);
+        DrawAnimatorProcessor.Execute(ctx, commandBuffer.GetSkinningUploaderCtx(), animationTable.GetDataView());
         DrawParticleProcessor.Execute(_world.Particles);
     }
 
-    private void SubmitWorldObjects()
-    {
-        DrawWorldProcessor.SubmitDrawTerrain(_world.Terrain);
-        DrawWorldProcessor.SubmitDrawSkybox(_world.Sky);
-    }
 
     private void Validate()
     {
         if (_entityIndices.Length == 0 || _entities.Length == 0)
             throw new InvalidOperationException();
 
-        var view = WorldEntities.Core.GetCoreView();
+        var view = _world.Entities.Core.GetCoreView();
 
         if (_entities.Length != _entityIndices.Length || _entities.Length != _byEntityId.Length)
             throw new InvalidOperationException();
@@ -133,7 +131,7 @@ internal sealed class DrawEntityAssembler
             throw new IndexOutOfRangeException();
     }
 
-    public void EnsureDrawEntityData(int amount)
+    private void EnsureDrawEntityData(int amount)
     {
         InvalidOpThrower.ThrowIf(_byEntityId.Length != _entities.Length);
         InvalidOpThrower.ThrowIf(_byEntityId.Length != _entityIndices.Length);

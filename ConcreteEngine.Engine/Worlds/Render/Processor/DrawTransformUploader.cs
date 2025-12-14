@@ -2,16 +2,17 @@ using System.Numerics;
 using System.Runtime.CompilerServices;
 using ConcreteEngine.Common.Numerics.Maths;
 using ConcreteEngine.Engine.Worlds.Render.Data;
+using ConcreteEngine.Engine.Worlds.Tables;
 using ConcreteEngine.Renderer.Data;
+using ConcreteEngine.Renderer.Draw;
 
 namespace ConcreteEngine.Engine.Worlds.Render.Processor;
 
 internal static class DrawTransformUploader
 {
-    public static void UploadTransform(DrawEntityContext ctx)
+    public static void UploadTransform(DrawEntityContext ctx, DrawCommandUploader uploader, MeshTable meshTable)
     {
-        var view = DrawDataProvider.WorldEntities.Core.GetCoreView();
-        var writer = DrawDataProvider.GetDrawUploaderCtx();
+        var view = ctx.WorldEntities.Core.GetCoreView();
 
         foreach (var it in ctx)
         {
@@ -21,11 +22,11 @@ internal static class DrawTransformUploader
 
             ref readonly var t = ref view.GetTransform(entity.Entity);
 
-            MatrixMath.CreateModelMatrix(in t.Translation, in t.Scale, in t.Rotation, out var world);
-            var locals = DrawDataProvider.GetPartTransforms(entity.Source.Model);
+            MatrixMath.CreateModelMatrix(in t.Translation, in t.Scale, in t.Rotation, out var world);   
+            var locals = meshTable.GetPartTransforms(entity.Source.Model);
             foreach (ref readonly var local in locals)
             {
-                ref var modelTransform = ref writer.GetWriter();
+                ref var modelTransform = ref uploader.GetWriter();
                 WriteTransformUniform(ref modelTransform, in local, in world, animatedSlot);
             }
         }

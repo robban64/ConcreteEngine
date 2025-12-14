@@ -132,14 +132,12 @@ public sealed class GameEngine : IDisposable
         if (!_timeHub.TryTriggerDebounceResize()) beginStatus = BeginFrameStatus.None;
 
 
-        StaticProfileTimer.RenderTimer.Begin();
         WorldRenderer.PreRender(beginStatus, frameInfo, runtimeParams);
         WorldRenderer.ExecuteFrame(out _gfxFrameResult);
 
         if (_engineGateway.Active)
             _engineGateway.RenderEditor(in frameInfo, _gfxFrameResult);
 
-        StaticProfileTimer.RenderTimer.EndPrint();
     }
 
     internal void Update(float dt)

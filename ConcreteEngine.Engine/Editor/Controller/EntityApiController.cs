@@ -113,7 +113,7 @@ internal sealed class EntityApiController : IEngineEntityController
     {
         var entityId = new EntityId(entity.Identifier);
         ref readonly var component = ref Entities.Animations.GetById(entityId);
-        var clipCount = _world.GetAnimationTableImpl().GetClipCount(component.Animation);
+        var clipCount = _world.AnimationTableImpl.GetClipCount(component.Animation);
         state.Animation = new EditorId(component.Animation, EditorItemType.AnimationKey);
         state.Clip = component.Clip;
         state.ClipCount = clipCount;

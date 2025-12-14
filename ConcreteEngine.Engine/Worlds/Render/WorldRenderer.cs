@@ -32,8 +32,6 @@ public sealed class WorldRenderer
 
     private bool _hasUploadedMaterial = false;
 
-    internal RenderEngine RenderEngine => _renderer;
-    internal RenderCamera RenderCamera => _renderer.RenderCamera;
 
     internal WorldRenderer(EngineWindow window, GraphicsRuntime graphics, AssetSystem assets,
         WorldRenderParams worldRenderParams, DrawEntityAssembler drawEntities, Camera3D camera)
@@ -50,8 +48,11 @@ public sealed class WorldRenderer
 
         _renderer = new RenderEngine(graphics, _worldRenderParams.Snapshot, PrimitiveMeshes.FsqQuad);
     }
+    
+    internal RenderEngine RenderEngine => _renderer;
+    internal RenderCamera RenderCamera => _renderer.RenderCamera;
 
-    internal void RenderEmptyFrame(in RenderFrameInfo frameInfo) => _renderer.RenderEmptyFrame(in frameInfo);
+    internal void RenderEmptyFrame(in RenderFrameInfo frameInfo) => _renderer.RenderEmptyFrame(frameInfo);
 
     internal void RecreateFrameBuffer(FboCommandRecord req)
     {

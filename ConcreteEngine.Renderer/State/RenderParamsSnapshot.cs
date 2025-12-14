@@ -30,6 +30,7 @@ public sealed class RenderParamsSnapshot
         Shadows = shadows;
         PostEffect = postEffect;
     }
+    public void SetDirty() => IsDirty = true;
 
     public void ClearDirty() => IsDirty = false;
 }

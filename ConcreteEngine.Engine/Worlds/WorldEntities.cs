@@ -2,6 +2,7 @@ using ConcreteEngine.Common.Numerics;
 using ConcreteEngine.Engine.Worlds.Data;
 using ConcreteEngine.Engine.Worlds.Entities;
 using ConcreteEngine.Engine.Worlds.Entities.Components;
+using ConcreteEngine.Engine.Worlds.Objects;
 using ConcreteEngine.Engine.Worlds.Tables;
 using ConcreteEngine.Graphics.Gfx.Resources;
 
@@ -75,10 +76,10 @@ public sealed class WorldEntities
         return entityId;
     }
 
-    public EntityId CreateParticleEntity(MeshId mesh, ParticleComponent component)
+    public EntityId CreateParticleEntity(ParticleEmitter emitter, ParticleComponent component)
     {
-        var source = new RenderSourceComponent(ModelId.Ignore, 4, MaterialTagKey.Ignore, RenderSourceKind.Particle);
-        var entity = Core.AddEntity(source, Transform.Identity, BoundingBox.Identity, out var index);
+        var source = new RenderSourceComponent(emitter.Model, 4, emitter.MaterialKey, RenderSourceKind.Particle);
+        var entity = Core.AddEntity(source, Transform.Identity, ParticleComponent.DefaultParticleBounds, out var index);
         Particles.Add(entity, index, component);
         return entity;
     }

@@ -10,7 +10,7 @@ namespace ConcreteEngine.Engine.Worlds.Render.Processor;
 
 internal static class DrawTagResolver
 {
-    internal static void TagDepthKeys(Camera3D camera, DrawEntityContext ctx)
+    internal static void TagDepthKeys(Camera3D camera, in DrawEntityContext ctx)
     {
         var projInfo = camera.RenderView;
         var viewDepth = DepthKeyUtility.ExtractDepthVector(in projInfo.ViewMatrix);
@@ -27,10 +27,10 @@ internal static class DrawTagResolver
         }
     }
 
-    internal static void TagEffectResolvers(DrawEntityContext ctx)
+    internal static void TagEffectResolvers(in DrawEntityContext ctx)
     {
         var worldEntities = ctx.WorldEntities;
-        float deltaTime = EngineTime.DeltaTime;
+        var deltaTime = EngineTime.DeltaTime;
 
         foreach (var resolved in worldEntities.ResolvedEntitySpan)
         {

@@ -1,4 +1,6 @@
+using System.Numerics;
 using System.Runtime.InteropServices;
+using ConcreteEngine.Common.Numerics;
 using ConcreteEngine.Engine.Worlds.Data;
 using ConcreteEngine.Renderer.Data;
 
@@ -36,4 +38,6 @@ public struct ParticleComponent(int emitterHandle, MaterialId material)
 {
     public int EmitterHandle = emitterHandle;
     public MaterialId Material = material;
+
+    public static BoundingBox DefaultParticleBounds => new(new Vector3(-0.5f), new Vector3(0.5f));
 }

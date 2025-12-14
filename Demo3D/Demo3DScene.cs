@@ -104,17 +104,17 @@ public sealed class Demo3DScene : GameScene
 
             var emitter = worldParticles.CreateEmitter("Emitter1", 1024, new ParticleDefinition());
             emitter.State = state;
-            emitter.MaterialId = particleMat.Id;
+            emitter.Material = particleMat.Id;
 
-            var component = new ParticleComponent(emitter.EmitterHandle, emitter.MaterialId);
-            Context.World.Entities.CreateParticleEntity(emitter.MeshId, component);
+            var component = new ParticleComponent(emitter.EmitterHandle, emitter.Material);
+            Context.World.Entities.CreateParticleEntity(emitter, component);
 
             var emitter2 = worldParticles.CreateEmitter("Emitter2", 1024, in def);
             emitter2.State = state with { Translation = new Vector3(110, 8, 110) };
-            emitter2.MaterialId = particleMat.Id;
+            emitter2.Material = particleMat.Id;
 
-            var component2 = new ParticleComponent(emitter2.EmitterHandle, emitter2.MaterialId);
-            Context.World.Entities.CreateParticleEntity(emitter2.MeshId, component2);
+            var component2 = new ParticleComponent(emitter2.EmitterHandle, emitter2.Material);
+            Context.World.Entities.CreateParticleEntity(emitter2, component2);
         }
     }
 

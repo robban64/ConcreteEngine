@@ -14,16 +14,19 @@ public sealed class ParticleEmitter : IComparable<int>, IComparable<ParticleEmit
     public string EmitterName;
 
     public int ParticleCount;
-    public MeshId MeshId;
-    public MaterialId MaterialId;
+    public MeshId Mesh;
+    public MaterialId Material;
 
+    public ModelId Model;
+    public MaterialTagKey MaterialKey;
+    
     public ParticleEmitterState State;
     public ParticleDefinition Definition;
     public BoundingBox LocalBounds;
 
     internal ParticleStateData[] Particles;
 
-    internal ReadOnlySpan<ParticleStateData> ParticlesSpan => Particles.AsSpan(0, ParticleCount);
+    internal Span<ParticleStateData> ParticlesSpan => Particles.AsSpan(0, ParticleCount);
 
     public ParticleEmitter(string name, int handle, int particleCount, in ParticleDefinition def)
     {

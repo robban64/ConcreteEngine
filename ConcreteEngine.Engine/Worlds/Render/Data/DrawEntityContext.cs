@@ -30,23 +30,23 @@ internal ref struct DrawEntityView(int idx, ref DrawEntity entity)
     public ref DrawEntity DrawEntity = ref entity;
 }
 
-internal ref struct DrawEntityContext(
+internal readonly ref struct DrawEntityContext(
     WorldEntities worldEntities,
     Span<DrawEntity> drawEntities,
     Span<EntityId> entityIndices,
     Span<int> byEntityId)
 {
     public readonly WorldEntities WorldEntities = worldEntities;
-    public Span<DrawEntity> EntitySpan = drawEntities;
-    public Span<EntityId> EntityIndices = entityIndices;
-    public Span<int> ByEntityIdSpan = byEntityId;
+    public readonly Span<DrawEntity> EntitySpan = drawEntities;
+    public readonly Span<EntityId> EntityIndices = entityIndices;
+    public readonly Span<int> ByEntityIdSpan = byEntityId;
+    
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public bool IsVisible(EntityId entityId) => ByEntityIdSpan[entityId] != -1;
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public readonly bool IsVisible(EntityId entityId) => ByEntityIdSpan[entityId] != -1;
+    public ref DrawEntity GetByEntityId(EntityId entityId) => ref EntitySpan[ByEntityIdSpan[entityId]];
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public readonly ref DrawEntity GetByEntityId(EntityId entityId) => ref EntitySpan[ByEntityIdSpan[entityId]];
-
-    [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public readonly DrawEntityEnumerator GetEnumerator() => new(this);
+    public DrawEntityEnumerator GetEnumerator() => new(this);
 }

@@ -1,5 +1,6 @@
 using ConcreteEngine.Common;
 using ConcreteEngine.Common.Collections;
+using ConcreteEngine.Common.Time;
 using ConcreteEngine.Engine.Editor.Diagnostics;
 using ConcreteEngine.Engine.Worlds.Data;
 using ConcreteEngine.Engine.Worlds.Entities;
@@ -82,6 +83,7 @@ internal sealed class DrawEntityAssembler
         var entities = _world.Entities;
         var ecsLen = entities.EntityCount;
 
+        // cull
         var len = _idx = DrawEntityCulling.CullEntities(_entityIndices, _byEntityId, _world);
 
         if (len == 0) return;
@@ -91,25 +93,27 @@ internal sealed class DrawEntityAssembler
         var ctx = new DrawEntityContext(_world.Entities, _entities.AsSpan(0, len), _entityIndices.AsSpan(0, len),
             _byEntityId.AsSpan(0, ecsLen));
 
-        _highEntityId = DrawEntityCollector.CollectEntities(ctx);
-        DrawTagResolver.TagEffectResolvers(ctx);
-        DrawTagResolver.TagDepthKeys(_world.Camera, ctx);
-        DrawParticleProcessor.TagParticles(_world.Particles, ctx);
+        // collect
+        _highEntityId = DrawEntityCollector.CollectEntities(in ctx);
+        
+        // tag
+        DrawTagResolver.TagEffectResolvers(in ctx);
+        DrawTagResolver.TagDepthKeys(_world.Camera, in ctx);
+        DrawParticleProcessor.TagParticles(_world.Particles, in ctx);
 
-        DrawEntityUploader.UploadDrawCommands(_world, ctx, commandBuffer.GetDrawUploaderCtx());
+        var uploader = commandBuffer.GetDrawUploaderCtx();
+        DrawEntityUploader.UploadDrawCommands(_world, in ctx, in uploader);
+        DrawTransformUploader.UploadTransform(in ctx, in uploader, _world.MeshTableImpl);
 
-        ExecuteProcessors(len, ecsLen, commandBuffer);
+        ExecuteProcessors(in ctx, commandBuffer);
 
         // end
     }
 
-    private void ExecuteProcessors(int len, int ecsLen, DrawCommandBuffer commandBuffer)
+    private void ExecuteProcessors(in DrawEntityContext ctx, DrawCommandBuffer commandBuffer)
     {
         var animationTable = _world.AnimationTableImpl;
-        var ctx = new DrawEntityContext(_world.Entities, _entities.AsSpan(0, len), _entityIndices.AsSpan(0, len),
-            _byEntityId.AsSpan(0, ecsLen));
-        DrawTransformUploader.UploadTransform(ctx, commandBuffer.GetDrawUploaderCtx(), _world.MeshTableImpl);
-        DrawAnimatorProcessor.Execute(ctx, commandBuffer.GetSkinningUploaderCtx(), animationTable.GetDataView());
+        DrawAnimatorProcessor.Execute(in ctx, commandBuffer.GetSkinningUploaderCtx(), animationTable.GetDataView());
         DrawParticleProcessor.Execute(_world.Particles);
     }
 

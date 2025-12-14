@@ -16,15 +16,6 @@ public readonly struct MeshPart(MeshId mesh, int materialSlot, int drawCount)
     private readonly int _pad; // ensure 16 byte
 }
 
-internal readonly ref struct ModelBoundsView(BoundingBox[] bounds)
-{
-    [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public void WriteModelBoundingBox(ModelId id, ref BoundingBox result) => result = bounds[id - 1];
-
-    public void FillModelBoundingBox(ModelId id, out BoundingBox result) => result = bounds[id - 1];
-    // public ref readonly BoundingBox ModelBoundingBox(ModelId id) =>ref  bounds[id - 1];
-}
-
 internal readonly ref struct ModelPartView(
     ReadOnlySpan<MeshPart> parts,
     ReadOnlySpan<Matrix4x4> locals,

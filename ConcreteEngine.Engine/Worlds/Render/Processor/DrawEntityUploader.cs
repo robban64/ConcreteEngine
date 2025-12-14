@@ -11,24 +11,16 @@ namespace ConcreteEngine.Engine.Worlds.Render.Processor;
 
 internal static class DrawEntityUploader
 {
-    public static void UploadDrawCommands(World world, DrawEntityContext ctx, DrawCommandUploader uploader)
+    public static void UploadDrawCommands(World world, in DrawEntityContext ctx, in DrawCommandUploader uploader)
     {
         var matTable = world.MaterialTableImpl;
         var meshTable = world.MeshTableImpl;
 
-
         MaterialTag materialTag = default;
         var prevMatKey = new MaterialTagKey(-1);
-
         foreach (var it in ctx)
         {
             ref readonly var entity = ref it.DrawEntity;
-            if (entity.Meta.CommandId != DrawCommandId.Model)
-            {
-                ExecuteGeneratedCommand(in entity, uploader);
-                continue;
-            }
-
             var matKey = entity.Source.MaterialKey;
             if (matKey != prevMatKey)
             {
@@ -37,34 +29,24 @@ internal static class DrawEntityUploader
             }
 
             var parts = meshTable.GetMeshParts(entity.Source.Model);
-            ExecuteSubmitCommand(in entity, in materialTag, parts, uploader);
+            foreach (ref readonly var part in parts)
+            {
+                var isTransparent = materialTag.ResolveSlot(part.MaterialSlot, out var materialId);
+                var cmd = new DrawCommand(part.Mesh, materialId, part.DrawCount, entity.Source.InstanceCount);
+                uploader.SubmitDraw(in cmd, BuildMeta(entity.Meta, isTransparent));
+            }
         }
+
     }
-
-    private static void ExecuteSubmitCommand(in DrawEntity entity, in MaterialTag materialTag,
-        ReadOnlySpan<MeshPart> parts, DrawCommandUploader uploader)
+    
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    private static DrawCommandMeta BuildMeta(DrawEntityMeta m, bool isTransparent)
     {
-        foreach (ref readonly var part in parts)
-        {
-            var isTransparent = materialTag.ResolveSlot(part.MaterialSlot, out var materialId);
-            var cmd = new DrawCommand(part.Mesh, materialId, part.DrawCount, entity.Source.InstanceCount);
+        if (!isTransparent) return m.ToCommandMeta();
 
-            var meta = BuildMeta(entity.Meta, isTransparent);
-
-            uploader.SubmitDraw(in cmd, meta);
-        }
-
-        return;
-
-        [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        static DrawCommandMeta BuildMeta(DrawEntityMeta m, bool isTransparent)
-        {
-            if (!isTransparent) return m.ToCommandMeta();
-
-            var depthKey = (ushort)(ushort.MaxValue - m.DepthKey);
-            var queue = m.Queue >= DrawCommandQueue.Transparent ? m.Queue : DrawCommandQueue.Transparent;
-            return new DrawCommandMeta(m.CommandId, queue, m.Resolver, m.PassMask, depthKey, m.AnimatedSlot);
-        }
+        var depthKey = (ushort)(ushort.MaxValue - m.DepthKey);
+        var queue = m.Queue >= DrawCommandQueue.Transparent ? m.Queue : DrawCommandQueue.Transparent;
+        return new DrawCommandMeta(m.CommandId, queue, m.Resolver, m.PassMask, depthKey, m.AnimatedSlot);
     }
 
     private static void ExecuteGeneratedCommand(in DrawEntity entity, DrawCommandUploader uploader)

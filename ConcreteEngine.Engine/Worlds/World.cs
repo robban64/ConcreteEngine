@@ -52,8 +52,8 @@ public sealed class World
 
         _entities = new WorldEntities();
         _sky = new WorldSkybox();
-        _terrain = new WorldTerrain();
-        _particles = new WorldParticles();
+        _terrain = new WorldTerrain(_meshTable, _materialTable);
+        _particles = new WorldParticles(_meshTable, _materialTable);
 
         _raycast = new WorldRaycaster(Camera, Entities, _terrain, _drawEntities);
 
@@ -91,8 +91,8 @@ public sealed class World
         _meshTable.Setup(_assets);
         _animationTable.Setup(_assets);
 
-        Terrain.AttachRenderer(_meshGenerator.Register(new TerrainMeshGenerator(gfx)), _meshTable, _materialTable);
-        _particles.AttachRenderer(_meshGenerator.Register(new ParticleMeshGenerator(gfx)), _materialTable);
+        Terrain.AttachRenderer(_meshGenerator.Register(new TerrainMeshGenerator(gfx)));
+        _particles.AttachRenderer(_meshGenerator.Register(new ParticleMeshGenerator(gfx)));
         _entities.Attach(_meshTable, _materialTable);
         _sky.AttachRenderer(_meshTable);
 

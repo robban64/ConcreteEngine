@@ -175,7 +175,7 @@ public sealed class RenderEngine
         _graphics.EndFrame(out frameResult);
     }
 
-    public void RenderEmptyFrame(in RenderFrameInfo frameInfo)
+    public void RenderEmptyFrame(RenderFrameInfo frameInfo)
     {
         _graphics.BeginFrame(frameInfo.ToGfxFrameInfo());
         _graphics.EndFrame(out _);

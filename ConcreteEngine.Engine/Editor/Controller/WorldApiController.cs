@@ -65,7 +65,7 @@ internal sealed class WorldApiController(ApiContext ctx) : IEngineWorldControlle
         {
             emitters.Add(new EditorParticleResource
             {
-                MeshId = new EditorId(it.MeshId, EditorItemType.Model),
+                MeshId = new EditorId(it.Mesh, EditorItemType.Model),
                 Id = new EditorId(it.EmitterHandle, EditorItemType.Particle),
                 Name = it.EmitterName
             });

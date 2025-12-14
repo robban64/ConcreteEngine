@@ -12,7 +12,8 @@ namespace ConcreteEngine.Engine.Worlds.Render.Processor;
 internal static class DrawAnimatorProcessor
 {
     [SkipLocalsInit]
-    public static void Execute(DrawEntityContext ctx, SkinningBufferUploader uploader, AnimationDataView animationView)
+    public static void Execute(in DrawEntityContext ctx, SkinningBufferUploader uploader,
+        AnimationDataView animationView)
     {
         const int boneCap = RenderLimits.BoneCapacity;
         Span<Matrix4x4> globals = stackalloc Matrix4x4[boneCap];
@@ -29,12 +30,11 @@ internal static class DrawAnimatorProcessor
                 throw new IndexOutOfRangeException("BoneCount exceeds capacity.");
 
             var finals = uploader.GetWriter();
-            var clip = view.GetClip(component.Clip);
 
             Matrix4x4 result = default;
             for (var i = 0; i < len; i++)
             {
-                ProcessClip(i, component.Time, clip, globals, view.NodeTransformSpan, view.ParentIndexSpan);
+                ProcessClip(i, in component, globals, in view);
                 MatrixMath.WriteMultiplyAffine(ref result, in view.BoneOffsetMatrixSpan[i], in globals[i]);
                 MatrixMath.WriteMultiplyAffine(ref finals[i], in result, in invTransform);
             }
@@ -42,16 +42,16 @@ internal static class DrawAnimatorProcessor
 
         return;
 
-        static void ProcessClip(int i, float time, ReadOnlySpan<BoneTrack> clip, Span<Matrix4x4> globals,
-            ReadOnlySpan<Matrix4x4> nodeTransformSpan, ReadOnlySpan<int> parentIndexSpan)
+        static void ProcessClip(int i, in AnimationComponent component, Span<Matrix4x4> globals, in ModelAnimationView view)
         {
+            var clip = view.GetClip(component.Clip);
             ref readonly var track = ref clip[i];
 
             var local = track.IsEmpty
-                ? nodeTransformSpan[i]
-                : SampleKeyFrame(track.Positions, track.Rotations, time);
+                ? view.NodeTransformSpan[i]
+                : SampleKeyFrame(track.Positions, track.Rotations, component.Time);
 
-            var p = parentIndexSpan[i];
+            var p = view.ParentIndexSpan[i];
             if (p >= 0)
                 MatrixMath.WriteMultiplyAffine(ref globals[i], in local, in globals[p]);
             else
@@ -66,9 +66,10 @@ internal static class DrawAnimatorProcessor
         var translation = pos.Length == 1 ? pos[0].Value : SampleVector(pos, time);
         var rotation = rot.Length == 1 ? rot[0].Value : SampleQuaternion(rot, time);
 
-        MatrixMath.CreateModelMatrix(in translation, Vector3.One, in rotation, out var localMatrix);
+        MatrixMath.CreateFixedSizeModelMatrix(in translation, in rotation, out var localMatrix);
         return localMatrix;
 
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         static Vector3 SampleVector(ReadOnlySpan<KeyFrameVec3> values, float time)
         {
             int index = FindIndex(values, time);
@@ -79,6 +80,7 @@ internal static class DrawAnimatorProcessor
             return Vector3.Lerp(k1.Value, k2.Value, factor);
         }
 
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         static Quaternion SampleQuaternion(ReadOnlySpan<KeyFrameQuat> values, float time)
         {
             int index = FindIndex(values, time);

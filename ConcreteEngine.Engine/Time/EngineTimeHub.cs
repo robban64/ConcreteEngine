@@ -9,11 +9,11 @@ namespace ConcreteEngine.Engine.Time;
 internal sealed class EngineTimeHub
 {
     private const int MaxTicksPerFrame = 6;
-    private const int GameTicksPerSecond = 60;
-    private const int SimulationTickPerSecond = 20;
+    public const int GameTicksPerSecond = 60;
+    public const int SimulationTickPerSecond = 40;
 
     private const float GameTickDeltaTime = 1f / GameTicksPerSecond;
-    private const float SimulationDeltaTime = 1f / SimulationTickPerSecond;
+    public const float SimulationDeltaTime = 1f / SimulationTickPerSecond;
     private const float DiagnosticTickDeltaTime = 1f / 4;
 
     private FrameTickTimer _updateTicker = new(GameTickDeltaTime);

@@ -14,7 +14,7 @@ internal static class DrawParticleProcessor
 {
     private static readonly List<ParticleEmitter> Emitters = new(8);
 
-    internal static void TagParticles(WorldParticles worldParticles, DrawEntityContext ctx)
+    internal static void TagParticles(WorldParticles worldParticles, in DrawEntityContext ctx)
     {
         Emitters.Clear();
         Emitters.EnsureCapacity(ctx.WorldEntities.Particles.Count);
@@ -32,8 +32,8 @@ internal static class DrawParticleProcessor
             drawEntity.Meta.PassMask = PassMask.Main;
             drawEntity.Meta.CommandId = DrawCommandId.Particle;
             drawEntity.Source.InstanceCount = emitter.ParticleCount;
-            drawEntity.Source.Model = new ModelId(emitter.MeshId);
-            drawEntity.Source.MaterialKey = new MaterialTagKey(emitter.MaterialId);
+            drawEntity.Source.Model = emitter.Model;
+            drawEntity.Source.MaterialKey = emitter.MaterialKey;
 
             Emitters.Add(emitter);
         }

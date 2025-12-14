@@ -116,6 +116,7 @@ public sealed class WorldRenderParams
 
 
         _dirty = false;
+        _snapshot.SetDirty();
         return _snapshot;
     }
 }

@@ -10,6 +10,9 @@ internal static class DrawEntityCulling
     {
         var renderView = world.Camera.RenderView;
         var entities = world.Entities;
+        var len = entities.Core.Count;
+        if((uint)len > entityIndices.Length || (uint)len > byEntityId.Length)
+            throw new IndexOutOfRangeException();
 
         var count = 0;
         BoundingBox worldBounds;

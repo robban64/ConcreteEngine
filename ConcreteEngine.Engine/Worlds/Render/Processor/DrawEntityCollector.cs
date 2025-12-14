@@ -8,7 +8,7 @@ namespace ConcreteEngine.Engine.Worlds.Render.Processor;
 
 internal static class DrawEntityCollector
 {
-    public static EntityId CollectEntities(DrawEntityContext ctx)
+    public static EntityId CollectEntities(in DrawEntityContext ctx)
     {
         var len = ctx.EntitySpan.Length;
         var view = ctx.WorldEntities.Core.GetCoreView();
@@ -19,21 +19,15 @@ internal static class DrawEntityCollector
             var entityId = ctx.EntityIndices[i];
             ref var drawEntity = ref ctx.EntitySpan[i];
             ref readonly var source = ref view.GetSource(entityId);
+            
             drawEntity.Entity = entityId;
+            drawEntity.Source = new DrawEntitySource(source.Model, source.MaterialKey, source.DrawCount);
+            drawEntity.Meta = new DrawEntityMeta(DrawCommandId.Model, DrawCommandQueue.Opaque, PassMask.Default);
+            
             highEntityId = int.Max(highEntityId, entityId);
-            CollectEntity(ref drawEntity, entityId, in source);
         }
 
         return new EntityId(highEntityId);
     }
 
-    [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    private static void CollectEntity(ref DrawEntity entity, EntityId entityId, in RenderSourceComponent source)
-    {
-        entity.Entity = entityId;
-        entity.Source = new DrawEntitySource(source.Model, source.MaterialKey, source.DrawCount);
-        entity.Meta = new DrawEntityMeta(DrawCommandId.Model, DrawCommandQueue.Opaque, PassMask.Default);
-        if (source.Kind == RenderSourceKind.Particle)
-            entity.Meta = new DrawEntityMeta(DrawCommandId.Particle, DrawCommandQueue.Particles, PassMask.Main);
-    }
 }

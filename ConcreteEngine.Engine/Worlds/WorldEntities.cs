@@ -13,7 +13,6 @@ namespace ConcreteEngine.Engine.Worlds;
 
 public sealed class WorldEntities
 {
-
     private MeshTable _meshTable = null!;
     private MaterialTable _materialTable = null!;
 
@@ -21,7 +20,7 @@ public sealed class WorldEntities
     private readonly EntityRenderResolver _renderResolver;
     private readonly EntityStore<AnimationComponent> _animations;
     private readonly EntityStore<ParticleComponent> _particles;
-    
+
     private static EntityCoreStore _coreStore = null!;
 
     internal WorldEntities()
@@ -34,14 +33,14 @@ public sealed class WorldEntities
         _renderResolver = new EntityRenderResolver();
     }
 
-    
+
     public int EntityCount => _coreStore.Count;
     internal EntityCoreStore Core => _coreStore;
     internal EntityStore<AnimationComponent> Animations => _animations;
     internal EntityStore<ParticleComponent> Particles => _particles;
 
     internal ReadOnlySpan<EntityResolverEntry> ResolvedEntitySpan => _renderResolver.Entities;
-    
+
     internal void Attach(MeshTable meshTable, MaterialTable materialTable)
     {
         _meshTable = meshTable;
@@ -93,7 +92,7 @@ public sealed class WorldEntities
     internal EntityEnumerator<T> Query<T>() where T : unmanaged => new(GenericStores<T>.Store);
 
     internal EntityCoreEnumerator CoreQuery() => new(_coreStore);
-    
+
     private static class GenericStores<T> where T : unmanaged
     {
         public static EntityStore<T> Store = null!;

@@ -19,7 +19,7 @@ internal sealed class EntityApiController : IEngineEntityController
 
 
     private EntityId _cachedEntity;
-    
+
     private readonly ApiContext _apiContext;
     private readonly World _world;
 
@@ -28,9 +28,9 @@ internal sealed class EntityApiController : IEngineEntityController
         _apiContext = apiContext;
         _world = _apiContext.World;
     }
-    
+
     private WorldEntities Entities => _world.Entities;
-    
+
     public List<EditorEntityResource> CreateEntityList()
     {
         const string animationName = "Animation";
@@ -76,16 +76,15 @@ internal sealed class EntityApiController : IEngineEntityController
 
         state = new EditorEntityState(in Transform.UnsafeAs(ref view.Transform), in view.Box.Bounds)
         {
-            Model = new EditorId(view.Source.Model, EditorItemType.Model), 
+            Model = new EditorId(view.Source.Model, EditorItemType.Model),
             MaterialKey = new EditorId(view.Source.MaterialKey.Value, EditorItemType.MaterialKey)
         };
-        
-        if(Entities.Animations.Has(entityId))
+
+        if (Entities.Animations.Has(entityId))
             state.ComponentRef = new EditorId(entity, EditorItemType.Animation);
-        
-        if(Entities.Particles.Has(entityId))
+
+        if (Entities.Particles.Has(entityId))
             state.ComponentRef = new EditorId(entity, EditorItemType.Particle);
-        
     }
 
     public void DeselectEntity(EditorId entity)

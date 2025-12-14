@@ -1,7 +1,6 @@
 #region
 
 using ConcreteEngine.Engine.Scene.Modules;
-using ConcreteEngine.Renderer;
 using ConcreteEngine.Renderer.Descriptors;
 
 #endregion
@@ -21,7 +20,7 @@ public interface IGameSceneRenderBuilder
 public sealed class GameSceneConfigBuilder(ModuleManager modules)
     : IGameSceneRenderBuilder, IGameSceneModuleBuilder
 {
-    private readonly List<Func<GameModule>> _modules = new();
+    private readonly List<Func<GameModule>> _modules = [];
     private RenderTargetDescriptor _renderTargetsDesc = null!;
 
     public RenderTargetDescriptor RenderTargetsDesc => _renderTargetsDesc;

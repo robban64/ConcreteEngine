@@ -82,14 +82,14 @@ internal sealed class AssetLoader
             InvalidOpThrower.ThrowIf(it.GId == Guid.Empty);
             InvalidOpThrower.ThrowIfNull(it.EmbeddedName);
 
-            if (it is TextureEmbeddedDescriptor tex) _embeddedTextures.Add(tex);
-            if (it is MaterialEmbeddedDescriptor mat) _embeddedMaterials.Add(mat);
+            if (it is TextureEmbeddedDescriptor tex) _embeddedTextures!.Add(tex);
+            if (it is MaterialEmbeddedDescriptor mat) _embeddedMaterials!.Add(mat);
         }
     }
 
     private void ProcessEmbedded()
     {
-        if (_embeddedTextures.Count > 0)
+        if (_embeddedTextures!.Count > 0)
         {
             EmbeddedAssembleDel<Texture2D, TextureEmbeddedDescriptor> del = _textureLoader!.LoadEmbeddedTexture;
             foreach (var it in _embeddedTextures)
@@ -98,7 +98,7 @@ internal sealed class AssetLoader
             }
         }
 
-        if (_embeddedMaterials.Count > 0)
+        if (_embeddedMaterials!.Count > 0)
         {
             LoadEmbeddedMaterial(CollectionsMarshal.AsSpan(_embeddedMaterials));
         }
@@ -168,8 +168,8 @@ internal sealed class AssetLoader
         _loadMeshDel = null;
         _enqueueDel = null!;
 
-        _embeddedTextures.Clear();
-        _embeddedMaterials.Clear();
+        _embeddedTextures?.Clear();
+        _embeddedMaterials?.Clear();
         _embeddedTextures = null!;
         _embeddedMaterials = null!;
 

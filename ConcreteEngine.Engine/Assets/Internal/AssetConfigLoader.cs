@@ -1,7 +1,6 @@
 #region
 
 using System.Text.Json;
-using System.Text.Json.Serialization;
 using ConcreteEngine.Engine.Assets.Descriptors;
 using ConcreteEngine.Engine.Assets.IO;
 using ConcreteEngine.Engine.Editor.Diagnostics;
@@ -13,24 +12,6 @@ namespace ConcreteEngine.Engine.Assets.Internal;
 
 internal sealed class AssetConfigLoader
 {
-    private readonly JsonSerializerOptions _jsonOptions;
-
-    internal AssetConfigLoader()
-    {
-        _jsonOptions = new JsonSerializerOptions
-        {
-            PropertyNamingPolicy = JsonNamingPolicy.CamelCase,
-            WriteIndented = true,
-            Converters =
-            {
-                new JsonStringEnumConverter(),
-                new Vector2Converter(),
-                new Vector3Converter(),
-                new Vector4Converter()
-            }
-        };
-    }
-
     public AssetManifest LoadAssetManifest()
     {
         Logger.LogString(LogScope.Assets, "Loading Asset Manifest...");
@@ -46,7 +27,7 @@ internal sealed class AssetConfigLoader
         using var fs = new FileStream(path, FileMode.Open, FileAccess.Read, FileShare.Read,
             64 * 1024, FileOptions.SequentialScan);
 
-        var assetManifest = JsonSerializer.Deserialize<AssetManifest>(fs, _jsonOptions) ??
+        var assetManifest = JsonSerializer.Deserialize<AssetManifest>(fs, JsonUtils.DefaultJsonOptions) ??
                             throw new InvalidDataException("Invalid manifest.");
 
         return assetManifest;
@@ -65,7 +46,7 @@ internal sealed class AssetConfigLoader
         using var fs = new FileStream(path, FileMode.Open, FileAccess.Read, FileShare.Read,
             64 * 1024, FileOptions.SequentialScan);
 
-        var manifest = JsonSerializer.Deserialize<T>(fs, _jsonOptions)
+        var manifest = JsonSerializer.Deserialize<T>(fs, JsonUtils.DefaultJsonOptions)
                        ?? throw new InvalidDataException($"Invalid resource manifest for {typeof(T).Name}.");
 
         Logger.LogString(LogScope.Assets, $"Loading Assets - ({typeof(T).Name})");

@@ -20,7 +20,7 @@ namespace ConcreteEngine.Engine.Editor;
 
 internal static class EngineCommandHandler
 {
-    internal static EditorEngineQueue CommandQueues { get; set; } //EngineCommandRecord queue
+    internal static EditorEngineQueue CommandQueues { get; set; }
 
     public static CommandResponse OnAssetShaderCmd(in EditorShaderCommand shaderCommand)
     {
@@ -90,15 +90,13 @@ internal static class EngineCommandHandler
         ctx.AddLog(StructStr<DrawEntity>());
         ctx.AddLog(StructStr<DrawEntityMeta>());
         ctx.AddLog(StructStr<DrawEntitySource>());
-        
+
         ctx.AddLog(StructStr<DrawCommand>());
         ctx.AddLog(StructStr<DrawCommandMeta>());
 
-        
+
         ctx.AddLog(StructStr<RenderSourceComponent>());
         ctx.AddLog(StructStr<AnimationComponent>());
-
-
     }
 
 

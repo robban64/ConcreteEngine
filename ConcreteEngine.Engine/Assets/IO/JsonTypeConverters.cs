@@ -8,7 +8,24 @@ using System.Text.Json.Serialization;
 
 namespace ConcreteEngine.Engine.Assets.IO;
 
-sealed class Vector2Converter : JsonConverter<Vector2>
+internal static class JsonUtils
+{
+    internal static JsonSerializerOptions DefaultJsonOptions =>
+        new()
+        {
+            PropertyNamingPolicy = JsonNamingPolicy.CamelCase,
+            WriteIndented = true,
+            Converters =
+            {
+                new JsonStringEnumConverter(),
+                new Vector2Converter(),
+                new Vector3Converter(),
+                new Vector4Converter()
+            }
+        };
+}
+
+internal sealed class Vector2Converter : JsonConverter<Vector2>
 {
     public override Vector2 Read(ref Utf8JsonReader r, Type t, JsonSerializerOptions o)
     {
@@ -31,7 +48,7 @@ sealed class Vector2Converter : JsonConverter<Vector2>
     }
 }
 
-sealed class Vector3Converter : JsonConverter<Vector3>
+internal sealed class Vector3Converter : JsonConverter<Vector3>
 {
     public override Vector3 Read(ref Utf8JsonReader r, Type t, JsonSerializerOptions o)
     {
@@ -57,7 +74,7 @@ sealed class Vector3Converter : JsonConverter<Vector3>
     }
 }
 
-sealed class Vector4Converter : JsonConverter<Vector4>
+internal sealed class Vector4Converter : JsonConverter<Vector4>
 {
     public override Vector4 Read(ref Utf8JsonReader r, Type t, JsonSerializerOptions o)
     {

@@ -9,7 +9,7 @@ namespace ConcreteEngine.Engine.Assets.Models;
 public sealed class AnimationClip(string name, float duration, float ticksPerSecond)
 {
     public string Name { get; set; } = name;
-    
+
     public readonly float Duration = duration;
     public readonly float TicksPerSecond = ticksPerSecond;
 

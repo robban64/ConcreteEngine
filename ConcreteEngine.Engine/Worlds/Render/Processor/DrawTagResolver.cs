@@ -30,7 +30,7 @@ internal static class DrawTagResolver
             entity.Meta.DepthKey = depthKey;
         }
     }
-    
+
     internal static void TagEffectResolvers(DrawEntityContext ctx)
     {
         var worldEntities = DrawDataProvider.WorldEntities;
@@ -39,7 +39,7 @@ internal static class DrawTagResolver
         foreach (var resolved in worldEntities.ResolvedEntitySpan)
         {
             var index = ctx.ByEntityIdSpan[resolved.Entity];
-            if(index == -1) continue;
+            if (index == -1) continue;
             ref var drawEntity = ref ctx.EntitySpan[index];
             drawEntity.Meta.PassMask = PassMask.Effect | PassMask.DepthPre;
             drawEntity.Meta.Resolver = resolved.CommandResolver;
@@ -53,7 +53,7 @@ internal static class DrawTagResolver
             component.AdvanceTime(deltaTime);
 
             var index = ctx.ByEntityIdSpan[entityId];
-            if(index == -1) continue;
+            if (index == -1) continue;
             ref var drawEntity = ref ctx.EntitySpan[index];
             drawEntity.SetAnimationSlot(slot++);
         }

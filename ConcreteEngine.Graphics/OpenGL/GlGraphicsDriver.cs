@@ -10,8 +10,6 @@ internal sealed class GlBackendDriver : IGraphicsDriver
 {
     private readonly GL _gl;
 
-    private readonly GraphicsConfiguration _configuration;
-
     private readonly GlCapabilities _capabilities;
     private readonly GlDebugger _debugger;
     private readonly GlDisposer _disposer;
@@ -22,7 +20,6 @@ internal sealed class GlBackendDriver : IGraphicsDriver
     private readonly GlStates _states;
     private readonly GlFrameBuffers _frameBuffers;
 
-    public GraphicsConfiguration Configuration => _configuration;
     public DeviceCapabilities Capabilities => _capabilities.Caps;
 
 
@@ -30,7 +27,6 @@ internal sealed class GlBackendDriver : IGraphicsDriver
     {
         _gl = config.DriverContext;
         _capabilities = new GlCapabilities();
-        _configuration = new GraphicsConfiguration();
 
         var ctx = new GlCtx { Capabilities = _capabilities, Gl = _gl, Store = store, Dispatcher = dispatcher };
 

@@ -17,9 +17,6 @@ namespace ConcreteEngine.Graphics.Gfx;
 
 public sealed class GfxCommands
 {
-    public GraphicsConfiguration Configuration => _driver.Configuration;
-    public DeviceCapabilities Capabilities => _driver.Capabilities;
-
     private readonly IGraphicsDriver _driver;
     private readonly GlStates _states;
     private readonly GlShaders _shaders;
@@ -34,7 +31,6 @@ public sealed class GfxCommands
     //States
     private GfxStateFlags _activeFlags;
     private GfxPassStateFunc _stateFunc;
-    private GfxPassClear _activeClear;
 
     private readonly TextureId[] _boundTextures;
 
@@ -66,7 +62,7 @@ public sealed class GfxCommands
         _meshStore = ctx.Resources.GfxStoreHub.MeshStore;
         _shaderStore = ctx.Resources.GfxStoreHub.ShaderStore;
 
-        _boundTextures = new TextureId[Configuration.TextureSlots];
+        _boundTextures = new TextureId[GfxLimits.TextureSlots];
 
         SetBlendMode(BlendMode.Alpha);
         SetDepthMode(DepthMode.Lequal);
@@ -263,7 +259,7 @@ public sealed class GfxCommands
 
     public void BindTexture(TextureId texture, int slot)
     {
-        Debug.Assert(slot >= 0 && slot <= Configuration.TextureSlots);
+        Debug.Assert(slot >= 0 && slot <= GfxLimits.TextureSlots);
 
         if (_boundTextures[slot] == texture) return;
         _boundTextures[slot] = texture;

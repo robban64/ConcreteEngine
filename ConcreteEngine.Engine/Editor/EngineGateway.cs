@@ -1,21 +1,24 @@
+#region
+
 using ConcreteEngine.Editor;
 using ConcreteEngine.Editor.Data;
 using ConcreteEngine.Editor.Definitions;
+using ConcreteEngine.Editor.Utils;
 using ConcreteEngine.Engine.Assets;
+using ConcreteEngine.Engine.Editor.Controller;
 using ConcreteEngine.Engine.Editor.Diagnostics;
+using ConcreteEngine.Engine.Time;
 using ConcreteEngine.Engine.Worlds;
+using ConcreteEngine.Graphics;
 using ConcreteEngine.Graphics.Diagnostic;
+using ConcreteEngine.Renderer.State;
 using ConcreteEngine.Shared.Diagnostics;
 using Silk.NET.Input;
 using Silk.NET.OpenGL;
 using Silk.NET.Windowing;
-
-using ConcreteEngine.Editor.Utils;
-using ConcreteEngine.Engine.Editor.Controller;
-using ConcreteEngine.Engine.Time;
-using ConcreteEngine.Graphics;
-using ConcreteEngine.Renderer.State;
 using EditorCmd = ConcreteEngine.Editor.CommandDispatcher;
+
+#endregion
 
 namespace ConcreteEngine.Engine.Editor;
 
@@ -94,20 +97,21 @@ internal sealed class EngineGateway : IDisposable
 
         _editor.Initialize();
     }
-    
 
 
-    public void RenderEditor(in RenderFrameInfo frameInfo,  GfxFrameResult frameResult)
+    public void RenderEditor(in RenderFrameInfo frameInfo, GfxFrameResult frameResult)
     {
         if (!Enabled || !HasBoundEditor) return;
         _editor.Render(frameInfo.DeltaTime);
     }
 
-    public void UpdateDiagnostics(in RenderFrameInfo frameInfo,  GfxFrameResult frameResult)
+    public void UpdateDiagnostics(in RenderFrameInfo frameInfo, GfxFrameResult frameResult)
     {
         if (!Enabled) return;
         DrainLogs();
-        RefreshMetrics(frameInfo, frameResult);
+
+        if (_editor.IsMetricsMode)
+            RefreshMetrics(frameInfo, frameResult);
     }
 
     private void RefreshMetrics(in RenderFrameInfo frameInfo, GfxFrameResult frameResult, in bool force = false)

@@ -22,7 +22,6 @@ public sealed class GfxFrameBuffers
     private readonly GfxTextures _gfxTextures;
     private readonly GlFrameBuffers _driver;
 
-    private GraphicsConfiguration Configuration { get; }
 
     internal GfxFrameBuffers(GfxContextInternal context, GfxTextures gfxTextures)
     {
@@ -33,13 +32,11 @@ public sealed class GfxFrameBuffers
         _disposer = context.Disposer;
         _driver = context.Driver.FrameBuffers;
         _gfxTextures = gfxTextures;
-
-        Configuration = context.Driver.Configuration;
     }
 
     public FrameBufferId CreateFrameBuffer(in GfxFrameBufferDescriptor desc)
     {
-        EnsureCreateFrameBuffer(Configuration, in desc);
+        EnsureCreateFrameBuffer(in desc);
         var size = desc.Size;
         var fboRef = _driver.CreateFrameBuffer();
 
@@ -182,7 +179,7 @@ public sealed class GfxFrameBuffers
     }
 
 
-    private static void EnsureCreateFrameBuffer(GraphicsConfiguration config, in GfxFrameBufferDescriptor desc)
+    private static void EnsureCreateFrameBuffer(in GfxFrameBufferDescriptor desc)
     {
         ArgumentOutOfRangeException.ThrowIfLessThan(desc.Size.Width, 1, nameof(desc.Size.Width));
         ArgumentOutOfRangeException.ThrowIfLessThan(desc.Size.Height, 1, nameof(desc.Size.Height));
@@ -190,8 +187,8 @@ public sealed class GfxFrameBuffers
 
         if (desc.ColorTexture is { } colorTexture)
         {
-            if (desc.Size.Width > config.MaxTextureSize || desc.Size.Height > config.MaxTextureSize)
-                throw new GraphicsException($"Texture Size exceeds {config.MaxTextureSize}");
+            if (desc.Size.Width > GfxLimits.MaxTextureSize || desc.Size.Height > GfxLimits.MaxTextureSize)
+                throw new GraphicsException($"Texture Size exceeds {GfxLimits.MaxTextureSize}");
 
             if (colorTexture.PixelFormat is TexturePixelFormat.Depth or TexturePixelFormat.Unknown)
                 throw new GraphicsException($"Invalid value for ColorTexture {nameof(desc)}");
@@ -202,8 +199,8 @@ public sealed class GfxFrameBuffers
 
         if (desc.DepthTexture is { } depthTexture)
         {
-            if (desc.Size.Width > config.MaxDepthTextureSize || desc.Size.Height > config.MaxDepthTextureSize)
-                throw new GraphicsException($"DepthTexture Size exceeds {config.MaxDepthTextureSize}");
+            if (desc.Size.Width > GfxLimits.MaxDepthTextureSize || desc.Size.Height > GfxLimits.MaxDepthTextureSize)
+                throw new GraphicsException($"DepthTexture Size exceeds {GfxLimits.MaxDepthTextureSize}");
 
             if (depthTexture.PixelFormat is not TexturePixelFormat.Depth)
                 throw new GraphicsException($"Invalid value for DepthTexture {nameof(desc)}");

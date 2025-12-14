@@ -1,17 +1,13 @@
 #region
 
 using ConcreteEngine.Common;
-using ConcreteEngine.Common.Time;
 using ConcreteEngine.Engine.Assets;
-using ConcreteEngine.Engine.Assets.Models;
 using ConcreteEngine.Engine.Assets.Shaders;
 using ConcreteEngine.Engine.Editor.Data;
 using ConcreteEngine.Engine.Editor.Definitions;
 using ConcreteEngine.Engine.Platform;
 using ConcreteEngine.Engine.Time;
 using ConcreteEngine.Engine.Utils;
-using ConcreteEngine.Engine.Worlds.Tables;
-using ConcreteEngine.Engine.Worlds.Utility;
 using ConcreteEngine.Engine.Worlds.View;
 using ConcreteEngine.Graphics;
 using ConcreteEngine.Graphics.Gfx;
@@ -43,7 +39,8 @@ public sealed class WorldRenderer
     internal RenderEngine RenderEngine => _renderer;
     internal RenderCamera RenderCamera => _renderer.RenderCamera;
 
-    internal WorldRenderer(EngineWindow window, GraphicsRuntime graphics, AssetSystem assets, WorldRenderParams worldRenderParams, DrawEntityAssembler drawEntities, Camera3D camera)
+    internal WorldRenderer(EngineWindow window, GraphicsRuntime graphics, AssetSystem assets,
+        WorldRenderParams worldRenderParams, DrawEntityAssembler drawEntities, Camera3D camera)
     {
         _window = window;
         _graphics = graphics.Gfx;

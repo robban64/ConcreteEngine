@@ -2,7 +2,6 @@
 
 using ConcreteEngine.Engine.Configuration;
 using ConcreteEngine.Engine.Scene.Modules;
-using ConcreteEngine.Renderer;
 using ConcreteEngine.Renderer.Descriptors;
 
 #endregion
@@ -62,7 +61,7 @@ internal sealed class SceneManager
         GameSceneContext context)
     {
         public readonly RenderTargetDescriptor RenderTargetsDesc = renderTargetsDesc;
-        public readonly IReadOnlyList<Func<GameModule>> Modules  = modules;
-        public readonly GameSceneContext Context  = context;
+        public readonly IReadOnlyList<Func<GameModule>> Modules = modules;
+        public readonly GameSceneContext Context = context;
     }
 }

@@ -23,7 +23,7 @@ internal sealed class DrawEntityAssembler
     private static int _prevIdx;
 
     private EntityId _highEntityId;
-    
+
     //...
     private int[] _byEntityId = new int[DefaultCapacity];
     private EntityId[] _entityIndices = new EntityId[DefaultCapacity];
@@ -57,8 +57,8 @@ internal sealed class DrawEntityAssembler
 
     public void Reset()
     {
-        _entityIndices.AsSpan(0,_idx).Clear();
-        _byEntityId.AsSpan(0,_highEntityId).Fill(-1);
+        _entityIndices.AsSpan(0, _idx).Clear();
+        _byEntityId.AsSpan(0, _highEntityId).Fill(-1);
 
         _prevIdx = _idx;
         _idx = 0;
@@ -95,7 +95,7 @@ internal sealed class DrawEntityAssembler
 
         _highEntityId = DrawEntityCollector.CollectEntities(ctx);
         DrawTagResolver.TagEffectResolvers(ctx);
-        DrawTagResolver.TagDepthKeys(ctx,_world.Camera);
+        DrawTagResolver.TagDepthKeys(ctx, _world.Camera);
         DrawParticleProcessor.TagParticles(ctx, _world.Particles);
 
         DrawEntityUploader.UploadDrawCommands(ctx);

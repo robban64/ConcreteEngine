@@ -3,7 +3,6 @@
 using System.Numerics;
 using ConcreteEngine.Common.Numerics;
 using ConcreteEngine.Common.Numerics.Maths;
-using ConcreteEngine.Common.Time;
 using ConcreteEngine.Editor.Data;
 using ConcreteEngine.Renderer.State;
 using ConcreteEngine.Shared.World;
@@ -28,7 +27,7 @@ public sealed class Camera3D
 
     private BoundingFrustum _frustum;
     private ViewMatrixData _renderView;
-    
+
     private Matrix4x4 _viewMatrix = Matrix4x4.Identity;
     private Matrix4x4 _projectionMatrix = Matrix4x4.Identity;
     private Matrix4x4 _projectionViewMatrix = Matrix4x4.Identity;
@@ -60,7 +59,7 @@ public sealed class Camera3D
     internal ref readonly Matrix4x4 InverseProjectionViewMatrix => ref _invProjectionViewMatrix;
 
     public float AspectRatio => _projInfo.AspectRatio;
-    internal CameraRenderView RenderView => new (ref _renderView.ViewMatrix, ref _projInfo, ref _frustum);
+    internal CameraRenderView RenderView => new(ref _renderView.ViewMatrix, ref _projInfo, ref _frustum);
 
     public YawPitch Orientation
     {
@@ -130,7 +129,6 @@ public sealed class Camera3D
         }
     }
 
-    
 
     internal void StartTick()
     {
@@ -172,7 +170,7 @@ public sealed class Camera3D
     {
         if (!_dirty) return;
         _dirty = false;
-        
+
         var fov = FloatMath.ToRadians(_projInfo.Fov / 2f);
         _projectionMatrix =
             Matrix4x4.CreatePerspectiveFieldOfView(fov, _projInfo.AspectRatio, _projInfo.Near, _projInfo.Far);

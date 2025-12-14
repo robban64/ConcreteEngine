@@ -1,11 +1,14 @@
+#region
+
 using System.Numerics;
 using System.Runtime.CompilerServices;
+
+#endregion
 
 namespace ConcreteEngine.Common.Numerics.Maths;
 
 public static class FrustumMath
 {
-    
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static Vector3 GetFrustumCenter(Span<Vector3> corners)
     {
@@ -13,7 +16,7 @@ public static class FrustumMath
         foreach (var c in corners) s += c;
         return s / corners.Length;
     }
-    
+
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static void FillFrustumCorners(
         in Matrix4x4 viewMat,
@@ -48,5 +51,4 @@ public static class FrustumMath
         corners[6] = fc - up * fy - right * fx; // FB-L
         corners[7] = fc - up * fy + right * fx; // FB-R
     }
-
 }

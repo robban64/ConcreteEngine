@@ -49,7 +49,7 @@ public sealed class RenderSetupBuilder
         ArgumentOutOfRangeException.ThrowIfLessThan(variant.Value, 0, nameof(variant));
         ArgumentNullException.ThrowIfNull(entry, nameof(entry));
 
-        Ctx.FboSetup.Add((variant, entry, Action));
+        Ctx.FboSetup.Add(new RenderSetupPlan.FboSetupRecord(variant, entry, Action));
         return this;
 
         void Action(FboVariant v, RegisterFboEntry e) =>

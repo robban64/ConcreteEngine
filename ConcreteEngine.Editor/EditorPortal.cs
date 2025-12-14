@@ -16,12 +16,11 @@ public sealed class EditorPortal : IDisposable
 {
     private readonly ImGuiController _controller;
 
-    public bool Initialized { get; private set; } = false;
-    private static float _accumScrollY = 0f;
-    private static float _accumScrollX = 0f;
-    private static float _scrollY = 0f;
-    private static float _scrollX = 0f;
-    private static bool _blockInput = false;
+    public bool Initialized { get; private set; }
+
+    public bool IsMetricsMode => StateContext.ModeState.IsMetricState;
+
+    private static bool _blockInput;
 
     public EditorPortal(GL gl, IWindow window, IInputContext inputCtx)
     {

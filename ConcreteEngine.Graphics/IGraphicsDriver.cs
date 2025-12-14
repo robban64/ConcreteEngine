@@ -10,7 +10,6 @@ internal interface IGraphicsDriverModule;
 
 internal interface IGraphicsDriver
 {
-    GraphicsConfiguration Configuration { get; }
     DeviceCapabilities Capabilities { get; }
     void EndFrame();
 

@@ -110,8 +110,9 @@ internal static class EntitiesComponent
 
         float childHeight = ImGui.GetContentRegionAvail().Y - 2;
         if (ImGui.BeginChild("##right-sidebar-properties", new Vector2(0, childHeight),
-                ImGuiChildFlags.AlwaysUseWindowPadding | ImGuiChildFlags.AlwaysAutoResize, ImGuiWindowFlags.AlwaysVerticalScrollbar |
-                                                        ImGuiWindowFlags.NoBringToFrontOnFocus))
+                ImGuiChildFlags.AlwaysUseWindowPadding | ImGuiChildFlags.AlwaysAutoResize,
+                ImGuiWindowFlags.AlwaysVerticalScrollbar |
+                ImGuiWindowFlags.NoBringToFrontOnFocus))
         {
             DrawCoreProperties();
             var componentRef = EditorDataStore.EntityState.ComponentRef;

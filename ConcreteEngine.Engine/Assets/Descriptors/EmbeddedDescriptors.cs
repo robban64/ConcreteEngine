@@ -25,8 +25,8 @@ internal sealed class MaterialEmbeddedDescriptor : IAssetEmbeddedDescriptor
     public MaterialImportParams Params;
 
     public required Guid GId { get; init; }
-    public string EmbeddedName { get; set; }
-    public string AssetName { get; set; }
+    public string EmbeddedName { get; set; } = null!;
+    public string AssetName { get; set; } = null!;
 
     public bool IsAnimated { get; set; }
 
@@ -41,17 +41,17 @@ internal sealed class MaterialEmbeddedDescriptor : IAssetEmbeddedDescriptor
 internal sealed class TextureEmbeddedDescriptor : IAssetEmbeddedDescriptor
 {
     public required Guid GId { get; init; }
-    public required string EmbeddedName { get; set; }
-    public string AssetName { get; set; }
+    public required string EmbeddedName { get; init; }
+    public string AssetName { get; set; } = null!;
     public required int Index { get; set; } = -1;
 
-    public required int Width { get; set; }
-    public required int Height { get; set; }
+    public required int Width { get; init; }
+    public required int Height { get; init; }
     public required TextureSlotKind SlotKind { get; init; } = TextureSlotKind.Albedo;
     public required TexturePixelFormat PixelFormat { get; init; }
-    public required byte[] PixelData { get; set; } = [];
+    public required byte[] PixelData { get; init; } = [];
 
-    public required AssetFileSpec[] FileSpec { get; set; } = [];
+    public required AssetFileSpec[] FileSpec { get; init; } = [];
 
 
     public Type AssetType => typeof(Texture2D);

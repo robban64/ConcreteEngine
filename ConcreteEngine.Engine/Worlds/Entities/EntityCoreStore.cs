@@ -39,10 +39,10 @@ internal sealed class EntityCoreStore
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public ref RenderSourceComponent GetSourceById(EntityId e) => ref _sources[e - 1];
-    
+
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public ref Transform GetTransformById(EntityId e) => ref _transforms[e - 1];
-    
+
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public ref BoxComponent GetBoxById(EntityId e) => ref _boxes[e - 1];
 
@@ -59,7 +59,6 @@ internal sealed class EntityCoreStore
 
     public EntitiesCoreView GetCoreView() =>
         new(_entities.AsSpan(0, _idx), _sources.AsSpan(0, _idx), _transforms.AsSpan(0, _idx), _boxes.AsSpan(0, _idx));
-
 
 
     public EntityId AddEntity(RenderSourceComponent renderSource, in Transform transform, in BoundingBox bounds,
@@ -95,7 +94,7 @@ internal sealed class EntityCoreStore
         var len = _idx + amount;
         if (_entities.Length >= len) return;
 
-        if (_sources.Length != _entities.Length || _transforms.Length != _entities.Length )
+        if (_sources.Length != _entities.Length || _transforms.Length != _entities.Length)
         {
             throw new InvalidOperationException();
         }

@@ -1,9 +1,13 @@
+#region
+
 using System.Runtime.CompilerServices;
 using ConcreteEngine.Engine.Worlds.Data;
 using ConcreteEngine.Engine.Worlds.Render.Data;
 using ConcreteEngine.Graphics.Gfx.Resources;
 using ConcreteEngine.Renderer.Data;
 using ConcreteEngine.Renderer.Definitions;
+
+#endregion
 
 namespace ConcreteEngine.Engine.Worlds.Render.Processor;
 
@@ -33,7 +37,7 @@ internal static class DrawEntityUploader
             ExecuteSubmitCommand(in entity, in materialTag);
         }
     }
-    
+
     private static void ExecuteSubmitCommand(in DrawEntity entity, in MaterialTag materialTag)
     {
         var parts = DrawDataProvider.GetMeshParts(entity.Source.Model);
@@ -61,11 +65,11 @@ internal static class DrawEntityUploader
             return new DrawCommandMeta(m.CommandId, queue, m.Resolver, m.PassMask, depthKey, m.AnimatedSlot);
         }
     }
-    
+
     private static void ExecuteGeneratedCommand(in DrawEntity entity)
-    { 
-        ArgumentOutOfRangeException.ThrowIfLessThan(entity.Source.MaterialKey.Value,1);
-        ArgumentOutOfRangeException.ThrowIfLessThan(entity.Source.Model,1);
+    {
+        ArgumentOutOfRangeException.ThrowIfLessThan(entity.Source.MaterialKey.Value, 1);
+        ArgumentOutOfRangeException.ThrowIfLessThan(entity.Source.Model, 1);
 
         var writer = DrawDataProvider.GetDrawUploaderCtx();
         var mesh = new MeshId(entity.Source.Model);

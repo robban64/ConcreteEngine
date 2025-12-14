@@ -1,10 +1,7 @@
 #region
 
-using System.Numerics;
-using System.Runtime.CompilerServices;
 using ConcreteEngine.Common.Numerics;
 using ConcreteEngine.Engine.Worlds.Entities;
-using ConcreteEngine.Engine.Worlds.Entities.Components;
 using ConcreteEngine.Engine.Worlds.View;
 
 #endregion
@@ -29,8 +26,4 @@ internal static class DrawEntityCulling
 
         return count;
     }
-
-
-
-
 }

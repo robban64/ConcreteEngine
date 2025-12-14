@@ -2,12 +2,9 @@
 
 using System.Numerics;
 using System.Runtime.CompilerServices;
-using ConcreteEngine.Common.Numerics;
 using ConcreteEngine.Engine.Worlds.Data;
-using ConcreteEngine.Engine.Worlds.Render.Data;
 using ConcreteEngine.Engine.Worlds.Tables;
 using ConcreteEngine.Renderer.Draw;
-using ConcreteEngine.Renderer.State;
 
 #endregion
 
@@ -15,7 +12,6 @@ namespace ConcreteEngine.Engine.Worlds.Render;
 
 internal static class DrawDataProvider
 {
-
     private static class ManagedStorage
     {
         public static DrawCommandBuffer CmdBuffer = null!;

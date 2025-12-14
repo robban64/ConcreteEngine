@@ -33,8 +33,10 @@ internal sealed class MeshTable : IMeshTable
     private BoundingBox[] _partBoxes = new BoundingBox[DefaultPartCap];
 
     private int _partIdx = 0;
-    
-    internal MeshTable(){}
+
+    internal MeshTable()
+    {
+    }
 
     public ModelBoundsView GetModelBoundSpan() => new(_modelBoxes);
 

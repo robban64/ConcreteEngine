@@ -9,11 +9,15 @@ using Silk.NET.OpenGL;
 
 namespace ConcreteEngine.Engine.Configuration;
 
-internal record GfxRuntimeBundle<T>(GraphicsRuntime Graphics, IGfxStartupConfig<T> Config) where T : class;
+internal sealed class GfxRuntimeBundle<T>(GraphicsRuntime graphics, IGfxStartupConfig<T> config) where T : class
+{
+    public readonly GraphicsRuntime Graphics = graphics;
+    public readonly IGfxStartupConfig<T> Config = config;
+}
 
 public sealed class GameEngineBuilder
 {
-    private readonly List<Func<GameScene>> _sceneFactories = new();
+    private readonly List<Func<GameScene>> _sceneFactories = [];
 
     internal GameEngine Build(EngineWindow engineWindow, EngineInputSource input, GfxRuntimeBundle<GL> gfxBundle)
     {

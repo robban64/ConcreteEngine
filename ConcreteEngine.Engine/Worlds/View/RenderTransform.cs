@@ -14,9 +14,8 @@ namespace ConcreteEngine.Engine.Worlds.View;
 
 internal static class RenderTransform
 {
-    
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public static void GetWorldBounds(in BoundingBox local,in Transform transform,out BoundingBox world)
+    public static void GetWorldBounds(in BoundingBox local, in Transform transform, out BoundingBox world)
     {
         var worldCenter = Vector3.Transform(local.Center, transform.Rotation) + transform.Translation;
         var localExtent = local.Extent;
@@ -46,7 +45,7 @@ internal static class RenderTransform
         world.Max.Y = worldCenter.Y + wEy;
         world.Max.Z = worldCenter.Z + wEz;
     }
-    
+
     public static void CreateLightView(
         ref LightView view,
         in ShadowParams shadowParams,
@@ -105,5 +104,4 @@ internal static class RenderTransform
 
         view.LightSpaceMatrix = view.LightViewMatrix * view.LightProjectionMatrix;
     }
-
 }

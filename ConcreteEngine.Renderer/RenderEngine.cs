@@ -77,8 +77,8 @@ public sealed class RenderEngine
         _renderRegistry.BeginRegistration(plan.OutputSize);
 
         // register FBO
-        foreach (var (variant, entry, registerFbo) in plan.FboSetup)
-            registerFbo(variant, entry);
+        foreach (var it in plan.FboSetup)
+            it.RegisterFbo(it.Variant, it.Entry);
 
         // Register Shaders
         Span<ShaderId> shaderIds = stackalloc ShaderId[plan.ShaderCount];

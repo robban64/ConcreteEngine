@@ -46,7 +46,7 @@ internal sealed class GfxResourceManager : IGfxResourceManager
     }
 
 
-    internal void OnDeleted(in DeleteResourceCommand cmd)
+    private static void OnDeleted(in DeleteResourceCommand cmd)
     {
         GfxLog.LogBackend(cmd.BackendHandle.Value, cmd.Handle, cmd.Handle.Kind.ToLogTopic(), LogAction.Destroy);
     }

@@ -31,7 +31,6 @@ public struct TransformStable
         result.Scale = model.Scale;
         result.Rotation = model.Rotation;
         result.EulerAngles = RotationMath.QuaternionToEulerDegrees(in model.Rotation, default);
-
     }
 
     public void FromStable(in TransformData model)

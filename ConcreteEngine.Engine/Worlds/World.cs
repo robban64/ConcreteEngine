@@ -1,7 +1,6 @@
 #region
 
 using ConcreteEngine.Common.Numerics;
-using ConcreteEngine.Common.Time;
 using ConcreteEngine.Engine.Assets;
 using ConcreteEngine.Engine.Assets.Models;
 using ConcreteEngine.Engine.Editor.Data;
@@ -13,7 +12,6 @@ using ConcreteEngine.Engine.Worlds.Utility;
 using ConcreteEngine.Engine.Worlds.View;
 using ConcreteEngine.Graphics;
 using ConcreteEngine.Graphics.Gfx;
-using ConcreteEngine.Renderer.State;
 
 #endregion
 
@@ -41,7 +39,7 @@ public interface IWorld
 public sealed class World : IWorld
 {
     private readonly AssetSystem _assets;
-    
+
     private readonly WorldEntities _entities;
     private readonly WorldSkybox _sky;
     private readonly WorldTerrain _terrain;
@@ -67,7 +65,7 @@ public sealed class World : IWorld
 
         _worldRenderParams = new WorldRenderParams();
         _worldRenderParams.EndTick();
-        
+
         _meshGenerator = new MeshGeneratorRegistry();
 
         _meshTable = new MeshTable();
@@ -85,7 +83,7 @@ public sealed class World : IWorld
 
         _worldRenderer = new WorldRenderer(engineWindow, graphics, assets, _worldRenderParams, _drawEntities, _camera);
     }
-    
+
     internal WorldRenderer Renderer => _worldRenderer;
 
     public Camera3D Camera => _camera;
@@ -109,13 +107,13 @@ public sealed class World : IWorld
 
     public int EntityCount => Entities.EntityCount;
     public int ShadowMapSize => WorldRenderParams.Snapshot.Shadows.ShadowMapSize;
-    
+
     internal void Initialize(AssetSystem assets, GfxContext gfx)
     {
         _meshTable.Setup(_assets);
         _animationTable.Setup(_assets);
         _drawEntities.AttachWorld(this);
-        
+
         Terrain.AttachRenderer(_meshGenerator.Register(new TerrainMeshGenerator(gfx)), _meshTable, _materialTable);
         _particles.AttachRenderer(_meshGenerator.Register(new ParticleMeshGenerator(gfx)), _materialTable);
         _entities.Attach(_meshTable, _materialTable);

@@ -1,4 +1,8 @@
+#region
+
 using System.Diagnostics;
+
+#endregion
 
 namespace ConcreteEngine.Common.Time;
 
@@ -25,7 +29,7 @@ public sealed class FrameProfiler(int sampleFrames, int sampleFrameRate)
 
     public void Begin(int index)
     {
-        if(!Enabled) return;
+        if (!Enabled) return;
         ArgumentOutOfRangeException.ThrowIfGreaterThanOrEqual(_boundIndex, 0);
         _sw.Restart();
         _boundIndex = index;
@@ -33,7 +37,7 @@ public sealed class FrameProfiler(int sampleFrames, int sampleFrameRate)
 
     public bool End()
     {
-        if(!Enabled) return false;
+        if (!Enabled) return false;
 
         ArgumentOutOfRangeException.ThrowIfNegative(_boundIndex);
 

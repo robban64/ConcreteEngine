@@ -26,7 +26,7 @@ internal static class DrawAnimatorProcessor
         foreach (var query in DrawDataProvider.WorldEntities.Query<AnimationComponent>())
         {
             ref readonly var component = ref query.Component;
-            if(!ctx.IsVisible(query.Entity)) continue;
+            if (!ctx.IsVisible(query.Entity)) continue;
             var view = animationView.GetModelView(component.Animation, out var invTransform);
 
             var len = view.BoneLength;

@@ -11,7 +11,6 @@ using ConcreteEngine.Engine.Configuration;
 using ConcreteEngine.Engine.Scene;
 using ConcreteEngine.Engine.Scene.Modules;
 using ConcreteEngine.Engine.Worlds.Entities.Components;
-using ConcreteEngine.Engine.Worlds.Render;
 using ConcreteEngine.Engine.Worlds.Utility;
 using ConcreteEngine.Graphics.Gfx.Contracts;
 using ConcreteEngine.Graphics.Gfx.Definitions;
@@ -146,7 +145,7 @@ public sealed class Demo3DScene : GameScene
                 in transform, warriorModel.Bounds);
             var animationComponent =
                 new AnimationComponent(warriorModel.AnimationId, clip.TicksPerSecond, clip.Duration);
- 
+
             worldEntities.AddComponent(entity, animationComponent);
         }
 
@@ -292,7 +291,7 @@ public sealed class Demo3DScene : GameScene
         var assets = Context.GetSystem<IAssetSystem>();
 
         // Scene globals
-       // var rb = renderer.WorldRenderParams;
+        // var rb = renderer.WorldRenderParams;
 
         // Terrain
         CreateTerrain(assets);

@@ -1,7 +1,6 @@
 #region
 
 using ConcreteEngine.Editor.Metrics;
-using ConcreteEngine.Editor.Store;
 using ConcreteEngine.Shared.Diagnostics;
 
 #endregion

@@ -112,6 +112,5 @@ internal sealed class DrawCommandPipeline
         _drawBuffers.ResetCursor();
         _drawCmdProc.PrepareDrawPass();
         _commandBuffer.DispatchDrawPass(passId, defaultDraw);
-
     }
 }

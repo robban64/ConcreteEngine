@@ -1,6 +1,5 @@
 #region
 
-using ConcreteEngine.Common.Numerics.Maths;
 using ConcreteEngine.Common.Time;
 using ConcreteEngine.Engine.Assets;
 using ConcreteEngine.Engine.Configuration;

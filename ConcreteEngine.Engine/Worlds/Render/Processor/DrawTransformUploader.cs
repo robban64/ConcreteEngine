@@ -32,7 +32,6 @@ internal static class DrawTransformUploader
                 ref var modelTransform = ref writer.GetWriter();
                 WriteTransformUniform(ref modelTransform, in local, in world, animatedSlot);
             }
-
         }
     }
 

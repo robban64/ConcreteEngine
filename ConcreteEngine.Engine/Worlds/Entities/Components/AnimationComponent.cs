@@ -13,15 +13,15 @@ public struct AnimationComponent
 {
     public float Time;
     public float Duration;
-    public float Speed ;
+    public float Speed;
     public AnimationId Animation;
     public short Clip;
-    
-    public AnimationComponent(AnimationId animation, float speed , float duration)
+
+    public AnimationComponent(AnimationId animation, float speed, float duration)
     {
         Animation = animation;
-        Clip = 0;     
-        Speed = speed;  
+        Clip = 0;
+        Speed = speed;
         Duration = duration;
         Time = 0f;
     }

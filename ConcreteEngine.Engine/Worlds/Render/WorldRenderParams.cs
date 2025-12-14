@@ -87,7 +87,6 @@ public sealed class WorldRenderParams
 
     internal RenderParamsSnapshot EndTick()
     {
-   
         if (!_dirty)
         {
             if (_snapshot.IsDirty && !_clearSnapshotDirtyNext) _clearSnapshotDirtyNext = true;
@@ -96,11 +95,12 @@ public sealed class WorldRenderParams
                 _snapshot.ClearDirty();
                 _clearSnapshotDirtyNext = false;
             }
+
             return _snapshot;
         }
 
         Generation++;
-        
+
         _snapshot.Ambient = _ambient;
         _snapshot.Fog = _fog;
         _snapshot.SunLight = _sunLight;

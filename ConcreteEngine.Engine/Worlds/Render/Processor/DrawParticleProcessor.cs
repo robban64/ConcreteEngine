@@ -56,9 +56,9 @@ internal static class DrawParticleProcessor
                 writer = worldParticles.GetMeshWriterFor(emitter);
                 definition = emitter.Definition;
             }
-            
+
             ProcessEmitter(writer, in definition, timeOffset);
-            
+
             prevEmitterHandle = emitter.EmitterHandle;
         }
     }
@@ -67,7 +67,7 @@ internal static class DrawParticleProcessor
     {
         var gpuParticles = writer.GpuParticleSpan;
         var particles = writer.ParticleSpan;
-        
+
         var len = writer.ParticleCount;
         if ((uint)len > particles.Length || (uint)len > gpuParticles.Length)
             throw new IndexOutOfRangeException();

@@ -29,13 +29,14 @@ internal sealed class WorldApiController(ApiContext ctx) : IEngineWorldControlle
             slot.Gen = _camera.Generation;
             return;
         }
+
         _camera.SetFromData(in slot.State);
     }
-    
+
 
     public void FetchCamera(EditorSlot<EditorCameraState> slot)
     {
-        if(slot.Gen == _camera.Generation) return;
+        if (slot.Gen == _camera.Generation) return;
         _camera.FillData(out slot.State);
         slot.Gen = _camera.Generation;
     }
@@ -48,17 +49,16 @@ internal sealed class WorldApiController(ApiContext ctx) : IEngineWorldControlle
             slot.Gen = _renderParams.Generation;
             return;
         }
+
         _renderParams.SetFromData(in slot.State);
     }
-    
+
     public void FetchWorldRenderParams(EditorSlot<WorldParamsData> slot)
     {
-        if(slot.Gen == _renderParams.Generation) return;
+        if (slot.Gen == _renderParams.Generation) return;
         _renderParams.FillData(out slot.State);
         slot.Gen = _renderParams.Generation;
     }
-
-
 
 
     public List<EditorParticleResource> GetEditorEmitter()

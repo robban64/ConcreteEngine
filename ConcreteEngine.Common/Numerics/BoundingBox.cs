@@ -13,7 +13,7 @@ public record struct BoundingBox(in Vector3 Min, in Vector3 Max)
 {
     public Vector3 Min = Min;
     public Vector3 Max = Max;
-    
+
     public static BoundingBox Identity => new(Vector3.Zero, Vector3.Zero);
 
     public readonly Vector3 Center => (Min + Max) / 2f;

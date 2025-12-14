@@ -5,7 +5,6 @@ using System.Runtime.CompilerServices;
 using ConcreteEngine.Common.Numerics;
 using ConcreteEngine.Common.Numerics.Maths;
 using ConcreteEngine.Engine.Worlds.Entities;
-using ConcreteEngine.Engine.Worlds.Entities.Components;
 using ConcreteEngine.Engine.Worlds.Render;
 using ConcreteEngine.Engine.Worlds.View;
 
@@ -20,14 +19,15 @@ public sealed class WorldRaycaster
     private readonly WorldTerrain _terrain;
     private readonly DrawEntityAssembler _drawEntities;
 
-    internal WorldRaycaster(Camera3D camera, WorldEntities entities, WorldTerrain terrain, DrawEntityAssembler drawEntities)
+    internal WorldRaycaster(Camera3D camera, WorldEntities entities, WorldTerrain terrain,
+        DrawEntityAssembler drawEntities)
     {
         _entities = entities;
         _terrain = terrain;
         _camera = camera;
-        _drawEntities  = drawEntities;
+        _drawEntities = drawEntities;
     }
-    
+
 
     public Vector3 GetPointOnPlane(Vector2 screenCoords, float planeY, out Ray ray)
     {
@@ -70,7 +70,7 @@ public sealed class WorldRaycaster
 
         return closestEntity;
     }
-    
+
     private void CreateRayFrom(Vector2 screenCoords, out Ray ray)
     {
         var ndc = CoordinateMath.ToNdcCoords(screenCoords, _camera.Viewport);
@@ -88,7 +88,7 @@ public sealed class WorldRaycaster
 
         return t < 0 ? default : ray.GetPointOnRay(t);
     }
-    
+
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     private static void UnProject(in Vector3 mouseNdc, in Matrix4x4 invViewProjection, out Vector3 point)
     {

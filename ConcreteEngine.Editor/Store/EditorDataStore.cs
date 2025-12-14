@@ -1,7 +1,6 @@
 #region
 
 using ConcreteEngine.Editor.Data;
-using ConcreteEngine.Shared.Diagnostics;
 
 #endregion
 
@@ -22,5 +21,4 @@ public static class EditorDataStore
         public static long Generation;
         public static EditorSlot<T> GetView() => new(ref State, ref Generation);
     }
-
 }

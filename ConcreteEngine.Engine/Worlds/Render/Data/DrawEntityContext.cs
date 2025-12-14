@@ -1,6 +1,5 @@
 using System.Runtime.CompilerServices;
 using ConcreteEngine.Engine.Worlds.Entities;
-using ConcreteEngine.Engine.Worlds.Tables;
 
 namespace ConcreteEngine.Engine.Worlds.Render.Data;
 
@@ -37,7 +36,7 @@ internal ref struct DrawEntityContext(
     Span<EntityId> entityIndices,
     Span<int> byEntityId)
 {
-    public readonly WorldEntities WorldEntities  = worldEntities;
+    public readonly WorldEntities WorldEntities = worldEntities;
     public Span<DrawEntity> EntitySpan = drawEntities;
     public Span<EntityId> EntityIndices = entityIndices;
     public Span<int> ByEntityIdSpan = byEntityId;

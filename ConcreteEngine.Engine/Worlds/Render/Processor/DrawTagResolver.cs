@@ -34,8 +34,8 @@ internal static class DrawTagResolver
 
         foreach (var resolved in worldEntities.ResolvedEntitySpan)
         {
-            if(!resolved.Entity.IsValid) continue;
-            
+            if (!resolved.Entity.IsValid) continue;
+
             var index = ctx.ByEntityIdSpan[resolved.Entity];
             if (index == -1) continue;
             ref var drawEntity = ref ctx.EntitySpan[index];

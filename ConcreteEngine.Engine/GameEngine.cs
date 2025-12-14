@@ -114,6 +114,7 @@ public sealed class GameEngine : IDisposable
     internal void Render(float dt)
     {
         _timeHub.UpdateFrame(dt);
+
         var mousePos = _inputSystem.InputSourceImpl.MousePosition;
 
         _window.OnFrameStart(out var outputSize, out var windowSize);
@@ -128,7 +129,7 @@ public sealed class GameEngine : IDisposable
         }
 
         var beginStatus = _window.UpdateCheckResized() ? BeginFrameStatus.Resize : BeginFrameStatus.None;
-        if (EngineTime.FrameIndex > 1 && beginStatus == BeginFrameStatus.Resize) 
+        if (EngineTime.FrameIndex > 1 && beginStatus == BeginFrameStatus.Resize)
             _timeHub.Debounce(int.Min(60, (int)frameInfo.Fps));
         beginStatus = _timeHub.TryTriggerDebounceResize() ? BeginFrameStatus.Resize : BeginFrameStatus.None;
 

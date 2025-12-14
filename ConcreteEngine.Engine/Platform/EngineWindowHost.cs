@@ -1,3 +1,4 @@
+using ConcreteEngine.Engine.Assets.Internal;
 using ConcreteEngine.Engine.Configuration;
 using ConcreteEngine.Graphics;
 using ConcreteEngine.Graphics.Error;
@@ -33,11 +34,12 @@ public sealed class EngineWindowHost
         WindowOptions options,
         GraphicsBackend backend)
     {
+        var config = AssetConfigLoader.LoadGraphicSettings();
         _options = options;
         _backend = backend;
-        _options.VSync = false;
-        _options.UpdatesPerSecond = 60;
-        _options.FramesPerSecond = 144;
+        _options.VSync = config.Vsync;
+        _options.UpdatesPerSecond = config.UpdateFps;
+        _options.FramesPerSecond = config.RenderFps;
     }
 
     public void Run(GameEngineBuilder builder)

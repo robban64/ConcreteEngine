@@ -1,6 +1,5 @@
 using ConcreteEngine.Common;
 using ConcreteEngine.Common.Collections;
-using ConcreteEngine.Common.Time;
 using ConcreteEngine.Engine.Editor.Diagnostics;
 using ConcreteEngine.Engine.Worlds.Data;
 using ConcreteEngine.Engine.Worlds.Entities;
@@ -66,7 +65,7 @@ internal sealed class DrawEntityAssembler
 
         var entityLen = _world.EntityCount + extraEntities;
         var animationLen = _world.Entities.Animations.Count + extraAnimations;
-        
+
         EnsureDrawEntityData(entityLen);
         commandBuffer.EnsureBufferCapacity(entityLen);
         commandBuffer.EnsureBoneBuffer(animationLen);
@@ -89,7 +88,8 @@ internal sealed class DrawEntityAssembler
         if ((uint)len > _entities.Length || (uint)len > _entityIndices.Length || (uint)ecsLen > _byEntityId.Length)
             throw new IndexOutOfRangeException();
 
-        var ctx = new DrawEntityContext(_world.Entities, _entities.AsSpan(0, len), _entityIndices.AsSpan(0, len), _byEntityId.AsSpan(0, ecsLen));
+        var ctx = new DrawEntityContext(_world.Entities, _entities.AsSpan(0, len), _entityIndices.AsSpan(0, len),
+            _byEntityId.AsSpan(0, ecsLen));
 
         _highEntityId = DrawEntityCollector.CollectEntities(ctx);
         DrawTagResolver.TagEffectResolvers(ctx);
@@ -106,8 +106,9 @@ internal sealed class DrawEntityAssembler
     private void ExecuteProcessors(int len, int ecsLen, DrawCommandBuffer commandBuffer)
     {
         var animationTable = _world.AnimationTableImpl;
-        var ctx = new DrawEntityContext(_world.Entities, _entities.AsSpan(0, len), _entityIndices.AsSpan(0, len), _byEntityId.AsSpan(0, ecsLen));
-        DrawTransformUploader.UploadTransform(ctx,commandBuffer.GetDrawUploaderCtx(), _world.MeshTableImpl);
+        var ctx = new DrawEntityContext(_world.Entities, _entities.AsSpan(0, len), _entityIndices.AsSpan(0, len),
+            _byEntityId.AsSpan(0, ecsLen));
+        DrawTransformUploader.UploadTransform(ctx, commandBuffer.GetDrawUploaderCtx(), _world.MeshTableImpl);
         DrawAnimatorProcessor.Execute(ctx, commandBuffer.GetSkinningUploaderCtx(), animationTable.GetDataView());
         DrawParticleProcessor.Execute(_world.Particles);
     }

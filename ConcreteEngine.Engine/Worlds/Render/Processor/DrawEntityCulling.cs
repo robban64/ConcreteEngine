@@ -10,7 +10,7 @@ internal static class DrawEntityCulling
     {
         var renderView = world.Camera.RenderView;
         var entities = world.Entities;
-        
+
         var count = 0;
         BoundingBox worldBounds;
         foreach (var query in entities.CoreQuery())

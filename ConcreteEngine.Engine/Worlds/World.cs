@@ -1,5 +1,6 @@
 using ConcreteEngine.Common.Numerics;
 using ConcreteEngine.Engine.Assets;
+using ConcreteEngine.Engine.Assets.Internal;
 using ConcreteEngine.Engine.Assets.Models;
 using ConcreteEngine.Engine.Editor.Data;
 using ConcreteEngine.Engine.Platform;
@@ -40,7 +41,7 @@ public sealed class World
         _assets = assets;
         _camera = new Camera3D();
 
-        _worldRenderParams = new WorldRenderParams();
+        _worldRenderParams = new WorldRenderParams(AssetConfigLoader.GraphicSettings);
         _worldRenderParams.EndTick();
 
         _meshGenerator = new MeshGeneratorRegistry();
@@ -98,7 +99,6 @@ public sealed class World
         _drawEntities.CubeId = _assets.StoreImpl.GetByName<Model>("Cube").ModelId;
         var mat = assets.MaterialStoreImpl.CreateMaterial("EmptyMat", "EmptyMat1");
         _drawEntities.EmptyMaterialKey = _materialTable.Add(MaterialTagBuilder.BuildOne(mat.Id, true));
-
     }
 
     internal void StartTick(Size2D viewSize)

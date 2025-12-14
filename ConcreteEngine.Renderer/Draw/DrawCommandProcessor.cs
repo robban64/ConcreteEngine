@@ -155,6 +155,7 @@ internal sealed class DrawCommandProcessor
                     _gfxCmd.SetUniform(1, in _highlightColor);
                     break;
                 }
+
                 _gfxCmd.UseShader(shaders.HighlightShader, _ctx.GetUniformLocations(shaders.HighlightShader));
                 _gfxCmd.SetUniform(0, 0);
                 _gfxCmd.SetUniform(1, in _highlightColor);

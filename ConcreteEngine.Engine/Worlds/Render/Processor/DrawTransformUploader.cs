@@ -22,7 +22,7 @@ internal static class DrawTransformUploader
 
             ref readonly var t = ref view.GetTransform(entity.Entity);
 
-            MatrixMath.CreateModelMatrix(in t.Translation, in t.Scale, in t.Rotation, out var world);   
+            MatrixMath.CreateModelMatrix(in t.Translation, in t.Scale, in t.Rotation, out var world);
             var locals = meshTable.GetPartTransforms(entity.Source.Model);
             foreach (ref readonly var local in locals)
             {

@@ -1,8 +1,6 @@
 using System.Runtime.InteropServices;
 using ConcreteEngine.Common;
-using ConcreteEngine.Common.Collections;
 using ConcreteEngine.Engine.Worlds.Entities.Components;
-using ConcreteEngine.Graphics;
 using ConcreteEngine.Renderer.Definitions;
 
 namespace ConcreteEngine.Engine.Worlds.Entities;
@@ -30,7 +28,7 @@ internal readonly struct EntityResolverEntry : IComparable<EntityResolverEntry>
 
 internal sealed class EntityRenderResolver
 {
-    private readonly List<EntityResolverEntry> _resolvedEntities = new (16);
+    private readonly List<EntityResolverEntry> _resolvedEntities = new(16);
 
     internal ReadOnlySpan<EntityResolverEntry> Entities => CollectionsMarshal.AsSpan(_resolvedEntities);
 
@@ -47,7 +45,7 @@ internal sealed class EntityRenderResolver
         ArgumentOutOfRangeException.ThrowIfNegativeOrZero(entity.Id, nameof(entity));
 
         var entities = Entities;
-        
+
         int foundIndex = -1;
         for (int i = 0; i < entities.Length; i++)
         {
@@ -60,5 +58,4 @@ internal sealed class EntityRenderResolver
         InvalidOpThrower.ThrowIf(foundIndex == -1, "Entity not found");
         _resolvedEntities.RemoveAt(foundIndex);
     }
-
 }

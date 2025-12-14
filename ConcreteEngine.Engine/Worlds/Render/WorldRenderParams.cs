@@ -1,4 +1,5 @@
 using ConcreteEngine.Common.Numerics.Maths;
+using ConcreteEngine.Engine.Configuration;
 using ConcreteEngine.Engine.Worlds.Utility;
 using ConcreteEngine.Renderer.Data;
 using ConcreteEngine.Renderer.State;
@@ -13,11 +14,21 @@ public sealed class WorldRenderParams
 
     private readonly RenderParamsSnapshot _snapshot = new();
 
-    private AmbientParams _ambient = WorldParamUtils.MakeDefaultAmbient();
-    private FogParams _fog = WorldParamUtils.MakeDefaultFog();
-    private SunLightParams _sunLight = WorldParamUtils.MakeDefaultSunLight();
-    private ShadowParams _shadow = WorldParamUtils.MakeSizedShadow(4096);
-    private PostEffectParams _postEffect = WorldParamUtils.MakeDefaultPostEffect();
+    private AmbientParams _ambient;
+    private FogParams _fog;
+    private SunLightParams _sunLight;
+    private ShadowParams _shadow;
+    private PostEffectParams _postEffect;
+
+    internal WorldRenderParams(EngineGraphicSettings graphicSettings)
+    {
+        _shadow = WorldParamUtils.MakeShadowFromQuality(graphicSettings.ShadowQuality);
+
+        _ambient = WorldParamUtils.MakeDefaultAmbient();
+        _fog = WorldParamUtils.MakeDefaultFog();
+        _sunLight = WorldParamUtils.MakeDefaultSunLight();
+        _postEffect = WorldParamUtils.MakeDefaultPostEffect();
+    }
 
     public long Generation { get; private set; }
 

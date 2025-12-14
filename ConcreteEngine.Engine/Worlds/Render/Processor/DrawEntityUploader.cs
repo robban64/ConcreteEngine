@@ -1,6 +1,5 @@
 using System.Runtime.CompilerServices;
 using ConcreteEngine.Engine.Worlds.Data;
-using ConcreteEngine.Engine.Worlds.Entities;
 using ConcreteEngine.Engine.Worlds.Render.Data;
 using ConcreteEngine.Engine.Worlds.Tables;
 using ConcreteEngine.Graphics.Gfx.Resources;
@@ -17,7 +16,7 @@ internal static class DrawEntityUploader
         var matTable = world.MaterialTableImpl;
         var meshTable = world.MeshTableImpl;
 
-        
+
         MaterialTag materialTag = default;
         var prevMatKey = new MaterialTagKey(-1);
 
@@ -42,7 +41,8 @@ internal static class DrawEntityUploader
         }
     }
 
-    private static void ExecuteSubmitCommand(in DrawEntity entity, in MaterialTag materialTag, ReadOnlySpan<MeshPart> parts, DrawCommandUploader uploader)
+    private static void ExecuteSubmitCommand(in DrawEntity entity, in MaterialTag materialTag,
+        ReadOnlySpan<MeshPart> parts, DrawCommandUploader uploader)
     {
         foreach (ref readonly var part in parts)
         {

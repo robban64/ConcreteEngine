@@ -1,13 +1,11 @@
 #region
 
 using System.Numerics;
-using ConcreteEngine.Common.Numerics;
 using ConcreteEngine.Editor.Bridge;
 using ConcreteEngine.Editor.Definitions;
 using ConcreteEngine.Editor.Store;
 using ConcreteEngine.Engine.Worlds;
 using ConcreteEngine.Engine.Worlds.Entities;
-using ConcreteEngine.Engine.Worlds.Entities.Components;
 
 #endregion
 

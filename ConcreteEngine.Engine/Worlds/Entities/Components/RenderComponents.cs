@@ -3,7 +3,6 @@
 using System.Runtime.InteropServices;
 using ConcreteEngine.Engine.Worlds.Data;
 using ConcreteEngine.Renderer.Data;
-using ConcreteEngine.Renderer.Definitions;
 
 #endregion
 

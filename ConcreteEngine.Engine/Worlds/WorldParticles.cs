@@ -77,7 +77,7 @@ public sealed class WorldParticles
     internal ParticleMeshWriter GetMeshWriterFor(ParticleEmitter emitter)
     {
         ArgumentNullException.ThrowIfNull(emitter);
-        return _particleGenerator.GetWriteBuffer(emitter.EmitterHandle, emitter.ParticleCount);
+        return _particleGenerator.GetWriteBuffer(emitter);
     }
 
 

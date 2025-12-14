@@ -1,6 +1,5 @@
 #region
 
-using System.Runtime.CompilerServices;
 using ConcreteEngine.Common;
 using ConcreteEngine.Engine.Assets;
 using ConcreteEngine.Engine.Assets.Models;

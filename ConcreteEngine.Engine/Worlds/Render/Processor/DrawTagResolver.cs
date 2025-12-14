@@ -1,9 +1,9 @@
 #region
 
-using ConcreteEngine.Common.Collections;
-using ConcreteEngine.Engine.Worlds.Data;
+using System.Numerics;
 using ConcreteEngine.Engine.Worlds.Entities.Components;
 using ConcreteEngine.Engine.Worlds.Render.Data;
+using ConcreteEngine.Engine.Worlds.Utility;
 using ConcreteEngine.Renderer.Definitions;
 
 #endregion
@@ -12,10 +12,26 @@ namespace ConcreteEngine.Engine.Worlds.Render.Processor;
 
 internal static class DrawTagResolver
 {
+    internal static void TagDepthKeys(DrawEntityContext ctx)
+    {
+        var view = DrawDataProvider.GetCameraRefView();
+        var viewDepth = DepthKeyUtility.ExtractDepthVector(in view.ViewMatrix);
+        var nearFar = new Vector2(view.ProjectionInfo.Near, view.ProjectionInfo.Far);
+
+        var coreEntities = DrawDataProvider.WorldEntities.Core.GetCoreView();
+
+        foreach (var it in ctx)
+        {
+            ref var entity = ref it.DrawEntity;
+            var worldPos = coreEntities.GetTransform(entity.Entity).Translation;
+            var depthKey = DepthKeyUtility.MakeDepthKey(in viewDepth, worldPos, nearFar);
+            entity.Meta.DepthKey = depthKey;
+        }
+    }
+    
     internal static void TagEffectResolvers(DrawEntityContext ctx)
     {
         var worldEntities = DrawDataProvider.WorldEntities;
-        var dt = DrawDataProvider.DeltaTime;
 
         foreach (var resolved in worldEntities.ResolvedEntitySpan)
         {
@@ -26,7 +42,8 @@ internal static class DrawTagResolver
             drawEntity.Meta.Resolver = resolved.CommandResolver;
         }
 
-        int slot = 1;
+        var dt = DrawDataProvider.DeltaTime;
+        var slot = 1;
         foreach (var query in DrawDataProvider.WorldEntities.Query<AnimationComponent>())
         {
             var entityId = query.Entity;

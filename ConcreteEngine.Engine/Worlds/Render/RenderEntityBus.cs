@@ -1,18 +1,13 @@
 #region
 
-using System.Runtime.CompilerServices;
-using System.Runtime.InteropServices;
 using ConcreteEngine.Common;
 using ConcreteEngine.Common.Collections;
 using ConcreteEngine.Common.Time;
 using ConcreteEngine.Engine.Editor.Diagnostics;
-using ConcreteEngine.Engine.Time;
 using ConcreteEngine.Engine.Worlds.Data;
 using ConcreteEngine.Engine.Worlds.Entities;
-using ConcreteEngine.Engine.Worlds.Entities.Components;
 using ConcreteEngine.Engine.Worlds.Render.Data;
 using ConcreteEngine.Engine.Worlds.Render.Processor;
-using ConcreteEngine.Renderer.Definitions;
 using ConcreteEngine.Shared.Diagnostics;
 
 #endregion
@@ -28,9 +23,9 @@ internal sealed class RenderEntityBus
     public const int MaxCapacity = 1024 * 50;
 
     //...
-    private int[] _byEntityId = new int[DefaultCapacity];
-    private EntityId[] _entityIndices = new EntityId[DefaultCapacity];
-    private DrawEntity[] _entities = new DrawEntity[DefaultCapacity];
+    private static int[] _byEntityId = new int[DefaultCapacity];
+    private static EntityId[] _entityIndices = new EntityId[DefaultCapacity];
+    private static DrawEntity[] _entities = new DrawEntity[DefaultCapacity];
     //...
 
     private World _world = null!;
@@ -51,7 +46,7 @@ internal sealed class RenderEntityBus
     }
 
 
-    private WorldEntities WorldEntities => _world!.Entities;
+    private WorldEntities WorldEntities => _world.Entities;
 
     internal void AttachWorld(World world) => _world = world;
 
@@ -82,31 +77,42 @@ internal sealed class RenderEntityBus
         Ensure();
         Validate();
 
-        StaticProfileTimer.RenderTimer.Begin();
-
         // start
         SubmitWorldObjects();
 
-        var len = _idx = DrawSpatialProcessor.CullEntities(_entityIndices, _byEntityId);
-        if (len == 0) return;
-        if ((uint)len > _entities.Length) throw new IndexOutOfRangeException();
+        var len = _idx = DrawEntityCulling.CullEntities(_entityIndices, _byEntityId);
 
-        var ctx = new DrawEntityContext(_entities.AsSpan(0, len),_entityIndices.AsSpan(0, len), _byEntityId);
+        if (len == 0) return;
+        if ((uint)len > _entities.Length || (uint)len > _entityIndices.Length || (uint)len > _byEntityId.Length)
+            throw new IndexOutOfRangeException();
+
+        var ctx = new DrawEntityContext(_entities.AsSpan(0, len), _entityIndices.AsSpan(0, len), _byEntityId);
 
         DrawEntityCollector.CollectEntities(ctx);
-        
-        DrawSpatialProcessor.TagDepthKeys(ctx);
-        DrawTagResolver.TagEffectResolvers(ctx);
 
-        DrawParticleProcessor.Execute(ctx, _world.Particles);
-        DrawAnimatorProcessor.Execute(ctx);
+        DrawTagResolver.TagEffectResolvers(ctx);
+        DrawTagResolver.TagDepthKeys(ctx);
+        DrawParticleProcessor.TagParticles(ctx, _world.Particles);
 
         DrawEntityUploader.UploadDrawCommands(ctx);
-        DrawTransformUploader.UploadTransform(ctx);
-        
-        StaticProfileTimer.RenderTimer.EndPrint();
+
+        ExecuteProcessors(len);
 
         // end
+    }
+
+    private void ExecuteProcessors(int len)
+    {
+        var ctx = new DrawEntityContext(_entities.AsSpan(0, len), _entityIndices.AsSpan(0, len), _byEntityId);
+        DrawTransformUploader.UploadTransform(ctx);
+        DrawAnimatorProcessor.Execute(ctx);
+        DrawParticleProcessor.Execute(_world.Particles);
+    }
+    
+    private void SubmitWorldObjects()
+    {
+        DrawWorldProcessor.SubmitDrawTerrain(_world.Terrain);
+        DrawWorldProcessor.SubmitDrawSkybox(_world.Sky);
     }
 
     private void Validate()
@@ -125,46 +131,6 @@ internal sealed class RenderEntityBus
         var len = view.EntityId.Length;
         if ((uint)len > _entities.Length || (uint)len > view.Transforms.Length)
             throw new IndexOutOfRangeException();
-    }
-
-    //var ctx = new DrawEntityContext(_entities.Length, _entities, _entityData, _byEntityId);
-
-    private void CollectEntities()
-    {
-        var len = _idx;
-        if (len == 0 || (uint)len > _entities.Length || (uint)len > _entityIndices.Length)
-            throw new IndexOutOfRangeException();
-
-        var view  = WorldEntities.Core.GetCoreView();
-        for (int i = 0; i < len; i++)
-        {
-            var entityId = _entityIndices[i];
-            ref var drawEntity = ref _entities[i];
-            ref readonly var source = ref view.GetSource(entityId);
-            drawEntity.Entity = entityId;
-            DrawEntityCollector.CollectEntity(ref drawEntity, entityId, in source);
-
-        }
-    }
-
-    private void TagCollectedEntities()
-    {
-        var len = _idx;
-        if (len == 0) return;
-        if ((uint)len > _entities.Length || _entities.Length != _byEntityId.Length ||
-            _entityIndices.Length != _entities.Length)
-        {
-            throw new IndexOutOfRangeException();
-        }
-
-        var ctx = new DrawEntityContext(_entities.AsSpan(0, len), _entityIndices, _byEntityId);
-
-    }
-
-    private void SubmitWorldObjects()
-    {
-        DrawWorldProcessor.SubmitDrawTerrain(_world!.Terrain);
-        DrawWorldProcessor.SubmitDrawSkybox(_world!.Sky);
     }
 
     public void EnsureDrawEntityData(int amount)

@@ -1,19 +1,12 @@
 #region
 
 using System.Runtime.CompilerServices;
-using ConcreteEngine.Common.Time;
-using ConcreteEngine.Editor.Data;
 using ConcreteEngine.Editor.Definitions;
 using ConcreteEngine.Editor.Store;
 using ConcreteEngine.Engine.Editor.Controller;
-using ConcreteEngine.Engine.Time;
-using ConcreteEngine.Engine.Worlds;
 using ConcreteEngine.Engine.Worlds.Entities;
 using ConcreteEngine.Graphics;
 using ConcreteEngine.Renderer.State;
-using ConcreteEngine.Shared.Diagnostics;
-using ConcreteEngine.Shared.Rendering;
-using EditorData = ConcreteEngine.Editor.Store.EditorDataStore;
 
 #endregion
 

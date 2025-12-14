@@ -22,7 +22,6 @@ using Silk.NET.Windowing;
 
 #endregion
 
-using ConcreteEngine.Editor.Bridge;
 using ConcreteEngine.Editor.Utils;
 using ConcreteEngine.Engine.Editor.Controller;
 using ConcreteEngine.Graphics;

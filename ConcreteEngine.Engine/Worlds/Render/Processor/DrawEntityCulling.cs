@@ -5,26 +5,21 @@ using System.Runtime.CompilerServices;
 using ConcreteEngine.Common.Numerics;
 using ConcreteEngine.Engine.Worlds.Entities;
 using ConcreteEngine.Engine.Worlds.Entities.Components;
-using ConcreteEngine.Engine.Worlds.Render.Data;
-using ConcreteEngine.Engine.Worlds.Utility;
 
 #endregion
 
 namespace ConcreteEngine.Engine.Worlds.Render.Processor;
 
-internal static class DrawSpatialProcessor
+internal static class DrawEntityCulling
 {
-    internal static int CullEntities(Span<EntityId> entityIndices, Span<int> byEntityId)
+    internal static int CullEntities(EntityId[] entityIndices, int[] byEntityId)
     {
         var count = 0;
         BoundingBox worldBounds;
-        ref readonly var frustum = ref DrawDataProvider.Frustum;
         foreach (var query in DrawDataProvider.WorldEntities.CoreQuery())
         {
-            ref readonly var transform = ref query.Transform;
-            ref readonly var bounds = ref query.Box.Bounds;
-            GetWorldBounds(in bounds, in transform, out worldBounds);
-            if (!frustum.IntersectsBox(in worldBounds)) continue;
+            GetWorldBounds(in query.Box.Bounds, in query.Transform, out worldBounds);
+            if (!DrawDataProvider.Frustum.IntersectsBox(in worldBounds)) continue;
 
             byEntityId[query.Entity] = count;
             entityIndices[count++] = query.Entity;
@@ -33,23 +28,7 @@ internal static class DrawSpatialProcessor
         return count;
     }
 
-    internal static void TagDepthKeys(DrawEntityContext ctx)
-    {
-        var view = DrawDataProvider.GetCameraRefView();
-        var viewDepth = DepthKeyUtility.ExtractDepthVector(in view.ViewMatrix);
-        var nearFar = new Vector2(view.ProjectionInfo.Near, view.ProjectionInfo.Far);
 
-        var coreEntities = DrawDataProvider.WorldEntities.Core.GetCoreView();
-
-        Vector3 worldPos;
-        foreach (var it in ctx)
-        {
-            ref var entity = ref it.DrawEntity;
-            worldPos = coreEntities.GetTransform(entity.Entity).Translation;
-            var depthKey = DepthKeyUtility.MakeDepthKey(in viewDepth, worldPos, nearFar);
-            entity.WithDepthKey(depthKey);
-        }
-    }
 
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]

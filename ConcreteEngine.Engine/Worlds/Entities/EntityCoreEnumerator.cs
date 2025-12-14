@@ -1,5 +1,7 @@
 #region
 
+using System.Runtime.CompilerServices;
+using ConcreteEngine.Common.Numerics;
 using ConcreteEngine.Engine.Worlds.Entities.Components;
 
 #endregion
@@ -25,5 +27,12 @@ internal ref struct EntityCoreEnumerator(EntityCoreStore r)
         public ref RenderSourceComponent Source => ref r.GetSourceById(Entity);
         public ref Transform Transform => ref r.GetTransformById(Entity);
         public ref BoxComponent Box => ref r.GetBoxById(Entity);
+
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public void FillTransformBox(out Transform transform, out BoundingBox box)
+        {
+            transform = Transform;
+            box = Box.Bounds;
+        }
     }
 }

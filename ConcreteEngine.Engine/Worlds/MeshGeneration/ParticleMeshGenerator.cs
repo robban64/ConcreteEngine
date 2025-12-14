@@ -2,7 +2,9 @@
 
 using System.Numerics;
 using ConcreteEngine.Common.Collections;
+using ConcreteEngine.Engine.Worlds.Data;
 using ConcreteEngine.Engine.Worlds.MeshGeneration.MeshData;
+using ConcreteEngine.Engine.Worlds.Objects;
 using ConcreteEngine.Graphics.Gfx;
 using ConcreteEngine.Graphics.Gfx.Contracts;
 using ConcreteEngine.Graphics.Gfx.Definitions;
@@ -17,16 +19,16 @@ namespace ConcreteEngine.Engine.Worlds.MeshGeneration;
 internal readonly ref struct ParticleMeshWriter(
     int slot,
     int particleCount,
-    ParticleInstanceData[] particles,
+    ParticleInstanceData[] gpuParticles,
+    ParticleStateData[] particles,
     Action<int, int> uploadGpu)
 {
-    private readonly Action<int, int> _uploadGpuDel = uploadGpu;
-    private readonly ParticleInstanceData[] _particles = particles;
-
     public readonly int Slot = slot;
     public readonly int ParticleCount = particleCount;
-    public Span<ParticleInstanceData> Particles => _particles.AsSpan(0, ParticleCount);
-    public void UploadGpuData() => _uploadGpuDel(Slot, ParticleCount);
+    public readonly Span<ParticleInstanceData> GpuParticleSpan = gpuParticles.AsSpan(0, particleCount);
+    public readonly ReadOnlySpan<ParticleStateData> ParticleSpan = particles.AsSpan(0, particleCount);
+
+    public void UploadGpuData() => uploadGpu(Slot, ParticleCount);
 }
 
 public sealed class ParticleMeshGenerator : MeshGenerator
@@ -63,10 +65,11 @@ public sealed class ParticleMeshGenerator : MeshGenerator
     internal int HandleCapacity => _handles.Length;
     internal int NextSlot => _slot;
 
-    internal ParticleMeshWriter GetWriteBuffer(int slot, int particleCount)
+    internal ParticleMeshWriter GetWriteBuffer(ParticleEmitter e)
     {
-        EnsureCapacity(particleCount);
-        return new ParticleMeshWriter(slot, particleCount, _particleData, _uploadGpuDel);
+        var len = e.ParticleCount;
+        EnsureCapacity(len);
+        return new ParticleMeshWriter(e.EmitterHandle, len, _particleData, e.Particles, _uploadGpuDel);
     }
 
     private ref ParticleMeshHandle GetHandle(int slot)

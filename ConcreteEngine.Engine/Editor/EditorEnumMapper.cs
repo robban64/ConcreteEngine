@@ -1,7 +1,6 @@
 #region
 
 using ConcreteEngine.Editor.Definitions;
-using ConcreteEngine.Editor.Store;
 using ConcreteEngine.Engine.Assets.Data;
 using ConcreteEngine.Engine.Assets.Materials;
 using ConcreteEngine.Engine.Assets.Models;

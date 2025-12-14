@@ -1,5 +1,4 @@
 using System.Runtime.CompilerServices;
-using System.Runtime.InteropServices;
 using ConcreteEngine.Engine.Worlds.Data;
 using ConcreteEngine.Engine.Worlds.Render.Data;
 using ConcreteEngine.Graphics.Gfx.Resources;
@@ -35,21 +34,7 @@ internal static class DrawEntityUploader
             ExecuteSubmitCommand(in entity, in materialTag);
         }
     }
-
-
-    private static void ExecuteGeneratedCommand(in DrawEntity entity)
-    { 
-        ArgumentOutOfRangeException.ThrowIfLessThan(entity.Source.MaterialKey.Value,1);
-        ArgumentOutOfRangeException.ThrowIfLessThan(entity.Source.Model,1);
-
-        var writer = DrawDataProvider.GetDrawUploaderCtx();
-        var mesh = new MeshId(entity.Source.Model);
-        var material = new MaterialId(entity.Source.MaterialKey.Value);
-        var cmd = new DrawCommand(mesh, material, entity.Source.DrawCount, entity.Source.InstanceCount);
-        writer.SubmitDrawIdentity(cmd, entity.Meta.ToCommandMeta());
-    }
-
-
+    
     private static void ExecuteSubmitCommand(in DrawEntity entity, in MaterialTag materialTag)
     {
         var parts = DrawDataProvider.GetMeshParts(entity.Source.Model);
@@ -76,5 +61,17 @@ internal static class DrawEntityUploader
             var queue = m.Queue >= DrawCommandQueue.Transparent ? m.Queue : DrawCommandQueue.Transparent;
             return new DrawCommandMeta(m.CommandId, queue, m.Resolver, m.PassMask, depthKey, m.AnimatedSlot);
         }
+    }
+    
+    private static void ExecuteGeneratedCommand(in DrawEntity entity)
+    { 
+        ArgumentOutOfRangeException.ThrowIfLessThan(entity.Source.MaterialKey.Value,1);
+        ArgumentOutOfRangeException.ThrowIfLessThan(entity.Source.Model,1);
+
+        var writer = DrawDataProvider.GetDrawUploaderCtx();
+        var mesh = new MeshId(entity.Source.Model);
+        var material = new MaterialId(entity.Source.MaterialKey.Value);
+        var cmd = new DrawCommand(mesh, material, entity.Source.DrawCount, entity.Source.InstanceCount);
+        writer.SubmitDrawIdentity(cmd, entity.Meta.ToCommandMeta());
     }
 }

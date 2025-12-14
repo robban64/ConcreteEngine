@@ -1,8 +1,8 @@
 #region
 
+using System.Diagnostics;
 using System.Text.Json;
 using ConcreteEngine.Engine.Assets.Descriptors;
-using ConcreteEngine.Engine.Assets.IO;
 using ConcreteEngine.Engine.Editor.Diagnostics;
 using ConcreteEngine.Shared.Diagnostics;
 
@@ -12,8 +12,11 @@ namespace ConcreteEngine.Engine.Assets.Internal;
 
 internal sealed class AssetConfigLoader
 {
+    private JsonSerializerOptions? _jsonOptions;
+
     public AssetManifest LoadAssetManifest()
     {
+        _jsonOptions ??= JsonUtility.DefaultJsonOptions;
         Logger.LogString(LogScope.Assets, "Loading Asset Manifest...");
 
         if (!Directory.Exists(AssetPaths.AssetRoot))
@@ -27,7 +30,7 @@ internal sealed class AssetConfigLoader
         using var fs = new FileStream(path, FileMode.Open, FileAccess.Read, FileShare.Read,
             64 * 1024, FileOptions.SequentialScan);
 
-        var assetManifest = JsonSerializer.Deserialize<AssetManifest>(fs, JsonUtils.DefaultJsonOptions) ??
+        var assetManifest = JsonSerializer.Deserialize<AssetManifest>(fs, _jsonOptions) ??
                             throw new InvalidDataException("Invalid manifest.");
 
         return assetManifest;
@@ -36,6 +39,7 @@ internal sealed class AssetConfigLoader
     public T LoadAssetCatalog<T>(string filename) where T : class, IAssetCatalog
     {
         ArgumentNullException.ThrowIfNull(filename);
+        _jsonOptions ??= JsonUtility.DefaultJsonOptions;
 
         var path = Path.Combine(AssetPaths.AssetRoot, filename);
 
@@ -46,11 +50,13 @@ internal sealed class AssetConfigLoader
         using var fs = new FileStream(path, FileMode.Open, FileAccess.Read, FileShare.Read,
             64 * 1024, FileOptions.SequentialScan);
 
-        var manifest = JsonSerializer.Deserialize<T>(fs, JsonUtils.DefaultJsonOptions)
+        var manifest = JsonSerializer.Deserialize<T>(fs, _jsonOptions)
                        ?? throw new InvalidDataException($"Invalid resource manifest for {typeof(T).Name}.");
 
         Logger.LogString(LogScope.Assets, $"Loading Assets - ({typeof(T).Name})");
 
         return manifest;
     }
+
+    public void ClearCache() => _jsonOptions = null;
 }

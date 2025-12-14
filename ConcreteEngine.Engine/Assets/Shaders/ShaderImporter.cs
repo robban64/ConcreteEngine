@@ -1,7 +1,7 @@
 #region
 
 using System.Text;
-using ConcreteEngine.Engine.Assets.IO;
+using ConcreteEngine.Engine.Assets.Internal;
 
 #endregion
 

@@ -4,7 +4,7 @@ using System.Security.Cryptography;
 
 #endregion
 
-namespace ConcreteEngine.Engine.Assets.IO;
+namespace ConcreteEngine.Engine.Assets.Internal;
 
 internal static class FileUtility
 {

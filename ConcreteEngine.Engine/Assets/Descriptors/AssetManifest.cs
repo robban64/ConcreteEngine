@@ -8,27 +8,20 @@ using ConcreteEngine.Graphics.Gfx.Definitions;
 
 namespace ConcreteEngine.Engine.Assets.Descriptors;
 
-internal sealed class AssetManifest(
-    AssetResourceLayout resourceLayout,
-    string? version)
+internal sealed class AssetManifest
 {
-    public AssetResourceLayout ResourceLayout { get; init; } = resourceLayout;
-    public string? Version { get; init; } = version;
+    public required AssetResourceLayout ResourceLayout { get; init; }
+    public string? Version { get; init; }
 }
 
-internal sealed class AssetResourceLayout(
-    string shader,
-    string texture,
-    string mesh,
-    string material,
-    string? cubeMaps = null)
+internal sealed class AssetResourceLayout
 {
-    public string Shader { get; } = shader;
-    public string Texture { get; } = texture;
-    public string Mesh { get; } = mesh;
-    public string Material { get; } = material;
+    public required string Shader { get; init; }
+    public required string Texture { get; init; }
+    public required string Mesh { get; init; }
+    public required string Material { get; init; }
 
-    [JsonPropertyName("cubemaps")] public string? CubeMaps { get; } = cubeMaps;
+    public string? CubeMaps { get; init;} 
 }
 
 internal sealed class ShaderManifest : IAssetCatalog
@@ -39,18 +32,14 @@ internal sealed class ShaderManifest : IAssetCatalog
     IReadOnlyList<IAssetDescriptor> IAssetCatalog.Records => Records;
 }
 
-internal sealed class ShaderDescriptor(
-    string name,
-    string vertexFilename,
-    string fragmentFilename,
-    AssetLoadingMode loadMode = AssetLoadingMode.Processed
-) : IAssetDescriptor
+internal sealed class ShaderDescriptor: IAssetDescriptor
 {
+    public required string Name { get; init; }
+    public required string VertexFilename { get; init;}
+    public required string FragmentFilename { get;init; }
+    
     public AssetKind Kind => AssetKind.Shader;
-    public string Name { get; } = name;
-    public string VertexFilename { get; } = vertexFilename;
-    public string FragmentFilename { get; } = fragmentFilename;
-    public AssetLoadingMode LoadMode { get; } = loadMode;
+    public AssetLoadingMode LoadMode { get; }  = AssetLoadingMode.Processed;
 }
 
 internal sealed class TextureManifest : IAssetCatalog
@@ -61,26 +50,18 @@ internal sealed class TextureManifest : IAssetCatalog
     IReadOnlyList<IAssetDescriptor> IAssetCatalog.Records => Records;
 }
 
-internal sealed class TextureDescriptor(
-    string name,
-    string filename,
-    TexturePreset preset = TexturePreset.LinearClamp,
-    TexturePixelFormat pixelFormat = TexturePixelFormat.SrgbAlpha,
-    TextureAnisotropy anisotropy = TextureAnisotropy.Off,
-    float lodBias = 0,
-    bool inMemory = false,
-    AssetLoadingMode loadMode = AssetLoadingMode.Processed)
-    : IAssetDescriptor
+internal sealed class TextureDescriptor : IAssetDescriptor
 {
+    public required string Name { get; init; }
+    public required string Filename { get; init; }
+    public TexturePreset Preset { get; init;} = TexturePreset.LinearClamp;
+    public TexturePixelFormat PixelFormat { get; init;} = TexturePixelFormat.SrgbAlpha;
+    public TextureAnisotropy Anisotropy { get; init;} = TextureAnisotropy.Off;
+    public float LodBias { get; init;}
+    public bool InMemory { get; init; }
+    
     public AssetKind Kind => AssetKind.Texture2D;
-    public string Name { get; } = name;
-    public string Filename { get; } = filename;
-    public TexturePreset Preset { get; } = preset;
-    public TexturePixelFormat PixelFormat { get; } = pixelFormat;
-    public TextureAnisotropy Anisotropy { get; } = anisotropy;
-    public float LodBias { get; } = lodBias;
-    public bool InMemory { get; } = inMemory;
-    public AssetLoadingMode LoadMode { get; } = loadMode;
+    public AssetLoadingMode LoadMode { get; init;}  = AssetLoadingMode.Processed;
 }
 
 internal sealed class CubeMapManifest : IAssetCatalog
@@ -90,24 +71,17 @@ internal sealed class CubeMapManifest : IAssetCatalog
     IReadOnlyList<IAssetDescriptor> IAssetCatalog.Records => Records;
 }
 
-internal sealed class CubeMapDescriptor(
-    string name,
-    string[] textures,
-    int width,
-    int height,
-    TexturePreset preset,
-    TexturePixelFormat pixelFormat = TexturePixelFormat.Rgba,
-    AssetLoadingMode loadMode = AssetLoadingMode.Processed
-) : IAssetDescriptor
+internal sealed class CubeMapDescriptor : IAssetDescriptor
 {
+    public required string Name { get; init; }
+    public required string[] Textures { get; init; }
+    public required int Width { get; init; }
+    public required int Height { get; init; }
+    public TexturePreset Preset { get; init; }
+    public TexturePixelFormat PixelFormat { get; } = TexturePixelFormat.Rgba;
+    public AssetLoadingMode LoadMode { get; } =  AssetLoadingMode.Processed;
+    
     public AssetKind Kind => AssetKind.TextureCubeMap;
-    public string Name { get; } = name;
-    public string[] Textures { get; } = textures;
-    public int Width { get; } = width;
-    public int Height { get; } = height;
-    public TexturePreset Preset { get; } = preset;
-    public TexturePixelFormat PixelFormat { get; } = pixelFormat;
-    public AssetLoadingMode LoadMode { get; } = loadMode;
 }
 
 internal sealed class MeshManifest : IAssetCatalog
@@ -117,14 +91,11 @@ internal sealed class MeshManifest : IAssetCatalog
     IReadOnlyList<IAssetDescriptor> IAssetCatalog.Records => Records;
 }
 
-internal sealed class MeshDescriptor(
-    string name,
-    string filename,
-    AssetLoadingMode loadMode = AssetLoadingMode.Processed)
-    : IAssetDescriptor
+internal sealed class MeshDescriptor: IAssetDescriptor
 {
+    public required string Name { get; init; }
+    public required string Filename { get; init; }
+    public AssetLoadingMode LoadMode { get; } =  AssetLoadingMode.Processed;
     public AssetKind Kind => AssetKind.Model;
-    public string Name { get; } = name;
-    public string Filename { get; } = filename;
-    public AssetLoadingMode LoadMode { get; } = loadMode;
+
 }

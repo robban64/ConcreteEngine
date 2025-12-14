@@ -80,6 +80,7 @@ internal sealed class AssetStartupWorker
         _loadCubeMapFunc = null!;
         _loadMeshFunc = null!;
         _loadMaterialFunc = null!;
+        _configLoader.ClearCache();
     }
 
     public bool ProcessAssets(int n)

@@ -3,7 +3,6 @@
 using ConcreteEngine.Engine.Assets.Data;
 using ConcreteEngine.Engine.Assets.Descriptors;
 using ConcreteEngine.Engine.Assets.Internal;
-using ConcreteEngine.Engine.Assets.IO;
 
 #endregion
 
@@ -45,7 +44,12 @@ internal sealed class ShaderLoaderModule(AssetGfxUploader uploader)
 
         var basePath = shader.IsCoreAsset ? AssetPaths.ShaderCorePath : AssetPaths.ShaderPath;
 
-        var desc = new ShaderDescriptor(shader.Name, vert.RelativePath, frag.RelativePath);
+        var desc = new ShaderDescriptor
+        {
+            Name = shader.Name,
+            VertexFilename = vert.RelativePath,
+            FragmentFilename = frag.RelativePath
+        };
         var payload = _loader.LoadShader(desc, basePath);
         uploader.RecreateShader(shader.ResourceId, payload, out var info);
         specs = [payload.VertexFileSpec, payload.FragmentFileSpec];

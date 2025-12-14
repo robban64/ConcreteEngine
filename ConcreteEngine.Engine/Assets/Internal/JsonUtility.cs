@@ -6,9 +6,9 @@ using System.Text.Json.Serialization;
 
 #endregion
 
-namespace ConcreteEngine.Engine.Assets.IO;
+namespace ConcreteEngine.Engine.Assets.Internal;
 
-internal static class JsonUtils
+internal static class JsonUtility
 {
     internal static JsonSerializerOptions DefaultJsonOptions =>
         new()

@@ -51,8 +51,7 @@ public sealed class WorldEntities
 
     internal void ApplyRenderResolverFor(EntityId entityId, RenderResolver resolver)
     {
-        var isAnimated = Animations.Has(entityId);
-        _renderResolver.AddResolver(entityId, resolver, isAnimated);
+        _renderResolver.AddResolver(entityId, resolver);
     }
 
     internal void RemoveRenderResolverFor(EntityId entityId) => _renderResolver.RemoveResolver(entityId);

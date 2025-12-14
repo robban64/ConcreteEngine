@@ -27,8 +27,7 @@ public enum DrawCommandResolver : byte
     None = 0,
     Wireframe = 1,
     Highlight = 2,
-    HighlightAnimated = 3,
-    BoundingVolume = 4,
+    BoundingVolume = 3,
 }
 
 [Flags]

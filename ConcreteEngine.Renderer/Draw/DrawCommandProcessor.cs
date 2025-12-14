@@ -139,24 +139,24 @@ internal sealed class DrawCommandProcessor
     {
         const GfxStateFlags allowMaterialOverride = GfxStateFlags.Cull | GfxStateFlags.PolygonOffset;
 
-        Debug.Assert(ticket.Resolver is DrawCommandResolver.Highlight or DrawCommandResolver.HighlightAnimated
-            or DrawCommandResolver.BoundingVolume);
+        Debug.Assert(ticket.Resolver is DrawCommandResolver.Highlight or DrawCommandResolver.BoundingVolume);
 
         var texSlots = _buffers.ResolveMaterial(cmd.MaterialId, out var materialMeta);
         ref readonly var shaders = ref _ctx.CoreShaders;
 
-
         switch (ticket.Resolver)
         {
             case DrawCommandResolver.Highlight:
+                if (ticket.AnimationSlot > 0)
+                {
+                    _buffers.BindAnimation(ticket.AnimationSlot - 1);
+                    _gfxCmd.UseShader(shaders.HighlightShader, _ctx.GetUniformLocations(shaders.HighlightShader));
+                    _gfxCmd.SetUniform(0, 1);
+                    _gfxCmd.SetUniform(1, in _highlightColor);
+                    break;
+                }
                 _gfxCmd.UseShader(shaders.HighlightShader, _ctx.GetUniformLocations(shaders.HighlightShader));
                 _gfxCmd.SetUniform(0, 0);
-                _gfxCmd.SetUniform(1, in _highlightColor);
-                break;
-            case DrawCommandResolver.HighlightAnimated:
-                _buffers.BindAnimation(ticket.AnimationSlot - 1);
-                _gfxCmd.UseShader(shaders.HighlightShader, _ctx.GetUniformLocations(shaders.HighlightShader));
-                _gfxCmd.SetUniform(0, 1);
                 _gfxCmd.SetUniform(1, in _highlightColor);
                 break;
             case DrawCommandResolver.BoundingVolume:

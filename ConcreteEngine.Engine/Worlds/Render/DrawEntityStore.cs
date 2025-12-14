@@ -16,17 +16,6 @@ namespace ConcreteEngine.Engine.Worlds.Render;
 internal static class DrawDataProvider
 {
 
-    //....
-    internal static RenderFrameInfo FrameInfo;
-    internal static RenderViewSnapshot RenderView;
-    internal static BoundingFrustum Frustum;
-    //....
-
-    internal static float DeltaTime => FrameInfo.DeltaTime;
-
-    internal static RenderCameraRefView GetCameraRefView() =>
-        new(ref RenderView.ViewMatrix, ref RenderView.ProjectionInfo);
-
     private static class ManagedStorage
     {
         public static DrawCommandBuffer CmdBuffer = null!;

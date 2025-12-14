@@ -85,7 +85,7 @@ internal sealed class RenderEntityBus
         // start
         SubmitWorldObjects();
 
-        var len = _idx = DrawEntityCulling.CullEntities(_entityIndices, _byEntityId);
+        var len = _idx = DrawEntityCulling.CullEntities(_entityIndices, _byEntityId, _world.Camera);
 
         if (len == 0) return;
         if ((uint)len > _entities.Length || (uint)len > _entityIndices.Length || (uint)len > _byEntityId.Length)
@@ -95,7 +95,7 @@ internal sealed class RenderEntityBus
 
         _highEntityId = DrawEntityCollector.CollectEntities(ctx);
         DrawTagResolver.TagEffectResolvers(ctx);
-        DrawTagResolver.TagDepthKeys(ctx);
+        DrawTagResolver.TagDepthKeys(ctx,_world.Camera);
         DrawParticleProcessor.TagParticles(ctx, _world.Particles);
 
         DrawEntityUploader.UploadDrawCommands(ctx);

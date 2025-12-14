@@ -1,6 +1,7 @@
 #region
 
 using ConcreteEngine.Common.Numerics.Maths;
+using ConcreteEngine.Common.Time;
 using ConcreteEngine.Engine.Assets;
 using ConcreteEngine.Engine.Configuration;
 using ConcreteEngine.Engine.Definitions;
@@ -42,7 +43,7 @@ public sealed class GameEngine : IDisposable
     private readonly EngineGateway _engineGateway;
     private readonly EditorEngineQueue _editorQueues;
 
-    private FastRandom _rng = new (12323);
+    private FastRandom _rng = new(12323);
 
     private bool _isDisposed;
 
@@ -123,19 +124,19 @@ public sealed class GameEngine : IDisposable
         }
 
         var beginStatus = _window.UpdateCheckResized() ? BeginFrameStatus.Resize : BeginFrameStatus.None;
-
-        if (EngineTime.FrameIndex > 1 && beginStatus == BeginFrameStatus.Resize)
-            _timeHub.BeginDebounceResize(30);
-
-        if (_timeHub.TryTriggerDebounceResize()) beginStatus = BeginFrameStatus.Resize;
+        if (EngineTime.FrameIndex > 1 && beginStatus == BeginFrameStatus.Resize) _timeHub.BeginDebounceResize(30);
+        if (!_timeHub.TryTriggerDebounceResize()) beginStatus = BeginFrameStatus.None;
 
 
+        StaticProfileTimer.RenderTimer.Begin();
         _world.StartRenderFrame(alpha);
-        _worldRenderer.PreRender(beginStatus,  frameInfo,  runtimeParams, _world.Camera);
+        _worldRenderer.PreRender(beginStatus, frameInfo, runtimeParams, _world.Camera);
         _worldRenderer.ExecuteFrame(out var gfxFrameResult);
 
         if (_engineGateway.Active)
             _engineGateway.RenderEditor(in frameInfo, in gfxFrameResult);
+
+        StaticProfileTimer.RenderTimer.EndPrint();
     }
 
     internal void Update(float dt)
@@ -167,7 +168,7 @@ public sealed class GameEngine : IDisposable
     {
         //_engineGateway.UpdateEditorData();
 
-        _world.StartTick(_window.OutputSize, dt, EngineTime.Time);
+        _world.StartTick(_window.OutputSize);
 
         _sceneManager.Current?.UpdateTick(dt);
 

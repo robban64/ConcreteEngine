@@ -181,13 +181,12 @@ internal sealed class DrawBuffers
         ref var data = ref DataStore.CameraData;
         if (!camera.UseLightViewOverride)
         {
-            ref var view = ref camera.RenderView;
-            data.ViewMat = view.ViewMatrix;
-            data.ProjMat = view.ProjectionMatrix;
-            data.ProjViewMat = view.ProjectionViewMatrix;
-            data.CameraPos = view.Transform.Translation.AsVector4();
-            data.CameraUp = view.Up.AsVector4();
-            data.CameraRight = view.Right.AsVector4();
+            data.ViewMat = camera.RenderView.ViewMatrix;
+            data.ProjMat = camera.RenderView.ProjectionMatrix;
+            data.ProjViewMat = camera.RenderView.ProjectionViewMatrix;
+            data.CameraPos = camera.Transform.Translation.AsVector4();
+            data.CameraUp = camera.Up.AsVector4();
+            data.CameraRight = camera.Right.AsVector4();
         }
         else
         {
@@ -195,7 +194,7 @@ internal sealed class DrawBuffers
             data.ViewMat = view.LightViewMatrix;
             data.ProjMat = view.LightProjectionMatrix;
             data.ProjViewMat = view.LightSpaceMatrix;
-            data.CameraPos = camera.RenderView.Transform.Translation.AsVector4();
+            data.CameraPos = camera.Transform.Translation.AsVector4();
             data.CameraUp = view.Up.AsVector4();
             data.CameraRight = view.Right.AsVector4();
         }
@@ -270,7 +269,7 @@ internal sealed class DrawBuffers
 
     private void UploadPost()
     {
-        _paramsSnapshot.PostEffects
+        _paramsSnapshot.PostEffect
             .Deconstruct(out var g, out var wb, out var b, out var fx);
 
         ref var data = ref DataStore.PostData;

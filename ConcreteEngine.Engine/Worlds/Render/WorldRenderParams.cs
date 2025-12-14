@@ -85,8 +85,9 @@ public sealed class WorldRenderParams
         data.Shadow = _shadow;
     }
 
-    internal RenderParamsSnapshot Commit()
+    internal void EndTick()
     {
+   
         if (!_dirty)
         {
             if (_snapshot.IsDirty && !_clearSnapshotDirtyNext) _clearSnapshotDirtyNext = true;
@@ -96,20 +97,17 @@ public sealed class WorldRenderParams
                 _clearSnapshotDirtyNext = false;
             }
 
-            return _snapshot;
         }
 
         Generation++;
+        
+        _snapshot.Ambient = _ambient;
+        _snapshot.Fog = _fog;
+        _snapshot.SunLight = _sunLight;
+        _snapshot.Shadows = _shadow;
+        _snapshot.PostEffect = _postEffect;
 
-        _snapshot.Update(
-            version: Generation,
-            ambient: in _ambient,
-            fog: in _fog,
-            sunLight: in _sunLight,
-            shadows: in _shadow,
-            postEffect: in _postEffect);
 
         _dirty = false;
-        return _snapshot;
     }
 }

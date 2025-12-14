@@ -11,17 +11,11 @@ public sealed class RenderParamsSnapshot
     public long Generation { get; private set; }
     public bool IsDirty { get; private set; } = true;
 
-    private AmbientParams _ambient;
-    private FogParams _fog;
-    private SunLightParams _sunLight;
-    private ShadowParams _shadows;
-    private PostEffectParams _postEffect;
-
-    public ref readonly AmbientParams Ambient => ref _ambient;
-    public ref readonly FogParams Fog => ref _fog;
-    public ref readonly SunLightParams SunLight => ref _sunLight;
-    public ref readonly ShadowParams Shadows => ref _shadows;
-    public ref readonly PostEffectParams PostEffects => ref _postEffect;
+    public AmbientParams Ambient;
+    public FogParams Fog;
+    public SunLightParams SunLight;
+    public ShadowParams Shadows;
+    public PostEffectParams PostEffect;
 
     public void Update(
         long version,
@@ -34,11 +28,11 @@ public sealed class RenderParamsSnapshot
         IsDirty = true;
 
         Generation = version;
-        _ambient = ambient;
-        _fog = fog;
-        _sunLight = sunLight;
-        _shadows = shadows;
-        _postEffect = postEffect;
+        Ambient = ambient;
+        Fog = fog;
+        SunLight = sunLight;
+        Shadows = shadows;
+        PostEffect = postEffect;
     }
 
     public void ClearDirty() => IsDirty = false;

@@ -3,6 +3,7 @@
 using System.Numerics;
 using ConcreteEngine.Common.Numerics;
 using ConcreteEngine.Common.Numerics.Maths;
+using ConcreteEngine.Common.Time;
 using ConcreteEngine.Editor.Data;
 using ConcreteEngine.Renderer.State;
 using ConcreteEngine.Shared.World;
@@ -26,10 +27,12 @@ public sealed class Camera3D
     private const float DirtyThreshold = MetricUnits.Micrometer;
 
     private BoundingFrustum _frustum;
-
+    private ViewMatrixData _renderView;
+    
     private Matrix4x4 _viewMatrix = Matrix4x4.Identity;
     private Matrix4x4 _projectionMatrix = Matrix4x4.Identity;
     private Matrix4x4 _projectionViewMatrix = Matrix4x4.Identity;
+    private Matrix4x4 _invProjectionViewMatrix = Matrix4x4.Identity;
 
     private ViewTransform _transform;
     private ViewTransform _prevTransform;
@@ -42,20 +45,22 @@ public sealed class Camera3D
 
     public long Generation { get; private set; } = 0;
 
-    private readonly CameraRaycaster _raycaster;
 
     public Camera3D()
     {
         Ensure();
         _dirty = true;
-        _raycaster = new CameraRaycaster();
     }
 
     public Vector3 Right => new(_viewMatrix.M11, _viewMatrix.M21, _viewMatrix.M31);
     public Vector3 Up => new Vector3(_viewMatrix.M12, _viewMatrix.M22, _viewMatrix.M32);
     public Vector3 Forward => -new Vector3(_viewMatrix.M13, _viewMatrix.M23, _viewMatrix.M33);
 
-    internal ref BoundingFrustum Frustum => ref _frustum;
+    internal ref readonly BoundingFrustum Frustum => ref _frustum;
+    internal ref readonly Matrix4x4 InverseProjectionViewMatrix => ref _invProjectionViewMatrix;
+
+    public float AspectRatio => _projInfo.AspectRatio;
+    internal CameraRenderView RenderView => new (ref _renderView.ViewMatrix, ref _projInfo, ref _frustum);
 
     public YawPitch Orientation
     {
@@ -125,22 +130,9 @@ public sealed class Camera3D
         }
     }
 
-    public float AspectRatio => _projInfo.AspectRatio;
-
-
-    public CameraRaycaster Raycaster
-    {
-        get
-        {
-            if (_raycaster.Generation != Generation)
-                _raycaster.UpdateFromCamera(Generation, _viewportSize, in _viewMatrix, in _projectionMatrix);
-
-            return _raycaster;
-        }
-    }
     
 
-    public void StartTick()
+    internal void StartTick()
     {
         _prevTransform = _transform;
     }
@@ -150,53 +142,49 @@ public sealed class Camera3D
     {
         Ensure();
 
-        var translation = _transform.Translation;
-
         ref readonly var shadows = ref renderParams.Shadows;
         var lightDir = renderParams.SunLight.Direction;
         var nearFar = new Vector2(_projInfo.Near, MathF.Min(_projInfo.Far, _projInfo.Near + shadows.Distance));
         Span<Vector3> corners = stackalloc Vector3[8];
-        RenderTransform.FillFrustumCorners(in _viewMatrix, in _projectionMatrix, translation, nearFar, corners);
+        FrustumMath.FillFrustumCorners(in _viewMatrix, in _projectionMatrix,
+            _transform.Translation, nearFar, corners);
         RenderTransform.CreateLightView(ref renderCamera.LightSpace, in shadows, lightDir, corners);
     }
-    
 
-    internal void WriteSnapshot(float alpha, ref RenderViewSnapshot viewSnapshot)
+
+    internal void WriteSnapshot(float alpha, RenderCamera renderCamera)
     {
         var camPos = Vector3.Lerp(_prevTransform.Translation, _transform.Translation, alpha);
         var camOri = YawPitch.LerpFixed(_prevTransform.Orientation, _transform.Orientation, alpha);
 
         MatrixMath.CreateFixedSizeModelMatrix(in camPos, RotationMath.YawPitchToQuaternion(camOri), out var viewMatrix);
-        Matrix4x4.Invert(viewMatrix, out viewMatrix);
+        Matrix4x4.Invert(viewMatrix, out _renderView.ViewMatrix);
 
-        var projViewMat = viewMatrix * _projectionMatrix;
-        _frustum = new BoundingFrustum(in _projectionViewMatrix);
+        _renderView.ProjectionMatrix = _projectionMatrix;
+        _renderView.ProjectionViewMatrix = _renderView.ViewMatrix * _projectionMatrix;
+        _frustum = new BoundingFrustum(in _renderView.ProjectionViewMatrix);
 
-        
-        viewSnapshot.ViewMatrix = viewMatrix;
-        viewSnapshot.ProjectionMatrix = _projectionMatrix;
-        viewSnapshot.ProjectionViewMatrix = projViewMat;
-        viewSnapshot.ProjectionInfo = _projInfo;
-        viewSnapshot.Transform = _transform;
-
+        renderCamera.RenderView = _renderView;
+        renderCamera.Transform = _transform;
     }
 
     internal void Ensure()
     {
         if (!_dirty) return;
         _dirty = false;
-
-        ref var transform = ref _transform;
-        ref var projInfo = ref _projInfo;
-
-        MatrixMath.CreateFixedSizeModelMatrix(transform.Translation,
-            RotationMath.YawPitchToQuaternion(transform.Orientation), out var viewModel);
-        Matrix4x4.Invert(viewModel, out _viewMatrix);
-
-        var fov = FloatMath.ToRadians(projInfo.Fov / 2f);
-        _projectionMatrix =
-            Matrix4x4.CreatePerspectiveFieldOfView(fov, projInfo.AspectRatio, projInfo.Near, projInfo.Far);
         
+        var fov = FloatMath.ToRadians(_projInfo.Fov / 2f);
+        _projectionMatrix =
+            Matrix4x4.CreatePerspectiveFieldOfView(fov, _projInfo.AspectRatio, _projInfo.Near, _projInfo.Far);
+
+        var rotation = RotationMath.YawPitchToQuaternion(_transform.Orientation);
+        MatrixMath.CreateFixedSizeModelMatrix(in _transform.Translation, in rotation, out var view);
+        Matrix4x4.Invert(view, out _viewMatrix);
+
+        Matrix4x4.Invert(_viewMatrix, out var invView);
+        Matrix4x4.Invert(_projectionMatrix, out var invProjection);
+        _invProjectionViewMatrix = invProjection * invView;
+
         _projectionViewMatrix = _viewMatrix * _projectionMatrix;
 
         Generation++;

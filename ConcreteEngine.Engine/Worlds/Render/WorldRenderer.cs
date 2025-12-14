@@ -1,6 +1,7 @@
 #region
 
 using ConcreteEngine.Common;
+using ConcreteEngine.Common.Time;
 using ConcreteEngine.Engine.Assets;
 using ConcreteEngine.Engine.Assets.Models;
 using ConcreteEngine.Engine.Assets.Shaders;
@@ -123,9 +124,8 @@ public sealed class WorldRenderer : IWorldRenderer
     {
         _renderEntityBus.Reset();
 
-        WorldRenderParams.Commit();
 
-        PrepareRenderView(in frameInfo, camera);
+        camera.WriteSnapshot(EngineTime.GameAlpha, RenderCamera);
 
         _renderer.PrepareFrame(in frameInfo, in runtimeParams);
 
@@ -148,14 +148,6 @@ public sealed class WorldRenderer : IWorldRenderer
         _renderer.EndRenderFrame(out frameResult);
     }
 
-
-    private void PrepareRenderView(in RenderFrameInfo frameInfo, Camera3D camera)
-    {
-        camera.WriteSnapshot(EngineTime.GameAlpha, ref RenderCamera.RenderView);
-        DrawDataProvider.FrameInfo = frameInfo;
-        DrawDataProvider.RenderView = RenderCamera.RenderView;
-        DrawDataProvider.Frustum = camera.Frustum;
-    }
 
     private void SubmitMaterialData()
     {

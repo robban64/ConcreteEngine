@@ -1,6 +1,7 @@
 #region
 
 using ConcreteEngine.Common.Numerics;
+using ConcreteEngine.Common.Time;
 using ConcreteEngine.Engine.Editor.Data;
 using ConcreteEngine.Engine.Worlds.MeshGeneration;
 using ConcreteEngine.Engine.Worlds.Render;
@@ -97,7 +98,7 @@ public sealed class World : IWorld
         _particles.AttachRenderer(_meshGenerators.Register(new ParticleMeshGenerator(gfx)), _materialTable);
     }
 
-    internal void StartTick(Size2D viewSize, float fixedDt, float totalTime)
+    internal void StartTick(Size2D viewSize)
     {
         Camera.Viewport = viewSize;
         ProcessActions();
@@ -108,6 +109,7 @@ public sealed class World : IWorld
     {
         Entities.EndTick();
         Camera.EndTick(WorldRenderParams.Snapshot, renderCamera);
+        WorldRenderParams.EndTick();
     }
 
     internal void OnSimulationTick(float fixedDt)

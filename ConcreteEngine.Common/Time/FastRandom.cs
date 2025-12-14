@@ -5,7 +5,7 @@ using System.Runtime.CompilerServices;
 
 #endregion
 
-namespace ConcreteEngine.Common.Numerics.Maths;
+namespace ConcreteEngine.Common.Time;
 
 public struct FastRandom
 {

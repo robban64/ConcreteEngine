@@ -13,14 +13,15 @@ namespace ConcreteEngine.Engine.Worlds.Render.Processor;
 
 internal static class DrawEntityCulling
 {
-    internal static int CullEntities(EntityId[] entityIndices, int[] byEntityId)
+    internal static int CullEntities(EntityId[] entityIndices, int[] byEntityId, Camera3D camera)
     {
+        var renderView = camera.RenderView;
         var count = 0;
         BoundingBox worldBounds;
         foreach (var query in DrawDataProvider.WorldEntities.CoreQuery())
         {
             RenderTransform.GetWorldBounds(in query.Box.Bounds, in query.Transform, out worldBounds);
-            if (!DrawDataProvider.Frustum.IntersectsBox(in worldBounds)) continue;
+            if (!renderView.Frustum.IntersectsBox(in worldBounds)) continue;
 
             byEntityId[query.Entity] = count;
             entityIndices[count++] = query.Entity;

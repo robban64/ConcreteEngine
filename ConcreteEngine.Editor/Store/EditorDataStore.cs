@@ -23,9 +23,4 @@ public static class EditorDataStore
         public static EditorSlot<T> GetView() => new(ref State, ref Generation);
     }
 
-    public static class MetricState
-    {
-        public static RenderInfoSample FrameSample;
-        public static FrameMetric FrameMetrics;
-    }
 }

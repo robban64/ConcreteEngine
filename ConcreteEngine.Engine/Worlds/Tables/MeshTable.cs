@@ -32,8 +32,9 @@ internal sealed class MeshTable : IMeshTable
     private Matrix4x4[] _partTransforms = new Matrix4x4[DefaultPartCap];
     private BoundingBox[] _partBoxes = new BoundingBox[DefaultPartCap];
 
-
     private int _partIdx = 0;
+    
+    internal MeshTable(){}
 
     public ModelBoundsView GetModelBoundSpan() => new(_modelBoxes);
 

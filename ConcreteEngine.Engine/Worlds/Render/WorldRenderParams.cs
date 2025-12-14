@@ -85,7 +85,7 @@ public sealed class WorldRenderParams
         data.Shadow = _shadow;
     }
 
-    internal void EndTick()
+    internal RenderParamsSnapshot EndTick()
     {
    
         if (!_dirty)
@@ -96,7 +96,7 @@ public sealed class WorldRenderParams
                 _snapshot.ClearDirty();
                 _clearSnapshotDirtyNext = false;
             }
-
+            return _snapshot;
         }
 
         Generation++;
@@ -109,5 +109,6 @@ public sealed class WorldRenderParams
 
 
         _dirty = false;
+        return _snapshot;
     }
 }

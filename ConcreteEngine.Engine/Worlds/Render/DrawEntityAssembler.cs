@@ -14,16 +14,16 @@ using ConcreteEngine.Shared.Diagnostics;
 
 namespace ConcreteEngine.Engine.Worlds.Render;
 
-internal sealed class RenderEntityBus
+internal sealed class DrawEntityAssembler
 {
-    public const int DefaultCapacity = 512;
-    public const int MaxCapacity = 1024 * 50;
+    private const int DefaultCapacity = 512;
+    private const int MaxCapacity = 1024 * 50;
 
     private static int _idx;
     private static int _prevIdx;
 
-    private EntityId _lowEntityId;
     private EntityId _highEntityId;
+    
     //...
     private int[] _byEntityId = new int[DefaultCapacity];
     private EntityId[] _entityIndices = new EntityId[DefaultCapacity];
@@ -38,7 +38,7 @@ internal sealed class RenderEntityBus
 
     public ReadOnlySpan<EntityId> VisibleEntities => _entityIndices.AsSpan(0, _idx);
 
-    internal RenderEntityBus()
+    internal DrawEntityAssembler()
     {
         RenderProfiler.Register("Collect");
         RenderProfiler.Register("Tag");

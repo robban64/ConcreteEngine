@@ -33,13 +33,12 @@ public sealed class Demo3DScene : GameScene
 
     protected override void ConfigureRenderer(IGameSceneRenderBuilder builder)
     {
-        builder.RegisterRender3D(new RenderTargetDescriptor());
+        builder.RegisterRender(new RenderTargetDescriptor());
     }
 
     public override void Unload()
     {
     }
-
 
     private void CreateTerrain(IAssetSystem assets)
     {
@@ -290,11 +289,10 @@ public sealed class Demo3DScene : GameScene
 
     public override void Initialize()
     {
-        var renderer = Context.GetSystem<IWorldRenderer>();
         var assets = Context.GetSystem<IAssetSystem>();
 
         // Scene globals
-        var rb = renderer.WorldRenderParams;
+       // var rb = renderer.WorldRenderParams;
 
         // Terrain
         CreateTerrain(assets);

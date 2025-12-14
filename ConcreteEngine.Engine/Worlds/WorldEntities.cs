@@ -13,36 +13,41 @@ namespace ConcreteEngine.Engine.Worlds;
 
 public sealed class WorldEntities
 {
+
     private MeshTable _meshTable = null!;
     private MaterialTable _materialTable = null!;
 
-    internal EntityCoreStore Core => _coreStore;
-    internal EntityStore<AnimationComponent> Animations { get; }
-    internal EntityStore<ParticleComponent> Particles { get; }
-
     private readonly List<IEntityStore> _storeList;
     private readonly EntityRenderResolver _renderResolver;
+    private readonly EntityStore<AnimationComponent> _animations;
+    private readonly EntityStore<ParticleComponent> _particles;
+    
+    private static EntityCoreStore _coreStore = null!;
 
     internal WorldEntities()
     {
         _coreStore = new EntityCoreStore(1024);
-        Animations = GenericStores<AnimationComponent>.CreateStore(64);
-        Particles = GenericStores<ParticleComponent>.CreateStore(64);
+        _animations = GenericStores<AnimationComponent>.CreateStore(64);
+        _particles = GenericStores<ParticleComponent>.CreateStore(64);
         _storeList = [Animations, Particles];
-        
-        _renderResolver =  new EntityRenderResolver();
+
+        _renderResolver = new EntityRenderResolver();
     }
 
-    public int EntityCount => Core.Count;
+    
+    public int EntityCount => _coreStore.Count;
+    internal EntityCoreStore Core => _coreStore;
+    internal EntityStore<AnimationComponent> Animations => _animations;
+    internal EntityStore<ParticleComponent> Particles => _particles;
 
     internal ReadOnlySpan<EntityResolverEntry> ResolvedEntitySpan => _renderResolver.Entities;
-
-    internal void AttachRender(MeshTable meshTable, MaterialTable materialTable)
+    
+    internal void Attach(MeshTable meshTable, MaterialTable materialTable)
     {
         _meshTable = meshTable;
         _materialTable = materialTable;
     }
-    
+
     public void AddComponent<T>(EntityId entityId, in T component) where T : unmanaged
     {
         ArgumentOutOfRangeException.ThrowIfNegativeOrZero(entityId.Id, nameof(entityId));
@@ -54,7 +59,7 @@ public sealed class WorldEntities
         var isAnimated = Animations.Has(entityId);
         _renderResolver.AddResolver(entityId, resolver, isAnimated);
     }
-    
+
     internal void RemoveRenderResolverFor(EntityId entityId) => _renderResolver.RemoveResolver(entityId);
 
     internal void EndTick()
@@ -83,14 +88,12 @@ public sealed class WorldEntities
         Particles.Add(entity, index, component);
         return entity;
     }
- 
+
 
     internal EntityEnumerator<T> Query<T>() where T : unmanaged => new(GenericStores<T>.Store);
 
     internal EntityCoreEnumerator CoreQuery() => new(_coreStore);
-
-    private static EntityCoreStore _coreStore = null!;
-
+    
     private static class GenericStores<T> where T : unmanaged
     {
         public static EntityStore<T> Store = null!;

@@ -6,7 +6,7 @@ internal enum EngineStateLevel : byte
     LoadingGraphics = 1,
     LoadingAssets = 2,
     InitializeSystem = 3,
-    LoadScenes = 4,
+    LoadWorld = 4,
     LoadEditor = 5,
     Running = 6
 }

@@ -18,24 +18,16 @@ public sealed class WorldRaycaster
     private readonly Camera3D _camera;
     private readonly WorldEntities _entities;
     private readonly WorldTerrain _terrain;
-    private RenderEntityBus _renderEntities = null!;
+    private readonly DrawEntityAssembler _drawEntities;
 
-    internal WorldRaycaster(Camera3D camera, WorldEntities entities, WorldTerrain terrain)
+    internal WorldRaycaster(Camera3D camera, WorldEntities entities, WorldTerrain terrain, DrawEntityAssembler drawEntities)
     {
         _entities = entities;
         _terrain = terrain;
         _camera = camera;
+        _drawEntities  = drawEntities;
     }
-
-    internal void AttachRenderer(RenderEntityBus renderEntities) => _renderEntities = renderEntities;
     
-    public void CreateRayFrom(Vector2 screenCoords, out Ray ray)
-    {
-        var ndc = CoordinateMath.ToNdcCoords(screenCoords, _camera.Viewport);
-        UnProject(new Vector3(ndc, -1.0f), in _camera.InverseProjectionViewMatrix, out var p1); // near
-        UnProject(new Vector3(ndc, 1.0f), in _camera.InverseProjectionViewMatrix, out var p2); // far
-        Ray.FromTwoPoints(in p1, in p2, out ray);
-    }
 
     public Vector3 GetPointOnPlane(Vector2 screenCoords, float planeY, out Ray ray)
     {
@@ -57,7 +49,7 @@ public sealed class WorldRaycaster
         distance = float.MaxValue;
         resultBounds = default;
 
-        var visibleEntities = _renderEntities.VisibleEntities;
+        var visibleEntities = _drawEntities.VisibleEntities;
         if (visibleEntities.Length == 0) return default;
         var coreView = _entities.Core.GetCoreView();
 
@@ -77,6 +69,14 @@ public sealed class WorldRaycaster
         }
 
         return closestEntity;
+    }
+    
+    private void CreateRayFrom(Vector2 screenCoords, out Ray ray)
+    {
+        var ndc = CoordinateMath.ToNdcCoords(screenCoords, _camera.Viewport);
+        UnProject(new Vector3(ndc, -1.0f), in _camera.InverseProjectionViewMatrix, out var p1); // near
+        UnProject(new Vector3(ndc, 1.0f), in _camera.InverseProjectionViewMatrix, out var p2); // far
+        Ray.FromTwoPoints(in p1, in p2, out ray);
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]

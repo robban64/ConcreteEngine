@@ -14,7 +14,7 @@ namespace ConcreteEngine.Engine;
 public sealed class GameSceneContext
 {
     private readonly IEngineSystemManager _systems;
-    public ModuleManager Modules { get; internal set; }
+    public ModuleManager Modules { get; internal init; }
     public IWorld World { get; }
 
     public T GetSystem<T>() where T : IGameEngineSystem => _systems.GetSystem<T>();

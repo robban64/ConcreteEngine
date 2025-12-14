@@ -1,13 +1,3 @@
-#region
-
-#region
-
-#region
-
-#region
-
-#region
-
 using ConcreteEngine.Editor;
 using ConcreteEngine.Editor.Data;
 using ConcreteEngine.Editor.Definitions;
@@ -20,21 +10,12 @@ using Silk.NET.Input;
 using Silk.NET.OpenGL;
 using Silk.NET.Windowing;
 
-#endregion
-
 using ConcreteEngine.Editor.Utils;
 using ConcreteEngine.Engine.Editor.Controller;
+using ConcreteEngine.Engine.Time;
 using ConcreteEngine.Graphics;
 using ConcreteEngine.Renderer.State;
 using EditorCmd = ConcreteEngine.Editor.CommandDispatcher;
-
-#endregion
-
-#endregion
-
-#endregion
-
-#endregion
 
 namespace ConcreteEngine.Engine.Editor;
 
@@ -51,9 +32,9 @@ internal sealed class EngineGateway : IDisposable
 
     public bool HasBoundEditor { get; private set; }
     public bool HasBoundMetrics { get; private set; }
-    public bool Enabled { get; private set; } = false;
+    public bool Enabled { get; private set; }
 
-    private int _ticker = 0, _slowTicker = 0;
+    private int _ticker, _slowTicker;
 
 
     internal EngineGateway(GL gl, IWindow window, IInputContext inputCtx)
@@ -100,7 +81,6 @@ internal sealed class EngineGateway : IDisposable
         EditorSetup.Editor = _editor!;
         MetricRouter.Attach(world, assetSystem);
         EngineResourceProvider.Attach(assetSystem, _entityController, _interactionController, _worldController);
-        EngineDataBridge.Attach(_entityController, _worldController, _interactionController);
 
         EngineController.EntityController = _entityController;
         EngineController.InteractionController = _interactionController;
@@ -114,31 +94,23 @@ internal sealed class EngineGateway : IDisposable
 
         _editor.Initialize();
     }
+    
 
-    public void UpdateEditorData()
+
+    public void RenderEditor(in RenderFrameInfo frameInfo,  GfxFrameResult frameResult)
     {
         if (!Enabled || !HasBoundEditor) return;
-        EngineDataBridge.ProcessEditorDataSlot();
-    }
-
-
-    public void RenderEditor(in RenderFrameInfo frameInfo, in GfxFrameResult frameResult)
-    {
-        if (!Enabled || !HasBoundEditor) return;
-
-        EngineDataBridge.ProcessEditorDataSlot();
         _editor.Render(frameInfo.DeltaTime);
-        EngineDataBridge.WriteFrameMetrics(in frameInfo, in frameResult);
     }
 
-    public void UpdateDiagnostics(float dt)
+    public void UpdateDiagnostics(in RenderFrameInfo frameInfo,  GfxFrameResult frameResult)
     {
         if (!Enabled) return;
         DrainLogs();
-        RefreshMetrics();
+        RefreshMetrics(frameInfo, frameResult);
     }
 
-    private void RefreshMetrics(bool force = false)
+    private void RefreshMetrics(in RenderFrameInfo frameInfo, GfxFrameResult frameResult, in bool force = false)
     {
         if (force)
         {
@@ -149,6 +121,10 @@ internal sealed class EngineGateway : IDisposable
             MetricsApi.RefreshMemoryMetrics();
             return;
         }
+
+        MetricsApi.FrameSample =
+            new RenderInfoSample(frameInfo.Fps, frameInfo.Alpha, frameResult.DrawCalls, frameResult.TriangleCount);
+        MetricsApi.FrameMetrics = new FrameMetric(frameInfo.FrameIndex, EngineTime.Timestamp, default);
 
         MetricsApi.RefreshFrameMetrics();
 
@@ -169,7 +145,7 @@ internal sealed class EngineGateway : IDisposable
         }
     }
 
-    private void DrainLogs()
+    private static void DrainLogs()
     {
         var gfxLogLeft = DefaultLogDrain;
         var engineLogLeft = DefaultLogDrain;
@@ -224,7 +200,7 @@ internal sealed class EngineGateway : IDisposable
         }
 
 
-        public static unsafe void RegisterMetrics()
+        public static void RegisterMetrics()
         {
             MetricsApi.PullMaterialMetrics = MetricRouter.GetMaterialMetrics;
             MetricsApi.PullSceneMetrics = MetricRouter.GetSceneMetrics;

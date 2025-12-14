@@ -17,7 +17,6 @@ internal static class DrawEntityUploader
         foreach (var it in ctx)
         {
             ref readonly var entity = ref it.DrawEntity;
-            //Temp solution
             if (entity.Meta.CommandId != DrawCommandId.Model)
             {
                 ExecuteGeneratedCommand(in entity);

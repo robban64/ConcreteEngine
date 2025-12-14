@@ -84,12 +84,13 @@ public sealed class World : IWorld
 
 
     internal void AttachRender(GfxContext gfx, MeshTable meshTable, MaterialTable materialTable,
-        AnimationTable animationTable)
+        AnimationTable animationTable, RenderEntityBus renderEntities)
     {
         _meshTable = meshTable;
         _materialTable = materialTable;
         _animationTable = animationTable;
 
+        Raycast.AttachRenderer(renderEntities);
         Entities.AttachRender(_meshTable, _materialTable);
         Sky.AttachRenderer(_meshTable);
         Terrain.AttachRenderer(_meshGenerators.Register(new TerrainMeshGenerator(gfx)), _meshTable, _materialTable);

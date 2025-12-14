@@ -18,7 +18,7 @@ public sealed class CollisionMethods
         return true;
     }
 
-
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static bool RayIntersectsBox(in Ray ray, in BoundingBox box, out float t)
     {
         var dirfrac = new Vector3

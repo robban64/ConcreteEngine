@@ -31,7 +31,7 @@ internal static class DrawWorldProcessor
         var meta = new DrawCommandMeta(DrawCommandId.Skybox, DrawCommandQueue.Skybox, passMask: PassMask.Main);
         var cmd = new DrawCommand(sky.Mesh, sky.Material);
 
-        CreateTransformMatrices(in sky.Transform, out var model, out var normal);
+        CreateTransformMatrices(in Transform.Identity, out var model, out var normal);
         uploader.SubmitDrawAndTransform(cmd, meta, in model, in normal);
     }
 

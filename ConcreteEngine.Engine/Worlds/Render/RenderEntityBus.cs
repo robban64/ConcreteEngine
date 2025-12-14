@@ -16,16 +16,18 @@ namespace ConcreteEngine.Engine.Worlds.Render;
 
 internal sealed class RenderEntityBus
 {
-    private static int _idx;
-    private static int _prevIdx;
-
     public const int DefaultCapacity = 512;
     public const int MaxCapacity = 1024 * 50;
 
+    private static int _idx;
+    private static int _prevIdx;
+
+    private EntityId _lowEntityId;
+    private EntityId _highEntityId;
     //...
-    private static int[] _byEntityId = new int[DefaultCapacity];
-    private static EntityId[] _entityIndices = new EntityId[DefaultCapacity];
-    private static DrawEntity[] _entities = new DrawEntity[DefaultCapacity];
+    private int[] _byEntityId = new int[DefaultCapacity];
+    private EntityId[] _entityIndices = new EntityId[DefaultCapacity];
+    private DrawEntity[] _entities = new DrawEntity[DefaultCapacity];
     //...
 
     private World _world = null!;
@@ -33,6 +35,8 @@ internal sealed class RenderEntityBus
     public MaterialTagKey EmptyMaterialKey;
 
     public static readonly FrameProfiler RenderProfiler = new(144, 144 * 10);
+
+    public ReadOnlySpan<EntityId> VisibleEntities => _entityIndices.AsSpan(0, _idx);
 
     internal RenderEntityBus()
     {
@@ -53,11 +57,12 @@ internal sealed class RenderEntityBus
 
     public void Reset()
     {
-        _entityIndices.AsSpan(0, _idx).Clear();
-        _byEntityId.AsSpan(0, _idx).Fill(-1);
+        _entityIndices.AsSpan(0,_idx).Clear();
+        _byEntityId.AsSpan(0,_highEntityId).Fill(-1);
 
         _prevIdx = _idx;
         _idx = 0;
+        _highEntityId = default;
     }
 
     private void Ensure()
@@ -88,8 +93,7 @@ internal sealed class RenderEntityBus
 
         var ctx = new DrawEntityContext(_entities.AsSpan(0, len), _entityIndices.AsSpan(0, len), _byEntityId);
 
-        DrawEntityCollector.CollectEntities(ctx);
-
+        _highEntityId = DrawEntityCollector.CollectEntities(ctx);
         DrawTagResolver.TagEffectResolvers(ctx);
         DrawTagResolver.TagDepthKeys(ctx);
         DrawParticleProcessor.TagParticles(ctx, _world.Particles);
@@ -108,7 +112,7 @@ internal sealed class RenderEntityBus
         DrawAnimatorProcessor.Execute(ctx);
         DrawParticleProcessor.Execute(_world.Particles);
     }
-    
+
     private void SubmitWorldObjects()
     {
         DrawWorldProcessor.SubmitDrawTerrain(_world.Terrain);

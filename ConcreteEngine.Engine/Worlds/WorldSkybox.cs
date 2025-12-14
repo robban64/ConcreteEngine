@@ -17,7 +17,6 @@ public sealed class WorldSkybox
     public ModelId Model { get; private set; }
     public MeshId Mesh { get; private set; }
     public MaterialId Material { get; private set; }
-    public readonly Transform Transform = new(Vector3.Zero, Vector3.One, Quaternion.Identity);
 
     public bool IsActive => Model > 0 || Material > 0;
 

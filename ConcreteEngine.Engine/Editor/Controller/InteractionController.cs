@@ -1,5 +1,6 @@
 #region
 
+using System.Diagnostics;
 using System.Numerics;
 using ConcreteEngine.Editor.Bridge;
 using ConcreteEngine.Editor.Definitions;
@@ -16,8 +17,7 @@ internal sealed class InteractionController(ApiContext apiContext) : IEngineInte
     private readonly WorldTerrain _terrain = apiContext.World.Terrain;
     private readonly WorldRaycaster _raycaster = apiContext.World.Raycast;
     private readonly WorldEntities _entities = apiContext.World.Entities;
-
-
+    
     public Vector3 RaycastTerrain(Vector2 mousePos) => _raycaster.GetPointOnTerrain(mousePos, out _);
 
     public EditorId Raycast(Vector2 mousePos)

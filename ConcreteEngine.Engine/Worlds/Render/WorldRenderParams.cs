@@ -20,7 +20,7 @@ public sealed class WorldRenderParams
     private AmbientParams _ambient = WorldParamUtils.MakeDefaultAmbient();
     private FogParams _fog = WorldParamUtils.MakeDefaultFog();
     private SunLightParams _sunLight = WorldParamUtils.MakeDefaultSunLight();
-    private ShadowParams _shadow = WorldParamUtils.MakeSizedShadow(2048);
+    private ShadowParams _shadow = WorldParamUtils.MakeSizedShadow(4096);
     private PostEffectParams _postEffect = WorldParamUtils.MakeDefaultPostEffect();
 
     public long Generation { get; private set; }

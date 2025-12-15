@@ -17,7 +17,7 @@ public sealed class FlyCameraModule : GameModule
     private Vector3 _currentVelocity;
     private YawPitch _targetOrientation;
 
-    public override void Initialize()
+    public override void OnStart()
     {
         _input = Context.GetSystem<IInputSystem>().InputSource;
         _camera = Context.World.Camera;

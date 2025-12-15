@@ -30,8 +30,6 @@ public sealed class GameEngine : IDisposable
     private readonly World _world;
     private WorldRenderer WorldRenderer => _world.Renderer;
 
-
-    private readonly ModuleManager _modules;
     private readonly SceneManager _sceneManager;
 
     private readonly EngineTimeHub _timeHub;
@@ -39,14 +37,14 @@ public sealed class GameEngine : IDisposable
     private readonly EditorEngineQueue _editorQueues;
 
     private FastRandom _rng = new(12323);
-
-    private bool _isDisposed;
-
+    
     private EngineSetupStepper _setupStepper = new(7);
 
     private RenderFrameInfo _frameInfo;
     private RenderRuntimeParams _runtimeParams;
     private GfxFrameResult _gfxFrameResult;
+
+    private bool _isDisposed;
 
     internal GameEngine(
         EngineWindow engineWindow,
@@ -61,8 +59,6 @@ public sealed class GameEngine : IDisposable
         _graphics.Initialize(gfxBundle.Config);
 
         _sceneManager = new SceneManager(sceneFactories);
-
-        _modules = new ModuleManager();
 
         // time
         _timeHub = new EngineTimeHub(UpdateTick, SimulationTickUpdate, LogTickUpdate);
@@ -169,7 +165,7 @@ public sealed class GameEngine : IDisposable
     private void UpdateTick(float dt)
     {
         _world.StartTick(_window.OutputSize);
-        _sceneManager.Current?.UpdateTick(dt);
+        _sceneManager.UpdateTick(dt);
         _world.EndTick();
     }
 
@@ -222,15 +218,8 @@ public sealed class GameEngine : IDisposable
     private void LoadScene()
     {
         if (!_sceneManager.HasPendingSwitch) return;
-        var sceneContext = new GameSceneContext(_coreSystems, _world) { Modules = _modules };
-        var builder = new GameSceneConfigBuilder(_modules);
-        _sceneManager.ApplyPendingScene(sceneContext, builder, static (result) =>
-        {
-            for (int i = 0; i < result.Modules.Count; i++)
-                result.Context.Modules.AddModule(result.Modules[i]());
-        });
-
-        _modules.Load(new GameModuleContext(sceneContext));
+        var builder = new GameSceneConfigBuilder();
+        _sceneManager.ApplyPendingScene(builder, _coreSystems, _world);
     }
 
     internal void Close()

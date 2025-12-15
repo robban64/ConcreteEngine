@@ -31,9 +31,37 @@ public sealed class Demo3DScene : GameScene
         builder.RegisterRender(new RenderTargetDescriptor());
     }
 
+
+    public override void Update(float deltaTime) { }
+
+    public override void UpdateTick(float deltaTime) { }
+
+    public override void Initialize()
+    {
+        var assets = Context.GetSystem<IAssetSystem>();
+
+        // Terrain
+        CreateTerrain(assets);
+
+        // Skybox
+        CreateSky(assets);
+
+        // Particle
+        CreateParticles(assets);
+
+        CreateAnimatedEntities(assets);
+
+        CreateSpawner(assets);
+
+        float half = 256 / 2f;
+        var worldTerrain = Context.World.Terrain;
+        Camera.Translation = new Vector3(half - 30, worldTerrain.GetSmoothHeight(half - 30, half + 30) + 4f, half + 30);
+    }
+
     public override void Unload()
     {
     }
+
 
     private void CreateTerrain(IAssetSystem assets)
     {
@@ -280,30 +308,5 @@ public sealed class Demo3DScene : GameScene
                     Vector3.One, Quaternion.Identity));
         }
 */
-    }
-
-    public override void Initialize()
-    {
-        var assets = Context.GetSystem<IAssetSystem>();
-
-        // Scene globals
-        // var rb = renderer.WorldRenderParams;
-
-        // Terrain
-        CreateTerrain(assets);
-
-        // Skybox
-        CreateSky(assets);
-
-        // Particle
-        CreateParticles(assets);
-
-        CreateAnimatedEntities(assets);
-
-        CreateSpawner(assets);
-
-        float half = 256 / 2f;
-        var worldTerrain = Context.World.Terrain;
-        Camera.Translation = new Vector3(half - 30, worldTerrain.GetSmoothHeight(half - 30, half + 30) + 4f, half + 30);
     }
 }

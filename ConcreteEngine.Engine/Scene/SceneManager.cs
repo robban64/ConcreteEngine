@@ -1,29 +1,43 @@
 using ConcreteEngine.Engine.Configuration;
 using ConcreteEngine.Engine.Scene.Modules;
+using ConcreteEngine.Engine.Worlds;
 using ConcreteEngine.Renderer.Descriptors;
 
 namespace ConcreteEngine.Engine.Scene;
 
 internal sealed class SceneManager
 {
-    private readonly List<Func<GameScene>> _sceneFactories;
     private int _pendingIndex = -1;
+
+    private readonly ModuleManager _modules;
+    private readonly List<Func<GameScene>> _sceneFactories;
 
     public GameScene? Current { get; private set; }
 
-    public bool HasPendingSwitch => _pendingIndex >= 0;
-
-    public SceneManager(List<Func<GameScene>> sceneFactories)
+    internal SceneManager(List<Func<GameScene>> sceneFactories)
     {
         _sceneFactories = sceneFactories ?? throw new ArgumentNullException(nameof(sceneFactories));
+        _modules = new ModuleManager();
     }
 
-    public void QueueSwitch(int sceneIndex) => _pendingIndex = sceneIndex;
+    public bool HasPendingSwitch => _pendingIndex >= 0;
 
-    public void ApplyPendingScene(
-        GameSceneContext context,
-        GameSceneConfigBuilder builder,
-        Action<SceneBuildResult>? afterBuild)
+    public void QueueSwitch(int sceneIndex)
+    {
+        ArgumentOutOfRangeException.ThrowIfNegative(sceneIndex);
+        ArgumentOutOfRangeException.ThrowIfGreaterThanOrEqual(sceneIndex, _sceneFactories.Count);
+        _pendingIndex = sceneIndex;
+    }
+
+    public void UpdateTick(float deltaTime)
+    {
+        if(Current is null) return;
+        _modules.UpdateTick(deltaTime);
+        Current.UpdateTick(deltaTime);
+    }
+    
+
+    public void ApplyPendingScene(GameSceneConfigBuilder builder, IEngineSystemManager systems, World world)
     {
         if (_pendingIndex < 0) return;
 
@@ -33,31 +47,23 @@ internal sealed class SceneManager
 
         Current?.Unload();
 
+        var sceneContext = new GameSceneContext(systems, world, _modules) ;
+
         var newScene = _sceneFactories[index]();
-        newScene.AttachContext(context);
+        newScene.AttachContext(sceneContext);
 
-        builder.Clear();
         newScene.Build(builder);
+        
+        for (int i = 0; i < builder.Modules.Count; i++)
+            _modules.Add(builder.Modules[i]());
 
-        afterBuild?.Invoke(new SceneBuildResult(
-            builder.RenderTargetsDesc,
-            builder.Modules,
-            context));
-
-        newScene.InitializeInternal();
+        newScene.Initialize();
 
         Current = newScene;
         _pendingIndex = -1;
         builder.Clear();
+        
+        _modules.Load(new GameModuleContext(sceneContext));
     }
 
-    internal readonly ref struct SceneBuildResult(
-        RenderTargetDescriptor renderTargetsDesc,
-        IReadOnlyList<Func<GameModule>> modules,
-        GameSceneContext context)
-    {
-        public readonly RenderTargetDescriptor RenderTargetsDesc = renderTargetsDesc;
-        public readonly IReadOnlyList<Func<GameModule>> Modules = modules;
-        public readonly GameSceneContext Context = context;
-    }
 }

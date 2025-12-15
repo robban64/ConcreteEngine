@@ -4,7 +4,6 @@ using ConcreteEngine.Engine.Worlds.View;
 
 namespace ConcreteEngine.Engine.Scene;
 
-//TODO rework
 public abstract class GameScene
 {
     protected GameSceneContext Context { get; private set; } = null!;
@@ -12,33 +11,30 @@ public abstract class GameScene
     protected World World => Context.World;
     protected Camera3D Camera => World.Camera;
 
-
     protected GameScene()
     {
     }
 
-    internal void UpdateTick(float deltaTime)
+    internal void AttachContext(GameSceneContext context)
     {
-        Context.Modules.GameTickUpdate(deltaTime);
+        ArgumentNullException.ThrowIfNull(context);
+        if(Context is not null) throw new InvalidOperationException();
+        Context = context;
     }
+    
+    public abstract void Update(float deltaTime);
+    public abstract void UpdateTick(float deltaTime);
+    
+    public abstract void Initialize();
+    public abstract void Unload();
+    
+    protected abstract void ConfigureModules(IGameSceneModuleBuilder builder);
+    protected abstract void ConfigureRenderer(IGameSceneRenderBuilder builder);
 
-    internal void AttachContext(GameSceneContext context) => Context = context;
-
+    
     internal void Build(GameSceneConfigBuilder builder)
     {
         ConfigureRenderer(builder);
         ConfigureModules(builder);
     }
-
-    internal void InitializeInternal()
-    {
-        Initialize();
-    }
-
-    protected abstract void ConfigureModules(IGameSceneModuleBuilder builder);
-    protected abstract void ConfigureRenderer(IGameSceneRenderBuilder builder);
-
-
-    public abstract void Initialize();
-    public abstract void Unload();
 }

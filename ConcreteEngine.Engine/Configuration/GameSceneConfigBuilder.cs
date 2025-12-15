@@ -13,7 +13,7 @@ public interface IGameSceneRenderBuilder
     void RegisterRender(RenderTargetDescriptor desc);
 }
 
-public sealed class GameSceneConfigBuilder(ModuleManager modules)
+public sealed class GameSceneConfigBuilder
     : IGameSceneRenderBuilder, IGameSceneModuleBuilder
 {
     private readonly List<Func<GameModule>> _modules = [];

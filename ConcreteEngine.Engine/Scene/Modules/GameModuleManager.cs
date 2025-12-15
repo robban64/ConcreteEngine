@@ -7,12 +7,17 @@ public interface IModuleManager
 
 public sealed class ModuleManager : IModuleManager
 {
-    private readonly List<GameModule> _modules = new(8);
+    private GameModuleContext _context = null!;
+    private readonly List<GameModule> _pending = [];
+    private readonly List<GameModule> _modules = [];
 
-    public void AddModule<T>(T module) where T : GameModule
+    public void Add<T>(T module) where T : GameModule
     {
-        module.Order = _modules.Count;
-        _modules.Add(module);
+        if (_pending.Contains(module) || _modules.Contains(module))
+            throw new InvalidOperationException($"Module instance is already registered.");
+        
+        module.Id = _modules.Count;
+        _pending.Add(module);
     }
 
     public T Get<T>() where T : GameModule
@@ -25,45 +30,29 @@ public sealed class ModuleManager : IModuleManager
         throw new InvalidOperationException($"Module {typeof(T).Name} is not registered.");
     }
 
-    internal void GameTickUpdate(float deltaTime)
+    internal void UpdateTick(float deltaTime)
     {
-        if (_modules.Count == 0) return;
-
-        foreach (var module in _modules)
+        if (_pending.Count > 0)
         {
-            module.UpdateTick(deltaTime);
+            _modules.AddRange(_pending);
+            foreach (var module in _pending) module.AttachContext(_context);
+            foreach (var module in _pending) module.OnStart();
+            _pending.Clear();
         }
+        
+        if (_modules.Count == 0) return;
+        foreach (var module in _modules) module.UpdateTick(deltaTime);
     }
 
     internal void Load(GameModuleContext context)
     {
-        foreach (var module in _modules)
-        {
-            module.AttachContext(context);
-        }
-
-        foreach (var module in _modules)
-        {
-            module.Initialize();
-        }
+        ArgumentNullException.ThrowIfNull(context);
+        _context = context;
     }
-
-    internal void OnSceneReady()
-    {
-        foreach (var module in _modules)
-        {
-            module.OnSceneReady();
-        }
-    }
-
 
     internal void Unload()
     {
-        foreach (var module in _modules)
-        {
-            module.Unload();
-        }
-
+        foreach (var module in _modules) module.OnDestroy();
         _modules.Clear();
     }
 }

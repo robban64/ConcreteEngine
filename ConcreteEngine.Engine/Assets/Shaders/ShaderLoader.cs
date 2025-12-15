@@ -1,11 +1,7 @@
-#region
-
 using System.Security.Cryptography;
 using System.Text;
 using ConcreteEngine.Engine.Assets.Data;
 using ConcreteEngine.Engine.Assets.Descriptors;
-
-#endregion
 
 namespace ConcreteEngine.Engine.Assets.Shaders;
 
@@ -46,14 +42,11 @@ internal sealed class ShaderLoader
             sizeBytes: fragInfo.Length);
 
 
-        return new ShaderPayload(vertResult, fragResult, in vertFileSpec, in fragFileSpec);
+        return new ShaderPayload(vertResult, fragResult, vertFileSpec, fragFileSpec);
     }
 
     public void ClearCache()
     {
-        //_vertexShaderCache.Clear();
-        //_vertexShaderCache = null!;
-
         _shaderImporter.ClearCache();
     }
 

@@ -1,8 +1,4 @@
-#region
-
 using ConcreteEngine.Graphics.OpenGL;
-
-#endregion
 
 namespace ConcreteEngine.Graphics;
 
@@ -10,7 +6,6 @@ internal interface IGraphicsDriverModule;
 
 internal interface IGraphicsDriver
 {
-    GraphicsConfiguration Configuration { get; }
     DeviceCapabilities Capabilities { get; }
     void EndFrame();
 

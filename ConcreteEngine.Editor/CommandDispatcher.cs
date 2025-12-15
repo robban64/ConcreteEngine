@@ -1,10 +1,6 @@
-#region
-
 using ConcreteEngine.Editor.Data;
 using ConcreteEngine.Editor.Definitions;
 using ConcreteEngine.Editor.Utils;
-
-#endregion
 
 namespace ConcreteEngine.Editor;
 
@@ -19,9 +15,9 @@ public static class CoreCmdNames
 
 public static class CommandDispatcher
 {
-    private static readonly Dictionary<string, ConsoleCommandRecord> ConsoleCmd = new(8);
-    private static readonly Dictionary<string, IEditorCommand> EditorCmd = new(8);
-    private static readonly HashSet<string> RegisteredCommands = new(8);
+    private static readonly Dictionary<string, ConsoleCommandRecord> ConsoleCmd = new(16);
+    private static readonly Dictionary<string, IEditorCommand> EditorCmd = new(16);
+    private static readonly HashSet<string> RegisteredCommands = new(16);
 
 
     public static void RegisterNoOpConsoleCmd(string command, string description, ConsoleCommandReqDel del)
@@ -117,8 +113,8 @@ public static class CommandDispatcher
     internal static void InvokeCommand(ConsoleCtx ctx, string cmd, string action, string? arg1,
         string? arg2 = null)
     {
-        ArgumentNullException.ThrowIfNull(ctx, nameof(ctx));
-        ArgumentException.ThrowIfNullOrWhiteSpace(cmd, nameof(cmd));
+        ArgumentNullException.ThrowIfNull(ctx);
+        ArgumentException.ThrowIfNullOrWhiteSpace(cmd);
 
         if (!ConsoleCmd.TryGetValue(cmd, out var record))
             throw new KeyNotFoundException($"Unknown command: {cmd}");

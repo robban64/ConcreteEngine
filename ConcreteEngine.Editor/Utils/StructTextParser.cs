@@ -1,9 +1,5 @@
-#region
-
 using System.Numerics;
 using System.Text;
-
-#endregion
 
 namespace ConcreteEngine.Editor.Utils;
 

@@ -1,8 +1,4 @@
-#region
-
 using ConcreteEngine.Common.Collections;
-
-#endregion
 
 namespace ConcreteEngine.Engine.Stuff.Messaging;
 

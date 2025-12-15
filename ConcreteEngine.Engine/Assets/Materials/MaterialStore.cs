@@ -1,23 +1,21 @@
-#region
-
 using ConcreteEngine.Common;
 using ConcreteEngine.Common.Collections;
 using ConcreteEngine.Engine.Assets.Data;
 using ConcreteEngine.Engine.Assets.Textures;
+using ConcreteEngine.Engine.Editor.Diagnostics;
 using ConcreteEngine.Graphics.Gfx;
 using ConcreteEngine.Graphics.Gfx.Definitions;
 using ConcreteEngine.Graphics.Gfx.Resources;
 using ConcreteEngine.Renderer.Data;
 using ConcreteEngine.Renderer.Definitions;
-
-#endregion
+using ConcreteEngine.Shared.Diagnostics;
 
 namespace ConcreteEngine.Engine.Assets.Materials;
 
 public interface IMaterialStore
 {
-    public int Count { get; }
-    public int FreeSlots { get; }
+    int Count { get; }
+    int FreeSlots { get; }
 
     Material Get(MaterialId materialId);
     Material Get(string name);
@@ -166,7 +164,7 @@ public sealed class MaterialStore : IMaterialStore
             if (newCap > RenderLimits.MaxMaterialCount)
                 throw new InvalidOperationException("Material limit exceeded");
 
-            Console.WriteLine("Material store resized");
+            Logger.LogString(LogScope.Assets, $"Material store resized {newCap}", LogLevel.Warn);
             Array.Resize(ref _materials, newCap);
         }
 

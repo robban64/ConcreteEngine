@@ -1,11 +1,7 @@
-#region
-
 using System.Runtime.CompilerServices;
 using ConcreteEngine.Graphics.Gfx.Utility;
 using ConcreteEngine.Renderer.Data;
 using ConcreteEngine.Renderer.Passes;
-
-#endregion
 
 namespace ConcreteEngine.Renderer.Draw;
 
@@ -38,7 +34,7 @@ internal sealed class DrawCommandPipeline
         {
             Gfx = ctx.Gfx,
             Registry = ctx.Registry,
-            RenderView = _stateContext.View,
+            RenderCamera = _stateContext.Camera,
             Snapshot = _stateContext.Snapshot
         };
 
@@ -78,7 +74,6 @@ internal sealed class DrawCommandPipeline
 
         // Fill Material buffer
         // Happens in engine atm
-
         var drawCap = UniformBufferUtils.GetCapacityForEntities<DrawObjectUniform>(_commandBuffer.Count + 32);
         var matCap = UniformBufferUtils.GetCapacityForEntities<MaterialUniformRecord>(_materialBuffer.Count + 4);
 
@@ -88,8 +83,8 @@ internal sealed class DrawCommandPipeline
 
     internal void UploadUniformGlobals()
     {
-        _drawBuffers.UploadGlobalUniforms(in _stateContext.CurrentFrameInfo, in _stateContext.CurrentRuntimeParams);
-        _drawBuffers.UploadCameraView(_stateContext.View);
+        _drawBuffers.UploadGlobalUniforms(_stateContext.CurrentFrameInfo, _stateContext.CurrentRuntimeParams);
+        _drawBuffers.UploadCameraView(_stateContext.Camera);
     }
 
     internal void UploadDrawUniformData()

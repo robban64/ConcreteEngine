@@ -12,6 +12,7 @@ out vec4 FragColor;
 
 @import struct:LightData
 
+@import ubo:EngineUniform
 @import ubo:FrameUniform
 @import ubo:CameraUniform
 @import ubo:DirLightUniform
@@ -30,11 +31,13 @@ layout(binding = 4) uniform sampler2D uWeightMap;
 layout(binding = 5) uniform sampler2DShadow uShadowMap;
 
 const vec2 offsets[4] = vec2[](
-    vec2( 0.0,  0.0),
-    vec2( 1.0,  0.0),
-    vec2(-1.0,  0.0),
-    vec2( 0.0,  1.0)
+    vec2(-0.5, -0.5),
+    vec2( 0.5, -0.5),
+    vec2(-0.5,  0.5),
+    vec2( 0.5,  0.5)
 );
+
+const float fadeRange = 5.0;
 
 float saturate(float x) {
     return clamp(x, 0.0, 1.0);
@@ -100,27 +103,26 @@ vec3 computeFogColor(vec3 sunColor, float shadowTerm) {
 }
 
 
-float sampleShadowMap(vec4 lightSpacePos)
+float sampleShadowMap(vec4 lightSpacePos, vec3 N, vec3 L)
 {
     vec3 p = lightSpacePos.xyz / lightSpacePos.w;
     p = p * 0.5 + 0.5;
 
-    if (p.x <= 0.0 || p.x >= 1.0 || p.y <= 0.0 || p.y >= 1.0) return 1.0;
-    if (p.z >= 1.0) return 1.0;
-
-    float ref = p.z - uShadowParams0.z;
-
-    vec2 texel   = uShadowParams0.xy;
-
-    float vis = 0.0;
+    if (p.x < 0.0 || p.x > 1.0 || p.y < 0.0 || p.y > 1.0 || p.z > 1.0) 
+        return 1.0;
+        
+    float ndl  = clamp(dot(N, L), 0.0, 1.0);
+    float bias = max(uShadowParams0.z, uShadowParams0.w * (1.0 - ndl));
+    float depthToCompare = p.z - bias;    
+    
+    vec2 texelSize = uShadowParams0.xy;
+    float shadowSum = 0.0;
     for (int i = 0; i < 4; ++i) {
-        vec2 uv = p.xy + offsets[i] * texel;
-        uv = clamp(uv, vec2(0.001), vec2(0.999));
-        vis += texture(uShadowMap, vec3(uv, ref));
+        shadowSum += texture(uShadowMap, vec3(p.xy + offsets[i] * texelSize, depthToCompare));
     }
-    vis *= 0.25;
-
-    return vis;
+    
+    // 0.0 (Shadow) to 1.0 (Lit)
+    return shadowSum * 0.25;
 }
 
 vec3 terrainAlbedo(vec2 texCoords, float uvRepeat) {
@@ -148,6 +150,9 @@ void main() {
     vec3 V = normalize(uCameraPos.xyz - P);
     vec3 N = normalize(fs_in.N_world);
 
+    // Camera distance
+    float viewDist = length(uCameraPos.xyz - P);
+
     // Directional light (sun)
     vec3 Ld = normalize(-uLightDirection.xyz);
     vec3 LiD = uLightDiffuse.rgb * uLightDiffuse.a;
@@ -164,10 +169,18 @@ void main() {
     float dirShadow = 1.0;
     if (uShadowParams1.x > 0.0) {
         vec4 lp = uLightViewProj * vec4(P, 1.0);   
-        float s  = sampleShadowMap(lp);
+        float s = sampleShadowMap(lp, N, Ld);
         dirShadow = mix(1.0, s, uShadowParams1.x);
     }
 
+    // Shadow soft fade
+    float fadeStart = uShadowParams1.w - fadeRange;
+    float fadeEnd = uShadowParams1.w;
+    float distanceFade = clamp((fadeEnd - viewDist) / (fadeEnd - fadeStart), 0.0, 1.0);
+
+    dirShadow = mix(1.0, dirShadow, distanceFade);
+
+    // Shadow specular
     float dirShadowSpec = max(dirShadow, 0.25);
 
     vec3 direct = diffuse * LiD * dirShadow + specular * LiD * dirShadowSpec;
@@ -198,10 +211,11 @@ void main() {
     vec3 litColor = (ambient + direct) * exposure;
 
     // Fog
-    float viewDist = length(uCameraPos.xyz - P);
     float fogF = computeFogFactor(P, viewDist);
     vec3 fogColor = computeFogColor(LiD, 1.0);
 
+    // Final color
     vec3 finalColor = mix(litColor, fogColor, fogF);
+
     FragColor = vec4(finalColor, 1.0);
 }

@@ -1,33 +1,44 @@
-#region
-
-using System.Numerics;
+using ConcreteEngine.Common.Numerics.Maths;
+using ConcreteEngine.Engine.Configuration;
+using ConcreteEngine.Engine.Worlds.Utility;
 using ConcreteEngine.Renderer.Data;
 using ConcreteEngine.Renderer.State;
-using ConcreteEngine.Shared.RenderData;
-
-#endregion
+using ConcreteEngine.Shared.Rendering;
 
 namespace ConcreteEngine.Engine.Worlds.Render;
 
 public sealed class WorldRenderParams
 {
     private bool _dirty = true;
-    private bool _clearSnapshotDirtyNext = false;
+    private bool _clearSnapshotDirtyNext;
+
     private readonly RenderParamsSnapshot _snapshot = new();
 
-    private AmbientParams _ambient = MakeDefaultAmbient();
-    private FogParams _fog = MakeDefaultFog();
-    private DirLightParams _dirLight = MakeDefaultDirLight();
+    private AmbientParams _ambient;
+    private FogParams _fog;
+    private SunLightParams _sunLight;
     private ShadowParams _shadow;
-    private PostEffectParams _postEffect = MakeDefaultPostEffect();
+    private PostEffectParams _postEffect;
 
-    public long Version { get; private set; } = 0;
+    internal WorldRenderParams(EngineGraphicSettings graphicSettings)
+    {
+        _shadow = WorldParamUtils.MakeShadowFromQuality(graphicSettings.ShadowQuality);
+
+        _ambient = WorldParamUtils.MakeDefaultAmbient();
+        _fog = WorldParamUtils.MakeDefaultFog();
+        _sunLight = WorldParamUtils.MakeDefaultSunLight();
+        _postEffect = WorldParamUtils.MakeDefaultPostEffect();
+    }
+
+    public long Generation { get; private set; }
 
     internal RenderParamsSnapshot Snapshot => _snapshot;
 
-    public void SetDirectionalLight(in DirLightParams param)
+    internal int ShadowMapSize => _shadow.ShadowMapSize;
+
+    public void SetDirectionalLight(in SunLightParams param)
     {
-        _dirLight = param;
+        _sunLight = param;
         _dirty = true;
     }
 
@@ -50,40 +61,38 @@ public sealed class WorldRenderParams
         _dirty = true;
     }
 
-    public void SetShadowDefault(int size, float? distance = null)
+    public void SetShadow(int size)
     {
         ArgumentOutOfRangeException.ThrowIfLessThan(size, RenderLimits.MinShadowMapSize);
         ArgumentOutOfRangeException.ThrowIfGreaterThan(size, RenderLimits.MaxShadowMapSize);
+        ArgumentOutOfRangeException.ThrowIfZero(IntMath.IsPowerOfTwo(size) ? 1 : 0);
 
-        if (distance is not { } dist)
-            dist = _shadow.Distance > 1 ? _shadow.Distance : 120f;
-
-        var constBias = 0.8f / size;
-        var slopeBias = constBias * 6f;
-        //var constBias = 1.2f / size;
-        //var slopeBias = constBias * 3f;
-        _shadow = new ShadowParams(
-            shadowMapSize: size,
-            distance: dist,
-            zPad: 0.5f,
-            constBias: constBias,
-            slopeBias: slopeBias,
-            strength: 1f,
-            pcfRadius: 1f);
-
-        _dirty = true;
+        _shadow = WorldParamUtils.MakeSizedShadow(size);
     }
 
-    internal void FromEditor(in WorldParamsData data)
+    internal void SetFromData(in WorldParamsData data)
     {
+        int size = _shadow.ShadowMapSize;
+        _shadow = data.Shadow;
+        _shadow.ShadowMapSize = size;
+
         _ambient = data.Ambient;
-        _dirLight = data.DirLight;
+        _sunLight = data.SunLight;
         _fog = data.Fog;
         _postEffect = data.PostEffect;
         _dirty = true;
     }
 
-    internal RenderParamsSnapshot Commit()
+    internal void FillData(out WorldParamsData data)
+    {
+        data.SunLight = _sunLight;
+        data.Ambient = _ambient;
+        data.Fog = _fog;
+        data.PostEffect = _postEffect;
+        data.Shadow = _shadow;
+    }
+
+    internal RenderParamsSnapshot EndTick()
     {
         if (!_dirty)
         {
@@ -97,53 +106,17 @@ public sealed class WorldRenderParams
             return _snapshot;
         }
 
-        Version++;
+        Generation++;
 
-        _snapshot.Update(
-            version: Version,
-            ambient: in _ambient,
-            fog: in _fog,
-            dirLight: in _dirLight,
-            shadows: in _shadow,
-            postEffect: in _postEffect);
+        _snapshot.Ambient = _ambient;
+        _snapshot.Fog = _fog;
+        _snapshot.SunLight = _sunLight;
+        _snapshot.Shadows = _shadow;
+        _snapshot.PostEffect = _postEffect;
+
 
         _dirty = false;
+        _snapshot.SetDirty();
         return _snapshot;
     }
-
-    private static DirLightParams MakeDefaultDirLight() =>
-        new(
-            direction: new Vector3(-0.35f, -0.95f, 0.25f),
-            diffuse: new Vector3(1.05f, 0.92f, 0.82f),
-            intensity: 1.35f,
-            specular: 0.75f
-        );
-
-    private static AmbientParams MakeDefaultAmbient() =>
-        new(
-            ambient: new Vector3(0.34f, 0.38f, 0.44f),
-            ambientGround: new Vector3(0.20f, 0.17f, 0.15f),
-            exposure: 0.26f
-        );
-
-    private static FogParams MakeDefaultFog() =>
-        new(
-            color: new Vector3(0.70f, 0.89f, 0.68f),
-            density: 720f,
-            heightFalloff: 5200f,
-            baseHeight: 0f,
-            strength: 1.05f,
-            heightInfluence: 0.85f,
-            scattering: 0.09f,
-            maxDistance: 9500f
-        );
-
-
-    private static PostEffectParams MakeDefaultPostEffect() =>
-        new(
-            grade: new PostGradeParams(-0.10f, 0.80f, 0.805f, 0.70f),
-            whiteBalance: new PostWhiteBalanceParams(-0.10f, 0.25f),
-            bloom: new PostBloomParams(0.35f, 0.75f, 8.0f),
-            imageFx: new PostImageFxParams(0.25f, 0.15f, 0.30f, 0.60f)
-        );
 }

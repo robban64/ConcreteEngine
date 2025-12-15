@@ -1,11 +1,7 @@
-#region
-
 using ConcreteEngine.Common.Collections;
 using ConcreteEngine.Engine.Assets;
 using ConcreteEngine.Engine.Platform;
 using ConcreteEngine.Engine.Worlds.Render;
-
-#endregion
 
 namespace ConcreteEngine.Engine;
 
@@ -16,7 +12,7 @@ public interface IGameEngineSystem
 
 public interface IEngineSystemManager
 {
-    public T GetSystem<T>() where T : IGameEngineSystem;
+    T GetSystem<T>() where T : IGameEngineSystem;
 }
 
 public class EngineCoreSystem : IEngineSystemManager
@@ -38,7 +34,6 @@ public class EngineCoreSystem : IEngineSystemManager
     {
         _systems.Register<IInputSystem>(_inputSystem);
         _systems.Register<IAssetSystem>(_assets);
-        _systems.Register<IWorldRenderer>(_renderer);
         _systems.Freeze();
     }
 

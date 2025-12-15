@@ -1,5 +1,3 @@
-#region
-
 using System.Diagnostics.CodeAnalysis;
 using System.Numerics;
 using ConcreteEngine.Common;
@@ -9,8 +7,6 @@ using ConcreteEngine.Graphics.Gfx.Definitions;
 using ConcreteEngine.Graphics.Gfx.Resources;
 using ConcreteEngine.Graphics.Gfx.Utility;
 using ConcreteEngine.Graphics.Primitives;
-
-#endregion
 
 namespace ConcreteEngine.Engine.Utils;
 
@@ -39,7 +35,7 @@ public static class PrimitiveMeshes
             4);
         var builder = meshes.StartUploadBuilder(in props);
         builder.UploadVertices(vertices, BufferUsage.StaticDraw, BufferStorage.Static, BufferAccess.None);
-        var attribBuilder = new VertexAttributeMaker<Vertex2D>();
+        var attribBuilder = new VertexAttributeMaker();
         builder.AddAttribute(attribBuilder.Make<Vector2>(0));
         builder.AddAttribute(attribBuilder.Make<Vector2>(1));
         FsqQuad = meshes.FinishUploadBuilder(out _);
@@ -70,7 +66,7 @@ public static class PrimitiveMeshes
 
         var builder = meshes.StartUploadBuilder(in props);
         builder.UploadVertices(vertices, BufferUsage.StaticDraw, BufferStorage.Static, BufferAccess.None);
-        builder.AddAttribute(new VertexAttributeMaker<Vector3>().Make<Vector3>(0));
+        builder.AddAttribute(new VertexAttributeMaker().Make<Vector3>(0));
         SkyboxCube = meshes.FinishUploadBuilder(out _);
     }
 }

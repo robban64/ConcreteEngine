@@ -1,17 +1,13 @@
-#region
-
 using System.Numerics;
 using System.Runtime.InteropServices;
-
-#endregion
 
 namespace ConcreteEngine.Graphics.Primitives;
 
 [StructLayout(LayoutKind.Sequential)]
-public readonly struct Vertex2D
+public struct Vertex2D
 {
-    public readonly Vector2 Position;
-    public readonly Vector2 TexCoords;
+    public Vector2 Position;
+    public Vector2 TexCoords;
 
     public Vertex2D(Vector2 pos, Vector2 tex)
     {

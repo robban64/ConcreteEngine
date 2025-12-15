@@ -1,44 +1,44 @@
-#region
-
 using System.Text.Json;
-using System.Text.Json.Serialization;
 using ConcreteEngine.Engine.Assets.Descriptors;
-using ConcreteEngine.Engine.Assets.IO;
+using ConcreteEngine.Engine.Configuration;
 using ConcreteEngine.Engine.Editor.Diagnostics;
 using ConcreteEngine.Shared.Diagnostics;
-
-#endregion
 
 namespace ConcreteEngine.Engine.Assets.Internal;
 
 internal sealed class AssetConfigLoader
 {
-    private readonly JsonSerializerOptions _jsonOptions;
+    private JsonSerializerOptions? _jsonOptions;
 
-    internal AssetConfigLoader()
+    public static EngineGraphicSettings GraphicSettings { get; private set; } = null!;
+
+    public static EngineGraphicSettings LoadGraphicSettings()
     {
-        _jsonOptions = new JsonSerializerOptions
+        var path = AssetPaths.GraphicSettingsFilePath;
+        if (!File.Exists(path))
         {
-            PropertyNamingPolicy = JsonNamingPolicy.CamelCase,
-            WriteIndented = true,
-            Converters =
-            {
-                new JsonStringEnumConverter(),
-                new Vector2Converter(),
-                new Vector3Converter(),
-                new Vector4Converter()
-            }
-        };
+            Logger.LogString(LogScope.Assets, "Loading Default Graphic Settings...");
+            return GraphicSettings = new EngineGraphicSettings();
+        }
+
+        Logger.LogString(LogScope.Assets, "Loading Custom Graphic Settings...");
+        var options = JsonUtility.DefaultJsonOptions;
+        GraphicSettings = JsonSerializer.Deserialize<EngineGraphicSettings>(File.ReadAllText(path), options) ??
+                          throw new InvalidDataException("Invalid Graphic Settings.");
+
+        GraphicSettings.Validate();
+        return GraphicSettings;
     }
 
     public AssetManifest LoadAssetManifest()
     {
+        _jsonOptions ??= JsonUtility.DefaultJsonOptions;
         Logger.LogString(LogScope.Assets, "Loading Asset Manifest...");
 
-        if (!Directory.Exists(AssetPaths.AssetFolder))
-            throw new DirectoryNotFoundException($"Asset '{AssetPaths.AssetFolder}' directory not found.");
+        if (!Directory.Exists(AssetPaths.AssetRoot))
+            throw new DirectoryNotFoundException($"Asset '{AssetPaths.AssetRoot}' directory not found.");
 
-        var path = AssetPaths.GetManifestPath();
+        var path = Path.Combine(AssetPaths.AssetRoot, AssetPaths.ManifestFilename);
 
         if (!File.Exists(path))
             throw new FileNotFoundException($"Manifest '{path}' not found.");
@@ -54,9 +54,10 @@ internal sealed class AssetConfigLoader
 
     public T LoadAssetCatalog<T>(string filename) where T : class, IAssetCatalog
     {
-        ArgumentNullException.ThrowIfNull(filename, nameof(filename));
+        ArgumentNullException.ThrowIfNull(filename);
+        _jsonOptions ??= JsonUtility.DefaultJsonOptions;
 
-        var path = AssetPaths.GetAssetSubPath(filename);
+        var path = Path.Combine(AssetPaths.AssetRoot, filename);
 
         if (!File.Exists(path))
             throw new FileNotFoundException($"Resource manifest {typeof(T).Name} with path {path} does not exists.");
@@ -72,4 +73,6 @@ internal sealed class AssetConfigLoader
 
         return manifest;
     }
+
+    public void ClearCache() => _jsonOptions = null;
 }

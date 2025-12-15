@@ -1,8 +1,4 @@
-#region
-
 using System.Globalization;
-
-#endregion
 
 namespace ConcreteEngine.Engine.Editor.Utils;
 

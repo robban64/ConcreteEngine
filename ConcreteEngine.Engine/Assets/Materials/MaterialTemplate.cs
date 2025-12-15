@@ -1,9 +1,5 @@
-#region
-
 using ConcreteEngine.Engine.Assets.Data;
 using ConcreteEngine.Engine.Assets.Shaders;
-
-#endregion
 
 namespace ConcreteEngine.Engine.Assets.Materials;
 

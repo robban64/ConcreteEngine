@@ -1,13 +1,9 @@
-#region
-
 using System.Runtime.CompilerServices;
 using ConcreteEngine.Common;
 using ConcreteEngine.Common.Collections;
 using ConcreteEngine.Graphics.Diagnostic;
 using ConcreteEngine.Graphics.Gfx.Definitions;
 using ConcreteEngine.Shared.Diagnostics;
-
-#endregion
 
 namespace ConcreteEngine.Graphics.Gfx.Resources;
 
@@ -34,7 +30,7 @@ internal interface IGfxMetaResourceStore<TMeta> : IGfxResourceStore where TMeta 
 internal sealed class GfxResourceStore<TId, TMeta> : IGfxResourceStore<TId>, IGfxMetaResourceStore<TMeta>
     where TId : unmanaged, IResourceId where TMeta : unmanaged, IResourceMeta
 {
-    public unsafe delegate*<in GfxMetaChanged<TMeta>, void> ChangeCallback { get; private set; }
+    private unsafe delegate*<in GfxMetaChanged<TMeta>, void> _changeCallback;
 
     private static TId MakeId(int idx)
     {
@@ -47,7 +43,6 @@ internal sealed class GfxResourceStore<TId, TMeta> : IGfxResourceStore<TId>, IGf
     private GfxHandle[] _handle;
 
     private readonly Stack<int> _free;
-
 
     public ResourceKind ResourceKind => TId.Kind;
 
@@ -72,8 +67,8 @@ internal sealed class GfxResourceStore<TId, TMeta> : IGfxResourceStore<TId>, IGf
     public unsafe void BindOnChangeCallback(delegate*<in GfxMetaChanged<TMeta>, void> callback)
     {
         ArgumentNullException.ThrowIfNull(callback);
-        InvalidOpThrower.ThrowIf(ChangeCallback != null);
-        ChangeCallback = callback;
+        InvalidOpThrower.ThrowIf(_changeCallback != null);
+        _changeCallback = callback;
     }
 
     public bool TryGetRef(TId id, out GfxRefToken<TId> handle, out TMeta meta)
@@ -155,8 +150,8 @@ internal sealed class GfxResourceStore<TId, TMeta> : IGfxResourceStore<TId>, IGf
 
         unsafe
         {
-            if (ChangeCallback != null)
-                ChangeCallback(new GfxMetaChanged<TMeta>(id.Value, in newMeta, newRef.Gen, true, ResourceKind));
+            if (_changeCallback != null)
+                _changeCallback(new GfxMetaChanged<TMeta>(id.Value, in newMeta, newRef.Gen, true, ResourceKind));
         }
 
         GfxLog.LogGfxStore(id.Value, newRef, ResourceKind.ToLogTopic(), LogAction.Replace);
@@ -172,8 +167,8 @@ internal sealed class GfxResourceStore<TId, TMeta> : IGfxResourceStore<TId>, IGf
 
         unsafe
         {
-            if (ChangeCallback != null)
-                ChangeCallback(new GfxMetaChanged<TMeta>(id.Value, in newMeta, _handle[idx].Gen, true, ResourceKind));
+            if (_changeCallback != null)
+                _changeCallback(new GfxMetaChanged<TMeta>(id.Value, in newMeta, _handle[idx].Gen, true, ResourceKind));
         }
     }
 
@@ -182,8 +177,10 @@ internal sealed class GfxResourceStore<TId, TMeta> : IGfxResourceStore<TId>, IGf
         var len = _meta.Length;
         if (_idx == len)
         {
-            var newCap = Arrays.CapacityGrowthLinear(len, len * 2, step: 32);
-            Console.WriteLine("GfxStore resize");
+            var newCap = Arrays.CapacityGrowthSafe(len, len + 1);
+            GfxLog.Event(new LogEvent(0, 0, newCap, 0, 0, 0, LogTopic.ArrayBuffer, LogScope.Gfx, LogAction.Resize,
+                LogLevel.Warn));
+
             if (newCap > GfxLimits.StoreLimit)
                 throw new InvalidOperationException("Store limit exceeded");
 

@@ -1,8 +1,4 @@
-#region
-
 using Silk.NET.Input;
-
-#endregion
 
 namespace ConcreteEngine.Engine.Platform;
 

@@ -1,38 +1,34 @@
-#region
-
 using ImGuiNET;
-
-#endregion
 
 namespace ConcreteEngine.Editor.Utils;
 
 public struct ImGuiFieldStatus()
 {
-    public int Field = 0;
-    public int ActiveField = -1;
-    public int EditedField = -1;
+    private int _field = 0;
+    private int _activeField = -1;
+    private int _editedField = -1;
 
     public int NextFieldDrag()
     {
-        var field = Field;
-        (int activeField, int deactivatedField) = GuiUtils.ItemActivatedAndDeactivatedAfterEdit(Field++);
-        ActiveField &= activeField;
-        EditedField &= deactivatedField;
+        var field = _field;
+        (int activeField, int deactivatedField) = GuiUtils.ItemActivatedAndDeactivatedAfterEdit(_field++);
+        _activeField &= activeField;
+        _editedField &= deactivatedField;
         return field;
     }
 
     public int NextField()
     {
         var deactivatedField = ImGui.IsItemDeactivatedAfterEdit();
-        ActiveField &= -1;
-        EditedField &= deactivatedField ? Field : -1;
-        return Field++;
+        _activeField &= -1;
+        _editedField &= deactivatedField ? _field : -1;
+        return _field++;
     }
 
     public bool HasEdited(out int field)
     {
-        field = EditedField;
-        if (ActiveField == -1 && EditedField >= 0) return true;
+        field = _editedField;
+        if (_activeField == -1 && _editedField >= 0) return true;
 
         field = -1;
         return false;

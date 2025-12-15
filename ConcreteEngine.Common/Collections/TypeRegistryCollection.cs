@@ -1,7 +1,3 @@
-#region
-
-#endregion
-
 namespace ConcreteEngine.Common.Collections;
 
 public sealed class TypeRegistryCollection<TValue>(int capacity = 16)

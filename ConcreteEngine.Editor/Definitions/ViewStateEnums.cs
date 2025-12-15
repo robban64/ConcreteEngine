@@ -1,33 +1,25 @@
 namespace ConcreteEngine.Editor.Definitions;
 
-internal enum EditorViewMode
+internal enum EditorViewMode : byte
 {
     None,
     Editor,
     Metrics
 }
 
-internal enum LeftSidebarMode
+internal enum LeftSidebarMode : byte
 {
     Default,
     Assets,
     Entities
 }
 
-internal enum RightSidebarMode
+internal enum RightSidebarMode : byte
 {
     Default,
+    Property,
     Camera,
     World,
     Sky,
-    Terrain
-}
-
-public enum EditorAssetCategory
-{
-    None,
-    Shader,
-    Texture,
-    Model,
-    Material
+    Terrain,
 }

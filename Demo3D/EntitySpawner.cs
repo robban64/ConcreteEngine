@@ -1,20 +1,21 @@
-#region
-
 using System.Numerics;
 using ConcreteEngine.Common.Numerics;
-using ConcreteEngine.Common.Numerics.Maths;
+using ConcreteEngine.Common.Time;
 using ConcreteEngine.Engine.Assets.Models;
 using ConcreteEngine.Engine.Worlds;
 using ConcreteEngine.Engine.Worlds.Data;
 using ConcreteEngine.Engine.Worlds.Entities;
-
-#endregion
+using ConcreteEngine.Engine.Worlds.Entities.Components;
 
 namespace Demo3D;
 
-public readonly record struct ScenePlacement(ModelBaseDrawInfo ModelInfo, in BoundingBox Bounds, MaterialTag Mat, float Offset = 0f);
+public readonly record struct ScenePlacement(
+    ModelBaseDrawInfo ModelInfo,
+    in BoundingBox Bounds,
+    MaterialTag Mat,
+    float Offset = 0f);
 
-public sealed class EntitySpawner(IWorld world, float size = 256f, float margin = 4f)
+public sealed class EntitySpawner(World world, float size = 256f, float margin = 4f)
 {
     private EntityId CreateOnTerrain(ScenePlacement sp, Vector3 p, Vector3? s = null, Quaternion? r = null)
     {
@@ -26,13 +27,8 @@ public sealed class EntitySpawner(IWorld world, float size = 256f, float margin 
 
     private EntityId CreateModelEntity(ScenePlacement sp, Transform transform)
     {
-        var entityId = world.Entities.Create();
-        var key = world.EntityMaterials.Add(sp.Mat);
-        world.Entities.Models.Add(entityId, new ModelComponent(sp.ModelInfo.Model, sp.ModelInfo.DrawCount, key));
-        world.Entities.Transforms.Add(entityId, transform);
-        world.Entities.BoundingBoxes.Add(entityId, new BoxComponent(sp.Bounds));
-
-        return entityId;
+        var m = sp.ModelInfo;
+        return world.Entities.CreateModelEntity(m.Model, m.DrawCount, sp.Mat, in transform, sp.Bounds);
     }
 
     public void PlaceGroundRocksBasic(

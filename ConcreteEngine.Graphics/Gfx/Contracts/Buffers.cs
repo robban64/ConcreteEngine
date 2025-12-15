@@ -1,12 +1,13 @@
-#region
-
 using ConcreteEngine.Graphics.Gfx.Definitions;
-
-#endregion
 
 namespace ConcreteEngine.Graphics.Gfx.Contracts;
 
-public readonly record struct GfxBufferDataDesc(nint Size, BufferStorage Storage, BufferAccess Access);
+public readonly struct GfxBufferDataDesc(uint size, BufferStorage storage, BufferAccess access)
+{
+    public readonly uint Size = size;
+    public readonly BufferStorage Storage = storage;
+    public readonly BufferAccess Access = access;
+}
 
 //VBO
 public readonly struct VertexBufferPayload(in VertexBufferDesc descriptor, ReadOnlyMemory<byte> data)

@@ -1,12 +1,8 @@
-#region
-
 using System.Runtime.InteropServices;
 using ConcreteEngine.Common;
 using ConcreteEngine.Common.Numerics;
 using ConcreteEngine.Engine.Assets.Descriptors;
 using static ConcreteEngine.Engine.Assets.Models.Loader.AssimpImporter.ImportModelUtils;
-
-#endregion
 
 namespace ConcreteEngine.Engine.Assets.Models.Loader;
 

@@ -1,9 +1,5 @@
-#region
-
 using System.Numerics;
 using System.Runtime.CompilerServices;
-
-#endregion
 
 namespace ConcreteEngine.Common.Numerics.Maths;
 
@@ -18,14 +14,12 @@ public sealed class CollisionMethods
         return true;
     }
 
-
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static bool RayIntersectsBox(in Ray ray, in BoundingBox box, out float t)
     {
         var dirfrac = new Vector3
         {
-            X = 1.0f / ray.Direction.X,
-            Y = 1.0f / ray.Direction.Y,
-            Z = 1.0f / ray.Direction.Z
+            X = 1.0f / ray.Direction.X, Y = 1.0f / ray.Direction.Y, Z = 1.0f / ray.Direction.Z
         };
         float t1 = (box.Min.X - ray.Position.X) * dirfrac.X;
         float t2 = (box.Max.X - ray.Position.X) * dirfrac.X;
@@ -34,8 +28,8 @@ public sealed class CollisionMethods
         float t5 = (box.Min.Z - ray.Position.Z) * dirfrac.Z;
         float t6 = (box.Max.Z - ray.Position.Z) * dirfrac.Z;
 
-        float tmin = Math.Max(Math.Max(Math.Min(t1, t2), Math.Min(t3, t4)), Math.Min(t5, t6));
-        float tmax = Math.Min(Math.Min(Math.Max(t1, t2), Math.Max(t3, t4)), Math.Max(t5, t6));
+        float tmin = MathF.Max(MathF.Max(MathF.Min(t1, t2), MathF.Min(t3, t4)), MathF.Min(t5, t6));
+        float tmax = MathF.Min(MathF.Min(MathF.Max(t1, t2), MathF.Max(t3, t4)), MathF.Max(t5, t6));
 
         // behind
         if (tmax < 0)
@@ -55,14 +49,25 @@ public sealed class CollisionMethods
         return true;
     }
 
-    [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public static bool BoxInFrontOfPlane(in BoundingBox box, in Plane plane)
+    public static bool IntersectsPlane(in BoundingBox box, in Plane plane)
     {
+        var ext = box.Extent;
         return Vector3.Dot(box.Center, plane.Normal)
-               + box.Extent.X * MathF.Abs(plane.Normal.X)
-               + box.Extent.Y * MathF.Abs(plane.Normal.Y)
-               + box.Extent.Z * MathF.Abs(plane.Normal.Z)
+               + ext.X * MathF.Abs(plane.Normal.X)
+               + ext.Y * MathF.Abs(plane.Normal.Y)
+               + ext.Z * MathF.Abs(plane.Normal.Z)
                <= -plane.D;
+    }
+
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public static bool IsOutsidePlane(in BoundingBox box, in Plane plane)
+    {
+        var ext = box.Extent;
+        return Vector3.Dot(plane.Normal, box.Center) + plane.D +
+               ext.X * MathF.Abs(plane.Normal.X) +
+               ext.Y * MathF.Abs(plane.Normal.Y) +
+               ext.Z * MathF.Abs(plane.Normal.Z)
+               < 0f;
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]

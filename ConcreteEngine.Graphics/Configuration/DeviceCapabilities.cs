@@ -7,16 +7,16 @@ public readonly record struct OpenGlVersion(int Major, int Minor)
 
 public sealed record DeviceCapabilities
 {
-    public OpenGlVersion GlVersion { get; init; }
-    public int MaxTextureSize { get; init; }
-    public int MaxTextureImageUnits { get; init; }
-    public int MaxArrayTextureLayers { get; init; }
-    public int MaxSamples { get; init; }
-    public int MaxFramebufferWidth { get; init; }
-    public int MaxFramebufferHeight { get; init; }
-    public int MaxColorAttachments { get; init; }
-    public int MaxVertexAttribBindings { get; init; }
-    public float MaxAnisotropy { get; init; }
-    public int MaxUniformBlockSize { get; init; }
-    public int UniformBufferOffsetAlignment { get; init; }
+    public OpenGlVersion GlVersion;
+    public int MaxTextureSize;
+    public int MaxTextureImageUnits;
+    public int MaxArrayTextureLayers;
+    public int MaxSamples;
+    public int MaxFramebufferWidth;
+    public int MaxFramebufferHeight;
+    public int MaxColorAttachments;
+    public int MaxVertexAttribBindings;
+    public float MaxAnisotropy;
+    public int MaxUniformBlockSize;
+    public int UniformBufferOffsetAlignment;
 }

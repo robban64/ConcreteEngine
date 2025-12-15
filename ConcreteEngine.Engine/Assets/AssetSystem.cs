@@ -1,5 +1,3 @@
-#region
-
 using ConcreteEngine.Common;
 using ConcreteEngine.Engine.Assets.Data;
 using ConcreteEngine.Engine.Assets.Descriptors;
@@ -12,8 +10,6 @@ using ConcreteEngine.Engine.Utils;
 using ConcreteEngine.Graphics.Error;
 using ConcreteEngine.Graphics.Gfx;
 using ConcreteEngine.Shared.Diagnostics;
-
-#endregion
 
 namespace ConcreteEngine.Engine.Assets;
 
@@ -80,7 +76,7 @@ public sealed class AssetSystem : IAssetSystem
 
     internal void EnqueueReloadAsset(AssetCommandRecord command)
     {
-        ArgumentNullException.ThrowIfNull(command, nameof(command));
+        ArgumentNullException.ThrowIfNull(command);
         ArgumentException.ThrowIfNullOrWhiteSpace(command.Name, nameof(command.Name));
 
         if (!_assetStore.TryGetByName(command.Name, typeof(Shader), out var obj) || obj is not Shader s)
@@ -153,8 +149,8 @@ public sealed class AssetSystem : IAssetSystem
     internal void StartLoader(GfxContext gfx)
     {
         InvalidOpThrower.ThrowIfNot(CurrentStatus == Status.ManifestLoaded, nameof(CurrentStatus));
-        ArgumentNullException.ThrowIfNull(gfx, nameof(gfx));
-        ArgumentNullException.ThrowIfNull(_configLoader, nameof(_configLoader));
+        ArgumentNullException.ThrowIfNull(gfx);
+        ArgumentNullException.ThrowIfNull(_configLoader);
 
         CurrentStatus = Status.Booting;
 

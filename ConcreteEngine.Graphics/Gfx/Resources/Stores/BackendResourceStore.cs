@@ -1,5 +1,3 @@
-#region
-
 using System.Diagnostics;
 using System.Diagnostics.CodeAnalysis;
 using System.Runtime.CompilerServices;
@@ -7,8 +5,6 @@ using ConcreteEngine.Common.Collections;
 using ConcreteEngine.Graphics.Diagnostic;
 using ConcreteEngine.Graphics.Gfx.Definitions;
 using ConcreteEngine.Shared.Diagnostics;
-
-#endregion
 
 namespace ConcreteEngine.Graphics.Gfx.Resources;
 
@@ -103,7 +99,7 @@ internal sealed class BackendResourceStore<TId, THandle> : IBackendResourceStore
         var len = _records.Length;
         if (_idx == len)
         {
-            var newCap = Arrays.CapacityGrowthLinear(len, len * 2, step: 32);
+            var newCap = Arrays.CapacityGrowthSafe(len, len + 1);
             Console.WriteLine("Backend store resize");
 
             if (newCap > GfxLimits.StoreLimit)

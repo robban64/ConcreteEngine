@@ -1,16 +1,18 @@
-#region
-
 using ConcreteEngine.Graphics.Gfx.Definitions;
-
-#endregion
 
 namespace ConcreteEngine.Graphics.Gfx.Contracts;
 
-public sealed record MeshLayout(
-    MeshId MeshId,
-    IndexBufferId IboId,
-    VertexBufferId[] VboIds,
-    VertexAttribute[] Attributes);
+public sealed class MeshLayout(
+    MeshId meshId,
+    IndexBufferId iboId,
+    VertexBufferId[] vboIds,
+    VertexAttribute[] attributes)
+{
+    public readonly MeshId MeshId = meshId;
+    public readonly IndexBufferId IboId = iboId;
+    public readonly VertexBufferId[] VboIds = vboIds;
+    public readonly VertexAttribute[] Attributes = attributes;
+}
 
 public readonly struct VertexLayout(
     byte slot,
@@ -36,8 +38,8 @@ public readonly struct VertexAttribute(
     bool normalized = false
 )
 {
-    public readonly int Components = components;
-    public readonly int Offset = offset;
+    public readonly ushort Components = (ushort)components;
+    public readonly ushort Offset = (ushort)offset;
     public readonly byte Binding = binding;
     public readonly byte Location = location;
     public readonly VertexFormat Format = format;

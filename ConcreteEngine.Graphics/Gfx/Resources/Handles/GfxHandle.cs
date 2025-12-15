@@ -1,13 +1,5 @@
-#region
-
-#endregion
-
-#region
-
 using System.Runtime.Serialization;
 using ConcreteEngine.Graphics.Gfx.Definitions;
-
-#endregion
 
 namespace ConcreteEngine.Graphics.Gfx.Resources;
 

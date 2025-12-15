@@ -1,5 +1,3 @@
-#region
-
 using System.Diagnostics;
 using ConcreteEngine.Common.Numerics;
 using ConcreteEngine.Graphics.Error;
@@ -7,8 +5,6 @@ using ConcreteEngine.Graphics.Gfx.Contracts;
 using ConcreteEngine.Graphics.Gfx.Definitions;
 using ConcreteEngine.Graphics.Gfx.Internal;
 using ConcreteEngine.Graphics.OpenGL;
-
-#endregion
 
 namespace ConcreteEngine.Graphics.Gfx;
 

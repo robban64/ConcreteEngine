@@ -1,9 +1,3 @@
-#region
-
-using ConcreteEngine.Engine.Data;
-
-#endregion
-
 namespace ConcreteEngine.Engine.Scene.Modules;
 
 public interface IModuleManager
@@ -31,23 +25,13 @@ public sealed class ModuleManager : IModuleManager
         throw new InvalidOperationException($"Module {typeof(T).Name} is not registered.");
     }
 
-    internal void GameTickUpdate(int tick, float fixedDt)
+    internal void GameTickUpdate(float deltaTime)
     {
         if (_modules.Count == 0) return;
 
         foreach (var module in _modules)
         {
-            module.UpdateTick(tick, fixedDt);
-        }
-    }
-
-    internal void Update(in UpdateTickInfo frameCtx)
-    {
-        if (_modules.Count == 0) return;
-
-        foreach (var module in _modules)
-        {
-            module.Update(in frameCtx);
+            module.UpdateTick(deltaTime);
         }
     }
 

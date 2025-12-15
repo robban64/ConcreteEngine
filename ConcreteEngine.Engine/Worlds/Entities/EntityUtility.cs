@@ -1,11 +1,12 @@
+using System.Runtime.CompilerServices;
+
 namespace ConcreteEngine.Engine.Worlds.Entities;
 
 internal static class EntityUtility
 {
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static int BinarySearchEntity(ReadOnlySpan<EntityId> collection, EntityId entity)
     {
-        var id = entity.Id;
-
         int lo = 0, hi = collection.Length - 1;
         while (lo <= hi)
         {

@@ -1,8 +1,4 @@
-#region
-
 using ConcreteEngine.Engine.Assets.Descriptors;
-
-#endregion
 
 namespace ConcreteEngine.Engine.Assets;
 

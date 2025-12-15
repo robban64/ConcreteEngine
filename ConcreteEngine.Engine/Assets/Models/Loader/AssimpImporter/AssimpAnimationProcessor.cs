@@ -1,12 +1,8 @@
-#region
-
 using System.Numerics;
 using ConcreteEngine.Common;
 using ConcreteEngine.Common.Numerics.Maths;
 using AssimpScene = Silk.NET.Assimp.Scene;
 using AssimpNode = Silk.NET.Assimp.Node;
-
-#endregion
 
 namespace ConcreteEngine.Engine.Assets.Models.Loader.AssimpImporter;
 

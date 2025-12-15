@@ -1,11 +1,14 @@
+using System.Runtime.InteropServices;
+
 namespace ConcreteEngine.Engine.Worlds.Data;
 
-public readonly record struct AnimationId(int Value)
+[StructLayout(LayoutKind.Sequential)]
+public readonly record struct AnimationId
 {
-    public static implicit operator int(AnimationId id) => id.Value;
-}
+    public readonly ushort Value;
 
-public readonly record struct AnimationClipId(int Value)
-{
-    public static implicit operator int(AnimationClipId id) => id.Value;
+    public AnimationId(ushort value) => Value = value;
+    public AnimationId(int value) => Value = (ushort)value;
+
+    public static implicit operator int(AnimationId id) => id.Value;
 }

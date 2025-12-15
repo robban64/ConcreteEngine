@@ -1,7 +1,3 @@
-#region
-
-#endregion
-
 namespace ConcreteEngine.Renderer.Definitions;
 
 public enum DrawCommandId : byte
@@ -10,13 +6,7 @@ public enum DrawCommandId : byte
     Model,
     Terrain,
     Skybox,
-
     Particle
-    /*
-    Tilemap,
-    Sprite,
-    Light,
-*/
 }
 
 public enum DrawCommandQueue : byte

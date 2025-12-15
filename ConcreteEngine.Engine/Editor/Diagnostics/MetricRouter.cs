@@ -1,16 +1,11 @@
-#region
-
 using System.Diagnostics;
 using ConcreteEngine.Editor.Metrics;
 using ConcreteEngine.Engine.Assets;
 using ConcreteEngine.Engine.Assets.Data;
 using ConcreteEngine.Engine.Assets.Materials;
-using ConcreteEngine.Engine.Data;
 using ConcreteEngine.Engine.Worlds;
 using ConcreteEngine.Graphics.Diagnostic;
 using ConcreteEngine.Shared.Diagnostics;
-
-#endregion
 
 namespace ConcreteEngine.Engine.Editor.Diagnostics;
 
@@ -18,25 +13,13 @@ internal static class MetricRouter
 {
     private static World? _world;
     private static AssetSystem? _assetSystem;
-    private static RenderEngineFrameInfo? _frameInfo;
 
     private static MaterialStore? Materials => _assetSystem?.MaterialStoreImpl;
 
-
-    internal static void Attach(World world, AssetSystem assetSystem, RenderEngineFrameInfo frameInfo)
+    internal static void Attach(World world, AssetSystem assetSystem)
     {
         _world = world;
         _assetSystem = assetSystem;
-        _frameInfo = frameInfo;
-    }
-
-
-    internal static void GetFrameMetrics(out FrameMetric metric, out RenderInfoSample sample)
-    {
-        var f = _frameInfo;
-        var gfxInfo = f!.GfxResult;
-        sample = new RenderInfoSample(f.Fps, f.Alpha, 0, gfxInfo.DrawCalls, gfxInfo.TriangleCount);
-        metric = new FrameMetric(f.FrameIndex, f.TimeStamp, default);
     }
 
     internal static PairSample GetMemoryMetrics() => new((int)GC.GetAllocatedBytesForCurrentThread());

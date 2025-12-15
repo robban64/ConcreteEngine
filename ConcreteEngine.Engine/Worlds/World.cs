@@ -1,166 +1,131 @@
-#region
-
 using ConcreteEngine.Common.Numerics;
-using ConcreteEngine.Editor.Data;
+using ConcreteEngine.Engine.Assets;
+using ConcreteEngine.Engine.Assets.Internal;
+using ConcreteEngine.Engine.Assets.Models;
 using ConcreteEngine.Engine.Editor.Data;
-using ConcreteEngine.Engine.Worlds.Entities;
+using ConcreteEngine.Engine.Platform;
+using ConcreteEngine.Engine.Worlds.MeshGeneration;
 using ConcreteEngine.Engine.Worlds.Render;
-using ConcreteEngine.Engine.Worlds.Render.Batching;
-using ConcreteEngine.Engine.Worlds.Render.Tables;
+using ConcreteEngine.Engine.Worlds.Tables;
+using ConcreteEngine.Engine.Worlds.Utility;
 using ConcreteEngine.Engine.Worlds.View;
+using ConcreteEngine.Graphics;
 using ConcreteEngine.Graphics.Gfx;
-using ConcreteEngine.Shared.RenderData;
-using ConcreteEngine.Shared.TransformData;
-
-#endregion
 
 namespace ConcreteEngine.Engine.Worlds;
 
-public interface IWorld
+public sealed class World
 {
-    int EntityCount { get; }
-
-    Camera3D Camera { get; }
-    WorldEntities Entities { get; }
-
-    WorldRenderParams WorldRenderParams { get; }
-    WorldSkybox Sky { get; }
-    WorldTerrain Terrain { get; }
-    WorldParticles Particles { get; }
-
-    WorldRaycaster Raycast { get; }
-
-
-    IMeshTable MeshTable { get; }
-    IMaterialTable EntityMaterials { get; }
-}
-
-public sealed class World : IWorld
-{
-    public Camera3D Camera { get; }
-    public WorldRenderParams WorldRenderParams { get; }
-
-    public WorldRaycaster Raycast { get; }
-
-    private readonly BatcherRegistry _batchers;
+    private readonly AssetSystem _assets;
 
     private readonly WorldEntities _entities;
     private readonly WorldSkybox _sky;
     private readonly WorldTerrain _terrain;
     private readonly WorldParticles _particles;
+    private readonly WorldRaycaster _raycast;
+    private readonly WorldRenderParams _worldRenderParams;
 
-    private MeshTable _meshTable = null!;
-    private MaterialTable _materialTable = null!;
+    private readonly MeshGeneratorRegistry _meshGenerator;
 
+    private readonly MeshTable _meshTable;
+    private readonly MaterialTable _materialTable;
+    private readonly AnimationTable _animationTable;
 
-    internal World()
+    private readonly Camera3D _camera;
+
+    private readonly DrawEntityAssembler _drawEntities;
+    private readonly WorldRenderer _worldRenderer;
+
+    internal World(EngineWindow engineWindow, GraphicsRuntime graphics, AssetSystem assets)
     {
-        Camera = new Camera3D();
-        WorldRenderParams = new WorldRenderParams();
+        _assets = assets;
+        _camera = new Camera3D();
 
-        _batchers = new BatcherRegistry();
+
+        _meshGenerator = new MeshGeneratorRegistry();
+
+        _meshTable = new MeshTable();
+        _materialTable = new MaterialTable();
+        _animationTable = new AnimationTable();
+
+        _drawEntities = new DrawEntityAssembler(this);
 
         _entities = new WorldEntities();
         _sky = new WorldSkybox();
-        _terrain = new WorldTerrain();
-        _particles = new WorldParticles();
+        _terrain = new WorldTerrain(_meshTable, _materialTable);
+        _particles = new WorldParticles(_meshTable, _materialTable);
 
-        Raycast = new WorldRaycaster(Camera, Entities, _terrain);
+        _raycast = new WorldRaycaster(Camera, Entities, _terrain, _drawEntities);
+
+        _worldRenderParams = new WorldRenderParams(AssetConfigLoader.GraphicSettings);
+        _worldRenderParams.EndTick();
+
+        _worldRenderer = new WorldRenderer(engineWindow, graphics, assets, _worldRenderParams, _drawEntities, _camera);
     }
+
+    internal WorldRenderer Renderer => _worldRenderer;
+
+    public Camera3D Camera => _camera;
+    public WorldRaycaster Raycast => _raycast;
 
     public WorldSkybox Sky => _sky;
     public WorldTerrain Terrain => _terrain;
     public WorldEntities Entities => _entities;
     public WorldParticles Particles => _particles;
 
+    public WorldRenderParams WorldRenderParams => _worldRenderParams;
 
     public IMeshTable MeshTable => _meshTable;
     public IMaterialTable EntityMaterials => _materialTable;
 
+    internal MeshTable MeshTableImpl => _meshTable;
+    internal MaterialTable MaterialTableImpl => _materialTable;
+    internal AnimationTable AnimationTableImpl => _animationTable;
+
+
     public int EntityCount => Entities.EntityCount;
     public int ShadowMapSize => WorldRenderParams.Snapshot.Shadows.ShadowMapSize;
 
-
-    internal void AttachRender(GfxContext gfx, MeshTable meshTable, MaterialTable materialTable)
+    internal void Initialize(AssetSystem assets, GfxContext gfx)
     {
-        _meshTable = meshTable;
-        _materialTable = materialTable;
+        _meshTable.Setup(_assets);
+        _animationTable.Setup(_assets);
 
-        Entities.AttachRender(_meshTable, _materialTable);
-        Sky.AttachRenderer(_meshTable);
-        Terrain.AttachRenderer(_batchers.Register(new TerrainBatcher(gfx)), _meshTable, _materialTable);
-        _particles.AttachRenderer(_batchers.Register(new ParticleBatcher(gfx)), _meshTable, _materialTable);
+        Terrain.AttachRenderer(_meshGenerator.Register(new TerrainMeshGenerator(gfx)));
+        _particles.AttachRenderer(_meshGenerator.Register(new ParticleMeshGenerator(gfx)));
+        _entities.Attach(_meshTable, _materialTable);
+        _sky.AttachRenderer(_meshTable);
+
+
+        _drawEntities.CubeId = _assets.StoreImpl.GetByName<Model>("Cube").ModelId;
+        var mat = assets.MaterialStoreImpl.CreateMaterial("EmptyMat", "EmptyMat1");
+        _drawEntities.EmptyMaterialKey = _materialTable.Add(MaterialTagBuilder.BuildOne(mat.Id, true));
     }
 
-    internal void StartUpdate(Size2D viewSize, float dt)
+    internal void StartTick(Size2D viewSize)
     {
         Camera.Viewport = viewSize;
-    }
-
-    internal void StartTick(float fixedDt, float totalTime)
-    {
         ProcessActions();
-        _particles.Simulate(fixedDt, totalTime, Camera.Translation);
+        Camera.StartTick();
     }
 
     internal void EndTick()
     {
         Entities.EndTick();
-        Camera.EndTick();
+        WorldRenderParams.EndTick();
+        Camera.EndTick(WorldRenderParams.Snapshot, _worldRenderer.RenderCamera);
     }
 
-    internal void OnPreRender(float alpha)
+    internal void OnSimulationTick(float fixedDt)
     {
-        _particles?.ProcessAndUpload(alpha);
+        _particles.UpdateSimulate(_entities, fixedDt);
     }
 
     internal void ProcessCommand(IWorldCommandRecord cmd)
     {
-        if (cmd is EntityCommandRecord<TransformData> transformCmd)
-        {
-        }
-        else if (cmd is CameraCommandRecord cameraCmd)
-        {
-        }
-        else
-        {
-            throw new InvalidOperationException("Unknown Command");
-        }
     }
 
     private void ProcessActions()
     {
-        var entities = Entities;
-
-        if (WorldActionSlot.SelectedEntityId > 0)
-        {
-            //var model = entities.Meshes.GetById(WorldActionSlot.SelectedEntityId);
-        }
-
-        if (!WorldActionSlot.IsDirty) return;
-        if (WorldActionSlot.TryReadSlot(WorldRenderParams.Version, out WorldParamsData worldData))
-            WorldRenderParams.FromEditor(in worldData);
-
-        if (WorldActionSlot.TryReadSlot(Camera.Generation, out CameraEditorPayload cameraData))
-        {
-            ref readonly var data = ref cameraData;
-            Camera.Translation = data.ViewTransform.Translation;
-            Camera.Scale = data.ViewTransform.Scale;
-            Camera.Orientation = data.ViewTransform.Orientation;
-            Camera.FarPlane = data.Projection.Far;
-            Camera.NearPlane = data.Projection.Near;
-            Camera.Fov = data.Projection.Fov;
-        }
-
-        if (WorldActionSlot.TryReadSlot(0, out EntityDataPayload entityData))
-        {
-            ref readonly var transform = ref entityData.Transform;
-            ref var entityTransform = ref entities.Transforms.GetById(new EntityId(entityData.EntityId));
-            entityTransform.Translation = transform.Translation;
-            entityTransform.Scale = transform.Scale;
-            entityTransform.Rotation = transform.Rotation;
-        }
-
-        WorldActionSlot.ClearDirty();
     }
 }

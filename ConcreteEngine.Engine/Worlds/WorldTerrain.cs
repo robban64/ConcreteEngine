@@ -1,5 +1,3 @@
-#region
-
 using System.Diagnostics;
 using System.Numerics;
 using ConcreteEngine.Common.Numerics;
@@ -7,11 +5,9 @@ using ConcreteEngine.Common.Numerics.Maths;
 using ConcreteEngine.Engine.Assets.Data;
 using ConcreteEngine.Engine.Assets.Textures;
 using ConcreteEngine.Engine.Worlds.Data;
-using ConcreteEngine.Engine.Worlds.Render.Batching;
-using ConcreteEngine.Engine.Worlds.Render.Tables;
+using ConcreteEngine.Engine.Worlds.MeshGeneration;
+using ConcreteEngine.Engine.Worlds.Tables;
 using ConcreteEngine.Renderer.Data;
-
-#endregion
 
 namespace ConcreteEngine.Engine.Worlds;
 
@@ -23,26 +19,26 @@ public sealed class WorldTerrain
     public ModelId Model { get; private set; }
 
     public MaterialId Material { get; private set; }
-    internal TerrainBatcher Terrain { get; private set; }
+    internal TerrainMeshGenerator Terrain { get; private set; }
 
     private AssetRef<Texture2D> _heightmap;
 
     private MaterialTable _materialTable;
-    private IMeshTable _meshTable;
+    private readonly MeshTable _meshTable;
 
 
-    internal WorldTerrain()
+    internal WorldTerrain(MeshTable meshTable, MaterialTable materialTable)
     {
+        _meshTable = meshTable;
+        _materialTable = materialTable;
     }
 
     public bool IsActive => _heightmap.IsValid && Terrain.TextureRef.IsValid && Material > 0;
     public void SetMaterial(MaterialId materialId) => Material = materialId;
 
-    internal void AttachRenderer(TerrainBatcher batcher, MeshTable meshTable, MaterialTable materialTable)
+    internal void AttachRenderer(TerrainMeshGenerator meshGenerator)
     {
-        Terrain = batcher;
-        _meshTable = meshTable;
-        _materialTable = materialTable;
+        Terrain = meshGenerator;
     }
 
     public void CreateTerrainMesh(Texture2D heightmap)

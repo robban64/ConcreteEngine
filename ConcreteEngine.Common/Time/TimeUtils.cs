@@ -1,9 +1,5 @@
-#region
-
 using System.Diagnostics;
 using System.Runtime.CompilerServices;
-
-#endregion
 
 namespace ConcreteEngine.Common.Time;
 

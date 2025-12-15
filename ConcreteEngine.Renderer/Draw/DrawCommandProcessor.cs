@@ -1,15 +1,10 @@
-#region
-
 using System.Diagnostics;
-using System.Numerics;
 using ConcreteEngine.Common.Numerics;
 using ConcreteEngine.Graphics.Gfx;
 using ConcreteEngine.Graphics.Gfx.Contracts;
 using ConcreteEngine.Graphics.Gfx.Definitions;
 using ConcreteEngine.Renderer.Data;
 using ConcreteEngine.Renderer.Definitions;
-
-#endregion
 
 namespace ConcreteEngine.Renderer.Draw;
 
@@ -50,8 +45,6 @@ internal sealed class DrawCommandProcessor
         }
     }
 
-    public void SubmitAnimationData(ReadOnlySpan<Matrix4x4> boneData) =>
-        _buffers.UploadAnimationData(boneData);
 
     public void DrawMesh(DrawCommand cmd, DrawCommandTicket ticket)
     {
@@ -73,7 +66,8 @@ internal sealed class DrawCommandProcessor
             }
         }
 
-        if (cmd.AnimationSlot >= 0) _buffers.BindAnimation(cmd.AnimationSlot);
+        if (ticket.AnimationSlot > 0) _buffers.BindAnimation(ticket.AnimationSlot - 1);
+
         _buffers.BindDrawObject(ticket.SubmitIdx);
         _gfxCmd.BindMesh(cmd.MeshId);
         _gfxCmd.DrawMesh(cmd.MeshId, cmd.DrawCount);
@@ -148,18 +142,32 @@ internal sealed class DrawCommandProcessor
         Debug.Assert(ticket.Resolver is DrawCommandResolver.Highlight or DrawCommandResolver.BoundingVolume);
 
         var texSlots = _buffers.ResolveMaterial(cmd.MaterialId, out var materialMeta);
+        ref readonly var shaders = ref _ctx.CoreShaders;
 
-        var shader = _ctx.CoreShaders.HighlightShader;
-        var color = _highlightColor;
-        if (ticket.Resolver == DrawCommandResolver.BoundingVolume)
+        switch (ticket.Resolver)
         {
-            shader = _ctx.CoreShaders.BoundingBoxShader;
-            color = Color4.Green;
+            case DrawCommandResolver.Highlight:
+                if (ticket.AnimationSlot > 0)
+                {
+                    _buffers.BindAnimation(ticket.AnimationSlot - 1);
+                    _gfxCmd.UseShader(shaders.HighlightShader, _ctx.GetUniformLocations(shaders.HighlightShader));
+                    _gfxCmd.SetUniform(0, 1);
+                    _gfxCmd.SetUniform(1, in _highlightColor);
+                    break;
+                }
+
+                _gfxCmd.UseShader(shaders.HighlightShader, _ctx.GetUniformLocations(shaders.HighlightShader));
+                _gfxCmd.SetUniform(0, 0);
+                _gfxCmd.SetUniform(1, in _highlightColor);
+                break;
+            case DrawCommandResolver.BoundingVolume:
+                _gfxCmd.UseShader(shaders.BoundingBoxShader, _ctx.GetUniformLocations(shaders.BoundingBoxShader));
+                _gfxCmd.SetUniform(0, Color4.Green);
+                break;
+            case DrawCommandResolver.Wireframe:
+            default:
+                throw new NotSupportedException();
         }
-
-        _gfxCmd.UseShader(shader, _ctx.GetUniformLocations(shader));
-        _gfxCmd.SetUniform(0, in color);
-
 
         foreach (var slot in texSlots)
         {

@@ -1,17 +1,18 @@
 namespace ConcreteEngine.Engine.Worlds.Entities;
 
-public struct EntityEnumerator<T1>(EntityStore<T1> r)
+internal ref struct EntityEnumerator<T1>(EntityStore<T1> r)
     where T1 : unmanaged
 {
     private int _i = -1;
 
     public bool MoveNext() => ++_i < r.Count;
-    public Item Current => new Item(r.GetEntityId(_i), _i, r);
+    public Item Current => new Item(_i, r);
 
-    public readonly ref struct Item(EntityId e, int idx, EntityStore<T1> r)
+    public readonly ref struct Item(int idx, EntityStore<T1> r)
     {
-        public readonly EntityId Entity = e;
         public readonly int Index = idx;
+        public int CoreIndex => r.GetCoreIndex(Index);
+        public EntityId Entity => r.GetEntityId(Index);
         public ref T1 Component => ref r.GetByIndex(Index);
     }
 
@@ -21,8 +22,8 @@ public struct EntityEnumerator<T1>(EntityStore<T1> r)
         return this;
     }
 }
-
-public struct EntityEnumerator<T1, T2>(EntityStore<T1> r1, EntityStore<T2> r2)
+/*
+internal struct EntityEnumerator<T1, T2>(EntityStore<T1> r1, EntityStore<T2> r2)
     where T1 : unmanaged where T2 : unmanaged
 {
     private int _i = -1;
@@ -45,7 +46,7 @@ public struct EntityEnumerator<T1, T2>(EntityStore<T1> r1, EntityStore<T2> r2)
     }
 }
 
-public struct EntityEnumerator<T1, T2, T3>(EntityStore<T1> r1, EntityStore<T2> r2, EntityStore<T3> r3)
+internal struct EntityEnumerator<T1, T2, T3>(EntityStore<T1> r1, EntityStore<T2> r2, EntityStore<T3> r3)
     where T1 : unmanaged where T2 : unmanaged where T3 : unmanaged
 {
     private int _i = -1;
@@ -67,4 +68,4 @@ public struct EntityEnumerator<T1, T2, T3>(EntityStore<T1> r1, EntityStore<T2> r
         _i = -1;
         return this;
     }
-}
+}*/

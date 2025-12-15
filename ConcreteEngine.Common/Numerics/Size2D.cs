@@ -1,9 +1,5 @@
-#region
-
 using System.Numerics;
 using System.Runtime.Serialization;
-
-#endregion
 
 namespace ConcreteEngine.Common.Numerics;
 

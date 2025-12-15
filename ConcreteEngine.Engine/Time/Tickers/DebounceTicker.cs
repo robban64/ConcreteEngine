@@ -1,14 +1,14 @@
 namespace ConcreteEngine.Engine.Time.Tickers;
 
-internal sealed class DebounceTicker(int ticks)
+internal struct DebounceTicker(int ticksLeft)
 {
-    private int _ticksLeft = ticks;
+    public int TicksLeft = ticksLeft;
 
     public bool Tick()
     {
-        if (_ticksLeft > 0) _ticksLeft--;
-        return _ticksLeft == 0;
+        if (TicksLeft > 0) TicksLeft--;
+        return TicksLeft == 0;
     }
 
-    public void Debounce(int ticks) => _ticksLeft = int.Max(ticks, _ticksLeft);
+    public void Debounce(int ticks) => TicksLeft = int.Max(ticks, TicksLeft);
 }

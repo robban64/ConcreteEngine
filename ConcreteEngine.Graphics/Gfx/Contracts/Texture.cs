@@ -1,13 +1,15 @@
-#region
-
 using ConcreteEngine.Graphics.Gfx.Definitions;
-
-#endregion
 
 namespace ConcreteEngine.Graphics.Gfx.Contracts;
 
-public readonly record struct GfxTextureBorder(byte R, byte G, byte B, byte A, bool Enabled)
+public readonly struct GfxTextureBorder(byte r, byte g, byte b, byte a, bool enabled)
 {
+    public readonly byte R = r;
+    public readonly byte G = g;
+    public readonly byte B = b;
+    public readonly byte A = a;
+    public readonly bool Enabled = enabled;
+
     public static GfxTextureBorder Off => new(0, 0, 0, 0, false);
     public static GfxTextureBorder On => new(1, 1, 1, 1, true);
 }

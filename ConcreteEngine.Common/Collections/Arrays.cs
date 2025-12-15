@@ -1,7 +1,3 @@
-#region
-
-#endregion
-
 namespace ConcreteEngine.Common.Collections;
 
 public static class Arrays

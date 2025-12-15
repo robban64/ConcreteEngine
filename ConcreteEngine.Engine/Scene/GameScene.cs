@@ -1,11 +1,6 @@
-#region
-
 using ConcreteEngine.Engine.Configuration;
-using ConcreteEngine.Engine.Data;
 using ConcreteEngine.Engine.Worlds;
 using ConcreteEngine.Engine.Worlds.View;
-
-#endregion
 
 namespace ConcreteEngine.Engine.Scene;
 
@@ -14,7 +9,7 @@ public abstract class GameScene
 {
     protected GameSceneContext Context { get; private set; } = null!;
 
-    protected IWorld World => Context.World;
+    protected World World => Context.World;
     protected Camera3D Camera => World.Camera;
 
 
@@ -22,14 +17,9 @@ public abstract class GameScene
     {
     }
 
-    internal void Update(in UpdateTickInfo frameCtx)
+    internal void UpdateTick(float deltaTime)
     {
-        Context.Modules.Update(in frameCtx);
-    }
-
-    internal void UpdateTick(int tick, float fixedDt)
-    {
-        Context.Modules.GameTickUpdate(tick, fixedDt);
+        Context.Modules.GameTickUpdate(deltaTime);
     }
 
     internal void AttachContext(GameSceneContext context) => Context = context;

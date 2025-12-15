@@ -1,7 +1,3 @@
-#region
-
-#endregion
-
 namespace ConcreteEngine.Graphics.Gfx;
 
 public sealed class GfxContext

@@ -1,5 +1,3 @@
-#region
-
 using System.Diagnostics;
 using System.Diagnostics.CodeAnalysis;
 using ConcreteEngine.Common;
@@ -13,13 +11,11 @@ using ConcreteEngine.Renderer.Descriptors;
 using ConcreteEngine.Renderer.Passes;
 using ConcreteEngine.Renderer.Utility;
 
-#endregion
-
 namespace ConcreteEngine.Renderer.Registry;
 
 public interface IRenderFboRegistry
 {
-    public void RecreateFixedFrameBuffer<TTag>(FboVariant variant, Size2D outputSize)
+    void RecreateFixedFrameBuffer<TTag>(FboVariant variant, Size2D outputSize)
         where TTag : class;
 
     void RecreateScreenDependentFbo(Size2D outputSize);

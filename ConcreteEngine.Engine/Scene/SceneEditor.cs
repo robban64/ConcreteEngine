@@ -1,12 +1,8 @@
-#region
-
 using ConcreteEngine.Engine.Assets;
 using ConcreteEngine.Engine.Editor;
 using ConcreteEngine.Engine.Platform;
 using ConcreteEngine.Engine.Worlds;
 using ConcreteEngine.Engine.Worlds.Render;
-
-#endregion
 
 namespace ConcreteEngine.Engine.Scene;
 

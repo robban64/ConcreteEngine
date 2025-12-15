@@ -1,7 +1,3 @@
-#region
-
-#endregion
-
 namespace ConcreteEngine.Graphics.Gfx.Resources;
 
 internal readonly record struct NativeHandle(uint Value);

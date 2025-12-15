@@ -1,11 +1,7 @@
-#region
-
 using System.Runtime.CompilerServices;
 using ConcreteEngine.Graphics.Gfx.Resources;
 using ConcreteEngine.Renderer.Passes;
 using static ConcreteEngine.Renderer.Data.RenderLimits;
-
-#endregion
 
 namespace ConcreteEngine.Renderer.Registry;
 

@@ -1,11 +1,7 @@
-#region
-
 using System.Globalization;
 using System.Text;
 using ConcreteEngine.Shared.Diagnostics;
 using ConcreteEngine.Shared.Diagnostics.Extensions;
-
-#endregion
 
 namespace ConcreteEngine.Engine.Editor.Diagnostics;
 

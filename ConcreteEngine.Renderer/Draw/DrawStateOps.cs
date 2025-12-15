@@ -1,12 +1,8 @@
-#region
-
 using ConcreteEngine.Graphics.Gfx;
 using ConcreteEngine.Graphics.Gfx.Contracts;
 using ConcreteEngine.Graphics.Gfx.Resources;
 using ConcreteEngine.Renderer.Registry;
 using ConcreteEngine.Renderer.State;
-
-#endregion
 
 namespace ConcreteEngine.Renderer.Draw;
 
@@ -15,7 +11,7 @@ public sealed class DrawStateOps
     private readonly GfxCommands _gfxCmd;
     private readonly GfxTextures _gfxTextures;
     private readonly RenderRegistry _renderRegistry;
-    private readonly RenderView _renderView;
+    private readonly RenderCamera _renderCamera;
     private readonly RenderParamsSnapshot _paramsSnapshot;
     private readonly DrawBuffers _drawBuffers;
 
@@ -24,7 +20,7 @@ public sealed class DrawStateOps
     internal DrawStateOps(DrawStateContext ctx, DrawStateContextPayload ctxPayload, DrawBuffers drawBuffers)
     {
         _renderRegistry = ctxPayload.Registry;
-        _renderView = ctxPayload.RenderView;
+        _renderCamera = ctxPayload.RenderCamera;
         _paramsSnapshot = ctxPayload.Snapshot;
         _drawBuffers = drawBuffers;
         _gfxCmd = ctxPayload.Gfx.Commands;
@@ -37,16 +33,16 @@ public sealed class DrawStateOps
     {
         _ctx.SetDepthMode();
 
-        _renderView.ApplyLightViewOverride(_paramsSnapshot.DirLight.Direction, _paramsSnapshot);
-        _drawBuffers.UploadShadow(in _renderView.ProjectionViewMatrix);
-        _drawBuffers.UploadCameraView(_renderView);
+        _renderCamera.ToggleLightView();
+        _drawBuffers.UploadShadow(in _renderCamera.LightSpace.LightSpaceMatrix);
+        _drawBuffers.UploadCameraView(_renderCamera);
     }
 
     public void RestoreMode()
     {
         _ctx.ResetPassMode();
-        _renderView.ClearOverride();
-        _drawBuffers.UploadCameraView(_renderView);
+        _renderCamera.RestoreView();
+        _drawBuffers.UploadCameraView(_renderCamera);
     }
 
 

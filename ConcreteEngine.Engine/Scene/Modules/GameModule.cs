@@ -1,9 +1,3 @@
-#region
-
-using ConcreteEngine.Engine.Data;
-
-#endregion
-
 namespace ConcreteEngine.Engine.Scene.Modules;
 
 public abstract class GameModule
@@ -17,11 +11,7 @@ public abstract class GameModule
 
     public abstract void Initialize();
 
-    public virtual void UpdateTick(int tick, float fixedDt)
-    {
-    }
-
-    public virtual void Update(in UpdateTickInfo frameCtx)
+    public virtual void UpdateTick(float deltaTime)
     {
     }
 

@@ -1,9 +1,5 @@
-#region
-
 using System.Numerics;
 using Silk.NET.Input;
-
-#endregion
 
 namespace ConcreteEngine.Engine.Platform;
 

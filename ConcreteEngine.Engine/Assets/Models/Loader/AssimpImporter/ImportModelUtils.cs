@@ -1,9 +1,5 @@
-#region
-
 using ConcreteEngine.Common.Numerics;
 using Silk.NET.Assimp;
-
-#endregion
 
 namespace ConcreteEngine.Engine.Assets.Models.Loader.AssimpImporter;
 

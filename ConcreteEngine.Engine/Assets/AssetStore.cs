@@ -1,10 +1,6 @@
-#region
-
 using ConcreteEngine.Common;
 using ConcreteEngine.Engine.Assets.Data;
 using ConcreteEngine.Engine.Assets.Descriptors;
-
-#endregion
 
 namespace ConcreteEngine.Engine.Assets;
 
@@ -152,16 +148,15 @@ internal sealed class AssetStore : IAssetStore
     {
         foreach (var asset in _assets.Values)
         {
-            if (asset is TAsset typedAsset)
-            {
-                var it = transform(typedAsset);
-                if (it is null) continue;
-                list.Add(it);
-            }
+            if (asset is not TAsset typedAsset) continue;
+            var it = transform(typedAsset);
+            // ReSharper disable once ConditionIsAlwaysTrueOrFalseAccordingToNullableAPIContract
+            if (it is null) continue;
+            list.Add(it);
         }
     }
 
-    public void DrainSpan<TAsset, TData>(Span<TData> span, Action<TAsset, Span<TData>> transform)
+    public void FillSpan<TAsset, TData>(Span<TData> span, Action<TAsset, Span<TData>> transform)
         where TAsset : AssetObject where TData : unmanaged
     {
         foreach (var asset in _assets.Values)
@@ -243,7 +238,7 @@ internal sealed class AssetStore : IAssetStore
     {
         var id = MakeAssetId();
         var asset = factory(id, descriptor, isCoreAsset, out var fileSpecs);
-        ArgumentNullException.ThrowIfNull(fileSpecs, nameof(fileSpecs));
+        ArgumentNullException.ThrowIfNull(fileSpecs);
         RegisterInternal(id, asset, fileSpecs);
         return asset;
     }
@@ -291,7 +286,7 @@ internal sealed class AssetStore : IAssetStore
     private void RegisterInternal<TAsset>(AssetId id, TAsset asset, ReadOnlySpan<AssetFileSpec> fileSpecs)
         where TAsset : AssetObject
     {
-        ArgumentNullException.ThrowIfNull(asset, nameof(asset));
+        ArgumentNullException.ThrowIfNull(asset);
         ArgumentOutOfRangeException.ThrowIfLessThanOrEqual(id.Value, 0);
         ArgumentOutOfRangeException.ThrowIfNotEqual(asset.RawId.Value, id.Value);
 

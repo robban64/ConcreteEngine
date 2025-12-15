@@ -1,68 +1,110 @@
-#region
-
-using System.Runtime.CompilerServices;
+using ConcreteEngine.Editor.Bridge;
 using ConcreteEngine.Editor.Data;
-using ConcreteEngine.Editor.DataState;
+using ConcreteEngine.Editor.Definitions;
+using ConcreteEngine.Editor.Store;
+using ConcreteEngine.Editor.Store.Resources;
+using ConcreteEngine.Engine.Assets.Models;
 using ConcreteEngine.Engine.Worlds;
-using ConcreteEngine.Shared.RenderData;
-using ConcreteEngine.Shared.TransformData;
-
-#endregion
+using ConcreteEngine.Engine.Worlds.Render;
+using ConcreteEngine.Engine.Worlds.View;
+using ConcreteEngine.Shared.Rendering;
 
 namespace ConcreteEngine.Engine.Editor.Controller;
 
-internal sealed class WorldApiController(ApiContext ctx)
+internal sealed class WorldApiController(ApiContext ctx) : IEngineWorldController
 {
-    public long FillCameraData(long version, ref CameraEditorPayload data)
-    {
-        var camera = ctx.World.Camera;
-        if (camera.Generation == version) return camera.Generation;
+    private readonly World _world = ctx.World;
+    private readonly Camera3D _camera = ctx.World.Camera;
+    private readonly WorldRenderParams _renderParams = ctx.World.WorldRenderParams;
 
-        data.Generation = camera.Generation;
-        data.ViewTransform = new ViewTransformData(camera.Translation, camera.Scale, camera.Orientation);
-        data.Projection =
-            new ProjectionInfoData(camera.AspectRatio, camera.Fov, camera.NearPlane, camera.FarPlane);
-        data.Viewport = camera.Viewport;
-        return camera.Generation;
+    public void CommitCamera(EditorSlot<EditorCameraState> slot)
+    {
+        if (slot.Gen != _camera.Generation)
+        {
+            _camera.FillData(out slot.State);
+            slot.Gen = _camera.Generation;
+            return;
+        }
+
+        _camera.SetFromData(in slot.State);
     }
 
 
-    public long WriteCameraData(long version, ref CameraEditorPayload data)
+    public void FetchCamera(EditorSlot<EditorCameraState> slot)
     {
-        var camera = ctx.World.Camera;
-
-        if (camera.Generation == version) return version;
-        WorldActionSlot.SetSlot(version, in data);
-        return camera.Generation;
+        if (slot.Gen == _camera.Generation) return;
+        _camera.FillData(out slot.State);
+        slot.Gen = _camera.Generation;
     }
 
-    public long FillWorldParams(long version, ref WorldParamState data)
+    public void CommitWorldRenderParams(EditorSlot<WorldParamsData> slot)
     {
-        var snapshot = ctx.World.WorldRenderParams.Snapshot;
-        if (version == snapshot.Version) return version;
+        if (slot.Gen != _renderParams.Generation)
+        {
+            _renderParams.FillData(out slot.State);
+            slot.Gen = _renderParams.Generation;
+            return;
+        }
 
-        data.LightState.DirectionalLight = new DirLightState(in snapshot.DirLight);
-        data.LightState.AmbientLight = new AmbientState(in snapshot.Ambient);
-        data.FogState = new FogState(in snapshot.Fog);
-        data.PostState.Grade = new PostGradeState(in snapshot.PostEffects.Grade);
-        data.PostState.WhiteBalance = new PostWhiteBalanceState(snapshot.PostEffects.WhiteBalance);
-        data.PostState.Bloom = new PostBloomState(in snapshot.PostEffects.Bloom);
-        data.PostState.ImageFx = new PostImageFxState(in snapshot.PostEffects.ImageFx);
-
-        return snapshot.Version;
+        _renderParams.SetFromData(in slot.State);
     }
 
-    public long WriteWorldParams(long version, ref WorldParamState data)
+    public void FetchWorldRenderParams(EditorSlot<WorldParamsData> slot)
     {
-        var snapshot = ctx.World.WorldRenderParams.Snapshot;
-        if (version == snapshot.Version) return snapshot.Version;
+        if (slot.Gen == _renderParams.Generation) return;
+        _renderParams.FillData(out slot.State);
+        slot.Gen = _renderParams.Generation;
+    }
 
-        ref var slot = ref WorldActionSlot.WriteSlot<WorldParamsData>(version);
 
-        slot.DirLight = Unsafe.As<DirLightState, DirLightParams>(ref data.LightState.DirectionalLight);
-        slot.Ambient = Unsafe.As<AmbientState, AmbientParams>(ref data.LightState.AmbientLight);
-        slot.Fog = Unsafe.As<FogState, FogParams>(ref data.FogState);
-        slot.PostEffect = Unsafe.As<PostEffectState, PostEffectParams>(ref data.PostState);
-        return snapshot.Version;
+    public List<EditorParticleResource> GetEditorEmitter()
+    {
+        var span = _world.Particles.EmitterSpan;
+        List<EditorParticleResource> emitters = new(span.Length);
+        foreach (var it in span)
+        {
+            emitters.Add(new EditorParticleResource
+            {
+                MeshId = new EditorId(it.Mesh, EditorItemType.Model),
+                Id = new EditorId(it.EmitterHandle, EditorItemType.Particle),
+                Name = it.EmitterName
+            });
+        }
+
+        return emitters;
+    }
+
+    public List<EditorAnimationResource> GetEditorAnimations()
+    {
+        var span = _world.AnimationTableImpl.ModelIdSpan;
+        List<EditorAnimationResource> list = new(span.Length);
+        ctx.AssetSystem.StoreImpl.ExtractList<Model, EditorAnimationResource>(list, static (it) =>
+        {
+            if (it.AnimationId <= 0) return null!;
+            var span = it.Animation!.ClipDataSpan;
+            var clips = new EditorAnimationClip[span.Length];
+            for (int i = 0; i < span.Length; i++)
+            {
+                var c = span[i];
+                clips[i] = new EditorAnimationClip
+                {
+                    DisplayName = c.Name,
+                    Duration = c.Duration,
+                    TicksPerSecond = (float)c.TicksPerSecond,
+                    TrackCount = c.Tracks.Count
+                };
+            }
+
+            return new EditorAnimationResource
+            {
+                Name = it.Name,
+                Id = new EditorId(it.AnimationId, EditorItemType.Animation),
+                ModelId = new EditorId(it.ModelId, EditorItemType.Model),
+                Clips = clips
+            };
+        });
+
+
+        return list;
     }
 }

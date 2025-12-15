@@ -1,10 +1,6 @@
-#region
-
 using ConcreteEngine.Engine.Assets.Data;
 using ConcreteEngine.Engine.Assets.Descriptors;
 using ConcreteEngine.Engine.Assets.Internal;
-
-#endregion
 
 namespace ConcreteEngine.Engine.Assets.Models.Loader;
 

@@ -1,13 +1,9 @@
-#region
-
 using System.Numerics;
 using System.Runtime.CompilerServices;
 
-#endregion
-
 namespace ConcreteEngine.Engine.Worlds.Render.Data;
 
-public readonly struct BoneTrack
+internal readonly struct BoneTrack
 {
     private readonly KeyFrameVec3[] _positions;
     private readonly KeyFrameQuat[] _rotations;

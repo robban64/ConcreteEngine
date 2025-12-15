@@ -1,11 +1,7 @@
-#region
-
 using ConcreteEngine.Engine.Assets.Data;
 using ConcreteEngine.Graphics.Gfx.Contracts;
 using ConcreteEngine.Graphics.Gfx.Definitions;
 using ConcreteEngine.Graphics.Gfx.Resources;
-
-#endregion
 
 namespace ConcreteEngine.Engine.Assets.Textures;
 
@@ -30,19 +26,19 @@ internal readonly struct TextureUploadMeta(GfxTextureDescriptor textureDesc, Gfx
     public readonly GfxTextureProperties TextureProps = textureProps;
 }
 
-internal sealed class TextureImportResult
+internal ref struct TextureImportResult
 {
-    public byte[]? Data { get; init; } = null;
-    public required AssetFileSpec FileSpec { get; init; }
-    public required TextureCreationInfo CreationInfo { get; init; }
-    public required GfxTextureDescriptor TextureDesc { get; init; }
-    public required GfxTextureProperties TextureProps { get; init; }
+    public byte[]? Data;
+    public required AssetFileSpec FileSpec;
+    public required TextureCreationInfo CreationInfo;
+    public required GfxTextureDescriptor TextureDesc;
+    public required GfxTextureProperties TextureProps;
 }
 
-internal sealed class CubeMapImportResult
+internal ref struct CubeMapImportResult
 {
-    public required AssetFileSpec[] FaceFiles { get; init; }
-    public required CubeMapCreationInfo CreationInfo { get; init; }
-    public required GfxTextureDescriptor TextureDesc { get; init; }
-    public required GfxTextureProperties TextureProps { get; init; }
+    public required AssetFileSpec[] FaceFiles;
+    public required CubeMapCreationInfo CreationInfo;
+    public required GfxTextureDescriptor TextureDesc;
+    public required GfxTextureProperties TextureProps;
 }

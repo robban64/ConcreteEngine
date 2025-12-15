@@ -1,93 +1,157 @@
-#region
-
-using System.Diagnostics;
+using System.Runtime.CompilerServices;
 using ConcreteEngine.Common.Collections;
-
-#endregion
+using ConcreteEngine.Engine.Editor.Diagnostics;
+using ConcreteEngine.Shared.Diagnostics;
 
 namespace ConcreteEngine.Engine.Worlds.Entities;
 
-public sealed class EntityStore<T> where T : unmanaged
+internal interface IEntityStore
 {
-    private int[] _sparse;
+    int Count { get; }
+    bool IsDirty { get; }
+    void Remove(EntityId id);
+    void EndTick();
+}
+
+internal sealed class EntityStore<T> : IEntityStore where T : unmanaged
+{
     private T[] _data;
+    private int[] _coreIndices;
     private EntityId[] _entities;
+
+    //private Stack<int> _free = [];
 
     private int _idx = 0;
 
-    public bool IsDirty { get; set; }
+    public int Low { get; private set; }
+    public int High { get; private set; }
 
-    public EntityStore(int initialCapacity = 256)
+
+    public EntityStore(int initialCapacity)
     {
-        _sparse = new int[initialCapacity];
+        ArgumentOutOfRangeException.ThrowIfLessThan(initialCapacity, 32);
         _data = new T[initialCapacity];
         _entities = new EntityId[initialCapacity];
+        _coreIndices = new int[initialCapacity];
+
+        _coreIndices.AsSpan().Fill(-1);
     }
 
     public int Count => _idx;
+    public bool IsDirty { get; internal set; }
+
+
+    public Span<EntityId> GetEntitySpan() => _entities.AsSpan(0, _idx);
+    public Span<T> GetComponentSpan() => _data.AsSpan(0, _idx);
+    public Span<int> GetCoreIndexSpan() => _coreIndices.AsSpan(0, _idx);
+
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    private int FindIndex(EntityId e) => EntityUtility.BinarySearchEntity(GetEntitySpan(), e);
+
 
     public bool Has(EntityId e)
     {
-        var index = _sparse[e];
+        var index = FindIndex(e);
         return (uint)index < (uint)_idx && _entities[index] == e;
     }
 
-    public ref T GetById(EntityId e) => ref _data[_sparse[e]];
+    public bool Has(EntityId e, int coreIndex)
+    {
+        if (coreIndex < Low || coreIndex > High) return false;
+        var index = FindIndex(e);
+        return (uint)index < (uint)_idx && _entities[index] == e;
+    }
+
 
     public bool TryGetById(EntityId e, out T value)
     {
-        if (e.Id >= _idx)
+        var id = FindIndex(e);
+        if (id >= _idx || id < 0)
         {
             value = default;
             return false;
         }
 
-        value = _data[_sparse[e]];
+        value = _data[id];
         return true;
     }
 
-    public ref T GetByIndex(int i) => ref _data[i];
-
-    public EntityId GetEntityId(int i) => _entities[i];
-
-
-    public ref T Add(EntityId e, in T value)
+    public T GetByIdOrDefault(EntityId e)
     {
-        Debug.Assert(_data.Length == _entities.Length);
-        Debug.Assert(_sparse.Length >= e.Id);
-
-        if (_data.Length < _idx)
-        {
-            var newSize = Arrays.CapacityGrowthSafe(_data.Length, _idx, 2048);
-            Array.Resize(ref _data, newSize);
-            Array.Resize(ref _entities, newSize);
-            Console.WriteLine("EntityStore entities resize");
-        }
-
-        if (_sparse.Length < e.Id)
-        {
-            var newSize = Arrays.CapacityGrowthSafe(e.Id, _idx, 2048);
-            Array.Resize(ref _sparse, newSize);
-            Console.WriteLine("EntityStore sparse resize");
-        }
-
-        IsDirty = true;
-
-        _sparse[e] = _idx;
-        _entities[_idx] = e;
-        _data[_idx] = value;
-        return ref _data[_idx++];
+        var index = FindIndex(e);
+        if (index >= 0 && index < _data.Length) return _data[index];
+        return default;
     }
 
-    internal void EndTick()
+    public ref T GetById(EntityId e) => ref _data[FindIndex(e)];
+    public ref T GetByIndex(int i) => ref _data[i];
+    public EntityId GetEntityId(int i) => _entities[i];
+    public int GetCoreIndex(int i) => _coreIndices[i];
+
+    public T GetByIndexOrDefault(int index)
+    {
+        if (index >= 0 && index < _data.Length) return _data[index];
+        return default;
+    }
+
+
+    public void Add(EntityId e, int index, T value)
+    {
+        ArgumentOutOfRangeException.ThrowIfNegativeOrZero(e.Id, nameof(e));
+        ArgumentOutOfRangeException.ThrowIfNegative(index);
+
+        Low = _idx == 0 ? index : int.Min(Low, index);
+        High = int.Max(High, index);
+
+        EnsureCapacity(1);
+        _entities[_idx] = e;
+        _data[_idx] = value;
+        _coreIndices[_idx] = index;
+        IsDirty = true;
+        _idx++;
+    }
+
+    //TODO
+    public void Remove(EntityId e)
+    {
+        ArgumentOutOfRangeException.ThrowIfNegativeOrZero(e.Id, nameof(e));
+        ArgumentOutOfRangeException.ThrowIfGreaterThan(e.Id, _idx, nameof(e));
+
+        var idx = e - 1;
+        _entities[idx] = default;
+        _data[idx] = default;
+        //_free.Push(idx);
+    }
+
+    public void EndTick()
     {
         IsDirty = false;
     }
 
-    public Span<EntityId> AsEntitySpan() => _entities.AsSpan(0, _idx);
-    public Span<T> AsSpan() => _data.AsSpan(0, _idx);
+    private void EnsureCapacity(int amount)
+    {
+        var len = _idx + amount;
+        if (_entities.Length >= len) return;
 
-    public EntityEnumerator<T> GetEnumerator() => new(this);
+        if (_data.Length != _entities.Length)
+        {
+            throw new InvalidOperationException();
+        }
+
+        var prevLen = _coreIndices.Length;
+
+        var newSize = Arrays.CapacityGrowthSafe(_entities.Length, len);
+        Array.Resize(ref _entities, newSize);
+        Array.Resize(ref _data, newSize);
+        Array.Resize(ref _coreIndices, newSize);
+
+        _coreIndices.AsSpan(prevLen).Fill(-1);
+
+        Logger.LogString(LogScope.World, $"EntityStore: {typeof(T).Name} resized {newSize}", LogLevel.Warn);
+    }
+
+
+    // public EntityEnumerator<T> GetEnumerator() => new(this);
 /*
     public EntityEnumerator<T, T2> Query<T2>(EntityStore<T2> r2)
         where T2 : unmanaged =>

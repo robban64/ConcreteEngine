@@ -1,5 +1,3 @@
-#region
-
 global using ConcreteEngine.Graphics.Gfx.Resources;
 global using TextureStore =
     ConcreteEngine.Graphics.Gfx.Resources.GfxResourceStore<ConcreteEngine.Graphics.Gfx.Resources.TextureId,
@@ -25,5 +23,3 @@ global using RboStore =
 global using UboStore =
     ConcreteEngine.Graphics.Gfx.Resources.GfxResourceStore<ConcreteEngine.Graphics.Gfx.Resources.UniformBufferId,
         ConcreteEngine.Graphics.Gfx.Resources.UniformBufferMeta>;
-
-#endregion

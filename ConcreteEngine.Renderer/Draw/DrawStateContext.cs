@@ -1,5 +1,3 @@
-#region
-
 using ConcreteEngine.Graphics.Gfx;
 using ConcreteEngine.Graphics.Gfx.Contracts;
 using ConcreteEngine.Graphics.Gfx.Resources;
@@ -9,14 +7,12 @@ using ConcreteEngine.Renderer.Passes;
 using ConcreteEngine.Renderer.Registry;
 using ConcreteEngine.Renderer.State;
 
-#endregion
-
 namespace ConcreteEngine.Renderer.Draw;
 
 internal sealed class DrawStateContextPayload
 {
     public required RenderRegistry Registry { get; init; }
-    public required RenderView RenderView { get; init; }
+    public required RenderCamera RenderCamera { get; init; }
     public required RenderParamsSnapshot Snapshot { get; init; }
     public required GfxContext Gfx { get; init; }
 }

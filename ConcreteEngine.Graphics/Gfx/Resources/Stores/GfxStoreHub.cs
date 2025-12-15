@@ -1,12 +1,8 @@
-#region
-
 using System.Diagnostics;
 using System.Diagnostics.CodeAnalysis;
 using System.Runtime.CompilerServices;
 using ConcreteEngine.Graphics.Gfx.Definitions;
 using static ConcreteEngine.Graphics.GfxLimits;
-
-#endregion
 
 namespace ConcreteEngine.Graphics.Gfx.Resources;
 
@@ -80,14 +76,14 @@ internal sealed class GfxStoreHub
         }
     }
 
-    public TextureStore TextureStore { get; } = new(LargeCapacity);
-    public ShaderStore ShaderStore { get; } = new(MediumCapacity);
-    public MeshStore MeshStore { get; } = new(LargeCapacity);
-    public VboStore VboStore { get; } = new(LargeCapacity);
-    public IboStore IboStore { get; } = new(LargeCapacity);
-    public FboStore FboStore { get; } = new(LowCapacity);
-    public RboStore RboStore { get; } = new(LowCapacity);
-    public UboStore UboStore { get; } = new(LowCapacity);
+    public readonly TextureStore TextureStore = new(LargeCapacity);
+    public readonly ShaderStore ShaderStore = new(MediumCapacity);
+    public readonly MeshStore MeshStore = new(LargeCapacity);
+    public readonly VboStore VboStore = new(LargeCapacity);
+    public readonly IboStore IboStore = new(LargeCapacity);
+    public readonly FboStore FboStore = new(LowCapacity);
+    public readonly RboStore RboStore = new(LowCapacity);
+    public readonly UboStore UboStore = new(LowCapacity);
 
     [MethodImpl(MethodImplOptions.NoInlining)]
     [DoesNotReturn]

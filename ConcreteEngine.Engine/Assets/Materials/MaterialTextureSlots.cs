@@ -1,11 +1,7 @@
-#region
-
 using ConcreteEngine.Engine.Assets.Data;
 using ConcreteEngine.Graphics.Gfx.Definitions;
 using ConcreteEngine.Renderer.Data;
 using ConcreteEngine.Renderer.Definitions;
-
-#endregion
 
 namespace ConcreteEngine.Engine.Assets.Materials;
 
@@ -18,7 +14,7 @@ public sealed class MaterialTextureSlots
 
 
     private readonly AssetTextureSlot[] _assetSlots;
-    internal TextureSlotInfo[] CacheSlots { get; set; } = Array.Empty<TextureSlotInfo>();
+    internal TextureSlotInfo[] CacheSlots { get; set; } = [];
 
     public MaterialTextureSlots(ReadOnlySpan<AssetTextureSlot> slots)
     {

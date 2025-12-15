@@ -1,41 +1,26 @@
-#region
-
-#region
-
-#region
-
-#region
-
 using ConcreteEngine.Editor;
 using ConcreteEngine.Editor.Data;
-using ConcreteEngine.Editor.DataState;
 using ConcreteEngine.Editor.Definitions;
+using ConcreteEngine.Editor.Utils;
 using ConcreteEngine.Engine.Assets;
-using ConcreteEngine.Engine.Data;
+using ConcreteEngine.Engine.Editor.Controller;
 using ConcreteEngine.Engine.Editor.Diagnostics;
+using ConcreteEngine.Engine.Time;
 using ConcreteEngine.Engine.Worlds;
+using ConcreteEngine.Graphics;
 using ConcreteEngine.Graphics.Diagnostic;
+using ConcreteEngine.Renderer.State;
 using ConcreteEngine.Shared.Diagnostics;
 using Silk.NET.Input;
 using Silk.NET.OpenGL;
 using Silk.NET.Windowing;
-
-#endregion
-
-using ConcreteEngine.Engine.Editor.Controller;
-using ConcreteEngine.Renderer.State;
 using EditorCmd = ConcreteEngine.Editor.CommandDispatcher;
-
-#endregion
-
-#endregion
-
-#endregion
 
 namespace ConcreteEngine.Engine.Editor;
 
 internal sealed class EngineGateway : IDisposable
 {
+    private const int DefaultLogDrain = 12;
     private static EditorPortal _editor = null!;
     private static LogParser _logParser = null!;
 
@@ -46,11 +31,10 @@ internal sealed class EngineGateway : IDisposable
 
     public bool HasBoundEditor { get; private set; }
     public bool HasBoundMetrics { get; private set; }
-    public bool Enabled { get; private set; } = false;
+    public bool Enabled { get; private set; }
 
-    private int _ticker = 0, _mediumTicker = 0, _slowTicker = 0;
+    private int _ticker, _slowTicker;
 
-    private bool _drainGfxLogs;
 
     internal EngineGateway(GL gl, IWindow window, IInputContext inputCtx)
     {
@@ -69,18 +53,16 @@ internal sealed class EngineGateway : IDisposable
 
     public static void SetupLogger()
     {
-        if (Logger.Enabled && !Logger.IsAttached) Logger.Attach(EditorSetup.ProcessStringLog);
+        if (Logger.Enabled) Logger.Attach(EditorSetup.ProcessStringLog);
 
         GfxLog.ToggleLog(false, LogTopic.Unknown, LogScope.Backend);
         GfxLog.ToggleLog(false, LogTopic.RenderBuffer, LogScope.Gfx);
     }
 
-    public void SetupEditor(EditorEngineQueue editorQueues, World world, AssetSystem assetSystem,
-        RenderEngineFrameInfo frameInfo)
+    public void SetupEditor(EditorEngineQueue editorQueues, World world, AssetSystem assetSystem)
     {
         ArgumentNullException.ThrowIfNull(world);
         ArgumentNullException.ThrowIfNull(assetSystem);
-        ArgumentNullException.ThrowIfNull(frameInfo);
 
         if (Enabled) throw new InvalidOperationException(nameof(Enabled));
         if (HasBoundEditor) throw new InvalidOperationException(nameof(HasBoundEditor));
@@ -96,8 +78,12 @@ internal sealed class EngineGateway : IDisposable
         _interactionController = new InteractionController(_apiContext);
 
         EditorSetup.Editor = _editor!;
-        MetricRouter.Attach(world, assetSystem, frameInfo);
-        EngineDataProvider.Attach(world, assetSystem, _entityController, _worldController, _interactionController);
+        MetricRouter.Attach(world, assetSystem);
+        EngineResourceProvider.Attach(assetSystem, _entityController, _interactionController, _worldController);
+
+        EngineController.EntityController = _entityController;
+        EngineController.InteractionController = _interactionController;
+        EngineController.WorldController = _worldController;
 
         EditorSetup.RegisterDataProvider();
         EditorSetup.RegisterCommands();
@@ -109,16 +95,23 @@ internal sealed class EngineGateway : IDisposable
     }
 
 
-    public void RenderEditor(in RenderFrameInfo frameInfo)
+    public void RenderEditor(in RenderFrameInfo frameInfo, GfxFrameResult frameResult)
     {
         if (!Enabled || !HasBoundEditor) return;
-        _apiContext.OnRenderFrame(in frameInfo);
         _editor.Render(frameInfo.DeltaTime);
     }
 
-    public void RefreshMetrics(bool force = false)
+    public void UpdateDiagnostics(in RenderFrameInfo frameInfo, GfxFrameResult frameResult)
     {
         if (!Enabled) return;
+        DrainLogs();
+
+        if (_editor.IsMetricsMode)
+            RefreshMetrics(frameInfo, frameResult);
+    }
+
+    private void RefreshMetrics(in RenderFrameInfo frameInfo, GfxFrameResult frameResult, in bool force = false)
+    {
         if (force)
         {
             MetricsApi.RefreshFrameMetrics();
@@ -129,45 +122,38 @@ internal sealed class EngineGateway : IDisposable
             return;
         }
 
-        if (_ticker++ >= 4)
+        MetricsApi.FrameSample =
+            new RenderInfoSample(frameInfo.Fps, frameInfo.Alpha, frameResult.DrawCalls, frameResult.TriangleCount);
+        MetricsApi.FrameMetrics = new FrameMetric(frameInfo.FrameIndex, EngineTime.Timestamp, default);
+
+        MetricsApi.RefreshFrameMetrics();
+
+        switch (_ticker++)
         {
-            MetricsApi.RefreshFrameMetrics();
-            _ticker = 0;
+            case 0: MetricsApi.RefreshSceneMetrics(); break;
+            case 5: MetricsApi.RefreshGfxResourceMetrics(); break;
+            case >= 10:
+                MetricsApi.RefreshAssetMetrics();
+                _ticker = 0;
+                break;
         }
 
-        switch (_mediumTicker)
-        {
-            case 5: MetricsApi.RefreshSceneMetrics(); break;
-            case 10: MetricsApi.RefreshGfxResourceMetrics(); break;
-            case 15: MetricsApi.RefreshAssetMetrics(); break;
-        }
-
-        if (_mediumTicker++ >= 15) _mediumTicker = 0;
-
-        if (_slowTicker++ >= 30)
+        if (_slowTicker++ >= 16)
         {
             _slowTicker = 0;
             MetricsApi.RefreshMemoryMetrics();
         }
     }
 
-    public void DrainLogs()
+    private static void DrainLogs()
     {
-        if (_drainGfxLogs && GfxLog.Count > 0)
-        {
-            var logs = GfxLog.DrainLogs();
-            foreach (ref readonly var log in logs)
-                _editor.AddLog(_logParser.Format(in log));
-        }
+        var gfxLogLeft = DefaultLogDrain;
+        var engineLogLeft = DefaultLogDrain;
+        while (GfxLog.TryDrainLog(out var log) && gfxLogLeft-- > 0)
+            _editor.AddLog(_logParser.Format(in log));
 
-        if (!_drainGfxLogs && Logger.Count > 0)
-        {
-            var logs = Logger.DrainLogs();
-            foreach (ref readonly var log in logs)
-                _editor.AddLog(_logParser.Format(in log));
-        }
-
-        _drainGfxLogs = !_drainGfxLogs;
+        while (Logger.TryDrainLog(out var log) && engineLogLeft-- > 0)
+            _editor.AddLog(_logParser.Format(in log));
     }
 
     public void Dispose()
@@ -185,17 +171,17 @@ internal sealed class EngineGateway : IDisposable
         public static void RegisterCommands()
         {
             // Editor commands
-            EditorCmd.RegisterEditorCmd<EditorShaderPayload>(CoreCmdNames.AssetShader, EditorCommandScope.Engine,
+            EditorCmd.RegisterEditorCmd<EditorShaderCommand>(CoreCmdNames.AssetShader, EditorCommandScope.Engine,
                 EngineCommandHandler.OnAssetShaderCmd);
 
-            EditorCmd.RegisterEditorCmd<EditorShadowPayload>(CoreCmdNames.WorldShadow, EditorCommandScope.Engine,
+            EditorCmd.RegisterEditorCmd<EditorShadowCommand>(CoreCmdNames.WorldShadow, EditorCommandScope.Engine,
                 EngineCommandHandler.OnWorldShadowCmd);
 
             // Console commands
-            EditorCmd.RegisterConsoleCmd<EditorShaderPayload>(CoreCmdNames.AssetShader, string.Empty,
+            EditorCmd.RegisterConsoleCmd<EditorShaderCommand>(CoreCmdNames.AssetShader, string.Empty,
                 CommandParser.ParseShaderRequest);
 
-            EditorCmd.RegisterConsoleCmd<EditorShadowPayload>(CoreCmdNames.WorldShadow, string.Empty,
+            EditorCmd.RegisterConsoleCmd<EditorShadowCommand>(CoreCmdNames.WorldShadow, string.Empty,
                 CommandParser.ParseShadowRequest);
 
             // Misc
@@ -203,26 +189,19 @@ internal sealed class EngineGateway : IDisposable
                 EngineCommandHandler.OnStructSizesCmd);
         }
 
-        public static unsafe void RegisterDataProvider()
+        public static void RegisterDataProvider()
         {
-            EditorApi.FetchAssetStoreData = EngineDataProvider.GetAssetStoreData;
-            EditorApi.FetchAssetObjectFiles = EngineDataProvider.GetAssetObjectFiles;
-            EditorApi.FetchEntityView = EngineDataProvider.GetEntityView;
+            EditorApi.FetchAssetDetailed = EngineResourceProvider.GetAssetObjectFiles;
+            EditorApi.LoadAssetResources = EngineResourceProvider.CreateEditorAssets;
+            EditorApi.LoadEntityResources = EngineResourceProvider.CreateEntityList;
 
-            EditorApi.SendEditorMouseRequest = EngineDataProvider.OnEditorClick;
-
-            EditorApi.EntityApi = new ApiDataRefRequest<EntityDataPayload>(
-                &EngineDataProvider.FillEntityData, &EngineDataProvider.WriteToEntity);
-            EditorApi.CameraApi = new ApiDataRefRequest<CameraEditorPayload>(
-                &EngineDataProvider.FillCameraData, &EngineDataProvider.WriteCameraData);
-            EditorApi.WorldParamsApi = new ApiDataRefRequest<WorldParamState>(
-                &EngineDataProvider.FillWorldParams, &EngineDataProvider.WriteWorldParams);
+            EditorApi.LoadParticleResources = EngineResourceProvider.GetParticleResources;
+            EditorApi.LoadAnimationResources = EngineResourceProvider.GetAnimationResources;
         }
 
 
-        public static unsafe void RegisterMetrics()
+        public static void RegisterMetrics()
         {
-            MetricsApi.PullFrameMetrics = &MetricRouter.GetFrameMetrics;
             MetricsApi.PullMaterialMetrics = MetricRouter.GetMaterialMetrics;
             MetricsApi.PullSceneMetrics = MetricRouter.GetSceneMetrics;
             MetricsApi.PullMemoryMetrics = MetricRouter.GetMemoryMetrics;

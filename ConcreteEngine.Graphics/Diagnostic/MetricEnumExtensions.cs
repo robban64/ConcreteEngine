@@ -1,9 +1,5 @@
-#region
-
 using ConcreteEngine.Graphics.Gfx.Definitions;
 using ConcreteEngine.Shared.Diagnostics;
-
-#endregion
 
 namespace ConcreteEngine.Graphics.Diagnostic;
 

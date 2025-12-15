@@ -1,20 +1,15 @@
-#region
-
 using System.Numerics;
 using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
 using System.Runtime.Serialization;
 
-#endregion
-
 namespace ConcreteEngine.Common.Numerics;
 
-[StructLayout(LayoutKind.Sequential)]
-[DataContract]
-public readonly struct Vector2I(int x, int y) : IEquatable<Vector2I>, IComparable<Vector2I>
+[StructLayout(LayoutKind.Sequential), DataContract]
+public struct Vector2I(int x, int y) : IEquatable<Vector2I>, IComparable<Vector2I>
 {
-    [DataMember(Name = "x")] public readonly int X = x;
-    [DataMember(Name = "y")] public readonly int Y = y;
+    [DataMember(Name = "x")] public int X = x;
+    [DataMember(Name = "y")] public int Y = y;
 
     public static Vector2I Zero => new(0, 0);
     public static Vector2I UnitX => new(1, 0);
@@ -26,7 +21,6 @@ public readonly struct Vector2I(int x, int y) : IEquatable<Vector2I>, IComparabl
 
     public static Vector2I From((int x, int y) t) => new(t.x, t.y);
 
-    public (int x, int y) ToTuple() => (X, Y);
 
     public static implicit operator Vector2I((int x, int y) t) => new(t.x, t.y);
     public static implicit operator (int x, int y)(Vector2I v) => (v.X, v.Y);
@@ -81,18 +75,18 @@ public readonly struct Vector2I(int x, int y) : IEquatable<Vector2I>, IComparabl
 
     public static int PerpDot(Vector2I a, Vector2I b) => a.X * b.Y - a.Y * b.X;
 
-    public int Manhattan()
+    public readonly int Manhattan()
     {
         int ax = X < 0 ? -X : X;
         int ay = Y < 0 ? -Y : Y;
         return ax + ay;
     }
 
-    public float Length() => MathF.Sqrt(X * X + Y * Y);
+    public readonly float Length() => MathF.Sqrt(X * X + Y * Y);
 
-    public float LengthSquared() => X * X + Y * Y;
+    public readonly float LengthSquared() => X * X + Y * Y;
 
-    public Vector2I Scaled(float k) => new((int)MathF.Round(X * k), (int)MathF.Round(Y * k));
+    public readonly Vector2I Scaled(float k) => this with { X = (int)MathF.Round(X * k), Y = (int)MathF.Round(Y * k) };
 
     public static Vector2I Lerp(Vector2I a, Vector2I b, float t)
     {
@@ -101,11 +95,11 @@ public readonly struct Vector2I(int x, int y) : IEquatable<Vector2I>, IComparabl
         return new Vector2I((int)MathF.Round(ix), (int)MathF.Round(iy));
     }
 
-    public Vector2I PerpendicularCW() => new(Y, -X);
+    public Vector2I PerpendicularCw() => this with { X = Y, Y = -X };
 
-    public Vector2I PerpendicularCCW() => new(-Y, X);
+    public Vector2I PerpendicularCcw() => this with { X = -Y, Y = X };
 
-    public bool TryCopyTo(Span<int> dst)
+    public readonly bool TryCopyTo(Span<int> dst)
     {
         if (dst.Length < 2) return false;
         dst[0] = X;
@@ -113,18 +107,18 @@ public readonly struct Vector2I(int x, int y) : IEquatable<Vector2I>, IComparabl
         return true;
     }
 
-    public void CopyTo(Span<int> dst)
+    public readonly void CopyTo(Span<int> dst)
     {
         dst[0] = X;
         dst[1] = Y;
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public bool Equals(Vector2I other) => X == other.X && Y == other.Y;
+    public readonly bool Equals(Vector2I other) => X == other.X && Y == other.Y;
 
-    public override bool Equals(object? obj) => obj is Vector2I v && Equals(v);
+    public readonly override bool Equals(object? obj) => obj is Vector2I v && Equals(v);
 
-    public override int GetHashCode()
+    public readonly override int GetHashCode()
     {
         unchecked
         {
@@ -135,16 +129,10 @@ public readonly struct Vector2I(int x, int y) : IEquatable<Vector2I>, IComparabl
     public static bool operator ==(Vector2I a, Vector2I b) => a.Equals(b);
     public static bool operator !=(Vector2I a, Vector2I b) => !a.Equals(b);
 
-    public int CompareTo(Vector2I other)
+    public readonly int CompareTo(Vector2I other)
     {
         if (X != other.X) return X < other.X ? -1 : 1;
         if (Y != other.Y) return Y < other.Y ? -1 : 1;
         return 0;
-    }
-
-    public void Deconstruct(out int xOut, out int yOut)
-    {
-        xOut = X;
-        yOut = Y;
     }
 }

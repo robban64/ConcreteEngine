@@ -1,10 +1,6 @@
-#region
-
 using Silk.NET.Assimp;
 using AssimpScene = Silk.NET.Assimp.Scene;
 using AssimpNode = Silk.NET.Assimp.Node;
-
-#endregion
 
 namespace ConcreteEngine.Engine.Assets.Models.Loader.AssimpImporter;
 
@@ -31,7 +27,7 @@ internal sealed class AssimpScenePreProcessor(ModelLoaderState state)
         state.HasAnimationChannels = HasAnimationChannels(scene);
     }
 
-    unsafe void ProcessNodes(Assimp assimp, AssimpNode* currentNode)
+    private unsafe void ProcessNodes(Assimp assimp, AssimpNode* currentNode)
     {
         for (int i = 0; i < currentNode->MNumChildren; i++)
         {

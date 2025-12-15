@@ -1,12 +1,8 @@
-#region
-
 using ConcreteEngine.Common;
 using ConcreteEngine.Common.Numerics;
 using ConcreteEngine.Engine.Assets.Data;
 using ConcreteEngine.Engine.Worlds.Data;
 using ConcreteEngine.Graphics.Gfx.Definitions;
-
-#endregion
 
 namespace ConcreteEngine.Engine.Assets.Models;
 

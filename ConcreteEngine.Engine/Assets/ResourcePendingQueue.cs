@@ -1,17 +1,19 @@
-#region
-
 using ConcreteEngine.Engine.Assets.Data;
-
-#endregion
 
 namespace ConcreteEngine.Engine.Assets;
 
-public readonly record struct RecreateRequest(
-    int ResourceId,
-    AssetId AssetId,
-    AssetKind Kind,
-    byte Priority = 0
-);
+public readonly struct RecreateRequest(
+    int resourceId,
+    AssetId assetId,
+    AssetKind kind,
+    byte priority = 0
+)
+{
+    public readonly int ResourceId = resourceId;
+    public readonly AssetId AssetId = assetId;
+    public readonly AssetKind Kind = kind;
+    public readonly byte Priority = priority;
+}
 
 internal sealed class ResourcePendingQueue
 {

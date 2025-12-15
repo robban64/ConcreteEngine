@@ -1,12 +1,8 @@
-#region
-
 using System.Runtime.CompilerServices;
 using ConcreteEngine.Graphics.Gfx.Contracts;
 using ConcreteEngine.Graphics.Gfx.Definitions;
 using ConcreteEngine.Graphics.OpenGL.Utilities;
 using Silk.NET.OpenGL;
-
-#endregion
 
 namespace ConcreteEngine.Graphics.OpenGL;
 
@@ -126,14 +122,14 @@ internal sealed class GlBuffers : IGraphicsDriverModule
 
         if (desc.Storage == BufferStorage.Static)
         {
-            if (nullData || data.IsEmpty) _gl.NamedBufferStorage(buffer, (nuint)desc.Size, (void*)0, mask);
-            else _gl.NamedBufferStorage(buffer, (nuint)desc.Size, data, mask);
+            if (nullData || data.IsEmpty) _gl.NamedBufferStorage(buffer, desc.Size, (void*)0, mask);
+            else _gl.NamedBufferStorage(buffer, desc.Size, data, mask);
         }
         else
         {
             var usage = desc.Storage.ToBufferUsage();
-            if (nullData || data.IsEmpty) _gl.NamedBufferData(buffer, (nuint)desc.Size, (void*)0, usage.ToGlEnum());
-            else _gl.NamedBufferData(buffer, (nuint)desc.Size, data, usage.ToGlEnum());
+            if (nullData || data.IsEmpty) _gl.NamedBufferData(buffer, desc.Size, (void*)0, usage.ToGlEnum());
+            else _gl.NamedBufferData(buffer, desc.Size, data, usage.ToGlEnum());
         }
 
         return new NativeHandle(buffer);

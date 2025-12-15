@@ -20,49 +20,59 @@ internal static class CoreShaderManifest
         ColorFilterManifest
     ];
 
-    /*
-    public static Dictionary<string, ShaderDescriptor> GetManifestDict =>
-        new()
-        {
-            ["Composite"] = CompositeManifest,
-            ["Present"] = PresentManifest,
-            ["ColorFilter"] = ColorFilterManifest,
-            ["Terrain"] = TerrainManifest,
-            ["Skybox"] = SkyboxManifest,
-            ["Model"] = ModelManifest,
-            ["Depth"] = DepthManifest,
-            ["Highlight"] = HighlightManifest,
-            ["BoundingBox"] = BoundingManifest
-        };
-*/
 
     public static ShaderManifest GetManifest => new() { Records = ManifestRecords };
 
 
-    public static ShaderDescriptor DepthManifest => new("Depth", "depth.vert.glsl", "depth.frag.glsl");
+    private static ShaderDescriptor DepthManifest =>
+        new() { Name = "Depth", VertexFilename = "depth.vert.glsl", FragmentFilename = "depth.frag.glsl" };
 
 
-    public static ShaderDescriptor ModelManifest => new("Model", "model.vert.glsl", "model.frag.glsl");
+    private static ShaderDescriptor ModelManifest =>
+        new() { Name = "Model", VertexFilename = "model.vert.glsl", FragmentFilename = "model.frag.glsl" };
 
-    public static ShaderDescriptor ModelAnimatedManifest =>
-        new("ModelAnimated", "model-animated.vert.glsl", "model.frag.glsl");
+    private static ShaderDescriptor ModelAnimatedManifest =>
+        new()
+        {
+            Name = "ModelAnimated",
+            VertexFilename = "model-animated.vert.glsl",
+            FragmentFilename = "model.frag.glsl"
+        };
 
-    public static ShaderDescriptor TerrainManifest => new("Terrain", "terrain.vert.glsl", "terrain.frag.glsl");
-    public static ShaderDescriptor SkyboxManifest => new("Skybox", "skybox.vert.glsl", "skybox.frag.glsl");
-    public static ShaderDescriptor ParticleManifest => new("Particle", "particle.vert.glsl", "particle.frag.glsl");
+    private static ShaderDescriptor TerrainManifest =>
+        new() { Name = "Terrain", VertexFilename = "terrain.vert.glsl", FragmentFilename = "terrain.frag.glsl" };
+
+    private static ShaderDescriptor SkyboxManifest =>
+        new() { Name = "Skybox", VertexFilename = "skybox.vert.glsl", FragmentFilename = "skybox.frag.glsl" };
+
+    private static ShaderDescriptor ParticleManifest =>
+        new() { Name = "Particle", VertexFilename = "particle.vert.glsl", FragmentFilename = "particle.frag.glsl" };
 
 
-    public static ShaderDescriptor BoundingManifest =>
-        new("BoundingBox", "model-plain.vert.glsl", "bounding-box.frag.glsl");
+    private static ShaderDescriptor BoundingManifest =>
+        new()
+        {
+            Name = "BoundingBox",
+            VertexFilename = "model-plain.vert.glsl",
+            FragmentFilename = "bounding-box.frag.glsl"
+        };
 
-    public static ShaderDescriptor HighlightManifest =>
-        new("Highlight", "model-plain.vert.glsl", "highlight.frag.glsl");
+    private static ShaderDescriptor HighlightManifest =>
+        new()
+        {
+            Name = "Highlight", VertexFilename = "model-plain.vert.glsl", FragmentFilename = "highlight.frag.glsl"
+        };
 
 
-    public static ShaderDescriptor CompositeManifest => new("Composite", "screen.vert.glsl", "composite.frag.glsl");
+    private static ShaderDescriptor CompositeManifest =>
+        new() { Name = "Composite", VertexFilename = "screen.vert.glsl", FragmentFilename = "composite.frag.glsl" };
 
-    public static ShaderDescriptor PresentManifest => new("Present", "screen.vert.glsl", "present.frag.glsl");
+    private static ShaderDescriptor PresentManifest =>
+        new() { Name = "Present", VertexFilename = "screen.vert.glsl", FragmentFilename = "present.frag.glsl" };
 
-    public static ShaderDescriptor ColorFilterManifest =>
-        new("ColorFilter", "screen.vert.glsl", "color-filter.frag.glsl");
+    private static ShaderDescriptor ColorFilterManifest =>
+        new()
+        {
+            Name = "ColorFilter", VertexFilename = "screen.vert.glsl", FragmentFilename = "color-filter.frag.glsl"
+        };
 }

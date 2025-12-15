@@ -1,13 +1,9 @@
-#region
-
 using ConcreteEngine.Graphics.Gfx;
 using ConcreteEngine.Graphics.Gfx.Resources;
 using ConcreteEngine.Renderer.Draw;
 using ConcreteEngine.Renderer.Passes;
 using ConcreteEngine.Renderer.Registry;
 using ConcreteEngine.Renderer.State;
-
-#endregion
 
 namespace ConcreteEngine.Renderer;
 
@@ -21,7 +17,7 @@ internal sealed class RenderStateContext
     public MeshId FsqMesh { get; init; }
 
     public required RenderParamsSnapshot Snapshot { get; init; }
-    public required RenderView View { get; init; }
+    public required RenderCamera Camera { get; init; }
 
     public void SetCurrentFrameInfo(in RenderFrameInfo frameInfo, in RenderRuntimeParams frameParams)
     {

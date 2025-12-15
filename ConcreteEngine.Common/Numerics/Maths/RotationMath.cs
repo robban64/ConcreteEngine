@@ -1,10 +1,6 @@
-#region
-
 using System.Numerics;
 using System.Runtime.CompilerServices;
 using static ConcreteEngine.Common.Numerics.Maths.FloatMath;
-
-#endregion
 
 namespace ConcreteEngine.Common.Numerics.Maths;
 
@@ -27,8 +23,9 @@ public static class RotationMath
         return new YawPitch(yawDeg, pitchDeg);
     }
 
+
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public static void YawPitchToQuaternion(YawPitch orientation, out Quaternion quaternion)
+    public static Quaternion YawPitchToQuaternion(YawPitch orientation)
     {
         float yaw = orientation.Yaw * Deg2Rad;
         float pitch = orientation.Pitch * Deg2Rad;
@@ -36,7 +33,7 @@ public static class RotationMath
         var qy = Quaternion.CreateFromAxisAngle(Vector3.UnitY, yaw);
         var qx = Quaternion.CreateFromAxisAngle(Vector3.UnitX, pitch);
 
-        quaternion = Quaternion.Normalize(Quaternion.Multiply(qy, qx));
+        return Quaternion.Multiply(qy, qx);
     }
 
     public static Quaternion EulerDegreesToQuaternion(in Vector3 eulerDegrees)
@@ -49,7 +46,7 @@ public static class RotationMath
         var qy = Quaternion.CreateFromAxisAngle(Vector3.UnitY, ry);
         var qz = Quaternion.CreateFromAxisAngle(Vector3.UnitZ, rz);
 
-        var q = Quaternion.Normalize(Quaternion.Multiply(Quaternion.Multiply(qy, qx), qz));
+        var q = Quaternion.Multiply(Quaternion.Multiply(qy, qx), qz);
         return q;
     }
 

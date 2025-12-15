@@ -1,13 +1,9 @@
-#region
-
 using System.Numerics;
 using ConcreteEngine.Common;
 using ConcreteEngine.Common.Numerics;
 using ConcreteEngine.Graphics.Gfx.Contracts;
 using ConcreteEngine.Graphics.Gfx.Definitions;
 using ConcreteEngine.Renderer.Registry;
-
-#endregion
 
 namespace ConcreteEngine.Renderer.Descriptors;
 
@@ -41,9 +37,9 @@ public sealed class RegisterFboEntry
         return this;
     }
 
-    public RegisterFboEntry UseCalculatedSize(CalcFboOutputDel calcDel, Vector2 ratio)
+    public RegisterFboEntry UseCalculatedSize(FboSizePolicyDel del, Vector2 ratio)
     {
-        FboSizePolicy = RenderFboSizePolicy.Calculated(calcDel, ratio);
+        FboSizePolicy = RenderFboSizePolicy.Calculated(del, ratio);
         return this;
     }
 

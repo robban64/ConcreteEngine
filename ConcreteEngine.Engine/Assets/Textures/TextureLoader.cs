@@ -1,14 +1,9 @@
-#region
-
 using ConcreteEngine.Engine.Assets.Data;
 using ConcreteEngine.Engine.Assets.Descriptors;
 using ConcreteEngine.Engine.Assets.Internal;
-using ConcreteEngine.Engine.Assets.IO;
 using ConcreteEngine.Graphics.Gfx.Contracts;
 using ConcreteEngine.Graphics.Gfx.Definitions;
 using StbImageSharp;
-
-#endregion
 
 namespace ConcreteEngine.Engine.Assets.Textures;
 
@@ -29,6 +24,8 @@ internal sealed class TextureLoader(AssetGfxUploader uploader)
             ArgumentOutOfRangeException.ThrowIfNotEqual(image.Width, descriptor.Height, nameof(image.Width));
         }
 
+        var settings = AssetConfigLoader.GraphicSettings;
+
 
         var desc = new GfxTextureDescriptor(
             width: image.Width,
@@ -39,7 +36,7 @@ internal sealed class TextureLoader(AssetGfxUploader uploader)
 
         var props = new GfxTextureProperties(
             preset: TexturePreset.LinearMipmapRepeat,
-            anisotropy: TextureAnisotropy.X4,
+            anisotropy: settings.GetClampedAnisotropy(TextureAnisotropy.X4),
             lodBias: 0
         );
 
@@ -61,7 +58,7 @@ internal sealed class TextureLoader(AssetGfxUploader uploader)
     {
         //StbImage.stbi_set_flip_vertically_on_load(1);
 
-        var path = AssetPaths.GetTexturePath(record.Filename);
+        var path = Path.Combine(AssetPaths.TexturePath, record.Filename);
 
         var fi = new FileInfo(path);
         if (!fi.Exists) throw new FileNotFoundException("File not found.", path);
@@ -81,9 +78,11 @@ internal sealed class TextureLoader(AssetGfxUploader uploader)
 
         var props = new GfxTextureProperties(
             preset: record.Preset,
-            anisotropy: record.Anisotropy,
+            anisotropy: AssetConfigLoader.GraphicSettings.GetClampedAnisotropy(record.Anisotropy),
             lodBias: record.LodBias
         );
+        
+        //Console.WriteLine(props.Anisotropy.ToString());
 
         var fileSpec = new AssetFileSpec(
             storage: AssetStorageKind.FileSystem,
@@ -113,7 +112,8 @@ internal sealed class TextureLoader(AssetGfxUploader uploader)
 
         for (int i = 0; i < 6; i++)
         {
-            var path = AssetPaths.GetCubeMapPath(record.Textures[i]);
+            var path = Path.Combine(AssetPaths.CubeMapPath, record.Textures[i]);
+
             var fi = new FileInfo(path);
             if (!fi.Exists) throw new FileNotFoundException("File not found.", path);
 
@@ -151,6 +151,7 @@ internal sealed class TextureLoader(AssetGfxUploader uploader)
             FaceFiles = faceFiles, CreationInfo = info, TextureDesc = desc, TextureProps = props
         };
     }
+
 
     private static ColorComponents GetColorComponent(TexturePixelFormat format)
     {

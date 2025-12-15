@@ -1,9 +1,5 @@
-#region
-
 using ConcreteEngine.Graphics.Gfx.Definitions;
 using static ConcreteEngine.Graphics.GfxLimits;
-
-#endregion
 
 namespace ConcreteEngine.Graphics.Gfx.Resources;
 
@@ -25,7 +21,7 @@ internal sealed class BackendStoreHub
     }
 
 
-    public void Register<TId, THandle>(BackendResourceStore<TId, THandle> store)
+    internal void Register<TId, THandle>(BackendResourceStore<TId, THandle> store)
         where TId : unmanaged, IResourceId where THandle : unmanaged, IResourceHandle
     {
         if (!_stores.TryAdd(store.Kind, store))

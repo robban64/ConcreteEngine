@@ -1,12 +1,8 @@
-#region
-
 using System.Numerics;
 using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
 using ConcreteEngine.Common.Numerics;
-using ConcreteEngine.Shared.RenderData;
-
-#endregion
+using ConcreteEngine.Shared.Rendering;
 
 namespace ConcreteEngine.Renderer.Data;
 

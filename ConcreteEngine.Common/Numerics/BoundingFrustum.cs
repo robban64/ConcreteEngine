@@ -1,10 +1,6 @@
-#region
-
 using System.Numerics;
 using System.Runtime.CompilerServices;
 using static ConcreteEngine.Common.Numerics.Maths.CollisionMethods;
-
-#endregion
 
 namespace ConcreteEngine.Common.Numerics;
 
@@ -17,44 +13,43 @@ public struct BoundingFrustum
     public Plane NearPlane;
     public Plane FarPlane;
 
-    public BoundingFrustum(in Matrix4x4 matrix)
+    public BoundingFrustum(in Matrix4x4 viewProj)
     {
-        LeftPlane = Plane.Normalize(
-            new Plane(matrix.M14 + matrix.M11,
-                matrix.M24 + matrix.M21,
-                matrix.M34 + matrix.M31,
-                matrix.M44 + matrix.M41)
-        );
+        LeftPlane = NormalizePlane(
+            viewProj.M14 + viewProj.M11,
+            viewProj.M24 + viewProj.M21,
+            viewProj.M34 + viewProj.M31,
+            viewProj.M44 + viewProj.M41);
 
-        RightPlane = Plane.Normalize(
-            new Plane(matrix.M14 - matrix.M11,
-                matrix.M24 - matrix.M21,
-                matrix.M34 - matrix.M31,
-                matrix.M44 - matrix.M41)
-        );
+        RightPlane = NormalizePlane(
+            viewProj.M14 - viewProj.M11,
+            viewProj.M24 - viewProj.M21,
+            viewProj.M34 - viewProj.M31,
+            viewProj.M44 - viewProj.M41);
 
-        TopPlane = Plane.Normalize(
-            new Plane(matrix.M14 - matrix.M12,
-                matrix.M24 - matrix.M22,
-                matrix.M34 - matrix.M32,
-                matrix.M44 - matrix.M42)
-        );
+        TopPlane = NormalizePlane(
+            viewProj.M14 - viewProj.M12,
+            viewProj.M24 - viewProj.M22,
+            viewProj.M34 - viewProj.M32,
+            viewProj.M44 - viewProj.M42);
 
-        BottomPlane = Plane.Normalize(
-            new Plane(matrix.M14 + matrix.M12,
-                matrix.M24 + matrix.M22,
-                matrix.M34 + matrix.M32,
-                matrix.M44 + matrix.M42)
-        );
+        BottomPlane = NormalizePlane(
+            viewProj.M14 + viewProj.M12,
+            viewProj.M24 + viewProj.M22,
+            viewProj.M34 + viewProj.M32,
+            viewProj.M44 + viewProj.M42);
 
-        NearPlane = Plane.Normalize(new Plane(matrix.M13, matrix.M23, matrix.M33, matrix.M43));
+        NearPlane = NormalizePlane(
+            viewProj.M14 + viewProj.M13,
+            viewProj.M24 + viewProj.M23,
+            viewProj.M34 + viewProj.M33,
+            viewProj.M44 + viewProj.M43);
 
-        FarPlane = Plane.Normalize(
-            new Plane(matrix.M14 - matrix.M13,
-                matrix.M24 - matrix.M23,
-                matrix.M34 - matrix.M33,
-                matrix.M44 - matrix.M43)
-        );
+        FarPlane = NormalizePlane(
+            viewProj.M14 - viewProj.M13,
+            viewProj.M24 - viewProj.M23,
+            viewProj.M34 - viewProj.M33,
+            viewProj.M44 - viewProj.M43);
     }
 
     public BoundingFrustum(ReadOnlySpan<Vector3> corners)
@@ -67,14 +62,15 @@ public struct BoundingFrustum
         BottomPlane = Plane.Normalize(PlaneFromPoints(corners[2], corners[3], corners[6]));
     }
 
-    public readonly bool ContainsBox(in BoundingBox box)
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public readonly bool IntersectsBox(in BoundingBox box)
     {
-        return BoxInFrontOfPlane(in box, in LeftPlane)
-               && BoxInFrontOfPlane(in box, in RightPlane)
-               && BoxInFrontOfPlane(in box, in TopPlane)
-               && BoxInFrontOfPlane(in box, in BottomPlane)
-               && BoxInFrontOfPlane(in box, in NearPlane)
-               && BoxInFrontOfPlane(in box, in FarPlane);
+        return !IsOutsidePlane(in box, in LeftPlane) &&
+               !IsOutsidePlane(in box, in RightPlane) &&
+               !IsOutsidePlane(in box, in TopPlane) &&
+               !IsOutsidePlane(in box, in BottomPlane) &&
+               !IsOutsidePlane(in box, in NearPlane) &&
+               !IsOutsidePlane(in box, in FarPlane);
     }
 
     public readonly void GetCorners(Span<Vector3> corners)
@@ -95,5 +91,13 @@ public struct BoundingFrustum
         var normal = Vector3.Normalize(Vector3.Cross(b - a, c - a));
         float d = -Vector3.Dot(normal, a);
         return new Plane(normal, d);
+    }
+
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    private static Plane NormalizePlane(float x, float y, float z, float d)
+    {
+        float lengthSq = x * x + y * y + z * z;
+        float invLength = 1.0f / MathF.Sqrt(lengthSq);
+        return new Plane(x * invLength, y * invLength, z * invLength, d * invLength);
     }
 }

@@ -1,10 +1,6 @@
-#region
-
 using ConcreteEngine.Graphics.Diagnostic;
 using ConcreteEngine.Shared.Diagnostics;
 using static ConcreteEngine.Graphics.Gfx.Definitions.ResourceKind;
-
-#endregion
 
 namespace ConcreteEngine.Graphics.Gfx.Resources;
 
@@ -46,7 +42,7 @@ internal sealed class GfxResourceManager : IGfxResourceManager
     }
 
 
-    internal void OnDeleted(in DeleteResourceCommand cmd)
+    private static void OnDeleted(in DeleteResourceCommand cmd)
     {
         GfxLog.LogBackend(cmd.BackendHandle.Value, cmd.Handle, cmd.Handle.Kind.ToLogTopic(), LogAction.Destroy);
     }

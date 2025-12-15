@@ -1,34 +1,32 @@
-#region
-
 using System.Numerics;
 using System.Runtime.CompilerServices;
 
-#endregion
-
 namespace ConcreteEngine.Common.Numerics;
 
-public readonly record struct Color4(float R, float G, float B, float A = 1f)
+public record struct Color4(float R, float G, float B, float A = 1f)
 {
-    public static Color4 operator *(Color4 c, float s) => c.Multiply(s);
-    public static Color4 operator *(float s, Color4 c) => c.Multiply(s);
+    public void WithAlpha(float a) => A = ClampNorm(a);
+    public void WithAlphaByte(byte a) => A = a / 255f;
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public Vector4 AsVec4() => new(R, G, B, A);
+    public readonly Vector4 AsVec4() => new(R, G, B, A);
 
-    public Vector3 AsVec3() => new(R, G, B);
+    public readonly Vector3 AsVec3() => new(R, G, B);
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public Color4 Multiply(float scalar) => new(ClampNorm(R * scalar), ClampNorm(G * scalar), ClampNorm(B * scalar), A);
-
-    public Color4 WithAlpha(float a) => this with { A = ClampNorm(a) };
-    public Color4 WithAlphaByte(byte a) => this with { A = a / 255f };
+    public readonly Color4 Multiply(float scalar) =>
+        new(ClampNorm(R * scalar), ClampNorm(G * scalar), ClampNorm(B * scalar), A);
 
 
-    public (byte R, byte G, byte B, byte A) ToBytes() =>
+    public readonly (byte R, byte G, byte B, byte A) ToBytes() =>
         ((byte)MathF.Round(R * 255f),
             (byte)MathF.Round(G * 255f),
             (byte)MathF.Round(B * 255f),
             (byte)MathF.Round(A * 255f));
+
+
+    public static Color4 operator *(Color4 c, float s) => c.Multiply(s);
+    public static Color4 operator *(float s, Color4 c) => c.Multiply(s);
 
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]

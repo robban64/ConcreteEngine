@@ -1,55 +1,33 @@
-#region
-
 using System.Runtime.CompilerServices;
 using ConcreteEngine.Shared.Diagnostics;
-
-#endregion
 
 namespace ConcreteEngine.Graphics.Diagnostic;
 
 public static class GfxLog
 {
-    private static readonly LogEvent[] LogBuffer = new LogEvent[64];
+    public const int MaxQueueCapacity = 256;
+    private static readonly Queue<LogEvent> Logs = new(128);
     private static readonly List<LogFilterWildcard> IgnoreFilter = new(4);
 
-    private static int _idx = 0;
+    public static bool Enabled { get; set; }
 
-    private static bool _enabled = false;
+    public static int Count => Logs.Count;
 
-    public static bool Enabled
-    {
-        get => _enabled;
-        set
-        {
-            if (_enabled == value) return;
-            LogBuffer.AsSpan().Clear();
-            _idx = 0;
-            _enabled = value;
-        }
-    }
+    public static bool TryDrainLog(out LogEvent log) => Logs.TryDequeue(out log);
 
-    public static int Count => _idx;
-
-    public static ReadOnlySpan<LogEvent> DrainLogs()
-    {
-        var index = _idx;
-        _idx = 0;
-        return LogBuffer.AsSpan(0, index);
-    }
-
-    private static void Event(in LogEvent log)
+    internal static void Event(in LogEvent log)
     {
         if (!Enabled) return;
-        if (_idx >= 128)
+        if (Logs.Count >= MaxQueueCapacity)
         {
             Console.WriteLine("Log buffer full");
             return;
         }
 
-        if (FilterLog(in log))
+        if (IgnoreFilter.Count > 0 && FilterLog(in log))
             return;
 
-        LogBuffer[_idx++] = log;
+        Logs.Enqueue(log);
     }
 
 
@@ -64,6 +42,18 @@ public static class GfxLog
         else if (!enabled && idx == -1)
             IgnoreFilter.Add(rule);
     }
+
+    private static bool FilterLog(in LogEvent log) => FilterLogIndex(log.Topic, log.Scope, log.Action, log.Level) >= 0;
+
+
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    private static int FilterLogIndex(LogTopic topic, LogScope scope, LogAction action, LogLevel level)
+    {
+        var packed = LogFilterWildcard.Pack((byte)topic, (byte)scope, (byte)action, (byte)level);
+        return LogFilterWildcard.IndexAt(packed, IgnoreFilter);
+    }
+
+    // Utilities
 
 
     private static LogEvent LogGfx(int id, int slot, ushort gen, ushort flags, bool alive, LogTopic topic,
@@ -86,15 +76,4 @@ public static class GfxLog
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     internal static void LogBackend(uint handle, GfxHandle h, LogTopic topic, LogAction action, ushort flags = 0) =>
         Event(LogBk(handle, h.Slot, flags, h.IsValid, topic, action));
-
-
-    private static bool FilterLog(in LogEvent log) => FilterLogIndex(log.Topic, log.Scope, log.Action, log.Level) >= 0;
-
-
-    [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    private static int FilterLogIndex(LogTopic topic, LogScope scope, LogAction action, LogLevel level)
-    {
-        var packed = LogFilterWildcard.Pack((byte)topic, (byte)scope, (byte)action, (byte)level);
-        return LogFilterWildcard.IndexAt(packed, IgnoreFilter);
-    }
 }

@@ -1,5 +1,3 @@
-#region
-
 using System.Runtime.CompilerServices;
 using ConcreteEngine.Common.Numerics;
 using ConcreteEngine.Editor;
@@ -9,45 +7,43 @@ using ConcreteEngine.Engine.Assets.Data;
 using ConcreteEngine.Engine.Editor.Data;
 using ConcreteEngine.Engine.Editor.Definitions;
 using ConcreteEngine.Engine.Worlds.Data;
-using ConcreteEngine.Engine.Worlds.Entities;
+using ConcreteEngine.Engine.Worlds.Entities.Components;
 using ConcreteEngine.Engine.Worlds.Render.Data;
-using ConcreteEngine.Graphics.Gfx.Resources;
+using ConcreteEngine.Engine.Worlds.Tables;
 using ConcreteEngine.Renderer.Data;
-using ConcreteEngine.Renderer.Passes;
-
-#endregion
 
 namespace ConcreteEngine.Engine.Editor;
 
 internal static class EngineCommandHandler
 {
-    internal static EditorEngineQueue CommandQueues { get; set; } //EngineCommandRecord queue
+    internal static EditorEngineQueue CommandQueues { get; set; }
 
-    public static CommandResponse OnAssetShaderCmd(in EditorShaderPayload shaderPayload)
+    public static CommandResponse OnAssetShaderCmd(in EditorShaderCommand shaderCommand)
     {
-        ArgumentException.ThrowIfNullOrWhiteSpace(shaderPayload.Name);
-        switch (shaderPayload.RequestAction)
+        ArgumentException.ThrowIfNullOrWhiteSpace(shaderCommand.Name);
+        switch (shaderCommand.RequestAction)
         {
             case EditorRequestAction.Reload:
-            {
-                CommandQueues.EnqueueDeferred(new AssetCommandRecord(shaderPayload.Name, AssetCommandAction.ReloadAsset,
-                    AssetKind.Shader));
-                break;
-            }
+                {
+                    CommandQueues.EnqueueDeferred(new AssetCommandRecord(shaderCommand.Name,
+                        AssetCommandAction.ReloadAsset,
+                        AssetKind.Shader));
+                    break;
+                }
             default:
-                throw new ArgumentException("Unknown RequestAction", nameof(shaderPayload.RequestAction));
+                throw new ArgumentException("Unknown RequestAction", nameof(shaderCommand.RequestAction));
         }
 
         return CommandResponse.Ok();
     }
 
-    public static CommandResponse OnWorldShadowCmd(in EditorShadowPayload payload)
+    public static CommandResponse OnWorldShadowCmd(in EditorShadowCommand command)
     {
-        if (payload.Size <= 0)
-            throw new ArgumentException("Supported shadow map size are (1024, 2048, 4096, 8192)", nameof(payload.Size));
+        if (command.Size <= 0)
+            throw new ArgumentException("Supported shadow map size are (1024, 2048, 4096, 8192)", nameof(command.Size));
 
         CommandQueues.EnqueueDeferred(
-            new FboCommandRecord(FboCommandAction.RecreateShadowFbo, new Size2D(payload.Size)));
+            new FboCommandRecord(FboCommandAction.RecreateShadowFbo, new Size2D(command.Size)));
         return CommandResponse.Ok();
     }
 
@@ -64,7 +60,7 @@ internal static class EngineCommandHandler
         ctx.AddLog(StructStr<DrawObjectUniform>());
         ctx.AddLog(StructStr<RecreateRequest>());
         ctx.AddLog(StructStr<GfxDebugLog>());
-        */
+
 
         ctx.AddLog(StructStr<TextureMeta>());
         ctx.AddLog(StructStr<MeshMeta>());
@@ -82,13 +78,22 @@ internal static class EngineCommandHandler
 
         ctx.AddLog(StructStr<CameraEditorPayload>());
         ctx.AddLog(StructStr<EntityDataPayload>());
-
-        ctx.AddLog(StructStr<Transform>());
-        ctx.AddLog(StructStr<ModelComponent>());
+        */
 
         ctx.AddLog(StructStr<MeshPart>());
-        ctx.AddLog(StructStr<DrawEntity>());
         ctx.AddLog(StructStr<MaterialTag>());
+
+        ctx.AddLog(StructStr<Transform>());
+        ctx.AddLog(StructStr<DrawEntity>());
+        ctx.AddLog(StructStr<DrawEntityMeta>());
+        ctx.AddLog(StructStr<DrawEntitySource>());
+
+        ctx.AddLog(StructStr<DrawCommand>());
+        ctx.AddLog(StructStr<DrawCommandMeta>());
+
+
+        ctx.AddLog(StructStr<RenderSourceComponent>());
+        ctx.AddLog(StructStr<AnimationComponent>());
     }
 
 

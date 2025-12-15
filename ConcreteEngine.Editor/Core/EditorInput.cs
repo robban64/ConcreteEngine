@@ -23,10 +23,10 @@ internal static class EditorInput
     private static DragState _dragState;
     private static bool _wasDragging;
 
-    private static float _accumScrollY = 0f;
-    private static float _accumScrollX = 0f;
-    private static float _scrollY = 0f;
-    private static float _scrollX = 0f;
+    private static float _accumScrollY;
+    private static float _accumScrollX;
+    private static float _scrollY;
+    private static float _scrollX;
 
     private const float ScrollSpeed = 12f;
     private const float SmoothFactor = 0.15f;

@@ -33,6 +33,7 @@ internal sealed class EntityCoreStore
         _boxes = new BoxComponent[initialCapacity];
     }
 
+    // Getters
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public ref RenderSourceComponent GetSourceById(EntityId e) => ref _sources[e - 1];
 
@@ -42,10 +43,13 @@ internal sealed class EntityCoreStore
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public ref BoxComponent GetBoxById(EntityId e) => ref _boxes[e - 1];
 
+    // Spans
     public Span<EntityId> GetEntitySpan() => _entities.AsSpan(0, _idx);
+    public Span<RenderSourceComponent> GetSourceSpan() => _sources.AsSpan(0, _idx);
     public Span<Transform> GetTransformSpan() => _transforms.AsSpan(0, _idx);
     public Span<BoxComponent> GetBoxSpan() => _boxes.AsSpan(0, _idx);
 
+    // Views
     public EntityView GetEntityView(EntityId e)
     {
         var idx = e - 1;
@@ -53,8 +57,11 @@ internal sealed class EntityCoreStore
         return new EntityView(e, ref _sources[idx], ref _transforms[idx], ref _boxes[idx]);
     }
 
+    public EntitiesReadView GetReadView() =>
+        new(_sources.AsSpan(0, _idx), _transforms.AsSpan(0, _idx), _boxes.AsSpan(0, _idx));
+
     public EntitiesCoreView GetCoreView() =>
-        new(_entities.AsSpan(0, _idx), _sources.AsSpan(0, _idx), _transforms.AsSpan(0, _idx), _boxes.AsSpan(0, _idx));
+        new(_sources.AsSpan(0, _idx), _transforms.AsSpan(0, _idx), _boxes.AsSpan(0, _idx));
 
 
     public EntityId AddEntity(RenderSourceComponent renderSource, in Transform transform, in BoundingBox bounds,

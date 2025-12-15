@@ -8,10 +8,9 @@ namespace ConcreteEngine.Engine.Worlds.Render.Processor;
 
 internal static class DrawEntityCollector
 {
-    public static EntityId CollectEntities(in DrawEntityContext ctx)
+    public static EntityId CollectEntities(in DrawEntityContext ctx, in EntitiesReadView view)
     {
         var len = ctx.EntitySpan.Length;
-        var view = ctx.WorldEntities.Core.GetCoreView();
         int highEntityId = 0;
 
         for (var i = 0; i < len; i++)

@@ -1,3 +1,4 @@
+using System.Runtime.CompilerServices;
 using ConcreteEngine.Common.Numerics;
 using ConcreteEngine.Engine.Worlds.Data;
 using ConcreteEngine.Engine.Worlds.Entities;
@@ -85,9 +86,11 @@ public sealed class WorldEntities
     }
 
 
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     internal EntityEnumerator<T> Query<T>() where T : unmanaged => new(GenericStores<T>.Store);
 
-    internal EntityCoreEnumerator CoreQuery() => new(_coreStore);
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    internal EntityCoreEnumerator CoreQuery() => new(_coreStore.GetCoreView());
 
     private static class GenericStores<T> where T : unmanaged
     {

@@ -14,12 +14,13 @@ internal static class DrawParticleProcessor
 {
     private static readonly List<ParticleEmitter> Emitters = new(8);
 
-    internal static void TagParticles(WorldParticles worldParticles, in DrawEntityContext ctx)
+    internal static void TagParticles(in DrawEntityContext ctx, WorldParticles worldParticles,
+        WorldEntities worldEntities)
     {
         Emitters.Clear();
-        Emitters.EnsureCapacity(ctx.WorldEntities.Particles.Count);
+        Emitters.EnsureCapacity(worldEntities.Particles.Count);
 
-        foreach (var query in ctx.WorldEntities.Query<ParticleComponent>())
+        foreach (var query in worldEntities.Query<ParticleComponent>())
         {
             var index = ctx.ByEntityIdSpan[query.Entity];
             if (index == -1) continue;

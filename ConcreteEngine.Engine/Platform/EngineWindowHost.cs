@@ -4,6 +4,7 @@ using ConcreteEngine.Graphics;
 using ConcreteEngine.Graphics.Error;
 using ConcreteEngine.Graphics.Gfx.Definitions;
 using Silk.NET.Input;
+using Silk.NET.Maths;
 using Silk.NET.OpenGL;
 using Silk.NET.Windowing;
 
@@ -11,7 +12,7 @@ namespace ConcreteEngine.Engine.Platform;
 
 public sealed class EngineWindowHost
 {
-    private readonly WindowOptions _options;
+    private WindowOptions _options;
     private readonly GraphicsBackend _backend;
 
     private bool _disposed;
@@ -23,28 +24,29 @@ public sealed class EngineWindowHost
 
     private GameEngine _engine = null!;
 
-    public IWindow InternalWindow => _window;
-
     public GraphicsBackend Backend => _backend;
 
 
     private GameEngineBuilder? _builder = null;
+    private readonly EngineGraphicSettings _graphicSettings;
 
     public EngineWindowHost(
         WindowOptions options,
         GraphicsBackend backend)
     {
-        var config = AssetConfigLoader.LoadGraphicSettings();
+        _graphicSettings = AssetConfigLoader.LoadGraphicSettings();
+        
         _options = options;
         _backend = backend;
-        _options.VSync = config.Vsync;
-        _options.UpdatesPerSecond = config.UpdateFps;
-        _options.FramesPerSecond = config.RenderFps;
     }
 
     public void Run(GameEngineBuilder builder)
     {
         _builder = builder;
+        _options.Size = new Vector2D<int>(_graphicSettings.StartWindowWidth, _graphicSettings.StartWindowHeight);
+        _options.VSync = _graphicSettings.Vsync;
+        _options.UpdatesPerSecond = _graphicSettings.UpdateFps;
+        _options.FramesPerSecond = _graphicSettings.RenderFps;
 
         _window = Window.Create(_options);
         _window.Load += OnLoad;

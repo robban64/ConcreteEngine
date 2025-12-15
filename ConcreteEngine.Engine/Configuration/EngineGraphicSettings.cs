@@ -11,6 +11,8 @@ public enum EngineGraphicsLevel : byte
 
 public sealed class EngineGraphicSettings
 {
+    public int StartWindowWidth { get; init; } = 1280;
+    public int StartWindowHeight { get; init; } = 700;
     public int UpdateFps { get; init; } = 60;
     public int RenderFps { get; init; } = 144;
     public bool Vsync { get; init; }
@@ -19,6 +21,9 @@ public sealed class EngineGraphicSettings
 
     public void Validate()
     {
+        if(StartWindowWidth < 32 || StartWindowHeight < 32)
+            throw new ArgumentOutOfRangeException();
+        
         if (UpdateFps > RenderFps || UpdateFps < 20 || RenderFps < 20 || UpdateFps > 200 || RenderFps > 300)
             throw new InvalidOperationException();
     }
@@ -30,8 +35,7 @@ public sealed class EngineGraphicSettings
         if (anisotropy == TextureAnisotropy.Off) return TextureAnisotropy.Off;
         if (anisotropy == TextureAnisotropy.Default)
         {
-            if (TextureQuality == EngineGraphicsLevel.Low) return TextureAnisotropy.X2;
-            return TextureAnisotropy.X4;
+            return TextureQuality == EngineGraphicsLevel.Low ? TextureAnisotropy.X2 : TextureAnisotropy.X4;
         }
 
         switch (TextureQuality)
@@ -45,8 +49,5 @@ public sealed class EngineGraphicSettings
             default:
                 throw new ArgumentOutOfRangeException(nameof(TextureQuality));
         }
-
-
-        return (TextureAnisotropy)int.Min((int)anisotropy, (int)max);
     }
 }

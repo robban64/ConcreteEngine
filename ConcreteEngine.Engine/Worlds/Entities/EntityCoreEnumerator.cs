@@ -4,11 +4,14 @@ using ConcreteEngine.Engine.Worlds.Entities.Components;
 
 namespace ConcreteEngine.Engine.Worlds.Entities;
 
-internal ref struct EntityCoreEnumerator(EntityCoreStore r)
+internal ref struct EntityCoreEnumerator(EntitiesCoreView view)
 {
+    private readonly EntitiesCoreView _view = view;
+
     private int _i = -1;
-    public bool MoveNext() => ++_i < r.Count;
-    public EntityCoreQuery Current => new(_i, r);
+
+    public bool MoveNext() => ++_i < _view.Count;
+    public readonly EntityCoreQuery Current => new(_i, _view);
 
     public EntityCoreEnumerator GetEnumerator()
     {
@@ -16,19 +19,28 @@ internal ref struct EntityCoreEnumerator(EntityCoreStore r)
         return this;
     }
 
-    internal readonly ref struct EntityCoreQuery(int idx, EntityCoreStore r)
+    internal readonly ref struct EntityCoreQuery(int idx, EntitiesCoreView view)
     {
+        private readonly EntitiesCoreView _view = view;
         public readonly int Index = idx;
         public readonly EntityId Entity = new(idx + 1);
-        public ref RenderSourceComponent Source => ref r.GetSourceById(Entity);
-        public ref Transform Transform => ref r.GetTransformById(Entity);
-        public ref BoxComponent Box => ref r.GetBoxById(Entity);
 
-        [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public void FillTransformBox(out Transform transform, out BoundingBox box)
+        public ref RenderSourceComponent Source
         {
-            transform = Transform;
-            box = Box.Bounds;
+            [MethodImpl(MethodImplOptions.AggressiveInlining)]
+            get => ref _view.Sources[Index];
+        }
+
+        public ref Transform Transform
+        {
+            [MethodImpl(MethodImplOptions.AggressiveInlining)]
+            get => ref _view.Transforms[Index];
+        }
+
+        public ref BoxComponent Box
+        {
+            [MethodImpl(MethodImplOptions.AggressiveInlining)]
+            get => ref _view.Boxes[Index];
         }
     }
 }

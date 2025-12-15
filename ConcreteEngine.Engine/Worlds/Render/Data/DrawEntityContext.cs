@@ -31,12 +31,10 @@ internal ref struct DrawEntityView(int idx, ref DrawEntity entity)
 }
 
 internal readonly ref struct DrawEntityContext(
-    WorldEntities worldEntities,
     Span<DrawEntity> drawEntities,
     Span<EntityId> entityIndices,
     Span<int> byEntityId)
 {
-    public readonly WorldEntities WorldEntities = worldEntities;
     public readonly Span<DrawEntity> EntitySpan = drawEntities;
     public readonly Span<EntityId> EntityIndices = entityIndices;
     public readonly Span<int> ByEntityIdSpan = byEntityId;

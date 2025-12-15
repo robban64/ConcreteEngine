@@ -1,5 +1,6 @@
 using System.Numerics;
 using ConcreteEngine.Engine.Time;
+using ConcreteEngine.Engine.Worlds.Entities;
 using ConcreteEngine.Engine.Worlds.Entities.Components;
 using ConcreteEngine.Engine.Worlds.Render.Data;
 using ConcreteEngine.Engine.Worlds.Utility;
@@ -10,29 +11,25 @@ namespace ConcreteEngine.Engine.Worlds.Render.Processor;
 
 internal static class DrawTagResolver
 {
-    internal static void TagDepthKeys(Camera3D camera, in DrawEntityContext ctx)
+    internal static void TagDepthKeys(in DrawEntityContext ctx, in EntitiesReadView view, in CameraRenderView renderView)
     {
-        var projInfo = camera.RenderView;
-        var viewDepth = DepthKeyUtility.ExtractDepthVector(in projInfo.ViewMatrix);
-        var nearFar = new Vector2(projInfo.ProjectionInfo.Near, projInfo.ProjectionInfo.Far);
-
-        var coreEntities = ctx.WorldEntities.Core.GetCoreView();
+        var viewDepth = DepthKeyUtility.ExtractDepthVector(in renderView.ViewMatrix);
+        var nearFar = new Vector2(renderView.ProjectionInfo.Near, renderView.ProjectionInfo.Far);
 
         foreach (var it in ctx)
         {
             ref var entity = ref it.DrawEntity;
-            var worldPos = coreEntities.GetTransform(entity.Entity).Translation;
+            var worldPos = view.GetTransform(entity.Entity).Translation;
             var depthKey = DepthKeyUtility.MakeDepthKey(in viewDepth, worldPos, nearFar);
             entity.Meta.DepthKey = depthKey;
         }
     }
 
-    internal static void TagEffectResolvers(in DrawEntityContext ctx)
+    internal static void TagEffectResolvers(in DrawEntityContext ctx, WorldEntities worldEntities)
     {
-        var worldEntities = ctx.WorldEntities;
         var deltaTime = EngineTime.DeltaTime;
-
-        foreach (var resolved in worldEntities.ResolvedEntitySpan)
+        var resolvers = worldEntities.ResolvedEntitySpan;
+        foreach (var resolved in resolvers)
         {
             if (!resolved.Entity.IsValid) continue;
 
@@ -44,7 +41,7 @@ internal static class DrawTagResolver
         }
 
         var slot = 1;
-        foreach (var query in ctx.WorldEntities.Query<AnimationComponent>())
+        foreach (var query in worldEntities.Query<AnimationComponent>())
         {
             var entityId = query.Entity;
             ref var component = ref query.Component;

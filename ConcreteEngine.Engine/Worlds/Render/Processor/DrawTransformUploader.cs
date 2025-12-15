@@ -1,6 +1,7 @@
 using System.Numerics;
 using System.Runtime.CompilerServices;
 using ConcreteEngine.Common.Numerics.Maths;
+using ConcreteEngine.Engine.Worlds.Entities;
 using ConcreteEngine.Engine.Worlds.Render.Data;
 using ConcreteEngine.Engine.Worlds.Tables;
 using ConcreteEngine.Renderer.Data;
@@ -10,10 +11,8 @@ namespace ConcreteEngine.Engine.Worlds.Render.Processor;
 
 internal static class DrawTransformUploader
 {
-    public static void UploadTransform(in DrawEntityContext ctx, in DrawCommandUploader uploader, MeshTable meshTable)
+    public static void UploadTransform(in DrawEntityContext ctx, in EntitiesReadView view, in DrawCommandUploader uploader, MeshTable meshTable)
     {
-        var view = ctx.WorldEntities.Core.GetCoreView();
-
         foreach (var it in ctx)
         {
             ref readonly var entity = ref it.DrawEntity;

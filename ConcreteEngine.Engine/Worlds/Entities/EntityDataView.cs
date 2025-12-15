@@ -4,17 +4,37 @@ using ConcreteEngine.Engine.Worlds.Entities.Components;
 namespace ConcreteEngine.Engine.Worlds.Entities;
 
 internal readonly ref struct EntitiesCoreView(
-    ReadOnlySpan<EntityId> entityId,
+    Span<RenderSourceComponent> sources,
+    Span<Transform> transforms,
+    Span<BoxComponent> boxes)
+{
+    public readonly Span<RenderSourceComponent> Sources = sources;
+    public readonly Span<Transform> Transforms = transforms;
+    public readonly Span<BoxComponent> Boxes = boxes;
+
+    public int Count => Sources.Length;
+
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public ref readonly RenderSourceComponent GetSource(EntityId entity) => ref Sources[entity - 1];
+
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public ref readonly Transform GetTransform(EntityId entity) => ref Transforms[entity - 1];
+
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public ref readonly BoxComponent GetBox(EntityId entity) => ref Boxes[entity - 1];
+}
+
+
+internal readonly ref struct EntitiesReadView(
     ReadOnlySpan<RenderSourceComponent> sources,
     ReadOnlySpan<Transform> transforms,
     ReadOnlySpan<BoxComponent> boxes)
 {
-    public readonly ReadOnlySpan<EntityId> EntityId = entityId;
     public readonly ReadOnlySpan<RenderSourceComponent> Sources = sources;
     public readonly ReadOnlySpan<Transform> Transforms = transforms;
     public readonly ReadOnlySpan<BoxComponent> Boxes = boxes;
 
-    public int Count => EntityId.Length;
+    public int Count => Sources.Length;
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public ref readonly RenderSourceComponent GetSource(EntityId entity) => ref Sources[entity - 1];

@@ -101,6 +101,7 @@ public sealed class Demo3DScene : GameScene
             PassFunctions = new GfxPassStateFunc(BlendMode.Alpha)
         };
         var worldParticles = Context.World.Particles;
+        
         /*
         {
             var emitter = worldParticles.CreateEmitter(1024, ParticleDefinition.MakeDefault());
@@ -130,47 +131,39 @@ public sealed class Demo3DScene : GameScene
             };
             worldParticles.SetMaterial(particleMat.Id);
 
-            var emitter = worldParticles.CreateEmitter("Emitter1", 1024, new ParticleDefinition());
-            emitter.State = state;
+            var emitter = worldParticles.CreateEmitter("Emitter1", 1024, in def);
+            emitter.State = state with { Translation = new Vector3(100, 8, 110) };;
             emitter.Material = particleMat.Id;
 
-            var component = new ParticleComponent(emitter.EmitterHandle, emitter.Material);
-            Context.World.Entities.CreateParticleEntity(emitter, component);
+            var particleTransform = Transform.Identity with{Translation = new Vector3(110, 8, 110)};
+            Context.SceneWorld.AddParticleEntity("Particle1", emitter, in particleTransform);
 
             var emitter2 = worldParticles.CreateEmitter("Emitter2", 1024, in def);
             emitter2.State = state with { Translation = new Vector3(110, 8, 110) };
             emitter2.Material = particleMat.Id;
 
-            var component2 = new ParticleComponent(emitter2.EmitterHandle, emitter2.Material);
-            Context.World.Entities.CreateParticleEntity(emitter2, component2);
+            particleTransform = Transform.Identity with{Translation = new Vector3(100, 8, 110)};
+            Context.SceneWorld.AddParticleEntity("Particle2", emitter2, in particleTransform);
         }
     }
 
     private void CreateAnimatedEntities(IAssetSystem assets)
     {
-        var worldEntities = Context.World.Entities;
-        var worldMaterials = Context.World.EntityMaterials;
-
         for (int i = 0; i < 2; i++)
         {
-            var warriorModel = assets.Store.GetByName<Model>("Warrior");
-            var warriorMat = assets.MaterialStore.Get("Warrior::Materials/0");
-            var warriorMatKey = MaterialTagBuilder.BuildOne(warriorMat.Id);
-            var clip = warriorModel.Animation![0];
+            var model = assets.Store.GetByName<Model>("Warrior");
+            var mat = assets.MaterialStore.Get("Warrior::Materials/0");
+            var matTag = MaterialTagBuilder.BuildOne(mat.Id);
+            var clip = model.Animation![0];
 
-            warriorMat.State.Shininess = 2f;
-            warriorMat.State.Specular = 0.05f;
+            mat.State.Shininess = 2f;
+            mat.State.Specular = 0.05f;
 
             var transform = Transform.Identity with
             {
                 Translation = new Vector3(115, 6, 115 + i * 5), Scale = new Vector3(2)
             };
-            var entity = worldEntities.CreateModelEntity(warriorModel.ModelId, warriorModel.DrawCount, warriorMatKey,
-                in transform, warriorModel.Bounds);
-            var animationComponent =
-                new AnimationComponent(warriorModel.AnimationId, clip.TicksPerSecond, clip.Duration);
-
-            worldEntities.AddComponent(entity, animationComponent);
+             Context.SceneWorld.AddModelEntity($"Warrior {i}", model, matTag, in transform);
         }
 
 
@@ -187,13 +180,8 @@ public sealed class Demo3DScene : GameScene
                 Rotation = Quaternion.CreateFromYawPitchRoll(0, 0, 0),
                 Scale = new Vector3(2)
             };
-            var entity = worldEntities.CreateModelEntity(cesiumModel.ModelId, cesiumModel.DrawCount, cesiumMatKey,
-                in transform, cesiumModel.Bounds);
-
-            var animationComponent =
-                new AnimationComponent(cesiumModel.AnimationId, cesiumClip.TicksPerSecond, cesiumClip.Duration);
-
-            worldEntities.AddComponent(entity, animationComponent);
+            
+            Context.SceneWorld.AddModelEntity($"Cesium Man {i}", cesiumModel, cesiumMatKey, in transform);
         }
 
 
@@ -213,11 +201,7 @@ public sealed class Demo3DScene : GameScene
             var knightMatKey =
                 MaterialTagBuilder.Start(knightMat.Id).WithSlot(knightMat.Id).Build();
 
-            var entity = worldEntities.CreateModelEntity(knight.ModelId, knight.DrawCount, knightMatKey,
-                in transform, knight.Bounds);
-            //var animationComponent = new AnimationComponent(knight.ModelId, 4, 1, 1);
-            // animationComponent.Slot = Context.World.MeshTable.GetAnimationSlot(knight.ModelId);
-            //worldEntities.Animations.Add(knightEntity, animationComponent);
+            Context.SceneWorld.AddModelEntity("Knight", knight, knightMatKey, in transform);
         }
     }
 
@@ -274,7 +258,7 @@ public sealed class Demo3DScene : GameScene
         boatMat.State.Specular = 0;
         boatMat.State.Shininess = 1;
 
-        _spawner = new EntitySpawner(World);
+        _spawner = new EntitySpawner(Context.SceneWorld, World);
 
         var treeMatTag = MaterialTagBuilder.Start(treeMat.Id).WithSlot(leaf1Mat.Id, true).Build();
         var birchMatTag = MaterialTagBuilder.Start(birchMat.Id).WithSlot(leaf2Mat.Id, true).Build();
@@ -284,18 +268,18 @@ public sealed class Demo3DScene : GameScene
 
         _spawner.PlaceTreesBasic(14,
         [
-            new ScenePlacement(treeMesh.ToBaseDrawInfo(), treeMesh.Bounds, treeMatTag),
-            new ScenePlacement(treeMesh1.ToBaseDrawInfo(), treeMesh1.Bounds, birchMatTag),
-            new ScenePlacement(treeMesh2.ToBaseDrawInfo(), treeMesh2.Bounds, birchMatTag)
+            new ScenePlacement(treeMesh,  treeMatTag),
+            new ScenePlacement(treeMesh1, birchMatTag),
+            new ScenePlacement(treeMesh2, birchMatTag)
         ]);
 
         _spawner.PlaceGroundRocksBasic(90,
             [
-                new ScenePlacement(rockMesh.ToBaseDrawInfo(), rockMesh.Bounds, rockMat1Tag, 0.5f),
-                new ScenePlacement(rock2Mesh.ToBaseDrawInfo(), rock2Mesh.Bounds, rockMat2Tag, 0.6f)
+                new ScenePlacement(rockMesh, rockMat1Tag, 0.5f),
+                new ScenePlacement(rock2Mesh, rockMat2Tag, 0.6f)
             ],
             intensity: 0.5f);
-        _spawner.PlacePropsRingBasic(256, [new ScenePlacement(boatMesh.ToBaseDrawInfo(), boatMesh.Bounds, boatMatTag)]);
+        _spawner.PlacePropsRingBasic(256, [new ScenePlacement(boatMesh, boatMatTag)]);
 
 /*
         {

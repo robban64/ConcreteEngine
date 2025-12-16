@@ -58,7 +58,6 @@ public sealed class GameEngine : IDisposable
 
         _graphics.Initialize(gfxBundle.Config);
 
-        _sceneManager = new SceneManager(sceneFactories);
 
         // time
         _timeHub = new EngineTimeHub(UpdateTick, SimulationTickUpdate, LogTickUpdate);
@@ -69,6 +68,7 @@ public sealed class GameEngine : IDisposable
         _assets = new AssetSystem();
 
         _world = new World(engineWindow, _graphics, _assets);
+        _sceneManager = new SceneManager(sceneFactories, _assets, _world);
 
         _coreSystems = new EngineCoreSystem(WorldRenderer, _inputSystem, _assets);
 
@@ -219,7 +219,7 @@ public sealed class GameEngine : IDisposable
     {
         if (!_sceneManager.HasPendingSwitch) return;
         var builder = new GameSceneConfigBuilder();
-        _sceneManager.ApplyPendingScene(builder, _coreSystems, _world);
+        _sceneManager.ApplyPendingScene(builder, _coreSystems);
     }
 
     internal void Close()

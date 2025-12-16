@@ -1,4 +1,5 @@
 using ConcreteEngine.Common;
+using ConcreteEngine.Common.Time;
 using ConcreteEngine.Engine.Assets;
 using ConcreteEngine.Engine.Assets.Shaders;
 using ConcreteEngine.Engine.Editor.Data;
@@ -48,7 +49,7 @@ public sealed class WorldRenderer
 
         _renderer = new RenderEngine(graphics, _worldRenderParams.Snapshot, PrimitiveMeshes.FsqQuad);
     }
-    
+
     internal RenderEngine RenderEngine => _renderer;
     internal RenderCamera RenderCamera => _renderer.RenderCamera;
 
@@ -65,7 +66,7 @@ public sealed class WorldRenderer
                 _renderer.FboRegistry.RecreateScreenDependentFbo(_window.OutputSize);
                 break;
             case FboCommandAction.RecreateShadowFbo:
-                if(_worldRenderParams.SetShadow(req.Size.Width))
+                if (_worldRenderParams.SetShadow(req.Size.Width))
                     _renderer.FboRegistry.RecreateFixedFrameBuffer<ShadowPassTag>(FboVariant.Default, req.Size);
                 break;
             case FboCommandAction.None:
@@ -102,7 +103,9 @@ public sealed class WorldRenderer
     internal void ExecuteFrame(out GfxFrameResult frameResult)
     {
         _renderer.UploadFrameData();
+
         _renderer.Render();
+
         _renderer.EndRenderFrame(out frameResult);
     }
 

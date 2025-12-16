@@ -16,12 +16,13 @@ internal struct DrawEntity
 }
 
 [StructLayout(LayoutKind.Sequential)]
-internal struct DrawEntitySource(ModelId model, MaterialTagKey materialKey, int drawCount)
+internal struct DrawEntitySource(ModelId model, MaterialTagKey materialKey)
 {
-    public int DrawCount = drawCount;
     public int InstanceCount;
     public ModelId Model = model;
     public MaterialTagKey MaterialKey = materialKey;
+    public ushort AnimatedSlot;
+    public DrawCommandResolver Resolver;
 }
 
 [StructLayout(LayoutKind.Sequential)]
@@ -30,14 +31,8 @@ internal struct DrawEntityMeta(
     DrawCommandQueue queue,
     PassMask passMask)
 {
-    public ushort AnimatedSlot;
     public ushort DepthKey;
     public PassMask PassMask = passMask;
     public DrawCommandId CommandId = commandId;
     public DrawCommandQueue Queue = queue;
-    public DrawCommandResolver Resolver;
-
-    [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public readonly DrawCommandMeta ToCommandMeta() =>
-        new(CommandId, Queue, Resolver, PassMask, DepthKey, AnimatedSlot);
 }

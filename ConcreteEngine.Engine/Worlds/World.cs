@@ -4,6 +4,7 @@ using ConcreteEngine.Engine.Assets.Internal;
 using ConcreteEngine.Engine.Assets.Models;
 using ConcreteEngine.Engine.Editor.Data;
 using ConcreteEngine.Engine.Platform;
+using ConcreteEngine.Engine.Worlds.Entities;
 using ConcreteEngine.Engine.Worlds.MeshGeneration;
 using ConcreteEngine.Engine.Worlds.Render;
 using ConcreteEngine.Engine.Worlds.Tables;
@@ -64,6 +65,8 @@ public sealed class World
         _worldRenderer = new WorldRenderer(engineWindow, graphics, assets, _worldRenderParams, _drawEntities, _camera);
     }
 
+    internal WorldEntities Entities => _entities;
+
     internal WorldRenderer Renderer => _worldRenderer;
 
     public Camera3D Camera => _camera;
@@ -71,7 +74,6 @@ public sealed class World
 
     public WorldSkybox Sky => _sky;
     public WorldTerrain Terrain => _terrain;
-    public WorldEntities Entities => _entities;
     public WorldParticles Particles => _particles;
 
     public WorldRenderParams WorldRenderParams => _worldRenderParams;
@@ -82,6 +84,8 @@ public sealed class World
     internal MeshTable MeshTableImpl => _meshTable;
     internal MaterialTable MaterialTableImpl => _materialTable;
     internal AnimationTable AnimationTableImpl => _animationTable;
+
+    internal MeshGeneratorRegistry MeshGenerator => _meshGenerator;
 
 
     public int EntityCount => Entities.EntityCount;

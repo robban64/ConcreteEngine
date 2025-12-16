@@ -1,6 +1,7 @@
 using System.Numerics;
 using ConcreteEngine.Engine.Time;
 using ConcreteEngine.Engine.Worlds.Data;
+using ConcreteEngine.Engine.Worlds.Entities;
 using ConcreteEngine.Engine.Worlds.Entities.Components;
 using ConcreteEngine.Engine.Worlds.MeshGeneration;
 using ConcreteEngine.Engine.Worlds.Objects;
@@ -29,9 +30,10 @@ internal static class DrawParticleProcessor
             var component = query.Component;
             var emitter = worldParticles.GetEmitter(component.EmitterHandle);
 
-            drawEntity.Meta.Queue = DrawCommandQueue.Particles;
-            drawEntity.Meta.PassMask = PassMask.Main;
-            drawEntity.Meta.CommandId = DrawCommandId.Particle;
+            drawEntity.Meta = drawEntity.Meta with
+            {
+                Queue = DrawCommandQueue.Particles, PassMask = PassMask.Main, CommandId = DrawCommandId.Particle
+            };
             drawEntity.Source.InstanceCount = emitter.ParticleCount;
             drawEntity.Source.Model = emitter.Model;
             drawEntity.Source.MaterialKey = emitter.MaterialKey;

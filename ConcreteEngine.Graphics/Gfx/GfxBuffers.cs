@@ -183,6 +183,7 @@ public sealed class GfxBuffers
         _driverBuffer.UploadUniformBufferData(uboRef, MemoryMarshal.AsBytes(data), offset, stride * length);
     }
 
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public void BindUniformBufferRange(UniformBufferId uboId, nint offset, nint size)
     {
         var uboRef = _uboStore.GetRefAndMeta(uboId, out var meta);

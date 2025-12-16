@@ -1,16 +1,14 @@
 using System.Runtime.CompilerServices;
 using ConcreteEngine.Common.Numerics;
 using ConcreteEngine.Engine.Worlds.Data;
-using ConcreteEngine.Engine.Worlds.Entities;
 using ConcreteEngine.Engine.Worlds.Entities.Components;
 using ConcreteEngine.Engine.Worlds.Entities.Resources;
 using ConcreteEngine.Engine.Worlds.Objects;
 using ConcreteEngine.Engine.Worlds.Tables;
-using ConcreteEngine.Graphics.Gfx.Resources;
 
-namespace ConcreteEngine.Engine.Worlds;
+namespace ConcreteEngine.Engine.Worlds.Entities;
 
-public sealed class WorldEntities
+internal sealed class WorldEntities
 {
     public const int DefaultEntityCapacity = 1024;
     private MeshTable _meshTable = null!;
@@ -35,13 +33,13 @@ public sealed class WorldEntities
 
 
     public int EntityCount => _coreStore.ActiveCount;
-    internal EntityCoreStore Core => _coreStore;
-    internal EntityStore<AnimationComponent> Animations => _animations;
-    internal EntityStore<ParticleComponent> Particles => _particles;
+    public EntityCoreStore Core => _coreStore;
+    public EntityStore<AnimationComponent> Animations => _animations;
+    public EntityStore<ParticleComponent> Particles => _particles;
 
-    internal ReadOnlySpan<EntityResolverEntry> ResolvedEntitySpan => _renderResolver.Entities;
+    public ReadOnlySpan<EntityResolverEntry> ResolvedEntitySpan => _renderResolver.Entities;
 
-    internal void Attach(MeshTable meshTable, MaterialTable materialTable)
+    public void Attach(MeshTable meshTable, MaterialTable materialTable)
     {
         _meshTable = meshTable;
         _materialTable = materialTable;
@@ -53,36 +51,36 @@ public sealed class WorldEntities
         GenericStores<T>.Store.Add(entity, component);
     }
 
-    internal void ApplyRenderResolverFor(EntityId entity, RenderResolver resolver)
+    public void ApplyRenderResolverFor(EntityId entity, RenderResolver resolver)
     {
         _renderResolver.AddResolver(entity, resolver);
     }
 
-    internal void RemoveRenderResolverFor(EntityId entity) => _renderResolver.RemoveResolver(entity);
+    public void RemoveRenderResolverFor(EntityId entity) => _renderResolver.RemoveResolver(entity);
 
-    internal void EndTick()
+    public void EndTick()
     {
         foreach (var store in _storeList)
             store.EndTick();
     }
 
-    internal EntityId AddEntity(in CoreComponentBundle data) => Core.AddEntity(in data);
+    public EntityId AddEntity(in CoreComponentBundle data) => Core.AddEntity(in data);
 
-    internal void AddEntities(ReadOnlySpan<CoreComponentBundle> components, Span<EntityId> result) =>
+    public void AddEntities(ReadOnlySpan<CoreComponentBundle> components, Span<EntityId> result) =>
         Core.AddEntities(components, result);
 
 
-    public EntityId CreateModelEntity(ModelId id, int draw, in MaterialTag mat, in Transform tran, in BoundingBox box)
+    public EntityId CreateModelEntity(ModelId id, in MaterialTag mat, in Transform tran, in BoundingBox box)
     {
         var matKey = _materialTable.Add(in mat);
-        var source = new SourceComponent(id, draw, matKey, EntitySourceKind.Model);
+        var source = new SourceComponent(id, matKey, EntitySourceKind.Model);
         var core = new CoreComponentBundle(in source, in tran, box);
         return Core.AddEntity(in core);
     }
 
     public EntityId CreateParticleEntity(ParticleEmitter emitter, ParticleComponent component)
     {
-        var source = new SourceComponent(emitter.Model, 4, emitter.MaterialKey, EntitySourceKind.Particle);
+        var source = new SourceComponent(emitter.Model, emitter.MaterialKey, EntitySourceKind.Particle);
         var core = new CoreComponentBundle(in source, in Transform.Identity, ParticleComponent.DefaultParticleBounds);
         var entity = Core.AddEntity(in core);
         Particles.Add(entity, component);
@@ -90,10 +88,10 @@ public sealed class WorldEntities
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    internal EntityEnumerator<T> Query<T>() where T : unmanaged, IEntityComponent => new(GenericStores<T>.Store);
+    public EntityEnumerator<T> Query<T>() where T : unmanaged, IEntityComponent => new(GenericStores<T>.Store);
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    internal EntityCoreEnumerator CoreQuery() => new(_coreStore.GetCoreView());
+    public EntityCoreEnumerator CoreQuery() => new(_coreStore.GetCoreView());
 
 
     private static class GenericStores<T> where T : unmanaged, IEntityComponent

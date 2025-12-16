@@ -32,12 +32,6 @@ internal sealed class GfxResourceStore<TId, TMeta> : IGfxResourceStore<TId>, IGf
 {
     private unsafe delegate*<in GfxMetaChanged<TMeta>, void> _changeCallback;
 
-    private static TId MakeId(int idx)
-    {
-        idx += 1;
-        return Unsafe.As<int, TId>(ref idx);
-    }
-
     private int _idx = 0;
     private TMeta[] _meta;
     private GfxHandle[] _handle;
@@ -48,8 +42,8 @@ internal sealed class GfxResourceStore<TId, TMeta> : IGfxResourceStore<TId>, IGf
 
     internal GfxResourceStore(int initialCapacity)
     {
-        ArgumentOutOfRangeException.ThrowIfLessThan(initialCapacity, 4, nameof(initialCapacity));
-        ArgumentOutOfRangeException.ThrowIfGreaterThan(initialCapacity, GfxLimits.StoreLimit, nameof(initialCapacity));
+        ArgumentOutOfRangeException.ThrowIfLessThan(initialCapacity, 4);
+        ArgumentOutOfRangeException.ThrowIfGreaterThan(initialCapacity, GfxLimits.StoreLimit);
 
         InvalidOpThrower.ThrowIf(ResourceKind == ResourceKind.Invalid);
 
@@ -88,6 +82,7 @@ internal sealed class GfxResourceStore<TId, TMeta> : IGfxResourceStore<TId>, IGf
 
     public GfxRefToken<TId> GetRefHandle(TId id) => new(_handle[id.Value - 1]);
 
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public GfxRefToken<TId> GetRefAndMeta(TId id, out TMeta meta)
     {
         var idx = id.Value - 1;
@@ -107,7 +102,8 @@ internal sealed class GfxResourceStore<TId, TMeta> : IGfxResourceStore<TId>, IGf
         var idx = _free.Count > 0 ? _free.Pop() : Allocate();
         _meta[idx] = meta;
         _handle[idx] = newRef;
-        var newId = MakeId(idx);
+        idx += 1;
+        var newId = Unsafe.As<int, TId>(ref idx);
 
         GfxLog.LogGfxStore(newId.Value, newRef, ResourceKind.ToLogTopic(), LogAction.Add);
         return newId;
@@ -231,7 +227,7 @@ internal sealed class GfxResourceStore<TId, TMeta> : IGfxResourceStore<TId>, IGf
         public TId Current
         {
             [MethodImpl(MethodImplOptions.AggressiveInlining)]
-            get => MakeId(_i);
+            get => Unsafe.As<int, TId>(ref _i);
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]

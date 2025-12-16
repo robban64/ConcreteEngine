@@ -20,7 +20,7 @@ public sealed class MaterialTable : IMaterialTable
     private readonly Dictionary<MaterialTag, MaterialTagKey> _byTag = new(64);
     
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public void GetMaterialTag(MaterialTagKey key, out MaterialTag tag) => tag = _table[key.Value - 1];
+    public MaterialTag GetMaterialTag(MaterialTagKey key) => _table[key.Value - 1];
 
     public MaterialTagKey Add(in MaterialTag tag)
     {

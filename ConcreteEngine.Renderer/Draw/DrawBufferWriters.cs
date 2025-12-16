@@ -22,7 +22,7 @@ public readonly ref struct DrawCommandUploader
     public ref DrawObjectUniform GetWriter() => ref _transformBuffer[_cmdBuffer.IncrementTransformIndex()];
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public int SubmitDraw(in DrawCommand cmd, DrawCommandMeta meta) => _cmdBuffer.Submit(in cmd, meta);
+    public int SubmitDraw(in DrawCommand cmd, in DrawCommandMeta meta) => _cmdBuffer.Submit(in cmd, meta);
 
     public int SubmitDrawAndTransform(DrawCommand cmd, DrawCommandMeta meta, in Matrix4x4 model, in Matrix3X4 normal) =>
         _cmdBuffer.SubmitDraw(cmd, meta, in model, in normal);

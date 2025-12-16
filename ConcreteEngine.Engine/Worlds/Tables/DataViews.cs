@@ -8,12 +8,12 @@ using ConcreteEngine.Renderer.Data;
 
 namespace ConcreteEngine.Engine.Worlds.Tables;
 
-public readonly struct MeshPart(MeshId mesh, int materialSlot, int drawCount)
+public readonly struct MeshPart(MeshId mesh, byte materialSlot, int drawCount)
 {
     public readonly MeshId Mesh = mesh;
-    public readonly int MaterialSlot = materialSlot;
-    public readonly int DrawCount = drawCount;
-    private readonly int _pad; // ensure 16 byte
+    public readonly byte MaterialSlot = materialSlot;
+    //public readonly int DrawCount = drawCount;
+    //private readonly int _pad; // ensure 16 byte
 }
 
 internal readonly ref struct ModelPartView(

@@ -2,6 +2,7 @@ using System.Numerics;
 using ConcreteEngine.Common.Numerics;
 using ConcreteEngine.Common.Time;
 using ConcreteEngine.Engine.Assets.Models;
+using ConcreteEngine.Engine.Scene;
 using ConcreteEngine.Engine.Worlds;
 using ConcreteEngine.Engine.Worlds.Data;
 using ConcreteEngine.Engine.Worlds.Entities;
@@ -10,31 +11,32 @@ using ConcreteEngine.Engine.Worlds.Entities.Components;
 namespace Demo3D;
 
 public readonly struct ScenePlacement(
-    ModelMeshInfo modelInfo,
-    in BoundingBox bounds,
+    Model modelInfo,
     MaterialTag mat,
     float offset = 0f)
 {
-    public readonly BoundingBox Bounds  = bounds;
-    public readonly MaterialTag Mat  = mat;
-    public readonly ModelMeshInfo ModelInfo  = modelInfo;
-    public readonly float Offset  = offset;
+    public readonly MaterialTag Mat = mat;
+    public readonly Model ModelInfo = modelInfo;
+    public readonly float Offset = offset;
 }
 
-public sealed class EntitySpawner(World world, float size = 256f, float margin = 4f)
+public sealed class EntitySpawner(SceneWorld sceneWorld, World world, float size = 256f, float margin = 4f)
 {
-    private EntityId CreateOnTerrain(in ScenePlacement sp, Vector3 p, Vector3? s = null, Quaternion? r = null)
+    private static int _genIdx = 0;
+
+    private void CreateOnTerrain(in ScenePlacement sp, Vector3 p, Vector3? s = null, Quaternion? r = null)
     {
         var height = world.Terrain.GetSmoothHeight(p.X, p.Z) + p.Y;
         var scale = s.GetValueOrDefault(Vector3.One);
         var rotation = r.GetValueOrDefault(Quaternion.Identity);
-        return CreateModelEntity(in sp, new Transform(p with { Y = height }, scale, rotation));
+        CreateModelEntity(in sp, new Transform(p with { Y = height }, in scale, in rotation));
     }
 
-    private EntityId CreateModelEntity(in ScenePlacement sp, Transform transform)
+    private void CreateModelEntity(in ScenePlacement sp, Transform transform)
     {
         var m = sp.ModelInfo;
-        return world.Entities.CreateModelEntity(m.Model, m.DrawCount, sp.Mat, in transform, in sp.Bounds);
+        var name = $"{sp.ModelInfo.Name}-{_genIdx++}";
+        sceneWorld.AddModelEntity(name, sp.ModelInfo, sp.Mat, in transform);
     }
 
     public void PlaceGroundRocksBasic(
@@ -127,7 +129,7 @@ public sealed class EntitySpawner(World world, float size = 256f, float margin =
             var scale = new Vector3(s);
             var rot = Yaw((float)(rng.NextDouble() * MathF.Tau));
 
-            ref readonly var sp =ref variants[rng.Next(variants.Length)];
+            ref readonly var sp = ref variants[rng.Next(variants.Length)];
             CreateOnTerrain(in sp, new Vector3(x, sp.Offset, z), scale, rot);
         }
     }

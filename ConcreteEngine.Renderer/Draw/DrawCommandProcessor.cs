@@ -46,7 +46,7 @@ internal sealed class DrawCommandProcessor
     }
 
 
-    public void DrawMesh(DrawCommand cmd, DrawCommandTicket ticket)
+    public void DrawMesh(DrawCommand cmd, int submitIdx)
     {
         if (_ctx.PrevMaterial != cmd.MaterialId)
         {
@@ -66,24 +66,24 @@ internal sealed class DrawCommandProcessor
             }
         }
 
-        if (ticket.AnimationSlot > 0) _buffers.BindAnimation(ticket.AnimationSlot - 1);
+        if (cmd.AnimationSlot > 0) _buffers.BindAnimation(cmd.AnimationSlot - 1);
 
-        _buffers.BindDrawObject(ticket.SubmitIdx);
+        _buffers.BindDrawObject(submitIdx);
         _gfxCmd.BindMesh(cmd.MeshId);
-        _gfxCmd.DrawMesh(cmd.MeshId, cmd.DrawCount);
+        _gfxCmd.DrawMesh(cmd.InstanceCount);
     }
 
 
-    public void DrawSpecialResolveMesh(DrawCommand cmd, DrawCommandTicket ticket)
+    public void DrawSpecialResolveMesh(DrawCommand cmd, int submitIdx)
     {
         if (!_ctx.IsDepth)
         {
-            BindAndResolvedOverride(cmd, ticket);
+            BindAndResolvedOverride(cmd);
         }
 
-        _buffers.BindDrawObject(ticket.SubmitIdx);
+        _buffers.BindDrawObject(submitIdx);
         _gfxCmd.BindMesh(cmd.MeshId);
-        _gfxCmd.DrawMesh(cmd.MeshId, cmd.DrawCount);
+        _gfxCmd.DrawMesh(cmd.InstanceCount);
     }
 
     private void BindTextureSlots(ReadOnlySpan<TextureSlotInfo> slots)
@@ -135,21 +135,21 @@ internal sealed class DrawCommandProcessor
     }
 
     // allow for more flexible state management later on
-    private void BindAndResolvedOverride(DrawCommand cmd, DrawCommandTicket ticket)
+    private void BindAndResolvedOverride(DrawCommand cmd)
     {
         const GfxStateFlags allowMaterialOverride = GfxStateFlags.Cull | GfxStateFlags.PolygonOffset;
 
-        Debug.Assert(ticket.Resolver is DrawCommandResolver.Highlight or DrawCommandResolver.BoundingVolume);
+        Debug.Assert(cmd.Resolver is DrawCommandResolver.Highlight or DrawCommandResolver.BoundingVolume);
 
         var texSlots = _buffers.ResolveMaterial(cmd.MaterialId, out var materialMeta);
         ref readonly var shaders = ref _ctx.CoreShaders;
 
-        switch (ticket.Resolver)
+        switch (cmd.Resolver)
         {
             case DrawCommandResolver.Highlight:
-                if (ticket.AnimationSlot > 0)
+                if (cmd.AnimationSlot > 0)
                 {
-                    _buffers.BindAnimation(ticket.AnimationSlot - 1);
+                    _buffers.BindAnimation(cmd.AnimationSlot - 1);
                     _gfxCmd.UseShader(shaders.HighlightShader, _ctx.GetUniformLocations(shaders.HighlightShader));
                     _gfxCmd.SetUniform(0, 1);
                     _gfxCmd.SetUniform(1, in _highlightColor);

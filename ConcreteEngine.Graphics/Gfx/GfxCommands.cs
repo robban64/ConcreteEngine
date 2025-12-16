@@ -237,7 +237,7 @@ public sealed class GfxCommands
         _states.SetCullMode(cullMode);
     }
 
-
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public void BindFramebuffer(FrameBufferId id)
     {
         if (_boundFboId == id) return;
@@ -252,7 +252,7 @@ public sealed class GfxCommands
         _boundFboId = id;
     }
 
-
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public void BindTexture(TextureId texture, int slot)
     {
         Debug.Assert(slot >= 0 && slot <= GfxLimits.TextureSlots);
@@ -269,6 +269,7 @@ public sealed class GfxCommands
         _states.BindTexture(refHandle, slot);
     }
 
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public void UnbindAllTextures() => _states.UnbindAllTextures();
 
     public void UseShader(ShaderId id, ReadOnlySpan<int> uniforms)
@@ -284,7 +285,7 @@ public sealed class GfxCommands
         uniforms.CopyTo(_boundUniforms.AsSpan());
     }
 
-
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public void UseShader(ShaderId id)
     {
         if (_boundShaderId == id) return;
@@ -302,6 +303,7 @@ public sealed class GfxCommands
         _boundShaderId = id;
     }
 
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public void BindMesh(MeshId id)
     {
         if (_boundMeshId == id) return;
@@ -319,8 +321,38 @@ public sealed class GfxCommands
         _states.BindMesh(meshRef);
     }
 
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public void DrawMesh(int instanceCount = 0)
+    {
+        Debug.Assert(_boundMeshId > 0);
+        var meta = _boundMeshMeta;
+        var count = meta.DrawCount;
 
-    public void DrawMesh(MeshId id, int drawCount, int instanceCount = 0)
+        switch (meta.Kind)
+        {
+            case DrawMeshKind.Arrays:
+                _states.DrawArrays(meta.Primitive, count);
+                break;
+            case DrawMeshKind.Elements:
+                Debug.Assert(meta.ElementSize != DrawElementSize.Invalid);
+                _states.DrawElements(meta.Primitive, meta.ElementSize, count);
+                break;
+            case DrawMeshKind.ArraysInstanced:
+                var drawInstances = instanceCount > 0 ? instanceCount : meta.InstanceCount;
+                Debug.Assert(drawInstances > 0);
+                _states.DrawInstanced(meta.Primitive, meta.ElementSize, count, drawInstances);
+                break;
+            case DrawMeshKind.Invalid:
+            default:
+                GraphicsException.ThrowUnsupportedFeature(meta.Kind.ToString());
+                return;
+        }
+
+        _drawTriangleCount += count;
+        _drawCallCount++;
+    }
+    
+    public void DrawMesh2(MeshId id, int drawCount, int instanceCount = 0)
     {
         Debug.Assert(_boundMeshId > 0);
 

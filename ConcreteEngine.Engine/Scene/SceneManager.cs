@@ -1,3 +1,4 @@
+using ConcreteEngine.Engine.Assets;
 using ConcreteEngine.Engine.Configuration;
 using ConcreteEngine.Engine.Scene.Modules;
 using ConcreteEngine.Engine.Worlds;
@@ -12,12 +13,17 @@ internal sealed class SceneManager
     private readonly ModuleManager _modules;
     private readonly List<Func<GameScene>> _sceneFactories;
 
+    private readonly SceneWorld _sceneWorld;
+    private readonly World  _world;
+
     public GameScene? Current { get; private set; }
 
-    internal SceneManager(List<Func<GameScene>> sceneFactories)
+    internal SceneManager(List<Func<GameScene>> sceneFactories, AssetSystem assetSystem, World world)
     {
         _sceneFactories = sceneFactories ?? throw new ArgumentNullException(nameof(sceneFactories));
+        _world = world;
         _modules = new ModuleManager();
+        _sceneWorld = new SceneWorld(assetSystem, world);
     }
 
     public bool HasPendingSwitch => _pendingIndex >= 0;
@@ -37,7 +43,7 @@ internal sealed class SceneManager
     }
     
 
-    public void ApplyPendingScene(GameSceneConfigBuilder builder, IEngineSystemManager systems, World world)
+    public void ApplyPendingScene(GameSceneConfigBuilder builder, IEngineSystemManager systems)
     {
         if (_pendingIndex < 0) return;
 
@@ -47,7 +53,7 @@ internal sealed class SceneManager
 
         Current?.Unload();
 
-        var sceneContext = new GameSceneContext(systems, world, _modules) ;
+        var sceneContext = new GameSceneContext(systems, _world, _modules, _sceneWorld) ;
 
         var newScene = _sceneFactories[index]();
         newScene.AttachContext(sceneContext);

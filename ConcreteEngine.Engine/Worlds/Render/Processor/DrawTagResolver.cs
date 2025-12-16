@@ -38,7 +38,7 @@ internal static class DrawTagResolver
             if (index == -1) continue;
             ref var drawEntity = ref ctx.EntitySpan[index];
             drawEntity.Meta.PassMask = PassMask.Effect | PassMask.DepthPre;
-            drawEntity.Meta.Resolver = resolved.CommandResolver;
+            drawEntity.Source.Resolver = resolved.CommandResolver;
         }
 
 
@@ -52,7 +52,7 @@ internal static class DrawTagResolver
             var index = ctx.ByEntityIdSpan[entityId];
             if (index == -1) continue;
             ref var drawEntity = ref ctx.EntitySpan[index];
-            drawEntity.Meta.AnimatedSlot = (ushort)slot++;
+            drawEntity.Source.AnimatedSlot = (ushort)slot++;
         }
 
     }

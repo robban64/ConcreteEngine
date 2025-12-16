@@ -14,7 +14,7 @@ public readonly record struct EntityId(int Value) : IComparable<EntityId>
     public static implicit operator int(EntityId id) => id.Value;
 }
 
-public readonly record struct WorldEntityId(int Value, int Slot, ushort Gen) : IComparable<WorldEntityId>
+public readonly record struct SceneEntityId(int Value, int Slot, ushort Gen) : IComparable<SceneEntityId>
 {
     public readonly int Value = Value;
     public readonly int Slot = Slot;
@@ -22,8 +22,8 @@ public readonly record struct WorldEntityId(int Value, int Slot, ushort Gen) : I
 
     public bool IsValid => Value > 0;
 
-    public int CompareTo(WorldEntityId other) => Value.CompareTo(other.Value);
+    public int CompareTo(SceneEntityId other) => Value.CompareTo(other.Value);
 
-    public static implicit operator int(WorldEntityId handle) => handle.Value;
-    public static implicit operator EntityId(WorldEntityId handle) => new(handle.Slot);
+    public static implicit operator int(SceneEntityId handle) => handle.Value;
+    public static implicit operator EntityId(SceneEntityId handle) => new(handle.Slot);
 }

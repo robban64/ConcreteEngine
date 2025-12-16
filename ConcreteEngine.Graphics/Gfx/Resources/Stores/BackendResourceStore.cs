@@ -24,8 +24,6 @@ internal interface IBackendResourceStore
 internal sealed class BackendResourceStore<TId, THandle> : IBackendResourceStore
     where THandle : unmanaged, IResourceHandle where TId : unmanaged, IResourceId
 {
-    private static THandle MakeHandle(ref uint handle) => Unsafe.As<uint, THandle>(ref handle);
-
     private int _idx = 0;
     private BkHandle[] _records;
     private readonly Stack<int> _free = new();
@@ -42,10 +40,11 @@ internal sealed class BackendResourceStore<TId, THandle> : IBackendResourceStore
         _records = new BkHandle[capacity];
     }
 
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public THandle GetHandle(GfxRefToken<TId> refToken)
     {
         var handle = _records[refToken.Handle.Slot].Handle;
-        return MakeHandle(ref handle);
+        return Unsafe.As<uint, THandle>(ref handle);
     }
 
     public NativeHandle GetNativeHandle(in GfxHandle handle)

@@ -5,6 +5,7 @@ using ConcreteEngine.Common.Collections;
 using ConcreteEngine.Common.Numerics;
 using ConcreteEngine.Common.Time;
 using ConcreteEngine.Engine.Worlds.Data;
+using ConcreteEngine.Engine.Worlds.Entities;
 using ConcreteEngine.Engine.Worlds.Entities.Components;
 using ConcreteEngine.Engine.Worlds.MeshGeneration;
 using ConcreteEngine.Engine.Worlds.Objects;
@@ -42,7 +43,7 @@ public sealed class WorldParticles
 
     public void SetMaterial(MaterialId materialId) => Material = materialId;
 
-    internal ParticleEmitter GetEmitter(int emitterHandle)
+    public ParticleEmitter GetEmitter(int emitterHandle)
     {
         if (emitterHandle > _handleHigh) throw new IndexOutOfRangeException();
 
@@ -82,13 +83,18 @@ public sealed class WorldParticles
         return _particleGenerator.GetWriteBuffer(emitter);
     }
 
-    public void UpdateSimulate(WorldEntities entities, float fixedDt)
+    internal void UpdateSimulate(WorldEntities entities, float fixedDt)
     {
         SimulateEmitters(CollectionsMarshal.AsSpan(_emitters), fixedDt);
-        UpdateEntities(entities);
+        var core = entities.Core;
+        foreach (var query in entities.Query<ParticleComponent>())
+        {
+            var emitter = GetEmitter(query.Component.EmitterHandle);
+            emitter.State.Translation = core.GetTransform(query.Entity).Translation;
+        }
     }
 
-
+/*
     private void UpdateEntities(WorldEntities entities)
     {
         BoundingBox currBox = default;
@@ -109,6 +115,7 @@ public sealed class WorldParticles
             box.Bounds = currBox;
         }
     }
+    */
 
     private static void SimulateEmitters(ReadOnlySpan<ParticleEmitter> emitters, float fixedDt)
     {

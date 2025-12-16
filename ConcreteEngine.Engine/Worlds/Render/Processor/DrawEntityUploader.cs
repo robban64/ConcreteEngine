@@ -17,46 +17,51 @@ internal static class DrawEntityUploader
         var meshTable = world.MeshTableImpl;
 
         MaterialTag materialTag = default;
-        var prevMatKey = new MaterialTagKey(-1);
+        ModelId prevModel = default;
+        MaterialTagKey prevMatKey = default;
+
+        var parts = ReadOnlySpan<MeshPart>.Empty;
+
         foreach (var it in ctx)
         {
-            ref readonly var entity = ref it.DrawEntity;
-            var matKey = entity.Source.MaterialKey;
-            if (matKey != prevMatKey)
+            ref var entity = ref it.DrawEntity;
+            var source = entity.Source;
+            var baseMeta = entity.Meta;
+
+            if (source.MaterialKey != prevMatKey)
             {
-                matTable.GetMaterialTag(matKey, out materialTag);
-                prevMatKey = matKey;
+                materialTag = matTable.GetMaterialTag(source.MaterialKey);
+                prevMatKey = source.MaterialKey;
             }
 
-            var parts = meshTable.GetMeshParts(entity.Source.Model);
-            foreach (ref readonly var part in parts)
+            if (prevModel != source.Model)
             {
-                var isTransparent = materialTag.ResolveSlot(part.MaterialSlot, out var materialId);
-                var cmd = new DrawCommand(part.Mesh, materialId, part.DrawCount, entity.Source.InstanceCount);
-                uploader.SubmitDraw(in cmd, BuildMeta(entity.Meta, isTransparent));
+                parts = meshTable.GetMeshParts(source.Model);
+                prevModel = source.Model;
+            }
+
+            foreach (var part in parts)
+            {
+                ProcessParts(baseMeta, source, in materialTag, part, out var cmd, out var meta);
+                uploader.SubmitDraw(in cmd, in meta);
             }
         }
-
     }
-    
+
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    private static DrawCommandMeta BuildMeta(DrawEntityMeta m, bool isTransparent)
+    private static void ProcessParts(DrawEntityMeta baseMeta, DrawEntitySource source, in MaterialTag materialTag,
+        MeshPart part, out DrawCommand cmd, out DrawCommandMeta meta)
     {
-        if (!isTransparent) return m.ToCommandMeta();
+        var isTransparent = materialTag.ResolveSlot(part.MaterialSlot, out var materialId);
 
-        var depthKey = (ushort)(ushort.MaxValue - m.DepthKey);
-        var queue = m.Queue >= DrawCommandQueue.Transparent ? m.Queue : DrawCommandQueue.Transparent;
-        return new DrawCommandMeta(m.CommandId, queue, m.Resolver, m.PassMask, depthKey, m.AnimatedSlot);
-    }
+        if (!isTransparent) meta = Unsafe.As<DrawEntityMeta, DrawCommandMeta>(ref baseMeta);
+        else
+        {
+            var depthKey = (ushort)(ushort.MaxValue - baseMeta.DepthKey);
+            var queue = (DrawCommandQueue)byte.Max((byte)baseMeta.Queue, (byte)DrawCommandQueue.Transparent);
+            meta = new DrawCommandMeta(baseMeta.CommandId, queue, baseMeta.PassMask, depthKey);
+        }
 
-    private static void ExecuteGeneratedCommand(in DrawEntity entity, DrawCommandUploader uploader)
-    {
-        ArgumentOutOfRangeException.ThrowIfLessThan(entity.Source.MaterialKey.Value, 1);
-        ArgumentOutOfRangeException.ThrowIfLessThan(entity.Source.Model, 1);
-
-        var mesh = new MeshId(entity.Source.Model);
-        var material = new MaterialId(entity.Source.MaterialKey.Value);
-        var cmd = new DrawCommand(mesh, material, entity.Source.DrawCount, entity.Source.InstanceCount);
-        uploader.SubmitDrawIdentity(cmd, entity.Meta.ToCommandMeta());
+        cmd = new DrawCommand(part.Mesh, materialId, source.InstanceCount, source.AnimatedSlot, source.Resolver);
     }
 }

@@ -17,7 +17,7 @@ internal static class DrawTransformUploader
         {
             ref readonly var entity = ref it.DrawEntity;
             ref readonly var t = ref view.GetTransform(entity.Entity);
-            var animatedSlot = entity.Meta.AnimatedSlot;
+            var animatedSlot = entity.Source.AnimatedSlot;
 
             MatrixMath.CreateModelMatrix(in t.Translation, in t.Scale, in t.Rotation, out var world);
             var locals = meshTable.GetPartTransforms(entity.Source.Model);

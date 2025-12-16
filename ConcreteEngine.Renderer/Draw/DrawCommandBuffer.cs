@@ -19,8 +19,8 @@ public sealed class DrawCommandBuffer
     private DrawObjectUniform[] _transformBuffer;
     private DrawCommandMeta[] _metaBuffer;
     private DrawCommandRef[] _indexBuffer;
-    private DrawCommandTicket[] _drawTickets;
-    private readonly DrawPassRange[] _passRanges;
+    private int[] _drawTickets;
+    private readonly Range32[] _passRanges;
 
     private Matrix4x4[] _boneTransformBuffer;
 
@@ -37,9 +37,9 @@ public sealed class DrawCommandBuffer
         _transformBuffer = new DrawObjectUniform[DefaultCommandBuffCapacity];
         _metaBuffer = new DrawCommandMeta[DefaultCommandBuffCapacity];
         _indexBuffer = new DrawCommandRef[DefaultCommandBuffCapacity];
-        _drawTickets = new DrawCommandTicket[DefaultTicketCapacity];
+        _drawTickets = new int[DefaultTicketCapacity];
 
-        _passRanges = new DrawPassRange[PassSlots];
+        _passRanges = new Range32[PassSlots];
 
         _boneTransformBuffer = new Matrix4x4[DefaultBoneBufferCap];
 
@@ -63,14 +63,14 @@ public sealed class DrawCommandBuffer
     internal int Submit(in DrawCommand cmd, DrawCommandMeta meta)
     {
         var idx = _submitCmdIdx++;
-        if ((uint)idx >= _commandBuffer.Length)
+        if ((uint)idx >= _commandBuffer.Length || _commandBuffer.Length != _metaBuffer.Length || _commandBuffer.Length != _indexBuffer.Length)
         {
             throw new IndexOutOfRangeException();
         }
 
         _commandBuffer[idx] = cmd;
         _metaBuffer[idx] = meta;
-        _indexBuffer[idx] = new DrawCommandRef(meta, idx, meta.AnimationSlot);
+        _indexBuffer[idx] = new DrawCommandRef(meta, idx);
         return idx;
     }
 
@@ -157,7 +157,7 @@ public sealed class DrawCommandBuffer
         for (var p = 0; p < PassSlots; p++)
         {
             var c = counts[p];
-            _passRanges[p] = new DrawPassRange(total, c);
+            _passRanges[p] = new Range32(total, c);
             total += c;
         }
 
@@ -166,7 +166,7 @@ public sealed class DrawCommandBuffer
 
         Span<int> heads = stackalloc int[PassSlots];
         for (var p = 0; p < PassSlots; p++)
-            heads[p] = _passRanges[p].Start;
+            heads[p] = _passRanges[p].Offset;
 
         // fill tickets in sorted order
         for (var i = 0; i < len; i++)
@@ -178,7 +178,7 @@ public sealed class DrawCommandBuffer
             {
                 var p = BitOperations.TrailingZeroCount(mask);
                 var w = heads[p]++;
-                _drawTickets[w] = new DrawCommandTicket(mi.Idx, meta.AnimationSlot, (byte)p, meta.Resolver);
+                _drawTickets[w] = mi.Idx;
                 mask &= mask - 1;
             }
         }
@@ -208,19 +208,19 @@ public sealed class DrawCommandBuffer
         var processor = _processor!;
         var pass = _passRanges[passId];
 
-        var tickets = _drawTickets.AsSpan(pass.Start, pass.Count);
+        var tickets = _drawTickets.AsSpan(pass.Offset, pass.Length);
 
         if (defaultDraw)
         {
             ref var c0 = ref MemoryMarshal.GetReference(_commandBuffer);
             foreach (var ticket in tickets)
-                processor.DrawMesh(Unsafe.Add(ref c0, ticket.SubmitIdx), ticket);
+                processor.DrawMesh(Unsafe.Add(ref c0, ticket), ticket);
 
             return;
         }
 
         foreach (var ticket in tickets)
-            processor.DrawSpecialResolveMesh(_commandBuffer[ticket.SubmitIdx], ticket);
+            processor.DrawSpecialResolveMesh(_commandBuffer[ticket], ticket);
     }
 
     internal void Reset()
@@ -260,7 +260,7 @@ public sealed class DrawCommandBuffer
     {
         if (_drawTickets.Length >= total) return;
         var newSize = Arrays.CapacityGrowthLinear(_drawTickets.Length, total, step: PassSlots);
-        _drawTickets = new DrawCommandTicket[newSize];
+        _drawTickets = new int[newSize];
         Console.WriteLine("DrawTickets buffer resize");
     }
 

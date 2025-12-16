@@ -35,22 +35,6 @@ public readonly record struct MaterialTag
     public readonly byte EndIndex;
     public readonly byte TransparencyMask;
 
-
-    [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public bool ResolveSlot(int slot, out MaterialId materialId)
-    {
-        materialId = Unsafe.Add(ref Unsafe.AsRef(in Slot0), slot);
-        return (TransparencyMask & (1 << slot)) != 0;
-    }
-
-    [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public bool IsTransparent(int slot) => (TransparencyMask & (1 << slot)) != 0;
-
-    [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public ReadOnlySpan<MaterialId> AsReadOnlySpan() =>
-        MemoryMarshal.CreateReadOnlySpan(ref Unsafe.AsRef(in Slot0), EndIndex);
-
-
     public MaterialTag(MaterialId slot0, MaterialId slot1 = default, MaterialId slot2 = default,
         MaterialId slot3 = default, MaterialId slot4 = default,
         MaterialId slot5 = default, byte transparencyMask = 0)
@@ -73,4 +57,27 @@ public readonly record struct MaterialTag
 
         EndIndex = idx;
     }
+
+
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public bool ResolveSlot(int slot, out MaterialId materialId)
+    {
+        materialId = Unsafe.Add(ref Unsafe.AsRef(in Slot0), slot);
+        return (TransparencyMask & (1 << slot)) != 0;
+    }
+
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public bool IsTransparent(int slot) => (TransparencyMask & (1 << slot)) != 0;
+
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public ReadOnlySpan<MaterialId> AsReadOnlySpan() =>
+        MemoryMarshal.CreateReadOnlySpan(ref Unsafe.AsRef(in Slot0), EndIndex);
+
+    public bool Equals(MaterialTag other) =>
+        EndIndex == other.EndIndex && TransparencyMask == other.TransparencyMask &&
+        Slot0 == other.Slot0 && Slot1 == other.Slot1 && Slot2 == other.Slot2 &&
+        Slot3 == other.Slot3 && Slot4 == other.Slot4 && Slot5 == other.Slot5;
+
+    public override int GetHashCode() =>
+        HashCode.Combine(Slot0, Slot1, Slot2, Slot3, Slot4, Slot5, EndIndex, TransparencyMask);
 }

@@ -6,6 +6,7 @@ using ConcreteEngine.Engine.Assets;
 using ConcreteEngine.Engine.Assets.Models;
 using ConcreteEngine.Engine.Worlds.Data;
 using ConcreteEngine.Graphics.Gfx.Resources;
+using ConcreteEngine.Renderer.Data;
 
 namespace ConcreteEngine.Engine.Worlds.Tables;
 
@@ -106,9 +107,10 @@ internal sealed class MeshTable : IMeshTable
 
     public ModelId CreateSimpleModel(MeshId mesh, int materialSlot, int drawCount, in BoundingBox bounds)
     {
+        ArgumentOutOfRangeException.ThrowIfGreaterThan(materialSlot, 8);
         EnsureCapacity(_partIdx + 1, _modelIdx + 1);
 
-        _meshParts[_partIdx] = new MeshPart(mesh, materialSlot, drawCount);
+        _meshParts[_partIdx] = new MeshPart(mesh, (byte)materialSlot, drawCount);
         _partTransforms[_partIdx] = Matrix4x4.Identity;
         _modelPartRanges[_modelIdx] = new RangeU16(_partIdx, 1);
         _modelBoxes[_modelIdx] = bounds;
@@ -140,7 +142,8 @@ internal sealed class MeshTable : IMeshTable
             _modelPartRanges[i] = new RangeU16(idx, model.MeshParts.Length);
             foreach (var part in model.MeshParts)
             {
-                _meshParts[idx] = new MeshPart(part.ResourceId, part.MaterialSlot, part.DrawCount);
+                ArgumentOutOfRangeException.ThrowIfGreaterThan(part.MaterialSlot, 8);
+                _meshParts[idx] = new MeshPart(part.ResourceId, (byte)part.MaterialSlot, part.DrawCount);
                 _partTransforms[idx] = part.Transform;
                 _partBoxes[idx] = part.Bounds;
                 idx++;

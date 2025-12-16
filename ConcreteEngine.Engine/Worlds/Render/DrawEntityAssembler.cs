@@ -119,9 +119,8 @@ internal sealed class DrawEntityAssembler
     {
         var meshTable = _world.MeshTableImpl;
         var uploader = commandBuffer.GetDrawUploaderCtx();
-        StaticProfileTimer.RenderTimer.Begin();
+        
         DrawEntityUploader.UploadDrawCommands(_world, in ctx, in uploader);
-        StaticProfileTimer.RenderTimer.EndPrint();
         DrawTransformUploader.UploadTransform(in ctx, in coreEntities, in uploader, meshTable);
 
     }

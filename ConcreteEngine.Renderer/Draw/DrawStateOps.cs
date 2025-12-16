@@ -105,7 +105,7 @@ public sealed class DrawStateOps
     private void DrawFsq()
     {
         _gfxCmd.BindMesh(_ctx.FsqMesh);
-        _gfxCmd.DrawMesh(_ctx.FsqMesh, 0);
+        _gfxCmd.DrawMesh();
     }
 
     private void UseShader(ShaderId shaderId)

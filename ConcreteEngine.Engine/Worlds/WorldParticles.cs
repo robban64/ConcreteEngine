@@ -98,7 +98,7 @@ public sealed class WorldParticles
         foreach (var query in entities.Query<ParticleComponent>())
         {
             var handle = query.Component.EmitterHandle;
-            ref var box = ref core.GetBoxById(query.Entity);
+            ref var box = ref core.GetBox(query.Entity);
             if (prevHandle != handle)
             {
                 var emitter = GetEmitter(query.Component.EmitterHandle);

@@ -4,7 +4,7 @@ using ConcreteEngine.Shared.World;
 
 namespace ConcreteEngine.Engine.Worlds.Entities.Components;
 
-public struct Transform(in Vector3 translation, in Vector3 scale, in Quaternion rotation)
+public struct Transform(in Vector3 translation, in Vector3 scale, in Quaternion rotation) : IEntityComponent
 {
     public Vector3 Translation = translation;
     public Quaternion Rotation = rotation;

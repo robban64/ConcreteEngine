@@ -3,6 +3,7 @@ using ConcreteEngine.Common.Numerics;
 using ConcreteEngine.Engine.Worlds.Data;
 using ConcreteEngine.Engine.Worlds.Entities;
 using ConcreteEngine.Engine.Worlds.Entities.Components;
+using ConcreteEngine.Engine.Worlds.Entities.Resources;
 using ConcreteEngine.Engine.Worlds.Objects;
 using ConcreteEngine.Engine.Worlds.Tables;
 using ConcreteEngine.Graphics.Gfx.Resources;
@@ -46,18 +47,18 @@ public sealed class WorldEntities
         _materialTable = materialTable;
     }
 
-    public void AddComponent<T>(EntityId entity, in T component) where T : unmanaged
+    public void AddComponent<T>(EntityId entity, in T component) where T : unmanaged, IEntityComponent
     {
-        ArgumentOutOfRangeException.ThrowIfNegativeOrZero(entity.Handle, nameof(entity.Handle));
+        ArgumentOutOfRangeException.ThrowIfNegativeOrZero(entity.Value, nameof(entity.Value));
         GenericStores<T>.Store.Add(entity, component);
     }
 
-    internal void ApplyRenderResolverFor(EntityHandle entityHandle, RenderResolver resolver)
+    internal void ApplyRenderResolverFor(EntityId entity, RenderResolver resolver)
     {
-        _renderResolver.AddResolver(entityHandle, resolver);
+        _renderResolver.AddResolver(entity, resolver);
     }
 
-    internal void RemoveRenderResolverFor(EntityHandle entityHandle) => _renderResolver.RemoveResolver(entityHandle);
+    internal void RemoveRenderResolverFor(EntityId entity) => _renderResolver.RemoveResolver(entity);
 
     internal void EndTick()
     {
@@ -65,31 +66,37 @@ public sealed class WorldEntities
             store.EndTick();
     }
 
+    internal EntityId AddEntity(in CoreComponentBundle data) => Core.AddEntity(in data);
+
+    internal void AddEntities(ReadOnlySpan<CoreComponentBundle> components, Span<EntityId> result) =>
+        Core.AddEntities(components, result);
+
+
     public EntityId CreateModelEntity(ModelId id, int draw, in MaterialTag mat, in Transform tran, in BoundingBox box)
     {
         var matKey = _materialTable.Add(in mat);
-        var source = new RenderSourceComponent(id, draw, matKey, RenderSourceKind.Model);
-        var core = new CoreComponent(source, in tran, box);
-        return Core.AddEntity(EntityKind.Model, in core);
+        var source = new SourceComponent(id, draw, matKey, EntitySourceKind.Model);
+        var core = new CoreComponentBundle(in source, in tran, box);
+        return Core.AddEntity(in core);
     }
 
-    public EntityHandle CreateParticleEntity(ParticleEmitter emitter, ParticleComponent component)
+    public EntityId CreateParticleEntity(ParticleEmitter emitter, ParticleComponent component)
     {
-        var source = new RenderSourceComponent(emitter.Model, 4, emitter.MaterialKey, RenderSourceKind.Particle);
-        var core = new CoreComponent(in source, in Transform.Identity, ParticleComponent.DefaultParticleBounds);
-        var entity = Core.AddEntity(EntityKind.Particle, in core);
+        var source = new SourceComponent(emitter.Model, 4, emitter.MaterialKey, EntitySourceKind.Particle);
+        var core = new CoreComponentBundle(in source, in Transform.Identity, ParticleComponent.DefaultParticleBounds);
+        var entity = Core.AddEntity(in core);
         Particles.Add(entity, component);
         return entity;
     }
 
-
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    internal EntityEnumerator<T> Query<T>() where T : unmanaged => new(GenericStores<T>.Store);
+    internal EntityEnumerator<T> Query<T>() where T : unmanaged, IEntityComponent => new(GenericStores<T>.Store);
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     internal EntityCoreEnumerator CoreQuery() => new(_coreStore.GetCoreView());
 
-    private static class GenericStores<T> where T : unmanaged
+
+    private static class GenericStores<T> where T : unmanaged, IEntityComponent
     {
         public static EntityStore<T> Store = null!;
 

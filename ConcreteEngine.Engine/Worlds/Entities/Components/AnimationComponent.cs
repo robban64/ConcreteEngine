@@ -5,7 +5,7 @@ using ConcreteEngine.Engine.Worlds.Data;
 namespace ConcreteEngine.Engine.Worlds.Entities.Components;
 
 [StructLayout(LayoutKind.Sequential)]
-public struct AnimationComponent
+public struct AnimationComponent : IEntityComponent
 {
     public float Time;
     public float Duration;

@@ -6,7 +6,7 @@ namespace ConcreteEngine.Engine.Worlds.Render.Processor;
 
 internal static class DrawEntityCulling
 {
-    internal static int CullEntities(EntityHandle[] entityIndices, int[] byEntityId, World world)
+    internal static int CullEntities(EntityId[] entityIndices, int[] byEntityId, World world)
     {
         var renderView = world.Camera.RenderView;
         var entities = world.Entities;

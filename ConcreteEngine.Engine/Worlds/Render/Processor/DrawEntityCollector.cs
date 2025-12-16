@@ -8,7 +8,7 @@ namespace ConcreteEngine.Engine.Worlds.Render.Processor;
 
 internal static class DrawEntityCollector
 {
-    public static EntityHandle CollectEntities(in DrawEntityContext ctx, in EntitiesReadView view)
+    public static EntityId CollectEntities(in DrawEntityContext ctx, in EntitiesReadView view)
     {
         var len = ctx.EntitySpan.Length;
         int highEntityId = 0;
@@ -26,7 +26,7 @@ internal static class DrawEntityCollector
             highEntityId = int.Max(highEntityId, entityId);
         }
 
-        return new EntityHandle(highEntityId);
+        return new EntityId(highEntityId);
     }
 
 }

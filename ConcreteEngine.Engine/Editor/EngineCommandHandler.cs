@@ -92,7 +92,7 @@ internal static class EngineCommandHandler
         ctx.AddLog(StructStr<DrawCommandMeta>());
 
 
-        ctx.AddLog(StructStr<RenderSourceComponent>());
+        ctx.AddLog(StructStr<SourceComponent>());
         ctx.AddLog(StructStr<AnimationComponent>());
     }
 

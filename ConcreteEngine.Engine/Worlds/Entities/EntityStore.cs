@@ -1,6 +1,7 @@
 using System.Runtime.CompilerServices;
 using ConcreteEngine.Common.Collections;
 using ConcreteEngine.Engine.Editor.Diagnostics;
+using ConcreteEngine.Engine.Worlds.Entities.Resources;
 using ConcreteEngine.Shared.Diagnostics;
 
 namespace ConcreteEngine.Engine.Worlds.Entities;
@@ -13,7 +14,7 @@ internal interface IEntityStore
 internal sealed class EntityStore<T> : IEntityStore where T : unmanaged
 {
     private T[] _data;
-    private EntityHandle[] _entities;
+    private EntityId[] _entities;
     //private Stack<int> _free = [];
 
     public int Count { get; private set; }
@@ -27,37 +28,37 @@ internal sealed class EntityStore<T> : IEntityStore where T : unmanaged
     {
         ArgumentOutOfRangeException.ThrowIfLessThan(initialCapacity, 32);
         _data = new T[initialCapacity];
-        _entities = new EntityHandle[initialCapacity];
+        _entities = new EntityId[initialCapacity];
     }
 
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public EntityHandle GetHandle(int i) => _entities[i];
-    
+    public EntityId GetHandle(int i) => _entities[i];
+
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public ref T Get(EntityHandle e) => ref _data[FindIndex(e)];
-    
+    public ref T Get(EntityId entity) => ref _data[FindIndex(entity)];
+
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public ref T GetByIndex(int i) => ref _data[i];
-    
-    
-    public Span<EntityHandle> GetEntitySpan() => _entities.AsSpan(0, Count);
+
+
+    public Span<EntityId> GetEntitySpan() => _entities.AsSpan(0, Count);
     public Span<T> GetComponentSpan() => _data.AsSpan(0, Count);
-    
+
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    private int FindIndex(EntityHandle e) => EntityUtility.BinarySearchEntity(GetEntitySpan(), e);
+    private int FindIndex(EntityId entity) => EntityUtility.BinarySearchEntity(GetEntitySpan(), entity);
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public bool Has(EntityHandle e)
+    public bool Has(EntityId entity)
     {
-        var index = FindIndex(e);
-        return (uint)index < (uint)Count && _entities[index] == e;
+        var index = FindIndex(entity);
+        return (uint)index < (uint)Count && _entities[index] == entity;
     }
 
-    public bool TryGet(EntityHandle e, out T value)
+    public bool TryGet(EntityId entity, out T value)
     {
-        var id = FindIndex(e);
+        var id = FindIndex(entity);
         if (id >= Count || id < 0)
         {
             value = default;
@@ -68,33 +69,31 @@ internal sealed class EntityStore<T> : IEntityStore where T : unmanaged
         return true;
     }
 
-    public T GetOrDefault(EntityHandle e)
+    public T GetOrDefault(EntityId entity)
     {
-        var index = FindIndex(e);
+        var index = FindIndex(entity);
         if (index >= 0 && index < _data.Length) return _data[index];
         return default;
     }
 
-
-
-    public void Add(EntityHandle e, T value)
+    public void Add(EntityId entity, T value)
     {
-        ArgumentOutOfRangeException.ThrowIfNegativeOrZero(e.Value, nameof(e));
+        ArgumentOutOfRangeException.ThrowIfNegativeOrZero(entity.Value, nameof(entity));
 
         EnsureCapacity(1);
-        _entities[Count] = e;
+        _entities[Count] = entity;
         _data[Count] = value;
         IsDirty = true;
         Count++;
     }
 
     //TODO
-    public void Remove(EntityHandle e)
+    public void Remove(EntityId entity)
     {
-        ArgumentOutOfRangeException.ThrowIfNegativeOrZero(e.Value, nameof(e));
-        ArgumentOutOfRangeException.ThrowIfGreaterThan(e.Value, Count, nameof(e));
+        ArgumentOutOfRangeException.ThrowIfNegativeOrZero(entity.Value, nameof(entity));
+        ArgumentOutOfRangeException.ThrowIfGreaterThan(entity.Value, Count, nameof(entity));
 
-        var idx = e - 1;
+        var idx = entity - 1;
         _entities[idx] = default;
         _data[idx] = default;
         //_free.Push(idx);

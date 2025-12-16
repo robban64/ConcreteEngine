@@ -10,14 +10,14 @@ using ConcreteEngine.Engine.Worlds.Entities.Components;
 namespace Demo3D;
 
 public readonly struct ScenePlacement(
-    ModelBaseDrawInfo modelInfo,
+    ModelMeshInfo modelInfo,
     in BoundingBox bounds,
     MaterialTag mat,
     float offset = 0f)
 {
     public readonly BoundingBox Bounds  = bounds;
     public readonly MaterialTag Mat  = mat;
-    public readonly ModelBaseDrawInfo ModelInfo  = modelInfo;
+    public readonly ModelMeshInfo ModelInfo  = modelInfo;
     public readonly float Offset  = offset;
 }
 

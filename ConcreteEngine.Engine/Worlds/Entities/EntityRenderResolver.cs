@@ -7,10 +7,10 @@ namespace ConcreteEngine.Engine.Worlds.Entities;
 
 internal readonly struct EntityResolverEntry : IComparable<EntityResolverEntry>
 {
-    public readonly EntityHandle Entity;
+    public readonly EntityId Entity;
     public readonly DrawCommandResolver CommandResolver;
 
-    public EntityResolverEntry(EntityHandle entity, RenderResolver resolver)
+    public EntityResolverEntry(EntityId entity, RenderResolver resolver)
     {
         Entity = entity;
 
@@ -32,7 +32,7 @@ internal sealed class EntityRenderResolver
 
     internal ReadOnlySpan<EntityResolverEntry> Entities => CollectionsMarshal.AsSpan(_resolvedEntities);
 
-    public void AddResolver(EntityHandle entity, RenderResolver resolver)
+    public void AddResolver(EntityId entity, RenderResolver resolver)
     {
         ArgumentOutOfRangeException.ThrowIfNegativeOrZero(entity.Value, nameof(entity));
         ArgumentOutOfRangeException.ThrowIfNegativeOrZero((int)resolver, nameof(resolver));
@@ -40,7 +40,7 @@ internal sealed class EntityRenderResolver
         _resolvedEntities.Add(new EntityResolverEntry(entity, resolver));
     }
 
-    public void RemoveResolver(EntityHandle entity)
+    public void RemoveResolver(EntityId entity)
     {
         ArgumentOutOfRangeException.ThrowIfNegativeOrZero(entity.Value, nameof(entity));
 

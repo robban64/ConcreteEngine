@@ -36,6 +36,7 @@ public sealed class World
     private readonly DrawEntityAssembler _drawEntities;
     private readonly WorldRenderer _worldRenderer;
 
+
     internal World(EngineWindow engineWindow, GraphicsRuntime graphics, AssetSystem assets)
     {
         _assets = assets;
@@ -128,4 +129,20 @@ public sealed class World
     private void ProcessActions()
     {
     }
+
+    internal WorldContext CreateContext() =>
+        new()
+        {
+            Entities = _entities,
+            MeshTable = _meshTable,
+            MaterialTable = _materialTable,
+            AnimationTable = _animationTable,
+            WorldRenderParams = _worldRenderParams,
+            MeshGenerator = _meshGenerator,
+            Camera = _camera,
+            Particles = _particles,
+            Sky = _sky,
+            Raycast = _raycast,
+            Terrain = _terrain,
+        };
 }

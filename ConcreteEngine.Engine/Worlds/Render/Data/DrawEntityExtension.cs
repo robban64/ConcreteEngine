@@ -7,12 +7,12 @@ namespace ConcreteEngine.Engine.Worlds.Render.Data;
 internal static class DrawEntityExtension
 {
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public static DrawCommandId ToCommandId(this RenderSourceKind source)
+    public static DrawCommandId ToCommandId(this EntitySourceKind source)
     {
         return source switch
         {
-            RenderSourceKind.Model => DrawCommandId.Model,
-            RenderSourceKind.Particle => DrawCommandId.Particle,
+            EntitySourceKind.Model => DrawCommandId.Model,
+            EntitySourceKind.Particle => DrawCommandId.Particle,
             _ => throw new ArgumentOutOfRangeException(nameof(source), source, null)
         };
     }

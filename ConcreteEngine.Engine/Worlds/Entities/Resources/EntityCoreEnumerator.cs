@@ -1,8 +1,7 @@
 using System.Runtime.CompilerServices;
-using ConcreteEngine.Common.Numerics;
 using ConcreteEngine.Engine.Worlds.Entities.Components;
 
-namespace ConcreteEngine.Engine.Worlds.Entities;
+namespace ConcreteEngine.Engine.Worlds.Entities.Resources;
 
 internal ref struct EntityCoreEnumerator(EntitiesCoreView view)
 {
@@ -23,9 +22,9 @@ internal ref struct EntityCoreEnumerator(EntitiesCoreView view)
     {
         private readonly EntitiesCoreView _view = view;
         public readonly int Index = idx;
-        public readonly EntityHandle Entity = new(idx + 1);
+        public readonly EntityId Entity = new(idx + 1);
 
-        public ref RenderSourceComponent Source
+        public ref SourceComponent Source
         {
             [MethodImpl(MethodImplOptions.AggressiveInlining)]
             get => ref _view.Sources[Index];

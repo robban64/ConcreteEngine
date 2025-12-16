@@ -1,6 +1,6 @@
 using System.Runtime.CompilerServices;
 
-namespace ConcreteEngine.Engine.Worlds.Entities;
+namespace ConcreteEngine.Engine.Worlds.Entities.Resources;
 
 internal ref struct EntityEnumerator<T1>(EntityStore<T1> r)
     where T1 : unmanaged
@@ -15,7 +15,7 @@ internal ref struct EntityEnumerator<T1>(EntityStore<T1> r)
     public readonly ref struct Item(int idx, EntityStore<T1> r)
     {
         public readonly int Index = idx;
-        public EntityHandle Entity => r.GetHandle(Index);
+        public EntityId Entity => r.GetHandle(Index);
         public ref T1 Component => ref r.GetByIndex(Index);
     }
 

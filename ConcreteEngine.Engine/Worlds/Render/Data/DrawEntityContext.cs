@@ -32,18 +32,18 @@ internal ref struct DrawEntityView(int idx, ref DrawEntity entity)
 
 internal readonly ref struct DrawEntityContext(
     Span<DrawEntity> drawEntities,
-    Span<EntityHandle> entityIndices,
+    Span<EntityId> entityIndices,
     Span<int> byEntityId)
 {
     public readonly Span<DrawEntity> EntitySpan = drawEntities;
-    public readonly Span<EntityHandle> EntityIndices = entityIndices;
+    public readonly Span<EntityId> EntityIndices = entityIndices;
     public readonly Span<int> ByEntityIdSpan = byEntityId;
     
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public bool IsVisible(EntityHandle entityHandle) => ByEntityIdSpan[entityHandle] != -1;
+    public bool IsVisible(EntityId entityId) => ByEntityIdSpan[entityId] != -1;
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public ref DrawEntity GetByEntityId(EntityHandle entityHandle) => ref EntitySpan[ByEntityIdSpan[entityHandle]];
+    public ref DrawEntity GetByEntityId(EntityId entityId) => ref EntitySpan[ByEntityIdSpan[entityId]];
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public DrawEntityEnumerator GetEnumerator() => new(this);

@@ -6,35 +6,21 @@ using ConcreteEngine.Renderer.Data;
 
 namespace ConcreteEngine.Engine.Worlds.Entities.Components;
 
-public enum RenderSourceKind : byte
-{
-    Model,
-    Particle,
-}
-
-public enum RenderResolver : byte
-{
-    None = 0,
-    Wireframe = 1,
-    Highlight = 2,
-    BoundingVolume = 3,
-}
-
 [StructLayout(LayoutKind.Sequential)]
-public struct RenderSourceComponent(
+public struct SourceComponent(
     ModelId model,
     int drawCount,
     MaterialTagKey materialTagKey,
-    RenderSourceKind kind = RenderSourceKind.Model)
+    EntitySourceKind kind) : IEntityComponent
 {
-    public ModelId Model = model;
     public int DrawCount = drawCount;
+    public ModelId Model = model;
     public MaterialTagKey MaterialKey = materialTagKey;
-    public RenderSourceKind Kind = kind;
+    public EntitySourceKind Kind = kind;
 }
 
 [StructLayout(LayoutKind.Sequential)]
-public struct ParticleComponent(int emitterHandle, MaterialId material)
+public struct ParticleComponent(int emitterHandle, MaterialId material) : IEntityComponent
 {
     public int EmitterHandle = emitterHandle;
     public MaterialId Material = material;

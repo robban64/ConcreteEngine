@@ -1,7 +1,14 @@
+using System.Runtime.InteropServices;
+
 namespace ConcreteEngine.Engine.Worlds.Data;
 
-public readonly record struct ModelId(int Value)
+[StructLayout(LayoutKind.Sequential)]
+public readonly record struct ModelId
 {
-    public readonly int Value = Value;
+    public readonly ushort Value;
+
+    public ModelId(ushort value) => Value = value;
+    public ModelId(int value) => Value = (ushort)value;
+
     public static implicit operator int(ModelId id) => id.Value;
 }

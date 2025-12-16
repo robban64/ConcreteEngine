@@ -12,15 +12,15 @@ internal struct DrawEntity
 {
     public DrawEntitySource Source;
     public DrawEntityMeta Meta;
-    public EntityHandle Entity;
+    public EntityId Entity;
 }
 
 [StructLayout(LayoutKind.Sequential)]
 internal struct DrawEntitySource(ModelId model, MaterialTagKey materialKey, int drawCount)
 {
-    public ModelId Model = model;
     public int DrawCount = drawCount;
     public int InstanceCount;
+    public ModelId Model = model;
     public MaterialTagKey MaterialKey = materialKey;
 }
 

@@ -23,7 +23,7 @@ internal ref struct EntityCoreEnumerator(EntitiesCoreView view)
     {
         private readonly EntitiesCoreView _view = view;
         public readonly int Index = idx;
-        public readonly EntityId Entity = new(idx + 1);
+        public readonly EntityHandle Entity = new(idx + 1);
 
         public ref RenderSourceComponent Source
         {

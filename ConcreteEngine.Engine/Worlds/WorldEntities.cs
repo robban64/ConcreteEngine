@@ -11,6 +11,7 @@ namespace ConcreteEngine.Engine.Worlds;
 
 public sealed class WorldEntities
 {
+    public const int DefaultEntityCapacity = 1024;
     private MeshTable _meshTable = null!;
     private MaterialTable _materialTable = null!;
 
@@ -23,7 +24,7 @@ public sealed class WorldEntities
 
     internal WorldEntities()
     {
-        _coreStore = new EntityCoreStore(1024);
+        _coreStore = new EntityCoreStore(DefaultEntityCapacity);
         _animations = GenericStores<AnimationComponent>.CreateStore(64);
         _particles = GenericStores<ParticleComponent>.CreateStore(64);
         _storeList = [Animations, Particles];
@@ -32,7 +33,7 @@ public sealed class WorldEntities
     }
 
 
-    public int EntityCount => _coreStore.Count;
+    public int EntityCount => _coreStore.ActiveCount;
     internal EntityCoreStore Core => _coreStore;
     internal EntityStore<AnimationComponent> Animations => _animations;
     internal EntityStore<ParticleComponent> Particles => _particles;
@@ -45,18 +46,18 @@ public sealed class WorldEntities
         _materialTable = materialTable;
     }
 
-    public void AddComponent<T>(EntityId entityId, in T component) where T : unmanaged
+    public void AddComponent<T>(EntityId entity, in T component) where T : unmanaged
     {
-        ArgumentOutOfRangeException.ThrowIfNegativeOrZero(entityId.Id, nameof(entityId));
-        GenericStores<T>.Store.Add(entityId, entityId - 1, component);
+        ArgumentOutOfRangeException.ThrowIfNegativeOrZero(entity.Handle, nameof(entity.Handle));
+        GenericStores<T>.Store.Add(entity, component);
     }
 
-    internal void ApplyRenderResolverFor(EntityId entityId, RenderResolver resolver)
+    internal void ApplyRenderResolverFor(EntityHandle entityHandle, RenderResolver resolver)
     {
-        _renderResolver.AddResolver(entityId, resolver);
+        _renderResolver.AddResolver(entityHandle, resolver);
     }
 
-    internal void RemoveRenderResolverFor(EntityId entityId) => _renderResolver.RemoveResolver(entityId);
+    internal void RemoveRenderResolverFor(EntityHandle entityHandle) => _renderResolver.RemoveResolver(entityHandle);
 
     internal void EndTick()
     {
@@ -64,24 +65,20 @@ public sealed class WorldEntities
             store.EndTick();
     }
 
-    private EntityId CreateCoreEntity(ModelId id, int draw, in MaterialTag matTag, in Transform tran,
-        in BoundingBox box, out int index, out MaterialTagKey matKey)
-    {
-        matKey = _materialTable.Add(in matTag);
-        return Core.AddEntity(new RenderSourceComponent(id, draw, matKey), in tran, in box, out index);
-    }
-
     public EntityId CreateModelEntity(ModelId id, int draw, in MaterialTag mat, in Transform tran, in BoundingBox box)
     {
-        var entityId = CreateCoreEntity(id, draw, in mat, in tran, in box, out var index, out var matKey);
-        return entityId;
+        var matKey = _materialTable.Add(in mat);
+        var source = new RenderSourceComponent(id, draw, matKey, RenderSourceKind.Model);
+        var core = new CoreComponent(source, in tran, box);
+        return Core.AddEntity(EntityKind.Model, in core);
     }
 
-    public EntityId CreateParticleEntity(ParticleEmitter emitter, ParticleComponent component)
+    public EntityHandle CreateParticleEntity(ParticleEmitter emitter, ParticleComponent component)
     {
         var source = new RenderSourceComponent(emitter.Model, 4, emitter.MaterialKey, RenderSourceKind.Particle);
-        var entity = Core.AddEntity(source, Transform.Identity, ParticleComponent.DefaultParticleBounds, out var index);
-        Particles.Add(entity, index, component);
+        var core = new CoreComponent(in source, in Transform.Identity, ParticleComponent.DefaultParticleBounds);
+        var entity = Core.AddEntity(EntityKind.Particle, in core);
+        Particles.Add(entity, component);
         return entity;
     }
 

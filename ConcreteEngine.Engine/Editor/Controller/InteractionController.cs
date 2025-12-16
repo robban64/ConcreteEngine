@@ -35,7 +35,7 @@ internal sealed class InteractionController(ApiContext apiContext) : IEngineInte
         var newPoint = ray.GetPointOnRay(t);
         var tHeight = _terrain.GetSmoothHeight(newPoint.X, newPoint.Z);
 
-        var entityId = new EntityId(entity);
+        var entityId = new EntityHandle(entity);
         ref readonly var bounds = ref _entities.Core.GetBoxById(entityId);
 
         newPoint.Y = tHeight - bounds.Bounds.Min.Y;

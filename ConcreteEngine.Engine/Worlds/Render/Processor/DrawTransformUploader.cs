@@ -23,8 +23,7 @@ internal static class DrawTransformUploader
             var locals = meshTable.GetPartTransforms(entity.Source.Model);
             foreach (ref readonly var local in locals)
             {
-                ref var modelTransform = ref uploader.GetWriter();
-                WriteTransformUniform(ref modelTransform, in local, in world, animatedSlot);
+                WriteTransformUniform(ref uploader.GetWriter(), in local, in world, animatedSlot);
             }
         }
     }

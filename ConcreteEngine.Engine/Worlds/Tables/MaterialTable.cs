@@ -12,9 +12,15 @@ public interface IMaterialTable
 
 public sealed class MaterialTable : IMaterialTable
 {
-    private int _keyIdx = 0;
+    private static MaterialTagKey CreateTagKey() => new(++_keyIdx);
+
+    private static int _keyIdx = 0;
+    
     private MaterialTag[] _table = new MaterialTag[64];
     private readonly Dictionary<MaterialTag, MaterialTagKey> _byTag = new(64);
+    
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public void GetMaterialTag(MaterialTagKey key, out MaterialTag tag) => tag = _table[key.Value - 1];
 
     public MaterialTagKey Add(in MaterialTag tag)
     {
@@ -27,9 +33,10 @@ public sealed class MaterialTable : IMaterialTable
     {
         if (_byTag.TryGetValue(tag, out var key)) return key;
 
-        key = new MaterialTagKey(_keyIdx + 1);
+        _table[_keyIdx] = tag;
+
+        key = CreateTagKey();
         _byTag[tag] = key;
-        _table[_keyIdx++] = tag;
         return key;
     }
 
@@ -55,10 +62,6 @@ public sealed class MaterialTable : IMaterialTable
         tag = _table[key.Value - 1];
         return true;
     }
-
-
-    [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public void ResolveSubmitMaterial(MaterialTagKey key, out MaterialTag tag) => tag = _table[key.Value - 1];
 
     public int DrainMaterials(MaterialTagKey key, Span<MaterialId> span)
     {

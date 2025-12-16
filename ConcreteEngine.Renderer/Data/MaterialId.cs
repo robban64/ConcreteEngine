@@ -1,9 +1,17 @@
+using System.Runtime.InteropServices;
+
 namespace ConcreteEngine.Renderer.Data;
 
-public readonly record struct MaterialId(int Id) : IComparable<MaterialId>
+
+[StructLayout(LayoutKind.Sequential)]
+public readonly record struct MaterialId: IComparable<MaterialId>
 {
+    public readonly ushort Id;
+
+    public MaterialId(ushort value) => Id = value;
+    public MaterialId(int value) => Id = (ushort)value;
+
     public static implicit operator int(MaterialId id) => id.Id;
-    public static explicit operator MaterialId(int value) => new(value);
 
     public int CompareTo(MaterialId other) => Id.CompareTo(other.Id);
 }

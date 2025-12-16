@@ -65,8 +65,8 @@ public sealed class WorldRenderer
                 _renderer.FboRegistry.RecreateScreenDependentFbo(_window.OutputSize);
                 break;
             case FboCommandAction.RecreateShadowFbo:
-                _renderer.FboRegistry.RecreateFixedFrameBuffer<ShadowPassTag>(FboVariant.Default, req.Size);
-                _worldRenderParams.SetShadow(req.Size.Width);
+                if(_worldRenderParams.SetShadow(req.Size.Width))
+                    _renderer.FboRegistry.RecreateFixedFrameBuffer<ShadowPassTag>(FboVariant.Default, req.Size);
                 break;
             case FboCommandAction.None:
             default:

@@ -1,3 +1,5 @@
+using System.Runtime.CompilerServices;
+
 namespace ConcreteEngine.Engine.Worlds.Entities;
 
 internal ref struct EntityEnumerator<T1>(EntityStore<T1> r)
@@ -5,14 +7,15 @@ internal ref struct EntityEnumerator<T1>(EntityStore<T1> r)
 {
     private int _i = -1;
 
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public bool MoveNext() => ++_i < r.Count;
-    public Item Current => new Item(_i, r);
+    
+    public Item Current => new (_i, r);
 
     public readonly ref struct Item(int idx, EntityStore<T1> r)
     {
         public readonly int Index = idx;
-        public int CoreIndex => r.GetCoreIndex(Index);
-        public EntityId Entity => r.GetEntityId(Index);
+        public EntityHandle Entity => r.GetHandle(Index);
         public ref T1 Component => ref r.GetByIndex(Index);
     }
 

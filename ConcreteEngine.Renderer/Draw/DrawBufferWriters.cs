@@ -17,6 +17,9 @@ public readonly ref struct DrawCommandUploader
         _cmdBuffer = cmdBuffer;
         _transformBuffer = transformBuffer;
     }
+    
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public ref DrawObjectUniform GetWriter() => ref _transformBuffer[_cmdBuffer.IncrementTransformIndex()];
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public int SubmitDraw(in DrawCommand cmd, DrawCommandMeta meta) => _cmdBuffer.Submit(in cmd, meta);
@@ -26,13 +29,6 @@ public readonly ref struct DrawCommandUploader
 
     public int SubmitDrawIdentity(DrawCommand cmd, DrawCommandMeta meta) => _cmdBuffer.SubmitDrawIdentity(cmd, meta);
 
-    [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public ref DrawObjectUniform GetWriter()
-    {
-        var index = _cmdBuffer.IncrementTransformIndex();
-        if ((uint)index >= _transformBuffer.Length) throw new IndexOutOfRangeException();
-        return ref _transformBuffer[index];
-    }
 }
 
 public readonly ref struct SkinningBufferUploader

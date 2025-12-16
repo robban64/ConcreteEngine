@@ -8,7 +8,7 @@ namespace ConcreteEngine.Engine.Worlds.Entities;
 internal sealed class EntityCoreStore
 {
     //private int _entityIdx = 0;
-    private EntityId Create() => new(++_idx);
+    private EntityHandle Create() => new(++_idx);
     private int _idx = 0;
 
     private EntityId[] _entities;
@@ -18,8 +18,8 @@ internal sealed class EntityCoreStore
 
     private Stack<int> _free = [];
 
-    public int Count => int.Max(0, _idx - 1 - _free.Count);
-    public int TotalCount => _idx;
+    public int ActiveCount => int.Max(0, _idx - 1 - _free.Count);
+    public int Count => _idx;
 
     public bool IsDirty { get; private set; }
 
@@ -33,15 +33,17 @@ internal sealed class EntityCoreStore
         _boxes = new BoxComponent[initialCapacity];
     }
 
+    public EntityId GetEntity(EntityHandle e) => _entities[e - 1];
+
     // Getters
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public ref RenderSourceComponent GetSourceById(EntityId e) => ref _sources[e - 1];
+    public ref RenderSourceComponent GetSourceById(EntityHandle e) => ref _sources[e - 1];
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public ref Transform GetTransformById(EntityId e) => ref _transforms[e - 1];
+    public ref Transform GetTransformById(EntityHandle e) => ref _transforms[e - 1];
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public ref BoxComponent GetBoxById(EntityId e) => ref _boxes[e - 1];
+    public ref BoxComponent GetBoxById(EntityHandle e) => ref _boxes[e - 1];
 
     // Spans
     public Span<EntityId> GetEntitySpan() => _entities.AsSpan(0, _idx);
@@ -50,7 +52,7 @@ internal sealed class EntityCoreStore
     public Span<BoxComponent> GetBoxSpan() => _boxes.AsSpan(0, _idx);
 
     // Views
-    public EntityView GetEntityView(EntityId e)
+    public EntityView GetEntityView(EntityHandle e)
     {
         var idx = e - 1;
         if ((uint)idx >= _entities.Length) throw new IndexOutOfRangeException();
@@ -58,33 +60,32 @@ internal sealed class EntityCoreStore
     }
 
     public EntitiesReadView GetReadView() =>
-        new(_sources.AsSpan(0, _idx), _transforms.AsSpan(0, _idx), _boxes.AsSpan(0, _idx));
+        new(_idx, _sources.AsSpan(0, _idx), _transforms.AsSpan(0, _idx), _boxes.AsSpan(0, _idx));
 
     public EntitiesCoreView GetCoreView() =>
-        new(_sources.AsSpan(0, _idx), _transforms.AsSpan(0, _idx), _boxes.AsSpan(0, _idx));
+        new(_idx, _sources.AsSpan(0, _idx), _transforms.AsSpan(0, _idx), _boxes.AsSpan(0, _idx));
 
 
-    public EntityId AddEntity(RenderSourceComponent renderSource, in Transform transform, in BoundingBox bounds,
-        out int index)
+    public EntityId AddEntity(EntityKind kind, in CoreComponent component)
     {
         //var idx = _free.Count > 0 ? _free.Pop() : Create();
-        index = _idx;
-        var e = Create();
+        var index = _idx;
+        var entity = new EntityId(Create(), 0, kind);
         EnsureCapacity(1);
 
-        _entities[index] = e;
-        _sources[index] = renderSource;
-        _transforms[index] = transform;
-        _boxes[index] = bounds;
+        _entities[index] = entity;
+        _sources[index] = component.RenderSource;
+        _transforms[index] = component.Transform;
+        _boxes[index] = component.Box;
 
         IsDirty = true;
-        return e;
+        return entity;
     }
 
-    public void Remove(EntityId e)
+    public void Remove(EntityHandle e)
     {
-        ArgumentOutOfRangeException.ThrowIfNegativeOrZero(e.Id, nameof(e));
-        ArgumentOutOfRangeException.ThrowIfGreaterThan(e.Id, _idx, nameof(e));
+        ArgumentOutOfRangeException.ThrowIfNegativeOrZero(e.Value, nameof(e));
+        ArgumentOutOfRangeException.ThrowIfGreaterThan(e.Value, _idx, nameof(e));
     }
 
     internal void EndTick()

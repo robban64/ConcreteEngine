@@ -5,7 +5,7 @@ namespace ConcreteEngine.Engine.Worlds.Entities;
 internal static class EntityUtility
 {
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public static int BinarySearchEntity(ReadOnlySpan<EntityId> collection, EntityId entity)
+    public static int BinarySearchEntity(ReadOnlySpan<EntityHandle> collection, EntityHandle entity)
     {
         int lo = 0, hi = collection.Length - 1;
         while (lo <= hi)

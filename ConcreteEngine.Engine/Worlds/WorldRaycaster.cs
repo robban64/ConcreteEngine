@@ -38,7 +38,7 @@ public sealed class WorldRaycaster
         return _terrain.GetPointOnTerrainPlane(in ray);
     }
 
-    public EntityId GetEntityByCameraRay(Vector2 screenCoords, out BoundingBox resultBounds, out float distance)
+    public EntityHandle GetEntityByCameraRay(Vector2 screenCoords, out BoundingBox resultBounds, out float distance)
     {
         CreateRayFrom(screenCoords, out var ray);
 
@@ -49,7 +49,7 @@ public sealed class WorldRaycaster
         if (visibleEntities.Length == 0) return default;
         var coreView = _entities.Core.GetCoreView();
 
-        EntityId closestEntity = default;
+        EntityHandle closestEntity = default;
         BoundingBox worldBounds;
         foreach (var entity in visibleEntities)
         {

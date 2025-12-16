@@ -61,13 +61,16 @@ public sealed class WorldRenderParams
         _dirty = true;
     }
 
-    public void SetShadow(int size)
+    public bool SetShadow(int size)
     {
         ArgumentOutOfRangeException.ThrowIfLessThan(size, RenderLimits.MinShadowMapSize);
         ArgumentOutOfRangeException.ThrowIfGreaterThan(size, RenderLimits.MaxShadowMapSize);
         ArgumentOutOfRangeException.ThrowIfZero(IntMath.IsPowerOfTwo(size) ? 1 : 0);
+        if (size == ShadowMapSize) return false;
 
         _shadow = WorldParamUtils.MakeSizedShadow(size);
+        _dirty = true;
+        return true;
     }
 
     internal void SetFromData(in WorldParamsData data)

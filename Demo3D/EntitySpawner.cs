@@ -9,26 +9,32 @@ using ConcreteEngine.Engine.Worlds.Entities.Components;
 
 namespace Demo3D;
 
-public readonly record struct ScenePlacement(
-    ModelBaseDrawInfo ModelInfo,
-    in BoundingBox Bounds,
-    MaterialTag Mat,
-    float Offset = 0f);
+public readonly struct ScenePlacement(
+    ModelBaseDrawInfo modelInfo,
+    in BoundingBox bounds,
+    MaterialTag mat,
+    float offset = 0f)
+{
+    public readonly BoundingBox Bounds  = bounds;
+    public readonly MaterialTag Mat  = mat;
+    public readonly ModelBaseDrawInfo ModelInfo  = modelInfo;
+    public readonly float Offset  = offset;
+}
 
 public sealed class EntitySpawner(World world, float size = 256f, float margin = 4f)
 {
-    private EntityId CreateOnTerrain(ScenePlacement sp, Vector3 p, Vector3? s = null, Quaternion? r = null)
+    private EntityId CreateOnTerrain(in ScenePlacement sp, Vector3 p, Vector3? s = null, Quaternion? r = null)
     {
         var height = world.Terrain.GetSmoothHeight(p.X, p.Z) + p.Y;
         var scale = s.GetValueOrDefault(Vector3.One);
         var rotation = r.GetValueOrDefault(Quaternion.Identity);
-        return CreateModelEntity(sp, new Transform(p with { Y = height }, scale, rotation));
+        return CreateModelEntity(in sp, new Transform(p with { Y = height }, scale, rotation));
     }
 
-    private EntityId CreateModelEntity(ScenePlacement sp, Transform transform)
+    private EntityId CreateModelEntity(in ScenePlacement sp, Transform transform)
     {
         var m = sp.ModelInfo;
-        return world.Entities.CreateModelEntity(m.Model, m.DrawCount, sp.Mat, in transform, sp.Bounds);
+        return world.Entities.CreateModelEntity(m.Model, m.DrawCount, sp.Mat, in transform, in sp.Bounds);
     }
 
     public void PlaceGroundRocksBasic(
@@ -49,12 +55,12 @@ public sealed class EntitySpawner(World world, float size = 256f, float margin =
             float x = float.Lerp(rx, xPrev, bias);
             float z = float.Lerp(rz, zPrev, bias);
 
-            float s = 0.9f + (float)rng.NextFloat() * 0.4f;
+            float s = 0.9f + rng.NextFloat() * 0.4f;
             var scale = new Vector3(s);
-            var rot = Yaw((float)(rng.NextFloat() * MathF.Tau));
+            var rot = Yaw(rng.NextFloat() * MathF.Tau);
 
-            var sp = variants[Random.Shared.Next(variants.Length)];
-            CreateOnTerrain(sp, new Vector3(x, sp.Offset, z), scale, rot);
+            ref readonly var sp = ref variants[Random.Shared.Next(variants.Length)];
+            CreateOnTerrain(in sp, new Vector3(x, sp.Offset, z), scale, rot);
             xPrev = x;
             zPrev = z;
         }
@@ -88,7 +94,7 @@ public sealed class EntitySpawner(World world, float size = 256f, float margin =
             var rot = Yaw((float)(rng.NextDouble() * MathF.Tau));
 
             ref readonly var sp = ref variants[rng.Next(variants.Length)];
-            CreateOnTerrain(sp, new Vector3(x, sp.Offset, z), scale, rot);
+            CreateOnTerrain(in sp, new Vector3(x, sp.Offset, z), scale, rot);
         }
     }
 
@@ -121,16 +127,16 @@ public sealed class EntitySpawner(World world, float size = 256f, float margin =
             var scale = new Vector3(s);
             var rot = Yaw((float)(rng.NextDouble() * MathF.Tau));
 
-            var sp = variants[rng.Next(variants.Length)];
-            CreateOnTerrain(sp, new Vector3(x, sp.Offset, z), scale, rot);
+            ref readonly var sp =ref variants[rng.Next(variants.Length)];
+            CreateOnTerrain(in sp, new Vector3(x, sp.Offset, z), scale, rot);
         }
     }
 
     private (float x, float z) RandXz(ref FastRandom rng)
     {
         float max = size - margin;
-        float x = float.Lerp(margin, max, (float)rng.NextFloat());
-        float z = float.Lerp(margin, max, (float)rng.NextFloat());
+        float x = float.Lerp(margin, max, rng.NextFloat());
+        float z = float.Lerp(margin, max, rng.NextFloat());
         return (x, z);
     }
 

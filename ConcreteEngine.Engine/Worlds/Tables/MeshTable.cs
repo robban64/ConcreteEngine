@@ -1,4 +1,5 @@
 using System.Numerics;
+using System.Runtime.CompilerServices;
 using ConcreteEngine.Common.Collections;
 using ConcreteEngine.Common.Numerics;
 using ConcreteEngine.Engine.Assets;
@@ -19,8 +20,10 @@ internal sealed class MeshTable : IMeshTable
     private const int DefaultPartCap = 128;
     private const int DefaultModelCap = 64;
 
-    private int _modelIdx = 0;
-    private ModelId CreateModelId() => new(++_modelIdx);
+    private static ModelId CreateModelId() => new(++_modelIdx);
+    
+    private static int _modelIdx = 0;
+    private static int _partIdx = 0;
 
     private BoundingBox[] _modelBoxes = new BoundingBox[DefaultModelCap];
     private RangeU16[] _modelPartRanges = new RangeU16[DefaultModelCap];
@@ -28,7 +31,6 @@ internal sealed class MeshTable : IMeshTable
     private Matrix4x4[] _partTransforms = new Matrix4x4[DefaultPartCap];
     private BoundingBox[] _partBoxes = new BoundingBox[DefaultPartCap];
 
-    private int _partIdx = 0;
 
     internal MeshTable()
     {
@@ -44,6 +46,7 @@ internal sealed class MeshTable : IMeshTable
         return _modelPartRanges[index].Length;
     }
 
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public ReadOnlySpan<Matrix4x4> GetPartTransforms(ModelId id)
     {
         var index = id - 1;
@@ -54,6 +57,7 @@ internal sealed class MeshTable : IMeshTable
         return _partTransforms.AsSpan(range.Offset, range.Length);
     }
 
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public ReadOnlySpan<MeshPart> GetMeshParts(ModelId id)
     {
         var index = id - 1;

@@ -15,8 +15,8 @@ internal sealed class AnimationTable
     private const int DefaultAnimatedModelCap = 64;
     private const int DefaultBoneBufferCap = 64 * RenderLimits.BoneCapacity;
 
-    private AnimationId MakeId() => new(++_idx);
-    private int _idx = 0;
+    private static AnimationId MakeId() => new(++_idx);
+    private static int _idx = 0;
 
     private ModelId[] _idxToModel = new ModelId[DefaultAnimatedModelCap];
     private BoneTrack[][][] _clips = new BoneTrack[DefaultAnimatedModelCap][][];
@@ -29,6 +29,8 @@ internal sealed class AnimationTable
     public int TotalBones { get; private set; }
     public int TotalClips { get; private set; }
 
+
+    public int Count => _idx;
 
     public ReadOnlySpan<ModelId> ModelIdSpan => _idxToModel;
 

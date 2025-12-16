@@ -24,14 +24,12 @@ public sealed class DrawCommandBuffer
 
     private Matrix4x4[] _boneTransformBuffer;
 
+    private static int _submitCmdIdx = 0;
+    private static int _submitTransformIdx = 0;
+    private static int _skeletonIdx = 0;
+    
     private DrawCommandProcessor _processor = null!;
 
-    private int _submitCmdIdx = 0;
-    private int _submitTransformIdx = 0;
-
-    private int _skeletonIdx = 0;
-
-    public int Count => _submitCmdIdx;
 
     internal DrawCommandBuffer()
     {
@@ -47,13 +45,13 @@ public sealed class DrawCommandBuffer
 
         _submitCmdIdx = 0;
     }
+    
+    public int Count => _submitCmdIdx;
 
-    internal void Initialize(DrawCommandProcessor cmd)
-    {
-        _processor = cmd;
-    }
+    internal void Initialize(DrawCommandProcessor cmd) => _processor = cmd;
 
     public DrawCommandUploader GetDrawUploaderCtx() => new(this, _transformBuffer);
+    
     public SkinningBufferUploader GetSkinningUploaderCtx() => new(this, _boneTransformBuffer);
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]

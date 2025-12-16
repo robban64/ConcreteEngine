@@ -17,7 +17,4 @@ public struct Transform(in Vector3 translation, in Vector3 scale, in Quaternion 
 
     internal static ref TransformData UnsafeAs(ref Transform component) =>
         ref Unsafe.As<Transform, TransformData>(ref component);
-
-    internal static ref Transform UnsafeFrom(ref TransformData data) =>
-        ref Unsafe.As<TransformData, Transform>(ref data);
 }

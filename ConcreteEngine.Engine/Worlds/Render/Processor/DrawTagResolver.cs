@@ -1,4 +1,5 @@
 using System.Numerics;
+using ConcreteEngine.Common.Time;
 using ConcreteEngine.Engine.Time;
 using ConcreteEngine.Engine.Worlds.Entities;
 using ConcreteEngine.Engine.Worlds.Entities.Components;
@@ -19,7 +20,7 @@ internal static class DrawTagResolver
         foreach (var it in ctx)
         {
             ref var entity = ref it.DrawEntity;
-            var worldPos = view.GetTransform(entity.Entity).Translation;
+            ref readonly var worldPos = ref view.GetTransform(entity.Entity).Translation;
             var depthKey = DepthKeyUtility.MakeDepthKey(in viewDepth, worldPos, nearFar);
             entity.Meta.DepthKey = depthKey;
         }
@@ -40,6 +41,7 @@ internal static class DrawTagResolver
             drawEntity.Meta.Resolver = resolved.CommandResolver;
         }
 
+
         var slot = 1;
         foreach (var query in worldEntities.Query<AnimationComponent>())
         {
@@ -50,8 +52,9 @@ internal static class DrawTagResolver
             var index = ctx.ByEntityIdSpan[entityId];
             if (index == -1) continue;
             ref var drawEntity = ref ctx.EntitySpan[index];
-            drawEntity.SetAnimationSlot(slot++);
+            drawEntity.Meta.AnimatedSlot = (ushort)slot++;
         }
+
     }
 /*
     private bool hasRunEntities = false;

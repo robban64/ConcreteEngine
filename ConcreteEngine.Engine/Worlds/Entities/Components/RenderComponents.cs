@@ -28,8 +28,8 @@ public struct RenderSourceComponent(
     RenderSourceKind kind = RenderSourceKind.Model)
 {
     public ModelId Model = model;
-    public MaterialTagKey MaterialKey = materialTagKey;
     public int DrawCount = drawCount;
+    public MaterialTagKey MaterialKey = materialTagKey;
     public RenderSourceKind Kind = kind;
 }
 

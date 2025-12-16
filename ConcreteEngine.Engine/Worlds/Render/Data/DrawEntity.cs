@@ -12,20 +12,16 @@ internal struct DrawEntity
 {
     public DrawEntitySource Source;
     public DrawEntityMeta Meta;
-    public EntityId Entity;
-
-    public void WithDepthKey(ushort depthKey) => Meta.DepthKey = depthKey;
-
-    public void SetAnimationSlot(int animationSlot) => Meta.AnimatedSlot = (ushort)animationSlot;
+    public EntityHandle Entity;
 }
 
 [StructLayout(LayoutKind.Sequential)]
 internal struct DrawEntitySource(ModelId model, MaterialTagKey materialKey, int drawCount)
 {
     public ModelId Model = model;
-    public MaterialTagKey MaterialKey = materialKey;
     public int DrawCount = drawCount;
     public int InstanceCount;
+    public MaterialTagKey MaterialKey = materialKey;
 }
 
 [StructLayout(LayoutKind.Sequential)]

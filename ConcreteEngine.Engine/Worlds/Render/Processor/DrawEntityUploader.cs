@@ -24,7 +24,7 @@ internal static class DrawEntityUploader
             var matKey = entity.Source.MaterialKey;
             if (matKey != prevMatKey)
             {
-                matTable.ResolveSubmitMaterial(matKey, out materialTag);
+                matTable.GetMaterialTag(matKey, out materialTag);
                 prevMatKey = matKey;
             }
 

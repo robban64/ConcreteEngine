@@ -19,11 +19,11 @@ internal sealed class DrawEntityAssembler
 
     private static int _idx;
     private static int _prevIdx;
-    private  static EntityId _highEntityId;
+    private  static EntityHandle _highEntityHandle;
 
     //...
     private static int[] _byEntityId = new int[DefaultCapacity];
-    private static EntityId[] _entityIndices = new EntityId[DefaultCapacity];
+    private static EntityHandle[] _entityIndices = new EntityHandle[DefaultCapacity];
     private static DrawEntity[] _entities = new DrawEntity[DefaultCapacity];
     //...
 
@@ -33,7 +33,7 @@ internal sealed class DrawEntityAssembler
 
     //private static readonly FrameProfiler RenderProfiler = new(144, 144 * 10);
 
-    public ReadOnlySpan<EntityId> VisibleEntities => _entityIndices.AsSpan(0, _idx);
+    public ReadOnlySpan<EntityHandle> VisibleEntities => _entityIndices.AsSpan(0, _idx);
 
     internal DrawEntityAssembler(World world)
     {
@@ -53,11 +53,11 @@ internal sealed class DrawEntityAssembler
     public void Reset()
     {
         _entityIndices.AsSpan(0, _idx).Clear();
-        _byEntityId.AsSpan(0, _highEntityId).Fill(-1);
+        _byEntityId.AsSpan(0, _highEntityHandle).Fill(-1);
 
         _prevIdx = _idx;
         _idx = 0;
-        _highEntityId = default;
+        _highEntityHandle = default;
     }
 
     private void Ensure(DrawCommandBuffer commandBuffer)
@@ -97,14 +97,13 @@ internal sealed class DrawEntityAssembler
         var coreEntities = worldEntities.Core.GetReadView();
 
         // collect
-        _highEntityId = DrawEntityCollector.CollectEntities(in ctx, in coreEntities);
+        _highEntityHandle = DrawEntityCollector.CollectEntities(in ctx, in coreEntities);
 
         // tag
         TagDrawEntities(in ctx, in coreEntities);
 
         ExecuteUploader(in ctx, in coreEntities, commandBuffer);
         ExecuteProcessors(in ctx, commandBuffer);
-
         // end
     }
 
@@ -120,8 +119,11 @@ internal sealed class DrawEntityAssembler
     {
         var meshTable = _world.MeshTableImpl;
         var uploader = commandBuffer.GetDrawUploaderCtx();
+        StaticProfileTimer.RenderTimer.Begin();
         DrawEntityUploader.UploadDrawCommands(_world, in ctx, in uploader);
+        StaticProfileTimer.RenderTimer.EndPrint();
         DrawTransformUploader.UploadTransform(in ctx, in coreEntities, in uploader, meshTable);
+
     }
 
     private void ExecuteProcessors(in DrawEntityContext ctx, DrawCommandBuffer commandBuffer)

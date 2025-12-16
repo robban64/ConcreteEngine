@@ -7,10 +7,10 @@ namespace ConcreteEngine.Engine.Worlds.Entities;
 
 internal readonly struct EntityResolverEntry : IComparable<EntityResolverEntry>
 {
-    public readonly EntityId Entity;
+    public readonly EntityHandle Entity;
     public readonly DrawCommandResolver CommandResolver;
 
-    public EntityResolverEntry(EntityId entity, RenderResolver resolver)
+    public EntityResolverEntry(EntityHandle entity, RenderResolver resolver)
     {
         Entity = entity;
 
@@ -23,7 +23,7 @@ internal readonly struct EntityResolverEntry : IComparable<EntityResolverEntry>
         };
     }
 
-    public int CompareTo(EntityResolverEntry other) => Entity.Id == 0 ? -1 : Entity.Id.CompareTo(other.Entity.Id);
+    public int CompareTo(EntityResolverEntry other) => Entity.Value == 0 ? -1 : Entity.Value.CompareTo(other.Entity.Value);
 }
 
 internal sealed class EntityRenderResolver
@@ -32,17 +32,17 @@ internal sealed class EntityRenderResolver
 
     internal ReadOnlySpan<EntityResolverEntry> Entities => CollectionsMarshal.AsSpan(_resolvedEntities);
 
-    public void AddResolver(EntityId entity, RenderResolver resolver)
+    public void AddResolver(EntityHandle entity, RenderResolver resolver)
     {
-        ArgumentOutOfRangeException.ThrowIfNegativeOrZero(entity.Id, nameof(entity));
+        ArgumentOutOfRangeException.ThrowIfNegativeOrZero(entity.Value, nameof(entity));
         ArgumentOutOfRangeException.ThrowIfNegativeOrZero((int)resolver, nameof(resolver));
 
         _resolvedEntities.Add(new EntityResolverEntry(entity, resolver));
     }
 
-    public void RemoveResolver(EntityId entity)
+    public void RemoveResolver(EntityHandle entity)
     {
-        ArgumentOutOfRangeException.ThrowIfNegativeOrZero(entity.Id, nameof(entity));
+        ArgumentOutOfRangeException.ThrowIfNegativeOrZero(entity.Value, nameof(entity));
 
         var entities = Entities;
 

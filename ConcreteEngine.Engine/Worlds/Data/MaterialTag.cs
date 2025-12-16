@@ -4,11 +4,18 @@ using ConcreteEngine.Renderer.Data;
 
 namespace ConcreteEngine.Engine.Worlds.Data;
 
-public readonly record struct MaterialTagKey(int Value)
+[StructLayout(LayoutKind.Sequential)]
+public readonly record struct MaterialTagKey
 {
-    public static MaterialTagKey Ignore => new(-1);
+    public readonly ushort Value;
+
+    public MaterialTagKey(ushort value) => Value = value;
+    public MaterialTagKey(int value) => Value = (ushort)value;
+
+    public static implicit operator int(MaterialTagKey id) => id.Value;
 }
 
+[StructLayout(LayoutKind.Sequential)]
 public readonly struct MaterialSlotInfo(MaterialId material, ushort slot, bool isTransparent = false)
 {
     public readonly MaterialId Material = material;

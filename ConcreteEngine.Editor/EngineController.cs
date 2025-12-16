@@ -28,7 +28,7 @@ public static class EngineController
         if (SelectedEntity.IsValid)
             EntityController.DeselectEntity(SelectedEntity);
 
-        EntityController.SelectEntity(entity, out EditorDataStore.EntityState);
+        EntityController.SelectEntity(entity, ref EditorDataStore.EntityState);
         EditorDataStore.SelectedEntity = entity;
 
         var entityObj = EditorManagedStore.Get<EditorEntityResource>(entity);

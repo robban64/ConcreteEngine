@@ -5,7 +5,7 @@ namespace ConcreteEngine.Editor.Bridge;
 
 public interface IEngineEntityController
 {
-    void SelectEntity(EditorId entity, out EditorEntityState state);
+    void SelectEntity(EditorId entity, ref EditorEntityState state);
     void DeselectEntity(EditorId entity);
 
     void Fetch(EditorId entity, ref EditorEntityState state);

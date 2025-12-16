@@ -15,18 +15,14 @@ internal sealed class EntityStore<T> : IEntityStore where T : unmanaged
 {
     private T[] _data;
     private EntityId[] _entities;
-    //private Stack<int> _free = [];
+    private readonly Stack<int> _free = [];
 
     public int Count { get; private set; }
     public bool IsDirty { get; internal set; }
 
-    internal int Low { get; private set; }
-    internal int High { get; private set; }
-
-
     public EntityStore(int initialCapacity)
     {
-        ArgumentOutOfRangeException.ThrowIfLessThan(initialCapacity, 32);
+        ArgumentOutOfRangeException.ThrowIfLessThan(initialCapacity, 16);
         _data = new T[initialCapacity];
         _entities = new EntityId[initialCapacity];
     }
@@ -79,24 +75,24 @@ internal sealed class EntityStore<T> : IEntityStore where T : unmanaged
     public void Add(EntityId entity, T value)
     {
         ArgumentOutOfRangeException.ThrowIfNegativeOrZero(entity.Value, nameof(entity));
-
         EnsureCapacity(1);
-        _entities[Count] = entity;
-        _data[Count] = value;
+        var index = _free.Count > 0 ? _free.Pop() : Count++;
+
+        _entities[index] = entity;
+        _data[index] = value;
         IsDirty = true;
-        Count++;
     }
 
-    //TODO
     public void Remove(EntityId entity)
     {
         ArgumentOutOfRangeException.ThrowIfNegativeOrZero(entity.Value, nameof(entity));
-        ArgumentOutOfRangeException.ThrowIfGreaterThan(entity.Value, Count, nameof(entity));
 
-        var idx = entity - 1;
+        var idx = FindIndex(entity);
+        if(idx == -1) throw  new ArgumentOutOfRangeException(nameof(entity));
+        
         _entities[idx] = default;
         _data[idx] = default;
-        //_free.Push(idx);
+        _free.Push(idx);
     }
 
     public void EndTick()

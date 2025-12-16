@@ -19,7 +19,7 @@ internal static class DrawWorldProcessor
 
     private static void SubmitDrawTerrain(DrawCommandUploader uploader, MeshTable meshTable, WorldTerrain terrain)
     {
-        var view = meshTable.GetPartsRefView(terrain.Model);
+        var view = meshTable.GetPartsView(terrain.Model);
 
         var meta = new DrawCommandMeta(DrawCommandId.Terrain, DrawCommandQueue.Terrain);
         var cmd = new DrawCommand(view.Parts[0].Mesh, terrain.Material);

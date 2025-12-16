@@ -4,6 +4,7 @@ using ConcreteEngine.Engine.Assets.Internal;
 using ConcreteEngine.Engine.Assets.Models;
 using ConcreteEngine.Engine.Editor.Data;
 using ConcreteEngine.Engine.Platform;
+using ConcreteEngine.Engine.Utils;
 using ConcreteEngine.Engine.Worlds.Entities;
 using ConcreteEngine.Engine.Worlds.MeshGeneration;
 using ConcreteEngine.Engine.Worlds.Render;
@@ -102,7 +103,7 @@ public sealed class World
         _sky.AttachRenderer(_meshTable);
 
 
-        _drawEntities.CubeId = _assets.StoreImpl.GetByName<Model>("Cube").ModelId;
+        PrimitiveMeshes.Cube = _assets.StoreImpl.GetByName<Model>("Cube").MeshParts[0].ResourceId;
         var mat = assets.MaterialStoreImpl.CreateMaterial("EmptyMat", "EmptyMat1");
         _drawEntities.EmptyMaterialKey = _materialTable.Add(MaterialTagBuilder.BuildOne(mat.Id, true));
     }

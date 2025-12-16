@@ -15,9 +15,11 @@ internal sealed class WorldEntities
     private MaterialTable _materialTable = null!;
 
     private readonly List<IEntityStore> _storeList;
-    private readonly EntityRenderResolver _renderResolver;
     private readonly EntityStore<AnimationComponent> _animations;
     private readonly EntityStore<ParticleComponent> _particles;
+
+    private readonly EntityStore<SelectionComponent> _selections;
+    private readonly EntityStore<DebugBoundsComponent> _debugBounds;
 
     private static EntityCoreStore _coreStore = null!;
 
@@ -25,10 +27,12 @@ internal sealed class WorldEntities
     {
         _coreStore = new EntityCoreStore(DefaultEntityCapacity);
         _animations = GenericStores<AnimationComponent>.CreateStore(64);
-        _particles = GenericStores<ParticleComponent>.CreateStore(64);
-        _storeList = [Animations, Particles];
+        _particles = GenericStores<ParticleComponent>.CreateStore(16);
 
-        _renderResolver = new EntityRenderResolver();
+        _selections = GenericStores<SelectionComponent>.CreateStore(16);
+        _debugBounds = GenericStores<DebugBoundsComponent>.CreateStore(16);
+
+        _storeList = [_animations, _particles, _selections, _debugBounds];
     }
 
 
@@ -37,7 +41,6 @@ internal sealed class WorldEntities
     public EntityStore<AnimationComponent> Animations => _animations;
     public EntityStore<ParticleComponent> Particles => _particles;
 
-    public ReadOnlySpan<EntityResolverEntry> ResolvedEntitySpan => _renderResolver.Entities;
 
     public void Attach(MeshTable meshTable, MaterialTable materialTable)
     {
@@ -45,46 +48,23 @@ internal sealed class WorldEntities
         _materialTable = materialTable;
     }
 
+    public EntityId AddEntity(in CoreComponentBundle data) => Core.AddEntity(in data);
+
     public void AddComponent<T>(EntityId entity, in T component) where T : unmanaged, IEntityComponent
     {
         ArgumentOutOfRangeException.ThrowIfNegativeOrZero(entity.Value, nameof(entity.Value));
         GenericStores<T>.Store.Add(entity, component);
     }
 
-    public void ApplyRenderResolverFor(EntityId entity, RenderResolver resolver)
+    public void RemoveComponent<T>(EntityId entity) where T : unmanaged, IEntityComponent
     {
-        _renderResolver.AddResolver(entity, resolver);
+        ArgumentOutOfRangeException.ThrowIfNegativeOrZero(entity.Value, nameof(entity.Value));
+        GenericStores<T>.Store.Remove(entity);
     }
-
-    public void RemoveRenderResolverFor(EntityId entity) => _renderResolver.RemoveResolver(entity);
 
     public void EndTick()
     {
-        foreach (var store in _storeList)
-            store.EndTick();
-    }
-
-    public EntityId AddEntity(in CoreComponentBundle data) => Core.AddEntity(in data);
-
-    public void AddEntities(ReadOnlySpan<CoreComponentBundle> components, Span<EntityId> result) =>
-        Core.AddEntities(components, result);
-
-
-    public EntityId CreateModelEntity(ModelId id, in MaterialTag mat, in Transform tran, in BoundingBox box)
-    {
-        var matKey = _materialTable.Add(in mat);
-        var source = new SourceComponent(id, matKey, EntitySourceKind.Model);
-        var core = new CoreComponentBundle(in source, in tran, box);
-        return Core.AddEntity(in core);
-    }
-
-    public EntityId CreateParticleEntity(ParticleEmitter emitter, ParticleComponent component)
-    {
-        var source = new SourceComponent(emitter.Model, emitter.MaterialKey, EntitySourceKind.Particle);
-        var core = new CoreComponentBundle(in source, in Transform.Identity, ParticleComponent.DefaultParticleBounds);
-        var entity = Core.AddEntity(in core);
-        Particles.Add(entity, component);
-        return entity;
+        foreach (var store in _storeList) store.EndTick();
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
@@ -93,6 +73,7 @@ internal sealed class WorldEntities
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public EntityCoreEnumerator CoreQuery() => new(_coreStore.GetCoreView());
 
+    public EntityStore<T> GetStore<T>() where T : unmanaged, IEntityComponent => GenericStores<T>.Store;
 
     private static class GenericStores<T> where T : unmanaged, IEntityComponent
     {

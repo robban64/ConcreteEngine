@@ -31,9 +31,9 @@ void main()
     vec4 finalColor = vec4(baseTex.rgb * uHighlightColor.rgb, a);
 
     float pulseSpeed = 0.25; 
-    // This gives a 0-1-0 linear triangle wave. No easing, no "lag".
+    // This gives a 0-1-0 linear triangle wave.
     float triWave = abs(fract(uTime * pulseSpeed) * 2.0 - 1.0);
-    // Map this 0-1 wave to your desired alpha range (e.g., 60% to 100%)
+
     float pulseAlpha = mix(0.6, 1.0, triWave);
     finalColor.a *= pulseAlpha;
 

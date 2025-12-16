@@ -16,6 +16,8 @@ public static class PrimitiveMeshes
     public static MeshId FsqQuad { get; private set; }
     public static MeshId SkyboxCube { get; private set; }
 
+    public static MeshId Cube { get; set; }
+
     internal static void CreatePrimitives(GfxMeshes meshes)
     {
         InvalidOpThrower.ThrowIf(FsqQuad > 0 || SkyboxCube > 0);

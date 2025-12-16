@@ -1,18 +1,25 @@
 using System.Numerics;
+using ConcreteEngine.Common.Numerics;
+using ConcreteEngine.Common.Numerics.Maths;
 using ConcreteEngine.Common.Time;
 using ConcreteEngine.Engine.Time;
+using ConcreteEngine.Engine.Utils;
 using ConcreteEngine.Engine.Worlds.Entities;
 using ConcreteEngine.Engine.Worlds.Entities.Components;
 using ConcreteEngine.Engine.Worlds.Render.Data;
+using ConcreteEngine.Engine.Worlds.Tables;
 using ConcreteEngine.Engine.Worlds.Utility;
 using ConcreteEngine.Engine.Worlds.View;
+using ConcreteEngine.Renderer.Data;
 using ConcreteEngine.Renderer.Definitions;
+using ConcreteEngine.Renderer.Draw;
 
 namespace ConcreteEngine.Engine.Worlds.Render.Processor;
 
 internal static class DrawTagResolver
 {
-    internal static void TagDepthKeys(in DrawEntityContext ctx, in EntitiesReadView view, in CameraRenderView renderView)
+    internal static void TagDepthKeys(in DrawEntityContext ctx, in EntitiesReadView view,
+        in CameraRenderView renderView)
     {
         var viewDepth = DepthKeyUtility.ExtractDepthVector(in renderView.ViewMatrix);
         var nearFar = new Vector2(renderView.ProjectionInfo.Near, renderView.ProjectionInfo.Far);
@@ -29,19 +36,6 @@ internal static class DrawTagResolver
     internal static void TagEffectResolvers(in DrawEntityContext ctx, WorldEntities worldEntities)
     {
         var deltaTime = EngineTime.DeltaTime;
-        var resolvers = worldEntities.ResolvedEntitySpan;
-        foreach (var resolved in resolvers)
-        {
-            if (!resolved.Entity.IsValid) continue;
-
-            var index = ctx.ByEntityIdSpan[resolved.Entity];
-            if (index == -1) continue;
-            ref var drawEntity = ref ctx.EntitySpan[index];
-            drawEntity.Meta.PassMask = PassMask.Effect | PassMask.DepthPre;
-            drawEntity.Source.Resolver = resolved.CommandResolver;
-        }
-
-
         var slot = 1;
         foreach (var query in worldEntities.Query<AnimationComponent>())
         {
@@ -55,6 +49,59 @@ internal static class DrawTagResolver
             drawEntity.Source.AnimatedSlot = (ushort)slot++;
         }
 
+        if(worldEntities.GetStore<SelectionComponent>().Count == 0) return;
+
+        foreach (var query in worldEntities.Query<SelectionComponent>())
+        {
+            var entityId = query.Entity;
+            var index = ctx.ByEntityIdSpan[entityId];
+            if (index == -1) continue;
+            ref readonly var component = ref query.Component;
+            ref var drawEntity = ref ctx.EntitySpan[index];
+            drawEntity.Meta.PassMask = PassMask.Effect | PassMask.DepthPre;
+            drawEntity.Source.Resolver = DrawCommandResolver.Highlight;
+        }
+    }
+
+    public static void UploadEffectCommands(in DrawEntityContext ctx, in DrawCommandUploader uploader,
+        WorldEntities worldEntities, MeshTable meshTable)
+    {
+        if(worldEntities.GetStore<DebugBoundsComponent>().Count == 0) return;
+        
+        var view = worldEntities.Core.GetReadView();
+        BoundingBox worldBounds;
+        foreach (var query in worldEntities.Query<DebugBoundsComponent>())
+        {
+            var entityId = query.Entity;
+            var index = ctx.ByEntityIdSpan[entityId];
+            if (index == -1) continue;
+            
+            ref readonly var component = ref query.Component;
+            ref readonly var drawEntity = ref ctx.EntitySpan[index];
+            ref readonly var transform = ref view.GetTransform(entityId);
+
+            if (!component.ByPart || meshTable.GetPartLengthFor(drawEntity.Source.Model) == 0)
+            {
+                ref readonly var bounds = ref view.GetBox(entityId);
+                RenderTransform.GetWorldBounds(in bounds.Bounds, in transform, out worldBounds);
+                uploader.SubmitDraw(default, default);
+                return;
+            }
+
+            var slot = drawEntity.Source.AnimatedSlot;
+
+            MatrixMath.CreateModelMatrix(in transform.Translation, in transform.Scale,
+                in transform.Rotation, out var world);
+
+            var partView = meshTable.GetPartsView(drawEntity.Source.Model);
+            for(int i = 0; i < partView.Bounds.Length; i++)
+            {
+                ref readonly var local = ref partView.Locals[i];
+                ref var writer = ref uploader.GetWriter();
+                DrawTransformUploader.WriteTransformUniform(ref writer, in local, in world, slot);
+                uploader.SubmitDraw(default, default);
+            }
+        }
     }
 /*
     private bool hasRunEntities = false;

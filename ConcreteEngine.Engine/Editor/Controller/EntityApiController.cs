@@ -64,10 +64,13 @@ internal sealed class EntityApiController : IEngineEntityController
         return result;
     }
 
-    public void SelectEntity(EditorId entity, out EditorEntityState state)
+    public void SelectEntity(EditorId entity, ref EditorEntityState state)
     {
         var entityId = _cachedEntity = new EntityId(entity.Identifier);
-        Entities.ApplyRenderResolverFor(entityId, RenderResolver.Highlight);
+        var store = Entities.GetStore<SelectionComponent>();
+        if (store.Has(entityId)) return;
+        
+        Entities.AddComponent(entityId, new SelectionComponent());
         var view = Entities.Core.GetEntityView(entityId);
 
         state = new EditorEntityState(in Transform.UnsafeAs(ref view.Transform), in view.Box.Bounds)
@@ -86,7 +89,7 @@ internal sealed class EntityApiController : IEngineEntityController
     public void DeselectEntity(EditorId entity)
     {
         var entityId = new EntityId(entity.Identifier);
-        Entities.RemoveRenderResolverFor(entityId);
+        Entities.RemoveComponent<SelectionComponent>(entityId);
         _cachedEntity = default;
     }
 

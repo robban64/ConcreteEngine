@@ -46,6 +46,7 @@ internal sealed class MeshTable : IMeshTable
 
         return _modelPartRanges[index].Length;
     }
+    
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public ReadOnlySpan<Matrix4x4> GetPartTransforms(ModelId id)
@@ -73,7 +74,7 @@ internal sealed class MeshTable : IMeshTable
     }
 
 
-    public ModelPartView GetPartsRefView(ModelId id)
+    public ModelPartView GetPartsView(ModelId id)
     {
         var index = id - 1;
         if ((uint)index >= _modelPartRanges.Length)

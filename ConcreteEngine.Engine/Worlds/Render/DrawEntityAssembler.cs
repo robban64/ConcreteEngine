@@ -4,9 +4,12 @@ using ConcreteEngine.Common.Time;
 using ConcreteEngine.Engine.Editor.Diagnostics;
 using ConcreteEngine.Engine.Worlds.Data;
 using ConcreteEngine.Engine.Worlds.Entities;
+using ConcreteEngine.Engine.Worlds.Entities.Components;
 using ConcreteEngine.Engine.Worlds.Render.Data;
 using ConcreteEngine.Engine.Worlds.Render.Processor;
 using ConcreteEngine.Engine.Worlds.Tables;
+using ConcreteEngine.Engine.Worlds.View;
+using ConcreteEngine.Renderer.Data;
 using ConcreteEngine.Renderer.Draw;
 using ConcreteEngine.Shared.Diagnostics;
 
@@ -19,7 +22,7 @@ internal sealed class DrawEntityAssembler
 
     private static int _idx;
     private static int _prevIdx;
-    private  static EntityId _highEntityId;
+    private static EntityId _highEntityId;
 
     //...
     private static int[] _byEntityId = new int[DefaultCapacity];
@@ -28,8 +31,13 @@ internal sealed class DrawEntityAssembler
     //...
 
     private readonly World _world;
-    public ModelId CubeId;
-    public MaterialTagKey EmptyMaterialKey;
+    private readonly WorldEntities _worldEntities;
+    private readonly WorldParticles _worldParticles;
+    private readonly MeshTable _meshTable;
+    private readonly AnimationTable _animationTable;
+    private readonly Camera3D _camera;
+
+    public MaterialId BoundsMaterial;
 
     //private static readonly FrameProfiler RenderProfiler = new(144, 144 * 10);
 
@@ -38,6 +46,11 @@ internal sealed class DrawEntityAssembler
     internal DrawEntityAssembler(World world)
     {
         _world = world;
+        _worldEntities = world.Entities;
+        _worldParticles = world.Particles;
+        _meshTable = world.MeshTableImpl;
+        _animationTable = world.AnimationTableImpl;
+        _camera = world.Camera;
         /*
         RenderProfiler.Register("Collect");
         RenderProfiler.Register("Tag");
@@ -65,8 +78,8 @@ internal sealed class DrawEntityAssembler
         const int extraEntities = 64;
         const int extraAnimations = 8;
 
-        var entityLen = _world.EntityCount + extraEntities;
-        var animationLen = _world.Entities.Animations.Count + extraAnimations;
+        var entityLen = _worldEntities.Core.Count + extraEntities;
+        var animationLen = _worldEntities.GetStore<AnimationComponent>().Count + extraAnimations;
 
         EnsureDrawEntityData(entityLen);
         commandBuffer.EnsureBufferCapacity(entityLen);
@@ -79,59 +92,46 @@ internal sealed class DrawEntityAssembler
         Validate();
 
         // start
-        DrawWorldProcessor.SubmitWorldObjects(_world, commandBuffer.GetDrawUploaderCtx());
-
-        var worldEntities = _world.Entities;
-        var ecsLen = worldEntities.EntityCount;
+        DrawWorldProcessor.SubmitWorldObjects(commandBuffer, _world);
 
         // cull
-        var len = _idx = DrawEntityCulling.CullEntities(_entityIndices, _byEntityId, _world);
+        var ecsLen = _worldEntities.EntityCount;
+        var len = _idx = DrawEntityCulling.CullEntities(_entityIndices, _byEntityId, _worldEntities, _camera);
 
         if (len == 0) return;
         if ((uint)len > _entities.Length || (uint)len > _entityIndices.Length || (uint)ecsLen > _byEntityId.Length)
             throw new IndexOutOfRangeException();
 
-        var ctx = new DrawEntityContext(_entities.AsSpan(0, len), _entityIndices.AsSpan(0, len),
-            _byEntityId.AsSpan(0, ecsLen));
-
-        var coreEntities = worldEntities.Core.GetReadView();
+        var ctx = new DrawEntityContext(_entities.AsSpan(0, len), _entityIndices.AsSpan(0, len), _byEntityId);
+        var coreEntities = _worldEntities.Core.GetReadView();
 
         // collect
         _highEntityId = DrawEntityCollector.CollectEntities(in ctx, in coreEntities);
-
-        // tag
-        TagDrawEntities(in ctx, in coreEntities);
+        DrawTagResolver.TagResolveEntities(in ctx, _worldEntities);
+        DrawEntityCulling.TagDepthKeys(in ctx, in coreEntities, _camera.RenderView);
+        DrawParticleProcessor.TagParticles(in ctx, _worldParticles, _worldEntities);
 
         ExecuteUploader(in ctx, in coreEntities, commandBuffer);
         ExecuteProcessors(in ctx, commandBuffer);
         // end
     }
 
-    private void TagDrawEntities(in DrawEntityContext ctx, in EntitiesReadView coreEntities)
-    {
-        DrawTagResolver.TagEffectResolvers(in ctx, _world.Entities);
-        DrawTagResolver.TagDepthKeys(in ctx, in coreEntities, _world.Camera.RenderView);
-        DrawParticleProcessor.TagParticles(in ctx, _world.Particles, _world.Entities);
-    }
-
     private void ExecuteUploader(in DrawEntityContext ctx, in EntitiesReadView coreEntities,
         DrawCommandBuffer commandBuffer)
     {
-        var meshTable = _world.MeshTableImpl;
         var uploader = commandBuffer.GetDrawUploaderCtx();
-        
         DrawEntityUploader.UploadDrawCommands(_world, in ctx, in uploader);
-        DrawTransformUploader.UploadTransform(in ctx, in coreEntities, in uploader, meshTable);
-
+        DrawTransformUploader.UploadTransform(in ctx, in coreEntities, in uploader, _meshTable);
+        DrawTagResolver.UploadDebugBounds(in ctx, in uploader, _worldEntities, _meshTable, BoundsMaterial);
     }
 
     private void ExecuteProcessors(in DrawEntityContext ctx, DrawCommandBuffer commandBuffer)
     {
         var skinningUploader = commandBuffer.GetSkinningUploaderCtx();
-        var animationView = _world.AnimationTableImpl.GetDataView();
+        var animationView = _animationTable.GetDataView();
 
-        DrawAnimatorProcessor.Execute(_world.Entities, in ctx, in skinningUploader, in animationView);
-        DrawParticleProcessor.Execute(_world.Particles);
+        DrawAnimatorProcessor.Execute(_worldEntities, in ctx, in skinningUploader, in animationView);
+        DrawParticleProcessor.Execute(_worldParticles);
     }
 
 

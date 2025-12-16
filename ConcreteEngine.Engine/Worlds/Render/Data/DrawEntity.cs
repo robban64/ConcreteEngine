@@ -35,4 +35,7 @@ internal struct DrawEntityMeta(
     public PassMask PassMask = passMask;
     public DrawCommandId CommandId = commandId;
     public DrawCommandQueue Queue = queue;
+
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public readonly DrawCommandMeta ToCommandMeta() => new(CommandId, Queue, PassMask, DepthKey);
 }

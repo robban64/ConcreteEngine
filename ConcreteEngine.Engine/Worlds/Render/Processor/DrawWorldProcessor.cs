@@ -11,13 +11,13 @@ namespace ConcreteEngine.Engine.Worlds.Render.Processor;
 
 internal static class DrawWorldProcessor
 {
-    internal static void SubmitWorldObjects(World world, DrawCommandUploader uploader)
+    internal static void SubmitWorldObjects(DrawCommandBuffer commandBuffer, World world)
     {
-        SubmitDrawTerrain(uploader, world.MeshTableImpl, world.Terrain);
-        SubmitDrawSkybox(uploader, world.Sky);
+        SubmitDrawTerrain(commandBuffer, world.MeshTableImpl, world.Terrain);
+        SubmitDrawSkybox(commandBuffer, world.Sky);
     }
 
-    private static void SubmitDrawTerrain(DrawCommandUploader uploader, MeshTable meshTable, WorldTerrain terrain)
+    private static void SubmitDrawTerrain(DrawCommandBuffer commandBuffer, MeshTable meshTable, WorldTerrain terrain)
     {
         var view = meshTable.GetPartsView(terrain.Model);
 
@@ -25,16 +25,16 @@ internal static class DrawWorldProcessor
         var cmd = new DrawCommand(view.Parts[0].Mesh, terrain.Material);
 
         CreateTransformMatrices(in Transform.Identity, out var model, out var normal);
-        uploader.SubmitDrawAndTransform(cmd, meta, in model, in normal);
+        commandBuffer.SubmitDraw(cmd, meta, in model, in normal);
     }
 
-    private static void SubmitDrawSkybox(DrawCommandUploader uploader, WorldSkybox sky)
+    private static void SubmitDrawSkybox(DrawCommandBuffer commandBuffer, WorldSkybox sky)
     {
         var meta = new DrawCommandMeta(DrawCommandId.Skybox, DrawCommandQueue.Skybox, passMask: PassMask.Main);
         var cmd = new DrawCommand(sky.Mesh, sky.Material);
 
         CreateTransformMatrices(in Transform.Identity, out var model, out var normal);
-        uploader.SubmitDrawAndTransform(cmd, meta, in model, in normal);
+        commandBuffer.SubmitDraw(cmd, meta, in model, in normal);
     }
 
     private static void CreateTransformMatrices(in Transform transform, out Matrix4x4 model,

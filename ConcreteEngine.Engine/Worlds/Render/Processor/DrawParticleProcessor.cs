@@ -19,7 +19,7 @@ internal static class DrawParticleProcessor
         WorldEntities worldEntities)
     {
         Emitters.Clear();
-        Emitters.EnsureCapacity(worldEntities.Particles.Count);
+        //Emitters.EnsureCapacity(worldEntities.GetStore<ParticleComponent>().Count);
 
         foreach (var query in worldEntities.Query<ParticleComponent>())
         {
@@ -30,10 +30,7 @@ internal static class DrawParticleProcessor
             var component = query.Component;
             var emitter = worldParticles.GetEmitter(component.EmitterHandle);
 
-            drawEntity.Meta = drawEntity.Meta with
-            {
-                Queue = DrawCommandQueue.Particles, PassMask = PassMask.Main, CommandId = DrawCommandId.Particle
-            };
+            drawEntity.Meta = new DrawEntityMeta(DrawCommandId.Particle, DrawCommandQueue.Particles, PassMask.Main);
             drawEntity.Source.InstanceCount = emitter.ParticleCount;
             drawEntity.Source.Model = emitter.Model;
             drawEntity.Source.MaterialKey = emitter.MaterialKey;

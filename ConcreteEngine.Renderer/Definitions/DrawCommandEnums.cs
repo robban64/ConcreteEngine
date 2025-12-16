@@ -6,7 +6,8 @@ public enum DrawCommandId : byte
     Model,
     Terrain,
     Skybox,
-    Particle
+    Particle,
+    Effect
 }
 
 public enum DrawCommandQueue : byte
@@ -17,7 +18,8 @@ public enum DrawCommandQueue : byte
     Skybox = 40,
     Transparent = 50,
     Particles = 60,
-    Additive = 80,
+    Additive = 70,
+    Effect = 90,
     Overlay = 100,
     OverlayTransparent = 110
 }

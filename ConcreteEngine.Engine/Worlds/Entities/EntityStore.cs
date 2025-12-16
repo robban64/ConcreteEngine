@@ -20,6 +20,8 @@ internal sealed class EntityStore<T> : IEntityStore where T : unmanaged
     public int Count { get; private set; }
     public bool IsDirty { get; internal set; }
 
+    public int ActiveCount => Count - _free.Count;
+    
     public EntityStore(int initialCapacity)
     {
         ArgumentOutOfRangeException.ThrowIfLessThan(initialCapacity, 16);
@@ -115,7 +117,7 @@ internal sealed class EntityStore<T> : IEntityStore where T : unmanaged
         Array.Resize(ref _entities, newSize);
         Array.Resize(ref _data, newSize);
 
-        Logger.LogString(LogScope.World, $"EntityStore: {typeof(T).Name} resized {newSize}", LogLevel.Warn);
+        Console.WriteLine( $"EntityStore: {typeof(T).Name} resized {newSize}");
     }
 
 

@@ -1,6 +1,7 @@
 using ConcreteEngine.Common.Numerics;
 using ConcreteEngine.Engine.Assets;
 using ConcreteEngine.Engine.Assets.Internal;
+using ConcreteEngine.Engine.Assets.Materials;
 using ConcreteEngine.Engine.Assets.Models;
 using ConcreteEngine.Engine.Editor.Data;
 using ConcreteEngine.Engine.Platform;
@@ -13,6 +14,8 @@ using ConcreteEngine.Engine.Worlds.Utility;
 using ConcreteEngine.Engine.Worlds.View;
 using ConcreteEngine.Graphics;
 using ConcreteEngine.Graphics.Gfx;
+using ConcreteEngine.Graphics.Gfx.Contracts;
+using ConcreteEngine.Graphics.Gfx.Definitions;
 
 namespace ConcreteEngine.Engine.Worlds;
 
@@ -51,12 +54,12 @@ public sealed class World
         _materialTable = new MaterialTable();
         _animationTable = new AnimationTable();
 
-        _drawEntities = new DrawEntityAssembler(this);
-
         _entities = new WorldEntities();
         _sky = new WorldSkybox();
         _terrain = new WorldTerrain(_meshTable, _materialTable);
         _particles = new WorldParticles(_meshTable, _materialTable);
+
+        _drawEntities = new DrawEntityAssembler(this);
 
         _raycast = new WorldRaycaster(Camera, Entities, _terrain, _drawEntities);
 
@@ -88,7 +91,6 @@ public sealed class World
 
     internal MeshGeneratorRegistry MeshGenerator => _meshGenerator;
 
-
     public int EntityCount => Entities.EntityCount;
     public int ShadowMapSize => WorldRenderParams.Snapshot.Shadows.ShadowMapSize;
 
@@ -105,7 +107,13 @@ public sealed class World
 
         PrimitiveMeshes.Cube = _assets.StoreImpl.GetByName<Model>("Cube").MeshParts[0].ResourceId;
         var mat = assets.MaterialStoreImpl.CreateMaterial("EmptyMat", "EmptyMat1");
-        _drawEntities.EmptyMaterialKey = _materialTable.Add(MaterialTagBuilder.BuildOne(mat.Id, true));
+        mat.State.Pipeline = new MaterialPipelineState
+        {
+            PassState = GfxPassState.Set(GfxStateFlags.Blend,
+                GfxStateFlags.DepthWrite | GfxStateFlags.SampleAlphaCoverage),
+            PassFunctions = new GfxPassStateFunc(BlendMode.Alpha)
+        };
+        _drawEntities.BoundsMaterial = mat.Id;
     }
 
     internal void StartTick(Size2D viewSize)

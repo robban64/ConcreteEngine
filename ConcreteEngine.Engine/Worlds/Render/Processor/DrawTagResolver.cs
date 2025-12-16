@@ -18,22 +18,7 @@ namespace ConcreteEngine.Engine.Worlds.Render.Processor;
 
 internal static class DrawTagResolver
 {
-    internal static void TagDepthKeys(in DrawEntityContext ctx, in EntitiesReadView view,
-        in CameraRenderView renderView)
-    {
-        var viewDepth = DepthKeyUtility.ExtractDepthVector(in renderView.ViewMatrix);
-        var nearFar = new Vector2(renderView.ProjectionInfo.Near, renderView.ProjectionInfo.Far);
-
-        foreach (var it in ctx)
-        {
-            ref var entity = ref it.DrawEntity;
-            ref readonly var worldPos = ref view.GetTransform(entity.Entity).Translation;
-            var depthKey = DepthKeyUtility.MakeDepthKey(in viewDepth, worldPos, nearFar);
-            entity.Meta.DepthKey = depthKey;
-        }
-    }
-
-    internal static void TagEffectResolvers(in DrawEntityContext ctx, WorldEntities worldEntities)
+    internal static void TagResolveEntities(in DrawEntityContext ctx, WorldEntities worldEntities)
     {
         var deltaTime = EngineTime.DeltaTime;
         var slot = 1;
@@ -49,7 +34,7 @@ internal static class DrawTagResolver
             drawEntity.Source.AnimatedSlot = (ushort)slot++;
         }
 
-        if(worldEntities.GetStore<SelectionComponent>().Count == 0) return;
+        if (worldEntities.GetStore<SelectionComponent>().Count == 0) return;
 
         foreach (var query in worldEntities.Query<SelectionComponent>())
         {
@@ -63,44 +48,64 @@ internal static class DrawTagResolver
         }
     }
 
-    public static void UploadEffectCommands(in DrawEntityContext ctx, in DrawCommandUploader uploader,
-        WorldEntities worldEntities, MeshTable meshTable)
+    public static void UploadDebugBounds(in DrawEntityContext ctx, in DrawCommandUploader uploader,
+        WorldEntities worldEntities, MeshTable meshTable, MaterialId materialId)
     {
-        if(worldEntities.GetStore<DebugBoundsComponent>().Count == 0) return;
-        
+        if (worldEntities.GetStore<DebugBoundsComponent>().Count == 0) return;
+
         var view = worldEntities.Core.GetReadView();
-        BoundingBox worldBounds;
+        Span<Vector3> corners = stackalloc Vector3[8];
+        Matrix4x4 world;
         foreach (var query in worldEntities.Query<DebugBoundsComponent>())
         {
             var entityId = query.Entity;
             var index = ctx.ByEntityIdSpan[entityId];
             if (index == -1) continue;
-            
+
             ref readonly var component = ref query.Component;
             ref readonly var drawEntity = ref ctx.EntitySpan[index];
             ref readonly var transform = ref view.GetTransform(entityId);
+            ref readonly var bounds = ref view.GetBox(entityId);
 
-            if (!component.ByPart || meshTable.GetPartLengthFor(drawEntity.Source.Model) == 0)
+            var depthKey = (ushort)(ushort.MaxValue - drawEntity.Meta.DepthKey);
+            var cmd = new DrawCommand(PrimitiveMeshes.Cube, materialId, resolver: DrawCommandResolver.BoundingVolume);
+            var meta = new DrawCommandMeta(DrawCommandId.Effect, DrawCommandQueue.Effect, PassMask.Effect, depthKey);
+
+            MatrixMath.CreateModelMatrix(in transform.Translation, in transform.Scale,
+                in transform.Rotation, out world);
+
+            if (!component.ByPart)
             {
-                ref readonly var bounds = ref view.GetBox(entityId);
-                RenderTransform.GetWorldBounds(in bounds.Bounds, in transform, out worldBounds);
-                uploader.SubmitDraw(default, default);
+                ref var writer = ref uploader.GetWriter();
+                CreateBoxMatrix(corners, in bounds.Bounds, in transform, in world, out writer.Model);
+                writer.Normal = default;
+                uploader.SubmitDraw(cmd, meta);
                 return;
             }
 
-            var slot = drawEntity.Source.AnimatedSlot;
-
-            MatrixMath.CreateModelMatrix(in transform.Translation, in transform.Scale,
-                in transform.Rotation, out var world);
-
             var partView = meshTable.GetPartsView(drawEntity.Source.Model);
-            for(int i = 0; i < partView.Bounds.Length; i++)
+            foreach (ref readonly var local in partView.Bounds)
             {
-                ref readonly var local = ref partView.Locals[i];
                 ref var writer = ref uploader.GetWriter();
-                DrawTransformUploader.WriteTransformUniform(ref writer, in local, in world, slot);
-                uploader.SubmitDraw(default, default);
+                CreateBoxMatrix(corners, in local, in transform, in world, out writer.Model);
+                writer.Normal = default;
+                uploader.SubmitDraw(cmd, meta);
             }
+        }
+
+        return;
+
+        static void CreateBoxMatrix(Span<Vector3> corners, in BoundingBox local, in Transform transform,
+            in Matrix4x4 world, out Matrix4x4 global)
+        {
+            local.FillCorners(corners);
+            for (var i = 0; i < corners.Length; i++)
+                corners[i] = Vector3.Transform(corners[i], world);
+
+            BoundingAxisBox.FromPoints(corners, out var axisBounds);
+
+            var t = new Transform(axisBounds.Center, axisBounds.Extent, in transform.Rotation);
+            MatrixMath.CreateModelMatrix(in t.Translation, in t.Scale, in transform.Rotation, out global);
         }
     }
 /*

@@ -79,10 +79,10 @@ internal sealed class EntityApiController : IEngineEntityController
             MaterialKey = new EditorId(view.Source.MaterialKey.Value, EditorItemType.MaterialKey)
         };
 
-        if (Entities.Animations.Has(entityId))
+        if (Entities.GetStore<AnimationComponent>().Has(entityId))
             state.ComponentRef = new EditorId(entity, EditorItemType.Animation);
 
-        if (Entities.Particles.Has(entityId))
+        if (Entities.GetStore<ParticleComponent>().Has(entityId))
             state.ComponentRef = new EditorId(entity, EditorItemType.Particle);
     }
 
@@ -115,7 +115,7 @@ internal sealed class EntityApiController : IEngineEntityController
     public void FetchAnimation(EditorId entity, ref EditorAnimationState state)
     {
         var entityId = new EntityId(entity.Identifier);
-        ref readonly var component = ref Entities.Animations.Get(entityId);
+        ref readonly var component = ref Entities.GetStore<AnimationComponent>().Get(entityId);
         var clipCount = _world.AnimationTableImpl.GetClipCount(component.Animation);
         state.Animation = new EditorId(component.Animation, EditorItemType.AnimationKey);
         state.Clip = component.Clip;
@@ -128,7 +128,7 @@ internal sealed class EntityApiController : IEngineEntityController
     public void CommitAnimation(EditorId entity, in EditorAnimationState state)
     {
         var entityId = new EntityId(entity.Identifier);
-        ref var component = ref Entities.Animations.Get(entityId);
+        ref var component = ref Entities.GetStore<AnimationComponent>().Get(entityId);
         component.Clip = (short)state.Clip;
         component.Time = state.Time;
         component.Speed = state.Speed;
@@ -138,7 +138,7 @@ internal sealed class EntityApiController : IEngineEntityController
     public void FetchParticle(EditorId entity, ref EditorParticleState state)
     {
         var entityId = new EntityId(entity.Identifier);
-        var component = Entities.Particles.Get(entityId);
+        var component = Entities.GetStore<ParticleComponent>().Get(entityId);
 
         var emitter = _world.Particles.GetEmitter(component.EmitterHandle);
         state.EmitterHandle = new EditorId(emitter.EmitterHandle, EditorItemType.ParticleEmitter);

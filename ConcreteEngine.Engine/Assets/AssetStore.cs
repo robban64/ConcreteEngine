@@ -27,10 +27,10 @@ internal sealed class AssetStore : IAssetStore
 {
     private const int DefaultCap = 256;
 
-    private int _assetId = 0;
-    private int _assetFileId = 0;
-    private AssetId MakeAssetId() => new(++_assetId);
-    private AssetFileId MakeAssetFileId() => new(++_assetFileId);
+    private static int _assetId = 0;
+    private static int _assetFileId = 0;
+    private static AssetId MakeAssetId() => new(++_assetId);
+    private static AssetFileId MakeAssetFileId() => new(++_assetFileId);
 
     private readonly Dictionary<AssetId, AssetObject> _assets = new(DefaultCap);
     private readonly Dictionary<AssetFileId, AssetFileEntry> _files = new(DefaultCap);

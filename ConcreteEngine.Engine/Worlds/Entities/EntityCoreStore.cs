@@ -19,7 +19,7 @@ internal sealed class EntityCoreStore
 
     private Stack<int> _free = [];
 
-    public int ActiveCount => int.Max(0, _count - 1 - _free.Count);
+    public int ActiveCount => _count - _free.Count;
     public int Count => _count;
 
     public bool IsDirty { get; private set; }

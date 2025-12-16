@@ -1,4 +1,5 @@
 using System.Runtime.CompilerServices;
+using ConcreteEngine.Engine.Time;
 using ConcreteEngine.Engine.Worlds.Entities;
 using ConcreteEngine.Engine.Worlds.Entities.Components;
 using ConcreteEngine.Engine.Worlds.Render.Data;
@@ -12,7 +13,7 @@ internal static class DrawEntityCollector
     public static EntityId CollectEntities(in DrawEntityContext ctx, in EntitiesReadView view)
     {
         var len = ctx.EntitySpan.Length;
-        int highEntityId = 0;
+        var highEntityId = 0;
 
         for (var i = 0; i < len; i++)
         {
@@ -29,5 +30,4 @@ internal static class DrawEntityCollector
 
         return new EntityId(highEntityId);
     }
-
 }

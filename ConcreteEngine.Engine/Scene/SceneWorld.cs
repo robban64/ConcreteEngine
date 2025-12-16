@@ -48,6 +48,7 @@ public sealed class SceneWorld
     private WorldEntities Ecs => _world.Entities;
     private EntityCoreStore CoreEcs => _world.Entities.Core;
 
+    private int i = 0;
 
     public void AddModelEntity(string name, Model model, MaterialTag materialTag, in Transform transform)
     {
@@ -61,8 +62,11 @@ public sealed class SceneWorld
         var data = new CoreComponentBundle(in source, in transform, in box);
 
         var entityId = Ecs.AddEntity(in data);
-
         AddEntityInternal(entityId, name);
+        if (name.StartsWith("Tree"))
+        {
+            Ecs.AddComponent(entityId, new DebugBoundsComponent{ ByPart = true});
+        }
 
         if (kind != EntitySourceKind.AnimatedModel) return;
 

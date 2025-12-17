@@ -13,8 +13,11 @@ namespace ConcreteEngine.Renderer.Draw;
 
 public sealed class DrawCommandBuffer
 {
-    private const int DefaultTicketCapacity = 1024;
+    private const int DefaultTicketCapacity = 1024 * 4;
+    private const int DefaultCommandBuffCapacity = 1024;
 
+    private const int DefaultBoneBufferCap = BoneCapacity * 64 * 10;
+    
     private DrawCommand[] _commandBuffer;
     private DrawObjectUniform[] _transformBuffer;
     private DrawCommandMeta[] _metaBuffer;
@@ -259,7 +262,7 @@ public sealed class DrawCommandBuffer
     private void EnsureTicketsCapacity(int total)
     {
         if (_drawTickets.Length >= total) return;
-        var newSize = Arrays.CapacityGrowthLinear(_drawTickets.Length, total, step: PassSlots);
+        var newSize = Arrays.CapacityGrowthSafe(_drawTickets.Length, total, largeThreshold: 16384);
         _drawTickets = new int[newSize];
         Console.WriteLine("DrawTickets buffer resize");
     }

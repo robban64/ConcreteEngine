@@ -104,10 +104,10 @@ internal sealed class EngineGateway : IDisposable
     public void UpdateDiagnostics(in RenderFrameInfo frameInfo, GfxFrameResult frameResult)
     {
         if (!Enabled) return;
+        if(Logger.HasPendingStringLogs) Logger.FlushStringLogs();
         DrainLogs();
 
-        if (_editor.IsMetricsMode)
-            RefreshMetrics(frameInfo, frameResult);
+        if (_editor.IsMetricsMode) RefreshMetrics(frameInfo, frameResult);
     }
 
     private void RefreshMetrics(in RenderFrameInfo frameInfo, GfxFrameResult frameResult, in bool force = false)

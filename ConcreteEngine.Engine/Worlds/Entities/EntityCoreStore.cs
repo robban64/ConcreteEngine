@@ -1,8 +1,10 @@
 using System.Runtime.CompilerServices;
 using ConcreteEngine.Common.Collections;
 using ConcreteEngine.Common.Numerics;
+using ConcreteEngine.Engine.Editor.Diagnostics;
 using ConcreteEngine.Engine.Worlds.Entities.Components;
 using ConcreteEngine.Engine.Worlds.Entities.Resources;
+using ConcreteEngine.Shared.Diagnostics;
 
 namespace ConcreteEngine.Engine.Worlds.Entities;
 
@@ -17,7 +19,7 @@ internal sealed class EntityCoreStore
     private Transform[] _transforms;
     private BoxComponent[] _boxes;
 
-    private Stack<int> _free = [];
+    private readonly Stack<int> _free = [];
 
     public int ActiveCount => _count - _free.Count;
     public int Count => _count;
@@ -74,47 +76,70 @@ internal sealed class EntityCoreStore
 
     public EntityId AddEntity(in CoreComponentBundle componentBundle)
     {
-        //var idx = _free.Count > 0 ? _free.Pop() : Create();
-        ValidateSource(componentBundle.Source);
-
-        var index = _count;
-        var entity = MakeEntityId();
-        EnsureCapacity(1);
-
-        _entities[index] = entity;
-        _sources[index] = componentBundle.Source;
-        _transforms[index] = componentBundle.Transform;
-        _boxes[index] = componentBundle.Box;
-
+        if(_free.Count == 0) EnsureCapacity(1);
+        var result = AddEntityInternal(in componentBundle);
         IsDirty = true;
-        return entity;
+        return result;
     }
     
     public void AddEntities(ReadOnlySpan<CoreComponentBundle> components, Span<EntityId> result)
     {
-        EnsureCapacity(components.Length);
+        int ensureCap = int.Max(0, components.Length - _free.Count);
+        if (ensureCap > 0)
+            EnsureCapacity(ensureCap);
+        
         for (var i = 0; i < components.Length; i++)
         {
             ref readonly var component = ref components[i];
-            ValidateSource(component.Source);
-
-            var index = _count;
-            var entity = MakeEntityId();
-            result[i] = entity;
-            
-            _entities[index] = entity;
-            _sources[index] = component.Source;
-            _transforms[index] = component.Transform;
-            _boxes[index] = component.Box;
+            result[i] = AddEntityInternal(in component);
         }
 
         IsDirty = true;
+    }
+
+    private EntityId AddEntityInternal(in CoreComponentBundle component)
+    {
+        ValidateSource(component.Source);
+
+        EntityId entity;
+        if (!_free.TryPop(out var index))
+        {
+            index = _count;
+            entity = MakeEntityId();
+        }
+        else
+        {
+            entity = new EntityId(index + 1);
+        }
+        
+        if(entity - 1 != index) throw new InvalidOperationException();
+        
+        ref var existingEntity = ref _entities[index];
+        if(existingEntity.IsValid) throw new InvalidOperationException();
+        
+        existingEntity = entity;
+        _sources[index] = component.Source;
+        _transforms[index] = component.Transform;
+        _boxes[index] = component.Box;
+        
+        return entity;
     }
 
     public void Remove(EntityId e)
     {
         ArgumentOutOfRangeException.ThrowIfNegativeOrZero(e.Value, nameof(e));
         ArgumentOutOfRangeException.ThrowIfGreaterThan(e.Value, _count, nameof(e));
+
+        var index = e - 1;
+        ref var existing = ref _entities[index];
+        if(existing != e) throw new InvalidOperationException();
+        
+        _entities[index] = default;
+        _sources[index] = default;
+        _transforms[index] = default;
+        _boxes[index] = default;
+        
+        _free.Push(index);
     }
 
     internal void EndTick()
@@ -145,6 +170,6 @@ internal sealed class EntityCoreStore
         Array.Resize(ref _transforms, newSize);
         Array.Resize(ref _boxes, newSize);
 
-        Console.WriteLine("EntityCoreStore resize");
+        Logger.LogString(LogScope.World, $"EntityCoreStore: resized {newSize}", LogLevel.Warn);
     }
 }

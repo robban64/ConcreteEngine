@@ -101,7 +101,6 @@ public sealed class World
 
         Terrain.AttachRenderer(_meshGenerator.Register(new TerrainMeshGenerator(gfx)));
         _particles.AttachRenderer(_meshGenerator.Register(new ParticleMeshGenerator(gfx)));
-        _entities.Attach(_meshTable, _materialTable);
         _sky.AttachRenderer(_meshTable);
 
 

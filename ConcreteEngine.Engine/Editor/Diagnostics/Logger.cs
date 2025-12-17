@@ -14,6 +14,7 @@ public static class Logger
 {
     public const int MaxQueueCapacity = 256;
     private static readonly Queue<LogEvent> Logs = new(128);
+    private static readonly List<StringLogEvent> StringLogsBuffer = new(16);
     private static readonly List<LogFilterWildcard> IgnoreFilter = new(4);
 
     private static Action<StringLogEvent>? _logStringDel;
@@ -22,14 +23,9 @@ public static class Logger
 
     public static int Count => Logs.Count;
     public static bool IsAttached => _logStringDel != null;
-
-    internal static void Attach(Action<StringLogEvent> logStringDel)
-    {
-        _logStringDel = logStringDel;
-    }
-
+    public static bool HasPendingStringLogs => StringLogsBuffer.Count > 0;
+    
     public static bool TryDrainLog(out LogEvent log) => Logs.TryDequeue(out log);
-
 
     public static void ToggleLog(bool enabled, LogTopic topic = 0, LogScope scope = 0, LogAction action = 0,
         LogLevel level = 0)
@@ -41,6 +37,20 @@ public static class Logger
             IgnoreFilter.RemoveAt(idx);
         else if (!enabled && idx == -1)
             IgnoreFilter.Add(rule);
+    }
+    
+    internal static void Attach(Action<StringLogEvent> logStringDel)
+    {
+        ArgumentNullException.ThrowIfNull(logStringDel);
+        _logStringDel = logStringDel;
+    }
+
+    internal static void FlushStringLogs()
+    {
+        if (_logStringDel is null) throw new InvalidOperationException();
+        foreach (var log in StringLogsBuffer) _logStringDel.Invoke(log);
+        StringLogsBuffer.Clear();
+        StringLogsBuffer.TrimExcess();
     }
 
 
@@ -59,8 +69,18 @@ public static class Logger
         Logs.Enqueue(log);
     }
 
-    public static void LogString(LogScope scope, string message, LogLevel level = LogLevel.Info) =>
-        _logStringDel?.Invoke(new StringLogEvent(scope, message, level));
+    public static void LogString(LogScope scope, string message, LogLevel level = LogLevel.Info)
+    {
+        var log = new StringLogEvent(scope, message, level);
+        if (_logStringDel is not null)
+        {
+            _logStringDel.Invoke(new StringLogEvent(scope, message, level));
+            return;
+        }
+        
+        if(StringLogsBuffer.Count > MaxQueueCapacity) throw new InvalidOperationException("String log buffer full");
+        StringLogsBuffer.Add(log);
+    }
 
 
     public static void LogAssetObject(AssetObject asset, LogAction action, bool error = false) =>

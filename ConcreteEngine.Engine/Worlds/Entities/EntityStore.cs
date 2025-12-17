@@ -77,8 +77,11 @@ internal sealed class EntityStore<T> : IEntityStore where T : unmanaged
     public void Add(EntityId entity, T value)
     {
         ArgumentOutOfRangeException.ThrowIfNegativeOrZero(entity.Value, nameof(entity));
-        EnsureCapacity(1);
-        var index = _free.Count > 0 ? _free.Pop() : Count++;
+        if (!_free.TryPop(out var index))
+        {
+            EnsureCapacity(1);
+            index = Count++;
+        }
 
         _entities[index] = entity;
         _data[index] = value;
@@ -116,8 +119,7 @@ internal sealed class EntityStore<T> : IEntityStore where T : unmanaged
         var newSize = Arrays.CapacityGrowthSafe(_entities.Length, len);
         Array.Resize(ref _entities, newSize);
         Array.Resize(ref _data, newSize);
-
-        Console.WriteLine( $"EntityStore: {typeof(T).Name} resized {newSize}");
+        Logger.LogString(LogScope.World, $"EntityStore: {typeof(T).Name} resized {newSize}", LogLevel.Warn);
     }
 
 

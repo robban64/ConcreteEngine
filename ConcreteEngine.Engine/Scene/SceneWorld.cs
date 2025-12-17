@@ -4,6 +4,7 @@ using ConcreteEngine.Engine.Assets;
 using ConcreteEngine.Engine.Assets.Data;
 using ConcreteEngine.Engine.Assets.Materials;
 using ConcreteEngine.Engine.Assets.Models;
+using ConcreteEngine.Engine.Editor.Diagnostics;
 using ConcreteEngine.Engine.Scene.Data;
 using ConcreteEngine.Engine.Worlds;
 using ConcreteEngine.Engine.Worlds.Data;
@@ -13,31 +14,29 @@ using ConcreteEngine.Engine.Worlds.Objects;
 using ConcreteEngine.Engine.Worlds.Tables;
 using ConcreteEngine.Engine.Worlds.Utility;
 using ConcreteEngine.Renderer.Data;
+using ConcreteEngine.Shared.Diagnostics;
 
 namespace ConcreteEngine.Engine.Scene;
 
-public abstract class GameEntity
-{
-    protected virtual void OnCreate() { }
-    public virtual void OnDestroy() { }
-}
+
 
 public sealed class SceneWorld
 {
+    private const int DefaultEntityDictCapacity = 128;
     private static int _entityCount = 0;
-    private static SceneEntityId MakeId(EntityId entity, ushort gen = 0) => new(++_entityCount, entity, gen);
+    private static GameEntityHandle MakeId(EntityId entity, ushort gen = 0) => new(++_entityCount, entity, gen);
 
     private readonly AssetStore _assetStore;
     private readonly MaterialStore _materialStore;
 
     private readonly World _world;
 
-    private SceneEntityId[] _entities = new SceneEntityId[WorldEntities.DefaultEntityCapacity];
-    private GameEntity[] _gameEntities = new GameEntity[WorldEntities.DefaultEntityCapacity];
+    private GameEntity[] _entities = new GameEntity[WorldEntities.DefaultEntityCapacity];
+    private GameEntityHandle[] _handles = new GameEntityHandle[WorldEntities.DefaultEntityCapacity];
 
-    private readonly Dictionary<SceneEntityId, Guid> _fromGuid = new(WorldEntities.DefaultEntityCapacity);
-    private readonly Dictionary<string, SceneEntityId> _byName = new(WorldEntities.DefaultEntityCapacity);
-
+    private readonly Dictionary<GameEntityHandle, Guid> _toGuid = new(DefaultEntityDictCapacity);
+    private readonly Dictionary<string, GameEntityHandle> _byName = new(DefaultEntityDictCapacity);
+    
     internal SceneWorld(AssetSystem assetSystem, World world)
     {
         _assetStore = assetSystem.StoreImpl;
@@ -105,36 +104,38 @@ public sealed class SceneWorld
                 throw new InvalidOperationException($"Entity with name {name} already exists");
         }
 
-        _fromGuid.Add(id, Guid.NewGuid());
+        _toGuid.Add(id, Guid.NewGuid());
 
-        _entities[index] = id;
+        _handles[index] = id;
     }
 
-    private void ValidateEntity(SceneEntityId sceneEntity)
+    private void ValidateEntity(GameEntityHandle entityHandle)
     {
-        if (!sceneEntity.IsValid || sceneEntity > CoreEcs.Count)
-            throw new ArgumentOutOfRangeException(nameof(sceneEntity));
+        if (!entityHandle.IsValid || entityHandle > CoreEcs.Count)
+            throw new ArgumentOutOfRangeException(nameof(entityHandle));
 
-        var actualEntity = CoreEcs.GetEntity(sceneEntity);
-        if (actualEntity != sceneEntity)
-            throw new InvalidOperationException($"Entity: {sceneEntity} does not match actual: {actualEntity}");
+        var actualEntity = CoreEcs.GetEntity(entityHandle);
+        if (actualEntity != entityHandle)
+            throw new InvalidOperationException($"Entity: {entityHandle} does not match actual: {actualEntity}");
     }
 
     private void EnsureCapacity(int amount)
     {
         var len = _entityCount + amount;
+        if (len >= _handles.Length)
+        {
+            var newSize = Arrays.CapacityGrowthSafe(_handles.Length, len);
+            Array.Resize(ref _handles, newSize);
+            
+            Logger.LogString(LogScope.World, $"SceneEntities: resized {newSize}", LogLevel.Warn);
+        }
+
         if (len >= _entities.Length)
         {
             var newSize = Arrays.CapacityGrowthSafe(_entities.Length, len);
             Array.Resize(ref _entities, newSize);
-            Console.WriteLine("Scene Entities resize");
-        }
-
-        if (len >= _gameEntities.Length)
-        {
-            var newSize = Arrays.CapacityGrowthSafe(_gameEntities.Length, len);
-            Array.Resize(ref _gameEntities, newSize);
-            Console.WriteLine("GameEntities resize");
+            
+            Logger.LogString(LogScope.World, $"GameEntities: resized {newSize}", LogLevel.Warn);
         }
     }
 }

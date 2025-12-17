@@ -17,8 +17,6 @@ public static class RenderLimits
 
     public const int MaxFboVariants = 4;
 
-    public const int DefaultBoneBufferCap = BoneCapacity * 64 * 10;
-    public const int DefaultCommandBuffCapacity = 512;
     public const int DefaultMaterialBufferCapacity = 512;
 
     public const int MaxMaterialCount = 1024;

@@ -1,26 +1,28 @@
 using System.Runtime.CompilerServices;
 using ConcreteEngine.Common.Numerics;
+using ConcreteEngine.Engine.Editor.Diagnostics;
 using ConcreteEngine.Engine.Worlds.Data;
 using ConcreteEngine.Engine.Worlds.Entities.Components;
 using ConcreteEngine.Engine.Worlds.Entities.Resources;
 using ConcreteEngine.Engine.Worlds.Objects;
 using ConcreteEngine.Engine.Worlds.Tables;
+using ConcreteEngine.Shared.Diagnostics;
 
 namespace ConcreteEngine.Engine.Worlds.Entities;
 
 internal sealed class WorldEntities
 {
     public const int DefaultEntityCapacity = 1024;
-    private MeshTable _meshTable = null!;
-    private MaterialTable _materialTable = null!;
 
     private static readonly List<IEntityStore> StoreList = [];
     private static EntityCoreStore _coreStore = null!;
 
+    public int EntityCount => _coreStore.ActiveCount;
 
     internal WorldEntities()
     {
-        if (_coreStore is not null) throw new InvalidOperationException("WorldEntities already initialized");
+        if (_coreStore is not null || StoreList.Count > 0)
+            throw new InvalidOperationException("WorldEntities already initialized");
 
         _coreStore = new EntityCoreStore(DefaultEntityCapacity);
         GenericStores<ModelComponent>.CreateStore(DefaultEntityCapacity);
@@ -30,14 +32,7 @@ internal sealed class WorldEntities
         GenericStores<DebugBoundsComponent>.CreateStore(16);
     }
 
-    public int EntityCount => _coreStore.ActiveCount;
     public EntityCoreStore Core => _coreStore;
-
-    public void Attach(MeshTable meshTable, MaterialTable materialTable)
-    {
-        _meshTable = meshTable;
-        _materialTable = materialTable;
-    }
 
     public EntityId AddEntity(in CoreComponentBundle data) => Core.AddEntity(in data);
 

@@ -18,29 +18,32 @@ using ConcreteEngine.Shared.Diagnostics;
 
 namespace ConcreteEngine.Engine.Scene;
 
-
-
 public sealed class SceneWorld
 {
-    public GameEntityStore EntityStore { get; }
+    public SceneStore Store { get; }
 
     private readonly World _world;
+    private readonly WorldEntities _worldEntities;
+    private readonly EntityCoreStore _entityCore;
+
     private readonly AssetStore _assetStore;
     private readonly MaterialStore _materialStore;
 
     internal SceneWorld(AssetSystem assetSystem, World world)
     {
-        GameEntityFactory.Initialize();
-        
-        EntityStore = new  GameEntityStore(world, assetSystem.StoreImpl, assetSystem.MaterialStoreImpl);
+        _world = world;
+        _worldEntities = world.Entities;
+        _entityCore = world.Entities.Core;
+
         _assetStore = assetSystem.StoreImpl;
         _materialStore = assetSystem.MaterialStoreImpl;
-        _world = world;
+        Store = new SceneStore(world, assetSystem.StoreImpl, assetSystem.MaterialStoreImpl);
     }
 
-    public void CreateEntity(string name, string template)
-    {
-        
-    }
-    
+    public SceneObjectId CreateSceneObject(string name) => Store.Create(name);
+
+    public EntityId SpawnEntity(SceneObjectId id, EntityTemplate template) =>
+        Store.SpawnWorldEntity(id, template);
+
+    public ref Transform GetEntityTransform(EntityId entity) => ref _entityCore.GetTransform(entity);
 }

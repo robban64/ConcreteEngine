@@ -19,7 +19,7 @@ public readonly struct ScenePlacement(
     public readonly Model ModelInfo = modelInfo;
     public readonly float Offset = offset;
 }
-
+/*
 public sealed class EntitySpawner(SceneWorld sceneWorld, World world, float size = 256f, float margin = 4f)
 {
     private static int _genIdx = 0;
@@ -36,7 +36,7 @@ public sealed class EntitySpawner(SceneWorld sceneWorld, World world, float size
     {
         var m = sp.ModelInfo;
         var name = $"{sp.ModelInfo.Name}-{_genIdx++}";
-        sceneWorld.EntityStore.AddModelEntity(name, sp.ModelInfo, sp.Mat, in transform);
+        sceneWorld.Store.AddModelEntity(name, sp.ModelInfo, sp.Mat, in transform);
     }
 
     public void PlaceGroundRocksBasic(
@@ -145,4 +145,4 @@ public sealed class EntitySpawner(SceneWorld sceneWorld, World world, float size
     private static float Clamp01(float v) => v < 0f ? 0f : v > 1f ? 1f : v;
 
     private static Quaternion Yaw(float radians) => Quaternion.CreateFromAxisAngle(Vector3.UnitY, radians);
-}
+}*/

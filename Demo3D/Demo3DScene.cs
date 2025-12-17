@@ -7,6 +7,7 @@ using ConcreteEngine.Engine.Assets.Models;
 using ConcreteEngine.Engine.Assets.Textures;
 using ConcreteEngine.Engine.Configuration;
 using ConcreteEngine.Engine.Scene;
+using ConcreteEngine.Engine.Scene.Data;
 using ConcreteEngine.Engine.Scene.Modules;
 using ConcreteEngine.Engine.Worlds.Entities.Components;
 using ConcreteEngine.Engine.Worlds.Utility;
@@ -19,7 +20,7 @@ namespace Demo3D;
 
 public sealed class Demo3DScene : GameScene
 {
-    private EntitySpawner _spawner = null!;
+    //private EntitySpawner _spawner = null!;
 
     protected override void ConfigureModules(IGameSceneModuleBuilder builder)
     {
@@ -49,9 +50,12 @@ public sealed class Demo3DScene : GameScene
         // Particle
         CreateParticles(assets);
 
-        CreateAnimatedEntities(assets);
+        CreateCesiumMan(assets);
 
-        CreateSpawner(assets);
+        CreateKnight(assets);
+        CreateWarrior(assets);
+
+        
 
         float half = 256 / 2f;
         var worldTerrain = Context.World.Terrain;
@@ -100,111 +104,140 @@ public sealed class Demo3DScene : GameScene
                 GfxStateFlags.DepthWrite | GfxStateFlags.SampleAlphaCoverage),
             PassFunctions = new GfxPassStateFunc(BlendMode.Alpha)
         };
+
         var worldParticles = Context.World.Particles;
+        worldParticles.SetMaterial(particleMat.Id);
+
+        var def = new ParticleDefinition
+        {
+            StartColor = new Vector4(1.0f, 0.8f, 0.2f, 1.0f),
+            EndColor = new Vector4(0.5f, 0.0f, 0.0f, 0.0f),
+            Gravity = new Vector3(0, -3.0f, 0),
+            SpeedMinMax = new Vector2(4.0f, 7.0f),
+            SizeStartEnd = new Vector2(0.5f, 0.1f),
+            LifeMinMax = new Vector2(1.0f, 2.5f)
+        };
+        var state = new ParticleEmitterState
+        {
+            Translation = new Vector3(120, 8, 120),
+            StartArea = new Vector3(0.2f, 0.0f, 0.2f),
+            Direction = new Vector3(0, 1, 0),
+            Spread = 0.3f
+        };
+
+        var t1 = new EntityTemplate
+        {
+            Spatial = new SpatialTemplate { LocalBounds = ParticleComponent.DefaultParticleBounds },
+            Particle = new ParticleTemplate
+            {
+                EmitterName = "Emitter1",
+                ParticleCount = 1024,
+                Definition = def,
+                State = state,
+                Material = particleMat.Id,
+            }
+        };
+
+        var t2 = new EntityTemplate
+        {
+            Spatial = new SpatialTemplate { LocalBounds = ParticleComponent.DefaultParticleBounds },
+            Particle = new ParticleTemplate
+            {
+                EmitterName = "Emitter2",
+                ParticleCount = 1024,
+                Definition = ParticleDefinition.MakeDefault(),
+                State = state,
+                Material = particleMat.Id,
+            }
+        };
+
+        var sceneWorld = Context.SceneWorld;
+
+        var particleObj1 = sceneWorld.CreateSceneObject("Particle1");
+        var entity1 = sceneWorld.SpawnEntity(particleObj1, t1);
+        sceneWorld.GetEntityTransform(entity1).Translation = new Vector3(100, 8, 110);
         
-        /*
-        {
-            var emitter = worldParticles.CreateEmitter(1024, ParticleDefinition.MakeDefault());
-            worldParticles.SetMaterial(particleMat.Id);
-            emitter.MaterialId = particleMat.Id;
 
-            var component = new ParticleComponent( emitter.EmitterHandle, emitter.MaterialId);
-            Context.World.Entities.CreateParticleEntity(emitter.MeshId, component);
-        }
-*/
-        {
-            var def = new ParticleDefinition
-            {
-                StartColor = new Vector4(1.0f, 0.8f, 0.2f, 1.0f),
-                EndColor = new Vector4(0.5f, 0.0f, 0.0f, 0.0f),
-                Gravity = new Vector3(0, -3.0f, 0),
-                SpeedMinMax = new Vector2(4.0f, 7.0f),
-                SizeStartEnd = new Vector2(0.5f, 0.1f),
-                LifeMinMax = new Vector2(1.0f, 2.5f)
-            };
-            var state = new ParticleEmitterState
-            {
-                Translation = new Vector3(120, 8, 120),
-                StartArea = new Vector3(0.2f, 0.0f, 0.2f),
-                Direction = new Vector3(0, 1, 0),
-                Spread = 0.3f
-            };
-            worldParticles.SetMaterial(particleMat.Id);
-
-            var emitter = worldParticles.CreateEmitter("Emitter1", 1024, in def);
-            emitter.State = state with { Translation = new Vector3(100, 8, 110) };;
-            emitter.Material = particleMat.Id;
-
-            var particleTransform = Transform.Identity with{Translation = new Vector3(110, 8, 110)};
-            Context.SceneWorld.EntityStore.AddParticleEntity("Particle1", emitter, in particleTransform);
-
-            var emitter2 = worldParticles.CreateEmitter("Emitter2", 1024, in def);
-            emitter2.State = state with { Translation = new Vector3(110, 8, 110) };
-            emitter2.Material = particleMat.Id;
-
-            particleTransform = Transform.Identity with{Translation = new Vector3(100, 8, 110)};
-            Context.SceneWorld.EntityStore.AddParticleEntity("Particle2", emitter2, in particleTransform);
-        }
+        var particleObj2 = sceneWorld.CreateSceneObject("Particle2");
+        var entity2 = sceneWorld.SpawnEntity(particleObj2, t2);
+        sceneWorld.GetEntityTransform(entity2).Translation = new Vector3(110, 8, 110);
     }
 
-    private void CreateAnimatedEntities(IAssetSystem assets)
+    private void CreateWarrior(IAssetSystem assets)
     {
+        var model = assets.Store.GetByName<Model>("Warrior");
+        var mat = assets.MaterialStore.Get("Warrior::Materials/0");
+        mat.State.Shininess = 2f;
+        mat.State.Specular = 0.05f;
+
+        var template = new EntityTemplate
+        {
+            Spatial = new SpatialTemplate { LocalBounds = model.Bounds },
+            Model = new ModelTemplate { Model = model.ModelId, Materials = [mat.GetMeta()] },
+            Animation = new AnimationTemplate { Animation = model.AnimationId, Clip = 0, }
+        };
+
+        var sceneWorld = Context.SceneWorld;
+
         for (int i = 0; i < 2; i++)
         {
-            var model = assets.Store.GetByName<Model>("Warrior");
-            var mat = assets.MaterialStore.Get("Warrior::Materials/0");
-            var matTag = MaterialTagBuilder.BuildOne(mat.Id);
-            var clip = model.Animation![0];
-
-            mat.State.Shininess = 2f;
-            mat.State.Specular = 0.05f;
-
             var transform = Transform.Identity with
             {
                 Translation = new Vector3(115, 6, 115 + i * 5), Scale = new Vector3(2)
             };
-            Context.SceneWorld.EntityStore.AddModelEntity($"Warrior {i}", model, matTag, in transform);
-        }
-
-
-        var cesiumModel = assets.Store.GetByName<Model>("Cesium_Man");
-        var cesiumMat = assets.MaterialStore.CreateMaterial("EmptyAnimated", "CesiumMat");
-        var cesiumMatKey = MaterialTagBuilder.BuildOne(cesiumMat.Id);
-        var cesiumClip = cesiumModel.Animation![0];
-
-        for (int i = 0; i < 16; i++)
-        {
-            var transform = Transform.Identity with
-            {
-                Translation = new Vector3(100 + i * 4, 6, 100 + i * 4),
-                Rotation = Quaternion.CreateFromYawPitchRoll(0, 0, 0),
-                Scale = new Vector3(2)
-            };
+            var entity = sceneWorld.CreateSceneObject($"Warrior {i}");
+            sceneWorld.SpawnEntity(entity, template);
             
-            Context.SceneWorld.EntityStore.AddModelEntity($"Cesium Man {i}", cesiumModel, cesiumMatKey, in transform);
-        }
-
-
-        {
-            var knight = assets.Store.GetByName<Model>("Knight");
-            var knightMat = assets.MaterialStore.Get("Knight::Materials/0");
-            knightMat.State.Shininess = 2f;
-            knightMat.State.Specular = 0.05f;
-
-            var transform = Transform.Identity with
-            {
-                Translation = new Vector3(110, 6, 125),
-                Rotation = Quaternion.CreateFromYawPitchRoll(0, FloatMath.ToRadians(90), 0),
-                Scale = new Vector3(2)
-            };
-
-            var knightMatKey =
-                MaterialTagBuilder.Start(knightMat.Id).WithSlot(knightMat.Id).Build();
-
-            Context.SceneWorld.EntityStore.AddModelEntity("Knight", knight, knightMatKey, in transform);
         }
     }
 
+    private void CreateCesiumMan(IAssetSystem assets)
+    {
+        var sceneWorld = Context.SceneWorld;
+        
+        var cesiumModel = assets.Store.GetByName<Model>("Cesium_Man");
+        var cesiumMat = assets.MaterialStore.CreateMaterial("EmptyAnimated", "CesiumMat");
+        var template = new EntityTemplate
+        {
+            Spatial = new SpatialTemplate { LocalBounds = cesiumModel.Bounds },
+            Model = new ModelTemplate { Model = cesiumModel.ModelId, Materials = [cesiumMat.GetMeta()] },
+            Animation = new AnimationTemplate { Animation = cesiumModel.AnimationId, Clip = 0, }
+        };
+        
+        var sceneObject = sceneWorld.CreateSceneObject("Cesium Man");
+
+        for (int i = 0; i < 16; i++)
+        {
+            var entity = sceneWorld.SpawnEntity(sceneObject, template);
+            ref var entityTransform = ref sceneWorld.GetEntityTransform(entity);
+            entityTransform.Translation = new Vector3(100 + i * 4, 6, 100 + i * 4);
+            entityTransform.Rotation = Quaternion.CreateFromYawPitchRoll(0, 0, 0);
+            entityTransform.Scale = new Vector3(2);
+        }
+    }
+
+    private void CreateKnight(IAssetSystem assets)
+    {
+        var knight = assets.Store.GetByName<Model>("Knight");
+        var knightMat = assets.MaterialStore.Get("Knight::Materials/0");
+        knightMat.State.Shininess = 2f;
+        knightMat.State.Specular = 0.05f;
+        
+        var template = new EntityTemplate
+        {
+            Spatial = new SpatialTemplate { LocalBounds = knight.Bounds },
+            Model = new ModelTemplate { Model = knight.ModelId, Materials = [knightMat.GetMeta()] }
+        };
+
+        var sceneObject = Context.SceneWorld.CreateSceneObject("Knight");
+        var entity = Context.SceneWorld.SpawnEntity(sceneObject, template);
+        
+        ref var entityTransform = ref Context.SceneWorld.GetEntityTransform(entity);
+        entityTransform.Translation = new Vector3(110, 6, 125);
+        entityTransform.Rotation = Quaternion.CreateFromYawPitchRoll(0, FloatMath.ToRadians(90), 0);
+        entityTransform.Scale = new Vector3(2);
+    }
+/*
     private void CreateSpawner(IAssetSystem assets)
     {
         var (store, materialStore) = (assets.Store, assets.MaterialStore);
@@ -268,7 +301,7 @@ public sealed class Demo3DScene : GameScene
 
         _spawner.PlaceTreesBasic(14,
         [
-            new ScenePlacement(treeMesh,  treeMatTag),
+            new ScenePlacement(treeMesh, treeMatTag),
             new ScenePlacement(treeMesh1, birchMatTag),
             new ScenePlacement(treeMesh2, birchMatTag)
         ]);
@@ -280,17 +313,6 @@ public sealed class Demo3DScene : GameScene
             ],
             intensity: 0.5f);
         _spawner.PlacePropsRingBasic(256, [new ScenePlacement(boatMesh, boatMatTag)]);
-
-/*
-        {
-            var mesh = store.GetByName<Model>("Cube");
-            var entityId = World.Entities.Create();
-            var mat = World.EntityMaterials.Add(rockMat1Tag);
-            World.Entities.Models.Add(entityId, new ModelComponent(mesh.ModelId, mesh.DrawCount, mat));
-            World.Entities.Transforms.Add(entityId,
-                new TransformComponent(new Vector3(half, worldTerrain.GetSmoothHeight(half, half) + 1f, half),
-                    Vector3.One, Quaternion.Identity));
-        }
-*/
-    }
+        
+    }*/
 }

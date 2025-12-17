@@ -6,48 +6,50 @@ using ConcreteEngine.Engine.Worlds.Data;
 using ConcreteEngine.Renderer.Data;
 using ConcreteEngine.Shared.World;
 
-namespace ConcreteEngine.Engine.Scene;
+namespace ConcreteEngine.Engine.Scene.Data;
 
 public interface IComponentTemplate
-{ }
-
-public sealed class SpatialComponentTemplate : IComponentTemplate
 {
-    public TransformData Transform;
-    public BoundingBox Bounds;
 }
 
-public sealed class ModelComponentTemplate : IComponentTemplate
+public sealed class SpatialTemplate : IComponentTemplate
+{
+    public BoundingBox LocalBounds;
+}
+
+public sealed class ModelTemplate : IComponentTemplate
 {
     public ModelId Model;
     public MaterialMeta[] Materials = [];
 }
 
-public sealed class AnimationComponentTemplate : IComponentTemplate
+public sealed class AnimationTemplate : IComponentTemplate
 {
     public AnimationId Animation;
-    public float Time;
-    public float Duration;
-    public float Speed;
     public short Clip;
 }
 
-public sealed class ParticleComponentTemplate : IComponentTemplate
+public sealed class ParticleTemplate : IComponentTemplate
 {
     public required string EmitterName;
     public ParticleDefinition Definition;
     public ParticleEmitterState State;
-    
+    public int ParticleCount;
+
     public MaterialId Material;
 }
 
-public sealed class WorldEntityTemplate
+public sealed class EntityTemplate
 {
-    public List<IComponentTemplate> Components = [];
+    public SpatialTemplate? Spatial;
+    public ModelTemplate? Model;
+    public ParticleTemplate? Particle;
+
+    public AnimationTemplate? Animation;
 }
 
-public sealed class GameEntityTemplate
+public sealed class SceneObjectTemplate
 {
     public required string Name;
-    public List<WorldEntityTemplate> EntityTemplates = [];
+    public List<EntityTemplate> EntityTemplates = [];
 }

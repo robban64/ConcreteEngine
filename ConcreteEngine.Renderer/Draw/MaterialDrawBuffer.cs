@@ -16,7 +16,7 @@ internal sealed class MaterialDrawBuffer
     private RangeU16[] _slotRanges = new RangeU16[DefaultMaterialBufferCapacity];
     private TextureSlotInfo[] _textureSlots = new TextureSlotInfo[DefaultTextureSlotCapacity];
 
-    private DrawMaterialMeta[] _metas = new DrawMaterialMeta[DefaultMaterialBufferCapacity];
+    private RenderMaterialMeta[] _metas = new RenderMaterialMeta[DefaultMaterialBufferCapacity];
     private MaterialUniformRecord[] _buffer = new MaterialUniformRecord[DefaultMaterialBufferCapacity];
 
     private int _idx = 0;
@@ -30,10 +30,10 @@ internal sealed class MaterialDrawBuffer
     {
     }
 
-    internal ReadOnlySpan<DrawMaterialMeta> MaterialMetas => _metas;
-    internal DrawMaterialMeta GetMeta(MaterialId materialId) => _metas[materialId - 1];
+    internal ReadOnlySpan<RenderMaterialMeta> MaterialMetas => _metas;
+    internal RenderMaterialMeta GetMeta(MaterialId materialId) => _metas[materialId - 1];
 
-    internal ReadOnlySpan<TextureSlotInfo> GetMetaAndSlots(MaterialId materialId, out DrawMaterialMeta meta)
+    internal ReadOnlySpan<TextureSlotInfo> GetMetaAndSlots(MaterialId materialId, out RenderMaterialMeta meta)
     {
         meta = _metas[materialId - 1];
         var range = _slotRanges[materialId - 1];
@@ -41,7 +41,7 @@ internal sealed class MaterialDrawBuffer
     }
 
 
-    public void SubmitDrawData(in DrawMaterialPayload payload, ReadOnlySpan<TextureSlotInfo> slots)
+    public void SubmitDrawData(in RenderMaterialPayload payload, ReadOnlySpan<TextureSlotInfo> slots)
     {
         ArgumentOutOfRangeException.ThrowIfGreaterThan(slots.Length, TextureSlots);
 

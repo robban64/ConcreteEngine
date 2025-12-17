@@ -2,7 +2,7 @@ using ConcreteEngine.Graphics.Gfx.Definitions;
 using ConcreteEngine.Renderer.Definitions;
 
 namespace ConcreteEngine.Engine.Assets.Materials;
-
+/*
 public sealed class MaterialTemplateSpec
 {
     public ShadingModelMode ShadingModel { get; }
@@ -20,4 +20,4 @@ public sealed class MaterialTemplateSpec
     public bool DepthWrite { get; }
 
     public PassMask PassMask { get; }
-}
+}*/

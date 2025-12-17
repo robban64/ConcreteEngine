@@ -136,14 +136,14 @@ public sealed class Demo3DScene : GameScene
             emitter.Material = particleMat.Id;
 
             var particleTransform = Transform.Identity with{Translation = new Vector3(110, 8, 110)};
-            Context.SceneWorld.AddParticleEntity("Particle1", emitter, in particleTransform);
+            Context.SceneWorld.EntityStore.AddParticleEntity("Particle1", emitter, in particleTransform);
 
             var emitter2 = worldParticles.CreateEmitter("Emitter2", 1024, in def);
             emitter2.State = state with { Translation = new Vector3(110, 8, 110) };
             emitter2.Material = particleMat.Id;
 
             particleTransform = Transform.Identity with{Translation = new Vector3(100, 8, 110)};
-            Context.SceneWorld.AddParticleEntity("Particle2", emitter2, in particleTransform);
+            Context.SceneWorld.EntityStore.AddParticleEntity("Particle2", emitter2, in particleTransform);
         }
     }
 
@@ -163,7 +163,7 @@ public sealed class Demo3DScene : GameScene
             {
                 Translation = new Vector3(115, 6, 115 + i * 5), Scale = new Vector3(2)
             };
-             Context.SceneWorld.AddModelEntity($"Warrior {i}", model, matTag, in transform);
+            Context.SceneWorld.EntityStore.AddModelEntity($"Warrior {i}", model, matTag, in transform);
         }
 
 
@@ -181,7 +181,7 @@ public sealed class Demo3DScene : GameScene
                 Scale = new Vector3(2)
             };
             
-            Context.SceneWorld.AddModelEntity($"Cesium Man {i}", cesiumModel, cesiumMatKey, in transform);
+            Context.SceneWorld.EntityStore.AddModelEntity($"Cesium Man {i}", cesiumModel, cesiumMatKey, in transform);
         }
 
 
@@ -201,7 +201,7 @@ public sealed class Demo3DScene : GameScene
             var knightMatKey =
                 MaterialTagBuilder.Start(knightMat.Id).WithSlot(knightMat.Id).Build();
 
-            Context.SceneWorld.AddModelEntity("Knight", knight, knightMatKey, in transform);
+            Context.SceneWorld.EntityStore.AddModelEntity("Knight", knight, knightMatKey, in transform);
         }
     }
 

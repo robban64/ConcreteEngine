@@ -6,19 +6,13 @@ using ConcreteEngine.Engine.Worlds.View;
 
 namespace ConcreteEngine.Engine.Worlds;
 
-internal sealed class WorldContext
+internal readonly ref struct WorldContext(WorldEntities entities, WorldSkybox sky, WorldTerrain terrain, WorldParticles particles, MeshTable meshTable, MaterialTable materialTable, AnimationTable animationTable)
 {
-   public required WorldEntities Entities { get; init; }
-   public required WorldSkybox Sky { get; init; }
-   public required WorldTerrain Terrain { get; init; }
-   public required WorldParticles Particles { get; init; }
-   public required WorldRaycaster Raycast { get; init; }
-   public required WorldRenderParams WorldRenderParams { get; init; }
-   
-   public required MeshGeneratorRegistry MeshGenerator { get; init; }
-   public required MeshTable MeshTable { get; init; }
-   public required MaterialTable MaterialTable { get; init; }
-   public required AnimationTable AnimationTable { get; init; }
-   public required Camera3D Camera { get; init; }
-
+    public readonly WorldEntities Entities = entities;
+    public readonly WorldSkybox Sky = sky;
+    public readonly WorldTerrain Terrain = terrain;
+    public readonly WorldParticles Particles = particles;
+    public readonly MeshTable MeshTable = meshTable;
+    public readonly MaterialTable MaterialTable = materialTable;
+    public readonly AnimationTable AnimationTable = animationTable;
 }

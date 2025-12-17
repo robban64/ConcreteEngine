@@ -27,16 +27,17 @@ public sealed class World
     private readonly WorldSkybox _sky;
     private readonly WorldTerrain _terrain;
     private readonly WorldParticles _particles;
-    private readonly WorldRaycaster _raycast;
+
     private readonly WorldRenderParams _worldRenderParams;
 
-    private readonly MeshGeneratorRegistry _meshGenerator;
+    private readonly WorldRaycaster _raycast;
+    private readonly Camera3D _camera;
 
     private readonly MeshTable _meshTable;
     private readonly MaterialTable _materialTable;
     private readonly AnimationTable _animationTable;
+    private readonly MeshGeneratorRegistry _meshGenerator;
 
-    private readonly Camera3D _camera;
 
     private readonly DrawEntityAssembler _drawEntities;
     private readonly WorldRenderer _worldRenderer;
@@ -46,8 +47,6 @@ public sealed class World
     {
         _assets = assets;
         _camera = new Camera3D();
-
-
         _meshGenerator = new MeshGeneratorRegistry();
 
         _meshTable = new MeshTable();
@@ -143,18 +142,5 @@ public sealed class World
     }
 
     internal WorldContext CreateContext() =>
-        new()
-        {
-            Entities = _entities,
-            MeshTable = _meshTable,
-            MaterialTable = _materialTable,
-            AnimationTable = _animationTable,
-            WorldRenderParams = _worldRenderParams,
-            MeshGenerator = _meshGenerator,
-            Camera = _camera,
-            Particles = _particles,
-            Sky = _sky,
-            Raycast = _raycast,
-            Terrain = _terrain,
-        };
+        new(_entities, _sky, _terrain, _particles, _meshTable, _materialTable, _animationTable);
 }

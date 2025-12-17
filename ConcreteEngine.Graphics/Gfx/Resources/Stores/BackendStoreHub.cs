@@ -20,14 +20,6 @@ internal sealed class BackendStoreHub
         StoreBundle = new BackendStoreBundle(this);
     }
 
-
-    internal void Register<TId, THandle>(BackendResourceStore<TId, THandle> store)
-        where TId : unmanaged, IResourceId where THandle : unmanaged, IResourceHandle
-    {
-        if (!_stores.TryAdd(store.Kind, store))
-            throw new InvalidOperationException("Duplicate backend store.");
-    }
-
     internal IBackendResourceStore GetStore(ResourceKind kind)
     {
         if (!_stores.TryGetValue(kind, out var store))
@@ -43,6 +35,13 @@ internal sealed class BackendStoreHub
             throw new InvalidOperationException("Missing backend store.");
 
         return store;
+    }
+    
+    private void Register<TId, THandle>(BackendResourceStore<TId, THandle> store)
+        where TId : unmanaged, IResourceId where THandle : unmanaged, IResourceHandle
+    {
+        if (!_stores.TryAdd(store.Kind, store))
+            throw new InvalidOperationException("Duplicate backend store.");
     }
 
     private void RegisterBackendStores()

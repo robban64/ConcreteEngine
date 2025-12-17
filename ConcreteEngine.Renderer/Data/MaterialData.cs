@@ -5,7 +5,7 @@ using ConcreteEngine.Graphics.Gfx.Resources;
 namespace ConcreteEngine.Renderer.Data;
 
 [StructLayout(LayoutKind.Sequential)]
-public readonly struct DrawMaterialMeta(
+public readonly struct RenderMaterialMeta(
     MaterialId materialId,
     ShaderId shaderId,
     GfxPassState passState,
@@ -18,8 +18,8 @@ public readonly struct DrawMaterialMeta(
 }
 
 [StructLayout(LayoutKind.Sequential)]
-public readonly struct DrawMaterialPayload(in DrawMaterialMeta meta, in MaterialParamSnapshot param)
+public readonly struct RenderMaterialPayload(in RenderMaterialMeta meta, in RenderMaterialData param)
 {
-    public readonly DrawMaterialMeta Meta = meta;
-    public readonly MaterialParamSnapshot MatParams = param;
+    public readonly RenderMaterialMeta Meta = meta;
+    public readonly RenderMaterialData MatParams = param;
 }

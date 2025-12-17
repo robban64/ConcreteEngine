@@ -96,7 +96,7 @@ internal sealed class DrawBuffers
         }
     }
 
-    public ReadOnlySpan<TextureSlotInfo> ResolveMaterial(MaterialId materialId, out DrawMaterialMeta materialMeta)
+    public ReadOnlySpan<TextureSlotInfo> ResolveMaterial(MaterialId materialId, out RenderMaterialMeta materialMeta)
     {
         if (_ctx.ResolveMaterialBind(materialId))
         {

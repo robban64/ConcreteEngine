@@ -93,13 +93,13 @@ public sealed class MaterialState
         }
     } = false;
 
-    internal void Set(in MaterialParamSnapshot param)
+    internal void Set(in RenderMaterialData param)
     {
         Color = param.Color;
         Specular = param.Specular;
         Shininess = param.Shininess;
         UvRepeat = param.UvRepeat;
-        Transparency = param.IsTransparent;
+        Transparency = param.HasTransparency;
         IsDirty = true;
     }
 

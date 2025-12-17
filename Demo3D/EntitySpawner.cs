@@ -36,7 +36,7 @@ public sealed class EntitySpawner(SceneWorld sceneWorld, World world, float size
     {
         var m = sp.ModelInfo;
         var name = $"{sp.ModelInfo.Name}-{_genIdx++}";
-        sceneWorld.AddModelEntity(name, sp.ModelInfo, sp.Mat, in transform);
+        sceneWorld.EntityStore.AddModelEntity(name, sp.ModelInfo, sp.Mat, in transform);
     }
 
     public void PlaceGroundRocksBasic(

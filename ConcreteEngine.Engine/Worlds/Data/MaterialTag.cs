@@ -16,7 +16,7 @@ public readonly record struct MaterialTagKey
 }
 
 [StructLayout(LayoutKind.Sequential)]
-public readonly struct MaterialSlotInfo(MaterialId material, ushort slot, bool isTransparent = false)
+public readonly struct MaterialTagSlot(MaterialId material, ushort slot, bool isTransparent = false)
 {
     public readonly MaterialId Material = material;
     public readonly ushort Slot = slot;

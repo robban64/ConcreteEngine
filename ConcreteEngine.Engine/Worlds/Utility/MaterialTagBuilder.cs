@@ -1,3 +1,4 @@
+using ConcreteEngine.Engine.Assets.Materials;
 using ConcreteEngine.Engine.Worlds.Data;
 using ConcreteEngine.Renderer.Data;
 
@@ -27,25 +28,11 @@ public struct MaterialTagBuilder()
     }
 
 
-    public MaterialTagBuilder WithSlot(MaterialSlotInfo info)
+    public static MaterialTag FromSpan(Span<MaterialMeta> materials)
     {
-        var slot = info.Slot;
-        var material = info.Material;
-        switch (slot)
-        {
-            case 0: _s0 = material; break;
-            case 1: _s1 = material; break;
-            case 2: _s2 = material; break;
-            case 3: _s3 = material; break;
-            case 4: _s4 = material; break;
-            case 5: _s5 = material; break;
-            default: throw new ArgumentOutOfRangeException(nameof(slot));
-        }
-
-        if (info.IsTransparent)
-            _transparentMask = (byte)(_transparentMask | (1 << slot));
-
-        return this;
+        var builder = new MaterialTagBuilder();
+        foreach (var meta in materials) builder.WithSlot(meta.MaterialId, meta.HasTransparency);
+        return builder.Build();
     }
 
     public MaterialTagBuilder WithSlot(MaterialId material, bool transparent = false)

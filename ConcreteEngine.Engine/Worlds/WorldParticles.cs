@@ -21,14 +21,15 @@ public sealed class WorldParticles
     // public ModelId Model { get; private set; }
     private MaterialId Material { get; set; }
 
-    private ParticleMeshGenerator _particleGenerator;
+    private ParticleMeshGenerator _particleGenerator = null!;
     private readonly MaterialTable _materialTable;
     private readonly MeshTable _meshTable;
 
     private readonly List<ParticleEmitter> _emitters = new(4);
+    private readonly Dictionary<string, ParticleEmitter> _byName = new(4);
+
     private int _handleHigh = 0;
 
-    internal ReadOnlySpan<ParticleEmitter> EmitterSpan => CollectionsMarshal.AsSpan(_emitters);
 
     internal WorldParticles(MeshTable meshTable, MaterialTable materialTable)
     {
@@ -36,12 +37,18 @@ public sealed class WorldParticles
         _materialTable = materialTable;
     }
 
+    internal ReadOnlySpan<ParticleEmitter> EmitterSpan => CollectionsMarshal.AsSpan(_emitters);
+
+
     internal void AttachRenderer(ParticleMeshGenerator meshGenerator)
     {
         _particleGenerator = meshGenerator;
     }
 
     public void SetMaterial(MaterialId materialId) => Material = materialId;
+
+
+    public bool TryGetEmitter(string name, out ParticleEmitter emitter) => _byName.TryGetValue(name, out emitter!);
 
     public ParticleEmitter GetEmitter(int emitterHandle)
     {
@@ -63,17 +70,22 @@ public sealed class WorldParticles
 
     public ParticleEmitter CreateEmitter(string name, int particleCount, in ParticleDefinition definition)
     {
+        if (_byName.ContainsKey(name)) throw new InvalidOperationException();
+        
         var slotHandle = _particleGenerator.CreateParticleMesh(particleCount, out var mesh);
         var emitter = new ParticleEmitter(name, slotHandle, particleCount, in definition)
         {
             Mesh = mesh, Material = Material
         };
+        
         _emitters.Add(emitter);
+        _byName[name] = emitter;
+        
         _handleHigh = int.Max(_handleHigh, slotHandle);
-
+        
         emitter.Model = _meshTable.CreateSimpleModel(emitter.Mesh, 0, 4, ParticleComponent.DefaultParticleBounds);
         emitter.MaterialKey = _materialTable.Add(MaterialTagBuilder.BuildOne(emitter.Material));
-
+        
         return emitter;
     }
 

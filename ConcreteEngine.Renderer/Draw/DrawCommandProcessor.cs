@@ -111,7 +111,7 @@ internal sealed class DrawCommandProcessor
         _gfxCmd.BindTexture(GfxTextures.FallbackTextures.AlphaMaskId, 1);
     }
 
-    private void BindPassState(in DrawMaterialMeta materialMeta)
+    private void BindPassState(in RenderMaterialMeta materialMeta)
     {
         if (!materialMeta.PassState.IsEmpty)
         {

@@ -20,7 +20,7 @@ public static class ConsoleService
 {
     private const int MaxLogCount = 128;
 
-    private static readonly string[] LogBuffer = new string[MaxLogCount];
+    private static readonly string[] LogBuffer;
     private static int _head = 0;
     private static int _count = 0;
 
@@ -28,6 +28,7 @@ public static class ConsoleService
 
     static ConsoleService()
     {
+        LogBuffer = new string[MaxLogCount];
         ConsoleCtx = new ConsoleCtx(SendLog);
     }
 

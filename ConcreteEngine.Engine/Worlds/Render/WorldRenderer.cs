@@ -53,7 +53,6 @@ public sealed class WorldRenderer
     internal RenderEngine RenderEngine => _renderer;
     internal RenderCamera RenderCamera => _renderer.RenderCamera;
 
-    internal void RenderEmptyFrame(in RenderFrameInfo frameInfo) => _renderer.RenderEmptyFrame(frameInfo);
 
     internal void RecreateFrameBuffer(FboCommandRecord req)
     {
@@ -75,6 +74,11 @@ public sealed class WorldRenderer
         }
     }
 
+    internal void RenderEmptyFrame(in RenderFrameInfo frameInfo)
+    {
+        _renderer.RenderEmptyFrame(frameInfo);
+    }
+
 
     internal void PreRender(
         BeginFrameStatus status,
@@ -82,7 +86,6 @@ public sealed class WorldRenderer
         RenderRuntimeParams runtimeParams)
     {
         _drawEntities.Reset();
-
 
         _camera.WriteSnapshot(EngineTime.GameAlpha, RenderCamera);
 

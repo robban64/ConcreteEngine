@@ -23,6 +23,12 @@ public static class MetricsApi
     private static bool _activeStoreMetrics = true;
     private static bool _activeMemoryMetrics = true;
 
+    public static bool CheckDelegates()
+    {
+        return PullSceneMetrics != null && PullMaterialMetrics != null && PullMemoryMetrics != null &&
+               FillGfxStoreMetrics != null && FillAssetMetrics != null;
+    }
+
     public static void ToggleMetrics(bool value)
     {
         _activeSceneMetrics = value;

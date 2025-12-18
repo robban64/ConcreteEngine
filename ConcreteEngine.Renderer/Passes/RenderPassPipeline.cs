@@ -88,7 +88,6 @@ public sealed class RenderPassPipeline
             return false;
         }
 
-
         var pass = _entries[_passIter++];
         Debug.Assert(pass != null);
 

@@ -12,9 +12,17 @@ public record struct BoundingBox(in Vector3 Min, in Vector3 Max)
 
     public static BoundingBox Identity => new(Vector3.Zero, Vector3.Zero);
 
-    public readonly Vector3 Center => (Min + Max) / 2f;
+    public readonly Vector3 Center
+    {
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        get => (Min + Max) / 2f;
+    }
 
-    public readonly Vector3 Extent => (Max - Min) / 2f;
+    public readonly Vector3 Extent
+    {
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        get => (Max - Min) / 2f;
+    }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public void FromPoint(Vector3 point)
@@ -23,12 +31,8 @@ public record struct BoundingBox(in Vector3 Min, in Vector3 Max)
         Max = Vector3.Max(Max, point);
     }
 
-    /*
-    [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public BoundingBox FromPoint(Vector3 point, out BoundingBox bounds) =>
-        bounds = new BoundingBox(Vector3.Min(Min, point), Vector3.Max(Max, point));
-*/
 
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public readonly void FillCorners(Span<Vector3> corners)
     {
         ref readonly var min = ref Min;

@@ -8,8 +8,17 @@ public record struct BoundingAxisBox(in Vector3 Center, in Vector3 Extent)
     public Vector3 Center = Center;
     public Vector3 Extent = Extent;
 
-    public readonly Vector3 Min => Center - Extent;
-    public readonly Vector3 Max => Center + Extent;
+    public readonly Vector3 Min
+    {
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        get => Center - Extent;
+    }
+
+    public readonly Vector3 Max
+    {
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        get => Center + Extent;
+    }
 
     public readonly void FillCorners(Span<Vector3> corners)
     {

@@ -20,6 +20,8 @@ internal sealed class EditorEngineQueue
 
     public int MainCommandCount => _mainCommands.Count;
     public int DeferredCommandCount => _deferredCommands.Count;
+    
+    public int QueuesCount => _mainCommands.Count + _deferredCommands.Count;
 
     public EditorEngineQueue(World world, WorldRenderer worldRenderer, AssetSystem assets)
     {

@@ -13,10 +13,10 @@ public record struct Ray(in Vector3 Position, in Vector3 Direction)
     public readonly bool IntersectsWith(in BoundingBox bounds, out float distance) =>
         CollisionMethods.RayIntersectsBox(in this, in bounds, out distance);
 
-
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public readonly Vector3 GetPointOnRay(float distance) => Position + Direction * distance;
 
-
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static void FromTwoPoints(in Vector3 p1, in Vector3 p2, out Ray ray) =>
         ray = new Ray(in p1, Vector3.Normalize(p2 - p1));
 }

@@ -1,3 +1,4 @@
+using System.Runtime.CompilerServices;
 using ConcreteEngine.Graphics.Gfx;
 using ConcreteEngine.Graphics.Gfx.Contracts;
 using ConcreteEngine.Graphics.Gfx.Resources;
@@ -42,11 +43,11 @@ internal sealed class DrawStateContext
         _shaderRegistry = registry.ShaderRegistry;
     }
 
+    
     public ref readonly RenderCoreShaders CoreShaders => ref _shaderRegistry.CoreShaders;
 
     public ReadOnlySpan<int> GetUniformLocations(ShaderId shader) =>
         _shaderRegistry.GetRenderShader(shader).GetUniforms();
-
 
     public bool IsMain => PassMode == PassStateMode.Main;
     public bool IsDepth => PassMode == PassStateMode.Depth;
@@ -67,6 +68,7 @@ internal sealed class DrawStateContext
         OverridePassStateFunc = default;
     }
 
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public bool ResolveMaterialBind(MaterialId material)
     {
         if (material == PrevMaterial) return false;

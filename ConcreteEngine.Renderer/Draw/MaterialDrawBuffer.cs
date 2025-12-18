@@ -33,6 +33,7 @@ internal sealed class MaterialDrawBuffer
     internal ReadOnlySpan<RenderMaterialMeta> MaterialMetas => _metas;
     internal RenderMaterialMeta GetMeta(MaterialId materialId) => _metas[materialId - 1];
 
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     internal ReadOnlySpan<TextureSlotInfo> GetMetaAndSlots(MaterialId materialId, out RenderMaterialMeta meta)
     {
         meta = _metas[materialId - 1];

@@ -1,5 +1,6 @@
 using System.Diagnostics;
 using System.Diagnostics.CodeAnalysis;
+using System.Runtime.CompilerServices;
 using ConcreteEngine.Common;
 using ConcreteEngine.Common.Numerics;
 using ConcreteEngine.Graphics.Error;
@@ -74,15 +75,18 @@ internal sealed class RenderFboRegistry : IRenderFboRegistry
     internal void FinishRegistration()
     {
         _fboRegistry.AsSpan(0, _fboCount).Sort(RenderFbo.FboKeyComparer.Instance);
+        Warmup();
     }
+    
 
-
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public bool TryGetRenderFbo(FboTagKey key, out RenderFbo? fbo)
     {
         fbo = GetRenderFbo(key);
         return fbo != null;
     }
 
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public RenderFbo? GetRenderFbo(FboTagKey key)
     {
         foreach (var fb in FrameBufferSpan)
@@ -178,6 +182,40 @@ internal sealed class RenderFboRegistry : IRenderFboRegistry
         }
     }
 
+    [MethodImpl(MethodImplOptions.NoInlining)]
+    private void Warmup()
+    {
+        for (int i = 0; i < 32; i++)
+        {
+            _ = TagRegistry.PassKey<ShadowPassTag>(FboVariant.Default).Variant;
+            _ = TagRegistry.PassKey<ScenePassTag>(FboVariant.Default).Variant;
+            _ = TagRegistry.PassKey<LightPassTag>(FboVariant.Default).Variant;
+            _ = TagRegistry.PassKey<PostPassTag>(FboVariant.Default).Variant;
+            _ = TagRegistry.PassKey<ScreenPassTag>(FboVariant.Default).Variant;
+
+            var t1 = TagRegistry.FboKey<ShadowPassTag>(FboVariant.Default);
+            var t2 = TagRegistry.FboKey<ScenePassTag>(FboVariant.Default);
+            var t3 = TagRegistry.FboKey<LightPassTag>(FboVariant.Default);
+            var t4 = TagRegistry.FboKey<PostPassTag>(FboVariant.Default);
+            var t5 = TagRegistry.FboKey<ScreenPassTag>(FboVariant.Default);
+
+            GetRenderFbo(t1);
+            GetRenderFbo(t2);
+            GetRenderFbo(t3);
+            GetRenderFbo(t4);
+            GetRenderFbo(t5);
+
+            if (!TryGetRenderFbo(t1, out _) &&
+                !TryGetRenderFbo(t2, out _) &&
+                !TryGetRenderFbo(t3, out _) &&
+                !TryGetRenderFbo(t4, out _) &&
+                !TryGetRenderFbo(t5, out _))
+            {
+                throw new InvalidOperationException();
+            }
+
+        }
+    }
 
     [DoesNotReturn]
     [StackTraceHidden]

@@ -15,10 +15,18 @@ public static class CoreCmdNames
 
 public static class CommandDispatcher
 {
-    private static readonly Dictionary<string, ConsoleCommandRecord> ConsoleCmd = new(16);
-    private static readonly Dictionary<string, IEditorCommand> EditorCmd = new(16);
-    private static readonly HashSet<string> RegisteredCommands = new(16);
+    private static readonly Dictionary<string, ConsoleCommandRecord> ConsoleCmd;
+    private static readonly Dictionary<string, IEditorCommand> EditorCmd;
+    private static readonly HashSet<string> RegisteredCommands;
 
+    static CommandDispatcher()
+    {
+        ConsoleCmd = new Dictionary<string, ConsoleCommandRecord>(16);
+        EditorCmd = new Dictionary<string, IEditorCommand>(16);
+        RegisteredCommands = new HashSet<string>(16);
+    }
+
+    public static bool HasCommands => EditorCmd.Count > 0 || RegisteredCommands.Count > 0 || ConsoleCmd.Count > 0;
 
     public static void RegisterNoOpConsoleCmd(string command, string description, ConsoleCommandReqDel del)
     {

@@ -8,11 +8,9 @@ namespace ConcreteEngine.Renderer.Registry;
 
 internal sealed class RenderRegistry
 {
-    public RenderShaderRegistry ShaderRegistry { get; }
-
-    public RenderUboRegistry UboRegistry { get; }
-
-    public RenderFboRegistry FboRegistry { get; }
+    public readonly RenderShaderRegistry ShaderRegistry;
+    public readonly RenderUboRegistry UboRegistry;
+    public readonly RenderFboRegistry FboRegistry;
 
 
     public RenderRegistry(GfxContext gfx)

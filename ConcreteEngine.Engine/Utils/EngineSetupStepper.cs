@@ -4,6 +4,7 @@ namespace ConcreteEngine.Engine.Utils;
 
 internal struct EngineSetupStepper
 {
+    public int WarmupTick;
     private int _currentIndex;
     private readonly int _endIndex;
 

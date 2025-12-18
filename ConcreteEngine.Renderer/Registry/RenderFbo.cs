@@ -14,8 +14,8 @@ public delegate Size2D FboSizePolicyDel(Size2D outputSize, Vector2 ratio);
 
 public sealed class RenderFbo : IComparable<RenderFbo>
 {
-    public FrameBufferId FboId { get; }
-    public FboTagKey TagKey { get; }
+    public readonly FrameBufferId FboId;
+    public readonly FboTagKey TagKey;
     public int Version { get; private set; }
 
     public Size2D Size { get; private set; }

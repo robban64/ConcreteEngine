@@ -31,25 +31,12 @@ public readonly struct RenderMaterialData(
     public bool HasNormal => NormalToggle > 0.1f;
     public bool HasAlpha => AlphaToggle > 0.1f;
 
-
-    [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public void Fill(out Vector4 color, out Vector4 param1, out Vector4 param2)
-    {
-        color = Color.AsVec4();
-        param1 = new Vector4(Specular, UvRepeat, 1.0f, 1.0f);
-        param2 = new Vector4(Shininess, NormalToggle, TransparencyToggle, AlphaToggle);
-    }
-
+    
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public void WriteTo(ref MaterialUniformRecord record)
     {
         record.MatColor = Color.AsVec4();
         record.MatParams0 = new Vector4(Specular, UvRepeat, 1.0f, 1.0f);
         record.MatParams1 = new Vector4(Shininess, NormalToggle, TransparencyToggle, AlphaToggle);
-    }
-
-    public static RenderMaterialData From(ref MaterialParameters param)
-    {
-        return new RenderMaterialData(in param.Color, param.Specular, param.Shininess, param.UvRepeat);
     }
 }

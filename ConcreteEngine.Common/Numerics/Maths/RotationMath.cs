@@ -36,6 +36,7 @@ public static class RotationMath
         return Quaternion.Multiply(qy, qx);
     }
 
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static Quaternion EulerDegreesToQuaternion(in Vector3 eulerDegrees)
     {
         var rx = eulerDegrees.X * Deg2Rad; // pitch
@@ -50,6 +51,7 @@ public static class RotationMath
         return q;
     }
 
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static Vector3 QuaternionToEulerDegrees(in Quaternion q, in Vector3 lastEulerDegrees)
     {
         // convert quaternion -> rotation matrix

@@ -96,7 +96,12 @@ public sealed class RenderEngine
     public void SubmitMaterialDrawData(in RenderMaterialPayload payload, ReadOnlySpan<TextureSlotInfo> slots) =>
         _drawPipeline.SubmitMaterialDrawData(in payload, slots);
 
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public void CollectDrawBuffers() => _drawPipeline.PrepareDrawBuffers();
+
+    
     //
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public void PrepareFrame(
         in RenderFrameInfo frameInfo,
         in RenderRuntimeParams runtimeParams)
@@ -109,9 +114,9 @@ public sealed class RenderEngine
         _drawPipeline.Prepare();
     }
 
-    [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public void CollectDrawBuffers() => _drawPipeline.PrepareDrawBuffers();
+    
 
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public void StartFrame(BeginFrameStatus status)
     {
         ref readonly var frameInfo = ref _stateContext.CurrentFrameInfo;
@@ -120,7 +125,9 @@ public sealed class RenderEngine
         if (status == BeginFrameStatus.Resize)
             _renderRegistry.FboRegistry.RecreateScreenDependentFbo(frameInfo.OutputSize);
     }
+    
 
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public void UploadFrameData()
     {
         _drawPipeline.UploadUniformGlobals();
@@ -154,22 +161,9 @@ public sealed class RenderEngine
         }
 
         _passPipeline.ApplyAfterPass();
-        /*
-        if (passResult.OpKind == PassOpKind.Resolve)
-        {
-            _passPipeline.ApplyAfterPass();
-            return;
-        }
-
-        if (passResult == PassAction.DrawPassResult())
-        {
-            _drawPipeline.ExecuteDrawPass(passId);
-        }
-
-        _passPipeline.ApplyAfterPass();
-        */
     }
 
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public void EndRenderFrame(out GfxFrameResult frameResult)
     {
         _graphics.EndFrame(out frameResult);

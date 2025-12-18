@@ -9,13 +9,21 @@ internal static class EditorManagedStore
 {
     private readonly record struct ResourceNameKey(string Name, EditorItemType ItemType);
 
-    private static readonly Dictionary<EditorId, EditorResource> Resources = new(512);
-    private static readonly Dictionary<ResourceNameKey, EditorId> ByName = new(512);
+    private static readonly Dictionary<EditorId, EditorResource> Resources;
+    private static readonly Dictionary<ResourceNameKey, EditorId> ByName;
 
     private static List<EditorAssetResource> _assetResources = [];
     private static List<EditorEntityResource> _entityResources = [];
 
-    private static readonly Range32[] AssetRanges = new Range32[Enum.GetValues<EditorAssetCategory>().Length];
+    private static readonly Range32[] AssetRanges;
+
+    static EditorManagedStore()
+    {
+        Resources = new Dictionary<EditorId, EditorResource>(512);
+        ByName = new Dictionary<ResourceNameKey, EditorId>(512);
+        AssetRanges = new Range32[Enum.GetValues<EditorAssetCategory>().Length];
+    }
+
 
     public static int Count => Resources.Count;
 

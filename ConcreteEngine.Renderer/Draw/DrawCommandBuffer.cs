@@ -63,6 +63,7 @@ public sealed class DrawCommandBuffer
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     internal int IncrementTransformIndex() => _submitTransformIdx++;
 
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     internal int Submit(in DrawCommand cmd, DrawCommandMeta meta)
     {
         var idx = _submitCmdIdx++;
@@ -86,6 +87,7 @@ public sealed class DrawCommandBuffer
         return idx;
     }
 
+    
     public int SubmitDraw(
         DrawCommand cmd,
         DrawCommandMeta meta,

@@ -8,5 +8,6 @@ internal enum EngineStateLevel : byte
     InitializeSystem = 3,
     LoadWorld = 4,
     LoadEditor = 5,
-    Running = 6
+    Warmup = 6,
+    Running = 7
 }

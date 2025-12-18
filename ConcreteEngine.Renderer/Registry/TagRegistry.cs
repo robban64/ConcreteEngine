@@ -15,11 +15,14 @@ internal static class TagRegistry
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static int TagIndexOf<TTag>() where TTag : class => RenderPassTag<TTag>.TagIndex;
 
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static FboTagKey FboKey<TTag>(FboVariant variant) where TTag : class => new(TagIndexOf<TTag>(), variant);
 
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static PassTagKey PassKey<TTag>(FboVariant variant) where TTag : class =>
         new(TagIndexOf<TTag>(), variant, RenderPassTag<TTag>.GetPassId(variant));
 
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static PassTagKey BindFboPassId<TTag>(FboVariant variant, PassId passId) where TTag : class
     {
         RenderPassTag<TTag>.BindFboPassId(variant, passId);
@@ -38,12 +41,14 @@ internal static class TagRegistry
     //
     private static class RenderPassTag<TTag> where TTag : class
     {
-        internal static int TagIndex { get; private set; } = -1;
+        internal static int TagIndex = -1;
 
-        private static PassId[] _passIds = new PassId[MaxFboVariants];
+        private static readonly PassId[] _passIds = new PassId[MaxFboVariants];
 
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static PassId GetPassId(FboVariant variant) => _passIds[variant];
 
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static void BindFboPassId(FboVariant variant, PassId passId)
         {
             ArgumentOutOfRangeException.ThrowIfGreaterThanOrEqual(variant.Value, MaxFboVariants);

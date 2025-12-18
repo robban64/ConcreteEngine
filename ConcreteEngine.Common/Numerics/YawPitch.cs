@@ -8,8 +8,10 @@ public record struct YawPitch(float Yaw, float Pitch)
 {
     public const float PitchLimit = 89.9f;
 
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public void WithClampedPitch() => Pitch = float.Clamp(Pitch, -PitchLimit, PitchLimit);
 
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public readonly Vector2 AsVec2() => new(Yaw, Pitch);
 
     public static YawPitch operator +(YawPitch a, YawPitch b) => new(a.Yaw + b.Yaw, a.Pitch + b.Pitch);

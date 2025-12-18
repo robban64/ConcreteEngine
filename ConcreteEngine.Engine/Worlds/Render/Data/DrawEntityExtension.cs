@@ -1,5 +1,5 @@
 using System.Runtime.CompilerServices;
-using ConcreteEngine.Engine.Worlds.Entities.Components;
+using ConcreteEngine.Engine.ECS.Definitions;
 using ConcreteEngine.Renderer.Definitions;
 
 namespace ConcreteEngine.Engine.Worlds.Render.Data;

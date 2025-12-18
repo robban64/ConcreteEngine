@@ -1,28 +1,31 @@
 using System.Runtime.CompilerServices;
-using ConcreteEngine.Engine.Worlds.Entities.Components;
+using ConcreteEngine.Engine.ECS.Data;
+using ConcreteEngine.Engine.ECS.RenderComponent;
 
-namespace ConcreteEngine.Engine.Worlds.Entities.Resources;
+namespace ConcreteEngine.Engine.ECS.Enumerators;
 
-internal ref struct EntityCoreEnumerator(EntitiesCoreView view)
+internal ref struct RenderEntityEnumerator(RenderEntityContext view)
 {
-    private readonly EntitiesCoreView _view = view;
+    private readonly RenderEntityContext _view = view;
 
     private int _i = -1;
 
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public bool MoveNext() => ++_i < _view.Count;
+    
     public readonly EntityCoreQuery Current => new(_i, _view);
 
-    public EntityCoreEnumerator GetEnumerator()
+    public RenderEntityEnumerator GetEnumerator()
     {
         _i = -1;
         return this;
     }
 
-    internal readonly ref struct EntityCoreQuery(int idx, EntitiesCoreView view)
+    internal readonly ref struct EntityCoreQuery(int idx, RenderEntityContext view)
     {
-        private readonly EntitiesCoreView _view = view;
+        private readonly RenderEntityContext _view = view;
         public readonly int Index = idx;
-        public readonly EntityId Entity = new(idx + 1);
+        public readonly RenderEntityId RenderEntity = new(idx + 1);
 
         public ref SourceComponent Source
         {

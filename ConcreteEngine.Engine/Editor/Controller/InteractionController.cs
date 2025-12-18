@@ -2,8 +2,8 @@ using System.Numerics;
 using ConcreteEngine.Editor.Bridge;
 using ConcreteEngine.Editor.Definitions;
 using ConcreteEngine.Editor.Store;
+using ConcreteEngine.Engine.ECS;
 using ConcreteEngine.Engine.Worlds;
-using ConcreteEngine.Engine.Worlds.Entities;
 
 namespace ConcreteEngine.Engine.Editor.Controller;
 
@@ -35,7 +35,7 @@ internal sealed class InteractionController(ApiContext apiContext) : IEngineInte
         var newPoint = ray.GetPointOnRay(t);
         var tHeight = _terrain.GetSmoothHeight(newPoint.X, newPoint.Z);
 
-        var entityId = new EntityId(entity);
+        var entityId = new RenderEntityId(entity);
         ref readonly var bounds = ref _entities.Core.GetBox(entityId);
 
         newPoint.Y = tHeight - bounds.Bounds.Min.Y;

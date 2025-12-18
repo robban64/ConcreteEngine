@@ -1,4 +1,4 @@
-namespace ConcreteEngine.Engine.ECS.Game;
+namespace ConcreteEngine.Engine.ECS;
 
 public readonly record struct GameEntityId(int Id, ushort Gen) : IComparable<GameEntityId>
 {

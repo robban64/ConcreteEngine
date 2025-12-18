@@ -1,4 +1,4 @@
-namespace ConcreteEngine.Engine.ECS.Game;
+namespace ConcreteEngine.Engine.ECS.GameComponent;
 
 public interface IGameComponent<T> where T : unmanaged, IGameComponent<T>
 {

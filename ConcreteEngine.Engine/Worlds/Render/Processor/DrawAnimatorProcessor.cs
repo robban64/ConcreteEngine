@@ -1,8 +1,8 @@
 using System.Numerics;
 using System.Runtime.CompilerServices;
 using ConcreteEngine.Common.Numerics.Maths;
-using ConcreteEngine.Engine.Worlds.Entities;
-using ConcreteEngine.Engine.Worlds.Entities.Components;
+using ConcreteEngine.Engine.ECS;
+using ConcreteEngine.Engine.ECS.RenderComponent;
 using ConcreteEngine.Engine.Worlds.Render.Data;
 using ConcreteEngine.Engine.Worlds.Tables;
 using ConcreteEngine.Renderer.Data;
@@ -23,7 +23,7 @@ internal static class DrawAnimatorProcessor
         foreach (var query in worldEntities.Query<AnimationComponent>())
         {
             ref readonly var component = ref query.Component;
-            if (!ctx.IsVisible(query.Entity)) continue;
+            if (!ctx.IsVisible(query.RenderEntity)) continue;
             var view = animationView.GetModelView(component.Animation, out var invTransform);
 
             var len = view.BoneLength;

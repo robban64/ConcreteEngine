@@ -2,17 +2,17 @@ using System.Numerics;
 using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
 using ConcreteEngine.Common.Numerics;
+using ConcreteEngine.Engine.ECS.Definitions;
 using ConcreteEngine.Engine.Worlds.Data;
-using ConcreteEngine.Graphics.Gfx.Resources;
 using ConcreteEngine.Renderer.Data;
 
-namespace ConcreteEngine.Engine.Worlds.Entities.Components;
+namespace ConcreteEngine.Engine.ECS.RenderComponent;
 
 [StructLayout(LayoutKind.Sequential)]
 public struct SourceComponent(
     ModelId model,
     MaterialTagKey materialTagKey,
-    EntitySourceKind kind) : IEntityComponent
+    EntitySourceKind kind) : IRenderComponent<SourceComponent>
 {
     public ModelId Model = model;
     public MaterialTagKey MaterialKey = materialTagKey;
@@ -20,14 +20,14 @@ public struct SourceComponent(
 }
 
 [StructLayout(LayoutKind.Sequential)]
-public struct ModelComponent : IEntityComponent
+public struct ModelComponent : IRenderComponent<ModelComponent>
 {
     public ModelId Model;
     public MaterialTagKey MaterialKey;
 }
 
 [StructLayout(LayoutKind.Sequential)]
-public struct AnimationComponent : IEntityComponent
+public struct AnimationComponent : IRenderComponent<AnimationComponent>
 {
     public float Time;
     public float Duration;
@@ -56,7 +56,7 @@ public struct AnimationComponent : IEntityComponent
 }
 
 [StructLayout(LayoutKind.Sequential)]
-public struct ParticleComponent(int emitterHandle, MaterialId material) : IEntityComponent
+public struct ParticleComponent(int emitterHandle, MaterialId material) : IRenderComponent<ParticleComponent>
 {
     public int EmitterHandle = emitterHandle;
     public MaterialId Material = material;

@@ -1,10 +1,11 @@
+using System.Runtime.CompilerServices;
 using ConcreteEngine.Common;
 using ConcreteEngine.Common.Collections;
 using ConcreteEngine.Common.Time;
+using ConcreteEngine.Engine.ECS;
+using ConcreteEngine.Engine.ECS.RenderComponent;
 using ConcreteEngine.Engine.Editor.Diagnostics;
 using ConcreteEngine.Engine.Worlds.Data;
-using ConcreteEngine.Engine.Worlds.Entities;
-using ConcreteEngine.Engine.Worlds.Entities.Components;
 using ConcreteEngine.Engine.Worlds.Render.Data;
 using ConcreteEngine.Engine.Worlds.Render.Processor;
 using ConcreteEngine.Engine.Worlds.Tables;
@@ -22,11 +23,11 @@ internal sealed class DrawEntityAssembler
 
     private static int _idx;
     private static int _prevIdx;
-    private static EntityId _highEntityId;
+    private static RenderEntityId _highEntityId;
 
     //...
     private static int[] _byEntityId = new int[DefaultCapacity];
-    private static EntityId[] _entityIndices = new EntityId[DefaultCapacity];
+    private static RenderEntityId[] _entityIndices = new RenderEntityId[DefaultCapacity];
     private static DrawEntity[] _entities = new DrawEntity[DefaultCapacity];
     //...
 
@@ -41,7 +42,7 @@ internal sealed class DrawEntityAssembler
 
     //private static readonly FrameProfiler RenderProfiler = new(144, 144 * 10);
 
-    public ReadOnlySpan<EntityId> VisibleEntities => _entityIndices.AsSpan(0, _idx);
+    public ReadOnlySpan<RenderEntityId> VisibleEntities => _entityIndices.AsSpan(0, _idx);
 
     internal DrawEntityAssembler(World world)
     {
@@ -95,36 +96,54 @@ internal sealed class DrawEntityAssembler
         DrawWorldProcessor.SubmitWorldObjects(commandBuffer, _world);
 
         // cull
-        var ecsLen = _worldEntities.EntityCount;
-        var len = _idx = DrawEntityCulling.CullEntities(_entityIndices, _byEntityId, _worldEntities, _camera);
+        StaticProfileTimer.RenderTimer.Begin();
+        var renderView = _camera.RenderView;
+        var len = CullEntities(in renderView);
+        
+        // execute
+        var ctx = new DrawEntityContext(_entities.AsSpan(0, len), _entityIndices.AsSpan(0, len), _byEntityId);
+        
+        ExecuteCollectCommands(in ctx, in renderView);
+        ExecuteUploader(in ctx, commandBuffer);
+        ExecuteProcessors(in ctx, commandBuffer);
+        StaticProfileTimer.RenderTimer.EndPrint();
+    }
 
-        if (len == 0) return;
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    private int CullEntities(in CameraRenderView renderView)
+    {
+        var ecsLen = _worldEntities.EntityCount;
+        var len = _idx = DrawEntityCulling.CullEntities(_entityIndices, _byEntityId, _worldEntities, in renderView);
+        if (len == 0) return 0;
         if ((uint)len > _entities.Length || (uint)len > _entityIndices.Length || (uint)ecsLen > _byEntityId.Length)
             throw new IndexOutOfRangeException();
 
-        var ctx = new DrawEntityContext(_entities.AsSpan(0, len), _entityIndices.AsSpan(0, len), _byEntityId);
-        var coreEntities = _worldEntities.Core.GetReadView();
-
-        // collect
-        _highEntityId = DrawEntityCollector.CollectEntities(in ctx, in coreEntities);
-        DrawTagResolver.TagResolveEntities(in ctx, _worldEntities);
-        DrawEntityCulling.TagDepthKeys(in ctx, in coreEntities, _camera.RenderView);
-        DrawParticleProcessor.TagParticles(in ctx, _worldParticles, _worldEntities);
-
-        ExecuteUploader(in ctx, in coreEntities, commandBuffer);
-        ExecuteProcessors(in ctx, commandBuffer);
-        // end
+        return len;
     }
 
-    private void ExecuteUploader(in DrawEntityContext ctx, in EntitiesReadView coreEntities,
-        DrawCommandBuffer commandBuffer)
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    private void ExecuteCollectCommands(in DrawEntityContext ctx, in CameraRenderView renderView)
     {
+        var coreEntities = _worldEntities.Core.GetCoreView();
+
+        _highEntityId = DrawEntityCollector.CollectEntities(in ctx, in coreEntities);
+        DrawTagResolver.TagResolveEntities(in ctx, _worldEntities);
+        DrawEntityCulling.TagDepthKeys(in ctx, in coreEntities, in renderView);
+        DrawParticleProcessor.TagParticles(in ctx, _worldParticles, _worldEntities);
+    }
+
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    private void ExecuteUploader(in DrawEntityContext ctx, DrawCommandBuffer commandBuffer)
+    {
+        var coreEntities = _worldEntities.Core.GetCoreView();
+
         var uploader = commandBuffer.GetDrawUploaderCtx();
         DrawEntityUploader.UploadDrawCommands(_world, in ctx, in uploader);
         DrawTransformUploader.UploadTransform(in ctx, in coreEntities, in uploader, _meshTable);
         DrawTagResolver.UploadDebugBounds(in ctx, in uploader, _worldEntities, _meshTable, BoundsMaterial);
     }
 
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     private void ExecuteProcessors(in DrawEntityContext ctx, DrawCommandBuffer commandBuffer)
     {
         var skinningUploader = commandBuffer.GetSkinningUploaderCtx();

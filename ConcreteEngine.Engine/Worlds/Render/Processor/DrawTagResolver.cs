@@ -2,10 +2,10 @@ using System.Numerics;
 using ConcreteEngine.Common.Numerics;
 using ConcreteEngine.Common.Numerics.Maths;
 using ConcreteEngine.Common.Time;
+using ConcreteEngine.Engine.ECS;
+using ConcreteEngine.Engine.ECS.RenderComponent;
 using ConcreteEngine.Engine.Time;
 using ConcreteEngine.Engine.Utils;
-using ConcreteEngine.Engine.Worlds.Entities;
-using ConcreteEngine.Engine.Worlds.Entities.Components;
 using ConcreteEngine.Engine.Worlds.Render.Data;
 using ConcreteEngine.Engine.Worlds.Tables;
 using ConcreteEngine.Engine.Worlds.Utility;
@@ -13,6 +13,7 @@ using ConcreteEngine.Engine.Worlds.View;
 using ConcreteEngine.Renderer.Data;
 using ConcreteEngine.Renderer.Definitions;
 using ConcreteEngine.Renderer.Draw;
+using ConcreteEngine.Shared.World;
 
 namespace ConcreteEngine.Engine.Worlds.Render.Processor;
 
@@ -24,7 +25,7 @@ internal static class DrawTagResolver
         var slot = 1;
         foreach (var query in worldEntities.Query<AnimationComponent>())
         {
-            var entityId = query.Entity;
+            var entityId = query.RenderEntity;
             ref var component = ref query.Component;
             component.AdvanceTime(deltaTime);
 
@@ -38,7 +39,7 @@ internal static class DrawTagResolver
 
         foreach (var query in worldEntities.Query<SelectionComponent>())
         {
-            var entityId = query.Entity;
+            var entityId = query.RenderEntity;
             var index = ctx.ByEntityIdSpan[entityId];
             if (index == -1) continue;
             ref readonly var component = ref query.Component;
@@ -53,19 +54,19 @@ internal static class DrawTagResolver
     {
         if (worldEntities.GetStore<DebugBoundsComponent>().Count == 0) return;
 
-        var view = worldEntities.Core.GetReadView();
+        var view = worldEntities.Core.GetCoreView();
         Span<Vector3> corners = stackalloc Vector3[8];
         Matrix4x4 world;
         foreach (var query in worldEntities.Query<DebugBoundsComponent>())
         {
-            var entityId = query.Entity;
+            var entityId = query.RenderEntity;
             var index = ctx.ByEntityIdSpan[entityId];
             if (index == -1) continue;
 
             ref readonly var component = ref query.Component;
             ref readonly var drawEntity = ref ctx.EntitySpan[index];
-            ref readonly var transform = ref view.GetTransform(entityId);
-            ref readonly var bounds = ref view.GetBox(entityId);
+            ref readonly var transform = ref view.GetTransform(entityId).Data;
+            ref readonly var bounds = ref view.GetBox(entityId).Bounds;
 
             var depthKey = (ushort)(ushort.MaxValue - drawEntity.Meta.DepthKey);
             var cmd = new DrawCommand(PrimitiveMeshes.Cube, materialId, resolver: DrawCommandResolver.BoundingVolume);
@@ -77,7 +78,7 @@ internal static class DrawTagResolver
             if (!component.ByPart)
             {
                 ref var writer = ref uploader.GetWriter();
-                CreateBoxMatrix(corners, in bounds.Bounds, in transform, in world, out writer.Model);
+                CreateBoxMatrix(corners, in bounds, in transform, in world, out writer.Model);
                 writer.Normal = default;
                 uploader.SubmitDraw(cmd, meta);
                 return;
@@ -95,7 +96,7 @@ internal static class DrawTagResolver
 
         return;
 
-        static void CreateBoxMatrix(Span<Vector3> corners, in BoundingBox local, in Transform transform,
+        static void CreateBoxMatrix(Span<Vector3> corners, in BoundingBox local, in TransformData transform,
             in Matrix4x4 world, out Matrix4x4 global)
         {
             local.FillCorners(corners);
@@ -104,7 +105,7 @@ internal static class DrawTagResolver
 
             BoundingAxisBox.FromPoints(corners, out var axisBounds);
 
-            var t = new Transform(axisBounds.Center, axisBounds.Extent, in transform.Rotation);
+            var t = new TransformData(in axisBounds.Center, in axisBounds.Extent, in transform.Rotation);
             MatrixMath.CreateModelMatrix(in t.Translation, in t.Scale, in transform.Rotation, out global);
         }
     }

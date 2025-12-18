@@ -1,57 +1,57 @@
 using System.Runtime.CompilerServices;
 using ConcreteEngine.Common.Collections;
-using ConcreteEngine.Common.Numerics;
+using ConcreteEngine.Engine.ECS.Data;
+using ConcreteEngine.Engine.ECS.Definitions;
+using ConcreteEngine.Engine.ECS.RenderComponent;
 using ConcreteEngine.Engine.Editor.Diagnostics;
-using ConcreteEngine.Engine.Worlds.Entities.Components;
-using ConcreteEngine.Engine.Worlds.Entities.Resources;
 using ConcreteEngine.Shared.Diagnostics;
 
-namespace ConcreteEngine.Engine.Worlds.Entities;
+namespace ConcreteEngine.Engine.ECS;
 
-internal sealed class EntityCoreStore
+internal sealed class RenderEntityCore
 {
     //private int _entityIdx = 0;
-    private static EntityId MakeEntityId() => new(++_count);
+    private static RenderEntityId MakeEntityId() => new(++_count);
     private static int _count = 0;
 
-    private EntityId[] _entities;
+    private RenderEntityId[] _entities;
     private SourceComponent[] _sources;
     private Transform[] _transforms;
     private BoxComponent[] _boxes;
 
     private readonly Stack<int> _free = [];
+    private bool _isDirty;
 
-    public int ActiveCount => _count - _free.Count;
     public int Count => _count;
+    public int ActiveCount => _count - _free.Count;
 
-    public bool IsDirty { get; private set; }
+    public bool IsDirty => _isDirty;
 
 
-    internal EntityCoreStore(int initialCapacity)
+    internal RenderEntityCore(int initialCapacity)
     {
         ArgumentOutOfRangeException.ThrowIfLessThan(initialCapacity, 32);
-        _entities = new EntityId[initialCapacity];
+        _entities = new RenderEntityId[initialCapacity];
         _sources = new SourceComponent[initialCapacity];
         _transforms = new Transform[initialCapacity];
         _boxes = new BoxComponent[initialCapacity];
     }
 
-    public bool HasEntity(EntityId e)
+    public bool HasEntity(RenderEntityId e)
     {
         var index = e - 1;
         return (uint)index < (uint)Count && _entities[index] == e;
     }
     
-    
     // Getters
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public ref SourceComponent GetSource(EntityId e) => ref _sources[e - 1];
+    public ref SourceComponent GetSource(RenderEntityId e) => ref _sources[e - 1];
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public ref Transform GetTransform(EntityId e) => ref _transforms[e - 1];
+    public ref Transform GetTransform(RenderEntityId e) => ref _transforms[e - 1];
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public ref BoxComponent GetBox(EntityId e) => ref _boxes[e - 1];
+    public ref BoxComponent GetBox(RenderEntityId e) => ref _boxes[e - 1];
 
     // Spans
     public Span<SourceComponent> GetSourceSpan() => _sources.AsSpan(0, _count);
@@ -59,29 +59,34 @@ internal sealed class EntityCoreStore
     public Span<BoxComponent> GetBoxSpan() => _boxes.AsSpan(0, _count);
 
     // Views
-    public EntityView GetEntityView(EntityId e)
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public RenderEntityView GetEntityView(RenderEntityId e)
     {
-        var idx = e - 1;
+        var idx = e.Index;
         if ((uint)idx >= _entities.Length) throw new IndexOutOfRangeException();
-        return new EntityView(e, ref _sources[idx], ref _transforms[idx], ref _boxes[idx]);
+        return new RenderEntityView(e, ref _sources[idx], ref _transforms[idx], ref _boxes[idx]);
     }
 
-    public EntitiesReadView GetReadView() =>
-        new(_count, _sources.AsSpan(0, _count), _transforms.AsSpan(0, _count), _boxes.AsSpan(0, _count));
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public RenderEntityContext GetCoreView()
+    {
+        var len = _count;
+        if ((uint)len > _sources.Length || _sources.Length != _transforms.Length || _sources.Length != _boxes.Length)
+            throw new IndexOutOfRangeException();
+        
+        return new RenderEntityContext(len, _sources.AsSpan(0, len), _transforms.AsSpan(0, len), _boxes.AsSpan(0, len));
+    }
 
-    public EntitiesCoreView GetCoreView() =>
-        new(_count, _sources.AsSpan(0, _count), _transforms.AsSpan(0, _count), _boxes.AsSpan(0, _count));
 
-
-    public EntityId AddEntity(in CoreComponentBundle componentBundle)
+    public RenderEntityId AddEntity(in CoreComponentBundle componentBundle)
     {
         if(_free.Count == 0) EnsureCapacity(1);
         var result = AddEntityInternal(in componentBundle);
-        IsDirty = true;
+        _isDirty = true;
         return result;
     }
     
-    public void AddEntities(ReadOnlySpan<CoreComponentBundle> components, Span<EntityId> result)
+    public void AddEntities(ReadOnlySpan<CoreComponentBundle> components, Span<RenderEntityId> result)
     {
         int ensureCap = int.Max(0, components.Length - _free.Count);
         if (ensureCap > 0)
@@ -93,14 +98,14 @@ internal sealed class EntityCoreStore
             result[i] = AddEntityInternal(in component);
         }
 
-        IsDirty = true;
+        _isDirty = true;
     }
 
-    private EntityId AddEntityInternal(in CoreComponentBundle component)
+    private RenderEntityId AddEntityInternal(in CoreComponentBundle component)
     {
         ValidateSource(component.Source);
 
-        EntityId entity;
+        RenderEntityId entity;
         if (!_free.TryPop(out var index))
         {
             index = _count;
@@ -108,10 +113,10 @@ internal sealed class EntityCoreStore
         }
         else
         {
-            entity = new EntityId(index + 1);
+            entity = new RenderEntityId(index + 1);
         }
         
-        if(entity - 1 != index) throw new InvalidOperationException();
+        if(entity.Index != index) throw new InvalidOperationException();
         
         ref var existingEntity = ref _entities[index];
         if(existingEntity.IsValid) throw new InvalidOperationException();
@@ -124,12 +129,12 @@ internal sealed class EntityCoreStore
         return entity;
     }
 
-    public void Remove(EntityId e)
+    public void Remove(RenderEntityId e)
     {
-        ArgumentOutOfRangeException.ThrowIfNegativeOrZero(e.Value, nameof(e));
-        ArgumentOutOfRangeException.ThrowIfGreaterThan(e.Value, _count, nameof(e));
+        ArgumentOutOfRangeException.ThrowIfNegativeOrZero(e.Id, nameof(e));
+        ArgumentOutOfRangeException.ThrowIfGreaterThan(e.Id, _count, nameof(e));
 
-        var index = e - 1;
+        var index = e.Index;
         ref var existing = ref _entities[index];
         if(existing != e) throw new InvalidOperationException();
         
@@ -143,7 +148,7 @@ internal sealed class EntityCoreStore
 
     internal void EndTick()
     {
-        IsDirty = false;
+        _isDirty = false;
     }
     
     private void ValidateSource(SourceComponent source)

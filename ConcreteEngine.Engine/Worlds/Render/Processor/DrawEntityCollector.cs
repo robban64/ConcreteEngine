@@ -1,7 +1,7 @@
 using System.Runtime.CompilerServices;
+using ConcreteEngine.Engine.ECS;
+using ConcreteEngine.Engine.ECS.Data;
 using ConcreteEngine.Engine.Time;
-using ConcreteEngine.Engine.Worlds.Entities;
-using ConcreteEngine.Engine.Worlds.Entities.Components;
 using ConcreteEngine.Engine.Worlds.Render.Data;
 using ConcreteEngine.Renderer.Data;
 using ConcreteEngine.Renderer.Definitions;
@@ -10,7 +10,7 @@ namespace ConcreteEngine.Engine.Worlds.Render.Processor;
 
 internal static class DrawEntityCollector
 {
-    public static EntityId CollectEntities(in DrawEntityContext ctx, in EntitiesReadView view)
+    public static RenderEntityId CollectEntities(in DrawEntityContext ctx, in RenderEntityContext view)
     {
         var len = ctx.EntitySpan.Length;
         var highEntityId = 0;
@@ -21,13 +21,13 @@ internal static class DrawEntityCollector
             ref var drawEntity = ref ctx.EntitySpan[i];
             ref readonly var source = ref view.GetSource(entityId);
             
-            drawEntity.Entity = entityId;
+            drawEntity.RenderEntity = entityId;
             drawEntity.Source = new DrawEntitySource(source.Model, source.MaterialKey);
             drawEntity.Meta = new DrawEntityMeta(DrawCommandId.Model, DrawCommandQueue.Opaque, PassMask.Default);
             
             highEntityId = int.Max(highEntityId, entityId);
         }
 
-        return new EntityId(highEntityId);
+        return new RenderEntityId(highEntityId);
     }
 }

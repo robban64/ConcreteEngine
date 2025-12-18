@@ -1,4 +1,4 @@
-using ConcreteEngine.Engine.Worlds.Entities;
+using ConcreteEngine.Engine.ECS;
 
 namespace ConcreteEngine.Engine.Scene;
 
@@ -15,7 +15,7 @@ public sealed class SceneObject
     public bool HasAnimation { get; internal set; }
     public bool HasParticle { get; internal set; }
 
-    private readonly List<EntityId> _linkedEntities = [];
+    private readonly List<RenderEntityId> _linkedEntities = [];
 
     internal SceneObject(SceneObjectId id, Guid guid, string name)
     {
@@ -24,8 +24,8 @@ public sealed class SceneObject
         Name = name;
     }
     
-    internal void LinkEntity(EntityId entity) => _linkedEntities.Add(entity);
-    internal void LinkEntities(ReadOnlySpan<EntityId> entities) => _linkedEntities.AddRange(entities);
+    internal void LinkEntity(RenderEntityId renderEntity) => _linkedEntities.Add(renderEntity);
+    internal void LinkEntities(ReadOnlySpan<RenderEntityId> entities) => _linkedEntities.AddRange(entities);
     
     internal void EnsureLinkedCapacity(int capacity) => _linkedEntities.EnsureCapacity(capacity);
 

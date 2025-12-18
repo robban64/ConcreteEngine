@@ -1,8 +1,8 @@
 using ConcreteEngine.Common.Numerics;
 
-namespace ConcreteEngine.Engine.Worlds.Entities.Components;
+namespace ConcreteEngine.Engine.ECS.RenderComponent;
 
-public struct SelectionComponent() : IEntityComponent
+public struct SelectionComponent() : IRenderComponent<SelectionComponent>
 {
     private static Color4 DefaultHighlight => Color4.FromRgba(46, 163, 242);
     
@@ -16,7 +16,7 @@ public struct SelectionComponent() : IEntityComponent
 */
 }
 
-public struct DebugBoundsComponent() : IEntityComponent
+public struct DebugBoundsComponent() : IRenderComponent<DebugBoundsComponent>
 {
     public Color4 Color = Color4.Green;
     public float LineThickness;

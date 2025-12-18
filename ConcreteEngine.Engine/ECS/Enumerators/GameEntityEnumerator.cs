@@ -1,10 +1,10 @@
 using System.Runtime.CompilerServices;
-using ConcreteEngine.Engine.ECS.Game;
+using ConcreteEngine.Engine.ECS.GameComponent;
 
-namespace ConcreteEngine.Engine.ECS.Data;
+namespace ConcreteEngine.Engine.ECS.Enumerators;
 
 public ref struct GameEntityEnumerator<T1>(GameEntityStore<T1> r)
-    where T1 : unmanaged
+    where T1 : unmanaged, IGameComponent<T1>
 {
     private int _i = -1;
 
@@ -28,7 +28,7 @@ public ref struct GameEntityEnumerator<T1>(GameEntityStore<T1> r)
 }
 
 public ref struct GameEntityEnumerator<T1, T2>(GameEntityStore<T1> r1, GameEntityStore<T2> r2)
-    where T1 : unmanaged where T2 : unmanaged
+    where T1 : unmanaged, IGameComponent<T1> where T2 : unmanaged, IGameComponent<T2>
 {
     private int _i = -1;
     private readonly int _count = r1.Count;

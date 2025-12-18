@@ -1,5 +1,3 @@
-using ConcreteEngine.Engine.Worlds.Entities;
-
 namespace ConcreteEngine.Engine.Scene;
 
 public readonly record struct SceneObjectId(int Value, ushort Gen) 

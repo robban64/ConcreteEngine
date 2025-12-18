@@ -3,7 +3,7 @@ using ConcreteEngine.Common.Collections;
 using ConcreteEngine.Engine.Editor.Diagnostics;
 using ConcreteEngine.Shared.Diagnostics;
 
-namespace ConcreteEngine.Engine.ECS.Game;
+namespace ConcreteEngine.Engine.ECS;
 
 
 internal interface IGameEntityStore
@@ -15,7 +15,7 @@ public sealed class GameEntityStore <T> : IGameEntityStore where T : unmanaged
 {
     private T[] _data;
     private GameEntityId[] _entities;
-    private readonly Dictionary<GameEntityId, int> _entityToIndex; // temp
+    private readonly Dictionary<GameEntityId, int> _entityToIndex;
     
     private readonly Stack<int> _free = [];
     private int _count;

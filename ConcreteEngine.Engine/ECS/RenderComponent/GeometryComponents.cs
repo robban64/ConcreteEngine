@@ -1,11 +1,10 @@
-using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
 using ConcreteEngine.Common.Numerics;
 
-namespace ConcreteEngine.Engine.Worlds.Entities.Components;
+namespace ConcreteEngine.Engine.ECS.RenderComponent;
 
 [StructLayout(LayoutKind.Sequential)]
-public struct BoxComponent(in BoundingBox bounds) : IEntityComponent
+public struct BoxComponent(in BoundingBox bounds) : IRenderComponent<BoxComponent>
 {
     public BoundingBox Bounds = bounds;
     public static implicit operator BoundingBox(BoxComponent c) => c.Bounds;

@@ -1,11 +1,12 @@
 using System.Numerics;
 using ConcreteEngine.Common.Numerics;
 using ConcreteEngine.Common.Numerics.Maths;
-using ConcreteEngine.Engine.Worlds.Entities.Components;
+using ConcreteEngine.Engine.ECS.RenderComponent;
 using ConcreteEngine.Engine.Worlds.Tables;
 using ConcreteEngine.Renderer.Data;
 using ConcreteEngine.Renderer.Definitions;
 using ConcreteEngine.Renderer.Draw;
+using ConcreteEngine.Shared.World;
 
 namespace ConcreteEngine.Engine.Worlds.Render.Processor;
 
@@ -24,7 +25,7 @@ internal static class DrawWorldProcessor
         var meta = new DrawCommandMeta(DrawCommandId.Terrain, DrawCommandQueue.Terrain);
         var cmd = new DrawCommand(view.Parts[0].Mesh, terrain.Material);
 
-        CreateTransformMatrices(in Transform.Identity, out var model, out var normal);
+        CreateTransformMatrices(Transform.Identity.Data, out var model, out var normal);
         commandBuffer.SubmitDraw(cmd, meta, in model, in normal);
     }
 
@@ -33,11 +34,11 @@ internal static class DrawWorldProcessor
         var meta = new DrawCommandMeta(DrawCommandId.Skybox, DrawCommandQueue.Skybox, passMask: PassMask.Main);
         var cmd = new DrawCommand(sky.Mesh, sky.Material);
 
-        CreateTransformMatrices(in Transform.Identity, out var model, out var normal);
+        CreateTransformMatrices(Transform.Identity.Data, out var model, out var normal);
         commandBuffer.SubmitDraw(cmd, meta, in model, in normal);
     }
 
-    private static void CreateTransformMatrices(in Transform transform, out Matrix4x4 model,
+    private static void CreateTransformMatrices(in TransformData transform, out Matrix4x4 model,
         out Matrix3X4 normal)
     {
         MatrixMath.CreateModelMatrix(

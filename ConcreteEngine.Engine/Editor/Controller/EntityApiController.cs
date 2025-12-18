@@ -3,9 +3,10 @@ using ConcreteEngine.Editor.Data;
 using ConcreteEngine.Editor.Definitions;
 using ConcreteEngine.Editor.Store;
 using ConcreteEngine.Editor.Store.Resources;
+using ConcreteEngine.Engine.ECS;
+using ConcreteEngine.Engine.ECS.Definitions;
+using ConcreteEngine.Engine.ECS.RenderComponent;
 using ConcreteEngine.Engine.Worlds;
-using ConcreteEngine.Engine.Worlds.Entities;
-using ConcreteEngine.Engine.Worlds.Entities.Components;
 
 namespace ConcreteEngine.Engine.Editor.Controller;
 
@@ -13,8 +14,7 @@ internal sealed class EntityApiController : IEngineEntityController
 {
     private static readonly string[] SourceNames = Enum.GetNames<EntitySourceKind>();
 
-
-    private EntityId _cachedEntity;
+    private RenderEntityId _cachedEntity;
 
     private readonly ApiContext _apiContext;
     private readonly World _world;
@@ -36,7 +36,7 @@ internal sealed class EntityApiController : IEngineEntityController
         foreach (var query in entities.CoreQuery())
         {
             ref readonly var source = ref query.Source;
-            var entity = query.Entity;
+            var entity = query.RenderEntity;
             var item = new EditorEntityResource
             {
                 Id = new EditorId(entity, EditorItemType.Entity),
@@ -51,14 +51,14 @@ internal sealed class EntityApiController : IEngineEntityController
         foreach (var query in entities.Query<ParticleComponent>())
         {
             ref readonly var comp = ref query.Component;
-            result[query.Entity - 1].ComponentRef = new EditorId(comp.EmitterHandle, EditorItemType.Particle);
+            result[query.RenderEntity - 1].ComponentRef = new EditorId(comp.EmitterHandle, EditorItemType.Particle);
         }
 
         foreach (var query in entities.Query<AnimationComponent>())
         {
             ref readonly var comp = ref query.Component;
-            result[query.Entity - 1].DisplayName = animationName;
-            result[query.Entity - 1].ComponentRef = new EditorId(comp.Animation, EditorItemType.Animation);
+            result[query.RenderEntity - 1].DisplayName = animationName;
+            result[query.RenderEntity - 1].ComponentRef = new EditorId(comp.Animation, EditorItemType.Animation);
         }
 
         return result;
@@ -66,14 +66,14 @@ internal sealed class EntityApiController : IEngineEntityController
 
     public void SelectEntity(EditorId entity, ref EditorEntityState state)
     {
-        var entityId = _cachedEntity = new EntityId(entity.Identifier);
+        var entityId = _cachedEntity = new RenderEntityId(entity.Identifier);
         var store = Entities.GetStore<SelectionComponent>();
         if (store.Has(entityId)) return;
         
         Entities.AddComponent(entityId, new SelectionComponent());
         var view = Entities.Core.GetEntityView(entityId);
 
-        state = new EditorEntityState(in Transform.UnsafeAs(ref view.Transform), in view.Box.Bounds)
+        state = new EditorEntityState(in view.Transform.Data, in view.Box.Bounds)
         {
             Model = new EditorId(view.Source.Model, EditorItemType.Model),
             MaterialKey = new EditorId(view.Source.MaterialKey.Value, EditorItemType.MaterialKey)
@@ -88,7 +88,7 @@ internal sealed class EntityApiController : IEngineEntityController
 
     public void DeselectEntity(EditorId entity)
     {
-        var entityId = new EntityId(entity.Identifier);
+        var entityId = new RenderEntityId(entity.Identifier);
         Entities.RemoveComponent<SelectionComponent>(entityId);
         _cachedEntity = default;
     }
@@ -96,25 +96,27 @@ internal sealed class EntityApiController : IEngineEntityController
     public void Fetch(EditorId entity, ref EditorEntityState state)
     {
         if (entity == 0) return;
-        var entityId = new EntityId(entity.Identifier);
+        var entityId = new RenderEntityId(entity.Identifier);
         var view = Entities.Core.GetEntityView(entityId);
-        state.Transform.Set(in Transform.UnsafeAs(ref view.Transform));
+        state.Transform.Set(in view.Transform.Data);
         state.Bounds = view.Box.Bounds;
     }
 
     public void Commit(EditorId entity, in EditorEntityState data)
     {
-        var entityId = new EntityId(entity.Identifier);
+        var entityId = new RenderEntityId(entity.Identifier);
         var view = Entities.Core.GetEntityView(entityId);
-        view.Box.Bounds = data.Bounds;
-        view.Transform.Translation = data.Transform.Translation;
-        view.Transform.Rotation = data.Transform.Rotation;
-        view.Transform.Scale = data.Transform.Scale;
+        ref var bounds = ref view.Box.Bounds;
+        ref var transform = ref view.Transform.Data;
+        bounds = data.Bounds;
+        transform.Translation = data.Transform.Translation;
+        transform.Rotation = data.Transform.Rotation;
+        transform.Scale = data.Transform.Scale;
     }
 
     public void FetchAnimation(EditorId entity, ref EditorAnimationState state)
     {
-        var entityId = new EntityId(entity.Identifier);
+        var entityId = new RenderEntityId(entity.Identifier);
         ref readonly var component = ref Entities.GetStore<AnimationComponent>().Get(entityId);
         var clipCount = _world.AnimationTableImpl.GetClipCount(component.Animation);
         state.Animation = new EditorId(component.Animation, EditorItemType.AnimationKey);
@@ -127,7 +129,7 @@ internal sealed class EntityApiController : IEngineEntityController
 
     public void CommitAnimation(EditorId entity, in EditorAnimationState state)
     {
-        var entityId = new EntityId(entity.Identifier);
+        var entityId = new RenderEntityId(entity.Identifier);
         ref var component = ref Entities.GetStore<AnimationComponent>().Get(entityId);
         component.Clip = (short)state.Clip;
         component.Time = state.Time;
@@ -137,7 +139,7 @@ internal sealed class EntityApiController : IEngineEntityController
 
     public void FetchParticle(EditorId entity, ref EditorParticleState state)
     {
-        var entityId = new EntityId(entity.Identifier);
+        var entityId = new RenderEntityId(entity.Identifier);
         var component = Entities.GetStore<ParticleComponent>().Get(entityId);
 
         var emitter = _world.Particles.GetEmitter(component.EmitterHandle);

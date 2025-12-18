@@ -2,7 +2,7 @@ using System.Numerics;
 using System.Runtime.CompilerServices;
 using ConcreteEngine.Common.Numerics;
 using ConcreteEngine.Common.Numerics.Maths;
-using ConcreteEngine.Engine.Worlds.Entities;
+using ConcreteEngine.Engine.ECS;
 using ConcreteEngine.Engine.Worlds.Render;
 using ConcreteEngine.Engine.Worlds.View;
 
@@ -38,7 +38,7 @@ public sealed class WorldRaycaster
         return _terrain.GetPointOnTerrainPlane(in ray);
     }
 
-    public EntityId GetEntityByCameraRay(Vector2 screenCoords, out BoundingBox resultBounds, out float distance)
+    public RenderEntityId GetEntityByCameraRay(Vector2 screenCoords, out BoundingBox resultBounds, out float distance)
     {
         CreateRayFrom(screenCoords, out var ray);
 
@@ -49,11 +49,11 @@ public sealed class WorldRaycaster
         if (visibleEntities.Length == 0) return default;
         var coreView = _entities.Core.GetCoreView();
 
-        EntityId closestEntity = default;
+        RenderEntityId closestEntity = default;
         BoundingBox worldBounds;
         foreach (var entity in visibleEntities)
         {
-            ref readonly var transform = ref coreView.GetTransform(entity);
+            ref readonly var transform = ref coreView.GetTransform(entity).Data;
             ref readonly var box = ref coreView.GetBox(entity);
             RenderTransform.GetWorldBounds(in box.Bounds, in transform, out worldBounds);
             if (CollisionMethods.RayIntersectsBox(in ray, in worldBounds, out var dist) && dist < distance)

@@ -1,10 +1,10 @@
 using ConcreteEngine.Common.Collections;
-using ConcreteEngine.Engine.ECS.Data;
+using ConcreteEngine.Engine.ECS.Enumerators;
+using ConcreteEngine.Engine.ECS.GameComponent;
 using ConcreteEngine.Engine.Editor.Diagnostics;
-using ConcreteEngine.Engine.Worlds.Entities.Components;
 using ConcreteEngine.Shared.Diagnostics;
 
-namespace ConcreteEngine.Engine.ECS.Game;
+namespace ConcreteEngine.Engine.ECS;
 
 public sealed class GameEntityHub
 {
@@ -29,6 +29,13 @@ public sealed class GameEntityHub
 
         _entities = new GameEntityId[DefaultCapacity];
     }
+    
+    public bool HasEntity(GameEntityId e)
+    {
+        var index = e.Index;
+        return (uint)index < (uint)Count && _entities[index] == e;
+    }
+
 
     private GameEntityId AddEntity()
     {
@@ -57,18 +64,12 @@ public sealed class GameEntityHub
         _free.Push(index);
     }
 
-    public bool HasEntity(GameEntityId e)
-    {
-        var index = e.Index;
-        return (uint)index < (uint)Count && _entities[index] == e;
-    }
 
-
-    public GameEntityEnumerator<T1> Query<T1>() where T1 : unmanaged, IEntityComponent
+    public GameEntityEnumerator<T1> Query<T1>() where T1 : unmanaged, IGameComponent<T1>
         => new(GenericStores<T1>.Store);
 
     public GameEntityEnumerator<T1, T2> Query<T1, T2>()
-        where T1 : unmanaged, IEntityComponent where T2 : unmanaged, IEntityComponent =>
+        where T1 : unmanaged, IGameComponent<T1> where T2 : unmanaged, IGameComponent<T2> =>
         new(GenericStores<T1>.Store, GenericStores<T2>.Store);
 
 
@@ -88,7 +89,7 @@ public sealed class GameEntityHub
         public static readonly List<IGameEntityStore> All = [];
     }
 
-    private static class GenericStores<T> where T : unmanaged, IEntityComponent
+    private static class GenericStores<T> where T : unmanaged, IGameComponent<T>
     {
         public static GameEntityStore<T> Store = null!;
 

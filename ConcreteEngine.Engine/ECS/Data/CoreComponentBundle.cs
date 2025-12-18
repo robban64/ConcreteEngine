@@ -1,7 +1,7 @@
 using System.Runtime.InteropServices;
-using ConcreteEngine.Common.Numerics;
+using ConcreteEngine.Engine.ECS.RenderComponent;
 
-namespace ConcreteEngine.Engine.Worlds.Entities.Components;
+namespace ConcreteEngine.Engine.ECS.Data;
 
 [StructLayout(LayoutKind.Sequential)]
 public struct CoreComponentBundle(in SourceComponent source, in Transform transform, in BoxComponent box)

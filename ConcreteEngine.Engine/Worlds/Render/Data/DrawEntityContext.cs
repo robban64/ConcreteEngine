@@ -1,5 +1,5 @@
 using System.Runtime.CompilerServices;
-using ConcreteEngine.Engine.Worlds.Entities;
+using ConcreteEngine.Engine.ECS;
 
 namespace ConcreteEngine.Engine.Worlds.Render.Data;
 
@@ -32,18 +32,18 @@ internal ref struct DrawEntityView(int idx, ref DrawEntity entity)
 
 internal readonly ref struct DrawEntityContext(
     Span<DrawEntity> drawEntities,
-    Span<EntityId> entityIndices,
+    Span<RenderEntityId> entityIndices,
     Span<int> byEntityId)
 {
     public readonly Span<DrawEntity> EntitySpan = drawEntities;
-    public readonly Span<EntityId> EntityIndices = entityIndices;
+    public readonly Span<RenderEntityId> EntityIndices = entityIndices;
     public readonly Span<int> ByEntityIdSpan = byEntityId;
     
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public bool IsVisible(EntityId entityId) => ByEntityIdSpan[entityId] != -1;
+    public bool IsVisible(RenderEntityId renderEntityId) => ByEntityIdSpan[renderEntityId] != -1;
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public ref DrawEntity GetByEntityId(EntityId entityId) => ref EntitySpan[ByEntityIdSpan[entityId]];
+    public ref DrawEntity GetByEntityId(RenderEntityId renderEntityId) => ref EntitySpan[ByEntityIdSpan[renderEntityId]];
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public DrawEntityEnumerator GetEnumerator() => new(this);

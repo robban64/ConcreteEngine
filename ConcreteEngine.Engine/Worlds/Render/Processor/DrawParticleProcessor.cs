@@ -1,8 +1,8 @@
 using System.Numerics;
+using ConcreteEngine.Engine.ECS;
+using ConcreteEngine.Engine.ECS.RenderComponent;
 using ConcreteEngine.Engine.Time;
 using ConcreteEngine.Engine.Worlds.Data;
-using ConcreteEngine.Engine.Worlds.Entities;
-using ConcreteEngine.Engine.Worlds.Entities.Components;
 using ConcreteEngine.Engine.Worlds.MeshGeneration;
 using ConcreteEngine.Engine.Worlds.Objects;
 using ConcreteEngine.Engine.Worlds.Render.Data;
@@ -23,7 +23,7 @@ internal static class DrawParticleProcessor
 
         foreach (var query in worldEntities.Query<ParticleComponent>())
         {
-            var index = ctx.ByEntityIdSpan[query.Entity];
+            var index = ctx.ByEntityIdSpan[query.RenderEntity];
             if (index == -1) continue;
             ref var drawEntity = ref ctx.EntitySpan[index];
 

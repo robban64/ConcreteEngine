@@ -4,9 +4,9 @@ using System.Runtime.InteropServices;
 using ConcreteEngine.Common.Collections;
 using ConcreteEngine.Common.Numerics;
 using ConcreteEngine.Common.Time;
+using ConcreteEngine.Engine.ECS;
+using ConcreteEngine.Engine.ECS.RenderComponent;
 using ConcreteEngine.Engine.Worlds.Data;
-using ConcreteEngine.Engine.Worlds.Entities;
-using ConcreteEngine.Engine.Worlds.Entities.Components;
 using ConcreteEngine.Engine.Worlds.MeshGeneration;
 using ConcreteEngine.Engine.Worlds.Objects;
 using ConcreteEngine.Engine.Worlds.Tables;
@@ -102,7 +102,7 @@ public sealed class WorldParticles
         foreach (var query in entities.Query<ParticleComponent>())
         {
             var emitter = GetEmitter(query.Component.EmitterHandle);
-            emitter.State.Translation = core.GetTransform(query.Entity).Translation;
+            emitter.State.Translation = core.GetTransform(query.RenderEntity).Data.Translation;
         }
     }
 

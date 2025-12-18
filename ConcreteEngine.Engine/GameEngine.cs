@@ -13,7 +13,6 @@ using ConcreteEngine.Engine.Scene.Modules;
 using ConcreteEngine.Engine.Time;
 using ConcreteEngine.Engine.Utils;
 using ConcreteEngine.Engine.Worlds;
-using ConcreteEngine.Engine.Worlds.Entities.Components;
 using ConcreteEngine.Engine.Worlds.Render;
 using ConcreteEngine.Graphics;
 using ConcreteEngine.Renderer.State;

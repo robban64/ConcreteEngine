@@ -2,12 +2,14 @@ using ConcreteEngine.Common.Collections;
 using ConcreteEngine.Engine.Assets;
 using ConcreteEngine.Engine.Assets.Materials;
 using ConcreteEngine.Engine.Assets.Models;
+using ConcreteEngine.Engine.ECS;
+using ConcreteEngine.Engine.ECS.Data;
+using ConcreteEngine.Engine.ECS.Definitions;
+using ConcreteEngine.Engine.ECS.RenderComponent;
 using ConcreteEngine.Engine.Editor.Diagnostics;
 using ConcreteEngine.Engine.Scene.Data;
 using ConcreteEngine.Engine.Worlds;
 using ConcreteEngine.Engine.Worlds.Data;
-using ConcreteEngine.Engine.Worlds.Entities;
-using ConcreteEngine.Engine.Worlds.Entities.Components;
 using ConcreteEngine.Engine.Worlds.Objects;
 using ConcreteEngine.Engine.Worlds.Utility;
 using ConcreteEngine.Shared.Diagnostics;
@@ -32,7 +34,7 @@ public sealed class SceneStore
     private readonly World _world;
 
     private readonly WorldEntities _worldEntities;
-    private readonly EntityCoreStore _entityCore;
+    private readonly RenderEntityCore _renderEntityCore;
 
     internal SceneStore(World world, AssetStore assetStore, MaterialStore materialStore)
     {
@@ -42,7 +44,7 @@ public sealed class SceneStore
         _materialStore = materialStore;
 
         _worldEntities = world.Entities;
-        _entityCore = world.Entities.Core;
+        _renderEntityCore = world.Entities.Core;
     }
 
 
@@ -67,7 +69,7 @@ public sealed class SceneStore
         return id;
     }
 
-    internal EntityId SpawnWorldEntity(SceneObjectId id, EntityTemplate e)
+    internal RenderEntityId SpawnWorldEntity(SceneObjectId id, EntityTemplate e)
     {
         var ctx = _world.CreateContext();
         var sceneObject = _objects[id - 1];

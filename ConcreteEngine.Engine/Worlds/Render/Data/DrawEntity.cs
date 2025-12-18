@@ -1,7 +1,7 @@
 using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
+using ConcreteEngine.Engine.ECS;
 using ConcreteEngine.Engine.Worlds.Data;
-using ConcreteEngine.Engine.Worlds.Entities;
 using ConcreteEngine.Renderer.Data;
 using ConcreteEngine.Renderer.Definitions;
 
@@ -12,7 +12,7 @@ internal struct DrawEntity
 {
     public DrawEntitySource Source;
     public DrawEntityMeta Meta;
-    public EntityId Entity;
+    public RenderEntityId RenderEntity;
 }
 
 [StructLayout(LayoutKind.Sequential)]

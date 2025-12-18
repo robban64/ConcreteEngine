@@ -15,13 +15,14 @@ internal sealed class WorldEntities
     public const int DefaultEntityCapacity = 1024;
 
     private static readonly List<IEntityStore> StoreList = [];
-    private static EntityCoreStore _coreStore = null!;
+    
+    private readonly EntityCoreStore _coreStore;
 
     public int EntityCount => _coreStore.ActiveCount;
 
     internal WorldEntities()
     {
-        if (_coreStore is not null || StoreList.Count > 0)
+        if (StoreList.Count > 0)
             throw new InvalidOperationException("WorldEntities already initialized");
 
         _coreStore = new EntityCoreStore(DefaultEntityCapacity);

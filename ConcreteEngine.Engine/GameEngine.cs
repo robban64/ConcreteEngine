@@ -130,7 +130,6 @@ public sealed class GameEngine : IDisposable
             return;
         }
 
-        StaticProfileTimer.RenderTimer.Begin();
 
         var beginStatus = _window.UpdateCheckResized() ? BeginFrameStatus.Resize : BeginFrameStatus.None;
         if (EngineTime.FrameIndex > 1 && beginStatus == BeginFrameStatus.Resize)
@@ -145,7 +144,6 @@ public sealed class GameEngine : IDisposable
         if (_engineGateway.Active)
             _engineGateway.RenderEditor(in frameInfo, _gfxFrameResult);
 
-        StaticProfileTimer.RenderTimer.EndPrint();
 
     }
 

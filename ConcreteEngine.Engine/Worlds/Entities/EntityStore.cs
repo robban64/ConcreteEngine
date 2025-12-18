@@ -39,8 +39,10 @@ internal sealed class EntityStore<T> : IEntityStore where T : unmanaged
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public ref T GetByIndex(int i) => ref _data[i];
 
-
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public Span<EntityId> GetEntitySpan() => _entities.AsSpan(0, Count);
+    
+    
     public Span<T> GetComponentSpan() => _data.AsSpan(0, Count);
 
 

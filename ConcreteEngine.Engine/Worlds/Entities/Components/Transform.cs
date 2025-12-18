@@ -1,8 +1,10 @@
 using System.Numerics;
 using System.Runtime.CompilerServices;
+using ConcreteEngine.Common.Numerics.Maths;
 using ConcreteEngine.Shared.World;
 
 namespace ConcreteEngine.Engine.Worlds.Entities.Components;
+
 
 public struct Transform(in Vector3 translation, in Vector3 scale, in Quaternion rotation) : IEntityComponent
 {

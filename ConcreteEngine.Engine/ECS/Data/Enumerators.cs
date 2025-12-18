@@ -1,7 +1,7 @@
 using System.Runtime.CompilerServices;
-using ConcreteEngine.Engine.Worlds.Entities;
+using ConcreteEngine.Engine.ECS.Game;
 
-namespace ConcreteEngine.Engine.Scene.GameEntity;
+namespace ConcreteEngine.Engine.ECS.Data;
 
 public ref struct GameEntityEnumerator<T1>(GameEntityStore<T1> r)
     where T1 : unmanaged
@@ -10,13 +10,13 @@ public ref struct GameEntityEnumerator<T1>(GameEntityStore<T1> r)
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public bool MoveNext() => ++_i < r.Count;
-    
-    public Item Current => new (_i, r);
+
+    public Item Current => new(_i, r);
 
     public readonly ref struct Item(int idx, GameEntityStore<T1> r)
     {
         public readonly int Index = idx;
-        public EntityId Entity => r.GetHandle(Index);
+        public GameEntityId Entity => r.GetEntity(Index);
         public ref T1 Component => ref r.GetByIndex(Index);
     }
 
@@ -31,20 +31,21 @@ public ref struct GameEntityEnumerator<T1, T2>(GameEntityStore<T1> r1, GameEntit
     where T1 : unmanaged where T2 : unmanaged
 {
     private int _i = -1;
-    private readonly int _count = int.Max(r1.Count, r2.Count);
+    private readonly int _count = r1.Count;
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public bool MoveNext()
     {
-       return ++_i < _count;
+        var entity = r1.GetEntity(++_i);
+        return r2.Has(entity);
     }
-    
-    public Item Current => new (_i, r1, r2);
+
+    public Item Current => new(_i, r1, r2);
 
     public readonly ref struct Item(int idx, GameEntityStore<T1> r1, GameEntityStore<T2> r2)
     {
         public readonly int Index = idx;
-        public readonly EntityId Entity = r1.GetHandle(idx);
+        public readonly GameEntityId Entity = r1.GetEntity(idx);
         public ref T1 Component1 => ref r1.GetByIndex(Index);
         public ref T2 Component2 => ref r2.Get(Entity);
     }

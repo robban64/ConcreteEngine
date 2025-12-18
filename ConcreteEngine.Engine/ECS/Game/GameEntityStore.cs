@@ -1,11 +1,9 @@
 using System.Runtime.CompilerServices;
 using ConcreteEngine.Common.Collections;
 using ConcreteEngine.Engine.Editor.Diagnostics;
-using ConcreteEngine.Engine.Worlds.Entities;
-using ConcreteEngine.Engine.Worlds.Entities.Resources;
 using ConcreteEngine.Shared.Diagnostics;
 
-namespace ConcreteEngine.Engine.Scene.GameEntity;
+namespace ConcreteEngine.Engine.ECS.Game;
 
 
 internal interface IGameEntityStore
@@ -16,62 +14,64 @@ internal interface IGameEntityStore
 public sealed class GameEntityStore <T> : IGameEntityStore where T : unmanaged
 {
     private T[] _data;
-    private EntityId[] _entities;
-    private readonly Dictionary<EntityId, int> _entityToIndex; // temp
+    private GameEntityId[] _entities;
+    private readonly Dictionary<GameEntityId, int> _entityToIndex; // temp
     
     private readonly Stack<int> _free = [];
-    
-    public int Count { get; private set; }
-    public bool IsDirty { get; internal set; }
+    private int _count;
+    private bool _isDirty;
 
-    public int ActiveCount => Count - _free.Count;
+    public bool IsDirty => _isDirty;
+    public int Count => _count;
+    public int ActiveCount => _count - _free.Count;
+    public int Capacity => _entities.Length;
 
 
     public GameEntityStore(int initialCapacity)
     {
         ArgumentOutOfRangeException.ThrowIfLessThan(initialCapacity, 16);
         _data = new T[initialCapacity];
-        _entities = new EntityId[initialCapacity];
-        _entityToIndex = new Dictionary<EntityId, int>(initialCapacity);
+        _entities = new GameEntityId[initialCapacity];
+        _entityToIndex = new Dictionary<GameEntityId, int>(initialCapacity);
     }
     
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public EntityId GetHandle(int i) => _entities[i];
+    public GameEntityId GetEntity(int i) => _entities[i];
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public ref T Get(EntityId entity) => ref _data[FindIndex(entity)];
+    public ref T Get(GameEntityId entity) => ref _data[FindIndex(entity)];
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public ref T GetByIndex(int i) => ref _data[i];
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    private int FindIndex(EntityId entity) => EntityUtility.BinarySearchEntity(_entities.AsSpan(0, Count), entity);
+    private int FindIndex(GameEntityId entity) => _entityToIndex[entity];
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public bool Has(EntityId entity)
+    public bool Has(GameEntityId entity)
     {
         var index = FindIndex(entity);
-        return (uint)index < (uint)Count && _entities[index] == entity;
+        return (uint)index < (uint)_count && _entities[index] == entity;
     }
 
-    public void Add(EntityId entity, T value)
+    public void Add(GameEntityId entity, T value)
     {
-        ArgumentOutOfRangeException.ThrowIfNegativeOrZero(entity.Value, nameof(entity));
+        ArgumentOutOfRangeException.ThrowIfNegativeOrZero(entity.Id, nameof(entity));
         if (!_free.TryPop(out var index))
         {
             EnsureCapacity(1);
-            index = Count++;
+            index = _count++;
         }
 
         _entities[index] = entity;
         _data[index] = value;
         _entityToIndex[entity] = index;
-        IsDirty = true;
+        _isDirty = true;
     }
 
-    public void Remove(EntityId entity)
+    public void Remove(GameEntityId entity)
     {
-        ArgumentOutOfRangeException.ThrowIfNegativeOrZero(entity.Value, nameof(entity));
+        ArgumentOutOfRangeException.ThrowIfNegativeOrZero(entity.Id, nameof(entity));
 
         var idx = FindIndex(entity);
         if(idx == -1) throw  new ArgumentOutOfRangeException(nameof(entity));
@@ -83,12 +83,12 @@ public sealed class GameEntityStore <T> : IGameEntityStore where T : unmanaged
 
     public void EndTick()
     {
-        IsDirty = false;
+        _isDirty = true;
     }
 
     private void EnsureCapacity(int amount)
     {
-        var len = Count + amount;
+        var len = _count + amount;
         if (_entities.Length >= len) return;
 
         if (_data.Length != _entities.Length)
@@ -100,6 +100,6 @@ public sealed class GameEntityStore <T> : IGameEntityStore where T : unmanaged
         var newSize = Arrays.CapacityGrowthSafe(_entities.Length, len);
         Array.Resize(ref _entities, newSize);
         Array.Resize(ref _data, newSize);
-        Logger.LogString(LogScope.World, $"EntityStore: {typeof(T).Name} resized {newSize}", LogLevel.Warn);
+        Logger.LogString(LogScope.World, $"GameEntityStore: {typeof(T).Name} resized {newSize}", LogLevel.Warn);
     }
 }

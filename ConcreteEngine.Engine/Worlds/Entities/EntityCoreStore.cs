@@ -41,9 +41,8 @@ internal sealed class EntityCoreStore
         var index = e - 1;
         return (uint)index < (uint)Count && _entities[index] == e;
     }
-
-    public EntityId GetEntity(EntityId e) => _entities[e - 1];
-
+    
+    
     // Getters
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public ref SourceComponent GetSource(EntityId e) => ref _sources[e - 1];

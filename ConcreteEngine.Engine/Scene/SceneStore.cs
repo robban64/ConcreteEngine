@@ -30,7 +30,7 @@ public sealed class SceneStore
     private readonly AssetStore _assetStore;
     private readonly MaterialStore _materialStore;
     private readonly World _world;
-    
+
     private readonly WorldEntities _worldEntities;
     private readonly EntityCoreStore _entityCore;
 
@@ -69,7 +69,6 @@ public sealed class SceneStore
 
     internal EntityId SpawnWorldEntity(SceneObjectId id, EntityTemplate e)
     {
-        
         var ctx = _world.CreateContext();
         var sceneObject = _objects[id - 1];
         CoreComponentBundle coreComponent = default;
@@ -83,8 +82,8 @@ public sealed class SceneStore
             var kind = e.Animation != null ? EntitySourceKind.AnimatedModel : EntitySourceKind.Model;
             coreComponent.Source = new SourceComponent(model.Model, materialKey, kind);
             sceneObject.HasModel = true;
-            
         }
+
         else if (e.Particle is { } particle)
         {
             if (!ctx.Particles.TryGetEmitter(particle.EmitterName, out emitter))
@@ -103,7 +102,14 @@ public sealed class SceneStore
         if (e.Animation is { } animation)
         {
             if (e.Model is null) throw new InvalidOperationException();
-            var component = new AnimationComponent { Animation = animation.Animation, Clip = animation.Clip };
+            var component = new AnimationComponent
+            {
+                Animation = animation.Animation,
+                Clip = animation.Clip,
+                Duration = animation.Duration,
+                Time = animation.Time,
+                Speed = animation.Speed,
+            };
             _worldEntities.AddComponent(entity, component);
             sceneObject.HasAnimation = true;
         }
@@ -141,7 +147,7 @@ public sealed class SceneStore
 
             Logger.LogString(LogScope.World, $"SceneObject: resized {newSize}", LogLevel.Warn);
         }
-        
+
         len = _handleIdx + amount;
         if (len >= _handles.Length)
         {

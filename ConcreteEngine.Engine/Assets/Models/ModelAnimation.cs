@@ -1,4 +1,5 @@
 using System.Numerics;
+using ConcreteEngine.Engine.Worlds.Data;
 
 namespace ConcreteEngine.Engine.Assets.Models;
 
@@ -14,6 +15,7 @@ public sealed class ModelAnimation
     private readonly Matrix4x4 _inverseRootTransform;
     private readonly Matrix4x4 _skeletonRootOffset;
 
+    public AnimationId  AnimationId { get; private set; }
     public string ModelName { get; internal set; } = string.Empty;
 
     internal ModelAnimation(
@@ -39,6 +41,14 @@ public sealed class ModelAnimation
         }
     }
 
+    internal void Attach(AnimationId animationId)
+    {
+        ArgumentOutOfRangeException.ThrowIfNegativeOrZero(animationId.Value, nameof(animationId));
+        if(AnimationId > 0) throw new InvalidOperationException("Animation already attached.");
+        AnimationId = animationId;
+    }
+
+    public AnimationClip this[int index] => _clips[index];
 
     public ref readonly Matrix4x4 InverseRootTransform => ref _inverseRootTransform;
     public ref readonly Matrix4x4 SkeletonRootOffset => ref _skeletonRootOffset;
@@ -49,5 +59,4 @@ public sealed class ModelAnimation
     internal ReadOnlySpan<AnimationClip> ClipDataSpan => _clips;
     public int DefinedBoneCount => _boneOffsetMatrix.Length;
 
-    public AnimationClip this[int index] => _clips[index];
 }

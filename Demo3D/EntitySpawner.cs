@@ -1,8 +1,10 @@
 using System.Numerics;
 using ConcreteEngine.Common.Numerics;
 using ConcreteEngine.Common.Time;
+using ConcreteEngine.Engine.Assets.Materials;
 using ConcreteEngine.Engine.Assets.Models;
 using ConcreteEngine.Engine.Scene;
+using ConcreteEngine.Engine.Scene.Data;
 using ConcreteEngine.Engine.Worlds;
 using ConcreteEngine.Engine.Worlds.Data;
 using ConcreteEngine.Engine.Worlds.Entities;
@@ -10,16 +12,13 @@ using ConcreteEngine.Engine.Worlds.Entities.Components;
 
 namespace Demo3D;
 
-public readonly struct ScenePlacement(
-    Model modelInfo,
-    MaterialTag mat,
-    float offset = 0f)
+public readonly struct ScenePlacement( string name, EntityTemplate template, float offset = 0f)
 {
-    public readonly MaterialTag Mat = mat;
-    public readonly Model ModelInfo = modelInfo;
+    public readonly string Name = name;
+    public readonly EntityTemplate ModelInfo = template;
     public readonly float Offset = offset;
 }
-/*
+
 public sealed class EntitySpawner(SceneWorld sceneWorld, World world, float size = 256f, float margin = 4f)
 {
     private static int _genIdx = 0;
@@ -29,15 +28,15 @@ public sealed class EntitySpawner(SceneWorld sceneWorld, World world, float size
         var height = world.Terrain.GetSmoothHeight(p.X, p.Z) + p.Y;
         var scale = s.GetValueOrDefault(Vector3.One);
         var rotation = r.GetValueOrDefault(Quaternion.Identity);
-        CreateModelEntity(in sp, new Transform(p with { Y = height }, in scale, in rotation));
+        
+        var name = $"{sp.Name}-{_genIdx++}";
+        var transform = new Transform(p with { Y = height }, in scale, in rotation);
+        var sceneObject = sceneWorld.CreateSceneObject(name);
+        var entity = sceneWorld.SpawnEntity(sceneObject, sp.ModelInfo);
+        sceneWorld.GetEntityTransform(entity) = transform;
     }
 
-    private void CreateModelEntity(in ScenePlacement sp, Transform transform)
-    {
-        var m = sp.ModelInfo;
-        var name = $"{sp.ModelInfo.Name}-{_genIdx++}";
-        sceneWorld.Store.AddModelEntity(name, sp.ModelInfo, sp.Mat, in transform);
-    }
+
 
     public void PlaceGroundRocksBasic(
         int amount,
@@ -145,4 +144,4 @@ public sealed class EntitySpawner(SceneWorld sceneWorld, World world, float size
     private static float Clamp01(float v) => v < 0f ? 0f : v > 1f ? 1f : v;
 
     private static Quaternion Yaw(float radians) => Quaternion.CreateFromAxisAngle(Vector3.UnitY, radians);
-}*/
+}

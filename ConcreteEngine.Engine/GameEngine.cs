@@ -1,3 +1,4 @@
+using System.Runtime.CompilerServices;
 using ConcreteEngine.Common.Time;
 using ConcreteEngine.Engine.Assets;
 using ConcreteEngine.Engine.Configuration;
@@ -9,6 +10,7 @@ using ConcreteEngine.Engine.Scene.Modules;
 using ConcreteEngine.Engine.Time;
 using ConcreteEngine.Engine.Utils;
 using ConcreteEngine.Engine.Worlds;
+using ConcreteEngine.Engine.Worlds.Entities.Components;
 using ConcreteEngine.Engine.Worlds.Render;
 using ConcreteEngine.Graphics;
 using ConcreteEngine.Renderer.State;
@@ -76,6 +78,7 @@ public sealed class GameEngine : IDisposable
         _engineGateway =
             new EngineGateway(gfxBundle.Config.DriverContext, engineWindow.PlatformWindow, internalInput);
         _editorQueues = new EditorEngineQueue(_world, WorldRenderer, _assets);
+        
     }
 
 

@@ -47,6 +47,8 @@ public sealed class Model : AssetObject, IComparable<Model>
         ArgumentOutOfRangeException.ThrowIfLessThanOrEqual(animationId.Value, 0, nameof(animationId));
         InvalidOpThrower.ThrowIf(AnimationId.Value > 0, nameof(ModelId));
         InvalidOpThrower.ThrowIfNull(Animation);
+        
+        Animation!.Attach(animationId);
         AnimationId = animationId;
     }
 

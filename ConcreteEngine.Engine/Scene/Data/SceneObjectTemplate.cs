@@ -27,6 +27,24 @@ public sealed class AnimationTemplate : IComponentTemplate
 {
     public AnimationId Animation;
     public short Clip;
+    public float Time;
+    public float Duration;
+    public float Speed;
+
+    public AnimationTemplate()
+    {
+        
+    }
+
+    public AnimationTemplate( ModelAnimation animation)
+    {
+        var c = animation.ClipDataSpan[Clip];
+        Animation = animation.AnimationId;
+        Clip = 0;
+        Time = 0;
+        Duration = c.Duration;
+        Speed = c.TicksPerSecond;
+    }
 }
 
 public sealed class ParticleTemplate : IComponentTemplate

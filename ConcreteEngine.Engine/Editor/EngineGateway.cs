@@ -166,7 +166,11 @@ internal sealed class EngineGateway : IDisposable
     {
         public static EditorPortal Editor = null!;
 
-        public static void ProcessStringLog(StringLogEvent log) => Editor.AddLog(_logParser.Format(log));
+        public static void ProcessStringLog(StringLogEvent log)
+        {
+            if(_logParser is null) return;
+            Editor?.AddLog(_logParser.Format(log));
+        }
 
         public static void RegisterCommands()
         {

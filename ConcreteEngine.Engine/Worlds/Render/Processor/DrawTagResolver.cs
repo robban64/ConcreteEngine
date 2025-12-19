@@ -50,7 +50,7 @@ internal static class DrawTagResolver
     {
         if (renderEntities.GetStore<DebugBoundsComponent>().Count == 0) return;
 
-        var view = renderEntities.Core.GetCoreView();
+        var view = renderEntities.Core.GetContext();
         Span<Vector3> corners = stackalloc Vector3[8];
         Matrix4x4 world;
         foreach (var query in renderEntities.Query<DebugBoundsComponent>())

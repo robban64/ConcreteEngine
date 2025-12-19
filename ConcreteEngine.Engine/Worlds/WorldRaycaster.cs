@@ -47,7 +47,7 @@ public sealed class WorldRaycaster
 
         var visibleEntities = _drawEntities.VisibleEntities;
         if (visibleEntities.Length == 0) return default;
-        var coreView = _entities.Core.GetCoreView();
+        var coreView = _entities.Core.GetContext();
 
         RenderEntityId closestEntity = default;
         BoundingBox worldBounds;

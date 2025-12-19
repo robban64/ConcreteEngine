@@ -149,15 +149,19 @@ public sealed class Camera3D
 
     internal void WriteSnapshot(float alpha, RenderCamera renderCamera)
     {
+        ref var rView = ref _renderView.ViewMatrix;
+        ref var rProj = ref _renderView.ProjectionMatrix;
+        ref var rProjView = ref _renderView.ProjectionViewMatrix;
+        
         var camPos = Vector3.Lerp(_prevTransform.Translation, _transform.Translation, alpha);
         var camOri = YawPitch.LerpFixed(_prevTransform.Orientation, _transform.Orientation, alpha);
 
         MatrixMath.CreateFixedSizeModelMatrix(in camPos, RotationMath.YawPitchToQuaternion(camOri), out var viewMatrix);
-        Matrix4x4.Invert(viewMatrix, out _renderView.ViewMatrix);
+        Matrix4x4.Invert(viewMatrix, out rView);
 
-        _renderView.ProjectionMatrix = _projectionMatrix;
-        _renderView.ProjectionViewMatrix = _renderView.ViewMatrix * _projectionMatrix;
-        _frustum = new BoundingFrustum(in _renderView.ProjectionViewMatrix);
+        rProj = _projectionMatrix;
+        rProjView = rView * _projectionMatrix;
+        _frustum = new BoundingFrustum(in rProjView);
 
         renderCamera.RenderView = _renderView;
         renderCamera.Transform = _transform;

@@ -27,7 +27,7 @@ public sealed class Material
         ShaderRef = template.ShaderRef;
         IsAssetMaterial = TemplateName.Length >= 1;
 
-        State = new MaterialState(template.Params);
+        State = new MaterialState(template.Params) { Id = id };
         TextureSlots = new MaterialTextureSlots(template.TextureSlots.AssetSlots);
     }
 

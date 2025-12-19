@@ -6,9 +6,26 @@ namespace ConcreteEngine.Engine.Assets.Materials;
 
 public sealed class MaterialState
 {
-    private bool _clearDirty = false;
+    internal static class DirtyState
+    {
+        public static readonly HashSet<MaterialId> DirtyIds = new(16);
+    }
 
-    internal bool IsDirty { get; set; }
+    public MaterialId Id { get; internal set; }
+
+    private bool _clearDirty;
+
+    internal bool IsDirty
+    {
+        get => DirtyState.DirtyIds.Contains(Id);
+        private set
+        {
+            if (Id == 0) return;
+            if (value) DirtyState.DirtyIds.Add(Id);
+            else DirtyState.DirtyIds.Remove(Id);
+        }
+    }
+
 
     internal MaterialState(MaterialState param)
     {

@@ -10,9 +10,8 @@ namespace ConcreteEngine.Engine.ECS;
 
 public sealed class RenderEntityCore
 {
-    //private int _entityIdx = 0;
     private static RenderEntityId MakeEntityId() => new(++_count);
-    private static int _count = 0;
+    private static int _count;
 
     private RenderEntityId[] _entities;
     private SourceComponent[] _sources;
@@ -68,7 +67,7 @@ public sealed class RenderEntityCore
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public RenderEntityContext GetCoreView()
+    public RenderEntityContext GetContext()
     {
         var len = _count;
         if ((uint)len > _sources.Length || _sources.Length != _transforms.Length || _sources.Length != _boxes.Length)

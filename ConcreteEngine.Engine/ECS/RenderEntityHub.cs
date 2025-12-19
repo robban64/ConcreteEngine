@@ -51,7 +51,7 @@ public sealed class RenderEntityHub
     internal RenderComponentEnumerator<T> Query<T>() where T : unmanaged, IRenderComponent<T> => new(GenericStores<T>.Store);
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    internal RenderEntityEnumerator CoreQuery() => new(_core.GetCoreView());
+    internal RenderEntityEnumerator CoreQuery() => new(_core.GetContext());
 
     public RenderEntityStore<T> GetStore<T>() where T : unmanaged, IRenderComponent<T> => GenericStores<T>.Store;
 

@@ -1,4 +1,5 @@
 using ConcreteEngine.Common;
+using ConcreteEngine.Common.Time;
 using ConcreteEngine.Engine.Assets;
 using ConcreteEngine.Engine.Assets.Shaders;
 using ConcreteEngine.Engine.Editor.Data;
@@ -84,6 +85,7 @@ public sealed class WorldRenderer
         RenderFrameInfo frameInfo,
         RenderRuntimeParams runtimeParams)
     {
+
         _drawEntities.Reset();
 
         _camera.WriteSnapshot(EngineTime.GameAlpha, RenderCamera);
@@ -115,16 +117,12 @@ public sealed class WorldRenderer
     private void SubmitMaterialData()
     {
         var matStore = _assets.MaterialStore;
-        var isDirty = false;
-        foreach (var material in matStore.MaterialSpan)
-        {
-            if (material?.State.IsDirty != true) continue;
-            material.State.ClearDirty();
-            isDirty = true;
-            _hasUploadedMaterial = false;
-        }
+        
+        if(!matStore.HasDirtyMaterials && _hasUploadedMaterial) return;
+        
+        if (matStore.HasDirtyMaterials) _hasUploadedMaterial = false;
+        matStore.ClearDirtyMaterials();
 
-        if (!isDirty && _hasUploadedMaterial) return;
         foreach (var material in matStore.MaterialSpan)
         {
             matStore.GetMaterialUploadData(material!, out var payload);

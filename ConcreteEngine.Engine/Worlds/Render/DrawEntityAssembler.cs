@@ -84,7 +84,6 @@ internal sealed class DrawEntityAssembler
         DrawWorldProcessor.SubmitWorldObjects(commandBuffer, _world);
 
         // cull
-        StaticProfileTimer.RenderTimer.Begin();
         var renderView = _camera.RenderView;
         var len = CullEntities(in renderView);
         
@@ -111,7 +110,7 @@ internal sealed class DrawEntityAssembler
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     private void ExecuteCollectCommands(in DrawEntityContext ctx, in CameraRenderView renderView)
     {
-        var coreEntities = _renderEntities.Core.GetCoreView();
+        var coreEntities = _renderEntities.Core.GetContext();
 
         _highEntityId = DrawEntityCollector.CollectEntities(in ctx, in coreEntities);
         DrawTagResolver.TagResolveEntities(in ctx, _renderEntities);
@@ -122,13 +121,12 @@ internal sealed class DrawEntityAssembler
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     private void ExecuteUploader(in DrawEntityContext ctx, DrawCommandBuffer commandBuffer)
     {
-        var coreEntities = _renderEntities.Core.GetCoreView();
+        var coreEntities = _renderEntities.Core.GetContext();
 
         var uploader = commandBuffer.GetDrawUploaderCtx();
         DrawEntityUploader.UploadDrawCommands(_world, in ctx, in uploader);
         DrawTransformUploader.UploadTransform(in ctx, in coreEntities, in uploader, _meshTable);
         DrawTagResolver.UploadDebugBounds(in ctx, in uploader, _renderEntities, _meshTable, BoundsMaterial);
-        StaticProfileTimer.RenderTimer.EndPrint();
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
@@ -147,7 +145,7 @@ internal sealed class DrawEntityAssembler
         if (_entityIndices.Length == 0 || _entities.Length == 0)
             throw new InvalidOperationException();
 
-        var view = _world.Entities.Core.GetCoreView();
+        var view = _world.Entities.Core.GetContext();
 
         if (_entities.Length != _entityIndices.Length || _entities.Length != _byEntityId.Length)
             throw new InvalidOperationException();

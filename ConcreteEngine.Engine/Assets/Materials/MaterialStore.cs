@@ -37,6 +37,7 @@ public sealed class MaterialStore : IMaterialStore
 
     public int Count => _idx;
     public int FreeSlots => _free.Count;
+    public bool HasDirtyMaterials => MaterialState.DirtyState.DirtyIds.Count > 0;
 
 
     internal MaterialStore(AssetStore assetStore)
@@ -96,8 +97,7 @@ public sealed class MaterialStore : IMaterialStore
         return true;
     }
 
-    //TODO rework
-    public void GetMaterialUploadData(Material material, out RenderMaterialPayload data)
+    internal void GetMaterialUploadData(Material material, out RenderMaterialPayload data)
     {
         var shader = ResolveShader(material);
         var pipeline = material.State.Pipeline;
@@ -107,6 +107,13 @@ public sealed class MaterialStore : IMaterialStore
             new RenderMaterialMeta(material.Id, shader, pipeline.PassState, pipeline.PassFunctions), in snapshot);
     }
 
+    internal ShaderId ResolveShader(Material material) => _assetStore.GetByRef(material.ShaderRef).ResourceId;
+
+    internal void ClearDirtyMaterials()
+    {
+        MaterialState.DirtyState.DirtyIds.Clear();
+    }
+    
     private void FillTextureInfo(Material material)
     {
         var textureSlots = material.TextureSlots.AssetSlots;
@@ -121,7 +128,6 @@ public sealed class MaterialStore : IMaterialStore
         material.TextureSlots.CacheSlots = result;
     }
 
-    public ShaderId ResolveShader(Material material) => _assetStore.GetByRef(material.ShaderRef).ResourceId;
 
     private TextureId ResolveTextureId(AssetTextureSlot assetSlot)
     {

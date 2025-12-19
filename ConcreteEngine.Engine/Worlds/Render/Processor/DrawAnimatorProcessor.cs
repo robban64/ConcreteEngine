@@ -20,7 +20,7 @@ internal static class DrawAnimatorProcessor
         Span<Matrix4x4> globals = stackalloc Matrix4x4[boneCap];
         globals.Fill(Matrix4x4.Identity);
 
-        foreach (var query in renderEntities.Query<AnimationComponent>())
+        foreach (var query in renderEntities.Query<RenderAnimationComponent>())
         {
             ref readonly var component = ref query.Component;
             if (!ctx.IsVisible(query.RenderEntity)) continue;
@@ -43,7 +43,7 @@ internal static class DrawAnimatorProcessor
 
         return;
 
-        static void ProcessClip(int i, in AnimationComponent component, Span<Matrix4x4> globals, in ModelAnimationView view)
+        static void ProcessClip(int i, in RenderAnimationComponent component, Span<Matrix4x4> globals, in ModelAnimationView view)
         {
             var clip = view.GetClip(component.Clip);
             ref readonly var track = ref clip[i];

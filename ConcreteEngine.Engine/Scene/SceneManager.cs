@@ -1,3 +1,4 @@
+using System.Diagnostics;
 using ConcreteEngine.Engine.Assets;
 using ConcreteEngine.Engine.Configuration;
 using ConcreteEngine.Engine.ECS;
@@ -72,7 +73,11 @@ internal sealed class SceneManager : IGameEngineSystem
         for (int i = 0; i < builder.Modules.Count; i++)
             _modules.Add(builder.Modules[i]());
 
+        var sw = Stopwatch.StartNew();
         newScene.Initialize();
+        sw.Stop();
+        Console.WriteLine(sw.ElapsedTicks / 1000.0);
+        sw.Reset();
 
         Current = newScene;
         _pendingIndex = -1;

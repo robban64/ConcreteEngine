@@ -54,7 +54,7 @@ internal sealed class EntityApiController : IEngineEntityController
             result[query.RenderEntity - 1].ComponentRef = new EditorId(comp.EmitterHandle, EditorItemType.Particle);
         }
 
-        foreach (var query in entities.Query<AnimationComponent>())
+        foreach (var query in entities.Query<RenderAnimationComponent>())
         {
             ref readonly var comp = ref query.Component;
             result[query.RenderEntity - 1].DisplayName = animationName;
@@ -79,7 +79,7 @@ internal sealed class EntityApiController : IEngineEntityController
             MaterialKey = new EditorId(view.Source.MaterialKey.Value, EditorItemType.MaterialKey)
         };
 
-        if (Entities.GetStore<AnimationComponent>().Has(entityId))
+        if (Entities.GetStore<RenderAnimationComponent>().Has(entityId))
             state.ComponentRef = new EditorId(entity, EditorItemType.Animation);
 
         if (Entities.GetStore<ParticleComponent>().Has(entityId))
@@ -117,7 +117,7 @@ internal sealed class EntityApiController : IEngineEntityController
     public void FetchAnimation(EditorId entity, ref EditorAnimationState state)
     {
         var entityId = new RenderEntityId(entity.Identifier);
-        ref readonly var component = ref Entities.GetStore<AnimationComponent>().Get(entityId);
+        ref readonly var component = ref Entities.GetStore<RenderAnimationComponent>().Get(entityId);
         var clipCount = _world.AnimationTableImpl.GetClipCount(component.Animation);
         state.Animation = new EditorId(component.Animation, EditorItemType.AnimationKey);
         state.Clip = component.Clip;
@@ -130,7 +130,7 @@ internal sealed class EntityApiController : IEngineEntityController
     public void CommitAnimation(EditorId entity, in EditorAnimationState state)
     {
         var entityId = new RenderEntityId(entity.Identifier);
-        ref var component = ref Entities.GetStore<AnimationComponent>().Get(entityId);
+        ref var component = ref Entities.GetStore<RenderAnimationComponent>().Get(entityId);
         component.Clip = (short)state.Clip;
         component.Time = state.Time;
         component.Speed = state.Speed;

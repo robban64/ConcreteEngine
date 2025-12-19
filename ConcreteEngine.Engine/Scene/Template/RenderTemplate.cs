@@ -5,24 +5,24 @@ using ConcreteEngine.Engine.Worlds.Data;
 using ConcreteEngine.Renderer.Data;
 using ConcreteEngine.Shared.World;
 
-namespace ConcreteEngine.Engine.Scene.Data;
+namespace ConcreteEngine.Engine.Scene.Template;
 
-public interface IComponentTemplate
+public interface IRenderComponentTemplate
 {
 }
 
-public sealed class SpatialTemplate : IComponentTemplate
+public sealed class SpatialTemplate : IRenderComponentTemplate
 {
     public BoundingBox LocalBounds;
 }
 
-public sealed class ModelTemplate : IComponentTemplate
+public sealed class RenderModelTemplate : IRenderComponentTemplate
 {
     public ModelId Model;
     public MaterialMeta[] Materials = [];
 }
 
-public sealed class AnimationTemplate : IComponentTemplate
+public sealed class RenderAnimationTemplate : IRenderComponentTemplate
 {
     public AnimationId Animation;
     public short Clip;
@@ -30,12 +30,12 @@ public sealed class AnimationTemplate : IComponentTemplate
     public float Duration;
     public float Speed;
 
-    public AnimationTemplate()
+    public RenderAnimationTemplate()
     {
         
     }
 
-    public AnimationTemplate( ModelAnimation animation)
+    public RenderAnimationTemplate( ModelAnimation animation)
     {
         var c = animation.ClipDataSpan[Clip];
         Animation = animation.AnimationId;
@@ -46,7 +46,7 @@ public sealed class AnimationTemplate : IComponentTemplate
     }
 }
 
-public sealed class ParticleTemplate : IComponentTemplate
+public sealed class RenderParticleTemplate : IRenderComponentTemplate
 {
     public required string EmitterName;
     public ParticleDefinition Definition;
@@ -56,17 +56,11 @@ public sealed class ParticleTemplate : IComponentTemplate
     public MaterialId Material;
 }
 
-public sealed class EntityTemplate
+public sealed class RenderEntityTemplate
 {
     public SpatialTemplate? Spatial;
-    public ModelTemplate? Model;
-    public ParticleTemplate? Particle;
-
-    public AnimationTemplate? Animation;
+    public RenderModelTemplate? Model;
+    public RenderParticleTemplate? Particle;
+    public RenderAnimationTemplate? Animation;
 }
 
-public sealed class SceneObjectTemplate
-{
-    public required string Name;
-    public List<EntityTemplate> EntityTemplates = [];
-}

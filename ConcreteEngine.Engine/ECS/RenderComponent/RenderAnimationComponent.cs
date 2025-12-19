@@ -6,7 +6,7 @@ namespace ConcreteEngine.Engine.ECS.RenderComponent;
 
 
 [StructLayout(LayoutKind.Sequential)]
-public struct AnimationComponent : IRenderComponent<AnimationComponent>
+public struct RenderAnimationComponent : IRenderComponent<RenderAnimationComponent>
 {
     public float Time;
     public float Duration;
@@ -14,7 +14,7 @@ public struct AnimationComponent : IRenderComponent<AnimationComponent>
     public AnimationId Animation;
     public short Clip;
 
-    public AnimationComponent(AnimationId animation, float speed, float duration)
+    public RenderAnimationComponent(AnimationId animation, float speed, float duration)
     {
         Animation = animation;
         Clip = 0;

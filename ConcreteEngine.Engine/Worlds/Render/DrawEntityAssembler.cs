@@ -68,7 +68,7 @@ internal sealed class DrawEntityAssembler
         const int extraAnimations = 8;
 
         var entityLen = _renderEntities.Core.Count + extraEntities;
-        var animationLen = _renderEntities.GetStore<AnimationComponent>().Count + extraAnimations;
+        var animationLen = _renderEntities.GetStore<RenderAnimationComponent>().Count + extraAnimations;
 
         EnsureDrawEntityData(entityLen);
         commandBuffer.EnsureBufferCapacity(entityLen);

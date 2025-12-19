@@ -8,8 +8,8 @@ using ConcreteEngine.Engine.Assets.Textures;
 using ConcreteEngine.Engine.Configuration;
 using ConcreteEngine.Engine.ECS.RenderComponent;
 using ConcreteEngine.Engine.Scene;
-using ConcreteEngine.Engine.Scene.Data;
 using ConcreteEngine.Engine.Scene.Modules;
+using ConcreteEngine.Engine.Scene.Template;
 using ConcreteEngine.Graphics.Gfx.Contracts;
 using ConcreteEngine.Graphics.Gfx.Definitions;
 using ConcreteEngine.Renderer.Descriptors;
@@ -55,7 +55,7 @@ public sealed class Demo3DScene : GameScene
         CreateWarrior(assets);
 
         CreateSpawner(assets);
-
+        _spawner = null!;
 
         float half = 256 / 2f;
         var worldTerrain = Context.World.Terrain;
@@ -125,10 +125,10 @@ public sealed class Demo3DScene : GameScene
             Spread = 0.3f
         };
 
-        var t1 = new EntityTemplate
+        var t1 = new RenderEntityTemplate
         {
             Spatial = new SpatialTemplate { LocalBounds = ParticleComponent.DefaultParticleBounds },
-            Particle = new ParticleTemplate
+            Particle = new RenderParticleTemplate
             {
                 EmitterName = "Emitter1",
                 ParticleCount = 1024,
@@ -138,10 +138,10 @@ public sealed class Demo3DScene : GameScene
             }
         };
 
-        var t2 = new EntityTemplate
+        var t2 = new RenderEntityTemplate
         {
             Spatial = new SpatialTemplate { LocalBounds = ParticleComponent.DefaultParticleBounds },
-            Particle = new ParticleTemplate
+            Particle = new RenderParticleTemplate
             {
                 EmitterName = "Emitter2",
                 ParticleCount = 1024,
@@ -172,11 +172,11 @@ public sealed class Demo3DScene : GameScene
         mat.State.Shininess = 2f;
         mat.State.Specular = 0.05f;
 
-        var template = new EntityTemplate
+        var template = new RenderEntityTemplate
         {
             Spatial = new SpatialTemplate { LocalBounds = model.Bounds },
-            Model = new ModelTemplate { Model = model.ModelId, Materials = [mat.GetMeta()] },
-            Animation = new AnimationTemplate(model.Animation!)
+            Model = new RenderModelTemplate { Model = model.ModelId, Materials = [mat.GetMeta()] },
+            Animation = new RenderAnimationTemplate(model.Animation!)
         };
 
         for (int i = 0; i < 2; i++)
@@ -195,11 +195,11 @@ public sealed class Demo3DScene : GameScene
 
         var cesiumModel = assets.Store.GetByName<Model>("Cesium_Man");
         var cesiumMat = assets.MaterialStore.CreateMaterial("EmptyAnimated", "CesiumMat");
-        var template = new EntityTemplate
+        var template = new RenderEntityTemplate
         {
             Spatial = new SpatialTemplate { LocalBounds = cesiumModel.Bounds },
-            Model = new ModelTemplate { Model = cesiumModel.ModelId, Materials = [cesiumMat.GetMeta()] },
-            Animation = new AnimationTemplate(cesiumModel.Animation!)
+            Model = new RenderModelTemplate { Model = cesiumModel.ModelId, Materials = [cesiumMat.GetMeta()] },
+            Animation = new RenderAnimationTemplate(cesiumModel.Animation!)
         };
 
         var sceneObject = sceneWorld.CreateSceneObject("Cesium Man");
@@ -221,10 +221,10 @@ public sealed class Demo3DScene : GameScene
         knightMat.State.Shininess = 2f;
         knightMat.State.Specular = 0.05f;
 
-        var template = new EntityTemplate
+        var template = new RenderEntityTemplate
         {
             Spatial = new SpatialTemplate { LocalBounds = knight.Bounds },
-            Model = new ModelTemplate { Model = knight.ModelId, Materials = [knightMat.GetMeta()] }
+            Model = new RenderModelTemplate { Model = knight.ModelId, Materials = [knightMat.GetMeta()] }
         };
 
         var sceneObject = Context.SceneWorld.CreateSceneObject("Knight");
@@ -294,48 +294,48 @@ public sealed class Demo3DScene : GameScene
 
         _spawner = new EntitySpawner(Context.SceneWorld, World);
 
-        var treeTemplate = new EntityTemplate
+        var treeTemplate = new RenderEntityTemplate
         {
             Spatial = new SpatialTemplate { LocalBounds = treeMesh.Bounds },
-            Model = new ModelTemplate
+            Model = new RenderModelTemplate
             {
                 Model = treeMesh.ModelId, Materials = [treeMat.GetMeta(), leaf1Mat.GetMeta()]
             },
         };
 
-        var birchTemplate1 = new EntityTemplate
+        var birchTemplate1 = new RenderEntityTemplate
         {
             Spatial = new SpatialTemplate { LocalBounds = treeMesh1.Bounds },
-            Model = new ModelTemplate
+            Model = new RenderModelTemplate
             {
                 Model = treeMesh1.ModelId, Materials = [birchMat.GetMeta(), leaf2Mat.GetMeta()]
             },
         };
-        var birchTemplate2 = new EntityTemplate
+        var birchTemplate2 = new RenderEntityTemplate
         {
             Spatial = new SpatialTemplate { LocalBounds = treeMesh2.Bounds },
-            Model = new ModelTemplate
+            Model = new RenderModelTemplate
             {
                 Model = treeMesh2.ModelId, Materials = [birchMat.GetMeta(), leaf2Mat.GetMeta()]
             },
         };
 
-        var rockTemplate1 = new EntityTemplate
+        var rockTemplate1 = new RenderEntityTemplate
         {
             Spatial = new SpatialTemplate { LocalBounds = rockMesh.Bounds },
-            Model = new ModelTemplate { Model = rockMesh.ModelId, Materials = [rockMat.GetMeta()] },
+            Model = new RenderModelTemplate { Model = rockMesh.ModelId, Materials = [rockMat.GetMeta()] },
         };
 
-        var rockTemplate2 = new EntityTemplate
+        var rockTemplate2 = new RenderEntityTemplate
         {
             Spatial = new SpatialTemplate { LocalBounds = rock2Mesh.Bounds },
-            Model = new ModelTemplate { Model = rock2Mesh.ModelId, Materials = [rockMat2.GetMeta()] },
+            Model = new RenderModelTemplate { Model = rock2Mesh.ModelId, Materials = [rockMat2.GetMeta()] },
         };
 
-        var boatTemplate = new EntityTemplate
+        var boatTemplate = new RenderEntityTemplate
         {
             Spatial = new SpatialTemplate { LocalBounds = boatMesh.Bounds },
-            Model = new ModelTemplate { Model = boatMesh.ModelId, Materials = [boatMat.GetMeta()] },
+            Model = new RenderModelTemplate { Model = boatMesh.ModelId, Materials = [boatMat.GetMeta()] },
         };
         _spawner.PlaceTreesBasic(14,
         [

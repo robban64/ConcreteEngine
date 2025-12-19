@@ -2,14 +2,13 @@ using ConcreteEngine.Common.Numerics;
 using ConcreteEngine.Engine.Assets;
 using ConcreteEngine.Engine.Assets.Materials;
 using ConcreteEngine.Engine.ECS;
-using ConcreteEngine.Engine.Scene.Data;
+using ConcreteEngine.Engine.Scene.Template;
 using ConcreteEngine.Engine.Worlds;
 
 namespace ConcreteEngine.Engine.Scene;
 
 public sealed class SceneWorld
 {
-
     private readonly World _world;
     private readonly EntityWorld _ecs;
     private readonly RenderEntityHub _renderEntityHub;
@@ -35,8 +34,8 @@ public sealed class SceneWorld
 
     public SceneObjectId CreateSceneObject(string name) => Store.Create(name);
 
-    public RenderEntityId SpawnEntity(SceneObjectId id, EntityTemplate template) =>
-        Store.SpawnWorldEntity(id, template);
+    public RenderEntityId SpawnEntity(SceneObjectId id, RenderEntityTemplate template) =>
+        Store.SpawnEntity(id, template);
 
     public ref Transform GetEntityTransform(RenderEntityId renderEntity) =>
         ref _renderEntityCore.GetTransform(renderEntity).Transform;

@@ -1,36 +1,37 @@
 using System.Numerics;
 using ConcreteEngine.Common.Numerics;
 using ConcreteEngine.Common.Time;
+using ConcreteEngine.Editor.Utils;
 using ConcreteEngine.Engine.Scene;
-using ConcreteEngine.Engine.Scene.Data;
+using ConcreteEngine.Engine.Scene.Template;
 using ConcreteEngine.Engine.Worlds;
 
 namespace Demo3D;
 
-public readonly struct ScenePlacement( string name, EntityTemplate template, float offset = 0f)
+public sealed class ScenePlacement(string name, RenderEntityTemplate template, float offset = 0f)
 {
     public readonly string Name = name;
-    public readonly EntityTemplate ModelInfo = template;
+    public readonly RenderEntityTemplate ModelInfo = template;
     public readonly float Offset = offset;
 }
 
 public sealed class EntitySpawner(SceneWorld sceneWorld, World world, float size = 256f, float margin = 4f)
 {
-    private static int _genIdx = 0;
+    private int _genIdx = 0;
 
     private void CreateOnTerrain(in ScenePlacement sp, Vector3 p, Vector3? s = null, Quaternion? r = null)
     {
         var height = world.Terrain.GetSmoothHeight(p.X, p.Z) + p.Y;
         var scale = s.GetValueOrDefault(Vector3.One);
         var rotation = r.GetValueOrDefault(Quaternion.Identity);
-        
+
         var name = $"{sp.Name}-{_genIdx++}";
+
         var transform = new Transform(p with { Y = height }, in scale, in rotation);
         var sceneObject = sceneWorld.CreateSceneObject(name);
         var entity = sceneWorld.SpawnEntity(sceneObject, sp.ModelInfo);
         sceneWorld.GetEntityTransform(entity) = transform;
     }
-
 
 
     public void PlaceGroundRocksBasic(

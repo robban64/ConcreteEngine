@@ -4,7 +4,7 @@ using ConcreteEngine.Engine.ECS.Data;
 using ConcreteEngine.Engine.ECS.Definitions;
 using ConcreteEngine.Engine.ECS.RenderComponent;
 using ConcreteEngine.Engine.Editor.Diagnostics;
-using ConcreteEngine.Engine.Scene.Data;
+using ConcreteEngine.Engine.Scene.Template;
 using ConcreteEngine.Engine.Worlds;
 using ConcreteEngine.Engine.Worlds.Objects;
 using ConcreteEngine.Engine.Worlds.Utility;
@@ -27,14 +27,14 @@ public sealed class SceneStore
 
     private readonly World _world;
 
-    private readonly RenderEntityHub _renderEntityHub;
+    private readonly RenderEntityHub _renderEntities;
 
     internal SceneStore(World world)
     {
         if (_idx > 0 || _handleIdx > 0) throw new InvalidOperationException();
         _world = world;
 
-        _renderEntityHub = world.Entities;
+        _renderEntities = world.Entities;
     }
 
 
@@ -59,61 +59,12 @@ public sealed class SceneStore
         return id;
     }
 
-    internal RenderEntityId SpawnWorldEntity(SceneObjectId id, EntityTemplate e)
+    internal RenderEntityId SpawnEntity(SceneObjectId id, RenderEntityTemplate e)
     {
         var ctx = _world.CreateContext();
         var sceneObject = _objects[id - 1];
-        CoreComponentBundle coreComponent = default;
-        ParticleEmitter? emitter = null;
 
-        if (e.Spatial is { } spatial) coreComponent.Box = spatial.LocalBounds;
-
-        if (e.Model is { } model)
-        {
-            var materialKey = ctx.MaterialTable.Add(MaterialTagBuilder.FromSpan(model.Materials));
-            var kind = e.Animation != null ? EntitySourceKind.AnimatedModel : EntitySourceKind.Model;
-            coreComponent.Source = new SourceComponent(model.Model, materialKey, kind);
-            sceneObject.HasModel = true;
-        }
-
-        else if (e.Particle is { } particle)
-        {
-            if (!ctx.Particles.TryGetEmitter(particle.EmitterName, out emitter))
-            {
-                emitter = ctx.Particles
-                    .CreateEmitter(particle.EmitterName, particle.ParticleCount, in particle.Definition);
-            }
-
-            coreComponent.Source = new SourceComponent(emitter.Model, emitter.MaterialKey, EntitySourceKind.Particle);
-
-            sceneObject.HasParticle = true;
-        }
-
-        var entity = _renderEntityHub.AddEntity(in coreComponent);
-
-        if (e.Animation is { } animation)
-        {
-            if (e.Model is null) throw new InvalidOperationException();
-            var component = new AnimationComponent
-            {
-                Animation = animation.Animation,
-                Clip = animation.Clip,
-                Duration = animation.Duration,
-                Time = animation.Time,
-                Speed = animation.Speed,
-            };
-            _renderEntityHub.AddComponent(entity, component);
-            sceneObject.HasAnimation = true;
-        }
-
-        if (emitter is not null)
-        {
-            var component = new ParticleComponent(emitter.EmitterHandle, emitter.Material);
-            _renderEntityHub.AddComponent(entity, component);
-        }
-
-        sceneObject.AddRenderEntity(entity);
-        return entity;
+        return EntityFactory.BuildRenderEntity(sceneObject, in ctx, _renderEntities, e);
     }
 
     private void ValidateSceneObjectId(SceneObjectId id)

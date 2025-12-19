@@ -19,7 +19,7 @@ internal static class DrawTagResolver
     {
         var deltaTime = EngineTime.DeltaTime;
         var slot = 1;
-        foreach (var query in renderEntities.Query<AnimationComponent>())
+        foreach (var query in renderEntities.Query<RenderAnimationComponent>())
         {
             var entityId = query.RenderEntity;
             ref var component = ref query.Component;

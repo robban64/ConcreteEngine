@@ -20,7 +20,7 @@ public sealed class RenderEntityHub
             throw new InvalidOperationException("WorldEntities already initialized");
 
         _core = new RenderEntityCore(DefaultEntityCapacity);
-        GenericStores<AnimationComponent>.CreateStore(64);
+        GenericStores<RenderAnimationComponent>.CreateStore(64);
         GenericStores<ParticleComponent>.CreateStore(16);
         GenericStores<SelectionComponent>.CreateStore(16);
         GenericStores<DebugBoundsComponent>.CreateStore(16);

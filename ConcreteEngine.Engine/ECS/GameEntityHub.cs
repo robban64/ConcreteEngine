@@ -32,8 +32,6 @@ public sealed class GameEntityHub
         GenericStores<VisibilityComponent>.CreateStore(DefaultCapacity);
         GenericStores<TransformComponent>.CreateStore(DefaultCapacity);
         GenericStores<BoundingBoxComponent>.CreateStore(DefaultCapacity);
-        GenericStores<ModelComponent>.CreateStore(DefaultCapacity);
-        GenericStores<MaterialComponent>.CreateStore(DefaultCapacity);
         GenericStores<AnimationComponent>.CreateStore(64);
         GenericStores<TagComponent>.CreateStore(32);
         GenericStores<ParticleRefComponent>.CreateStore(32);

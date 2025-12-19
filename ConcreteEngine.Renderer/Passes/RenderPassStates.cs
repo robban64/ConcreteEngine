@@ -1,27 +1,72 @@
+using System.Runtime.CompilerServices;
 using ConcreteEngine.Common.Numerics;
 using ConcreteEngine.Graphics.Gfx.Contracts;
 using ConcreteEngine.Graphics.Gfx.Resources;
-using ConcreteEngine.Graphics.Gfx.Resources.Handles;
 
 namespace ConcreteEngine.Renderer.Passes;
 
-public readonly struct PassMutationState(
-    GfxPassClear? clearColor = null,
-    GfxPassState? passState = null,
-    FrameBufferId? targetFboId = null,
-    ShaderId? shaderId = null,
-    int? samples = null,
-    bool? linearFilter = null
-)
+public struct PassMutationState
 {
-    public GfxPassClear? ClearColor { get; init; } = clearColor;
-    public GfxPassState? PassState { get; init; } = passState;
-    public FrameBufferId? TargetFboId { get; init; } = targetFboId;
-    public ShaderId? ShaderId { get; init; } = shaderId;
-    public int? Samples { get; init; } = samples;
-    public bool? LinearFilter { get; init; } = linearFilter;
+    private const uint LinearFilterBit = 1u << 0;
+    private const uint HasClearBit = 1u << 8;
+    private const uint HasStateBit = 1u << 9;
+    private const uint HasFboBit = 1u << 10;
+    private const uint HasShaderBit = 1u << 11;
+    private const uint HasSamplesBit = 1u << 12;
 
-    public static PassMutationState MutateTarget(FrameBufferId fboId) => new(targetFboId: fboId);
+    public GfxPassClear ClearColor;
+    public GfxPassState PassState;
+    public FrameBufferId TargetFboId;
+    public ShaderId ShaderId;
+    public byte Samples;
+
+    private uint _mask;
+
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public static PassMutationState MutateTarget(FrameBufferId fboId)
+    {
+        var state = new PassMutationState();
+        state.WithTarget(fboId);
+        return state;
+    }
+
+
+    public readonly bool HasLinearFilter => (_mask & LinearFilterBit) != 0;
+    public readonly bool HasClear => (_mask & HasClearBit) != 0;
+    public readonly bool HasPassState => (_mask & HasStateBit) != 0;
+    public readonly bool HasTarget => (_mask & HasFboBit) != 0;
+    public readonly bool HasShader => (_mask & HasShaderBit) != 0;
+    public readonly bool HasSample => (_mask & HasSamplesBit) != 0;
+
+    public bool LinearFilter
+    {
+        get => (_mask & LinearFilterBit) != 0;
+        set => _mask = value ? _mask | LinearFilterBit : _mask & ~LinearFilterBit;
+    }
+
+    public void WithClear(in GfxPassClear clearColor)
+    {
+        ClearColor = clearColor;
+        _mask |= HasClearBit;
+    }
+
+    public void WithShader(ShaderId id)
+    {
+        ShaderId = id;
+        _mask |= HasShaderBit;
+    }
+
+    public void WithTarget(FrameBufferId id)
+    {
+        TargetFboId = id;
+        _mask |= HasFboBit;
+    }
+
+    public void WithSamples(byte count)
+    {
+        Samples = count;
+        _mask |= HasSamplesBit;
+    }
 }
 
 public readonly struct RenderPassState(
@@ -37,18 +82,19 @@ public readonly struct RenderPassState(
     public readonly GfxPassState PassState = passState;
     public readonly ShaderId ShaderId = shaderId;
     public readonly FrameBufferId TargetFboId = targetFboId;
-    public readonly int Samples = samples;
+    public readonly byte Samples = (byte)samples;
     public readonly bool LinearFilter = linearFilter;
 
-
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public RenderPassState FromMutation(in PassMutationState m) =>
-        new(clearColor: m.ClearColor ?? ClearColor,
-            passState: m.PassState ?? PassState,
-            targetFboId: m.TargetFboId ?? TargetFboId,
-            shaderId: m.ShaderId ?? ShaderId,
-            samples: m.Samples ?? Samples,
-            linearFilter: m.LinearFilter ?? LinearFilter
+        new(clearColor: m.HasClear ? m.ClearColor : ClearColor,
+            passState: m.HasPassState ? m.PassState : PassState,
+            targetFboId: m.HasTarget ? m.TargetFboId : TargetFboId,
+            shaderId: m.HasShader ? m.ShaderId : ShaderId,
+            samples: m.HasSample ? m.Samples : Samples,
+            linearFilter: m.HasLinearFilter ? m.LinearFilter : LinearFilter
         );
+
 
     public static RenderPassState MakeSceneMsaa(int samples) =>
         new(clearColor: GfxPassClear.MakeColorDepthClear(Color4.CornflowerBlue), passState: GfxPassState.MakeScene(),

@@ -1,3 +1,4 @@
+using System.Runtime.CompilerServices;
 using ConcreteEngine.Graphics.Gfx.Definitions;
 
 namespace ConcreteEngine.Graphics.Gfx.Contracts;
@@ -10,8 +11,17 @@ public readonly struct GfxTextureBorder(byte r, byte g, byte b, byte a, bool ena
     public readonly byte A = a;
     public readonly bool Enabled = enabled;
 
-    public static GfxTextureBorder Off => new(0, 0, 0, 0, false);
-    public static GfxTextureBorder On => new(1, 1, 1, 1, true);
+    public static GfxTextureBorder Off
+    {
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        get => new(0, 0, 0, 0, false);
+    }
+
+    public static GfxTextureBorder On
+    {
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        get => new(1, 1, 1, 1, true);
+    }
 }
 
 public readonly struct GfxTextureDescriptor(

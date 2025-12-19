@@ -1,8 +1,5 @@
 using ConcreteEngine.Common;
 using ConcreteEngine.Graphics.Diagnostic;
-using ConcreteEngine.Graphics.Gfx.Resources.Data;
-using ConcreteEngine.Graphics.Gfx.Resources.Handles;
-using ConcreteEngine.Graphics.Gfx.Resources.Stores;
 using ConcreteEngine.Shared.Diagnostics;
 
 namespace ConcreteEngine.Graphics.Gfx.Resources;
@@ -67,7 +64,7 @@ internal sealed class GfxResourceDisposer : IGfxResourceDisposer
     public void EnqueueReplace<TId>(GfxRefToken<TId> refToken)
         where TId : unmanaged, IResourceId
     {
-        ArgumentOutOfRangeException.ThrowIfEqual(refToken.Handle.IsValid, false);
+        ArgumentOutOfRangeException.ThrowIfEqual(refToken.IsValid, false);
         var fkStore = _gfxStoreHub.GetStore<TId>();
 
         var bkStore = _backendStoreHub.GetStore(TId.Kind);

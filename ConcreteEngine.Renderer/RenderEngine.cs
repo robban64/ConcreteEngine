@@ -3,9 +3,7 @@ using System.Runtime.CompilerServices;
 using ConcreteEngine.Common;
 using ConcreteEngine.Common.Numerics;
 using ConcreteEngine.Graphics;
-using ConcreteEngine.Graphics.Configuration;
 using ConcreteEngine.Graphics.Gfx.Resources;
-using ConcreteEngine.Graphics.Gfx.Resources.Handles;
 using ConcreteEngine.Renderer.Data;
 using ConcreteEngine.Renderer.Definitions;
 using ConcreteEngine.Renderer.Draw;
@@ -15,11 +13,6 @@ using ConcreteEngine.Renderer.State;
 
 namespace ConcreteEngine.Renderer;
 
-public enum RenderType
-{
-    Render2D,
-    Render3D
-}
 
 public sealed class RenderEngine
 {
@@ -31,16 +24,12 @@ public sealed class RenderEngine
 
     private readonly RenderCamera _renderCamera;
 
-    private RenderEngineContext EngineContext { get; }
     private readonly RenderStateContext _stateContext;
 
-    public bool Initialized { get; private set; } = false;
+    public bool Initialized { get; private set; }
+    
+    private RenderEngineContext EngineContext { get; }
 
-    public DrawCommandBuffer CommandBuffer => _drawPipeline.CommandBuffer;
-    public IRenderFboRegistry FboRegistry => _renderRegistry.FboRegistry;
-
-    public int PassCount => _passPipeline.PassCount;
-    public RenderCamera RenderCamera => _renderCamera;
 
     public RenderEngine(GraphicsRuntime graphics, RenderParamsSnapshot paramsSnapshot, MeshId fsqMesh)
     {
@@ -50,7 +39,7 @@ public sealed class RenderEngine
 
         _renderRegistry = new RenderRegistry(graphics.Gfx);
         _drawPipeline = new DrawCommandPipeline();
-        _passPipeline = new RenderPassPipeline();
+        _passPipeline = new RenderPassPipeline(_renderRegistry.FboRegistry);
 
         _stateContext = new RenderStateContext { Camera = _renderCamera, Snapshot = paramsSnapshot, FsqMesh = fsqMesh };
 
@@ -62,6 +51,13 @@ public sealed class RenderEngine
             PassPipeline = _passPipeline
         };
     }
+    
+    public int PassCount => _passPipeline.PassCount;
+
+    public DrawCommandBuffer CommandBuffer => _drawPipeline.CommandBuffer;
+    public IRenderFboRegistry FboRegistry => _renderRegistry.FboRegistry;
+    public RenderCamera RenderCamera => _renderCamera;
+
 
     public RenderSetupBuilder StartBuilder(Size2D outputSize) => new(EngineContext, outputSize);
 
@@ -148,7 +144,7 @@ public sealed class RenderEngine
     private void ExecutePass(PassId passId)
     {
         var passResult = _passPipeline.ApplyPass();
-
+        
         switch (passResult.OpKind)
         {
             case PassOpKind.Draw:
@@ -161,8 +157,8 @@ public sealed class RenderEngine
                 _passPipeline.ApplyAfterPass();
                 return;
         }
-
         _passPipeline.ApplyAfterPass();
+
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]

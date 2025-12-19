@@ -1,7 +1,4 @@
 using ConcreteEngine.Common.Collections;
-using ConcreteEngine.Engine.Assets;
-using ConcreteEngine.Engine.Assets.Materials;
-using ConcreteEngine.Engine.Assets.Models;
 using ConcreteEngine.Engine.ECS;
 using ConcreteEngine.Engine.ECS.Data;
 using ConcreteEngine.Engine.ECS.Definitions;
@@ -9,7 +6,6 @@ using ConcreteEngine.Engine.ECS.RenderComponent;
 using ConcreteEngine.Engine.Editor.Diagnostics;
 using ConcreteEngine.Engine.Scene.Data;
 using ConcreteEngine.Engine.Worlds;
-using ConcreteEngine.Engine.Worlds.Data;
 using ConcreteEngine.Engine.Worlds.Objects;
 using ConcreteEngine.Engine.Worlds.Utility;
 using ConcreteEngine.Shared.Diagnostics;
@@ -116,7 +112,7 @@ public sealed class SceneStore
             _renderEntityHub.AddComponent(entity, component);
         }
 
-        sceneObject.LinkEntity(entity);
+        sceneObject.AddRenderEntity(entity);
         return entity;
     }
 
@@ -158,6 +154,6 @@ public sealed class SceneStore
     {
         public bool IsValid => SceneObject > 0 && Slot >= 0 && Gen > 0;
 
-        public bool VerifyGameEntityId(SceneObjectId e) => e.Value == SceneObject && e.Gen == Gen;
+        public bool Validate(SceneObjectId e) => e.Value == SceneObject && e.Gen == Gen;
     }
 }

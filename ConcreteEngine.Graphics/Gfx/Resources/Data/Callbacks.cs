@@ -1,7 +1,6 @@
 using ConcreteEngine.Graphics.Gfx.Definitions;
-using ConcreteEngine.Graphics.Gfx.Resources.Handles;
 
-namespace ConcreteEngine.Graphics.Gfx.Resources.Data;
+namespace ConcreteEngine.Graphics.Gfx.Resources;
 
 public readonly struct GfxMetaChanged<TMeta>(
     int Id,

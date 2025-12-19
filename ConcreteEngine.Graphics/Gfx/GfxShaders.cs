@@ -1,6 +1,4 @@
 using ConcreteEngine.Graphics.Gfx.Internal;
-using ConcreteEngine.Graphics.Gfx.Resources.Handles;
-using ConcreteEngine.Graphics.Gfx.Resources.Stores;
 using ConcreteEngine.Graphics.OpenGL;
 
 namespace ConcreteEngine.Graphics.Gfx;

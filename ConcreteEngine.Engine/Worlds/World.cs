@@ -10,7 +10,6 @@ using ConcreteEngine.Engine.Utils;
 using ConcreteEngine.Engine.Worlds.MeshGeneration;
 using ConcreteEngine.Engine.Worlds.Render;
 using ConcreteEngine.Engine.Worlds.Tables;
-using ConcreteEngine.Engine.Worlds.Utility;
 using ConcreteEngine.Engine.Worlds.View;
 using ConcreteEngine.Graphics;
 using ConcreteEngine.Graphics.Gfx;
@@ -23,7 +22,6 @@ public sealed class World
 {
     private readonly AssetSystem _assets;
 
-    private readonly RenderEntityHub _entities;
     private readonly WorldSkybox _sky;
     private readonly WorldTerrain _terrain;
     private readonly WorldParticles _particles;
@@ -42,10 +40,13 @@ public sealed class World
     private readonly DrawEntityAssembler _drawEntities;
     private readonly WorldRenderer _worldRenderer;
 
+    private readonly EntityWorld _ecs;
 
-    internal World(EngineWindow engineWindow, GraphicsRuntime graphics, AssetSystem assets)
+
+    internal World(EngineWindow engineWindow, GraphicsRuntime graphics, AssetSystem assets, EntityWorld ecs)
     {
         _assets = assets;
+        _ecs = ecs;
         _camera = new Camera3D();
         _meshGenerator = new MeshGeneratorRegistry();
 
@@ -53,7 +54,6 @@ public sealed class World
         _materialTable = new MaterialTable();
         _animationTable = new AnimationTable();
 
-        _entities = new RenderEntityHub();
         _sky = new WorldSkybox();
         _terrain = new WorldTerrain(_meshTable, _materialTable);
         _particles = new WorldParticles(_meshTable, _materialTable);
@@ -68,7 +68,7 @@ public sealed class World
         _worldRenderer = new WorldRenderer(engineWindow, graphics, assets, _worldRenderParams, _drawEntities, _camera);
     }
 
-    internal RenderEntityHub Entities => _entities;
+    internal RenderEntityHub Entities => _ecs.RenderEntity;
 
     internal WorldRenderer Renderer => _worldRenderer;
 
@@ -80,9 +80,6 @@ public sealed class World
     public WorldParticles Particles => _particles;
 
     public WorldRenderParams WorldRenderParams => _worldRenderParams;
-
-    public IMeshTable MeshTable => _meshTable;
-    public IMaterialTable EntityMaterials => _materialTable;
 
     internal MeshTable MeshTableImpl => _meshTable;
     internal MaterialTable MaterialTableImpl => _materialTable;
@@ -114,11 +111,9 @@ public sealed class World
         _drawEntities.BoundsMaterial = mat.Id;
     }
 
-    internal void StartTick(Size2D viewSize)
+    internal void StartTick(Size2D viewport)
     {
-        Camera.Viewport = viewSize;
-        ProcessActions();
-        Camera.StartTick();
+        Camera.StartTick(viewport);
     }
 
     internal void EndTick()
@@ -130,17 +125,14 @@ public sealed class World
 
     internal void OnSimulationTick(float fixedDt)
     {
-        _particles.UpdateSimulate(_entities, fixedDt);
+        _particles.UpdateSimulate(_ecs.RenderEntity, fixedDt);
     }
 
     internal void ProcessCommand(IWorldCommandRecord cmd)
     {
     }
 
-    private void ProcessActions()
-    {
-    }
 
     internal WorldContext CreateContext() =>
-        new(_entities, _sky, _terrain, _particles, _meshTable, _materialTable, _animationTable);
+        new(_ecs.RenderEntity, _sky, _terrain, _particles, _meshTable, _materialTable, _animationTable);
 }

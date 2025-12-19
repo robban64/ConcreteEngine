@@ -1,7 +1,6 @@
 using System.Numerics;
 using ConcreteEngine.Common.Numerics;
 using ConcreteEngine.Graphics.Gfx.Resources;
-using ConcreteEngine.Graphics.Gfx.Resources.Handles;
 
 namespace ConcreteEngine.Engine.Assets.Models.Loader;
 

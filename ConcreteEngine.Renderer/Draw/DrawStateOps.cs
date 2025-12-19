@@ -1,7 +1,7 @@
+using System.Runtime.CompilerServices;
 using ConcreteEngine.Graphics.Gfx;
 using ConcreteEngine.Graphics.Gfx.Contracts;
 using ConcreteEngine.Graphics.Gfx.Resources;
-using ConcreteEngine.Graphics.Gfx.Resources.Handles;
 using ConcreteEngine.Renderer.Registry;
 using ConcreteEngine.Renderer.State;
 
@@ -46,22 +46,21 @@ public sealed class DrawStateOps
         _drawBuffers.UploadCameraView(_renderCamera);
     }
 
-
     public void ApplyStateFunctions(GfxPassStateFunc passFunc)
     {
         _gfxCmd.ApplyStateFunctions(passFunc);
         _ctx.PassStateFunc = passFunc;
     }
-
+    
     public void BeginScreenPass(in GfxPassClear passClear, GfxPassState states)
     {
-        _gfxCmd.BeginScreenPass(in passClear, states);
+        _gfxCmd.BeginScreenPass( passClear, states);
         _ctx.PassState = states;
     }
 
     public void BeginRenderPass(FrameBufferId fboId, in GfxPassClear passClear, GfxPassState states)
     {
-        _gfxCmd.BeginRenderPass(fboId, in passClear, states);
+        _gfxCmd.BeginRenderPass(fboId,  passClear, states);
         _ctx.PassState = states;
     }
 
@@ -83,16 +82,7 @@ public sealed class DrawStateOps
 
     public void GenerateMips(TextureId textureId) => _gfxTextures.GenerateMipMaps(textureId);
 
-    public void DrawFullscreenQuad(ShaderId shaderId, IReadOnlyList<TextureId> sources)
-    {
-        UseShader(shaderId);
-
-        for (int i = 0; i < sources.Count; i++)
-            _gfxCmd.BindTexture(sources[i], i);
-
-        DrawFsq();
-    }
-
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public void DrawFullscreenQuad(ShaderId shaderId, ReadOnlySpan<TextureId> sources)
     {
         UseShader(shaderId);
@@ -103,15 +93,12 @@ public sealed class DrawStateOps
         DrawFsq();
     }
 
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     private void DrawFsq()
     {
         _gfxCmd.BindMesh(_ctx.FsqMesh);
         _gfxCmd.DrawMesh();
     }
 
-    private void UseShader(ShaderId shaderId)
-    {
-        //var renderShader = _renderRegistry.GetRenderShader(shaderId);
-        _gfxCmd.UseShader(shaderId);
-    }
+    private void UseShader(ShaderId shaderId) => _gfxCmd.UseShader(shaderId);
 }

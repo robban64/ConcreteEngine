@@ -25,7 +25,7 @@ internal static class MetricRouter
     internal static PairSample GetMemoryMetrics() => new((int)GC.GetAllocatedBytesForCurrentThread());
 
     internal static PairSample GetSceneMetrics() =>
-        _world is not null ? new(_world.EntityCount, _world.ShadowMapSize) : default;
+        _world is not null ? new PairSample(_world.EntityCount, _world.WorldRenderParams.ShadowMapSize) : default;
 
     internal static CollectionSample GetMaterialMetrics()
     {

@@ -1,6 +1,4 @@
-using ConcreteEngine.Graphics.Gfx.Resources.Handles;
-
-namespace ConcreteEngine.Graphics.Gfx.Resources.Data;
+namespace ConcreteEngine.Graphics.Gfx.Resources;
 
 public struct FboAttachmentIds(
     TextureId colorTextureId,

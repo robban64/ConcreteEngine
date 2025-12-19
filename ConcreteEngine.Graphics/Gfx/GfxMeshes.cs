@@ -1,8 +1,6 @@
 using ConcreteEngine.Common;
 using ConcreteEngine.Graphics.Gfx.Contracts;
 using ConcreteEngine.Graphics.Gfx.Internal;
-using ConcreteEngine.Graphics.Gfx.Resources.Handles;
-using ConcreteEngine.Graphics.Gfx.Resources.Stores;
 
 namespace ConcreteEngine.Graphics.Gfx;
 
@@ -69,9 +67,9 @@ public sealed class GfxMeshes
 
     public void AttachVertexBuffer(MeshId meshId, VertexBufferId vboId, int binding)
     {
-        var meshRef = _meshStore.GetRefAndMeta(meshId, out var meta);
+        var meshView = _meshStore.GetRefAndMeta(meshId, out var meta);
         var vboRef = _vboStore.GetRefAndMeta(vboId, out var vboMeta);
-        _driver.Meshes.AttachVertexBuffer(meshRef, binding, vboRef, in vboMeta);
+        _driver.Meshes.AttachVertexBuffer(meshView, binding, vboRef, in vboMeta);
         var newMeta = meta with { VboCount = (byte)(meta.VboCount + 1) };
         _meshStore.ReplaceMeta(meshId, in newMeta, out _);
     }

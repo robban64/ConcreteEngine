@@ -1,9 +1,6 @@
-using System.Runtime.CompilerServices;
 using ConcreteEngine.Engine.ECS;
 using ConcreteEngine.Engine.ECS.Data;
-using ConcreteEngine.Engine.Time;
 using ConcreteEngine.Engine.Worlds.Render.Data;
-using ConcreteEngine.Renderer.Data;
 using ConcreteEngine.Renderer.Definitions;
 
 namespace ConcreteEngine.Engine.Worlds.Render.Processor;

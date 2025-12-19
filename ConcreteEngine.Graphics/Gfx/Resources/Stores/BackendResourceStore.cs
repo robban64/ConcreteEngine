@@ -2,13 +2,11 @@ using System.Diagnostics;
 using System.Diagnostics.CodeAnalysis;
 using System.Runtime.CompilerServices;
 using ConcreteEngine.Common.Collections;
-using ConcreteEngine.Graphics.Configuration;
 using ConcreteEngine.Graphics.Diagnostic;
 using ConcreteEngine.Graphics.Gfx.Definitions;
-using ConcreteEngine.Graphics.Gfx.Resources.Handles;
 using ConcreteEngine.Shared.Diagnostics;
 
-namespace ConcreteEngine.Graphics.Gfx.Resources.Stores;
+namespace ConcreteEngine.Graphics.Gfx.Resources;
 
 internal interface IBackendResourceStore
 {
@@ -45,7 +43,7 @@ internal sealed class BackendResourceStore<TId, THandle> : IBackendResourceStore
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public THandle GetHandle(GfxRefToken<TId> refToken)
     {
-        var handle = _records[refToken.Handle.Slot].Handle;
+        var handle = _records[refToken.Slot].Handle;
         return Unsafe.As<uint, THandle>(ref handle);
     }
 
@@ -64,7 +62,7 @@ internal sealed class BackendResourceStore<TId, THandle> : IBackendResourceStore
         var idx = _free.Count > 0 ? _free.Pop() : Allocate();
         var newHandle = _records[idx] = new BkHandle(handle.Value, true);
         GfxLog.LogBkStore(newHandle.Handle, idx, Kind.ToLogTopic(), LogAction.Add);
-        return new GfxRefToken<TId>(new GfxHandle(idx, 1, Kind));
+        return new GfxRefToken<TId>(idx, 1);
     }
 
 
@@ -80,21 +78,6 @@ internal sealed class BackendResourceStore<TId, THandle> : IBackendResourceStore
         GfxLog.LogBkStore(record, handle.Slot, Kind.ToLogTopic(), LogAction.Remove);
     }
 
-/*
-    public GfxRefToken<TId> Replace(GfxRefToken<TId> refToken, THandle value)
-    {
-        Throwers.ThrowOnDefaultHandle(value);
-
-        var handle = refToken.Handle;
-        var prev = _records[handle.Slot];
-        var newRecord = _records[handle.Slot] = new BkHandle<THandle>(value, true);
-
-        GfxLog.LogBkStore(value, prev, TId.Kind.ToLogTopic(),  LogAction.Replace,0);
-        GfxLog.LogBkStore(value, refToken, TId.Kind.ToLogTopic(),  LogAction.Replace, 1);
-
-        return GfxRefToken<TId>.MakeBkRef(handle.Slot);
-    }
-*/
     private int Allocate()
     {
         var len = _records.Length;

@@ -1,11 +1,9 @@
 using System.Runtime.CompilerServices;
 using ConcreteEngine.Common;
 using ConcreteEngine.Common.Collections;
-using ConcreteEngine.Common.Time;
 using ConcreteEngine.Engine.ECS;
 using ConcreteEngine.Engine.ECS.RenderComponent;
 using ConcreteEngine.Engine.Editor.Diagnostics;
-using ConcreteEngine.Engine.Worlds.Data;
 using ConcreteEngine.Engine.Worlds.Render.Data;
 using ConcreteEngine.Engine.Worlds.Render.Processor;
 using ConcreteEngine.Engine.Worlds.Tables;
@@ -96,7 +94,7 @@ internal sealed class DrawEntityAssembler
         DrawWorldProcessor.SubmitWorldObjects(commandBuffer, _world);
 
         // cull
-        StaticProfileTimer.RenderTimer.Begin();
+        //StaticProfileTimer.RenderTimer.Begin();
         var renderView = _camera.RenderView;
         var len = CullEntities(in renderView);
         
@@ -106,7 +104,7 @@ internal sealed class DrawEntityAssembler
         ExecuteCollectCommands(in ctx, in renderView);
         ExecuteUploader(in ctx, commandBuffer);
         ExecuteProcessors(in ctx, commandBuffer);
-        StaticProfileTimer.RenderTimer.EndPrint();
+        //StaticProfileTimer.RenderTimer.EndPrint();
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]

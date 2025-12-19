@@ -1,8 +1,5 @@
-using System.Runtime.CompilerServices;
+using ConcreteEngine.Common.Numerics;
 using ConcreteEngine.Common.Time;
-using ConcreteEngine.Editor;
-using ConcreteEngine.Editor.Data;
-using ConcreteEngine.Editor.Store;
 using ConcreteEngine.Engine.Assets;
 using ConcreteEngine.Engine.Configuration;
 using ConcreteEngine.Engine.Definitions;
@@ -10,13 +7,11 @@ using ConcreteEngine.Engine.ECS;
 using ConcreteEngine.Engine.Editor;
 using ConcreteEngine.Engine.Platform;
 using ConcreteEngine.Engine.Scene;
-using ConcreteEngine.Engine.Scene.Modules;
 using ConcreteEngine.Engine.Time;
 using ConcreteEngine.Engine.Utils;
 using ConcreteEngine.Engine.Worlds;
-using ConcreteEngine.Engine.Worlds.Render;
 using ConcreteEngine.Graphics;
-using ConcreteEngine.Graphics.Configuration;
+using ConcreteEngine.Graphics.Gfx.Contracts;
 using ConcreteEngine.Renderer.State;
 using Silk.NET.OpenGL;
 
@@ -31,10 +26,10 @@ public sealed class GameEngine : IDisposable
     private readonly AssetSystem _assets;
     private readonly InputSystem _inputSystem;
 
-
-    private readonly EntityWorld _ecs;
     private readonly World _world;
     private readonly SceneManager _sceneManager;
+
+    private readonly EntityWorld _ecs;
 
     private readonly EngineGateway _engineGateway;
     private readonly EditorEngineQueue _editorQueues;
@@ -70,8 +65,8 @@ public sealed class GameEngine : IDisposable
         _assets = new AssetSystem();
 
         _ecs = new EntityWorld();
-        _world = new World(engineWindow, _graphics, _assets);
-        _sceneManager = new SceneManager(sceneFactories, _assets, _world);
+        _world = new World(engineWindow, _graphics, _assets, _ecs);
+        _sceneManager = new SceneManager(sceneFactories, _assets, _world, _ecs);
 
         _coreSystems = new EngineCoreSystem(_world.Renderer, _inputSystem, _assets);
 
@@ -79,6 +74,13 @@ public sealed class GameEngine : IDisposable
         _engineGateway =
             new EngineGateway(gfxBundle.Config.DriverContext, engineWindow.PlatformWindow, internalInput);
         _editorQueues = new EditorEngineQueue(_world, _world.Renderer, _assets);
+    }
+
+    private void InitializeLogger()
+    {
+        EngineGateway.ToggleEngineLogger(true);
+        EngineGateway.ToggleGfxLogger(true);
+        EngineGateway.SetupLogger();
     }
 
 
@@ -98,10 +100,6 @@ public sealed class GameEngine : IDisposable
         GC.Collect();
 
         _coreSystems.Initialize();
-
-        EngineGateway.ToggleEngineLogger(true);
-        EngineGateway.ToggleGfxLogger(true);
-        EngineGateway.SetupLogger();
     }
 
     private void RegisterRenderer()
@@ -142,6 +140,10 @@ public sealed class GameEngine : IDisposable
         if (_engineGateway.Active)
             _engineGateway.RenderEditor(in frameInfo, _gfxFrameResult);
 
+        if (!_sceneManager.Enabled)
+        {
+            _graphics.Gfx.Commands.Clear(GfxPassClear.MakeColorDepthClear(Color4.Black));
+        }
 
     }
 
@@ -174,12 +176,16 @@ public sealed class GameEngine : IDisposable
     private void UpdateTick(float dt)
     {
         _world.StartTick(_window.OutputSize);
-        _sceneManager.UpdateTick(dt);
+        if(_setupStepper.Current == EngineStateLevel.Running)
+            _sceneManager.UpdateTick(dt);
         _world.EndTick();
     }
 
 
-    private void SimulationTickUpdate(float dt) => _world.OnSimulationTick(dt);
+    private void SimulationTickUpdate(float dt)
+    {
+        _world.OnSimulationTick(dt);
+    }
 
     private void LogTickUpdate(float dt)
     {
@@ -203,6 +209,7 @@ public sealed class GameEngine : IDisposable
                 break;
             case EngineStateLevel.InitializeSystem:
                 InitializeSystems();
+                InitializeLogger();
                 _setupStepper.Next();
                 break;
             case EngineStateLevel.LoadWorld:
@@ -216,7 +223,9 @@ public sealed class GameEngine : IDisposable
                 _setupStepper.Next();
                 break;
             case EngineStateLevel.Warmup:
-                _setupStepper.Next(++_setupStepper.WarmupTick > 24);
+                var result = _setupStepper.Next(++_setupStepper.WarmupTick > 60);
+                if (result == EngineStateLevel.Running)
+                    _sceneManager.SetEnabled(true);
                 break;
         }
     }

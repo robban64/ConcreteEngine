@@ -1,8 +1,7 @@
+using System.Runtime.CompilerServices;
 using ConcreteEngine.Renderer.Definitions;
 
 namespace ConcreteEngine.Renderer.Passes;
-
-public delegate PassMutationState RenderPassMutate(in RenderPassState currentState);
 
 public delegate PassAction RenderPassOp(RenderPassCtx ctx, in RenderPassState state);
 
@@ -10,18 +9,21 @@ public delegate void RenderAfterPassOp(RenderPassCtx ctx, in RenderPassState sta
 
 public sealed class RenderPassEntry
 {
+    private static PassAction NoOpPass(RenderPassCtx ctx, in RenderPassState state) => default;
+    private static void NoOpAfterPass(RenderPassCtx ctx, in RenderPassState state) { }
+
     public PassTagKey PassKey { get; private set; }
     public PassOpKind PassOp { get; private set; }
     public PassTagKey? DependsOn { get; }
 
-    private RenderPassOp? _applyPassDel;
-    private RenderAfterPassOp? _applyAfterPassDel;
-    private RenderPassMutate? _applyPassMutateDel;
+    private RenderPassOp _applyPassDel = NoOpPass;
+    private RenderAfterPassOp _applyAfterPassDel = NoOpAfterPass;
 
     private readonly RenderPassState _defaultState;
     private RenderPassState _state;
 
-    private PassMutationState? _pendingState = null;
+    private PassMutationState _pendingState;
+    private bool _hasPending;
 
 
     internal RenderPassEntry(PassTagKey passKey, PassOpKind passOp, RenderPassState initial,
@@ -46,42 +48,33 @@ public sealed class RenderPassEntry
         return this;
     }
 
-    public void UpdateState(in RenderPassMutate mutate) => _applyPassMutateDel = mutate;
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public void UpdateState(in PassMutationState replace)
+    {
+        _pendingState = replace;
+        _hasPending = true;
+    }
 
-    public void UpdateState(in PassMutationState replace) => _pendingState = replace;
-
-
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public PassAction ApplyPass(RenderPassCtx ctx)
     {
         ApplyPending();
-
-        if (_applyPassDel is { } applyPassDel)
-            return applyPassDel(ctx, in _state);
-
-        return default;
+        return _applyPassDel(ctx, in _state);
     }
 
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public void ApplyAfterPass(RenderPassCtx ctx)
     {
-        if (_applyAfterPassDel is { } afterPassDel)
-            afterPassDel(ctx, in _state);
+        _applyAfterPassDel(ctx, in _state);
     }
 
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     private void ApplyPending()
     {
-        if (_pendingState is { } rep)
-        {
-            _state = _state.FromMutation(in rep);
-            _pendingState = null;
-            _applyPassMutateDel = null;
-            return;
-        }
+        if (!_hasPending) return;
 
-        if (_applyPassMutateDel is { } mut)
-        {
-            var mutationState = mut(in _state);
-            _state = _state.FromMutation(in mutationState);
-            _applyPassMutateDel = null;
-        }
+        _state = _state.FromMutation(in _pendingState);
+        _pendingState = default;
+        _hasPending = false;
     }
 }

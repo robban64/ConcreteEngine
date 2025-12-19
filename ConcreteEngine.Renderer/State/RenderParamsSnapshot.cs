@@ -1,4 +1,3 @@
-using System.Runtime.CompilerServices;
 using ConcreteEngine.Shared.Rendering;
 
 namespace ConcreteEngine.Renderer.State;

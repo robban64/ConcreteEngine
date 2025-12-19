@@ -17,8 +17,6 @@ internal sealed class DrawCommandPipeline
     private RenderStateContext _stateContext = null!;
 
     internal DrawStateOps DrawStateOps => _drawStateOps;
-    internal DrawBuffers DrawBuffer => _drawBuffers;
-    internal DrawCommandProcessor DrawCmdProcessor => _drawCmdProc;
     internal DrawCommandBuffer CommandBuffer => _commandBuffer;
 
     internal DrawCommandPipeline()

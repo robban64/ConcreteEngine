@@ -4,8 +4,6 @@ using ConcreteEngine.Graphics.Error;
 using ConcreteEngine.Graphics.Gfx.Contracts;
 using ConcreteEngine.Graphics.Gfx.Definitions;
 using ConcreteEngine.Graphics.Gfx.Internal;
-using ConcreteEngine.Graphics.Gfx.Resources.Handles;
-using ConcreteEngine.Graphics.Gfx.Resources.Stores;
 using ConcreteEngine.Graphics.Gfx.Utility;
 using ConcreteEngine.Graphics.OpenGL;
 
@@ -119,17 +117,17 @@ public sealed class GfxBuffers
     public void SetUniformBufferCapacity(UniformBufferId uboId, nint capacity)
     {
         ArgumentOutOfRangeException.ThrowIfEqual(0, (int)capacity);
-        var refToken = _uboStore.GetRefAndMeta(uboId, out var meta);
-        if (meta.Capacity == capacity) return;
-        var newMeta = UniformBufferMeta.MakeResizeCopy(in meta, capacity);
+        var view = _uboStore.GetHandleMeta(uboId);
+        if (view.Meta.Capacity == capacity) return;
+        var newMeta = UniformBufferMeta.MakeResizeCopy(in view.Meta, capacity);
         _uboStore.ReplaceMeta(uboId, in newMeta, out _);
-        _driverBuffer.ResizeUniformBuffer(refToken, capacity, BufferUsage.DynamicDraw);
+        _driverBuffer.ResizeUniformBuffer(view.Handle, capacity, BufferUsage.DynamicDraw);
     }
 
     public void ClearUniformBufferData(UniformBufferId uboId)
     {
-        var refToken = _uboStore.GetRefAndMeta(uboId, out var meta);
-        _driverBuffer.ResizeUniformBuffer(refToken, meta.Capacity, BufferUsage.DynamicDraw);
+        var view = _uboStore.GetHandleMeta(uboId);
+        _driverBuffer.ResizeUniformBuffer(view.Handle, view.Meta.Capacity, BufferUsage.DynamicDraw);
     }
 
 
@@ -166,16 +164,17 @@ public sealed class GfxBuffers
     public void UploadUniformGpuSpan<T>(UniformBufferId uboId, ReadOnlySpan<T> data, nint offset) where T : unmanaged
     {
         UniformBufferUtils.IsStd140AlignedOrThrow<T>(out nint stride);
-        var uboRef = _uboStore.GetRefAndMeta(uboId, out var meta);
+        var view = _uboStore.GetHandleMeta(uboId);
+
         var len = stride * data.Length;
 
-        if (stride != meta.Stride)
-            GraphicsException.ThrowInvalidBufferData(nameof(T), $"Invalid stride {stride},  expected {meta.Stride}");
+        if (stride != view.Meta.Stride)
+            GraphicsException.ThrowInvalidBufferData(nameof(T), $"Invalid stride {stride},  expected {view.Meta.Stride}");
 
-        if (offset + len > meta.Capacity)
-            GraphicsException.ThrowCapabilityExceeded(nameof(T), (int)len, (int)meta.Capacity);
+        if (offset + len > view.Meta.Capacity)
+            GraphicsException.ThrowCapabilityExceeded(nameof(T), (int)len, (int)view.Meta.Capacity);
 
-        _driverBuffer.UploadUniformBufferData(uboRef, MemoryMarshal.AsBytes(data), offset, len);
+        _driverBuffer.UploadUniformBufferData(view.Handle, MemoryMarshal.AsBytes(data), offset, len);
     }
 
     public void UploadUniformBytes(UniformBufferId uboId, ReadOnlySpan<byte> data, int stride, int length, nint offset)
@@ -188,17 +187,17 @@ public sealed class GfxBuffers
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public void BindUniformBufferRange(UniformBufferId uboId, nint offset, nint size)
     {
-        var uboRef = _uboStore.GetRefAndMeta(uboId, out var meta);
-        _driverBuffer.BindUniformBufferRange(uboRef, meta.Slot, offset, size);
+        var view = _uboStore.GetHandleMeta(uboId);
+        _driverBuffer.BindUniformBufferRange(view.Handle, view.Meta.Slot, offset, size);
     }
 
-    public (nint Offset, nint Size) ToSizeAndOffset<T>(int offsetElements, int count) where T : unmanaged
+    private static (nint Offset, nint Size) ToSizeAndOffset<T>(int offsetElements, int count) where T : unmanaged
     {
         var stride = (nint)Unsafe.SizeOf<T>();
         return (offsetElements * stride, count * stride);
     }
 
-    public (int Stride, nint Size) ToStrideAndSize<T>(int count) where T : unmanaged
+    private static (int Stride, nint Size) ToStrideAndSize<T>(int count) where T : unmanaged
     {
         var stride = Unsafe.SizeOf<T>();
         return (stride, count * stride);

@@ -2,8 +2,8 @@ namespace ConcreteEngine.Engine.ECS;
 
 public sealed class EntityWorld
 {
-    private GameEntityHub GameEntity { get; }
-    private RenderEntityHub RenderEntity { get; }
+    public GameEntityHub GameEntity { get; }
+    public RenderEntityHub RenderEntity { get; }
 
     public EntityWorld()
     {

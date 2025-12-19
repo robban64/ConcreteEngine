@@ -6,7 +6,6 @@ using ConcreteEngine.Engine.Worlds.Tables;
 using ConcreteEngine.Renderer.Data;
 using ConcreteEngine.Renderer.Definitions;
 using ConcreteEngine.Renderer.Draw;
-using ConcreteEngine.Shared.World;
 
 namespace ConcreteEngine.Engine.Worlds.Render.Processor;
 

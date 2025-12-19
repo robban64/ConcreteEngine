@@ -10,27 +10,26 @@ internal readonly record struct PreparePassResult(int TagIndex, PassId PassId, P
 
 public sealed class RenderPassPipeline
 {
-    private RenderPassCtx _ctx = null!;
-    private RenderRegistry _renderRegistry = null!;
-
-    private PassCommandQueue _cmdQueue = null!;
-
+    private readonly RenderFboRegistry _fboRegistry;
     private readonly List<RenderPassEntry> _entries = new(8);
 
-    private int _passIter = 0;
-    private RenderPassEntry? _currentEntry = null;
+    private PassCommandQueue _cmdQueue = null!;
+    private RenderPassCtx _ctx = null!;
+
+    private int _passIter;
+    private RenderPassEntry? _currentEntry;
 
     private Size2D _outputSize;
 
-    internal RenderPassPipeline()
+    internal RenderPassPipeline(RenderFboRegistry fboRegistry)
     {
+        _fboRegistry = fboRegistry;
     }
 
     public int PassCount => _entries.Count;
 
     internal void Initialize(RenderEngineContext ctx)
     {
-        _renderRegistry = ctx.Registry;
         _cmdQueue = new PassCommandQueue();
         _ctx = new RenderPassCtx(ctx.CommandPipeline.DrawStateOps, _cmdQueue);
     }
@@ -99,7 +98,7 @@ public sealed class RenderPassPipeline
         if (pass.DependsOn is { } dependKey)
             key = new FboTagKey(dependKey.TagIndex, pass.PassKey.Variant);
 
-        if (_renderRegistry.TryGetRenderFbo(key, out var fbo))
+        if (_fboRegistry.TryGetRenderFbo(key, out var fbo))
             _ctx.AttachPass(fbo!, pass.PassKey);
         else if (pass.PassOp == PassOpKind.Screen)
             _ctx.AttachScreenPass(pass.PassKey, _outputSize);

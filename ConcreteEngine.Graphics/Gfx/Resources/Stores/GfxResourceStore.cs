@@ -1,14 +1,11 @@
 using System.Runtime.CompilerServices;
 using ConcreteEngine.Common;
 using ConcreteEngine.Common.Collections;
-using ConcreteEngine.Graphics.Configuration;
 using ConcreteEngine.Graphics.Diagnostic;
 using ConcreteEngine.Graphics.Gfx.Definitions;
-using ConcreteEngine.Graphics.Gfx.Resources.Data;
-using ConcreteEngine.Graphics.Gfx.Resources.Handles;
 using ConcreteEngine.Shared.Diagnostics;
 
-namespace ConcreteEngine.Graphics.Gfx.Resources.Stores;
+namespace ConcreteEngine.Graphics.Gfx.Resources;
 
 public interface IGfxResourceStore
 {
@@ -33,9 +30,15 @@ internal interface IGfxMetaResourceStore<TMeta> : IGfxResourceStore where TMeta 
 internal sealed class GfxResourceStore<TId, TMeta> : IGfxResourceStore<TId>, IGfxMetaResourceStore<TMeta>
     where TId : unmanaged, IResourceId where TMeta : unmanaged, IResourceMeta
 {
+    public readonly ref struct GfxHandleMeta(GfxRefToken<TId> handle, in TMeta meta)
+    {
+        public readonly GfxRefToken<TId> Handle = handle;
+        public readonly ref readonly TMeta Meta = ref meta;
+    }
+
     private unsafe delegate*<in GfxMetaChanged<TMeta>, void> _changeCallback;
 
-    private int _idx = 0;
+    private int _idx;
     private TMeta[] _meta;
     private GfxHandle[] _handle;
 
@@ -68,40 +71,51 @@ internal sealed class GfxResourceStore<TId, TMeta> : IGfxResourceStore<TId>, IGf
         _changeCallback = callback;
     }
 
-    public bool TryGetRef(TId id, out GfxRefToken<TId> handle, out TMeta meta)
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public bool TryGetRef(TId id, out GfxHandleMeta result)
     {
         if (id.Value == 0)
         {
-            handle = default;
-            meta = default;
+            result = default;
             return false;
         }
 
-        handle = GetRefAndMeta(id, out meta);
+        result = GetHandleMeta(id);
         return true;
     }
 
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public ref readonly TMeta GetMeta(TId id) => ref _meta[id.Value - 1];
 
-    public GfxRefToken<TId> GetRefHandle(TId id) => new(_handle[id.Value - 1]);
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public GfxRefToken<TId> GetRefHandle(TId id) => Unsafe.As<GfxHandle, GfxRefToken<TId>>(ref _handle[id.Value - 1]);
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public GfxRefToken<TId> GetRefAndMeta(TId id, out TMeta meta)
     {
         var idx = id.Value - 1;
         meta = _meta[idx];
-        return new GfxRefToken<TId>(_handle[idx]);
+        return Unsafe.As<GfxHandle, GfxRefToken<TId>>(ref _handle[idx]);
     }
+
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public GfxHandleMeta GetHandleMeta(TId id)
+    {
+        var idx = id.Value - 1;
+        ref readonly var meta = ref _meta[idx];
+        var handle = Unsafe.As<GfxHandle, GfxRefToken<TId>>(ref _handle[idx]);
+        return new GfxHandleMeta(handle, in meta);
+    }
+
 
     public GfxHandle GetHandleUntyped(TId id) => _handle[id.Value - 1];
 
     public TId Add(in TMeta meta, GfxRefToken<TId> addRef)
     {
-        var addHandle = addRef.Handle;
-        ArgumentOutOfRangeException.ThrowIfEqual(addHandle.IsValid, false, nameof(addRef));
-        ArgumentOutOfRangeException.ThrowIfLessThan(addHandle.Slot, 0, nameof(addRef));
+        ArgumentOutOfRangeException.ThrowIfEqual(addRef.IsValid, false, nameof(addRef));
+        ArgumentOutOfRangeException.ThrowIfLessThan(addRef.Slot, 0, nameof(addRef));
 
-        var newRef = GfxRefToken<TId>.Make(addHandle.Slot, 1);
+        var newRef = new GfxRefToken<TId>(addRef.Slot, 1);
         var idx = _free.Count > 0 ? _free.Pop() : Allocate();
         _meta[idx] = meta;
         _handle[idx] = newRef;
@@ -137,11 +151,11 @@ internal sealed class GfxResourceStore<TId, TMeta> : IGfxResourceStore<TId>, IGf
         ArgumentOutOfRangeException.ThrowIfEqual(id.Value, 0, nameof(id));
 
         var idx = id.Value - 1;
-        oldRef = new GfxRefToken<TId>(_handle[idx]);
+        oldRef = _handle[idx];
 
-        var newSlot = incRef.Handle.Slot;
-        var newGen = (ushort)(oldRef.Handle.Gen + 1);
-        var newRef = GfxRefToken<TId>.Make(newSlot, newGen);
+        var newSlot = incRef.Slot;
+        var newGen = (ushort)(oldRef.Gen + 1);
+        var newRef = new GfxRefToken<TId>(newSlot, newGen);
 
         var oldMeta = _meta[idx];
         _meta[idx] = newMeta;
@@ -202,6 +216,8 @@ internal sealed class GfxResourceStore<TId, TMeta> : IGfxResourceStore<TId>, IGf
         return count;
     }
 
+
+/*
     public IdEnumerable IdEnumerator => new(this);
 
     public readonly struct IdEnumerable
@@ -251,5 +267,5 @@ internal sealed class GfxResourceStore<TId, TMeta> : IGfxResourceStore<TId>, IGf
 
             return false;
         }
-    }
+    }*/
 }

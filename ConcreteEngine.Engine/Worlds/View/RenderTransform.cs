@@ -4,7 +4,6 @@ using ConcreteEngine.Common.Numerics;
 using ConcreteEngine.Common.Numerics.Maths;
 using ConcreteEngine.Renderer.State;
 using ConcreteEngine.Shared.Rendering;
-using ConcreteEngine.Shared.World;
 
 namespace ConcreteEngine.Engine.Worlds.View;
 

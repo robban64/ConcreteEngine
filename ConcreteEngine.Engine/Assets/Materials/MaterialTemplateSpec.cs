@@ -1,6 +1,3 @@
-using ConcreteEngine.Graphics.Gfx.Definitions;
-using ConcreteEngine.Renderer.Definitions;
-
 namespace ConcreteEngine.Engine.Assets.Materials;
 /*
 public sealed class MaterialTemplateSpec

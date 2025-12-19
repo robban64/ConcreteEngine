@@ -126,8 +126,9 @@ public sealed class Camera3D
     }
 
 
-    internal void StartTick()
+    internal void StartTick(Size2D viewport)
     {
+        Viewport = viewport;
         _prevTransform = _transform;
     }
 

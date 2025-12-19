@@ -2,12 +2,10 @@ using System.Diagnostics;
 using System.Numerics;
 using System.Runtime.CompilerServices;
 using ConcreteEngine.Common.Numerics;
-using ConcreteEngine.Graphics.Configuration;
 using ConcreteEngine.Graphics.Error;
 using ConcreteEngine.Graphics.Gfx.Contracts;
 using ConcreteEngine.Graphics.Gfx.Definitions;
 using ConcreteEngine.Graphics.Gfx.Internal;
-using ConcreteEngine.Graphics.Gfx.Resources.Handles;
 using ConcreteEngine.Graphics.OpenGL;
 using ConcreteEngine.Graphics.OpenGL.Utilities;
 
@@ -21,10 +19,10 @@ public sealed class GfxCommands
     private readonly GlTextures _textures;
     private readonly GlFrameBuffers _frameBuffers;
 
-    private readonly FboStore _fboStore;
-    private readonly TextureStore _textureStore;
-    private readonly MeshStore _meshStore;
-    private readonly ShaderStore _shaderStore;
+    private readonly GfxResourceStore<FrameBufferId, FrameBufferMeta> _fboStore;
+    private readonly GfxResourceStore<TextureId, TextureMeta> _textureStore;
+    private readonly GfxResourceStore<MeshId, MeshMeta> _meshStore;
+    private readonly GfxResourceStore<ShaderId, ShaderMeta> _shaderStore;
 
     //States
     private GfxStateFlags _activeFlags;
@@ -141,16 +139,16 @@ public sealed class GfxCommands
         Debug.Assert(fromId != default);
         Debug.Assert(fromId != toId, "READ and DRAW FBO must differ for resolve.");
 
-        var fromHandle = _fboStore.GetRefAndMeta(fromId, out var fromFboMeta);
-        var srcSize = fromFboMeta.Size;
+        var fromView = _fboStore.GetHandleMeta(fromId);
+        var srcSize = fromView.Meta.Size;
 
-        if (!_fboStore.TryGetRef(toId, out var toHandle, out var toFboMeta))
+        if (!_fboStore.TryGetRef(toId, out var fboView))
         {
-            _frameBuffers.BlitDefault(fromHandle, srcSize, _activeOutputSize, false);
+            _frameBuffers.BlitDefault(fromView.Handle, srcSize, _activeOutputSize, false);
             return;
         }
 
-        _frameBuffers.Blit(fromHandle, toHandle, srcSize, toFboMeta.Size, linear);
+        _frameBuffers.Blit(fromView.Handle, fboView.Handle, srcSize, fboView.Meta.Size, linear);
     }
 
 
@@ -163,6 +161,7 @@ public sealed class GfxCommands
             _states.ClearBuffer(passClear.ClearBuffer);
     }
 
+    
     public void ApplyState(GfxPassState state)
     {
         var d = state.Defined;
@@ -274,6 +273,7 @@ public sealed class GfxCommands
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public void UnbindAllTextures() => _states.UnbindAllTextures();
 
+    
     public void UseShader(ShaderId id, ReadOnlySpan<int> uniforms)
     {
         ArgumentOutOfRangeException.ThrowIfLessThanOrEqual(id.Value, 0);
@@ -318,9 +318,10 @@ public sealed class GfxCommands
             return;
         }
 
-        var meshRef = _meshStore.GetRefAndMeta(id, out _boundMeshMeta);
+        var view = _meshStore.GetHandleMeta(id);
+        _boundMeshMeta = view.Meta;
         _boundMeshId = id;
-        _states.BindMesh(meshRef);
+        _states.BindMesh(view.Handle);
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
@@ -329,37 +330,6 @@ public sealed class GfxCommands
         Debug.Assert(_boundMeshId > 0);
         var meta = _boundMeshMeta;
         var count = meta.DrawCount;
-
-        switch (meta.Kind)
-        {
-            case DrawMeshKind.Arrays:
-                _states.DrawArrays(meta.Primitive, count);
-                break;
-            case DrawMeshKind.Elements:
-                Debug.Assert(meta.ElementSize != DrawElementSize.Invalid);
-                _states.DrawElements(meta.Primitive, meta.ElementSize, count);
-                break;
-            case DrawMeshKind.ArraysInstanced:
-                var drawInstances = instanceCount > 0 ? instanceCount : meta.InstanceCount;
-                Debug.Assert(drawInstances > 0);
-                _states.DrawInstanced(meta.Primitive, meta.ElementSize, count, drawInstances);
-                break;
-            case DrawMeshKind.Invalid:
-            default:
-                GraphicsException.ThrowUnsupportedFeature(meta.Kind.ToString());
-                return;
-        }
-
-        _drawTriangleCount += count;
-        _drawCallCount++;
-    }
-    
-    public void DrawMesh2(MeshId id, int drawCount, int instanceCount = 0)
-    {
-        Debug.Assert(_boundMeshId > 0);
-
-        var meta = _boundMeshMeta;
-        var count = drawCount > 0 ? drawCount : meta.DrawCount;
 
         switch (meta.Kind)
         {

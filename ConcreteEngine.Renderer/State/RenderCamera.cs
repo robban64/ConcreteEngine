@@ -9,7 +9,7 @@ public sealed class RenderCamera
     public ViewTransform Transform;
     public LightView LightSpace;
 
-    internal bool UseLightViewOverride { get; set; }
+    internal bool UseLightViewOverride;
 
     internal void RestoreView() => UseLightViewOverride = false;
     internal void ToggleLightView() => UseLightViewOverride = true;

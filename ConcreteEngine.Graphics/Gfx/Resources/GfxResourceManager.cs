@@ -1,7 +1,4 @@
 using ConcreteEngine.Graphics.Diagnostic;
-using ConcreteEngine.Graphics.Gfx.Resources.Data;
-using ConcreteEngine.Graphics.Gfx.Resources.Handles;
-using ConcreteEngine.Graphics.Gfx.Resources.Stores;
 using ConcreteEngine.Shared.Diagnostics;
 using static ConcreteEngine.Graphics.Gfx.Definitions.ResourceKind;
 

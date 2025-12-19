@@ -1,13 +1,9 @@
 using System.Numerics;
 using ConcreteEngine.Common.Numerics;
 using ConcreteEngine.Common.Time;
-using ConcreteEngine.Engine.Assets.Materials;
-using ConcreteEngine.Engine.Assets.Models;
-using ConcreteEngine.Engine.ECS.RenderComponent;
 using ConcreteEngine.Engine.Scene;
 using ConcreteEngine.Engine.Scene.Data;
 using ConcreteEngine.Engine.Worlds;
-using ConcreteEngine.Engine.Worlds.Data;
 
 namespace Demo3D;
 

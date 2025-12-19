@@ -1,27 +1,25 @@
 using System.Runtime.Serialization;
 using ConcreteEngine.Graphics.Gfx.Definitions;
 
-namespace ConcreteEngine.Graphics.Gfx.Resources.Handles;
+namespace ConcreteEngine.Graphics.Gfx.Resources;
 
-internal readonly struct GfxRefToken<TId>(GfxHandle handle) where TId : unmanaged, IResourceId
+internal readonly record struct GfxRefToken<TId>(int Slot, ushort Gen) where TId : unmanaged, IResourceId
 {
-    public readonly GfxHandle Handle = handle;
+    public readonly int Slot = Slot;
+    public readonly ushort Gen = Gen;
+    public readonly ResourceKind Kind = TId.Kind;
 
-    public int Slot => Handle.Slot;
-    public ushort Gen => Handle.Gen;
+    public bool IsValid => Gen > 0 && Kind != ResourceKind.Invalid;
 
-    public bool IsValid => Handle.Gen > 0 && Handle.Kind != ResourceKind.Invalid;
-
-    public static GfxRefToken<TId> Make(int slot, ushort gen) => new(new GfxHandle(slot, gen, TId.Kind));
-
-    public static explicit operator GfxRefToken<TId>(GfxHandle handle) => new(handle);
-    public static implicit operator GfxHandle(GfxRefToken<TId> typed) => typed.Handle;
-
-    public override string ToString() => Handle.ToString();
+    public static implicit operator GfxRefToken<TId>(GfxHandle handle) => new(handle.Slot, handle.Gen);
+    public static implicit operator GfxHandle(GfxRefToken<TId> typed) => new(typed.Slot, typed.Gen, typed.Kind);
 }
 
 internal readonly record struct GfxHandle(int Slot, ushort Gen, ResourceKind Kind)
 {
+    public readonly int Slot = Slot;
+    public readonly ushort Gen = Gen;
+    public readonly ResourceKind Kind = Kind;
     [IgnoreDataMember] public bool IsValid => Gen > 0 && Kind != ResourceKind.Invalid;
 }
 

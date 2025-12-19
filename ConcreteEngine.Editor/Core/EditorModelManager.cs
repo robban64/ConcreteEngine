@@ -34,35 +34,10 @@ internal static class EditorModelManager
         RegisterAssetState();
         RegisterCameraState();
         RegisterWorldRenderState();
-        RegisterWorldObjectState();
 
         EntitiesStateContext.InvokeAction(TransitionKey.Enter);
     }
 
-    private static void RegisterWorldObjectState()
-    {
-        /*
-        WorldObjectStateContext = ModelStateContext<ObjectComponentState>
-            .CreateBuilder(static () => new ObjectComponentState())
-            .OnEnter(static (ctx, it) => { })
-            .OnLeave(static (ctx, it) =>
-            {
-                EditorDataStore.Slot<ParticleDataState>.Data.EmitterHandle = 0;
-                ctx.ResetState();
-            })
-            .RegisterEvent(EventKey.CategoryChanged, static (ctx) =>
-            {
-                var state = ctx.State!;
-                state.Particles = [];
-                state.Animations = [];
-                if (state.Selection == WorldObjectSelection.Particle)
-                    state.Particles = EditorApi.LoadParticleResources();
-                else if (state.Selection == WorldObjectSelection.Animation)
-                    state.Animations = EditorApi.LoadAnimationResources();
-            })
-            .Build();
-            */
-    }
 
 
     private static void RegisterAssetState()

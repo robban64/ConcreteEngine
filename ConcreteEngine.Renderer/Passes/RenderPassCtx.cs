@@ -1,7 +1,7 @@
 using System.Diagnostics;
+using System.Runtime.CompilerServices;
 using ConcreteEngine.Common.Numerics;
 using ConcreteEngine.Graphics.Gfx.Resources;
-using ConcreteEngine.Graphics.Gfx.Resources.Handles;
 using ConcreteEngine.Renderer.Data;
 using ConcreteEngine.Renderer.Draw;
 using ConcreteEngine.Renderer.Registry;
@@ -37,6 +37,8 @@ public sealed class RenderPassCtx
 
     public ReadOnlySpan<TextureId> GetPassSources() => _cmdQueue.GetPassSources();
 
+    
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public void SampleTo<TTag>(FboVariant variant, TextureSlot texSlot)
         where TTag : class
     {
@@ -47,6 +49,7 @@ public sealed class RenderPassCtx
         _cmdQueue.SampleTo(key, texSlot.Texture);
     }
 
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public void MutateStatePass<TTag>(FboVariant variant, in PassMutationState newState) where TTag : class
     {
         var key = TagRegistry.PassKey<TTag>(variant);

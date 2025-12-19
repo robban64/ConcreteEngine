@@ -1,6 +1,6 @@
 using ConcreteEngine.Common.Numerics;
 
-namespace ConcreteEngine.Graphics.Configuration;
+namespace ConcreteEngine.Graphics;
 
 public readonly struct GfxFrameInfo(
     long frameIndex,

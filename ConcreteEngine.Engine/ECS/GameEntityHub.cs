@@ -28,6 +28,16 @@ public sealed class GameEntityHub
             throw new InvalidOperationException("GameEntityHub already initialized");
 
         _entities = new GameEntityId[DefaultCapacity];
+        GenericStores<RenderLink>.CreateStore(DefaultCapacity);
+        GenericStores<VisibilityComponent>.CreateStore(DefaultCapacity);
+        GenericStores<TransformComponent>.CreateStore(DefaultCapacity);
+        GenericStores<BoundingBoxComponent>.CreateStore(DefaultCapacity);
+        GenericStores<ModelComponent>.CreateStore(DefaultCapacity);
+        GenericStores<MaterialComponent>.CreateStore(DefaultCapacity);
+        GenericStores<AnimationComponent>.CreateStore(64);
+        GenericStores<TagComponent>.CreateStore(32);
+        GenericStores<ParticleRefComponent>.CreateStore(32);
+
     }
     
     public bool HasEntity(GameEntityId e)
@@ -35,7 +45,6 @@ public sealed class GameEntityHub
         var index = e.Index;
         return (uint)index < (uint)Count && _entities[index] == e;
     }
-
 
     private GameEntityId AddEntity()
     {
@@ -68,7 +77,7 @@ public sealed class GameEntityHub
     public GameEntityEnumerator<T1> Query<T1>() where T1 : unmanaged, IGameComponent<T1>
         => new(GenericStores<T1>.Store);
 
-    public GameEntityEnumerator<T1, T2> Query<T1, T2>()
+    public GameEntityEnumerator<T1, T2> QueryLeft<T1, T2>()
         where T1 : unmanaged, IGameComponent<T1> where T2 : unmanaged, IGameComponent<T2> =>
         new(GenericStores<T1>.Store, GenericStores<T2>.Store);
 

@@ -1,5 +1,4 @@
 using ConcreteEngine.Graphics.Gfx.Resources;
-using ConcreteEngine.Graphics.Gfx.Resources.Handles;
 
 namespace ConcreteEngine.Engine.Worlds.MeshGeneration.Tilemap;
 

@@ -1,8 +1,8 @@
 using ConcreteEngine.Engine.Assets;
 using ConcreteEngine.Engine.Configuration;
+using ConcreteEngine.Engine.ECS;
 using ConcreteEngine.Engine.Scene.Modules;
 using ConcreteEngine.Engine.Worlds;
-using ConcreteEngine.Renderer.Descriptors;
 
 namespace ConcreteEngine.Engine.Scene;
 
@@ -16,17 +16,26 @@ internal sealed class SceneManager
     private readonly SceneWorld _sceneWorld;
     private readonly World  _world;
 
-    public GameScene? Current { get; private set; }
+    private readonly EntityWorld _ecs;
 
-    internal SceneManager(List<Func<GameScene>> sceneFactories, AssetSystem assetSystem, World world)
+    public GameScene? Current { get; private set; }
+    public bool Enabled { get; private set; }
+
+    public bool HasPendingSwitch => _pendingIndex >= 0;
+
+    internal SceneManager(List<Func<GameScene>> sceneFactories, AssetSystem assetSystem, World world, EntityWorld ecs)
     {
         _sceneFactories = sceneFactories ?? throw new ArgumentNullException(nameof(sceneFactories));
         _world = world;
+        _ecs = ecs;
         _modules = new ModuleManager();
-        _sceneWorld = new SceneWorld(assetSystem, world);
+        _sceneWorld = new SceneWorld(assetSystem, world, ecs);
     }
 
-    public bool HasPendingSwitch => _pendingIndex >= 0;
+    public void SetEnabled(bool enabled)
+    {
+        Enabled = enabled;
+    }
 
     public void QueueSwitch(int sceneIndex)
     {
@@ -37,7 +46,7 @@ internal sealed class SceneManager
 
     public void UpdateTick(float deltaTime)
     {
-        if(Current is null) return;
+        if(Current is null || !Enabled) return;
         _modules.UpdateTick(deltaTime);
         Current.UpdateTick(deltaTime);
     }

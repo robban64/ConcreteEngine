@@ -30,7 +30,7 @@ internal static class EngineResourceProvider
     {
         if (_assetSystem is null) throw new InvalidOperationException("EngineDataProvider is not initialized.");
 
-        var store = _assetSystem.StoreImpl;
+        var store = _assetSystem.Store;
         var result = new List<EditorAssetResource>(store.Count);
         foreach (var obj in store.AssetValues)
             result.Add(EditorObjectMapper.MakeAssetObjectModel(obj));
@@ -43,7 +43,7 @@ internal static class EngineResourceProvider
     public static EditorFileAssetModel[] GetAssetObjectFiles(EditorFetchHeader header)
     {
         var assetTypedId = new AssetId(header.EditorId);
-        var store = _assetSystem.StoreImpl;
+        var store = _assetSystem.Store;
         store.TryGetFileIds(assetTypedId, out var fileIds);
 
         if (!store.TryGetByAssetId(assetTypedId, out var asset))

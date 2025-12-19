@@ -38,7 +38,7 @@ public sealed class Demo3DScene : GameScene
 
     public override void Initialize()
     {
-        var assets = Context.GetSystem<IAssetSystem>();
+        var assets = Context.GetSystem<AssetSystem>();
 
         // Terrain
         CreateTerrain(assets);
@@ -67,7 +67,7 @@ public sealed class Demo3DScene : GameScene
     }
 
 
-    private void CreateTerrain(IAssetSystem assets)
+    private void CreateTerrain(AssetSystem assets)
     {
         var heightmap = assets.Store.GetByName<Texture2D>("Heightmap");
         var terrainMat = assets.MaterialStore.CreateMaterial("TerrainMat", "TerrainMat1");
@@ -80,7 +80,7 @@ public sealed class Demo3DScene : GameScene
         worldTerrain.SetMaterial(terrainMat.Id);
     }
 
-    private void CreateSky(IAssetSystem assets)
+    private void CreateSky(AssetSystem assets)
     {
         var skyboxMaterial = assets.MaterialStore.CreateMaterial("SkyboxMat", "SkyboxMat1");
         skyboxMaterial.State.Pipeline = new MaterialPipelineState(
@@ -90,7 +90,7 @@ public sealed class Demo3DScene : GameScene
         Context.World.Sky.SetSkyMaterial(skyboxMaterial.Id);
     }
 
-    private void CreateParticles(IAssetSystem assets)
+    private void CreateParticles(AssetSystem assets)
     {
         var particleMat = assets.MaterialStore.CreateMaterial("ParticleMat", "ParticleMat1");
         particleMat.State.Transparency = true;
@@ -163,7 +163,7 @@ public sealed class Demo3DScene : GameScene
         sceneWorld.GetEntityTransform(entity2).Translation = new Vector3(110, 8, 110);
     }
 
-    private void CreateWarrior(IAssetSystem assets)
+    private void CreateWarrior(AssetSystem assets)
     {
         var sceneWorld = Context.SceneWorld;
 
@@ -189,7 +189,7 @@ public sealed class Demo3DScene : GameScene
         }
     }
 
-    private void CreateCesiumMan(IAssetSystem assets)
+    private void CreateCesiumMan(AssetSystem assets)
     {
         var sceneWorld = Context.SceneWorld;
 
@@ -214,7 +214,7 @@ public sealed class Demo3DScene : GameScene
         }
     }
 
-    private void CreateKnight(IAssetSystem assets)
+    private void CreateKnight(AssetSystem assets)
     {
         var knight = assets.Store.GetByName<Model>("Knight");
         var knightMat = assets.MaterialStore.Get("Knight::Materials/0");
@@ -236,7 +236,7 @@ public sealed class Demo3DScene : GameScene
         entityTransform.Scale = new Vector3(2);
     }
 
-    private void CreateSpawner(IAssetSystem assets)
+    private void CreateSpawner(AssetSystem assets)
     {
         var (store, materialStore) = (assets.Store, assets.MaterialStore);
 

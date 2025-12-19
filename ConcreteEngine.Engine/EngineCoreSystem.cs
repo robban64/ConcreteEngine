@@ -1,55 +1,46 @@
 using ConcreteEngine.Common.Collections;
 using ConcreteEngine.Engine.Assets;
 using ConcreteEngine.Engine.Platform;
+using ConcreteEngine.Engine.Scene;
+using ConcreteEngine.Engine.Worlds;
 using ConcreteEngine.Engine.Worlds.Render;
 
 namespace ConcreteEngine.Engine;
 
 public interface IGameEngineSystem
 {
-    void Shutdown(); // Not used
+    void Shutdown();
 }
 
 public interface IEngineSystemManager
 {
-    T GetSystem<T>() where T : IGameEngineSystem;
+    T GetSystem<T>() where T : class, IGameEngineSystem;
 }
 
 public class EngineCoreSystem : IEngineSystemManager
 {
-    private readonly DictionaryTypeRegistry<IGameEngineSystem, IGameEngineSystem> _systems = new(4);
+    private readonly Dictionary<Type, IGameEngineSystem> _systems = new(4);
 
-    private readonly WorldRenderer _renderer;
-    private readonly InputSystem _inputSystem;
-    private readonly AssetSystem _assets;
-
-    internal EngineCoreSystem(WorldRenderer renderer, InputSystem inputSystem, AssetSystem assets)
+    internal EngineCoreSystem(InputSystem inputSystem, AssetSystem assets, World world, SceneManager sceneManager)
     {
-        _renderer = renderer;
-        _inputSystem = inputSystem;
-        _assets = assets;
+        Register(inputSystem);
+        Register(assets);
+        Register(world);
+        Register(sceneManager);
     }
 
-    internal void Initialize()
+
+    private void Register<T>(T system) where T : class, IGameEngineSystem
     {
-        _systems.Register<IInputSystem>(_inputSystem);
-        _systems.Register<IAssetSystem>(_assets);
-        _systems.Freeze();
+        if(!_systems.TryAdd(typeof(T), system)) 
+            throw new InvalidOperationException($"System of type {typeof(T)} is already registered");
     }
 
-    public T GetSystem<T>() where T : IGameEngineSystem
+    public T GetSystem<T>() where T : class, IGameEngineSystem
     {
-        var system = _systems.GetRequired<T>();
+        if(!_systems.TryGetValue(typeof(T), out var system) || system is not T t)
+            throw new InvalidOperationException($"System  of type {typeof(T)} is not registered or wrong type");
 
-        if (typeof(T).IsClass)
-            throw new ArgumentException($"GetSystem only allow interfaces for T");
-
-        if (system == null)
-            throw new NullReferenceException($"System of type {typeof(T)} not found");
-
-        if (system is T engineSystem)
-            return engineSystem;
-
-        throw new InvalidOperationException($"System of type {typeof(T)} not found");
+        return t;
     }
 }

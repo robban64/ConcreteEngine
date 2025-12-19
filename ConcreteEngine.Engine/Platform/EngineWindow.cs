@@ -6,17 +6,7 @@ using Silk.NET.Windowing;
 
 namespace ConcreteEngine.Engine.Platform;
 
-public interface IEngineWindow
-{
-    string Title { get; set; }
-    Size2D OutputSize { get; }
-    Size2D WindowSize { get; set; }
-    Vector2I Position { get; set; }
-
-    void CenterOnCurrentMonitor();
-}
-
-internal sealed class EngineWindow : IEngineWindow
+public sealed class EngineWindow
 {
     private readonly IWindow _window;
 

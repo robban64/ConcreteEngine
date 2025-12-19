@@ -1,6 +1,7 @@
 using System.Runtime.CompilerServices;
 using ConcreteEngine.Common;
 using ConcreteEngine.Common.Collections;
+using ConcreteEngine.Common.Time;
 using ConcreteEngine.Engine.ECS;
 using ConcreteEngine.Engine.ECS.RenderComponent;
 using ConcreteEngine.Engine.Editor.Diagnostics;
@@ -30,7 +31,7 @@ internal sealed class DrawEntityAssembler
     //...
 
     private readonly World _world;
-    private readonly RenderEntityHub _renderEntityHub;
+    private readonly RenderEntityHub _renderEntities;
     private readonly WorldParticles _worldParticles;
     private readonly MeshTable _meshTable;
     private readonly AnimationTable _animationTable;
@@ -38,27 +39,16 @@ internal sealed class DrawEntityAssembler
 
     public MaterialId BoundsMaterial;
 
-    //private static readonly FrameProfiler RenderProfiler = new(144, 144 * 10);
-
     public ReadOnlySpan<RenderEntityId> VisibleEntities => _entityIndices.AsSpan(0, _idx);
 
     internal DrawEntityAssembler(World world)
     {
         _world = world;
-        _renderEntityHub = world.Entities;
+        _renderEntities = world.Entities;
         _worldParticles = world.Particles;
         _meshTable = world.MeshTableImpl;
         _animationTable = world.AnimationTableImpl;
         _camera = world.Camera;
-        /*
-        RenderProfiler.Register("Collect");
-        RenderProfiler.Register("Tag");
-        RenderProfiler.Register("Particle");
-        RenderProfiler.Register("Animator");
-        RenderProfiler.Register("DrawCommands");
-        RenderProfiler.Register("Transforms");
-        RenderProfiler.Enabled = false;
-        */
     }
 
 
@@ -77,8 +67,8 @@ internal sealed class DrawEntityAssembler
         const int extraEntities = 64;
         const int extraAnimations = 8;
 
-        var entityLen = _renderEntityHub.Core.Count + extraEntities;
-        var animationLen = _renderEntityHub.GetStore<AnimationComponent>().Count + extraAnimations;
+        var entityLen = _renderEntities.Core.Count + extraEntities;
+        var animationLen = _renderEntities.GetStore<AnimationComponent>().Count + extraAnimations;
 
         EnsureDrawEntityData(entityLen);
         commandBuffer.EnsureBufferCapacity(entityLen);
@@ -94,7 +84,7 @@ internal sealed class DrawEntityAssembler
         DrawWorldProcessor.SubmitWorldObjects(commandBuffer, _world);
 
         // cull
-        //StaticProfileTimer.RenderTimer.Begin();
+        StaticProfileTimer.RenderTimer.Begin();
         var renderView = _camera.RenderView;
         var len = CullEntities(in renderView);
         
@@ -104,14 +94,13 @@ internal sealed class DrawEntityAssembler
         ExecuteCollectCommands(in ctx, in renderView);
         ExecuteUploader(in ctx, commandBuffer);
         ExecuteProcessors(in ctx, commandBuffer);
-        //StaticProfileTimer.RenderTimer.EndPrint();
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     private int CullEntities(in CameraRenderView renderView)
     {
-        var ecsLen = _renderEntityHub.EntityCount;
-        var len = _idx = DrawEntityCulling.CullEntities(_entityIndices, _byEntityId, _renderEntityHub, in renderView);
+        var ecsLen = _renderEntities.EntityCount;
+        var len = _idx = DrawEntityCulling.CullEntities(_entityIndices, _byEntityId, _renderEntities, in renderView);
         if (len == 0) return 0;
         if ((uint)len > _entities.Length || (uint)len > _entityIndices.Length || (uint)ecsLen > _byEntityId.Length)
             throw new IndexOutOfRangeException();
@@ -122,23 +111,24 @@ internal sealed class DrawEntityAssembler
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     private void ExecuteCollectCommands(in DrawEntityContext ctx, in CameraRenderView renderView)
     {
-        var coreEntities = _renderEntityHub.Core.GetCoreView();
+        var coreEntities = _renderEntities.Core.GetCoreView();
 
         _highEntityId = DrawEntityCollector.CollectEntities(in ctx, in coreEntities);
-        DrawTagResolver.TagResolveEntities(in ctx, _renderEntityHub);
+        DrawTagResolver.TagResolveEntities(in ctx, _renderEntities);
         DrawEntityCulling.TagDepthKeys(in ctx, in coreEntities, in renderView);
-        DrawParticleProcessor.TagParticles(in ctx, _worldParticles, _renderEntityHub);
+        DrawParticleProcessor.TagParticles(in ctx, _worldParticles, _renderEntities);
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     private void ExecuteUploader(in DrawEntityContext ctx, DrawCommandBuffer commandBuffer)
     {
-        var coreEntities = _renderEntityHub.Core.GetCoreView();
+        var coreEntities = _renderEntities.Core.GetCoreView();
 
         var uploader = commandBuffer.GetDrawUploaderCtx();
         DrawEntityUploader.UploadDrawCommands(_world, in ctx, in uploader);
         DrawTransformUploader.UploadTransform(in ctx, in coreEntities, in uploader, _meshTable);
-        DrawTagResolver.UploadDebugBounds(in ctx, in uploader, _renderEntityHub, _meshTable, BoundsMaterial);
+        DrawTagResolver.UploadDebugBounds(in ctx, in uploader, _renderEntities, _meshTable, BoundsMaterial);
+        StaticProfileTimer.RenderTimer.EndPrint();
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
@@ -147,7 +137,7 @@ internal sealed class DrawEntityAssembler
         var skinningUploader = commandBuffer.GetSkinningUploaderCtx();
         var animationView = _animationTable.GetDataView();
 
-        DrawAnimatorProcessor.Execute(_renderEntityHub, in ctx, in skinningUploader, in animationView);
+        DrawAnimatorProcessor.Execute(_renderEntities, in ctx, in skinningUploader, in animationView);
         DrawParticleProcessor.Execute(_worldParticles);
     }
 

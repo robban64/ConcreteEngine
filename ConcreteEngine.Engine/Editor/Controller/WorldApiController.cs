@@ -78,7 +78,7 @@ internal sealed class WorldApiController(ApiContext ctx) : IEngineWorldControlle
     {
         var span = _world.AnimationTableImpl.ModelIdSpan;
         List<EditorAnimationResource> list = new(span.Length);
-        ctx.AssetSystem.StoreImpl.ExtractList<Model, EditorAnimationResource>(list, static (it) =>
+        ctx.AssetSystem.Store.ExtractList<Model, EditorAnimationResource>(list, static (it) =>
         {
             if (it.AnimationId <= 0) return null!;
             var span = it.Animation!.ClipDataSpan;

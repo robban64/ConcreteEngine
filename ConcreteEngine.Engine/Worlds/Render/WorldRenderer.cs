@@ -114,7 +114,7 @@ public sealed class WorldRenderer
 
     private void SubmitMaterialData()
     {
-        var matStore = _assets.MaterialStoreImpl;
+        var matStore = _assets.MaterialStore;
         var isDirty = false;
         foreach (var material in matStore.MaterialSpan)
         {

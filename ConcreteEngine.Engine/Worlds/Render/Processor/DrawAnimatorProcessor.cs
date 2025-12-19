@@ -13,14 +13,14 @@ namespace ConcreteEngine.Engine.Worlds.Render.Processor;
 internal static class DrawAnimatorProcessor
 {
     [SkipLocalsInit]
-    public static void Execute(RenderEntityHub renderEntityHub, in DrawEntityContext ctx, in SkinningBufferUploader uploader,
+    public static void Execute(RenderEntityHub renderEntities, in DrawEntityContext ctx, in SkinningBufferUploader uploader,
         in AnimationDataView animationView)
     {
         const int boneCap = RenderLimits.BoneCapacity;
         Span<Matrix4x4> globals = stackalloc Matrix4x4[boneCap];
         globals.Fill(Matrix4x4.Identity);
 
-        foreach (var query in renderEntityHub.Query<AnimationComponent>())
+        foreach (var query in renderEntities.Query<AnimationComponent>())
         {
             ref readonly var component = ref query.Component;
             if (!ctx.IsVisible(query.RenderEntity)) continue;

@@ -18,7 +18,7 @@ using ConcreteEngine.Graphics.Gfx.Definitions;
 
 namespace ConcreteEngine.Engine.Worlds;
 
-public sealed class World
+public sealed class World : IGameEngineSystem
 {
     private readonly AssetSystem _assets;
 
@@ -85,10 +85,7 @@ public sealed class World
     internal MaterialTable MaterialTableImpl => _materialTable;
     internal AnimationTable AnimationTableImpl => _animationTable;
 
-    internal MeshGeneratorRegistry MeshGenerator => _meshGenerator;
-
     public int EntityCount => Entities.EntityCount;
-    public int ShadowMapSize => WorldRenderParams.Snapshot.Shadows.ShadowMapSize;
 
     internal void Initialize(AssetSystem assets, GfxContext gfx)
     {
@@ -100,8 +97,8 @@ public sealed class World
         _sky.AttachRenderer(_meshTable);
 
 
-        PrimitiveMeshes.Cube = _assets.StoreImpl.GetByName<Model>("Cube").MeshParts[0].ResourceId;
-        var mat = assets.MaterialStoreImpl.CreateMaterial("EmptyMat", "EmptyMat1");
+        PrimitiveMeshes.Cube = _assets.Store.GetByName<Model>("Cube").MeshParts[0].ResourceId;
+        var mat = assets.MaterialStore.CreateMaterial("EmptyMat", "EmptyMat1");
         mat.State.Pipeline = new MaterialPipelineState
         {
             PassState = GfxPassState.Set(GfxStateFlags.Blend,
@@ -135,4 +132,6 @@ public sealed class World
 
     internal WorldContext CreateContext() =>
         new(_ecs.RenderEntity, _sky, _terrain, _particles, _meshTable, _materialTable, _animationTable);
+
+    public void Shutdown() {}
 }

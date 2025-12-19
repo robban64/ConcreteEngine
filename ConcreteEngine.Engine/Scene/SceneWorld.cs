@@ -28,8 +28,8 @@ public sealed class SceneWorld
         _renderEntityHub = world.Entities;
         _renderEntityCore = world.Entities.Core;
 
-        _assetStore = assetSystem.StoreImpl;
-        _materialStore = assetSystem.MaterialStoreImpl;
+        _assetStore = assetSystem.Store;
+        _materialStore = assetSystem.MaterialStore;
         _store = new SceneStore(world);
     }
 

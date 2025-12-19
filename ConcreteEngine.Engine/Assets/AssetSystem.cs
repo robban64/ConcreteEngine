@@ -13,13 +13,8 @@ using ConcreteEngine.Shared.Diagnostics;
 
 namespace ConcreteEngine.Engine.Assets;
 
-public interface IAssetSystem : IGameEngineSystem
-{
-    IAssetStore Store { get; }
-    IMaterialStore MaterialStore { get; }
-}
 
-public sealed class AssetSystem : IAssetSystem
+public sealed class AssetSystem :  IGameEngineSystem
 {
     public enum Status
     {
@@ -55,12 +50,8 @@ public sealed class AssetSystem : IAssetSystem
         _pendingQueue = new ResourcePendingQueue();
     }
 
-    internal AssetStore StoreImpl => _assetStore;
-    public IAssetStore Store => _assetStore;
-
-
-    internal MaterialStore MaterialStoreImpl => _materialStore;
-    public IMaterialStore MaterialStore => _materialStore;
+    public AssetStore Store => _assetStore;
+    public MaterialStore MaterialStore => _materialStore;
 
 
     internal void Initialize()

@@ -121,9 +121,9 @@ internal sealed class MeshTable : IMeshTable
 
     internal void Setup(AssetSystem assets)
     {
-        var modelCount = assets.StoreImpl.GetAssetCount<Model>();
+        var modelCount = assets.Store.GetAssetCount<Model>();
         var models = new List<Model>(modelCount);
-        assets.StoreImpl.ExtractList<Model, Model>(models, static (it) => it);
+        assets.Store.ExtractList<Model, Model>(models, static (it) => it);
         models.Sort();
 
         int totalParts = 0;

@@ -2,7 +2,7 @@ using System.Numerics;
 using Silk.NET.Input;
 
 namespace ConcreteEngine.Engine.Platform;
-
+/*
 public interface IEngineInputSource
 {
     bool IsKeyDown(Key key);
@@ -19,9 +19,9 @@ public interface IEngineInputSource
     Vector2 Scroll { get; }
 
     void Update(bool enableInput);
-}
+}*/
 
-public sealed class EngineInputSource : IEngineInputSource
+public sealed class EngineInputSource
 {
     private readonly IInputContext _context;
     private readonly KeyboardInput _keyboardInput;
@@ -40,7 +40,7 @@ public sealed class EngineInputSource : IEngineInputSource
     }
 
 
-    public void Update(bool enableInput)
+    internal void Update(bool enableInput)
     {
         _keyboardInput.Update(enableInput);
         _mouseInput.Update(enableInput);

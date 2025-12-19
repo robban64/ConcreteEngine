@@ -23,7 +23,7 @@ public interface IAssetStore
     void Process<TAsset>(Action<TAsset> action) where TAsset : AssetObject;
 }
 
-internal sealed class AssetStore : IAssetStore
+public sealed class AssetStore : IAssetStore
 {
     private const int DefaultCap = 256;
 
@@ -38,7 +38,6 @@ internal sealed class AssetStore : IAssetStore
     private readonly Dictionary<AssetKey, AssetId> _names = new(DefaultCap);
 
     private readonly Dictionary<Type, AssetTypeMeta> _typeMeta = new(8);
-
     private readonly Dictionary<Guid, AssetId> _byEmbedded = new(8);
 
     public int Count => _assetId;
@@ -48,6 +47,7 @@ internal sealed class AssetStore : IAssetStore
 
     internal AssetStore()
     {
+        if (_assetId > 0 || _assetFileId > 0) throw new InvalidOperationException();
     }
 
     public int GetAssetCount<TAsset>() where TAsset : AssetObject => _typeMeta[typeof(TAsset)].Count;
@@ -206,7 +206,7 @@ internal sealed class AssetStore : IAssetStore
     }
 
 
-    public void Reload<TAsset>(TAsset asset, AssetFileReloadDel<TAsset> factory) where TAsset : AssetObject
+    internal void Reload<TAsset>(TAsset asset, AssetFileReloadDel<TAsset> factory) where TAsset : AssetObject
     {
         var gen = asset.Generation;
 

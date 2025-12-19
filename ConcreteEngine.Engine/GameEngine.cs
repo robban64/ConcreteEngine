@@ -68,7 +68,7 @@ public sealed class GameEngine : IDisposable
         _world = new World(engineWindow, _graphics, _assets, _ecs);
         _sceneManager = new SceneManager(sceneFactories, _assets, _world, _ecs);
 
-        _coreSystems = new EngineCoreSystem(_world.Renderer, _inputSystem, _assets);
+        _coreSystems = new EngineCoreSystem(_inputSystem, _assets, _world, _sceneManager);
 
         var internalInput = input.InputContext;
         _engineGateway =
@@ -98,8 +98,6 @@ public sealed class GameEngine : IDisposable
         GC.Collect();
         GC.WaitForPendingFinalizers();
         GC.Collect();
-
-        _coreSystems.Initialize();
     }
 
     private void RegisterRenderer()
@@ -110,7 +108,7 @@ public sealed class GameEngine : IDisposable
 
     internal void Render(float dt)
     {
-        var mousePos = _inputSystem.InputSourceImpl.MousePosition;
+        var mousePos = _inputSystem.InputSource.MousePosition;
         var worldRender = _world.Renderer;
 
         _timeHub.UpdateFrame(dt);
@@ -144,7 +142,6 @@ public sealed class GameEngine : IDisposable
         {
             _graphics.Gfx.Commands.Clear(GfxPassClear.MakeColorDepthClear(Color4.Black));
         }
-
     }
 
     internal void Update(float dt)
@@ -176,7 +173,7 @@ public sealed class GameEngine : IDisposable
     private void UpdateTick(float dt)
     {
         _world.StartTick(_window.OutputSize);
-        if(_setupStepper.Current == EngineStateLevel.Running)
+        if (_setupStepper.Current == EngineStateLevel.Running)
             _sceneManager.UpdateTick(dt);
         _world.EndTick();
     }

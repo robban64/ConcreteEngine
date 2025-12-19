@@ -15,12 +15,12 @@ internal static class DrawParticleProcessor
     private static readonly List<ParticleEmitter> Emitters = new(8);
 
     internal static void TagParticles(in DrawEntityContext ctx, WorldParticles worldParticles,
-        RenderEntityHub renderEntityHub)
+        RenderEntityHub renderEntities)
     {
         Emitters.Clear();
         //Emitters.EnsureCapacity(worldEntities.GetStore<ParticleComponent>().Count);
 
-        foreach (var query in renderEntityHub.Query<ParticleComponent>())
+        foreach (var query in renderEntities.Query<ParticleComponent>())
         {
             var index = ctx.ByEntityIdSpan[query.RenderEntity];
             if (index == -1) continue;

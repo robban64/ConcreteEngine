@@ -1,18 +1,13 @@
 namespace ConcreteEngine.Engine.Platform;
 
-public interface IInputSystem : IGameEngineSystem
-{
-    IEngineInputSource InputSource { get; }
-}
 
-public class InputSystem : IInputSystem
+public class InputSystem : IGameEngineSystem
 {
-    public EngineInputSource InputSourceImpl { get; }
-    public IEngineInputSource InputSource => InputSourceImpl;
+    public EngineInputSource InputSource { get; }
 
     public InputSystem(EngineInputSource inputSource)
     {
-        InputSourceImpl = inputSource;
+        InputSource = inputSource;
     }
 
     public void Initialize()

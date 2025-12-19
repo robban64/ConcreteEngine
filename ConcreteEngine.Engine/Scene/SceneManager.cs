@@ -6,7 +6,7 @@ using ConcreteEngine.Engine.Worlds;
 
 namespace ConcreteEngine.Engine.Scene;
 
-internal sealed class SceneManager
+internal sealed class SceneManager : IGameEngineSystem
 {
     private int _pendingIndex = -1;
 
@@ -81,4 +81,5 @@ internal sealed class SceneManager
         _modules.Load(new GameModuleContext(sceneContext));
     }
 
+    public void Shutdown() {}
 }

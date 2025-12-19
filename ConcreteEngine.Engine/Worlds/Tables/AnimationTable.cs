@@ -49,7 +49,7 @@ internal sealed class AnimationTable
         _idx = 0;
 
         var models = new List<Model>(8);
-        assets.StoreImpl.ExtractList<Model, Model>(models, static (it) => it.Animation != null ? it : null!);
+        assets.Store.ExtractList<Model, Model>(models, static (it) => it.Animation != null ? it : null!);
         models.Sort();
 
         int totalBones = 0, totalClips = 0, modelHighId = -1;

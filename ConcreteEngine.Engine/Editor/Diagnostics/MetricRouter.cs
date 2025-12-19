@@ -14,7 +14,7 @@ internal static class MetricRouter
     private static World? _world;
     private static AssetSystem? _assetSystem;
 
-    private static MaterialStore? Materials => _assetSystem?.MaterialStoreImpl;
+    private static MaterialStore? Materials => _assetSystem?.MaterialStore;
 
     internal static void Attach(World world, AssetSystem assetSystem)
     {
@@ -37,7 +37,7 @@ internal static class MetricRouter
     {
         if (_assetSystem is null) return;
 
-        var store = _assetSystem.StoreImpl;
+        var store = _assetSystem.Store;
 
         if (data.AssetMetrics.Length != store.TypeCount)
         {

@@ -132,9 +132,7 @@ public sealed class Demo3DScene : GameScene
                 Spatial = new SpatialTemplate { LocalBounds = ParticleComponent.DefaultParticleBounds },
                 Particle = new RenderParticleTemplate(in def, in state)
                 {
-                    EmitterName = "Emitter1",
-                    ParticleCount = 1024,
-                    Material = particleMat.Id,
+                    EmitterName = "Emitter1", ParticleCount = 1024, Material = particleMat.Id,
                 }
             }
         };
@@ -145,9 +143,7 @@ public sealed class Demo3DScene : GameScene
                 Spatial = new SpatialTemplate { LocalBounds = ParticleComponent.DefaultParticleBounds },
                 Particle = new RenderParticleTemplate(ParticleDefinition.MakeDefault(), in state)
                 {
-                    EmitterName = "Emitter2",
-                    ParticleCount = 1024,
-                    Material = particleMat.Id,
+                    EmitterName = "Emitter2", ParticleCount = 1024, Material = particleMat.Id,
                 }
             }
         };
@@ -181,6 +177,19 @@ public sealed class Demo3DScene : GameScene
                 Spatial = new SpatialTemplate { LocalBounds = model.Bounds },
                 Model = new RenderModelTemplate { Model = model.ModelId, Materials = [mat.GetMeta()] },
                 Animation = new RenderAnimationTemplate(model.Animation!)
+            },
+            GameEntity = new GameEntityTemplate
+            {
+                Components =
+                [
+                    new AnimationTemplate
+                    {
+                        Clip = 0,
+                        Duration = model.Animation![0].Duration,
+                        Speed = model.Animation![0].TicksPerSecond,
+                        Time = 0
+                    }
+                ]
             }
         };
         for (int i = 0; i < 2; i++)
@@ -204,11 +213,22 @@ public sealed class Demo3DScene : GameScene
             RenderEntity = new RenderEntityTemplate
             {
                 Spatial = new SpatialTemplate { LocalBounds = cesiumModel.Bounds },
-                Model = new RenderModelTemplate
-                {
-                    Model = cesiumModel.ModelId, Materials = [cesiumMat.GetMeta()]
-                },
+                Model =
+                    new RenderModelTemplate { Model = cesiumModel.ModelId, Materials = [cesiumMat.GetMeta()] },
                 Animation = new RenderAnimationTemplate(cesiumModel.Animation!)
+            },
+            GameEntity = new GameEntityTemplate
+            {
+                Components =
+                [
+                    new AnimationTemplate
+                    {
+                        Clip = 0,
+                        Duration = cesiumModel.Animation![0].Duration,
+                        Speed = cesiumModel.Animation![0].TicksPerSecond,
+                        Time = 0
+                    }
+                ]
             }
         };
 

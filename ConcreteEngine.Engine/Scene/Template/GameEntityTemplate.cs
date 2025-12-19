@@ -15,7 +15,7 @@ public sealed class GameEntityTemplate
     public BoundingBoxTemplate? BoundingBox;
     public VisibilityTemplate? Visibility;
 
-    public readonly IGameComponentTemplate[] Components = [];
+    public IGameComponentTemplate[] Components = [];
 }
 
 public sealed class VisibilityTemplate : IGameComponentTemplate

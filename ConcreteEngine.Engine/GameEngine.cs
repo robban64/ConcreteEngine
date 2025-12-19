@@ -176,7 +176,7 @@ public sealed class GameEngine : IDisposable
         _world.UpdateTick(dt, _window.OutputSize);
         if (_setupStepper.Current == EngineStateLevel.Running)
             _sceneManager.UpdateTick(dt);
-        _world.EndUpdateTick();
+        _world.EndUpdateTick(dt);
     }
 
 

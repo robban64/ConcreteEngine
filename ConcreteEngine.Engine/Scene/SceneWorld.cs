@@ -47,14 +47,13 @@ public sealed class SceneWorld
         if (template is null || template.GameEntity is null && template.RenderEntity is null)
             throw new ArgumentNullException();
 
-        var ctx = _world.CreateContext();
         var sceneObject = _store.Get(id);
 
         RenderEntityId renderEntityId = default;
         GameEntityId gameEntityId = default;
 
         if (template.RenderEntity is { } renderTemplate)
-            renderEntityId = RenderEntityFactory.BuildRenderEntity(sceneObject, in ctx, _renderEntities, renderTemplate);
+            renderEntityId = RenderEntityFactory.BuildRenderEntity(sceneObject, _world, _renderEntities, renderTemplate);
 
         if (template.GameEntity is { } gameTemplate)
         {

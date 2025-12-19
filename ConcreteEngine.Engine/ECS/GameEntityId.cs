@@ -2,8 +2,8 @@ namespace ConcreteEngine.Engine.ECS;
 
 public readonly record struct GameEntityId(int Id, ushort Gen) : IComparable<GameEntityId>
 {
-    public readonly int Id;
-    public readonly ushort Gen;
+    public readonly int Id = Id;
+    public readonly ushort Gen = Gen;
 
     public int Index => Id - 1;
     

@@ -111,10 +111,6 @@ public sealed class World : IGameEngineSystem
         _drawEntities.BoundsMaterial = mat.Id;
     }
 
-    internal WorldContext CreateContext() =>
-        new(_ecs.RenderEntity, _sky, _terrain, _particles, _meshTable, _materialTable, _animationTable);
-
-
     internal void BeforeRender()
     {
         var gameEcs = _ecs.GameEntity;
@@ -143,20 +139,22 @@ public sealed class World : IGameEngineSystem
     internal void UpdateTick(float dt, Size2D viewport)
     {
         Camera.StartTick(viewport);
+    }
+
+    internal void EndUpdateTick(float dt)
+    {
+        //Entities.EndTick();
         
         var gameEcs = _ecs.GameEntity;
         foreach (var query in gameEcs.Query<AnimationComponent>())
         {
             ref var c = ref query.Component;
+            c.PrevTime = c.Time;
+            
             c.Time += dt * c.Speed;
             if (c.Time > c.Duration) c.Time = 0;
         }
-
-    }
-
-    internal void EndUpdateTick()
-    {
-        Entities.EndTick();
+        
         WorldRenderParams.EndTick();
         Camera.EndTick(WorldRenderParams.Snapshot, _worldRenderer.RenderCamera);
     }

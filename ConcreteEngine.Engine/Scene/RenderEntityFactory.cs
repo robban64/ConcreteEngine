@@ -11,7 +11,7 @@ namespace ConcreteEngine.Engine.Scene;
 
 internal static class RenderEntityFactory
 {
-    internal static RenderEntityId BuildRenderEntity(SceneObject sceneObject, in WorldContext ctx,
+    internal static RenderEntityId BuildRenderEntity(SceneObject sceneObject,  World world,
         RenderEntityHub entities, RenderEntityTemplate e)
     {
         CoreComponentBundle coreComponent = default;
@@ -26,7 +26,7 @@ internal static class RenderEntityFactory
 
         if (isModel)
         {
-            var materialKey = ctx.MaterialTable.Add(MaterialTagBuilder.FromSpan(e.Model!.Materials));
+            var materialKey = world.MaterialTableImpl.Add(MaterialTagBuilder.FromSpan(e.Model!.Materials));
             var kind = e.Animation != null ? EntitySourceKind.AnimatedModel : EntitySourceKind.Model;
             coreComponent.Source = new SourceComponent(e.Model.Model, materialKey, kind);
             sceneObject.HasModel = true;
@@ -34,9 +34,9 @@ internal static class RenderEntityFactory
         else if (isParticle)
         {
             var particle = e.Particle!;
-            if (!ctx.Particles.TryGetEmitter(particle.EmitterName, out emitter))
+            if (!world.Particles.TryGetEmitter(particle.EmitterName, out emitter))
             {
-                emitter = ctx.Particles
+                emitter = world.Particles
                     .CreateEmitter(particle.EmitterName, particle.ParticleCount, in particle.Definition);
             }
 

@@ -11,7 +11,7 @@ public sealed class GameEntityHub
     private const int DefaultCapacity = 128;
 
     private static GameEntityId MakeGameEntity() => new(++_count, 1);
-    private static int _count = 0;
+    private static int _count;
 
     private GameEntityId[] _entities;
     private readonly Stack<int> _free = [];
@@ -40,7 +40,7 @@ public sealed class GameEntityHub
     public bool HasEntity(GameEntityId e)
     {
         var index = e.Index;
-        return (uint)index < (uint)Count && _entities[index] == e;
+        return (uint)index < (uint)_count && _entities[index] == e;
     }
 
     public GameEntityId AddEntity()
@@ -54,7 +54,8 @@ public sealed class GameEntityHub
         EnsureCapacity(1);
 
         index = _count;
-        return _entities[index] = MakeGameEntity();
+        var id = MakeGameEntity();
+        return _entities[index] = id;
     }
 
     public void AddComponent<T>(GameEntityId entity, in T component) where T : unmanaged, IGameComponent<T>

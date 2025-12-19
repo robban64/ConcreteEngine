@@ -14,7 +14,6 @@ internal sealed class MaterialLoader
 
     private readonly record struct ProfileSlot(TextureSlotKind SlotKind, TextureKind TexKind = TextureKind.Texture2D);
 
-
     private readonly Dictionary<MaterialProfile, MatProfileInfo> _profiles;
 
     internal MaterialLoader()
@@ -81,8 +80,7 @@ internal sealed class MaterialLoader
         }
     }
 
-    private MaterialTemplate CreateEmbeddedTemplate(AssetId assetId, MaterialEmbeddedDescriptor record,
-        AssetStore store)
+    private MaterialTemplate CreateEmbeddedTemplate(AssetId asset, MaterialEmbeddedDescriptor desc, AssetStore store)
     {
         AssetTextureSlot[] slots =
         [
@@ -92,7 +90,7 @@ internal sealed class MaterialLoader
             new(default, TextureSlotKind.Shadowmap),
         ];
         int idx = 0;
-        foreach (var gid in record.EmbeddedTextures.Values)
+        foreach (var gid in desc.EmbeddedTextures.Values)
         {
             if (!store.TryGetByEmbeddedGid<Texture2D>(gid, out var texture))
                 throw new ArgumentException($"Embedded texture {gid} not found");
@@ -104,13 +102,13 @@ internal sealed class MaterialLoader
                 slots[1] = slots[1].WithAssetId(texture.RawId);
         }
 
-        var shaderName = record.IsAnimated ? "ModelAnimated" : "Model";
+        var shaderName = desc.IsAnimated ? "ModelAnimated" : "Model";
 
-        var matParams = new MaterialState(in record.Params);
+        var matParams = new MaterialState(in desc.Params);
         return new MaterialTemplate(slots)
         {
-            RawId = assetId,
-            Name = record.AssetName,
+            RawId = asset,
+            Name = desc.AssetName,
             ShaderRef = store.GetByName<Shader>(shaderName).RefId,
             Params = matParams,
             IsCoreAsset = false
@@ -185,16 +183,15 @@ internal sealed class MaterialLoader
         return slotInfo;
     }
 
-    private AssetTextureSlot[] CreateSlotsFromProfile(ProfileSlot[] slotProfile, MaterialDescriptor record,
-        IAssetStore store)
+    private AssetTextureSlot[] CreateSlotsFromProfile(ProfileSlot[] profile, MaterialDescriptor desc, AssetStore store)
     {
-        ArgumentNullException.ThrowIfNull(slotProfile, nameof(slotProfile));
+        ArgumentNullException.ThrowIfNull(profile, nameof(profile));
         var slots = new List<AssetTextureSlot>();
 
-        for (int i = 0; i < slotProfile.Length; i++)
+        for (int i = 0; i < profile.Length; i++)
         {
-            var info = slotProfile[i];
-            var name = record.ProfileSlots.Length > i ? record.ProfileSlots[i] : null;
+            var info = profile[i];
+            var name = desc.ProfileSlots.Length > i ? desc.ProfileSlots[i] : null;
             if (name == null)
             {
                 slots.Add(new AssetTextureSlot(new AssetId(0), info.SlotKind, info.TexKind));

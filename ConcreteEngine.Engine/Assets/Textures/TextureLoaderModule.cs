@@ -13,7 +13,7 @@ internal sealed class TextureLoaderModule
         _loader = new TextureLoader(uploader);
     }
 
-    public Texture2D LoadEmbeddedTexture(AssetId id, TextureEmbeddedDescriptor descriptor, IAssetStore assetStore)
+    public Texture2D LoadEmbeddedTexture(AssetId id, TextureEmbeddedDescriptor descriptor, AssetStore assetStore)
     {
         var result = _loader.LoadEmbeddedTexture(descriptor);
 

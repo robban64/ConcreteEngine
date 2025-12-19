@@ -10,25 +10,23 @@ internal sealed class SceneManager : IGameEngineSystem
 {
     private int _pendingIndex = -1;
 
-    private readonly ModuleManager _modules;
-    private readonly List<Func<GameScene>> _sceneFactories;
-
-    private readonly SceneWorld _sceneWorld;
-    private readonly World _world;
-
-
     public GameScene? Current { get; private set; }
     public bool Enabled { get; private set; }
 
-    public bool HasPendingSwitch => _pendingIndex >= 0;
+    private readonly SceneWorld _sceneWorld;
+
+    private readonly ModuleManager _modules;
+    private readonly List<Func<GameScene>> _sceneFactories;
+
 
     internal SceneManager(List<Func<GameScene>> sceneFactories, AssetSystem assetSystem, World world, EntityWorld ecs)
     {
         _sceneFactories = sceneFactories ?? throw new ArgumentNullException(nameof(sceneFactories));
-        _world = world;
         _modules = new ModuleManager();
         _sceneWorld = new SceneWorld(assetSystem, world, ecs);
     }
+
+    public bool HasPendingSwitch => _pendingIndex >= 0;
 
     public void SetEnabled(bool enabled)
     {
@@ -60,7 +58,7 @@ internal sealed class SceneManager : IGameEngineSystem
 
         Current?.Unload();
 
-        var sceneContext = new GameSceneContext(systems, _world, _modules, _sceneWorld);
+        var sceneContext = new GameSceneContext(systems, _modules, _sceneWorld);
 
         var newScene = _sceneFactories[index]();
         newScene.AttachContext(sceneContext);

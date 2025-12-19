@@ -92,7 +92,10 @@ internal sealed class DrawEntityAssembler
         
         ExecuteCollectCommands(in ctx, in renderView);
         ExecuteUploader(in ctx, commandBuffer);
-        ExecuteProcessors(in ctx, commandBuffer);
+        ExecuteAnimationProcessor(in ctx, commandBuffer);
+
+        DrawParticleProcessor.Execute(_worldParticles);
+
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
@@ -126,17 +129,16 @@ internal sealed class DrawEntityAssembler
         var uploader = commandBuffer.GetDrawUploaderCtx();
         DrawEntityUploader.UploadDrawCommands(_world, in ctx, in uploader);
         DrawTransformUploader.UploadTransform(in ctx, in coreEntities, in uploader, _meshTable);
+
         DrawTagResolver.UploadDebugBounds(in ctx, in uploader, _renderEntities, _meshTable, BoundsMaterial);
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    private void ExecuteProcessors(in DrawEntityContext ctx, DrawCommandBuffer commandBuffer)
+    private void ExecuteAnimationProcessor(in DrawEntityContext ctx, DrawCommandBuffer commandBuffer)
     {
         var skinningUploader = commandBuffer.GetSkinningUploaderCtx();
         var animationView = _animationTable.GetDataView();
-
         DrawAnimatorProcessor.Execute(_renderEntities, in ctx, in skinningUploader, in animationView);
-        DrawParticleProcessor.Execute(_worldParticles);
     }
 
 

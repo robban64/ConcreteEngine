@@ -4,8 +4,11 @@ using ConcreteEngine.Engine.Assets.Internal;
 using ConcreteEngine.Engine.Assets.Materials;
 using ConcreteEngine.Engine.Assets.Models;
 using ConcreteEngine.Engine.ECS;
+using ConcreteEngine.Engine.ECS.GameComponent;
+using ConcreteEngine.Engine.ECS.RenderComponent;
 using ConcreteEngine.Engine.Editor.Data;
 using ConcreteEngine.Engine.Platform;
+using ConcreteEngine.Engine.Time;
 using ConcreteEngine.Engine.Utils;
 using ConcreteEngine.Engine.Worlds.MeshGeneration;
 using ConcreteEngine.Engine.Worlds.Render;
@@ -108,12 +111,50 @@ public sealed class World : IGameEngineSystem
         _drawEntities.BoundsMaterial = mat.Id;
     }
 
-    internal void StartTick(Size2D viewport)
+    internal WorldContext CreateContext() =>
+        new(_ecs.RenderEntity, _sky, _terrain, _particles, _meshTable, _materialTable, _animationTable);
+
+
+    internal void BeforeRender()
+    {
+        var gameEcs = _ecs.GameEntity;
+        var renderEcs = _ecs.RenderEntity;
+        var alpha = EngineTime.GameAlpha;
+
+        var renderLinks = gameEcs.GetStore<RenderLink>();
+        var renderAnimations = renderEcs.GetStore<RenderAnimationComponent>();
+        //gameEcs.QueryLeft<RenderLink, AnimationComponent>
+        foreach (var query in gameEcs.Query<AnimationComponent>())
+        {
+            var gameEntity = query.Entity;
+            ref readonly var gameAnim = ref query.Component;
+            var renderEntity = renderLinks.GetOrDefault(gameEntity).RenderEntityId;
+            if(renderEntity == default) continue;
+
+            var animationPtr = renderAnimations.TryGet(renderEntity);
+            if(animationPtr.IsNull) continue;
+            
+            animationPtr.Value.Time = float.Lerp(gameAnim.PrevTime, gameAnim.Time, alpha);
+            animationPtr.Value.Speed = gameAnim.Speed;
+        }
+    }
+    
+    
+    internal void UpdateTick(float dt, Size2D viewport)
     {
         Camera.StartTick(viewport);
+        
+        var gameEcs = _ecs.GameEntity;
+        foreach (var query in gameEcs.Query<AnimationComponent>())
+        {
+            ref var c = ref query.Component;
+            c.Time += dt * c.Speed;
+            if (c.Time > c.Duration) c.Time = 0;
+        }
+
     }
 
-    internal void EndTick()
+    internal void EndUpdateTick()
     {
         Entities.EndTick();
         WorldRenderParams.EndTick();
@@ -130,8 +171,6 @@ public sealed class World : IGameEngineSystem
     }
 
 
-    internal WorldContext CreateContext() =>
-        new(_ecs.RenderEntity, _sky, _terrain, _particles, _meshTable, _materialTable, _animationTable);
 
     public void Shutdown() {}
 }

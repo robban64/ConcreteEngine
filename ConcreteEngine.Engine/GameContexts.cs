@@ -9,15 +9,15 @@ public sealed class GameSceneContext
     private readonly IEngineSystemManager _systems;
     
     public ModuleManager Modules { get; }
-    public World World { get; }
     public SceneWorld SceneWorld { get; }
+    
+    public World World => GetSystem<World>();
 
     public T GetSystem<T>() where T : class, IGameEngineSystem => _systems.GetSystem<T>();
 
-    internal GameSceneContext(IEngineSystemManager systems, World world, ModuleManager modules, SceneWorld sceneWorld)
+    internal GameSceneContext(IEngineSystemManager systems, ModuleManager modules, SceneWorld sceneWorld)
     {
         _systems = systems;
-        World = world;
         Modules = modules;
         SceneWorld = sceneWorld;
     }

@@ -1,5 +1,6 @@
 using System.Runtime.CompilerServices;
 using ConcreteEngine.Common.Collections;
+using ConcreteEngine.Common.Generics;
 using ConcreteEngine.Engine.ECS.Data;
 using ConcreteEngine.Engine.ECS.Definitions;
 using ConcreteEngine.Engine.ECS.RenderComponent;
@@ -36,11 +37,20 @@ public sealed class RenderEntityCore
         _boxes = new BoxComponent[initialCapacity];
     }
 
-    public bool HasEntity(RenderEntityId e)
+    public bool Has(RenderEntityId e)
     {
         var index = e - 1;
         return (uint)index < (uint)Count && _entities[index] == e;
     }
+    
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public ValuePtr<RenderTransform> TryGetTransform(RenderEntityId entity)
+    {
+        var id = entity.Index;
+        if ((uint)id >= _count) return ValuePtr<RenderTransform>.Null;
+        return new ValuePtr<RenderTransform>(ref _transforms[id]);
+    }
+
     
     // Getters
     [MethodImpl(MethodImplOptions.AggressiveInlining)]

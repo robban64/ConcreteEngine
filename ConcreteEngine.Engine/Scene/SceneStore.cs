@@ -36,7 +36,8 @@ public sealed class SceneStore
         _renderEntities = entityWorld.RenderEntity;
         _gameEntities = entityWorld.GameEntity;
     }
-
+    
+    internal SceneObject Get(SceneObjectId id) => _objects[id.Index];
 
     internal SceneObjectId Create(string name)
     {
@@ -57,33 +58,6 @@ public sealed class SceneStore
         _objects[index] = new SceneObject(id, guid, name);
 
         return id;
-    }
-
-    internal EntityTuple SpawnEntity(SceneObjectId id, EntityTemplate template)
-    {
-        if (template is null || template.GameEntity is null && template.RenderEntity is null)
-            throw new ArgumentNullException();
-
-        var ctx = _world.CreateContext();
-        var sceneObject = _objects[id - 1];
-
-        RenderEntityId renderEntityId = default;
-        GameEntityId gameEntityId = default;
-
-        if (template.RenderEntity is { } renderTemplate)
-            renderEntityId = RenderEntityFactory.BuildRenderEntity(sceneObject, in ctx, _renderEntities, renderTemplate);
-
-        if (template.GameEntity is { } gameTemplate)
-        {
-            gameEntityId = GameEntityFactory.BuildGameEntity(sceneObject, _gameEntities, gameTemplate);
-            if (gameTemplate.CreateRenderEntity)
-            {
-                InvalidOpThrower.ThrowIfNot(renderEntityId.IsValid);
-                _gameEntities.AddComponent(gameEntityId, new RenderLink { RenderEntityId = renderEntityId });
-            }
-        }
-
-        return new EntityTuple(gameEntityId, renderEntityId);
     }
 
     private void ValidateSceneObjectId(SceneObjectId id)

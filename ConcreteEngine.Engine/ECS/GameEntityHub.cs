@@ -35,9 +35,8 @@ public sealed class GameEntityHub
         GenericStores<AnimationComponent>.CreateStore(64);
         GenericStores<TagComponent>.CreateStore(32);
         GenericStores<ParticleRefComponent>.CreateStore(32);
-
     }
-    
+
     public bool HasEntity(GameEntityId e)
     {
         var index = e.Index;
@@ -53,11 +52,11 @@ public sealed class GameEntityHub
         }
 
         EnsureCapacity(1);
-        
+
         index = _count;
         return _entities[index] = MakeGameEntity();
     }
-    
+
     public void AddComponent<T>(GameEntityId entity, in T component) where T : unmanaged, IGameComponent<T>
     {
         ArgumentOutOfRangeException.ThrowIfNegativeOrZero(entity.Id, nameof(entity.Id));
@@ -92,6 +91,7 @@ public sealed class GameEntityHub
         where T1 : unmanaged, IGameComponent<T1> where T2 : unmanaged, IGameComponent<T2> =>
         new(GenericStores<T1>.Store, GenericStores<T2>.Store);
 
+    public GameEntityStore<T> GetStore<T>() where T : unmanaged, IGameComponent<T> => GenericStores<T>.Store;
 
     private void EnsureCapacity(int amount)
     {

@@ -1,5 +1,6 @@
 using System.Runtime.CompilerServices;
 using ConcreteEngine.Common.Collections;
+using ConcreteEngine.Common.Generics;
 using ConcreteEngine.Engine.ECS.RenderComponent;
 using ConcreteEngine.Engine.ECS.Utility;
 using ConcreteEngine.Engine.Editor.Diagnostics;
@@ -62,26 +63,22 @@ public sealed class RenderEntityStore<T> : IRenderEntityStore where T : unmanage
         return (uint)index < (uint)Count && _entities[index] == renderEntity;
     }
 
-    public bool TryGet(RenderEntityId renderEntity, out T value)
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public ValuePtr<T> TryGet(RenderEntityId entity)
     {
-        var id = FindIndex(renderEntity);
-        if (id >= Count || id < 0)
-        {
-            value = default;
-            return false;
-        }
-
-        value = _data[id];
-        return true;
+        var id = FindIndex(entity);
+        if ((uint)id >= Count) return ValuePtr<T>.Null;
+        return new ValuePtr<T>(ref _data[id]);
     }
 
-    public T GetOrDefault(RenderEntityId renderEntity)
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public T GetOrDefault(RenderEntityId entity)
     {
-        var index = FindIndex(renderEntity);
-        if (index >= 0 && index < _data.Length) return _data[index];
-        return default;
+        var id = FindIndex(entity);
+        if ((uint)id >= Count) return default;
+        return _data[id];
     }
-
+    
     public void Add(RenderEntityId renderEntity, T value)
     {
         ArgumentOutOfRangeException.ThrowIfNegativeOrZero(renderEntity.Id, nameof(renderEntity));

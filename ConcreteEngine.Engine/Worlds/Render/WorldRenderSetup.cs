@@ -33,7 +33,7 @@ internal static class WorldRenderSetup
             new RegisterFboEntry().AttachColorTexture(GfxFboColorTextureDesc.Default()));
     }
 
-    internal static RenderCoreShaders GetCoreShaders(IAssetStore store) =>
+    internal static RenderCoreShaders GetCoreShaders(AssetStore store) =>
         new()
         {
             DepthShader = store.GetByName<Shader>("Depth").ResourceId,

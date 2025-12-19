@@ -13,7 +13,8 @@ namespace ConcreteEngine.Engine.Worlds.Render.Processor;
 internal static class DrawAnimatorProcessor
 {
     [SkipLocalsInit]
-    public static void Execute(RenderEntityHub renderEntities, in DrawEntityContext ctx, in SkinningBufferUploader uploader,
+    public static void Execute(RenderEntityHub renderEntities, in DrawEntityContext ctx,
+        in SkinningBufferUploader uploader,
         in AnimationDataView animationView)
     {
         const int boneCap = RenderLimits.BoneCapacity;
@@ -22,53 +23,52 @@ internal static class DrawAnimatorProcessor
 
         foreach (var query in renderEntities.Query<RenderAnimationComponent>())
         {
-            ref readonly var component = ref query.Component;
             if (!ctx.IsVisible(query.RenderEntity)) continue;
+
+            ref readonly var component = ref query.Component;
             var view = animationView.GetModelView(component.Animation, out var invTransform);
+            var clip = view.GetClip(component.Clip);
 
             var len = view.BoneLength;
             if ((uint)len > boneCap)
                 throw new IndexOutOfRangeException("BoneCount exceeds capacity.");
 
-            var finals = uploader.GetWriter();
-
             Matrix4x4 result = default;
+            Matrix4x4 local;
+
+            var finals = uploader.GetWriter();
             for (var i = 0; i < len; i++)
             {
-                ProcessClip(i, in component, globals, in view);
-                MatrixMath.WriteMultiplyAffine(ref result, in view.BoneOffsetMatrixSpan[i], in globals[i]);
+                ref readonly var node = ref view.NodeTransformSpan[i];
+                ref readonly var offset = ref view.BoneOffsetMatrixSpan[i];
+                
+                var track = clip[i].GetTrackView();
+                SampleKeyFrame(in track, component.Time, in node, out local);
+
+                var p = view.ParentIndexSpan[i];
+                if (p >= 0) MatrixMath.WriteMultiplyAffine(ref globals[i], in local, in globals[p]);
+                else globals[i] = local;
+
+                MatrixMath.WriteMultiplyAffine(ref result, in offset, in globals[i]);
                 MatrixMath.WriteMultiplyAffine(ref finals[i], in result, in invTransform);
             }
-        }
-
-        return;
-
-        static void ProcessClip(int i, in RenderAnimationComponent component, Span<Matrix4x4> globals, in ModelAnimationView view)
-        {
-            var clip = view.GetClip(component.Clip);
-            ref readonly var track = ref clip[i];
-
-            var local = track.IsEmpty
-                ? view.NodeTransformSpan[i]
-                : SampleKeyFrame(track.Positions, track.Rotations, component.Time);
-
-            var p = view.ParentIndexSpan[i];
-            if (p >= 0)
-                MatrixMath.WriteMultiplyAffine(ref globals[i], in local, in globals[p]);
-            else
-                globals[i] = local;
         }
     }
 
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    private static Matrix4x4 SampleKeyFrame(ReadOnlySpan<KeyFrameVec3> pos, ReadOnlySpan<KeyFrameQuat> rot, float time)
+    private static void SampleKeyFrame(in BoneTrackView view, float time, in Matrix4x4 nodeLocal, out Matrix4x4 local)
     {
-        var translation = pos.Length == 1 ? pos[0].Value : SampleVector(pos, time);
-        var rotation = rot.Length == 1 ? rot[0].Value : SampleQuaternion(rot, time);
+        if (view.Length == 0)
+        {
+            local =  nodeLocal;
+            return;
+        }
+        
+        var translation = view.Positions.Length == 1 ? view.Positions[0].Value : SampleVector(view.Positions, time);
+        var rotation = view.Rotations.Length == 1 ? view.Rotations[0].Value : SampleQuaternion(view.Rotations, time);
 
-        MatrixMath.CreateFixedSizeModelMatrix(in translation, in rotation, out var localMatrix);
-        return localMatrix;
+        MatrixMath.CreateFixedSizeModelMatrix(in translation, in rotation, out local);
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         static Vector3 SampleVector(ReadOnlySpan<KeyFrameVec3> values, float time)

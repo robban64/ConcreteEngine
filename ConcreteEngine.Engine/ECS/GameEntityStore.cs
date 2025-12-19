@@ -1,22 +1,22 @@
 using System.Runtime.CompilerServices;
 using ConcreteEngine.Common.Collections;
+using ConcreteEngine.Common.Generics;
 using ConcreteEngine.Engine.Editor.Diagnostics;
 using ConcreteEngine.Shared.Diagnostics;
 
 namespace ConcreteEngine.Engine.ECS;
-
 
 internal interface IGameEntityStore
 {
     void EndTick();
 }
 
-public sealed class GameEntityStore <T> : IGameEntityStore where T : unmanaged
+public sealed class GameEntityStore<T> : IGameEntityStore where T : unmanaged
 {
     private T[] _data;
     private GameEntityId[] _entities;
     private readonly Dictionary<GameEntityId, int> _entityToIndex;
-    
+
     private readonly Stack<int> _free = [];
     private int _count;
     private bool _isDirty;
@@ -34,7 +34,7 @@ public sealed class GameEntityStore <T> : IGameEntityStore where T : unmanaged
         _entities = new GameEntityId[initialCapacity];
         _entityToIndex = new Dictionary<GameEntityId, int>(initialCapacity);
     }
-    
+
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public GameEntityId GetEntity(int i) => _entities[i];
 
@@ -52,6 +52,22 @@ public sealed class GameEntityStore <T> : IGameEntityStore where T : unmanaged
     {
         var index = FindIndex(entity);
         return (uint)index < (uint)_count && _entities[index] == entity;
+    }
+
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public ValuePtr<T> TryGet(GameEntityId entity)
+    {
+        var id = FindIndex(entity);
+        if ((uint)id >= Count) return ValuePtr<T>.Null;
+        return new ValuePtr<T>(ref _data[id]);
+    }
+
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public T GetOrDefault(GameEntityId entity)
+    {
+        var id = FindIndex(entity);
+        if ((uint)id >= Count) return default;
+        return _data[id];
     }
 
     public void Add(GameEntityId entity, T value)
@@ -74,8 +90,8 @@ public sealed class GameEntityStore <T> : IGameEntityStore where T : unmanaged
         ArgumentOutOfRangeException.ThrowIfNegativeOrZero(entity.Id, nameof(entity));
 
         var idx = FindIndex(entity);
-        if(idx == -1) throw  new ArgumentOutOfRangeException(nameof(entity));
-        
+        if (idx == -1) throw new ArgumentOutOfRangeException(nameof(entity));
+
         _entities[idx] = default;
         _data[idx] = default;
         _free.Push(idx);

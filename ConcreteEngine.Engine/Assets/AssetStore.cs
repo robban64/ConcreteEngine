@@ -4,26 +4,8 @@ using ConcreteEngine.Engine.Assets.Descriptors;
 
 namespace ConcreteEngine.Engine.Assets;
 
-public interface IAssetStore
-{
-    T GetByRef<T>(AssetRef<T> id) where T : AssetObject;
-    T GetByName<T>(string name) where T : AssetObject;
 
-    bool TryGetByRef<T>(AssetRef<T> assetRef, out T? asset) where T : AssetObject;
-    bool TryGetByName<T>(string name, out T? asset) where T : AssetObject;
-
-    AssetTypeMetaSnapshot GetMetaSnapshot<TAsset>() where TAsset : AssetObject;
-
-    void ExtractList<TAsset, TData>(List<TData> list, Func<TAsset, TData> transform)
-        where TAsset : AssetObject where TData : class;
-
-    void ExtractSpan<TAsset, TData>(Span<TData> span, Func<TAsset, TData> transform)
-        where TAsset : AssetObject where TData : unmanaged;
-
-    void Process<TAsset>(Action<TAsset> action) where TAsset : AssetObject;
-}
-
-public sealed class AssetStore : IAssetStore
+public sealed class AssetStore
 {
     private const int DefaultCap = 256;
 
@@ -60,73 +42,48 @@ public sealed class AssetStore : IAssetStore
     internal AssetTypeMetaSnapshot GetMetaSnapshot(Type type) => _typeMeta[type].ToSnapshot();
 
 
-    public bool TryGetFileEntry(AssetFileId id, out AssetFileEntry? entry) => _files.TryGetValue(id, out entry);
-
-    internal bool TryGetFileIds(AssetId id, out ReadOnlySpan<AssetFileId> fileIds)
-    {
-        if (_bindings.TryGetValue(id, out var res))
-        {
-            fileIds = res;
-            return true;
-        }
-
-        fileIds = ReadOnlySpan<AssetFileId>.Empty;
-        return false;
-    }
-
     public T GetByRef<T>(AssetRef<T> assetRef) where T : AssetObject
     {
         if (TryGetByRef(assetRef, out var value)) return value!;
-
         throw new InvalidCastException($"Asset '{assetRef.Value}' not found or incorrect type.");
     }
 
     public T GetByName<T>(string name) where T : AssetObject
     {
         if (TryGetByName<T>(name, out var value)) return value!;
-
         throw new InvalidCastException($"Asset '{name}' not found or incorrect type.");
     }
 
     public bool TryGetByRef<T>(AssetRef<T> assetRef, out T? asset) where T : AssetObject
     {
-        if (_assets.TryGetValue(assetRef, out var obj) && obj is T t)
-        {
-            asset = t;
-            return true;
-        }
-
-        asset = null;
-        return false;
+        asset = null!;
+        if (!TryGetByAssetId(assetRef, out var res) || res is not T tRes) return false;
+        asset = tRes;
+        return true;
     }
 
-    internal bool TryGetByAssetId(AssetId assetId, out AssetObject? asset)
+    public bool TryGetByName<T>(string name, out T asset) where T : AssetObject
     {
-        if (_assets.TryGetValue(assetId, out var obj))
-        {
-            asset = obj;
-            return true;
-        }
-
-        asset = null;
-        return false;
+        asset = null!;
+        if (!TryGetByName(name, typeof(T), out var res) || res is not T tRes) return false;
+        asset = tRes;
+        return true;
     }
 
-    public bool TryGetByName<T>(string name, out T? asset) where T : AssetObject
-    {
-        if (TryGetByName(name, typeof(T), out var objT) && objT is T t)
-        {
-            asset = t;
-            return true;
-        }
+    public bool TryGetFileEntry(AssetFileId id, out AssetFileEntry? entry) => _files.TryGetValue(id, out entry);
 
-        asset = null;
-        return false;
+    internal bool TryGetFileIds(AssetId id, out ReadOnlySpan<AssetFileId> fileIds)
+    {
+        fileIds = ReadOnlySpan<AssetFileId>.Empty;
+        if (_bindings.TryGetValue(id, out var res)) fileIds = res;
+        return !fileIds.IsEmpty;
     }
 
-    internal bool TryGetByName(string name, Type type, out AssetObject? asset)
+    internal bool TryGetByAssetId(AssetId assetId, out AssetObject? asset) => _assets.TryGetValue(assetId, out asset);
+
+    internal bool TryGetByName(string name, Type type, out AssetObject asset)
     {
-        asset = null;
+        asset = null!;
         if (!_names.TryGetValue(new AssetKey(type, name), out var id)) return false;
         if (!_assets.TryGetValue(id, out var objT)) return false;
         asset = objT;
@@ -138,7 +95,6 @@ public sealed class AssetStore : IAssetStore
         asset = null!;
         if (!_byEmbedded.TryGetValue(gid, out var assetId)) return false;
         if (!_assets.TryGetValue(assetId, out var obj) || obj is not TAsset tAsset) return false;
-
         asset = tAsset;
         return true;
     }
@@ -279,7 +235,6 @@ public sealed class AssetStore : IAssetStore
         asset.IsEmbedded = true;
         RegisterInternal(id, asset, embedded.FileSpec);
         //Logger.LogString(LogScope.Assets, $"{asset.Name} - Embedded {typeof(TAsset).Name} loaded");
-        //Console.WriteLine( $"{asset.Name} - Embedded {embedded.FileSpec[0].Source} loaded");
         return asset;
     }
 
@@ -322,7 +277,7 @@ public sealed class AssetStore : IAssetStore
     {
         for (var i = 0; i < fileSpecs.Length; i++)
         {
-            ref readonly var spec = ref fileSpecs[i];
+            var spec = fileSpecs[i];
             var file = prevFiles[i];
             _files[file.Id] = new AssetFileEntry(file.Id, spec);
         }
@@ -338,6 +293,7 @@ public sealed class AssetStore : IAssetStore
 
     private readonly record struct AssetKey(Type RegistryType, string Name)
     {
+        public static implicit operator AssetKey((Type, string ) k) => new(k.Item1, k.Item2);
         public static AssetKey For<T>(string name) where T : AssetObject => new(typeof(T), name);
     }
 }

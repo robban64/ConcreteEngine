@@ -132,6 +132,7 @@ public sealed class GameEngine : IDisposable
         beginStatus = _timeHub.TryTriggerDebounceResize() ? BeginFrameStatus.Resize : BeginFrameStatus.None;
 
 
+        _world.BeforeRender();
         worldRender.PreRender(beginStatus, frameInfo, runtimeParams);
         worldRender.ExecuteFrame(out _gfxFrameResult);
 
@@ -172,10 +173,10 @@ public sealed class GameEngine : IDisposable
 
     private void UpdateTick(float dt)
     {
-        _world.StartTick(_window.OutputSize);
+        _world.UpdateTick(dt, _window.OutputSize);
         if (_setupStepper.Current == EngineStateLevel.Running)
             _sceneManager.UpdateTick(dt);
-        _world.EndTick();
+        _world.EndUpdateTick();
     }
 
 

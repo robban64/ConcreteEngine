@@ -22,8 +22,8 @@ internal static class DrawTagResolver
         foreach (var query in renderEntities.Query<RenderAnimationComponent>())
         {
             var entityId = query.RenderEntity;
-            ref var component = ref query.Component;
-            component.AdvanceTime(deltaTime);
+            //ref var component = ref query.Component;
+            //component.AdvanceTime(deltaTime);
 
             var index = ctx.ByEntityIdSpan[entityId];
             if (index == -1) continue;

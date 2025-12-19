@@ -3,26 +3,26 @@ using ConcreteEngine.Engine.ECS.RenderComponent;
 
 namespace ConcreteEngine.Engine.ECS.Data;
 
-internal readonly ref struct RenderEntityView(
-    RenderEntityId renderEntityId,
+public readonly ref struct RenderEntityView(
+    RenderEntityId entity,
     ref SourceComponent source,
-    ref Transform transform,
+    ref RenderTransform transform,
     ref BoxComponent box)
 {
-    public readonly RenderEntityId RenderEntityId = renderEntityId;
+    public readonly RenderEntityId Entity = entity;
     public readonly ref SourceComponent Source = ref source;
-    public readonly ref Transform Transform = ref transform;
+    public readonly ref RenderTransform Transform = ref transform;
     public readonly ref BoxComponent Box = ref box;
 }
 
-internal readonly ref struct RenderEntityContext(
+public readonly ref struct RenderEntityContext(
     int count,
     Span<SourceComponent> sources,
-    Span<Transform> transforms,
+    Span<RenderTransform> transforms,
     Span<BoxComponent> boxes)
 {
     public readonly Span<SourceComponent> Sources = sources;
-    public readonly Span<Transform> Transforms = transforms;
+    public readonly Span<RenderTransform> Transforms = transforms;
     public readonly Span<BoxComponent> Boxes = boxes;
 
     public readonly int Count = count;
@@ -38,7 +38,7 @@ internal readonly ref struct RenderEntityContext(
     public ref SourceComponent GetSource(RenderEntityId renderEntity) => ref Sources[renderEntity.Index];
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public ref Transform GetTransform(RenderEntityId renderEntity) => ref Transforms[renderEntity.Index];
+    public ref RenderTransform GetTransform(RenderEntityId renderEntity) => ref Transforms[renderEntity.Index];
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public ref BoxComponent GetBox(RenderEntityId renderEntity) => ref Boxes[renderEntity.Index];

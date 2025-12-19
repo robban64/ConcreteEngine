@@ -19,11 +19,11 @@ namespace ConcreteEngine.Engine.Worlds.Render.Processor;
 
 internal static class DrawTagResolver
 {
-    internal static void TagResolveEntities(in DrawEntityContext ctx, WorldEntities worldEntities)
+    internal static void TagResolveEntities(in DrawEntityContext ctx, RenderEntityHub renderEntityHub)
     {
         var deltaTime = EngineTime.DeltaTime;
         var slot = 1;
-        foreach (var query in worldEntities.Query<AnimationComponent>())
+        foreach (var query in renderEntityHub.Query<AnimationComponent>())
         {
             var entityId = query.RenderEntity;
             ref var component = ref query.Component;
@@ -35,14 +35,14 @@ internal static class DrawTagResolver
             drawEntity.Source.AnimatedSlot = (ushort)slot++;
         }
 
-        if (worldEntities.GetStore<SelectionComponent>().Count == 0) return;
+        if (renderEntityHub.GetStore<SelectionComponent>().Count == 0) return;
 
-        foreach (var query in worldEntities.Query<SelectionComponent>())
+        foreach (var query in renderEntityHub.Query<SelectionComponent>())
         {
             var entityId = query.RenderEntity;
             var index = ctx.ByEntityIdSpan[entityId];
             if (index == -1) continue;
-            ref readonly var component = ref query.Component;
+            //ref readonly var component = ref query.Component;
             ref var drawEntity = ref ctx.EntitySpan[index];
             drawEntity.Meta.PassMask = PassMask.Effect | PassMask.DepthPre;
             drawEntity.Source.Resolver = DrawCommandResolver.Highlight;
@@ -50,14 +50,14 @@ internal static class DrawTagResolver
     }
 
     public static void UploadDebugBounds(in DrawEntityContext ctx, in DrawCommandUploader uploader,
-        WorldEntities worldEntities, MeshTable meshTable, MaterialId materialId)
+        RenderEntityHub renderEntityHub, MeshTable meshTable, MaterialId materialId)
     {
-        if (worldEntities.GetStore<DebugBoundsComponent>().Count == 0) return;
+        if (renderEntityHub.GetStore<DebugBoundsComponent>().Count == 0) return;
 
-        var view = worldEntities.Core.GetCoreView();
+        var view = renderEntityHub.Core.GetCoreView();
         Span<Vector3> corners = stackalloc Vector3[8];
         Matrix4x4 world;
-        foreach (var query in worldEntities.Query<DebugBoundsComponent>())
+        foreach (var query in renderEntityHub.Query<DebugBoundsComponent>())
         {
             var entityId = query.RenderEntity;
             var index = ctx.ByEntityIdSpan[entityId];
@@ -65,15 +65,14 @@ internal static class DrawTagResolver
 
             ref readonly var component = ref query.Component;
             ref readonly var drawEntity = ref ctx.EntitySpan[index];
-            ref readonly var transform = ref view.GetTransform(entityId).Data;
+            ref readonly var transform = ref view.GetTransform(entityId).Transform;
             ref readonly var bounds = ref view.GetBox(entityId).Bounds;
 
             var depthKey = (ushort)(ushort.MaxValue - drawEntity.Meta.DepthKey);
             var cmd = new DrawCommand(PrimitiveMeshes.Cube, materialId, resolver: DrawCommandResolver.BoundingVolume);
             var meta = new DrawCommandMeta(DrawCommandId.Effect, DrawCommandQueue.Effect, PassMask.Effect, depthKey);
 
-            MatrixMath.CreateModelMatrix(in transform.Translation, in transform.Scale,
-                in transform.Rotation, out world);
+            MatrixMath.CreateModelMatrix(in transform, out world);
 
             if (!component.ByPart)
             {
@@ -96,7 +95,7 @@ internal static class DrawTagResolver
 
         return;
 
-        static void CreateBoxMatrix(Span<Vector3> corners, in BoundingBox local, in TransformData transform,
+        static void CreateBoxMatrix(Span<Vector3> corners, in BoundingBox local, in Transform transform,
             in Matrix4x4 world, out Matrix4x4 global)
         {
             local.FillCorners(corners);
@@ -105,8 +104,7 @@ internal static class DrawTagResolver
 
             BoundingAxisBox.FromPoints(corners, out var axisBounds);
 
-            var t = new TransformData(in axisBounds.Center, in axisBounds.Extent, in transform.Rotation);
-            MatrixMath.CreateModelMatrix(in t.Translation, in t.Scale, in transform.Rotation, out global);
+            MatrixMath.CreateModelMatrix(in axisBounds.Center, in axisBounds.Extent, in transform.Rotation, out global);
         }
     }
 /*

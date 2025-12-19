@@ -11,11 +11,11 @@ namespace ConcreteEngine.Engine.Worlds;
 public sealed class WorldRaycaster
 {
     private readonly Camera3D _camera;
-    private readonly WorldEntities _entities;
+    private readonly RenderEntityHub _entities;
     private readonly WorldTerrain _terrain;
     private readonly DrawEntityAssembler _drawEntities;
 
-    internal WorldRaycaster(Camera3D camera, WorldEntities entities, WorldTerrain terrain,
+    internal WorldRaycaster(Camera3D camera, RenderEntityHub entities, WorldTerrain terrain,
         DrawEntityAssembler drawEntities)
     {
         _entities = entities;
@@ -53,7 +53,7 @@ public sealed class WorldRaycaster
         BoundingBox worldBounds;
         foreach (var entity in visibleEntities)
         {
-            ref readonly var transform = ref coreView.GetTransform(entity).Data;
+            ref readonly var transform = ref coreView.GetTransform(entity).Transform;
             ref readonly var box = ref coreView.GetBox(entity);
             RenderTransform.GetWorldBounds(in box.Bounds, in transform, out worldBounds);
             if (CollisionMethods.RayIntersectsBox(in ray, in worldBounds, out var dist) && dist < distance)

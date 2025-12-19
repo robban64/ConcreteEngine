@@ -75,4 +75,8 @@
 	<s:String x:Key="/Default/PatternsAndTemplates/LiveTemplates/Template/=520ED668623B004894103358E0628DE4/Text/@EntryValue">internal struct $name$
 {
   $END$
+}</s:String>
+	<s:String x:Key="/Default/PatternsAndTemplates/LiveTemplates/Template/=9BB83ED0FF792E47BAAB217C25589C77/Text/@EntryValue">$HEADER$namespace $NAMESPACE$
+{
+  public struct $STRUCT$ {$END$}
 }</s:String></wpf:ResourceDictionary>

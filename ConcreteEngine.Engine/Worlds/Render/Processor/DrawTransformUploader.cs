@@ -16,10 +16,10 @@ internal static class DrawTransformUploader
         foreach (var it in ctx)
         {
             ref readonly var entity = ref it.DrawEntity;
-            ref readonly var t = ref view.GetTransform(entity.RenderEntity).Data;
+            ref readonly var transform = ref view.GetTransform(entity.RenderEntity).Transform;
             var animatedSlot = entity.Source.AnimatedSlot;
 
-            MatrixMath.CreateModelMatrix(in t.Translation, in t.Scale, in t.Rotation, out var world);
+            MatrixMath.CreateModelMatrix(in transform, out var world);
             var locals = meshTable.GetPartTransforms(entity.Source.Model);
             foreach (ref readonly var local in locals)
             {

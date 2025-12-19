@@ -29,22 +29,16 @@ public sealed class SceneStore
     private readonly Dictionary<SceneObjectId, Guid> _toGuid = new(DefaultCapacity);
     private readonly Dictionary<string, SceneObjectId> _byName = new(DefaultCapacity);
 
-    private readonly AssetStore _assetStore;
-    private readonly MaterialStore _materialStore;
     private readonly World _world;
 
-    private readonly WorldEntities _worldEntities;
-    private readonly RenderEntityCore _renderEntityCore;
+    private readonly RenderEntityHub _renderEntityHub;
 
-    internal SceneStore(World world, AssetStore assetStore, MaterialStore materialStore)
+    internal SceneStore(World world)
     {
         if (_idx > 0 || _handleIdx > 0) throw new InvalidOperationException();
         _world = world;
-        _assetStore = assetStore;
-        _materialStore = materialStore;
 
-        _worldEntities = world.Entities;
-        _renderEntityCore = world.Entities.Core;
+        _renderEntityHub = world.Entities;
     }
 
 
@@ -99,7 +93,7 @@ public sealed class SceneStore
             sceneObject.HasParticle = true;
         }
 
-        var entity = _worldEntities.AddEntity(in coreComponent);
+        var entity = _renderEntityHub.AddEntity(in coreComponent);
 
         if (e.Animation is { } animation)
         {
@@ -112,14 +106,14 @@ public sealed class SceneStore
                 Time = animation.Time,
                 Speed = animation.Speed,
             };
-            _worldEntities.AddComponent(entity, component);
+            _renderEntityHub.AddComponent(entity, component);
             sceneObject.HasAnimation = true;
         }
 
         if (emitter is not null)
         {
             var component = new ParticleComponent(emitter.EmitterHandle, emitter.Material);
-            _worldEntities.AddComponent(entity, component);
+            _renderEntityHub.AddComponent(entity, component);
         }
 
         sceneObject.LinkEntity(entity);

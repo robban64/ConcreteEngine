@@ -7,12 +7,12 @@ using ConcreteEngine.Shared.Diagnostics;
 
 namespace ConcreteEngine.Engine.ECS;
 
-internal interface IRenderEntityStore
+public interface IRenderEntityStore
 {
     void EndTick();
 }
 
-internal sealed class RenderEntityStore<T> : IRenderEntityStore where T : unmanaged, IRenderComponent<T>
+public sealed class RenderEntityStore<T> : IRenderEntityStore where T : unmanaged, IRenderComponent<T>
 {
     private T[] _data;
     private RenderEntityId[] _entities;

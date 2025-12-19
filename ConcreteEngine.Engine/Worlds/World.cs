@@ -23,7 +23,7 @@ public sealed class World
 {
     private readonly AssetSystem _assets;
 
-    private readonly WorldEntities _entities;
+    private readonly RenderEntityHub _entities;
     private readonly WorldSkybox _sky;
     private readonly WorldTerrain _terrain;
     private readonly WorldParticles _particles;
@@ -53,7 +53,7 @@ public sealed class World
         _materialTable = new MaterialTable();
         _animationTable = new AnimationTable();
 
-        _entities = new WorldEntities();
+        _entities = new RenderEntityHub();
         _sky = new WorldSkybox();
         _terrain = new WorldTerrain(_meshTable, _materialTable);
         _particles = new WorldParticles(_meshTable, _materialTable);
@@ -68,7 +68,7 @@ public sealed class World
         _worldRenderer = new WorldRenderer(engineWindow, graphics, assets, _worldRenderParams, _drawEntities, _camera);
     }
 
-    internal WorldEntities Entities => _entities;
+    internal RenderEntityHub Entities => _entities;
 
     internal WorldRenderer Renderer => _worldRenderer;
 

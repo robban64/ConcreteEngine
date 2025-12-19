@@ -33,7 +33,7 @@ internal ref struct RenderEntityEnumerator(RenderEntityContext view)
             get => ref _view.Sources[Index];
         }
 
-        public ref Transform Transform
+        public ref RenderTransform Transform
         {
             [MethodImpl(MethodImplOptions.AggressiveInlining)]
             get => ref _view.Transforms[Index];

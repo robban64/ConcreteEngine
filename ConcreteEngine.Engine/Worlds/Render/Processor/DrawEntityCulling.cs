@@ -10,13 +10,13 @@ namespace ConcreteEngine.Engine.Worlds.Render.Processor;
 
 internal static class DrawEntityCulling
 {
-    internal static int CullEntities(RenderEntityId[] entityIndices, int[] byEntityId, WorldEntities worldEntities, in CameraRenderView renderView)
+    internal static int CullEntities(RenderEntityId[] entityIndices, int[] byEntityId, RenderEntityHub renderEntityHub, in CameraRenderView renderView)
     {
         var count = 0;
         BoundingBox worldBounds;
-        foreach (var query in worldEntities.CoreQuery())
+        foreach (var query in renderEntityHub.CoreQuery())
         {
-            RenderTransform.GetWorldBounds(in query.Box.Bounds, in query.Transform.Data, out worldBounds);
+            RenderTransform.GetWorldBounds(in query.Box.Bounds, in query.Transform.Transform, out worldBounds);
             if (!renderView.Frustum.IntersectsBox(in worldBounds)) continue;
             var entity = query.RenderEntity;
             byEntityId[entity] = count;
@@ -35,7 +35,7 @@ internal static class DrawEntityCulling
         foreach (var it in ctx)
         {
             ref var entity = ref it.DrawEntity;
-            ref readonly var transform = ref view.GetTransform(entity.RenderEntity).Data;
+            ref readonly var transform = ref view.GetTransform(entity.RenderEntity).Transform;
             var depthKey = DepthKeyUtility.MakeDepthKey(in viewDepth, in transform.Translation, nearFar);
             entity.Meta.DepthKey = depthKey;
         }

@@ -13,7 +13,7 @@ public struct TransformStable
 
     public void ApplyRotationFromEuler() => Rotation = RotationMath.EulerDegreesToQuaternion(in EulerAngles);
 
-    public void Set(in TransformData model)
+    public void Set(in Transform model)
     {
         Translation = model.Translation;
         Scale = model.Scale;
@@ -21,7 +21,7 @@ public struct TransformStable
         EulerAngles = RotationMath.QuaternionToEulerDegrees(in model.Rotation, in EulerAngles);
     }
 
-    public static void MakeFrom(in TransformData model, out TransformStable result)
+    public static void MakeFrom(in Transform model, out TransformStable result)
     {
         result.Translation = model.Translation;
         result.Scale = model.Scale;
@@ -29,7 +29,7 @@ public struct TransformStable
         result.EulerAngles = RotationMath.QuaternionToEulerDegrees(in model.Rotation, default);
     }
 
-    public void FromStable(in TransformData model)
+    public void FromStable(in Transform model)
     {
         if (!VectorMath.DistanceNearlyEqual(in Translation, in model.Translation, MetricUnits.Millimeter))
             Translation = model.Translation;

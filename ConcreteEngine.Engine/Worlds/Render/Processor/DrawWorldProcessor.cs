@@ -25,7 +25,7 @@ internal static class DrawWorldProcessor
         var meta = new DrawCommandMeta(DrawCommandId.Terrain, DrawCommandQueue.Terrain);
         var cmd = new DrawCommand(view.Parts[0].Mesh, terrain.Material);
 
-        CreateTransformMatrices(Transform.Identity.Data, out var model, out var normal);
+        CreateTransformMatrices(RenderTransform.Identity.Transform, out var model, out var normal);
         commandBuffer.SubmitDraw(cmd, meta, in model, in normal);
     }
 
@@ -34,20 +34,14 @@ internal static class DrawWorldProcessor
         var meta = new DrawCommandMeta(DrawCommandId.Skybox, DrawCommandQueue.Skybox, passMask: PassMask.Main);
         var cmd = new DrawCommand(sky.Mesh, sky.Material);
 
-        CreateTransformMatrices(Transform.Identity.Data, out var model, out var normal);
+        CreateTransformMatrices(RenderTransform.Identity.Transform, out var model, out var normal);
         commandBuffer.SubmitDraw(cmd, meta, in model, in normal);
     }
 
-    private static void CreateTransformMatrices(in TransformData transform, out Matrix4x4 model,
+    private static void CreateTransformMatrices(in Transform transform, out Matrix4x4 model,
         out Matrix3X4 normal)
     {
-        MatrixMath.CreateModelMatrix(
-            in transform.Translation,
-            in transform.Scale,
-            in transform.Rotation,
-            out model
-        );
-
+        MatrixMath.CreateModelMatrix(in transform, out model);
         MatrixMath.CreateNormalMatrix(in model, out normal);
     }
 }

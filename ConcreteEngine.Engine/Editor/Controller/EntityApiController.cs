@@ -25,7 +25,7 @@ internal sealed class EntityApiController : IEngineEntityController
         _world = _apiContext.World;
     }
 
-    private WorldEntities Entities => _world.Entities;
+    private RenderEntityHub Entities => _world.Entities;
 
     public List<EditorEntityResource> CreateEntityList()
     {
@@ -73,7 +73,7 @@ internal sealed class EntityApiController : IEngineEntityController
         Entities.AddComponent(entityId, new SelectionComponent());
         var view = Entities.Core.GetEntityView(entityId);
 
-        state = new EditorEntityState(in view.Transform.Data, in view.Box.Bounds)
+        state = new EditorEntityState(in view.Transform.Transform, in view.Box.Bounds)
         {
             Model = new EditorId(view.Source.Model, EditorItemType.Model),
             MaterialKey = new EditorId(view.Source.MaterialKey.Value, EditorItemType.MaterialKey)
@@ -98,7 +98,7 @@ internal sealed class EntityApiController : IEngineEntityController
         if (entity == 0) return;
         var entityId = new RenderEntityId(entity.Identifier);
         var view = Entities.Core.GetEntityView(entityId);
-        state.Transform.Set(in view.Transform.Data);
+        state.Transform.Set(in view.Transform.Transform);
         state.Bounds = view.Box.Bounds;
     }
 
@@ -107,7 +107,7 @@ internal sealed class EntityApiController : IEngineEntityController
         var entityId = new RenderEntityId(entity.Identifier);
         var view = Entities.Core.GetEntityView(entityId);
         ref var bounds = ref view.Box.Bounds;
-        ref var transform = ref view.Transform.Data;
+        ref var transform = ref view.Transform.Transform;
         bounds = data.Bounds;
         transform.Translation = data.Transform.Translation;
         transform.Rotation = data.Transform.Rotation;

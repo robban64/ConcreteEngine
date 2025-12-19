@@ -5,7 +5,7 @@ using ConcreteEngine.Engine.ECS.RenderComponent;
 
 namespace ConcreteEngine.Engine.ECS;
 
-internal sealed class WorldEntities
+public sealed class RenderEntityHub
 {
     public const int DefaultEntityCapacity = 1024;
     
@@ -14,13 +14,12 @@ internal sealed class WorldEntities
     public int EntityCount => _core.ActiveCount;
     public RenderEntityCore Core => _core;
 
-    internal WorldEntities()
+    internal RenderEntityHub()
     {
         if (StaticStores.All.Count > 0)
             throw new InvalidOperationException("WorldEntities already initialized");
 
         _core = new RenderEntityCore(DefaultEntityCapacity);
-        GenericStores<ModelComponent>.CreateStore(DefaultEntityCapacity);
         GenericStores<AnimationComponent>.CreateStore(64);
         GenericStores<ParticleComponent>.CreateStore(16);
         GenericStores<SelectionComponent>.CreateStore(16);
@@ -54,7 +53,7 @@ internal sealed class WorldEntities
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     internal RenderEntityEnumerator CoreQuery() => new(_core.GetCoreView());
 
-    internal RenderEntityStore<T> GetStore<T>() where T : unmanaged, IRenderComponent<T> => GenericStores<T>.Store;
+    public RenderEntityStore<T> GetStore<T>() where T : unmanaged, IRenderComponent<T> => GenericStores<T>.Store;
 
     private static class StaticStores
     {

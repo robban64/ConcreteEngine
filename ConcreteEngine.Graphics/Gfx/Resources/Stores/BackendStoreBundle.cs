@@ -1,4 +1,6 @@
-namespace ConcreteEngine.Graphics.Gfx.Resources;
+using ConcreteEngine.Graphics.Gfx.Resources.Handles;
+
+namespace ConcreteEngine.Graphics.Gfx.Resources.Stores;
 
 internal sealed class BackendStoreBundle
 {

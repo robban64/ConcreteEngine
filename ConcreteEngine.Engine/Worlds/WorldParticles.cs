@@ -95,14 +95,14 @@ public sealed class WorldParticles
         return _particleGenerator.GetWriteBuffer(emitter);
     }
 
-    internal void UpdateSimulate(WorldEntities entities, float fixedDt)
+    internal void UpdateSimulate(RenderEntityHub entities, float fixedDt)
     {
         SimulateEmitters(CollectionsMarshal.AsSpan(_emitters), fixedDt);
         var core = entities.Core;
         foreach (var query in entities.Query<ParticleComponent>())
         {
             var emitter = GetEmitter(query.Component.EmitterHandle);
-            emitter.State.Translation = core.GetTransform(query.RenderEntity).Data.Translation;
+            emitter.State.Translation = core.GetTransform(query.RenderEntity).Transform.Translation;
         }
     }
 

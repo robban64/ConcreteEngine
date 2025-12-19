@@ -1,6 +1,7 @@
 using ConcreteEngine.Common.Numerics;
 using ConcreteEngine.Graphics.Gfx.Contracts;
 using ConcreteEngine.Graphics.Gfx.Resources;
+using ConcreteEngine.Graphics.Gfx.Resources.Handles;
 
 namespace ConcreteEngine.Renderer.Passes;
 

@@ -1,4 +1,4 @@
-namespace ConcreteEngine.Graphics;
+namespace ConcreteEngine.Graphics.Configuration;
 
 public static class GfxLimits
 {

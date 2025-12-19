@@ -1,4 +1,6 @@
 using ConcreteEngine.Graphics.Gfx.Internal;
+using ConcreteEngine.Graphics.Gfx.Resources.Handles;
+using ConcreteEngine.Graphics.Gfx.Resources.Stores;
 using ConcreteEngine.Graphics.OpenGL;
 
 namespace ConcreteEngine.Graphics.Gfx;
@@ -8,7 +10,7 @@ public sealed class GfxShaders
     private readonly GfxResourceDisposer _disposer;
     private readonly IDriverDebugger _drivDebug;
 
-    private readonly ShaderStore _store;
+    private readonly GfxResourceStore<ShaderId, ShaderMeta> _store;
     private readonly GlShaders _driver;
 
     internal GfxShaders(GfxContextInternal context)

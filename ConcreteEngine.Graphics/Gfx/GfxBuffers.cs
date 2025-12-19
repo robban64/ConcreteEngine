@@ -4,6 +4,8 @@ using ConcreteEngine.Graphics.Error;
 using ConcreteEngine.Graphics.Gfx.Contracts;
 using ConcreteEngine.Graphics.Gfx.Definitions;
 using ConcreteEngine.Graphics.Gfx.Internal;
+using ConcreteEngine.Graphics.Gfx.Resources.Handles;
+using ConcreteEngine.Graphics.Gfx.Resources.Stores;
 using ConcreteEngine.Graphics.Gfx.Utility;
 using ConcreteEngine.Graphics.OpenGL;
 
@@ -13,9 +15,9 @@ public sealed class GfxBuffers
 {
     private readonly GlBuffers _driverBuffer;
 
-    private readonly VboStore _vboStore;
-    private readonly IboStore _iboStore;
-    private readonly UboStore _uboStore;
+    private readonly GfxResourceStore<VertexBufferId, VertexBufferMeta> _vboStore;
+    private readonly GfxResourceStore<IndexBufferId, IndexBufferMeta> _iboStore;
+    private readonly GfxResourceStore<UniformBufferId, UniformBufferMeta> _uboStore;
 
     private const BufferUsage DefaultUsage = BufferUsage.StaticDraw;
 

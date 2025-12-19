@@ -6,9 +6,9 @@ using ConcreteEngine.Engine.Worlds.View;
 
 namespace ConcreteEngine.Engine.Worlds;
 
-internal readonly ref struct WorldContext(WorldEntities entities, WorldSkybox sky, WorldTerrain terrain, WorldParticles particles, MeshTable meshTable, MaterialTable materialTable, AnimationTable animationTable)
+internal readonly ref struct WorldContext(RenderEntityHub entities, WorldSkybox sky, WorldTerrain terrain, WorldParticles particles, MeshTable meshTable, MaterialTable materialTable, AnimationTable animationTable)
 {
-    public readonly WorldEntities Entities = entities;
+    public readonly RenderEntityHub Entities = entities;
     public readonly WorldSkybox Sky = sky;
     public readonly WorldTerrain Terrain = terrain;
     public readonly WorldParticles Particles = particles;

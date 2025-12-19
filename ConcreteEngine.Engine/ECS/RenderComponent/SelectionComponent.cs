@@ -16,9 +16,3 @@ public struct SelectionComponent() : IRenderComponent<SelectionComponent>
 */
 }
 
-public struct DebugBoundsComponent() : IRenderComponent<DebugBoundsComponent>
-{
-    public Color4 Color = Color4.Green;
-    public float LineThickness;
-    public bool ByPart;
-}

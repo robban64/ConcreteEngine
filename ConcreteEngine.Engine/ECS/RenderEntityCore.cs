@@ -8,7 +8,7 @@ using ConcreteEngine.Shared.Diagnostics;
 
 namespace ConcreteEngine.Engine.ECS;
 
-internal sealed class RenderEntityCore
+public sealed class RenderEntityCore
 {
     //private int _entityIdx = 0;
     private static RenderEntityId MakeEntityId() => new(++_count);
@@ -16,7 +16,7 @@ internal sealed class RenderEntityCore
 
     private RenderEntityId[] _entities;
     private SourceComponent[] _sources;
-    private Transform[] _transforms;
+    private RenderTransform[] _transforms;
     private BoxComponent[] _boxes;
 
     private readonly Stack<int> _free = [];
@@ -33,7 +33,7 @@ internal sealed class RenderEntityCore
         ArgumentOutOfRangeException.ThrowIfLessThan(initialCapacity, 32);
         _entities = new RenderEntityId[initialCapacity];
         _sources = new SourceComponent[initialCapacity];
-        _transforms = new Transform[initialCapacity];
+        _transforms = new RenderTransform[initialCapacity];
         _boxes = new BoxComponent[initialCapacity];
     }
 
@@ -48,14 +48,14 @@ internal sealed class RenderEntityCore
     public ref SourceComponent GetSource(RenderEntityId e) => ref _sources[e - 1];
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public ref Transform GetTransform(RenderEntityId e) => ref _transforms[e - 1];
+    public ref RenderTransform GetTransform(RenderEntityId e) => ref _transforms[e - 1];
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public ref BoxComponent GetBox(RenderEntityId e) => ref _boxes[e - 1];
 
     // Spans
     public Span<SourceComponent> GetSourceSpan() => _sources.AsSpan(0, _count);
-    public Span<Transform> GetTransformSpan() => _transforms.AsSpan(0, _count);
+    public Span<RenderTransform> GetTransformSpan() => _transforms.AsSpan(0, _count);
     public Span<BoxComponent> GetBoxSpan() => _boxes.AsSpan(0, _count);
 
     // Views

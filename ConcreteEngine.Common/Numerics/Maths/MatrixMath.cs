@@ -90,6 +90,44 @@ public static class MatrixMath
         dest.M43 = t.Z;
         dest.M44 = 1f;
     }
+    
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public static void CreateModelMatrix(in Transform t, out Matrix4x4 mat)
+    {
+        float x = t.Rotation.X, y = t.Rotation.Y, z = t.Rotation.Z, w = t.Rotation.W;
+        float xx = x + x, yy = y + y, zz = z + z;
+        float xy = x * yy, xz = x * zz, yz = y * zz;
+        float wx = w * xx, wy = w * yy, wz = w * zz;
+        float x2 = x * xx, y2 = y * yy, z2 = z * zz;
+
+        float r11 = 1f - (y2 + z2), r22 = 1f - (x2 + z2), r33 = 1f - (x2 + y2);
+        float r12 = xy + wz, r13 = xz - wy, r21 = xy - wz;
+        float r23 = yz + wx, r31 = xz + wy, r32 = yz - wx;
+
+        // row 1 - local X Axis (Right)
+        mat.M11 = r11 * t.Scale.X;
+        mat.M12 = r12 * t.Scale.X;
+        mat.M13 = r13 * t.Scale.X;
+        mat.M14 = 0f;
+
+        // row 2 corresponds - Local Y Axis (Up)
+        mat.M21 = r21 * t.Scale.Y;
+        mat.M22 = r22 * t.Scale.Y;
+        mat.M23 = r23 * t.Scale.Y;
+        mat.M24 = 0f;
+
+        // row 3 corresponds - Local Z Axis (Forward)
+        mat.M31 = r31 * t.Scale.Z;
+        mat.M32 = r32 * t.Scale.Z;
+        mat.M33 = r33 * t.Scale.Z;
+        mat.M34 = 0f;
+
+        mat.M41 = t.Translation.X;
+        mat.M42 = t.Translation.Y;
+        mat.M43 = t.Translation.Z;
+        mat.M44 = 1f;
+    }
+
 
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]

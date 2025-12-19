@@ -11,7 +11,7 @@ namespace ConcreteEngine.Engine.Worlds.View;
 internal static class RenderTransform
 {
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public static void GetWorldBounds(in BoundingBox local, in TransformData transform, out BoundingBox world)
+    public static void GetWorldBounds(in BoundingBox local, in Transform transform, out BoundingBox world)
     {
         var worldCenter = Vector3.Transform(local.Center, transform.Rotation) + transform.Translation;
         var localExtent = local.Extent;

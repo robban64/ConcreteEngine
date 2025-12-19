@@ -6,6 +6,7 @@ using ConcreteEngine.Editor.Store;
 using ConcreteEngine.Engine.Assets;
 using ConcreteEngine.Engine.Configuration;
 using ConcreteEngine.Engine.Definitions;
+using ConcreteEngine.Engine.ECS;
 using ConcreteEngine.Engine.Editor;
 using ConcreteEngine.Engine.Platform;
 using ConcreteEngine.Engine.Scene;
@@ -15,6 +16,7 @@ using ConcreteEngine.Engine.Utils;
 using ConcreteEngine.Engine.Worlds;
 using ConcreteEngine.Engine.Worlds.Render;
 using ConcreteEngine.Graphics;
+using ConcreteEngine.Graphics.Configuration;
 using ConcreteEngine.Renderer.State;
 using Silk.NET.OpenGL;
 
@@ -22,21 +24,18 @@ namespace ConcreteEngine.Engine;
 
 public sealed class GameEngine : IDisposable
 {
-    private readonly EngineWindow _window;
     private readonly GraphicsRuntime _graphics;
-
-    // private EngineEventBus _eventBus;
-
+    private readonly EngineWindow _window;
+    private readonly EngineTimeHub _timeHub;
     private readonly EngineCoreSystem _coreSystems;
     private readonly AssetSystem _assets;
     private readonly InputSystem _inputSystem;
 
-    private readonly World _world;
-    private WorldRenderer WorldRenderer => _world.Renderer;
 
+    private readonly EntityWorld _ecs;
+    private readonly World _world;
     private readonly SceneManager _sceneManager;
 
-    private readonly EngineTimeHub _timeHub;
     private readonly EngineGateway _engineGateway;
     private readonly EditorEngineQueue _editorQueues;
 
@@ -67,19 +66,19 @@ public sealed class GameEngine : IDisposable
         _timeHub = new EngineTimeHub(UpdateTick, SimulationTickUpdate, LogTickUpdate);
 
         // systems
-
         _inputSystem = new InputSystem(input);
         _assets = new AssetSystem();
 
+        _ecs = new EntityWorld();
         _world = new World(engineWindow, _graphics, _assets);
         _sceneManager = new SceneManager(sceneFactories, _assets, _world);
 
-        _coreSystems = new EngineCoreSystem(WorldRenderer, _inputSystem, _assets);
+        _coreSystems = new EngineCoreSystem(_world.Renderer, _inputSystem, _assets);
 
         var internalInput = input.InputContext;
         _engineGateway =
             new EngineGateway(gfxBundle.Config.DriverContext, engineWindow.PlatformWindow, internalInput);
-        _editorQueues = new EditorEngineQueue(_world, WorldRenderer, _assets);
+        _editorQueues = new EditorEngineQueue(_world, _world.Renderer, _assets);
     }
 
 
@@ -107,14 +106,14 @@ public sealed class GameEngine : IDisposable
 
     private void RegisterRenderer()
     {
-        var builder = WorldRenderer.StartBuilder();
-        WorldRenderer.SetupRenderer(builder);
+        var builder = _world.Renderer.StartBuilder();
+        _world.Renderer.SetupRenderer(builder);
     }
 
     internal void Render(float dt)
     {
         var mousePos = _inputSystem.InputSourceImpl.MousePosition;
-        var worldRender = WorldRenderer;
+        var worldRender = _world.Renderer;
 
         _timeHub.UpdateFrame(dt);
 

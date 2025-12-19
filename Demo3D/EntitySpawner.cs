@@ -8,10 +8,10 @@ using ConcreteEngine.Engine.Worlds;
 
 namespace Demo3D;
 
-public sealed class ScenePlacement(string name, RenderEntityTemplate template, float offset = 0f)
+public sealed class ScenePlacement(string name, EntityTemplate template, float offset = 0f)
 {
     public readonly string Name = name;
-    public readonly RenderEntityTemplate ModelInfo = template;
+    public readonly EntityTemplate ModelInfo = template;
     public readonly float Offset = offset;
 }
 
@@ -30,7 +30,7 @@ public sealed class EntitySpawner(SceneWorld sceneWorld, World world, float size
         var transform = new Transform(p with { Y = height }, in scale, in rotation);
         var sceneObject = sceneWorld.CreateSceneObject(name);
         var entity = sceneWorld.SpawnEntity(sceneObject, sp.ModelInfo);
-        sceneWorld.GetEntityTransform(entity) = transform;
+        sceneWorld.GetEntityTransform(entity.RenderEntityId) = transform;
     }
 
 

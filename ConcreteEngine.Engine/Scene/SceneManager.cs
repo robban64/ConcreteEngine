@@ -1,4 +1,3 @@
-using System.Diagnostics;
 using ConcreteEngine.Engine.Assets;
 using ConcreteEngine.Engine.Configuration;
 using ConcreteEngine.Engine.ECS;
@@ -15,9 +14,8 @@ internal sealed class SceneManager : IGameEngineSystem
     private readonly List<Func<GameScene>> _sceneFactories;
 
     private readonly SceneWorld _sceneWorld;
-    private readonly World  _world;
+    private readonly World _world;
 
-    private readonly EntityWorld _ecs;
 
     public GameScene? Current { get; private set; }
     public bool Enabled { get; private set; }
@@ -28,7 +26,6 @@ internal sealed class SceneManager : IGameEngineSystem
     {
         _sceneFactories = sceneFactories ?? throw new ArgumentNullException(nameof(sceneFactories));
         _world = world;
-        _ecs = ecs;
         _modules = new ModuleManager();
         _sceneWorld = new SceneWorld(assetSystem, world, ecs);
     }
@@ -47,11 +44,11 @@ internal sealed class SceneManager : IGameEngineSystem
 
     public void UpdateTick(float deltaTime)
     {
-        if(Current is null || !Enabled) return;
+        if (Current is null || !Enabled) return;
         _modules.UpdateTick(deltaTime);
         Current.UpdateTick(deltaTime);
     }
-    
+
 
     public void ApplyPendingScene(GameSceneConfigBuilder builder, IEngineSystemManager systems)
     {
@@ -63,28 +60,24 @@ internal sealed class SceneManager : IGameEngineSystem
 
         Current?.Unload();
 
-        var sceneContext = new GameSceneContext(systems, _world, _modules, _sceneWorld) ;
+        var sceneContext = new GameSceneContext(systems, _world, _modules, _sceneWorld);
 
         var newScene = _sceneFactories[index]();
         newScene.AttachContext(sceneContext);
 
         newScene.Build(builder);
-        
+
         for (int i = 0; i < builder.Modules.Count; i++)
             _modules.Add(builder.Modules[i]());
 
-        var sw = Stopwatch.StartNew();
         newScene.Initialize();
-        sw.Stop();
-        Console.WriteLine(sw.ElapsedTicks / 1000.0);
-        sw.Reset();
 
         Current = newScene;
         _pendingIndex = -1;
         builder.Clear();
-        
+
         _modules.Load(new GameModuleContext(sceneContext));
     }
 
-    public void Shutdown() {}
+    public void Shutdown() { }
 }

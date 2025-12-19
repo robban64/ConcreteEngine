@@ -2,6 +2,7 @@ using ConcreteEngine.Common.Numerics;
 using ConcreteEngine.Engine.Assets;
 using ConcreteEngine.Engine.Assets.Materials;
 using ConcreteEngine.Engine.ECS;
+using ConcreteEngine.Engine.ECS.Data;
 using ConcreteEngine.Engine.Scene.Template;
 using ConcreteEngine.Engine.Worlds;
 
@@ -11,7 +12,8 @@ public sealed class SceneWorld
 {
     private readonly World _world;
     private readonly EntityWorld _ecs;
-    private readonly RenderEntityHub _renderEntityHub;
+    private readonly GameEntityHub _gameEntities;
+    private readonly RenderEntityHub _renderEntities;
     private readonly RenderEntityCore _renderEntityCore;
 
     private readonly AssetStore _assetStore;
@@ -24,17 +26,18 @@ public sealed class SceneWorld
     {
         _world = world;
         _ecs = ecs;
-        _renderEntityHub = world.Entities;
-        _renderEntityCore = world.Entities.Core;
+        _gameEntities = ecs.GameEntity;
+        _renderEntities = ecs.RenderEntity;
+        _renderEntityCore = ecs.RenderEntity.Core;
 
         _assetStore = assetSystem.Store;
         _materialStore = assetSystem.MaterialStore;
-        _store = new SceneStore(world);
+        _store = new SceneStore(world, ecs);
     }
 
     public SceneObjectId CreateSceneObject(string name) => Store.Create(name);
 
-    public RenderEntityId SpawnEntity(SceneObjectId id, RenderEntityTemplate template) =>
+    public EntityTuple SpawnEntity(SceneObjectId id, EntityTemplate template) =>
         Store.SpawnEntity(id, template);
 
     public ref Transform GetEntityTransform(RenderEntityId renderEntity) =>

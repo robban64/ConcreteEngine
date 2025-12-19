@@ -9,7 +9,7 @@ using ConcreteEngine.Engine.Worlds.Utility;
 
 namespace ConcreteEngine.Engine.Scene;
 
-internal static class EntityFactory
+internal static class RenderEntityFactory
 {
     internal static RenderEntityId BuildRenderEntity(SceneObject sceneObject, in WorldContext ctx,
         RenderEntityHub entities, RenderEntityTemplate e)
@@ -17,18 +17,23 @@ internal static class EntityFactory
         CoreComponentBundle coreComponent = default;
         ParticleEmitter? emitter = null;
 
+
+        var isModel = e.Model is not null;
+        var isAnimated = e.Animation is not null;
+        var isParticle = e.Particle is not null;
+
         if (e.Spatial is { } spatial) coreComponent.Box = spatial.LocalBounds;
 
-        if (e.Model is { } model)
+        if (isModel)
         {
-            var materialKey = ctx.MaterialTable.Add(MaterialTagBuilder.FromSpan(model.Materials));
+            var materialKey = ctx.MaterialTable.Add(MaterialTagBuilder.FromSpan(e.Model!.Materials));
             var kind = e.Animation != null ? EntitySourceKind.AnimatedModel : EntitySourceKind.Model;
-            coreComponent.Source = new SourceComponent(model.Model, materialKey, kind);
+            coreComponent.Source = new SourceComponent(e.Model.Model, materialKey, kind);
             sceneObject.HasModel = true;
         }
-
-        else if (e.Particle is { } particle)
+        else if (isParticle)
         {
+            var particle = e.Particle!;
             if (!ctx.Particles.TryGetEmitter(particle.EmitterName, out emitter))
             {
                 emitter = ctx.Particles
@@ -36,15 +41,14 @@ internal static class EntityFactory
             }
 
             coreComponent.Source = new SourceComponent(emitter.Model, emitter.MaterialKey, EntitySourceKind.Particle);
-
             sceneObject.HasParticle = true;
         }
 
         var entity = entities.AddEntity(in coreComponent);
 
-        if (e.Animation is { } animation)
+        if (isAnimated)
         {
-            if (e.Model is null) throw new InvalidOperationException();
+            var animation = e.Animation!;
             var component = new RenderAnimationComponent
             {
                 Animation = animation.Animation,
@@ -57,9 +61,9 @@ internal static class EntityFactory
             sceneObject.HasAnimation = true;
         }
 
-        if (emitter is not null)
+        if (isParticle)
         {
-            var component = new ParticleComponent(emitter.EmitterHandle, emitter.Material);
+            var component = new ParticleComponent(emitter!.EmitterHandle, emitter.Material);
             entities.AddComponent(entity, component);
         }
 

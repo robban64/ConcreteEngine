@@ -6,3 +6,9 @@ public sealed class SceneObjectTemplate
     public List<RenderEntityTemplate> RenderEntities = [];
     public List<GameEntityTemplate> GameEntities = [];
 }
+
+public sealed class EntityTemplate
+{
+    public RenderEntityTemplate? RenderEntity;
+    public GameEntityTemplate? GameEntity;
+}

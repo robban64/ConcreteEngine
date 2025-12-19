@@ -44,7 +44,7 @@ public sealed class GameEntityHub
         return (uint)index < (uint)Count && _entities[index] == e;
     }
 
-    private GameEntityId AddEntity()
+    public GameEntityId AddEntity()
     {
         if (_free.TryPop(out var index))
         {
@@ -57,6 +57,19 @@ public sealed class GameEntityHub
         index = _count;
         return _entities[index] = MakeGameEntity();
     }
+    
+    public void AddComponent<T>(GameEntityId entity, in T component) where T : unmanaged, IGameComponent<T>
+    {
+        ArgumentOutOfRangeException.ThrowIfNegativeOrZero(entity.Id, nameof(entity.Id));
+        GenericStores<T>.Store.Add(entity, component);
+    }
+
+    public void RemoveComponent<T>(GameEntityId entity) where T : unmanaged, IGameComponent<T>
+    {
+        ArgumentOutOfRangeException.ThrowIfNegativeOrZero(entity.Id, nameof(entity.Id));
+        GenericStores<T>.Store.Remove(entity);
+    }
+
 
     public void Remove(GameEntityId e)
     {

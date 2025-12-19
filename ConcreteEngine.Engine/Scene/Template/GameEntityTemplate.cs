@@ -9,12 +9,13 @@ public interface IGameComponentTemplate
 
 public sealed class GameEntityTemplate
 {
+    public bool CreateRenderEntity = true;
+
     public TransformTemplate? Transform;
     public BoundingBoxTemplate? BoundingBox;
     public VisibilityTemplate? Visibility;
-    public RenderLinkTemplate? RenderLink;
-    
-    public readonly List<IGameComponentTemplate> Components = [];
+
+    public readonly IGameComponentTemplate[] Components = [];
 }
 
 public sealed class VisibilityTemplate : IGameComponentTemplate
@@ -24,17 +25,15 @@ public sealed class VisibilityTemplate : IGameComponentTemplate
 
 public sealed class TransformTemplate : IGameComponentTemplate
 {
+    public TransformTemplate(in Transform transform) => Transform = transform;
+    public TransformTemplate() { }
+
     public Transform Transform;
 }
 
 public sealed class BoundingBoxTemplate : IGameComponentTemplate
 {
     public BoundingBox LocalBounds;
-}
-
-public sealed class RenderLinkTemplate : IGameComponentTemplate
-{
-    public bool CreateRenderEntity = true;
 }
 
 public sealed class AnimationTemplate : IGameComponentTemplate

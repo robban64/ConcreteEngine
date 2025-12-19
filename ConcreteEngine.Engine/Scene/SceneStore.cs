@@ -1,13 +1,11 @@
+using ConcreteEngine.Common;
 using ConcreteEngine.Common.Collections;
 using ConcreteEngine.Engine.ECS;
 using ConcreteEngine.Engine.ECS.Data;
-using ConcreteEngine.Engine.ECS.Definitions;
-using ConcreteEngine.Engine.ECS.RenderComponent;
+using ConcreteEngine.Engine.ECS.GameComponent;
 using ConcreteEngine.Engine.Editor.Diagnostics;
 using ConcreteEngine.Engine.Scene.Template;
 using ConcreteEngine.Engine.Worlds;
-using ConcreteEngine.Engine.Worlds.Objects;
-using ConcreteEngine.Engine.Worlds.Utility;
 using ConcreteEngine.Shared.Diagnostics;
 
 namespace ConcreteEngine.Engine.Scene;
@@ -28,13 +26,15 @@ public sealed class SceneStore
     private readonly World _world;
 
     private readonly RenderEntityHub _renderEntities;
+    private readonly GameEntityHub _gameEntities;
 
-    internal SceneStore(World world)
+    internal SceneStore(World world, EntityWorld entityWorld)
     {
         if (_idx > 0 || _handleIdx > 0) throw new InvalidOperationException();
         _world = world;
 
-        _renderEntities = world.Entities;
+        _renderEntities = entityWorld.RenderEntity;
+        _gameEntities = entityWorld.GameEntity;
     }
 
 
@@ -59,12 +59,31 @@ public sealed class SceneStore
         return id;
     }
 
-    internal RenderEntityId SpawnEntity(SceneObjectId id, RenderEntityTemplate e)
+    internal EntityTuple SpawnEntity(SceneObjectId id, EntityTemplate template)
     {
+        if (template is null || template.GameEntity is null && template.RenderEntity is null)
+            throw new ArgumentNullException();
+
         var ctx = _world.CreateContext();
         var sceneObject = _objects[id - 1];
 
-        return EntityFactory.BuildRenderEntity(sceneObject, in ctx, _renderEntities, e);
+        RenderEntityId renderEntityId = default;
+        GameEntityId gameEntityId = default;
+
+        if (template.RenderEntity is { } renderTemplate)
+            renderEntityId = RenderEntityFactory.BuildRenderEntity(sceneObject, in ctx, _renderEntities, renderTemplate);
+
+        if (template.GameEntity is { } gameTemplate)
+        {
+            gameEntityId = GameEntityFactory.BuildGameEntity(sceneObject, _gameEntities, gameTemplate);
+            if (gameTemplate.CreateRenderEntity)
+            {
+                InvalidOpThrower.ThrowIfNot(renderEntityId.IsValid);
+                _gameEntities.AddComponent(gameEntityId, new RenderLink { RenderEntityId = renderEntityId });
+            }
+        }
+
+        return new EntityTuple(gameEntityId, renderEntityId);
     }
 
     private void ValidateSceneObjectId(SceneObjectId id)

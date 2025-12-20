@@ -28,10 +28,10 @@ layout(binding = 2) uniform sampler2D uAlpha;
 layout(binding = 3) uniform sampler2DShadow uShadowMap;
 
 const vec2 offsets[4] = vec2[](
-    vec2(-0.5, -0.5),
-    vec2( 0.5, -0.5),
-    vec2(-0.5,  0.5),
-    vec2( 0.5,  0.5)
+vec2(-0.5, -0.5),
+vec2(0.5, -0.5),
+vec2(-0.5, 0.5),
+vec2(0.5, 0.5)
 );
 
 float saturate(float x) {
@@ -103,20 +103,20 @@ float sampleShadowMap(vec4 lightSpacePos, vec3 N, vec3 L)
     vec3 p = lightSpacePos.xyz / lightSpacePos.w;
     p = p * 0.5 + 0.5;
 
-    if (p.x < 0.0 || p.x > 1.0 || p.y < 0.0 || p.y > 1.0 || p.z > 1.0) 
-        return 1.0;
-        
+    if (p.x < 0.0 || p.x > 1.0 || p.y < 0.0 || p.y > 1.0 || p.z > 1.0)
+    return 1.0;
+
     float ndl  = clamp(dot(N, L), 0.0, 1.0);
     float bias = max(uShadowParams0.z, uShadowParams0.w * (1.0 - ndl));
     float depthToCompare = p.z - bias;
-    
+
     float shadowSum = 0.0;
     vec2 texelSize = uShadowParams0.xy;
-    for (int i = 0; i < 4; ++i) 
+    for (int i = 0; i < 4; ++i)
     {
         shadowSum += texture(uShadowMap, vec3(p.xy + offsets[i] * texelSize, depthToCompare));
     }
-    
+
     return shadowSum * 0.25;
 }
 
@@ -138,9 +138,8 @@ void main()
         a = texture(uAlpha, uv).r;
     }
 
-    float cutoff = (uMatParams1.w > 0.5) ? 0.25 : 0.05; 
-    if (uMatParams1.z > 0.5 && a < cutoff)
-        discard;
+    float cutoff = (uMatParams1.w > 0.5) ? 0.25 : 0.05;
+    if (uMatParams1.z > 0.5 && a < cutoff) discard;
 
     vec3 baseColor = baseTex.rgb * uMatColor.rgb;
 
@@ -148,7 +147,7 @@ void main()
     vec3 N_geo = normalize(fs_in.N_world);
 
     // Visual Normal 
-    vec3 N_vis = N_geo; 
+    vec3 N_vis = N_geo;
 
     if (uMatParams1.y > 0.5) {
         //(Gram-Schmidt)
@@ -156,7 +155,7 @@ void main()
         Tw = normalize(Tw - N_geo * dot(Tw, N_geo));
         vec3 Bw = normalize(fs_in.B_world);
         mat3 TBN = mat3(Tw, Bw, N_geo);
-        
+
         vec3 nTex = texture(uNormalTex, fs_in.TexCoord).rgb * 2.0 - 1.0;
         N_vis = normalize(TBN * nTex);
     }
@@ -181,7 +180,7 @@ void main()
 
     // Shadow Calculation (Use N_geo) 
     float vis = sampleShadowMap(uLightViewProj * vec4(P, 1.0), N_geo, Ld);
-    
+
     float dirShadow = mix(1.0, max(vis, 0.2), uShadowParams1.x);
     float dirShadowSpec = max(dirShadow, 0.25);
 
@@ -194,7 +193,7 @@ void main()
         evalPunctual(uLights[i], P, Lp, atten, LiP);
 
         // Point lights react to bumps
-        float ndlp = dot(N_vis, Lp); 
+        float ndlp = dot(N_vis, Lp);
         float diffP = halfLambert(ndlp);
         if (diffP <= 0.0) continue;
 

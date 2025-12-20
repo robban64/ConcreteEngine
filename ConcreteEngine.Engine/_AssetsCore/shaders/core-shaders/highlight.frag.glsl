@@ -14,7 +14,7 @@ uniform vec4 uHighlightColor;
 @import ubo:MaterialUniform
 
 void main()
-{    
+{
     float uvRepeat = uMatParams0.y;
     vec2 uv = TexCoord * uvRepeat;
 
@@ -24,13 +24,12 @@ void main()
         a = texture(uAlpha, uv).r;
     }
 
-    float cutoff = (uMatParams1.w > 0.5) ? 0.25 : 0.05; 
-    if (uMatParams1.z > 0.5 && a < cutoff)
-        discard;
+    float cutoff = (uMatParams1.w > 0.5) ? 0.25 : 0.05;
+    if (uMatParams1.z > 0.5 && a < cutoff) discard;
 
     vec4 finalColor = vec4(baseTex.rgb * uHighlightColor.rgb, a);
 
-    float pulseSpeed = 0.25; 
+    float pulseSpeed = 0.25;
     // This gives a 0-1-0 linear triangle wave.
     float triWave = abs(fract(uTime * pulseSpeed) * 2.0 - 1.0);
 
@@ -42,7 +41,7 @@ void main()
     float wave3 = sin(uTime * 37.3);
 
     float smoothNoise = (wave1 + wave2 + wave3) / 3.0;
-    smoothNoise = (smoothNoise + 1.0) * 0.5; // Now 0.0 to 1.0
+    smoothNoise = (smoothNoise + 1.0) * 0.5;// Now 0.0 to 1.0
     float flicker = mix(0.95, 1.0, smoothNoise);
 
     finalColor.a *= flicker;

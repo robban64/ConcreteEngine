@@ -17,9 +17,8 @@ void main()
 
     // override alpha from separate mask
     if (uMatParams1.w > 0.5)
-        a = texture(uAlpha, uv).r;
+    a = texture(uAlpha, uv).r;
 
-    float cutoff = (uMatParams1.w > 0.5) ? 0.25 : 0.05; 
-    if (uMatParams1.z > 0.5 && a < cutoff)
-        discard;
+    float cutoff = (uMatParams1.w > 0.5) ? 0.25 : 0.05;
+    if (uMatParams1.z > 0.5 && a < cutoff) discard;
 }

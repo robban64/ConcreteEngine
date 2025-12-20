@@ -7,8 +7,6 @@ layout(binding = 0) uniform samplerCube uCubemapTex;
 
 void main()
 {
-    //FragColor = texture(uCubemapTex, normalize(Pos));
-
     vec4 c = texture(uCubemapTex, normalize(Pos));
     float l = dot(c.rgb, vec3(0.333));
     float t = smoothstep(0.6, 1.0, l);

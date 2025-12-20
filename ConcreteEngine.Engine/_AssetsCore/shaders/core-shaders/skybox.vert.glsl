@@ -12,5 +12,5 @@ void main()
 
     Pos = aPos;
     vec4 pos = uProjMat * viewNoTrans * vec4(aPos, 1.0);
-    gl_Position = vec4(pos.x,pos.y, pos.w, pos.w); // pos.w for depth test
+    gl_Position = vec4(pos.x, pos.y, pos.w, pos.w);// pos.w for depth test
 }

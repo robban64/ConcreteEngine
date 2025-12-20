@@ -14,13 +14,14 @@ out vec4 ParticleColor;
 @import ubo:CameraUniform
 
 void main() {
+    
     vec3 pos = aInstancePosition.xyz
-        + uCameraRight.xyz * aLocalPos.x * aInstancePosition.w
-        + uCameraUp.xyz * aLocalPos.y * aInstancePosition.w;
-        
+    + uCameraRight.xyz * aLocalPos.x * aInstancePosition.w
+    + uCameraUp.xyz * aLocalPos.y * aInstancePosition.w;
+
     FragPos = pos;
     TexCoord = aTexCoord;
     ParticleColor = aInstanceColor;
-    
-    gl_Position = uProjViewMat * vec4(pos,1.0);
+
+    gl_Position = uProjViewMat * vec4(pos, 1.0);
 }

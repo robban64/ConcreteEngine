@@ -31,10 +31,10 @@ layout(binding = 4) uniform sampler2D uWeightMap;
 layout(binding = 5) uniform sampler2DShadow uShadowMap;
 
 const vec2 offsets[4] = vec2[](
-    vec2(-0.5, -0.5),
-    vec2( 0.5, -0.5),
-    vec2(-0.5,  0.5),
-    vec2( 0.5,  0.5)
+vec2(-0.5, -0.5),
+vec2(0.5, -0.5),
+vec2(-0.5, 0.5),
+vec2(0.5, 0.5)
 );
 
 const float fadeRange = 5.0;
@@ -108,19 +108,18 @@ float sampleShadowMap(vec4 lightSpacePos, vec3 N, vec3 L)
     vec3 p = lightSpacePos.xyz / lightSpacePos.w;
     p = p * 0.5 + 0.5;
 
-    if (p.x < 0.0 || p.x > 1.0 || p.y < 0.0 || p.y > 1.0 || p.z > 1.0) 
-        return 1.0;
-        
+    if (p.x < 0.0 || p.x > 1.0 || p.y < 0.0 || p.y > 1.0 || p.z > 1.0) return 1.0;
+
     float ndl  = clamp(dot(N, L), 0.0, 1.0);
     float bias = max(uShadowParams0.z, uShadowParams0.w * (1.0 - ndl));
-    float depthToCompare = p.z - bias;    
-    
+    float depthToCompare = p.z - bias;
+
     vec2 texelSize = uShadowParams0.xy;
     float shadowSum = 0.0;
     for (int i = 0; i < 4; ++i) {
         shadowSum += texture(uShadowMap, vec3(p.xy + offsets[i] * texelSize, depthToCompare));
     }
-    
+
     // 0.0 (Shadow) to 1.0 (Lit)
     return shadowSum * 0.25;
 }
@@ -168,7 +167,7 @@ void main() {
     // Shadow
     float dirShadow = 1.0;
     if (uShadowParams1.x > 0.0) {
-        vec4 lp = uLightViewProj * vec4(P, 1.0);   
+        vec4 lp = uLightViewProj * vec4(P, 1.0);
         float s = sampleShadowMap(lp, N, Ld);
         dirShadow = mix(1.0, s, uShadowParams1.x);
     }

@@ -60,7 +60,7 @@ public sealed class WorldParticles
                 return found;
         }
 
-        var index = SortMethod.BinarySearch(_emitters, emitterHandle);
+        var index = SortMethod.BinarySearchList(_emitters, emitterHandle);
         if (index < 0)
             throw new InvalidOperationException($"Missing emitter handle {emitterHandle}");
 

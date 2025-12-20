@@ -1,3 +1,4 @@
+using System.Runtime.CompilerServices;
 using ConcreteEngine.Common.Collections;
 using ConcreteEngine.Engine.ECS.Enumerators;
 using ConcreteEngine.Engine.ECS.GameComponent;
@@ -37,10 +38,11 @@ public sealed class GameEntityHub
         GenericStores<ParticleRefComponent>.CreateStore(32);
     }
 
-    public bool HasEntity(GameEntityId e)
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public bool Has(GameEntityId e)
     {
         var index = e.Index;
-        return (uint)index < (uint)_count && _entities[index] == e;
+        return index > 0 && index < _count && _entities[index] == e;
     }
 
     public GameEntityId AddEntity()
@@ -52,10 +54,7 @@ public sealed class GameEntityHub
         }
 
         EnsureCapacity(1);
-
-        index = _count;
-        var id = MakeGameEntity();
-        return _entities[index] = id;
+        return _entities[_count] = MakeGameEntity();
     }
 
     public void AddComponent<T>(GameEntityId entity, in T component) where T : unmanaged, IGameComponent<T>
@@ -85,10 +84,10 @@ public sealed class GameEntityHub
     }
 
 
-    public GameEntityEnumerator<T1> Query<T1>() where T1 : unmanaged, IGameComponent<T1>
+    public GameQuery<T1>.EntityEnumerator Query<T1>() where T1 : unmanaged, IGameComponent<T1>
         => new(GenericStores<T1>.Store);
 
-    public GameEntityEnumerator<T1, T2> QueryLeft<T1, T2>()
+    public GameQuery<T1, T2>.EntityEnumerator Query<T1, T2>()
         where T1 : unmanaged, IGameComponent<T1> where T2 : unmanaged, IGameComponent<T2> =>
         new(GenericStores<T1>.Store, GenericStores<T2>.Store);
 

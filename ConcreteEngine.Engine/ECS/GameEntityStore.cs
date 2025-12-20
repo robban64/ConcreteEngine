@@ -45,20 +45,17 @@ public sealed class GameEntityStore<T> : IGameEntityStore where T : unmanaged
     public ref T GetByIndex(int i) => ref _data[i];
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    private int FindIndex(GameEntityId entity) => _entityToIndex[entity];
+    private int FindIndex(GameEntityId entity) => SortMethod.BinarySearch(_entities.AsSpan(0, _count), entity);
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public bool Has(GameEntityId entity)
-    {
-        var index = FindIndex(entity);
-        return (uint)index < (uint)_count && _entities[index] == entity;
-    }
+    public bool Has(GameEntityId entity) => FindIndex(entity) >= 0;
+
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public ValuePtr<T> TryGet(GameEntityId entity)
     {
         var id = FindIndex(entity);
-        if ((uint)id >= Count) return ValuePtr<T>.Null;
+        if ((uint)id >= _count) return ValuePtr<T>.Null;
         return new ValuePtr<T>(ref _data[id]);
     }
 
@@ -66,7 +63,7 @@ public sealed class GameEntityStore<T> : IGameEntityStore where T : unmanaged
     public T GetOrDefault(GameEntityId entity)
     {
         var id = FindIndex(entity);
-        if ((uint)id >= Count) return default;
+        if ((uint)id >= _count) return default;
         return _data[id];
     }
 
@@ -79,9 +76,9 @@ public sealed class GameEntityStore<T> : IGameEntityStore where T : unmanaged
             index = _count++;
         }
 
+        _entityToIndex[entity] = index;
         _entities[index] = entity;
         _data[index] = value;
-        _entityToIndex[entity] = index;
         _isDirty = true;
     }
 

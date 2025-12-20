@@ -1,10 +1,6 @@
-using ConcreteEngine.Common;
 using ConcreteEngine.Common.Collections;
 using ConcreteEngine.Engine.ECS;
-using ConcreteEngine.Engine.ECS.Data;
-using ConcreteEngine.Engine.ECS.GameComponent;
 using ConcreteEngine.Engine.Editor.Diagnostics;
-using ConcreteEngine.Engine.Scene.Template;
 using ConcreteEngine.Engine.Worlds;
 using ConcreteEngine.Shared.Diagnostics;
 

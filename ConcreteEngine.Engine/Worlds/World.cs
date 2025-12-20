@@ -1,4 +1,5 @@
 using ConcreteEngine.Common.Numerics;
+using ConcreteEngine.Common.Time;
 using ConcreteEngine.Engine.Assets;
 using ConcreteEngine.Engine.Assets.Internal;
 using ConcreteEngine.Engine.Assets.Materials;
@@ -117,22 +118,26 @@ public sealed class World : IGameEngineSystem
         var renderEcs = _ecs.RenderEntity;
         var alpha = EngineTime.GameAlpha;
 
-        var renderLinks = gameEcs.GetStore<RenderLink>();
+        StaticProfileTimer.RenderTimer.Begin();
         var renderAnimations = renderEcs.GetStore<RenderAnimationComponent>();
-        //gameEcs.QueryLeft<RenderLink, AnimationComponent>
-        foreach (var query in gameEcs.Query<AnimationComponent>())
+        foreach (var query in gameEcs.Query<AnimationComponent, RenderLink>())
         {
-            var gameEntity = query.Entity;
-            ref readonly var gameAnim = ref query.Component;
-            var renderEntity = renderLinks.GetOrDefault(gameEntity).RenderEntityId;
+            ref readonly var a = ref query.Component1;
+            ref readonly var renderEntity = ref query.Component2.RenderEntityId;;
             if(renderEntity == default) continue;
 
             var animationPtr = renderAnimations.TryGet(renderEntity);
             if(animationPtr.IsNull) continue;
-            
-            animationPtr.Value.Time = float.Lerp(gameAnim.PrevTime, gameAnim.Time, alpha);
-            animationPtr.Value.Speed = gameAnim.Speed;
+
+            float t;
+            if (a.Time < a.PrevTime)
+                animationPtr.Value.Time = float.Lerp(a.PrevTime, a.Time + a.Duration, alpha) % a.Duration;
+            else 
+                animationPtr.Value.Time = float.Lerp(a.PrevTime, a.Time, alpha);
+
+            animationPtr.Value.Speed = a.Speed;
         }
+        StaticProfileTimer.RenderTimer.EndPrint();
     }
     
     

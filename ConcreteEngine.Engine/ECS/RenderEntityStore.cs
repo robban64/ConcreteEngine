@@ -2,7 +2,6 @@ using System.Runtime.CompilerServices;
 using ConcreteEngine.Common.Collections;
 using ConcreteEngine.Common.Generics;
 using ConcreteEngine.Engine.ECS.RenderComponent;
-using ConcreteEngine.Engine.ECS.Utility;
 using ConcreteEngine.Engine.Editor.Diagnostics;
 using ConcreteEngine.Shared.Diagnostics;
 
@@ -19,7 +18,6 @@ public sealed class RenderEntityStore<T> : IRenderEntityStore where T : unmanage
     private RenderEntityId[] _entities;
 
     private readonly Stack<int> _free = [];
-
 
     private int _count;
     private bool _isDirty;
@@ -46,28 +44,21 @@ public sealed class RenderEntityStore<T> : IRenderEntityStore where T : unmanage
     public ref T GetByIndex(int i) => ref _data[i];
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public Span<RenderEntityId> GetEntitySpan() => _entities.AsSpan(0, Count);
+    public Span<RenderEntityId> GetEntitySpan() => _entities.AsSpan(0, _count);
 
-
-    public Span<T> GetComponentSpan() => _data.AsSpan(0, Count);
-
+    public Span<T> GetComponentSpan() => _data.AsSpan(0, _count);
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    private int FindIndex(RenderEntityId renderEntity) =>
-        RenderEntityUtility.BinarySearchEntity(GetEntitySpan(), renderEntity);
+    private int FindIndex(RenderEntityId renderEntity) => SortMethod.BinarySearch(GetEntitySpan(), renderEntity);
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public bool Has(RenderEntityId renderEntity)
-    {
-        var index = FindIndex(renderEntity);
-        return (uint)index < (uint)Count && _entities[index] == renderEntity;
-    }
+    public bool Has(RenderEntityId renderEntity) => FindIndex(renderEntity) >= 0;
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public ValuePtr<T> TryGet(RenderEntityId entity)
     {
         var id = FindIndex(entity);
-        if ((uint)id >= Count) return ValuePtr<T>.Null;
+        if ((uint)id >= _count) return ValuePtr<T>.Null;
         return new ValuePtr<T>(ref _data[id]);
     }
 
@@ -75,10 +66,10 @@ public sealed class RenderEntityStore<T> : IRenderEntityStore where T : unmanage
     public T GetOrDefault(RenderEntityId entity)
     {
         var id = FindIndex(entity);
-        if ((uint)id >= Count) return default;
+        if ((uint)id >= _count) return default;
         return _data[id];
     }
-    
+
     public void Add(RenderEntityId renderEntity, T value)
     {
         ArgumentOutOfRangeException.ThrowIfNegativeOrZero(renderEntity.Id, nameof(renderEntity));
@@ -109,7 +100,7 @@ public sealed class RenderEntityStore<T> : IRenderEntityStore where T : unmanage
 
     private void EnsureCapacity(int amount)
     {
-        var len = Count + amount;
+        var len = _count + amount;
         if (_entities.Length >= len) return;
 
         if (_data.Length != _entities.Length)

@@ -5,13 +5,13 @@ using ConcreteEngine.Common.Numerics.Maths;
 using ConcreteEngine.Engine.Assets.Data;
 using ConcreteEngine.Engine.Assets.Textures;
 using ConcreteEngine.Engine.Worlds.Data;
-using ConcreteEngine.Engine.Worlds.MeshGeneration;
+using ConcreteEngine.Engine.Worlds.Mesh;
 using ConcreteEngine.Engine.Worlds.Tables;
 using ConcreteEngine.Renderer.Data;
 
 namespace ConcreteEngine.Engine.Worlds;
 
-public sealed class WorldTerrain
+public sealed class Terrain
 {
     private const int TerrainHeight = 12;
     private const int TerrainStep = 1;
@@ -19,7 +19,7 @@ public sealed class WorldTerrain
     public ModelId Model { get; private set; }
 
     public MaterialId Material { get; private set; }
-    internal TerrainMeshGenerator Terrain { get; private set; }
+    internal TerrainMeshGenerator MeshGenerator { get; private set; }
 
     private AssetRef<Texture2D> _heightmap;
 
@@ -27,18 +27,18 @@ public sealed class WorldTerrain
     private readonly MeshTable _meshTable;
 
 
-    internal WorldTerrain(MeshTable meshTable, MaterialTable materialTable)
+    internal Terrain(MeshTable meshTable, MaterialTable materialTable)
     {
         _meshTable = meshTable;
         _materialTable = materialTable;
     }
 
-    public bool IsActive => _heightmap.IsValid && Terrain.TextureRef.IsValid && Material > 0;
+    public bool IsActive => _heightmap.IsValid && MeshGenerator.TextureRef.IsValid && Material > 0;
     public void SetMaterial(MaterialId materialId) => Material = materialId;
 
     internal void AttachRenderer(TerrainMeshGenerator meshGenerator)
     {
-        Terrain = meshGenerator;
+        MeshGenerator = meshGenerator;
     }
 
     public void CreateTerrainMesh(Texture2D heightmap)
@@ -46,20 +46,20 @@ public sealed class WorldTerrain
         ArgumentNullException.ThrowIfNull(heightmap);
         ArgumentOutOfRangeException.ThrowIfEqual(heightmap.PixelData.HasValue, false, nameof(heightmap.PixelData));
         _heightmap = heightmap.RefId;
-        Terrain.Initialize(heightmap, TerrainHeight, TerrainStep);
-        Terrain.BuildBatch();
+        MeshGenerator.Initialize(heightmap, TerrainHeight, TerrainStep);
+        MeshGenerator.BuildBatch();
 
-        Debug.Assert(Terrain.MeshId > 0);
+        Debug.Assert(MeshGenerator.MeshId > 0);
 
-        var bounds = new BoundingBox(Vector3.Zero, new Vector3(Terrain.Dimension, TerrainHeight, Terrain.Dimension));
-        Model = _meshTable.CreateSimpleModel(Terrain.MeshId, 0, Terrain.DrawCount, in bounds);
+        var bounds = new BoundingBox(Vector3.Zero, new Vector3(MeshGenerator.Dimension, TerrainHeight, MeshGenerator.Dimension));
+        Model = _meshTable.CreateSimpleModel(MeshGenerator.MeshId, 0, MeshGenerator.DrawCount, in bounds);
     }
 
-    public float GetHeight(int x, int z) => Terrain.GetHeight(x, z);
+    public float GetHeight(int x, int z) => MeshGenerator.GetHeight(x, z);
 
     public float GetSmoothHeight(float x, float z)
     {
-        var terrain = Terrain;
+        var terrain = MeshGenerator;
         var ix = int.Clamp((int)x, 0, terrain.Dimension);
         var iz = int.Clamp((int)z, 0, terrain.Dimension);
 
@@ -84,8 +84,8 @@ public sealed class WorldTerrain
 
     public Vector3 GetPointOnTerrainPlane(in Ray ray)
     {
-        float maxHeight = Terrain.MaxHeight;
-        var size = Terrain.Dimension;
+        float maxHeight = MeshGenerator.MaxHeight;
+        var size = MeshGenerator.Dimension;
 
         var n = Vector3.UnitY;
         Vector3 p0 = default;

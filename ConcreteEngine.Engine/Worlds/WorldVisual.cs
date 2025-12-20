@@ -5,9 +5,9 @@ using ConcreteEngine.Renderer.Data;
 using ConcreteEngine.Renderer.State;
 using ConcreteEngine.Shared.Rendering;
 
-namespace ConcreteEngine.Engine.Worlds.Render;
+namespace ConcreteEngine.Engine.Worlds;
 
-public sealed class WorldRenderParams
+public sealed class WorldVisual
 {
     private bool _dirty = true;
     private bool _clearSnapshotDirtyNext;
@@ -20,7 +20,7 @@ public sealed class WorldRenderParams
     private ShadowParams _shadow;
     private PostEffectParams _postEffect;
 
-    internal WorldRenderParams(EngineGraphicSettings graphicSettings)
+    internal WorldVisual(EngineGraphicSettings graphicSettings)
     {
         _shadow = WorldParamUtils.MakeShadowFromQuality(graphicSettings.ShadowQuality);
 
@@ -28,6 +28,7 @@ public sealed class WorldRenderParams
         _fog = WorldParamUtils.MakeDefaultFog();
         _sunLight = WorldParamUtils.MakeDefaultSunLight();
         _postEffect = WorldParamUtils.MakeDefaultPostEffect();
+        EndTick();
     }
 
     public long Generation { get; private set; }

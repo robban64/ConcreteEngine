@@ -1,4 +1,4 @@
-namespace ConcreteEngine.Engine.Worlds.MeshGeneration.Tilemap;
+namespace ConcreteEngine.Engine.Worlds.Mesh.Tilemap;
 /*
 public class TilemapBatcher : RenderBatcher<TilemapBatchResult>
 {

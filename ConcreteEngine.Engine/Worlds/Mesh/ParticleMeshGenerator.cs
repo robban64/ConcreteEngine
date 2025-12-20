@@ -1,7 +1,7 @@
 using System.Numerics;
 using ConcreteEngine.Common.Collections;
 using ConcreteEngine.Engine.Worlds.Data;
-using ConcreteEngine.Engine.Worlds.MeshGeneration.MeshData;
+using ConcreteEngine.Engine.Worlds.Mesh.Data;
 using ConcreteEngine.Engine.Worlds.Objects;
 using ConcreteEngine.Graphics.Gfx;
 using ConcreteEngine.Graphics.Gfx.Contracts;
@@ -10,7 +10,7 @@ using ConcreteEngine.Graphics.Gfx.Resources;
 using ConcreteEngine.Graphics.Gfx.Utility;
 using ConcreteEngine.Graphics.Primitives;
 
-namespace ConcreteEngine.Engine.Worlds.MeshGeneration;
+namespace ConcreteEngine.Engine.Worlds.Mesh;
 
 internal readonly ref struct ParticleMeshWriter(
     int slot,

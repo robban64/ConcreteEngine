@@ -1,10 +1,8 @@
 using ConcreteEngine.Graphics.Gfx;
 
-namespace ConcreteEngine.Engine.Worlds.MeshGeneration;
+namespace ConcreteEngine.Engine.Worlds.Mesh;
 
-public interface IRenderBatcher : IDisposable;
-
-public abstract class MeshGenerator(GfxContext gfx) : IRenderBatcher
+public abstract class MeshGenerator(GfxContext gfx)
 {
     protected readonly GfxContext Gfx = gfx;
     public abstract void Dispose();

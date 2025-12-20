@@ -5,9 +5,9 @@ using ConcreteEngine.Common.Numerics.Maths;
 using ConcreteEngine.Renderer.State;
 using ConcreteEngine.Shared.Rendering;
 
-namespace ConcreteEngine.Engine.Worlds.View;
+namespace ConcreteEngine.Engine.Worlds.Utility;
 
-internal static class RenderTransform
+internal static class CameraUtils
 {
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static void GetWorldBounds(in BoundingBox local, in Transform transform, out BoundingBox world)

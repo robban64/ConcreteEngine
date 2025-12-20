@@ -1,6 +1,7 @@
 using ConcreteEngine.Common.Numerics;
 using ConcreteEngine.Engine.Assets;
 using ConcreteEngine.Engine.Assets.Shaders;
+using ConcreteEngine.Engine.Worlds.Render;
 using ConcreteEngine.Graphics.Gfx.Contracts;
 using ConcreteEngine.Graphics.Gfx.Definitions;
 using ConcreteEngine.Renderer;
@@ -8,15 +9,15 @@ using ConcreteEngine.Renderer.Data;
 using ConcreteEngine.Renderer.Descriptors;
 using ConcreteEngine.Renderer.Passes;
 
-namespace ConcreteEngine.Engine.Worlds.Render;
+namespace ConcreteEngine.Engine.Worlds.Utility;
 
 internal static class WorldRenderSetup
 {
-    internal static void RegisterFrameBuffers(RenderSetupBuilder builder, WorldRenderParams renderParams)
+    internal static void RegisterFrameBuffers(RenderSetupBuilder builder, WorldVisual worldVisual)
     {
         builder.RegisterFbo<ShadowPassTag>(FboVariant.Default,
             new RegisterFboEntry().AttachDepthTexture(GfxFboDepthTextureDesc.Default())
-                .UseFixedSize(new Size2D(renderParams.ShadowMapSize)));
+                .UseFixedSize(new Size2D(worldVisual.ShadowMapSize)));
 
         builder.RegisterFbo<ScenePassTag>(FboVariant.Default,
             new RegisterFboEntry().AttachColorTexture(GfxFboColorTextureDesc.Off(), RenderBufferMsaa.X4)

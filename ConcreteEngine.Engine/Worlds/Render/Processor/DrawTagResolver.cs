@@ -3,7 +3,6 @@ using ConcreteEngine.Common.Numerics;
 using ConcreteEngine.Common.Numerics.Maths;
 using ConcreteEngine.Engine.ECS;
 using ConcreteEngine.Engine.ECS.RenderComponent;
-using ConcreteEngine.Engine.Time;
 using ConcreteEngine.Engine.Utils;
 using ConcreteEngine.Engine.Worlds.Render.Data;
 using ConcreteEngine.Engine.Worlds.Tables;
@@ -17,31 +16,23 @@ internal static class DrawTagResolver
 {
     internal static void TagResolveEntities(in DrawEntityContext ctx, RenderEntityHub renderEntities)
     {
-        var deltaTime = EngineTime.DeltaTime;
         var slot = 1;
         foreach (var query in renderEntities.Query<RenderAnimationComponent>())
         {
-            var entityId = query.RenderEntity;
-            //ref var component = ref query.Component;
-            //component.AdvanceTime(deltaTime);
-
-            var index = ctx.ByEntityIdSpan[entityId];
-            if (index == -1) continue;
-            ref var drawEntity = ref ctx.EntitySpan[index];
-            drawEntity.Source.AnimatedSlot = (ushort)slot++;
+            var drawPtr = ctx.TryGetVisible(query.RenderEntity);
+            if (drawPtr.IsNull) continue;
+            drawPtr.Value.Source.AnimatedSlot = (ushort)slot++;
         }
 
         if (renderEntities.GetStore<SelectionComponent>().Count == 0) return;
 
         foreach (var query in renderEntities.Query<SelectionComponent>())
         {
-            var entityId = query.RenderEntity;
-            var index = ctx.ByEntityIdSpan[entityId];
-            if (index == -1) continue;
+            var drawPtr = ctx.TryGetVisible(query.RenderEntity);
+            if (drawPtr.IsNull) continue;
             //ref readonly var component = ref query.Component;
-            ref var drawEntity = ref ctx.EntitySpan[index];
-            drawEntity.Meta.PassMask = PassMask.Effect | PassMask.DepthPre;
-            drawEntity.Source.Resolver = DrawCommandResolver.Highlight;
+            drawPtr.Value.Meta.PassMask = PassMask.Effect | PassMask.DepthPre;
+            drawPtr.Value.Source.Resolver = DrawCommandResolver.Highlight;
         }
     }
 

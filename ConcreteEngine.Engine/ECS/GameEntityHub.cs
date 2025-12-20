@@ -42,7 +42,7 @@ public sealed class GameEntityHub
     public bool Has(GameEntityId e)
     {
         var index = e.Index;
-        return index > 0 && index < _count && _entities[index] == e;
+        return (uint)index < (uint)_count && _entities[index] == e;
     }
 
     public GameEntityId AddEntity()
@@ -82,7 +82,6 @@ public sealed class GameEntityHub
         _entities[index] = default;
         _free.Push(index);
     }
-
 
     public GameQuery<T1>.EntityEnumerator Query<T1>() where T1 : unmanaged, IGameComponent<T1>
         => new(GenericStores<T1>.Store);

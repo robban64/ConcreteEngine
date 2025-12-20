@@ -16,7 +16,7 @@ internal ref struct RenderComponentEnumerator<T1>(RenderEntityStore<T1> r)
     public readonly ref struct Item(int idx, RenderEntityStore<T1> r)
     {
         public readonly int Index = idx;
-        public RenderEntityId RenderEntity => r.GetHandle(Index);
+        public RenderEntityId RenderEntity => r.GetEntity(Index);
         public ref T1 Component => ref r.GetByIndex(Index);
     }
 

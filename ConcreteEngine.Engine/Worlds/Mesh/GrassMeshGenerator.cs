@@ -3,7 +3,7 @@ using ConcreteEngine.Common;
 using ConcreteEngine.Graphics.Gfx;
 using ConcreteEngine.Graphics.Gfx.Resources;
 
-namespace ConcreteEngine.Engine.Worlds.MeshGeneration;
+namespace ConcreteEngine.Engine.Worlds.Mesh;
 
 public readonly struct GrassBatcherResult(MeshId meshId, int drawCount, int instanceCount)
 {

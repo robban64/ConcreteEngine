@@ -2,13 +2,14 @@ using System.Numerics;
 using ConcreteEngine.Common.Numerics;
 using ConcreteEngine.Common.Numerics.Maths;
 using ConcreteEngine.Editor.Data;
+using ConcreteEngine.Engine.Worlds.Data;
+using ConcreteEngine.Engine.Worlds.Utility;
 using ConcreteEngine.Renderer.State;
 using ConcreteEngine.Shared.World;
 
-namespace ConcreteEngine.Engine.Worlds.View;
+namespace ConcreteEngine.Engine.Worlds;
 
-// TODO improve
-public sealed class Camera3D
+public sealed class Camera
 {
     private const float MinNearPlane = 0.1f;
     private const float MaxNearPlane = 4f;
@@ -41,7 +42,7 @@ public sealed class Camera3D
     public long Generation { get; private set; } = 0;
 
 
-    public Camera3D()
+    public Camera()
     {
         Ensure();
         _dirty = true;
@@ -53,9 +54,9 @@ public sealed class Camera3D
 
     internal ref readonly BoundingFrustum Frustum => ref _frustum;
     internal ref readonly Matrix4x4 InverseProjectionViewMatrix => ref _invProjectionViewMatrix;
+    internal CameraRenderView RenderView => new(ref _renderView.ViewMatrix, ref _projInfo, ref _frustum);
 
     public float AspectRatio => _projInfo.AspectRatio;
-    internal CameraRenderView RenderView => new(ref _renderView.ViewMatrix, ref _projInfo, ref _frustum);
 
     public YawPitch Orientation
     {
@@ -143,7 +144,7 @@ public sealed class Camera3D
         Span<Vector3> corners = stackalloc Vector3[8];
         FrustumMath.FillFrustumCorners(in _viewMatrix, in _projectionMatrix,
             _transform.Translation, nearFar, corners);
-        RenderTransform.CreateLightView(ref renderCamera.LightSpace, in shadows, lightDir, corners);
+        CameraUtils.CreateLightView(ref renderCamera.LightSpace, in shadows, lightDir, corners);
     }
 
 

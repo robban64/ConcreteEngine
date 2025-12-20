@@ -6,7 +6,7 @@ using ConcreteEngine.Renderer.Data;
 
 namespace ConcreteEngine.Engine.Worlds;
 
-public sealed class WorldSkybox
+public sealed class WorldSky
 {
     public ModelId Model { get; private set; }
     public MeshId Mesh { get; private set; }
@@ -14,7 +14,7 @@ public sealed class WorldSkybox
 
     public bool IsActive => Model > 0 || Material > 0;
 
-    internal WorldSkybox()
+    internal WorldSky()
     {
     }
 

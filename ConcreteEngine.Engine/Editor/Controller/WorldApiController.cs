@@ -6,7 +6,6 @@ using ConcreteEngine.Editor.Store.Resources;
 using ConcreteEngine.Engine.Assets.Models;
 using ConcreteEngine.Engine.Worlds;
 using ConcreteEngine.Engine.Worlds.Render;
-using ConcreteEngine.Engine.Worlds.View;
 using ConcreteEngine.Shared.Rendering;
 
 namespace ConcreteEngine.Engine.Editor.Controller;
@@ -14,8 +13,8 @@ namespace ConcreteEngine.Engine.Editor.Controller;
 internal sealed class WorldApiController(ApiContext ctx) : IEngineWorldController
 {
     private readonly World _world = ctx.World;
-    private readonly Camera3D _camera = ctx.World.Camera;
-    private readonly WorldRenderParams _renderParams = ctx.World.WorldRenderParams;
+    private readonly Camera _camera = ctx.World.Camera;
+    private readonly WorldVisual _worldVisual = ctx.World.WorldVisual;
 
     public void CommitCamera(EditorSlot<EditorCameraState> slot)
     {
@@ -39,21 +38,21 @@ internal sealed class WorldApiController(ApiContext ctx) : IEngineWorldControlle
 
     public void CommitWorldRenderParams(EditorSlot<WorldParamsData> slot)
     {
-        if (slot.Gen != _renderParams.Generation)
+        if (slot.Gen != _worldVisual.Generation)
         {
-            _renderParams.FillData(out slot.State);
-            slot.Gen = _renderParams.Generation;
+            _worldVisual.FillData(out slot.State);
+            slot.Gen = _worldVisual.Generation;
             return;
         }
 
-        _renderParams.SetFromData(in slot.State);
+        _worldVisual.SetFromData(in slot.State);
     }
 
     public void FetchWorldRenderParams(EditorSlot<WorldParamsData> slot)
     {
-        if (slot.Gen == _renderParams.Generation) return;
-        _renderParams.FillData(out slot.State);
-        slot.Gen = _renderParams.Generation;
+        if (slot.Gen == _worldVisual.Generation) return;
+        _worldVisual.FillData(out slot.State);
+        slot.Gen = _worldVisual.Generation;
     }
 
 

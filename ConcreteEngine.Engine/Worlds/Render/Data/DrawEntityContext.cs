@@ -1,4 +1,5 @@
 using System.Runtime.CompilerServices;
+using ConcreteEngine.Common.Generics;
 using ConcreteEngine.Engine.ECS;
 
 namespace ConcreteEngine.Engine.Worlds.Render.Data;
@@ -38,6 +39,13 @@ internal readonly ref struct DrawEntityContext(
     public readonly Span<DrawEntity> EntitySpan = drawEntities;
     public readonly Span<RenderEntityId> EntityIndices = entityIndices;
     public readonly Span<int> ByEntityIdSpan = byEntityId;
+
+    public ValuePtr<DrawEntity> TryGetVisible(RenderEntityId entity)
+    {
+        var index = ByEntityIdSpan[entity];
+        if (index == -1) return ValuePtr<DrawEntity>.Null;
+        return new ValuePtr<DrawEntity>(ref EntitySpan[index]);
+    }
     
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public bool IsVisible(RenderEntityId renderEntityId) => ByEntityIdSpan[renderEntityId] != -1;

@@ -2,7 +2,7 @@ using System.Numerics;
 using ConcreteEngine.Common.Numerics;
 using ConcreteEngine.Shared.World;
 
-namespace ConcreteEngine.Engine.Worlds.View;
+namespace ConcreteEngine.Engine.Worlds.Data;
 
 internal readonly ref struct CameraRenderView(
     ref Matrix4x4 viewMatrix,

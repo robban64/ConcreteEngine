@@ -1,6 +1,5 @@
 using ConcreteEngine.Engine.Configuration;
 using ConcreteEngine.Engine.Worlds;
-using ConcreteEngine.Engine.Worlds.View;
 
 namespace ConcreteEngine.Engine.Scene;
 
@@ -9,7 +8,7 @@ public abstract class GameScene
     protected GameSceneContext Context { get; private set; } = null!;
 
     protected World World => Context.World;
-    protected Camera3D Camera => World.Camera;
+    protected Camera Camera => World.Camera;
 
     protected GameScene()
     {

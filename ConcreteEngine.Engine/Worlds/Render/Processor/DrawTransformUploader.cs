@@ -1,7 +1,7 @@
 using System.Numerics;
 using System.Runtime.CompilerServices;
 using ConcreteEngine.Common.Numerics.Maths;
-using ConcreteEngine.Engine.ECS.Data;
+using ConcreteEngine.Engine.ECS;
 using ConcreteEngine.Engine.Worlds.Render.Data;
 using ConcreteEngine.Engine.Worlds.Tables;
 using ConcreteEngine.Renderer.Data;
@@ -11,19 +11,21 @@ namespace ConcreteEngine.Engine.Worlds.Render.Processor;
 
 internal static class DrawTransformUploader
 {
-    public static void UploadTransform(in DrawEntityContext ctx, in RenderEntityContext view, in DrawCommandUploader uploader, MeshTable meshTable)
+    public static void UploadTransform(in DrawEntityContext ctx, in DrawCommandUploader uploader,
+        RenderEntityCore ecsCore, MeshTable meshTable)
     {
+        var transformSpan = ecsCore.GetTransformSpan();
         foreach (var it in ctx)
         {
             ref readonly var entity = ref it.DrawEntity;
-            ref readonly var transform = ref view.GetTransform(entity.RenderEntity).Transform;
-            var animatedSlot = entity.Source.AnimatedSlot;
+            var index = entity.RenderEntity.Index;
+            ref readonly var transform = ref transformSpan[index].Transform;
 
             MatrixMath.CreateModelMatrix(in transform, out var world);
             var locals = meshTable.GetPartTransforms(entity.Source.Model);
             foreach (ref readonly var local in locals)
             {
-                WriteTransformUniform(ref uploader.GetWriter(), in local, in world, animatedSlot);
+                WriteTransformUniform(ref uploader.GetWriter(), in local, in world, entity.Source.AnimatedSlot);
             }
         }
     }

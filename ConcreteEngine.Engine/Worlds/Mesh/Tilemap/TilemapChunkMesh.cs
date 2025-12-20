@@ -1,4 +1,4 @@
-namespace ConcreteEngine.Engine.Worlds.MeshGeneration.Tilemap;
+namespace ConcreteEngine.Engine.Worlds.Mesh.Tilemap;
 /*
 internal sealed class TilemapChunkMesh : IDisposable
 {

@@ -7,7 +7,7 @@ internal sealed class GameMessagePipeline
     private readonly EventBus _bus = new();
 
     //private readonly CommandQueue _queue = new();
-    private readonly TypeRegistryCollection<CommandInvoker> _registry = new();
+    //private readonly TypeRegistryCollection<CommandInvoker> _registry = new();
 
     private readonly List<IGameCommand> _commandQueue = new(128);
     private readonly List<IGameCommand> _commands = new(128);
@@ -24,7 +24,7 @@ internal sealed class GameMessagePipeline
 
     public void RegisterHandler<TCommand>(ICommandHandler<TCommand> handler) where TCommand : IGameCommand
     {
-        _registry.Register<TCommand>((cmd, tick, bus) => handler.Handle((TCommand)cmd, tick, bus));
+       // _registry.Register<TCommand>((cmd, tick, bus) => handler.Handle((TCommand)cmd, tick, bus));
     }
 
     public void ProcessTick(int tick)
@@ -39,8 +39,8 @@ internal sealed class GameMessagePipeline
 
         foreach (var cmd in _commands)
         {
-            var handler = _registry.Get(cmd.GetType());
-            handler(cmd, tick, _bus);
+            //var handler = _registry.Get(cmd.GetType());
+            //handler(cmd, tick, _bus);
         }
     }
 

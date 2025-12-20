@@ -1,22 +1,18 @@
 using ConcreteEngine.Common.Numerics;
-using ConcreteEngine.Common.Time;
 using ConcreteEngine.Engine.Assets;
 using ConcreteEngine.Engine.Assets.Internal;
 using ConcreteEngine.Engine.Assets.Materials;
 using ConcreteEngine.Engine.Assets.Models;
 using ConcreteEngine.Engine.ECS;
-using ConcreteEngine.Engine.ECS.GameComponent;
-using ConcreteEngine.Engine.ECS.RenderComponent;
 using ConcreteEngine.Engine.Editor.Data;
 using ConcreteEngine.Engine.Editor.Definitions;
 using ConcreteEngine.Engine.Platform;
 using ConcreteEngine.Engine.Time;
 using ConcreteEngine.Engine.Utils;
 using ConcreteEngine.Engine.Worlds.Game;
-using ConcreteEngine.Engine.Worlds.MeshGeneration;
+using ConcreteEngine.Engine.Worlds.Mesh;
 using ConcreteEngine.Engine.Worlds.Render;
 using ConcreteEngine.Engine.Worlds.Tables;
-using ConcreteEngine.Engine.Worlds.View;
 using ConcreteEngine.Graphics;
 using ConcreteEngine.Graphics.Gfx;
 using ConcreteEngine.Graphics.Gfx.Contracts;
@@ -34,14 +30,14 @@ public sealed class World : IGameEngineSystem
     private readonly RenderEngine _renderEngine;
     private readonly AssetSystem _assets;
 
-    private readonly WorldSkybox _sky;
-    private readonly WorldTerrain _terrain;
-    private readonly WorldParticles _particles;
+    private readonly WorldSky _sky;
+    private readonly Terrain _terrain;
+    private readonly ParticleSystem _particles;
 
-    private readonly WorldRenderParams _worldRenderParams;
+    private readonly WorldVisual _worldVisual;
 
-    private readonly WorldRaycaster _raycast;
-    private readonly Camera3D _camera;
+    private readonly RayCaster _raycast;
+    private readonly Camera _camera;
 
     private readonly MeshTable _meshTable;
     private readonly MaterialTable _materialTable;
@@ -66,42 +62,41 @@ public sealed class World : IGameEngineSystem
         _renderEngine = renderEngine;
         _assets = assets;
         _ecs = ecs;
-        _camera = new Camera3D();
+        _camera = new Camera();
         _meshGenerator = new MeshGeneratorRegistry();
 
         _meshTable = new MeshTable();
         _materialTable = new MaterialTable();
         _animationTable = new AnimationTable();
 
-        _sky = new WorldSkybox();
-        _terrain = new WorldTerrain(_meshTable, _materialTable);
-        _particles = new WorldParticles(_meshTable, _materialTable);
+        _sky = new WorldSky();
+        _terrain = new Terrain(_meshTable, _materialTable);
+        _particles = new ParticleSystem(_meshTable, _materialTable);
 
         _drawEntities = new DrawEntityPipeline(this);
         _gameSystem = new GameSystem(ecs.GameEntity);
 
-        _raycast = new WorldRaycaster(Camera, Entities, _terrain, _drawEntities);
+        _raycast = new RayCaster(Camera, Entities, _terrain, _drawEntities);
 
-        _worldRenderParams = new WorldRenderParams(AssetConfigLoader.GraphicSettings);
-        _worldRenderParams.EndTick();
+        _worldVisual = new WorldVisual(AssetConfigLoader.GraphicSettings);
 
         _worldRenderer = new WorldRenderer(_ecs.GameEntity, _ecs.RenderEntity, _drawEntities, _camera);
         
-        _renderEngine.SetRenderParams(_worldRenderParams.Snapshot);
+        _renderEngine.SetRenderParams(_worldVisual.Snapshot);
     }
 
     internal RenderEntityHub Entities => _ecs.RenderEntity;
 
     internal WorldRenderer Renderer => _worldRenderer;
 
-    public Camera3D Camera => _camera;
-    public WorldRaycaster Raycast => _raycast;
+    public Camera Camera => _camera;
+    public RayCaster Raycast => _raycast;
 
-    public WorldSkybox Sky => _sky;
-    public WorldTerrain Terrain => _terrain;
-    public WorldParticles Particles => _particles;
+    public WorldSky Sky => _sky;
+    public Terrain Terrain => _terrain;
+    public ParticleSystem Particles => _particles;
 
-    public WorldRenderParams WorldRenderParams => _worldRenderParams;
+    public WorldVisual WorldVisual => _worldVisual;
 
     internal MeshTable MeshTableImpl => _meshTable;
     internal MaterialTable MaterialTableImpl => _materialTable;
@@ -192,8 +187,8 @@ public sealed class World : IGameEngineSystem
         
         _gameSystem.UpdateTick(dt);
         
-        WorldRenderParams.EndTick();
-        Camera.EndTick(WorldRenderParams.Snapshot, RenderCamera);
+        WorldVisual.EndTick();
+        Camera.EndTick(WorldVisual.Snapshot, RenderCamera);
     }
 
     internal void OnSimulationTick(float fixedDt)
@@ -216,7 +211,7 @@ public sealed class World : IGameEngineSystem
                 _renderEngine.FboRegistry.RecreateScreenDependentFbo(_window.OutputSize);
                 break;
             case FboCommandAction.RecreateShadowFbo:
-                if (_worldRenderParams.SetShadow(req.Size.Width))
+                if (_worldVisual.SetShadow(req.Size.Width))
                     _renderEngine.FboRegistry.RecreateFixedFrameBuffer<ShadowPassTag>(FboVariant.Default, req.Size);
                 break;
             case FboCommandAction.None:

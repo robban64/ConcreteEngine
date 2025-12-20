@@ -2,7 +2,7 @@ using System.Numerics;
 using ConcreteEngine.Graphics.Gfx.Resources;
 using ConcreteEngine.Shared.Graphics;
 
-namespace ConcreteEngine.Engine.Worlds.MeshGeneration.Sprite;
+namespace ConcreteEngine.Engine.Worlds.Mesh.Sprite;
 
 public readonly record struct SpriteBatchDrawItem(
     Vector2 Position,

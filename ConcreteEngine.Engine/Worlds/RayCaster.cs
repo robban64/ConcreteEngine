@@ -4,18 +4,18 @@ using ConcreteEngine.Common.Numerics;
 using ConcreteEngine.Common.Numerics.Maths;
 using ConcreteEngine.Engine.ECS;
 using ConcreteEngine.Engine.Worlds.Render;
-using ConcreteEngine.Engine.Worlds.View;
+using ConcreteEngine.Engine.Worlds.Utility;
 
 namespace ConcreteEngine.Engine.Worlds;
 
-public sealed class WorldRaycaster
+public sealed class RayCaster
 {
-    private readonly Camera3D _camera;
+    private readonly Camera _camera;
     private readonly RenderEntityHub _entities;
-    private readonly WorldTerrain _terrain;
+    private readonly Terrain _terrain;
     private readonly DrawEntityPipeline _drawEntities;
 
-    internal WorldRaycaster(Camera3D camera, RenderEntityHub entities, WorldTerrain terrain,
+    internal RayCaster(Camera camera, RenderEntityHub entities, Terrain terrain,
         DrawEntityPipeline drawEntities)
     {
         _entities = entities;
@@ -55,7 +55,7 @@ public sealed class WorldRaycaster
         {
             ref readonly var transform = ref coreView.GetTransform(entity).Transform;
             ref readonly var box = ref coreView.GetBox(entity);
-            RenderTransform.GetWorldBounds(in box.Bounds, in transform, out worldBounds);
+            CameraUtils.GetWorldBounds(in box.Bounds, in transform, out worldBounds);
             if (CollisionMethods.RayIntersectsBox(in ray, in worldBounds, out var dist) && dist < distance)
             {
                 distance = dist;

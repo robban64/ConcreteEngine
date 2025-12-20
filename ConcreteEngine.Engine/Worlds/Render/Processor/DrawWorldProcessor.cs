@@ -17,7 +17,7 @@ internal static class DrawWorldProcessor
         SubmitDrawSkybox(commandBuffer, world.Sky);
     }
 
-    private static void SubmitDrawTerrain(DrawCommandBuffer commandBuffer, MeshTable meshTable, WorldTerrain terrain)
+    private static void SubmitDrawTerrain(DrawCommandBuffer commandBuffer, MeshTable meshTable, Terrain terrain)
     {
         var view = meshTable.GetPartsView(terrain.Model);
 
@@ -28,7 +28,7 @@ internal static class DrawWorldProcessor
         commandBuffer.SubmitDraw(cmd, meta, in model, in normal);
     }
 
-    private static void SubmitDrawSkybox(DrawCommandBuffer commandBuffer, WorldSkybox sky)
+    private static void SubmitDrawSkybox(DrawCommandBuffer commandBuffer, WorldSky sky)
     {
         var meta = new DrawCommandMeta(DrawCommandId.Skybox, DrawCommandQueue.Skybox, passMask: PassMask.Main);
         var cmd = new DrawCommand(sky.Mesh, sky.Material);

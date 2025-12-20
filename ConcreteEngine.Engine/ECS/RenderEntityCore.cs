@@ -37,30 +37,29 @@ public sealed class RenderEntityCore
         _boxes = new BoxComponent[initialCapacity];
     }
 
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public bool Has(RenderEntityId e)
     {
-        var index = e - 1;
-        return (uint)index < (uint)Count && _entities[index] == e;
+        var index = e.Index;
+        return (uint)index < _entities.Length && _entities[index] == e;
     }
-    
+
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public ValuePtr<RenderTransform> TryGetTransform(RenderEntityId entity)
+    public ref SourceComponent GetSource(RenderEntityId e) => ref _sources[e.Index];
+
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public ref RenderTransform GetTransform(RenderEntityId e) => ref _transforms[e.Index];
+
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public ref BoxComponent GetBox(RenderEntityId e) => ref _boxes[e.Index];
+
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public ValuePtr<RenderTransform> TryGetTransform(RenderEntityId e)
     {
-        var id = entity.Index;
-        if ((uint)id >= _count) return ValuePtr<RenderTransform>.Null;
+        var id = e.Index;
+        if ((uint)id >= _transforms.Length) return ValuePtr<RenderTransform>.Null;
         return new ValuePtr<RenderTransform>(ref _transforms[id]);
     }
-
-    
-    // Getters
-    [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public ref SourceComponent GetSource(RenderEntityId e) => ref _sources[e - 1];
-
-    [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public ref RenderTransform GetTransform(RenderEntityId e) => ref _transforms[e - 1];
-
-    [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public ref BoxComponent GetBox(RenderEntityId e) => ref _boxes[e - 1];
 
     // Spans
     public Span<SourceComponent> GetSourceSpan() => _sources.AsSpan(0, _count);
@@ -82,25 +81,24 @@ public sealed class RenderEntityCore
         var len = _count;
         if ((uint)len > _sources.Length || _sources.Length != _transforms.Length || _sources.Length != _boxes.Length)
             throw new IndexOutOfRangeException();
-        
+
         return new RenderEntityContext(len, _sources.AsSpan(0, len), _transforms.AsSpan(0, len), _boxes.AsSpan(0, len));
     }
 
-
     public RenderEntityId AddEntity(in CoreComponentBundle componentBundle)
     {
-        if(_free.Count == 0) EnsureCapacity(1);
+        if (_free.Count == 0) EnsureCapacity(1);
         var result = AddEntityInternal(in componentBundle);
         _isDirty = true;
         return result;
     }
-    
+
     public void AddEntities(ReadOnlySpan<CoreComponentBundle> components, Span<RenderEntityId> result)
     {
         int ensureCap = int.Max(0, components.Length - _free.Count);
         if (ensureCap > 0)
             EnsureCapacity(ensureCap);
-        
+
         for (var i = 0; i < components.Length; i++)
         {
             ref readonly var component = ref components[i];
@@ -124,17 +122,17 @@ public sealed class RenderEntityCore
         {
             entity = new RenderEntityId(index + 1);
         }
-        
-        if(entity.Index != index) throw new InvalidOperationException();
-        
+
+        if (entity.Index != index) throw new InvalidOperationException();
+
         ref var existingEntity = ref _entities[index];
-        if(existingEntity.IsValid) throw new InvalidOperationException();
-        
+        if (existingEntity.IsValid) throw new InvalidOperationException();
+
         existingEntity = entity;
         _sources[index] = component.Source;
         _transforms[index] = component.Transform;
         _boxes[index] = component.Box;
-        
+
         return entity;
     }
 
@@ -145,13 +143,13 @@ public sealed class RenderEntityCore
 
         var index = e.Index;
         ref var existing = ref _entities[index];
-        if(existing != e) throw new InvalidOperationException();
-        
+        if (existing != e) throw new InvalidOperationException();
+
         _entities[index] = default;
         _sources[index] = default;
         _transforms[index] = default;
         _boxes[index] = default;
-        
+
         _free.Push(index);
     }
 
@@ -159,8 +157,8 @@ public sealed class RenderEntityCore
     {
         _isDirty = false;
     }
-    
-    private void ValidateSource(SourceComponent source)
+
+    private static void ValidateSource(SourceComponent source)
     {
         ArgumentOutOfRangeException.ThrowIfNegativeOrZero(source.Model.Value, nameof(source.Model));
         ArgumentOutOfRangeException.ThrowIfNegativeOrZero(source.MaterialKey.Value, nameof(source.MaterialKey));

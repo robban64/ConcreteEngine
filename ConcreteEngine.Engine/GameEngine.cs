@@ -10,7 +10,7 @@ using ConcreteEngine.Engine.Scene;
 using ConcreteEngine.Engine.Time;
 using ConcreteEngine.Engine.Utils;
 using ConcreteEngine.Engine.Worlds;
-using ConcreteEngine.Engine.Worlds.Render;
+using ConcreteEngine.Engine.Worlds.Utility;
 using ConcreteEngine.Graphics;
 using ConcreteEngine.Graphics.Gfx.Contracts;
 using ConcreteEngine.Graphics.Gfx.Resources;
@@ -251,7 +251,7 @@ public sealed class GameEngine : IDisposable
         var shaderCount = _assets.Store.GetMetaSnapshot<Shader>().Count;
 
         builder.RegisterShader(shaderCount, ExtractShaderIds).RegisterCoreShaders(GetCoreShaders);
-        WorldRenderSetup.RegisterFrameBuffers(builder, _world.WorldRenderParams);
+        WorldRenderSetup.RegisterFrameBuffers(builder, _world.WorldVisual);
         builder.SetupPassPipeline(RenderPipelineVersion.Default3D);
         _renderer.ApplyBuilder(builder);
         return;

@@ -1,7 +1,7 @@
 using System.Numerics;
 using System.Runtime.InteropServices;
 
-namespace ConcreteEngine.Engine.Worlds.MeshGeneration.MeshData;
+namespace ConcreteEngine.Engine.Worlds.Mesh.Data;
 
 [StructLayout(LayoutKind.Sequential)]
 internal struct ParticleInstanceData

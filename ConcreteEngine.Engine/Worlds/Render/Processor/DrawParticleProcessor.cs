@@ -2,7 +2,7 @@ using System.Numerics;
 using ConcreteEngine.Engine.ECS;
 using ConcreteEngine.Engine.ECS.RenderComponent;
 using ConcreteEngine.Engine.Time;
-using ConcreteEngine.Engine.Worlds.MeshGeneration;
+using ConcreteEngine.Engine.Worlds.Mesh;
 using ConcreteEngine.Engine.Worlds.Objects;
 using ConcreteEngine.Engine.Worlds.Render.Data;
 using ConcreteEngine.Renderer.Definitions;
@@ -12,49 +12,48 @@ namespace ConcreteEngine.Engine.Worlds.Render.Processor;
 
 internal static class DrawParticleProcessor
 {
-    private static readonly List<ParticleEmitter> Emitters = new(8);
 
-    internal static void TagParticles(in DrawEntityContext ctx, WorldParticles worldParticles,
+    internal static void TagParticles(in DrawEntityContext ctx, ParticleSystem particleSystem,
         RenderEntityHub renderEntities)
     {
-        Emitters.Clear();
-        //Emitters.EnsureCapacity(worldEntities.GetStore<ParticleComponent>().Count);
 
+        foreach (var query in renderEntities.Query<ParticleComponent>())
+        {
+            var drawPtr = ctx.TryGetVisible(query.RenderEntity);
+            if (drawPtr.IsNull) continue;
+
+            var component = query.Component;
+            var emitter = particleSystem.GetEmitter(component.EmitterHandle);
+
+            drawPtr.Value.Meta = new DrawEntityMeta(DrawCommandId.Particle, DrawCommandQueue.Particles, PassMask.Main);
+            drawPtr.Value.Source.InstanceCount = emitter.ParticleCount;
+            drawPtr.Value.Source.Model = emitter.Model;
+            drawPtr.Value.Source.MaterialKey = emitter.MaterialKey;
+        }
+    }
+
+    internal static void Execute(in DrawEntityContext ctx, ParticleSystem particleSystem,
+        RenderEntityHub renderEntities)
+    {
+        var timeOffset = EngineTime.SimulationDeltaTime * EngineTime.SimulationAlpha;
+        ParticleEmitter? prevEmitter = null;
+        ParticleMeshWriter writer = default;
+        ParticleDefinition definition = default;
+        
         foreach (var query in renderEntities.Query<ParticleComponent>())
         {
             var index = ctx.ByEntityIdSpan[query.RenderEntity];
             if (index == -1) continue;
-            ref var drawEntity = ref ctx.EntitySpan[index];
-
             var component = query.Component;
-            var emitter = worldParticles.GetEmitter(component.EmitterHandle);
+            var emitter = particleSystem.GetEmitter(component.EmitterHandle);
 
-            drawEntity.Meta = new DrawEntityMeta(DrawCommandId.Particle, DrawCommandQueue.Particles, PassMask.Main);
-            drawEntity.Source.InstanceCount = emitter.ParticleCount;
-            drawEntity.Source.Model = emitter.Model;
-            drawEntity.Source.MaterialKey = emitter.MaterialKey;
-
-            Emitters.Add(emitter);
-        }
-    }
-
-    internal static void Execute(WorldParticles worldParticles)
-    {
-        var timeOffset = EngineTime.SimulationDeltaTime * EngineTime.SimulationAlpha;
-        var prevEmitterHandle = -1;
-        ParticleMeshWriter writer = default;
-        ParticleDefinition definition = default;
-        foreach (var emitter in Emitters)
-        {
-            if (prevEmitterHandle != emitter.EmitterHandle)
+            if (prevEmitter?.EmitterHandle != component.EmitterHandle)
             {
-                writer = worldParticles.GetMeshWriterFor(emitter);
+                writer = particleSystem.GetMeshWriterFor(emitter);
                 definition = emitter.Definition;
             }
 
             ProcessEmitter(writer, in definition, timeOffset);
-
-            prevEmitterHandle = emitter.EmitterHandle;
         }
     }
 

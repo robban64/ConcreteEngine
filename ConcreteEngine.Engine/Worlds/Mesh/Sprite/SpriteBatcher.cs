@@ -1,4 +1,4 @@
-namespace ConcreteEngine.Engine.Worlds.MeshGeneration.Sprite;
+namespace ConcreteEngine.Engine.Worlds.Mesh.Sprite;
 /*
 public sealed class SpriteBatcher : RenderBatcher<SpriteBatchBuildResult>
 {

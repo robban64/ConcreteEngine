@@ -1,24 +1,7 @@
-using ConcreteEngine.Common;
-using ConcreteEngine.Common.Time;
-using ConcreteEngine.Engine.Assets;
-using ConcreteEngine.Engine.Assets.Shaders;
 using ConcreteEngine.Engine.ECS;
 using ConcreteEngine.Engine.ECS.GameComponent;
 using ConcreteEngine.Engine.ECS.RenderComponent;
-using ConcreteEngine.Engine.Editor.Data;
-using ConcreteEngine.Engine.Editor.Definitions;
-using ConcreteEngine.Engine.Platform;
 using ConcreteEngine.Engine.Time;
-using ConcreteEngine.Engine.Utils;
-using ConcreteEngine.Engine.Worlds.View;
-using ConcreteEngine.Graphics;
-using ConcreteEngine.Graphics.Gfx;
-using ConcreteEngine.Graphics.Gfx.Resources;
-using ConcreteEngine.Renderer;
-using ConcreteEngine.Renderer.Data;
-using ConcreteEngine.Renderer.Definitions;
-using ConcreteEngine.Renderer.Passes;
-using ConcreteEngine.Renderer.State;
 
 namespace ConcreteEngine.Engine.Worlds.Render;
 
@@ -27,9 +10,9 @@ public sealed class WorldRenderer
     private readonly GameEntityHub _gameEcs;
     private readonly RenderEntityHub _renderEcs;
     private readonly DrawEntityPipeline _drawEntities;
-    private readonly Camera3D _camera;
+    private readonly Camera _camera;
 
-    internal WorldRenderer(GameEntityHub gameEcs, RenderEntityHub renderEcs, DrawEntityPipeline drawEntities, Camera3D camera)
+    internal WorldRenderer(GameEntityHub gameEcs, RenderEntityHub renderEcs, DrawEntityPipeline drawEntities, Camera camera)
     {
         _gameEcs = gameEcs;
         _renderEcs = renderEcs;

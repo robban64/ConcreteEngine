@@ -33,9 +33,12 @@ public sealed class RenderEntityStore<T> : IRenderEntityStore where T : unmanage
         _entities = new RenderEntityId[initialCapacity];
     }
 
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public bool Has(RenderEntityId renderEntity) => FindIndex(renderEntity) >= 0;
+
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public RenderEntityId GetHandle(int i) => _entities[i];
+    public RenderEntityId GetEntity(int i) => _entities[i];
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public ref T Get(RenderEntityId renderEntity) => ref _data[FindIndex(renderEntity)];
@@ -44,31 +47,30 @@ public sealed class RenderEntityStore<T> : IRenderEntityStore where T : unmanage
     public ref T GetByIndex(int i) => ref _data[i];
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public Span<RenderEntityId> GetEntitySpan() => _entities.AsSpan(0, _count);
-
-    public Span<T> GetComponentSpan() => _data.AsSpan(0, _count);
-
-    [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    private int FindIndex(RenderEntityId renderEntity) => SortMethod.BinarySearch(GetEntitySpan(), renderEntity);
-
-    [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public bool Has(RenderEntityId renderEntity) => FindIndex(renderEntity) >= 0;
+    public T GetOrDefault(RenderEntityId entity)
+    {
+        var id = FindIndex(entity);
+        if ((uint)id >= _data.Length) return default;
+        return _data[id];
+    }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public ValuePtr<T> TryGet(RenderEntityId entity)
     {
         var id = FindIndex(entity);
-        if ((uint)id >= _count) return ValuePtr<T>.Null;
+        if ((uint)id >= _data.Length) return ValuePtr<T>.Null;
         return new ValuePtr<T>(ref _data[id]);
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public T GetOrDefault(RenderEntityId entity)
-    {
-        var id = FindIndex(entity);
-        if ((uint)id >= _count) return default;
-        return _data[id];
-    }
+    public Span<RenderEntityId> GetEntitySpan() => _entities.AsSpan(0, _count);
+
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public Span<T> GetComponentSpan() => _data.AsSpan(0, _count);
+
+
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    private int FindIndex(RenderEntityId renderEntity) => SortMethod.BinarySearch(GetEntitySpan(), renderEntity);
 
     public void Add(RenderEntityId renderEntity, T value)
     {
@@ -97,6 +99,7 @@ public sealed class RenderEntityStore<T> : IRenderEntityStore where T : unmanage
     }
 
     public void EndTick() => _isDirty = false;
+
 
     private void EnsureCapacity(int amount)
     {

@@ -6,7 +6,7 @@ using ConcreteEngine.Common.Time;
 using ConcreteEngine.Engine.ECS;
 using ConcreteEngine.Engine.ECS.RenderComponent;
 using ConcreteEngine.Engine.Worlds.Data;
-using ConcreteEngine.Engine.Worlds.MeshGeneration;
+using ConcreteEngine.Engine.Worlds.Mesh;
 using ConcreteEngine.Engine.Worlds.Objects;
 using ConcreteEngine.Engine.Worlds.Tables;
 using ConcreteEngine.Engine.Worlds.Utility;
@@ -15,7 +15,7 @@ using ConcreteEngine.Shared.World;
 
 namespace ConcreteEngine.Engine.Worlds;
 
-public sealed class WorldParticles
+public sealed class ParticleSystem
 {
     // public ModelId Model { get; private set; }
     private MaterialId Material { get; set; }
@@ -30,7 +30,7 @@ public sealed class WorldParticles
     private int _handleHigh = 0;
 
 
-    internal WorldParticles(MeshTable meshTable, MaterialTable materialTable)
+    internal ParticleSystem(MeshTable meshTable, MaterialTable materialTable)
     {
         _meshTable = meshTable;
         _materialTable = materialTable;

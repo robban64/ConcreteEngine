@@ -1,6 +1,10 @@
 using ConcreteEngine.Common;
+using ConcreteEngine.Common.Time;
 using ConcreteEngine.Engine.Assets;
 using ConcreteEngine.Engine.Assets.Shaders;
+using ConcreteEngine.Engine.ECS;
+using ConcreteEngine.Engine.ECS.GameComponent;
+using ConcreteEngine.Engine.ECS.RenderComponent;
 using ConcreteEngine.Engine.Editor.Data;
 using ConcreteEngine.Engine.Editor.Definitions;
 using ConcreteEngine.Engine.Platform;
@@ -20,138 +24,46 @@ namespace ConcreteEngine.Engine.Worlds.Render;
 
 public sealed class WorldRenderer
 {
-    private readonly EngineWindow _window;
-    private readonly GfxContext _graphics;
-    private readonly RenderEngine _renderer;
-    private readonly AssetSystem _assets;
+    private readonly GameEntityHub _gameEcs;
+    private readonly RenderEntityHub _renderEcs;
+    private readonly DrawEntityPipeline _drawEntities;
     private readonly Camera3D _camera;
 
-    private readonly WorldRenderParams _worldRenderParams;
-
-    private readonly DrawEntityAssembler _drawEntities;
-
-    private bool _hasUploadedMaterial = false;
-
-
-    internal WorldRenderer(EngineWindow window, GraphicsRuntime graphics, AssetSystem assets,
-        WorldRenderParams worldRenderParams, DrawEntityAssembler drawEntities, Camera3D camera)
+    internal WorldRenderer(GameEntityHub gameEcs, RenderEntityHub renderEcs, DrawEntityPipeline drawEntities, Camera3D camera)
     {
-        _window = window;
-        _graphics = graphics.Gfx;
-        _assets = assets;
-        _worldRenderParams = worldRenderParams;
+        _gameEcs = gameEcs;
+        _renderEcs = renderEcs;
         _drawEntities = drawEntities;
         _camera = camera;
-
-        PrimitiveMeshes.CreatePrimitives(graphics.Gfx.Meshes);
-        InvalidOpThrower.ThrowIf(PrimitiveMeshes.FsqQuad == 0 || PrimitiveMeshes.SkyboxCube == 0);
-
-        _renderer = new RenderEngine(graphics, _worldRenderParams.Snapshot, PrimitiveMeshes.FsqQuad);
     }
 
-    internal RenderEngine RenderEngine => _renderer;
-    internal RenderCamera RenderCamera => _renderer.RenderCamera;
-
-
-    internal void RecreateFrameBuffer(FboCommandRecord req)
+    internal void BeforeRender()
     {
-        _graphics.Commands.BindFramebuffer(default);
-        _graphics.Commands.UnbindAllTextures();
+        var gameEcs = _gameEcs;
+        var renderEcs = _renderEcs;
+        var alpha = EngineTime.GameAlpha;
+        var dt = EngineTime.DeltaTime;
 
-        switch (req.Action)
+        var renderAnimations = renderEcs.GetStore<RenderAnimationComponent>();
+        foreach (var query in gameEcs.Query<AnimationComponent, RenderLink>())
         {
-            case FboCommandAction.RecreateScreenDependentFbo:
-                _renderer.FboRegistry.RecreateScreenDependentFbo(_window.OutputSize);
-                break;
-            case FboCommandAction.RecreateShadowFbo:
-                if (_worldRenderParams.SetShadow(req.Size.Width))
-                    _renderer.FboRegistry.RecreateFixedFrameBuffer<ShadowPassTag>(FboVariant.Default, req.Size);
-                break;
-            case FboCommandAction.None:
-            default:
-                throw new ArgumentOutOfRangeException(nameof(req.Action));
-        }
-    }
+            var renderEntity = query.Component2.RenderEntityId;;
+            if(renderEntity == default) continue;
 
-    internal void RenderEmptyFrame(in RenderFrameInfo frameInfo)
-    {
-        _renderer.RenderEmptyFrame(frameInfo);
-    }
+            var animationPtr = renderAnimations.TryGet(renderEntity);
+            if(animationPtr.IsNull) continue;
 
+            ref readonly var a = ref query.Component1;
 
-    internal void PreRender(
-        BeginFrameStatus status,
-        RenderFrameInfo frameInfo,
-        RenderRuntimeParams runtimeParams)
-    {
+            if (a.Time < a.PrevTime)
+                animationPtr.Value.Time = float.Lerp(a.PrevTime, a.Time + a.Duration, alpha) % a.Duration;
+            else 
+                animationPtr.Value.Time = float.Lerp(a.PrevTime, a.Time, alpha);
 
-        _drawEntities.Reset();
-
-        _camera.WriteSnapshot(EngineTime.GameAlpha, RenderCamera);
-
-        _renderer.PrepareFrame(in frameInfo, in runtimeParams);
-
-        // Upload materials
-        SubmitMaterialData();
-
-        // Upload draw commands
-        _drawEntities.Execute(RenderEngine.CommandBuffer);
-
-        // fill buffers
-        _renderer.CollectDrawBuffers();
-
-        _renderer.StartFrame(status);
-    }
-
-    internal void ExecuteFrame(out GfxFrameResult frameResult)
-    {
-        _renderer.UploadFrameData();
-
-        _renderer.Render();
-
-        _renderer.EndRenderFrame(out frameResult);
-    }
-
-
-    private void SubmitMaterialData()
-    {
-        var matStore = _assets.MaterialStore;
-        
-        if(!matStore.HasDirtyMaterials && _hasUploadedMaterial) return;
-        
-        if (matStore.HasDirtyMaterials) _hasUploadedMaterial = false;
-        matStore.ClearDirtyMaterials();
-
-        foreach (var material in matStore.MaterialSpan)
-        {
-            matStore.GetMaterialUploadData(material!, out var payload);
-            _renderer.SubmitMaterialDrawData(in payload, material!.TextureSlots.CacheSlots);
+            animationPtr.Value.Speed = a.Speed;
         }
 
-        _hasUploadedMaterial = true;
     }
 
 
-    public void Shutdown()
-    {
-    }
-
-
-    internal RenderSetupBuilder StartBuilder() => _renderer.StartBuilder(_window.OutputSize);
-
-    internal void SetupRenderer(RenderSetupBuilder builder)
-    {
-        var shaderCount = _assets.Store.GetMetaSnapshot<Shader>().Count;
-
-        builder.RegisterShader(shaderCount, ExtractShaderIds).RegisterCoreShaders(GetCoreShaders);
-        WorldRenderSetup.RegisterFrameBuffers(builder, _worldRenderParams);
-        builder.SetupPassPipeline(RenderPipelineVersion.Default3D);
-        _renderer.ApplyBuilder(builder);
-        return;
-
-        void ExtractShaderIds(Span<ShaderId> span) =>
-            _assets.Store.ExtractSpan<Shader, ShaderId>(span, static shader => shader.ResourceId);
-
-        RenderCoreShaders GetCoreShaders() => WorldRenderSetup.GetCoreShaders(_assets.Store);
-    }
 }

@@ -13,10 +13,10 @@ public sealed class WorldRaycaster
     private readonly Camera3D _camera;
     private readonly RenderEntityHub _entities;
     private readonly WorldTerrain _terrain;
-    private readonly DrawEntityAssembler _drawEntities;
+    private readonly DrawEntityPipeline _drawEntities;
 
     internal WorldRaycaster(Camera3D camera, RenderEntityHub entities, WorldTerrain terrain,
-        DrawEntityAssembler drawEntities)
+        DrawEntityPipeline drawEntities)
     {
         _entities = entities;
         _terrain = terrain;

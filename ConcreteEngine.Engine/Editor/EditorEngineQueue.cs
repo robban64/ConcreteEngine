@@ -25,7 +25,7 @@ internal sealed class EditorEngineQueue
 
     public EditorEngineQueue(World world, WorldRenderer worldRenderer, AssetSystem assets)
     {
-        RegisterHandler<FboCommandRecord>(EngineCommandScope.RenderCommand, worldRenderer.RecreateFrameBuffer);
+        RegisterHandler<FboCommandRecord>(EngineCommandScope.RenderCommand, world.RecreateFrameBuffer);
         RegisterHandler<AssetCommandRecord>(EngineCommandScope.AssetCommand, assets.EnqueueReloadAsset);
         RegisterHandler<IWorldCommandRecord>(EngineCommandScope.WorldCommand, world.ProcessCommand);
     }

@@ -23,13 +23,4 @@ public struct RenderAnimationComponent : IRenderComponent<RenderAnimationCompone
         Time = 0f;
     }
 
-    [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public float AdvanceTime(float deltaTime)
-    {
-        Time += deltaTime * Speed;
-        if (Time > Duration)
-            Time = 0;
-
-        return Time;
-    }
 }

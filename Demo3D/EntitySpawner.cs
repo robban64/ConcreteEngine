@@ -18,7 +18,7 @@ public sealed class EntitySpawner(SceneWorld sceneWorld, World world, float size
 {
     private int _genIdx = 0;
 
-    private void CreateOnTerrain(in ScenePlacement sp, Vector3 p, Vector3? s = null, Quaternion? r = null)
+    private void CreateOnTerrain(ScenePlacement sp, Vector3 p, Vector3? s = null, Quaternion? r = null)
     {
         var height = world.Terrain.GetSmoothHeight(p.X, p.Z) + p.Y;
         var scale = s.GetValueOrDefault(Vector3.One);
@@ -55,8 +55,8 @@ public sealed class EntitySpawner(SceneWorld sceneWorld, World world, float size
             var scale = new Vector3(s);
             var rot = Yaw(rng.NextFloat() * MathF.Tau);
 
-            ref readonly var sp = ref variants[Random.Shared.Next(variants.Length)];
-            CreateOnTerrain(in sp, new Vector3(x, sp.Offset, z), scale, rot);
+            var sp = variants[Random.Shared.Next(variants.Length)];
+            CreateOnTerrain(sp, new Vector3(x, sp.Offset, z), scale, rot);
             xPrev = x;
             zPrev = z;
         }
@@ -89,8 +89,8 @@ public sealed class EntitySpawner(SceneWorld sceneWorld, World world, float size
             var scale = new Vector3(tScale, tScale * 1.3f, tScale);
             var rot = Yaw((float)(rng.NextDouble() * MathF.Tau));
 
-            ref readonly var sp = ref variants[rng.Next(variants.Length)];
-            CreateOnTerrain(in sp, new Vector3(x, sp.Offset, z), scale, rot);
+            var sp = variants[rng.Next(variants.Length)];
+            CreateOnTerrain(sp, new Vector3(x, sp.Offset, z), scale, rot);
         }
     }
 
@@ -123,8 +123,8 @@ public sealed class EntitySpawner(SceneWorld sceneWorld, World world, float size
             var scale = new Vector3(s);
             var rot = Yaw((float)(rng.NextDouble() * MathF.Tau));
 
-            ref readonly var sp = ref variants[rng.Next(variants.Length)];
-            CreateOnTerrain(in sp, new Vector3(x, sp.Offset, z), scale, rot);
+            var sp = variants[rng.Next(variants.Length)];
+            CreateOnTerrain(sp, new Vector3(x, sp.Offset, z), scale, rot);
         }
     }
 

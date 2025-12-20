@@ -1,3 +1,5 @@
+using System.Runtime.CompilerServices;
+
 namespace ConcreteEngine.Engine.ECS.GameComponent;
 
 public enum AnimationState
@@ -16,4 +18,12 @@ public struct AnimationComponent : IGameComponent<AnimationComponent>
     public float Speed;
     public short Clip;
     public AnimationState State;
+
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public void AdvanceTime(float deltaTime)
+    {
+        PrevTime = Time;
+        Time += deltaTime * Speed;
+        if (Time > Duration) Time = 0;
+    }
 }

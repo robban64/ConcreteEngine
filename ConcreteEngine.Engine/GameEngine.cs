@@ -10,16 +10,24 @@ using ConcreteEngine.Engine.Scene;
 using ConcreteEngine.Engine.Time;
 using ConcreteEngine.Engine.Utils;
 using ConcreteEngine.Engine.Worlds;
+using ConcreteEngine.Engine.Worlds.Render;
 using ConcreteEngine.Graphics;
 using ConcreteEngine.Graphics.Gfx.Contracts;
+using ConcreteEngine.Graphics.Gfx.Resources;
+using ConcreteEngine.Renderer;
+using ConcreteEngine.Renderer.Data;
+using ConcreteEngine.Renderer.Definitions;
 using ConcreteEngine.Renderer.State;
 using Silk.NET.OpenGL;
+using Shader = ConcreteEngine.Engine.Assets.Shaders.Shader;
 
 namespace ConcreteEngine.Engine;
 
 public sealed class GameEngine : IDisposable
 {
     private readonly GraphicsRuntime _graphics;
+    private readonly RenderEngine _renderer;
+
     private readonly EngineWindow _window;
     private readonly EngineTimeHub _timeHub;
     private readonly EngineCoreSystem _coreSystems;
@@ -55,24 +63,25 @@ public sealed class GameEngine : IDisposable
         _graphics = gfxBundle.Graphics;
 
         _graphics.Initialize(gfxBundle.Config);
-
-
+        PrimitiveMeshes.CreatePrimitives(_graphics.Gfx.Meshes);
+        
         // time
         _timeHub = new EngineTimeHub(UpdateTick, SimulationTickUpdate, LogTickUpdate);
 
         // systems
         _inputSystem = new InputSystem(input);
         _assets = new AssetSystem();
-
+        
         _ecs = new EntityWorld();
-        _world = new World(engineWindow, _graphics, _assets, _ecs);
+        _renderer = new RenderEngine(_graphics, PrimitiveMeshes.FsqQuad);
+        _world = new World(engineWindow, _graphics, _renderer, _assets, _ecs);
+
         _sceneManager = new SceneManager(sceneFactories, _assets, _world, _ecs);
 
         _coreSystems = new EngineCoreSystem(_inputSystem, _assets, _world, _sceneManager);
 
-        var internalInput = input.InputContext;
-        _engineGateway =
-            new EngineGateway(gfxBundle.Config.DriverContext, engineWindow.PlatformWindow, internalInput);
+        var driver = gfxBundle.Config.DriverContext;
+        _engineGateway = new EngineGateway(driver, engineWindow.PlatformWindow, input.InputContext);
         _editorQueues = new EditorEngineQueue(_world, _world.Renderer, _assets);
     }
 
@@ -100,11 +109,7 @@ public sealed class GameEngine : IDisposable
         GC.Collect();
     }
 
-    private void RegisterRenderer()
-    {
-        var builder = _world.Renderer.StartBuilder();
-        _world.Renderer.SetupRenderer(builder);
-    }
+
 
     internal void Render(float dt)
     {
@@ -120,7 +125,7 @@ public sealed class GameEngine : IDisposable
 
         if (_sceneManager.Current is null)
         {
-            worldRender.RenderEmptyFrame(in frameInfo);
+            _renderer.RenderEmptyFrame(frameInfo);
             return;
         }
 
@@ -132,9 +137,8 @@ public sealed class GameEngine : IDisposable
         beginStatus = _timeHub.TryTriggerDebounceResize() ? BeginFrameStatus.Resize : BeginFrameStatus.None;
 
 
-        _world.BeforeRender();
-        worldRender.PreRender(beginStatus, frameInfo, runtimeParams);
-        worldRender.ExecuteFrame(out _gfxFrameResult);
+        _world.PreRender(beginStatus, frameInfo, runtimeParams);
+        _world.ExecuteFrame(out _gfxFrameResult);
 
         if (_engineGateway.Active)
             _engineGateway.RenderEditor(in frameInfo, _gfxFrameResult);
@@ -239,6 +243,23 @@ public sealed class GameEngine : IDisposable
         if (!_sceneManager.HasPendingSwitch) return;
         var builder = new GameSceneConfigBuilder();
         _sceneManager.ApplyPendingScene(builder, _coreSystems);
+    }
+    
+    private void RegisterRenderer()
+    {
+        var builder = _renderer.StartBuilder(_window.OutputSize);
+        var shaderCount = _assets.Store.GetMetaSnapshot<Shader>().Count;
+
+        builder.RegisterShader(shaderCount, ExtractShaderIds).RegisterCoreShaders(GetCoreShaders);
+        WorldRenderSetup.RegisterFrameBuffers(builder, _world.WorldRenderParams);
+        builder.SetupPassPipeline(RenderPipelineVersion.Default3D);
+        _renderer.ApplyBuilder(builder);
+        return;
+
+        void ExtractShaderIds(Span<ShaderId> span) =>
+            _assets.Store.ExtractSpan<Shader, ShaderId>(span, static shader => shader.ResourceId);
+
+        RenderCoreShaders GetCoreShaders() => WorldRenderSetup.GetCoreShaders(_assets.Store);
     }
 
     internal void Close()

@@ -14,7 +14,7 @@ using ConcreteEngine.Shared.Diagnostics;
 
 namespace ConcreteEngine.Engine.Worlds.Render;
 
-internal sealed class DrawEntityAssembler
+internal sealed class DrawEntityPipeline
 {
     private const int DefaultCapacity = 512;
     private const int MaxCapacity = 1024 * 50;
@@ -40,7 +40,7 @@ internal sealed class DrawEntityAssembler
 
     public ReadOnlySpan<RenderEntityId> VisibleEntities => _entityIndices.AsSpan(0, _idx);
 
-    internal DrawEntityAssembler(World world)
+    internal DrawEntityPipeline(World world)
     {
         _world = world;
         _renderEntities = world.Entities;
@@ -88,11 +88,10 @@ internal sealed class DrawEntityAssembler
         
         // execute
         var ctx = new DrawEntityContext(_entities.AsSpan(0, len), _entityIndices.AsSpan(0, len), _byEntityId);
-        
         ExecuteCollectCommands(in ctx, in renderView);
         ExecuteUploader(in ctx, commandBuffer);
+        
         ExecuteAnimationProcessor(in ctx, commandBuffer);
-
         DrawParticleProcessor.Execute(_worldParticles);
 
     }

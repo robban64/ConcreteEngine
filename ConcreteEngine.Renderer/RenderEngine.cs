@@ -31,7 +31,7 @@ public sealed class RenderEngine
     private RenderEngineContext EngineContext { get; }
 
 
-    public RenderEngine(GraphicsRuntime graphics, RenderParamsSnapshot paramsSnapshot, MeshId fsqMesh)
+    public RenderEngine(GraphicsRuntime graphics, MeshId fsqMesh)
     {
         _graphics = graphics;
 
@@ -41,7 +41,7 @@ public sealed class RenderEngine
         _drawPipeline = new DrawCommandPipeline();
         _passPipeline = new RenderPassPipeline(_renderRegistry.FboRegistry);
 
-        _stateContext = new RenderStateContext { Camera = _renderCamera, Snapshot = paramsSnapshot, FsqMesh = fsqMesh };
+        _stateContext = new RenderStateContext { Camera = _renderCamera, FsqMesh = fsqMesh };
 
         EngineContext = new RenderEngineContext
         {
@@ -59,6 +59,8 @@ public sealed class RenderEngine
     public RenderCamera RenderCamera => _renderCamera;
 
 
+    public void SetRenderParams(RenderParamsSnapshot snapshot) => _stateContext.Snapshot = snapshot;
+    
     public RenderSetupBuilder StartBuilder(Size2D outputSize) => new(EngineContext, outputSize);
 
     public void ApplyBuilder(RenderSetupBuilder builder)

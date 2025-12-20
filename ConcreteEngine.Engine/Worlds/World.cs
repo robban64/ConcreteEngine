@@ -8,9 +8,11 @@ using ConcreteEngine.Engine.ECS;
 using ConcreteEngine.Engine.ECS.GameComponent;
 using ConcreteEngine.Engine.ECS.RenderComponent;
 using ConcreteEngine.Engine.Editor.Data;
+using ConcreteEngine.Engine.Editor.Definitions;
 using ConcreteEngine.Engine.Platform;
 using ConcreteEngine.Engine.Time;
 using ConcreteEngine.Engine.Utils;
+using ConcreteEngine.Engine.Worlds.Game;
 using ConcreteEngine.Engine.Worlds.MeshGeneration;
 using ConcreteEngine.Engine.Worlds.Render;
 using ConcreteEngine.Engine.Worlds.Tables;
@@ -19,11 +21,17 @@ using ConcreteEngine.Graphics;
 using ConcreteEngine.Graphics.Gfx;
 using ConcreteEngine.Graphics.Gfx.Contracts;
 using ConcreteEngine.Graphics.Gfx.Definitions;
+using ConcreteEngine.Renderer;
+using ConcreteEngine.Renderer.Passes;
+using ConcreteEngine.Renderer.State;
 
 namespace ConcreteEngine.Engine.Worlds;
 
 public sealed class World : IGameEngineSystem
 {
+    private readonly GfxCommands _gfxCommands;
+    private readonly EngineWindow _window;
+    private readonly RenderEngine _renderEngine;
     private readonly AssetSystem _assets;
 
     private readonly WorldSkybox _sky;
@@ -41,14 +49,21 @@ public sealed class World : IGameEngineSystem
     private readonly MeshGeneratorRegistry _meshGenerator;
 
 
-    private readonly DrawEntityAssembler _drawEntities;
+    private readonly DrawEntityPipeline _drawEntities;
     private readonly WorldRenderer _worldRenderer;
 
     private readonly EntityWorld _ecs;
+    private readonly GameSystem _gameSystem;
 
+    private bool _hasUploadedMaterial = false;
 
-    internal World(EngineWindow engineWindow, GraphicsRuntime graphics, AssetSystem assets, EntityWorld ecs)
+    private RenderCamera RenderCamera => _renderEngine.RenderCamera;
+
+    internal World(EngineWindow window, GraphicsRuntime graphics, RenderEngine renderEngine, AssetSystem assets, EntityWorld ecs)
     {
+        _gfxCommands = graphics.Gfx.Commands;
+        _window = window;
+        _renderEngine = renderEngine;
         _assets = assets;
         _ecs = ecs;
         _camera = new Camera3D();
@@ -62,14 +77,17 @@ public sealed class World : IGameEngineSystem
         _terrain = new WorldTerrain(_meshTable, _materialTable);
         _particles = new WorldParticles(_meshTable, _materialTable);
 
-        _drawEntities = new DrawEntityAssembler(this);
+        _drawEntities = new DrawEntityPipeline(this);
+        _gameSystem = new GameSystem(ecs.GameEntity);
 
         _raycast = new WorldRaycaster(Camera, Entities, _terrain, _drawEntities);
 
         _worldRenderParams = new WorldRenderParams(AssetConfigLoader.GraphicSettings);
         _worldRenderParams.EndTick();
 
-        _worldRenderer = new WorldRenderer(engineWindow, graphics, assets, _worldRenderParams, _drawEntities, _camera);
+        _worldRenderer = new WorldRenderer(_ecs.GameEntity, _ecs.RenderEntity, _drawEntities, _camera);
+        
+        _renderEngine.SetRenderParams(_worldRenderParams.Snapshot);
     }
 
     internal RenderEntityHub Entities => _ecs.RenderEntity;
@@ -111,34 +129,56 @@ public sealed class World : IGameEngineSystem
         };
         _drawEntities.BoundsMaterial = mat.Id;
     }
-
-    internal void BeforeRender()
+    
+    private void SubmitMaterialData()
     {
-        var gameEcs = _ecs.GameEntity;
-        var renderEcs = _ecs.RenderEntity;
-        var alpha = EngineTime.GameAlpha;
-
-        StaticProfileTimer.RenderTimer.Begin();
-        var renderAnimations = renderEcs.GetStore<RenderAnimationComponent>();
-        foreach (var query in gameEcs.Query<AnimationComponent, RenderLink>())
+        var matStore = _assets.MaterialStore;
+        if(!matStore.HasDirtyMaterials && _hasUploadedMaterial) return;
+        if (matStore.HasDirtyMaterials) _hasUploadedMaterial = false;
+       
+        matStore.ClearDirtyMaterials();
+        foreach (var material in matStore.MaterialSpan)
         {
-            ref readonly var a = ref query.Component1;
-            ref readonly var renderEntity = ref query.Component2.RenderEntityId;;
-            if(renderEntity == default) continue;
-
-            var animationPtr = renderAnimations.TryGet(renderEntity);
-            if(animationPtr.IsNull) continue;
-
-            float t;
-            if (a.Time < a.PrevTime)
-                animationPtr.Value.Time = float.Lerp(a.PrevTime, a.Time + a.Duration, alpha) % a.Duration;
-            else 
-                animationPtr.Value.Time = float.Lerp(a.PrevTime, a.Time, alpha);
-
-            animationPtr.Value.Speed = a.Speed;
+            matStore.GetMaterialUploadData(material!, out var payload);
+            _renderEngine.SubmitMaterialDrawData(in payload, material!.TextureSlots.CacheSlots);
         }
-        StaticProfileTimer.RenderTimer.EndPrint();
+
+        _hasUploadedMaterial = true;
     }
+
+    internal void PreRender(
+        BeginFrameStatus status,
+        RenderFrameInfo frameInfo,
+        RenderRuntimeParams runtimeParams)
+    {
+        _worldRenderer.BeforeRender();
+
+        _drawEntities.Reset();
+
+        _camera.WriteSnapshot(EngineTime.GameAlpha, RenderCamera);
+
+        _renderEngine.PrepareFrame(in frameInfo, in runtimeParams);
+
+        // Upload materials
+        SubmitMaterialData();
+
+        // Upload draw commands
+        _drawEntities.Execute(_renderEngine.CommandBuffer);
+
+        // fill buffers
+        _renderEngine.CollectDrawBuffers();
+
+        _renderEngine.StartFrame(status);
+    }
+
+    internal void ExecuteFrame(out GfxFrameResult frameResult)
+    {
+        _renderEngine.UploadFrameData();
+        _renderEngine.Render();
+        _renderEngine.EndRenderFrame(out frameResult);
+    }
+
+
     
     
     internal void UpdateTick(float dt, Size2D viewport)
@@ -150,18 +190,10 @@ public sealed class World : IGameEngineSystem
     {
         //Entities.EndTick();
         
-        var gameEcs = _ecs.GameEntity;
-        foreach (var query in gameEcs.Query<AnimationComponent>())
-        {
-            ref var c = ref query.Component;
-            c.PrevTime = c.Time;
-            
-            c.Time += dt * c.Speed;
-            if (c.Time > c.Duration) c.Time = 0;
-        }
+        _gameSystem.UpdateTick(dt);
         
         WorldRenderParams.EndTick();
-        Camera.EndTick(WorldRenderParams.Snapshot, _worldRenderer.RenderCamera);
+        Camera.EndTick(WorldRenderParams.Snapshot, RenderCamera);
     }
 
     internal void OnSimulationTick(float fixedDt)
@@ -172,8 +204,26 @@ public sealed class World : IGameEngineSystem
     internal void ProcessCommand(IWorldCommandRecord cmd)
     {
     }
+    
+    internal void RecreateFrameBuffer(FboCommandRecord req)
+    {
+        _gfxCommands.BindFramebuffer(default);
+        _gfxCommands.UnbindAllTextures();
 
-
+        switch (req.Action)
+        {
+            case FboCommandAction.RecreateScreenDependentFbo:
+                _renderEngine.FboRegistry.RecreateScreenDependentFbo(_window.OutputSize);
+                break;
+            case FboCommandAction.RecreateShadowFbo:
+                if (_worldRenderParams.SetShadow(req.Size.Width))
+                    _renderEngine.FboRegistry.RecreateFixedFrameBuffer<ShadowPassTag>(FboVariant.Default, req.Size);
+                break;
+            case FboCommandAction.None:
+            default:
+                throw new ArgumentOutOfRangeException(nameof(req.Action));
+        }
+    }
 
     public void Shutdown() {}
 }
